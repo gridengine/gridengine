@@ -53,8 +53,6 @@ static int rcv_messages = 0;
 static int snd_messages = 0;
 
 void sighandler_client(int sig);
-static int pipe_signal = 0;
-static int hup_signal = 0;
 static int do_shutdown = 0;
 
 static cl_com_handle_t* handle = NULL; 
@@ -64,12 +62,10 @@ int sig
 ) {
 /*   thread_signal_receiver = pthread_self(); */
    if (sig == SIGPIPE) {
-      pipe_signal = 1;
       return;
    }
 
    if (sig == SIGHUP) {
-      hup_signal = 1;
       return;
    }
    printf("do_shutdown\n");
@@ -125,14 +121,15 @@ extern int main(int argc, char** argv)
         printf("virtual gdi client message count[received |%d| / sent |%d|]...\n",rcv_messages,snd_messages);
         last_time = now.tv_sec;
      }
+
      if (now.tv_sec > shutdown_time ) {
         printf("shutting down test - timeout\n");
         do_shutdown = 1;
      }
 
-     cl_com_setup_commlib(CL_NO_THREAD ,atoi(argv[1]), NULL );
+     cl_com_setup_commlib(CL_NO_THREAD , (cl_log_t)atoi(argv[1]), NULL );
    
-     handle=cl_com_create_handle(NULL,CL_CT_TCP,CL_CM_CT_MESSAGE , 0, atoi(argv[2]) , CL_TCP_DEFAULT,"virtual_gdi_client", 0, 1,0 );
+     handle=cl_com_create_handle(NULL,CL_CT_TCP,CL_CM_CT_MESSAGE , CL_FALSE, atoi(argv[2]) , CL_TCP_DEFAULT,"virtual_gdi_client", 0, 1,0 );
      if (handle == NULL) {
         printf("could not get handle\n");
         exit(1);
@@ -170,11 +167,11 @@ extern int main(int argc, char** argv)
         retval = cl_commlib_send_message(handle, argv[3], "virtual_master", 1,
                                          CL_MIH_MAT_NAK,
                                          (cl_byte_t*) data , 3000,
-                                         NULL, 0, 0 , 1, 0 );
+                                         NULL, 0, 0 , CL_TRUE, CL_FALSE );
         if ( retval == CL_RETVAL_OK ) {
            snd_messages++;
            retval = cl_commlib_receive_message(handle, NULL, NULL, 0,  /* handle, comp_host, comp_name , comp_id, */
-                                               1, 0,                   /* syncron, response_mid */
+                                               CL_TRUE, 0,                   /* syncron, response_mid */
                                                &message, &sender );
            if ( retval == CL_RETVAL_OK) {
                  rcv_messages++;

@@ -148,11 +148,11 @@ unsuspend_job_in_queues( lList *queue_list, lList *job_list, order_t *orders)
          (lGetUlong(qep, QU_last_suspend_threshold_ckeck) + 
          interval> now)) {
          char tmp[128];
-         strcpy(tmp, sge_ctime(lGetUlong(qep, QU_last_suspend_threshold_ckeck), &ds));
+         strcpy(tmp, sge_ctime((time_t)lGetUlong(qep, QU_last_suspend_threshold_ckeck), &ds));
          DPRINTF(("queue was last checked at %s (interval = %s, now = %s)\n",
             tmp,
             lGetString(qep, QU_suspend_interval),
-            sge_ctime(now, &ds)));
+            sge_ctime((time_t)now, &ds)));
          continue;
       }
 

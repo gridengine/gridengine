@@ -43,7 +43,7 @@
 #include "sge_ja_task_mirror.h"
 #include "sge_pe_task_mirror.h"
 
-static int job_update_master_list_usage(lListElem *event);
+static bool job_update_master_list_usage(lListElem *event);
 
 /****** Eventmirror/job/job_update_master_list_usage() *************************
 *  NAME
@@ -70,9 +70,9 @@ static int job_update_master_list_usage(lListElem *event);
 *     Eventmirror/ja_task/pe_task_update_master_list_usage()
 *     Eventmirror/pe_task/pe_task_update_master_list_usage()
 *******************************************************************************/
-static int job_update_master_list_usage(lListElem *event)
+static bool job_update_master_list_usage(lListElem *event)
 {
-   int ret = true;
+   bool ret = true;
    u_long32 job_id, ja_task_id;
    const char *pe_task_id;
 
@@ -166,7 +166,7 @@ bool job_update_master_list(sge_object_type type, sge_event_action action,
          * Preferable would probably be to send MOD events for the different
          * object types.
          */
-         int ret = job_update_master_list_usage(event);
+         bool ret = job_update_master_list_usage(event);
          DEXIT;
          return ret;
       } else {

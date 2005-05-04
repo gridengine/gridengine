@@ -725,7 +725,7 @@ bool
 answer_list_add(lList **answer_list, const char *text,
                 u_long32 status, answer_quality_t quality)
 {
-   int ret = false;
+   bool ret = false;
 
    DENTER(ANSWER_LAYER, "answer_list_add");
 
@@ -757,7 +757,7 @@ answer_list_add(lList **answer_list, const char *text,
 
 bool answer_list_add_elem(lList **answer_list, lListElem *answer)
 {
-   int ret = false;
+   bool ret = false;
 
    DENTER(ANSWER_LAYER, "answer_list_add_elem");
    if (answer_list != NULL) {

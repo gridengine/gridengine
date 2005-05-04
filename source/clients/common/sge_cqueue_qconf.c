@@ -119,7 +119,7 @@ cqueue_add_del_mod_via_gdi(lListElem *this_elem, lList **answer_list,
    DENTER(TOP_LAYER, "cqueue_add_del_mod_via_gdi");
    if (this_elem != NULL) {
       u_long32 operation = SGE_GDI_GET_OPERATION(gdi_command);
-      bool do_verify = (operation == SGE_GDI_MOD) || (operation == SGE_GDI_ADD);
+      bool do_verify = (operation == SGE_GDI_MOD) || (operation == SGE_GDI_ADD) ? true : false;
 
       if (do_verify) {
          ret &= cqueue_verify_attributes(this_elem, answer_list,
@@ -202,9 +202,9 @@ cqueue_hgroup_get_via_gdi(lList **answer_list, const lList *qref_list,
          cqueue_name_split(name, &cqueue_name, &host_domain,
                            &has_hostname, &has_domain);
 
-         fetch_all_hgroup = fetch_all_hgroup || has_domain;
-         fetch_all_qi = fetch_all_qi || (has_domain || has_hostname);
-         fetch_all_nqi = fetch_all_nqi || (!has_domain && !has_hostname);
+         fetch_all_hgroup = (fetch_all_hgroup || has_domain) ? true : false;
+         fetch_all_qi = (fetch_all_qi || (has_domain || has_hostname)) ? true : false;
+         fetch_all_nqi = (fetch_all_nqi || (!has_domain && !has_hostname)) ? true : false;
 
          cqueue_name_str = sge_dstring_get_string(&cqueue_name);
          

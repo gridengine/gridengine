@@ -308,7 +308,7 @@ bool sge_bootstrap(dstring *error_dstring)
          u_long32 uval;
          parse_ulong_val(NULL, &uval, TYPE_BOO, value[2], 
                          NULL, 0);
-         bootstrap_set_ignore_fqdn(uval);
+         bootstrap_set_ignore_fqdn(uval ? true : false);
       }
 
       DPRINTF(("admin_user          >%s<\n", bootstrap_get_admin_user()));

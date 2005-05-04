@@ -126,7 +126,6 @@ bool print_event(sge_object_type type, sge_event_action action,
 bool print_jatask_event(sge_object_type type, sge_event_action action, 
                 lListElem *event, void *clientdata)
 {
-   int pos;
    char buffer[1024];
    u_long32 timestamp;
    dstring buffer_wrapper;
@@ -140,7 +139,7 @@ bool print_jatask_event(sge_object_type type, sge_event_action action,
 
    DPRINTF(("%s\n", event_text(event, &buffer_wrapper)));
 /*    fprintf(stdout,"%s\n",event_text(event, &buffer_wrapper)); */
-   if ((pos=lGetPosViaElem(event, ET_type))>=0) {
+   if (lGetPosViaElem(event, ET_type) >= 0) {
       u_long32 type = lGetUlong(event, ET_type);
       if (type == sgeE_JATASK_MOD) { 
          lList *jat = lGetList(event,ET_new_version);
@@ -204,17 +203,13 @@ bool print_jatask_event(sge_object_type type, sge_event_action action,
 bool analyze_jatask_event(sge_object_type type, sge_event_action action, 
                 lListElem *event, void *clientdata)
 {
-   int pos;
    char buffer[1024];
-   u_long32 timestamp;
    dstring buffer_wrapper;
 
 
    sge_dstring_init(&buffer_wrapper, buffer, sizeof(buffer));
    
-   timestamp = sge_get_gmt();
-
-   if ((pos=lGetPosViaElem(event, ET_type))>=0) {
+   if (lGetPosViaElem(event, ET_type) >= 0) {
       u_long32 type = lGetUlong(event, ET_type);
 
       if (type == sgeE_JATASK_MOD) { 
@@ -307,7 +302,6 @@ static void qevent_start_trigger_script(int qevent_event, const char* script_fil
    }
 
    if (pid > 0) {
-      int pid2;
       int exit_status;
 
 #if !(defined(CRAY) || defined(INTERIX))
@@ -320,9 +314,9 @@ static void qevent_start_trigger_script(int qevent_event, const char* script_fil
          int status;
 #endif
 #if defined(CRAY) || defined(INTERIX)
-         pid2 = waitpid(pid, &status, 0);
+         waitpid(pid, &status, 0);
 #else
-         pid2 = wait3(&status, 0, &rusage);
+         wait3(&status, 0, &rusage);
 #endif
 #if defined(SVR3) || defined(_BSD)
          exit_status = status.w_retcode;
@@ -471,7 +465,7 @@ int main(int argc, char *argv[])
    qevent_options enabled_options;
    dstring errors = DSTRING_INIT;
    lList *alp = NULL;
-   int ret,i,gdi_setup;
+   int i,gdi_setup;
 
 
    DENTER_MAIN(TOP_LAYER, "qevent");
@@ -520,7 +514,7 @@ int main(int argc, char *argv[])
 
    sge_setup_sig_handlers(QEVENT);
 
-   if ((ret = reresolve_me_qualified_hostname()) != CL_RETVAL_OK) {
+   if (reresolve_me_qualified_hostname() != CL_RETVAL_OK) {
       sge_dstring_free(enabled_options.error_message);
       SGE_EXIT(1);
    }

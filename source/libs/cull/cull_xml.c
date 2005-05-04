@@ -367,7 +367,6 @@ static void lWriteElemXML_(const lListElem *ep, int nesting_level, FILE *fp)
          case lRefT:
             /* connot print a ref */
             continue;
-            break;
          }   
          
          attr_name = lNm2Str(ep->descr[i].nm);
@@ -570,8 +569,6 @@ static bool lAttributesToString_(const lList *attr_list, dstring *attr){
 }
 
 static void lWriteXMLHead_(const lListElem *ep, int nesting_level, FILE *fp) {
-   char indent[128];
-   int i;
    const lListElem *elem = NULL;
    const char *name = NULL;
    dstring attr = DSTRING_INIT;
@@ -582,15 +579,6 @@ static void lWriteXMLHead_(const lListElem *ep, int nesting_level, FILE *fp) {
    if (!ep){
       DEXIT;
       return;
-   }
-
-   {
-      int max = nesting_level * 3;
-      if (max > 128)
-      max = 128;
-      for (i = 0; i < nesting_level * 3; i++)
-         indent[i] = ' ';
-      indent[i] = '\0';
    }
 
    name = lGetString(ep, XMLH_Name);

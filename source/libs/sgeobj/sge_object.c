@@ -1130,9 +1130,9 @@ const char *object_type_get_name(const sge_object_type type)
 sge_object_type object_name_get_type(const char *name)
 {
    sge_object_type ret = SGE_TYPE_ALL;
-   int i;
+   sge_object_type i;
 
-   for (i = 0; i < SGE_TYPE_ALL; i++) {
+   for (i = SGE_TYPE_ADMINHOST; i < SGE_TYPE_ALL; i++) {
       int length = strlen(object_base[i].type_name);
 
       if (!strncasecmp(object_base[i].type_name, name, length)) {
@@ -1140,6 +1140,7 @@ sge_object_type object_name_get_type(const char *name)
          break;
       }
    }
+
    return ret;
 }
 
@@ -1706,47 +1707,47 @@ object_parse_float_from_string(lListElem *this_elem, lList **answer_list,
 bool
 object_set_any_type(lListElem *this_elem, int name, void *value)
 {
-   int ret = true;
+   int cull_ret = 0;
    int pos = lGetPosViaElem(this_elem, name);
    int type = lGetPosType(lGetElemDescr(this_elem), pos);
 
    DENTER(OBJECT_LAYER, "object_set_any_type");
    if (type == lStringT) {
-      ret = lSetPosString(this_elem, pos, *((const char **)value));
+      cull_ret = lSetPosString(this_elem, pos, *((const char **)value));
    } else if (type == lHostT) {
-      ret = lSetPosHost(this_elem, pos, *((const char **)value));
+      cull_ret = lSetPosHost(this_elem, pos, *((const char **)value));
    } else if (type == lUlongT) {
-      ret = lSetPosUlong(this_elem, pos, *((lUlong*)value));
+      cull_ret = lSetPosUlong(this_elem, pos, *((lUlong*)value));
    } else if (type == lDoubleT) {
-      ret = lSetPosDouble(this_elem, pos, *((lDouble*)value));
+      cull_ret = lSetPosDouble(this_elem, pos, *((lDouble*)value));
    } else if (type == lFloatT) {
-      ret = lSetPosFloat(this_elem, pos, *((lFloat*)value));
+      cull_ret = lSetPosFloat(this_elem, pos, *((lFloat*)value));
    } else if (type == lLongT) {
-      ret = lSetPosLong(this_elem, pos, *((lLong*)value));
+      cull_ret = lSetPosLong(this_elem, pos, *((lLong*)value));
    } else if (type == lCharT) {
-      ret = lSetPosChar(this_elem, pos, *((lChar*)value));
+      cull_ret = lSetPosChar(this_elem, pos, *((lChar*)value));
    } else if (type == lBoolT) {
-      ret = lSetPosBool(this_elem, pos, *((bool*)value));
+      cull_ret = lSetPosBool(this_elem, pos, *((bool*)value));
    } else if (type == lIntT) {
-      ret = lSetPosInt(this_elem, pos, *((int*)value));
+      cull_ret = lSetPosInt(this_elem, pos, *((int*)value));
    } else if (type == lObjectT) {
-      ret = lSetPosObject(this_elem, pos, *((lListElem **)value));
+      cull_ret = lSetPosObject(this_elem, pos, *((lListElem **)value));
    } else if (type == lRefT) {
-      ret = lSetPosRef(this_elem, pos, *((lRef*)value));
+      cull_ret = lSetPosRef(this_elem, pos, *((lRef*)value));
    } else if (type == lListT) {
-      ret = lSetPosList(this_elem, pos, lCopyList("", *((lList **)value)));
+      cull_ret = lSetPosList(this_elem, pos, lCopyList("", *((lList **)value)));
    } else {
       /* not possible */
-      ret = false;
+      cull_ret = -1;
    }
    DEXIT;
-   return ret;
+   return cull_ret == 0 ? true : false;
 }
 
 bool
 object_replace_any_type(lListElem *this_elem, int name, lListElem *org_elem)
 {
-   int ret = true;
+   int cull_ret = 0;
    int out_pos = lGetPosViaElem(this_elem, name);
    int in_pos = lGetPosViaElem(org_elem, name);
    int type = lGetPosType(lGetElemDescr(this_elem), out_pos);
@@ -1755,53 +1756,53 @@ object_replace_any_type(lListElem *this_elem, int name, lListElem *org_elem)
    if (type == lStringT) {
       const char *value = lGetPosString(org_elem, in_pos);
 
-      ret = lSetPosString(this_elem, out_pos, value);
+      cull_ret = lSetPosString(this_elem, out_pos, value);
    } else if (type == lHostT) {
       const char *value = lGetPosHost(org_elem, in_pos);
       
-      ret = lSetPosHost(this_elem, out_pos, value);
+      cull_ret = lSetPosHost(this_elem, out_pos, value);
    } else if (type == lUlongT) {
       u_long32 value = lGetPosUlong(org_elem, in_pos);
    
-      ret = lSetPosUlong(this_elem, out_pos, value);
+      cull_ret = lSetPosUlong(this_elem, out_pos, value);
    } else if (type == lDoubleT) {
       double value = lGetPosDouble(org_elem, in_pos);
    
-      ret = lSetPosDouble(this_elem, out_pos, value);
+      cull_ret = lSetPosDouble(this_elem, out_pos, value);
    } else if (type == lFloatT) {
       float value = lGetPosFloat(org_elem, in_pos);
 
-      ret = lSetPosFloat(this_elem, out_pos, value);
+      cull_ret = lSetPosFloat(this_elem, out_pos, value);
    } else if (type == lLongT) {
       int value = lGetPosLong(org_elem, in_pos);
 
-      ret = lSetPosLong(this_elem, out_pos, value);
+      cull_ret = lSetPosLong(this_elem, out_pos, value);
    } else if (type == lCharT) {
       char value = lGetPosChar(org_elem, in_pos);
 
-      ret = lSetPosChar(this_elem, out_pos, value);
+      cull_ret = lSetPosChar(this_elem, out_pos, value);
    } else if (type == lBoolT) {
-      bool value = lGetPosBool(org_elem, in_pos);
+      bool value = lGetPosBool(org_elem, in_pos) ? true : false;
    
-      ret = lSetPosBool(this_elem, out_pos, value);
+      cull_ret = lSetPosBool(this_elem, out_pos, value);
    } else if (type == lIntT) {
       int value = lGetPosInt(org_elem, in_pos);
       
-      ret = lSetPosInt(this_elem, out_pos, value);
+      cull_ret = lSetPosInt(this_elem, out_pos, value);
    } else if (type == lObjectT) {
       lListElem *value = lGetPosObject(org_elem, in_pos);
       
-      ret = lSetPosObject(this_elem, out_pos, value);
+      cull_ret = lSetPosObject(this_elem, out_pos, value);
    } else if (type == lRefT) {
       void *value = lGetPosRef(org_elem, in_pos);
 
-      ret = lSetPosRef(this_elem, out_pos, value);
+      cull_ret = lSetPosRef(this_elem, out_pos, value);
    } else {
       /* not possible */
-      ret = false;
+      cull_ret = -1;
    }
    DEXIT;
-   return ret;
+   return cull_ret == 0 ? true : false;
 }
 
 void 
@@ -2054,25 +2055,25 @@ object_has_differences(lListElem *this_elem, lList **answer_list,
           */
          switch (mt_get_type(type1)) {
             case lFloatT:
-               equiv = (lGetPosFloat(this_elem, pos) == lGetPosFloat(old_elem, pos));
+               equiv = (lGetPosFloat(this_elem, pos) == lGetPosFloat(old_elem, pos)) ? true : false;
                break;
             case lDoubleT:
-               equiv = (lGetPosDouble(this_elem, pos) == lGetPosDouble(old_elem, pos));
+               equiv = (lGetPosDouble(this_elem, pos) == lGetPosDouble(old_elem, pos)) ? true : false;
                break;
             case lUlongT:
-               equiv = (lGetPosUlong(this_elem, pos) == lGetPosUlong(old_elem, pos));
+               equiv = (lGetPosUlong(this_elem, pos) == lGetPosUlong(old_elem, pos)) ? true : false;
                break;
             case lLongT:
-               equiv = (lGetPosLong(this_elem, pos) == lGetPosLong(old_elem, pos));
+               equiv = (lGetPosLong(this_elem, pos) == lGetPosLong(old_elem, pos)) ? true : false;
                break;
             case lCharT:
-               equiv = (lGetPosChar(this_elem, pos) == lGetPosChar(old_elem, pos));
+               equiv = (lGetPosChar(this_elem, pos) == lGetPosChar(old_elem, pos)) ? true : false;
                break;
             case lBoolT:
-               equiv = (lGetPosBool(this_elem, pos) == lGetPosBool(old_elem, pos));
+               equiv = (lGetPosBool(this_elem, pos) == lGetPosBool(old_elem, pos)) ? true : false;
                break;
             case lIntT:
-               equiv = (lGetPosInt(this_elem, pos) == lGetPosInt(old_elem, pos));
+               equiv = (lGetPosInt(this_elem, pos) == lGetPosInt(old_elem, pos)) ? true : false;
                break;
             case lStringT:
                {
@@ -2086,7 +2087,7 @@ object_has_differences(lListElem *this_elem, lList **answer_list,
                   } else if (new_str == old_str) {
                      equiv = true;
                   } else {
-                     equiv = (strcmp(new_str, old_str) == 0);
+                     equiv = (strcmp(new_str, old_str) == 0) ? true : false;
                   }
                }
                break;
@@ -2102,12 +2103,12 @@ object_has_differences(lListElem *this_elem, lList **answer_list,
                   } else if (new_str == old_str) {
                      equiv = true;
                   } else {
-                     equiv = (sge_hostcmp(new_str, old_str) == 0);
+                     equiv = (sge_hostcmp(new_str, old_str) == 0) ? true : false;
                   }
                }
                break;
             case lRefT:
-               equiv = (lGetPosRef(this_elem, pos) == lGetPosRef(old_elem, pos));
+               equiv = (lGetPosRef(this_elem, pos) == lGetPosRef(old_elem, pos)) ? true : false;
                break;
             case lObjectT:
                {
@@ -2123,9 +2124,13 @@ object_has_differences(lListElem *this_elem, lList **answer_list,
                   lList *new_list = lGetPosList(this_elem, pos);
                   lList *old_list = lGetPosList(old_elem, pos);
 
-                  equiv = !object_list_has_differences(new_list, answer_list,
-                                                       old_list, 
-                                                       modify_changed_flag);
+                  if (object_list_has_differences(new_list, answer_list,
+                                                  old_list, 
+                                                  modify_changed_flag)) {
+                     equiv = false;
+                  } else {
+                     equiv = true;
+                  }
                }
                break;
             default:

@@ -463,7 +463,7 @@ bool hgroup_show_structure(lList **answer_list, const char *name,
       answer_exit_if_not_recoverable(alep);
       if (answer_get_status(alep) != STATUS_OK) {
          fprintf(stderr, "%s\n", lGetString(alep, AN_text));
-         return 0;
+         return false;
       }
 
       hgroup = lGetElemHost(hgroup_list, HGRP_name, name); 

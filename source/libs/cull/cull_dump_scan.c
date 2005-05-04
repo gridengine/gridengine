@@ -452,7 +452,7 @@ int lDumpObject(FILE *fp, const lListElem *ep, int indent)
 int lDumpList(FILE *fp, const lList *lp, int indent) 
 {
    lListElem *ep;
-   int i, n, ret = ~EOF;
+   int i, ret = ~EOF;
 
    char space[256];
 
@@ -478,7 +478,7 @@ int lDumpList(FILE *fp, const lList *lp, int indent)
    ret = fprintf(fp, "%s/* LISTNAME               */ \"%s\"\n", space, 
                  lGetListName(lp));
    ret = fprintf(fp, "%s/* NUMBER OF ELEMENTS     */ %d\n", space, 
-                 n = lGetNumberOfElem(lp));
+                 lGetNumberOfElem(lp));
 
    ret = lDumpDescr(fp, lGetListDescr(lp), indent);
 

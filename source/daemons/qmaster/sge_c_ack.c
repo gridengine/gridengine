@@ -103,7 +103,7 @@ sge_pack_buffer *pb
          break;
 
       case ACK_EVENT_DELIVERY:
-         sge_handle_event_ack(ack_ulong2, ack_ulong);
+         sge_handle_event_ack(ack_ulong2, (ev_event)ack_ulong);
          break;
 
       default:

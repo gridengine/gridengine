@@ -62,7 +62,7 @@ char *fname
       return (-1);
    }
 
-   chown(fname, uti_state_get_uid(), uti_state_get_gid());
+   chown(fname, (uid_t)uti_state_get_uid(), (gid_t)uti_state_get_gid());
 
    pid = fork();
    if (pid) {

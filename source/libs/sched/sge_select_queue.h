@@ -38,9 +38,9 @@
 
 #include "sge_orders.h"
 
-int
+bool
 sge_select_queue(lList *reqested_attr, lListElem *queue, lListElem *host, lList *exechost_list,
-                 lList *centry_list, int allow_non_requestable, int slots); 
+                 lList *centry_list, bool allow_non_requestable, int slots); 
 
 /* --- is there a load alarm on this queue ---------------------------- */
 

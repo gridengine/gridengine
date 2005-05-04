@@ -246,7 +246,7 @@ char **argv
                if (sscanf(argv[++ii], sge_u32, &gid) == 1) {
                   struct group *pg;
 
-                  pg = getgrgid(gid);
+                  pg = getgrgid((gid_t)gid);
                   strcpy(group, (pg ? pg->gr_name : argv[ii]));
                }
                else {
@@ -324,7 +324,7 @@ char **argv
 
             ii++;
             range_list_parse_from_string(&task_id_range_list, &answer,
-                                         argv[ii], 0, 1, INF_NOT_ALLOWED);
+                                         argv[ii], false, true, INF_NOT_ALLOWED);
             if (!task_id_range_list) {
                lFreeList(answer);
                fprintf(stderr, MSG_HISTORY_INVALIDLISTOFTASKIDRANGES_S , argv[ii]);
@@ -352,7 +352,7 @@ char **argv
                */
                show_the_way(stderr);
             }
-            begin_time = tmp_begin_time;
+            begin_time = (time_t)tmp_begin_time;
             DPRINTF(("begin is: %ld\n", begin_time));
             beginflag = 1; 
          }
@@ -373,7 +373,7 @@ char **argv
                */
                show_the_way(stderr);
             }
-            end_time = tmp_end_time;
+            end_time = (time_t)tmp_end_time;
             DPRINTF(("end is: %ld\n", end_time));
             endflag = 1; 
          }
@@ -539,7 +539,7 @@ char **argv
    */
    if (!endflag) {
       if (daysflag && beginflag) {
-         end_time = begin_time + days*24*3600;
+         end_time = begin_time + (time_t)(days*24*3600);
       }
       else {
          end_time = -1; /* infty */
@@ -547,10 +547,10 @@ char **argv
    }
    if (!beginflag) {
       if (endflag && daysflag) {
-         begin_time = end_time - days*24*3600;
+         begin_time = end_time - (time_t)(days*24*3600);
       }
       else  if (daysflag) {
-         begin_time = time(NULL) - days*24*3600;
+         begin_time = time(NULL) - (time_t)(days*24*3600);
       }
       else {
          begin_time = -1; /* minus infty */
@@ -782,7 +782,7 @@ char **argv
    
          sconf_set_qs_state(QS_STATE_EMPTY);
 
-         selected = sge_select_queue(complex_options,queue, NULL, exechost_list, centry_list, 1, 1);
+         selected = sge_select_queue(complex_options,queue, NULL, exechost_list, centry_list, true, 1);
   
          if (!selected) {
             continue;

@@ -205,7 +205,7 @@ char **argv
 
          DPRINTF(("matching host %s with qhost -l\n", lGetHost(ep, EH_name)));
 
-         selected = sge_select_queue(resource_match_list, NULL, ep, ehl, cl, 1, -1);
+         selected = sge_select_queue(resource_match_list, NULL, ep, ehl, cl, true, -1);
 
          if (selected) 
             lSetUlong(ep, EH_tagged, 1);
@@ -466,10 +466,11 @@ u_long32 show
             ** should be visible (necessary for the qstat printing functions)
             */
             if (show & QHOST_DISPLAY_JOBS) {
+               u_long32 full_listing = (show & QHOST_DISPLAY_QUEUES) ?  
+                                       QSTAT_DISPLAY_FULL : 0;
+               full_listing = full_listing | QSTAT_DISPLAY_ALL;
                sge_print_jobs_queue(qep, jl, pel, ul, ehl, cl, 1,
-                                    QSTAT_DISPLAY_ALL | 
-                                    ( (show & QHOST_DISPLAY_QUEUES) ?
-                                     QSTAT_DISPLAY_FULL : 0), "   ", 
+                                    full_listing, "   ", 
                                      GROUP_NO_PETASK_GROUPS, 10);
             }
          }
@@ -506,14 +507,12 @@ u_long32 show
       if (resl) {
          lListElem *r1;
          int found = 0;
-         int first_item = 0;
          for_each (r1, resl) {
             if (!strcmp(lGetString(r1, ST_name), lGetString(rep, CE_name)) ||
                 !strcmp(lGetString(r1, ST_name), lGetString(rep, CE_shortcut))) {
                found = 1;
                if (first) {
                   first = 0;
-                  first_item = 1;
                   printf("    Host Resource(s):   ");
                }
                break;

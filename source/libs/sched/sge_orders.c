@@ -525,7 +525,6 @@ int sge_send_job_start_orders(order_t *orders) {
    sge_gdi_request *answer= NULL;
    int config_mode = SGE_GDI_RECORD;
    int start_mode = SGE_GDI_RECORD;
-   int order_id = 0;
    int orders_send = 0;
    state_gdi_multi state = STATE_GDI_MULTI_INIT;
 
@@ -560,21 +559,21 @@ int sge_send_job_start_orders(order_t *orders) {
    if (lGetNumberOfElem(orders->configOrderList) > 0) {
    
       orders_send += lGetNumberOfElem(orders->configOrderList);
-      order_id = sge_gdi_multi_sync(&alp, config_mode, SGE_ORDER_LIST, SGE_GDI_ADD,
+      sge_gdi_multi_sync(&alp, config_mode, SGE_ORDER_LIST, SGE_GDI_ADD,
                                &orders->configOrderList, NULL, NULL, &malp, &state, false, true);
    }        
    
    if (lGetNumberOfElem(orders->jobStartOrderList) > 0) {
 
       orders_send += lGetNumberOfElem(orders->jobStartOrderList);
-      order_id = sge_gdi_multi_sync(&alp, start_mode, SGE_ORDER_LIST, SGE_GDI_ADD,
+      sge_gdi_multi_sync(&alp, start_mode, SGE_ORDER_LIST, SGE_GDI_ADD,
                             &orders->jobStartOrderList, NULL, NULL, &malp, &state, false, true);
    }
 
    if (lGetNumberOfElem(orders->pendingOrderList) > 0) {
 
       orders_send += lGetNumberOfElem(orders->pendingOrderList);
-      order_id = sge_gdi_multi_sync(&alp, SGE_GDI_SEND, SGE_ORDER_LIST, SGE_GDI_ADD,
+      sge_gdi_multi_sync(&alp, SGE_GDI_SEND, SGE_ORDER_LIST, SGE_GDI_ADD,
                             &orders->pendingOrderList, NULL, NULL, &malp, &state, false, true);
    }
 

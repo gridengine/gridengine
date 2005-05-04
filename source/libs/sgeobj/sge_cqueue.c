@@ -1253,7 +1253,7 @@ cqueue_verify_processors(lListElem *cqueue, lList **answer_list,
 
          range_list_parse_from_string(&range_list, answer_list, 
                                       processors_string,
-                                      JUST_PARSE, 0, INF_ALLOWED);
+                                      JUST_PARSE, false, INF_ALLOWED);
          if (*answer_list) {
             ret = false;
          }

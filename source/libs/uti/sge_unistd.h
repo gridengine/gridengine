@@ -110,7 +110,7 @@ int sge_mkdir2(const char *base_dir, const char *name, int fmode,
 
 int sge_rmdir(const char *cp, dstring *err_str);
 
-int sge_unlink(const char *prefix, const char *suffix); 
+bool sge_unlink(const char *prefix, const char *suffix); 
  
 int sge_is_directory(const char *name);
  

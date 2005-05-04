@@ -303,7 +303,7 @@ int drmaa_init(const char *contact, char *error_diagnosis,
     */
    ret = japi_init(contact,
                    set_session?sge_dstring_get_string(&session_key_in):NULL, 
-                   &session_key_out, DRMAA, 1, NULL, diagp);
+                   &session_key_out, DRMAA, true, NULL, diagp);
 
    if (set_session)
       sge_dstring_free(&session_key_in);
@@ -364,7 +364,6 @@ int drmaa_exit(char *error_diagnosis, size_t error_diag_len)
 {
    dstring diag;
    dstring *diagp = NULL;
-   const char *s;
    int drmaa_errno;
    bool close_session = true;
    extern int sge_clrenv(const char *name);
@@ -378,7 +377,7 @@ int drmaa_exit(char *error_diagnosis, size_t error_diag_len)
 
    /* session_shutdown_mode_env_var is used to interface japi_exit(close_session) */
    DRMAA_LOCK_ENVIRON();
-   if ((s=getenv(session_shutdown_mode_env_var))) {
+   if (getenv(session_shutdown_mode_env_var)) {
       close_session = false;
    }
    DRMAA_UNLOCK_ENVIRON();
@@ -1345,7 +1344,8 @@ int drmaa_synchronize(const char *job_ids[], signed long timeout, int dispose,
       sge_dstring_init(&diag, error_diagnosis, error_diag_len+1);
    }
    
-   return japi_synchronize(job_ids, timeout, dispose, error_diagnosis?&diag:NULL);
+   return japi_synchronize(job_ids, timeout, dispose ? true : false, 
+                           error_diagnosis?&diag:NULL);
 }
 
 /****** DRMAA/drmaa_wait() ****************************************************
@@ -3874,7 +3874,7 @@ static int drmaa_set_bulk_range (lList **opts, int start, int end, int step,
    sprintf (str, "%d-%d:%d", start, end, step);
 
    range_list_parse_from_string(&task_id_range_list, alp, str,
-                                   0, 1, INF_NOT_ALLOWED);
+                                   false, true, INF_NOT_ALLOWED);
 
    if (task_id_range_list) {
       ep_opt = sge_add_arg (opts, t_OPT, lStringT, "-t", str);

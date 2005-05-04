@@ -1652,7 +1652,7 @@ psRetrieveOSJobData(void)
          /* Elapsed time of the job */
          job->jd_etime = time_stamp - arse->start;
          /* attached process count (from OS) */
-         job->jd_refcnt = arse->refcnt;
+         job->jd_refcnt = (long)arse->refcnt;
 
          /* get pids in the POSIX session */
 
@@ -2285,7 +2285,7 @@ struct psJob_s *psGetOneJob(JobID_t JobID)
    }
 
    if (found) {
-      long rsize;
+      unsigned long rsize;
 
       job = &job_elem->job;
       rsize = sizeof(psJob_t) + job->jd_proccount * sizeof(psProc_t);

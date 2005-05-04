@@ -1041,7 +1041,6 @@ void print_job_list(
 lList *job_list /* JB_Type */
 ) {
    lListElem *job, *task;
-   int jobs_exist = 0;
    int jobs = 0;
 
    DENTER(TOP_LAYER, "print_job_list");
@@ -1053,7 +1052,6 @@ lList *job_list /* JB_Type */
          for_each(task, lGetList(job, JB_ja_tasks)) {
             DPRINTF(("Task: %ld Status: %ld State: %ld\n",
                lGetUlong(task, JAT_task_number), lGetUlong(task, JAT_status), lGetUlong(task, JAT_state)));
-            jobs_exist = 1;
          }
       }
    } else {

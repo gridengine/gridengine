@@ -412,7 +412,7 @@ char **argv
    PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM1);
 
    if (prof_is_active(SGE_PROF_ALL)) {
-     time_t now = sge_get_gmt();
+     time_t now = (time_t)sge_get_gmt();
 
       if (now > next_prof_output) {
          prof_output_info(SGE_PROF_ALL, false, "profiling summary:\n");

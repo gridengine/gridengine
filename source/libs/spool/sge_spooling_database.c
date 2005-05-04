@@ -1391,7 +1391,7 @@ spool_database_assign_table_description(lList **answer_list, spooling_field *fie
          /* processing for subfields succeeded. Create info for this level */
          if (ret) {
             table_description *description;
-            description = spool_database_create_table_description(answer_list, table_name, prefix, key_nm, sublevel || recursive_table);
+            description = spool_database_create_table_description(answer_list, table_name, prefix, key_nm, (bool)(sublevel || recursive_table));
 
             if (description == NULL) {
                /* error messages created in spool_database_create_table_description */

@@ -949,11 +949,11 @@ u_long32 flags
                alp = cull_parse_cmdline(str_table, envp, &lp_new_opts, 0);
 
                for_each (aep, alp) {
-                  u_long32 quality;
+                  answer_quality_t quality;
                   u_long32 status = STATUS_OK;
 
                   status = lGetUlong(aep, AN_status);
-                  quality = lGetUlong(aep, AN_quality);
+                  quality = (answer_quality_t)lGetUlong(aep, AN_quality);
 
                   if (quality == ANSWER_QUALITY_ERROR) {
                      DPRINTF(("%s", lGetString(aep, AN_text)));

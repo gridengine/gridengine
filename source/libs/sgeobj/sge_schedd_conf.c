@@ -196,7 +196,7 @@ typedef struct{
 
    bool new_config;     /* identifies an update in the configuration */
 
-   int s_max_resources;            /* additional scheduler states, independed of the user */
+   qs_state_t s_max_resources;            /* additional scheduler states, independed of the user */
    bool s_global_load_correction;  /* scheduler configuration */
    bool s_host_order_changed;
    u_long32 s_now_time;
@@ -231,7 +231,7 @@ static config_pos_type pos = {true,
                        -1, -1, -1, -1, -1, -1, 
                        SCHEDD_JOB_INFO_UNDEF, NULL, NULL, NULL, MAX_ULONG32, 
                        false,
-                       QS_STATE_FULL, 0, true, 0, 0};
+                       QS_STATE_FULL, false, true, 0, 0};
 
 /*
  * a list of all valid "params" parameters
@@ -1608,7 +1608,7 @@ bool sconf_get_share_override_tickets(void) {
    const lListElem *sc_ep = sconf_get_config();
 
    if (pos.share_override_tickets != -1)
-      return lGetPosBool(sc_ep, pos.share_override_tickets);
+      return lGetPosBool(sc_ep, pos.share_override_tickets) ? true : false;
    else
       return true;
 }
@@ -1632,7 +1632,7 @@ bool sconf_get_share_functional_shares(void){
    const lListElem *sc_ep = sconf_get_config();
 
    if (pos.share_functional_shares != -1)
-      return lGetPosBool(sc_ep, pos.share_functional_shares);
+      return lGetPosBool(sc_ep, pos.share_functional_shares) ? true : false;
    else
       return true;
 
@@ -1659,7 +1659,7 @@ bool sconf_get_report_pjob_tickets(void){
    const lListElem *sc_ep = sconf_get_config();
 
    if (pos.report_pjob_tickets!= -1)
-      return lGetPosBool(sc_ep, pos.report_pjob_tickets);
+      return lGetPosBool(sc_ep, pos.report_pjob_tickets) ? true : false;
    else
       return true;
 
@@ -1850,7 +1850,7 @@ bool sconf_is(void) {
    if (Master_Sched_Config_List)
       sc_ep = lFirst(Master_Sched_Config_List);
 
-   return sc_ep != NULL;
+   return sc_ep != NULL ? true : false;
 }
 
 /****** sge_schedd_conf/sconf_get_config() *************************************
@@ -2202,7 +2202,8 @@ bool sconf_validate_config_(lList **answer_list){
          /* check list of groups */
          if (ikey == SCHEDD_JOB_INFO_JOB_LIST) {
             key = strtok(NULL, "\n");
-            range_list_parse_from_string(&rlp, &alp, key, 0, 0, INF_NOT_ALLOWED);
+            range_list_parse_from_string(&rlp, &alp, key, false, false, 
+                                         INF_NOT_ALLOWED);
             if (rlp == NULL) {
                lFreeList(alp);
                SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_ATTRIB_SCHEDDJOBINFONOVALIDJOBLIST));
@@ -2524,7 +2525,7 @@ void sconf_ph_fill_array(policy_hierarchy_t array[])
    if (policy_hierarchy_string != NULL && strcmp(policy_hierarchy_string, "") && strcasecmp(policy_hierarchy_string, "NONE")) {
       for (i = 0; i < strlen(policy_hierarchy_string); i++) {
          char c = policy_hierarchy_string[i];
-         int enum_value = policy_hierarchy_char2enum(c); 
+         policy_type_t enum_value = policy_hierarchy_char2enum(c); 
 
          is_contained[enum_value] = 1;
          array[index].policy = enum_value;
@@ -2534,7 +2535,7 @@ void sconf_ph_fill_array(policy_hierarchy_t array[])
    }
    for (i = INVALID_POLICY + 1; i < LAST_POLICY_VALUE; i++) {
       if (!is_contained[i])  {
-         array[index].policy = i;
+         array[index].policy = (policy_type_t)i;
          array[index].dependent = 0;
          index++;
       }
@@ -2567,7 +2568,7 @@ static policy_type_t policy_hierarchy_char2enum(char character)
    
    pointer = strchr(policy_hierarchy_chars, character);
    if (pointer != NULL) {
-      ret = (pointer - policy_hierarchy_chars) + 1;
+      ret = (policy_type_t)((pointer - policy_hierarchy_chars) + 1);
    } else {
       ret = INVALID_POLICY;
    }

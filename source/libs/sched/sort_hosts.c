@@ -305,7 +305,6 @@ static double scaled_mixed_load( lListElem *global, lListElem *host, const lList
 static int get_load_value(double *dvalp, lListElem *global, lListElem *host, const lList *centry_list, const char *attrname) 
 {
    lListElem *cep;
-   u_long32 dominant;
 
    DENTER(TOP_LAYER, "get_load_value");
 
@@ -319,10 +318,8 @@ static int get_load_value(double *dvalp, lListElem *global, lListElem *host, con
 
    if (lGetUlong(cep, CE_pj_dominant) & DOMINANT_TYPE_VALUE) {
       *dvalp = lGetDouble(cep, CE_doubleval);
-      dominant = lGetUlong(cep, CE_dominant);
    } else {
       *dvalp = lGetDouble(cep, CE_pj_doubleval);
-      dominant = lGetUlong(cep, CE_pj_dominant);
    }
 
    cep = lFreeElem(cep);

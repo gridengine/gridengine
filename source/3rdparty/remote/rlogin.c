@@ -319,7 +319,8 @@ main(argc, argv)
 	len = strlen(term);
 	if (len < (sizeof(term) - 1) && tcgetattr(0, &tty) == 0) {
 		/* start at 2 to include the / */
-		for (ospeed = i = cfgetospeed(&tty), len2 = 2; i > 9; len2++)
+      ospeed = cfgetospeed(&tty);
+		for (i = (int)ospeed, len2 = 2; i > 9; len2++)
 			i /= 10;
 
 		if (len + len2 < sizeof(term)) {

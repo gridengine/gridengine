@@ -803,7 +803,7 @@ lList **alpp
       {
          dstring range_string = DSTRING_INIT;
 
-         range_list_print_to_string(lp, &range_string, 1);
+         range_list_print_to_string(lp, &range_string, true);
          sge_dstring_append(&string_buffer, 
                             sge_dstring_get_string(&range_string));
          sge_dstring_free(&range_string);
@@ -906,7 +906,6 @@ lList **alpp
    int ret = 0;
    char str[BUFSIZ];
    lListElem *ap = NULL;
-   lListElem *ep_opt = NULL;
 
    DENTER(TOP_LAYER, "sge_unparse_acl");
 
@@ -931,7 +930,7 @@ lList **alpp
          DEXIT;
          return ret;
       }
-      ep_opt = sge_add_arg(pcmdline, q_OPT, lListT, option, str);
+      sge_add_arg(pcmdline, q_OPT, lListT, option, str);
    }
 
    DEXIT;

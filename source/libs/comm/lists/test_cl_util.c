@@ -45,7 +45,6 @@
 #define __CL_FUNCTION__ "main()"
 int main(void) {
   unsigned long i = 0; 
-  unsigned long max_ulong = 0;
   int back = 0;
   int i2 = 0;
 
@@ -56,7 +55,6 @@ int main(void) {
   back = cl_util_get_ulong_number_length(i);
   printf("min: %lu last back=%d\n",i,back);
   i--;
-  max_ulong = i;
   back = cl_util_get_ulong_number_length(i);
   printf("max: %lu last back=%d\n",i,back);
   i=1000;

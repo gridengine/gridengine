@@ -611,10 +611,8 @@ int *interpretation_rule
    }
 
    {
-      int ret;
-
-      if ((ret = cull_parse_definition_list(str, &tmplp, key, descr, 
-            interpretation_rule))) {
+      if (cull_parse_definition_list(str, &tmplp, key, descr, 
+            interpretation_rule) != 0) {
          DEXIT;
          return false;
       }
@@ -755,7 +753,7 @@ bool set_conf_enum(lList **alpp, lList **clpp, int fields[], const char *key,
       SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_CONFIGINVALIDQUEUESPECIFIED ));
       answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
       DEXIT;
-      return -1;
+      return false;
    }
 
    lSetUlong(ep, name_nm, uval);

@@ -110,7 +110,7 @@ int answer_error;
       return 0;
    }
 
-   feature_activate(feature_set);
+   feature_activate((feature_id_t)feature_set);
 
    /* if request comes from qmaster: start a job
     * else it is a request to start a pe task
@@ -181,7 +181,7 @@ int answer_error;
       return 0;
    }
 
-   feature_activate(feature_set);
+   feature_activate((feature_id_t)feature_set);
 
    /* ------- job */
    if (cull_unpack_elem(pb, &jelem, NULL)) {

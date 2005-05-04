@@ -110,7 +110,7 @@ typedef struct {
    char*           user_name;
    char*           default_cell;
    sge_exit_func_t exit_func;
-   int             exit_on_error;
+   bool            exit_on_error;
 } prog_state_t;
 
 static pthread_once_t prog_once = PTHREAD_ONCE_INIT;
@@ -236,7 +236,7 @@ const char *uti_state_get_default_cell(void)
    return prog_state->default_cell;
 }
 
-int uti_state_get_exit_on_error(void)
+bool uti_state_get_exit_on_error(void)
 {
    prog_state_t *prog_state = NULL;
 
@@ -362,7 +362,7 @@ static void uti_state_set_default_cell(const char *s)
    return;
 }
 
-void uti_state_set_exit_on_error(int i)
+void uti_state_set_exit_on_error(bool i)
 {
    prog_state_t *prog_state = NULL;
 
@@ -498,7 +498,7 @@ void sge_getme(u_long32 program_number)
    /* SETPGRP; */
    uti_state_set_uid(getuid());
    uti_state_set_gid(getgid());
-   SGE_ASSERT(((paswd = (struct passwd *) getpwuid(uti_state_get_uid())) != NULL));
+   SGE_ASSERT(((paswd = (struct passwd *) getpwuid((uid_t)uti_state_get_uid())) != NULL));
    uti_state_set_user_name(paswd->pw_name);
    uti_state_set_default_cell(sge_get_default_cell());
  
@@ -686,7 +686,7 @@ static void prog_state_init(prog_state_t *theState)
    theState->user_name = NULL;
    theState->default_cell = NULL;
    theState->exit_func = NULL;
-   theState->exit_on_error = 1;
+   theState->exit_on_error = true;
 
    return;
 }

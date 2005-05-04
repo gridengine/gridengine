@@ -92,14 +92,14 @@ tst_sos(int used, int total, lListElem *so)
       DPRINTF(("TSTSOS: %sfull -> %ssuspended\n", (used>=total)?"":"not ",
          (used>=total)?"":"not "));
       DEXIT;
-         return (used>=total);
+         return (used>=total) ? true : false;
    }
 
    /* used slots greater or equal threshold */
    DPRINTF(("TSTSOS: "sge_u32" slots used (limit "sge_u32") -> %ssuspended\n",
       used, threshold, ( (u_long32)(used) >= threshold)?"":"not "));
    DEXIT;
-   return ( (u_long32) (used) >= threshold);
+   return ((u_long32)used) >= threshold ? true : false;
 }
 
 const char *
@@ -242,7 +242,7 @@ so_list_resolve(const lList *so_list, lList **answer_list,
          if (ret) {
             cq_name_str = sge_dstring_get_string (&cq_name);
 
-            ret = (cq_name_str != NULL);
+            ret = cq_name_str != NULL ? true : false;
          }
 
          /* If no qinstance name is given, the calling routine is responsible

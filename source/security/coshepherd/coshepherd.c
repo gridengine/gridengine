@@ -107,7 +107,7 @@ int main(int argc, char *argv[])
 
    while(1) {
 
-      now = sge_get_gmt();      
+      now = (time_t)sge_get_gmt();      
 
       if (now < last)
          last = now;

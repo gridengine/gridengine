@@ -200,7 +200,7 @@ u_long32 flags
                lSetString(ep, CF_value, value);
             } else {
                range_list_parse_from_string(&rlp, &alp, value, 
-                                            0, 0, INF_NOT_ALLOWED);
+                                            false, false, INF_NOT_ALLOWED);
                if (rlp == NULL) {
                   WARNING((SGE_EVENT, MSG_CONFIG_CONF_INCORRECTVALUEFORCONFIGATTRIB_SS, 
                            name, value));
@@ -213,7 +213,7 @@ u_long32 flags
                   lListElem *rep;
 
                   for_each (rep, rlp) {
-                     long min;
+                     u_long32 min;
 
                      min = lGetUlong(rep, RN_min);
                      if (min < GID_RANGE_NOT_ALLOWED_ID) {

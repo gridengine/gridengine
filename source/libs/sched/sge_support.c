@@ -317,7 +317,6 @@ sge_calc_node_usage( lListElem *node,
    static int sn_usage_list_pos = -1;
    static int ua_name_pos = -1;
    static int ua_value_pos = -1;
-   static int up_usage_pos = -1;
 
    DENTER(TOP_LAYER, "sge_calc_node_usage");
 
@@ -331,7 +330,6 @@ sge_calc_node_usage( lListElem *node,
       sn_name_pos = lGetPosViaElem(node, STN_name);
       ua_name_pos = lGetPosViaElem(ua_elem, UA_name);
       ua_value_pos = lGetPosViaElem(ua_elem, UA_value);
-      up_usage_pos = lGetPosViaElem(up_elem, UP_usage);
       lFreeElem(ua_elem);
       lFreeElem(sc_elem);
       lFreeElem(up_elem);
@@ -499,10 +497,9 @@ sge_calc_node_usage( lListElem *node,
             project usage. Then, we add this usage to all of the nodes
             leading to the "default" user node. */
 
-         lListElem *default_node;
          ancestors_t ancestors;
          int i;
-         if ((default_node=search_ancestors(node, "default", &ancestors, 1))) {
+         if (search_ancestors(node, "default", &ancestors, 1)) {
             double default_usage = usage_value - child_usage;
             if (default_usage > 1.0) {
                for(i=1; i<ancestors.depth; i++) {

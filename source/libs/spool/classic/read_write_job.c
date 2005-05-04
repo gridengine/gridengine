@@ -689,7 +689,7 @@ int job_remove_spool_file(u_long32 jobid, u_long32 ja_taskid,
                DTRACE;
             } 
          } else {
-            if (sge_unlink(NULL, task_spool_file)) {
+            if (!sge_unlink(NULL, task_spool_file)) {
                ERROR((SGE_EVENT, MSG_JOB_CANNOT_REMOVE_SS, 
                       MSG_JOB_TASK_SPOOL_FILE, task_spool_file));
                DTRACE;
@@ -724,7 +724,7 @@ int job_remove_spool_file(u_long32 jobid, u_long32 ja_taskid,
    if (!one_file) {
       if (ja_taskid == 0) { 
          DPRINTF(("removing "SFN"\n", spoolpath_common));
-         if (sge_unlink(NULL, spoolpath_common)) {
+         if (!sge_unlink(NULL, spoolpath_common)) {
             ERROR((SGE_EVENT, MSG_JOB_CANNOT_REMOVE_SS, 
                    MSG_JOB_JOB_SPOOL_FILE, spoolpath_common)); 
             DTRACE;
@@ -739,7 +739,7 @@ int job_remove_spool_file(u_long32 jobid, u_long32 ja_taskid,
       }
    } else {
       DPRINTF(("removing "SFN"\n", spool_dir));
-      if (sge_unlink(NULL, spool_dir)) {
+      if (!sge_unlink(NULL, spool_dir)) {
          ERROR((SGE_EVENT, MSG_JOB_CANNOT_REMOVE_SS, MSG_JOB_JOB_SPOOL_FILE,
                 spool_dir));
          DTRACE;

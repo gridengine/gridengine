@@ -87,7 +87,7 @@ int schedd_log(const char *logstr) {
          DPRINTF(("schedd log file >>%s<<\n", schedd_log_file));
       }
 
-      now = sge_get_gmt();
+      now = (time_t)sge_get_gmt();
       /* strftime(time_str, sizeof(time_str), "%m-%d-%Y:%H:%M:%S ", localtime(&now)); */
       strcpy(time_str, ctime((time_t *)&now));
       if (time_str[strlen(time_str) - 1] == '\n') {

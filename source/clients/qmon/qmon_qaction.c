@@ -3170,7 +3170,7 @@ static void qmonQCToggleTW(Widget w, XtPointer cld, XtPointer cad)
 static void qmonQCSetAllTogglesSensitive(Widget w, XtPointer cld, XtPointer cad)
 {
    Widget target;
-   Boolean set = (Boolean) cld;
+   Boolean set = (cld == NULL) ? False : True;
 
    DENTER(GUI_LAYER, "qmonQCSetAllTogglesSensitive");
 

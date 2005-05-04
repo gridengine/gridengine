@@ -44,8 +44,6 @@
 #include "cl_commlib.h"
 
 void sighandler_client(int sig);
-static int pipe_signal = 0;
-static int hup_signal = 0;
 static int do_shutdown = 0;
 
 static cl_com_handle_t* handle = NULL; 
@@ -61,12 +59,10 @@ int sig
 ) {
 /*   thread_signal_receiver = pthread_self(); */
    if (sig == SIGPIPE) {
-      pipe_signal = 1;
       return;
    }
 
    if (sig == SIGHUP) {
-      hup_signal = 1;
       return;
    }
    printf("do_shutdown\n");
@@ -96,7 +92,7 @@ extern int main(void)
   sigaction(SIGPIPE, &sa, NULL);
 
   cl_com_setup_commlib(CL_RW_THREAD ,CL_LOG_WARNING, NULL );
-  handle=cl_com_create_handle(NULL,CL_CT_TCP,CL_CM_CT_MESSAGE , 0, 5000 , CL_TCP_DEFAULT,"client", 0, 1,0 );
+  handle=cl_com_create_handle(NULL,CL_CT_TCP,CL_CM_CT_MESSAGE , CL_FALSE, 5000 , CL_TCP_DEFAULT,"client", 0, 1,0 );
   if (handle == NULL) {
      printf("could not get handle\n");
      exit(1);
@@ -122,7 +118,7 @@ extern int main(void)
      int retval;
 
      /* synchron message receive */
-     retval = cl_commlib_receive_message(handle,NULL, NULL, 0, 1, 0, &message, &sender);
+     retval = cl_commlib_receive_message(handle,NULL, NULL, 0, CL_TRUE, 0, &message, &sender);
      if (retval != CL_RETVAL_OK) {
         CL_LOG_STR(CL_LOG_ERROR,"cl_commlib_receive_message:",cl_get_error_text(retval));
         retval = cl_commlib_open_connection(handle, "es-ergb01-01", "server", 1);
@@ -153,13 +149,13 @@ extern int main(void)
   }
 
   cl_thread_list_cleanup(&thread_list);
-  while (cl_commlib_shutdown_handle(handle,1) == CL_RETVAL_MESSAGE_IN_BUFFER) {
+  while (cl_commlib_shutdown_handle(handle, CL_TRUE) == CL_RETVAL_MESSAGE_IN_BUFFER) {
      cl_com_message_t* message = NULL;
      cl_com_endpoint_t* sender = NULL;
 
      printf("got message\n");
 
-     cl_commlib_receive_message(handle,NULL, NULL, 0, 0,0, &message, &sender);
+     cl_commlib_receive_message(handle,NULL, NULL, 0, CL_FALSE, 0, &message, &sender);
      if (message != NULL) {
         cl_com_free_endpoint(&sender);
         cl_com_free_message(&message);
@@ -208,11 +204,11 @@ void *my_multi_thread(void *t_conf) {
 
       sprintf(message,"This message is from %s", thread_config->thread_name);
       message_length = strlen(message) + 1;
-      ret_val = cl_commlib_send_message(handle, "es-ergb01-01", "server", 1, CL_MIH_MAT_ACK, (cl_byte_t*)message ,message_length , &mid ,0,0, 1, 1);
+      ret_val = cl_commlib_send_message(handle, "es-ergb01-01", "server", 1, CL_MIH_MAT_ACK, (cl_byte_t*)message ,message_length , &mid , 0, 0, CL_TRUE, CL_TRUE);
       if (ret_val != CL_RETVAL_OK) {
          CL_LOG_STR(CL_LOG_ERROR,"cl_commlib_send_message() returned", cl_get_error_text(ret_val));
       } 
-      CL_LOG_INT(CL_LOG_INFO,"message has mid", mid);
+      CL_LOG_INT(CL_LOG_INFO,"message has mid", (int)mid);
       
 #if 0
       CL_LOG(CL_LOG_INFO,"wait for event ...");
@@ -277,7 +273,7 @@ void *my_multi_read_thread(void *t_conf) {
         The implemented thread handling will always do a broadcast when a new message arives. The application
         should only use one thread for cl_commlib_receive_message() calls for a better performance. 
 */
-     retval = cl_commlib_receive_message(handle,NULL, NULL, 0, 1, 0, &message, &sender);
+     retval = cl_commlib_receive_message(handle,NULL, NULL, 0, CL_TRUE, 0, &message, &sender);
      if (retval != CL_RETVAL_OK) {
         CL_LOG_STR(CL_LOG_ERROR,"cl_commlib_receive_message:",cl_get_error_text(retval));
         retval = cl_commlib_open_connection(handle, "es-ergb01-01", "server", 1);

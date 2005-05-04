@@ -60,7 +60,7 @@ typedef enum {
 
 int sge_give_job(lListElem *jep, lListElem *jatep, lListElem *master_qep, lListElem *pep, lListElem *hep);
 
-void sge_commit_job(lListElem *jep, lListElem *jatep, lListElem *jr, sge_commit_mode_t mode, sge_commit_flags_t commit_flags);
+void sge_commit_job(lListElem *jep, lListElem *jatep, lListElem *jr, sge_commit_mode_t mode, int commit_flags);
 
 void sge_zombie_job_cleanup_handler(te_event_t anEvent);
 

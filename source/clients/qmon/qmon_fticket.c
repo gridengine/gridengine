@@ -1115,7 +1115,7 @@ int nm1
          max_rows++;
       }
       /* FIX_CONST_GUI */
-      XbaeMatrixSetCell(matrix, row, 0, name ? (const String) name : "");
+      XbaeMatrixSetCell(matrix, row, 0, name ? (String) name : "");
       XbaeMatrixSetCell(matrix, row, 1, buf);
    }
 

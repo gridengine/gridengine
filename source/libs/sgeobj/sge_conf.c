@@ -564,12 +564,12 @@ int merge_configuration(lListElem *global, lListElem *local,
          }
          if (parse_bool_param(s, "NO_SECURITY", &do_credentials)) {
             /* reversed logic */
-            do_credentials = !do_credentials;
+            do_credentials = do_credentials ? false : true;
             continue;
          } 
          if (parse_bool_param(s, "NO_AUTHENTICATION", &do_authentication)) {
             /* reversed logic */
-            do_authentication = !do_authentication;
+            do_authentication = do_authentication ? false : true;
             continue;
          } 
          if (parse_bool_param(s, "DISABLE_AUTO_RESCHEDULING", &disable_reschedule)) {
@@ -635,12 +635,12 @@ int merge_configuration(lListElem *global, lListElem *local,
          if (uti_state_get_mewho() == EXECD) {
             if (parse_bool_param(s, "NO_SECURITY", &do_credentials)) { 
                /* reversed logic */
-               do_credentials = !do_credentials;
+               do_credentials = do_credentials ? false : true;
                continue;
             }
             if (parse_bool_param(s, "NO_AUTHENTICATION", &do_authentication)) {
                /* reversed logic */
-               do_authentication = !do_authentication;
+               do_authentication = do_authentication ? false : true;
                continue;
             }
             if (parse_bool_param(s, "DO_AUTHENTICATION", &do_authentication)) {

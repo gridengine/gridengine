@@ -81,12 +81,12 @@ void cull_show_job(lListElem *job, int flags)
          printf("exec_file:                  %s\n", lGetString(job, JB_exec_file));
 
    if (lGetPosViaElem(job, JB_submission_time)>=0)
-      if ((ultime = lGetUlong(job, JB_submission_time))) {
+      if ((ultime = (time_t)lGetUlong(job, JB_submission_time))) {
          printf("submission_time:            %s", ctime((time_t *) &ultime));
       }
 
    if (lGetPosViaElem(job, JB_deadline)>=0)
-      if ((ultime = lGetUlong(job, JB_deadline))) {
+      if ((ultime = (time_t)lGetUlong(job, JB_deadline))) {
          printf("deadline:                   %s", ctime((time_t *) &ultime));
       }
 
@@ -146,7 +146,7 @@ void cull_show_job(lListElem *job, int flags)
    }
 
    if (lGetPosViaElem(job, JB_execution_time)>=0)
-      if ((ultime = lGetUlong(job, JB_execution_time)))
+      if ((ultime = (time_t)lGetUlong(job, JB_execution_time)))
          printf("execution_time:             %s", ctime((time_t *) &ultime));
 
    if (lGetPosViaElem(job, JB_account)>=0)
@@ -414,7 +414,7 @@ void cull_show_job(lListElem *job, int flags)
          dstring range_string = DSTRING_INIT;
 
          range_list_print_to_string(lGetList(job, JB_pe_range), 
-                                    &range_string, 1);
+                                    &range_string, true);
          printf("parallel environment:  %s range: %s\n",
                 lGetString(job, JB_pe), sge_dstring_get_string(&range_string));
          sge_dstring_free(&range_string);
@@ -456,12 +456,12 @@ void cull_show_job(lListElem *job, int flags)
          printf("verify_suitable_queues:     %d\n", (int)lGetUlong(job, JB_verify_suitable_queues));
 
    if (lGetPosViaElem(job, JB_soft_wallclock_gmt)>=0)
-      if ((ultime = lGetUlong(job, JB_soft_wallclock_gmt))) {
+      if ((ultime = (time_t)lGetUlong(job, JB_soft_wallclock_gmt))) {
          printf("soft_wallclock_gmt:         %s", ctime((time_t *) &ultime));
       }
 
    if (lGetPosViaElem(job, JB_hard_wallclock_gmt)>=0)
-      if ((ultime = lGetUlong(job, JB_hard_wallclock_gmt))) {
+      if ((ultime = (time_t)lGetUlong(job, JB_hard_wallclock_gmt))) {
          printf("hard_wallclock_gmt:         %s", ctime((time_t *) &ultime));
       }
 

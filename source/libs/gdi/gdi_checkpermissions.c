@@ -144,7 +144,7 @@ bool sge_gdi_get_mapping_name(const char *requestedHost, char *buf,
 *     int option - check flag (MANAGER_CHECK or OPERATOR_CHECK)
 *
 *  RESULT
-*     int true if caller has the right, false if not (-10 if qmaster 
+*     bool true if caller has the right, false if not (false if qmaster 
 *     not reachable)
 * 
 *  SEE ALSO
@@ -174,7 +174,7 @@ bool sge_gdi_check_permission(lList **alpp, int option)
         }       
      }
      failed_checks++;
-     return -10;
+     return false;
   } else {
      if (permList->first == NULL) {
        DPRINTF(("Permlist has no entries\n")); 

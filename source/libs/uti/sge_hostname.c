@@ -361,7 +361,7 @@ struct hostent *sge_gethostbyname(const char *name, int* system_error_retval)
     * so that's probably ok.  If it's not ok, the interface can be changed
     * later. */
    
-   now = sge_get_gmt();
+   now = (time_t)sge_get_gmt();
    gethostbyname_calls++;       /* profiling */
    
 #ifdef GETHOSTBYNAME_R6
@@ -489,7 +489,7 @@ struct hostent *sge_gethostbyname(const char *name, int* system_error_retval)
 #error "no sge_gethostbyname() definition for this architecture."
 #endif
 
-   time = sge_get_gmt() - now;
+   time = (time_t)sge_get_gmt() - now;
    gethostbyname_sec += time;   /* profiling */
 
    /* warn about blocking gethostbyname() calls */
@@ -631,7 +631,7 @@ struct hostent *sge_gethostbyaddr(const struct in_addr *addr, int* system_error_
     * later. */
 
    gethostbyaddr_calls++;      /* profiling */
-   now = sge_get_gmt();
+   now = (time_t)sge_get_gmt();
 
 #ifdef GETHOSTBYADDR_R8
 #define SGE_GETHOSTBYADDR_FOUND
@@ -756,7 +756,7 @@ struct hostent *sge_gethostbyaddr(const struct in_addr *addr, int* system_error_
 #ifndef SGE_GETHOSTBYADDR_FOUND
 #error "no sge_gethostbyaddr() definition for this architecture."
 #endif
-   time = sge_get_gmt() - now;
+   time = (time_t)sge_get_gmt() - now;
    gethostbyaddr_sec += time;   /* profiling */
 
    /* warn about blocking gethostbyaddr() calls */
@@ -1234,7 +1234,7 @@ bool sge_is_hgroup_ref(const char *string)
    bool ret = false;
 
    if (string != NULL) {
-      ret = (string[0] == HOSTGROUP_INITIAL_CHAR);
+      ret = string[0] == HOSTGROUP_INITIAL_CHAR ? true : false;
    }
    return ret;
 }

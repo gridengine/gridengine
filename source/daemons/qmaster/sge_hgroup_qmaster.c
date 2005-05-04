@@ -379,8 +379,7 @@ hgroup_mod(lList **answer_list, lListElem *hgroup, lListElem *reduced_elem,
                    * Mopdify QIs of CQ
                    */
                   if (ret) {
-                     bool refresh_all_values = ((add_hosts != NULL) ||
-                                                (rem_hosts != NULL));
+                     bool refresh_all_values = ((add_hosts != NULL) || (rem_hosts != NULL)) ? true : false;
 
                      ret &= cqueue_handle_qinstances(new_cqueue, answer_list, 
                                                      reduced_elem,

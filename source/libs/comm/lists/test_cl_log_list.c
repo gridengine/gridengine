@@ -133,7 +133,7 @@ extern int main(int argc, char** argv)
 
      count++;
 
-     CL_LOG_INT(CL_LOG_INFO,  "number of threads: ", cl_raw_list_get_elem_count(thread_list) );
+     CL_LOG_INT(CL_LOG_INFO,  "number of threads: ", (int)cl_raw_list_get_elem_count(thread_list) );
 
      thread_p = cl_thread_list_get_first_thread(thread_list);
      id = thread_p->thread_id;
@@ -155,14 +155,14 @@ extern int main(int argc, char** argv)
   while ( (thread_p=cl_thread_list_get_first_thread(thread_list)) != NULL ) {
      int id = thread_p->thread_id;
      CL_LOG_INT( CL_LOG_INFO,  "delete thread: ", id );
-     CL_LOG_INT( CL_LOG_INFO,  "event calls: ", thread_p->thread_event_count );
+     CL_LOG_INT( CL_LOG_INFO,  "event calls: ", (int)thread_p->thread_event_count );
 
      cl_thread_list_delete_thread_by_id(thread_list, id);
      CL_LOG_INT( CL_LOG_INFO,  "thread deleted, id: ", id );
   }
 
 
-  CL_LOG_INT( CL_LOG_INFO,  "log event calls: ", log_thread->thread_event_count );
+  CL_LOG_INT( CL_LOG_INFO,  "log event calls: ", (int)log_thread->thread_event_count );
 
   CL_LOG( CL_LOG_INFO,  "cleaning up thread list");
   cl_thread_list_cleanup(&thread_list);

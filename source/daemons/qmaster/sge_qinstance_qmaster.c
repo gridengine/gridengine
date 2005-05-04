@@ -539,7 +539,7 @@ qinstance_modify_attribute(lListElem *this_elem, lList **answer_list,
                break;
             case lBoolT:
                {
-                  bool old_value = lGetBool(this_elem, attribute_name);
+                  bool old_value = lGetBool(this_elem, attribute_name) ? true : false;
                   bool new_value;
 
                   bool_attr_list_find_value(attr_list, answer_list,
@@ -687,7 +687,7 @@ qinstance_change_state_on_command(lListElem *this_elem, lList**answer_list,
                 * Rollback
                 */
                if (!force_transition) {
-                  transitions[i].set_state(this_elem, !(transitions[i].set));
+                  transitions[i].set_state(this_elem, transitions[i].set ? false : true);
                }
             }
          }
@@ -832,8 +832,8 @@ static bool qinstance_change_state_on_calender_(lListElem *this_elem,
    bool ret = true;
    bool old_cal_disabled = qinstance_state_is_cal_disabled(this_elem);
    bool old_cal_suspended = qinstance_state_is_cal_suspended(this_elem);
-   bool new_cal_disabled = (cal_order == QI_DO_CAL_DISABLE);
-   bool new_cal_suspended = (cal_order == QI_DO_CAL_SUSPEND);
+   bool new_cal_disabled = (cal_order == QI_DO_CAL_DISABLE) ? true : false;
+   bool new_cal_suspended = (cal_order == QI_DO_CAL_SUSPEND) ? true : false;
    bool state_changed = false;
 
    DENTER(TOP_LAYER, "qinstance_signal_on_calendar_");

@@ -108,7 +108,7 @@ lEnumeration *lWhatFromElem(const lListElem *what){
    DENTER(CULL_LAYER, "lWhatFromCull");
    
    if (lGetUlong(what, PACK_id) == SGE_WHAT) {
-      compressed = lGetBool(what, PACK_compressed);
+      compressed = lGetBool(what, PACK_compressed) ? true : false;
       size = getByteArray(&buffer, what, PACK_string);
       if (size <= 0){
          ERROR((SGE_EVENT, MSG_PACK_INVALIDPACKDATA ));

@@ -1,4 +1,4 @@
-/*	$Id: rshd.c,v 1.17 2004/12/13 17:13:24 ernst Exp $	*/
+/*	$Id: rshd.c,v 1.18 2005/05/04 20:11:34 joga Exp $	*/
 
 /*-
  * Copyright (c) 1988, 1989, 1992, 1993, 1994
@@ -103,7 +103,7 @@
 typedef int socklen_t;
 #endif
 
-#if defined HP10 || IRIX || LINUX || NECSX5 || CRAY 
+#if defined HP10 || LINUX || NECSX5 || CRAY 
 #ifndef HAS_IN_PORT_T
 typedef unsigned short in_port_t;
 #endif

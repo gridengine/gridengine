@@ -321,7 +321,7 @@ is_job_pending(lListElem *job) {
          We can do this simple check here, because all we loos is a bit of performance, but
          no wrong decissions will be made later... 
        */  
-   return (lFirst(lGetList(job, JB_ja_tasks)) == NULL); 
+   return (lFirst(lGetList(job, JB_ja_tasks)) == NULL) ? true : false;
 }
 
 /*-------------------------------------------------------------------------*/

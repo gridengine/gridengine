@@ -410,7 +410,7 @@ bool prof_start(prof_level level, dstring *error)
          clock_t start_time = times(&tms_buffer);
 
          if (level == SGE_PROF_ALL) {
-            for (i = 0; i <= SGE_PROF_ALL; i++) {
+            for (i = SGE_PROF_OTHER; i <= SGE_PROF_ALL; i++) {
                /* get start time */
                theInfo[thread_num][i].start_clock = start_time;
 
@@ -504,7 +504,7 @@ bool prof_stop(prof_level level, dstring *error)
          prof_stop_measurement(SGE_PROF_OTHER, error);
 
          if (level == SGE_PROF_ALL) {
-            for (i = 0; i <= SGE_PROF_ALL; i++) {
+            for (i = SGE_PROF_OTHER; i <= SGE_PROF_ALL; i++) {
                theInfo[thread_num][i].prof_is_started = false;
             }
          } else {
@@ -704,7 +704,6 @@ bool prof_reset(prof_level level, dstring *error)
 {
    pthread_t thread_id;
    int thread_num;
-   int c;
    bool ret = true;
 
    if (level > SGE_PROF_ALL) {
@@ -728,7 +727,8 @@ bool prof_reset(prof_level level, dstring *error)
             ret = prof_stop_measurement(SGE_PROF_OTHER, error);
          }
          if (level == SGE_PROF_ALL) {
-            for (c = 0; c <= SGE_PROF_ALL; c++) {
+            prof_level c;
+            for (c = SGE_PROF_OTHER; c <= SGE_PROF_ALL; c++) {
                prof_reset_thread (thread_num, c);
             }
          } else {
@@ -1078,7 +1078,7 @@ double prof_get_total_busy(prof_level level, bool with_sub, dstring *error)
       } else if (level == SGE_PROF_ALL) {
          prof_level i;
 
-         for (i = 0; i < SGE_PROF_ALL; i++) {
+         for (i = SGE_PROF_OTHER; i < SGE_PROF_ALL; i++) {
             ret += _prof_get_total_busy(i, with_sub, error);
          }
       } else {
@@ -1150,7 +1150,7 @@ double prof_get_total_utime(prof_level level, bool with_sub, dstring *error)
       } else if (level == SGE_PROF_ALL) {
          prof_level i;
 
-         for (i = 0; i < SGE_PROF_ALL; i++) {
+         for (i = SGE_PROF_OTHER; i < SGE_PROF_ALL; i++) {
             ret += _prof_get_total_utime(i, with_sub, error);
          }
       } else {
@@ -1222,7 +1222,7 @@ double prof_get_total_stime(prof_level level, bool with_sub, dstring *error)
       } else if (level == SGE_PROF_ALL) {
          prof_level i;
 
-         for (i = 0; i < SGE_PROF_ALL; i++) {
+         for (i = SGE_PROF_OTHER; i < SGE_PROF_ALL; i++) {
             ret += _prof_get_total_stime(i, with_sub, error);
          }
       } else {
@@ -1325,7 +1325,7 @@ prof_get_info_string(prof_level level, bool with_sub, dstring *error)
          prof_level i;
          dstring total_string = DSTRING_INIT;
 
-         for (i = 0; i <= SGE_PROF_ALL; i++) {
+         for (i = SGE_PROF_OTHER; i <= SGE_PROF_ALL; i++) {
             /* clear previous contents */
             sge_dstring_clear(&(theInfo[thread_num][i].info_string));
          }
@@ -1337,7 +1337,7 @@ prof_get_info_string(prof_level level, bool with_sub, dstring *error)
          stime       = prof_get_total_stime(SGE_PROF_ALL, with_sub, error);
          utilization = busy > 0 ? (utime + stime) / busy * 100 : 0;
 
-         for (i = 0; i < SGE_PROF_ALL; i++) {
+         for (i = SGE_PROF_OTHER; i < SGE_PROF_ALL; i++) {
             if (theInfo[thread_num][i].name != NULL && theInfo[thread_num][i].ever_started == true) {
                _prof_get_info_string(i, &theInfo[thread_num][SGE_PROF_ALL].info_string, with_sub, error);
             }
@@ -1449,17 +1449,17 @@ bool prof_output_info(prof_level level, bool with_sub, const char *info)
 static void prof_info_init(prof_level level, pthread_t thread_id)
 {
    int thread_num;
-   prof_level i = 0;
 
    thread_num = get_prof_info_thread_id(thread_id);
 
    if (level <= SGE_PROF_ALL) {
       if (level == SGE_PROF_ALL) {
-         for (i = 0; i <= SGE_PROF_ALL; i++) {
+         prof_level i;
+         for (i = SGE_PROF_OTHER; i <= SGE_PROF_ALL; i++) {
             prof_info_level_init (i, thread_num);
          }
       } else {
-         prof_info_level_init (i, thread_num);
+         prof_info_level_init (SGE_PROF_OTHER, thread_num);
       }     
 
       theInfo[thread_num][SGE_PROF_ALL].akt_level = SGE_PROF_NONE;
@@ -2234,7 +2234,7 @@ void
 thread_output_profiling(const char *title, time_t *next_prof_output)
 {
    if (prof_is_active(SGE_PROF_ALL)) {
-      time_t now = sge_get_gmt();
+      time_t now = (time_t)sge_get_gmt();
 
       if (*next_prof_output == 0) {
          unsigned int seed = (unsigned int)pthread_self();

@@ -393,7 +393,7 @@ cqueue_mod_qinstances(lListElem *cqueue, lList **answer_list,
          dstring buffer = DSTRING_INIT;
          const char *qinstance_name = qinstance_get_name(qinstance, &buffer);
          bool is_ambiguous = qinstance_state_is_ambiguous(qinstance);
-         bool is_del = (lGetUlong(qinstance, QU_tag) == SGE_QI_TAG_DEL);
+         bool is_del = (lGetUlong(qinstance, QU_tag) == SGE_QI_TAG_DEL) ? true : false;
          bool will_be_ambiguous = false;
          bool state_changed = false;
          bool conf_changed = false;
@@ -623,7 +623,7 @@ int cqueue_mod(lList **answer_list, lListElem *cqueue, lListElem *reduced_elem,
     * Now we have to add/mod/del all qinstances
     */ 
    if (ret) {
-      bool refresh_all_values = ((add_hosts != NULL) || (rem_hosts != NULL));
+      bool refresh_all_values = ((add_hosts != NULL) || (rem_hosts != NULL)) ? true : false;
 
       ret &= cqueue_handle_qinstances(cqueue, answer_list, reduced_elem, 
                                       add_hosts, rem_hosts, refresh_all_values);

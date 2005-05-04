@@ -44,8 +44,6 @@
 
 #define CL_DO_SLOW 1
 void sighandler_client(int sig);
-static int pipe_signal = 0;
-static int hup_signal = 0;
 static int do_shutdown = 0;
 
 
@@ -55,12 +53,10 @@ int sig
 ) {
 /*   thread_signal_receiver = pthread_self(); */
    if (sig == SIGPIPE) {
-      pipe_signal = 1;
       return;
    }
 
    if (sig == SIGHUP) {
-      hup_signal = 1;
       return;
    }
    printf("do_shutdown\n");
@@ -95,9 +91,9 @@ extern int main(int argc, char** argv)
      printf("wrong parameters, param1 = server host, param2 = port number, param3 = comp name, param4 = comp_id, param5=debug_level\n");
      exit(1);
   }
-  cl_com_setup_commlib(CL_RW_THREAD,atoi(argv[5]), NULL );
+  cl_com_setup_commlib(CL_RW_THREAD, (cl_log_t)atoi(argv[5]), NULL );
 
-  handle=cl_com_create_handle(NULL,CL_CT_TCP,CL_CM_CT_MESSAGE , 0, atoi(argv[2]) , CL_TCP_DEFAULT,"sim_client", 0, 1,0 );
+  handle=cl_com_create_handle(NULL,CL_CT_TCP,CL_CM_CT_MESSAGE , CL_FALSE, atoi(argv[2]) , CL_TCP_DEFAULT,"sim_client", 0, 1,0 );
   if (handle == NULL) {
      printf("could not get handle\n");
      exit(1);
@@ -124,7 +120,7 @@ extern int main(int argc, char** argv)
      }
   }
   printf("do_shutdown received\n");
-  cl_commlib_shutdown_handle(handle,0);
+  cl_commlib_shutdown_handle(handle, CL_FALSE);
   cl_com_cleanup_commlib();
   printf("main done\n");
   fflush(stdout);

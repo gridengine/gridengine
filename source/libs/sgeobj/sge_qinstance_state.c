@@ -615,7 +615,7 @@ qinstance_set_initial_state(lListElem *this_elem)
 
    DENTER(QINSTANCE_STATE_LAYER, "qinstance_set_initial_state");
    if (state_string != NULL && strcmp(state_string, "default")) {
-      bool do_disable = !strcmp(state_string, "disabled");
+      bool do_disable = strcmp(state_string, "disabled") == 0 ? true : false;
       bool is_disabled = qinstance_state_is_manual_disabled(this_elem);
 
       if ((do_disable && !is_disabled) || (!do_disable && is_disabled)) {

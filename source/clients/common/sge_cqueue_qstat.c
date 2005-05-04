@@ -249,7 +249,7 @@ select_by_qref_list(lList *cqueue_list, const lList *hgrp_list, const lList *qre
          qinstance_list = lGetList(cqueue, CQ_qinstances);
          for_each(qinstance, qinstance_list) {
             u_long32 tag = lGetUlong(qinstance, QU_tag);
-            bool selected = (tag & TAG_SELECT_IT) != 0;
+            bool selected = ((tag & TAG_SELECT_IT) != 0) ? true : false;
 
             if (!selected) {
                tag &= ~(TAG_SELECT_IT | TAG_SHOW_IT);
@@ -556,14 +556,14 @@ u_long32 empty_qs
    /* prepare request */
    for_each(cqueue, queue_list) {
       lListElem *qep;
-      int selected;
+      bool selected;
       lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
 
       for_each(qep, qinstance_list) {
          if (empty_qs)
             sconf_set_qs_state(QS_STATE_EMPTY);
 
-         selected = sge_select_queue(resource_list, qep, NULL, exechost_list, centry_list, 1, -1);
+         selected = sge_select_queue(resource_list, qep, NULL, exechost_list, centry_list, true, -1);
          if (empty_qs)
             sconf_set_qs_state(QS_STATE_FULL);
 

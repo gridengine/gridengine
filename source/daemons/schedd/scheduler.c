@@ -458,7 +458,7 @@ static int dispatch_jobs(sge_Sdescr_t *lists, order_t *orders,
       }
    }
 
-   sconf_set_global_load_correction(global_lc != 0);
+   sconf_set_global_load_correction((global_lc != 0) ? true : false);
    
    /* we will assume this time as start time for now assignments */
    sconf_set_now(sge_get_gmt());
@@ -694,7 +694,7 @@ static int dispatch_jobs(sge_Sdescr_t *lists, order_t *orders,
    {
    bool is_immediate_array_job = false;
    struct timeval now, later;
-   float time;
+   double time;
    gettimeofday(&now, NULL);
 
    while ( (orig_job = lFirst(*(splitted_job_lists[SPLIT_PENDING]))) != NULL) {
@@ -716,9 +716,9 @@ static int dispatch_jobs(sge_Sdescr_t *lists, order_t *orders,
 
       job_id = lGetUlong(orig_job, JB_job_number);
 
-      is_immediate_array_job = is_immediate_array_job || 
+      is_immediate_array_job = (is_immediate_array_job || 
                                  (JOB_TYPE_IS_ARRAY(lGetUlong(orig_job, JB_type)) && 
-                                  JOB_TYPE_IS_IMMEDIATE(lGetUlong(orig_job, JB_type)));
+                                  JOB_TYPE_IS_IMMEDIATE(lGetUlong(orig_job, JB_type)))) ? true : false;
       /* 
        * We don't try to get a reservation, if 
        * - reservation is generally disabled 

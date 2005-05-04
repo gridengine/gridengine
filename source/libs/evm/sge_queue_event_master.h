@@ -32,10 +32,12 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-void
-qinstance_add_event(lListElem *this_elem, u_long32 type);
+#include "sgeobj/sge_event.h"
 
 void
-cqueue_add_event(lListElem *this_elem, u_long32 type);
+qinstance_add_event(lListElem *this_elem, ev_event type);
+
+void
+cqueue_add_event(lListElem *this_elem, ev_event type);
 
 #endif /* __SGE_QUEUE_EVENT_MASTER_H */

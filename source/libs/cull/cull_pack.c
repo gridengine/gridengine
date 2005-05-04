@@ -849,7 +849,7 @@ int cull_unpack_list_partial(sge_pack_buffer *pb, lList **lpp, int flags)
       DEXIT;
       return ret;
    }
-   lp->changed = c;
+   lp->changed = (bool)c;
 
    /* unpack descriptor */
    if((ret = cull_unpack_descr(pb, &(lp->descr))) != PACK_SUCCESS) {

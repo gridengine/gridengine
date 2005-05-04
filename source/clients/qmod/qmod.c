@@ -259,14 +259,14 @@ lList *alp = NULL;
          DPRINTF(("\"-t %s\"\n", *sp));
 
          range_list_parse_from_string(&task_id_range_list, &alp, *sp,
-                                      0, 1, INF_NOT_ALLOWED);
+                                      false, true, INF_NOT_ALLOWED);
          if (!task_id_range_list) {
             goto error;
          }
 
          range_list_sort_uniq_compress(task_id_range_list, &alp);
          if (lGetNumberOfElem(task_id_range_list) > 1) {
-            answer_list_add(&alp, MSG_QCONF_ONLYONERANGE, STATUS_ESYNTAX, 0);
+            answer_list_add(&alp, MSG_QCONF_ONLYONERANGE, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
             goto error;
          }
 

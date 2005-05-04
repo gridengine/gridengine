@@ -86,7 +86,6 @@ char **argv
    int all_jobs = 0;
    int all_users = 0;
    u_long32 gdi_cmd = SGE_GDI_MOD; 
-   int cl_err = 0;
    int tmp_ret;
    int me_who;
 
@@ -117,7 +116,7 @@ char **argv
    log_state_set_log_gui(1);
 
    sge_gdi_param(SET_MEWHO, me_who, NULL);
-   if ((cl_err = sge_gdi_setup(prognames[uti_state_get_mewho()], &alp))) {
+   if (sge_gdi_setup(prognames[uti_state_get_mewho()], &alp)) {
       answer_list_output(&alp);
       SGE_EXIT(1);
    }
@@ -243,7 +242,6 @@ int *all_users
    lEnumeration *what = NULL;
    lDescr *rdp = NULL;
    lList *answer = NULL;
-   int is_mail_requested = 0;
    enum {NOTINIT, JOB, ALL} all_or_jidlist = NOTINIT;
    int users_flag = 0;
 
@@ -472,12 +470,10 @@ int *all_users
          ul = lGetInt(ep, SPA_argval_lIntT);
          if  ((ul & NO_MAIL)) {
             lSetUlong(job, JB_mail_options, 0);
-            is_mail_requested = 0;
          }
          else {
             old_mail_opts = lGetUlong(job, JB_mail_options);
             lSetUlong(job, JB_mail_options, ul | old_mail_opts);
-            is_mail_requested = 1;
          }
          lRemoveElem(cmdline, ep);
          nm_set(job_field, JB_mail_options);

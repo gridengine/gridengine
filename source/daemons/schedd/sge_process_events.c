@@ -93,7 +93,6 @@ extern int start_on_master_host;
 extern int new_global_config;
 
 static bool rebuild_categories = true;
-static bool is_fc_filtering = false;
 
 const lCondition 
       *where_queue = NULL,
@@ -174,7 +173,7 @@ int event_handler_default_scheduler()
       /* category references are used in the access tree
          so rebuilding categories makes necessary to rebuild
          the access tree */
-      rebuild_categories = 0;   
+      rebuild_categories = false;   
    }
 
    sge_before_dispatch();
@@ -725,8 +724,6 @@ sge_process_schedd_conf_event_before(sge_object_type type, sge_event_action acti
    old = sconf_get_config(); 
    new = lFirst(lGetList(event, ET_new_version));
 
-   is_fc_filtering = sconf_is_job_category_filtering();
-
    if (new == NULL) {
       ERROR((SGE_EVENT, "> > > > > no scheduler configuration available < < < < <\n"));
       DEXIT;
@@ -868,7 +865,7 @@ bool sge_process_job_event_after(sge_object_type type, sge_event_action action,
    
    switch (action) {
       case SGE_EMA_LIST:
-         rebuild_categories = 1;
+         rebuild_categories = true;
          sge_do_priority(Master_Job_List, NULL); /* recompute the priorities */
          break;
 
@@ -1006,7 +1003,7 @@ bool sge_process_userset_event_after(sge_object_type type,
 {
    DENTER(GDI_LAYER, "sge_process_userset_event");
    DPRINTF(("callback processing userset event after default rule\n"));
-   rebuild_categories = 1;
+   rebuild_categories = true;
    DEXIT;
    return true;
 }

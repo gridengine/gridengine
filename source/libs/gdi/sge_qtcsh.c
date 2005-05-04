@@ -62,9 +62,6 @@ static int mode_remote = 1;
 static int force_remote = 0;
 static int mode_immediate = 1;
 
-/* prevent remote execution before everything is initialized */
-static int catch_exec_initialized = 0;
-
 static int init_qtask_config(lList **alpp, print_func_t ostream);
 
 /****** sge_qtcsh/init_qtask_config() ******************************************
@@ -475,15 +472,11 @@ lList *alp /* For returning error information */
 void sge_init(
 print_func_t ostream 
 ) {
-   lListElem *aep;
    lList *alp = NULL;
 
    sge_gdi_param(SET_EXIT_ON_ERROR, 0, NULL);
    if (sge_gdi_setup("qtcsh", NULL)==AE_OK) {
       if (init_qtask_config(&alp, ostream)) {
-         const char *s;
-         if (!alp || !(aep=lFirst(alp)) || !(s=lGetString(aep, AN_text)))
-            s = "unknown reason";
          mode_remote = 0;          
       } else {
          /* Remote execution is default.
@@ -506,7 +499,6 @@ print_func_t ostream
 /*       (*ostream) ("no $SGE_ROOT, running as normal tcsh\n"); */
    }
 
-   catch_exec_initialized = 1;
    return;
 }
 

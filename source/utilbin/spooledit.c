@@ -231,7 +231,7 @@ dump_object(bdb_info info, const char *key)
 
    /* close the transaction */
    dbret = spool_berkeleydb_end_transaction(&answer_list, info, 
-                                            ret == EXIT_SUCCESS);
+                                            (ret == EXIT_SUCCESS) ? true : false);
    if (!dbret) {
       answer_list_output(&answer_list);
       ret = EXIT_FAILURE;
@@ -292,7 +292,7 @@ load_object(bdb_info info, const char *key, const char *fname)
 
          /* close the transaction */
          dbret = spool_berkeleydb_end_transaction(&answer_list, info, 
-                                                  ret == EXIT_SUCCESS);
+                                                  (ret == EXIT_SUCCESS) ? true : false);
          if (!dbret) {
             answer_list_output(&answer_list);
             ret = EXIT_FAILURE;
@@ -337,7 +337,7 @@ delete_object( bdb_info info, const char *key)
 
    /* close the transaction */
    dbret = spool_berkeleydb_end_transaction(&answer_list, info, 
-                                            ret == EXIT_SUCCESS);
+                                            (ret == EXIT_SUCCESS) ? true : false);
    if (!dbret) {
       answer_list_output(&answer_list);
       ret = EXIT_FAILURE;

@@ -545,10 +545,9 @@ bool is_attr_prior(lListElem *upper_el, lListElem *lower_el){
    lower_value = lGetDouble(lower_el, used_dom_val);
 
    if (relop == CMPLXGE_OP || relop == CMPLXGT_OP ){
-      ret = upper_value >= lower_value; 
-   }
-   else{
-      ret =  upper_value <= lower_value; 
+      ret = upper_value >= lower_value ? true : false;
+   } else {
+      ret = upper_value <= lower_value ? true : false;
    }
 
    DEXIT;
@@ -606,10 +605,9 @@ static bool is_attr_prior2(lListElem *upper_el, double lower_value, int t_value,
    upper_value = lGetDouble(upper_el, t_value); 
 
    if (relop == CMPLXGE_OP || relop == CMPLXGT_OP ){
-      ret = upper_value >= lower_value;
-   }
-   else{
-      ret = upper_value <= lower_value;
+      ret = upper_value >= lower_value ? true : false;
+   } else {
+      ret = upper_value <= lower_value ? true : false;
    }
    DEXIT;
    return ret;

@@ -141,7 +141,7 @@ bool
 qinstance_x_on_subordinate(lListElem *this_elem, bool suspend,
                            bool rebuild_cache)
 {
-   int ret = true;
+   bool ret = true;
    u_long32 sos_counter;
    bool do_action;
    bool send_qinstance_signal;
@@ -174,14 +174,14 @@ qinstance_x_on_subordinate(lListElem *this_elem, bool suspend,
    hostname = lGetHost(this_elem, QU_qhostname);
    cqueue_name = lGetString(this_elem, QU_qname);
    full_name = lGetString(this_elem, QU_full_name);
-   send_qinstance_signal = !(qinstance_state_is_manual_suspended(this_elem) ||
-                             qinstance_state_is_cal_suspended(this_elem));
+   send_qinstance_signal = (qinstance_state_is_manual_suspended(this_elem) ||
+                            qinstance_state_is_cal_suspended(this_elem)) ? false : true;
    if (suspend) {
-      do_action = (sos_counter == 1);
+      do_action = (sos_counter == 1) ? true : false;
       signal = SGE_SIGSTOP;
       event = sgeE_QINSTANCE_SOS;
    } else {
-      do_action = (sos_counter == 0);
+      do_action = (sos_counter == 0) ? true : false;
       signal = SGE_SIGCONT;
       event = sgeE_QINSTANCE_USOS;
    }
@@ -196,7 +196,7 @@ qinstance_x_on_subordinate(lListElem *this_elem, bool suspend,
       DPRINTF(("Due to other suspend states signal will %sbe delivered\n",
                send_qinstance_signal ? "NOT " : "")); 
       if (send_qinstance_signal && !rebuild_cache) {
-         ret = (sge_signal_queue(signal, this_elem, NULL, NULL) == 0);
+         ret = (sge_signal_queue(signal, this_elem, NULL, NULL) == 0) ? true : false;
       }
 
       qinstance_state_set_susp_on_sub(this_elem, suspend);
@@ -260,7 +260,7 @@ qinstance_find_suspended_subordinates(const lListElem *this_elem,
       /* Slots calculations */
       u_long32 slots = lGetUlong (this_elem, QU_job_slots);
       u_long32 slots_used = qinstance_slots_used(this_elem);
-      bool all_full = (slots_used == slots);
+      bool all_full = (slots_used == slots) ? true : false;
 
       /*
        * Resolve cluster queue names into qinstance names

@@ -378,7 +378,7 @@ JNIEXPORT void JNICALL Java_com_sun_grid_drmaa_SessionImpl_nativeSynchronize
    
    job_ids[count] = NULL;
    
-   errnum = drmaa_synchronize (job_ids, timeout, dispose, error,
+   errnum = drmaa_synchronize (job_ids, (signed long)timeout, dispose, error,
                               DRMAA_ERROR_STRING_BUFFER);
    
    for (count = 0; count < length; count++) {
@@ -421,7 +421,7 @@ JNIEXPORT jobject JNICALL Java_com_sun_grid_drmaa_SessionImpl_nativeWait
    
    job_id = (*env)->GetStringUTFChars (env, jobId, NULL);
    
-   errnum = drmaa_wait (job_id, buffer, DRMAA_JOBNAME_BUFFER, &status, timeout,
+   errnum = drmaa_wait (job_id, buffer, DRMAA_JOBNAME_BUFFER, &status, (signed long)timeout,
                        &rusage, error, DRMAA_ERROR_STRING_BUFFER);
    (*env)->ReleaseStringUTFChars (env, jobId, job_id);
       

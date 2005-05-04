@@ -50,7 +50,6 @@ void *server_thread(void *t_conf);
 void *client_thread(void *t_conf);
 
 static int pipe_signal = 0;
-static int hup_signal = 0;
 static int do_shutdown = 0;
 char data[] = "> * * * Welcome to the tcp framework module! * * * <";
 
@@ -196,7 +195,6 @@ int sig
    }
 
    if (sig == SIGHUP) {
-      hup_signal = 1;
       return;
    }
 
@@ -300,13 +298,13 @@ void *server_thread(void *t_conf) {
  
       cl_com_connection_t*  connection = NULL;
 
-      pthread_cleanup_push((void *) server_cleanup, (void*) &con );
-      pthread_cleanup_push((void *) server_cleanup_conlist, (void*) &connection_list);
+      pthread_cleanup_push((void (*)(void *)) server_cleanup, (void*) &con );
+      pthread_cleanup_push((void (*)(void *)) server_cleanup_conlist, (void*) &connection_list);
       cl_thread_func_testcancel(thread_config);
       pthread_cleanup_pop(0); /* list cleanup */
       pthread_cleanup_pop(0); /* server cleanup */
 
-      CL_LOG_INT( CL_LOG_INFO, "--> nr of connections: ", cl_raw_list_get_elem_count(connection_list) );
+      CL_LOG_INT( CL_LOG_INFO, "--> nr of connections: ", (int)cl_raw_list_get_elem_count(connection_list) );
 
       new_con = NULL;
       if (con->data_read_flag == CL_COM_DATA_READY) {
@@ -368,9 +366,9 @@ void *server_thread(void *t_conf) {
          cl_raw_list_unlock(connection_list);
       }
 
-      CL_LOG_INT(CL_LOG_INFO, "--> nr of connections: ", cl_raw_list_get_elem_count(connection_list) );
+      CL_LOG_INT(CL_LOG_INFO, "--> nr of connections: ", (int)cl_raw_list_get_elem_count(connection_list) );
       cl_connection_list_destroy_connections_to_close(connection_list,1);
-      CL_LOG_INT(CL_LOG_INFO, "--> nr of connections: ", cl_raw_list_get_elem_count(connection_list) );
+      CL_LOG_INT(CL_LOG_INFO, "--> nr of connections: ", (int)cl_raw_list_get_elem_count(connection_list) );
 
 #if 1
       if ((ret_val = cl_thread_wait_for_event(thread_config,2,100000)) != CL_RETVAL_OK) {  /* nothing to do */
@@ -444,9 +442,7 @@ void *client_thread(void *t_conf) {
 
    /* ok, thread main */
    while (do_exit == 0) {
-      unsigned long size;
-
-      pthread_cleanup_push((void *) client_cleanup_function, (void*) &con );
+      pthread_cleanup_push((void (*)(void *)) client_cleanup_function, (void*) &con );
       cl_thread_func_testcancel(thread_config);
       pthread_cleanup_pop(0);  /* client_thread_cleanup */
 
@@ -492,7 +488,6 @@ void *client_thread(void *t_conf) {
       
 #if 1
       if (con != NULL) {
-         size = 0;
          gettimeofday(&now,NULL);
          con->read_buffer_timeout_time = now.tv_sec + 5;
          retval = cl_com_read(con, con->data_read_buffer, sizeof(data), NULL); 

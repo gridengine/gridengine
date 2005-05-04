@@ -573,7 +573,7 @@ static void ptf_setpriority_ash(lListElem *job, lListElem *osjob, long pri)
 
          /* set the background "weightless" priority */
 
-         if (setpriority(PRIO_PROCESS, lGetUlong(pid, JP_pid),
+         if (setpriority(PRIO_PROCESS, (id_t)lGetUlong(pid, JP_pid),
                          PTF_BACKGROUND_NICE_VALUE) < 0 && errno != ESRCH) {
 
             ERROR((SGE_EVENT, MSG_PRIO_JOBXPIDYSETPRIORITYFAILURE_UUS,
@@ -589,7 +589,7 @@ static void ptf_setpriority_ash(lListElem *job, lListElem *osjob, long pri)
 
          sp.sched_priority = pri;
 
-         if (sched_setscheduler(lGetUlong(pid, JP_pid), SCHED_TS, &sp) < 0 
+         if (sched_setscheduler((id_t)lGetUlong(pid, JP_pid), SCHED_TS, &sp) < 0 
              && errno != ESRCH) {
             ERROR((SGE_EVENT, MSG_SCHEDD_JOBXPIDYSCHEDSETSCHEDULERFAILURE_UUS,
                    sge_u32c(lGetUlong(job, JL_job_ID)),
@@ -1454,8 +1454,8 @@ static void ptf_set_OS_scheduling_parameters(lList *job_list, double min_share,
          (max_share - min_share);
 #endif
 
-      pri = pri_max + (pri_range * (1.0 -
-                        lGetDouble(job, JL_adjusted_current_proportion)));
+      pri = pri_max + (long)(pri_range * (1.0 -
+                       lGetDouble(job, JL_adjusted_current_proportion)));
 
 #ifdef PTF_NEW_ALGORITHM
 
@@ -1471,8 +1471,8 @@ static void ptf_set_OS_scheduling_parameters(lList *job_list, double min_share,
 #endif
 
       if (max_share > 0) {
-         pri = pri_max + (pri_range * ((lGetDouble(job, JL_curr_pri) 
-                                       - min_share) / max_share));
+         pri = pri_max + (long)(pri_range * ((lGetDouble(job, JL_curr_pri) 
+                                              - min_share) / max_share));
       } else {
          pri = pri_min;
       }
@@ -1502,15 +1502,12 @@ static void ptf_set_OS_scheduling_parameters(lList *job_list, double min_share,
 int ptf_job_started(osjobid_t os_job_id, const char *task_id_str, 
                     lListElem *new_job, u_long32 jataskid)
 {
-
-   lListElem *job;
-
    DENTER(TOP_LAYER, "ptf_job_started");
 
    /*
     * Add new job to job list
     */
-   job = ptf_process_job(os_job_id, task_id_str, new_job, jataskid);
+   ptf_process_job(os_job_id, task_id_str, new_job, jataskid);
 
    /*
     * Tell data collector to start collecting data for this job

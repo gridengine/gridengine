@@ -63,7 +63,7 @@ static file_type_t sge_get_file_type(const char *name);
 static file_type_t sge_get_file_type(const char *name)
 {
    SGE_STRUCT_STAT stat_buffer;
-   int ret = FILE_TYPE_NOT_EXISTING;
+   file_type_t ret = FILE_TYPE_NOT_EXISTING;
  
    if (SGE_STAT(name, &stat_buffer)) {
       ret = FILE_TYPE_NOT_EXISTING;
@@ -126,7 +126,7 @@ static int sge_domkdir(const char *path_, int fmode, int exit_on_error, int may_
 *     sge_unlink() -- delete a name and possibly the file it refers to
 *
 *  SYNOPSIS
-*     int sge_unlink(const char *prefix, const char *suffix) 
+*     bool sge_unlink(const char *prefix, const char *suffix) 
 *
 *  FUNCTION
 *     Replacement for unlink(). 'prefix' and 'suffix' will be combined
@@ -138,10 +138,10 @@ static int sge_domkdir(const char *path_, int fmode, int exit_on_error, int may_
 *
 *  RESULT
 *     int - error state
-*         0 - OK
-*        -1 - Error
+*         true  - OK
+*         false - Error
 ******************************************************************************/
-int sge_unlink(const char *prefix, const char *suffix) 
+bool sge_unlink(const char *prefix, const char *suffix) 
 {
    int status;
    stringT str;
@@ -151,7 +151,7 @@ int sge_unlink(const char *prefix, const char *suffix)
    if (!suffix) {
       ERROR((SGE_EVENT, MSG_POINTER_SUFFIXISNULLINSGEUNLINK ));
       DEXIT;
-      return -1;
+      return false;
    }
  
    if (prefix) {
@@ -166,10 +166,10 @@ int sge_unlink(const char *prefix, const char *suffix)
    if (status) {
       ERROR((SGE_EVENT, "ERROR: unlinking "SFQ": "SFN"\n", str, strerror(errno)));
       DEXIT;
-      return -1;
+      return false;
    } else {
       DEXIT;
-      return 0;
+      return true;
    }
 }  
 
@@ -514,7 +514,7 @@ int sge_is_executable(const char *name)
    SGE_STRUCT_STAT stat_buffer;
    int ret = SGE_STAT(name, &stat_buffer);
    if (!ret) { 
-      return (stat_buffer.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH));
+      return (int)(stat_buffer.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH));
    } else {
       return 0;
    }

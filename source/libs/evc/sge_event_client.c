@@ -895,7 +895,7 @@ ec_set_flush_delay(int flush_delay)
    if (ec == NULL) {
       ERROR((SGE_EVENT, MSG_EVENT_UNINITIALIZED_EC));
    } else {
-      ret = (lGetUlong(ec, EV_flush_delay) != flush_delay);
+      ret = (lGetUlong(ec, EV_flush_delay) != flush_delay) ? true : false;
 
       if (ret) {
          lSetUlong(ec, EV_flush_delay, flush_delay);
@@ -987,7 +987,7 @@ ec_set_busy_handling(ev_busy_handling handling)
    if (ec == NULL) {
       ERROR((SGE_EVENT, MSG_EVENT_UNINITIALIZED_EC));
    } else {
-      ret = (lGetUlong(ec, EV_busy_handling) != handling);
+      ret = (lGetUlong(ec, EV_busy_handling) != handling) ? true : false;
 
       if (ret) {
          lSetUlong(ec, EV_busy_handling, handling);
@@ -1029,7 +1029,7 @@ ec_get_busy_handling(void)
    if (ec == NULL) {
       ERROR((SGE_EVENT, MSG_EVENT_UNINITIALIZED_EC));
    } else {
-      handling = lGetUlong(ec, EV_busy_handling);
+      handling = (ev_busy_handling)lGetUlong(ec, EV_busy_handling);
    }
 
    DEXIT;
@@ -1127,7 +1127,7 @@ ec_register(bool exit_on_qmaster_down, lList** alpp)
     
       aep = lFirst(alp);
     
-      ret = (lGetUlong(aep, AN_status)==STATUS_OK);   
+      ret = (lGetUlong(aep, AN_status) == STATUS_OK) ? true : false;
 
       if (ret) { 
          lListElem *new_ec;
@@ -1149,7 +1149,8 @@ ec_register(bool exit_on_qmaster_down, lList** alpp)
          if (lGetUlong(aep, AN_quality) == ANSWER_QUALITY_ERROR) {
             ERROR((SGE_EVENT, "%s", lGetString(aep, AN_text)));
             answer_list_add(alpp, lGetString(aep, AN_text), 
-                  lGetUlong(aep, AN_status), lGetUlong(aep, AN_quality));
+                  lGetUlong(aep, AN_status), 
+                  (answer_quality_t)lGetUlong(aep, AN_quality));
             lFreeList(lp); 
             lFreeList(alp);
             if (exit_on_qmaster_down) {
@@ -1290,8 +1291,8 @@ ec_subscribe(ev_event event)
    }
 
    if (event == sgeE_ALL_EVENTS) {
-      int i;
-      for(i = 0; i < sgeE_EVENTSIZE; i++) {
+      ev_event i;
+      for(i = sgeE_ALL_EVENTS; i < sgeE_EVENTSIZE; i++) {
          ec_add_subscriptionElement(ec, i, EV_NOT_FLUSHED, -1);
       }
    } else {
@@ -1534,8 +1535,8 @@ ec_unsubscribe(ev_event event)
    }
 
    if (event == sgeE_ALL_EVENTS) {
-      int i;
-      for(i = 0; i < sgeE_EVENTSIZE; i++) {
+      ev_event i;
+      for(i = sgeE_ALL_EVENTS; i < sgeE_EVENTSIZE; i++) {
          ec_remove_subscriptionElement(ec, i);
       }
       ec_add_subscriptionElement(ec, sgeE_QMASTER_GOES_DOWN, EV_FLUSHED, 0);
@@ -1920,7 +1921,7 @@ ec_get_busy(void)
       ERROR((SGE_EVENT, MSG_EVENT_UNINITIALIZED_EC));
    } else {
       /* JG: TODO: EV_busy should be boolean datatype */
-      ret = lGetUlong(ec, EV_busy) > 0;
+      ret = (lGetUlong(ec, EV_busy) > 0) ? true : false;
    }
 
    DEXIT;
@@ -2021,11 +2022,11 @@ ev_registration_id ec_get_id(void)
    if (ec == NULL) {
       ERROR((SGE_EVENT, MSG_EVENT_UNINITIALIZED_EC));
       DEXIT;
-      return -1;
+      return EV_ID_INVALID;
    }
    
    DEXIT;
-   return lGetUlong(ec, EV_id);
+   return (ev_registration_id)lGetUlong(ec, EV_id);
 }
 
 /****** Eventclient/Client/ec_config_changed() ********************************
@@ -2114,7 +2115,7 @@ ec_commit(void)
       alp = sge_gdi(SGE_EVENT_LIST, SGE_GDI_MOD, &lp, NULL, NULL);
       lFreeList(lp); 
       
-      ret = (lGetUlong(lFirst(alp), AN_status)==STATUS_OK);   
+      ret = (lGetUlong(lFirst(alp), AN_status) == STATUS_OK) ? true : false;
       lFreeList(alp);
       
       if (ret) {
@@ -2306,7 +2307,7 @@ ec_get(lList **event_list, bool exit_on_qmaster_down)
       int max_fetch;
       int sync = 1;
 
-      now = sge_get_gmt();
+      now = (time_t)sge_get_gmt();
 
       /* initialize last_fetch_ok_time */
       if (last_fetch_ok_time == 0) {
@@ -2403,7 +2404,7 @@ ec_get(lList **event_list, bool exit_on_qmaster_down)
          }
       } else {
          /* set last_fetch_ok_time, because we had success */
-         last_fetch_ok_time = sge_get_gmt();
+         last_fetch_ok_time = (time_t)sge_get_gmt();
 
          /* send an ack to the qmaster for all received events */
          if (sge_send_ack_to_qmaster(0, ACK_EVENT_DELIVERY, next_event - 1,

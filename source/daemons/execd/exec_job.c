@@ -402,7 +402,7 @@ char *err_str
                host_slots += slots;
                if (q_set && strcasecmp(q_set, "UNDEFINED")) {
                   range_list_parse_from_string(&processor_set, &alp, q_set,
-                                               0, 0, INF_ALLOWED);
+                                               false, false, INF_ALLOWED);
                   if (lGetNumberOfElem(alp))
                      alp = lFreeList(alp);
                }
@@ -1069,7 +1069,7 @@ char *err_str
    {
       dstring range_string = DSTRING_INIT;
 
-      range_list_print_to_string(processor_set, &range_string, 1);
+      range_list_print_to_string(processor_set, &range_string, true);
       fprintf(fp, "processors=%s", sge_dstring_get_string(&range_string)); 
       sge_dstring_free(&range_string);
    }
@@ -1410,7 +1410,7 @@ char *err_str
 
       mail_users = lGetList(jep, JB_mail_list);
       mail_options = lGetUlong(jep, JB_mail_options);
-      strcpy(sge_mail_start, sge_ctime(lGetUlong(jatep, JAT_start_time), &ds));
+      strcpy(sge_mail_start, sge_ctime((time_t)lGetUlong(jatep, JAT_start_time), &ds));
       if (VALID(MAIL_AT_BEGINNING, mail_options)) {
          if (job_is_array(jep)) {
             sprintf(sge_mail_subj, MSG_MAIL_STARTSUBJECT_UUS, sge_u32c(job_id),

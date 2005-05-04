@@ -104,7 +104,7 @@ int verify_str_key(lList **alpp, const char *str, const char *name)
             SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_KEYSTR_FIRSTCHAR_S, 
                            begin_strings[i]));
          }
-         answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, 0);
+         answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
          return STATUS_EUNKNOWN;
       }
    }
@@ -120,7 +120,7 @@ int verify_str_key(lList **alpp, const char *str, const char *name)
             SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_KEYSTR_MIDCHAR_S, 
                            mid_strings[i]));
          }
-         answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, 0);
+         answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
          return STATUS_EUNKNOWN;
       }
    }
@@ -132,7 +132,7 @@ int verify_str_key(lList **alpp, const char *str, const char *name)
          SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_KEYSTR_KEYWORD_SS, 
                         keyword_strings[i],
             forbidden_string));
-         answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, 0);
+         answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
          return STATUS_EUNKNOWN;
       }
    }

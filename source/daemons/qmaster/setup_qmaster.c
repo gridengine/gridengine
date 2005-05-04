@@ -304,7 +304,7 @@ void sge_setup_job_resend(void)
 
             when += MAX(load_report_interval(host), MAX_JOB_DELIVER_TIME);
 
-            ev = te_new_event(when, TYPE_JOB_RESEND_EVENT, ONE_TIME_EVENT, job_num, task_num, "job-resend_event");           
+            ev = te_new_event((time_t)when, TYPE_JOB_RESEND_EVENT, ONE_TIME_EVENT, job_num, task_num, "job-resend_event");           
             te_add_event(ev);
             te_free_event(ev);
 
@@ -486,7 +486,6 @@ static lList *parse_qmaster(lList **ppcmdline, u_long32 *help )
    stringT str;
    lList *alp = NULL;
    int usageshowed = 0;
-   u_long32 flag;
 
    DENTER(TOP_LAYER, "parse_qmaster");
 
@@ -495,7 +494,6 @@ static lList *parse_qmaster(lList **ppcmdline, u_long32 *help )
    */
    while(lGetNumberOfElem(*ppcmdline))
    {
-      flag = 0;
       /* -help */
       if(parse_flag(ppcmdline, "-help", &alp, help)) {
          usageshowed = 1;
@@ -753,7 +751,6 @@ static int setup_qmaster(void)
 {
    lListElem *jep, *ep, *tmpqep;
    static bool first = true;
-   int ret;
    extern int new_config;
    lListElem *spooling_context = NULL;
    lList *answer_list = NULL;
@@ -1009,7 +1006,7 @@ static int setup_qmaster(void)
    if (ep) {
       lList *alp = NULL;
       lList *found = NULL;
-      ret = check_sharetree(&alp, ep, Master_User_List, Master_Project_List, 
+      check_sharetree(&alp, ep, Master_User_List, Master_Project_List, 
             NULL, &found);
       found = lFreeList(found);
       alp = lFreeList(alp); 
@@ -1083,9 +1080,8 @@ int user
 static int debit_all_jobs_from_qs()
 {
    lListElem *gdi;
-   u_long32 slots, jid, tid;
+   u_long32 slots;
    const char *queue_name;
-   lListElem *hep = NULL;
    lListElem *next_jep, *jep, *qep, *next_jatep, *jatep;
    int ret = 0;
 
@@ -1096,12 +1092,10 @@ static int debit_all_jobs_from_qs()
    
       /* may be we have to delete this job */   
       next_jep = lNext(jep);
-      jid = lGetUlong(jep, JB_job_number);
       
       next_jatep = lFirst(lGetList(jep, JB_ja_tasks));
       while ((jatep = next_jatep)) {
          next_jatep = lNext(jatep);
-         tid = lGetUlong(jatep, JAT_task_number);
 
          /* don't look at states - we only trust in 
             "granted destin. ident. list" */
@@ -1119,7 +1113,7 @@ static int debit_all_jobs_from_qs()
                /* debit in all layers */
                debit_host_consumable(jep, host_list_locate(Master_Exechost_List,
                                      "global"), Master_CEntry_List, slots);
-               debit_host_consumable(jep, hep = host_list_locate(
+               debit_host_consumable(jep, host_list_locate(
                         Master_Exechost_List, lGetHost(qep, QU_qhostname)), 
                         Master_CEntry_List, slots);
                qinstance_debit_consumable(qep, jep, Master_CEntry_List, slots);

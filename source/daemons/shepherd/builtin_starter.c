@@ -150,7 +150,7 @@ int truncate_stderr_out
    const char *fs_stdin_file="";
    const char *fs_stdout_file="";
    const char *fs_stderr_file="";
-   pid_t pid, ppid, pgrp, newpgrp;
+   pid_t pid, pgrp, newpgrp;
    gid_t add_grp_id = 0;
    gid_t gid;
    struct passwd *pw=NULL;
@@ -209,7 +209,6 @@ int truncate_stderr_out
    }
 
    pid = getpid();
-   ppid = getppid();
    pgrp = GETPGRP;
 
 #ifdef SOLARIS
@@ -1601,7 +1600,7 @@ static bool inherit_env ()
       }
    }
    
-   return (inherit_environ == 1);
+   return (inherit_environ == 1) ? true : false;
 }
 
 #if 0 /* Not currently used, but looks kinda useful... */

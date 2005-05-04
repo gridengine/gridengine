@@ -371,11 +371,11 @@ spool_berkeleydb_open_database(lList **answer_list, bdb_info info,
                                bool create)
 {
    bool ret = true;
-   int i;
+   bdb_database i;
 
    DENTER(TOP_LAYER, "spool_berkeleydb_open_database");
 
-   for (i = 0; i < BDB_ALL_DBS && ret; i++) {
+   for (i = BDB_CONFIG_DB; i < BDB_ALL_DBS && ret; i++) {
       DB_ENV *env;
       DB *db;
 
@@ -508,8 +508,9 @@ spool_berkeleydb_close_database(lList **answer_list, bdb_info info)
                               dbname);
       ret = false;
    } else {
-      int i, dbret;
-      for (i = 0; i < BDB_ALL_DBS; i++) {
+      bdb_database i;
+      int dbret;
+      for (i = BDB_CONFIG_DB; i < BDB_ALL_DBS; i++) {
          DB *db;
 
          /* close open database */
@@ -1472,7 +1473,7 @@ spool_berkeleydb_error_close(bdb_info info)
    DB_ENV *env;
    DB     *db;
    DB_TXN *txn;
-   int i;
+   bdb_database i;
 
    /* try to shutdown all open resources */
    txn = bdb_get_txn(info);
@@ -1481,7 +1482,7 @@ spool_berkeleydb_error_close(bdb_info info)
       bdb_set_txn(info, NULL);
    }
 
-   for (i = 0; i < BDB_ALL_DBS; i++) {
+   for (i = BDB_CONFIG_DB; i < BDB_ALL_DBS; i++) {
       db = bdb_get_db(info, i);
       if (db != NULL) {
          db->close(db, 0);

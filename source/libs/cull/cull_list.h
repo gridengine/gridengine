@@ -254,8 +254,8 @@ lListElem *lFindFirst(const lList *lp, const lCondition *cp);
 lListElem *lFindLast(const lList *lp, const lCondition *cp);
 
 #define mt_get_type(mt) ((mt) & 0x000000FF)
-#define mt_do_hashing(mt) ((mt) & CULL_HASH)
-#define mt_is_unique(mt) ((mt) & CULL_UNIQUE)
+#define mt_do_hashing(mt) (((mt) & CULL_HASH) ? true : false)
+#define mt_is_unique(mt) (((mt) & CULL_UNIQUE) ? true : false)
 
 bool lListElem_is_pos_changed(const lListElem *ep, int pos);
 bool lListElem_is_changed(const lListElem *ep);

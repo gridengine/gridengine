@@ -174,7 +174,7 @@ sge_follow_order(lListElem *ep, lList **alpp, char *ruser, char *rhost,
    lList *acl, *xacl;
    lListElem *jep, *qep, *master_qep, *oep, *hep, *master_host = NULL, *jatp = NULL;
    u_long32 state;
-   u_long32 pe_slots = 0, q_slots, q_version, task_id_range = 0;
+   u_long32 pe_slots = 0, q_slots, q_version;
    lListElem *pe = NULL;
 
    DENTER(TOP_LAYER, "sge_follow_order");
@@ -288,7 +288,6 @@ sge_follow_order(lListElem *ep, lList **alpp, char *ruser, char *rhost,
             DEXIT;
             return -2;
          }
-         task_id_range = 0;
          lSetString(jatp, JAT_granted_pe, or_pe);  /* free me on error! */
       }
 
@@ -866,7 +865,7 @@ sge_follow_order(lListElem *ep, lList **alpp, char *ruser, char *rhost,
                job_pos_t   *order_job_pos;
          
                joker_task = lFirst(lGetList(joker, JB_ja_tasks));
-               destribute_tickets = (lGetPosViaElem(joker_task, JAT_granted_destin_identifier_list) > -1);
+               destribute_tickets = (lGetPosViaElem(joker_task, JAT_granted_destin_identifier_list) > -1)? true : false;
 
                sge_mutex_lock("follow_last_update_mutex", SGE_FUNC, __LINE__, &Follow_Control.last_update_mutex);
          

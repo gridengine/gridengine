@@ -720,13 +720,13 @@ static bool nfs_mounted(const char *path)
 #endif
   
 #if defined (DARWIN) || defined(FREEBSD) || defined(NETBSD)
-   ret = (strcmp("nfs", buf.f_fstypename)==0);
+   ret = (strcmp("nfs", buf.f_fstypename) == 0) ? true : false;
 #elif defined(LINUX)
    ret = (buf.f_type == 0x6969);
 #elif defined(INTERIX)
-   ret = (strncasecmp("nfs", buf.f_fstypename, 3)==0);
+   ret = (strncasecmp("nfs", buf.f_fstypename, 3) == 0) ? true : false;
 #else
-   ret = (strncmp("nfs", buf.f_basetype, 3)==0);
+   ret = (strncmp("nfs", buf.f_basetype, 3) == 0) ? true : false;
 #endif
    return ret;
 }

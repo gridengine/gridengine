@@ -57,7 +57,7 @@ static int
 setup_lists(lList **sharetree, lList **users, lList **projects, lList **config)
 {
    lList *alp;
-   lListElem *aep, *root;
+   lListElem *aep;
    lEnumeration *what;
 
    /*
@@ -76,7 +76,7 @@ setup_lists(lList **sharetree, lList **users, lList **projects, lList **config)
    }
    lFreeList(alp);
 
-   if (!*sharetree || (root = lFirst(*sharetree)) == NULL) {
+   if (!*sharetree || lFirst(*sharetree) == NULL) {
       fprintf(stderr, MSG_SGESHAREMON_NOSHARETREE );
       exit(2);
    }

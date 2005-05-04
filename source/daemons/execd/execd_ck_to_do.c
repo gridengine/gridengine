@@ -889,7 +889,7 @@ lListElem *pe_task
    u_long32 ja_task_id;   
    const char *pe_task_id = NULL;
 
-   int success, newerrno;
+   int success;
    FILE *fp;
    SGE_STRUCT_STAT sb;
 
@@ -939,7 +939,6 @@ lListElem *pe_task
 
    /* read addgrpid */
    success = (fscanf(fp, gid_t_fmt, &addgrpid)==1);
-   newerrno = errno;
    fclose(fp);
    if (!success) {
       /* can happen that shepherd has opend the file but not written */
@@ -998,7 +997,6 @@ lListElem *pe_task
    sge_dstring_free(&osjobid_path);      
 
    success = (fscanf(fp, OSJOBID_FMT, &osjobid)==1);
-   newerrno = errno;
    fclose(fp);
    if (!success) {
       /* can happen that shepherd has opend the file but not written */
@@ -1059,11 +1057,11 @@ static bool should_reprioritize(void)
    {
       const char* value;
       value = lGetString(ep, CF_value);
-      ret = strncasecmp(value, "0", sizeof("0"));
+      ret = (strncasecmp(value, "0", sizeof("0")) == 0) ? false : true;
    }
    else
    {
-      ret = conf.reprioritize;
+      ret = conf.reprioritize ? true : false;
    }
 
    if (NULL != confl) {

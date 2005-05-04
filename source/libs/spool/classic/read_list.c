@@ -579,7 +579,7 @@ int sge_read_qinstance_list_from_disk(lListElem *cqueue)
 int sge_read_cqueue_list_from_disk(lList **list, const char *directory)
 {
    lList *alp = NULL, *direntries;
-   lListElem *qep, *direntry, *exec_host;
+   lListElem *qep, *direntry;
    int config_tag = 0;
 
    DENTER(TOP_LAYER, "sge_read_cqueue_list_from_disk");
@@ -666,8 +666,8 @@ int sge_read_cqueue_list_from_disk(lList **list, const char *directory)
                   qinstance_state_set_cal_suspended(qinstance, false);
                   qinstance_set_slots_used(qinstance, 0);
                   
-                  if (!(exec_host = host_list_locate(Master_Exechost_List, 
-                        lGetHost(qinstance, QU_qhostname)))) {
+                  if (host_list_locate(Master_Exechost_List, 
+                                       lGetHost(qinstance, QU_qhostname)) == NULL) {
 
                      ERROR((SGE_EVENT, MSG_CONFIG_CANTRECREATEQEUEUE_SS,
                             lGetString(qinstance, QU_qname), 
@@ -1105,7 +1105,7 @@ int read_all_configurations(lList **lpp,
                   return -1;
                }
                sprintf(old_fname, "%s/%s", local_config_dir, old_name);
-               if (sge_unlink(NULL, old_fname)) {
+               if (!sge_unlink(NULL, old_fname)) {
                   DEXIT;
                   return -1;
                }

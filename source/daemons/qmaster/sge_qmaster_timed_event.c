@@ -306,7 +306,7 @@ void te_free_event(te_event_t anEvent)
 *******************************************************************************/
 void te_add_event(te_event_t anEvent)
 {
-   u_long32 when = 0;
+   time_t when = 0;
    lListElem *le;
 
    DENTER(TOP_LAYER, "te_add_event");
@@ -554,7 +554,7 @@ time_t te_get_when(te_event_t anEvent)
 *******************************************************************************/
 te_type_t te_get_type(te_event_t anEvent)
 {
-   te_type_t res = 0;
+   te_type_t res;
 
    DENTER(TOP_LAYER, "te_get_type");
 
@@ -588,7 +588,7 @@ te_type_t te_get_type(te_event_t anEvent)
 *******************************************************************************/
 te_mode_t te_get_mode(te_event_t anEvent)
 {
-   te_mode_t res = 0;
+   te_mode_t res;
 
    DENTER(TOP_LAYER, "te_get_mode");
 
@@ -992,10 +992,10 @@ static te_event_t event_from_list_elem(lListElem* aListElem)
 
    ev = (te_event_t)sge_malloc(sizeof(struct te_event));
    
-   ev->when        = lGetUlong(aListElem, TE_when);
-   ev->type        = lGetUlong(aListElem, TE_type);
-   ev->mode        = lGetUlong(aListElem, TE_mode);
-   ev->interval    = lGetUlong(aListElem, TE_interval);
+   ev->when        = (time_t)lGetUlong(aListElem, TE_when);
+   ev->interval    = (time_t)lGetUlong(aListElem, TE_interval);
+   ev->type        = (te_type_t)lGetUlong(aListElem, TE_type);
+   ev->mode        = (te_mode_t)lGetUlong(aListElem, TE_mode);
    ev->ulong_key_1 = lGetUlong(aListElem, TE_uval0);
    ev->ulong_key_2 = lGetUlong(aListElem, TE_uval1);
    ev->seq_no      = lGetUlong(aListElem, TE_seqno);

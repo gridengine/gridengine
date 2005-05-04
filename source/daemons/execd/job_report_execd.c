@@ -212,7 +212,6 @@ u_long32 jataskid
 int add_usage(lListElem *jr, char *name, const char *val_as_str, double val) 
 {
    lListElem *usage;
-   double old_val = 0;
 
    DENTER(CULL_LAYER, "add_usage");
 
@@ -228,8 +227,7 @@ int add_usage(lListElem *jr, char *name, const char *val_as_str, double val)
          DEXIT;
          return -1;
       }
-   } else 
-      old_val = lGetDouble(usage, UA_value);
+   }
 
    if (val_as_str) {
       char *p;
@@ -247,7 +245,7 @@ int add_usage(lListElem *jr, char *name, const char *val_as_str, double val)
       val = parsed;
    }
       
-   lSetDouble(usage, UA_value, val /*val>old_val?val:old_val*/); 
+   lSetDouble(usage, UA_value, val);
 
    DEXIT;
    return 0;

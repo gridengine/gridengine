@@ -1148,7 +1148,7 @@ bool sge_has_event_client(u_long32 aClientID) {
    sge_mutex_lock("event_master_mutex", SGE_FUNC, __LINE__,
                &Master_Control.mutex);
 
-   ret = get_event_client(aClientID) != NULL;
+   ret = (get_event_client(aClientID) != NULL) ? true : false;
    
    sge_mutex_unlock("event_master_mutex", SGE_FUNC, __LINE__,
                     &Master_Control.mutex);
@@ -1802,7 +1802,7 @@ static void process_sends ()
 
          while (event != NULL) {
             event = lDechainElem (event_list, event);
-            type = lGetUlong (event, ET_type);
+            type = (ev_event)lGetUlong (event, ET_type);
             count = 0;
 
             while (Master_Control.clients_indices[count] != 0) {
@@ -1846,7 +1846,7 @@ static void process_sends ()
 
             while (event != NULL) {
                event = lDechainElem (event_list, event);
-               type = lGetUlong (event, ET_type);
+               type = (ev_event)lGetUlong (event, ET_type);
 
                /* This has to come after the client is locked. */
                if ((event_client = get_event_client (ec_id)) == NULL) {
@@ -2334,7 +2334,7 @@ static void* event_deliver_thread(void *anArg)
           * this shortcut will occasionally cause this block to finish early
           * due to a well timed spurrious wakeup. */
          do { 
-            ts.tv_sec = current_time + EVENT_DELIVERY_INTERVAL_S;
+            ts.tv_sec = (time_t)(current_time + EVENT_DELIVERY_INTERVAL_S);
             ts.tv_nsec = EVENT_DELIVERY_INTERVAL_N;
             pthread_cond_timedwait(&Master_Control.cond_var,
                                    &Master_Control.cond_mutex, &ts);
@@ -2696,7 +2696,7 @@ static void send_events(lListElem *report, lList *report_list) {
          if (event_client != NULL) {
             /* on failure retry is triggered automatically */
             if (ret == CL_RETVAL_OK) {
-               now = sge_get_gmt();
+               now = (time_t)sge_get_gmt();
 
                /*printf("send events %d to host: %s id: %d: now: %d\n", numevents, host, id, sge_get_gmt()); */           
                switch (busy_handling) {
@@ -2928,7 +2928,7 @@ static void build_subscription(lListElem *event_el)
       
       sub_array[event].subscription = EV_SUBSCRIBED; 
       Subscribed_Control.subscribed_events[event]++;
-      sub_array[event].flush = lGetBool(sub_el, EVS_flush);
+      sub_array[event].flush = lGetBool(sub_el, EVS_flush) ? true : false;
       sub_array[event].flush_time = lGetUlong(sub_el, EVS_interval);
      
       if ((temp = lGetObject(sub_el, EVS_where)))
@@ -3157,8 +3157,7 @@ static void add_list_event_direct(lListElem *event_client, lListElem *event,
    lList *lp = NULL;
    lList *clp = NULL;
    lListElem *ep = NULL;
-   ev_event type = lGetUlong(event, ET_type);
-   bool flush = false;
+   ev_event type = (ev_event)lGetUlong(event, ET_type);
    subscription_t *subscription = NULL;
    char buffer[1024];
    dstring buffer_wrapper;
@@ -3290,11 +3289,9 @@ static void add_list_event_direct(lListElem *event_client, lListElem *event,
       Master_Control.is_prepare_shutdown = true;
       lSetUlong(event_client, EV_busy, 0); /* can't be too busy for shutdown */
       flush_events(event_client, 0);
-      flush = true;
    }
    else if (type == sgeE_SHUTDOWN) {
       flush_events(event_client, 0);
-      flush = true;
       /* the event client should be shutdown, so we do not add any events to it, after
          the shutdown event */
       lSetUlong(event_client, EV_state, EV_closing);   
@@ -3302,7 +3299,6 @@ static void add_list_event_direct(lListElem *event_client, lListElem *event,
    else if (subscription[type].flush) {
       DPRINTF(("flushing event client\n"));
       flush_events(event_client, subscription[type].flush_time);
-      flush = ( subscription[type].flush_time == 0);
    }
 
    DEXIT;
@@ -3332,7 +3328,6 @@ static void total_update_event(lListElem *event_client, ev_event type)
    lList *copy_lp = NULL; /* copy_lp should be used for a copy of the org. list */
    char buffer[1024];
    dstring buffer_wrapper;
-   const char *session = NULL;
    u_long32 id;
 
    DENTER(TOP_LAYER, "total_update_event");
@@ -3340,7 +3335,6 @@ static void total_update_event(lListElem *event_client, ev_event type)
    SGE_ASSERT (event_client != NULL);
    
    sge_dstring_init(&buffer_wrapper, buffer, sizeof(buffer));
-   session = lGetString(event_client, EV_session);
    id = lGetUlong(event_client, EV_id);
 
    /* This test bothers me.  Technically, the GDI thread should just drop the

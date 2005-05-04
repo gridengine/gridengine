@@ -349,10 +349,11 @@ static void append_opts_from_default_files(lList **pcmdline,
          FLG_HIGHER_PRIOR | FLG_USE_NO_PSEUDOS);
 
       for_each(aep, alp) {
-         u_long32 status, quality;
+         u_long32 status;
+         answer_quality_t quality;
 
          status = lGetUlong(aep, AN_status);
-         quality = lGetUlong(aep, AN_quality);
+         quality = (answer_quality_t)lGetUlong(aep, AN_quality);
 
          if (quality == ANSWER_QUALITY_ERROR) {
             DPRINTF(("%s", lGetString(aep, AN_text)));
@@ -672,7 +673,7 @@ void opt_list_merge_command_lines(lList **opts_all,
 *     opt_list_has_X() -- is a certail option contained in list 
 *
 *  SYNOPSIS
-*     int opt_list_has_X(lList *opts, const char *option) 
+*     bool opt_list_has_X(lList *opts, const char *option) 
 *
 *  FUNCTION
 *     This function returns true (1) if the given 'option' 
@@ -683,21 +684,21 @@ void opt_list_merge_command_lines(lList **opts_all,
 *     const char *option - switch name  
 *
 *  RESULT
-*     int - found switch?
-*        1 - yes
-*        0 - no
+*     bool - found switch?
+*        true - yes
+*        false - no
 *
 *  SEE ALSO
 *     sge/opt/opt_list_is_X_true()
 *******************************************************************************/
-int opt_list_has_X(lList *opts, const char *option) 
+bool opt_list_has_X(lList *opts, const char *option) 
 {
    lListElem *opt;
-   int ret = 0;
+   bool ret = false;
 
    opt = lGetElemStr(opts, SPA_switch, option);
    if (opt != NULL) {
-      ret = 1;
+      ret = true;
    }
    return ret;
 }
@@ -707,7 +708,7 @@ int opt_list_has_X(lList *opts, const char *option)
 *     opt_list_is_X_true() -- check the state of a boolean switch 
 *
 *  SYNOPSIS
-*     int opt_list_is_X_true(lList *opts, const char *option) 
+*     bool opt_list_is_X_true(lList *opts, const char *option) 
 *
 *  FUNCTION
 *     This function returns true (1) if the given 'option'
@@ -720,21 +721,21 @@ int opt_list_has_X(lList *opts, const char *option)
 *     const char *option - switch name 
 *
 *  RESULT
-*     int - found switch with value 'true'
-*        1 - yes
-*        0 - no 
+*     bool - found switch with value 'true'
+*        true - yes
+*        false - no 
 *
 *  SEE ALSO
 *     sge/opt/opt_list_has_X()
 ******************************************************************************/
-int opt_list_is_X_true(lList *opts, const char *option) 
+bool opt_list_is_X_true(lList *opts, const char *option) 
 {
    lListElem *opt;
-   int ret = 0;
+   bool ret = false;
 
    opt = lGetElemStr(opts, SPA_switch, option);
    if (opt != NULL) {
-      ret = (lGetInt(opt, SPA_argval_lIntT) == 1);
+      ret = (lGetInt(opt, SPA_argval_lIntT) == 1) ? true : false;
    }
    return ret;
 }

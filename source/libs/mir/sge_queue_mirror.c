@@ -110,7 +110,7 @@ qinstance_update_cqueue_list(sge_object_type type, sge_event_action action,
       
       lListElem *qinstance = qinstance_list_locate(list, hostname, NULL);
       const char *key = NULL;
-      bool is_list = (list != NULL);
+      bool is_list = list != NULL ? true : false;
       
       sge_dstring_sprintf(&key_buffer, SFN"@"SFN, name, hostname);
       key = sge_dstring_get_string(&key_buffer);

@@ -186,7 +186,7 @@ char *argv[]
    parse_cmdline_schedd(argc, argv);
 
    /* daemonizes if qmaster is unreachable */
-   check_qmaster = sge_setup_sge_schedd();
+   check_qmaster = (sge_setup_sge_schedd() != 0) ? true : false;
 
    /* prepare event client/mirror mechanism */
    sge_schedd_mirror_register();
@@ -319,7 +319,7 @@ char *argv[]
       
       /* output profiling information */
       if (prof_is_active(SGE_PROF_CUSTOM0)) {
-         time_t now = sge_get_gmt();
+         time_t now = (time_t)sge_get_gmt();
 
          if (now > next_prof_output || shut_me_down) {
             prof_output_info(SGE_PROF_ALL, false, "profiling summary:\n");
@@ -628,7 +628,7 @@ int sge_before_dispatch(void)
    
    if (sconf_is_new_config()) {
       int interval = sconf_get_flush_finish_sec();
-      bool flush = interval> 0;
+      bool flush = (interval > 0) ? true : false;
       if (interval== 0)
          interval= -1;
       if(ec_get_flush(sgeE_JOB_DEL) != interval) {
@@ -639,7 +639,7 @@ int sge_before_dispatch(void)
       }
 
       interval= sconf_get_flush_submit_sec();
-      flush = interval> 0;
+      flush = (interval > 0) ? true : false;
       if (interval== 0)
          interval= -1;
       if(ec_get_flush(sgeE_JOB_ADD) != interval) {

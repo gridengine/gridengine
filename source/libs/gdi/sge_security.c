@@ -540,8 +540,6 @@ int sge_security_initialize(const char *name)
 
 #ifdef SECURE
    {
-      static const char* dummy_string = NULL;
-      dummy_string = sge_dummy_sec_string;
       if (feature_is_enabled(FEATURE_CSP_SECURITY)) {
          if (sge_ssl_setup_security_path(name)) {
             DEXIT;
@@ -601,7 +599,7 @@ int gdi_receive_sec_message(cl_com_handle_t* handle,char* un_resolved_hostname, 
    DENTER(TOP_LAYER, "gdi_receive_sec_message");
 
    ret = cl_commlib_receive_message(handle, un_resolved_hostname,  component_name,  component_id,  
-                                     synchron, response_mid,  message,  sender);
+                                     (cl_bool_t)synchron, response_mid,  message,  sender);
    if (message != NULL) {
       dump_rcv_info(message,sender);
    }
@@ -622,7 +620,7 @@ int gdi_send_sec_message(cl_com_handle_t* handle,
 
    ret = cl_commlib_send_message(handle, un_resolved_hostname,  component_name,  component_id, 
                                   ack_type, data,  size ,
-                                  mid,  response_mid,  tag , copy_data, wait_for_ack);
+                                  mid,  response_mid,  tag , (cl_bool_t)copy_data, (cl_bool_t)wait_for_ack);
    dump_snd_info(un_resolved_hostname, component_name, component_id, ack_type, tag, mid);
    DEXIT;
    return ret;
@@ -846,7 +844,7 @@ u_short *compressed
       message->message = NULL;
       *buflen = message->message_length;
       if (tag) {
-         *tag = message->message_tag;
+         *tag = (int)message->message_tag;
       }
       if (compressed) {
          *compressed = 0;
@@ -861,7 +859,7 @@ u_short *compressed
             strcpy(fromhost, sender->comp_host);
          }
          if (fromid != NULL) {
-            *fromid = sender->comp_id;
+            *fromid = (u_short)sender->comp_id;
          }
       }
    }

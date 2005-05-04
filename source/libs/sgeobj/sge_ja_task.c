@@ -114,7 +114,7 @@ void ja_task_list_print_to_string(const lList *ja_task_list,
       range_list_insert_id(&range_list, NULL, tid);      
    } 
    range_list_sort_uniq_compress(range_list, NULL); 
-   range_list_print_to_string(range_list, range_string, 0); 
+   range_list_print_to_string(range_list, range_string, false); 
    range_list = lFreeList(range_list);
    DEXIT;
 }
@@ -333,7 +333,7 @@ int sge_parse_jobtasks( lList **ipp, lListElem **idp, const char *str_jobtask,
          token[0] = '\0';
          token++;
          range_list_parse_from_string(&task_id_range_list, alpp, token,
-                                      0, 1, INF_NOT_ALLOWED);
+                                      false, true, INF_NOT_ALLOWED);
          if (*alpp || !task_id_range_list) {
             ret = -1;
          }

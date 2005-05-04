@@ -1255,7 +1255,7 @@ static void trigger_scheduler_monitoring(char *aHost, sge_gdi_request *aRequest,
 
    if (sge_get_auth_info(aRequest, &uid, user, &gid, group) == -1) {
       ERROR((SGE_EVENT, MSG_GDI_FAILEDTOEXTRACTAUTHINFO));
-      answer_list_add(&(anAnswer->alp), SGE_EVENT, STATUS_ENOMGR, 0);
+      answer_list_add(&(anAnswer->alp), SGE_EVENT, STATUS_ENOMGR, ANSWER_QUALITY_ERROR);
       DEXIT;
       return;
    }
@@ -1596,7 +1596,6 @@ static int sge_chck_get_perm_host(lList **alpp, sge_gdi_request *request)
 {
    u_long32 target;
    char *host     = NULL;
-   char *commproc = NULL;
    static int last_id = -1; 
    
    DENTER(TOP_LAYER, "sge_chck_get_perm_host");
@@ -1611,7 +1610,6 @@ static int sge_chck_get_perm_host(lList **alpp, sge_gdi_request *request)
 
    target = request->target;
    host = request->host;
-   commproc = request->commproc;
 
    /* check permissions of host */
    switch (target) {
@@ -1912,9 +1910,9 @@ int sub_command
    int ret;
    DENTER(TOP_LAYER, "schedd_mod");
 
-   ret = sconf_validate_config_(alpp)?0:1;
+   ret = sconf_validate_config_(alpp) ? 0 : 1;
    
    DEXIT;
-   return 0;
+   return ret;
 }
 

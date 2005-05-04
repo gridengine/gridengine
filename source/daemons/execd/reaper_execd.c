@@ -540,7 +540,7 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
 
       slots = (s=get_conf_val("pe_slots"))?atoi(s):1;
       usage_mul_factor = execd_get_acct_multiplication_factor(pe, slots, 
-                                                         pe_task_id != NULL);
+                                                         (pe_task_id != NULL) ? true : false);
    }
 
    if (read_dusage(jr, sge_dstring_get_string(&jobdir), job_id, ja_task_id, failed, usage_mul_factor)) {
@@ -1845,12 +1845,12 @@ lListElem *jr
     */
 
    if ((ep=lGetSubStr(jr, UA_name, "start_time", JR_usage)))
-      strcpy(sge_mail_start, sge_ctime((u_long32)lGetDouble(ep, UA_value), &ds));
+      strcpy(sge_mail_start, sge_ctime((time_t)lGetDouble(ep, UA_value), &ds));
    else   
       strcpy(sge_mail_start, MSG_MAIL_UNKNOWN_NAME);
 
    if ((ep=lGetSubStr(jr, UA_name, "end_time", JR_usage)))
-      strcpy(sge_mail_end, sge_ctime((u_long32)lGetDouble(ep, UA_value), &ds));
+      strcpy(sge_mail_end, sge_ctime((time_t)lGetDouble(ep, UA_value), &ds));
    else   
       strcpy(sge_mail_end, MSG_MAIL_UNKNOWN_NAME);
 

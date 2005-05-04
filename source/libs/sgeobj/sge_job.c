@@ -791,7 +791,14 @@ void job_add_as_zombie(lListElem *zombie, lList **answer_list,
 *******************************************************************************/
 bool job_has_soft_requests(lListElem *job) 
 {
-   return lGetList(job, JB_soft_resource_list) || lGetList(job, JB_soft_queue_list);
+   bool ret = false;
+   
+   if (lGetList(job, JB_soft_resource_list) != NULL || 
+       lGetList(job, JB_soft_queue_list) != NULL) {
+      ret = true;
+   }
+
+   return ret;
 }
 
 /****** sgeobj/job/job_set_hold_state() ***************************************

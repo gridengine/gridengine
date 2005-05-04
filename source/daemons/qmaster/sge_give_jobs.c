@@ -129,7 +129,7 @@ sge_to_zombies(lListElem *jep, lListElem *ja_task, int spool_job);
 
 static void 
 sge_job_finish_event(lListElem *jep, lListElem *jatep, lListElem *jr, 
-                     sge_commit_flags_t commit_flags, const char *diagnosis);
+                     int commit_flags, const char *diagnosis);
 
 static int 
 setCheckpointObj(lListElem *job); 
@@ -727,7 +727,7 @@ void sge_job_resend_event_handler(te_event_t anEvent)
 
    jep = job_list_locate(Master_Job_List, jobid);
    jatep = job_search_task(jep, NULL, jataskid);
-   now = sge_get_gmt();
+   now = (time_t)sge_get_gmt();
 
    if(!jep || !jatep)
    {
@@ -843,7 +843,7 @@ void trigger_job_resend(u_long32 now, lListElem *hep, u_long32 jid, u_long32 ja_
    seconds = hep ? MAX(load_report_interval(hep), MAX_JOB_DELIVER_TIME) : 0;
    DPRINTF(("TRIGGER JOB RESEND "sge_u32"/"sge_u32" in %d seconds\n", jid, ja_task_id, seconds)); 
 
-   when = now + seconds;
+   when = (time_t)(now + seconds);
    ev = te_new_event(when, TYPE_JOB_RESEND_EVENT, ONE_TIME_EVENT, jid, ja_task_id, "job-resend_event");
    te_add_event(ev);
    te_free_event(ev);
@@ -922,7 +922,7 @@ lListElem *jep,
 lListElem *jatep,
 lListElem *jr,
 sge_commit_mode_t mode,
-sge_commit_flags_t commit_flags
+int commit_flags
 ) {
    lListElem *cqueue, *hep, *petask, *tmp_ja_task;
    lListElem *global_host_ep;
@@ -1290,7 +1290,7 @@ sge_commit_flags_t commit_flags
     * char *failed_reason
     */
 static void sge_job_finish_event(lListElem *jep, lListElem *jatep, lListElem *jr, 
-                  sge_commit_flags_t commit_flags, const char *diagnosis)
+                  int commit_flags, const char *diagnosis)
 {
    bool release_jr = false;
 

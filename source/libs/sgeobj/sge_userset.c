@@ -86,11 +86,11 @@ bool userset_is_deadline_user(lList *lp, const char *username)
    if (deadline_users && lGetSubStr(deadline_users, UE_name, username, 
          US_entries)) {
       DEXIT;
-      return 1; /* found user in deadline user list */
+      return true; /* found user in deadline user list */
    }
 
    DEXIT;
-   return 0;
+   return false;
 }
 
 /****** sgeobj/userset/userset_list_locate() **********************************

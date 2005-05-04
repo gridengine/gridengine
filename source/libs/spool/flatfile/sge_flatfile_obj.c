@@ -542,7 +542,7 @@ static void create_spooling_field (
    }
 }
 
-spooling_field *sge_build_UP_field_list (int spool, int user)
+spooling_field *sge_build_UP_field_list (bool spool, bool user)
 {
    /* There are 13 possible UP_Type fields. */
    spooling_field *fields = (spooling_field *)malloc (sizeof (spooling_field)*13);
@@ -800,7 +800,7 @@ static int read_CF_value(lListElem *ep, int nm, const char *buf,
             lList *rlp = NULL;
             
             range_list_parse_from_string(&rlp, alp, value, 
-                                         0, 0, INF_NOT_ALLOWED);
+                                         false, false, INF_NOT_ALLOWED);
             if (rlp == NULL) {
                WARNING((SGE_EVENT, MSG_CONFIG_CONF_INCORRECTVALUEFORCONFIGATTRIB_SS, 
                         name, value));
@@ -812,7 +812,7 @@ static int read_CF_value(lListElem *ep, int nm, const char *buf,
                lListElem *rep;
 
                for_each (rep, rlp) {
-                  long min;
+                  u_long32 min;
 
                   min = lGetUlong(rep, RN_min);
                   if (min < GID_RANGE_NOT_ALLOWED_ID) {

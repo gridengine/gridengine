@@ -328,7 +328,7 @@ ulong_parse_date_time_from_string(u_long32 *this_ulong,
       }
       non_seconds+=year_fieldlen;
    } else {
-      gmt_secs=sge_get_gmt();
+      gmt_secs=(time_t)sge_get_gmt();
       tmp_timeptr=localtime(&gmt_secs);
       timeptr.tm_year=tmp_timeptr->tm_year;
    }

@@ -142,7 +142,7 @@ static void uncullify_tm(const lListElem *tm_ep, struct tm *tm_now);
 
 static int normalize_range_list(lList *rl, cmp_func_t cmp_func);
 
-static int in_range_list(lListElem *tm, lList *rl, cmp_func_t cmp_func); 
+static bool in_range_list(lListElem *tm, lList *rl, cmp_func_t cmp_func); 
 
 static int in_range(const lListElem *tm, const lListElem *r, cmp_func_t cmp_func);
 
@@ -329,7 +329,6 @@ static int state_at(time_t now, const lList *ycal, lList *wcal, time_t *next_eve
       int max = lGetNumberOfElem(wcal);
       bool *visited = (bool*) malloc(max * sizeof(bool));
       bool isOverlapping;
-      bool isNoChange = false;
      
       memset(visited, false, max * sizeof(bool));
 
@@ -348,7 +347,6 @@ static int state_at(time_t now, const lList *ycal, lList *wcal, time_t *next_eve
             }   
             
             if (limit == 0) { 
-               isNoChange = true;
             }
             else if (state == next_state && temp_next_event >= limit) {
                if (!visited[counter]) {
@@ -366,7 +364,6 @@ static int state_at(time_t now, const lList *ycal, lList *wcal, time_t *next_eve
                else {
                   temp_next_event = 0;
                   isOverlapping = false;
-                  isNoChange = true;
                   break;
                }
             }
@@ -447,7 +444,7 @@ lListElem *week_entry,  CA_Type
 *******************************************************************************/
 static u_long32 is_week_entry_active(lListElem *tm, lListElem *week_entry, time_t *limit, u_long32 *next_state) {
    u_long32 state;
-   int in_wday_range, in_daytime_range = 0;
+   bool in_wday_range, in_daytime_range = false;
 
    DENTER(TOP_LAYER, "is_week_entry_active");
 
@@ -545,7 +542,7 @@ lListElem *year_entry, CA_Type
 *******************************************************************************/
 static u_long32 is_year_entry_active(lListElem *tm, lListElem *year_entry, time_t *limit) {
    u_long32 state;
-   int in_yday_range, in_daytime_range = 0;
+   bool in_yday_range, in_daytime_range = false;
 
    DENTER(TOP_LAYER, "is_year_entry_active");
 
@@ -1003,7 +1000,8 @@ static time_t compute_limit(bool today, bool active, const lList *year_time, con
       }
 
       /* convert from cull struct tm into time_t */
-      if ((end_of_day = (lGetUlong(lep, TM_hour)==24))) {
+      end_of_day = (lGetUlong(lep, TM_hour)==24) ? true : false;
+      if (end_of_day) {
          lSetUlong(lep, TM_hour, 23);
          lSetUlong(lep, TM_min, 59);
          lSetUlong(lep, TM_sec, 59);
@@ -1053,12 +1051,12 @@ static time_t compute_limit(bool today, bool active, const lList *year_time, con
 static int normalize_range_list(lList *rl, cmp_func_t cmp_func) {
    lListElem *r1, *r2, *r;
    lListElem *q1, *q2, *q;
-   lListElem *t1, *t2, *t3, *t4;
-   int i1, i2, i3, i4;
+/*    lListElem *t1, *t2, *t3, *t4; */
+/*    int i1, i2, i3, i4; */
 
    DENTER(TOP_LAYER, "normalize_range_list");
 
-   i1 = i2 = i3 = i4 = -1;
+/*    i1 = i2 = i3 = i4 = -1; */
 
    for_each(r, rl) {
 
@@ -1071,16 +1069,16 @@ static int normalize_range_list(lList *rl, cmp_func_t cmp_func) {
          q2 = lFirst(lGetList(q, TMR_end));
 
          /* overlapping ranges ? */
-         if ((i1=in_range(r1, q, cmp_func))         || /* r1 in q */
-             (i2=(r2 && in_range(r2, q, cmp_func))) || /* r2 in q */
-             (i3=in_range(q1, r, cmp_func))         || /* q1 in r */
-             (i4=(q2 && in_range(q2, r, cmp_func))))   /* q2 in r */ {
+         if (in_range(r1, q, cmp_func)         || /* r1 in q */
+             (r2 && in_range(r2, q, cmp_func)) || /* r2 in q */
+             in_range(q1, r, cmp_func)         || /* q1 in r */
+             (q2 && in_range(q2, r, cmp_func)))   /* q2 in r */ {
 
 /*             DPRINTF(("%d %d %d %d\n", i1,i2,i3,i4)); */
-            t1=lFirst(lGetList(r, TMR_begin));
-            t2=lFirst(lGetList(r, TMR_end));
-            t3=lFirst(lGetList(q, TMR_begin));
-            t4=lFirst(lGetList(q, TMR_end));
+/*             t1=lFirst(lGetList(r, TMR_begin)); */
+/*             t2=lFirst(lGetList(r, TMR_end)); */
+/*             t3=lFirst(lGetList(q, TMR_begin)); */
+/*             t4=lFirst(lGetList(q, TMR_end)); */
 
 /*            DPRINTF(("overlapping ranges %d:%d:%d-%d:%d:%d and %d:%d:%d-%d:%d:%d\n",
                lGetUlong(t1, TM_hour),
@@ -1110,8 +1108,8 @@ static int normalize_range_list(lList *rl, cmp_func_t cmp_func) {
                lSwapList(r, TMR_end, q, TMR_end);
             }   
             
-            t1=lFirst(lGetList(r, TMR_begin));
-            t2=lFirst(lGetList(r, TMR_end));
+/*             t1=lFirst(lGetList(r, TMR_begin)); */
+/*             t2=lFirst(lGetList(r, TMR_end)); */
 
 /*            DPRINTF(("resulting range %d:%d:%d-%d:%d:%d\n",
                lGetUlong(t1, TM_hour),
@@ -1142,25 +1140,25 @@ static int normalize_range_list(lList *rl, cmp_func_t cmp_func) {
 /*
 lListElem *tm, TM_Type 
 */
-static int in_range_list(lListElem *tm, lList *rl, cmp_func_t cmp_func) {
+static bool in_range_list(lListElem *tm, lList *rl, cmp_func_t cmp_func) {
    lListElem *r;
 
    DENTER(TOP_LAYER, "in_range_list");
 
    if (!rl) {
       DEXIT;
-      return 1;
+      return true;
    }
 
    for_each(r, rl) {
       if (in_range(tm, r, cmp_func)) {
          DEXIT;
-         return 1;
+         return true;
       }
    }
 
    DEXIT;
-   return 0;
+   return false;
 }
 
 /*
@@ -2158,7 +2156,7 @@ static void extend_wday_range(lList *week_day)
    
 
 static void split_wday_range(lList *wdrl, lListElem *tmr) {
-   lListElem *t2, *t1, *t3, *t4, *tmr2;
+   lListElem *t2, *t1, /* *t3, *t4, */ *tmr2;
 
    DENTER(TOP_LAYER, "split_wday_range");
 
@@ -2175,8 +2173,8 @@ static void split_wday_range(lList *wdrl, lListElem *tmr) {
 
          t1=lFirst(lGetList(tmr, TMR_begin));
          t2=lFirst(lGetList(tmr, TMR_end));
-         t3=lFirst(lGetList(tmr2, TMR_begin));
-         t4=lFirst(lGetList(tmr2, TMR_end));
+/*          t3=lFirst(lGetList(tmr2, TMR_begin)); */
+/*          t4=lFirst(lGetList(tmr2, TMR_end)); */
 
 #if 0
       DPRINTF(("splitted wday %d-%d into %d-%d and %d-%d\n",
@@ -2502,7 +2500,7 @@ uncullify_tm(const lListElem *tm_ep, struct tm *tm_now)
 bool 
 calendar_parse_year(lListElem *cal, lList **answer_list) 
 {
-   int ret = true;
+   bool ret = true;
    lList *yc = NULL;
 
    DENTER(TOP_LAYER, "calendar_parse_year");
@@ -2573,7 +2571,7 @@ u_long32 calendar_get_current_state_and_end(const lListElem *cep, time_t *then, 
    }
    
    if (now == NULL) {
-      new_state = state_at(sge_get_gmt(), year_list, week_list, then);
+      new_state = state_at((time_t)sge_get_gmt(), year_list, week_list, then);
    }
    else {
       new_state = state_at(*now, year_list, week_list, then);

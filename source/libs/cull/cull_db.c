@@ -1229,7 +1229,7 @@ int lString2ListNone(const char *s, lList **lpp, const lDescr *dp,
 int lDiffListStr(int nm, lList **lpp1, lList **lpp2) 
 {
    const char *key;
-   lListElem *ep, *to_check, *to_del;
+   lListElem *ep, *to_check;
 
    DENTER(CULL_LAYER, "lDiffListStr");
 
@@ -1250,7 +1250,7 @@ int lDiffListStr(int nm, lList **lpp1, lList **lpp2)
 
       ep = lNext(ep);           /* point to next element before del */
 
-      if ((to_del = lGetElemStr(*lpp2, nm, key))) {
+      if (lGetElemStr(*lpp2, nm, key) != NULL) {
          lDelElemStr(lpp2, nm, key);
          lDelElemStr(lpp1, nm, key);
       }

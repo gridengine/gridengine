@@ -1247,7 +1247,7 @@ DTRACE;
          }
 
          range_list_parse_from_string(&pe_range, &answer, *sp, 
-                                      0, 0, INF_ALLOWED);
+                                      false, false, INF_ALLOWED);
 
          if (!pe_range) {
             DEXIT;
@@ -1276,7 +1276,7 @@ DTRACE;
          sp++;
          if (!*sp) {
              sprintf(str, MSG_PARSE_QOPTIONMUSTHAVEDESTIDLISTARGUMENT);
-             answer_list_add(&answer, str, STATUS_ESEMANTIC, 0);
+             answer_list_add(&answer, str, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
              DEXIT;
              return answer;
          }
@@ -1534,7 +1534,7 @@ DTRACE;
          DPRINTF(("\"-t %s\"\n", *sp));
 
          range_list_parse_from_string(&task_id_range_list, &answer, *sp,
-                                      0, 1, INF_NOT_ALLOWED);
+                                      false, true, INF_NOT_ALLOWED);
          if (!task_id_range_list) {
             DEXIT;
             return answer;
@@ -1542,7 +1542,7 @@ DTRACE;
 
          range_list_sort_uniq_compress(task_id_range_list, &answer);
          if (lGetNumberOfElem(task_id_range_list) > 1) {
-            answer_list_add(&answer, MSG_QCONF_ONLYONERANGE, STATUS_ESYNTAX, 0);
+            answer_list_add(&answer, MSG_QCONF_ONLYONERANGE, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
             DEXIT;
             return answer;
          }
@@ -2134,11 +2134,11 @@ char *path_str
    char **pstr = NULL;
    lListElem *ep = NULL;
    char *path_string = NULL;
-   bool ret_error=false;
+   bool ret_error = false;
 
    DENTER(TOP_LAYER, "cull_parse_path_list");
 
-   ret_error = !lpp;
+   ret_error = (lpp == NULL) ? true : false;
 /*
    if (!lpp) {
       DEXIT;
@@ -2148,7 +2148,7 @@ char *path_str
 
    if(!ret_error){
       path_string = sge_strdup(NULL, path_str);
-      ret_error = !path_string;
+      ret_error = (path_string == NULL) ? true : false;
    }
 /*
    if (!path_string) {
@@ -2159,7 +2159,7 @@ char *path_str
 */
    if(!ret_error){
       str_str = string_list(path_string, ",", NULL);
-      ret_error = !str_str || !*str_str;
+      ret_error = (str_str == NULL || *str_str == NULL) ? true : false;
    }
 /*
    if (!str_str || !*str_str) {
@@ -2171,7 +2171,7 @@ char *path_str
 */
    if ( (!ret_error) && (!*lpp)) {
       *lpp = lCreateList("path_list", PN_Type);
-      ret_error = !*lpp;
+      ret_error = (*lpp == NULL) ? true : false;
 /*
       if (!*lpp) {
          FREE(path_string);

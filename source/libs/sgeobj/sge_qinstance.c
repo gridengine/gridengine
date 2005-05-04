@@ -815,14 +815,12 @@ void
 qinstance_check_unknown_state(lListElem *this_elem)
 {
    const char *hostname = NULL;
-   const char *full_name = NULL;
    lList *load_list = NULL;
    lListElem *host = NULL;
    lListElem *load = NULL;
 
    DENTER(QINSTANCE_LAYER, "qinstance_check_unknown_state");
    hostname = lGetHost(this_elem, QU_qhostname);
-   full_name = lGetString(this_elem, QU_full_name);
    host = host_list_locate(Master_Exechost_List, hostname);
    if (host != NULL) {
       load_list = lGetList(host, EH_load_list);

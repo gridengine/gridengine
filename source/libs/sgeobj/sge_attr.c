@@ -351,7 +351,7 @@ attr_list_add_set_del(lList **this_list, lList **answer_list,
               const lDescr *descriptor, 
               int href_nm, int value_nm)
 {
-   bool ret = True;
+   bool ret = true;
    lListElem *attr = NULL;
 
    if (remove && this_list && *this_list) {
@@ -499,7 +499,7 @@ attr_list_find_value_href(const lList *this_list, lList **answer_list,
       href = attr_list_locate(this_list, hostname, href_nm);
       if (href != NULL) {  
          object_get_any_type(href, value_nm, value_buffer);
-         *found = True;
+         *found = true;
          DTRACE;
          ret = true;
       } else {
@@ -512,7 +512,7 @@ attr_list_find_value_href(const lList *this_list, lList **answer_list,
             tmp_href = attr_list_locate(this_list, HOSTREF_DEFAULT, href_nm);
             if (tmp_href != NULL) {
                object_get_any_type(tmp_href, value_nm, value_buffer);
-               *found = False;
+               *found = false;
                DTRACE;
                ret = true;
             } else {

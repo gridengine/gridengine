@@ -86,7 +86,7 @@ is_hgroup_name(const char *name)
    bool ret = false;
 
    if (name != NULL) {
-      ret = (name[0] == HOSTGROUP_INITIAL_CHAR);
+      ret = (name[0] == HOSTGROUP_INITIAL_CHAR) ? true : false;
    }
    return ret;
 }

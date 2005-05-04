@@ -64,7 +64,7 @@ static const featureset_names_t featureset_list[] = {
    {FEATURE_DCE_SECURITY,           "dce"},
    {FEATURE_KERBEROS_SECURITY,      "kerberos"},
    {FEATURE_CSP_SECURITY,           "csp"},
-   {0, NULL}
+   {FEATURE_UNINITIALIZED,          NULL}
 };
 /* *INDENT-ON* */
 
@@ -274,7 +274,7 @@ void feature_activate(feature_id_t id)
       lSetUlong(inactive_set, FES_active, 1);
       if (lGetUlong(active_set, FES_id) != id) {
          WARNING((SGE_EVENT, MSG_GDI_SWITCHFROMTO_SS, 
-            feature_get_featureset_name(lGetUlong(active_set, FES_id)),
+            feature_get_featureset_name((feature_id_t)lGetUlong(active_set, FES_id)),
             feature_get_featureset_name(id)));
       }
    } else if (inactive_set) {
@@ -308,7 +308,7 @@ feature_id_t feature_get_active_featureset_id(void)
 
    for_each(feature, *feature_get_master_featureset_list()) {
       if (lGetUlong(feature, FES_active)) {
-         ret = lGetUlong(feature, FES_id);
+         ret = (feature_id_t)lGetUlong(feature, FES_id);
          break;
       }
    }

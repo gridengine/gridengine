@@ -326,9 +326,9 @@ sge_mirror_error sge_mirror_subscribe(sge_object_type type,
    }
 
    if(type == SGE_TYPE_ALL) {
-      int i;
+      sge_object_type i;
 
-      for(i = 0; i < SGE_TYPE_ALL; i++) {
+      for(i = SGE_TYPE_ADMINHOST; i < SGE_TYPE_ALL; i++) {
          if((ret = _sge_mirror_subscribe(i, callback_before, callback_after, clientdata, NULL, NULL)) != SGE_EM_OK) {
             break;
          }
@@ -706,9 +706,9 @@ sge_mirror_error sge_mirror_unsubscribe(sge_object_type type)
    }
 
    if(type == SGE_TYPE_ALL) {
-      int i;
+      sge_object_type i;
       
-      for(i = 0; i < SGE_TYPE_ALL; i++) {
+      for(i = SGE_TYPE_ADMINHOST; i < SGE_TYPE_ALL; i++) {
          if(i != SGE_TYPE_SHUTDOWN && i != SGE_TYPE_QMASTER_GOES_DOWN) {
             _sge_mirror_unsubscribe(i);
          }
@@ -925,8 +925,6 @@ static sge_mirror_error _sge_mirror_unsubscribe(sge_object_type type)
 *******************************************************************************/
 sge_mirror_error sge_mirror_process_events(void)
 {
-   static u_long32 last_heared = 0;
-   u_long32 now;
    lList *event_list = NULL;
    sge_mirror_error ret = SGE_EM_OK;
    static int test_debug = 0;
@@ -935,11 +933,9 @@ sge_mirror_error sge_mirror_process_events(void)
 
    PROF_START_MEASUREMENT(SGE_PROF_MIRROR);
 
-   now = sge_get_gmt();
    num_events = 0;
 
    if(ec_get(&event_list, false)) {
-      last_heared = now;
       if(event_list != NULL) {
          ret = sge_mirror_process_event_list(event_list);
          lFreeList(event_list);

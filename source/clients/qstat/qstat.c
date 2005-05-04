@@ -426,15 +426,8 @@ char **argv
 
       sconf_set_qs_state(QS_STATE_EMPTY);
       for_each(jep, job_list) {
-         lListElem *pe, *ckpt;
          int ret, show_job;
 
-         pe = lGetString(jep, JB_pe)?
-                  pe_list_locate(pe_list, lGetString(jep, JB_pe)):
-                  NULL; /* aargh ! wildcard pe */
-         ckpt = lGetString(jep, JB_checkpoint_name)?
-                           ckpt_list_locate(ckpt_list, 
-                           lGetString(jep, JB_checkpoint_name)): NULL;
          show_job = 0;
 
          for_each(cqueue, queue_list) {
@@ -557,7 +550,7 @@ char **argv
             u_long32 disabled_manual, disabled_calendar, ambiguous;
             u_long32 orphaned, error;
             bool is_load_available;
-            bool show_states = full_listing & QSTAT_DISPLAY_EXTENDED;
+            bool show_states = (full_listing & QSTAT_DISPLAY_EXTENDED) ? true : false;
 
             cqueue_calculate_summary(cqueue,
                                      exechost_list,

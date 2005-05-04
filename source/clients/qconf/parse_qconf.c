@@ -128,7 +128,7 @@ static int print_config(const char *config_name);
 static int delete_config(const char *config_name);
 static int add_modify_config(const char *config_name, const char *filename, u_long32 flags);
 static lList* edit_sched_conf(lList *confl);
-static lListElem* edit_userprj(lListElem *ep, int user);
+static lListElem* edit_userprj(lListElem *ep, bool user);
 static lListElem *edit_sharetree(lListElem *ep);
 
 static char **sge_parser_get_next(char **head);
@@ -926,7 +926,7 @@ char *argv[]
          /* get a template for editing */
          ep = getUserPrjTemplate(); 
 
-         newep = edit_userprj(ep, 1);
+         newep = edit_userprj(ep, true);
          ep = lFreeElem(ep);
 
          /* send it to qmaster */
@@ -963,7 +963,7 @@ char *argv[]
          /* get a template for editing */
          ep = getUserPrjTemplate(); 
          
-         newep = edit_userprj(ep, 0);
+         newep = edit_userprj(ep, false);
          ep = lFreeElem(ep);
 
          /* send it to qmaster */
@@ -1004,7 +1004,7 @@ char *argv[]
          /* get project  */
          ep = NULL;
          fields_out[0] = NoName;
-         fields = sge_build_UP_field_list (0, 1);
+         fields = sge_build_UP_field_list (false, true);
          ep = spool_flatfile_read_object(&alp, UP_Type, NULL, fields, fields_out,
                                           true, &qconf_sfi, SP_FORM_ASCII, NULL,
                                           file);
@@ -1075,7 +1075,7 @@ char *argv[]
          /* get project  */
          ep = NULL;
          fields_out[0] = NoName;
-         fields = sge_build_UP_field_list (0, 0);
+         fields = sge_build_UP_field_list (false, false);
          ep = spool_flatfile_read_object(&alp, UP_Type, NULL, fields, fields_out,
                                           true, &qconf_sfi, SP_FORM_ASCII, NULL,
                                           file);
@@ -1166,7 +1166,7 @@ char *argv[]
             lp = lFreeList(lp);
          } else {
             char errstr[1024];
-            spooling_field *fields = sge_build_STN_field_list (0, 1);
+            spooling_field *fields = sge_build_STN_field_list (false, true);
             
             spp = sge_parser_get_next(spp);
            
@@ -2505,20 +2505,30 @@ char *argv[]
       spp = sge_parser_get_next(spp);
       sge_dstring_sprintf(&value_pattern, "%s", *spp);
 
-      handle_cqueue = !strcmp(sge_dstring_get_string(&object_name), "queue");
-      handle_domain = !strcmp(sge_dstring_get_string(&object_name), "queue_domain");
-      handle_qinstance = !strcmp(sge_dstring_get_string(&object_name), "queue_instance");
-      handle_exechost = !strcmp(sge_dstring_get_string(&object_name), "exechost");
+      handle_cqueue = (strcmp(sge_dstring_get_string(&object_name), "queue") == 0) ? true : false;
+      handle_domain = (strcmp(sge_dstring_get_string(&object_name), "queue_domain") == 0) ? true : false;
+      handle_qinstance = (strcmp(sge_dstring_get_string(&object_name), "queue_instance") == 0) ? true : false;
+      handle_exechost = (strcmp(sge_dstring_get_string(&object_name), "exechost") == 0) ? true : false;
 
       if (handle_exechost) {
          lEnumeration *what = NULL;
          lList *list = NULL;
          lListElem *elem = NULL;
          lList *answer_list = NULL;
+         lListElem *answer_ep;
 
          what = lWhat("%T(ALL)", EH_Type);
          answer_list = sge_gdi(SGE_EXECHOST_LIST, SGE_GDI_GET, &list, NULL, what);
          what = lFreeWhat(what);
+
+         answer_ep = lFirst(answer_list);
+         answer_exit_if_not_recoverable(answer_ep);
+         if (answer_get_status(answer_ep) != STATUS_OK) {
+            fprintf(stderr, "%s\n", lGetString(answer_ep, AN_text));
+            lFreeList(answer_list);
+            return 0;
+         }
+         answer_list = lFreeList(answer_list);
 
          for_each(elem, list) {
             const char *hostname = NULL;
@@ -2723,10 +2733,20 @@ char *argv[]
          lList *list = NULL;
          lListElem *elem = NULL;
          lList *answer_list = NULL;
+         lListElem *answer_ep;
 
          what = lWhat("%T(ALL)", CQ_Type);
          answer_list = sge_gdi(SGE_CQUEUE_LIST, SGE_GDI_GET, &list, NULL, what);
          what = lFreeWhat(what);
+
+         answer_ep = lFirst(answer_list);
+         answer_exit_if_not_recoverable(answer_ep);
+         if (answer_get_status(answer_ep) != STATUS_OK) {
+            fprintf(stderr, "%s\n", lGetString(answer_ep, AN_text));
+            lFreeList(answer_list);
+            return 0;
+         }
+         answer_list = lFreeList(answer_list);
 
          for_each(elem, list) {
             int index = 0;
@@ -2787,12 +2807,12 @@ char *argv[]
                      bool is_domain;
                      bool is_qinstance;
 
-                     is_cqueue = !strcmp(host_hgroup, HOSTREF_DEFAULT);
+                     is_cqueue = (strcmp(host_hgroup, HOSTREF_DEFAULT) == 0) ? true : false;
                      is_domain = false;
                      if (!is_cqueue) {
                         is_domain = is_hgroup_name(host_hgroup);
                      }
-                     is_qinstance = (!is_domain && !is_cqueue);
+                     is_qinstance = (!is_domain && !is_cqueue) ? true : false;
 
                      lAppendElem(tmp_attribute_list, tmp_attribute);
                      lSetHost(tmp_attribute,
@@ -3192,7 +3212,7 @@ char *argv[]
             lp = lFreeList(lp);
          } else {
             char errstr[1024];
-            spooling_field *fields = sge_build_STN_field_list (0, 1);
+            spooling_field *fields = sge_build_STN_field_list (false, true);
 
             spp = sge_parser_get_next(spp);
            
@@ -3474,7 +3494,7 @@ char *argv[]
          ep = lFirst(lp);
          
          /* edit user */
-         newep = edit_userprj(ep, 1);
+         newep = edit_userprj(ep, true);
 
          /* if the user name has changed, we need to print an error message */   
          if (strcmp(lGetString(ep, UP_name), lGetString(newep, UP_name))) {
@@ -3540,7 +3560,7 @@ char *argv[]
          ep = lFirst(lp);
          
          /* edit project */
-         newep = edit_userprj(ep, 0);
+         newep = edit_userprj(ep, false);
 
          /* look whether name has changed. If so we have to delete the
             project with the old name */
@@ -3593,7 +3613,7 @@ char *argv[]
          /* get user from file */
          newep = NULL;
          fields_out[0] = NoName;
-         fields = sge_build_UP_field_list (0, 1);
+         fields = sge_build_UP_field_list (false, true);
          newep = spool_flatfile_read_object(&alp, UP_Type, NULL,
                                          fields, fields_out, true, &qconf_sfi,
                                          SP_FORM_ASCII, NULL, file);
@@ -3650,7 +3670,7 @@ char *argv[]
          ep = lFirst(lp);
          
          /* edit user */
-         /* newep = edit_userprj(ep, 1); */
+         /* newep = edit_userprj(ep, true); */
 
          /* send it to qmaster */
          lp = lCreateList("User list to modify", UP_Type); 
@@ -3700,7 +3720,7 @@ char *argv[]
          /* get project from file */
          newep = NULL;
          fields_out[0] = NoName;
-         fields = sge_build_UP_field_list (0, 0);
+         fields = sge_build_UP_field_list (false, false);
          newep = spool_flatfile_read_object(&alp, UP_Type, NULL,
                                          fields, fields_out, true, &qconf_sfi,
                                          SP_FORM_ASCII, NULL, file);
@@ -3755,7 +3775,7 @@ char *argv[]
          ep = lFirst(lp);
          
          /* edit project */
-         /* newep = edit_userprj(ep, 0); */
+         /* newep = edit_userprj(ep, false); */
 
          /* send it to qmaster */
          lp = lCreateList("Project list to modify", UP_Type); 
@@ -5198,7 +5218,7 @@ char *argv[]
             ep = lFirst(lp);
             
             /* print to stdout */
-            fields = sge_build_UP_field_list (0, 1);
+            fields = sge_build_UP_field_list (false, true);
             filename_stdout = spool_flatfile_write_object(&alp, ep, false, fields, &qconf_param_sfi,
                                                  SP_DEST_STDOUT, SP_FORM_ASCII, 
                                                  NULL, false);
@@ -5242,7 +5262,7 @@ char *argv[]
          ep = lFirst(lp);
          
          /* print to stdout */
-         fields = sge_build_UP_field_list (0, 0);
+         fields = sge_build_UP_field_list (false, false);
          filename_stdout = spool_flatfile_write_object(&alp, ep, false, fields, &qconf_param_sfi,
                                               SP_DEST_STDOUT, SP_FORM_ASCII, 
                                               NULL, false);
@@ -5492,22 +5512,18 @@ u_long32 target
 ) {
    lListElem *argep=NULL, *ep=NULL;
    lList *lp=NULL, *alp=NULL;
-   int nm = NoName;
    lDescr *type = NULL;
 
    DENTER(TOP_LAYER, "del_host_of_type");
 
    switch (target) {
    case SGE_SUBMITHOST_LIST:
-      nm = SH_name;
       type = SH_Type;
       break;
    case SGE_ADMINHOST_LIST:
-      nm = AH_name;
       type = AH_Type;
       break;
    case SGE_EXECHOST_LIST:
-      nm = EH_name;
       type = EH_Type;
       break;
    }
@@ -5685,13 +5701,13 @@ lList *confl
 
 static lListElem *edit_userprj(
 lListElem *ep,
-int user        /* =1 user, =0 project */
+bool user        /* =1 user, =0 project */
 ) {
    int status;
    lListElem *newep = NULL;
    lList *alp = NULL;
    char *filename = NULL;
-   spooling_field *fields = sge_build_UP_field_list (0, user);
+   spooling_field *fields = sge_build_UP_field_list (false, user);
    int fields_out[MAX_NUM_FIELDS];
    int missing_field = NoName;
 
@@ -5778,7 +5794,7 @@ lListElem *ep
       ep = getSNTemplate();
    }
 
-   fields = sge_build_STN_field_list (0, 1);
+   fields = sge_build_STN_field_list (false, true);
    
    id_sharetree (ep, 0);
    

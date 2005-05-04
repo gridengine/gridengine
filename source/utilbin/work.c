@@ -361,7 +361,7 @@ static void reserve_stack_mem_kb(int n)
    char stack_mem[1024];   
    stack_mem[0] = '\0';
    if (n==1) {
-      printf(".\n"); fflush(stdout);
+      printf(".%s\n", stack_mem); fflush(stdout);
       return;
    }
    printf("."); fflush(stdout);
@@ -375,7 +375,7 @@ static void reserve_stack_mem_mb(int n)
    char stack_mem[1024*1024];   
    stack_mem[0] = '\0';
    if (n==1) {
-      printf(".\n"); fflush(stdout);
+      printf(".%s\n", stack_mem); fflush(stdout);
       return;
    }
    printf("."); fflush(stdout);

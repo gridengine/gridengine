@@ -443,7 +443,7 @@ static int xml_jobs_not_enrolled(lListElem *job, lListElem *qep,
       }
       if (range_list[i] != NULL && show) { 
          if ((group_opt & GROUP_NO_TASK_GROUPS) == 0) {
-            range_list_print_to_string(range_list[i], &ja_task_id_string, 0);
+            range_list_print_to_string(range_list[i], &ja_task_id_string, false);
             first_id = range_list_get_first_id(range_list[i], &answer_list);
             if (answer_list_has_error(&answer_list) != 1) {
                lListElem *ja_task = (lListElem *)job_get_ja_task_template_hold(job, first_id, 
@@ -547,7 +547,6 @@ int slots_per_line  /* number of slots to be printed in slots column
    int sge_urg, sge_ext, sge_pri, sge_time;
    lList *ql = NULL;
    lListElem *qrep, *gdil_ep=NULL;
-   int running;
    const char *queue_name;
    int tsk_ext;
    u_long tickets,otickets,stickets,ftickets;
@@ -578,7 +577,8 @@ int slots_per_line  /* number of slots to be printed in slots column
    tsk_ext = (full_listing & QSTAT_DISPLAY_TASKS);
    sge_urg = (full_listing & QSTAT_DISPLAY_URGENCY);
    sge_pri = (full_listing & QSTAT_DISPLAY_PRIORITY);
-   sge_time = (!sge_ext | tsk_ext | sge_urg | sge_pri);
+   sge_time = !sge_ext;
+   sge_time = sge_time | tsk_ext | sge_urg | sge_pri;
 
    /* job number / ja task id */
    if (print_jobid){
@@ -657,7 +657,7 @@ int slots_per_line  /* number of slots to be printed in slots column
       if (print_jobid) {
          /* start/submit time */
          if (!lGetUlong(jatep, JAT_start_time) ) {
-            xml_append_Attr_S(attributeList, "JB_submission_time", sge_ctime(lGetUlong(job, JB_submission_time), &ds));
+            xml_append_Attr_S(attributeList, "JB_submission_time", sge_ctime((time_t)lGetUlong(job, JB_submission_time), &ds));
          }   
          else {
 #if 0
@@ -669,20 +669,16 @@ int slots_per_line  /* number of slots to be printed in slots column
                printf("%s!", sge_ctime(lGetUlong(jatep, JAT_stop_initiate_time), &ds));
             else
 #endif
-               xml_append_Attr_S(attributeList, "JAT_start_time", sge_ctime(lGetUlong(jatep, JAT_start_time), &ds));
+               xml_append_Attr_S(attributeList, "JAT_start_time", sge_ctime((time_t)lGetUlong(jatep, JAT_start_time), &ds));
          }
       }
    }
-
-   /* is job logically running */
-   running = lGetUlong(jatep, JAT_status)==JRUNNING || 
-      lGetUlong(jatep, JAT_status)==JTRANSFERING;
 
    /* deadline time */
    if (sge_urg) {
       if (print_jobid) { 
          if (lGetUlong(job, JB_deadline) )
-            xml_append_Attr_S(attributeList, "JB_deadline", sge_ctime(lGetUlong(job, JB_deadline), &ds));
+            xml_append_Attr_S(attributeList, "JB_deadline", sge_ctime((time_t)lGetUlong(job, JB_deadline), &ds));
       }
    }
 
@@ -760,17 +756,17 @@ int slots_per_line  /* number of slots to be printed in slots column
          && slots && (gdil_ep=lGetSubStr(jatep, JG_qname, queue_name,
                JAT_granted_destin_identifier_list))) {
          if (slot == 0) {
-            tickets = lGetDouble(gdil_ep, JG_ticket);
-            otickets = lGetDouble(gdil_ep, JG_oticket);
-            ftickets = lGetDouble(gdil_ep, JG_fticket);
-            stickets = lGetDouble(gdil_ep, JG_sticket);
+            tickets = (u_long)lGetDouble(gdil_ep, JG_ticket);
+            otickets = (u_long)lGetDouble(gdil_ep, JG_oticket);
+            ftickets = (u_long)lGetDouble(gdil_ep, JG_fticket);
+            stickets = (u_long)lGetDouble(gdil_ep, JG_sticket);
          }
          else {
             if (slots) {
-               tickets = lGetDouble(gdil_ep, JG_ticket) / slots;
-               otickets = lGetDouble(gdil_ep, JG_oticket) / slots;
-               ftickets = lGetDouble(gdil_ep, JG_fticket) / slots;
-               stickets = lGetDouble(gdil_ep, JG_sticket) / slots;
+               tickets = (u_long)(lGetDouble(gdil_ep, JG_ticket) / slots);
+               otickets = (u_long)(lGetDouble(gdil_ep, JG_oticket) / slots);
+               ftickets = (u_long)(lGetDouble(gdil_ep, JG_fticket) / slots);
+               stickets = (u_long)(lGetDouble(gdil_ep, JG_sticket) / slots);
             } 
             else {
                tickets = otickets = ftickets = stickets = 0;
@@ -778,10 +774,10 @@ int slots_per_line  /* number of slots to be printed in slots column
          }
       }
       else {
-         tickets = lGetDouble(jatep, JAT_tix);
-         otickets = lGetDouble(jatep, JAT_oticket);
-         ftickets = lGetDouble(jatep, JAT_fticket);
-         stickets = lGetDouble(jatep, JAT_sticket);
+         tickets = (u_long)lGetDouble(jatep, JAT_tix);
+         otickets = (u_long)lGetDouble(jatep, JAT_oticket);
+         ftickets = (u_long)lGetDouble(jatep, JAT_fticket);
+         stickets = (u_long)lGetDouble(jatep, JAT_sticket);
       }
 
       /* report jobs dynamic scheduling attributes */
@@ -854,7 +850,7 @@ int slots_per_line  /* number of slots to be printed in slots column
          if (lGetString(job, JB_pe)) {
             dstring range_string = DSTRING_INIT;
             range_list_print_to_string(lGetList(job, JB_pe_range), 
-                                       &range_string, 1);
+                                       &range_string, true);
             xmlElem = xml_append_Attr_S(attributeList, "requested_PE", sge_dstring_get_string(&range_string)); 
             xml_addAttribute(xmlElem, "name", lGetString(job, JB_pe));  
 
@@ -982,7 +978,6 @@ static lListElem *xml_subtask(lListElem *job, lListElem *ja_task,
    lList *attributeList = NULL;
    char task_state_string[8];
    u_long32 tstate, tstatus;
-   int task_running;
    lListElem *ep;
    lList *usage_list;
    lList *scaled_usage_list;
@@ -1004,8 +999,6 @@ static lListElem *xml_subtask(lListElem *job, lListElem *ja_task,
       usage_list = lGetList(pe_task, PET_usage);
       scaled_usage_list = lGetList(pe_task, PET_scaled_usage);
    }
-
-   task_running = (tstatus==JRUNNING || tstatus==JTRANSFERING);
 
    if(pe_task) {
       xml_append_Attr_S(attributeList, "task-id", lGetString(pe_task, PET_id));      
@@ -1080,7 +1073,6 @@ static lListElem *xml_subtask(lListElem *job, lListElem *ja_task,
 static void xml_print_jobs_finished(lList *job_list, const lList *pe_list, const lList *user_list,
                              const lList *exechost_list, const lList *centry_list, 
                              u_long32 full_listing, u_long32 group_opt, lList **target_list) {
-   int sge_ext;
    lListElem *jep, *jatep;
    dstring dyn_task_str = DSTRING_INIT;
    lListElem *elem;
@@ -1090,8 +1082,6 @@ static void xml_print_jobs_finished(lList *job_list, const lList *pe_list, const
    if (*target_list == NULL){
       *target_list = lCreateList("Job-List", XMLE_Type);
    }
-
-   sge_ext = (full_listing & QSTAT_DISPLAY_EXTENDED);
 
    {
       for_each (jep, job_list) {
@@ -1145,7 +1135,6 @@ static void xml_print_jobs_error( lList *job_list, const lList *pe_list, const l
                            const lList *exechost_list, const lList *centry_list,
                            u_long32 full_listing, u_long32 group_opt, lList **target_list) {
    lListElem *jep, *jatep;
-   int sge_ext;
    dstring dyn_task_str = DSTRING_INIT;
    lListElem *elem;
 
@@ -1155,8 +1144,6 @@ static void xml_print_jobs_error( lList *job_list, const lList *pe_list, const l
       *target_list = lCreateList("Job-List", XMLE_Type);
    }
    
-   sge_ext = (full_listing & QSTAT_DISPLAY_EXTENDED);
-
    for_each (jep, job_list) {
       for_each (jatep, lGetList(jep, JB_ja_tasks)) {
          if (!(lGetUlong(jatep, JAT_suitable) & TAG_FOUND_IT) && lGetUlong(jatep, JAT_status) == JERROR) {
@@ -1198,7 +1185,6 @@ static void xml_print_jobs_error( lList *job_list, const lList *pe_list, const l
 static void xml_print_jobs_zombie(lList *zombie_list, const lList *pe_list, const lList *user_list,
                            const lList *exechost_list, const lList *centry_list,
                            u_long32 full_listing, u_long32 group_opt, lList **target_list) {
-   int sge_ext;
    lListElem *jep;
    dstring dyn_task_str = DSTRING_INIT; 
    lListElem *elem;
@@ -1213,8 +1199,6 @@ static void xml_print_jobs_zombie(lList *zombie_list, const lList *pe_list, cons
       *target_list = lCreateList("Job-List", XMLE_Type);
    }
    
-   sge_ext = (full_listing & QSTAT_DISPLAY_EXTENDED);
-
    for_each (jep, zombie_list) { 
       lList *z_ids = NULL;
 
@@ -1224,7 +1208,7 @@ static void xml_print_jobs_zombie(lList *zombie_list, const lList *pe_list, cons
          u_long32 first_task_id = range_list_get_first_id(z_ids, NULL);
 
          ja_task = (lListElem *) job_get_ja_task_template_pending(jep, first_task_id);
-         range_list_print_to_string(z_ids, &dyn_task_str, 0);
+         range_list_print_to_string(z_ids, &dyn_task_str, false);
          
          elem = sge_job_to_XML(jep, ja_task, NULL, 1, NULL, &dyn_task_str, 
                              full_listing, 0, 0, exechost_list, centry_list, pe_list, group_opt, 0);  
@@ -1271,9 +1255,7 @@ lList **target_list
    lListElem *jatep;
    lListElem *gdilep;
    u_long32 job_tag;
-   int sge_ext;
-   u_long32 jid = 0, old_jid;
-   u_long32 jataskid = 0, old_jataskid;
+   u_long32 jataskid = 0;
    dstring queue_name_buffer = DSTRING_INIT;
    const char *qnm;
    dstring dyn_task_str = DSTRING_INIT;
@@ -1284,8 +1266,6 @@ lList **target_list
       *target_list = lCreateList("job_list", XMLE_Type);
    }
 
-   sge_ext = (full_listing & QSTAT_DISPLAY_EXTENDED);
-   
    qnm = qinstance_get_name(qep, &queue_name_buffer);
 
    for_each(jlep, job_list) {
@@ -1365,9 +1345,6 @@ lList **target_list
                         int print_jobid = 1;
                         int different = 1;
 
-                        old_jid = jid;
-                        jid = lGetUlong(jlep, JB_job_number);
-                        old_jataskid = jataskid;
                         jataskid = lGetUlong(jatep, JAT_task_number);
                         sge_dstring_sprintf(&dyn_task_str, sge_u32, jataskid);
                         
@@ -1454,7 +1431,6 @@ lListElem *xml_print_queue(lListElem *q, const lList *exechost_list, const lList
                     u_long32 full_listing, const lList *qresource_list, u_long32 explain_bits) {
    char arch_string[80];
    double load_avg;
-   int sge_ext;
    char *load_avg_str;
    char load_alarm_reason[MAX_STRING_SIZE];
    char suspend_alarm_reason[MAX_STRING_SIZE];
@@ -1493,7 +1469,7 @@ lListElem *xml_print_queue(lListElem *q, const lList *exechost_list, const lList
    
    /* compute the load and check for alarm states */
 
-   is_load_value = sge_get_double_qattr(&load_avg, load_avg_str, q, exechost_list, centry_list, &has_value_from_object);
+   is_load_value = sge_get_double_qattr(&load_avg, load_avg_str, q, exechost_list, centry_list, &has_value_from_object) ? true : false;
    if (sge_load_alarm(NULL, q, lGetList(q, QU_load_thresholds), exechost_list, centry_list, NULL, true)) {
       qinstance_state_set_alarm(q, true);
       sge_load_alarm_reason(q, lGetList(q, QU_load_thresholds), exechost_list, 
@@ -1511,9 +1487,6 @@ lListElem *xml_print_queue(lListElem *q, const lList *exechost_list, const lList
                             MAX_STRING_SIZE - 1, "suspend");
    }
 
-   sge_ext = (full_listing & QSTAT_DISPLAY_EXTENDED);
-
-   
    xml_append_Attr_S(attributeList, "name", queue_name);        
 
    {

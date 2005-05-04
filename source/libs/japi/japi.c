@@ -1918,15 +1918,14 @@ int japi_control(const char *jobid_str, int drmaa_action, dstring *diag)
          }
 
          if (ref_list) {
-            bool tmp_ret;
             lList *id_list = NULL;
                                              
             if (drmaa_action == DRMAA_CONTROL_SUSPEND) {
-               tmp_ret = id_list_build_from_str_list(&id_list, &alp, ref_list,
-                                                     QI_DO_SUSPEND, 0);
+               id_list_build_from_str_list(&id_list, &alp, ref_list,
+                                           QI_DO_SUSPEND, 0);
             } else {
-               tmp_ret = id_list_build_from_str_list(&id_list, &alp, ref_list,
-                                                     QI_DO_UNSUSPEND, 0);
+               id_list_build_from_str_list(&id_list, &alp, ref_list,
+                                           QI_DO_UNSUSPEND, 0);
             }
             
             alp = sge_gdi(SGE_CQUEUE_LIST, SGE_GDI_TRIGGER, 
@@ -2530,7 +2529,6 @@ int japi_synchronize(const char *job_ids[], signed long timeout, bool dispose, d
 *******************************************************************************/
 static int japi_synchronize_jobids_retry(const char *job_ids[], bool dispose)
 {
-   bool all_finished = true;
    int i;
    lListElem *japi_job;
    lList *not_yet_finished;
@@ -2558,8 +2556,6 @@ static int japi_synchronize_jobids_retry(const char *job_ids[], bool dispose)
       not_yet_finished = lGetList(japi_job, JJ_not_yet_finished_ids);
       if (not_yet_finished && range_list_is_id_within(not_yet_finished, taskid)) {
          DPRINTF(("job "sge_u32"."sge_u32" is a still unfinished task\n", jobid, taskid));
-         all_finished = false;
-
          DEXIT;
          return JAPI_WAIT_UNFINISHED;
       } 
@@ -2673,7 +2669,7 @@ int japi_wait(const char *job_id, dstring *waited_job, int *stat,
    u_long32 jobid = 0;
    u_long32 taskid = 0;
    int wait4any = 0;
-   bool is_array_task = 0;
+   bool is_array_task = false;
    int drmaa_errno, wait_result;
    bool waited_is_task_array;
    u_long32 waited_jobid, waited_taskid;
@@ -3526,20 +3522,19 @@ static int japi_parse_jobid(const char *job_id_str, u_long32 *jp, u_long32 *tp,
    bool *ap, dstring *diag)
 {
    u_long32 jobid, taskid;
-   int is_array_task;
-   const char *s;
+   bool is_array_task;
 
    DENTER(TOP_LAYER, "japi_parse_jobid");
 
    /* parse jobid/taskid */
-   if ((s=strchr(job_id_str, '.'))) {
+   if (strchr(job_id_str, '.')) {
       if (sscanf(job_id_str, sge_u32"."sge_u32, &jobid, &taskid) != 2) {
          sge_dstring_sprintf(diag, "job id passed "SFQ" is not a valid bulk job id\n", job_id_str);
          DEXIT;
          return DRMAA_ERRNO_INVALID_ARGUMENT;
       }
 /*       DPRINTF(("parsing jobid.taskid: %ld.%ld\n", jobid, taskid)); */
-      is_array_task = 1;
+      is_array_task = true;
    } else {
       if (sscanf(job_id_str, sge_u32, &jobid) != 1) {
          sge_dstring_sprintf(diag, "job id passed "SFQ" is not a valid job id\n", job_id_str);
@@ -3548,7 +3543,7 @@ static int japi_parse_jobid(const char *job_id_str, u_long32 *jp, u_long32 *tp,
       }
 /*       DPRINTF(("parsing jobid: %ld\n", jobid)); */
       taskid = 1;
-      is_array_task = 0;
+      is_array_task = false;
    }
 
    if (jp) 
@@ -4140,7 +4135,7 @@ static void *japi_implementation_thread(void *p)
          lListElem *aep = lFirst(alp);
          if (aep) {
             answer_list_add((lList **)p, lGetString(aep, AN_text), 
-                  lGetUlong(aep, AN_status), lGetUlong(aep, AN_quality));
+                  lGetUlong(aep, AN_status), (answer_quality_t)lGetUlong(aep, AN_quality));
          }
       }
       lFreeList(alp);
@@ -4214,7 +4209,7 @@ static void *japi_implementation_thread(void *p)
          lListElem *aep = lFirst(alp);
          if (aep) {
             answer_list_add((lList **)p, lGetString(aep, AN_text), 
-                  lGetUlong(aep, AN_status), lGetUlong(aep, AN_quality));
+                  lGetUlong(aep, AN_status), (answer_quality_t)lGetUlong(aep, AN_quality));
          }
       }
       JAPI_UNLOCK_EC_STATE();
@@ -4268,8 +4263,7 @@ static void *japi_implementation_thread(void *p)
          }
          
          for_each (event, event_list) {
-            u_long32 number, type, intkey, intkey2;
-            number = lGetUlong(event, ET_number);
+            u_long32 type, intkey, intkey2;
             type = lGetUlong(event, ET_type);
             intkey = lGetUlong(event, ET_intkey);
             intkey2 = lGetUlong(event, ET_intkey2);
@@ -4279,7 +4273,7 @@ static void *japi_implementation_thread(void *p)
             /* maintain library session data */ 
             if (type == sgeE_JOB_LIST) {
                lList *sge_job_list = lGetList(event, ET_new_version);
-               lListElem *sge_job, *japi_job, *japi_task;
+               lListElem *sge_job, *japi_job;
                u_long32 jobid, taskid;
                int finished_tasks = 0;
 
@@ -4301,7 +4295,7 @@ static void *japi_implementation_thread(void *p)
 
                         /* add entry to the finished tasks */
                         DPRINTF(("adding finished task "sge_u32" for job "sge_u32" existing not any longer\n", taskid, jobid));
-                        japi_task = lAddSubUlong(japi_job, JJAT_task_id, taskid, JJ_finished_tasks, JJAT_Type);
+                        lAddSubUlong(japi_job, JJAT_task_id, taskid, JJ_finished_tasks, JJAT_Type);
                         finished_tasks++;
 
                      } /* while */
@@ -4324,9 +4318,8 @@ static void *japi_implementation_thread(void *p)
                      for_each (range, range_list_copy) {
                         range_get_all_ids(range, &min, &max, &step);
                         for (taskid=min; taskid<=max; taskid+= step) {
-                           lListElem *ja_task;
 
-                           if ((ja_task=job_search_task(sge_job, NULL, taskid))) {
+                           if (job_search_task(sge_job, NULL, taskid)) {
                               DPRINTF(("task "sge_u32"."sge_u32" contained in enrolled task list\n", jobid, taskid));
                               continue;
                            }
@@ -4349,7 +4342,7 @@ static void *japi_implementation_thread(void *p)
                            object_delete_range_id(japi_job, NULL, JJ_not_yet_finished_ids, taskid);
                            /* add entry to the finished tasks */
                            DPRINTF(("adding finished task %ld for job %ld which still exists\n", taskid, jobid));
-                           japi_task = lAddSubUlong(japi_job, JJAT_task_id, taskid, JJ_finished_tasks, JJAT_Type);
+                           lAddSubUlong(japi_job, JJAT_task_id, taskid, JJ_finished_tasks, JJAT_Type);
                            finished_tasks++;
                         } /* for */
                      } /* for_each */
@@ -4440,8 +4433,8 @@ static void *japi_implementation_thread(void *p)
                lList *jat = lGetList(event, ET_new_version);
                lListElem *ep = lFirst(jat);
                u_long job_status = lGetUlong(ep, JAT_status);
-               bool task_running = (job_status==JRUNNING ||
-                                   job_status==JTRANSFERING);
+               bool task_running = (job_status==JRUNNING || 
+                                    job_status==JTRANSFERING) ? true : false;
 
                if (task_running) {
                   DPRINTF (("Handling task start event\n"));
@@ -4782,7 +4775,7 @@ bool japi_is_delegated_file_staging_enabled(dstring *diag)
       japi_read_dynamic_attributes (diag);
    }
    
-   ret = (japi_delegated_file_staging_is_enabled == 1);
+   ret = (japi_delegated_file_staging_is_enabled == 1) ? true : false;
    JAPI_UNLOCK_SESSION();
    
    DEXIT;

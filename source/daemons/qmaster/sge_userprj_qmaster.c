@@ -100,7 +100,6 @@ int sub_command
    u_long32 up_new_version;
    lList *lp;
    const char *obj_name;
-   int make_auto_user_permanent = 0;
 
    DENTER(TOP_LAYER, "userprj_mod");
   
@@ -131,14 +130,12 @@ int sub_command
    if ((pos=lGetPosViaElem(ep, UP_oticket))>=0) {
       uval = lGetPosUlong(ep, pos);
       lSetUlong(modp, UP_oticket, uval);
-      make_auto_user_permanent = 1;
    }
 
    /* ---- UP_fshare */
    if ((pos=lGetPosViaElem(ep, UP_fshare))>=0) {
       uval = lGetPosUlong(ep, pos);
       lSetUlong(modp, UP_fshare, uval);
-      make_auto_user_permanent = 1;
    }
 
    /* ---- UP_delete_time */
@@ -179,19 +176,8 @@ int sub_command
          }
 
          lSetString(modp, UP_default_project, dproj);
-         make_auto_user_permanent = 1;
       }
-
-#if 0 /* SVD040202 - commented out because we only make user permanent if
-         the delete_time is adjusted */
-      /* if one of the attributes has been edited, make the user object permanent */
-      if (!add && make_auto_user_permanent) {
-         lSetUlong(modp, UP_delete_time, 0);
-      }
-#endif
-
-   }
-   else {
+   } else {
       /* ---- UP_acl */
       if ((pos=lGetPosViaElem(ep, UP_acl))>=0) {
          lp = lGetPosList(ep, pos);
@@ -601,7 +587,7 @@ static int do_add_auto_user(lListElem* anUser, lList** anAnswer)
       lListElem *err   = lFirst(tmpAnswer);
       const char *text = lGetString(err, AN_text);
       u_long32 status  = lGetUlong(err, AN_status);
-      u_long32 quality = lGetUlong(err, AN_quality);
+      answer_quality_t quality = (answer_quality_t)lGetUlong(err, AN_quality);
 
       answer_list_add(anAnswer, text, status, quality);
    }

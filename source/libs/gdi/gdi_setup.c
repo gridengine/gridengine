@@ -476,7 +476,7 @@ int sge_gdi_param(int param, int intval, char *strval)
       uti_state_set_exit_func((sge_exit_func_t) strval);
       break;
    case SET_EXIT_ON_ERROR:
-      uti_state_set_exit_on_error(intval);
+      uti_state_set_exit_on_error(intval ? true : false);
       break;
    default:
       DEXIT;

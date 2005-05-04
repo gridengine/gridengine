@@ -965,7 +965,7 @@ spool_flatfile_write_object_fields(lList **answer_list, const lListElem *object,
       else if (mt_get_type(descr[pos].mt) == lListT) {
          const spool_flatfile_instr *sub_instr = NULL;
          const bool recurse_field = (instr->recursion_info.recursion_field
-                                                               == fields[i].nm);
+                                       == fields[i].nm) ? true : false;
          const spooling_field *sub_fields = NULL;
          
          if (!recurse_field) {

@@ -1167,7 +1167,7 @@ spool_write_object(lList **answer_list, const lListElem *context,
                    const lListElem *object, const char *key, 
                    const sge_object_type object_type)
 {
-   int ret = false;
+   bool ret = false;
 
    DENTER(TOP_LAYER, "spool_write_object");
    PROF_START_MEASUREMENT(SGE_PROF_SPOOLING);
@@ -1269,7 +1269,7 @@ bool
 spool_delete_object(lList **answer_list, const lListElem *context, 
                     const sge_object_type object_type, const char *key)
 {
-   int ret = false;
+   bool ret = false;
 
    DENTER(TOP_LAYER, "spool_delete_object");
    PROF_START_MEASUREMENT(SGE_PROF_SPOOLING);

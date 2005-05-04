@@ -148,7 +148,7 @@ void reschedule_unknown_event(te_event_t anEvent)
  
       delta = new_timeout + add_time;    
       when = time(NULL) + (delta - timeout);
-      ev = te_new_event(when, TYPE_RESCHEDULE_UNKNOWN_EVENT, ONE_TIME_EVENT, delta, 0, hostname);
+      ev = te_new_event((time_t)when, TYPE_RESCHEDULE_UNKNOWN_EVENT, ONE_TIME_EVENT, delta, 0, hostname);
       te_add_event(ev);
       te_free_event(ev);
       DEXIT;
@@ -1123,7 +1123,7 @@ void reschedule_unknown_trigger(lListElem *hep)
 
       DPRINTF(("RU: Autorescheduling enabled for host "SFN". ("sge_u32 " sec)\n", host, timeout + add_time));
       
-      ev = te_new_event(when, TYPE_RESCHEDULE_UNKNOWN_EVENT, ONE_TIME_EVENT, timeout, 0, host);
+      ev = te_new_event((time_t)when, TYPE_RESCHEDULE_UNKNOWN_EVENT, ONE_TIME_EVENT, timeout, 0, host);
       te_add_event(ev);
       te_free_event(ev);
    }

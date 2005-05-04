@@ -41,7 +41,7 @@
 #include "sge_queue_event_master.h"
 
 void 
-qinstance_add_event(lListElem *this_elem, u_long32 type)
+qinstance_add_event(lListElem *this_elem, ev_event type)
 {
    DENTER(TOP_LAYER, "qinstance_add_event");
    sge_add_event(0, type, 0, 0, 
@@ -51,7 +51,7 @@ qinstance_add_event(lListElem *this_elem, u_long32 type)
 }
 
 void 
-cqueue_add_event(lListElem *this_elem, u_long32 type)
+cqueue_add_event(lListElem *this_elem, ev_event type)
 {
    DENTER(TOP_LAYER, "cqueue_add_event");
    sge_add_event( 0, type, 0, 0, 

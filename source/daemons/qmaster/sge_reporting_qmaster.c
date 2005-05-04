@@ -334,7 +334,7 @@ reporting_trigger_handler(te_event_t anEvent)
       u_long32 next = time(NULL) + flush_interval;
       te_event_t ev = NULL;
 
-      ev = te_new_event(next, te_get_type(anEvent), ONE_TIME_EVENT, 1, 0, NULL);
+      ev = te_new_event((time_t)next, te_get_type(anEvent), ONE_TIME_EVENT, 1, 0, NULL);
       te_add_event(ev);
       te_free_event(ev);
    }
@@ -1055,8 +1055,7 @@ reporting_is_intermediate_acct_required(const lListElem *job,
                                         const lListElem *pe_task)
 {
    bool ret = false;
-   time_t last_intermediate, now;
-   u_long32 start_time;
+   time_t last_intermediate, now, start_time;
    struct tm tm_last_intermediate, tm_now;
 
 
@@ -1077,7 +1076,7 @@ reporting_is_intermediate_acct_required(const lListElem *job,
    /* 
     * optimization: only do the following actions "shortly after midnight" 
     */
-   now = sge_get_gmt();
+   now = (time_t)sge_get_gmt();
    localtime_r(&now, &tm_now);
 #if 1
    if (tm_now.tm_hour != 0 || tm_now.tm_min > INTERMEDIATE_ACCT_WINDOW) {
@@ -1090,9 +1089,9 @@ reporting_is_intermediate_acct_required(const lListElem *job,
     * "started a short time before"
     */
    if (pe_task != NULL) {
-      start_time = lGetUlong(pe_task, PET_start_time);
+      start_time = (time_t)lGetUlong(pe_task, PET_start_time);
    } else {
-      start_time = lGetUlong(ja_task, JAT_start_time);
+      start_time = (time_t)lGetUlong(ja_task, JAT_start_time);
    }
 
    if ((now - start_time) < (INTERMEDIATE_MIN_RUNTIME + tm_now.tm_min * 60 + 
@@ -1105,11 +1104,11 @@ reporting_is_intermediate_acct_required(const lListElem *job,
     * if no intermediate report has been written so far, use start time 
     */
    if (pe_task != NULL) {
-      last_intermediate = usage_list_get_ulong_usage(
+      last_intermediate = (time_t)usage_list_get_ulong_usage(
                              lGetList(pe_task, PET_reported_usage), 
                              LAST_INTERMEDIATE, 0);
    } else {
-      last_intermediate = usage_list_get_ulong_usage(
+      last_intermediate = (time_t)usage_list_get_ulong_usage(
                              lGetList(ja_task, JAT_reported_usage_list), 
                              LAST_INTERMEDIATE, 0);
    }

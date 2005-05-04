@@ -176,7 +176,7 @@ centry_mod(lList **answer_list, lListElem *centry, lListElem *reduced_elem,
       pos = lGetPosViaElem(reduced_elem, CE_consumable);
 
       if (pos >= 0) {
-         bool consumable = lGetPosBool(reduced_elem, pos);
+         bool consumable = lGetPosBool(reduced_elem, pos) ? true : false;
 
          if (is_slots_attr) {
             consumable = true;
@@ -327,8 +327,8 @@ centry_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object, lList **p
        * it is a consumable and the default value has changed,
        * queue / host values for these consumables have to be rebuilt.
        */
-      bool consumable = lGetBool(ep, CE_consumable);
-      bool old_consumable = lGetBool(old_ep, CE_consumable);
+      bool consumable = lGetBool(ep, CE_consumable) ? true : false;
+      bool old_consumable = lGetBool(old_ep, CE_consumable) ? true : false;
       if ((consumable && !old_consumable) ||
           (!consumable && old_consumable)) {
             rebuild_consumables = true;
@@ -419,19 +419,19 @@ int sge_del_centry(lListElem *centry, lList **answer_list,
             } else {
                ERROR((SGE_EVENT, MSG_SGETEXT_DOESNOTEXIST_SS, 
                      MSG_OBJ_CPLX, name));
-               answer_list_add(answer_list, SGE_EVENT, STATUS_EEXIST, 0);
+               answer_list_add(answer_list, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
                ret = false;
             }
          }
       } else {
          CRITICAL((SGE_EVENT, MSG_SGETEXT_MISSINGCULLFIELD_SS,
                    lNm2Str(CE_name), SGE_FUNC));
-         answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN, 0);
+         answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          ret = false;
       }
    } else {
       CRITICAL((SGE_EVENT, MSG_SGETEXT_NULLPTRPASSED_S, SGE_FUNC));
-      answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN, 0);
+      answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       ret = false;
    }
 

@@ -477,7 +477,7 @@ lCondition *lWhereFromElem(const lListElem *where){
 
    if (lGetUlong(where, PACK_id) == SGE_WHERE) {
 
-      compressed = lGetBool(where, PACK_compressed);
+      compressed = lGetBool(where, PACK_compressed) ? true : false;
       size = getByteArray(&buffer, where, PACK_string);
       if (size <= 0){
          ERROR((SGE_EVENT, MSG_PACK_INVALIDPACKDATA ));

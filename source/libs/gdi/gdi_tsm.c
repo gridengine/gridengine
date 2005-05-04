@@ -103,23 +103,21 @@ lList *gdi_kill(lList *id_list, const char *cell, u_long32 option_flags,
    }
 
    if (action_flag & SCHEDD_KILL) {
-      lListElem *idep;
       char buffer[10];
 
       sprintf(buffer, "%d", EV_ID_SCHEDD);
       id_list = lCreateList("kill scheduler", ID_Type);
-      idep = lAddElemStr(&id_list, ID_str, buffer, ID_Type);
+      lAddElemStr(&id_list, ID_str, buffer, ID_Type);
       tmpalp = sge_gdi(SGE_EVENT_LIST, SGE_GDI_TRIGGER, &id_list, NULL, NULL);
       lAddList(alp, tmpalp);  
    }
 
    if (action_flag & EVENTCLIENT_KILL) {
-      lListElem *idep;
       if(id_list == NULL) {
          char buffer[10];
          sprintf(buffer, "%d", EV_ID_ANY);
          id_list = lCreateList("kill all event clients", ID_Type);
-         idep = lAddElemStr(&id_list, ID_str, buffer, ID_Type);
+         lAddElemStr(&id_list, ID_str, buffer, ID_Type);
       }
       tmpalp = sge_gdi(SGE_EVENT_LIST, SGE_GDI_TRIGGER, &id_list, NULL, NULL);
       lAddList(alp, tmpalp);  

@@ -32,6 +32,8 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+#include "sched/sge_select_queue.h"
+
 enum {
    ALLOC_RULE_FILLUP = -1,
    ALLOC_RULE_ROUNDROBIN = -2
@@ -45,7 +47,7 @@ int or_sge_pe_slots_per_host(lListElem *pep, lList *hosts, lListElem *h_elem, in
 
 int sge_debit_job_from_pe(lListElem *pep, lListElem *jep, int slots);
 
-int pe_match_static(lListElem *job, lListElem *pe, lList *acl_list);
+dispatch_t pe_match_static(lListElem *job, lListElem *pe, lList *acl_list);
 
 #endif /* __SGE_PE_SCHEDD_H */
 

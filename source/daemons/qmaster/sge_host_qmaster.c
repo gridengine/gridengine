@@ -1020,7 +1020,7 @@ void
 sge_change_queue_version_exechost(const char *exechost_name) 
 {
    lListElem *cqueue = NULL; 
-   bool change_all = (strcasecmp(exechost_name, SGE_GLOBAL_NAME) == 0);
+   bool change_all = (strcasecmp(exechost_name, SGE_GLOBAL_NAME) == 0) ? true : false;
 
    DENTER(TOP_LAYER, "sge_change_queue_version_exechost");
 

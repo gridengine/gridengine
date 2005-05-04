@@ -167,17 +167,12 @@ static int gdi_log_flush_func(cl_raw_list_t* list_p) {
 
    while ( (elem = cl_log_list_get_first_elem(list_p) ) != NULL) {
       char* param;
-      char* module;
       if (elem->log_parameter == NULL) {
          param = "";
       } else {
          param = elem->log_parameter;
       }
-      if (elem->log_module_name == NULL) {
-         module = "";
-      } else {
-         module = elem->log_module_name;
-      }
+
       switch(elem->log_type) {
          case CL_LOG_ERROR: 
             if ( log_state_get_log_level() >= LOG_ERR) {
@@ -555,9 +550,8 @@ void prepare_enroll(const char *name)
          communication lib setup */
       DPRINTF(("waiting for 15 seconds, because environment SGE_TEST_SOCKET_BIND is set\n"));
       while ( handle != NULL && now.tv_sec - handle->start_time.tv_sec  <= 15 ) {
-         int retval = CL_RETVAL_OK;
          DPRINTF(("timeout: "sge_U32CFormat"\n",sge_u32c(now.tv_sec - handle->start_time.tv_sec)));
-         retval = cl_commlib_trigger(handle);
+         cl_commlib_trigger(handle);
          gettimeofday(&now,NULL);
       }
       DPRINTF(("continue with setup\n"));
@@ -582,7 +576,6 @@ int sge_send_any_request(int synchron, u_long32 *mid, const char *rhost,
                          int tag, u_long32  response_id, lList **alpp)
 {
    int i;
-   u_long32 me_who;
    cl_xml_ack_type_t ack_type;
    cl_com_handle_t* handle = NULL;
    unsigned long dummy_mid = 0;
@@ -598,7 +591,6 @@ int sge_send_any_request(int synchron, u_long32 *mid, const char *rhost,
       return CL_RETVAL_PARAMS;
    }
    
-   me_who = uti_state_get_mewho();
    handle = cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0);
    if (handle == NULL) {
       answer_list_add(alpp, MSG_GDI_NOCOMMHANDLE, STATUS_NOCOMMD, ANSWER_QUALITY_ERROR);
@@ -733,10 +725,10 @@ sge_get_any_request(char *rhost, char *commproc, u_short *id, sge_pack_buffer *p
    /* ok, we received a message */
    if (message != NULL ) {
       if (sender != NULL && id) {
-         *id = sender->comp_id;
+         *id = (u_short)sender->comp_id;
       }
       if (tag) {
-        *tag = message->message_tag;
+        *tag = (int)message->message_tag;
       }  
       if (mid) {
         *mid = message->message_id;

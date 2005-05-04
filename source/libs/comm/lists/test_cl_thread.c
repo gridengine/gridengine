@@ -125,7 +125,7 @@ void *timeout_thread_main(void *t_conf) {
    /* get pointer to cl_thread_settings_t struct */
    int ret_val;
    cl_thread_settings_t *thread_config = (cl_thread_settings_t*)t_conf; 
-   pthread_cleanup_push((void *) cl_thread_default_cleanup_function, (void*) thread_config );
+   pthread_cleanup_push((void (*)(void *)) cl_thread_default_cleanup_function, (void*) thread_config );
 
    /* setup thread */
    if (thread_config) {

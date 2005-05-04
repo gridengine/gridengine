@@ -74,7 +74,7 @@ main(int argc, char** argv)
   sleep(4);
 
   printf("commlib setup ...\n");
-  retval = cl_com_setup_commlib(CL_NO_THREAD , atoi(argv[1]), NULL );
+  retval = cl_com_setup_commlib(CL_NO_THREAD , (cl_log_t)atoi(argv[1]), NULL );
   printf("%s\n\n",cl_get_error_text(retval));
 
 
@@ -88,9 +88,9 @@ main(int argc, char** argv)
 
      printf("append \"%s\" (static):\n", argv[arg]);
      new = cl_com_create_endpoint(argv[arg], "name", 1);
-     retval = cl_endpoint_list_define_endpoint(endpoint_list, new, 1024+ arg,CL_CM_AC_DISABLED ,1 );
+     retval = cl_endpoint_list_define_endpoint(endpoint_list, new, 1024+ arg,CL_CM_AC_DISABLED , CL_TRUE );
      printf("%s\n\n",cl_get_error_text(retval));
-     retval = cl_endpoint_list_define_endpoint(endpoint_list, new, 1024+ arg,CL_CM_AC_DISABLED, 1 );
+     retval = cl_endpoint_list_define_endpoint(endpoint_list, new, 1024+ arg,CL_CM_AC_DISABLED,  CL_TRUE );
      printf("%s\n\n",cl_get_error_text(retval));
 
      cl_com_free_endpoint(&new);
@@ -99,7 +99,7 @@ main(int argc, char** argv)
 
      printf("append \"%s\" (non static):\n", argv[arg]);
      new = cl_com_create_endpoint(argv[arg], "name", 2);
-     retval = cl_endpoint_list_define_endpoint(endpoint_list, new, 1024 +arg,CL_CM_AC_DISABLED , 0 );
+     retval = cl_endpoint_list_define_endpoint(endpoint_list, new, 1024 +arg,CL_CM_AC_DISABLED , CL_FALSE );
      printf("%s\n\n",cl_get_error_text(retval));
      cl_com_free_endpoint(&new);
 
@@ -137,7 +137,7 @@ main(int argc, char** argv)
   cl_raw_list_unlock(endpoint_list);
 
   
-  arg = cl_raw_list_get_elem_count(endpoint_list);
+  arg = (int)cl_raw_list_get_elem_count(endpoint_list);
   arg = arg/2;
   while(cl_raw_list_get_elem_count(endpoint_list) != arg ) {
      printf("waiting for list count getting %d\n", arg);
@@ -166,7 +166,7 @@ main(int argc, char** argv)
 
      if (touches) {
         printf("touch endpoint %s/%s/%ld:\n",last_endpoint->comp_host,last_endpoint->comp_name,last_endpoint->comp_id );
-        retval = cl_endpoint_list_define_endpoint(endpoint_list,last_endpoint, 1024 +arg,CL_CM_AC_DISABLED , 0);   
+        retval = cl_endpoint_list_define_endpoint(endpoint_list,last_endpoint, 1024 +arg,CL_CM_AC_DISABLED , CL_FALSE);
         printf("%s\n\n",cl_get_error_text(retval));
      }
 
@@ -232,10 +232,10 @@ main(int argc, char** argv)
   sleep(4);
 
   printf("commlib setup ...\n");
-  retval = cl_com_setup_commlib(CL_NO_THREAD , atoi(argv[1]), NULL );
+  retval = cl_com_setup_commlib(CL_NO_THREAD , (cl_log_t)atoi(argv[1]), NULL );
   printf("%s\n\n",cl_get_error_text(retval));
 
-  handle = cl_com_create_handle(NULL,CL_CT_TCP,CL_CM_CT_MESSAGE , 1, 4545 , CL_TCP_DEFAULT,"client", 1,1,0 );
+  handle = cl_com_create_handle(NULL,CL_CT_TCP,CL_CM_CT_MESSAGE , CL_TRUE, 4545 , CL_TCP_DEFAULT,"client", 1,1,0 );
   if (handle == NULL) {
      printf("could not get handle\n");
      exit(1);
@@ -252,11 +252,11 @@ main(int argc, char** argv)
   }
 
   printf("append endpoint host/name/1 on (port 1024) (not static)...\n");
-  retval = cl_com_append_known_endpoint_from_name(local_host,"name",1,1024,CL_CM_AC_DISABLED,0);
+  retval = cl_com_append_known_endpoint_from_name(local_host,"name",1,1024,CL_CM_AC_DISABLED, CL_FALSE);
   printf("%s\n\n",cl_get_error_text(retval));
 
   printf("append endpoint host/name/2 on (port 1025) (static)...\n");
-  retval = cl_com_append_known_endpoint_from_name(local_host,"name",2,1025,CL_CM_AC_DISABLED,1);
+  retval = cl_com_append_known_endpoint_from_name(local_host,"name",2,1025,CL_CM_AC_DISABLED, CL_TRUE);
   printf("%s\n\n",cl_get_error_text(retval));
 
   printf("try to get port for endpoint host/name/1...\n");
@@ -290,7 +290,7 @@ main(int argc, char** argv)
      service_port = 0;
   }
 
-  cl_commlib_shutdown_handle(handle,0);
+  cl_commlib_shutdown_handle(handle, CL_FALSE);
 
   printf("try to get port for endpoint host/name/1...\n");
   service_port = 0;
@@ -334,10 +334,10 @@ main(int argc, char** argv)
   sleep(4);
   
     printf("commlib setup ...\n");
-  retval = cl_com_setup_commlib(CL_RW_THREAD , atoi(argv[1]), NULL );
+  retval = cl_com_setup_commlib(CL_RW_THREAD , (cl_log_t)atoi(argv[1]), NULL );
   printf("%s\n\n",cl_get_error_text(retval));
 
-  handle = cl_com_create_handle(NULL,CL_CT_TCP,CL_CM_CT_MESSAGE , 1, 4545 , CL_TCP_DEFAULT,"client", 1,1,0 );
+  handle = cl_com_create_handle(NULL,CL_CT_TCP,CL_CM_CT_MESSAGE , CL_TRUE, 4545 , CL_TCP_DEFAULT,"client", 1,1, CL_FALSE );
   if (handle == NULL) {
      printf("could not get handle\n");
      exit(1);
@@ -354,11 +354,11 @@ main(int argc, char** argv)
   }
 
   printf("append endpoint host/name/1 on (port 1024) (not static)...\n");
-  retval = cl_com_append_known_endpoint_from_name(local_host,"name",1,1024,CL_CM_AC_DISABLED,0);
+  retval = cl_com_append_known_endpoint_from_name(local_host,"name",1,1024,CL_CM_AC_DISABLED, CL_FALSE);
   printf("%s\n\n",cl_get_error_text(retval));
 
   printf("append endpoint host/name/2 on (port 1025) (static)...\n");
-  retval = cl_com_append_known_endpoint_from_name(local_host,"name",2,1025,CL_CM_AC_DISABLED,1);
+  retval = cl_com_append_known_endpoint_from_name(local_host,"name",2,1025,CL_CM_AC_DISABLED, CL_TRUE);
   printf("%s\n\n",cl_get_error_text(retval));
 
   printf("try to get port for endpoint host/name/1...\n");
@@ -392,7 +392,7 @@ main(int argc, char** argv)
      service_port = 0;
   }
 
-  cl_commlib_shutdown_handle(handle,0);
+  cl_commlib_shutdown_handle(handle, CL_FALSE);
 
   printf("try to get port for endpoint host/name/1...\n");
   service_port = 0;

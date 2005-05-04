@@ -1228,7 +1228,7 @@ int sub_command
                dstring tid_string = DSTRING_INIT;
 
                range_list_sort_uniq_compress(range_list, NULL);
-               range_list_print_to_string(range_list, &tid_string, 0);
+               range_list_print_to_string(range_list, &tid_string, false);
                INFO((SGE_EVENT, MSG_JOB_DELETETASKS_SSU,
                      ruser, sge_dstring_get_string(&tid_string), 
                      sge_u32c(job_number))); 
@@ -1828,7 +1828,7 @@ int sub_command
        (((job_id_pos = lGetPosViaElem(jep, JB_job_number)) >= 0) && 
        lGetPosUlong(jep, job_id_pos) > 0) ||
        ((job_name != NULL) && 
-        (job_name_flag = (job_name[0] == JOB_NAME_DEL)))
+        (job_name_flag = (job_name[0] == JOB_NAME_DEL) ? true : false))
        ) { 
       jid_flag = 1; 
    } else
@@ -2323,7 +2323,7 @@ static int changes_consumables(lList **alpp, lList* new, lList* old)
          /* complex attribute definition has been removed though
             job still requests resource */ 
          ERROR((SGE_EVENT, MSG_ATTRIB_MISSINGATTRIBUTEXINCOMPLEXES_S , name));
-         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          DEXIT;
          return -1; 
       }
@@ -2341,7 +2341,7 @@ static int changes_consumables(lList **alpp, lList* new, lList* old)
 
       if (!found_it) {
          ERROR((SGE_EVENT, MSG_JOB_MOD_MISSINGRUNNINGJOBCONSUMABLE_S, name));
-         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          DEXIT;
          return -1;
       }
@@ -2356,7 +2356,7 @@ static int changes_consumables(lList **alpp, lList* new, lList* old)
       if (!(dcep = centry_list_locate(Master_CEntry_List, name))) {
          /* refers to a not existing complex attribute definition */ 
          ERROR((SGE_EVENT, MSG_ATTRIB_MISSINGATTRIBUTEXINCOMPLEXES_S , name));
-         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          DEXIT;
          return -1; 
       }
@@ -2374,7 +2374,7 @@ static int changes_consumables(lList **alpp, lList* new, lList* old)
 
       if (!found_it) {
          ERROR((SGE_EVENT, MSG_JOB_MOD_ADDEDRUNNINGJOBCONSUMABLE_S, name));
-         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          DEXIT;
          return -1;
       }
@@ -2386,7 +2386,7 @@ static int changes_consumables(lList **alpp, lList* new, lList* old)
       if (lGetDouble(old_entry, CE_doubleval) != 
          lGetDouble(new_entry, CE_doubleval)) {
          ERROR((SGE_EVENT, MSG_JOB_MOD_CHANGEDRUNNINGJOBCONSUMABLE_S, name));
-         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          DEXIT;
          return -1;
       }
@@ -2429,7 +2429,7 @@ static int deny_soft_consumables(lList **alpp, lList *srl)
 
       if (!(dcep = centry_list_locate(Master_CEntry_List, name))) {
          ERROR((SGE_EVENT, MSG_ATTRIB_MISSINGATTRIBUTEXINCOMPLEXES_S , name));
-         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          DEXIT;
          return -1;
       }
@@ -2437,7 +2437,7 @@ static int deny_soft_consumables(lList **alpp, lList *srl)
       /* ignore non-consumables */
       if (lGetBool(dcep, CE_consumable)) {
          ERROR((SGE_EVENT, MSG_JOB_MOD_SOFTREQCONSUMABLE_S, name));
-         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          DEXIT;
          return -1;
       }
@@ -3214,7 +3214,7 @@ int *trigger
    /* deny certain modifications of running jobs */
    if (may_not_be_running && is_running) {
       ERROR((SGE_EVENT, MSG_SGETEXT_CANT_MOD_RUNNING_JOBS_U, sge_u32c(jobid)));
-      answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
       DEXIT;
       return STATUS_EEXIST;
    }
@@ -3850,7 +3850,7 @@ int *trigger
          lList *talp = NULL;
          int ngranted = 0;
          int try_it = 1;
-         const char *pe_name, *ckpt_name;
+         const char *ckpt_name;
 
          sge_assignment_t a;
          assignment_init(&a, jep, NULL);
@@ -3893,7 +3893,7 @@ int *trigger
             if (verify_mode==JUST_VERIFY)
                set_monitor_alpp(&talp);
 
-            if ((pe_name=lGetString(jep, JB_pe))) {
+            if (lGetString(jep, JB_pe)) {
                sge_select_parallel_environment(&a, Master_Pe_List);
                ngranted += nslots_granted(a.gdil, NULL);
             } else {

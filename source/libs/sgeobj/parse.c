@@ -392,7 +392,7 @@ u_long32 action
 ) {
    lListElem *ep, *sep, *idp;
    char str[256];
-   int ret = false;
+   bool ret = false;
    bool is_run_once = false;
 
    DENTER(TOP_LAYER, "parse_multi_jobtaskslist");

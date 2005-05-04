@@ -272,9 +272,6 @@ sge_gdi_qmod(char *host, sge_gdi_request *request, sge_gdi_request *answer)
                   u_long32 min, max, step;
                   u_long32 taskid;
 
-                  DPRINTF(("start: %d end: %d step: %d alltasks: %d\n", 
-                        start, end, step, alltasks));
-
                   /* handle all pending tasks */
                   for_each (range, lGetList(job, JB_ja_n_h_ids)) {
                      range_get_all_ids(range, &min, &max, &step);
@@ -402,8 +399,8 @@ sge_gdi_qmod(char *host, sge_gdi_request *request, sge_gdi_request *answer)
 static int 
 sge_change_queue_state(char *user, char *host, lListElem *qep, u_long32 action, u_long32 force, lList **answer) 
 {
-   int isoperator;
-   int isowner;
+   bool isoperator;
+   bool isowner;
    int result = 0;
    
    DENTER(TOP_LAYER, "sge_change_queue_state");
@@ -750,7 +747,7 @@ char *host
             } else {
                INFO((SGE_EVENT, MSG_JOB_FORCESUSPENDJOB_SU, user, sge_u32c(jobid)));
             }
-            answer_list_add(answer, SGE_EVENT, STATUS_OK, 0);
+            answer_list_add(answer, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_ERROR);
          }
 
          state = lGetUlong(jatep, JAT_state);
@@ -770,7 +767,7 @@ char *host
             } else {
                INFO((SGE_EVENT, MSG_JOB_SUSPENDJOB_SU, user, sge_u32c(jobid)));
             }
-            answer_list_add(answer, SGE_EVENT, STATUS_OK, 0);
+            answer_list_add(answer, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_ERROR);
 
             state = lGetUlong(jatep, JAT_state);
             CLEARBIT(JRUNNING, state);
@@ -820,7 +817,7 @@ char *host
          } else {
             INFO((SGE_EVENT, MSG_JOB_RMADMSUSPENDJOB_SSU, user, host, sge_u32c(jobid)));
          }
-         answer_list_add(answer, SGE_EVENT, STATUS_OK, 0);
+         answer_list_add(answer, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_ERROR);
 
          state = lGetUlong(jatep, JAT_state);
          CLEARBIT(JSUSPENDED, state);
@@ -904,7 +901,7 @@ char *host
             } else {
                INFO((SGE_EVENT, MSG_JOB_FORCEUNSUSPJOB_SSU, user, host, sge_u32c(jobid)));
             }
-            answer_list_add(answer, SGE_EVENT, STATUS_OK, 0);
+            answer_list_add(answer, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_ERROR);
          }
 
          state = lGetUlong(jatep, JAT_state);
@@ -923,7 +920,7 @@ char *host
             } else {
                INFO((SGE_EVENT, MSG_JOB_UNSUSPENDJOB_SU, user, sge_u32c(jobid)));
             }
-            answer_list_add(answer, SGE_EVENT, STATUS_OK, 0);
+            answer_list_add(answer, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_ERROR);
             
             state = lGetUlong(jatep, JAT_state);
             SETBIT(JRUNNING, state);
@@ -951,7 +948,7 @@ void rebuild_signal_events()
    {
       for_each (jatep, lGetList(jep, JB_ja_tasks))
       { 
-         u_long32 when = lGetUlong(jatep, JAT_pending_signal_delivery_time);
+         time_t when = (time_t)lGetUlong(jatep, JAT_pending_signal_delivery_time);
 
          if (lGetUlong(jatep, JAT_pending_signal) && (when > 0))
          {
@@ -974,7 +971,7 @@ void rebuild_signal_events()
 
       for_each(qinstance, qinstance_list)
       {
-         u_long32 when = lGetUlong(qinstance, QU_pending_signal_delivery_time);
+         time_t when = (time_t)lGetUlong(qinstance, QU_pending_signal_delivery_time);
 
          if (lGetUlong(qinstance, QU_pending_signal) && (when > 0))
          {
@@ -1139,7 +1136,7 @@ lListElem *jatep
       te_delete_one_time_event(TYPE_SIGNAL_RESEND_EVENT, lGetUlong(jep, JB_job_number),
          lGetUlong(jatep, JAT_task_number), NULL);
       lSetUlong(jatep, JAT_pending_signal, how);
-      ev = te_new_event(next_delivery_time, TYPE_SIGNAL_RESEND_EVENT, ONE_TIME_EVENT,
+      ev = te_new_event((time_t)next_delivery_time, TYPE_SIGNAL_RESEND_EVENT, ONE_TIME_EVENT,
          lGetUlong(jep, JB_job_number), lGetUlong(jatep, JAT_task_number), NULL);
       te_add_event(ev);
       te_free_event(ev);
@@ -1154,7 +1151,7 @@ lListElem *jatep
             lGetHost(qep, QU_qhostname)));
       te_delete_one_time_event(TYPE_SIGNAL_RESEND_EVENT, 0, 0, lGetString(qep, QU_full_name));
       lSetUlong(qep, QU_pending_signal, how);
-      ev = te_new_event(next_delivery_time, TYPE_SIGNAL_RESEND_EVENT, ONE_TIME_EVENT, 0, 0,
+      ev = te_new_event((time_t)next_delivery_time, TYPE_SIGNAL_RESEND_EVENT, ONE_TIME_EVENT, 0, 0,
          lGetString(qep, QU_full_name));
       te_add_event(ev);
       te_free_event(ev);
@@ -1186,7 +1183,7 @@ int how, /* signal */
 lListElem *qep 
 ) {
    lList *gdil_lp;
-   lListElem *mq, *pe, *jep, *gdil_ep, *jatep;
+   lListElem *mq, *jep, *gdil_ep, *jatep;
    const char *qname, *mqname, *pe_name;
 
    DENTER(TOP_LAYER, "signal_slave_jobs_in_queue");
@@ -1207,10 +1204,7 @@ lListElem *qep
             since they are not known to the apropriate execd - we should
             omit signalling in this case to prevent waste of communication bandwith */ 
          if (!(pe_name=lGetString(jatep, JAT_granted_pe)) ||
-             !(pe=pe_list_locate(Master_Pe_List, pe_name)) /* ||
-             ** signal also jobs, that are not slave controlled
-             ** master task must be signaled in every case (JG)
-             !lGetBool(pe, PE_control_slaves) */)
+             !pe_list_locate(Master_Pe_List, pe_name))
             continue;
 
          for (gdil_ep=lNext(lFirst(gdil_lp)); gdil_ep; gdil_ep=lNext(gdil_ep))

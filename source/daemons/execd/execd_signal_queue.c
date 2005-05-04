@@ -342,8 +342,6 @@ void sge_send_suspend_mail(u_long32 signal, lListElem *master_q, lListElem *jep,
 
        lList *mail_users      = NULL; 
 
-       u_long32 mq_state      = 0;
-       u_long32 state         = 0;
        u_long32 jobid         = 0;
        u_long32 taskid        = 0;
        u_long32 job_sub_time  = 0;
@@ -376,14 +374,10 @@ void sge_send_suspend_mail(u_long32 signal, lListElem *master_q, lListElem *jep,
 
        if (jatep != NULL) {
           job_exec_time    = lGetUlong(jatep,JAT_start_time );
-          state            = lGetUlong(jatep, JAT_state);
           taskid           = lGetUlong(jatep, JAT_task_number );
           job_master_queue = lGetString(jatep, JAT_master_queue);
        }
 
-       if (master_q != NULL) {
-          mq_state = lGetUlong(master_q, QU_state);
-       }
        /* check strings */
        if (job_name == NULL) {
            job_name = MSG_MAIL_UNKNOWN_NAME;
@@ -397,8 +391,8 @@ void sge_send_suspend_mail(u_long32 signal, lListElem *master_q, lListElem *jep,
 
 
        /* make human readable time format */
-       sprintf(job_sub_time_str ,"%s",sge_ctime(job_sub_time, &ds));
-       sprintf(job_exec_time_str,"%s",sge_ctime(job_exec_time, &ds));
+       sprintf(job_sub_time_str ,"%s",sge_ctime((time_t)job_sub_time, &ds));
+       sprintf(job_exec_time_str,"%s",sge_ctime((time_t)job_exec_time, &ds));
 
        if (signal == SGE_SIGSTOP) {
           /* suspended */
@@ -467,7 +461,6 @@ u_long32 ja_task_id,
 const char *pe_task_id 
 ) {
    int sig;
-   int status=0;
    int direct_signal;   /* deliver per signal or per file */
 
    DENTER(TOP_LAYER, "sge_kill");
@@ -544,7 +537,7 @@ const char *pe_task_id
 #if defined(NECSX4) || defined(NECSX5)
    sge_switch2start_user();
 #endif    
-   if ((status = kill(pid, direct_signal?sig:SIGTTIN))) {
+   if (kill(pid, direct_signal?sig:SIGTTIN)) {
 #if defined(NECSX4) || defined(NECSX5)
       sge_switch2admin_user();
 #endif   
@@ -607,7 +600,6 @@ u_long32 signal
 ) {
    lListElem *jep;
    u_long32 state;
-   u_long32 mq_state;
    lListElem *master_q;
    lListElem *jatep = NULL;
    int getridofjob = 0;
@@ -686,7 +678,6 @@ u_long32 signal
 
          getridofjob = sge_execd_deliver_signal(signal, jep, jatep);
          if ( (!getridofjob) && (suspend_change == 1) ) {
-            mq_state = lGetUlong(master_q, QU_state);
             if (!qinstance_state_is_manual_suspended(master_q)) {
                send_mail = 2;
             }

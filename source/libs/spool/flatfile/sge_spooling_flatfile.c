@@ -1111,13 +1111,13 @@ spool_flatfile_default_delete_func(lList **answer_list,
 
    switch(object_type) {
       case SGE_TYPE_ADMINHOST:
-         ret = sge_unlink(ADMINHOST_DIR, key) == 0;
+         ret = sge_unlink(ADMINHOST_DIR, key);
          break;
       case SGE_TYPE_CALENDAR:
-         ret = sge_unlink(CAL_DIR, key) == 0;
+         ret = sge_unlink(CAL_DIR, key);
          break;
       case SGE_TYPE_CKPT:
-         ret = sge_unlink(CKPTOBJ_DIR, key) == 0;
+         ret = sge_unlink(CKPTOBJ_DIR, key);
          break;
       case SGE_TYPE_CONFIG:
          if(sge_hostcmp(key, "global") == 0) {
@@ -1134,11 +1134,11 @@ spool_flatfile_default_delete_func(lList **answer_list,
             dir_name = sge_dstring_sprintf(&dir_name_dstring, "%s/%s",
                                            lGetString(rule, SPR_url), 
                                            LOCAL_CONF_DIR);
-            ret = sge_unlink(dir_name, key) == 0;
+            ret = sge_unlink(dir_name, key);
          }
          break;
       case SGE_TYPE_EXECHOST:
-         ret = sge_unlink(EXECHOST_DIR, key) == 0;
+         ret = sge_unlink(EXECHOST_DIR, key);
          break;
       case SGE_TYPE_JOB:
       case SGE_TYPE_JATASK:   
@@ -1161,26 +1161,26 @@ spool_flatfile_default_delete_func(lList **answer_list,
          }
          break;
       case SGE_TYPE_MANAGER:
-         ret = sge_unlink(MAN_DIR, key) == 0;
+         ret = sge_unlink(MAN_DIR, key);
          break;
       case SGE_TYPE_OPERATOR:
-         ret = sge_unlink(OP_DIR, key) == 0;
+         ret = sge_unlink(OP_DIR, key);
          break;
       case SGE_TYPE_SHARETREE:
-         ret = sge_unlink(NULL, key) == 0;
+         ret = sge_unlink(NULL, key);
          break;
       case SGE_TYPE_PE:
-         ret = sge_unlink(PE_DIR, key) == 0;
+         ret = sge_unlink(PE_DIR, key);
          break;
       case SGE_TYPE_PROJECT:
-         ret = sge_unlink(PROJECT_DIR, key) == 0;
+         ret = sge_unlink(PROJECT_DIR, key);
          break;
       case SGE_TYPE_CQUEUE:
-         ret = sge_unlink(CQUEUE_DIR, key) == 0;
+         ret = sge_unlink(CQUEUE_DIR, key);
          break;
       case SGE_TYPE_QINSTANCE:
 #if 0
-         ret = sge_unlink(QINSTANCE_DIR, key) == 0;
+         ret = sge_unlink(QINSTANCE_DIR, key);
 #else
          ret = false;
 #endif
@@ -1192,21 +1192,21 @@ spool_flatfile_default_delete_func(lList **answer_list,
          ret = false;
          break;
       case SGE_TYPE_SUBMITHOST:
-         ret = sge_unlink(SUBMITHOST_DIR, key) == 0;
+         ret = sge_unlink(SUBMITHOST_DIR, key);
          break;
       case SGE_TYPE_USER:
-         ret = sge_unlink(USER_DIR, key) == 0;
+         ret = sge_unlink(USER_DIR, key);
          break;
       case SGE_TYPE_USERSET:
-         ret = sge_unlink(USERSET_DIR, key) == 0;
+         ret = sge_unlink(USERSET_DIR, key);
          break;
 #ifndef __SGE_NO_USERMAPPING__
       case SGE_TYPE_CUSER:
-         ret = sge_unlink(UME_DIR, key) == 0;
+         ret = sge_unlink(UME_DIR, key);
          break;
 #endif
       case SGE_TYPE_HGROUP:
-         ret = sge_unlink(HGROUP_DIR, key) == 0;
+         ret = sge_unlink(HGROUP_DIR, key);
          break;
       default:
          break;

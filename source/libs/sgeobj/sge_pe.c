@@ -63,7 +63,7 @@ lList *Master_Pe_List = NULL;
 
 static bool pe_name_is_matching(const char *pe_name, const char *wildcard)
 {
-   return !fnmatch(wildcard, pe_name, 0);
+   return fnmatch(wildcard, pe_name, 0) == 0 ? true : false;
 }
 
 /****** sgeobj/pe/pe_is_matching() ********************************************
@@ -254,7 +254,7 @@ int pe_validate(lListElem *pep, lList **alpp, int startup)
    pe_name = lGetString(pep, PE_name);
    if (pe_name && verify_str_key(alpp, pe_name, MSG_OBJ_PE)) {
       ERROR((SGE_EVENT, "Invalid character in pe name of pe "SFQ, pe_name));
-      answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, 0);
+      answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
       DEXIT;
       return STATUS_EEXIST;
    }

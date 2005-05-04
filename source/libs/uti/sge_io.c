@@ -285,7 +285,7 @@ int sge_copy_append(char *src, const char *dst, sge_mode_t mode)
    }    
     
    error = false;
-   while (true) {
+   while (!error) {
       rs = read(fdsrc, buf, 512);
       if (rs == -1 && errno == EINTR)
          continue;
@@ -293,7 +293,7 @@ int sge_copy_append(char *src, const char *dst, sge_mode_t mode)
          error = true;
     
       if (!error && rs > 0) {      
-         while (true) {   
+         while (!error) {   
             ws = write(fddst, buf, rs);
             if (ws == -1 && errno == EINTR)   
                continue;
@@ -373,7 +373,7 @@ char *sge_bin2string(FILE *fp, int size)
 
    error = false;
 
-   while (1) {
+   while (!error) {
       i = read(fd, inbuf, BUFFER);
       if (i > 0) {
          inp = inbuf;

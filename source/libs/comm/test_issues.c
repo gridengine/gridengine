@@ -46,18 +46,14 @@
 
 void sighandler_issue_tests(int sig);
 
-static int pipe_signal = 0;
-static int hup_signal = 0;
 static int do_shutdown = 0;
 
 void sighandler_issue_tests(int sig) {
    if (sig == SIGPIPE) {
-      pipe_signal = 1;
       return;
    }
 
    if (sig == SIGHUP) {
-      hup_signal = 1;
       return;
    }
 

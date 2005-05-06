@@ -1,3 +1,8 @@
+CR-2005-05-06-0: Testsuite: - fixed module test: test_cl_commlib_client
+                            - reworked handle_vi_edit()
+                            - fixed bug in resolve_queue()  
+                            - fixed bug in create_shell_script()
+
 JG-2005-05-04-0: Cleanup:   enable compilation with -Werror on irix65.
                  Review:    CR, RD
 

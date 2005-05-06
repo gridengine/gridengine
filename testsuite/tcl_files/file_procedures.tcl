@@ -1511,6 +1511,7 @@ proc create_shell_script { scriptfile
       puts $script "umask 022"
 
       if { $set_shared_lib_path == 1 } {
+         puts $script "# settup shared library path"
          get_shared_lib_path $host shared_var shared_value
          puts $script "if \[ x\$$shared_var = x \]; then"
          puts $script "   $shared_var=$shared_value"
@@ -1521,10 +1522,12 @@ proc create_shell_script { scriptfile
          puts $script "fi"
       }
       if { $source_settings_file == 1 } {
+         puts $script "# source settings file"
          puts $script "if \[ -f $CHECK_PRODUCT_ROOT/$ts_config(cell)/common/settings.sh \]; then"
          puts $script "   . $CHECK_PRODUCT_ROOT/$ts_config(cell)/common/settings.sh"
          puts $script "else"
       }
+      puts $script "# set testsuite environment"
       puts $script "   unset GRD_ROOT"
       puts $script "   unset CODINE_ROOT"
       puts $script "   unset GRD_CELL"
@@ -1542,25 +1545,29 @@ proc create_shell_script { scriptfile
          puts $script "   SGE_ROOT=$CHECK_PRODUCT_ROOT"
          puts $script "   export SGE_ROOT"
       }
+      puts $script "   SGE_CELL=$ts_config(cell)"
+      puts $script "   export SGE_CELL"
+    
       if { $source_settings_file == 1 } {
          puts $script "fi"
       }
 
-      puts $script "SGE_CELL=$ts_config(cell)"
-      puts $script "export SGE_CELL"
-
+      puts $script "# don't break long lines with qstat"
       puts $script "SGE_SINGLE_LINE=1"
       puts $script "export SGE_SINGLE_LINE"
 #      do not enable this without rework of qstat parsing routines
 #      puts $script "SGE_LONG_QNAMES=40"
 #      puts $script "export SGE_LONG_QNAMES"
 
-   
-      foreach u_env [ array names users_env ] {
-         set u_val [set users_env($u_env)] 
-         debug_puts "setting $u_env to $u_val"
-         puts $script "${u_env}=${u_val}"
-         puts $script "export ${u_env}"
+      set user_env_names [array names users_env]
+      if { [llength $user_env_names] > 0 } {
+         puts $script "# setting users environment variables"
+         foreach u_env $user_env_names {
+            set u_val [set users_env($u_env)] 
+            debug_puts "setting $u_env to $u_val"
+            puts $script "${u_env}=\"${u_val}\""
+            puts $script "export ${u_env}"
+         }
       }
       if { $without_start_output == 0 } {
          puts $script "echo \"_start_mark_:(\$?)\""

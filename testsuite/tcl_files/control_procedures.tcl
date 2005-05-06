@@ -244,9 +244,9 @@ proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result 
    set env(EDITOR) [get_binary_path "$CHECK_HOST" "vim"]
    set env(SGE_SINGLE_LINE) 1
    set result -100
-   set id [ open_remote_spawn_process $CHECK_HOST $CHECK_USER "$prog_binary" "$prog_args" 0 env]
+   set id [ open_remote_spawn_process $CHECK_HOST $CHECK_USER "$prog_binary" "$prog_args"]
       set sp_id [ lindex $id 1 ] 
-      debug_puts "starting -> $prog_binary $prog_args"
+#      debug_puts "starting -> $prog_binary $prog_args"
       if {$CHECK_DEBUG_LEVEL != 0} {
          log_user 1
          set send_speed .05
@@ -260,9 +260,7 @@ proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result 
       set stop_line_wait 0
       set timeout 10
 
-      set start_time [ timestamp ] 
       send -i $sp_id "G"
-      #set timeout 1
       set timeout_count 0
       while { $stop_line_wait == 0 } {
          expect {
@@ -271,7 +269,9 @@ proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result 
                set stop_line_wait 1
             }
             -i $sp_id "100%" {
-               after 100
+               set start_time [ timestamp ] 
+#               debug_puts "handle_vi_edit(5.1)"
+#               debug_puts "start_time = $start_time"
                send -i $sp_id "1G"      ;# go to first line
                set stop_line_wait 1
             }
@@ -319,21 +319,19 @@ proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result 
             }
          }
 
-         after 50
+         after 25
       }
 
-      # wait 1 second for new file date!!! 
-      after 1000
+      # wait for file time older one second
       while { [ timestamp ] <= $start_time } { 
-         after 1000
+         after 100
       }
       send -i $sp_id ":wq\n"
-      set timeout 100
+      set timeout 30
       set doStop 0
-      debug_puts "handle_vi_edit(6)"
+#      debug_puts "handle_vi_edit(6)"
 
       if { [string compare "" $expected_result ] == 0 } {
-         set timeout 0
          set doStop 0
          while { $doStop == 0 } {
             expect {
@@ -1464,9 +1462,14 @@ proc resolve_queue { queue } {
       set queue_name [string range $queue 0 $at_sign]
       debug_puts "queue name:          \"$queue_name\""
       debug_puts "host name:           \"$host_name\""
-      set resolved_host_name [resolve_host $host_name 1]
-      debug_puts "resolved host name:  \"$resolved_host_name\""
-      set new_queue_name "$queue_name@$resolved_host_name"
+      set resolved_name [resolve_host $host_name 1]
+      if { $resolved_name != "unknown" } {
+         set resolved_host_name $resolved_name
+         debug_puts "resolved host name:  \"$resolved_host_name\""
+         set new_queue_name "$queue_name@$resolved_host_name"
+      } else {
+         puts $CHECK_OUTPUT "can't resolve host \"$host_name\""
+      }
    }
    puts $CHECK_OUTPUT "queue \"$queue\" resolved to \"$new_queue_name\""
 

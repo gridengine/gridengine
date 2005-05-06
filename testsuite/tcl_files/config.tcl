@@ -4049,16 +4049,6 @@ proc config_build_ts_config {} {
    set ts_config($parameter,pos)        $ts_pos
    incr ts_pos 1
 
-   set parameter "mail_application"
-   set ts_config($parameter)            ""
-   set ts_config($parameter,desc)       "Name of mail application used for sending testsuite mails"
-   set ts_config($parameter,default)    "sendmail"
-   set ts_config($parameter,setup_func) "config_$parameter"
-   set ts_config($parameter,onchange)   ""
-   set ts_config($parameter,pos)        $ts_pos
-   incr ts_pos 1
-
-
    set parameter "mailx_host"
    set ts_config($parameter)            ""
    set ts_config($parameter,desc)       "Name of host used for sending mails (mailx/sendmail must work on this host)"
@@ -4346,14 +4336,14 @@ proc config_build_ts_config_1_9 {} {
    }
 
    set parameter "mail_application"
-   set ts_config($parameter)            "mailx"
+   set ts_config($parameter)            ""
    set ts_config($parameter,desc)       "Name of mail application used for sending testsuite mails"
-   set ts_config($parameter,default)    "sendmail"
+   set ts_config($parameter,default)    "mailx"
    set ts_config($parameter,setup_func) "config_$parameter"
    set ts_config($parameter,onchange)   ""
    set ts_config($parameter,pos)        $insert_pos
 
-   # now we have a configuration version 1.8
+   # now we have a configuration version 1.9
    set ts_config(version) "1.9"
 }
 

@@ -710,6 +710,7 @@ proc translate { host remove_control_signs is_script no_input_parsing msg_txt { 
          set prg_exit_state 0
          debug_puts "reading message from l10n install cache ..."
       } else {
+         puts $CHECK_OUTPUT "translating Grid Engine message macro ..."
          set back [start_remote_prog $host $CHECK_USER $CHECK_PRODUCT_ROOT/utilbin/$arch_string/infotext "-n -__eoc__ \"$msg_text\" $parameter_list"]
          set l10n_install_cache($msg_text) $back
          debug_puts "adding message to l10n install cache ..." 

@@ -1,3 +1,6 @@
+JG-2005-05-06-0: Testsuite: Make opening of rlogin connections safer and faster.
+                            Fixed check bugs/issuezilla/403.
+
 CR-2005-05-06-0: Testsuite: - fixed module test: test_cl_commlib_client
                             - reworked handle_vi_edit()
                             - fixed bug in resolve_queue()  
@@ -13,7 +16,8 @@ CR-2005-05-04-0: Testsuite: - using shorter queue names. Long queue instances
                               get_queue_state() 
 
 CR-2005-05-03-4: Testsuite: install_core_system now supports load sensor
-                            installation on nosuid root mounted disks
+                            installation on nosuid root mounted disks, if qmaster
+                            is installed on fileserver.
 
 CR-2005-05-03-3: Testsuite: fixed bug in create_gnuplot_xy_gif() which
                             had the effect that png terminal was used

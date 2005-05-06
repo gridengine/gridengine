@@ -1126,7 +1126,7 @@ proc open_remote_spawn_process { hostname
         add_proc_error "open_remote_spawn_process" -2 "could not spawn! (ret_pid = $pid)" 
       }
       match_max -i $sp_id $CHECK_EXPECT_MATCH_MAX_BUFFER
-      debug_puts "open_remote_spawn_process -> buffer size is: [match_max]"
+      debug_puts "open_remote_spawn_process -> buffer size is: [match_max -i $sp_id]"
       # wait for shell to start
       set catch_return [ catch {
           uplevel 1 {
@@ -1134,7 +1134,7 @@ proc open_remote_spawn_process { hostname
              if { $CHECK_DEBUG_LEVEL != 0 } {
                 log_user 1
              }
-             set my_tries 30
+             set my_tries 60
              while { 1 } {
                 set timeout 1
                 expect {
@@ -1152,7 +1152,7 @@ proc open_remote_spawn_process { hostname
                    -i $spawn_id "Please type 'yes' or 'no'*" {
                       send -i $spawn_id "yes\n"
                    }
-                   -i $spawn_id "*" {
+                   -i $spawn_id {*[A-Za-z]*} {
                        debug_puts "startup ..."
                        break;
                    }
@@ -1173,7 +1173,7 @@ proc open_remote_spawn_process { hostname
              set timeout 1
 #            On some architectures it makes problems when trying to send
 #            to a just openend shell, so this line is not active
-#            send -i $spawn_id "\n$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/shell_start_output.sh\n"
+            send -i $spawn_id "\n$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/shell_start_output.sh\n"
              set open_remote_spawn__tries 30
              while { $open_remote_spawn__tries > 0 } {
                 expect {

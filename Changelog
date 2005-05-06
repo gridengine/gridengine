@@ -1,3 +1,7 @@
+JG-2005-05-06-2: Bugfix:    Fixed typo in qstat error message.
+                 Issue:     1580
+                 Review:    RD
+
 JG-2005-05-06-0: Testsuite: check functional/backup_restore only applies to 
                             Grid Engine version 6.x.
 

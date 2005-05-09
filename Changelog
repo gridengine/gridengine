@@ -1,3 +1,6 @@
+HP-2005-05-09-0: Bugfix:    Excluded DB and DRMAA install from distinst for Windows
+                 Changed:   scripts/distinst
+
 AS-2005-05-92-0: CVS        Created V60u4win_{TAG,BRANCH}
 ---------------------------------------------------------
 

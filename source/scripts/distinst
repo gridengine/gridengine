@@ -1340,36 +1340,38 @@ for i in $ARCH; do
             fi   
          fi
 
-         if [ $instbdb = true ]; then
-            for lib in $BERKELEYDB_SHARED_LIBRARIES; do
-               libname="$BERKELEYDBBASE/$DSTARCH/lib/$lib.$shlibext"
+         if [ $DSTARCH != win32-x86 ]; then
+            if [ $instbdb = true ]; then
+               for lib in $BERKELEYDB_SHARED_LIBRARIES; do
+                  libname="$BERKELEYDBBASE/$DSTARCH/lib/$lib.$shlibext"
+                  if [ -f $libname ]; then
+                     InstallProg $libname
+                  elif [ $exit_on_error = true ]; then
+                     echo "\"$libname\" not found. Installation failed."
+                     exit 1
+                  fi
+               done
+            fi
+
+            for lib in $DRMAA_SHARED_LIBRARIES; do
+               libname=$lib.$shlibext
                if [ -f $libname ]; then
                   InstallProg $libname
                elif [ $exit_on_error = true ]; then
                   echo "\"$libname\" not found. Installation failed."
-                  exit 1
                fi
             done
-         fi
-
-         for lib in $DRMAA_SHARED_LIBRARIES; do
-            libname=$lib.$shlibext
-            if [ -f $libname ]; then
-               InstallProg $libname
-            elif [ $exit_on_error = true ]; then
-               echo "\"$libname\" not found. Installation failed."
-            fi
-         done
 
 # On MacOS X, the JVM expects a special JNI extension for shared libraries
-         if [ $shlibext != $jnilibext ]; then
-            echo Linking $lib.$jnilibext to $lib.$shlibext
+            if [ $shlibext != $jnilibext ]; then
+               echo Linking $lib.$jnilibext to $lib.$shlibext
 
-            if [ -f $DEST_SGE_ROOT/lib/$DSTARCH/4lib.$jnilibext ]; then
-               rm $DEST_SGE_ROOT/lib/$DSTARCH/$lib.$jnilibext
+               if [ -f $DEST_SGE_ROOT/lib/$DSTARCH/4lib.$jnilibext ]; then
+                  rm $DEST_SGE_ROOT/lib/$DSTARCH/$lib.$jnilibext
+               fi
+
+               ln -s $DEST_SGE_ROOT/lib/$DSTARCH/$lib.$shlibext $DEST_SGE_ROOT/lib/$DSTARCH/$lib.$jnilibext
             fi
-
-            ln -s $DEST_SGE_ROOT/lib/$DSTARCH/$lib.$shlibext $DEST_SGE_ROOT/lib/$DSTARCH/$lib.$jnilibext
          fi
       fi
       cd ..

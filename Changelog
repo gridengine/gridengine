@@ -1,3 +1,6 @@
+HP-2005-05-09-0: Bugfix:    Excluded DB and DRMAA install from distinst for Windows
+                 Changed:   scripts/distinst
+
 CR-2005-05-09-0: Testsuite: Fixed bug in check_local_spool_directories()
 
 JG-2005-05-06-2: Bugfix:    Fixed typo in qstat error message.

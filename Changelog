@@ -1,3 +1,10 @@
+CR-2005-05-09-1: Bugfix:    Repeated logging of the same message produces giant 
+                            logging files
+                 Issue:     1598
+                 Bugtraq:   6267245
+                 Changed:   gdi library (all binaries)
+                 Review:    AH
+
 HP-2005-05-09-0: Bugfix:    Excluded DB and DRMAA install from distinst for Windows
                  Changed:   scripts/distinst
 

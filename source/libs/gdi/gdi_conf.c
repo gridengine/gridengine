@@ -164,7 +164,12 @@ lListElem **lepp
             DEXIT;
             return -6;
          default:
-            ERROR((SGE_EVENT, cl_get_error_text(commlib_error)));
+            break;
+            /*
+             * no need to log an error to the messages file, because
+             * commlib errors are logged via general_communication_error()
+             * callback function
+             */
       }
    }
 
@@ -252,7 +257,6 @@ lList **conf_list
    cl_com_handle_t* handle = NULL;
    int ret_val;
    int ret;
-   time_t now, last;
 
    DENTER(TOP_LAYER, "get_conf_and_daemonize");
    /*
@@ -261,7 +265,6 @@ lList **conf_list
     */
    DPRINTF(("qualified hostname: %s\n",  uti_state_get_qualified_hostname()));
 
-   now = last = (time_t) sge_get_gmt();
    while ((ret = get_configuration(uti_state_get_qualified_hostname(), &global, &local))) {
       if (ret==-6 || ret==-7) {
          /* confict: COMMPROC ALREADY REGISTERED */
@@ -274,8 +277,6 @@ lList **conf_list
          if (!getenv("SGE_ND") && sleep_counter > 2) {
             ERROR((SGE_EVENT, MSG_CONF_NOCONFBG));
             dfunc();
-         } else {
-            WARNING((SGE_EVENT, MSG_CONF_NOCONFSLEEP));
          }
          handle = cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0);
          ret_val = cl_commlib_trigger(handle);
@@ -299,13 +300,6 @@ lList **conf_list
             default:
                sleep(1);
                break;
-         }
-         now = (time_t) sge_get_gmt();
-         if (last > now)
-            last=now;
-         if (now - last > 1800) {
-            last = now;
-            ERROR((SGE_EVENT, MSG_CONF_NOCONFSTILL));
          }
       }
    }

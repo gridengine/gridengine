@@ -1147,25 +1147,32 @@ for i in $ARCH; do
                Install 0.0 755 ../3rdparty/qtcsh/$ARCHBIN/tcsh $DEST_SGE_ROOT/${UTILPREFIX}/$DSTARCH/qtcsh
                ;; 
             sge_qmaster|spoolinit|spooldefaults)
-               if [ $instclassictargets = false ]; then
-                  InstallProg $prog
-               else
-                  if [ -f ../${ARCHBIN}_classic/$prog ]; then
-                     InstallProgAs ../${ARCHBIN}_classic/$prog ${prog}.spool_classic
-                     InstallProgAs $prog ${prog}.spool_bdb
-                     ( echo changing to $DEST_SGE_ROOT/bin/$DSTARCH ; \
-                       cd $DEST_SGE_ROOT/bin/$DSTARCH ; \
-                       echo ln -s ${prog}.spool_bdb $prog ; \
-                       ln -s ${prog}.spool_bdb $prog
-                     )
-                  else
+               if [ "$DSTARCH" != "win32-x86" ]; then
+                  if [ $instclassictargets = false ]; then
                      InstallProg $prog
+                  else
+                     if [ -f ../${ARCHBIN}_classic/$prog ]; then
+                        InstallProgAs ../${ARCHBIN}_classic/$prog ${prog}.spool_classic
+                        InstallProgAs $prog ${prog}.spool_bdb
+                        ( echo changing to $DEST_SGE_ROOT/bin/$DSTARCH ; \
+                          cd $DEST_SGE_ROOT/bin/$DSTARCH ; \
+                          echo ln -s ${prog}.spool_bdb $prog ; \
+                          ln -s ${prog}.spool_bdb $prog
+                        )
+                     else
+                        InstallProg $prog
+                     fi
                   fi
+               fi
+               ;;
+            sge_schedd|sge_shadowd|qmon)
+               if [ "$DSTARCH" != "win32-x86" ]; then
+                  InstallProg $prog
                fi
                ;;
             qloadsensor.exe)
                if [ "$DSTARCH" = "win32-x86" ]; then
-                  # In the moment qloadsensor.exe is only needed for win32-x86 architecture
+                  # Currently qloadsensor.exe is needed only for win32-x86
                   InstallProg $prog
                fi
                ;;

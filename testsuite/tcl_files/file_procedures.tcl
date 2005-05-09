@@ -1894,15 +1894,19 @@ proc check_local_spool_directories { { do_delete 0 } } {
    foreach host $ts_config(execd_hosts) {
        
       puts $CHECK_OUTPUT "host ${host}:"
-      puts $CHECK_OUTPUT "checking testsuite spool root dir ..."
-      set result [start_remote_prog $host "root" "du" "-k -s $ts_host_config($host,spooldir)/"]
+      set my_spool_dir $ts_host_config($host,spooldir)
+      if { $my_spool_dir == "" } {
+         set my_spool_dir "no_spool_dir_defined"
+      }
+      puts $CHECK_OUTPUT "checking testsuite spool root dir ($my_spool_dir) ..."
+      set result [start_remote_prog $host "root" "du" "-k -s $my_spool_dir/" prg_exit_state 120 ]
       puts $CHECK_OUTPUT $result
       set testsuite($host,spooldir_size) [lindex $result 0]
       set testsuite($host,spooldir_size,state) $prg_exit_state
 
       foreach dir "execd qmaster spooldb" {
          puts $CHECK_OUTPUT "checking testsuite \"$dir\" spool dir for port \"$ts_config(commd_port)\" ..."
-         set result [start_remote_prog $host "root" "du" "-k -s $ts_host_config($host,spooldir)/$ts_config(commd_port)/$dir/"]
+         set result [start_remote_prog $host "root" "du" "-k -s $my_spool_dir/$ts_config(commd_port)/$dir/" prg_exit_state 120]
          puts $CHECK_OUTPUT $result
          set testsuite($host,$dir,spooldir_size) [lindex $result 0]
          set testsuite($host,$dir,spooldir_size,state) $prg_exit_state
@@ -1910,26 +1914,26 @@ proc check_local_spool_directories { { do_delete 0 } } {
    }
 
    foreach host $ts_config(execd_hosts) {
-      puts $CHECK_OUTPUT "$host: testsuite uses $testsuite($host,spooldir_size) bytes in $ts_host_config($host,spooldir)"
-      if { $testsuite($host,spooldir_size) > 1000000 } {
-         add_proc_error "check_local_spool_directories" -3 "$host: testsuite uses $testsuite($host,spooldir_size) bytes in $ts_host_config($host,spooldir)"
+      puts $CHECK_OUTPUT "$host: testsuite uses $testsuite($host,spooldir_size) bytes in $my_spool_dir"
+      if { $testsuite($host,spooldir_size) > 1000000 && $testsuite($host,spooldir_size,state) == 0 } {
+         add_proc_error "check_local_spool_directories" -3 "$host: testsuite uses $testsuite($host,spooldir_size) bytes in $my_spool_dir"
       }
 
       foreach dir "execd qmaster spooldb" {
          if { $testsuite($host,$dir,spooldir_size,state) != 0 } {
-            puts $CHECK_OUTPUT "skipping \"$ts_host_config($host,spooldir)/$ts_config(commd_port)/$dir\" (no directory found)"
+            puts $CHECK_OUTPUT "skipping \"$my_spool_dir/$ts_config(commd_port)/$dir\" (no directory found)"
             continue
          }
          puts $CHECK_OUTPUT "$host ($dir): spool dir size is $testsuite($host,$dir,spooldir_size)"
          if { $do_delete != 0 && $testsuite($host,$dir,spooldir_size) > 10 } {
-            puts -nonewline $CHECK_OUTPUT "delete directory \"$ts_host_config($host,spooldir)/$ts_config(commd_port)/$dir\" (y/n)? "
+            puts -nonewline $CHECK_OUTPUT "delete directory \"$my_spool_dir/$ts_config(commd_port)/$dir\" (y/n)? "
             set input [ wait_for_enter 1]
             if { $input == "y" } {
-               puts $CHECK_OUTPUT "deleting \"$ts_host_config($host,spooldir)/$ts_config(commd_port)/$dir\" ..."
-               cleanup_spool_dir_for_host $host $ts_host_config($host,spooldir) $dir
-               set result [start_remote_prog $host "root" "du" "-k -s $ts_host_config($host,spooldir)/$ts_config(commd_port)/$dir"]
+               puts $CHECK_OUTPUT "deleting \"$my_spool_dir/$ts_config(commd_port)/$dir\" ..."
+               cleanup_spool_dir_for_host $host $my_spool_dir $dir
+               set result [start_remote_prog $host "root" "du" "-k -s $my_spool_dir/$ts_config(commd_port)/$dir"]
                if { [lindex $result 0] > 10 } {
-                  add_proc_error "check_local_spool_directories" -1 "could not delete \"$ts_host_config($host,spooldir)/$ts_config(commd_port)/$dir\" on host $host"
+                  add_proc_error "check_local_spool_directories" -1 "could not delete \"$my_spool_dir/$ts_config(commd_port)/$dir\" on host $host"
                }
             }
          }

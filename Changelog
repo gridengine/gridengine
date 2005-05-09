@@ -1,3 +1,7 @@
+HP-2005-05-09-1: Bugfix:    Excluded qmon, sge_master, sge_shadowd and sge_scheddd
+                            install from distinst for Windows
+                 Changed:   scripts/distinst
+
 CR-2005-05-09-1: Bugfix:    Repeated logging of the same message produces giant 
                             logging files
                  Issue:     1598

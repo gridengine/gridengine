@@ -2679,11 +2679,6 @@ static void send_events(lListElem *report, lList *report_list) {
           */
          unlock_client(ec_id);
 
-         {
-            struct timeval now;
-            gettimeofday(&now, NULL);
-            ERROR((SGE_EVENT,"send time %ld,%06ld s\n", now.tv_sec, now.tv_usec)); 
-         }   
          ret = report_list_send(report_list, host, commproc, id, 0, NULL);
          
          lock_client(ec_id, true); 

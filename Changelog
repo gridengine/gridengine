@@ -1,3 +1,7 @@
+SG-2005-05-10-0: Bugfix:    fixed the flushing in the event master
+                 Review:    pending
+                 Changed:   qmaster
+
 EB-2005-05-10-0: Bugfix:    Domain admin <-> domain user problem (windows)
                  Bugtraq:   6239470
                  Review:    HP 

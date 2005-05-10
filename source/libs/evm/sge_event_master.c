@@ -106,7 +106,6 @@
  *
  *******************************************************/
 
-
 /****** subscription_t definition **********************
  *
  * This is a subscription entry in a two dimensional 
@@ -720,6 +719,9 @@ sge_mod_event_client(lListElem *clio, lList **alpp, char *ruser, char *rhost)
    answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
 
    sge_mutex_unlock("event_master_change_evc_mutex", SGE_FUNC, __LINE__, &Master_Control.change_evc_mutex);
+
+   set_flush();
+
    DEXIT; 
    return STATUS_OK;
 }
@@ -779,7 +781,7 @@ process_mod_event_client(void)
 
       /* try to find event_client */
       id = lGetUlong(clio, EV_id);
-      
+
       lock_client (id, true);
 
       event_client = get_event_client (id);
@@ -883,8 +885,6 @@ process_mod_event_client(void)
       }
 
       lSetUlong(event_client, EV_state, EV_connected);
-
-      set_flush();
 
       DEBUG((SGE_EVENT, MSG_SGETEXT_MODIFIEDINLIST_SSSS,
             "em thread", "master host", lGetString(event_client, EV_name), MSG_EVE_EVENTCLIENT));
@@ -1747,12 +1747,6 @@ static bool add_list_event_for_client(u_long32 aClientID, u_long32 timestamp,
             if (client == NULL) {
                res = false;
             }
-            /* Otherwise, flush the client if required. */
-#if 0
-            else if (should_flush_event_client (aClientID, type, true)) {
-               set_flush ();
-            }
-#endif            
 
             /* If we had to aquire the lock, release it now. */
             if (!has_lock) {
@@ -2592,11 +2586,10 @@ static void send_events(lListElem *report, lList *report_list) {
          /* If we can't get access to this client right now, just leave it to
           * be handled in the next run. */
          DPRINTF (("Skipping event client %d because it's locked.\n", ec_id));
-
          continue; /* while */
       } /* if */
       
-      event_client = get_event_client (ec_id);
+      event_client = get_event_client(ec_id);
 
       /* Keep looking for a non-NULL client. */
       if (event_client == NULL) {
@@ -2665,7 +2658,7 @@ static void send_events(lListElem *report, lList *report_list) {
                || !lGetUlong(event_client, EV_busy))
          ) {
          lList *lp = NULL;
-         
+
          /* put only pointer in report - dont copy */
          lXchgList(event_client, EV_events, &lp);
          lXchgList(report, REP_list, &lp);
@@ -2686,6 +2679,11 @@ static void send_events(lListElem *report, lList *report_list) {
           */
          unlock_client(ec_id);
 
+         {
+            struct timeval now;
+            gettimeofday(&now, NULL);
+            ERROR((SGE_EVENT,"send time %ld,%06ld s\n", now.tv_sec, now.tv_usec)); 
+         }   
          ret = report_list_send(report_list, host, commproc, id, 0, NULL);
          
          lock_client(ec_id, true); 
@@ -2754,7 +2752,8 @@ static void send_events(lListElem *report, lList *report_list) {
  
 static void flush_events(lListElem *event_client, int interval)
 {
-   u_long32 next_send, flush_delay;
+   u_long32 next_send = 0;
+   u_long32 flush_delay = 0;
    int now = time(NULL);
    DENTER(TOP_LAYER, "flush_events");
 
@@ -2764,7 +2763,7 @@ static void flush_events(lListElem *event_client, int interval)
    next_send = MIN(next_send, now + interval);
 
    /* never send out two event packages in the very same second */
-   flush_delay = 1;
+/*   flush_delay = 1;*/
 
    if (lGetUlong(event_client, EV_busy_handling) == EV_THROTTLE_FLUSH) {
       u_long32 busy_counter = lGetUlong(event_client, EV_busy);
@@ -2785,6 +2784,10 @@ static void flush_events(lListElem *event_client, int interval)
    next_send = MAX(next_send, lGetUlong(event_client, EV_last_send_time) + flush_delay);
 
    lSetUlong(event_client, EV_next_send_time, next_send);
+
+   if (now >= next_send) {
+      set_flush();
+   }
    
    DPRINTF(("%s: %s %d\tNOW: %d NEXT FLUSH: %d (%s,%s,%d)\n", 
          SGE_FUNC, lGetString(event_client, EV_name), lGetUlong(event_client, EV_id), 
@@ -4131,11 +4134,6 @@ bool sge_commit (void)
          sge_mutex_lock("event_master_send_mutex", SGE_FUNC, __LINE__, &Master_Control.send_mutex);
          lAppendList (Master_Control.send_events, Master_Control.transaction_events);
          sge_mutex_unlock("event_master_send_mutex", SGE_FUNC, __LINE__, &Master_Control.send_mutex);
-#if 0         
-         if (flush) {
-            set_flush();
-         }
-#endif         
 
          set_flush();
       }

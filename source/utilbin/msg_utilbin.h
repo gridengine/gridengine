@@ -185,4 +185,21 @@
 #define MSG_DBSTAT_ERRORUNDUMPING_S _MESSAGE(57306,         _("error reading object from file "SFN"\n"))
 #define MSG_DBSTAT_INVALIDKEY_S     _MESSAGE(57307,         _("invalid key "SFQ"\n"))
 
+#define MSG_PWD_ONLY_USER           _MESSAGE(57310,         _(SFN": only the user "SFQ" or \"root\" can change this password\n"))
+#define MSG_PWD_ONLY_ROOT           _MESSAGE(57311,         _(SFN": only \"root\" has the permission to delete entrys\n"))
+#define MSG_PWD_SWITCH_ADMIN        _MESSAGE(57312,         _(SFN": can't switch to admin_user\n"))
+#define MSG_PWD_CHANGED             _MESSAGE(57313,         _("Password changed\n"))
+#define MSG_PWD_INVALID             _MESSAGE(57314,         _(SFN": Invalid password\n"))
+#define MSG_PWD_NO_MATCH            _MESSAGE(57315,         _(SFN": Passwords do not match.\n"))
+#define MSG_PWD_CHANGE_ABORT        _MESSAGE(57316,         _(SFN": password change aborted\n"))
+#define MSG_PWD_AUTH_FAILURE        _MESSAGE(57317,         _(SFN": Authentication failure\n"))
+#define MSG_PWD_CHANGE_FOR          _MESSAGE(57318,         _("Changing password for "SFN"\n"))
+#define MSG_PWD_NO_USERNAME         _MESSAGE(57319,         _(SFN": unable to get name for user with id %d\n"))
+#define MSG_PWD_LOAD_PRIV           _MESSAGE(57320,         _(SFN": can't load private key "SFQ" to decrypt password\n"))
+#define MSG_PWD_DECR                _MESSAGE(57321,         _(SFN": error decrypting password - keylength mismatch\n"))
+#define MSG_PWD_MALLOC              _MESSAGE(57322,         _(SFN": malloc failed\n"))
+#define MSG_PWD_LOAD_PUB            _MESSAGE(57323,         _(SFN": can't load public key "SFQ" to ecrypt password\n"))
+
+
+
 #endif /* __MSG_UTILBIN_H */

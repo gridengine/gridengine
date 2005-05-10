@@ -39,7 +39,7 @@ UTILBIN_TARGETS = uidgid gethostname gethostbyname gethostbyaddr \
                  signals loadcheck now \
                  adminrun checkuser languagetest \
                  testsuidroot infotext spooldefaults spooledit spoolinit \
-                 tst_pthread_signals fstype qping
+                 tst_pthread_signals fstype sgepasswd qping
 
 UTILBIN_SRC =  uidgid.c gethostname.c gethostbyname.c gethostbyaddr.c \
                getservbyname.c filestat.c signals.c now.c \
@@ -194,6 +194,16 @@ fstype:   fstype.o  version.o $(RMONLIB)
 
 fstype.o: $(UTILBIN_DIR)/fstype.c
 		$(CC) $(CFLAGS) $(MEMCFLAG) $(GCC_NODUPLWARN) -c $(UTILBIN_DIR)/fstype.c
+
+#---------------------------------------------------------------------
+sgepasswd: sge_passwd_main.o version.o $(LCKLIB) $(UTILIB) $(RMONLIB)
+		$(LD_WRAPPER) $(CC) -o $@ $(LFLAGS) sge_passwd_main.o version.o $(FSTYPELIBS) $(UTILIB) $(LCKLIB) $(RMONLIB) $(SLIBS) $(LIBS) $(DLLIB)
+
+sge_passwd_main.o: $(UTILBIN_DIR)/sge_passwd.c
+		$(CC) -D DEFINE_SGE_PASSWD_MAIN $(CFLAGS) $(NOERR_PROTO) $(MEMCFLAG) $(GCC_NODUPLWARN) -o $@ -c $(UTILBIN_DIR)/sge_passwd.c
+
+sge_passwd.o: $(UTILBIN_DIR)/sge_passwd.c
+		$(CC) $(CFLAGS) $(NOERR_PROTO) $(MEMCFLAG) $(GCC_NODUPLWARN) -c $(UTILBIN_DIR)/sge_passwd.c
 #---------------------------------------------------------------------
 spooldefaults:   spooldefaults.o  version.o sge_mt_init.o $(SPOOLING_DEPS) $(SPOOLCLIB) $(SPOOLLIB) $(SCHEDLIB) $(EVCLIB) $(GDILIB) $(SECLIBS) $(SGEOBJLIB) $(SGEOBJDLIB) $(COMMLIB) $(COMMLISTSLIB) $(CULLLIB) $(LCKLIB) $(UTILIB) $(RMONLIB)
 		$(CC) -o $@ spooldefaults.o version.o sge_mt_init.o $(LFLAGS) -lspoolc $(SPOOLING_LIBS) -lsched -levc -lgdi -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lcull -lcomm -lcommlists -luti -llck -lrmon $(DLLIB) $(SLIBS) $(LIBS)

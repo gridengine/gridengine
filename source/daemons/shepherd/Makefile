@@ -54,7 +54,8 @@ SHEPHERD_ADD_SRC = \
            pdc.c \
            procfs.c \
            sge_mt_init.c \
-           sge_processes_irix.c
+           sge_processes_irix.c \
+           sge_passwd.c
 
 SHEPHERD_OBJS = $(SHEPHERD_SRC:.c=.o)
 

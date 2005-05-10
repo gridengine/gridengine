@@ -92,7 +92,8 @@ enum {
  JAPI            ,       /* 40 */
  JAPI_EC         ,       /* 41 */
  DRMAA           ,       /* 42 */
- QPING                   /* 43 */
+ QPING           ,       /* 43 */
+ SGE_PASSWD              /* 44 */
 };
 
 

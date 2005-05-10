@@ -1,0 +1,214 @@
+#___INFO__MARK_BEGIN__
+##########################################################################
+#
+#  The Contents of this file are made available subject to the terms of
+#  the Sun Industry Standards Source License Version 1.2
+#
+#  Sun Microsystems Inc., March, 2001
+#
+#
+#  Sun Industry Standards Source License Version 1.2
+#  =================================================
+#  The contents of this file are subject to the Sun Industry Standards
+#  Source License Version 1.2 (the "License"); You may not use this file
+#  except in compliance with the License. You may obtain a copy of the
+#  License at http://gridengine.sunsource.net/Gridengine_SISSL_license.html
+#
+#  Software provided under this License is provided on an "AS IS" basis,
+#  WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING,
+#  WITHOUT LIMITATION, WARRANTIES THAT THE SOFTWARE IS FREE OF DEFECTS,
+#  MERCHANTABLE, FIT FOR A PARTICULAR PURPOSE, OR NON-INFRINGING.
+#  See the License for the specific provisions governing your rights and
+#  obligations concerning the Software.
+#
+#  The Initial Developer of the Original Code is: Sun Microsystems, Inc.
+#
+#  Copyright: 2001 by Sun Microsystems, Inc.
+#
+#  All Rights Reserved.
+#
+##########################################################################
+#___INFO__MARK_END__
+
+global check_functions
+lappend check_functions "qalter_h"
+
+#                                                             max. column:     |
+#****** qalter/qalter_h() ******
+# 
+#  NAME
+#     qalter_h -- test -h option for altering jobs' hold states
+#
+#  SYNOPSIS
+#     qalter_h { } 
+#
+#  FUNCTION
+#     ??? 
+#
+#  INPUTS
+#
+#  RESULT
+#     ??? 
+#
+#  EXAMPLE
+#     ??? 
+#
+#  NOTES
+#     ??? 
+#
+#  BUGS
+#     1434 
+#
+#  SEE ALSO
+#     ???/???
+#*******************************
+proc qalter_h {} {
+   global CHECK_PRODUCT_ROOT CHECK_ARCH submitresult
+   global check_errno hold_job_D hold_job_U
+   global check_errstr  CHECK_ACTUAL_TEST_PATH CHECK_OUTPUT CHECK_USER
+   global nonadmin_user nonadmin_hold_job
+   global CHECK_OUTPUT CHECK_HOST
+   
+   set option "-h n"
+   set qalterresult [ catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qalter $option $hold_job_D $hold_job_U.1-4" } qalteroutput ]
+   if {$qalterresult == 1} {
+      set_error -1 "qalter $option - $qalteroutput"
+      return
+   }
+   
+   #
+   # Set a user hold as nonadmin user
+   # 
+   
+   set option       "-h u"
+   
+   puts $CHECK_OUTPUT "set user hold as non admin user $nonadmin_user for job $nonadmin_hold_job"
+   
+   set qalterresult [ start_remote_prog $CHECK_HOST $nonadmin_user \
+                      $CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qhold \
+                      "$option $nonadmin_hold_job" ]
+                     
+   if { $prg_exit_state != 0 } {
+      set_error -1 "qhold as non admin user failed($option)"
+      return
+   }
+   
+   #
+   # Remove a user hold as nonadmin user 
+   #
+   set option       "-h u"
+   
+   puts $CHECK_OUTPUT "release user hold as non admin user $nonadmin_user for job $nonadmin_hold_job"
+   
+   set qalterresult [ start_remote_prog $CHECK_HOST $nonadmin_user \
+                     $CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qrls \
+                     "$option $nonadmin_hold_job" ]
+                     
+   if { $prg_exit_state != 0 } {
+      set_error -1 "qrls as non admin user failed($option)"
+      return
+   }
+   
+   #
+   # Negativ test
+   # Set an operator hold as nonadmin user
+   #
+   set option       "-h o"
+   
+   puts $CHECK_OUTPUT "set operator hold as user $nonadmin_user for job $nonadmin_hold_job"
+   
+   set qalterresult [ start_remote_prog $CHECK_HOST $nonadmin_user \
+                     $CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qhold \
+                     "$option $nonadmin_hold_job" ]
+                     
+   if { $prg_exit_state == 0 } {
+      set_error -1 "illegal set of operator hold as non admin user succeeded (qhold $option)"
+      return
+   }
+   
+   #
+   # Negativ test
+   # Set an system hold as nonadmin user
+   #
+   set option       "-h s"
+   
+   puts $CHECK_OUTPUT "set system hold as non admin user $nonadmin_user for job $nonadmin_hold_job"
+   
+   set qalterresult [ start_remote_prog $CHECK_HOST $nonadmin_user \
+                     $CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qhold \
+                     "$option $nonadmin_hold_job" ]
+                     
+   if { $prg_exit_state == 0 } {
+      set_error -1 "illegal set of system hold as non admin user succeeded (qhold $option)"
+      return
+   }
+   
+   #
+   # Set an system hold as admin user
+   #
+   set option       "-h s"
+   
+   puts $CHECK_OUTPUT "set system hold as admin user $CHECK_USER for job $nonadmin_hold_job"
+   
+   set qalterresult [ catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qhold $option $nonadmin_hold_job" } qalteroutput ]
+   if {$qalterresult == 1} {
+      set_error -1 "system hold as admin user failed ($option - $qalteroutput)"
+      return
+   }
+
+   #
+   # Negativ test
+   # Remove an system hold as nonadmin user
+   #
+   set option       "-h s"
+   
+   puts $CHECK_OUTPUT "release system hold as non admin user $nonadmin_user for job $nonadmin_hold_job"
+   
+   set qalterresult [ start_remote_prog $CHECK_HOST $nonadmin_user \
+                     $CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qrls \
+                     "$option $nonadmin_hold_job" ]
+                     
+   if { $prg_exit_state == 0 } {
+      set_error -1 "illegal remove of system hold as non admin user succeeded (qhold $option)"
+      return
+   }
+
+   
+   #
+   # Set an operator hold as admin user
+   #
+   set option       "-h o"
+   
+   puts $CHECK_OUTPUT "set operator hold as admin user $CHECK_USER for job $nonadmin_hold_job"
+   
+   set qalterresult [ catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qhold $option $nonadmin_hold_job" } qalteroutput ]
+   if {$qalterresult == 1} {
+      set_error -1 "system hold as admin user failed ($option - $qalteroutput)"
+      return
+   }
+   
+   #
+   # Negativ test
+   # Remove an operator hold as nonadmin user
+   #
+   set option       "-h o"
+   
+   puts $CHECK_OUTPUT "release operator hold as non admin user $nonadmin_user for job $nonadmin_hold_job"
+   
+   set qalterresult [ start_remote_prog $CHECK_HOST $nonadmin_user \
+                     $CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qrls \
+                     "$option $nonadmin_hold_job" ]
+                     
+   if { $prg_exit_state == 0 } {
+      set_error -1 "illegal remove of operator hold as non admin user succeeded (qhold $option)"
+      return
+   }
+   
+   
+   
+   set_error 0 "qalter $option - no errors"
+
+   return
+}
+
+

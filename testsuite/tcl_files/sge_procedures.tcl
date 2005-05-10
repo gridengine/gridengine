@@ -1315,11 +1315,10 @@ proc set_config { change_array {host global} {do_add 0} {ignore_error 0}} {
      set ADDED    [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_CONFIG_ADDEDTOLIST_SSS] $CHECK_USER "*" "*"]
   }
 
-
   set EDIT_FAILED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_PARSE_EDITFAILED]]
 
   set result [ handle_vi_edit "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "$qconf_cmd $host" $vi_commands $MODIFIED $EDIT_FAILED $ADDED $GIDRANGE ]
-  
+
   if { ($ignore_error == 1) && ($result == -4) } {
      # ignore error -4 
   } else {

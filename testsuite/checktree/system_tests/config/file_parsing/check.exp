@@ -257,14 +257,9 @@ proc file_parsing_N_option {} {
 proc file_parsing_long_option_verify {back long case} {
    global ts_config
 
-   # in SGE 5.3 options longer than 4300 bytes made qsub fail
-   if { $ts_config(gridengine_version) == 53 && $long && $back > 0 } {
-      add_proc_error "file_parsing_long_option_verify" -1 "The job should not run ($case)"  
-   } else {
-      if { $back < 0 } {
-         add_proc_error "file_parsing_long_option_verify" "-1" "Could not start job ($case)"      
-      }  
-   }
+   if { $back < 0 } {
+      add_proc_error "file_parsing_long_option_verify" "-1" "Could not start job ($case)"      
+   }  
 }
 
 proc file_parsing_long_option {} {

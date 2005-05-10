@@ -121,6 +121,7 @@ proc issue_403_cleanup  {} {
    global CHECK_OUTPUT
 
    delete_all_jobs
+   wait_for_end_of_all_jobs 60
 
    set_error 0 "ok"
 }

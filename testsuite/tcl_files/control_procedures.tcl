@@ -287,6 +287,12 @@ proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result 
                   set stop_line_wait 1
                }
             }
+            
+            -i $sp_id "o lines in buffer" {
+               set start_time [ timestamp ] 
+               set stop_line_wait 1
+            }
+            
             -i $sp_id "erminal too wide" {
                add_proc_error "handle_vi_edit" -2 "got terminal to wide vi error"
                set stop_line_wait 1

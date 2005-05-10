@@ -92,6 +92,8 @@ set check_category        "COMPATIBILITY SYSTEM VERIFIED"
 set check_highest_level   1
 set check_description(0)  "check reserved usage of jobs submitted with qsub"
 set check_description(1)  "check reserved usage of jobs submitted with qrsh"
+set check_description(2)  "check usage of jobs submitted with qsub"
+set check_description(3)  "check usage of jobs submitted with qrsh"
 
 # define test's dependencies
 set check_needs           "init_core_system" 

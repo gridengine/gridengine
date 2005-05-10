@@ -1,3 +1,11 @@
+JG-2005-05-10-0: Testsuite: Fixed tests to run testsuite with SGE(EE) 5.3:
+                            - bugs/issuezilla/423
+                            - bugs/issuezilla/1126 (N1GE6 only test)
+                            - system_tests/clients/qalter
+                            - system_tests/clients/qmod/reschedule
+                            - system_tests/config/file_parsing
+                            - system_tests/config/submit_hosts
+
 SG-2005-05-10-0: Bugfix:    fixed the flushing in the event master
                  Review:    pending
                  Changed:   qmaster

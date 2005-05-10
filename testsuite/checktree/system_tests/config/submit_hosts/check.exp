@@ -74,8 +74,8 @@ proc init_level {} {
   global submit_hosts_use_local_conf
 
   switch -- $CHECK_ACT_LEVEL {
-     "0" { set submit_hosts_use_local_conf 0 ; return 0    } 
-     "1" { set submit_hosts_use_local_conf 1 ;return 0   }
+     "0" { set submit_hosts_use_local_conf 0 ; return 0  } 
+     "1" { set submit_hosts_use_local_conf 1 ; return 0  }
   } 
   return -1  ;# no other level else
 }
@@ -97,11 +97,13 @@ proc submit_hosts_setup {} {
       puts $CHECK_OUTPUT "$result"
 
       if { $submit_hosts_use_local_conf != 0 } {
-         puts $CHECK_OUTPUT "generating local cluster configuration for host $submit_host"
          set used_arch [resolve_arch $submit_host]
+         puts $CHECK_OUTPUT "generating submit script for host $submit_host"
          create_shell_script $CHECK_JOB_OUTPUT_DIR/rsh_${submit_host}.sh $submit_host "echo" "WRAPPER_SCRIPT ; $CHECK_PRODUCT_ROOT/utilbin/$used_arch/rsh \$\*"
-         set new_conf(rsh_command) $CHECK_JOB_OUTPUT_DIR/rsh_${submit_host}.sh
-         set_config new_conf $submit_host 1 
+         puts $CHECK_OUTPUT "generating local cluster configuration for host $submit_host"
+         set new_conf(rsh_command) "$CHECK_JOB_OUTPUT_DIR/rsh_${submit_host}.sh"
+         set_config new_conf $submit_host 1
+         puts $CHECK_OUTPUT "setup done"
       } else {
          puts $CHECK_OUTPUT "removing local cluster configuration for host $submit_host"
          catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-dconf $submit_host" } result

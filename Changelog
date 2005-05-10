@@ -1,8 +1,13 @@
-HP-2005-05-09-1: Bugfix:    Excluded qmon, sge_master, sge_shadowd and sge_scheddd
-                            install from distinst for Windows
+EB-2005-05-10-0: Bugfix:    Domain admin <-> domain user problem (windows)
+                 Bugtraq:   6239470
+                 Review:    HP
+
+HP-2005-05-09-1: Bugfix:    Excluded qmon, sge_master, sge_shadowd and 
+                            sge_scheddd install from distinst for Windows
                  Changed:   scripts/distinst
 
-HP-2005-05-09-0: Bugfix:    Excluded DB and DRMAA install from distinst for Windows
+HP-2005-05-09-0: Bugfix:    Excluded DB and DRMAA install from distinst for 
+                            Windows
                  Changed:   scripts/distinst
 
 AS-2005-05-92-0: CVS        Created V60u4win_{TAG,BRANCH}

@@ -629,9 +629,8 @@ int sge_before_dispatch(void)
    if (sconf_is_new_config()) {
       int interval = sconf_get_flush_finish_sec();
       bool flush = (interval > 0) ? true : false;
-      if (interval== 0)
-         interval= -1;
-      if(ec_get_flush(sgeE_JOB_DEL) != interval) {
+      interval--;
+      if (ec_get_flush(sgeE_JOB_DEL) != interval) {
          ec_set_flush(sgeE_JOB_DEL,flush, interval);
          ec_set_flush(sgeE_JOB_FINAL_USAGE,flush, interval);
          ec_set_flush(sgeE_JATASK_MOD, flush, interval);
@@ -640,8 +639,7 @@ int sge_before_dispatch(void)
 
       interval= sconf_get_flush_submit_sec();
       flush = (interval > 0) ? true : false;
-      if (interval== 0)
-         interval= -1;
+      interval--;      
       if(ec_get_flush(sgeE_JOB_ADD) != interval) {
          ec_set_flush(sgeE_JOB_ADD, flush, interval);
       }

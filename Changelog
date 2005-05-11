@@ -1,3 +1,7 @@
+SG-2005-05-11-2: Bugfix:    fixed a wrong flush settings in the scheduler event client
+                 Changed:   scheduler
+                 Review:    pending
+
 CR-2005-05-11-1: Enhancm.:  added prototype for new module test:
                                test_thread_throughput
 

@@ -1120,7 +1120,7 @@ int main(int argc, char *argv[])
          argc--; argv++;
          if (argc != 1 && sscanf(argv[1], "%s", username) == 1) {
             argc--; argv++;
-            do_delete = 1;
+            do_delete = true;
             continue;
          } else {
             sge_passwd_show_usage();

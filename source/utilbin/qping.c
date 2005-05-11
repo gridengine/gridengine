@@ -1435,7 +1435,7 @@ int main(int argc, char *argv[]) {
          }
 #endif
 
-         cl_commlib_trigger(handle);
+         cl_commlib_trigger(handle, 1);
          retval = cl_commlib_receive_message(handle, NULL, NULL, 0,      /* handle, comp_host, comp_name , comp_id, */
                                              CL_FALSE, 0,                 /* syncron, response_mid */
                                              &message, &sender );

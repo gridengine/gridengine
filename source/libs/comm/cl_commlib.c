@@ -81,7 +81,7 @@ static int cl_commlib_send_sirm_message(cl_com_connection_t* connection,
                                         unsigned long        connection_count,
                                         unsigned long application_status,
                                         char*                infotext);
-static int cl_com_trigger(cl_com_handle_t* handle);
+static int cl_com_trigger(cl_com_handle_t* handle, int synchron);
 
 /* threads functions */
 static void *cl_com_trigger_thread(void *t_conf);
@@ -1322,7 +1322,7 @@ int cl_commlib_shutdown_handle(cl_com_handle_t* handle, cl_bool_t return_for_mes
                } else {
                   pthread_mutex_unlock(handle->messages_ready_mutex);
                }
-               cl_commlib_trigger(handle);
+               cl_commlib_trigger(handle, 1);
                break;
             case CL_RW_THREAD:
                if (trigger_write == CL_TRUE) {
@@ -2172,7 +2172,7 @@ int cl_com_remove_allowed_host(cl_com_handle_t* handle, char* hostname) {
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_commlib_trigger()"
-int cl_commlib_trigger(cl_com_handle_t* handle) {
+int cl_commlib_trigger(cl_com_handle_t* handle, int synchron) {
 
    cl_commlib_check_callback_functions();
    if (handle == NULL) {
@@ -2180,12 +2180,12 @@ int cl_commlib_trigger(cl_com_handle_t* handle) {
    }
    switch(cl_com_create_threads) {
       case CL_NO_THREAD:
-         return cl_com_trigger(handle);
+         return cl_com_trigger(handle, synchron);
       case CL_RW_THREAD: {
          int ret_val = CL_RETVAL_OK;
          /* application has nothing to do, wait for next message */
          pthread_mutex_lock(handle->messages_ready_mutex);
-         if (handle->messages_ready_for_read == 0) {
+         if ((handle->messages_ready_for_read == 0) && (synchron == 1)) {
             CL_LOG(CL_LOG_INFO,"NO MESSAGES to READ, WAITING ...");
             pthread_mutex_unlock(handle->messages_ready_mutex);
             ret_val = cl_thread_wait_for_thread_condition(handle->app_condition ,
@@ -2209,7 +2209,7 @@ int cl_commlib_trigger(cl_com_handle_t* handle) {
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_com_trigger()"
-static int cl_com_trigger(cl_com_handle_t* handle) {
+static int cl_com_trigger(cl_com_handle_t* handle, int synchron) {
    cl_connection_list_elem_t* elem = NULL;
    
    struct timeval now;
@@ -2253,12 +2253,23 @@ static int cl_com_trigger(cl_com_handle_t* handle) {
    }
   
    /* do virtual select */
-   retval = cl_com_open_connection_request_handler(handle->framework, 
-                                          handle->connection_list, 
-                                          the_handler,
-                                          handle->select_sec_timeout,
-                                          handle->select_usec_timeout,
-                                          CL_RW_SELECT);
+   if (synchron == 1) {
+      retval = cl_com_open_connection_request_handler(handle->framework, 
+                                             handle->connection_list, 
+                                             the_handler,
+                                             handle->select_sec_timeout,
+                                             handle->select_usec_timeout,
+                                             CL_RW_SELECT);
+   }
+   else {
+      retval = cl_com_open_connection_request_handler(handle->framework, 
+                                             handle->connection_list, 
+                                             the_handler,
+                                             0,
+                                             0,
+                                             CL_RW_SELECT);
+         
+   }
 
 
    /* read / write messages */
@@ -3459,7 +3470,7 @@ static int cl_commlib_handle_debug_clients(cl_com_handle_t* handle, cl_bool_t lo
          case CL_NO_THREAD:
             CL_LOG(CL_LOG_INFO,"no threads enabled");
             /* we just want to trigger write , no wait for read*/
-            cl_commlib_trigger(handle);
+            cl_commlib_trigger(handle, 1);
             break;
          case CL_RW_THREAD:
             /* we just want to trigger write , no wait for read*/
@@ -4361,7 +4372,7 @@ int cl_commlib_receive_message(cl_com_handle_t*      handle,
                            case CL_NO_THREAD:
                               CL_LOG(CL_LOG_INFO,"no threads enabled");
                               /* we just want to trigger write , no wait for read*/
-                              cl_commlib_trigger(handle);
+                              cl_commlib_trigger(handle, 1);
                               break;
                            case CL_RW_THREAD:
                               /* we just want to trigger write , no wait for read*/
@@ -4401,7 +4412,7 @@ int cl_commlib_receive_message(cl_com_handle_t*      handle,
       if (synchron == CL_TRUE) {
          switch(cl_com_create_threads) {
             case CL_NO_THREAD:
-               cl_commlib_trigger(handle);
+               cl_commlib_trigger(handle, 1);
                break;
             case CL_RW_THREAD:
                cl_thread_trigger_event(handle->read_thread);
@@ -4882,7 +4893,7 @@ int cl_commlib_check_for_ack(cl_com_handle_t* handle, char* un_resolved_hostname
                         case CL_NO_THREAD:
                            CL_LOG(CL_LOG_INFO,"no threads enabled");
                            /* we just want to trigger write , no wait for read*/
-                           cl_commlib_trigger(handle);
+                           cl_commlib_trigger(handle, 1);
                            break;
                         case CL_RW_THREAD:
                            /* we just want to trigger write , no wait for read*/
@@ -4918,7 +4929,7 @@ int cl_commlib_check_for_ack(cl_com_handle_t* handle, char* un_resolved_hostname
          switch(cl_com_create_threads) {
             case CL_NO_THREAD:
                CL_LOG(CL_LOG_INFO,"no threads enabled");
-               cl_commlib_trigger(handle);
+               cl_commlib_trigger(handle, 1);
                break;
             case CL_RW_THREAD:
                cl_thread_wait_for_thread_condition(handle->read_condition,
@@ -5150,7 +5161,7 @@ int cl_commlib_open_connection(cl_com_handle_t* handle, char* un_resolved_hostna
             switch(cl_com_create_threads) {
                case CL_NO_THREAD:
                   CL_LOG(CL_LOG_INFO,"no threads enabled");
-                  cl_commlib_trigger(handle);
+                  cl_commlib_trigger(handle, 1);
                   break;
                case CL_RW_THREAD:
                   /* unlock connection list */
@@ -5227,11 +5238,11 @@ int cl_commlib_open_connection(cl_com_handle_t* handle, char* un_resolved_hostna
       switch(cl_com_create_threads) {
       case CL_NO_THREAD:
          CL_LOG(CL_LOG_INFO,"no threads enabled");
-         cl_commlib_trigger(handle);
+         cl_commlib_trigger(handle, 1);
          break;
       case CL_RW_THREAD:
          cl_thread_trigger_event(handle->read_thread);
-         cl_commlib_trigger(handle); /* TODO: check if this is ok ???  */
+         cl_commlib_trigger(handle, 1); /* TODO: check if this is ok ???  */
          break;
       }
 
@@ -5294,7 +5305,7 @@ int cl_commlib_open_connection(cl_com_handle_t* handle, char* un_resolved_hostna
    switch(cl_com_create_threads) {
       case CL_NO_THREAD:
          CL_LOG(CL_LOG_INFO,"no threads enabled");
-         cl_commlib_trigger(handle);
+         cl_commlib_trigger(handle, 1);
          break;
       case CL_RW_THREAD:
          /* new connection, trigger read_thread */
@@ -5382,7 +5393,7 @@ int cl_commlib_close_connection(cl_com_handle_t* handle,char* un_resolved_hostna
             case CL_NO_THREAD:
                CL_LOG(CL_LOG_INFO,"no threads enabled");
                /* we just want to trigger write , no wait for read*/
-               cl_commlib_trigger(handle);
+               cl_commlib_trigger(handle, 1);
                break;
             case CL_RW_THREAD:
                /* we just want to trigger write , no wait for read*/
@@ -5455,7 +5466,7 @@ int cl_commlib_close_connection(cl_com_handle_t* handle,char* un_resolved_hostna
             switch(cl_com_create_threads) {
                case CL_NO_THREAD:
                   CL_LOG(CL_LOG_INFO,"no threads enabled");
-                  cl_commlib_trigger(handle);
+                  cl_commlib_trigger(handle, 1);
                   break;
                case CL_RW_THREAD:
                   /* we just want to trigger write , no wait for read*/
@@ -5605,7 +5616,7 @@ int cl_commlib_get_endpoint_status(cl_com_handle_t* handle,
             case CL_NO_THREAD:
                CL_LOG(CL_LOG_INFO,"no threads enabled");
                /* we just want to trigger write , no wait for read*/
-               cl_commlib_trigger(handle);
+               cl_commlib_trigger(handle, 1);
                break;
             case CL_RW_THREAD:
                /* we just want to trigger write , no wait for read*/
@@ -5681,7 +5692,7 @@ int cl_commlib_get_endpoint_status(cl_com_handle_t* handle,
                         case CL_NO_THREAD:
                            CL_LOG(CL_LOG_INFO,"no threads enabled");
                            /* we just want to trigger write , no wait for read*/
-                           cl_commlib_trigger(handle);
+                           cl_commlib_trigger(handle, 1);
                            break;
                         case CL_RW_THREAD:
                            /* we just want to trigger write , no wait for read*/
@@ -5715,7 +5726,7 @@ int cl_commlib_get_endpoint_status(cl_com_handle_t* handle,
       switch(cl_com_create_threads) {
          case CL_NO_THREAD:
             CL_LOG(CL_LOG_INFO,"no threads enabled");
-            cl_commlib_trigger(handle);
+            cl_commlib_trigger(handle, 1);
             break;
          case CL_RW_THREAD:
             cl_thread_wait_for_thread_condition(handle->read_condition,
@@ -5910,7 +5921,7 @@ int cl_commlib_send_message(cl_com_handle_t* handle,
             case CL_NO_THREAD:
                CL_LOG(CL_LOG_INFO,"no threads enabled");
                /* we just want to trigger write , no wait for read*/
-               cl_commlib_trigger(handle);
+               cl_commlib_trigger(handle, 1);
                break;
             case CL_RW_THREAD:
                /* we just want to trigger write , no wait for read*/

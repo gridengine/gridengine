@@ -546,7 +546,7 @@ int merge_configuration(lListElem *global, lListElem *local,
             continue;
          }
          if (parse_int_param(s, "STREE_SPOOL_INTERVAL", &spool_time, TYPE_TIM)) {
-            if (spool_time<= 0) {
+            if (spool_time <= 0) {
                WARNING((SGE_EVENT, MSG_CONF_NOCONFIGFROMMASTER));
                spool_time = STREESPOOLTIMEDEF;
             }

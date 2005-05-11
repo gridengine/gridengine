@@ -1,3 +1,8 @@
+RC-2005-05-11-0: Enhancem.: install MacOSX Startup Item
+                 Review:    pending
+                 Changed:   dist/util/install_modules/inst_common.sh
+                 Added:     dist/util/rctemplates/darwin_template
+
 JG-2005-05-10-0: Testsuite: Fixed tests to run testsuite with SGE(EE) 5.3:
                             - bugs/issuezilla/423
                             - bugs/issuezilla/1126 (N1GE6 only test)

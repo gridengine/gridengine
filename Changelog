@@ -1,3 +1,9 @@
+CR-2005-05-11-0: Bugfix:    high CPU load of qmaster even on empty cluster
+                 Issue:     1612
+                 Bugtraq:   6267932
+                 Changed:   commlib
+                 Review:    JG, AS
+
 JG-2005-05-11-0: Testsuite: Improved error messages and error handling when
                             opening rlogin connections 
                             (open_remote_spawn_process).

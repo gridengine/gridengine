@@ -126,7 +126,7 @@ extern int main(int argc, char** argv)
      CL_LOG(CL_LOG_INFO,"main()");
 
      gettimeofday(&now,NULL);
-     cl_commlib_trigger(handle);
+     cl_commlib_trigger(handle, 1);
      ret_val = cl_commlib_receive_message(handle,NULL, NULL, 0, CL_FALSE, 0, &message, &sender);
      if (message != NULL ) {
         ret_val = cl_commlib_send_message(handle, 

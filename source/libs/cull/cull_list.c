@@ -1101,23 +1101,27 @@ lListElem *lFreeElem(lListElem *ep)
          break;
 
       case lStringT:
-         if (ep->cont[i].str != NULL)
+         if (ep->cont[i].str != NULL) {
             free(ep->cont[i].str);
+         }   
          break;
 
       case lHostT:
-         if (ep->cont[i].host != NULL)
+         if (ep->cont[i].host != NULL) {
             free(ep->cont[i].host);
+         }   
          break;
 
       case lListT:
-         if (ep->cont[i].glp != NULL)
+         if (ep->cont[i].glp != NULL) {
             lFreeList(ep->cont[i].glp);
+         }   
          break;
 
       case lObjectT:
-         if (ep->cont[i].obj != NULL)
+         if (ep->cont[i].obj != NULL) {
             lFreeElem(ep->cont[i].obj);
+         }   
          break;
 
       default:

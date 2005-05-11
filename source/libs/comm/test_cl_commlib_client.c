@@ -290,7 +290,7 @@ extern int main(int argc, char** argv)
         if (retval == CL_RETVAL_OK) {
            CL_LOG_INT(CL_LOG_WARNING,"received ack for message mid", (int)mid); 
         } else {
-           cl_commlib_trigger(handle);
+           cl_commlib_trigger(handle, 1);
         }
 
         if ( retval == CL_RETVAL_CONNECTION_NOT_FOUND ) {
@@ -315,7 +315,7 @@ extern int main(int argc, char** argv)
      bytes_received = 0;
      while (bytes_received != welcome_text_size ) {
 
-        cl_commlib_trigger(handle); 
+        cl_commlib_trigger(handle, 1); 
 
 
         CL_LOG_INT(CL_LOG_WARNING,"waiting for mid .... ", (int)mid); 

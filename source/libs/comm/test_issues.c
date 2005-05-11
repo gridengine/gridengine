@@ -325,7 +325,7 @@ extern int main(int argc, char** argv)
            cl_raw_list_unlock(handle->connection_list);
         }
 
-        cl_commlib_trigger(handle); 
+        cl_commlib_trigger(handle, 1); 
    
         ret_val = cl_commlib_receive_message(handle,NULL, NULL, 0, CL_FALSE, 0, &message, &sender);
         if (message != NULL) {
@@ -398,7 +398,7 @@ extern int main(int argc, char** argv)
         printf("starting measurement...\n");
         gettimeofday(&start,NULL);
         while(do_shutdown == 0 ) {
-           cl_commlib_trigger(handle); 
+           cl_commlib_trigger(handle, 1); 
            ret_val = cl_commlib_receive_message(handle,NULL, NULL, 0, CL_FALSE, 0, &message, &sender);
            if (ret_val != CL_RETVAL_OK && ret_val != CL_RETVAL_NO_MESSAGE) {
               printf("cl_commlib_receive_message returned: %s\n", cl_get_error_text(ret_val));

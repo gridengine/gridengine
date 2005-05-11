@@ -293,7 +293,7 @@ extern int main(int argc, char** argv)
      static int runs = 100;
 
      CL_LOG(CL_LOG_INFO,"main()");
-     cl_commlib_trigger(handle); 
+     cl_commlib_trigger(handle, 1); 
 
 #if 0
      runs--;

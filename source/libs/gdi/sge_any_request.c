@@ -493,6 +493,9 @@ void prepare_enroll(const char *name)
                                           cl_get_error_text(commlib_error)));
                }
             }
+            else {
+               cl_com_set_synchron_receive_timeout(handle, 5);
+            }
             break;
          case QMON:
             DPRINTF(("creating QMON GDI handle\n"));
@@ -551,7 +554,7 @@ void prepare_enroll(const char *name)
       DPRINTF(("waiting for 15 seconds, because environment SGE_TEST_SOCKET_BIND is set\n"));
       while ( handle != NULL && now.tv_sec - handle->start_time.tv_sec  <= 15 ) {
          DPRINTF(("timeout: "sge_U32CFormat"\n",sge_u32c(now.tv_sec - handle->start_time.tv_sec)));
-         cl_commlib_trigger(handle);
+         cl_commlib_trigger(handle, 1);
          gettimeofday(&now,NULL);
       }
       DPRINTF(("continue with setup\n"));
@@ -687,7 +690,7 @@ sge_get_any_request(char *rhost, char *commproc, u_short *id, sge_pack_buffer *p
    handle = cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0);
 
    /* trigger communication or wait for a new message (select timeout) */
-   cl_commlib_trigger(handle);
+   cl_commlib_trigger(handle, synchron);
 
    i = gdi_receive_sec_message( handle, rhost, commproc, usid, synchron, for_request_mid, &message, &sender);
 

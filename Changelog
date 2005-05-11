@@ -1,3 +1,9 @@
+SG-2005-05-11-0: Bugfix:    - fixed delay in event client after recieving 
+                              an event package.
+                            - sge_passwd did not build on irix  
+                 Changed:   event_client, sge_passwd
+                 Review:    CR
+
 EB-2005-05-11-0: Bugfix:    renamed sge_passwd man pages to sgepasswd 
 
 RC-2005-05-11-0: Enhancem.: install MacOSX Startup Item

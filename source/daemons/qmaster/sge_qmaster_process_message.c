@@ -110,7 +110,7 @@ void *sge_qmaster_process_message(void *anArg)
     *
     */
    
-   res = sge_get_any_request(msg.snd_host, msg.snd_name, &msg.snd_id, &msg.buf, &msg.tag, 0, 0, &msg.request_mid);
+   res = sge_get_any_request(msg.snd_host, msg.snd_name, &msg.snd_id, &msg.buf, &msg.tag, 1, 0, &msg.request_mid);
 
    if (res != CL_RETVAL_OK) {
       DPRINTF(("%s returned: %s\n", SGE_FUNC, cl_get_error_text(res)));

@@ -279,7 +279,7 @@ lList **conf_list
             dfunc();
          }
          handle = cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0);
-         ret_val = cl_commlib_trigger(handle);
+         ret_val = cl_commlib_trigger(handle, 1);
          switch(ret_val) {
             case CL_RETVAL_SELECT_TIMEOUT:
             case CL_RETVAL_OK:
@@ -292,7 +292,7 @@ lList **conf_list
       } else {
          DTRACE;
          handle = cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0);
-         ret_val = cl_commlib_trigger(handle);
+         ret_val = cl_commlib_trigger(handle, 1);
          switch(ret_val) {
             case CL_RETVAL_SELECT_TIMEOUT:
             case CL_RETVAL_OK:

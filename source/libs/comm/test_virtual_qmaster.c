@@ -262,7 +262,7 @@ void *my_message_thread(void *t_conf) {
 
       cl_thread_func_testcancel(thread_config);
 
-      cl_commlib_trigger(handle);
+      cl_commlib_trigger(handle, 1);
       ret_val = cl_commlib_receive_message(handle, NULL, NULL, 0,      /* handle, comp_host, comp_name , comp_id, */
                                            CL_FALSE, 0,                       /* syncron, response_mid */
                                            &message, &sender );

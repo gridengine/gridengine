@@ -566,7 +566,7 @@ static void execd_register(void)
                handle = cl_com_get_handle((char*)prognames[EXECD],1);
             }
 
-            ret_val = cl_commlib_trigger(handle);
+            ret_val = cl_commlib_trigger(handle, 1);
             switch(ret_val) {
                case CL_RETVAL_SELECT_TIMEOUT:
                case CL_RETVAL_OK:

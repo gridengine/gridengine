@@ -186,7 +186,7 @@ int dispatch( dispatch_entry*   table,
                cl_get_error_text(i), de.host, de.commproc, de.id)); 
 
       if (i != CL_RETVAL_OK) {
-         cl_commlib_trigger(cl_com_get_handle( "execd" ,1));
+         cl_commlib_trigger(cl_com_get_handle( "execd" ,1), 1);
       }
       sge_update_thread_alive_time(SGE_EXECD_MAIN);
 

@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: sge_passwd.1,v $     Last Update: $Date: 2005/05/10 08:21:54 $     Revision: $Revision: 1.1 $
+.\" $RCSfile: sgepasswd.1,v $     Last Update: $Date: 2005/05/11 11:50:25 $     Revision: $Revision: 1.1 $
 .\"
 .\"
 .de SB		\" small and bold
@@ -28,20 +28,20 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH SGE_PASSWD 1 "$Date: 2005/05/10 08:21:54 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH SGE_PASSWD 1 "$Date: 2005/05/11 11:50:25 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
-sge_passwd \- Modify the xxQS_NAMExx password file of xxQS_NAMExx 
+sgepasswd \- Modify the xxQS_NAMExx password file of xxQS_NAMExx 
 .\"
 .\"
 .SH SYNTAX
-.B sge_passwd
+.B sgepasswd
 [[
 .B -D domain
 ]
 .B -d user
 ] 
 .PP
-.B sge_passwd
+.B sgepasswd
 [
 .B -D domain
 ] [
@@ -49,9 +49,9 @@ sge_passwd \- Modify the xxQS_NAMExx password file of xxQS_NAMExx
 ]
 .\"
 .SH DESCRIPTION
-.I sge_passwd
+.I sgepasswd
 modifys the xxQS_NAMExx password file 
-.M sge_passwd 5 . 
+.M sgepasswd 5 . 
 .PP
 This file containes a list of usernames and their windows password in 
 encrypted form. 
@@ -62,24 +62,24 @@ on hosts running Microsoft Windows as operating systems use this
 information to start jobs for a certain user. 
 .PP
 Each user can use the 
-.I sge_passwd 
+.I sgepasswd 
 application to add a new entry for the own user account. It is also possible 
 to change the stored password with 
-.I sge_passwd 
+.I sgepasswd 
 as far as the user knows the old one.
 .PP
 The root user additionally has the permission to change the password entries 
 for other user accounts. Root can also delete existing entries.
 .PP
 The 
-.I sge_passwd 
+.I sgepasswd 
 binary is only available on non-Windows hosts.
 .PP
 .\"
 .SH OPTIONS
 .IP "\fB\-D domain\fP"
 Per default 
-.I sge_passwd 
+.I sgepasswd 
 will add/modify the current Unix username without domain specification.
 This switch can be used to add a domain specification in front of the
 current user name. Consult your Microsoft Windows documentation to get
@@ -87,7 +87,7 @@ more information about domain users.
 .\"
 .IP "\fB\-d user\fP"
 Only root can use this parameter to delete entries from the
-.M sge_passwd 5 
+.M sgepasswd 5 
 file.
 .\"
 .IP "\fB\-help\fP"
@@ -97,7 +97,7 @@ Prints a listing of all options.
 .\" 
 .IP "\fBSGE_CERTFILE\fP" 1.5i
 Specifies the location of public key file. Per default 
-.I sge_passwd
+.I sgepasswd
 will use the file $SGE_ROOT/$SGE_CELL/common/sgeCA/certs/cert.pem
 .\"
 .IP "\fBSGE_KEYFILE\fP" 1.5i
@@ -106,7 +106,7 @@ Default is /var/sgeCA/port${SGE_QMASTER_PORT}/private/key.pem
 .\"
 .SH "SEE ALSO"
 .M xxqs_name_sxx_intro 1 ,
-.M sge_passwd 5 
+.M sgepasswd 5 
 .\"
 .SH "COPYRIGHT"
 See

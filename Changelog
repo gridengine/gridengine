@@ -1,3 +1,5 @@
+EB-2005-05-11-0: Bugfix:    renamed sge_passwd man pages to sgepasswd 
+
 EB-2005-05-10-0: Bugfix:    Domain admin <-> domain user problem (windows)
                  Bugtraq:   6239470
                  Review:    HP

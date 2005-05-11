@@ -656,15 +656,6 @@ proc translate { host remove_control_signs is_script no_input_parsing msg_txt { 
 
    global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_USER l10n_raw_cache l10n_install_cache
 
-#   puts $CHECK_OUTPUT "cleaning l10n cache buffers ..."
-#   if { [ info exists l10n_raw_cache ] } {
-#      unset l10n_raw_cache
-#   }
-#   if { [ info exists l10n_install_cache ] } {
-#      unset l10n_install_cache
-#   }
-
-
    set msg_text $msg_txt
    if { $no_input_parsing != 1 } {
       set msg_text [replace_string $msg_text "\n" "\\n"]
@@ -673,12 +664,7 @@ proc translate { host remove_control_signs is_script no_input_parsing msg_txt { 
       set msg_text [replace_string $msg_text "__QUOTE_DUMMY_" "\\\""]
    }
 
-#   puts $CHECK_OUTPUT [eval exec "echo \"$msg_text\" | /usr/bin/od -c"]
-#   puts $CHECK_OUTPUT "translation of:\n\"$msg_text\""
-#   puts $CHECK_OUTPUT [eval exec "echo \"$msg_text\" | /usr/bin/od -c"]
-
    set arch_string [resolve_arch $host]
-
 
    if { $is_script == 0 } {
       set msg_text [replace_string $msg_text "\\\$" "__DOLLAR_DUMMY_"]
@@ -710,18 +696,14 @@ proc translate { host remove_control_signs is_script no_input_parsing msg_txt { 
          set prg_exit_state 0
          debug_puts "reading message from l10n install cache ..."
       } else {
-         puts $CHECK_OUTPUT "translating Grid Engine message macro ..."
+         debug_puts "translating Grid Engine message macro ..."
          set back [start_remote_prog $host $CHECK_USER $CHECK_PRODUCT_ROOT/utilbin/$arch_string/infotext "-n -__eoc__ \"$msg_text\" $parameter_list"]
          set l10n_install_cache($msg_text) $back
          debug_puts "adding message to l10n install cache ..." 
       }
    }
    if { $prg_exit_state == 0} { 
-#      puts $CHECK_OUTPUT "---"
       set trans_mes "$back"
-#      puts $CHECK_OUTPUT "start_remote_prog returned:\n\"$back\""
-#      puts $CHECK_OUTPUT [eval exec "echo \"$trans_mes\" | /usr/bin/od -c"]
-#      wait_for_enter 
       if { $remove_control_signs != 0 } {
          set trans_mes [replace_string $trans_mes "\r" ""]
          set trans_mes [replace_string $trans_mes "\n" ""]
@@ -731,9 +713,6 @@ proc translate { host remove_control_signs is_script no_input_parsing msg_txt { 
          set trans_mes [replace_string $trans_mes "\]" "\\\]"]
       }
 
-
-
-#      puts $CHECK_OUTPUT [eval exec "echo \"$trans_mes\" | /usr/bin/od -c"]
       set msg_text $trans_mes
    } else {
       add_proc_error "translate" -1 "gettext returned error:\n--$back\n--"
@@ -768,10 +747,9 @@ proc translate { host remove_control_signs is_script no_input_parsing msg_txt { 
          }
          set spec_string [ string range $spec_start_string 0 $spec_end] 
          incr spec_end 1 
-#         puts $CHECK_OUTPUT "specifier($p_numb): \"$spec_string\""
+
          if { [string first "\$" $spec_string] >= 0 } {
             set p_numb [string range $spec_string 1 1]
-#            puts $CHECK_OUTPUT "--> new parameter order, parameter number is $p_numb"
          }
          incr s_specifier -1
          set new_msg_text [string range $msg_text 0 $s_specifier ]
@@ -790,7 +768,6 @@ proc translate { host remove_control_signs is_script no_input_parsing msg_txt { 
    set msg_text [replace_string $msg_text "PAR_5" $par5]
    set msg_text [replace_string $msg_text "PAR_6" $par6]
 
-#   puts $CHECK_OUTPUT "returned(final):\n\"$msg_text\"" 
    return $msg_text
 }
 

@@ -96,6 +96,10 @@ set arch     [get_arch]
 set submit_options ""
 set script ""
 
+# change dir to /tmp - and we have to submit with -cwd
+# we had NFS problems, when 1500 jobs started and wanted to cd to /gridware/Testsuite
+cd /tmp
+
 puts "SUBMITTER $host"
 
 set do_exit 0

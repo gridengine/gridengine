@@ -280,19 +280,19 @@ proc init_level {} {
       }
       "1" {
          set job_count 3000
-         set ps_interval 20
+         set ps_interval 15
          set qstat_interval 2000
          set level_array_size 50
       }
       "2" {
          set job_count 30000
-         set ps_interval 60
+         set ps_interval 20
          set qstat_interval 5000
          set level_array_size 500
       }
       "3" {
          set job_count 300000
-         set ps_interval 300
+         set ps_interval 30
          set qstat_interval 10000
          set level_array_size 5000
       }
@@ -941,7 +941,7 @@ proc run_throughput_test {} {
    set qstat_ok 0
 
    set my_timeout [ expr ( [timestamp] + 300 ) ]
-   set submit_options "-o /dev/null -j y"
+   set submit_options "-cwd -o /dev/null -j y"
    if {$array_size > 1} {
       append submit_options " -t 1-$array_size"
    }
@@ -1822,7 +1822,7 @@ proc compare_dump_data_file { file1 file2 } {
    }
 
    # qmaster, execd_list, host_list
-   if { [string compare $host_list1(host_list) $host_list2(host_list)] != 0 } {
+   if { [string compare [lsort -dictionary $host_list1(host_list)] [lsort -dictionary $host_list2(host_list)]] != 0 } {
       incr error 1
       append content [create_html_text "The test runs have different host list settings"]
    }
@@ -3515,15 +3515,19 @@ proc create_reports { results_array job_array_name schedd_array_name monitoring_
    set nr_of_local_spool_directories 0
    foreach execd $host_list {
       get_exechost execd_array $execd
-      spool_array_add_data $prot_output_file "execd $execd" execd_array
-      unset execd_array
+      if {[info exists execd_array]} {
+         spool_array_add_data $prot_output_file "execd $execd" execd_array
+         unset execd_array
+      }
 
       get_config config_array $execd
-      spool_array_add_data $prot_output_file "config execd $execd" config_array
-      if { [info exists config_array(execd_spool_dir)] } {
-         incr nr_of_local_spool_directories 1
+      if {[info exists config_array]} {
+         spool_array_add_data $prot_output_file "config execd $execd" config_array
+         if { [info exists config_array(execd_spool_dir)] } {
+            incr nr_of_local_spool_directories 1
+         }
+         unset config_array
       }
-      unset config_array
    }
    
    # save scheduler configuration into file

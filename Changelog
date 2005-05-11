@@ -1,3 +1,14 @@
+JG-2005-05-11-0: Testsuite: Improved error messages and error handling when
+                            opening rlogin connections 
+                            (open_remote_spawn_process).
+                            Improved/fixed test performance/throughput:
+                            - more finegrained process monitoring
+                            - use a local filesystem as working directory for 
+                              job submission and execution to avoid NFS 
+                              overload.
+                            Fixed pe/ckpt to queue association for SGE 5.3.
+                 Review:    CR
+
 SG-2005-05-11-0: Bugfix:    - fixed delay in event client after recieving 
                               an event package.
                             - sge_passwd did not build on irix  
@@ -47,7 +58,7 @@ JG-2005-05-06-2: Bugfix:    Fixed typo in qstat error message.
                  Issue:     1580
                  Review:    RD
 
-JG-2005-05-06-0: Testsuite: check functional/backup_restore only applies to 
+JG-2005-05-06-1: Testsuite: check functional/backup_restore only applies to 
                             Grid Engine version 6.x.
 
 JG-2005-05-06-0: Testsuite: Make opening of rlogin connections safer and faster.

@@ -1398,7 +1398,7 @@ proc resolve_build_arch { host } {
 #  SEE ALSO
 #     ???/???
 #*******************************
-proc resolve_host { name { long 1 } } {
+proc resolve_host { name { long 0 } } {
    global ts_config
    global CHECK_OUTPUT
    global resolve_host_cache

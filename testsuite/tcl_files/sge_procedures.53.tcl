@@ -187,7 +187,12 @@ proc assign_queues_with_ckpt_object { qname hostlist ckpt_obj } {
       }
    }
 
-   set my_change(queue_list) $q_list
+   get_checkpointobj $ckpt_obj curr_ckpt
+   if { $curr_ckpt(queue_list) == "all" || $curr_ckpt(queue_list) == "NONE" } {
+      set my_change(queue_list) $q_list
+   } else {
+      set my_change(queue_list) "$curr_ckpt(queue_list) $q_list"
+   }
    set_checkpointobj $ckpt_obj my_change
 }
 
@@ -211,8 +216,8 @@ proc assign_queues_with_pe_object { qname hostlist pe_obj } {
    }
 
    get_pe $pe_obj curr_pe
-   if { $curr_pe(queue_list) == "all" } {
-      set my_change(queue_list) $q_list
+   if { $curr_pe(queue_list) == "all" || $curr_pe(queue_list) == "NONE" } {
+      set my_change(queue_list) "$q_list"
    } else {
       set my_change(queue_list) "$curr_pe(queue_list) $q_list"
    }

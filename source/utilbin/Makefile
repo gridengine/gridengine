@@ -197,7 +197,7 @@ fstype.o: $(UTILBIN_DIR)/fstype.c
 
 #---------------------------------------------------------------------
 sgepasswd: sge_passwd_main.o version.o $(LCKLIB) $(UTILIB) $(RMONLIB)
-		$(LD_WRAPPER) $(CC) -o $@ $(LFLAGS) sge_passwd_main.o version.o $(FSTYPELIBS) $(UTILIB) $(LCKLIB) $(RMONLIB) $(SLIBS) $(LIBS) $(DLLIB)
+		$(LD_WRAPPER) $(CC) -o $@ $(LFLAGS) sge_passwd_main.o version.o $(FSTYPELIBS) $(UTILIB) $(SECLIB) $(LCKLIB) $(RMONLIB) $(LIBS) $(DLLIB)
 
 sge_passwd_main.o: $(UTILBIN_DIR)/sge_passwd.c
 		$(CC) -D DEFINE_SGE_PASSWD_MAIN $(CFLAGS) $(NOERR_PROTO) $(MEMCFLAG) $(GCC_NODUPLWARN) -o $@ -c $(UTILBIN_DIR)/sge_passwd.c

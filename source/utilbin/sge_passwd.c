@@ -37,7 +37,10 @@
 #include <fcntl.h>
 #include <string.h>
 #include <stdlib.h>
+
+#ifdef LOAD_OPENSSL
 #include <dlfcn.h>
+#endif
 
 #include <openssl/rsa.h>
 #include <openssl/evp.h>
@@ -93,7 +96,8 @@ sge_init_shared_ssl_lib(void)
    int ret;
 
    DENTER(TOP_LAYER, "sge_init_shared_ssl_lib");
-#if 1 
+
+#ifdef LOAD_OPENSSL
    if (shared_ssl_lib == NULL) {
 #  if defined(DARWIN)
 #     ifdef RTLD_NODELETE
@@ -113,7 +117,7 @@ sge_init_shared_ssl_lib(void)
 #     else
       shared_ssl_lib = dlopen ("libcrypto.so", RTLD_LAZY);
 #     endif /* RTLD_NODELETE */
-#endif
+#  endif
 
       if (shared_ssl_lib != NULL) {
          const char *func_name[] = {

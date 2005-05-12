@@ -1,4 +1,9 @@
-RD-2005-05-12-0  Bugfix:    fixed broken build on HP11
+CR-2005-05-12-0: Enhancm.:  - Added new cvs directory: source/libs/comm/examples
+                            - added 2 commlib demo modules and Makefile:
+                              client_demo and server_demo
+                 Changes:   Makefile of commlib, source/scripts/zerodepend
+
+RD-2005-05-12-0: Bugfix:    fixed broken build on HP11
                             no dlopen on HP11
                  Changes:   sge_passwd, shepherd
                  Review:    TBD

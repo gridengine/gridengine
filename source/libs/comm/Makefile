@@ -41,6 +41,7 @@ DEPEND = $(SOURCE)/3rdparty/sge_depend/$(COMPILE_ARCH)/sge_depend -l -S -Y $(CFL
 
 ###############################################################################
 include $(SOURCE)/libs/comm/lists/Makefile
+include $(SOURCE)/libs/comm/examples/Makefile
 ###############################################################################
 
 COMMLIB = libcomm$(LIBEXT)
@@ -86,7 +87,7 @@ COMMLIBS = $(COMMLIB) $(COMMLISTSLIB)
 ###############################################################################
 # global rules: all, clean, depend, messages
 ###############################################################################
-comm_all: commlib commlists_all test_cl_tcp_framework test_cl_commlib test_cl_commlib_client \
+comm_all: commlib commlists_all commexamples_all test_cl_tcp_framework test_cl_commlib test_cl_commlib_client \
      test_cl_hostname_list test_cl_hostalias_list test_multithread_io test_status_info \
      test_server_connection test_cl_endpoint_list test_virtual_qmaster test_virtual_event_client \
      test_virtual_gdi_client test_debug_client test_issues test_thread_throughput
@@ -95,7 +96,7 @@ depend: commlib_depend commlistslib_depend
 
 messages: commlib_messages commlistslib_messages
 
-clean: commlib_clean
+clean: commlib_clean commexamples_clean commliblists_clean
 
 commlib: $(COMMLIB) $(COMMLISTSLIB)
 

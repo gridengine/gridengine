@@ -1,16 +1,25 @@
+CR-2005-05-13-2: Bugfix:    new message will trigger write thread only when
+                            connection is in state CL_CONNECTED or CL_CLOSING.
+                            This will fix unnecessary high write thread cpu
+                            usage when connection is not yet established.
+                 Review:    pending
+                 Changed:   commlib (ibs/comm/cl_communication.c)
+
 CR-2005-05-13-1: Testsuite: - fixed commlib throughput test
+                 Changed:   testsuite
 
 CR-2005-05-13-0: Cleanup:   - cleanup of some commlib message logging and added
                               new error messages
+                 Changed:   commlib
 
 CR-2005-05-12-0: Enhancm.:  - Added new cvs directory: source/libs/comm/examples
                             - added 2 commlib demo modules and Makefile:
                               client_demo and server_demo
-                 Changes:   Makefile of commlib, source/scripts/zerodepend
+                 Changed:   Makefile of commlib, source/scripts/zerodepend
 
 RD-2005-05-12-0: Bugfix:    fixed broken build on HP11
                             no dlopen on HP11
-                 Changes:   sge_passwd, shepherd
+                 Changed:   sge_passwd, shepherd
                  Review:    TBD
 
 SG-2005-05-11-2: Bugfix:    fixed a wrong flush settings in the scheduler event client

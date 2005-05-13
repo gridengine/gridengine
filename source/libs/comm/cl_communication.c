@@ -670,7 +670,17 @@ int cl_com_setup_message(cl_com_message_t** message, cl_com_connection_t* connec
       connection->last_send_message_id = connection->last_send_message_id + 1;
    }
    (*message)->message_length = size;
-   connection->data_write_flag = CL_COM_DATA_READY;
+   switch (connection->connection_state) {
+      case CL_CONNECTED:
+      case CL_CLOSING:
+         connection->data_write_flag = CL_COM_DATA_READY;
+         break;
+      case CL_DISCONNECTED:
+      case CL_OPENING:
+      case CL_ACCEPTING:
+      case CL_CONNECTING:
+         break;
+   }
    return return_value;
 }
 

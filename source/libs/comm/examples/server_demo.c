@@ -41,8 +41,6 @@
 /* 
  *  global signal flags 
  */
-static int pipe_signal = 0;
-static int hup_signal = 0;
 static int do_shutdown = 0;
 
 
@@ -52,11 +50,9 @@ static int do_shutdown = 0;
  */
 void sighandler_function( int sig ) {
    if (sig == SIGPIPE) {
-      pipe_signal = 1;
       return;
    }
    if (sig == SIGHUP) {
-      hup_signal = 1;
       return;
    }
    
@@ -201,18 +197,17 @@ extern int main(int argc, char** argv) {
      
    /* application main loop */
    while(do_shutdown != 1) {
-      int ret_val;
  
       cl_commlib_trigger(handle, 1);
  
-      ret_val = cl_commlib_receive_message(handle,NULL, NULL, 0, CL_FALSE, 0, &message, &sender);
+      cl_commlib_receive_message(handle,NULL, NULL, 0, CL_FALSE, 0, &message, &sender);
  
       if (message != NULL) {
          char response_message[1024];
          sprintf(response_message,"Welcome to demo service at host \"%s\"!", handle->local->comp_host);
          printf("received message from \"%s/%s/%ld\": %s\n", sender->comp_host, sender->comp_name, sender->comp_id, message->message);
  
-         ret_val = cl_commlib_send_message(handle, 
+         cl_commlib_send_message(handle, 
                                  sender->comp_host, 
                                  sender->comp_name, 
                                  sender->comp_id, CL_MIH_MAT_NAK,  

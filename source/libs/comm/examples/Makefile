@@ -72,10 +72,10 @@ include $(COMM_EXAMPLES_DIR)/commexamples_dependencies
 ###############################################################################
 # rules to build object codes
 ###############################################################################
-server_demo: server_demo.o $(SECLIB) $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB)
+server_demo: server_demo.o $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB)
 	$(CC) -o server_demo $(LFLAGS) server_demo.o $(SECLIB) $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB) $(DLLIB) $(LIBS)
 
-client_demo: client_demo.o $(SECLIB) $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB)
+client_demo: client_demo.o $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB)
 	$(CC) -o client_demo $(LFLAGS) client_demo.o $(SECLIB) $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB) $(DLLIB) $(LIBS)
 
 

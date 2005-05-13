@@ -452,6 +452,7 @@ void prepare_enroll(const char *name)
       switch(me_who) {
          case EXECD:
             /* add qmaster as known endpoint */
+            DPRINTF(("re-read actual qmaster file (prepare_enroll)\n"));
             cl_com_append_known_endpoint_from_name((char*)sge_get_master(true), 
                                                    (char*) prognames[QMASTER],
                                                    1 ,

@@ -74,7 +74,7 @@ int read_master_file
       return NULL;
    }
 
-   DPRINTF(("got qmaster host \"%s\"\n", cached_master_name));
+   DPRINTF(("(re-)reading act_qmaster file. Got master host \"%s\"\n", cached_master_name));
    DEXIT;
    return cached_master_name;
 }

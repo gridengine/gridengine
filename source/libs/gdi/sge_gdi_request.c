@@ -804,6 +804,7 @@ gdi_send_multi_sync(lList **alpp, state_gdi_multi *state, sge_gdi_request **answ
             SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_GENERALERRORXSENDRECEIVEGDIREQUEST_I , status));
             break;
       }
+      DPRINTF(("re-read act_qmaster file (gdi_send_multi_sync)\n"));
       sge_get_master(true);
       return false;
    }

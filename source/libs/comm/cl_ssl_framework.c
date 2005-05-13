@@ -1397,7 +1397,7 @@ int cl_com_ssl_framework_setup(void) {
       }
    }
    pthread_mutex_unlock(&cl_com_ssl_global_config_mutex);
-   CL_LOG(CL_LOG_INFO,"ssl framework setup done");
+   CL_LOG(CL_LOG_INFO,"ssl framework configuration object setup done");
    return ret_val;
 }
 
@@ -3157,7 +3157,7 @@ int cl_com_ssl_open_connection_request_handler(cl_raw_list_t* connection_list, c
        */
       
       if ( ldata->select_not_called_count < 3 ) { 
-         CL_LOG_INT(CL_LOG_WARNING, "no usable file descriptor for select() call nr.:", ldata->select_not_called_count);
+         CL_LOG_INT(CL_LOG_INFO, "no usable file descriptor for select() call nr.:", ldata->select_not_called_count);
          ldata->select_not_called_count += 1;
          cl_raw_list_unlock(connection_list); 
          return CL_RETVAL_NO_SELECT_DESCRIPTORS; 

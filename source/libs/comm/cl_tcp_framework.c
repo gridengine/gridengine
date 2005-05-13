@@ -1622,7 +1622,7 @@ int cl_com_tcp_open_connection_request_handler(cl_raw_list_t* connection_list, c
        */
       
       if ( ldata->select_not_called_count < 3 ) { 
-         CL_LOG_INT(CL_LOG_WARNING, "no usable file descriptor for select() call nr.:", ldata->select_not_called_count);
+         CL_LOG_INT(CL_LOG_INFO, "no usable file descriptor for select() call nr.:", ldata->select_not_called_count);
          ldata->select_not_called_count += 1;
          cl_raw_list_unlock(connection_list); 
          return CL_RETVAL_NO_SELECT_DESCRIPTORS; 

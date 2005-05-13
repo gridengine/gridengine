@@ -285,8 +285,8 @@ int cl_commlib_push_application_error(int cl_error, const char* cl_info_text) {
    int retval = CL_RETVAL_OK; 
 
    if (cl_info == NULL) {
-      cl_info = "not available";
-      retval = CL_RETVAL_PARAMS;
+      cl_info = MSG_CL_COMMLIB_NO_ADDITIONAL_INFO;
+      retval  = CL_RETVAL_PARAMS;
    }
 
    pthread_mutex_lock(&cl_com_error_mutex);
@@ -554,7 +554,7 @@ int cl_com_cleanup_commlib(void) {
    cl_host_list_cleanup(&cl_com_host_list);
    pthread_mutex_unlock(&cl_com_host_list_mutex);
 
-   CL_LOG(CL_LOG_WARNING,"cleanup ssl framework ...");
+   CL_LOG(CL_LOG_INFO,"cleanup ssl framework configuration object ...");
    cl_com_ssl_framework_cleanup(); 
 
    CL_LOG(CL_LOG_INFO,"cleanup application error list ...");
@@ -659,6 +659,7 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
 
    if (cl_com_handle_list  == NULL) {
       CL_LOG(CL_LOG_ERROR,"cl_com_setup_commlib() not called");
+      cl_commlib_push_application_error(CL_RETVAL_NO_FRAMEWORK_INIT, NULL);
       if (commlib_error) {
          *commlib_error = CL_RETVAL_NO_FRAMEWORK_INIT;
       }
@@ -667,6 +668,7 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
 
    if (component_name == NULL ) {
       CL_LOG(CL_LOG_ERROR,"component name is NULL");
+      cl_commlib_push_application_error(CL_RETVAL_PARAMS, NULL);
       if (commlib_error) {
          *commlib_error = CL_RETVAL_PARAMS;
       }
@@ -675,6 +677,7 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
 
    if ( service_provider == CL_TRUE && component_id == 0) {
       CL_LOG(CL_LOG_ERROR,"service can't use component id 0");
+      cl_commlib_push_application_error(CL_RETVAL_PARAMS, NULL);
       if (commlib_error) {
          *commlib_error = CL_RETVAL_PARAMS;
       }
@@ -692,6 +695,7 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
          if (strcmp(local_endpoint->comp_name, component_name) == 0) {
             /* we have this handle allready in list */
             CL_LOG(CL_LOG_ERROR,"component not unique");
+            cl_commlib_push_application_error(CL_RETVAL_LOCAL_ENDPOINT_NOT_UNIQUE, NULL);
             cl_raw_list_unlock(cl_com_handle_list);
             if (commlib_error) {
                *commlib_error = CL_RETVAL_LOCAL_ENDPOINT_NOT_UNIQUE;
@@ -705,6 +709,7 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
    return_value = cl_com_gethostname(&local_hostname, NULL, NULL, NULL);
    if (return_value != CL_RETVAL_OK) {
       CL_LOG(CL_LOG_ERROR,cl_get_error_text(return_value));
+      cl_commlib_push_application_error(return_value, NULL);
       cl_raw_list_unlock(cl_com_handle_list);
       if (commlib_error) {
          *commlib_error = return_value;
@@ -718,6 +723,7 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
    if (new_handle == NULL) {
       free(local_hostname);
       CL_LOG(CL_LOG_ERROR,"malloc() error");
+      cl_commlib_push_application_error(CL_RETVAL_MALLOC, NULL);
       cl_raw_list_unlock(cl_com_handle_list);
       if (commlib_error) {
          *commlib_error = CL_RETVAL_MALLOC;
@@ -743,6 +749,7 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
                *commlib_error = CL_RETVAL_NO_FRAMEWORK_INIT;
             }
             pthread_mutex_unlock(&cl_com_ssl_setup_mutex);
+            cl_commlib_push_application_error(CL_RETVAL_NO_FRAMEWORK_INIT, NULL);
             return NULL;
          }
         
@@ -754,6 +761,7 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
                *commlib_error = return_value;
             }
             pthread_mutex_unlock(&cl_com_ssl_setup_mutex);
+            cl_commlib_push_application_error(return_value, NULL);
             return NULL;
          }
 
@@ -780,6 +788,7 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
       if (commlib_error) {
          *commlib_error = CL_RETVAL_NO_FRAMEWORK_INIT;
       }
+      cl_commlib_push_application_error(CL_RETVAL_NO_FRAMEWORK_INIT, NULL);
       return NULL;
    }  
 
@@ -844,6 +853,7 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
       if (commlib_error) {
          *commlib_error = CL_RETVAL_TO_LESS_FILEDESCRIPTORS;
       }
+      cl_commlib_push_application_error(CL_RETVAL_TO_LESS_FILEDESCRIPTORS, NULL);
       return NULL;
    }
    CL_LOG_INT(CL_LOG_INFO, "max file descriptors on this system    :", (int)new_handle->max_open_connections);
@@ -869,6 +879,7 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
       if (commlib_error) {
          *commlib_error = CL_RETVAL_MALLOC;
       }
+      cl_commlib_push_application_error(CL_RETVAL_MALLOC, NULL);
       return NULL;
    }
    memset(new_handle->statistic, 0, sizeof(cl_com_handle_statistic_t));
@@ -886,6 +897,7 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
       if (commlib_error) {
          *commlib_error = CL_RETVAL_MALLOC;
       }
+      cl_commlib_push_application_error(CL_RETVAL_MALLOC, NULL);
       return NULL;
    }
 
@@ -899,6 +911,7 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
       if (commlib_error) {
          *commlib_error = CL_RETVAL_MALLOC;
       }
+      cl_commlib_push_application_error(CL_RETVAL_MALLOC, NULL);
       return NULL;
    }
 
@@ -916,6 +929,7 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
       if (commlib_error) {
          *commlib_error = CL_RETVAL_MUTEX_ERROR;
       }
+      cl_commlib_push_application_error(CL_RETVAL_MUTEX_ERROR, NULL);
       return NULL;
    } 
 
@@ -936,6 +950,7 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
       if (commlib_error) {
          *commlib_error = CL_RETVAL_MUTEX_ERROR;
       }
+      cl_commlib_push_application_error(CL_RETVAL_MUTEX_ERROR, NULL);
       return NULL;
    }
 
@@ -958,6 +973,7 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
       if (commlib_error) {
          *commlib_error = CL_RETVAL_MALLOC;
       }
+      cl_commlib_push_application_error(CL_RETVAL_MALLOC, NULL);
       return NULL;
    }
 
@@ -981,6 +997,7 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
       if (commlib_error) {
          *commlib_error = return_value;
       }
+      cl_commlib_push_application_error(return_value, NULL);
       return NULL;
    } 
 
@@ -1005,6 +1022,7 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
       if (commlib_error) {
          *commlib_error = return_value;
       }
+      cl_commlib_push_application_error(return_value, NULL);
       return NULL;
    }
  
@@ -1043,6 +1061,7 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
          if (commlib_error) {
             *commlib_error = return_value;
          }
+         cl_commlib_push_application_error(return_value, NULL);
          return NULL;
       }
       
@@ -1073,6 +1092,7 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
          if (commlib_error) {
             *commlib_error = return_value;
          }
+         cl_commlib_push_application_error(return_value, NULL);
          return NULL;
       }
 
@@ -1184,6 +1204,7 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
       if (commlib_error) {
          *commlib_error = return_value;
       }
+      cl_commlib_push_application_error(return_value, NULL);
       return NULL;
    }
    cl_handle_list_append_handle(cl_com_handle_list, new_handle,0);
@@ -3096,7 +3117,7 @@ static int cl_commlib_handle_connection_read(cl_com_connection_t* connection) {
                   return return_value;
                }
                if (connection->connection_state == CL_CONNECTED) {
-                  CL_LOG(CL_LOG_WARNING,"received connection close response message");
+                  CL_LOG(CL_LOG_INFO,"received connection close response message");
                   connection->ccrm_received = 1;
                   connection->connection_sub_state = CL_COM_DONE;  /* CLOSE message */
                   connection->data_write_flag = CL_COM_DATA_NOT_READY;

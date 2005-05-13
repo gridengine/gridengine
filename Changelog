@@ -1,3 +1,9 @@
+CR-2005-05-13-6: Bugfix:    commlib acknowledge message should be send when
+                            a acknowledged message arrives and not when gdi
+                            removes the message from commlib buffer. 
+                 Review:    pending
+                 Changed:   commlib
+
 CR-2005-05-13-5: Enhancm.:  added DPRINTF() statements where the act_qmaster
                             file is read
 

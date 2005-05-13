@@ -214,10 +214,6 @@ int cl_com_add_debug_message(cl_com_connection_t* connection, const char* messag
       return CL_RETVAL_HANDLE_NOT_FOUND;
    }
 
-   if (handle->connection_list != NULL) {
-      nr_of_connections = cl_raw_list_get_elem_count(handle->connection_list);
-   }
-
    /* don't add default case for this switch! */
    switch(handle->debug_client_setup->dc_mode) {
       case CL_DEBUG_CLIENT_OFF:
@@ -230,6 +226,10 @@ int cl_com_add_debug_message(cl_com_connection_t* connection, const char* messag
  
    if (handle->debug_client_setup->dc_debug_list == NULL) {
       return CL_RETVAL_PARAMS;
+   }
+
+   if (handle->connection_list != NULL) {
+      nr_of_connections = cl_raw_list_get_elem_count(handle->connection_list);
    }
 
    if (message == NULL) {

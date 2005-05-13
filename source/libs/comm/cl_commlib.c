@@ -55,7 +55,15 @@
 
 #include "msg_commlib.h"
 
+/* enable more commlib logging */
 #define CL_DO_COMMLIB_DEBUG 0
+
+/* the next switch is used to send ack for messages when they arive
+   at commlib layer or when application removes them from commlib */
+#if 1
+#define CL_DO_SEND_ACK_AT_COMMLIB_LAYER /* send ack when message arives */ 
+#endif
+
 static void cl_com_default_application_debug_client_callback(int dc_connected, int debug_level);
 
 static int cl_commlib_check_callback_functions(void);
@@ -2907,6 +2915,8 @@ static int cl_commlib_handle_connection_read(cl_com_connection_t* connection) {
             case CL_MIH_DF_BIN:
                CL_LOG(CL_LOG_INFO,"received binary message");
                message->message_state = CL_MS_READY;
+               gettimeofday(&(message->message_remove_time),NULL);
+               cl_com_add_debug_message(connection, NULL, message);
                if (connection->handler != NULL) { 
                   cl_com_handle_t* handle = connection->handler;
                   /* increase counter for ready messages */
@@ -2919,6 +2929,8 @@ static int cl_commlib_handle_connection_read(cl_com_connection_t* connection) {
             case CL_MIH_DF_XML:
                CL_LOG(CL_LOG_INFO,"received XML message");
                message->message_state = CL_MS_READY;
+               gettimeofday(&(message->message_remove_time),NULL);
+               cl_com_add_debug_message(connection, NULL, message);
                if (connection->handler != NULL) { 
                   cl_com_handle_t* handle = connection->handler;
                   /* increase counter for ready messages */
@@ -2934,6 +2946,16 @@ static int cl_commlib_handle_connection_read(cl_com_connection_t* connection) {
                break;
          }
       }
+
+#ifdef CL_DO_SEND_ACK_AT_COMMLIB_LAYER
+      /* send a message acknowledge when message arives at commlib layer */
+      if (message->message_state == CL_MS_READY) {
+         /* send acknowledge for CL_MIH_MAT_ACK type (application removed message from buffer) */
+         if ( message->message_mat == CL_MIH_MAT_ACK) {
+            cl_commlib_send_ack_message(connection, message);
+         } 
+      }
+#endif /* CL_DO_SEND_ACK_AT_COMMLIB_LAYER */
 
       if (message->message_state == CL_MS_PROTOCOL) {
          cl_com_AM_t*            ack_message       = NULL;
@@ -4340,12 +4362,15 @@ int cl_commlib_receive_message(cl_com_handle_t*      handle,
                         }
 
                        
-
+#ifndef CL_DO_SEND_ACK_AT_COMMLIB_LAYER 
+                        /* send a message acknowledge when application gets the message */
+  
                         /* send acknowledge for CL_MIH_MAT_ACK type (application removed message from buffer) */
                         if ( (*message)->message_mat == CL_MIH_MAT_ACK) {
                            cl_commlib_send_ack_message(connection, *message );
                            message_sent = 1; 
                         } 
+#endif /* CL_DO_SEND_ACK_AT_COMMLIB_LAYER */
 
                            
 #if 1
@@ -4384,7 +4409,6 @@ int cl_commlib_receive_message(cl_com_handle_t*      handle,
   
                         handle->last_receive_message_connection = connection;                       
 
-                        cl_com_add_debug_message(connection, NULL, *message);
 
                         cl_raw_list_unlock(handle->connection_list);
 

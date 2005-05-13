@@ -96,7 +96,7 @@ depend: commlib_depend commlistslib_depend
 
 messages: commlib_messages commlistslib_messages
 
-clean: commlib_clean commexamples_clean commliblists_clean
+clean: commlib_clean commexamples_clean commlistslib_clean
 
 commlib: $(COMMLIB) $(COMMLISTSLIB)
 

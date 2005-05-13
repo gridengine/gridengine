@@ -1,3 +1,6 @@
+CR-2005-05-13-3: Bugfix:    fixed bug in commlib Makefile
+                 Changed:   source/libs/comm/Makefile
+
 CR-2005-05-13-2: Bugfix:    new message will trigger write thread only when
                             connection is in state CL_CONNECTED or CL_CLOSING.
                             This will fix unnecessary high write thread cpu

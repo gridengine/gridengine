@@ -1,3 +1,8 @@
+AH-2005-05-17-0: Doc:       Fixed inconsistent naming for "weight_waiting_time" 
+                            in sge_priority(5)
+                 BugTraq:   6269033
+                 Changed:   man
+
 CR-2005-05-13-6: Bugfix:    commlib acknowledge message should be send when
                             a acknowledged message arrives and not when gdi
                             removes the message from commlib buffer. 

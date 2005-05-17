@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_priority.5,v $     Last Update: $Date: 2004/11/12 15:40:07 $     Revision: $Revision: 1.7 $
+.\" $RCSfile: sge_priority.5,v $     Last Update: $Date: 2005/05/17 09:32:54 $     Revision: $Revision: 1.8 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH SGE_PRIORITY 5 "$Date: 2004/11/12 15:40:07 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH SGE_PRIORITY 5 "$Date: 2005/05/17 09:32:54 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 sge_priority \- xxQS_NAMExx job priorities
@@ -121,9 +121,9 @@ as specified under \fBurgency\fP in
 The waiting time contribution represents a weighted weighting time of the
 jobs
 
-   wtcontr = waiting_time * waiting_weight
+   wtcontr = waiting_time * weight_waiting_time
 
-with the waiting time in seconds and the \fBwaiting_weight\fP value 
+with the waiting time in seconds and the \fBweight_waiting_time\fP value 
 as specified in 
 .M sched_conf 5 .
 .PP

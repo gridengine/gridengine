@@ -120,10 +120,9 @@ extern int main(void)
   while(do_shutdown == 0) {
      cl_com_message_t* message = NULL;
      cl_com_endpoint_t* sender = NULL;
-     int retval;
 
      /* synchron message receive */
-     retval = cl_commlib_receive_message(handle,NULL, NULL, 0, CL_TRUE, 0, &message, &sender);
+     cl_commlib_receive_message(handle,NULL, NULL, 0, CL_TRUE, 0, &message, &sender);
      if (message != NULL) {
         printf("server: received message: \"%s\"\n", message->message);
      }

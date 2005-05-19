@@ -4602,7 +4602,7 @@ ri_time_by_slots(const sge_assignment_t *a, lListElem *rep, lList *load_attr, lL
    actual_el = lGetElemStr(actual_attr, RUE_name, attrname);
    ready_time = *start_time;
 
-DPRINTF(("ri_time_by_slots(%s, %s)\n", object_name, attrname));
+   DPRINTF(("ri_time_by_slots(%s, %s)\n", object_name, attrname));
 
    /*
     * Consumables are treated futher below in schedule based mode 
@@ -4619,7 +4619,8 @@ DPRINTF(("ri_time_by_slots(%s, %s)\n", object_name, attrname));
    if (!(cplx_el = get_attribute(attrname, config_attr, actual_attr, load_attr, a->centry_list, queue,layer, 
                         lc_factor, reason, schedule_based, DISPATCH_TIME_NOW, 0))) {
       DEXIT;
-      return DISPATCH_MISSING_ATTR; 
+      return DISPATCH_MISSING_ATTR;
+
    }
 
    ret = match_static_resource(slots, rep, cplx_el, reason, false, false, allow_non_requestable);
@@ -4702,8 +4703,8 @@ DPRINTF(("ri_time_by_slots(%s, %s)\n", object_name, attrname));
 
    util = utilization_max(actual_el, ready_time, a->duration);
 
-DPRINTF(("\t\t%s: time_by_slots: %s total = %f util = %f from "sge_u32" plus "sge_u32" seconds\n", 
-      object_name, attrname, total, util, ready_time, a->duration));
+   DPRINTF(("\t\t%s: time_by_slots: %s total = %f util = %f from "sge_u32" plus "sge_u32" seconds\n", 
+            object_name, attrname, total, util, ready_time, a->duration));
 
    /* ensure resource is sufficient from now until finish */
    if (request * slots > total - util) {
@@ -4731,10 +4732,16 @@ DPRINTF(("\t\t%s: time_by_slots: %s total = %f util = %f from "sge_u32" plus "sg
 
       monitor_dominance(dom_str, DOMINANT_TYPE_CONSUMABLE | layer);
       sge_dstring_sprintf(&availability, "%s:%s=%f", dom_str, attrname, total - util);
+         
       sge_dstring_append(reason, MSG_SCHEDD_ITOFFERSONLY);
       sge_dstring_append(reason, availability_text);
+
+      if ((a->duration != DISPATCH_TIME_NOW) &&
+          (request * slots <= total - utilization_max(actual_el, ready_time, DISPATCH_TIME_NOW))) {
+         sge_dstring_append(reason, MSG_SCHEDD_DUETORR);
+      }
    } 
-   else  {
+   else {
       ret = DISPATCH_OK;
    }
 

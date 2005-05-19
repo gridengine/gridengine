@@ -1,3 +1,9 @@
+SG-2005-05-12-2: Bugfix:    missleading qstat -j messages in case of rr
+                 BugTraq:   6252469
+                 Issue:     1547
+                 Changed:   scheduler
+                 Review:    pending
+
 RD-2005-05-19-1: Bugfix:    qstat -j "" results in a segmentation fault
                  BugTraq:   6273006
                  Issue:     1610

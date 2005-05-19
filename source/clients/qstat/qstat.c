@@ -1299,9 +1299,16 @@ u_long32 *isXML
          SGE_EXIT(0);
          break;
       }
-     
-      while (parse_multi_stringlist(ppcmdline, "-j", &alp, ppljid, ST_Type, ST_name)) {
+
+      while (parse_string(ppcmdline, "-j", &alp, &argstr)) {
          *job_info = 1;
+         if (argstr) {
+            if (*ppljid) {
+               *ppljid = lFreeList(*ppljid);
+            }
+            str_list_parse_from_string(ppljid, argstr, ",");
+            FREE(argstr);
+         }
          continue;
       }
 
@@ -1317,10 +1324,10 @@ u_long32 *isXML
       */
       if (getenv("MORE_INFO")) {
          while (parse_flag(ppcmdline, "-dj", &alp, &global_showjobs))
-            break;
+            ;
          
          while (parse_flag(ppcmdline, "-dq", &alp, &global_showqueues))
-            break;
+            ;
       }
 
       while (parse_flag(ppcmdline, "-ne", &alp, &full)) {

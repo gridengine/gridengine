@@ -1,3 +1,9 @@
+RD-2005-05-19-0: Bugfix:    qrsh/qsh/qlogin reject -js option
+                 BugTraq:   6269305
+                 Issue:     1621
+                 Changed:   qsh, qrsh, qlogin
+                 Review:    AH
+
 SG-2005-05-19-1: Bugfix:    incomplete resource reservation with array jobs
                  Changed:   scheduler
                  Review:    pending

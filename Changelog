@@ -1,6 +1,12 @@
-SG-2005-05-19-0: Bugfix:    Wildcards in PE Name Cause Unusual Behavior
+SG-2005-05-19-1: Bugfix:    incomplete resource reservation with array jobs
                  Changed:   scheduler
                  Review:    pending
+                 BugTraq:   6260565 
+                 Issue:     1583
+                 
+SG-2005-05-19-0: Bugfix:    Wildcards in PE Name Cause Unusual Behavior
+                 Changed:   scheduler
+                 Review:    AH
                  BugTraq:   6265154
                  Issue:     1597
    

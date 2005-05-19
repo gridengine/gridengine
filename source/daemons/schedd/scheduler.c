@@ -64,6 +64,7 @@
 #include "sge_sched.h"
 #include "sge_feature.h"
 #include "sgeee.h"
+#include "sgeobj/sge_range.h"
 #include "sge_support.h"
 #include "interactive_sched.h"
 #include "shutdown.h"
@@ -700,7 +701,7 @@ static int dispatch_jobs(sge_Sdescr_t *lists, order_t *orders,
    while ( (orig_job = lFirst(*(splitted_job_lists[SPLIT_PENDING]))) != NULL) {
       dispatch_t result = DISPATCH_NEVER_CAT;
       u_long32 job_id; 
-      bool dispatched_a_job = false;
+      bool is_pjob_resort = false;
       bool is_reserve;
       bool is_start;
 
@@ -788,8 +789,7 @@ static int dispatch_jobs(sge_Sdescr_t *lists, order_t *orders,
             DPRINTF(("Found NOW assignment\n"));
 
             schedd_mes_rollback();
-            dispatched_a_job = true;
-            job_move_first_pending_to_running(&orig_job, splitted_job_lists);
+            is_pjob_resort = job_move_first_pending_to_running(&orig_job, splitted_job_lists);
 
             /* 
              * after sge_move_to_running() orig_job can be removed and job 
@@ -814,6 +814,30 @@ static int dispatch_jobs(sge_Sdescr_t *lists, order_t *orders,
          /* here the job got a reservation but can't be started now */
          DPRINTF(("Got a RESERVATION\n"));
          nreservation++;
+
+         /* mark the category as rejected */
+         if ((cat = lGetRef(orig_job, JB_category))) {
+            DPRINTF(("SKIP JOB " sge_u32 " of category '%s' (rc: "sge_u32 ")\n", job_id, 
+                        lGetString(cat, CT_str), lGetUlong(cat, CT_refcount))); 
+            sge_reject_category(cat);
+         }
+        
+         {
+            u_long32 ja_task_number = range_list_get_first_id(lGetList(orig_job, JB_ja_n_h_ids), NULL);
+            object_delete_range_id(orig_job, NULL, JB_ja_n_h_ids, ja_task_number);
+         }
+         
+         /* Remove pending job if there are no pending tasks anymore */
+         if (!job_has_pending_tasks(orig_job) || (nreservation >= max_reserve )) {
+            lDechainElem(*(splitted_job_lists[SPLIT_PENDING]), orig_job);
+            orig_job = lFreeElem(orig_job); 
+            is_pjob_resort = false;
+         }
+         else {
+            is_pjob_resort = true;
+         }
+
+         break;
          /* no break */
 
       case DISPATCH_NEVER_CAT: /* never this category */
@@ -859,7 +883,7 @@ static int dispatch_jobs(sge_Sdescr_t *lists, order_t *orders,
        * list in case another job is higher priority (i.e. has more tickets)
        *------------------------------------------------------------------*/
 
-      if (dispatched_a_job) {
+      if (is_pjob_resort) {
          sgeee_resort_pending_jobs(splitted_job_lists[SPLIT_PENDING]);
       }
 
@@ -946,7 +970,6 @@ select_assign_debit(lList **queue_list, lList **dis_queue_list, lListElem *job, 
    a.host_list        = host_list;
    a.centry_list      = centry_list;
    a.acl_list         = acl_list;
-
 
    /* in reservation scheduling mode a non-zero duration always must be defined */
    if ( !job_get_duration(&a.duration, job) ) {

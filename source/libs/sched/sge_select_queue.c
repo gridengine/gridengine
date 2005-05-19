@@ -389,7 +389,7 @@ sge_select_parallel_environment( sge_assignment_t *best, lList *pe_list)
 
          matched_pe_count++;
 
-         if (!best->gdil) { /* first pe run */
+         if (best->gdil == NULL) { /* first pe run */
             best->pe = pe;
 
             /* determine earliest start time with that PE */
@@ -408,6 +408,7 @@ sge_select_parallel_environment( sge_assignment_t *best, lList *pe_list)
             /* try to find earlier assignment again with minimum slot amount */
             tmp.slots = 0;
             result = parallel_reservation_max_time_slots(&tmp); 
+            
             if (result != DISPATCH_OK) {
                best_result = find_best_result(best_result, result);
                continue;
@@ -433,9 +434,10 @@ sge_select_parallel_environment( sge_assignment_t *best, lList *pe_list)
          pe_name = lGetString(pe, PE_name);
          matched_pe_count++;
 
-         if (best->gdil != NULL) {
+         if (best->gdil == NULL) {
             best->pe = pe;
             result = parallel_maximize_slots_pe(best);
+
             if (result != DISPATCH_OK) {
                schedd_mes_add(best->job_id, SCHEDD_INFO_PESLOTSNOTINRANGE_S, pe_name); 
                best_result = find_best_result(best_result, result);
@@ -450,6 +452,7 @@ sge_select_parallel_environment( sge_assignment_t *best, lList *pe_list)
             tmp.pe = pe;
 
             result = parallel_maximize_slots_pe(&tmp);
+                        
             if (result != DISPATCH_OK) {
                schedd_mes_add(best->job_id, SCHEDD_INFO_PESLOTSNOTINRANGE_S, pe_name); 
                best_result = find_best_result(best_result, result);

@@ -1,3 +1,9 @@
+AA-2005-05-20-0: Bugfix:    qmon crash (segmentation fault) on Solaris64
+                 Bugtraq:   6250603
+                 Issue:     1541
+                 Changed:   qmon
+                 Review:    CR 
+
 EB-2005-05-20-0: Bugfix:    Performance prob. with qconf -mattr exechost global
                  Bugtraq:   6266392
                  Issue:     1623

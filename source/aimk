@@ -2001,7 +2001,8 @@ if ( "$MAKEWINGRIDAPP" == 1 ) then
       breaksw
       case depend:
          set param = depend
-         set DEPEND = "../3rdparty/sge_depend/$COMPILE_ARCH/sge_depend -l -S -Y $DEPEND_FLAGS"
+         set DEPEND = "../3rdparty/sge_depend/${COMPILE_ARCH}/sge_depend -l -S -Y ${DEPEND_FLAGS}"
+      breaksw
       default
          set param = ""
          set DEPEND = ""

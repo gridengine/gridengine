@@ -1,3 +1,9 @@
+EB-2005-05-20-0: Bugfix:    Performance prob. with qconf -mattr exechost global
+                 Bugtraq:   6266392
+                 Issue:     1623
+                 Changed:   sge_qmaster
+                 Review:    AH
+
 RD-2005-05-20-1: Bugfix:    qstat -j "" results in a segmentation fault
                  BugTraq:   6273006
                  Issue:     1610

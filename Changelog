@@ -1,3 +1,9 @@
+SG-2005-05-20-1: Bugfix:    incomplete resource reservation with array jobs
+                 Changed:   scheduler
+                 Review:    pending
+                 BugTraq:   6260565 
+                 Issue:     1583
+
 EB-2005-05-20-0: Bugfix:    Performance prob. with qconf -mattr exechost global
                  Bugtraq:   6266392
                  Issue:     1623

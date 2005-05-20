@@ -148,13 +148,17 @@ const char *get_name_of_split_value(int value)
 *     lListElem **pending_job - Pointer to a pending job (JB_Type) 
 *     lList **splitted_jobs[] - (JB_Type) array of job lists 
 *
+*  RETURNS
+*      bool - true, if the pending job was removed
+*
 *  SEE ALSO
 *     sched/sge_job_schedd/SPLIT_-Constants 
 *     sched/sge_job_schedd/split_jobs()
 *******************************************************************************/
-void 
+bool
 job_move_first_pending_to_running(lListElem **pending_job, lList **splitted_jobs[]) 
 {
+   bool ret = false;
    lList *ja_task_list = NULL;      /* JAT_Type */
    lList *r_ja_task_list = NULL;    /* JAT_Type */
    lListElem *ja_task = NULL;       /* JAT_Type */
@@ -241,6 +245,7 @@ job_move_first_pending_to_running(lListElem **pending_job, lList **splitted_jobs
    if (!job_has_pending_tasks(*pending_job)) {
       lDechainElem(*(splitted_jobs[SPLIT_PENDING]), *pending_job);
       *pending_job = lFreeElem(*pending_job); 
+      ret = true;
    }
 
 #if 0 /* EB: DEBUG */
@@ -248,6 +253,7 @@ job_move_first_pending_to_running(lListElem **pending_job, lList **splitted_jobs
 #endif
 
    DEXIT;
+   return ret;
 }
 
 int job_get_next_task(lListElem *job, lListElem **task_ret, u_long32 *id_ret)

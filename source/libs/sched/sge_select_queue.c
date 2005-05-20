@@ -4748,8 +4748,13 @@ DPRINTF(("\t\t%s: time_by_slots: %s total = %f util = %f from "u32" plus "u32" s
       sge_dstring_sprintf(&availability, "%s:%s=%f", dom_str, attrname, total - util);
       sge_dstring_append(reason, MSG_SCHEDD_ITOFFERSONLY);
       sge_dstring_append(reason, availability_text);
+
+      if ((a->duration != DISPATCH_TIME_NOW) &&
+          (request * slots <= total - utilization_max(actual_el, ready_time, DISPATCH_TIME_NOW))) {
+         sge_dstring_append(reason, MSG_SCHEDD_DUETORR);
+      }
    } 
-   else  {
+   else {
       ret = DISPATCH_OK;
    }
 

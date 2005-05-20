@@ -1,3 +1,9 @@
+AA-2005-05-20-0: Bugfix:    qmon crash (segmentation fault) on Solaris64
+                 Issue:     1541
+                 Bugtraq:   6250603
+                 Changed:   qmon
+                 Review:    CR
+
 RD-2005-04-27-0: Enhancem.  Zones support on Solaris 10
                             switched kvm usage to kstat interface
                  Issue:     1403

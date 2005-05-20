@@ -1,3 +1,9 @@
+SG-2005-05-20-0: Bugfix:    Wildcards in PE Name Cause Unusual Behavior
+                 Changed:   scheduler
+                 Review:    AH
+                 BugTraq:   6265154
+                 Issue:     1597
+
 EB-2005-05-11-0: Bugfix:    renamed sge_passwd man pages to sgepasswd 
 
 EB-2005-05-10-0: Bugfix:    Domain admin <-> domain user problem (windows)

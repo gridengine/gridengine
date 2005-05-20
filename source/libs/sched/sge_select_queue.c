@@ -437,7 +437,7 @@ sge_select_parallel_environment( sge_assignment_t *best, lList *pe_list)
          pe_name = lGetString(pe, PE_name);
          matched_pe_count++;
 
-         if (best->gdil != NULL) {
+         if (best->gdil == NULL) {
             best->pe = pe;
             result = parallel_maximize_slots_pe(best);
             if (result != DISPATCH_OK) {

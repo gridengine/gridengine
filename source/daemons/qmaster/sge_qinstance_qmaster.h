@@ -56,7 +56,8 @@ qinstance_modify_attribute(lListElem *this_elem, lList **answer_list,
                            const char **matching_group,
                            bool *is_ambiguous,
                            bool *has_changed_conf_attr,
-                           bool *has_changed_state_attr);
+                           bool *has_changed_state_attr,
+                           const bool initial_modify);
 
 bool qinstance_change_state_on_calendar_all(const char* cal_name,  u_long32 cal_order, const lList *state_change_list);
 

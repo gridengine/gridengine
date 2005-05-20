@@ -92,7 +92,8 @@ qinstance_modify_attribute(lListElem *this_elem, lList **answer_list,
                            const char **matching_group,
                            bool *is_ambiguous, 
                            bool *has_changed_conf_attr, 
-                           bool *has_changed_state_attr)
+                           bool *has_changed_state_attr,
+                           const bool initial_modify)
 {
 #if 0 /* EB: DEBUG: enable debugging for qinstance_modify_attribute() */
 #define QINSTANCE_MODIFY_DEBUG
@@ -430,8 +431,12 @@ qinstance_modify_attribute(lListElem *this_elem, lList **answer_list,
                    * than it might we necessary to set the sos state.
                    * We have to check the subordinated list of all
                    * other queue instances to intitialize the state.
+                   *
+                   * This queue can't be subordinated if the queue was freshly added.
                    */
-                  qinstance_initialize_sos_attr(this_elem);
+                  if (initial_modify == false) {
+                     qinstance_initialize_sos_attr(this_elem);
+                  }
    
 
                   /*

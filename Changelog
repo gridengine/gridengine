@@ -1,3 +1,9 @@
+RD-2005-05-20-0: Bugfix:    performace bottleneck with subordinate list
+                 BugTraq:   6266450
+                 Issue:     1624
+                 Changed:   qmaster
+                 Review:    SG
+
 SG-2005-05-12-2: Bugfix:    missleading qstat -j messages in case of rr
                  BugTraq:   6252469
                  Issue:     1547

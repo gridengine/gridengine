@@ -134,6 +134,7 @@ qinstance_create(const lListElem *cqueue, lList **answer_list,
       bool tmp_has_changed_state_attr = false;
       const char *matching_host_or_group = NULL;
       const char *matching_group = NULL;
+      bool initial_modify = true;
 
       qinstance_modify_attribute(ret, answer_list, cqueue, 
                        cqueue_attribute_array[index].qinstance_attr,
@@ -145,7 +146,8 @@ qinstance_create(const lListElem *cqueue, lList **answer_list,
                        &matching_group,
                        &tmp_is_ambiguous, 
                        &tmp_has_changed_conf_attr,
-                       &tmp_has_changed_state_attr);
+                       &tmp_has_changed_state_attr,
+                       initial_modify);
 
       DPRINTF(("tmp_is_ambiguous == %d\n", tmp_is_ambiguous));
       *is_ambiguous |= tmp_is_ambiguous;
@@ -449,6 +451,7 @@ cqueue_mod_qinstances(lListElem *cqueue, lList **answer_list,
                bool tmp_is_ambiguous = false;
                bool tmp_has_changed_conf_attr = false;
                bool tmp_has_changed_state_attr = false;
+               bool initial_modify = false;
 
                ret &= qinstance_modify_attribute(qinstance,
                           answer_list, cqueue,
@@ -461,7 +464,8 @@ cqueue_mod_qinstances(lListElem *cqueue, lList **answer_list,
                           &matching_group,
                           &tmp_is_ambiguous,
                           &tmp_has_changed_conf_attr,
-                          &tmp_has_changed_state_attr);
+                          &tmp_has_changed_state_attr,
+                          initial_modify);
 
                if (tmp_is_ambiguous) {
                   /*

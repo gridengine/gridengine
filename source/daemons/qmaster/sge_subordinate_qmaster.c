@@ -319,7 +319,8 @@ qinstance_initialize_sos_attr(lListElem *this_elem)
       lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
       lListElem *qinstance = NULL; 
 
-      for_each(qinstance, qinstance_list) {
+      qinstance = lGetElemHost(qinstance_list, QU_qhostname, hostname);
+      if (qinstance != NULL) {
          lList *so_list = lGetList(qinstance, QU_subordinate_list);
          lListElem *so = NULL;
          lList *resolved_so_list = NULL;

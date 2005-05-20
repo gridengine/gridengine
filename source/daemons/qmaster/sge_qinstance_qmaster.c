@@ -426,6 +426,7 @@ qinstance_modify_attribute(lListElem *this_elem, lList **answer_list,
 #ifdef QINSTANCE_MODIFY_DEBUG
                   DPRINTF(("Changed "SFQ"\n", lNm2Str(attribute_name)));
 #endif
+
                   /*
                    * If this queue instance itself is a subordinated queue
                    * than it might we necessary to set the sos state.
@@ -478,7 +479,6 @@ qinstance_modify_attribute(lListElem *this_elem, lList **answer_list,
                    */
                   suspended_so = lFreeList(suspended_so);
                   unsuspended_so = lFreeList(unsuspended_so);
-
                }
             }
             break;

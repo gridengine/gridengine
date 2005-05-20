@@ -1437,7 +1437,7 @@ u_long32 *isXML
 
       while (parse_flag(ppcmdline, "-ext", &alp, &full)) {
          qstat_filter_add_ext_attributes();
-         if(full) {
+         if (full) {
             (*pfull) |= QSTAT_DISPLAY_EXTENDED;
             full = 0;
          }

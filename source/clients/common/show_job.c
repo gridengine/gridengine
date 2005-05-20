@@ -33,6 +33,8 @@
 #include <string.h>
 
 #include "sge_all_listsL.h"
+#include "sgermon.h"
+#include "sge_unistd.h"
 #include "show_job.h"
 #include "parse_qsub.h"
 #include "sgermon.h"
@@ -49,6 +51,10 @@
 #include "sge_ulong.h"
 #include "sge_centry.h"
 #include "sge_urgency.h"
+#include "sge_cqueue.h"
+#include "sge_qinstance_state.h"
+#include "sge_gdi.h"
+#include "sge_answer.h"
 
 static void sge_show_checkpoint(int how, int op);
 static void sge_show_y_n(int op, int how);

@@ -1,3 +1,9 @@
+EB-2005-05-20-0: Bugfix:    Performance prob. with qconf -mattr exechost global
+                 Bugtraq:   6266392
+                 Issue:     1623
+                 Changed:   sge_qmaster
+                 Review:    AH
+
 RD-2005-05-20-0: Bugfix:    performace bottleneck with subordinate list
                  BugTraq:   6266450
                  Issue:     1624

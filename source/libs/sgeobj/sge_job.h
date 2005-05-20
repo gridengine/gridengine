@@ -35,6 +35,7 @@
 #include "sge_htable.h"
 #include "sge_dstring.h"
 #include "sge_jobL.h"
+#include "sge_job_refL.h"
 #include "sge_messageL.h"
 
 /****** sgeobj/job/jb_now *****************************************************

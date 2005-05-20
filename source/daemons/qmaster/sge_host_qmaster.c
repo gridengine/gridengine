@@ -1054,7 +1054,7 @@ sge_change_queue_version_exechost(const char *exechost_name)
          sge_event_spool(&answer_list, 0, sgeE_QINSTANCE_MOD, 
                          0, 0, lGetString(qinstance, QU_qname), 
                          lGetHost(qinstance, QU_qhostname), NULL,
-                         qinstance, NULL, NULL, true, true);
+                         qinstance, NULL, NULL, true, false);
          answer_list_output(&answer_list);
       }
    }

@@ -1,3 +1,10 @@
+CR-2005-05-11-0: Bugfix:    merged bugfix from maintrunk 
+                            high CPU load of qmaster even on empty cluster
+                 Issue:     1612
+                 Bugtraq:   6267932
+                 Changed:   commlib
+                 Review:    JG, AS
+
 SG-2005-05-20-2: Bugfix:    missleading qstat -j messages in case of rr
                  BugTraq:   6252469
                  Issue:     1547

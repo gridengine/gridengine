@@ -88,6 +88,7 @@
 #include "sge_resource_utilization.h"
 #include "sge_serf.h"
 #include "sge_qinstance_state.h"
+#include "sge_range.h"
 
 /* profiling info */
 extern int scheduled_fast_jobs;

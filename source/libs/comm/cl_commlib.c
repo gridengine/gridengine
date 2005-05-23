@@ -1292,7 +1292,7 @@ int cl_commlib_shutdown_handle(cl_com_handle_t* handle, cl_bool_t return_for_mes
          switch(cl_com_create_threads) {
             case CL_NO_THREAD:
                pthread_mutex_lock(handle->messages_ready_mutex);
-               if (handle->messages_ready_for_read > 0) {
+               if (handle->messages_ready_for_read != 0) {
                   pthread_mutex_unlock(handle->messages_ready_mutex);
                   /* return for messages */
                   if (return_for_messages == CL_TRUE) {
@@ -1331,7 +1331,7 @@ int cl_commlib_shutdown_handle(cl_com_handle_t* handle, cl_bool_t return_for_mes
 
 
                pthread_mutex_lock(handle->messages_ready_mutex);
-               if (handle->messages_ready_for_read > 0) {
+               if (handle->messages_ready_for_read != 0) {
                   pthread_mutex_unlock(handle->messages_ready_mutex);
 
                   if ( return_for_messages == CL_TRUE) {
@@ -4232,7 +4232,8 @@ int cl_commlib_receive_message(cl_com_handle_t*      handle,
 
       /* only search for messages if there are any messages in message state CL_MS_READY */
       pthread_mutex_lock(handle->messages_ready_mutex);
-      if (handle->messages_ready_for_read > 0) {
+      if (handle->messages_ready_for_read != 0) {
+         unsigned long nr_messages_to_read = 0;
          pthread_mutex_unlock(handle->messages_ready_mutex);
 
 
@@ -4250,6 +4251,7 @@ int cl_commlib_receive_message(cl_com_handle_t*      handle,
       
                   if (message_elem->message->message_state == CL_MS_READY) {
                      message_match = 1;  /* always match the message */
+                     nr_messages_to_read++;  /* this message has state CL_MS_READY */
                     
                      /* try to find response for mid */
                      /* TODO: Just return a matchin response_mid !!!  0 = match all else match response_id */
@@ -4381,6 +4383,14 @@ int cl_commlib_receive_message(cl_com_handle_t*      handle,
             /* get next connection, because we found no message or endpoint does not match */
             elem = cl_connection_list_get_next_elem(elem);
          }
+         pthread_mutex_lock(handle->messages_ready_mutex);
+         if ( nr_messages_to_read != handle->messages_ready_for_read ) {
+            CL_LOG(CL_LOG_ERROR,"handle->messages_ready_for_read is not in sync");
+            cl_commlib_push_application_error(CL_RETVAL_NO_MESSAGE, "messages_ready_for_read not in sync");
+            handle->messages_ready_for_read = nr_messages_to_read;
+         }
+         pthread_mutex_unlock(handle->messages_ready_mutex);
+
          cl_raw_list_unlock(handle->connection_list);
          /* connection list */
       } else {

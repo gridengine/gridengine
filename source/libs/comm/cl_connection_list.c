@@ -391,6 +391,12 @@ int cl_connection_list_destroy_connections_to_close(cl_raw_list_t* list_p, int d
             message = message_list_elem->message;
             if (message->message_state == CL_MS_READY) {
                CL_LOG(CL_LOG_ERROR,"deleting unread message for connection");
+               if (connection->handler != NULL) {
+                  /* decrease counter for ready messages */
+                  pthread_mutex_lock(connection->handler->messages_ready_mutex);
+                  connection->handler->messages_ready_for_read = connection->handler->messages_ready_for_read - 1;
+                  pthread_mutex_unlock(connection->handler->messages_ready_mutex);
+               }
             }
             if (message->message_length != 0) {
                CL_LOG_INT(CL_LOG_ERROR,"connection sub_state:",connection->connection_sub_state);

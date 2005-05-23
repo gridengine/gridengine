@@ -1,3 +1,9 @@
+RD-2005-05-23-0: Bugfix:    execd auto_install performance bottleneck
+                 Changed:   install modules
+                 Bugster:   6272451
+                 Issue:     1627
+                 Review:    MD
+
 SG-2005-05-22-0: Bugfix:    test_drmaa sec faulted on linux.
                  Changed:   test_drmaa
                  Review:    JG 

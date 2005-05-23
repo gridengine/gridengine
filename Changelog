@@ -1,3 +1,9 @@
+AA-2005-05-20-1: Bugfix:    qmon: complex attributes not removeable
+                 Bugtraq:   6252525
+                 Issue:     1625
+                 Changed:   qmon
+                 Review:    RD 
+
 AA-2005-05-20-0: Bugfix:    qmon crash (segmentation fault) on Solaris64
                  Bugtraq:   6250603
                  Issue:     1541

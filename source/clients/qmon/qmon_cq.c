@@ -367,6 +367,12 @@ Widget parent
    XtAddEventHandler(XtParent(cq_layout), StructureNotifyMask, False, 
                         SetMinShellSize, NULL);
 
+
+   /*
+   ** register callback procedures
+   */
+   XmtRegisterCallbackProcedure("DeleteClusterQueue", qmonCQDelete, XtRWidget);
+
    XtSetSensitive(cq_load, False);
    XtSetSensitive(cq_explain_states, False);
    XtSetSensitive(cq_explain, False);

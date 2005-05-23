@@ -371,6 +371,12 @@ Widget parent
    XtAddEventHandler(XtParent(cq_layout), StructureNotifyMask, False, 
                         SetMinShellSize, NULL);
 
+
+   /*
+   ** register callback procedures
+   */
+   XmtRegisterCallbackProcedure("DeleteClusterQueue", qmonCQDelete, XtRWidget);
+
    XtSetSensitive(cq_load, False);
    XtSetSensitive(cq_explain_states, False);
    XtSetSensitive(cq_explain, False);
@@ -2035,6 +2041,7 @@ static void qmonCQUpdateQIMatrix(void)
 
    row=0;
    for_each(cq, fql) {
+      lList *ql = NULL;
       lListElem *qp;
       char to_print[80];
       char arch_string[80];
@@ -2049,7 +2056,9 @@ static void qmonCQUpdateQIMatrix(void)
       if (!(load_avg_str=getenv("SGE_LOAD_AVG")) || !strlen(load_avg_str))
          load_avg_str = LOAD_ATTR_LOAD_AVG;
 
-      for_each(qp, lGetList(cq, CQ_qinstances)) {
+      ql = lCopyList("copy", lGetList(cq, CQ_qinstances));
+      lPSortList(ql, "%I+", QU_full_name);
+      for_each(qp, ql) {
          if ((lGetUlong(qp, QU_tag) & TAG_SHOW_IT)!=0) {
             num_rows = XbaeMatrixNumRows(qinstance_settings);
             if (row >= num_rows) {
@@ -2124,6 +2133,7 @@ static void qmonCQUpdateQIMatrix(void)
             row++;
          }
       }   
+      ql = lFreeList(ql);
    }   
 
    fql = lFreeList(fql);

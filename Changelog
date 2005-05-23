@@ -1,3 +1,26 @@
+AA-2005-05-23-1: Bugfix:    Have the Queue Instances tab within Qmon display queues in alphabetical order (like 5.3 did with the queue tab)
+                 Issue:     1602
+                 Changed:   qmon
+                 Review:    CR
+
+AA-2005-05-23-0: Bugfix:    qmon kills a system
+                 Bugtraq:   6274467
+                 Issue:     1446
+                 Changed:   qmon
+                 Review:    CR
+
+AA-2005-05-20-1: Bugfix:    qmon: complex attributes not removeable
+                 Bugtraq:   6252525
+                 Issue:     1625
+                 Changed:   qmon
+                 Review:    RD
+
+AA-2005-05-20-0: Bugfix:    qmon crash (segmentation fault) on Solaris64
+                 Bugtraq:   6250603
+                 Issue:     1541
+                 Changed:   qmon
+                 Review:    CR
+
 CR-2005-05-11-0: Bugfix:    merged bugfix from maintrunk 
                             high CPU load of qmaster even on empty cluster
                  Issue:     1612

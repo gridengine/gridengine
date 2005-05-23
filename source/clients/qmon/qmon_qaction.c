@@ -2947,12 +2947,16 @@ static void qmonQCToggleTW(Widget w, XtPointer cld, XtPointer cad)
       XtSetSensitive(target, set);
       target = XmtNameToWidget(w, "^load_thresholds"); 
       XtSetSensitive(target, set);
+      target = XmtNameToWidget(w, "^load_thresholds_remove"); 
+      XtSetSensitive(target, set);
    }   
 
    if (w == suspend_thresholds_tw) {
       target = XmtNameToWidget(w, "^suspend_thresholds_label"); 
       XtSetSensitive(target, set);
       target = XmtNameToWidget(w, "^suspend_thresholds"); 
+      XtSetSensitive(target, set);
+      target = XmtNameToWidget(w, "^suspend_thresholds_remove"); 
       XtSetSensitive(target, set);
    }   
 
@@ -3121,12 +3125,16 @@ static void qmonQCToggleTW(Widget w, XtPointer cld, XtPointer cad)
       XtSetSensitive(target, set);
       target = XmtNameToWidget(w, "^complexes_ccl"); 
       XtSetSensitive(target, set);
+      target = XmtNameToWidget(w, "^complexes_ccl_remove"); 
+      XtSetSensitive(target, set);
    }   
 
    if (w == subordinate_list_tw ) {
       target = XmtNameToWidget(w, "^subordinate_list_label"); 
       XtSetSensitive(target, set);
       target = XmtNameToWidget(w, "^subordinates_attached"); 
+      XtSetSensitive(target, set);
+      target = XmtNameToWidget(w, "^subordinates_attached_remove"); 
       XtSetSensitive(target, set);
    }   
 
@@ -3174,7 +3182,7 @@ static void qmonQCToggleTW(Widget w, XtPointer cld, XtPointer cad)
 static void qmonQCSetAllTogglesSensitive(Widget w, XtPointer cld, XtPointer cad)
 {
    Widget target;
-   Boolean set = (Boolean) cld;
+   Boolean set = (cld == NULL) ? False : True;
 
    DENTER(GUI_LAYER, "qmonQCSetAllTogglesSensitive");
 

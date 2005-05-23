@@ -1242,46 +1242,52 @@ lListElem *get_attribute_by_name(lListElem* global, lListElem *host, lListElem *
    lListElem *host_el=NULL;
    lListElem *queue_el=NULL;
    lListElem *ret_el = NULL;
-   u_long32 ulc_factor = 0;
-   double lc_factor = 0;
    lList *load_attr = NULL;
    lList *config_attr = NULL;
    lList *actual_attr = NULL; 
 
    DENTER(BASIS_LAYER, "get_attribute_by_name");
 
-   if(global){
+   if (global) {
+      double lc_factor = 0;
       load_attr = lGetList(global, EH_load_list);  
       config_attr = lGetList(global, EH_consumable_config_list);
       actual_attr = lGetList(global, EH_resource_utilization);
 
       /* is there a multiplier for load correction (may be not in qstat, qmon etc) */
       if (lGetPosViaElem(global, EH_load_correction_factor) >= 0) {
-         if ((ulc_factor=lGetUlong(global, EH_load_correction_factor)))
-            lc_factor = ((double)ulc_factor)/100;
+         if ((lc_factor=lGetUlong(global, EH_load_correction_factor)) != 0) {
+            lc_factor = ((double)lc_factor)/100;
+         }   
       }
+      /* SG: this should be an error case */
+      
       global_el = get_attribute(attrname, config_attr, actual_attr, load_attr, 
                                 centry_list, NULL, DOMINANT_LAYER_GLOBAL, 
                                 lc_factor, NULL, false, start_time, duration);
       ret_el = global_el;
    } 
 
-   if(host){
+   if (host) {   
+      double lc_factor = 0;
       load_attr = lGetList(host, EH_load_list); 
       config_attr = lGetList(host, EH_consumable_config_list);
       actual_attr = lGetList(host, EH_resource_utilization);
 
       /* is there a multiplier for load correction (may be not in qstat, qmon etc) */
       if (lGetPosViaElem(host, EH_load_correction_factor) >= 0) {
-         if ((ulc_factor=lGetUlong(host, EH_load_correction_factor)))
-            lc_factor = ((double)ulc_factor)/100;
+         if ((lc_factor=lGetUlong(host, EH_load_correction_factor)) != 0) {
+            lc_factor = ((double)lc_factor)/100;
+         }
       }
+      /* SG: this should be an error case */
       host_el = get_attribute(attrname, config_attr, actual_attr, load_attr, centry_list, NULL, DOMINANT_LAYER_HOST, 
                               lc_factor, NULL, false, start_time, duration);
-      if(!global_el && host_el)
+      if (!global_el && host_el) {
          ret_el = host_el;
-      else if(global_el && host_el){
-         if(is_attr_prior(global_el, host_el)){
+      }   
+      else if (global_el && host_el) {
+         if(is_attr_prior(global_el, host_el)) {
             host_el = lFreeElem(host_el);
          }
          else{
@@ -1291,20 +1297,21 @@ lListElem *get_attribute_by_name(lListElem* global, lListElem *host, lListElem *
       }
    }
 
-   if(queue){
+   if (queue) {
       config_attr = lGetList(queue, QU_consumable_config_list);
       actual_attr = lGetList(queue, QU_resource_utilization);
       
       queue_el = get_attribute(attrname, config_attr, actual_attr, NULL, centry_list, queue, DOMINANT_LAYER_QUEUE, 
                               0.0, NULL, false, start_time, duration);
 
-      if(!ret_el)
+      if (!ret_el) {
          ret_el = queue_el;
-      else if(ret_el && queue_el){
-         if(is_attr_prior(ret_el, queue_el)){
+      }   
+      else if (ret_el && queue_el) {
+         if (is_attr_prior(ret_el, queue_el)) {
             queue_el = lFreeElem(queue_el);
          }
-         else{
+         else {
             ret_el = lFreeElem(ret_el);
             ret_el = queue_el;
          }

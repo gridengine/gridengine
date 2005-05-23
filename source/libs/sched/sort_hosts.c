@@ -104,12 +104,10 @@ int sort_host_list(
 lList *hl,           /* EH_Type */ 
 lList *centry_list   /* CE_Type */
 ) {
-   lListElem *hlp;
-   lListElem *global;
-   const char *host;
+   lListElem *hlp = NULL;
+   lListElem *global = NULL;
+   const char *host = NULL;
    double load;
-/*   lList *tcl = NULL;*/
-
    
    DENTER(TOP_LAYER, "sort_host_list");
 
@@ -159,7 +157,13 @@ lList *centry_list   /* CE_Type */
 *************************************************************************/
 static double scaled_mixed_load( lListElem *global, lListElem *host, const lList *centry_list)
 {
-   char *cp, *tf, *ptr, *ptr2, *par_name, *op_ptr=NULL;
+   char *cp = NULL;
+   char *tf = NULL; 
+   char *ptr = NULL;
+   char *ptr2 = NULL;
+   char *par_name = NULL;
+   char *op_ptr=NULL;
+
    double val=0, val2=0;
    double load=0;
    int op_pos, next_op=LOAD_OP_NONE;
@@ -189,16 +193,16 @@ static double scaled_mixed_load( lListElem *global, lListElem *host, const lList
       /* determine 1st components value           */
       if (!(val = strtol(cp, &ptr, 0)) && ptr == cp) {
          /* it is not an integer ==> it's got to be a load value */
-         if (!(par_name = sge_delim_str(cp,&ptr,load_ops)) ||
-/*               get_load_value(&val, tcl, par_name, source_name)) {*/
+         if (!(par_name = sge_delim_str(cp, &ptr, load_ops)) ||
                get_load_value(&val, global, host, centry_list, par_name)) {
-            if (par_name)
-               free(par_name);
-            free(tf);
+            if (par_name) {
+               FREE(par_name);
+            }   
+            FREE(tf);
             DEXIT;
             return ERROR_LOAD_VAL;
          }
-         free(par_name);
+         FREE(par_name);
          par_name=NULL;
       }
 
@@ -208,7 +212,7 @@ static double scaled_mixed_load( lListElem *global, lListElem *host, const lList
       if (*ptr) {
          /* if the delimiter is not \0 it's got to be a operator -> find it */
          if (!(op_ptr=strchr(load_ops,(int) *ptr))) {
-            free(tf);
+            FREE(tf);
             DEXIT;
             return ERROR_LOAD_VAL;
          }
@@ -228,7 +232,7 @@ static double scaled_mixed_load( lListElem *global, lListElem *host, const lList
                DEXIT;
                return ERROR_LOAD_VAL;
             }
-            free(par_name);
+            FREE(par_name);
             par_name=NULL;
          }
 
@@ -261,7 +265,7 @@ static double scaled_mixed_load( lListElem *global, lListElem *host, const lList
             }
          }     /* switch (op_pos) */
       }     /* if (*ptr) */
-   
+
       /* now we have the intermediate result from the subexpression in
        * between a + or - operator in val. next we've to add or
        * subtract from the current result value.
@@ -282,15 +286,17 @@ static double scaled_mixed_load( lListElem *global, lListElem *host, const lList
             load -= val;
             break;
       }
-      
+
       /* determine next_op from the safety copy of the stripped formula */
-      if (load_formula[cp-tf+strlen(cp)] == '+')
+      if (load_formula[cp-tf+strlen(cp)] == '+') {
          next_op = LOAD_OP_PLUS;
-      else
+      }   
+      else {
          next_op = LOAD_OP_MINUS;
+      }   
    }
 
-   free(tf);
+   FREE(tf);
    DEXIT;
    return load;
 }
@@ -307,7 +313,7 @@ static int get_load_value(double *dvalp, lListElem *global, lListElem *host, con
    lListElem *cep;
 
    DENTER(TOP_LAYER, "get_load_value");
-
+   
    /* search complex */
 
    if(!(cep = get_attribute_by_name(global, host, NULL, attrname, centry_list, DISPATCH_TIME_NOW, 0))){

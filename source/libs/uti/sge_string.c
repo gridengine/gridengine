@@ -543,12 +543,13 @@ void sge_strip_white_space_at_eol(char *str)
 ******************************************************************************/
 char *sge_delim_str(char *str, char **delim_pos, const char *delim) 
 {
-   char *cp, *tstr;
+   char *cp = NULL; 
+   char *tstr = NULL;
 
    DENTER(BASIS_LAYER, "sge_delim_str");
 
    /* we want it non-destructive --> we need a copy of str */
-   if (!(tstr = strdup(str))) {
+   if ((tstr = strdup(str)) == NULL) {
       DEXIT;
       return NULL;
    }
@@ -565,10 +566,12 @@ char *sge_delim_str(char *str, char **delim_pos, const char *delim)
    }
 
    /* cp now either points to a closing \0 or to a delim character */
-   if (*cp)                     /* if it points to a delim character */
+   if (*cp) {                    /* if it points to a delim character */
       *cp = '\0';               /* terminate str with a \0 */
-   if (delim_pos)               /* give back delimiting position for name */
+   }   
+   if (delim_pos) {               /* give back delimiting position for name */
       *delim_pos = str + strlen(tstr);
+   }   
    /* delim_pos either points to the delimiter or the closing \0 in str */
 
    DEXIT;

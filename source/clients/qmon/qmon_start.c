@@ -138,10 +138,10 @@ Widget parent
       }
       if (!defaultFontList) {
          XmFontListEntry entry = XmFontListEntryLoad(XtDisplay(parent),
-                                    "-*-helvetica-medium-r-*-*-*-60-*-*-*-*-*-*",
+                                    "-*-helvetica-medium-r-*-*-*-*-*-*-*-*-*-*",
                                     XmFONT_IS_FONT,
                                     XmFONTLIST_DEFAULT_TAG);
-         DPRINTF(("Using font set: -*-helvetica-medium-r-*-*-*-60-*-*-*-*-*-*\n"));
+         DPRINTF(("Using font set: -*-helvetica-medium-r-*-*-*-*-*-*-*-*-*-*\n"));
          defaultFontList = XmFontListAppendEntry(NULL, entry);
          XmFontListEntryFree(&entry);
       }   

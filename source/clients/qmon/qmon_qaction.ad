@@ -330,16 +330,25 @@ Qmon*load_threshold_config.xmtChildren: \
    Matrix_2xN     suspend_thresholds = suspend_thresholds; \
    Spinbox        suspend_nsuspend = nsuspend; \
    InputField     suspend_interval = suspend_interval; \
-   XmPushButton   suspend_intervalPB;
+   XmPushButton   suspend_intervalPB, load_thresholds_remove, \
+			      suspend_thresholds_remove;
 
 Qmon*load_threshold_config.layout: \
    Row { \
       Etched Through Caption tl "@{@fBLoad Thresholds}" Col { \
-         Margin 10 Centered load_thresholds \
+         Row { \
+			   Margin 10 Centered load_thresholds \
+			   ## \
+			   Fixed Centered load_thresholds_remove \
+		   } \
       } \
       ## \
       Equal Etched Through Caption tl "@{@fBSuspend Thresholds}" Row { \
-         Margin 10 Centered suspend_thresholds \
+         Row { \
+            Margin 10 Centered suspend_thresholds \
+            ## \
+            Fixed Centered suspend_thresholds_remove \
+         } \
          ### \
          Margin 10 Col { \
             Caption tl "@{@fISuspend interval}" Row { \
@@ -365,6 +374,10 @@ Qmon*qc_dialog*load_thresholds*qc_menu.items: \
    ------;\
    "@{_Delete}" [Ctrl-D] DeleteLines(*load_thresholds);
 
+Qmon*qc_dialog*load_threshold_config*load_thresholds_remove.labelType: PIXMAP
+Qmon*qc_dialog*load_threshold_config*load_thresholds_remove.labelPixmap: trashcan
+Qmon*qc_dialog*load_threshold_config*load_thresholds_remove.activateCallback: DeleteLines(*load_thresholds);
+
 Qmon*qc_dialog*load_thresholds.enterCellCallback: \
       ColumnZeroNoEdit();
 
@@ -375,6 +388,10 @@ Qmon*qc_dialog*suspend_thresholds*qc_menu.items: \
    Title "@{@fBOperations}"; \
    ------;\
    "@{_Delete}" [Ctrl-D] DeleteLines(*suspend_thresholds);
+
+Qmon*qc_dialog*load_threshold_config*suspend_thresholds_remove.labelType: PIXMAP
+Qmon*qc_dialog*load_threshold_config*suspend_thresholds_remove.labelPixmap: trashcan
+Qmon*qc_dialog*load_threshold_config*suspend_thresholds_remove.activateCallback: DeleteLines(*suspend_thresholds);
 
 Qmon*qc_dialog*suspend_thresholds.enterCellCallback: \
       ColumnZeroNoEdit();
@@ -426,7 +443,7 @@ Qmon*complexes_config.xmtChildren: \
    StringList     complexes_attached = complex_list; \
    XmScrolledList complexes_available; \
    Matrix_2xN     complexes_ccl = consumable_config_list; \
-   XmPushButton   complexes_dialog, complexes_add, complexes_remove;
+   XmPushButton   complexes_dialog, complexes_add, complexes_remove, complexes_ccl_remove;
 
 Qmon*complexes_config.layout: \
    Row { \
@@ -443,8 +460,9 @@ Qmon*complexes_config.layout: \
          Fixed Caption tl "@{Attached Complexes}" 3 in complexes_attached \
       } \
       ## \
-      Etched Through Caption tc "@{@fBConsumables/Fixed Attributes}" Col { \
+      Etched Through Caption tc "@{@fBConsumables/Fixed Attributes}" Row { \
          Margin 10 Centered complexes_ccl \
+         Fixed Centered complexes_ccl_remove \
       } \
    }
 
@@ -477,17 +495,25 @@ Qmon*qc_dialog*complexes_ccl*qc_menu.items: \
    ------;\
    "@{_Delete}" [Ctrl-D] DeleteLines(*complexes_ccl);
 
+Qmon*qc_dialog*complexes_ccl_remove.labelType: PIXMAP
+Qmon*qc_dialog*complexes_ccl_remove.labelPixmap: trashcan
+Qmon*qc_dialog*complexes_ccl_remove.activateCallback: DeleteLines(*complexes_ccl);
+
+
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!! subordinate list 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 Qmon*qc_dialog.qc_folder.subordinates_config.tabLabel: @{@fBSubordinates}
 Qmon*qc_dialog.qc_folder.subordinates_config.xmtChildren: \
-   Matrix_2xN      subordinates_attached = subordinate_list;
+   Matrix_2xN      subordinates_attached = subordinate_list; \
+   XmPushButton    subordinates_attached_remove;
 
 Qmon*qc_dialog.qc_folder.subordinates_config.layout: \
    Row { \
       subordinates_attached \
+      ## \
+      Fixed Centered subordinates_attached_remove \
       ##### \
       "@{qaction.max_slots.If 'Max Slots' are filled in the current queue,\nthe queues in column one are suspended.}" \
       <> \
@@ -524,6 +550,10 @@ Qmon*subordinates_attached*del_menu.items: \
    Title "@{@fBOperations}"; \
    ------;\
    "@{_Delete}" [Ctrl-D] DeleteLines(*subordinates_attached);
+
+Qmon*qc_dialog*subordinates_config*subordinates_attached_remove.labelType: PIXMAP
+Qmon*qc_dialog*subordinates_config*subordinates_attached_remove.labelPixmap: trashcan
+Qmon*qc_dialog*subordinates_config*subordinates_attached_remove.activateCallback: DeleteLines(*subordinates_attached);
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!! (x)access list 

@@ -1,4 +1,13 @@
-AA-2005-05-23-1: Bugfix:    Have the Queue Instances tab within Qmon display queues in alphabetical order (like 5.3 did with the queue tab)
+SG-2005-05-23-1: Bugfix:    job_load_adjustements is not correctly 
+                            working when parallel jobs are submitted.
+                 Changed:   scheduler
+                 Issue:     1620
+                 Bugtraq:   6268707
+                 Review:    EB
+
+AA-2005-05-23-1: Bugfix:    Have the Queue Instances tab within Qmon 
+                            display queues in alphabetical order 
+                            (like 5.3 did with the queue tab)
                  Issue:     1602
                  Changed:   qmon
                  Review:    CR

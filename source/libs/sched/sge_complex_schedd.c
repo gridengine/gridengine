@@ -1248,8 +1248,6 @@ lListElem *get_attribute_by_name(lListElem* global, lListElem *host, lListElem *
    lListElem *host_el=NULL;
    lListElem *queue_el=NULL;
    lListElem *ret_el = NULL;
-   u_long32 ulc_factor = 0;
-   double lc_factor = 0;
    lList *load_attr = NULL;
    lList *config_attr = NULL;
    lList *actual_attr = NULL; 
@@ -1257,14 +1255,15 @@ lListElem *get_attribute_by_name(lListElem* global, lListElem *host, lListElem *
    DENTER(BASIS_LAYER, "get_attribute_by_name");
 
    if(global){
+      double lc_factor = 0;
       load_attr = lGetList(global, EH_load_list);  
       config_attr = lGetList(global, EH_consumable_config_list);
       actual_attr = lGetList(global, EH_resource_utilization);
 
       /* is there a multiplier for load correction (may be not in qstat, qmon etc) */
       if (lGetPosViaElem(global, EH_load_correction_factor) >= 0) {
-         if ((ulc_factor=lGetUlong(global, EH_load_correction_factor)))
-            lc_factor = ((double)ulc_factor)/100;
+         if ((lc_factor=lGetUlong(global, EH_load_correction_factor)))
+            lc_factor = ((double)lc_factor)/100;
       }
       global_el = get_attribute(attrname, config_attr, actual_attr, load_attr, 
                                 centry_list, NULL, DOMINANT_LAYER_GLOBAL, 
@@ -1273,14 +1272,15 @@ lListElem *get_attribute_by_name(lListElem* global, lListElem *host, lListElem *
    } 
 
    if(host){
+      double lc_factor = 0;
       load_attr = lGetList(host, EH_load_list); 
       config_attr = lGetList(host, EH_consumable_config_list);
       actual_attr = lGetList(host, EH_resource_utilization);
 
       /* is there a multiplier for load correction (may be not in qstat, qmon etc) */
       if (lGetPosViaElem(host, EH_load_correction_factor) >= 0) {
-         if ((ulc_factor=lGetUlong(host, EH_load_correction_factor)))
-            lc_factor = ((double)ulc_factor)/100;
+         if ((lc_factor=lGetUlong(host, EH_load_correction_factor)))
+            lc_factor = ((double)lc_factor)/100;
       }
       host_el = get_attribute(attrname, config_attr, actual_attr, load_attr, centry_list, NULL, DOMINANT_LAYER_HOST, 
                               lc_factor, NULL, false, start_time, duration);

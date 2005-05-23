@@ -4980,30 +4980,30 @@ static int job_run_sequence_verify(int pos, char *all_jobids[], int *order[])
 #define NUMBER_CHUNK 5
 static int **job_run_sequence_parse(char *jrs_str)
 {
-   char *s, *group_str;
+   char *s = NULL, *group_str = NULL;
 
    /* control outer loop */
-   char *iter_dash = NULL;
+   char *jrs_str_cp = strdup(jrs_str);
+   char  *iter_dash = NULL;
    int **sequence = NULL;
    int groups_total = GROUP_CHUNK;
    int groups_used = 0;
    int i = 0;
 
-   /* control inner loop */
-   char *iter_comma;
-   int *group;
-   int numbers_total;
-   int numbers_used;
-   int j;
 
-
-   printf("parsing sequence: \"%s\"\n", jrs_str);
+   printf("parsing sequence: \"%s\"\n", jrs_str_cp);
 
    sequence = malloc(sizeof(int *)*(GROUP_CHUNK+1));
 
    /* groups are delimited by dashes '-' */
-   for (group_str=strtok_r(jrs_str, "-", &iter_dash); group_str; group_str=strtok_r(NULL, "-", &iter_dash)) {
+   for (group_str=strtok_r(jrs_str_cp, "-", &iter_dash); group_str; group_str=strtok_r(NULL, "-", &iter_dash)) {
 
+   char  *iter_comma = NULL;
+   int *group;
+   int numbers_total;
+   int numbers_used;
+   int j = 0;
+   
       if (++groups_used > groups_total) {
          groups_total += GROUP_CHUNK;
          sequence = realloc(sequence, groups_total+1);
@@ -5013,8 +5013,6 @@ static int **job_run_sequence_parse(char *jrs_str)
       numbers_used = 0;
 
       group = malloc(sizeof(int *)*(NUMBER_CHUNK+1));
-      iter_comma = NULL;
-      j = 0;
 
       /* sequence numbers within a group are delimited by comma ',' */
       for (s=strtok_r(group_str, ",", &iter_comma); s; s=strtok_r(NULL, ",", &iter_comma)) {
@@ -5033,6 +5031,9 @@ static int **job_run_sequence_parse(char *jrs_str)
       i++;
    }
    sequence[i] = NULL;
+   
+   free(jrs_str_cp);
+   jrs_str_cp = NULL;
 
    return sequence;
 }

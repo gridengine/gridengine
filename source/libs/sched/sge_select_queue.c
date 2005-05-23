@@ -4732,7 +4732,6 @@ ri_time_by_slots(const sge_assignment_t *a, lListElem *rep, lList *load_attr, lL
 
       monitor_dominance(dom_str, DOMINANT_TYPE_CONSUMABLE | layer);
       sge_dstring_sprintf(&availability, "%s:%s=%f", dom_str, attrname, total - util);
-         
       sge_dstring_append(reason, MSG_SCHEDD_ITOFFERSONLY);
       sge_dstring_append(reason, availability_text);
 

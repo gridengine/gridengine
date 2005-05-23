@@ -1,3 +1,7 @@
+SG-2005-05-22-0: Bugfix:    test_drmaa sec faulted on linux.
+                 Changed:   test_drmaa
+                 Review:    JG 
+
 AA-2005-05-20-1: Bugfix:    qmon: complex attributes not removeable
                  Bugtraq:   6252525
                  Issue:     1625
@@ -26,7 +30,7 @@ SG-2005-05-12-2: Bugfix:    missleading qstat -j messages in case of rr
                  BugTraq:   6252469
                  Issue:     1547
                  Changed:   scheduler
-                 Review:    pending
+                 Review:    RD
 
 RD-2005-05-19-1: Bugfix:    qstat -j "" results in a segmentation fault
                  BugTraq:   6273006
@@ -42,7 +46,7 @@ RD-2005-05-19-0: Bugfix:    qrsh/qsh/qlogin reject -js option
 
 SG-2005-05-19-1: Bugfix:    incomplete resource reservation with array jobs
                  Changed:   scheduler
-                 Review:    pending
+                 Review:    RD, AH
                  BugTraq:   6260565 
                  Issue:     1583
                  

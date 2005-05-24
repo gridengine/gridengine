@@ -1,3 +1,5 @@
+JG-2005-05-24-0: Testsuite: Fixed installation of SGE 5.3 as non root user.
+
 SG-2005-05-23-1: Bugfix:    job_load_adjustements is not correctly 
                             working when parallel jobs are submitted.
                  Changed:   scheduler

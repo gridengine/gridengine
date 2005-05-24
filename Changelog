@@ -1,3 +1,10 @@
+MD-2005-05-24-0: Enhancm.:  - windows support
+                            - windows domain user access support
+                            - admin_user creation on windows exechosts
+                            - Unix Domain to Windows Domain mapping
+                 Changed:   install_modules
+                 Review:    HP
+           
 RD-2005-05-23-0: Bugfix:    execd auto_install performance bottleneck
                  Changed:   install modules
                  Bugster:   6272451

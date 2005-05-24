@@ -256,6 +256,11 @@ BINFILES="sge_coshepherd \
           qhost qlogin qmake qmod qmon qresub qrls qrsh qselect qsh \
           qstat qsub qtcsh qping"
 
+WINBINFILES="sge_coshepherd sge_execd sge_shepherd  \
+             qacct qalter qconf qdel qhold qhost qlogin \
+             qmake qmod qresub qrls qrsh qselect qsh \
+             qstat qsub qtcsh qping qloadsensor.exe sgepasswd"
+
 UTILFILES="adminrun checkprog checkuser filestat gethostbyaddr gethostbyname \
            gethostname getservbyname loadcheck now qrsh_starter rlogin rsh rshd \
            testsuidroot uidgid infotext"
@@ -263,8 +268,7 @@ UTILFILES="adminrun checkprog checkuser filestat gethostbyaddr gethostbyname \
 THIRD_PARTY_FILES="openssl"
 
 if [ $SGE_ARCH = "win32-x86" ]; then
-   WINBINFILES="qloadsensor.exe"
-   BINFILES="$BINFILES $WINBINFILES"
+   BINFILES="$WINBINFILES"
 fi
 
    missing=false
@@ -279,7 +283,7 @@ fi
    #echo $CSP
 
    for f in $THIRD_PARTY_FILES; do
-      if [ $f = openssl -a $CSP = true ]; then
+      if [ $f = openssl -a "$CSP" = true ]; then
          if [ ! -f $SGE_UTILBIN/$f ]; then
            missing=true
            $INFOTEXT "missing program >%s< in directory >%s<" $f $SGE_BIN
@@ -298,21 +302,38 @@ fi
    done
 
    if [ $missing = true ]; then
-      $INFOTEXT "\nMissing Grid Engine binaries!\n\n" \
-      "A complete installation needs the following binaries in >%s<:\n\n" \
-      "qacct           qlogin          qrsh            sge_shepherd\n" \
-      "qalter          qmake           qselect         sge_coshepherd\n" \
-      "qconf           qmod            qsh             sge_execd\n" \
-      "qdel            qmon            qstat           sge_qmaster\n" \
-      "qhold           qresub          qsub            sge_schedd\n" \
-      "qhost           qrls            qtcsh           sge_shadowd\n" \
-      "qping\n\n" \
-      "The binaries in >%s< are:\n\n" \
-      "adminrun       gethostbyaddr  loadcheck      rlogin         uidgid\n" \
-      "checkprog      gethostbyname  now            rsh            infotext\n" \
-      "checkuser      gethostname    openssl        rshd\n" \
-      "filestat       getservbyname  qrsh_starter   testsuidroot\n\n" \
-      "Installation failed. Exit.\n" $SGE_BIN $SGE_UTILBIN
+      if [ "$SGE_ARCH" = "win32-x86" ]; then
+         $INFOTEXT "\nMissing Grid Engine binaries!\n\n" \
+         "A complete installation needs the following binaries in >%s<:\n\n" \
+         "qacct           qlogin          qrsh            sge_shepherd\n" \
+         "qalter          qmake           qselect         sge_coshepherd\n" \
+         "qconf           qmod            qsh             sge_execd\n" \
+         "qdel            qmon            qstat           qhold\n" \
+         "qresub          qsub            qhost           qrls\n" \
+         "qtcsh           qping           sgepasswd       qloadsensor.exe\n\n" \
+         "The binaries in >%s< are:\n\n" \
+         "adminrun       gethostbyaddr  loadcheck      rlogin         uidgid\n" \
+         "checkprog      gethostbyname  now            rsh            infotext\n" \
+         "checkuser      gethostname    openssl        rshd\n" \
+         "filestat       getservbyname  qrsh_starter   testsuidroot\n\n" \
+         "Installation failed. Exit.\n" $SGE_BIN $SGE_UTILBIN
+      else
+         $INFOTEXT "\nMissing Grid Engine binaries!\n\n" \
+         "A complete installation needs the following binaries in >%s<:\n\n" \
+         "qacct           qlogin          qrsh            sge_shepherd\n" \
+         "qalter          qmake           qselect         sge_coshepherd\n" \
+         "qconf           qmod            qsh             sge_execd\n" \
+         "qdel            qmon            qstat           sge_qmaster\n" \
+         "qhold           qresub          qsub            sge_schedd\n" \
+         "qhost           qrls            qtcsh           sge_shadowd\n" \
+         "qping\n\n" \
+         "The binaries in >%s< are:\n\n" \
+         "adminrun       gethostbyaddr  loadcheck      rlogin         uidgid\n" \
+         "checkprog      gethostbyname  now            rsh            infotext\n" \
+         "checkuser      gethostname    openssl        rshd\n" \
+         "filestat       getservbyname  qrsh_starter   testsuidroot\n\n" \
+         "Installation failed. Exit.\n" $SGE_BIN $SGE_UTILBIN
+      fi
 
       $INFOTEXT -log "\nMissing Grid Engine binaries!\n\n" \
       "A complete installation needs the following binaries in >%s<:\n\n" \

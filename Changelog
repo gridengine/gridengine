@@ -1,3 +1,9 @@
+RD-2005-05-23-0: Bugfix:    execd auto_install performance bottleneck
+                 Changed:   install modules
+                 Bugster:   6272451
+                 Issue:     1627
+                 Review:    MD
+
 SG-2005-05-23-1: Bugfix:    job_load_adjustements is not correctly 
                             working when parallel jobs are submitted.
                  Changed:   scheduler

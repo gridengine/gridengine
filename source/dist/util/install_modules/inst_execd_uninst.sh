@@ -100,7 +100,7 @@ DisableQueue()
 {
    exechost=$1
 
-   for q in `qstat -f | grep $exechost | cut -d" " -f1`; do
+   for q in `qstat -F -l h=$exechost | grep qname | cut -d"=" -f2`; do
 
      $INFOTEXT "Disabling queue %s now" $q
      $INFOTEXT -log "Disabling queue %s now" $q
@@ -115,7 +115,7 @@ SuspendQueue()
 {
    exechost=$1
 
-   for q in `qstat -f | grep $exechost | cut -d" " -f1`; do
+   for q in `qstat -F -l h=$exechost | grep qname | cut -d"=" -f2`; do
 
      $INFOTEXT "Suspending queue %s now" $q
      $INFOTEXT -log "Suspending queue %s now" $q
@@ -130,7 +130,7 @@ SuspendJobs()
 {
    exechost=$1
 
-   for q in `qstat -f | grep $exechost | cut -d" " -f1`; do
+   for q in `qstat -F -l h=$exechost | grep qname | cut -d"=" -f2`; do
 
      $INFOTEXT "Suspending Checkpointing Jobs on queue %s now!" $q 
      $INFOTEXT -log "Suspending Checkpointing Jobs on queue %s now!" $q 
@@ -144,7 +144,7 @@ RescheduleJobs()
 {
    exechost=$1
 
-   for q in `qstat -f | grep $exechost | cut -d" " -f1`; do
+   for q in `qstat -F -l h=$exechost | grep qname | cut -d"=" -f2`; do
 
      $INFOTEXT "Rescheduling Jobs on queue %s now!" $q 
      $INFOTEXT -log "Rescheduling Jobs on queue %s now!" $q 
@@ -152,7 +152,7 @@ RescheduleJobs()
 
    done
 
-   for q in `qstat -f | grep $exechost | cut -d" " -f1`; do
+   for q in `qstat -F -l h=$exechost | grep qname | cut -d"=" -f2`; do
 
      $INFOTEXT "There are still running jobs on %s!" $q
      $INFOTEXT -log "There are still running jobs on %s!" $q
@@ -162,7 +162,7 @@ RescheduleJobs()
 
    done
 
-   for q in `qstat -f | grep $exechost | cut -d" " -f1`; do
+   for q in `qstat -F -l h=$exechost | grep qname | cut -d"=" -f2`; do
 
      $INFOTEXT "There are still running jobs on %s!" $q
      $INFOTEXT -log "There are still running jobs on %s!" $q
@@ -181,7 +181,7 @@ RemoveQueues()
 {
    exechost=$1
 
-   for q in `qstat -f | grep $exechost | cut -d" " -f1`; do
+   for q in `qstat -F -l h=$exechost | grep qname | cut -d"=" -f2`; do
 
      $INFOTEXT "Deleting queue %s!" $q
      $INFOTEXT -log "Deleting queue %s!" $q

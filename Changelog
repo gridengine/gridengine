@@ -275,7 +275,7 @@ AH-2005-05-02-0: Bugfix:    qrsh shouldn't block SIGTSTP
                  Changes:   qsh, qrsh, qlogin
 
 
-AS-2005-05-92-0: CVS        Created V60u4win_{TAG,BRANCH}
+AS-2005-05-02-0: CVS        Created V60u4win_{TAG,BRANCH}
 ---------------------------------------------------------
 
 CR-2005-05-02-1: Testsuite: o Fixed bug in testsuite test
@@ -348,9 +348,6 @@ JG-2005-04-26-0: Testsuite: Fixed testsuite startup for SGE(EE) 5.3 clusters.
 
 CR-2005-04-26-0: Testsuite: enhanced functional/consumable_resources test
                             to install 2 load sensors
-
-AS-2005-04-26-0: CVS        Created V60u4_TAG
----------------------------------------------
 
 AA-2005-04-25-0: Bugfix:    Can't select 'slots' in select box when adding 
                             consumables for execution host

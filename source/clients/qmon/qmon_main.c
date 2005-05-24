@@ -63,6 +63,7 @@
 #include "sge_feature.h"
 #include "sge_prog.h"
 #include "sge_mt_init.h"
+#include "version.h"
 
 #ifdef REPLAY_XT
 #include "ReplayXt.h"
@@ -211,8 +212,12 @@ char **argv
    strcpy(progname, argv[0]);
    
    /* GENERAL SGE SETUP */
-   if (!(argc > 1 && !strcmp(argv[1], "-help")))
-      qmonInitSge(progname);
+   if (!(argc > 1 && !strcmp(argv[1], "-help"))) {
+      qmonInitSge(progname, 0);
+   } else {  
+      /* -help */
+      qmonInitSge(progname, 1);
+   }
 
    SGE_ROOT = sge_get_root_dir(0, NULL, 0, 1);
 
@@ -472,7 +477,8 @@ static void qmonUsage(Widget w)
 
    sge_dstring_init(&ds, buffer, sizeof(buffer));
 
-   printf("%s\n", feature_get_product_name(FS_SHORT_VERSION, &ds));
+   printf("%s %s\n", GE_SHORTNAME, GDI_VERSION);
+/*    printf("%s\n", feature_get_product_name(FS_SHORT_VERSION, &ds)); */
    printf(XmtLocalize2(w, "usage: qmon\n", "qmon_usage", "usageTitle"));
    printf("	[-cmap]                           ");
    printf(XmtLocalize2(w, "use own colormap\n", "qmon_usage", "cmapOption"));

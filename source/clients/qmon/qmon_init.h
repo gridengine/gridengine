@@ -38,7 +38,7 @@
 
 void qmonLoadIcons(void); 
 Pixmap qmonGetIcon(String name);
-void qmonInitSge(char *progname);
+void qmonInitSge(char *progname, int usage);
 void qmonAllocColor(Widget w);
 void qmonCreateGC(Widget top);
 void qmonExitCB(Widget w, XtPointer cld, XtPointer cad);

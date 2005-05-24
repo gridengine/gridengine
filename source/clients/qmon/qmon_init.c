@@ -227,7 +227,7 @@ String name
 
 
 /*-------------------------------------------------------------------------*/
-void qmonInitSge( char *progname) 
+void qmonInitSge( char *progname, int usage) 
 {
    int error = 0;
    int endless_loop = 0;
@@ -244,8 +244,10 @@ void qmonInitSge( char *progname)
    }
    log_state_set_log_gui(True);
    sge_gdi_param(SET_MEWHO, QMON, NULL);
-   sge_gdi_param(SET_ISALIVE, 1, NULL);
-   if ((error=sge_gdi_setup(prognames[QMON], &alp))) {
+   if (!usage) {
+      sge_gdi_param(SET_ISALIVE, 1, NULL);
+   }   
+   if ((error=sge_gdi_setup(prognames[QMON], &alp)) != AE_OK) {
       answer_list_output(&alp);
       
       if ( sge_get_master(0) != NULL) {

@@ -1,3 +1,8 @@
+MD-2005-05-24-1: Bugfix:    shadow_masters file could not be created on 
+                            user root=nobody mounted fs
+                 Changed:   inst_sge
+                 Review:    pending
+
 AA-2005-05-24-1: Bugfix:    usage output
                  Changed:   qmon
 

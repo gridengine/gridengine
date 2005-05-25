@@ -79,7 +79,7 @@ static char execd_messages_file[SGE_PATH_MAX];
 void sge_setup_sge_execd(const char* tmp_err_file_name)
 {
    char err_str[1024];
-   int allowed_get_conf_errors     = 3;
+   int  allowed_get_conf_errors = 3;
 
    DENTER(TOP_LAYER, "sge_setup_sge_execd");
 
@@ -95,7 +95,7 @@ void sge_setup_sge_execd(const char* tmp_err_file_name)
    /*
    ** switch to admin user
    */
-   if (sge_set_admin_username(bootstrap_get_admin_user(), err_str)) {
+   if(sge_set_admin_username(bootstrap_get_admin_user(), err_str)) {
       CRITICAL((SGE_EVENT, err_str));
       SGE_EXIT(1);
    }

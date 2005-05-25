@@ -350,10 +350,14 @@ void shepherd_write_exit_status( const char *exit_status )
 		/* set euid=0. Local files: root can write to every file.
 		 * NFS files: everyone is allowed to write to exit_status file.
 		 */
-		if( getuid()==0 ) {
-			old_euid = geteuid();
+      if(sge_is_id_superuser(getuid())) {
+         old_euid = geteuid();
+#if defined( INTERIX )
+         seteuid(wl_get_superuser_id());
+#else
          seteuid(0);
-		}	
+#endif
+      }
 		/* File was closed (e.g. by an exec()) but fp was not set to NULL */
 		if( shepherd_exit_status_fp 
 	    	 && fstat( fileno( shepherd_exit_status_fp ), &statbuf )==-1
@@ -368,7 +372,7 @@ void shepherd_write_exit_status( const char *exit_status )
 		} else {
          shepherd_trace("could not write exit_status file\n");
       }
-		if( old_euid!=0 ) {
+		if(!sge_is_id_superuser(old_euid)) {
 			seteuid( old_euid );
 		}
       /* There are cases where we have to open and close the files 
@@ -542,7 +546,7 @@ static FILE* shepherd_trace_init_intern( st_shepherd_file_t shepherd_file )
          shepherd_panic(buffer);
       }
 
-		if( getuid()==0 ) {
+      if(sge_is_id_superuser(getuid())) {
          /* We must give the file to the job owner later */
 			do_chown = 1;
 		} else {
@@ -570,9 +574,13 @@ static FILE* shepherd_trace_init_intern( st_shepherd_file_t shepherd_file )
        * It can't be done here because we don't know if we are in 
        * case a) (exec failed) or case b) (after execution of prolog/job).
        */
-      if( getuid()==0 ) {
+      if(sge_is_id_superuser(getuid())) {
          old_euid = geteuid();
+#if defined( INTERIX )
+         seteuid(wl_get_superuser_id());
+#else
          seteuid(0);
+#endif
       }
 
       fd = open( tmppath, O_RDWR | O_APPEND );
@@ -582,9 +590,9 @@ static FILE* shepherd_trace_init_intern( st_shepherd_file_t shepherd_file )
          shepherd_panic(buffer);
       }
 
-      if( old_euid>0 ) {
-         seteuid( old_euid );
-      }
+		if(!sge_is_id_superuser(old_euid)) {
+			seteuid( old_euid );
+		}
       do_chown = 0;
 	}
 
@@ -650,7 +658,7 @@ static void shepherd_trace_chown_intern( const char* job_owner, FILE* fp,
       
       /* If uid != 0, the system is installed as a test user system.
        * We don't have to change any file ownerships there. */
-		if( getuid()==0 ) {
+		if(sge_is_id_superuser(getuid())) {
 			/* root */
 			strcpy( g_job_owner, job_owner );
 			if( sge_user2uid( job_owner, &jobuser_id, 1 )==0 )
@@ -662,7 +670,11 @@ static void shepherd_trace_chown_intern( const char* job_owner, FILE* fp,
              * to change the ownership of a file. 
  	 	 	 	 */
 				old_euid = geteuid();
-				seteuid( 0 );
+#if defined( INTERIX )
+            seteuid(wl_get_superuser_id());
+#else
+				seteuid(0);
+#endif
            
             /* Have to use chown() here, because fchown() has some bugs
              * on True64 and Irix.*/
@@ -672,7 +684,7 @@ static void shepherd_trace_chown_intern( const char* job_owner, FILE* fp,
                 * other chance than open the file for writing for everyone. 
                 * We must do this as file owner = admin user.
 	    	 	 	 */
-					seteuid( old_euid );
+					seteuid(old_euid);
 	   			if( fchmod( fd, 0666 )==-1) {
                   sprintf(buffer, "can't fchmod(fd, 0666): %s\n", strerror(errno));
                   shepherd_panic(buffer);
@@ -692,7 +704,7 @@ static void shepherd_trace_chown_intern( const char* job_owner, FILE* fp,
                   g_keep_files_open = false;
                }
             }
-				seteuid( old_euid );
+				seteuid(old_euid);
 			} else {
 				/* Can't get jobuser_id -> grant access for everyone */
 				if (fchmod( fd, 0666 )==-1) {

@@ -48,6 +48,9 @@
 #include "msg_common.h"
 #include "msg_utilib.h"
 
+#if defined( INTERIX )
+#   include "misc.h"
+#endif
 
 #define UIDGID_LAYER CULL_LAYER 
 
@@ -161,17 +164,23 @@ bool sge_is_start_user_superuser(void)
    DENTER(UIDGID_LAYER, "sge_is_start_user_superuser");
 
    start_uid = getuid();
-#if defined(INTERIX) || defined(WIN32)
-   is_root = wl_is_user_id_superuser(start_uid);
-#else
-   if (start_uid == 0) {
-     is_root = true;
-   }
-#endif
+   is_root = sge_is_id_superuser(start_uid);
 
    DEXIT;
    return is_root;
 } /* sge_is_start_user_superuser() */           
+
+bool sge_is_id_superuser(uid_t id)
+{
+   bool ret=false;
+
+#if defined( INTERIX )
+   ret = wl_is_user_id_superuser(id);
+#else
+   ret = (id == 0);
+#endif
+   return ret;
+}
 
 /****** uti/uidgid/sge_set_admin_username() ***********************************
 *  NAME
@@ -209,9 +218,22 @@ int sge_set_admin_username(const char *user, char *err_str)
    int ret;
    uid_t uid;
    gid_t gid;
+#if defined( INTERIX )
+   char fq_name[1024];
+   char hostname[128];
+#endif
 
    DENTER(UIDGID_LAYER, "sge_set_admin_username");
- 
+
+#if defined( INTERIX ) 
+   /* For Interix: Construct full qualified admin user name.
+    * As admin user is always local, use hostname as domain name.
+    */
+   gethostname(hostname, 1023);
+   snprintf(fq_name, 1023, "%s+%s", hostname, user);
+   user = fq_name;
+#endif
+
    if (get_admin_user(&uid, &gid) != ESRCH) {
       DEXIT;
       return -2;
@@ -280,7 +302,7 @@ int sge_switch2admin_user(void)
       CRITICAL((SGE_EVENT, MSG_SWITCH_USER_NOT_INITIALIZED));
       abort();
    }
- 
+
    if (!sge_is_start_user_superuser()) {
       DPRINTF((MSG_SWITCH_USER_NOT_ROOT));
       ret = 0;
@@ -352,7 +374,7 @@ int sge_switch2start_user(void)
       CRITICAL((SGE_EVENT, MSG_SWITCH_USER_NOT_INITIALIZED));
       abort();
    }
- 
+
    start_uid = getuid();
    start_gid = getgid();
 
@@ -415,13 +437,12 @@ int sge_run_as_user(void)
    int ret = 0;
  
    DENTER(UIDGID_LAYER, "sge_run_as_user");
- 
-   if (geteuid() != getuid()) {
+
+   if(geteuid() != getuid()) {
       if (seteuid(getuid())) {
          ret = -1;
       }
    }
- 
    DEXIT;
    return ret;
 } /* sge_run_as_user() */
@@ -442,7 +463,7 @@ int sge_run_as_user(void)
 *     const char *user - username 
 *     uid_t *uidp      - uid pointer 
 *     int retries      - number of retries 
- *
+*
 *  NOTES
 *     MT-NOTE: sge_user2uid() is MT safe.
 *
@@ -834,29 +855,53 @@ int sge_set_uid_gid_addgrp(const char *user, const char *intermediate_user,
                  user, u32c(pw->pw_uid), min_uid);
          return 1;
       }
- 
-      if (use_qsub_gid) {
-         if (setgid(pw->pw_gid)) {
-            sprintf(err_str, MSG_SYSTEM_SETGIDFAILED_U, u32c(pw->pw_uid));
+
+#if defined( INTERIX )
+      if(wl_use_sgepasswd()) {
+         if(wl_setuser(pw->pw_uid, pw->pw_gid)!=0) {
+            sprintf(err_str, MSG_SYSTEM_SETUIDFAILED_U, u32c(pw->pw_uid));
             return 1;
          }
       }
+      else
+#endif
+      {
+         if (use_qsub_gid) {
+            if (setgid(pw->pw_gid)) {
+               sprintf(err_str, MSG_SYSTEM_SETGIDFAILED_U, u32c(pw->pw_uid));
+               return 1;
+            }
+         }
  
-      if (setuid(pw->pw_uid)) {
-         sprintf(err_str, MSG_SYSTEM_SETUIDFAILED_U , u32c(pw->pw_uid));
-         return 1;
+         if (setuid(pw->pw_uid)) {
+            sprintf(err_str, MSG_SYSTEM_SETUIDFAILED_U , u32c(pw->pw_uid));
+            return 1;
+         }
       }
    } else {
-      if (use_qsub_gid) {
-         if (setgid(pw->pw_gid)) {
-            sprintf(err_str, MSG_SYSTEM_SETGIDFAILED_U , u32c(pw->pw_uid));
+#if defined( INTERIX )
+#if 0
+      if(wl_use_sgepasswd()) {
+         if(wl_setuser(pw->pw_uid, pw->pw_gid)!=0) {
+            sprintf(err_str, MSG_SYSTEM_SETUIDFAILED_U, u32c(pw->pw_uid));
             return 1;
          }
       }
+      else
+#endif
+#endif 
+      {
+         if (use_qsub_gid) {
+            if (setgid(pw->pw_gid)) {
+               sprintf(err_str, MSG_SYSTEM_SETGIDFAILED_U , u32c(pw->pw_uid));
+               return 1;
+            }
+         }
  
-      if (seteuid(pw->pw_uid)) {
-         sprintf(err_str, MSG_SYSTEM_SETEUIDFAILED_U , u32c(pw->pw_uid));
-         return 1;
+         if (seteuid(pw->pw_uid)) {
+            sprintf(err_str, MSG_SYSTEM_SETEUIDFAILED_U , u32c(pw->pw_uid));
+            return 1;
+         }
       }
    }
  
@@ -1158,7 +1203,7 @@ static void set_admin_user(uid_t theUID, gid_t theGID)
    DEXIT;
    return;
 } /* set_admin_user() */
-     
+
 /****** uti/uidgid/get_admin_user() ********************************************
 *  NAME
 *     get_admin_user() -- Get user and group id of admin user.

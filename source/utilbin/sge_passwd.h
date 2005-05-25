@@ -40,8 +40,23 @@ void
 buffer_encrypt(const char *buffer_in, size_t buffer_in_length, 
                char **buffer_out, size_t *buffer_out_size, 
                size_t *buffer_out_length);
-void 
+int 
 buffer_decrypt(const char *buffer_in, size_t buffer_in_length,
                char **buffer_out, size_t *buffer_out_size,
                size_t *buffer_out_length);
+
+int
+password_read_file(char **users[], char**encryped_pwds[], const char *filename);
+
+const char*
+sge_get_file_passwd(void);
+
+int
+password_find_entry(char *users[], char *encryped_pwds[], const char *user);
+
+unsigned char *
+buffer_encode_hex(unsigned char *input, size_t len, unsigned char **output);
+
+unsigned char *
+buffer_decode_hex(unsigned char *buf, size_t *len, unsigned char **outbuf);
 

@@ -41,7 +41,6 @@ UTILIB_DRMAA_SRC = \
          setup_path.c \
          sge_afsutil.c \
          sge_arch.c \
-         sge_base64.c \
          sge_bitfield.c \
          sge_bitop.c \
          sge_bootstrap.c \
@@ -153,10 +152,6 @@ pids_standalone.o: $(UTILIB_DIR)/sge_os.c
 
 sge_crc.o: 	$(UTILIB_DIR)/sge_crc.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_crc.c
-
-sge_base64.o:   $(UTILIB_DIR)/sge_base64.c
-		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_base64.c
-
 
 sge_bitop.o:	$(UTILIB_DIR)/sge_bitop.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_bitop.c

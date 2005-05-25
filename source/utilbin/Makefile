@@ -50,7 +50,8 @@ UTILBIN_SRC =  uidgid.c gethostname.c gethostbyname.c gethostbyaddr.c \
 
 UTILBIN_OBJS  = $(UTILBIN_SRC:.c=.o) 
 
-UTILBIN_TARGET_OBJS = checkprog.o loadcheck.o testsuidroot.o work.o
+UTILBIN_TARGET_OBJS = checkprog.o loadcheck.o testsuidroot.o work.o \
+                      sge_passwd_main.o
 
 ###############################################################################
 # global rules: all, clean, depend, messages

@@ -1,3 +1,7 @@
+HP-2005-05-25-0: Enhancem.: handling for sgepasswd in sge_execd and sge_shepherd.
+                 Changed:   execd, shepherd, sgepasswd, utilities
+                 Review:    EB
+
 MD-2005-05-25-0: Bugfix:    settings file must be sourced for shadow host
                             installation.
                  Changed:   inst_sge

@@ -101,6 +101,10 @@ struct rusage {
 #include "sge_processes_irix.h"
 #endif
 
+#if defined(INTERIX)
+#include "../../../utilbin/sge_passwd.h"
+#endif
+
 #if defined(SOLARIS) || defined(ALPHA)
 /* ALPHA4 only has wait3() prototype if _XOPEN_SOURCE_EXTENDED is defined */
 pid_t wait3(int *, int, struct rusage *);
@@ -542,6 +546,9 @@ int main(int argc, char **argv)
       }
    }
    sge_mt_init();
+#if defined( INTERIX )
+   sge_init_shared_ssl_lib();
+#endif
 	shepherd_trace_init( );
 
    sge_dstring_init(&ds, buffer, sizeof(buffer));
@@ -593,6 +600,9 @@ int main(int argc, char **argv)
          shepherd_error("can't read configuration file: malloc() failure");
       }
    }
+#if defined( INTERIX )
+   wl_set_use_sgepasswd((bool)get_conf_val("enable_windomacc"));
+#endif
 
    /* init admin user stuff */
    admin_user = get_conf_val("admin_user");
@@ -601,7 +611,7 @@ int main(int argc, char **argv)
    }
 
    if (sge_switch2admin_user()) {
-      shepherd_error(err_str);
+      shepherd_error("can't switch to admin user: sge_switch2admin_user() failed");
    }
 
 	/* finalize initialization of shepherd_trace - give the trace file
@@ -905,6 +915,9 @@ int ckpt_type
 
       pid = fork();
       if (pid==0) {
+#ifdef DEBUG
+         printf("childpid=%d\n", (int)getpid());
+#endif
          son(childname, script_file, 0);
       }
    }

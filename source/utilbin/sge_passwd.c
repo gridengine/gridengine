@@ -32,6 +32,8 @@
 
 #include <unistd.h>
 #include <stdio.h>
+
+#if defined( LOAD_OPENSSL )
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <fcntl.h>
@@ -49,17 +51,24 @@
 
 #include "uti/sge_arch.h"
 #include "uti/sge_log.h"
-#include "uti/sge_base64.h"
 #include "uti/sge_unistd.h"
 #include "uti/sge_uidgid.h"
 #include "uti/sge_profiling.h"
 #include "uti/sge_bootstrap.h"
 #include "uti/setup_path.h"
 #include "uti/sge_prog.h"
+#if defined(DEFINE_SGE_PASSWD_MAIN)
 #include "sgermon.h"
+#endif
 
 #include "sge_passwd.h"
 #include "msg_utilbin.h"
+
+#if !defined(DEFINE_SGE_PASSWD_MAIN)
+#define DENTER(x,y)
+#define DPRINTF(x)
+#define DEXIT
+#endif
 
 static void (*shared_ssl_func__X509_free)(X509 *a);
 static void (*shared_ssl_func__EVP_PKEY_free)(EVP_PKEY *pkey);
@@ -181,8 +190,7 @@ sge_init_shared_ssl_lib(void)
         
          ret = 0;
       } else {
-         fprintf(stderr, "%s: unable to open ssl library\n", 
-                 prognames[SGE_PASSWD]);
+         fprintf(stderr, MSG_PWD_CANT_OPEN_SLL_LIB, prognames[SGE_PASSWD]);
          ret = 1;
       }
    } else {
@@ -502,7 +510,7 @@ buffer_encrypt(const char *buffer_in, size_t buffer_in_length,
    DEXIT;
 }
 
-void 
+int
 buffer_decrypt(const char *buffer_in, size_t buffer_in_length,
                char **buffer_out, size_t *buffer_out_size,
                size_t *buffer_out_length)
@@ -524,7 +532,7 @@ buffer_decrypt(const char *buffer_in, size_t buffer_in_length,
 	if (!privateKey) {
 		fprintf(stderr, MSG_PWD_LOAD_PRIV, prognames[SGE_PASSWD], sge_get_file_priv_key());
       DEXIT;
-		exit(1);	
+      return 1;
 	}
 
    memcpy(&ekeylen, curr_ptr, sizeof(ekeylen));
@@ -535,7 +543,7 @@ buffer_decrypt(const char *buffer_in, size_t buffer_in_length,
       shared_ssl_func__EVP_PKEY_free(privateKey);
 		fprintf(stderr, MSG_PWD_DECR, prognames[SGE_PASSWD]);
       DEXIT;
-		exit(1);	
+      return 1;
 	}
 
 	encryptKey = malloc(sizeof(char) * ekeylen);
@@ -543,7 +551,7 @@ buffer_decrypt(const char *buffer_in, size_t buffer_in_length,
       shared_ssl_func__EVP_PKEY_free(privateKey);
       fprintf(stderr, MSG_PWD_MALLOC, prognames[SGE_PASSWD]);
       DEXIT;
-		exit(1);
+      return 1;
 	}
 
    memcpy(encryptKey, curr_ptr, ekeylen);
@@ -588,6 +596,7 @@ buffer_decrypt(const char *buffer_in, size_t buffer_in_length,
    shared_ssl_func__EVP_PKEY_free(privateKey);
 	free(encryptKey);
    DEXIT;
+   return 0;
 }
 
 static int 
@@ -684,9 +693,7 @@ password_find_entry(char *users[], char *encryped_pwds[], const char *user)
    return ret;
 }
 
-#ifdef DEFINE_SGE_PASSWD_MAIN
-
-static const char*
+const char*
 sge_get_file_passwd(void)
 {
    static char file[4096] = "";
@@ -702,6 +709,50 @@ sge_get_file_passwd(void)
    return file;
 }
 
+unsigned char *
+buffer_encode_hex(unsigned char *input, size_t len, unsigned char **output)
+{
+   size_t s;
+
+   s = len * 2 + 1;
+   *output = malloc(s);
+   memset(*output, 0, s);
+
+   for (s = 0; s < len; s++) {
+      char buffer[32] = "";
+      int byte = input[s];
+
+      sprintf(buffer, "%02x", byte);
+      strcat((char*) *output, buffer);
+   }
+   return *output;
+}
+
+unsigned char *
+buffer_decode_hex(unsigned char *input, size_t *len, unsigned char **output) 
+{
+   size_t s;
+
+   s = *len / 2 + 1;
+   *output = malloc(s);
+   memset(*output, 0, s);
+
+   for (s = 0; s < *len; s+=2) {
+      char buffer[32] = "";
+      int byte = 0;
+
+      buffer[0] = input[s];
+      buffer[1] = input[s+1];
+
+      sscanf(buffer, "%02x", &byte);
+      (*output)[s/2] = byte;
+   }
+   *len = *len / 2;
+   return *output;
+}
+
+#ifdef DEFINE_SGE_PASSWD_MAIN
+
 static void
 password_write_file(char *users[], char *encryped_pwds[], const char *filename) 
 {
@@ -710,7 +761,7 @@ password_write_file(char *users[], char *encryped_pwds[], const char *filename)
 
    DENTER(TOP_LAYER, "password_write_file");
    fp = fopen(filename, "w");
-   while (users[i] != NULL) {
+   while (fp && users[i] != NULL) {
       if (users[i][0] != '\0') {
          fprintf(fp, "%s %s\n", users[i], encryped_pwds[i]);
       }
@@ -841,8 +892,10 @@ sge_passwd_show(const char *username)
          buffer_deco_length = strlen(encryped_pwd[i]);
          buffer_decode_base64(encryped_pwd[i], &buffer_deco_length, 0, 
                               &err64, &buffer_deco);
-         buffer_decrypt(buffer_deco, buffer_deco_length, &buffer_decr, 
-                        &buffer_decr_size, &buffer_decr_length);
+         if(buffer_decrypt(buffer_deco, buffer_deco_length, &buffer_decr, 
+                        &buffer_decr_size, &buffer_decr_length)!=0) {
+            exit(1);
+         }
 
          fprintf(stdout, "%s\n", buffer_decr);
 
@@ -934,10 +987,11 @@ sge_passwd_add_change(const char *username, const char *domain)
                            &buffer_deco_length, &buffer_deco);
 #endif
 
-         buffer_decrypt((const char*)buffer_deco, buffer_deco_length, 
+         if(buffer_decrypt((const char*)buffer_deco, buffer_deco_length, 
                         &buffer_decr, 
-                        &buffer_decr_size, &buffer_decr_length);
-
+                        &buffer_decr_size, &buffer_decr_length)!=0) {
+            exit(1);
+         }
          if (strncmp(buffer_decr, old_passwd, 128)) {
             fprintf(stderr, MSG_PWD_AUTH_FAILURE, prognames[SGE_PASSWD]);
             exit(7);
@@ -1066,7 +1120,10 @@ int main(int argc, char *argv[])
       char buffer[1024];
       dstring bw;
 
-      sge_init_shared_ssl_lib();
+      if(sge_init_shared_ssl_lib()!=0) {
+         exit(1);
+      }
+
       shared_ssl_func__ERR_load_crypto_strings();
       sge_dstring_init(&bw, buffer, sizeof(buffer));
       sge_prof_setup();
@@ -1152,6 +1209,17 @@ int main(int argc, char *argv[])
 	return 0;		
 }
 
-#endif
+#endif /* defined( DEFINE_SGE_PASSWD_MAIN ) */
+#else  /* defined( LOAD_OPENSSL ) */
+#if defined( DEFINE_SGE_PASSWD_MAIN )
+
+int main(void)
+{
+   printf("sgepasswd built with option -no-secure and therefore not functional.\n");
+   return 1;
+}
+
+#endif /* defined( DEFINE_SGE_PASSWD_MAIN ) */
+#endif /* defined( LOAD_OPENSSL ) */
 
 

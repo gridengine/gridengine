@@ -411,6 +411,18 @@ int sge_gdi_multi_sync(lList **alpp, int mode, u_long32 target, u_long32 cmd,
               (int)uid, strerror(errno)));
       goto error;
    }
+#if defined( INTERIX )
+   /* Strip Windows domain name from user name */
+   {
+      char *plus_sign;
+
+      plus_sign = strstr(username, "+");
+      if(plus_sign!=NULL) {
+         plus_sign++;
+         strcpy(username, plus_sign);
+      }
+   }
+#endif
    gid = getgid();
    if (sge_gid2group(gid, groupname, sizeof(groupname), 
          MAX_NIS_RETRIES)) {

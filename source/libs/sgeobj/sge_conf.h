@@ -105,6 +105,7 @@ extern bool do_authentication;
 extern bool acct_reserved_usage;
 extern bool sharetree_reserved_usage;
 extern bool keep_active;
+extern bool enable_windomacc;
 extern bool simulate_hosts;
 extern long ptf_max_priority;
 extern long ptf_min_priority;

@@ -944,7 +944,11 @@ static int dispatch_jobs(sge_Sdescr_t *lists, order_t *orders,
 *  FUNCTION
 *     Selects resources for 'job', add appropriate order to the 'orders_list',
 *     debits resources of this job for the next dispatch and sort out no longer
-*     available queues from the 'queue_list'.
+*     available queues from the 'queue_list'. If no assignment can be made and 
+*     reservation scheduling is enabled a reservation assignment is made if 
+*     possible. This is done to prevent lower prior jobs eating up resources 
+*     and thus preventing this job from being started at the earliest point in 
+*     time.
 *
 *  INPUTS
 *     bool is_start  -   try to find a now assignment 

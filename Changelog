@@ -1,3 +1,6 @@
+AH-2005-05-25-0: Bugfix:    Fixed Makefile insufficiencies
+                 Doc:       Added scheduler comments
+
 AA-2005-05-24-1: Bugfix:    usage output
                  Changed:   qmon
 

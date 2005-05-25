@@ -350,7 +350,7 @@ void trace_resources(lList *resources)
 *
 *  INPUTS
 *     sge_assignment_t *best - herein we keep all important in/out information
-*     lList *pe_list         - ??? 
+*     lList *pe_list         - the list of all parallel environments (PE_Type)
 *
 *  RESULT
 *     dispatch_t - 0 ok got an assignment
@@ -927,7 +927,11 @@ sge_select_queue(lList *requested_attr, lListElem *queue, lListElem *host,
 *
 *  FUNCTION
 *     Checks, weather all requests, default requests and implicit requests on this
-*     this level are fulfilled 
+*     this level are fulfilled.
+*
+*     With reservation scheduling the earliest start time due to resources of the 
+*     resource container is the maximum of the earliest start times for all 
+*     resources comprised by the resource container that requested by a job.
 *
 *  INPUTS
 *     lList *requested          - list of attribute requests 
@@ -2636,8 +2640,8 @@ sequential_tag_queues_suitable4job(sge_assignment_t *a)
                lAddElemStr(&skip_queue_list, CTI_name, qname, CTI_Type);
             }
             best_queue_result = find_best_result(result, best_queue_result); 
-         }   
-      } 
+         }
+      }
       else {
          ERROR((SGE_EVENT, MSG_SCHEDD_UNKNOWN_HOST_SS, qname, eh_name));
          if (skip_queue_list != NULL) {
@@ -3270,6 +3274,11 @@ sequential_max_host_slots(sge_assignment_t *a, lListElem *host) {
 *                      lList **ignore_hosts, lList **ignore_queues) 
 *
 *  FUNCTION
+*     For sequential job assignments all the earliest job start time
+*     is determined with each queue instance and the earliest one gets
+*     chosen. Secondary criterion for queue selection minimizing jobs 
+*     soft requests.
+*
 *     The overall behaviour of this function is somewhat dependent on the 
 *     value that gets passed to assignment->start and whether soft requests 
 *     were specified with the job: 
@@ -4558,6 +4567,12 @@ const lList *centry_list
 *
 *  FUNCTION
 *     Checks for one level, if one request is fulfilled or not. 
+* 
+*     With reservation scheduling the earliest start time due to 
+*     availability of the resource instance is determined by ensuring 
+*     non-consumable resource requests are fulfilled or by finding the 
+*     earliest time utilization of a consumable resource is below the
+*     threshold required for the request.
 *
 *  INPUTS
 *     lListElem *rep            - requested attribut 
@@ -4752,6 +4767,46 @@ ri_time_by_slots(const sge_assignment_t *a, lListElem *rep, lList *load_attr, lL
    return ret;                                                       
 }
 
+/****** sge_select_queue/ri_slots_by_time() ************************************
+*  NAME
+*     ri_slots_by_time() -- Determine number of slots avail. within time frame
+*
+*  SYNOPSIS
+*     static dispatch_t ri_slots_by_time(const sge_assignment_t *a, int *slots, 
+*     int *slots_qend, lList *rue_list, lListElem *request, lList *load_attr, 
+*     lList *total_list, lListElem *queue, u_long32 layer, double lc_factor, 
+*     dstring *reason, bool allow_non_requestable, bool no_centry, const char 
+*     *object_name) 
+*
+*  FUNCTION
+*     The number of slots available with a resource can be zero for static
+*     resources or is determined based on maximum utilization within the
+*     specific time frame, the total amount of the resource and the per
+*     task request of the parallel job (ri_slots_by_time())
+*
+*  INPUTS
+*     const sge_assignment_t *a  - ??? 
+*     int *slots                 - Returns maximum slots that can be served 
+*                                  within the specified time frame.
+*     int *slots_qend            - Returns the maximum possible number of slots
+*     lList *rue_list            - Resource utilization (RUE_Type)
+*     lListElem *request         - Job request (CE_Type)
+*     lList *load_attr           - Load information for the resource
+*     lList *total_list          - Total resource amount (CE_Type)
+*     lListElem *queue           - Queue instance (QU_Type) for queue-based resources
+*     u_long32 layer             - DOMINANT_LAYER_{GLOBAL|HOST|QUEUE}
+*     double lc_factor           - load correction factor
+*     dstring *reason            - diagnosis information if no rsrc available
+*     bool allow_non_requestable - ??? 
+*     bool no_centry             - ??? 
+*     const char *object_name    - ??? 
+*
+*  RESULT
+*     static dispatch_t - 
+*
+*  NOTES
+*     MT-NOTE: ri_slots_by_time() is not MT safe 
+*******************************************************************************/
 static dispatch_t
 ri_slots_by_time(const sge_assignment_t *a, int *slots, int *slots_qend, 
    lList *rue_list, lListElem *request, lList *load_attr, lList *total_list, 

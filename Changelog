@@ -1,3 +1,9 @@
+DT-2005-05-25-0: Bugfix:    o Enforced thread safety in DRMAA
+                 Review:    SG
+                 Changed:   DRMAA
+                 Issue:     1632
+                 Bugtraq:   6267238
+
 MD-2005-05-25-1: Bugfix:    refix of MD-2005-05-24-1 (review doc follows)
                  Changed:   inst_sge
                  Review:    HP

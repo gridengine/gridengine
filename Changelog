@@ -1,3 +1,7 @@
+MD-2005-05-25-1: Bugfix:    refix of MD-2005-05-24-1 (review doc follows)
+                 Changed:   inst_sge
+                 Review:    HP
+
 SG-2005-05-25-0: Bugfix:    fix qstat -t again (SG-2005-01-21-0 was not enough)
                  Review:    EB
                  Changed:   qstat
@@ -11,12 +15,12 @@ HP-2005-05-25-0: Enhancem.: handling for sgepasswd in sge_execd and sge_shepherd
 MD-2005-05-25-0: Bugfix:    settings file must be sourced for shadow host
                             installation.
                  Changed:   inst_sge
-                 Review:    pending
+                 Review:    HP
     
 MD-2005-05-24-1: Bugfix:    shadow_masters file could not be created on 
                             user root=nobody mounted fs
                  Changed:   inst_sge
-                 Review:    pending
+                 Review:    HP
 
 AA-2005-05-24-1: Bugfix:    usage output
                  Changed:   qmon

@@ -1482,7 +1482,7 @@ proc create_shell_script { scriptfile
                            { without_start_output 0 }
                          } {
    global ts_config
-   global CHECK_OUTPUT CHECK_PRODUCT_TYPE CHECK_COMMD_PORT CHECK_PRODUCT_ROOT
+   global CHECK_OUTPUT CHECK_PRODUCT_TYPE CHECK_PRODUCT_ROOT
    global CHECK_DEBUG_LEVEL 
  
    upvar $envlist users_env
@@ -1532,12 +1532,12 @@ proc create_shell_script { scriptfile
       puts $script "   unset CODINE_ROOT"
       puts $script "   unset GRD_CELL"
       puts $script "   unset CODINE_CELL"
-      if { [info exists CHECK_COMMD_PORT] } {
-         puts $script "   COMMD_PORT=$CHECK_COMMD_PORT"
+      if { [info exists ts_config(commd_port)] } {
+         puts $script "   COMMD_PORT=$ts_config(commd_port)"
          puts $script "   export COMMD_PORT"
-         puts $script "   SGE_QMASTER_PORT=$CHECK_COMMD_PORT"
+         puts $script "   SGE_QMASTER_PORT=$ts_config(commd_port)"
          puts $script "   export SGE_QMASTER_PORT"
-         set my_execd_port [expr ($CHECK_COMMD_PORT + 1) ]
+         set my_execd_port [expr ($ts_config(commd_port) + 1) ]
          puts $script "   SGE_EXECD_PORT=$my_execd_port"
          puts $script "   export SGE_EXECD_PORT"
       }
@@ -1831,14 +1831,15 @@ proc copy_directory { source target } {
 #     file_procedures/delete_directory()
 #*******************************
 proc cleanup_spool_dir { topleveldir subdir } {
-   global CHECK_COMMD_PORT CHECK_OUTPUT
+   global ts_config
+   global CHECK_OUTPUT
 
    set spooldir "$topleveldir"
 
    puts $CHECK_OUTPUT "->spool toplevel directory is $spooldir"
    
    if { [ file isdirectory $spooldir ] == 1 } {
-      set spooldir "$spooldir/$CHECK_COMMD_PORT"
+      set spooldir "$spooldir/$ts_config(commd_port)"
       if { [ file isdirectory $spooldir ] != 1 } { 
           puts $CHECK_OUTPUT "creating directory \"$spooldir\""
           file mkdir $spooldir
@@ -1966,14 +1967,15 @@ proc check_local_spool_directories { { do_delete 0 } } {
 #     file_procedures/cleanup_spool_dir()
 #*******************************************************************************
 proc cleanup_spool_dir_for_host { hostname topleveldir subdir } {
-   global CHECK_COMMD_PORT CHECK_OUTPUT CHECK_DEBUG_LEVEL
+   global ts_config
+   global CHECK_OUTPUT
 
    set spooldir "$topleveldir"
 
    puts $CHECK_OUTPUT "->spool toplevel directory is $spooldir"
    
    if { [ remote_file_isdirectory $hostname $spooldir ] == 1 } {
-      set spooldir "$spooldir/$CHECK_COMMD_PORT"
+      set spooldir "$spooldir/$ts_config(commd_port)"
       if { [ remote_file_isdirectory $hostname $spooldir ] != 1 } { 
           puts $CHECK_OUTPUT "creating directory \"$spooldir\""
           remote_file_mkdir $hostname $spooldir
@@ -1982,7 +1984,14 @@ proc cleanup_spool_dir_for_host { hostname topleveldir subdir } {
               add_proc_error "cleanup_spool_dir" "-1" "could not create directory \"$spooldir\""
           }
       }
+
       set spooldir "$spooldir/$subdir"
+      
+      # spooldir might be shared between multiple hosts - e.g. Solaris zones.
+      # clean only the spooldir of the specific exec host.
+      if { $subdir == "execd" } {
+         set spooldir "$spooldir/$hostname"
+      }
 
       if { [ remote_file_isdirectory $hostname $spooldir ] != 1 } {
           puts $CHECK_OUTPUT "creating directory \"$spooldir\""
@@ -2028,7 +2037,50 @@ proc remote_file_isdirectory { hostname dir } {
 }
 
 proc remote_file_mkdir { hostname dir } {
-  start_remote_prog $hostname "ts_def_con2" "mkdir" "$dir" prg_exit_state 60 0 "" 1 0 1
+  start_remote_prog $hostname "ts_def_con2" "mkdir" "-p $dir" prg_exit_state 60 0 "" 1 0 1
+}
+
+proc check_for_core_files {hostname path} {
+   global CHECK_OUTPUT CHECK_USER
+
+   puts $CHECK_OUTPUT "looking for core files in directory $path on host $hostname"
+
+   # try to find core files in path
+   set core_files [start_remote_prog $hostname "ts_def_con2" "find" "$path -name core -print" prg_exit_state 60 0 "" 1 0 1]
+   if { $prg_exit_state != 0 } {
+      add_proc_error "check_for_core_files" -1 "find core files in directory $path on host $hostname failed: $core_files"
+   } else {
+      set core_list [split $core_files "\n"]
+      # process all cores found
+      foreach core $core_list {
+         # strip trailing empty lines
+         set core [string trim $core]
+         if {[string length $core] > 0} {
+            puts $CHECK_OUTPUT "found core $core"
+
+            # we need root access to determine file type (file may belong root)
+            # and to change owner (for later delete)
+            if { [ have_root_passwd ] == -1 } {
+               set_root_passwd 
+            }
+
+            # get file info of core file
+            set core_info [start_remote_prog $hostname "root" "file" "$core" prg_exit_state 60 0 "" 1 0 1]
+            if {$prg_exit_state != 0} {
+               add_proc_error "check_for_core_files" -1 "determining file type of core file $core on host $hostname failed: $core_info"
+            } else {
+               add_proc_error "check_for_core_files" -3 "found core file $core on host $hostname\n$core_info"
+            }
+
+            # chown core to $CHECK_USER.
+            puts $CHECK_OUTPUT "changing owner of core file $core to $CHECK_USER"
+            set output [start_remote_prog $hostname "root" "chown" "$CHECK_USER $core" prg_exit_state 60 0 "" 1 0 1]
+            if {$prg_exit_state != 0} {
+               add_proc_error "check_for_core_files" -1 "changing owner of core file $core on host $hostname failed: $output"
+            }
+         }
+      }
+   }
 }
 
 proc remote_delete_directory { hostname path } { 

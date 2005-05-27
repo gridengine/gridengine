@@ -6453,6 +6453,16 @@ proc shutdown_core_system {} {
       }
    }
 
+   # check for core files
+   # core file in qmaster spool directory
+   set spooldir [get_qmaster_spool_dir]
+   check_for_core_files $ts_config(master_host) $spooldir
+
+   # core files in execd spool directories
+   foreach host $ts_config(execd_nodes) { 
+      set spooldir [get_spool_dir $host execd 0]
+      check_for_core_files $host "$spooldir/$host"
+   }
 }
 
 #****** sge_procedures/startup_core_system() ***********************************

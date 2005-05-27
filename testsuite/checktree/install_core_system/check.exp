@@ -333,19 +333,20 @@ proc get_spool_dir {host subdir {do_cleanup 1} } {
    }
 
    if { [ string compare "" $spooldir] != 0 } {
-      puts $CHECK_OUTPUT "->host $host has spool toplevel directory $spooldir"
+      puts $CHECK_OUTPUT "host $host has spool toplevel directory $spooldir"
       if { $do_cleanup == 1 } {
-         puts $CHECK_OUTPUT "cleanup spooldir!"
+         debug_puts "cleanup spooldir!"
          set result "cleanup spooldir"
          cleanup_spool_dir_for_host $host $spooldir $subdir
       } else {
-         puts $CHECK_OUTPUT "don't cleanup spooldir!"
+         debug_puts "don't cleanup spooldir!"
          set result "no cleanup"
       }
       set spooldir "$spooldir/$CHECK_COMMD_PORT/$subdir"
-      puts $CHECK_OUTPUT $result
-      puts $CHECK_OUTPUT $spooldir
-   } 
+      debug_puts $result
+      debug_puts $spooldir
+   }
+
    return $spooldir
 }
 

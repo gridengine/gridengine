@@ -1,3 +1,13 @@
+JG-2005-05-27-0: Testsuite: - Spooldir of first exec host was not cleared during
+                              installation.
+                            - If multiple exec hosts used the same spool 
+                              directory, spool directories of previously 
+                              installed exec hosts were deleted in subsequent 
+                              exec host installations.
+                            - Check for core files in the spool directories 
+                              after cluster shutdown.
+                            - Some cleanup.
+
 DT-2005-05-25-0: Bugfix:    o Enforced thread safety in DRMAA
                  Review:    SG
                  Changed:   DRMAA
@@ -16,7 +26,8 @@ AH-2005-05-25-0: Bugfix:    Fixed Makefile insufficiencies
 AA-2005-05-24-1: Bugfix:    usage output
                  Changed:   qmon
 
-AA-2005-05-24-0: Bugfix:    FAQ incorrectly states glib 2.1.3 is required for Linux 
+AA-2005-05-24-0: Bugfix:    FAQ incorrectly states glib 2.1.3 is required for 
+                            Linux 
                  Issue:     410
                  Changed:   www
                  Review:    AS 

@@ -947,7 +947,7 @@ int read_all_centries(lList **list, const char *directory)
 
       sprintf(fstr, "%s/%s", directory, dent->d_name);
       
-      if ((fd=open(fstr, O_RDONLY)) < 0) {
+      if ((fd=SGE_OPEN2(fstr, O_RDONLY)) < 0) {
          ERROR((SGE_EVENT, MSG_FILE_NOOPEN_SS, fstr, strerror(errno)));
          continue;
       }

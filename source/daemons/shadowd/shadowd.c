@@ -339,7 +339,7 @@ char **argv
                       * open logfile as admin user for initial qmaster/schedd 
                       * startup messages
                       */
-                     out = open(qmaster_out_file, O_CREAT|O_WRONLY|O_APPEND, 
+                     out = SGE_OPEN3(qmaster_out_file, O_CREAT|O_WRONLY|O_APPEND, 
                                 0644);
                      err = out;
                      if (out == -1) {

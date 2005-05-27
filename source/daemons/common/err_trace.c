@@ -535,7 +535,7 @@ static FILE* shepherd_trace_init_intern( st_shepherd_file_t shepherd_file )
 
 	/* If the file does not exist, create it. Otherwise just open it. */
 	if( SGE_STAT( tmppath, &statbuf )) {
-	   fd = open( tmppath, O_RDWR | O_CREAT | O_APPEND, 0644 );
+	   fd = SGE_OPEN3( tmppath, O_RDWR | O_CREAT | O_APPEND, 0644 );
       if (fd<0) {
          sge_dstring_init(&ds, buffer, sizeof(buffer));
          sge_dstring_sprintf(&ds, "creat(%s) failed: %s", tmppath, strerror(errno));
@@ -575,7 +575,7 @@ static FILE* shepherd_trace_init_intern( st_shepherd_file_t shepherd_file )
          seteuid(0);
       }
 
-      fd = open( tmppath, O_RDWR | O_APPEND );
+      fd = SGE_OPEN2( tmppath, O_RDWR | O_APPEND );
       if (fd<0) {
          sge_dstring_init(&ds, buffer, sizeof(buffer));
          sge_dstring_sprintf(&ds, "open(%s) failed: %s", tmppath, strerror(errno));

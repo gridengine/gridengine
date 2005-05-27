@@ -1382,7 +1382,7 @@ char *err_str
 
    /* JG: TODO (254) use function sge_get_active_job.... */
       sprintf(fname, "%s/%s", active_dir_buffer, TOKEN_FILE);
-      if ((fd = open(fname, O_RDWR | O_CREAT | O_TRUNC, 0600)) == -1) {
+      if ((fd = SGE_OPEN3(fname, O_RDWR | O_CREAT | O_TRUNC, 0600)) == -1) {
          sprintf(err_str, MSG_EXECD_NOCREATETOKENFILE_S, strerror(errno));
          DEXIT;
          return -2;

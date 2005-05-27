@@ -572,7 +572,7 @@ int truncate_stderr_out
 
    in = 0;
    if (!strcasecmp(shell_start_mode, "script_from_stdin")) {
-      in = open(script_file, O_RDONLY);
+      in = SGE_OPEN2(script_file, O_RDONLY);
       if (in == -1) {
          sprintf(err_str,  "error: can't open %s script file \"%s\": %s", 
                childname, script_file, strerror(errno));
@@ -580,7 +580,7 @@ int truncate_stderr_out
       }
    } else {
       /* need to open a file as fd0 */
-      in = open(stdin_path, O_RDONLY); 
+      in = SGE_OPEN2(stdin_path, O_RDONLY); 
 
       if (in == -1) {
          shepherd_state = SSTATE_OPEN_OUTPUT;
@@ -604,9 +604,9 @@ int truncate_stderr_out
    /* open stdout - not for interactive jobs */
    if (!is_interactive && !is_qlogin) {
       if (truncate_stderr_out) {
-         out = open(stdout_path, O_WRONLY | O_CREAT | O_APPEND | O_TRUNC, 0644);
+         out = SGE_OPEN3(stdout_path, O_WRONLY | O_CREAT | O_APPEND | O_TRUNC, 0644);
       } else {
-         out = open(stdout_path, O_WRONLY | O_CREAT | O_APPEND, 0644);
+         out = SGE_OPEN3(stdout_path, O_WRONLY | O_CREAT | O_APPEND, 0644);
       }
       
       if (out==-1) {
@@ -626,9 +626,9 @@ int truncate_stderr_out
          dup2(1, 2);
       } else {
          if (truncate_stderr_out) {
-            err = open(stderr_path, O_WRONLY | O_CREAT | O_TRUNC | O_APPEND, 0644);
+            err = SGE_OPEN3(stderr_path, O_WRONLY | O_CREAT | O_TRUNC | O_APPEND, 0644);
          } else {
-            err = open(stderr_path, O_WRONLY | O_CREAT | O_APPEND, 0644);
+            err = SGE_OPEN3(stderr_path, O_WRONLY | O_CREAT | O_APPEND, 0644);
          }
 
          if (err == -1) {

@@ -192,7 +192,7 @@ static int spawn_file(dstring *aBuffer)
       }
 
       sge_dstring_append_dstring(aBuffer, &s);
-      fd = open(sge_dstring_get_string(aBuffer), O_RDWR | O_CREAT | O_EXCL, S_IRUSR | S_IWUSR);
+      fd = SGE_OPEN3(sge_dstring_get_string(aBuffer), O_RDWR | O_CREAT | O_EXCL, S_IRUSR | S_IWUSR);
       if (fd >= 0) {
          close(fd);
          break;

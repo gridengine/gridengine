@@ -73,7 +73,7 @@ main(int argc, char **argv)
 
 
    if (argc > 1) {
-      fd = open(argv[1], O_WRONLY|O_CREAT, 0700);
+      fd = SGE_OPEN3(argv[1], O_WRONLY|O_CREAT, 0700);
       if (fd < 0) {
 	 fprintf(stderr, MSG_GSS_COULDNOTOPENXY_SS , argv[1], strerror(errno));
 	 exit(1);

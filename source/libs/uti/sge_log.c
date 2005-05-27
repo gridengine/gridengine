@@ -544,7 +544,7 @@ static void sge_do_log(int aLevel, const char *aMessage, const char *aNewLine)
 {
    int fd;
 
-   if ((fd = open(log_state_get_log_file(), O_WRONLY | O_APPEND | O_CREAT, 0666)) >= 0) {
+   if ((fd = SGE_OPEN3(log_state_get_log_file(), O_WRONLY | O_APPEND | O_CREAT, 0666)) >= 0) {
       char msg2log[4*MAX_STRING_SIZE];
       char date[256], tmp_date[256], time_buf[256];
       dstring ds, msg;

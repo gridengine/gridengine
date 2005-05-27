@@ -156,7 +156,7 @@ int lWriteElemToDisk(const lListElem *ep, const char *prefix, const char *name,
    }
 
    /* open file */
-   if ((fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC, 0666)) < 0) {
+   if ((fd = SGE_OPEN3(filename, O_WRONLY | O_CREAT | O_TRUNC, 0666)) < 0) {
       CRITICAL((SGE_EVENT, MSG_CULL_CANTOPENXFORWRITINGOFYZ_SSS ,
                 filename, obj_name, strerror(errno)));
       clear_packbuffer(&pb);
@@ -272,7 +272,7 @@ lListElem *lReadElemFromDisk(const char *prefix, const char *name,
    }
 
    /* open file */
-   if ((fd = open(filename, O_RDONLY)) < 0) {
+   if ((fd = SGE_OPEN2(filename, O_RDONLY)) < 0) {
       CRITICAL((SGE_EVENT, MSG_CULL_CANTREADXFROMFILEY_SS , obj_name, filename));
       clear_packbuffer(&pb);    /* this one frees buf */
       DEXIT;

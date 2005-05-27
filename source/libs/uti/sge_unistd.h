@@ -44,6 +44,14 @@
 #  include "../wingrid/misc.h"
 #endif
 
+#if defined(SOLARIS) || defined(LINUX) || defined(IRIX)
+#  define SGE_OPEN2(filename, oflag)       open64(filename, oflag)
+#  define SGE_OPEN3(filename, oflag, mode) open64(filename, oflag, mode)
+#else
+#  define SGE_OPEN2(filename, oflag)       open(filename, oflag)
+#  define SGE_OPEN3(filename, oflag, mode) open(filename, oflag, mode)
+#endif                
+
 #ifdef IRIX
 #  define SGE_STAT(filename, buffer) stat64(filename, buffer)
 #  define SGE_LSTAT(filename, buffer) lstat64(filename, buffer)

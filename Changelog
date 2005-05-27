@@ -1,3 +1,9 @@
+AH-2005-05-27-0: Bugfix:    Problem with large job output files under
+                            32-bit Linux
+                 Review:    CR
+                 Issue:     1628
+                 Bugtraq:   6277104
+
 SG-2005-05-27-0: Bugfix:    fix qstat -t again (SG-2005-05-25-0 was not enough)
                  Review:    CR
                  Changed:   qstat

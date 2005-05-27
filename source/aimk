@@ -1858,9 +1858,9 @@ set GSHARED_LFLAGS = "$SHARED_LFLAGS"
 # Actual make targets begin here
 #
 if ("$COMPILE_DIR" == "") then
-   echo making in $COMPILE_ARCH/ for $BUILDARCH
+   echo making in $COMPILE_ARCH/ for $BUILDARCH at host `hostname`
 else
-   echo making in $COMPILE_DIR/ for $BUILDARCH
+   echo making in $COMPILE_DIR/ for $BUILDARCH at host `hostname`
 endif
 
 if ( "$BUILDMAN" == 1 ) then

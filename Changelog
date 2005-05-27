@@ -1,3 +1,5 @@
+JG-2005-05-27-0: CVS        Created V60u5_TAG
+
 DT-2005-05-25-0: Bugfix:    o Enforced thread safety in DRMAA
                  Review:    SG
                  Changed:   DRMAA

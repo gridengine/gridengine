@@ -297,12 +297,14 @@ void qstat_filter_add_t_attributes(void)
    const int nm_JAT_Type_list[] = {
       JAT_task_list,
       JAT_usage_list,
+      JAT_scaled_usage_list,
       NoName
    };
 
    const int nm_JAT_Type_template[] = {
       JAT_task_list,
       JAT_usage_list,
+      JAT_scaled_usage_list,
       NoName
    };
    

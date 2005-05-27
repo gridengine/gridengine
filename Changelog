@@ -1,3 +1,9 @@
+SG-2005-05-27-0: Bugfix:    fix qstat -t again (SG-2005-05-25-0 was not enough)
+                 Review:    CR
+                 Changed:   qstat
+                 Issue:     1420
+                 Bugtraq:   6218877
+
 JG-2005-05-27-0: Testsuite: - Spooldir of first exec host was not cleared during
                               installation.
                             - If multiple exec hosts used the same spool 

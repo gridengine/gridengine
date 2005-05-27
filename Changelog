@@ -1,3 +1,7 @@
+AH-2005-05-27-1: Doc:       Job error state is not documented in the qstat 
+                            man page
+                 Issue:     1631
+
 AH-2005-05-27-0: Bugfix:    Problem with large job output files under
                             32-bit Linux
                  Review:    CR

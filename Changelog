@@ -1,3 +1,7 @@
+AH-2005-05-30-1: Bugfix:    Removed outdated and unused DIST_VERSION in
+                            inst_sge
+                 Review:    MD
+
 AH-2005-05-27-1: Doc:       Job error state is not documented in the qstat 
                             man page
                  Issue:     1631

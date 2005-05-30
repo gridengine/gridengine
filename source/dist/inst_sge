@@ -37,7 +37,6 @@
 #
 # set -x
 
-DIST_VERSION="6.0u4beta"
 SCRIPT_VERSION="4"
 
 #Reset PATH to a safe value

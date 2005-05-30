@@ -1,3 +1,9 @@
+SG-2005-05-30-0: Bugfix:    qconf -mq coredumps
+                 Changed:   qconf
+                 Review:    DT, JG, RD
+                 Issue:     1642
+                 Bugtraq:   6277909 
+
 MD-2005-05-30-0: Bugfix:    - path check for net.exe binary
                             - fixed typo
                  Review:    HP

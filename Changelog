@@ -1,3 +1,7 @@
+AH-2005-05-30-0: Bugfix:    Removed outdated and unused DIST_VERSION in  
+                            inst_sge
+                 Review:    MD
+
 SG-2005-05-27-0: Bugfix:    fix qstat -t again (SG-2005-05-25-0 was not enough)
                  Review:    CR
                  Changed:   qstat

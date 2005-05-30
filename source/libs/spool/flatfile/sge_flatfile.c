@@ -32,6 +32,8 @@
 
 /* system */
 #include <stdio.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 
 #if defined(ALPHA)
    extern void flockfile(FILE *);
@@ -1187,6 +1189,7 @@ spool_flatfile_read_object(lList **answer_list, const lDescr *descr,
    lListElem *object = NULL;
    const spooling_field *fields = NULL;
    spooling_field *my_fields = NULL;
+   struct stat file_buf;
 
    DENTER(TOP_LAYER, "spool_flatfile_read_object");
 
@@ -1206,12 +1209,24 @@ spool_flatfile_read_object(lList **answer_list, const lDescr *descr,
          DEXIT;
          return NULL;
       }
-
       file_opened = true;
    }
-
    /* initialize scanner */
-   token = spool_scanner_initialize(file);
+   stat(filepath, &file_buf);
+   token = spool_scanner_initialize(file, file_buf.st_size);
+
+   if (token == SPFT_ERROR_NO_MEMORY) {
+      /* messages generated in spool_get_fields_to_spool */
+      spool_scanner_shutdown();
+      answer_list_add_sprintf(answer_list, STATUS_EDISK,
+                              ANSWER_QUALITY_ERROR, 
+                              MSG_GDI_OUTOFMEMORY);
+      if (file_opened) {
+         fclose (file);
+      }
+      DEXIT;
+      return NULL;
+   }
 
    /* if no fields are passed, retrieve them from instructions */
    if (fields_in != NULL) {
@@ -1770,6 +1785,7 @@ spool_flatfile_read_list(lList **answer_list, const lDescr *descr,
    lList *list = NULL;
    const spooling_field *fields = NULL;
    spooling_field *my_fields = NULL;
+   struct stat file_buf;
 
    DENTER(TOP_LAYER, "spool_flatfile_read_list");
 
@@ -1794,7 +1810,23 @@ spool_flatfile_read_list(lList **answer_list, const lDescr *descr,
    }
 
    /* initialize scanner */
-   token = spool_scanner_initialize(file);
+   stat(filepath, &file_buf);
+   token = spool_scanner_initialize(file, file_buf.st_size);
+
+   if (token == SPFT_ERROR_NO_MEMORY) {
+      /* messages generated in spool_get_fields_to_spool */
+      spool_scanner_shutdown();
+
+      answer_list_add_sprintf(answer_list, STATUS_EDISK,
+                              ANSWER_QUALITY_ERROR, 
+                              MSG_GDI_OUTOFMEMORY);
+
+      if (file_opened) {
+         fclose (file);
+      }
+      DEXIT;
+      return NULL;
+   }
 
    /* if no fields are passed, retrieve them from instructions */
    if (fields_in != NULL) {
@@ -1804,6 +1836,10 @@ spool_flatfile_read_list(lList **answer_list, const lDescr *descr,
                                             instr->spool_instr);
       if (my_fields == NULL) {
          /* messages generated in spool_get_fields_to_spool */
+         spool_scanner_shutdown();
+         if (file_opened) {
+            fclose (file);
+         }
          DEXIT;
          return NULL;
       }
@@ -1814,6 +1850,7 @@ spool_flatfile_read_list(lList **answer_list, const lDescr *descr,
    list = _spool_flatfile_read_list(answer_list, descr, instr, 
                                     fields, fields_out, &token, NULL,
                                     parse_values);
+   spool_scanner_shutdown();
 
    /* if we opened the file, we also have to close it */
    if (file_opened) {

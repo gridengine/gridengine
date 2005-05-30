@@ -44,7 +44,8 @@ typedef enum {
    SPFT_DELIMITER,
    SPFT_WHITESPACE,
    SPFT_NEWLINE,
-   SPFT_UNKNOWN
+   SPFT_UNKNOWN,
+   SPFT_ERROR_NO_MEMORY
 } spool_flatfile_token;
 
 extern int spool_line;
@@ -53,7 +54,7 @@ extern int spool_finish_line;
 extern char spool_text[];
 
 int spool_lex(void);
-int spool_scanner_initialize(FILE *input);
+int spool_scanner_initialize(FILE *input, off_t file_size);
 void spool_scanner_shutdown(void);
 
 #endif /* __SGE_SPOOLING_FLATFILE_SCANNER_H */    

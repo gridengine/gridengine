@@ -650,6 +650,14 @@ CheckWinAdminUser()
       export PATH
       eval net user $win_admin_user > /dev/null 2>&1
       ret=$?
+      if [ "$ret" = 127 ]; then
+         /usr/contrib/win32/bin/net user $win_adimn_user > /dev/null 2>&1
+         ret=$?
+         if [ "$ret" = 127 ]; then
+	         $INFOTEXT "The net binary could not be found!\nPlease, check your $PATH variable or your installation!"
+            exit 1
+         fi
+      fi
       if [ "$ret" != 0 ]; then
          while [ "$ret" != 0 ]; do
             $INFOTEXT -u "Local Admin User"

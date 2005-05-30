@@ -1,3 +1,7 @@
+MD-2005-05-30-0: Bugfix:    - path check for net.exe binary
+                            - fixed typo
+                 Review:    HP
+
 AH-2005-05-30-0: Bugfix:    Removed outdated and unused DIST_VERSION in  
                             inst_sge
                  Review:    MD

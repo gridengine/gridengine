@@ -525,7 +525,7 @@ fi
 if [ $BERKELEY = "uninstall" ]; then
 
    if [ "$AUTO" = "true" ]; then
-      $INFOTEXT -log "Starting berekey rpc uninstallation!"
+      $INFOTEXT -log "Starting berkeley rpc uninstallation!"
    fi
    if [ "$HOST" = "$DB_SPOOLING_SERVER" -o "$NOREMOTE" = "true" ]; then
       ProcessSGERoot

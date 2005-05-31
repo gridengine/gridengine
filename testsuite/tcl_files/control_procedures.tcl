@@ -1403,6 +1403,11 @@ proc resolve_host { name { long 0 } } {
    global CHECK_OUTPUT
    global resolve_host_cache
 
+   # we cannot resolve hostgroups.
+   if {[string range $name 0 0] == "@" } {
+      puts $CHECK_OUTPUT "hostgroups ($name) cannot be resolved"
+      return $name
+   }
    
    if { $long != 0 } {
       if {[info exists resolve_host_cache($name,long)]} {

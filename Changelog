@@ -1,3 +1,7 @@
+JG-2005-05-31-0: Testsuite: Bugfixes:
+                            - do not search for core files in non existing dir
+                            - do not try hostname resolving on hostgroups
+
 SG-2005-05-30-0: Bugfix:    qconf -mq coredumps
                  Changed:   qconf
                  Review:    DT, JG, RD

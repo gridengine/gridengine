@@ -2045,6 +2045,11 @@ proc check_for_core_files {hostname path} {
 
    puts $CHECK_OUTPUT "looking for core files in directory $path on host $hostname"
 
+   # if directory does not (yet) exist, there can be no cores
+   if {![remote_file_isdirectory $hostname $path]} {
+      return
+   }
+
    # try to find core files in path
    set core_files [start_remote_prog $hostname "ts_def_con2" "find" "$path -name core -print" prg_exit_state 60 0 "" 1 0 1]
    if { $prg_exit_state != 0 } {

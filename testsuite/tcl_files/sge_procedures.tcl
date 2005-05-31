@@ -6455,7 +6455,7 @@ proc shutdown_core_system {} {
 
    # check for core files
    # core file in qmaster spool directory
-   set spooldir [get_qmaster_spool_dir]
+   set spooldir [get_spool_dir $ts_config(master_host) qmaster 0]
    check_for_core_files $ts_config(master_host) $spooldir
 
    # core files in execd spool directories

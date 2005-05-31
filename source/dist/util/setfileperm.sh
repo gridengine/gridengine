@@ -197,9 +197,9 @@ for f in $FILELIST $OPTFILES; do
    fi
 done
 
-chown 0 utilbin/*/rsh utilbin/*/rlogin utilbin/*/testsuidroot utilbin/*/sgepasswd
-chgrp 0 utilbin/*/rsh utilbin/*/rlogin utilbin/*/testsuidroot utilbin/*/sgepasswd
-chmod 4511 utilbin/*/rsh utilbin/*/rlogin utilbin/*/testsuidroot utilbin/*/sgepasswd
+chown 0 utilbin/*/rsh utilbin/*/rlogin utilbin/*/testsuidroot bin/*/sgepasswd
+chgrp 0 utilbin/*/rsh utilbin/*/rlogin utilbin/*/testsuidroot bin/*/sgepasswd
+chmod 4511 utilbin/*/rsh utilbin/*/rlogin utilbin/*/testsuidroot bin/*/sgepasswd
 
 $ECHO
 $ECHO "Your file permissions were set"

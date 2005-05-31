@@ -101,7 +101,7 @@
 #define MSG_CL_COMMLIB_SSL_ACCEPT_ERROR_S             _MESSAGE(85062, _("ssl accept error for client "SFQ""))
 #define MSG_CL_COMMLIB_SSL_ACCEPT_ERROR               _MESSAGE(85063, _("ssl accept error for unresolvable client"))
 
-#define MSG_CL_COMMLIB_NO_ADDITIONAL_INFO             _MESSAGE(85063, _("no additional information available"))
+#define MSG_CL_COMMLIB_NO_ADDITIONAL_INFO             _MESSAGE(85064, _("no additional information available"))
 
 
 

@@ -1,3 +1,6 @@
+AH-2005-06-01-2: Bugfix:    libdrmaa.so crashed if monitoring was enabled
+                 Review:    JG
+
 HP-2005-06-01-0: Enhancem.: handling for sgepasswd improved
                  Changed:   execd, shepherd, libraries
                  Review:    MD

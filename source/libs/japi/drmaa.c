@@ -2931,12 +2931,12 @@ static int opt_list_append_opts_from_drmaa_attr(lList **args, const lList *attrs
    }
 
    /* job environment -- -v */
-   if ((ep=lGetElemStr (vattrs, NSV_name, DRMAA_V_ENV))) {
+   if ((ep=lGetElemStr(vattrs, NSV_name, DRMAA_V_ENV))) {
       dstring env = DSTRING_INIT;
       char *variable = NULL;
       char *value = NULL;
       lListElem *oep = NULL;
-      lList *olp = lGetList (ep, NSV_strings);
+      lList *olp = lGetList(ep, NSV_strings);
       lListElem *nep = NULL;
       lList *nlp = lCreateList ("variable list", VA_Type);
       int first_time = 1;
@@ -2945,36 +2945,36 @@ static int opt_list_append_opts_from_drmaa_attr(lList **args, const lList *attrs
       DPRINTF(("processing %s = ", DRMAA_V_ENV));
       
       for_each (oep, olp) {
-         const char *str = lGetString (oep, ST_name);
+         const char *str = lGetString(oep, ST_name);
          
-         sge_dstring_append (&env, str);
+         sge_dstring_append(&env, str);
          
          if (first_time) {
             first_time = 0;
          }
          else {
-            sge_dstring_append_char (&env, ',');
+            sge_dstring_append_char(&env, ',');
          }
          
-         nep = lCreateElem (VA_Type);
-         lAppendElem (nlp, nep);
+         nep = lCreateElem(VA_Type);
+         lAppendElem(nlp, nep);
          
-         variable = sge_strtok_r (str, "=", &context);
+         variable = sge_strtok_r(str, "=", &context);
          lSetString (nep, VA_variable, variable);
          
-         value = sge_strtok_r ((char *)NULL, "=", &context);
+         value = sge_strtok_r((char *)NULL, "=", &context);
          
          if (value)
-            lSetString (nep, VA_value, value);
+            lSetString(nep, VA_value, value);
          else
-            lSetString (nep, VA_value, NULL);
+            lSetString(nep, VA_value, NULL);
       }
 
       sge_free_saved_vars (context);
       
-      DPRINTF (("\"%s\"\n", env));
+      DPRINTF(("\"%s\"\n", sge_dstring_get_string(&env)));
       
-      ep_opt = sge_add_arg (args, v_OPT, lListT, "-v", sge_dstring_get_string (&env));
+      ep_opt = sge_add_arg(args, v_OPT, lListT, "-v", sge_dstring_get_string(&env));
       lSetList (ep_opt, SPA_argval_lListT, nlp);
    }
 
@@ -2984,9 +2984,9 @@ static int opt_list_append_opts_from_drmaa_attr(lList **args, const lList *attrs
       char *user = NULL;
       char *host = NULL;
       lListElem *oep = NULL;
-      lList *olp = lGetList (ep, NSV_strings);
+      lList *olp = lGetList(ep, NSV_strings);
       lListElem *nep = NULL;
-      lList *nlp = lCreateList ("mail list", MR_Type);
+      lList *nlp = lCreateList("mail list", MR_Type);
       lListElem *tmp = NULL;
       int first_time = 1;
       struct saved_vars_s *context = NULL;
@@ -2994,22 +2994,22 @@ static int opt_list_append_opts_from_drmaa_attr(lList **args, const lList *attrs
       DPRINTF (("processing %s = ", DRMAA_V_EMAIL));
       
       for_each (oep, olp) {
-         const char *str = lGetString (oep, ST_name);
+         const char *str = lGetString(oep, ST_name);
          
-         sge_dstring_append (&email, str);
+         sge_dstring_append(&email, str);
          
          if (first_time) {
             first_time = 0;
          }
          else {
-            sge_dstring_append_char (&email, ',');
+            sge_dstring_append_char(&email, ',');
          }
          
-         user = sge_strtok_r (str, "@", &context);
-         host = sge_strtok_r (NULL, "@", &context);
+         user = sge_strtok_r(str, "@", &context);
+         host = sge_strtok_r(NULL, "@", &context);
          
-         if ((tmp=lGetElemStr (nlp, MR_user, user))) {
-            if (!sge_strnullcmp (host, lGetHost (tmp, MR_host))) {
+         if ((tmp=lGetElemStr(nlp, MR_user, user))) {
+            if (!sge_strnullcmp(host, lGetHost (tmp, MR_host))) {
                /* got this mail adress twice */
                continue;
             }
@@ -3025,9 +3025,9 @@ static int opt_list_append_opts_from_drmaa_attr(lList **args, const lList *attrs
 
       sge_free_saved_vars (context);
       
-      DPRINTF (("\"%s\"\n", email));
+      DPRINTF(("\"%s\"\n", sge_dstring_get_string(&email)));
       
-      ep_opt = sge_add_arg (args, M_OPT, lListT, "-M", sge_dstring_get_string (&email));
+      ep_opt = sge_add_arg (args, M_OPT, lListT, "-M", sge_dstring_get_string(&email));
       lSetList (ep_opt, SPA_argval_lListT, nlp);
    }
 

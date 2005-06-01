@@ -1,3 +1,10 @@
+AH-2005-06-01-1: Bugfix:    drmaa_job_ps() returns DRMAA_PS_QUEUED_ACTIVE 
+                            for finished array job rather than DRMAA_PS_DONE
+                 Issue:     1648
+                 Bugtraq:   6278147
+                 Changed:   libdrmaa.so
+                 Review:    DT
+
 RD-2005-06-01-0: Bugfix:   inst_sge -db error on MacOS
                  Changed:  install scripts
                  Review:   MD

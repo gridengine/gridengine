@@ -3178,8 +3178,18 @@ japi_sge_state_to_drmaa_state(lListElem *job, lList *cqueue_list,
       
       if ((ja_task != NULL) && (lGetUlong(ja_task, JAT_status) == JFINISHED)) {
          task_finished = true;
+      } else {
+         if (ja_task == NULL) {
+            if (!range_list_is_id_within(lGetList(job, JB_ja_n_h_ids), taskid) &&
+                !range_list_is_id_within(lGetList(job, JB_ja_u_h_ids), taskid) &&
+                !range_list_is_id_within(lGetList(job, JB_ja_s_h_ids), taskid) &&
+                !range_list_is_id_within(lGetList(job, JB_ja_o_h_ids), taskid))
+               task_finished = true;
+         }
       }
    }
+
+   DPRINTF(("japi_sge_state_to_drmaa_state(1)\n"));
 
    /*
     * The reason for this job no longer being available at qmaster might 
@@ -3251,6 +3261,8 @@ japi_sge_state_to_drmaa_state(lListElem *job, lList *cqueue_list,
       return DRMAA_ERRNO_SUCCESS;
    }
 
+   DPRINTF(("japi_sge_state_to_drmaa_state(2)\n"));
+
    if (!is_array_task) {
       /* reject "jobid" without taskid for array jobs */
       if (JOB_TYPE_IS_ARRAY(lGetUlong(job, JB_type))) {
@@ -3267,8 +3279,10 @@ japi_sge_state_to_drmaa_state(lListElem *job, lList *cqueue_list,
       }
    }
 
-   if (ja_task != NULL) { 
-      /* the state of enrolled tasks can be direclty determined */
+   DPRINTF(("japi_sge_state_to_drmaa_state(3)\n"));
+
+   if (ja_task != NULL) {
+      /* the state of enrolled tasks can directly be determined */
       u_long32 ja_task_status = lGetUlong(ja_task, JAT_status);
       u_long32 ja_task_state = lGetUlong(ja_task, JAT_state);
       u_long32 ja_task_hold = lGetUlong(ja_task, JAT_hold);
@@ -3348,6 +3362,8 @@ japi_sge_state_to_drmaa_state(lListElem *job, lList *cqueue_list,
       return DRMAA_ERRNO_SUCCESS;
    }
   
+   DPRINTF(("japi_sge_state_to_drmaa_state(4)\n"));
+
    /* not yet enrolled tasks are always PENDING */
    *remote_ps = DRMAA_PS_SUBSTATE_PENDING;
 
@@ -3360,6 +3376,8 @@ japi_sge_state_to_drmaa_state(lListElem *job, lList *cqueue_list,
        )
       *remote_ps |= DRMAA_PS_SUBSTATE_SYSTEM_SUSP;
  
+   DPRINTF(("japi_sge_state_to_drmaa_state(5)\n"));
+
    DEXIT;
    return DRMAA_ERRNO_SUCCESS;
 }
@@ -3595,6 +3613,22 @@ static int japi_parse_jobid(const char *job_id_str, u_long32 *jp, u_long32 *tp,
 *     jobids.
 *     Would be good to have DRMAA_JOB_IDS_SESSION_ALL supported with 
 *     drama_job_ps().
+*
+*     This function should be changed in a way that local JAPI-internal 
+*     information is evaluated at first and no GDI request is done if
+*     this isn't necessary: 
+*
+*     (1) A GDI request isn't acutally required for argument checking 
+*         to prevent "jobid" being passed for array jobs or "jobid.taskid" 
+*         be passed for non-array jobs. This is true at least for jobs 
+*         that were submitted during the session which can be assumed the
+*         majority. Argument checking can be done based on JJ_type.
+*
+*     (2) A GDI request isn't actually required if job finish event
+*         already arrived at JAPI.
+*     
+*     in these cases GDI request could be saved. This would help 
+*     improving qmaster availability.
 *******************************************************************************/
 int japi_job_ps(const char *job_id_str, int *remote_ps, dstring *diag)
 {
@@ -3636,7 +3670,7 @@ int japi_job_ps(const char *job_id_str, int *remote_ps, dstring *diag)
       return DRMAA_ERRNO_INTERNAL_ERROR;
    }
 
-   DPRINTF(("japi_job_ps("SFQ")\n", job_id_str)); 
+   DPRINTF(("japi_job_ps1("SFQ")\n", job_id_str)); 
    if ((drmaa_errno=japi_parse_jobid(job_id_str, &jobid, &taskid, 
          &is_array_task, diag)) !=DRMAA_ERRNO_SUCCESS) {
       japi_dec_threads(SGE_FUNC);
@@ -3645,6 +3679,8 @@ int japi_job_ps(const char *job_id_str, int *remote_ps, dstring *diag)
       return drmaa_errno;
    }
 
+   DPRINTF(("japi_job_ps2("SFQ")\n", job_id_str)); 
+
    drmaa_errno = japi_get_job_and_queues(jobid, &retrieved_cqueue_list, &retrieved_job_list, diag);
    if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
       japi_dec_threads(SGE_FUNC);
@@ -3652,6 +3688,8 @@ int japi_job_ps(const char *job_id_str, int *remote_ps, dstring *diag)
       DEXIT;
       return drmaa_errno;
    }
+
+   DPRINTF(("japi_job_ps3("SFQ")\n", job_id_str)); 
 
    drmaa_errno = japi_sge_state_to_drmaa_state(lFirst(retrieved_job_list), 
                                                retrieved_cqueue_list, 

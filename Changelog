@@ -1,3 +1,6 @@
+AH-2005-06-01-3: Bugfix:    libdrmaa.so crashed if monitoring was enabled
+                 Review:    JG
+
 AH-2005-06-01-1: Bugfix:    drmaa_job_ps() returns DRMAA_PS_QUEUED_ACTIVE 
                             for finished array job rather than DRMAA_PS_DONE
                  Issue:     1648

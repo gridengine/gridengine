@@ -253,8 +253,13 @@ int truncate_stderr_out
        *  Additionally it prevents that a root procedures write to
        *  files which may not be accessable by the job owner 
        *  (e.g. /etc/passwd)
+       *
+       *  This workaround doesn't work for Interix - we have to find
+       *  another solution here!
        */
+#if !defined(INTERIX)
       intermediate_user = get_conf_val("job_owner");
+#endif
    }
 
 #if defined(ALPHA)
@@ -323,15 +328,8 @@ int truncate_stderr_out
        use_qsub_gid = 0;
        gid = 0;
     }
-/* --- switch to intermediate user */
-#if defined(INTERIX)
-#if 0
-if(intermediate_user != NULL) {
-   intermediate_user[0]='\0';
-}
-#endif
-#endif
 
+/* --- switch to intermediate user */
    if(qlogin_starter) { 
       ret = sge_set_uid_gid_addgrp(target_user, intermediate_user, 0, 0, 
                                    0, err_str, use_qsub_gid, gid);
@@ -340,11 +338,7 @@ if(intermediate_user != NULL) {
                                    min_uid, add_grp_id, err_str, use_qsub_gid, 
                                    gid);
    }   
-#if defined(INTERIX)
-#if 0
-   ret = 0;
-#endif
-#endif
+
    if (ret < 0) {
       shepherd_trace(err_str);
       sprintf(err_str, "try running further with uid=%d", (int)getuid());

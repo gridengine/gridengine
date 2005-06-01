@@ -1,3 +1,7 @@
+HP-2005-06-01-0: Enhancem.: handling for sgepasswd improved
+                 Changed:   execd, shepherd, libraries
+                 Review:    MD
+
 AH-2005-06-01-0: Bugfix:    drmaa_job_ps() returns DRMAA_PS_QUEUED_ACTIVE 
                             for finished array job rather than DRMAA_PS_DONE
                  Issue:     1648

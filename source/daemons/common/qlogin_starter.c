@@ -53,7 +53,11 @@
 #include "config_file.h"
 #include "err_trace.h"
 #include "qlogin_starter.h"
+#include "sge_uidgid.h"
 
+#if defined(INTERIX)
+#  include "misc.h"
+#endif
 
 static char err_str[1024];
 
@@ -425,12 +429,13 @@ int qlogin_starter(const char *cwd, char *daemon, char** env)
                    getuid(), geteuid(), getgid(), getegid()));
    
    /* must be root because we must access /dev/something */
-#if !defined(INTERIX)
-   if (setgid(0) || setuid(0) || setegid(0) || seteuid(0)) {
+   if( setgid(sge_get_superuser_gid()) ||
+       setuid(sge_get_superuser_id()) ||
+       setegid(sge_get_superuser_gid()) ||
+       seteuid(sge_get_superuser_id())) {
       SHEPHERD_TRACE((err_str, "cannot change uid/gid\n"));
       return 4;
    }
-#endif
 
    SHEPHERD_TRACE((err_str, "uid = " uid_t_fmt ", euid = " uid_t_fmt ", gid = " gid_t_fmt ", egid = " gid_t_fmt "", 
                    getuid(), geteuid(), getgid(), getegid()));

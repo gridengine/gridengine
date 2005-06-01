@@ -1532,6 +1532,11 @@ char *err_str
    }
 
 #if defined(INTERIX)
+   /*
+    * In Interix, we have to start the shepherd as Administrator,
+    * because there seems to be some bug with inheriting euid
+    * over a fork.
+    */
    seteuid(wl_get_superuser_id());
 #endif
 

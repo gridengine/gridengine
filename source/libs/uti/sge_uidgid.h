@@ -56,6 +56,8 @@ void uidgid_mt_init(void);
 
 bool sge_is_start_user_superuser(void);
 bool sge_is_id_superuser(uid_t id);
+uid_t sge_get_superuser_id(void);
+gid_t sge_get_superuser_gid(void);
 int sge_set_admin_username(const char *username, char *err_str);
 int sge_switch2admin_user(void);
 int sge_switch2start_user(void);

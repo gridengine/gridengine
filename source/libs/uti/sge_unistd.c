@@ -84,7 +84,6 @@ static int sge_domkdir(const char *path_, int fmode, int exit_on_error, int may_
    SGE_STRUCT_STAT statbuf;
  
    DENTER(TOP_LAYER, "sge_domkdir");
- 
    if (mkdir(path_, (mode_t) fmode)) {
       if (errno == EEXIST) {
          if (may_not_exist) {
@@ -116,6 +115,12 @@ static int sge_domkdir(const char *path_, int fmode, int exit_on_error, int may_
          return -1;
       }
    }
+#if defined( INTERIX )
+   /*
+    * mkdir is buggy, chown dir manually
+    */
+   chown(path_, geteuid(), getegid());
+#endif
  
    DEXIT;
    return 0;
@@ -344,14 +349,20 @@ int sge_mkdir(const char *path, int fmode, int exit_on_error, int may_not_exist)
          return -1;
       }
    }
- 
+
+   DPRINTF(("Making dir \"%s\"\n", path));
+
    memset(path_, 0, sizeof(path_));
    while ((unsigned char) path[i]) {
       path_[i] = path[i];
       if ((path[i] == '/') && (i != 0)) {
          path_[i] = (unsigned char) 0;
          res = sge_domkdir(path_, fmode, exit_on_error, 0);
+#if defined(INTERIX)
+         chown(path_, geteuid(), getegid());
+#endif 
          if (res) {
+            DPRINTF(("retval = %d\n", res));
             DEXIT;
             return res;
          }
@@ -362,6 +373,7 @@ int sge_mkdir(const char *path, int fmode, int exit_on_error, int may_not_exist)
  
    i = sge_domkdir(path_, fmode, exit_on_error, may_not_exist);
  
+   DPRINTF(("retval = %d\n", i));
    DEXIT;
    return i;
 }   

@@ -208,6 +208,12 @@ typedef char stringT[MAX_STRING_SIZE];
 #  define seteuid(euid) setresuid(-1, euid, -1)
 #  define setegid(egid) setresgid(-1, egid, -1)
 #endif
+
+#if defined(INTERIX)
+#  define seteuid(euid) setreuid(-1, euid)
+#  define setegid(egid) setregid(-1, egid)
+#  define getgrgid_r getgrgid_nomembers_r
+#endif
     
 
 #ifdef  __cplusplus

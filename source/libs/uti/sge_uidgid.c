@@ -182,6 +182,28 @@ bool sge_is_id_superuser(uid_t id)
    return ret;
 }
 
+uid_t sge_get_superuser_id(void)
+{
+   uid_t ret_uid;
+#if defined( INTERIX )
+   ret_uid = wl_get_superuser_id();
+#else
+   ret_uid = 0;
+#endif
+   return ret_uid;
+}
+
+gid_t sge_get_superuser_gid(void)
+{
+   gid_t ret_gid;
+#if defined( INTERIX )
+   ret_gid = wl_get_superuser_gid();
+#else
+   ret_gid = 0;
+#endif
+   return ret_gid;
+}
+
 /****** uti/uidgid/sge_set_admin_username() ***********************************
 *  NAME
 *     sge_set_admin_username() -- Set SGE/EE admin user
@@ -786,6 +808,7 @@ int sge_set_uid_gid_addgrp(const char *user, const char *intermediate_user,
       pw->pw_gid = qsub_gid;
    }
  
+#if !defined(INTERIX)
    if ( !intermediate_user) {
       /*
        *  It should not be necessary to set min_gid/min_uid to 0
@@ -807,6 +830,7 @@ int sge_set_uid_gid_addgrp(const char *user, const char *intermediate_user,
          return 1;
       }
    }
+#endif
 
 #if !(defined(WIN32) || defined(INTERIX)) /* initgroups not called */
    status = initgroups(pw->pw_name, pw->pw_gid);
@@ -872,7 +896,6 @@ int sge_set_uid_gid_addgrp(const char *user, const char *intermediate_user,
                return 1;
             }
          }
- 
          if (setuid(pw->pw_uid)) {
             sprintf(err_str, MSG_SYSTEM_SETUIDFAILED_U , u32c(pw->pw_uid));
             return 1;

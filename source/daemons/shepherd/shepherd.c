@@ -585,8 +585,8 @@ int main(int argc, char **argv)
        * this is done in case where our getuid() is root and our
        * geteuid() is a normal user id
        */
-
-      if (getuid() == 0 && geteuid() != 0) {
+       if(getuid() == sge_get_superuser_id() &&
+          geteuid() != sge_get_superuser_id()) { 
           char name[128];
           if (!sge_uid2user(geteuid(), name, sizeof(name), MAX_NIS_RETRIES)) {
              sge_set_admin_username(name, NULL);

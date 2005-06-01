@@ -352,11 +352,7 @@ void shepherd_write_exit_status( const char *exit_status )
 		 */
       if(sge_is_id_superuser(getuid())) {
          old_euid = geteuid();
-#if defined( INTERIX )
-         seteuid(wl_get_superuser_id());
-#else
-         seteuid(0);
-#endif
+         seteuid(sge_get_superuser_id());
       }
 		/* File was closed (e.g. by an exec()) but fp was not set to NULL */
 		if( shepherd_exit_status_fp 
@@ -576,11 +572,7 @@ static FILE* shepherd_trace_init_intern( st_shepherd_file_t shepherd_file )
        */
       if(sge_is_id_superuser(getuid())) {
          old_euid = geteuid();
-#if defined( INTERIX )
-         seteuid(wl_get_superuser_id());
-#else
-         seteuid(0);
-#endif
+         seteuid(sge_get_superuser_id());
       }
 
       fd = open( tmppath, O_RDWR | O_APPEND );
@@ -670,11 +662,7 @@ static void shepherd_trace_chown_intern( const char* job_owner, FILE* fp,
              * to change the ownership of a file. 
  	 	 	 	 */
 				old_euid = geteuid();
-#if defined( INTERIX )
-            seteuid(wl_get_superuser_id());
-#else
-				seteuid(0);
-#endif
+            seteuid(sge_get_superuser_id());
            
             /* Have to use chown() here, because fchown() has some bugs
              * on True64 and Irix.*/

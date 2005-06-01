@@ -1456,7 +1456,7 @@ case WIN32_X86:
    endif
    
    set CORE_INCLUDE = "$CORE_INCLUDE -I../libs/wingrid"
-   set LIBS = "$LIBS -lwingrid -lcomm -lsge -levc -levm -lmir -lsgeobjd -ldl -lrmon -luti -llck -lgdi -lsgeobj"
+   set LIBS = "$LIBS -lsge -lwingrid -lcomm -lsge -levc -levm -lmir -lsgeobjd -ldl -lrmon -luti -llck -lgdi -lsgeobj"
 
    if ($OPTIMIZATION == 1) then
       set OFLAG = "-O3"

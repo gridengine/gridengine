@@ -38,6 +38,7 @@
 
 #include "basis_types.h"
 #include "msg_utilbin.h"
+#include "sge_uidgid.h"
 
 
 void usage(void)
@@ -56,11 +57,7 @@ int main(int argc, char **argv)
    if (argc < 3)
       usage();
 
-#if defined( INTERIX )
-   if (geteuid() != 197108 ) {
-#else
-   if (geteuid() != 0) {
-#endif 
+   if(geteuid() != sge_get_superuser_id()) {
       argv+=2;
       execvp(argv[0], argv);
       fprintf(stderr, MSG_COMMAND_EXECUTEFAILED_S , argv[0]);

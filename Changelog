@@ -1,3 +1,10 @@
+AH-2005-06-01-0: Bugfix:    drmaa_job_ps() returns DRMAA_PS_QUEUED_ACTIVE 
+                            for finished array job rather than DRMAA_PS_DONE
+                 Issue:     1648
+                 Bugtraq:   6278147
+                 Changed:   libdrmaa.so
+                 Review:    DT
+
 AA-2005-06-01-0: Bugfix:    qmon basic test, exechost consumable/fixed 
                             attribute removal on x86 and sol-x86 architecture
                  Changed:   qmon

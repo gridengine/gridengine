@@ -430,7 +430,7 @@ Qmon*eh_complexes.layout: \
 
 Qmon*eh_complexes*complexes_ccl_remove.labelType: PIXMAP
 Qmon*eh_complexes*complexes_ccl_remove.labelPixmap: trashcan
-Qmon*eh_complexes*complexes_ccl_remove.activateCallback: DeleteLines(*complexes_ccl);
+Qmon*eh_complexes*complexes_ccl_remove.activateCallback: DeleteLines(*eh_complexes*complexes_ccl);
 
 Qmon*eh_complexes*complexes_ccl.buttonLabels: True
 Qmon*eh_complexes*complexes_ccl.rows: 7
@@ -467,7 +467,7 @@ Qmon*eh_complexes*complexes_ccl*ccl_menu.menuPost: <Btn3Down>
 Qmon*eh_complexes*complexes_ccl*ccl_menu.items: \
    Title "@{@fBOperations}"; \
    ------;\
-   "@{_Delete}" [Ctrl-D] DeleteLines(*complexes_ccl);
+   "@{_Delete}" [Ctrl-D] DeleteLines(*eh_complexes*complexes_ccl);
 
 Qmon*eh_complexes*complexes_ccl.enterCellCallback: \
       ColumnZeroNoEdit();

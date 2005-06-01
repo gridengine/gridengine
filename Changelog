@@ -1,3 +1,8 @@
+AA-2005-06-01-0: Bugfix:    qmon basic test, exechost consumable/fixed 
+                            attribute removal on x86 and sol-x86 architecture
+                 Changed:   qmon
+                 Review:    CR
+
 MD-2005-05-31-1: Bugfix:    used wrong path for win binary
                  Changed:   setfileperm.sh
 

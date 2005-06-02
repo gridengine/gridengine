@@ -502,7 +502,7 @@ GetLocalExecdSpoolDir()
       fi
    done
 
-   if [ "$ret" = 1 ]; then
+   if [ "$ret" = 1 -a "$LOCAL_EXECD_SPOOL" = "undef" ]; then
       MakeHostSpoolDir
    fi
 

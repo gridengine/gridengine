@@ -635,7 +635,6 @@ if [ $SHADOW = "install" ]; then
       $INFOTEXT "Creating shadow_masters file for host %s\n" $SHADOW_HOST
       $INFOTEXT "Starting sge_shadowd on host %s\n" $SHADOW_HOST    
       mod_file="echo $SHADOW_HOST"
-      echo ADMINUSER $ADMINUSER
       ExecuteAsAdmin touch $SGE_ROOT/$SGE_CELL/common/shadow_masters
       ExecuteAsAdmin chmod a+w $SGE_ROOT/$SGE_CELL/common/shadow_masters
       ExecuteAsAdmin $mod_file >> $SGE_ROOT/$SGE_CELL/common/shadow_masters

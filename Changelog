@@ -1,3 +1,9 @@
+RD-2005-06-02-2: Bugfix:    qstat -xml -urg output contains badly formatted numbers
+                 Changed:   qstat
+                 Bugtraq:   6278727
+                 Issue:     1656
+                 Review:    AH
+
 RD-2005-06-02-1: Bugfix:    inst_sge -sm don't install a startup script
                             enh. MacOS Startup Item BDB RPC Server
                  Changed:   install scripts

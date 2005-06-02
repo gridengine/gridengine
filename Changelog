@@ -1,3 +1,11 @@
+RD-2005-06-02-1: Bugfix:    inst_sge -sm don't install a startup script
+                            inst_sge -db error on MacOS
+                            merged install MacOSX Startup Item
+                 Changed:   install scripts
+                 Bugtraq:   6278140, 6278146 
+                 Issue:     1646, 1647
+                 Review:    MD
+
 SG-2005-06-02-0: Bugfix:    qconf -tsm command never stops writing output
                  Changed:   scheduler
                  Bugtraq:   6279409

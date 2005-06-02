@@ -435,7 +435,11 @@ SetSpoolingOptionsBerkeleyDB()
          done
        fi
    else
-      ret=`ps -efa | grep "berkeley_db_svc" | wc -l` 
+      if [ "$ARCH" = "darwin" ]; then
+         ret=`ps ax | grep "berkeley_db_svc" | wc -l` 
+      else 
+         ret=`ps -efa | grep "berkeley_db_svc" | wc -l` 
+      fi
       if [ $ret -gt 1 ]; then
          $INFOTEXT "We found a running berkeley db server on this host!"
          if [ "$AUTO" = "true" ]; then
@@ -447,10 +451,9 @@ SetSpoolingOptionsBerkeleyDB()
                   $INFOTEXT -log "We found a running berkeley db server on this host!"
                   $INFOTEXT -log "Please, check this first! Exiting Installation!"
                   MoveLog
+                  exit 1
                fi
-         fi
-
-         if [ "$AUTO" = "false" ]; then
+         else  # $AUTO != true
             $INFOTEXT -auto $AUTO -ask "y" "n" -def "n" "Do you want to use an other host for spooling? (y/n) [n] >>"
             if [ $? = 1 ]; then
                $INFOTEXT "Please enter the path to your Berkeley DB startup script! >>"
@@ -471,6 +474,7 @@ SetSpoolingOptionsBerkeleyDB()
                   ret=$?               
                   if [ "$AUTO" = true ]; then
                      $INFOTEXT -log "The spooling directory already exists!\n Please remove it or choose any other spooling directory!"
+                     MoveLog
                      exit 1
                   fi
  

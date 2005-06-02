@@ -1,3 +1,6 @@
+AA-2005-06-02-0: Testsuite: Bugfix:
+                            - shadowd install send answer for install as admin user
+
 MD-2005-06-02-0: Bugfix:    Merged from V60u4win_BRANCH
                             - shadow_masters file could not be created on 
                             user root=nobody mounted fs

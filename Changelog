@@ -1,3 +1,9 @@
+SG-2005-06-02-0: Bugfix:    qconf -tsm command never stops writing output
+                 Changed:   scheduler
+                 Bugtraq:   6279409
+                 Issue:     1616
+                 Review:    JG
+
 RD-2005-06-02-0: Bugfix:    Close integration cause jobscripts with multiple 
                             mprun commands to be  killed.
                  Changed:   shepherd

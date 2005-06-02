@@ -249,15 +249,19 @@ void write_exit_code_to_qrsh(int exit_code)
 *     Reads the exit code from a process started via qrsh - qrsh_starter
 *     from a file in the jobs TMPDIR.
 *
+*  INPUTS
+*     exit_code - exit code of qrsh_starter
+*
 *  RESULT
-*     the exit code of the process
-*     1, if an error occured while reading the file
+*     0, success
+*     1, if an error occured while trying to get the exit code
 ******************************************************************************/
-int get_exit_code_of_qrsh_starter(void)
+int get_exit_code_of_qrsh_starter(int* exit_code)
 {
    char buffer[1024];
-   int exit_code = 1;
+   int ret = 1;
 
+   *exit_code = 1;
    *buffer = 0;
 
    /* rshd exited with OK: try to get returncode from qrsh_starter file */
@@ -283,15 +287,18 @@ int get_exit_code_of_qrsh_starter(void)
 
          errorfile = fopen(buffer, "r");
          if (errorfile) {
-            if (fscanf(errorfile, "%d", &exit_code) == 1) {
+            ret = 0;
+            if (fscanf(errorfile, "%d", exit_code) == 1) {
                SHEPHERD_TRACE((err_str, "error code from remote command "
-                  "is %d", exit_code));
+                  "is %d", *exit_code));
             }
             fclose(errorfile);
+         } else {
+            SHEPHERD_TRACE((err_str, "can't open file %s", buffer ));
          }
       }
    }
-   return exit_code;        
+   return ret;        
 }
 
 /****** shepherd/qrsh/get_exit_code_of_qrsh_starter() *************************

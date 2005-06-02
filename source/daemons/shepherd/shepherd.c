@@ -1090,7 +1090,16 @@ int ckpt_type
 
    if (!strcmp("job", childname)) {
       if (search_conf_val("rsh_daemon") != NULL) {
-         int qrsh_exit_code = get_exit_code_of_qrsh_starter();
+         int qrsh_exit_code = -1;
+         int success = 1; 
+
+         sge_switch2start_user();
+         success = get_exit_code_of_qrsh_starter(&qrsh_exit_code);
+         sge_switch2admin_user();
+
+         if (success != 0) {
+            shepherd_error_sprintf("can't get qrsh_exit_code\n");
+         }
 
          /* normal exit */
          if (WIFEXITED(qrsh_exit_code)) {

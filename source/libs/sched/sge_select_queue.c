@@ -2298,10 +2298,9 @@ u_long32 ttype
 *******************************************************************************/
 int sge_split_queue_slots_free(lList **free, lList **full) 
 {
-   lList *lp = NULL;
-   int do_free_list = 0;
-   lListElem *this, *next;
-   bool full_queues = false;
+   lList *full_queues = NULL;
+   lListElem *this = NULL;
+   lListElem *next = NULL;
 
    DENTER(TOP_LAYER, "sge_split_queue_nslots_free");
 
@@ -2310,26 +2309,24 @@ int sge_split_queue_slots_free(lList **free, lList **full)
       return -1;
    }
 
-   if (full == NULL) {
-       full = &lp;
-       do_free_list = 1;
-   }
-
    for (this=lFirst(*free); ((next=lNext(this))), this ; this = next) {
-      if ((qinstance_slots_used(this)+1) > (int) lGetUlong(this, QU_job_slots)) {
-
+      if (qinstance_slots_used(this) >= (int) lGetUlong(this, QU_job_slots)) {
+          
+         this = lDechainElem(*free, this);        
+          
          if (!qinstance_state_is_full(this)) {
             schedd_mes_add_global(SCHEDD_INFO_QUEUEFULL_, lGetString(this, QU_full_name));
-            full_queues = true;
+            qinstance_state_set_full(this, true);
+
+            if (full_queues == NULL) {
+               full_queues = lCreateList("full one", lGetListDescr(*free));
+            }
+            lAppendElem(full_queues, this);             
          }   
-      
-         /* chain 'this' into 'full' list */
-         this = lDechainElem(*free, this);
-         if (full) {
-            if (!*full) {
+         else if (full != NULL) {
+            if (*full == NULL) {
                *full = lCreateList("full one", lGetListDescr(*free));
             }   
-            qinstance_state_set_full(this, true);
             lAppendElem(*full, this);
          } 
          else {
@@ -2338,21 +2335,28 @@ int sge_split_queue_slots_free(lList **free, lList **full)
       }
    }
 
-   if (*full) {
-
-      if (full_queues) { 
-         schedd_log_list(MSG_SCHEDD_LOGLIST_QUEUESFULLANDDROPPED , *full, QU_full_name);
-      }   
-
-      if (do_free_list) {
-         lFreeList(*full);
-         *full = NULL;
+   /* dump out the -tsm log and add the new queues to the disabled queue list */
+   if (full_queues) {
+      schedd_log_list(MSG_SCHEDD_LOGLIST_QUEUESFULLANDDROPPED , full_queues, QU_full_name);
+      if (full != NULL) {
+         if (*full == NULL) {
+            *full = full_queues;
+            full_queues = NULL;
+         }
+         else {
+            lAddList(*full, full_queues);
+            full_queues = NULL;
+         }
+      }
+      else {
+         full_queues = lFreeList(full_queues);
       }
    }
 
    DEXIT;
    return 0;
 }
+
 
 /* ----------------------------------------
 

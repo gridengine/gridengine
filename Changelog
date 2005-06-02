@@ -1,3 +1,8 @@
+HP-2005-06-02-1: Enhancem.: man page sge_conf now explains execd_paramd
+                            ENABLE_WINDOMACC
+                 Changed:   sge_conf man page
+                 Review:    AH
+
 RD-2005-06-02-1: Bugfix:    inst_sge -sm don't install a startup script
                             inst_sge -db error on MacOS
                             merged install MacOSX Startup Item

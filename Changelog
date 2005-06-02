@@ -1,3 +1,10 @@
+RD-2005-06-02-0: Bugfix:    Close integration cause jobscripts with multiple 
+                            mprun commands to be  killed.
+                 Changed:   shepherd
+                 Bugtraq:   6269411
+                 Issue:     1654
+                 Review:    AA
+
 AH-2005-06-01-3: Bugfix:    libdrmaa.so crashed if monitoring was enabled
                  Review:    JG
 

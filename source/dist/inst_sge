@@ -317,7 +317,7 @@ if [ "$BERKELEY" = "install" ]; then
       Makedir $SGE_CELL
       Makedir $COMMONDIR 
       SetSpoolingOptions
-      InstallServerScript $euid
+      AddSGEStartUpScript $euid bdb
       GiveBerkelyHints
    else
       $INFOTEXT -log "remote berkeley rpc server installation on host %s" $DB_SPOOLING_SERVER
@@ -372,6 +372,7 @@ if [ "$QMASTER" = "install" -a "$UPDATE" != "true" ]; then
  if [ "$AUTO" = "true" ]; then
     MoveLog
  fi
+
 fi
 
 
@@ -393,6 +394,7 @@ if [ "$EXECD" = "install" -a "$UPDATE" != "true" ]; then
          else 
             $INFOTEXT -log "Host %s already installed" $h
          fi
+
       done
 
    else
@@ -570,7 +572,7 @@ if [ $SHADOW = "install" ]; then
                       "shadow host,\n has read/write permissions to the qmaster spool " \
                       "and SGE_ROOT/<cell>/common \ndirectory! For using a shadow master it " \
                       "is recommended to set up a \nBerkeley DB Spooling Server\n\n Hit <RETURN> to continue >> "
-      
+      CheckWhoInstallsSGE
       CheckForLocalHostResolving
       ProcessSGERoot
 
@@ -640,9 +642,11 @@ if [ $SHADOW = "install" ]; then
          . $SGE_ROOT/$SGE_CELL/common/settings.sh
          SGE_ARCH=`$SGE_ROOT/util/arch`
          $SGE_ROOT/bin/$SGE_ARCH/sge_shadowd &
+         AddSGEStartUpScript $euid master 
       else
         for shs in `cat $SGE_ROOT/$SGE_CELL/common/shadow_masters`; do
            echo ". $SGE_ROOT/$SGE_CELL/common/settings.sh; SGE_ARCH=`$SGE_ROOT/util/arch`; $SGE_ROOT/bin/$SGE_ARCH/sge_shadowd &" | $SHELL_NAME $shs /bin/sh &
+           #TODO: install rc script
         done
       fi
 
@@ -656,6 +660,7 @@ if [ $SHADOW = "install" ]; then
       ExecuteAsAdmin chmod go-w $SGE_ROOT/$SGE_CELL/common/shadow_masters
       for shs in `cat $SGE_ROOT/$SGE_CELL/common/shadow_masters`; do
          echo ". $SGE_ROOT/$SGE_CELL/common/settings.sh; SGE_ARCH=`$SGE_ROOT/util/arch`; $SGE_ROOT/bin/$SGE_ARCH/sge_shadowd &" | $SHELL_NAME $shs /bin/sh &
+         #TODO: install rc script
       done
    fi
 fi

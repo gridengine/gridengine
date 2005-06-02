@@ -1017,6 +1017,11 @@ AddSGEStartUpScript()
       STARTUP_FILE_NAME=sgemaster
       S95NAME=S95sgemaster
       DAEMON_NAME="qmaster/scheduler"
+   elif [ $hosttype = "bdb" ]; then
+      TMP_SGE_STARTUP_FILE=/tmp/sgebdb.$$
+      STARTUP_FILE_NAME=sgebdb
+      S95NAME=S94sgebdb
+      DAEMON_NAME="berkeleydb"
    else
       TMP_SGE_STARTUP_FILE=/tmp/sgeexecd.$$
       STARTUP_FILE_NAME=sgeexecd
@@ -1024,7 +1029,7 @@ AddSGEStartUpScript()
       DAEMON_NAME="execd"
    fi
 
-   SGE_STARTUP_FILE=$SGE_ROOT_VAL/$COMMONDIR/$STARTUP_FILE_NAME
+   SGE_STARTUP_FILE=$SGE_ROOT/$SGE_CELL/common/$STARTUP_FILE_NAME
 
    InstallRcScript 
 
@@ -1125,6 +1130,8 @@ PLIST
 
      if [ $hosttype = "master" ]; then
         DARWIN_GEN_REPLACE="#GENMASTERRC"
+     elif [ $hosttype = "bdb" ]; then
+        DARWIN_GEN_REPLACE="#GENBDBRC"
      else
         DARWIN_GEN_REPLACE="#GENEXECDRC"
      fi

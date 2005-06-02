@@ -7,6 +7,7 @@ StartService()
      ConsoleMessage "Starting SUN Grid Engine"
      #GENMASTERRC > /dev/null 2>&1 < /dev/null
      #GENEXECDRC  > /dev/null 2>&1 < /dev/null
+     #GENBDBRC  > /dev/null 2>&1 < /dev/null
 }
 
 StopService()
@@ -14,6 +15,7 @@ StopService()
      ConsoleMessage "Stopping SUN Grid Engine services"
      #GENMASTERRC stop > /dev/null 2>&1 < /dev/null
      #GENEXECDRC  stop > /dev/null 2>&1 < /dev/null
+     #GENBDBRC  stop > /dev/null 2>&1 < /dev/null
 }
 
 RestartService()
@@ -23,6 +25,8 @@ RestartService()
      #GENMASTERRC stop > /dev/null 2>&1 < /dev/null
      #GENEXECDRC       > /dev/null 2>&1 < /dev/null
      #GENEXECDRC  stop > /dev/null 2>&1 < /dev/null
+     #GENBDBRC       > /dev/null 2>&1 < /dev/null
+     #GENBDBRC  stop > /dev/null 2>&1 < /dev/null
 
 }
 

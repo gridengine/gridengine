@@ -1,3 +1,10 @@
+RD-2005-06-02-1: Bugfix:    inst_sge -sm don't install a startup script
+                            enh. MacOS Startup Item BDB RPC Server
+                 Changed:   install scripts
+                 Bugtraq:   6278140
+                 Issue:     1646
+                 Review:    MD
+
 AA-2005-06-02-0: Testsuite: Bugfix:
                             - shadowd install send answer for install as admin user
 
@@ -271,7 +278,7 @@ SG-2005-05-11-0: Bugfix:    - fixed delay in event client after recieving
 EB-2005-05-11-0: Bugfix:    renamed sge_passwd man pages to sgepasswd 
 
 RC-2005-05-11-0: Enhancem.: install MacOSX Startup Item
-                 Review:    pending
+                 Review:    RD
                  Changed:   dist/util/install_modules/inst_common.sh
                  Added:     dist/util/rctemplates/darwin_template
 

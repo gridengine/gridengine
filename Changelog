@@ -1,3 +1,7 @@
+RD-2005-06-02-3: Bugfix:    upgrade from 5.3 -> 6.0 add managers to operators
+                 Changed:   install scripts
+                 Review:    MD
+
 RD-2005-06-02-2: Bugfix:    qstat -xml -urg output contains badly formatted numbers
                  Changed:   qstat
                  Bugtraq:   6278727

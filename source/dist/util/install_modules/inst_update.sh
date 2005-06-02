@@ -445,7 +445,7 @@ GetOldManagers()
 GetOldOperators()
 {
    OLD_OPERATORS=`cat $OLD_QMASTER_SPOOL/operators | grep -v "#" | tr "\n" " "`    
-   ExecuteAsAdmin $SPOOLDEFAULTS operators $OLD_MANAGERS
+   ExecuteAsAdmin $SPOOLDEFAULTS operators $OLD_OPERATORS
 }
 
 

@@ -1,3 +1,11 @@
+MD-2005-06-02-0: Bugfix:    Merged from V60u4win_BRANCH
+                            - shadow_masters file could not be created on 
+                            user root=nobody mounted fs
+                            - settings file must be sourced for shadow host
+                            installation.
+                 Changed:   inst_sge
+                 Review:    HP
+
 SG-2005-06-02-0: Bugfix:    qconf -tsm command never stops writing output
                  Changed:   scheduler
                  Bugtraq:   6279409

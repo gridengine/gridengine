@@ -1,3 +1,8 @@
+MD-2005-06-06-0: Bugfix:    - added some echo output to setfileperm.sh
+                            - added directories $PATH variable
+                 Review:    HP
+                 Changed:   setfileperm.sh, inst_execd.sh
+
 AH-2005-06-06-1: Bugfix:    Race condition with qsub -sync yes and drmaa_wait() if
                             job exits directly after being submitted
                  Issue:     1657

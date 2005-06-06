@@ -153,6 +153,7 @@ else
    $ECHO "   \$SGE_ROOT/utilbin/<arch>/rlogin"
    $ECHO "   \$SGE_ROOT/utilbin/<arch>/rsh"
    $ECHO "   \$SGE_ROOT/utilbin/<arch>/testsuidroot"
+   $ECHO "   \$SGE_ROOT/bin/<arch>/sgepasswd"
    $ECHO
 
    TEXT="Do you want to set the file permissions (yes/no) [NO] >> \c"

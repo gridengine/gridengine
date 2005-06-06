@@ -1,9 +1,12 @@
+AA-2005-06-06-0: comment caused problem for newer expect version
+
 EB-2005-06-06-0: Bugfix:    file "locking" for sgepasswd
                  Changed:   sgepasswd
                  Review:    HP
 
 SG-2005-06-06-0: Bugfix:    - minor performance improvement in the qmaster, 
                               scriptfile was unlinked twice
+
 SG-2005-06-06-1: Testsuite: new resource reservation test
                  Issue:     1488, 697, 714, 703
                  Review:    JG

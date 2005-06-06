@@ -71,9 +71,12 @@ proc resource_reservation_init_level {} {
    global CHECK_OUTPUT
  
    switch -exact -- $CHECK_ACT_LEVEL {
-      0 {  return 0 } ;# Tests resource_reservation
-      default { return -1 }      
+      "0" {
+         return 0 ;# Tests resource_reservation
+      }
    }
+
+   return -1
 }
 
 # -------- local test procedures: initialization ------------------------------

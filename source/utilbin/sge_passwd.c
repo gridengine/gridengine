@@ -94,7 +94,9 @@ static X509* (*shared_ssl_func__d2i_X509)(X509 **a, unsigned char **in, long len
 #define shared_ssl_func__PEM_read_X509(fp,x,cb,u) (X509 *)shared_ssl_func__PEM_ASN1_read((char *(*)())shared_ssl_func__d2i_X509,PEM_STRING_X509,fp,(char **)x,cb,u)
 #define shared_ssl_func__PEM_read_PrivateKey(fp,x,cb,u) (EVP_PKEY *)shared_ssl_func__PEM_ASN1_read((char *(*)())shared_ssl_func__d2i_AutoPrivateKey,PEM_STRING_EVP_PKEY,fp,(char **)x,cb,u)
 
+#ifdef LOAD_OPENSSL
 static void* shared_ssl_lib = NULL;
+#endif
 
 int
 sge_init_shared_ssl_lib(void) 

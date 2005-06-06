@@ -1,3 +1,7 @@
+EB-2005-06-06-0: Bugfix:    file "locking" for sgepasswd
+                 Changed:   sgepasswd
+                 Review:    HP  
+
 AA-2005-06-06-0: Bugfix:    - sgepasswd, static linking of libcrypto
                  Changed:   sgepasswd, aimk
                  Review:    EB

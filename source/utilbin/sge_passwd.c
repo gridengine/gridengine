@@ -711,6 +711,22 @@ sge_get_file_passwd(void)
    return file;
 }
 
+const char*
+sge_get_file_dotpasswd(void)
+{
+   static char file[4096] = "";
+
+   DENTER(TOP_LAYER, "sge_get_file_dotpasswd");
+   if (file[0] == '\0') {
+      const char *sge_root = sge_get_root_dir(0, NULL, 0, 1);
+      const char *sge_cell = sge_get_default_cell();
+
+      sprintf(file, "%s/%s/common/.sgepasswd", sge_root, sge_cell);
+   } 
+   DEXIT;
+   return file;
+}
+
 unsigned char *
 buffer_encode_hex(unsigned char *input, size_t len, unsigned char **output)
 {
@@ -756,13 +772,14 @@ buffer_decode_hex(unsigned char *input, size_t *len, unsigned char **output)
 #ifdef DEFINE_SGE_PASSWD_MAIN
 
 static void
-password_write_file(char *users[], char *encryped_pwds[], const char *filename) 
+password_write_file(char *users[], char *encryped_pwds[], 
+                    const char *backup_file, const char *filename) 
 {
    FILE *fp = NULL;
    size_t i = 0;
 
    DENTER(TOP_LAYER, "password_write_file");
-   fp = fopen(filename, "w");
+   fp = fopen(backup_file, "w");
    while (fp && users[i] != NULL) {
       if (users[i][0] != '\0') {
          fprintf(fp, "%s %s\n", users[i], encryped_pwds[i]);
@@ -770,6 +787,7 @@ password_write_file(char *users[], char *encryped_pwds[], const char *filename)
       i++;
    }
    fclose(fp);
+   rename(backup_file, filename);
    DEXIT;
 }
 
@@ -780,7 +798,7 @@ password_add_or_replace_entry(char **users[], char **encryped_pwds[],
    size_t i = 0;
    bool done = false;
 
-   DENTER(TOP_LAYER, "password_write_file");
+   DENTER(TOP_LAYER, "password_add_or_replace_entry");
    while ((*users)[i] != NULL) {
       if (!strcmp((*users)[i], user)) {
          free((*encryped_pwds)[i]);
@@ -843,7 +861,8 @@ sge_passwd_delete(const char *username, const char *domain)
    /* 
     * write new password table 
     */ 
-   password_write_file(users, encryped_pwd, sge_get_file_passwd());
+   password_write_file(users, encryped_pwd, 
+                       sge_get_file_dotpasswd(), sge_get_file_passwd());
 }
 
 #if 0
@@ -1067,7 +1086,8 @@ sge_passwd_add_change(const char *username, const char *domain)
    /* 
     * write new password table 
     */ 
-   password_write_file(users, encryped_pwd, sge_get_file_passwd());
+   password_write_file(users, encryped_pwd, 
+                       sge_get_file_dotpasswd(), sge_get_file_passwd());
    DPRINTF(("password table has been written\n"));
    fprintf(stdout, MSG_PWD_CHANGED);
    DEXIT;

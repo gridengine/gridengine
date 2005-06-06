@@ -200,6 +200,14 @@ char **argv
          /* error message gets written by centry_list_fill_request into SGE_EVENT */
          SGE_EXIT(1);
       }
+      
+      {/* clean host list */
+         lListElem *host = NULL;
+         for_each(host, ehl) {
+            lSetUlong(host, EH_tagged, 0);
+         }  
+      }   
+
       /* prepare request */
       for_each(ep, ehl) {
 
@@ -211,8 +219,9 @@ char **argv
 
          selected = sge_select_queue(resource_match_list, NULL, ep, ehl, cl, 1, -1);
 
-         if (selected) 
+         if (selected) {
             lSetUlong(ep, EH_tagged, 1);
+         }   
       }
 
       /*

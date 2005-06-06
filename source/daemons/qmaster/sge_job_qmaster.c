@@ -3890,8 +3890,9 @@ int *trigger
             sconf_set_qs_state(QS_STATE_EMPTY);
 
             /* redirect scheduler monitoring into answer list */
-            if (verify_mode==JUST_VERIFY)
+            if (verify_mode==JUST_VERIFY) {
                set_monitor_alpp(&talp);
+            }   
 
             if (lGetString(jep, JB_pe)) {
                sge_select_parallel_environment(&a, Master_Pe_List);

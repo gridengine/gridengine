@@ -1,3 +1,11 @@
+SG-2005-06-06-0: Bugfix:    - minor performance improvement in the qmaster, scriptfile
+                              was unlinked twice
+                            - Resource filtering with qhost broken
+                 Changed:   qmaster, scheduler, qhost
+                 Issue:     1531
+                 Bugtraq:   6280698
+                 Review:    JG
+
 RD-2005-06-02-3: Bugfix:    upgrade from 5.3 -> 6.0 add managers to operators
                  Changed:   install scripts
                  Review:    MD

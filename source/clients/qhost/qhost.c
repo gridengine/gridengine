@@ -196,6 +196,14 @@ char **argv
          /* error message gets written by centry_list_fill_request into SGE_EVENT */
          SGE_EXIT(1);
       }
+
+      {
+         lListElem *host = NULL;
+         for_each(host, ehl) {
+            lSetUlong(host, EH_tagged, 0);
+         }  
+      }   
+         
       /* prepare request */
       for_each(ep, ehl) {
 

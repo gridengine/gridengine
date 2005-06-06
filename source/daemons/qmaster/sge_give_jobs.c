@@ -1228,12 +1228,17 @@ int commit_flags
       if (job_get_not_enrolled_ja_tasks(jep)) {
          no_unlink = 1;
       }
+      
       if (!no_unlink) {
          release_successor_jobs(jep);
-         PROF_START_MEASUREMENT(SGE_PROF_JOBSCRIPT);
-         unlink(lGetString(jep, JB_exec_file));
-         PROF_STOP_MEASUREMENT(SGE_PROF_JOBSCRIPT);
+         if (lGetString(jep, JB_exec_file) != NULL) {
+            PROF_START_MEASUREMENT(SGE_PROF_JOBSCRIPT);
+            unlink(lGetString(jep, JB_exec_file));
+            lSetString(jep, JB_exec_file, NULL);
+            PROF_STOP_MEASUREMENT(SGE_PROF_JOBSCRIPT);
+         }
       }
+
       break;
 
    case COMMIT_ST_DEBITED_EE: /* triggered by ORT_remove_job */
@@ -1241,8 +1246,9 @@ int commit_flags
       reporting_create_job_log(NULL, now, JL_DELETED, MSG_SCHEDD, hostname, jr, jep, jatep, NULL, (mode==COMMIT_ST_DEBITED_EE) ?  MSG_LOG_DELSGE : MSG_LOG_DELIMMEDIATE);
       jobid = lGetUlong(jep, JB_job_number);
 
-      if (mode == COMMIT_ST_NO_RESOURCES)
+      if (mode == COMMIT_ST_NO_RESOURCES) {
          sge_job_finish_event(jep, jatep, jr, commit_flags, NULL); 
+      }   
       sge_bury_job(jep, jobid, jatep, spool_job, no_events);
       break;
    
@@ -1562,7 +1568,7 @@ static int sge_bury_job(lListElem *job, u_long32 job_id, lListElem *ja_task,
       /* 
        * do not try to remove script file for interactive jobs 
        */
-      if (lGetString(job, JB_script_file)) {
+      if (lGetString(job, JB_script_file) != NULL) {
          PROF_START_MEASUREMENT(SGE_PROF_JOBSCRIPT);
          unlink(lGetString(job, JB_exec_file));
          PROF_STOP_MEASUREMENT(SGE_PROF_JOBSCRIPT);

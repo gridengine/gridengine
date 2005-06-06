@@ -135,6 +135,8 @@ parallel_queue_slots(sge_assignment_t *a,lListElem *qep, int *slots, int *slots_
 static int 
 parallel_make_granted_destination_id_list(sge_assignment_t *assignment);
 
+static 
+void clean_up_parallel_job(sge_assignment_t *a); 
 
 /* -- these implement sequential assignemnt ---------------------- */
 
@@ -514,8 +516,43 @@ sge_select_parallel_environment( sge_assignment_t *best, lList *pe_list)
       schedd_mes_set_logging(old_logging);
    }   
 
+   /* clean up */
+   clean_up_parallel_job(best); 
+   
    DEXIT;
    return best_result;
+}
+
+/****** sge_select_queue/clean_up_parallel_job() *******************************
+*  NAME
+*     clean_up_parallel_job() -- removes tages
+*
+*  SYNOPSIS
+*     static void clean_up_parallel_job(sge_assignment_t *a) 
+*
+*  FUNCTION
+*     duing pe job dispatch are man queues and hosts taged. This
+*     function removes the tages.
+*
+*  INPUTS
+*     sge_assignment_t *a - the resource structure
+*
+*
+*
+*  NOTES
+*     MT-NOTE: clean_up_parallel_job() is not MT safe 
+*
+*******************************************************************************/
+static
+void clean_up_parallel_job(sge_assignment_t *a) 
+{
+   lListElem *host = NULL;
+   qinstance_list_set_tag(a->queue_list, 0);
+   for_each(host, a->host_list) {
+      lSetUlong(host, EH_tagged, 0);
+      lSetUlong(host, EH_master_host, 0); 
+   }  
+
 }
 
 /****** scheduler/parallel_reservation_max_time_slots() *****************************************
@@ -2799,10 +2836,7 @@ parallel_tag_queues_suitable4job(sge_assignment_t *a, category_use_t *use_catego
 
    DENTER(TOP_LAYER, "parallel_tag_queues_suitable4job");
 
-   qinstance_list_set_tag(a->queue_list, 0);
-   for_each(hep, a->host_list) {
-      lSetUlong(hep, EH_tagged, 0);
-   }   
+   clean_up_parallel_job(a); 
 
    if (use_category->use_category) {
       schedd_mes_set_tmp_list(use_category->cache, CCT_job_messages, lGetUlong(job, JB_job_number));

@@ -1,16 +1,22 @@
+EB-2005-06-06-0: Bugfix:    file "locking" for sgepasswd
+                 Changed:   sgepasswd
+                 Review:    HP
+
+SG-2005-06-06-0: Bugfix:    - minor performance improvement in the qmaster, 
+                              scriptfile was unlinked twice
 SG-2005-06-06-1: Testsuite: new resource reservation test
                  Issue:     1488, 697, 714, 703
                  Review:    JG
 
-AH-2005-06-06-0: Bugfix:    Race condition with qsub -sync yes and drmaa_wait() if 
-                            job exits directly after being submitted
+AH-2005-06-06-0: Bugfix:    Race condition with qsub -sync yes and drmaa_wait()
+                            if job exits directly after being submitted
                  Issue:     1657
                  Bugtraq:   6273217
                  Changed:   qsub, libdrmaa.so
                  Review:    DT
 
-SG-2005-06-06-0: Bugfix:    - minor performance improvement in the qmaster, scriptfile
-                              was unlinked twice
+SG-2005-06-06-0: Bugfix:    - minor performance improvement in the qmaster, 
+                              scriptfile was unlinked twice
                             - Resource filtering with qhost broken
                  Changed:   qmaster, scheduler, qhost
                  Issue:     1531
@@ -21,7 +27,8 @@ RD-2005-06-02-3: Bugfix:    upgrade from 5.3 -> 6.0 add managers to operators
                  Changed:   install scripts
                  Review:    MD
 
-RD-2005-06-02-2: Bugfix:    qstat -xml -urg output contains badly formatted numbers
+RD-2005-06-02-2: Bugfix:    qstat -xml -urg output contains badly formatted 
+                            numbers
                  Changed:   qstat
                  Bugtraq:   6278727
                  Issue:     1656
@@ -35,7 +42,8 @@ RD-2005-06-02-1: Bugfix:    inst_sge -sm don't install a startup script
                  Review:    MD
 
 AA-2005-06-02-0: Testsuite: Bugfix:
-                            - shadowd install send answer for install as admin user
+                            - shadowd install send answer for install as 
+                              admin user
 
 MD-2005-06-02-0: Bugfix:    Merged from V60u4win_BRANCH
                             - shadow_masters file could not be created on 

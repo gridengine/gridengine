@@ -175,9 +175,18 @@ proc drmaa_check {} {
                 ST_SUBMIT_PAUSE_SUBMIT_SYNC ST_INPUT_FILE_FAILURE ST_OUTPUT_FILE_FAILURE \
                 ST_ERROR_FILE_FAILURE ST_SUBMIT_SUSPEND_RESUME_WAIT \
                 ST_SUBMIT_POLLING_WAIT_TIMEOUT ST_SUBMIT_POLLING_WAIT_ZEROTIMEOUT \
-                ST_SUBMIT_POLLING_SYNCHRONIZE_TIMEOUT ST_SUBMIT_POLLING_SYNCHRONIZE_ZEROTIMEOUT"  {
+                ST_SUBMIT_POLLING_SYNCHRONIZE_TIMEOUT ST_SUBMIT_POLLING_SYNCHRONIZE_ZEROTIMEOUT" {
                puts "starting single threaded test $st_test"
                drmaa_test $host $binary_path $st_test $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh
+            }
+
+            # -- tests with a <sleeper_job> argument repeatedly 
+            foreach st_test "ST_SUBMIT_NO_RUN_WAIT" {
+               set n 100
+               puts "starting single threaded test $st_test $n times each"
+               for {set i 0} {$i < $n} {incr i} {
+                  drmaa_test $host $binary_path $st_test $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh
+               }
             }
 
             # -- tests with a <exit_arg_job> argument

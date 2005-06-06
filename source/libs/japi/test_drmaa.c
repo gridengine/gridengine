@@ -68,6 +68,11 @@ enum {
          - submit jobs 
          - wait for jobend */
 
+   ST_SUBMIT_NO_RUN_WAIT,    
+      /* - one thread 
+         - submit jobs that won't run
+         - wait for jobend */
+
    MT_SUBMIT_WAIT,        
       /* - multiple submission threads
          - wait is done by main thread */
@@ -427,6 +432,7 @@ const struct test_name2number_map {
    { "ST_EMPTY_SESSION_SYNCHRONIZE_NODISPOSE",    ST_EMPTY_SESSION_SYNCHRONIZE_NODISPOSE,    0, "" },
    { "ST_EMPTY_SESSION_CONTROL",                  ST_EMPTY_SESSION_CONTROL,                  1, "DRMAA_CONTROL_*" },
    { "ST_SUBMIT_WAIT",                            ST_SUBMIT_WAIT,                            1, "<sleeper_job>" },
+   { "ST_SUBMIT_NO_RUN_WAIT",                     ST_SUBMIT_NO_RUN_WAIT,                     1, "<sleeper_job>" },
    { "ST_BULK_SUBMIT_WAIT",                       ST_BULK_SUBMIT_WAIT,                       1, "<sleeper_job>" },
    { "ST_BULK_SINGLESUBMIT_WAIT_INDIVIDUAL",      ST_BULK_SINGLESUBMIT_WAIT_INDIVIDUAL,      1, "<sleeper_job>" },
    { "ST_SUBMITMIXTURE_SYNC_ALL_DISPOSE",         ST_SUBMITMIXTURE_SYNC_ALL_DISPOSE,         1, "<sleeper_job>" },
@@ -729,8 +735,9 @@ static int test(int *argc, char **argv[], int parse_args)
       break;
 
    case ST_SUBMIT_WAIT:
+   case ST_SUBMIT_NO_RUN_WAIT:
       {
-         int n = -1;
+         int n = (test_case == ST_SUBMIT_WAIT)?JOB_CHUNK:1;
          char jobid[1024];
 
          if (parse_args)
@@ -747,7 +754,11 @@ static int test(int *argc, char **argv[], int parse_args)
             return 1;
          }
 
-         for (i=0; i<JOB_CHUNK; i++) {
+         if (test_case == ST_SUBMIT_NO_RUN_WAIT) {
+            drmaa_set_attribute(jt, DRMAA_NATIVE_SPECIFICATION, "-l a=fantasy_os -now yes -w n", NULL, 0);
+         }
+
+         for (i=0; i<n; i++) {
             if (drmaa_run_job(jobid, sizeof(jobid)-1, jt, diagnosis, sizeof(diagnosis)-1)!=DRMAA_ERRNO_SUCCESS) {
                fprintf(stderr, "drmaa_run_job() failed: %s\n", diagnosis);
                return 1;

@@ -1,3 +1,10 @@
+AH-2005-06-01-1: Bugfix:    Race condition with qsub -sync yes and drmaa_wait() if 
+                            job exits directly after being submitted
+                 Issue:     1657
+                 Bugtraq:   6273217
+                 Changed:   qsub, libdrmaa.so
+                 Review:    DT
+
 SG-2005-06-06-0: Bugfix:    - minor performance improvement in the qmaster, scriptfile
                               was unlinked twice
                             - Resource filtering with qhost broken

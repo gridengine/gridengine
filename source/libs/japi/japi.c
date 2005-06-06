@@ -1474,7 +1474,8 @@ static int japi_send_job(lListElem *sge_job_template, u_long32 *jobid, dstring *
 *     static int - DRMAA error codes
 *
 *  NOTES
-*     MT-NOTES: japi_add_job() is MT safe 
+*     MT-NOTES: japi_add_job() is not MT safe due to 
+*               Master_japi_job_list
 *******************************************************************************/
 static int japi_add_job(u_long32 jobid, u_long32 start, u_long32 end, u_long32 incr, 
       bool is_array, dstring *diag)
@@ -1483,12 +1484,8 @@ static int japi_add_job(u_long32 jobid, u_long32 start, u_long32 end, u_long32 i
 
    DENTER(TOP_LAYER, "japi_add_job");
 
-   JAPI_LOCK_JOB_LIST();
-
    japi_job = lGetElemUlong(Master_japi_job_list, JJ_jobid, jobid);
    if (japi_job) {
-      JAPI_UNLOCK_JOB_LIST();
-
       /* job may not yet exist */
       sge_dstring_copy_string(diag, "job exists already in japi job list");
       DEXIT;
@@ -1508,8 +1505,6 @@ static int japi_add_job(u_long32 jobid, u_long32 start, u_long32 end, u_long32 i
       JOB_TYPE_SET_ARRAY(job_type);
       lSetUlong(japi_job, JJ_type, job_type);
    }
-
-   JAPI_UNLOCK_JOB_LIST();
 
    DEXIT;
    return DRMAA_ERRNO_SUCCESS;
@@ -1580,18 +1575,23 @@ int japi_run_job(dstring *job_id, lListElem *sge_job_template, dstring *diag)
    /* tag job with JAPI session key */
    lSetString(sge_job_template, JB_session, japi_session_key);
 
+   JAPI_LOCK_JOB_LIST();    
+
    /* send job to qmaster using GDI */
    drmaa_errno = japi_send_job(sge_job_template, &jobid, diag);
    if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
+      JAPI_UNLOCK_JOB_LIST();    
       japi_dec_threads(SGE_FUNC);
       /* diag written by japi_send_job() */
       DEXIT;
       return drmaa_errno;
    }
 
-   /* add job arry to library session data */
+   /* add job array to library session data */
    drmaa_errno = japi_add_job(jobid, 1, 1, 1, false, diag);
    
+   JAPI_UNLOCK_JOB_LIST();    
+
    /* this is just a dirty hook for testing purposes 
       need this to enforce certain error conditions */
    if ((s=getenv("SGE_DELAY_AFTER_SUBMIT"))) {
@@ -1686,9 +1686,12 @@ int japi_run_bulk_jobs(drmaa_attr_values_t **jobidsp, lListElem *sge_job_templat
       lSetString(sge_job_template, JB_session, japi_session_key);
    }
 
+   JAPI_LOCK_JOB_LIST();    
+
    /* send job to qmaster using GDI */
    drmaa_errno = japi_send_job(sge_job_template, &jobid, diag);
    if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
+      JAPI_UNLOCK_JOB_LIST();    
       japi_dec_threads(SGE_FUNC);
       /* diag written by japi_send_job() */
       DEXIT;
@@ -1697,6 +1700,9 @@ int japi_run_bulk_jobs(drmaa_attr_values_t **jobidsp, lListElem *sge_job_templat
 
    /* add job arry to library session data */
    drmaa_errno = japi_add_job(jobid, start, end, incr, true, diag);
+
+   JAPI_UNLOCK_JOB_LIST();    
+
    japi_dec_threads(SGE_FUNC);
    if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
       /* diag written by japi_add_job() */

@@ -33,7 +33,7 @@
 #include <unistd.h>
 #include <stdio.h>
 
-#if defined( LOAD_OPENSSL )
+#ifdef SECURE
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <fcntl.h>
@@ -102,7 +102,7 @@ sge_init_shared_ssl_lib(void)
    int ret;
 
    DENTER(TOP_LAYER, "sge_init_shared_ssl_lib");
-#if 1 
+#ifdef LOAD_OPENSSL  
    if (shared_ssl_lib == NULL) {
 #  if defined(DARWIN)
 #     ifdef RTLD_NODELETE
@@ -1210,7 +1210,7 @@ int main(int argc, char *argv[])
 }
 
 #endif /* defined( DEFINE_SGE_PASSWD_MAIN ) */
-#else  /* defined( LOAD_OPENSSL ) */
+#else  /* defined( SECURE ) */
 #if defined( DEFINE_SGE_PASSWD_MAIN )
 
 int main(void)
@@ -1220,6 +1220,6 @@ int main(void)
 }
 
 #endif /* defined( DEFINE_SGE_PASSWD_MAIN ) */
-#endif /* defined( LOAD_OPENSSL ) */
+#endif /* defined( SECURE ) */
 
 

@@ -1,3 +1,7 @@
+AA-2005-06-06-0: Bugfix:    - sgepasswd, static linking of libcrypto
+                 Changed:   sgepasswd, aimk
+                 Review:    EB
+                 
 SG-2005-06-06-0: Bugfix:    - Resource filtering with qhost broken
                  Changed:   qmaster, scheduler, qhost
                  Issue:     1531

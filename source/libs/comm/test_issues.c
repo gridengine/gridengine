@@ -417,10 +417,10 @@ extern int main(int argc, char** argv)
         gettimeofday(&now,NULL);
         runtime = now.tv_sec - start.tv_sec;
         printf("send/receive took %d seconds\n", runtime );
-        if (data_size < 60*1024*1024) {
+        if (data_size < 30*1024*1024) {
            data_size = data_size * 2;
         } else {
-           data_size = data_size + 32*1024*1024;
+           data_size = data_size + 16*1024*1024;
         }
      }
 

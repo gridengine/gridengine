@@ -1,4 +1,12 @@
-AA-2005-06-06-0: comment caused problem for newer expect version
+CR-2005-06-07-0: Testsuite: o test_issues module test now raise memory
+                              allocation size slower (some machines started
+                              swapping so that commlib/issues test failed
+                            o raised timeout waiting for output in
+                              commlib/issues test
+                            o raised timeout waiting for file in
+                              bugs/issuezilla/1489 test
+
+AA-2005-06-06-0: Testsuite: comment caused problem for newer expect version
 
 EB-2005-06-06-0: Bugfix:    file "locking" for sgepasswd
                  Changed:   sgepasswd

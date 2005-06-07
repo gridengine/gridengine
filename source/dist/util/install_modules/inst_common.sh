@@ -1322,9 +1322,10 @@ BackupConfig()
 {
    DATE=`date '+%Y-%m-%d_%H_%M_%S'`
    BUP_BDB_COMMON_FILE_LIST_TMP="accounting bootstrap qtask settings.sh act_qmaster sgemaster host_aliases settings.csh sgeexecd sgebdb shadow_masters" 
+   BUP_BDB_COMMON_DIR_LIST_TMP="sgeCA"
    BUP_BDB_SPOOL_FILE_LIST_TMP="jobseqnum"
    BUP_CLASSIC_COMMON_FILE_LIST_TMP="configuration sched_configuration accounting bootstrap qtask settings.sh act_qmaster sgemaster host_aliases settings.csh sgeexecd shadow_masters"
-   BUP_CLASSIC_DIR_LIST_TMP="local_conf" 
+   BUP_CLASSIC_DIR_LIST_TMP="sgeCA local_conf" 
    BUP_CLASSIC_SPOOL_FILE_LIST_TMP="jobseqnum admin_hosts calendars centry ckpt cqueues exec_hosts hostgroups managers operators pe projects qinstances schedd submit_hosts usermapping users usersets zombies"
    BUP_COMMON_FILE_LIST=""
    BUP_SPOOL_FILE_LIST=""
@@ -1385,9 +1386,10 @@ RestoreConfig()
 {
    DATE=`date '+%H_%M_%S'`
    BUP_COMMON_FILE_LIST="accounting bootstrap qtask settings.sh act_qmaster sgemaster host_aliases settings.csh sgeexecd sgebdb shadow_masters" 
+   BUP_COMMON_DIR_LIST="sgeCA"
    BUP_SPOOL_FILE_LIST="jobseqnum"
    BUP_CLASSIC_COMMON_FILE_LIST="configuration sched_configuration accounting bootstrap qtask settings.sh act_qmaster sgemaster host_aliases settings.csh sgeexecd shadow_masters"
-   BUP_CLASSIC_DIR_LIST="local_conf" 
+   BUP_CLASSIC_DIR_LIST="sgeCA local_conf" 
    BUP_CLASSIC_SPOOL_FILE_LIST="jobseqnum admin_hosts calendars centry ckpt cqueues exec_hosts hostgroups managers operators pe projects qinstances schedd submit_hosts usermapping users usersets zombies"
 
    MKDIR="mkdir -p"
@@ -1449,6 +1451,12 @@ RestoreConfig()
             fi
 
          for f in $BUP_COMMON_FILE_LIST; do
+            if [ -f /tmp/bup_tmp_$DATE/$f ]; then
+               ExecuteAsAdmin $CP /tmp/bup_tmp_$DATE/$f $SGE_ROOT/$SGE_CELL/common/
+            fi
+         done
+
+         for f in $BUP_COMMON_DIR_LIST; do
             if [ -f /tmp/bup_tmp_$DATE/$f ]; then
                ExecuteAsAdmin $CP /tmp/bup_tmp_$DATE/$f $SGE_ROOT/$SGE_CELL/common/
             fi
@@ -2011,6 +2019,13 @@ DoBackup()
       for f in $BUP_BDB_COMMON_FILE_LIST_TMP; do
          if [ -f $SGE_ROOT/$SGE_CELL/common/$f ]; then
             BUP_COMMON_FILE_LIST="$BUP_COMMON_FILE_LIST $f"
+            ExecuteAsAdmin $CPF $SGE_ROOT/$SGE_CELL/common/$f $backup_dir
+         fi
+      done
+
+      for f in $BUP_BDB_COMMON_DIR_LIST_TMP; do
+         if [ -f $SGE_ROOT/$SGE_CELL/common/$f ]; then
+            BUP_COMMON_DIR_LIST="$BUP_COMMON_DIR_LIST $f"
             ExecuteAsAdmin $CPF $SGE_ROOT/$SGE_CELL/common/$f $backup_dir
          fi
       done

@@ -1,3 +1,8 @@
+HP-2005-06-07-0: Enhancem.: fopen(), fprintf() and fclose()-error handling
+                            improved.
+                 Changed:   sgepasswd, libs/uti/sge_stdio.h
+                 Review:    MD
+
 JG-2005-06-07-0: Bugfix:    qmaster profiling can only be turned on by 
                             restarting qmaster.
                  Issue:     1601

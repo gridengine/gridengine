@@ -57,6 +57,7 @@
 #include "uti/sge_bootstrap.h"
 #include "uti/setup_path.h"
 #include "uti/sge_prog.h"
+#include "uti/sge_stdio.h"
 #if defined(DEFINE_SGE_PASSWD_MAIN)
 #include "sgermon.h"
 #endif
@@ -779,15 +780,36 @@ password_write_file(char *users[], char *encryped_pwds[],
    size_t i = 0;
 
    DENTER(TOP_LAYER, "password_write_file");
-   fp = fopen(backup_file, "w");
-   while (fp && users[i] != NULL) {
+
+   FOPEN(fp, backup_file, "w");
+   while (users[i] != NULL) {
       if (users[i][0] != '\0') {
-         fprintf(fp, "%s %s\n", users[i], encryped_pwds[i]);
+         FPRINTF((fp, "%s %s\n", users[i], encryped_pwds[i]));
       }
       i++;
    }
-   fclose(fp);
+   FCLOSE(fp);
    rename(backup_file, filename);
+   goto FUNC_EXIT;
+
+
+FOPEN_ERROR:
+   fprintf(stderr, MSG_PWD_OPEN_SGEPASSWD, prognames[SGE_PASSWD],
+      strerror(errno), errno);
+   goto FUNC_EXIT;
+
+FPRINTF_ERROR:
+   fprintf(stderr, MSG_PWD_WRITE_SGEPASSWD, prognames[SGE_PASSWD],
+      strerror(errno), errno);
+   FCLOSE(fp);
+   goto FUNC_EXIT;
+
+FCLOSE_ERROR:
+   fprintf(stderr, MSG_PWD_CLOSE_SGEPASSWD, prognames[SGE_PASSWD],
+      strerror(errno), errno);
+   goto FUNC_EXIT;
+
+FUNC_EXIT:
    DEXIT;
 }
 
@@ -812,7 +834,6 @@ password_add_or_replace_entry(char **users[], char **encryped_pwds[],
       (*encryped_pwds)[i] = strdup(encryped_pwd); 
    }
    DEXIT;
- 
 }
 
 static void

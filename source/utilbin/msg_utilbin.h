@@ -200,6 +200,11 @@
 #define MSG_PWD_MALLOC              _MESSAGE(57322,         _(SFN": malloc failed\n"))
 #define MSG_PWD_LOAD_PUB            _MESSAGE(57323,         _(SFN": can't load public key "SFQ" to ecrypt password\n"))
 #define MSG_PWD_CANT_OPEN_SLL_LIB   _MESSAGE(57324,         _(SFN": can't open SSL library\n"))
+#define MSG_PWD_OPEN_SGEPASSWD      _MESSAGE(57325,         _(SFN": can't open sgepasswd file: %s (%d)\n"))
+#define MSG_PWD_READ_SGEPASSWD      _MESSAGE(57325,         _(SFN": can't read from sgepasswd file: %s (%d)\n"))
+#define MSG_PWD_WRITE_SGEPASSWD     _MESSAGE(57325,         _(SFN": can't write to sgepasswd file: %s (%d)\n"))
+#define MSG_PWD_CLOSE_SGEPASSWD     _MESSAGE(57325,         _(SFN": error closing sgepasswd file: %s (%d)\n"))
+
 
 
 #endif /* __MSG_UTILBIN_H */

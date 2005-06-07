@@ -262,6 +262,7 @@ proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result 
 
       send -i $sp_id "G"
       set timeout_count 0
+      set start_time 0
       while { $stop_line_wait == 0 } {
          expect {
             -i $sp_id full_buffer {

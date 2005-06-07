@@ -5911,8 +5911,6 @@ proc shutdown_qmaster {hostname qmaster_spool_dir} {
    puts $CHECK_OUTPUT "killing qmaster on host $hostname ..."
    puts $CHECK_OUTPUT "retrieving data from spool dir $qmaster_spool_dir"
 
-
-
    set qmaster_pid -1
 
    set qmaster_pid [ start_remote_prog "$hostname" "$CHECK_USER" "cat" "$qmaster_spool_dir/qmaster.pid" ]
@@ -5921,11 +5919,9 @@ proc shutdown_qmaster {hostname qmaster_spool_dir} {
       set qmaster_pid -1
    }
  
-
    get_ps_info $qmaster_pid $hostname
    if { ($ps_info($qmaster_pid,error) == 0) } {
       if { [ is_pid_with_name_existing $hostname $qmaster_pid "sge_qmaster" ] == 0 } { 
-
          puts $CHECK_OUTPUT "killing qmaster with pid $qmaster_pid on host $hostname"
          puts $CHECK_OUTPUT "do a qconf -km ..."
 
@@ -5943,6 +5939,7 @@ proc shutdown_qmaster {hostname qmaster_spool_dir} {
       add_proc_error "shutdown_qmaster" "-1" "ps_info failed (2), pid=$qmaster_pid"
       set qmaster_pid -1
    }
+
    puts $CHECK_OUTPUT "done."
 }  
 
@@ -6666,6 +6663,9 @@ proc delete_operator {anOperator} {
 #     options       - options to the submit command
 #     script        - script to start
 #     args          - arguments to the script
+#     tail_host     - host on which a tail to the output file will be done.
+#                     This may be important, it should be the host where the job, or
+#                     the master task of the job is run to avoid NFS latencies.
 #
 #  RESULT
 #     a session id from open_spawn_process, or an empty string ("") on error
@@ -6675,18 +6675,16 @@ proc delete_operator {anOperator} {
 #
 #*******************************
 #
-proc submit_with_method {submit_method options script args} {
+proc submit_with_method {submit_method options script args tail_host} {
    global ts_config
    global CHECK_OUTPUT CHECK_HOST CHECK_USER 
    global CHECK_PROTOCOL_DIR
-   global file_procedure_logfile_wait_sp_id
   
    # preprocessing args - it is treated as list for some reason - options not.
    set job_args [lindex $args 0]
    foreach arg [lrange $args 1 end] {
       append job_args " $arg"
    }
-   
   
    switch -exact $submit_method {
       qsub {
@@ -6695,11 +6693,9 @@ proc submit_with_method {submit_method options script args} {
          set job_output_file "$CHECK_PROTOCOL_DIR/check.out"
          catch {exec touch $job_output_file} output
          # initialize tail to logfile
-         init_logfile_wait $CHECK_HOST $job_output_file
+         set sid [init_logfile_wait $tail_host $job_output_file]
          # submit job
          submit_job "-o $job_output_file -j y $options $script $job_args" 1 60
-         # return global file handle
-         set sid $file_procedure_logfile_wait_sp_id
       }
 
       qrsh {

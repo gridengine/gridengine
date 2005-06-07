@@ -2586,6 +2586,8 @@ proc init_logfile_wait { hostname logfile  } {
    log_user 1 
    puts $CHECK_OUTPUT "init_logfile_wait done"
    set file_procedure_logfile_wait_sp_id $sid
+
+   return $sid
 }
 
 #****** file_procedures/logfile_wait() *****************************************
@@ -2642,7 +2644,6 @@ proc logfile_wait { { wait_string "" } { mytimeout 60 } { close_connection 1 } {
 
    upvar $return_err_code back_value
 
-
    set back_value 0
 
    set sp_id [ lindex $file_procedure_logfile_wait_sp_id 1 ]
@@ -2664,7 +2665,7 @@ proc logfile_wait { { wait_string "" } { mytimeout 60 } { close_connection 1 } {
       expect {
          -i $sp_id -- full_buffer {
             if { $add_errors == 1 } {
-               add_proc_error "init_logfile_wait" "-1" "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
+               add_proc_error "logfile_wait" "-1" "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
             }
             set back_value -2
             break
@@ -2672,14 +2673,14 @@ proc logfile_wait { { wait_string "" } { mytimeout 60 } { close_connection 1 } {
 
          -i $sp_id eof {
             if { $add_errors == 1 } {
-               add_proc_error "init_logfile_wait" "-1" "unexpected end of file"
+               add_proc_error "logfile_wait" "-1" "unexpected end of file"
             }
             set back_value -3
             break
          }
          -i $sp_id -- "_exit_status_" { 
             if { $add_errors == 1 } {
-               add_proc_error "init_logfile_wait" "-1" "unexpected end of tail command"
+               add_proc_error "logfile_wait" "-1" "unexpected end of tail command"
             }
             set back_value -4
             break

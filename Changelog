@@ -1,9 +1,13 @@
-RD-2005-06-07-0: Bugfix:   backup script does not backup sgeCA directory 
-                           for CSP systems
-                 Changed:  inst_common.sh
-                 Bugtraq:  6262009
-                 Issue:    1591
-                 Review:   CR
+JG-2005-06-07-0: Testsuite: New check system_tests/qmaster/profiling.
+                            Minor fixes for tests functional/usage and 
+                            functional/tight_integration.
+
+RD-2005-06-07-0: Bugfix:    backup script does not backup sgeCA directory 
+                            for CSP systems
+                 Changed:   inst_common.sh
+                 Bugtraq:   6262009
+                 Issue:     1591
+                 Review:    CR
 
 CR-2005-06-07-0: Testsuite: o test_issues module test now raise memory
                               allocation size slower (some machines started

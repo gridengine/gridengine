@@ -1869,7 +1869,7 @@ int set_thread_prof_status_by_name(const char* thread_name, bool prof_status) {
    
    for (i = 0; i < MAX_THREAD_NUM; i++) {
       if (thrdInfo[i].thrd_name != NULL) {
-         if (strcmp(thrdInfo[i].thrd_name, thread_name)) {
+         if (strcmp(thrdInfo[i].thrd_name, thread_name) == 0) {
             thrdInfo[i].prof_is_active = prof_status;
          }
       }

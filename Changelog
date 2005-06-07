@@ -1,3 +1,10 @@
+JG-2005-06-07-0: Bugfix:    qmaster profiling can only be turned on by 
+                            restarting qmaster.
+                 Issue:     1601
+                 Bugtraq:   6281462
+                 Changed:   sge_qmaster
+                 Review:    SG
+
 MD-2005-06-06-1: Bugfix:    -typo in variable name
                  Changed:   inst_execd.sh
 

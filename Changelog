@@ -1,3 +1,10 @@
+JG-2005-06-07-1: Bugfix:    qmaster profiling can only be turned on by 
+                            restarting qmaster.
+                 Issue:     1601
+                 Bugtraq:   6281462
+                 Changed:   sge_qmaster
+                 Review:    SG
+
 JG-2005-06-07-0: Testsuite: New check system_tests/qmaster/profiling.
                             Minor fixes for tests functional/usage and 
                             functional/tight_integration.

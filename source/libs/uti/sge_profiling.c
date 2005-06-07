@@ -121,7 +121,7 @@
 *
 *  NOTES
 *     MT-NOTE: this module is MT safe, if sge_prof_setup() and/or
-*              sge_set_profiling_enabled() are called before
+*              sge_prof_set_enabled() are called before
 *              profiling is started and sge_prof_cleanup() is called after
 *              all threads which make profiling calls have been stopped!
 *              sge_prof_cleanup() is used to free  the profiling array 
@@ -1858,8 +1858,7 @@ int set_thread_prof_status_by_name(const char* thread_name, bool prof_status) {
 
    if (!profiling_enabled) {
       return 0;
-   }   
-   else if (thread_name == NULL) {
+   } else if (thread_name == NULL) {
       return 1;
    }
 
@@ -1869,7 +1868,7 @@ int set_thread_prof_status_by_name(const char* thread_name, bool prof_status) {
    
    for (i = 0; i < MAX_THREAD_NUM; i++) {
       if (thrdInfo[i].thrd_name != NULL) {
-         if (strcmp(thrdInfo[i].thrd_name, thread_name)) {
+         if (strcmp(thrdInfo[i].thrd_name, thread_name) == 0) {
             thrdInfo[i].prof_is_active = prof_status;
          }
       }

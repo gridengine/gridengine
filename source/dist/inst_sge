@@ -37,7 +37,7 @@
 #
 # set -x
 
-SCRIPT_VERSION="4"
+SCRIPT_VERSION="5"
 
 #Reset PATH to a safe value
 #

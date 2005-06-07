@@ -900,7 +900,7 @@ PrintLocalConf()
 
    arg=$1
    if [ $arg = 1 ]; then
-      $ECHO "# Version: 6.0u4"
+      $ECHO "# Version: 6.0u5"
       $ECHO "#"
       $ECHO "# DO NOT MODIFY THIS FILE MANUALLY!"
       $ECHO "#"
@@ -912,7 +912,11 @@ PrintLocalConf()
    else
       $ECHO "xterm                  $XTERM"
    fi
-   $ECHO "qlogin_daemon          $QLOGIN_DAEMON"
+   if [ "$SGE_ARCH" = "win32-x86" ]; then
+      $ECHO "qlogin_daemon          $QLOGIN_DAEMON -i"
+   else
+      $ECHO "qlogin_daemon          $QLOGIN_DAEMON"
+   fi
    $ECHO "rlogin_daemon          $RLOGIN_DAEMON"
    if [ "$LOCAL_EXECD_SPOOL" != "undef" ]; then
       $ECHO "execd_spool_dir        $LOCAL_EXECD_SPOOL"

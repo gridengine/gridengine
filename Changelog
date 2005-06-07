@@ -1,3 +1,8 @@
+MD-2005-06-07-0: Enhancem:  windows enhancement, adde option to
+                            telnet command in local conf.
+                 Review:    HP
+                 Changed:   install_modules
+
 HP-2005-06-07-0: Enhancem.: fopen(), fprintf() and fclose()-error handling
                             improved.
                  Changed:   sgepasswd, libs/uti/sge_stdio.h

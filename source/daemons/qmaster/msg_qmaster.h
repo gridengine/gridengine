@@ -723,7 +723,7 @@
  * other
  */
 #define MSG_JOB_CHANGEJOBSHARE            _MESSAGE(33900, _("change job share"))
-#define MSG_JOB_PRIOSET_SSUU              _MESSAGE(33901, _(SFN"@"SFN" sets scheduling priority of job "sge_U32CFormat" to "sge_U32CFormat"\n"))
+#define MSG_JOB_PRIOSET_SSUI              _MESSAGE(33901, _(SFN"@"SFN" sets scheduling priority of job "sge_U32CFormat" to %d\n"))
 
 #define MSG_JOB_PERANGE_ONLY_FOR_PARALLEL _MESSAGE(33902, _("rejected: change request for PE range supported only for parallel jobs\n"))
 

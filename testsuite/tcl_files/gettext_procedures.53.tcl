@@ -36,13 +36,15 @@
 #     sge_macro() -- return sge macro string
 #
 #  SYNOPSIS
-#     sge_macro { macro_name } 
+#     sge_macro { macro_name {raise_error 1} } 
 #
 #  FUNCTION
 #     This procedure returns the string defined by the macro. 
 #
 #  INPUTS
-#     macro_name - sge source code macro
+#     macro_name  - sge source code macro
+#     raise_error - if macro is not found, shall an error be raised and 
+#                   reparsing of messages file be triggered?
 #
 #  RESULT
 #     string
@@ -53,10 +55,12 @@
 #  SEE ALSO
 #     ???/???
 #*******************************************************************************
-proc sge_macro { macro_name } {
+proc sge_macro { macro_name {raise_error 1} } {
    global CHECK_OUTPUT
  
    set value ""
+
+   # special handling for install macros
    switch -exact $macro_name {
       "DISTINST_HIT_RETURN_TO_CONTINUE" { set value "\nHit <RETURN> to continue >> " } 
       "DISTINST_NOT_COMPILED_IN_SECURE_MODE" { set value "\n>sge_qmaster< binary is not compiled with >-secure< option!\n" }
@@ -89,20 +93,24 @@ proc sge_macro { macro_name } {
       "DISTINST_LOCAL_CONFIG_FOR_HOST" { set value "Local configuration for host >%s< created." }
       "DISTINST_CELL_NAME_FOR_QMASTER" { set value "\nPlease enter cell name which you used for the qmaster\ninstallation or press <RETURN> to use default cell >%s< >> " }
       "DISTINST_ADD_DEFAULT_QUEUE" { set value "Do you want to add a default queue for this host (y/n) \[y\] >> " }
-
-
    }
+
+   # if it was no install macro, try to find it from messages files
    if { $value == "" } {
       set value [get_macro_string_from_name $macro_name]
 #      puts $CHECK_OUTPUT "value for $macro_name is \n\"$value\""
    }
-   if { $value == -1 } {
-      set macro_messages_file [get_macro_messages_file_name]
-      add_proc_error "sge_macro" -3 "could not find macro \"$macro_name\" in source code!!!\ndeleting macro messages file:\n$macro_messages_file"
-      if { [ file isfile $macro_messages_file] } {
-         file delete $macro_messages_file
+
+   # macro nowhere found
+   if {$raise_error} {
+      if { $value == -1 } {
+         set macro_messages_file [get_macro_messages_file_name]
+         add_proc_error "sge_macro" -3 "could not find macro \"$macro_name\" in source code!!!\ndeleting macro messages file:\n$macro_messages_file"
+         if { [ file isfile $macro_messages_file] } {
+            file delete $macro_messages_file
+         }
+         update_macro_messages_list
       }
-      update_macro_messages_list
    }
 
    return $value

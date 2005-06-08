@@ -1,3 +1,9 @@
+JG-2005-06-08-0: Bugfix:    qalter -p <negative priority> shows wrong priority.
+                 Issue:     403
+                 Bugtraq:   2125401, 4769608
+                 Changed:   sge_qmaster
+                 Review:    CR
+
 AH-2005-06-08-0: Bugfix:    drmaa_exit() and qsub -sync y causes qmaster 
                             error logging if host is no admin host
                  Issue:     1659

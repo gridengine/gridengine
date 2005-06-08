@@ -1,3 +1,10 @@
+DT-2005-06-08-0: Bugfix:    o Fixed drmaa_control(ALL)
+                            - Merged from DT-2005-05-03-0.
+                 Changed:   JAPI, cull_parse_util.h
+                 Review:    AH
+                 Issue:     1595
+                 Bugtraq:   6264592
+
 AA-2005-06-08-0: Bugfix:    removal of link dependency to libspoolc.so
                  Issue:     1569
                  Review:    JG

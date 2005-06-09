@@ -844,7 +844,7 @@ parallel_maximize_slots_pe(sge_assignment_t *best) {
 *  SYNOPSIS
 *     int sge_select_queue(lList *requested_attr, lListElem *queue, lListElem 
 *     *host, lList *exechost_list, lList *centry_list, bool 
-*     allow_non_requestable, char *reason, int reason_size, int slots) 
+*     allow_non_requestable, int slots) 
 *
 *  FUNCTION
 *     Takes the requested attributes from a job and checks if it fits to the given
@@ -858,8 +858,6 @@ parallel_maximize_slots_pe(sge_assignment_t *best) {
 *     lList *exechost_list      - list of all hosts in the system
 *     lList *centry_list        - system wide attribut config list
 *     bool allow_non_requestable - allow non requestable?
-*     char *reason              - error message
-*     int reason_size           - max error message length
 *     int slots                 - number of requested slots
 *
 *  RESULT

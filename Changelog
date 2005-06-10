@@ -1,3 +1,9 @@
+AA-2005-06-10-3: Bugfix:    html man page generation scripts mismatched man 
+                            pages with same name (sgepasswd (1,5)), 
+                            added -s section to man -> restricts generation 
+                            of man pages to solaris man
+                 Changed:   scripts/mk_ascman
+
 AA-2005-06-10-2: Bugfix:    merge from V60u4win - removal of link dependency to libspoolc.so
                  Issue:     1569
                  Review:    JG

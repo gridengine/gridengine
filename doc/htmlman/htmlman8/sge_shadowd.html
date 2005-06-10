@@ -59,6 +59,10 @@ ENVIRONMENT VARIABLES
                     use  a  services  map  entry  for the service
                     "sge_qmaster" instead to define that port.
 
+     SGE_DELAY_TIME If set, overrides  the  600  seconds  default
+                    minimum    delay    before   before   a   new
+                    <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B> is started by <I>sge</I>_<I>shadowd</I> .
+
 FILES
      &lt;<I>sge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>common</I>
                      Default configuration directory
@@ -66,6 +70,8 @@ FILES
                      Shadow master hostname file.
      &lt;<I>sge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>spool</I>/<I>qmaster</I>
                      Default master daemon spool directory
+     &lt;<I>sge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>spool</I>/<I>qmaster</I>/<I>heartbeat</I>
+                     The heartbeat file.
 
 SEE ALSO
      <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>, <B><A HREF="../htmlman5/sge_conf.html">sge_conf(5)</A></B>, <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B>, <I>Grid</I> <I>Engine</I>  <I>Ins-</I>
@@ -74,12 +80,6 @@ SEE ALSO
 COPYRIGHT
      See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
      sions.
-
-
-
-
-
-
 
 
 

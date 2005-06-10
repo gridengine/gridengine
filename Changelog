@@ -1,3 +1,17 @@
+AA-2005-06-10-2: Bugfix:    merge from V60u4win - removal of link dependency to libspoolc.so
+                 Issue:     1569
+                 Review:    JG
+                 Changed:   qmon
+
+AA-2005-06-10-1: Bugfix:    merge from V60u4win - sgepasswd, static linking of libcrypto
+                 Changed:   sgepasswd, aimk
+                 Review:    EB
+
+AA-2005-06-10-0: Bugfix:    merge from V60u4win - qmon basic test, exechost consumable/fixed
+                            attribute removal on x86 and sol-x86 architecture
+                 Changed:   qmon
+                 Review:    CR
+
 RD-2005-06-10-0: Enhancem:  add rpm switch to mk_dist
                  Changed:   mk_dist
                  Review:    AA

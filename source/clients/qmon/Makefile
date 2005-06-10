@@ -111,15 +111,21 @@ QMON_ADD_SRC = parse_job_cull.c unparse_job_cull.c \
             write_job_defaults.c sge_options.c usage.c \
             sge_centry_qconf.c sge_hgroup_qconf.c \
             sge_cqueue_qconf.c sge_mt_init.c \
-            sge_cqueue_qstat.c
+            sge_cqueue_qstat.c \
+            read_write_complex.c \
+            read_object.c
 
 QMON_OBJS = $(QMON_SRC:.c=.o) qmon_diares.o
             
-QMON_ADD_OBJS = $(QMON_ADD_SRC:.c=.o)
+QMON_ADD_OBJS = $(QMON_ADD_SRC:.c=.o) libspoolf.a
 
-QMON_ADD_LIBS = -L../3rdparty/qmon/$(COMPILE_ARCH) -lXbae -lXmt -lXspin -lXicon -lXltree -lXtab \
-                -L. -lspoolc -lspoolf -lspool -lsched -levc -lgdi -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lcull -lrmon -lcomm -lcommlists -luti -llck $(DLLIB)
+#QMON_ADD_LIBS = -L../3rdparty/qmon/$(COMPILE_ARCH) -lXbae -lXmt -lXspin -lXicon -lXltree -lXtab \
+#                -L. -lspoolc -lspoolf -lspool -lsched -levc -lgdi -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lcull -lrmon -lcomm -lcommlists -luti -llck $(DLLIB)
                 
+QMON_ADD_LIBS = -L../3rdparty/qmon/$(COMPILE_ARCH) -lXbae -lXmt -lXspin -lXicon -lXltree -lXtab \
+                -L. -lspool -lsched -levc -lgdi -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lcull -lrmon \
+                -lcomm -lcommlists -luti -llck $(DLLIB)
+
 QMON_LIB_DEPENDS = $(XBAELIB) $(XMTLIB) $(XSPINLIB) $(XICONLIB) \
                    $(XLTREELIB) $(XTABLIB) $(SPOOLCLIB) $(SPOOLLIB) $(SPOOLFLIB) \
                    $(SCHEDLIB) $(EVCLIB) $(GDILIB) $(SGEOBJLIB) \

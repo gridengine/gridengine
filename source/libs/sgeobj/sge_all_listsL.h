@@ -202,6 +202,10 @@ extern "C" {
       {CU_LOWERBOUND, CUS, CUN},        /* usermap entry list for
                                          * administrator mapping */
       {LS_LOWERBOUND, LSS, LSN},        /* load sensor list */
+
+      {RU_LOWERBOUND, RUS, RUN},        /* user unknown list */
+      {FES_LOWERBOUND, FESS, FESN},
+      
       {SU_LOWERBOUND, SUS, SUN},        /* submit user */
       {SEC_LOWERBOUND, SecurityS, SecurityN},   /* Certificate security */
 

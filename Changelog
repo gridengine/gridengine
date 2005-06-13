@@ -1,3 +1,8 @@
+JG-2005-06-13-0: Bugfix:    Fixed missing initialization.
+                            FES_Type was missing in cull namevector.
+                 Changed:   all
+                 Review:    CR
+
 AA-2005-06-10-3: Bugfix:    html man page generation scripts mismatched man 
                             pages with same name (sgepasswd (1,5)), 
                             added -s section to man -> restricts generation 

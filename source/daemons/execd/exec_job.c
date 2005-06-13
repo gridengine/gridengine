@@ -1023,6 +1023,10 @@ char *err_str
                                        lGetString(pep, PE_start_proc_args):"none");
       fprintf(fp, "pe_stop=%s\n",   pep != NULL && lGetString(pep, PE_stop_proc_args)?
                                        lGetString(pep, PE_stop_proc_args):"none");
+#ifdef SGE_PQS_API
+      fprintf(fp, "pe_qsort=%s\n",   pep != NULL && lGetString(pep, PE_qsort_args)?
+                                       lGetString(pep, PE_qsort_args):"none");
+#endif
 
       /* build path for stdout of pe scripts */
       sge_get_path(lGetList(jep, JB_stdout_path_list), cwd, 

@@ -81,6 +81,9 @@ static Widget pe_alloc_w = 0;
 static Widget pe_urgency_w = 0;
 static Widget pe_control_slaves_w = 0;
 static Widget pe_job_is_first_task_w = 0;
+#ifdef SGE_PQS_API
+static Widget pe_qsort_args_w = 0;
+#endif
 static int add_mode = 0;
 
 /*-------------------------------------------------------------------------*/
@@ -273,6 +276,12 @@ lListElem *ep
             (int)lGetBool(ep, PE_job_is_first_task) ? "true" : "false");
    items[i++] = XmStringCreateLocalized(buf);
 
+#ifdef SGE_PQS_API
+   /* qsort_args */
+   str = (StringConst)lGetString(ep, PE_qsort_args);
+   sprintf(buf, "%-20.20s %s", "Queue Sort Args", str ? str : "NONE" );
+   items[i++] = XmStringCreateLocalized(buf);
+#endif
    
    XtVaSetValues( pe_conf_list, 
                   XmNitems, items,
@@ -375,6 +384,9 @@ Widget parent
                            "pe_urgency_slots", &pe_urgency_w,
                            "pe_control_slaves", &pe_control_slaves_w,
                            "pe_job_is_first_task", &pe_job_is_first_task_w,
+#ifdef SGE_PQS_API
+                           "pe_qsort_args", &pe_qsort_args_w,
+#endif
                            NULL);
 
    XtAddCallback(pe_ok, XmNactivateCallback, 
@@ -614,6 +626,9 @@ lListElem *pep
    StringConst stop_args = NULL;
    StringConst alloc_rule = NULL;
    StringConst urgency_slots = NULL;
+#ifdef SGE_PQS_API
+   StringConst qsort_args = NULL;
+#endif
 
    DENTER(GUI_LAYER, "qmonPESetAsk");
 
@@ -657,6 +672,12 @@ lListElem *pep
    XmToggleButtonSetState(pe_job_is_first_task_w, 
                lGetBool(pep, PE_job_is_first_task), False);
 
+#ifdef SGE_PQS_API
+   qsort_args = (StringConst)lGetString(pep, PE_qsort_args);
+   if (qsort_args)
+      XmtInputFieldSetString(pe_qsort_args_w, qsort_args);
+#endif
+
    DEXIT;
 }
 
@@ -689,6 +710,10 @@ static void qmonPEResetAsk(void)
 
    XmToggleButtonSetState(pe_job_is_first_task_w, 0, False);
 
+#ifdef SGE_PQS_API
+   XmtInputFieldSetString(pe_qsort_args_w, "NONE");
+#endif
+
    DEXIT;
 }
 
@@ -706,6 +731,9 @@ lListElem *pep
    String stop_args = NULL;
    String alloc_rule = NULL;
    String urgency_slots = NULL;
+#ifdef SGE_PQS_API
+   String qsort_args = NULL;
+#endif
 
    DENTER(GUI_LAYER, "qmonPEGetAsk");
 
@@ -758,6 +786,14 @@ lListElem *pep
 
    pe_job_is_first_task = XmToggleButtonGetState(pe_job_is_first_task_w); 
    lSetBool(pep, PE_job_is_first_task, pe_job_is_first_task);
+
+#ifdef SGE_PQS_API
+   qsort_args = XmtInputFieldGetString(pe_qsort_args_w);
+   if (!qsort_args || !strcasecmp(qsort_args, "none"))
+      lSetString(pep, PE_qsort_args, NULL);
+   else   
+      lSetString(pep, PE_qsort_args, qsort_args);
+#endif
 
    DEXIT;
    return True;

@@ -501,6 +501,31 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
          DEXIT;
          return STATUS_EUNKNOWN;
       }
+
+#ifdef SGE_PQS_API
+#if 0
+      /* verify PE qsort_args */
+      if ((qsort_args=lGetString(pep, PE_qsort_argv)) != NULL) {
+         sge_assignment_t a;
+         int ret;
+
+         memset(&a, 0, sizeof(a));
+         a.job = jep;
+         a.job_id = 
+         a.ja_task_id =
+         a.slots = 
+         ret = sge_call_pe_qsort(&a, qsort_args, 1, err_str);
+         if (!ret) {
+            answer_list_add(alpp, err_str, STATUS_EUNKNOWN,
+                            ANSWER_QUALITY_ERROR);
+            DEXIT;
+            return STATUS_EUNKNOWN;
+         }
+      }
+#endif
+#endif
+
+ 
    }
 
    ckpt_err = 0;

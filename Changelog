@@ -1,3 +1,7 @@
+JG-2005-06-13-0: Bugfix:    Fixed missing initialization.
+                 Changed:   all
+                 Review:    CR
+
 AA-2005-05-23-0: Bugfix:    qmon: complex attributes not removeable
                  Bugtraq:   6252525
                  Issue:     1625

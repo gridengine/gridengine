@@ -4354,7 +4354,7 @@ lListElem *lGetSubUlong(const lListElem *ep, int nm, lUlong val, int snm)
 ******************************************************************************/
 lListElem *lGetElemUlong(const lList *lp, int nm, lUlong val) 
 {
-   const void *iterator;
+   const void *iterator = NULL;
    return lGetElemUlongFirst(lp, nm, val, &iterator);
 }
 

@@ -40,6 +40,14 @@
 
 #include "basis_types.h"
 
+/* On some systems, FOPEN is already defined as value -1 */
+#undef FOPEN
+
+#define FOPEN(var,fname,fmode) \
+   if((var = fopen(fname,fmode)) == NULL) { \
+      goto FOPEN_ERROR; \
+   }
+
 /****** uti/stdio/FPRINTF() ***************************************************
 *  NAME
 *     FPRINTF() -- fprintf() macro 
@@ -95,6 +103,32 @@
    if ((var = fprintf x)== -1) { \
       goto FPRINTF_ERROR; \
    }
+
+/****** uti/stdio/FCLOSE() ****************************************************
+*  NAME
+*     FCLOSE() -- fclose() macro 
+*
+*  SYNOPSIS
+*     #define FCLOSE(argument)
+*     int fclose(FILE *stream)
+*
+*  FUNCTION
+*     This FCLOSE macro has to be used similar to the fclose 
+*     function. It is not necessary to check the return value. 
+*     In case of an error the macro will jump to a defined label.
+*     The label name is 'FCLOSE_ERROR'.
+*
+*  INPUTS
+*     FILE *stream       - output stream
+*
+*  NOTES
+*     Don't forget to define the 'FCLOSE_ERROR'-label
+******************************************************************************/
+#define FCLOSE(x) \
+   if(fclose(x) != 0) { \
+      goto FCLOSE_ERROR; \
+   }
+
 
 pid_t sge_peopen(const char *shell, int login_shell, const char *command, 
                  const char *user, char **env, FILE **fp_in, FILE **fp_out, 

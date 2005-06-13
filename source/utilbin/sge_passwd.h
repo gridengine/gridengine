@@ -40,7 +40,7 @@ void
 buffer_encrypt(const char *buffer_in, size_t buffer_in_length, 
                char **buffer_out, size_t *buffer_out_size, 
                size_t *buffer_out_length);
-void 
+int 
 buffer_decrypt(const char *buffer_in, size_t buffer_in_length,
                char **buffer_out, size_t *buffer_out_size,
                size_t *buffer_out_length);

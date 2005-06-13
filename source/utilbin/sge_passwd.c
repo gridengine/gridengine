@@ -193,7 +193,7 @@ sge_init_shared_ssl_lib(void)
         
          ret = 0;
       } else {
-         fprintf(stderr, MSG_PWD_CANT_OPEN_SLL_LIB, prognames[SGE_PASSWD]);
+         fprintf(stderr, MSG_PWD_CANT_OPEN_SSL_LIB, prognames[SGE_PASSWD]);
          ret = 1;
       }
    } else {

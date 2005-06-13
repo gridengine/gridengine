@@ -1,3 +1,6 @@
+RD-2005-06-13-0: Bugfix:    fixed broken sge_passwd
+                 Review:    AA
+
 JG-2005-06-13-0: Bugfix:    Fixed missing initialization.
                             FES_Type was missing in cull namevector.
                  Changed:   all

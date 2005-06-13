@@ -437,7 +437,7 @@ SetSpoolingOptionsBerkeleyDB()
    else
       if [ "$ARCH" = "darwin" ]; then
          ret=`ps ax | grep "berkeley_db_svc" | wc -l` 
-      else 
+      else
          ret=`ps -efa | grep "berkeley_db_svc" | wc -l` 
       fi
       if [ $ret -gt 1 ]; then
@@ -453,7 +453,7 @@ SetSpoolingOptionsBerkeleyDB()
                   MoveLog
                   exit 1
                fi
-         else  # $AUTO != true
+         else                 # $AUTO != true
             $INFOTEXT -auto $AUTO -ask "y" "n" -def "n" "Do you want to use an other host for spooling? (y/n) [n] >>"
             if [ $? = 1 ]; then
                $INFOTEXT "Please enter the path to your Berkeley DB startup script! >>"

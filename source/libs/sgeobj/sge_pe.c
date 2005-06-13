@@ -34,6 +34,9 @@
 #include <strings.h>
 #include <ctype.h>
 #include <string.h>
+#ifdef SGE_PQS_API
+#include <dlfcn.h>
+#endif
 
 #include "sge.h"
 #include "sgermon.h"
@@ -54,6 +57,9 @@
 #include "sge_resource_utilization.h"
 #include "sge_pe.h"
 #include "sge_str.h"
+#ifdef SGE_PQS_API
+#include "sge_string.h"
+#endif
 
 #include "msg_common.h"
 #include "msg_sgeobjlib.h"
@@ -321,6 +327,23 @@ int pe_validate(lListElem *pep, lList **alpp, int startup)
       return ret;
    }
    
+#ifdef SGE_PQS_API
+   /* -------- PE_qsort_args */
+   NULL_OUT_NONE(pep, PE_qsort_args);
+   if (startup) {
+      void *handle=NULL, *fn=NULL;
+      const char *qsort_args = lGetString(pep, PE_qsort_args);
+      if (qsort_args) {
+         if ((ret=pe_validate_qsort_args(alpp, qsort_args, pep,
+                     &handle, &fn))!=STATUS_OK) {
+            DEXIT;
+            return ret;
+         }
+         /* lSetRef(pep, PE_qsort_validated, 1); */
+      }
+   }
+#endif
+
    DEXIT;
    return STATUS_OK;
 }
@@ -525,6 +548,10 @@ lListElem* pe_create_template(char *pe_name)
 
    lSetString(pep, PE_urgency_slots, SGE_ATTRVAL_MIN);
 
+#ifdef SGE_PQS_API
+   lSetString(pep, PE_qsort_args, NULL);
+#endif
+
    DEXIT;
    return pep;
 }
@@ -627,4 +654,110 @@ void pe_debit_slots(lListElem *pep, int slots, u_long32 job_id)
    DEXIT;
    return;
 }
+
+
+#ifdef SGE_PQS_API
+/****** sgeobj/pe/pe_validate_qsort_args() *********************************
+*  NAME
+*     pe_validate_qsort_args() -- Ensures the qsort_args setting is valid
+*     by verifying that the dynamic link library can be loaded. This function
+*     is presumably called during startup and whenever a PE is created
+*     or modified.
+*
+*  SYNOPSIS
+*     int pe_validate_qsort_args(lList **alpp, const char *qsort_args, 
+*           lListElem *pe, void **lib, void **fn) 
+*
+*  FUNCTION
+*     Validates urgency slot setting.
+*
+*  INPUTS
+*     lList **alpp  - On error a context message is returned.
+*     const char *qsort_args - The qsort_args string
+*     lListElem *pe - The new or existing PE
+*     void **lib - The returned handle of the dynamically linked library
+*     void **fn - The returned address of the dynamically linked function
+*
+*  RESULT
+*     int - values other than STATUS_OK indicate error condition 
+*
+*  NOTES
+*     MT-NOTE: pe_validate_qsort_args() is not MT safe
+*******************************************************************************/
+int pe_validate_qsort_args(lList **alpp, const char *qsort_args, lListElem *pe,
+      void **lib, void **fn)
+{
+   const char *old_qsort_args = lGetString(pe, PE_qsort_args);
+   char *lib_name, *fn_name;
+   struct saved_vars_s *cntx = NULL;
+   void *lib_handle=NULL, *fn_handle=NULL;
+   int ret = STATUS_OK;
+   const char *error;
+
+   DENTER(TOP_LAYER, "pe_validate_qsort_args");
+
+   /*
+    * If we already have already validated the function and the old and new qsort_args
+    * are the same, then we're done
+    */
+   if ( /* lGetUlong(pe, PE_qsort_validated) && */
+             old_qsort_args && qsort_args && strcmp(old_qsort_args, qsort_args)==0) {
+      goto cleanup;
+   }
+
+   /* if new args are blank, then we go close the old library */
+   if (!qsort_args)
+      goto cleanup;
+
+   /* get library name */
+   lib_name = sge_strtok_r(qsort_args, " ", &cntx); 
+   if (!lib_name) {
+      ERROR((SGE_EVENT, "No dynamic library specified for pe_qsort_args for PE %s\n",
+             lGetString(pe, PE_name)));
+      answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
+      ret = STATUS_EEXIST;
+      goto cleanup;
+   }
+
+   /* open library */
+   lib_handle = dlopen(lib_name, RTLD_LAZY);
+   if (!lib_handle) {
+      ERROR((SGE_EVENT, "Unable to open %s library in pe_qsort_args for PE %s - %s\n",
+             lib_name, lGetString(pe, PE_name), dlerror()));
+      answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
+      ret = STATUS_EEXIST;
+      goto cleanup;
+   }
+
+   /* get function name */
+   fn_name = sge_strtok_r(NULL, " ", &cntx);
+   if (!fn_name) {
+      ERROR((SGE_EVENT, "No function name specified in pe_qsort_args for PE %s \n",
+             lGetString(pe, PE_name)));
+      answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
+      ret = STATUS_EEXIST;
+      goto cleanup;
+   }
+
+   /* lookup function address */
+   fn_handle = dlsym(lib_handle, fn_name);
+   if ((error = dlerror()) != NULL) {
+      ERROR((SGE_EVENT, "Unable to locate %s symbol in %s library for pe_qsort_args in PE %s - %s\n",
+             fn_name, lib_name, lGetString(pe, PE_name), error));
+      answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
+      ret = STATUS_EEXIST;
+      goto cleanup;
+   }
+
+cleanup:
+
+   if (cntx)
+      sge_free_saved_vars(cntx);
+
+   if (lib_handle)
+      dlclose(lib_handle);
+
+   return ret;
+}
+#endif
 

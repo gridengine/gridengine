@@ -404,6 +404,9 @@ static void PE_test (void)
    lSetBool (ep, PE_control_slaves, true);
    lSetBool (ep, PE_job_is_first_task, true);
    lSetString (ep, PE_urgency_slots, "urgency_slots");
+#ifdef SGE_PQS_API
+   lSetString (ep, PE_qsort_args, "qsort_args");
+#endif
    
    lp = lCreateList ("Resource Utilization List", RUE_Type);
    

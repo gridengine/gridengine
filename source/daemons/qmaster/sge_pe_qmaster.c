@@ -176,6 +176,23 @@ int sub_command
       lSetString(new_pe, PE_urgency_slots, s);
    }
 
+#ifdef SGE_PQS_API
+   /* -------- PE_qsort_args */
+   if (lGetPosViaElem(pe, PE_qsort_args)>=0) {
+      void *handle=NULL, *fn=NULL;
+
+      s = lGetString(pe, PE_qsort_args);
+
+      if ((ret=pe_validate_qsort_args(alpp, s, new_pe,
+                  &handle, &fn))!=STATUS_OK) {
+         DEXIT;
+         return ret;
+      }
+      lSetString(new_pe, PE_qsort_args, s);
+      /* lSetUlong(new_pe, PE_qsort_validated, 1); */
+   }
+#endif
+
    /* -------- PE_resource_utilization */
    if (add) {
       if (pe_set_slots_used(new_pe, 0)) {

@@ -163,6 +163,16 @@ int parsing_type
       return -1;
    }
 
+#ifdef SGE_PQS_API
+   /* --------- PE_qsort_args */
+   if (!set_conf_string(alpp, clpp, fields, "qsort_args", ep, 
+            PE_qsort_args)) {
+      DEXIT;
+      return -1;
+   }
+   NULL_OUT_NONE(ep, PE_qsort_args);
+#endif
+
    /* initialize number of used PE slots with 0 */
    if (pe_set_slots_used(ep, 0)) {
       answer_list_add(alpp, MSG_GDI_OUTOFMEMORY, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
@@ -296,6 +306,12 @@ const lListElem *ep
 
    /* --------- PE_urgency_slots */
    FPRINTF((fp, "urgency_slots     %s\n", lGetString(ep, PE_urgency_slots)));
+
+#ifdef SGE_PQS_API
+   /* --------- PE_qsort_args */
+   FPRINTF((fp, "qsort_args   %s\n", 
+         (s=lGetString(ep, PE_qsort_args))?s:"NONE"));
+#endif
 
 
    /* --------- internal fields ----------------------------------- */

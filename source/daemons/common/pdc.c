@@ -2765,7 +2765,8 @@ main(int argc, char **argv)
 
             for (j=0; j<proccount; j++) {
                if (killjob) {
-                  if (getuid() == 0 || getuid() == procs->pd_uid) {
+                  if (getuid() == sge_get_superuser_id() ||
+                      getuid() == procs->pd_uid) {
                      if (kill(procs->pd_pid, signo)<0) {
                         char buf[128];
                         sprintf(buf, "kill("pid_t_fmt", %d)", procs->pd_pid, signo);

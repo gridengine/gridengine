@@ -41,7 +41,6 @@ UTILIB_DRMAA_SRC = \
          setup_path.c \
          sge_afsutil.c \
          sge_arch.c \
-         sge_base64.c \
          sge_bitfield.c \
          sge_bitop.c \
          sge_bootstrap.c \
@@ -201,9 +200,6 @@ sge_signal.o:	$(UTILIB_DIR)/sge_signal.c
 
 sge_htable.o:	$(UTILIB_DIR)/sge_htable.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_htable.c
-
-sge_base64.o:	$(UTILIB_DIR)/sge_base64.c
-		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_base64.c
 
 sge_bitfield.o:	$(UTILIB_DIR)/sge_bitfield.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_bitfield.c

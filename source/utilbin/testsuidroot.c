@@ -38,6 +38,8 @@
 #include <netdb.h>
 #include <string.h>
 
+#include "sge_uidgid.h"
+
 /****** testsuidroot ***************************************
 *
 *  NAME
@@ -91,15 +93,21 @@ int main(int argc, char *argv[]) {
    if(argc == 2 && strcmp(argv[1], "-q") == 0) {
       quiet = 1;
    }
-
+#if defined(INTERIX)
+   if(getuid() == sge_get_superuser_id()) {
+#else
    if(getuid() == 0) {
+#endif
       if(!quiet) {
          fprintf(stderr, "%s: must be started with uid != 0\n", argv[0]);
       }
       return 1;
    }
-
+#if defined(INTERIX)
+   if(geteuid() != sge_get_superuser_id()) {
+#else
    if(geteuid() != 0) {
+#endif
       if(!quiet) {
          fprintf(stderr, "%s: effective uid should be 0\n", argv[0]);
       }

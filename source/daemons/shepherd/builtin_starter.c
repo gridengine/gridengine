@@ -102,7 +102,6 @@ extern int  shepherd_state;
 extern char shepherd_job_dir[];
 extern char **environ;
 
-
 /************************************************************************
  This is the shepherds buitin starter.
 
@@ -154,7 +153,10 @@ int truncate_stderr_out
    gid_t add_grp_id = 0;
    gid_t gid;
    struct passwd *pw=NULL;
-
+#if defined(INTERIX)
+#  define TARGET_USER_BUFFER_SIZE 1024
+   char target_user_buffer[TARGET_USER_BUFFER_SIZE];
+#endif
 
    foreground = 0; /* VX sends SIGTTOU if trace messages go to foreground */
 
@@ -200,11 +202,12 @@ int truncate_stderr_out
    if(qlogin_starter) {
       /* must force to run the qlogin starter as root, since it needs
          access to /dev/something */
-#ifndef INTERIX
-      target_user = "root";
+#if defined(INTERIX)
+      if(wl_get_superuser_name(target_user_buffer, TARGET_USER_BUFFER_SIZE)==0) {
+         target_user = target_user_buffer;
+      }
 #else
-/* HP: TODO: Handling for Interix */
-      target_user = wl_get_superuser_name();
+      target_user = "root";
 #endif
    }
 
@@ -249,8 +252,13 @@ int truncate_stderr_out
        *  Additionally it prevents that a root procedures write to
        *  files which may not be accessable by the job owner 
        *  (e.g. /etc/passwd)
+       *
+       *  This workaround doesn't work for Interix - we have to find
+       *  another solution here!
        */
+#if !defined(INTERIX)
       intermediate_user = get_conf_val("job_owner");
+#endif
    }
 
 #if defined(ALPHA)
@@ -319,7 +327,8 @@ int truncate_stderr_out
        use_qsub_gid = 0;
        gid = 0;
     }
-/* --- switch to intermediate user */                                                                      
+
+/* --- switch to intermediate user */
    if(qlogin_starter) { 
       ret = sge_set_uid_gid_addgrp(target_user, intermediate_user, 0, 0, 
                                    0, err_str, use_qsub_gid, gid);
@@ -328,6 +337,7 @@ int truncate_stderr_out
                                    min_uid, add_grp_id, err_str, use_qsub_gid, 
                                    gid);
    }   
+
    if (ret < 0) {
       shepherd_trace(err_str);
       sprintf(err_str, "try running further with uid=%d", (int)getuid());
@@ -339,6 +349,7 @@ int truncate_stderr_out
       */
       shepherd_error(err_str);
    }
+
    shell_start_mode = get_conf_val("shell_start_mode");
 
    shepherd_trace("closing all filedescriptors");

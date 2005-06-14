@@ -1310,7 +1310,10 @@ char *err_str
    fprintf(fp, "write_osjob_id=%d\n", write_osjob_id);
    
    /* should the job inherit the execd's environment */
-   fprintf(fp, "inherit_env=%d", (int)inherit_env);
+   fprintf(fp, "inherit_env=%d\n", (int)inherit_env);
+
+   /* should a windows exec daemon use domain users */
+   fprintf(fp, "enable_windomacc=%d", (int)enable_windomacc);
 
    lFreeList(environmentList);
    fclose(fp);
@@ -1527,6 +1530,15 @@ char *err_str
 	      job_id);
       putenv(ccname);
    }
+
+#if defined(INTERIX)
+   /*
+    * In Interix, we have to start the shepherd as Administrator,
+    * because there seems to be some bug with inheriting euid
+    * over a fork.
+    */
+   seteuid(wl_get_superuser_id());
+#endif
 
    DPRINTF(("**********************CHILD*********************\n"));
    shepherd_name = SGE_SHEPHERD;

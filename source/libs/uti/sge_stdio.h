@@ -71,7 +71,7 @@
 *     Don't forget to define the 'FPRINTF_ERROR'-label
 ******************************************************************************/
 #define FPRINTF(x) \
-   if (fprintf x == -1) { \
+   if (fprintf x < 0) { \
       goto FPRINTF_ERROR; \
    }
 
@@ -100,7 +100,7 @@
 *     Don't forget to define the 'FPRINTF_ERROR'-label
 ******************************************************************************/
 #define FPRINTF_ASSIGN(var, x) \
-   if ((var = fprintf x)== -1) { \
+   if ((var = fprintf x) < 0) { \
       goto FPRINTF_ERROR; \
    }
 

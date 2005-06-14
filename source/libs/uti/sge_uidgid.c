@@ -48,6 +48,9 @@
 #include "msg_common.h"
 #include "msg_utilib.h"
 
+#if defined( INTERIX )
+#   include "misc.h"
+#endif
 
 #define UIDGID_LAYER CULL_LAYER 
 
@@ -161,17 +164,45 @@ bool sge_is_start_user_superuser(void)
    DENTER(UIDGID_LAYER, "sge_is_start_user_superuser");
 
    start_uid = getuid();
-#if defined(INTERIX) || defined(WIN32)
-   is_root = wl_is_user_id_superuser(start_uid);
-#else
-   if (start_uid == 0) {
-     is_root = true;
-   }
-#endif
+   is_root = sge_is_id_superuser(start_uid);
 
    DEXIT;
    return is_root;
 } /* sge_is_start_user_superuser() */           
+
+bool sge_is_id_superuser(uid_t id)
+{
+   bool ret=false;
+
+#if defined( INTERIX )
+   ret = wl_is_user_id_superuser(id);
+#else
+   ret = (id == 0);
+#endif
+   return ret;
+}
+
+uid_t sge_get_superuser_id(void)
+{
+   uid_t ret_uid;
+#if defined( INTERIX )
+   ret_uid = wl_get_superuser_id();
+#else
+   ret_uid = 0;
+#endif
+   return ret_uid;
+}
+
+gid_t sge_get_superuser_gid(void)
+{
+   gid_t ret_gid;
+#if defined( INTERIX )
+   ret_gid = wl_get_superuser_gid();
+#else
+   ret_gid = 0;
+#endif
+   return ret_gid;
+}
 
 /****** uti/uidgid/sge_set_admin_username() ***********************************
 *  NAME
@@ -209,9 +240,22 @@ int sge_set_admin_username(const char *user, char *err_str)
    int ret;
    uid_t uid;
    gid_t gid;
+#if defined( INTERIX )
+   char fq_name[1024];
+   char hostname[128];
+#endif
 
    DENTER(UIDGID_LAYER, "sge_set_admin_username");
- 
+
+#if defined( INTERIX ) 
+   /* For Interix: Construct full qualified admin user name.
+    * As admin user is always local, use hostname as domain name.
+    */
+   gethostname(hostname, 1023);
+   snprintf(fq_name, 1023, "%s+%s", hostname, user);
+   user = fq_name;
+#endif
+
    if (get_admin_user(&uid, &gid) != ESRCH) {
       DEXIT;
       return -2;
@@ -442,7 +486,7 @@ int sge_run_as_user(void)
 *     const char *user - username 
 *     uid_t *uidp      - uid pointer 
 *     int retries      - number of retries 
- *
+*
 *  NOTES
 *     MT-NOTE: sge_user2uid() is MT safe.
 *
@@ -765,6 +809,7 @@ int sge_set_uid_gid_addgrp(const char *user, const char *intermediate_user,
       pw->pw_gid = qsub_gid;
    }
  
+#if !defined(INTERIX)
    if ( !intermediate_user) {
       /*
        *  It should not be necessary to set min_gid/min_uid to 0
@@ -786,6 +831,7 @@ int sge_set_uid_gid_addgrp(const char *user, const char *intermediate_user,
          return 1;
       }
    }
+#endif
 
 #if !(defined(WIN32) || defined(INTERIX)) /* initgroups not called */
    status = initgroups(pw->pw_name, pw->pw_gid);
@@ -834,17 +880,27 @@ int sge_set_uid_gid_addgrp(const char *user, const char *intermediate_user,
                  user, sge_u32c(pw->pw_uid), min_uid);
          return 1;
       }
- 
-      if (use_qsub_gid) {
-         if (setgid(pw->pw_gid)) {
-            sprintf(err_str, MSG_SYSTEM_SETGIDFAILED_U, sge_u32c(pw->pw_uid));
+
+#if defined( INTERIX )
+      if(wl_use_sgepasswd()) {
+         if(wl_setuser(pw->pw_uid, pw->pw_gid)!=0) {
+            sprintf(err_str, MSG_SYSTEM_SETUIDFAILED_U, sge_u32c(pw->pw_uid));
             return 1;
          }
       }
- 
-      if (setuid(pw->pw_uid)) {
-         sprintf(err_str, MSG_SYSTEM_SETUIDFAILED_U , sge_u32c(pw->pw_uid));
-         return 1;
+      else
+#endif
+      {
+         if (use_qsub_gid) {
+            if (setgid(pw->pw_gid)) {
+               sprintf(err_str, MSG_SYSTEM_SETGIDFAILED_U, sge_u32c(pw->pw_uid));
+               return 1;
+            }
+         }
+         if (setuid(pw->pw_uid)) {
+            sprintf(err_str, MSG_SYSTEM_SETUIDFAILED_U , sge_u32c(pw->pw_uid));
+            return 1;
+         }
       }
    } else {
       if (use_qsub_gid) {

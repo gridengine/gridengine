@@ -55,6 +55,9 @@
 void uidgid_mt_init(void);
 
 bool sge_is_start_user_superuser(void);
+bool sge_is_id_superuser(uid_t id);
+uid_t sge_get_superuser_id(void);
+gid_t sge_get_superuser_gid(void);
 int sge_set_admin_username(const char *username, char *err_str);
 int sge_switch2admin_user(void);
 int sge_switch2start_user(void);
@@ -67,7 +70,7 @@ int sge_add_group(gid_t newgid, char *err_str);
 int sge_set_uid_gid_addgrp(const char *user, const char *intermediate_user,
                            int min_gid, int min_uid, int add_grp, 
                            char *err_str, int use_qsub_gid, gid_t qsub_gid);
- 
+
 struct passwd *sge_getpwnam_r(const char *name, struct passwd *pw_struct, char *buffer, int buflen);
  
 /*

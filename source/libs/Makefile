@@ -70,7 +70,7 @@ libs_messages: gdilib_messages sgeobjlib_messages evclib_messages evmlib_message
 ###############################################################################
 # rules to build library libsge.a
 ###############################################################################
-libsge.a:	$(SCHEDLIB_OBJS) $(GDILIB_OBJS) $(SGEOBJLIB_OBJS) $(SGEOBJDLIB_OBJS) $(SECLIB_OBJS) $(KRBLIBS) $(COMMLIB_OBJS) $(CULLLIB_OBJS) $(RMONLIB_OBJS) $(UTILIB_OBJS) $(LCKLIB_OBJS) 
+libsge.a:	$(SCHEDLIB_OBJS) $(GDILIB_OBJS) $(SGEOBJLIB_OBJS) $(SGEOBJDLIB_OBJS) $(SECLIB_OBJS) $(KRBLIBS) $(COMMLIB_OBJS) $(COMMLISTSLIB_OBJS) $(CULLLIB_OBJS) $(RMONLIB_OBJS) $(UTILIB_OBJS) $(LCKLIB_OBJS)
 	$(AR) $(ARFLAGS) libsge.a $(SCHEDLIB_OBJS) $(GDILIB_OBJS) $(SGEOBJLIB_OBJS) $(SGEOBJDLIB_OBJS) $(SECLIB_OBJS) $(KRBLIBS) $(COMMLIB_OBJS) $(COMMLISTSLIB_OBJS) $(CULLLIB_OBJS) $(RMONLIB_OBJS) $(UTILIB_OBJS) $(LCKLIB_OBJS) 
 	$(RANLIB) $(SGELIB)
 

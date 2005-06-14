@@ -93,6 +93,7 @@ long ptf_min_priority = -999;
 int execd_priority = 0;
 int max_dynamic_event_clients = 99;
 bool keep_active = false;
+bool enable_windomacc = false;
 
 /* reporting params */
 bool do_accounting         = true;
@@ -525,6 +526,7 @@ int merge_configuration(lListElem *global, lListElem *local,
       prof_signal_thrd = false;
       prof_deliver_thrd = false;
       prof_tevent_thrd = false;
+      enable_windomacc = false;
       scheduler_timeout = 0;
       max_dynamic_event_clients = 99;
       /*u_long32 output_interval;*/
@@ -625,6 +627,7 @@ int merge_configuration(lListElem *global, lListElem *local,
       ptf_min_priority = -999;
       execd_priority = -999;
       keep_active = false;
+      enable_windomacc = false;
       use_qsub_gid = false;
       prof_execd_thrd = false;
 
@@ -650,6 +653,9 @@ int merge_configuration(lListElem *global, lListElem *local,
          if (parse_bool_param(s, "KEEP_ACTIVE", &keep_active)) {
             continue;
          }
+         if (parse_bool_param(s, "ENABLE_WINDOMACC", &enable_windomacc)) {
+            continue;
+         } 
          if (parse_bool_param(s, "ACCT_RESERVED_USAGE", &acct_reserved_usage)) {
             continue;
          } 

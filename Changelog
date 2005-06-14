@@ -1,3 +1,9 @@
+HP-2005-06-14-0: Enhancm.:  All sgepasswd related functionality merged from 
+                            V60U4WIN_BRANCH
+                 Review:    MD
+                 Changed:   execd, shepherd, libs/uti, libs/sgeobj, libs/gdi,
+                            utilbin/...
+
 SD-2005-06-13-0: Enhancm.:  Added Parallel Environment Queue Sort API
                             as compile-time option (-DSGE_PQS_API).
 

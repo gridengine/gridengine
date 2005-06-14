@@ -236,7 +236,6 @@ spooledit: spooledit.o sge_mt_init.o $(SPOOLING_DEPS) $(SPOOLLIB) $(SCHEDLIB) $(
 
 spooledit.o: $(UTILBIN_DIR)/spooledit.c
 		$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/spooledit.c
-
 #---------------------------------------------------------------------
 sgepasswd: sge_passwd_main.o version.o $(LCKLIB) $(UTILIB) $(RMONLIB)
 		$(CC) -o $@ sge_passwd_main.o version.o $(LFLAGS) $(FSTYPELIBS) $(UTILIB) $(LCKLIB) $(RMONLIB) $(SECLIBS_STATIC) $(LIBS)

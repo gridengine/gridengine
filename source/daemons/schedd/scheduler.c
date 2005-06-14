@@ -987,6 +987,8 @@ select_assign_debit(lList **queue_list, lList **dis_queue_list, lListElem *job, 
       return DISPATCH_NEVER_CAT;
    }
 
+   a.duration += sconf_get_duration_offset();
+
    /*------------------------------------------------------------------ 
     * seek for ckpt interface definition requested by the job 
     * in case of ckpt jobs 
@@ -1313,7 +1315,7 @@ static bool job_get_duration(u_long32 *duration, const lListElem *jep)
    } 
    else {
       *duration = sconf_get_default_duration();
-   }    
+   }
 
    DEXIT;
    return true;
@@ -1351,12 +1353,17 @@ add_job_list_to_schedule(const lList *job_list, bool suspended, lList *pe_list,
             ERROR((SGE_EVENT, "got running job with invalid duration\n"));
             continue; /* may never happen */
          }
+         a.duration += sconf_get_duration_offset();
 
          /* Prevent jobs that exceed their prospective duration are not reflected 
             in the resource schedules. Note duration enforcement is domain of 
             sge_execd and default_duration is not enforced at all anyways.
             All we can do here is hope the job will be finished in the next interval. */
          if (a.start + a.duration <= now) {
+            if (sconf_get_max_reservations()>0) {
+               WARNING((SGE_EVENT, MSG_SCHEDD_SHOULDHAVEFINISHED_UUU, a.job_id, a.ja_task_id, 
+                     now - a.duration - a.start + 1));
+            }
             a.duration = (now - a.start) + interval;
          }
 

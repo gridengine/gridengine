@@ -1,3 +1,9 @@
+AH-2005-06-14-0: Bugfix:    Overhead with job execution could lead to overoptimistic 
+                            backfilling and break resource reservation
+                 Issue:     1662
+                 Bugtraq:   6283308
+                 Review:    AS, CR
+
 HP-2005-06-14-0: Enhancm.:  All sgepasswd related functionality merged from 
                             V60U4WIN_BRANCH
                  Review:    MD

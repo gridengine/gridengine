@@ -353,6 +353,33 @@
    >           $SGE_ROOT/<cell>/common/schedule.
    > 
 
+   yet another parameter was added to scheduler configuration 
+   sched_conf(5) to allow for modeling difference between net and gross
+   job runtimes:
+
+   >      DURATION_OFFSET
+   >           If set overrides the default  of  60  seconds  that  is
+   >           assumed  as  offset by N1GE scheduler when plan-
+   >           ning resource utilization  as  delta  between  net  job
+   >           runtimes  and  gross time until resources are available
+   >           again. Jobs net runtime as specified with  -l  h_rt=...
+   >           or  -l  s_rt=... or default_duration always differ from
+   >           jobs gross runtime  due  to  delays  before  and  after
+   >           actual job start. Amongst these delays before job start
+   >           is the time until the end of a  schedule_interval,  the
+   >           time  it takes to deliver a job to sge_execd(8) and the
+   >           delays prolog in  queue_conf(5)  ,  start_proc_args  in
+   >           sge_pe(5)   and  starter_method  in  queue_conf(5)  may
+   >           effectuate.  The  delays  after  a  jobs   actual   run
+   >           comprises  delays  due  to  a  forced  job  termination
+   >           (notify, terminate_method or checkpointing),  procedure
+   >           runs  after  acutal job finished such as stop_proc_args
+   >           in sge_pe(5) or epilog in queue_conf(5) and  the  delay
+   >           until a new schedule_interval.
+   >           If the offset is too  low  resource  reservations  (see
+   >           max_reservation) can be delayed repeatedly due to a too
+   >           optistic job circulation time.
+
 4. Implementation
 
    For the reservation scheduling major reconstructions in scheduling code

@@ -1,3 +1,10 @@
+SG-2005-06-15-1: Bugfix:    resource allocation shown by qstat/qhost not consistent 
+                            with resource utilization
+                 Changed:   qmaster                            
+                 Issue:     1658
+                 Bugtraq:   6281440
+                 Review:    EB
+
 JG-2005-06-15-0: Cleanup:   enabled more warnings for compilation with -Werror
                             on irix65.
                  Bugfix:    - fixed broken build for lx24-alpha

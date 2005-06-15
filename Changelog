@@ -1,3 +1,6 @@
+RD-2005-06-15-0: Bugfix:    GEMM doesn't like behavior of checkin RD-2005-05-23-0
+                 Review:    MD
+
 AH-2005-06-15-0: Bugfix:    Overhead with job execution could lead to 
                             overoptimistic backfilling and break resource 
                             reservation

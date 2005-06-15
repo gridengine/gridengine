@@ -1,3 +1,11 @@
+AH-2005-06-15-0: Bugfix:    Overhead with job execution could lead to 
+                            overoptimistic backfilling and break resource 
+                            reservation
+                 Changed:   sge_schedd, libsgeobj.a and sched_conf(5)
+                 Issue:     1662
+                 Bugtraq:   6283308
+                 Review:    AS, CR
+
 JG-2005-06-13-0: Bugfix:    Fixed missing initialization.
                  Changed:   all
                  Review:    CR

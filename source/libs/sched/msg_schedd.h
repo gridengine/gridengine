@@ -227,6 +227,7 @@
 */ 
 #define MSG_SCHEDD_LOGLIST_QUEUESTEMPORARLYNOTAVAILABLEDROPPED _MESSAGE(47227, _("queues dropped because they are temporarily not available: "))
 #define MSG_SCHEDD_MON_NOPENDJOBSTOPERFORMSCHEDULINGON         _MESSAGE(47228, _("no pending jobs to perform scheduling on"))
+#define MSG_SCHEDD_SHOULDHAVEFINISHED_UUU                      _MESSAGE(47289, _("job "U32CFormat"."U32CFormat" should have finished since "U32CFormat"s\n"))
 
 
 /* 

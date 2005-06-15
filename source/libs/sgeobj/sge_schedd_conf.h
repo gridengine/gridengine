@@ -205,6 +205,9 @@ void sconf_set_host_order_changed(bool changed);
 int  sconf_get_last_dispatch_type(void);
 void sconf_set_last_dispatch_type(int changed);
 
+u_long32  sconf_get_duration_offset(void);
+void sconf_set_duration_offset(u_long32 offset);
+
 bool serf_get_active(void);
 void serf_set_active(bool);
 

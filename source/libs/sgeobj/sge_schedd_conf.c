@@ -115,6 +115,7 @@
 #define SCHEDD_JOB_INFO                     "true"
 #define DEFAULT_DURATION                    "0:10:00" /* the default_duration and default_duration_I have to be */
 #define DEFAULT_DURATION_I                  600       /* in sync. On is the strin version of the other (based on seconds)*/
+#define DEFAULT_DURATION_OFFSET             60
 
 
 /* 
@@ -201,7 +202,8 @@ typedef struct{
    bool s_host_order_changed;
    u_long32 s_now_time;
    int s_last_dispatch_type;
-   
+   u_long32 s_duration_offset;   
+
 }config_pos_type;
 
 static bool schedd_profiling = false;
@@ -214,6 +216,7 @@ static void sconf_clear_pos(void);
 static bool sconf_eval_set_profiling(lList *param_list, lList **answer_list, const char* param); 
 static bool sconf_eval_set_monitoring(lList *param_list, lList **answer_list, const char* param);
 static bool sconf_eval_set_job_category_filtering(lList *param_list, lList **answer_list, const char* param);
+static bool sconf_eval_set_duration_offset(lList *param_list, lList **answer_list, const char* param);
 
 static char policy_hierarchy_enum2char(policy_type_t value);
 
@@ -231,7 +234,7 @@ static config_pos_type pos = {true,
                        -1, -1, -1, -1, -1, -1, 
                        SCHEDD_JOB_INFO_UNDEF, NULL, NULL, NULL, MAX_ULONG32, 
                        false,
-                       QS_STATE_FULL, 0, true, 0, 0};
+                       QS_STATE_FULL, 0, true, 0, 0, DEFAULT_DURATION_OFFSET};
 
 /*
  * a list of all valid "params" parameters
@@ -241,11 +244,12 @@ static config_pos_type pos = {true,
  * before we work on the params 
  */
 const parameters_t params[] = {
-   {"PROFILE",  sconf_eval_set_profiling},
-   {"MONITOR",  sconf_eval_set_monitoring},
-   {"JC_FILTER", sconf_eval_set_job_category_filtering},
-   {"NONE",     NULL},
-   {NULL,       NULL}
+   {"PROFILE",         sconf_eval_set_profiling},
+   {"MONITOR",         sconf_eval_set_monitoring},
+   {"JC_FILTER",       sconf_eval_set_job_category_filtering},
+   {"DURATION_OFFSET", sconf_eval_set_duration_offset},
+   {"NONE",            NULL},
+   {NULL,              NULL}
 };
 
 /* stores the overall configuraion */
@@ -2232,6 +2236,7 @@ bool sconf_validate_config_(lList **answer_list){
       is_category_job_filtering = false;
 
       serf_set_active(false);
+      sconf_set_duration_offset(DEFAULT_DURATION_OFFSET);
 
       if (sparams) {
          if (pos.c_params == NULL) {
@@ -2241,7 +2246,7 @@ bool sconf_validate_config_(lList **answer_list){
             int i = 0;
             bool added = false;
             for(i=0; params[i].name ;i++ ){
-               if (!strncasecmp(s, params[i].name, sizeof(params[i].name)-1)){
+               if (!strncasecmp(s, params[i].name, strlen(params[i].name))){
                   if (params[i].setParam) {
                      ret &= params[i].setParam(pos.c_params, answer_list, s);
                   }
@@ -2798,6 +2803,27 @@ static bool sconf_eval_set_monitoring(lList *param_list, lList **answer_list, co
 }
 
 
+static bool sconf_eval_set_duration_offset(lList *param_list, lList **answer_list, const char* param)
+{
+   u_long32 uval;
+   char *s;
+
+   DENTER(TOP_LAYER, "sconf_eval_set_monitoring");
+
+   if (!(s=strchr(param, '=')) ||
+       !extended_parse_ulong_val(NULL, &uval, TYPE_TIM, ++s, NULL, 0, 0)) {
+      sconf_set_duration_offset(DEFAULT_DURATION_OFFSET);
+      DEXIT;
+      return false;
+   }
+
+   sconf_set_duration_offset(uval);
+
+   DEXIT;
+   return true;
+}
+
+
 /* 
    QS_STATE_FULL
       All debitations caused by running jobs are in effect.
@@ -2854,6 +2880,15 @@ int sconf_get_last_dispatch_type(void)
 void sconf_set_last_dispatch_type(int last)
 {
    pos.s_last_dispatch_type = last;
+}
+
+u_long32 sconf_get_duration_offset(void)
+{
+   return pos.s_duration_offset;
+}
+void sconf_set_duration_offset(u_long32 offset)
+{
+   pos.s_duration_offset = offset;
 }
 
 /****** sge_resource_utilization/serf_control() ********************************

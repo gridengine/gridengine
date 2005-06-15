@@ -45,7 +45,6 @@
 #include "sge_feature.h"
 #include "sgermon.h"
 #include "sge_log.h"
-#include "sge_profiling.h"
 #include "sge_string.h"
 #include "sge_userset_qmaster.h"
 #include "sge_prog.h"
@@ -58,11 +57,11 @@
 #include "sge_answer.h"
 #include "sge_userprj.h"
 #include "sge_userset.h"
-#include "sge_profiling.h"
 
-#include "config_file.h"
+#include "uti/sge_profiling.h"
+#include "uti/config_file.h"
 
-#include "msg_sgeobjlib.h"
+#include "sgeobj/msg_sgeobjlib.h"
 
 #define SGE_BIN "bin"
 #define STREESPOOLTIMEDEF 240

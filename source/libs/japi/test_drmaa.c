@@ -692,6 +692,7 @@ static int test(int *argc, char **argv[], int parse_args)
    char diagnosis[DRMAA_ERROR_STRING_BUFFER];
    drmaa_job_template_t *jt = NULL;
    int drmaa_errno=0;
+   int do_while_end = 0;
 
    switch (test_case) {
    case ST_MULT_INIT:
@@ -2243,7 +2244,7 @@ static int test(int *argc, char **argv[], int parse_args)
                const char *session_all[] = { DRMAA_JOB_IDS_SESSION_ALL, NULL };
                /* drmaa_synchronize(DRMAA_JOB_IDS_SESSION_ALL) must return DRMAA_ERRNO_SUCCESS */
                if ((drmaa_errno=drmaa_synchronize(session_all, DRMAA_TIMEOUT_WAIT_FOREVER, 
-                    ST_EMPTY_SESSION_SYNCHRONIZE_DISPOSE?0:1, 
+                    (test_case == ST_EMPTY_SESSION_SYNCHRONIZE_DISPOSE) ? 1 : 0, 
                      diagnosis, sizeof(diagnosis)-1))!=DRMAA_ERRNO_SUCCESS) {
                   fprintf(stderr, "drmaa_synchronize(empty session) failed: %s\n", diagnosis);
                   return 1;
@@ -2622,7 +2623,7 @@ static int test(int *argc, char **argv[], int parse_args)
             else if (!failed_test) {
                printf ("Test succeeded!\n");
             }
-         } while (0);
+         } while (do_while_end);
          
          if (jt != NULL) { drmaa_delete_job_template(jt, NULL, 0); jt = NULL; }
          
@@ -2740,7 +2741,7 @@ static int test(int *argc, char **argv[], int parse_args)
             if (!failed_test) {
                printf ("Test succeeded!\n");
             }
-         } while (0);
+         } while (do_while_end);
          
          if (jt != NULL) { drmaa_delete_job_template(jt, NULL, 0); jt = NULL; }
          
@@ -2838,7 +2839,7 @@ static int test(int *argc, char **argv[], int parse_args)
             else if (!failed_test) {
                printf ("Test succeeded!\n");
             }
-         } while (0);
+         } while (do_while_end);
          
          if (jt != NULL) { drmaa_delete_job_template(jt, NULL, 0); jt = NULL; }
 
@@ -2923,7 +2924,7 @@ static int test(int *argc, char **argv[], int parse_args)
             else if (!failed_test) {
                printf ("Test succeeded!\n");
             }
-         } while (0);
+         } while (do_while_end);
 
          if (jt != NULL) { drmaa_delete_job_template(jt, NULL, 0); jt = NULL; }
          
@@ -3084,7 +3085,7 @@ static int test(int *argc, char **argv[], int parse_args)
             else if (!failed_test) {
                printf ("Test succeeded!\n");
             }
-         } while (0);
+         } while (do_while_end);
 
          if (jt != NULL) { drmaa_delete_job_template(jt, NULL, 0); jt = NULL; }
 
@@ -3313,7 +3314,7 @@ static int test(int *argc, char **argv[], int parse_args)
             else if (!failed_test) {
                printf ("Test succeeded!\n");
             }
-         } while (0);
+         } while (do_while_end);
 
          if (jt != NULL) { drmaa_delete_job_template(jt, NULL, 0); jt = NULL; }
          
@@ -3539,7 +3540,7 @@ static int test(int *argc, char **argv[], int parse_args)
             else if (!failed_test) {
                printf ("Test succeeded!\n");
             }
-         } while (0);
+         } while (do_while_end);
 
          if (jt != NULL) { drmaa_delete_job_template(jt, NULL, 0); jt = NULL; }
 
@@ -3642,7 +3643,7 @@ static int test(int *argc, char **argv[], int parse_args)
             else if (!failed_test) {
                printf ("Test succeeded!\n");
             }
-         } while (0);
+         } while (do_while_end);
             
          if (jt != NULL) { drmaa_delete_job_template(jt, NULL, 0); jt = NULL; }
 
@@ -3735,7 +3736,7 @@ static int test(int *argc, char **argv[], int parse_args)
             else if (!failed_test) {
                printf ("Test succeeded!\n");
             }
-         } while (0);
+         } while (do_while_end);
          
          if (jt != NULL) { drmaa_delete_job_template(jt, NULL, 0); jt = NULL; }
 
@@ -3803,7 +3804,7 @@ static int test(int *argc, char **argv[], int parse_args)
             }
 
             printf ("Check for email to find out if the test succeeded.\n");
-         } while (0);
+         } while (do_while_end);
          
          if (jt != NULL) { drmaa_delete_job_template(jt, NULL, 0); jt = NULL; }
          
@@ -3872,7 +3873,7 @@ static int test(int *argc, char **argv[], int parse_args)
             }
 
             printf ("Check for email to find out if the test failed.\n");
-         } while (0);
+         } while (do_while_end);
          
          if (jt != NULL) { drmaa_delete_job_template(jt, NULL, 0); jt = NULL; }
 
@@ -4430,10 +4431,12 @@ static int do_submit(drmaa_job_template_t *jt, int n)
    char jobid[100];
    int drmaa_errno = DRMAA_ERRNO_SUCCESS;
    int error = DRMAA_ERRNO_SUCCESS;
+   bool done;
 
    for (i=0; i<n; i++) {
       /* submit job */
-      while (true) {
+      done = false;
+      while (!done) {
          drmaa_errno = drmaa_run_job(jobid, sizeof(jobid)-1, jt, diagnosis, sizeof(diagnosis)-1);
 
          if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
@@ -4444,16 +4447,15 @@ static int do_submit(drmaa_job_template_t *jt, int n)
          if (drmaa_errno == DRMAA_ERRNO_TRY_LATER) {
             printf("retry: %s\n", diagnosis);
             sleep(1);
-         }
-         else {
+         } else {
+            done = true;
             break; /* while */
          }
       }
       
       if (drmaa_errno == DRMAA_ERRNO_SUCCESS) {
          printf("submitted job \"%s\"\n", jobid);
-      }
-      else {
+      } else {
          printf("unable to submit job\n");
       }
       
@@ -4515,9 +4517,11 @@ static int wait_n_jobs(int n)
    int i, stat;
    int drmaa_errno = DRMAA_ERRNO_SUCCESS;
    int error = DRMAA_ERRNO_SUCCESS;
+   bool done;
 
    for (i=0; i<n; i++) {
-      while (true) {
+      done = false;
+      while (!done) {
          drmaa_errno = drmaa_wait(DRMAA_JOB_IDS_SESSION_ANY, jobid,
                                   sizeof(jobid)-1, &stat,
                                   DRMAA_TIMEOUT_WAIT_FOREVER, NULL, NULL, 0);
@@ -4530,16 +4534,15 @@ static int wait_n_jobs(int n)
          if (drmaa_errno == DRMAA_ERRNO_TRY_LATER) {
             printf("retry...\n");
             sleep(1);
-         }
-         else {
+         } else {
+            done = true;
             break;
          }
       }
 
       if (drmaa_errno == DRMAA_ERRNO_SUCCESS) {
          printf("waited job \"%s\"\n", jobid);
-      }
-      else {
+      } else {
          /* If there is ever an error, we will return an error. */
          error = drmaa_errno;
       }

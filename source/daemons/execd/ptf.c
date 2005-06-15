@@ -1414,11 +1414,11 @@ static void ptf_set_OS_scheduling_parameters(lList *job_list, double min_share,
     * the the values are in the boundaries of PTF_OS_MAX_PRIORITY and
     * PTF_OS_MIN_PRIORITY.
     */
-   if (ENFORCE_PRI_RANGE) {
+#if ENFORCE_PRI_RANGE
       pri_max_tmp = MAX(pri_max_tmp, PTF_OS_MAX_PRIORITY);
       pri_min_tmp = MIN(pri_min_tmp, PTF_OS_MIN_PRIORITY);
-   }
-   
+#endif 
+
    /*
     * Ensure that the max priority can't get a bigger value than
     * the min priority (otherwise the "range" gets wrongly calculated

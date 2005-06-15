@@ -1,14 +1,24 @@
-RD-2005-06-15-0: Bugfix:    GEMM doesn't like behavior of checkin RD-2005-05-23-0
+JG-2005-06-15-0: Cleanup:   enabled more warnings for compilation with -Werror
+                            on irix65.
+                 Bugfix:    - fixed broken build for lx24-alpha
+                            - fixed a memory leak
+                 Changed:   all
+                 Review:    RD
+
+RD-2005-06-15-0: Bugfix:    GEMM doesn't like behavior of checkin 
+                            RD-2005-05-23-0
                  Review:    MD
 
 SG-2005-06-15-0: Bugfix:    - fixed a couple performance bugs
                             - fixed the build for irix
-                            - fixed unknown event handler message on qmaster startup
+                            - fixed unknown event handler message on qmaster 
+                              startup
                  Changed:   qmaster, scheduler
                  Review:    RD
 
-AH-2005-06-14-0: Bugfix:    Overhead with job execution could lead to overoptimistic 
-                            backfilling and break resource reservation
+AH-2005-06-14-0: Bugfix:    Overhead with job execution could lead to 
+                            overoptimistic backfilling and break resource 
+                            reservation
                  Issue:     1662
                  Bugtraq:   6283308
                  Review:    AS, CR
@@ -36,16 +46,19 @@ AA-2005-06-10-3: Bugfix:    html man page generation scripts mismatched man
                             of man pages to solaris man
                  Changed:   scripts/mk_ascman
 
-AA-2005-06-10-2: Bugfix:    merge from V60u4win - removal of link dependency to libspoolc.so
+AA-2005-06-10-2: Bugfix:    merge from V60u4win - removal of link dependency to
+                            libspoolc.so
                  Issue:     1569
                  Review:    JG
                  Changed:   qmon
 
-AA-2005-06-10-1: Bugfix:    merge from V60u4win - sgepasswd, static linking of libcrypto
+AA-2005-06-10-1: Bugfix:    merge from V60u4win - sgepasswd, static linking of 
+                            libcrypto
                  Changed:   sgepasswd, aimk
                  Review:    EB
 
-AA-2005-06-10-0: Bugfix:    merge from V60u4win - qmon basic test, exechost consumable/fixed
+AA-2005-06-10-0: Bugfix:    merge from V60u4win - qmon basic test, exechost 
+                            consumable/fixed
                             attribute removal on x86 and sol-x86 architecture
                  Changed:   qmon
                  Review:    CR

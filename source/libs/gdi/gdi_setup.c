@@ -357,9 +357,12 @@ int sge_gdi_setup(const char *programname, lList **alpp)
    bool alpp_was_null = true;
    DENTER(TOP_LAYER, "sge_gdi_setup");
 
+   lInit(nmv);
+
    if (alpp != NULL && *alpp != NULL) {
      alpp_was_null = false;
    }
+
    /* initialize libraries */
    pthread_once(&gdi_once_control, gdi_once_init);
    if (gdi_state_get_made_setup()) {
@@ -383,8 +386,6 @@ int sge_gdi_setup(const char *programname, lList **alpp)
                          (textdomain_func_type)     textdomain);
    sge_init_language(NULL,NULL);   
 #endif /* __SGE_COMPILE_WITH_GETTEXT__  */
-
-   lInit(nmv);
 
    if (sge_setup(uti_state_get_mewho(), alpp)) {
       if (alpp_was_null) {

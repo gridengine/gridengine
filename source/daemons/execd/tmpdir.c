@@ -65,6 +65,14 @@ char *tmpdir
 
    sge_switch2start_user();
    sge_mkdir(tmpdir, 0755, 0, 0);
+
+   /*
+    * chown is considered to be a security flaw, as an attacker might move the 
+    * directory between the mkdir and chown.
+    * This is both nearly impossible here and would have no effect.
+    * Make flawfinder ignore it
+    */
+   /* Flawfinder: ignore */
    chown(tmpdir, uid, gid);
    sge_switch2admin_user();
 

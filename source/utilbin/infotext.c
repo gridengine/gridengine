@@ -255,6 +255,8 @@ static void  sge_infotext_format_output(dstring* dash_buf,sge_infotext_options* 
    
    int new_line_opt = options->n;
 
+   bool done;
+
    DENTER(TOP_LAYER,"sge_infotext_format_output" );
 
 
@@ -275,13 +277,14 @@ static void  sge_infotext_format_output(dstring* dash_buf,sge_infotext_options* 
    DPRINTF(("strcpy done"));
    sge_dstring_copy_string(&dash,"");
    DPRINTF(("copy done"));
-   for(i=0;i< sge_dstring_strlen(&line);i++) {
+   for (i=0;i< sge_dstring_strlen(&line);i++) {
       sge_dstring_append(&dash," ");
    }
    nr_word = 0;
    DPRINTF(("while\n"));
 
-   while(1) {
+   done = false;
+   while (!done) {
       char* next_word = NULL;
       int new_line_buffer;
 
@@ -292,6 +295,7 @@ static void  sge_infotext_format_output(dstring* dash_buf,sge_infotext_options* 
             sge_infotext_print_line(dash_buf,options,&line); 
          }
          nr_word = 0;
+         done = true;
          break;
       }
 
@@ -359,16 +363,18 @@ static void  sge_infotext_format_output(dstring* dash_buf,sge_infotext_options* 
             options->n = new_line_opt;
             sge_infotext_print_line(dash_buf,options,&line); 
             nr_word = 0;
-         break;
+            done = true;
+            break;
          }
-         if( sge_dstring_strlen(&line) + strlen(next_word) + 1 > max_column &&
-            nr_word != 0 ) {
+         if (sge_dstring_strlen(&line) + strlen(next_word) + 1 > max_column &&
+            nr_word != 0) {
             sge_infotext_print_line(dash_buf,options,&line);
             nr_word = 0;
             sge_dstring_copy_dstring(&line,&dash);  
          }      
       }
    }
+
    DPRINTF(("free strings\n"));
    options->n = new_line_opt;
    sge_dstring_free(&dash);

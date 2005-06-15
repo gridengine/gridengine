@@ -568,12 +568,10 @@ buffer_decrypt(const char *buffer_in, size_t buffer_in_length,
 #else
 	shared_ssl_func__EVP_OpenInit(&ectx, shared_ssl_func__EVP_rc4(), encryptKey, ekeylen, iv, privateKey); 	
 #endif
-	while(1) {
+	while (buffer_in_length > 0) {
       int readlen = 0;
 
-      if (buffer_in_length == 0) {
-         break;
-      } else if (buffer_in_length < sizeof(ebuf)) {
+      if (buffer_in_length < sizeof(ebuf)) {
          memcpy(&ebuf, curr_ptr, buffer_in_length);
          readlen = buffer_in_length;
          buffer_in_length = 0;

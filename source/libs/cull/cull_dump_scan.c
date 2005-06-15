@@ -1131,8 +1131,9 @@ static int fGetString(FILE *fp, lString *tp)
       sge_dstring_append_char(&sp, s[i]);
    }
    if (s[i] != '"') {
+      bool done = false;
       /* String is diveded by a newline */
-      while ( true ) {
+      while ( !done ) {
          if (fGetLine(fp, line, READ_LINE_LENGHT)) {
             sge_dstring_free(&sp);
             LERROR(LEFGETLINE);
@@ -1144,10 +1145,11 @@ static int fGetString(FILE *fp, lString *tp)
             sge_dstring_append_char(&sp, s[j]);
          }
          if (s[j] == '"') {
+            done = true;
             break;
          }
       }
-   } 
+   }
 
    s = sge_dstring_get_string(&sp);
    if (s == NULL) {

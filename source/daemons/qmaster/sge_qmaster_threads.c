@@ -985,11 +985,10 @@ static void* signal_thread(void* anArg)
    sge_update_thread_alive_time(SGE_MASTER_SIGNAL_THREAD);
 
    /* register at profiling module */
-   set_thread_name(pthread_self(),"Signal Thread");
+   set_thread_name(pthread_self(), "Signal Thread");
    conf_update_thread_profiling("Signal Thread");
 
-   while (is_continue)
-   {
+   while (is_continue) {
       sigwait(&sig_set, &sig_num);
 
       thread_start_stop_profiling();

@@ -124,6 +124,7 @@ extern int main(void)
 void *timeout_thread_main(void *t_conf) {
    /* get pointer to cl_thread_settings_t struct */
    int ret_val;
+   int pthread_cleanup_pop_execute = 0; /* workaround for irix compiler warning */
    cl_thread_settings_t *thread_config = (cl_thread_settings_t*)t_conf; 
    pthread_cleanup_push((void (*)(void *)) cl_thread_default_cleanup_function, (void*) thread_config );
 
@@ -157,7 +158,7 @@ void *timeout_thread_main(void *t_conf) {
          printf("thread %d: cl_thread_func_cleanup() - %d\n", thread_config->thread_id, ret_val);
       }
    }
-   pthread_cleanup_pop(0);
+   pthread_cleanup_pop(pthread_cleanup_pop_execute);
    return(NULL);
 }
 

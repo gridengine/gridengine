@@ -1008,6 +1008,9 @@ case AIX43:
 case AIX51:
    set MAKEWINGRIDLIB   = 0
    set MAKEWINGRIDAPP   = 0
+   if ( $DEBUGGED == 1 ) then
+      set DEBUG_FLAG = "$DEBUG_FLAG -qinitauto=01 -qro -qroconst"
+   endif
    if ( $OPTIMIZATION == 1 ) then
       set OFLAG = "-O3 -qstrict -qmaxmem=8192"
    else
@@ -1245,14 +1248,14 @@ case IRIX65:
    set COMPILE_DC = 1
    set MAKE = gmake
 
-   set CFLAGS   = "$OFLAG -Werror -woff 1209,3201 -n32 -mips3 -DFD_SETSIZE=8192 -DIRIX -D$BUILDARCH -DGETHOSTBYNAME_M -DGETHOSTBYADDR_M $DEBUG_FLAG $CFLAGS"
-   set NOERR_CFLAG = "-woff 1110,1174"
+   set CFLAGS   = "$OFLAG -Werror -woff 3201,3496 -n32 -mips3 -DFD_SETSIZE=8192 -DIRIX -D$BUILDARCH -DGETHOSTBYNAME_M -DGETHOSTBYADDR_M $DEBUG_FLAG $CFLAGS"
+   set NOERR_CFLAG = "-woff 1110,1174,1209"
    set DEPEND_FLAGS = "$CFLAGS $XMTINCD"
    set LFLAGS   = "-n32 -mips3 $DEBUG_FLAG $LFLAGS"
    set LIBS     = "$LIBS"
    set XMTDEF   = ""
    set XINCD    = "$XMTINCD $XINCD"
-   set XCFLAGS  = "$XMTDEF $XINCD -woff 1174,1498,1506,1185,1552,3496"
+   set XCFLAGS  = "$XMTDEF $XINCD -woff 1174,1498,1506,1185,1552,3496,1209"
    set XLIBD    = ""
    set XLFLAGS  = "$XLIBD"
    set XLIBS    = "-lXm -lXt -lXext -lX11 -lPW -lm"

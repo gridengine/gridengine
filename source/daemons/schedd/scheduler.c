@@ -1361,8 +1361,9 @@ add_job_list_to_schedule(const lList *job_list, bool suspended, lList *pe_list,
             All we can do here is hope the job will be finished in the next interval. */
          if (a.start + a.duration <= now) {
             if (sconf_get_max_reservations()>0) {
-               WARNING((SGE_EVENT, MSG_SCHEDD_SHOULDHAVEFINISHED_UUU, a.job_id, a.ja_task_id, 
-                     now - a.duration - a.start + 1));
+               WARNING((SGE_EVENT, MSG_SCHEDD_SHOULDHAVEFINISHED_UUU, 
+                     sge_u32c(a.job_id), sge_u32c(a.ja_task_id), 
+                     sge_u32c(now - a.duration - a.start + 1)));
             }
             a.duration = (now - a.start) + interval;
          }

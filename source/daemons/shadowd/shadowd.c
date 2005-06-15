@@ -145,10 +145,9 @@ static int shadowd_is_old_master_enrolled(char *oldqmaster)
 }
 
 /*----------------------------------------------------------------------------*/
-int main(
-int argc,
-char **argv 
-) {
+int 
+main(int argc, char **argv)
+{
    int heartbeat, last_heartbeat, latest_heartbeat, ret, delay;
    time_t now, last;
    const char *cp;
@@ -287,12 +286,8 @@ char **argv
    last = (time_t) sge_get_gmt();
 
    delay = 0;
-   while (TRUE) {
+   while (!shut_me_down) {
       sleep(check_interval);
-
-      if (shut_me_down) {
-         sge_shutdown();
-      }   
 
       heartbeat = get_qmaster_heartbeat(QMASTER_HEARTBEAT_FILE);
       
@@ -379,6 +374,10 @@ char **argv
          last_heartbeat = heartbeat;
       }
    }
+
+   sge_shutdown();
+
+   return EXIT_SUCCESS;
 }
 
 /*-----------------------------------------------------------------

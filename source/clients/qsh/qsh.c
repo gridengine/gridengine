@@ -675,35 +675,39 @@ static int start_client_program(const char *client_name,
       return 1;
    }
 
-   if(child_pid) {
+   if (child_pid) {
+      bool done;
+
       sge_unblock_all_signals();
       signal(SIGINT,  forward_signal);
       signal(SIGQUIT, forward_signal);
       signal(SIGTERM, forward_signal);
-   
-      while(1) {
+  
+      done = false;
+      while (!done) {
          int status;
 
       /* Always try to get exit code (or error) from shepherd.
        * If rsh didn't return EXIT_SUCCESS or didn't exit (!WIFEXITED), 
        * output a message "cleaning up ..." and delete the job
        */
-         if(waitpid(child_pid, &status, 0) == child_pid) {
+         if (waitpid(child_pid, &status, 0) == child_pid) {
             int ret = -1;  /* default: delete job */
 
-            if(WIFEXITED(status)) {
+            if (WIFEXITED(status)) {
                ret = WEXITSTATUS(status);
                VERBOSE_LOG((stderr, MSG_QSH_EXITEDWITHCODE_SI, client_name, ret));
             }
 
-            if(WIFSIGNALED(status)) {
+            if (WIFSIGNALED(status)) {
                int code = WTERMSIG(status);
-               VERBOSE_LOG((stderr, MSG_QSH_EXITEDONSIGNAL_SIS, client_name, code, sge_sys_sig2str(code)));
+               VERBOSE_LOG((stderr, MSG_QSH_EXITEDONSIGNAL_SIS, client_name, 
+                           code, sge_sys_sig2str(code)));
                /* if not qrsh <command>: use default: delete job */
             }
 
             /* get exit code from shepherd for qrsh <command> */
-            if(is_rsh) {
+            if (is_rsh) {
                ret = get_remote_exit_code(sock);
             }
 

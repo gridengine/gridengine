@@ -400,8 +400,7 @@ spool_berkeleydb_trigger_func(lList **answer_list, const lListElem *rule,
       ret = false;
 
       /* nothing can be done - but set new trigger!! */
-      *next_trigger = trigger + MIN(BERKELEYDB_CLEAR_INTERVAL, 
-                                    BERKELEYDB_CHECKPOINT_INTERVAL);
+      *next_trigger = trigger + BERKELEYDB_MIN_INTERVAL;
    } 
 
    if (ret) {

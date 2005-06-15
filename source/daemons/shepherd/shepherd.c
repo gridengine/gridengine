@@ -872,6 +872,7 @@ int ckpt_type
    u_long32 wait_status = 0;
    FILE *fp;
    int core_dumped, ckpt_interval, ckpt_pid;
+   int wexit_flag_true = 1; /* to please IRIX compiler */
 
 #if defined(IRIX)
    ash_t ash = 0;
@@ -1024,7 +1025,7 @@ int ckpt_type
 
       exit_status = 128 + child_signal;
 
-      wait_status = SGE_SET_WSIGNALED(wait_status, 1);
+      wait_status = SGE_SET_WSIGNALED(wait_status, wexit_flag_true);
       wait_status = SGE_SET_WCOREDUMP(wait_status, core_dumped);
       wait_status = SGE_SET_WSIGNAL(wait_status, sge_map_signal(child_signal));
    } else {
@@ -1046,7 +1047,7 @@ int ckpt_type
             (exit_status==RESCHEDULE_EXIT_STATUS || exit_status==APPERROR_EXIT_STATUS)?
             " -> rescheduling":"");
 
-         wait_status = SGE_SET_WEXITED(wait_status, 1);
+         wait_status = SGE_SET_WEXITED(wait_status, wexit_flag_true);
          wait_status = SGE_SET_WEXITSTATUS(wait_status, exit_status);
 
       } else {
@@ -2282,11 +2283,11 @@ static void start_clean_command(char *cmd)
  and uses it instead of the pid. If reading or killing fails, the normal
  mechanism is used.
  ****************************************************************/
-static void shepherd_signal_job(
-pid_t pid,
-int sig 
-) {
+static void 
+shepherd_signal_job(pid_t pid, int sig) 
+{
 #if defined(IRIX) || defined(CRAY) || defined(NECSX4) || defined(NECSX5)
+   bool do_while_end = false;
    FILE *fp;
    static int first = 1;
    int n;
@@ -2368,7 +2369,7 @@ int sig
 #     endif
       sge_switch2admin_user();
 
-   } while (0);
+   } while (do_while_end);
 
 #elif defined(SOLARIS) || defined(LINUX) || defined(ALPHA)
 #if 0

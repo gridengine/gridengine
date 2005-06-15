@@ -294,6 +294,7 @@ void *server_thread(void *t_conf) {
    /* ok, thread main */
 
    while (do_exit == 0) {
+      int pthread_cleanup_pop_execute = 0; /* workaround for irix compiler warning */
       cl_connection_list_elem_t* con_elem = NULL;
  
       cl_com_connection_t*  connection = NULL;
@@ -301,8 +302,8 @@ void *server_thread(void *t_conf) {
       pthread_cleanup_push((void (*)(void *)) server_cleanup, (void*) &con );
       pthread_cleanup_push((void (*)(void *)) server_cleanup_conlist, (void*) &connection_list);
       cl_thread_func_testcancel(thread_config);
-      pthread_cleanup_pop(0); /* list cleanup */
-      pthread_cleanup_pop(0); /* server cleanup */
+      pthread_cleanup_pop(pthread_cleanup_pop_execute); /* list cleanup */
+      pthread_cleanup_pop(pthread_cleanup_pop_execute); /* server cleanup */
 
       CL_LOG_INT( CL_LOG_INFO, "--> nr of connections: ", (int)cl_raw_list_get_elem_count(connection_list) );
 
@@ -442,9 +443,10 @@ void *client_thread(void *t_conf) {
 
    /* ok, thread main */
    while (do_exit == 0) {
+      int pthread_cleanup_pop_execute = 0; /* workaround for irix compiler warning */
       pthread_cleanup_push((void (*)(void *)) client_cleanup_function, (void*) &con );
       cl_thread_func_testcancel(thread_config);
-      pthread_cleanup_pop(0);  /* client_thread_cleanup */
+      pthread_cleanup_pop(pthread_cleanup_pop_execute);  /* client_thread_cleanup */
 
       if (con == NULL) {
          cl_com_tcp_setup_connection(&con, 5000, 5000,CL_CM_CT_STREAM, CL_CM_AC_DISABLED, CL_CT_TCP, CL_CM_DF_BIN, CL_TCP_DEFAULT );

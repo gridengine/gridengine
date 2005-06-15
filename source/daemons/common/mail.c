@@ -128,6 +128,7 @@ const char *buf
    int pipefds[2];
    FILE *fp;
    stringT user_str;
+   bool done;
 
 #if !(defined(CRAY) || defined(INTERIX))
    struct rusage rusage;
@@ -205,7 +206,8 @@ const char *buf
 
    sge_setup_sig_handlers(uti_state_get_mewho());
 
-   while (1) {
+   done = false;
+   while (!done) {
       alarm(60);                /* max time to allow for mail */
       sigprocmask(SIG_SETMASK, &io_mask, &omask);
       sigaction(SIGALRM, &sigalrm_vec, &sigalrm_ovec);

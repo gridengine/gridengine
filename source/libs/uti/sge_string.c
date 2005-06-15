@@ -194,6 +194,7 @@ char *sge_strtok(const char *str, const char *delimitor)
    static char *static_str = NULL;
    static unsigned int alloc_len = 0;
    unsigned int n;
+   bool done;
 
    DENTER(BASIS_LAYER, "sge_strtok");
 
@@ -217,7 +218,8 @@ char *sge_strtok(const char *str, const char *delimitor)
    }
 
    /* seek first character which is no '\0' and no delimitor */
-   while (1) {
+   done = false;
+   while (!done) {
 
       /* found end of string */
       if (*saved_cp == '\0') {
@@ -227,6 +229,7 @@ char *sge_strtok(const char *str, const char *delimitor)
 
       /* eat white spaces */
       if (!IS_DELIMITOR((int) saved_cp[0], delimitor)) {
+         done = true;
          break;
       }
 
@@ -235,7 +238,8 @@ char *sge_strtok(const char *str, const char *delimitor)
 
    /* seek end of string given by '\0' or delimitor */
    cp = saved_cp;
-   while (1) {
+   done = false;
+   while (!done) {
       if (!cp[0]) {
          static_cp = cp;
 
@@ -254,6 +258,8 @@ char *sge_strtok(const char *str, const char *delimitor)
       }
       cp++;
    }
+
+   return NULL;
 }
 
 /****** uti/string/sge_strtok_r() *********************************************
@@ -292,6 +298,7 @@ char *sge_strtok_r(const char *str, const char *delimitor,
    char *cp;
    char *saved_cp;
    struct saved_vars_s *saved;
+   bool done;
 
    DENTER(BASIS_LAYER, "sge_strtok_r");
 
@@ -320,7 +327,8 @@ char *sge_strtok_r(const char *str, const char *delimitor,
    }
 
    /* seek first character which is no '\0' and no delimitor */
-   while (1) {
+   done = false;
+   while (!done) {
 
       /* found end of string */
       if (*saved_cp == '\0') {
@@ -330,6 +338,7 @@ char *sge_strtok_r(const char *str, const char *delimitor,
 
       /* eat white spaces */
       if (!IS_DELIMITOR((int) saved_cp[0], delimitor)) {
+         done = true;
          break;
       }
 
@@ -338,7 +347,8 @@ char *sge_strtok_r(const char *str, const char *delimitor,
 
    /* seek end of string given by '\0' or delimitor */
    cp = saved_cp;
-   while (1) {
+   done = false;
+   while (!done) {
       if (!cp[0]) {
          saved->static_cp = cp;
 
@@ -357,6 +367,8 @@ char *sge_strtok_r(const char *str, const char *delimitor,
       }
       cp++;
    }
+
+   return NULL;
 }
 
 /****** uti/string/sge_free_saved_vars() **************************************
@@ -567,11 +579,11 @@ char *sge_delim_str(char *str, char **delim_pos, const char *delim)
 
    /* cp now either points to a closing \0 or to a delim character */
    if (*cp) {                    /* if it points to a delim character */
-      *cp = '\0';               /* terminate str with a \0 */
-   }   
-   if (delim_pos) {               /* give back delimiting position for name */
+      *cp = '\0';                /* terminate str with a \0 */
+   }
+   if (delim_pos) {              /* give back delimiting position for name */
       *delim_pos = str + strlen(tstr);
-   }   
+   }
    /* delim_pos either points to the delimiter or the closing \0 in str */
 
    DEXIT;
@@ -1143,6 +1155,7 @@ char **string_list(char *str, char *delis, char **pstr)
    int is_space = 0;
    int found_first_quote = 0;
    char **head = NULL;
+   bool done;
 
    DENTER(BASIS_LAYER, "string_list");
 
@@ -1173,11 +1186,13 @@ char **string_list(char *str, char *delis, char **pstr)
       head = pstr;
    }
 
-   while (1) {
+   done = false;
+   while (!done) {
       while (str[i] && strchr(delis, str[i])) {
          i++;
       }
       if (str[i] == '\0') {
+         done = true;
          break;
       }
       head[j] = &str[i];
@@ -1202,6 +1217,7 @@ char **string_list(char *str, char *delis, char **pstr)
          }
       }
       if (str[i] == '\0') {
+         done = true;
          break;
       }
 

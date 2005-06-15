@@ -514,15 +514,19 @@ static int read_ls(void)
    DENTER(TOP_LAYER, "read_ls");
 
    for_each(ls_elem, ls_list) {
+      bool done;
+      
       if (sge_ls_get_pid(ls_elem) == -1) {
          continue;
       }
       DPRINTF(("receiving from %s\n", lGetString(ls_elem, LS_command)));
-      while (1) {
+      done = false;
+      while (!done) {
          FILE *file = lGetRef(ls_elem, LS_out);
          lList *tmp_list;
 
          if (fscanf(file, "%[^\n]\n", input) != 1) {
+            done = true;
             break;
          }
 #ifdef INTERIX
@@ -546,6 +550,7 @@ static int read_ls(void)
 
             /* request next load report from ls */
             ls_send_command(ls_elem, "\n");
+            done = true;
             break;
          }
 

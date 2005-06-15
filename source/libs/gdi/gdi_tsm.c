@@ -92,6 +92,7 @@ lList *gdi_kill(lList *id_list, const char *cell, u_long32 option_flags,
                 u_long32 action_flag ) 
 {
    lList *alp = NULL, *tmpalp;
+   bool id_list_created = false;
 
    DENTER(TOP_LAYER, "gdi_kill");
 
@@ -107,16 +108,18 @@ lList *gdi_kill(lList *id_list, const char *cell, u_long32 option_flags,
 
       sprintf(buffer, "%d", EV_ID_SCHEDD);
       id_list = lCreateList("kill scheduler", ID_Type);
+      id_list_created = true;
       lAddElemStr(&id_list, ID_str, buffer, ID_Type);
       tmpalp = sge_gdi(SGE_EVENT_LIST, SGE_GDI_TRIGGER, &id_list, NULL, NULL);
       lAddList(alp, tmpalp);  
    }
 
    if (action_flag & EVENTCLIENT_KILL) {
-      if(id_list == NULL) {
+      if (id_list == NULL) {
          char buffer[10];
          sprintf(buffer, "%d", EV_ID_ANY);
          id_list = lCreateList("kill all event clients", ID_Type);
+         id_list_created = true;
          lAddElemStr(&id_list, ID_str, buffer, ID_Type);
       }
       tmpalp = sge_gdi(SGE_EVENT_LIST, SGE_GDI_TRIGGER, &id_list, NULL, NULL);
@@ -126,7 +129,7 @@ lList *gdi_kill(lList *id_list, const char *cell, u_long32 option_flags,
    if ((action_flag & EXECD_KILL) || (action_flag & JOB_KILL)) {
       lListElem *hlep = NULL, *hep = NULL;
       lList *hlp = NULL;
-      if(id_list) {
+      if (id_list) {
          /*
          ** we have to convert the EH_Type to ID_Type
          ** It would be better to change the call to use ID_Type!
@@ -144,6 +147,11 @@ lList *gdi_kill(lList *id_list, const char *cell, u_long32 option_flags,
       }
       tmpalp = sge_gdi(SGE_EXECHOST_LIST, SGE_GDI_TRIGGER, &hlp, NULL, NULL);
       lAddList(alp, tmpalp);
+      hlp = lFreeList(hlp);
+   }
+
+   if (id_list_created) {
+      id_list = lFreeList(id_list);
    }
 
    DEXIT;

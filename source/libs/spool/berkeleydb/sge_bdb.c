@@ -784,6 +784,7 @@ spool_berkeleydb_read_list(lList **answer_list, bdb_info info,
                                  dbret, db_strerror(dbret));
          ret = false;
       } else {
+         bool done;
          /* initialize query to first record for this object type */
          memset(&key_dbt, 0, sizeof(key_dbt));
          memset(&data_dbt, 0, sizeof(data_dbt));
@@ -792,7 +793,8 @@ spool_berkeleydb_read_list(lList **answer_list, bdb_info info,
          PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
          dbret = dbc->c_get(dbc, &key_dbt, &data_dbt, DB_SET_RANGE);
          PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
-         while (true) {
+         done = false;
+         while (!done) {
             if (dbret != 0 && dbret != DB_NOTFOUND) {
                spool_berkeleydb_handle_bdb_error(answer_list, info, dbret);
                answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
@@ -800,15 +802,18 @@ spool_berkeleydb_read_list(lList **answer_list, bdb_info info,
                                        MSG_BERKELEY_QUERYERROR_SIS,
                                        key, dbret, db_strerror(dbret));
                ret = false;
+               done = true;
                break;
             } else if (dbret == DB_NOTFOUND) {
                DPRINTF(("last record reached\n"));
+               done = true;
                break;
             } else if (key_dbt.data != NULL && 
                        strncmp(key_dbt.data, key, strlen(key)) 
                        != 0) {
                DPRINTF(("current key is %s\n", key_dbt.data));
                DPRINTF(("last record of this object type reached\n"));
+               done = true;
                break;
             } else {
                sge_pack_buffer pb;
@@ -826,6 +831,7 @@ spool_berkeleydb_read_list(lList **answer_list, bdb_info info,
                                           key_dbt.data,
                                           cull_pack_strerror(cull_ret));
                   ret = false;
+                  done = true;
                   break;
                }
 
@@ -837,6 +843,7 @@ spool_berkeleydb_read_list(lList **answer_list, bdb_info info,
                                           key_dbt.data,
                                           cull_pack_strerror(cull_ret));
                   ret = false;
+                  done = true;
                   break;
                }
                /* we may not free the packbuffer: it references the buffer
@@ -851,8 +858,6 @@ spool_berkeleydb_read_list(lList **answer_list, bdb_info info,
                }
 
                /* get next record */
-      /*          memset(&key_dbt, 0, sizeof(key_dbt)); */
-      /*          memset(&data_dbt, 0, sizeof(data_dbt)); */
                PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
                dbret = dbc->c_get(dbc, &key_dbt, &data_dbt, DB_NEXT);
                PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
@@ -1153,6 +1158,7 @@ spool_berkeleydb_delete_object(lList **answer_list, bdb_info info,
                                     dbret, db_strerror(dbret));
             ret = false;
          } else {
+            bool done;
             DBT cursor_dbt, data_dbt;
             /* initialize query to first record for this object type */
             memset(&cursor_dbt, 0, sizeof(cursor_dbt));
@@ -1162,7 +1168,8 @@ spool_berkeleydb_delete_object(lList **answer_list, bdb_info info,
             PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
             dbret = dbc->c_get(dbc, &cursor_dbt, &data_dbt, DB_SET_RANGE);
             PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
-            while (true) {
+            done = false;
+            while (!done) {
                if (dbret != 0 && dbret != DB_NOTFOUND) {
                   spool_berkeleydb_handle_bdb_error(answer_list, info, dbret);
                   answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
@@ -1170,15 +1177,18 @@ spool_berkeleydb_delete_object(lList **answer_list, bdb_info info,
                                           MSG_BERKELEY_QUERYERROR_SIS,
                                           key, dbret, db_strerror(dbret));
                   ret = false;
+                  done = true;
                   break;
                } else if (dbret == DB_NOTFOUND) {
                   DPRINTF(("last record reached\n"));
+                  done = true;
                   break;
                } else if (cursor_dbt.data != NULL && 
                           strncmp(cursor_dbt.data, key, strlen(key)) 
                           != 0) {
                   DPRINTF(("current key is %s\n", cursor_dbt.data));
                   DPRINTF(("last record of this object type reached\n"));
+                  done = true;
                   break;
                } else {
                   int delete_ret;
@@ -1208,6 +1218,7 @@ spool_berkeleydb_delete_object(lList **answer_list, bdb_info info,
                                              delete_ret, db_strerror(delete_ret));
                      ret = false;
                      free(delete_dbt.data);
+                     done = true;
                      break;
                   } else {
                      DEBUG((SGE_EVENT, "deleted record with key "SFQ"\n", (char *)delete_dbt.data));
@@ -1590,6 +1601,7 @@ spool_berkeleydb_read_keys(lList **answer_list, bdb_info info,
                                  dbret, db_strerror(dbret));
          ret = false;
       } else {
+         bool done;
          /* initialize query to first record for this object type */
          memset(&key_dbt, 0, sizeof(key_dbt));
          memset(&data_dbt, 0, sizeof(data_dbt));
@@ -1598,7 +1610,8 @@ spool_berkeleydb_read_keys(lList **answer_list, bdb_info info,
          PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
          dbret = dbc->c_get(dbc, &key_dbt, &data_dbt, DB_SET_RANGE);
          PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
-         while (true) {
+         done = false;
+         while (!done) {
             if (dbret != 0 && dbret != DB_NOTFOUND) {
                spool_berkeleydb_handle_bdb_error(answer_list, info, dbret);
                answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
@@ -1606,15 +1619,18 @@ spool_berkeleydb_read_keys(lList **answer_list, bdb_info info,
                                        MSG_BERKELEY_QUERYERROR_SIS,
                                        key, dbret, db_strerror(dbret));
                ret = false;
+               done = true;
                break;
             } else if (dbret == DB_NOTFOUND) {
                DPRINTF(("last record reached\n"));
+               done = true;
                break;
             } else if (key_dbt.data != NULL && 
                        strncmp(key_dbt.data, key, strlen(key)) 
                        != 0) {
                DPRINTF(("current key is %s\n", key_dbt.data));
                DPRINTF(("last record of this object type reached\n"));
+               done = true;
                break;
             } else {
                DPRINTF(("read object with key "SFQ", size %d\n", 

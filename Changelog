@@ -1,3 +1,6 @@
+RD-2005-06-15-0: Bugfix:    GEMM doesn't like behavior of checkin RD-2005-05-23-0
+                 Review:    MD
+
 SG-2005-06-15-0: Bugfix:    - fixed a couple performance bugs
                             - fixed the build for irix
                             - fixed unknown event handler message on qmaster startup

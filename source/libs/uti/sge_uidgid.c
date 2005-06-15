@@ -177,7 +177,7 @@ bool sge_is_id_superuser(uid_t id)
 #if defined( INTERIX )
    ret = wl_is_user_id_superuser(id);
 #else
-   ret = (id == 0);
+   ret = (id == 0)?true:false;
 #endif
    return ret;
 }

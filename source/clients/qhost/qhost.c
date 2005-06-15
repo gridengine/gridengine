@@ -197,7 +197,7 @@ char **argv
          SGE_EXIT(1);
       }
 
-      {
+      {/* clean host list */
          lListElem *host = NULL;
          for_each(host, ehl) {
             lSetUlong(host, EH_tagged, 0);

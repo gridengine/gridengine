@@ -556,11 +556,64 @@ void sge_start_periodic_tasks(void)
 
    DENTER(TOP_LAYER, "sge_start_periodic_tasks");
 
-   te_register_event_handler(sge_store_job_number, TYPE_JOB_NUMBER_EVENT);
    ev = te_new_event(15, TYPE_JOB_NUMBER_EVENT, RECURRING_EVENT, 0, 0, "job_number_changed");
    te_add_event(ev);
    te_free_event(ev);
 
+   ev = te_new_event(15, TYPE_LOAD_VALUE_CLEANUP_EVENT, RECURRING_EVENT, 0, 0, "load-value-cleanup");
+   te_add_event(ev);
+   te_free_event(ev);
+
+   ev = te_new_event(30, TYPE_ZOMBIE_JOB_CLEANUP_EVENT, RECURRING_EVENT, 0, 0, "zombie-job-cleanup");
+   te_add_event(ev);
+   te_free_event(ev);
+
+   ev = te_new_event(60, TYPE_AUTOMATIC_USER_CLEANUP_EVENT, RECURRING_EVENT, 0, 0, "automatic-user-cleanup");
+   te_add_event(ev);
+   te_free_event(ev);
+
+   ev = te_new_event(10, TYPE_SECURITY_EVENT, RECURRING_EVENT, 0, 0, "security-event");
+   te_add_event(ev);
+   te_free_event(ev);
+
+   DEXIT;
+   return;
+} /* sge_start_periodic_tasks() */
+
+
+/****** sge_qmaster_threads/sge_register_event_handler() ***********************
+*  NAME
+*     sge_register_event_handler() -- register event handlers
+*
+*  SYNOPSIS
+*     void sge_register_event_handler(void) 
+*
+*  FUNCTION
+*    registers event handlers
+*
+*  NOTES
+*     MT-NOTE: sge_register_event_handler() is MT safe 
+*
+*  SEE ALSO
+*     sge_qmaster_threads/sge_start_periodic_tasks
+*******************************************************************************/
+void sge_register_event_handler(void) 
+{
+   DENTER(TOP_LAYER, "sge_register_event_handler");
+
+   /* recurring events */
+   te_register_event_handler(sge_store_job_number, TYPE_JOB_NUMBER_EVENT);
+
+   te_register_event_handler(sge_load_value_cleanup_handler, TYPE_LOAD_VALUE_CLEANUP_EVENT); 
+
+   te_register_event_handler(sge_zombie_job_cleanup_handler, TYPE_ZOMBIE_JOB_CLEANUP_EVENT);
+
+   te_register_event_handler(sge_automatic_user_cleanup_handler, TYPE_AUTOMATIC_USER_CLEANUP_EVENT);
+
+   te_register_event_handler(sge_security_event_handler, TYPE_SECURITY_EVENT);
+  
+  
+   /* one time events*/
    te_register_event_handler(sge_job_resend_event_handler, TYPE_JOB_RESEND_EVENT);
 
    te_register_event_handler(sge_calendar_event_handler, TYPE_CALENDAR_EVENT);
@@ -569,29 +622,9 @@ void sge_start_periodic_tasks(void)
 
    te_register_event_handler(reschedule_unknown_event, TYPE_RESCHEDULE_UNKNOWN_EVENT);
 
-   te_register_event_handler(sge_load_value_cleanup_handler, TYPE_LOAD_VALUE_CLEANUP_EVENT);
-   ev = te_new_event(15, TYPE_LOAD_VALUE_CLEANUP_EVENT, RECURRING_EVENT, 0, 0, "load-value-cleanup");
-   te_add_event(ev);
-   te_free_event(ev);
-
-   te_register_event_handler(sge_zombie_job_cleanup_handler, TYPE_ZOMBIE_JOB_CLEANUP_EVENT);
-   ev = te_new_event(30, TYPE_ZOMBIE_JOB_CLEANUP_EVENT, RECURRING_EVENT, 0, 0, "zombie-job-cleanup");
-   te_add_event(ev);
-   te_free_event(ev);
-
-   te_register_event_handler(sge_automatic_user_cleanup_handler, TYPE_AUTOMATIC_USER_CLEANUP_EVENT);
-   ev = te_new_event(60, TYPE_AUTOMATIC_USER_CLEANUP_EVENT, RECURRING_EVENT, 0, 0, "automatic-user-cleanup");
-   te_add_event(ev);
-   te_free_event(ev);
-
-   te_register_event_handler(sge_security_event_handler, TYPE_SECURITY_EVENT);
-   ev = te_new_event(10, TYPE_SECURITY_EVENT, RECURRING_EVENT, 0, 0, "security-event");
-   te_add_event(ev);
-   te_free_event(ev);
-
    DEXIT;
    return;
-} /* sge_start_periodic_tasks() */
+}
 
 /****** qmaster/sge_qmaster_main/sge_setup_lock_service() **************************
 *  NAME

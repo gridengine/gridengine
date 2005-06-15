@@ -217,6 +217,8 @@ static bool sconf_eval_set_monitoring(lList *param_list, lList **answer_list, co
 static bool sconf_eval_set_job_category_filtering(lList *param_list, lList **answer_list, const char* param);
 static bool sconf_eval_set_duration_offset(lList *param_list, lList **answer_list, const char* param);
 
+static void sconf_set_duration_offset(u_long32 offset);
+
 static char policy_hierarchy_enum2char(policy_type_t value);
 
 static policy_type_t policy_hierarchy_char2enum(char character);
@@ -2886,7 +2888,8 @@ u_long32 sconf_get_duration_offset(void)
 {
    return pos.s_duration_offset;
 }
-void sconf_set_duration_offset(u_long32 offset)
+
+static void sconf_set_duration_offset(u_long32 offset)
 {
    pos.s_duration_offset = offset;
 }

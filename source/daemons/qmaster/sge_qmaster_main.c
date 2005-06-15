@@ -468,6 +468,8 @@ int main(int argc, char* argv[])
 
    sge_setup_lock_service();
 
+   sge_register_event_handler(); 
+
    sge_setup_qmaster(argv);
 
    if (file_descriptor_settings_result == 1) {

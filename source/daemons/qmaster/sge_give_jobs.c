@@ -1548,7 +1548,9 @@ static int sge_bury_job(lListElem *job, u_long32 job_id, lListElem *ja_task,
 
    DENTER(TOP_LAYER, "sge_bury_job");
 
-   job = job_list_locate(Master_Job_List, job_id);
+   if (job == NULL) {
+      job = job_list_locate(Master_Job_List, job_id);
+   }
    te_delete_one_time_event(TYPE_SIGNAL_RESEND_EVENT, job_id, ja_task_id, NULL);
 
 

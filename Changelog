@@ -1,3 +1,9 @@
+SG-2005-06-15-0: Bugfix:    - fixed a couple performance bugs
+                            - fixed the build for irix
+                            - fixed unknown event handler message on qmaster startup
+                 Changed:   qmaster, scheduler
+                 Review:    RD
+
 AH-2005-06-14-0: Bugfix:    Overhead with job execution could lead to overoptimistic 
                             backfilling and break resource reservation
                  Issue:     1662

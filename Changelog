@@ -1,3 +1,7 @@
+AH-2005-06-16-3: Bugfix:    qtcsh will not compiles on Fedora Core 2 
+                            or later
+                 Issue:     1571
+
 RD-2005-06-16-0: Bugfix:    qconf -Xattr does not resolve fqdn hostnames
                  Issue:     1667
                  Bugtraq:   6285898
@@ -9,7 +13,7 @@ AH-2005-06-16-0: Bugfix:    job wallclock monitoring and enforcement
                             Fixed popular "allready" typo 
                  Issue:     1666
                  Bugtraq:   6286533
-                 Review:    TBD
+                 Review:    HP
 
 JG-2005-06-16-0: Testsuite: Improved output of performance/throughput test.
                             Fixed handling of pe and ckpt objects with long

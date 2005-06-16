@@ -1896,7 +1896,8 @@ attr_mod_sub_list(lList **alpp, lListElem *this_elem, int this_elem_name,
                   fstring = lGetHost(full_element, this_elem_primary_key);
                }
 
-               if (!strcmp(rstring, fstring)) {
+               if (((type == lStringT) && strcmp(rstring, fstring) == 0) ||
+                   ((type == lHostT) && sge_hostcmp(rstring, fstring) == 0)) {
                   lListElem *new_sub_elem;
                   lListElem *old_sub_elem;
 

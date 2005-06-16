@@ -246,7 +246,7 @@ case "sol-amd64":
    breaksw
 case "tru64":
    set BUILDARCH = ALPHA5
-   set TARGET_BITS = TARGET_32BIT
+   set TARGET_BITS = TARGET_64BIT
    breaksw
 case "win32-x86":
    set BUILDARCH = WIN32_X86

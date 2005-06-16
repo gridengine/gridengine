@@ -1,3 +1,6 @@
+AH-2005-06-16-3: Bugfix:    tru64 binaries use 64-bit u_long as u_long32
+                 Issue:     1399
+
 AH-2005-06-16-3: Bugfix:    qtcsh will not compiles on Fedora Core 2 
                             or later
                  Issue:     1571

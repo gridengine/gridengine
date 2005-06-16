@@ -62,7 +62,7 @@ int cl_thread_create_thread_condition(cl_thread_condition_t** condition ) {
       return CL_RETVAL_PARAMS;
    }
    if (*condition != NULL) {
-      /* pointer pointer is allready initialized (not free) */
+      /* pointer pointer is already initialized (not free) */
       return CL_RETVAL_PARAMS;
    }
 

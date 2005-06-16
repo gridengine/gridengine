@@ -416,7 +416,7 @@ lList *order_list
 *
 *  FUNCTION
 *      generates one order list from the order structure, and cleans the
-*      the order structure. The orders, which have been send allready, are
+*      the order structure. The orders, which have been send already, are
 *      removed.
 *
 *  INPUTS
@@ -502,7 +502,7 @@ int sge_GetNumberOfOrders(order_t *orders) {
 *
 *  FUNCTION
 *     If many jobs are dispatched during one scheduling run, this function
-*     can submit the allready generated job start orders to the master, so it
+*     can submit the already generated job start orders to the master, so it
 *     can start the jobs and does not need for the scheduling cycle to finish.
 *
 *     The config orders are submitted as well (queue suspend or unsuspend, job

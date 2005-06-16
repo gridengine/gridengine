@@ -1661,7 +1661,7 @@ static int sge_chck_get_perm_host(lList **alpp, sge_gdi_request *request)
             SGE_ADD_MSG_ID( sprintf(SGE_EVENT, MSG_SGETEXT_NOSUBMITORADMINHOST_S, host));
          }
          answer_list_add(alpp, SGE_EVENT, STATUS_EDENIED2HOST, ANSWER_QUALITY_ERROR);
-         last_id = request->id;       /* this indicates that the error is allready locked */
+         last_id = request->id;       /* this indicates that the error is already locked */
          SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
          DEXIT;
          return 1;
@@ -1680,7 +1680,7 @@ static int sge_chck_get_perm_host(lList **alpp, sge_gdi_request *request)
             SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_SGETEXT_NOSUBMITORADMINHOST_S, host));
          }
          answer_list_add(alpp, SGE_EVENT, STATUS_EDENIED2HOST, ANSWER_QUALITY_ERROR);
-         last_id = request->id;       /* this indicates that the error is allready locked */
+         last_id = request->id;       /* this indicates that the error is already locked */
          SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
          DEXIT;
          return 1;

@@ -347,7 +347,7 @@ int cl_com_tcp_open_connection(cl_com_connection_t* connection, int timeout, uns
       } else {
          switch(my_error) {
             case EISCONN: {
-               CL_LOG(CL_LOG_INFO,"allready connected");
+               CL_LOG(CL_LOG_INFO,"already connected");
                connect_state = CL_TRUE;
                break;
             }

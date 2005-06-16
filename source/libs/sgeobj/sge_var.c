@@ -262,13 +262,13 @@ void var_list_set_sharedlib_path(lList **varl)
                         strlen("/lib/") + strlen(sge_get_arch()) + 1);
    sprintf(sge_sharedlib_path, "%s/lib/%s", sge_root, sge_get_arch());
 
-   /* if allready in environment: extend by SGE sharedlib path, else set */
+   /* if already in environment: extend by SGE sharedlib path, else set */
    sharedlib_elem = lGetElemStr(*varl, VA_variable, sharedlib_path_name);
    if(sharedlib_elem != NULL) {
       const char *old_value = lGetString(sharedlib_elem, VA_value);
 
       if(old_value && strlen(old_value) > 0) {
-         DPRINTF(("sharedlib path %s allready set:\n", sharedlib_path_name));
+         DPRINTF(("sharedlib path %s already set:\n", sharedlib_path_name));
          
          sharedlib_path = sge_malloc(strlen(old_value) + 1 + 
                           strlen(sge_sharedlib_path) + 1);

@@ -98,7 +98,7 @@ execd_signal_queue(struct dispatch_entry *de, sge_pack_buffer *pb, sge_pack_buff
    /* In real this is both a signal queue and a signal job request.
       If jobid is set this is a job signal.
          qname is set this is a queue signal.
-      Acknowledges are sent allready by the dispatcher. */
+      Acknowledges are sent already by the dispatcher. */
 
    if (jobid) {     /* signal a job / task */
       found = (signal_job(jobid, jataskid, signal)==0);

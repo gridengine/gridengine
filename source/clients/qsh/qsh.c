@@ -1599,7 +1599,7 @@ int main(int argc, char **argv)
       exit_status = start_client_program(client_name, opts_qrsh, host, port, job_dir, utilbin_dir,
                                          is_rsh, is_rlogin, nostdin, noshell, sock);
       /* CR: TODO: This code is not active because there is no need to wait for an
-       *           task exit message. The exit_status is allready reported by 
+       *           task exit message. The exit_status is already reported by 
        *           start_client_program().
        *
        *           The code who sends the task exit message is located in the execd code

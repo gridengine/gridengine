@@ -25,7 +25,7 @@ int main(int argc, char *argv[])
    int ret = 0;
    char *s;
    char diagnosis[DRMAA_ERROR_STRING_BUFFER];
-   char jobwd[1024];
+   char jobwd[1024*4];
    char jobid[1024];
    char line[2*1024];
    int drmaa_errno;
@@ -35,12 +35,11 @@ int main(int argc, char *argv[])
    int i, j, njobs = 0;
    FILE *fp;
 
-   if (!(s=strrchr(argv[1], '/'))) {
-      usage(stderr);
-      return 2;
+   if (!getwd(jobwd)) {
+      fprintf(stderr, "getwd() failed: %s\n", strerror(errno));
+      ret = 2;
+      goto Finish;
    }
-   strncpy(jobwd, argv[1], s-argv[1]);
-   jobwd[s-argv[1]] = '\0';
 
    if (!(fp = fopen("compile.conf", "r"))) {
       fprintf(stderr, "fopen(\"compile.conf\") failed: %s\n", strerror(errno));
@@ -53,7 +52,7 @@ int main(int argc, char *argv[])
       return 2;
    }
 
-   printf("--- start compile session --------------------------------\n");
+   printf("--- start cluster session --------------------------------\n");
 
    while (fscanf(fp, "%[^\n]\n", line) == 1) {
       char nat_spec[1024];
@@ -130,7 +129,7 @@ int main(int argc, char *argv[])
        */
       drmaa_wifaborted(&aborted, stat, NULL, 0);
       if (aborted)
-         printf("--- compile \"%s\" stopped or never started\n", job[j].name);
+         printf("--- run \"%s\" stopped or never started\n", job[j].name);
       else {
          char path[1024];
          int failed = 1;
@@ -139,10 +138,10 @@ int main(int argc, char *argv[])
          if (exited) {
             drmaa_wexitstatus(&exit_status, stat, NULL, 0);
             if (exit_status == 0) {
-               printf("+++ job \"%s\" successfully compiled\n", job[j].name);
+               printf("+++ run \"%s\" was successful\n", job[j].name);
                failed = 0;
             } else
-               printf("### compile \"%s\" broken ##################################\n", job[j].name);
+               printf("### run \"%s\" broken ##################################\n", job[j].name);
          } else {
             drmaa_wifsignaled(&signaled, stat, NULL, 0);
             if (signaled) {
@@ -166,7 +165,7 @@ int main(int argc, char *argv[])
       }
    }
 
-   printf("--- end compile session --------------------------------\n");
+   printf("--- end cluster session --------------------------------\n");
 
 Finish:
    if (drmaa_exit(diagnosis, sizeof(diagnosis)-1) != DRMAA_ERRNO_SUCCESS) {

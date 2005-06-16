@@ -507,7 +507,7 @@ int cl_com_cleanup_commlib(void) {
 
    if (cl_com_handle_list  == NULL) {
       pthread_mutex_unlock(&cl_com_handle_list_mutex);
-      /* cleanup allready called or cl_com_setup_commlib() was not called */
+      /* cleanup already called or cl_com_setup_commlib() was not called */
       return CL_RETVAL_PARAMS;
    }
  
@@ -701,7 +701,7 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
        
       if (local_endpoint->comp_id == component_id) {
          if (strcmp(local_endpoint->comp_name, component_name) == 0) {
-            /* we have this handle allready in list */
+            /* we have this handle already in list */
             CL_LOG(CL_LOG_ERROR,"component not unique");
             cl_commlib_push_application_error(CL_RETVAL_LOCAL_ENDPOINT_NOT_UNIQUE, NULL);
             cl_raw_list_unlock(cl_com_handle_list);
@@ -2750,7 +2750,7 @@ static int cl_commlib_handle_connection_read(cl_com_connection_t* connection) {
       if (message_list_element != NULL) {
          message = message_list_element->message;
          if (message->message_state == CL_MS_READY || message->message_state == CL_MS_PROTOCOL) {
-            message = NULL; /* allready read, create new message */
+            message = NULL; /* already read, create new message */
          }
       }
      
@@ -2861,7 +2861,7 @@ static int cl_commlib_handle_connection_read(cl_com_connection_t* connection) {
          CL_LOG(CL_LOG_INFO,"CL_MS_RCV");
 
          size = 0;
-         /* is message allready complete received ? */
+         /* is message already complete received ? */
          if (message->message_rcv_pointer < message->message_length) {
             return_value = cl_com_read(connection, 
                                        &(message->message[message->message_rcv_pointer]),
@@ -5081,7 +5081,7 @@ int cl_commlib_open_connection(cl_com_handle_t* handle, char* un_resolved_hostna
          }
          /* connection is open, just return */
          cl_raw_list_unlock(handle->connection_list);
-         CL_LOG(CL_LOG_WARNING,"connection is allready open");
+         CL_LOG(CL_LOG_WARNING,"connection is already open");
          free(unique_hostname);
          unique_hostname = NULL;
          receiver.comp_host = NULL;

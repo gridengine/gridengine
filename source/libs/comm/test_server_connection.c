@@ -150,7 +150,7 @@ extern int main(int argc, char** argv)
 
         for(nr=0;nr<connected_clients;nr++) {
            if (cl_com_compare_endpoints( clients[nr], sender ) != 0 ) {
-              printf("client %s/%s/%ld allready known\n", sender->comp_host, sender->comp_name, sender->comp_id);
+              printf("client %s/%s/%ld already known\n", sender->comp_host, sender->comp_name, sender->comp_id);
               is_new = 0;
            }
         }

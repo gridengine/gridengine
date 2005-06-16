@@ -3480,7 +3480,7 @@ int cl_com_connection_complete_request( cl_com_connection_t* connection, long ti
             return CL_RETVAL_STREAM_BUFFER_OVERFLOW;
          }
    
-         /* is data allready in buffer ? */
+         /* is data already in buffer ? */
          if (data_to_read > 0) {
             if (only_once != 0) {
                data_read = 0;
@@ -3692,7 +3692,7 @@ int cl_com_connection_complete_request( cl_com_connection_t* connection, long ti
             free(unique_host);
             unique_host = NULL;
          } else {
-            /* This host is allready resolved */
+            /* This host is already resolved */
             connection->remote   = cl_com_create_endpoint(connection->receiver->comp_host,cm_message->src->comp_name,cm_message->src->comp_id);
          }
          connection->data_flow_type = cm_message->ct;
@@ -4509,7 +4509,7 @@ int cl_com_connection_complete_request( cl_com_connection_t* connection, long ti
             return CL_RETVAL_STREAM_BUFFER_OVERFLOW;
          }
    
-         /* is data allready in buffer ? */
+         /* is data already in buffer ? */
          if (data_to_read > 0) {
             if (only_once != 0) {
                data_read = 0;

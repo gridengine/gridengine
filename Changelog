@@ -1,3 +1,11 @@
+AH-2005-06-16-2: Bugfix:    job wallclock monitoring and enforcement
+                            considers prolog/epilog runtime part of net
+                            job runtime
+                            Fixed popular "allready" typo
+                 Issue:     1666
+                 Bugtraq:   6286533
+                 Review:    HP
+
 RD-2005-06-16-0: Bugfix:    qconf -Xattr does not resolve fqdn hostnames
                  Issue:     1667
                  Bugtraq:   6285898

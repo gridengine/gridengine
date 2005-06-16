@@ -470,12 +470,23 @@ execd_ck_to_do(struct dispatch_entry *de, sge_pack_buffer *pb, sge_pack_buffer *
       jobs_to_start = 0;
    }
 
+   if (dead_children) {
+      /* reap all jobs, who generated a SIGCLD */
+      sge_reap_children_execd();
+      dead_children = 0;
+   }
+
    now = sge_get_gmt();
    if (next_signal <= now) {
       next_signal = now + SIGNAL_RESEND_INTERVAL;
       /* resend signals to shepherds */
       for_each(jep, Master_Job_List) {
          for_each (jatep, lGetList(jep, JB_ja_tasks)) {
+            /* don't start wallclock before job acutally started */
+            if (lGetUlong(jatep, JAT_status) == JWAITING4OSJID ||
+                lGetUlong(jatep, JAT_status) == JEXITING)
+               continue;
+
             if (!lGetUlong(jep, JB_hard_wallclock_gmt)) {
                lList *gdil_list = lGetList(jatep, 
                                            JAT_granted_destin_identifier_list);
@@ -524,12 +535,6 @@ execd_ck_to_do(struct dispatch_entry *de, sge_pack_buffer *pb, sge_pack_buffer *
             }   
          }
       }
-   }
-
-   if (dead_children) {
-      /* reap all jobs, who generated a SIGCLD */
-      sge_reap_children_execd();
-      dead_children = 0;
    }
 
    if (next_old_job <= now) {

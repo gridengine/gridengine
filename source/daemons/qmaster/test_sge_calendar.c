@@ -37,6 +37,10 @@
 #include <time.h>
 #include <sys/time.h>
 
+#ifdef SOLARISAMD64
+   #include <sys/stream.h>
+#endif
+
 #include "sge_all_listsL.h"
 #include "sge.h"
 #include "sge_log.h"
@@ -70,7 +74,7 @@ typedef struct {
    char *year_cal; /* year calendar definition */ 
    char *week_cal; /* week calendar definition */
    char *description; /* a calendar description for the test output */
-}cal_entry_t;
+} cal_entry_t;
 
 typedef struct {
    int         cal_nr; /* The calendar to test */
@@ -79,7 +83,7 @@ typedef struct {
    int         state1;   /* the expected curret state */
    struct tm   result2;  /* the expected state change date */
    int         state2;   /* the expected curret stat   */
-}date_entry_t;
+} date_entry_t;
 
 
 
@@ -304,7 +308,7 @@ static int test_state_change(lListElem *stateObject, u_long32 state, struct tm *
 
    if (lGetUlong(stateObject, CQU_state) != state) {
       ret = 1;
-      printf("wrong state in state list (elem %d): expected %lu, got %lu\n", elemNr, state, lGetUlong(stateObject, CQU_state));
+      printf("wrong state in state list (elem %d): expected %lu, got %lu\n", elemNr, (unsigned long)state, (unsigned long)lGetUlong(stateObject, CQU_state));
    }
    else {
       time_t now  = mktime(time);
@@ -534,7 +538,7 @@ static int test(date_entry_t *test, cal_entry_t *calendar, int test_nr)
          }
       }
       else {
-         printf("wrong state: expected %d, got %lu\n", test->state1, current_state);
+         printf("wrong state: expected %d, got %lu\n", test->state1, (unsigned long)current_state);
       }
       state_changes_list = lFreeList(state_changes_list);
    }

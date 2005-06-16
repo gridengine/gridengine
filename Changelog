@@ -1,5 +1,9 @@
-SG-2005-06-15-1: Bugfix:    resource allocation shown by qstat/qhost not consistent 
-                            with resource utilization
+JG-2005-06-16-0: Testsuite: Improved output of performance/throughput test.
+                            Fixed handling of pe and ckpt objects with long
+                            queue lists in 5.3 systems.
+
+SG-2005-06-15-1: Bugfix:    resource allocation shown by qstat/qhost not 
+                            consistent with resource utilization
                  Changed:   qmaster                            
                  Issue:     1658
                  Bugtraq:   6281440

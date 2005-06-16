@@ -346,12 +346,6 @@ proc init_level {} {
          # enable queues after half of the jobs have been submitted
          set throughput_subdir        "mixed_requests_parallel"
 
-         # we have problems attatching pe to queue in 5.3 systems
-         # (too long line for the pe's queue_list)
-         if { $ts_config(gridengine_version) == 53 } {
-            return -1
-         }
-
          set end_job_count            $job_count
          set enable_queues_job_count  [expr $job_count / 2]
          set do_requests              1
@@ -1127,6 +1121,7 @@ proc run_throughput_test {} {
    # here the throughput test starts
    set error 0
    log_user 0
+   set start_time [clock seconds]
    while { ! $error && $result(jobs_done) < $test_end_job_count } {
       set time_now [timestamp]
 
@@ -1522,7 +1517,7 @@ proc run_throughput_test {} {
          
          # tasks to be done once a minute
          if { $result(test_run_time) != $time_now } {
-            show_current_system_status result job_data schedd_data monitoring
+            show_current_system_status $start_time result job_data schedd_data monitoring
             flush $CHECK_OUTPUT
 
             # enable queues when $enable_queues_job_count is reached
@@ -1733,7 +1728,6 @@ proc compare_dump_data_file { file1 file2 } {
    read_array_from_file $file1 "test configuration" test_config1
    read_array_from_file $file2 "test configuration" test_config2
 
-
    set content ""
    set error 0
    set job_count1 $test_config1(end_job_count)
@@ -1769,15 +1763,12 @@ proc compare_dump_data_file { file1 file2 } {
       append content [create_html_text "The number of slots on each host is different"]
    }
    
-
-
    set FLUSH_SUBMIT_SEC1 $test_config1(FLUSH_SUBMIT_SEC)
    set FLUSH_SUBMIT_SEC2 $test_config2(FLUSH_SUBMIT_SEC)
    if { $FLUSH_SUBMIT_SEC1  != $FLUSH_SUBMIT_SEC2 } {
       incr error 1
       append content [create_html_text "The test runs have different FLUSH_SUBMIT_SEC times"]
    }
-
   
    set FLUSH_FINISH_SEC1 $test_config1(FLUSH_FINISH_SEC)
    set FLUSH_FINISH_SEC2 $test_config2(FLUSH_FINISH_SEC)
@@ -1786,7 +1777,6 @@ proc compare_dump_data_file { file1 file2 } {
       append content [create_html_text "The test runs have different FLUSH_FINISH_SEC times"]
    }
 
-  
    set SCHEDULE_INTERVAL1 $test_config1(SCHEDULE_INTERVAL)
    set SCHEDULE_INTERVAL2 $test_config2(SCHEDULE_INTERVAL)
    if { $SCHEDULE_INTERVAL1 != $SCHEDULE_INTERVAL2 } {
@@ -1836,7 +1826,6 @@ proc compare_dump_data_file { file1 file2 } {
       incr error 1
       append content [create_html_text "The execd have different count of local spool directories"]
    }
-
    
    if { $error != 0 } {
       append content [create_html_text "Can't compare the two test scenarios !!!"]
@@ -3499,12 +3488,12 @@ proc create_reports { results_array job_array_name schedd_array_name monitoring_
          incr run_nr 1
       }
       }
-   } 
+   }
+
    set prot_output_file "${prot_output_dir}/saved_run.${run_nr}"
    puts $CHECK_OUTPUT "using filename:"
    puts $CHECK_OUTPUT $prot_output_file
    spool_array_prepare $prot_output_file
-   
 
    # execd configuration for each host
    set host_list $ts_config(execd_nodes)
@@ -3844,7 +3833,7 @@ proc calculate_average_schedd_times { schedd_array_name schedd_results_array { d
 }
 
 
-proc show_current_system_status { array_name job_array_name schedd_array_name monitoring_name} {
+proc show_current_system_status { start_time array_name job_array_name schedd_array_name monitoring_name} {
    global ts_config
    global CHECK_OUTPUT
    global test_scenario
@@ -3871,7 +3860,7 @@ proc show_current_system_status { array_name job_array_name schedd_array_name mo
    puts $CHECK_OUTPUT "total slots      : $data(total_slots)"
    puts $CHECK_OUTPUT "free slots       : $data(free_slots)"
    puts $CHECK_OUTPUT "jobs run time    : $data(job_run_time)"
-   puts $CHECK_OUTPUT "test run time    : $data(test_run_time)"
+   puts $CHECK_OUTPUT "test run time    : [expr [clock seconds] - $start_time] s"
    puts $CHECK_OUTPUT "scheduling time  : $schedd($schedd(count),schedd_time)"
    puts $CHECK_OUTPUT "schedd total time: $schedd($schedd(count),schedd_total_time)"
    puts $CHECK_OUTPUT "qmaster size     : $monitoring(qmaster,$monitoring(qmaster,count),size)"

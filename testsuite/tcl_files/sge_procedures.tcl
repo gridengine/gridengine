@@ -1841,7 +1841,7 @@ proc add_checkpointobj { change_array } {
 
    set vi_commands [build_vi_command chgar]
 
-   set ckpt_name [set chgar(ckpt_name)]
+   set ckpt_name $chgar(ckpt_name)
    set args "-ackpt $ckpt_name"
  
    set ALREADY_EXISTS [ translate $ts_config(master_host) 1 0 0 [sge_macro MSG_SGETEXT_ALREADYEXISTS_SS] "*" $ckpt_name]

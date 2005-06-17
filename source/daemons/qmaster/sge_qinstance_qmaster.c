@@ -79,7 +79,8 @@ typedef struct {
 } change_state_t;
 
 static bool
-qinstance_change_state_on_calender_(lListElem *qi_elem, u_long32 cal_order, lList **state_change_list);
+qinstance_change_state_on_calender_(lListElem *qi_elem, u_long32 cal_order, 
+                                    lList **state_change_list);
 
 bool
 qinstance_modify_attribute(lListElem *this_elem, lList **answer_list,

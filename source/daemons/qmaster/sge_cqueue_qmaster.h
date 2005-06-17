@@ -73,5 +73,8 @@ void
 cqueue_list_set_unknown_state(lList *this_list, const char *hostname,
                               bool send_events, bool is_unknown);
 
+u_long32
+sge_get_qinstance_number(void);
+
 #endif /* _SGE_CQUEUE_QMASTER_H_ */
 

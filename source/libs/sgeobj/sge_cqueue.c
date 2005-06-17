@@ -1785,3 +1785,35 @@ bool cqueue_purge_host(lListElem *this_elem, lList **answer_list, lList *attr_li
    DEXIT;
    return ret;
 }
+
+u_long32
+cqueue_list_get_max_qinstance_number(lList *this_list)
+{
+   u_long32 ret = 0;
+   lListElem *cqueue;
+
+   DENTER(CQUEUE_LAYER, "cqueue_list_get_max_qinstance_number");
+   for_each(cqueue, this_list) {
+      lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
+      ret = MAX(ret, qinstance_list_get_max_qinstance_number(qinstance_list));
+   }
+   DEXIT;
+   return ret;
+}
+
+bool
+cqueue_list_qinstance_number_is_used(lList *this_list, u_long32 number)
+{  
+   bool ret = false;
+
+   lListElem *cqueue;
+
+   DENTER(CQUEUE_LAYER, "cqueue_list_qinstance_number_is_used");
+   for_each(cqueue, this_list) {
+      lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
+      ret = qinstance_list_number_is_used(qinstance_list, number);
+   }                 
+   DEXIT;
+   return ret;
+}
+

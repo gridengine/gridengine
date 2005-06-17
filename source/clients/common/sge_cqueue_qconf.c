@@ -374,15 +374,17 @@ cqueue_provide_modify_context(lListElem **this_elem, lList **answer_list,
 
          fields_out[0] = NoName;
          cqueue = spool_flatfile_read_object(answer_list, CQ_Type, NULL,
-                                             CQ_fields, fields_out, false, &cqqconf_sfi,
-                                             SP_FORM_ASCII, NULL, filename);
-      
+                                             CQ_fields, fields_out, false, 
+                                             &cqqconf_sfi, SP_FORM_ASCII, 
+                                             NULL, filename);
+
          if (answer_list_output(answer_list)) {
             cqueue = lFreeElem (cqueue);
          }
 
          if (cqueue != NULL) {
-            missing_field = spool_get_unprocessed_field (CQ_fields, fields_out, answer_list);
+            missing_field = spool_get_unprocessed_field(CQ_fields, fields_out,
+                                                        answer_list);
          }
 
          if (missing_field != NoName) {

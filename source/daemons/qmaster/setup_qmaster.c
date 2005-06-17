@@ -954,6 +954,31 @@ static int setup_qmaster(void)
    }
 
    /* 
+    * initialize QU_queue_number if the value is 0 
+    *
+    * Normally this attribute gets a value > 0 during instance creation
+    * but due to CR 6286510 (IZ 1665) there might be instances which have
+    * the value 0. We correct this here.
+    */
+   {
+      lListElem *cqueue;
+
+      for_each(cqueue, *(object_type_get_master_list(SGE_TYPE_CQUEUE))) {
+         lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
+         lListElem *qinstance;
+   
+         for_each(qinstance, qinstance_list) {
+            u_long32 qinstance_number = lGetUlong(qinstance, QU_queue_number);
+
+            if (qinstance_number == 0) {
+               qinstance_number = sge_get_qinstance_number();
+               lSetUlong(qinstance, QU_queue_number, qinstance_number);
+            }
+         }
+      }
+   }
+
+   /* 
     * Initialize
     *    - suspend on subordinate state 
     *    - cached QI values.

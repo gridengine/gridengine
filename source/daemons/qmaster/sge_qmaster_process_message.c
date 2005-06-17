@@ -62,11 +62,291 @@ typedef struct {
    sge_pack_buffer buf;       /* message buffer                            */
 } struct_msg_t;
 
+/***************************************************
+ *
+ * The next section ensures, that GDI multi request
+ * will be handled atomic and that other requests do
+ * not interfer with the GDI multi get requsts. 
+ *
+ * Some assumption have been made for the current
+ * implementation. They should minimize the performance
+ * impact of this serialisation.
+ *
+ * Assumption:
+ * 1) If the first GDI multi request is a get request
+ *    all GDI request in the GDI multi are get requests
+ *
+ * 2) if the first GDI multi request is not a get request
+ *    all GDI requests are not a get request
+ * 
+ * Based on this assumption we can greate the following
+ * execution matrix (GDI is used for atomix GDI requests
+ * and load/job reports:
+ *
+ *          |  GDI     |  M-GDI-R  | M-GDI-W
+ *  --------|----------|-----------|---------
+ *  GDI     | parallel |  seriel   | parallel
+ *  --------|----------|-----------|---------
+ *  M-GDI-R | seriel   | parallel  | seriel
+ *  --------|----------|-----------|---------
+ *  M-GDI-W | parallel | seriel    | parallel
+ *          |          |           |
+ *
+ * states: 
+ *  NONE     0
+ *  GDI      1
+ *  M-GDI-R  2
+ *  M-GDI-W  1 
+ *
+ * Based on the matrix, we do not need seperated
+ * states for GDI and M-GDI-W.
+ *
+ * The implementation will allow a new requst to
+ * execute, when no other request is executed or
+ * the exectuted request as the same state as the
+ * new one. If that is not the case, the new request
+ * will be blocked until the others have finished.
+ *
+ * Implementation:
+ *
+ *  eval_message_and_block - eval message and assign states
+ *  eval_gdi_and_block     - eval gdi and assign states
+ *
+ *  eval_atomic            - check current execution and block
+ *
+ *  eval_atomic_end        - release current block
+ */
+ 
+typedef enum {
+   ATOMIC_NONE = 0,
+   ATOMIC_SINGLE = 1,
+   ATOMIC_MULTIPLE_WRITE = 1,
+   ATOMIC_MULTIPLE_READ = 2
+} request_handling_t;
 
-static void do_gdi_request(struct_msg_t*);
-static void do_report_request(struct_msg_t*);
+typedef struct {
+   request_handling_t type;      /* execution type*/
+   int                counter;   /* number of requests executed of type */
+   pthread_cond_t     cond_var;  /* used to block other threads */   
+   bool               signal;    /* need to signal? */
+   pthread_mutex_t    mutex;     /* mutex to gard this structure */
+} message_control_t;
+
+static message_control_t Master_Control = {ATOMIC_NONE, 0, PTHREAD_COND_INITIALIZER, false, PTHREAD_MUTEX_INITIALIZER};
+
+static request_handling_t eval_message_and_block(struct_msg_t msg);
+static request_handling_t eval_gdi_and_block(sge_gdi_request *req_head);
+static void eval_atomic(request_handling_t type);
+static void eval_atomic_end(request_handling_t type); 
+
+static request_handling_t do_gdi_request(struct_msg_t*);
+static request_handling_t do_report_request(struct_msg_t*);
 static void do_event_client_exit(const char*, const char*, sge_pack_buffer*);
 
+
+/****** sge_qmaster_process_message/eval_message_and_block() *******************
+*  NAME
+*     eval_message_and_block() -- eval a message and proceed or block
+*
+*  SYNOPSIS
+*     static request_handling_t eval_message_and_block(struct_msg_t msg) 
+*
+*  FUNCTION
+*     determines the current block type for a message and proceeds or
+*     waits for another thread to finish.
+*
+*  INPUTS
+*     struct_msg_t msg - current message
+*
+*  RESULT
+*     static request_handling_t - block type
+*
+*  NOTES
+*     MT-NOTE: eval_message_and_block() is MT safe 
+*
+*******************************************************************************/
+static request_handling_t 
+eval_message_and_block(struct_msg_t msg) 
+{
+   request_handling_t type;
+
+   DENTER(TOP_LAYER, "eval_message_and_block");
+   
+   if (msg.tag == TAG_REPORT_REQUEST) {
+      type = ATOMIC_SINGLE;
+   }
+   else {
+      type = ATOMIC_NONE;   
+   }
+  
+   eval_atomic(type);
+   
+   DEXIT;   
+   return type;
+}
+
+/****** sge_qmaster_process_message/eval_gdi_and_block() ***********************
+*  NAME
+*     eval_gdi_and_block() -- eval gdi request and proceed or block
+*
+*  SYNOPSIS
+*     static request_handling_t eval_gdi_and_block(sge_gdi_request *req_head) 
+*
+*  FUNCTION
+*     determines the current block type for a gdi request and proceeds or
+*     waits for another thread to finish.
+*
+*  INPUTS
+*     sge_gdi_request *req_head - ??? 
+*
+*  RESULT
+*     static request_handling_t - returns block type
+*
+*
+*  NOTES
+*     MT-NOTE: eval_gdi_and_block() is  MT safe 
+*
+*******************************************************************************/
+static request_handling_t 
+eval_gdi_and_block(sge_gdi_request *req_head) 
+{
+   request_handling_t type = ATOMIC_NONE;
+
+   DENTER(TOP_LAYER, "eval_gdi_and_block");
+   
+   if (req_head->next == NULL) {
+      type = ATOMIC_SINGLE;     
+   }
+   else if (req_head->op == SGE_GDI_GET) {
+      type = ATOMIC_MULTIPLE_READ; 
+   }
+   else {
+      type = ATOMIC_MULTIPLE_WRITE;
+   }
+  
+   eval_atomic(type);
+  
+   DEXIT;
+   return type;
+}
+
+/****** sge_qmaster_process_message/eval_atomic() ******************************
+*  NAME
+*     eval_atomic() -- check proceed type
+*
+*  SYNOPSIS
+*     static void eval_atomic(request_handling_t type) 
+*
+*  FUNCTION
+*     checks wether the current thread can proceed or if it needs to wait
+*     till the next one is done.
+*
+*  INPUTS
+*     request_handling_t type - current block type
+*
+*  RESULT
+*     static void - 
+*
+*  NOTES
+*     MT-NOTE: eval_atomic() is MT safe 
+*
+*******************************************************************************/
+static void 
+eval_atomic(request_handling_t type) 
+{
+   bool cond = false;
+
+   DENTER(TOP_LAYER, "eval_atomicx");
+   
+   if (type == ATOMIC_NONE) {
+      return;
+   }
+
+   sge_mutex_lock("message_master_mutex", SGE_FUNC, __LINE__, &Master_Control.mutex);
+
+   DPRINTF(("eval before type %d, counter %d, wait %d --- ntype %d\n", Master_Control.type, 
+            Master_Control.counter, Master_Control.signal, type));
+   
+   do {
+      if (Master_Control.type == ATOMIC_NONE) {
+         Master_Control.type = type;
+         Master_Control.counter = 1;
+         cond = true;
+      }
+      else if (Master_Control.type == type) {
+         Master_Control.counter++;
+         cond = true;
+      }
+      else {
+         Master_Control.signal = true;
+         pthread_cond_wait(&Master_Control.cond_var, &Master_Control.mutex);
+      }
+   } while (!cond);
+  
+   DPRINTF(("eval after type %d, counter %d, wait %d --- ntype %d\n\n", Master_Control.type, 
+            Master_Control.counter, Master_Control.signal, type));
+   
+   sge_mutex_unlock("message_master_mutex", SGE_FUNC, __LINE__, &Master_Control.mutex);
+   DEXIT; 
+}
+
+/****** sge_qmaster_process_message/eval_atomic_end() **************************
+*  NAME
+*     eval_atomic_end() -- free block
+*
+*  SYNOPSIS
+*     static void eval_atomic_end(request_handling_t type) 
+*
+*  FUNCTION
+*     frees a current block and triggers a possible pending thread
+*
+*  INPUTS
+*     request_handling_t type - the last processing type
+*
+*  RESULT
+*     static void - 
+*
+*  NOTES
+*     MT-NOTE: eval_atomic_end() is MT safe 
+*
+*******************************************************************************/
+static void 
+eval_atomic_end(request_handling_t type) 
+{
+ 
+   DENTER(TOP_LAYER, "eval_atomic_end");
+
+   if (type == ATOMIC_NONE) {
+      return; 
+   }
+
+   sge_mutex_lock("message_master_mutex", SGE_FUNC, __LINE__, &Master_Control.mutex);
+
+   DPRINTF(("end before type %d, counter %d, wait %d --- ntype %d\n", Master_Control.type, 
+            Master_Control.counter, Master_Control.signal, type));
+   
+   if (Master_Control.type != type) {
+      ERROR((SGE_EVENT, "we have a atomic type missmatch (expected = %d, got = %d\n", Master_Control.type, type));
+   }
+   
+   Master_Control.counter--;
+   
+   if (Master_Control.counter <= 0) {
+      Master_Control.type = ATOMIC_NONE;
+   }
+   
+   if (Master_Control.signal) {
+      Master_Control.signal = false;
+      pthread_cond_broadcast(&Master_Control.cond_var);
+   }
+   
+   DPRINTF(("end after stype %d, counter %d, wait %d --- ntype %d\n\n", Master_Control.type, 
+            Master_Control.counter, Master_Control.signal, type));
+   
+   sge_mutex_unlock("message_master_mutex", SGE_FUNC, __LINE__, &Master_Control.mutex);
+
+   DEXIT;
+}
 
 /****** qmaster/sge_qmaster_process_message/sge_qmaster_process_message() ******
 *  NAME
@@ -94,6 +374,7 @@ void *sge_qmaster_process_message(void *anArg)
 {
    int res;
    struct_msg_t msg;
+   request_handling_t type = ATOMIC_NONE;
 
    DENTER(TOP_LAYER, "sge_qmaster_process_message");
    
@@ -122,7 +403,7 @@ void *sge_qmaster_process_message(void *anArg)
       case TAG_SEC_ANNOUNCE:
          break; /* All processing done in libsec */
       case TAG_GDI_REQUEST: 
-         do_gdi_request(&msg);
+         type = do_gdi_request(&msg);
          break;
       case TAG_ACK_REQUEST:
          sge_c_ack(msg.snd_host, msg.snd_name, &(msg.buf));
@@ -131,11 +412,13 @@ void *sge_qmaster_process_message(void *anArg)
          do_event_client_exit(msg.snd_host, msg.snd_name, &(msg.buf));
          break;
       case TAG_REPORT_REQUEST: 
-         do_report_request(&msg);
+         type = do_report_request(&msg);
          break;
       default: 
          DPRINTF(("***** UNKNOWN TAG TYPE %d\n", msg.tag));
    }
+
+   eval_atomic_end(type);
 
    clear_packbuffer(&(msg.buf));
   
@@ -168,10 +451,11 @@ void *sge_qmaster_process_message(void *anArg)
 *     list of 'sge_gdi_request' structures.
 *
 *******************************************************************************/
-static void do_gdi_request(struct_msg_t *aMsg)
+static request_handling_t do_gdi_request(struct_msg_t *aMsg)
 {
    enum { ASYNC = 0, SYNC = 1 };
    lList *alp = NULL;
+   request_handling_t type = ATOMIC_NONE;
 
    sge_pack_buffer *buf = &(aMsg->buf);
    sge_gdi_request *req_head = NULL;  /* head of request linked list */
@@ -183,9 +467,11 @@ static void do_gdi_request(struct_msg_t *aMsg)
 
    if (sge_unpack_gdi_request(buf, &req_head)) {
       ERROR((SGE_EVENT, MSG_GDI_FAILEDINSGEUNPACKGDIREQUEST_SSI, (char *)aMsg->snd_host, (char *)aMsg->snd_name, (int)aMsg->snd_id));
-      return;
+      return type;
    }
    resp_head = new_gdi_request();
+
+   type = eval_gdi_and_block(req_head);
 
    for (req = req_head; req; req = req->next) {
       req->id = aMsg->snd_id;
@@ -215,7 +501,7 @@ static void do_gdi_request(struct_msg_t *aMsg)
    free_gdi_request(req_head);
 
    DEXIT;
-   return;
+   return type;
 } /* do_gdi_request */
 
 /****** sge_qmaster_process_message/do_report_request() ************************
@@ -237,22 +523,25 @@ static void do_gdi_request(struct_msg_t *aMsg)
 *     void - none 
 *
 *******************************************************************************/
-static void do_report_request(struct_msg_t *aMsg)
+static  request_handling_t do_report_request(struct_msg_t *aMsg)
 {
    lList *rep = NULL;
+   request_handling_t type = ATOMIC_NONE;
 
    DENTER(TOP_LAYER, "do_report_request");
 
    if (cull_unpack_list(&(aMsg->buf), &rep)) {
       ERROR((SGE_EVENT,MSG_CULL_FAILEDINCULLUNPACKLISTREPORT));
-      return;
+      return type;
    }
+
+   type = eval_message_and_block(*aMsg); 
 
    sge_c_report(aMsg->snd_host, aMsg->snd_name, aMsg->snd_id, rep);
    lFreeList(rep);
 
    DEXIT;
-   return;
+   return  type;
 } /* do_report_request */
 
 /****** qmaster/sge_qmaster_process_message/do_event_client_exit() *************

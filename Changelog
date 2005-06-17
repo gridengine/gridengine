@@ -1,3 +1,6 @@
+SG-2005-06-17-1: Bugfix:    made SG-2005-06-15-1 more efficent
+                 Changed:   master
+
 RD-2005-06-17-0: Bugfix:    autoinst execd uninstallation disables and suspends
                             whole queues instead of instances only
                             introduced with RD-2005-05-23-0 
@@ -14,6 +17,13 @@ AH-2005-06-16-2: Bugfix:    job wallclock monitoring and enforcement
 RD-2005-06-16-0: Bugfix:    qconf -Xattr does not resolve fqdn hostnames
                  Issue:     1667
                  Bugtraq:   6285898
+                 Review:    EB
+
+SG-2005-06-15-1: Bugfix:    resource allocation shown by qstat/qhost not consistent 
+                            with resource utilization
+                 Changed:   qmaster                            
+                 Issue:     1658
+                 Bugtraq:   6281440
                  Review:    EB
 
 RD-2005-06-15-0: Bugfix:    GEMM doesn't like behavior of checkin RD-2005-05-23-0

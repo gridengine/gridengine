@@ -140,7 +140,7 @@ static void eval_atomic(request_handling_t type);
 static void eval_atomic_end(request_handling_t type); 
 
 static request_handling_t do_gdi_request(struct_msg_t*);
-static void do_report_request(struct_msg_t*);
+static request_handling_t do_report_request(struct_msg_t*);
 static void do_event_client_exit(const char*, const char*, sge_pack_buffer*);
 
 
@@ -374,7 +374,7 @@ void *sge_qmaster_process_message(void *anArg)
 {
    int res;
    struct_msg_t msg;
-   request_handling_t type;
+   request_handling_t type = ATOMIC_NONE;
 
    DENTER(TOP_LAYER, "sge_qmaster_process_message");
    
@@ -398,8 +398,6 @@ void *sge_qmaster_process_message(void *anArg)
       return anArg;              
    }
 
-   type = eval_message_and_block(msg);
-
    switch (msg.tag)
    {
       case TAG_SEC_ANNOUNCE:
@@ -414,7 +412,7 @@ void *sge_qmaster_process_message(void *anArg)
          do_event_client_exit(msg.snd_host, msg.snd_name, &(msg.buf));
          break;
       case TAG_REPORT_REQUEST: 
-         do_report_request(&msg);
+         type = do_report_request(&msg);
          break;
       default: 
          DPRINTF(("***** UNKNOWN TAG TYPE %d\n", msg.tag));
@@ -525,22 +523,25 @@ static request_handling_t do_gdi_request(struct_msg_t *aMsg)
 *     void - none 
 *
 *******************************************************************************/
-static void do_report_request(struct_msg_t *aMsg)
+static request_handling_t do_report_request(struct_msg_t *aMsg)
 {
    lList *rep = NULL;
+   request_handling_t type = ATOMIC_NONE;
 
    DENTER(TOP_LAYER, "do_report_request");
 
    if (cull_unpack_list(&(aMsg->buf), &rep)) {
       ERROR((SGE_EVENT,MSG_CULL_FAILEDINCULLUNPACKLISTREPORT));
-      return;
+      return type;
    }
+
+   type = eval_message_and_block(*aMsg); 
 
    sge_c_report(aMsg->snd_host, aMsg->snd_name, aMsg->snd_id, rep);
    lFreeList(rep);
 
    DEXIT;
-   return;
+   return type;
 } /* do_report_request */
 
 /****** qmaster/sge_qmaster_process_message/do_event_client_exit() *************

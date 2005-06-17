@@ -1068,3 +1068,35 @@ qinstance_list_validate(lList *this_list, lList **answer_list)
    return ret;
 }
 
+u_long32
+qinstance_list_get_max_qinstance_number(lList *this_list)
+{
+   u_long32 ret = 0;
+   lListElem *qinstance;
+
+   DENTER(TOP_LAYER, "qinstance_list_get_max_qinstance_number");
+   for_each(qinstance, this_list) {
+      ret = MAX(ret, lGetUlong(qinstance, QU_queue_number));
+   }
+   DEXIT;
+   return ret;
+}
+
+bool
+qinstance_list_number_is_used(lList *this_list, u_long32 number)
+{
+   bool ret = false;
+   lListElem *qinstance;
+
+   DENTER(TOP_LAYER, "qinstance_list_number_is_used");
+   for_each(qinstance, this_list) {
+      if (lGetUlong(qinstance, QU_queue_number) == number) {
+         ret = true;
+         break;
+      }
+   }
+   DEXIT;
+   return ret;
+}
+
+

@@ -1346,10 +1346,11 @@ CheckRunningDaemon()
 BackupConfig()
 {
    DATE=`date '+%Y-%m-%d_%H_%M_%S'`
-   BUP_BDB_COMMON_FILE_LIST_TMP="accounting bootstrap qtask settings.sh act_qmaster sgemaster host_aliases settings.csh sgeexecd sgebdb shadow_masters" 
+   BUP_BDB_COMMON_FILE_LIST_TMP="accounting bootstrap qtask settings.sh act_qmaster sgemaster host_aliases settings.csh sgeexecd sgebdb shadow_masters"
+   BUP_BDB_COMMON_DIR_LIST_TMP="sgeCA"
    BUP_BDB_SPOOL_FILE_LIST_TMP="jobseqnum"
    BUP_CLASSIC_COMMON_FILE_LIST_TMP="configuration sched_configuration accounting bootstrap qtask settings.sh act_qmaster sgemaster host_aliases settings.csh sgeexecd shadow_masters"
-   BUP_CLASSIC_DIR_LIST_TMP="local_conf" 
+   BUP_CLASSIC_DIR_LIST_TMP="sgeCA local_conf" 
    BUP_CLASSIC_SPOOL_FILE_LIST_TMP="jobseqnum admin_hosts calendars centry ckpt cqueues exec_hosts hostgroups managers operators pe projects qinstances schedd submit_hosts usermapping users usersets zombies"
    BUP_COMMON_FILE_LIST=""
    BUP_SPOOL_FILE_LIST=""
@@ -1409,10 +1410,11 @@ BackupConfig()
 RestoreConfig()
 {
    DATE=`date '+%H_%M_%S'`
-   BUP_COMMON_FILE_LIST="accounting bootstrap qtask settings.sh act_qmaster sgemaster host_aliases settings.csh sgeexecd sgebdb shadow_masters" 
+   BUP_COMMON_FILE_LIST="accounting bootstrap qtask settings.sh act_qmaster sgemaster host_aliases settings.csh sgeexecd sgebdb shadow_masters"
+   BUP_COMMON_DIR_LIST="sgeCA"
    BUP_SPOOL_FILE_LIST="jobseqnum"
    BUP_CLASSIC_COMMON_FILE_LIST="configuration sched_configuration accounting bootstrap qtask settings.sh act_qmaster sgemaster host_aliases settings.csh sgeexecd shadow_masters"
-   BUP_CLASSIC_DIR_LIST="local_conf" 
+   BUP_CLASSIC_DIR_LIST="sgeCA local_conf" 
    BUP_CLASSIC_SPOOL_FILE_LIST="jobseqnum admin_hosts calendars centry ckpt cqueues exec_hosts hostgroups managers operators pe projects qinstances schedd submit_hosts usermapping users usersets zombies"
 
    MKDIR="mkdir -p"
@@ -1476,6 +1478,12 @@ RestoreConfig()
          for f in $BUP_COMMON_FILE_LIST; do
             if [ -f /tmp/bup_tmp_$DATE/$f ]; then
                ExecuteAsAdmin $CP /tmp/bup_tmp_$DATE/$f $SGE_ROOT/$SGE_CELL/common/
+            fi
+         done
+
+         for f in $BUP_COMMON_DIR_LIST; do
+            if [ -d /tmp/bup_tmp_$DATE/$f ]; then
+               ExecuteAsAdmin $CPR /tmp/bup_tmp_$DATE/$f $SGE_ROOT/$SGE_CELL/common/
             fi
          done
 
@@ -1981,9 +1989,9 @@ CreateTarArchive()
       if [ $? -eq 0 ]; then
          TAR=$TAR" -cvf"
          if [ "$spooling_method" = "berkeleydb" ]; then
-            ExecuteAsAdmin $TAR $bup_file $DATE.dump $BUP_COMMON_FILE_LIST $BUP_SPOOL_FILE_LIST
+            ExecuteAsAdmin $TAR $bup_file $DATE.dump $BUP_COMMON_FILE_LIST $BUP_SPOOL_FILE_LIST $BUP_COMMON_DIR_LIST
          else
-            ExecuteAsAdmin $TAR $bup_file $BUP_COMMON_FILE_LIST $BUP_SPOOL_FILE_LIST $BUP_CLASSIC_DIR_LIST
+            ExecuteAsAdmin $TAR $bup_file $BUP_COMMON_FILE_LIST $BUP_SPOOL_FILE_LIST $BUP_COMMON_DIR_LIST
          fi          
 
          ZIP=`which gzip`
@@ -2008,7 +2016,7 @@ CreateTarArchive()
 
       cd $backup_dir     
       RMF="rm -fR" 
-      ExecuteAsAdmin $RMF $DATE.dump.tar $DATE.dump $BUP_COMMON_FILE_LIST $BUP_SPOOL_FILE_LIST $BUP_CLASSIC_DIR_LIST
+      ExecuteAsAdmin $RMF $DATE.dump.tar $DATE.dump $BUP_COMMON_FILE_LIST $BUP_SPOOL_FILE_LIST $BUP_COMMON_DIR_LIST
 
       cd $SGE_ROOT
 
@@ -2040,6 +2048,13 @@ DoBackup()
          fi
       done
 
+      for f in $BUP_BDB_COMMON_DIR_LIST_TMP; do
+         if [ -d $SGE_ROOT/$SGE_CELL/common/$f ]; then
+            BUP_COMMON_DIR_LIST="$BUP_COMMON_DIR_LIST $f"
+            ExecuteAsAdmin $CPFR $SGE_ROOT/$SGE_CELL/common/$f $backup_dir
+         fi
+      done
+
       for f in $BUP_BDB_SPOOL_FILE_LIST_TMP; do
          if [ -f $master_spool/$f ]; then
             BUP_SPOOL_FILE_LIST="$BUP_SPOOL_FILE_LIST $f"
@@ -2064,7 +2079,7 @@ DoBackup()
 
       for f in $BUP_CLASSIC_DIR_LIST_TMP; do
          if [ -d $SGE_ROOT/$SGE_CELL/common/$f ]; then
-            BUP_CLASSIC_DIR_LIST="$BUP_CLASSIC_DIR_LIST $f"
+            BUP_COMMON_DIR_LIST="$BUP_COMMON_DIR_LIST $f"
             ExecuteAsAdmin $CPFR $SGE_ROOT/$SGE_CELL/common/$f $backup_dir
          fi
       done

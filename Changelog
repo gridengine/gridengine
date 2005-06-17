@@ -1,3 +1,8 @@
+MD-2005-06-17-0: Bugfix:    - merged RD-2005-06-07-0 from maintrunk + added missing dir
+                            - due to SFU problems, removed sge_passwd from setfileperms.sh
+                 Changed:   inst_sge, setfileperms.sh
+                 Review:    RD, HP
+
 EB-2005-06-17-0: Bugfix:    delivery of queue based signals to execd 
                             repeated endlessly
                  Issue:     1665

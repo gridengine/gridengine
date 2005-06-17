@@ -153,7 +153,7 @@ else
    $ECHO "   \$SGE_ROOT/utilbin/<arch>/rlogin"
    $ECHO "   \$SGE_ROOT/utilbin/<arch>/rsh"
    $ECHO "   \$SGE_ROOT/utilbin/<arch>/testsuidroot"
-   $ECHO "   \$SGE_ROOT/bin/<arch>/sgepasswd"
+   #$ECHO "   \$SGE_ROOT/bin/<arch>/sgepasswd"
    $ECHO
 
    TEXT="Do you want to set the file permissions (yes/no) [NO] >> \c"
@@ -198,9 +198,9 @@ for f in $FILELIST $OPTFILES; do
    fi
 done
 
-chown 0 utilbin/*/rsh utilbin/*/rlogin utilbin/*/testsuidroot bin/*/sgepasswd
-chgrp 0 utilbin/*/rsh utilbin/*/rlogin utilbin/*/testsuidroot bin/*/sgepasswd
-chmod 4511 utilbin/*/rsh utilbin/*/rlogin utilbin/*/testsuidroot bin/*/sgepasswd
+chown 0 utilbin/*/rsh utilbin/*/rlogin utilbin/*/testsuidroot #bin/*/sgepasswd
+chgrp 0 utilbin/*/rsh utilbin/*/rlogin utilbin/*/testsuidroot #bin/*/sgepasswd
+chmod 4511 utilbin/*/rsh utilbin/*/rlogin utilbin/*/testsuidroot #bin/*/sgepasswd
 
 $ECHO
 $ECHO "Your file permissions were set"

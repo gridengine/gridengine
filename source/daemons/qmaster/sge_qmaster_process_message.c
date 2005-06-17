@@ -279,7 +279,6 @@ eval_atomic(request_handling_t type)
       }
       else {
          Master_Control.signal = true;
-         printf("wait type %d\n", type);
          pthread_cond_wait(&Master_Control.cond_var, &Master_Control.mutex);
       }
    } while (!cond);
@@ -338,7 +337,6 @@ eval_atomic_end(request_handling_t type)
    
    if (Master_Control.signal) {
       Master_Control.signal = false;
-      printf("cond\n");
       pthread_cond_broadcast(&Master_Control.cond_var);
    }
    

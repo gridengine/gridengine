@@ -104,7 +104,7 @@ DisableQueue()
 
      $INFOTEXT "Disabling queue %s now" $q
      $INFOTEXT -log "Disabling queue %s now" $q
-     qmod -d $q
+     qmod -d $q@$exechost
 
    done
 
@@ -119,7 +119,7 @@ SuspendQueue()
 
      $INFOTEXT "Suspending queue %s now" $q
      $INFOTEXT -log "Suspending queue %s now" $q
-     qmod -sq $q
+     qmod -sq $q@$exechost
 
    done
 
@@ -134,7 +134,7 @@ SuspendJobs()
 
      $INFOTEXT "Suspending Checkpointing Jobs on queue %s now!" $q 
      $INFOTEXT -log "Suspending Checkpointing Jobs on queue %s now!" $q 
-     qmod -sj $q
+     qmod -sj $q@$exechost
 
    done
 
@@ -148,7 +148,7 @@ RescheduleJobs()
 
      $INFOTEXT "Rescheduling Jobs on queue %s now!" $q 
      $INFOTEXT -log "Rescheduling Jobs on queue %s now!" $q 
-     qmod -r $q
+     qmod -r $q@$exechost
 
    done
 
@@ -158,7 +158,7 @@ RescheduleJobs()
      $INFOTEXT -log "There are still running jobs on %s!" $q
      $INFOTEXT "... trying to force a reschedule!"
      $INFOTEXT -log "... trying to force a reschedule!"
-     qmod -f -r $q 
+     qmod -f -r $q@$exechost 
 
    done
 

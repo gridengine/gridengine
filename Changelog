@@ -1,3 +1,9 @@
+RD-2005-06-17-0: Bugfix:    autoinst execd uninstallation disables and suspends
+                            whole queues instead of instances only
+                            introduced with RD-2005-05-23-0 
+                 Review:    MD
+                
+
 AH-2005-06-16-3: Bugfix:    tru64 binaries use 64-bit u_long as u_long32
                  Issue:     1399
 

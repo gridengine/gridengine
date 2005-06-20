@@ -1,3 +1,9 @@
+CR-2005-06-20-0: Cleanup:   - re-added secure dummy string (to be
+                              able to check files for correct compile
+                              mode in install script)
+                            - fixed wrong variable type
+                 Review:    JG
+
 EB-2005-06-17-0: Bugfix:    delivery of queue based signals to execd 
                             repeated endlessly
                  Issue:     1665

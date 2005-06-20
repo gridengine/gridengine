@@ -349,7 +349,7 @@ struct hostent *sge_gethostbyname(const char *name, int* system_error_retval)
 {
    struct hostent *he = NULL;
    time_t now;
-   int time;
+   time_t time;
    int l_errno = 0;
    
    DENTER(GDI_LAYER, "sge_gethostbyname");
@@ -618,7 +618,7 @@ struct hostent *sge_gethostbyaddr(const struct in_addr *addr, int* system_error_
 {
    struct hostent *he = NULL;
    time_t now;
-   int time;
+   time_t time;
    int l_errno;
 
    DENTER(TOP_LAYER, "sge_gethostbyaddr");
@@ -1234,7 +1234,9 @@ bool sge_is_hgroup_ref(const char *string)
    bool ret = false;
 
    if (string != NULL) {
-      ret = string[0] == HOSTGROUP_INITIAL_CHAR ? true : false;
+      if (string[0] == HOSTGROUP_INITIAL_CHAR) {
+         ret = true;
+      } 
    }
    return ret;
 }

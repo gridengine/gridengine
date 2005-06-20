@@ -540,6 +540,22 @@ int sge_security_initialize(const char *name)
 
 #ifdef SECURE
    {
+
+     /*
+      * The dummy_string is only neccessary to be able to check with
+      * strings command in installation scripts whether the SECURE
+      * compile option was used at compile time.
+      * 
+      */
+      static const char* dummy_string = NULL;
+
+      dummy_string = sge_dummy_sec_string;
+      if (dummy_string != NULL) {
+         DPRINTF(("secure dummy string: %s\n", dummy_string));
+      } else {
+         DPRINTF(("secure dummy string not available\n"));
+      }
+
       if (feature_is_enabled(FEATURE_CSP_SECURITY)) {
          if (sge_ssl_setup_security_path(name)) {
             DEXIT;

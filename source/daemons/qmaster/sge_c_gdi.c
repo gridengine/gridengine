@@ -1024,7 +1024,6 @@ static void sge_c_gdi_trigger(char *host, sge_gdi_request *request, sge_gdi_requ
    {
       case SGE_EXECHOST_LIST: /* kill execd */
       case SGE_MASTER_EVENT:  /* kill master */
-      case SGE_EVENT_LIST:    /* kill scheduler */
       case SGE_SC_LIST:       /* trigger scheduler monitoring */
          if (!host_list_locate(Master_Adminhost_List, host))
          {
@@ -1063,6 +1062,7 @@ static void sge_c_gdi_trigger(char *host, sge_gdi_request *request, sge_gdi_requ
       trigger_scheduler_monitoring(host, request, answer);
    }
    else if (SGE_EVENT_LIST == target) {
+      /* kill scheduler or event client */
       /* JG: TODO: why does sge_gdi_shutdown_event_client use two different answer lists? */
       sge_gdi_shutdown_event_client(host, request, answer, &alp);
       answer_list_output(&alp);
@@ -1136,6 +1136,17 @@ static void sge_gdi_shutdown_event_client(const char *aHost,
 
       if (get_client_id(elem, &client_id) != 0) {
          answer_list_add(&(anAnswer->alp), SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
+         continue;
+      }
+
+      if (client_id == EV_ID_SCHEDD && !host_list_locate(Master_Adminhost_List, aHost)) {
+         ERROR((SGE_EVENT, MSG_SGETEXT_NOADMINHOST_S, aHost));
+         answer_list_add(&(anAnswer->alp), SGE_EVENT, STATUS_EDENIED2HOST, ANSWER_QUALITY_ERROR);
+         continue;
+      } else if (!host_list_locate(Master_Submithost_List, aHost) 
+              && !host_list_locate(Master_Adminhost_List, aHost)) {
+         ERROR((SGE_EVENT, MSG_SGETEXT_NOSUBMITORADMINHOST_S, aHost));
+         answer_list_add(&(anAnswer->alp), SGE_EVENT, STATUS_EDENIED2HOST, ANSWER_QUALITY_ERROR);
          continue;
       }
 

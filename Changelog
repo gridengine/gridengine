@@ -1,3 +1,10 @@
+AH-2005-06-20-0: Bugfix:    drmaa_exit() and qsub -sync y causes qmaster
+                            error logging if host is no admin host
+                 Issue:     1659
+                 Bugtraq:   6279402
+                 Changed:   sge_qmaster
+                 Review:    CR
+
 MD-2005-06-20-0: Bugfix:    - removed sgepasswd from distinst and from inst_sge
                               binary check. see MD-2005-06-17-0
                  Changed:   - inst_sge, distinst

@@ -133,7 +133,7 @@ extern int main(int argc, char** argv)
 
 
   printf("startup commlib ...\n");
-  cl_com_setup_commlib(CL_RW_THREAD , (cl_log_t)atoi(argv[1]), NULL );
+  cl_com_setup_commlib(CL_RW_THREAD /* CL_THREAD_POOL */ , (cl_log_t)atoi(argv[1]), NULL );
   cl_com_set_status_func(my_application_status); 
 
 
@@ -296,15 +296,15 @@ void *my_message_thread(void *t_conf) {
             } 
          } else {
             /* no event client, just return message to sender */
-            char data[3000];
-            memset(data, 0, 3000);
+            char data[13000];
+            memset(data, 0, 13000);
             sprintf(data,"gdi response");
 #if 0
             printf(" \"%s\" -> send gdi response to %s/%s/%ld\n", thread_config->thread_name, 
                            sender->comp_host, sender->comp_name, sender->comp_id);
 #endif
 
-#if 1
+#if 0
            /* simulate a work for the gdi thread */
            {
               int d;
@@ -315,7 +315,7 @@ void *my_message_thread(void *t_conf) {
 #endif
             ret_val = cl_commlib_send_message(handle, sender->comp_host, sender->comp_name, sender->comp_id,
                                       CL_MIH_MAT_NAK,
-                                      (cl_byte_t*) data , 3000,
+                                      (cl_byte_t*) data , 13000,
                                       NULL, 0, 0 , CL_TRUE, CL_FALSE );
             if (ret_val == CL_RETVAL_OK) {
                snd_messages++;
@@ -370,8 +370,8 @@ void *my_event_thread(void *t_conf) {
          for (i=0;i<MAX_EVENT_CLIENTS;i++) {
             cl_com_endpoint_t* client = event_client_array[i];
             if ( client != NULL) {
-               char help[3000];
-               memset(help, 0, 3000);
+               char help[13000];
+               memset(help, 0, 13000);
    
 
                if (first == 0) {
@@ -384,7 +384,7 @@ void *my_event_thread(void *t_conf) {
                                                                  client->comp_host, client->comp_name, client->comp_id  );
 #endif
                ret_val = cl_commlib_send_message(handle, client->comp_host, client->comp_name, client->comp_id,
-                                                 CL_MIH_MAT_NAK, (cl_byte_t*) help , 3000,
+                                                 CL_MIH_MAT_NAK, (cl_byte_t*) help , 13000,
                                                  NULL, 0, 0 , CL_TRUE, CL_FALSE );
              
                if ( ret_val != CL_RETVAL_OK) {

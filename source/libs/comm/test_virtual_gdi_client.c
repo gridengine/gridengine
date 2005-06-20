@@ -155,7 +155,7 @@ extern int main(int argc, char** argv)
         int                retval  = 0;
         cl_com_message_t*  message = NULL;
         cl_com_endpoint_t* sender  = NULL;
-        char data[3000];
+        char data[13000];
    
         gettimeofday(&now,NULL);
         if (now.tv_sec > shutdown_time ) {
@@ -166,7 +166,7 @@ extern int main(int argc, char** argv)
         sprintf(data,"gdi request");
         retval = cl_commlib_send_message(handle, argv[3], "virtual_master", 1,
                                          CL_MIH_MAT_NAK,
-                                         (cl_byte_t*) data , 3000,
+                                         (cl_byte_t*) data , 13000,
                                          NULL, 0, 0 , CL_TRUE, CL_FALSE );
         if ( retval == CL_RETVAL_OK ) {
            snd_messages++;
@@ -183,12 +183,14 @@ extern int main(int argc, char** argv)
            } else {
               /* shutdown when virtual qmaster is not running anymore */
               if (rcv_messages > 0) {
+                 printf("cl_commlib_receive_message returned: %s\n", cl_get_error_text(retval));
                  do_shutdown = 1;
               }
            }
         } else {
            /* shutdown when virtual qmaster is not running anymore */
            if (rcv_messages > 0) {
+              printf("cl_commlib_send_message returned: %s\n", cl_get_error_text(retval));
               do_shutdown = 1;
            }
         } 

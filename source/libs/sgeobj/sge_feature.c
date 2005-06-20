@@ -389,7 +389,7 @@ static feature_id_t feature_get_featureset_id(const char *name)
    int i = 0;
    feature_id_t ret = FEATURE_UNINITIALIZED;
 
-   DENTER(TOP_LAYER, "featureset_get_id");
+   DENTER(TOP_LAYER, "feature_get_featureset_id");
    if (!name) {
       DEXIT;
       return ret;

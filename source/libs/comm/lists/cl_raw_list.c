@@ -364,6 +364,9 @@ int cl_raw_list_lock(cl_raw_list_t* list_p) {             /* CR check */
       /* ENABLE THIS ONLY FOR LOCK DEBUGING (1 of 2) */
       if ( list_p->list_type != CL_LOG_LIST ) {
         CL_LOG_STR(CL_LOG_DEBUG, "locking list:", list_p->list_name); 
+        if (list_p->last_lock_thread != NULL) {
+           CL_LOG_STR(CL_LOG_DEBUG, "last locker thread:", list_p->last_lock_thread->thread_name);
+        }
       }
 #endif
       if ( pthread_mutex_lock(list_p->list_mutex) != 0) {
@@ -372,6 +375,12 @@ int cl_raw_list_lock(cl_raw_list_t* list_p) {             /* CR check */
          }
          return CL_RETVAL_MUTEX_LOCK_ERROR;
       }
+#if CL_DO_RAW_LIST_DEBUG
+      list_p->last_lock_thread = cl_thread_get_thread_config();
+      if ( list_p->list_type != CL_LOG_LIST ) {
+         CL_LOG_STR(CL_LOG_DEBUG, "hold lock:", list_p->list_name); 
+      }
+#endif
    }
    return CL_RETVAL_OK;
 }

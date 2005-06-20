@@ -335,7 +335,7 @@ int cl_log_list_setup(cl_raw_list_t** list_p, const char* creator_name, int crea
 
 
    /* setup creator thread information */
-   if ( (ret_val=cl_thread_setup(creator_settings,*list_p,creator_name,creator_id , NULL)) != CL_RETVAL_OK) {
+   if ( (ret_val=cl_thread_setup(creator_settings,*list_p,creator_name,creator_id , NULL, NULL, NULL)) != CL_RETVAL_OK) {
       cl_thread_cleanup(creator_settings);
       free(creator_settings);
       free(ldata);

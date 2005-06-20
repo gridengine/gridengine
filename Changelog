@@ -1,4 +1,11 @@
-RD-2005-05-20-0: Bugfix:    serveral install/uninstall issues
+CR-2005-06-20-1: Enhancm.:  - commlib thread list:
+                              o added new parameter to specify cleanup function
+                              o added new parameter to specify user data
+                            - enhanced commlib debuging when CL_DO_COMMLIB_DEBUG
+                              is defined at compile time
+                 Review:    AA
+
+RD-2005-06-20-0: Bugfix:    serveral install/uninstall issues
                  Bugtraq:   6287831, 6287824, 6287850, 6245812, 6287826, 6287917 
                  Issue:     1617, 1481, 1028, 1108, 1528, 1670
                  Review:    MD

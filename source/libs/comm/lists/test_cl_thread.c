@@ -62,7 +62,7 @@ extern int main(void)
   for (i=0;i<THREAD_COUNT;i++) {
      char name[20];
      sprintf(name,"thread_%d_",i);
-     if ( (retval=cl_thread_setup(&thread_list[i],NULL,name, i, timeout_thread_main)) != CL_RETVAL_OK) {
+     if ( (retval=cl_thread_setup(&thread_list[i],NULL,name, i, timeout_thread_main, NULL, NULL)) != CL_RETVAL_OK) {
         printf("error: cl_thread_setup() - %d\n", retval);
      }
   }

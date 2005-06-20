@@ -61,10 +61,10 @@ extern int main(void)
   cl_thread_list_setup(&thread_list,"thread list");
 
   /* setup first thread */
-  cl_thread_list_create_thread(thread_list, &dummy_thread_p,NULL, "1st thread", 1, my_thread);
+  cl_thread_list_create_thread(thread_list, &dummy_thread_p,NULL, "1st thread", 1, my_thread, NULL, NULL);
 
   /* setup second thread */
-  cl_thread_list_create_thread(thread_list, &dummy_thread_p, NULL, "2nd thread", 2, my_thread);
+  cl_thread_list_create_thread(thread_list, &dummy_thread_p, NULL, "2nd thread", 2, my_thread, NULL, NULL);
 
   thread_p = cl_thread_list_get_thread_by_id(thread_list, 1);
   printf("first thread (%s) has id: %d\n", thread_p->thread_name, thread_p->thread_id);
@@ -85,7 +85,7 @@ extern int main(void)
      printf("<----------- delete thread %d done\n", id);
 
      printf("-----------> add thread ...\n");
-     cl_thread_list_create_thread(thread_list, &dummy_thread_p, NULL,"new thread", id, my_thread);
+     cl_thread_list_create_thread(thread_list, &dummy_thread_p, NULL,"new thread", id, my_thread, NULL, NULL);
      printf("<----------- add thread done\n");
 
   }

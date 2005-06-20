@@ -376,7 +376,13 @@ int cl_thread_trigger_thread_condition(cl_thread_condition_t* condition, int do_
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_thread_setup()"
-int cl_thread_setup(cl_thread_settings_t* thread_config, cl_raw_list_t* log_list, const char* name, int id, void * (*start_routine)(void *)) {
+int cl_thread_setup(cl_thread_settings_t* thread_config, 
+                    cl_raw_list_t* log_list,
+                    const char* name,
+                    int id,
+                    void * (*start_routine)(void *), 
+                    cl_thread_cleanup_func_t cleanup_func,
+                    void* user_data) {
 
    int retry = 0; 
    int ret_val;
@@ -403,6 +409,9 @@ int cl_thread_setup(cl_thread_settings_t* thread_config, cl_raw_list_t* log_list
    }
 
    thread_config->thread_state = CL_THREAD_STARTING;
+
+   thread_config->thread_cleanup_func = cleanup_func;
+   thread_config->thread_user_data = user_data;
 
    if (start_routine != NULL) {
       thread_config->thread_pointer = (pthread_t*)malloc(sizeof(pthread_t));
@@ -673,19 +682,46 @@ int cl_thread_func_testcancel(cl_thread_settings_t* thread_config) {
    int execute_pop = 0;
 
 
-   /* push default cleanup function */
-   /* (void(*)(void*)) */
-   pthread_cleanup_push( (void(*)(void*)) cl_thread_default_cleanup_function, thread_config );
+   /* pthread_cleanup_push() and pthread_cleanup_pop() must be used in the
+      same { ... } context */
 
-   ret_val = pthread_setcancelstate(PTHREAD_CANCEL_ENABLE,NULL);
+#if CL_DO_COMMLIB_DEBUG
+   gettimeofday(&(thread_config->thread_last_cancel_test_time),NULL);
+#endif
 
-   if ( ret_val == 0 ) {
-      pthread_testcancel();
-      ret_val = pthread_setcancelstate(PTHREAD_CANCEL_DISABLE,NULL);
+   if (thread_config->thread_cleanup_func != NULL) {
+
+      /* push user cleanup function */
+      pthread_cleanup_push( (void(*)(void*)) thread_config->thread_cleanup_func, thread_config );
+   
+      /* push default cleanup function */
+      pthread_cleanup_push( (void(*)(void*)) cl_thread_default_cleanup_function, thread_config );
+   
+      ret_val = pthread_setcancelstate(PTHREAD_CANCEL_ENABLE,NULL);
+   
+      if ( ret_val == 0 ) {
+         pthread_testcancel();
+         ret_val = pthread_setcancelstate(PTHREAD_CANCEL_DISABLE,NULL);
+      }
+      /* remove cleanup function from stack without execution */
+      pthread_cleanup_pop(execute_pop);  /* client_thread_cleanup */
+   
+      /* remove user function from stack without execution */
+      pthread_cleanup_pop(execute_pop);
+   } else {
+      /* push default cleanup function */
+      pthread_cleanup_push( (void(*)(void*)) cl_thread_default_cleanup_function, thread_config );
+   
+      ret_val = pthread_setcancelstate(PTHREAD_CANCEL_ENABLE,NULL);
+   
+      if ( ret_val == 0 ) {
+         pthread_testcancel();
+         ret_val = pthread_setcancelstate(PTHREAD_CANCEL_DISABLE,NULL);
+      }
+      /* remove cleanup function from stack without execution */
+      pthread_cleanup_pop(execute_pop);  /* client_thread_cleanup */
    }
 
-   /* remove cleanup function from stack without execution */
-   pthread_cleanup_pop(execute_pop);  /* client_thread_cleanup */
 
    if ( ret_val != 0) {
       return CL_RETVAL_THREAD_CANCELSTATE_ERROR;

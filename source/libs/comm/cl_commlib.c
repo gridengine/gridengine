@@ -470,7 +470,7 @@ int cl_com_setup_commlib( cl_thread_mode_t t_mode, cl_log_t debug_level , cl_log
             ret_val = cl_thread_list_create_thread(cl_com_thread_list,
                                                    &thread_p,
                                                    cl_com_log_list,
-                                                   "trigger_thread", 1, cl_com_trigger_thread );
+                                                   "trigger_thread", 1, cl_com_trigger_thread, NULL, NULL);
             if (ret_val != CL_RETVAL_OK) {
                pthread_mutex_unlock(&cl_com_thread_list_mutex);
                CL_LOG(CL_LOG_ERROR,"could not start trigger_thread");
@@ -1153,7 +1153,7 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
          return_value = cl_thread_list_create_thread(cl_com_thread_list,
                                                      &(new_handle->service_thread),
                                                      cl_com_log_list,
-                                                     help_buffer, 2, cl_com_handle_service_thread );
+                                                     help_buffer, 2, cl_com_handle_service_thread, NULL, (void*)new_handle);
          if (return_value != CL_RETVAL_OK) {
             CL_LOG(CL_LOG_ERROR,"could not start handle service thread");
             thread_start_error = 1;
@@ -1165,7 +1165,7 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
          return_value = cl_thread_list_create_thread(cl_com_thread_list,
                                                      &(new_handle->read_thread),
                                                      cl_com_log_list,
-                                                     help_buffer, 3, cl_com_handle_read_thread );
+                                                     help_buffer, 3, cl_com_handle_read_thread, NULL, NULL);
          if (return_value != CL_RETVAL_OK) {
             CL_LOG(CL_LOG_ERROR,"could not start handle read thread");
             thread_start_error = 1;
@@ -1177,7 +1177,7 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
          return_value = cl_thread_list_create_thread(cl_com_thread_list,
                                                      &(new_handle->write_thread),
                                                      cl_com_log_list,
-                                                     help_buffer, 2, cl_com_handle_write_thread );
+                                                     help_buffer, 2, cl_com_handle_write_thread, NULL, NULL);
          if (return_value != CL_RETVAL_OK) {
             CL_LOG(CL_LOG_ERROR,"could not start handle write thread");
             thread_start_error = 1;
@@ -6149,17 +6149,11 @@ static void *cl_com_trigger_thread(void *t_conf) {
 static void *cl_com_handle_service_thread(void *t_conf) {
    int ret_val = CL_RETVAL_OK;
    int do_exit = 0;
-   int wait_for_events = 1;
-   int select_sec_timeout = 0;
-   int select_usec_timeout = 100*1000;
-
-
-   cl_handle_list_elem_t* handle_elem = NULL;
    cl_com_handle_t* handle = NULL;
+
 
    /* get pointer to cl_thread_settings_t struct */
    cl_thread_settings_t *thread_config = (cl_thread_settings_t*)t_conf; 
-
 
    /* set thread config data */
    if (cl_thread_set_thread_config(thread_config) != CL_RETVAL_OK) {
@@ -6170,48 +6164,63 @@ static void *cl_com_handle_service_thread(void *t_conf) {
    /* setup thread */
    CL_LOG(CL_LOG_INFO, "starting initialization ...");
 
+   /* get handle from thread_config */
+   handle = (cl_com_handle_t*) thread_config->thread_user_data;
+
    /* thread init done, trigger startup conditon variable*/
    cl_thread_func_startup(thread_config);
    CL_LOG(CL_LOG_INFO, "starting main loop ...");
 
    /* ok, thread main */
    while (do_exit == 0) {
-      wait_for_events = 1;
-
       cl_thread_func_testcancel(thread_config);
  
-      if (handle == NULL) {
-         cl_raw_list_lock(cl_com_handle_list);
-         handle_elem = cl_handle_list_get_first_elem(cl_com_handle_list);
-         while(handle_elem && handle == NULL ) {
-            if (handle_elem->handle->service_thread == thread_config) {
-               handle = handle_elem->handle;
-               select_sec_timeout = handle->select_sec_timeout; 
-               select_usec_timeout = handle->select_usec_timeout;
+#if CL_DO_COMMLIB_DEBUG
+      {
+         struct timeval now;
+
+         gettimeofday(&now,NULL);
+   
+         cl_raw_list_lock(cl_com_thread_list);
+         elem = cl_thread_list_get_first_elem(cl_com_thread_list);
+         while(elem) {
+            if (elem->thread_config->thread_last_cancel_test_time.tv_sec + 15 < now.tv_sec ) {
+               CL_LOG_STR(CL_LOG_ERROR,"POSSIBLE DEADLOCK DETECTED (thread_list) => ",elem->thread_config->thread_name);
             }
-            handle_elem = cl_handle_list_get_next_elem(handle_elem);
+            elem = cl_thread_list_get_next_elem(elem);
          }
-         cl_raw_list_unlock(cl_com_handle_list);
-      } else {
-         /* we don't want to force statistics update every one second */
-         cl_commlib_calculate_statistic(handle, CL_FALSE, 1);
-         /* ceck for debug clients */
-         cl_commlib_handle_debug_clients(handle, CL_TRUE);
-      }
-      if (wait_for_events != 0) {
-         CL_LOG(CL_LOG_INFO,"wait for event ...");
-         if ((ret_val = cl_thread_wait_for_event(thread_config,select_sec_timeout,select_usec_timeout )) != CL_RETVAL_OK) {  /* nothing to do */
-            switch(ret_val) {
-               case CL_RETVAL_CONDITION_WAIT_TIMEOUT:
-                  CL_LOG(CL_LOG_INFO,"condition wait timeout");
-                  break;
-               default:
-                  CL_LOG_STR( CL_LOG_INFO, ">got error<: ", cl_get_error_text(ret_val));
-                  do_exit = 1;
+         cl_raw_list_unlock(cl_com_thread_list);
+   
+         cl_raw_list_lock(handle->work_thread_list);
+         elem = cl_thread_list_get_first_elem(handle->work_thread_list);
+         while(elem) {
+            if (elem->thread_config->thread_last_cancel_test_time.tv_sec + 15 < now.tv_sec ) {
+               CL_LOG_STR(CL_LOG_ERROR,"POSSIBLE DEADLOCK DETECTED (work list) => ",elem->thread_config->thread_name );
             }
+            elem = cl_thread_list_get_next_elem(elem);
          }
-         cl_thread_clear_events(thread_config);
+         cl_raw_list_unlock(handle->work_thread_list);
       }
+#endif /* CL_DO_COMMLIB_DEBUG */
+
+      /* we don't want to force statistics update every one second */
+      cl_commlib_calculate_statistic(handle, CL_FALSE, 1);
+      /* ceck for debug clients */
+      cl_commlib_handle_debug_clients(handle, CL_TRUE);
+
+      /* there is nothing to do, wait for events */
+      CL_LOG(CL_LOG_INFO,"wait for event ...");
+      if ((ret_val = cl_thread_wait_for_event(thread_config,handle->select_sec_timeout, handle->select_usec_timeout)) != CL_RETVAL_OK) {
+         switch(ret_val) {
+            case CL_RETVAL_CONDITION_WAIT_TIMEOUT:
+               CL_LOG(CL_LOG_INFO,"condition wait timeout");
+               break;
+            default:
+               CL_LOG_STR( CL_LOG_INFO, ">got error<: ", cl_get_error_text(ret_val));
+               do_exit = 1;
+         }
+      }
+      cl_thread_clear_events(thread_config);
    }
 
    CL_LOG(CL_LOG_INFO, "exiting ...");

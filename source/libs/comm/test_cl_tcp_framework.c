@@ -117,14 +117,14 @@ extern int main(int argc, char** argv)
 
      printf("debug4\n");
 
-     cl_thread_list_create_thread(thread_list, &dummy_thread_p,log_list, "client1", 2, client_thread );   
+     cl_thread_list_create_thread(thread_list, &dummy_thread_p,log_list, "client1", 2, client_thread, NULL, NULL);   
      printf("debug5\n");
 
   }
   printf("debug6\n");
 
   if (strcmp( argv[1], "server") == 0 || strcmp( argv[1], "both") == 0) {
-     cl_thread_list_create_thread(thread_list, &dummy_thread_p,log_list, "server", 1, server_thread ); 
+     cl_thread_list_create_thread(thread_list, &dummy_thread_p,log_list, "server", 1, server_thread, NULL, NULL); 
   }
 #if 0
   cl_thread_list_create_thread(thread_list, log_list, "client2", 3, client_thread );   

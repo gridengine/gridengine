@@ -153,11 +153,11 @@ extern int main(int argc, char** argv)
 
   printf("create application threads ...\n");
   cl_thread_list_setup(&thread_list,"thread list");
-  cl_thread_list_create_thread(thread_list, &dummy_thread_p,cl_com_get_log_list(), "message_thread 1", 100, my_message_thread);
+  cl_thread_list_create_thread(thread_list, &dummy_thread_p,cl_com_get_log_list(), "message_thread 1", 100, my_message_thread, NULL, NULL);
 #if 1
-  cl_thread_list_create_thread(thread_list, &dummy_thread_p,cl_com_get_log_list(), "message_thread 2", 101, my_message_thread);
+  cl_thread_list_create_thread(thread_list, &dummy_thread_p,cl_com_get_log_list(), "message_thread 2", 101, my_message_thread, NULL, NULL);
 #endif
-  cl_thread_list_create_thread(thread_list, &dummy_thread_p,cl_com_get_log_list(), "event_thread__", 3, my_event_thread);
+  cl_thread_list_create_thread(thread_list, &dummy_thread_p,cl_com_get_log_list(), "event_thread__", 3, my_event_thread, NULL, NULL);
 
   gettimeofday(&last,NULL);
   usec_last = (last.tv_sec * 1000000.0) + last.tv_usec;

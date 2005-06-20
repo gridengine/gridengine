@@ -227,15 +227,15 @@ This is done by setting a small number for <b>max_reservation</b> in <b>schedd_c
         </li>
       </ul>
       <ul>
-In clusters with large bulks of jobs a limiting factor often is the memory 
+In clusters with large quantities of jobs a limiting factor is often the memory 
 footprint due to the memory required per job to store all job properties.
-Experience shows large parts of memory occupied by qmaster is used to store
-per job environment as specified via "<b>-v variable_list</b>" or "<b>-V</b>".
-End users sometimes perceive it as convenient to simply use "<b>-V</b>" even
-though it had been entirely sufficient to inherit a handful of dedicated 
-environment variables from the submission environment. Consciously and sparingly 
-use of job environment is known to notedly raise the maximum number of jobs that
-can be processed with a given amount of memory by Grid Engine.
+Experience shows large parts of the memory occupied by the qmaster are used to store
+each job's environment as specified via "<b>-v variable_list</b>" or "<b>-V</b>".
+End users sometimes perceive it as convenient to simply use "<b>-V</b>", even
+though it would have been entirely sufficient to inherit a handful of dedicated 
+environment variables from the submission environment. Conscious and sparing 
+use of job environment variables has been shown to greatly increase the maximum 
+number of jobs that can be processed with a given amount of main memory by Grid Engine.
       </ul>
       <ul>
         <li>
@@ -246,13 +246,12 @@ can be processed with a given amount of memory by Grid Engine.
       <ul>
 Per default Grid Engine <b>qsub</b> job submission transports the job scripts
 together with the job itself. Since version 6 the <b>-b y</b> option can be 
-used to prevent job scripts be transported and merely the path to the job be 
-sent with the job. Though this requires the script be made available elsewhere 
-but in many cases the script is available anyways or could easily be made 
-available by means shared file systems. It is obvious that the use of <b>-b y</b> 
-has a beneficial impact on cluster scalability due to job scripts need not be 
-stored on disk by qmaster at submission time and then be packed with the job 
-when the job is executed.
+used to prevent job scripts from being transported, instead simply sending the path to 
+the executable with the job. This technique requires that the script be made available 
+elsewhere, but in many cases the script is already available or could easily be made 
+available by means shared file systems. Use of <b>-b y</b> has a beneficial impact 
+on cluster scalability because job scripts do not need to be stored on disk by the
+qmaster at submission time or be packed with the job when it is delivered to the execd.
       </ul>
       <ul>
         <li><b>EXPERIMENTAL: job filter based on job clases (V6.0u1)</b></li>

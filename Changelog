@@ -1,3 +1,8 @@
+MD-2005-06-20-0: Bugfix:    - removed sgepasswd from distinst and from inst_sge
+                              binary check. see MD-2005-06-17-0
+                 Changed:   - inst_sge, distinst
+                 Review:    HP
+
 MD-2005-06-17-0: Bugfix:    - merged RD-2005-06-07-0 from maintrunk + added missing dir
                             - due to SFU problems, removed sge_passwd from setfileperms.sh
                  Changed:   inst_sge, setfileperms.sh

@@ -259,7 +259,7 @@ BINFILES="sge_coshepherd \
 WINBINFILES="sge_coshepherd sge_execd sge_shepherd  \
              qacct qalter qconf qdel qhold qhost qlogin \
              qmake qmod qresub qrls qrsh qselect qsh \
-             qstat qsub qtcsh qping qloadsensor.exe sgepasswd"
+             qstat qsub qtcsh qping qloadsensor.exe"
 
 UTILFILES="adminrun checkprog checkuser filestat gethostbyaddr gethostbyname \
            gethostname getservbyname loadcheck now qrsh_starter rlogin rsh rshd \
@@ -310,7 +310,7 @@ fi
          "qconf           qmod            qsh             sge_execd\n" \
          "qdel            qmon            qstat           qhold\n" \
          "qresub          qsub            qhost           qrls\n" \
-         "qtcsh           qping           sgepasswd       qloadsensor.exe\n\n" \
+         "qtcsh           qping           qloadsensor.exe\n\n" \
          "The binaries in >%s< are:\n\n" \
          "adminrun       gethostbyaddr  loadcheck      rlogin         uidgid\n" \
          "checkprog      gethostbyname  now            rsh            infotext\n" \

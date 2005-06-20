@@ -83,6 +83,8 @@ int me_who
    sigdelset(&default_mask, SIGTTIN);
    sigdelset(&default_mask, SIGTTOU);
    sigdelset(&default_mask, SIGFPE);
+/* Allow SIGTRAP for debuggin purpose */
+   sigdelset(&default_mask, SIGTRAP); 
 #if !(defined(CRAY) || defined(NECSX4) || defined(NECSX5))
    sigdelset(&default_mask, SIGVTALRM);
    sigdelset(&default_mask, SIGPROF);
@@ -118,6 +120,8 @@ int me_who
    sigdelset(&io_mask, SIGTTIN);
    sigdelset(&io_mask, SIGTTOU);
    sigdelset(&io_mask, SIGFPE);
+/* Allow SIGTRAP for debuggin purpose */
+   sigdelset(&io_mask, SIGTRAP);
 #if !( defined(CRAY) || defined(NECSX4) || defined(NECSX5) )
    sigdelset(&io_mask, SIGVTALRM);
    sigdelset(&io_mask, SIGPROF);

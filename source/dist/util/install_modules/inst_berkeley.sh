@@ -171,14 +171,6 @@ ExecuteRPCServerScript()
    ExecuteAsAdmin $SGE_ROOT/$SGE_CELL/common/sgebdb $1
 }
 
-DeleteServerScript()
-{
-   ExecuteRPCServerScript stop
-   rm $SGE_ROOT/$SGE_CELL/common/sgebdb   
-
-   # TODO: Delete startup script in /etc/init.d
-}
-
 DeleteSpoolingDir()
 {
    QMDIR="$SGE_ROOT/$SGE_CELL/qmaster"

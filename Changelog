@@ -1,3 +1,8 @@
+RD-2005-05-20-0: Bugfix:    serveral install/uninstall issues
+                 Bugtraq:   6287831, 6287824, 6287850, 6245812, 6287826, 6287917 
+                 Issue:     1617, 1481, 1028, 1108, 1528, 1670
+                 Review:    MD
+
 CR-2005-06-20-0: Cleanup:   - re-added secure dummy string (to be
                               able to check files for correct compile
                               mode in install script)

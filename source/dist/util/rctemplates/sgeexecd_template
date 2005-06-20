@@ -77,6 +77,7 @@ PATH=/bin:/usr/bin:/sbin:/usr/sbin
 # Required-Stop:
 # Default-Start:  3 5
 # Default-Stop: 0 1 2 6
+# chkconfig: 35 96 02
 # Description:  start Grid Engine execd 
 ### END INIT INFO
 #---------------------------------------------------------------------------

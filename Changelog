@@ -1,3 +1,11 @@
+AH-2005-06-21-0: Bugfix:    Jobs submitted with -v PATH do not retain $TMPDIR 
+                            prefixed by Grid Engine as required for tight 
+                            integration
+                 Issue:     1674
+                 Bugtraq:   6288588
+                 Changed:   sge_execd
+                 Review:    RD
+
 RD-2005-06-21-1: Bugfix:   sge_shepherd SEGV's when it tries to fopen the usage file
                  Bugtraq:  6288156
                  Issue:    1673

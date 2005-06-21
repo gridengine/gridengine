@@ -425,15 +425,7 @@ char *err_str
          DEXIT;
          return -2;        /* general */
       }
-      
-      /* write inherited environment first, to be sure that some task specific variables
-      ** will be overridden
-      */
-      {
-         char buffer[2048];
-         sprintf(buffer, "%s:/usr/local/bin:/usr/ucb:/bin:/usr/bin:", tmpdir);
-         var_list_set_string(&environmentList, "PATH", buffer);
-      }
+     
 
       /* write environment of job */
       var_list_copy_env_vars_and_value(&environmentList, 
@@ -446,7 +438,18 @@ char *err_str
                                           lGetList(petep, PET_environment),
                                           VAR_COMPLEX_PREFIX);
       }
-     
+
+      {
+         lListElem *user_path;
+         dstring buffer = DSTRING_INIT;
+         if ((user_path=lGetElemStr(environmentList, VA_variable, "PATH")))
+            sge_dstring_sprintf(&buffer, "%s:%s", tmpdir, lGetString(user_path, VA_value));
+         else
+            sge_dstring_sprintf(&buffer, "%s:/usr/local/bin:/usr/ucb:/bin:/usr/bin:", tmpdir);
+         var_list_set_string(&environmentList, "PATH", sge_dstring_get_string(&buffer));
+         sge_dstring_free(&buffer);
+      }
+
       /* 1.) try to read cwd from pe task */
       if(petep != NULL) {
          cwd = lGetString(petep, PET_cwd);

@@ -1128,7 +1128,7 @@ int ckpt_type
       /******* write usage to file "usage" ************/
       fp = fopen("usage", "w");
       if (!fp) {
-         shepherd_trace_sprintf("error: can't open \"usage\" file: %s", 
+         shepherd_error_sprintf("error: can't open \"usage\" file: %s", 
                                 strerror(errno));
       } 
       

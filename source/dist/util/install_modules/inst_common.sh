@@ -1770,6 +1770,11 @@ RemoveRcScript()
       STARTUP_FILE_NAME=sgemaster
       S95NAME=S95sgemaster
       DAEMON_NAME="qmaster/scheduler"
+   elif [ $hosttype = "bdb" ]; then
+      TMP_SGE_STARTUP_FILE=/tmp/sgebdb.$$
+      STARTUP_FILE_NAME=sgebdb
+      S95NAME=S94sgebdb
+      DAEMON_NAME="berkeleydb"
    else
       TMP_SGE_STARTUP_FILE=/tmp/sgeexecd.$$
       STARTUP_FILE_NAME=sgeexecd
@@ -1827,13 +1832,33 @@ RemoveRcScript()
        esac
 
    elif [ "$RC_FILE" = "insserv-linux" ]; then
-      echo  cp $SGE_STARTUP_FILE $RC_PREFIX/$STARTUP_FILE_NAME
-      echo /sbin/insserv $RC_PREFIX/$STARTUP_FILE_NAME
-      Execute cp $SGE_STARTUP_FILE $RC_PREFIX/$STARTUP_FILE_NAME
-      /sbin/insserv $RC_PREFIX/$STARTUP_FILE_NAME
+      echo  rm $SGE_STARTUP_FILE $RC_PREFIX/$STARTUP_FILE_NAME
+      echo /sbin/insserv -r $RC_PREFIX/$STARTUP_FILE_NAME
+      Execute rm $SGE_STARTUP_FILE $RC_PREFIX/$STARTUP_FILE_NAME
+      /sbin/insserv -r $RC_PREFIX/$STARTUP_FILE_NAME
    elif [ "$RC_FILE" = "freebsd" ]; then
-      echo  cp $SGE_STARTUP_FILE $RC_PREFIX/sge${RC_SUFFIX}
-      Execute cp $SGE_STARTUP_FILE $RC_PREFIX/sge${RC_SUFFIX}
+      echo  rm $SGE_STARTUP_FILE $RC_PREFIX/sge${RC_SUFFIX}
+      Execute rm $SGE_STARTUP_FILE $RC_PREFIX/sge${RC_SUFFIX}
+   elif [ "$RC_FILE" = "SGE" ]; then
+      if [ $hosttype = "master" ]; then
+        DARWIN_GEN_REPLACE="#GENMASTERRC"
+      elif [ $hosttype = "bdb" ]; then
+        DARWIN_GEN_REPLACE="#GENBDBRC"
+      else
+        DARWIN_GEN_REPLACE="#GENEXECDRC"
+      fi
+
+      Execute sed -e "s%${SGE_STARTUP_FILE}%${DARWIN_GEN_REPLACE}%g" \
+          "$RC_PREFIX/$RC_DIR/$RC_FILE" > "$RC_PREFIX/$RC_DIR/$RC_FILE.$$"
+      Execute chmod a+x "$RC_PREFIX/$RC_DIR/$RC_FILE.$$"
+      Execute mv "$RC_PREFIX/$RC_DIR/$RC_FILE.$$" "$RC_PREFIX/$RC_DIR/$RC_FILE"
+
+      if [ "`grep '#GENMASTERRC' $RC_PREFIX/$RC_DIR/$RC_FILE`" = "" -o \
+           "`grep '#GENBDBRC' $RC_PREFIX/$RC_DIR/$RC_FILE`" = "" -o \
+           "`grep '#GENEXECDRC' $RC_PREFIX/$RC_DIR/$RC_FILE`" ]; then
+         echo rm -rf "$RC_PREFIX/$RC_DIR"
+         Execute  rm -rf "$RC_PREFIX/$RC_DIR"
+      fi
    else
       # if this is not System V we simple add the call to the
       # startup script to RC_FILE

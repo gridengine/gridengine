@@ -1,3 +1,13 @@
+RD-2005-06-21-0: Bugfix:   suspend not working under Mac OS X
+                 Bugtraq:  6287958
+                 Issue:    1671
+                 Review:   AH
+
+RD-2005-05-20-0: Bugfix:    serveral install/uninstall issues
+                 Bugtraq:   6287831, 6287824, 6245812, 6287917 
+                 Issue:     1617, 1481, 1108, 1670
+                 Review:    MD
+
 AH-2005-06-20-0: Bugfix:    drmaa_exit() and qsub -sync y causes qmaster
                             error logging if host is no admin host
                  Issue:     1659

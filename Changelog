@@ -1,3 +1,8 @@
+RD-2005-06-21-0: Bugfix:   suspend not working under Mac OS X
+                 Bugtraq:  6287958
+                 Issue:    1671
+                 Review:   AH
+
 CR-2005-06-20-1: Enhancm.:  - commlib thread list:
                               o added new parameter to specify cleanup function
                               o added new parameter to specify user data

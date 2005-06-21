@@ -61,6 +61,9 @@
 #include "sge_qinstance_state.h"
 #include "sge_report_execd.h"
 #include "sge_report.h"
+#if defined(DARWIN)
+#include "sge_uidgid.h"
+#endif
 
 #include "msg_execd.h"
 #include "msg_daemons_common.h"
@@ -135,7 +138,7 @@ execd_signal_queue(struct dispatch_entry *de, sge_pack_buffer *pb, sge_pack_buff
                               INFO((SGE_EVENT, MSG_JOB_INITMIGRSUSPQ_U, sge_u32c(lGetUlong(jep, JB_job_number))));
                               signal = SGE_MIGRATE;
                            }   
-                           if( sge_execd_deliver_signal(signal, jep, jatep) == 0) {
+                           if (sge_execd_deliver_signal(signal, jep, jatep) == 0) {
                               sge_send_suspend_mail(signal,master_q ,jep, jatep); 
                            }
                         }   
@@ -534,11 +537,11 @@ const char *pe_task_id
    ** execd.uid==0 && execd.euid==admin_user
    **    => kill does neither send SIGCONT-signals nor return an error
    */
-#if defined(NECSX4) || defined(NECSX5)
+#if defined(NECSX4) || defined(NECSX5) || defined(DARWIN)
    sge_switch2start_user();
 #endif    
    if (kill(pid, direct_signal?sig:SIGTTIN)) {
-#if defined(NECSX4) || defined(NECSX5)
+#if defined(NECSX4) || defined(NECSX5) || defined(DARWIN)
       sge_switch2admin_user();
 #endif   
       if (errno == ESRCH)

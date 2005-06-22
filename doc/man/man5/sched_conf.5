@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sched_conf.5,v $     Last Update: $Date: 2005/06/15 09:52:24 $     Revision: $Revision: 1.23.4.1 $
+.\" $RCSfile: sched_conf.5,v $     Last Update: $Date: 2005/06/22 14:41:21 $     Revision: $Revision: 1.23.4.2 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH SCHED_CONF 5 "$Date: 2005/06/15 09:52:24 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH SCHED_CONF 5 "$Date: 2005/06/22 14:41:21 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 sched_conf \- xxQS_NAMExx default scheduler configuration file
@@ -378,7 +378,7 @@ to reproduce job resources utilization in the file \fI<xxqs_name_sxx_root>/<cell
 Changing \fBparams\fP will take immediate effect.
 The default for \fBparams\fP is none.
 .\"
-.SS \fBreprioritize_interval\fP"
+.SS \fBreprioritize_interval\fP
 Interval (HH:MM:SS) to reprioritize jobs on the exec hosts based on the 
 current ticket amount for the running jobs. If the interval is set to 
 00:00:00 the reprioritization is turned off. The default value is 00:00:00.

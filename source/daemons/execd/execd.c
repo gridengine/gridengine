@@ -499,6 +499,7 @@ int sge_execd_register_at_qmaster(void) {
    lAppendElem(hlp, hep);
 
    /* register at qmaster */
+   DPRINTF(("*****  Register at qmaster   *****\n"));
    alp = sge_gdi(SGE_EXECHOST_LIST, SGE_GDI_ADD, &hlp, NULL, NULL);
    aep = lFirst(alp);
    if (!alp || (lGetUlong(aep, AN_status) != STATUS_OK)) {

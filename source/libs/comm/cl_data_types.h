@@ -305,6 +305,12 @@ typedef struct cl_com_handle {
    cl_raw_list_t* allowed_host_list; /* string list with hostnames allowed to connect */
    unsigned long next_free_client_id;
 
+   cl_raw_list_t* received_message_queue; /* used as queue for application messages which are ready to be
+                                             handled over to the application ( used in cl_commlib_receive_message() 
+                                             This message queue must have a "garbage collector", removing 
+                                             references to destroyed objects!!!  
+                                           */
+
    unsigned long max_open_connections; /* maximum number of open connections  */
    cl_max_count_t max_con_close_mode;  /*  state of auto close at max connection count */
    cl_xml_connection_autoclose_t auto_close_mode; /* used to enable/disable autoclose of connections opend from this handle to services */

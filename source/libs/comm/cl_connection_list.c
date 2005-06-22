@@ -39,6 +39,7 @@
 
 
 #include "cl_connection_list.h"
+#include "cl_app_message_queue.h"
 #include "cl_message_list.h"
 #include "cl_communication.h"
 
@@ -358,16 +359,16 @@ int cl_connection_list_destroy_connections_to_close(cl_raw_list_t* list_p, int d
                continue;
             }
          }
-         cl_raw_list_dechain_elem(list_p, elem2->raw_elem); 
-         cl_raw_list_append_dechained_elem(delete_connections, elem2->raw_elem);
-   
-         connection = elem2->connection;
+
          if (connection->handler != NULL) {
             connection->handler->statistic->bytes_sent +=  connection->statistic->bytes_sent;
             connection->handler->statistic->bytes_received +=  connection->statistic->bytes_received;
             connection->handler->statistic->real_bytes_sent +=  connection->statistic->real_bytes_sent;
             connection->handler->statistic->real_bytes_received +=  connection->statistic->real_bytes_received;
          }
+
+         cl_raw_list_dechain_elem(list_p, elem2->raw_elem); 
+         cl_raw_list_append_dechained_elem(delete_connections, elem2->raw_elem);
       }
    } 
 
@@ -395,6 +396,7 @@ int cl_connection_list_destroy_connections_to_close(cl_raw_list_t* list_p, int d
                   /* decrease counter for ready messages */
                   pthread_mutex_lock(connection->handler->messages_ready_mutex);
                   connection->handler->messages_ready_for_read = connection->handler->messages_ready_for_read - 1;
+                  cl_app_message_queue_remove(connection->handler->received_message_queue, connection, 1, CL_FALSE);
                   pthread_mutex_unlock(connection->handler->messages_ready_mutex);
                }
             }

@@ -668,6 +668,7 @@ int compressed
    cl_com_handle_t* handle = NULL;
    cl_xml_ack_type_t ack_type;
    unsigned long dummy_mid;
+   unsigned long* mid_pointer = NULL;
    int use_execd_handle = 0;
    DENTER(TOP_LAYER, "gdi_send_message");
 
@@ -733,21 +734,21 @@ int compressed
       ack_type = CL_MIH_MAT_ACK;
    }
    if (mid != NULL) {
-      dummy_mid = *mid;
+      mid_pointer = &dummy_mid;
    }
 
-   ret = gdi_send_sec_message( handle, 
-                                  (char*)tohost ,(char*)tocomproc ,toid , 
-                                  ack_type , 
-                                  (cl_byte_t*)buffer ,(unsigned long)buflen,
-                                  &dummy_mid , 0 ,tag,1 , synchron);
+   ret = gdi_send_sec_message(handle, 
+                              (char*)tohost ,(char*)tocomproc ,toid , 
+                              ack_type , 
+                              (cl_byte_t*)buffer ,(unsigned long)buflen,
+                              mid_pointer, 0 ,tag,1 , synchron);
    if (ret != CL_RETVAL_OK) {
       /* try again ( if connection timed out) */
-      ret = gdi_send_sec_message( handle, 
-                                     (char*)tohost ,(char*)tocomproc ,toid ,
-                                     ack_type , 
-                                     (cl_byte_t*)buffer ,(unsigned long)buflen,
-                                     &dummy_mid , 0 ,tag,1 , synchron);
+      ret = gdi_send_sec_message(handle, 
+                                 (char*)tohost ,(char*)tocomproc ,toid ,
+                                 ack_type , 
+                                 (cl_byte_t*)buffer ,(unsigned long)buflen,
+                                 mid_pointer, 0 ,tag,1 , synchron);
    }
 
    if (mid != NULL) {

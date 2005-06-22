@@ -43,6 +43,7 @@
 #include "cl_commlib.h"
 #include "cl_handle_list.h"
 #include "cl_connection_list.h"
+#include "cl_app_message_queue.h"
 #include "cl_message_list.h"
 #include "cl_host_list.h"
 #include "cl_endpoint_list.h"
@@ -55,8 +56,7 @@
 
 #include "msg_commlib.h"
 
-/* enable more commlib logging */
-#define CL_DO_COMMLIB_DEBUG 0
+/* enable more commlib logging by definening CL_DO_COMMLIB_DEBUG at compile time */
 
 /* the next switch is used to send ack for messages when they arive
    at commlib layer or when application removes them from commlib */
@@ -454,10 +454,11 @@ int cl_com_setup_commlib( cl_thread_mode_t t_mode, cl_log_t debug_level , cl_log
    /* setup global thread list */
    pthread_mutex_lock(&cl_com_thread_list_mutex);
    switch(cl_com_create_threads) {
-      case CL_NO_THREAD:
+      case CL_NO_THREAD: {
          CL_LOG(CL_LOG_INFO,"no threads enabled");
          break;
-      case CL_RW_THREAD:
+      }
+      case CL_RW_THREAD: {
          if (cl_com_thread_list == NULL) {
             ret_val = cl_thread_list_setup(&cl_com_thread_list,"global_thread_list");
             if (cl_com_thread_list == NULL) {
@@ -479,6 +480,7 @@ int cl_com_setup_commlib( cl_thread_mode_t t_mode, cl_log_t debug_level , cl_log
             }
          }
          break;
+      }
    }
    pthread_mutex_unlock(&cl_com_thread_list_mutex);
  
@@ -804,6 +806,8 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
    new_handle->messages_ready_mutex = NULL;
    new_handle->connection_list_mutex = NULL;
    new_handle->connection_list = NULL;
+   new_handle->received_message_queue = NULL;
+
    new_handle->next_free_client_id = 1;
    new_handle->service_handler = NULL;
    new_handle->framework = framework;
@@ -985,9 +989,32 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
       return NULL;
    }
 
+   if ((return_value=cl_app_message_queue_setup(&(new_handle->received_message_queue), "received message queue", 1)) != CL_RETVAL_OK) {
+      int mutex_ret_val;
+      cl_app_message_queue_cleanup(&(new_handle->received_message_queue));
+      cl_com_free_endpoint(&(new_handle->local));
+      mutex_ret_val = pthread_mutex_destroy(new_handle->connection_list_mutex);
+      if (mutex_ret_val != EBUSY) {
+         free(new_handle->connection_list_mutex); 
+      }
+      mutex_ret_val = pthread_mutex_destroy(new_handle->messages_ready_mutex);
+      if (mutex_ret_val != EBUSY) {
+         free(new_handle->messages_ready_mutex); 
+      }
+      cl_com_free_handle_statistic(&(new_handle->statistic));
+      free(new_handle);
+      free(local_hostname);
+      cl_raw_list_unlock(cl_com_handle_list);
+      if (commlib_error) {
+         *commlib_error = return_value;
+      }
+      cl_commlib_push_application_error(return_value, NULL);
+      return NULL;
+   } 
 
    if ((return_value=cl_connection_list_setup(&(new_handle->connection_list), "connection list", 1)) != CL_RETVAL_OK) {
       int mutex_ret_val;
+      cl_app_message_queue_cleanup(&(new_handle->received_message_queue));
       cl_connection_list_cleanup(&(new_handle->connection_list));
       cl_com_free_endpoint(&(new_handle->local));
       mutex_ret_val = pthread_mutex_destroy(new_handle->connection_list_mutex);
@@ -1013,6 +1040,7 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
       int mutex_ret_val;
 
       cl_string_list_cleanup(&(new_handle->allowed_host_list));
+      cl_app_message_queue_cleanup(&(new_handle->received_message_queue));
       cl_connection_list_cleanup(&(new_handle->connection_list));
       cl_com_free_endpoint(&(new_handle->local));
       mutex_ret_val = pthread_mutex_destroy(new_handle->connection_list_mutex);
@@ -1053,6 +1081,7 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
          int mutex_ret_val;
          cl_com_close_connection(&new_con);
          cl_string_list_cleanup(&(new_handle->allowed_host_list));
+         cl_app_message_queue_cleanup(&(new_handle->received_message_queue));
          cl_connection_list_cleanup(&(new_handle->connection_list));
          cl_com_free_endpoint(&(new_handle->local));
          mutex_ret_val = pthread_mutex_destroy(new_handle->connection_list_mutex);
@@ -1084,6 +1113,7 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
          cl_com_connection_request_handler_cleanup(new_con);
          cl_com_close_connection(&new_con);
          cl_string_list_cleanup(&(new_handle->allowed_host_list));
+         cl_app_message_queue_cleanup(&(new_handle->received_message_queue));
          cl_connection_list_cleanup(&(new_handle->connection_list));
          cl_com_free_endpoint(&(new_handle->local));
          mutex_ret_val = pthread_mutex_destroy(new_handle->connection_list_mutex);
@@ -1119,10 +1149,11 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
    /* create handle thread */
    thread_start_error = 0;
    switch(cl_com_create_threads) {
-      case CL_NO_THREAD:
+      case CL_NO_THREAD: {
          CL_LOG(CL_LOG_INFO,"no threads enabled");
          break;
-      case CL_RW_THREAD:
+      }
+      case CL_RW_THREAD: {
          CL_LOG(CL_LOG_INFO,"creating read condition ...");
          return_value = cl_thread_create_thread_condition(&(new_handle->read_condition));
          if (return_value != CL_RETVAL_OK) {
@@ -1184,6 +1215,7 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
             break;
          }
          break;
+      }
    }
    /*
     * Do NOT touch return_value, it contains information about 
@@ -1196,6 +1228,7 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
          cl_com_close_connection(&(new_handle->service_handler));
       }
       cl_connection_list_cleanup(&(new_handle->connection_list));
+      cl_app_message_queue_cleanup(&(new_handle->received_message_queue));
       cl_string_list_cleanup(&(new_handle->allowed_host_list));
       cl_com_free_endpoint(&(new_handle->local));
       mutex_ret_val = pthread_mutex_destroy(new_handle->connection_list_mutex);
@@ -1319,7 +1352,7 @@ int cl_commlib_shutdown_handle(cl_com_handle_t* handle, cl_bool_t return_for_mes
          int return_value = CL_RETVAL_OK;
          /* still waiting for messages */
          switch(cl_com_create_threads) {
-            case CL_NO_THREAD:
+            case CL_NO_THREAD: {
                pthread_mutex_lock(handle->messages_ready_mutex);
                if (handle->messages_ready_for_read != 0) {
                   pthread_mutex_unlock(handle->messages_ready_mutex);
@@ -1353,7 +1386,8 @@ int cl_commlib_shutdown_handle(cl_com_handle_t* handle, cl_bool_t return_for_mes
                }
                cl_commlib_trigger(handle, 1);
                break;
-            case CL_RW_THREAD:
+            }
+            case CL_RW_THREAD: {
                if (trigger_write == CL_TRUE) {
                   cl_thread_trigger_event(handle->write_thread);
                }
@@ -1395,6 +1429,7 @@ int cl_commlib_shutdown_handle(cl_com_handle_t* handle, cl_bool_t return_for_mes
                   CL_LOG(CL_LOG_WARNING,"APPLICATION GOT CONDITION WAIT TIMEOUT WHILE WAITING FOR CCRM");
                }
                break;
+            }
          }
 
          /* shutdown stream connections when there are no more message connections */
@@ -1457,11 +1492,11 @@ int cl_commlib_shutdown_handle(cl_com_handle_t* handle, cl_bool_t return_for_mes
    if (ret_val == CL_RETVAL_OK) {
       /* delete handle thread */
       switch(cl_com_create_threads) {
-         case CL_NO_THREAD:
+         case CL_NO_THREAD: {
             CL_LOG(CL_LOG_INFO,"no threads enabled");
             break;
-         case CL_RW_THREAD:
-   
+         }
+         case CL_RW_THREAD: {
             CL_LOG(CL_LOG_INFO,"shutdown handle write thread ...");
             thread_settings = handle->write_thread;
             handle->write_thread = NULL; /* set thread pointer to NULL because other threads use this pointer */
@@ -1517,6 +1552,7 @@ int cl_commlib_shutdown_handle(cl_com_handle_t* handle, cl_bool_t return_for_mes
                CL_LOG(CL_LOG_INFO,"shutdown handle read condition OK");
             }
             break;
+         }
       }
    
       /* cleanup all connection list entries */
@@ -1538,6 +1574,7 @@ int cl_commlib_shutdown_handle(cl_com_handle_t* handle, cl_bool_t return_for_mes
          cl_com_close_connection(&(handle->service_handler));
       }
    
+      cl_app_message_queue_cleanup(&(handle->received_message_queue));
       cl_connection_list_cleanup(&(handle->connection_list));
       cl_com_free_endpoint(&(handle->local));
    
@@ -2551,6 +2588,7 @@ static int cl_commlib_handle_connection_read(cl_com_connection_t* connection) {
    int return_value = CL_RETVAL_OK;
    int connect_port = 0;
    struct timeval now;
+   cl_bool_t new_message_for_queue = CL_FALSE;
 
    if (connection == NULL) {
       return CL_RETVAL_PARAMS;
@@ -2730,8 +2768,12 @@ static int cl_commlib_handle_connection_read(cl_com_connection_t* connection) {
                /* increase counter for ready messages */
                pthread_mutex_lock(handle->messages_ready_mutex);
                handle->messages_ready_for_read = handle->messages_ready_for_read + 1;
-               cl_thread_trigger_thread_condition(handle->app_condition,0);
+               cl_app_message_queue_append(handle->received_message_queue, connection, NULL, CL_MIH_MAT_UNDEFINED, NULL, 0,0,0,1);
                pthread_mutex_unlock(handle->messages_ready_mutex);
+
+               
+                  cl_thread_trigger_thread_condition(handle->app_condition,1);
+
             }
          }
          connection->statistic->bytes_received = connection->statistic->bytes_received + size;
@@ -2917,28 +2959,16 @@ static int cl_commlib_handle_connection_read(cl_com_connection_t* connection) {
                message->message_state = CL_MS_READY;
                gettimeofday(&(message->message_remove_time),NULL);
                cl_com_add_debug_message(connection, NULL, message);
-               if (connection->handler != NULL) { 
-                  cl_com_handle_t* handle = connection->handler;
-                  /* increase counter for ready messages */
-                  pthread_mutex_lock(handle->messages_ready_mutex);
-                  handle->messages_ready_for_read = handle->messages_ready_for_read + 1;
-                  cl_thread_trigger_thread_condition(handle->app_condition,0);
-                  pthread_mutex_unlock(handle->messages_ready_mutex);
-               }
+               /* we have a new message for the read queue */
+               new_message_for_queue = CL_TRUE;
                break;
             case CL_MIH_DF_XML:
                CL_LOG(CL_LOG_INFO,"received XML message");
                message->message_state = CL_MS_READY;
                gettimeofday(&(message->message_remove_time),NULL);
                cl_com_add_debug_message(connection, NULL, message);
-               if (connection->handler != NULL) { 
-                  cl_com_handle_t* handle = connection->handler;
-                  /* increase counter for ready messages */
-                  pthread_mutex_lock(handle->messages_ready_mutex);
-                  handle->messages_ready_for_read = handle->messages_ready_for_read + 1;
-                  cl_thread_trigger_thread_condition(handle->app_condition,0);
-                  pthread_mutex_unlock(handle->messages_ready_mutex);
-               }
+               /* we have a new message for the read queue */
+               new_message_for_queue = CL_TRUE;
                break;
             default:
                CL_LOG(CL_LOG_INFO,"received protocol message");
@@ -3163,6 +3193,21 @@ static int cl_commlib_handle_connection_read(cl_com_connection_t* connection) {
       }
 
       cl_raw_list_unlock(connection->received_message_list);
+
+      if (new_message_for_queue == CL_TRUE) {
+         if (connection->handler != NULL) { 
+            /* increase counter for ready messages */
+            pthread_mutex_lock(connection->handler->messages_ready_mutex);
+            connection->handler->messages_ready_for_read = connection->handler->messages_ready_for_read + 1;
+            cl_app_message_queue_append(connection->handler->received_message_queue, connection, NULL, CL_MIH_MAT_UNDEFINED, NULL, 0,0,0,1);
+            pthread_mutex_unlock(connection->handler->messages_ready_mutex);
+
+
+               cl_thread_trigger_thread_condition(connection->handler->app_condition,1);
+         }
+      }
+
+
       if (connection->ccm_received == 1) {
    
           CL_LOG_INT(CL_LOG_WARNING,"receive buffer:",(int)cl_raw_list_get_elem_count(connection->received_message_list) );
@@ -3870,6 +3915,7 @@ static int cl_commlib_finish_request_completeness(cl_com_connection_t* connectio
 static int cl_commlib_handle_connection_write(cl_com_connection_t* connection) {
    cl_com_message_t* message = NULL;
    cl_message_list_elem_t* message_list_elem = NULL;
+   cl_message_list_elem_t* next_message_list_elem = NULL;
    int return_value = CL_RETVAL_OK;
    struct timeval now;
    int connect_port = 0;
@@ -3953,14 +3999,17 @@ static int cl_commlib_handle_connection_write(cl_com_connection_t* connection) {
 #if CL_DO_COMMLIB_DEBUG
        CL_LOG_INT(CL_LOG_INFO,"number of messages in send list:",(int)cl_raw_list_get_elem_count(connection->send_message_list));
 #endif
+
+       message = NULL;
        message_list_elem = cl_message_list_get_first_elem(connection->send_message_list);
        while (message_list_elem != NULL) {
-          message = message_list_elem->message;
-          if (message->message_state != CL_MS_PROTOCOL && message->message_state != CL_MS_READY) {
-             break;
+          if (message_list_elem->message->message_state == CL_MS_PROTOCOL ||
+              message_list_elem->message->message_state == CL_MS_READY) {
+             message_list_elem = cl_message_list_get_next_elem(message_list_elem);
+             continue;
           } 
-          message = NULL;
-          message_list_elem = cl_message_list_get_next_elem(message_list_elem);
+          message = message_list_elem->message;
+          break;
        } 
 
        if (message == NULL) {
@@ -3968,6 +4017,8 @@ static int cl_commlib_handle_connection_write(cl_com_connection_t* connection) {
           cl_raw_list_unlock(connection->send_message_list);
           return CL_RETVAL_OK;
        }
+
+       next_message_list_elem = cl_message_list_get_next_elem(message_list_elem);
 
        if (message->message_state == CL_MS_INIT_SND) {
           unsigned long gmsh_message_size = 0;
@@ -4181,23 +4232,25 @@ static int cl_commlib_handle_connection_write(cl_com_connection_t* connection) {
                    CL_LOG(CL_LOG_DEBUG,"last sent message removed from send_message_list");
 #endif
                 }
-
-                message_list_elem = cl_message_list_get_first_elem(connection->send_message_list);
              } else {
                 message->message_state = CL_MS_PROTOCOL;  /* wait for ACK, do not delete message */
              }
           } /* switch */
 
           /* try to find out if there are more messages to send */
-          message_list_elem = cl_message_list_get_first_elem(connection->send_message_list);
+          message = NULL;
+          message_list_elem = next_message_list_elem;
           while (message_list_elem != NULL) {
-             message = message_list_elem->message;
-             if (message->message_state != CL_MS_PROTOCOL && message->message_state != CL_MS_READY) {
-                break;
+             if (message_list_elem->message->message_state == CL_MS_PROTOCOL ||
+                 message_list_elem->message->message_state == CL_MS_READY) {
+                message_list_elem = cl_message_list_get_next_elem(message_list_elem);
+                continue;
              } 
-             message = NULL;
-             message_list_elem = cl_message_list_get_next_elem(message_list_elem);
+             message = message_list_elem->message;
+             break;
           } 
+
+
           if (message == NULL) {
              /* no messages to send, data is not ready */
              connection->data_write_flag = CL_COM_DATA_NOT_READY;
@@ -4243,13 +4296,12 @@ int cl_commlib_receive_message(cl_com_handle_t*      handle,
                                cl_com_endpoint_t**   sender ) {
    cl_com_connection_t* connection = NULL;
    cl_message_list_elem_t* message_elem = NULL;
-   cl_connection_list_elem_t* elem = NULL;
-   
+
+
    long my_timeout = 0;
    int message_sent = 0;
    struct timeval now;
    int leave_reason = CL_RETVAL_OK;
-   int endpoint_match = 1;
    int message_match = 1;
    int return_value;
 
@@ -4278,180 +4330,162 @@ int cl_commlib_receive_message(cl_com_handle_t*      handle,
    do {
       leave_reason = CL_RETVAL_OK;
       /* return if there are no connections in list */
-      cl_raw_list_lock(handle->connection_list);
-      elem = cl_connection_list_get_first_elem(handle->connection_list);     
-      if (elem == NULL) {
-         leave_reason = CL_RETVAL_CONNECTION_NOT_FOUND;
-      }
 
-      /* only search for messages if there are any messages in message state CL_MS_READY */
+      /* If messages_ready_for_read is > 0 there are messages with state CL_MS_READY in receive
+       * message lists for application 
+       */
       pthread_mutex_lock(handle->messages_ready_mutex);
       if (handle->messages_ready_for_read != 0) {
-         unsigned long nr_messages_to_read = 0;
-         pthread_mutex_unlock(handle->messages_ready_mutex);
+         cl_app_message_queue_elem_t* app_mq_elem = NULL;
+
+         /* when accessing a connection from the received_message_queue it is 
+          * important to hold the messages_ready_mutex lock, because 
+          * cl_connection_list_destroy_connections_to_close() will also lock
+          * the mutex to remove all queue entries referencing to a connection 
+          * which will be removed. So as long the messages_ready_mutex lock
+          * is owned the connection is guilty!
+          */
 
 
-         while(elem) {
-            endpoint_match = 1;
-            connection = elem->connection;
-             
+         cl_raw_list_lock(handle->received_message_queue);
+         app_mq_elem = cl_app_message_queue_get_first_elem(handle->received_message_queue);
+         while (app_mq_elem != NULL) {
+            connection = app_mq_elem->rcv_connection;
+
             /* TODO: filter messages for endpoint, if specified and open connection if necessary  (use cl_commlib_open_connection()) */
-            if (endpoint_match == 1) {
-               /* ok, the endpoint matches the given parameters */  
-               /* try to find complete received message in received message list of this connection */
-               cl_raw_list_lock(connection->received_message_list);
-               message_elem = cl_message_list_get_first_elem(connection->received_message_list);
-               while(message_elem) {
-      
-                  if (message_elem->message->message_state == CL_MS_READY) {
-                     message_match = 1;  /* always match the message */
-                     nr_messages_to_read++;  /* this message has state CL_MS_READY */
-                    
-                     /* try to find response for mid */
-                     /* TODO: Just return a matchin response_mid !!!  0 = match all else match response_id */
-                     if (response_mid != 0) {
-                        if(message_elem->message->message_response_id != response_mid) {
-                           /* if the response_mid parameter is set we can't return this message because
-                              the response id is not the same. -> We have to wait for the correct message */
-                           if ( response_mid > connection->last_send_message_id || connection->last_send_message_id == 0 ) {
-                              CL_LOG(CL_LOG_ERROR,"protocol error: can't wait for unsent message!!!");
-                           }
 
-
-                           if ( response_mid > message_elem->message->message_response_id ) {
-                              CL_LOG(CL_LOG_ERROR,"protocol error: There is still a lower message id than requested");
-                           }
-
-                           message_match = 0;  
-                        } else {
-                           CL_LOG_INT(CL_LOG_INFO,"received response for message id", (int)response_mid);
+            /* try to find complete received message in received message list of this connection */
+            cl_raw_list_lock(connection->received_message_list);
+            message_elem = cl_message_list_get_first_elem(connection->received_message_list);
+            while(message_elem) {
+               if (message_elem->message->message_state == CL_MS_READY) {
+                  message_match = 1;  /* always match the message */
+                 
+                  /* try to find response for mid */
+                  /* TODO: Just return a matchin response_mid !!!  0 = match all else match response_id */
+                  if (response_mid != 0) {
+                     if(message_elem->message->message_response_id != response_mid) {
+                        /* if the response_mid parameter is set we can't return this message because
+                           the response id is not the same. -> We have to wait for the correct message */
+                        if ( response_mid > connection->last_send_message_id || connection->last_send_message_id == 0 ) {
+                           CL_LOG(CL_LOG_ERROR,"protocol error: can't wait for unsent message!!!");
                         }
+
+                        if ( response_mid > message_elem->message->message_response_id ) {
+                           CL_LOG(CL_LOG_ERROR,"protocol error: There is still a lower message id than requested");
+                        }
+
+                        message_match = 0;  
                      } else {
-                        /* never return a message with response id  when response_mid is 0 */
-                        if (message_elem->message->message_response_id != 0) {
-                           if (handle->do_shutdown != 2) {
-                              CL_LOG_INT(CL_LOG_WARNING,"message response id is set for this message:", (int)message_elem->message->message_response_id);
-                              message_match = 0;
-                           } else {
-                              /* this is handle shutdown mode without returning any message to application */
-                              /* cl_commlib_shutdown_handle() has to delete this message */
-                              CL_LOG_INT(CL_LOG_WARNING,"returning response message without request:", (int)message_elem->message->message_response_id);
-                           }
-                        }
+                        CL_LOG_INT(CL_LOG_INFO,"received response for message id", (int)response_mid);
                      }
-   
-                     if (message_match == 1) {
-                        /* remove message from received message list*/
-                        *message = message_elem->message;
-                        cl_message_list_remove_message(connection->received_message_list, *message,0);
-
-                        /* release the message list */
-                        cl_raw_list_unlock(connection->received_message_list);
-       
-                        /* decrease counter for ready messages */
-                        pthread_mutex_lock(handle->messages_ready_mutex);
-                        handle->messages_ready_for_read = handle->messages_ready_for_read - 1;
-                        pthread_mutex_unlock(handle->messages_ready_mutex);
-
-                        
-
-                        if (sender != NULL) {
-                           *sender = cl_com_create_endpoint(connection->receiver->comp_host,
-                                                            connection->receiver->comp_name,
-                                                            connection->receiver->comp_id );
+                  } else {
+                     /* never return a message with response id  when response_mid is 0 */
+                     if (message_elem->message->message_response_id != 0) {
+                        if (handle->do_shutdown != 2) {
+                           CL_LOG_INT(CL_LOG_WARNING,"message response id is set for this message:", (int)message_elem->message->message_response_id);
+                           message_match = 0;
+                        } else {
+                           /* this is handle shutdown mode without returning any message to application */
+                           /* cl_commlib_shutdown_handle() has to delete this message */
+                           CL_LOG_INT(CL_LOG_WARNING,"returning response message without request:", (int)message_elem->message->message_response_id);
                         }
-
-                       
-#ifndef CL_DO_SEND_ACK_AT_COMMLIB_LAYER 
-                        /* send a message acknowledge when application gets the message */
-  
-                        /* send acknowledge for CL_MIH_MAT_ACK type (application removed message from buffer) */
-                        if ( (*message)->message_mat == CL_MIH_MAT_ACK) {
-                           cl_commlib_send_ack_message(connection, *message );
-                           message_sent = 1; 
-                        } 
-#endif /* CL_DO_SEND_ACK_AT_COMMLIB_LAYER */
-
-                           
-#if 1
-                        /* now take list entry and add it at least if there are more connections */
-                        /* this must be done in order to NOT prefer the first connection in list */
-                        if ( cl_raw_list_get_elem_count(handle->connection_list) > 1) {
-/*                           elem = cl_connection_list_get_first_elem(handle->connection_list); */
-/*                           if (elem) { */
-                              cl_raw_list_dechain_elem(handle->connection_list,elem->raw_elem);
-                              cl_raw_list_append_dechained_elem(handle->connection_list,elem->raw_elem);
-/*                           } */
-                        }
-#endif
-                        
-
-                        if (connection->ccm_received == 1) {
-                           CL_LOG(CL_LOG_INFO,"received ccm");
-
-                           CL_LOG_INT(CL_LOG_WARNING,"receive buffer:",(int)cl_raw_list_get_elem_count(connection->received_message_list) );
-                           CL_LOG_INT(CL_LOG_WARNING,"send buffer   :",(int)cl_raw_list_get_elem_count(connection->send_message_list) );
-                           CL_LOG_INT(CL_LOG_WARNING,"ccm_received  :",(int)connection->ccm_received);
-
-
-                           if( cl_raw_list_get_elem_count(connection->send_message_list) == 0 && 
-                               cl_raw_list_get_elem_count(connection->received_message_list) == 0 ) {
-                              connection->ccm_received = 2;
-                              connection->connection_sub_state = CL_COM_SENDING_CCRM;
-                              /* disable #if 1 if you want to test a client, that is frozen! */
-                              cl_commlib_send_ccrm_message(connection);
-                              message_sent = 1;
-                              CL_LOG(CL_LOG_WARNING,"sending ccrm");
-                           } else {
-                              CL_LOG(CL_LOG_WARNING,"can't send ccrm, still messages in buffer");
-                           }
-                        }
-  
-                        handle->last_receive_message_connection = connection;                       
-
-
-                        cl_raw_list_unlock(handle->connection_list);
-
-                        if ( message_sent ) {
-                           switch(cl_com_create_threads) {
-                           case CL_NO_THREAD:
-                              CL_LOG(CL_LOG_INFO,"no threads enabled");
-                              /* we just want to trigger write , no wait for read*/
-                              cl_commlib_trigger(handle, 1);
-                              break;
-                           case CL_RW_THREAD:
-                              /* we just want to trigger write , no wait for read*/
-                              CL_LOG(CL_LOG_INFO,"trigger write thread");
-                              cl_thread_trigger_event(handle->write_thread);
-                              break;
-                           }
-                        }
-                        return CL_RETVAL_OK;
                      }
                   }
-                  /* get next message */
-                  message_elem = cl_message_list_get_next_elem(message_elem);
-               }
-               /* unlock message list */
-               cl_raw_list_unlock(connection->received_message_list);
-            } 
-   
-            /* get next connection, because we found no message or endpoint does not match */
-            elem = cl_connection_list_get_next_elem(elem);
-         }
-         pthread_mutex_lock(handle->messages_ready_mutex);
-         if ( nr_messages_to_read != handle->messages_ready_for_read ) {
-            CL_LOG(CL_LOG_ERROR,"handle->messages_ready_for_read is not in sync");
-            cl_commlib_push_application_error(CL_RETVAL_NO_MESSAGE, "messages_ready_for_read not in sync");
-            handle->messages_ready_for_read = nr_messages_to_read;
-         }
-         pthread_mutex_unlock(handle->messages_ready_mutex);
 
-         cl_raw_list_unlock(handle->connection_list);
-         /* connection list */
+                  if (message_match == 1) {
+                     /* remove message from received message list*/
+                     *message = message_elem->message;
+                     cl_message_list_remove_message(connection->received_message_list, *message,0);
+
+                     /* release the message list */
+                     cl_raw_list_unlock(connection->received_message_list);
+    
+                     if (sender != NULL) {
+                        *sender = cl_com_create_endpoint(connection->receiver->comp_host,
+                                                         connection->receiver->comp_name,
+                                                         connection->receiver->comp_id );
+                     }
+
+                    
+#ifndef CL_DO_SEND_ACK_AT_COMMLIB_LAYER 
+                     /* send a message acknowledge when application gets the message */
+  
+                     /* send acknowledge for CL_MIH_MAT_ACK type (application removed message from buffer) */
+                     if ( (*message)->message_mat == CL_MIH_MAT_ACK) {
+                        cl_commlib_send_ack_message(connection, *message );
+                        message_sent = 1; 
+                     } 
+#endif /* CL_DO_SEND_ACK_AT_COMMLIB_LAYER */
+
+                     if (connection->ccm_received == 1) {
+                        CL_LOG(CL_LOG_INFO,"received ccm");
+
+                        CL_LOG_INT(CL_LOG_WARNING,"receive buffer:",(int)cl_raw_list_get_elem_count(connection->received_message_list) );
+                        CL_LOG_INT(CL_LOG_WARNING,"send buffer   :",(int)cl_raw_list_get_elem_count(connection->send_message_list) );
+                        CL_LOG_INT(CL_LOG_WARNING,"ccm_received  :",(int)connection->ccm_received);
+
+
+                        if( cl_raw_list_get_elem_count(connection->send_message_list) == 0 && 
+                            cl_raw_list_get_elem_count(connection->received_message_list) == 0 ) {
+                           connection->ccm_received = 2;
+                           connection->connection_sub_state = CL_COM_SENDING_CCRM;
+                           /* disable #if 1 if you want to test a client, that is frozen! */
+                           cl_commlib_send_ccrm_message(connection);
+                           message_sent = 1;
+                           CL_LOG(CL_LOG_WARNING,"sending ccrm");
+                        } else {
+                           CL_LOG(CL_LOG_WARNING,"can't send ccrm, still messages in buffer");
+                        }
+                     }
+  
+                     handle->last_receive_message_connection = connection;
+
+                     /* decrease counter for ready messages */
+                     handle->messages_ready_for_read = handle->messages_ready_for_read - 1;
+                     cl_app_message_queue_remove(handle->received_message_queue, connection, 0, CL_FALSE);
+                     cl_raw_list_unlock(handle->received_message_queue);
+                     pthread_mutex_unlock(handle->messages_ready_mutex);
+
+                     if ( message_sent ) {
+                        switch(cl_com_create_threads) {
+                        case CL_NO_THREAD:
+                           CL_LOG(CL_LOG_INFO,"no threads enabled");
+                           /* we just want to trigger write , no wait for read*/
+                           cl_commlib_trigger(handle, 1);
+                           break;
+                        case CL_RW_THREAD:
+                           /* we just want to trigger write , no wait for read*/
+                           CL_LOG(CL_LOG_INFO,"trigger write thread");
+                           cl_thread_trigger_event(handle->write_thread);
+                           break;
+                        }
+                     }
+                     return CL_RETVAL_OK;
+                  }
+               }
+               /* get next message */
+               message_elem = cl_message_list_get_next_elem(message_elem);
+            }
+            /* unlock message list */
+            cl_raw_list_unlock(connection->received_message_list);
+
+            app_mq_elem = cl_app_message_queue_get_next_elem(app_mq_elem);
+         }
+         cl_raw_list_unlock(handle->received_message_queue); 
+         pthread_mutex_unlock(handle->messages_ready_mutex);
+         CL_LOG(CL_LOG_INFO,"got no message, but thought there should be one");
       } else {
          pthread_mutex_unlock(handle->messages_ready_mutex);
+
+         /* return if there are no connections in list */
+         /* check if it is possible to receive messages */
+         cl_raw_list_lock(handle->connection_list);
+         if (cl_connection_list_get_first_elem(handle->connection_list) == NULL) {     
+            leave_reason = CL_RETVAL_CONNECTION_NOT_FOUND;
+         }
          cl_raw_list_unlock(handle->connection_list);
+
       }
        
       if (synchron == CL_TRUE) {
@@ -5281,14 +5315,14 @@ int cl_commlib_open_connection(cl_com_handle_t* handle, char* un_resolved_hostna
       /* do this for compatibility to remote clients, which
          will never immediately will return a connect error */
       switch(cl_com_create_threads) {
-      case CL_NO_THREAD:
-         CL_LOG(CL_LOG_INFO,"no threads enabled");
-         cl_commlib_trigger(handle, 1);
-         break;
-      case CL_RW_THREAD:
-         cl_thread_trigger_event(handle->read_thread);
-         cl_commlib_trigger(handle, 1); /* TODO: check if this is ok ???  */
-         break;
+         case CL_NO_THREAD:
+            CL_LOG(CL_LOG_INFO,"no threads enabled");
+            cl_commlib_trigger(handle, 1);
+            break;
+         case CL_RW_THREAD:
+            cl_thread_trigger_event(handle->read_thread);
+            cl_commlib_trigger(handle, 1); /* TODO: check if this is ok ???  */
+            break;
       }
 
       return ret_val;
@@ -5419,6 +5453,7 @@ int cl_commlib_close_connection(cl_com_handle_t* handle,char* un_resolved_hostna
                closed = 1;
             }
          } 
+
          if (connection->data_flow_type == CL_CM_CT_STREAM) {
             CL_LOG(CL_LOG_WARNING,"closing stream connection");
             CL_LOG_STR(CL_LOG_WARNING,"closing connection to host:", connection->remote->comp_host );
@@ -5435,15 +5470,17 @@ int cl_commlib_close_connection(cl_com_handle_t* handle,char* un_resolved_hostna
 
    if ( trigger_write == CL_TRUE ) {
       switch(cl_com_create_threads) {
-            case CL_NO_THREAD:
-               CL_LOG(CL_LOG_INFO,"no threads enabled");
-               /* we just want to trigger write , no wait for read*/
-               cl_commlib_trigger(handle, 1);
-               break;
-            case CL_RW_THREAD:
-               /* we just want to trigger write , no wait for read*/
-               cl_thread_trigger_event(handle->write_thread);
-               break;
+         case CL_NO_THREAD: {
+            CL_LOG(CL_LOG_INFO,"no threads enabled");
+            /* we just want to trigger write , no wait for read*/
+            cl_commlib_trigger(handle, 1);
+            break;
+         }
+         case CL_RW_THREAD: {
+            /* we just want to trigger write , no wait for read*/
+            cl_thread_trigger_event(handle->write_thread);
+            break;
+         }
       }
    }
    if (closed == 1) {
@@ -5486,10 +5523,11 @@ int cl_commlib_close_connection(cl_com_handle_t* handle,char* un_resolved_hostna
                            /* remove message from received message list*/
                            message = current_message_elem->message;
                            cl_message_list_remove_message(connection->received_message_list, message, 0);
-                          
+
                            /* decrease counter for ready messages */
                            pthread_mutex_lock(handle->messages_ready_mutex);
                            handle->messages_ready_for_read = handle->messages_ready_for_read - 1;
+                           cl_app_message_queue_remove(handle->received_message_queue, connection, 1, CL_FALSE);
                            pthread_mutex_unlock(handle->messages_ready_mutex);
 
                            /* delete message */
@@ -5658,15 +5696,17 @@ int cl_commlib_get_endpoint_status(cl_com_handle_t* handle,
    if (message_added == 1) {
       
       switch(cl_com_create_threads) {
-            case CL_NO_THREAD:
-               CL_LOG(CL_LOG_INFO,"no threads enabled");
-               /* we just want to trigger write , no wait for read*/
-               cl_commlib_trigger(handle, 1);
-               break;
-            case CL_RW_THREAD:
-               /* we just want to trigger write , no wait for read*/
-               cl_thread_trigger_event(handle->write_thread);
-               break;
+         case CL_NO_THREAD: {
+            CL_LOG(CL_LOG_INFO,"no threads enabled");
+            /* we just want to trigger write , no wait for read*/
+            cl_commlib_trigger(handle, 1);
+            break;
+         }
+         case CL_RW_THREAD: {
+            /* we just want to trigger write , no wait for read*/
+            cl_thread_trigger_event(handle->write_thread);
+            break;
+         }
       }
    } else {
       free(unique_hostname);
@@ -5783,6 +5823,157 @@ int cl_commlib_get_endpoint_status(cl_com_handle_t* handle,
    return CL_RETVAL_UNKNOWN;
 }
 
+#if 0
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "cl_commlib_send_message_to_endpoint()"
+static int cl_commlib_send_message_to_endpoint(cl_com_handle_t*   handle,
+                                               cl_com_endpoint_t* endpoint, 
+                                               cl_xml_ack_type_t  ack_type, 
+                                               cl_byte_t*         data, 
+                                               unsigned long      size , 
+                                               unsigned long      response_mid,
+                                               unsigned long      tag) {
+
+   cl_com_connection_t* connection = NULL;
+   cl_connection_list_elem_t* elem = NULL;
+   cl_com_message_t* message = NULL;
+   int message_added = 0;
+   int return_value = CL_RETVAL_OK;
+   int retry_send = 1;
+   cl_bool_t ignore_connection = CL_FALSE;
+
+   /* check acknowledge method */
+   if (ack_type == CL_MIH_MAT_UNDEFINED || data == NULL || size == 0 ) {
+      CL_LOG(CL_LOG_ERROR,cl_get_error_text(CL_RETVAL_PARAMS));
+      return CL_RETVAL_PARAMS;
+   }
+
+   if ( handle == NULL) {
+      CL_LOG(CL_LOG_ERROR,cl_get_error_text(CL_RETVAL_HANDLE_NOT_FOUND));
+      return CL_RETVAL_HANDLE_NOT_FOUND;
+   }
+
+   if ( endpoint == NULL ) {
+      CL_LOG(CL_LOG_ERROR,cl_get_error_text(CL_RETVAL_UNKNOWN_ENDPOINT));
+      return CL_RETVAL_UNKNOWN_ENDPOINT;
+   }
+
+   if ( endpoint->comp_id == 0) {
+      CL_LOG(CL_LOG_ERROR,cl_get_error_text(CL_RETVAL_UNKNOWN_ENDPOINT));
+      return CL_RETVAL_UNKNOWN_ENDPOINT;
+   }
+
+
+   CL_LOG_STR_STR_INT(CL_LOG_INFO, "sending message to :      ", endpoint->comp_host, endpoint->comp_name, (int)endpoint->comp_id);
+   
+   while(retry_send != 0) {
+   
+      /* lock handle connection list */
+      cl_raw_list_lock(handle->connection_list);
+      elem = cl_connection_list_get_first_elem(handle->connection_list);     
+      while(elem) {
+         ignore_connection = CL_FALSE;
+         connection = elem->connection;
+   
+         if (connection->was_accepted == CL_TRUE) {
+            /* ignore duplicate endpoints */
+            switch (connection->crm_state) {
+               case CL_CRM_CS_UNDEFINED:
+               case CL_CRM_CS_CONNECTED: {
+                  ignore_connection = CL_FALSE;
+                  break;
+               }
+               default: {
+                  ignore_connection = CL_TRUE;
+                  CL_LOG(CL_LOG_WARNING,"ignore connection with unexpected connection state");
+                  break;
+               }
+            }
+         }
+         
+         if (ignore_connection == CL_FALSE && 
+             cl_com_compare_endpoints(connection->receiver, endpoint)) {
+   
+            /* send message to client (no broadcast) */
+
+            if (connection->ccm_received != 0) {  
+               /* we have sent connection close response, do not accept any new message */
+               /* we wait till connection is down and try to reconnect  */
+               CL_LOG(CL_LOG_ERROR,"connection is going down now, can't send message (ccrm sent)");
+               break;
+            }
+   
+            if (connection->connection_state == CL_CONNECTED && connection->connection_sub_state != CL_COM_WORK) {
+               CL_LOG(CL_LOG_WARNING,"connection is going down now, can't send message");
+               break;
+            }
+   
+
+            if (  response_mid > 0 && response_mid > connection->last_received_message_id ) {
+               CL_LOG_INT(CL_LOG_DEBUG,"last_received_message_id:", (int)connection->last_received_message_id );
+               CL_LOG_INT(CL_LOG_DEBUG,"last_send_message_id    :", (int)connection->last_send_message_id);
+               CL_LOG_INT(CL_LOG_DEBUG,"response_mid to send    :", (int)response_mid);
+
+               CL_LOG(CL_LOG_ERROR,"Protocol error: haven't received such a high message id till now");
+               cl_raw_list_unlock(handle->connection_list);
+               return CL_RETVAL_PROTOCOL_ERROR;
+            }    
+
+            CL_LOG_STR_STR_INT(CL_LOG_INFO, "sending it to:        ", connection->receiver->comp_host,
+                                                                      connection->receiver->comp_name,
+                                                                      (int)connection->receiver->comp_id);
+
+            return_value = cl_com_setup_message(&message, connection, data, size, ack_type,response_mid,tag);
+
+
+   
+            if (return_value != CL_RETVAL_OK) {
+               cl_raw_list_unlock(handle->connection_list);
+               return return_value;
+            }
+   
+            return_value = cl_message_list_append_message(connection->send_message_list,message,1);
+            if (return_value != CL_RETVAL_OK) {
+               cl_com_free_message(&message);
+               cl_raw_list_unlock(handle->connection_list);
+               return return_value;
+            }
+            message_added = 1;
+            
+            break;
+         }
+         elem = cl_connection_list_get_next_elem(elem);
+      }
+      cl_raw_list_unlock(handle->connection_list);
+
+      /* if message is not added, the connection was not found -> try to open it */
+      if (message_added != 1) {
+         retry_send++;  
+         return_value = cl_commlib_open_connection(handle, endpoint->comp_host, endpoint->comp_name, endpoint->comp_id );
+         if (return_value != CL_RETVAL_OK) {
+            CL_LOG_STR(CL_LOG_ERROR,"cl_commlib_open_connection() returned: ",cl_get_error_text(return_value));
+            return return_value;
+         }
+         if (retry_send >= 3) {
+            CL_LOG(CL_LOG_ERROR,"can't open connection, don't retry to send this message");
+            retry_send = 0;
+         }
+      } else {
+         retry_send = 0; /* break */
+      }
+   }
+
+   if (message_added != 1) {
+      return CL_RETVAL_SEND_ERROR;
+   }
+
+   return return_value;
+}
+#endif
+
+
 #ifdef __CL_FUNCTION__
 #undef __CL_FUNCTION__
 #endif
@@ -5808,7 +5999,6 @@ int cl_commlib_send_message(cl_com_handle_t* handle,
    cl_bool_t ignore_connection = CL_FALSE;
 
    cl_commlib_check_callback_functions();
-
 
    /* check acknowledge method */
    if (ack_type == CL_MIH_MAT_UNDEFINED || data == NULL || size == 0 ) {
@@ -6229,7 +6419,6 @@ static void *cl_com_handle_service_thread(void *t_conf) {
    cl_thread_func_cleanup(thread_config);  
    return(NULL);
 }
-
 
 
 

@@ -148,6 +148,10 @@ static cl_bool_t my_ssl_verify_func(cl_ssl_verify_mode_t mode, cl_bool_t service
 }
 
 
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "main()"
 extern int main(int argc, char** argv)
 {
   struct sigaction sa;
@@ -288,7 +292,6 @@ extern int main(int argc, char** argv)
 
 
   while(do_shutdown != 1) {
-     unsigned long mid;
      int ret_val;
      static int runs = 100;
 
@@ -368,7 +371,7 @@ extern int main(int argc, char** argv)
                                 sender->comp_id, CL_MIH_MAT_NAK,  
                                 message->message, 
                                 message->message_length, 
-                                &mid, message->message_id,0, 
+                                NULL, message->message_id,0, 
                                 CL_FALSE,CL_FALSE);
            if (ret_val != CL_RETVAL_OK) {
               CL_LOG_INT(CL_LOG_ERROR,"sent message response for message id", (int)message->message_id);

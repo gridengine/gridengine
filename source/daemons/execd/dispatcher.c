@@ -212,12 +212,11 @@ int dispatch( dispatch_entry*   table,
                sge_get_master(true);
                last_qmaster_file_read = now;
             }
-         }
-
-         if (do_re_register == true && i != CL_RETVAL_CONNECTION_NOT_FOUND) {
-            /* re-register at qmaster when connection is up again */
-            if ( sge_execd_register_at_qmaster() == 0) {
-               do_re_register = false;
+            if (i != CL_RETVAL_CONNECTION_NOT_FOUND) {
+               /* re-register at qmaster when connection is up again */
+               if ( sge_execd_register_at_qmaster() == 0) {
+                  do_re_register = false;
+               }
             }
          }
          /* look for dispatch entries matching the inbound message or
@@ -263,10 +262,12 @@ int dispatch( dispatch_entry*   table,
 
                switch (j) {
                case -1:
+                  DPRINTF(("TERMINATE dispatcher because j == -1\n"));
                   terminate = 1;
                   errorcode = CL_RETVAL_UNKNOWN;
                   break;
                case 1:
+                  DPRINTF(("TERMINATE dispatcher because j == 1\n"));
                   terminate = 1;
                   errorcode = CL_RETVAL_OK;
                   break;

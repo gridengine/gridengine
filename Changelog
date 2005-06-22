@@ -1,3 +1,8 @@
+CR-2005-06-22-0: Enhancem.: - added received message queue for connection
+                              handles (performance enhancement)
+                            - code cleanup
+                 Review:    RD
+
 AH-2005-06-22-1: Bugfix     no event client known to process acks error 
                             logging
                  Issue:     1675
@@ -13,15 +18,15 @@ AH-2005-06-21-1: Bugfix:    Jobs submitted with -v PATH do not retain $TMPDIR
                  Changed:   sge_execd
                  Review:    RD
 
-RD-2005-06-21-1: Bugfix:   sge_shepherd SEGV's when it tries to fopen the usage file
-                 Bugtraq:  6288156
-                 Issue:    1673
-                 Review:   AH
+RD-2005-06-21-1: Bugfix:    sge_shepherd SEGV's when it tries to fopen the usage file
+                 Bugtraq:   6288156
+                 Issue:     1673
+                 Review:    AH
 
-RD-2005-06-21-0: Bugfix:   suspend not working under Mac OS X
-                 Bugtraq:  6287958
-                 Issue:    1671
-                 Review:   AH
+RD-2005-06-21-0: Bugfix:    suspend not working under Mac OS X
+                 Bugtraq:   6287958
+                 Issue:     1671
+                 Review:    AH
 
 CR-2005-06-20-1: Enhancm.:  - commlib thread list:
                               o added new parameter to specify cleanup function

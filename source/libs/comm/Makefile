@@ -52,6 +52,7 @@ COMMLIB_SRC = \
          cl_communication.c \
          cl_xml_parsing.c \
          cl_connection_list.c \
+         cl_app_message_queue.c \
          cl_message_list.c \
          cl_host_list.c \
          cl_host_alias_list.c \
@@ -145,6 +146,8 @@ cl_xml_parsing.o: $(COMMLIB_DIR)/cl_xml_parsing.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(COMMLIB_DIR)/cl_xml_parsing.c
 cl_connection_list.o: $(COMMLIB_DIR)/cl_connection_list.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(COMMLIB_DIR)/cl_connection_list.c
+cl_app_message_queue.o: $(COMMLIB_DIR)/cl_app_message_queue.c 
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(COMMLIB_DIR)/cl_app_message_queue.c
 cl_message_list.o: $(COMMLIB_DIR)/cl_message_list.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(COMMLIB_DIR)/cl_message_list.c
 cl_host_list.o: $(COMMLIB_DIR)/cl_host_list.c 

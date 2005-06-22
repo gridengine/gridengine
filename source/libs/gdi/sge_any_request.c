@@ -583,6 +583,7 @@ int sge_send_any_request(int synchron, u_long32 *mid, const char *rhost,
    cl_xml_ack_type_t ack_type;
    cl_com_handle_t* handle = NULL;
    unsigned long dummy_mid = 0;
+   unsigned long* mid_pointer = NULL;
 
    DENTER(GDI_LAYER, "sge_send_any_request");
 
@@ -615,18 +616,23 @@ int sge_send_any_request(int synchron, u_long32 *mid, const char *rhost,
                           (unsigned long) pb->bytes_used));
    answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
 #endif
-   i = gdi_send_sec_message( handle,
-                                (char*) rhost,(char*) commproc , id, 
-                                ack_type , 
-                                (cl_byte_t*)pb->head_ptr ,(unsigned long) pb->bytes_used , 
-                                &dummy_mid , response_id, tag, 1, synchron);
+
+   if (mid) {
+      mid_pointer = &dummy_mid;
+   }
+
+   i = gdi_send_sec_message(handle,
+                            (char*) rhost,(char*) commproc , id, 
+                            ack_type , 
+                            (cl_byte_t*)pb->head_ptr ,(unsigned long) pb->bytes_used , 
+                            mid_pointer, response_id, tag, 1, synchron);
    if (i != CL_RETVAL_OK) {
       /* try again ( if connection timed out ) */
-      i = gdi_send_sec_message( handle,
-                                   (char*)rhost, (char*)commproc , id, 
-                                   ack_type ,
-                                   (cl_byte_t*)pb->head_ptr ,(unsigned long) pb->bytes_used , 
-                                   &dummy_mid ,response_id,tag,1 , synchron);
+      i = gdi_send_sec_message(handle,
+                               (char*)rhost, (char*)commproc , id, 
+                               ack_type ,
+                               (cl_byte_t*)pb->head_ptr ,(unsigned long) pb->bytes_used , 
+                               mid_pointer, response_id,tag,1 , synchron);
    }
    
    if (mid) {

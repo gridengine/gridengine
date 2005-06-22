@@ -1964,7 +1964,12 @@ static void process_acks(void)
       
       if (client == NULL) {
          unlock_client(ec_id);
-         ERROR((SGE_EVENT, MSG_EVE_UNKNOWNEVCLIENT_US, sge_u32c(ec_id), "process acknowledgements"));
+         /*
+          * Due to CR #6289273 / IZ #1675 event client deregister can be processed before 
+          * event acknowledge. Though this is ugly but it isn't known to cause any
+          * perceivable error condition finally. 
+          */
+         DPRINTF((MSG_EVE_UNKNOWNEVCLIENT_US, sge_u32c(ec_id), "process acknowledgements"));
       }
       else {
          int res = 0;

@@ -1,3 +1,10 @@
+AH-2005-06-22-1: Bugfix     no event client known to process acks error 
+                            logging
+                 Issue:     1675
+                 Bugtraq:   6289273
+                 Changed:   sge_qmaster
+                 Review:    JG, EB
+
 AH-2005-06-21-1: Bugfix:    Jobs submitted with -v PATH do not retain $TMPDIR 
                             prefixed by Grid Engine as required for tight 
                             integration

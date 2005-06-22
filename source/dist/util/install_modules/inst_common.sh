@@ -153,13 +153,19 @@ Enter()
 #
 Makedir()
 {
-   file=$1
-   if [ ! -d $file ]; then
-       $INFOTEXT "creating directory: %s" "$file"
-       ExecuteAsAdmin $MKDIR -p $1
+   dir=$1
+
+   if [ ! -d $dir ]; then
+       $INFOTEXT "creating directory: %s" "$dir"
+       if [ "`$SGE_UTILBIN/filestat -owner $SGE_ROOT`" != "$ADMINUSER" ]; then
+         Execute $MKDIR -p $dir
+         Execute $CHOWN $ADMINUSER $dir
+       else
+         ExecuteAsAdmin $MKDIR -p $dir
+       fi
    fi
 
-   ExecuteAsAdmin $CHMOD $DIRPERM $file
+   ExecuteAsAdmin $CHMOD $DIRPERM $dir
 }
 
 #-------------------------------------------------------------------------
@@ -626,7 +632,11 @@ CheckWhoInstallsSGE()
          $INFOTEXT -n "\nPlease enter a valid user name >> "
          INP=`Enter ""`
          if [ "$AUTO" = "true" ]; then
-            INP=`Enter $ADMIN_USER`
+            if [ "$ADMIN_USER" = "" ]; then
+               INP=`Enter root`
+            else
+               INP=`Enter $ADMIN_USER`
+            fi
          fi
 
          if [ "$INP" != "" ]; then
@@ -926,6 +936,8 @@ CreateSGEStartUpScripts()
 
    if [ -f $TMP_SGE_STARTUP_FILE ]; then
       Execute rm $TMP_SGE_STARTUP_FILE
+      Execute touch $TMP_SGE_STARTUP_FILE
+      Execute $CHMOD a+r $TMP_SGE_STARTUP_FILE
    fi
    if [ -f ${TMP_SGE_STARTUP_FILE}.0 ]; then
       Execute rm ${TMP_SGE_STARTUP_FILE}.0
@@ -1016,16 +1028,19 @@ AddSGEStartUpScript()
       TMP_SGE_STARTUP_FILE=/tmp/sgemaster.$$
       STARTUP_FILE_NAME=sgemaster
       S95NAME=S95sgemaster
+      K03NAME=K03sgemaster
       DAEMON_NAME="qmaster/scheduler"
    elif [ $hosttype = "bdb" ]; then
       TMP_SGE_STARTUP_FILE=/tmp/sgebdb.$$
       STARTUP_FILE_NAME=sgebdb
       S95NAME=S94sgebdb
+      K03NAME=K02sgebdb
       DAEMON_NAME="berkeleydb"
    else
       TMP_SGE_STARTUP_FILE=/tmp/sgeexecd.$$
       STARTUP_FILE_NAME=sgeexecd
       S95NAME=S96sgeexecd
+      K03NAME=K04sgeexecd
       DAEMON_NAME="execd"
    fi
 
@@ -1070,11 +1085,13 @@ InstallRcScript()
    # If we have System V we need to put the startup script to $RC_PREFIX/init.d
    # and make a link in $RC_PREFIX/rc2.d to $RC_PREFIX/init.d
    elif [ "$RC_FILE" = "sysv_rc" ]; then
-      $INFOTEXT "Installing startup script %s" "$RC_PREFIX/$RC_DIR/$S95NAME"
+      $INFOTEXT "Installing startup script %s and %s" "$RC_PREFIX/$RC_DIR/$S95NAME" "$RC_PREFIX/$RC_DIR/$K03NAME"
       Execute rm -f $RC_PREFIX/$RC_DIR/$S95NAME
+      Execute rm -f $RC_PREFIX/$RC_DIR/$K03NAME
       Execute cp $SGE_STARTUP_FILE $RC_PREFIX/init.d/$STARTUP_FILE_NAME
       Execute chmod a+x $RC_PREFIX/init.d/$STARTUP_FILE_NAME
       Execute ln -s $RC_PREFIX/init.d/$STARTUP_FILE_NAME $RC_PREFIX/$RC_DIR/$S95NAME
+      Execute ln -s $RC_PREFIX/init.d/$STARTUP_FILE_NAME $RC_PREFIX/$RC_DIR/$K03NAME
 
       # runlevel management in Linux is different -
       # each runlevel contains full set of links
@@ -1087,9 +1104,11 @@ InstallRcScript()
       lx2?-*)
          runlevel=`grep "^id:.:initdefault:"  /etc/inittab | cut -f2 -d:`
          if [ "$runlevel" = 2 -o  "$runlevel" = 5 ]; then
-            $INFOTEXT "Installing startup script also in %s" "$RC_PREFIX/rc${runlevel}.d/$S95NAME"
+            $INFOTEXT "Installing startup script also in %s and %s" "$RC_PREFIX/rc${runlevel}.d/$S95NAME" "$RC_PREFIX/rc${runlevel}.d/$K03NAME"
             Execute rm -f $RC_PREFIX/rc${runlevel}.d/$S95NAME
+            Execute rm -f $RC_PREFIX/rc${runlevel}.d/$K03NAME
             Execute ln -s $RC_PREFIX/init.d/$STARTUP_FILE_NAME $RC_PREFIX/rc${runlevel}.d/$S95NAME
+            Execute ln -s $RC_PREFIX/init.d/$STARTUP_FILE_NAME $RC_PREFIX/rc${runlevel}.d/$K03NAME
          fi
          ;;
        esac
@@ -1104,7 +1123,7 @@ InstallRcScript()
       echo  cp $SGE_STARTUP_FILE $RC_PREFIX/$STARTUP_FILE_NAME
       echo /usr/sbin/update-rc.d $STARTUP_FILE_NAME
       Execute cp $SGE_STARTUP_FILE $RC_PREFIX/$STARTUP_FILE_NAME
-      /usr/sbin/update-rc.d $STARTUP_FILE_NAME defaults 95
+      /usr/sbin/update-rc.d $STARTUP_FILE_NAME defaults 95 03
    elif [ "$RC_FILE" = "freebsd" ]; then
       echo  cp $SGE_STARTUP_FILE $RC_PREFIX/sge${RC_SUFFIX}
       Execute cp $SGE_STARTUP_FILE $RC_PREFIX/sge${RC_SUFFIX}
@@ -1744,16 +1763,19 @@ RemoveRcScript()
       TMP_SGE_STARTUP_FILE=/tmp/sgemaster.$$
       STARTUP_FILE_NAME=sgemaster
       S95NAME=S95sgemaster
+      K03NAME=K03sgemaster
       DAEMON_NAME="qmaster/scheduler"
    elif [ $hosttype = "bdb" ]; then
       TMP_SGE_STARTUP_FILE=/tmp/sgebdb.$$
       STARTUP_FILE_NAME=sgebdb
       S95NAME=S94sgebdb
+      K03NAME=K04sgebdb
       DAEMON_NAME="berkeleydb"
    else
       TMP_SGE_STARTUP_FILE=/tmp/sgeexecd.$$
       STARTUP_FILE_NAME=sgeexecd
       S95NAME=S96sgeexecd
+      K03NAME=K02sgeexecd
       DAEMON_NAME="execd"
    fi
 
@@ -1785,8 +1807,9 @@ RemoveRcScript()
    # If we have System V we need to put the startup script to $RC_PREFIX/init.d
    # and make a link in $RC_PREFIX/rc2.d to $RC_PREFIX/init.d
    if [ "$RC_FILE" = "sysv_rc" ]; then
-      $INFOTEXT "Removing startup script %s" "$RC_PREFIX/$RC_DIR/$S95NAME"
+      $INFOTEXT "Removing startup script %s and %s" "$RC_PREFIX/$RC_DIR/$S95NAME" "$RC_PREFIX/$RC_DIR/$K03NAME"
       Execute rm -f $RC_PREFIX/$RC_DIR/$S95NAME
+      Execute rm -f $RC_PREFIX/$RC_DIR/$K03NAME
       Execute rm -f $RC_PREFIX/init.d/$STARTUP_FILE_NAME
 
       # runlevel management in Linux is different -
@@ -1800,8 +1823,9 @@ RemoveRcScript()
       lx2?-*)
          runlevel=`grep "^id:.:initdefault:"  /etc/inittab | cut -f2 -d:`
          if [ "$runlevel" = 2 -o  "$runlevel" = 5 ]; then
-            $INFOTEXT "Removing startup script %s" "$RC_PREFIX/rc${runlevel}.d/$S95NAME"
+            $INFOTEXT "Removing startup script %s and %s" "$RC_PREFIX/rc${runlevel}.d/$S95NAME" "$RC_PREFIX/rc${runlevel}.d/$K03NAME"
             Execute rm -f $RC_PREFIX/rc${runlevel}.d/$S95NAME
+            Execute rm -f $RC_PREFIX/rc${runlevel}.d/$K03NAME
          fi
          ;;
        esac

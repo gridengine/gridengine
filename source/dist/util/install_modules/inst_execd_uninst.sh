@@ -82,8 +82,8 @@ FetchHostname()
         SuspendJobs $h
         RescheduleJobs $h
         RemoveQueues $h
-        RemoveReferences $h
         RemoveSpoolDir $h
+        RemoveReferences $h
         RemoveExecd $h
         RemoveRcScript $h execd $euid
 
@@ -152,7 +152,7 @@ RescheduleJobs()
 
    done
 
-   for q in `qstat -F -l h=$exechost | grep qname | cut -d"=" -f2`; do
+   for q in `qstat -ne -F -l h=$exechost | grep qname | cut -d"=" -f2`; do
 
      $INFOTEXT "There are still running jobs on %s!" $q
      $INFOTEXT -log "There are still running jobs on %s!" $q
@@ -162,7 +162,7 @@ RescheduleJobs()
 
    done
 
-   for q in `qstat -F -l h=$exechost | grep qname | cut -d"=" -f2`; do
+   for q in `qstat -ne -F -l h=$exechost | grep qname | cut -d"=" -f2`; do
 
      $INFOTEXT "There are still running jobs on %s!" $q
      $INFOTEXT -log "There are still running jobs on %s!" $q
@@ -250,15 +250,18 @@ RemoveSpoolDir()
    $INFOTEXT "Checking local spooldir configuration!\n"
 
    SPOOL_DIR=`qconf -sconf $exechost | grep execd_spool_dir | awk '{ print $2 }'`
-   `qconf -dconf $exechost`
+   qconf -dconf $exechost
 
-   $INFOTEXT -n "For removing the local spool directory, the uninstall script has to\n" \
-                "login to the uninstalled execution host. Please enter the shell name\n" \
-                "which should be used! (rsh/ssh) >>"
-   SHELL_NAME=`Enter $SHELL_NAME`
+   if [ "$SPOOL_DIR" != "" ]; then
+
+      $INFOTEXT -n "For removing the local spool directory, the uninstall script has to\n" \
+                   "login to the uninstalled execution host. Please enter the shell name\n" \
+                   "which should be used! (rsh/ssh) >>"
+      SHELL_NAME=`Enter $SHELL_NAME`
  
 
-   $INFOTEXT "Removing local spool directory [%s]" "$SPOOL_DIR"
-   echo "rm -R $SPOOL_DIR/$HOST_DIR" | $SHELL_NAME $exechost /bin/sh 
-   echo "rm -fR $SPOOL_DIR" | $SHELL_NAME $exechost /bin/sh 
+      $INFOTEXT "Removing local spool directory [%s]" "$SPOOL_DIR"
+      echo "rm -R $SPOOL_DIR/$HOST_DIR" | $SHELL_NAME $exechost /bin/sh 
+      echo "rm -fR $SPOOL_DIR" | $SHELL_NAME $exechost /bin/sh 
+   fi
 }

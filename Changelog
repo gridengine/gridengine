@@ -1,7 +1,10 @@
-RD-2005-06-21-2: Bugfix:   several install script fixes
-                 Bugtraq:  5063313, 5090187, 5056331, 6289240
-                 Issue:    1084, 1248, 1149, 1249
-                 Review:   MD
+CR-2005-06-23-0: Testsuite: Fixed possible NFS problem when waiting for 
+                            certificates tar file at CSP execd installation
+
+RD-2005-06-21-2: Bugfix:    several install script fixes
+                 Bugtraq:   5063313, 5090187, 5056331, 6289240
+                 Issue:     1084, 1248, 1149, 1249
+                 Review:    MD
 
 CR-2005-06-22-0: Enhancem.: - added received message queue for connection
                               handles (performance enhancement)

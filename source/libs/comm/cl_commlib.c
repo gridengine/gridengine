@@ -1448,11 +1448,13 @@ int cl_commlib_shutdown_handle(cl_com_handle_t* handle, cl_bool_t return_for_mes
                      cl_raw_list_lock(handle->debug_client_setup->dc_debug_list);
                      if (cl_raw_list_get_elem_count(handle->debug_client_setup->dc_debug_list) == 0) {
                         elem->connection->connection_state = CL_CLOSING;
+                        elem->connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
                      }
                      cl_raw_list_unlock(handle->debug_client_setup->dc_debug_list);
                   } else {
                      /* debug clients are not connected, just close stream connections */
                      elem->connection->connection_state = CL_CLOSING;
+                     elem->connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
                   }
                }
             }
@@ -1562,6 +1564,7 @@ int cl_commlib_shutdown_handle(cl_com_handle_t* handle, cl_bool_t return_for_mes
       elem = cl_connection_list_get_first_elem(handle->connection_list);
       while(elem) {
          elem->connection->connection_state = CL_CLOSING;
+         elem->connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
          elem = cl_connection_list_get_next_elem(elem);
       }
       cl_raw_list_unlock(handle->connection_list);
@@ -2366,10 +2369,12 @@ static int cl_com_trigger(cl_com_handle_t* handle, int synchron) {
                 return_value != CL_RETVAL_UNCOMPLETE_WRITE) {
                CL_LOG_STR(CL_LOG_ERROR,"could not open connection:",cl_get_error_text(return_value));
                elem->connection->connection_state = CL_CLOSING;
+               elem->connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
             }
             if (return_value != CL_RETVAL_OK && cl_com_get_ignore_timeouts_flag() == CL_TRUE) {
                CL_LOG(CL_LOG_WARNING,"setting connection state to closing");
                elem->connection->connection_state = CL_CLOSING;
+               elem->connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
             } 
          }  else {
             /* check timeouts */
@@ -2377,12 +2382,14 @@ static int cl_com_trigger(cl_com_handle_t* handle, int synchron) {
                if ( now.tv_sec >= elem->connection->read_buffer_timeout_time || cl_com_get_ignore_timeouts_flag() == CL_TRUE) {
                   CL_LOG(CL_LOG_ERROR,"read timeout for connection opening");
                   elem->connection->connection_state = CL_CLOSING;
+                  elem->connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
                }
             }
             if ( elem->connection->write_buffer_timeout_time != 0) {
                if ( now.tv_sec >= elem->connection->write_buffer_timeout_time || cl_com_get_ignore_timeouts_flag() == CL_TRUE) {
                   CL_LOG(CL_LOG_ERROR,"write timeout for connection opening");
                   elem->connection->connection_state = CL_CLOSING;
+                  elem->connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
                }
             }
          }
@@ -2400,9 +2407,11 @@ static int cl_com_trigger(cl_com_handle_t* handle, int synchron) {
                 return_value != CL_RETVAL_SELECT_ERROR ) {
                CL_LOG_STR(CL_LOG_ERROR,"connection accept error:",cl_get_error_text(return_value));
                elem->connection->connection_state = CL_CLOSING;
+               elem->connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
             }
             if (return_value != CL_RETVAL_OK && cl_com_get_ignore_timeouts_flag() == CL_TRUE) {
                elem->connection->connection_state = CL_CLOSING;
+               elem->connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
             } 
             if (return_value == CL_RETVAL_OK) {
                elem->connection->connection_state = CL_CONNECTING;
@@ -2415,12 +2424,14 @@ static int cl_com_trigger(cl_com_handle_t* handle, int synchron) {
                if ( now.tv_sec >= elem->connection->read_buffer_timeout_time ) {
                   CL_LOG(CL_LOG_ERROR,"accept timeout for connection");
                   elem->connection->connection_state = CL_CLOSING;
+                  elem->connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
                }
             }
             if ( elem->connection->write_buffer_timeout_time != 0) {
                if ( now.tv_sec >= elem->connection->write_buffer_timeout_time ) {
                   CL_LOG(CL_LOG_ERROR,"accept timeout for connection");
                   elem->connection->connection_state = CL_CLOSING;
+                  elem->connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
                }
             }
          }
@@ -2437,9 +2448,11 @@ static int cl_com_trigger(cl_com_handle_t* handle, int synchron) {
                 return_value != CL_RETVAL_SELECT_ERROR ) {
                CL_LOG_STR(CL_LOG_ERROR,"connection establish error:",cl_get_error_text(return_value));
                elem->connection->connection_state = CL_CLOSING;
+               elem->connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
             }
             if (return_value != CL_RETVAL_OK && cl_com_get_ignore_timeouts_flag() == CL_TRUE) {
                elem->connection->connection_state = CL_CLOSING;
+               elem->connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
             } 
             if ( elem->connection->connection_state == CL_CONNECTED ) {
                cl_commlib_finish_request_completeness(elem->connection);
@@ -2452,12 +2465,14 @@ static int cl_com_trigger(cl_com_handle_t* handle, int synchron) {
                if ( now.tv_sec >= elem->connection->read_buffer_timeout_time || cl_com_get_ignore_timeouts_flag() == CL_TRUE  ) {
                   CL_LOG(CL_LOG_ERROR,"read timeout for connection completion");
                   elem->connection->connection_state = CL_CLOSING;
+                  elem->connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
                }
             }
             if ( elem->connection->write_buffer_timeout_time != 0) {
                if ( now.tv_sec >= elem->connection->write_buffer_timeout_time || cl_com_get_ignore_timeouts_flag() == CL_TRUE ) {
                   CL_LOG(CL_LOG_ERROR,"write timeout for connection completion");
                   elem->connection->connection_state = CL_CLOSING;
+                  elem->connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
                }
             }
          }
@@ -2475,6 +2490,7 @@ static int cl_com_trigger(cl_com_handle_t* handle, int synchron) {
                  return_value != CL_RETVAL_UNCOMPLETE_READ && 
                  return_value != CL_RETVAL_SELECT_ERROR ) {
                elem->connection->connection_state = CL_CLOSING;
+               elem->connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
                CL_LOG_STR(CL_LOG_ERROR,"read from connection: setting close flag! Reason:", cl_get_error_text(return_value));
                snprintf(tmp_string, 1024, MSG_CL_COMMLIB_CLOSING_SSU,
                         elem->connection->remote->comp_host,
@@ -2484,6 +2500,7 @@ static int cl_com_trigger(cl_com_handle_t* handle, int synchron) {
             }
             if (return_value != CL_RETVAL_OK && cl_com_get_ignore_timeouts_flag() == CL_TRUE) {
                elem->connection->connection_state = CL_CLOSING;
+               elem->connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
             }
          } else {
             /* check timeouts */
@@ -2491,6 +2508,7 @@ static int cl_com_trigger(cl_com_handle_t* handle, int synchron) {
                if ( now.tv_sec >= elem->connection->read_buffer_timeout_time ) {
                   CL_LOG(CL_LOG_ERROR,"connection read timeout");
                   elem->connection->connection_state = CL_CLOSING;
+                  elem->connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
                }
             }
             if ( elem->connection->ccrm_received != 0 ) {
@@ -2506,6 +2524,7 @@ static int cl_com_trigger(cl_com_handle_t* handle, int synchron) {
                 return_value != CL_RETVAL_UNCOMPLETE_WRITE && 
                 return_value != CL_RETVAL_SELECT_ERROR ) {
                elem->connection->connection_state = CL_CLOSING;
+               elem->connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
                CL_LOG_STR(CL_LOG_ERROR,"write to connection: setting close flag! Reason:", cl_get_error_text(return_value));
                snprintf(tmp_string, 1024, MSG_CL_COMMLIB_CLOSING_SSU,
                         elem->connection->remote->comp_host,
@@ -2515,6 +2534,7 @@ static int cl_com_trigger(cl_com_handle_t* handle, int synchron) {
             }
             if (return_value != CL_RETVAL_OK && cl_com_get_ignore_timeouts_flag() == CL_TRUE) {
                elem->connection->connection_state = CL_CLOSING;
+               elem->connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
             }
          } else {
             /* check timeouts */
@@ -2522,6 +2542,7 @@ static int cl_com_trigger(cl_com_handle_t* handle, int synchron) {
                if ( now.tv_sec >= elem->connection->write_buffer_timeout_time ) {
                   CL_LOG(CL_LOG_ERROR,"write timeout for connection completion");
                   elem->connection->connection_state = CL_CLOSING;
+                  elem->connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
                }
             }
          }
@@ -2547,6 +2568,15 @@ static int cl_com_trigger(cl_com_handle_t* handle, int synchron) {
       }
       elem = cl_connection_list_get_next_elem(elem);
    }
+
+   /* now take list entry and add it at least if there are more connections */
+   /* this must be done in order to NOT prefer the first connection in list */
+   if ( cl_raw_list_get_elem_count(handle->connection_list) > 1) {
+         elem = cl_connection_list_get_first_elem(handle->connection_list);
+         cl_raw_list_dechain_elem(handle->connection_list,elem->raw_elem);
+         cl_raw_list_append_dechained_elem(handle->connection_list,elem->raw_elem);
+   }
+
    cl_raw_list_unlock(handle->connection_list);
 
 
@@ -5221,6 +5251,7 @@ int cl_commlib_open_connection(cl_com_handle_t* handle, char* un_resolved_hostna
                if (connection->shutdown_timeout <= now.tv_sec || cl_com_get_ignore_timeouts_flag() == CL_TRUE) {
                   CL_LOG(CL_LOG_WARNING,"got timeout while waiting for connection close");
                   connection->connection_state = CL_CLOSING;
+                  connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
                   cl_raw_list_unlock(handle->connection_list);
                   free(unique_hostname);
                   unique_hostname = NULL;
@@ -5460,6 +5491,7 @@ int cl_commlib_close_connection(cl_com_handle_t* handle,char* un_resolved_hostna
             CL_LOG_STR(CL_LOG_WARNING,"component name:            ", connection->remote->comp_name );
             CL_LOG_INT(CL_LOG_WARNING,"component id:              ", (int)connection->remote->comp_id );
             connection->connection_state = CL_CLOSING;
+            connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
             closed = 1;
          }
       }
@@ -6551,10 +6583,12 @@ static void *cl_com_handle_read_thread(void *t_conf) {
                      if (return_value != CL_RETVAL_OK && return_value != CL_RETVAL_UNCOMPLETE_WRITE ) {
                         CL_LOG_STR(CL_LOG_ERROR,"could not open connection:",cl_get_error_text(return_value));
                         elem->connection->connection_state = CL_CLOSING;
+                        elem->connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
                      }
                      if (return_value != CL_RETVAL_OK && cl_com_get_ignore_timeouts_flag() == CL_TRUE) {
                         CL_LOG(CL_LOG_WARNING,"setting connection state to closing");
                         elem->connection->connection_state = CL_CLOSING;
+                        elem->connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
                      }
                   } else {
                      /* check timeouts */
@@ -6562,12 +6596,14 @@ static void *cl_com_handle_read_thread(void *t_conf) {
                         if ( now.tv_sec >= elem->connection->read_buffer_timeout_time || cl_com_get_ignore_timeouts_flag() == CL_TRUE) {
                            CL_LOG(CL_LOG_ERROR,"read timeout for connection opening");
                            elem->connection->connection_state = CL_CLOSING;
+                           elem->connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
                         }
                      }
                      if ( elem->connection->write_buffer_timeout_time != 0) {
                         if ( now.tv_sec >= elem->connection->write_buffer_timeout_time || cl_com_get_ignore_timeouts_flag() == CL_TRUE ) {
                            CL_LOG(CL_LOG_ERROR,"write timeout for connection opening");
                            elem->connection->connection_state = CL_CLOSING;
+                           elem->connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
                         }
                      }
                   }
@@ -6584,9 +6620,11 @@ static void *cl_com_handle_read_thread(void *t_conf) {
                          return_value != CL_RETVAL_SELECT_ERROR ) {
                         CL_LOG_STR(CL_LOG_ERROR,"connection accept error:",cl_get_error_text(return_value));
                         elem->connection->connection_state = CL_CLOSING;
+                        elem->connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
                      }
                      if (return_value != CL_RETVAL_OK && cl_com_get_ignore_timeouts_flag() == CL_TRUE) {
                         elem->connection->connection_state = CL_CLOSING;
+                        elem->connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
                      } 
                      if (return_value == CL_RETVAL_OK) {
                         elem->connection->connection_state = CL_CONNECTING;
@@ -6599,12 +6637,14 @@ static void *cl_com_handle_read_thread(void *t_conf) {
                         if ( now.tv_sec >= elem->connection->read_buffer_timeout_time ) {
                            CL_LOG(CL_LOG_ERROR,"accept timeout for connection");
                            elem->connection->connection_state = CL_CLOSING;
+                           elem->connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
                         }
                      }
                      if ( elem->connection->write_buffer_timeout_time != 0) {
                         if ( now.tv_sec >= elem->connection->write_buffer_timeout_time ) {
                            CL_LOG(CL_LOG_ERROR,"accept timeout for connection");
                            elem->connection->connection_state = CL_CLOSING;
+                           elem->connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
                         }
                      }
                   }
@@ -6621,9 +6661,11 @@ static void *cl_com_handle_read_thread(void *t_conf) {
                          return_value != CL_RETVAL_SELECT_ERROR ) {
                         CL_LOG_STR(CL_LOG_ERROR,"connection establish error:",cl_get_error_text(return_value));
                         elem->connection->connection_state = CL_CLOSING;
+                        elem->connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
                      }
                      if (return_value != CL_RETVAL_OK && cl_com_get_ignore_timeouts_flag() == CL_TRUE) {
                         elem->connection->connection_state = CL_CLOSING;
+                        elem->connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
                      } 
                      if ( elem->connection->connection_state == CL_CONNECTED ) {
                         cl_commlib_finish_request_completeness(elem->connection);
@@ -6636,12 +6678,14 @@ static void *cl_com_handle_read_thread(void *t_conf) {
                         if ( now.tv_sec >= elem->connection->read_buffer_timeout_time || cl_com_get_ignore_timeouts_flag() == CL_TRUE) {
                            CL_LOG(CL_LOG_ERROR,"read timeout for connection completion");
                            elem->connection->connection_state = CL_CLOSING;
+                           elem->connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
                         }
                      }
                      if ( elem->connection->write_buffer_timeout_time != 0) {
                         if ( now.tv_sec >= elem->connection->write_buffer_timeout_time || cl_com_get_ignore_timeouts_flag() == CL_TRUE) {
                            CL_LOG(CL_LOG_ERROR,"write timeout for connection completion");
                            elem->connection->connection_state = CL_CLOSING;
+                           elem->connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
                         }
                      }
                   }
@@ -6662,6 +6706,7 @@ static void *cl_com_handle_read_thread(void *t_conf) {
                           return_value != CL_RETVAL_UNCOMPLETE_READ && 
                           return_value != CL_RETVAL_SELECT_ERROR ) {
                         elem->connection->connection_state = CL_CLOSING;
+                        elem->connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
                         CL_LOG_STR(CL_LOG_ERROR,"read from connection: setting close flag! Reason:", cl_get_error_text(return_value));
                         snprintf(tmp_string, 1024, MSG_CL_COMMLIB_CLOSING_SSU,
                                  elem->connection->remote->comp_host,
@@ -6671,6 +6716,7 @@ static void *cl_com_handle_read_thread(void *t_conf) {
                      }
                      if (return_value != CL_RETVAL_OK && cl_com_get_ignore_timeouts_flag() == CL_TRUE) {
                         elem->connection->connection_state = CL_CLOSING;
+                        elem->connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
                      }
                      message_received = 1;
                   } else {
@@ -6679,6 +6725,7 @@ static void *cl_com_handle_read_thread(void *t_conf) {
                         if ( now.tv_sec >= elem->connection->read_buffer_timeout_time ) {
                            CL_LOG(CL_LOG_ERROR,"connection read timeout");
                            elem->connection->connection_state = CL_CLOSING;
+                           elem->connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
                         }
                      }
                      if ( elem->connection->ccrm_received != 0 ) {
@@ -6748,6 +6795,10 @@ static void *cl_com_handle_read_thread(void *t_conf) {
                trigger application ( cl_commlib_receive_message() ) */
          } 
       }
+
+
+      /* TODO: never wait for events here, use dummy pipe to wakeup read_select when
+               a new connection is added, use select() to sleep */
 
       if (wait_for_events != 0) {
          if ((ret_val = cl_thread_wait_for_event(thread_config,select_sec_timeout,select_usec_timeout )) != CL_RETVAL_OK) {
@@ -6869,10 +6920,12 @@ static void *cl_com_handle_write_thread(void *t_conf) {
                            if (return_value != CL_RETVAL_OK && return_value != CL_RETVAL_UNCOMPLETE_WRITE ) {
                               CL_LOG_STR(CL_LOG_ERROR,"could not open connection:",cl_get_error_text(return_value));
                               elem->connection->connection_state = CL_CLOSING;
+                              elem->connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
                            }
                            if (return_value != CL_RETVAL_OK && cl_com_get_ignore_timeouts_flag() == CL_TRUE) {
                               CL_LOG(CL_LOG_WARNING,"setting connection state to closing");
                               elem->connection->connection_state = CL_CLOSING;
+                              elem->connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
                            }
                         } else {
                            /* check timeouts */
@@ -6880,12 +6933,14 @@ static void *cl_com_handle_write_thread(void *t_conf) {
                               if ( now.tv_sec >= elem->connection->read_buffer_timeout_time || cl_com_get_ignore_timeouts_flag() == CL_TRUE) {
                                  CL_LOG(CL_LOG_ERROR,"read timeout for connection opening");
                                  elem->connection->connection_state = CL_CLOSING;
+                                 elem->connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
                               }
                            }
                            if ( elem->connection->write_buffer_timeout_time != 0) {
                               if ( now.tv_sec >= elem->connection->write_buffer_timeout_time  || cl_com_get_ignore_timeouts_flag() == CL_TRUE) {
                                  CL_LOG(CL_LOG_ERROR,"write timeout for connection opening");
                                  elem->connection->connection_state = CL_CLOSING;
+                                 elem->connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
                               }
                            }
                         }
@@ -6905,9 +6960,11 @@ static void *cl_com_handle_write_thread(void *t_conf) {
                                return_value != CL_RETVAL_SELECT_ERROR ) {
                               CL_LOG_STR(CL_LOG_ERROR,"connection accept error:",cl_get_error_text(return_value));
                               elem->connection->connection_state = CL_CLOSING;
+                              elem->connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
                            }
                            if (return_value != CL_RETVAL_OK && cl_com_get_ignore_timeouts_flag() == CL_TRUE) {
                               elem->connection->connection_state = CL_CLOSING;
+                              elem->connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
                            } 
                            if (return_value == CL_RETVAL_OK) {
                               elem->connection->connection_state = CL_CONNECTING;
@@ -6920,12 +6977,14 @@ static void *cl_com_handle_write_thread(void *t_conf) {
                               if ( now.tv_sec >= elem->connection->read_buffer_timeout_time ) {
                                  CL_LOG(CL_LOG_ERROR,"accept timeout for connection");
                                  elem->connection->connection_state = CL_CLOSING;
+                                 elem->connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
                               }
                            }
                            if ( elem->connection->write_buffer_timeout_time != 0) {
                               if ( now.tv_sec >= elem->connection->write_buffer_timeout_time ) {
                                  CL_LOG(CL_LOG_ERROR,"accept timeout for connection");
                                  elem->connection->connection_state = CL_CLOSING;
+                                 elem->connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
                               }
                            }
                         }
@@ -6942,9 +7001,11 @@ static void *cl_com_handle_write_thread(void *t_conf) {
                                return_value != CL_RETVAL_SELECT_ERROR ) {
                               CL_LOG_STR(CL_LOG_ERROR,"connection establish error:",cl_get_error_text(return_value));
                               elem->connection->connection_state = CL_CLOSING;
+                              elem->connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
                            }
                            if (return_value != CL_RETVAL_OK && cl_com_get_ignore_timeouts_flag() == CL_TRUE) {
                               elem->connection->connection_state = CL_CLOSING;
+                              elem->connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
                            }
                            if ( elem->connection->connection_state == CL_CONNECTED ) {
                               cl_commlib_finish_request_completeness(elem->connection);
@@ -6957,12 +7018,14 @@ static void *cl_com_handle_write_thread(void *t_conf) {
                               if ( now.tv_sec >= elem->connection->read_buffer_timeout_time || cl_com_get_ignore_timeouts_flag() == CL_TRUE ) {
                                  CL_LOG(CL_LOG_ERROR,"read timeout for connection completion");
                                  elem->connection->connection_state = CL_CLOSING;
+                                 elem->connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
                               }
                            }
                            if ( elem->connection->write_buffer_timeout_time != 0) {
                               if ( now.tv_sec >= elem->connection->write_buffer_timeout_time || cl_com_get_ignore_timeouts_flag() == CL_TRUE ) {
                                  CL_LOG(CL_LOG_ERROR,"write timeout for connection completion");
                                  elem->connection->connection_state = CL_CLOSING;
+                                 elem->connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
                               }
                            }
                         }
@@ -6979,6 +7042,7 @@ static void *cl_com_handle_write_thread(void *t_conf) {
                                return_value != CL_RETVAL_UNCOMPLETE_WRITE && 
                                return_value != CL_RETVAL_SELECT_ERROR ) {
                               elem->connection->connection_state = CL_CLOSING;
+                              elem->connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
                               CL_LOG_STR(CL_LOG_ERROR,"write to connection: setting close flag! Reason:", cl_get_error_text(return_value));
                               snprintf(tmp_string, 1024, MSG_CL_COMMLIB_CLOSING_SSU,
                                        elem->connection->remote->comp_host,
@@ -6988,6 +7052,7 @@ static void *cl_com_handle_write_thread(void *t_conf) {
                            }
                            if (return_value != CL_RETVAL_OK && cl_com_get_ignore_timeouts_flag() == CL_TRUE) {
                               elem->connection->connection_state = CL_CLOSING;
+                              elem->connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
                            }
                         } else {
                            /* check timeouts */
@@ -6995,6 +7060,7 @@ static void *cl_com_handle_write_thread(void *t_conf) {
                               if ( now.tv_sec >= elem->connection->write_buffer_timeout_time ) {
                                  CL_LOG(CL_LOG_ERROR,"write timeout for connection completion");
                                  elem->connection->connection_state = CL_CLOSING;
+                                 elem->connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
                               }
                            }
                         }
@@ -7026,6 +7092,15 @@ static void *cl_com_handle_write_thread(void *t_conf) {
                   }
                   elem = cl_connection_list_get_next_elem(elem);
                }
+
+               /* now take list entry and add it at least if there are more connections */
+               /* this must be done in order to NOT prefer the first connection in list */
+               if ( cl_raw_list_get_elem_count(handle->connection_list) > 1) {
+                     elem = cl_connection_list_get_first_elem(handle->connection_list);
+                     cl_raw_list_dechain_elem(handle->connection_list,elem->raw_elem);
+                     cl_raw_list_append_dechained_elem(handle->connection_list,elem->raw_elem);
+               }
+
                cl_raw_list_unlock(handle->connection_list);
                if (trigger_read_thread != 0) {
 #if CL_DO_COMMLIB_DEBUG

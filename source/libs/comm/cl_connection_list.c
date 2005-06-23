@@ -237,7 +237,7 @@ int cl_connection_list_destroy_connections_to_close(cl_raw_list_t* list_p, int d
             if( cl_raw_list_get_elem_count(connection->received_message_list) == 0 &&
                 cl_raw_list_get_elem_count(connection->send_message_list) == 0) {
                  connection->connection_state = CL_CLOSING;   
-                 connection->connection_sub_state = CL_COM_DONE_FLUSHED;
+                 connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
                  CL_LOG(CL_LOG_INFO,"setting connection state to close this connection");
             } else {
                struct timeval now;
@@ -245,7 +245,7 @@ int cl_connection_list_destroy_connections_to_close(cl_raw_list_t* list_p, int d
                if ( connection->connection_close_time.tv_sec <= now.tv_sec || cl_com_get_ignore_timeouts_flag() == CL_TRUE) {
                   CL_LOG(CL_LOG_ERROR,"close connection timeout - shutdown of connection");
                   connection->connection_state = CL_CLOSING;   
-                  connection->connection_sub_state = CL_COM_DONE_FLUSHED;
+                  connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
                   CL_LOG(CL_LOG_INFO,"setting connection state to close this connection");
                } else {
                   CL_LOG(CL_LOG_WARNING,"wait for empty message buffers");
@@ -298,6 +298,7 @@ int cl_connection_list_destroy_connections_to_close(cl_raw_list_t* list_p, int d
                            CL_LOG_STR(CL_LOG_WARNING,"component name:            ", connection->remote->comp_name );
                            CL_LOG_INT(CL_LOG_WARNING,"component id:              ", (int)connection->remote->comp_id );
                            connection->connection_state = CL_CLOSING;
+                           connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
                         } else {
                            CL_LOG(CL_LOG_WARNING,"unsent messages in send list, don't close connection");
                         }
@@ -305,6 +306,7 @@ int cl_connection_list_destroy_connections_to_close(cl_raw_list_t* list_p, int d
                   } else {
                      CL_LOG(CL_LOG_WARNING,"closing unconnected connection object");
                      connection->connection_state = CL_CLOSING;
+                     connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
                   }
                } 
                if (connection->data_flow_type == CL_CM_CT_STREAM) {
@@ -329,28 +331,30 @@ int cl_connection_list_destroy_connections_to_close(cl_raw_list_t* list_p, int d
                      CL_LOG(CL_LOG_WARNING,"removing undefined connection object");
                   }
                   connection->connection_state = CL_CLOSING;
+                  connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
                }
             }
          }
       }
 
       if (connection->connection_state == CL_CLOSING ) {
-         ret_val=cl_com_connection_complete_shutdown(connection);
-         if (ret_val != CL_RETVAL_OK) {
-            struct timeval now;
-            gettimeofday(&now,NULL);
-            if ( connection->connection_close_time.tv_sec <= now.tv_sec || cl_com_get_ignore_timeouts_flag() == CL_TRUE) {
-               CL_LOG(CL_LOG_ERROR,"close connection timeout - skipping another connection shutdown");
-            } else {
-               if (ret_val == CL_RETVAL_UNCOMPLETE_READ || ret_val == CL_RETVAL_UNCOMPLETE_WRITE) {
-                  CL_LOG_STR(CL_LOG_WARNING,"cl_com_connection_complete_shutdown() returned:", cl_get_error_text(ret_val));
-                  connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
-                  continue;
+         if (connection->connection_sub_state == CL_COM_DO_SHUTDOWN) {
+            ret_val=cl_com_connection_complete_shutdown(connection);
+            if (ret_val != CL_RETVAL_OK) {
+               struct timeval now;
+               gettimeofday(&now,NULL);
+               if ( connection->connection_close_time.tv_sec <= now.tv_sec || cl_com_get_ignore_timeouts_flag() == CL_TRUE) {
+                  CL_LOG(CL_LOG_ERROR,"close connection timeout - skipping another connection shutdown");
+                  connection->connection_sub_state = CL_COM_SHUTDOWN_DONE;
+               } else {
+                  if (ret_val == CL_RETVAL_UNCOMPLETE_READ || ret_val == CL_RETVAL_UNCOMPLETE_WRITE) {
+                     CL_LOG_STR(CL_LOG_WARNING,"cl_com_connection_complete_shutdown() returned:", cl_get_error_text(ret_val));
+                     continue;
+                  }
+                  CL_LOG_STR(CL_LOG_ERROR,"skipping another connection shutdown, last one returned:", cl_get_error_text(ret_val));
                }
             }
-            connection->connection_sub_state = CL_COM_DONE;
-            CL_LOG_STR(CL_LOG_ERROR,"skipping another connection shutdown, last one returned:", cl_get_error_text(ret_val));
-            CL_LOG(CL_LOG_ERROR,"skipping shutdown");
+            connection->connection_sub_state = CL_COM_SHUTDOWN_DONE;
          }
 
          if (delete_connections == NULL) {

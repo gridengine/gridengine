@@ -1,3 +1,8 @@
+CR-2005-06-23-1: Cleanup:   commlib:
+                            - substates for CL_CLOSE state was not initialized
+                            - round robin connection handling for writeing  
+                 Review:    RD
+
 CR-2005-06-23-0: Testsuite: Fixed possible NFS problem when waiting for 
                             certificates tar file at CSP execd installation
 

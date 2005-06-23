@@ -215,6 +215,7 @@ void server_cleanup_conlist(cl_raw_list_t** connection_list) {
       while(con_elem) {
          cl_com_connection_t* connection = con_elem->connection;
          connection->connection_state = CL_CLOSING;
+         connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
          CL_LOG(CL_LOG_INFO,"marking connection to close");
          con_elem = cl_connection_list_get_next_elem(con_elem);
       }
@@ -353,6 +354,7 @@ void *server_thread(void *t_conf) {
                   con_elem = cl_connection_list_get_next_elem(con_elem);
                   CL_LOG( CL_LOG_INFO, "set connection close flag");
                   connection->connection_state = CL_CLOSING;
+                  connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
                   continue;
                }
                CL_LOG_STR( CL_LOG_WARNING, "data is:", (char*)connection->data_read_buffer);

@@ -175,7 +175,7 @@ extern int main(int argc, char** argv)
 
 #ifdef CREATE_SERVICE
   cl_com_append_known_endpoint_from_name(argv[1], "server", 1,atoi(argv[2]),CL_CM_AC_DISABLED , 1);
-  handle=cl_com_create_handle(NULL,framework,CL_CM_CT_MESSAGE , 1, 0 , "client", atoi(argv[3]),SELECT_TIMEOUT,0 );
+  handle=cl_com_create_handle(NULL,framework,CL_CM_CT_MESSAGE , CL_TRUE, 0 , CL_TCP_DEFAULT, "client", atoi(argv[3]),SELECT_TIMEOUT,0 );
   if (handle == NULL) {
      printf("could not get handle\n");
      exit(1);
@@ -420,7 +420,7 @@ extern int main(int argc, char** argv)
            }
         }  
 #ifdef CREATE_SERVICE
-        handle=cl_com_create_handle(NULL,framework,CL_CM_CT_MESSAGE , 1, 0 , "client", atoi(argv[3]), SELECT_TIMEOUT,0 );
+        handle=cl_com_create_handle(NULL,framework,CL_CM_CT_MESSAGE , CL_TRUE, 0 , CL_TCP_DEFAULT, "client", atoi(argv[3]),SELECT_TIMEOUT,0 );
         if (handle == NULL) {
            printf("could not get handle\n");
            exit(-1);

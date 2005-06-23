@@ -1099,6 +1099,8 @@ const char* cl_com_get_connection_sub_state(cl_com_connection_t* connection) {
          switch( connection->connection_sub_state ) {
             case CL_COM_DO_SHUTDOWN:
                return "CL_COM_DO_SHUTDOWN";
+            case CL_COM_SHUTDOWN_DONE:
+               return "CL_COM_SHUTDOWN_DONE";
             default:
                return "UNEXPECTED CONNECTION SUB STATE";
          }
@@ -1137,8 +1139,6 @@ const char* cl_com_get_connection_sub_state(cl_com_connection_t* connection) {
                return "CL_COM_CCRM_SENT";
             case CL_COM_DONE:
                return "CL_COM_DONE";
-            case CL_COM_DONE_FLUSHED:
-               return "CL_COM_DONE_FLUSHED";
             default:
                return "UNEXPECTED CONNECTION SUB STATE";
          }
@@ -4345,6 +4345,7 @@ int cl_com_connection_complete_request( cl_com_connection_t* connection, long ti
                cl_dump_connection(connection);
             } else {
                connection->connection_state = CL_CLOSING;  /* That was it! */
+               connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
                CL_LOG(CL_LOG_WARNING,"access to client denied");
                cl_dump_connection(connection);
             }
@@ -4551,6 +4552,7 @@ int cl_com_connection_complete_request( cl_com_connection_t* connection, long ti
             CL_LOG_INT(CL_LOG_ERROR,"Connect Error:",crm_message->cs_condition);
             CL_LOG_STR(CL_LOG_ERROR,"error:",crm_message->cs_text);
             connection->connection_state = CL_CLOSING;  /* That was it */
+            connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
 
             switch(crm_message->cs_condition) {
                case CL_CRM_CS_DENIED:
@@ -4581,6 +4583,7 @@ int cl_com_connection_complete_request( cl_com_connection_t* connection, long ti
               cl_com_compare_hosts(crm_message->src->comp_host   , connection->sender->comp_host   ) != CL_RETVAL_OK    ) {
             CL_LOG(CL_LOG_ERROR,"host names are not resolved equal");
             connection->connection_state = CL_CLOSING;  /* That was it */
+            connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
          }
    
          if ( connection->local->comp_id == 0 ) {

@@ -163,10 +163,10 @@ typedef enum cl_connection_sub_state_type {
    CL_COM_SENDING_CCRM,
    CL_COM_CCRM_SENT,
    CL_COM_DONE,
-   CL_COM_DONE_FLUSHED,
 
    /* when CL_CLOSING */
-   CL_COM_DO_SHUTDOWN
+   CL_COM_DO_SHUTDOWN,
+   CL_COM_SHUTDOWN_DONE
 
 } cl_connection_sub_state_type;
 
@@ -287,15 +287,15 @@ typedef struct cl_com_handle {
    cl_com_endpoint_t* local;        /* local endpoint id of this handle */
    cl_com_handle_statistic_t* statistic; /* statistic data of handle */
 
-/* Threads */
+   /* Threads for CL_RW_THREAD */
    cl_thread_condition_t* app_condition;   /* triggered when there are messages to read for application (by read thread) */
    cl_thread_condition_t* read_condition;  /* condition variable for data write */
    cl_thread_condition_t* write_condition; /* condition variable for data read */
    cl_thread_settings_t*  service_thread;  /* pointer to cl_com_handle_service_thread() thread pointer */
    cl_thread_settings_t*  read_thread;   
    cl_thread_settings_t*  write_thread;
+   /* Threads for CL_RW_THREAD done */
 
-/* Threads done */
    
    pthread_mutex_t* messages_ready_mutex;
    unsigned long messages_ready_for_read;

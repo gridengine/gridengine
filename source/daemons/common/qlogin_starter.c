@@ -61,6 +61,46 @@
 
 static char err_str[1024];
 
+/****** qrsh_starter/delete_qrsh_pid_file() *****************************************
+*  NAME
+*     delete_qrsh_pid_file() -- delete the pid file from $TMPDIR
+*
+*  SYNOPSIS
+*     static int delete_qrsh_pid_file() 
+*
+*  FUNCTION
+*     Delete the pid file created by qrsh_starter
+*
+*  RESULT
+*     1, if the file could be deleted
+*     0, if and error occured. Possible error situations are:
+*           - the environment variable TMPDIR cannot be read
+*           - the file cannot be deleted
+*
+*  SEE ALSO
+*  qrsh_starter
+*******************************************************************************/
+int delete_qrsh_pid_file()
+{
+   char *pid_file_name = NULL;
+   int ret = 1;
+
+   if((pid_file_name = search_conf_val("qrsh_pid_file")) == NULL) {
+      SHEPHERD_TRACE((err_str, "cannot get variable %s", pid_file_name));
+      return 0;
+   }
+   
+   if (unlink(pid_file_name) != 0) {
+      SHEPHERD_TRACE((err_str, "cannot delete qrsh pid file %s", pid_file_name));
+      ret = 0;
+   }   
+   
+   return ret;
+
+}
+
+
+
 /****** shepherd/qrsh/write_to_qrsh() *****************************************
 *  NAME
 *     write_to_qrsh -- short description
@@ -243,7 +283,7 @@ void write_exit_code_to_qrsh(int exit_code)
 *
 *  SYNOPSIS
 *     #include "qlogin_starter.h"
-*     int get_exit_code_of_qrsh_starter(void);
+*     int get_exit_code_of_qrsh_starter(int* exit_code);
 *
 *  FUNCTION
 *     Reads the exit code from a process started via qrsh - qrsh_starter
@@ -293,6 +333,9 @@ int get_exit_code_of_qrsh_starter(int* exit_code)
                   "is %d", *exit_code));
             }
             fclose(errorfile);
+            if (unlink(buffer) != 0) {
+               SHEPHERD_TRACE((err_str, "can't delete %s", buffer));
+            }
          } else {
             SHEPHERD_TRACE((err_str, "can't open file %s", buffer ));
          }
@@ -359,6 +402,9 @@ const char *get_error_of_qrsh_starter(void)
                ret = strdup(buffer);
             }
             fclose(errorfile);
+            if (unlink(buffer) != 0) {
+               SHEPHERD_TRACE((err_str, "can't delete %s", buffer));
+            }
          }
       }
    }

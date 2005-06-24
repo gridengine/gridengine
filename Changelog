@@ -1,3 +1,9 @@
+RD-2005-06-24-0: Bugfix:   tight integration: temporary files are not deleted
+                           at task exit
+                 Bugster:  6287867
+                 Issue:    1410
+                 Review:   JG
+
 CR-2005-06-23-1: Cleanup:   commlib:
                             - substates for CL_CLOSE state was not initialized
                             - round robin connection handling for writeing  

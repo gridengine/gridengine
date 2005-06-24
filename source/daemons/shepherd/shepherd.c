@@ -1093,6 +1093,7 @@ int ckpt_type
 
          sge_switch2start_user();
          success = get_exit_code_of_qrsh_starter(&qrsh_exit_code);
+         delete_qrsh_pid_file();
          sge_switch2admin_user();
 
          if (success != 0) {
@@ -1106,6 +1107,7 @@ int ckpt_type
             exit_status = WEXITSTATUS(qrsh_exit_code);
 
             qrsh_error = get_error_of_qrsh_starter();
+            delete_qrsh_pid_file();
             if (qrsh_error != NULL) {
                shepherd_error_sprintf("startup of qrsh job failed: "SFN"\n",
                                       qrsh_error);

@@ -1060,7 +1060,7 @@ proc run_throughput_test {} {
                   }
                   "messages in read buffer:*" {
                      set index $qping_data(count)
-                     set qping_data($index,time) [clock seconds]
+                     set qping_data($index,time) [timestamp]
                      set qping_data($index,read) [lindex $line 4]
                   }
                   "messages in write buffer:*" {
@@ -1121,7 +1121,7 @@ proc run_throughput_test {} {
    # here the throughput test starts
    set error 0
    log_user 0
-   set start_time [clock seconds]
+   set start_time [timestamp]
    while { ! $error && $result(jobs_done) < $test_end_job_count } {
       set time_now [timestamp]
 
@@ -1278,7 +1278,7 @@ proc run_throughput_test {} {
                   }
                   "messages in read buffer:*" {
                      set index $qping_data(count)
-                     set qping_data($index,time) [clock seconds]
+                     set qping_data($index,time) [timestamp]
                      set qping_data($index,read) [lindex $line 4]
                   }
                   "messages in write buffer:*" {
@@ -3860,7 +3860,7 @@ proc show_current_system_status { start_time array_name job_array_name schedd_ar
    puts $CHECK_OUTPUT "total slots      : $data(total_slots)"
    puts $CHECK_OUTPUT "free slots       : $data(free_slots)"
    puts $CHECK_OUTPUT "jobs run time    : $data(job_run_time)"
-   puts $CHECK_OUTPUT "test run time    : [expr [clock seconds] - $start_time] s"
+   puts $CHECK_OUTPUT "test run time    : [expr [timestamp] - $start_time] s"
    puts $CHECK_OUTPUT "scheduling time  : $schedd($schedd(count),schedd_time)"
    puts $CHECK_OUTPUT "schedd total time: $schedd($schedd(count),schedd_total_time)"
    puts $CHECK_OUTPUT "qmaster size     : $monitoring(qmaster,$monitoring(qmaster,count),size)"

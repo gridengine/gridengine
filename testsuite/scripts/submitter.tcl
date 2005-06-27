@@ -52,12 +52,12 @@ proc submit_job { num_jobs add_opts } {
    #puts "submitting job:"
 
    for {set i 0} {$i < $num_jobs} {incr i} {
-      set start_clock [clock seconds]
+      set start_clock [timestamp]
       set start_time [clock clicks -milliseconds]
       set args "exec $sge_root/bin/$arch/qsub $submit_options $add_opts $script"
       set result [catch $args output]
       set end_time [clock clicks -milliseconds]
-      set end_clock [clock seconds]
+      set end_clock [timestamp]
       if { $result == 0 } {
          set job_id [lindex $output 2]
          # array job?

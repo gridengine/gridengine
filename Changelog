@@ -1,3 +1,9 @@
+CR-2005-06-27-0: Testsuite: throughput test:
+                            using tcl timestamp command instead of 
+                            clock seconds command which caused time measurement
+                            errors on some architectures
+                 Review:    RD
+
 RD_2005-06-27-0: Bugfix:    installation on Red Hat creates wrong
                             rc*.d script names
                  Bugster:   6277874

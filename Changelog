@@ -1,11 +1,14 @@
-RD-2005-06-24-1: Bugfix:   fixed broken build on linux
+JG-2005-06-27-0: Testsuite: Closing rlogin connections sporadically failed.
+                 Review:    CR
 
-RD-2005-06-24-0: Bugfix:   tight integration: temporary files are not deleted
-                           at task exit
-                 Changed:  shepherd
-                 Bugster:  6287867
-                 Issue:    1410
-                 Review:   JG
+RD-2005-06-24-1: Bugfix:    fixed broken build on linux
+
+RD-2005-06-24-0: Bugfix:    tight integration: temporary files are not deleted
+                            at task exit
+                 Changed:   shepherd
+                 Bugster:   6287867
+                 Issue:     1410
+                 Review:    JG
 
 CR-2005-06-23-1: Cleanup:   commlib:
                             - substates for CL_CLOSE state was not initialized

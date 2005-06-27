@@ -1682,7 +1682,10 @@ proc add_open_spawn_rlogin_session { hostname user spawn_id spawn_pid nr_of_shel
       lappend cl_id $remove_sp_id
       lappend cl_id $closes       ;# nr of open shells
       unset rlogin_spawn_session_buffer($remove_sp_id)
-      close_spawn_process $cl_id 0 2
+      # close the connection. We are not intested in the exit code of the 
+      # previously executed command, so don't make close_spawn_process check
+      # the exit code
+      close_spawn_process $cl_id 1 2
    }
 
    debug_puts "Adding spawn_id=$spawn_id, rlogin pid=$spawn_pid to"
@@ -2108,6 +2111,8 @@ proc close_spawn_process { id { check_exit_state 0 } {my_uplevel 1}} {
    if { $con_data(pid) != 0 } {
       debug_puts "sending CTRL + C to spawn id $sp_id ..."
       send -i $sp_id "\003" ;# send CTRL+C to stop evtl. running processes in that shell
+      # wait for CTRL-C to have effect
+      after 200
       debug_puts "Will not close spawn id \"$sp_id\", this is rlogin connection to"
       debug_puts "host \"$con_data(hostname)\", user \"$con_data(user)\""
       set rlogin_in_use_buffer($sp_id) 0
@@ -2127,6 +2132,8 @@ proc close_spawn_process { id { check_exit_state 0 } {my_uplevel 1}} {
        debug_puts "-->sending $nr_of_shells exit(s) to shell on id $sp_id"
        send -s -i $sp_id "\003" ;# send CTRL+C to stop evtl. running processes in that shell
 
+       # wait for CTRL-C to have effect
+       after 200
        for {set i 0} {$i < $nr_of_shells } {incr i 1} {
           send -s -i $sp_id "exit\n"
           set timeout 15
@@ -2183,31 +2190,38 @@ proc close_spawn_process { id { check_exit_state 0 } {my_uplevel 1}} {
    log_user 1
    set wait_return "" 
    catch { set wait_return [ uplevel $my_uplevel { wait -i $open_spawn_buffer } ] }
+   set wait_pid      [lindex $wait_return 0]
+   set wait_spawn_id [lindex $wait_return 1]
+   set wait_error    [lindex $wait_return 2]
+   set wait_code     [lindex $wait_return 3]
 
    debug_puts "closed buffer: $open_spawn_buffer"
-   if { ([ string compare $open_spawn_buffer [lindex $wait_return 1] ] != 0) && ($check_exit_state == 0)} {
-      add_proc_error "close_spawn_process" "-1" "wrong spawn id closed: expected $open_spawn_buffer, got [lindex $wait_return 1]"
+   debug_puts "wait pid        : $wait_pid"
+   debug_puts "wait spawn id   : $wait_spawn_id"
+   debug_puts "wait error      : $wait_error (-1 = operating system error, 0 = exit)"
+   debug_puts "wait code       : $wait_code  (os error code or exit status)"
+
+   # did we close the correct spawn id?
+   if { ([ string compare $open_spawn_buffer $wait_spawn_id ] != 0) && ($check_exit_state == 0)} {
+      add_proc_error "close_spawn_process" "-1" "wrong spawn id closed: expected $open_spawn_buffer, got $wait_spawn_id"
    }
-   
 
-   debug_puts "wait pid        : [lindex $wait_return 0]"
-   debug_puts "wait spawn id   : [lindex $wait_return 1]"
-
-   if { [lindex $wait_return 2] == 0 } {
-      if { ([lindex $wait_return 3] != 0) && ($check_exit_state == 0) } {
-         add_proc_error "close_spawn_process" -1 "wait exit status: [lindex $wait_return 3]"
+   # on regular exit: check exit code, shall be 0
+   if { $wait_error == 0 } {
+      if { ($wait_code != 0) && ($check_exit_state == 0) } {
+         add_proc_error "close_spawn_process" -1 "wait exit status: $wait_code"
       }
    } else {
-         puts $CHECK_OUTPUT "*** operating system error: [lindex $wait_return 3]"
-         puts $CHECK_OUTPUT "spawn id: [lindex $wait_return 1]"
-         puts $CHECK_OUTPUT "wait pid: [lindex $wait_return 0]"
+         puts $CHECK_OUTPUT "*** operating system error: $wait_code"
+         puts $CHECK_OUTPUT "spawn id: $wait_spawn_id"
+         puts $CHECK_OUTPUT "wait pid: $wait_pid"
          if { ($check_exit_state == 0) } {
-            add_proc_error "close_spawn_process" -1 "operating system error: [lindex $wait_return 3]"
+            add_proc_error "close_spawn_process" -1 "operating system error: $wait_code"
          }
    }
    flush $CHECK_OUTPUT
    set rlogin_in_use_buffer($sp_id) 0
-   return [lindex $wait_return 3] ;# return exit state
+   return $wait_code ;# return exit state
 }
 
 

@@ -1082,6 +1082,35 @@ InstallRcScript()
       echo /usr/lib/lsb/install_initd $RC_PREFIX/$STARTUP_FILE_NAME
       Execute cp $SGE_STARTUP_FILE $RC_PREFIX/$STARTUP_FILE_NAME
       Execute /usr/lib/lsb/install_initd $RC_PREFIX/$STARTUP_FILE_NAME
+      # Several old Red Hat releases does not create proper startup links from LSB conform
+      # scripts. So we need to check if the proper links were created.
+      # See RedHat: https://bugzilla.redhat.com/bugzilla/long_list.cgi?buglist=106193
+      if [ -f "/etc/redhat-release" -o -f "/etc/fedora-release" ]; then
+         # According to Red Hat documentation all rcX.d directories are in /etc/rc.d
+         # we hope this will never change for Red Hat
+         RCD_PREFIX="/etc/rc.d"
+         for runlevel in 0 1 2 3 4 5 6; do
+            # check for a currupted startup link
+            if [ -L "$RCD_PREFIX/rc$runlevel.d/S-1$STARTUP_FILE_NAME" ]; then
+               Execute rm -f $RCD_PREFIX/rc$runlevel.d/S-1$STARTUP_FILE_NAME
+               # create new correct startup link
+               if [ $runlevel -eq 3 -o $runlevel -eq 5 ]; then
+                  Execute rm -f $RCD_PREFIX/rc$runlevel.d/$S95NAME
+                  Execute ln -s $RC_PREFIX/$STARTUP_FILE_NAME $RCD_PREFIX/rc$runlevel.d/$S95NAME
+               fi
+            fi
+            # check for a currpeted shutdown link
+            if [ -L "$RCD_PREFIX/rc$runlevel.d/K-1$STARTUP_FILE_NAME" ]; then
+               Execute rm -f $RCD_PREFIX/rc$runlevel.d/K-1$STARTUP_FILE_NAME
+               Execute rm -f $RCD_PREFIX/rc$runlevel.d/$K03NAME
+               # create new correct shutdown link
+               if [ $runlevel -eq 0 -o $runlevel -eq 1 -o $runlevel -eq 2 -o $runlevel -eq 6 ]; then
+                  Execute rm -f $RCD_PREFIX/rc$runlevel.d/$K03NAME
+                  Execute ln -s $RC_PREFIX/$STARTUP_FILE_NAME $RCD_PREFIX/rc$runlevel.d/$K03NAME
+               fi
+            fi
+         done
+      fi
    # If we have System V we need to put the startup script to $RC_PREFIX/init.d
    # and make a link in $RC_PREFIX/rc2.d to $RC_PREFIX/init.d
    elif [ "$RC_FILE" = "sysv_rc" ]; then
@@ -1804,9 +1833,31 @@ RemoveRcScript()
       fi
    fi
 
+   # If system is Linux Standard Base (LSB) compliant, use the install_initd utility
+   if [ "$RC_FILE" = lsb ]; then
+      echo /usr/lib/lsb/remove_initd $RC_PREFIX/$STARTUP_FILE_NAME
+      Execute /usr/lib/lsb/remove_initd $RC_PREFIX/$STARTUP_FILE_NAME
+      # Several old Red Hat releases does not create/remove startup links from LSB conform
+      # scripts. So we need to check if the links were deleted.
+      # See RedHat: https://bugzilla.redhat.com/bugzilla/long_list.cgi?buglist=106193
+      if [ -f "/etc/redhat-release" -o -f "/etc/fedora-release" ]; then
+         RCD_PREFIX="/etc/rc.d"
+         # Are all startup links correctly removed?
+         for runlevel in 3 5; do
+            if [ -L "$RCD_PREFIX/rc$runlevel.d/$S95NAME" ]; then
+               Execute rm -f $RCD_PREFIX/rc$runlevel.d/$S95NAME
+            fi
+         done
+         # Are all shutdown links correctly removed?
+         for runlevel in 0 1 2 6; do
+            if [ -L "$RCD_PREFIX/rc$runlevel.d/$K03NAME" ]; then
+               Execute rm -f $RCD_PREFIX/rc$runlevel.d/$K03NAME
+            fi
+         done
+      fi
    # If we have System V we need to put the startup script to $RC_PREFIX/init.d
    # and make a link in $RC_PREFIX/rc2.d to $RC_PREFIX/init.d
-   if [ "$RC_FILE" = "sysv_rc" ]; then
+   elif [ "$RC_FILE" = "sysv_rc" ]; then
       $INFOTEXT "Removing startup script %s and %s" "$RC_PREFIX/$RC_DIR/$S95NAME" "$RC_PREFIX/$RC_DIR/$K03NAME"
       Execute rm -f $RC_PREFIX/$RC_DIR/$S95NAME
       Execute rm -f $RC_PREFIX/$RC_DIR/$K03NAME

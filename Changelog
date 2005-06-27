@@ -1,3 +1,9 @@
+RD_2005-06-27-0: Bugfix:    installation on Red Hat creates wrong
+                            rc*.d script names
+                 Bugster:   6277874
+                 Issue:     1669
+                 Review:    CR
+
 JG-2005-06-27-0: Testsuite: Closing rlogin connections sporadically failed.
                  Review:    CR
 

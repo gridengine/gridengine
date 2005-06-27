@@ -305,6 +305,8 @@ typedef struct cl_com_handle {
    cl_raw_list_t* allowed_host_list; /* string list with hostnames allowed to connect */
    unsigned long next_free_client_id;
 
+   cl_raw_list_t* send_message_queue;     /* used as queue for application messages which have to 
+                                             be send to a connection ( used in cl_commlib_send_message()) */
    cl_raw_list_t* received_message_queue; /* used as queue for application messages which are ready to be
                                              handled over to the application ( used in cl_commlib_receive_message() 
                                              This message queue must have a "garbage collector", removing 

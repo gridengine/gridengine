@@ -99,6 +99,14 @@ static void *cl_com_handle_read_thread(void *t_conf);
 
 
 
+static int cl_commlib_send_message_to_endpoint(cl_com_handle_t*   handle,
+                                               cl_com_endpoint_t* endpoint, 
+                                               cl_xml_ack_type_t  ack_type, 
+                                               cl_byte_t*         data, 
+                                               unsigned long      size , 
+                                               unsigned long      response_mid,
+                                               unsigned long      tag);
+
 /* global lists */
 
 /* cl_com_handle_list
@@ -807,7 +815,7 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
    new_handle->connection_list_mutex = NULL;
    new_handle->connection_list = NULL;
    new_handle->received_message_queue = NULL;
-
+   new_handle->send_message_queue = NULL;
    new_handle->next_free_client_id = 1;
    new_handle->service_handler = NULL;
    new_handle->framework = framework;
@@ -989,6 +997,30 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
       return NULL;
    }
 
+   if ((return_value=cl_app_message_queue_setup(&(new_handle->send_message_queue), "send message queue", 1)) != CL_RETVAL_OK) {
+      int mutex_ret_val;
+      cl_app_message_queue_cleanup(&(new_handle->received_message_queue));
+      cl_app_message_queue_cleanup(&(new_handle->send_message_queue));
+      cl_com_free_endpoint(&(new_handle->local));
+      mutex_ret_val = pthread_mutex_destroy(new_handle->connection_list_mutex);
+      if (mutex_ret_val != EBUSY) {
+         free(new_handle->connection_list_mutex); 
+      }
+      mutex_ret_val = pthread_mutex_destroy(new_handle->messages_ready_mutex);
+      if (mutex_ret_val != EBUSY) {
+         free(new_handle->messages_ready_mutex); 
+      }
+      cl_com_free_handle_statistic(&(new_handle->statistic));
+      free(new_handle);
+      free(local_hostname);
+      cl_raw_list_unlock(cl_com_handle_list);
+      if (commlib_error) {
+         *commlib_error = return_value;
+      }
+      cl_commlib_push_application_error(return_value, NULL);
+      return NULL;
+   } 
+
    if ((return_value=cl_app_message_queue_setup(&(new_handle->received_message_queue), "received message queue", 1)) != CL_RETVAL_OK) {
       int mutex_ret_val;
       cl_app_message_queue_cleanup(&(new_handle->received_message_queue));
@@ -1014,6 +1046,7 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
 
    if ((return_value=cl_connection_list_setup(&(new_handle->connection_list), "connection list", 1)) != CL_RETVAL_OK) {
       int mutex_ret_val;
+      cl_app_message_queue_cleanup(&(new_handle->send_message_queue));
       cl_app_message_queue_cleanup(&(new_handle->received_message_queue));
       cl_connection_list_cleanup(&(new_handle->connection_list));
       cl_com_free_endpoint(&(new_handle->local));
@@ -1040,6 +1073,7 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
       int mutex_ret_val;
 
       cl_string_list_cleanup(&(new_handle->allowed_host_list));
+      cl_app_message_queue_cleanup(&(new_handle->send_message_queue));
       cl_app_message_queue_cleanup(&(new_handle->received_message_queue));
       cl_connection_list_cleanup(&(new_handle->connection_list));
       cl_com_free_endpoint(&(new_handle->local));
@@ -1081,6 +1115,7 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
          int mutex_ret_val;
          cl_com_close_connection(&new_con);
          cl_string_list_cleanup(&(new_handle->allowed_host_list));
+         cl_app_message_queue_cleanup(&(new_handle->send_message_queue));
          cl_app_message_queue_cleanup(&(new_handle->received_message_queue));
          cl_connection_list_cleanup(&(new_handle->connection_list));
          cl_com_free_endpoint(&(new_handle->local));
@@ -1113,6 +1148,7 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
          cl_com_connection_request_handler_cleanup(new_con);
          cl_com_close_connection(&new_con);
          cl_string_list_cleanup(&(new_handle->allowed_host_list));
+         cl_app_message_queue_cleanup(&(new_handle->send_message_queue));
          cl_app_message_queue_cleanup(&(new_handle->received_message_queue));
          cl_connection_list_cleanup(&(new_handle->connection_list));
          cl_com_free_endpoint(&(new_handle->local));
@@ -1228,6 +1264,7 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
          cl_com_close_connection(&(new_handle->service_handler));
       }
       cl_connection_list_cleanup(&(new_handle->connection_list));
+      cl_app_message_queue_cleanup(&(new_handle->send_message_queue));
       cl_app_message_queue_cleanup(&(new_handle->received_message_queue));
       cl_string_list_cleanup(&(new_handle->allowed_host_list));
       cl_com_free_endpoint(&(new_handle->local));
@@ -1577,6 +1614,7 @@ int cl_commlib_shutdown_handle(cl_com_handle_t* handle, cl_bool_t return_for_mes
          cl_com_close_connection(&(handle->service_handler));
       }
    
+      cl_app_message_queue_cleanup(&(handle->send_message_queue));
       cl_app_message_queue_cleanup(&(handle->received_message_queue));
       cl_connection_list_cleanup(&(handle->connection_list));
       cl_com_free_endpoint(&(handle->local));
@@ -5855,7 +5893,7 @@ int cl_commlib_get_endpoint_status(cl_com_handle_t* handle,
    return CL_RETVAL_UNKNOWN;
 }
 
-#if 0
+
 #ifdef __CL_FUNCTION__
 #undef __CL_FUNCTION__
 #endif
@@ -5897,9 +5935,6 @@ static int cl_commlib_send_message_to_endpoint(cl_com_handle_t*   handle,
       return CL_RETVAL_UNKNOWN_ENDPOINT;
    }
 
-
-   CL_LOG_STR_STR_INT(CL_LOG_INFO, "sending message to :      ", endpoint->comp_host, endpoint->comp_name, (int)endpoint->comp_id);
-   
    while(retry_send != 0) {
    
       /* lock handle connection list */
@@ -6003,7 +6038,6 @@ static int cl_commlib_send_message_to_endpoint(cl_com_handle_t*   handle,
 
    return return_value;
 }
-#endif
 
 
 #ifdef __CL_FUNCTION__
@@ -6027,6 +6061,7 @@ int cl_commlib_send_message(cl_com_handle_t* handle,
    int return_value = CL_RETVAL_OK;
    cl_com_endpoint_t receiver;
    char* unique_hostname = NULL;
+   cl_byte_t* help_data = NULL;
    int retry_send = 1;
    cl_bool_t ignore_connection = CL_FALSE;
 
@@ -6049,170 +6084,247 @@ int cl_commlib_send_message(cl_com_handle_t* handle,
       return CL_RETVAL_UNKNOWN_ENDPOINT;
    }
 
-   CL_LOG_STR_STR_INT(CL_LOG_INFO, "new message for:      ", un_resolved_hostname, component_name, (int)component_id);
-
-   /* resolve hostname */
-   return_value = cl_com_cached_gethostbyname(un_resolved_hostname, &unique_hostname,NULL, NULL, NULL);
-   if (return_value != CL_RETVAL_OK) {
-      CL_LOG(CL_LOG_ERROR,cl_get_error_text(return_value));
-      return return_value;
+   /* make a copy of the message date (if wished) */
+   if (copy_data == CL_TRUE) {
+      help_data = (cl_byte_t*) malloc((sizeof(cl_byte_t)*size));
+      if (help_data == NULL) {
+         return CL_RETVAL_MALLOC;
+      }
+      memcpy(help_data, data, (sizeof(cl_byte_t)*size) );
+   } else {
+      help_data = data;
    }
 
 
-   /* setup endpoint */
-   receiver.comp_host = unique_hostname;
-   receiver.comp_name = component_name;
-   receiver.comp_id   = component_id;
+   /*
+    *  The send_message_queue can only be used if the following parameters are not requested
+    *  by the user:
+    *
+    *  - mid != NULL               : The caller wants the message id which can't be set before
+    *                                the message is added to the connection's message list
+    *
+    *  - wait_for_ack == CL_TRUE   : The caller wants to wait for the response, we have to do
+    *                                the transaction at once
+    *
+    */
 
-   while(retry_send != 0) {
-   
-      /* lock handle connection list */
-      cl_raw_list_lock(handle->connection_list);
-      elem = cl_connection_list_get_first_elem(handle->connection_list);     
-      connection = NULL;
-      while(elem) {
-         ignore_connection = CL_FALSE;
-         connection = elem->connection;
-   
-         if (connection->was_accepted == CL_TRUE) {
-            /* ignore duplicate endpoints */
-            switch (connection->crm_state) {
-               case CL_CRM_CS_UNDEFINED:
-               case CL_CRM_CS_CONNECTED: {
-                  ignore_connection = CL_FALSE;
-                  break;
-               }
-               default: {
-                  ignore_connection = CL_TRUE;
-                  break;
-               }
-            }
+
+   if (mid == NULL && wait_for_ack == CL_FALSE && cl_com_create_threads != CL_NO_THREAD ) {
+      cl_com_endpoint_t* destination_endpoint = NULL;
+
+      /* using send_message_queue for this message */
+      CL_LOG_STR_STR_INT(CL_LOG_INFO, "add message into send queue for:      ", un_resolved_hostname, component_name, (int)component_id);
+    
+      /* resolve hostname and create endpoint structure */
+      return_value = cl_com_cached_gethostbyname(un_resolved_hostname, &unique_hostname,NULL, NULL, NULL);
+      if (return_value != CL_RETVAL_OK) {
+         CL_LOG(CL_LOG_ERROR,cl_get_error_text(return_value));
+         if (copy_data == CL_TRUE) {
+            free(help_data);
          }
-         
-         if (ignore_connection == CL_FALSE && 
-             cl_com_compare_endpoints(connection->receiver, &receiver)) {
-            cl_byte_t* help_data = NULL;
-   
-            /* send message to client (no broadcast) */
+         return return_value;
+      }
 
-            if (connection->ccm_received != 0) {  
-               /* we have sent connection close response, do not accept any new message */
-               /* we wait till connection is down and try to reconnect  */
-               CL_LOG(CL_LOG_ERROR,"connection is going down now, can't send message (ccrm sent)");
-               break;
+      destination_endpoint = cl_com_create_endpoint(unique_hostname,component_name,component_id);
+      free(unique_hostname);
+      unique_hostname = NULL;
+
+      if (destination_endpoint == NULL) {
+         if (copy_data == CL_TRUE) {
+            free(help_data);
+         }
+         return CL_RETVAL_MALLOC;
+      }
+
+      return_value = cl_app_message_queue_append(handle->send_message_queue, NULL,
+                                                 destination_endpoint, ack_type,
+                                                 help_data, size, response_mid, tag, 1);
+      if (return_value != CL_RETVAL_OK) {
+         CL_LOG(CL_LOG_ERROR,cl_get_error_text(return_value));
+         if (copy_data == CL_TRUE) {
+            free(help_data);
+         }
+         return return_value;
+      }
+
+      switch(cl_com_create_threads) {
+         case CL_NO_THREAD:
+            CL_LOG(CL_LOG_INFO,"no threads enabled");
+            /* we just want to trigger write , no wait for read*/
+            cl_commlib_trigger(handle, 1);
+            break;
+         case CL_RW_THREAD:
+            /* we just want to trigger write , no wait for read*/
+            cl_thread_trigger_event(handle->write_thread);
+            break;
+      }
+
+   } else {
+
+      CL_LOG_STR_STR_INT(CL_LOG_INFO, "new message for:      ", un_resolved_hostname, component_name, (int)component_id);
+   
+      /* resolve hostname */
+      return_value = cl_com_cached_gethostbyname(un_resolved_hostname, &unique_hostname,NULL, NULL, NULL);
+      if (return_value != CL_RETVAL_OK) {
+         CL_LOG(CL_LOG_ERROR,cl_get_error_text(return_value));
+         if (copy_data == CL_TRUE) {
+            free(help_data);
+         }
+         return return_value;
+      }
+   
+   
+      /* setup endpoint */
+      receiver.comp_host = unique_hostname;
+      receiver.comp_name = component_name;
+      receiver.comp_id   = component_id;
+   
+      while(retry_send != 0) {
+      
+         /* lock handle connection list */
+         cl_raw_list_lock(handle->connection_list);
+         elem = cl_connection_list_get_first_elem(handle->connection_list);     
+         while(elem) {
+            ignore_connection = CL_FALSE;
+            connection = elem->connection;
+      
+            if (connection->was_accepted == CL_TRUE) {
+               /* ignore duplicate endpoints */
+               switch (connection->crm_state) {
+                  case CL_CRM_CS_UNDEFINED:
+                  case CL_CRM_CS_CONNECTED: {
+                     ignore_connection = CL_FALSE;
+                     break;
+                  }
+                  default: {
+                     ignore_connection = CL_TRUE;
+                     CL_LOG(CL_LOG_WARNING,"ignore connection with unexpected connection state");
+                     break;
+                  }
+               }
             }
+            
+            if (ignore_connection == CL_FALSE && 
+                cl_com_compare_endpoints(connection->receiver, &receiver)) {
+      
+               /* send message to client (no broadcast) */
    
-            if (connection->connection_state == CL_CONNECTED && connection->connection_sub_state != CL_COM_WORK) {
-               CL_LOG(CL_LOG_WARNING,"connection is going down now, can't send message");
-               break;
-            }
+               if (connection->ccm_received != 0) {  
+                  /* we have sent connection close response, do not accept any new message */
+                  /* we wait till connection is down and try to reconnect  */
+                  CL_LOG(CL_LOG_ERROR,"connection is going down now, can't send message (ccrm sent)");
+                  break;
+               }
+      
+               if (connection->connection_state == CL_CONNECTED && connection->connection_sub_state != CL_COM_WORK) {
+                  CL_LOG(CL_LOG_WARNING,"connection is going down now, can't send message");
+                  break;
+               }
+      
    
-
-            if (  response_mid > 0 && response_mid > connection->last_received_message_id ) {
-               CL_LOG_INT(CL_LOG_DEBUG,"last_received_message_id:", (int)connection->last_received_message_id );
-               CL_LOG_INT(CL_LOG_DEBUG,"last_send_message_id    :", (int)connection->last_send_message_id);
-               CL_LOG_INT(CL_LOG_DEBUG,"response_mid to send    :", (int)response_mid);
-
-               CL_LOG(CL_LOG_ERROR,"Protocol error: haven't received such a high message id till now");
-               cl_raw_list_unlock(handle->connection_list);
-               free(unique_hostname);
-               return CL_RETVAL_PROTOCOL_ERROR;
-            }    
-
-            CL_LOG_STR_STR_INT(CL_LOG_INFO, "sending it to:        ", connection->receiver->comp_host,
-                                                                      connection->receiver->comp_name,
-                                                                      (int)connection->receiver->comp_id);
-            if (copy_data == CL_TRUE) {
-               help_data = (cl_byte_t*) malloc((sizeof(cl_byte_t)*size));
-               if (help_data == NULL) {
+               if (  response_mid > 0 && response_mid > connection->last_received_message_id ) {
+                  CL_LOG_INT(CL_LOG_DEBUG,"last_received_message_id:", (int)connection->last_received_message_id );
+                  CL_LOG_INT(CL_LOG_DEBUG,"last_send_message_id    :", (int)connection->last_send_message_id);
+                  CL_LOG_INT(CL_LOG_DEBUG,"response_mid to send    :", (int)response_mid);
+   
+                  CL_LOG(CL_LOG_ERROR,"Protocol error: haven't received such a high message id till now");
                   cl_raw_list_unlock(handle->connection_list);
                   free(unique_hostname);
-                  return CL_RETVAL_MALLOC;
-               }
-               memcpy(help_data, data, (sizeof(cl_byte_t)*size) );
-               return_value = cl_com_setup_message(&message, connection, help_data, size,ack_type,response_mid,tag);
-            } else {
-               return_value = cl_com_setup_message(&message, connection, data, size, ack_type,response_mid,tag);
-            }
+                  if (copy_data == CL_TRUE) {
+                     free(help_data);
+                  }
+                  return CL_RETVAL_PROTOCOL_ERROR;
+               }    
    
-            if (return_value != CL_RETVAL_OK) {
-               cl_raw_list_unlock(handle->connection_list);
-               free(unique_hostname);
-               return return_value;
-            }
-   
-            my_mid = message->message_id;
-            if (mid != NULL) {
-              *mid = message->message_id;
-            }
-            return_value = cl_message_list_append_message(connection->send_message_list,message,1);
-            if (return_value != CL_RETVAL_OK) {
-               cl_com_free_message(&message);
-               cl_raw_list_unlock(handle->connection_list);
-               free(unique_hostname);
-               return return_value;
-            }
-            message_added = 1;
-            
-            break;
-         } else {
-            if (ignore_connection == CL_TRUE) {
-               CL_LOG(CL_LOG_WARNING,"ignore connection with unexpected connection state");
-            }
-         }
-         elem = cl_connection_list_get_next_elem(elem);
-         connection = NULL;
-      }
-      cl_raw_list_unlock(handle->connection_list);
+               CL_LOG_STR_STR_INT(CL_LOG_INFO, "sending it to:        ", connection->receiver->comp_host,
+                                                                         connection->receiver->comp_name,
+                                                                         (int)connection->receiver->comp_id);
 
-      /* if message is not added, the connection was not found -> try to open it */
-      if (message_added != 1) {
-         retry_send++;  
-         return_value = cl_commlib_open_connection(handle, un_resolved_hostname, component_name, component_id );
-         if (return_value != CL_RETVAL_OK) {
-            free(unique_hostname);
-            CL_LOG_STR(CL_LOG_ERROR,"cl_commlib_open_connection() returned: ",cl_get_error_text(return_value));
-            return return_value;
+               return_value = cl_com_setup_message(&message, connection, help_data, size, ack_type,response_mid,tag);
+
+               if (return_value != CL_RETVAL_OK) {
+                  cl_raw_list_unlock(handle->connection_list);
+                  free(unique_hostname);
+                  if (copy_data == CL_TRUE) {
+                     free(help_data);
+                  }
+                  return return_value;
+               }
+      
+               my_mid = message->message_id;
+               if (mid != NULL) {
+                 *mid = message->message_id;
+               }
+               return_value = cl_message_list_append_message(connection->send_message_list,message,1);
+               if (return_value != CL_RETVAL_OK) {
+                  cl_com_free_message(&message);
+                  cl_raw_list_unlock(handle->connection_list);
+                  free(unique_hostname);
+                  return return_value;
+               }
+               message_added = 1;
+               
+               break;
+            }
+            elem = cl_connection_list_get_next_elem(elem);
          }
-         if (retry_send >= 3) {
-            CL_LOG(CL_LOG_ERROR,"can't open connection, don't retry to send this message");
-            retry_send = 0;
+         cl_raw_list_unlock(handle->connection_list);
+   
+         /* if message is not added, the connection was not found -> try to open it */
+         if (message_added != 1) {
+            retry_send++;  
+            return_value = cl_commlib_open_connection(handle, un_resolved_hostname, component_name, component_id );
+            if (return_value != CL_RETVAL_OK) {
+               free(unique_hostname);
+               CL_LOG_STR(CL_LOG_ERROR,"cl_commlib_open_connection() returned: ",cl_get_error_text(return_value));
+               if (copy_data == CL_TRUE) {
+                  free(help_data);
+               }
+               return return_value;
+            }
+            if (retry_send >= 3) {
+               CL_LOG(CL_LOG_ERROR,"can't open connection, don't retry to send this message");
+               retry_send = 0;
+            }
+         } else {
+            retry_send = 0; /* break */
+         }
+      }
+   
+      if (message_added == 1) {
+         switch(cl_com_create_threads) {
+               case CL_NO_THREAD:
+                  CL_LOG(CL_LOG_INFO,"no threads enabled");
+                  /* we just want to trigger write , no wait for read*/
+                  cl_commlib_trigger(handle, 1);
+                  break;
+               case CL_RW_THREAD:
+                  /* we just want to trigger write , no wait for read*/
+                  cl_thread_trigger_event(handle->write_thread);
+                  break;
          }
       } else {
-         retry_send = 0; /* break */
+         free(unique_hostname);
+         if (copy_data == CL_TRUE) {
+            free(help_data);
+         }
+         return CL_RETVAL_SEND_ERROR;
+      } 
+    
+      if (ack_type == CL_MIH_MAT_NAK) {
+         free(unique_hostname);
+         return CL_RETVAL_OK;
       }
-   }
-
-   if (message_added == 1) {
-      switch(cl_com_create_threads) {
-            case CL_NO_THREAD:
-               CL_LOG(CL_LOG_INFO,"no threads enabled");
-               /* we just want to trigger write , no wait for read*/
-               cl_commlib_trigger(handle, 1);
-               break;
-            case CL_RW_THREAD:
-               /* we just want to trigger write , no wait for read*/
-               cl_thread_trigger_event(handle->write_thread);
-               break;
+   
+      if (wait_for_ack == CL_FALSE) {
+         free(unique_hostname);
+         return CL_RETVAL_OK;
       }
-   } else {
+   
+      CL_LOG_INT(CL_LOG_INFO,"message acknowledge expected, waiting for ack", (int)my_mid);
+      return_value = cl_commlib_check_for_ack(handle, receiver.comp_host, component_name, component_id, my_mid, CL_TRUE);
       free(unique_hostname);
-      return CL_RETVAL_SEND_ERROR;
-   } 
- 
-   if (ack_type == CL_MIH_MAT_NAK) {
-      free(unique_hostname);
-      return CL_RETVAL_OK;
    }
-
-   if (wait_for_ack == CL_FALSE) {
-      free(unique_hostname);
-      return CL_RETVAL_OK;
-   }
-
-   CL_LOG_INT(CL_LOG_INFO,"message acknowledge expected, waiting for ack", (int)my_mid);
-   return_value = cl_commlib_check_for_ack(handle, receiver.comp_host, component_name, component_id, my_mid, CL_TRUE);
-   free(unique_hostname);
    return return_value;
 }
 
@@ -6466,6 +6578,10 @@ static void *cl_com_handle_read_thread(void *t_conf) {
    int wait_for_events = 1;
    int select_sec_timeout = 0;
    int select_usec_timeout = 100*1000;
+   cl_app_message_queue_elem_t* mq_elem = NULL;
+   int mq_return_value = CL_RETVAL_OK; 
+
+
    int message_received = 0;
    int trigger_write_thread = 0;
    cl_connection_list_elem_t* elem = NULL;
@@ -6529,6 +6645,25 @@ static void *cl_com_handle_read_thread(void *t_conf) {
          } else {
             the_handler = NULL;
          }
+
+         cl_raw_list_lock(handle->send_message_queue);
+         while((mq_elem = cl_app_message_queue_get_first_elem(handle->send_message_queue)) != NULL) {
+            mq_return_value = cl_commlib_send_message_to_endpoint(handle, mq_elem->snd_destination,
+                                                                  mq_elem->snd_ack_type, mq_elem->snd_data,
+                                                                  mq_elem->snd_size, mq_elem->snd_response_mid,
+                                                                  mq_elem->snd_tag); 
+            /* remove queue entries */
+            cl_raw_list_remove_elem(handle->send_message_queue, mq_elem->raw_elem);
+            if (mq_return_value != CL_RETVAL_OK) {
+               CL_LOG_STR(CL_LOG_ERROR,"can't send message:", cl_get_error_text(mq_return_value));
+               free(mq_elem->snd_data);
+            }
+            cl_com_free_endpoint(&(mq_elem->snd_destination));
+            free(mq_elem);
+         }
+         cl_raw_list_unlock(handle->send_message_queue);
+
+
          ret_val = cl_com_open_connection_request_handler(handle->framework, 
                                                           handle->connection_list, 
                                                           the_handler,
@@ -6845,6 +6980,8 @@ static void *cl_com_handle_write_thread(void *t_conf) {
    cl_com_handle_t* handle = NULL;
    int trigger_read_thread = 0;
    char tmp_string[1024];
+   cl_app_message_queue_elem_t* mq_elem = NULL;
+   int mq_return_value = CL_RETVAL_OK; 
 
    /* get pointer to cl_thread_settings_t struct */
    cl_thread_settings_t *thread_config = (cl_thread_settings_t*)t_conf; 
@@ -6883,6 +7020,24 @@ static void *cl_com_handle_write_thread(void *t_conf) {
          cl_raw_list_unlock(cl_com_handle_list);
          
       } else {
+
+         cl_raw_list_lock(handle->send_message_queue);
+         while((mq_elem = cl_app_message_queue_get_first_elem(handle->send_message_queue)) != NULL) {
+            mq_return_value = cl_commlib_send_message_to_endpoint(handle, mq_elem->snd_destination,
+                                                                  mq_elem->snd_ack_type, mq_elem->snd_data,
+                                                                  mq_elem->snd_size, mq_elem->snd_response_mid,
+                                                                  mq_elem->snd_tag); 
+            /* remove queue entries */
+            cl_raw_list_remove_elem(handle->send_message_queue, mq_elem->raw_elem);
+            if (mq_return_value != CL_RETVAL_OK) {
+               CL_LOG_STR(CL_LOG_ERROR,"can't send message:", cl_get_error_text(mq_return_value));
+               free(mq_elem->snd_data);
+            }
+            cl_com_free_endpoint(&(mq_elem->snd_destination));
+            free(mq_elem);
+         }
+         cl_raw_list_unlock(handle->send_message_queue);
+
 
          /* do write select */
          ret_val = cl_com_open_connection_request_handler(handle->framework, 

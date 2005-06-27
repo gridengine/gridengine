@@ -1,3 +1,8 @@
+CR-2005-06-27-1: Enhancem.: - added send message queue for connection
+                              handles (performance enhancement)
+                            - code cleanup
+                 Review:    RD
+
 CR-2005-06-27-0: Testsuite: throughput test:
                             using tcl timestamp command instead of 
                             clock seconds command which caused time measurement

@@ -81,9 +81,7 @@ static Widget pe_alloc_w = 0;
 static Widget pe_urgency_w = 0;
 static Widget pe_control_slaves_w = 0;
 static Widget pe_job_is_first_task_w = 0;
-#ifdef SGE_PQS_API
 static Widget pe_qsort_args_w = 0;
-#endif
 static int add_mode = 0;
 
 /*-------------------------------------------------------------------------*/
@@ -384,10 +382,12 @@ Widget parent
                            "pe_urgency_slots", &pe_urgency_w,
                            "pe_control_slaves", &pe_control_slaves_w,
                            "pe_job_is_first_task", &pe_job_is_first_task_w,
-#ifdef SGE_PQS_API
                            "pe_qsort_args", &pe_qsort_args_w,
-#endif
                            NULL);
+
+#ifndef SGE_PQS_API
+   XtUnmanageChild(pe_qsort_args_w);
+#endif
 
    XtAddCallback(pe_ok, XmNactivateCallback, 
                      qmonPEOk, NULL);

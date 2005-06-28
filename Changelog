@@ -1,3 +1,9 @@
+SG-2005-06-24-0: Bugfix:    getting many E messages "failed building category string for job N"
+                 Issue:     1652
+                 Bugtraq:   6287953
+                 Changed:   qmaster, scheduler
+                 Review:    EB
+
 JG-2005-06-24-0: Bugfix:    qalter -p <negative priority> shows wrong priority.
                  Issue:     403
                  Bugtraq:   2125401, 4769608

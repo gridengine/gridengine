@@ -63,6 +63,7 @@
 #include "sge_userset.h"
 #include "sge_mailrec.h"
 #include "sge_centry.h"
+#include "sge_log.h"
 #include "sge_qref.h"
 
 #include "msg_daemons_common.h"
@@ -873,7 +874,7 @@ lList **alpp
 ) {
    lList *lp = NULL;
    int ret = 0;
-   char str[BUFSIZ];
+   char str[MAX_STRING_SIZE*2];
    lListElem *ep_opt;
 
    DENTER(TOP_LAYER, "sge_unparse_id_list");

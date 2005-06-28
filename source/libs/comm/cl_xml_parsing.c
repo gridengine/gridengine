@@ -1240,6 +1240,7 @@ int cl_xml_parse_MIH(unsigned char* buffer, unsigned long buffer_length, cl_com_
    unsigned long mtag_end = 0;  
    unsigned long rid_begin = 0;
    unsigned long rid_end = 0;
+   int while_helper = 1;
 
 
 
@@ -1415,28 +1416,40 @@ int cl_xml_parse_MIH(unsigned char* buffer, unsigned long buffer_length, cl_com_
          help_buf[help_buf_pointer++] = buffer[i];
       }
       help_buf[help_buf_pointer] = 0;
-      if (strcmp(CL_MIH_MESSAGE_DATA_FORMAT_BIN,help_buf) == 0) {
-         (*message)->df = CL_MIH_DF_BIN;
-      }
-      if (strcmp(CL_MIH_MESSAGE_DATA_FORMAT_XML,help_buf) == 0) {
-         (*message)->df = CL_MIH_DF_XML;
-      }
-      if (strcmp(CL_MIH_MESSAGE_DATA_FORMAT_AM,help_buf) == 0) {
-         (*message)->df = CL_MIH_DF_AM;
-      }
-      if (strcmp(CL_MIH_MESSAGE_DATA_FORMAT_SIM,help_buf) == 0) {
-         (*message)->df = CL_MIH_DF_SIM;
-      }
-      if (strcmp(CL_MIH_MESSAGE_DATA_FORMAT_SIRM,help_buf) == 0) {
-         (*message)->df = CL_MIH_DF_SIRM;
-      }
-      if (strcmp(CL_MIH_MESSAGE_DATA_FORMAT_CCM,help_buf) == 0) {
-         (*message)->df = CL_MIH_DF_CCM;
-      }
-      if (strcmp(CL_MIH_MESSAGE_DATA_FORMAT_CCRM,help_buf) == 0) {
-         (*message)->df = CL_MIH_DF_CCRM;
-      }
+      
+      while(while_helper) {
+         if (strcmp(CL_MIH_MESSAGE_DATA_FORMAT_BIN,help_buf) == 0) {
+            (*message)->df = CL_MIH_DF_BIN;
+            break;
+         }
+         if (strcmp(CL_MIH_MESSAGE_DATA_FORMAT_AM,help_buf) == 0) {
+            (*message)->df = CL_MIH_DF_AM;
+            break;
+         }
+         if (strcmp(CL_MIH_MESSAGE_DATA_FORMAT_CCM,help_buf) == 0) {
+            (*message)->df = CL_MIH_DF_CCM;
+            break;
+         }
+         if (strcmp(CL_MIH_MESSAGE_DATA_FORMAT_CCRM,help_buf) == 0) {
+            (*message)->df = CL_MIH_DF_CCRM;
+            break;
+         }
+         if (strcmp(CL_MIH_MESSAGE_DATA_FORMAT_XML,help_buf) == 0) {
+            (*message)->df = CL_MIH_DF_XML;
+            break;
+         }
+         if (strcmp(CL_MIH_MESSAGE_DATA_FORMAT_SIM,help_buf) == 0) {
+            (*message)->df = CL_MIH_DF_SIM;
+            break;
+         }
+         if (strcmp(CL_MIH_MESSAGE_DATA_FORMAT_SIRM,help_buf) == 0) {
+            (*message)->df = CL_MIH_DF_SIRM;
+            break;
+         }
 
+
+         break;
+      }
    }
    /* get mat */
    if (mat_begin > 0 && mat_end > 0 && mat_end >= mat_begin) {
@@ -1445,14 +1458,21 @@ int cl_xml_parse_MIH(unsigned char* buffer, unsigned long buffer_length, cl_com_
          help_buf[help_buf_pointer++] = buffer[i];
       }
       help_buf[help_buf_pointer] = 0;
-      if (strcmp(CL_MIH_MESSAGE_ACK_TYPE_NAK,help_buf) == 0) {
-         (*message)->mat = CL_MIH_MAT_NAK;
-      }
-      if (strcmp(CL_MIH_MESSAGE_ACK_TYPE_ACK,help_buf) == 0) {
-         (*message)->mat = CL_MIH_MAT_ACK;
-      }
-      if (strcmp(CL_MIH_MESSAGE_ACK_TYPE_SYNC,help_buf) == 0) {
-         (*message)->mat = CL_MIH_MAT_SYNC;
+
+      while(while_helper) {
+         if (strcmp(CL_MIH_MESSAGE_ACK_TYPE_NAK,help_buf) == 0) {
+            (*message)->mat = CL_MIH_MAT_NAK;
+            break;
+         }
+         if (strcmp(CL_MIH_MESSAGE_ACK_TYPE_ACK,help_buf) == 0) {
+            (*message)->mat = CL_MIH_MAT_ACK;
+            break;
+         }
+         if (strcmp(CL_MIH_MESSAGE_ACK_TYPE_SYNC,help_buf) == 0) {
+            (*message)->mat = CL_MIH_MAT_SYNC;
+            break;
+         }
+         break;
       }
    }
 

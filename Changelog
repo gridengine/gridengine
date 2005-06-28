@@ -1,3 +1,7 @@
+CR-2005-06-28-0: Cleanup:   - commlib: skipped unnecessary string compares
+                              when parsing message information headers
+                 Review:    AA
+
 CR-2005-06-27-1: Enhancem.: - added send message queue for connection
                               handles (performance enhancement)
                             - code cleanup

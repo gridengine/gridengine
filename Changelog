@@ -1,3 +1,10 @@
+RD-2005-06-29-0: Bugfix:    - no links for SGE startup scripts for shutdown created
+                            - installation on Red Hat creates wrong rc*.d script names
+                 Changed:   inst_common.sh
+                 Bugtraq:   5063313, 6277874
+                 Issue:     1084, 1669
+                 Review:    MD, CR  
+
 SG-2005-06-24-0: Bugfix:    getting many E messages "failed building category string for job N"
                  Issue:     1652
                  Bugtraq:   6287953

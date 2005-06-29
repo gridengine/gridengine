@@ -951,6 +951,8 @@ CreateSGEStartUpScripts()
 
    if [ -f $TMP_SGE_STARTUP_FILE ]; then
       Execute rm $TMP_SGE_STARTUP_FILE
+      Execute touch $TMP_SGE_STARTUP_FILE
+      Execute $CHMOD a+r $TMP_SGE_STARTUP_FILE
    fi
    if [ -f ${TMP_SGE_STARTUP_FILE}.0 ]; then
       Execute rm ${TMP_SGE_STARTUP_FILE}.0
@@ -1041,16 +1043,19 @@ AddSGEStartUpScript()
       TMP_SGE_STARTUP_FILE=/tmp/sgemaster.$$
       STARTUP_FILE_NAME=sgemaster
       S95NAME=S95sgemaster
+      K03NAME=K03sgemaster
       DAEMON_NAME="qmaster/scheduler"
    elif [ $hosttype = "bdb" ]; then
       TMP_SGE_STARTUP_FILE=/tmp/sgebdb.$$
       STARTUP_FILE_NAME=sgebdb
       S95NAME=S94sgebdb
+      K03NAME=K02sgebdb
       DAEMON_NAME="berkeleydb"
    else
       TMP_SGE_STARTUP_FILE=/tmp/sgeexecd.$$
       STARTUP_FILE_NAME=sgeexecd
       S95NAME=S96sgeexecd
+      K03NAME=K04sgeexecd
       DAEMON_NAME="execd"
    fi
 
@@ -1092,14 +1097,45 @@ InstallRcScript()
       echo /usr/lib/lsb/install_initd $RC_PREFIX/$STARTUP_FILE_NAME
       Execute cp $SGE_STARTUP_FILE $RC_PREFIX/$STARTUP_FILE_NAME
       Execute /usr/lib/lsb/install_initd $RC_PREFIX/$STARTUP_FILE_NAME
+      # Several old Red Hat releases do not create proper startup links from LSB conform
+      # scripts. So we need to check if the proper links were created.
+      # See RedHat: https://bugzilla.redhat.com/bugzilla/long_list.cgi?buglist=106193
+      if [ -f "/etc/redhat-release" -o -f "/etc/fedora-release" ]; then
+         # According to Red Hat documentation all rcX.d directories are in /etc/rc.d
+         # we hope this will never change for Red Hat
+         RCD_PREFIX="/etc/rc.d"
+         for runlevel in 0 1 2 3 4 5 6; do
+            # check for a corrupted startup link
+            if [ -L "$RCD_PREFIX/rc$runlevel.d/S-1$STARTUP_FILE_NAME" ]; then
+               Execute rm -f $RCD_PREFIX/rc$runlevel.d/S-1$STARTUP_FILE_NAME
+               # create new correct startup link
+               if [ $runlevel -eq 3 -o $runlevel -eq 5 ]; then
+                  Execute rm -f $RCD_PREFIX/rc$runlevel.d/$S95NAME
+                  Execute ln -s $RC_PREFIX/$STARTUP_FILE_NAME $RCD_PREFIX/rc$runlevel.d/$S95NAME
+               fi
+            fi
+            # check for a corrupted shutdown link
+            if [ -L "$RCD_PREFIX/rc$runlevel.d/K-1$STARTUP_FILE_NAME" ]; then
+               Execute rm -f $RCD_PREFIX/rc$runlevel.d/K-1$STARTUP_FILE_NAME
+               Execute rm -f $RCD_PREFIX/rc$runlevel.d/$K03NAME
+               # create new correct shutdown link
+               if [ $runlevel -eq 0 -o $runlevel -eq 1 -o $runlevel -eq 2 -o $runlevel -eq 6 ]; then
+                  Execute rm -f $RCD_PREFIX/rc$runlevel.d/$K03NAME
+                  Execute ln -s $RC_PREFIX/$STARTUP_FILE_NAME $RCD_PREFIX/rc$runlevel.d/$K03NAME
+               fi
+            fi
+         done
+      fi
    # If we have System V we need to put the startup script to $RC_PREFIX/init.d
    # and make a link in $RC_PREFIX/rc2.d to $RC_PREFIX/init.d
    elif [ "$RC_FILE" = "sysv_rc" ]; then
-      $INFOTEXT "Installing startup script %s" "$RC_PREFIX/$RC_DIR/$S95NAME"
+      $INFOTEXT "Installing startup script %s and %s" "$RC_PREFIX/$RC_DIR/$S95NAME" "$RC_PREFIX/$RC_DIR/$K03NAME"
       Execute rm -f $RC_PREFIX/$RC_DIR/$S95NAME
+      Execute rm -f $RC_PREFIX/$RC_DIR/$K03NAME
       Execute cp $SGE_STARTUP_FILE $RC_PREFIX/init.d/$STARTUP_FILE_NAME
       Execute chmod a+x $RC_PREFIX/init.d/$STARTUP_FILE_NAME
       Execute ln -s $RC_PREFIX/init.d/$STARTUP_FILE_NAME $RC_PREFIX/$RC_DIR/$S95NAME
+      Execute ln -s $RC_PREFIX/init.d/$STARTUP_FILE_NAME $RC_PREFIX/$RC_DIR/$K03NAME
 
       # runlevel management in Linux is different -
       # each runlevel contains full set of links
@@ -1112,9 +1148,11 @@ InstallRcScript()
       lx2?-*)
          runlevel=`grep "^id:.:initdefault:"  /etc/inittab | cut -f2 -d:`
          if [ "$runlevel" = 2 -o  "$runlevel" = 5 ]; then
-            $INFOTEXT "Installing startup script also in %s" "$RC_PREFIX/rc${runlevel}.d/$S95NAME"
+            $INFOTEXT "Installing startup script also in %s and %s" "$RC_PREFIX/rc${runlevel}.d/$S95NAME" "$RC_PREFIX/rc${runlevel}.d/$K03NAME"
             Execute rm -f $RC_PREFIX/rc${runlevel}.d/$S95NAME
+            Execute rm -f $RC_PREFIX/rc${runlevel}.d/$K03NAME
             Execute ln -s $RC_PREFIX/init.d/$STARTUP_FILE_NAME $RC_PREFIX/rc${runlevel}.d/$S95NAME
+            Execute ln -s $RC_PREFIX/init.d/$STARTUP_FILE_NAME $RC_PREFIX/rc${runlevel}.d/$K03NAME
          fi
          ;;
        esac
@@ -1129,7 +1167,7 @@ InstallRcScript()
       echo  cp $SGE_STARTUP_FILE $RC_PREFIX/$STARTUP_FILE_NAME
       echo /usr/sbin/update-rc.d $STARTUP_FILE_NAME
       Execute cp $SGE_STARTUP_FILE $RC_PREFIX/$STARTUP_FILE_NAME
-      /usr/sbin/update-rc.d $STARTUP_FILE_NAME defaults 95
+      /usr/sbin/update-rc.d $STARTUP_FILE_NAME defaults 95 03
    elif [ "$RC_FILE" = "freebsd" ]; then
       echo  cp $SGE_STARTUP_FILE $RC_PREFIX/sge${RC_SUFFIX}
       Execute cp $SGE_STARTUP_FILE $RC_PREFIX/sge${RC_SUFFIX}
@@ -1769,16 +1807,19 @@ RemoveRcScript()
       TMP_SGE_STARTUP_FILE=/tmp/sgemaster.$$
       STARTUP_FILE_NAME=sgemaster
       S95NAME=S95sgemaster
+      K03NAME=K03sgemaster
       DAEMON_NAME="qmaster/scheduler"
    elif [ $hosttype = "bdb" ]; then
       TMP_SGE_STARTUP_FILE=/tmp/sgebdb.$$
       STARTUP_FILE_NAME=sgebdb
       S95NAME=S94sgebdb
+      K03NAME=K04sgebdb
       DAEMON_NAME="berkeleydb"
    else
       TMP_SGE_STARTUP_FILE=/tmp/sgeexecd.$$
       STARTUP_FILE_NAME=sgeexecd
       S95NAME=S96sgeexecd
+      K03NAME=K02sgeexecd
       DAEMON_NAME="execd"
    fi
 
@@ -1807,11 +1848,34 @@ RemoveRcScript()
       fi
    fi
 
+   # If system is Linux Standard Base (LSB) compliant, use the install_initd utility
+   if [ "$RC_FILE" = lsb ]; then
+      echo /usr/lib/lsb/remove_initd $RC_PREFIX/$STARTUP_FILE_NAME
+      Execute /usr/lib/lsb/remove_initd $RC_PREFIX/$STARTUP_FILE_NAME
+      # Several old Red Hat releases do not create/remove startup links from LSB conform
+      # scripts. So we need to check if the links were deleted.
+      # See RedHat: https://bugzilla.redhat.com/bugzilla/long_list.cgi?buglist=106193
+      if [ -f "/etc/redhat-release" -o -f "/etc/fedora-release" ]; then
+         RCD_PREFIX="/etc/rc.d"
+         # Are all startup links correctly removed?
+         for runlevel in 3 5; do
+            if [ -L "$RCD_PREFIX/rc$runlevel.d/$S95NAME" ]; then
+               Execute rm -f $RCD_PREFIX/rc$runlevel.d/$S95NAME
+            fi
+         done
+         # Are all shutdown links correctly removed?
+         for runlevel in 0 1 2 6; do
+            if [ -L "$RCD_PREFIX/rc$runlevel.d/$K03NAME" ]; then
+               Execute rm -f $RCD_PREFIX/rc$runlevel.d/$K03NAME
+            fi
+         done
+      fi
    # If we have System V we need to put the startup script to $RC_PREFIX/init.d
    # and make a link in $RC_PREFIX/rc2.d to $RC_PREFIX/init.d
-   if [ "$RC_FILE" = "sysv_rc" ]; then
-      $INFOTEXT "Removing startup script %s" "$RC_PREFIX/$RC_DIR/$S95NAME"
+   elif [ "$RC_FILE" = "sysv_rc" ]; then
+      $INFOTEXT "Removing startup script %s and %s" "$RC_PREFIX/$RC_DIR/$S95NAME" "$RC_PREFIX/$RC_DIR/$K03NAME"
       Execute rm -f $RC_PREFIX/$RC_DIR/$S95NAME
+      Execute rm -f $RC_PREFIX/$RC_DIR/$K03NAME
       Execute rm -f $RC_PREFIX/init.d/$STARTUP_FILE_NAME
 
       # runlevel management in Linux is different -
@@ -1825,8 +1889,9 @@ RemoveRcScript()
       lx2?-*)
          runlevel=`grep "^id:.:initdefault:"  /etc/inittab | cut -f2 -d:`
          if [ "$runlevel" = 2 -o  "$runlevel" = 5 ]; then
-            $INFOTEXT "Removing startup script %s" "$RC_PREFIX/rc${runlevel}.d/$S95NAME"
+            $INFOTEXT "Removing startup script %s and %s" "$RC_PREFIX/rc${runlevel}.d/$S95NAME" "$RC_PREFIX/rc${runlevel}.d/$K03NAME"
             Execute rm -f $RC_PREFIX/rc${runlevel}.d/$S95NAME
+            Execute rm -f $RC_PREFIX/rc${runlevel}.d/$K03NAME
          fi
          ;;
        esac

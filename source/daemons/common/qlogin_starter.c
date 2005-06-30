@@ -537,7 +537,7 @@ int qlogin_starter(const char *cwd, char *daemon, char** env)
     * directory 
     */
    port = ntohs(serv_addr.sin_port);
-   SHEPHERD_TRACE((err_str, "bound to port %d\n", port));
+   SHEPHERD_TRACE((err_str, "bound to port %d", port));
  
    sge_root = sge_get_root_dir(0, NULL, 0, 1);
    arch = getenv("ARC");

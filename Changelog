@@ -1,3 +1,7 @@
+RD-2005-06-30-2: Bugfix:    disabled admin mail if qrsh_exit_code can't be read
+                            removed empty lines in shepherd trace file
+                 Review:    JG
+
 RD-2005-06-30-1: Testsuite: fix for running as other user as sgetest
                  Review:    CR
 

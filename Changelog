@@ -1,3 +1,8 @@
+RD-2005-06-30-0: Bugfix:    backup and restore was broken
+                            several comments corrected
+                 Changed:   inst_common.sh 
+                 Review:    JG
+
 JG-2005-06-30-0: Testsuite: Check for core files during cluster shutdown failed
                             if non local spool directories were used.
                             Fixed incomplete cleanup of consumable resources 

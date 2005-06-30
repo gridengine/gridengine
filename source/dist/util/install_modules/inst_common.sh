@@ -1082,7 +1082,7 @@ InstallRcScript()
       echo /usr/lib/lsb/install_initd $RC_PREFIX/$STARTUP_FILE_NAME
       Execute cp $SGE_STARTUP_FILE $RC_PREFIX/$STARTUP_FILE_NAME
       Execute /usr/lib/lsb/install_initd $RC_PREFIX/$STARTUP_FILE_NAME
-      # Several old Red Hat releases does not create proper startup links from LSB conform
+      # Several old Red Hat releases do not create proper startup links from LSB conform
       # scripts. So we need to check if the proper links were created.
       # See RedHat: https://bugzilla.redhat.com/bugzilla/long_list.cgi?buglist=106193
       if [ -f "/etc/redhat-release" -o -f "/etc/fedora-release" ]; then
@@ -1090,7 +1090,7 @@ InstallRcScript()
          # we hope this will never change for Red Hat
          RCD_PREFIX="/etc/rc.d"
          for runlevel in 0 1 2 3 4 5 6; do
-            # check for a currupted startup link
+            # check for a corrupted startup link
             if [ -L "$RCD_PREFIX/rc$runlevel.d/S-1$STARTUP_FILE_NAME" ]; then
                Execute rm -f $RCD_PREFIX/rc$runlevel.d/S-1$STARTUP_FILE_NAME
                # create new correct startup link
@@ -1099,7 +1099,7 @@ InstallRcScript()
                   Execute ln -s $RC_PREFIX/$STARTUP_FILE_NAME $RCD_PREFIX/rc$runlevel.d/$S95NAME
                fi
             fi
-            # check for a currpeted shutdown link
+            # check for a corrupted shutdown link
             if [ -L "$RCD_PREFIX/rc$runlevel.d/K-1$STARTUP_FILE_NAME" ]; then
                Execute rm -f $RCD_PREFIX/rc$runlevel.d/K-1$STARTUP_FILE_NAME
                Execute rm -f $RCD_PREFIX/rc$runlevel.d/$K03NAME
@@ -1369,7 +1369,7 @@ CheckRunningDaemon()
 BackupConfig()
 {
    DATE=`date '+%Y-%m-%d_%H_%M_%S'`
-   BUP_BDB_COMMON_FILE_LIST_TMP="accounting bootstrap qtask settings.sh act_qmaster sgemaster host_aliases settings.csh sgeexecd sgebdb shadow_masters" 
+   BUP_BDB_COMMON_FILE_LIST_TMP="accounting bootstrap qtask settings.sh act_qmaster sgemaster host_aliases settings.csh sgeexecd sgebdb shadow_masters"
    BUP_BDB_COMMON_DIR_LIST_TMP="sgeCA"
    BUP_BDB_SPOOL_FILE_LIST_TMP="jobseqnum"
    BUP_CLASSIC_COMMON_FILE_LIST_TMP="configuration sched_configuration accounting bootstrap qtask settings.sh act_qmaster sgemaster host_aliases settings.csh sgeexecd shadow_masters"
@@ -1433,7 +1433,7 @@ BackupConfig()
 RestoreConfig()
 {
    DATE=`date '+%H_%M_%S'`
-   BUP_COMMON_FILE_LIST="accounting bootstrap qtask settings.sh act_qmaster sgemaster host_aliases settings.csh sgeexecd sgebdb shadow_masters" 
+   BUP_COMMON_FILE_LIST="accounting bootstrap qtask settings.sh act_qmaster sgemaster host_aliases settings.csh sgeexecd sgebdb shadow_masters"
    BUP_COMMON_DIR_LIST="sgeCA"
    BUP_SPOOL_FILE_LIST="jobseqnum"
    BUP_CLASSIC_COMMON_FILE_LIST="configuration sched_configuration accounting bootstrap qtask settings.sh act_qmaster sgemaster host_aliases settings.csh sgeexecd shadow_masters"
@@ -1837,7 +1837,7 @@ RemoveRcScript()
    if [ "$RC_FILE" = lsb ]; then
       echo /usr/lib/lsb/remove_initd $RC_PREFIX/$STARTUP_FILE_NAME
       Execute /usr/lib/lsb/remove_initd $RC_PREFIX/$STARTUP_FILE_NAME
-      # Several old Red Hat releases does not create/remove startup links from LSB conform
+      # Several old Red Hat releases do not create/remove startup links from LSB conform
       # scripts. So we need to check if the links were deleted.
       # See RedHat: https://bugzilla.redhat.com/bugzilla/long_list.cgi?buglist=106193
       if [ -f "/etc/redhat-release" -o -f "/etc/fedora-release" ]; then
@@ -2176,7 +2176,7 @@ ExtractBackup()
             loop_stop="false"
          fi
       done
-      Makedir /tmp/bup_tmp_$DATE
+      mkdir /tmp/bup_tmp_$DATE
       $INFOTEXT -n "\nCopying backupfile to /tmp/bup_tmp_%s\n" $DATE
       cp $bup_file /tmp/bup_tmp_$DATE
       cd /tmp/bup_tmp_$DATE/

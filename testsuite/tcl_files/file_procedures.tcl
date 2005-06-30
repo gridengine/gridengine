@@ -1499,6 +1499,10 @@ proc create_shell_script { scriptfile
       return
    }
 
+   catch { exec chmod 0755 $scriptfile } result
+   debug_puts $result
+
+
    # script header
    puts $script "#!${script_path}"
    puts $script "# Automatic generated script from Grid Engine Testsuite"

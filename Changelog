@@ -1,3 +1,12 @@
+RD-2005-06-24-0: Bugfix:    tight integration: temporary files are not deleted
+                            at task exit
+                            disabled admin mail if qrsh_exit_code can't be read
+                            removed empty lines in shepherd trace file
+                 Changed:   shepherd
+                 Bugster:   6287867
+                 Issue:     1410
+                 Review:    JG
+
 RD-2005-06-29-0: Bugfix:    - no links for SGE startup scripts for shutdown created
                             - installation on Red Hat creates wrong rc*.d script names
                  Changed:   inst_common.sh

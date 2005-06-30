@@ -1095,10 +1095,11 @@ int ckpt_type
 
          sge_switch2start_user();
          success = get_exit_code_of_qrsh_starter(&qrsh_exit_code);
+         delete_qrsh_pid_file();
          sge_switch2admin_user();
 
          if (success != 0) {
-            shepherd_error_sprintf("can't get qrsh_exit_code\n");
+            shepherd_trace("can't get qrsh_exit_code");
          }
 
          /* normal exit */
@@ -1109,11 +1110,11 @@ int ckpt_type
 
             qrsh_error = get_error_of_qrsh_starter();
             if (qrsh_error != NULL) {
-               shepherd_error_sprintf("startup of qrsh job failed: "SFN"\n",
+               shepherd_error_sprintf("startup of qrsh job failed: "SFN"",
                                       qrsh_error);
                FREE(qrsh_error);
             } else {
-               shepherd_trace_sprintf("job exited normally, exit code is %d\n", 
+               shepherd_trace_sprintf("job exited normally, exit code is %d", 
                                       exit_status);
             }
          }
@@ -1123,7 +1124,7 @@ int ckpt_type
             child_signal = WTERMSIG(qrsh_exit_code);
             exit_status = 128 + child_signal;
             shepherd_trace_sprintf("job exited on signal %d, exit code is "
-                                   "%d\n", child_signal, exit_status);
+                                   "%d", child_signal, exit_status);
          }
       }
    

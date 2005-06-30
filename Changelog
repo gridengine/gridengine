@@ -1,3 +1,7 @@
+RD-2005-06-30-0: Bugfix:    sgepasswd not covered by setfileperm.sh 
+                 Changed:   setfileperm.sh
+                 Review:    CR           
+
 HP-2005-06-30-0: Bugfix:    Used static linking for SSL libraries for sge_passwd and
                             Windows sge_sheperd and sge_execd,
                             moved functions from wingridlib to utilib so it can 

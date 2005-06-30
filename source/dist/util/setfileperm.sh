@@ -53,6 +53,8 @@ FILELIST="3rd_party bin ckpt examples inst_sge install_execd install_qmaster \
 
 OPTFILES="catman doc include man"  
 
+SUIDFILES="utilbin/*/rsh utilbin/*/rlogin utilbin/*/testsuidroot bin/*/sgepasswd"
+
 umask 022
 
 #---------------------------------------------------
@@ -105,6 +107,14 @@ fi
 
 . $SGE_ROOT/util/arch_variables
 
+if [ $ARCH = "win32-x86" ]; then
+   echo
+   echo "ERROR: Using this script on windows is not supported!"
+   echo "Please execute this script on a unix host"
+   echo
+   exit 1
+fi
+
 if [ $# -lt 1 ]; then
    echo
    echo Set file permissions and owner of Grid Engine distribution in \$SGE_ROOT
@@ -153,7 +163,7 @@ else
    $ECHO "   \$SGE_ROOT/utilbin/<arch>/rlogin"
    $ECHO "   \$SGE_ROOT/utilbin/<arch>/rsh"
    $ECHO "   \$SGE_ROOT/utilbin/<arch>/testsuidroot"
-   #$ECHO "   \$SGE_ROOT/bin/<arch>/sgepasswd"
+   $ECHO "   \$SGE_ROOT/bin/<arch>/sgepasswd"
    $ECHO
 
    TEXT="Do you want to set the file permissions (yes/no) [NO] >> \c"
@@ -198,9 +208,17 @@ for f in $FILELIST $OPTFILES; do
    fi
 done
 
-chown 0 utilbin/*/rsh utilbin/*/rlogin utilbin/*/testsuidroot #bin/*/sgepasswd
-chgrp 0 utilbin/*/rsh utilbin/*/rlogin utilbin/*/testsuidroot #bin/*/sgepasswd
-chmod 4511 utilbin/*/rsh utilbin/*/rlogin utilbin/*/testsuidroot #bin/*/sgepasswd
+for file in $SUIDFILES; do
+
+   # Windows NFS Server does not like suid files
+   echo $file
+   if [ "`echo $file | grep win32-x86`" != "" ]; then
+      chmod 511 $file
+      echo "this was windows"
+   else
+      chmod 4511 $file
+   fi
+done
 
 $ECHO
 $ECHO "Your file permissions were set"

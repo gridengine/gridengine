@@ -39,7 +39,9 @@ DRMAA_HOWTO_SRC   = howto1.c howto2.c howto2_1.c howto3.c howto3_1.c howto3_2.c 
 
 DRMAA_HOWTO_OBJS  = $(DRMAA_HOWTO_SRC:.c=.o)
 
-drmaa_howto_all: howto1 howto2 howto2_1 howto3 howto3_1 howto3_2 howto4 howto5 howto6
+DRMAA_HOWTO_ALL   = howto1 howto2 howto2_1 howto3 howto3_1 howto3_2 howto4 howto5 howto6
+
+drmaa_howto_all: $(DRMAA_HOWTO_ALL)
 
 drmaa_howto_clean: 
 	$(RM) $(DRMAA_HOWTO_ALL) $(DRMAA_HOWTO_OBJS)
@@ -47,56 +49,56 @@ drmaa_howto_clean:
 ###############################################################################
 # rules to build object codes
 ###############################################################################
-howto1: howto1.o $(DRMAALIB)
-	$(LD_WRAPPER) $(CC) $(CFLAGS) -o howto1 howto1.o $(LFLAGS) -ldrmaa $(LIBS) $(SLIBS) $(DLLIB)
+howto1: howto1.o $(DRMAALIB) $(WINGRIDLIB_DEP)
+	$(LD_WRAPPER) $(CC) $(CFLAGS) -o howto1 howto1.o $(LFLAGS) -ldrmaa $(WINGRIDLIB) $(LIBS) $(SLIBS) $(DLLIB)
 
 howto1.o: $(DRMAA_HOWTO_DIR)/howto1.c
 	$(CC) $(CFLAGS) -c $(DRMAA_HOWTO_DIR)/howto1.c
 
-howto2: howto2.o $(DRMAALIB)
-	$(LD_WRAPPER) $(CC) $(CFLAGS) -o howto2 howto2.o $(LFLAGS) -ldrmaa $(LIBS) $(SLIBS) $(DLLIB)
+howto2: howto2.o $(DRMAALIB) $(WINGRIDLIB_DEP)
+	$(LD_WRAPPER) $(CC) $(CFLAGS) -o howto2 howto2.o $(LFLAGS) -ldrmaa $(WINGRIDLIB) $(LIBS) $(SLIBS) $(DLLIB)
 
 howto2.o: $(DRMAA_HOWTO_DIR)/howto2.c
 	$(CC) $(CFLAGS) -c $(DRMAA_HOWTO_DIR)/howto2.c
 
-howto2_1: howto2_1.o $(DRMAALIB)
-	$(LD_WRAPPER) $(CC) $(CFLAGS) -o howto2_1 howto2_1.o $(LFLAGS) -ldrmaa $(LIBS) $(SLIBS) $(DLLIB)
+howto2_1: howto2_1.o $(DRMAALIB) $(WINGRIDLIB_DEP)
+	$(LD_WRAPPER) $(CC) $(CFLAGS) -o howto2_1 howto2_1.o $(LFLAGS) -ldrmaa $(WINGRIDLIB) $(LIBS) $(SLIBS) $(DLLIB)
 
 howto2_1.o: $(DRMAA_HOWTO_DIR)/howto2_1.c
 	$(CC) $(CFLAGS) -c $(DRMAA_HOWTO_DIR)/howto2_1.c
 
-howto3: howto3.o $(DRMAALIB)
-	$(LD_WRAPPER) $(CC) $(CFLAGS) -o howto3 howto3.o $(LFLAGS) -ldrmaa $(LIBS) $(SLIBS) $(DLLIB)
+howto3: howto3.o $(DRMAALIB) $(WINGRIDLIB_DEP)
+	$(LD_WRAPPER) $(CC) $(CFLAGS) -o howto3 howto3.o $(LFLAGS) -ldrmaa $(WINGRIDLIB) $(LIBS) $(SLIBS) $(DLLIB)
 
 howto3.o: $(DRMAA_HOWTO_DIR)/howto3.c
 	$(CC) $(CFLAGS) -c $(DRMAA_HOWTO_DIR)/howto3.c
 
-howto3_1: howto3_1.o $(DRMAALIB)
-	$(LD_WRAPPER) $(CC) $(CFLAGS) -o howto3_1 howto3_1.o $(LFLAGS) -ldrmaa $(LIBS) $(SLIBS) $(DLLIB)
+howto3_1: howto3_1.o $(DRMAALIB) $(WINGRIDLIB_DEP)
+	$(LD_WRAPPER) $(CC) $(CFLAGS) -o howto3_1 howto3_1.o $(LFLAGS) -ldrmaa $(WINGRIDLIB) $(LIBS) $(SLIBS) $(DLLIB)
 
 howto3_1.o: $(DRMAA_HOWTO_DIR)/howto3_1.c
 	$(CC) $(CFLAGS) -c $(DRMAA_HOWTO_DIR)/howto3_1.c
 
-howto3_2: howto3_2.o $(DRMAALIB)
-	$(LD_WRAPPER) $(CC) $(CFLAGS) -o howto3_2 howto3_2.o $(LFLAGS) -ldrmaa $(LIBS) $(SLIBS) $(DLLIB)
+howto3_2: howto3_2.o $(DRMAALIB) $(WINGRIDLIB_DEP)
+	$(LD_WRAPPER) $(CC) $(CFLAGS) -o howto3_2 howto3_2.o $(LFLAGS) -ldrmaa $(WINGRIDLIB) $(LIBS) $(SLIBS) $(DLLIB)
 
 howto3_2.o: $(DRMAA_HOWTO_DIR)/howto3_2.c
 	$(CC) $(CFLAGS) -c $(DRMAA_HOWTO_DIR)/howto3_2.c
 
-howto4: howto4.o $(DRMAALIB)
-	$(LD_WRAPPER) $(CC) $(CFLAGS) -o howto4 howto4.o $(LFLAGS) -ldrmaa $(LIBS) $(SLIBS) $(DLLIB)
+howto4: howto4.o $(DRMAALIB) $(WINGRIDLIB_DEP)
+	$(LD_WRAPPER) $(CC) $(CFLAGS) -o howto4 howto4.o $(LFLAGS) -ldrmaa $(WINGRIDLIB) $(LIBS) $(SLIBS) $(DLLIB)
 
 howto4.o: $(DRMAA_HOWTO_DIR)/howto4.c
 	$(CC) $(CFLAGS) -c $(DRMAA_HOWTO_DIR)/howto4.c
 
-howto5: howto5.o $(DRMAALIB)
-	$(LD_WRAPPER) $(CC) $(CFLAGS) -o howto5 howto5.o $(LFLAGS) -ldrmaa $(LIBS) $(SLIBS) $(DLLIB)
+howto5: howto5.o $(DRMAALIB) $(WINGRIDLIB_DEP)
+	$(LD_WRAPPER) $(CC) $(CFLAGS) -o howto5 howto5.o $(LFLAGS) -ldrmaa $(WINGRIDLIB) $(LIBS) $(SLIBS) $(DLLIB)
 
 howto5.o: $(DRMAA_HOWTO_DIR)/howto5.c
 	$(CC) $(CFLAGS) -c $(DRMAA_HOWTO_DIR)/howto5.c
 
-howto6: howto6.o $(DRMAALIB)
-	$(LD_WRAPPER) $(CC) $(CFLAGS) -o howto6 howto6.o $(LFLAGS) -ldrmaa $(LIBS) $(SLIBS) $(DLLIB)
+howto6: howto6.o $(DRMAALIB) $(WINGRIDLIB_DEP)
+	$(LD_WRAPPER) $(CC) $(CFLAGS) -o howto6 howto6.o $(LFLAGS) -ldrmaa $(WINGRIDLIB) $(LIBS) $(SLIBS) $(DLLIB)
 
 howto6.o: $(DRMAA_HOWTO_DIR)/howto6.c
 	$(CC) $(CFLAGS) -c $(DRMAA_HOWTO_DIR)/howto6.c

@@ -482,10 +482,10 @@ int qlogin_starter(const char *cwd, char *daemon, char** env)
                    getuid(), geteuid(), getgid(), getegid()));
    
    /* must be root because we must access /dev/something */
-   if( setgid(sge_get_superuser_gid()) ||
-       setuid(sge_get_superuser_id()) ||
-       setegid(sge_get_superuser_gid()) ||
-       seteuid(sge_get_superuser_id())) {
+   if( setgid(SGE_SUPERUSER_GID) ||
+       setuid(SGE_SUPERUSER_UID) ||
+       setegid(SGE_SUPERUSER_GID) ||
+       seteuid(SGE_SUPERUSER_UID)) {
       SHEPHERD_TRACE((err_str, "cannot change uid/gid\n"));
       return 4;
    }

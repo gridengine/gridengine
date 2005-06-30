@@ -213,7 +213,7 @@ pid_t sge_peopen(const char *shell, int login_shell, const char *command,
          if (myuid != pw->pw_uid) {
  
             /* Only change user if we differ from the wanted user */
-            if(myuid != sge_get_superuser_id()) {
+            if(myuid != SGE_SUPERUSER_UID) {
                write(2, not_root, sizeof(not_root));
                SGE_EXIT(1);
             }                             

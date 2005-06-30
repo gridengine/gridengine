@@ -1540,7 +1540,7 @@ char *err_str
     * because there seems to be some bug with inheriting euid
     * over a fork.
     */
-   seteuid(wl_get_superuser_id());
+   seteuid(SGE_SUPERUSER_UID);
 #endif
 
    DPRINTF(("**********************CHILD*********************\n"));

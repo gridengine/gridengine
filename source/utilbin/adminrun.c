@@ -57,7 +57,7 @@ int main(int argc, char **argv)
    if (argc < 3)
       usage();
 
-   if(geteuid() != sge_get_superuser_id()) {
+   if(geteuid() != SGE_SUPERUSER_UID) {
       argv+=2;
       execvp(argv[0], argv);
       fprintf(stderr, MSG_COMMAND_EXECUTEFAILED_S , argv[0]);

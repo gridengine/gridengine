@@ -1,3 +1,18 @@
+HP-2005-06-30-0: Bugfix:    Used static linking for SSL libraries for sge_passwd and
+                            Windows sge_sheperd and sge_execd,
+                            moved functions from wingridlib to utilib so it can 
+                            link now,
+                            inserted improved debug, warning and error informations.
+                 Changed:   aimk+Makefiles, utilib, wingridlib, sgepasswd
+                 Review:    AH
+
+RD-2005-06-29-0: Bugfix:    - no links for SGE startup scripts for shutdown created
+                            - installation on Red Hat creates wrong rc*.d script names
+                 Changed:   inst_common.sh
+                 Bugtraq:   5063313, 6277874
+                 Issue:     1084, 1669
+                 Review:    MD, CR  
+
 RD-2005-06-24-0: Bugfix:    tight integration: temporary files are not deleted
                             at task exit
                             disabled admin mail if qrsh_exit_code can't be read
@@ -6,13 +21,6 @@ RD-2005-06-24-0: Bugfix:    tight integration: temporary files are not deleted
                  Bugster:   6287867
                  Issue:     1410
                  Review:    JG
-
-RD-2005-06-29-0: Bugfix:    - no links for SGE startup scripts for shutdown created
-                            - installation on Red Hat creates wrong rc*.d script names
-                 Changed:   inst_common.sh
-                 Bugtraq:   5063313, 6277874
-                 Issue:     1084, 1669
-                 Review:    MD, CR  
 
 SG-2005-06-24-0: Bugfix:    getting many E messages "failed building category string for job N"
                  Issue:     1652

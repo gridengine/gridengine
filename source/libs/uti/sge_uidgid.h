@@ -46,18 +46,23 @@
 #  define seteuid(euid) setreuid(-1, euid)
 #  define setegid(egid) setregid(-1, egid)
 #  define getgrgid_r getgrgid_nomembers_r
+#  define SGE_SUPERUSER_UID wl_get_superuser_id()
+#  define SGE_SUPERUSER_GID wl_get_superuser_gid() 
+#else
+#  define SGE_SUPERUSER_UID 0
+#  define SGE_SUPERUSER_GID 0
 #endif
 
 #ifndef MAX_NIS_RETRIES
-#   define MAX_NIS_RETRIES 10
+#  define MAX_NIS_RETRIES 10
 #endif    
 
 void uidgid_mt_init(void);
 
 bool sge_is_start_user_superuser(void);
-bool sge_is_id_superuser(uid_t id);
-uid_t sge_get_superuser_id(void);
-gid_t sge_get_superuser_gid(void);
+int password_read_file(char **users[], char**encryped_pwds[], const char *filename);
+const char* sge_get_file_passwd(void);
+
 int sge_set_admin_username(const char *username, char *err_str);
 int sge_switch2admin_user(void);
 int sge_switch2start_user(void);

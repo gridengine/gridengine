@@ -409,8 +409,8 @@ set QMAKE            = 1
 set QTCSH            = 1
 set MAKESTRPTIME     = 0
 set MAKEFNMATCH      = 0
-set MAKEWINGRIDLIB   = 1
-set MAKEWINGRIDAPP   = 1
+set MAKEWINGRIDLIB   = 0
+set MAKEWINGRIDAPP   = 0
 set WITH_USERMAPPING = 0 # Compile without usermapping feature
 
 # Default Flags and Libraries 
@@ -498,6 +498,10 @@ set SECLIBS_STATIC    = "$OPENSSL_HOME/lib/libssl.a $OPENSSL_HOME/lib/libcrypto.
 set SECLIBOBJS        = ""
 set SECTARGETS        = ""
 set KLFLAGS           = "-L$OPENSSL_HOME/lib"
+
+# WIN
+set WINGRIDLIB        = ""
+set WINGRIDLIB_DEP    = ""
 
 # GSS
 set GSSDEPEND         = ""
@@ -1425,12 +1429,13 @@ case WIN32_X86:
    set MAKE = gmake
 
    # Default build targets for WIN32_X86 for which we have seperate make files
+   set MAKEWINGRIDLIB   = 1
+   set MAKEWINGRIDAPP   = 1
    set QMON             = 0
    set MAKESTRPTIME     = 0
    set MAKEFNMATCH      = 0
    set WITH_USERMAPPING = 0 # Compile without usermapping feature
    set COMPILE_DC       = 1
-
 
    # generate all not compilable targets using touch
    if (0) then
@@ -1457,8 +1462,9 @@ case WIN32_X86:
    endif
    endif
    
-   set CORE_INCLUDE = "$CORE_INCLUDE -I../libs/wingrid"
-   set LIBS = "$LIBS -lsge -lwingrid -lcomm -lsge -levc -levm -lmir -lsgeobjd -ldl -lrmon -luti -llck -lgdi -lsgeobj"
+   set CORE_INCLUDE   = "$CORE_INCLUDE -I../libs/wingrid"
+   set WINGRIDLIB     = "-lwingrid $SECLIBS_STATIC"
+   set WINGRIDLIB_DEP = "libwingrid.a"
 
    if ($OPTIMIZATION == 1) then
       set OFLAG = "-O3"
@@ -1469,11 +1475,16 @@ case WIN32_X86:
    if ($CC == gcc) then
       set CC  = gcc
       set CXX = gcc
-      set CFLAGS = "-Wl,-EL,-b=pe-i386 -Wall -Werror -O0 -pipe -DINTERIX -D$COMPILE_ARCH -DGETHOSTBYNAME_M -DGETHOSTBYADDR_M -D_ALL_SOURCE -D_REENTRANT $DEBUG_FLAG $CFLAGS"      
+      set CFLAGS = "$DEBUG_FLAG $CFLAGS"
+      set CFLAGS = "-DGETHOSTBYADDR_M -D_ALL_SOURCE -D_REENTRANT $CFLAGS"
+      set CFLAGS = "-DINTERIX -D$COMPILE_ARCH -DGETHOSTBYNAME_M $CFLAGS" 
+      set CFLAGS = "-Wall -Werror -O0 -pipe $CFLAGS"
+      #set LFLAGS = "-Wl,-EL,-b=pe-i1386 $LFLAGS"
    else
       set CC  = cc
       set CXX = cc
-      set CFLAGS = "-X /Wall -X /WX $OFLAG -DINTERIX -D$COMPILE_ARCH $DEBUG_FLAG $CFLAGS"
+      set CFLAGS = "-X /Wall -X /WX $OFLAG -DINTERIX -D$COMPILE_ARCH $CFLAGS"
+      set CFLAGS = "$DEBUG_FLAG $CFLAGS"
    endif
 
    if ($DEBUGGED == 1) then
@@ -2053,7 +2064,7 @@ if ( "$MAKEWINGRIDLIB" == 1 ) then
    $MAKE $MAKEOPT -f $SOURCE/libs/wingrid/Makefile "MAKE=$MAKE" "CC=$CC" \
       "COMPILE_ARCH=$COMPILE_ARCH" \
       "CFLAGS=$CFLAGS $CORE_INCLUDE" "SOURCE=$SOURCE" \
-      "KRBLIBS=$KRBLIBS" \
+      "KRBLIBS=$KRBLIBS" "SECLIBS_STATIC=$SECLIBS_STATIC" \
       "LFLAGS=$LFLAGS $KLFLAGS" "STRIP=$STRIP" "RANLIB=$RANLIB" \
       "AR=$AR" "ARFLAGS=$ARFLAGS" \
       "SHARED_CFLAGS=$SHARED_CFLAGS" "SHARED_LFLAGS=$SHARED_LFLAGS" \
@@ -2182,7 +2193,9 @@ if ( "$CORE" == 1 && "$JAVA" != 2 ) then
          "DEPEND_FLAGS=$DEPEND_FLAGS $CORE_INCLUDE" \
          "SDIR=$SDIR" "SOURCE=$SOURCE" "COMPILE_ARCH=$COMPILE_ARCH" \
          "SECTARGETS=$SECTARGETS" "SECDEPEND=$SECDEPEND" "SECCLEAN=$SECCLEAN" \
-         "SECLIBOBJS=$SECLIBOBJS" "SECLIB=$SECLIB" "SECLIBS=$SECLIBS" "SECLIBS_STATIC=$SECLIBS_STATIC" \
+         "SECLIBOBJS=$SECLIBOBJS" "SECLIB=$SECLIB" "SECLIBS=$SECLIBS" \
+         "SECLIBS_STATIC=$SECLIBS_STATIC" \
+         "WINGRIDLIB=$WINGRIDLIB" "WINGRIDLIB_DEP=$WINGRIDLIB_DEP" \
          "KRBTARGETS=$KRBTARGETS" "KRBDEPEND=$KRBDEPEND" "KRBCLEAN=$KRBCLEAN"\
          "KRBLIBS=$KRBLIBS" "KRBLIB=$KRBLIB" "GSSDEPEND=$GSSDEPEND" \
          "GSSCLEAN=$GSSCLEAN" "MSDIR=$MSDIR" "SLIBS=$GSSLIBS $KLIBS" "LIBS=$LIBS" \
@@ -2322,6 +2335,7 @@ if ( "$REMOTE" == 1) then
       "KRBLIBS=$KRBLIBS" "DLLIB=$DLLIB" \
       "LFLAGS=$LFLAGS $KLFLAGS" "STRIP=$STRIP" "RANLIB=$RANLIB" \
       "AR=$AR" "ARFLAGS=$ARFLAGS" "LIBEXT=$LIBEXT" \
+      "WINGRIDLIB=$WINGRIDLIB" "WINGRIDLIB_DEP=$WINGRIDLIB_DEP" \
       "MEMCFLAG=$MEMCFLAG" "COMPILE_ARCH=$COMPILE_ARCH" $argv
 
    if ( $status != 0 ) then
@@ -2382,7 +2396,7 @@ if ( "$QTCSH" == 1) then
    if ( "$COMPILE_ARCH" == "NECSX5" ) then
       set SGE_LIBS = "$SGE_LIBS -lfnmatch"
    else if ( "$COMPILE_ARCH" == "WIN32_X86" ) then
-      set SGE_LIBS = "$SGE_LIBS $LIBS"
+      set SGE_LIBS = "$SGE_LIBS $WINGRIDLIB"
    endif
 
    if ( ! -d $SOURCE/3rdparty/qtcsh/$COMPILE_ARCH || \

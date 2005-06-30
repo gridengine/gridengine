@@ -44,6 +44,10 @@
 #include "cl_communication.h"
 
 
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "cl_connection_list_setup()"
 int cl_connection_list_setup(cl_raw_list_t** list_p, char* list_name, int enable_locking) {
    cl_connection_list_data_t* ldata = NULL;
    int ret_val;
@@ -65,6 +69,10 @@ int cl_connection_list_setup(cl_raw_list_t** list_p, char* list_name, int enable
    return ret_val;
 }
 
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "cl_connection_list_cleanup()"
 int cl_connection_list_cleanup(cl_raw_list_t** list_p) {
    cl_connection_list_data_t* ldata = NULL;
 
@@ -90,6 +98,10 @@ int cl_connection_list_cleanup(cl_raw_list_t** list_p) {
 }
 
 
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "cl_connection_list_append_connection()"
 int cl_connection_list_append_connection(cl_raw_list_t* list_p,cl_com_connection_t* connection , int do_lock) {
 
    int ret_val;
@@ -133,6 +145,10 @@ int cl_connection_list_append_connection(cl_raw_list_t* list_p,cl_com_connection
 }
 
 
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "cl_connection_list_remove_connection()"
 int cl_connection_list_remove_connection(cl_raw_list_t* list_p, cl_com_connection_t* connection, int do_lock ) {  /* CR check */
    int function_return = CL_RETVAL_CONNECTION_NOT_FOUND;
    int ret_val = CL_RETVAL_OK;
@@ -443,6 +459,10 @@ int cl_connection_list_destroy_connections_to_close(cl_raw_list_t* list_p, int d
 
 
 
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "cl_connection_list_get_first_elem()"
 cl_connection_list_elem_t* cl_connection_list_get_first_elem(cl_raw_list_t* list_p) {   /* CR check */
    cl_raw_list_elem_t* raw_elem = cl_raw_list_get_first_elem(list_p);
    if (raw_elem) {
@@ -451,6 +471,10 @@ cl_connection_list_elem_t* cl_connection_list_get_first_elem(cl_raw_list_t* list
    return NULL;
 }
 
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "cl_connection_list_get_least_elem()"
 cl_connection_list_elem_t* cl_connection_list_get_least_elem(cl_raw_list_t* list_p) {   /* CR check */
    cl_raw_list_elem_t* raw_elem = cl_raw_list_get_least_elem(list_p);
    if (raw_elem) {
@@ -460,6 +484,10 @@ cl_connection_list_elem_t* cl_connection_list_get_least_elem(cl_raw_list_t* list
 }
 
 
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "cl_connection_list_get_next_elem()"
 cl_connection_list_elem_t* cl_connection_list_get_next_elem(cl_connection_list_elem_t* elem) {  /* CR check */
 
    cl_raw_list_elem_t* next_raw_elem = NULL;
@@ -475,6 +503,10 @@ cl_connection_list_elem_t* cl_connection_list_get_next_elem(cl_connection_list_e
 }
 
 
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "cl_connection_list_get_last_elem()"
 cl_connection_list_elem_t* cl_connection_list_get_last_elem(cl_connection_list_elem_t* elem) {  /* CR check */
 
    cl_raw_list_elem_t* last_raw_elem = NULL;

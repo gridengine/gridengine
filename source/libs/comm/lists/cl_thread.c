@@ -685,7 +685,7 @@ int cl_thread_func_testcancel(cl_thread_settings_t* thread_config) {
    /* pthread_cleanup_push() and pthread_cleanup_pop() must be used in the
       same { ... } context */
 
-#if CL_DO_COMMLIB_DEBUG
+#ifdef CL_DO_COMMLIB_DEBUG
    gettimeofday(&(thread_config->thread_last_cancel_test_time),NULL);
 #endif
 

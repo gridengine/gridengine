@@ -55,8 +55,10 @@ typedef struct cl_raw_list_type {
    unsigned long         elem_count;      /* number of list entries */
    void*                 list_data;       /* user list data */
 
-#if CL_DO_COMMLIB_DEBUG
-   cl_thread_settings_t* last_lock_thread;
+#ifdef CL_DO_COMMLIB_DEBUG
+   char* last_locker;
+   unsigned long         lock_count;
+   unsigned long         unlock_count;
 #endif
    cl_raw_list_elem_t*   first_elem;
    cl_raw_list_elem_t*   last_elem;

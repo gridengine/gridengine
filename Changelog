@@ -1,3 +1,9 @@
+CR-2005-06-30-0: Cleanup:   commlib:
+                            - new logging for commlib debuging with
+                              definition of CL_DO_COMMLIB_DEBUG at compile time
+                            - optimized locking when receiving messages
+                 Review:    RD
+
 RD-2005-06-30-2: Bugfix:    disabled admin mail if qrsh_exit_code can't be read
                             removed empty lines in shepherd trace file
                  Review:    JG

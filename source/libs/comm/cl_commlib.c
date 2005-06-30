@@ -3339,7 +3339,7 @@ static int cl_commlib_handle_connection_ack_timeouts(cl_com_connection_t* connec
          }
       }
 
-#if CL_DO_COMMLIB_DEBUG
+#ifdef CL_DO_COMMLIB_DEBUG
        CL_LOG(CL_LOG_INFO,"checking timeouts for ack messages");
 #endif
       /* lock received messages list */
@@ -4064,7 +4064,7 @@ static int cl_commlib_handle_connection_write(cl_com_connection_t* connection) {
 
        cl_raw_list_lock(connection->send_message_list);
        message = NULL;
-#if CL_DO_COMMLIB_DEBUG
+#ifdef CL_DO_COMMLIB_DEBUG
        CL_LOG_INT(CL_LOG_INFO,"number of messages in send list:",(int)cl_raw_list_get_elem_count(connection->send_message_list));
 #endif
 
@@ -4103,11 +4103,13 @@ static int cl_commlib_handle_connection_write(cl_com_connection_t* connection) {
 
 
           if (connection->data_buffer_size < (mih_message_size + 1) ) {
+             cl_raw_list_unlock(connection->send_message_list);
              return CL_RETVAL_STREAM_BUFFER_OVERFLOW;
           }
 
           gmsh_message_size = CL_GMSH_MESSAGE_SIZE + cl_util_get_ulong_number_length(mih_message_size);
           if (connection->data_buffer_size < (gmsh_message_size + 1) ) {
+             cl_raw_list_unlock(connection->send_message_list);
              return CL_RETVAL_STREAM_BUFFER_OVERFLOW;
           }
           snprintf((char*)connection->data_write_buffer, connection->data_buffer_size, CL_GMSH_MESSAGE , mih_message_size);
@@ -4156,7 +4158,7 @@ static int cl_commlib_handle_connection_write(cl_com_connection_t* connection) {
                    message->message_tag ,
                    message->message_response_id);
 
-#if CL_DO_COMMLIB_DEBUG         
+#ifdef CL_DO_COMMLIB_DEBUG         
           CL_LOG_STR(CL_LOG_DEBUG,"write buffer:",(char*)connection->data_write_buffer);
           CL_LOG_STR(CL_LOG_INFO,"CL_MS_SND_GMSH, MIH: ",(char*)connection->data_write_buffer );
 #endif
@@ -4296,7 +4298,7 @@ static int cl_commlib_handle_connection_write(cl_com_connection_t* connection) {
              if (message->message_mat == CL_MIH_MAT_NAK) {
                 if (cl_message_list_remove_message(connection->send_message_list, message,0 ) == CL_RETVAL_OK) {
                    cl_com_free_message(&message);
-#if CL_DO_COMMLIB_DEBUG
+#ifdef CL_DO_COMMLIB_DEBUG
                    CL_LOG(CL_LOG_DEBUG,"last sent message removed from send_message_list");
 #endif
                 }
@@ -4548,12 +4550,17 @@ int cl_commlib_receive_message(cl_com_handle_t*      handle,
 
          /* return if there are no connections in list */
          /* check if it is possible to receive messages */
-         cl_raw_list_lock(handle->connection_list);
-         if (cl_connection_list_get_first_elem(handle->connection_list) == NULL) {     
-            leave_reason = CL_RETVAL_CONNECTION_NOT_FOUND;
+         if (handle->service_provider == CL_FALSE) {
+            cl_raw_list_lock(handle->send_message_queue);
+            if (cl_connection_list_get_first_elem(handle->send_message_queue) == NULL) {
+               cl_raw_list_lock(handle->connection_list);
+               if (cl_connection_list_get_first_elem(handle->connection_list) == NULL) {     
+                  leave_reason = CL_RETVAL_CONNECTION_NOT_FOUND;
+               }
+               cl_raw_list_unlock(handle->connection_list);
+            }
+            cl_raw_list_unlock(handle->send_message_queue);
          }
-         cl_raw_list_unlock(handle->connection_list);
-
       }
        
       if (synchron == CL_TRUE) {
@@ -4572,7 +4579,7 @@ int cl_commlib_receive_message(cl_com_handle_t*      handle,
                break;
          }
          /* at this point the handle->connection_list must be unlocked */
-         if ( handle->service_provider == CL_FALSE  && leave_reason == CL_RETVAL_CONNECTION_NOT_FOUND) {
+         if ( leave_reason == CL_RETVAL_CONNECTION_NOT_FOUND) {
             /* 
              *  we are no service provider AND we have no connection !
              *  we can't wait for a (possible) new connection, so we return immediately 
@@ -6509,9 +6516,10 @@ static void *cl_com_handle_service_thread(void *t_conf) {
    while (do_exit == 0) {
       cl_thread_func_testcancel(thread_config);
  
-#if CL_DO_COMMLIB_DEBUG
+#ifdef CL_DO_COMMLIB_DEBUG
       {
          struct timeval now;
+         cl_thread_list_elem_t* elem = NULL;
 
          gettimeofday(&now,NULL);
    
@@ -6524,7 +6532,7 @@ static void *cl_com_handle_service_thread(void *t_conf) {
             elem = cl_thread_list_get_next_elem(elem);
          }
          cl_raw_list_unlock(cl_com_thread_list);
-   
+#if 0   
          cl_raw_list_lock(handle->work_thread_list);
          elem = cl_thread_list_get_first_elem(handle->work_thread_list);
          while(elem) {
@@ -6534,6 +6542,7 @@ static void *cl_com_handle_service_thread(void *t_conf) {
             elem = cl_thread_list_get_next_elem(elem);
          }
          cl_raw_list_unlock(handle->work_thread_list);
+#endif
       }
 #endif /* CL_DO_COMMLIB_DEBUG */
 
@@ -7258,7 +7267,7 @@ static void *cl_com_handle_write_thread(void *t_conf) {
 
                cl_raw_list_unlock(handle->connection_list);
                if (trigger_read_thread != 0) {
-#if CL_DO_COMMLIB_DEBUG
+#ifdef CL_DO_COMMLIB_DEBUG
                   CL_LOG(CL_LOG_DEBUG,"triggering read thread");
 #endif
                   cl_thread_trigger_event(handle->read_thread);

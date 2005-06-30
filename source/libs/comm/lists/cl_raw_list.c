@@ -40,7 +40,6 @@
 
 
 
-#define CL_DO_RAW_LIST_DEBUG 0
 
 
 
@@ -100,7 +99,7 @@ int cl_raw_list_setup(cl_raw_list_t** list_p, char* list_name ,int enable_list_l
          return CL_RETVAL_MUTEX_ERROR;
       }
    }
-#if CL_DO_RAW_LIST_DEBUG
+#ifdef CL_DO_COMMLIB_DEBUG
    CL_LOG_STR(CL_LOG_DEBUG,"raw list setup complete for list:",(*list_p)->list_name);
 #endif
    return CL_RETVAL_OK;
@@ -174,7 +173,7 @@ int cl_raw_list_cleanup(cl_raw_list_t** list_p) {  /* CR check */
       (*list_p)->list_mutex = NULL;
    }
 
-#if CL_DO_RAW_LIST_DEBUG
+#ifdef CL_DO_COMMLIB_DEBUG
    if (do_log) {
       CL_LOG_STR(CL_LOG_DEBUG,"raw list cleanup complete for list:",(*list_p)->list_name );
    }
@@ -229,7 +228,7 @@ cl_raw_list_elem_t* cl_raw_list_append_elem(cl_raw_list_t* list_p, void* data) {
 
    cl_raw_list_append_dechained_elem(list_p,new_elem);
 
-#if CL_DO_RAW_LIST_DEBUG
+#ifdef CL_DO_COMMLIB_DEBUG
    /* ENABLE THIS ONLY FOR LIST DEBUGING */
    if ( list_p->list_type != CL_LOG_LIST ) {
       CL_LOG_STR(CL_LOG_DEBUG, "list:", list_p->list_name);
@@ -331,7 +330,7 @@ void* cl_raw_list_remove_elem(cl_raw_list_t* list_p, cl_raw_list_elem_t* delete_
    /* now delete the dechained element */
    free(delete_elem);
 
-#if CL_DO_RAW_LIST_DEBUG
+#ifdef CL_DO_COMMLIB_DEBUG
    if ( list_p->list_type != CL_LOG_LIST ) {
       CL_LOG_STR(CL_LOG_DEBUG, "list:", list_p->list_name);
       CL_LOG_INT(CL_LOG_DEBUG,"elements in list:", (int)list_p->elem_count); 
@@ -360,12 +359,12 @@ int cl_raw_list_lock(cl_raw_list_t* list_p) {             /* CR check */
       return CL_RETVAL_PARAMS;
    }
    if (list_p->list_mutex != NULL) {
-#if CL_DO_RAW_LIST_DEBUG
+#ifdef CL_DO_COMMLIB_DEBUG
       /* ENABLE THIS ONLY FOR LOCK DEBUGING (1 of 2) */
       if ( list_p->list_type != CL_LOG_LIST ) {
-        CL_LOG_STR(CL_LOG_DEBUG, "locking list:", list_p->list_name); 
-        if (list_p->last_lock_thread != NULL) {
-           CL_LOG_STR(CL_LOG_DEBUG, "last locker thread:", list_p->last_lock_thread->thread_name);
+        CL_LOG_STR(CL_LOG_INFO, "try locking list:", list_p->list_name); 
+        if (list_p->last_locker != NULL) {
+           CL_LOG_STR(CL_LOG_INFO, "last locker thread:", list_p->last_locker);
         }
       }
 #endif
@@ -375,10 +374,21 @@ int cl_raw_list_lock(cl_raw_list_t* list_p) {             /* CR check */
          }
          return CL_RETVAL_MUTEX_LOCK_ERROR;
       }
-#if CL_DO_RAW_LIST_DEBUG
-      list_p->last_lock_thread = cl_thread_get_thread_config();
+#ifdef CL_DO_COMMLIB_DEBUG
       if ( list_p->list_type != CL_LOG_LIST ) {
-         CL_LOG_STR(CL_LOG_DEBUG, "hold lock:", list_p->list_name); 
+         if (list_p->last_locker != NULL) {
+            free(list_p->last_locker);
+            list_p->last_locker = NULL;
+         }
+         list_p->last_locker = strdup(cl_thread_get_thread_config()->thread_name);
+         CL_LOG_STR(CL_LOG_INFO, "got lock:", list_p->list_name); 
+         if (list_p->unlock_count != list_p->lock_count) {
+            CL_LOG_STR(CL_LOG_ERROR, "unlock count doesn't match lock count: ", list_p->list_name); 
+            printf("abort due thread lock error\n");
+            exit(1);
+         }
+         list_p->lock_count = list_p->lock_count + 1;
+         CL_LOG_INT(CL_LOG_INFO, "lock_count is", list_p->lock_count ); 
       }
 #endif
    }
@@ -394,10 +404,16 @@ int cl_raw_list_unlock(cl_raw_list_t* list_p){
       return CL_RETVAL_PARAMS;
    }
    if (list_p->list_mutex != NULL) {
-#if CL_DO_RAW_LIST_DEBUG
+#ifdef CL_DO_COMMLIB_DEBUG
       /* ENABLE THIS ONLY FOR LOCK DEBUGING (2 of 2) */
       if ( list_p->list_type != CL_LOG_LIST ) {
-        CL_LOG_STR(CL_LOG_DEBUG, "unlocking list:",list_p->list_name); 
+         CL_LOG_STR(CL_LOG_INFO, "unlocking list:",list_p->list_name); 
+         list_p->unlock_count = list_p->unlock_count + 1;
+         if (list_p->unlock_count != list_p->lock_count) {
+            CL_LOG_STR(CL_LOG_ERROR, "unlock count doesn't match lock count: ", list_p->list_name); 
+            printf("abort due thread lock error\n");
+            exit(1);
+         }
       }
 #endif
       if (pthread_mutex_unlock(list_p->list_mutex) != 0) {

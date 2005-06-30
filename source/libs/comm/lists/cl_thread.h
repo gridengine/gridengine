@@ -63,7 +63,7 @@
 typedef void  (*cl_thread_cleanup_func_t) (cl_thread_settings_t* thread_config);
 
 struct cl_thread_settings_type {
-#if CL_DO_COMMLIB_DEBUG
+#ifdef CL_DO_COMMLIB_DEBUG
    struct timeval           thread_last_cancel_test_time; /* time when thread did the last cl_thread_func_testcancel() call */
 #endif
    char*                    thread_name;                  /* name of thread */

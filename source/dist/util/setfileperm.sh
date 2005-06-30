@@ -209,12 +209,9 @@ for f in $FILELIST $OPTFILES; do
 done
 
 for file in $SUIDFILES; do
-
    # Windows NFS Server does not like suid files
-   echo $file
    if [ "`echo $file | grep win32-x86`" != "" ]; then
       chmod 511 $file
-      echo "this was windows"
    else
       chmod 4511 $file
    fi

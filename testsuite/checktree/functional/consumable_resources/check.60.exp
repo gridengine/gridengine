@@ -46,7 +46,6 @@ global env
 
 #set check_root_access_needs "yes"
 
-
 # define a level initialization procedure:
 set check_init_level_procedure "consumable_resources_init_level"
 
@@ -64,20 +63,12 @@ set check_description(6)  "Consumable resources and rescheduling"
 set check_description(7)  "Consumable resources and load sensors"
 set check_description(8)  "Consumable resources and 2 load sensor scripts"
 
-
-
-
-
-
-
 # define test's dependencies
 set check_needs           "init_core_system" 
 
 # setup and cleanup functions
 set check_setup_function consumable_resources_setup
 set check_cleanup_function consumable_resources_cleanup
-
-
 
 # define test's procedure order
 set check_functions "consumable_resources_test"
@@ -132,7 +123,11 @@ proc consumable_resources_setup  {} {
    global ts_config
    global consumable_resources_test_hosts
    global consumable_resources_saved_slot_count
+   global consumable_complex_backup
    global CHECK_OUTPUT
+
+   # backup complex - we will modify it during the test
+   get_complex consumable_complex_backup
 
    set consumable_resources_test_hosts {}
    set consumable_resources_saved_slot_count ""
@@ -167,6 +162,7 @@ proc consumable_resources_cleanup  {} {
    global CHECK_OUTPUT ts_config
    global consumable_resources_test_hosts
    global consumable_resources_saved_slot_count
+   global consumable_complex_backup
 
    delete_all_jobs
    wait_for_end_of_all_jobs 60
@@ -181,6 +177,9 @@ proc consumable_resources_cleanup  {} {
 
    set qname "res.q"
    del_queue $qname $consumable_resources_test_hosts  0 1
+
+   # restore complex
+   set_complex consumable_complex_backup
 
    set_error 0 "ok"
 }

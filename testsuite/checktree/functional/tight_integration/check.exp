@@ -652,6 +652,7 @@ proc tight_integration_slave_killed {} {
          delete_job $jobid
       }
    }
+
    set sp_id [lindex $id 1]
    send -i $sp_id "\003" ;# send CTRL+C to stop evtl. running processes in that shell
 

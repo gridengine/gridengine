@@ -1,9 +1,18 @@
-AA-2005-06-28-0: Bugfix:    - unmanage qsort args field when not compiled with SGE_PQS_API
+JG-2005-06-30-0: Testsuite: Check for core files during cluster shutdown failed
+                            if non local spool directories were used.
+                            Fixed incomplete cleanup of consumable resources 
+                            test.
+                            New testsuite option "fast_setup" to skip expensive
+                            verifications of the configuration file.
+                 Review:    CR
+
+AA-2005-06-28-0: Bugfix:    unmanage qsort args field when not compiled with 
+                            SGE_PQS_API
                  Changed:   qmon
                  Review:    CR
                  
-CR-2005-06-28-0: Cleanup:   - commlib: skipped unnecessary string compares
-                              when parsing message information headers
+CR-2005-06-28-0: Cleanup:   commlib: skipped unnecessary string compares when 
+                            parsing message information headers
                  Review:    AA
 
 CR-2005-06-27-1: Enhancem.: - added send message queue for connection

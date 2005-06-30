@@ -51,6 +51,12 @@ set write_mail_to_file 0
 global do_close_rlogin
 set do_close_rlogin 0
 
+# if we know the config is ok, we don't want to check it, 
+# e.g. we don't want to connect to all hosts during setup
+#      or check the CVS version at every testsuite startup
+global fast_setup
+set fast_setup 0
+
 global do_compile
 global CHECK_TESTSUITE_LOCKFILE
 set CHECK_TESTSUITE_LOCKFILE "testsuite_lockfile"
@@ -2010,12 +2016,9 @@ proc setup2 { } {
    global ts_config ts_host_config ts_user_config actual_ts_config_version
    global CHECK_OUTPUT CHECK_DO_SETUP
    global CHECK_DEFAULTS_FILE do_nomain
-   global env be_quiet be_quiet
+   global env be_quiet fast_setup
    global check_name CHECK_ACT_LEVEL have_defaults
    global CHECK_USER CHECK_CURRENT_WORKING_DIR
-
-
-
    global CHECK_PRODUCT_TYPE
    global CHECK_PRODUCT_VERSION_NUMBER
    global CHECK_PRODUCT_ROOT
@@ -7071,6 +7074,7 @@ set do_nomain         0
 set do_prog_start     0
 set do_only_reset_config 0
 set be_quiet          0
+set fast_setup        0
 set CHECK_CUR_PROC_NAME "main"
 set check_name "main"
 set CHECK_ACTUAL_TEST_PATH "not in testmode"
@@ -7078,7 +7082,6 @@ set mail_subject "testsuite error - main"
 set mail_body    "date: [exec date]\n:\n"
 
 for { set i 0 } { $i < $argc } { incr i } {
-   
    if {([string compare [lindex $argv $i] "--setup"] == 0) || ([string compare [lindex $argv $i] "setup"] == 0) } {
       set catch_return [ catch { eval exec "cp ${CHECK_DEFAULTS_FILE} ${CHECK_DEFAULTS_FILE}.[timestamp]" } ]
       if { $catch_return == 0 } { 
@@ -7093,6 +7096,12 @@ for { set i 0 } { $i < $argc } { incr i } {
       set be_quiet 1
       continue
    }
+
+   if {([string compare [lindex $argv $i] "--fast_setup"] == 0) || ([string compare [lindex $argv $i] "fast_setup"] == 0) } {
+      set fast_setup 1
+      continue
+   }
+
    if {([string compare [lindex $argv $i] "--close_rlogin"] == 0) || ([string compare [lindex $argv $i] "close_rlogin"] == 0) } {
       set do_close_rlogin 1
       continue
@@ -7149,6 +7158,8 @@ for { set i 0 } { $i < $argc } { incr i } {
       puts "                      0=no debug, 1=more output, 2=1+user response"
       puts ""
       puts "quiet                 no output on setup"
+      puts ""
+      puts "fast_setup            suppress configuration checks at startup (setup phase)"
       puts ""
       puts "no_local_spool        ignore local spool directories from host configuration file"
       puts ""

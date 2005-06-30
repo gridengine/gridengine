@@ -274,7 +274,7 @@ proc install_execd {} {
                   }
                   send -i $sp_id "$ANSWER_YES\n"
                } else {
-                  set spooldir [get_spool_dir $exec_host execd]
+                  set spooldir [get_local_spool_dir $exec_host execd]
                   if { $spooldir == "" } {
                      puts $CHECK_OUTPUT "\n -->testsuite: sending >$ANSWER_NO<(11.2)"
                      if {$do_log_output == 1} {
@@ -304,7 +304,7 @@ proc install_execd {} {
                   set spooldir ""
                   puts $CHECK_OUTPUT "checking inst_sge error handling, sending \"\" as local spooldir"
                } else {
-                  set spooldir [get_spool_dir $exec_host execd 0]
+                  set spooldir [get_local_spool_dir $exec_host execd 0]
                   puts $CHECK_OUTPUT "spooldir on host $exec_host is $spooldir"
                }
 

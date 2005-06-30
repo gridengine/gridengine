@@ -482,7 +482,7 @@ proc install_qmaster {} {
        }
 
        -i $sp_id $OTHER_SPOOL_DIR {
-          set spooldir [get_spool_dir $CHECK_CORE_MASTER qmaster]
+          set spooldir [get_local_spool_dir $CHECK_CORE_MASTER qmaster]
           if { $spooldir != "" } {
             set answer $ANSWER_YES
           } else {
@@ -521,7 +521,7 @@ proc install_qmaster {} {
 
        -i $sp_id $ENTER_SPOOL_DIR {
           puts $CHECK_OUTPUT "\n"
-          set spooldir [get_spool_dir $CHECK_CORE_MASTER qmaster]
+          set spooldir [get_local_spool_dir $CHECK_CORE_MASTER qmaster]
           if { $spooldir != "" } {
             # use local spool dir
             puts $CHECK_OUTPUT "\n -->testsuite: sending >$spooldir<"
@@ -545,7 +545,7 @@ proc install_qmaster {} {
        
        -i $sp_id $EXECD_SPOOLING_DIR_NOROOT_NOADMINUSER {
           puts $CHECK_OUTPUT "\n"
-          set spooldir [get_spool_dir $CHECK_CORE_MASTER execd 0]
+          set spooldir [get_local_spool_dir $CHECK_CORE_MASTER execd 0]
           if { $spooldir != "" } {
             # use local spool dir
             puts $CHECK_OUTPUT "\n -->testsuite: sending >$spooldir<"
@@ -569,7 +569,7 @@ proc install_qmaster {} {
 
        -i $sp_id $EXECD_SPOOLING_DIR_NOROOT {
           puts $CHECK_OUTPUT "\n"
-          set spooldir [get_spool_dir $CHECK_CORE_MASTER execd 0]
+          set spooldir [get_local_spool_dir $CHECK_CORE_MASTER execd 0]
           if { $spooldir != "" } {
             # use local spool dir
             puts $CHECK_OUTPUT "\n -->testsuite: sending >$spooldir<"
@@ -842,7 +842,7 @@ proc install_qmaster {} {
          if {[string compare $ts_config(bdb_dir) "none"] != 0 } {
             set spooldir $ts_config(bdb_dir)
          } else {
-            set spooldir [get_spool_dir $CHECK_CORE_MASTER spooldb 0 ]
+            set spooldir [get_local_spool_dir $CHECK_CORE_MASTER spooldb 0 ]
          }
   
          if { $spooldir == "" } {

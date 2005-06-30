@@ -329,7 +329,7 @@ proc install_execd {} {
 
             -i $sp_id $LOCAL_CONFIG_FOR_HOST {
                puts $CHECK_OUTPUT "\n -->testsuite: reconfigure configuration for spool dir\n"
-               set spooldir [get_spool_dir $exec_host execd]
+               set spooldir [get_local_spool_dir $exec_host execd]
                puts $CHECK_OUTPUT "spooldir on host $exec_host is $spooldir"
 
                if { $spooldir != "" } {

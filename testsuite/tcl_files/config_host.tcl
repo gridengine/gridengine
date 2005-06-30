@@ -1125,7 +1125,8 @@ proc host_conf_get_unique_arch_nodes {host_list} {
    set covered_archs {}
 
    foreach node $host_list {
-      set arch [resolve_arch $node]
+      set host [node_get_host $node]
+      set arch $ts_host_config($host,arch)
       if {[lsearch -exact $covered_archs $arch] == -1} {
          lappend covered_archs $arch
          lappend node_list $node

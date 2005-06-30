@@ -430,7 +430,7 @@ proc install_qmaster {} {
 
        -i $sp_id $ENTER_SPOOL_DIR_OR_HIT_RET {
           puts $CHECK_OUTPUT "\n"
-          set spooldir [get_spool_dir $CHECK_CORE_MASTER qmaster]
+          set spooldir [get_local_spool_dir $CHECK_CORE_MASTER qmaster]
           if { $spooldir != "" } {
             # use local spool dir
             puts $CHECK_OUTPUT "\n -->testsuite: sending >$spooldir<"

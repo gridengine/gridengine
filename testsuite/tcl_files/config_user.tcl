@@ -1019,6 +1019,7 @@ proc verify_user_config { config_array only_check parameter_error_list { force 0
    if { $be_quiet == 0 } { 
       puts $CHECK_OUTPUT ""
    }
+
    for { set param 1 } { $param <= $max_pos } { incr param 1 } {
       set par [ get_configuration_element_name_on_pos config $param ]
       if { $be_quiet == 0 } { 
@@ -1155,15 +1156,15 @@ proc verify_user_config { config_array only_check parameter_error_list { force 0
 proc setup_user_config { file { force 0 }} {
    global CHECK_OUTPUT
    global ts_user_config actual_ts_user_config_version do_nomain
-   
+   global fast_setup
 
    if { [read_array_from_file $file "testsuite user configuration" ts_user_config ] == 0 } {
       if { $ts_user_config(version) != $actual_ts_user_config_version } {
          puts $CHECK_OUTPUT "unkown user configuration file version: $ts_user_config(version)"
          exit -1
       }
+
       # got config
-     
       if { $do_nomain == 0 } {
          if { [verify_user_config ts_user_config 1 err_list $force ] != 0 } {
             # configuration problems

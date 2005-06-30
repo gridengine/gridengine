@@ -2896,3 +2896,118 @@ proc check_output_is_tty {} {
 
    return $ret
 }
+
+#****** file_procedures/get_local_spool_dir() ********************************************
+#  NAME
+#     get_local_spool_dir() -- get local spool dir for an host
+#
+#  SYNOPSIS
+#     get_local_spool_dir { host subdir {do_cleanup 1} } 
+#
+#  FUNCTION
+#     This procedure returns the path to the local spool directory for the given
+#     host
+#
+#  INPUTS
+#     host           - hostname
+#     subdir         - "execd" or "qmaster"
+#     {do_cleanup 1} - if 1: delete spool dir contents
+#
+#  RESULT
+#     path to spool directory 
+#
+#  SEE ALSO
+#     file_procedures/get_spool_dir()
+#*******************************************************************************
+proc get_local_spool_dir {host subdir {do_cleanup 1}} {
+   global ts_config ts_host_config 
+   global CHECK_OUTPUT
+   global check_do_not_use_spool_config_entries
+
+   set spooldir ""
+
+   # special case: suppress local spooldirectories
+   if {$check_do_not_use_spool_config_entries == 1 && $local == 1} {
+      puts $CHECK_OUTPUT "\"no_local_spool\" option is set - returning empty spool dir" 
+      return $spooldir
+   }
+
+   # host might be a virtual host - to query local spooldir we need the real host
+   set physical_host [node_get_host $host]
+
+   # read local spool dir from host config
+   if { [info exist ts_host_config($physical_host,spooldir)] } {
+      set spooldir $ts_host_config($physical_host,spooldir)
+      set local_spooldir 1
+   }
+
+   # if we have a toplevel spooldir, we can construct the real spooldir
+   # and trigger cleanup if requested
+   if {$spooldir != ""} {
+      puts $CHECK_OUTPUT "host $host has local toplevel spool directory $spooldir"
+      if { $do_cleanup == 1 } {
+         debug_puts "cleanup spooldir!"
+         set result "cleanup spooldir"
+         cleanup_spool_dir_for_host $host $spooldir $subdir
+      } else {
+         debug_puts "don't cleanup spooldir!"
+         set result "no cleanup"
+      }
+      set spooldir "$spooldir/$ts_config(commd_port)/$subdir"
+      debug_puts $result
+      debug_puts $spooldir
+   }
+
+   return $spooldir
+}
+
+#****** file_procedures/get_spool_dir() ****************************************
+#  NAME
+#     get_spool_dir() -- get the spooldir for qmaster or an exec host
+#
+#  SYNOPSIS
+#     get_spool_dir { host subdir } 
+#
+#  FUNCTION
+#     Returns the spool directory for qmaster or an exec host.
+#     This can either be a local or a global spool directory.
+#
+#  INPUTS
+#     host   - host on which the component is running
+#     subdir - qmaster or execd
+#
+#  RESULT
+#     String in one of the following forms:
+#     <local_toplevel_dir>/<port>/qmaster
+#     <local_toplevel_dir>/<port>/execd/<host>
+#     <sge_root>/<sge_cell>/spool/qmaster
+#     <sge_root>/<sge_cell>/spool/<host>
+#
+#  SEE ALSO
+#     file_procedures/get_local_spool_dir()
+#*******************************************************************************
+proc get_spool_dir {host subdir} {
+   global ts_config
+   global CHECK_OUTPUT
+
+   # first try to get a local spooldir
+   set spooldir [get_local_spool_dir $host $subdir 0]
+
+   # if we have no local spooldir, build path of global spooldir
+   if {$spooldir == ""} {
+      set spooldir "$ts_config(product_root)/$ts_config(cell)/spool"
+      puts $CHECK_OUTPUT "host $host has global toplevel spool directory $spooldir"
+   
+      switch -exact $subdir {
+         "qmaster" {
+            set spooldir "$spooldir/$subdir"
+         }
+         "execd" {
+            set spooldir "$spooldir/$host"
+         }
+      }
+   }
+
+   return $spooldir
+}
+

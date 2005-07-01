@@ -1,3 +1,11 @@
+HP-2005-07-01-0: Bugfix:    Installer always tryed to create Windows admin user,
+                            even on root system.
+                            On root system, qlogin tried to find Administrators
+                            password in sgepasswd file.
+                 Changed:   dist/util/install_modules/inst_execd.sh
+                            libs/uti/sge_uidgid.c
+                 Review:    JG
+
 CR-2005-07-01-0: Cleanup:   - removed unused message macros
                             - removed duplicate message id
 

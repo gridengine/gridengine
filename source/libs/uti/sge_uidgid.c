@@ -217,12 +217,19 @@ int sge_set_admin_username(const char *user, char *err_str)
 #if defined( INTERIX ) 
    /* For Interix: Construct full qualified admin user name.
     * As admin user is always local, use hostname as domain name.
+    * If admin user is "none", it is a special case and 
+    * full qualified name must not be constructed!
     */
-   gethostname(hostname, 1023);
-   snprintf(fq_name, 1023, "%s+%s", hostname, user);
-   user = fq_name;
+   if(strcasecmp(user, "none") != 0) {
+      gethostname(hostname, 1023);
+      snprintf(fq_name, 1023, "%s+%s", hostname, user);
+      user = fq_name;
+   }
 #endif
 
+   /*
+    * Do only if admin user is not already set!
+    */
    if (get_admin_user(&uid, &gid) != ESRCH) {
       DEXIT;
       return -2;
@@ -848,7 +855,10 @@ int sge_set_uid_gid_addgrp(const char *user, const char *intermediate_user,
       }
 
 #if defined( INTERIX )
-      if(wl_use_sgepasswd()) {
+      /*
+       * Do only for domain users and if windomacc=true is set.
+       */
+      if(pw->pw_uid >= 1000000 && wl_use_sgepasswd()) {
          char *pass=NULL;
          char buf[1000]="\0";
          err_str[0]='\0';

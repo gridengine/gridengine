@@ -644,7 +644,7 @@ CheckWinAdminUser()
       exit 1
    fi
 
-   if [ "$win_admin_user" != "default" -a "$win_admin_user" != "root" ]; then
+   if [ "$win_admin_user" != "default" -a "$win_admin_user" != "root" -a "$win_admin_user" != "none" ]; then
       tmp_path=$PATH
       PATH=/usr/contrib/win32/bin:/common:$SAVED_PATH
       export PATH

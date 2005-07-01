@@ -1,8 +1,12 @@
-RD-2005-07-01-0: Bugfix:   distinst ignored sgepasswd
-                           and tried to copy libXltree on win32-x86
-                           sgepasswd not covered by setfileperm.sh 
-                 Changed:  setfileperm.sh, distinst  
-                 Review:   JG, CR
+CR-2005-07-01-0: Testsuite: added missing translation for rpc server
+                            installation script
+                 Review:    RD
+
+RD-2005-07-01-0: Bugfix:    distinst ignored sgepasswd
+                            and tried to copy libXltree on win32-x86
+                            sgepasswd not covered by setfileperm.sh 
+                 Changed:   setfileperm.sh, distinst  
+                 Review:    JG, CR
 
 CR-2005-06-30-0: Cleanup:   commlib:
                             - new logging for commlib debuging with

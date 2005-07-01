@@ -1308,12 +1308,14 @@ for i in $ARCH; do
          done
 
          for lib in $QMON_NEED_SHARED_LIBRARIES; do
-            libname="../3rdparty/qmon/$ARCHBIN/$lib.$shlibext"
-            if [ -f $libname ]; then
-               InstallProg $libname
-            elif [ $exit_on_error = true ]; then
-               echo "\"$libname\" not found. Installation failed."
-               exit 1
+            if [ "$DSTARCH" != "win32-x86" ]; then
+               libname="../3rdparty/qmon/$ARCHBIN/$lib.$shlibext"
+               if [ -f $libname ]; then
+                  InstallProg $libname
+               elif [ $exit_on_error = true ]; then
+                  echo "\"$libname\" not found. Installation failed."
+                  exit 1
+               fi
             fi
          done
 

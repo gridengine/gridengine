@@ -1,3 +1,6 @@
+CR-2005-07-01-1: Cleanup:   commlib: optimized host compare function
+                 Review:    RD
+
 CR-2005-07-01-0: Testsuite: added missing translation for rpc server
                             installation script
                  Review:    RD

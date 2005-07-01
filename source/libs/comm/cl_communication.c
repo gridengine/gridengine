@@ -700,27 +700,11 @@ int cl_com_create_message(cl_com_message_t** message) {
    if (*message == NULL) {
       return CL_RETVAL_MALLOC; 
    }
+   memset( *message, 0, sizeof(cl_com_message_t));
 
    (*message)->message_state = CL_MS_UNDEFINED;
    (*message)->message_df = CL_MIH_DF_UNDEFINED;
    (*message)->message_mat = CL_MIH_MAT_UNDEFINED;
-   (*message)->message_tag = 0;
-   (*message)->message_ack_flag = 0;
-   (*message)->message_sirm = NULL;
-   (*message)->message_id = 0;
-   (*message)->message_response_id = 0;
-   (*message)->message_length = 0;
-   (*message)->message_snd_pointer = 0;
-   (*message)->message_rcv_pointer = 0;
-   (*message)->message_send_time.tv_sec  = 0;
-   (*message)->message_send_time.tv_usec = 0;
-   (*message)->message_receive_time.tv_sec  = 0;
-   (*message)->message_receive_time.tv_usec = 0;
-   (*message)->message_remove_time.tv_sec  = 0;
-   (*message)->message_remove_time.tv_usec = 0;
-   (*message)->message_insert_time.tv_sec  = 0;
-   (*message)->message_insert_time.tv_usec = 0;
-   (*message)->message = NULL;
    return CL_RETVAL_OK;
 }
 
@@ -2008,74 +1992,89 @@ static int cl_com_gethostbyaddr(struct in_addr *addr, cl_com_hostent_t **hostent
 static int cl_com_dup_host(char** host_dest, char* source, cl_host_resolve_method_t method, char* domain) {
 
    int retval = CL_RETVAL_OK;
-   int hostlen = 0;
+   unsigned long hostlen = 0;
+   unsigned long counter = 0;
+   cl_bool_t is_static_buffer = CL_FALSE;
    char* the_dot = NULL;
 
    if (host_dest == NULL || source == NULL) {
       return CL_RETVAL_PARAMS;
    }
    if (*host_dest != NULL) {
-      return CL_RETVAL_PARAMS;
+      is_static_buffer = CL_TRUE;
    }
 
-   the_dot = strchr(source, '.');
 
    switch(method) {
        case CL_SHORT:
           hostlen = strlen(source);
-          if (the_dot != NULL) {
-             hostlen = hostlen - strlen(the_dot);
+
+          /* for performance reasons we malloc the full name */
+          if (is_static_buffer == CL_FALSE) {
+             *host_dest = (char*) malloc(sizeof(char) * (hostlen + 1));
+             if (*host_dest == NULL) {
+                return CL_RETVAL_MALLOC;
+             }
           }
-          *host_dest = (char*) malloc((sizeof(char) * hostlen) + 1);
-          if (*host_dest == NULL) {
-             return CL_RETVAL_MALLOC;
-          }
-          strncpy(*host_dest, source, hostlen);
-          (*host_dest)[hostlen]=0;
+               
+          /* now we copy till we found a dot or till end of string
+             AND transform the host name to upper letters */
+          for (counter = 0; counter < hostlen && source[counter] != '.' ; counter++) {
+             (*host_dest)[counter] = toupper(source[counter]);
+          }  
+          (*host_dest)[counter]=0;
           retval = CL_RETVAL_OK;
           break;
        case CL_LONG:
+          the_dot = strchr(source, '.');
           hostlen = strlen(source);
-          if (domain == NULL) {
-             if (the_dot == NULL) {
+
+          if (the_dot == NULL) {
+             if (domain == NULL) {
                 CL_LOG(CL_LOG_ERROR,"can't dup host with domain name without default domain");
                 /* error copy host without domain name , host is short */
-                *host_dest = (char*) malloc((sizeof(char) * hostlen) + 1);
-                if (*host_dest == NULL) {
-                   return CL_RETVAL_MALLOC;
+                if (is_static_buffer == CL_FALSE) {
+                   *host_dest = (char*) malloc( sizeof(char) * (hostlen + 1) );
+                   if (*host_dest == NULL) {
+                      return CL_RETVAL_MALLOC;
+                   }
                 }
-                strncpy(*host_dest, source, hostlen);
+                for (counter = 0; counter < hostlen  ; counter++) {
+                   (*host_dest)[counter] = toupper(source[counter]);
+                }  
                 (*host_dest)[hostlen]=0;
              } else {
-                /* we have no domain, but the host is resolved long -> ok */
-                *host_dest = (char*) malloc((sizeof(char) * hostlen) + 1);
-                if (*host_dest == NULL) {
-                   return CL_RETVAL_MALLOC;
+                /* length = hostlength + domainlength + '.' */
+                unsigned long length = hostlen + strlen(domain) + 1;
+                unsigned long domain_counter = 0;
+                /* we have a short hostname, add the default domain */
+                if (is_static_buffer == CL_FALSE) {
+                   *host_dest = (char*) malloc( sizeof(char) * ( length + 1) );
+                   if (*host_dest == NULL) { 
+                      return CL_RETVAL_MALLOC;
+                   }
                 }
-                strncpy(*host_dest, source, hostlen);
-                (*host_dest)[hostlen]=0;
+                for (counter = 0; counter < hostlen  ; counter++) {
+                   (*host_dest)[counter] = toupper(source[counter]);
+                }  
+                (*host_dest)[hostlen]='.';
+                for (counter = hostlen+1; counter < length ; counter++) {
+                   (*host_dest)[counter] = toupper(domain[domain_counter++]);
+                }
+                (*host_dest)[length]=0;
              }
           } else {
-             if (the_dot == NULL) {
-                int length = hostlen + strlen(domain) + 1;
-                /* we have a short hostname, add the default domain */
-                *host_dest = (char*) malloc((sizeof(char) * length) + 1);
-                if (*host_dest == NULL) { 
-                   return CL_RETVAL_MALLOC;
-                }
-                strncpy(*host_dest, source, hostlen);
-                (*host_dest)[hostlen]=0;
-                strncat(*host_dest, ".", 1);
-                strncat(*host_dest, domain, strlen(domain));
-             } else {
-                /* we have a long hostname, return original name */
-                *host_dest = (char*) malloc((sizeof(char) * hostlen) + 1);
+             /* we have a long hostname, return original name */
+             if (is_static_buffer == CL_FALSE) {
+                *host_dest = (char*) malloc( sizeof(char) * (hostlen + 1) );
                 if (*host_dest == NULL) {
                    return CL_RETVAL_MALLOC;
                 }
-                strncpy(*host_dest, source, hostlen);
-                (*host_dest)[hostlen]=0;
              }
+             for (counter = 0; counter < hostlen  ; counter++) {
+                (*host_dest)[counter] = toupper(source[counter]);
+             }  
+             (*host_dest)[hostlen]=0;
           }
           retval = CL_RETVAL_OK;
           break;
@@ -2157,12 +2156,20 @@ int cl_com_set_resolve_method(cl_host_resolve_method_t method, char* local_domai
 #endif
 #define __CL_FUNCTION__ "cl_com_compare_hosts()"
 int cl_com_compare_hosts( char* host1, char* host2) {
+#define CL_COM_COMPARE_HOSTS_STATIC_BUFFER_SIZE 512
 
     int retval = CL_RETVAL_UNKNOWN;
+    char* malloc_hostbuf1 = NULL;
+    char* malloc_hostbuf2 = NULL;
     char* hostbuf1 = NULL;
     char* hostbuf2 = NULL;
     cl_raw_list_t* host_list = NULL;
     cl_host_list_data_t* host_list_data = NULL;
+    cl_host_resolve_method_t resolve_method;
+    char* local_domain_name = NULL;
+    int domain_length = 0;
+    char fixed_host_buffer1[CL_COM_COMPARE_HOSTS_STATIC_BUFFER_SIZE];
+    char fixed_host_buffer2[CL_COM_COMPARE_HOSTS_STATIC_BUFFER_SIZE];
 
 
     if (host1 == NULL || host2 == NULL) {
@@ -2181,27 +2188,73 @@ int cl_com_compare_hosts( char* host1, char* host2) {
     cl_raw_list_lock(host_list);
     host_list_data = cl_host_list_get_data(host_list);
     if (host_list_data == NULL) {
-       CL_LOG(CL_LOG_ERROR,"communication library setup error for hostlist");
        cl_raw_list_unlock(host_list);
+       CL_LOG(CL_LOG_ERROR,"communication library setup error for hostlist");
        return CL_RETVAL_RESOLVING_SETUP_ERROR;
     }
 
-    if ( ( retval = cl_com_dup_host(&hostbuf1, host1, host_list_data->resolve_method, host_list_data->local_domain_name)) != CL_RETVAL_OK) {
-       cl_raw_list_unlock(host_list);
-       return retval;
-    }
-    if ( ( retval = cl_com_dup_host(&hostbuf2, host2, host_list_data->resolve_method, host_list_data->local_domain_name)) != CL_RETVAL_OK) {
-       free(hostbuf1);
-       cl_raw_list_unlock(host_list);
-       return retval;
+    resolve_method = host_list_data->resolve_method;
+    if (host_list_data->local_domain_name != NULL) {
+       local_domain_name = strdup(host_list_data->local_domain_name);
+       if (local_domain_name == NULL) {
+          cl_raw_list_unlock(host_list);
+          return CL_RETVAL_MALLOC;
+       }
+       domain_length = strlen(local_domain_name);
     }
     cl_raw_list_unlock(host_list);
+
+    if (domain_length + strlen(host1) + 2 < CL_COM_COMPARE_HOSTS_STATIC_BUFFER_SIZE) {
+       malloc_hostbuf1 = fixed_host_buffer1;
+       if ( ( retval = cl_com_dup_host(&malloc_hostbuf1, host1, resolve_method, local_domain_name)) != CL_RETVAL_OK) {
+          free(local_domain_name);
+          return retval;
+       }
+       malloc_hostbuf1 = NULL;
+       hostbuf1 = fixed_host_buffer1;
+    } else {
+       if ( ( retval = cl_com_dup_host(&malloc_hostbuf1, host1, resolve_method, local_domain_name)) != CL_RETVAL_OK) {
+          free(local_domain_name);
+          return retval;
+       }
+       hostbuf1 = malloc_hostbuf1;
+    }
+
+
+    if (domain_length + strlen(host2) + 2 < CL_COM_COMPARE_HOSTS_STATIC_BUFFER_SIZE) {
+       malloc_hostbuf2 = fixed_host_buffer2;
+       if ( ( retval = cl_com_dup_host(&malloc_hostbuf2, host2, resolve_method, local_domain_name)) != CL_RETVAL_OK) {
+          if (malloc_hostbuf1) {
+             free(malloc_hostbuf1);
+             malloc_hostbuf1 = NULL;
+          }
+          free(local_domain_name);
+          return retval;
+       }
+       malloc_hostbuf2 = NULL;
+       hostbuf2 = fixed_host_buffer2;
+    } else {
+       if ( ( retval = cl_com_dup_host(&malloc_hostbuf2, host2, resolve_method, local_domain_name)) != CL_RETVAL_OK) {
+          if (malloc_hostbuf1) {
+             free(malloc_hostbuf1);
+             malloc_hostbuf1 = NULL;
+          }
+          free(local_domain_name);
+          return retval;
+       }
+       hostbuf2 = malloc_hostbuf2;
+    }
+
+    if (local_domain_name) {
+       free(local_domain_name);
+       local_domain_name = NULL;
+    }
 
 #if CL_DO_COMMUNICATION_DEBUG
     CL_LOG_STR(CL_LOG_DEBUG,"compareing host 1:", hostbuf1);
     CL_LOG_STR(CL_LOG_DEBUG,"compareing host 2:", hostbuf2);
 #endif
-    if ( strcasecmp(hostbuf1,hostbuf2) == 0 ) {   /* hostname compare OK */
+    if ( strcmp(hostbuf1,hostbuf2) == 0 ) {   /* hostname compare OK */
 #if CL_DO_COMMUNICATION_DEBUG
        CL_LOG(CL_LOG_DEBUG,"hosts are equal");
 #endif
@@ -2213,8 +2266,12 @@ int cl_com_compare_hosts( char* host1, char* host2) {
        retval = CL_RETVAL_UNKNOWN;
     }
     
-    free(hostbuf1);
-    free(hostbuf2);
+    if (malloc_hostbuf1) {
+       free(malloc_hostbuf1);
+    }
+    if (malloc_hostbuf2) {
+       free(malloc_hostbuf2);
+    }
     return retval;  
 }
 
@@ -2358,7 +2415,7 @@ int cl_com_cached_gethostbyname( char *unresolved_host, char **unique_hostname, 
       if (alias_name == NULL) {
          CL_LOG_STR(CL_LOG_INFO,"NOT found in cache, unresolved name:", unresolved_host);
       } else {
-         CL_LOG_STR(CL_LOG_INFO,"NOT found in cach, aliased name:", alias_name);
+         CL_LOG_STR(CL_LOG_INFO,"NOT found in cache, aliased name:", alias_name);
       }
       cl_raw_list_unlock(hostlist);
 
@@ -2434,7 +2491,9 @@ int cl_com_cached_gethostbyname( char *unresolved_host, char **unique_hostname, 
 
    ret_val = cl_host_alias_list_get_alias_name(ldata->host_alias_list, *unique_hostname, &alias_name );
    if (ret_val == CL_RETVAL_OK) {
+#if CL_DO_COMMUNICATION_DEBUG
       CL_LOG_STR(CL_LOG_DEBUG,"resolved name aliased to", alias_name);
+#endif
       free(*unique_hostname);
       *unique_hostname = alias_name;
    }

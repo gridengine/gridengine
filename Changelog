@@ -1,3 +1,6 @@
+CR-2005-07-01-0: Cleanup:   - removed unused message macros
+                            - removed duplicate message id
+
 RD-2005-07-01-0: Bugfix     distinst ignored sgepasswd
                             and tried to copy libXltree on win32-x86
                  Changed:   distinst

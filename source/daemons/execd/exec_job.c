@@ -442,6 +442,10 @@ char *err_str
             sge_dstring_sprintf(&buffer, "%s:%s", tmpdir, lGetString(user_path, VA_value));
          else
             sge_dstring_sprintf(&buffer, "%s:/usr/local/bin:/usr/ucb:/bin:/usr/bin:", tmpdir);
+            /*
+             * The default path is insufficient: #6288626
+             * irix65: "/usr/sbin:/usr/bsd:/sbin:/usr/bin"
+             */
          var_list_set_string(&environmentList, "PATH", sge_dstring_get_string(&buffer));
          sge_dstring_free(&buffer);
       }

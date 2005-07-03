@@ -3,7 +3,7 @@ RC-2005-07-03-1: Bugfix:    bug in RestartService()
                  Review:    Pending
 
 RC-2005-07-03-0: Enhancem.: use poll() instead select() (enable with -DUSE_POLL)
-                 Changed:   cl_tcp_framework.c
+                 Changed:   cl_tcp_framework.c, cl_ssl_framework.c
                  Issue:     1510
                  Review:    Pending
 

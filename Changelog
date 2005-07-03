@@ -1,3 +1,7 @@
+RC-2005-07-03-1: Bugfix:    bug in RestartService()
+                 Changed:   darwin_template
+                 Review:    Pending
+
 RC-2005-07-03-0: Enhancem.: use poll() instead select() (enable with -DUSE_POLL)
                  Changed:   cl_tcp_framework.c
                  Issue:     1510

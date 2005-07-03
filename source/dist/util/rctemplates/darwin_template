@@ -21,12 +21,12 @@ StopService()
 RestartService()
 {
      ConsoleMessage "Restarting SUN Grid Engine services"
-     #GENMASTERRC      > /dev/null 2>&1 < /dev/null
      #GENMASTERRC stop > /dev/null 2>&1 < /dev/null
-     #GENEXECDRC       > /dev/null 2>&1 < /dev/null
+     #GENMASTERRC      > /dev/null 2>&1 < /dev/null
      #GENEXECDRC  stop > /dev/null 2>&1 < /dev/null
-     #GENBDBRC       > /dev/null 2>&1 < /dev/null
-     #GENBDBRC  stop > /dev/null 2>&1 < /dev/null
+     #GENEXECDRC       > /dev/null 2>&1 < /dev/null
+     #GENBDBRC  stop  > /dev/null 2>&1 < /dev/null
+     #GENBDBRC        > /dev/null 2>&1 < /dev/null
 
 }
 

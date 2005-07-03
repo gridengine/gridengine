@@ -1,3 +1,7 @@
+RC-2005-07-03-0: Bugfix:    bug in RestartService()
+                 Changed:   darwin_template
+                 Review:    Pending
+
 HP-2005-07-01-0: Bugfix:    Installer always tryed to create Windows admin user,
                             even on root system.
                             On root system, qlogin tried to find Administrators

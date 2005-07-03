@@ -1812,10 +1812,15 @@ int cl_com_tcp_open_connection_request_handler(cl_raw_list_t* connection_list, c
       default:
       {
 #ifdef USE_POLL
-         int *lookup_index = calloc(max_fd, sizeof(int));
+         int *lookup_index = calloc(max_fd + 1, sizeof(int));
          int i;
 
-         for (i=0; i < (ufds_index-1); i++) {
+         if (lookup_index == NULL) {
+           retval = CL_RETVAL_MALLOC;
+           break;
+         }
+
+         for (i=0; i < ufds_index; i++) {
            lookup_index[ufds[i].fd] = i;
          }
 #endif
@@ -1850,7 +1855,7 @@ int cl_com_tcp_open_connection_request_handler(cl_raw_list_t* connection_list, c
                }
             }
             con_elem = cl_connection_list_get_next_elem(con_elem);
-         } // while
+         } /* while */
          cl_raw_list_unlock(connection_list);
 
 #ifdef USE_POLL
@@ -1870,9 +1875,9 @@ int cl_com_tcp_open_connection_request_handler(cl_raw_list_t* connection_list, c
 #ifdef USE_POLL
          free(ufds);
 #endif
-         }
          return CL_RETVAL_OK; /* OK - done */
-   }
+      } /* default */
+   } /* switch */
 #ifdef USE_POLL
    free(ufds);
 #endif

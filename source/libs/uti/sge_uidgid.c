@@ -892,29 +892,16 @@ int sge_set_uid_gid_addgrp(const char *user, const char *intermediate_user,
          }
       }
    } else {
-#if defined( INTERIX )
-#if 0
-      if(wl_use_sgepasswd()) {
-         if(wl_setuser(pw->pw_uid, pw->pw_gid)!=0) {
-            sprintf(err_str, MSG_SYSTEM_SETUIDFAILED_U, u32c(pw->pw_uid));
+      if (use_qsub_gid) {
+         if (setgid(pw->pw_gid)) {
+            sprintf(err_str, MSG_SYSTEM_SETGIDFAILED_U , u32c(pw->pw_uid));
             return 1;
          }
       }
-      else
-#endif
-#endif 
-      {
-         if (use_qsub_gid) {
-            if (setgid(pw->pw_gid)) {
-               sprintf(err_str, MSG_SYSTEM_SETGIDFAILED_U , u32c(pw->pw_uid));
-               return 1;
-            }
-         }
  
-         if (seteuid(pw->pw_uid)) {
-            sprintf(err_str, MSG_SYSTEM_SETEUIDFAILED_U , u32c(pw->pw_uid));
-            return 1;
-         }
+      if (seteuid(pw->pw_uid)) {
+         sprintf(err_str, MSG_SYSTEM_SETEUIDFAILED_U , u32c(pw->pw_uid));
+         return 1;
       }
    }
  

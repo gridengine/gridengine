@@ -185,7 +185,7 @@
 #define MSG_DBSTAT_ERRORUNDUMPING_S _MESSAGE(57306,         _("error reading object from file "SFN"\n"))
 #define MSG_DBSTAT_INVALIDKEY_S     _MESSAGE(57307,         _("invalid key "SFQ"\n"))
 
-#define MSG_PWD_ONLY_USER_SS         _MESSAGE(57310,         _(SFN": only the user "SFQ" or \"root\" can change this password\n"))
+#define MSG_PWD_ONLY_USER_SS        _MESSAGE(57310,         _(SFN": only the user "SFQ" or \"root\" can change this password\n"))
 #define MSG_PWD_ONLY_ROOT_S         _MESSAGE(57311,         _(SFN": only \"root\" has the permission to delete entrys\n"))
 #define MSG_PWD_SWITCH_ADMIN_S      _MESSAGE(57312,         _(SFN": can't switch to admin_user\n"))
 #define MSG_PWD_CHANGED             _MESSAGE(57313,         _("Password changed\n"))

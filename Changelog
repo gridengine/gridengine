@@ -1,3 +1,7 @@
+HP-2005-07-04-0: Cleanup:   Removed unused code...
+                 Changed:   sge_uidgid, utilbin/msg_utilbin.h
+                 Review:    RD
+
 RD-2005-07-04-0: Bugfix:    qrsh returned exit status 1 instead of 0
                  Changed:   shepherd
                  Review:    CR

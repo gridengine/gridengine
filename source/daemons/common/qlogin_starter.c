@@ -237,39 +237,6 @@ void write_exit_code_to_qrsh(int exit_code)
    /* rshd exited with OK: try to get returncode from qrsh_starter file */
    SHEPHERD_TRACE((err_str, "write_exit_code_to_qrsh(%d)", exit_code));
 
-   /* we only have an error file in TMPDIR in case of rsh, 
-      otherwise pass exit_code */ 
-   if (search_conf_val("rsh_daemon") != NULL) {
-      if (exit_code == 0) {
-         char *tmpdir;
-         char *taskid;
-         FILE *errorfile;
-   
-         exit_code = 1;
-         
-         tmpdir = getenv("TMPDIR");
-         taskid = search_conf_val("pe_task_id");
-         SHEPHERD_TRACE((err_str, "write_exit_code_to_qrsh - TMPDIR = "
-            "%s, pe_task_id = %s", tmpdir ? tmpdir : "0", 
-            taskid ? taskid : "0"));
-         if (tmpdir) {
-            if (taskid) {
-               sprintf(buffer, "%s/qrsh_exit_code.%s", tmpdir, taskid);
-            } else {   
-               sprintf(buffer, "%s/qrsh_exit_code", tmpdir);
-            }   
-            errorfile = fopen(buffer, "r");
-            if (errorfile) {
-               if (fscanf(errorfile, "%d", &exit_code) == 1) {
-                  SHEPHERD_TRACE((err_str, "error code from remote "
-                     "command is %d", exit_code));
-               }
-               fclose(errorfile);
-            }
-         }
-      }
-   }
-
    /* write exit code as string number to qrsh */
    sprintf(buffer, "%d", exit_code);
    if (write_to_qrsh(buffer) != 0) {

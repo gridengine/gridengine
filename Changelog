@@ -1,3 +1,7 @@
+RD-2005-07-04-0: Bugfix:    qrsh returned exit status 1 instead of 0
+                 Changed:   shepherd
+                 Review:    CR
+
 RC-2005-07-03-1: Bugfix:    bug in RestartService()
                  Changed:   darwin_template
                  Review:    Pending

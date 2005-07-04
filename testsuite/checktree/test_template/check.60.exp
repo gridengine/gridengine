@@ -109,8 +109,8 @@ set check_cleanup_function __TESTSUITE_TEST_NAME_cleanup
 # define test's procedure order
 set check_functions ""
 lappend check_functions "__TESTSUITE_TEST_NAME_test1"
-lappend check_functions "__TESTSUITE_TEST_NAME_test2"
-lappend check_functions "__TESTSUITE_TEST_NAME_test3"
+#lappend check_functions "__TESTSUITE_TEST_NAME_test2"
+#lappend check_functions "__TESTSUITE_TEST_NAME_test3"
 
 
 global __TESTSUITE_TEST_NAME_test_hosts
@@ -177,7 +177,7 @@ proc __TESTSUITE_TEST_NAME_cleanup  {} {
 }
 
 
-proc __TESTSUITE_TEST_NAME_test {} {
+proc __TESTSUITE_TEST_NAME_test1 {} {
    global __TESTSUITE_TEST_NAME_test_hosts check_description CHECK_ARCH
    global CHECK_OUTPUT ts_config CHECK_CORE_MASTER CHECK_ACT_LEVEL CHECK_SCRIPT_FILE_DIR
 

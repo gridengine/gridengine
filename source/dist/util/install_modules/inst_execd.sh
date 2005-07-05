@@ -637,14 +637,18 @@ CheckWinAdminUser()
 
    if [ -f $SGE_ROOT/$SGE_CELL/common/bootstrap ]; then
       win_admin_user=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep admin_user | awk '{ print $2 }'`
-      WIN_HOST_NAME=`hostname | tr [a-z] [A-Z]`
-      ADMINUSER=$WIN_HOST_NAME"+$win_admin_user"
+      if [ "$win_admin_user" = "default" -o "$win_admin_user" = "root" -o "$win_admin_user" = "none" ]; then
+         ADMINUSER=default
+      fi
    else
       $INFOTEXT "bootstrap file could not be found, please check your installation! Exiting now ..."
       exit 1
    fi
 
    if [ "$win_admin_user" != "default" -a "$win_admin_user" != "root" -a "$win_admin_user" != "none" ]; then
+      WIN_HOST_NAME=`hostname | tr [a-z] [A-Z]`
+      ADMINUSER=$WIN_HOST_NAME"+$win_admin_user"
+
       tmp_path=$PATH
       PATH=/usr/contrib/win32/bin:/common:$SAVED_PATH
       export PATH

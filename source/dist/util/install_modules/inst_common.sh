@@ -937,7 +937,7 @@ CreateSGEStartUpScripts()
    if [ -f $TMP_SGE_STARTUP_FILE ]; then
       Execute rm $TMP_SGE_STARTUP_FILE
       Execute touch $TMP_SGE_STARTUP_FILE
-      Execute $CHMOD a+r $TMP_SGE_STARTUP_FILE
+      Execute $CHMOD a+rx $TMP_SGE_STARTUP_FILE
    fi
    if [ -f ${TMP_SGE_STARTUP_FILE}.0 ]; then
       Execute rm ${TMP_SGE_STARTUP_FILE}.0

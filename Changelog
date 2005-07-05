@@ -1,3 +1,7 @@
+RD-2005-07-05-0: Bugfix:    permission issues with noroot exported nfs shares
+                 Changed:   inst_sge, inst_common.sh
+                 Review:    MD
+
 RD-2005-07-04-0: Bugfix:    qrsh returned exit status 1 instead of 0
                  Changed:   shepherd
                  Review:    CR

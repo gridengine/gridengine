@@ -646,7 +646,7 @@ if [ $SHADOW = "install" ]; then
       $INFOTEXT "Starting sge_shadowd on host %s\n" $SHADOW_HOST    
       mod_file="echo $SHADOW_HOST"
       ExecuteAsAdmin touch $SGE_ROOT/$SGE_CELL/common/shadow_masters
-      ExecuteAsAdmin chmod a+w $SGE_ROOT/$SGE_CELL/common/shadow_masters
+      ExecuteAsAdmin chmod a+rw $SGE_ROOT/$SGE_CELL/common/shadow_masters
       ExecuteAsAdmin $mod_file >> $SGE_ROOT/$SGE_CELL/common/shadow_masters
       ExecuteAsAdmin chmod go-w $SGE_ROOT/$SGE_CELL/common/shadow_masters
  
@@ -667,7 +667,7 @@ if [ $SHADOW = "install" ]; then
       $INFOTEXT -log "Starting sge_shadowd on host %s" $SHADOW_HOST    
       mod_file="echo $SHADOW_HOST"
       ExecuteAsAdmin touch $SGE_ROOT/$SGE_CELL/common/shadow_masters
-      ExecuteAsAdmin chmod a+w $SGE_ROOT/$SGE_CELL/common/shadow_masters
+      ExecuteAsAdmin chmod a+rw $SGE_ROOT/$SGE_CELL/common/shadow_masters
       ExecuteAsAdmin $mod_file >> $SGE_ROOT/$SGE_CELL/common/shadow_masters
       ExecuteAsAdmin chmod go-w $SGE_ROOT/$SGE_CELL/common/shadow_masters
       for shs in `cat $SGE_ROOT/$SGE_CELL/common/shadow_masters`; do

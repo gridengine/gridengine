@@ -579,16 +579,16 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
          if ((sge_signo=sge_map_signal(signo)) != -1)
             lSetDouble(du, UA_value, (double)sge_signo);
       }
-   }
-      
-   if (du && ((u_long32)lGetDouble(du, UA_value) == 0xffffffff)) {
-      if (!failed) {
-         failed = SSTATE_FAILURE_AFTER_JOB;
-         if (!*error)
-            sprintf(error, MSG_JOB_CANTREADUSEDRESOURCESFORJOB);
+
+      if ((u_long32)lGetDouble(du, UA_value) == 0xffffffff) {
+         if (!failed) {
+            failed = SSTATE_FAILURE_AFTER_JOB;
+            if (!*error)
+               sprintf(error, MSG_JOB_CANTREADUSEDRESOURCESFORJOB);
+         }
       }
    }
-
+      
    DTRACE;
 
    /* Be careful: the checkpointing checking is done at the end. It will

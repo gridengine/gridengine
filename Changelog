@@ -1,3 +1,7 @@
+CR-2005-07-05-0: Bugfix:    Merged modifications in test_drmaa.c module
+                            test from maintrunk
+                 Changed:   module test test_drmaa.c
+
 HP-2005-07-04-0: Cleanup:   Removed unused code...
                  Changed:   sge_uidgid, utilbin/msg_utilbin.h
                  Review:    RD

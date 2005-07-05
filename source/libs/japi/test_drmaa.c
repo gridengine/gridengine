@@ -72,6 +72,11 @@ enum {
          - submit jobs 
          - wait for jobend */
 
+   ST_SUBMIT_NO_RUN_WAIT,    
+      /* - one thread 
+         - submit jobs that won't run
+         - wait for jobend */
+
    MT_SUBMIT_WAIT,        
       /* - multiple submission threads
          - wait is done by main thread */
@@ -431,6 +436,7 @@ const struct test_name2number_map {
    { "ST_EMPTY_SESSION_SYNCHRONIZE_NODISPOSE",    ST_EMPTY_SESSION_SYNCHRONIZE_NODISPOSE,    0, "" },
    { "ST_EMPTY_SESSION_CONTROL",                  ST_EMPTY_SESSION_CONTROL,                  1, "DRMAA_CONTROL_*" },
    { "ST_SUBMIT_WAIT",                            ST_SUBMIT_WAIT,                            1, "<sleeper_job>" },
+   { "ST_SUBMIT_NO_RUN_WAIT",                     ST_SUBMIT_NO_RUN_WAIT,                     1, "<sleeper_job>" },
    { "ST_BULK_SUBMIT_WAIT",                       ST_BULK_SUBMIT_WAIT,                       1, "<sleeper_job>" },
    { "ST_BULK_SINGLESUBMIT_WAIT_INDIVIDUAL",      ST_BULK_SINGLESUBMIT_WAIT_INDIVIDUAL,      1, "<sleeper_job>" },
    { "ST_SUBMITMIXTURE_SYNC_ALL_DISPOSE",         ST_SUBMITMIXTURE_SYNC_ALL_DISPOSE,         1, "<sleeper_job>" },
@@ -690,6 +696,7 @@ static int test(int *argc, char **argv[], int parse_args)
    char diagnosis[DRMAA_ERROR_STRING_BUFFER];
    drmaa_job_template_t *jt = NULL;
    int drmaa_errno=0;
+   int do_while_end = 0;
 
    switch (test_case) {
    case ST_MULT_INIT:
@@ -733,8 +740,9 @@ static int test(int *argc, char **argv[], int parse_args)
       break;
 
    case ST_SUBMIT_WAIT:
+   case ST_SUBMIT_NO_RUN_WAIT:
       {
-         int n = -1;
+         int n = (test_case == ST_SUBMIT_WAIT)?JOB_CHUNK:1;
          char jobid[1024];
 
          if (parse_args)
@@ -751,7 +759,11 @@ static int test(int *argc, char **argv[], int parse_args)
             return 1;
          }
 
-         for (i=0; i<JOB_CHUNK; i++) {
+         if (test_case == ST_SUBMIT_NO_RUN_WAIT) {
+            drmaa_set_attribute(jt, DRMAA_NATIVE_SPECIFICATION, "-l a=fantasy_os -now yes -w n", NULL, 0);
+         }
+
+         for (i=0; i<n; i++) {
             if (drmaa_run_job(jobid, sizeof(jobid)-1, jt, diagnosis, sizeof(diagnosis)-1)!=DRMAA_ERRNO_SUCCESS) {
                fprintf(stderr, "drmaa_run_job() failed: %s\n", diagnosis);
                return 1;
@@ -2236,7 +2248,7 @@ static int test(int *argc, char **argv[], int parse_args)
                const char *session_all[] = { DRMAA_JOB_IDS_SESSION_ALL, NULL };
                /* drmaa_synchronize(DRMAA_JOB_IDS_SESSION_ALL) must return DRMAA_ERRNO_SUCCESS */
                if ((drmaa_errno=drmaa_synchronize(session_all, DRMAA_TIMEOUT_WAIT_FOREVER, 
-                    ST_EMPTY_SESSION_SYNCHRONIZE_DISPOSE?0:1, 
+                    (test_case == ST_EMPTY_SESSION_SYNCHRONIZE_DISPOSE) ? 1 : 0, 
                      diagnosis, sizeof(diagnosis)-1))!=DRMAA_ERRNO_SUCCESS) {
                   fprintf(stderr, "drmaa_synchronize(empty session) failed: %s\n", diagnosis);
                   return 1;
@@ -2615,7 +2627,7 @@ static int test(int *argc, char **argv[], int parse_args)
             else if (!failed_test) {
                printf ("Test succeeded!\n");
             }
-         } while (0);
+         } while (do_while_end);
          
          if (jt != NULL) { drmaa_delete_job_template(jt, NULL, 0); jt = NULL; }
          
@@ -2733,7 +2745,7 @@ static int test(int *argc, char **argv[], int parse_args)
             if (!failed_test) {
                printf ("Test succeeded!\n");
             }
-         } while (0);
+         } while (do_while_end);
          
          if (jt != NULL) { drmaa_delete_job_template(jt, NULL, 0); jt = NULL; }
          
@@ -2831,7 +2843,7 @@ static int test(int *argc, char **argv[], int parse_args)
             else if (!failed_test) {
                printf ("Test succeeded!\n");
             }
-         } while (0);
+         } while (do_while_end);
          
          if (jt != NULL) { drmaa_delete_job_template(jt, NULL, 0); jt = NULL; }
 
@@ -2916,7 +2928,7 @@ static int test(int *argc, char **argv[], int parse_args)
             else if (!failed_test) {
                printf ("Test succeeded!\n");
             }
-         } while (0);
+         } while (do_while_end);
 
          if (jt != NULL) { drmaa_delete_job_template(jt, NULL, 0); jt = NULL; }
          
@@ -3077,7 +3089,7 @@ static int test(int *argc, char **argv[], int parse_args)
             else if (!failed_test) {
                printf ("Test succeeded!\n");
             }
-         } while (0);
+         } while (do_while_end);
 
          if (jt != NULL) { drmaa_delete_job_template(jt, NULL, 0); jt = NULL; }
 
@@ -3306,7 +3318,7 @@ static int test(int *argc, char **argv[], int parse_args)
             else if (!failed_test) {
                printf ("Test succeeded!\n");
             }
-         } while (0);
+         } while (do_while_end);
 
          if (jt != NULL) { drmaa_delete_job_template(jt, NULL, 0); jt = NULL; }
          
@@ -3532,7 +3544,7 @@ static int test(int *argc, char **argv[], int parse_args)
             else if (!failed_test) {
                printf ("Test succeeded!\n");
             }
-         } while (0);
+         } while (do_while_end);
 
          if (jt != NULL) { drmaa_delete_job_template(jt, NULL, 0); jt = NULL; }
 
@@ -3635,7 +3647,7 @@ static int test(int *argc, char **argv[], int parse_args)
             else if (!failed_test) {
                printf ("Test succeeded!\n");
             }
-         } while (0);
+         } while (do_while_end);
             
          if (jt != NULL) { drmaa_delete_job_template(jt, NULL, 0); jt = NULL; }
 
@@ -3728,7 +3740,7 @@ static int test(int *argc, char **argv[], int parse_args)
             else if (!failed_test) {
                printf ("Test succeeded!\n");
             }
-         } while (0);
+         } while (do_while_end);
          
          if (jt != NULL) { drmaa_delete_job_template(jt, NULL, 0); jt = NULL; }
 
@@ -3796,7 +3808,7 @@ static int test(int *argc, char **argv[], int parse_args)
             }
 
             printf ("Check for email to find out if the test succeeded.\n");
-         } while (0);
+         } while (do_while_end);
          
          if (jt != NULL) { drmaa_delete_job_template(jt, NULL, 0); jt = NULL; }
          
@@ -3865,7 +3877,7 @@ static int test(int *argc, char **argv[], int parse_args)
             }
 
             printf ("Check for email to find out if the test failed.\n");
-         } while (0);
+         } while (do_while_end);
          
          if (jt != NULL) { drmaa_delete_job_template(jt, NULL, 0); jt = NULL; }
 
@@ -4423,10 +4435,12 @@ static int do_submit(drmaa_job_template_t *jt, int n)
    char jobid[100];
    int drmaa_errno = DRMAA_ERRNO_SUCCESS;
    int error = DRMAA_ERRNO_SUCCESS;
+   bool done;
 
    for (i=0; i<n; i++) {
       /* submit job */
-      while (true) {
+      done = false;
+      while (!done) {
          drmaa_errno = drmaa_run_job(jobid, sizeof(jobid)-1, jt, diagnosis, sizeof(diagnosis)-1);
 
          if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
@@ -4437,16 +4451,15 @@ static int do_submit(drmaa_job_template_t *jt, int n)
          if (drmaa_errno == DRMAA_ERRNO_TRY_LATER) {
             printf("retry: %s\n", diagnosis);
             sleep(1);
-         }
-         else {
+         } else {
+            done = true;
             break; /* while */
          }
       }
       
       if (drmaa_errno == DRMAA_ERRNO_SUCCESS) {
          printf("submitted job \"%s\"\n", jobid);
-      }
-      else {
+      } else {
          printf("unable to submit job\n");
       }
       
@@ -4508,9 +4521,11 @@ static int wait_n_jobs(int n)
    int i, stat;
    int drmaa_errno = DRMAA_ERRNO_SUCCESS;
    int error = DRMAA_ERRNO_SUCCESS;
+   bool done;
 
    for (i=0; i<n; i++) {
-      while (true) {
+      done = false;
+      while (!done) {
          drmaa_errno = drmaa_wait(DRMAA_JOB_IDS_SESSION_ANY, jobid,
                                   sizeof(jobid)-1, &stat,
                                   DRMAA_TIMEOUT_WAIT_FOREVER, NULL, NULL, 0);
@@ -4523,16 +4538,15 @@ static int wait_n_jobs(int n)
          if (drmaa_errno == DRMAA_ERRNO_TRY_LATER) {
             printf("retry...\n");
             sleep(1);
-         }
-         else {
+         } else {
+            done = true;
             break;
          }
       }
 
       if (drmaa_errno == DRMAA_ERRNO_SUCCESS) {
          printf("waited job \"%s\"\n", jobid);
-      }
-      else {
+      } else {
          /* If there is ever an error, we will return an error. */
          error = drmaa_errno;
       }
@@ -4984,30 +4998,30 @@ static int job_run_sequence_verify(int pos, char *all_jobids[], int *order[])
 #define NUMBER_CHUNK 5
 static int **job_run_sequence_parse(char *jrs_str)
 {
-   char *s, *group_str;
+   char *s = NULL, *group_str = NULL;
 
    /* control outer loop */
-   char *iter_dash = NULL;
+   char *jrs_str_cp = strdup(jrs_str);
+   char  *iter_dash = NULL;
    int **sequence = NULL;
    int groups_total = GROUP_CHUNK;
    int groups_used = 0;
    int i = 0;
 
-   /* control inner loop */
-   char *iter_comma;
-   int *group;
-   int numbers_total;
-   int numbers_used;
-   int j;
 
-
-   printf("parsing sequence: \"%s\"\n", jrs_str);
+   printf("parsing sequence: \"%s\"\n", jrs_str_cp);
 
    sequence = malloc(sizeof(int *)*(GROUP_CHUNK+1));
 
    /* groups are delimited by dashes '-' */
-   for (group_str=strtok_r(jrs_str, "-", &iter_dash); group_str; group_str=strtok_r(NULL, "-", &iter_dash)) {
+   for (group_str=strtok_r(jrs_str_cp, "-", &iter_dash); group_str; group_str=strtok_r(NULL, "-", &iter_dash)) {
 
+   char  *iter_comma = NULL;
+   int *group;
+   int numbers_total;
+   int numbers_used;
+   int j = 0;
+   
       if (++groups_used > groups_total) {
          groups_total += GROUP_CHUNK;
          sequence = realloc(sequence, groups_total+1);
@@ -5017,8 +5031,6 @@ static int **job_run_sequence_parse(char *jrs_str)
       numbers_used = 0;
 
       group = malloc(sizeof(int *)*(NUMBER_CHUNK+1));
-      iter_comma = NULL;
-      j = 0;
 
       /* sequence numbers within a group are delimited by comma ',' */
       for (s=strtok_r(group_str, ",", &iter_comma); s; s=strtok_r(NULL, ",", &iter_comma)) {
@@ -5037,6 +5049,9 @@ static int **job_run_sequence_parse(char *jrs_str)
       i++;
    }
    sequence[i] = NULL;
+   
+   free(jrs_str_cp);
+   jrs_str_cp = NULL;
 
    return sequence;
 }

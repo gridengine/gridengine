@@ -1,4 +1,4 @@
-RD-2005-07-05-1: Bugfix:    wrong drama jnilib link on MacOS
+RD-2005-07-05-1: Bugfix:    wrong drmaa jnilib link on MacOS
                  Changed    scripts/distinst
                  Review:    AH
 

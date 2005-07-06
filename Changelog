@@ -1,5 +1,7 @@
 RD-2005-07-05-1: Bugfix:    wrong drmaa jnilib link on MacOS
-                 Changed    scripts/distinst
+                 Changed:   scripts/distinst
+                 Bugster:   6294397 
+                 Issue:     1694
                  Review:    AH
 
 RD-2005-07-05-0: Bugfix:    permission issues with noroot exported nfs shares

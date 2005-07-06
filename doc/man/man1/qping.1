@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: qping.1,v $     Last Update: $Date: 2004/12/02 11:21:32 $     Revision: $Revision: 1.7 $
+.\" $RCSfile: qping.1,v $     Last Update: $Date: 2005/07/06 15:48:54 $     Revision: $Revision: 1.7.6.1 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,12 +30,12 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QPING 1 "$Date: 2004/12/02 11:21:32 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH QPING 1 "$Date: 2005/07/06 15:48:54 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 qping \- check application status of xxQS_NAMExx daemons.
 .PP
 .SH SYNTAX
-.B "qping [-help] [-noalias] [ [ [-i <interval>] [-info] [-f] ] | [ [-dump] [ -nonewline ] ] ]"
+.B "qping [-help] [-noalias] [-ssl|-tcp] [ [ [-i <interval>] [-info] [-f] ] | [ [-dump_tag tag [param] ] [-dump] [-nonewline] ] ]"
 .B <host> <port> <name> <id>
 .\"
 .\"
@@ -49,8 +49,8 @@ Information Message) to the destination daemon. The communication layer of the
 specified daemon will respond with a SIRM (Status Information Response Message) which
 contains status information about the consulted daemon.
 
-The qping -dump option allows an administrator to observe the communication protocol
-data flow of a xxQS_NAMExx service daemon. The qping -dump instruction must be started
+The qping -dump and -dump_tag options allowing an administrator to observe the communication
+protocol data flow of a xxQS_NAMExx service daemon. The qping -dump instruction must be started
 with root account and on the same host where the observed daemon is running.
 .PP
 .\"
@@ -257,6 +257,21 @@ Ignore host_aliases file, which is located at
 If this option is used it is not necessary to set any xxQS_NAMExx environment
 variable. 
 
+.SS "\fB\-ssl\fP"
+This option can be used to specify
+an SSL (Secure Socket Layer) configuration. The qping will use the configuration
+to connect to services running SSL. If the SGE settings file is not sourced, you
+have to use the -noalias option to bypass the need for the SGE_ROOT environment
+variable.
+The following environment variables are used to specifiy your certificates:
+  SSL_CA_CERT_FILE - CA certificate file
+  SSL_CERT_FILE    - certificates file
+  SSL_KEY_FILE     - key file
+  SSL_RAND_FILE    - rand file
+
+.SS "\fB\-tcp\fP"
+This option is used to select TCP/IP as the protocol used to connect to other services.
+
 .SS "\fB\-nonewline\fP"
 Dump output will not have a linebreak within a message and binary messages are
 not unpacked.
@@ -281,8 +296,36 @@ the following specifiers separated by a space character:
 .fi
 .RE
 
-.in-3
 Start qping -help to see which columns are available.
+
+
+.SS "\fB\-dump_tag tag [param]\fP"
+This option has the same the same meaning as -dump, but can provide more information by
+specifying the debug level and message types qping should print:
+.in+3
+-dump_tag ALL <debug level> 
+.in+3
+This option shows all possible debug messages (APP+MSG) for the debug levels, ERROR, WARNING,
+INFO, DEBUG and DPRINTF. The contacted service must support this kind of debugging. 
+This option is not currently implemented.
+.in-3
+.in-3    
+.in+3
+-dump_tag APP <debug level> 
+.in+3
+This option shows only application debug messages for the debug levels, ERROR, WARNING, INFO,
+DEBUG and DPRINTF. The contacted service must support this kind of debugging.
+This option is not currently implemented.
+.in-3
+.in-3    
+.in+3
+-dump_tag MSG
+.in+3
+This option has the same behaviour as the -dump option. 
+.in-3
+.in-3    
+
+.in-3
 
 .SS "\fBhost\fP"
 Host where daemon is running.

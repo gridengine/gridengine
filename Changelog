@@ -1,3 +1,5 @@
+CR-2005-07-06-0: Enhancm.:  updated qping man page
+
 HP-2005-07-05-0: Bugfix:    Fixed wrong behaviour in installation for Interix 
                             and root system.
                  Changed:   inst_execd.sh

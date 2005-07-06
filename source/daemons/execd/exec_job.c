@@ -443,8 +443,9 @@ char *err_str
          else
             sge_dstring_sprintf(&buffer, "%s:/usr/local/bin:/usr/ucb:/bin:/usr/bin:", tmpdir);
             /*
-             * The default path is insufficient: #6288626
+             * The default path is insufficient: #6288626 / #1695
              * irix65: "/usr/sbin:/usr/bsd:/sbin:/usr/bin"
+             * sol-*: "/bin:/usr/bin:/usr/ucb"
              */
          var_list_set_string(&environmentList, "PATH", sge_dstring_get_string(&buffer));
          sge_dstring_free(&buffer);

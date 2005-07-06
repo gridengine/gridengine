@@ -4,7 +4,9 @@ HP-2005-07-05-0: Bugfix:    Fixed wrong behaviour in installation for Interix
                  Review:    MD
 
 RD-2005-07-05-0: Bugfix:    wrong drmaa jnilib link on MacOS
-                 Changed    scripts/distinst
+                 Changed:   scripts/distinst
+                 Bugster:   6294397 
+                 Issue:     1694
                  Review:    AH
 
 CR-2005-07-05-0: Bugfix:    Merged modifications in test_drmaa.c module

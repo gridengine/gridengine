@@ -1657,7 +1657,7 @@ proc config_execd_hosts { only_check name config_array } {
    # set host lists
    # set CHECK_CORE_EXECD $value
    # we need a mapping from node to physical hosts
-   foreach host $config(execd_hosts) {
+   foreach host $value {
       node_set_host $host $host
       set nodes [host_conf_get_nodes $host]
       foreach node $nodes {

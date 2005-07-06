@@ -39,7 +39,6 @@ global check_init_level_procedure
 set check_init_level_procedure "qmod_general_init_level"
 set check_name         "qmod_general"
 set check_category     "COMPATIBILITY SYSTEM L10N VERIFIED"
-set check_root_access_needs "yes"
 
 set check_description(0)  "checking all options, except rescheduling (-r)"
 set check_needs        "init_core_system"  ;# dependencies of this check (name of other check)
@@ -258,7 +257,7 @@ proc qmod_wildcard_enable {} {
 proc qmod_wildcard_disable { } {
    global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_HOST CHECK_OUTPUT qmod_test_queues
    
-   #diable all queues on the test host
+   #disable all queues on the test host
    set queue_name [get_queue_instance "qmod*" ${CHECK_HOST}] 
    set result [ catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qmod -d $queue_name" } output ]
    
@@ -632,22 +631,10 @@ proc qmod_unsuspend {} {
 #     ???/???
 #*******************************
 proc qmod_clearerrorstate {} {
-   
-   global CHECK_PRODUCT_TYPE CHECK_PRODUCT_ROOT CHECK_ARCH test_queue CHECK_HOST
+   global CHECK_OUTPUT CHECK_PRODUCT_TYPE CHECK_PRODUCT_ROOT CHECK_ARCH test_queue CHECK_HOST
 
-
-   if { [have_root_passwd] == -1 } {
-      set_error -3 "root access required"
-      return
-   } 
- 
-
-   set file_name "sge_shepherd"
-
-   # rename the shepherd binary to produce error state
-   set output [ run_command_as_user "$CHECK_HOST" "root" "/bin/mv" "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/$file_name $CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/${file_name}.tmp" 1 ] 
-   wait_for_file "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/$file_name" 200 1    ;# wait for shepherd binary to disappear
-   
+   # set queue prolog to a non existing script - this will produce an error state
+   mqattr prolog "/tmp/foo/bar/non_existing_prolog.sh" $test_queue
 
    # submit testjob to set the queue in error
    set job_id [ submit_job "-o /dev/null -e /dev/null -q $test_queue $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 15" ] 
@@ -655,10 +642,9 @@ proc qmod_clearerrorstate {} {
    # wait for queue to get in error state
    set time [timestamp]
    while {1} {
-   
       set state [ get_queue_state $test_queue ] 
       if { [ string first "E" $state ] >=  0  } {
-         break;
+         break
       }
 
       set runtime [expr ( [timestamp] - $time) ]
@@ -666,25 +652,18 @@ proc qmod_clearerrorstate {} {
          set_error -1 "timeout waiting for queue $test_queue to get in error state"
          break;
       }
+
       sleep 1
    }
-  
-   # set the shepherd binary to his orignal filename
-   # set result [ catch { file rename $CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/$file_name.tmp $CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/$file_name } ]
-   # if { $result != 0 } {
-   #   set_error -1 "could not rename the $file_name binary to original name"
-   # }
-   set output [ run_command_as_user "$CHECK_HOST" "root" "/bin/mv" "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/${file_name}.tmp $CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/$file_name" 1 ] 
-   wait_for_file "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/$file_name" 200    ;# wait for shepherd binary to appear
+ 
+   # remove the prolog
+   mqattr prolog none $test_queue
 
-
-
-   # now wait for jobstart
+   # now wait for jobstart - should not happen as queue is in error state
    set result [wait_for_jobstart $job_id "leeper" 120 0]
    if {$result != -1} {
       set_error -1 "job $job_id should not start until yet"
    }
-
 
    # clear error state
    set result [ catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qmod -c $test_queue" } output ]
@@ -697,15 +676,32 @@ proc qmod_clearerrorstate {} {
    if { [ string compare $state "" ] != 0  } {
       set_error -1 "queue $test_queue is not in original state"
    }
-
-   
  
    # now wait for jobend
    wait_for_jobstart $job_id "leeper" 300
    wait_for_jobend   $job_id "leeper" 300 
 
+   qmod_clear_all_error_states
+
    set_error 0 "ok" 
-}  
+}
+
+# Due to a bug, in N1GE 6 an invalid queue prolog will set the host into error state
+# we have to clear it after the qmod_clearerrorstate test.
+proc qmod_clear_all_error_states {} {
+   global CHECK_HOST CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_OUTPUT
+   global qmod_test_queues
+
+   set queue_list $qmod_test_queues
+   lappend queue_list "all.q"
+   
+   foreach queue $queue_list {
+      set qinstance [get_queue_instance $queue $CHECK_HOST]
+      puts $CHECK_OUTPUT "clear error state of $qinstance"
+      catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qmod -c $qinstance" } output
+      puts $CHECK_OUTPUT "$output"
+   }
+}
 
 # do to:
 # 1) set running job to suspend

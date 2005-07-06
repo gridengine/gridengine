@@ -3288,8 +3288,8 @@ proc mqattr { attribute entry queue_list } {
   
   foreach elem $help {
      set queue_name [lindex $queue_list $counter]
-     set MODIFIED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_MODIFIEDINLIST_SSSS] $CHECK_USER "*" $queue_name "*"]
-     if { [ string match "*$MODIFIED*" $elem ] != 1 } {
+     set MODIFIED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_MODIFIEDINLIST_SSSS] $CHECK_USER "*" "*" "*"]
+     if { [ string match "$MODIFIED" $elem ] != 1 } {
         puts $CHECK_OUTPUT "Could not modify queue $queue_name."
         set return_value -1
      } else {

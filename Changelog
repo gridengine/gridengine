@@ -1,3 +1,7 @@
+JG-2005-07-06-0: Testsuite: Fixed test system_tests/clients/qmod/general.
+                            Fixed adding exec hosts with Solaris zones to exec
+                            host list.
+
 RD-2005-07-05-1: Bugfix:    wrong drmaa jnilib link on MacOS
                  Changed:   scripts/distinst
                  Bugster:   6294397 

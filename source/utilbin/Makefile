@@ -78,107 +78,107 @@ include $(UTILBIN_DIR)/utilbin_dependencies
 ###############################################################################
 # rules to build object codes and binaries
 ###############################################################################
-uidgid:		uidgid.o 
-		$(CC) -o $@  uidgid.o $(LFLAGS) $(LIBS)
+uidgid:		uidgid.o version.o 
+		$(CC) -o $@  uidgid.o version.o $(LFLAGS) $(LIBS)
 
 uidgid.o:	$(UTILBIN_DIR)/uidgid.c
 		$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/uidgid.c
 
 #---------------------------------------------------------------------
-gethostname:	gethostname.o $(UTILIB) $(RMONLIB) $(COMMLIB) $(COMMLISTSLIB) $(LCKLIB)
-		$(CC) -o $@ gethostname.o $(LFLAGS) -luti -llck -lrmon $(SECLIB) -lcomm -lcommlists $(DLLIB) $(LIBS)
+gethostname:	gethostname.o version.o $(UTILIB) $(RMONLIB) $(COMMLIB) $(COMMLISTSLIB) $(LCKLIB)
+		$(CC) -o $@ gethostname.o version.o $(LFLAGS) -luti -llck -lrmon $(SECLIB) -lcomm -lcommlists $(DLLIB) $(LIBS)
 
 gethostname.o:	$(UTILBIN_DIR)/gethostname.c
 		$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/gethostname.c
 
 #---------------------------------------------------------------------
-gethostbyname:	gethostbyname.o $(UTILIB) $(RMONLIB) $(COMMLIB) $(COMMLISTSLIB) $(LCKLIB)
-		$(CC) -o $@ gethostbyname.o $(LFLAGS) -luti -llck -lrmon $(SECLIB) -lcomm -lcommlists $(DLLIB) $(LIBS)
+gethostbyname:	gethostbyname.o version.o $(UTILIB) $(RMONLIB) $(COMMLIB) $(COMMLISTSLIB) $(LCKLIB)
+		$(CC) -o $@ gethostbyname.o version.o $(LFLAGS) -luti -llck -lrmon $(SECLIB) -lcomm -lcommlists $(DLLIB) $(LIBS)
 
 gethostbyname.o:	$(UTILBIN_DIR)/gethostbyname.c
 		$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/gethostbyname.c
 
 #---------------------------------------------------------------------
-qping:	qping.o $(UTILIB) $(RMONLIB) $(GDILIB) $(COMMLIB) $(COMMLISTSLIB) $(SECLIBS) $(LCKLIB) $(SGEOBJDLIB) $(CULLLIB)
-		$(CC) -o $@ qping.o $(LFLAGS) -lgdi -lsgeobjd $(SECLIB) $(KRBLIB) -lcull -lcomm -lcommlists -luti -llck -lrmon $(DLLIB) $(SLIBS) $(LIBS)
+qping:	qping.o version.o $(UTILIB) $(RMONLIB) $(GDILIB) $(COMMLIB) $(COMMLISTSLIB) $(SECLIBS) $(LCKLIB) $(SGEOBJDLIB) $(CULLLIB)
+		$(CC) -o $@ qping.o version.o $(LFLAGS) -lgdi -lsgeobjd $(SECLIB) $(KRBLIB) -lcull -lcomm -lcommlists -luti -llck -lrmon $(DLLIB) $(SLIBS) $(LIBS)
 
 qping.o:	$(UTILBIN_DIR)/qping.c
 		$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/qping.c
 
 
 #---------------------------------------------------------------------
-gethostbyaddr:	gethostbyaddr.o $(UTILIB) $(RMONLIB) $(COMMLIB) $(COMMLISTSLIB) $(LCKLIB)
-		$(CC) -o $@ gethostbyaddr.o $(LFLAGS) -luti -llck -lrmon $(SECLIB) -lcomm -lcommlists $(DLLIB) $(LIBS)
+gethostbyaddr:	gethostbyaddr.o version.o $(UTILIB) $(RMONLIB) $(COMMLIB) $(COMMLISTSLIB) $(LCKLIB)
+		$(CC) -o $@ gethostbyaddr.o version.o $(LFLAGS) -luti -llck -lrmon $(SECLIB) -lcomm -lcommlists $(DLLIB) $(LIBS)
 
 gethostbyaddr.o:	$(UTILBIN_DIR)/gethostbyaddr.c
 		$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/gethostbyaddr.c
 
 #---------------------------------------------------------------------
-getservbyname:	getservbyname.o $(UTILIB) $(RMONLIB) $(LCKLIB)
-		$(CC) $(CFLAGS) -o $@ getservbyname.o $(LFLAGS) -luti -llck -lrmon $(DLLIB) $(LIBS)
+getservbyname:	getservbyname.o version.o $(UTILIB) $(RMONLIB) $(LCKLIB)
+		$(CC) $(CFLAGS) -o $@ getservbyname.o version.o $(LFLAGS) -luti -llck -lrmon $(DLLIB) $(LIBS)
 
 getservbyname.o:	$(UTILBIN_DIR)/getservbyname.c
 		$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/getservbyname.c
 
 #---------------------------------------------------------------------
-filestat:	filestat.o $(UTILIB) $(RMONLIB) $(LCKLIB)
-		$(CC) $(CFLAGS) -o $@ filestat.o $(LFLAGS) -luti -llck -lrmon $(LIBS)
+filestat:	filestat.o version.o $(UTILIB) $(RMONLIB) $(LCKLIB)
+		$(CC) $(CFLAGS) -o $@ filestat.o version.o $(LFLAGS) -luti -llck -lrmon $(LIBS)
 
 filestat.o:	$(UTILBIN_DIR)/filestat.c
 		$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/filestat.c
 
 #---------------------------------------------------------------------
-now:		now.o
-		$(CC) $(CFLAGS) -o $@ now.o $(LFLAGS)
+now:		now.o version.o
+		$(CC) $(CFLAGS) -o $@ now.o version.o $(LFLAGS)
 
 now.o:		$(UTILBIN_DIR)/now.c
 		$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/now.c
 
 #---------------------------------------------------------------------
-checkprog:	checkprog.o peopen_standalone.o pids_standalone.o $(RMONLIB) $(UTILIB) $(LCKLIB)
-		$(CC) $(CFLAGS) -o $@ checkprog.o peopen_standalone.o pids_standalone.o $(LFLAGS) -luti -llck -lrmon $(LIBS)
+checkprog:	checkprog.o peopen_standalone.o pids_standalone.o version.o $(RMONLIB) $(UTILIB) $(LCKLIB)
+		$(CC) $(CFLAGS) -o $@ checkprog.o peopen_standalone.o pids_standalone.o version.o $(LFLAGS) -luti -llck -lrmon $(LIBS)
 
 checkprog.o:	$(UTILBIN_DIR)/checkprog.c
 		$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/checkprog.c
 
 #---------------------------------------------------------------------
-checkuser:     checkuser.o $(UTILIB) $(RMONLIB)  $(LCKLIB)
-		$(CC) $(CFLAGS) -o $@ checkuser.o $(LFLAGS) -luti -llck -lrmon $(LIBS)
+checkuser:     checkuser.o version.o $(UTILIB) $(RMONLIB)  $(LCKLIB)
+		$(CC) $(CFLAGS) -o $@ checkuser.o version.o $(LFLAGS) -luti -llck -lrmon $(LIBS)
 
 checkuser.o:      $(UTILBIN_DIR)/checkuser.c
 		$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/checkuser.c
 
 #---------------------------------------------------------------------
-adminrun:   adminrun.o $(UTILIB) $(RMONLIB) $(LCKLIB)
-		$(CC) -o $@ adminrun.o $(LFLAGS) -luti -llck -lrmon $(LIBS)
+adminrun:   adminrun.o version.o $(UTILIB) $(RMONLIB) $(LCKLIB)
+		$(CC) -o $@ adminrun.o version.o $(LFLAGS) -luti -llck -lrmon $(LIBS)
 
 adminrun.o: $(UTILBIN_DIR)/adminrun.c
 		$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/adminrun.c
 
 #---------------------------------------------------------------------
-range:		range.o
-		$(CC) -o $@ range.o $(LFLAGS)
+range:		range.o version.o 
+		$(CC) -o $@ range.o version.o $(LFLAGS)
 
 range.o:	$(UTILBIN_DIR)/range.c
 		$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/range.c
 
 #---------------------------------------------------------------------
-signals:	signals.o
-		$(CC) -o $@ signals.o $(LFLAGS)
+signals:	signals.o version.o 
+		$(CC) -o $@ signals.o version.o $(LFLAGS)
 
 signals.o:	$(UTILBIN_DIR)/signals.c
 		$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/signals.c
 
 #---------------------------------------------------------------------
-loadcheck:	loadcheck.o $(UTILIB) $(RMONLIB) $(LCKLIB)
-		$(CC) -o $@ loadcheck.o $(LFLAGS) -luti -llck -lrmon $(LOADAVGLIBS) $(LIBS)
+loadcheck:	loadcheck.o version.o $(UTILIB) $(RMONLIB) $(LCKLIB)
+		$(CC) -o $@ loadcheck.o version.o $(LFLAGS) -luti -llck -lrmon $(LOADAVGLIBS) $(LIBS)
 
 loadcheck.o:	$(UTILBIN_DIR)/loadcheck.c 
 		$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/loadcheck.c
 
 #---------------------------------------------------------------------
-languagetest:   languagetest.o  $(UTILIB) $(RMONLIB) $(LCKLIB)
-		$(CC) -o $@ languagetest.o $(LFLAGS)  -luti -llck -lrmon $(LIBS)
+languagetest:   languagetest.o version.o $(UTILIB) $(RMONLIB) $(LCKLIB)
+		$(CC) -o $@ languagetest.o version.o $(LFLAGS)  -luti -llck -lrmon $(LIBS)
 
 languagetest.o: $(UTILBIN_DIR)/languagetest.c
 		$(CC) $(CFLAGS) $(GCC_NODUPLWARN) -c $(UTILBIN_DIR)/languagetest.c
@@ -196,7 +196,7 @@ fstype:   fstype.o  version.o $(RMONLIB)
 fstype.o: $(UTILBIN_DIR)/fstype.c
 		$(CC) $(CFLAGS) $(MEMCFLAG) $(GCC_NODUPLWARN) -c $(UTILBIN_DIR)/fstype.c
 #---------------------------------------------------------------------
-spooldefaults:   spooldefaults.o  version.o sge_mt_init.o $(SPOOLING_DEPS) $(SPOOLCLIB) $(SPOOLLIB) $(SCHEDLIB) $(EVCLIB) $(GDILIB) $(SECLIBS) $(SGEOBJLIB) $(SGEOBJDLIB) $(COMMLIB) $(COMMLISTSLIB) $(CULLLIB) $(LCKLIB) $(UTILIB) $(RMONLIB)
+spooldefaults:   spooldefaults.o version.o sge_mt_init.o $(SPOOLING_DEPS) $(SPOOLCLIB) $(SPOOLLIB) $(SCHEDLIB) $(EVCLIB) $(GDILIB) $(SECLIBS) $(SGEOBJLIB) $(SGEOBJDLIB) $(COMMLIB) $(COMMLISTSLIB) $(CULLLIB) $(LCKLIB) $(UTILIB) $(RMONLIB)
 		$(CC) -o $@ spooldefaults.o version.o sge_mt_init.o $(LFLAGS) -lspoolc $(SPOOLING_LIBS) -lsched -levc -lgdi -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lcull -lcomm -lcommlists -luti -llck -lrmon $(DLLIB) $(SLIBS) $(LIBS)
 
 spooldefaults.o: $(UTILBIN_DIR)/spooldefaults.c
@@ -210,22 +210,22 @@ spoolinit.o: $(UTILBIN_DIR)/spoolinit.c
 		$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/spoolinit.c
 
 #---------------------------------------------------------------------
-testsuidroot:   testsuidroot.o 
-		$(CC) -o $@ testsuidroot.o  $(LFLAGS) $(LIBS)
+testsuidroot:   testsuidroot.o version.o
+		$(CC) -o $@ testsuidroot.o version.o $(LFLAGS) $(LIBS)
 
 testsuidroot.o: $(UTILBIN_DIR)/testsuidroot.c
 		$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/testsuidroot.c
 
 #---------------------------------------------------------------------
-work:	work.o 
-	$(CC) -o $@ work.o  $(LFLAGS) $(LIBS)
+work:	work.o version.o
+	$(CC) -o $@ work.o version.o $(LFLAGS) $(LIBS)
 
 work.o:	$(UTILBIN_DIR)/work.c
 	$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/work.c
 
 #---------------------------------------------------------------------
-tst_pthread_signals: tst_pthread_signals.o
-		$(CC) -o $@ tst_pthread_signals.o $(LFLAGS) $(SLIBS) $(LIBS)
+tst_pthread_signals: tst_pthread_signals.o version.o
+		$(CC) -o $@ tst_pthread_signals.o version.o $(LFLAGS) $(SLIBS) $(LIBS)
 
 tst_pthread_signals.o: $(UTILBIN_DIR)/tst_pthread_signals.c
 		$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/tst_pthread_signals.c

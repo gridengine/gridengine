@@ -1,4 +1,5 @@
-RD-2005-07-07-0: Cleanup:   switched GDI_VERSION from define to const char
+RD-2005-07-06-0: Cleanup:   switched GDI_VERSION, GE_LONGNAME and GE_SHORTNAME
+                            from define to const char
                  Changed:   all
                  Review:    JG
 

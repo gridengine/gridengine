@@ -1,3 +1,7 @@
+RD-2005-07-07-0: Cleanup:   switched GDI_VERSION from define to const char
+                 Changed:   all
+                 Review:    JG
+
 JG-2005-07-06-0: Testsuite: Fixed test system_tests/clients/qmod/general.
                             Fixed adding exec hosts with Solaris zones to exec
                             host list.

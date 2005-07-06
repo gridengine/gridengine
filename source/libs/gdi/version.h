@@ -32,14 +32,9 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#define GDI_VERSION "maintrunk"
+extern const char GDI_VERSION[]; /* set in version.c */
 
-#ifdef ADD_SUN_COPYRIGHT
-#  define GE_LONGNAME "N1 Grid Engine"
-#  define GE_SHORTNAME "N1GE"
-#else
-#  define GE_LONGNAME "Grid Engine"
-#  define GE_SHORTNAME "SGE"
-#endif
+extern const char GE_LONGNAME[]; /* set in version.c */
+extern const char GE_SHORTNAME[]; /* set in version.c */
 
 #endif /* __VERISON_H */

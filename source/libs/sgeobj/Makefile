@@ -114,15 +114,15 @@ sgeobjlib_messages:
 ###############################################################################
 # rules to build library
 ###############################################################################
-libsgeobj.a:	$(SGEOBJLIB_OBJS) 
-	$(AR) $(ARFLAGS) libsgeobj.a $(SGEOBJLIB_OBJS)
+libsgeobj.a:	$(SGEOBJLIB_OBJS) version.o
+	$(AR) $(ARFLAGS) libsgeobj.a $(SGEOBJLIB_OBJS) version.o
 	$(RANLIB) libsgeobj.a
 
 libsgeobj$(SHAREDEXT): $(SGEOBJLIB_OBJS) $(SGEOBJDLIB) $(COMMLIB) $(CULLLIB) $(UTILIB) $(RMONLIB) $(LCKLIB)
 	$(SHAREDLD) $(SHARED_LFLAGS) -o libsgeobj$(SHAREDEXT) $(SGEOBJLIB_OBJS) -lsgeobjd -lcomm -lcommlists -lcull -luti -lrmon -llck $(LIBS) -lc
 
-libsgeobjd.a:	$(SGEOBJDLIB_OBJS)
-	$(AR) $(ARFLAGS) libsgeobjd.a $(SGEOBJDLIB_OBJS) 
+libsgeobjd.a:	$(SGEOBJDLIB_OBJS) version.o
+	$(AR) $(ARFLAGS) libsgeobjd.a $(SGEOBJDLIB_OBJS) version.o
 	$(RANLIB) libsgeobjd.a
 
 libsgeobjd$(SHAREDEXT): $(SGEOBJDLIB_OBJS) $(CULLLIB) $(UTILIB) $(RMONLIB) $(LCKLIB)

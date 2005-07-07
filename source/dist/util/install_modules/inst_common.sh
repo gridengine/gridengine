@@ -1049,13 +1049,13 @@ AddSGEStartUpScript()
       TMP_SGE_STARTUP_FILE=/tmp/sgebdb.$$
       STARTUP_FILE_NAME=sgebdb
       S95NAME=S94sgebdb
-      K03NAME=K02sgebdb
+      K03NAME=K04sgebdb
       DAEMON_NAME="berkeleydb"
    else
       TMP_SGE_STARTUP_FILE=/tmp/sgeexecd.$$
       STARTUP_FILE_NAME=sgeexecd
       S95NAME=S96sgeexecd
-      K03NAME=K04sgeexecd
+      K03NAME=K02sgeexecd
       DAEMON_NAME="execd"
    fi
 

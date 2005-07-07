@@ -1,3 +1,5 @@
+CR-2005-07-07-0: Cleanup:   Merged qping man page changes from windows branch
+
 RD-2005-07-06-0: Cleanup:   switched GDI_VERSION, GE_LONGNAME and GE_SHORTNAME
                             from define to const char
                  Changed:   all

@@ -1,3 +1,7 @@
+CR-2005-07-70-1: Bugfix:    - fixed memory leak in commlib for -DUSE_POLL
+                              compile definition
+                            - reviewd poll() implementation
+
 CR-2005-07-07-0: Cleanup:   Merged qping man page changes from windows branch
 
 RD-2005-07-06-0: Cleanup:   switched GDI_VERSION, GE_LONGNAME and GE_SHORTNAME
@@ -30,7 +34,7 @@ RC-2005-07-03-1: Bugfix:    bug in RestartService()
 RC-2005-07-03-0: Enhancem.: use poll() instead select() (enable with -DUSE_POLL)
                  Changed:   cl_tcp_framework.c, cl_ssl_framework.c
                  Issue:     1510
-                 Review:    Pending
+                 Review:    CR
 
 CR-2005-07-01-1: Cleanup:   commlib: optimized host compare function
                  Review:    RD

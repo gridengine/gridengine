@@ -1547,7 +1547,7 @@ int cl_com_tcp_open_connection_request_handler(cl_raw_list_t* connection_list, c
    }
 
 #ifdef USE_POLL
-   ufds = calloc(connection_list->elem_count + 1, sizeof(struct pollfd));
+   ufds = (struct pollfd*) calloc(cl_raw_list_get_elem_count(connection_list) + 1, sizeof(struct pollfd));
 
    if (ufds == NULL) {
       cl_raw_list_unlock(connection_list);
@@ -1711,6 +1711,10 @@ int cl_com_tcp_open_connection_request_handler(cl_raw_list_t* connection_list, c
          /* return immediate for only write select ( only called by write thread) */
          cl_raw_list_unlock(connection_list); 
          CL_LOG(CL_LOG_INFO,"returning, because of no select descriptors (CL_W_SELECT)");
+         
+#ifdef USE_POLL
+         free(ufds);
+#endif
          return CL_RETVAL_NO_SELECT_DESCRIPTORS;
       }
 #if 0
@@ -1740,6 +1744,9 @@ int cl_com_tcp_open_connection_request_handler(cl_raw_list_t* connection_list, c
          CL_LOG_INT(CL_LOG_INFO, "no usable file descriptor for select() call nr.:", ldata->select_not_called_count);
          ldata->select_not_called_count += 1;
          cl_raw_list_unlock(connection_list); 
+#ifdef USE_POLL
+         free(ufds);
+#endif
          return CL_RETVAL_NO_SELECT_DESCRIPTORS; 
       } else {
          CL_LOG(CL_LOG_WARNING, "no usable file descriptors (repeated!) - select() will be used for wait");
@@ -1769,6 +1776,9 @@ int cl_com_tcp_open_connection_request_handler(cl_raw_list_t* connection_list, c
          ldata->last_nr_of_descriptors = nr_of_descriptors;
          cl_raw_list_unlock(connection_list); 
          CL_LOG(CL_LOG_INFO,"last connection closed");
+#ifdef USE_POLL
+         free(ufds);
+#endif
          return CL_RETVAL_NO_SELECT_DESCRIPTORS;
       }
    }
@@ -1812,7 +1822,7 @@ int cl_com_tcp_open_connection_request_handler(cl_raw_list_t* connection_list, c
       default:
       {
 #ifdef USE_POLL
-         int *lookup_index = calloc(max_fd + 1, sizeof(int));
+         int *lookup_index = (int*)calloc(max_fd + 1, sizeof(int));
          int i;
 
          if (lookup_index == NULL) {

@@ -60,16 +60,20 @@ proc compile_check_compile_hosts {host_list} {
 
    # check each host in host_list
    foreach host $host_list {
-      # host's architecture
-      set arch $ts_host_config($host,arch)
+      if {![info exists ts_host_config($host,arch)]} {
+         add_proc_error "compile_check_compile_hosts" -1 "host $host is not contained in testsuite host configuration!"
+      } else {
+         # host's architecture
+         set arch $ts_host_config($host,arch)
 
-      # do we already have a compile host for this arch?
-      # if not, search it.
-      if {[lsearch $compile_archs $arch] < 0} {
-         if {[compile_search_compile_host $arch] != "none"} {
-            lappend compile_archs $arch
-         } else {
-            return -1
+         # do we already have a compile host for this arch?
+         # if not, search it.
+         if {[lsearch $compile_archs $arch] < 0} {
+            if {[compile_search_compile_host $arch] != "none"} {
+               lappend compile_archs $arch
+            } else {
+               return -1
+            }
          }
       }
    }

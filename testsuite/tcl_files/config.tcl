@@ -1598,10 +1598,18 @@ proc config_execd_hosts { only_check name config_array } {
                 set host [ lindex $ts_host_config(hostlist) $host ]
              }
              if { [ lsearch $ts_host_config(hostlist) $host ] < 0 } {
-                puts $CHECK_OUTPUT "host \"$host\" not found in list"
-                wait_for_enter
-                continue
+                # if the host is in selected host, but no longer in host config, delete it
+                set selected_idx [lsearch -exact $selected $host]
+                if {$selected_idx >= 0} {
+                   set selected [lreplace $selected $selected_idx $selected_idx]
+                   continue
+                } else {
+                   puts $CHECK_OUTPUT "host \"$host\" not found in list"
+                   wait_for_enter
+                   continue
+                }
              }
+
              if { [ lsearch -exact $selected $host ] < 0 } {
                 append selected " $host"
              } else {
@@ -1766,9 +1774,16 @@ proc config_submit_only_hosts { only_check name config_array } {
              set host [ lindex $ts_host_config(hostlist) $host ]
           }
           if { [ lsearch $ts_host_config(hostlist) $host ] < 0 } {
-             puts $CHECK_OUTPUT "host \"$host\" not found in list"
-             wait_for_enter
-             continue
+             # if the host is in selected host, but no longer in host config, delete it
+             set selected_idx [lsearch -exact $selected $host]
+             if {$selected_idx >= 0} {
+                set selected [lreplace $selected $selected_idx $selected_idx]
+                continue
+             } else {
+                puts $CHECK_OUTPUT "host \"$host\" not found in list"
+                wait_for_enter
+                continue
+             }
           }
           if { [ lsearch $CHECK_CORE_EXECD $host ] >= 0 } {
              puts $CHECK_OUTPUT "host \"$host\" is in execd list"
@@ -3835,9 +3850,16 @@ proc config_shadowd_hosts { only_check name config_array } {
              set host [ lindex $ts_host_config(hostlist) $host ]
           }
           if { [ lsearch $ts_host_config(hostlist) $host ] < 0 } {
-             puts $CHECK_OUTPUT "host \"$host\" not found in list"
-             wait_for_enter
-             continue
+             # if the host is in selected host, but no longer in host config, delete it
+             set selected_idx [lsearch -exact $selected $host]
+             if {$selected_idx >= 0} {
+                set selected [lreplace $selected $selected_idx $selected_idx]
+                continue
+             } else {
+                puts $CHECK_OUTPUT "host \"$host\" not found in list"
+                wait_for_enter
+                continue
+             }
           }
           if { [ lsearch -exact $selected $host ] < 0 } {
              append selected " $host"

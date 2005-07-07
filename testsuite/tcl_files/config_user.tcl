@@ -111,6 +111,7 @@ proc user_config_first_foreign_user { only_check name config_array } {
    global CHECK_OUTPUT CHECK_HOST CHECK_USER
    global CHECK_FIRST_FOREIGN_SYSTEM_USER
    global CHECK_SECOND_FOREIGN_SYSTEM_USER
+   global fast_setup
    upvar $config_array config
    
    set actual_value  $config($name)
@@ -137,24 +138,26 @@ proc user_config_first_foreign_user { only_check name config_array } {
          puts $CHECK_OUTPUT "using default value"
       }
    } 
+
    # now verify
-   if { [string compare $CHECK_USER $value] == 0 } {
-      puts $CHECK_OUTPUT "first testsuite user \"$value\" and actual check user are identical!"
-      return -1
-   }
-   if { [ info exists CHECK_SECOND_FOREIGN_SYSTEM_USER ] } {
-      if { $CHECK_SECOND_FOREIGN_SYSTEM_USER == $value } {
-         puts $CHECK_OUTPUT "first testsuite user should not be identical with second testsuite user"
+   if { ! $fast_setup } {
+      if { [string compare $CHECK_USER $value] == 0 } {
+         puts $CHECK_OUTPUT "first testsuite user \"$value\" and actual check user are identical!"
+         return -1
+      }
+      if { [ info exists CHECK_SECOND_FOREIGN_SYSTEM_USER ] } {
+         if { $CHECK_SECOND_FOREIGN_SYSTEM_USER == $value } {
+            puts $CHECK_OUTPUT "first testsuite user should not be identical with second testsuite user"
+            return -1
+         }
+      }
+      
+      set result [start_remote_prog $CHECK_HOST $CHECK_USER "id" "$value" prg_exit_state 60 0 "" 1 0]
+      if { $prg_exit_state != 0 } {
+         puts $CHECK_OUTPUT "id $value returns error. User $value not existing?"
          return -1
       }
    }
-   
-   set result [start_remote_prog $CHECK_HOST $CHECK_USER "id" "$value" prg_exit_state 60 0 "" 1 0]
-   if { $prg_exit_state != 0 } {
-      puts $CHECK_OUTPUT "id $value returns error. User $value not existing?"
-      return -1
-   }
-   
 
    # set global variables to value
    set CHECK_FIRST_FOREIGN_SYSTEM_USER $value
@@ -187,6 +190,7 @@ proc user_config_second_foreign_user { only_check name config_array } {
    global CHECK_OUTPUT CHECK_HOST CHECK_USER
    global CHECK_SECOND_FOREIGN_SYSTEM_USER
    global CHECK_FIRST_FOREIGN_SYSTEM_USER
+   global fast_setup
    upvar $config_array config
    
    set actual_value  $config($name)
@@ -212,25 +216,26 @@ proc user_config_second_foreign_user { only_check name config_array } {
       } else {
          puts $CHECK_OUTPUT "using default value"
       }
-   } 
-   # now verify
-   if { [string compare $CHECK_USER $value] == 0 } {
-      puts $CHECK_OUTPUT "second testsuite user \"$value\" and actual check user are identical!"
-      return -1
    }
-   if { [ info exists CHECK_FIRST_FOREIGN_SYSTEM_USER ] } {
-      if { $value == $CHECK_FIRST_FOREIGN_SYSTEM_USER } {
-         puts $CHECK_OUTPUT "second testsuite user should not be identical with first testsuite user"
+
+   # now verify
+   if { ! $fast_setup } {
+      if { [string compare $CHECK_USER $value] == 0 } {
+         puts $CHECK_OUTPUT "second testsuite user \"$value\" and actual check user are identical!"
+         return -1
+      }
+      if { [ info exists CHECK_FIRST_FOREIGN_SYSTEM_USER ] } {
+         if { $value == $CHECK_FIRST_FOREIGN_SYSTEM_USER } {
+            puts $CHECK_OUTPUT "second testsuite user should not be identical with first testsuite user"
+            return -1
+         }
+      }
+      set result [start_remote_prog $CHECK_HOST $CHECK_USER "id" "$value" prg_exit_state 60 0 "" 1 0]
+      if { $prg_exit_state != 0 } {
+         puts $CHECK_OUTPUT "id $value returns error. User $value not existing?"
          return -1
       }
    }
-   set result [start_remote_prog $CHECK_HOST $CHECK_USER "id" "$value" prg_exit_state 60 0 "" 1 0]
-   if { $prg_exit_state != 0 } {
-      puts $CHECK_OUTPUT "id $value returns error. User $value not existing?"
-      return -1
-   }
-
-
 
    # set global variables to value
    set CHECK_SECOND_FOREIGN_SYSTEM_USER $value
@@ -262,6 +267,7 @@ proc user_config_first_foreign_group { only_check name config_array } {
    global CHECK_OUTPUT CHECK_HOST CHECK_USER
    global CHECK_FIRST_FOREIGN_SYSTEM_GROUP CHECK_FIRST_FOREIGN_SYSTEM_USER
    global CHECK_SECOND_FOREIGN_SYSTEM_GROUP
+   global fast_setup
 
    upvar $config_array config
    
@@ -303,45 +309,47 @@ proc user_config_first_foreign_group { only_check name config_array } {
       }
 
       set value "$group1 $group2" 
-   } 
+   }
+
    # now verify
-
-   if { [llength $value] != 2 } {
-        puts $CHECK_OUTPUT "first testsuite user should belong to 2 groups"
-        return -1
-   }
-
-   if { [info exists CHECK_SECOND_FOREIGN_SYSTEM_GROUP ] } {
-      foreach gname $value {
-         if { [ string compare $gname $CHECK_SECOND_FOREIGN_SYSTEM_GROUP] == 0 } {
-             puts $CHECK_OUTPUT "first testsuite user should not have the same group as second testsuite user"
-             return -1
-         } 
+   if { ! $fast_setup } {
+      if { [llength $value] != 2 } {
+           puts $CHECK_OUTPUT "first testsuite user should belong to 2 groups"
+           return -1
       }
-   }
 
-   set group1 [lindex $value 0]
-   set group2 [lindex $value 1]
-   
-   set result [start_remote_prog $CHECK_HOST $CHECK_USER "id" "$CHECK_FIRST_FOREIGN_SYSTEM_USER" prg_exit_state 60 0 "" 1 0]
-   debug_puts $result
-   if { [string first $group1 $result ] < 0 } {
-      puts $CHECK_OUTPUT "first testsuite user ($CHECK_FIRST_FOREIGN_SYSTEM_USER) has not \"$group1\" as main group"
-      return -1
-   }
+      if { [info exists CHECK_SECOND_FOREIGN_SYSTEM_GROUP ] } {
+         foreach gname $value {
+            if { [ string compare $gname $CHECK_SECOND_FOREIGN_SYSTEM_GROUP] == 0 } {
+                puts $CHECK_OUTPUT "first testsuite user should not have the same group as second testsuite user"
+                return -1
+            } 
+         }
+      }
 
-   set result [start_remote_prog $CHECK_HOST $CHECK_USER "groups" "$CHECK_FIRST_FOREIGN_SYSTEM_USER" prg_exit_state 60 0 "" 1 0]
-   debug_puts $result
-   if { $prg_exit_state == 0 } {
-      if { [string first $group2 $result] < 0 } { 
-         puts $CHECK_OUTPUT "first testsuite user ($CHECK_FIRST_FOREIGN_SYSTEM_USER) has not \"$group2\" as secondary group"
+      set group1 [lindex $value 0]
+      set group2 [lindex $value 1]
+      
+      set result [start_remote_prog $CHECK_HOST $CHECK_USER "id" "$CHECK_FIRST_FOREIGN_SYSTEM_USER" prg_exit_state 60 0 "" 1 0]
+      debug_puts $result
+      if { [string first $group1 $result ] < 0 } {
+         puts $CHECK_OUTPUT "first testsuite user ($CHECK_FIRST_FOREIGN_SYSTEM_USER) has not \"$group1\" as main group"
          return -1
       }
-   }
 
-   if { [llength $value] != 2 } {
-        puts $CHECK_OUTPUT "first foreign system group must have 2 group entries"
-        return -1
+      set result [start_remote_prog $CHECK_HOST $CHECK_USER "groups" "$CHECK_FIRST_FOREIGN_SYSTEM_USER" prg_exit_state 60 0 "" 1 0]
+      debug_puts $result
+      if { $prg_exit_state == 0 } {
+         if { [string first $group2 $result] < 0 } { 
+            puts $CHECK_OUTPUT "first testsuite user ($CHECK_FIRST_FOREIGN_SYSTEM_USER) has not \"$group2\" as secondary group"
+            return -1
+         }
+      }
+
+      if { [llength $value] != 2 } {
+           puts $CHECK_OUTPUT "first foreign system group must have 2 group entries"
+           return -1
+      }
    }
 
 
@@ -378,6 +386,7 @@ proc user_config_second_foreign_group { only_check name config_array } {
    global CHECK_OUTPUT CHECK_HOST CHECK_USER
    global CHECK_FIRST_FOREIGN_SYSTEM_GROUP CHECK_SECOND_FOREIGN_SYSTEM_USER
    global CHECK_SECOND_FOREIGN_SYSTEM_GROUP do_nomain
+   global fast_setup
 
    upvar $config_array config
    
@@ -403,35 +412,36 @@ proc user_config_second_foreign_group { only_check name config_array } {
       } else {
          puts $CHECK_OUTPUT "using default value"
       }
-   } 
-   # now verify
-
-   if { [llength $value] != 1 } {
-        puts $CHECK_OUTPUT "second testsuite user should belong only to one group"
-        return -1
    }
 
-   if { [info exists CHECK_FIRST_FOREIGN_SYSTEM_GROUP ] } {
-      foreach gname $CHECK_FIRST_FOREIGN_SYSTEM_GROUP {
-         if { [ string compare $gname $value] == 0 } {
-             puts $CHECK_OUTPUT "first testsuite user should not have the same group as second testsuite user"
-             return -1
-         } 
+   # now verify
+   if { ! $fast_setup } {
+      if { [llength $value] != 1 } {
+           puts $CHECK_OUTPUT "second testsuite user should belong only to one group"
+           return -1
+      }
+
+      if { [info exists CHECK_FIRST_FOREIGN_SYSTEM_GROUP ] } {
+         foreach gname $CHECK_FIRST_FOREIGN_SYSTEM_GROUP {
+            if { [ string compare $gname $value] == 0 } {
+                puts $CHECK_OUTPUT "first testsuite user should not have the same group as second testsuite user"
+                return -1
+            } 
+         }
+      }
+
+      set result [start_remote_prog $CHECK_HOST $CHECK_USER "id" "$CHECK_SECOND_FOREIGN_SYSTEM_USER" prg_exit_state 60 0 "" 1 0]
+      debug_puts $result
+      if { [string first $value $result ] < 0 && $do_nomain == 0 } {
+         puts $CHECK_OUTPUT "second testsuite user ($CHECK_SECOND_FOREIGN_SYSTEM_USER) has not \"$value\" as main group"
+         return -1
+      }
+
+      if { [llength $value] != 1 } {
+           puts $CHECK_OUTPUT "second foreign system group must have 1 group entries"
+           return -1
       }
    }
-
-   set result [start_remote_prog $CHECK_HOST $CHECK_USER "id" "$CHECK_SECOND_FOREIGN_SYSTEM_USER" prg_exit_state 60 0 "" 1 0]
-   debug_puts $result
-   if { [string first $value $result ] < 0 && $do_nomain == 0 } {
-      puts $CHECK_OUTPUT "second testsuite user ($CHECK_SECOND_FOREIGN_SYSTEM_USER) has not \"$value\" as main group"
-      return -1
-   }
-
-   if { [llength $value] != 1 } {
-        puts $CHECK_OUTPUT "second foreign system group must have 1 group entries"
-        return -1
-   }
-
 
    # set global variables to value
    set CHECK_SECOND_FOREIGN_SYSTEM_GROUP $value

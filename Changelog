@@ -1,3 +1,8 @@
+JG-2005-07-07-0: Testsuite: configuration failed when hostlist (exec, shadow,
+                            submit only) contained an unknown host.
+                 Issue:     1594
+                            Extended "fast_setup" to user config.
+
 CR-2005-07-70-1: Bugfix:    - fixed memory leak in commlib for -DUSE_POLL
                               compile definition
                             - reviewd poll() implementation

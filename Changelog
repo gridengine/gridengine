@@ -1,3 +1,10 @@
+CR-2005-07-07-0: Bugfix:    Merged: Repeated logging of the same message
+                            produces giant logging files from maintrunk
+                 Issue:     1598
+                 Bugtraq:   6267245
+                 Changed:   gdi library (all binaries)
+                 Review:    AH
+
 RD-2005-07-07-0: Bugfix:    distinst does not set all file permissions
                  Changed:   scripts/distinst
                  Bugtraq:   6294632

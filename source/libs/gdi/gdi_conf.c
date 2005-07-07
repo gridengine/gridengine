@@ -168,7 +168,7 @@ lListElem **lepp
             DEXIT;
             return -6;
          default:
-            ERROR((SGE_EVENT, cl_get_error_text(commlib_error)));
+            break;
       }
    }
 
@@ -278,8 +278,6 @@ lList **conf_list
          if (!getenv("SGE_ND") && sleep_counter > 2) {
             ERROR((SGE_EVENT, MSG_CONF_NOCONFBG));
             dfunc();
-         } else {
-            WARNING((SGE_EVENT, MSG_CONF_NOCONFSLEEP));
          }
          handle = cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0);
          ret_val = cl_commlib_trigger(handle);
@@ -309,7 +307,6 @@ lList **conf_list
             last=now;
          if (now - last > 1800) {
             last = now;
-            ERROR((SGE_EVENT, MSG_CONF_NOCONFSTILL));
          }
       }
    }

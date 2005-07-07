@@ -570,7 +570,7 @@ RD-2005-05-19-0: Bugfix:    qrsh/qsh/qlogin reject -js option
 SG-2005-05-19-1: Bugfix:    incomplete resource reservation with array jobs
                  Changed:   scheduler
                  Review:    RD, AH
-                 BugTraq:   6260565 
+                 BugTraq:   6260656 
                  Issue:     1583
                  
 SG-2005-05-19-0: Bugfix:    Wildcards in PE Name Cause Unusual Behavior

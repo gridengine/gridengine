@@ -1,4 +1,7 @@
+CR-2005-07-08-0: Cleanup:   modified some format specifier of qping man page
+
 CR-2005-07-06-0: Enhancm.:  updated qping man page
+                 Review:    DT
 
 HP-2005-07-05-0: Bugfix:    Fixed wrong behaviour in installation for Interix 
                             and root system.

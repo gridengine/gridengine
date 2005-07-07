@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: qping.1,v $     Last Update: $Date: 2005/07/06 15:48:54 $     Revision: $Revision: 1.7.6.1 $
+.\" $RCSfile: qping.1,v $     Last Update: $Date: 2005/07/07 06:35:22 $     Revision: $Revision: 1.7.6.2 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QPING 1 "$Date: 2005/07/06 15:48:54 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH QPING 1 "$Date: 2005/07/07 06:35:22 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 qping \- check application status of xxQS_NAMExx daemons.
 .PP
@@ -297,6 +297,7 @@ the following specifiers separated by a space character:
 .RE
 
 Start qping -help to see which columns are available.
+.in-3
 
 
 .SS "\fB\-dump_tag tag [param]\fP"
@@ -325,8 +326,6 @@ This option has the same behaviour as the -dump option.
 .in-3
 .in-3    
 
-.in-3
-
 .SS "\fBhost\fP"
 Host where daemon is running.
 
@@ -344,16 +343,14 @@ Id of communication endpoint ("1" for daemons)
 .\"
 
 .SH "EXAMPLES"
-.RS
+
 .nf
 >qping master_host 31116 qmaster
 08/24/2004 16:41:15 endpoint master_host/qmaster/1 at port 31116 is up since 365761 seconds
 08/24/2004 16:41:16 endpoint master_host/qmaster/1 at port 31116 is up since 365762 seconds
 08/24/2004 16:41:17 endpoint master_host/qmaster/1 at port 31116 is up since 365763 seconds
 .fi
-.RE
 
-.RS
 .nf
 > qping -info master_host 31116 qmaster 1
 08/24/2004 16:42:47:
@@ -367,9 +364,7 @@ nr. of connected clients: 4
 status:                   0
 info:                     ok
 .fi
-.RE
 
-.RS
 .nf
 > qping -info execd_host 31117 execd 1
 08/24/2004 16:43:45:
@@ -383,7 +378,6 @@ nr. of connected clients: 2
 status:                   0
 info:                     ok
 .fi
-.RE
 
 .\"
 .\"

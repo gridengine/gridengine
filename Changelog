@@ -1,3 +1,9 @@
+RD-2005-07-07-0: Bugfix:    distinst does not set all file permissions
+                 Changed:   scripts/distinst
+                 Bugtraq:   6294632
+                 Issue:     1697
+                 Review:    AS
+
 CR-2005-07-07-0: Cleanup:   modified some format specifier of qping man page
 
 CR-2005-07-06-0: Enhancm.:  updated qping man page
@@ -10,7 +16,7 @@ HP-2005-07-05-0: Bugfix:    Fixed wrong behaviour in installation for Interix
 
 RD-2005-07-05-0: Bugfix:    wrong drmaa jnilib link on MacOS
                  Changed:   scripts/distinst
-                 Bugster:   6294397 
+                 Bugtraq:   6294397 
                  Issue:     1694
                  Review:    AH
 

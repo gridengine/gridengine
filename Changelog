@@ -1,3 +1,8 @@
+SG-2005-07-07-0: Bugfix:    fixed a memory leak and looking issue in the event
+                            master
+                 Changed:   qmaster
+                 Review:    JG
+
 JG-2005-07-07-0: Testsuite: configuration failed when hostlist (exec, shadow,
                             submit only) contained an unknown host.
                  Issue:     1594

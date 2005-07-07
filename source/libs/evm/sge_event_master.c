@@ -106,6 +106,7 @@
  *
  *******************************************************/
 
+
 /****** subscription_t definition **********************
  *
  * This is a subscription entry in a two dimensional 
@@ -1839,20 +1840,18 @@ static void process_sends ()
             event = lFirst (event_list);
 
             while (event != NULL) {
-               event = lDechainElem (event_list, event);
+               event = lDechainElem(event_list, event);
                type = (ev_event)lGetUlong (event, ET_type);
 
-               /* This has to come after the client is locked. */
-               if ((event_client = get_event_client (ec_id)) == NULL) {
-                  unlock_client(ec_id);
-                  ERROR((SGE_EVENT, MSG_EVE_UNKNOWNEVCLIENT_US, sge_u32c(ec_id), "send events"));
-               }
-               else if (eventclient_subscribed(event_client, type, session)) {
-                  add_list_event_direct (event_client, event, false);
+               if (eventclient_subscribed(event_client, type, session)) {
+                  add_list_event_direct(event_client, event, false);
 
                   /* We can't free the event when we're done because it now belongs
                    * to send_events(). */
                } /* else if */
+               else {
+                  event = lFreeElem(event);
+               }
                event = lFirst (event_list);
             } /* while */
          } /* if */
@@ -1860,7 +1859,7 @@ static void process_sends ()
          unlock_client(ec_id);
       } /* else */
 
-      send = lFreeElem (send);
+      send = lFreeElem(send);
    } /* while */
 
    temp_send_events = lFreeList(temp_send_events);                   
@@ -1905,9 +1904,9 @@ void sge_handle_event_ack(u_long32 aClientID, ev_event anEvent)
    lListElem *etp = lCreateElem (ET_Type);
    
    DENTER(TOP_LAYER, "sge_handle_event_ack");
-   
-   pthread_once(&Event_Master_Once, event_master_once_init);
 
+   pthread_once(&Event_Master_Once, event_master_once_init);
+   
    /* This doesn't check whether the id is too large, which is a possibility.
     * The problem is that to double the check, I'd have to grab the lock, which
     * is not worth it.  Instead I will just rely on the calling methods not
@@ -1967,7 +1966,7 @@ static void process_acks(void)
          /*
           * Due to CR #6289273 / IZ #1675 event client deregister can be processed before 
           * event acknowledge. Though this is ugly but it isn't known to cause any
-          * perceivable error condition finally. 
+          * perceivable error condition finally.
           */
          DPRINTF((MSG_EVE_UNKNOWNEVCLIENT_US, sge_u32c(ec_id), "process acknowledgements"));
       }
@@ -2333,7 +2332,7 @@ static void* event_deliver_thread(void *anArg)
           * this shortcut will occasionally cause this block to finish early
           * due to a well timed spurrious wakeup. */
          do { 
-            ts.tv_sec = (time_t)(current_time + EVENT_DELIVERY_INTERVAL_S);
+            ts.tv_sec = current_time + EVENT_DELIVERY_INTERVAL_S;
             ts.tv_nsec = EVENT_DELIVERY_INTERVAL_N;
             pthread_cond_timedwait(&Master_Control.cond_var,
                                    &Master_Control.cond_mutex, &ts);
@@ -2343,7 +2342,7 @@ static void* event_deliver_thread(void *anArg)
       }
       Master_Control.delivery_signaled = false;
 
-      
+
 
       sge_mutex_unlock("event_master_cond_mutex", SGE_FUNC, __LINE__, &Master_Control.cond_mutex);
 
@@ -3176,6 +3175,10 @@ static void add_list_event_direct(lListElem *event_client, lListElem *event,
    if (lGetUlong(event_client, EV_state) != EV_connected) {
       /* the event client is not connected anymore, so we are not
          adding new events to it*/
+      if (!copy_event) {
+         event = lFreeElem(event);
+      }
+
       return;
    }
 
@@ -3185,7 +3188,7 @@ static void add_list_event_direct(lListElem *event_client, lListElem *event,
    sge_dstring_init(&buffer_wrapper, buffer, sizeof(buffer));
 
    /* Pull out payload for selecting */
-   lXchgList (event, ET_new_version, &lp);
+   lXchgList(event, ET_new_version, &lp);
 
    /* If the list is NULL, no need to bother with any of this.  Plus, if we
     * did do this part with a NULL list, the check for a clp with no

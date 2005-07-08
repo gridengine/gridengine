@@ -1,3 +1,7 @@
+SG-2005-07-08-0: Bugfix:    removed mesage size limitation for qping
+                 Changed:   commlib
+                 Review:    CR
+
 SG-2005-07-07-0: Bugfix:    fixed a memory leak and looking issue in the event
                             master
                  Changed:   qmaster

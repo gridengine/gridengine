@@ -12,6 +12,7 @@ RD-2005-07-07-0: Bugfix:    distinst does not set all file permissions
                  Review:    AS
 
 CR-2005-07-07-0: Cleanup:   modified some format specifier of qping man page
+                 Bugtraq:   6294979
 
 CR-2005-07-06-0: Enhancm.:  updated qping man page
                  Review:    DT
@@ -190,7 +191,7 @@ AH-2005-06-15-0: Bugfix:    Overhead with job execution could lead to
                             reservation
                  Changed:   sge_schedd, libsgeobj.a and sched_conf(5)
                  Issue:     1662
-                 Bugtraq:   6283308
+                 Bugtraq:   6283308, 6294982
                  Review:    AS, CR
 
 JG-2005-06-13-0: Bugfix:    Fixed missing initialization.
@@ -269,6 +270,7 @@ MD-2005-06-02-0: Cleanup:   removed debug output!
 HP-2005-06-02-1: Enhancem.: man page sge_conf now explains execd_paramd
                             ENABLE_WINDOMACC
                  Changed:   sge_conf man page
+                 Bugtraq:   6294987
                  Review:    AH
 
 RD-2005-06-02-1: Bugfix:    inst_sge -sm don't install a startup script
@@ -470,7 +472,9 @@ SG-2005-05-20-0: Bugfix:    Wildcards in PE Name Cause Unusual Behavior
                  BugTraq:   6265154
                  Issue:     1597
 
-EB-2005-05-11-0: Bugfix:    renamed sge_passwd man pages to sgepasswd 
+EB-2005-05-11-0: Bugfix:    renamed sge_passwd man pages to sgepasswd
+                            added man page
+                 BugTraq:   6294980 
 
 EB-2005-05-10-0: Bugfix:    Domain admin <-> domain user problem (windows)
                  Bugtraq:   6239470

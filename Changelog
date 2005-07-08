@@ -1,3 +1,7 @@
+DT-2005-07-08-0: Enhancem.: o Added script to removed date tags from JavaDocs
+                            o Moved JavaDoc build dir to source/JAVADOCS
+                 Changed:   build.xml, distinst
+
 SG-2005-07-08-1: Enhancem.: added monitoring capabilities to the qmaster
                  Changed:   qmaster, execd
                  Review:    JG

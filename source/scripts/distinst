@@ -1067,11 +1067,11 @@ if [ $instcommon = true ]; then
    fi
 
    if [ $instjavadoc = true ]; then
-      if [ -d ../doc/javadocs ]; then
+      if [ -d JAVADOCS ]; then
          echo "Installing doc/javadocs"
          Execute rm -rf $DEST_SGE_ROOT/doc/javadocs
          MakeDir doc/javadocs
-         Execute cp -R ../doc/javadocs $DEST_SGE_ROOT/doc
+         Execute cp -R JAVADOCS/* $DEST_SGE_ROOT/doc/javadocs
          Execute chmod -R a+r $DEST_SGE_ROOT/doc/javadocs
          Cleanup doc/javadocs
       fi

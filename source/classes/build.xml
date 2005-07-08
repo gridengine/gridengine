@@ -5,11 +5,12 @@
       <property location="../CLASSES/test" name="classes.dir.test"/>
       <property location="." name="src.dir"/>
       <property location="${src.dir}/test" name="src.dir.test"/>
-      <property location="../../doc/javadocs" name="javadoc.dir"/>
+      <property location="../JAVADOCS" name="javadoc.dir"/>
       <property name="project.name" value="${ant.project.name}"/>
       <property location="${classes.dir}/${project.name}.jar" name="jar"/>
       <property location="${classes.dir}/${project.name}-test.jar" name="test.jar"/>
       <property location="${classes.dir}/${project.name}-api.jar" name="api.jar"/>
+      <property location="../scripts/removeGeneratedTags.pl" name="script"/>
    </target>
 
    <target depends="init" description="Compile core classes." name="compile">
@@ -89,7 +90,7 @@
 
    <target depends="" description="Placeholder" name="messages"/>
 
-   <target depends="init,javadoc.clean" description="Javadoc tool docs for DRMAA" name="javadoc">
+   <target depends="init" description="Javadoc tool docs for DRMAA" name="javadoc">
       <mkdir dir="${javadoc.dir}"/>
       <javadoc destdir="${javadoc.dir}" packagenames="*" Overview="${src.dir}/overview.html" access="public">
          <fileset dir="${src.dir}">
@@ -97,9 +98,12 @@
             <include name="com/sun/grid/drmaa/*.java"/>
          </fileset>
       </javadoc>
+      <exec executable="${script}">
+         <arg line="${javadoc.dir}"/>
+      </exec>
    </target>
 
-   <target depends="init,javadoc.clean" description="Javadoc tool docs for DRMAA" name="javadoc.all">
+   <target depends="init" description="Javadoc tool docs for DRMAA" name="javadoc.all">
       <mkdir dir="${javadoc.dir}"/>
       <javadoc destdir="${javadoc.dir}" packagenames="*" Overview="${src.dir}/overview.html" access="protected">
          <fileset dir="${src.dir}">
@@ -107,11 +111,14 @@
             <include name="com/sun/grid/drmaa/*.java"/>
          </fileset>
       </javadoc>
+      <exec executable="${script}">
+         <arg line="${javadoc.dir}"/>
+      </exec>
    </target>
 
    <target depends="init" description="Clean Javadoc tool docs." name="javadoc.clean">
       <delete>
-         <fileset dir="${javadoc.dir}" excludes="**/CVS"/>
+         <fileset dir="${javadoc.dir}"/>
       </delete>
    </target>
    

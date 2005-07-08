@@ -1,3 +1,9 @@
+RD-2005-07-08-0: Bugfix:    distinst does not set all file permissions
+                 Changed:   distinst, mk_ascman, mk_catman
+                 Bugtraq:   6294632
+                 Issue:     1697
+                 Review:    AS
+
 DT-2005-07-08-0: Enhancem.: o Added script to removed date tags from JavaDocs
                             o Moved JavaDoc build dir to source/JAVADOCS
                  Changed:   build.xml, distinst

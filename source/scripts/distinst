@@ -349,9 +349,8 @@ MakeDir()
 {
    if [ ! -d $DEST_SGE_ROOT/$1 ]; then
       Execute mkdir $DEST_SGE_ROOT/$1
-   else
-      Execute chmod 755 $DEST_SGE_ROOT/$1
    fi
+   Execute chmod 755 $DEST_SGE_ROOT/$1
 }
 
 #-------------------------------------------------------------------------
@@ -381,9 +380,10 @@ Install()
       Execute chown $target_uid $4
       Execute chgrp $target_gid $4
    fi
-   Execute chmod $2 $4
-   if [ $verbose = true ]; then
-      echo
+   if [ -d $4 ]; then
+      Execute chmod $2 $4/`basename $3`
+   else
+      Execute chmod $2 $4
    fi
 }
 
@@ -973,7 +973,7 @@ if [ $instcommon = true ]; then
              echo Installing `basename $filename`
              Execute rm -f $DEST_SGE_ROOT/lib/`basename $filename`
              MakeDir lib
-             Install 0.0 755 $filename $DEST_SGE_ROOT/lib
+             Install 0.0 644 $filename $DEST_SGE_ROOT/lib
          fi
       done
       Cleanup include
@@ -1026,6 +1026,7 @@ if [ $instcommon = true ]; then
       echo Installing \"man/\" and \"catman/\"
       Execute rm -rf $DEST_SGE_ROOT/man $DEST_SGE_ROOT/catman
       Execute cp -r MANSBUILD_$MANSRCDIR/SEDMAN/man $DEST_SGE_ROOT
+
       if [ -d MANSBUILD_$MANSRCDIR/ASCMAN/catman ]; then
          Execute cp -r MANSBUILD_$MANSRCDIR/ASCMAN/catman $DEST_SGE_ROOT
       fi
@@ -1037,13 +1038,19 @@ if [ $instcommon = true ]; then
             dir_num=`basename $dir | cut -d"n" -f2`
             for file in `ls $SOURCEDIR/$dir`; do
                if [ ! -d "$DESTDIR/cat$dir_num" ]; then
-                  mkdir -p $DESTDIR/cat$dir_num
+                  Execute mkdir -p $DESTDIR/cat$dir_num
                fi
                Execute cp $SOURCEDIR/$dir/$file $DESTDIR/cat$dir_num/$file.$dir_num
             done
          done
       fi
 
+      Execute find $DEST_SGE_ROOT/man -type d | xargs chmod 755
+      Execute find $DEST_SGE_ROOT/man -type f | xargs chmod 644
+
+      Execute find $DEST_SGE_ROOT/catman -type d | xargs chmod 755
+      Execute find $DEST_SGE_ROOT/catman -type f | xargs chmod 644
+      
       Cleanup man catman
    fi
 
@@ -1070,9 +1077,13 @@ if [ $instcommon = true ]; then
       if [ -d JAVADOCS ]; then
          echo "Installing doc/javadocs"
          Execute rm -rf $DEST_SGE_ROOT/doc/javadocs
-         MakeDir doc/javadocs
+         MakeDir $DEST_SGE_ROOT/doc/javadocs
+
          Execute cp -R JAVADOCS/* $DEST_SGE_ROOT/doc/javadocs
-         Execute chmod -R a+r $DEST_SGE_ROOT/doc/javadocs
+
+         Execute find $DEST_SGE_ROOT/doc/javadocs -type d | xargs chmod 755
+         Execute find $DEST_SGE_ROOT/doc/javadocs -type f | xargs chmod 644
+
          Cleanup doc/javadocs
       fi
    fi
@@ -1374,13 +1385,13 @@ for i in $ARCH; do
 
 # On MacOS X, the JVM expects a special JNI extension for shared libraries
             if [ $shlibext != $jnilibext ]; then
-               echo Linking $lib.$jnilibext to $lib.$shlibext
+               ( echo Linking $lib.$jnilibext to $lib.$shlibext
                cd $DEST_SGE_ROOT/lib/$DSTARCH
                if [ -f lib.$jnilibext ]; then
                   rm $lib.$jnilibext
                fi
 
-               ln -s $lib.$shlibext $lib.$jnilibext
+               ln -s $lib.$shlibext $lib.$jnilibext )
             fi
          fi
       fi

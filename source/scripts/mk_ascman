@@ -45,6 +45,8 @@
 ##########################################################################
 #___INFO__MARK_END__
 
+umask 022
+
 set MANBUILDDIR = $1/MANSBUILD_$2
 set MANMODE = $2
 set MANASC  = $3

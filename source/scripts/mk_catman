@@ -39,6 +39,8 @@
 ##########################################################################
 #___INFO__MARK_END__
 
+umask 022
+
 set MANBUILDDIR = $1/MANSBUILD_$2
 
 if ( `/sbin/uname` != IRIX && `/sbin/uname` != IRIX64 ) then

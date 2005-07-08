@@ -106,11 +106,11 @@ cqueue_mark_qinstances(lListElem *cqueue, lList **answer_list,
                        lList *del_hosts);
 
 static bool
-cqueue_add_qinstances(lListElem *cqueue, lList **answer_list, lList *add_hosts);
+cqueue_add_qinstances(lListElem *cqueue, lList **answer_list, lList *add_hosts, monitoring_t *monitor);
 
 static lListElem * 
 qinstance_create(const lListElem *cqueue, lList **answer_list,
-                 const char *hostname, bool *is_ambiguous);
+                 const char *hostname, bool *is_ambiguous, monitoring_t *monitor);
 
 u_long32
 sge_get_qinstance_number(void)
@@ -152,7 +152,7 @@ sge_get_qinstance_number(void)
 
 static lListElem * 
 qinstance_create(const lListElem *cqueue, lList **answer_list,
-                 const char *hostname, bool *is_ambiguous) 
+                 const char *hostname, bool *is_ambiguous, monitoring_t *monitor) 
 {
    dstring buffer = DSTRING_INIT;
    const char *cqueue_name = lGetString(cqueue, CQ_name);
@@ -198,7 +198,7 @@ qinstance_create(const lListElem *cqueue, lList **answer_list,
                        &tmp_is_ambiguous, 
                        &tmp_has_changed_conf_attr,
                        &tmp_has_changed_state_attr,
-                       initial_modify);
+                       initial_modify, monitor);
 
       DPRINTF(("tmp_is_ambiguous == %d\n", tmp_is_ambiguous));
       *is_ambiguous |= tmp_is_ambiguous;
@@ -234,7 +234,7 @@ qinstance_create(const lListElem *cqueue, lList **answer_list,
 }
 
 static bool
-cqueue_add_qinstances(lListElem *cqueue, lList **answer_list, lList *add_hosts)
+cqueue_add_qinstances(lListElem *cqueue, lList **answer_list, lList *add_hosts, monitoring_t *monitor)
 {
    bool ret = true;
 
@@ -268,7 +268,7 @@ cqueue_add_qinstances(lListElem *cqueue, lList **answer_list, lList *add_hosts)
                lSetList(cqueue, CQ_qinstances, list);
             }
             qinstance = qinstance_create(cqueue, answer_list,
-                                         hostname, &is_ambiguous);
+                                         hostname, &is_ambiguous, monitor);
             if (is_ambiguous) {
                DPRINTF(("qinstance %s has ambiguous conf\n", hostname));
             }
@@ -429,7 +429,7 @@ cqueue_mod_hostlist(lListElem *cqueue, lList **answer_list,
 
 bool
 cqueue_mod_qinstances(lListElem *cqueue, lList **answer_list,
-                      lListElem *reduced_elem, bool refresh_all_values)
+                      lListElem *reduced_elem, bool refresh_all_values, monitoring_t *monitor)
 {
    bool ret = true;
    
@@ -516,7 +516,8 @@ cqueue_mod_qinstances(lListElem *cqueue, lList **answer_list,
                           &tmp_is_ambiguous,
                           &tmp_has_changed_conf_attr,
                           &tmp_has_changed_state_attr,
-                          initial_modify);
+                          initial_modify,
+                          monitor);
 
                if (tmp_is_ambiguous) {
                   /*
@@ -586,7 +587,8 @@ cqueue_mod_qinstances(lListElem *cqueue, lList **answer_list,
 bool
 cqueue_handle_qinstances(lListElem *cqueue, lList **answer_list,
                          lListElem *reduced_elem, lList *add_hosts,
-                         lList *rem_hosts, bool refresh_all_values) 
+                         lList *rem_hosts, bool refresh_all_values,
+                         monitoring_t *monitor) 
 {
    bool ret = true;
 
@@ -597,10 +599,10 @@ cqueue_handle_qinstances(lListElem *cqueue, lList **answer_list,
    }
    if (ret) {
       ret &= cqueue_mod_qinstances(cqueue, answer_list, reduced_elem, 
-                                   refresh_all_values);
+                                   refresh_all_values, monitor);
    }
    if (ret) {
-      ret &= cqueue_add_qinstances(cqueue, answer_list, add_hosts);
+      ret &= cqueue_add_qinstances(cqueue, answer_list, add_hosts, monitor);
    }
    DEXIT;
    return ret;
@@ -608,7 +610,7 @@ cqueue_handle_qinstances(lListElem *cqueue, lList **answer_list,
 
 int cqueue_mod(lList **answer_list, lListElem *cqueue, lListElem *reduced_elem, 
                int add, const char *remote_user, const char *remote_host,
-               gdi_object_t *object, int sub_command) 
+               gdi_object_t *object, int sub_command, monitoring_t *monitor) 
 {
    bool ret = true;
    lList *add_hosts = NULL;
@@ -681,7 +683,7 @@ int cqueue_mod(lList **answer_list, lListElem *cqueue, lListElem *reduced_elem,
       bool refresh_all_values = ((add_hosts != NULL) || (rem_hosts != NULL)) ? true : false;
 
       ret &= cqueue_handle_qinstances(cqueue, answer_list, reduced_elem, 
-                                      add_hosts, rem_hosts, refresh_all_values);
+                                      add_hosts, rem_hosts, refresh_all_values, monitor);
    }
 
    /*
@@ -692,7 +694,7 @@ int cqueue_mod(lList **answer_list, lListElem *cqueue, lListElem *reduced_elem,
    if (ret) {
       lList *list = *(object_type_get_master_list(SGE_TYPE_EXECHOST));
 
-      ret &= host_list_add_missing_href(list, answer_list, add_hosts);
+      ret &= host_list_add_missing_href(list, answer_list, add_hosts, monitor);
    }
 
    /*
@@ -710,7 +712,7 @@ int cqueue_mod(lList **answer_list, lListElem *cqueue, lListElem *reduced_elem,
 }
 
 int cqueue_success(lListElem *cqueue, lListElem *old_cqueue, 
-                   gdi_object_t *object, lList **ppList) 
+                   gdi_object_t *object, lList **ppList, monitoring_t *monitor) 
 {
    lList *qinstances;
    lListElem *qinstance; 
@@ -761,7 +763,7 @@ int cqueue_success(lListElem *cqueue, lListElem *old_cqueue,
                      if (!strcmp(queue_name, full_name)) {
 
                         if (!ISSET(state, JSUSPENDED)) {
-                           sge_signal_queue(SGE_SIGCONT, qinstance, job, ja_task);
+                           sge_signal_queue(SGE_SIGCONT, qinstance, job, ja_task, monitor);
                            SETBIT(JRUNNING, state); 
                            is_qinstance_mod = true;
                         }

@@ -74,8 +74,11 @@
 #include "msg_common.h"
 #include "msg_sgeobjlib.h"
 #include "msg_evmlib.h"
-
+   
 #include "sge_lock.h"
+
+/* name of this thread */
+static const char THREAD_NAME[] = "EDT";
 
 /****** transaction handling implementation ************
  *
@@ -422,11 +425,12 @@ static pthread_t              Event_Thread;
 static void       event_master_once_init(void);
 static void       init_send_events(void); 
 static void*      event_deliver_thread(void*);
+static void       event_master_wait_next(void);
 static bool       should_exit(void);
 static int        get_number_of_subscriptions(u_long32 event_type);
-static void       send_events(lListElem *report, lList *report_list);
+static void       send_events(lListElem *report, lList *report_list, monitoring_t *monitor);
 static void       flush_events(lListElem*, int);
-static void       total_update(lListElem*);
+static void       total_update(lListElem*, monitoring_t *monitor);
 static void       build_subscription(lListElem*);
 static void       remove_event_client(lListElem *client, int aClientID, bool lock_event_master);
 static void       check_send_new_subscribed_list(const subscription_t*, const subscription_t*, lListElem*, ev_event);
@@ -449,7 +453,7 @@ static lListElem* get_event_client(u_long32 id);
 static void       set_event_client(u_long32 id, lListElem *client);
 static u_long32   assign_new_dynamic_id (void);
 static void       process_acks(void);
-static void       process_mod_event_client(void);
+static void       process_mod_event_client(monitoring_t *monitor);
 static void       process_sends(void);
 static void       set_flush (void);
 #if 0
@@ -496,7 +500,8 @@ static void blockEvents(lListElem *event_client, ev_event ev_type, bool isBlock)
 *              internal ones.
 *
 *******************************************************************************/
-int sge_add_event_client(lListElem *clio, lList **alpp, lList **eclpp, char *ruser, char *rhost)
+int sge_add_event_client(lListElem *clio, lList **alpp, lList **eclpp, char *ruser, 
+                         char *rhost, monitoring_t *monitor)
 {
    lListElem *ep=NULL;
    u_long32 now;
@@ -597,7 +602,7 @@ int sge_add_event_client(lListElem *clio, lList **alpp, lList **eclpp, char *rus
    /* if it already exists, delete the old one and register the new one */
    if (id > EV_ID_ANY && id < EV_ID_FIRST_DYNAMIC) {
      
-      SGE_LOCK(LOCK_GLOBAL, LOCK_READ);
+      MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_READ), monitor);
       if (!manop_is_manager(ruser)) {
          SGE_UNLOCK(LOCK_GLOBAL, LOCK_READ);
          unlock_all_clients();
@@ -659,7 +664,7 @@ int sge_add_event_client(lListElem *clio, lList **alpp, lList **eclpp, char *rus
    build_subscription(ep);
 
    /* build events for total update */
-   total_update(ep);
+   total_update(ep, monitor);
 
    /* flush initial list events */
    flush_events(ep, 0);
@@ -759,7 +764,7 @@ sge_mod_event_client(lListElem *clio, lList **alpp, char *ruser, char *rhost)
 *
 *******************************************************************************/
 static void 
-process_mod_event_client(void)
+process_mod_event_client(monitoring_t *monitor)
 {
    lListElem *event_client=NULL;
    u_long32 id;
@@ -833,7 +838,7 @@ process_mod_event_client(void)
          new_sub = lGetRef(clio, EV_sub_array);
          old_sub = lGetRef(event_client, EV_sub_array);
    
-         SGE_LOCK(LOCK_GLOBAL, LOCK_READ);
+         MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_READ), monitor);
    
          check_send_new_subscribed_list(old_sub, new_sub, event_client, sgeE_ADMINHOST_LIST);
          check_send_new_subscribed_list(old_sub, new_sub, event_client, sgeE_CALENDAR_LIST);
@@ -1239,7 +1244,7 @@ lList* sge_select_event_clients(const char *aNewList, const lCondition *aCond, c
 *
 *******************************************************************************/
 int sge_shutdown_event_client(u_long32 aClientID, const char* anUser,
-                              uid_t anUID, lList **alpp)
+                              uid_t anUID, lList **alpp, monitoring_t *monitor)
 {
    lListElem *client = NULL;
    int ret = 0;
@@ -1260,7 +1265,7 @@ int sge_shutdown_event_client(u_long32 aClientID, const char* anUser,
 
    if (client != NULL) {
 
-      SGE_LOCK(LOCK_GLOBAL, LOCK_READ);
+      MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_READ), monitor);
       if (!manop_is_manager(anUser) && (anUID != lGetUlong(client, EV_uid))) {
          SGE_UNLOCK(LOCK_GLOBAL, LOCK_READ);
          answer_list_add(alpp, MSG_COM_NOSHUTDOWNPERMS, STATUS_DENIED,
@@ -1331,7 +1336,7 @@ int sge_shutdown_event_client(u_long32 aClientID, const char* anUser,
 *               global_lock and internal ones.
 *
 *******************************************************************************/
-int sge_shutdown_dynamic_event_clients(const char *anUser, lList **alpp)
+int sge_shutdown_dynamic_event_clients(const char *anUser, lList **alpp, monitoring_t *monitor)
 {
    lListElem *client; 
    int id = 0;
@@ -1341,7 +1346,7 @@ int sge_shutdown_dynamic_event_clients(const char *anUser, lList **alpp)
 
    pthread_once(&Event_Master_Once, event_master_once_init);
 
-   SGE_LOCK(LOCK_GLOBAL, LOCK_READ);
+   MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_READ), monitor);
    if (!manop_is_manager(anUser)) {
       SGE_UNLOCK(LOCK_GLOBAL, LOCK_READ);
       answer_list_add(alpp, MSG_COM_NOSHUTDOWNPERMS, STATUS_DENIED,
@@ -2075,7 +2080,7 @@ void sge_deliver_events_immediately(u_long32 aClientID)
 *     MT-NOTE: sge_resync_schedd() in NOT MT safe. 
 *
 *******************************************************************************/
-int sge_resync_schedd(void)
+int sge_resync_schedd(monitoring_t *monitor)
 {
    lListElem *client;
    int ret = -1;
@@ -2089,7 +2094,7 @@ int sge_resync_schedd(void)
       ERROR((SGE_EVENT, MSG_EVE_REINITEVENTCLIENT_S,
              lGetString(client, EV_name)));
       
-      total_update(client);
+      total_update(client, monitor);
       
       ret = 0;
    }
@@ -2196,7 +2201,7 @@ static void event_master_once_init(void)
 
    pthread_attr_init(&attr);
    pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
-   pthread_create(&Event_Thread, &attr, event_deliver_thread, NULL);
+   pthread_create(&Event_Thread, &attr, event_deliver_thread, (void*) THREAD_NAME);
 
 /* init the event subscription counter */
    {
@@ -2259,6 +2264,54 @@ static void init_send_events(void)
    return;
 } /* init_send_events() */
 
+
+/****** sge_event_master/event_master_wait_next() ******************************
+*  NAME
+*     event_master_wait_next() -- waits for a weakup
+*
+*  SYNOPSIS
+*     static void event_master_wait_next(void) 
+*
+*  FUNCTION
+*     waits for a weakup
+*
+*  NOTES
+*     MT-NOTE: event_master_wait_next() is not MT safe needs Master_Control.cond_mutex
+*
+*     Since the ack for a delivered event might take some time, we want to sleep
+*     before delivering new events. If we would change this into a while loop,
+*     the client would never sleep, because it does take some time before a event
+*     is acknowledged. An event is removed, after it gets acknowledged.
+*
+*     This block will sleep until an event is delivered, someone shuts the
+*     qmaster down, or the given time interval passes.  This is not an
+*     issue with clients and timeouts because the delivery interval will
+*     likely never be more than 1 sec.  We ignore the nanoseconds
+*     component of the interval in the loop comparison because we can't
+*     represent nanoseconds in a u_long32 that contains seconds.  At worst
+*     this shortcut will occasionally cause this block to finish early
+*     due to a well timed spurrious wakeup. 
+*
+*******************************************************************************/
+static void event_master_wait_next(void) 
+{
+   struct timespec ts;
+   u_long32 current_time = sge_get_gmt();
+   if (!Master_Control.delivery_signaled) {
+
+      do { 
+         ts.tv_sec = (time_t)(current_time + EVENT_DELIVERY_INTERVAL_S);
+         ts.tv_nsec = EVENT_DELIVERY_INTERVAL_N;
+         pthread_cond_timedwait(&Master_Control.cond_var,
+                                &Master_Control.cond_mutex, &ts);
+      } while (!Master_Control.delivery_signaled && !should_exit() &&
+               ((sge_get_gmt() - current_time) < EVENT_DELIVERY_INTERVAL_S));
+   }
+   
+   Master_Control.delivery_signaled = false;
+}
+
+
 /****** evm/sge_event_master/event_deliver_thread() *************************************
 *  NAME
 *     event_deliver_thread() -- send events due 
@@ -2288,11 +2341,12 @@ static void* event_deliver_thread(void *anArg)
 {
    lListElem *report = NULL; 
    lList *report_list = NULL;
-   struct timespec ts;
    time_t next_prof_output = 0;
+   monitoring_t monitor;
 
    DENTER(TOP_LAYER, "event_deliver_thread");
 
+   sge_monitor_init(&monitor, (char *) anArg, NONE_EXT, EMT_WARNING, EMT_ERROR);
    sge_qmaster_thread_init(true);
 
    /* register at profiling module */
@@ -2308,43 +2362,15 @@ static void* event_deliver_thread(void *anArg)
    while (!should_exit()) {
       thread_start_stop_profiling();
 
-      /* update thread alive time */
-      sge_update_thread_alive_time(SGE_MASTER_EVENT_DELIVER_THREAD);
       sge_mutex_lock("event_master_cond_mutex", SGE_FUNC, __LINE__, &Master_Control.cond_mutex);
       /*
        * did a new event arrive which has a flush time of 0 seconds?
        */
-      if (!Master_Control.delivery_signaled) {
-         u_long32 current_time = sge_get_gmt();
-  
-         /*
-          * since the ack for a delivered event might take some time, we want to sleep
-          * before delivering new events. If we would change this into a while loop,
-          * the client would never sleep, because it does take some time before a event
-          * is acknowledged. An event is removed, after it gets acknowledged.
-          */
-         /* This block will sleep until an event is delivered, someone shuts the
-          * qmaster down, or the given time interval passes.  This is not an
-          * issue with clients and timeouts because the delivery interval will
-          * likely never be more than 1 sec.  We ignore the nanoseconds
-          * component of the interval in the loop comparison because we can't
-          * represent nanoseconds in a u_long32 that contains seconds.  At worst
-          * this shortcut will occasionally cause this block to finish early
-          * due to a well timed spurrious wakeup. */
-         do { 
-            ts.tv_sec = current_time + EVENT_DELIVERY_INTERVAL_S;
-            ts.tv_nsec = EVENT_DELIVERY_INTERVAL_N;
-            pthread_cond_timedwait(&Master_Control.cond_var,
-                                   &Master_Control.cond_mutex, &ts);
-         } while (!Master_Control.delivery_signaled && !should_exit() &&
-                  ((sge_get_gmt() - current_time) < EVENT_DELIVERY_INTERVAL_S));
-
-      }
-      Master_Control.delivery_signaled = false;
-
-
+      MONITOR_IDLE_TIME(event_master_wait_next(),(&monitor), monitor_time);
 
       sge_mutex_unlock("event_master_cond_mutex", SGE_FUNC, __LINE__, &Master_Control.cond_mutex);
+
+      MONITOR_MESSAGES((&monitor));
 
       /* If the client array has changed, rebuild the indices. */
       sge_mutex_lock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.mutex);
@@ -2367,17 +2393,21 @@ static void* event_deliver_thread(void *anArg)
       
       sge_mutex_unlock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.mutex);
      
-      process_mod_event_client();
-      process_acks ();
-      process_sends ();
-      send_events(report, report_list);
+      process_mod_event_client(&monitor);
+      process_acks();
+      process_sends();
+      send_events(report, report_list, &monitor);
 
+      sge_monitor_output(&monitor);
+      
       thread_output_profiling("event master thread profiling summary:\n", 
                               &next_prof_output);
    }
 
    report_list = lFreeList(report_list);
    report = NULL;
+  
+   sge_monitor_free(&monitor);
    
    DEXIT;
    return NULL;
@@ -2569,7 +2599,7 @@ static int get_number_of_subscriptions(u_long32 event_type) {
 *     MT-NOTE: will wait on the condition variable 'Master_Control.cond_var'
 *
 *******************************************************************************/
-static void send_events(lListElem *report, lList *report_list) {
+static void send_events(lListElem *report, lList *report_list, monitoring_t *monitor) {
    u_long32 timeout, busy_handling;
    lListElem *event_client;
    int ret, id; 
@@ -2684,7 +2714,8 @@ static void send_events(lListElem *report, lList *report_list) {
          unlock_client(ec_id);
 
          ret = report_list_send(report_list, host, commproc, id, 0, NULL);
-         
+         MONITOR_MESSAGES_OUT(monitor);
+        
          lock_client(ec_id, true); 
 
          event_client = get_event_client(ec_id); 
@@ -2828,7 +2859,7 @@ static void flush_events(lListElem *event_client, int interval)
 *     libs/lck/sge_lock.c
 *
 *******************************************************************************/
-static void total_update(lListElem *event_client)
+static void total_update(lListElem *event_client, monitoring_t *monitor)
 {
    DENTER(TOP_LAYER, "total_update");
 
@@ -2836,7 +2867,7 @@ static void total_update(lListElem *event_client)
   
    blockEvents(event_client, sgeE_ALL_EVENTS, true);
    
-   SGE_LOCK(LOCK_GLOBAL, LOCK_READ);
+   MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_READ), monitor);
    
    sge_set_commit_required();
   

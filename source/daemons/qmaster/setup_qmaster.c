@@ -755,6 +755,7 @@ static int setup_qmaster(void)
    lListElem *spooling_context = NULL;
    lList *answer_list = NULL;
    time_t time_start, time_end;
+   monitoring_t monitor;
 
    DENTER(TOP_LAYER, "sge_setup_qmaster");
 
@@ -821,20 +822,20 @@ static int setup_qmaster(void)
 
    if (!host_list_locate(Master_Exechost_List, SGE_TEMPLATE_NAME)) {
       /* add an exec host "template" */
-      if (sge_add_host_of_type(SGE_TEMPLATE_NAME, SGE_EXECHOST_LIST))
+      if (sge_add_host_of_type(SGE_TEMPLATE_NAME, SGE_EXECHOST_LIST, &monitor))
          ERROR((SGE_EVENT, MSG_CONFIG_ADDINGHOSTTEMPLATETOEXECHOSTLIST));
    }
 
    /* add host "global" to Master_Exechost_List as an exec host */
    if (!host_list_locate(Master_Exechost_List, SGE_GLOBAL_NAME)) {
       /* add an exec host "global" */
-      if (sge_add_host_of_type(SGE_GLOBAL_NAME, SGE_EXECHOST_LIST))
+      if (sge_add_host_of_type(SGE_GLOBAL_NAME, SGE_EXECHOST_LIST, &monitor))
          ERROR((SGE_EVENT, MSG_CONFIG_ADDINGHOSTGLOBALTOEXECHOSTLIST));
    }
 
    /* add qmaster host to Master_Adminhost_List as an administrativ host */
    if (!host_list_locate(Master_Adminhost_List, uti_state_get_qualified_hostname())) {
-      if (sge_add_host_of_type(uti_state_get_qualified_hostname(), SGE_ADMINHOST_LIST)) {
+      if (sge_add_host_of_type(uti_state_get_qualified_hostname(), SGE_ADMINHOST_LIST, &monitor)) {
          DEXIT;
          return -1;
       }
@@ -984,7 +985,7 @@ static int setup_qmaster(void)
     *    - cached QI values.
     */
    for_each(tmpqep, *(object_type_get_master_list(SGE_TYPE_CQUEUE))) {
-      cqueue_mod_qinstances(tmpqep, NULL, tmpqep, true);
+      cqueue_mod_qinstances(tmpqep, NULL, tmpqep, true, &monitor);
    }
         
    /* calendar */
@@ -998,7 +999,7 @@ static int setup_qmaster(void)
          calendar_parse_week(cep, &answer_list);
          answer_list_output(&answer_list);
 
-         calendar_update_queue_states(cep, NULL, NULL, &ppList);
+         calendar_update_queue_states(cep, NULL, NULL, &ppList, &monitor);
       }
 
       ppList = lFreeList(ppList);

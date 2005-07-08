@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: qping.1,v $     Last Update: $Date: 2005/07/07 06:38:44 $     Revision: $Revision: 1.8 $
+.\" $RCSfile: qping.1,v $     Last Update: $Date: 2005/07/08 10:19:24 $     Revision: $Revision: 1.9 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QPING 1 "$Date: 2005/07/07 06:38:44 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH QPING 1 "$Date: 2005/07/08 10:19:24 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 qping \- check application status of xxQS_NAMExx daemons.
 .PP
@@ -183,6 +183,9 @@ EDT:  Event Delivery Thread
 TET:  Timed Event Thread
 MT:   Message Thread(s)
 SIGT: SIGnal Thread
+
+In addition to these thread names the name can contain a thread number (for example:
+MT(1)), when multiple instances of this thread are running.
 .fi
 .in-3
 
@@ -237,6 +240,10 @@ application status.
 
 .in-3
 .in-3
+\fIMonitor:\fP
+If available, displayes statistics on a thread. The data for each thread is
+displayed in one line. The format of this line can be changed at any time. Only the
+master implements the monitoring.
 
 .SS "\fB\-help\fP"
 Prints a list of all options.

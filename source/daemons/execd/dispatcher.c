@@ -50,6 +50,7 @@
 #include "sge_time.h"
 #include "qm_name.h"
 #include "execd.h"
+#include "uti/sge_monitor.h"
 
 /* number of messages to cache in server process
    the rest stays in commd */
@@ -59,7 +60,6 @@
 #define CONNECT_PROBLEM_SLEEP_MIN 10
 #define CONNECT_PROBLEM_SLEEP_MAX 120
 #define CONNECT_PROBLEM_SLEEP_INC 10
-
 
 /* Cache we need for buffering inbound messages */
 typedef struct pbcache {
@@ -80,6 +80,29 @@ static int deleteCacheTags(pbcache **lastBeforeThisCall, int *tagarray);
 static int alloc_de(dispatch_entry *de);
 static void free_de(dispatch_entry *de);
 static int copy_de(dispatch_entry *dedst, dispatch_entry *desrc);
+static int receive_message(dispatch_entry *de, sge_pack_buffer **pb, int* tagarray,
+                           void              (*errfunc)(const char *));
+
+
+static int receive_message(dispatch_entry *de, sge_pack_buffer **pb, int* tagarray, 
+                           void              (*errfunc)(const char *)) 
+{
+   int ret;
+   DENTER(TOP_LAYER, "receive_message");
+
+      ret = receive_message_cach_n_ack(de, pb, tagarray, RECEIVE_CACHESIZE, errfunc); 
+
+      DPRINTF(("receive_message_cach_n_ack() returns: %s (%s/%s/%d)\n", 
+               cl_get_error_text(ret), de->host, de->commproc, de->id)); 
+
+      if (ret != CL_RETVAL_OK) {
+         cl_commlib_trigger(cl_com_get_handle( "execd" ,1), 1);
+      }
+
+   
+   DEXIT;
+   return ret;
+}
 
 
 /*********************************************************
@@ -138,9 +161,13 @@ int dispatch( dispatch_entry*   table,
    sge_pack_buffer *pb = NULL, apb;
    int synchron = 0;
    time_t next_prof_output = 0;
+   monitoring_t monitor;
+   u_long32 monitor_time = 0; /* will never change in case of an execd, disables the monitoring */
 
    DENTER(TOP_LAYER, "dispatch");
 
+   sge_monitor_init(&monitor, "dispatcher", NONE_EXT, EXECD_WARNING, EXECD_ERROR);
+   
    if (tabsize<=0) {
       strcpy(err_str,MSG_COM_INTERNALDISPATCHCALLWITHOUTDISPATCH);
       DEXIT;
@@ -153,7 +180,8 @@ int dispatch( dispatch_entry*   table,
    errorcode = CL_RETVAL_OK;
 
    while (!terminate) {
-
+      sge_monitor_output(&monitor);
+      
       PROF_START_MEASUREMENT(SGE_PROF_CUSTOM2);
       /* Scan table to see what we are waiting for 
          We have to build a receive pattern which matches all entries in the
@@ -174,22 +202,9 @@ int dispatch( dispatch_entry*   table,
             de.id = 0;
       }
 
-
-      /*  trigger communication
-       *  =====================
-       *  -> this will block 1 second , when there are no messages to read/write 
-       */
-
-      i = receive_message_cach_n_ack(&de, &pb, tagarray, RECEIVE_CACHESIZE, errfunc); 
-
-      DPRINTF(("receive_message_cach_n_ack() returns: %s (%s/%s/%d)\n", 
-               cl_get_error_text(i), de.host, de.commproc, de.id)); 
-
-      if (i != CL_RETVAL_OK) {
-         cl_commlib_trigger(cl_com_get_handle( "execd" ,1), 1);
-      }
-      sge_update_thread_alive_time(SGE_EXECD_MAIN);
-
+      MONITOR_IDLE_TIME((i = receive_message(&de, &pb, tagarray, errfunc)), (&monitor), monitor_time);
+      MONITOR_MESSAGES((&monitor));
+      
       switch (i) {
       case CL_RETVAL_CONNECTION_NOT_FOUND:  /* is renewed */
         de.tag = -1;  
@@ -253,6 +268,7 @@ int dispatch( dispatch_entry*   table,
                if (pb_filled(&apb)) {              
                   i = gdi_send_message_pb(synchron, de.commproc, de.id, de.host, 
                                    de.tag, &apb, &dummyid);
+                  MONITOR_MESSAGES_OUT((&monitor));
                   if (i != CL_RETVAL_OK) {
                      DPRINTF(("gdi_send_message_pb() returns: %s (%s/%s/%d)\n", 
                                cl_get_error_text(i), de.host, de.commproc, de.id));
@@ -275,8 +291,9 @@ int dispatch( dispatch_entry*   table,
             }
          }
          clear_packbuffer(pb);
-         if (pb) 
-            free(pb); /* allocated in receive_message_cach_n_ack() */
+         if (pb != NULL) {
+            FREE(pb); /* allocated in receive_message_cach_n_ack() */
+         }   
 
          break;
       default:
@@ -302,6 +319,8 @@ int dispatch( dispatch_entry*   table,
       }
    }
 
+   sge_monitor_free(&monitor);
+   
    free_de(&de);
    DEXIT;
    return errorcode;

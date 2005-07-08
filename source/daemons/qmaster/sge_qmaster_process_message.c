@@ -34,6 +34,7 @@
 
 #include <string.h>
 #include <unistd.h>
+
 #include "sgermon.h"
 #include "commlib.h"
 #include "sge_time.h"
@@ -52,6 +53,8 @@
 #include "sgeobj/sge_answer.h"
 #include "sge_prog.h"
 #include "sge_mtutil.h"
+
+extern u_long32 monitor_time;
 
 typedef struct {
    char snd_host[CL_MAXHOSTLEN]; /* sender hostname; NULL -> all              */
@@ -139,8 +142,8 @@ static request_handling_t eval_gdi_and_block(sge_gdi_request *req_head);
 static void eval_atomic(request_handling_t type);
 static void eval_atomic_end(request_handling_t type); 
 
-static request_handling_t do_gdi_request(struct_msg_t*);
-static request_handling_t do_report_request(struct_msg_t*);
+static request_handling_t do_gdi_request(struct_msg_t*, monitoring_t *monitor);
+static request_handling_t do_report_request(struct_msg_t*, monitoring_t *monitor);
 static void do_event_client_exit(const char*, const char*, sge_pack_buffer*);
 
 
@@ -171,7 +174,7 @@ eval_message_and_block(struct_msg_t msg)
    request_handling_t type;
 
    DENTER(TOP_LAYER, "eval_message_and_block");
-   
+  
    if (msg.tag == TAG_REPORT_REQUEST) {
       type = ATOMIC_SINGLE;
    }
@@ -213,7 +216,7 @@ eval_gdi_and_block(sge_gdi_request *req_head)
    request_handling_t type = ATOMIC_NONE;
 
    DENTER(TOP_LAYER, "eval_gdi_and_block");
-   
+  
    if (req_head->next == NULL) {
       type = ATOMIC_SINGLE;     
    }
@@ -370,7 +373,7 @@ eval_atomic_end(request_handling_t type)
 *     MT-NOTE: This function should only be used as a 'thread function'
 *
 *******************************************************************************/
-void *sge_qmaster_process_message(void *anArg)
+void *sge_qmaster_process_message(void *anArg, monitoring_t *monitor)
 {
    int res;
    struct_msg_t msg;
@@ -390,9 +393,11 @@ void *sge_qmaster_process_message(void *anArg)
     * timeout (syncron receive timeout) when no messages are there to read.
     *
     */
+   MONITOR_IDLE_TIME((res = sge_get_any_request(msg.snd_host, msg.snd_name, &msg.snd_id, &msg.buf, 
+                                &msg.tag, 1, 0, &msg.request_mid)), monitor, monitor_time);
    
-   res = sge_get_any_request(msg.snd_host, msg.snd_name, &msg.snd_id, &msg.buf, &msg.tag, 1, 0, &msg.request_mid);
-
+   MONITOR_MESSAGES(monitor);      
+   
    if (res != CL_RETVAL_OK) {
       DPRINTF(("%s returned: %s\n", SGE_FUNC, cl_get_error_text(res)));
       return anArg;              
@@ -403,21 +408,22 @@ void *sge_qmaster_process_message(void *anArg)
       case TAG_SEC_ANNOUNCE:
          break; /* All processing done in libsec */
       case TAG_GDI_REQUEST: 
-         type = do_gdi_request(&msg);
+         type = do_gdi_request(&msg, monitor);
          break;
       case TAG_ACK_REQUEST:
-         sge_c_ack(msg.snd_host, msg.snd_name, &(msg.buf));
+         sge_c_ack(msg.snd_host, msg.snd_name, &(msg.buf), monitor);
          break;
       case TAG_EVENT_CLIENT_EXIT:
          do_event_client_exit(msg.snd_host, msg.snd_name, &(msg.buf));
+         MONITOR_ACK(monitor);   
          break;
       case TAG_REPORT_REQUEST: 
-         type = do_report_request(&msg);
+         type = do_report_request(&msg, monitor);
          break;
       default: 
          DPRINTF(("***** UNKNOWN TAG TYPE %d\n", msg.tag));
    }
-
+   
    eval_atomic_end(type);
 
    clear_packbuffer(&(msg.buf));
@@ -451,7 +457,7 @@ void *sge_qmaster_process_message(void *anArg)
 *     list of 'sge_gdi_request' structures.
 *
 *******************************************************************************/
-static request_handling_t do_gdi_request(struct_msg_t *aMsg)
+static request_handling_t do_gdi_request(struct_msg_t *aMsg, monitoring_t *monitor)
 {
    enum { ASYNC = 0, SYNC = 1 };
    lList *alp = NULL;
@@ -465,13 +471,15 @@ static request_handling_t do_gdi_request(struct_msg_t *aMsg)
 
    DENTER(TOP_LAYER, "do_gid_request");
 
+   MONITOR_GDI(monitor);   
+
    if (sge_unpack_gdi_request(buf, &req_head)) {
       ERROR((SGE_EVENT, MSG_GDI_FAILEDINSGEUNPACKGDIREQUEST_SSI, (char *)aMsg->snd_host, (char *)aMsg->snd_name, (int)aMsg->snd_id));
       return type;
    }
    resp_head = new_gdi_request();
 
-   type = eval_gdi_and_block(req_head);
+   MONITOR_WAIT_TIME((type = eval_gdi_and_block(req_head)), monitor);
 
    for (req = req_head; req; req = req->next) {
       req->id = aMsg->snd_id;
@@ -489,12 +497,14 @@ static request_handling_t do_gdi_request(struct_msg_t *aMsg)
          resp = resp->next;
       }
       
-      sge_c_gdi(aMsg->snd_host, req, resp);
+      sge_c_gdi(aMsg->snd_host, req, resp, monitor);
    }
 
    sge_send_gdi_request(ASYNC, aMsg->snd_host, aMsg->snd_name,
                         (int)aMsg->snd_id, resp_head, NULL, aMsg->request_mid,
                         &alp);
+   MONITOR_MESSAGES_OUT(monitor);
+
    answer_list_output (&alp);
 
    free_gdi_request(resp_head);
@@ -523,21 +533,23 @@ static request_handling_t do_gdi_request(struct_msg_t *aMsg)
 *     void - none 
 *
 *******************************************************************************/
-static request_handling_t do_report_request(struct_msg_t *aMsg)
+static request_handling_t do_report_request(struct_msg_t *aMsg, monitoring_t *monitor)
 {
    lList *rep = NULL;
    request_handling_t type = ATOMIC_NONE;
 
    DENTER(TOP_LAYER, "do_report_request");
 
+   MONITOR_LOAD(monitor);   
+
    if (cull_unpack_list(&(aMsg->buf), &rep)) {
       ERROR((SGE_EVENT,MSG_CULL_FAILEDINCULLUNPACKLISTREPORT));
       return type;
    }
 
-   type = eval_message_and_block(*aMsg); 
+   MONITOR_WAIT_TIME((type = eval_message_and_block(*aMsg)), monitor); 
 
-   sge_c_report(aMsg->snd_host, aMsg->snd_name, aMsg->snd_id, rep);
+   sge_c_report(aMsg->snd_host, aMsg->snd_name, aMsg->snd_id, rep, monitor);
    lFreeList(rep);
 
    DEXIT;

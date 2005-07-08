@@ -294,7 +294,7 @@ reporting_shutdown(lList **answer_list)
 *     Timeeventmanager/te_add()
 *******************************************************************************/
 void
-reporting_trigger_handler(te_event_t anEvent)
+reporting_trigger_handler(te_event_t anEvent, monitoring_t *monitor)
 {
    u_long32 flush_interval = 0;
    u_long32 next_flush = 0;

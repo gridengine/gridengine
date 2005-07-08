@@ -72,7 +72,7 @@ int add,
 const char *ruser,
 const char *rhost,
 gdi_object_t *object,
-int sub_command 
+int sub_command, monitoring_t *monitor
 ) {
    int ret;
    const char *s, *pe_name;
@@ -234,7 +234,7 @@ int pe_spool(lList **alpp, lListElem *pep, gdi_object_t *object)
    return dbret ? 0 : 1;
 }
 
-int pe_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object, lList **ppList) 
+int pe_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object, lList **ppList, monitoring_t *monitor) 
 {
    const char *pe_name;
 

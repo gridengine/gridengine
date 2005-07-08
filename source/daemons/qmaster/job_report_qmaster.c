@@ -145,7 +145,8 @@ lListElem *report,
 lListElem *hep,
 char *rhost,
 char *commproc,
-sge_pack_buffer *pb  
+sge_pack_buffer *pb,
+monitoring_t *monitor
 ) {
    lList* jrl = NULL; /* JR_Type */
    lListElem *jep, *jr, *ep, *jatep = NULL; 
@@ -324,7 +325,7 @@ sge_pack_buffer *pb
                  
                   if (status == JTRANSFERING) { /* got async ack for this job */
                      DPRINTF(("--- transfering job "sge_u32" is running\n", jobid));
-                     sge_commit_job(jep, jatep, jr, COMMIT_ST_ARRIVED, COMMIT_DEFAULT); /* implicitly sending usage to schedd */
+                     sge_commit_job(jep, jatep, jr, COMMIT_ST_ARRIVED, COMMIT_DEFAULT, monitor); /* implicitly sending usage to schedd */
                      cancel_job_resend(jobid, jataskid);
                   } else {
                      /* need to generate a job event for new usage 
@@ -641,7 +642,7 @@ sge_pack_buffer *pb
                      DPRINTF(("--- running job "sge_u32"."sge_u32" is exiting\n", 
                         jobid, jataskid, (status==JTRANSFERING)?"transfering":"running"));
 
-                     sge_job_exit(jr, jep, jatep);
+                     sge_job_exit(jr, jep, jatep, monitor);
                   } else {
                      u_long32 failed = lGetUlong(jr, JR_failed);
 

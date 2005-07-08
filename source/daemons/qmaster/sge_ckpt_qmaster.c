@@ -111,7 +111,8 @@
 *     STATUS_EUNKNOWN - an error occured
 ******************************************************************************/ 
 int ckpt_mod(lList **alpp, lListElem *new_ckpt, lListElem *ckpt, int add,
-             const char *ruser, const char *rhost, gdi_object_t *object, int sub_command) 
+             const char *ruser, const char *rhost, gdi_object_t *object, 
+             int sub_command, monitoring_t *monitor) 
 {
    const char *ckpt_name;
 
@@ -274,7 +275,7 @@ int ckpt_spool(lList **alpp, lListElem *ep, gdi_object_t *object)
 *  RESULT
 *     0 - success
 ******************************************************************************/ 
-int ckpt_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object, lList **ppList) 
+int ckpt_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object, lList **ppList, monitoring_t *monitor) 
 {
    const char *ckpt_name;
 

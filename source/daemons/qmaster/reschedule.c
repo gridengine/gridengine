@@ -103,7 +103,7 @@ u_long32 add_time = 0;
 *     MT-NOTE: reschedule_unknown_event() is NOT MT safe
 *
 *******************************************************************************/
-void reschedule_unknown_event(te_event_t anEvent)
+void reschedule_unknown_event(te_event_t anEvent, monitoring_t *monitor)
 {
    lListElem *qep;            /* QU_Type */
    lList *answer_list = NULL; /* AN_Type */
@@ -116,7 +116,7 @@ void reschedule_unknown_event(te_event_t anEvent)
 
    DENTER(TOP_LAYER, "reschedule_unknown_event");
 
-   SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE);
+   MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE), monitor);
  
    /*
     * is the automatic rescheduling disabled
@@ -182,7 +182,7 @@ void reschedule_unknown_event(te_event_t anEvent)
     * unknown state and append the jobids/taskids into
     * a sublist of the exechost object
     */
-   reschedule_jobs(hep, 0, &answer_list);
+   reschedule_jobs(hep, 0, &answer_list, monitor);
    lFreeList(answer_list);
    
    free((char*)hostname);
@@ -220,7 +220,7 @@ Error:
 *  RESULT
 *     int - 0 on success; 1 if one of the parameters was invalid 
 *******************************************************************************/
-int reschedule_jobs(lListElem *ep, u_long32 force, lList **answer) 
+int reschedule_jobs(lListElem *ep, u_long32 force, lList **answer, monitoring_t *monitor) 
 {
    lListElem *jep;               /* JB_Type */
    int ret = 1;
@@ -239,7 +239,7 @@ int reschedule_jobs(lListElem *ep, u_long32 force, lList **answer)
        * append the jobids/taskids into a sublist of the exechost object
        */
       for_each(jep, Master_Job_List) {
-         reschedule_job(jep, NULL, ep, force, answer);
+         reschedule_job(jep, NULL, ep, force, answer, monitor);
       }      
       ret = 0;
    }
@@ -287,7 +287,7 @@ int reschedule_jobs(lListElem *ep, u_long32 force, lList **answer)
 *     int - 0 on success
 *******************************************************************************/
 int reschedule_job(lListElem *jep, lListElem *jatep, lListElem *ep,  
-                   u_long32 force, lList **answer) 
+                   u_long32 force, lList **answer, monitoring_t *monitor) 
 {
    lListElem *qep;               /* QU_Type */
    lListElem *hep;               /* EH_Type */
@@ -557,7 +557,7 @@ int reschedule_job(lListElem *jep, lListElem *jatep, lListElem *ep,
             lGetHost(first_granted_queue, JG_qhostname));
          lSetString(pseudo_jr, JR_owner,
             lGetString(jep, JB_owner));
-         sge_job_exit(pseudo_jr, jep, this_jatep);
+         sge_job_exit(pseudo_jr, jep, this_jatep, monitor);
          lFreeElem(pseudo_jr);
       }                         
 

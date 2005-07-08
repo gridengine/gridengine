@@ -34,15 +34,16 @@
 
 #include "basis_types.h"
 #include "sge_eventL.h"
+#include "uti/sge_monitor.h"
 
 
-extern int    sge_add_event_client(lListElem*, lList**, lList**, char*, char*);
+extern int    sge_add_event_client(lListElem*, lList**, lList**, char*, char*, monitoring_t *monitor);
 extern int    sge_mod_event_client(lListElem*, lList**, char*, char*);
 extern bool   sge_has_event_client(u_long32);
 extern void   sge_remove_event_client(u_long32);
 extern lList* sge_select_event_clients(const char*, const lCondition*, const lEnumeration*);
-extern int    sge_shutdown_event_client(u_long32, const char*, uid_t, lList **alpp);
-extern int    sge_shutdown_dynamic_event_clients(const char*, lList **alpp);
+extern int    sge_shutdown_event_client(u_long32, const char*, uid_t, lList **alpp, monitoring_t *monitor);
+extern int    sge_shutdown_dynamic_event_clients(const char*, lList **alpp, monitoring_t *monitor);
 
 extern bool sge_add_event( u_long32, ev_event, u_long32, u_long32, 
                           const char*, const char*, const char*, lListElem*);
@@ -56,7 +57,7 @@ extern bool sge_add_list_event( u_long32, ev_event, u_long32, u_long32,
 extern void sge_handle_event_ack(u_long32, ev_event);
 extern void sge_deliver_events_immediately(u_long32);
 
-extern int      sge_resync_schedd(void);
+extern int sge_resync_schedd(monitoring_t *monitor);
 
 extern u_long32 sge_set_max_dynamic_event_clients(u_long32 max);
 extern u_long32 sge_get_max_dynamic_event_clients(void);

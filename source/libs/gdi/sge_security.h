@@ -114,7 +114,7 @@ int sge_get_auth_info(sge_gdi_request *request, uid_t *uid, char *user,
 
 int sge_security_verify_user(const char *host, const char *commproc, u_long32 id, const char *user); 
 
-void sge_security_event_handler(te_event_t anEvent);
+void sge_security_event_handler(te_event_t anEvent, monitoring_t *monitor);
 
 #endif /* __SGE_SECURITY_H */
 

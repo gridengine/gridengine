@@ -80,7 +80,7 @@
 #include "msg_qmaster.h"
 
 
-static int do_add_auto_user(lListElem*, lList**);
+static int do_add_auto_user(lListElem*, lList**, monitoring_t *monitor);
 
 
 int userprj_mod(
@@ -91,7 +91,7 @@ int add,
 const char *ruser,
 const char *rhost,
 gdi_object_t *object,
-int sub_command 
+int sub_command, monitoring_t *monitor 
 ) {
    int user_flag = (object->target==SGE_USER_LIST)?1:0;
    int pos;
@@ -219,7 +219,7 @@ Error:
    return STATUS_EUNKNOWN;
 }
 
-int userprj_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object, lList **ppList) 
+int userprj_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object, lList **ppList, monitoring_t *monitor) 
 {
    int user_flag = (object->target==SGE_USER_LIST)?1:0;
    
@@ -430,7 +430,7 @@ const char *obj_name   /* e.g. "fangorn"  */
 /* automatic user objects which have expired.                         */
 /*-------------------------------------------------------------------------*/
 void
-sge_automatic_user_cleanup_handler(te_event_t anEvent)
+sge_automatic_user_cleanup_handler(te_event_t anEvent, monitoring_t *monitor)
 {
    DENTER(TOP_LAYER, "sge_automatic_user_cleanup_handler");
 
@@ -494,7 +494,7 @@ sge_automatic_user_cleanup_handler(te_event_t anEvent)
 /*    called in sge_gdi_add_job                                            */
 /*-------------------------------------------------------------------------*/
 int
-sge_add_auto_user(const char *user, lList **alpp)
+sge_add_auto_user(const char *user, lList **alpp, monitoring_t *monitor)
 {
    lListElem *uep;
    int status = STATUS_OK;
@@ -543,7 +543,7 @@ sge_add_auto_user(const char *user, lList **alpp)
       }
    
       /* add the auto user via GDI request */
-      status = do_add_auto_user(uep, alpp); 
+      status = do_add_auto_user(uep, alpp, monitor); 
       uep = lFreeElem(uep);
    }
 
@@ -562,7 +562,7 @@ sge_add_auto_user(const char *user, lList **alpp)
 *     MT-NOTE: do_add_auto_user() is not MT safe 
 *
 *******************************************************************************/
-static int do_add_auto_user(lListElem* anUser, lList** anAnswer)
+static int do_add_auto_user(lListElem* anUser, lList** anAnswer, monitoring_t *monitor)
 {
    int res = STATUS_EUNKNOWN;
    gdi_object_t *userList = NULL;
@@ -579,7 +579,7 @@ static int do_add_auto_user(lListElem* anUser, lList** anAnswer)
     */
    res = sge_gdi_add_mod_generic(&tmpAnswer, anUser, 1, userList, 
                                  bootstrap_get_admin_user(), 
-                                 uti_state_get_qualified_hostname(), 0, &ppList);
+                                 uti_state_get_qualified_hostname(), 0, &ppList, monitor);
 
    ppList = lFreeList(ppList);
    if ((STATUS_OK != res) && (NULL != tmpAnswer))

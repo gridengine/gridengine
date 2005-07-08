@@ -123,6 +123,7 @@ extern int max_dynamic_event_clients;
 extern bool set_lib_path;
 extern bool inherit_env;
 extern int spool_time;
+extern u_long32 monitor_time;
 
 /* reporting params */
 extern bool do_accounting;

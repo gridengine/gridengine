@@ -150,10 +150,11 @@ proc add_queue { qname hostlist change_array {fast_add 0} } {
    set chgar(qname)     "$qname"
    set chgar(hostlist)  "$hostlist"
 
-   # just resolve the queue name 
-   foreach test_hname $hostlist {
-      resolve_queue "$qname@$test_hname"
-   }
+# just resolve the queue name 
+#   foreach test_hname $hostlist {
+#      resolve_queue "$qname@$test_hname"
+#   }
+
    # localize messages
    # JG: TODO: object name is taken from c_gdi object structure - not I18Ned!!
    set QUEUE [translate $ts_config(master_host) 1 0 0 [sge_macro MSG_OBJ_QUEUE]]

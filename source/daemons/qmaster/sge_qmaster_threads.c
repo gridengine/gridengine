@@ -114,7 +114,7 @@ static void*     signal_thread(void*);
 static void*     message_thread(void*);
 
 /* misc functions */
-static void increment_heartbeat(te_event_t);
+static void increment_heartbeat(te_event_t, monitoring_t *monitor);
 
 /****** qmaster/sge_qmaster_main/sge_gdi_kill_master() *************************
 *  NAME
@@ -386,7 +386,7 @@ void sge_start_heartbeat(void)
 void sge_create_and_join_threads(void)
 {
    enum { NUM_THRDS = 5 };
-
+   const char *thread_names[NUM_THRDS] = {"SIGT","MT(1)","MT(2)","MT(3)","MT(4)"}; 
    pthread_t tids[NUM_THRDS];
    int threads = 2;
    int i;
@@ -397,13 +397,13 @@ void sge_create_and_join_threads(void)
       threads = NUM_THRDS -1;
    }
 
-   pthread_create(&(tids[0]), NULL, signal_thread, NULL);
+   pthread_create(&(tids[0]), NULL, signal_thread, (void*)thread_names[0]);
    inc_thread_count();
    
    set_signal_thread(tids[0]);
 
    for (i = 1; i <= threads; i++) {
-      pthread_create(&(tids[i]), NULL, message_thread, NULL);
+      pthread_create(&(tids[i]), NULL, message_thread, (void*)thread_names[i]);
       inc_thread_count();
    }
 
@@ -517,7 +517,7 @@ static pthread_t get_signal_thread(void)
 *     do cope with a system clock which has been put back.
 *
 *******************************************************************************/
-static void increment_heartbeat(te_event_t anEvent)
+static void increment_heartbeat(te_event_t anEvent, monitoring_t *monitor)
 {
    DENTER(TOP_LAYER, "increment_heartbeat");
 
@@ -972,32 +972,26 @@ static void* signal_thread(void* anArg)
    sigset_t sig_set;
    int sig_num;
    time_t next_prof_output = 0;
+   monitoring_t monitor;
 
    DENTER(TOP_LAYER, "signal_thread");
 
+   sge_monitor_init(&monitor, (char *) anArg, NONE_EXT, ST_WARNING, ST_ERROR);
    sge_qmaster_thread_init(true);
 
    sigemptyset(&sig_set);
    sigaddset(&sig_set, SIGINT);
    sigaddset(&sig_set, SIGTERM);
 
-   /* Set thread alive time to current time */
-   sge_update_thread_alive_time(SGE_MASTER_SIGNAL_THREAD);
 
    /* register at profiling module */
    set_thread_name(pthread_self(), "Signal Thread");
    conf_update_thread_profiling("Signal Thread");
 
    while (is_continue) {
-      sigwait(&sig_set, &sig_num);
+      MONITOR_IDLE_TIME(sigwait(&sig_set, &sig_num), (&monitor), monitor_time);
 
       thread_start_stop_profiling();
-
-      /* 
-       * This thread will only wake up on signals, so the
-       * alive time will not be set in an specified intervall
-       */
-      sge_update_thread_alive_time(SGE_MASTER_SIGNAL_THREAD);
 
       DPRINTF(("%s: got signal %d\n", SGE_FUNC, sig_num));
 
@@ -1012,10 +1006,14 @@ static void* signal_thread(void* anArg)
             ERROR((SGE_EVENT, MSG_QMASTER_UNEXPECTED_SIGNAL_I, sig_num));
       }
 
+      sge_monitor_output(&monitor);
+      
       thread_output_profiling("signal thread profiling summary:\n", 
                               &next_prof_output);
    }
-
+   
+   sge_monitor_free(&monitor);
+   
    DEXIT;
    return NULL;
 } /* signal_thread() */
@@ -1044,9 +1042,12 @@ static void* signal_thread(void* anArg)
 static void* message_thread(void* anArg)
 {
    time_t next_prof_output = 0;
+   monitoring_t monitor;
 
    DENTER(TOP_LAYER, "message_thread");
 
+   sge_monitor_init(&monitor, (char *) anArg, GDI_EXT, MT_WARNING, MT_ERROR);
+   
    sge_qmaster_thread_init(true);
 
    /* register at profiling module */
@@ -1056,16 +1057,16 @@ static void* message_thread(void* anArg)
    while (should_terminate() == false) {
       thread_start_stop_profiling();
 
-      /* 
-       * Update thread alive time 
-       */
-      sge_update_thread_alive_time(SGE_MASTER_MESSAGE_THREAD);
-      sge_qmaster_process_message(anArg);
+      sge_qmaster_process_message(anArg, &monitor);
 
       thread_output_profiling("message thread profiling summary:\n", 
                               &next_prof_output);
+
+      sge_monitor_output(&monitor);
    }
 
+   sge_monitor_free(&monitor);
+   
    DEXIT;
    return NULL;
 } /* message_thread() */

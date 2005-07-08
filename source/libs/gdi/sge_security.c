@@ -1922,7 +1922,7 @@ int sge_security_verify_user(const char *host, const char *commproc, u_long32 id
 }   
 
 /* MT-NOTE: sge_security_ck_to_do() is MT safe (assumptions) */
-void sge_security_event_handler(te_event_t anEvent)
+void sge_security_event_handler(te_event_t anEvent, monitoring_t *monitor)
 {
 #ifdef SECURE
 #if 0

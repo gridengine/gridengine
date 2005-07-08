@@ -165,7 +165,7 @@ lList **topp,   ticket orders ptr ptr
  **********************************************************************/ 
 int 
 sge_follow_order(lListElem *ep, lList **alpp, char *ruser, char *rhost,
-                 lList **topp) 
+                 lList **topp, monitoring_t *monitor) 
 {
    int allowed;
    u_long32 job_number, task_number;
@@ -174,7 +174,7 @@ sge_follow_order(lListElem *ep, lList **alpp, char *ruser, char *rhost,
    lList *acl, *xacl;
    lListElem *jep, *qep, *master_qep, *oep, *hep, *master_host = NULL, *jatp = NULL;
    u_long32 state;
-   u_long32 pe_slots = 0, q_slots, q_version;
+   u_long32 pe_slots = 0, q_slots = 0, q_version;
    lListElem *pe = NULL;
 
    DENTER(TOP_LAYER, "sge_follow_order");
@@ -462,6 +462,8 @@ sge_follow_order(lListElem *ep, lList **alpp, char *ruser, char *rhost,
          lSetHost(gdil_ep, JG_qhostname, lGetHost(qep, QU_qhostname));
          lSetUlong(gdil_ep, JG_slots, q_slots);
 
+         
+         
          /* ------------------------------------------------
           *  tag each gdil entry of slave exec host
           *  in case of sge controlled slaves 
@@ -492,6 +494,7 @@ sge_follow_order(lListElem *ep, lList **alpp, char *ruser, char *rhost,
                DPRINTF(("master host %s\n", lGetHost(master_host, EH_name)));
             }   
          }
+         
          /* in case of a pe job update free_slots on the pe */
          if (pe) { 
             pe_slots += q_slots;
@@ -502,10 +505,10 @@ sge_follow_order(lListElem *ep, lList **alpp, char *ruser, char *rhost,
       lSetString(jatp, JAT_master_queue, lGetString(master_qep, QU_full_name));
       lSetList(jatp, JAT_granted_destin_identifier_list, gdil);
 
-      if (sge_give_job(jep, jatp, master_qep, pe, master_host)) {
+      if (sge_give_job(jep, jatp, master_qep, pe, master_host, monitor)) {
 
          /* setting of queues in state unheard is done by sge_give_job() */
-         sge_commit_job(jep, jatp, NULL, COMMIT_ST_DELIVERY_FAILED, COMMIT_DEFAULT);
+         sge_commit_job(jep, jatp, NULL, COMMIT_ST_DELIVERY_FAILED, COMMIT_DEFAULT, monitor);
          /* This was sge_commit_job(jep, COMMIT_ST_RESCHEDULED). It raised problems if a job
             could not be delivered. The jobslotsfree had been increased even if
             they where not decreased bevore. */
@@ -516,9 +519,9 @@ sge_follow_order(lListElem *ep, lList **alpp, char *ruser, char *rhost,
          DEXIT;
          return -3;
       }
-
+     
       /* job is now sent and goes into transfering state */
-      sge_commit_job(jep, jatp, NULL, COMMIT_ST_SENT, COMMIT_DEFAULT);   /* mode==0 -> really accept when execd acks */
+      sge_commit_job(jep, jatp, NULL, COMMIT_ST_SENT, COMMIT_DEFAULT, monitor);   /* mode==0 -> really accept when execd acks */
 
       /* set timeout for job resend */
       trigger_job_resend(sge_get_gmt(), master_host, job_number, task_number);
@@ -540,7 +543,7 @@ sge_follow_order(lListElem *ep, lList **alpp, char *ruser, char *rhost,
          lList *master_list = *(object_type_get_master_list(SGE_TYPE_CQUEUE));
          lList *gdil = lGetList(jatp, JAT_granted_destin_identifier_list);
 
-         cqueue_list_x_on_subordinate_gdil(master_list, true, gdil);
+         cqueue_list_x_on_subordinate_gdil(master_list, true, gdil, monitor);
       }
    }    
       break;
@@ -1042,7 +1045,7 @@ sge_follow_order(lListElem *ep, lList **alpp, char *ruser, char *rhost,
          }
     
          /* remove it */
-         sge_commit_job(jep, jatp, NULL, COMMIT_ST_DEBITED_EE, COMMIT_DEFAULT);
+         sge_commit_job(jep, jatp, NULL, COMMIT_ST_DEBITED_EE, COMMIT_DEFAULT, monitor);
       } else {
          if (!JOB_TYPE_IS_IMMEDIATE(lGetUlong(jep, JB_type))) {
             if(lGetString(jep, JB_script_file))
@@ -1065,7 +1068,7 @@ sge_follow_order(lListElem *ep, lList **alpp, char *ruser, char *rhost,
                lGetString(jep, JB_owner)));
 
          /* remove it */
-         sge_commit_job(jep, jatp, NULL, COMMIT_ST_NO_RESOURCES, COMMIT_DEFAULT | COMMIT_NEVER_RAN);
+         sge_commit_job(jep, jatp, NULL, COMMIT_ST_NO_RESOURCES, COMMIT_DEFAULT | COMMIT_NEVER_RAN, monitor);
       }
       break;
 
@@ -1288,7 +1291,7 @@ sge_follow_order(lListElem *ep, lList **alpp, char *ruser, char *rhost,
             INFO((SGE_EVENT, MSG_JOB_SUSPTQ_UUS, sge_u32c(jobid), sge_u32c(task_number), qnm));
 
             if (!ISSET(lGetUlong(jatp, JAT_state), JSUSPENDED)) {
-               sge_signal_queue(SGE_SIGSTOP, queueep, jep, jatp);
+               sge_signal_queue(SGE_SIGSTOP, queueep, jep, jatp, monitor);
                state = lGetUlong(jatp, JAT_state);
                CLEARBIT(JRUNNING, state);
                lSetUlong(jatp, JAT_state, state);
@@ -1342,7 +1345,7 @@ sge_follow_order(lListElem *ep, lList **alpp, char *ruser, char *rhost,
             INFO((SGE_EVENT, MSG_JOB_UNSUSPOT_UUS, sge_u32c(jobid), sge_u32c(task_number), qnm));
       
             if (!ISSET(lGetUlong(jatp, JAT_state), JSUSPENDED)) {
-               sge_signal_queue(SGE_SIGCONT, queueep, jep, jatp);
+               sge_signal_queue(SGE_SIGCONT, queueep, jep, jatp, monitor);
                state = lGetUlong(jatp, JAT_state);
                SETBIT(JRUNNING, state);
                lSetUlong(jatp, JAT_state, state);
@@ -1404,9 +1407,8 @@ sge_follow_order(lListElem *ep, lList **alpp, char *ruser, char *rhost,
 /*
  * MT-NOTE: distribute_ticket_orders() is NOT MT safe
  */
-int distribute_ticket_orders(
-lList *ticket_orders 
-) {
+int distribute_ticket_orders( lList *ticket_orders, monitoring_t *monitor) 
+{
    u_long32 jobid, jataskid; 
    lList *to_send;
    const char *host_name;
@@ -1505,6 +1507,7 @@ lList *ticket_orders
             }
             cl_err = gdi_send_message_pb(0, prognames[EXECD], 1, master_host_name, 
                                          TAG_CHANGE_TICKET, &pb, &dummymid);
+            MONITOR_MESSAGES_OUT(monitor);
             clear_packbuffer(&pb);
             DPRINTF(("%s %d ticket changings to execd@%s\n", 
                      (cl_err==CL_RETVAL_OK)?"failed sending":"sent", n, master_host_name));

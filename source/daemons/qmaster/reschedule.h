@@ -33,6 +33,7 @@
 /*___INFO__MARK_END__*/
 
 #include "sge_qmaster_timed_event.h"
+#include "uti/sge_monitor.h"
 
 
 #define RESCHEDULE_SKIP_JR_REMOVE      0x00000000
@@ -41,13 +42,13 @@
 #define RESCHEDULE_HANDLE_JR_REMOVE    0x00000004
 #define RESCHEDULE_HANDLE_JR_WAIT      0x00000008
 
-void reschedule_unknown_event(te_event_t anEvent);
+void reschedule_unknown_event(te_event_t anEvent, monitoring_t *monitor);
  
 u_long32 skip_restarted_job(lListElem *host, lListElem *job_report, u_long32 job_number, u_long32 task_number);
  
-int reschedule_jobs(lListElem *ep, u_long32 force, lList **answer);
+int reschedule_jobs(lListElem *ep, u_long32 force, lList **answer, monitoring_t *monitor);
  
-int reschedule_job(lListElem *jep, lListElem *jatep, lListElem *qep, u_long32 force, lList **answer);
+int reschedule_job(lListElem *jep, lListElem *jatep, lListElem *qep, u_long32 force, lList **answer, monitoring_t *monitor);
  
 lListElem* add_to_reschedule_unknown_list(lListElem *hostr, u_long32 job_number, u_long32 task_number, u_long32 state);
  

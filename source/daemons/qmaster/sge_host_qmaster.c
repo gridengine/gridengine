@@ -146,7 +146,7 @@ static void host_trash_nonstatic_load_values(lListElem *host)
  */
 int sge_add_host_of_type(
 const char *hostname,
-u_long32 target 
+u_long32 target, monitoring_t *monitor 
 ) {
    int ret;
    int dataType;
@@ -179,7 +179,7 @@ u_long32 target
          DPRINTF(("sge_add_host_of_type: unexpected datatype\n"));
    }
    ret = sge_gdi_add_mod_generic(NULL, ep, 1, object, uti_state_get_user_name(), 
-      uti_state_get_qualified_hostname(), 0, &ppList);
+      uti_state_get_qualified_hostname(), 0, &ppList, monitor);
    lFreeElem(ep);
    ppList = lFreeList(ppList);
 
@@ -189,7 +189,7 @@ u_long32 target
 
 bool
 host_list_add_missing_href(lList *this_list, 
-                           lList **answer_list, const lList *href_list)
+                           lList **answer_list, const lList *href_list, monitoring_t *monitor)
 {
    bool ret = true;
    lListElem *href = NULL;
@@ -200,7 +200,7 @@ host_list_add_missing_href(lList *this_list,
       lListElem *host = host_list_locate(this_list, hostname);
 
       if (host == NULL) {
-         ret &= (sge_add_host_of_type(hostname, SGE_EXECHOST_LIST) == 0);
+         ret &= (sge_add_host_of_type(hostname, SGE_EXECHOST_LIST, monitor) == 0);
       }
    }
    DEXIT;
@@ -389,7 +389,7 @@ int add,
 const char *ruser,
 const char *rhost,
 gdi_object_t *object,
-int sub_command 
+int sub_command, monitoring_t *monitor
 ) {
    const char *host;
    int nm;
@@ -554,7 +554,7 @@ gdi_object_t *object
    return dbret ? 0 : 1;
 }
 
-int host_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object, lList **ppList) 
+int host_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object, lList **ppList, monitoring_t *monitor) 
 {
    lListElem* jatep;
    DENTER(TOP_LAYER, "host_success");
@@ -827,7 +827,7 @@ lList *lp
    trash old load values 
    
 */
-void sge_load_value_cleanup_handler(te_event_t anEvent)
+void sge_load_value_cleanup_handler(te_event_t anEvent, monitoring_t *monitor)
 {
    extern int new_config;
    lListElem *hep, *ep, *nextep; 
@@ -848,7 +848,7 @@ void sge_load_value_cleanup_handler(te_event_t anEvent)
 
    DENTER(TOP_LAYER, "sge_load_value_cleanup_handler");
 
-   SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE);
+   MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE), monitor);
 
    comproc = prognames[EXECD];
 
@@ -1301,7 +1301,7 @@ lListElem *host,
 lList **alpp,
 char *ruser,
 char *rhost,
-u_long32 target) {
+u_long32 target, monitoring_t *monitor) {
    lListElem *hep, *cqueue;
    dstring ds;
    char buffer[256];
@@ -1319,7 +1319,7 @@ u_long32 target) {
    
    hep = host_list_locate(Master_Exechost_List, rhost);
    if(!hep) {
-      if (sge_add_host_of_type(rhost, SGE_EXECHOST_LIST) < 0) {
+      if (sge_add_host_of_type(rhost, SGE_EXECHOST_LIST, monitor) < 0) {
          ERROR((SGE_EVENT, MSG_OBJ_INVALIDHOST_S, rhost));
          answer_list_add(alpp, SGE_EVENT, STATUS_DENIED, ANSWER_QUALITY_ERROR);
          DEXIT;

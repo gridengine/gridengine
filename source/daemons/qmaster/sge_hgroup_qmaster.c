@@ -232,7 +232,7 @@ hgroup_rollback(lListElem *this_elem)
 int 
 hgroup_mod(lList **answer_list, lListElem *hgroup, lListElem *reduced_elem,
            int add, const char *remote_user, const char *remote_host, 
-           gdi_object_t *object, int sub_command) 
+           gdi_object_t *object, int sub_command, monitoring_t *monitor) 
 {
    bool ret = true;
    int pos;
@@ -385,7 +385,7 @@ hgroup_mod(lList **answer_list, lListElem *hgroup, lListElem *reduced_elem,
                                                      reduced_elem,
                                                      real_add_hosts, 
                                                      real_rem_hosts,
-                                                     refresh_all_values);
+                                                     refresh_all_values, monitor);
                   }
 
                   /*
@@ -425,7 +425,7 @@ hgroup_mod(lList **answer_list, lListElem *hgroup, lListElem *reduced_elem,
          if (ret) {
             lList *list = *(object_type_get_master_list(SGE_TYPE_EXECHOST));
 
-            ret &= host_list_add_missing_href(list, answer_list, add_hosts);
+            ret &= host_list_add_missing_href(list, answer_list, add_hosts, monitor);
          }
 
          add_hosts = lFreeList(add_hosts);
@@ -589,7 +589,7 @@ hgroup_del(lListElem *this_elem, lList **answer_list,
 }
 
 int 
-hgroup_success(lListElem *hgroup, lListElem *old_hgroup, gdi_object_t *object, lList **ppList) 
+hgroup_success(lListElem *hgroup, lListElem *old_hgroup, gdi_object_t *object, lList **ppList, monitoring_t *monitor) 
 {
    const char *name = lGetHost(hgroup, HGRP_name);
 

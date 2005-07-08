@@ -36,6 +36,7 @@
 #include <sys/types.h>
 
 #include "basis_types.h"
+#include "uti/sge_monitor.h"
 
 
 typedef enum {
@@ -62,7 +63,7 @@ typedef enum {
 
 typedef struct te_event* te_event_t;
 
-typedef void (*te_handler_t)(te_event_t);
+typedef void (*te_handler_t)(te_event_t, monitoring_t *monitor);
 
 
 extern void       te_register_event_handler(te_handler_t, te_type_t);

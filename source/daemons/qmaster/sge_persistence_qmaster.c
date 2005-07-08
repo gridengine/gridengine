@@ -133,7 +133,7 @@ sge_shutdown_persistence(lList **answer_list)
 }
 
 void
-spooling_trigger_handler(te_event_t anEvent)
+spooling_trigger_handler(te_event_t anEvent, monitoring_t *monitor)
 {
    time_t next_trigger = 0;
    time_t now;

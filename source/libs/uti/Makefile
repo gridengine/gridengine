@@ -67,7 +67,7 @@ UTILIB_DRMAA_SRC = \
          sge_uidgid.c \
          sge_unistd.c
 
-UTILIB_SRC = sge_loadmem.c sge_getloadavg.c $(UTILIB_DRMAA_SRC)
+UTILIB_SRC = sge_loadmem.c sge_getloadavg.c sge_monitor.c $(UTILIB_DRMAA_SRC)
 
 UTILIB_DRMAA_OBJS = $(UTILIB_DRMAA_SRC:.c=.o)
 UTILIB_OBJS = $(UTILIB_SRC:.c=.o)
@@ -215,6 +215,9 @@ sge_tmpnam.o:	$(UTILIB_DIR)/sge_tmpnam.c
 
 sge_edit.o:	$(UTILIB_DIR)/sge_edit.c 
 		$(CC) $(CFLAGS) $(MEMCFLAG) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_edit.c
+
+sge_monitor.o:	$(UTILIB_DIR)/sge_monitor.c 
+		$(CC) $(CFLAGS) $(MEMCFLAG) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_monitor.c
 
 ###############################################################################
 # test targets

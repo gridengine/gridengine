@@ -184,7 +184,7 @@ static void empty_job_list_filter(lList **alpp, int was_modify, int user_list_fl
                                   int all_users_flag, int all_jobs_flag, char *ruser, 
                                   int is_array, u_long32 start, u_long32 end, u_long32 step);   
                                   
-static u_long32 sge_get_job_number(void);
+static u_long32 sge_get_job_number(monitoring_t *monitor);
 
 static void get_rid_of_schedd_job_messages(u_long32 job_number);
 
@@ -211,7 +211,8 @@ static const char JOB_NAME_DEL = ':';
 /*          none safe functions                                            */
 /*-------------------------------------------------------------------------*/
 int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
-                    char *rhost, uid_t uid, gid_t gid, char *group, sge_gdi_request *request) 
+                    char *rhost, uid_t uid, gid_t gid, char *group, 
+                    sge_gdi_request *request, monitoring_t *monitor) 
 {
    int ckpt_err;
    const char *pe_name, *project, *ckpt_name;
@@ -337,7 +338,7 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
 
    {
       /* set automatic default values */
-      job_number = sge_get_job_number();
+      job_number = sge_get_job_number(monitor);
       lSetUlong(jep, JB_job_number, job_number);
       /*
       ** with interactive jobs, JB_exec_file is not set
@@ -361,7 +362,7 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
    }
    
 /* NEED A LOCK FROM HERE ON */
-   SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE);
+   MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE), monitor);
    
    /* check conf.max_jobs */
    if (job_list_register_new_job(Master_Job_List, conf.max_jobs, 0)) {/*read*/
@@ -604,7 +605,7 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
 
    /* if enforce_user flag is "auto", add or update the user */
    if (conf.enforce_user && !strcasecmp(conf.enforce_user, "auto")) {
-      int status = sge_add_auto_user(ruser, alpp);
+      int status = sge_add_auto_user(ruser, alpp, monitor);
       if (status != STATUS_OK) {
          SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
          DEXIT;
@@ -904,7 +905,7 @@ lListElem *idep,
 lList **alpp,
 char *ruser,
 char *rhost,
-int sub_command 
+int sub_command, monitoring_t *monitor 
 ) {
    lListElem *nxt, *job = NULL, *rn;
    u_long32 enrolled_start = 0;
@@ -1162,7 +1163,7 @@ int sub_command
         
                   sge_commit_job(job, tmp_task, NULL, COMMIT_ST_FINISHED_FAILED,
                                  COMMIT_NO_SPOOLING | COMMIT_NO_EVENTS | 
-                                 COMMIT_UNENROLLED_TASK | COMMIT_NEVER_RAN);
+                                 COMMIT_UNENROLLED_TASK | COMMIT_NEVER_RAN, monitor);
                   deleted_unenrolled_tasks = 1;
                   showmessage = 1;
                   if (!alltasks) {
@@ -1234,9 +1235,9 @@ int sub_command
                                                  rhost, NULL);
                      get_rid_of_job_due_to_qdel(job, tmp_task,
                                                 alpp, ruser,
-                                                lGetUlong(idep, ID_force));
+                                                lGetUlong(idep, ID_force), monitor);
                   } else {
-                     sge_commit_job(job, tmp_task, NULL, COMMIT_ST_FINISHED_FAILED_EE, spool_job | COMMIT_NEVER_RAN);
+                     sge_commit_job(job, tmp_task, NULL, COMMIT_ST_FINISHED_FAILED_EE, spool_job | COMMIT_NEVER_RAN, monitor);
                      showmessage = 1;
                      if (!alltasks) {
                         range_list_insert_id(&range_list, NULL, task_number);
@@ -1669,7 +1670,8 @@ void get_rid_of_job_due_to_qdel(lListElem *j,
                                 lListElem *t,
                                 lList **answer_list,
                                 const char *ruser,
-                                int force)
+                                int force,
+                                monitoring_t *monitor)
 {
    u_long32 job_number, task_number;
    lListElem *qep = NULL;
@@ -1685,7 +1687,7 @@ void get_rid_of_job_due_to_qdel(lListElem *j,
       answer_list_add(answer_list, SGE_EVENT, STATUS_EEXIST, 
                       ANSWER_QUALITY_ERROR);
    }
-   if (sge_signal_queue(SGE_SIGKILL, qep, j, t)) {
+   if (sge_signal_queue(SGE_SIGKILL, qep, j, t, monitor)) {
       if (force) {
          if (job_is_array(j)) {
             ERROR((SGE_EVENT, MSG_JOB_FORCEDDELTASK_SUU,
@@ -1695,7 +1697,7 @@ void get_rid_of_job_due_to_qdel(lListElem *j,
                    ruser, sge_u32c(job_number)));
          }
          /* 3: JOB_FINISH reports aborted */
-         sge_commit_job(j, t, NULL, COMMIT_ST_FINISHED_FAILED_EE, COMMIT_DEFAULT | COMMIT_NEVER_RAN);
+         sge_commit_job(j, t, NULL, COMMIT_ST_FINISHED_FAILED_EE, COMMIT_DEFAULT | COMMIT_NEVER_RAN, monitor);
          cancel_job_resend(job_number, task_number);
          j = NULL;
          /* IZ 664: Where is SGE_EVENT initialized??? 
@@ -1720,7 +1722,7 @@ void get_rid_of_job_due_to_qdel(lListElem *j,
                    ruser, sge_u32c(job_number)));
          }
          /* 3: JOB_FINISH reports aborted */
-         sge_commit_job(j, t, NULL, COMMIT_ST_FINISHED_FAILED_EE, COMMIT_DEFAULT | COMMIT_NEVER_RAN);
+         sge_commit_job(j, t, NULL, COMMIT_ST_FINISHED_FAILED_EE, COMMIT_DEFAULT | COMMIT_NEVER_RAN, monitor);
          cancel_job_resend(job_number, task_number);
          j = NULL;
       } else {
@@ -3665,7 +3667,7 @@ lListElem *job  /* JB_Type */
 }
 
 /************************************************************************/
-static u_long32 sge_get_job_number(void)
+static u_long32 sge_get_job_number(monitoring_t *monitor)
 {
    u_long32 job_nr;
    bool is_store_job = false;
@@ -3688,7 +3690,7 @@ static u_long32 sge_get_job_number(void)
                   &job_number_control.job_number_mutex);
   
    if (is_store_job) {
-      sge_store_job_number(NULL);
+      sge_store_job_number(NULL, monitor);
    }
   
    DEXIT;
@@ -3727,7 +3729,7 @@ void sge_init_job_number(void) {
    return;
 }
 
-void sge_store_job_number(te_event_t anEvent) {
+void sge_store_job_number(te_event_t anEvent, monitoring_t *monitor) {
    FILE *fp = NULL;
    u_long32 job_nr = 0;
    bool changed = false;
@@ -3981,7 +3983,8 @@ int *trigger
 }
 
 int sge_gdi_copy_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser, char *rhost, 
-                     uid_t uid, gid_t gid, char *group, sge_gdi_request *request ) 
+                     uid_t uid, gid_t gid, char *group, sge_gdi_request *request, 
+                     monitoring_t *monitor) 
 {  
    u_long32 seek_jid;
    int ret;
@@ -4001,7 +4004,7 @@ int sge_gdi_copy_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser, cha
    seek_jid = lGetUlong(jep, JB_job_number);
    DPRINTF(("SEEK jobid "sge_u32" for COPY operation\n", seek_jid));
 
-   SGE_LOCK(LOCK_GLOBAL, LOCK_READ)
+   MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_READ), monitor);
    
    if (!(old_jep = job_list_locate(Master_Job_List, seek_jid))) {
       ERROR((SGE_EVENT, MSG_SGETEXT_DOESNOTEXIST_SU, "job", sge_u32c(seek_jid)));
@@ -4045,7 +4048,7 @@ int sge_gdi_copy_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser, cha
    }
 
    /* call add() method */
-   ret = sge_gdi_add_job(new_jep, alpp, lpp, ruser, rhost, uid, gid, group, request);
+   ret = sge_gdi_add_job(new_jep, alpp, lpp, ruser, rhost, uid, gid, group, request, monitor);
 
    new_jep = lFreeElem(new_jep);
 

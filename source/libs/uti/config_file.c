@@ -499,6 +499,43 @@ char **allowed
    return 0;
 }
 
+bool parse_time_param(const char *input, const char *variable, u_long32 *value)
+{
+   bool ret = false;
+
+   DENTER(BASIS_LAYER, "parse_time_param");
+
+   /* variable is set in input */
+   if (strncasecmp(input, variable, strlen(variable)) == 0) {
+      const char *s;
+
+      /* yes, this variable is set */
+      ret = true;
+
+      /* search position of = */
+      s = strchr(input, '=');
+
+      /* only boolean variable contained in input -> value = true */
+      if (s == NULL) {
+         *value = 0;
+      } else {
+         /* skip = */
+         s++;
+
+         if (!extended_parse_ulong_val(NULL, value, TYPE_TIM, s, NULL, 0, 0)) {
+            *value = 0;
+            ret = false;
+         }
+      }
+
+      DPRINTF(("%s = "sge_u32"\n", variable, value));
+   }
+
+   DEXIT;
+   return ret;
+}
+
+
 bool parse_bool_param(const char *input, const char *variable, bool *value)
 {
    bool ret = false;
@@ -541,7 +578,7 @@ bool parse_int_param(const char *input, const char *variable,
 {
    bool ret = false;
 
-   DENTER(BASIS_LAYER, "parse_ulong_param");
+   DENTER(BASIS_LAYER, "parse_int_param");
 
    /* variable is set in input */
    if (strncasecmp(input, variable, strlen(variable)) == 0) {

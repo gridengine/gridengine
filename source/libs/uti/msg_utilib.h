@@ -86,24 +86,12 @@
 #define MSG_FILE_UNLINKFAILED_SS             _MESSAGE(49023, _("unlink("SFN") failed: "SFN"\n"))
 #define MSG_FILE_RMDIRFAILED_SS              _MESSAGE(49024, _("rmdir("SFN") failed: "SFN"\n"))
 
-
-/* 
-** utilib/sge_getloadavg.c
-*/ 
-/* #define MSG_PROCESSOR_SETNOTFOUND_I          _message(49025, _("processor set %d not found.\n")) __TS Removed automatically from testsuite!! TS__*/
-/* #define MSG_PROCESSOR_TOTALLOADAVG_F         _message(49026, _("total load_avg %2.2f\n") )   __TS Removed automatically from testsuite!! TS__*/
-/* #define MSG_PROCESSOR_KNLISTFAILED           _message(49027, _("Can't knlist()\n")) __TS Removed automatically from testsuite!! TS__*/
-/* #define MSG_PROCESSOR_KMEMFAILED             _message(49028, _("Can't read kmem\n")) __TS Removed automatically from testsuite!! TS__*/
-/* #define MSG_PROCESSOR_NLISTFAILED            _message(49029, _("Can't nlist()\n")) __TS Removed automatically from testsuite!! TS__*/
-
-
 /* 
 ** utilib/sge_loadmem.c
 */ 
 #define MSG_SYSTEM_NOPAGESIZEASSUME8192      _MESSAGE(49030, _("can't determine system page size - assuming 8192"))
 #define MSG_SYSTEM_TABINFO_FAILED_SS         _MESSAGE(49031, _("tabinfo("SFQ", ...) failed, "SFN"\n") )            
 #define MSG_MEMORY_MALLOCFAILED_D            _MESSAGE(49032, _("malloc("sge_U32CFormat") failed" ))
-
 
 /* 
 ** utilib/sge_log.c
@@ -124,20 +112,11 @@
 #define MSG_SYSTEM_SWITCHTOUSERFAILED_SS        _MESSAGE(49042, _("can't change to user "SFN": "SFN"\n"))
 #define MSG_SYSTEM_FAILOPENPIPES_SS             _MESSAGE(49043, _("failed opening pipes for "SFN": "SFN"\n"))
 
-
-/* 
-** utilib/sge_put_get_file.c
-*/ 
-/* #define MSG_FILE_WRITEOPENFAILED_SS             _message(49044, _("couldn't open "SFN" for writing: "SFN"\n")) __TS Removed automatically from testsuite!! TS__*/
-/* #define MSG_FILE_READOPENFAILED_SS              _message(49045, _("couldn't open "SFN" for reading: "SFN"")) __TS Removed automatically from testsuite!! TS__*/
-
-
 /* 
 ** utilib/sge_signal.c
 */ 
 #define MSG_PROC_UNKNOWNSIGNAL                  _MESSAGE(49046, _("unknown signal"))
 #define MSG_PROC_SIGACTIONFAILED_IS             _MESSAGE(49047, _("sigaction for signal %d failed: "SFN""))
-
 
 /* 
 ** utilib/sge_str_from_file.c
@@ -159,7 +138,6 @@
 #define MSG_SYSTEM_ADMINUSERNOTEXIST_S          _MESSAGE(49054, _("admin_user "SFQ" does not exist"))
 #define MSG_SWITCH_USER_NOT_INITIALIZED         _MESSAGE(49055, _("Module 'sge_switch_user' not initialized"))
 #define MSG_SWITCH_USER_NOT_ROOT                _MESSAGE(49056, _("User 'root' did not start the application\n"))
-
 
 /* 
 ** utilib/sge_sysconf.c
@@ -218,6 +196,7 @@
 #define MSG_PROF_RESETWHILEMEASUREMENT_S        _MESSAGE(49095, _(SFN": cannot reset profiling while a measurement is active\n"))
 #define MSG_PROF_MAXTHREADSEXCEEDED_S           _MESSAGE(49096, _(SFN": maximum number of threads mas been exceeded\n"))
 #define MSG_PROF_NULLLEVELNAME_S                _MESSAGE(49097, _(SFN": the assigned level name is NULL\n"))
+#define MSG_LOG_PROFILING                       _MESSAGE(49098, _("profiling: "))                                                                                                                                                 
 /*
  * libs/uti/sge_bootstrap
  */
@@ -228,12 +207,27 @@
 /* 
 ** libs/uti/setup_path.c
 */
-#define MSG_UTI_SGEROOTNOTADIRECTORY_S                   _MESSAGE(49110, _("$SGE_ROOT="SFN" is not a directory\n"))
-#define MSG_UTI_DIRECTORYNOTEXIST_S                      _MESSAGE(49111, _("directory doesn't exist: "SFN"\n"))
+#define MSG_UTI_SGEROOTNOTADIRECTORY_S         _MESSAGE(49110, _("$SGE_ROOT="SFN" is not a directory\n"))
+#define MSG_UTI_DIRECTORYNOTEXIST_S            _MESSAGE(49111, _("directory doesn't exist: "SFN"\n"))
 #define MSG_SGETEXT_NOSGECELL_S                _MESSAGE(49112, _("cell directory "SFQ" doesn't exist\n"))
 
 #define MSG_UTI_CANT_GET_ENV_OR_PORT_SS        _MESSAGE(49113, _("could not get environment variable "SFN" or service "SFQ"\n"))
 #define MSG_UTI_USING_CACHED_PORT_SU           _MESSAGE(49114, _("using cached "SFQ" port value "sge_U32CFormat"\n"))
 
+/*
+** libs/uti/sge_monitor.c
+*/
+#define MSG_UTI_MONITOR_DEFLINEEXT_SFSFFFFF    _MESSAGE(59120, _(SFN": runs: %.2fr/s ("SFN") out: %.2fm/s APT: %.4fs/m idle: %.2f%% wait: %.2f%% time: %.2fs \n"))
+#define MSG_UTI_MONITOR_DEFLINE_SFFFFFF        _MESSAGE(59121, _(SFN": runs: %.2fr/s out: %.2fm/s APT: %.4fs/m idle: %.2f%% wait: %.2f%% time: %.2fs \n"))
+#define MSG_UTI_MONITOR_GDIEXT_FFF             _MESSAGE(59122, _("reports %.2f/s requests %.2f/s acks: %.2f/s"))
+#define MSG_UTI_MONITOR_DISABLED               _MESSAGE(59123, _("Monitor:                  disabled\n"))         
+#define MSG_UTI_MONITOR                        _MESSAGE(59124, _("Monitor:\n"))
+#define MSG_UTI_MONITOR_OK                     _MESSAGE(59125, _("OK\n"))
+#define MSG_UTI_MONITOR_WARNING                _MESSAGE(59126, _("WARNING\n"))
+#define MSG_UTI_MONITOR_ERROR                  _MESSAGE(59127, _("ERROR\n"))
+#define MSG_UTI_MONITOR_INFO_SCF               _MESSAGE(59128, _(SFN": %c (%.2f) | "))
+#define MSG_UTI_MONITOR_NOLINES_S              _MESSAGE(59129, _("no additional monitoring output lines availabe for thread "SFN))
+#define MSG_UTI_MONITOR_UNSUPPORTEDEXT_D       _MESSAGE(59130, _("not supported monitoring extension %d"))
+#define MSG_UTI_MONITOR_NODATA                 _MESSAGE(59131, _(": no monitoring data available\n"))                                                                                                                                                 
 #endif /* __MSG_UTILIB_H */
 

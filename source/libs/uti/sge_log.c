@@ -473,6 +473,10 @@ int sge_log(int log_level, const char *mesg, const char *file__, const char *fun
    }
 
    switch(log_level) {
+      case LOG_PROF:
+         strcpy(levelstring, MSG_LOG_PROFILING);
+         levelchar = 'P';
+         break;
       case LOG_CRIT:
          strcpy(levelstring, MSG_LOG_CRITICALERROR);
          levelchar = 'C';
@@ -505,7 +509,7 @@ int sge_log(int log_level, const char *mesg, const char *file__, const char *fun
 
    /* avoid double output in debug mode */
    if (!uti_state_get_daemonized() && !rmon_condition(TOP_LAYER, INFOPRINT) && 
-       (log_state_get_log_verbose() || log_level == LOG_ERR || log_level == LOG_CRIT)) {
+       (log_state_get_log_verbose() || log_level <= LOG_ERR)) {
       fprintf(stderr, "%s%s%s", levelstring, mesg, newline);
    } 
    if (uti_state_get_mewho() == QMASTER || uti_state_get_mewho() == EXECD   || uti_state_get_mewho() == QSTD ||

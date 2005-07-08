@@ -84,6 +84,8 @@
 #include "msg_execd.h"
 #include "msg_gdilib.h"
 
+#include "uti/sge_monitor.h"
+
 #ifdef COMPILE_DC
 #   include "ptf.h"
 #   include "sgedefs.h"
@@ -161,69 +163,9 @@ int main(int argc, char *argv[]);
 *  NOTES
 *     This function is MT save
 *******************************************************************************/
-unsigned long sge_execd_application_status(char** info_message) {
-   char buffer[1024];
-   unsigned long status = 0;
-   const char* status_message = NULL;
-   double last_execd_main_time          = 0.0;
-   sge_thread_alive_times_t* thread_times       = NULL;
-
-   struct timeval now;
-
-   status_message = MSG_EXECD_APPL_STATE_OK;
-   sge_lock_alive_time_mutex();
-   gettimeofday(&now,NULL);
-   
-   thread_times = sge_get_thread_alive_times();
-   if ( thread_times != NULL ) {
-      int warning_count = 0;
-      int error_count = 0;
-      double time1;
-      double time2;
-      time1 = now.tv_sec + (now.tv_usec / 1000000.0);
-
-      time2 = thread_times->execd_main.timestamp.tv_sec + (thread_times->execd_main.timestamp.tv_usec / 1000000.0);
-      last_execd_main_time          = time1 - time2;
-
-      /* always set running state */
-      thread_times->execd_main.state   = 'R';
-
-      /* check for warning */
-      if ( thread_times->execd_main.warning_timeout > 0 ) {
-         if ( last_execd_main_time > thread_times->execd_main.warning_timeout ) {
-            thread_times->execd_main.state = 'W';
-            warning_count++;
-         }
-      }
-
-      /* check for error */
-      if ( thread_times->execd_main.error_timeout > 0 ) {
-         if ( last_execd_main_time > thread_times->execd_main.error_timeout ) {
-            thread_times->execd_main.state = 'E';
-            error_count++;
-         }
-      }
-
-      if ( error_count > 0 ) {
-         status = 2;
-         status_message = MSG_EXECD_APPL_STATE_TIMEOUT_ERROR;
-      } else if ( warning_count > 0 ) {
-         status = 1; 
-         status_message = MSG_EXECD_APPL_STATE_TIMEOUT_WARNING;
-      }
-
-      snprintf(buffer, 1024, MSG_EXECD_APPL_STATE_CFS,
-                    thread_times->execd_main.state,
-                    last_execd_main_time,
-                    status_message);
-      if (info_message != NULL && *info_message == NULL) {
-         *info_message = strdup(buffer);
-      }
-   } else {
-      status = 3;
-   }
-   sge_unlock_alive_time_mutex();
-   return status;
+unsigned long sge_execd_application_status(char** info_message) 
+{
+   return sge_monitor_status(info_message, 0);
 }
 
 /*-------------------------------------------------------------------------*/

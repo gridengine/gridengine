@@ -77,7 +77,7 @@ static int update_license_data(lListElem *hep, lList *lp_lic);
 *     MT-NOTE: sge_c_report() is MT safe
 *
 ******************************************************************************/
-void sge_c_report(char *rhost, char *commproc, int id, lList *report_list)
+void sge_c_report(char *rhost, char *commproc, int id, lList *report_list, monitoring_t *monitor)
 {
    lListElem *hep = NULL;
    u_long32 rep_type;
@@ -117,7 +117,7 @@ void sge_c_report(char *rhost, char *commproc, int id, lList *report_list)
    
    this_seqno = lGetUlong(lFirst(report_list), REP_seqno);
    
-   SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE); 
+   MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE), monitor); 
    /* need exec host for all types of reports */
    if (!(hep = host_list_locate(Master_Exechost_List, rhost))) {
       ERROR((SGE_EVENT, MSG_GOTSTATUSREPORTOFUNKNOWNEXECHOST_S, rhost));
@@ -186,7 +186,7 @@ void sge_c_report(char *rhost, char *commproc, int id, lList *report_list)
          {
             is_pb_used = true;
             if(init_packbuffer(&pb, 1024, 0) == PACK_SUCCESS) {
-               process_job_report(report, hep, rhost, commproc, &pb);
+               process_job_report(report, hep, rhost, commproc, &pb, monitor);
             }
          }
          break;
@@ -203,7 +203,7 @@ void sge_c_report(char *rhost, char *commproc, int id, lList *report_list)
          lList *alp = NULL;
          /* send all stuff packed during processing to execd */
          sge_send_any_request(0, NULL, rhost, commproc, id, &pb, TAG_ACK_REQUEST, 0, &alp); 
-         
+         MONITOR_MESSAGES_OUT(monitor); 
          answer_list_output (&alp);
       }
       clear_packbuffer(&pb);

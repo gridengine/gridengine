@@ -38,6 +38,7 @@
 #   include "sge_gdiP.h"
 #endif
 
+#include "uti/sge_monitor.h"
 #include "cull.h"
 
 typedef struct _gdi_object_t gdi_object_t;
@@ -50,7 +51,8 @@ typedef int (*modifier_func_t)(
    const char *ruser,
    const char *rhost,
    gdi_object_t *object, /* some kind of "this" */
-   int sub_command
+   int sub_command,
+   monitoring_t *monitor
 );
 
 typedef int (*writer_func_t)(
@@ -66,7 +68,8 @@ typedef int (*on_success_func_t)(
    lListElem *ep,       /* new modified and already spooled element */
    lListElem *old_ep,   /* old element is NULL in add case */
    gdi_object_t *this,  /* some kind of "this" */
-   lList **ppList       /* a list to pass back information for post processing */
+   lList **ppList,       /* a list to pass back information for post processing */
+   monitoring_t *monitor  /* monitoring structure */
 );
 
 struct _gdi_object_t {
@@ -83,9 +86,9 @@ struct _gdi_object_t {
 
 gdi_object_t *get_gdi_object(u_long32);
 
-int sge_gdi_add_mod_generic(lList **alpp, lListElem *instructions, int add, gdi_object_t *object, const char *ruser, const char *rhost, int sub_command, lList **ppList);
+int sge_gdi_add_mod_generic(lList **alpp, lListElem *instructions, int add, gdi_object_t *object, const char *ruser, const char *rhost, int sub_command, lList **ppList, monitoring_t *monitor);
 
-void sge_c_gdi(char *host, sge_gdi_request *request, sge_gdi_request *answer);
+void sge_c_gdi(char *host, sge_gdi_request *request, sge_gdi_request *answer, monitoring_t *monitor);
 
 void sge_clean_lists(void); 
 

@@ -79,7 +79,7 @@ sge_change_queue_version_centry(void);
 int 
 centry_mod(lList **answer_list, lListElem *centry, lListElem *reduced_elem, 
            int add, const char *remote_user, const char *remote_host, 
-           gdi_object_t *object, int sub_command) 
+           gdi_object_t *object, int sub_command, monitoring_t *monitor) 
 {
    bool ret = true;
    bool is_slots_attr = false;
@@ -310,7 +310,7 @@ centry_spool(lList **alpp, lListElem *cep, gdi_object_t *object)
 *
 *******************************************************************************/
 int 
-centry_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object, lList **ppList) 
+centry_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object, lList **ppList, monitoring_t *monitor) 
 {
    bool rebuild_consumables = false;
 

@@ -50,6 +50,7 @@
 
 #include "sgeobj/sge_conf.h"
 
+static const char THREAD_NAME[] = "TET";
 
 struct te_event {
    time_t      when;        /* event delivery time                */
@@ -96,14 +97,82 @@ static handler_tbl_t   Handler_Tbl = {PTHREAD_MUTEX_INITIALIZER, 0, 0, NULL};
 static pthread_once_t  Timed_Event_Once = PTHREAD_ONCE_INIT;
 static pthread_t       Event_Thread;
 
-
+static void       timed_event_wait_empty(void);
+static void       timed_event_wait_next(te_event_t te, time_t now);
 static void       timed_event_once_init(void);
 static void*      timed_event_thread(void*);
 static void       check_time(time_t);
 static te_event_t event_from_list_elem(lListElem*);
-static void       scan_table_and_deliver(te_event_t);
+static void       scan_table_and_deliver(te_event_t, monitoring_t *monitor);
 static bool       should_exit(void);
 
+
+/****** sge_qmaster_timed_event/timed_event_wait_empty() ***********************
+*  NAME
+*     timed_event_wait_empty() -- waits, if the event list is empty
+*
+*  SYNOPSIS
+*     static void timed_event_wait_empty(void) 
+*
+*  FUNCTION
+*     waits, if the event list is empty
+*
+*  NOTES
+*     MT-NOTE: timed_event_wait_empty() is not MT safe 
+*
+*******************************************************************************/
+static void timed_event_wait_empty(void) 
+{
+
+   DENTER(TOP_LAYER, "timed_event_wait");
+   
+   while (lGetNumberOfElem((const lList*)Event_Control.list) == 0) {
+         DPRINTF(("%s: event list empty --> will wait\n", SGE_FUNC));
+         Event_Control.next = 0;
+         pthread_cond_wait(&Event_Control.cond_var, &Event_Control.mutex);
+   }
+
+   DEXIT;
+}
+
+/****** sge_qmaster_timed_event/timed_event_wait_next() ************************
+*  NAME
+*     timed_event_wait_next() -- waits for the next event
+*
+*  SYNOPSIS
+*     static void timed_event_wait_next(te_event_t te, time_t now) 
+*
+*  FUNCTION
+*    waits for the next event
+*
+*  INPUTS
+*     te_event_t te - next event
+*     time_t now    - current time
+*
+*  NOTES
+*     MT-NOTE: timed_event_wait_next() is not MT safe 
+*
+*******************************************************************************/
+static void timed_event_wait_next(te_event_t te, time_t now) 
+{
+   struct timespec ts;
+   DENTER(TOP_LAYER, "timed_event_wait_next");
+
+   ts.tv_sec = te->when;
+   ts.tv_nsec = 0;
+   
+   while(Event_Control.next == te->when)
+   {
+      int res = 0;
+
+      DPRINTF(("%s: time:"sge_u32" next:"sge_u32" --> will wait\n", SGE_FUNC, now, Event_Control.next));
+
+      res = pthread_cond_timedwait(&Event_Control.cond_var, &Event_Control.mutex, &ts);
+      if (ETIMEDOUT == res) { break; }
+   }
+
+DEXIT;
+}
 
 /****** qmaster/sge_qmaster_timed_event/te_register_event_handler() ************
 *  NAME
@@ -770,7 +839,7 @@ static void timed_event_once_init(void)
 
    pthread_attr_init(&attr);
    pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
-   pthread_create(&Event_Thread, &attr, timed_event_thread, NULL);
+   pthread_create(&Event_Thread, &attr, timed_event_thread, (void*)THREAD_NAME);
 
    DEXIT;
    return;
@@ -827,9 +896,11 @@ static void* timed_event_thread(void* anArg)
    te_event_t te = NULL;
    time_t now;
    time_t next_prof_output = 0;
+   monitoring_t monitor;
 
    DENTER(TOP_LAYER, "timed_event_thread");
 
+   sge_monitor_init(&monitor, (char *) anArg, NONE_EXT, TET_WARNING, TET_ERROR);
    sge_qmaster_thread_init(true);
 
    /* register at profiling module */
@@ -839,41 +910,24 @@ static void* timed_event_thread(void* anArg)
    while (should_exit() == false) {
       thread_start_stop_profiling();
 
-      /* update thread alive time */
-      sge_update_thread_alive_time(SGE_MASTER_TIMED_EVENT_THREAD);
       sge_mutex_lock("event_control_mutex", SGE_FUNC, __LINE__, &Event_Control.mutex);
 
       check_time(time(NULL));
 
       Event_Control.last = time(NULL);
 
-      while (lGetNumberOfElem((const lList*)Event_Control.list) == 0) {
-         DPRINTF(("%s: event list empty --> will wait\n", SGE_FUNC));
-         Event_Control.next = 0;
-         pthread_cond_wait(&Event_Control.cond_var, &Event_Control.mutex);
-      }
-
+      MONITOR_IDLE_TIME(timed_event_wait_empty(), (&monitor), monitor_time);
+      
       le = lFirst(Event_Control.list);
       te = event_from_list_elem(le);
       now = Event_Control.next = time(NULL);
 
       if (te->when > now) {
-         struct timespec ts;
          
-         ts.tv_sec = te->when;
-         ts.tv_nsec = 0;
          Event_Control.next = te->when;
          Event_Control.delete = false;
 
-         while(Event_Control.next == te->when)
-         {
-            int res = 0;
-
-            DPRINTF(("%s: time:"sge_u32" next:"sge_u32" --> will wait\n", SGE_FUNC, now, Event_Control.next));
-
-            res = pthread_cond_timedwait(&Event_Control.cond_var, &Event_Control.mutex, &ts);
-            if (ETIMEDOUT == res) { break; }
-         }
+         MONITOR_IDLE_TIME(timed_event_wait_next(te, now), (&monitor), monitor_time);
 
          if ((Event_Control.next < te->when) || (Event_Control.delete == true))
          {
@@ -890,14 +944,19 @@ static void* timed_event_thread(void* anArg)
       lFreeElem(le);
 
       sge_mutex_unlock("event_control_mutex", SGE_FUNC, __LINE__, &Event_Control.mutex);
-         
-      scan_table_and_deliver(te);
+        
+      MONITOR_MESSAGES((&monitor));
+        
+      scan_table_and_deliver(te, &monitor);
       te_free_event(te);
 
+      sge_monitor_output(&monitor);
       thread_output_profiling("timed event thread profiling summary:\n", 
                               &next_prof_output);
    }
 
+   sge_monitor_free(&monitor);
+   
    DEXIT;
    return NULL;
 }
@@ -1024,7 +1083,7 @@ static te_event_t event_from_list_elem(lListElem* aListElem)
 *     MT-NOTE: Otherwise a deadlock may occur due to recursive mutex locking.
 *
 *******************************************************************************/
-static void scan_table_and_deliver(te_event_t anEvent)
+static void scan_table_and_deliver(te_event_t anEvent, monitoring_t *monitor)
 {
    int i = 0;
    te_handler_t handler = NULL;
@@ -1048,7 +1107,7 @@ static void scan_table_and_deliver(te_event_t anEvent)
    sge_mutex_unlock("handler_table_mutex", SGE_FUNC, __LINE__, &Handler_Tbl.mutex);
 
    if (handler != NULL) {
-      handler(anEvent);
+      handler(anEvent, monitor);
    } else {
       WARNING((SGE_EVENT, MSG_SYSTEM_RECEIVEDUNKNOWNEVENT_I, anEvent->type ));
    }

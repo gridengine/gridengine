@@ -32,6 +32,8 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-void sge_job_exit(lListElem *jr, lListElem *jep, lListElem *jatep);
+#include "uti/sge_monitor.h"
+
+void sge_job_exit(lListElem *jr, lListElem *jep, lListElem *jatep, monitoring_t *monitor);
 
 #endif /* _JOB_EXIT_H_ */

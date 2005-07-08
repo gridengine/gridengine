@@ -56,7 +56,8 @@
 #include "spool/sge_spooling.h"
 
 
-static void sge_c_job_ack(char *, char *, u_long32, u_long32, u_long32);
+static void sge_c_job_ack(char *, char *, u_long32, u_long32, u_long32, 
+                          monitoring_t *monitor);
 
 /****************************************************
  Master code.
@@ -71,15 +72,15 @@ static void sge_c_job_ack(char *, char *, u_long32, u_long32, u_long32);
  if the counterpart uses the dispatcher ack_tag is the
  TAG we sent to the counterpart.
  ****************************************************/
-void sge_c_ack(
-char *host,
-char *commproc,
-sge_pack_buffer *pb 
-) {
+void sge_c_ack(char *host, char *commproc, sge_pack_buffer *pb, 
+               monitoring_t *monitor) 
+{
 
    u_long32 ack_tag, ack_ulong, ack_ulong2;
 
    DENTER(TOP_LAYER, "sge_c_ack");
+
+   MONITOR_ACK(monitor); 
 
    /* Do some validity tests */
    while (!unpackint(pb, &ack_tag)) {
@@ -99,7 +100,7 @@ sge_pack_buffer *pb
       case TAG_SIGJOB:
       case TAG_SIGQUEUE:
          /* an execd sends a job specific acknowledge ack_ulong == jobid of received job */
-         sge_c_job_ack(host, commproc, ack_tag, ack_ulong, ack_ulong2);
+         sge_c_job_ack(host, commproc, ack_tag, ack_ulong, ack_ulong2, monitor);
          break;
 
       case ACK_EVENT_DELIVERY:
@@ -117,22 +118,18 @@ sge_pack_buffer *pb
 }
 
 /***************************************************************/
-static void sge_c_job_ack(
-char *host, 
-char *commproc, 
-u_long32 ack_tag, 
-u_long32 ack_ulong,
-u_long32 ack_ulong2 
-) {
+static void sge_c_job_ack(char *host, char *commproc, u_long32 ack_tag, 
+                          u_long32 ack_ulong, u_long32 ack_ulong2, 
+                          monitoring_t *monitor) 
+{
    lListElem *qinstance = NULL;
    lListElem *jep = NULL;
    lListElem *jatep = NULL;
    lList *answer_list = NULL;
-/*   const char *qinstance_name = NULL; */
 
    DENTER(TOP_LAYER, "sge_c_job_ack");
 
-   SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE);
+   MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE), monitor); 
 
    if (strcmp(prognames[EXECD], commproc) &&
       strcmp(prognames[QSTD], commproc)) {
@@ -206,9 +203,6 @@ u_long32 ack_ulong2
 
    default:
       ERROR((SGE_EVENT, MSG_COM_ACK_UNKNOWN));
-      SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
-      DEXIT;
-      return;
    }
 
    SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);

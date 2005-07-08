@@ -1,3 +1,7 @@
+SG-2005-07-08-1: Enhancem.: added monitoring capabilities to the qmaster
+                 Changed:   qmaster, execd
+                 Review:    JG
+
 SG-2005-07-08-0: Bugfix:    removed mesage size limitation for qping
                  Changed:   commlib
                  Review:    CR

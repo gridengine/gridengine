@@ -85,7 +85,7 @@ bool prof_signal_thrd = false;
 bool prof_deliver_thrd = false;
 bool prof_tevent_thrd = false;
 bool prof_execd_thrd = false;
-
+u_long32 monitor_time = 0;
 
 long ptf_max_priority = -999;
 long ptf_min_priority = -999;
@@ -525,6 +525,7 @@ int merge_configuration(lListElem *global, lListElem *local,
       prof_signal_thrd = false;
       prof_deliver_thrd = false;
       prof_tevent_thrd = false;
+      monitor_time = 0;
       enable_windomacc = false;
       scheduler_timeout = 0;
       max_dynamic_event_clients = 99;
@@ -559,6 +560,9 @@ int merge_configuration(lListElem *global, lListElem *local,
          if (parse_bool_param(s, "ENABLE_FORCED_QDEL", &enable_forced_qdel)) {
             continue;
          } 
+         if (parse_time_param(s, "MONITOR_TIME", &monitor_time)) {
+            continue;
+         }
          if (!strncasecmp(s, "MAX_DYN_EC", sizeof("MAX_DYN_EC")-1)) {
             max_dynamic_event_clients = atoi(&s[sizeof("MAX_DYN_EC=")-1]);
             continue;

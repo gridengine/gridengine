@@ -32,7 +32,10 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-void process_job_report(lListElem *report, lListElem *hep, char *rhost, char *commproc, sge_pack_buffer *pb);
+#include "uti/sge_monitor.h"
+
+void process_job_report(lListElem *report, lListElem *hep, char *rhost, 
+                        char *commproc, sge_pack_buffer *pb, monitoring_t *monitor);
 void pack_job_kill(sge_pack_buffer *pb, u_long32 jobid, u_long32 jataskid);
 
 #endif /* __JOB_REPORT_QMASTER_H */

@@ -1,3 +1,7 @@
+RC-2005-07-09-0: Enhancem.: install lx26 binaries without requiring
+                            to set SGE_ROOT
+                 Changed  : arch.dist
+
 RD-2005-07-08-0: Bugfix:    distinst does not set all file permissions
                  Changed:   distinst, mk_ascman, mk_catman
                  Bugtraq:   6294632

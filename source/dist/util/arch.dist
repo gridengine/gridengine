@@ -202,7 +202,7 @@ Linux)
                         lxrelease=24
                      fi
                   fi
-              ;;
+                  ;;
         esac
       fi
       ;;

@@ -1,3 +1,6 @@
+AS-2005-07-11-1  Cleanup:   formatting changes to conform with rest of file
+                 Changed:   dist/util/arch.dist
+
 RD-2005-07-11-1: Cleanup:   changed full path to relativ path in commlib
                             binaries no longer include full compile path
                  Review:    CR

@@ -349,7 +349,7 @@ MakeDir()
 {
    if [ ! -d $DEST_SGE_ROOT/$1 ]; then
       Execute mkdir $DEST_SGE_ROOT/$1
-   fi 
+   fi
    Execute chmod 755 $DEST_SGE_ROOT/$1
 }
 

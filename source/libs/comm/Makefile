@@ -40,11 +40,11 @@ DEPEND = $(SOURCE)/3rdparty/sge_depend/$(COMPILE_ARCH)/sge_depend -l -S -Y $(CFL
 ##########################################################################
 
 ###############################################################################
-include $(SOURCE)/libs/comm/lists/Makefile
+include $(SDIR)/libs/comm/lists/Makefile
 ###############################################################################
 
 COMMLIB = libcomm$(LIBEXT)
-COMMLIB_DIR = $(SOURCE)/libs/comm
+COMMLIB_DIR = $(SDIR)/libs/comm
 COMMLIB_SRC = \
          cl_tcp_framework.c \
          cl_ssl_framework.c \

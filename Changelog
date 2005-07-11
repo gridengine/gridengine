@@ -1,3 +1,7 @@
+EB-2005-07-11-0: Enhancem.: cleanup and ADOC comments
+                 Changed:   nothing
+                 Review:    JG
+
 RC-2005-07-09-0: Enhancem.: install lx26 binaries without requiring
                             to set SGE_ROOT
                  Changed  : arch.dist

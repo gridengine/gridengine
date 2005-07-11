@@ -132,51 +132,7 @@ cqueue_verify_attributes(lListElem *cqueue, lList **answer_list,
                          lListElem *reduced_elem, bool in_master);
 
 bool
-cqueue_verify_priority(lListElem *cqueue, lList **answer_list,
-                       lListElem *attr_elem);
-
-bool
-cqueue_verify_processors(lListElem *cqueue, lList **answer_list,
-                         lListElem *attr_elem);
-
-bool
-cqueue_verify_pe_list(lListElem *cqueue, lList **answer_list,
-                      lListElem *attr_elem);
-
-bool
-cqueue_verify_ckpt_list(lListElem *cqueue, lList **answer_list,
-                        lListElem *attr_elem);
-
-bool
-cqueue_verify_user_list(lListElem *cqueue, lList **answer_list,
-                        lListElem *attr_elem);
-
-bool
-cqueue_verify_project_list(lListElem *cqueue, lList **answer_list,
-                           lListElem *attr_elem);
-
-bool
-cqueue_verify_calendar(lListElem *cqueue, lList **answer_list,
-                       lListElem *attr_elem);
-
-bool
-cqueue_verify_initial_state(lListElem *cqueue, lList **answer_list,
-                            lListElem *attr_elem);
-
-bool
-cqueue_verify_shell_start_mode(lListElem *cqueue, lList **answer_list,
-                               lListElem *attr_elem);
-
-bool
-cqueue_verify_subordinate_list(lListElem *cqueue, lList **answer_list,
-                               lListElem *attr_elem);
-
-bool
 cqueue_is_used_in_subordinate(const char *cqueue_name, const lListElem *cqueue);
-
-bool
-cqueue_verify_consumable_config_list(lListElem *cqueue, lList **answer_list,
-                                     lListElem *attr_elem);
 
 void
 cqueue_list_set_tag(lList *this_list, u_long32 tag_value, bool tag_qinstances);

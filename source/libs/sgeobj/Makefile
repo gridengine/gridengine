@@ -52,6 +52,7 @@ SGEOBJLIB_SRC = \
          sge_centry.c \
          sge_conf.c \
          sge_cqueue.c \
+         sge_cqueue_verify.c \
          sge_ckpt.c \
          sge_cuser.c \
          sge_event.c \
@@ -159,6 +160,9 @@ sge_conf.o: $(SGEOBJLIB_DIR)/sge_conf.c
 
 sge_cqueue.o: $(SGEOBJLIB_DIR)/sge_cqueue.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_cqueue.c
+
+sge_cqueue_verify.o: $(SGEOBJLIB_DIR)/sge_cqueue_verify.c 
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_cqueue_verify.c
 
 sge_cuser.o: $(SGEOBJLIB_DIR)/sge_cuser.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_cuser.c

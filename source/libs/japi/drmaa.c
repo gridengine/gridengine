@@ -2772,7 +2772,7 @@ static int drmaa_job2sge_job(lListElem **jtp, const drmaa_job_template_t *drmaa_
    }
    
    /*
-    * Merge all commandline options and interprete them
+    * Merge all commandline options and interprete them.
     */
    merge_drmaa_options (&opts_all, &opts_default, &opts_defaults, &opts_scriptfile,
                        &opts_job_cat, &opts_native, &opts_drmaa);
@@ -2781,7 +2781,8 @@ static int drmaa_job2sge_job(lListElem **jtp, const drmaa_job_template_t *drmaa_
    if (is_bulk) {
       if (drmaa_set_bulk_range (&opts_all, start, end, step, &alp) != 0) {
          answer_list_to_dstring (alp, diag);
-         jt = lFreeElem (jt);   
+         jt = lFreeElem (jt);
+         opts_all = lFreeList (opts_all);
          DEXIT;
          return DRMAA_ERRNO_DENIED_BY_DRM;
       }
@@ -2791,14 +2792,15 @@ static int drmaa_job2sge_job(lListElem **jtp, const drmaa_job_template_t *drmaa_
 
    if (answer_list_has_error (&alp)) {
       answer_list_to_dstring (alp, diag);
-      jt = lFreeElem (jt);   
+      jt = lFreeElem (jt);
+      opts_all = lFreeList (opts_all);
       DEXIT;
       return DRMAA_ERRNO_DENIED_BY_DRM;
    }
 
-
-   /* JG: TODO: MemoryLeak: the opts_* lists, at least opts_default */
    *jtp = jt;
+   opts_all = lFreeList (opts_all);
+   
    DEXIT;
    return DRMAA_ERRNO_SUCCESS;
 }

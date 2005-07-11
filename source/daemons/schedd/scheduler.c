@@ -89,6 +89,8 @@
 #include "sge_serf.h"
 #include "sge_qinstance_state.h"
 #include "sge_range.h"
+#include "sig_handlers.h"
+
 
 /* profiling info */
 extern int scheduled_fast_jobs;
@@ -248,8 +250,9 @@ int scheduler(sge_Sdescr_t *lists, lList **order) {
    remove_immediate_jobs(*(splitted_job_lists[SPLIT_PENDING]), *(splitted_job_lists[SPLIT_RUNNING]), &orders);
 
    /* send job_start_orders */
-   sge_send_job_start_orders(&orders);
-
+   if (!shut_me_down) {
+      sge_send_job_start_orders(&orders);
+   }
    PROF_START_MEASUREMENT(SGE_PROF_SCHEDLIB4);
    {
       int clean_jobs[] = {SPLIT_WAITING_DUE_TO_PREDECESSOR,
@@ -346,7 +349,8 @@ int scheduler(sge_Sdescr_t *lists, lList **order) {
       }
    }
 
-   {
+   
+   if (!shut_me_down) {
       lList *orderlist=sge_join_orders(&orders);
      
       if (orderlist) {

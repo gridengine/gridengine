@@ -1,3 +1,10 @@
+SG-2005-07-11-0: Bugfix:    Array jobs sometimes get out of sync when 
+                            grid master daemons is started/stopped
+                 Changed:   qmaster, scheduler
+                 Bugtraq:   6295165
+                 Issue:     1705
+                 Review:    EB, AH 
+
 RD-2005-07-11-1: Cleanup:   changed absolut path to relativ path in commlib
                             binaries no longer include full compile path
                  Review:    CR

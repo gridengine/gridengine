@@ -166,13 +166,13 @@ int dispatch( dispatch_entry*   table,
 
    DENTER(TOP_LAYER, "dispatch");
 
-   sge_monitor_init(&monitor, "dispatcher", NONE_EXT, EXECD_WARNING, EXECD_ERROR);
-   
    if (tabsize<=0) {
       strcpy(err_str,MSG_COM_INTERNALDISPATCHCALLWITHOUTDISPATCH);
       DEXIT;
       return -1;
    }
+
+   sge_monitor_init(&monitor, "dispatcher", NONE_EXT, EXECD_WARNING, EXECD_ERROR);
 
    alloc_de(&de);       /* malloc fields in de */
 
@@ -242,6 +242,7 @@ int dispatch( dispatch_entry*   table,
 
                if(init_packbuffer(&apb, 1024, 0) != PACK_SUCCESS) {
                   free_de(&de);
+                  sge_monitor_free(&monitor);
                   PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM2);
                   DEXIT;
                   return CL_RETVAL_MALLOC;
@@ -299,6 +300,7 @@ int dispatch( dispatch_entry*   table,
       default:
          sprintf(err_str, MSG_COM_NORCVMSG_S, cl_get_error_text(i));
          free_de(&de);
+         sge_monitor_free(&monitor);
          PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM2);
          DEXIT;
          return i;
@@ -320,7 +322,6 @@ int dispatch( dispatch_entry*   table,
    }
 
    sge_monitor_free(&monitor);
-   
    free_de(&de);
    DEXIT;
    return errorcode;

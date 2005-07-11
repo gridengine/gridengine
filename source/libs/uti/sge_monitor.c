@@ -45,6 +45,7 @@
 #include "uti/sge_log.h"
 #include "uti/msg_utilib.h"
 
+
 /*************************************************
  * 
  * structure definition to hand the threading 
@@ -175,24 +176,45 @@ sge_monitor_init(monitoring_t *monitor, const char *thread_name, extension_t ext
 
    monitor->thread_name = thread_name;
   
-   monitor->output_line1 = (char*) malloc(1024);
-   monitor->output_line2 = (char*) malloc(1024);
+   monitor->output_line1 = (char*) malloc(1024*sizeof(char));
+   monitor->output_line2 = (char*) malloc(1024*sizeof(char));
+
+   if (monitor->output_line1 == NULL || monitor->output_line2 == NULL) {
+      CRITICAL((SGE_EVENT, MSG_UTI_MONITOR_MEMERROR)); 
+      exit(1);
+   } 
  
    strcpy(monitor->output_line1, thread_name);
    strcat(monitor->output_line1, MSG_UTI_MONITOR_NODATA);
    monitor->output_line2[0] = '\0';
    monitor->work_line = monitor->output_line2;
  
-   monitor->ext_type = ext;
    switch(ext) {
       case GDI_EXT :
-            monitor->ext_data_size = sizeof(m_gdi_t);
             monitor->ext_data = malloc(sizeof(m_gdi_t));
-            monitor->ext_output = &ext_gdi_output;
+            if (monitor->ext_data != NULL) {
+               monitor->ext_type = GDI_EXT;
+               monitor->ext_data_size = sizeof(m_gdi_t);
+               monitor->ext_output = &ext_gdi_output;
+            }
+            else {
+               monitor->ext_data_size = 0;
+               monitor->ext_output = NULL;
+               monitor->ext_type = NONE_EXT;
+               ERROR((SGE_EVENT, MSG_UTI_MONITOR_MEMERROREXT));
+            }
          break;
       case NONE_EXT : /* we do nothing */
+            monitor->ext_type = NONE_EXT;
+            monitor->ext_data_size = 0;
+            monitor->ext_data = NULL;
+            monitor->ext_output = NULL;
          break;
-      default : monitor->ext_type = NONE_EXT;
+      default : 
+            monitor->ext_type = NONE_EXT;
+            monitor->ext_data_size = 0;
+            monitor->ext_data = 0;
+            monitor->ext_output = NULL;
             ERROR((SGE_EVENT, MSG_UTI_MONITOR_UNSUPPORTEDEXT_D, ext));
    };
  

@@ -228,6 +228,8 @@
 #define MSG_UTI_MONITOR_INFO_SCF               _MESSAGE(59128, _(SFN": %c (%.2f) | "))
 #define MSG_UTI_MONITOR_NOLINES_S              _MESSAGE(59129, _("no additional monitoring output lines availabe for thread "SFN))
 #define MSG_UTI_MONITOR_UNSUPPORTEDEXT_D       _MESSAGE(59130, _("not supported monitoring extension %d"))
-#define MSG_UTI_MONITOR_NODATA                 _MESSAGE(59131, _(": no monitoring data available\n"))                                                                                                                                                 
+#define MSG_UTI_MONITOR_NODATA                 _MESSAGE(59131, _(": no monitoring data available\n"))
+#define MSG_UTI_MONITOR_MEMERROR               _MESSAGE(59132, _("not enough memory for monitor output"))
+#define MSG_UTI_MONITOR_MEMERROREXT            _MESSAGE(59133, _("not enough memory for monitor extension"))
 #endif /* __MSG_UTILIB_H */
 

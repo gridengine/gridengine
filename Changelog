@@ -1,3 +1,6 @@
+AS-2005-07-11-0  Cleanup:   formatting changes to conform with rest of file
+                 Changed:   dist/util/arch.dist
+
 RD-2005-07-11-0: Bugfix:    aix43 linker error after compiler update
                             sge_qmaster
                  Review:    JG 

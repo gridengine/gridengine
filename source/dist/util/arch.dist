@@ -190,20 +190,20 @@ Linux)
       if [ $? = 0 ]; then
          lxrelease=UNSUPPORTED-linux2.2-glibc2.0
       else
-        case $osrelease in
-           2.4.*) lxrelease=24
-                  ;;
-           2.6.*) if [ "$SGE_ROOT" != "" -a -d "$SGE_ROOT/bin/lx26-${lxmachine}" ] ; then
-                     lxrelease=26
-                  else
-                     if [ "$SGE_ROOT" = "" -a -d "bin/lx26-${lxmachine}" ] ; then
-                        lxrelease=26
-                     else
-                        lxrelease=24
-                     fi
-                  fi
-                  ;;
-        esac
+         case $osrelease in
+         2.4.*) 
+            lxrelease=24
+            ;;
+         2.6.*) 
+            if [ "$SGE_ROOT" != "" -a -d "$SGE_ROOT/bin/lx26-${lxmachine}" ] ; then
+               lxrelease=26
+            elif [ "$SGE_ROOT" = "" -a -d "bin/lx26-${lxmachine}" ] ; then
+               lxrelease=26
+            else
+               lxrelease=24
+            fi
+            ;;
+         esac
       fi
       ;;
    *)

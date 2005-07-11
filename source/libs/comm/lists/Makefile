@@ -32,7 +32,7 @@
 #
 ##########################################################################
 #___INFO__MARK_END__
-COMMLISTSLIB_DIR = $(SOURCE)/libs/comm/lists
+COMMLISTSLIB_DIR = $(SDIR)/libs/comm/lists
 
 COMMLISTSLIB = libcommlists$(LIBEXT)
 

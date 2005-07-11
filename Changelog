@@ -1,3 +1,7 @@
+RD-2005-07-11-1: Cleanup:   changed full path to relativ path in commlib
+                            binaries no longer include full compile path
+                 Review:    CR
+
 RD-2005-07-11-0: Bugfix:    aix43 linker error after compiler update
                             sge_qmaster
                  Review:    JG 

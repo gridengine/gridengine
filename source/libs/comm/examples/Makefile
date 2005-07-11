@@ -32,7 +32,7 @@
 #
 ##########################################################################
 #___INFO__MARK_END__
-COMM_EXAMPLES_DIR = $(SOURCE)/libs/comm/examples
+COMM_EXAMPLES_DIR = $(SDIR)/libs/comm/examples
 
 COMMLISTSLIB = libcommlists$(LIBEXT)
 COMMLIB      = libcomm$(LIBEXT)

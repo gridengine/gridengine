@@ -169,8 +169,8 @@ proc init_level {} {
       return -1
    }
 
-   set auto_reschedule_host1  [ lindex $ts_config(execd_hosts) 0  ]
-   set auto_reschedule_host2  [ lindex $ts_config(execd_hosts) 1  ]
+   set auto_reschedule_host1  [ lindex $ts_config(execd_nodes) 0  ]
+   set auto_reschedule_host2  [ lindex $ts_config(execd_nodes) 1  ]
 
    set global_resch 1
 

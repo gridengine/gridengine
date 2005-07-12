@@ -1022,6 +1022,7 @@ sge_follow_order(lListElem *ep, lList **alpp, char *ruser, char *rhost,
 
          /* new jatask has to be spooled and event sent */
          if (jatp != NULL) {
+            lSetUlong(jatp, JAT_status, JFINISHED);
             sge_event_spool(alpp, 0, sgeE_JATASK_ADD, 
                             job_number, task_number, NULL, NULL, 
                             lGetString(jep, JB_session),

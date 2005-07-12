@@ -262,6 +262,10 @@ char *argv[]
          continue;
       }
 
+      if (shut_me_down) {
+         continue;
+      }
+      
       /* event processing can trigger a re-registration, 
        * -> if qmaster goes down
        * -> the scheduling algorithm was changed

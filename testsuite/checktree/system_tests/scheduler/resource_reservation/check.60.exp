@@ -99,6 +99,7 @@ proc resource_reservation_setup {} {
    puts $CHECK_OUTPUT "rr-startup" 
  
    # Setup the scheduler
+   set schedconf(schedule_interval)          "0:0:05"
    set schedconf(weight_tickets_functional)  "0"
    set schedconf(weight_tickets_share)       "0"
    set schedconf(share_override_tickets)     "TRUE"
@@ -286,8 +287,8 @@ proc get_job_descriptions { test1 test2 } {
    global CHECK_OUTPUT
    global ts_config
 
-   set runtime_def "30"
-   set runtime_long "55" 
+   set runtime_def "15"
+   set runtime_long "25" 
 
    set job_script "$ts_config(product_root)/examples/jobs/sleeper.sh"
    set drmaa_mode "ST_RESERVATION_FINISH_ORDER"

@@ -794,8 +794,8 @@ proc setup_execd_conf {} {
         set spool_dir 1
         incr expected_entries 1
      }
+
      set spool_dir_found 0
- 
      foreach elem $elements {
         append output "$elem is set to $tmp_config($elem)\n" 
         incr counter 1
@@ -819,7 +819,11 @@ proc setup_execd_conf {} {
      }
      if { $spool_dir == 1 && $spool_dir_found == 0 } {
         add_proc_error "setup_execd_conf" -3 "host $host should have spool dir entry \"$have_exec_spool_dir\"\nADDING: execd_spool_dir $have_exec_spool_dir"
-        puts $CHECK_OUTPUT "spooldir (old): $tmp_config(execd_spool_dir)"
+        if {[info exists tmp_config(execd_spool_dir)]} {
+           puts $CHECK_OUTPUT "spooldir (old): $tmp_config(execd_spool_dir)"
+        } else {
+           puts $CHECK_OUTPUT "spooldir (old): <not set>"
+        }
         set tmp_config(execd_spool_dir) $have_exec_spool_dir
         puts $CHECK_OUTPUT "spooldir (new): $tmp_config(execd_spool_dir)"
         wait_for_enter

@@ -2482,6 +2482,64 @@ lList **suspended         /* QU_Type */
    return ret;
 }
 
+/* ----------------------------------------
+
+   sge_split_cal_disabled()
+
+   splits the incoming queue list (1st arg) into non disabled queues and
+   cal_disabled queues (2nd arg) 
+
+   lList **queue_list,       QU_Type 
+   lList **disabled          QU_Type 
+
+   returns:
+      0 successful
+     -1 errors in functions called by sge_split_queue_load
+
+*/
+int 
+sge_split_cal_disabled(lList **queue_list, lList **disabled) 
+{
+   lCondition *where;
+   int ret;
+   lList *lp = NULL;
+   bool do_free_list = false;
+
+   DENTER(TOP_LAYER, "sge_split_disabled");
+
+   if (!queue_list) {
+      DEXIT;
+      return -1;
+   }
+
+   if (disabled == NULL) {
+       disabled = &lp;
+       do_free_list = true;
+   }
+
+   /* split queues */
+   where = lWhere("%T(!(%I m= %u))", lGetListDescr(*queue_list), 
+                  QU_state, QI_CAL_DISABLED);
+   ret = lSplit(queue_list, disabled, "full queues", where);
+   lFreeWhere(where);
+
+   if (*disabled != NULL) {
+      lListElem* mes_queue;
+
+      for_each(mes_queue, *disabled) {
+         schedd_mes_add_global(SCHEDD_INFO_QUEUEDISABLED_, lGetString(mes_queue, QU_full_name));
+      }   
+ 
+      schedd_log_list(MSG_SCHEDD_LOGLIST_QUEUESDISABLEDANDDROPPED , *disabled, QU_full_name);
+
+      if (do_free_list) {
+         *disabled = lFreeList(*disabled);
+      }
+   }
+   
+   DEXIT;
+   return ret;
+}
 
 /* ----------------------------------------
 
@@ -2541,8 +2599,6 @@ sge_split_disabled(lList **queue_list, lList **disabled)
    DEXIT;
    return ret;
 }
-
-
 
 /****** sge_select_queue/sequential_tag_queues_suitable4job() **************
 *  NAME

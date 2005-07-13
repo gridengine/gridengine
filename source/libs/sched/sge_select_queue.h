@@ -69,6 +69,7 @@ int sge_split_queue_load(lList **unloaded, lList **overloaded, lList *exechost_l
 
 int sge_split_queue_slots_free(lList **unloaded, lList **overloaded);
 
+int sge_split_cal_disabled(lList **unloaded, lList **overloaded);
 int sge_split_disabled(lList **unloaded, lList **overloaded);
 
 int sge_split_suspended(lList **queue_list, lList **suspended);

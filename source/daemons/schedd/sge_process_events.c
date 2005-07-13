@@ -501,12 +501,10 @@ DTRACE;
             " !(%I m= %u) &&"
             " !(%I m= %u) &&"
             " !(%I m= %u) &&"
-            " !(%I m= %u) &&"
             " !(%I m= %u))",
             queue_des,    
             QU_state, QI_SUSPENDED,        /* only not suspended queues      */
             QU_state, QI_SUSPENDED_ON_SUBORDINATE, 
-            QU_state, QI_CAL_DISABLED,
             QU_state, QI_CAL_SUSPENDED, 
             QU_state, QI_ERROR,            /* no queues in error state       */
             QU_state, QI_UNKNOWN,
@@ -515,7 +513,8 @@ DTRACE;
             );         /* only known queues              */
            
          where_queue2 = lWhere("%T("
-            " ((%I m= %u) || (%I m= %u)) &&" 
+            "  (%I m= %u) &&" 
+            " !(%I m= %u) &&" 
             " !(%I m= %u) &&" 
             " !(%I m= %u) &&"
             " !(%I m= %u) &&"

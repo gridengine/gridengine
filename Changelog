@@ -1,3 +1,10 @@
+SG-2005-07-13-1: Bugfix:    Suspend on threshold not working for calendar disabled 
+                            queues
+                 Review:    EB
+                 Changed:   scheduler
+                 Bugtraq:   6294052
+                 Issue:     1691
+
 RD-2005-07-13-1: Cleanup:   removed unnecessary lib dependencies
                  Review:    JG 
 

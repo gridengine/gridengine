@@ -242,7 +242,8 @@ int scheduler(sge_Sdescr_t *lists, lList **order) {
    /**
     * post processing 
     */
-   remove_immediate_jobs(*(splitted_job_lists[SPLIT_PENDING]), *(splitted_job_lists[SPLIT_RUNNING]), &orders);
+   remove_immediate_jobs(*(splitted_job_lists[SPLIT_PENDING]), 
+                         *(splitted_job_lists[SPLIT_RUNNING]), &orders);
 
    /* send job_start_orders */
    if (!shut_me_down) {
@@ -530,7 +531,13 @@ static int dispatch_jobs(sge_Sdescr_t *lists, order_t *orders,
       return -1;
    }
 
-
+   /* remove cal_disabled queues - needed them for implementing suspend thresholds */
+   if (sge_split_cal_disabled(&(lists->queue_list), &lists->dis_queue_list)) {
+      DPRINTF(("couldn't split queue list concerning cal_disabled state\n"));
+      DEXIT;
+      return -1;
+   }
+   
    /* trash disabled queues - needed them for implementing suspend thresholds */
    if (sge_split_disabled(&(lists->queue_list), &none_avail_queues)) {
       DPRINTF(("couldn't split queue list concerning disabled state\n"));

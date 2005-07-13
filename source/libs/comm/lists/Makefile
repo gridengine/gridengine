@@ -100,7 +100,7 @@ include $(COMMLISTSLIB_DIR)/commlistslib_dependencies
 cl_raw_list.o: $(COMMLISTSLIB_DIR)/cl_raw_list.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(COMMLISTSLIB_DIR)/cl_raw_list.c
 cl_util.o: $(COMMLISTSLIB_DIR)/cl_util.c 
-		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(COMMLISTSLIB_DIR)/cl_util.c
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(COMMLISTSLIB_DIR)/cl_util.c 
 cl_errors.o: $(COMMLISTSLIB_DIR)/cl_errors.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(COMMLISTSLIB_DIR)/cl_errors.c
 cl_log_list.o: $(COMMLISTSLIB_DIR)/cl_log_list.c 
@@ -117,17 +117,17 @@ cl_thread_list.o: $(COMMLISTSLIB_DIR)/cl_thread_list.c
 
 
 test_cl_raw_list: test_cl_raw_list.o $(COMMLISTSLIB) $(COMMLISTSBIN_DEPEND)
-	$(CC) -o test_cl_raw_list $(LFLAGS) test_cl_raw_list.o $(COMMLISTSLIB) -luti -lrmon -llck $(LIBS)
+	$(CC) -o test_cl_raw_list $(LFLAGS) test_cl_raw_list.o $(COMMLISTSLIB) $(LIBS)
 test_cl_util: test_cl_util.o $(COMMLISTSLIB) $(COMMLISTSBIN_DEPEND)
-	$(CC) -o test_cl_util $(LFLAGS) test_cl_util.o $(COMMLISTSLIB) -luti -lrmon -llck $(LIBS)
+	$(CC) -o test_cl_util $(LFLAGS) test_cl_util.o $(COMMLISTSLIB) $(LIBS)
 test_cl_errors: test_cl_errors.o $(COMMLISTSLIB) $(COMMLISTSBIN_DEPEND)
-	$(CC) -o test_cl_errors $(LFLAGS) test_cl_errors.o $(COMMLISTSLIB) -luti -lrmon -llck $(LIBS)
+	$(CC) -o test_cl_errors $(LFLAGS) test_cl_errors.o $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB) $(LIBS)
 test_cl_log_list: test_cl_log_list.o $(COMMLISTSLIB) $(COMMLISTSBIN_DEPEND)
-	$(CC) -o test_cl_log_list $(LFLAGS) test_cl_log_list.o $(COMMLISTSLIB) -luti -lrmon -llck $(LIBS)
+	$(CC) -o test_cl_log_list $(LFLAGS) test_cl_log_list.o $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB) $(LIBS)
 test_cl_thread: test_cl_thread.o $(COMMLISTSLIB) $(COMMLISTSBIN_DEPEND)
-	$(CC) -o test_cl_thread $(LFLAGS) test_cl_thread.o $(COMMLISTSLIB) -luti -lrmon -llck $(LIBS)
+	$(CC) -o test_cl_thread $(LFLAGS) test_cl_thread.o $(COMMLISTSLIB) $(LIBS)
 test_cl_thread_list: test_cl_thread_list.o $(COMMLISTSLIB) $(COMMLISTSBIN_DEPEND)
-	$(CC) -o test_cl_thread_list $(LFLAGS) test_cl_thread_list.o $(COMMLISTSLIB) -luti -lrmon -llck $(LIBS)
+	$(CC) -o test_cl_thread_list $(LFLAGS) test_cl_thread_list.o $(COMMLISTSLIB) $(LIBS)
 
 test_cl_raw_list.o: $(COMMLISTSLIB_DIR)/test_cl_raw_list.c
 	$(CC) $(CFLAGS) -c $(COMMLISTSLIB_DIR)/test_cl_raw_list.c

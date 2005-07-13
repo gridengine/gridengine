@@ -1627,7 +1627,7 @@ case SOLARISAMD64:
             set patchcnt = `/bin/sh -c 'ls -d /var/sadm/patch/112756-* 2> /dev/null' | wc -l`
             set haspatch = `expr $patchcnt ">=" 1`
      #       set haspatch = 0
-            if ( $compversion == 5.5 && $haspatch == 1 ) then
+            if ( $compversion == 5.5 && $haspatch == 1 || $compversion != 5.5 ) then
                set OFLAG = "-fast -xchip=pentium -xcache=generic"
             else
                echo using \"-xO3\" optimization due to compiler bug
@@ -1635,7 +1635,7 @@ case SOLARISAMD64:
      #          set OFLAG = "-xO3 -fns -fsimple=2 -fsingle -ftrap=%none -nofstore -xbuiltin=%all -xdepend -xlibmil"
             endif
          else
-	    set OFLAG = "-fast -xchip=generic -xcache=generic"
+	         set OFLAG = "-fast -xchip=generic -xcache=generic"
          endif
       endif
    else

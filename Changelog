@@ -1,3 +1,6 @@
+RD-2005-07-13-1: Cleanup:   removed unnecessary lib dependencies
+                 Review:    JG 
+
 SG-2005-07-13-0: Bugfix:    . message cleanup
                             - made modify requests atomar, when they were working
                               on multiple objects.

@@ -184,7 +184,7 @@ test_cl_hostname_list: test_cl_hostname_list.o $(COMMLIB) $(COMMLISTSLIB) $(UTIL
 test_cl_endpoint_list: test_cl_endpoint_list.o $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB)
 	$(CC) -o test_cl_endpoint_list $(LFLAGS) test_cl_endpoint_list.o $(SECLIB) $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB) $(DLLIB) $(LIBS)
 
-test_cl_hostalias_list: test_cl_hostalias_list.o $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB) 
+test_cl_hostalias_list: test_cl_hostalias_list.o $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB)
 	$(CC) -o test_cl_hostalias_list $(LFLAGS) test_cl_hostalias_list.o $(SECLIB) $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB) $(DLLIB) $(LIBS)
 
 test_multithread_io: test_multithread_io.o $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB)
@@ -208,8 +208,8 @@ test_status_info: test_status_info.o $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKL
 test_issues: test_issues.o $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB)
 	$(CC) -o test_issues $(LFLAGS) test_issues.o $(SECLIB) $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB) $(DLLIB) $(LIBS)
 
-test_general: test_general.o $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB)
-	$(CC) -o test_general $(LFLAGS) test_general.o $(SECLIB) $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB) $(DLLIB) $(LIBS)
+test_general: test_general.o
+	$(CC) -o test_general $(LFLAGS) test_general.o $(SECLIB) $(DLLIB) $(LIBS)
 
 test_thread_throughput: test_thread_throughput.o $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB)
 	$(CC) -o test_thread_throughput $(LFLAGS) test_thread_throughput.o $(SECLIB) $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB) $(DLLIB) $(LIBS)

@@ -40,22 +40,21 @@
 
 
 
-extern int main(int argc, char** argv) {
+int main(int argc, char** argv)
+{
  
-   { 
-      printf("\ntest issue #1502: ");
+   printf("\ntest issue #1502: ");
 
 #ifdef __GRIDENGINE_FD_SETSIZE
-      if (FD_SETSIZE != __GRIDENGINE_FD_SETSIZE) {
-         printf("__GRIDENGINE_FD_SETSIZE is not enabled in system include header! See issuezilla bug #1502 for more information\n");
-         exit(1);
-      }
+   if (FD_SETSIZE != __GRIDENGINE_FD_SETSIZE) {
+      printf("__GRIDENGINE_FD_SETSIZE is not enabled in system include header! See issuezilla bug #1502 for more information\n");
+      exit(1);
+   }
 #endif      
 
-      printf("ok\n");
-   }
+   printf("ok\n");
 
-   exit(0);
+   return 0;
 }
 
 

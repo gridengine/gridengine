@@ -114,7 +114,9 @@ static int  get_client_id(lListElem*, int*);
 static void trigger_scheduler_monitoring(char*, sge_gdi_request*, sge_gdi_request*); 
 
 static int sge_chck_mod_perm_user(lList **alpp, u_long32 target, char *user);
-static int sge_chck_mod_perm_host(lList **alpp, u_long32 target, char *host, char *commproc, int mod, lListElem *ep);
+static int sge_chck_mod_perm_host(lList **alpp, u_long32 target, char *host, 
+                                  char *commproc, int mod, lListElem *ep, 
+                                  bool is_locked);
 static int sge_chck_get_perm_host(lList **alpp, sge_gdi_request *request);
 
 
@@ -560,7 +562,8 @@ static void sge_c_gdi_add(gdi_object_t *ao, char *host, sge_gdi_request *request
 
    /* check permissions of host and user */
    if ((!sge_chck_mod_perm_user(&(answer->alp), request->target, user)) &&
-       (!sge_chck_mod_perm_host(&(answer->alp), request->target, request->host, request->commproc, 0, NULL))) {
+       (!sge_chck_mod_perm_host(&(answer->alp), request->target, request->host, 
+                                request->commproc, 0, NULL, false))) {
 
       if (request->target == SGE_EVENT_LIST) {
          for_each (ep, request->lp) {/* is thread save. the global lock is used, when needed */
@@ -731,14 +734,13 @@ static void sge_c_gdi_del(char *host, sge_gdi_request *request, sge_gdi_request 
 
    if (!request->lp) /* delete whole list */
    { 
-      if (sge_chck_mod_perm_user(&(answer->alp), request->target, user))
-      {
+      if (sge_chck_mod_perm_user(&(answer->alp), request->target, user)) {
          DEXIT;
          return;
       }
       
-      if (sge_chck_mod_perm_host(&(answer->alp), request->target, request->host, request->commproc, 0, NULL))
-      {
+      if (sge_chck_mod_perm_host(&(answer->alp), request->target, request->host, 
+                                 request->commproc, 0, NULL, false)) {
          DEXIT;
          return;
       }
@@ -757,14 +759,20 @@ static void sge_c_gdi_del(char *host, sge_gdi_request *request, sge_gdi_request 
             break;
       }
    }
-   else 
-   {
-      for_each (ep, request->lp)
-      {
-         if (sge_chck_mod_perm_user(&(answer->alp), request->target, user))
-            continue;
-         if (sge_chck_mod_perm_host(&(answer->alp), request->target, request->host, request->commproc, 0, NULL))
-            continue;
+   else {
+
+      if (sge_chck_mod_perm_user(&(answer->alp), request->target, user)) {
+         DEXIT;
+         return;
+      }  
+
+      if (sge_chck_mod_perm_host(&(answer->alp), request->target, request->host, 
+                                 request->commproc, 0, NULL, false)) {
+         DEXIT;
+         return;
+      }
+
+      for_each (ep, request->lp) {
 
          MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE), monitor);
 
@@ -864,19 +872,24 @@ static void sge_c_gdi_copy(gdi_object_t *ao, char *host, sge_gdi_request *reques
       return;
    }
 
-   for_each (ep, request->lp)
-   {
-      if (sge_chck_mod_perm_user(&(answer->alp), request->target, user))
-         continue;
-      if (sge_chck_mod_perm_host(&(answer->alp), request->target, request->host, request->commproc, 0, NULL))
-         continue;
+   if (sge_chck_mod_perm_user(&(answer->alp), request->target, user)) {
+      DEXIT;
+      return;
+   }
 
+   if (sge_chck_mod_perm_host(&(answer->alp), request->target, request->host, 
+                              request->commproc, 0, NULL, false)) {
+      DEXIT;
+      return;
+   }
+   
+   for_each (ep, request->lp) {
       switch (request->target)
       {
          case SGE_JOB_LIST:
             /* gdi_copy_job uses the global lock internal */
-            sge_gdi_copy_job(ep, &(answer->alp), (sub_command & SGE_GDI_RETURN_NEW_VERSION) ? &(answer->lp) : NULL, user, host, 
-                             uid, gid, group, request, monitor);
+            sge_gdi_copy_job(ep, &(answer->alp), (sub_command & SGE_GDI_RETURN_NEW_VERSION) ? &(answer->lp) : NULL, 
+                             user, host, uid, gid, group, request, monitor);
             break;
 
          default:
@@ -1315,7 +1328,8 @@ static void sge_c_gdi_mod(gdi_object_t *ao, char *host, sge_gdi_request *request
    dstring ds;
    char buffer[256];
    lList *ppList = NULL; /* for postprocessing, after the lists of requests has been processed */
-
+   bool is_locked = false;
+      
    DENTER(TOP_LAYER, "sge_c_gdi_mod");
 
    sge_dstring_init(&ds, buffer, sizeof(buffer));
@@ -1328,12 +1342,15 @@ static void sge_c_gdi_mod(gdi_object_t *ao, char *host, sge_gdi_request *request
       return;
    }
 
+   if (sge_chck_mod_perm_user(&(answer->alp), request->target, user)) {
+      DEXIT;
+      return;
+   }
+
    for_each (ep, request->lp)
    {
-      if (sge_chck_mod_perm_user(&(answer->alp), request->target, user)) {
-         continue;
-      }
-      if (sge_chck_mod_perm_host(&(answer->alp), request->target, request->host, request->commproc, 1, ep)) {
+      if (sge_chck_mod_perm_host(&(answer->alp), request->target, request->host, 
+                                 request->commproc, 1, ep, is_locked)) {
          continue;
       }
 
@@ -1353,9 +1370,12 @@ static void sge_c_gdi_mod(gdi_object_t *ao, char *host, sge_gdi_request *request
  
          sge_mod_event_client(ep, &(answer->alp), user, host);      
       }
-      else 
-      {
-         MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE), monitor);
+      else {
+         if (!is_locked) {
+            MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE), monitor);
+            sge_set_commit_required();
+            is_locked = true; 
+         }
                
          switch (request->target)
          {
@@ -1374,11 +1394,6 @@ static void sge_c_gdi_mod(gdi_object_t *ao, char *host, sge_gdi_request *request
             case SGE_SHARETREE_LIST:
                sge_mod_sharetree(ep, &Master_Sharetree_List, &(answer->alp), user, host);
                break;
-#if 0
-            case SGE_CKPT_LIST:
-               sge_mod_ckpt(ep, &(answer->alp), user, host);
-               break;
-#endif
             default:
                if (!ao)
                {
@@ -1389,11 +1404,14 @@ static void sge_c_gdi_mod(gdi_object_t *ao, char *host, sge_gdi_request *request
                sge_gdi_add_mod_generic(&(answer->alp), ep, 0, ao, user, host, sub_command, &ppList, monitor);
                break;
          }
-         
-         SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
       }
    } /* for_each */
 
+   if (is_locked) {
+      sge_commit();
+      SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
+   }
+   
    /* postprocessing for the list of requests */
    if (lGetNumberOfElem(ppList) != 0) {
       switch (request->target) {
@@ -1500,11 +1518,15 @@ static int sge_chck_mod_perm_user(lList **alpp, u_long32 target, char *user)
 /*
  * MT-NOTE: sge_chck_mod_perm_host() is MT safe
  */
-static int sge_chck_mod_perm_host(lList **alpp, u_long32 target, char *host, char *commproc, int mod, lListElem *ep)
+static int sge_chck_mod_perm_host(lList **alpp, u_long32 target, char *host, 
+                                  char *commproc, int mod, lListElem *ep, 
+                                  bool is_locked)
 {
    DENTER(TOP_LAYER, "sge_chck_mod_perm_host");
 
-   SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE);
+   if (!is_locked) {
+      SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE);
+   }
 
    /* check permissions of host */
    switch (target) {
@@ -1601,8 +1623,11 @@ static int sge_chck_mod_perm_host(lList **alpp, u_long32 target, char *host, cha
       DEXIT;
       return 1;
    }
+   
+   if (!is_locked) {
+      SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
+   }
 
-   SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
    DEXIT;
    return 0;
 }

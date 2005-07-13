@@ -217,18 +217,18 @@
 /*
 ** libs/uti/sge_monitor.c
 */
-#define MSG_UTI_MONITOR_DEFLINEEXT_SFSFFFFF    _MESSAGE(59120, _(SFN": runs: %.2fr/s ("SFN") out: %.2fm/s APT: %.4fs/m idle: %.2f%% wait: %.2f%% time: %.2fs \n"))
-#define MSG_UTI_MONITOR_DEFLINE_SFFFFFF        _MESSAGE(59121, _(SFN": runs: %.2fr/s out: %.2fm/s APT: %.4fs/m idle: %.2f%% wait: %.2f%% time: %.2fs \n"))
+#define MSG_UTI_MONITOR_DEFLINEEXT_SFSFFFFF    _MESSAGE(59120, _(SFN": runs: %.2fr/s ("SFN") out: %.2fm/s APT: %.4fs/m idle: %.2f%% wait: %.2f%% time: %.2fs"))
+#define MSG_UTI_MONITOR_DEFLINE_SFFFFFF        _MESSAGE(59121, _(SFN": runs: %.2fr/s out: %.2fm/s APT: %.4fs/m idle: %.2f%% wait: %.2f%% time: %.2fs"))
 #define MSG_UTI_MONITOR_GDIEXT_FFF             _MESSAGE(59122, _("reports %.2f/s requests %.2f/s acks: %.2f/s"))
-#define MSG_UTI_MONITOR_DISABLED               _MESSAGE(59123, _("Monitor:                  disabled\n"))         
-#define MSG_UTI_MONITOR                        _MESSAGE(59124, _("Monitor:\n"))
-#define MSG_UTI_MONITOR_OK                     _MESSAGE(59125, _("OK\n"))
-#define MSG_UTI_MONITOR_WARNING                _MESSAGE(59126, _("WARNING\n"))
-#define MSG_UTI_MONITOR_ERROR                  _MESSAGE(59127, _("ERROR\n"))
+#define MSG_UTI_MONITOR_DISABLED               _MESSAGE(59123, _("Monitor:                  disabled"))         
+#define MSG_UTI_MONITOR                        _MESSAGE(59124, _("Monitor:"))
+#define MSG_UTI_MONITOR_OK                     _MESSAGE(59125, _("OK"))
+#define MSG_UTI_MONITOR_WARNING                _MESSAGE(59126, _("WARNING"))
+#define MSG_UTI_MONITOR_ERROR                  _MESSAGE(59127, _("ERROR"))
 #define MSG_UTI_MONITOR_INFO_SCF               _MESSAGE(59128, _(SFN": %c (%.2f) | "))
 #define MSG_UTI_MONITOR_NOLINES_S              _MESSAGE(59129, _("no additional monitoring output lines availabe for thread "SFN))
 #define MSG_UTI_MONITOR_UNSUPPORTEDEXT_D       _MESSAGE(59130, _("not supported monitoring extension %d"))
-#define MSG_UTI_MONITOR_NODATA                 _MESSAGE(59131, _(": no monitoring data available\n"))
+#define MSG_UTI_MONITOR_NODATA                 _MESSAGE(59131, _(": no monitoring data available"))
 #define MSG_UTI_MONITOR_MEMERROR               _MESSAGE(59132, _("not enough memory for monitor output"))
 #define MSG_UTI_MONITOR_MEMERROREXT            _MESSAGE(59133, _("not enough memory for monitor extension"))
 #endif /* __MSG_UTILIB_H */

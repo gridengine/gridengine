@@ -1,3 +1,9 @@
+SG-2005-07-13-0: Bugfix:    . message cleanup
+                            - made modify requests atomar, when they were working
+                              on multiple objects.
+                 Changed:   qmaster
+                 Review:    RD
+
 RD-2005-07-13-0: Bugfix:    unified qstat output part 1
                             removed some additional \t and \n in command line
                             and xml output

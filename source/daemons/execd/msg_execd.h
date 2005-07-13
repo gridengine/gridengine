@@ -290,11 +290,6 @@
 
 #define MSG_EXECD_INITPACKBUFFERFAILED_S _MESSAGE(29181, _("init_packbuffer failed: "SFN"\n"))
 
-#define MSG_EXECD_APPL_STATE_OK                _MESSAGE(29182, _("ok"))
-#define MSG_EXECD_APPL_STATE_TIMEOUT_WARNING   _MESSAGE(29183, _("dispatcher timeout warning"))
-#define MSG_EXECD_APPL_STATE_TIMEOUT_ERROR     _MESSAGE(29184, _("dispatcher timeout error"))
-#define MSG_EXECD_APPL_STATE_CFS               _MESSAGE(29185, _("dispatcher: %c (%.2f) | %s"))
-
 #define MSG_EXECD_CANT_GET_CONFIGURATION_EXIT  _MESSAGE(29186, _("can't get configuration qmaster - terminating\n"))
 #define MSG_EXECD_REGISTERED_AT_QMASTER_S      _MESSAGE(29187, _("registered at qmaster host "SFQ"\n"))
 

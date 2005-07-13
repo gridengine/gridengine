@@ -340,11 +340,13 @@ u_long32 sge_monitor_status(char **info_message, u_long32 monitor_time)
          ret = 2;
          sge_dstring_append(&Info_Line, MSG_UTI_MONITOR_ERROR);
       }
+      sge_dstring_append(&Info_Line, "\n");
    }
 
    if (monitor_time != 0) { /* generates the output monitoring output data */
       int i;
       sge_dstring_append(&Info_Line, MSG_UTI_MONITOR); 
+      sge_dstring_append(&Info_Line, "\n");
 
       sge_mutex_lock("sge_monitor_status", SGE_FUNC, __LINE__, &Output_Mutex);
       for (i = 0; i < MAX_OUTPUT_LINES; i++) {
@@ -352,12 +354,14 @@ u_long32 sge_monitor_status(char **info_message, u_long32 monitor_time)
             sge_dstring_append(&Info_Line, sge_ctime(Output[i].update_time, &ddate));
             sge_dstring_append(&Info_Line, " | ");
             sge_dstring_append(&Info_Line, Output[i].output);
+            sge_dstring_append(&Info_Line,"\n");
          }
       }
       sge_mutex_unlock("sge_monitor_status", SGE_FUNC, __LINE__, &Output_Mutex);
    }
    else {
       sge_dstring_append(&Info_Line, MSG_UTI_MONITOR_DISABLED);
+      sge_dstring_append(&Info_Line, "\n");
    }
 
    *info_message = strdup(sge_dstring_get_string(&Info_Line));

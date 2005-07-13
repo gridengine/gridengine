@@ -207,7 +207,7 @@
 #define MSG_SCHEDD_LOGLIST_QUEUESDISABLEDANDDROPPED         _MESSAGE(47216, _("queues dropped because they are disabled: "))
 #define MSG_SCHEDD_NOMASTERQUEUE_SU                         _MESSAGE(47217, _("found no master queue at host "SFQ" for job "sge_U32CFormat))
 #define MSG_SCHEDD_UNKNOWN_HOST_SS                          _MESSAGE(47218, _("queue "SFQ" is referencing unknown host "SFQ))
-#define MSG_SCHEDD_NOCOMPLEXATTRIBUTEFORTHRESHOLD_S         _MESSAGE(47219, _("\terror: no complex attribute for threshold "SFN))
+#define MSG_SCHEDD_NOCOMPLEXATTRIBUTEFORTHRESHOLD_S         _MESSAGE(47219, _("error: no complex attribute for threshold "SFN))
 #define MSG_SCHEDD_DUETORR                                  _MESSAGE(47220, _(" due to a reservation"))
 #define MSG_SUBORDPOLICYCONFLICT_UUSS                       _MESSAGE(47288, _("Jobs "sge_U32CFormat" & "sge_U32CFormat" dispatched to master/subordinated queues "SFQ"/"SFQ". Suspend on subordinate to occur in same scheduling interval. Policy conflict!"))
 
@@ -290,15 +290,15 @@
 /* 
 ** schedd/sge_select_queue.c
 */
-#define MSG_SCHEDD_WHYEXCEEDINVALIDLOAD_SS            _MESSAGE(47310, _("invalid load value "SFQ" for theshold "SFN"\n"))
-#define MSG_SCHEDD_WHYEXCEEDINVALIDTHRESHOLD_SS       _MESSAGE(47311, _("invalid threshold value "SFN"="SFN"\n"))
-#define MSG_SCHEDD_WHYEXCEEDINVALIDLOADADJUST_SS      _MESSAGE(47312, _("invalid load adjustment value "SFN"="SFN"\n"))
-#define MSG_SCHEDD_WHYEXCEEDBOOLVALUE_SSSSS           _MESSAGE(47313, _(SFN"="SFN" ("SN_UNLIMITED") "SFN" "SFN"\n"))
-#define MSG_SCHEDD_WHYEXCEEDFLOATVALUE_SFSSS          _MESSAGE(47314, _(SFN"=%f ("SN_UNLIMITED") "SFN" "SFN"\n"))
+#define MSG_SCHEDD_WHYEXCEEDINVALIDLOAD_SS            _MESSAGE(47310, _("invalid load value "SFQ" for theshold "SFN))
+#define MSG_SCHEDD_WHYEXCEEDINVALIDTHRESHOLD_SS       _MESSAGE(47311, _("invalid threshold value "SFN"="SFN))
+#define MSG_SCHEDD_WHYEXCEEDINVALIDLOADADJUST_SS      _MESSAGE(47312, _("invalid load adjustment value "SFN"="SFN))
+#define MSG_SCHEDD_WHYEXCEEDBOOLVALUE_SSSSS           _MESSAGE(47313, _(SFN"="SFN" ("SN_UNLIMITED") "SFN" "SFN))
+#define MSG_SCHEDD_WHYEXCEEDFLOATVALUE_SFSSS          _MESSAGE(47314, _(SFN"=%f ("SN_UNLIMITED") "SFN" "SFN))
 #define MSG_SCHEDD_WHYEXCEEDSTRINGVALUE_SSSS          _MESSAGE(47315, _(SFN"="SFN" "SFN" "SFN))
-#define MSG_SCHEDD_WHYEXCEEDCOMPLEXTYPE_S             _MESSAGE(47316, _("unknown complex attribute type for threshold "SFN"\n"))
-#define MSG_SCHEDD_WHYEXCEEDNOHOST_S                  _MESSAGE(47317, _("no such host "SFN" for that queue\n"))
-#define MSG_SCHEDD_WHYEXCEEDNOCOMPLEX_S               _MESSAGE(47318, _("no such complex attribute for threshold "SFQ"\n"))
+#define MSG_SCHEDD_WHYEXCEEDCOMPLEXTYPE_S             _MESSAGE(47316, _("unknown complex attribute type for threshold "SFN))
+#define MSG_SCHEDD_WHYEXCEEDNOHOST_S                  _MESSAGE(47317, _("no such host "SFN" for that queue"))
+#define MSG_SCHEDD_WHYEXCEEDNOCOMPLEX_S               _MESSAGE(47318, _("no such complex attribute for threshold "SFQ))
 
 #define MSG_SCHEDD_LCDIAGHOSTNP_SFI                   _MESSAGE(47330, _(SFN" * %f with nproc=%d"))
 #define MSG_SCHEDD_LCDIAGHOST_SF                      _MESSAGE(47331, _(SFN" * %f"))
@@ -338,6 +338,6 @@
 #define MSG_INCOMPLETE_SCHEDD_CONFIG                  _MESSAGE(47400, _("The scheduler configuration is incomplete"))
 #define MSG_USE_DEFAULT_CONFIG                        _MESSAGE(47401, _("Using the scheduler default configuration"))
 #define MSG_INVALID_PARAM_SETTING_S                   _MESSAGE(47402, _("Invalid scheduler param setting: "SFQ)) 
-#define MSG_QINSTANCE_VALUEMISSINGMASTERDOWN_S        _MESSAGE(47404, _("\terror: no value for "SFQ" because execd is in unknown state\n"))
+#define MSG_QINSTANCE_VALUEMISSINGMASTERDOWN_S        _MESSAGE(47404, _("error: no value for "SFQ" because execd is in unknown state"))
 
 #endif /* __MSG_SCHEDD_H */

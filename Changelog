@@ -1,4 +1,12 @@
- SG-2005-07-11-0: Bugfix:    Array jobs sometimes get out of sync when
+RD-2005-07-13-0: Bugfix:    unified qstat output part 1
+                            removed some additional \t and \n in command line
+                            and xml output
+                 Changed:   all
+                 Bugtraq:   6294118
+                 Issue:     1692
+                 Review:    SG
+
+SG-2005-07-11-0: Bugfix:    Array jobs sometimes get out of sync when
                              grid master daemons is started/stopped
                   Changed:   qmaster, scheduler
                   Bugtraq:   6295165

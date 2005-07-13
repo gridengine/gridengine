@@ -221,21 +221,29 @@ sge_print_queue(lListElem *q, lList *exechost_list, lList *centry_list,
 
    if((full_listing & QSTAT_DISPLAY_ALARMREASON)) {
       if(*load_alarm_reason) {
+         printf("\t");
 	      printf(load_alarm_reason);
+         printf("\n");
       }
       if(*suspend_alarm_reason) {
+         printf("\t");
 	      printf(suspend_alarm_reason);
+         printf("\n");
       }
    }
 
    if ((explain_bits & QI_ALARM) > 0) {
       if(*load_alarm_reason) {
+         printf("\t");
          printf(load_alarm_reason);
+         printf("\n");
       }
    }
    if ((explain_bits & QI_SUSPEND_ALARM) > 0) {
       if(*suspend_alarm_reason) {
+         printf("\t");
          printf(suspend_alarm_reason);
+         printf("\n");
       }
    }
    if (explain_bits != QI_DEFAULT) {
@@ -251,6 +259,7 @@ sge_print_queue(lListElem *q, lList *exechost_list, lList *centry_list,
 
             printf("\t");
             printf(message);
+            printf("\n");
          }
       }
    }

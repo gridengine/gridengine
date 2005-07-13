@@ -2208,7 +2208,7 @@ char *sge_load_alarm_reason(lListElem *qep, lList *threshold,
 
          monitor_dominance(dom_str, dom_val);
 
-         snprintf(buffer, MAX_STRING_SIZE, "\talarm %s:%s=%s %s-threshold=%s\n",
+         snprintf(buffer, MAX_STRING_SIZE, "alarm %s:%s=%s %s-threshold=%s",
                  dom_str,
                  name, 
                  load_value,

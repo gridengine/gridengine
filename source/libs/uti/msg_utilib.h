@@ -159,6 +159,9 @@
 #define MSG_SYSTEM_ADDGROUPIDFORSGEFAILED_UUS   _MESSAGE(49069, _("can't set additional group id (uid="sge_U32CFormat", euid="sge_U32CFormat"): "SFN"\n"))
 #define MSG_SYSTEM_INVALID_NGROUPS_MAX          _MESSAGE(49070, _("invalid value for NGROUPS_MAX"))
 #define MSG_SYSTEM_USER_HAS_TOO_MANY_GIDS       _MESSAGE(49071, _("the user already has too many group ids"))
+#define MSG_SYSTEM_SETUSERFAILED_UU             _MESSAGE(49115, _("setuser("sge_U32CFormat","sge_U32CFormat") failed"))
+#define MSG_SYSTEM_READ_SGEPASSWD_SSI           _MESSAGE(49116, _("can't open sgepasswd file \"%s\": %s (%d)\n"))
+#define MSG_SYSTEM_NO_PASSWD_ENTRY_SS           _MESSAGE(49117, _("can't find password entry for user %s in sgepasswd file %s\n"))
 
 /* 
 ** utilib/sge_stdlib.c

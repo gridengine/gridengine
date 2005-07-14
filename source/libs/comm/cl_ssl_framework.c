@@ -218,7 +218,9 @@ static cl_com_ssl_global_t* cl_com_ssl_global_config_object = NULL;
 
 /* here we load the SSL functions via dlopen */
 static pthread_mutex_t cl_com_ssl_crypto_handle_mutex = PTHREAD_MUTEX_INITIALIZER;
+#ifdef LOAD_OPENSSL
 static void* cl_com_ssl_crypto_handle = NULL;
+#endif
 
 
 /* static function declarations */
@@ -1087,8 +1089,6 @@ static int cl_com_ssl_build_symbol_table(void) {
    }
 #else
    {
-      char* func_name = NULL;
-
       CL_LOG(CL_LOG_INFO,"setting up ssl library function pointers ...");
       pthread_mutex_lock(&cl_com_ssl_crypto_handle_mutex);
 

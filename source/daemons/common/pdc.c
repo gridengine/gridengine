@@ -2765,7 +2765,7 @@ main(int argc, char **argv)
 
             for (j=0; j<proccount; j++) {
                if (killjob) {
-                  if (getuid() == sge_get_superuser_id() ||
+                  if (getuid() == SGE_SUPERUSER_UID ||
                       getuid() == procs->pd_uid) {
                      if (kill(procs->pd_pid, signo)<0) {
                         char buf[128];

@@ -280,6 +280,8 @@ int truncate_stderr_out
                     (cp = getlogin()) ? cp : "<no login set>");
    shepherd_trace(err_str);
 
+   shepherd_trace_sprintf("reading passwd information for user '%s'",
+         target_user ? target_user : "<NULL>");
    pw = sge_getpwnam(target_user);
    if (!pw) {
       sprintf(err_str, "can't get password entry for user \"%s\"", target_user);
@@ -295,8 +297,10 @@ int truncate_stderr_out
       }   
    }
    
+   shepherd_trace("setting limits");
    setrlimits(!strcmp(childname, "job"));
 
+   shepherd_trace("setting environment");
    sge_set_environment();
 
 	/* Create the "error" and the "exit" status file here.
@@ -306,8 +310,11 @@ int truncate_stderr_out
 	 * file ownership to the job owner immediately after opening the file, 
 	 * so the job owner can reopen the file if the exec() fails.
 	 */
+   shepherd_trace("Initializing error file");
 	shepherd_error_init( );
 
+   shepherd_trace_sprintf("now doing chown(%s) of trace and error files",
+         target_user ? target_user : "<NULL>");
    shepherd_trace_chown( target_user );
    shepherd_error_chown( target_user );
 	
@@ -329,6 +336,7 @@ int truncate_stderr_out
     }
 
 /* --- switch to intermediate user */
+   shepherd_trace("switching to intermediate/target user");
    if(qlogin_starter) { 
       ret = sge_set_uid_gid_addgrp(target_user, intermediate_user, 0, 0, 
                                    0, err_str, use_qsub_gid, gid);
@@ -349,6 +357,8 @@ int truncate_stderr_out
       */
       shepherd_error(err_str);
    }
+   shepherd_trace_sprintf("now running with uid="uid_t_fmt", euid="uid_t_fmt, 
+         getuid(), geteuid());
 
    shell_start_mode = get_conf_val("shell_start_mode");
 
@@ -749,6 +759,8 @@ int truncate_stderr_out
          shepherd_error(err_str);
       }
    }
+   shepherd_trace_sprintf("now running with uid="uid_t_fmt", euid="uid_t_fmt, 
+      (int)getuid(), (int)geteuid());
 
    /*
    ** if we dont check if the script_file exists, then in case of

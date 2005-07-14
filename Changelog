@@ -1,3 +1,6 @@
+HP-2005-07-14-0: Enhancem.: Merged sgepasswd functionality from V60U4WIN_BRANCH
+                 Changed:   execd, shepherd, libs
+
 JG-2005-07-13-0: Testsuite: Fixed testsuite installation of SGE 5.3 clusters.
 
 SG-2005-07-13-1: Bugfix:    Suspend on threshold not working for calendar disabled 

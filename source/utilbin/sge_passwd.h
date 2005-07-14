@@ -43,13 +43,7 @@ buffer_encrypt(const char *buffer_in, size_t buffer_in_length,
 int 
 buffer_decrypt(const char *buffer_in, size_t buffer_in_length,
                char **buffer_out, size_t *buffer_out_size,
-               size_t *buffer_out_length);
-
-int
-password_read_file(char **users[], char**encryped_pwds[], const char *filename);
-
-const char*
-sge_get_file_passwd(void);
+               size_t *buffer_out_length, char *err_str);
 
 int
 password_find_entry(char *users[], char *encryped_pwds[], const char *user);

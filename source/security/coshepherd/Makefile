@@ -40,9 +40,9 @@ COSHEPHERD_SRC = coshepherd.c
 
 COSHEPHERD_OBJS = $(COSHEPHERD_SRC:.c=.o)
 
-COSHEPHERD_ADD_LIBS = -luti -llck -lrmon
+COSHEPHERD_ADD_LIBS = -luti $(WINGRIDLIB) -llck -lrmon
 
-COSHEPHERD_LIB_DEPENDS = $(UTILIB) $(LCKLIB) $(RMONLIB)
+COSHEPHERD_LIB_DEPENDS = $(WINGRIDLIB_DEP) $(UTILIB) $(LCKLIB) $(RMONLIB)
 
 ###############################################################################
 # global rules: all, clean, depend, messages

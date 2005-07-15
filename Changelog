@@ -1,3 +1,6 @@
+JG-2005-07-15-0: CVS        Created V60u5_TAG
+---------------------------------------------------------
+
 SG-2005-07-11-0: Bugfix:    Array jobs sometimes get out of sync when 
                             grid master daemons is started/stopped
                  Changed:   qmaster, scheduler
@@ -360,8 +363,6 @@ SG-2005-05-27-0: Bugfix:    fix qstat -t again (SG-2005-05-25-0 was not enough)
                  Changed:   qstat
                  Issue:     1420
                  Bugtraq:   6218877
-
-JG-2005-05-27-0: CVS        Created V60u5_TAG
 
 DT-2005-05-25-0: Bugfix:    o Enforced thread safety in DRMAA
                  Review:    SG

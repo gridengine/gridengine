@@ -1235,7 +1235,9 @@ sge_commit_flags_t commit_flags
       if (!no_unlink) {
          release_successor_jobs(jep);
          PROF_START_MEASUREMENT(SGE_PROF_JOBSCRIPT);
-         unlink(lGetString(jep, JB_exec_file));
+         if (lGetString(jep, JB_exec_file) != NULL) {
+            unlink(lGetString(jep, JB_exec_file));
+         }
          PROF_STOP_MEASUREMENT(SGE_PROF_JOBSCRIPT);
       }
       break;

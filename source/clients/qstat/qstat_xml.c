@@ -1481,6 +1481,7 @@ lListElem *xml_print_queue(lListElem *q, const lList *exechost_list, const lList
       load_avg_str = LOAD_ATTR_LOAD_AVG;
 
    if (!(full_listing & QSTAT_DISPLAY_FULL)) {
+      sge_dstring_free(&queue_name_buffer);
       DEXIT;
       return jobElem;
    }
@@ -1693,6 +1694,8 @@ lListElem *xml_print_queue(lListElem *q, const lList *exechost_list, const lList
       sge_dstring_free(&resource_string);
 
    }
+
+   sge_dstring_free(&queue_name_buffer);
 
    DEXIT;
    return jobElem;

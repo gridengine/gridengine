@@ -419,12 +419,17 @@ centry_list_show(lList **answer_list)
    DENTER(TOP_LAYER, "centry_list_show");
    centry_list = centry_list_get_via_gdi(answer_list);
    if (centry_list != NULL) {
+      const char *filename;
+
       spool_flatfile_align_list(answer_list, (const lList *)centry_list,
                                 CE_fields, 3);
-      spool_flatfile_write_list(answer_list, centry_list, CE_fields,
-                                &ceqconf_ce_sfi, SP_DEST_STDOUT, SP_FORM_ASCII, 
-                                NULL, false);
-      
+      filename = spool_flatfile_write_list(answer_list, centry_list, CE_fields,
+                                           &ceqconf_ce_sfi, SP_DEST_STDOUT, SP_FORM_ASCII, 
+                                           NULL, false);
+     
+      FREE(filename);
+      centry_list = lFreeList(centry_list);
+
       if (answer_list_output(answer_list)) {
          DEXIT;
          SGE_EXIT (1);
@@ -452,6 +457,8 @@ centry_list_get_via_gdi(lList **answer_list)
    }
 
    centry_list_sort(ret);
+
+   gdi_answer_list = lFreeList(gdi_answer_list);
 
    DEXIT;
    return ret;
@@ -571,6 +578,8 @@ centry_list_add_del_mod_via_gdi(lList **this_list, lList **answer_list,
             lDechainElem(*this_list, centry_elem);
             if (object_has_differences(centry_elem, NULL, tmp_elem, false)) {
                lAppendElem(modify_list, centry_elem);
+            } else {
+               centry_elem = lFreeElem(centry_elem);
             }
             lRemoveElem(*old_list, tmp_elem);
          } else {
@@ -688,7 +697,12 @@ centry_list_add_del_mod_via_gdi(lList **this_list, lList **answer_list,
                                     MSG_CENTRY_NOTCHANGED);
          }
 
+         gdi_answer_list = lFreeList(gdi_answer_list);
+         mal_answer_list = lFreeList(mal_answer_list);
       }
+
+      add_list = lFreeList(add_list);
+      modify_list = lFreeList(modify_list);
    }
    DEXIT;
    return ret;    
@@ -708,6 +722,9 @@ centry_list_modify(lList **answer_list)
       if (ret) {
          ret &= centry_list_add_del_mod_via_gdi(&centry_list, answer_list, &old_centry_list);  
       }
+      
+      centry_list = lFreeList(centry_list);
+      old_centry_list = lFreeList(old_centry_list);
    }
    DEXIT;
    return ret;
@@ -743,6 +760,9 @@ centry_list_modify_from_file(lList **answer_list, const char *filename)
          ret &= centry_list_add_del_mod_via_gdi(&centry_list, answer_list, 
                                                 &old_centry_list);  
       }
+
+      centry_list = lFreeList(centry_list);
+      old_centry_list = lFreeList(old_centry_list);
    }
    DEXIT;
    return ret;
@@ -757,16 +777,16 @@ centry_list_provide_modify_context(lList **this_list,
    
    DENTER(TOP_LAYER, "centry_list_provide_modify_context");
    if (this_list != NULL) {
-      char filename[SGE_PATH_MAX] = "complex";
+      const char *filename;
 
-      sge_tmpnam(filename);
       spool_flatfile_align_list(answer_list, (const lList *)*this_list,
                                 CE_fields, 3);
-      spool_flatfile_write_list(answer_list, *this_list, CE_fields,
-                                &ceqconf_ce_sfi, SP_DEST_SPOOL,
-                                SP_FORM_ASCII, filename, false);
+      filename = spool_flatfile_write_list(answer_list, *this_list, CE_fields,
+                                           &ceqconf_ce_sfi, SP_DEST_TMP,
+                                           SP_FORM_ASCII, NULL, false);
       
       if (answer_list_output(answer_list)) {
+         FREE(filename);
          DEXIT;
          SGE_EXIT (1);
       }
@@ -796,6 +816,7 @@ centry_list_provide_modify_context(lList **this_list,
                          STATUS_ERROR1, ANSWER_QUALITY_ERROR);
       }
       unlink(filename);
+      FREE(filename);
    } 
    DEXIT;
    return ret;

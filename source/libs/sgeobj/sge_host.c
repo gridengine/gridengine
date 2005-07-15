@@ -170,6 +170,7 @@ bool host_is_referenced(const lListElem *host,
                   ret = true;
                   break;
                }
+               host_list = lFreeList(host_list);
             }
          }
       }

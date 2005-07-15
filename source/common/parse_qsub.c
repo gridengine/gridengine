@@ -1535,7 +1535,7 @@ DTRACE;
 
          range_list_parse_from_string(&task_id_range_list, &answer, *sp,
                                       0, 1, INF_NOT_ALLOWED);
-         if (!task_id_range_list) {
+         if (task_id_range_list == NULL) {
             DEXIT;
             return answer;
          }
@@ -1543,6 +1543,7 @@ DTRACE;
          range_list_sort_uniq_compress(task_id_range_list, &answer);
          if (lGetNumberOfElem(task_id_range_list) > 1) {
             answer_list_add(&answer, MSG_QCONF_ONLYONERANGE, STATUS_ESYNTAX, 0);
+            task_id_range_list = lFreeList(task_id_range_list);
             DEXIT;
             return answer;
          }

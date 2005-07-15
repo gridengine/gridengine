@@ -44,11 +44,8 @@
 #include "sge_edit.h"
 #include "sge_unistd.h"
 
-int sge_edit(
-char *fname 
-
-) {
-
+int sge_edit(const char *fname) 
+{
    SGE_STRUCT_STAT before, after;
    pid_t pid;
    int status;

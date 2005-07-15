@@ -172,7 +172,9 @@ cqueue_get_via_gdi(lList **answer_list, const char *name)
          answer_list_replace(answer_list, &gdi_answer_list);
       }
       cqueue_list = lFreeList(cqueue_list);
-   } 
+      gdi_answer_list = lFreeList(gdi_answer_list);
+   }
+
    DEXIT;
    return ret;
 }
@@ -415,6 +417,7 @@ cqueue_provide_modify_context(lListElem **this_elem, lList **answer_list,
       }
 
       unlink(filename);
+      FREE(filename);
    } 
    DEXIT;
    return ret;
@@ -441,7 +444,9 @@ cqueue_add(lList **answer_list, const char *name)
       if (ret) {
          ret &= cqueue_add_del_mod_via_gdi(cqueue, answer_list, 
                                            SGE_GDI_ADD | SGE_GDI_SET_ALL); 
-      } 
+      }
+
+      cqueue = lFreeElem(cqueue);
    }  
   
    DEXIT;
@@ -605,7 +610,6 @@ cqueue_show(lList **answer_list, const lList *qref_pattern_list)
       local_ret = cqueue_hgroup_get_via_gdi(answer_list, qref_pattern_list,
                                             &hgroup_list, &cqueue_list);
       if (local_ret) {
-
          for_each(qref_pattern, qref_pattern_list) {
             dstring cqueue_name = DSTRING_INIT;
             dstring host_domain = DSTRING_INIT;
@@ -711,6 +715,7 @@ cqueue_show(lList **answer_list, const lList *qref_pattern_list)
                         hostname = lGetHost(qinstance, QU_qhostname);
                         if (!fnmatch(h_pattern, hostname, 0) ||
                             !sge_hostcmp(h_pattern, hostname)) {
+                           const char *filename;
                            spooling_field *fields = sge_build_QU_field_list
                                                                   (true, false);                          
 
@@ -727,13 +732,14 @@ cqueue_show(lList **answer_list, const lList *qref_pattern_list)
                               fprintf(stdout, "\n");
                            }
 
-                           spool_flatfile_write_object(answer_list, qinstance,
-                                                       false, fields,
-                                                       &cqqconf_sfi,
-                                                       SP_DEST_STDOUT,
-                                                       SP_FORM_ASCII, NULL,
-                                                       false);
-                           FREE (fields);
+                           filename = spool_flatfile_write_object(answer_list, qinstance,
+                                                                  false, fields,
+                                                                  &cqqconf_sfi,
+                                                                  SP_DEST_STDOUT,
+                                                                  SP_FORM_ASCII, NULL,
+                                                                  false);
+                           FREE(fields);
+                           FREE(filename);
                            
                            if (answer_list_output(answer_list)) {
                               DEXIT;
@@ -785,22 +791,31 @@ cqueue_show(lList **answer_list, const lList *qref_pattern_list)
             }
             sge_dstring_free(&host_domain);
             sge_dstring_free(&cqueue_name);
+
+            qref_list = lFreeList(qref_list);
          }
-      } 
+      }
+      hgroup_list = lFreeList(hgroup_list);
+      cqueue_list = lFreeList(cqueue_list);
    } else {
+      const char *filename;
       lListElem *cqueue = cqueue_create(answer_list, "template");
 
       DTRACE;
       ret &= cqueue_set_template_attributes(cqueue, answer_list);
-      spool_flatfile_write_object(answer_list, cqueue, false, CQ_fields,
-                                  &cqqconf_sfi, SP_DEST_STDOUT, SP_FORM_ASCII,
-                                  NULL, false);
+      filename = spool_flatfile_write_object(answer_list, cqueue, false, CQ_fields,
+                                             &cqqconf_sfi, SP_DEST_STDOUT, SP_FORM_ASCII,
+                                             NULL, false);
                            
+      FREE(filename);
+      cqueue = lFreeElem(cqueue);
+
       if (answer_list_output(answer_list)) {
          DEXIT;
          SGE_EXIT(1);
       }
    }
+
    DEXIT;
    return ret;
 }

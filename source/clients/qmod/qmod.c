@@ -404,6 +404,7 @@ int usageshowed = 0;
             if (parse_multi_stringlist( ppcmdline, options[i], &alp, &queueList, ST_Type, ST_name)){
                id_list_build_from_str_list(ppreflist, &alp, queueList, transitions[i], *pforce); 
             }
+            queueList = lFreeList(queueList);
          }
          i++;
       }

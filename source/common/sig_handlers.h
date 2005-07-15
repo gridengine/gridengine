@@ -47,7 +47,6 @@ extern sigset_t io_mask;
 
 extern struct sigaction sigterm_vec, sigterm_ovec;
 extern struct sigaction sigalrm_vec, sigalrm_ovec;
-extern struct sigaction sigcld_vec, sigcld_ovec;
 
 extern volatile int shut_me_down;
 extern volatile int dead_children;

@@ -1285,7 +1285,7 @@ int sge_shutdown_event_client(u_long32 aClientID, const char* anUser,
       else {
          SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_COM_SHUTDOWNNOTIFICATION_SUS,
                         lGetString(client, EV_name),
-                        (unsigned long)lGetUlong(client, EV_id),
+                        u32c(lGetUlong(client, EV_id)),
                         lGetHost(client, EV_host)));
       }
 
@@ -1854,15 +1854,17 @@ static void process_sends ()
 
                /* This has to come after the client is locked. */
                if ((event_client = get_event_client (ec_id)) == NULL) {
+                  event = lFreeElem(event);
                   unlock_client(ec_id);
                   ERROR((SGE_EVENT, MSG_EVE_UNKNOWNEVCLIENT_US, u32c(ec_id), "send events"));
-               }
-               else if (eventclient_subscribed(event_client, type, session)) {
+               } else if (eventclient_subscribed(event_client, type, session)) {
                   add_list_event_direct (event_client, event, false);
 
                   /* We can't free the event when we're done because it now belongs
                    * to send_events(). */
-               } /* else if */
+               } else {
+                  event = lFreeElem(event);
+               }
                event = lFirst (event_list);
             } /* while */
          } /* if */
@@ -3183,6 +3185,9 @@ static void add_list_event_direct(lListElem *event_client, lListElem *event,
    if (lGetUlong(event_client, EV_state) != EV_connected) {
       /* the event client is not connected anymore, so we are not
          adding new events to it*/
+      if (!copy_event) {
+         event = lFreeElem(event);
+      }
       return;
    }
 

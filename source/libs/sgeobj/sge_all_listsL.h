@@ -274,7 +274,6 @@ extern "C" {
 #endif
 
    extern lNameSpace nmv[];
-   extern lNameSpace ptf_nmv[];
 
 #ifdef  __cplusplus
 }

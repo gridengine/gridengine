@@ -1,3 +1,7 @@
+JG-2005-07-18-1: Testsuite: Check system_tests/shepherd/submit_del failed 
+                            SGE 5.3 clusters in case of slow NFS or slow 
+                            machines.
+
 JG-2005-07-18-0: Testsuite: Check bugs/issuezilla/540 failed in case of slow NFS
 
 MD-2005-07-18-0: Bugfix:    typo in BT number

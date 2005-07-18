@@ -1024,7 +1024,11 @@ sge_follow_order(lListElem *ep, lList **alpp, char *ruser, char *rhost,
 
          /* new jatask has to be spooled and event sent */
          if (jatp != NULL) {
-            lSetUlong(jatp, JAT_status, JFINISHED);
+            if (or_type == ORT_remove_job) {
+               ERROR((SGE_EVENT, MSG_JOB_ORDERDELINCOMPLETEJOB_UU, u32c(job_number), 
+                      u32c(task_number)));
+               lSetUlong(jatp, JAT_status, JFINISHED);
+            }
             sge_event_spool(alpp, 0, sgeE_JATASK_ADD, 
                             job_number, task_number, NULL, NULL, 
                             lGetString(jep, JB_session),
@@ -1051,10 +1055,12 @@ sge_follow_order(lListElem *ep, lList **alpp, char *ruser, char *rhost,
          sge_commit_job(jep, jatp, NULL, COMMIT_ST_DEBITED_EE, COMMIT_DEFAULT);
       } else {
          if (!JOB_TYPE_IS_IMMEDIATE(lGetUlong(jep, JB_type))) {
-            if(lGetString(jep, JB_script_file))
+            if(lGetString(jep, JB_script_file)) {
                ERROR((SGE_EVENT, MSG_JOB_REMOVENONINTERACT_U, u32c(lGetUlong(jep, JB_job_number))));
-            else
+            }
+            else {
                ERROR((SGE_EVENT, MSG_JOB_REMOVENONIMMEDIATE_U,  u32c(lGetUlong(jep, JB_job_number))));
+            }   
             answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
             DEXIT;
             return -1;

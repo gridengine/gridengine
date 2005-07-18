@@ -1,3 +1,9 @@
+SG-2005-07-18-0: Bugfix:    no user notification or command hanging if 
+                            an immediate job cannot be scheduled
+                 Review:    JG, RD
+                 Changed:   qmaster
+                 Bugtraq:   6298233
+
 MD-2005-07-18-0: Bugfix:    typo in BT number
                  Changed:   Changelog
 

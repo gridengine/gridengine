@@ -1,134 +1,123 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN"><html><head>
-	<meta http-equiv="CONTENT-TYPE" content="text/html; charset=iso-8859-1"><title></title>
-	
-	<meta name="GENERATOR" content="StarOffice 6.0  (Solaris Sparc)">
-	<meta name="CREATED" content="20020529;10474700">
-	<meta name="CHANGEDBY" content="Charu Chaubal">
-	<meta name="CHANGED" content="20020529;12534600"></head>
-
-<body lang="en-US">
-
-<p style="margin-bottom: 0cm;">&nbsp; 
-</p>
-<table width="100%" border="0" cellpadding="2" cellspacing="0">
-	<tbody><tr>
-		<td>
-			<h2><font color="#336699">Using ssh with qrsh and qlogin</font></h2>
-		</td>
-	</tr>
-</tbody></table>
-<table width="100%" border="0" cellpadding="2" cellspacing="0">
-	<col width="256*">
-
-	<tbody><tr>
-		<td width="100%">
-			<p>By default, the Grid Engine commands <b>qrsh</b> will use
-			standard remote mechanisms (rsh/rlogin) and <b>qlogin</b> will use the telnet 
-			mechanism to establish interactive sessions. 
-			</p>
-			<ul>
-				<li><p><b>qrsh</b> by itself will use rlogin</p>
-
-				</li><li><p><b>qrsh</b> with a command will establish a rsh
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<HTML>
+<HEAD>
+	<META HTTP-EQUIV="CONTENT-TYPE" CONTENT="text/html; charset=iso-8859-1">
+	<TITLE></TITLE>
+	<META NAME="GENERATOR" CONTENT="StarOffice 7  (Solaris Sparc)">
+	<META NAME="CREATED" CONTENT="20020529;10474700">
+	<META NAME="CHANGED" CONTENT="20050718;12070500">
+</HEAD>
+<BODY LANG="en-US" DIR="LTR">
+<P STYLE="margin-bottom: 0in">&nbsp; 
+</P>
+<TABLE WIDTH=100% BORDER=0 CELLPADDING=2 CELLSPACING=0>
+	<TR>
+		<TD>
+			<H2><FONT COLOR="#336699">Using ssh with qrsh and qlogin</FONT></H2>
+		</TD>
+	</TR>
+</TABLE>
+<TABLE WIDTH=100% BORDER=0 CELLPADDING=2 CELLSPACING=0>
+	<COL WIDTH=256*>
+	<TR>
+		<TD WIDTH=100%>
+			<P>By default, the Grid Engine commands <B>qrsh</B> will use
+			standard remote mechanisms (rsh/rlogin) and <B>qlogin</B> will use
+			the telnet mechanism to establish interactive sessions. 
+			</P>
+			<UL>
+				<LI><P><B>qrsh</B> by itself will use rlogin</P>
+				<LI><P><B>qrsh</B> with a command will establish a rsh
 				connection. 
-				</p>
-
-				</li><li><p><b>qlogin</b> does not use commands and will do a telnet</p>
-			</li></ul>
-			<p>To enable the rsh/rlogin mechanism, special rsh and rlogin
+				</P>
+				<LI><P><B>qlogin</B> does not use commands and will do a telnet</P>
+			</UL>
+			<P>To enable the rsh/rlogin mechanism, special rsh and rlogin
 			binaries are provided with Grid Engine (found in
 			$SGE_ROOT/utilbin/$ARCH). In addition, to have full accounting and
-			process control for interactive jobs, an extended <b>rshd</b>
+			process control for interactive jobs, an extended <B>rshd</B>
 			comes with Grid&nbsp;Engine. 
-			</p>
-			<p>As an alternative, Grid Engine can be configured to use <b>ssh</b>
-
-			instead to start interactive jobs. <br>&nbsp; 
-			</p>
-			<h3>Advantages of using ssh:</h3>
-			<ul>
-				<li><p style="margin-bottom: 0cm;">secure connection 
-				</p>
-				</li><li><p style="margin-bottom: 0cm;">no need to have suid root
-				programs installed (rsh and rlogin have to be suid root)</p>
-				</li><li><p style="margin-bottom: 0cm;">much larger number of running
-				sessions per host (not limited by port number &lt; 1024)</p>
-
-				</li><li><p style="margin-bottom: 0cm;">compression (if lots of data
-				pushed through STDIN/STDOUT)</p>
-				</li><li><p>possibility to attach a tty to remotely executed commands
-				(ssh option -t)</p>
-			</li></ul>
-			<h3 style="margin-top: 0cm; margin-bottom: 0cm;">Disadvantages:</h3>
-			<ul>
-				<li><p style="margin-bottom: 0cm;">Lack of complete accounting 
-				</p>
-				</li><li><p>lack of process control (reprioritization) 
-				</p>
-
-			</li></ul>
-		</td>
-	</tr>
-</tbody></table>
-<h3>How to setup ssh for qrsh:</h3>
-<p style="margin-bottom: 0cm;">Have ssh working, all keys created ... 
-</p>
-<p style="margin-bottom: 0cm;">Set the parameters rsh_daemon and
+			</P>
+			<P>As an alternative, Grid Engine can be configured to use <B>ssh</B>
+			instead to start interactive jobs. <BR>&nbsp; 
+			</P>
+			<H3>Advantages of using ssh:</H3>
+			<UL>
+				<LI><P STYLE="margin-bottom: 0in">secure connection 
+				</P>
+				<LI><P STYLE="margin-bottom: 0in">no need to have suid root
+				programs installed (rsh and rlogin have to be suid root)</P>
+				<LI><P STYLE="margin-bottom: 0in">much larger number of running
+				sessions per host (not limited by port number &lt; 1024)</P>
+				<LI><P STYLE="margin-bottom: 0in">compression (if lots of data
+				pushed through STDIN/STDOUT)</P>
+				<LI><P>possibility to attach a tty to remotely executed commands
+				(ssh option -t)</P>
+			</UL>
+			<H3 STYLE="margin-top: 0in; margin-bottom: 0in">Disadvantages:</H3>
+			<UL>
+				<LI><P STYLE="margin-bottom: 0in">Lack of complete accounting 
+				</P>
+				<LI><P>lack of process control (reprioritization) 
+				</P>
+			</UL>
+		</TD>
+	</TR>
+</TABLE>
+<H3>How to setup ssh for qrsh:</H3>
+<P STYLE="margin-bottom: 0in">Have ssh working, all keys created ... 
+</P>
+<P STYLE="margin-bottom: 0in">Set the parameters rsh_daemon and
 rlogin_daemon in your cluster configuration to ssh: 
-</p>
-<ul>
-	<li><p>rsh_daemon: /usr/sbin/sshd -i</p>
-
-	</li><li><p>rlogin_daemon: /usr/sbin/sshd -i 
-	</p>
-</li></ul>
-<p style="margin-bottom: 0cm;">If you have execution hosts with
+</P>
+<UL>
+	<LI><P>rsh_daemon: /usr/sbin/sshd -i</P>
+	<LI><P>rlogin_daemon: /usr/sbin/sshd -i 
+	</P>
+</UL>
+<P STYLE="margin-bottom: 0in">If you have execution hosts with
 different architectures that have different paths to ssh, you will
 have to make these settings for each execution host individually
-(qconf -mconf <host>), else you can change the global cluster
-configuration (qconf -mconf).</p>
-<p>Set the parameters rsh_command and rlogin_command in your cluster
-configuration to ssh:</p>
-<ul>
-	<li><p>rsh_command&nbsp;&nbsp;&nbsp;&nbsp; /usr/bin/ssh</p>
-	</li><li><p>rlogin_command&nbsp; /usr/bin/ssh 
-	</p>
-
-</li></ul>
-<p>If you have submit hosts with different architectures that have
+(qconf -mconf <I>hostname</I>), else you can change the global
+cluster configuration (qconf -mconf).</P>
+<P>Set the parameters rsh_command and rlogin_command in your cluster
+configuration to ssh:</P>
+<UL>
+	<LI><P>rsh_command&nbsp;&nbsp;&nbsp;&nbsp; /usr/bin/ssh</P>
+	<LI><P>rlogin_command&nbsp; /usr/bin/ssh 
+	</P>
+</UL>
+<P>If you have submit hosts with different architectures that have
 different paths to ssh, you will have to make these settings for each
-submit host individualy (qconf -mconf <host>), else you can change the
-global cluster configuration (qconf -mconf). <br>&nbsp; <br>&nbsp; </p>
-<h3>How to setup ssh for qlogin:</h3>
-<p style="margin-bottom: 0cm;">Have ssh working, all keys created ... 
-</p>
-<p style="margin-bottom: 0cm;">Set the parameter qlogin_daemon 
-in your cluster configuration to support ssh: 
-</p>
-<ul>
-	<li><p>qlogin_daemon: /usr/sbin/sshd -i</p>
-
-</li></ul>
-<p style="margin-bottom: 0cm;">If you have execution hosts with
+submit host individually (qconf -mconf <I>hostname</I>), else you can
+change the global cluster configuration (qconf -mconf). <BR>&nbsp; <BR>&nbsp;
+</P>
+<H3>How to setup ssh for qlogin:</H3>
+<P STYLE="margin-bottom: 0in">Have ssh working, all keys created ... 
+</P>
+<P STYLE="margin-bottom: 0in">Set the parameter qlogin_daemon in your
+cluster configuration to support ssh: 
+</P>
+<UL>
+	<LI><P>qlogin_daemon: /usr/sbin/sshd -i</P>
+</UL>
+<P STYLE="margin-bottom: 0in">If you have execution hosts with
 different architectures that have different paths to ssh, you will
-have to make these settings for each execution host individualy
-(qconf -mconf <host>), else you can change the global cluster
-configuration (qconf -mconf).</host></p>
-<p>Set the parameter qlogin_command in your cluster
-configuration to support ssh:</p>
-<ul>
-	<li><p>qlogin_command&nbsp; path_to_qlogin_wrapper
-	</p>
-
-</li></ul>
-<p> The qlogin_wrapper script should be as follows: <br>
-#!/bin/sh<br>
-HOST=$1<br>
-PORT=$2<br>
-/usr/bin/ssh -X -p $PORT $HOST<br> 
-<br>
-</p><p>If you have submit hosts with different architectures that have
-different paths to ssh, you will have to make sure that the qlogin_wrapper script is
-set for each submit host individualy (qconf -mconf <host>), else you can change the
-global cluster configuration (qconf -mconf). <br>&nbsp; <br>&nbsp; <br>&nbsp;</p>
-</body></html>
+have to make these settings for each execution host individually
+(qconf -mconf <I>hostname</I>), else you can change the global
+cluster configuration (qconf -mconf).</P>
+<P>Set the parameter qlogin_command in your cluster configuration to
+support ssh:</P>
+<UL>
+	<LI><P>qlogin_command&nbsp; path_to_qlogin_wrapper 
+	</P>
+</UL>
+<P>The qlogin_wrapper script should be as follows:
+<BR>#!/bin/sh<BR>HOST=$1<BR>PORT=$2<BR>/usr/bin/ssh -X -p $PORT $HOST</P>
+<P>If you have submit hosts with different architectures that have
+different paths to ssh, you will have to make sure that the
+qlogin_wrapper script is set for each submit host individualy (qconf
+-mconf <I>hostname</I>), else you can change the global cluster
+configuration (qconf -mconf). <BR>&nbsp; <BR>&nbsp; <BR>&nbsp;</P>
+</BODY>
+</HTML>

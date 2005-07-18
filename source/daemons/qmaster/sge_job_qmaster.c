@@ -1957,8 +1957,9 @@ int sub_command
          bool dbret;
          lList *answer_list = NULL;
 
-         if (trigger & MOD_EVENT)
+         if (trigger & MOD_EVENT) {
             lSetUlong(new_job, JB_version, lGetUlong(new_job, JB_version)+1);
+         }
 
          /* all job modifications to be saved on disk must be made in new_job */
          dbret = spool_write_object(&answer_list, spool_get_default_context(), new_job, 
@@ -3766,6 +3767,8 @@ static u_long32 guess_highest_job_number()
    
    DENTER(TOP_LAYER, "guess_highest_job_number");   
 
+   /* this function is called during qmaster startup and not while it is running,
+      we do not need to monitor this lock */
    SGE_LOCK(LOCK_GLOBAL, LOCK_READ);
    
    jep = lFirst(Master_Job_List);
@@ -3880,7 +3883,7 @@ int *trigger
          const char *ckpt_name;
 
          sge_assignment_t a;
-         assignment_init(&a, jep, NULL);
+         assignment_init(&a, jep, NULL, false);
 
          DPRINTF(("verify schedulability = %c\n", OPTION_VERIFY_STR[verify_mode]));
 
@@ -3930,8 +3933,9 @@ int *trigger
             }
 
             /* stop redirection of scheduler monitoring messages */
-            if (verify_mode==JUST_VERIFY)
+            if (verify_mode==JUST_VERIFY) {
                set_monitor_alpp(NULL);
+            }
 
             /* stop dreaming */
             sconf_set_qs_state(QS_STATE_FULL);

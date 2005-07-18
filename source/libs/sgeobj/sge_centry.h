@@ -63,8 +63,7 @@ centry_create(lList **answer_list,
 bool
 centry_is_referenced(const lListElem *centry, lList **answer_list,
                      const lList *master_cqueue_list,
-                     const lList *master_exechost_list,
-                     const lList *master_sconf_list);
+                     const lList *master_exechost_list);
 
 bool
 centry_print_resource_to_dstring(const lListElem *this_elem, 

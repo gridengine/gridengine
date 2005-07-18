@@ -52,6 +52,11 @@
    if (rmon_condition(xaybzc, TRACE))       \
       rmon_menter (SGE_FUNC)
 
+#define DRETURN(ret)                            \
+   if (rmon_condition(xaybzc, TRACE))           \
+      rmon_mexit(SGE_FUNC, __FILE__, __LINE__); \
+   return ret
+
 #define DEXIT                                   \
    if (rmon_condition(xaybzc, TRACE))           \
       rmon_mexit(SGE_FUNC, __FILE__, __LINE__)

@@ -385,8 +385,7 @@ centry_create(lList **answer_list, const char *name)
 bool 
 centry_is_referenced(const lListElem *centry, lList **answer_list,
                      const lList *master_cqueue_list,
-                     const lList *master_exechost_list,
-                     const lList *master_sconf_list)
+                     const lList *master_exechost_list)
 {
    bool ret = false;
 
@@ -431,7 +430,7 @@ centry_is_referenced(const lListElem *centry, lList **answer_list,
          }
       }
       if (!ret) {
-         if (sconf_is_centry_referenced(sconf_get_config(), centry)) {
+         if (sconf_is_centry_referenced(centry)) {
             answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
                                     ANSWER_QUALITY_INFO, 
                                     MSG_CENTRYREFINSCONF_S, centry_name);

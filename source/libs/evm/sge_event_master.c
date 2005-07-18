@@ -3428,7 +3428,7 @@ static void total_update_event(lListElem *event_client, ev_event type)
             lp = *(object_type_get_master_list(SGE_TYPE_CQUEUE));
             break;
          case sgeE_SCHED_CONF:
-            lp = *sconf_get_config_list();
+            copy_lp = sconf_get_config_list();
             break;
          case sgeE_SUBMITHOST_LIST:
             lp = Master_Submithost_List;

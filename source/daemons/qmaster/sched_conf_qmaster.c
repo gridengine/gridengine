@@ -105,7 +105,6 @@ char *ruser,
 char *rhost 
 ) {
    lList *temp_conf_list = NULL;
-   const lListElem *config = NULL;
    
    DENTER(TOP_LAYER, "sge_mod_sched_configuration");
 
@@ -115,13 +114,10 @@ char *rhost
       DEXIT;
       return STATUS_EUNKNOWN;
    }
-   config = sconf_get_config();
    temp_conf_list = lCreateList("sched config", SC_Type);
 
-   if (config) {
-      lSetUlong(confp, SC_weight_tickets_override, 
-      lGetUlong(config, SC_weight_tickets_override));
-   }
+   lSetUlong(confp, SC_weight_tickets_override, 
+             sconf_get_weight_tickets_override());
 
    confp = lCopyElem(confp);
    lAppendElem(temp_conf_list, confp);

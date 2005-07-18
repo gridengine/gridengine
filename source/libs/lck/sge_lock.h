@@ -39,7 +39,8 @@
 
 typedef enum {
    LOCK_GLOBAL  = 0,  /* global lock */
-   NUM_OF_TYPES = 1
+   LOCK_SCHED_CONF = 1,
+   NUM_OF_LOCK_TYPES = 2
 } sge_locktype_t;
 
 #if defined(LINUX)
@@ -53,6 +54,10 @@ typedef enum {
 } sge_lockmode_t;
 
 typedef u_long32 sge_locker_t;
+
+/* lock_service_provider */
+void sge_setup_lock_service(void);
+void sge_teardown_lock_service(void);
 
 /*
  * Lock user interface

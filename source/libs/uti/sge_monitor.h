@@ -74,7 +74,8 @@
  *
  * Improtant:
  * ----------
- * TODO SG:
+ *  The call to MONITOR_IDLE_TIME has to be the first one after the thread loop otherwise
+ *  certain parts of the monitoring structure are not correctly initilized.
  *
  * General statistic methods:
  * --------------------------

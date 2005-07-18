@@ -85,6 +85,7 @@
 #include "sge_resource_utilization.h"
 #include "sge_serf.h"
 #include "sge_qinstance_state.h"
+/*#include "sge_qinstance_type.h" */
 #include "sig_handlers.h"
 
 /* profiling info */
@@ -190,7 +191,7 @@ int scheduler(sge_Sdescr_t *lists, lList **order) {
    split_jobs(&(lists->job_list), NULL, lists->all_queue_list, 
               conf.max_aj_instances, splitted_job_lists);
  
-   {
+   { /* add global queue messages */
       lList *qlp;
       lCondition *where;
       lEnumeration *what;
@@ -411,7 +412,7 @@ static int dispatch_jobs(sge_Sdescr_t *lists, order_t *orders,
 
    u_long32 queue_sort_method; 
    u_long32 maxujobs;
-   const lList *job_load_adjustments = NULL;
+   lList *job_load_adjustments = NULL;
    double total_running_job_tickets=0; 
    int nreservation = 0;
 
@@ -506,6 +507,7 @@ static int dispatch_jobs(sge_Sdescr_t *lists, order_t *orders,
          NULL, false, false,
          QU_suspend_thresholds)) {
       none_avail_queues = lFreeList(none_avail_queues);
+      job_load_adjustments = lFreeList(job_load_adjustments);
       DPRINTF(("couldn't split queue list with regard to suspend thresholds\n"));
       DEXIT;
       return -1;
@@ -526,6 +528,7 @@ static int dispatch_jobs(sge_Sdescr_t *lists, order_t *orders,
    if (sge_split_queue_load(&(lists->queue_list), NULL, 
          lists->host_list, lists->centry_list, job_load_adjustments,
          NULL, false, true, QU_load_thresholds)) {
+      job_load_adjustments = lFreeList(job_load_adjustments);
       DPRINTF(("couldn't split queue list concerning load\n"));
       DEXIT;
       return -1;
@@ -534,6 +537,7 @@ static int dispatch_jobs(sge_Sdescr_t *lists, order_t *orders,
    /* remove cal_disabled queues - needed them for implementing suspend thresholds */
    if (sge_split_cal_disabled(&(lists->queue_list), &lists->dis_queue_list)) {
       DPRINTF(("couldn't split queue list concerning cal_disabled state\n"));
+      job_load_adjustments = lFreeList(job_load_adjustments);
       DEXIT;
       return -1;
    }
@@ -542,6 +546,7 @@ static int dispatch_jobs(sge_Sdescr_t *lists, order_t *orders,
    if (sge_split_disabled(&(lists->queue_list), &none_avail_queues)) {
       DPRINTF(("couldn't split queue list concerning disabled state\n"));
       none_avail_queues = lFreeList(none_avail_queues);
+      job_load_adjustments = lFreeList(job_load_adjustments);
       DEXIT;
       return -1;
    }
@@ -550,6 +555,7 @@ static int dispatch_jobs(sge_Sdescr_t *lists, order_t *orders,
    if (sge_split_queue_slots_free(&(lists->queue_list), &none_avail_queues)) {
       DPRINTF(("couldn't split queue list concerning free slots\n"));
       none_avail_queues = lFreeList(none_avail_queues);
+      job_load_adjustments = lFreeList(job_load_adjustments);
       DEXIT;
       return -1;
    }
@@ -607,6 +613,7 @@ static int dispatch_jobs(sge_Sdescr_t *lists, order_t *orders,
       if( ret != 0){
          lFreeList(user_list);
          lFreeList(group_list);
+         job_load_adjustments = lFreeList(job_load_adjustments);
          DEXIT;
          return -1;
       }
@@ -618,6 +625,7 @@ static int dispatch_jobs(sge_Sdescr_t *lists, order_t *orders,
       schedd_mes_add_global(SCHEDD_INFO_ALLALARMOVERLOADED_);
       lFreeList(user_list);
       lFreeList(group_list);
+      job_load_adjustments = lFreeList(job_load_adjustments);
       DEXIT;
       return 0;
    } 
@@ -634,6 +642,7 @@ static int dispatch_jobs(sge_Sdescr_t *lists, order_t *orders,
       SCHED_MON((log_string, MSG_SCHEDD_MON_NOPENDJOBSTOPERFORMSCHEDULINGON ));
       lFreeList(user_list);
       lFreeList(group_list);
+      job_load_adjustments = lFreeList(job_load_adjustments);
       DEXIT;
       return 0;
    }
@@ -939,6 +948,7 @@ static int dispatch_jobs(sge_Sdescr_t *lists, order_t *orders,
    lFreeList(user_list);
    lFreeList(group_list);
    sge_free_load_list(&consumable_load_list);
+   job_load_adjustments = lFreeList(job_load_adjustments);
    
    DEXIT;
    return 0;
@@ -984,8 +994,7 @@ select_assign_debit(lList **queue_list, lList **dis_queue_list, lListElem *job, 
 
    DENTER(TOP_LAYER, "select_assign_debit");
 
-   assignment_init(&a, job, ja_task);
-   a.load_adjustments = sconf_get_job_load_adjustments();
+   assignment_init(&a, job, ja_task, true);
    a.queue_list       = *queue_list;
    a.host_list        = host_list;
    a.centry_list      = centry_list;
@@ -994,7 +1003,8 @@ select_assign_debit(lList **queue_list, lList **dis_queue_list, lListElem *job, 
    /* in reservation scheduling mode a non-zero duration always must be defined */
    if ( !job_get_duration(&a.duration, job) ) {
       schedd_mes_add(a.job_id, SCHEDD_INFO_CKPTNOTFOUND_);
-      return DISPATCH_NEVER_CAT;
+      assignment_release(&a);
+      DRETURN(DISPATCH_NEVER_CAT);
    }
 
    a.duration += sconf_get_duration_offset();
@@ -1007,7 +1017,8 @@ select_assign_debit(lList **queue_list, lList **dis_queue_list, lListElem *job, 
       a.ckpt = ckpt_list_locate(ckpt_list, ckpt_name);
       if (!a.ckpt) {
          schedd_mes_add(a.job_id, SCHEDD_INFO_CKPTNOTFOUND_);
-         return DISPATCH_NEVER_CAT;
+         assignment_release(&a);
+         DRETURN(DISPATCH_NEVER_CAT);
       }
    }
 
@@ -1119,9 +1130,9 @@ select_assign_debit(lList **queue_list, lList **dis_queue_list, lListElem *job, 
       if (JOB_TYPE_IS_IMMEDIATE(lGetUlong(job, JB_type))) { /* immediate job */
          /* generate order for removing it at qmaster */
          order_remove_immediate(job, ja_task, orders);
-      }   
-      DEXIT;
-      return result;
+      }
+      assignment_release(&a);
+      DRETURN(result);
    }
 
    if (result == DISPATCH_OK) {
@@ -1229,8 +1240,7 @@ select_assign_debit(lList **queue_list, lList **dis_queue_list, lListElem *job, 
             
          DPRINTF(("couldn't split queue list concerning load\n"));
          assignment_release(&a);
-         DEXIT;
-         return DISPATCH_NEVER;
+         DRETURN(DISPATCH_NEVER);
       }
       if (*load_list != NULL) {
          sge_remove_queue_from_load_list(load_list, disabled_queues);
@@ -1248,9 +1258,7 @@ select_assign_debit(lList **queue_list, lList **dis_queue_list, lListElem *job, 
    /* no longer needed - having built the order 
       and debited the job everywhere */
    assignment_release(&a);
-  
-   DEXIT;
-   return result;
+   DRETURN(result);
 }
 
 
@@ -1355,7 +1363,7 @@ add_job_list_to_schedule(const lList *job_list, bool suspended, lList *pe_list,
       for_each (ja_task, lGetList(jep, JB_ja_tasks)) {  
          sge_assignment_t a;
 
-         assignment_init(&a, jep, ja_task);
+         assignment_init(&a, jep, ja_task, false);
 
          a.start = lGetUlong(ja_task, JAT_start_time);
 

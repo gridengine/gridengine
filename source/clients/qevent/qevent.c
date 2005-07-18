@@ -65,6 +65,7 @@
 #include "sge_spool.h"
 #include "qevent.h"
 #include "sge_profiling.h"
+#include "sge_mt_init.h"
 
 
 #if defined(SOLARIS) || defined(ALPHA)
@@ -470,7 +471,7 @@ int main(int argc, char *argv[])
 
    DENTER_MAIN(TOP_LAYER, "qevent");
 
-   sge_prof_setup();
+   sge_mt_init();
 
    /* dump pid to file */
    qevent_dump_pid_file();

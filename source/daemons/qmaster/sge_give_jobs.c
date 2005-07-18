@@ -849,7 +849,7 @@ void trigger_job_resend(u_long32 now, lListElem *hep, u_long32 jid, u_long32 ja_
    when = (time_t)(now + seconds);
    ev = te_new_event(when, TYPE_JOB_RESEND_EVENT, ONE_TIME_EVENT, jid, ja_task_id, "job-resend_event");
    te_add_event(ev);
-   te_free_event(ev);
+   te_free_event(&ev);
 
    DEXIT;
    return;
@@ -1237,12 +1237,13 @@ void sge_commit_job(lListElem *jep, lListElem *jatep, lListElem *jr,
             PROF_STOP_MEASUREMENT(SGE_PROF_JOBSCRIPT);
          }
       }
-
       break;
 
    case COMMIT_ST_DEBITED_EE: /* triggered by ORT_remove_job */
    case COMMIT_ST_NO_RESOURCES: /* triggered by ORT_remove_immediate_job */
-      reporting_create_job_log(NULL, now, JL_DELETED, MSG_SCHEDD, hostname, jr, jep, jatep, NULL, (mode==COMMIT_ST_DEBITED_EE) ?  MSG_LOG_DELSGE : MSG_LOG_DELIMMEDIATE);
+      reporting_create_job_log(NULL, now, JL_DELETED, MSG_SCHEDD, hostname, jr, 
+                               jep, jatep, NULL, 
+                               (mode==COMMIT_ST_DEBITED_EE) ?  MSG_LOG_DELSGE : MSG_LOG_DELIMMEDIATE);
       jobid = lGetUlong(jep, JB_job_number);
 
       if (mode == COMMIT_ST_NO_RESOURCES) {
@@ -1552,13 +1553,14 @@ static int sge_bury_job(lListElem *job, u_long32 job_id, lListElem *ja_task,
    }
    te_delete_one_time_event(TYPE_SIGNAL_RESEND_EVENT, job_id, ja_task_id, NULL);
 
-
    /*
     * Remove the job with the last task
     * or
     * Remove one ja task
     */
    if (remove_job) {
+      /* we might have done this before, but to make sure, that we
+         did not miss it, we do it again.... */
       release_successor_jobs(job);
 
       /*
@@ -1594,7 +1596,6 @@ static int sge_bury_job(lListElem *job, u_long32 job_id, lListElem *ja_task,
       lRemoveElem(Master_Job_List, job);
    } else {
       int is_enrolled = job_is_enrolled(job, ja_task_id);
-
 
       if (!no_events) {
          sge_add_event( 0, sgeE_JATASK_DEL, job_id, ja_task_id, 

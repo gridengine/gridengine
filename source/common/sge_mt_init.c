@@ -39,6 +39,8 @@
 #include "gdi_setup.h"
 #include "sge_profiling.h"
 
+#include "sgeobj/sge_schedd_conf.h"
+
 /****** common/sge_mt_init/sge_mt_init() ***************************************
 *  NAME
 *     sge_mt_init() -- Initialize libraries for multi threaded usage. 
@@ -77,6 +79,7 @@ void sge_mt_init(void)
    bootstrap_mt_init(); 
    feature_mt_init();
 
+   sc_init_mt();
    gdi_mt_init();
 
 } /* sge_mt_init */

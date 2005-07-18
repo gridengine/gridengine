@@ -108,9 +108,6 @@ reporting_create_queue_consumable_record(lList **answer_list,
                                         u_long32 report_time);
 
 bool
-reporting_create_sharelog_record(lList **answer_list);
-
-bool
 reporting_is_intermediate_acct_required(const lListElem *job, 
                                         const lListElem *ja_task, 
                                         const lListElem *pe_task);

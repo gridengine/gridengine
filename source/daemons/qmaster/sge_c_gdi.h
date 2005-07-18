@@ -78,7 +78,6 @@ struct _gdi_object_t {
    lDescr             *type;           /* QU_Type */
    char               *object_name;    /* "queue" */
    lList              **master_list;   /* &Master_Calendar_List */
-   getMasterList      getMasterList;   /* master list retrieve method    */
    modifier_func_t    modifier;        /* responsible for validating each our attribute modifier */
    writer_func_t      writer;          /* function that spools our object */
    on_success_func_t  on_success;      /* do everything what has to be done on successful writing */

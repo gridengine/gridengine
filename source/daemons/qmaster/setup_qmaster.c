@@ -306,7 +306,7 @@ void sge_setup_job_resend(void)
 
             ev = te_new_event((time_t)when, TYPE_JOB_RESEND_EVENT, ONE_TIME_EVENT, job_num, task_num, "job-resend_event");           
             te_add_event(ev);
-            te_free_event(ev);
+            te_free_event(&ev);
 
             DPRINTF(("Did add job resend for "sge_u32"/"sge_u32" at %d\n", job_num, task_num, when)); 
          }

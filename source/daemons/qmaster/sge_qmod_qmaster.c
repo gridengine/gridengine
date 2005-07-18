@@ -980,7 +980,7 @@ void rebuild_signal_events()
             
             ev = te_new_event(when, TYPE_SIGNAL_RESEND_EVENT, ONE_TIME_EVENT, key1, key2, NULL);
             te_add_event(ev);
-            te_free_event(ev);
+            te_free_event(&ev);
          }
       }
    }
@@ -1002,7 +1002,7 @@ void rebuild_signal_events()
 
             ev = te_new_event(when, TYPE_SIGNAL_RESEND_EVENT, ONE_TIME_EVENT, 0, 0, str_key);
             te_add_event(ev);
-            te_free_event(ev);
+            te_free_event(&ev);
          }
       }
    }
@@ -1163,7 +1163,7 @@ monitoring_t *monitor
       ev = te_new_event((time_t)next_delivery_time, TYPE_SIGNAL_RESEND_EVENT, ONE_TIME_EVENT,
          lGetUlong(jep, JB_job_number), lGetUlong(jatep, JAT_task_number), NULL);
       te_add_event(ev);
-      te_free_event(ev);
+      te_free_event(&ev);
       lSetUlong(jatep, JAT_pending_signal_delivery_time, next_delivery_time); 
    }
    else
@@ -1178,7 +1178,7 @@ monitoring_t *monitor
       ev = te_new_event((time_t)next_delivery_time, TYPE_SIGNAL_RESEND_EVENT, ONE_TIME_EVENT, 0, 0,
          lGetString(qep, QU_full_name));
       te_add_event(ev);
-      te_free_event(ev);
+      te_free_event(&ev);
       lSetUlong(qep, QU_pending_signal_delivery_time, next_delivery_time);
    }
 

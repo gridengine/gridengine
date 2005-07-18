@@ -744,20 +744,21 @@ sge_process_schedd_conf_event_before(sge_object_type type, sge_event_action acti
                lSetString(new, SC_load_formula, "none");
 
       }
-      else{
-         char *copy;  
+      else {
 
          int n = strlen(new_load_formula);
-         if (n) {
+         if (n > 0) {
+            char *copy = NULL;  
+
+         
             copy = malloc(n + 1);
-            if (copy) {
+            if (copy != NULL) {
                strcpy(copy, new_load_formula);
+
+               sge_strip_blanks(copy);
+               lSetString(new, SC_load_formula, copy);
             }
-
-            sge_strip_blanks(copy);
-            lSetString(new, SC_load_formula, copy);
-
-            free(copy);
+            FREE(copy);
          }
       }
    }
@@ -766,6 +767,7 @@ sge_process_schedd_conf_event_before(sge_object_type type, sge_event_action acti
    {
       const char *time = lGetString(new, SC_schedule_interval); 
       u_long32 schedule_interval;  
+      
       if (extended_parse_ulong_val(NULL, &schedule_interval, TYPE_TIM, time, NULL, 0, 0) ) {
          if (ec_get_edtime() != schedule_interval) {
            ec_set_edtime(schedule_interval);

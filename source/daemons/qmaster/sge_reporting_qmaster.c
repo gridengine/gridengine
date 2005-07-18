@@ -125,6 +125,9 @@ reporting_create_record(lList **answer_list,
                         const char *data);
 
 static bool
+reporting_create_sharelog_record(lList **answer_list, monitoring_t *monitor);
+
+static bool
 reporting_write_load_values(lList **answer_list, dstring *buffer, 
                             const lList *load_list, const lList *variables);
 
@@ -211,7 +214,7 @@ reporting_initialize(lList **answer_list)
     */
    ev = te_new_event(time(NULL), TYPE_REPORTING_TRIGGER, ONE_TIME_EVENT, 1, 0, NULL);
    te_add_event(ev);
-   te_free_event(ev);
+   te_free_event(&ev);
 
    /* the sharelog timed events can be switched on or off */
    config_sharelog();
@@ -308,7 +311,7 @@ reporting_trigger_handler(te_event_t anEvent, monitoring_t *monitor)
    switch (te_get_type(anEvent)) {
       case TYPE_SHARELOG_TRIGGER:
          /* dump sharetree usage and flush reporting file */
-         if (!reporting_create_sharelog_record(&answer_list)) {
+         if (!reporting_create_sharelog_record(&answer_list, monitor)) {
             answer_list_output(&answer_list);
          }
          flush_interval = sharelog_time;
@@ -336,7 +339,7 @@ reporting_trigger_handler(te_event_t anEvent, monitoring_t *monitor)
 
       ev = te_new_event((time_t)next, te_get_type(anEvent), ONE_TIME_EVENT, 1, 0, NULL);
       te_add_event(ev);
-      te_free_event(ev);
+      te_free_event(&ev);
    }
 
    DEXIT;
@@ -933,7 +936,8 @@ reporting_create_host_consumable_record(lList **answer_list,
 *     ??? 
 *
 *  INPUTS
-*     lList **answer_list - used to return error messages
+*     lList **answer_list   - used to return error messages
+*     monitoring_t *monitor - monitors the use of the global lock
 *
 *  RESULT
 *     bool -  true on success, false on error
@@ -942,8 +946,8 @@ reporting_create_host_consumable_record(lList **answer_list,
 *     MT-NOTE: reporting_create_sharelog_record() is most probably MT safe
 *              (depends on sge_sharetree_print with uncertain MT safety)
 *******************************************************************************/
-bool
-reporting_create_sharelog_record(lList **answer_list)
+static bool
+reporting_create_sharelog_record(lList **answer_list, monitoring_t *monitor)
 {
    bool ret = true;
 
@@ -976,7 +980,7 @@ reporting_create_sharelog_record(lList **answer_list)
          format.line_prefix  = sge_dstring_get_string(&prefix_dstring);
 
          /* dump the sharetree data */
-         SGE_LOCK(LOCK_GLOBAL, LOCK_READ);
+         MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_READ), monitor);
 
          sge_sharetree_print(&data_dstring, Master_Sharetree_List, 
                              Master_User_List,
@@ -1501,7 +1505,7 @@ config_sharelog(void) {
          ev = te_new_event(time(NULL), TYPE_SHARELOG_TRIGGER , ONE_TIME_EVENT, 
                            1, 0, NULL);
          te_add_event(ev);
-         te_free_event(ev);
+         te_free_event(&ev);
          sharelog_running = true;
       }
    } else {

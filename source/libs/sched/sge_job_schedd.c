@@ -264,7 +264,7 @@ int job_get_next_task(lListElem *job, lListElem **task_ret, u_long32 *id_ret)
    DENTER(TOP_LAYER, "job_get_next_task");
 
    ja_task = lFirst(lGetList(job, JB_ja_tasks));
-   if (!ja_task) {
+   if (ja_task == NULL) {
       lList *answer_list = NULL;
 
       ja_task_id = range_list_get_first_id(lGetList(job, JB_ja_n_h_ids),
@@ -274,7 +274,8 @@ int job_get_next_task(lListElem *job, lListElem **task_ret, u_long32 *id_ret)
          return -1;
       }
       ja_task = job_get_ja_task_template_pending(job, ja_task_id);
-   } else {
+   } 
+   else {
       ja_task_id = lGetUlong(ja_task, JAT_task_number);
    }
 

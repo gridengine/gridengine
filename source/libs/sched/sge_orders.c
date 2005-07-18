@@ -557,7 +557,7 @@ int sge_send_job_start_orders(order_t *orders) {
   
    /* send orders */
    if (lGetNumberOfElem(orders->configOrderList) > 0) {
-   
+
       orders_send += lGetNumberOfElem(orders->configOrderList);
       sge_gdi_multi_sync(&alp, config_mode, SGE_ORDER_LIST, SGE_GDI_ADD,
                                &orders->configOrderList, NULL, NULL, &malp, &state, false, true);

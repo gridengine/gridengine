@@ -73,6 +73,8 @@
 #include "sge_ulong.h"
 #include "sge_centry.h"
 #include "sge_profiling.h"
+#include "sgeobj/sge_schedd_conf.h"
+#include "sge_mt_init.h"
 
 #define QHOST_DISPLAY_QUEUES     (1<<0)
 #define QHOST_DISPLAY_JOBS       (1<<1)
@@ -117,7 +119,8 @@ char **argv
 
    DENTER_MAIN(TOP_LAYER, "qhost");
 
-   sge_prof_setup();
+   sge_mt_init();
+/*   sge_prof_setup(); >*/
   
    log_state_set_log_gui(1);
 
@@ -127,6 +130,11 @@ char **argv
       sge_prof_cleanup();
       SGE_EXIT(1);
    }
+
+   /* init sched-conf local storage */
+/*   sconf_set_now(0); */
+
+
 
    sge_setup_sig_handlers(QHOST);
 

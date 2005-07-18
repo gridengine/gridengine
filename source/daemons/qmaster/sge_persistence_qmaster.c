@@ -87,7 +87,7 @@ sge_initialize_persistence(lList **answer_list)
          te_register_event_handler(spooling_trigger_handler, TYPE_SPOOLING_TRIGGER);
          ev = te_new_event(now, TYPE_SPOOLING_TRIGGER, ONE_TIME_EVENT, 0, 0, NULL);
          te_add_event(ev);
-         te_free_event(ev);
+         te_free_event(&ev);
       }
    }
 
@@ -157,7 +157,7 @@ spooling_trigger_handler(te_event_t anEvent, monitoring_t *monitor)
    /* set timerevent for next trigger */
    ev = te_new_event(next_trigger, te_get_type(anEvent), ONE_TIME_EVENT, 0, 0, NULL);
    te_add_event(ev);
-   te_free_event(ev);
+   te_free_event(&ev);
 
    DEXIT;
    return;

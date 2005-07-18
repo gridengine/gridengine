@@ -68,7 +68,7 @@ typedef void (*te_handler_t)(te_event_t, monitoring_t *monitor);
 
 extern void       te_register_event_handler(te_handler_t, te_type_t);
 extern te_event_t te_new_event(time_t, te_type_t, te_mode_t, u_long32, u_long32, const char*);
-extern void       te_free_event(te_event_t);
+extern void       te_free_event(te_event_t*);
 extern void       te_add_event(te_event_t);
 extern int        te_delete_one_time_event(te_type_t, u_long32, u_long32, const char*);     
 extern void       te_shutdown(void);

@@ -166,9 +166,9 @@ int sge_read_user_mapping_entries_from_disk()
  
   direntries = sge_get_dirents(UME_DIR);
   if (direntries) {
-     if (*(cuser_list_get_master_list()) == NULL) {
-        *(cuser_list_get_master_list()) = 
-           lCreateList("", CU_Type);
+     lList **cuser_master_list = object_type_get_master_list(SGE_TYPE_CUSER); 
+     if (*(cuser_master_list) == NULL) {
+        *(cuser_master_list) = lCreateList("", CU_Type);
      }  
      if (!sge_silent_get()) { 
         printf(MSG_CONFIG_READINGUSERMAPPINGENTRY);

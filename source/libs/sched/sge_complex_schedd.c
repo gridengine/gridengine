@@ -262,8 +262,10 @@ lListElem* get_attribute(const char *attrname, lList *config_attr, lList *actual
                char err_str[256];
                char sval[100];
                u_long32 dom_type = DOMINANT_TYPE_LOAD;
+               lList *load_adjustments = sconf_get_job_load_adjustments();
  
-               job_load=lGetElemStr(sconf_get_job_load_adjustments(), CE_name, attrname);
+               job_load=lGetElemStr(load_adjustments, CE_name, attrname);
+
                if (parse_ulong_val(&dval, NULL, type, load_value, NULL, 0)) {
 
                strncpy(sval, load_value, 100);
@@ -325,6 +327,7 @@ lListElem* get_attribute(const char *attrname, lList *config_attr, lList *actual
                   lSetDouble(cplx_el, CE_pj_doubleval, dval );
                }
             } /* end numerical load value */
+            load_adjustments = lFreeList(load_adjustments);
          }/* end block */
       }
    }
@@ -1379,7 +1382,7 @@ char *object_name
 
       tmp_elem = lCopyElem(new_ep); 
       attr_mod_sub_list(alpp, tmp_elem, nm, primary_key, qep,
-         sub_command, attr_name, object_name, 0); 
+                        sub_command, attr_name, object_name, 0); 
 
       ret=centry_list_fill_request(lGetList(tmp_elem, nm), Master_CEntry_List, true, false, false);
       if (ret) {

@@ -434,7 +434,7 @@ sge_automatic_user_cleanup_handler(te_event_t anEvent, monitoring_t *monitor)
 {
    DENTER(TOP_LAYER, "sge_automatic_user_cleanup_handler");
 
-   SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE);
+   MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE), monitor);
 
    /* shall auto users be deleted again? */
    if (conf.auto_user_delete_time > 0) {
@@ -625,8 +625,8 @@ void sge_userprj_spool(void) {
 
    DENTER(TOP_LAYER, "sge_userprj_spool");
 
+   /* this function is used on qmaster shutdown, no need to monitor this lock */
    SGE_LOCK(LOCK_GLOBAL, LOCK_READ);
-   
 
    for_each(elem, Master_User_List) {
       name = lGetString(elem, UP_name);

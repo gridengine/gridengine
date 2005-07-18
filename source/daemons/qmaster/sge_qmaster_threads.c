@@ -98,11 +98,6 @@ typedef struct {
 
 
 static qmaster_control_t Qmaster_Control = {PTHREAD_MUTEX_INITIALIZER, PTHREAD_COND_INITIALIZER, INVALID_THREAD, false, 0};
-static pthread_rwlock_t Global_Lock;
-/* lock service provider */
-static void lock_callback(sge_locktype_t, sge_lockmode_t, const char *func, sge_locker_t);
-static void unlock_callback(sge_locktype_t, sge_lockmode_t, const char *func, sge_locker_t);
-static sge_locker_t id_callback(void);
 
 /* thread management */
 static void      inc_thread_count(void);
@@ -353,7 +348,7 @@ void sge_start_heartbeat(void)
 
    ev = te_new_event(HEARTBEAT_INTERVAL, TYPE_HEARTBEAT_EVENT, RECURRING_EVENT, 0, 0, "heartbeat-event");
    te_add_event(ev);
-   te_free_event(ev);
+   te_free_event(&ev);
 
    DEXIT;
    return;
@@ -558,28 +553,27 @@ void sge_start_periodic_tasks(void)
 
    ev = te_new_event(15, TYPE_JOB_NUMBER_EVENT, RECURRING_EVENT, 0, 0, "job_number_changed");
    te_add_event(ev);
-   te_free_event(ev);
+   te_free_event(&ev);
 
    ev = te_new_event(15, TYPE_LOAD_VALUE_CLEANUP_EVENT, RECURRING_EVENT, 0, 0, "load-value-cleanup");
    te_add_event(ev);
-   te_free_event(ev);
+   te_free_event(&ev);
 
    ev = te_new_event(30, TYPE_ZOMBIE_JOB_CLEANUP_EVENT, RECURRING_EVENT, 0, 0, "zombie-job-cleanup");
    te_add_event(ev);
-   te_free_event(ev);
+   te_free_event(&ev);
 
    ev = te_new_event(60, TYPE_AUTOMATIC_USER_CLEANUP_EVENT, RECURRING_EVENT, 0, 0, "automatic-user-cleanup");
    te_add_event(ev);
-   te_free_event(ev);
+   te_free_event(&ev);
 
    ev = te_new_event(10, TYPE_SECURITY_EVENT, RECURRING_EVENT, 0, 0, "security-event");
    te_add_event(ev);
-   te_free_event(ev);
+   te_free_event(&ev);
 
    DEXIT;
    return;
 } /* sge_start_periodic_tasks() */
-
 
 /****** sge_qmaster_threads/sge_register_event_handler() ***********************
 *  NAME
@@ -625,197 +619,6 @@ void sge_register_event_handler(void)
    DEXIT;
    return;
 }
-
-/****** qmaster/sge_qmaster_main/sge_setup_lock_service() **************************
-*  NAME
-*     sge_setup_lock_service() -- setup lock service 
-*
-*  SYNOPSIS
-*     static void sge_setup_lock_service(void) 
-*
-*  FUNCTION
-*     Determine number of locks needed. Create and initialize the respective
-*     mutexes. Register the callbacks required by the locking API 
-*
-*  INPUTS
-*     void - none 
-*
-*  RESULT
-*     void - none 
-*
-*  NOTES
-*     MT-NOTE: sge_setup_lock_service() is NOT MT safe. 
-*
-*     Currently we do not use so called recursive mutexes. This may change
-*     *without* warning, if necessary!
-*
-*  SEE ALSO
-*     libs/lck/sge_lock.c
-*
-*******************************************************************************/
-void sge_setup_lock_service(void)
-{
-   DENTER(TOP_LAYER, "sge_setup_lock_service");
-   
-   pthread_rwlock_init(&Global_Lock, NULL); 
-   sge_set_lock_callback(lock_callback);
-   sge_set_unlock_callback(unlock_callback);
-   sge_set_id_callback(id_callback);
-   
-   DEXIT;
-   return;
-} /* sge_setup_lock_service() */
-
-/****** qmaster/sge_qmaster_main/sge_teardown_lock_service() ***********************
-*  NAME
-*     sge_teardown_lock_service() -- teardown lock service 
-*
-*  SYNOPSIS
-*     static void sge_teardown_lock_service(void) 
-*
-*  FUNCTION
-*     Destroy and free mutexes created with 'sge_setup_lock_service()' 
-*
-*  INPUTS
-*     void - none 
-*
-*  RESULT
-*     void - none
-*
-*  NOTES
-*     MT-NOTE: sge_teardown_lock_service() is NOT MT safe. 
-*
-*******************************************************************************/
-void sge_teardown_lock_service(void)
-{
-   DENTER(TOP_LAYER, "sge_teardown_lock_service");
-
-   
-   DEXIT;
-   return;
-} /* sge_teardown_lock_service() */
-
-/****** qmaster/sge_qmaster_main/lock_callback() *******************************
-*  NAME
-*     lock_callback() -- lock callback 
-*
-*  SYNOPSIS
-*     static void lock_callback(sge_locktype_t aType, sge_lockmode_t aMode, 
-*     sge_locker_t anID) 
-*
-*  FUNCTION
-*     Acquire global lock determined by 'aType' in mode 'aMode'. 
-*
-*  INPUTS
-*     sge_locktype_t aType - lock type 
-*     sge_lockmode_t aMode - lock mode 
-*     sge_locker_t anID    - locker id
-*
-*  RESULT
-*     void - none
-*
-*  NOTES
-*     MT-NOTE: lock_callback() is MT safe. 
-*
-*     Currently a global lock is just a 'pthread_mutex_t'. This does imply
-*     that the lock mode has no effect.
-*
-*******************************************************************************/
-static void lock_callback(sge_locktype_t aType, sge_lockmode_t aMode, const char *func,  sge_locker_t anID)
-{
-   DENTER(TOP_LAYER, "lock_callback");
-
-   if (aMode == LOCK_READ) {
-       sge_rwlock_rdlock("Global_Lock_read", func, __LINE__, &(Global_Lock));
-   }
-   else if (aMode == LOCK_WRITE) {
-       sge_rwlock_wrlock("Global_Lock_write", func, __LINE__, &(Global_Lock));
-   }
-   else {
-      ERROR((SGE_EVENT, "wrong lock type for global lock\n")); 
-   }
-
-   DEXIT;
-   return;
-} /* lock_callback() */
-
-/****** qmaster/sge_qmaster_main/unlock_callback() *****************************
-*  NAME
-*     unlock_callback() -- unlock callback 
-*
-*  SYNOPSIS
-*     static void unlock_callback(sge_locktype_t aType, sge_lockmode_t aMode, 
-*     sge_locker_t anID) 
-*
-*  FUNCTION
-*     Release global lock 'aType' which has been acquired in mode 'aMode'
-*     previously. 
-*
-*  INPUTS
-*     sge_locktype_t aType - lock type 
-*     sge_lockmode_t aMode - lock mode 
-*     sge_locker_t anID    - locker id 
-*
-*  RESULT
-*     void - none
-*
-*  NOTES
-*     MT-NOTE: unlock_callback() is MT safe. 
-*
-*     Currently a global lock is just a 'pthread_mutex_t'. This does imply
-*     that the lock mode has no effect.
-*
-*******************************************************************************/
-static void unlock_callback(sge_locktype_t aType, sge_lockmode_t aMode, const char *func, sge_locker_t anID)
-{
-   DENTER(TOP_LAYER, "unlock_callback");
-
-   if (aMode == LOCK_READ) {
-       sge_rwlock_unlock("Global_Lock_read", "lock_callback", __LINE__, &(Global_Lock));
-   }
-   else if (aMode == LOCK_WRITE) {
-       sge_rwlock_unlock("Global_Lock_write", "lock_callback", __LINE__, &(Global_Lock));
-   }
-  else {
-      ERROR((SGE_EVENT, "wrong lock type for global lock\n"));
-   }
-   
-
-   DEXIT;
-   return;
-} /* unlock_callback() */
-
-/****** qmaster/sge_qmaster_main/id_callback() *********************************
-*  NAME
-*     id_callback() -- locker ID callback 
-*
-*  SYNOPSIS
-*     static sge_locker_t id_callback(void) 
-*
-*  FUNCTION
-*     Return ID of current locker. 
-*
-*  INPUTS
-*     void - none 
-*
-*  RESULT
-*     sge_locker_t - locker id
-*
-*  NOTES
-*     MT-NOTE: id_callback() is MT safe. 
-*
-*******************************************************************************/
-static sge_locker_t id_callback(void)
-{
-   sge_locker_t id;
-
-   DENTER(TOP_LAYER, "id_callback");
-   
-   id = (sge_locker_t)pthread_self();
-
-   DEXIT;
-   return id;
-} /* id_callback */
 
 /****** qmaster/sge_qmaster_main/sge_exit_func() **********************************
 *  NAME

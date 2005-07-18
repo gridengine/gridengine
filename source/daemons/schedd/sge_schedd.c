@@ -38,6 +38,7 @@
 #include <sys/stat.h>
 #include <sys/time.h>
 
+#include "sge_lock.h"
 #include "sge_bootstrap.h"
 #include "sge_unistd.h"
 #include "sge.h"
@@ -101,7 +102,7 @@ int daemonize_schedd(void);
 
 /* array used to select from different scheduling alorithms */
 sched_func_struct sched_funcs[] =
-{
+{ /*algorithm_config        name                event subscription         data preparation    -- calls --> scheduler_impl */
    {"default",      "Default scheduler",   subscribe_default_scheduler, event_handler_default_scheduler, (void *)scheduler },
    
 #ifdef SCHEDULER_SAMPLES
@@ -128,8 +129,6 @@ char *argv[]
    bool done = false;
 
    DENTER_MAIN(TOP_LAYER, "schedd");
-
-   sge_prof_setup();
 
    sge_mt_init();
 
@@ -224,6 +223,7 @@ char *argv[]
 
    cl_com_set_synchron_receive_timeout( cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0), (int) (sconf_get_schedule_interval() * 2) );
 
+   sge_setup_lock_service();
 
    in_main_loop = 1;
 
@@ -284,7 +284,7 @@ char *argv[]
                                               (int) (sconf_get_schedule_interval() * 2) );
 
          /* check profiling settings, if necessary, switch profiling on/off */
-         if(sconf_get_profiling()) {
+         if (sconf_get_profiling()) {
             prof_start(SGE_PROF_OTHER, NULL);
             prof_start(SGE_PROF_PACKING, NULL);
             prof_start(SGE_PROF_EVENTCLIENT, NULL);
@@ -299,7 +299,8 @@ char *argv[]
             prof_start(SGE_PROF_CUSTOM6, NULL);
             prof_start(SGE_PROF_CUSTOM7, NULL);
             prof_start(SGE_PROF_SCHEDLIB4, NULL);
-         } else {
+         } 
+         else {
             prof_stop(SGE_PROF_OTHER, NULL);
             prof_stop(SGE_PROF_PACKING, NULL);
             prof_stop(SGE_PROF_EVENTCLIENT, NULL);
@@ -331,8 +332,13 @@ char *argv[]
          }
       }
    }
+   
+   sge_teardown_lock_service();
+   
    sge_prof_cleanup();
+
    FREE(initial_qmaster_host);
+
    DEXIT;
    return EXIT_SUCCESS;
 }

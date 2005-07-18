@@ -1177,7 +1177,7 @@ sge_init_share_tree_nodes( lListElem *root )
 
 
 /*--------------------------------------------------------------------
- * get_usage - return usage entry based on name
+ * get_usage - return libs/sched/sgeee.c usage entry based on name
  *--------------------------------------------------------------------*/
 
 static lListElem *
@@ -1315,13 +1315,8 @@ combine_usage( sge_ref_t *ref )
    /*-------------------------------------------------------------
     * Get usage from associated user/project object
     *-------------------------------------------------------------*/
-
-#if 0
-   userprj = ref->share_tree_type == STT_PROJECT ? ref->project : ref->user;
-#endif
-
    if (ref->node) {
-      const lList *usage_weight_list = NULL;
+      lList *usage_weight_list = NULL;
       lList *usage_list=NULL;
       lListElem *usage_weight, *usage_elem;
       double sum_of_usage_weights = 0;
@@ -1351,10 +1346,14 @@ combine_usage( sge_ref_t *ref )
                    ((upp = lGetElemStr(upp_list, UPP_name,
                                        lGetString(ref->project, UP_name)))))
                   usage_list = lGetList(upp, UPP_usage);
-            } else
+            } 
+            else {
                usage_list = lGetList(ref->user, UP_usage);
-         } else if (ref->project) /* not sure about this, use it when? */
+            }
+         } 
+         else if (ref->project) { /* not sure about this, use it when? */
             usage_list = lGetList(ref->project, UP_usage);
+         }
 
          for_each(usage_elem, usage_list) {
             usage_name = lGetString(usage_elem, UA_name);
@@ -1373,7 +1372,7 @@ combine_usage( sge_ref_t *ref )
        *-------------------------------------------------------------*/
 
       lSetDouble(ref->node, STN_combined_usage, usage_value);
-
+      usage_weight_list = lFreeList(usage_weight_list);
    }
 
    return;
@@ -1405,30 +1404,28 @@ decay_and_sum_usage( sge_ref_t *ref,
              *userprj = NULL,
              *petask;
 
-   if (!node && !user && !project)
+   if (!node && !user && !project) {
       return;
+   }   
 
-#if 0
-   if (ref->share_tree_type == STT_PROJECT)
-      userprj = ref->project;
-   else
+   if (ref->user) {
       userprj = ref->user;
-#endif
-
-   if (ref->user)
-      userprj = ref->user;
-   else if (ref->project)
+   }
+   else if (ref->project) {
       userprj = ref->project;
+   }
 
    /*-------------------------------------------------------------
     * Decay the usage for the associated user and project
     *-------------------------------------------------------------*/
     
-   if (user)
+   if (user) {
       decay_userprj_usage(user, decay_list, seqno, curr_time);
+   }
 
-   if (project)
+   if (project) {
       decay_userprj_usage(project, decay_list, seqno, curr_time);
+   }
 
    /*-------------------------------------------------------------
     * Note: Since SGE will update job.usage directly, we 
@@ -2720,10 +2717,13 @@ sge_calc_tickets( sge_Sdescr_t *lists,
 
    sge_scheduling_run++;
    { 
-      const lList *halflife_decay_list = sconf_get_halflife_decay_list();
+      lList *halflife_decay_list = sconf_get_halflife_decay_list();
+
       if (halflife_decay_list) {
-         lListElem *ep, *u;
+         lListElem *ep = NULL;
+         lListElem *u = NULL;
          double decay_rate, decay_constant;
+         
          for_each(ep, halflife_decay_list) {
             calculate_decay_constant(lGetDouble(ep, UA_value),
                                     &decay_rate, &decay_constant);
@@ -2731,13 +2731,16 @@ sge_calc_tickets( sge_Sdescr_t *lists,
                            UA_Type); 
             lSetDouble(u, UA_value, decay_constant);
          }
-      } else {
-         lListElem *u;
+      } 
+      else {
+         lListElem *u = NULL;
          double decay_rate, decay_constant;
+
          calculate_decay_constant(-1, &decay_rate, &decay_constant);
          u = lAddElemStr(&decay_list, UA_name, "finished_jobs", UA_Type); 
          lSetDouble(u, UA_value, decay_constant);
       }
+      halflife_decay_list = lFreeList(halflife_decay_list);
    }
 
    /*-------------------------------------------------------------
@@ -3971,7 +3974,6 @@ sge_build_sgeee_orders(sge_Sdescr_t *lists, lList *running_jobs, lList *queued_j
 {
    static lEnumeration *usage_what = NULL;
    static lEnumeration *share_tree_what = NULL;
-   static lEnumeration *config_what = NULL;
    lCondition *where=NULL;
    lList *up_list = NULL;
    lList *order_list = NULL;
@@ -3986,11 +3988,6 @@ sge_build_sgeee_orders(sge_Sdescr_t *lists, lList *running_jobs, lList *queued_j
    
    DENTER(TOP_LAYER, "sge_build_sgeee_orders");
 
-   if (config_what == NULL) {
-      config_what = lWhat("%T(%I )", SC_Type,
-                   SC_weight_tickets_override);
-   }   
-                   
    if (share_tree_what == NULL) {
       share_tree_what = lWhat("%T(%I %I %I %I %I %I)", STN_Type,
                          STN_version, STN_name, STN_job_ref_count, STN_m_share,
@@ -4117,8 +4114,10 @@ sge_build_sgeee_orders(sge_Sdescr_t *lists, lList *running_jobs, lList *queued_j
                lSetUlong(order, OR_type, ORT_update_user_usage);
                lSetList(order, OR_joker, up_list);
                lAppendElem(order_list, order);
-            } else
+            } 
+            else {
                lFreeList(up_list);
+            }
          }
          DPRINTF(("   added %d orders for updating usage of user\n",
             lGetNumberOfElem(order_list) - norders));      
@@ -4127,7 +4126,6 @@ sge_build_sgeee_orders(sge_Sdescr_t *lists, lList *running_jobs, lList *queued_j
       /*-----------------------------------------------------------------
        * build update project usage order
        *-----------------------------------------------------------------*/
-
       if (lists->project_list) {
          norders = lGetNumberOfElem(order_list); 
          if ((up_list = lSelect("", lists->project_list, where, usage_what))) {
@@ -4150,12 +4148,13 @@ sge_build_sgeee_orders(sge_Sdescr_t *lists, lList *running_jobs, lList *queued_j
        *-----------------------------------------------------------------*/
 
       if (lists->share_tree && ((root = lFirst(lists->share_tree)))) {
-         lListElem *node;
+         lListElem *node = NULL;
          norders = lGetNumberOfElem(order_list);
 
          if ((node = get_mod_share_tree(root, share_tree_what, last_seqno))) {
             up_list = lCreateList("", STN_Type);
             lAppendElem(up_list, node);
+
             order = lCreateElem(OR_Type);
             lSetUlong(order, OR_type, ORT_share_tree);
             lSetList(order, OR_joker, up_list);
@@ -4170,19 +4169,27 @@ sge_build_sgeee_orders(sge_Sdescr_t *lists, lList *running_jobs, lList *queued_j
        *-----------------------------------------------------------------*/
 
       if (sconf_is()) {
-         lList *config_list;
-         norders = lGetNumberOfElem(order_list); 
-         if ((config_list = lSelect("", *sconf_get_config_list(), NULL, config_what))) {
-            if (lGetNumberOfElem(config_list)>0) {
-               order = lCreateElem(OR_Type);
-               lSetUlong(order, OR_type, ORT_sched_conf);
-               lSetList(order, OR_joker, config_list);
-               lAppendElem(order_list, order);
-            } else
-               lFreeList(config_list);
-         }
-         DPRINTF(("   added %d orders for scheduler configuration\n",
-            lGetNumberOfElem(order_list) - norders));   
+         lListElem *node = NULL;
+         const lDescr schedConfDesc[] = {
+                            {SC_weight_tickets_override, lUlongT},
+                            {NoName, lEndT}
+                           };
+
+         node = lCreateElem(schedConfDesc);
+         up_list = lCreateList("sched_conf_update", schedConfDesc);
+
+         lAppendElem(up_list, node);
+         
+         lSetUlong(node, SC_weight_tickets_override, 
+                   sconf_get_weight_tickets_override());
+
+         order = lCreateElem(OR_Type);
+         lSetUlong(order, OR_type, ORT_sched_conf);
+         lSetList(order, OR_joker, up_list);
+         lAppendElem(order_list, order);
+         
+         DPRINTF(("   added 1 order for scheduler configuration\n"));
+         
       }
       last_seqno = seqno;
    }

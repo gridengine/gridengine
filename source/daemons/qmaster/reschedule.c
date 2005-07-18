@@ -150,7 +150,7 @@ void reschedule_unknown_event(te_event_t anEvent, monitoring_t *monitor)
       when = time(NULL) + (delta - timeout);
       ev = te_new_event((time_t)when, TYPE_RESCHEDULE_UNKNOWN_EVENT, ONE_TIME_EVENT, delta, 0, hostname);
       te_add_event(ev);
-      te_free_event(ev);
+      te_free_event(&ev);
       DEXIT;
       goto Error;
    }
@@ -1125,7 +1125,7 @@ void reschedule_unknown_trigger(lListElem *hep)
       
       ev = te_new_event((time_t)when, TYPE_RESCHEDULE_UNKNOWN_EVENT, ONE_TIME_EVENT, timeout, 0, host);
       te_add_event(ev);
-      te_free_event(ev);
+      te_free_event(&ev);
    }
    DEXIT;
 }       

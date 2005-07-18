@@ -167,11 +167,12 @@ static double scaled_mixed_load( lListElem *global, lListElem *host, const lList
    double val=0, val2=0;
    double load=0;
    int op_pos, next_op=LOAD_OP_NONE;
-   const char *load_formula = sconf_get_load_formula();
+   char *load_formula = sconf_get_load_formula();
    DENTER(TOP_LAYER, "scaled_mixed_load");
 
    /* we'll use strtok ==> we need a safety copy */
-   if (!(tf = strdup(load_formula))) {
+   if ((tf = sconf_get_load_formula()) == NULL) {
+      FREE(load_formula);
       DEXIT;
       return ERROR_LOAD_VAL;
    }
@@ -195,15 +196,14 @@ static double scaled_mixed_load( lListElem *global, lListElem *host, const lList
          /* it is not an integer ==> it's got to be a load value */
          if (!(par_name = sge_delim_str(cp, &ptr, load_ops)) ||
                get_load_value(&val, global, host, centry_list, par_name)) {
-            if (par_name) {
-               FREE(par_name);
-            }   
+            FREE(par_name);
             FREE(tf);
+            FREE(load_formula);
+
             DEXIT;
             return ERROR_LOAD_VAL;
          }
          FREE(par_name);
-         par_name=NULL;
       }
 
       /* ---------------------------------------- */
@@ -213,6 +213,7 @@ static double scaled_mixed_load( lListElem *global, lListElem *host, const lList
          /* if the delimiter is not \0 it's got to be a operator -> find it */
          if (!(op_ptr=strchr(load_ops,(int) *ptr))) {
             FREE(tf);
+            FREE(load_formula);
             DEXIT;
             return ERROR_LOAD_VAL;
          }
@@ -226,14 +227,13 @@ static double scaled_mixed_load( lListElem *global, lListElem *host, const lList
             /* it is not an integer ==> it's got to be a load value */
             if (!(par_name = sge_delim_str(ptr,NULL,load_ops)) ||
                get_load_value(&val2, global, host, centry_list, par_name)) {
-               if (par_name)
-                  free(par_name);
-               free(tf);
+               FREE(par_name);
+               FREE(tf);
+               FREE(load_formula);
                DEXIT;
                return ERROR_LOAD_VAL;
             }
             FREE(par_name);
-            par_name=NULL;
          }
 
          /* ------------------------------- */
@@ -295,8 +295,9 @@ static double scaled_mixed_load( lListElem *global, lListElem *host, const lList
          next_op = LOAD_OP_MINUS;
       }   
    }
-
+   FREE(load_formula);
    FREE(tf);
+
    DEXIT;
    return load;
 }
@@ -350,6 +351,7 @@ int *sort_hostlist
    lListElem *gel, *hep;
    lListElem *global;
    const char *hnm;
+   lList *job_load_adjustments = sconf_get_job_load_adjustments();
 
    double old_sort_value, new_sort_value;
 
@@ -367,7 +369,7 @@ int *sort_hostlist
       hnm = lGetHost(gel, JG_qhostname);
       hep = host_list_locate(host_list, hnm); 
 
-      if (sconf_get_load_adjustment_decay_time() && lGetNumberOfElem(sconf_get_job_load_adjustments())) {
+      if (sconf_get_load_adjustment_decay_time() && lGetNumberOfElem(job_load_adjustments)) {
          /* increase host load for each scheduled job slot */
          ulc_factor = lGetUlong(hep, EH_load_correction_factor);
          ulc_factor += 100*slots;
@@ -393,9 +395,8 @@ int *sort_hostlist
       lResortElem(so, hep, host_list);
    }
 
-   if(so) {
-      lFreeSortOrder(so);
-   }   
+   so = lFreeSortOrder(so);
+   job_load_adjustments = lFreeList(job_load_adjustments);
 
    DEXIT; 
    return 0;

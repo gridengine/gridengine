@@ -39,7 +39,7 @@ QEVENT_TARGETS = qevent
 QEVENT_SRC = qevent.c
 
 QEVENT_ADD_SRC = \
-               usage.c sig_handlers.c sge_options.c
+               usage.c sig_handlers.c sge_options.c sge_mt_init.c
 
 QEVENT_OBJS = $(QEVENT_SRC:.c=.o) 
 

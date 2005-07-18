@@ -36,10 +36,6 @@
 
 void sge_gdi_kill_master(char *host, sge_gdi_request *request, sge_gdi_request *answer);
 
-/* lock_service_provider */
-void sge_setup_lock_service(void);
-void sge_teardown_lock_service(void);
-
 /* thread management */
 void sge_create_and_join_threads(void);
 

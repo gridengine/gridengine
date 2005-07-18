@@ -54,7 +54,7 @@ DRMAALIB_OBJS    = $(DRMAALIB_SRC:.c=.o) $(JAPILIB_OBJS) $(JAPI_ADD_OBJS) $(EVCL
 JAPI_ADD_SRC = parse_job_cull.c parse_qsub.c read_defaults.c sge_options.c
 
 JAPI_ADD_OBJS = $(JAPI_ADD_SRC:.c=.o)
-JAPI_ADD_LIBS = -levc -lgdi -lsgeobj -lsgeobjd \
+JAPI_ADD_LIBS = $(EVCLIB) -lgdi -lsgeobj -lsgeobjd \
                 $(SECLIB) $(KRBLIB) -lcull -lcomm -lcommlists \
                 $(WINGRIDLIB) -luti -lrmon -llck $(DLLIB)
                 

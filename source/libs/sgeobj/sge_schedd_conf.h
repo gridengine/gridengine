@@ -68,6 +68,8 @@ typedef struct {
    int dependent;
 } policy_hierarchy_t;  
 
+void sc_init_mt(void); 
+
 void sconf_ph_fill_array(policy_hierarchy_t array[]);
 
 void sconf_ph_print_array(policy_hierarchy_t array[]);
@@ -86,15 +88,15 @@ bool sconf_is_valid_load_formula(lListElem *sc_ep,
                                        lList *cmplx_list);
 
 bool
-sconf_is_centry_referenced(const lListElem *this_elem, const lListElem *centry);
+sconf_is_centry_referenced(const lListElem *centry);
 
 bool sconf_validate_config(lList **answer_list, lList *config);
 
 bool sconf_validate_config_(lList **answer_list);
 
-const lListElem *sconf_get_config(void);
+lListElem *sconf_get_config(void); 
 
-lList **sconf_get_config_list(void);
+lList *sconf_get_config_list(void); 
 
 bool sconf_is_new_config(void); 
 void sconf_reset_new_config(void);
@@ -103,17 +105,9 @@ bool sconf_is(void);
 
 u_long32 sconf_get_load_adjustment_decay_time(void);
 
-const lList *sconf_get_job_load_adjustments(void);
+lList *sconf_get_job_load_adjustments(void);
 
-const char *sconf_get_schedule_interval_str(void);
-
-const char *sconf_get_load_formula(void);
-
-const char *sconf_get_load_adjustment_decay_time_str(void);
-
-const char *sconf_reprioritize_interval_str(void);
-
-const char *sconf_get_param(const char *name);
+char *sconf_get_load_formula(void);
 
 u_long32 sconf_get_queue_sort_method(void);
 
@@ -123,19 +117,13 @@ u_long32 sconf_get_schedule_interval(void);
 
 u_long32 sconf_get_reprioritize_interval(void);
 
-u_long32 sconf_get_schedd_job_info(void);
-
 u_long32 sconf_get_weight_tickets_share(void);
 
-void sconf_disable_schedd_job_info(void);
+lList *sconf_get_schedd_job_info_range(void);
 
-void sconf_enable_schedd_job_info(void);
+bool sconf_is_id_in_schedd_job_info_range(u_long32 job_number);
 
-const lList *sconf_get_schedd_job_info_range(void);
-
-const char *sconf_get_algorithm(void);
-
-const lList *sconf_get_usage_weight_list(void);
+lList *sconf_get_usage_weight_list(void);
 
 double sconf_get_weight_user(void);
 
@@ -152,6 +140,8 @@ u_long32 sconf_get_weight_tickets_functional(void);
 u_long32 sconf_get_halftime(void);
 
 void sconf_set_weight_tickets_override(u_long32 active);
+
+u_long32 sconf_get_weight_tickets_override(void);
 
 double sconf_get_compensation_factor(void);
 
@@ -171,9 +161,7 @@ u_long32 sconf_get_max_functional_jobs_to_schedule(void);
 
 u_long32 sconf_get_max_pending_tasks_per_job(void);
 
-const char *sconf_get_halflife_decay_list_str(void);
-
-const lList* sconf_get_halflife_decay_list(void);
+lList* sconf_get_halflife_decay_list(void);
 
 double sconf_get_weight_ticket(void);
 double sconf_get_weight_waiting_time(void);
@@ -182,19 +170,25 @@ double sconf_get_weight_urgency(void);
 
 u_long32 sconf_get_max_reservations(void);
 
+double sconf_get_weight_priority(void);
+bool sconf_get_profiling(void);
+
+u_long32 sconf_get_default_duration(void);
+
 typedef enum {
    QS_STATE_EMPTY,
    QS_STATE_FULL
 } qs_state_t;
+
+u_long32 sconf_get_schedd_job_info(void);
+void sconf_disable_schedd_job_info(void);
+void sconf_enable_schedd_job_info(void);
 
 void sconf_set_qs_state(qs_state_t state);
 qs_state_t sconf_get_qs_state(void);
 
 void sconf_set_global_load_correction(bool flag);
 bool sconf_get_global_load_correction(void);
-
-u_long32 sconf_get_default_duration(void);
-const char *sconf_get_default_duration_str(void);
 
 void     sconf_set_now(u_long32);
 u_long32 sconf_get_now(void);
@@ -208,10 +202,5 @@ void sconf_set_last_dispatch_type(int changed);
 u_long32  sconf_get_duration_offset(void);
 
 bool serf_get_active(void);
-void serf_set_active(bool);
-
-double sconf_get_weight_priority(void);
-
-bool sconf_get_profiling(void);
 
 #endif /* __SGE_SCHEDD_CONF_H */

@@ -112,7 +112,7 @@ static object_description object_base[SGE_TYPE_ALL] = {
    { &Master_Project_List,         NULL,           NULL,                 "PROJECT",           UP_Type,   UP_name           },
    { &Master_CQueue_List,          NULL,           NULL,                 "CQUEUE",            CQ_Type,   CQ_name           },
    { NULL,                         NULL,           NULL,                 "QINSTANCE",         QU_Type,   QU_qname          },
-   { NULL,                 sconf_get_config_list, sconf_validate_config_, "SCHEDD_CONF",      SC_Type,   NoName            },
+   { NULL,                         NULL,         sconf_validate_config_, "SCHEDD_CONF",       SC_Type,   NoName            },
    { NULL,                         NULL,           NULL,                 "SCHEDD_MONITOR",    NULL,      NoName            },
    { NULL,                         NULL,           NULL,                 "SHUTDOWN",          NULL,      NoName            },
    { NULL,                         NULL,           NULL,                 "QMASTER_GOES_DOWN", NULL,      NoName            },
@@ -1008,7 +1008,8 @@ lList **object_type_get_master_list(const sge_object_type type)
    return ret;
 }
 
-bool object_type_commit_master_list(const sge_object_type type, lList **answer_list) {
+bool object_type_commit_master_list(const sge_object_type type, lList **answer_list) 
+{
    bool ret = true;
    
    DENTER(OBJECT_LAYER, "object_type_set_master_list");

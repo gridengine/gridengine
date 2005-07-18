@@ -1201,16 +1201,18 @@ XtPointer cld, cad;
    /*
    ** set the share tree sensitive to enable editing
    */
-/*    XtSetSensitive(tree, True); */
    XmtDisplayDefaultCursor(w);
 
    /*
    ** refresh the Sharetree Parameters section 
    */
-/*   if (scl) { */
    if (sconf_is()) {
-      CullToParameters(&ratio_data, sconf_get_config());
+      lListElem *schedd_conf = sconf_get_config();
+
+      CullToParameters(&ratio_data, schedd_conf);
       XmtDialogSetDialogValues(st_ratio, &ratio_data);
+
+      schedd_conf = lFreeElem(schedd_conf);
    }
    
    DEXIT;

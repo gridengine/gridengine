@@ -316,15 +316,15 @@ te_event_t te_new_event(time_t aTime, te_type_t aType, te_mode_t aMode, u_long32
 *     MT-NOTE: te_free_event() is MT safe. 
 *
 *******************************************************************************/
-void te_free_event(te_event_t anEvent)
+void te_free_event(te_event_t *anEvent)
 {
 
    DENTER(TOP_LAYER, "te_free_event");
 
    SGE_ASSERT((anEvent != NULL));
    
-   sge_free((char*)anEvent->str_key);
-   FREE(anEvent);
+   sge_free((char*)(*anEvent)->str_key);
+   FREE(*anEvent);
 
    DEXIT;
    return;
@@ -935,7 +935,7 @@ static void* timed_event_thread(void* anArg)
 
             sge_mutex_unlock("event_control_mutex", SGE_FUNC, __LINE__, &Event_Control.mutex);
 
-            te_free_event(te);
+            te_free_event(&te);
             continue;
          }
       }
@@ -948,7 +948,7 @@ static void* timed_event_thread(void* anArg)
       MONITOR_MESSAGES((&monitor));
         
       scan_table_and_deliver(te, &monitor);
-      te_free_event(te);
+      te_free_event(&te);
 
       sge_monitor_output(&monitor);
       thread_output_profiling("timed event thread profiling summary:\n", 

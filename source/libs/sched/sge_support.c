@@ -306,7 +306,6 @@ sge_calc_node_usage( lListElem *node,
    lListElem *child_node;
    lList *children;
    lListElem *userprj = NULL;
-   const lList *usage_weight_list = NULL;
    lList *usage_list=NULL;
    lListElem *usage_weight, *usage_elem;
    double sum_of_usage_weights = 0;
@@ -395,6 +394,7 @@ sge_calc_node_usage( lListElem *node,
    }
 
    if (usage_list) {
+      lList *usage_weight_list = NULL;
 
       /*-------------------------------------------------------------
        * Decay usage
@@ -432,6 +432,8 @@ sge_calc_node_usage( lListElem *node,
             }
          }
       }
+
+      usage_weight_list = lFreeList(usage_weight_list);
 
       /*-------------------------------------------------------------
        * Store other usage values in node usage list

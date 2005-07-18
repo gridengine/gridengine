@@ -111,51 +111,52 @@ static void sge_c_gdi_trigger(char *host, sge_gdi_request *request, sge_gdi_requ
 static void sge_gdi_shutdown_event_client(const char*, sge_gdi_request*, sge_gdi_request*, 
                                           lList **alpp, monitoring_t *monitor);
 static int  get_client_id(lListElem*, int*);
-static void trigger_scheduler_monitoring(char*, sge_gdi_request*, sge_gdi_request*); 
+static void trigger_scheduler_monitoring(char*, sge_gdi_request*, sge_gdi_request*, monitoring_t*); 
 
-static int sge_chck_mod_perm_user(lList **alpp, u_long32 target, char *user);
+static int sge_chck_mod_perm_user(lList **alpp, u_long32 target, char *user, monitoring_t *monitor);
 static int sge_chck_mod_perm_host(lList **alpp, u_long32 target, char *host, 
                                   char *commproc, int mod, lListElem *ep, 
-                                  bool is_locked);
-static int sge_chck_get_perm_host(lList **alpp, sge_gdi_request *request);
+                                  bool is_locked, monitoring_t *monitor);
+static int sge_chck_get_perm_host(lList **alpp, sge_gdi_request *request, monitoring_t *monitor);
 
 
 static int schedd_mod(lList **alpp, lListElem *modp, lListElem *ep, int add, 
                       const char *ruser, const char *rhost, gdi_object_t *object, 
                       int sub_command, monitoring_t *monitor );
 static int do_gdi_get_config_list(sge_gdi_request *aReq, sge_gdi_request *aRes, int *aBeforeCnt, int *anAfterCnt);
+static int do_gdi_get_sc_config_list(sge_gdi_request *aReq, sge_gdi_request *aRes, int *aBeforeCnt, int *anAfterCnt);
 
 /* ------------------------------ generic gdi objects --------------------- */
 /* *INDENT-OFF* */
 static gdi_object_t gdi_object[] = {
-   { SGE_CALENDAR_LIST,     CAL_name,  CAL_Type,  "calendar",                &Master_Calendar_List,        NULL,                  calendar_mod, calendar_spool, calendar_update_queue_states },
-   { SGE_EVENT_LIST,        0,         NULL,      "event",                   NULL,                         NULL,                  NULL,         NULL,           NULL },
-   { SGE_ADMINHOST_LIST,    AH_name,   AH_Type,   "adminhost",               &Master_Adminhost_List,       NULL,                  host_mod,     host_spool,     host_success },
-   { SGE_SUBMITHOST_LIST,   SH_name,   SH_Type,   "submithost",              &Master_Submithost_List,      NULL,                  host_mod,     host_spool,     host_success },
-   { SGE_EXECHOST_LIST,     EH_name,   EH_Type,   "exechost",                &Master_Exechost_List,        NULL,                  host_mod,     host_spool,     host_success },
-   { SGE_CQUEUE_LIST,       CQ_name,   CQ_Type,   "cluster queue",           &Master_CQueue_List,          NULL,                  cqueue_mod,   cqueue_spool,   cqueue_success },
-   { SGE_JOB_LIST,          0,         NULL,      "job",                     &Master_Job_List,             NULL,                  NULL,         NULL,           NULL },
-   { SGE_CENTRY_LIST,       CE_name,   CE_Type,   "complex entry",           &Master_CEntry_List,          NULL,                  centry_mod,   centry_spool,   centry_success },
-   { SGE_ORDER_LIST,        0,         NULL,      "order",                   NULL,                         NULL,                  NULL,         NULL,           NULL },
-   { SGE_MASTER_EVENT,      0,         NULL,      "master event",            NULL,                         NULL,                  NULL,         NULL,           NULL },
-   { SGE_MANAGER_LIST,      0,         NULL,      "manager",                 &Master_Manager_List,         NULL,                  NULL,         NULL,           NULL },
-   { SGE_OPERATOR_LIST,     0,         NULL,      "operator",                &Master_Operator_List,        NULL,                  NULL,         NULL,           NULL },
-   { SGE_PE_LIST,           PE_name,   PE_Type,   "parallel environment",    &Master_Pe_List,              NULL,                  pe_mod,       pe_spool,       pe_success },
-   { SGE_CONFIG_LIST,       0,         NULL,      "configuration",           NULL,                         NULL,                  NULL,         NULL,           NULL },
-   { SGE_SC_LIST,           0,         NULL,      "scheduler configuration", NULL,                         sconf_get_config_list, schedd_mod,   NULL,           NULL },
-   { SGE_USER_LIST,         UP_name,   UP_Type,   "user",                    &Master_User_List,            NULL,                  userprj_mod,  userprj_spool,  userprj_success },
-   { SGE_USERSET_LIST,      0,         NULL,      "userset",                 &Master_Userset_List,         NULL,                  NULL,         NULL,           NULL },
-   { SGE_PROJECT_LIST,      UP_name,   UP_Type,   "project",                 &Master_Project_List,         NULL,                  userprj_mod,  userprj_spool,  userprj_success },
-   { SGE_SHARETREE_LIST,    0,         NULL,      "sharetree",               &Master_Sharetree_List,       NULL,                  NULL,         NULL,           NULL },
-   { SGE_CKPT_LIST,         CK_name,   CK_Type,   "checkpoint interface",    &Master_Ckpt_List,            NULL,                  ckpt_mod,     ckpt_spool,     ckpt_success },
-   { SGE_JOB_SCHEDD_INFO,   0,         NULL,      "schedd info",             &Master_Job_Schedd_Info_List, NULL,                  NULL,         NULL,           NULL },
-   { SGE_ZOMBIE_LIST,       0,         NULL,      "job zombie list",         &Master_Zombie_List,          NULL,                  NULL,         NULL,           NULL },
+   { SGE_CALENDAR_LIST,     CAL_name,  CAL_Type,  "calendar",                &Master_Calendar_List,        calendar_mod, calendar_spool, calendar_update_queue_states },
+   { SGE_EVENT_LIST,        0,         NULL,      "event",                   NULL,                         NULL,         NULL,           NULL },
+   { SGE_ADMINHOST_LIST,    AH_name,   AH_Type,   "adminhost",               &Master_Adminhost_List,       host_mod,     host_spool,     host_success },
+   { SGE_SUBMITHOST_LIST,   SH_name,   SH_Type,   "submithost",              &Master_Submithost_List,      host_mod,     host_spool,     host_success },
+   { SGE_EXECHOST_LIST,     EH_name,   EH_Type,   "exechost",                &Master_Exechost_List,        host_mod,     host_spool,     host_success },
+   { SGE_CQUEUE_LIST,       CQ_name,   CQ_Type,   "cluster queue",           &Master_CQueue_List,          cqueue_mod,   cqueue_spool,   cqueue_success },
+   { SGE_JOB_LIST,          0,         NULL,      "job",                     &Master_Job_List,             NULL,         NULL,           NULL },
+   { SGE_CENTRY_LIST,       CE_name,   CE_Type,   "complex entry",           &Master_CEntry_List,          centry_mod,   centry_spool,   centry_success },
+   { SGE_ORDER_LIST,        0,         NULL,      "order",                   NULL,                         NULL,         NULL,           NULL },
+   { SGE_MASTER_EVENT,      0,         NULL,      "master event",            NULL,                         NULL,         NULL,           NULL },
+   { SGE_MANAGER_LIST,      0,         NULL,      "manager",                 &Master_Manager_List,         NULL,         NULL,           NULL },
+   { SGE_OPERATOR_LIST,     0,         NULL,      "operator",                &Master_Operator_List,        NULL,         NULL,           NULL },
+   { SGE_PE_LIST,           PE_name,   PE_Type,   "parallel environment",    &Master_Pe_List,              pe_mod,       pe_spool,       pe_success },
+   { SGE_CONFIG_LIST,       0,         NULL,      "configuration",           NULL,                         NULL,         NULL,           NULL },
+   { SGE_SC_LIST,           0,         NULL,      "scheduler configuration", NULL,                         schedd_mod,   NULL,           NULL },
+   { SGE_USER_LIST,         UP_name,   UP_Type,   "user",                    &Master_User_List,            userprj_mod,  userprj_spool,  userprj_success },
+   { SGE_USERSET_LIST,      0,         NULL,      "userset",                 &Master_Userset_List,         NULL,         NULL,           NULL },
+   { SGE_PROJECT_LIST,      UP_name,   UP_Type,   "project",                 &Master_Project_List,         userprj_mod,  userprj_spool,  userprj_success },
+   { SGE_SHARETREE_LIST,    0,         NULL,      "sharetree",               &Master_Sharetree_List,       NULL,         NULL,           NULL },
+   { SGE_CKPT_LIST,         CK_name,   CK_Type,   "checkpoint interface",    &Master_Ckpt_List,            ckpt_mod,     ckpt_spool,     ckpt_success },
+   { SGE_JOB_SCHEDD_INFO,   0,         NULL,      "schedd info",             &Master_Job_Schedd_Info_List, NULL,         NULL,           NULL },
+   { SGE_ZOMBIE_LIST,       0,         NULL,      "job zombie list",         &Master_Zombie_List,          NULL,         NULL,           NULL },
 #ifndef __SGE_NO_USERMAPPING__
-   { SGE_USER_MAPPING_LIST, CU_name,   CU_Type,   "user mapping entry",      &Master_Cuser_List,           NULL,                  cuser_mod,    cuser_spool,    cuser_success },
+   { SGE_USER_MAPPING_LIST, CU_name,   CU_Type,   "user mapping entry",      &Master_Cuser_List,           cuser_mod,    cuser_spool,    cuser_success },
 #endif
-   { SGE_HGROUP_LIST,       HGRP_name, HGRP_Type, "host group",              &Master_HGroup_List,          NULL,                  hgroup_mod,   hgroup_spool,   hgroup_success },
-   { SGE_DUMMY_LIST,        0,         NULL,      "general request",         NULL,                         NULL,                  NULL,         NULL,           NULL },
-   { 0,                     0,         NULL,      NULL,                      NULL,                         NULL,                  NULL,         NULL,           NULL }
+   { SGE_HGROUP_LIST,       HGRP_name, HGRP_Type, "host group",              &Master_HGroup_List,          hgroup_mod,   hgroup_spool,   hgroup_success },
+   { SGE_DUMMY_LIST,        0,         NULL,      "general request",         NULL,                         NULL,         NULL,           NULL },
+   { 0,                     0,         NULL,      NULL,                      NULL,                         NULL,         NULL,           NULL }
 };
 /* *INDENT-ON* */
 
@@ -439,8 +440,7 @@ static void sge_c_gdi_get(gdi_object_t *ao, char *host, sge_gdi_request *request
 
    sge_dstring_init(&ds, buffer, sizeof(buffer));
 
-   if (sge_chck_get_perm_host(&(answer->alp), request ))
-   {
+   if (sge_chck_get_perm_host(&(answer->alp), request, monitor)) {
       DEXIT;
       return;
    }
@@ -468,6 +468,10 @@ static void sge_c_gdi_get(gdi_object_t *ao, char *host, sge_gdi_request *request
       case SGE_CONFIG_LIST:
             do_gdi_get_config_list(request, answer, before, after);
             answer_list_add(&(answer->alp), SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);        
+         break;;
+      case SGE_SC_LIST:
+            do_gdi_get_sc_config_list(request, answer, before, after);
+            answer_list_add(&(answer->alp), SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
          break;
       default:
       
@@ -481,17 +485,12 @@ static void sge_c_gdi_get(gdi_object_t *ao, char *host, sge_gdi_request *request
               !sge_has_event_client(EV_ID_SCHEDD) ) {
             answer_list_add(&(answer->alp),MSG_SGETEXT_JOBINFOMESSAGESOUTDATED, 
                             STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
-         } else if (ao == NULL || (ao->master_list == NULL && ao->getMasterList == NULL)) {
+         } else if (ao == NULL || (ao->master_list == NULL )) {
             SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_SGETEXT_OPNOIMPFORTARGET));
             answer_list_add(&(answer->alp), SGE_EVENT, STATUS_ENOIMP, ANSWER_QUALITY_ERROR);
          }
          else {
-            if (ao->master_list) {
-               lp = *(ao->master_list);
-            }   
-            else {
-               lp = *(ao->getMasterList());
-            }   
+            lp = *(ao->master_list);
             
             *before = lGetNumberOfElem(lp);
             answer->lp = lSelectHash("qmaster_response", lp, request->cp, request->enp, false);
@@ -537,6 +536,28 @@ static int do_gdi_get_config_list(sge_gdi_request *aReq, sge_gdi_request *aRes, 
    return 0;
 }
 
+static int do_gdi_get_sc_config_list(sge_gdi_request *aReq, sge_gdi_request *aRes, 
+                                     int *aBeforeCnt, int *anAfterCnt)
+{
+   lList *conf = NULL;
+
+   DENTER(TOP_LAYER, "do_gdi_get_sc_config_list");
+   
+   conf = sconf_get_config_list();
+
+   *aBeforeCnt = lGetNumberOfElem(conf);
+   aRes->lp = lSelectHash("qmaster_response", conf, aReq->cp, aReq->enp, false);
+   *anAfterCnt = lGetNumberOfElem(aRes->lp);
+
+   sprintf(SGE_EVENT, MSG_GDI_OKNL);
+   answer_list_add(&(aRes->alp), SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
+
+   conf = lFreeList(conf);
+   
+   DEXIT;
+   return 0;
+}
+
 /*
  * MT-NOTE: sge_c_gdi_add() is MT safe
  */
@@ -561,9 +582,9 @@ static void sge_c_gdi_add(gdi_object_t *ao, char *host, sge_gdi_request *request
    }
 
    /* check permissions of host and user */
-   if ((!sge_chck_mod_perm_user(&(answer->alp), request->target, user)) &&
+   if ((!sge_chck_mod_perm_user(&(answer->alp), request->target, user, monitor)) &&
        (!sge_chck_mod_perm_host(&(answer->alp), request->target, request->host, 
-                                request->commproc, 0, NULL, false))) {
+                                request->commproc, 0, NULL, false, monitor))) {
 
       if (request->target == SGE_EVENT_LIST) {
          for_each (ep, request->lp) {/* is thread save. the global lock is used, when needed */
@@ -613,7 +634,12 @@ static void sge_c_gdi_add(gdi_object_t *ao, char *host, sge_gdi_request *request
                                user, host, uid, gid, group, request, monitor);
             }
          }
-      } else {
+      } else if (request->target == SGE_SC_LIST ) {
+         for_each (ep, request->lp) {
+            sge_mod_sched_configuration(ep, &(answer->alp), user, host);
+         }
+      } 
+      else {
          bool is_scheduler_resync = false;
          lList *ppList = NULL;
 
@@ -660,10 +686,6 @@ static void sge_c_gdi_add(gdi_object_t *ao, char *host, sge_gdi_request *request
                   sge_add_sharetree(ep, &Master_Sharetree_List, &(answer->alp), user, host);
                   break;
 
-               case SGE_SC_LIST:
-                  sge_mod_sched_configuration(ep, &(answer->alp), user, host);
-                  break;
-
                default:
                   if (!ao) {
                      SGE_ADD_MSG_ID( sprintf(SGE_EVENT, MSG_SGETEXT_OPNOIMPFORTARGET));
@@ -685,7 +707,7 @@ static void sge_c_gdi_add(gdi_object_t *ao, char *host, sge_gdi_request *request
             sge_set_next_spooling_time();
             answer_list_add(&(answer->alp), "OK\n", STATUS_OK, ANSWER_QUALITY_INFO);
          }
-         
+
          SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
 
          if (is_scheduler_resync) {
@@ -734,13 +756,13 @@ static void sge_c_gdi_del(char *host, sge_gdi_request *request, sge_gdi_request 
 
    if (!request->lp) /* delete whole list */
    { 
-      if (sge_chck_mod_perm_user(&(answer->alp), request->target, user)) {
+      if (sge_chck_mod_perm_user(&(answer->alp), request->target, user, monitor)) {
          DEXIT;
          return;
       }
       
       if (sge_chck_mod_perm_host(&(answer->alp), request->target, request->host, 
-                                 request->commproc, 0, NULL, false)) {
+                                 request->commproc, 0, NULL, false, monitor)) {
          DEXIT;
          return;
       }
@@ -761,13 +783,13 @@ static void sge_c_gdi_del(char *host, sge_gdi_request *request, sge_gdi_request 
    }
    else {
 
-      if (sge_chck_mod_perm_user(&(answer->alp), request->target, user)) {
+      if (sge_chck_mod_perm_user(&(answer->alp), request->target, user, monitor)) {
          DEXIT;
          return;
       }  
 
       if (sge_chck_mod_perm_host(&(answer->alp), request->target, request->host, 
-                                 request->commproc, 0, NULL, false)) {
+                                 request->commproc, 0, NULL, false, monitor)) {
          DEXIT;
          return;
       }
@@ -872,13 +894,13 @@ static void sge_c_gdi_copy(gdi_object_t *ao, char *host, sge_gdi_request *reques
       return;
    }
 
-   if (sge_chck_mod_perm_user(&(answer->alp), request->target, user)) {
+   if (sge_chck_mod_perm_user(&(answer->alp), request->target, user, monitor)) {
       DEXIT;
       return;
    }
 
    if (sge_chck_mod_perm_host(&(answer->alp), request->target, request->host, 
-                              request->commproc, 0, NULL, false)) {
+                              request->commproc, 0, NULL, false, monitor)) {
       DEXIT;
       return;
    }
@@ -1061,7 +1083,7 @@ static void sge_c_gdi_trigger(char *host, sge_gdi_request *request, sge_gdi_requ
             SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
             
             if (SGE_SC_LIST == target) {
-               trigger_scheduler_monitoring(host, request, answer);
+               trigger_scheduler_monitoring(host, request, answer, monitor);
             }
             else if (target == SGE_MASTER_EVENT) {
                /* shutdown qmaster. Do NOT hold the global lock, while doing this !! */
@@ -1274,7 +1296,9 @@ static int get_client_id(lListElem *anElem, int *anID)
 *     qconf -tsm
 *
 *******************************************************************************/
-static void trigger_scheduler_monitoring(char *aHost, sge_gdi_request *aRequest, sge_gdi_request *anAnswer) 
+static void 
+trigger_scheduler_monitoring(char *aHost, sge_gdi_request *aRequest, sge_gdi_request *anAnswer,
+                             monitoring_t *monitor) 
 {
    uid_t uid;
    gid_t gid;
@@ -1290,7 +1314,7 @@ static void trigger_scheduler_monitoring(char *aHost, sge_gdi_request *aRequest,
       return;
    }
 
-   SGE_LOCK(LOCK_GLOBAL, LOCK_READ);
+   MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_READ), monitor);
    if (!manop_is_manager(user)) {
       SGE_UNLOCK(LOCK_GLOBAL, LOCK_READ);
       WARNING((SGE_EVENT, MSG_COM_NOSCHEDMONPERMS));
@@ -1342,7 +1366,7 @@ static void sge_c_gdi_mod(gdi_object_t *ao, char *host, sge_gdi_request *request
       return;
    }
 
-   if (sge_chck_mod_perm_user(&(answer->alp), request->target, user)) {
+   if (sge_chck_mod_perm_user(&(answer->alp), request->target, user, monitor)) {
       DEXIT;
       return;
    }
@@ -1350,16 +1374,14 @@ static void sge_c_gdi_mod(gdi_object_t *ao, char *host, sge_gdi_request *request
    for_each (ep, request->lp)
    {
       if (sge_chck_mod_perm_host(&(answer->alp), request->target, request->host, 
-                                 request->commproc, 1, ep, is_locked)) {
+                                 request->commproc, 1, ep, is_locked, monitor)) {
          continue;
       }
 
-      if (SGE_CONFIG_LIST == (request->target))
-      {
+      if (request->target == SGE_CONFIG_LIST) {
          sge_mod_configuration(ep, &(answer->alp), user, host);      
       }
-      else if (SGE_EVENT_LIST == (request->target))
-      {
+      else if (request->target == SGE_EVENT_LIST) {
          /* fill address infos from request into event client that must be added */
          lSetHost(ep, EV_host, request->host);
          lSetString(ep, EV_commproc, request->commproc);
@@ -1369,6 +1391,9 @@ static void sge_c_gdi_mod(gdi_object_t *ao, char *host, sge_gdi_request *request
          lSetUlong(ep, EV_uid, uid);
  
          sge_mod_event_client(ep, &(answer->alp), user, host);      
+      }
+      else if (request->target == SGE_SC_LIST) {
+         sge_mod_sched_configuration(ep, &(answer->alp), user, host);
       }
       else {
          if (!is_locked) {
@@ -1381,10 +1406,6 @@ static void sge_c_gdi_mod(gdi_object_t *ao, char *host, sge_gdi_request *request
          {
             case SGE_JOB_LIST:
                sge_gdi_mod_job(ep, &(answer->alp), user, host, sub_command);
-               break;
-
-            case SGE_SC_LIST:
-               sge_mod_sched_configuration(ep, &(answer->alp), user, host);
                break;
 
             case SGE_USERSET_LIST:
@@ -1431,12 +1452,12 @@ static void sge_c_gdi_mod(gdi_object_t *ao, char *host, sge_gdi_request *request
 /*
  * MT-NOTE: sge_chck_mod_perm_user() is MT safe
  */
-static int sge_chck_mod_perm_user(lList **alpp, u_long32 target, char *user)
+static int sge_chck_mod_perm_user(lList **alpp, u_long32 target, char *user, monitoring_t *monitor)
 {
 
    DENTER(TOP_LAYER, "sge_chck_mod_perm_user");
 
-   SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE);
+   MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE), monitor);
 
    /* check permissions of user */
    switch (target) {
@@ -1520,12 +1541,12 @@ static int sge_chck_mod_perm_user(lList **alpp, u_long32 target, char *user)
  */
 static int sge_chck_mod_perm_host(lList **alpp, u_long32 target, char *host, 
                                   char *commproc, int mod, lListElem *ep, 
-                                  bool is_locked)
+                                  bool is_locked, monitoring_t *monitor)
 {
    DENTER(TOP_LAYER, "sge_chck_mod_perm_host");
 
    if (!is_locked) {
-      SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE);
+      MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE), monitor);
    }
 
    /* check permissions of host */
@@ -1635,7 +1656,8 @@ static int sge_chck_mod_perm_host(lList **alpp, u_long32 target, char *host,
 /*
  * MT-NOTE: sge_chck_get_perm_host() is MT safe
  */
-static int sge_chck_get_perm_host(lList **alpp, sge_gdi_request *request)
+static int 
+sge_chck_get_perm_host(lList **alpp, sge_gdi_request *request, monitoring_t *monitor)
 {
    u_long32 target;
    char *host     = NULL;
@@ -1643,7 +1665,7 @@ static int sge_chck_get_perm_host(lList **alpp, sge_gdi_request *request)
    
    DENTER(TOP_LAYER, "sge_chck_get_perm_host");
 
-   SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE);
+   MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE), monitor);
 
    /* reset the last_id counter on first sequence number we won't
       log the same error message twice in an api multi request */
@@ -1803,17 +1825,11 @@ monitoring_t *monitor
    dataType = lGetPosType(lGetElemDescr(instructions),pos);
    if (dataType == lHostT) {
       name = lGetHost(instructions, object->key_nm); 
-      if (object->getMasterList)
-         old_obj = lGetElemHost(*(object->getMasterList()), object->key_nm, name);
-      else
-         old_obj = lGetElemHost(*(object->master_list), object->key_nm, name);
+      old_obj = lGetElemHost(*(object->master_list), object->key_nm, name);
       
    } else {
       name = lGetString(instructions, object->key_nm); 
-      if (object->getMasterList)
-         old_obj = lGetElemStr(*(object->getMasterList()), object->key_nm, name);
-      else
-         old_obj = lGetElemStr(*(object->master_list), object->key_nm, name);
+      old_obj = lGetElemStr(*(object->master_list), object->key_nm, name);
    }
 
    if ((old_obj && add) ||
@@ -1885,13 +1901,9 @@ monitoring_t *monitor
    }
    tmp_alp = lFreeList(tmp_alp);
    {
-      lList ** master_list = NULL;
+      lList **master_list = NULL;
 
-      if (object->master_list) {
-         master_list = object->master_list;
-      } else {
-         master_list = object->getMasterList();
-      }
+      master_list = object->master_list;
          
    /* chain out the old object */
       if (old_obj) {

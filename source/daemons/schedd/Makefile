@@ -75,7 +75,7 @@ SMON_OBJS = $(SMON_SRC:.c=.o)
 
 SMON_ADD_OBJS = $(SMON_ADD_SRC:.c=.o) 
 
-SMON_ADD_LIBS = -lsched -levc -lgdi -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lcull -lrmon -lcomm -lcommlists -luti $(WINGRIDLIB) -llck $(DLLIB)
+SMON_ADD_LIBS = -lsched -levc -lgdi -lsgeobjd -lsgeobj $(SECLIB) $(KRBLIB) -lcull -lrmon -lcomm -lcommlists -luti $(WINGRIDLIB) -llck $(DLLIB)
 
 SMON_LIB_DEPENDS = $(SCHEDLIB) $(EVCLIB) $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(SECLIBS) $(KRBLIBS) $(CULLLIB) $(WINGRIDLIB_DEP) $(RMONLIB) $(LCKLIB) $(COMMLIB) $(COMMLISTSLIB) $(UTILIB)
 

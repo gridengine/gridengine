@@ -235,12 +235,15 @@ load_np_value_adjustment(const char* name, lListElem *hep, double *load_correcti
 
 /* ---- Implementation ------------------------------------------------------------------------- */
 
-void assignment_init(sge_assignment_t *a, lListElem *job, lListElem *ja_task)
+void assignment_init(sge_assignment_t *a, lListElem *job, lListElem *ja_task, bool is_load_adj)
 {
    memset(a, 0, sizeof(sge_assignment_t));
    a->job         = job;
    a->ja_task     = ja_task;
-
+   if (is_load_adj) {
+      a->load_adjustments = sconf_get_job_load_adjustments();
+   }
+   
    if (job != NULL) {
       a->job_id      = lGetUlong(job, JB_job_number);
    }
@@ -252,20 +255,28 @@ void assignment_init(sge_assignment_t *a, lListElem *job, lListElem *ja_task)
 
 void assignment_copy(sge_assignment_t *dst, sge_assignment_t *src, bool move_gdil)
 {
-   if (move_gdil) 
+   if (move_gdil) {
       dst->gdil = lFreeList(dst->gdil);
+   }
 
    memcpy(dst, src, sizeof(sge_assignment_t));
-  
-   if (!move_gdil)
+ 
+   if (src->load_adjustments != NULL) {
+      dst->load_adjustments = lCopyList("cpy_load_adj", src->load_adjustments);
+   }
+ 
+   if (!move_gdil) {
       dst->gdil = NULL; 
-   else
+   }   
+   else {
       src->gdil = NULL; 
+   }
 }
 
 void assignment_release(sge_assignment_t *a)
 {
-   lFreeList(a->gdil);
+   a->load_adjustments = lFreeList(a->load_adjustments);
+   a->gdil = lFreeList(a->gdil);
 }
 
 static dispatch_t 
@@ -908,7 +919,7 @@ sge_select_queue(lList *requested_attr, lListElem *queue, lListElem *host,
 
    clear_resource_tags(requested_attr, MAX_TAG);
    
-   assignment_init(&a, NULL, NULL);
+   assignment_init(&a, NULL, NULL, false);
    a.centry_list      = centry_list;
    a.host_list        = exechost_list;
    

@@ -1,3 +1,12 @@
+MD-2005-07-18-0: Bugfix:    typo in BT number
+                 Changed:   Changelog
+
+JG-2005-07-15-1: Bugfix:    Fixed memory leaks.
+                 Review:    SG
+
+JG-2005-07-15-0: CVS        Created V60u5_TAG
+---------------------------------------------------------
+
 SG-2005-07-11-0: Bugfix:    Array jobs sometimes get out of sync when 
                             grid master daemons is started/stopped
                  Changed:   qmaster, scheduler
@@ -360,8 +369,6 @@ SG-2005-05-27-0: Bugfix:    fix qstat -t again (SG-2005-05-25-0 was not enough)
                  Changed:   qstat
                  Issue:     1420
                  Bugtraq:   6218877
-
-JG-2005-05-27-0: CVS        Created V60u5_TAG
 
 DT-2005-05-25-0: Bugfix:    o Enforced thread safety in DRMAA
                  Review:    SG
@@ -1515,7 +1522,7 @@ MD-2005-03-04-0: Bugfix:    - Port free/used check returns a wrong result in
                               is down (1242)
                  Issue:     1208, 1242, 1244, 1385
                  Changed:   inst_sge, install_modules, getservbyname
-                 Bugtraq:   6203984, 6231589, 6236139, 6236139
+                 Bugtraq:   6203984, 6231589, 6236139, 6236136
                  Review:    RD
 
 JG-2005-03-03-0: Testsuite: Make more tests use the setup/cleanup framework.

@@ -1,3 +1,7 @@
+AA-2005-07-19-0: Bugfix:    make compiler happy
+                 Changed:   sge_passwd
+                 Review:    RD
+
 CR-2005-07-19-0: Cleanup:   commlib: Performance Cleanup, etc.
                             - If compiled with -DCL_DO_COMMLIB_DEBUG:
                               o Use default commlib logging function

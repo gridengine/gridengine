@@ -281,11 +281,12 @@ char **argv
                prepare_enroll("qacct");
                ret = getuniquehostname(argv[++ii], host, 0);
                if (ret != CL_RETVAL_OK) {
-                  fprintf(stderr, MSG_HISTORY_FAILEDRESOLVINGHOSTNAME_SS ,
-                       argv[ii], cl_get_error_text(ret));
-                  fprintf(stderr, "\n");
-                  show_the_way(stderr);
-                  return 1;
+                   /*
+                    * we can't resolve the hostname, but that's no drama for qacct.
+                    * maybe the hostname is no longer active but the usage information
+                    * is already available
+                    */
+                  snprintf(host, CL_MAXHOSTLEN, "%s", argv[ii] );
                }
             }
          }

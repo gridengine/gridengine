@@ -1,3 +1,9 @@
+RD-2005-07-19-1: Bugfix:    qacct -h shall not resolve hostnames
+                 Changed:   qacct
+                 Bugtraq:   6295791
+                 Issue:     1720
+                 Review:    CR 
+
 AA-2005-07-19-0: Bugfix:    make compiler happy
                  Changed:   sge_passwd
                  Review:    RD

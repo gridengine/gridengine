@@ -142,20 +142,20 @@ usage(void)
 {
       fprintf(stderr, "%s sge_share_mon [-cdfhilmnorsux] [node_names ...]\n", MSG_USAGE); 
       fprintf(stderr, "\n" );
-      fprintf(stderr, "   -c count          %s", MSG_SGESHAREMON_c_OPT_USAGE );
-      fprintf(stderr, "   -d delimiter      %s", MSG_SGESHAREMON_d_OPT_USAGE );
-      fprintf(stderr, "   -f field[,field]  %s", MSG_SGESHAREMON_f_OPT_USAGE );
-      fprintf(stderr, "   -h                %s", MSG_SGESHAREMON_h_OPT_USAGE );
-      fprintf(stderr, "   -i interval       %s", MSG_SGESHAREMON_i_OPT_USAGE );
-      fprintf(stderr, "   -l delimiter      %s", MSG_SGESHAREMON_l_OPT_USAGE );
-      fprintf(stderr, "   -m output_mode    %s", MSG_SGESHAREMON_m_OPT_USAGE );
-      fprintf(stderr, "   -n                %s", MSG_SGESHAREMON_n_OPT_USAGE );
-      fprintf(stderr, "   -o output_file    %s", MSG_SGESHAREMON_o_OPT_USAGE );
-      fprintf(stderr, "   -r delimiter      %s", MSG_SGESHAREMON_r_OPT_USAGE );
-      fprintf(stderr, "   -s string_format  %s", MSG_SGESHAREMON_s_OPT_USAGE );
-      fprintf(stderr, "   -t                %s", MSG_SGESHAREMON_t_OPT_USAGE );
-      fprintf(stderr, "   -u                %s", MSG_SGESHAREMON_u_OPT_USAGE );
-      fprintf(stderr, "   -x                %s", MSG_SGESHAREMON_x_OPT_USAGE );
+      fprintf(stderr, "   -c count          %s\n", MSG_SGESHAREMON_c_OPT_USAGE );
+      fprintf(stderr, "   -d delimiter      %s\n", MSG_SGESHAREMON_d_OPT_USAGE );
+      fprintf(stderr, "   -f field[,field]  %s\n", MSG_SGESHAREMON_f_OPT_USAGE );
+      fprintf(stderr, "   -h                %s\n", MSG_SGESHAREMON_h_OPT_USAGE );
+      fprintf(stderr, "   -i interval       %s\n", MSG_SGESHAREMON_i_OPT_USAGE );
+      fprintf(stderr, "   -l delimiter      %s\n", MSG_SGESHAREMON_l_OPT_USAGE );
+      fprintf(stderr, "   -m output_mode    %s\n", MSG_SGESHAREMON_m_OPT_USAGE );
+      fprintf(stderr, "   -n                %s\n", MSG_SGESHAREMON_n_OPT_USAGE );
+      fprintf(stderr, "   -o output_file    %s\n", MSG_SGESHAREMON_o_OPT_USAGE );
+      fprintf(stderr, "   -r delimiter      %s\n", MSG_SGESHAREMON_r_OPT_USAGE );
+      fprintf(stderr, "   -s string_format  %s\n", MSG_SGESHAREMON_s_OPT_USAGE );
+      fprintf(stderr, "   -t                %s\n", MSG_SGESHAREMON_t_OPT_USAGE );
+      fprintf(stderr, "   -u                %s\n", MSG_SGESHAREMON_u_OPT_USAGE );
+      fprintf(stderr, "   -x                %s\n", MSG_SGESHAREMON_x_OPT_USAGE );
       fprintf(stderr,"\n");
 }
 
@@ -168,6 +168,7 @@ open_output(const char *file_name, const char *mode)
       file = fopen(file_name, mode);
       if (file == NULL) {
          fprintf(stderr, MSG_FILE_COULDNOTOPENXFORY_SS , file_name, mode);
+         fprintf(stderr, "\n");
          exit(1);
       }
    }

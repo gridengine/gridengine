@@ -101,7 +101,7 @@ char **argv
       ** high level parsing error! show answer list
       */
       for_each(aep, alp) { 
-         fprintf(stderr, "%s", lGetString(aep, AN_text));
+         fprintf(stderr, "%s\n", lGetString(aep, AN_text));
       }
       lFreeList(alp);
       lFreeList(pcmdline);
@@ -115,7 +115,7 @@ char **argv
       ** low level parsing error! show answer list
       */
       for_each(aep, alp) { 
-         fprintf(stderr, "%s", lGetString(aep, AN_text));
+         fprintf(stderr, "%s\n", lGetString(aep, AN_text));
       }
       lFreeList(alp);
       lFreeList(pcmdline);
@@ -138,7 +138,7 @@ char **argv
    ** show answer list
    */
    for_each(aep, alp) { 
-      fprintf(stdout, "%s", lGetString(aep, AN_text));
+      fprintf(stdout, "%s\n", lGetString(aep, AN_text));
    }
 
    lFreeList(alp);
@@ -452,33 +452,33 @@ char *what
    if(!what) {
       /* display full usage */
       fprintf(fp,"%s qmod [options]\n", MSG_SRC_USAGE); 
-      fprintf(fp, "   [-c job_wc_queue_list]  %s", MSG_QMOD_c_OPT_USAGE);
-      fprintf(fp, "   [-cj wc_queue_list]     %s", MSG_QMOD_c_OPT_USAGE_J);
-      fprintf(fp, "   [-cq job_list]          %s", MSG_QMOD_c_OPT_USAGE_Q);
+      fprintf(fp, "   [-c job_wc_queue_list]  %s\n", MSG_QMOD_c_OPT_USAGE);
+      fprintf(fp, "   [-cj wc_queue_list]     %s\n", MSG_QMOD_c_OPT_USAGE_J);
+      fprintf(fp, "   [-cq job_list]          %s\n", MSG_QMOD_c_OPT_USAGE_Q);
 
-      fprintf(fp, "   [-d wc_queue_list]      %s", MSG_QMOD_d_OPT_USAGE);
-      fprintf(fp, "   [-e wc_queue_list]      %s", MSG_QMOD_e_OPT_USAGE);
-      fprintf(fp, "   [-f]                    %s", MSG_QMOD_f_OPT_USAGE);
-      fprintf(fp, "   [-help]                 %s", MSG_QMOD_help_OPT_USAGE);
-      fprintf(fp, "   [-r job_wc_queue_list]  %s", MSG_QMOD_r_OPT_USAGE);
-      fprintf(fp, "   [-rj job_list]          %s", MSG_QMOD_r_OPT_USAGE_J);
-      fprintf(fp, "   [-rq wc_queue_list]     %s", MSG_QMOD_r_OPT_USAGE_Q);
+      fprintf(fp, "   [-d wc_queue_list]      %s\n", MSG_QMOD_d_OPT_USAGE);
+      fprintf(fp, "   [-e wc_queue_list]      %s\n", MSG_QMOD_e_OPT_USAGE);
+      fprintf(fp, "   [-f]                    %s\n", MSG_QMOD_f_OPT_USAGE);
+      fprintf(fp, "   [-help]                 %s\n", MSG_QMOD_help_OPT_USAGE);
+      fprintf(fp, "   [-r job_wc_queue_list]  %s\n", MSG_QMOD_r_OPT_USAGE);
+      fprintf(fp, "   [-rj job_list]          %s\n", MSG_QMOD_r_OPT_USAGE_J);
+      fprintf(fp, "   [-rq wc_queue_list]     %s\n", MSG_QMOD_r_OPT_USAGE_Q);
 
-      fprintf(fp, "   [-s job_wc_queue_list]  %s", MSG_QMOD_s_OPT_USAGE);
-      fprintf(fp, "   [-sj job_list]          %s", MSG_QMOD_s_OPT_USAGE_J);
-      fprintf(fp, "   [-sq wc_queue_list]     %s", MSG_QMOD_s_OPT_USAGE_Q);
-      fprintf(fp, "   [-us job_wc_queue_list] %s", MSG_QMOD_us_OPT_USAGE);
-      fprintf(fp, "   [-usj job_list]         %s", MSG_QMOD_us_OPT_USAGE_J);
-      fprintf(fp, "   [-usq wc_queue_list]    %s", MSG_QMOD_us_OPT_USAGE_Q);
+      fprintf(fp, "   [-s job_wc_queue_list]  %s\n", MSG_QMOD_s_OPT_USAGE);
+      fprintf(fp, "   [-sj job_list]          %s\n", MSG_QMOD_s_OPT_USAGE_J);
+      fprintf(fp, "   [-sq wc_queue_list]     %s\n", MSG_QMOD_s_OPT_USAGE_Q);
+      fprintf(fp, "   [-us job_wc_queue_list] %s\n", MSG_QMOD_us_OPT_USAGE);
+      fprintf(fp, "   [-usj job_list]         %s\n", MSG_QMOD_us_OPT_USAGE_J);
+      fprintf(fp, "   [-usq wc_queue_list]    %s\n", MSG_QMOD_us_OPT_USAGE_Q);
       
 #ifdef __SGE_QINSTANCE_STATE_DEBUG__
-      fprintf(fp, "   [-_e queue_list]        %s", MSG_QMOD_err_OPT_ISAGE);
-      fprintf(fp, "   [-_o queue_list]        %s", MSG_QMOD_o_OPT_ISAGE);
-      fprintf(fp, "   [-_do queue_list]       %s", MSG_QMOD_do_OPT_ISAGE);
-      fprintf(fp, "   [-_u queue_list]        %s", MSG_QMOD_u_OPT_ISAGE);
-      fprintf(fp, "   [-_du queue_list]       %s", MSG_QMOD_du_OPT_ISAGE);
-      fprintf(fp, "   [-_c queue_list]        %s", MSG_QMOD_c_OPT_ISAGE);
-      fprintf(fp, "   [-_dc queue_list]       %s", MSG_QMOD_dc_OPT_ISAGE);
+      fprintf(fp, "   [-_e queue_list]        %s\n", MSG_QMOD_err_OPT_ISAGE);
+      fprintf(fp, "   [-_o queue_list]        %s\n", MSG_QMOD_o_OPT_ISAGE);
+      fprintf(fp, "   [-_do queue_list]       %s\n", MSG_QMOD_do_OPT_ISAGE);
+      fprintf(fp, "   [-_u queue_list]        %s\n", MSG_QMOD_u_OPT_ISAGE);
+      fprintf(fp, "   [-_du queue_list]       %s\n", MSG_QMOD_du_OPT_ISAGE);
+      fprintf(fp, "   [-_c queue_list]        %s\n", MSG_QMOD_c_OPT_ISAGE);
+      fprintf(fp, "   [-_dc queue_list]       %s\n", MSG_QMOD_dc_OPT_ISAGE);
 #endif
       fprintf(fp, "\n");
       fprintf(fp, "job_wc_queue_list          {job_tasks|wc_queue}[{','|' '}{job_tasks|wc_queue}[{','|' '}...]]\n");
@@ -495,6 +495,7 @@ char *what
    } else {
       /* display option usage */
       fprintf(fp, MSG_QDEL_not_available_OPT_USAGE_S,what);
+      fprintf(fp, "\n"); 
    }
    return 1;
 }

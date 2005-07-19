@@ -1360,6 +1360,7 @@ XtPointer cld, cad;
       */
       if (set_sec_cred(lFirst(lp)) != 0) {
          sprintf(buf, MSG_SEC_SETJOBCRED);
+         sprintf(buf, "\n");
          goto error;
       }   
 

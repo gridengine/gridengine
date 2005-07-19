@@ -455,11 +455,13 @@ int sge_log(int log_level, const char *mesg, const char *file__, const char *fun
               mesg ? MSG_LOG_ZEROLENGTH : MSG_POINTER_NULL);
       mesg = buf;
    }
+/*
    if (mesg[strlen(mesg)-1] != '\n') {
       strcpy(newline,"\n");
    } else {
       strcpy(newline, "\0");
    }
+*/
 
    DPRINTF(("%s %d %s%s", file__, line__, mesg, newline));
 
@@ -510,7 +512,10 @@ int sge_log(int log_level, const char *mesg, const char *file__, const char *fun
    /* avoid double output in debug mode */
    if (!uti_state_get_daemonized() && !rmon_condition(TOP_LAYER, INFOPRINT) && 
        (log_state_get_log_verbose() || log_level <= LOG_ERR)) {
+/*
       fprintf(stderr, "%s%s%s", levelstring, mesg, newline);
+*/
+      fprintf(stderr, "%s%s\n", levelstring, mesg);
    } 
    if (uti_state_get_mewho() == QMASTER || uti_state_get_mewho() == EXECD   || uti_state_get_mewho() == QSTD ||
        uti_state_get_mewho() == SCHEDD ||  uti_state_get_mewho() == SHADOWD || uti_state_get_mewho() == COMMD) {
@@ -557,13 +562,15 @@ static void sge_do_log(int aLevel, const char *aMessage, const char *aNewLine)
       sprintf(tmp_date, "%s", sge_ctime(0, &ds));
       sscanf(tmp_date, "%[^\n]", date);
 
-      sge_dstring_sprintf(&msg, "%s|%s|%s|%c|%s%s",
+      sge_dstring_sprintf(&msg, "%s|%s|%s|%c|%s\n",
               date,
               uti_state_get_sge_formal_prog_name(),
               uti_state_get_unqualified_hostname(),
               aLevel,
-              aMessage,
+              aMessage);
+/*
               aNewLine);
+*/
       write(fd, msg2log, strlen(msg2log));
       close(fd);
    }

@@ -151,6 +151,7 @@ char *err_str
       if (err_str)
          sprintf(err_str, MSG_GDI_MASTERHOSTNAMEEXCEEDSCHARS_SI , 
                  master_file, (int) CL_MAXHOSTLEN);
+         sprintf(err_str, "\n");
       fclose(fp);
       DEXIT;
       return -1;

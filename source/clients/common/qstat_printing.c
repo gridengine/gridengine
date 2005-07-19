@@ -815,7 +815,7 @@ static void sge_printf_header(u_long32 full_listing, u_long32 sge_ext)
          first_pending = 0;
          printf("\n############################################################################%s\n",
             sge_ext?hashes:"");
-         printf(MSG_QSTAT_PRT_PEDINGJOBS);
+         printf("%s\n", MSG_QSTAT_PRT_PEDINGJOBS);
          printf("############################################################################%s\n",
             sge_ext?hashes:"");
       }
@@ -825,7 +825,7 @@ static void sge_printf_header(u_long32 full_listing, u_long32 sge_ext)
       if (first_zombie) {
          first_zombie = 0;
          printf("\n############################################################################%s\n", sge_ext?hashes:"");
-         printf(MSG_QSTAT_PRT_FINISHEDJOBS);
+         printf("%s\n", MSG_QSTAT_PRT_FINISHEDJOBS);
          printf("############################################################################%s\n", sge_ext?hashes:""); 
       }
    }
@@ -947,7 +947,7 @@ int longest_queue_length) {
                   if (first) {
                      first = 0;
                      printf("\n################################################################################%s\n", sge_ext?hashes:"");
-                     printf(MSG_QSTAT_PRT_JOBSWAITINGFORACCOUNTING);
+                     printf("%s\n", MSG_QSTAT_PRT_JOBSWAITINGFORACCOUNTING);
                      printf(  "################################################################################%s\n", sge_ext?hashes:"");
                   }
                   sge_dstring_sprintf(&dyn_task_str, sge_u32, 
@@ -994,7 +994,7 @@ int longest_queue_length) {
                if (first) {
                   first = 0;
                   printf("\n################################################################################%s\n", sge_ext?hashes:"");
-                  printf(MSG_QSTAT_PRT_ERRORJOBS);
+                  printf("%s\n", MSG_QSTAT_PRT_ERRORJOBS);
                   printf("################################################################################%s\n", sge_ext?hashes:"");
                }
                sge_dstring_sprintf(&dyn_task_str, "sge_u32", lGetUlong(jatep, JAT_task_number));

@@ -37,7 +37,7 @@
 /*
  * libs/spool/sge_spooling_loader.c
  */
-#define MSG_SPOOL_ERRORCREATINGCONTEXT_S   _MESSAGE(211000, _("error creating a "SFQ" spooling context\n"))
-#define MSG_SPOOL_COMPILEDMETHODNECONFIGURED_SS   _MESSAGE(211001, _("Binaries were compiled with spooling method "SFQ", requested spooling method is "SFQ"\n"))
+#define MSG_SPOOL_ERRORCREATINGCONTEXT_S   _MESSAGE(211000, _("error creating a "SFQ" spooling context"))
+#define MSG_SPOOL_COMPILEDMETHODNECONFIGURED_SS   _MESSAGE(211001, _("Binaries were compiled with spooling method "SFQ", requested spooling method is "SFQ))
 
 #endif /* __MSG_SPOOLLIB_LOADER_H */

@@ -476,7 +476,6 @@ lList *cull_parse_qsh_parameter(lList *cmdline, lListElem **pjob)
          strcat(str, " ");
          strcat(str, cp);
       }
-      strcat(str, "\n");
       answer_list_add(&answer, str, STATUS_ENOIMP, ANSWER_QUALITY_ERROR);
    } 
 

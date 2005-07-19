@@ -1,3 +1,9 @@
+RD-2005-07-19-0: Cleanup:   unified qstat output part 1
+                            removed \n and \t from all message definitions
+                            modified all clients to print necessary newlines
+                 Changed:   all
+                 Review:    AA
+
 DT-2005-07-19-0: Bugfix:    o Initialized INHERIT_ENV and SET_LIB_PATH to
                               default values
                  Changed:   sge_conf.c

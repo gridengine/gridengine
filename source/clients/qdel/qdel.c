@@ -97,7 +97,7 @@ int main(int argc, char **argv) {
       ** high level parsing error! show answer list
       */
       for_each(aep, alp) {
-         fprintf(stdout, "%s", lGetString(aep, AN_text));
+         fprintf(stdout, "%s\n", lGetString(aep, AN_text));
       }
       lFreeList(alp);
       lFreeList(pcmdline);
@@ -113,7 +113,7 @@ int main(int argc, char **argv) {
       ** low level parsing error! show answer list
       */
       for_each(aep, alp) {
-         fprintf(stdout, "%s", lGetString(aep, AN_text));
+         fprintf(stdout, "%s\n", lGetString(aep, AN_text));
       }
       goto error_exit;
    } 
@@ -142,7 +142,7 @@ int main(int argc, char **argv) {
 
    /* Are there jobs which should be deleted? */
    if (!ref_list) {
-      printf(MSG_PARSE_NOOPTIONARGUMENT);
+      printf("%s\n", MSG_PARSE_NOOPTIONARGUMENT);
       qdel_usage(stderr, NULL);
       goto error_exit;
    }
@@ -157,7 +157,7 @@ int main(int argc, char **argv) {
          /* fills SGE_EVENT with diagnosis information */
          if (alp != NULL) {
             if (lGetUlong(aep = lFirst(alp), AN_status) != STATUS_OK) {
-               fprintf(stderr, "%s", lGetString(aep, AN_text));
+               fprintf(stderr, "%s\n", lGetString(aep, AN_text));
             }
             lFreeList(alp);
             alp = NULL;
@@ -249,7 +249,7 @@ int main(int argc, char **argv) {
                    ((first_try  && status != STATUS_OK_DOAGAIN) ||
                     (!first_try && status == STATUS_OK))) {
                   
-                  printf("%s", lGetString(aep, AN_text) );
+                  printf("%s\n", lGetString(aep, AN_text) );
                   
                }
                /* but a job name might have extended to more than MAX_DELETE_JOBS */
@@ -491,11 +491,11 @@ char *what
    if(!what) {
       /* display full usage */
       fprintf(fp, "%s qdel [options] job_task_list\n", MSG_SRC_USAGE);      
-      fprintf(fp, "  [-f]                               %s",  MSG_QDEL_f_OPT_USAGE);
-      fprintf(fp, "  [-help]                            %s",  MSG_QDEL_help_OPT_USAGE);
-      fprintf(fp, "  [-u user_list]                     %s",  MSG_QDEL_del_list_3_OPT_USAGE); 
+      fprintf(fp, "  [-f]                               %s\n",  MSG_QDEL_f_OPT_USAGE);
+      fprintf(fp, "  [-help]                            %s\n",  MSG_QDEL_help_OPT_USAGE);
+      fprintf(fp, "  [-u user_list]                     %s\n",  MSG_QDEL_del_list_3_OPT_USAGE); 
       fprintf(fp, "\n");
-      fprintf(fp, "  job_task_list                      %s",  MSG_QDEL_del_list_1_OPT_USAGE);
+      fprintf(fp, "  job_task_list                      %s\n",  MSG_QDEL_del_list_1_OPT_USAGE);
       fprintf(fp, "job_task_list  job_tasks[ job_tasks[ ...]]\n");
       fprintf(fp, "job_tasks      {job_id[.task_id_range]|job_name|pattern}[ -t task_id_range]\n");
       fprintf(fp, "task_id_range  task_id[-task_id[:step]]\n");
@@ -503,6 +503,7 @@ char *what
    } else {
       /* display option usage */
       fprintf(fp, MSG_QDEL_not_available_OPT_USAGE_S, what);
+      fprintf(fp, "\n");
    }
    return 1;
 }

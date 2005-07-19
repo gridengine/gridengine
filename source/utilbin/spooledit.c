@@ -61,12 +61,12 @@ static void
 usage(const char *argv0)
 {
    fprintf(stderr, "%s\n %s command\n\n", MSG_UTILBIN_USAGE, argv0);
-   fprintf(stderr, "%s", MSG_DBSTAT_COMMANDINTRO1);
-   fprintf(stderr, "%s", MSG_DBSTAT_COMMANDINTRO2);
-   fprintf(stderr, "%s", MSG_DBSTAT_LIST);
-   fprintf(stderr, "%s", MSG_DBSTAT_DUMP);
-   fprintf(stderr, "%s", MSG_DBSTAT_LOAD);
-   fprintf(stderr, "%s", MSG_DBSTAT_DELETE);
+   fprintf(stderr, "%s\n", MSG_DBSTAT_COMMANDINTRO1);
+   fprintf(stderr, "%s\n", MSG_DBSTAT_COMMANDINTRO2);
+   fprintf(stderr, "%s\n", MSG_DBSTAT_LIST);
+   fprintf(stderr, "%s\n", MSG_DBSTAT_DUMP);
+   fprintf(stderr, "%s\n", MSG_DBSTAT_LOAD);
+   fprintf(stderr, "%s\n", MSG_DBSTAT_DELETE);
 }
 
 static int 

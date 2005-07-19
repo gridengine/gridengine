@@ -283,6 +283,7 @@ char **argv
                if (ret != CL_RETVAL_OK) {
                   fprintf(stderr, MSG_HISTORY_FAILEDRESOLVINGHOSTNAME_SS ,
                        argv[ii], cl_get_error_text(ret));
+                  fprintf(stderr, "\n");
                   show_the_way(stderr);
                   return 1;
                }
@@ -315,7 +316,7 @@ char **argv
       */
       else if (!strcmp("-t", argv[ii])) {
          if (!argv[ii+1] || *(argv[ii+1])=='-') {
-            fprintf(stderr, MSG_HISTORY_TOPTIONMASTHAVELISTOFTASKIDRANGES ); 
+            fprintf(stderr, "%s\n", MSG_HISTORY_TOPTIONMASTHAVELISTOFTASKIDRANGES ); 
             show_the_way(stderr);
             return 1;
          } else {
@@ -328,6 +329,7 @@ char **argv
             if (!task_id_range_list) {
                lFreeList(answer);
                fprintf(stderr, MSG_HISTORY_INVALIDLISTOFTASKIDRANGES_S , argv[ii]);
+               fprintf(stderr, "\n");
                show_the_way(stderr);
                return 1; 
             }
@@ -522,7 +524,7 @@ char **argv
  
       if (SGE_STAT(acctfile,&buf)) {
          perror(acctfile); 
-         printf(MSG_HISTORY_NOJOBSRUNNINGSINCESTARTUP);
+         printf("%s\n", MSG_HISTORY_NOJOBSRUNNINGSINCESTARTUP);
          SGE_EXIT(1);
       }
    }
@@ -629,7 +631,7 @@ char **argv
             qref_list_resolve(queueref_list, NULL, &queue_name_list, 
                            &found_something, queue_list, hgrp_list, true, true);
             if (!found_something) {
-               fprintf(stderr, MSG_QINSTANCE_NOQUEUES);
+               fprintf(stderr, "%s\n", MSG_QINSTANCE_NOQUEUES);
                SGE_EXIT(1);
             }
          }  
@@ -656,7 +658,7 @@ char **argv
    fp = fopen(acctfile,"r");
    if (fp == NULL) {
       ERROR((SGE_EVENT, MSG_HISTORY_ERRORUNABLETOOPENX_S ,acctfile));
-      printf(MSG_HISTORY_NOJOBSRUNNINGSINCESTARTUP);
+      printf("%s\n", MSG_HISTORY_NOJOBSRUNNINGSINCESTARTUP);
       SGE_EXIT(1);
    }
 
@@ -997,7 +999,7 @@ char **argv
    fp = NULL;
 
    if ( shut_me_down ) {
-      printf(MSG_USER_ABORT);
+      printf("%s\n", MSG_USER_ABORT);
       SGE_EXIT(1);
    }
    if (job_number || job_name[0]) {
@@ -1092,7 +1094,7 @@ char **argv
       }
          
       if (!dashcnt)
-         printf(MSG_HISTORY_TOTSYSTEMUSAGE );
+         printf("%s\n", MSG_HISTORY_TOTSYSTEMUSAGE );
 
       sprintf(title_array,"%13.13s %13.13s %13.13s %13.13s %18.18s %18.18s %18.18s",
                      "WALLCLOCK", 
@@ -1405,26 +1407,26 @@ FILE *fp
    fprintf(fp, "%s\n", feature_get_product_name(FS_SHORT_VERSION, &ds));
          
    fprintf(fp, "%s qacct [options]\n",MSG_HISTORY_USAGE );
-   fprintf(fp, " [-A account_string]               %s", MSG_HISTORY_A_OPT_USAGE); 
-   fprintf(fp, " [-b begin_time]                   %s", MSG_HISTORY_b_OPT_USAGE);
-   fprintf(fp, " [-d days]                         %s", MSG_HISTORY_d_OPT_USAGE ); 
-   fprintf(fp, " [-D [department]]                 %s", MSG_HISTORY_D_OPT_USAGE);
-   fprintf(fp, " [-e end_time]                     %s", MSG_HISTORY_e_OPT_USAGE);
-   fprintf(fp, " [-g [groupid|groupname]]          %s", MSG_HISTORY_g_OPT_USAGE );
-   fprintf(fp, " [-h [host]]                       %s", MSG_HISTORY_h_OPT_USAGE );
-   fprintf(fp, " [-help]                           %s", MSG_HISTORY_help_OPT_USAGE);
-   fprintf(fp, " [-j [[job_id|job_name|pattern]]]  %s", MSG_HISTORY_j_OPT_USAGE);
-   fprintf(fp, " [-l attr=val,...]                 %s", MSG_HISTORY_l_OPT_USAGE );
-   fprintf(fp, " [-o [owner]]                      %s", MSG_HISTORY_o_OPT_USAGE);
-   fprintf(fp, " [-pe [pe_name]]                   %s", MSG_HISTORY_pe_OPT_USAGE );
-   fprintf(fp, " [-P [project]]                    %s", MSG_HISTORY_P_OPT_USAGE );
-   fprintf(fp, " [-q [queue]                      %s", MSG_HISTORY_q_OPT_USAGE );
-   fprintf(fp, " [-slots [slots]]                  %s", MSG_HISTORY_slots_OPT_USAGE);
-   fprintf(fp, " [-t taskid[-taskid[:step]]]       %s", MSG_HISTORY_t_OPT_USAGE );
-   fprintf(fp, " [[-f] acctfile]                   %s", MSG_HISTORY_f_OPT_USAGE );
+   fprintf(fp, " [-A account_string]               %s\n", MSG_HISTORY_A_OPT_USAGE); 
+   fprintf(fp, " [-b begin_time]                   %s\n", MSG_HISTORY_b_OPT_USAGE);
+   fprintf(fp, " [-d days]                         %s\n", MSG_HISTORY_d_OPT_USAGE ); 
+   fprintf(fp, " [-D [department]]                 %s\n", MSG_HISTORY_D_OPT_USAGE);
+   fprintf(fp, " [-e end_time]                     %s\n", MSG_HISTORY_e_OPT_USAGE);
+   fprintf(fp, " [-g [groupid|groupname]]          %s\n", MSG_HISTORY_g_OPT_USAGE );
+   fprintf(fp, " [-h [host]]                       %s\n", MSG_HISTORY_h_OPT_USAGE );
+   fprintf(fp, " [-help]                           %s\n", MSG_HISTORY_help_OPT_USAGE);
+   fprintf(fp, " [-j [[job_id|job_name|pattern]]]  %s\n", MSG_HISTORY_j_OPT_USAGE);
+   fprintf(fp, " [-l attr=val,...]                 %s\n", MSG_HISTORY_l_OPT_USAGE );
+   fprintf(fp, " [-o [owner]]                      %s\n", MSG_HISTORY_o_OPT_USAGE);
+   fprintf(fp, " [-pe [pe_name]]                   %s\n", MSG_HISTORY_pe_OPT_USAGE );
+   fprintf(fp, " [-P [project]]                    %s\n", MSG_HISTORY_P_OPT_USAGE );
+   fprintf(fp, " [-q [queue]                       %s\n", MSG_HISTORY_q_OPT_USAGE );
+   fprintf(fp, " [-slots [slots]]                  %s\n", MSG_HISTORY_slots_OPT_USAGE);
+   fprintf(fp, " [-t taskid[-taskid[:step]]]       %s\n", MSG_HISTORY_t_OPT_USAGE );
+   fprintf(fp, " [[-f] acctfile]                   %s\n", MSG_HISTORY_f_OPT_USAGE );
    
    fprintf(fp, "\n");
-   fprintf(fp, " begin_time, end_time              %s", MSG_HISTORY_beginend_OPT_USAGE );
+   fprintf(fp, " begin_time, end_time              %s\n", MSG_HISTORY_beginend_OPT_USAGE );
    fprintf(fp, " queue                             [cluster_queue|queue_instance|queue_domain|pattern]\n");
    if (fp==stderr) {
       SGE_EXIT(1);
@@ -1674,7 +1676,7 @@ lList **hgrp_l
       alp = sge_gdi_extract_answer(SGE_GDI_GET, SGE_HGROUP_LIST, hgrp_id, mal, 
                                    hgrp_l);
       if (!alp) {
-         printf(MSG_GDI_HGRPCONFIGGDIFAILED);
+         printf("%s\n", MSG_GDI_HGRPCONFIGGDIFAILED);
          SGE_EXIT(1);
       }
       if (lGetUlong(aep=lFirst(alp), AN_status) != STATUS_OK) {

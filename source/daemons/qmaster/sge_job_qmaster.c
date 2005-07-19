@@ -1659,6 +1659,7 @@ void job_ja_task_send_abort_mail(const lListElem *job,
                  sge_u32c(job_id), job_name, ruser, rhost);
       }
       if (err_str != NULL) {
+         sprintf(body, "\n");
          strcat(body, MSG_MAIL_BECAUSE);
          strcat(body, err_str);
       }

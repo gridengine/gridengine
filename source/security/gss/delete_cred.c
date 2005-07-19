@@ -142,12 +142,12 @@ main(int argc, char **argv)
 
       } else {
          cc = 2;
-         fprintf(stderr, MSG_GSS_DELETECREDKRB5CCNAMEENVVARHASINVALIDFORMAT );
+         fprintf(stderr, "%s\n", MSG_GSS_DELETECREDKRB5CCNAMEENVVARHASINVALIDFORMAT );
       }
 
    } else {
       cc = 1;
-      fprintf(stderr, MSG_GSS_DELETECREDKRB5CCNAMEENVVARNOTSET );
+      fprintf(stderr, "%s\n", MSG_GSS_DELETECREDKRB5CCNAMEENVVARNOTSET );
    }
 
 #ifdef DCE
@@ -155,7 +155,7 @@ main(int argc, char **argv)
 #endif
 
    if (cc)
-      fprintf(stderr, MSG_GSS_DELETECREDCOULDNOTDELCREDENTIALS);
+      fprintf(stderr, "%s\n", MSG_GSS_DELETECREDCOULDNOTDELCREDENTIALS);
 
    return cc;
 }

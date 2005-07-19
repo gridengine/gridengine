@@ -697,12 +697,14 @@ static int start_client_program(const char *client_name,
             if (WIFEXITED(status)) {
                ret = WEXITSTATUS(status);
                VERBOSE_LOG((stderr, MSG_QSH_EXITEDWITHCODE_SI, client_name, ret));
+               VERBOSE_LOG((stderr, "\n"));
             }
 
             if (WIFSIGNALED(status)) {
                int code = WTERMSIG(status);
                VERBOSE_LOG((stderr, MSG_QSH_EXITEDONSIGNAL_SIS, client_name, 
                            code, sge_sys_sig2str(code)));
+               VERBOSE_LOG((stderr, "\n"));
                /* if not qrsh <command>: use default: delete job */
             }
 
@@ -1508,6 +1510,7 @@ int main(int argc, char **argv)
       */
       if (set_sec_cred(job) != 0) {
          fprintf(stderr, MSG_SEC_SETJOBCRED);
+         fprintf(stderr, "\n");
          SGE_EXIT(1);
       }   
 
@@ -1557,6 +1560,7 @@ int main(int argc, char **argv)
       sge_tid_t tid;
      
       VERBOSE_LOG((stderr, MSG_QSH_SENDINGTASKTO_S, host)); 
+      VERBOSE_LOG((stderr, "\n"));
 
 #if 0
       /* if we had a connection to qmaster commd (to get configuration), close it and reset commproc id */
@@ -1582,6 +1586,7 @@ int main(int argc, char **argv)
       }
 
       VERBOSE_LOG((stderr, MSG_QSH_SERVERDAEMONSUCCESSFULLYSTARTEDWITHTASKID_S, tid)); 
+      VERBOSE_LOG((stderr, "\n"));
 
       if((msgsock = wait_for_qrsh_socket(sock, QSH_SOCKET_FINAL_TIMEOUT)) == -1) {
          ERROR((SGE_EVENT,MSG_QSH_CANNOTGETCONNECTIONTOQLOGIN_STARTER_SS,"shepherd", host));
@@ -1595,6 +1600,7 @@ int main(int argc, char **argv)
       }
 
       VERBOSE_LOG((stderr, MSG_QSH_ESTABLISHINGREMOTESESSIONTO_SS, client_name, host));
+      VERBOSE_LOG((stderr, "\n")); 
 
       exit_status = start_client_program(client_name, opts_qrsh, host, port, job_dir, utilbin_dir,
                                          is_rsh, is_rlogin, nostdin, noshell, sock);
@@ -1707,10 +1713,12 @@ int main(int argc, char **argv)
                   exit_status = 1;
                   break;
                }
-   
+               VERBOSE_LOG((stderr, "\n")); 
                VERBOSE_LOG((stderr, MSG_QSH_INTERACTIVEJOBHASBEENSCHEDULED_S, 
                             job_get_id_string(job_id, 0, NULL)));
+               VERBOSE_LOG((stderr, "\n")); 
                VERBOSE_LOG((stderr, MSG_QSH_ESTABLISHINGREMOTESESSIONTO_SS, client_name, host));
+               VERBOSE_LOG((stderr, "\n")); 
 
                exit_status = start_client_program(client_name, opts_qrsh, host, port, job_dir, utilbin_dir,
                                                   is_rsh, is_rlogin, nostdin, noshell, sock);
@@ -1779,8 +1787,10 @@ int main(int argc, char **argv)
    
             case JRUNNING:
             case JTRANSFERING:
+               VERBOSE_LOG((stderr, "\n")); 
                VERBOSE_LOG((stderr, MSG_QSH_INTERACTIVEJOBHASBEENSCHEDULED_S, 
                             job_get_id_string(job_id, 0, NULL)));
+               VERBOSE_LOG((stderr, "\n")); 
    
                /* in case of qlogin: has been scheduled / is transitting just after */
                /* timeout -> loop */

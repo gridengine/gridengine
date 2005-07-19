@@ -183,7 +183,7 @@ char **argv
 
    alp = sge_gdi(SGE_JOB_LIST, gdi_cmd, &request_list, NULL, NULL); 
    for_each (aep, alp) {
-      printf("%s", lGetString(aep, AN_text));
+      printf("%s\n", lGetString(aep, AN_text));
       if (ret==0) {
          ret = lGetUlong(aep, AN_status);
       }

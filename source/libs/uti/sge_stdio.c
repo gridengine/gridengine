@@ -178,6 +178,7 @@ pid_t sge_peopen(const char *shell, int login_shell, const char *command,
          if (fd == -1) {
             sprintf(err_str, MSG_ERROROPENINGFILEFORWRITING_SS, "/dev/null", 
                     strerror(errno));
+            sprintf(err_str, "\n");
             write(2, err_str, strlen(err_str));
             SGE_EXIT(1);
          }
@@ -204,7 +205,9 @@ pid_t sge_peopen(const char *shell, int login_shell, const char *command,
  
          pw = getpwnam(user);
          if (!pw) {
-            sprintf(err_str, MSG_SYSTEM_NOUSERFOUND_SS , user, strerror(errno));            write(2, err_str, strlen(err_str));
+            sprintf(err_str, MSG_SYSTEM_NOUSERFOUND_SS , user, strerror(errno));            
+            sprintf(err_str, "\n");
+            write(2, err_str, strlen(err_str));
             SGE_EXIT(1);
          }
  
@@ -229,6 +232,7 @@ pid_t sge_peopen(const char *shell, int login_shell, const char *command,
             {
                sprintf(err_str, MSG_SYSTEM_INITGROUPSFORUSERFAILED_ISS ,
                      res, user, strerror(errno));
+               sprintf(err_str, "\n");
                write(2, err_str, strlen(err_str));
                SGE_EXIT(1);
             }
@@ -237,6 +241,7 @@ pid_t sge_peopen(const char *shell, int login_shell, const char *command,
             if (setuid(pw->pw_uid)) {
                sprintf(err_str, MSG_SYSTEM_SWITCHTOUSERFAILED_SS , user,
                      strerror(errno));
+               sprintf(err_str, "\n");
                write(2, err_str, strlen(err_str));
                SGE_EXIT(1);
             }

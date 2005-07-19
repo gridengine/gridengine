@@ -164,6 +164,7 @@ int main(int argc, char *argv[])
   } else {
      if (he != NULL) {
         printf(MSG_SYSTEM_HOSTNAMEIS_S,he->h_name);
+        printf("\n");
      }
    
      if (resolved_name != NULL && all_option) {

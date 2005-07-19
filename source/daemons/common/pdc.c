@@ -391,6 +391,7 @@ read_kernel_table(char *name, void **table, long *size, int *entries)
    if (tabinfo(name, &tinfo) < 0) {
       sprintf(ps_errstr, MSG_SGE_TABINFOXFAILEDY_SS ,
               name, strerror(errno));
+      sprintf(ps_errstr, "\n");
       return -1;
    }
 
@@ -409,6 +410,7 @@ read_kernel_table(char *name, void **table, long *size, int *entries)
    if (tabread(name, (char *)*table, tsize, 0) == -1) {
       sprintf(ps_errstr, MSG_SGE_TABINFOXFAILEDY_SS ,
               name, strerror(errno));
+      sprintf(ps_errstr, "\n");
       return -1;
    }
 
@@ -822,18 +824,21 @@ int psRetrieveSystemData(void)
    if (sysmp(MP_SAGET, MPSA_SINFO, &si, sizeof(si))<0) {
       sprintf(ps_errstr, MSG_SGE_SYSMP_MP_SAGETXFAILEDY_SS,"MPSA_SINFO",
               strerror(errno));
+      sprintf(ps_errstr, "\n");
       return -1;
    }
 
    if (sysmp(MP_SAGET, MPSA_RMINFO, &rmi, sizeof(rmi))<0) {
       sprintf(ps_errstr, MSG_SGE_SYSMP_MP_SAGETXFAILEDY_SS,"MPSA_RMINFO",
               strerror(errno));
+      sprintf(ps_errstr, "\n");
       return -1;
    }
 
    if (sysmp(MP_SAGET, MPSA_MINFO, &mi, sizeof(mi))<0) {
       sprintf(ps_errstr, MSG_SGE_SYSMP_MP_SAGETXFAILEDY_SS,"MPSA_MINFO",
               strerror(errno));
+      sprintf(ps_errstr, "\n");
       return -1;
    }
 
@@ -842,18 +847,21 @@ int psRetrieveSystemData(void)
    if (sysmp(MP_SAGET, MPSA_SERR, &se, sizeof(se))<0) {
       sprintf(ps_errstr, MSG_SGE_SYSMP_MP_SAGETXFAILEDY_SS,"MPSA_SERR",
               strerror(errno));
+      sprintf(ps_errstr, "\n");
       return -1;
    }
 
    if (sysmp(MP_SAGET, MPSA_DINFO, &di, sizeof(di))<0) {
       sprintf(ps_errstr, MSG_SGE_SYSMP_MP_SAGETXFAILEDY_SS,"MPSA_DINFO",
               strerror(errno));
+      sprintf(ps_errstr, "\n");
       return -1;
    }
 
    if (sysmp(MP_SAGET, MPSA_TCPIPSTATS, &k, sizeof(k))<0) {
       sprintf(ps_errstr, MSG_SGE_SYSMP_MP_SAGETXFAILEDY_SS,"MPSA_TCPIPSTATS",
               strerror(errno));
+      sprintf(ps_errstr, "\n");
       return -1;
    }
 
@@ -862,30 +870,35 @@ int psRetrieveSystemData(void)
    if (swapctl(SC_GETFREESWAP, &swapfree)<0) {
       sprintf(ps_errstr, MSG_SGE_SWAPCTL_XFAILEDY_SS,"SC_GETFREESWAP",
               strerror(errno));
+      sprintf(ps_errstr, "\n");
       return -1;
    }
    
    if (swapctl(SC_GETSWAPMAX, &swapmax)<0) {
       sprintf(ps_errstr, MSG_SGE_SWAPCTL_XFAILEDY_SS,"SC_GETSWAPMAX",
               strerror(errno));
+      sprintf(ps_errstr, "\n");
       return -1;
    }
    
    if (swapctl(SC_GETSWAPVIRT, &swapvirt)<0) {
       sprintf(ps_errstr, MSG_SGE_SWAPCTL_XFAILEDY_SS,"SC_GETSWAPVIRT",
               strerror(errno));
+      sprintf(ps_errstr, "\n");
       return -1;
    }
    
    if (swapctl(SC_GETRESVSWAP, &swaprsrv)<0) {
       sprintf(ps_errstr, MSG_SGE_SWAPCTL_XFAILEDY_SS,"SC_GETRESVSWAP",
               strerror(errno));
+      sprintf(ps_errstr, "\n");
       return -1;
    }
    
    if (swapctl(SC_GETSWAPTOT, &swaptot)<0) {
       sprintf(ps_errstr, MSG_SGE_SWAPCTL_XFAILEDY_SS,"SC_GETSWAPTOT",
               strerror(errno));
+      sprintf(ps_errstr, "\n");
       return -1;
    }
 
@@ -2106,6 +2119,7 @@ int psStartCollector(void)
       if (getsysinfo(GSI_PHYSMEM, (caddr_t)&physical_memory,sizeof(int),0,NULL)==-1) {
          sprintf(ps_errstr, MSG_SGE_GETSYSINFO_GSI_PHYSMEM_FAILEDX_S ,
                  strerror(errno));
+         sprintf(ps_errstr, "\n");
          return -1;
       }
 
@@ -2118,10 +2132,12 @@ int psStartCollector(void)
       if (nlist(unixname, mem_nl) == -1) {
          sprintf(ps_errstr, MSG_SGE_NLISTFAILEDX_S ,
                  strerror(errno));
+         sprintf(ps_errstr, "\n");
          return -1;
       }
       if (mem_nl[PERFSUM].n_value == 0) {
          sprintf(ps_errstr, MSG_SGE_VM_PERFSUM_NOTFOUND );
+         sprintf(ps_errstr, "\n");
          return -1;
       }
 
@@ -2413,25 +2429,25 @@ int psVerify(void)
 void
 usage(void)
 {
-   fprintf(stderr, MSG_SGE_USAGE);
-   fprintf(stderr, MSG_SGE_s_OPT_USAGE);
-   fprintf(stderr, MSG_SGE_n_OPT_USAGE);
-   fprintf(stderr, MSG_SGE_p_OPT_USAGE);
-   fprintf(stderr, MSG_SGE_i_OPT_USAGE);
-   fprintf(stderr, MSG_SGE_g_OPT_USAGE);
-   fprintf(stderr, MSG_SGE_j_OPT_USAGE);
-   fprintf(stderr, MSG_SGE_J_OPT_USAGE);
-   fprintf(stderr, MSG_SGE_k_OPT_USAGE);
-   fprintf(stderr, MSG_SGE_K_OPT_USAGE);
-   fprintf(stderr, MSG_SGE_P_OPT_USAGE);
-   fprintf(stderr, MSG_SGE_S_OPT_USAGE);
+   fprintf(stderr, "\n%s\n\n", MSG_SGE_USAGE);
+   fprintf(stderr, "\t%s\n",  MSG_SGE_s_OPT_USAGE);
+   fprintf(stderr, "\t%s\n",  MSG_SGE_n_OPT_USAGE);
+   fprintf(stderr, "\t%s\n",  MSG_SGE_p_OPT_USAGE);
+   fprintf(stderr, "\t%s\n",  MSG_SGE_i_OPT_USAGE);
+   fprintf(stderr, "\t%s\n",  MSG_SGE_g_OPT_USAGE);
+   fprintf(stderr, "\t%s\n",  MSG_SGE_j_OPT_USAGE);
+   fprintf(stderr, "\t%s\n",  MSG_SGE_J_OPT_USAGE);
+   fprintf(stderr, "\t%s\n",  MSG_SGE_k_OPT_USAGE);
+   fprintf(stderr, "\t%s\n",  MSG_SGE_K_OPT_USAGE);
+   fprintf(stderr, "\t%s\n",  MSG_SGE_P_OPT_USAGE);
+   fprintf(stderr, "\t%s\n",  MSG_SGE_S_OPT_USAGE);
 }
 
 
 static void
 print_job_data(psJob_t *job)
 {
-   printf(MSG_SGE_JOBDATA );
+   printf("%s\n", MSG_SGE_JOBDATA );
    printf("jd_jid="OSJOBID_FMT"\n", job->jd_jid);
    printf("jd_length=%d\n", job->jd_length);
    printf("jd_uid="uid_t_fmt"\n", job->jd_uid);
@@ -2487,7 +2503,7 @@ print_process_data(psProc_t *proc)
 static void
 print_system_data(psSys_t *sys)
 {
-   printf(MSG_SGE_SYSTEMDATA );
+   printf("%s\n", MSG_SGE_SYSTEMDATA );
    printf("sys_length=%d\n", (int)sys->sys_length);
    printf("sys_ncpus=%d\n", (int)sys->sys_ncpus);
    printf("sys_tstamp=%s\n", ctime(&sys->sys_tstamp));
@@ -2525,7 +2541,7 @@ print_system_data(psSys_t *sys)
 static void
 print_status(psStat_t *stat)
 {
-   printf(MSG_SGE_STATUS );
+   printf("%s\n", MSG_SGE_STATUS );
    printf("stat_length=%d\n", (int)stat->stat_length);
    printf("stat_tstamp=%s\n", ctime(&stat->stat_tstamp));
    printf("stat_ifmpid=%d\n", (int)stat->stat_ifmpid);
@@ -2602,6 +2618,7 @@ main(int argc, char **argv)
 	    killjob = 1;
             if (sscanf(optarg, "%d", &signo)!=1) {
                fprintf(stderr, MSG_SGE_XISNOTAVALIDSIGNALNUMBER_S , optarg);
+               fprintf(stderr, "\n");
                usage();
                exit(6);
             }
@@ -2621,6 +2638,7 @@ main(int argc, char **argv)
 	 case 'S':
             if (sscanf(optarg, "%d", &sysi)!=1) {
                fprintf(stderr, MSG_SGE_XISNOTAVALIDINTERVAL_S, optarg);
+               fprintf(stderr, MSG_SGE_XISNOTAVALIDSIGNALNUMBER_S , optarg);
                usage();
                exit(4);
             }
@@ -2642,6 +2660,7 @@ main(int argc, char **argv)
 	 case 'i':
             if (sscanf(optarg, "%d", &interval)!=1) {
                fprintf(stderr, MSG_SGE_XISNOTAVALIDINTERVAL_S, optarg);
+               fprintf(stderr, "\n");
                usage();
                exit(3);
             }
@@ -2654,8 +2673,9 @@ main(int argc, char **argv)
 
    for (arg=optind; arg<argc; arg++) {
       if (sscanf(argv[arg], OSJOBID_FMT, &osjobid) != 1) {
-	 fprintf(stderr, MSG_SGE_XISNOTAVALIDJOBID_S , argv[arg]);
-	 exit(2);
+	      fprintf(stderr, MSG_SGE_XISNOTAVALIDJOBID_S , argv[arg]);
+         fprintf(stderr, "\n");
+	      exit(2);
       }
       psWatchJob(osjobid);
       numjobs++;
@@ -2677,7 +2697,7 @@ main(int argc, char **argv)
       diff_cpu = (double *)malloc(numjobs * sizeof(double));
       memset(diff_cpu, 0, numjobs*sizeof(double));
 
-      printf(MSG_SGE_GROSVIEWEXPORTFILE );
+      printf("%s\n", MSG_SGE_GROSVIEWEXPORTFILE );
       printf("=14 3\n");  /* arbsize */
       printf("=14 2 1\n");
       if (use_winsize)
@@ -2774,7 +2794,7 @@ main(int argc, char **argv)
                      } else if (verbose)
                         printf("kill("pid_t_fmt", %d) issued\n", procs->pd_pid, signo);
                   } else {
-                     fprintf(stderr, "kill: "pid_t_fmt ": %s",
+                     fprintf(stderr, "kill: "pid_t_fmt ": %s\n",
                              procs->pd_pid, MSG_SGE_PERMISSIONDENIED);
                   }
                }
@@ -2787,7 +2807,7 @@ main(int argc, char **argv)
          }
 
       } else if (verbose)
-         printf(MSG_SGE_NOJOBS );
+         printf("%s\n", MSG_SGE_NOJOBS );
 
       if (sgeview && jobcount>0) {
          int i;

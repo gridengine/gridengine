@@ -439,7 +439,7 @@ char *argv[]
 
          aep = lFirst(alp);
          answer_exit_if_not_recoverable(aep);
-         fprintf(stderr, "%s", lGetString(aep, AN_text));
+         fprintf(stderr, "%s\n", lGetString(aep, AN_text));
          
          alp = lFreeList(alp);
          lp = lFreeList(lp);
@@ -561,7 +561,7 @@ char *argv[]
 
          aep = lFirst(alp);
          answer_exit_if_not_recoverable(aep);
-         fprintf(stderr, "%s", lGetString(aep, AN_text));
+         fprintf(stderr, "%s\n", lGetString(aep, AN_text));
          
          alp = lFreeList(alp);
          lp = lFreeList(lp);
@@ -592,6 +592,7 @@ char *argv[]
                   break;
                default:
                   fprintf(stderr, MSG_SGETEXT_CANTRESOLVEHOST_S, lGetHost(hep, EH_name));
+                  fprintf(stderr, "\n");
                   hep = lFreeElem(hep);
                   SGE_EXIT(1);
                   break;
@@ -614,13 +615,14 @@ char *argv[]
          aep = lFirst(alp);
          answer_exit_if_not_recoverable(aep);
          if (answer_get_status(aep) != STATUS_OK) {
-            fprintf(stderr, "%s", lGetString(aep, AN_text));
+            fprintf(stderr, "%s\n", lGetString(aep, AN_text));
             spp++;
             continue;
          }
          
          if ( !arglp ) {
             fprintf(stderr, MSG_EXEC_XISNOEXECHOST_S, host);   
+            fprintf(stderr, "\n");
             spp++;
             sge_parse_return = 1;
             continue;
@@ -640,6 +642,7 @@ char *argv[]
             break;
          default:
             fprintf(stderr, MSG_SGETEXT_CANTRESOLVEHOST_S, lGetHost(ep, EH_name));
+            fprintf(stderr, "\n");
             ep = lFreeElem(ep);
             SGE_EXIT(1);
             break;
@@ -657,7 +660,7 @@ char *argv[]
          aep = lFirst(alp);
          answer_exit_if_not_recoverable(aep);
          if (answer_get_status(aep) != STATUS_OK) {
-            fprintf(stderr, "%s", lGetString(aep, AN_text));
+            fprintf(stderr, "%s\n", lGetString(aep, AN_text));
             spp++;
             continue;
          }
@@ -668,6 +671,7 @@ char *argv[]
             fprintf(stderr, MSG_EXEC_ADDEDHOSTXTOEXECHOSTLIST_S, host);
          else
             fprintf(stderr, "%s", lGetString(ep, AN_text));
+         fprintf(stderr, "\n");
       
          alp = lFreeList(alp);
          spp++;
@@ -706,7 +710,7 @@ char *argv[]
          }
 
          if (!ep) {
-            fprintf(stderr, MSG_ANSWER_INVALIDFORMAT); 
+            fprintf(stderr, "%s\n", MSG_ANSWER_INVALIDFORMAT); 
             SGE_EXIT(1);
          }
          lAppendElem(lp, ep);
@@ -717,6 +721,7 @@ char *argv[]
             break;
          default:
             fprintf(stderr, MSG_SGETEXT_CANTRESOLVEHOST_S, lGetHost(ep, EH_name));
+            fprintf(stderr, "\n");
             ep = lFreeElem(ep);
             SGE_EXIT(1);
             break;
@@ -727,7 +732,7 @@ char *argv[]
          aep = lFirst(alp);
         
          answer_exit_if_not_recoverable(aep); 
-         fprintf(stderr, "%s", lGetString(aep, AN_text));
+         fprintf(stderr, "%s\n", lGetString(aep, AN_text));
          alp = lFreeList(alp);
          lp = lFreeList(lp);
 
@@ -904,7 +909,7 @@ char *argv[]
 
          aep = lFirst(alp);
          answer_exit_if_not_recoverable(aep);
-         fprintf(stderr, "%s", lGetString(aep, AN_text));
+         fprintf(stderr, "%s\n", lGetString(aep, AN_text));
          
          alp = lFreeList(alp);
          lp = lFreeList(lp);
@@ -938,12 +943,12 @@ char *argv[]
          aep = lFirst(alp);
          answer_exit_if_not_recoverable(aep);
          if (answer_get_status(aep) != STATUS_OK) {
-            fprintf(stderr, "%s", lGetString(aep, AN_text)); 
+            fprintf(stderr, "%s\n", lGetString(aep, AN_text)); 
             alp = lFreeList(alp);
             lp = lFreeList(lp);
             SGE_EXIT(1);
          } else {
-            fprintf(stdout, "%s", lGetString(aep, AN_text));
+            fprintf(stdout, "%s\n", lGetString(aep, AN_text));
          }
          
          alp = lFreeList(alp);
@@ -974,7 +979,7 @@ char *argv[]
 
          aep = lFirst(alp);
          answer_exit_if_not_recoverable(aep);
-         fprintf(stderr, "%s", lGetString(aep, AN_text));
+         fprintf(stderr, "%s\n", lGetString(aep, AN_text));
          
          alp = lFreeList(alp);
          lp = lFreeList(lp);
@@ -1039,12 +1044,12 @@ char *argv[]
          aep = lFirst(alp);
          answer_exit_if_not_recoverable(aep);
          if (answer_get_status(aep) != STATUS_OK) {
-            fprintf(stderr, "%s", lGetString(aep, AN_text)); 
+            fprintf(stderr, "%s\n", lGetString(aep, AN_text)); 
             alp = lFreeList(alp);
             lp = lFreeList(lp);
             SGE_EXIT(1);
          } else {
-            fprintf(stdout, "%s", lGetString(aep, AN_text));
+            fprintf(stdout, "%s\n", lGetString(aep, AN_text));
          }
          alp = lFreeList(alp);
          lp = lFreeList(lp);
@@ -1107,7 +1112,7 @@ char *argv[]
 
          aep = lFirst(alp);
          answer_exit_if_not_recoverable(aep);
-         fprintf(stderr, "%s", lGetString(aep, AN_text)); 
+         fprintf(stderr, "%s\n", lGetString(aep, AN_text)); 
          if (answer_get_status(aep) != STATUS_OK) {
             alp = lFreeList(alp);
             lp = lFreeList(lp);
@@ -1153,7 +1158,7 @@ char *argv[]
             aep = lFirst(alp);
             answer_exit_if_not_recoverable(aep);
             if (answer_get_status(aep) != STATUS_OK) {
-               fprintf(stderr, "%s", lGetString(aep, AN_text));
+               fprintf(stderr, "%s\n", lGetString(aep, AN_text));
                spp++;
                continue;
             }
@@ -1192,7 +1197,7 @@ char *argv[]
             }
                
             if (ep == NULL) {
-               fprintf(stderr, errstr);
+               fprintf(stderr, "%s\n", errstr);
                
                if (sge_error_and_exit(MSG_FILE_ERRORREADINGINFILE)) {
                   continue;
@@ -1208,6 +1213,7 @@ char *argv[]
          if (unspecified != NULL) {
             fprintf(stderr, MSG_STREE_NOVALIDNODEREF_U,
                     sge_u32c(lGetUlong(unspecified, STN_id)));
+            fprintf(stderr, "\n");
 
             lFreeElem(ep);
             spp++;
@@ -1224,9 +1230,9 @@ char *argv[]
          ep = lFirst(alp);
          answer_exit_if_not_recoverable(ep);
          if (answer_get_status(ep) == STATUS_OK)
-            fprintf(stderr, MSG_TREE_CHANGEDSHARETREE);
+            fprintf(stderr, "%s\n", MSG_TREE_CHANGEDSHARETREE);
          else
-            fprintf(stderr, "%s", lGetString(ep, AN_text));
+            fprintf(stderr, "%s\n", lGetString(ep, AN_text));
          newlp = lFreeList(newlp);
          spp++;
          continue;
@@ -1253,7 +1259,7 @@ char *argv[]
          aep = lFirst(alp);
          answer_exit_if_not_recoverable(aep);
          if (answer_get_status(aep) != STATUS_OK) {
-            fprintf(stderr, "%s", lGetString(aep, AN_text));
+            fprintf(stderr, "%s\n", lGetString(aep, AN_text));
             spp++;
             continue;
          }
@@ -1265,7 +1271,7 @@ char *argv[]
             if (ep) lSetUlong(ep, STN_shares, 1);
          }
          if (!ep) {
-            fprintf(stderr, MSG_TREE_NOSHARETREE);
+            fprintf(stderr, "%s\n", MSG_TREE_NOSHARETREE);
             spp++;
             continue;
          }
@@ -1313,6 +1319,7 @@ char *argv[]
                         node = search_named_node_path(ep, nodepath, &ancestors);
                         if (node != nnode) {
                            fprintf(stderr, MSG_TREE_CANTADDNODEXISNONUNIQUE_S, nodepath);
+                           fprintf(stderr, "\n");
                            SGE_EXIT(1);
                         }
                      }
@@ -1322,18 +1329,21 @@ char *argv[]
                   int i;
                   modified++;
                   lSetUlong(node, STN_shares, shares);
-                  fprintf(stderr, MSG_TREE_SETTING);
+                  fprintf(stderr, "%s\n", MSG_TREE_SETTING);
                   for(i=0; i<ancestors.depth; i++)
                      fprintf(stderr, "/%s",
                              lGetString(ancestors.nodes[i], STN_name));
                   fprintf(stderr, "=%d\n", shares);
-               } else 
+               } else {
                   fprintf(stderr, MSG_TREE_UNABLETOLACATEXINSHARETREE_S,
                           nodepath);
+                  fprintf(stderr, "\n");
+               }
                free_ancestors(&ancestors);
 
             } else {
                fprintf(stderr, MSG_ANSWER_XISNOTVALIDSEENODESHARESLIST_S, *spp);
+               fprintf(stderr, "\n");
                print_usage = 1;
             }
 
@@ -1348,12 +1358,12 @@ char *argv[]
             ep = lFirst(alp);
             answer_exit_if_not_recoverable(ep);
             if (answer_get_status(ep) == STATUS_OK)
-               fprintf(stderr, MSG_TREE_MODIFIEDSHARETREE);
+               fprintf(stderr, "%s\n", MSG_TREE_MODIFIEDSHARETREE);
             else
-               fprintf(stderr, "%s", lGetString(ep, AN_text));
+               fprintf(stderr, "%s\n", lGetString(ep, AN_text));
             alp = lFreeList(alp);
          } else {
-            fprintf(stderr, MSG_TREE_NOMIDIFIEDSHARETREE);
+            fprintf(stderr, "%s\n", MSG_TREE_NOMIDIFIEDSHARETREE);
             if (print_usage)
                sge_usage(stderr);
             SGE_EXIT(1);
@@ -1412,7 +1422,7 @@ char *argv[]
          aep = lFirst(alp);
          answer_exit_if_not_recoverable(aep);
          if (answer_get_status(aep) != STATUS_OK) {
-            fprintf(stderr, "%s", lGetString(aep, AN_text));
+            fprintf(stderr, "%s\n", lGetString(aep, AN_text));
             spp++;
             continue;
          }
@@ -1426,7 +1436,7 @@ char *argv[]
          aep = lFirst(alp);
          answer_exit_if_not_recoverable(aep);
          if (answer_get_status(aep) != STATUS_OK) {
-            fprintf(stderr, "%s", lGetString(aep, AN_text));
+            fprintf(stderr, "%s\n", lGetString(aep, AN_text));
             spp++;
             continue;
          }
@@ -1695,7 +1705,7 @@ char *argv[]
          aep = lFirst(alp);
          answer_exit_if_not_recoverable(aep);
          if (answer_get_status(aep) != STATUS_OK) {
-            fprintf(stderr, "%s", lGetString(aep, AN_text));
+            fprintf(stderr, "%s\n", lGetString(aep, AN_text));
             spp++;
             continue;
          }
@@ -1703,7 +1713,7 @@ char *argv[]
  
          ep = lFirst(lp);
          if (!ep) {
-            fprintf(stderr, MSG_TREE_NOSHARETREE);
+            fprintf(stderr, "%s\n", MSG_TREE_NOSHARETREE);
             spp++;
             continue;
          }
@@ -1731,7 +1741,7 @@ char *argv[]
                            pnode = ep;
                         else
                            pnode = ancestors.nodes[ancestors.depth-2];
-                        fprintf(stderr, MSG_TREE_REMOVING);
+                        fprintf(stderr, "%s\n", MSG_TREE_REMOVING);
                         for(i=0; i<ancestors.depth; i++)
                            fprintf(stderr, "/%s",
                                    lGetString(ancestors.nodes[i], STN_name));
@@ -1741,14 +1751,16 @@ char *argv[]
                         if (lGetNumberOfElem(siblings) == 0)
                            lSetList(pnode, STN_children, NULL);
                      } else {
-                        fprintf(stderr, MSG_TREE_CANTDELROOTNODE);
+                        fprintf(stderr, "%s\n", MSG_TREE_CANTDELROOTNODE);
                      }
                   } else {
-                     fprintf(stderr, MSG_TREE_CANTDELNODESWITHCHILD);
+                     fprintf(stderr, "%s\n", MSG_TREE_CANTDELNODESWITHCHILD);
                   }
-               } else 
+               } else {
                   fprintf(stderr, MSG_TREE_UNABLETOLACATEXINSHARETREE_S,
                           nodepath);
+                  fprintf(stderr, "\n");
+               }
                free_ancestors(&ancestors);
 
             }
@@ -1762,12 +1774,12 @@ char *argv[]
             ep = lFirst(alp);
             answer_exit_if_not_recoverable(ep);
             if (answer_get_status(ep) == STATUS_OK)
-               fprintf(stderr, MSG_TREE_MODIFIEDSHARETREE);
+               fprintf(stderr, "%s\n", MSG_TREE_MODIFIEDSHARETREE);
             else
-               fprintf(stderr, "%s", lGetString(ep, AN_text));
+               fprintf(stderr, "%s\n", lGetString(ep, AN_text));
             alp = lFreeList(alp);
          } else {
-            fprintf(stderr, MSG_TREE_NOMIDIFIEDSHARETREE);
+            fprintf(stderr, "%s\n", MSG_TREE_NOMIDIFIEDSHARETREE);
             SGE_EXIT(1);
          }
 
@@ -1940,7 +1952,7 @@ char *argv[]
             aep = lFirst(alp);
             answer_exit_if_not_recoverable(aep);
             if (answer_get_status(aep) != STATUS_OK) {
-              fprintf(stderr, "%s", lGetString(aep, AN_text));
+              fprintf(stderr, "%s\n", lGetString(aep, AN_text));
                spp++;
                continue;
             }
@@ -1948,6 +1960,7 @@ char *argv[]
 
             if (!lp) {
                fprintf(stderr, MSG_CALENDAR_XISNOTACALENDAR_S, *spp);
+               fprintf(stderr, "\n");
                SGE_EXIT(1);
             }
 
@@ -2037,7 +2050,7 @@ char *argv[]
 
          aep = lFirst(alp);
          answer_exit_if_not_recoverable(aep);
-         fprintf(stderr, "%s", lGetString(aep, AN_text));
+         fprintf(stderr, "%s\n", lGetString(aep, AN_text));
          
          alp = lFreeList(alp);
          lp = lFreeList(lp);
@@ -2087,7 +2100,7 @@ char *argv[]
             aep = lFirst(alp);
             answer_exit_if_not_recoverable(aep);
             if (answer_get_status(aep) != STATUS_OK) {
-              fprintf(stderr, "%s", lGetString(aep, AN_text));
+              fprintf(stderr, "%s\n", lGetString(aep, AN_text));
                spp++;
                continue;
             }
@@ -2095,6 +2108,7 @@ char *argv[]
 
             if (!lp) {
                fprintf(stderr, MSG_CKPT_XISNOTCHKPINTERFACEDEF_S, *spp);
+               fprintf(stderr, "\n");
                SGE_EXIT(1);
             }
 
@@ -2195,7 +2209,7 @@ char *argv[]
 
          aep = lFirst(alp);
          answer_exit_if_not_recoverable(aep);
-         fprintf(stderr, "%s", lGetString(aep, AN_text));
+         fprintf(stderr, "%s\n", lGetString(aep, AN_text));
          
          alp = lFreeList(alp);
          lp = lFreeList(lp);
@@ -2238,7 +2252,7 @@ char *argv[]
          }
 
          if (ep == NULL) {
-            fprintf(stderr, MSG_ANSWER_INVALIDFORMAT); 
+            fprintf(stderr, "%s\n", MSG_ANSWER_INVALIDFORMAT); 
             SGE_EXIT(1);
          }
 
@@ -2250,6 +2264,7 @@ char *argv[]
             break;
          default:
             fprintf(stderr, MSG_SGETEXT_CANTRESOLVEHOST_S, lGetHost(ep, EH_name));
+            fprintf(stderr, "\n");
             ep = lFreeElem(ep);
             SGE_EXIT(1);
             break;
@@ -2259,7 +2274,7 @@ char *argv[]
 
          aep = lFirst(alp);
          answer_exit_if_not_recoverable(aep);
-         fprintf(stderr, "%s", lGetString(aep, AN_text));
+         fprintf(stderr, "%s\n", lGetString(aep, AN_text));
          alp = lFreeList(alp);
          lp = lFreeList(lp);
 
@@ -2285,6 +2300,7 @@ char *argv[]
                break;
             default:
                fprintf(stderr, MSG_SGETEXT_CANTRESOLVEHOST_S, lGetHost(argep, EH_name));
+               fprintf(stderr, "\n");
                argep = lFreeElem(argep);
                SGE_EXIT(1);
                break;
@@ -2301,13 +2317,14 @@ char *argv[]
             aep = lFirst(alp);
             answer_exit_if_not_recoverable(aep);
             if (answer_get_status(aep) != STATUS_OK) {
-               fprintf(stderr, "%s", lGetString(aep, AN_text));
+               fprintf(stderr, "%s\n", lGetString(aep, AN_text));
                spp++;
                continue;
             }
 
             if (!lp) {
                fprintf(stderr, MSG_EXEC_XISNOTANEXECUTIONHOST_S, host);
+               fprintf(stderr, "\n");
                spp++;
                continue;
             }
@@ -2328,6 +2345,7 @@ char *argv[]
                       host);
             else
                fprintf(stderr, "%s", lGetString(ep, AN_text));
+            fprintf(stderr, "\n");
             spp++;
          }
          continue;
@@ -2356,7 +2374,7 @@ char *argv[]
             aep = lFirst(alp);
             answer_exit_if_not_recoverable(aep);
             if (answer_get_status(aep) != STATUS_OK) {
-               fprintf(stderr, "%s", lGetString(aep, AN_text));
+               fprintf(stderr, "%s\n", lGetString(aep, AN_text));
                FREE (fields);
                spp++;
                continue;
@@ -2365,6 +2383,7 @@ char *argv[]
 
             if (!lp) {
                fprintf(stderr, MSG_PARALLEL_XNOTAPARALLELEVIRONMENT_S, *spp);
+               fprintf(stderr, "\n");
                FREE (fields);
                SGE_EXIT(1);
             }
@@ -2479,7 +2498,7 @@ char *argv[]
 
          aep = lFirst(alp);
          answer_exit_if_not_recoverable(aep);
-         fprintf(stderr, "%s", lGetString(aep, AN_text));
+         fprintf(stderr, "%s\n", lGetString(aep, AN_text));
          
          alp = lFreeList(alp);
          lp = lFreeList(lp);
@@ -2938,7 +2957,7 @@ char *argv[]
             } else {
                std_x = stdout;
             } 
-            fprintf(std_x, "%s", lGetString(aep, AN_text)); 
+            fprintf(std_x, "%s\n", lGetString(aep, AN_text)); 
          }
          alp = lFreeList(alp);   
          if (exit) {
@@ -3068,7 +3087,7 @@ char *argv[]
             } else {
                std_x = stdout;
             } 
-            fprintf(std_x, "%s", lGetString(aep, AN_text)); 
+            fprintf(std_x, "%s\n", lGetString(aep, AN_text)); 
          }
 
       if (cqueue != NULL) {
@@ -3129,9 +3148,9 @@ char *argv[]
          aep = lFirst(alp);
          answer_exit_if_not_recoverable(aep);
          if (answer_get_status(aep) == STATUS_OK)
-            fprintf(stderr, MSG_SCHEDD_CHANGEDSCHEDULERCONFIGURATION);
+            fprintf(stderr, "%s\n", MSG_SCHEDD_CHANGEDSCHEDULERCONFIGURATION);
          else
-            fprintf(stderr, "%s", lGetString(aep, AN_text));
+            fprintf(stderr, "%s\n", lGetString(aep, AN_text));
 
          alp = lFreeList(alp);
          lp = lFreeList(lp);
@@ -3156,7 +3175,7 @@ char *argv[]
          aep = lFirst(alp);
          answer_exit_if_not_recoverable(aep);
          if (answer_get_status(aep) != STATUS_OK) {
-            fprintf(stderr, "%s", lGetString(aep, AN_text));
+            fprintf(stderr, "%s\n", lGetString(aep, AN_text));
             spp++;
             continue;
          }
@@ -3172,9 +3191,9 @@ char *argv[]
          ep = lFirst(alp);
          answer_exit_if_not_recoverable(ep);
          if (answer_get_status(ep) == STATUS_OK)
-            fprintf(stderr, MSG_SCHEDD_CHANGEDSCHEDULERCONFIGURATION);
+            fprintf(stderr, "%s\n", MSG_SCHEDD_CHANGEDSCHEDULERCONFIGURATION);
          else
-            fprintf(stderr, "%s", lGetString(ep, AN_text));
+            fprintf(stderr, "%s\n", lGetString(ep, AN_text));
          newlp = lFreeList(newlp);
          spp++;
          continue;
@@ -3199,7 +3218,7 @@ char *argv[]
             aep = lFirst(alp);
             answer_exit_if_not_recoverable(aep);
             if (answer_get_status(aep) != STATUS_OK) {
-               fprintf(stderr, "%s", lGetString(aep, AN_text));
+               fprintf(stderr, "%s\n", lGetString(aep, AN_text));
                spp++;
                continue;
             }
@@ -3252,6 +3271,7 @@ char *argv[]
          if (unspecified != NULL) {
             fprintf(stderr, MSG_STREE_NOVALIDNODEREF_U,
                     sge_u32c(lGetUlong(unspecified, STN_id)));
+            fprintf(stderr, "\n");
 
             lFreeElem(ep);
             spp++;
@@ -3267,9 +3287,9 @@ char *argv[]
          ep = lFirst(alp);
          answer_exit_if_not_recoverable(ep);
          if (answer_get_status(ep) == STATUS_OK)
-            fprintf(stderr, MSG_TREE_CHANGEDSHARETREE);
+            fprintf(stderr, "%s\n", MSG_TREE_CHANGEDSHARETREE);
          else
-            fprintf(stderr, "%s", lGetString(ep, AN_text));
+            fprintf(stderr, "%s\n", lGetString(ep, AN_text));
          newlp = lFreeList(newlp);
          spp++;
          continue;
@@ -3356,7 +3376,7 @@ char *argv[]
          aep = lFirst(alp);
          answer_exit_if_not_recoverable(aep);
          if (answer_get_status(aep) != STATUS_OK) {
-            fprintf(stderr, "%s", lGetString(aep, AN_text));
+            fprintf(stderr, "%s\n", lGetString(aep, AN_text));
             alp = lFreeList(alp);
             ep = lFreeElem(ep);
             lp = lFreeList(lp);
@@ -3365,6 +3385,7 @@ char *argv[]
 
          if (!lp) {
             fprintf(stderr, MSG_PROJECT_XISNOKNWOWNPROJECT_S, usersetname);
+            fprintf(stderr, "\n");
             fflush(stdout);
             fflush(stderr);
             alp = lFreeList(alp);
@@ -3380,12 +3401,12 @@ char *argv[]
          aep = lFirst(alp);
          answer_exit_if_not_recoverable(aep);
          if (answer_get_status(aep) != STATUS_OK) {
-            fprintf(stderr, "%s", lGetString(aep, AN_text));
+            fprintf(stderr, "%s\n", lGetString(aep, AN_text));
             alp = lFreeList(alp);
             acl = lFreeList(acl);
             SGE_EXIT(1);
          } 
-         fprintf(stderr, "%s", lGetString(aep, AN_text));
+         fprintf(stderr, "%s\n", lGetString(aep, AN_text));
          alp = lFreeList(alp);
          acl = lFreeList(acl);
          spp++;
@@ -3447,12 +3468,12 @@ char *argv[]
          aep = lFirst(alp);
          answer_exit_if_not_recoverable(aep);
          if (answer_get_status(aep) != STATUS_OK) {
-            fprintf(stderr, "%s", lGetString(aep, AN_text));
+            fprintf(stderr, "%s\n", lGetString(aep, AN_text));
             alp = lFreeList(alp);
             acl = lFreeList(acl);
             SGE_EXIT(1);
          } 
-         fprintf(stderr, "%s", lGetString(aep, AN_text));
+         fprintf(stderr, "%s\n", lGetString(aep, AN_text));
          alp = lFreeList(alp);
          acl = lFreeList(acl);
          spp++;
@@ -3480,13 +3501,14 @@ char *argv[]
          aep = lFirst(alp);
          answer_exit_if_not_recoverable(aep);
          if (answer_get_status(aep) != STATUS_OK) {
-            fprintf(stderr, "%s", lGetString(aep, AN_text));
+            fprintf(stderr, "%s\n", lGetString(aep, AN_text));
             spp++;
             continue;
          }
 
          if (!lp) {
             fprintf(stderr, MSG_USER_XISNOKNOWNUSER_S, *spp);
+            fprintf(stderr, "\n");
             spp++;
             continue;
          }
@@ -3499,6 +3521,7 @@ char *argv[]
          /* if the user name has changed, we need to print an error message */   
          if (strcmp(lGetString(ep, UP_name), lGetString(newep, UP_name))) {
             fprintf(stderr, MSG_QCONF_CANTCHANGEOBJECTNAME_SS, lGetString(ep, UP_name), lGetString(newep, UP_name));
+            fprintf(stderr, "\n");
             SGE_EXIT(1);
          }
          else {
@@ -3512,12 +3535,12 @@ char *argv[]
             aep = lFirst(alp);
             answer_exit_if_not_recoverable(aep);
             if (answer_get_status(aep) != STATUS_OK) {
-               fprintf(stderr, "%s", lGetString(aep, AN_text));
+               fprintf(stderr, "%s\n", lGetString(aep, AN_text));
                alp = lFreeList(alp);
                lp = lFreeList(lp);
                SGE_EXIT(1);
             } else {
-               fprintf(stdout, "%s", lGetString(aep, AN_text));
+               fprintf(stdout, "%s\n", lGetString(aep, AN_text));
             }
          }
          alp = lFreeList(alp);
@@ -3547,13 +3570,14 @@ char *argv[]
          aep = lFirst(alp);
          answer_exit_if_not_recoverable(aep);
          if (answer_get_status(aep) != STATUS_OK) {
-            fprintf(stderr, "%s", lGetString(aep, AN_text));
+            fprintf(stderr, "%s\n", lGetString(aep, AN_text));
             spp++;
             continue;
          }
 
          if (!lp) {
             fprintf(stderr, MSG_PROJECT_XISNOKNWOWNPROJECT_S, *spp);
+            fprintf(stderr, "\n");
             continue;
          }
          alp = lFreeList(alp);
@@ -3568,7 +3592,7 @@ char *argv[]
             alp = sge_gdi(SGE_PROJECT_LIST, SGE_GDI_DEL, &lp, NULL, NULL);
             aep = lFirst(alp);
             answer_exit_if_not_recoverable(aep);
-            fprintf(stderr, "%s", lGetString(aep, AN_text));
+            fprintf(stderr, "%s\n", lGetString(aep, AN_text));
             alp = lFreeList(alp);
          }*/
 
@@ -3580,7 +3604,7 @@ char *argv[]
 
          aep = lFirst(alp);
          answer_exit_if_not_recoverable(aep);
-         fprintf(stderr, "%s", lGetString(aep, AN_text));
+         fprintf(stderr, "%s\n", lGetString(aep, AN_text));
          
          alp = lFreeList(alp);
          lp = lFreeList(lp);
@@ -3651,7 +3675,7 @@ char *argv[]
          aep = lFirst(alp);
          answer_exit_if_not_recoverable(aep);
          if (answer_get_status(aep) != STATUS_OK) {
-            fprintf(stderr, "%s", lGetString(aep, AN_text));
+            fprintf(stderr, "%s\n", lGetString(aep, AN_text));
             alp = lFreeList(alp);
             newep = lFreeElem(newep);
             lp = lFreeList(lp);
@@ -3660,6 +3684,7 @@ char *argv[]
 
          if (!lp) {
             fprintf(stderr, MSG_USER_XISNOKNOWNUSER_S, username);
+            fprintf(stderr, "\n");
             fflush(stdout);
             fflush(stderr);
             alp = lFreeList(alp);
@@ -3681,12 +3706,12 @@ char *argv[]
          aep = lFirst(alp);
          answer_exit_if_not_recoverable(aep);
          if (answer_get_status(aep) != STATUS_OK) {
-           fprintf(stderr, "%s", lGetString(aep, AN_text));
+           fprintf(stderr, "%s\n", lGetString(aep, AN_text));
            alp = lFreeList(alp);
            lp = lFreeList(lp);
            SGE_EXIT(1);
          } else {
-           fprintf(stdout, "%s", lGetString(aep, AN_text));
+           fprintf(stdout, "%s\n", lGetString(aep, AN_text));
          }
           
          alp = lFreeList(alp);
@@ -3756,7 +3781,7 @@ char *argv[]
          aep = lFirst(alp);
          answer_exit_if_not_recoverable(aep);
          if (answer_get_status(aep) != STATUS_OK) {
-            fprintf(stderr, "%s", lGetString(aep, AN_text));
+            fprintf(stderr, "%s\n", lGetString(aep, AN_text));
             alp = lFreeList(alp);
             newep = lFreeElem(newep);
             lp = lFreeList(lp);
@@ -3765,6 +3790,7 @@ char *argv[]
 
          if (!lp) {
             fprintf(stderr, MSG_PROJECT_XISNOKNWOWNPROJECT_S, projectname);
+            fprintf(stderr, "\n");
             fflush(stdout);
             fflush(stderr);
             alp = lFreeList(alp);
@@ -3785,7 +3811,7 @@ char *argv[]
 
          aep = lFirst(alp);
          answer_exit_if_not_recoverable(aep);
-         fprintf(stderr, "%s", lGetString(aep, AN_text));
+         fprintf(stderr, "%s\n", lGetString(aep, AN_text));
          
          alp = lFreeList(alp);
          lp = lFreeList(lp);
@@ -3821,7 +3847,7 @@ char *argv[]
          aep = lFirst(alp);
          answer_exit_if_not_recoverable(aep);
          if (answer_get_status(aep) != STATUS_OK) {
-           fprintf(stderr, "%s", lGetString(aep, AN_text));
+           fprintf(stderr, "%s\n", lGetString(aep, AN_text));
             spp++;
             continue;
          }
@@ -3829,6 +3855,7 @@ char *argv[]
 
          if (!lp) {
             fprintf(stderr, MSG_CALENDAR_XISNOTACALENDAR_S, *spp);
+            fprintf(stderr, "\n");
             SGE_EXIT(1);
          }
 
@@ -3914,6 +3941,7 @@ char *argv[]
                break;
             default:
                fprintf(stderr, MSG_SGETEXT_CANTRESOLVEHOST_SS, lGetHost(hep, EH_name), cl_get_error_text(ret));
+               fprintf(stderr, "\n");
                FREE(host_list);
                hep = lFreeElem(hep);
                SGE_EXIT(1);
@@ -3954,7 +3982,7 @@ char *argv[]
          aep = lFirst(alp);
          answer_exit_if_not_recoverable(aep);
          if (answer_get_status(aep) != STATUS_OK) {
-           fprintf(stderr, "%s", lGetString(aep, AN_text));
+           fprintf(stderr, "%s\n", lGetString(aep, AN_text));
             spp++;
             continue;
          }
@@ -3962,6 +3990,7 @@ char *argv[]
 
          if (!lp) {
             fprintf(stderr, MSG_CKPT_XISNOTCHKPINTERFACEDEF_S, *spp);
+            fprintf(stderr, "\n");
             SGE_EXIT(1);
          }
 
@@ -4021,6 +4050,7 @@ char *argv[]
                   break;
                default:
                   fprintf(stderr, MSG_SGETEXT_CANTRESOLVEHOST_S, cp);
+                  fprintf(stderr, "\n");
                   FREE(host_list);
                   hep = lFreeElem(hep);
                   SGE_EXIT(1);
@@ -4039,8 +4069,10 @@ char *argv[]
             FREE(host_list);
             hep = lFreeElem(hep);
          }
-         else
+         else {
             fprintf(stderr, MSG_ANSWER_NEEDHOSTNAMETODELLOCALCONFIG);
+            fprintf(stderr, "\n");
+         }
 
          spp++;
          continue;
@@ -4060,6 +4092,7 @@ char *argv[]
             break;
          default:
             fprintf(stderr, MSG_SGETEXT_CANTRESOLVEHOST_S, lGetHost(hep, EH_name));
+            fprintf(stderr, "\n");
             hep = lFreeElem(hep);
             SGE_EXIT(1);
             break;
@@ -4077,7 +4110,7 @@ char *argv[]
          aep = lFirst(alp);
          answer_exit_if_not_recoverable(aep);
          if (answer_get_status(aep) != STATUS_OK) {
-           fprintf(stderr, "%s", lGetString(aep, AN_text));
+           fprintf(stderr, "%s\n", lGetString(aep, AN_text));
             spp++;
             continue;
          }
@@ -4085,6 +4118,7 @@ char *argv[]
 
          if (!lp) {
             fprintf(stderr, MSG_EXEC_XISNOTANEXECUTIONHOST_S, host);
+            fprintf(stderr, "\n");
             SGE_EXIT(1);
          }
 
@@ -4159,7 +4193,7 @@ char *argv[]
          aep = lFirst(alp);
          answer_exit_if_not_recoverable(aep);
          if (answer_get_status(aep) != STATUS_OK) {
-           fprintf(stderr, "%s", lGetString(aep, AN_text));
+           fprintf(stderr, "%s\n", lGetString(aep, AN_text));
             spp++;
             continue;
          }
@@ -4167,6 +4201,7 @@ char *argv[]
 
          if (!lp) {
             fprintf(stderr,  MSG_PARALLEL_XNOTAPARALLELEVIRONMENT_S , *spp);
+            fprintf(stderr, "\n");
             SGE_EXIT(1);
          }
 
@@ -4218,7 +4253,7 @@ char *argv[]
          aep = lFirst(alp);
          answer_exit_if_not_recoverable(aep);
          if (answer_get_status(aep) != STATUS_OK) {
-            fprintf(stderr, "%s", lGetString(aep, AN_text));
+            fprintf(stderr, "%s\n", lGetString(aep, AN_text));
             spp++;
             continue;
          }
@@ -4230,7 +4265,7 @@ char *argv[]
         
          FREE (filename_stdout);
          if (answer_list_output(&alp)) {
-            fprintf(stderr, MSG_SCHEDCONF_CANTCREATESCHEDULERCONFIGURATION);
+            fprintf(stderr, "%s\n", MSG_SCHEDCONF_CANTCREATESCHEDULERCONFIGURATION);
             spp++;
             continue;
          }
@@ -4258,7 +4293,7 @@ char *argv[]
          aep = lFirst(alp);
          answer_exit_if_not_recoverable(aep);
          if (answer_get_status(aep) != STATUS_OK) {
-            fprintf(stderr, "%s", lGetString(aep, AN_text));
+            fprintf(stderr, "%s\n", lGetString(aep, AN_text));
             spp++;
             continue;
          }
@@ -4266,7 +4301,7 @@ char *argv[]
  
          ep = lFirst(lp);
          if (!ep) {
-            fprintf(stderr, MSG_TREE_NOSHARETREE);
+            fprintf(stderr, "%s\n", MSG_TREE_NOSHARETREE);
             spp++;
             continue;
          }
@@ -4294,6 +4329,7 @@ char *argv[]
                } else {
                   fprintf(stderr, MSG_TREE_UNABLETOLACATEXINSHARETREE_S,
                           nodepath);
+                  fprintf(stderr, "\n");
                }
                free_ancestors(&ancestors);
             }
@@ -4326,7 +4362,7 @@ char *argv[]
          aep = lFirst(alp);
          answer_exit_if_not_recoverable(aep);
          if (answer_get_status(aep) != STATUS_OK) {
-            fprintf(stderr, "%s", lGetString(aep, AN_text));
+            fprintf(stderr, "%s\n", lGetString(aep, AN_text));
             spp++;
             continue;
          }
@@ -4334,7 +4370,7 @@ char *argv[]
  
          ep = lFirst(lp);
          if (!ep) {
-            fprintf(stderr, MSG_TREE_NOSHARETREE);
+            fprintf(stderr, "%s\n", MSG_TREE_NOSHARETREE);
             spp++;
             continue;
          }
@@ -4373,7 +4409,7 @@ char *argv[]
          aep = lFirst(alp);
          answer_exit_if_not_recoverable(aep);
          if (answer_get_status(aep) != STATUS_OK) {
-            fprintf(stderr, "%s", lGetString(aep, AN_text));
+            fprintf(stderr, "%s\n", lGetString(aep, AN_text));
             spp++;
             continue;
          }
@@ -4411,7 +4447,7 @@ char *argv[]
          aep = lFirst(alp);
          answer_exit_if_not_recoverable(aep);
          if (answer_get_status(aep) != STATUS_OK) {
-            fprintf(stderr, "%s", lGetString(aep, AN_text));
+            fprintf(stderr, "%s\n", lGetString(aep, AN_text));
             spp++;
             continue;
          }
@@ -5206,12 +5242,13 @@ char *argv[]
             aep = lFirst(alp);
             answer_exit_if_not_recoverable(aep);
             if (answer_get_status(aep) != STATUS_OK) {
-               fprintf(stderr, "%s", lGetString(aep, AN_text));
+               fprintf(stderr, "%s\n", lGetString(aep, AN_text));
                continue;
             }
 
             if (!lp) {
                fprintf(stderr, MSG_USER_XISNOKNOWNUSER_S, user);
+               fprintf(stderr, "\n");
                continue;
             }
             alp = lFreeList(alp);
@@ -5248,13 +5285,14 @@ char *argv[]
          aep = lFirst(alp);
          answer_exit_if_not_recoverable(aep);
          if (answer_get_status(aep) != STATUS_OK) {
-            fprintf(stderr, "%s", lGetString(aep, AN_text));
+            fprintf(stderr, "%s\n", lGetString(aep, AN_text));
             spp++;
             continue;
          }
 
          if (!lp) {
             fprintf(stderr, MSG_PROJECT_XISNOKNWOWNPROJECT_S, *spp);
+            fprintf(stderr, "\n");
             spp++;
             continue;
          }
@@ -5334,6 +5372,7 @@ char *argv[]
 
       ERROR((SGE_EVENT, MSG_ANSWER_INVALIDOPTIONARGX_S, *spp));
       fprintf(stderr, MSG_SRC_X_HELP_USAGE_S , "qconf");
+      fprintf(stderr, "\n");
       SGE_EXIT(1);
    }
 
@@ -5475,6 +5514,7 @@ u_long32 target
       if (sge_resolve_host(argep, nm) != CL_RETVAL_OK) {
          ret |= 1;
          fprintf(stderr, MSG_SGETEXT_CANTRESOLVEHOST_S, lGetHost(argep, nm));
+         fprintf(stderr, "\n");
          continue;
       }
       host = lGetHost(argep, nm);
@@ -5491,10 +5531,12 @@ u_long32 target
       /* report results */
       ep = lFirst(alp);
       answer_exit_if_not_recoverable(ep);
-      if (answer_get_status(ep) == STATUS_OK)
+      if (answer_get_status(ep) == STATUS_OK) {
          fprintf(stderr, MSG_QCONF_XADDEDTOYLIST_SS, host, name);
-      else 
-         fprintf(stderr, "%s", lGetString(ep, AN_text));
+         fprintf(stderr, "\n");
+      } else {
+         fprintf(stderr, "%s\n", lGetString(ep, AN_text));
+      }
 
       lp = lFreeList(lp);
       alp = lFreeList(alp);
@@ -5636,7 +5678,7 @@ lList *confl
                                        SP_DEST_TMP, SP_FORM_ASCII, 
                                        fname, false);
    if (answer_list_output(&alp)) {
-      fprintf(stderr, MSG_SCHEDCONF_CANTCREATESCHEDULERCONFIGURATION);
+      fprintf(stderr, "%s\n", MSG_SCHEDCONF_CANTCREATESCHEDULERCONFIGURATION);
       SGE_EXIT(1);
    }
 
@@ -5686,6 +5728,7 @@ lList *confl
    
    if (newconfl == NULL) {
       fprintf(stderr, MSG_QCONF_CANTREADCONFIG_S, "can't parse config");
+      fprintf(stderr, "\n");
       unlink(fname);
       SGE_EXIT(1);
    }
@@ -5764,6 +5807,7 @@ bool user        /* =1 user, =0 project */
    
    if (!newep) {
       fprintf(stderr, MSG_QCONF_CANTREADX_S, user?MSG_OBJ_USER:MSG_JOB_PROJECT);
+      fprintf(stderr, "\n");
       SGE_EXIT(1);
    }
    
@@ -5851,6 +5895,7 @@ lListElem *ep
 
    if (newep == NULL) {
       fprintf(stderr, MSG_QCONF_CANTREADSHARETREEX_S, errstr);
+      fprintf(stderr, "\n");
       SGE_EXIT(1);
    }
    
@@ -5934,6 +5979,7 @@ char *name
       }
    } else {
       fprintf(stderr, MSG_QCONF_NOXDEFINED_S, name);
+      fprintf(stderr, "\n");
    }
    
    alp = lFreeList(alp);
@@ -5960,6 +6006,7 @@ static int show_eventclients()
    answer_exit_if_not_recoverable(ep);
    if (answer_get_status(ep) != STATUS_OK) {
       fprintf(stderr, "%s\n", lGetString(ep, AN_text));
+      fprintf(stderr, "\n");
       DEXIT;
       return -1;
    }
@@ -5975,9 +6022,10 @@ static int show_eventclients()
          printf("%-25s\n", lGetHost(ep, EV_host));
       }
    }
-   else
-      fprintf(stderr,  MSG_QCONF_NOEVENTCLIENTSREGISTERED);
-   
+   else {
+      fprintf(stderr,  MSG_QCONF_NOEVENTCLIENTSREGISTERED); 
+      fprintf(stderr, "\n");
+   }
    alp = lFreeList(alp);
    lp = lFreeList(lp);
    
@@ -6037,8 +6085,10 @@ static int show_processors()
 /*      printf("%35"sge_fu32"\r%-25.24s\n",sum, MSG_TABLE_SUM_F); */
       printf("%-25.24s%10"sge_fu32"\n",MSG_TABLE_SUM_F,sum);
    }
-   else
+   else {
       fprintf(stderr,  MSG_QCONF_NOEXECUTIONHOSTSDEFINED );
+      fprintf(stderr, "\n");
+   }
    
    alp = lFreeList(alp);
    lp = lFreeList(lp);
@@ -6061,7 +6111,7 @@ static bool show_gdi_request_answer(lList *alp)
          ret &= (lGetUlong (aep, AN_status) == STATUS_OK);
       }
       aep = lLast(alp);
-      fprintf(stderr, "%s", lGetString(aep, AN_text));
+      fprintf(stderr, "%s\n", lGetString(aep, AN_text));
    }
    
    DEXIT;
@@ -6079,7 +6129,7 @@ static bool show_gdi_request_answer_list(lList *alp)
       for_each(aep,alp) {
          answer_exit_if_not_recoverable(aep);
          ret &= (lGetUlong (aep, AN_status) == STATUS_OK);
-         fprintf(stderr, "%s", lGetString(aep, AN_text));
+         fprintf(stderr, "%s\n", lGetString(aep, AN_text));
       }
    }
    
@@ -6121,6 +6171,7 @@ lList *arglp
       ep=lGetElemStr(acls, US_name, acl_name);
       if (ep == NULL) {
          fprintf(stderr, MSG_SGETEXT_DOESNOTEXIST_SS, "access list", acl_name);
+         fprintf(stderr, "\n");
          fail = 1;
       }
       else {
@@ -6195,7 +6246,7 @@ lList *arglp
                                            &qconf_param_sfi, SP_DEST_TMP,
                                            SP_FORM_ASCII, fname, false);
       if (answer_list_output(&alp)) {
-         fprintf(stderr, MSG_FILE_ERRORWRITINGUSERSETTOFILE);
+         fprintf(stderr, "%s\n", MSG_FILE_ERRORWRITINGUSERSETTOFILE);
          DEXIT;
          return -2;
       }
@@ -6204,14 +6255,14 @@ lList *arglp
       
       if (status < 0) {
          unlink(fname);
-         fprintf(stderr, MSG_PARSE_EDITFAILED);
+         fprintf(stderr, "%s\n", MSG_PARSE_EDITFAILED);
          DEXIT;
          return -2;  /* why should the next edit have more luck */
       }
 
       if (status > 0) {
          unlink(fname);
-         fprintf(stdout, MSG_FILE_FILEUNCHANGED);
+         fprintf(stdout, "%s\n", MSG_FILE_FILEUNCHANGED);
          continue;
       }
 
@@ -6235,6 +6286,7 @@ lList *arglp
 
       if (changed_ep == NULL) {
          fprintf(stderr, MSG_FILE_ERRORREADINGUSERSETFROMFILE_S, fname);
+         fprintf(stderr, "\n");
          continue;   /* May be the user made a mistake. Just proceed with 
                         the next */
       }
@@ -6286,13 +6338,14 @@ const char *config_name
    ep = lFirst(alp);
    answer_exit_if_not_recoverable(ep);
    if (answer_get_status(ep) != STATUS_OK) {
-      fprintf(stderr, "%s\n", lGetString(ep, AN_text));
+      fprintf(stderr, lGetString(ep, AN_text));
       fail = 1;
    } else {
       const char *filename_stdout;
 
       if (!(ep = lFirst(lp))) {
          fprintf(stderr, MSG_ANSWER_CONFIGXNOTDEFINED_S, cfn);
+         fprintf(stderr, "\n");
          DEXIT;
          return 1;
       }
@@ -6390,12 +6443,14 @@ u_long32 flags
 
    if (ep && (flags == 1)) {
       fprintf(stderr, MSG_ANSWER_CONFIGXALREADYEXISTS_S, cfn);
+      fprintf(stderr, "\n");
       ep = lFreeElem(ep);
       DEXIT;
       return 2;
    }
    if (!ep && (flags == 2)) {
       fprintf(stderr, MSG_ANSWER_CONFIGXDOESNOTEXIST_S, cfn);
+      fprintf(stderr, "\n");
       ep = lFreeElem(ep);
       DEXIT;
       return 3;
@@ -6426,13 +6481,13 @@ u_long32 flags
          FREE (tmpname);
       }
       if (status < 0) {
-         fprintf(stderr, MSG_PARSE_EDITFAILED);
+         fprintf(stderr, "%s\n", MSG_PARSE_EDITFAILED);
          FREE (fields);
          DEXIT;
          return failed;
       }
       else if (status > 0) {
-         fprintf(stderr,MSG_ANSWER_CONFIGUNCHANGED  );
+         fprintf(stderr, "%s\n", MSG_ANSWER_CONFIGUNCHANGED  );
          FREE (fields);
          DEXIT;
          return failed;
@@ -6469,7 +6524,7 @@ u_long32 flags
          lSetHost(ep, CONF_hname, cfn);
       }
       else {
-         fprintf(stderr, MSG_ANSWER_ERRORREADINGTEMPFILE);
+         fprintf(stderr, "%s\n", MSG_ANSWER_ERRORREADINGTEMPFILE);
          unlink(tmpname);
          FREE (tmpname);
          failed = true;
@@ -6506,6 +6561,7 @@ u_long32 flags
 
       if (!ep) {
          fprintf(stderr, MSG_ANSWER_ERRORREADINGCONFIGFROMFILEX_S, filename);
+         fprintf(stderr, "\n");
          failed = true;
          DEXIT;
          return failed;
@@ -6580,11 +6636,12 @@ const char *user
       if (alp != NULL) {
          lListElem *aep;
          if (lGetUlong(aep = lFirst(alp), AN_status) != STATUS_OK) {
-            fprintf(stderr, "%s", lGetString(aep, AN_text));
+            fprintf(stderr, "%s\n", lGetString(aep, AN_text));
          }
       }
    } else {
       fprintf(stderr, MSG_SGETEXT_MUSTBEMANAGER_S , user);
+      fprintf(stderr, "\n");
    }
 
    if (alp != NULL) {
@@ -6643,7 +6700,7 @@ const char *host
       SGE_EXIT(1);
    }
    if (lGetUlong(aep = lFirst(alp), AN_status) != STATUS_OK) {
-      fprintf(stderr, "%s", lGetString(aep, AN_text));
+      fprintf(stderr, "%s\n", lGetString(aep, AN_text));
       alp = lFreeList(alp);
       SGE_EXIT(1);
    }
@@ -6657,6 +6714,7 @@ const char *host
       */
       lp = lFreeList(lp);
       fprintf(stderr, MSG_ANSWER_DENIEDHOSTXISNOADMINHOST_S, host);
+      fprintf(stderr, "\n");
       SGE_EXIT(1);
    }
 

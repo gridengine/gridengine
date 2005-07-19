@@ -304,7 +304,7 @@ lList *pe_list
       lAppendElem(pe_selected, copy_pe);
    }
    if (lGetNumberOfElem(pe_selected)==0) {
-      fprintf(stderr, MSG_PE_NOSUCHPARALLELENVIRONMENT);
+      fprintf(stderr, "%s\n", MSG_PE_NOSUCHPARALLELENVIRONMENT);
       return -1;
    }
 

@@ -804,6 +804,7 @@ int job_list_read_from_disk(lList **job_list, char *list_name, int check,
 
    if (first_direnties && !sge_silent_get()) {
       printf(MSG_CONFIG_READINGINX_S, list_name);
+      printf("\n");
    }
 
    sge_status_set_type(STATUS_DOTS);

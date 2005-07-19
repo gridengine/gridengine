@@ -611,8 +611,9 @@ static void sge_infotext_welcome(void) {
    
    printf("\nno l10n:\n");
    printf(SGE_INFOTEXT_TESTSTRING_S, user);
-   printf("\nl10n:\n");
+   printf("\n\nl10n:\n");
    printf(_SGE_GETTEXT__((char*)_(SGE_INFOTEXT_TESTSTRING_S)), user);
+   printf("\n");
 
 }
 
@@ -1129,7 +1130,9 @@ int main( int argc, char* argv[] ) {
          } 
  
          if (done != 1) {
+            printf("\n");
             printf( SGE_INFOTEXT_ONLY_ALLOWED_SS , _SGE_GETTEXT__(options.yes), _SGE_GETTEXT__(options.no));
+            printf("\n\n");
             if (do_auto != 0) {
                do_auto = 0;
             }

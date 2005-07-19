@@ -933,7 +933,7 @@ int set_sec_cred(lListElem *job)
       sprintf(binary, "%s/util/get_token_cmd", path_state_get_sge_root());
 
       if (sge_get_token_cmd(binary, NULL) != 0) {
-         fprintf(stderr, MSG_QSH_QSUBFAILED);
+         fprintf(stderr, "%s\n", MSG_QSH_QSUBFAILED);
          SGE_EXIT(1);
       }   
       
@@ -941,6 +941,7 @@ int set_sec_cred(lListElem *job)
 
       if (command_pid == -1) {
          fprintf(stderr, MSG_QSUB_CANTSTARTCOMMANDXTOGETTOKENQSUBFAILED_S, binary);
+         fprintf(stderr, "\n");
          SGE_EXIT(1);
       }
 
@@ -964,7 +965,7 @@ int set_sec_cred(lListElem *job)
       sprintf(binary, "%s/utilbin/%s/get_cred", path_state_get_sge_root(), sge_get_arch());
 
       if (sge_get_token_cmd(binary, NULL) != 0) {
-         fprintf(stderr, MSG_QSH_QSUBFAILED);
+         fprintf(stderr, "%s\n", MSG_QSH_QSUBFAILED);
          SGE_EXIT(1);
       }   
 
@@ -974,6 +975,7 @@ int set_sec_cred(lListElem *job)
 
       if (command_pid == -1) {
          fprintf(stderr, MSG_QSH_CANTSTARTCOMMANDXTOGETCREDENTIALSQSUBFAILED_S, binary);
+         fprintf(stderr, "\n");
          SGE_EXIT(1);
       }
 
@@ -987,7 +989,7 @@ int set_sec_cred(lListElem *job)
       ret = sge_peclose(command_pid, fp_in, fp_out, fp_err, NULL);
 
       if (ret) {
-         fprintf(stderr, MSG_QSH_CANTGETCREDENTIALS);
+         fprintf(stderr, "%s\n", MSG_QSH_CANTGETCREDENTIALS);
       }
       
       lSetString(job, JB_cred, str);

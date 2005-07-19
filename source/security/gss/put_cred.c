@@ -59,6 +59,7 @@ usage(char *progname)
    char *p;
    p = (NULL == (p = strrchr(progname,'/'))) ? progname : p+1;
    fprintf(stderr, MSG_GSS_PUTCRED_USAGE, p);
+   fprintf(stderr, "\n");
    exit(1);
 }
 
@@ -150,7 +151,7 @@ main(int argc, char **argv)
     */
 
    if (read(0, lenbuf, sizeof(lenbuf)) != sizeof(lenbuf)) {
-      fprintf(stderr, MSG_GSS_FAILEDREADINGCREDENTIALLENGTHFROMSTDIN );
+      fprintf(stderr, "%s\n", MSG_GSS_FAILEDREADINGCREDENTIALLENGTHFROMSTDIN );
       return 3;
    }
    client_cred.length = gsslib_unpackint(lenbuf);
@@ -160,11 +161,12 @@ main(int argc, char **argv)
    if ((client_cred.value = (char *)malloc(client_cred.length)) == 0) {
       fprintf(stderr, MSG_GSS_COULDNOTALLOCATEXBYTESFORCREDENTIALS_I ,
               (int) client_cred.length);
+      fprintf(stderr, "\n"); 
       return 3;
    }
 
    if (read(0, client_cred.value, client_cred.length) != client_cred.length) {
-      fprintf(stderr, MSG_GSS_FAILEDREADINGCREDENTIALFROMSTDIN );
+      fprintf(stderr, "%s\n", MSG_GSS_FAILEDREADINGCREDENTIALFROMSTDIN );
       return 3;
    }
 
@@ -189,6 +191,7 @@ main(int argc, char **argv)
       if (!(pw = getpwnam(owner))) {
          fprintf(stderr, MSG_GSS_COULDNOTGETUSERIDFORXY_SS ,
                  owner, strerror(errno));
+         fprintf(stderr, "\n");
          cc = 4;
          goto error;
       }
@@ -201,6 +204,7 @@ main(int argc, char **argv)
 
          if (new_ccname == NULL || strncasecmp(new_ccname, "file:", 5) != 0) {
             fprintf(stderr, MSG_GSS_COULDNOTCHANGEOWNERSHIPOFCREDENTIALSCACHETOXINVALIDKRB5CCNAME_S, owner);
+            fprintf(stderr, "\n");
             cc = 4;
             goto error;
          }
@@ -208,6 +212,7 @@ main(int argc, char **argv)
          if (chown(&new_ccname[5], pw->pw_uid, pw->pw_gid) < 0) {
             fprintf(stderr, MSG_GSS_COULDNOTCHANGEOWNERSHIPOFXTOYZ_SSS ,
                     &new_ccname[5], owner, strerror(errno));
+            fprintf(stderr, "\n");
             cc = 4;
             goto error;
          }
@@ -272,6 +277,7 @@ main(int argc, char **argv)
             if (symlink(&dce_ccname[5], &ccname[5]) < 0) {
                fprintf(stderr, MSG_GSS_COULDNOTLINKXTODCECREDENTIALSCACHEFILEYZ_SSS ,
                        ccname, dce_ccname, strerror(errno));
+               fprintf(stderr, "\n");
             }
 
 	    sprintf(src, "%s.data", &dce_ccname[5]);
@@ -289,6 +295,7 @@ main(int argc, char **argv)
 
          } else {
             fprintf(stderr, MSG_GSS_COULDNOTLINKXTODCECREDENTIALSCACHEFILEYINVALIDKRB5CCNAMEENVIRONMENTVARIABLEFORMAT_SS, ccname, dce_ccname);
+            fprintf(stderr, "\n");
          }
       }
    }

@@ -71,25 +71,25 @@ static int spool_object_list(const char *directory,
 static void usage(const char *argv0)
 {
    fprintf(stderr, "%s\n %s command\n\n", MSG_UTILBIN_USAGE, argv0);
-   fprintf(stderr, "%s", MSG_SPOOLDEFAULTS_COMMANDINTRO1);
-   fprintf(stderr, "%s", MSG_SPOOLDEFAULTS_COMMANDINTRO2);
-   fprintf(stderr, "%s", MSG_SPOOLDEFAULTS_TEST);
-   fprintf(stderr, "%s", MSG_SPOOLDEFAULTS_ADMINHOSTS);
-   fprintf(stderr, "%s", MSG_SPOOLDEFAULTS_CALENDARS);
-   fprintf(stderr, "%s", MSG_SPOOLDEFAULTS_CKPTS);
-   fprintf(stderr, "%s", MSG_SPOOLDEFAULTS_COMPLEXES);
-   fprintf(stderr, "%s", MSG_SPOOLDEFAULTS_CONFIGURATION);
-   fprintf(stderr, "%s", MSG_SPOOLDEFAULTS_CQUEUES);
-   fprintf(stderr, "%s", MSG_SPOOLDEFAULTS_EXECHOSTS);
-   fprintf(stderr, "%s", MSG_SPOOLDEFAULTS_LOCAL_CONF);
-   fprintf(stderr, "%s", MSG_SPOOLDEFAULTS_MANAGERS);
-   fprintf(stderr, "%s", MSG_SPOOLDEFAULTS_OPERATORS);
-   fprintf(stderr, "%s", MSG_SPOOLDEFAULTS_PES);
-   fprintf(stderr, "%s", MSG_SPOOLDEFAULTS_PROJECTS);
-   fprintf(stderr, "%s", MSG_SPOOLDEFAULTS_SHARETREE);
-   fprintf(stderr, "%s", MSG_SPOOLDEFAULTS_SUBMITHOSTS);
-   fprintf(stderr, "%s", MSG_SPOOLDEFAULTS_USERS);
-   fprintf(stderr, "%s", MSG_SPOOLDEFAULTS_USERSETS);
+   fprintf(stderr, "%s\n", MSG_SPOOLDEFAULTS_COMMANDINTRO1);
+   fprintf(stderr, "%s\n", MSG_SPOOLDEFAULTS_COMMANDINTRO2);
+   fprintf(stderr, "%s\n", MSG_SPOOLDEFAULTS_TEST);
+   fprintf(stderr, "%s\n", MSG_SPOOLDEFAULTS_ADMINHOSTS);
+   fprintf(stderr, "%s\n", MSG_SPOOLDEFAULTS_CALENDARS);
+   fprintf(stderr, "%s\n", MSG_SPOOLDEFAULTS_CKPTS);
+   fprintf(stderr, "%s\n", MSG_SPOOLDEFAULTS_COMPLEXES);
+   fprintf(stderr, "%s\n", MSG_SPOOLDEFAULTS_CONFIGURATION);
+   fprintf(stderr, "%s\n", MSG_SPOOLDEFAULTS_CQUEUES);
+   fprintf(stderr, "%s\n", MSG_SPOOLDEFAULTS_EXECHOSTS);
+   fprintf(stderr, "%s\n", MSG_SPOOLDEFAULTS_LOCAL_CONF);
+   fprintf(stderr, "%s\n", MSG_SPOOLDEFAULTS_MANAGERS);
+   fprintf(stderr, "%s\n", MSG_SPOOLDEFAULTS_OPERATORS);
+   fprintf(stderr, "%s\n", MSG_SPOOLDEFAULTS_PES);
+   fprintf(stderr, "%s\n", MSG_SPOOLDEFAULTS_PROJECTS);
+   fprintf(stderr, "%s\n", MSG_SPOOLDEFAULTS_SHARETREE);
+   fprintf(stderr, "%s\n", MSG_SPOOLDEFAULTS_SUBMITHOSTS);
+   fprintf(stderr, "%s\n", MSG_SPOOLDEFAULTS_USERS);
+   fprintf(stderr, "%s\n", MSG_SPOOLDEFAULTS_USERSETS);
 }
 
 static int init_framework(void)

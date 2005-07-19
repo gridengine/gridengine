@@ -110,8 +110,10 @@ char **argv
 
    if (japi_init(NULL, NULL, NULL, QSUB, false, NULL, &diag)
                                                       != DRMAA_ERRNO_SUCCESS) {
+      fprintf(stderr, "\n");
       fprintf(stderr, MSG_QSUB_COULDNOTINITIALIZEENV_S,
               sge_dstring_get_string (&diag));
+      fprintf(stderr, "\n");
       DEXIT;
       SGE_EXIT (1);
    }
@@ -195,7 +197,7 @@ char **argv
    }
 
    if (set_sec_cred(job) != 0) {
-      fprintf(stderr, MSG_SEC_SETJOBCRED);
+      fprintf(stderr, "%s\n", MSG_SEC_SETJOBCRED);
       DEXIT;
       SGE_EXIT(1);
    }
@@ -224,6 +226,7 @@ char **argv
       if (pthread_create (&sigt, NULL, sig_thread, (void *)NULL) != 0) {
          fprintf(stderr, MSG_QSUB_COULDNOTINITIALIZEENV_S,
                  " error preparing signal handling thread");
+         fprintf(stderr, "\n");
          
          exit_status = 1;
          goto Error;
@@ -234,6 +237,7 @@ char **argv
          const char *msg = sge_dstring_get_string (&diag);
          fprintf(stderr, MSG_QSUB_COULDNOTINITIALIZEENV_S,
                  msg?msg:" error starting event client thread");
+         fprintf(stderr, "\n");
          
          exit_status = 1;
          goto Error;
@@ -252,6 +256,7 @@ char **argv
          if (error != DRMAA_ERRNO_NO_ACTIVE_SESSION) {
             fprintf(stderr, MSG_QSUB_COULDNOTRUNJOB_S,
                     sge_dstring_get_string(&diag));
+            fprintf(stderr, "\n");
          }
          
          /* BUGFIX: Issuezilla #1013
@@ -281,6 +286,7 @@ char **argv
          if (error != DRMAA_ERRNO_NO_ACTIVE_SESSION) {
             fprintf(stderr, MSG_QSUB_COULDNOTRUNJOB_S,
                     sge_dstring_get_string(&diag));
+            fprintf(stderr, "\n");
          }
          
          /* BUGFIX: Issuezilla #1013
@@ -306,6 +312,7 @@ char **argv
    }
    else {
       fprintf(stderr, MSG_QSUB_COULDNOTRUNJOB_S, "invalid task structure");
+      fprintf(stderr, "\n");
       
       exit_status = 1;
       goto Error;
@@ -314,6 +321,7 @@ char **argv
    /* only success message is printed to stdout */
    if (!just_verify) {
       printf(MSG_QSUB_YOURJOBHASBEENSUBMITTED_SS, jobid_string, lGetString(job, JB_job_name));
+      printf("\n");
    }   
    else {
       printf(MSG_JOB_VERIFYFOUNDQ);
@@ -323,7 +331,7 @@ char **argv
       int event;
 
       if (is_immediate) {
-         fprintf(stderr, MSG_QSUB_WAITINGFORIMMEDIATEJOBTOBESCHEDULED);
+         fprintf(stderr, "%s\n", MSG_QSUB_WAITINGFORIMMEDIATEJOBTOBESCHEDULED);
 
          /* We only need to wait for the first task to be scheduled to be able
           * to say that the job is running. */
@@ -332,13 +340,15 @@ char **argv
                              NULL, &diag);
 
          if ((tmp_ret == DRMAA_ERRNO_SUCCESS) && (event == JAPI_JOB_START)) {
+            fprintf(stderr, "\n");
             fprintf(stderr, MSG_QSUB_YOURIMMEDIATEJOBXHASBEENSUCCESSFULLYSCHEDULED_S,
                   jobid_string);
+            fprintf(stderr, "\n");
          }
          /* A job finish event here means that the job was rejected. */
          else if ((tmp_ret == DRMAA_ERRNO_SUCCESS) &&
                   (event == JAPI_JOB_FINISH)) {
-            fprintf(stderr, MSG_QSUB_YOURQSUBREQUESTCOULDNOTBESCHEDULEDDTRYLATER);
+            fprintf(stderr, "\n%s\n", MSG_QSUB_YOURQSUBREQUESTCOULDNOTBESCHEDULEDDTRYLATER);
             
             exit_status = 1;
             goto Error;
@@ -349,8 +359,10 @@ char **argv
           * case we don't complain.  Same for no active session. */
             if ((tmp_ret != DRMAA_ERRNO_EXIT_TIMEOUT) &&
                 (tmp_ret != DRMAA_ERRNO_NO_ACTIVE_SESSION)) {
+               fprintf(stderr, "\n");
                fprintf(stderr, MSG_QSUB_COULDNOTWAITFORJOB_S,
                        sge_dstring_get_string (&diag));
+               fprintf(stderr, "\n");
             }
 
             exit_status = 1;
@@ -372,6 +384,7 @@ char **argv
                if ((tmp_ret != DRMAA_ERRNO_EXIT_TIMEOUT) &&
                    (tmp_ret != DRMAA_ERRNO_NO_ACTIVE_SESSION)) {
                   fprintf(stderr, MSG_QSUB_COULDNOTWAITFORJOB_S, sge_dstring_get_string (&diag));
+                  fprintf(stderr, "\n");
                }
                
                exit_status = 1;
@@ -401,7 +414,9 @@ Error:
    
    if ((tmp_ret = japi_exit (true, JAPI_EXIT_NO_FLAG, &diag)) != DRMAA_ERRNO_SUCCESS) {
       if (tmp_ret != DRMAA_ERRNO_NO_ACTIVE_SESSION) {
+         fprintf(stderr, "\n");
          fprintf(stderr, MSG_QSUB_COULDNOTFINALIZEENV_S, sge_dstring_get_string (&diag));
+         fprintf(stderr, "\n");
       }
       else {
          struct timespec ts;
@@ -510,8 +525,8 @@ static void qsub_terminate(void)
    dstring diag = DSTRING_INIT;
    int tmp_ret;
    
-   fprintf(stderr, MSG_QSUB_INTERRUPTED);
-   fprintf(stderr, MSG_QSUB_TERMINATING);
+   fprintf(stderr, "\n%s\n", MSG_QSUB_INTERRUPTED);
+   fprintf(stderr, "%s\n", MSG_QSUB_TERMINATING);
 
    tmp_ret = japi_exit (true, JAPI_EXIT_KILL_PENDING, &diag);
    
@@ -521,6 +536,7 @@ static void qsub_terminate(void)
        (tmp_ret != DRMAA_ERRNO_NO_ACTIVE_SESSION)) {
       fprintf(stderr, MSG_QSUB_COULDNOTFINALIZEENV_S,
               sge_dstring_get_string (&diag));
+      fprintf(stderr, "\n");
    }
 
    sge_dstring_free (&diag);
@@ -625,6 +641,7 @@ static int report_exit_status (int stat, const char *jobid)
          exit_status = 1;
       }
    }
+  printf("\n");
    
    return exit_status;
 }

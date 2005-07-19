@@ -235,7 +235,7 @@ static int do_prolog(int timeout, int ckpt_type)
       exit_status = start_child("prolog", command, NULL, timeout, ckpt_type);
 
       if (n_exit_status<(i=count_exit_status())) {
-         shepherd_trace_sprintf("exit states increased from %d to %d\n", n_exit_status, i);
+         shepherd_trace_sprintf("exit states increased from %d to %d", n_exit_status, i);
          /* in this case the child didnt get to the exec call or it failed */
          shepherd_trace("failed starting prolog");
          return SSTATE_BEFORE_PROLOG;
@@ -287,7 +287,7 @@ static int do_epilog(int timeout, int ckpt_type)
                      prolog_epilog_variables);
       exit_status = start_child("epilog", command, NULL, timeout, ckpt_type);
       if (n_exit_status<(i=count_exit_status())) {
-         shepherd_trace_sprintf("exit states increased from %d to %d\n", 
+         shepherd_trace_sprintf("exit states increased from %d to %d", 
                                 n_exit_status, i);
          /*
          ** in this case the child didnt get to the exec call or it failed
@@ -344,7 +344,7 @@ static int do_pe_start(int timeout, int ckpt_type, pid_t *pe_pid)
       */
       exit_status = start_child("pe_start", command, pe_pid, timeout, ckpt_type);
       if (n_exit_status<(i=count_exit_status())) {
-         shepherd_trace_sprintf("exit states increased from %d to %d\n", 
+         shepherd_trace_sprintf("exit states increased from %d to %d", 
                                 n_exit_status, i);
          /*
          ** in this case the child didnt get to the exec call or it failed
@@ -410,7 +410,7 @@ static int do_pe_stop(int timeout, int ckpt_type, pid_t *pe_pid)
        */
 
       if (n_exit_status<(i=count_exit_status())) {
-         shepherd_trace_sprintf("exit states increased from %d to %d\n", 
+         shepherd_trace_sprintf("exit states increased from %d to %d", 
                                 n_exit_status, i);
          /*
          ** in this case the child didnt get to the exec call or it failed

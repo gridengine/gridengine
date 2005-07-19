@@ -205,7 +205,7 @@ void answer_exit_if_not_recoverable(const lListElem *answer)
 {
    DENTER(ANSWER_LAYER, "answer_exit_if_not_recoverable");
    if (!answer_is_recoverable(answer)) {
-      fprintf(stderr, "%s: %s", answer_get_quality_text(answer),
+      fprintf(stderr, "%s: %s\n", answer_get_quality_text(answer),
               lGetString(answer, AN_text));
       DEXIT;
       SGE_EXIT(1);
@@ -320,6 +320,7 @@ void answer_print_text(const lListElem *answer,
    if (suffix != NULL) {
       fprintf(stream, "%s", suffix);
    }
+   fprintf(stream, "\n");
    DEXIT;
 }
 
@@ -677,7 +678,7 @@ int answer_list_handle_request_answer_list(lList **answer_list, FILE *stream) {
       }
       *answer_list = lFreeList(*answer_list);
    } else {
-      fprintf(stream, MSG_ANSWER_NOANSWERLIST);
+      fprintf(stream, "%s\n", MSG_ANSWER_NOANSWERLIST);
       return STATUS_EUNKNOWN;
    }
    DEXIT;

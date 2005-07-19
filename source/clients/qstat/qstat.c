@@ -314,6 +314,7 @@ char **argv
       }
       if (nqueues==0) {
          fprintf(stderr, MSG_QSTAT_NOQUEUESREMAININGAFTERXQUEUESELECTION_S,"-q");
+         fprintf(stderr, "\n");
          SGE_EXIT(1);
       }
    }
@@ -329,6 +330,7 @@ char **argv
 
       if (nqueues==0) {
          fprintf(stderr, MSG_QSTAT_NOQUEUESREMAININGAFTERXQUEUESELECTION_S,"-U");
+         fprintf(stderr, "\n");
          SGE_EXIT(1);
       }
    }
@@ -341,6 +343,7 @@ char **argv
 
       if (nqueues==0) {
          fprintf(stderr, MSG_QSTAT_NOQUEUESREMAININGAFTERXQUEUESELECTION_S,"-pe");
+         fprintf(stderr, "\n");
          SGE_EXIT(1);
       }
    }
@@ -354,7 +357,7 @@ char **argv
    a_cqueue_is_selected = is_cqueue_selected(queue_list);
 
    if (!a_cqueue_is_selected && qselect_mode) {
-      fprintf(stderr, MSG_QSTAT_NOQUEUESREMAININGAFTERSELECTION);
+      fprintf(stderr, "%s\n", MSG_QSTAT_NOQUEUESREMAININGAFTERSELECTION);
       SGE_EXIT(1);
    }
 
@@ -1066,7 +1069,7 @@ u_long32 show
    alp = sge_gdi_extract_answer(SGE_GDI_GET, SGE_CQUEUE_LIST, q_id, 
                                  mal, queue_l);
    if (!alp) {
-      printf(MSG_GDI_QUEUESGEGDIFAILED);
+      printf("%s\n", MSG_GDI_QUEUESGEGDIFAILED);
       SGE_EXIT(1);
    }
    if (lGetUlong(aep=lFirst(alp), AN_status) != STATUS_OK) {
@@ -1099,7 +1102,7 @@ u_long32 show
       }
 #endif
       if (!alp) {
-         printf(MSG_GDI_JOBSGEGDIFAILED);
+         printf("%s\n", MSG_GDI_JOBSGEGDIFAILED);
          SGE_EXIT(1);
       }
       if (lGetUlong(aep=lFirst(alp), AN_status) != STATUS_OK) {
@@ -1122,7 +1125,7 @@ u_long32 show
       alp = sge_gdi_extract_answer(SGE_GDI_GET, SGE_ZOMBIE_LIST, z_id, mal,
          zombie_l);
       if (!alp) {
-         printf(MSG_GDI_JOBZOMBIESSGEGDIFAILED);
+         printf("%s\n", MSG_GDI_JOBZOMBIESSGEGDIFAILED);
          SGE_EXIT(1);
       }
       if (lGetUlong(aep=lFirst(alp), AN_status) != STATUS_OK) {
@@ -1136,7 +1139,7 @@ u_long32 show
    alp = sge_gdi_extract_answer(SGE_GDI_GET, SGE_CENTRY_LIST, ce_id,
                                 mal, centry_l);
    if (!alp) {
-      printf(MSG_GDI_COMPLEXSGEGDIFAILED);
+      printf("%s\n", MSG_GDI_COMPLEXSGEGDIFAILED);
       SGE_EXIT(1);
    }
    if (lGetUlong(aep=lFirst(alp), AN_status) != STATUS_OK) {
@@ -1149,7 +1152,7 @@ u_long32 show
    alp = sge_gdi_extract_answer(SGE_GDI_GET, SGE_EXECHOST_LIST, eh_id, 
                                  mal, exechost_l);
    if (!alp) {
-      printf(MSG_GDI_EXECHOSTSGEGDIFAILED);
+      printf("%s\n", MSG_GDI_EXECHOSTSGEGDIFAILED);
       SGE_EXIT(1);
    }
    if (lGetUlong(aep=lFirst(alp), AN_status) != STATUS_OK) {
@@ -1163,7 +1166,7 @@ u_long32 show
       alp = sge_gdi_extract_answer(SGE_GDI_GET, SGE_PE_LIST, pe_id, 
                                     mal, pe_l);
       if (!alp) {
-         printf(MSG_GDI_PESGEGDIFAILED);
+         printf("%s\n", MSG_GDI_PESGEGDIFAILED);
          SGE_EXIT(1);
       }
       if (lGetUlong(aep=lFirst(alp), AN_status) != STATUS_OK) {
@@ -1178,7 +1181,7 @@ u_long32 show
       alp = sge_gdi_extract_answer(SGE_GDI_GET, SGE_CKPT_LIST, ckpt_id, 
                                     mal, ckpt_l);
       if (!alp) {
-         printf(MSG_GDI_CKPTSGEGDIFAILED);
+         printf("%s\n", MSG_GDI_CKPTSGEGDIFAILED);
          SGE_EXIT(1);
       }
       if (lGetUlong(aep=lFirst(alp), AN_status) != STATUS_OK) {
@@ -1193,7 +1196,7 @@ u_long32 show
       alp = sge_gdi_extract_answer(SGE_GDI_GET, SGE_USERSET_LIST, acl_id, 
                                     mal, acl_l);
       if (!alp) {
-         printf(MSG_GDI_USERSETSGEGDIFAILED);
+         printf("%s\n", MSG_GDI_USERSETSGEGDIFAILED);
          SGE_EXIT(1);
       }
       if (lGetUlong(aep=lFirst(alp), AN_status) != STATUS_OK) {
@@ -1206,7 +1209,7 @@ u_long32 show
    /* --- scheduler configuration */
    alp = sge_gdi_extract_answer(SGE_GDI_GET, SGE_SC_LIST, sc_id, mal, sc_l);
    if (!alp) {
-      printf(MSG_GDI_SCHEDDCONFIGSGEGDIFAILED);
+      printf("%s\n", MSG_GDI_SCHEDDCONFIGSGEGDIFAILED);
       SGE_EXIT(1);
    }
    if (lGetUlong(aep=lFirst(alp), AN_status) != STATUS_OK) {
@@ -1220,7 +1223,7 @@ u_long32 show
    alp = sge_gdi_extract_answer(SGE_GDI_GET, SGE_HGROUP_LIST, hgrp_id, mal, 
                                 hgrp_l);
    if (!alp) {
-      printf(MSG_GDI_HGRPCONFIGGDIFAILED);
+      printf("%s\n", MSG_GDI_HGRPCONFIGGDIFAILED);
       SGE_EXIT(1);
    }
    if (lGetUlong(aep=lFirst(alp), AN_status) != STATUS_OK) {
@@ -1232,7 +1235,7 @@ u_long32 show
    /* -- apply global configuration for sge_hostcmp() scheme */
    alp = sge_gdi_extract_answer(SGE_GDI_GET, SGE_CONFIG_LIST, gc_id, mal, &conf_l);
    if (!alp) {
-      printf(MSG_GDI_GLOBALCONFIGGDIFAILED);
+      printf("%s\n", MSG_GDI_GLOBALCONFIGGDIFAILED);
       SGE_EXIT(1);
    }
    if (lGetUlong(aep=lFirst(alp), AN_status) != STATUS_OK) {
@@ -1402,7 +1405,7 @@ u_long32 *isXML
             /* search for invalid options */
             for (j=0; argstr[j]; j++) {
                if (argstr[j] != noflag) {
-                  sprintf(str, MSG_OPTIONS_WRONGARGUMENTTOSOPT);
+                  sprintf(str, "%s\n", MSG_OPTIONS_WRONGARGUMENTTOSOPT);
                   if (!usageshowed)
                      qstat_usage(qselect_mode, stderr, NULL);
                   answer_list_add(&alp, str, 
@@ -1526,7 +1529,7 @@ u_long32 *isXML
    }
 
    if (lGetNumberOfElem(*ppcmdline)) {
-     sprintf(str, MSG_PARSE_TOOMANYOPTIONS);
+     sprintf(str, "%s\n", MSG_PARSE_TOOMANYOPTIONS);
      if (!usageshowed)
         qstat_usage(qselect_mode, stderr, NULL);
      answer_list_add(&alp, str, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);

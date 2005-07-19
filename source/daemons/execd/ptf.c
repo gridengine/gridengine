@@ -2269,6 +2269,7 @@ void dump_list(lList *list)
    if (lDumpList(f, list, 0) == EOF) {
       fprintf(stderr, MSG_ERROR_UNABLETODUMPJOBLIST);
    }
+   fprintf(stderr, "\n");
    fclose(f);
 }
 
@@ -2480,7 +2481,7 @@ int main(int argc, char **argv)
       /* dump job usage list */
 
       if (lDumpList(f, job_usage_list, 0) == EOF) {
-         fprintf(stderr, MSG_ERROR_UNABLETODUMPJOBUSAGELIST);
+         fprintf(stderr, "%s\n", MSG_ERROR_UNABLETODUMPJOBUSAGELIST);
          exit(2);
       }
 #endif

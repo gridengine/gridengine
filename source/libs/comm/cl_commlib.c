@@ -392,7 +392,11 @@ int cl_com_setup_commlib( cl_thread_mode_t t_mode, cl_log_t debug_level , cl_log
    /* setup global log list */
    pthread_mutex_lock(&cl_com_log_list_mutex);
    if (cl_com_log_list == NULL) {
+#ifdef CL_DO_COMMLIB_DEBUG
+      ret_val = cl_log_list_setup(&cl_com_log_list,"application thread",0, /* CL_LOG_FLUSHED */ CL_LOG_IMMEDIATE  , NULL ); 
+#else
       ret_val = cl_log_list_setup(&cl_com_log_list,"application thread",0, /* CL_LOG_FLUSHED */ CL_LOG_IMMEDIATE  , flush_func); 
+#endif
       if (cl_com_log_list == NULL) {
          pthread_mutex_unlock(&cl_com_log_list_mutex);
          cl_com_cleanup_commlib();
@@ -7057,7 +7061,7 @@ static void *cl_com_handle_write_thread(void *t_conf) {
                                                           CL_W_SELECT  );
          switch (ret_val) {
             case CL_RETVAL_SELECT_TIMEOUT:
-               CL_LOG(CL_LOG_INFO,"select timeout");
+               CL_LOG(CL_LOG_INFO,"write select timeout");
                wait_for_events = 0;
                break;
             case CL_RETVAL_SELECT_INTERRUPT:

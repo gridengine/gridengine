@@ -180,10 +180,12 @@ extern int main(int argc, char** argv)
      interval = usec_now - usec_last;
      interval /= 1000000.0;
 
-     rcv_m_sec  = rcv_messages / interval;
-     snd_m_sec  = snd_messages / interval;
-     nr_evc_sec = evc_count    / interval;
-     snd_ev_sec = events_sent  / interval;
+     if (interval > 0.0) {
+        rcv_m_sec  = rcv_messages / interval;
+        snd_m_sec  = snd_messages / interval;
+        nr_evc_sec = evc_count    / interval;
+        snd_ev_sec = events_sent  / interval;
+     }
 
      cl_com_get_actual_statistic_data(handle, &statistic_data);
      if (statistic_data != NULL) {

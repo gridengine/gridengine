@@ -376,11 +376,18 @@ int cl_raw_list_lock(cl_raw_list_t* list_p) {             /* CR check */
       }
 #ifdef CL_DO_COMMLIB_DEBUG
       if ( list_p->list_type != CL_LOG_LIST ) {
+         cl_thread_settings_t* thread_config_p = NULL;
          if (list_p->last_locker != NULL) {
             free(list_p->last_locker);
             list_p->last_locker = NULL;
          }
-         list_p->last_locker = strdup(cl_thread_get_thread_config()->thread_name);
+         thread_config_p = cl_thread_get_thread_config();
+         if (thread_config_p == NULL) {
+            list_p->last_locker = strdup("unknown");
+         } else {
+            list_p->last_locker = strdup(thread_config_p->thread_name);
+         }
+         
          CL_LOG_STR(CL_LOG_INFO, "got lock:", list_p->list_name); 
          if (list_p->unlock_count != list_p->lock_count) {
             CL_LOG_STR(CL_LOG_ERROR, "unlock count doesn't match lock count: ", list_p->list_name); 

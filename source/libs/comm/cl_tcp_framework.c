@@ -418,14 +418,14 @@ int cl_com_tcp_open_connection(cl_com_connection_t* connection, int timeout, uns
             ufds.fd = private->sockfd;
             ufds.events = POLLOUT;
 
-            select_back = poll(&ufds, 1, 250); /* 1/4 sec */
+            select_back = poll(&ufds, 1, 5); /* 5 ms */
 #else
             struct timeval stimeout;
             fd_set writefds;
             FD_ZERO(&writefds);
             FD_SET(private->sockfd, &writefds);
             stimeout.tv_sec = 0; 
-            stimeout.tv_usec = 250*1000;   /* 1/4 sec */
+            stimeout.tv_usec = 5 * 1000;   /* 5 ms */
 
             select_back = select(private->sockfd + 1, NULL, &writefds, NULL, &stimeout);
 #endif
@@ -759,15 +759,15 @@ int cl_com_tcp_write(cl_com_connection_t* connection, cl_byte_t* message, unsign
          ufds.fd = private->sockfd;
          ufds.events = POLLOUT;
 
-         select_back = poll(&ufds, 1, 1000);
+         select_back = poll(&ufds, 1, 0);
 #else
          struct timeval timeout;
          fd_set writefds;
 
          FD_ZERO(&writefds);
          FD_SET(private->sockfd, &writefds);
-         timeout.tv_sec = 1; 
-         timeout.tv_usec = 0;  /* 0 ms */
+         timeout.tv_sec = 0; 
+         timeout.tv_usec = 0;  /* 0 us */
          /* do select */
          select_back = select(private->sockfd + 1, NULL, &writefds, NULL , &timeout);
 #endif
@@ -897,15 +897,15 @@ int cl_com_tcp_read(cl_com_connection_t* connection, cl_byte_t* message, unsigne
          ufds.fd = private->sockfd;
          ufds.events = POLLIN|POLLPRI;
 
-         select_back = poll(&ufds, 1, 1000);
+         select_back = poll(&ufds, 1, 250); /* 250 ms */
 #else
          fd_set readfds;
          struct timeval timeout;
 
          FD_ZERO(&readfds);
          FD_SET(private->sockfd, &readfds);
-         timeout.tv_sec = 1; 
-         timeout.tv_usec = 0;  /* 0 ms */
+         timeout.tv_sec = 0; 
+         timeout.tv_usec = 250 * 1000;  /* 250 ms */
    
          /* do select */
          select_back = select(private->sockfd + 1, &readfds,NULL , NULL , &timeout);
@@ -1507,8 +1507,14 @@ int cl_com_tcp_open_connection_request_handler(cl_raw_list_t* connection_list, c
    }
 
 #ifndef USE_POLL
-   timeout.tv_sec = timeout_val_sec; 
-   timeout.tv_usec = timeout_val_usec;
+   /* If we do only a write select, don't use select timeout */
+   if (select_mode == CL_W_SELECT) {
+      timeout.tv_sec = 0;
+      timeout.tv_usec = 5*1000; /* 5 ms */
+   } else {
+      timeout.tv_sec = timeout_val_sec; 
+      timeout.tv_usec = timeout_val_usec;
+   }
    FD_ZERO(&my_read_fds);
    FD_ZERO(&my_write_fds);
 #endif
@@ -1580,6 +1586,38 @@ int cl_com_tcp_open_connection_request_handler(cl_raw_list_t* connection_list, c
       switch(connection->framework_type) {
          case CL_CT_TCP: {
             switch (connection->connection_state) {
+               case CL_CLOSING:
+                  if (connection->ccrm_sent == 0 && connection->connection_sub_state != CL_COM_SHUTDOWN_DONE) {
+                     if (do_read_select != 0) {
+#ifdef USE_POLL
+                        ufds[ufds_index].fd = con_private->sockfd;
+                        ufds[ufds_index].events = POLLIN|POLLPRI;
+#else
+                        FD_SET(con_private->sockfd,&my_read_fds);
+#endif
+                        max_fd = MAX(max_fd,con_private->sockfd);
+                        nr_of_descriptors++;
+                        connection->data_read_flag = CL_COM_DATA_NOT_READY;
+                     }
+                     if (connection->data_write_flag == CL_COM_DATA_READY && do_write_select != 0) {
+                        /* this is to come out of select when data is ready to write */
+#ifdef USE_POLL
+                        ufds[ufds_index].fd = con_private->sockfd;
+                        ufds[ufds_index].events |= POLLOUT;
+#else
+                        FD_SET(con_private->sockfd,&my_write_fds);
+#endif
+                        max_fd = MAX(max_fd, con_private->sockfd);
+                        connection->fd_ready_for_write = CL_COM_DATA_NOT_READY;
+                     }
+
+#ifdef USE_POLL
+                     if (ufds[ufds_index].events)
+                       ufds_index++;
+#endif
+                  }
+                  break;
+
                case CL_CONNECTED:
                   if (connection->ccrm_sent == 0) {
                      if (do_read_select != 0) {
@@ -1688,7 +1726,6 @@ int cl_com_tcp_open_connection_request_handler(cl_raw_list_t* connection_list, c
                   break;
                case CL_DISCONNECTED:
                case CL_ACCEPTING:
-               case CL_CLOSING:
                   break;
             }
             break;
@@ -1790,7 +1827,11 @@ int cl_com_tcp_open_connection_request_handler(cl_raw_list_t* connection_list, c
    errno = 0;
 
 #ifdef USE_POLL
-   select_back = poll(ufds, ufds_index, timeout_val_sec*1000 + timeout_val_usec);
+   if (select_mode == CL_W_SELECT) {
+      select_back = poll(ufds, ufds_index, 5); /* 5 ms */
+   } else {
+      select_back = poll(ufds, ufds_index, timeout_val_sec*1000 + timeout_val_usec/1000);
+   }
 #else
    select_back = select(max_fd + 1, &my_read_fds, &my_write_fds, NULL, &timeout);
 #endif

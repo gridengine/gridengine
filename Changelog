@@ -1,3 +1,18 @@
+CR-2005-07-19-0: Cleanup:   commlib: Performance Cleanup, etc.
+                            - If compiled with -DCL_DO_COMMLIB_DEBUG:
+                              o Use default commlib logging function
+                              o Fixed thread name setting for unknown appl.
+                                threads
+                            - Fixed wrong message send time in qping -dump
+                              output
+                            - optimized select() and poll() timeouts in
+                              tcp/ssl modules 
+                            - Fixed division by zero exception in 
+                              test_virtual_qmaster module
+                 Changed:   commlib, test_virtual_qmaster
+                 Review:    RD
+                            
+
 RD-2005-07-19-0: Cleanup:   unified qstat output part 1
                             removed \n and \t from all message definitions
                             modified all clients to print necessary newlines

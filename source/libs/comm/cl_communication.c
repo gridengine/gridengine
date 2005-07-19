@@ -242,9 +242,12 @@ int cl_com_add_debug_message(cl_com_connection_t* connection, const char* messag
    time_now = now.tv_sec + (now.tv_usec / 1000000.0);
    if (ms->message_send_time.tv_sec != 0) {
       outgoing = CL_TRUE;
-      msg_time = ms->message_send_time.tv_sec + (ms->message_send_time.tv_usec / 1000000.0);
+      /* set message_time to message creation time */
+      msg_time = ms->message_insert_time.tv_sec + (ms->message_insert_time.tv_usec / 1000000.0);
       snprintf(message_time,256,"%.6f", msg_time);
 
+      /* set commlib_time to commlib linger time */
+      msg_time = ms->message_send_time.tv_sec + (ms->message_send_time.tv_usec / 1000000.0);
       com_time = msg_time - (ms->message_insert_time.tv_sec + (ms->message_insert_time.tv_usec / 1000000.0));
       snprintf(commlib_time,256,"%.6f", com_time);
       

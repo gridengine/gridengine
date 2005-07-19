@@ -1177,7 +1177,7 @@ sge_init_share_tree_nodes( lListElem *root )
 
 
 /*--------------------------------------------------------------------
- * get_usage - return libs/sched/sgeee.c usage entry based on name
+ * get_usage - return usage entry based on name
  *--------------------------------------------------------------------*/
 
 static lListElem *
@@ -1406,7 +1406,7 @@ decay_and_sum_usage( sge_ref_t *ref,
 
    if (!node && !user && !project) {
       return;
-   }   
+   }
 
    if (ref->user) {
       userprj = ref->user;

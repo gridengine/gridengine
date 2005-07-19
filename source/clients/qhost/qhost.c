@@ -120,7 +120,6 @@ char **argv
    DENTER_MAIN(TOP_LAYER, "qhost");
 
    sge_mt_init();
-/*   sge_prof_setup(); >*/
   
    log_state_set_log_gui(1);
 
@@ -130,11 +129,6 @@ char **argv
       sge_prof_cleanup();
       SGE_EXIT(1);
    }
-
-   /* init sched-conf local storage */
-/*   sconf_set_now(0); */
-
-
 
    sge_setup_sig_handlers(QHOST);
 

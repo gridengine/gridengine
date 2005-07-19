@@ -353,7 +353,7 @@ read_private_key(const char *keyfile)
 {
    FILE *fp = NULL;
    EVP_PKEY *pkey = NULL;
-
+   char *pkey1 = NULL;
    DENTER(TOP_LAYER, "read_private_key");
    fp = fopen(keyfile, "r");
    if (!fp) {
@@ -362,7 +362,9 @@ read_private_key(const char *keyfile)
    }
 #if 1
    /* pointer to pkey must passed into function and will not be returned by function! */
-   shared_ssl_func__PEM_read_PrivateKey(fp, &pkey, NULL, NULL);
+/*   shared_ssl_func__PEM_read_PrivateKey(fp, &pkey, NULL, NULL);*/
+   shared_ssl_func__PEM_read_PrivateKey(fp, &pkey1, NULL, NULL);
+   pkey = (EVP_PKEY *) pkey1;
 #else
    pkey = PEM_read_PrivateKey(fp, NULL, 0, NULL);
 #endif

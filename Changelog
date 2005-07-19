@@ -1,3 +1,9 @@
+DT-2005-07-19-0: Bugfix:    o Initialized INHERIT_ENV and SET_LIB_PATH to
+                              default values
+                 Changed:   sge_conf.c
+                 Issue:     1718
+                 Review:    JG
+
 AA-2005-07-19-0: Bugfix:    make compiler happy, obsolete lib removed
                  Changed:   sge_passwd
                  Review:    RD

@@ -70,7 +70,7 @@
 #define MSG_KRB_KRB5GENPORTADDRFAILEDFORWXYZ_SSIS        _MESSAGE(53032, _("krb5_gen_portaddr failed for <"SFN","SFN",%d> - "SFN))
 #define MSG_KRB_COULDNOTGENPORTADDR                      _MESSAGE(53033, _("could not gen portaddr"))
 #define MSG_KRB_KRB5GENREPLAYNAMEFAILEDFORWXYZ_SSIS      _MESSAGE(53034, _("krb5_gen_replay_name failed for <"SFN","SFN",%d> - "SFN))
-#define MSG_KRB_COULDNOTGENREPLAYNAME                    _MESSAGE(53035, _("could not gen replay name))
+#define MSG_KRB_COULDNOTGENREPLAYNAME                    _MESSAGE(53035, _("could not gen replay name"))
 #define MSG_KRB_KRB5GETSERVERRCACHEFAILEDFORWXYZ_SSIS    _MESSAGE(53036, _("krb5_get_server_rcache failed for <"SFN","SFN",%d> - "SFN))
 #define MSG_KRB_COULDNOTGETREPLAYCACHE                   _MESSAGE(53037, _("could not get replay cache"))
 #define MSG_KRB_FAILEDENCRYPTINGMSGFORWXYZ_SSIS          _MESSAGE(53038, _("failed encrypting msg for <"SFN","SFN",%d> - "SFN))

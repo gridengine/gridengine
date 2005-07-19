@@ -43,13 +43,13 @@
 ** gss/sge_gsslib.c 
 */ 
 #define MSG_GSS_APIERRORXY_SS          _MESSAGE(51002, _("GSS-API error "SFN": "SFN))
-#define MSG_GSS_CONTEXTFLAG_GSS_C_DELEG_FLAG       _MESSAGE(51003, _("context flag: GSS_C_DELEG_FLAG"             ))
+#define MSG_GSS_CONTEXTFLAG_GSS_C_DELEG_FLAG       _MESSAGE(51003, _("context flag: GSS_C_DELEG_FLAG"))
 #define MSG_GSS_CONTEXTFLAG_GSS_C_MUTUAL_FLAG      _MESSAGE(51004, _("context flag: GSS_C_MUTUAL_FLAG"))
 #define MSG_GSS_CONTEXTFLAG_GSS_C_REPLAY_FLAG      _MESSAGE(51005, _("context flag: GSS_C_REPLAY_FLAG"))
 #define MSG_GSS_CONTEXTFLAG_GSS_C_SEQUENCE_FLAG    _MESSAGE(51006, _("context flag: GSS_C_SEQUENCE_FLAG"))
 #define MSG_GSS_CONTEXTFLAG_GSS_C_CONF_FLAG        _MESSAGE(51007, _("context flag: GSS_C_CONF_FLAG"))
 #define MSG_GSS_CONTEXTFLAG_GSS_C_INTEG_FLAG       _MESSAGE(51008, _("context flag: GSS_C_INTEG_FLAG"))
-#define MSG_GSS_ACCEPTSECCONTEXTREQUIRESTOKENTOBESENTBACK  _MESSAGE(51009, _("accept_sec_context requires token to be sent back" ))
+#define MSG_GSS_ACCEPTSECCONTEXTREQUIRESTOKENTOBESENTBACK  _MESSAGE(51009, _("accept_sec_context requires token to be sent back"))
 #define MSG_GSS_CLIENTNAMEXDOESNOTMATCHUNAMEY_SS   _MESSAGE(51010, _("client name \"%.*s\" does not match user name "SFQ))
 #define MSG_GSS_DISPLAYSTATUS_PARSINGNAME          _MESSAGE(51011, _("parsing name"))
 #define MSG_GSS_DISPLAYSTATUS_INITIALIZINGCONTEXT  _MESSAGE(51012, _("initializing context"))

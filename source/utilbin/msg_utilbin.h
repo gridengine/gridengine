@@ -205,7 +205,6 @@
 #define MSG_PWD_DECR_S              _MESSAGE(57321,         _(SFN": error decrypting password - keylength mismatch"))
 #define MSG_PWD_MALLOC_S            _MESSAGE(57322,         _(SFN": malloc failed"))
 #define MSG_PWD_LOAD_PUB_SS         _MESSAGE(57323,         _(SFN": can't load public key "SFQ" to ecrypt password"))
-#define MSG_PWD_CANT_OPEN_SLL_LIB   _MESSAGE(57324,         _(SFN": can't open SSL library"))
 #define MSG_PWD_OPEN_SGEPASSWD_SSI  _MESSAGE(57325,         _(SFN": can't open sgepasswd file: %s (%d)"))
 #define MSG_PWD_WRITE_SGEPASSWD_SSI _MESSAGE(57326,         _(SFN": can't write to sgepasswd file: %s (%d)"))
 #define MSG_PWD_CLOSE_SGEPASSWD_SSI _MESSAGE(57327,         _(SFN": error closing sgepasswd file: %s (%d)"))

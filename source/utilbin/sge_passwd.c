@@ -353,7 +353,10 @@ static EVP_PKEY *
 read_private_key(const char *keyfile)
 {
    FILE *fp = NULL;
-   EVP_PKEY *pkey = NULL;
+   union {
+      EVP_PKEY *pkey;
+      void *pointer;
+   } pku;   
 
    DENTER(TOP_LAYER, "read_private_key");
    fp = fopen(keyfile, "r");
@@ -361,18 +364,21 @@ read_private_key(const char *keyfile)
       DEXIT;
       return NULL;
    }
+   
+   pku.pointer = NULL;
+   
 #if 1
    /* pointer to pkey must passed into function and will not be returned by function! */
-   shared_ssl_func__PEM_read_PrivateKey(fp, &pkey, NULL, NULL);
+   shared_ssl_func__PEM_read_PrivateKey(fp, &pku.pointer, NULL, NULL);
 #else
-   pkey = PEM_read_PrivateKey(fp, NULL, 0, NULL);
+   pku.pkey = PEM_read_PrivateKey(fp, NULL, 0, NULL);
 #endif
    fclose (fp);
-   if (pkey == NULL) {
+   if (pku.pkey == NULL) {
       shared_ssl_func__ERR_print_errors_fp(stderr);
    }
    DEXIT;
-   return pkey;
+   return pku.pkey;
 }
 
 static void

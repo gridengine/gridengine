@@ -1,3 +1,7 @@
+AA-2005-07-19-0: Bugfix:    make compiler happy, obsolete lib removed
+                 Changed:   sge_passwd
+                 Review:    RD
+
 SG-2005-07-18-0: Bugfix:    no user notification or command hanging if 
                             an immediate job cannot be scheduled
                  Review:    JG, RD

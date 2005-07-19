@@ -633,6 +633,8 @@ int merge_configuration(lListElem *global, lListElem *local,
       enable_windomacc = false;
       use_qsub_gid = false;
       prof_execd_thrd = false;
+      inherit_env = true;
+      set_lib_path = false;
 
       for (s=sge_strtok(pconf->execd_params, ",; "); s; s=sge_strtok(NULL, ",; ")) {
          if (parse_bool_param(s, "USE_QIDLE", &use_qidle)) {

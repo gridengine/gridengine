@@ -1,3 +1,10 @@
+HP-2005-07-20-0: Bugfix:    Nonexpressive error messages for SSL initialisation 
+                            errors.
+                 Bugfix:    qrsh failed when ARC not set and INHERIT_ENV=false set.
+                 Changed:   sge_passwd.c, qlogin_starter.c
+                 Bugtraq:   6299351, 6299345
+                 Review:    AA
+
 DT-2005-07-19-0: Bugfix:    o Initialized INHERIT_ENV and SET_LIB_PATH to
                               default values
                  Changed:   sge_conf.c

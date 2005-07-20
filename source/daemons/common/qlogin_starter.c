@@ -434,7 +434,7 @@ int qlogin_starter(const char *cwd, char *daemon, char** env)
    char *args[20]; /* JG: TODO: should be dynamically allocated */
    int argc = 0;
    const char *sge_root = NULL;
-   char *arch = NULL;
+   const char *arch = NULL;
 #if AIX51
    size_t length;
    size_t len;
@@ -507,7 +507,7 @@ int qlogin_starter(const char *cwd, char *daemon, char** env)
    SHEPHERD_TRACE((err_str, "bound to port %d", port));
  
    sge_root = sge_get_root_dir(0, NULL, 0, 1);
-   arch = getenv("ARC");
+   arch = sge_get_arch();
    
    if (sge_root == NULL || arch == NULL) {
       SHEPHERD_TRACE((err_str, "reading environment SGE_ROOT and ARC failed"));

@@ -193,7 +193,7 @@ sge_init_shared_ssl_lib(void)
         
          ret = 0;
       } else {
-         fprintf(stderr, MSG_PWD_CANT_OPEN_SLL_LIB_S, prognames[SGE_PASSWD]);
+         fprintf(stderr, MSG_PWD_CANT_OPEN_SSL_LIB_S, prognames[SGE_PASSWD]);
          ret = 1;
       }
    } else {
@@ -469,6 +469,7 @@ buffer_encrypt(const char *buffer_in, size_t buffer_in_length,
 	int ekeylen=0, net_ekeylen=0;
 	EVP_PKEY *pubKey[1];
 	char ebuf[512];
+   int ret = 0;
 
    DENTER(TOP_LAYER, "buffer_encrypt");
    pubKey[0] = read_public_key(sge_get_file_pub_key());
@@ -488,15 +489,22 @@ buffer_encrypt(const char *buffer_in, size_t buffer_in_length,
 
  	memset(iv, '\0', sizeof(iv));
 #if 0
-	shared_ssl_func__EVP_SealInit(&ectx, EVP_des_ede3_cbc(), ekey, &ekeylen, iv, pubKey, 1); 
+	ret = shared_ssl_func__EVP_SealInit(&ectx, EVP_des_ede3_cbc(), ekey, &ekeylen, iv, pubKey, 1); 
 #else
-	shared_ssl_func__EVP_SealInit(&ectx, shared_ssl_func__EVP_rc4(), ekey, &ekeylen, iv, pubKey, 1); 
+	ret = shared_ssl_func__EVP_SealInit(&ectx, shared_ssl_func__EVP_rc4(), ekey, &ekeylen, iv, pubKey, 1); 
+#endif
+   if(ret == 0) {
+      printf("---> EVP_SealInit\n");
+      ERR_print_errors_fp(stdout);
+      DEXIT;
+      exit(1);
+   }
+   
    if(ekeylen == 0 || ekeylen > 10000) {
       DPRINTF(("Setting ekeylen to 128, "
                "because EVP_SealInit returned invalid value!\n"));
       ekeylen = 128;
    }
-#endif
 	net_ekeylen = htonl(ekeylen);	
 
    buffer_append(buffer_out, buffer_out_size, buffer_out_length,
@@ -542,6 +550,7 @@ buffer_decrypt(const char *buffer_in, size_t buffer_in_length,
 	EVP_PKEY *privateKey;
    char *curr_ptr = (char*)buffer_in;
    const char *file_priv_key=NULL;
+   int ret = 0;
 
    DENTER(TOP_LAYER, "buffer_decrypt");
 	memset(iv, '\0', sizeof(iv));
@@ -589,10 +598,17 @@ buffer_decrypt(const char *buffer_in, size_t buffer_in_length,
    curr_ptr += sizeof(iv);
    buffer_in_length -= sizeof(iv);
 #if 0
-	shared_ssl_func__EVP_OpenInit(&ectx, EVP_des_ede3_cbc(), encryptKey, ekeylen, iv, privateKey); 	
+	ret = shared_ssl_func__EVP_OpenInit(&ectx, EVP_des_ede3_cbc(), encryptKey, ekeylen, iv, privateKey); 	
 #else
-	shared_ssl_func__EVP_OpenInit(&ectx, shared_ssl_func__EVP_rc4(), encryptKey, ekeylen, iv, privateKey); 	
+	ret = shared_ssl_func__EVP_OpenInit(&ectx, shared_ssl_func__EVP_rc4(), encryptKey, ekeylen, iv, privateKey); 	
 #endif
+   if(ret == 0) {
+      printf("----> EVP_OpenInit\n");
+      ERR_print_errors_fp(stdout);
+      DEXIT;
+      exit(1);
+   }
+
 	while(1) {
       int readlen = 0;
 

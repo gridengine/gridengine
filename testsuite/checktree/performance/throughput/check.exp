@@ -1436,7 +1436,13 @@ proc run_throughput_test {} {
 # newest
 #  Mon Jul 21 15:29:35 2003|schedd|es-ergb01-01|I|PROF: scheduled in 0.000 (u 0.000 + s 0.000 = 0.000): 0 fast, 0 complex, 0 orders, 4 H, 0 Q, 3 QA, 0 J(qw), 0 J(r), 0 J(s), 0 J(h), 0 J(e), 0 J(x), 0 J(all), 3 C, 1 ACL, 1 PE, 1 CONF, 0 U, 0 D, 0 PRJ, 0 ST, 1 CKPT, 0 RU
 
-                     set st_pos [string first "|I|" $line ]
+# latest and greatest
+# 07/20/2005 14:11:36|schedd|dain|P|PROF: scheduled in 0.010 (u 0.020 + s 0.000 = 0.020): 0 sequential, 0 parallel, 34 orders, 34 H, 33 Q, 386 QA, 31 J(qw), 0 J(r), 0 J(s), 0 J(h), 0 J(e), 0 J(x), 31 J(all), 46 C, 1 ACL, 1 PE, 1 U, 1 D, 1 PRJ, 0 ST, 1 CKPT, 0 RU, 1 gMes, 0 jMes
+
+                     set st_pos [string first "|I|" $line]
+                     if {$st_pos == -1} {
+                        set st_pos [string first "|P|" $line]
+                     }
                      incr st_pos 3
                      set schedd_string [ string range $line $st_pos end ]
                      if { [ string compare "PROF:" [lindex $schedd_string 0]] == 0 } {

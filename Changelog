@@ -1,3 +1,7 @@
+JG-2005-07-20-0: Enhancem.: Distribution will contain additional Berkeley DB 
+                            utilities.
+                 Review:    HP
+
 HP-2005-07-20-0: Bugfix:    Nonexpressive error messages for SSL initialisation 
                             errors.
                  Bugfix:    qrsh failed when ARC not set and INHERIT_ENV=false set.

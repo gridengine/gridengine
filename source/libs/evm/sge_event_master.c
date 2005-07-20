@@ -452,9 +452,9 @@ static void       unlock_client(u_long32 id);
 static lListElem* get_event_client(u_long32 id);
 static void       set_event_client(u_long32 id, lListElem *client);
 static u_long32   assign_new_dynamic_id (void);
-static void       process_acks(void);
+static void       process_acks(monitoring_t *monitor);
 static void       process_mod_event_client(monitoring_t *monitor);
-static void       process_sends(void);
+static void       process_sends(monitoring_t *monitor);
 static void       set_flush (void);
 #if 0
 static bool       should_flush_event_client (u_long32 id, ev_event type,
@@ -775,7 +775,8 @@ process_mod_event_client(monitoring_t *monitor)
 
    DENTER(TOP_LAYER,"mod_event_client");
 
-   sge_mutex_lock("event_master_change_evc_mutex", SGE_FUNC, __LINE__, &Master_Control.change_evc_mutex);
+   MONITOR_WAIT_TIME(sge_mutex_lock("event_master_change_evc_mutex", SGE_FUNC, __LINE__, 
+                     &Master_Control.change_evc_mutex), monitor);
    if (lGetNumberOfElem(Master_Control.change_evc) > 0) {    
       temp_evc_list = Master_Control.change_evc;
       Master_Control.change_evc = lCreateListHash("EV_Clients", EV_Type, true);
@@ -892,6 +893,8 @@ process_mod_event_client(monitoring_t *monitor)
 
       lSetUlong(event_client, EV_state, EV_connected);
 
+      MONITOR_EDT_MOD(monitor);
+      
       DEBUG((SGE_EVENT, MSG_SGETEXT_MODIFIEDINLIST_SSSS,
             "em thread", "master host", lGetString(event_client, EV_name), MSG_EVE_EVENTCLIENT));
 
@@ -1767,7 +1770,7 @@ static bool add_list_event_for_client(u_long32 aClientID, u_long32 timestamp,
    return res;
 } /* end add_list_event_for_client*/
 
-static void process_sends ()
+static void process_sends(monitoring_t *monitor)
 {
    lListElem *event_client = NULL;
    lListElem *send = NULL;
@@ -1782,7 +1785,7 @@ static void process_sends ()
    
    DENTER(TOP_LAYER, "process_sends");
 
-   sge_mutex_lock("event_master_send_mutex", SGE_FUNC, __LINE__, &Master_Control.send_mutex);
+   MONITOR_WAIT_TIME(sge_mutex_lock("event_master_send_mutex", SGE_FUNC, __LINE__, &Master_Control.send_mutex), monitor);
       temp_send_events = Master_Control.send_events;
       Master_Control.send_events = new_send_events;
       new_send_events = NULL;
@@ -1794,6 +1797,8 @@ static void process_sends ()
       ec_id = lGetUlong (send, EV_id);
       session = lGetString (send, EV_session);
       event_list = lGetList (send, EV_events);
+     
+      MONITOR_EDT_NEW(monitor);
       
       if (ec_id == EV_ID_ANY) {
          DPRINTF (("Processing event for all clients\n"));
@@ -1801,6 +1806,7 @@ static void process_sends ()
          event = lFirst (event_list);
 
          while (event != NULL) {
+            bool added = false;
             event = lDechainElem (event_list, event);
             type = (ev_event)lGetUlong (event, ET_type);
             count = 0;
@@ -1822,13 +1828,17 @@ static void process_sends ()
                }
 
                if (eventclient_subscribed(event_client, type, session)) {
+                  added = true;
                   add_list_event_direct (event_client, event, true);
+                  MONITOR_EDT_ADDED(monitor);
                }
                
                unlock_client(ec_id);
 
             } /* while */
-
+            if (!added) {
+               MONITOR_EDT_SKIP(monitor);
+            }
             event = lFreeElem(event);
             event = lFirst (event_list);
          } /* while */
@@ -1850,11 +1860,12 @@ static void process_sends ()
 
                if (eventclient_subscribed(event_client, type, session)) {
                   add_list_event_direct(event_client, event, false);
-
+                  MONITOR_EDT_ADDED(monitor);
                   /* We can't free the event when we're done because it now belongs
                    * to send_events(). */
-               } /* else if */
+               } 
                else {
+                  MONITOR_EDT_SKIP(monitor);
                   event = lFreeElem(event);
                }
                event = lFirst (event_list);
@@ -1939,7 +1950,7 @@ void sge_handle_event_ack(u_long32 aClientID, ev_event anEvent)
    DEXIT;
 }
 
-static void process_acks(void)
+static void process_acks(monitoring_t *monitor)
 {
    lList *list = NULL;
    lListElem *client = NULL;
@@ -1949,7 +1960,7 @@ static void process_acks(void)
 
    DENTER(TOP_LAYER, "process_acks");
 
-   sge_mutex_lock("event_master_ack_mutex", SGE_FUNC, __LINE__, &Master_Control.ack_mutex);
+   MONITOR_WAIT_TIME(sge_mutex_lock("event_master_ack_mutex", SGE_FUNC, __LINE__, &Master_Control.ack_mutex), monitor);
    if (lGetNumberOfElem(Master_Control.ack_events) > 0) {
       temp_ack_list = Master_Control.ack_events;
       Master_Control.ack_events = lCreateListHash("Events_To_ACK", EV_Type, false);
@@ -1983,6 +1994,7 @@ static void process_acks(void)
          res = purge_event_list(list, (ev_event)lGetUlong (lFirst (lGetList
                                                  (ack, EV_events)), ET_number));
 
+         MONITOR_EDT_ACK(monitor);
          DPRINTF(("%s: purged %d acknowleded events\n", SGE_FUNC, res));
 
          lSetUlong(client, EV_last_heard_from, sge_get_gmt()); /* note time of ack */
@@ -2346,7 +2358,7 @@ static void* event_deliver_thread(void *anArg)
 
    DENTER(TOP_LAYER, "event_deliver_thread");
 
-   sge_monitor_init(&monitor, (char *) anArg, NONE_EXT, EMT_WARNING, EMT_ERROR);
+   sge_monitor_init(&monitor, (char *) anArg, EDT_EXT, EMT_WARNING, EMT_ERROR);
    sge_qmaster_thread_init(true);
 
    /* register at profiling module */
@@ -2371,9 +2383,12 @@ static void* event_deliver_thread(void *anArg)
       sge_mutex_unlock("event_master_cond_mutex", SGE_FUNC, __LINE__, &Master_Control.cond_mutex);
 
       MONITOR_MESSAGES((&monitor));
-
+      MONITOR_EDT_COUNT((&monitor));
       /* If the client array has changed, rebuild the indices. */
-      sge_mutex_lock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.mutex);
+      MONITOR_WAIT_TIME(sge_mutex_lock("event_master_mutex", SGE_FUNC, __LINE__, 
+                        &Master_Control.mutex), (&monitor));
+     
+      MONITOR_CLIENT_COUNT((&monitor), lGetNumberOfElem(Master_Control.clients));
       
       if (Master_Control.indices_dirty) {
          lListElem *ep = NULL;
@@ -2394,8 +2409,8 @@ static void* event_deliver_thread(void *anArg)
       sge_mutex_unlock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.mutex);
      
       process_mod_event_client(&monitor);
-      process_acks();
-      process_sends();
+      process_acks(&monitor);
+      process_sends(&monitor);
       send_events(report, report_list, &monitor);
 
       sge_monitor_output(&monitor);
@@ -2620,6 +2635,7 @@ static void send_events(lListElem *report, lList *report_list, monitoring_t *mon
          /* If we can't get access to this client right now, just leave it to
           * be handled in the next run. */
          DPRINTF (("Skipping event client %d because it's locked.\n", ec_id));
+         MONITOR_EDT_BLOCKED(monitor);
          continue; /* while */
       } /* if */
       
@@ -2687,89 +2703,92 @@ static void send_events(lListElem *report, lList *report_list, monitoring_t *mon
       }
 
       /* do we have to deliver events ? */
-      if ((now >= lGetUlong(event_client, EV_next_send_time)) 
-           && (busy_handling == EV_THROTTLE_FLUSH 
-               || !lGetUlong(event_client, EV_busy))
-         ) {
-         lList *lp = NULL;
+      if (now >= lGetUlong(event_client, EV_next_send_time)) {
+         if ((busy_handling == EV_THROTTLE_FLUSH) 
+            || !lGetUlong(event_client, EV_busy)) {
+            lList *lp = NULL;
 
-         /* put only pointer in report - dont copy */
-         lXchgList(event_client, EV_events, &lp);
-         lXchgList(report, REP_list, &lp);
-
-         /* SG: Issue 1579 
-          *  This unlock / lock sequence posses a memory missuage in case
-          *  that the event client registers itself to the event master.
-          *  There are two solutions to it:
-          *  1) removing the unlock / lock statements
-          *     Problem: the report_list_send might take a long time and certain
-          *              client commants will block, which will than later block
-          *              the entire master.
-          *  2) make a copy of host and commproc.
-          *     Problem: this slows down the event delivery process a bit to make
-          *              to handle a case, which happens very seldom.  
-          *
-          *  I take the second approach.
-          */
-         unlock_client(ec_id);
-
-         ret = report_list_send(report_list, host, commproc, id, 0, NULL);
-         MONITOR_MESSAGES_OUT(monitor);
-        
-         lock_client(ec_id, true); 
-
-         event_client = get_event_client(ec_id); 
-
-         /* Keep looking for a non-NULL client. */
-         if (event_client != NULL) {
-            /* on failure retry is triggered automatically */
-            if (ret == CL_RETVAL_OK) {
-               now = (time_t)sge_get_gmt();
-
-               /*printf("send events %d to host: %s id: %d: now: %d\n", numevents, host, id, sge_get_gmt()); */           
-               switch (busy_handling) {
-               case EV_THROTTLE_FLUSH:
-                  /* increase busy counter */
-                  lSetUlong(event_client, EV_busy, lGetUlong(event_client, EV_busy)+1); 
-                  break;
-               case EV_BUSY_UNTIL_RELEASED:
-               case EV_BUSY_UNTIL_ACK:
-                  lSetUlong(event_client, EV_busy, 1);
-                  break;
-               default: 
-                  /* EV_BUSY_NO_HANDLING */
-                  break;
-               }
-
-               lSetUlong(event_client, EV_last_send_time, now);
-            }
-
-            /* We reset this time even if the report list send failed because we
-             * want to give failed clients a break before trying them again. */
-            lSetUlong (event_client, EV_next_send_time, now + deliver_interval);
-
-            /* don't delete sent events - deletion is triggerd by ack's */
-            lXchgList(report, REP_list, &lp);
+            /* put only pointer in report - dont copy */
             lXchgList(event_client, EV_events, &lp);
+            lXchgList(report, REP_list, &lp);
 
-            /* Because we let go of the lock while we were sending the report, we
-             * have to make certain that no one added events to this client while
-             * we were busy.  If there are events, just add them to the end of our
-             * previous list if it exists.  If not, we just keep the new list. */
-            if (lp != NULL) {
-               lList *olp = lGetList (event_client, EV_events);
+            /* SG: Issue 1579 
+             *  This unlock / lock sequence posses a memory missuage in case
+             *  that the event client registers itself to the event master.
+             *  There are two solutions to it:
+             *  1) removing the unlock / lock statements
+             *     Problem: the report_list_send might take a long time and certain
+             *              client commants will block, which will than later block
+             *              the entire master.
+             *  2) make a copy of host and commproc.
+             *     Problem: this slows down the event delivery process a bit to make
+             *              to handle a case, which happens very seldom.  
+             *
+             *  I take the second approach.
+             */
+            unlock_client(ec_id);
 
-               if (olp != NULL) {
-                  /* This frees lp. */
-                  lAddList (olp, lp);
-                  lp = NULL;
+            ret = report_list_send(report_list, host, commproc, id, 0, NULL);
+            MONITOR_MESSAGES_OUT(monitor);
+           
+            lock_client(ec_id, true); 
+
+            event_client = get_event_client(ec_id); 
+
+            /* Keep looking for a non-NULL client. */
+            if (event_client != NULL) {
+               /* on failure retry is triggered automatically */
+               if (ret == CL_RETVAL_OK) {
+                  now = (time_t)sge_get_gmt();
+
+                  /*printf("send events %d to host: %s id: %d: now: %d\n", numevents, host, id, sge_get_gmt()); */           
+                  switch (busy_handling) {
+                  case EV_THROTTLE_FLUSH:
+                     /* increase busy counter */
+                     lSetUlong(event_client, EV_busy, lGetUlong(event_client, EV_busy)+1); 
+                     break;
+                  case EV_BUSY_UNTIL_RELEASED:
+                  case EV_BUSY_UNTIL_ACK:
+                     lSetUlong(event_client, EV_busy, 1);
+                     break;
+                  default: 
+                     /* EV_BUSY_NO_HANDLING */
+                     break;
+                  }
+
+                  lSetUlong(event_client, EV_last_send_time, now);
                }
-               else {
-                  lSetList (event_client, EV_events, lp);
+
+               /* We reset this time even if the report list send failed because we
+                * want to give failed clients a break before trying them again. */
+               lSetUlong (event_client, EV_next_send_time, now + deliver_interval);
+
+               /* don't delete sent events - deletion is triggerd by ack's */
+               lXchgList(report, REP_list, &lp);
+               lXchgList(event_client, EV_events, &lp);
+
+               /* Because we let go of the lock while we were sending the report, we
+                * have to make certain that no one added events to this client while
+                * we were busy.  If there are events, just add them to the end of our
+                * previous list if it exists.  If not, we just keep the new list. */
+               if (lp != NULL) {
+                  lList *olp = lGetList(event_client, EV_events);
+
+                  if (olp != NULL) {
+                     /* This frees lp. */
+                     lAddList (olp, lp);
+                     lp = NULL;
+                  }
+                  else {
+                     lSetList(event_client, EV_events, lp);
+                  }
                }
             }
+         } /* if */
+         else {
+            MONITOR_EDT_BUSY(monitor);
          }
-      } /* if */
+      } /*if */
    
       FREE(host);
       FREE(commproc);

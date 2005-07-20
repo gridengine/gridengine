@@ -59,7 +59,7 @@ typedef struct {
    thread_warning_t warning_timeout; /* how long can the thread be blocked before a warning is shown */
    thread_error_t   error_timeout;   /* how long can the thread be blocked before an error is shown */
    time_t           update_time;     /* last update time */
-   char*            output;          /* thread specific info line */
+   dstring*         output;          /* thread specific info line */
 }Output_t;
 
 #define MAX_OUTPUT_LINES 10           /* number of threads to monitor, currently 10 threads at max
@@ -82,13 +82,16 @@ static Output_t Output[MAX_OUTPUT_LINES] = {
 static pthread_mutex_t  Dstring_Mutex = PTHREAD_MUTEX_INITIALIZER; 
 static dstring Info_Line= DSTRING_INIT;
 
+static void append_time(time_t i, dstring *buffer); 
 
 
 /***********************************************
  * static functin def. for special extensions 
  ***********************************************/
 
-static void ext_gdi_output(char *message, int size, void *monitoring_extension, double time);
+static void ext_gdi_output(dstring *message, void *monitoring_extension, double time);
+static void ext_edt_output(dstring *message, void *monitoring_extension, double time);
+static void ext_tet_output(dstring *message, void *monitoring_extension, double time);
 
 
 /************************************************
@@ -129,9 +132,13 @@ void sge_monitor_free(monitoring_t *monitor)
       sge_mutex_unlock("sge_monitor_init", SGE_FUNC, __LINE__, &Output_Mutex);
    }
 
+   
+   sge_dstring_free(monitor->output_line1);
+   sge_dstring_free(monitor->output_line2);
    FREE(monitor->output_line1);
    FREE(monitor->output_line2);
    FREE(monitor->ext_data);
+
    monitor->ext_data_size = 0;
    monitor->ext_output = NULL;
    monitor->ext_type = NONE_EXT;
@@ -175,18 +182,21 @@ sge_monitor_init(monitoring_t *monitor, const char *thread_name, extension_t ext
    DENTER(TOP_LAYER, "sge_monitor_init");
 
    monitor->thread_name = thread_name;
-  
-   monitor->output_line1 = (char*) malloc(1024*sizeof(char));
-   monitor->output_line2 = (char*) malloc(1024*sizeof(char));
-
+ 
+   monitor->output_line1 = (dstring*) malloc(sizeof(dstring));
+   monitor->output_line2 = (dstring*) malloc(sizeof(dstring));
+   
    if (monitor->output_line1 == NULL || monitor->output_line2 == NULL) {
       CRITICAL((SGE_EVENT, MSG_UTI_MONITOR_MEMERROR)); 
       exit(1);
    } 
- 
-   strcpy(monitor->output_line1, thread_name);
-   strcat(monitor->output_line1, MSG_UTI_MONITOR_NODATA);
-   monitor->output_line2[0] = '\0';
+
+   memset(monitor->output_line1, 0, sizeof(dstring));
+   memset(monitor->output_line2, 0, sizeof(dstring));
+   
+   sge_dstring_append(monitor->output_line1, thread_name);
+   sge_dstring_append(monitor->output_line1, MSG_UTI_MONITOR_NODATA);
+   sge_dstring_clear(monitor->output_line2);
    monitor->work_line = monitor->output_line2;
  
    switch(ext) {
@@ -198,26 +208,52 @@ sge_monitor_init(monitoring_t *monitor, const char *thread_name, extension_t ext
                monitor->ext_output = &ext_gdi_output;
             }
             else {
-               monitor->ext_data_size = 0;
-               monitor->ext_output = NULL;
                monitor->ext_type = NONE_EXT;
                ERROR((SGE_EVENT, MSG_UTI_MONITOR_MEMERROREXT));
             }
          break;
-      case NONE_EXT : /* we do nothing */
-            monitor->ext_type = NONE_EXT;
-            monitor->ext_data_size = 0;
-            monitor->ext_data = NULL;
-            monitor->ext_output = NULL;
+         
+      case EDT_EXT : 
+            monitor->ext_data = malloc(sizeof(m_edt_t));
+            if (monitor->ext_data != NULL) {
+               monitor->ext_type = EDT_EXT;
+               monitor->ext_data_size = sizeof(m_edt_t);
+               monitor->ext_output = &ext_edt_output;
+            }
+            else {
+               monitor->ext_type = NONE_EXT;
+               ERROR((SGE_EVENT, MSG_UTI_MONITOR_MEMERROREXT));
+            }
          break;
+       
+      case TET_EXT : 
+            monitor->ext_data = malloc(sizeof(m_tet_t));
+            if (monitor->ext_data != NULL) {
+               monitor->ext_type = TET_EXT;
+               monitor->ext_data_size = sizeof(m_tet_t);
+               monitor->ext_output = &ext_tet_output;
+            }
+            else {
+               monitor->ext_type = NONE_EXT;
+               ERROR((SGE_EVENT, MSG_UTI_MONITOR_MEMERROREXT));
+            }
+         break;
+         
+      case NONE_EXT :
+            monitor->ext_type = NONE_EXT;
+         break;
+         
       default : 
             monitor->ext_type = NONE_EXT;
-            monitor->ext_data_size = 0;
-            monitor->ext_data = 0;
-            monitor->ext_output = NULL;
             ERROR((SGE_EVENT, MSG_UTI_MONITOR_UNSUPPORTEDEXT_D, ext));
    };
- 
+
+   if (monitor->ext_type == NONE_EXT) {
+      monitor->ext_data_size = 0;
+      monitor->ext_data = NULL;
+      monitor->ext_output = NULL;
+   }
+   
    sge_monitor_reset(monitor);
    
    { 
@@ -351,9 +387,9 @@ u_long32 sge_monitor_status(char **info_message, u_long32 monitor_time)
       sge_mutex_lock("sge_monitor_status", SGE_FUNC, __LINE__, &Output_Mutex);
       for (i = 0; i < MAX_OUTPUT_LINES; i++) {
          if (Output[i].name != NULL) {
-            sge_dstring_append(&Info_Line, sge_ctime(Output[i].update_time, &ddate));
+            append_time(Output[i].update_time, &Info_Line);
             sge_dstring_append(&Info_Line, " | ");
-            sge_dstring_append(&Info_Line, Output[i].output);
+            sge_dstring_append_dstring(&Info_Line, Output[i].output);
             sge_dstring_append(&Info_Line,"\n");
          }
       }
@@ -440,37 +476,31 @@ void sge_monitor_output(monitoring_t *monitor)
    if ((monitor != NULL) && (monitor->output == true)) {
       struct timeval after;
       double time;
-      char values[200];
 
       gettimeofday(&after, NULL); 
       time = after.tv_usec - monitor->now.tv_usec;
       time = after.tv_sec - monitor->now.tv_sec + (time/1000000);
 
+      sge_dstring_clear(monitor->work_line);
+  
+      sge_dstring_sprintf_append(monitor->work_line, MSG_UTI_MONITOR_DEFLINE_SF, 
+                                 monitor->thread_name, monitor->message_in_count/time); 
+      
       if (monitor->ext_type != NONE_EXT) {
-         monitor->ext_output(values, sizeof(values), monitor->ext_data, time);
+         sge_dstring_append(monitor->work_line, " (");
+         monitor->ext_output(monitor->work_line, monitor->ext_data, time);
+         sge_dstring_append(monitor->work_line, ")");
+      };
       
-      sprintf(monitor->work_line, MSG_UTI_MONITOR_DEFLINEEXT_SFSFFFFF, 
-              monitor->thread_name, monitor->message_in_count/time, 
-              values, monitor->message_out_count/time,
-              
-              (time - monitor->idle)/monitor->message_in_count,
-              monitor->idle/time*100, monitor->wait/time*100,time
-             );   
-      }
-      else {
-         sprintf(monitor->work_line, MSG_UTI_MONITOR_DEFLINE_SFFFFFF,  
-              monitor->thread_name, monitor->message_in_count/time, 
-              monitor->message_out_count/time,
-              
-              (time - monitor->idle)/monitor->message_in_count,
-              monitor->idle/time*100, monitor->wait/time*100,time
-             );           
-      }
+      sge_dstring_sprintf_append(monitor->work_line, MSG_UTI_MONITOR_DEFLINE_FFFFF,  
+                                 monitor->message_out_count/time,
+                                 (time - monitor->idle)/monitor->message_in_count,
+                                 monitor->idle/time*100, monitor->wait/time*100,time);           
       
-      sge_log(LOG_PROF, monitor->work_line,__FILE__,SGE_FUNC,__LINE__); 
+      sge_log(LOG_PROF, sge_dstring_get_string(monitor->work_line),__FILE__,SGE_FUNC,__LINE__); 
      
       if (monitor->pos != -1) {
-         char *tmp = NULL;
+         dstring *tmp = NULL;
 
          sge_mutex_lock("sge_monitor_init", SGE_FUNC, __LINE__, &Output_Mutex);
          tmp = Output[monitor->pos].output;
@@ -527,6 +557,44 @@ void sge_monitor_reset(monitoring_t *monitor)
 }
 
 
+/****** sge_monitor/append_time() **************************************************
+*  NAME
+*     append_time() -- Convert time value into string 
+*
+*  SYNOPSIS
+*     const char* append_time(time_t i, dstring *buffer) 
+*
+*  FUNCTION
+*     Convert time value into string 
+*
+*  INPUTS
+*     time_t i - 0 or time value 
+*
+*  RESULT
+*     const char* - time string (current time if 'i' was 0) 
+*     dstring *buffer - buffer provided by caller
+*
+*  NOTES
+*     MT-NOTE: append_time() is MT safe if localtime_r() can be used
+*
+******************************************************************************/
+static void append_time(time_t i, dstring *buffer) 
+{
+   struct tm *tm;
+
+#ifdef HAS_LOCALTIME_R
+   struct tm tm_buffer;
+   
+   tm = (struct tm *)localtime_r(&i, &tm_buffer);
+#else   
+   tm = localtime(&i);
+#endif
+
+   sge_dstring_sprintf_append(buffer, "%02d/%02d/%04d %02d:%02d:%02d",
+           tm->tm_mon + 1, tm->tm_mday, 1900 + tm->tm_year,
+           tm->tm_hour, tm->tm_min, tm->tm_sec);
+}
+
 
 /****************************************
  * implementation section for extensions
@@ -555,11 +623,81 @@ void sge_monitor_reset(monitoring_t *monitor)
 *     MT-NOTE: ext_gdi_output() is MT safe 
 *
 *******************************************************************************/
-static void ext_gdi_output(char *message, int size, void *monitoring_extension, double time)
+static void ext_gdi_output(dstring *message, void *monitoring_extension, double time)
 {
    m_gdi_t *gdi_ext = (m_gdi_t*) monitoring_extension;
 
-   snprintf(message, size, MSG_UTI_MONITOR_GDIEXT_FFF,
+   sge_dstring_sprintf_append(message, MSG_UTI_MONITOR_GDIEXT_FFF,
             gdi_ext->load_count/time, gdi_ext->gdi_count/time,
-            gdi_ext->act_count/time); 
+            gdi_ext->ack_count/time); 
 }
+
+/****** sge_monitor/ext_edt_output() *******************************************
+*  NAME
+*     ext_edt_output() -- generates a string from the GDI extension
+*
+*  SYNOPSIS
+*     static void ext_edt_output(char *message, int size, void 
+*     *monitoring_extension, double time) 
+*
+*  FUNCTION
+*     generates a string from the extension and returns it.
+*
+*  INPUTS
+*     char *message              - initilized string buffer
+*     int size                   - buffer size
+*     void *monitoring_extension - the extension structure
+*     double time                - length of the mesurement interval
+*
+*  NOTES
+*     MT-NOTE: ext_edt_output() is MT safe 
+*
+*******************************************************************************/
+static void ext_edt_output(dstring *message, void *monitoring_extension, double time)
+{
+   m_edt_t *edt_ext = (m_edt_t*) monitoring_extension;
+   
+   sge_dstring_sprintf_append(message, MSG_UTI_MONITOR_EDTEXT_FFFFFFFF,
+            ((double)edt_ext->client_count) / edt_ext->count,
+            edt_ext->mod_client_count / time,
+            edt_ext->ack_count / time,
+            ((double)edt_ext->blocked_client_count) / edt_ext->count,
+            ((double)edt_ext->busy_client_count) / edt_ext->count,
+            
+            edt_ext->new_event_count / time,
+            edt_ext->added_event_count / time,
+            edt_ext->skip_event_count / time);
+}
+
+/****** sge_monitor/ext_edt_output() *******************************************
+*  NAME
+*     ext_edt_output() -- generates a string from the GDI extension
+*
+*  SYNOPSIS
+*     static void ext_edt_output(char *message, int size, void 
+*     *monitoring_extension, double time) 
+*
+*  FUNCTION
+*     generates a string from the extension and returns it.
+*
+*  INPUTS
+*     char *message              - initilized string buffer
+*     int size                   - buffer size
+*     void *monitoring_extension - the extension structure
+*     double time                - length of the mesurement interval
+*
+*  NOTES
+*     MT-NOTE: ext_edt_output() is MT safe 
+*
+*******************************************************************************/
+
+static void ext_tet_output(dstring *message, void *monitoring_extension, double time)
+{
+   m_tet_t *tet_ext = (m_tet_t*) monitoring_extension;
+  
+   sge_dstring_sprintf_append(message, MSG_UTI_MONITOR_TETEXT_FF,
+            ((double)tet_ext->event_count) / tet_ext->count,
+             tet_ext->exec_count / time
+           );
+}
+

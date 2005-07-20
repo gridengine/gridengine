@@ -110,11 +110,14 @@
                need to be determined.
       
       <OPTIONAL> : 
-         Is not defined yet. Nothing is printed. A first guess is:
-         - number of new events
-         - number of acks
-         - number of event clients
-      
+        <clients> : Number of connected clients
+        <mod>     : Number of modified event clients per second
+        <ack>     : Number of processed acknowledges per second
+        <blocked> : Number of blocked event clients
+        <busy>    : Number of busy event clients
+        <events>  : Number of new events to send out
+        <added>   : Number of assigned events to the different event clients
+        <skipt>   : Number of ignored events, no subscriptions
       
    3.3 Timed Event Thread (TET):
       <RUNS> : Number of times the EDT was triggered (new events and 
@@ -124,7 +127,6 @@
       <WAIT> : Percentage waited for the global lock 
       
       <OPTIONAL> : 
-         Is not defined yet. Nothing is printed. A first guess is:
-         - number of pending events
-         - number of executed events per second and per event type
+         <pending>   : Number of pending timed events
+         <execduted> : Number of executed events per second.
                     

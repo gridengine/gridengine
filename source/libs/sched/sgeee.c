@@ -3519,22 +3519,15 @@ sge_calc_tickets( sge_Sdescr_t *lists,
       }
    }
 
-   if (job_ref) {
-      free(job_ref);
-   }
+   FREE(job_ref);
+   decay_list = lFreeList(decay_list);
 
-   if (decay_list)
-      lFreeList(decay_list);
-
-   PROF_STOP_MEASUREMENT(SGE_PROF_SCHEDLIB4);
-   prof_calc = prof_get_measurement_wallclock(SGE_PROF_SCHEDLIB4, false, NULL);
-      
-   if(prof_is_active(SGE_PROF_SCHEDLIB4)){
-      u_long32 saved_logginglevel = log_state_get_log_level();
-      log_state_set_log_level(LOG_INFO); 
-      INFO((SGE_EVENT, "PROF: job ticket calculation: init: %.3f s, pass 0: %.3f s, pass 1: %.3f, pass2: %.3f, calc: %.3f s\n",
+   if (prof_is_active(SGE_PROF_SCHEDLIB4)){
+      prof_stop_measurement(SGE_PROF_SCHEDLIB4, NULL);
+      prof_calc = prof_get_measurement_wallclock(SGE_PROF_SCHEDLIB4, false, NULL);    
+   
+      PROFILING((SGE_EVENT, "PROF: job ticket calculation: init: %.3f s, pass 0: %.3f s, pass 1: %.3f, pass2: %.3f, calc: %.3f s\n",
                prof_init, prof_pass0, prof_pass1, prof_pass2, prof_calc));
-      log_state_set_log_level(saved_logginglevel);
    }
 
    DEXIT;
@@ -4303,15 +4296,12 @@ int sgeee_scheduler( sge_Sdescr_t *lists,
    if (do_nurg) {
       PROF_START_MEASUREMENT(SGE_PROF_CUSTOM3);
       sge_do_urgency(now, pending_jobs, running_jobs, lists);
-      PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM3);
 
       if (prof_is_active(SGE_PROF_CUSTOM3)) {
-         u_long32 saved_logginglevel = log_state_get_log_level();
+         prof_stop_measurement(SGE_PROF_CUSTOM3, NULL);
 
-         log_state_set_log_level(LOG_INFO);
-         INFO((SGE_EVENT, "PROF: static urgency took %.3f s\n",
+         PROFILING((SGE_EVENT, "PROF: static urgency took %.3f s\n",
                prof_get_measurement_wallclock(SGE_PROF_CUSTOM3, false, NULL)));
-         log_state_set_log_level(saved_logginglevel);
       }
 
    }   
@@ -4349,15 +4339,11 @@ int sgeee_scheduler( sge_Sdescr_t *lists,
    sge_do_sgeee_priority(running_jobs, min_tix, max_tix, do_nprio, do_nurg); 
    sge_do_sgeee_priority(pending_jobs, min_tix, max_tix, do_nprio, do_nurg); 
 
-   PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM3);
-
    if (prof_is_active(SGE_PROF_CUSTOM3)) {
-      u_long32 saved_logginglevel = log_state_get_log_level();
+      prof_stop_measurement(SGE_PROF_CUSTOM3, NULL);
 
-      log_state_set_log_level(LOG_INFO);
-      INFO((SGE_EVENT, "PROF: normalizing job tickets took %.3f s\n",
-            prof_get_measurement_wallclock(SGE_PROF_CUSTOM3, false, NULL)));
-      log_state_set_log_level(saved_logginglevel);
+      PROFILING((SGE_EVENT, "PROF: normalizing job tickets took %.3f s\n",
+                 prof_get_measurement_wallclock(SGE_PROF_CUSTOM3, false, NULL)));
    }
 
    PROF_STOP_MEASUREMENT(SGE_PROF_SCHEDLIB4)
@@ -4380,15 +4366,11 @@ int sgeee_scheduler( sge_Sdescr_t *lists,
                              update_execd);
    }
 
-   PROF_STOP_MEASUREMENT(SGE_PROF_SCHEDLIB4);
    if (prof_is_active(SGE_PROF_SCHEDLIB4)) {
-      u_long32 saved_logginglevel = log_state_get_log_level();
-      log_state_set_log_level(LOG_INFO); 
+      prof_stop_measurement(SGE_PROF_SCHEDLIB4, NULL);
 
-      INFO((SGE_EVENT, "PROF: create active job orders: %.3f s\n",
+      PROFILING((SGE_EVENT, "PROF: create active job orders: %.3f s\n",
                prof_get_measurement_wallclock(SGE_PROF_SCHEDLIB4,false, NULL)));
-
-      log_state_set_log_level(saved_logginglevel);
    }  
    
    DEXIT;

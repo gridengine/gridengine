@@ -141,6 +141,7 @@ int my_scheduler(sge_Sdescr_t *lists, lList **order)
 #endif
 int scheduler(sge_Sdescr_t *lists, lList **order) {
    order_t orders = ORDER_INIT;
+   int send_orders = 0;
    lList **splitted_job_lists[SPLIT_LAST];         /* JB_Type */
    lList *waiting_due_to_pedecessor_list = NULL;   /* JB_Type */
    lList *waiting_due_to_time_list = NULL;         /* JB_Type */
@@ -248,6 +249,7 @@ int scheduler(sge_Sdescr_t *lists, lList **order) {
 
    /* send job_start_orders */
    if (!shut_me_down) {
+      send_orders += sge_GetNumberOfOrders(&orders);
       sge_send_job_start_orders(&orders);
    }
 
@@ -286,24 +288,16 @@ int scheduler(sge_Sdescr_t *lists, lList **order) {
 
    orders.jobStartOrderList= sge_add_schedd_info(orders.jobStartOrderList, &global_mes_count, &job_mes_count);
 
-   PROF_STOP_MEASUREMENT(SGE_PROF_SCHEDLIB4);
    if (prof_is_active(SGE_PROF_SCHEDLIB4)) {
-      u_long32 saved_logginglevel = log_state_get_log_level();
-      log_state_set_log_level(LOG_INFO); 
-
-      INFO((SGE_EVENT, "PROF: create pending job orders: %.3f s\n",
+      prof_stop_measurement(SGE_PROF_SCHEDLIB4, NULL);
+      PROFILING((SGE_EVENT, "PROF: create pending job orders: %.3f s\n",
                prof_get_measurement_utime(SGE_PROF_SCHEDLIB4,false, NULL)));
-
-      log_state_set_log_level(saved_logginglevel);
    }   
 
    if(prof_is_active(SGE_PROF_CUSTOM0)) {
-      u_long32 saved_logginglevel = log_state_get_log_level();
+      prof_stop_measurement(SGE_PROF_CUSTOM0, NULL); 
 
-      PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM0); 
-
-      log_state_set_log_level(LOG_INFO);
-      INFO((SGE_EVENT, "PROF: scheduled in %.3f (u %.3f + s %.3f = %.3f): %d sequential, %d parallel, %d orders, %d H, %d Q, %d QA, %d J(qw), %d J(r), %d J(s), %d J(h), %d J(e), %d J(x), %d J(all), %d C, %d ACL, %d PE, %d U, %d D, %d PRJ, %d ST, %d CKPT, %d RU, %d gMes, %d jMes\n",
+      PROFILING((SGE_EVENT, "PROF: scheduled in %.3f (u %.3f + s %.3f = %.3f): %d sequential, %d parallel, %d orders, %d H, %d Q, %d QA, %d J(qw), %d J(r), %d J(s), %d J(h), %d J(e), %d J(x), %d J(all), %d C, %d ACL, %d PE, %d U, %d D, %d PRJ, %d ST, %d CKPT, %d RU, %d gMes, %d jMes\n",
          prof_get_measurement_wallclock(SGE_PROF_CUSTOM0, true, NULL),
          prof_get_measurement_utime(SGE_PROF_CUSTOM0, true, NULL),
          prof_get_measurement_stime(SGE_PROF_CUSTOM0, true, NULL),
@@ -311,7 +305,7 @@ int scheduler(sge_Sdescr_t *lists, lList **order) {
          prof_get_measurement_stime(SGE_PROF_CUSTOM0, true, NULL),
          scheduled_fast_jobs,
          scheduled_complex_jobs,
-         sge_GetNumberOfOrders(&orders), 
+         (send_orders + sge_GetNumberOfOrders(&orders)), 
          lGetNumberOfElem(lists->host_list), 
          lGetNumberOfElem(lists->queue_list),
          lGetNumberOfElem(lists->all_queue_list),
@@ -334,7 +328,6 @@ int scheduler(sge_Sdescr_t *lists, lList **order) {
          global_mes_count,
          job_mes_count
       ));
-      log_state_set_log_level(saved_logginglevel);
    }
    
    PROF_START_MEASUREMENT(SGE_PROF_CUSTOM5); 
@@ -362,18 +355,13 @@ int scheduler(sge_Sdescr_t *lists, lList **order) {
    schedd_mes_release();
    schedd_mes_set_logging(0); 
 
-   PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM5); 
-
    if(prof_is_active(SGE_PROF_CUSTOM5)) {
-      u_long32 saved_logginglevel = log_state_get_log_level();
-      log_state_set_log_level(LOG_INFO);
+      prof_stop_measurement(SGE_PROF_CUSTOM5, NULL); 
    
-      INFO((SGE_EVENT, "PROF: send orders and cleanup took: %.3f (u %.3f,s %.3f) s\n",
+      PROFILING((SGE_EVENT, "PROF: send orders and cleanup took: %.3f (u %.3f,s %.3f) s\n",
          prof_get_measurement_wallclock(SGE_PROF_CUSTOM5, true, NULL), 
          prof_get_measurement_utime(SGE_PROF_CUSTOM5, true, NULL),
          prof_get_measurement_stime(SGE_PROF_CUSTOM5, true, NULL) ));
-
-      log_state_set_log_level(saved_logginglevel);
    }
    
    DEXIT;
@@ -600,14 +588,11 @@ static int dispatch_jobs(sge_Sdescr_t *lists, order_t *orders,
       /* TODO async gdi: put this in, when to enable async gdi */
       /*sge_send_job_start_orders(orders); */
    
-      PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM1);
       if (prof_is_active(SGE_PROF_CUSTOM1)) {
-         u_long32 saved_logginglevel = log_state_get_log_level();
+         prof_stop_measurement(SGE_PROF_CUSTOM1, NULL);
 
-         log_state_set_log_level(LOG_INFO);
-         INFO((SGE_EVENT, "PROF: job-order calculation took %.3f s\n",
+         PROFILING((SGE_EVENT, "PROF: job-order calculation took %.3f s\n",
                prof_get_measurement_wallclock(SGE_PROF_CUSTOM1, true, NULL)));
-         log_state_set_log_level(saved_logginglevel);
       }
 
       if( ret != 0){
@@ -655,15 +640,11 @@ static int dispatch_jobs(sge_Sdescr_t *lists, order_t *orders,
 
    sgeee_sort_jobs(splitted_job_lists[SPLIT_PENDING]);
 
-   PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM3);
-
    if (prof_is_active(SGE_PROF_CUSTOM3)) {
-      u_long32 saved_logginglevel = log_state_get_log_level();
+      prof_stop_measurement(SGE_PROF_CUSTOM3, NULL);
 
-      log_state_set_log_level(LOG_INFO);
-      INFO((SGE_EVENT, "PROF: job sorting took %.3f s\n",
+      PROFILING((SGE_EVENT, "PROF: job sorting took %.3f s\n",
             prof_get_measurement_wallclock(SGE_PROF_CUSTOM3, false, NULL)));
-      log_state_set_log_level(saved_logginglevel);
    }
 
    /*---------------------------------------------------------------------
@@ -934,15 +915,11 @@ static int dispatch_jobs(sge_Sdescr_t *lists, order_t *orders,
    } /* end of while */
    }
   
-   PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM4);
-
    if (prof_is_active(SGE_PROF_CUSTOM4)) {
-      u_long32 saved_logginglevel = log_state_get_log_level();
+      prof_stop_measurement(SGE_PROF_CUSTOM4, NULL);
 
-      log_state_set_log_level(LOG_INFO);
-      INFO((SGE_EVENT, "PROF: job dispatching took %.3f s\n",
+      PROFILING((SGE_EVENT, "PROF: job dispatching took %.3f s\n",
             prof_get_measurement_wallclock(SGE_PROF_CUSTOM4, false, NULL)));
-      log_state_set_log_level(saved_logginglevel);
    }
 
    lFreeList(user_list);

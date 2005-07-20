@@ -1,3 +1,12 @@
+SG-2005-07-20-0: Cleanup:   - profiling is using the profiling output makro
+                            - profiling correctly outputs the number of send
+                              orders
+                            - monitoring is completly using dstrings now
+                            - added monitoring to the event master and timed
+                              event thread
+                 Changed:   qmaster, scheduler
+                 Review:    RD
+
 RD-2005-07-19-1: Bugfix:    qacct -h shall not resolve hostnames
                  Changed:   qacct
                  Bugtraq:   6295791

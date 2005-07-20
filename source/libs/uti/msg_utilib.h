@@ -220,8 +220,8 @@
 /*
 ** libs/uti/sge_monitor.c
 */
-#define MSG_UTI_MONITOR_DEFLINEEXT_SFSFFFFF    _MESSAGE(59120, _(SFN": runs: %.2fr/s ("SFN") out: %.2fm/s APT: %.4fs/m idle: %.2f%% wait: %.2f%% time: %.2fs"))
-#define MSG_UTI_MONITOR_DEFLINE_SFFFFFF        _MESSAGE(59121, _(SFN": runs: %.2fr/s out: %.2fm/s APT: %.4fs/m idle: %.2f%% wait: %.2f%% time: %.2fs"))
+#define MSG_UTI_MONITOR_DEFLINE_SF             _MESSAGE(59120, _(SFN": runs: %.2fr/s"))
+#define MSG_UTI_MONITOR_DEFLINE_FFFFF          _MESSAGE(59121, _(" out: %.2fm/s APT: %.4fs/m idle: %.2f%% wait: %.2f%% time: %.2fs"))
 #define MSG_UTI_MONITOR_GDIEXT_FFF             _MESSAGE(59122, _("reports %.2f/s requests %.2f/s acks: %.2f/s"))
 #define MSG_UTI_MONITOR_DISABLED               _MESSAGE(59123, _("Monitor:                  disabled"))         
 #define MSG_UTI_MONITOR                        _MESSAGE(59124, _("Monitor:"))
@@ -234,5 +234,8 @@
 #define MSG_UTI_MONITOR_NODATA                 _MESSAGE(59131, _(": no monitoring data available"))
 #define MSG_UTI_MONITOR_MEMERROR               _MESSAGE(59132, _("not enough memory for monitor output"))
 #define MSG_UTI_MONITOR_MEMERROREXT            _MESSAGE(59133, _("not enough memory for monitor extension"))
+#define MSG_UTI_MONITOR_TETEXT_FF              _MESSAGE(59134, _("pending: %.2f executed: %.2f/s"))
+#define MSG_UTI_MONITOR_EDTEXT_FFFFFFFF        _MESSAGE(59135, _("clients: %.2f mod: %.2f/s ack: %.2f/s blocked: %.2f busy: %.2f | events: %.2f/s added: %.2f/s skipt: %.2f/s"))
+
 #endif /* __MSG_UTILIB_H */
 

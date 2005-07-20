@@ -900,7 +900,7 @@ static void* timed_event_thread(void* anArg)
 
    DENTER(TOP_LAYER, "timed_event_thread");
 
-   sge_monitor_init(&monitor, (char *) anArg, NONE_EXT, TET_WARNING, TET_ERROR);
+   sge_monitor_init(&monitor, (char *) anArg, TET_EXT, TET_WARNING, TET_ERROR);
    sge_qmaster_thread_init(true);
 
    /* register at profiling module */
@@ -917,7 +917,11 @@ static void* timed_event_thread(void* anArg)
       Event_Control.last = time(NULL);
 
       MONITOR_IDLE_TIME(timed_event_wait_empty(), (&monitor), monitor_time);
-      
+      MONITOR_MESSAGES((&monitor));  
+
+      MONITOR_TET_COUNT((&monitor));
+      MONITOR_TET_EVENT((&monitor), lGetNumberOfElem(Event_Control.list));
+
       le = lFirst(Event_Control.list);
       te = event_from_list_elem(le);
       now = Event_Control.next = time(NULL);
@@ -936,16 +940,17 @@ static void* timed_event_thread(void* anArg)
             sge_mutex_unlock("event_control_mutex", SGE_FUNC, __LINE__, &Event_Control.mutex);
 
             te_free_event(&te);
+            sge_monitor_output(&monitor);
             continue;
          }
       }
 
+      MONITOR_TET_EXEC((&monitor));
+      
       lDechainElem(Event_Control.list, le);
       lFreeElem(le);
 
       sge_mutex_unlock("event_control_mutex", SGE_FUNC, __LINE__, &Event_Control.mutex);
-        
-      MONITOR_MESSAGES((&monitor));
         
       scan_table_and_deliver(te, &monitor);
       te_free_event(&te);

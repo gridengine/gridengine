@@ -36,6 +36,7 @@
 #include <sys/time.h>
 
 #include "basis_types.h"
+#include "uti/sge_dstring.h"
 
 /**
  * Monitoring functionality:
@@ -123,8 +124,7 @@ typedef enum {
  * extension
  */
 typedef void (*extension_output)(
-   char *info_message,       /* target memory buffer*/
-   int  size,                /* length of the memory buffer */               
+   dstring *info_message,    /* target memory buffer*/
    void *monitor_extension,  /* contains the monitor extension structur */
    double time               /* length of the time inteval */
 );
@@ -134,7 +134,9 @@ typedef void (*extension_output)(
  */
 typedef enum {
    NONE_EXT = -1,
-   GDI_EXT = 0
+   GDI_EXT = 0,         /* GDI = request processing thread (qmaster) */
+   EDT_EXT = 1,         /* EDT = event delivery thread (qmaster/event master) */
+   TET_EXT = 2          /* TET = timed event thread (qmaster) */
 }extension_t;
 
 /**
@@ -145,9 +147,9 @@ typedef struct {
    const char *thread_name;
    u_long32    monitor_time;        /* stores the time interval for the mesuring run */
    /*--- output data ----------*/
-   char *output_line1;
-   char *output_line2;
-   char *work_line;
+   dstring *output_line1;
+   dstring *output_line2;
+   dstring *work_line;
    int  pos;                        /* position (line) in the qping output structure (kind of thread id) */
    /*--- work data ------------*/
    struct timeval now;              /* start time of mesurement */
@@ -257,13 +259,72 @@ void sge_monitor_reset(monitoring_t *monitor);
 typedef struct {
    u_long32    gdi_count; /* counts the gdi requests (a gdi-multi is only one request */
    u_long32    load_count;/* counts the execd load/job reports*/
-   u_long32    act_count; /* counts all kind of aknowledges */
+   u_long32    ack_count; /* counts all kind of aknowledges */
 }m_gdi_t;
 
 #define MONITOR_GDI(monitor)     if ((monitor->monitor_time > 0) && (monitor->ext_type == GDI_EXT)) ((m_gdi_t*)(monitor->ext_data))->gdi_count++
 
-#define MONITOR_ACK(monitor)     if ((monitor->monitor_time > 0) && (monitor->ext_type == GDI_EXT)) ((m_gdi_t*)(monitor->ext_data))->act_count++
+#define MONITOR_ACK(monitor)     if ((monitor->monitor_time > 0) && (monitor->ext_type == GDI_EXT)) ((m_gdi_t*)(monitor->ext_data))->ack_count++
 
 #define MONITOR_LOAD(monitor)    if ((monitor->monitor_time > 0) && (monitor->ext_type == GDI_EXT)) ((m_gdi_t*)(monitor->ext_data))->load_count++
+
+/* event master thread extension */
+
+typedef struct {
+   u_long32   count;                /* counts the number of runs */
+   u_long32   client_count;         /* connected event clients */
+   u_long32   mod_client_count;     /* event client modifications */
+   u_long32   ack_count;            /* nr of acknowledges */
+   u_long32   new_event_count;      /* newly added events */
+   u_long32   added_event_count;    /* nr of events added to the event clients */
+   u_long32   skip_event_count;     /* nr of events ignored, no client has a subscription */
+   u_long32   blocked_client_count; /* nr of event clients blocked during send */
+   u_long32   busy_client_count;    /* nr of event clients busy during send */
+}m_edt_t;
+
+#define MONITOR_CLIENT_COUNT(monitor, inc)  if ((monitor->monitor_time > 0) && (monitor->ext_type == EDT_EXT)) \
+                                               ((m_edt_t*) (monitor->ext_data))->client_count += inc
+
+#define MONITOR_EDT_COUNT(monitor) if ((monitor->monitor_time > 0) && (monitor->ext_type == EDT_EXT)) \
+                                    ((m_edt_t*) (monitor->ext_data))->count++
+
+#define MONITOR_EDT_MOD(monitor) if ((monitor->monitor_time > 0) && (monitor->ext_type == EDT_EXT)) \
+                                    ((m_edt_t*) (monitor->ext_data))->mod_client_count++
+
+#define MONITOR_EDT_ACK(monitor) if ((monitor->monitor_time > 0) && (monitor->ext_type == EDT_EXT)) \
+                                    ((m_edt_t*)(monitor->ext_data))->ack_count++
+
+#define MONITOR_EDT_NEW(monitor) if ((monitor->monitor_time > 0) && (monitor->ext_type == EDT_EXT)) \
+                                    ((m_edt_t*)(monitor->ext_data))->new_event_count++
+
+#define MONITOR_EDT_ADDED(monitor) if ((monitor->monitor_time > 0) && (monitor->ext_type == EDT_EXT)) \
+                                    ((m_edt_t*)(monitor->ext_data))->added_event_count++
+
+#define MONITOR_EDT_SKIP(monitor) if ((monitor->monitor_time > 0) && (monitor->ext_type == EDT_EXT)) \
+                                    ((m_edt_t*)(monitor->ext_data))->skip_event_count++
+
+#define MONITOR_EDT_BLOCKED(monitor)  if ((monitor->monitor_time > 0) && (monitor->ext_type == EDT_EXT)) \
+                                    ((m_edt_t*)(monitor->ext_data))->blocked_client_count++
+
+#define MONITOR_EDT_BUSY(monitor)  if ((monitor->monitor_time > 0) && (monitor->ext_type == EDT_EXT)) \
+                                    ((m_edt_t*)(monitor->ext_data))->busy_client_count++
+
+/* timed event thread extension */
+
+typedef struct {
+   u_long32   count;         /* counts the number of runs */
+   u_long32   event_count;   /* nr of pending events */
+   u_long32   exec_count;    /* nr of executed events */
+}m_tet_t;
+
+#define MONITOR_TET_COUNT(monitor)  if ((monitor->monitor_time > 0) && (monitor->ext_type == TET_EXT)) \
+                                    ((m_tet_t*)(monitor->ext_data))->count++
+
+#define MONITOR_TET_EVENT(monitor, inc)  if ((monitor->monitor_time > 0) && (monitor->ext_type == TET_EXT)) \
+                                    ((m_tet_t*)(monitor->ext_data))->event_count += inc
+
+#define MONITOR_TET_EXEC(monitor)  if ((monitor->monitor_time > 0) && (monitor->ext_type == TET_EXT)) \
+                                    ((m_tet_t*)(monitor->ext_data))->exec_count++
+
 
 #endif /* _SGE_MONITIR_H */

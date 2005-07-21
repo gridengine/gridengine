@@ -1,3 +1,8 @@
+CR-2005-07-21-0: Cleanup:   shutdown of multithreaded commlib clients doesn't
+                            flush commlib internal message buffers
+                 Changed:   commlib
+                 Review:    AH
+
 RD-2005-07-21-0: Cleanup:   unified message definitions part 3
                  Changed:   sge_log.o
                  Review:    MD

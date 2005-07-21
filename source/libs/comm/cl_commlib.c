@@ -511,11 +511,6 @@ int cl_com_cleanup_commlib(void) {
    cl_thread_settings_t* thread_p = NULL;
    cl_handle_list_elem_t* elem = NULL;
 
-   CL_LOG(CL_LOG_INFO,"cleanup commlib ...");
-
-   cl_commlib_check_callback_functions(); /* flush all callbacks to application */
-
-
    /* lock handle list mutex */   
    pthread_mutex_lock(&cl_com_handle_list_mutex);
 
@@ -525,6 +520,10 @@ int cl_com_cleanup_commlib(void) {
       return CL_RETVAL_PARAMS;
    }
  
+   CL_LOG(CL_LOG_INFO,"cleanup commlib ...");
+
+   cl_commlib_check_callback_functions(); /* flush all callbacks to application */
+
    /* shutdown all connection handle objects (and threads) */  
    while ( (elem = cl_handle_list_get_first_elem(cl_com_handle_list)) != NULL) {
       cl_commlib_shutdown_handle(elem->handle,CL_FALSE);
@@ -1308,6 +1307,8 @@ int cl_commlib_shutdown_handle(cl_com_handle_t* handle, cl_bool_t return_for_mes
    struct timeval now;
    cl_bool_t connection_list_empty = CL_FALSE;
    cl_bool_t trigger_write = CL_FALSE;
+   cl_app_message_queue_elem_t* mq_elem = NULL;
+   int mq_return_value = CL_RETVAL_OK;
    int ret_val;
 
 
@@ -1331,6 +1332,26 @@ int cl_commlib_shutdown_handle(cl_com_handle_t* handle, cl_bool_t return_for_mes
       gettimeofday(&now,NULL);
       handle->shutdown_timeout = now.tv_sec + handle->acknowledge_timeout + handle->close_connection_timeout;
    }
+
+   /* flush send message queue */
+   cl_raw_list_lock(handle->send_message_queue);
+   while((mq_elem = cl_app_message_queue_get_first_elem(handle->send_message_queue)) != NULL) {
+      CL_LOG(CL_LOG_INFO,"flushing send message queue ...");
+
+      mq_return_value = cl_commlib_send_message_to_endpoint(handle, mq_elem->snd_destination,
+                                                            mq_elem->snd_ack_type, mq_elem->snd_data,
+                                                            mq_elem->snd_size, mq_elem->snd_response_mid,
+                                                            mq_elem->snd_tag); 
+      /* remove queue entries */
+      cl_raw_list_remove_elem(handle->send_message_queue, mq_elem->raw_elem);
+      if (mq_return_value != CL_RETVAL_OK) {
+         CL_LOG_STR(CL_LOG_ERROR,"can't send message:", cl_get_error_text(mq_return_value));
+         free(mq_elem->snd_data);
+      }
+      cl_com_free_endpoint(&(mq_elem->snd_destination));
+      free(mq_elem);
+   }
+   cl_raw_list_unlock(handle->send_message_queue);
 
    if (return_for_messages == CL_TRUE) {
       handle->do_shutdown = 1; /* stop accepting new connections , don't delete any messages */
@@ -5489,6 +5510,8 @@ int cl_commlib_close_connection(cl_com_handle_t* handle,char* un_resolved_hostna
    cl_com_endpoint_t receiver;
    cl_connection_list_elem_t* elem = NULL;
    cl_com_connection_t* connection = NULL;
+   cl_app_message_queue_elem_t* mq_elem = NULL;
+   int mq_return_value = CL_RETVAL_OK;
 
    cl_commlib_check_callback_functions();
 
@@ -5511,6 +5534,27 @@ int cl_commlib_close_connection(cl_com_handle_t* handle,char* un_resolved_hostna
    receiver.comp_host = unique_hostname;
    receiver.comp_name = component_name;
    receiver.comp_id   = component_id;
+
+   /* flush send message queue */
+   cl_raw_list_lock(handle->send_message_queue);
+   while((mq_elem = cl_app_message_queue_get_first_elem(handle->send_message_queue)) != NULL) {
+      CL_LOG(CL_LOG_INFO,"flushing send message queue ...");
+
+      mq_return_value = cl_commlib_send_message_to_endpoint(handle, mq_elem->snd_destination,
+                                                            mq_elem->snd_ack_type, mq_elem->snd_data,
+                                                            mq_elem->snd_size, mq_elem->snd_response_mid,
+                                                            mq_elem->snd_tag); 
+      /* remove queue entries */
+      cl_raw_list_remove_elem(handle->send_message_queue, mq_elem->raw_elem);
+      if (mq_return_value != CL_RETVAL_OK) {
+         CL_LOG_STR(CL_LOG_ERROR,"can't send message:", cl_get_error_text(mq_return_value));
+         free(mq_elem->snd_data);
+      }
+      cl_com_free_endpoint(&(mq_elem->snd_destination));
+      free(mq_elem);
+   }
+   cl_raw_list_unlock(handle->send_message_queue);
+
 
    /* lock handle connection list */
    cl_raw_list_lock(handle->connection_list);
@@ -5944,6 +5988,11 @@ static int cl_commlib_send_message_to_endpoint(cl_com_handle_t*   handle,
    if ( endpoint->comp_id == 0) {
       CL_LOG(CL_LOG_ERROR,cl_get_error_text(CL_RETVAL_UNKNOWN_ENDPOINT));
       return CL_RETVAL_UNKNOWN_ENDPOINT;
+   }
+
+   if ( handle->do_shutdown != 0) {
+      CL_LOG(CL_LOG_WARNING,"handle is going down, don't send message");
+      return CL_RETVAL_HANDLE_SHUTDOWN_IN_PROGRESS;
    }
 
    while(retry_send != 0) {

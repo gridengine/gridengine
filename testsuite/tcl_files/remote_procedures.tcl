@@ -114,7 +114,6 @@ proc setup_qping_dump { log_array  } {
    set qping_env(SGE_QPING_OUTPUT_FORMAT) "\"s:1 s:2 s:3 s:4 s:5 s:6 s:7 s:8 s:9 s:10 s:11 s:12 s:13 s:14 s:15\""
 
    if { $ts_config(gridengine_version) >= 60 } {
-
       set sid [open_remote_spawn_process $master_host "root" $qping_binary $qping_arguments 0 qping_env]
       set sp_id [lindex $sid 1]
    } else {

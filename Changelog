@@ -1,3 +1,14 @@
+JG-2005-07-21-0: Testsuite: - the following checks failed, if first exec host 
+                              was not the master host (has Solaris zones 
+                              configured):
+                              o bugs/issuezilla/126
+                              o system_tests/clients/qmod/general
+                              o system_tests/clients/qmake
+                            - extended bugs/issuezilla/126 to test issue on all
+                              architectures available in test cluster
+                            - check functional/migration failed if queue names 
+                              were truncated by qstat
+
 CR-2005-07-21-0: Cleanup:   shutdown of multithreaded commlib clients doesn't
                             flush commlib internal message buffers
                  Changed:   commlib

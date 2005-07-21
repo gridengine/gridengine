@@ -326,7 +326,6 @@ proc cleanup_system { } {
       sleep 1
    } 
 
-
    # SGEEE: remove sharetree
    if { [ string compare $ts_config(product_type) "sgeee" ] == 0 } {
       puts $CHECK_OUTPUT "\nremoving share tree ..."

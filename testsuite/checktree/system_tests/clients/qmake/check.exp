@@ -133,7 +133,7 @@ proc qmake_setup  {} {
    add_pe pe
 
    # assign pe with queue
-   assign_queues_with_pe_object qmake.q $ts_config(master_host) make
+   assign_queues_with_pe_object qmake.q "" make
 
    set_error 0 "ok"
 }

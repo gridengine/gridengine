@@ -2627,7 +2627,7 @@ proc del_calendar { mycal_name } {
 #
 #  RESULT
 #     -1   timeout error
-#     -2   callendar allready exists
+#     -2   calendar allready exists
 #      0   ok
 #
 #  EXAMPLE
@@ -2670,7 +2670,7 @@ proc add_calendar { change_array } {
   set result [ handle_vi_edit "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-acal xyz" $vi_commands $ADDED $ALREADY_EXISTS]
   if { $result == -1 } { add_proc_error "add_calendar" -1 "timeout error" }
   if { $result == -2 } { add_proc_error "add_calendar" -1 "\"[set chgar(calendar_name)]\" already exists" }
-  if { $result != 0  } { add_proc_error "add_calendar" -1 "could not add callendar \"[set chgar(calendar_name)]\"" }
+  if { $result != 0  } { add_proc_error "add_calendar" -1 "could not add calendar \"[set chgar(calendar_name)]\"" }
   return $result
 }
 
@@ -2731,6 +2731,22 @@ proc was_job_running {jobid {do_errorcheck 1} } {
 
 }
 
+
+proc match_queue {qname qlist} {
+   global CHECK_OUTPUT
+
+   puts $CHECK_OUTPUT "trying to match $qname to queues in $qlist"
+
+   set ret {}
+   foreach q $qlist {
+      if {[string match "$qname*" $q] == 1} {
+         lappend ret $q
+      }
+   }
+
+   return $ret
+}
+
 #                                                             max. column:     |
 #****** sge_procedures/slave_queue_of() ******
 # 
@@ -2738,14 +2754,20 @@ proc was_job_running {jobid {do_errorcheck 1} } {
 #     slave_queue_of -- Get the last slave queue of a parallel job
 #
 #  SYNOPSIS
-#     slave_queue_of { job_id } 
+#     slave_queue_of { job_id {qlist {}}} 
 #
 #  FUNCTION
 #     This procedure will return the name of the last slave queue of a
 #     parallel job or "" if the SLAVE queue was not found.
 #
+#     If a queue list is passed via qlist parameter, the queue name returned
+#     by qstat will be matched against the queue names in qlist.
+#     This is sometimes necessary, if the queue name printed by qstat is 
+#     truncated (SGE(EE) 5.3, long hostnames).
+#
 #  INPUTS
 #     job_id - Identification number of the job
+#     qlist  - a list of queues - one has to match the slave_queue.
 #
 #  RESULT
 #     empty or the last queue name on which the SLAVE task is running 
@@ -2753,8 +2775,8 @@ proc was_job_running {jobid {do_errorcheck 1} } {
 #  SEE ALSO
 #     sge_procedures/master_queue_of()
 #*******************************
-proc slave_queue_of { job_id } {
-  global ts_config
+proc slave_queue_of { job_id {qlist {}}} {
+   global ts_config
    global CHECK_OUTPUT
 # return last slave queue of job
 # no slave -> return ""
@@ -2763,14 +2785,27 @@ proc slave_queue_of { job_id } {
    
    set result [get_standard_job_info $job_id]
    foreach elem $result {
-       set whatami [lindex $elem 8]
-       if { [string compare $whatami "SLAVE"] == 0 } { 
-          set slave_queue [lindex $elem 7]
-          puts $CHECK_OUTPUT "Slave is running on queue \"$slave_queue\""
-       }
+      set whatami [lindex $elem 8]
+      if { [string compare $whatami "SLAVE"] == 0 } {
+         set slave_queue [lindex $elem 7]
+         if {[llength $qlist] > 0} {
+            # we have to match queue name from qstat against qlist
+            set matching_queues [match_queue $slave_queue $qlist]
+            if {[llength $matching_queues] == 0} {
+               add_proc_error "slave_queue_of" -1 "no queue is matching queue list"
+            } else {
+               if {[llength $matching_queues] > 1} {
+                  add_proc_error "slave_queue_of" -1 "multiple queues are matching queue list"
+               } else {
+                  set slave_queue [lindex $matching_queues 0]
+               }
+            }
+         }
+         puts $CHECK_OUTPUT "Slave is running on queue \"$slave_queue\""
+      }
    }
 
-   set slave_queue [get_cluster_queue $slave_queue]
+   #set slave_queue [get_cluster_queue $slave_queue]
    
    if {$slave_queue == ""} {
      add_proc_error "slave_queue_of" -1 "no slave queue for job $job_id found"
@@ -2786,14 +2821,20 @@ proc slave_queue_of { job_id } {
 #     master_queue_of -- get the master queue of a parallel job
 #
 #  SYNOPSIS
-#     master_queue_of { job_id } 
+#     master_queue_of { job_id {qlist {}}} 
 #
 #  FUNCTION
 #     This procedure will return the name of the master queue of a
 #     parallel job or "" if the MASTER queue was not found.
 #
+#     If a queue list is passed via qlist parameter, the queue name returned
+#     by qstat will be matched against the queue names in qlist.
+#     This is sometimes necessary, if the queue name printed by qstat is 
+#     truncated (SGE(EE) 5.3, long hostnames).
+#
 #  INPUTS
 #     job_id - Identification number of the job
+#     qlist  - a list of queues - one has to match the slave_queue.
 #
 #  RESULT
 #     empty or the last queue name on which the MASTER task is running 
@@ -2801,7 +2842,7 @@ proc slave_queue_of { job_id } {
 #  SEE ALSO
 #     sge_procedures/slave_queue_of()
 #*******************************
-proc master_queue_of { job_id } {
+proc master_queue_of { job_id {qlist {}}} {
   global ts_config
    global CHECK_OUTPUT
 # return master queue of job
@@ -2811,19 +2852,33 @@ proc master_queue_of { job_id } {
    
    set result [get_standard_job_info $job_id]
    foreach elem $result {
-       set whatami [lindex $elem 8]
-       if { [string compare $whatami "MASTER"] == 0 } { 
-          set master_queue [lindex $elem 7]
-          puts $CHECK_OUTPUT "Master is running on queue \"$master_queue\""
-          break                  ;# break out of loop, if Master found
+      set whatami [lindex $elem 8]
+      if { [string compare $whatami "MASTER"] == 0 } { 
+         set master_queue [lindex $elem 7]
+         if {[llength $qlist] > 0} {
+            # we have to match queue name from qstat against qlist
+            set matching_queues [match_queue $master_queue $qlist]
+            if {[llength $matching_queues] == 0} {
+               add_proc_error "master_queue_of" -1 "no queue is matching queue list"
+            } else {
+               if {[llength $matching_queues] > 1} {
+                  add_proc_error "master_queue_of" -1 "multiple queues are matching queue list"
+               } else {
+                  set master_queue [lindex $matching_queues 0]
+               }
+            }
+         }
+         puts $CHECK_OUTPUT "Master is running on queue \"$master_queue\""
+         break                  ;# break out of loop, if Master found
        }
    }
 
-   set master_queue [get_cluster_queue $master_queue]
+   #set master_queue [get_cluster_queue $master_queue]
 
    if {$master_queue == ""} {
      add_proc_error "master_queue_of" -1 "no master queue for job $job_id found"
-   }  
+   }
+
    return $master_queue
 }
 
@@ -4216,16 +4271,16 @@ proc get_submit_error { error_id } {
 #     sge_procedures/get_suspend_state_of_job()
 #*******************************
 proc get_grppid_of_job { jobid {host ""}} {
-  global ts_config
-   global CHECK_OUTPUT CHECK_HOST
+   global ts_config
+   global CHECK_OUTPUT CHECK_HOST CHECK_USER
 
    # default for host parameter, use localhost
    if {$host == ""} {
       set host $CHECK_HOST
    }
 
+   # read execd spooldir from local or global config
    get_config value $host
-    
    if {[info exists value(execd_spool_dir)]} {
       set spool_dir $value(execd_spool_dir)
       puts $CHECK_OUTPUT "using local exec spool dir"  
@@ -4237,21 +4292,30 @@ proc get_grppid_of_job { jobid {host ""}} {
 
    puts $CHECK_OUTPUT "Exec Spool Dir is: $spool_dir"
 
-   # JG: TODO: we have to do a cat <pidfile> on remote host
-   set pidfile "$spool_dir/$CHECK_HOST/active_jobs/$jobid.1/job_pid"
+   # build name of pid file
+   set pidfile "$spool_dir/$host/active_jobs/$jobid.1/job_pid"
 
-   after 5000
-
-   set back [ catch { open $pidfile "r" } fio ]
-
-   set real_pid ""
-
-   if { $back != 0  } {
-      add_proc_error "get_grppid_of_job" -1 "can't open \"$pidfile\""
-   } else {
-      gets $fio real_pid
-      close $fio
+   # read pid from pidfile on execution host
+   set real_pid [start_remote_prog $host $CHECK_USER "cat" "$pidfile"]
+   if {$prg_exit_state != 0} {
+      add_proc_error "get_grppid_of_job" -1 "can't read $pidfile on host $host: $real_pid"
+      set real_pid ""
    }
+
+   # trim trailing newlines etc.
+   set real_pid [string trim $real_pid]
+#   after 5000
+#
+#   set back [ catch { open $pidfile "r" } fio ]
+#
+#   set real_pid ""
+#
+#   if { $back != 0  } {
+#      add_proc_error "get_grppid_of_job" -1 "can't open \"$pidfile\""
+#   } else {
+#      gets $fio real_pid
+#      close $fio
+#   }
 
    return $real_pid
 }
@@ -4274,6 +4338,7 @@ proc get_grppid_of_job { jobid {host ""}} {
 #
 #  INPUTS
 #     jobid                      - job identification number
+#     { host "" }                - host the job is running on, default $CHECK_HOST
 #     { pidlist pid_list }       - name of variable to store the pidlist
 #     {do_error_check 1}         - enable error messages (add_proc_error), default
 #                                  if not 1 the procedure will not report errors
@@ -4286,19 +4351,24 @@ proc get_grppid_of_job { jobid {host ""}} {
 #     sge_procedures/get_grppid_of_job()
 #     sge_procedures/add_proc_error()
 #*******************************************************************************
-proc get_suspend_state_of_job { jobid { pidlist pid_list } {do_error_check 1} { pgi process_group_info } } {
+proc get_suspend_state_of_job { jobid {host ""} { pidlist pid_list } {do_error_check 1} { pgi process_group_info } } {
   global ts_config
    global CHECK_OUTPUT CHECK_HOST CHECK_ARCH
 
    upvar $pidlist pidl 
    upvar $pgi pginfo
 
+   if {$host == ""} {
+      set host $CHECK_HOST
+   }
+
    # give the system time to change the processes before ps call!!
+   # JG: TODO: this should not be done here, but in the caller's context!
    after 5000
 
    # get process group id
-   set real_pid [get_grppid_of_job $jobid]
-   puts $CHECK_OUTPUT "grpid is \"$real_pid\" on host \"$CHECK_HOST\""
+   set real_pid [get_grppid_of_job $jobid $host]
+   puts $CHECK_OUTPUT "grpid is \"$real_pid\" on host \"$host\""
 
 
    set time_now [timestamp]
@@ -4306,9 +4376,8 @@ proc get_suspend_state_of_job { jobid { pidlist pid_list } {do_error_check 1} { 
 
    set have_errors 0
    while { [timestamp] < $time_out } {
-
       # get current process list (ps)
-      get_ps_info $real_pid "local" ps_list
+      get_ps_info $real_pid $host ps_list
       
    
       # copy pid_list from ps_list

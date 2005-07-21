@@ -70,46 +70,36 @@ set check_needs           "init_core_system"
 
 
 # setup and cleanup functions
-set check_setup_function "issue_126_setup"
-set check_cleanup_function "issue_126_cleanup"
+set check_setup_level_function "issue_126_setup"
+set check_cleanup_level_function "issue_126_cleanup"
 
 # define test's procedure order
 set check_functions ""
 lappend check_functions "issue_126_check"
 
 proc issue_126_init_level {} {
-   global ts_config 
+   global ts_config
    global CHECK_OUTPUT CHECK_ACT_LEVEL CHECK_HOST
-   global check_126_host check_126_loops check_126_num_hosts
+   global check_126_loops check_126_num_hosts
 
    set majorlevel [expr $CHECK_ACT_LEVEL / 100]
    set minorlevel [expr $CHECK_ACT_LEVEL % 100]
-
-# JG: TODO: functions retrieving pid of job do not support remote hosts
-# in level 0, we should only use 1 host (functional test)
-
-#   if {$minorlevel < $check_126_num_hosts} {
-   if {$minorlevel == 0} {
-      set check_126_host [lindex $ts_config(unique_arch_nodes) $minorlevel]
-      # currently, we can only run on CHECK_HOST, see TODO above.
-      if {$check_126_host != $CHECK_HOST} {
-         return -1
-      }
+   if {$minorlevel < $check_126_num_hosts} {
       switch -exact $majorlevel {
          0 {
             set check_126_loops 10
          }
          1 {
-            set check_126_loops 50
-         }
-         2 {
             set check_126_loops 100
          }
+         2 {
+            set check_126_loops 200
+         }
          3 {
-            set check_126_loops 500
+            set check_126_loops 300
          }
          4 {
-            set check_126_loops 1000
+            set check_126_loops 400
          }
          default {
             return -1
@@ -117,8 +107,7 @@ proc issue_126_init_level {} {
 
       }
       return 0
-   }   
-#   }
+   }
 
    return -1  ;# no other level else
 }
@@ -126,9 +115,12 @@ proc issue_126_init_level {} {
 # -------- local test procedures -----------------------------------------------
 
 proc issue_126_setup  {} {
-   global CHECK_OUTPUT CHECK_ACTUAL_TEST_PATH
+   global ts_config
+   global CHECK_OUTPUT CHECK_ACTUAL_TEST_PATH CHECK_ACT_LEVEL
    global check_126_host check_126_loops
 
+   set minorlevel [expr $CHECK_ACT_LEVEL % 100]
+   set check_126_host [lindex $ts_config(unique_arch_nodes) $minorlevel]
    puts $CHECK_OUTPUT "running $check_126_loops loops on host $check_126_host"
 
    set q1 [get_requestable_queue "q1" $check_126_host]
@@ -255,7 +247,7 @@ proc issue_126_check {} {
       
       append error_output "[exec date] try to get suspend state of job $job1_id ...\n"
 
-      set state1 [ get_suspend_state_of_job $job1_id "pid_list" 0 ]
+      set state1 [ get_suspend_state_of_job $job1_id $check_126_host "pid_list" 0 ]
       append error_output "[exec date] job $job1_id has state \"$state1\"\n"
 
       puts $CHECK_OUTPUT "suspend state is \"$state1\""

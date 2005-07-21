@@ -188,7 +188,7 @@ proc assign_queues_with_ckpt_object { qname hostlist ckpt_obj } {
    }
 
    # workaround for very long queue lists: use all parameter
-   if {[string length $q_list] > 100} {
+   if {[string length $q_list] > 256} {
       set q_list "all"
    }
 
@@ -221,7 +221,7 @@ proc assign_queues_with_pe_object { qname hostlist pe_obj } {
    }
 
    # workaround for very long queue lists: use all parameter
-   if {[string length $q_list] > 100} {
+   if {[string length $q_list] > 256} {
       set q_list "all"
    }
 

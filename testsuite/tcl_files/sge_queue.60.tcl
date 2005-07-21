@@ -463,12 +463,16 @@ proc get_requestable_queue { queue host } {
 }
 
 proc get_cluster_queue {queue_instance} {
+   set cqueue $queue_instance
+
    if {$queue_instance != "" } {
       set at [string first "@" $queue_instance]
       if {$at > 0} {
-         set queue_instance [string range $queue_instance 0 [expr $at - 1]]
+         set cqueue [string range $queue_instance 0 [expr $at - 1]]
       }
    }
 
-   return $queue_instance
+   puts $CHECK_OUTPUT "queue instance $queue_instance is cluster queue $cqueue"
+
+   return $cqueue
 }

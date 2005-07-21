@@ -1,3 +1,11 @@
+AH-2005-07-21-0: Bugfix:    Use CL_RW_THREAD rather than CL_NO_THREAD for 
+                            libdrmaa.so to fix problem of slow submission 
+                            rate with drmaa_run_job()
+                 Review:    CR
+                 Changed:   libdrmaa.so
+                 Bugtraq:   6299982
+                 Issue:     1724
+
 SG-2005-07-21-0: Bugfix:    no user notification or command hanging if 
                             an immediate job cannot be scheduled
                  Review:    JG, RD

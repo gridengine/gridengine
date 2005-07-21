@@ -362,9 +362,9 @@ void prepare_enroll(const char *name)
    /* TODO: activate mutlithreaded communication for SCHEDD and EXECD !!!
             This can only by done when the daemonize functions of SCHEDD and EXECD
             are thread save and reresolve qualified hostname for each thread */
-
-   if ( uti_state_get_mewho() == QMASTER || uti_state_get_mewho() == QMON 
-        /* || uti_state_get_mewho() == EXECD || uti_state_get_mewho() == SCHEDD */ ) {
+   if ( uti_state_get_mewho() == QMASTER || 
+        uti_state_get_mewho() == QMON    || 
+        uti_state_get_mewho() == DRMAA ) {
       INFO((SGE_EVENT,MSG_GDI_MULTI_THREADED_STARTUP));
       ret_val = cl_com_setup_commlib(CL_RW_THREAD,CL_LOG_OFF,gdi_log_flush_func);
    } else {

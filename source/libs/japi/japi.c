@@ -1165,7 +1165,9 @@ int japi_exit(bool close_session, int flag, dstring *diag)
    /* 
     * disconnect from commd
     */
+   DPRINTF (("Before commlib shutdown\n"));
    cl_errno = cl_commlib_shutdown_handle (cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name(), 0), CL_FALSE);
+   DPRINTF (("After commlib shutdown\n"));
    
    if (cl_errno != CL_RETVAL_OK) {
       sge_dstring_sprintf(diag, "cl_commlib_shutdown_handle() failed: %s\n", cl_get_error_text(cl_errno));

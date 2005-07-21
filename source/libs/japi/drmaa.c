@@ -1778,7 +1778,7 @@ int drmaa_wifaborted(int *aborted, int stat, char *error_diagnosis, size_t error
 
 /****** DRMAA/drmaa_strerror() ****************************************************
 *  NAME
-*     implementation_thread() -- Control flow implementation thread
+*     drmaa_strerror() -- Convert DRMAA error codes into string representation
 *
 *  SYNOPSIS
 *     void drmaa_strerror(int drmaa_errno, char *error_string, int error_len)

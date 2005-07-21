@@ -422,7 +422,6 @@ const struct test_name2number_map {
    { "ST_MULT_EXIT",                              ST_MULT_EXIT,                              0, "" },
    { "ST_SUPPORTED_ATTR",                         ST_SUPPORTED_ATTR,                         0, "" },
    { "ST_SUPPORTED_VATTR",                        ST_SUPPORTED_VATTR,                        0, "" },
-   { "ST_ATTRIBUTE_CHECK",                        ST_ATTRIBUTE_CHECK,                       2, "<exit_arg_job> <email_addr>" },
    { "ST_VERSION",                                ST_VERSION,                                0, "" },
    { "ST_DRM_SYSTEM",                             ST_DRM_SYSTEM,                             0, "" },
    { "ST_DRMAA_IMPL",                             ST_DRMAA_IMPL,                             0, "" },
@@ -450,7 +449,6 @@ const struct test_name2number_map {
    { "ST_BULK_SUBMIT_IN_HOLD_SINGLE_RELEASE",     ST_BULK_SUBMIT_IN_HOLD_SINGLE_RELEASE,     1, "<sleeper_job>" },
    { "ST_BULK_SUBMIT_IN_HOLD_SESSION_DELETE",     ST_BULK_SUBMIT_IN_HOLD_SESSION_DELETE,     1, "<sleeper_job>" },
    { "ST_BULK_SUBMIT_IN_HOLD_SINGLE_DELETE",      ST_BULK_SUBMIT_IN_HOLD_SINGLE_DELETE,      1, "<sleeper_job>" },
-   { "ST_SUBMIT_SUSPEND_RESUME_WAIT",             ST_SUBMIT_SUSPEND_RESUME_WAIT,             1, "<sleeper_job>" },
    { "ST_SUBMIT_POLLING_WAIT_TIMEOUT",            ST_SUBMIT_POLLING_WAIT_TIMEOUT,            1, "<sleeper_job>" },
    { "ST_SUBMIT_POLLING_WAIT_ZEROTIMEOUT",        ST_SUBMIT_POLLING_WAIT_ZEROTIMEOUT,        1, "<sleeper_job>" },
    { "ST_SUBMIT_POLLING_SYNCHRONIZE_TIMEOUT",     ST_SUBMIT_POLLING_SYNCHRONIZE_TIMEOUT,     1, "<sleeper_job>" },
@@ -462,9 +460,12 @@ const struct test_name2number_map {
    { "MT_EXIT_DURING_SUBMIT",                    MT_EXIT_DURING_SUBMIT,                      1, "<sleeper_job>" },
    { "MT_SUBMIT_MT_WAIT",                        MT_SUBMIT_MT_WAIT,                          1, "<sleeper_job>" },
    { "MT_EXIT_DURING_SUBMIT_OR_WAIT",            MT_EXIT_DURING_SUBMIT_OR_WAIT,              1, "<sleeper_job>" },
-   
+  
+   /* ------------------------------------------------------------------------------------ */
    /* tests that require test suite to be run in an automated fashion (file name creation) */
    { "ST_INPUT_BECOMES_OUTPUT",                  ST_INPUT_BECOMES_OUTPUT,                    2, "<input_path> <output_path>" },
+   { "ST_ATTRIBUTE_CHECK",                       ST_ATTRIBUTE_CHECK,                         2, "<exit_arg_job> <email_addr>" },
+   { "ST_SUBMIT_SUSPEND_RESUME_WAIT",            ST_SUBMIT_SUSPEND_RESUME_WAIT,              1, "<sleeper_job>" },
 
    /* tests that test_drmaa can't test in an automated fashion (so far) */
    { "ST_DRMAA_JOB_PS",                          ST_DRMAA_JOB_PS,                            1, "<jobid> ..."   },
@@ -626,11 +627,12 @@ int main(int argc, char *argv[])
          usage();
 
       if (test_case == ALL_TESTS) {
+         int success = 1;
          sleeper_job = NEXT_ARGV(&argc, &argv);
          exit_job    = NEXT_ARGV(&argc, &argv);
          email_addr  = NEXT_ARGV(&argc, &argv);
 
-         for (i=1; test_map[i].test_name && test_map[i].test_number != FIRST_NON_AUTOMATED_TEST; i++) {
+         for (i=1; test_map[i].test_name && test_map[i].test_number != FIRST_NON_AUTOMATED_TEST && success; i++) {
             test_case = test_map[i].test_number;
             printf("---------------------\n");
             printf("starting test #%d (%s)\n", i, test_map[i].test_name);
@@ -666,6 +668,9 @@ int main(int argc, char *argv[])
                   printf("successfully finished test #%d\n", i);
                break;
             }
+            
+            if (failed)
+               success = 0;
          }
       } else {
          printf("starting test \"%s\"\n", test_map[i].test_name);

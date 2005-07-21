@@ -157,10 +157,11 @@ int main(int argc, char *argv[])
             char tail_cmd[1024];
             sprintf(tail_cmd, "tail -15 %s", path);
             system(tail_cmd);
-         }
-         if (unlink(path)) {
-            fprintf(stderr, "couldn't unlink \"%s\" job output file %s: %s\n",
-                  job[j].name, path, strerror(errno));
+         } else {
+            if (unlink(path)) {
+               fprintf(stderr, "couldn't unlink \"%s\" job output file %s: %s\n",
+                     job[j].name, path, strerror(errno));
+            }
          }
       }
    }

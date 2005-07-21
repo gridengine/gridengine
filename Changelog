@@ -12,7 +12,7 @@ HP-2005-07-20-0: Bugfix:    Nonexpressive error messages for SSL initialisation
 DT-2005-07-19-0: Bugfix:    o Initialized INHERIT_ENV and SET_LIB_PATH to
                               default values
                  Changed:   sge_conf.c
-                 Bugtraq:   6297263
+                 Bugtraq:   6298056
                  Issue:     1718
                  Review:    JG
 

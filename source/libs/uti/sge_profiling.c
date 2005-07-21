@@ -1401,17 +1401,14 @@ bool prof_output_info(prof_level level, bool with_sub, const char *info)
       if ((thread_num >= 0) && (thread_num < MAX_THREAD_NUM) &&
           prof_is_active(level)) {
          const char *info_message = NULL;
-         u_long32 saved_logginglevel = log_state_get_log_level();
 
-         log_state_set_log_level(LOG_INFO);
          info_message = prof_get_info_string(level, with_sub, NULL);
-         INFO((SGE_EVENT, "PROF(%d): %s%s", (int)thread_id, info, ""));
+         PROFILING((SGE_EVENT, "PROF(%d): %s%s", (int)thread_id, info, ""));
          for (message = strtok_r((char*)info_message, "\n", &pos); message; 
               message = strtok_r(NULL, "\n", &pos)) {
-            INFO((SGE_EVENT, "PROF(%d): %s", (int)thread_id, message));
+            PROFILING((SGE_EVENT, "PROF(%d): %s", (int)thread_id, message));
          }
 
-         log_state_set_log_level(saved_logginglevel);
          ret = true;
       }
    }

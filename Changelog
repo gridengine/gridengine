@@ -1,3 +1,7 @@
+RD-2005-07-21-0: Cleanup:   unified message definitions part 3
+                 Changed:   sge_log.o
+                 Review:    MD
+
 HP-2005-07-21-0: Bugfix:    Nonexpressive error messages for SSL initialisation 
                             errors.
                  Bugfix:    qrsh failed when ARC not set and INHERIT_ENV=false set.
@@ -42,7 +46,7 @@ CR-2005-07-19-0: Cleanup:   commlib: Performance Cleanup, etc.
                  Review:    RD
                             
 
-RD-2005-07-19-0: Cleanup:   unified qstat output part 1
+RD-2005-07-19-0: Cleanup:   unified qstat output part 2
                             removed \n and \t from all message definitions
                             modified all clients to print necessary newlines
                  Changed:   all

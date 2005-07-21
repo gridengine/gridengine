@@ -269,7 +269,7 @@ void qmonInitSge( char *progname, int usage)
                                    sge_get_master(0), cl_get_error_text(error)));
          }
          
-         fprintf(stderr, SGE_EVENT);
+         fprintf(stderr, "%s\n", SGE_EVENT);
       }
       if (endless_loop == 0) {
          qmonExitFunc(1);

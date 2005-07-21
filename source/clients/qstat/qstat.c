@@ -190,7 +190,7 @@ char **argv
       ** high level parsing error! sow answer list
       */
       for_each(aep, alp) {
-         fprintf(stderr, "%s", lGetString(aep, AN_text));
+         fprintf(stderr, "%s\n", lGetString(aep, AN_text));
       }
       lFreeList(alp);
       lFreeList(pcmdline);
@@ -217,7 +217,7 @@ char **argv
       ** low level parsing error! show answer list
       */
       for_each(aep, alp) {
-         fprintf(stderr, "%s", lGetString(aep, AN_text));
+         fprintf(stderr, "%s\n", lGetString(aep, AN_text));
       }
       lFreeList(alp);
       lFreeList(pcmdline);
@@ -916,7 +916,7 @@ u_long32 show
       where = lFreeWhere(where);
 
       if (alp) {
-         printf("%s", lGetString(lFirst(alp), AN_text));
+         printf("%s\n", lGetString(lFirst(alp), AN_text));
          SGE_EXIT(1);
       }
    }
@@ -938,7 +938,7 @@ u_long32 show
       zw = lFreeWhere(zw);
 
       if (alp) {
-         printf("%s", lGetString(lFirst(alp), AN_text));
+         printf("%s\n", lGetString(lFirst(alp), AN_text));
          SGE_EXIT(1);
       }
    }
@@ -952,7 +952,7 @@ u_long32 show
    ce_all = lFreeWhat(ce_all);
 
    if (alp) {
-      printf("%s", lGetString(lFirst(alp), AN_text));
+      printf("%s\n", lGetString(lFirst(alp), AN_text));
       SGE_EXIT(1);
    }
 
@@ -967,7 +967,7 @@ u_long32 show
    where = lFreeWhere(where);
 
    if (alp) {
-      printf("%s", lGetString(lFirst(alp), AN_text));
+      printf("%s\n", lGetString(lFirst(alp), AN_text));
       SGE_EXIT(1);
    }
 
@@ -982,7 +982,7 @@ u_long32 show
       pw = lFreeWhere(pw);
 
       if (alp) {
-         printf("%s", lGetString(lFirst(alp), AN_text));
+         printf("%s\n", lGetString(lFirst(alp), AN_text));
          SGE_EXIT(1);
       }
    }
@@ -997,7 +997,7 @@ u_long32 show
       ckpt_all = lFreeWhat(ckpt_all);
 
       if (alp) {
-         printf("%s", lGetString(lFirst(alp), AN_text));
+         printf("%s\n", lGetString(lFirst(alp), AN_text));
          SGE_EXIT(1);
       }
    }
@@ -1012,7 +1012,7 @@ u_long32 show
       acl_all = lFreeWhat(acl_all);
 
       if (alp) {
-         printf("%s", lGetString(lFirst(alp), AN_text));
+         printf("%s\n", lGetString(lFirst(alp), AN_text));
          SGE_EXIT(1);
       }
    }
@@ -1030,7 +1030,7 @@ u_long32 show
    sc_what = lFreeWhat(sc_what);
 
    if (alp) {
-      printf("%s", lGetString(lFirst(alp), AN_text));
+      printf("%s\n", lGetString(lFirst(alp), AN_text));
       SGE_EXIT(1);
    }
 
@@ -1043,7 +1043,7 @@ u_long32 show
    hgrp_what = lFreeWhat(hgrp_what);
 
    if (alp) {
-      printf("%s", lGetString(lFirst(alp), AN_text));
+      printf("%s\n", lGetString(lFirst(alp), AN_text));
       SGE_EXIT(1);
    }
 
@@ -1058,7 +1058,7 @@ u_long32 show
    gc_where = lFreeWhere(gc_where);
 
    if (alp) {
-      printf("%s", lGetString(lFirst(alp), AN_text));
+      printf("%s\n", lGetString(lFirst(alp), AN_text));
       SGE_EXIT(1);
    }
 
@@ -1073,7 +1073,7 @@ u_long32 show
       SGE_EXIT(1);
    }
    if (lGetUlong(aep=lFirst(alp), AN_status) != STATUS_OK) {
-      printf("%s", lGetString(aep, AN_text));
+      printf("%s\n", lGetString(aep, AN_text));
       SGE_EXIT(1);
    }
    alp = lFreeList(alp);
@@ -1106,7 +1106,7 @@ u_long32 show
          SGE_EXIT(1);
       }
       if (lGetUlong(aep=lFirst(alp), AN_status) != STATUS_OK) {
-         printf("%s", lGetString(aep, AN_text));
+         printf("%s\n", lGetString(aep, AN_text));
          SGE_EXIT(1);
       }
       alp = lFreeList(alp);
@@ -1129,7 +1129,7 @@ u_long32 show
          SGE_EXIT(1);
       }
       if (lGetUlong(aep=lFirst(alp), AN_status) != STATUS_OK) {
-         printf("%s", lGetString(aep, AN_text));
+         printf("%s\n", lGetString(aep, AN_text));
          SGE_EXIT(1);
       }
       alp = lFreeList(alp);
@@ -1143,7 +1143,7 @@ u_long32 show
       SGE_EXIT(1);
    }
    if (lGetUlong(aep=lFirst(alp), AN_status) != STATUS_OK) {
-      printf("%s", lGetString(aep, AN_text));
+      printf("%s\n", lGetString(aep, AN_text));
       SGE_EXIT(1);
    }
    alp = lFreeList(alp);
@@ -1156,7 +1156,7 @@ u_long32 show
       SGE_EXIT(1);
    }
    if (lGetUlong(aep=lFirst(alp), AN_status) != STATUS_OK) {
-      printf("%s", lGetString(aep, AN_text));
+      printf("%s\n", lGetString(aep, AN_text));
       SGE_EXIT(1);
    }
    alp = lFreeList(alp);
@@ -1170,7 +1170,7 @@ u_long32 show
          SGE_EXIT(1);
       }
       if (lGetUlong(aep=lFirst(alp), AN_status) != STATUS_OK) {
-         printf("%s", lGetString(aep, AN_text));
+         printf("%s\n", lGetString(aep, AN_text));
          SGE_EXIT(1);
       }
       alp = lFreeList(alp);
@@ -1185,7 +1185,7 @@ u_long32 show
          SGE_EXIT(1);
       }
       if (lGetUlong(aep=lFirst(alp), AN_status) != STATUS_OK) {
-         printf("%s", lGetString(aep, AN_text));
+         printf("%s\n", lGetString(aep, AN_text));
          SGE_EXIT(1);
       }
       alp = lFreeList(alp);
@@ -1200,7 +1200,7 @@ u_long32 show
          SGE_EXIT(1);
       }
       if (lGetUlong(aep=lFirst(alp), AN_status) != STATUS_OK) {
-         printf("%s", lGetString(aep, AN_text));
+         printf("%s\n", lGetString(aep, AN_text));
          SGE_EXIT(1);
       }
       alp = lFreeList(alp);
@@ -1213,7 +1213,7 @@ u_long32 show
       SGE_EXIT(1);
    }
    if (lGetUlong(aep=lFirst(alp), AN_status) != STATUS_OK) {
-      printf("%s", lGetString(aep, AN_text));
+      printf("%s\n", lGetString(aep, AN_text));
       SGE_EXIT(1);
    }
 
@@ -1227,7 +1227,7 @@ u_long32 show
       SGE_EXIT(1);
    }
    if (lGetUlong(aep=lFirst(alp), AN_status) != STATUS_OK) {
-      printf("%s", lGetString(aep, AN_text));
+      printf("%s\n", lGetString(aep, AN_text));
       SGE_EXIT(1);
    }
    alp = lFreeList(alp);
@@ -1239,7 +1239,7 @@ u_long32 show
       SGE_EXIT(1);
    }
    if (lGetUlong(aep=lFirst(alp), AN_status) != STATUS_OK) {
-      printf("%s", lGetString(aep, AN_text));
+      printf("%s\n", lGetString(aep, AN_text));
       SGE_EXIT(1);
    }
    if (lFirst(conf_l)) {
@@ -1574,7 +1574,7 @@ u_long32 isXML
    if (!isXML){
       for_each(aep, alp) {
          if (lGetUlong(aep, AN_status) != STATUS_OK) {
-            fprintf(stderr, "%s", lGetString(aep, AN_text));
+            fprintf(stderr, "%s\n", lGetString(aep, AN_text));
             schedd_info = false;
          }
       }
@@ -1618,7 +1618,7 @@ u_long32 isXML
 
    for_each(aep, alp) {
       if (lGetUlong(aep, AN_status) != STATUS_OK) {
-         fprintf(stderr, "%s", lGetString(aep, AN_text));
+         fprintf(stderr, "%s\n", lGetString(aep, AN_text));
          jobs_exist = false;
       }
    }
@@ -1645,7 +1645,7 @@ u_long32 isXML
             lFreeElem(elem2);
          }    
       }
-      fprintf(stderr, MSG_QSTAT_FOLLOWINGDONOTEXIST);
+      fprintf(stderr, "%s\n", MSG_QSTAT_FOLLOWINGDONOTEXIST);
       for_each(elem1, jid_list) {
          if (!first_time) {
             fprintf(stderr, ", "); 
@@ -1741,7 +1741,7 @@ static int qstat_show_job_info(u_long32 isXML)
    else {
       for_each(aep, alp) {
          if (lGetUlong(aep, AN_status) != STATUS_OK) {
-            fprintf(stderr, "%s", lGetString(aep, AN_text));
+            fprintf(stderr, "%s\n", lGetString(aep, AN_text));
             schedd_info = false;
          }
       }

@@ -80,7 +80,7 @@
 #define MSG_JOB_REMOVENOTIDLEIA_U     _MESSAGE(33040, _("scheduler tried to remove interactive job "sge_U32CFormat" but it is not in JIDLE state"))
 #define MSG_JOB_NOFREERESOURCEIA_UU   _MESSAGE(33041, _("no free resource for interactive job "sge_U32CFormat"."sge_U32CFormat" for user "SFQ))
 #define MSG_MAIL_CREDITLOWSUBJ_SUS    SFN": Credit low for job " sge_U32CFormat " ("SFN")"
-/* #define MSG_MAIL_CREDITLOWBODY_USSFF  _message(33042, _("Your job " sge_U32CFormat " ("SFN") attached to project "SFQ" has\nfallen below low credit limit.\nActual Credit: %.2f   Low Credit Limit: %.2f")) __TS Removed automatically from testsuite!! TS__*/
+#define MSG_JOB_ORDERDELINCOMPLETEJOB_UU  _MESSAGE(33042, _("scheduler tried to remove a incomplete job "sge_U32CFormat"."sge_U32CFormat))
 #define MSG_JOB_SUSPOTNOTRUN_UU       _MESSAGE(33043, _("got ORT_suspend_on_threshold order for non running task "sge_U32CFormat"."sge_U32CFormat))
 #define MSG_JOB_UNSUSPOTNOTRUN_UU     _MESSAGE(33044, _("got ORT_unsuspend_on_threshold order for non running task "sge_U32CFormat"."sge_U32CFormat))
 #define MSG_JOB_UNSUSPOT_UUS          _MESSAGE(33045, _("unsuspending job "sge_U32CFormat"."sge_U32CFormat" according to suspend threshold of queue "SFQ))

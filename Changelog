@@ -1,3 +1,9 @@
+SG-2005-07-21-0: Bugfix:    no user notification or command hanging if 
+                            an immediate job cannot be scheduled
+                 Review:    JG, RD
+                 Changed:   qmaster
+                 Bugtraq:   6298233
+
 JG-2005-07-21-0: Testsuite: - the following checks failed, if first exec host 
                               was not the master host (has Solaris zones 
                               configured):

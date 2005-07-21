@@ -1022,7 +1022,11 @@ sge_follow_order(lListElem *ep, lList **alpp, char *ruser, char *rhost,
 
          /* new jatask has to be spooled and event sent */
          if (jatp != NULL) {
-            lSetUlong(jatp, JAT_status, JFINISHED);
+            if (or_type == ORT_remove_job) {
+               ERROR((SGE_EVENT, MSG_JOB_ORDERDELINCOMPLETEJOB_UU, sge_u32c(job_number), 
+                      sge_u32c(task_number)));
+               lSetUlong(jatp, JAT_status, JFINISHED);
+            }
             sge_event_spool(alpp, 0, sgeE_JATASK_ADD, 
                             job_number, task_number, NULL, NULL, 
                             lGetString(jep, JB_session),

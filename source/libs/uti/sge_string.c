@@ -79,9 +79,11 @@ const char *sge_basename(const char *name, int delim)
    DENTER(BASIS_LAYER, "sge_basename");
 
    if (!name) {
+      DEXIT;
       return NULL;
    }
    if (name[0] == '\0') {
+      DEXIT;
       return NULL;
    }
 
@@ -100,6 +102,60 @@ const char *sge_basename(const char *name, int delim)
          return cp;
       }
    }
+}
+
+/****** sge_string/sge_jobname() ***********************************************
+*  NAME
+*     sge_jobname() -- get jobname of command line string 
+*
+*  SYNOPSIS
+*     const char* sge_jobname(const char *name) 
+*
+*  FUNCTION
+*     Determine the jobname of a command line. The following definition is used
+*     for the jobname:
+*     - take everything up to the first semicolon
+*     - take everything up to the first whitespace
+*     - take the basename
+*
+*  INPUTS
+*     const char *name - contains the input string (command line)
+*
+*  RESULT
+*     const char* - pointer to the jobname
+*                   NULL if name is NULL or only '\0'
+*
+*  EXAMPLE
+*  Command line                       jobname
+*  ----------------------------------------------
+*  "cd /home/me/5five; hostname" --> cd
+*  "/home/me/4Ujob"              --> 4Ujob (invalid, will be denied)
+*  "cat /tmp/5five"              --> cat
+*  "bla;blub"                    --> bla
+*  "a b"                         --> a
+*      
+*
+*  NOTES
+*     MT-NOTE: sge_jobname() is not MT safe 
+*
+*  SEE ALSO
+*     sge_basename()
+*******************************************************************************/
+const char *sge_jobname(const char *name) {
+
+   const char *cp = NULL;
+   
+   DENTER(BASIS_LAYER, "sge_jobname");
+   if (name && name[0] != '\0' ) {
+
+      cp = sge_strtok(name, ";");
+      cp = sge_strtok(cp, " ");
+      cp = sge_basename(cp, '/');
+
+   }
+
+   DEXIT;
+   return cp;
 }
 
 /****** uti/string/sge_dirname() **********************************************

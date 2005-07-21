@@ -207,6 +207,19 @@ proc job_environment_qrsh_job { array arguments } {
    job_environment_parse_env_test_output $CHECK_PROTOCOL_DIR/job_env.out job_env_array
 }
 
+proc job_environment_qrsh_job_1363 { array arguments } {
+   # check if bug 6287865 is present
+   global CHECK_TESTSUITE_ROOT CHECK_PROTOCOL_DIR CHECK_PRODUCT_ROOT CHECK_ARCH 
+   global CHECK_OUTPUT CHECK_SCRIPT_FILE_DIR
+   global queue
+
+   upvar $array job_env_array
+
+   catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qrsh" "$arguments -q $queue" "\"$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/jobenv.sh $CHECK_PROTOCOL_DIR\; echo test\"" } result
+   puts $CHECK_OUTPUT $result
+   job_environment_parse_env_test_output $CHECK_PROTOCOL_DIR/job_env.out job_env_array
+}
+
 proc job_environment_qsh_job { array arguments } {
    global CHECK_TESTSUITE_ROOT CHECK_PROTOCOL_DIR CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_HOST CHECK_USER
    global CHECK_OUTPUT CHECK_SCRIPT_FILE_DIR
@@ -371,6 +384,12 @@ proc job_environment_JOB_NAME {} {
 
    puts $CHECK_OUTPUT "\nqrsh ..."
    job_environment_qrsh_job job_env ""
+   job_environment_check_env_value "JOB_NAME" "jobenv.sh" job_env(JOB_NAME)
+   job_environment_check_env_value "REQNAME" "jobenv.sh" job_env(REQNAME)
+   job_environment_check_env_value "REQUEST" "jobenv.sh" job_env(REQUEST)
+
+   puts $CHECK_OUTPUT "\nqrsh ...(Issue: 1363)"
+   job_environment_qrsh_job_1363 job_env ""
    job_environment_check_env_value "JOB_NAME" "jobenv.sh" job_env(JOB_NAME)
    job_environment_check_env_value "REQNAME" "jobenv.sh" job_env(REQNAME)
    job_environment_check_env_value "REQUEST" "jobenv.sh" job_env(REQUEST)

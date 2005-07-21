@@ -45,6 +45,8 @@ struct saved_vars_s {
 
 const char *sge_basename(const char *name, int delim);
 
+const char *sge_jobname(const char *name);
+
 char *sge_delim_str(char *str, char **delim_pos, const char *delim);
 
 char *sge_dirname(const char *name, int delim);

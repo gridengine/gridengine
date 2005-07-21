@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: submit.1,v $     Last Update: $Date: 2005/05/06 13:25:29 $     Revision: $Revision: 1.55 $
+.\" $RCSfile: submit.1,v $     Last Update: $Date: 2005/07/21 16:12:59 $     Revision: $Revision: 1.56 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH SUBMIT 1 "$Date: 2005/05/06 13:25:29 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH SUBMIT 1 "$Date: 2005/07/21 16:12:59 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 .IP "qsub   \-" 1i
 submit a batch job to xxQS_NAMExx.
@@ -946,7 +946,8 @@ Available for \fIqsub\fP, \fIqsh\fP, \fIqrsh\fP, \fIqlogin\fP and
 .sp 1
 The name of the job. The name can be any printable set
 of characters except "\\n", "\\t", "\\r", "/", ":", "@", "\\", "*", and "?",
-and it has to start with an alphabetic character.
+and it has to start with an alphabetic character. Invalid job names will be denied
+at submit time.
 .br
 If the \fB\-N\fP option is not present, xxQS_NAMExx assigns
 the name of the job script to the job after 
@@ -960,6 +961,13 @@ or
 .I qlogin
 with the \fB\-N\fP option is absent, the string `INTERACT' is 
 assigned to the job.
+.br
+In the case of 
+.I qrsh
+with the \fB\-N\fP option is absent, the resulting job name is determined from 
+the qrsh command line by using the argument string up to the first occurrence 
+of a semicolon or whitespace and removing the directory pathname.
+.br
 .sp 1
 .I Qalter
 allows changing this option even while the job executes.

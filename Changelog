@@ -1,3 +1,10 @@
+RD-2005-07-21-1: Bugfix:   qrsh default job names must be consistent with
+                           limitations generally imposed on job names
+                 Changed:  qsh
+                 Bugtraq:  6287865 
+                 Issue:    1363
+                 Review:   CR 
+
 AH-2005-07-21-0: Bugfix:    Use CL_RW_THREAD rather than CL_NO_THREAD for 
                             libdrmaa.so to fix problem of slow submission 
                             rate with drmaa_run_job()

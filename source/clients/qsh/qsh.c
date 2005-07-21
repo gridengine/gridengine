@@ -1371,7 +1371,7 @@ int main(int argc, char **argv)
             lDechainElem(opts_cmdline, ep);
             lAppendElem(opts_qrsh, ep);
            
-            new_name = sge_basename(lGetString(ep, SPA_argval_lStringT), '/');
+            new_name = sge_jobname(lGetString(ep, SPA_argval_lStringT));
             if(new_name != NULL) {
                strncpy(name, new_name, MAX_JOB_NAME); 
             }

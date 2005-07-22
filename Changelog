@@ -1,3 +1,7 @@
+AH-2005-07-22-0: Bugfix:    Added test_drmaa_perf utility that facilitates
+                            DRMAA performance testing
+                 Review:    RH
+
 RD-2005-07-21-1: Bugfix:   qrsh default job names must be consistent with
                            limitations generally imposed on job names
                  Changed:  qsh

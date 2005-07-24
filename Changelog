@@ -1,3 +1,6 @@
+RC-2005-07-23-0: Bugfix:    several minor changes to get -umap compiling
+                 Review:    Pending
+
 AH-2005-07-22-0: Bugfix:    Added test_drmaa_perf utility that facilitates
                             DRMAA performance testing
                  Review:    RH
@@ -217,7 +220,7 @@ JG-2005-07-07-0: Testsuite: configuration failed when hostlist (exec, shadow,
                  Issue:     1594
                             Extended "fast_setup" to user config.
 
-CR-2005-07-70-1: Bugfix:    - fixed memory leak in commlib for -DUSE_POLL
+CR-2005-07-07-1: Bugfix:    - fixed memory leak in commlib for -DUSE_POLL
                               compile definition
                             - reviewd poll() implementation
 

@@ -41,6 +41,7 @@
 #include "sge_cuser_qconf.h"
 #include "parse_qconf.h"
 #include "spool/classic/read_write_ume.h"
+#include "sge_edit.h"
 
 #include "msg_common.h"
 #include "msg_qconf.h"

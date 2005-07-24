@@ -461,7 +461,7 @@ send_slave_jobs_wc(const char *target, lListElem *tmpjep, lListElem *jatep,
                              owner, hostname, &mapped_user);
          if (strcmp(mapped_user, owner)) {
             DPRINTF(("execution mapping: user %s mapped to %s on host %s\n", 
-                     owner, mapped_user, rhost));
+                     owner, mapped_user, hostname));
             lSetString(tmpjep, JB_owner, mapped_user);
          }
 

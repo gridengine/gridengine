@@ -2981,7 +2981,7 @@ char *argv[]
       static object_info_entry info_entry[] = {
          {SGE_CQUEUE_LIST,     SGE_OBJ_CQUEUE,    QR_Type,   SGE_ATTR_QNAME,     QR_name,   NULL,        cqueue_xattr_pre_gdi},
 #ifndef __SGE_NO_USERMAPPING__
-         {SGE_USER_MAPPING_LIST,     SGE_OBJ_USERMAPPING,    CU_Type,   NULL,     CU_name,   NULL,        cqueue_xattr_pre_gdi},
+         {SGE_USER_MAPPING_LIST,     SGE_OBJ_USER_MAPPING,    CU_Type,   NULL,     CU_name,   NULL,        cqueue_xattr_pre_gdi},
 #endif
          {0,                   NULL,              0,         NULL,               0,         NULL,        NULL}
       };

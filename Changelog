@@ -1,3 +1,6 @@
+JG-2005-07-25-0: Testsuite: Parsing of Gridengine messages: Search for linefeeds
+                            and tabs.
+
 RC-2005-07-23-0: Bugfix:    several minor changes to get -umap compiling
                  Review:    Pending
 

@@ -309,6 +309,12 @@ proc update_macro_messages_list {} {
        lappend msg_files $CHECK_SOURCE_DIR/$dir/$file
      }
   }
+
+   puts $CHECK_OUTPUT "parsing the following messages files:"
+   foreach file $msg_files {
+      puts $CHECK_OUTPUT $file
+   }
+  
   set count 1
   puts $CHECK_OUTPUT "\nparsing source code for message macros ..."
   foreach file $msg_files {
@@ -405,6 +411,22 @@ proc update_macro_messages_list {} {
                append error_text "$org_line\nunexpected specifier: $unexpected_specifier"
                puts $CHECK_OUTPUT "---\nerror for message id $message_id in file \n$file:\n$org_line\nunexpected specifier: -->$unexpected_specifier<--"
            }
+
+           # check for "\n" at message end
+           set len [string length $message_string]
+           if {[string range $message_string [expr $len -2] [expr $len -1]] == "\\n" } {
+              append error_text "\n\n-------MESSAGE-ENDS-WITH-LINEFEED-------\n"
+              append error_text "message $message_id ends with a linefeed:\n$line"
+              puts $CHECK_OUTPUT "---\nmessage $message_id ends with a linefeed:\n$line"
+           }
+
+           # check for "\t" in messages
+           if {[string first "\\t" $message_string] >= 0} {
+              append error_text "\n\n-------MESSAGE-CONTAINS-TABS-------\n"
+              append error_text "message $message_id contains tabs:\n$line"
+              puts $CHECK_OUTPUT "---\nmessage $message_id contains tabs:\n$line"
+           }
+
            incr count 1
         }
      }

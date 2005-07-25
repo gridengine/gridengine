@@ -1,3 +1,9 @@
+CR-2005-07-25-0: Bugfix:    qmaster crash on hostname resolution
+                 Issue:     1722
+                 Bugtraq:   pending
+                 Changed:   utilib
+                 Review:    SG
+
 JG-2005-07-25-0: Testsuite: Parsing of Gridengine messages: Search for linefeeds
                             and tabs.
 

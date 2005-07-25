@@ -394,19 +394,21 @@ struct hostent *sge_gethostbyname(const char *name, int* system_error_retval)
       struct hostent *help_he = NULL;
 
       he = (struct hostent *)malloc (sizeof (struct hostent));
-      /* On Solaris, this function returns the pointer to my struct on success
-       * and NULL on failure. */
-      help_he = gethostbyname_r (name, he, buffer, 4096, &l_errno);
-      
-      /* Since he contains pointers into buffer, and buffer goes away when we
-       * exit this code block, we make a deep copy to return. */
-      if (help_he != NULL) {
-         struct hostent *new_he = sge_copy_hostent (he);
-         FREE (he);
-         he = new_he;
-      } else {
-         FREE (he);
-         he = NULL;
+      if (he != NULL) {
+         memset(he, 0, sizeof(struct hostent));
+         /* On Solaris, this function returns the pointer to my struct on success
+          * and NULL on failure. */
+         help_he = gethostbyname_r(name, he, buffer, 4096, &l_errno);
+         
+         /* Since he contains pointers into buffer, and buffer goes away when we
+          * exit this code block, we make a deep copy to return. */
+         if (help_he != NULL) {
+            struct hostent *new_he = sge_copy_hostent(he);
+            FREE(he);
+            he = new_he;
+         } else {
+            FREE(he);
+         }
       }
    }
 #endif
@@ -421,26 +423,28 @@ struct hostent *sge_gethostbyname(const char *name, int* system_error_retval)
      
       memset(&he_data, 0, sizeof(he_data));
       he = (struct hostent *)malloc (sizeof (struct hostent));
-      if (gethostbyname_r (name, he, &he_data) < 0) {
-         /* If this function fails, free he so that we can test if it's NULL
-          * later in the code. */
-         FREE (he);
-         he = NULL;
-      }
-      /* The location of the error code is actually undefined.  I'm just
-       * assuming that it's in h_errno since that's where it is in the unsafe
-       * version.
-       * h_errno is, of course, not thread safe, but if there's an error we're
-       * already screwed, so we won't worry to much about it.
-       * An alternative would be to set errno to HOST_NOT_FOUND. */
-      l_errno = h_errno;
-      
-      /* Since he contains pointers into he_data, and he_data goes away when we
-       * exit this code block, we make a deep copy to return. */
       if (he != NULL) {
-         struct hostent *new_he = sge_copy_hostent (he);
-         FREE (he);
-         he = new_he;
+         memset(he, 0, sizeof(struct hostent));
+         if (gethostbyname_r(name, he, &he_data) < 0) {
+            /* If this function fails, free he so that we can test if it's NULL
+             * later in the code. */
+            FREE(he);
+         }
+         /* The location of the error code is actually undefined.  I'm just
+          * assuming that it's in h_errno since that's where it is in the unsafe
+          * version.
+          * h_errno is, of course, not thread safe, but if there's an error we're
+          * already screwed, so we won't worry to much about it.
+          * An alternative would be to set errno to HOST_NOT_FOUND. */
+         l_errno = h_errno;
+      
+         /* Since he contains pointers into he_data, and he_data goes away when we
+          * exit this code block, we make a deep copy to return. */
+         if (he != NULL) {
+            struct hostent *new_he = sge_copy_hostent(he);
+            FREE(he);
+            he = new_he;
+         }
       }
    }
 #endif
@@ -531,59 +535,64 @@ struct hostent *sge_copy_hostent(struct hostent *orig)
    int count = 0;
 
    DENTER (GDI_LAYER, "sge_copy_hostent");
-   
-   /* Easy stuff first */
-   copy->h_name = strdup (orig->h_name);
-   copy->h_addrtype = orig->h_addrtype;
-   copy->h_length = orig->h_length;
-   
-   /* Count the number of entries */
-   count = 0;
-   for (p = orig->h_addr_list; *p != 0; p++) {
-      count++;
-   }
-   
-   DPRINTF (("%d names in h_addr_list\n", count));
-   
-   copy->h_addr_list = (char **) malloc (sizeof (char *) * (count + 1));
-   
-   /* Copy the entries */
-   count = 0;
-   for (p = orig->h_addr_list; *p != 0; p++) {
+ 
+
+   if (copy != NULL) {  
+      /* reset the malloced memory */
+      memset(copy, 0, sizeof(struct hostent));
+
+      /* Easy stuff first */
+      copy->h_name = strdup(orig->h_name);
+      copy->h_addrtype = orig->h_addrtype;
+      copy->h_length = orig->h_length;
+      
+      /* Count the number of entries */
+      count = 0;
+      for (p = orig->h_addr_list; *p != 0; p++) {
+         count++;
+      }
+      
+      DPRINTF (("%d names in h_addr_list\n", count));
+      
+      copy->h_addr_list = (char **) malloc (sizeof (char *) * (count + 1));
+      
+      /* Copy the entries */
+      count = 0;
+      for (p = orig->h_addr_list; *p != 0; p++) {
 
 #ifndef in_addr_t
-      int tmp_size = sizeof (uint32_t); /* POSIX definition for AF_INET */
+         int tmp_size = sizeof (uint32_t); /* POSIX definition for AF_INET */
 #else 
-      int tmp_size = sizeof (in_addr_t);
+         int tmp_size = sizeof (in_addr_t);
 #endif
-      /* struct in_addr */
-      copy->h_addr_list[count] = (char *)malloc (tmp_size);
-      memcpy (copy->h_addr_list[count++], *p, tmp_size);
-   }
-   
-   copy->h_addr_list[count] = NULL;
-   
-   /* Count the number of entries */
-   count = 0;
-   for (p = orig->h_aliases; *p != 0; p++) {
-      count++;
-   }
-   
-   DPRINTF (("%d names in h_aliases\n", count));
-   
-   copy->h_aliases = (char **) malloc (sizeof (char *) * (count + 1));
-   
-   /* Copy the entries */
-   count = 0;
-   for (p = orig->h_aliases; *p != 0; p++) {
-      int tmp_size = (strlen(*p) + 1) * sizeof(char);
+         /* struct in_addr */
+         copy->h_addr_list[count] = (char *)malloc (tmp_size);
+         memcpy (copy->h_addr_list[count++], *p, tmp_size);
+      }
+      
+      copy->h_addr_list[count] = NULL;
+      
+      /* Count the number of entries */
+      count = 0;
+      for (p = orig->h_aliases; *p != 0; p++) {
+         count++;
+      }
+      
+      DPRINTF (("%d names in h_aliases\n", count));
+      
+      copy->h_aliases = (char **) malloc (sizeof (char *) * (count + 1));
+      
+      /* Copy the entries */
+      count = 0;
+      for (p = orig->h_aliases; *p != 0; p++) {
+         int tmp_size = (strlen(*p) + 1) * sizeof(char);
 
-      copy->h_aliases[count] = (char *)malloc (tmp_size);
-      memcpy (copy->h_aliases[count++], *p, tmp_size);
+         copy->h_aliases[count] = (char *)malloc (tmp_size);
+         memcpy (copy->h_aliases[count++], *p, tmp_size);
+      }
+      
+      copy->h_aliases[count] = NULL;
    }
-   
-   copy->h_aliases[count] = NULL;
-   
    DEXIT;
    return copy;
 }
@@ -661,19 +670,23 @@ struct hostent *sge_gethostbyaddr(const struct in_addr *addr, int* system_error_
       char buffer[4096];
       struct hostent *help_he = NULL;
       he = (struct hostent *)malloc (sizeof (struct hostent));
-      /* On Solaris, this function returns the pointer to my struct on success
-       * and NULL on failure. */
-      help_he = gethostbyaddr_r ((const char *)addr, 4, AF_INET, he, buffer, 4096, &l_errno);
+      if (he != NULL) {
+         memset(he, 0, sizeof(struct hostent));
+
+         /* On Solaris, this function returns the pointer to my struct on success
+          * and NULL on failure. */
+         help_he = gethostbyaddr_r ((const char *)addr, 4, AF_INET, he, buffer, 4096, &l_errno);
       
-      /* Since he contains pointers into buffer, and buffer goes away when we
-       * exit this code block, we make a deep copy to return. */
-      if (help_he != NULL) {
-         struct hostent *new_he = sge_copy_hostent (help_he);
-         FREE (he);
-         he = new_he;
-      } else {
-         FREE (he);
-         he = NULL;
+         /* Since he contains pointers into buffer, and buffer goes away when we
+          * exit this code block, we make a deep copy to return. */
+         if (help_he != NULL) {
+            struct hostent *new_he = sge_copy_hostent (help_he);
+            FREE (he);
+            he = new_he;
+         } else {
+            FREE (he);
+            he = NULL;
+         }
       }
    }
 #endif
@@ -688,26 +701,29 @@ struct hostent *sge_gethostbyaddr(const struct in_addr *addr, int* system_error_
      
       memset(&he_data, 0, sizeof(he_data));
       he = (struct hostent *)malloc (sizeof (struct hostent));
-      if (gethostbyaddr_r ((const char *)addr, 4, AF_INET, he, &he_data) < 0) {
-         /* If this function fails, free he so that we can test if it's NULL
-          * later in the code. */
-         FREE (he);
-         he = NULL;
-      }
-      /* The location of the error code is actually undefined.  I'm just
-       * assuming that it's in h_errno since that's where it is in the unsafe
-       * version.
-       * h_errno is, of course, not thread safe, but if there's an error we're
-       * already screwed, so we won't worry to much about it.
-       * An alternative would be to set errno to HOST_NOT_FOUND. */
-      l_errno = h_errno;
-      
-      /* Since he contains pointers into he_data, and he_data goes away when we
-       * exit this code block, we make a deep copy to return. */
       if (he != NULL) {
-         struct hostent *new_he = sge_copy_hostent (he);
-         FREE (he);
-         he = new_he;
+         memset(he, 0, sizeof(struct hostent));
+         if (gethostbyaddr_r ((const char *)addr, 4, AF_INET, he, &he_data) < 0) {
+            /* If this function fails, free he so that we can test if it's NULL
+             * later in the code. */
+            FREE (he);
+            he = NULL;
+         }
+         /* The location of the error code is actually undefined.  I'm just
+          * assuming that it's in h_errno since that's where it is in the unsafe
+          * version.
+          * h_errno is, of course, not thread safe, but if there's an error we're
+          * already screwed, so we won't worry to much about it.
+          * An alternative would be to set errno to HOST_NOT_FOUND. */
+         l_errno = h_errno;
+         
+         /* Since he contains pointers into he_data, and he_data goes away when we
+          * exit this code block, we make a deep copy to return. */
+         if (he != NULL) {
+            struct hostent *new_he = sge_copy_hostent (he);
+            FREE (he);
+            he = new_he;
+         }
       }
    }
 #endif

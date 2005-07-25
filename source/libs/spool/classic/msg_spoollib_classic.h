@@ -78,6 +78,7 @@
 #define MSG_CONFIG_NODIRECTORY_S                      _MESSAGE(61036, _(SFQ" is no directory - skipping the entry"))
 #define MSG_CONFIG_CANTFINDSCRIPTFILE_U               _MESSAGE(61037, _("can't find script file for job " sge_U32CFormat " - deleting"))
 #define MSG_CONFIG_JOBFILEXHASWRONGFILENAMEDELETING_U _MESSAGE(61038, _("job file \""sge_U32CFormat"\" has wrong file name - deleting"))
+#define MSG_CONFIG_JOBSPOOLINGLONGDELAY_UUI           _MESSAGE(61135, _("spooling job "sge_U32CFormat"."sge_U32CFormat" took %d seconds")) 
 
 /*
  * libs/spool/sge_spooling_classic.c

@@ -53,6 +53,7 @@
 #include "sge_unistd.h"
 #include "sge_pe_task.h"
 #include "sge_pe.h"
+#include "sge_time.h"
 #include "uti/sge_profiling.h"
 
 #include "msg_common.h"
@@ -336,9 +337,9 @@ static lListElem *pe_task_create_from_file(u_long32 job_id,
 *     u_long32 ja_taskid      - 0 or a allowed array job task id 
 *     const char *pe_task_id  - pe task id
 *     sge_spool_flags_t flags - where/how should we spool the object 
-*        SPOOL_HANDLE_AS_ZOMBIE -> has to be used for zombie jobs 
-*        SPOOL_WITHIN_EXECD -> has to be used within the execd 
-*        SPOOL_DEFAULT -> if no other flags are needed
+*        SPOOL_HANDLE_AS_ZOMBIE   -> has to be used for zombie jobs 
+*        SPOOL_WITHIN_EXECD       -> has to be used within the execd 
+*        SPOOL_DEFAULT            -> if no other flags are needed
 *
 *  RESULT
 *     int - 0 on success otherwise != 0 
@@ -350,7 +351,13 @@ int job_write_spool_file(lListElem *job, u_long32 ja_taskid,
    int ret;
    int one_file;
    int ignore_instances = flags & SPOOL_IGNORE_TASK_INSTANCES;
+   int report_long_delays = flags & SPOOL_WITHIN_EXECD;
+   u_long32 start, end;
+   
    DENTER(TOP_LAYER, "job_write_spool_file");
+
+   if (report_long_delays)
+      start = sge_get_gmt();
 
    one_file = job_has_to_spool_one_file(job, Master_Pe_List, flags);
    if (one_file) {
@@ -361,6 +368,16 @@ int job_write_spool_file(lListElem *job, u_long32 ja_taskid,
          ret = job_write_ja_task_part(job, ja_taskid, pe_task_id, flags); 
       }
    }
+
+   if (report_long_delays) {
+      end = sge_get_gmt();
+      if (end - start > 30) {
+         /* administrators need to be aware of suspicious spooling delays */
+         WARNING((SGE_EVENT, MSG_CONFIG_JOBSPOOLINGLONGDELAY_UUI, 
+         sge_u32c(lGetUlong(job, JB_job_number)), sge_u32c(ja_taskid), (int)(end - start)));
+      }
+   }
+
    DEXIT; 
    return ret;
 }

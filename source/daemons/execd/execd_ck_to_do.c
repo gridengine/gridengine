@@ -496,7 +496,7 @@ execd_ck_to_do(struct dispatch_entry *de, sge_pack_buffer *pb, sge_pack_buffer *
             if (now >= lGetUlong(jep, JB_hard_wallclock_gmt) ) {
                if (!(lGetUlong(jatep, JAT_pending_signal_delivery_time)) ||
                    (now > lGetUlong(jatep, JAT_pending_signal_delivery_time))) {
-                  INFO((SGE_EVENT, MSG_EXECD_EXCEEDHWALLCLOCK_UU,
+                  WARNING((SGE_EVENT, MSG_EXECD_EXCEEDHWALLCLOCK_UU,
                        sge_u32c(lGetUlong(jep, JB_job_number)), sge_u32c(lGetUlong(jatep, JAT_task_number)))); 
                   if (sge_execd_ja_task_is_tightly_integrated(jatep)) {
                      sge_kill_petasks(jep, jatep);
@@ -515,7 +515,7 @@ execd_ck_to_do(struct dispatch_entry *de, sge_pack_buffer *pb, sge_pack_buffer *
             if (now >= lGetUlong(jep, JB_soft_wallclock_gmt)) {
                if (!(lGetUlong(jatep, JAT_pending_signal_delivery_time)) ||
                    (now > lGetUlong(jatep, JAT_pending_signal_delivery_time))) {
-                  INFO((SGE_EVENT, MSG_EXECD_EXCEEDSWALLCLOCK_UU,
+                  WARNING((SGE_EVENT, MSG_EXECD_EXCEEDSWALLCLOCK_UU,
                        sge_u32c(lGetUlong(jep, JB_job_number)), sge_u32c(lGetUlong(jatep, JAT_task_number))));  
                   if (sge_execd_ja_task_is_tightly_integrated(jatep)) {
                      sge_kill_petasks(jep, jatep);

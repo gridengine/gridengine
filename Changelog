@@ -1,3 +1,10 @@
+AH-2005-07-25-0: Bugfix:    Changed execd h_rt from info to warning to improve 
+                            diagnostics.
+                 Diagnost:  Added logging if long delay with execd job spooling is
+                            encountered.
+                 Review:    JG
+                 Issue:     483
+
 CR-2005-07-25-0: Bugfix:    qmaster crash on hostname resolution
                  Issue:     1722
                  Bugtraq:   pending

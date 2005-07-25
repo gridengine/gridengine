@@ -688,6 +688,14 @@ u_long32 signal
          }
       } else {
          if (signal == SGE_SIGKILL) {
+            /*
+             * At this point job termination is triggered and JDELETED state is set.
+             * Based on that state it should be possible to provide better diagnosis 
+             * information if the job dies due to a signal (Issue: #483). Possibly 
+             * SGE_SIGXCPU should be treated similarly. 
+             * ja_task_message_add(jatep, 1, err_str) could be used to intermediately
+             * store job termination reason until it gets reaped later on.
+             */
             state = lGetUlong(jatep, JAT_state);
             SETBIT(JDELETED, state);
             lSetUlong(jatep, JAT_state, state); 

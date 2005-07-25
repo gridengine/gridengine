@@ -56,9 +56,10 @@
 			</UL>
 			<H3 STYLE="margin-top: 0in; margin-bottom: 0in">Disadvantages:</H3>
 			<UL>
-				<LI><P STYLE="margin-bottom: 0in">Lack of complete accounting 
+				<LI><P STYLE="margin-bottom: 0in">lack of complete accounting: the online usage of the jobs is not collected, only the wallclock time. 
 				</P>
-				<LI><P>lack of process control (reprioritization) 
+				<LI><P>lack of dynamic reprioritization: the feature of adjusting the job's priority according to the Ticket policies is not available (see <b>reprioritize</b> parameter in man <b>sge_conf(5)</b>).
+				<LI><P>potential loss of control: in some unusual cases, killing the job might leave behind idle or busy processes, even if the job is seen as finished by Grid Engine.
 				</P>
 			</UL>
 		</TD>

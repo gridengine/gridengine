@@ -155,6 +155,7 @@ int dispatch( dispatch_entry*   table,
    dispatch_entry de,   /* filled with receive mask */
                   *te;
    int i, j, terminate, errorcode, ntab;
+   int last_comm_error;
    bool do_re_register = false;
    u_long rcvtimeoutt=rcvtimeout;
    u_long32 dummyid = 0;
@@ -207,104 +208,107 @@ int dispatch( dispatch_entry*   table,
       
       switch (i) {
       case CL_RETVAL_CONNECTION_NOT_FOUND:  /* is renewed */
-        de.tag = -1;  
+      case CL_RETVAL_CONNECT_ERROR:
         do_re_register = true;
         /* no break; */
       case CL_RETVAL_NO_MESSAGE:
       case CL_RETVAL_SYNC_RECEIVE_TIMEOUT:
       case CL_RETVAL_OK:
-
-         /* 
-          * trigger re-read of act_qmaster_file in case of
-          * do_re_register == true
-          */
-         if (do_re_register == true) {
-            u_long32 now = sge_get_gmt();
-            static u_long32 last_qmaster_file_read = 0;
-            if ( now - last_qmaster_file_read >= 5 ) {
-               /* re-read act qmaster file (max. every 5 seconds) */
-               DPRINTF(("re-read actual qmaster file\n"));
-               sge_get_master(true);
-               last_qmaster_file_read = now;
-            }
-            if (i != CL_RETVAL_CONNECTION_NOT_FOUND) {
-               /* re-register at qmaster when connection is up again */
-               if ( sge_execd_register_at_qmaster() == 0) {
-                  do_re_register = false;
-               }
-            }
-         }
-         /* look for dispatch entries matching the inbound message or
-            entries activated at idle times */
-         for (ntab=0; ntab<tabsize; ntab++) {
-            if (match_dpe(&de, &table[ntab])) {
-               sigset_t old_sigset, sigset;
-
-               if(init_packbuffer(&apb, 1024, 0) != PACK_SUCCESS) {
-                  free_de(&de);
-                  sge_monitor_free(&monitor);
-                  PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM2);
-                  DEXIT;
-                  return CL_RETVAL_MALLOC;
-               }
-
-               /* block these signals in application code */ 
-               sigemptyset(&sigset);
-               sigaddset(&sigset, SIGINT);
-               sigaddset(&sigset, SIGTERM);
-               sigaddset(&sigset, SIGCHLD);
-#ifdef SIGCLD
-               sigaddset(&sigset, SIGCLD);
-#endif
-               sigprocmask(SIG_BLOCK, &sigset, &old_sigset);
-
-               j = table[ntab].func(&de, pb, &apb, &rcvtimeoutt, &synchron, 
-                                    err_str, 0);
-
-               sigprocmask(SIG_SETMASK, &old_sigset, NULL);
-
-               rcvtimeoutt = MIN(rcvtimeout, rcvtimeoutt);
-               
-               /* if apb is filled send it back to the requestor */
-               if (pb_filled(&apb)) {              
-                  i = gdi_send_message_pb(synchron, de.commproc, de.id, de.host, 
-                                   de.tag, &apb, &dummyid);
-                  MONITOR_MESSAGES_OUT((&monitor));
-                  if (i != CL_RETVAL_OK) {
-                     DPRINTF(("gdi_send_message_pb() returns: %s (%s/%s/%d)\n", 
-                               cl_get_error_text(i), de.host, de.commproc, de.id));
-                  }
-               }
-               clear_packbuffer(&apb);
-
-               switch (j) {
-               case -1:
-                  DPRINTF(("TERMINATE dispatcher because j == -1\n"));
-                  terminate = 1;
-                  errorcode = CL_RETVAL_UNKNOWN;
-                  break;
-               case 1:
-                  DPRINTF(("TERMINATE dispatcher because j == 1\n"));
-                  terminate = 1;
-                  errorcode = CL_RETVAL_OK;
-                  break;
-               }
-            }
-         }
-         clear_packbuffer(pb);
-         if (pb != NULL) {
-            FREE(pb); /* allocated in receive_message_cach_n_ack() */
-         }   
-
          break;
       default:
-         sprintf(err_str, MSG_COM_NORCVMSG_S, cl_get_error_text(i));
-         free_de(&de);
-         sge_monitor_free(&monitor);
-         PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM2);
-         DEXIT;
-         return i;
+         do_re_register = true; /* unexpected error, do reregister */
       }
+
+      if ((last_comm_error = sge_get_communication_error()) != CL_RETVAL_OK) {
+         DPRINTF(("dispatcher: last commlib error = %d\n",last_comm_error));
+         DPRINTF(("dispatcher: last commlib error = %s\n", cl_get_error_text(last_comm_error)));
+         do_re_register = true;
+      }
+
+      /* 
+       * trigger re-read of act_qmaster_file in case of
+       * do_re_register == true
+       */
+      if (do_re_register == true) {
+         u_long32 now = sge_get_gmt();
+         static u_long32 last_qmaster_file_read = 0;
+         
+         de.tag = -1;
+
+         if ( now - last_qmaster_file_read >= 5 ) {
+            /* re-read act qmaster file (max. every 5 seconds) */
+            DPRINTF(("re-read actual qmaster file\n"));
+            sge_get_master(true);
+            last_qmaster_file_read = now;
+         }
+         if (i != CL_RETVAL_CONNECTION_NOT_FOUND &&
+             i != CL_RETVAL_CONNECT_ERROR) {
+            /* re-register at qmaster when connection is up again */
+            if ( sge_execd_register_at_qmaster() == 0) {
+               do_re_register = false;
+            }
+         }
+      }
+
+
+
+      /* look for dispatch entries matching the inbound message or
+         entries activated at idle times */
+      for (ntab=0; ntab<tabsize; ntab++) {
+         if (match_dpe(&de, &table[ntab])) {
+            sigset_t old_sigset, sigset;
+
+            if(init_packbuffer(&apb, 1024, 0) != PACK_SUCCESS) {
+               free_de(&de);
+               sge_monitor_free(&monitor);
+               PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM2);
+               DEXIT;
+               return CL_RETVAL_MALLOC;
+            }
+
+            /* block these signals in application code */ 
+            sigemptyset(&sigset);
+            sigaddset(&sigset, SIGINT);
+            sigaddset(&sigset, SIGTERM);
+            sigaddset(&sigset, SIGCHLD);
+#ifdef SIGCLD
+            sigaddset(&sigset, SIGCLD);
+#endif
+            sigprocmask(SIG_BLOCK, &sigset, &old_sigset);
+
+            j = table[ntab].func(&de, pb, &apb, &rcvtimeoutt, &synchron, 
+                                 err_str, 0);
+
+            sigprocmask(SIG_SETMASK, &old_sigset, NULL);
+
+            rcvtimeoutt = MIN(rcvtimeout, rcvtimeoutt);
+            
+            /* if apb is filled send it back to the requestor */
+            if (pb_filled(&apb)) {              
+               i = gdi_send_message_pb(synchron, de.commproc, de.id, de.host, 
+                                de.tag, &apb, &dummyid);
+               MONITOR_MESSAGES_OUT((&monitor));
+               if (i != CL_RETVAL_OK) {
+                  DPRINTF(("gdi_send_message_pb() returns: %s (%s/%s/%d)\n", 
+                            cl_get_error_text(i), de.host, de.commproc, de.id));
+               }
+            }
+            clear_packbuffer(&apb);
+
+            switch (j) {
+            case -1:
+               do_re_register = true;
+               break;
+            case 1:
+               DPRINTF(("TERMINATE dispatcher because j == 1\n"));
+               terminate = 1;
+               errorcode = CL_RETVAL_OK;
+               break;
+            }
+         }
+      }
+      clear_packbuffer(pb);
+      FREE(pb); /* allocated in receive_message_cach_n_ack() */
 
       DPRINTF(("====================[ DISPATCH EPOCH ]===========================\n"));
 

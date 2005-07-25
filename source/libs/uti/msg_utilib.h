@@ -237,5 +237,11 @@
 #define MSG_UTI_MONITOR_TETEXT_FF              _MESSAGE(59134, _("pending: %.2f executed: %.2f/s"))
 #define MSG_UTI_MONITOR_EDTEXT_FFFFFFFF        _MESSAGE(59135, _("clients: %.2f mod: %.2f/s ack: %.2f/s blocked: %.2f busy: %.2f | events: %.2f/s added: %.2f/s skipt: %.2f/s"))
 
+#define MSG_UTI_DAEMONIZE_CANT_PIPE            _MESSAGE(59140, _("can't create pipe"))
+#define MSG_UTI_DAEMONIZE_CANT_FCNTL_PIPE      _MESSAGE(59141, _("can't set daemonize pipe to not blocking mode"))
+#define MSG_UTI_DAEMONIZE_OK                   _MESSAGE(59142, _("process successfully daemonized"))
+#define MSG_UTI_DAEMONIZE_DEAD_CHILD           _MESSAGE(59143, _("daemonize error: child exited before sending daemonize state"))
+#define MSG_UTI_DAEMONIZE_TIMEOUT              _MESSAGE(59144, _("daemonize error: timeout while waiting for daemonize state"))
+
 #endif /* __MSG_UTILIB_H */
 

@@ -1,3 +1,14 @@
+CR-2005-07-25-1: Enhancm.:  - removed cl_commlib_cleanup_commlib() call from
+                              signal handler function sge_terminate()
+                            - disabled execd dispatcher leave on commlib errors
+                              (register at qmaster is also called inside dispatcher)
+                            - execd may loose dead children signal and may hence
+                              reaping of a child later (when next child is dead)
+                            - enabled multithreaded startup of scheduler daemon
+                 Review:    SG
+                 Changed:   commlib gdilib utilib execd schedd sig_handlers.c
+              
+
 AH-2005-07-25-0: Bugfix:    Changed execd h_rt from info to warning to improve 
                             diagnostics.
                  Diagnost:  Added logging if long delay with execd job spooling is

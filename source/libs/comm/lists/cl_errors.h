@@ -155,7 +155,7 @@
 
 
 #define CL_RETVAL_LAST_ID                     (CL_RETVAL_START_ID + 118)  /* this must be the last number + 1 */
-#define CL_RETVAL_UNDEFINED_STR "UNDEFINED"
+#define CL_RETVAL_UNDEFINED_STR "undefined commlib error code"
 
 int         cl_is_commlib_error(int error_id);
 const char* cl_get_error_text(int error_id);

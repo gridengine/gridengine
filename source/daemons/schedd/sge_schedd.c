@@ -173,7 +173,11 @@ char *argv[]
       SGE_EXIT(1);
    }
    
-   prepare_enroll(prognames[SCHEDD]);
+
+
+   if (!getenv("SGE_ND")) {
+      sge_daemonize_prepare();
+   }
 
    if ((ret = sge_occupy_first_three()) >= 0) {
       CRITICAL((SGE_EVENT, MSG_FILE_REDIRECTFILEDESCRIPTORFAILED_I , ret));
@@ -182,6 +186,7 @@ char *argv[]
 
    lInit(nmv);
 
+   prepare_enroll(prognames[SCHEDD]);
    parse_cmdline_schedd(argc, argv);
 
    /* daemonizes if qmaster is unreachable */
@@ -212,9 +217,9 @@ char *argv[]
       fd_set fds;
       FD_ZERO(&fds);
       if ( cl_com_set_handle_fds(cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0), &fds) == CL_RETVAL_OK) {
-         sge_daemonize(&fds);
+         sge_daemonize_finalize(&fds);
       } else {
-         sge_daemonize(NULL);
+         sge_daemonize_finalize(NULL);
       }
    }
 
@@ -548,7 +553,7 @@ static int sge_setup_sge_schedd()
 
    DENTER(TOP_LAYER, "sge_setup_sge_schedd");
 
-   if (get_conf_and_daemonize(daemonize_schedd, &schedd_config_list)) {
+   if (get_conf_and_daemonize(daemonize_schedd, &schedd_config_list) != 0) {
       CRITICAL((SGE_EVENT, MSG_SCHEDD_ALRADY_RUNNING));
       SGE_EXIT(1);
    }
@@ -607,9 +612,9 @@ int daemonize_schedd()
    FD_ZERO(&keep_open);
 
    if ( cl_com_set_handle_fds(cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name(),0), &keep_open) == CL_RETVAL_OK) {
-      ret = sge_daemonize(&keep_open);
+      ret = sge_daemonize_finalize(&keep_open);
    } else {
-      ret = sge_daemonize(NULL);
+      ret = sge_daemonize_finalize(NULL);
    }
 
    DEXIT;

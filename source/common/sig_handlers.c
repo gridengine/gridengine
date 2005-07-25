@@ -197,7 +197,6 @@ static void sge_terminate(int dummy)
 {
    if (!in_main_loop) {
       cl_com_ignore_timeouts(CL_TRUE);
-      cl_com_cleanup_commlib();
       /* leave_commd() */
       exit(1);
    }

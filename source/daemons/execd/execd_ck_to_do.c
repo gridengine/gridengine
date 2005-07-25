@@ -466,10 +466,13 @@ execd_ck_to_do(struct dispatch_entry *de, sge_pack_buffer *pb, sge_pack_buffer *
       jobs_to_start = 0;
    }
 
-   if (dead_children) {
+   if (dead_children != 0) {
       /* reap all jobs, who generated a SIGCLD */
-      sge_reap_children_execd();
+
+      /* set dead_children to 0 before reaping children
+         because SIGCLD's can be lost otherwise */
       dead_children = 0;
+      sge_reap_children_execd();
    }
 
    now = sge_get_gmt();

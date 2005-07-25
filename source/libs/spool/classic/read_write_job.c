@@ -352,7 +352,8 @@ int job_write_spool_file(lListElem *job, u_long32 ja_taskid,
    int one_file;
    int ignore_instances = flags & SPOOL_IGNORE_TASK_INSTANCES;
    int report_long_delays = flags & SPOOL_WITHIN_EXECD;
-   u_long32 start, end;
+   u_long32 start = 0;
+   u_long32 end = 0;
    
    DENTER(TOP_LAYER, "job_write_spool_file");
 

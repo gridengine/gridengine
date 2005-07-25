@@ -152,6 +152,12 @@ test_drmaa_mcpu: test_drmaa_mcpu.o $(DRMAALIB) $(WINGRIDLIB_DEP)
 test_drmaa_mcpu.o: $(JAPILIB_DIR)/test_drmaa_mcpu.c
 	$(CC) $(CFLAGS) -c $(JAPILIB_DIR)/test_drmaa_mcpu.c
 
+test_drmaa_perf: test_drmaa_perf.o $(DRMAALIB) $(WINGRIDLIB_DEP)
+	$(LD_WRAPPER) $(CC) -o $@ test_drmaa_perf.o $(LFLAGS) -ldrmaa $(WINGRIDLIB) $(LIBS) $(SLIBS) $(DLLIB)
+
+test_drmaa_perf.o: $(JAPILIB_DIR)/test_drmaa_perf.c
+	$(CC) $(CFLAGS) -c $(JAPILIB_DIR)/test_drmaa_perf.c
+
 test_drmaa_no_bin: test_drmaa_no_bin.o $(DRMAALIB) $(WINGRIDLIB_DEP)
 	$(LD_WRAPPER) $(CC) -o $@ test_drmaa_no_bin.o $(LFLAGS) -ldrmaa $(WINGRIDLIB) $(LIBS) $(SLIBS) $(DLLIB)
 

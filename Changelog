@@ -1,3 +1,8 @@
+DT-2005-07-26-0: Testsuite: o Extended job environment functional test to test
+                              INHERIT_ENV and SET_LIB_PATH
+                 Issue:     1714, 1718
+                 Bugtraq:   6297263, 6298056
+
 CR-2005-07-26-0: Testsuite: added test for issue 1661 (ip address string as
                             host name resolving)
 

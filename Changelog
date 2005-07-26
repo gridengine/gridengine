@@ -1,3 +1,6 @@
+CR-2005-07-26-0: Testsuite: added test for issue 1661 (ip address string as
+                            host name resolving)
+
 JG-2005-07-26-0: Testsuite: Error handling for setup and cleanup functions
                             was broken.
                  Issue:     1618

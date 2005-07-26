@@ -1,3 +1,8 @@
+JG-2005-07-26-0: Testsuite: Error handling for setup and cleanup functions
+                            was broken.
+                 Issue:     1618
+                            Cleanup.
+
 CR-2005-07-25-1: Enhancm.:  - removed cl_commlib_cleanup_commlib() call from
                               signal handler function sge_terminate()
                             - disabled execd dispatcher leave on commlib errors

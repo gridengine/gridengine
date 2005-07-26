@@ -632,7 +632,6 @@ proc spool_array_finish {filename {data_array spool_array_data}} {
 proc save_file { filename array_name } {
    global CHECK_OUTPUT
    upvar  $array_name data
-
    
    set file [open $filename "w"]
    set last_line $data(0)
@@ -670,10 +669,9 @@ proc save_file { filename array_name } {
 #     file_procedures/save_file()
 #*******************************************************************************
 proc read_file { filename array_name } {
-
    global CHECK_OUTPUT
    upvar  $array_name data
-   
+
    if { [file isfile $filename] != 1 } {
       set data(0) 0
       puts $CHECK_OUTPUT "read_file - returning empty file data structure, no such file"
@@ -2223,7 +2221,6 @@ proc delete_file_at_startup { filename } {
 #     file_procedures/delete_directory
 #*******************************
 proc delete_file { filename { do_wait_for_file 1 } } { 
- 
    global CHECK_OUTPUT CHECK_TESTSUITE_ROOT
 
    if { $do_wait_for_file == 1 } {
@@ -2931,7 +2928,7 @@ proc get_local_spool_dir {host subdir {do_cleanup 1}} {
    set spooldir ""
 
    # special case: suppress local spooldirectories
-   if {$check_do_not_use_spool_config_entries == 1 && $local == 1} {
+   if {$check_do_not_use_spool_config_entries == 1 } {
       puts $CHECK_OUTPUT "\"no_local_spool\" option is set - returning empty spool dir" 
       return $spooldir
    }

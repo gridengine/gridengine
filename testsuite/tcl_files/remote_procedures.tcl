@@ -44,7 +44,7 @@ puts "    *********************************************"
 puts "    * CONNECTION SETUP (remote_procedures.tcl)"
 puts "    *********************************************"
 puts "    * descriptors = $descriptors"
-set rlogin_max_open_connections [expr ($descriptors - 12) / 3]
+set rlogin_max_open_connections [expr ($descriptors - 15) / 3]
 puts "    * rlogin_max_open_connections = $rlogin_max_open_connections"
 puts "    *********************************************"
 

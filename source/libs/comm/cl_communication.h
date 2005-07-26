@@ -78,6 +78,7 @@ int cl_com_cached_gethostbyname( char *hostname, char **unique_hostname, struct 
 int cl_com_cached_gethostbyaddr( struct in_addr *addr, char **unique_hostname,struct hostent **he_copy,int* system_error_val );
 char* cl_com_get_h_error_string(int h_error);
 int cl_com_compare_hosts(char* host1, char* host2);
+cl_bool_t cl_com_is_ip_address_string(char* hostname, struct in_addr* addr);
 int cl_com_set_resolve_method(cl_host_resolve_method_t method, char* local_domain_name);
 
 int cl_com_free_handle_statistic(cl_com_handle_statistic_t** statistic);

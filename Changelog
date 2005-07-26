@@ -1,3 +1,10 @@
+CR-2005-07-26-1: Bugfix:    using of IP address as host names breaks unique 
+                            hostname resolving
+                 Issue:     1661
+                 Bugtraq:   6282996
+                 Changed:   commlib
+                 Review:    AH
+
 DT-2005-07-26-0: Testsuite: o Extended job environment functional test to test
                               INHERIT_ENV and SET_LIB_PATH
                  Issue:     1714, 1718

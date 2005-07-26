@@ -41,6 +41,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <arpa/inet.h>
 #include <netdb.h>
 
 #include "sge_hostname.h"
@@ -1888,13 +1889,20 @@ int cl_com_gethostname(char **unique_hostname,struct in_addr *copy_addr,struct h
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_com_gethostbyname()"
-static int cl_com_gethostbyname(char *hostname, cl_com_hostent_t **hostent, int* system_error ) {
-
+static int cl_com_gethostbyname(char *hostname_unresolved, cl_com_hostent_t **hostent, int* system_error ) {
+#if defined(CRAY)  
+   struct sockaddr_in  tmp_addr;
+#else
+   struct in_addr tmp_addr;
+#endif
    struct hostent* he = NULL;
+   char* hostname = NULL;
    cl_com_hostent_t *hostent_p = NULL;   
+   int ret_val = CL_RETVAL_OK;
+   cl_bool_t do_free_host = CL_FALSE;
 
    /* check parameters */
-   if (hostent == NULL || hostname == NULL) {
+   if (hostent == NULL || hostname_unresolved == NULL) {
       CL_LOG( CL_LOG_ERROR, cl_get_error_text(CL_RETVAL_PARAMS));
       return CL_RETVAL_PARAMS;    /* we don't accept NULL pointers */
    }
@@ -1903,22 +1911,52 @@ static int cl_com_gethostbyname(char *hostname, cl_com_hostent_t **hostent, int*
       return CL_RETVAL_PARAMS;    /* we expect an pointer address, set to NULL */
    }
 
+   /* check if the incoming hostname is an ip address string */
+   if (cl_com_is_ip_address_string(hostname_unresolved, &tmp_addr) == CL_TRUE) {
+      CL_LOG(CL_LOG_INFO,"got ip address string as host name argument");
+      ret_val = cl_com_cached_gethostbyaddr(&tmp_addr, &hostname, NULL, NULL);
+      if (ret_val != CL_RETVAL_OK) {
+         if (hostname != NULL) {
+            free(hostname);
+            hostname = NULL;
+         }
+         return ret_val;
+      }
+      do_free_host = CL_TRUE;
+      CL_LOG_STR(CL_LOG_INFO,"ip address string  :", hostname_unresolved);
+      CL_LOG_STR(CL_LOG_INFO,"resulting host name:", hostname);
+   } else {
+      hostname = hostname_unresolved;
+   }
+
+   /* was there a malloc() error */
+   if (hostname == NULL) {
+      return CL_RETVAL_MALLOC;
+   }
+
+
+
    /* get memory for cl_com_hostent_t struct */
    hostent_p = (cl_com_hostent_t*)malloc(sizeof(cl_com_hostent_t));
    if (hostent_p == NULL) {
       CL_LOG(CL_LOG_ERROR, cl_get_error_text(CL_RETVAL_MALLOC));
+      if (do_free_host == CL_TRUE) {
+         free(hostname);
+         hostname = NULL;
+      }
       return CL_RETVAL_MALLOC;          /* could not get memory */ 
    }
    hostent_p->he = NULL;
-#if 0
-   hostent_p->he_data_buffer = NULL;
-#endif
    
    /* use sge_gethostbyname() */
    he = sge_gethostbyname(hostname, system_error);
    if (he == NULL) {
       CL_LOG( CL_LOG_ERROR, cl_get_error_text(CL_RETVAL_UNKOWN_HOST_ERROR));
       cl_com_free_hostent(&hostent_p);       /* could not find host */
+      if (do_free_host == CL_TRUE) {
+         free(hostname);
+         hostname = NULL;
+      }
       return CL_RETVAL_UNKOWN_HOST_ERROR;
    } else {
       hostent_p->he = he;
@@ -1926,11 +1964,19 @@ static int cl_com_gethostbyname(char *hostname, cl_com_hostent_t **hostent, int*
 
    if (hostent_p->he->h_addr == NULL) {
       cl_com_free_hostent(&hostent_p);
+      if (do_free_host == CL_TRUE) {
+         free(hostname);
+         hostname = NULL;
+      }
       return CL_RETVAL_IP_NOT_RESOLVED_ERROR;
    }
 
    *hostent = hostent_p;
    cl_com_print_host_info(hostent_p);
+   if (do_free_host == CL_TRUE) {
+      free(hostname);
+      hostname = NULL;
+   }
    return CL_RETVAL_OK;
 }
 
@@ -2278,6 +2324,25 @@ int cl_com_compare_hosts( char* host1, char* host2) {
     return retval;  
 }
 
+
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "cl_com_is_ip_address_string()"
+cl_bool_t cl_com_is_ip_address_string(char* resolve_hostname, struct in_addr* addr  ) {
+
+   if (resolve_hostname == NULL || addr == NULL ) {
+      CL_LOG(CL_LOG_ERROR,"got NULL pointer for hostname parameter");
+      return CL_FALSE;
+   }
+
+   addr->s_addr = inet_addr(resolve_hostname);
+
+   if ( addr->s_addr == -1) {
+      return CL_FALSE;
+   }  
+   return CL_TRUE;
+}
 
 #ifdef __CL_FUNCTION__
 #undef __CL_FUNCTION__

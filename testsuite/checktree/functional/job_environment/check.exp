@@ -53,8 +53,8 @@ set check_init_level_procedure "job_environment_init_level"
 # define test's name and run level descriptions
 set check_name            "job_environment"
 set check_category        "COMPATIBILITY SYSTEM VERIFIED"
-set check_highest_level   1
-set check_description(1)  "test job environment variables"
+set check_highest_level   0
+set check_description(0)  "test job environment variables"
 
 # define test's dependencies
 set check_needs           "init_core_system" 

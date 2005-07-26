@@ -2339,6 +2339,20 @@ cl_bool_t cl_com_is_ip_address_string(char* resolve_hostname, struct in_addr* ad
    addr->s_addr = inet_addr(resolve_hostname);
 
    if ( addr->s_addr == -1) {
+      int v1 = 0;
+      int v2 = 0;
+      int v3 = 0;
+      int v4 = 0;
+
+      /* check if it is not the host address 255.255.255.255 */
+      sscanf(resolve_hostname, "%d.%d.%d.%d", &v1, &v2, &v3, &v4);
+      if (v1 == 255 && 
+          v2 == 255 &&
+          v3 == 255 &&
+          v4 == 255) {
+         CL_LOG(CL_LOG_WARNING,"got ip address 255.255.255.255 as host name!");
+         return CL_TRUE;
+      }
       return CL_FALSE;
    }  
    return CL_TRUE;

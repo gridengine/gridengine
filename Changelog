@@ -1,5 +1,14 @@
+CR-2005-07-26-2: Bugfix:    using of IP address as host names breaks unique 
+                            hostname resolving (part 2)
+                            (additional handling for special host ip address
+                            255.255.255.255)
+                 Issue:     1661
+                 Bugtraq:   6282996
+                 Changed:   commlib
+                 Review:    AH
+
 CR-2005-07-26-1: Bugfix:    using of IP address as host names breaks unique 
-                            hostname resolving
+                            hostname resolving (part 1)
                  Issue:     1661
                  Bugtraq:   6282996
                  Changed:   commlib

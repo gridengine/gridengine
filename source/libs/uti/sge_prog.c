@@ -453,7 +453,6 @@ void sge_getme(u_long32 program_number)
 {
    char *s = NULL;
    stringT tmp_str;
-   struct passwd *paswd = NULL;
    struct hostent *hent = NULL;
  
    DENTER(TOP_LAYER, "sge_getme");
@@ -499,8 +498,15 @@ void sge_getme(u_long32 program_number)
    /* SETPGRP; */
    uti_state_set_uid(getuid());
    uti_state_set_gid(getgid());
-   SGE_ASSERT(((paswd = (struct passwd *) getpwuid((uid_t)uti_state_get_uid())) != NULL));
-   uti_state_set_user_name(paswd->pw_name);
+
+   {
+      struct passwd *paswd = NULL;
+      char buffer[2048];
+      struct passwd pwentry;
+      SGE_ASSERT(getpwuid_r((uid_t)uti_state_get_uid(), &pwentry, buffer, sizeof(buffer), &paswd)==0)
+      uti_state_set_user_name(paswd->pw_name);
+   }
+
    uti_state_set_default_cell(sge_get_default_cell());
  
    sge_show_me();

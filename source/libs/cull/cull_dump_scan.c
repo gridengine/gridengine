@@ -222,6 +222,9 @@ lDescr *lUndumpDescr(FILE *fp)
 *     int - error state
 *        -1 - Error
 *         0 - OK
+*
+*  NOTES
+*     MT-NOTE: lDumpElem() is not MT safe
 ******************************************************************************/
 int lDumpElem(const char *fname, const lListElem *ep, int indent) 
 {
@@ -258,6 +261,9 @@ int lDumpElem(const char *fname, const lListElem *ep, int indent)
 *     int - error state
 *         0 - OK
 *        -1 - Error 
+*
+*  NOTES
+*     MT-NOTE: lDumpElemFp() is not MT safe
 ******************************************************************************/
 int lDumpElemFp(FILE *fp, const lListElem *ep, int indent) 
 {
@@ -448,6 +454,9 @@ int lDumpObject(FILE *fp, const lListElem *ep, int indent)
 *     int - error state
 *         0 - OK
 *        -1 - Error
+*
+*  NOTES
+*     MT-NOTE: lDumpList() is not MT safe
 *******************************************************************************/
 int lDumpList(FILE *fp, const lList *lp, int indent) 
 {

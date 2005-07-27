@@ -788,13 +788,14 @@ centry_list_append_to_string(lList *this_list, char *buff,
 /* CLEANUP: add answer_list remove SGE_EVENT */
 /*
  * NOTE
- *    MT-NOTE: function is not MT safe
+ *    MT-NOTE: centry_list_parse_from_string() is MT safe
  */
 lList *
 centry_list_parse_from_string(lList *complex_attributes,
                               const char *str, bool check_value) 
 {
    const char *cp;
+   struct saved_vars_s *context = NULL;
 
    DENTER(TOP_LAYER, "centry_list_parse_from_string");
 
@@ -808,7 +809,7 @@ centry_list_parse_from_string(lList *complex_attributes,
    }
 
    /* str now points to the attr=value pairs */
-   while ((cp = sge_strtok(str, ", "))) {
+   while ((cp = sge_strtok_r(str, ", ", &context))) {
       lListElem *complex_attribute = NULL;
       const char *attr = NULL;
       char *value = NULL;
@@ -826,6 +827,7 @@ centry_list_parse_from_string(lList *complex_attributes,
       if (attr == NULL || *attr == '\0') {
          ERROR((SGE_EVENT, MSG_SGETEXT_UNKNOWN_RESOURCE_S, ""));
          lFreeList(complex_attributes);
+         sge_free_saved_vars(context);
          DEXIT;
          return NULL;
       }
@@ -833,6 +835,7 @@ centry_list_parse_from_string(lList *complex_attributes,
       if ((check_value) && (value == NULL || *value == '\0')) {
          ERROR((SGE_EVENT, MSG_CPLX_VALUEMISSING_S, attr));
          lFreeList(complex_attributes);
+         sge_free_saved_vars(context);
          DEXIT;
          return NULL;
       }
@@ -842,6 +845,7 @@ centry_list_parse_from_string(lList *complex_attributes,
          if ((complex_attribute = lCreateElem(CE_Type)) == NULL) {
             ERROR((SGE_EVENT, MSG_PARSE_NOALLOCATTRELEM));
             lFreeList(complex_attributes);
+            sge_free_saved_vars(context);
             DEXIT;
             return NULL;
          }
@@ -853,6 +857,8 @@ centry_list_parse_from_string(lList *complex_attributes,
       
       lSetString(complex_attribute, CE_stringval, value);
    }
+
+   sge_free_saved_vars(context);
 
    DEXIT;
    return complex_attributes;

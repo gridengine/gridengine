@@ -74,6 +74,7 @@ static void expand_range_list(lListElem *r, lList **rl);
 /* we keep a descending sorted list of non overlapping ranges */
 
 /* why descending? don't ask me! ask the initiator of this function */
+/* MT-NOTE: expand_range_list() is MT safe */
 static void expand_range_list(lListElem *r, lList **rl)
 {
    u_long32 rmin, rmax, rstep;
@@ -265,6 +266,9 @@ void range_correct_end(lListElem *this_range)
 *
 *  SEE ALSO
 *     sgeobj/range/RN_Type 
+*
+*  NOTES
+*     MT-NOTE: range_is_overlapping() is MT safe
 *******************************************************************************/
 static bool range_is_overlapping(const lListElem *this_elem,
                                  const lListElem *range)
@@ -616,6 +620,9 @@ double range_list_get_average(const lList *this_list, u_long32 upperbound)
 *
 *  SEE ALSO
 *     sgeobj/range/RN_Type 
+*
+*  NOTES
+*     MT-NOTE: range_list_sort_uniq_compress() is MT safe
 ******************************************************************************/
 void range_list_sort_uniq_compress(lList *range_list, lList **answer_list)
 {
@@ -704,6 +711,9 @@ void range_list_sort_uniq_compress(lList *range_list, lList **answer_list)
 *
 *  SEE ALSO
 *     sgeobj/range/RN_Type 
+*
+*  NOTES
+*     MT-NOTE: range_list_compress() is MT safe
 ******************************************************************************/
 void range_list_compress(lList *range_list)
 {
@@ -1087,6 +1097,9 @@ void range_list_move_first_n_ids(lList **range_list, lList **answer_list,
 *     sgeobj/range/RN_Type 
 *     sgeobj/range/range_list_compress()
 *     sgeobj/range/range_list_sort_uniq_compress()
+*
+*  NOTES
+*     MT-NOTE: range_list_insert_id() is MT safe
 ******************************************************************************/
 void range_list_insert_id(lList **range_list, lList **answer_list, u_long32 id)
 {
@@ -1254,6 +1267,9 @@ void range_get_all_ids(const lListElem *range, u_long32 *min, u_long32 *max,
 *
 *  SEE ALSO
 *     sgeobj/range/RN_Type 
+*
+*  NOTES
+*     MT-NOTE: range_set_all_ids() is MT safe
 ******************************************************************************/
 void range_set_all_ids(lListElem *range, u_long32 min, u_long32 max,
                        u_long32 step)
@@ -1531,6 +1547,7 @@ void range_to_dstring(u_long32 start, u_long32 end, int step,
    sge_dstring_append(dyn_taskrange_str, tail);
 }
 
+/* MT-NOTE: range_parse_from_string() is MT safe */
 void range_parse_from_string(lListElem **range,
                              lList **answer_list,
                              const char *rstr,
@@ -1749,8 +1766,8 @@ void range_parse_from_string(lListElem **range,
    if answer_list is delivered no exit occurs instead the function fills the 
    answer list and returns NULL, *answer_list must be NULL !
 
+   MT-NOTE: range_list_parse_from_string() is MT safe
 */
-
 void 
 range_list_parse_from_string(lList **this_list, lList **answer_list, 
                              const char *string, bool just_parse, 
@@ -1760,6 +1777,7 @@ range_list_parse_from_string(lList **this_list, lList **answer_list,
    lListElem *range = NULL;
    lList *range_list = NULL;
    bool undefined = false, first = true;
+   struct saved_vars_s *context = NULL;
 
    DENTER(TOP_LAYER, "parse_ranges");
 
@@ -1767,11 +1785,12 @@ range_list_parse_from_string(lList **this_list, lList **answer_list,
       this_list = &range_list;
    }
 
-   for (s = sge_strtok(string, RANGE_SEPARATOR_CHARS);
-        s; s = sge_strtok(NULL, RANGE_SEPARATOR_CHARS)) {
+   for (s = sge_strtok_r(string, RANGE_SEPARATOR_CHARS, &context);
+        s; s = sge_strtok_r(NULL, RANGE_SEPARATOR_CHARS, &context)) {
       if (!first && undefined) {
          /* first was undefined - no more ranges allowed */
          ERROR((SGE_EVENT, MSG_GDI_UNEXPECTEDRANGEFOLLOWINGUNDEFINED));
+         sge_free_saved_vars(context);
          if (answer_list) {
             answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX,
                             ANSWER_QUALITY_ERROR);
@@ -1792,6 +1811,7 @@ range_list_parse_from_string(lList **this_list, lList **answer_list,
          } else {
             /* second range may not be undefined ! */
             ERROR((SGE_EVENT, MSG_GDI_UNEXPECTEDUNDEFINEDFOLLOWINGRANGE));
+            sge_free_saved_vars(context);
             if (answer_list) {
                answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX,
                                ANSWER_QUALITY_ERROR);
@@ -1813,6 +1833,8 @@ range_list_parse_from_string(lList **this_list, lList **answer_list,
       first = false;
    }
    
+   sge_free_saved_vars(context);
+
    DEXIT;
    return;
 }

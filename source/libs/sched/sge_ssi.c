@@ -55,6 +55,7 @@
 #include "sge_ssi.h"
 
 
+/* MT-NOTE: parse_job_identifier() is not MT safe */
 static bool parse_job_identifier(const char *id, u_long32 *job_id, u_long32 *ja_task_id)
 {
    char *copy;
@@ -102,6 +103,8 @@ static bool parse_job_identifier(const char *id, u_long32 *job_id, u_long32 *ja_
 *
 *  SEE ALSO
 *     schedlib/ssi/sge_ssi/job_start()
+*
+*  MT-NOTE: sge_ssi_job_cancel() is not MT safe
 *******************************************************************************/
 bool sge_ssi_job_cancel(const char *job_identifier, bool reschedule) 
 {

@@ -1,3 +1,11 @@
+AH-2005-07-27-0: Bugfix:    Multi-threaded, multi-CPU username problems
+                            Lots of job parsing code wasn't MT safe
+                            Issue with IRIX compilation
+                 Issue:     1490
+                 Bugtraq:   6242169
+                 Changed:   libdrmaa.so
+                 Review:    JG
+
 SG-2005-07-27-0: Testsuite: added a test for resource reservation with array jobs.
                  Changed:   testsuite, test_drmaa
                  Review:    AH

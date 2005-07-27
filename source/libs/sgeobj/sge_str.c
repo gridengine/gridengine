@@ -130,6 +130,9 @@ str_list_append_to_dstring(const lList *this_list, dstring *string,
 *
 *  SEE ALSO
 *     sgeobj/str/str_list_append_to_dstring()
+* 
+*  NOTES
+*     MT-NOTE: str_list_parse_from_string() is MT safe
 *******************************************************************************/
 bool 
 str_list_parse_from_string(lList **this_list,

@@ -51,6 +51,7 @@
 #include "sge_prog.h"
 #include "sge_conf.h"
 #include "lck/sge_mtutil.h"
+#include "sge_string.h"
 
 #include "msg_common.h"
 
@@ -343,23 +344,27 @@ int close_stdin /* use of qrsh's -nostdin option */
 
 /* This method counts the number of arguments in the string using a quick and
  * dirty algorithm.  The algorithm may incorrectly report the number of arguments
- * to be too large because it does not parse quotations correctly. */
+ * to be too large because it does not parse quotations correctly. 
+ * MT-NOTE: sge_quick_count_num_args() is MT safe
+ */
 int sge_quick_count_num_args (
 const char* args /* The argument string to count by whitespace tokens */
 ) {
    int num_args = 0;
    char *resreq = (char *)malloc (strlen (args)+1);
    char *s;
+   struct saved_vars_s *context = NULL;
    
    DENTER (TOP_LAYER, "count_num_qtask_args");
    
    /* This function may return a larger number than required since it does not
     * parse quotes.  This is ok, however, since it's current usage is for
     * mallocing arrays, and a little too big is fine. */
-   strcpy (resreq, args);
-   for (s=strtok (resreq, " \t"); s; s=strtok(NULL, " \t"))
+   strcpy(resreq, args);
+   for (s=sge_strtok_r(resreq, " \t", &context); s; s=sge_strtok_r(NULL, " \t", &context))
       num_args++;
    free(resreq);
+   sge_free_saved_vars(context);
    
    DEXIT;
    return num_args;

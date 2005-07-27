@@ -725,6 +725,8 @@ lList *cull_parse_job_parameter(lList *cmdline, lListElem **pjob)
 *     starting from position MAX_STRING_SIZE + 1 are silently ignored.
 *     MAX_STRING_SIZE is defined in common/basis_types.h (current value 2048).
 *
+*     MT-NOTE: parse_script_file() is MT safe
+*
 *  SEE ALSO
 *     centry_list_parse_from_string()
 *     basis_types.h

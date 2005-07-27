@@ -74,7 +74,7 @@ static void sge_parse_string_list(lList **lp, const char *str, int field,
 }
 
 /***************************************************************************/
-
+/* MT-NOTE: sge_add_noarg() is MT safe */
 lListElem *sge_add_noarg(
 lList **popt_list,
 u_long32 opt_number,
@@ -107,6 +107,7 @@ const char *opt_switch_arg
 
 /***************************************************************************/
 
+/* MT-NOTE: sge_add_arg() is MT safe */
 lListElem *sge_add_arg(
 lList **popt_list,
 u_long32 opt_number,

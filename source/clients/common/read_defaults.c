@@ -89,6 +89,8 @@ static void append_opts_from_default_files (lList **pcmdline,
 *                                parse_script_file, see there
 *     char **envp      - environment pointer 
 *
+*  NOTES
+*     MT-NOTE: opt_list_append_opts_from_default_files() is MT safe
 *******************************************************************************/
 void opt_list_append_opts_from_default_files(lList **pcmdline, 
                                              lList **answer_list,
@@ -103,17 +105,17 @@ void opt_list_append_opts_from_default_files(lList **pcmdline,
    }
 
    /* the sge root defaults file */
-   def_files[0] = get_root_defaults_file_path ();
+   def_files[0] = get_root_defaults_file_path();
 
    /*
     * the defaults file in the user's home directory
     */
-   def_files[1] = get_user_home_defaults_file_path (answer_list);
+   def_files[1] = get_user_home_defaults_file_path(answer_list);
 
    /*
     * the defaults file in the current working directory
     */
-   def_files[2] = get_cwd_defaults_file_path (answer_list);
+   def_files[2] = get_cwd_defaults_file_path(answer_list);
 
 
    def_files[3] = NULL;
@@ -121,7 +123,7 @@ void opt_list_append_opts_from_default_files(lList **pcmdline,
    /*
     * now read all the defaults files, unaware of where they came from
     */
-   append_opts_from_default_files (pcmdline,  answer_list, envp, def_files);
+   append_opts_from_default_files(pcmdline,  answer_list, envp, def_files); /* MT-NOTE !!!! */
     
    DEXIT;
    return;
@@ -140,6 +142,8 @@ void opt_list_append_opts_from_default_files(lList **pcmdline,
 *  OUTPUTS
 *     char * - root defaults file name with absolute path
 *
+*  NOTES
+*     MT-NOTE: get_root_defaults_file_path() is MT safe
 *******************************************************************************/
 static char *get_root_defaults_file_path () {
    char *file = NULL;
@@ -181,6 +185,7 @@ static char *get_root_defaults_file_path () {
 *                                parse_script_file, see there
 *     char * - user defaults file name with absolute path
 *
+*     MT-NOTE: get_user_home_defaults_file_path() is MT safe
 *******************************************************************************/
 static char *get_user_home_defaults_file_path(lList **answer_list)
 {
@@ -251,6 +256,7 @@ static char *get_user_home_defaults_file_path(lList **answer_list)
 *                                parse_script_file, see there
 *     char * - cwd defaults file name with absolute path
 *
+*   MT-NOTE: get_cwd_defaults_file_path() is MT safe
 *******************************************************************************/
 static char *get_cwd_defaults_file_path(lList **answer_list)
 {

@@ -448,10 +448,12 @@ char *sge_strtok_r(const char *str, const char *delimitor,
 ******************************************************************************/
 void sge_free_saved_vars(struct saved_vars_s *context) 
 {
-   if (context->static_str) {
-      free(context->static_str);
+   if (context) {
+      if (context->static_str) {
+         free(context->static_str);
+      }
+      free(context);
    }
-   free(context);
 }
 
 /****** uti/string/sge_strdup() ***********************************************

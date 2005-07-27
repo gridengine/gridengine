@@ -65,6 +65,9 @@ static int fprint_name_value_list(FILE *fp, char *name, lList *thresholds, int p
 ** DESCRIPTION
 **   parses a list of strings
 **   this list might have been created by string_list
+**
+** NOTES
+**   MT-NOTE: cull_parse_string_list() is MT safe
 */
 /*
 ** problem: if NULL ends string list, then NULL cannot be used

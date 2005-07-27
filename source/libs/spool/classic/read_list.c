@@ -131,6 +131,7 @@ int sge_read_host_group_entries_from_disk()
 
         if (hostGroupEntry[0] != '.') {
            if (!sge_silent_get()) { 
+              printf("\t");
               printf(MSG_SETUP_HOSTGROUPENTRIES_S, hostGroupEntry);
               printf("\n");
            }
@@ -180,6 +181,7 @@ int sge_read_user_mapping_entries_from_disk()
 
          if (ume[0] != '.') {
             if (!sge_silent_get()) { 
+               printf("\t");
                printf(MSG_SETUP_MAPPINGETRIES_S, ume);
                printf("\n");
             }
@@ -397,6 +399,7 @@ int sge_read_pe_list_from_disk(lList **list, const char *directory)
          pe = lGetString(direntry, ST_name);
          if (pe[0] != '.') {
             if (!sge_silent_get()) {
+               printf("\t");
                printf(MSG_SETUP_PE_S, pe);
                printf("\n");
             }
@@ -452,6 +455,7 @@ int sge_read_cal_list_from_disk(lList **list, const char *directory)
 
          if (cal[0] != '.') {
             if (!sge_silent_get()) {
+               printf("\t");
                printf(MSG_SETUP_CALENDAR_S, cal);
                printf("\n");
             }
@@ -509,6 +513,7 @@ int sge_read_ckpt_list_from_disk(lList **list, const char *directory)
 
          if (ckpt[0] != '.') {
             if (!sge_silent_get()) {
+               printf("\t");
                printf(MSG_SETUP_CKPT_S, ckpt);
                printf("\n");
             }
@@ -606,6 +611,7 @@ int sge_read_cqueue_list_from_disk(lList **list, const char *directory)
          if (queue_str[0] != '.') {
             config_tag = 0;
             if (!sge_silent_get()) {
+               printf("\t");
                printf(MSG_SETUP_QUEUE_S, lGetString(direntry, ST_name));
                printf("\n");
             }
@@ -724,6 +730,7 @@ int sge_read_project_list_from_disk(lList **list, const char *directory)
          if (userprj_str[0] != '.') {
             config_tag = 0;
             if (!sge_silent_get()) {
+               printf("\t");
                printf(MSG_SETUP_PROJECT_S, lGetString(direntry, ST_name));
                printf("\n");
             }
@@ -781,6 +788,7 @@ int sge_read_user_list_from_disk(lList **list, const char *directory)
          if (direntry_str[0] != '.') { 
             config_tag = 0;
             if (!sge_silent_get()) {
+               printf("\t");
                printf(MSG_SETUP_USER_S, lGetString(direntry, ST_name));
                printf("\n");
             }
@@ -827,6 +835,7 @@ int sge_read_userset_list_from_disk(lList **list, const char *directory)
 
          if (userset[0] != '.') {
             if (!sge_silent_get()) {
+               printf("\t");
                printf(MSG_SETUP_USERSET_S , lGetString(direntry, ST_name));
                printf("\n");
             }
@@ -949,6 +958,7 @@ int read_all_centries(lList **list, const char *directory)
       }
 #if 0
       if (!sge_silent_get()) {
+         printf("\t");
          printf(MSG_SETUP_COMPLEX_ATTR_S, dent->d_name);
          printf("\n");
       }  

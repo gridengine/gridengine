@@ -3526,7 +3526,7 @@ sge_calc_tickets( sge_Sdescr_t *lists,
       prof_stop_measurement(SGE_PROF_SCHEDLIB4, NULL);
       prof_calc = prof_get_measurement_wallclock(SGE_PROF_SCHEDLIB4, false, NULL);    
    
-      PROFILING((SGE_EVENT, "PROF: job ticket calculation: init: %.3f s, pass 0: %.3f s, pass 1: %.3f, pass2: %.3f, calc: %.3f s\n",
+      PROFILING((SGE_EVENT, "PROF: job ticket calculation: init: %.3f s, pass 0: %.3f s, pass 1: %.3f, pass2: %.3f, calc: %.3f s",
                prof_init, prof_pass0, prof_pass1, prof_pass2, prof_calc));
    }
 
@@ -4300,7 +4300,7 @@ int sgeee_scheduler( sge_Sdescr_t *lists,
       if (prof_is_active(SGE_PROF_CUSTOM3)) {
          prof_stop_measurement(SGE_PROF_CUSTOM3, NULL);
 
-         PROFILING((SGE_EVENT, "PROF: static urgency took %.3f s\n",
+         PROFILING((SGE_EVENT, "PROF: static urgency took %.3f s",
                prof_get_measurement_wallclock(SGE_PROF_CUSTOM3, false, NULL)));
       }
 
@@ -4342,7 +4342,7 @@ int sgeee_scheduler( sge_Sdescr_t *lists,
    if (prof_is_active(SGE_PROF_CUSTOM3)) {
       prof_stop_measurement(SGE_PROF_CUSTOM3, NULL);
 
-      PROFILING((SGE_EVENT, "PROF: normalizing job tickets took %.3f s\n",
+      PROFILING((SGE_EVENT, "PROF: normalizing job tickets took %.3f s",
                  prof_get_measurement_wallclock(SGE_PROF_CUSTOM3, false, NULL)));
    }
 
@@ -4369,7 +4369,7 @@ int sgeee_scheduler( sge_Sdescr_t *lists,
    if (prof_is_active(SGE_PROF_SCHEDLIB4)) {
       prof_stop_measurement(SGE_PROF_SCHEDLIB4, NULL);
 
-      PROFILING((SGE_EVENT, "PROF: create active job orders: %.3f s\n",
+      PROFILING((SGE_EVENT, "PROF: create active job orders: %.3f s",
                prof_get_measurement_wallclock(SGE_PROF_SCHEDLIB4,false, NULL)));
    }  
    

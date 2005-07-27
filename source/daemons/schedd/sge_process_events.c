@@ -327,7 +327,7 @@ int event_handler_default_scheduler()
    prof_event = prof_get_measurement_wallclock(SGE_PROF_CUSTOM6,true, NULL);
  
    if(prof_is_active(SGE_PROF_CUSTOM6)){
-      PROFILING((SGE_EVENT, "PROF: schedd run took: %.3f s (init: %.3f s, copy: %.3f s, run:%.3f, free: %.3f s, jobs: %d, categories: %d/%d)\n",
+      PROFILING((SGE_EVENT, "PROF: schedd run took: %.3f s (init: %.3f s, copy: %.3f s, run:%.3f, free: %.3f s, jobs: %d, categories: %d/%d)",
             prof_event, prof_init, prof_copy, prof_run, prof_free, lGetNumberOfElem(Master_Job_List), sge_category_count(), sge_cs_category_count() ));
 
    }

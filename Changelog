@@ -1,3 +1,6 @@
+RD-2005-07-27-1: Cleanup   messages cleanup
+                 Review:   SG
+
 RD-2005-07-27-0: Bugfix:   qhost -l for complexes broken
                  Changed:  qhost, qstat, schedd
                  Bugtraq:  6287862

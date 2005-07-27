@@ -1,3 +1,7 @@
+SG-2005-07-27-0: Testsuite: added a test for resource reservation with array jobs.
+                 Changed:   testsuite, test_drmaa
+                 Review:    AH
+
 CR-2005-07-26-2: Bugfix:    using of IP address as host names breaks unique 
                             hostname resolving (part 2)
                             (additional handling for special host ip address

@@ -514,6 +514,8 @@ static const char *drmaa_state2str(int state);
 static const char *drmaa_ctrl2str(int control);
 static const char *drmaa_errno2str(int ctrl);
 
+static void array_job_run_sequence_adapt(int **sequence, int job_id, int count); 
+
 static int set_path_attribute_plus_colon(drmaa_job_template_t *jt, const char *name, 
    const char *value, char *error_diagnosis, size_t error_diag_len);
 
@@ -4839,6 +4841,90 @@ static void report_wrong_job_finish(const char *comment, const char *jobid, int 
    }
 }
 
+static bool extract_array_command(char *command_line, int *start, int *end, int *incr) 
+{
+   bool ret = false;
+   char *t_option = NULL;
+   char *start_value = NULL;
+   char *end_value = NULL;
+   char *incr_value = NULL;
+   char *end_t_option = NULL;
+
+   *start = 1;
+   *end = 1;
+   *incr = 1;
+
+   t_option = strstr(command_line, "-t");
+  
+   if (t_option != NULL) {
+      ret = true;
+      start_value = t_option + 3;
+
+      *start = atoi(start_value);
+
+      if (*start <= 0) {
+         goto error;
+      }
+
+      end_t_option = strstr(start_value, " ");
+      end_value = strstr(start_value, "-");
+      incr_value = strstr(start_value, ":");
+
+      if ((end_value != NULL) && (end_value < end_t_option)) {
+         *end = atoi(end_value+1);
+
+         if (*end <= 0) {
+            goto error;
+         }
+     
+         if ((incr_value != NULL) && (incr_value < end_t_option)) {
+            *incr = atoi(incr_value+1);
+
+            if (*incr <= 0) {
+               *incr = 1;
+            }
+         }
+     
+      }
+      else {
+         goto error;
+      }
+
+      if (end_t_option != NULL) {
+         strcpy(t_option, end_t_option+1);
+      }
+      else {
+         t_option = '\0';
+      }
+   }/* end if */
+   
+   return ret;
+
+error:
+   if (end_t_option != NULL) {
+      strcpy(t_option, end_t_option);
+   }
+   else {
+      t_option = '\0';
+   }   
+   *start = 1;
+   *end = 1;
+   *incr = 1;
+   ret = false;
+   fprintf(stderr, "could not parse \"%s\" for -t option\n", command_line);
+
+   if (end_t_option != NULL) {
+      strcpy(t_option, end_t_option);
+   }
+   else {
+      t_option = '\0';
+   }   
+
+   
+   return ret;
+}
+
+
 static int test_dispatch_order_njobs(int njobs, test_job_t job[], char *jsr_str)
 {
    char diagnosis[DRMAA_ERROR_STRING_BUFFER];
@@ -4857,17 +4943,47 @@ static int test_dispatch_order_njobs(int njobs, test_job_t job[], char *jsr_str)
    
    /* submit jobs in hold */
    for (i=0; i<njobs; i++) {
+      int start = 0;
+      int end = 0;
+      int incr = 1;
+      bool bulk_job = false;
+
+      bulk_job = extract_array_command(job[i].native, &start, &end, &incr);
+
       jt = create_sleeper_job_template(job[i].time, 0, 1);
       drmaa_set_attribute(jt, DRMAA_NATIVE_SPECIFICATION, job[i].native, NULL, 0);
-      if (drmaa_run_job(jobid, sizeof(jobid)-1, jt, diagnosis, sizeof(diagnosis)-1)!=DRMAA_ERRNO_SUCCESS) {
-         fprintf(stderr, "drmaa_run_job() failed: %s\n", diagnosis);
-         return -1;
+      if (bulk_job) {
+         int counter = 0;
+         drmaa_job_ids_t *bulkJobId;
+         if (drmaa_run_bulk_jobs(&bulkJobId, jt, start, end, incr, 
+                                 diagnosis, sizeof(diagnosis)-1) != DRMAA_ERRNO_SUCCESS) {
+            fprintf(stderr, "drmaa_run_job() failed: %s\n", diagnosis);
+            return -1;
+         }
+         
+         while (drmaa_get_next_job_id(bulkJobId, jobid, sizeof(jobid)-1) == DRMAA_ERRNO_SUCCESS) {
+            all_jobids[pos++] = strdup(jobid);
+            printf("submitted job \"%s\"\n", jobid);
+            counter++;
+         }
+          array_job_run_sequence_adapt(order,i,counter);
+          drmaa_release_job_ids(bulkJobId);
       }
-      printf("submitted job \"%s\"\n", jobid);
-      all_jobids[pos++] = strdup(jobid);
+      else {
+         if (drmaa_run_job(jobid, sizeof(jobid)-1, jt, diagnosis, sizeof(diagnosis)-1) != DRMAA_ERRNO_SUCCESS) {
+            fprintf(stderr, "drmaa_run_job() failed: %s\n", diagnosis);
+            return -1;
+         }
+      
+         printf("submitted job \"%s\"\n", jobid);
+         all_jobids[pos++] = strdup(jobid);
+      }
       drmaa_delete_job_template(jt, NULL, 0);
    }
    all_jobids[pos] = NULL;
+
+   nwait = pos;
+   njobs = pos;
 
    /* release all three jobs in one operation to ensure they get runnable at once for scheduler */
    if (drmaa_control(DRMAA_JOB_IDS_SESSION_ALL, DRMAA_CONTROL_RELEASE, diagnosis, sizeof(diagnosis)-1)!=DRMAA_ERRNO_SUCCESS) {
@@ -4956,11 +5072,6 @@ static int job_run_sequence_verify(int pos, char *all_jobids[], int *order[])
 }
 
 
-   
-   
-
-
-
 /****** test_drmaa/job_run_sequence_parse() ************************************
 *  NAME
 *     job_run_sequence_parse() -- ??? 
@@ -4996,7 +5107,7 @@ static int job_run_sequence_verify(int pos, char *all_jobids[], int *order[])
 *        int *st_order[] = { st0, st1, st2, NULL };
 *******************************************************************************/
 #define GROUP_CHUNK 5
-#define NUMBER_CHUNK 5
+#define NUMBER_CHUNK 10
 static int **job_run_sequence_parse(char *jrs_str)
 {
    char *s = NULL, *group_str = NULL;
@@ -5056,3 +5167,52 @@ static int **job_run_sequence_parse(char *jrs_str)
 
    return sequence;
 }
+
+static void array_job_run_sequence_adapt(int **sequence, int job_id, int count) 
+{
+   int x = 0;
+   int y = 0;
+
+   if (count <= 1) {
+      return;
+   }
+
+   printf("modify finish order:\n");
+
+   while (sequence[x] != NULL) { 
+      y = 0;
+      while (sequence[x][y] != -1) {
+         
+         if (sequence[x][y] == job_id) {
+            int dy = 0;
+           
+            printf("%d ", sequence[x][y]);
+           
+            while (sequence[x][y] != -1) {
+               y++;
+            }
+            
+            for (; dy < (count-1); dy++) {
+               sequence[x][y+dy] = job_id + dy + 1; 
+               sequence[x][y+dy+1] = -1;
+               printf("[%d] ", sequence[x][y+dy]);
+            }
+            
+            y += dy - 1; 
+         }
+         else if (sequence[x][y] > job_id) {
+            sequence[x][y] += (count-1);
+            printf("(%d) ", sequence[x][y]);
+
+         }
+         else {
+            printf("%d ", sequence[x][y]);
+
+         }
+         y++;
+      }
+      printf("\n");
+      x++;
+   }
+}
+

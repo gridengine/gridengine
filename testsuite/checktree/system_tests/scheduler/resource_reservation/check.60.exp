@@ -397,8 +397,8 @@ proc resource_reservation_basic { } {
    get_job_descriptions "pe_slots" "backfill"
    drmaa_test "" $job_desc 
   
-#   get_job_descriptions "array" "backfill"
-#   drmaa_test "" $job_desc 
+   get_job_descriptions "array" "backfill"
+   drmaa_test "" $job_desc 
   
    get_job_descriptions "license" "reservation"  
    drmaa_test "" $job_desc 
@@ -413,8 +413,8 @@ proc resource_reservation_basic { } {
    get_job_descriptions "pe_slots" "reservation"
    drmaa_test "" $job_desc 
 
-#   get_job_descriptions "array" "reservation"
-#   drmaa_test "" $job_desc 
+    get_job_descriptions "array" "reservation"
+   drmaa_test "" $job_desc 
 
 
    set_error 0 "clean OK"

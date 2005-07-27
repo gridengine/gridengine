@@ -1,3 +1,11 @@
+JG-2005-07-27-0: Testsuite: Fixed testsuite problems on irix65.
+                            Improvements and cleanups in checks
+                            - bugs/issuezilla/126
+                            - bugs/issuezilla/440
+                            - functional/job_environment
+                            - system_tests/clients/qmod/general
+                            - system_tests/clients/qrsh
+
 AH-2005-07-27-0: Bugfix:    Multi-threaded, multi-CPU username problems
                             Lots of job parsing code wasn't MT safe
                             Issue with IRIX compilation

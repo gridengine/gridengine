@@ -218,16 +218,25 @@ proc job_environment_qsh_job { array arguments } {
 
    upvar $array job_env_array
 
-   set script_name "$CHECK_PROTOCOL_DIR/temp_script.sh"
-   create_shell_script $script_name $test_host "$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/jobenv.sh" "$CHECK_PROTOCOL_DIR"
-   
+   # create a script file to be executed by xterm -e <script> / qsh -S <script>
+   set script_name "$CHECK_PROTOCOL_DIR/qsh.sh"
+   set f [open $script_name "w" "0755"]
+   puts $f "#!/bin/sh"
+   puts $f "exec $CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/jobenv.sh $CHECK_PROTOCOL_DIR"
+   close $f
+
+   # wait for host to appear on the remote host
    wait_for_remote_file $test_host $CHECK_USER $script_name
 
    puts $CHECK_OUTPUT "starting qsh $arguments -q $queue -S $script_name ..."
    set output [start_remote_prog $CHECK_HOST $CHECK_USER "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qsh" "$arguments -q $queue -S $script_name"]
    puts $CHECK_OUTPUT $output
+
+   # check results
    job_environment_parse_env_test_output $CHECK_PROTOCOL_DIR/job_env.out job_env_array
-#   file delete $CHECK_PROTOCOL_DIR/temp_script.sh
+
+   # cleanup
+   file delete $script_name
 }
 
 

@@ -3377,7 +3377,9 @@ proc mqattr { attribute entry queue_list } {
 #     This procedure will call qmod to suspend the given job id.
 #
 #  INPUTS
-#     id - job identification number
+#     id          - job identification number
+#     force       - do a qmod -f
+#     error_check - raise an error in case qmod fails
 #
 #  RESULT
 #     0  - ok
@@ -3386,17 +3388,23 @@ proc mqattr { attribute entry queue_list } {
 #  SEE ALSO
 #     sge_procedures/unsuspend_job()
 #*******************************
-proc suspend_job { id } {
-  global ts_config
-   global CHECK_ARCH open_spawn_buffer CHECK_USER CHECK_HOST
+proc suspend_job { id {force 0} {error_check 1}} {
+   global ts_config
+   global CHECK_OUTPUT CHECK_ARCH open_spawn_buffer CHECK_USER CHECK_HOST
 
-   set SUSPEND1 [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_SUSPENDTASK_SUU] "*" "*" "*" ]
-   set SUSPEND2 [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_SUSPENDJOB_SU] "*" "*" ]
-
-
+   set SUSPEND1 [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_SUSPENDTASK_SUU] $CHECK_USER $id "*" ]
+   set SUSPEND2 [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_SUSPENDJOB_SU] $CHECK_USER $id ]
+   set ALREADY_SUSP1 [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_ALREADYSUSPENDED_SUU] $CHECK_USER $id "*"]
+   set ALREADY_SUSP2 [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_ALREADYSUSPENDED_SU] $CHECK_USER $id]
+   set FORCED_SUSP1 [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_FORCESUSPENDTASK_SUU] $CHECK_USER $id "*"]
+   set FORCED_SUSP2 [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_FORCESUSPENDJOB_SU] $CHECK_USER $id]
    log_user 0 
 	set program "$ts_config(product_root)/bin/$CHECK_ARCH/qmod"
-   set sid [ open_remote_spawn_process $CHECK_HOST $CHECK_USER $program "-s $id"  ]     
+   if {$force} {
+      set sid [ open_remote_spawn_process $CHECK_HOST $CHECK_USER $program "-f -s $id"  ]     
+   } else {
+      set sid [ open_remote_spawn_process $CHECK_HOST $CHECK_USER $program "-s $id"  ]     
+   }
 
    set sp_id [ lindex $sid 1 ]
 	set timeout 30
@@ -3408,25 +3416,47 @@ proc suspend_job { id } {
          set result -1 
          add_proc_error "suspend_job" "-1" "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
       }
-	   -i $sp_id $SUSPEND1 {
-	      set result 0 
+	   -i $sp_id -- "$SUSPEND1" {
+         puts $CHECK_OUTPUT "$expect_out(0,string)"
+	      set result 0
 	   }
-	   -i $sp_id $SUSPEND2 {
-	      set result 0 
+	   -i $sp_id -- "$SUSPEND2" {
+         puts $CHECK_OUTPUT "$expect_out(0,string)"
+	      set result 0
+	   }
+	   -i $sp_id -- "$ALREADY_SUSP1" {
+         puts $CHECK_OUTPUT "$expect_out(0,string)"
+	      set result -1
+	   }
+	   -i $sp_id -- "$ALREADY_SUSP2" {
+         puts $CHECK_OUTPUT "$expect_out(0,string)"
+	      set result -1
+	   }
+	   -i $sp_id -- "$FORCED_SUSP1" {
+         puts $CHECK_OUTPUT "$expect_out(0,string)"
+	      set result 0
+	   }
+	   -i $sp_id -- "$FORCED_SUSP2" {
+         puts $CHECK_OUTPUT "$expect_out(0,string)"
+	      set result 0
 	   }
 	   -i $sp_id "suspended job" {
-	      set result 0 
+	      set result 0
 	   }
       -i $sp_id default {
-	      set result -1 
+         puts $CHECK_OUTPUT "unexpected output: $expect_out(0,string)"
+	      set result -1
 	   }
 	}
 	# close spawned process 
 	close_spawn_process $sid
    log_user 1
-   if { $result != 0 } {
+
+   # error check
+   if { $error_check && $result != 0 } {
       add_proc_error "suspend_job" -1 "could not suspend job $id"
    }
+
    return $result
 }
 

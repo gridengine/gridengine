@@ -746,12 +746,13 @@ proc qmod_clear_all_error_states {} {
 #     ???/???
 #*******************************
 proc qmod_forceaction {} {
+   global ts_config
    global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_USER test_host test_queue CHECK_OUTPUT CHECK_ACTUAL_TEST_PATH
 
    # submit testjob to set the queue in error
-   set job_id [ submit_job "-q $test_queue -o /dev/null -e /dev/null $CHECK_ACTUAL_TEST_PATH/qmod_job.sh 5 $CHECK_ACTUAL_TEST_PATH/qmod_job.sh" ] 
+   set job_id [ submit_job "-N QMOD -q $test_queue -o /dev/null -e /dev/null $ts_config(testsuite_root_dir)/scripts/work_pid.sh 300" ] 
    # now wait for jobstart
-   wait_for_jobstart $job_id "blocking" 300
+   wait_for_jobstart $job_id "QMOD" 300
    wait_for_end_of_transfer $job_id 300 
   
 
@@ -764,24 +765,20 @@ proc qmod_forceaction {} {
       puts $CHECK_OUTPUT "Job has real state \"$state\""
       puts $CHECK_OUTPUT "Job has grp pid \"$grppid\""
       puts $CHECK_OUTPUT "pid_list is $pid_list and has length [llength $pid_list]"
-      if { [llength $pid_list] == 5 } {
-         puts $CHECK_OUTPUT "found 5 process mebmers - ok"
+      if { [llength $pid_list] == 1 } {
+         puts $CHECK_OUTPUT "found 1 process member - ok"
          set procgroup_ok 1
          break;
       }
    }
    if { $procgroup_ok != 1 } {
-      set_error -1 "not 5 processes in processgroup \"$grppid\""
+      set_error -1 "not 1 process in processgroup \"$grppid\""
    }
  
 
    # set job in suspend mode
-   puts $CHECK_OUTPUT "setting job in suspend mode ..."
-   set result [ catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qmod -s $job_id" } output ]
-   if {$result != 0} {
-     set_error -1 "exit state of \"qmod -s $job_id\" is not 0"
-   }          
-   puts $CHECK_OUTPUT $output
+   puts $CHECK_OUTPUT "suspend job ..."
+   suspend_job $job_id
  
    set state [ get_suspend_state_of_job $job_id $test_host]
    set grppid [ get_grppid_of_job $job_id $test_host]
@@ -822,15 +819,10 @@ proc qmod_forceaction {} {
    if { [string compare "T" $state] == 0 } {
       set_error -1 "job $job_id (grppid: $grppid) is still in suspend state"
    }   
-   
-   puts $CHECK_OUTPUT "set job in suspend mode (queueing system things it is still suspended) ..."
 
    # set job in suspend mode (is allready in suspend (in SGE system))
-   set result [ catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qmod -s $job_id" } output ]
-   if {$result != 0} {
-     set_error -1 "exit state of \"qmod -s $job_id\" is not 0"
-   }          
-   puts $CHECK_OUTPUT $output
+   puts $CHECK_OUTPUT "suspend job (queueing system thinks it is still suspended) ..."
+   suspend_job $job_id 0 0
 
    set state [ get_suspend_state_of_job $job_id $test_host]
    puts $CHECK_OUTPUT "Job has real state \"$state\""
@@ -838,16 +830,10 @@ proc qmod_forceaction {} {
    if { [string compare "T" $state] == 0 } {
       set_error -1 "job $job_id (grppid: $grppid) is still in suspend state without force flag"
    }    
-
-   puts $CHECK_OUTPUT "set job in suspend mode with force flag ..." 
-   
  
    # set job in suspend mode (is allready in suspend (in SGE system)) with force flag set
-   set result [ catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qmod -f -s $job_id" } output ]
-   if {$result != 0} {
-     set_error -1 "exit state of \"qmod -f -s $job_id\" is not 0"
-   }          
-   puts $CHECK_OUTPUT $output
+   puts $CHECK_OUTPUT "suspend job with force flag ..." 
+   suspend_job $job_id 1
 
    set state [ get_suspend_state_of_job $job_id $test_host]
    puts $CHECK_OUTPUT "Job has real state \"$state\""
@@ -856,34 +842,14 @@ proc qmod_forceaction {} {
       set_error -1 "job $job_id (grppid: $grppid) is still not in suspend state with using force flag"
    }    
 
-   puts $CHECK_OUTPUT "set job in unsuspend mode ..."
-   
-
    # ok unsuspend the job
-   # set job in unsuspend mode
-   set result [ catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qmod -us $job_id" } output ]
-   if {$result != 0} {
-     set_error -1 "exit state of \"qmod -us $job_id\" is not 0"
-   }          
-   puts $CHECK_OUTPUT $output
+   puts $CHECK_OUTPUT "unsuspend job"
+   unsuspend_job $job_id
 
+   # delete job and wait for jobend
+   puts $CHECK_OUTPUT "delete job and wait for jobend ..."
+   delete_job $job_id 1
 
-   puts $CHECK_OUTPUT "release job and wait for jobend ..."
-
-   
-
-   # release job
-   set result [ catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qdel $job_id" } output ]
-
-
-   # wait for jobend 
-   set break_time [timestamp]
-   set break_time [ expr ( $break_time + 300 ) ]
-   while { [timestamp] < $break_time } {
-      if { [was_job_running $job_id 0] != -1 } {
-         break;
-      }
-   }
    # let's see if all processes are killed
    get_ps_info 0 $test_host
    
@@ -895,5 +861,6 @@ proc qmod_forceaction {} {
          set_error -1 "process $ps_info(pid,$i) is still in ps list"
       }
    }
+
    set_error 0 "ok"
 }

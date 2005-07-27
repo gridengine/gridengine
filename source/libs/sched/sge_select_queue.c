@@ -294,6 +294,10 @@ find_best_result(dispatch_t r1, dispatch_t r2)
             r2 == DISPATCH_NEVER_JOB) {
       return DISPATCH_NEVER_JOB;
    }
+   else if (r1 == DISPATCH_MISSING_ATTR ||
+            r2 == DISPATCH_MISSING_ATTR) {
+      return DISPATCH_MISSING_ATTR;
+   }
    
    return DISPATCH_NEVER_CAT;
 }
@@ -613,7 +617,7 @@ parallel_reservation_max_time_slots(sge_assignment_t *best)
    u_long32 pe_time, first_time;
    sge_assignment_t tmp_assignment;
    dispatch_t result = DISPATCH_NEVER_CAT; 
-   sge_qeti_t *qeti; 
+   sge_qeti_t *qeti;
    
    bool is_first = true;
    int old_logging = 0;
@@ -634,7 +638,7 @@ parallel_reservation_max_time_slots(sge_assignment_t *best)
   
    if (!qeti) {
       ERROR((SGE_EVENT, "could not allocate qeti object needed reservation "
-            "scheduling of parallel job "sge_U32CFormat"\n", sge_u32c(best->job_id)));
+            "scheduling of parallel job "sge_U32CFormat, sge_u32c(best->job_id)));
       DEXIT;
       return DISPATCH_NEVER_CAT;
    }
@@ -936,11 +940,11 @@ sge_select_queue(lList *requested_attr, lListElem *queue, lListElem *host,
    } 
 
    ret = rc_time_by_slots(&a, requested_attr, load_attr, config_attr, actual_attr, 
-            NULL, allow_non_requestable, NULL, slots, DOMINANT_LAYER_HOST, lc_factor, HOST_TAG, 
+            NULL, allow_non_requestable, NULL, slots, DOMINANT_LAYER_HOST, lc_factor, GLOBAL_TAG,
             &start_time, SGE_GLOBAL_NAME);
 
 /* host */
-   if(ret == DISPATCH_OK){
+   if(ret == DISPATCH_OK || ret == DISPATCH_MISSING_ATTR){
       if(host == NULL) {
          host = host_list_locate(exechost_list, lGetHost(queue, QU_qhostname));
       }   
@@ -953,11 +957,12 @@ sge_select_queue(lList *requested_attr, lListElem *queue, lListElem *host,
             lc_factor = ((double)ulc_factor)/100;
       }
 
-      ret = rc_time_by_slots(&a, requested_attr, load_attr, config_attr, actual_attr, 
+      ret = find_best_result(ret, rc_time_by_slots(&a, requested_attr, load_attr, config_attr, actual_attr, 
                NULL, allow_non_requestable, NULL, slots, DOMINANT_LAYER_HOST, lc_factor, HOST_TAG, 
-               &start_time, lGetHost(host, EH_name));
+               &start_time, lGetHost(host, EH_name)));
+
 /* queue */
-     if((ret == DISPATCH_OK) && queue){
+     if((ret == DISPATCH_OK || ret == DISPATCH_MISSING_ATTR) && queue){
          config_attr = lGetList(queue, QU_consumable_config_list);
          actual_attr = lGetList(queue, QU_resource_utilization);
    
@@ -1031,9 +1036,10 @@ rc_time_by_slots(const sge_assignment_t *a, lList *requested, lList *load_attr, 
    u_long32 latest_time = DISPATCH_TIME_NOW;
    u_long32 tmp_start;
    dispatch_t ret;
+   bool is_not_found = false;
 
    DENTER(TOP_LAYER, "rc_time_by_slots");
- 
+
    clear_resource_tags(requested, QUEUE_TAG); 
 
    /* ensure availability of implicit slot request */
@@ -1162,6 +1168,11 @@ rc_time_by_slots(const sge_assignment_t *a, lList *requested, lList *load_attr, 
                DEXIT;
                return DISPATCH_NEVER_CAT;
             }
+
+            if (tag != QUEUE_TAG) {
+               is_not_found = true;
+            }
+
             break;
          default: /* error */
             break;
@@ -1171,6 +1182,11 @@ rc_time_by_slots(const sge_assignment_t *a, lList *requested, lList *load_attr, 
    if (*start_time == DISPATCH_TIME_QUEUE_END) {
       *start_time = latest_time;
    }
+
+   if (is_not_found) {
+      DEXIT;
+      return DISPATCH_MISSING_ATTR;
+   } 
 
    DEXIT;
    return DISPATCH_OK;
@@ -2677,8 +2693,7 @@ sequential_tag_queues_suitable4job(sge_assignment_t *a)
    }
 
    result = sequential_global_time(&tt_global, a, (use_category.compute_violation?&global_violations:NULL)); 
-
-   if (result != DISPATCH_OK) {
+   if (result != DISPATCH_OK && result != DISPATCH_MISSING_ATTR) {
       DEXIT;
       return result;
    }
@@ -2712,7 +2727,7 @@ sequential_tag_queues_suitable4job(sge_assignment_t *a)
          result = sequential_host_time( &tt_host, a, use_category.compute_violation?&queue_violations:NULL, 
                                      hep);
 
-         if (result != DISPATCH_OK) {
+         if (result != DISPATCH_OK && result != DISPATCH_MISSING_ATTR) {
 
             if (skip_host_list && result != DISPATCH_NEVER_JOB) { 
                lAddElemStr(&skip_host_list, CTI_name, eh_name, CTI_Type);
@@ -4345,7 +4360,7 @@ sequential_host_time(u_long32 *start, const sge_assignment_t *a,
          &reason, 1, DOMINANT_LAYER_HOST, 
          lc_factor, HOST_TAG, &tmp_time, eh_name);
 
-   if (result == DISPATCH_OK) {
+   if (result == DISPATCH_OK || result == DISPATCH_MISSING_ATTR) {
       if (violations != NULL) {
          *violations = compute_soft_violations(a, NULL, *violations, NULL, config_attr, 
                                            actual_attr, DOMINANT_LAYER_HOST, 0, HOST_TAG);
@@ -4358,10 +4373,10 @@ sequential_host_time(u_long32 *start, const sge_assignment_t *a,
       schedd_mes_add(lGetUlong(a->job, JB_job_number), SCHEDD_INFO_CANNOTRUNATHOST_SSS, buff, eh_name, reason_buf);
    }
 
-   if (a->is_reservation && result == DISPATCH_OK) {
+   if (a->is_reservation && (result == DISPATCH_OK || result == DISPATCH_MISSING_ATTR)) {
       *start = tmp_time;
       DPRINTF(("host_time_by_slots(%s) returns earliest start time "sge_u32"\n", eh_name, *start));
-   } else if (result == DISPATCH_OK) {
+   } else if (result == DISPATCH_OK || result == DISPATCH_MISSING_ATTR) {
       DPRINTF(("host_time_by_slots(%s) returns <at specified time>\n", eh_name));
    } else {
       DPRINTF(("host_time_by_slots(%s) returns <later>\n", eh_name));
@@ -4416,7 +4431,7 @@ sequential_global_time(u_long32 *start, const sge_assignment_t *a, int *violatio
    result = rc_time_by_slots(a, hard_request, load_attr, config_attr, actual_attr, NULL, false, &reason, 
                              1, DOMINANT_LAYER_GLOBAL, lc_factor, GLOBAL_TAG, &tmp_time, SGE_GLOBAL_NAME);
 
-   if (result == DISPATCH_OK) {
+   if (result == (DISPATCH_OK || result == DISPATCH_MISSING_ATTR)) {
       if (violations != NULL) {
          *violations = compute_soft_violations(a, NULL, *violations, NULL, config_attr, 
                                            actual_attr, DOMINANT_LAYER_GLOBAL, 0, GLOBAL_TAG);
@@ -4430,11 +4445,11 @@ sequential_global_time(u_long32 *start, const sge_assignment_t *a, int *violatio
                       buff, reason_buf);
    }
 
-   if (a->is_reservation && result == DISPATCH_OK) {
+   if (a->is_reservation && (result == DISPATCH_OK || result == DISPATCH_MISSING_ATTR)) {
       *start = tmp_time;
       DPRINTF(("global_time_by_slots() returns earliest start time "sge_u32"\n", *start));
    } 
-   else if (result == DISPATCH_OK) {
+   else if (result == DISPATCH_OK || result == DISPATCH_MISSING_ATTR) {
       DPRINTF(("global_time_by_slots() returns <at specified time>\n"));
    } 
    else {
@@ -4759,7 +4774,7 @@ ri_time_by_slots(const sge_assignment_t *a, lListElem *rep, lList *load_attr, lL
     * thus we always assume zero consumable utilization here 
     */ 
 
-   /* We need to desipatch scheduled based, when we have the reservation enabled. Therefore the
+   /* We need to dispatch scheduled based, when we have the reservation enabled. Therefore the
       duration will be always bigger than 0. But this code is also called from the qmaster to 
       verify, if a job can run. In this case, reservation can be enabled, but the verifcation is
       not scheduled based. For this case, we need this test.

@@ -232,6 +232,7 @@ lListElem* get_attribute(const char *attrname, lList *config_attr, lList *actual
          if (!cplx_el){
             cplx_el = lCopyElem(lGetElemStr(centry_list, CE_name, attrname));
                if(!cplx_el){
+                  DEXIT;
                   /* error */
                   return NULL;
                }         
@@ -338,6 +339,7 @@ lListElem* get_attribute(const char *attrname, lList *config_attr, lList *actual
       if(!cplx_el){
          cplx_el = lCopyElem(lGetElemStr(centry_list, CE_name, attrname));
          if(!cplx_el){
+            DEXIT;
             /* error */
             return NULL;
          }         
@@ -992,7 +994,6 @@ int force_existence
    name = lGetString(src_cplx, CE_name); 
    type = lGetUlong(src_cplx, CE_valtype);
    relop = lGetUlong(src_cplx, CE_relop);
-
 
    if (is_threshold) {
       switch (relop) {

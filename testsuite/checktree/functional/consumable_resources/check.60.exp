@@ -184,6 +184,17 @@ proc consumable_resources_cleanup  {} {
    set_error 0 "ok"
 }
 
+# Issue: 1306, Bugster: 6287862 - qhost -l for complexes broken
+proc check_qhost_broken { complex count } {
+   global ts_config CHECK_ARCH CHECK_OUTPUT CHECK_USER CHECK_HOST
+
+   set output [start_remote_prog $CHECK_HOST $CHECK_USER "$ts_config(product_root)/bin/$CHECK_ARCH/qhost" "-l $complex -F | grep arch | wc -l"]
+   if { $output != $count } {
+      add_proc_error "check_qhost_broken" -2 "qhost is broken - see Issue: 1306, returned $output hosts but $count is expected"
+      set error 1
+   }
+}
+
 proc consumable_resources_submit_jobs_and_wait { job_arguments job_count run_job_count job_arguments2 { schedd_info "" } { queue_state "" } } {
    global ts_config CHECK_OUTPUT CHECK_ARCH
  
@@ -352,7 +363,7 @@ proc consumable_resources_test {} {
       # modify complex_values of host_a host
       set host_a_host(complex_values) "test2=5"
       set_exechost host_a_host $host_a
-   
+      check_qhost_broken "test2=1" 1
 
       set job_arguments "-l h=$host_a -o /dev/null -e /dev/null"
       set job_count 6
@@ -409,7 +420,7 @@ proc consumable_resources_test {} {
 
       set queue_settings(complex_values) "test3=5"
       set_queue "res.q" $consumable_resources_test_hosts queue_settings
-
+      check_qhost_broken "test3=1" 0
 
       # case a
       puts $CHECK_OUTPUT "\ncase a)"
@@ -477,6 +488,7 @@ proc consumable_resources_test {} {
 
       set queue_settings(complex_values) "test1=1"
       set_queue "res.q" $consumable_resources_test_hosts queue_settings
+      check_qhost_broken "test1=1" "[llength $ts_config(execd_hosts)]"
 
 
       #case a

@@ -217,8 +217,11 @@ char **argv
 
          selected = sge_select_queue(resource_match_list, NULL, ep, ehl, cl, true, -1);
 
-         if (selected) 
+         if (selected) { 
             lSetUlong(ep, EH_tagged, 1);
+         } else {
+            lSetUlong(ep, EH_tagged, 0);
+         }
       }
 
       /*
@@ -789,7 +792,7 @@ lListElem *ep;
       }
 
       if(parse_string(ppcmdline, "-l", &alp, &argstr)) {
-         *pplres = centry_list_parse_from_string(*pplres, argstr, true);
+         *pplres = centry_list_parse_from_string(*pplres, argstr, false);
          FREE(argstr);
          continue;
       }

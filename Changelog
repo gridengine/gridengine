@@ -1,3 +1,9 @@
+RD-2005-07-27-0: Bugfix:   qhost -l for complexes broken
+                 Changed:  qhost, qstat, schedd
+                 Bugtraq:  6287862
+                 Issue:    1306
+                 Review:   SG
+
 JG-2005-07-27-0: Testsuite: Fixed testsuite problems on irix65.
                             Improvements and cleanups in checks
                             - bugs/issuezilla/126

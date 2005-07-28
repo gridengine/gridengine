@@ -129,7 +129,7 @@ lList *gdi_kill(lList *id_list, const char *cell, u_long32 option_flags,
    if ((action_flag & EXECD_KILL) || (action_flag & JOB_KILL)) {
       lListElem *hlep = NULL, *hep = NULL;
       lList *hlp = NULL;
-      if (id_list) {
+      if (id_list != NULL) {
          /*
          ** we have to convert the EH_Type to ID_Type
          ** It would be better to change the call to use ID_Type!

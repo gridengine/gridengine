@@ -776,7 +776,7 @@ bool answer_list_add_elem(lList **answer_list, lListElem *answer)
 
 /****** sgeobj/answer/answer_list_replace() ***********************************
 *  NAME
-*     answer_list_replace() -- repalce a answer list 
+*     answer_list_replace() -- replace an answer list 
 *
 *  SYNOPSIS
 *     void answer_list_replace(lList **answer_list, lList **new_list) 

@@ -1351,7 +1351,7 @@ u_long32 *isXML
       }
 
       while (parse_string(ppcmdline, "-s", &alp, &argstr)) {
-         if (argstr) {
+         if (argstr != NULL) {
             static char noflag = '$';
             static char* flags[] = {
                "hu", "hs", "ho", "hj", "ha", "h", "p", "r", "s", "z", "a", NULL
@@ -1398,7 +1398,7 @@ u_long32 *isXML
                         (*pfull) |= bits[i];
                         break;
                      }
-                  } 
+                  }
                }
             }
 
@@ -1412,9 +1412,11 @@ u_long32 *isXML
                                   STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
                   DEXIT;
                   return alp;
-               }  
+               }
             }
-         } 
+
+            FREE(argstr);
+         }
          continue;
       }
 

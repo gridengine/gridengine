@@ -917,6 +917,11 @@ static int get_client_server_context(int msgsock, char **port, char **job_dir, c
 *     path and name of client program
 *     NULL, if an error occures
 *
+*  NOTE
+*     It is in the responsibility of the caller to free the client name!
+*
+*  MT-NOTE
+*     get_client_name is NOT thread safe due to static buffer.
 ****************************************************************************
 *
 */
@@ -966,6 +971,9 @@ static const char *get_client_name(int is_rsh, int is_rlogin, int inherit_job)
    if(get_configuration(uti_state_get_qualified_hostname(), &global, &local) ||
       merge_configuration(global, local, &conf, &conf_list)) {
       ERROR((SGE_EVENT, MSG_CONFIG_CANTGETCONFIGURATIONFROMQMASTER));
+      conf_list = lFreeList(conf_list);
+      global    = lFreeElem(global);
+      local     = lFreeElem(local);
       DEXIT;
       return NULL;
    }
@@ -974,6 +982,9 @@ static const char *get_client_name(int is_rsh, int is_rlogin, int inherit_job)
    qlogin_cmd_elem = lGetElemStr(conf_list, CF_name, config_name);
    if(!qlogin_cmd_elem) {
       ERROR((SGE_EVENT, MSG_CONFIG_CANTGETCONFIGURATIONFROMQMASTER));
+      conf_list = lFreeList(conf_list);
+      global    = lFreeElem(global);
+      local     = lFreeElem(local);
       DEXIT;
       return NULL;
    }
@@ -984,7 +995,8 @@ static const char *get_client_name(int is_rsh, int is_rlogin, int inherit_job)
    if(client_name == NULL || !strcmp(client_name, "none")) {
       if(is_rsh || is_rlogin) {
          /* use path $ROOT/utilbin/$ARCH/sessionType */
-         static char cmdpath[1024];
+         /* JG: TODO: use a dstring here */
+         static char cmdpath[SGE_PATH_MAX];
 
          sprintf(cmdpath, "%s/utilbin/%s/%s", path_state_get_sge_root(), sge_get_arch(), session_type);
          client_name = cmdpath;
@@ -998,6 +1010,12 @@ static const char *get_client_name(int is_rsh, int is_rlogin, int inherit_job)
       /* cache client_name for use of further qrexec calls */
       write_client_name_cache(cache_name, client_name);
    }
+
+   client_name = strdup(client_name);
+
+   conf_list = lFreeList(conf_list);
+   global    = lFreeElem(global);
+   local     = lFreeElem(local);
 
    return client_name;
 }
@@ -1826,6 +1844,7 @@ int main(int argc, char **argv)
    
    }
 
+   FREE(client_name);
    sge_prof_cleanup();
    SGE_EXIT(exit_status);
    DEXIT;

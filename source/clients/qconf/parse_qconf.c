@@ -360,24 +360,28 @@ char *argv[]
                                                  CAL_fields, &qconf_sfi,
                                                  SP_DEST_TMP, SP_FORM_ASCII,
                                                  NULL, false);
+            ep = lFreeElem(ep);
             if (answer_list_output(&alp)) {
+               FREE(filename);
                sge_error_and_exit(NULL);
             }
 
-            ep = lFreeElem(ep);
-            
             /* edit this file */
             status = sge_edit(filename);
             if (status < 0) {
                unlink(filename);
-               if (sge_error_and_exit(MSG_PARSE_EDITFAILED))
+               FREE(filename);
+               if (sge_error_and_exit(MSG_PARSE_EDITFAILED)) {
                   continue;
+               }
             }
 
             if (status > 0) {
                unlink(filename);
-               if (sge_error_and_exit(MSG_FILE_FILEUNCHANGED))
+               FREE(filename);
+               if (sge_error_and_exit(MSG_FILE_FILEUNCHANGED)) {
                   continue;
+               }
             }
          
             /* read it in again */
@@ -386,6 +390,7 @@ char *argv[]
                                             CAL_fields, fields_out, true, &qconf_sfi,
                                             SP_FORM_ASCII, NULL, filename);
             unlink(filename);
+            FREE(filename);
             
             if (answer_list_output (&alp)) {
                ep = lFreeElem (ep);
@@ -809,17 +814,19 @@ char *argv[]
                                                  fields, &qconf_sfi,
                                                  SP_DEST_TMP, SP_FORM_ASCII,
                                                  NULL, false);
+            ep = lFreeElem(ep);
+            
             if (answer_list_output(&alp)) {
-               FREE (fields);
+               FREE(fields);
+               FREE(filename);
                sge_error_and_exit(NULL);
             }
 
-            ep = lFreeElem(ep);
-            
             /* edit this file */
             status = sge_edit(filename);
             if (status < 0) {
                unlink(filename);
+               FREE(filename);
                if (sge_error_and_exit(MSG_PARSE_EDITFAILED)) {
                   FREE (fields);
                   continue;
@@ -828,6 +835,7 @@ char *argv[]
 
             if (status > 0) {
                unlink(filename);
+               FREE(filename);
                if (sge_error_and_exit(MSG_FILE_FILEUNCHANGED)) {
                   FREE (fields);
                   continue;
@@ -840,6 +848,7 @@ char *argv[]
                                             fields, fields_out,  true, &qconf_sfi,
                                             SP_FORM_ASCII, NULL, filename);
             unlink(filename);
+            FREE(filename);
             
             if (answer_list_output(&alp)) {
                ep = lFreeElem(ep);
@@ -1927,6 +1936,7 @@ char *argv[]
 
          centry_list_modify(&answer_list);
          show_gdi_request_answer_list(answer_list);
+         answer_list = lFreeList(answer_list);
          spp++;
          continue;
       }
@@ -2075,6 +2085,7 @@ char *argv[]
          }
          centry_list_modify_from_file(&answer_list, file);
          show_gdi_request_answer_list(answer_list);
+         answer_list = lFreeList(answer_list);
          spp++;
          continue;
       }
@@ -3828,6 +3839,7 @@ char *argv[]
 
          centry_list_show(&answer_list);
          show_gdi_request_answer(answer_list);
+         answer_list = lFreeList(answer_list);
          spp++;
          continue;
       }
@@ -4530,6 +4542,7 @@ char *argv[]
          }
          cuser_modify_from_file(&answer_list, file);
          show_gdi_request_answer(answer_list);
+         answer_list = lFreeList(answer_list);
          
          spp++;
          continue;
@@ -4546,6 +4559,7 @@ char *argv[]
          spp = sge_parser_get_next(spp);
          cuser_show(&answer_list, *spp);
          show_gdi_request_answer(answer_list);
+         answer_list = lFreeList(answer_list);
          spp++;
          continue;
       }
@@ -4559,6 +4573,7 @@ char *argv[]
          spp = sge_parser_get_next(spp);
          centry_show(&answer_list, *spp);
          show_gdi_request_answer(answer_list);
+         answer_list = lFreeList(answer_list);
          spp++;
          continue;
       }
@@ -4578,6 +4593,7 @@ char *argv[]
          sge_gdi_is_manager(uti_state_get_user_name());
          cuser_modify(&answer_list, *spp);
          show_gdi_request_answer(answer_list);
+         answer_list = lFreeList(answer_list);
          spp++;
          continue;
       }
@@ -4598,6 +4614,7 @@ char *argv[]
          sge_gdi_is_manager(uti_state_get_user_name());
          centry_modify(&answer_list, *spp);
          show_gdi_request_answer(answer_list);
+         answer_list = lFreeList(answer_list);
          spp++;
          continue;
       }
@@ -4616,6 +4633,7 @@ char *argv[]
          sge_gdi_is_manager(uti_state_get_user_name());
          cuser_delete(&answer_list, *spp);
          show_gdi_request_answer(answer_list);
+         answer_list = lFreeList(answer_list);
          spp++;
          continue;
       }
@@ -4632,6 +4650,7 @@ char *argv[]
          sge_gdi_is_manager(uti_state_get_user_name());
          centry_delete(&answer_list, *spp);
          show_gdi_request_answer(answer_list); 
+         answer_list = lFreeList(answer_list);
          spp++;
          continue;
       }
@@ -4657,6 +4676,7 @@ char *argv[]
    
          cuser_add_from_file(&answer_list, file);
          show_gdi_request_answer(answer_list); 
+         answer_list = lFreeList(answer_list);
          spp++;
          continue;
       }
@@ -4676,6 +4696,7 @@ char *argv[]
          sge_gdi_is_manager(uti_state_get_user_name());
          cuser_add(&answer_list, *spp);
          show_gdi_request_answer(answer_list);
+         answer_list = lFreeList(answer_list);
          spp++;
          continue;
       }
@@ -4698,6 +4719,7 @@ char *argv[]
          sge_gdi_is_manager(uti_state_get_user_name());
          centry_add(&answer_list, *spp);
          show_gdi_request_answer(answer_list);
+         answer_list = lFreeList(answer_list);
          spp++;
          continue;
       }
@@ -4722,6 +4744,7 @@ char *argv[]
          }
          cuser_modify_from_file(&answer_list, file);
          show_gdi_request_answer(answer_list);
+         answer_list = lFreeList(answer_list);
          
          spp++;
          continue;
@@ -4738,6 +4761,7 @@ char *argv[]
          spp = sge_parser_get_next(spp);
          cuser_show(&answer_list, *spp);
          show_gdi_request_answer(answer_list);
+         answer_list = lFreeList(answer_list);
          spp++;
          continue;
       }
@@ -4753,6 +4777,7 @@ char *argv[]
          spp = sge_parser_get_next(spp);
          centry_show(&answer_list, *spp);
          show_gdi_request_answer(answer_list);
+         answer_list = lFreeList(answer_list);
          spp++;
          continue;
       }
@@ -4772,6 +4797,7 @@ char *argv[]
          sge_gdi_is_manager(uti_state_get_user_name());
          cuser_modify(&answer_list, *spp);
          show_gdi_request_answer(answer_list);
+         answer_list = lFreeList(answer_list);
          spp++;
          continue;
       }
@@ -4792,6 +4818,7 @@ char *argv[]
          sge_gdi_is_manager(uti_state_get_user_name());
          centry_modify(&answer_list, *spp);
          show_gdi_request_answer(answer_list);
+         answer_list = lFreeList(answer_list);
          spp++;
          continue;
       }
@@ -4810,6 +4837,7 @@ char *argv[]
          sge_gdi_is_manager(uti_state_get_user_name());
          cuser_delete(&answer_list, *spp);
          show_gdi_request_answer(answer_list);
+         answer_list = lFreeList(answer_list);
          spp++;
          continue;
       }
@@ -4836,6 +4864,7 @@ char *argv[]
          sge_gdi_is_manager(uti_state_get_user_name());
          ret = hgroup_modify(&answer_list, *spp);
          ret &= show_gdi_request_answer(answer_list);
+         answer_list = lFreeList(answer_list);
          sge_parse_return = ret ? 0 : 1;
          
          spp++;
@@ -4858,6 +4887,7 @@ char *argv[]
          sge_gdi_is_manager(uti_state_get_user_name());
          ret = hgroup_modify_from_file(&answer_list, file);
          ret &= show_gdi_request_answer(answer_list);
+         answer_list = lFreeList(answer_list);
          sge_parse_return = ret ? 0 : 1;
          
          spp++;
@@ -4884,6 +4914,7 @@ char *argv[]
          sge_gdi_is_manager(uti_state_get_user_name());
          ret = hgroup_add(&answer_list, group, is_validate_name);
          ret &= show_gdi_request_answer(answer_list);
+         answer_list = lFreeList(answer_list);
          sge_parse_return = ret ? 0 : 1;
          
          spp++;
@@ -4906,6 +4937,7 @@ char *argv[]
          sge_gdi_is_manager(uti_state_get_user_name());
          ret = hgroup_add_from_file(&answer_list, file);
          ret &= show_gdi_request_answer(answer_list);
+         answer_list = lFreeList(answer_list);
          sge_parse_return = ret ? 0 : 1;
          
          spp++;
@@ -4921,6 +4953,7 @@ char *argv[]
          sge_gdi_is_manager(uti_state_get_user_name());
          ret = hgroup_delete(&answer_list, *spp);
          ret &= show_gdi_request_answer(answer_list);
+         answer_list = lFreeList(answer_list);
          sge_parse_return = ret ? 0 : 1;
          
          spp++;
@@ -4935,6 +4968,7 @@ char *argv[]
          spp = sge_parser_get_next(spp);
          ret = hgroup_show(&answer_list, *spp);
          ret &= show_gdi_request_answer(answer_list);
+         answer_list = lFreeList(answer_list);
          sge_parse_return = ret ? 0 : 1;
          
          spp++;
@@ -4950,6 +4984,7 @@ char *argv[]
          spp = sge_parser_get_next(spp);
          ret = hgroup_show_structure(&answer_list, *spp, true);
          ret &= show_gdi_request_answer(answer_list);
+         answer_list = lFreeList(answer_list);
          sge_parse_return = ret ? 0 : 1;
          
          spp++;
@@ -4964,6 +4999,7 @@ char *argv[]
          spp = sge_parser_get_next(spp);
          ret = hgroup_show_structure(&answer_list, *spp, false);
          ret &= show_gdi_request_answer(answer_list);
+         answer_list = lFreeList(answer_list);
          sge_parse_return = ret ? 0 : 1;
          
          spp++;
@@ -4992,6 +5028,7 @@ char *argv[]
          sge_gdi_is_manager(uti_state_get_user_name());
          ret = cqueue_modify(&answer_list, *spp);
          ret &= show_gdi_request_answer(answer_list);
+         answer_list = lFreeList(answer_list);
          sge_parse_return = ret ? 0 : 1;
          
          spp++;
@@ -5014,6 +5051,7 @@ char *argv[]
          }
          ret = cqueue_modify_from_file(&answer_list, file);
          ret &= show_gdi_request_answer(answer_list);
+         answer_list = lFreeList(answer_list);
          sge_parse_return = ret ? 0 : 1;
          
          spp++;
@@ -5034,6 +5072,7 @@ char *argv[]
          sge_gdi_is_manager(uti_state_get_user_name());
          ret = cqueue_add(&answer_list, name);
          ret &= show_gdi_request_answer(answer_list);
+         answer_list = lFreeList(answer_list);
          sge_parse_return = ret ? 0 : 1;
          
          spp++;
@@ -5057,10 +5096,10 @@ char *argv[]
          
          ret = cqueue_add_from_file(&answer_list, file);
          ret &= show_gdi_request_answer(answer_list);
+         answer_list = lFreeList(answer_list);
          sge_parse_return = ret ? 0 : 1;
          
          spp++;
-         answer_list = lFreeList(answer_list);
          continue;
       }
 
@@ -5075,11 +5114,10 @@ char *argv[]
          sge_gdi_is_manager(uti_state_get_user_name());
          ret = cqueue_delete(&answer_list, *spp);
          ret &= show_gdi_request_answer(answer_list);
+         answer_list = lFreeList(answer_list);
          sge_parse_return = ret ? 0 : 1;
          
          spp++;
-
-         answer_list = lFreeList(answer_list);
          continue;
       }
 
@@ -5096,6 +5134,7 @@ char *argv[]
          ret = cqueue_show(&answer_list, arglp);
          arglp = lFreeList(arglp);
          ret &= show_gdi_request_answer(answer_list);
+         answer_list = lFreeList(answer_list);
          sge_parse_return = ret ? 0 : 1;
          
          spp++;
@@ -5122,6 +5161,7 @@ char *argv[]
 
          cqueue_list_sick(&answer_list);
          show_gdi_request_answer(answer_list);
+         answer_list = lFreeList(answer_list);
          spp++;
          continue;
       }
@@ -5138,6 +5178,7 @@ char *argv[]
          sge_gdi_is_manager(uti_state_get_user_name());
          centry_delete(&answer_list, *spp);
          show_gdi_request_answer(answer_list); 
+         answer_list = lFreeList(answer_list);
          spp++;
          continue;
       }
@@ -5163,6 +5204,7 @@ char *argv[]
    
          cuser_add_from_file(&answer_list, file);
          show_gdi_request_answer(answer_list); 
+         answer_list = lFreeList(answer_list);
          spp++;
          continue;
       }
@@ -5182,6 +5224,7 @@ char *argv[]
          sge_gdi_is_manager(uti_state_get_user_name());
          cuser_add(&answer_list, *spp);
          show_gdi_request_answer(answer_list);
+         answer_list = lFreeList(answer_list);
          spp++;
          continue;
       }
@@ -5202,6 +5245,7 @@ char *argv[]
          sge_gdi_is_manager(uti_state_get_user_name());
          centry_add(&answer_list, *spp);
          show_gdi_request_answer(answer_list);
+         answer_list = lFreeList(answer_list);
          spp++;
          continue;
       }
@@ -5376,6 +5420,7 @@ char *argv[]
       SGE_EXIT(1);
    }
 
+   alp = lFreeList(alp);
    DEXIT;
    return sge_parse_return;
 }
@@ -5679,6 +5724,7 @@ lList *confl
                                        fname, false);
    if (answer_list_output(&alp)) {
       fprintf(stderr, "%s\n", MSG_SCHEDCONF_CANTCREATESCHEDULERCONFIGURATION);
+      FREE(fname);
       SGE_EXIT(1);
    }
 
@@ -5686,6 +5732,7 @@ lList *confl
 
    if (status < 0) {
       unlink(fname);
+      FREE(fname);
       
       if (sge_error_and_exit(MSG_PARSE_EDITFAILED))
          return NULL;
@@ -5693,9 +5740,12 @@ lList *confl
 
    if (status > 0) {
       unlink(fname);
+      FREE(fname);
       
-      if (sge_error_and_exit(MSG_FILE_FILEUNCHANGED))
+      if (sge_error_and_exit(MSG_FILE_FILEUNCHANGED)) {
+         DEXIT;
          return NULL;
+      }
    }
    
    fields_out[0] = NoName;
@@ -5730,11 +5780,13 @@ lList *confl
       fprintf(stderr, MSG_QCONF_CANTREADCONFIG_S, "can't parse config");
       fprintf(stderr, "\n");
       unlink(fname);
+      FREE(fname);
       SGE_EXIT(1);
    }
    alp = lFreeList(alp);
    
    unlink(fname);
+   FREE(fname);
 
    DEXIT;
    return newconfl;
@@ -5825,7 +5877,7 @@ lListElem *ep
 ) {
    int status;
    lListElem *newep = NULL;
-   char *filename = NULL;
+   const char *filename = NULL;
    char errstr[1024];
    lList *alp = NULL;
    spooling_field *fields = NULL;
@@ -5834,7 +5886,7 @@ lListElem *ep
 
    DENTER(TOP_LAYER, "edit_sharetree");
 
-   if (!ep) {
+   if (ep == NULL) {
       ep = getSNTemplate();
    }
 
@@ -5842,12 +5894,15 @@ lListElem *ep
    
    id_sharetree (ep, 0);
    
-   filename = (char *)spool_flatfile_write_object(&alp, ep, false,
-                                        fields, &qconf_name_value_list_sfi,
-                                        SP_DEST_TMP, SP_FORM_ASCII,
-                                        NULL, false);
+   filename = spool_flatfile_write_object(&alp, ep, false,
+                                          fields, &qconf_name_value_list_sfi,
+                                          SP_DEST_TMP, SP_FORM_ASCII,
+                                          NULL, false);
+   ep = lFreeElem(ep);
+
    if (answer_list_output(&alp)) {
-      FREE (fields);
+      FREE(fields);
+      FREE(filename);
       sge_error_and_exit(NULL);
    }
 
@@ -5856,24 +5911,26 @@ lListElem *ep
    status = sge_edit(filename);
 
    if (status < 0) {
-      FREE (fields);
+      FREE(fields);
       unlink(filename);
+      FREE(filename);
       if (sge_error_and_exit(MSG_PARSE_EDITFAILED))
          return NULL;
    }
 
    if (status > 0) {
-      FREE (fields);
+      FREE(fields);
       unlink(filename);
+      FREE(filename);
       if (sge_error_and_exit(MSG_FILE_FILEUNCHANGED))
          return NULL;
    }
    
    fields_out[0] = NoName;
    newep = spool_flatfile_read_object(&alp, STN_Type, NULL,
-                                   fields, fields_out,  true,
-                                   &qconf_name_value_list_sfi,
-                                   SP_FORM_ASCII, NULL, filename);
+                                      fields, fields_out,  true,
+                                      &qconf_name_value_list_sfi,
+                                      SP_FORM_ASCII, NULL, filename);
    
    if (answer_list_output(&alp)) {
       newep = lFreeElem (newep);
@@ -6346,6 +6403,7 @@ const char *config_name
       if (!(ep = lFirst(lp))) {
          fprintf(stderr, MSG_ANSWER_CONFIGXNOTDEFINED_S, cfn);
          fprintf(stderr, "\n");
+         alp = lFreeList(alp);
          DEXIT;
          return 1;
       }

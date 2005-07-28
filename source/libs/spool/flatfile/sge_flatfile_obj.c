@@ -829,6 +829,7 @@ static int read_CF_value(lListElem *ep, int nm, const char *buf,
                      WARNING((SGE_EVENT, MSG_CONFIG_CONF_GIDRANGELESSTHANNOTALLOWED_I, GID_RANGE_NOT_ALLOWED_ID));
    
                      FREE (buffer);
+                     rlp = lFreeList(rlp);
                      DEXIT;
                      return 0;
                   }                  

@@ -335,6 +335,8 @@ spool_flatfile_align_list(lList **answer_list, const lList *list,
       }
    }
 
+   sge_dstring_free(&buffer);
+
    DEXIT;
    return true;
 }
@@ -415,6 +417,7 @@ spool_flatfile_write_list(lList **answer_list,
                                             instr->spool_instr);
       if (my_fields == NULL) {
          /* message generated in spool_get_fields_to_spool */
+         sge_dstring_free(&char_buffer);
          DEXIT;
          return NULL;
       }
@@ -424,6 +427,7 @@ spool_flatfile_write_list(lList **answer_list,
             if (!spool_flatfile_align_list(answer_list, list, my_fields, 0)) {
                /* message generated in spool_flatfile_align_object */
                my_fields = spool_free_spooling_fields(my_fields);
+               sge_dstring_free(&char_buffer);
                DEXIT;
                return NULL;
             }
@@ -459,6 +463,8 @@ spool_flatfile_write_list(lList **answer_list,
             }
             
             sge_dstring_append_char (&char_buffer, '\n');
+
+            sge_dstring_free(&tmp);
          }
          
          if(!spool_flatfile_write_list_fields(answer_list, list, &char_buffer, 
@@ -1211,6 +1217,7 @@ spool_flatfile_read_object(lList **answer_list, const lDescr *descr,
       }
       file_opened = true;
    }
+
    /* initialize scanner */
    stat(filepath, &file_buf);
    token = spool_scanner_initialize(file, file_buf.st_size);

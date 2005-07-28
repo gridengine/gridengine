@@ -1,3 +1,6 @@
+JG-2005-07-28-0: Bugfix:   Fixed memory leaks (merged from V60u4win_BRANCH).
+                 Review:   SG
+
 RD-2005-07-27-1: Cleanup   messages cleanup
                  Review:   SG
 
@@ -8,6 +11,7 @@ RD-2005-07-27-0: Bugfix:   qhost -l for complexes broken
                  Review:   SG
 
 JG-2005-07-27-0: Testsuite: Fixed testsuite problems on irix65.
+                 Issue:     1553
                             Improvements and cleanups in checks
                             - bugs/issuezilla/126
                             - bugs/issuezilla/440

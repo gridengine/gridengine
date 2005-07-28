@@ -115,9 +115,6 @@ extern char* notify_susp;
 extern int notify_kill_type;      
 extern char* notify_kill;
 extern bool disable_reschedule;  
-extern bool set_sge_environment;
-extern bool set_grd_environment;
-extern bool set_cod_environment;
 extern int scheduler_timeout;
 extern int max_dynamic_event_clients;
 extern bool set_lib_path;
@@ -131,12 +128,6 @@ extern bool do_reporting;
 extern bool do_joblog;
 extern int reporting_flush_time;
 extern int sharelog_time;
-
-/* simulation of large clusters: 
- *  - load values will not be trashed
- *  - no jobs will be delivered to unheared hosts
-*/
-extern int skip_unheared_host; 
 
 lList *sge_set_defined_defaults(lList *lpCfg);
 int merge_configuration(lListElem *global, lListElem *local, sge_conf_type *pconf, lList **lpp);

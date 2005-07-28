@@ -191,8 +191,6 @@ extern "C" {
       {USR_LOWERBOUND, USRS, USRN},     /* scheduler access tree: user */
       {JRL_LOWERBOUND, JRLS, JRLN},     /* scheduler access tree: job
                                          * reference */
-
-      /* former ptf_nmv entries */
       {JL_LOWERBOUND, JLS, JLN},        /* ptf job list */
       {JO_LOWERBOUND, JOS, JON},        /* ptf O.S. job list */
 
@@ -279,7 +277,6 @@ extern "C" {
 #endif
 
    extern lNameSpace nmv[];
-   extern lNameSpace ptf_nmv[];
 
 #ifdef  __cplusplus
 }

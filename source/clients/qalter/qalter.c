@@ -268,13 +268,14 @@ int *all_users
    */
    /* we need this job to parse our options in */
    job = lCreateElem(JB_Type);
-   if (!job) {
+   if (job == NULL) {
       sprintf(SGE_EVENT, MSG_MEM_MEMORYALLOCFAILED_S, SGE_FUNC);
       answer_list_add(&answer, SGE_EVENT,
                       STATUS_EMALLOC, ANSWER_QUALITY_ERROR);
       DEXIT;
       return answer;
    }
+
    /* initialize job field set */
    job_field[0] = NoName;
    nm_set(job_field, JB_job_number);
@@ -296,6 +297,7 @@ int *all_users
       lRemoveElem(cmdline, ep);
       sprintf(str, MSG_ANSWER_HELPNOTALLOWEDINCONTEXT);
       answer_list_add(&answer, str, STATUS_ENOIMP, ANSWER_QUALITY_ERROR);
+      job = lFreeElem(job);
       DEXIT;
       return answer;
    }
@@ -326,6 +328,7 @@ int *all_users
          if (!getcwd(tmp_str, sizeof(tmp_str))) {
             answer_list_add(&answer, MSG_ANSWER_GETCWDFAILED, 
                             STATUS_EDISK, ANSWER_QUALITY_ERROR);
+            job = lFreeElem(job);
             DEXIT;
             return answer;
          }
@@ -334,6 +337,7 @@ int *all_users
             if (!getcwd(tmp_str2, sizeof(tmp_str2))) {
                answer_list_add(&answer, MSG_ANSWER_GETCWDFAILED, 
                                STATUS_EDISK, ANSWER_QUALITY_ERROR);
+               job = lFreeElem(job);
                DEXIT;
                return answer;
             }
@@ -390,6 +394,7 @@ int *all_users
    if (lGetElemStr(cmdline, SPA_switch, STR_PSEUDO_JOBID)) {
       lList *jid_list = NULL;
       if (!parse_multi_jobtaskslist(&cmdline, STR_PSEUDO_JOBID, &answer, &jid_list, true, 0)) {
+         job = lFreeElem(job);
          DEXIT;
          return answer;
       }                                                 
@@ -654,6 +659,7 @@ int *all_users
    if (job_field[1] == NoName) {
       answer_list_add(&answer, MSG_JOB_NOJOBATTRIBUTESELECTED, 
                       STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+      job = lFreeElem(job);
       DEXIT;
       return answer;
    }
@@ -671,15 +677,17 @@ int *all_users
    if (!(what = lIntVector2What(JB_Type, job_field))) {
       answer_list_add(&answer, MSG_ANSWER_FAILDTOBUILDREDUCEDDESCRIPTOR, 
                         STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+      job = lFreeElem(job);
       DEXIT;
       return answer;
    }
 
    rdp = NULL;
    lReduceDescr(&rdp, JB_Type, what);
-   if (!rdp) {
+   if (rdp == NULL) {
       answer_list_add(&answer, MSG_ANSWER_FAILDTOBUILDREDUCEDDESCRIPTOR, 
                       STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+      job = lFreeElem(job);
       DEXIT;
       return answer;
    }
@@ -721,6 +729,8 @@ int *all_users
          if (!strcmp(lGetString(ep, ID_str), "all") || (all_or_jidlist == ALL)) {
             answer_list_add(&answer, MSG_ANSWER_ALLANDJOBIDSARENOTVALID, 
                             STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+            job = lFreeElem(job);
+            FREE(rdp);
             DEXIT;
             return answer;
          } else if (!strcmp(lGetString(ep, ID_str), "dummy")) {
@@ -728,6 +738,8 @@ int *all_users
          } else {
             answer_list_add(&answer, MSG_ANSWER_0ISNOTAVALIDJOBID,
                             STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+            job = lFreeElem(job);
+            FREE(rdp);
             DEXIT;
             return answer;
          }
@@ -756,6 +768,8 @@ int *all_users
          sprintf(SGE_EVENT, MSG_MEM_MEMORYALLOCFAILED_S, SGE_FUNC);
          answer_list_add(&answer, SGE_EVENT,
                          STATUS_EMALLOC, ANSWER_QUALITY_ERROR);
+         job = lFreeElem(job);
+         FREE(rdp);
          DEXIT;
          return answer;
       }
@@ -782,6 +796,8 @@ int *all_users
          sprintf(SGE_EVENT, MSG_OPTIONWORKSONLYONJOB);
          answer_list_add(&answer, SGE_EVENT,
                          STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+         job = lFreeElem(job);
+         FREE(rdp);
          DEXIT;
          return answer;
       }
@@ -865,10 +881,14 @@ int *all_users
       /* got no target */
       answer_list_add(&answer, MSG_JOB_MISSINGJOBID, 
                       STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+      job = lFreeElem(job);
+      FREE(rdp);
       DEXIT;
       return answer;      
    }
 
+   job = lFreeElem(job);
+   FREE(rdp);
    DEXIT;
    return answer;
 }

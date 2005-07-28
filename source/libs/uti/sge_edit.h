@@ -32,7 +32,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-int sge_edit(char *fname); 
+int sge_edit(const char *fname); 
 
 #endif /* __SGE_EDIT_H */
 

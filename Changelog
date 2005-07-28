@@ -1,3 +1,7 @@
+JG-2005-07-28-1: Enhancem.: Distribution will contain additional Berkeley DB 
+                            utilities (merged from V60u4win_BRANCH).
+                 Review:    HP
+
 JG-2005-07-28-0: Bugfix:   Fixed memory leaks (merged from V60u4win_BRANCH).
                  Review:   SG
 

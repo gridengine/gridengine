@@ -51,7 +51,7 @@ UTILITYBINARIES="uidgid gethostname gethostbyname gethostbyaddr \
                  sge_share_mon infotext spooldefaults spooledit spoolinit \
                  fstype"
 
-BDBUTILITYBINARIES="berkeley_db_svc db_dump db_load db_archive db_checkpoint"
+BDBUTILITYBINARIES="berkeley_db_svc db_archive db_checkpoint db_deadlock db_dump db_load db_printlog db_recover db_stat db_upgrade db_verify"
 
 SSLUTILITYBINARIES="openssl"
 
@@ -1234,7 +1234,7 @@ for i in $ARCH; do
                fi
             elif [ $prog = testsuidroot ]; then
                InstallProgSUID $prog
-            elif [ $prog = berkeley_db_svc -o $prog = db_dump -o $prog = db_load -o $prog = db_archive -o $prog = db_checkpoint ]; then
+            elif [ $prog = berkeley_db_svc -o $prog = db_archive -o $prog = db_checkpoint -o $prog = db_deadlock -o $prog = db_dump -o $prog = db_load -o $prog = db_printlog -o $prog = db_recover -o $prog = db_stat -o $prog = db_upgrade -o $prog = db_verify ]; then
                if [ "$DSTARCH" != "win32-x86" ]; then
                   InstallProg $BERKELEYDBBASE/$DSTARCH/bin/$prog
                fi

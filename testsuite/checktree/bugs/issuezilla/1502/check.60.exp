@@ -70,7 +70,7 @@ proc init_level {} {
 proc issue_1502_run  {} {
    global ts_config  CHECK_OUTPUT CHECK_USER
 
-   foreach host $ts_config(execd_hosts) {
+   foreach host $ts_config(unique_arch_nodes) {
       puts $CHECK_OUTPUT "\nhost: $host ..."
       set up_arch [resolve_build_arch $host]
       set binary $ts_config(source_dir)/$up_arch/test_general

@@ -300,7 +300,7 @@ proc init_level {} {
          return -1
       }
    }
-#if { $minor_level != 1 } {
+#if { $minor_level != 0 } {
 #   return -1
 #}
    switch -- $minor_level {
@@ -598,7 +598,7 @@ proc throughput_setup {} {
    global CHECK_SOURCE_DIR
    global nr_queues queue_list host_list submit_hosts nr_slots
    global stored_configuration FLUSH_SUBMIT_SEC FLUSH_FINISH_SEC run_throughput_test_SCHEDULE_INTERVAL
-   global global_job_run_time
+   global global_job_run_time ps_interval
    global throughput_sharetree functional_policy parallel_jobs
    global reservation
 
@@ -643,12 +643,17 @@ proc throughput_setup {} {
          set my_schedd_config(default_duration) $global_job_run_time
       }
    } 
-  
+ 
+   # need to use sharetree reserved usage for sharetree test
    set my_execd_params "SHARETREE_RESERVED_USAGE=true"
    if { [string compare "none" $stored_configuration(execd_params)] != 0 } {
       append my_execd_params ",$stored_configuration(execd_params)"
    }
    set myconfig(execd_params) "$my_execd_params"
+
+   # switch on monitoring
+   set monitoring [format "%02d:%02d:%02d" [expr $ps_interval / 3600] [expr $ps_interval / 60] [expr $ps_interval % 60]]
+   set myconfig(qmaster_params) "MONITOR_TIME=$monitoring"
 
    set_config myconfig
  
@@ -2352,8 +2357,11 @@ proc analyse_dump_data_file { file { force 0 } } {
    if { [file isdirectory $output_dir] && $force != 0 } {
       puts $CHECK_OUTPUT "forcing re-analyse ..."
    }
-   
-   file mkdir $output_dir
+
+   if {![file isdirectory $output_dir]} {
+      file mkdir $output_dir
+   }
+
    # TODO: all this data is usually available - do not read it from file, but upvar 
    puts $CHECK_OUTPUT "please wait ..."
    read_array_from_file $file "online data"    results
@@ -3489,10 +3497,10 @@ proc create_reports { results_array job_array_name schedd_array_name monitoring_
       set act_run [string range $act_run 1 end]
       puts $CHECK_OUTPUT "act-run: $act_run"
       if { [ string is integer $act_run ] } {
-      if { $act_run >= $run_nr } {
-         set run_nr $act_run
-         incr run_nr 1
-      }
+         if { $act_run >= $run_nr } {
+            set run_nr $act_run
+            incr run_nr 1
+         }
       }
    }
 
@@ -3558,6 +3566,24 @@ proc create_reports { results_array job_array_name schedd_array_name monitoring_
    # we don't want to keep the backup file - these files are huge!
    catch { file delete ${prot_output_file}.old }
 
+   # save qmaster and scheduler messages files in report directory
+   set results_dir "${prot_output_file}_dir"
+   puts $CHECK_OUTPUT "copying master and scheduler messages files to $results_dir"
+   if {![file isdirectory $results_dir]} {
+      file mkdir $results_dir
+   }
+   set qmaster_spool_dir [get_spool_dir $ts_config(master_host) qmaster]
+   set qmaster_messages "$qmaster_spool_dir/messages"
+   set schedd_messages "$qmaster_spool_dir/schedd/messages"
+   puts $CHECK_OUTPUT "-> $qmaster_spool_dir"
+   puts $CHECK_OUTPUT "-> $qmaster_messages"
+   puts $CHECK_OUTPUT "-> $schedd_messages"
+   puts $CHECK_OUTPUT [start_remote_prog $ts_config(master_host) $CHECK_USER "mv" "$qmaster_messages $results_dir/qmaster_messages"]
+   puts $CHECK_OUTPUT [start_remote_prog $ts_config(master_host) $CHECK_USER "touch" "$qmaster_messages"]
+   puts $CHECK_OUTPUT [start_remote_prog $ts_config(master_host) $CHECK_USER "mv" "$schedd_messages $results_dir/schedd_messages"]
+   puts $CHECK_OUTPUT [start_remote_prog $ts_config(master_host) $CHECK_USER "touch" "$schedd_messages"]
+
+   # create analysis, dump html and gif's
    analyse_dump_data_file $prot_output_file 1
 
    #compare_dump_directory $prot_output_dir

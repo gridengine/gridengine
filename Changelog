@@ -1,3 +1,8 @@
+JG-2005-07-28-2: Testsuite: check performance/throughput:
+                            - run with qmaster monitoring enabled
+                            - copy qmaster and schedd messages files to results dir
+                            cleanup
+
 JG-2005-07-28-1: Enhancem.: Distribution will contain additional Berkeley DB 
                             utilities (merged from V60u4win_BRANCH).
                  Review:    HP

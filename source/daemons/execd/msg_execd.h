@@ -259,7 +259,6 @@
 /*
 ** dispatcher.c
 */
-#define MSG_COM_NORCVMSG_S            _MESSAGE(29158, _("error receiving message "SFN))
 #define MSG_COM_NOACK_S               _MESSAGE(29159, _("error sending acknowledge: "SFN))
 #define MSG_COM_INTERNALDISPATCHCALLWITHOUTDISPATCH _MESSAGE(29160, _("internal dispatcher called without s.th. to dispatch"))
 

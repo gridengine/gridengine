@@ -38,7 +38,6 @@
 ** history/qacct.c
 */ 
 #define MSG_HISTORY_NOJOBSRUNNINGSINCESTARTUP      _MESSAGE(25066, _("no jobs running since startup"))
-#define MSG_HISTORY_FAILEDRESOLVINGHOSTNAME_SS     _MESSAGE(25067, _("failed resolving hostname "SFQ": "SFN))
 #define MSG_HISTORY_TOPTIONMASTHAVELISTOFTASKIDRANGES  _MESSAGE(25068, _("ERROR! -t option must have a list of task id ranges"))
 #define MSG_HISTORY_INVALIDLISTOFTASKIDRANGES_S       _MESSAGE(25069, _("ERROR! invalid list of task id ranges: "SFN))
 #define MSG_HISTORY_ERRORUNABLETOOPENX_S     _MESSAGE(25074, _("error unable to open "SFN))

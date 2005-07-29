@@ -290,14 +290,14 @@ int scheduler(sge_Sdescr_t *lists, lList **order) {
 
    if (prof_is_active(SGE_PROF_SCHEDLIB4)) {
       prof_stop_measurement(SGE_PROF_SCHEDLIB4, NULL);
-      PROFILING((SGE_EVENT, "PROF: create pending job orders: %.3f s\n",
+      PROFILING((SGE_EVENT, "PROF: create pending job orders: %.3f s",
                prof_get_measurement_utime(SGE_PROF_SCHEDLIB4,false, NULL)));
    }   
 
    if(prof_is_active(SGE_PROF_CUSTOM0)) {
       prof_stop_measurement(SGE_PROF_CUSTOM0, NULL); 
 
-      PROFILING((SGE_EVENT, "PROF: scheduled in %.3f (u %.3f + s %.3f = %.3f): %d sequential, %d parallel, %d orders, %d H, %d Q, %d QA, %d J(qw), %d J(r), %d J(s), %d J(h), %d J(e), %d J(x), %d J(all), %d C, %d ACL, %d PE, %d U, %d D, %d PRJ, %d ST, %d CKPT, %d RU, %d gMes, %d jMes\n",
+      PROFILING((SGE_EVENT, "PROF: scheduled in %.3f (u %.3f + s %.3f = %.3f): %d sequential, %d parallel, %d orders, %d H, %d Q, %d QA, %d J(qw), %d J(r), %d J(s), %d J(h), %d J(e), %d J(x), %d J(all), %d C, %d ACL, %d PE, %d U, %d D, %d PRJ, %d ST, %d CKPT, %d RU, %d gMes, %d jMes",
          prof_get_measurement_wallclock(SGE_PROF_CUSTOM0, true, NULL),
          prof_get_measurement_utime(SGE_PROF_CUSTOM0, true, NULL),
          prof_get_measurement_stime(SGE_PROF_CUSTOM0, true, NULL),
@@ -358,7 +358,7 @@ int scheduler(sge_Sdescr_t *lists, lList **order) {
    if(prof_is_active(SGE_PROF_CUSTOM5)) {
       prof_stop_measurement(SGE_PROF_CUSTOM5, NULL); 
    
-      PROFILING((SGE_EVENT, "PROF: send orders and cleanup took: %.3f (u %.3f,s %.3f) s\n",
+      PROFILING((SGE_EVENT, "PROF: send orders and cleanup took: %.3f (u %.3f,s %.3f) s",
          prof_get_measurement_wallclock(SGE_PROF_CUSTOM5, true, NULL), 
          prof_get_measurement_utime(SGE_PROF_CUSTOM5, true, NULL),
          prof_get_measurement_stime(SGE_PROF_CUSTOM5, true, NULL) ));
@@ -591,7 +591,7 @@ static int dispatch_jobs(sge_Sdescr_t *lists, order_t *orders,
       if (prof_is_active(SGE_PROF_CUSTOM1)) {
          prof_stop_measurement(SGE_PROF_CUSTOM1, NULL);
 
-         PROFILING((SGE_EVENT, "PROF: job-order calculation took %.3f s\n",
+         PROFILING((SGE_EVENT, "PROF: job-order calculation took %.3f s",
                prof_get_measurement_wallclock(SGE_PROF_CUSTOM1, true, NULL)));
       }
 
@@ -643,7 +643,7 @@ static int dispatch_jobs(sge_Sdescr_t *lists, order_t *orders,
    if (prof_is_active(SGE_PROF_CUSTOM3)) {
       prof_stop_measurement(SGE_PROF_CUSTOM3, NULL);
 
-      PROFILING((SGE_EVENT, "PROF: job sorting took %.3f s\n",
+      PROFILING((SGE_EVENT, "PROF: job sorting took %.3f s",
             prof_get_measurement_wallclock(SGE_PROF_CUSTOM3, false, NULL)));
    }
 
@@ -918,7 +918,7 @@ static int dispatch_jobs(sge_Sdescr_t *lists, order_t *orders,
    if (prof_is_active(SGE_PROF_CUSTOM4)) {
       prof_stop_measurement(SGE_PROF_CUSTOM4, NULL);
 
-      PROFILING((SGE_EVENT, "PROF: job dispatching took %.3f s\n",
+      PROFILING((SGE_EVENT, "PROF: job dispatching took %.3f s",
             prof_get_measurement_wallclock(SGE_PROF_CUSTOM4, false, NULL)));
    }
 

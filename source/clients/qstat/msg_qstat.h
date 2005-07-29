@@ -59,7 +59,7 @@
 #define MSG_QSTAT_USAGE_JOBSWITHAUSEROPERATORSYSTEMHOLD    _MESSAGE(19024, _("jobs with a user/operator/system hold, "))
 #define MSG_QSTAT_USAGE_JOBSWITHSTARTTIMEINFUTORE    _MESSAGE(19025, _("jobs with a start time in future or any combination only."))
 #define MSG_QSTAT_USAGE_HISABBREVIATIONFORHUHOHSHJHA    _MESSAGE(19026, _("h is an abbreviation for huhohshjha"))
-#define MSG_QSTAT_USAGE_AISABBREVIATIONFOR              _MESSAGE(19027, _("a is an abbreviation for prsh\n"))
+#define MSG_QSTAT_USAGE_AISABBREVIATIONFOR              _MESSAGE(19027, _("a is an abbreviation for prsh"))
 #define MSG_QSTAT_USAGE_SHOWTASKINFO    _MESSAGE(19028, _("show task information (implicitly -g t)"))
 #define MSG_QSTAT_USAGE_VIEWONLYJOBSOFTHISUSER    _MESSAGE(19029, _("view only jobs of this user"))
 #define MSG_QSTAT_USAGE_SELECTQUEUESWHEREUSERXHAVEACCESS    _MESSAGE(19030, _("select only queues where these users have access"))

@@ -520,7 +520,7 @@ lList **alpp
    }
 
 
-   FPRINTF((fp, "# "SFN, MSG_COMPLEX_STARTSCOMMENTBUTNOSAVE));
+   FPRINTF((fp, "# "SFN"\n", MSG_COMPLEX_STARTSCOMMENTBUTNOSAVE));
    
    if (fname) {
       fclose(fp);

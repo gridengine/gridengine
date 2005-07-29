@@ -1,3 +1,7 @@
+RD-2005-07-28-0: Bugfix:   testsuite test issue 1473 failed
+                           qconf -sc didn't print a newline at end of file
+                 Review:   CR
+
 JG-2005-07-28-2: Testsuite: check performance/throughput:
                             - run with qmaster monitoring enabled
                             - copy qmaster and schedd messages files to results dir

@@ -479,7 +479,7 @@ spool_flatfile_write_list(lList **answer_list,
          }
          
          if (instr->show_footer) {
-            sge_dstring_sprintf_append (&char_buffer, "# "SFN, MSG_COMPLEX_STARTSCOMMENTBUTNOSAVE);
+            sge_dstring_sprintf_append (&char_buffer, "# "SFN"\n", MSG_COMPLEX_STARTSCOMMENTBUTNOSAVE);
          }
          
          data     = sge_dstring_get_string(&char_buffer);

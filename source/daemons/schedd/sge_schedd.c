@@ -175,6 +175,7 @@ char *argv[]
    
 
 
+   /* prepare daemonize */
    if (!getenv("SGE_ND")) {
       sge_daemonize_prepare();
    }
@@ -186,10 +187,11 @@ char *argv[]
 
    lInit(nmv);
 
-   prepare_enroll(prognames[SCHEDD]);
+   /* parse scheduler command line arguments */
    parse_cmdline_schedd(argc, argv);
 
-   /* daemonizes if qmaster is unreachable */
+   /* setup communication (threads) and daemonize if qmaster is unreachable */
+   in_main_loop = 1;
    check_qmaster = (sge_setup_sge_schedd() != 0) ? true : false;
 
    /* prepare event client/mirror mechanism */
@@ -213,14 +215,9 @@ char *argv[]
    }
    FREE(local_host);
 
+   /* finalize daeamonize */
    if (!getenv("SGE_ND")) {
-      fd_set fds;
-      FD_ZERO(&fds);
-      if ( cl_com_set_handle_fds(cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0), &fds) == CL_RETVAL_OK) {
-         sge_daemonize_finalize(&fds);
-      } else {
-         sge_daemonize_finalize(NULL);
-      }
+      sge_daemonize_finalize();
    }
 
    starting_up();
@@ -253,7 +250,7 @@ char *argv[]
          } 
          
          if (ret > 0) {
-            sleep(10);
+            sleep(5);
             continue;
          }
 
@@ -553,14 +550,7 @@ static int sge_setup_sge_schedd()
 
    DENTER(TOP_LAYER, "sge_setup_sge_schedd");
 
-   if (get_conf_and_daemonize(daemonize_schedd, &schedd_config_list) != 0) {
-      CRITICAL((SGE_EVENT, MSG_SCHEDD_ALRADY_RUNNING));
-      SGE_EXIT(1);
-   }
-   sge_show_conf();
 
-   schedd_config_list = lFreeList(schedd_config_list);
-   
    /*
    ** switch to admin user
    */
@@ -574,6 +564,28 @@ static int sge_setup_sge_schedd()
       SGE_EXIT(1);
    }
 
+   /*
+    * setup communication as admin user
+    */
+   prepare_enroll(prognames[SCHEDD]);
+
+   ret = get_conf_and_daemonize(daemonize_schedd, &schedd_config_list, &shut_me_down);
+   switch(ret) {
+      case 0:
+         break;
+      case -2:
+         INFO((SGE_EVENT, MSG_SCHEDD_SCHEDD_ABORT_BY_USER));
+         SGE_EXIT(1);
+         break;
+      default:
+         CRITICAL((SGE_EVENT, MSG_SCHEDD_ALRADY_RUNNING));
+         SGE_EXIT(1);
+   }
+
+   sge_show_conf();
+
+   schedd_config_list = lFreeList(schedd_config_list);
+   
    /* get aliased hostname from commd */
    reresolve_me_qualified_hostname();
 
@@ -604,18 +616,10 @@ static int sge_setup_sge_schedd()
 /*-------------------------------------------------------------------*/
 int daemonize_schedd()
 {
-   fd_set keep_open;
    int ret = 0;
-
    DENTER(TOP_LAYER, "daemonize_schedd");
 
-   FD_ZERO(&keep_open);
-
-   if ( cl_com_set_handle_fds(cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name(),0), &keep_open) == CL_RETVAL_OK) {
-      ret = sge_daemonize_finalize(&keep_open);
-   } else {
-      ret = sge_daemonize_finalize(NULL);
-   }
+   ret = sge_daemonize_finalize();
 
    DEXIT;
    return ret;

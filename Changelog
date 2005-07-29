@@ -1,6 +1,21 @@
-RD-2005-07-28-0: Bugfix:   testsuite test issue 1473 failed
-                           qconf -sc didn't print a newline at end of file
-                 Review:   CR
+CR-2005-07-29-0: Bugfix:    - enabled multithreaded startup of scheduler daemon
+                              (Part 2)
+                              Fixed problems for linux 2.4 Kernel pthread library
+                              implementation
+                            - cleanup and TODO comments for sge_terminate() signal
+                              handler function
+                            - new parameter for get_conf_and_daemonize(): 
+                              added an abort variable (modified by signal handler)
+                            - scheduler startup: commlib threads are now started as
+                              admin user
+                            - fixed core dump for multithreaded commlib clients trying
+                              to connect to a service which is unavailable.
+                 Review:    SG
+                 Changed:   sig_handlers.c execd scheduler commlib utilib gdi
+
+RD-2005-07-28-0: Bugfix:    testsuite test issue 1473 failed
+                            qconf -sc didn't print a newline at end of file
+                 Review:    CR
 
 JG-2005-07-28-2: Testsuite: check performance/throughput:
                             - run with qmaster monitoring enabled
@@ -80,6 +95,7 @@ CR-2005-07-25-1: Enhancm.:  - removed cl_commlib_cleanup_commlib() call from
                             - execd may loose dead children signal and may hence
                               reaping of a child later (when next child is dead)
                             - enabled multithreaded startup of scheduler daemon
+                              (Part 1)
                  Review:    SG
                  Changed:   commlib gdilib utilib execd schedd sig_handlers.c
               

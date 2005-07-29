@@ -79,7 +79,7 @@ void sge_setup_sge_execd(const char* tmp_err_file_name)
 
    DENTER(TOP_LAYER, "sge_setup_sge_execd");
 
-   while (get_conf_and_daemonize(daemonize_execd, &Execd_Config_List)) {
+   while (get_conf_and_daemonize(daemonize_execd, &Execd_Config_List, NULL)) {
       if (allowed_get_conf_errors-- <= 0) {
          CRITICAL((SGE_EVENT, MSG_EXECD_CANT_GET_CONFIGURATION_EXIT));
          SGE_EXIT(1);

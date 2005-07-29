@@ -195,14 +195,16 @@ static void sge_alarmclock(int dummy)
 /***************************************************************************/
 static void sge_terminate(int dummy)
 {
+   /* set shut-me-down variable */
+   shut_me_down = 1;
+
+   /* inform commlib to ignore all timeouts */
+   cl_com_ignore_timeouts(CL_TRUE);
+
+   /* This is not the best way to shut down a process. 
+      TODO: remove the exit call, applications should check shut_me_down */
    if (!in_main_loop) {
-      cl_com_ignore_timeouts(CL_TRUE);
-      /* leave_commd() */
       exit(1);
-   }
-   else {
-      cl_com_ignore_timeouts(CL_TRUE);
-      shut_me_down = 1;
    }
 }
 

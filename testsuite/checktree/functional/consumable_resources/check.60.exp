@@ -488,7 +488,7 @@ proc consumable_resources_test {} {
 
       set queue_settings(complex_values) "test1=1"
       set_queue "res.q" $consumable_resources_test_hosts queue_settings
-      check_qhost_broken "test1=1" "[llength $ts_config(execd_hosts)]"
+      check_qhost_broken "test1=1" "[llength $ts_config(execd_nodes)]"
 
 
       #case a

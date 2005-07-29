@@ -1,3 +1,6 @@
+JG-2005-07-29-0: Testsuite: check functional/consumable_resources erroneously 
+                            reports a qhost error.
+
 CR-2005-07-29-1: Cleanup:   code format cleanup
 
 CR-2005-07-29-0: Bugfix:    - enabled multithreaded startup of scheduler daemon

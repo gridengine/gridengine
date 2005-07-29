@@ -88,7 +88,7 @@ int sge_daemonize(fd_set *keep_open);
 int sge_occupy_first_three(void);
 
 int sge_daemonize_prepare(void);
-int sge_daemonize_finalize(fd_set *keep_open);
+int sge_daemonize_finalize(void);
 
 
  

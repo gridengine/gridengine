@@ -308,6 +308,8 @@ int sge_checkprog(pid_t pid, const char *name, const char *pscommand)
 *      
 *     sge_daemonize_prepare() and sge_daemonize_finalize() will replace
 *     sge_daemonize() for multithreaded applications.
+*     
+*     sge_daemonize_prepare() must be called before starting any thread. 
 *
 *
 *  INPUTS
@@ -321,6 +323,7 @@ int sge_checkprog(pid_t pid, const char *name, const char *pscommand)
 *******************************************************************************/
 int sge_daemonize_prepare(void) {
    pid_t pid;
+   fd_set keep_open;
 #if !(defined(__hpux) || defined(CRAY) || defined(WIN32) || defined(SINIX) || defined(INTERIX))
    int fd;
 #endif
@@ -357,6 +360,15 @@ int sge_daemonize_prepare(void) {
       DRETURN(false);
    }
 
+   /* close all fd's expect pipe and first 3 */
+   FD_ZERO(&keep_open);
+   FD_SET(0,&keep_open);
+   FD_SET(1,&keep_open);
+   FD_SET(2,&keep_open);
+   FD_SET(fd_pipe[0],&keep_open);
+   FD_SET(fd_pipe[1],&keep_open);
+   sge_close_all_fds(&keep_open);
+
    /* first fork */
    pid=fork();
    if (pid <0) {
@@ -372,6 +384,8 @@ int sge_daemonize_prepare(void) {
       int exit_status = SGE_DAEMONIZE_TIMEOUT;
       int back;
       int errno_value = 0;
+
+      /* close send pipe */
       close(fd_pipe[1]);
 
       /* check pipe for message from child */
@@ -410,14 +424,13 @@ int sge_daemonize_prepare(void) {
             WARNING((SGE_EVENT, MSG_UTI_DAEMONIZE_TIMEOUT));
             break;
       }
+      /* close read pipe */
+      close(fd_pipe[0]);
       DEXIT;
       exit(exit_status); /* parent exit */
    }
 
    /* child */
-
-   close(fd_pipe[0]);
-
    SETPGRP;
 
 #if !(defined(__hpux) || defined(CRAY) || defined(WIN32) || defined(SINIX) || defined(INTERIX))
@@ -437,10 +450,15 @@ int sge_daemonize_prepare(void) {
       exit(1);
    }
    if ( pid > 0) {
+      /* close read and write pipe for second child and exit */
+      close(fd_pipe[0]);
+      close(fd_pipe[1]);
       exit(0);
    }
 
    /* child of child */
+
+   /* close read pipe */
    close(fd_pipe[0]);
 
 #if defined(__sgi) || defined(ALPHA) || defined(HP1164)
@@ -471,6 +489,9 @@ int sge_daemonize_prepare(void) {
 *     sge_daemonize_prepare() and sge_daemonize_finalize() will replace
 *     sge_daemonize() for multithreades applications.
 *
+*     sge_daemonize_finalize() must be called by the thread who have called
+*     sge_daemonize_prepare().
+*
 *  INPUTS
 *     fd_set *keep_open - file descriptor set to keep open
 *
@@ -480,10 +501,16 @@ int sge_daemonize_prepare(void) {
 *  SEE ALSO
 *     sge_os/sge_daemonize_prepare()
 *******************************************************************************/
-int sge_daemonize_finalize(fd_set *keep_open) {
+int sge_daemonize_finalize(void) {
    char tmp_buffer[4];
 
    DENTER(TOP_LAYER, "sge_daemonize_finalize");
+
+   /* don't call this function twice */
+   if (uti_state_get_daemonized()) {
+      DEXIT;
+      return true;
+   }
 
    /* The response id has 4 byte, send it to father process */
    snprintf(tmp_buffer, 4, "%3d", SGE_DEAMONIZE_OK );
@@ -491,9 +518,14 @@ int sge_daemonize_finalize(fd_set *keep_open) {
 
    sleep(2); /* give father time to read the status */
 
-   /* close all file descriptors */
-   sge_close_all_fds(keep_open);
- 
+   /* close write pipe */
+   close(fd_pipe[1]);
+
+   /* close first three file descriptors */
+   close(0);
+   close(1);
+   close(2);
+   
    /* new descriptors acquired for stdin, stdout, stderr should be 0,1,2 */
    if (open("/dev/null",O_RDONLY,0)!=0) {
       SGE_EXIT(0);
@@ -506,6 +538,8 @@ int sge_daemonize_finalize(fd_set *keep_open) {
    }
 
    SETPGRP;
+
+   /* now have finished daemonizing */
    uti_state_set_daemonized(1);
 
    DRETURN(true);
@@ -694,6 +728,7 @@ void sge_close_all_fds(fd_set *keep_open)
 /* JG: trying to close insights (insure) internal fd will be rejected */
    int fd;
    int maxfd;
+   bool ignore = false;
  
 #ifndef WIN32NATIVE
    maxfd = sysconf(_SC_OPEN_MAX) > FD_SETSIZE ? \
@@ -703,13 +738,23 @@ void sge_close_all_fds(fd_set *keep_open)
    /* detect maximal number of fds under NT/W2000 (env: Files)*/
 #endif /* WIN32NATIVE */
  
-   for (fd = 0; fd < maxfd; fd++)
-      if (!(keep_open && FD_ISSET(fd, keep_open)))
+   for (fd = 0; fd < maxfd; fd++) {
+      ignore = false;
+
+      if (keep_open != NULL) {
+         if (FD_ISSET(fd, keep_open)) {
+            ignore = true;
+         }
+      }
+
+      if (ignore == false) {
 #ifndef WIN32NATIVE
          close(fd);
 #else /* WIN32NATIVE */
          closesocket(fd);
 #endif /* WIN32NATIVE */
+      }
+   }
    return;
 }  
 

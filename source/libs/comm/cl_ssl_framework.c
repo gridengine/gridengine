@@ -3034,20 +3034,62 @@ int cl_com_ssl_open_connection_request_handler(cl_raw_list_t* connection_list, c
 #endif
          return CL_RETVAL_NO_FRAMEWORK_INIT;
       }
-
-      switch(connection->framework_type) {
-         case CL_CT_SSL: {
-            switch (connection->connection_state) {
-               case CL_CONNECTED:
-                  if (connection->ccrm_sent == 0) {
+      if (con_private->sockfd >= 0) {
+         switch(connection->framework_type) {
+            case CL_CT_SSL: {
+               switch (connection->connection_state) {
+                  case CL_CONNECTED:
+                     if (connection->ccrm_sent == 0) {
+                        if (do_read_select != 0) {
+                           max_fd = MAX(max_fd,con_private->sockfd);
+   #ifdef USE_POLL
+                           ufds[ufds_index].fd = con_private->sockfd;
+                           ufds[ufds_index].events = POLLIN|POLLPRI;
+   #else
+                           FD_SET(con_private->sockfd,&my_read_fds);
+   #endif
+                           nr_of_descriptors++;
+                           connection->data_read_flag = CL_COM_DATA_NOT_READY;
+                        }
+                        if (do_write_select != 0) {
+                           if (connection->data_write_flag == CL_COM_DATA_READY) {
+                              /* this is to come out of select when data is ready to write */
+                              max_fd = MAX(max_fd, con_private->sockfd);
+   #ifdef USE_POLL
+                              ufds[ufds_index].fd = con_private->sockfd;
+                              ufds[ufds_index].events |= POLLOUT;
+   #else
+                              FD_SET(con_private->sockfd,&my_write_fds);
+   #endif
+                              connection->fd_ready_for_write = CL_COM_DATA_NOT_READY;
+                           } 
+                           if (con_private->ssl_last_error == SSL_ERROR_WANT_WRITE) {
+                              max_fd = MAX(max_fd, con_private->sockfd);
+   #ifdef USE_POLL
+                              ufds[ufds_index].fd = con_private->sockfd;
+                              ufds[ufds_index].events |= POLLOUT;
+   #else
+                              FD_SET(con_private->sockfd,&my_write_fds);
+   #endif
+                              connection->fd_ready_for_write = CL_COM_DATA_NOT_READY;
+                              connection->data_write_flag = CL_COM_DATA_READY;
+                           }
+                        }
+   #ifdef USE_POLL
+                        if (ufds[ufds_index].events)
+                          ufds_index++;
+   #endif
+                     }
+                     break;
+                  case CL_CONNECTING:
                      if (do_read_select != 0) {
                         max_fd = MAX(max_fd,con_private->sockfd);
-#ifdef USE_POLL
+   #ifdef USE_POLL
                         ufds[ufds_index].fd = con_private->sockfd;
                         ufds[ufds_index].events = POLLIN|POLLPRI;
-#else
+   #else
                         FD_SET(con_private->sockfd,&my_read_fds);
-#endif
+   #endif
                         nr_of_descriptors++;
                         connection->data_read_flag = CL_COM_DATA_NOT_READY;
                      }
@@ -3055,212 +3097,171 @@ int cl_com_ssl_open_connection_request_handler(cl_raw_list_t* connection_list, c
                         if (connection->data_write_flag == CL_COM_DATA_READY) {
                            /* this is to come out of select when data is ready to write */
                            max_fd = MAX(max_fd, con_private->sockfd);
-#ifdef USE_POLL
+   #ifdef USE_POLL
                            ufds[ufds_index].fd = con_private->sockfd;
                            ufds[ufds_index].events |= POLLOUT;
-#else
+   #else
                            FD_SET(con_private->sockfd,&my_write_fds);
-#endif
+   #endif
                            connection->fd_ready_for_write = CL_COM_DATA_NOT_READY;
-                        } 
+                        }
                         if (con_private->ssl_last_error == SSL_ERROR_WANT_WRITE) {
                            max_fd = MAX(max_fd, con_private->sockfd);
-#ifdef USE_POLL
+   #ifdef USE_POLL
                            ufds[ufds_index].fd = con_private->sockfd;
                            ufds[ufds_index].events |= POLLOUT;
-#else
+   #else
                            FD_SET(con_private->sockfd,&my_write_fds);
-#endif
+   #endif
                            connection->fd_ready_for_write = CL_COM_DATA_NOT_READY;
                            connection->data_write_flag = CL_COM_DATA_READY;
                         }
                      }
-#ifdef USE_POLL
+   #ifdef USE_POLL
                      if (ufds[ufds_index].events)
-                       ufds_index++;
-#endif
-                  }
-                  break;
-               case CL_CONNECTING:
-                  if (do_read_select != 0) {
-                     max_fd = MAX(max_fd,con_private->sockfd);
-#ifdef USE_POLL
-                     ufds[ufds_index].fd = con_private->sockfd;
-                     ufds[ufds_index].events = POLLIN|POLLPRI;
-#else
-                     FD_SET(con_private->sockfd,&my_read_fds);
-#endif
-                     nr_of_descriptors++;
-                     connection->data_read_flag = CL_COM_DATA_NOT_READY;
-                  }
-                  if (do_write_select != 0) {
-                     if (connection->data_write_flag == CL_COM_DATA_READY) {
-                        /* this is to come out of select when data is ready to write */
-                        max_fd = MAX(max_fd, con_private->sockfd);
-#ifdef USE_POLL
-                        ufds[ufds_index].fd = con_private->sockfd;
-                        ufds[ufds_index].events |= POLLOUT;
-#else
-                        FD_SET(con_private->sockfd,&my_write_fds);
-#endif
-                        connection->fd_ready_for_write = CL_COM_DATA_NOT_READY;
+                         ufds_index++;
+   #endif
+                     break;
+                  case CL_ACCEPTING: {
+                     if (connection->connection_sub_state == CL_COM_ACCEPT_INIT ||
+                         connection->connection_sub_state == CL_COM_ACCEPT) {
+                           if (do_read_select != 0) {
+                              max_fd = MAX(max_fd,con_private->sockfd);
+   #ifdef USE_POLL
+                              ufds[ufds_index].fd = con_private->sockfd;
+                              ufds[ufds_index].events = POLLIN|POLLPRI;
+                              ufds_index++;
+   #else
+                              FD_SET(con_private->sockfd,&my_read_fds); 
+   #endif
+                              nr_of_descriptors++;
+                              connection->data_read_flag = CL_COM_DATA_NOT_READY;
+                           }
                      }
-                     if (con_private->ssl_last_error == SSL_ERROR_WANT_WRITE) {
-                        max_fd = MAX(max_fd, con_private->sockfd);
-#ifdef USE_POLL
-                        ufds[ufds_index].fd = con_private->sockfd;
-                        ufds[ufds_index].events |= POLLOUT;
-#else
-                        FD_SET(con_private->sockfd,&my_write_fds);
-#endif
-                        connection->fd_ready_for_write = CL_COM_DATA_NOT_READY;
-                        connection->data_write_flag = CL_COM_DATA_READY;
-                     }
+                     break;
                   }
-#ifdef USE_POLL
-                  if (ufds[ufds_index].events)
-                      ufds_index++;
-#endif
-                  break;
-               case CL_ACCEPTING: {
-                  if (connection->connection_sub_state == CL_COM_ACCEPT_INIT ||
-                      connection->connection_sub_state == CL_COM_ACCEPT) {
-                        if (do_read_select != 0) {
-                           max_fd = MAX(max_fd,con_private->sockfd);
-#ifdef USE_POLL
-                           ufds[ufds_index].fd = con_private->sockfd;
-                           ufds[ufds_index].events = POLLIN|POLLPRI;
-                           ufds_index++;
-#else
-                           FD_SET(con_private->sockfd,&my_read_fds); 
-#endif
-                           nr_of_descriptors++;
-                           connection->data_read_flag = CL_COM_DATA_NOT_READY;
-                        }
-                  }
-                  break;
-               }
 
 
-               case CL_OPENING:
-                  CL_LOG_STR(CL_LOG_DEBUG,"connection_sub_state:", cl_com_get_connection_sub_state(connection));
-                  switch(connection->connection_sub_state) {
-                     case CL_COM_OPEN_INIT:
-                     case CL_COM_OPEN_CONNECT: {
-                        if (do_read_select != 0) {
-                           connection->data_read_flag = CL_COM_DATA_READY;
+                  case CL_OPENING:
+                     CL_LOG_STR(CL_LOG_DEBUG,"connection_sub_state:", cl_com_get_connection_sub_state(connection));
+                     switch(connection->connection_sub_state) {
+                        case CL_COM_OPEN_INIT:
+                        case CL_COM_OPEN_CONNECT: {
+                           if (do_read_select != 0) {
+                              connection->data_read_flag = CL_COM_DATA_READY;
+                           }
+                           break;
                         }
-                        break;
-                     }
-                     case CL_COM_OPEN_CONNECTED:
-                     case CL_COM_OPEN_CONNECT_IN_PROGRESS: {
-                        if (do_read_select != 0) {
-                           max_fd = MAX(max_fd,con_private->sockfd);
-#ifdef USE_POLL
-                           ufds[ufds_index].fd = con_private->sockfd;
-                           ufds[ufds_index].events = POLLIN|POLLPRI;
-#else
-                           FD_SET(con_private->sockfd,&my_read_fds);
-#endif
-                           nr_of_descriptors++;
-                           connection->data_read_flag = CL_COM_DATA_NOT_READY;
-                        }
-                        if ( do_write_select != 0) {
-                           max_fd = MAX(max_fd, con_private->sockfd);
-#ifdef USE_POLL
-                           ufds[ufds_index].fd = con_private->sockfd;
-                           ufds[ufds_index].events |= POLLOUT;
-#else
-                           FD_SET(con_private->sockfd,&my_write_fds);
-#endif
-                           connection->fd_ready_for_write = CL_COM_DATA_NOT_READY;
-                           connection->data_write_flag = CL_COM_DATA_READY;
-                        }
-#ifdef USE_POLL
-                        if (ufds[ufds_index].events)
-                           ufds_index++;
-#endif
-                        break;
-                     }
-                     case CL_COM_OPEN_SSL_CONNECT:
-                     case CL_COM_OPEN_SSL_CONNECT_INIT: {
-                        if (do_read_select != 0) {
-                           max_fd = MAX(max_fd,con_private->sockfd);
-#ifdef USE_POLL
-                           ufds[ufds_index].fd = con_private->sockfd;
-                           ufds[ufds_index].events = POLLIN|POLLPRI;
-#else
-                           FD_SET(con_private->sockfd,&my_read_fds);
-#endif
-                           nr_of_descriptors++;
-                           connection->data_read_flag = CL_COM_DATA_NOT_READY;
-                        }
-                        if (do_write_select != 0) {
-                           if (con_private->ssl_last_error == SSL_ERROR_WANT_WRITE || 
-                               con_private->ssl_last_error == SSL_ERROR_WANT_CONNECT) {
+                        case CL_COM_OPEN_CONNECTED:
+                        case CL_COM_OPEN_CONNECT_IN_PROGRESS: {
+                           if (do_read_select != 0) {
+                              max_fd = MAX(max_fd,con_private->sockfd);
+   #ifdef USE_POLL
+                              ufds[ufds_index].fd = con_private->sockfd;
+                              ufds[ufds_index].events = POLLIN|POLLPRI;
+   #else
+                              FD_SET(con_private->sockfd,&my_read_fds);
+   #endif
+                              nr_of_descriptors++;
+                              connection->data_read_flag = CL_COM_DATA_NOT_READY;
+                           }
+                           if ( do_write_select != 0) {
                               max_fd = MAX(max_fd, con_private->sockfd);
-#ifdef USE_POLL
+   #ifdef USE_POLL
                               ufds[ufds_index].fd = con_private->sockfd;
                               ufds[ufds_index].events |= POLLOUT;
-#else
+   #else
                               FD_SET(con_private->sockfd,&my_write_fds);
-#endif
+   #endif
                               connection->fd_ready_for_write = CL_COM_DATA_NOT_READY;
                               connection->data_write_flag = CL_COM_DATA_READY;
                            }
+   #ifdef USE_POLL
+                           if (ufds[ufds_index].events)
+                              ufds_index++;
+   #endif
+                           break;
                         }
-#ifdef USE_POLL
-                        if (ufds[ufds_index].events)
-                           ufds_index++;
-#endif
-                        break;
+                        case CL_COM_OPEN_SSL_CONNECT:
+                        case CL_COM_OPEN_SSL_CONNECT_INIT: {
+                           if (do_read_select != 0) {
+                              max_fd = MAX(max_fd,con_private->sockfd);
+   #ifdef USE_POLL
+                              ufds[ufds_index].fd = con_private->sockfd;
+                              ufds[ufds_index].events = POLLIN|POLLPRI;
+   #else
+                              FD_SET(con_private->sockfd,&my_read_fds);
+   #endif
+                              nr_of_descriptors++;
+                              connection->data_read_flag = CL_COM_DATA_NOT_READY;
+                           }
+                           if (do_write_select != 0) {
+                              if (con_private->ssl_last_error == SSL_ERROR_WANT_WRITE || 
+                                  con_private->ssl_last_error == SSL_ERROR_WANT_CONNECT) {
+                                 max_fd = MAX(max_fd, con_private->sockfd);
+   #ifdef USE_POLL
+                                 ufds[ufds_index].fd = con_private->sockfd;
+                                 ufds[ufds_index].events |= POLLOUT;
+   #else
+                                 FD_SET(con_private->sockfd,&my_write_fds);
+   #endif
+                                 connection->fd_ready_for_write = CL_COM_DATA_NOT_READY;
+                                 connection->data_write_flag = CL_COM_DATA_READY;
+                              }
+                           }
+   #ifdef USE_POLL
+                           if (ufds[ufds_index].events)
+                              ufds_index++;
+   #endif
+                           break;
+                        }
+                        default:
+                           break;
                      }
-                     default:
-                        break;
-                  }
-                  break;
-               case CL_DISCONNECTED:
-                  break;
-               case CL_CLOSING: {
-                  if (connection->ccrm_sent == 0 && connection->connection_sub_state != CL_COM_SHUTDOWN_DONE) {
-                     if (do_read_select != 0) {
-#ifdef USE_POLL
-                        ufds[ufds_index].fd = con_private->sockfd;
-                        ufds[ufds_index].events = POLLIN|POLLPRI;
-#else
-                        FD_SET(con_private->sockfd,&my_read_fds);
-#endif
-                        max_fd = MAX(max_fd,con_private->sockfd);
-                        nr_of_descriptors++;
-                        connection->data_read_flag = CL_COM_DATA_NOT_READY;
+                     break;
+                  case CL_DISCONNECTED:
+                     break;
+                  case CL_CLOSING: {
+                     if (connection->ccrm_sent == 0 && connection->connection_sub_state != CL_COM_SHUTDOWN_DONE) {
+                        if (do_read_select != 0) {
+   #ifdef USE_POLL
+                           ufds[ufds_index].fd = con_private->sockfd;
+                           ufds[ufds_index].events = POLLIN|POLLPRI;
+   #else
+                           FD_SET(con_private->sockfd,&my_read_fds);
+   #endif
+                           max_fd = MAX(max_fd,con_private->sockfd);
+                           nr_of_descriptors++;
+                           connection->data_read_flag = CL_COM_DATA_NOT_READY;
+                        }
+                        if (connection->data_write_flag == CL_COM_DATA_READY && do_write_select != 0) {
+                           /* this is to come out of select when data is ready to write */
+   #ifdef USE_POLL
+                           ufds[ufds_index].fd = con_private->sockfd;
+                           ufds[ufds_index].events |= POLLOUT;
+                           
+   #else
+                           FD_SET(con_private->sockfd,&my_write_fds);
+   #endif
+                           max_fd = MAX(max_fd, con_private->sockfd);
+                           connection->fd_ready_for_write = CL_COM_DATA_NOT_READY;
+                        }
                      }
-                     if (connection->data_write_flag == CL_COM_DATA_READY && do_write_select != 0) {
-                        /* this is to come out of select when data is ready to write */
-#ifdef USE_POLL
-                        ufds[ufds_index].fd = con_private->sockfd;
-                        ufds[ufds_index].events |= POLLOUT;
-                        
-#else
-                        FD_SET(con_private->sockfd,&my_write_fds);
-#endif
-                        max_fd = MAX(max_fd, con_private->sockfd);
-                        connection->fd_ready_for_write = CL_COM_DATA_NOT_READY;
-                     }
-                  }
-#ifdef USE_POLL
-                  if (ufds[ufds_index].events)
-                     ufds_index++;
-#endif
+   #ifdef USE_POLL
+                     if (ufds[ufds_index].events)
+                        ufds_index++;
+   #endif
 
-                  break;
+                     break;
+                  }
                }
+               break;
             }
-            break;
-         }
-         case CL_CT_UNDEFINED:
-         case CL_CT_TCP: {
-            CL_LOG_STR(CL_LOG_WARNING,"ignoring unexpected connection type:",
-                       cl_com_get_framework_type(connection));
+            case CL_CT_UNDEFINED:
+            case CL_CT_TCP: {
+               CL_LOG_STR(CL_LOG_WARNING,"ignoring unexpected connection type:",
+                          cl_com_get_framework_type(connection));
+            }
          }
       }
       con_elem = cl_connection_list_get_next_elem(con_elem);

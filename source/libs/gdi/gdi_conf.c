@@ -249,7 +249,8 @@ lListElem **lepp
 
 int get_conf_and_daemonize(
 tDaemonizeFunc dfunc,
-lList **conf_list
+lList **conf_list,
+volatile int* abort_flag
 ) {
    lListElem *global = NULL;
    lListElem *local = NULL;
@@ -300,6 +301,12 @@ lList **conf_list
             default:
                sleep(1);
                break;
+         }
+      }
+      if (abort_flag != NULL) {
+         if (*abort_flag != 0) {
+            DEXIT;
+            return -2;
          }
       }
    }

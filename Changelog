@@ -1,3 +1,5 @@
+CR-2005-07-29-1: Cleanup:   code format cleanup
+
 CR-2005-07-29-0: Bugfix:    - enabled multithreaded startup of scheduler daemon
                               (Part 2)
                               Fixed problems for linux 2.4 Kernel pthread library

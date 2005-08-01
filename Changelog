@@ -1,3 +1,9 @@
+SG-2005-08-01-0: Bugfix:  	 strange reservation
+                 Issue:     1655
+                 Bugtraq:   6287955
+                 Changed:   scheduler
+                 Review:    RD
+
 JG-2005-07-29-0: Testsuite: check functional/consumable_resources erroneously 
                             reports a qhost error.
 

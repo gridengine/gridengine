@@ -115,6 +115,15 @@ prepare_resource_schedules(const lList *running_jobs, const lList *suspended_job
                            lList *centry_list);
 
 
+static void 
+add_calendar_to_schedule(lList *queue_list); 
+
+static void 
+set_utilization(lList *uti_list, u_long32 from, u_long32 till, double uti);
+
+static lListElem 
+*newResourceElem(u_long32 time, double amount); 
+
 /****** schedd/scheduler/scheduler() ******************************************
 *  NAME
 *     scheduler() -- Default scheduler
@@ -141,7 +150,6 @@ int my_scheduler(sge_Sdescr_t *lists, lList **order)
 #endif
 int scheduler(sge_Sdescr_t *lists, lList **order) {
    order_t orders = ORDER_INIT;
-   int send_orders = 0;
    lList **splitted_job_lists[SPLIT_LAST];         /* JB_Type */
    lList *waiting_due_to_pedecessor_list = NULL;   /* JB_Type */
    lList *waiting_due_to_time_list = NULL;         /* JB_Type */
@@ -249,7 +257,6 @@ int scheduler(sge_Sdescr_t *lists, lList **order) {
 
    /* send job_start_orders */
    if (!shut_me_down) {
-      send_orders += sge_GetNumberOfOrders(&orders);
       sge_send_job_start_orders(&orders);
    }
 
@@ -297,7 +304,7 @@ int scheduler(sge_Sdescr_t *lists, lList **order) {
    if(prof_is_active(SGE_PROF_CUSTOM0)) {
       prof_stop_measurement(SGE_PROF_CUSTOM0, NULL); 
 
-      PROFILING((SGE_EVENT, "PROF: scheduled in %.3f (u %.3f + s %.3f = %.3f): %d sequential, %d parallel, %d orders, %d H, %d Q, %d QA, %d J(qw), %d J(r), %d J(s), %d J(h), %d J(e), %d J(x), %d J(all), %d C, %d ACL, %d PE, %d U, %d D, %d PRJ, %d ST, %d CKPT, %d RU, %d gMes, %d jMes",
+      PROFILING((SGE_EVENT, "PROF: scheduled in %.3f (u %.3f + s %.3f = %.3f): %d sequential, %d parallel, %d orders, %d H, %d Q, %d QA, %d J(qw), %d J(r), %d J(s), %d J(h), %d J(e), %d J(x), %d J(all), %d C, %d ACL, %d PE, %d U, %d D, %d PRJ, %d ST, %d CKPT, %d RU, %d gMes, %d jMes, %d/%d pre-send\n",
          prof_get_measurement_wallclock(SGE_PROF_CUSTOM0, true, NULL),
          prof_get_measurement_utime(SGE_PROF_CUSTOM0, true, NULL),
          prof_get_measurement_stime(SGE_PROF_CUSTOM0, true, NULL),
@@ -305,7 +312,7 @@ int scheduler(sge_Sdescr_t *lists, lList **order) {
          prof_get_measurement_stime(SGE_PROF_CUSTOM0, true, NULL),
          scheduled_fast_jobs,
          scheduled_complex_jobs,
-         (send_orders + sge_GetNumberOfOrders(&orders)), 
+         (int)(orders.numberSendOrders + sge_GetNumberOfOrders(&orders)), 
          lGetNumberOfElem(lists->host_list), 
          lGetNumberOfElem(lists->queue_list),
          lGetNumberOfElem(lists->all_queue_list),
@@ -326,7 +333,9 @@ int scheduler(sge_Sdescr_t *lists, lList **order) {
          lGetNumberOfElem(lists->ckpt_list),
          lGetNumberOfElem(lists->running_per_user),
          global_mes_count,
-         job_mes_count
+         job_mes_count,
+         (int)orders.numberSendOrders,
+         (int)orders.numberSendPackages
       ));
    }
    
@@ -587,7 +596,7 @@ static int dispatch_jobs(sge_Sdescr_t *lists, order_t *orders,
 
       /* TODO async gdi: put this in, when to enable async gdi */
       /*sge_send_job_start_orders(orders); */
-   
+
       if (prof_is_active(SGE_PROF_CUSTOM1)) {
          prof_stop_measurement(SGE_PROF_CUSTOM1, NULL);
 
@@ -1069,8 +1078,8 @@ select_assign_debit(lList **queue_list, lList **dis_queue_list, lListElem *job, 
          if (is_reserve) {
             is_computed_reservation = true;
             if (*queue_list == NULL) { 
-               *queue_list = lCreateList("temp queue", lGetListDescr(*dis_queue_list));
-               a.queue_list       = *queue_list;
+               *queue_list  = lCreateList("temp queue", lGetListDescr(*dis_queue_list));
+               a.queue_list = *queue_list;
             }
             lAppendList(*queue_list, *dis_queue_list);
          }
@@ -1355,7 +1364,7 @@ add_job_list_to_schedule(const lList *job_list, bool suspended, lList *pe_list,
             sge_execd and default_duration is not enforced at all anyways.
             All we can do here is hope the job will be finished in the next interval. */
          if (a.start + a.duration <= now) {
-            if (sconf_get_max_reservations()>0) {
+            if (sconf_get_max_reservations() > 0) {
                WARNING((SGE_EVENT, MSG_SCHEDD_SHOULDHAVEFINISHED_UUU, 
                      sge_u32c(a.job_id), sge_u32c(a.ja_task_id), 
                      sge_u32c(now - a.duration - a.start + 1)));
@@ -1390,6 +1399,213 @@ add_job_list_to_schedule(const lList *job_list, bool suspended, lList *pe_list,
    return 0;
 }
 
+/****** scheduler/add_calendar_to_schedule() ***********************************
+*  NAME
+*     add_calendar_to_schedule() -- addes the queue calendar to the resource
+*                                   schedule
+*
+*  SYNOPSIS
+*     static void add_calendar_to_schedule(lList *queue_list) 
+*
+*  FUNCTION
+*     Adds the queue calendars to the resource schedule. It is using
+*     the slot entry for simulating and enabled / disabled calendar.
+*
+*  INPUTS
+*     lList *queue_list - all queues, which can posibly run jobs
+*
+*  NOTES
+*     MT-NOTE: add_calendar_to_schedule() is MT safe 
+*
+*  SEE ALSO
+*     scheduler/set_utilization
+*     scheduler/newResourceElem
+*     scheduler/prepare_resource_schedules
+*******************************************************************************/
+static void 
+add_calendar_to_schedule(lList *queue_list) 
+{
+   lListElem *queue;
+   DENTER(TOP_LAYER, "add_calendar_to_schedule");
+
+   for_each(queue, queue_list) {
+      lList *queue_states = lGetList(queue, QU_state_changes);
+      u_long32 from       = sconf_get_now();
+
+      if (queue_states != NULL) {
+      
+         lList *consumable_list = lGetList(queue, QU_consumable_config_list);
+         lListElem *slot_elem   = lGetElemStr(consumable_list, CE_name, "slots"); 
+         double slot_count      = lGetDouble(slot_elem, CE_doubleval); 
+
+         lList *queue_uti_list = lGetList(queue, QU_resource_utilization);
+         lListElem *slot_uti   = lGetElemStr(queue_uti_list, RUE_name, "slots");
+         lList *slot_uti_list  = lGetList(slot_uti, RUE_utilized);
+         
+         lListElem *queue_state = NULL;     
+
+         DPRINTF(("queue: %s time %d\n", lGetString(queue, QU_full_name), from));
+
+         if (slot_uti_list == NULL) {
+            slot_uti_list = lCreateList("slot_uti", RDE_Type);
+            lSetList(slot_uti, RUE_utilized, slot_uti_list);
+         }
+
+         for_each(queue_state, queue_states) {
+            bool is_full = (lGetUlong(queue_state, CQU_state) != QI_DO_NOTHING)?true:false;
+            u_long32 till = lGetUlong(queue_state, CQU_till);
+          
+            /* check for now, and set it if it is now */
+            if (is_full && (from == sconf_get_now())) {
+               lSetDouble(slot_uti, RUE_utilized_now, slot_count);
+            }
+          
+            set_utilization(slot_uti_list, from, till, is_full?slot_count:0);
+            
+            from = till;     
+         } /* end for_each */
+
+      }/* end if*/
+   }
+   
+   DEXIT;
+}
+
+/****** scheduler/set_utilization() ********************************************
+*  NAME
+*     set_utilization() -- adds one specific calendar entry to the resource schedule
+*
+*  SYNOPSIS
+*     static void set_utilization(lList *uti_list, u_long32 from, u_long32 
+*     till, double uti) 
+*
+*  FUNCTION
+*     This set utilization function is unique for calendars. It removes all other
+*     uti settings in the given time interval and replaces it with the given one.
+*
+*  INPUTS
+*     lList *uti_list - the uti list for a specifiy resource and queue
+*     u_long32 from   - starting time for this uti
+*     u_long32 till   - endtime for this uti.
+*     double uti      - utilization (needs to bigger than 1 (schould be max)
+*
+*  NOTES
+*     MT-NOTE: set_utilization() is MT safe 
+*
+*  SEE ALSO
+*     scheduler/add_calendar_to_schedule
+*     scheduler/newResourceElem
+*     scheduler/prepare_resource_schedules
+*******************************************************************************/
+static void 
+set_utilization(lList *uti_list, u_long32 from, u_long32 till, double uti)
+{
+   DENTER(TOP_LAYER, "set_utilization");
+
+   if (uti > 0) {
+      bool is_from_added = false;
+      bool is_till_added = false;
+      double past_uti = 0;
+      lListElem *uti_elem_next = NULL;
+
+      if (till == 0) {
+         till = DISPATCH_TIME_QUEUE_END;
+      }
+
+      DPRINTF(("queue cal. schedule entry time %d till %d util: %f\n", from, till, uti));
+
+      uti_elem_next = lFirst(uti_list);
+     
+      /* search for the starting point */
+      while (uti_elem_next != NULL) {
+         if (lGetUlong(uti_elem_next, RDE_time) > from) { /*insert before this elem */
+            lInsertElem(uti_list, lPrev(uti_elem_next), newResourceElem(from, uti));
+            past_uti = lGetDouble(uti_elem_next, RDE_amount);
+            is_from_added = true; 
+            break;
+         }
+         else if (lGetUlong(uti_elem_next, RDE_time) == from) { /* modify found elem */
+            /* override utilization is maximun */
+            past_uti = lGetDouble(uti_elem_next, RDE_amount);
+            lSetDouble(uti_elem_next, RDE_amount, uti);
+            is_from_added = true;
+            break;
+         }
+         else { /* did not find it, continue */
+            uti_elem_next = lNext(uti_elem_next);
+         }
+      }
+
+      if (is_from_added) { /* searc for the endpoint */
+          while (uti_elem_next != NULL) {
+            if (lGetUlong(uti_elem_next, RDE_time) > till) { /*insert before this elem */
+               lInsertElem(uti_list, lPrev(uti_elem_next), newResourceElem(till, past_uti));
+               is_till_added = true; 
+               break;
+            }
+            else if (lGetUlong(uti_elem_next, RDE_time) == till) { /* do not override utilization is maximun */
+               is_till_added = true;
+               break;
+            }
+            else { /* did not find it, remove the current elem and continue*/
+               lListElem *next = lNext(uti_elem_next);
+               past_uti = lGetDouble(uti_elem_next, RDE_amount);
+               lRemoveElem(uti_list, uti_elem_next);
+               uti_elem_next = next;
+            }
+         }
+      }
+      else {
+         lAppendElem(uti_list, newResourceElem(from, uti));
+      }
+
+      if (!is_till_added) {
+         lAppendElem(uti_list, newResourceElem(till, 0));
+      }   
+   }
+
+   DEXIT;
+}
+
+
+/****** scheduler/newResourceElem() ********************************************
+*  NAME
+*     newResourceElem() -- creates new resource schedule entry
+*
+*  SYNOPSIS
+*     static lListElem* newResourceElem(u_long32 time, double amount) 
+*
+*  FUNCTION
+*     creates new resource schedule entry and returns it
+*
+*  INPUTS
+*     u_long32 time - specific time
+*     double amount - the utilized amount
+*
+*  RESULT
+*     static lListElem* - new resource schedule entry
+*
+*  NOTES
+*     MT-NOTE: newResourceElem() is MT safe 
+*
+*  SEE ALSO
+*     scheduler/add_calendar_to_schedule
+*     scheduler/set_utilization
+*     scheduler/prepare_resource_schedules
+*******************************************************************************/
+static lListElem *newResourceElem(u_long32 time, double amount) 
+{
+   lListElem *elem = NULL;
+
+   elem = lCreateElem(RDE_Type);
+   if (elem != NULL) {
+      lSetUlong(elem, RDE_time, time);
+      lSetDouble(elem, RDE_amount, amount);    
+   }
+
+   return elem;
+}
+
 /****** scheduler/prepare_resource_schedules() *********************************
 *  NAME
 *     prepare_resource_schedules() -- Debit non-pending jobs in resource schedule
@@ -1422,7 +1638,7 @@ static void prepare_resource_schedules(const lList *running_jobs, const lList *s
 
    add_job_list_to_schedule(running_jobs, false, pe_list, host_list, queue_list, centry_list);
    add_job_list_to_schedule(suspended_jobs, true, pe_list, host_list, queue_list, centry_list);
-
+   add_calendar_to_schedule(queue_list); 
 
 #ifdef DEBUG /* just for information purposes... */
    utilization_print_all(pe_list, host_list, queue_list); 

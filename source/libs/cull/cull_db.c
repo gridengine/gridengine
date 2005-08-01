@@ -479,7 +479,7 @@ int lSplit(lList **slp, lList **ulp, const char *ulp_name,
       iterate through the source list call lCompare and chain all elems
       that don't fullfill the condition into a new list.
     */
-   if (!slp || (ulp && *ulp)) {
+   if (!slp) {
       DEXIT;
       return -1;
    }

@@ -525,7 +525,6 @@ int sge_send_job_start_orders(order_t *orders) {
    sge_gdi_request *answer= NULL;
    int config_mode = SGE_GDI_RECORD;
    int start_mode = SGE_GDI_RECORD;
-   int orders_send = 0;
    state_gdi_multi state = STATE_GDI_MULTI_INIT;
 
    DENTER(TOP_LAYER, "sge_send_orders2master");
@@ -539,13 +538,10 @@ int sge_send_job_start_orders(order_t *orders) {
       malp = lFreeList(malp); 
    }
   
-
-   
    /* figure out, what needs to be recorded, and what needs to be send */
-   if (orders->pendingOrderList == NULL) {
-      if (orders->jobStartOrderList == NULL) {
+   if (lGetNumberOfElem(orders->pendingOrderList) == 0 ) {
+      if (lGetNumberOfElem(orders->jobStartOrderList) == 0) {
          config_mode = SGE_GDI_SEND;
-         
       }
       else {
          start_mode = SGE_GDI_SEND;   
@@ -554,27 +550,30 @@ int sge_send_job_start_orders(order_t *orders) {
   
    /* TODO async gdi: change the last parameter in sge_gdi_multi_sync from true to false to 
                       enable the async gdi */
-  
-   /* send orders */
+    /* send orders */
    if (lGetNumberOfElem(orders->configOrderList) > 0) {
-
-      orders_send += lGetNumberOfElem(orders->configOrderList);
+      orders->numberSendOrders += lGetNumberOfElem(orders->configOrderList);
       sge_gdi_multi_sync(&alp, config_mode, SGE_ORDER_LIST, SGE_GDI_ADD,
                                &orders->configOrderList, NULL, NULL, &malp, &state, false, true);
+      if (config_mode == SGE_GDI_SEND) {
+         orders->numberSendPackages++;     
+      }
    }        
    
    if (lGetNumberOfElem(orders->jobStartOrderList) > 0) {
-
-      orders_send += lGetNumberOfElem(orders->jobStartOrderList);
+      orders->numberSendOrders += lGetNumberOfElem(orders->jobStartOrderList);
       sge_gdi_multi_sync(&alp, start_mode, SGE_ORDER_LIST, SGE_GDI_ADD,
                             &orders->jobStartOrderList, NULL, NULL, &malp, &state, false, true);
+      if (start_mode == SGE_GDI_SEND) {
+         orders->numberSendPackages++;     
+      }
    }
 
    if (lGetNumberOfElem(orders->pendingOrderList) > 0) {
-
-      orders_send += lGetNumberOfElem(orders->pendingOrderList);
+      orders->numberSendOrders += lGetNumberOfElem(orders->pendingOrderList);
       sge_gdi_multi_sync(&alp, SGE_GDI_SEND, SGE_ORDER_LIST, SGE_GDI_ADD,
                             &orders->pendingOrderList, NULL, NULL, &malp, &state, false, true);
+      orders->numberSendPackages++;                      
    }
 
    malp = lFreeList(malp);

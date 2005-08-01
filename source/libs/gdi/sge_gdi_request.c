@@ -634,7 +634,7 @@ gdi_receive_multi_async(sge_gdi_request **answer, lList **malpp, bool is_sync)
       /* nothing todo... */
       return true;
    }
-   
+ 
    /* recive answer */
    while (!(ret = sge_get_gdi_request_async(&commlib_error, rcv_rhost, rcv_commproc, &id, answer, gdi_request_mid, is_sync))) {
    
@@ -701,7 +701,7 @@ gdi_receive_multi_async(sge_gdi_request **answer, lList **malpp, bool is_sync)
    }
 
    (*answer) = free_gdi_request((*answer));
-  
+
    gdi_state_clear_last_gdi_request();
    
    return true;

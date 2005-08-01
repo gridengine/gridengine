@@ -152,7 +152,7 @@ static int sge_add_qeti_resource_container(lList **qeti_to_add, lList* rue_list,
 {
    lListElem *req, *actual, *tep;
    const char *name;
-   lListElem *centry_config;
+   lListElem *centry_config = NULL;
 
    DENTER(TOP_LAYER, "sge_add_qeti_resource_container");
 
@@ -263,6 +263,7 @@ sge_qeti_t *sge_qeti_allocate(lListElem *job, lListElem *pe, lListElem *ckpt,
       if (sge_host_match_static(job, NULL, hep, centry_list, acl_list) == DISPATCH_NEVER_CAT) {
          continue;
       }   
+
       if (!strcmp((eh_name=lGetHost(hep, EH_name)), SGE_GLOBAL_NAME)) {
          continue;
       }   
@@ -275,41 +276,35 @@ sge_qeti_t *sge_qeti_allocate(lListElem *job, lListElem *pe, lListElem *ckpt,
           (qep = next_queue);
            next_queue = lGetElemHostNext(queue_list, QU_qhostname, eh_name, &queue_iterator)) {
 
-         if (qinstance_is_pe_referenced(qep, pe)) {
-            is_relevant = true;
-            break;
+         if (!qinstance_is_pe_referenced(qep, pe)) {
+            continue;
          }
+
+         /* consider only those queues that match this job (statically) */
+         if (sge_queue_match_static(qep, job, pe, ckpt, centry_list, acl_list) != DISPATCH_OK) { 
+            continue;
+         }   
+
+         if (sge_add_qeti_resource_container(&iter->cr_refs_queue, 
+                  lGetList(qep, QU_resource_utilization), lGetList(qep, QU_consumable_config_list), 
+                        centry_list, requests, false)!=0) {
+            sge_qeti_release(iter);
+            DEXIT;
+            return NULL;
+         }
+         
+         is_relevant = true; 
+            
       }
-      if (!is_relevant) {
-         continue;
-      }   
+      if (is_relevant) {
 
-      if (sge_add_qeti_resource_container(&iter->cr_refs_host, 
-               lGetList(hep, EH_resource_utilization), lGetList(hep, EH_consumable_config_list), 
-                     centry_list, requests, false)!=0) {
-         sge_qeti_release(iter);
-         DEXIT;
-         return NULL;
-      }
-   }
-
-   /* add references to per queue resource utilization entries 
-      that might affect jobs queue end time */
-   for_each (qep, queue_list) {
-      if (!strcmp(lGetString(qep, QU_qname), SGE_TEMPLATE_NAME))
-         continue;
-
-      /* consider only those queues that match this job (statically) */
-      if (sge_queue_match_static(qep, job, pe, ckpt, centry_list, acl_list) != DISPATCH_OK) { 
-         continue;
-      }   
-
-      if (sge_add_qeti_resource_container(&iter->cr_refs_queue, 
-               lGetList(qep, QU_resource_utilization), lGetList(qep, QU_consumable_config_list), 
-                     centry_list, requests, false)!=0) {
-         sge_qeti_release(iter);
-         DEXIT;
-         return NULL;
+         if (sge_add_qeti_resource_container(&iter->cr_refs_host, 
+                  lGetList(hep, EH_resource_utilization), lGetList(hep, EH_consumable_config_list), 
+                        centry_list, requests, false)!=0) {
+            sge_qeti_release(iter);
+            DEXIT;
+            return NULL;
+         }
       }
    }
 

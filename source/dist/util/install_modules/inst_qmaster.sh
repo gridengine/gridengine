@@ -703,7 +703,7 @@ AddBootstrap()
 #
 PrintBootstrap()
 {
-   $ECHO "# Version: 6.0u2"
+   $ECHO "# Version: 6.0u4"
    $ECHO "#"
    if [ $ADMINUSER != default ]; then
       $ECHO "admin_user             $ADMINUSER"

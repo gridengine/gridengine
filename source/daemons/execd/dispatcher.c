@@ -432,7 +432,7 @@ static int receive_message_cach_n_ack( dispatch_entry*    de,
             acknowledge to apb. Else we have to send the acknowledge and
             reinitialize apb */
 
-         if (apb.head_ptr) {  /* only if there is allready an acknowlege */
+         if (apb.head_ptr) {  /* only if there is already an acknowlege */
             if (lastde.id != deact.id || sge_hostcmp(lastde.host, deact.host) ||
                 strcmp(lastde.commproc, deact.commproc)) {
                /* this is another sender -> send ack to last sender */

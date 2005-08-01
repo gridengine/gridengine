@@ -239,6 +239,7 @@ int             log_state_get_log_as_admin_user(void);
    } else { \
       sge_log(LOG_CRIT, # x ,__FILE__,SGE_FUNC,__LINE__); \
       sge_log(LOG_CRIT, MSG_UNREC_ERROR,__FILE__,SGE_FUNC,__LINE__); \
+      fflush(stderr); \
       abort(); \
    }
 #else
@@ -247,6 +248,7 @@ int             log_state_get_log_as_admin_user(void);
       ; \
    } else { \
       sge_log(LOG_CRIT, MSG_UNREC_ERROR,__FILE__,SGE_FUNC,__LINE__); \
+      fflush(stderr); \
       abort(); \
    }
 #endif

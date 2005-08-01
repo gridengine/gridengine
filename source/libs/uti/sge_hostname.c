@@ -352,7 +352,7 @@ struct hostent *sge_gethostbyname(const char *name, int* system_error_retval)
    int time;
    int l_errno = 0;
    
-   DENTER(GDI_LAYER, "sge_gethostbyname");
+   DENTER(TOP_LAYER, "sge_gethostbyname");
 
    /* This method goes to great lengths to slip a reentrant gethostbyname into
     * the code without making changes to the rest of the source base.  That

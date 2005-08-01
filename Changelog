@@ -1,3 +1,12 @@
+AH-2005-07-27-1: Bugfix:    Multi-threaded, multi-CPU username problems
+                 Bugfix:    DRMAA can abort in the middle of a session if 
+                            NIS becomes unavailable
+                            Issue with IRIX compilation
+                 Issue:     1490, 1727
+                 Bugtraq:   6242169, 6303671
+                 Changed:   libdrmaa.so
+                 Review:    CR
+
 JG-2005-07-23-0: CVS        Created V60u6_TAG
 ---------------------------------------------------------
 

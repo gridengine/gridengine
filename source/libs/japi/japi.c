@@ -390,6 +390,11 @@ static void japi_dec_threads(const char *func)
 *
 *  NOTES
 *     MT-NOTES: japi_init_mt() is MT safe
+*  
+*  BUGS
+*     This function is called each time a JAPI call is issued. Initialization
+*     of GDI is done only when called the first time by a thread, but other
+*     setup (e.g. sge_getme() which does hostname resolving) is done each time.
 *******************************************************************************/
 int japi_init_mt(dstring *diag)
 {

@@ -191,6 +191,28 @@ const char *sge_ctime(time_t i, dstring *buffer)
    return sge_dstring_get_string(buffer);
 }
 
+const char *sge_ctimeXML(time_t i, dstring *buffer) 
+{
+#ifdef HAS_LOCALTIME_R
+   struct tm tm_buffer;
+#endif
+   struct tm *tm;
+
+   if (!i)
+      i = (time_t)sge_get_gmt();
+#ifndef HAS_LOCALTIME_R
+   tm = localtime(&i);
+#else
+   tm = (struct tm *)localtime_r(&i, &tm_buffer);
+#endif
+   sge_dstring_sprintf(buffer, "%04d-%02d-%02dT%02d:%02d:%02d",
+           1900 + tm->tm_year, tm->tm_mon + 1, tm->tm_mday,
+           tm->tm_hour, tm->tm_min, tm->tm_sec);
+
+   return sge_dstring_get_string(buffer);
+}
+
+
 /****** uti/time/sge_ctime32() ************************************************
 *  NAME
 *     sge_ctime32() -- Convert time value into string (64 bit time_t) 

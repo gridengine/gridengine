@@ -46,6 +46,7 @@
 u_long32 sge_get_gmt(void);
 
 const char *sge_ctime(time_t, dstring *buffer); 
+const char *sge_ctimeXML(time_t i, dstring *buffer);
 const char *sge_ctime32(u_long32 *, dstring *buffer); 
 const char *sge_at_time(time_t, dstring *buffer);
 

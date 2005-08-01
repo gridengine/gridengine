@@ -657,19 +657,10 @@ int slots_per_line  /* number of slots to be printed in slots column
       if (print_jobid) {
          /* start/submit time */
          if (!lGetUlong(jatep, JAT_start_time) ) {
-            xml_append_Attr_S(attributeList, "JB_submission_time", sge_ctime((time_t)lGetUlong(job, JB_submission_time), &ds));
+            xml_append_Attr_S(attributeList, "JB_submission_time", sge_ctimeXML((time_t)lGetUlong(job, JB_submission_time), &ds));
          }   
          else {
-#if 0
-            /* AH: intermediate change to monitor JAT_stop_initiate_time 
-             * must be removed before 6.0 if really needed a better possiblity 
-             * for monitoring must be found (TODO)
-             */
-            if (getenv("JAT_stop_initiate_time") && (lGetUlong(jatep, JAT_state) & JDELETED))
-               printf("%s!", sge_ctime(lGetUlong(jatep, JAT_stop_initiate_time), &ds));
-            else
-#endif
-               xml_append_Attr_S(attributeList, "JAT_start_time", sge_ctime((time_t)lGetUlong(jatep, JAT_start_time), &ds));
+            xml_append_Attr_S(attributeList, "JAT_start_time", sge_ctimeXML((time_t)lGetUlong(jatep, JAT_start_time), &ds));
          }
       }
    }
@@ -678,7 +669,7 @@ int slots_per_line  /* number of slots to be printed in slots column
    if (sge_urg) {
       if (print_jobid) { 
          if (lGetUlong(job, JB_deadline) )
-            xml_append_Attr_S(attributeList, "JB_deadline", sge_ctime((time_t)lGetUlong(job, JB_deadline), &ds));
+            xml_append_Attr_S(attributeList, "JB_deadline", sge_ctimeXML((time_t)lGetUlong(job, JB_deadline), &ds));
       }
    }
 
@@ -721,22 +712,7 @@ int slots_per_line  /* number of slots to be printed in slots column
 
       /* scaled cpu usage */
       if ((up = lGetElemStr(job_usage_list, UA_name, USAGE_ATTR_CPU))) {
-         int secs, minutes, hours, days;
-         char xmlBuffer[128];
-
-         secs = lGetDouble(up, UA_value);
-
-         days    = secs/(60*60*24);
-         secs   -= days*(60*60*24);
-
-         hours   = secs/(60*60);
-         secs   -= hours*(60*60);
-
-         minutes = secs/60;
-         secs   -= minutes*60;
-      
-         sprintf(xmlBuffer, "%d:%2.2d:%2.2d:%2.2d ", days, hours, minutes, secs); 
-         xml_append_Attr_S(attributeList, "cpu_usage", xmlBuffer);
+         xml_append_Attr_D(attributeList, "cpu_usage", lGetDouble(up, UA_value));
       } 
       /* scaled mem usage */
       if ((up = lGetElemStr(job_usage_list, UA_name, USAGE_ATTR_MEM))) 
@@ -804,12 +780,13 @@ int slots_per_line  /* number of slots to be printed in slots column
    if ((group_opt & GROUP_NO_PETASK_GROUPS)) {
       /* MASTER/SLAVE information needed only to show parallel job distribution */
       xml_append_Attr_S(attributeList, "master", master);
-   } else {
-      /* job slots requested/granted */
-      if (!slots_per_line)
-         slots_per_line = sge_job_slot_request(job, pe_list);
-      xml_append_Attr_I(attributeList, "slots", slots_per_line);
    }
+
+   /* job slots requested/granted */
+   if (!slots_per_line) {
+      slots_per_line = sge_job_slot_request(job, pe_list);
+   }   
+   xml_append_Attr_I(attributeList, "slots", slots_per_line);
 
    if (sge_dstring_get_string(dyn_task_str) && job_is_array(job))
       xml_append_Attr_S(attributeList, "tasks", sge_dstring_get_string(dyn_task_str));
@@ -900,12 +877,14 @@ int slots_per_line  /* number of slots to be printed in slots column
 
                name = lGetString(ce, CE_name);
                if (!lGetBool(ce, CE_consumable) || !strcmp(name, "slots") || 
-                   job_get_request(job, name))
+                   job_get_request(job, name)) {
                   continue;
+               }   
 
                parse_ulong_val(&dval, NULL, lGetUlong(ce, CE_valtype), lGetString(ce, CE_default), NULL, 0); 
-               if (dval == 0.0)
+               if (dval == 0.0) {
                   continue;
+               }   
 
                /* For pending jobs (no queue/no exec host) we may print default request only
                   if the consumable is specified in the global host. For running we print it

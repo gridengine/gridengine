@@ -1,3 +1,7 @@
+AH-2005-08-02-0: Scripts:   Added script source/scripts/nonreentrant.sh to search
+                            for non-reentrant linking dependencies in binaries, objects
+                            and libraries
+
 SG-2005-08-02-0: Enhancem.: enabled async gdi
                  Changed:   scheduler
                  Review:    AA

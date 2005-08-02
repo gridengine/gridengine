@@ -1,3 +1,7 @@
+SG-2005-08-02-0: Enhancem.: enabled async gdi
+                 Changed:   scheduler
+                 Review:    AA
+
 SG-2005-08-01-1: Bugfix:    bug in qstat -XML output (does not match the schema)
                  Issue:     1731
                  Bugtraq:   6289455

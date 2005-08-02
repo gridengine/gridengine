@@ -548,13 +548,11 @@ int sge_send_job_start_orders(order_t *orders) {
       }
    }
   
-   /* TODO async gdi: change the last parameter in sge_gdi_multi_sync from true to false to 
-                      enable the async gdi */
     /* send orders */
    if (lGetNumberOfElem(orders->configOrderList) > 0) {
       orders->numberSendOrders += lGetNumberOfElem(orders->configOrderList);
       sge_gdi_multi_sync(&alp, config_mode, SGE_ORDER_LIST, SGE_GDI_ADD,
-                               &orders->configOrderList, NULL, NULL, &malp, &state, false, true);
+                               &orders->configOrderList, NULL, NULL, &malp, &state, false, false);
       if (config_mode == SGE_GDI_SEND) {
          orders->numberSendPackages++;     
       }
@@ -563,7 +561,7 @@ int sge_send_job_start_orders(order_t *orders) {
    if (lGetNumberOfElem(orders->jobStartOrderList) > 0) {
       orders->numberSendOrders += lGetNumberOfElem(orders->jobStartOrderList);
       sge_gdi_multi_sync(&alp, start_mode, SGE_ORDER_LIST, SGE_GDI_ADD,
-                            &orders->jobStartOrderList, NULL, NULL, &malp, &state, false, true);
+                            &orders->jobStartOrderList, NULL, NULL, &malp, &state, false, false);
       if (start_mode == SGE_GDI_SEND) {
          orders->numberSendPackages++;     
       }
@@ -572,7 +570,7 @@ int sge_send_job_start_orders(order_t *orders) {
    if (lGetNumberOfElem(orders->pendingOrderList) > 0) {
       orders->numberSendOrders += lGetNumberOfElem(orders->pendingOrderList);
       sge_gdi_multi_sync(&alp, SGE_GDI_SEND, SGE_ORDER_LIST, SGE_GDI_ADD,
-                            &orders->pendingOrderList, NULL, NULL, &malp, &state, false, true);
+                            &orders->pendingOrderList, NULL, NULL, &malp, &state, false, false);
       orders->numberSendPackages++;                      
    }
 

@@ -3228,9 +3228,9 @@ parallel_tag_hosts_queues(sge_assignment_t *a, lListElem *hep, int *slots, int *
 
 
             DPRINTF(("QUEUE %s TIME: %d + %d -> %d  QEND: %d + %d -> %d (%d soft violations)\n", qname, 
-               accu_queue_slots,      qslots,      accu_queue_slots+       qslots, 
-               accu_queue_slots_qend, qslots_qend, accu_queue_slots_qend + qslots_qend,
-               (int)lGetUlong(qep, QU_soft_violation))); 
+                     accu_queue_slots,      qslots,      accu_queue_slots+       qslots, 
+                     accu_queue_slots_qend, qslots_qend, accu_queue_slots_qend + qslots_qend,
+                     (int)lGetUlong(qep, QU_soft_violation))); 
             accu_queue_slots      += qslots;
             accu_queue_slots_qend += qslots_qend;
             lSetUlong(qep, QU_tag,      qslots);
@@ -3793,12 +3793,14 @@ parallel_assignment( sge_assignment_t *a, category_use_t *use_category ) {
 static int parallel_make_granted_destination_id_list( sge_assignment_t *a) 
 {
    int max_host_seq_no, start_seq_no, last_accu_host_slots, accu_host_slots = 0;
-   int host_slots;
+   int host_slots = 0;
    lList *gdil = NULL;
-   const char *eh_name;
-   const char *qname;
-   lListElem *hep, *qep;
-   int allocation_rule, minslots;
+   const char *eh_name = NULL;
+   const char *qname = NULL;
+   lListElem *hep = NULL;
+   lListElem *qep = NULL;
+   int allocation_rule = 0;
+   int minslots = 0;
    bool need_master_host = (lGetList(a->job, JB_master_hard_queue_list) != NULL) ? true : false;
    int host_seq_no = 1;
    int total_soft_violations = 0;
@@ -3809,8 +3811,9 @@ static int parallel_make_granted_destination_id_list( sge_assignment_t *a)
    minslots = ALLOC_RULE_IS_BALANCED(allocation_rule)?allocation_rule:1;
 
    /* derive suitablility of host from queues suitability */
-   for_each (hep, a->host_list) 
+   for_each (hep, a->host_list) {
       lSetUlong(hep, EH_seq_no, -1);
+   }   
 
    DPRINTF(("minslots = %d\n", minslots));
 
@@ -3828,7 +3831,8 @@ static int parallel_make_granted_destination_id_list( sge_assignment_t *a)
             (int) lGetUlong(hep, EH_seq_no)==-1) {
          lSetUlong(hep, EH_seq_no, host_seq_no++);
          DPRINTF(("%d. %s selected! %d\n", lGetUlong(hep, EH_seq_no), eh_name, lGetUlong(hep, EH_tagged)));
-      } else {
+      } 
+      else {
          DPRINTF(("%d. %s (%d tagged)\n", lGetUlong(hep, EH_seq_no), eh_name, lGetUlong(hep, EH_tagged)));
       }
    }
@@ -3861,13 +3865,15 @@ static int parallel_make_granted_destination_id_list( sge_assignment_t *a)
          queue of the master host to be at the first position */
       master_eh_name = lGetHost(master_hep, EH_name);
       for_each (qep, a->queue_list) {
-         if (sge_hostcmp(master_eh_name, lGetHost(qep, QU_qhostname)))
+         if (sge_hostcmp(master_eh_name, lGetHost(qep, QU_qhostname))) {
             continue;
-         if (lGetUlong(qep, QU_tagged4schedule))
+         }   
+         if (lGetUlong(qep, QU_tagged4schedule)) {
             break;
+         }   
       }
 
-      if (!qep) {
+      if (qep == NULL) {
          ERROR((SGE_EVENT, MSG_SCHEDD_NOMASTERQUEUE_SU, master_eh_name, 
                sge_u32c(lGetUlong(a->job, JB_job_number))));
          DEXIT;
@@ -3882,8 +3888,10 @@ static int parallel_make_granted_destination_id_list( sge_assignment_t *a)
       /* this will cause the master host to be selected first */
       lSetUlong(master_hep, EH_seq_no, 0);
       start_seq_no = 0;
-   } else
+   } 
+   else {
       start_seq_no = 1;
+   }
 
    do { /* loop only needed round robin allocation rule */
       last_accu_host_slots = accu_host_slots;
@@ -3906,8 +3914,9 @@ static int parallel_make_granted_destination_id_list( sge_assignment_t *a)
             host_slots = 1;
          } else if (allocation_rule==ALLOC_RULE_FILLUP) {
             host_slots = available;
-         } else 
+         } else {
             host_slots = allocation_rule;
+         }
          lSetUlong(hep, EH_tagged, available - host_slots);
 
          DPRINTF(("allocating %d of %d slots at host %s (seqno = %d)\n", 
@@ -3922,8 +3931,7 @@ static int parallel_make_granted_destination_id_list( sge_assignment_t *a)
             qname = lGetString(qep, QU_full_name);
             /* how many slots ? */
             qtagged = lGetUlong(qep, QU_tag);
-            slots = MIN(a->slots-accu_host_slots, 
-               MIN(host_slots, qtagged));
+            slots = MIN(a->slots-accu_host_slots, MIN(host_slots, qtagged));
 
             if (slots != 0) {
                accu_host_slots += slots;
@@ -3933,20 +3941,23 @@ static int parallel_make_granted_destination_id_list( sge_assignment_t *a)
                /* build gdil for that queue */
                DPRINTF((sge_u32": %d slots in queue %s@%s user %s (host_slots = %d)\n", 
                   a->job_id, slots, qname, eh_name, lGetString(a->job, JB_owner), host_slots));
+
                if (!(gdil_ep=lGetElemStr(gdil, JG_qname, qname))) {
                   gdil_ep = lAddElemStr(&gdil, JG_qname, qname, JG_Type);
                   lSetUlong(gdil_ep, JG_qversion, lGetUlong(qep, QU_version));
                   lSetHost(gdil_ep, JG_qhostname, eh_name);
                   lSetUlong(gdil_ep, JG_slots, slots);
-               } else 
+               } else {
                   lSetUlong(gdil_ep, JG_slots, lGetUlong(gdil_ep, JG_slots) + slots);
+               }   
 
                /* untag */
                lSetUlong(qep, QU_tag, qtagged - slots);
             }
 
-            if (!host_slots) 
+            if (!host_slots) {
                break; 
+            }   
          }
       }
 

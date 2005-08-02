@@ -594,9 +594,9 @@ static int dispatch_jobs(sge_Sdescr_t *lists, order_t *orders,
                     *(splitted_job_lists[SPLIT_PENDING]),
                     orders); 
 
-      /* TODO async gdi: put this in, when to enable async gdi */
-      /*sge_send_job_start_orders(orders); */
-
+      /* async gdi */
+      sge_send_job_start_orders(orders); 
+         
       if (prof_is_active(SGE_PROF_CUSTOM1)) {
          prof_stop_measurement(SGE_PROF_CUSTOM1, NULL);
 
@@ -714,21 +714,8 @@ static int dispatch_jobs(sge_Sdescr_t *lists, order_t *orders,
       bool is_reserve;
       bool is_start;
 
-      /* sort the hostlist */
-      if(sort_hostlist) {
-         lPSortList(lists->host_list, "%I+", EH_sort_value);
-         sort_hostlist      = 0;
-         sconf_set_host_order_changed(true);
-      } 
-      else {
-         sconf_set_host_order_changed(false);
-      }   
-
       job_id = lGetUlong(orig_job, JB_job_number);
 
-      is_immediate_array_job = (is_immediate_array_job || 
-                                 (JOB_TYPE_IS_ARRAY(lGetUlong(orig_job, JB_type)) && 
-                                  JOB_TYPE_IS_IMMEDIATE(lGetUlong(orig_job, JB_type)))) ? true : false;
       /* 
        * We don't try to get a reservation, if 
        * - reservation is generally disabled 
@@ -753,6 +740,22 @@ static int dispatch_jobs(sge_Sdescr_t *lists, order_t *orders,
          lListElem *job = NULL;
          u_long32 ja_task_id; 
          lListElem *ja_task;
+
+
+         /* sort the hostlist */
+         if(sort_hostlist) {
+            lPSortList(lists->host_list, "%I+", EH_sort_value);
+            sort_hostlist      = 0;
+            sconf_set_host_order_changed(true);
+         } 
+         else {
+            sconf_set_host_order_changed(false);
+         }  
+
+         is_immediate_array_job = (is_immediate_array_job || 
+                                 (JOB_TYPE_IS_ARRAY(lGetUlong(orig_job, JB_type)) && 
+                                  JOB_TYPE_IS_IMMEDIATE(lGetUlong(orig_job, JB_type)))) ? true : false;
+
 
          if ((job = lCopyElem(orig_job)) == NULL) {
             break;
@@ -787,7 +790,7 @@ static int dispatch_jobs(sge_Sdescr_t *lists, order_t *orders,
          } 
          job = lFreeElem(job);
       }     
-      
+  
 
       switch (result) {
       case DISPATCH_OK: /* now assignment */
@@ -806,7 +809,6 @@ static int dispatch_jobs(sge_Sdescr_t *lists, order_t *orders,
              */
             orig_job = NULL;
 
-
             /* 
              * drop idle jobs that exceed maxujobs limit 
              * should be done after resort_job() 'cause job is referenced 
@@ -816,6 +818,21 @@ static int dispatch_jobs(sge_Sdescr_t *lists, order_t *orders,
                                                 owner,
                                                 maxujobs);
             FREE(owner);
+
+            /* do not send job start orders inbetween, if we have an immediate array
+               job. */
+            if (!is_immediate_array_job && (lGetNumberOfElem(orders->jobStartOrderList) > 10)) {
+               gettimeofday(&later, NULL);
+               time = later.tv_usec - now.tv_usec;
+               time = (time / 1000000) + (later.tv_sec - now.tv_sec);
+
+               if (time > 0.5) {
+                  /*async gdi*/
+                  if (sge_send_job_start_orders(orders)) {
+                     gettimeofday(&now, NULL);
+                  }
+               }
+            }
          }
          break;
 
@@ -907,20 +924,6 @@ static int dispatch_jobs(sge_Sdescr_t *lists, order_t *orders,
          break;
       }   
 
-      /* do not send job start orders inbetween, if we have an immediate array
-         job. */
-      if (!is_immediate_array_job) {
-         gettimeofday(&later, NULL);
-         time = later.tv_usec - now.tv_usec;
-         time = (time / 1000000) + (later.tv_sec - now.tv_sec);
-
-         if ((lGetNumberOfElem(orders->jobStartOrderList) > 0) && (time > 0.5)) {
-         /*TODO async gdi: enable this code, when async gdi should be enabled */
-         /*   if (sge_send_job_start_orders(orders)) {
-               gettimeofday(&now, NULL);
-            }*/
-         }
-      }
    } /* end of while */
    }
   

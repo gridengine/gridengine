@@ -1,4 +1,9 @@
+SG-2005-08-02-0: Bugfix:    fixed the scheduler on linux
+                 Review:    RD
+                 Changed:   all
+
 RD-2005-08-01-0: Bugfix:    - qmaster crashes with large number of qconf -aattr calls
+
                             - qlogin -R does not work like documented
                             - qstat -j <name> doesn't print delimiter between jobs
                             - qconf -as/-ah "" segfault

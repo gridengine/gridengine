@@ -1563,7 +1563,6 @@ u_long32 isXML
    lList* alp = NULL;
    bool schedd_info = true;
    bool jobs_exist = true;
-   int line_separator=0;
    lListElem* mes;
 
    DENTER(TOP_LAYER, "qstat_show_job");
@@ -1665,10 +1664,7 @@ u_long32 isXML
       u_long32 jid = lGetUlong(j_elem, JB_job_number);
       lListElem *sme;
 
-      if (line_separator)
-         printf("\n");
-      else
-         line_separator = 1;
+      printf("==============================================================\n");
       /* print job information */
       cull_show_job(j_elem, 0);
       

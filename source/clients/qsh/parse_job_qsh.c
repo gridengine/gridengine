@@ -372,6 +372,11 @@ lList *cull_parse_qsh_parameter(lList *cmdline, lListElem **pjob)
    parse_list_hardsoft(cmdline, "-masterq", *pjob, 
                         JB_master_hard_queue_list, 0);
 
+   while ((ep = lGetElemStr(cmdline, SPA_switch, "-R"))) {
+      lSetBool(*pjob, JB_reserve, lGetInt(ep, SPA_argval_lIntT));
+      lRemoveElem(cmdline, ep);
+   }
+
    parse_list_simple(cmdline, "-S", *pjob, JB_shell_list, PN_host, PN_path, FLG_LIST_MERGE);
 
    /* context switches are sensitive to order */

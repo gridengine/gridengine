@@ -1,3 +1,11 @@
+RD-2005-08-01-0: Bugfix:    - qmaster crashes with large number of qconf -aattr calls
+                            - qlogin -R does not work like documented
+                            - qstat -j <name> doesn't print delimiter between jobs
+                            - qconf -as/-ah "" segfault
+                 Bugtraq:   6304466,  6304471, 6291023, 6304490
+                 Issue:     1715, 1687, 1475, 1732
+                 Review:    SG
+
 SG-2005-08-02-0: Bugfix:    qstat schema files are incomplete
                  Issue:     1733
                  Bugtraq:   6305095

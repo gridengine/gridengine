@@ -1316,7 +1316,7 @@ DTRACE;
 
          DPRINTF(("\"-R %s\"\n", *sp));
 
-         if (set_yn_option (pcmdline, R_OPT, *(sp - 1), *sp, &answer) == 0) {
+         if (set_yn_option(pcmdline, R_OPT, *(sp - 1), *sp, &answer) == 0) {
             return answer;
          }
 

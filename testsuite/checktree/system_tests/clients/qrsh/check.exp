@@ -76,6 +76,7 @@ lappend check_functions "qrsh_qsub_gid"              ;# qsub gid set correctly?
 lappend check_functions "qrsh_batch"                 ;# run qrsh in batch mode
 lappend check_functions "qrsh_limits"                ;# limits (e.g. cpu) passed correctly
 lappend check_functions "qrsh_env"                   ;# test the -v VAR=val and -v VAR options
+lappend check_functions "qrsh_reservation"           ;# test the -R y option
 
 # test specific global variables
 global qrsh_hostlist
@@ -1655,6 +1656,17 @@ proc qrsh_limits {} {
       close_spawn_process $qrsh_id
    }
 
+   set_error 0 "ok"
+}
+
+proc qrsh_reservation {} {
+   global ts_config CHECK_OUTPUT CHECK_ARCH CHECK_HOST CHECK_USER
+
+   set output [start_remote_prog $CHECK_HOST $CHECK_USER "$ts_config(product_root)/bin/$CHECK_ARCH/qrsh" "-R y echo bla"]
+   puts $CHECK_OUTPUT $output
+   if { [string match "error: Unknown option*" $output] == 1 } {
+      add_proc_error "qrsh_reservation" -1 "qrsh -R y failed - see Issue: 1306"
+   }
    set_error 0 "ok"
 }
 

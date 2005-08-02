@@ -5557,8 +5557,12 @@ u_long32 target
    for_each (argep, arglp) {
       /* resolve hostname */
       if (sge_resolve_host(argep, nm) != CL_RETVAL_OK) {
+         const char* host = lGetHost(argep, nm);
          ret |= 1;
-         fprintf(stderr, MSG_SGETEXT_CANTRESOLVEHOST_S, lGetHost(argep, nm));
+         if ( host == NULL) {
+            host = "";
+         }
+         fprintf(stderr, MSG_SGETEXT_CANTRESOLVEHOST_S, host);
          fprintf(stderr, "\n");
          continue;
       }

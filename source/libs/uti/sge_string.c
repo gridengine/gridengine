@@ -278,7 +278,7 @@ char *sge_strtok(const char *str, const char *delimitor)
    while (!done) {
 
       /* found end of string */
-      if (*saved_cp == '\0') {
+      if (saved_cp == NULL || *saved_cp == '\0') {
          DEXIT;
          return NULL;
       }
@@ -315,6 +315,7 @@ char *sge_strtok(const char *str, const char *delimitor)
       cp++;
    }
 
+   DEXIT;
    return NULL;
 }
 
@@ -387,7 +388,7 @@ char *sge_strtok_r(const char *str, const char *delimitor,
    while (!done) {
 
       /* found end of string */
-      if (*saved_cp == '\0') {
+      if (saved_cp == NULL || *saved_cp == '\0') {
          DEXIT;
          return NULL;
       }

@@ -1085,7 +1085,7 @@ cqueue_mod_sublist(lListElem *this_elem, lList **answer_list,
    int pos;
 
    DENTER(CQUEUE_LAYER, "cqueue_mod_sublist");
-  
+ 
    pos = lGetPosViaElem(reduced_elem, attribute_name);
    if (pos >= 0) {
       lList *mod_list = lGetPosList(reduced_elem, pos);
@@ -1121,6 +1121,13 @@ cqueue_mod_sublist(lListElem *this_elem, lList **answer_list,
          char resolved_name[CL_MAXHOSTLEN+1];
          lListElem *org_elem = NULL;
          
+         if (name == NULL) {
+            ERROR((SGE_EVENT, MSG_SGETEXT_INVALIDHOST_S, ""));
+            answer_list_add(answer_list, SGE_EVENT,
+                            STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+            ret = false;
+            break;
+         }
          /* Don't try to resolve hostgroups */
          if (name[0] != '@') {
             int back = getuniquehostname(name, resolved_name, 0);

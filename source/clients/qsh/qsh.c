@@ -1912,7 +1912,7 @@ static void remove_unknown_opts(lList *lp, u_long32 jb_now, int tightly_integrat
                continue;
             }
          }
-          
+
          if(strcmp(cp, "jobarg") && strcmp(cp, "script") &&
             strcmp(cp, "-A") && strcmp(cp, "-cell") && strcmp(cp, "-clear") && 
             strcmp(cp, "-cwd") && strcmp(cp, "-hard") && strcmp(cp, "-help") &&
@@ -1924,7 +1924,7 @@ static void remove_unknown_opts(lList *lp, u_long32 jb_now, int tightly_integrat
             strcmp(cp, "-V") && strcmp(cp, "-display") && strcmp(cp, "-verify") &&
             strcmp(cp, "-soft") && strcmp(cp, "-M") && strcmp(cp, "-verbose") &&
             strcmp(cp, "-ac") && strcmp(cp, "-dc") && strcmp(cp, "-sc") &&
-            strcmp(cp, "-S") && strcmp(cp, "-w") && strcmp(cp, "-js") 
+            strcmp(cp, "-S") && strcmp(cp, "-w") && strcmp(cp, "-js") && strcmp(cp, "-R")
            ) {
             if(error) {
                ERROR((SGE_EVENT, MSG_ANSWER_UNKOWNOPTIONX_S, cp));

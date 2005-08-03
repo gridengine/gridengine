@@ -153,6 +153,9 @@ int truncate_stderr_out
    gid_t add_grp_id = 0;
    gid_t gid;
    struct passwd *pw=NULL;
+   struct passwd pw_struct;
+   char buffer[2048];
+
 #if defined(INTERIX)
 #  define TARGET_USER_BUFFER_SIZE 1024
    char target_user_buffer[TARGET_USER_BUFFER_SIZE];
@@ -282,7 +285,7 @@ int truncate_stderr_out
 
    shepherd_trace_sprintf("reading passwd information for user '%s'",
          target_user ? target_user : "<NULL>");
-   pw = sge_getpwnam(target_user);
+   pw = sge_getpwnam_r(target_user, &pw_struct, buffer, sizeof(buffer));
    if (!pw) {
       sprintf(err_str, "can't get password entry for user \"%s\"", target_user);
       shepherd_error(err_str);

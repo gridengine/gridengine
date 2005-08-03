@@ -168,6 +168,8 @@ static double scaled_mixed_load( lListElem *global, lListElem *host, const lList
    double load=0;
    int op_pos, next_op=LOAD_OP_NONE;
    char *load_formula = sconf_get_load_formula();
+   char *lasts = NULL;
+
    DENTER(TOP_LAYER, "scaled_mixed_load");
 
    /* we'll use strtok ==> we need a safety copy */
@@ -187,7 +189,7 @@ static double scaled_mixed_load( lListElem *global, lListElem *host, const lList
       next_op = LOAD_OP_MINUS;
    }
 
-   for (cp=strtok(tf, "+-"); cp; cp = strtok(NULL, "+-")) {
+   for (cp=strtok_r(tf, "+-", &lasts); cp; cp = strtok_r(NULL, "+-", &lasts)) {
 
       /* ---------------------------------------- */
       /* get scaled load value                    */
@@ -295,6 +297,7 @@ static double scaled_mixed_load( lListElem *global, lListElem *host, const lList
          next_op = LOAD_OP_MINUS;
       }   
    }
+
    FREE(load_formula);
    FREE(tf);
 

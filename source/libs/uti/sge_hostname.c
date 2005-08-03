@@ -62,6 +62,7 @@
 #include "sge_mtutil.h"
 
 #define ALIAS_DELIMITER "\n\t ,;"
+#define SGE_MAXNISRETRY 5
 
 #ifndef h_errno
 extern int h_errno;
@@ -79,12 +80,34 @@ static host *localhost = NULL;
 static pthread_mutex_t get_qmaster_port_mutex = PTHREAD_MUTEX_INITIALIZER;
 static pthread_mutex_t get_execd_port_mutex = PTHREAD_MUTEX_INITIALIZER;
 
-#define SGE_MAXNISRETRY 5
+static struct servent *sge_getservbyname_r(struct servent *se_result, const char *service, char *buffer, size_t size)
+{
+   struct servent *se;
+
+   int nisretry = SGE_MAXNISRETRY;
+   while (nisretry--) {
+#if defined(LINUX)
+      if (getservbyname_r(service, "tcp", se_result, buffer, size, &se) != 0)
+         se = NULL;
+#elif defined(SOLARIS)
+      se = getservbyname_r(service, "tcp", se_result, buffer, size);
+#else
+      se = getservbyname(service, "tcp");
+#endif
+      if (se != NULL) {
+         return se;
+      } else {
+         sleep(1);
+      }
+   }
+
+   return NULL;
+}
+
 #define SGE_PORT_CACHE_TIMEOUT 60*10   /* 10 Min. */
 int sge_get_qmaster_port(void) {
    char* port = NULL;
    int int_port = -1;
-   struct servent *se = NULL;
 
    struct timeval now;
    static long next_timeout = 0;
@@ -114,16 +137,10 @@ int sge_get_qmaster_port(void) {
 
    /* get port from services file */
    if (int_port < 0) {
-      int nisretry = SGE_MAXNISRETRY;
-      while (nisretry--) {
-         se = getservbyname("sge_qmaster", "tcp");
-         if (se != NULL) {
-            int_port = ntohs(se->s_port);
-            break;
-         } else {
-            sleep(1);
-         }
-      }
+      char buffer[2048];
+      struct servent se_result;
+      if (sge_getservbyname_r(&se_result, "sge_qmaster", buffer, sizeof(buffer)))
+         int_port = ntohs(se_result.s_port);
    }
 
    if (int_port < 0 ) {
@@ -154,7 +171,6 @@ int sge_get_qmaster_port(void) {
 int sge_get_execd_port(void) {
    char* port = NULL;
    int int_port = -1;
-   struct servent *se = NULL;
 
    struct timeval now;
    static long next_timeout = 0;
@@ -184,16 +200,10 @@ int sge_get_execd_port(void) {
 
    /* get port from services file */
    if (int_port < 0) {
-      int nisretry = SGE_MAXNISRETRY;
-      while (nisretry--) {
-         se = getservbyname("sge_execd", "tcp");
-         if (se != NULL) {
-            int_port = ntohs(se->s_port);
-            break;
-         } else {
-            sleep(1);
-         }
-      }
+      char buffer[2048];
+      struct servent se_result;
+      if (sge_getservbyname_r(&se_result, "sge_execd", buffer, sizeof(buffer)))
+         int_port = ntohs(se_result.s_port);
    }
 
    if (int_port < 0 ) {
@@ -499,7 +509,7 @@ struct hostent *sge_gethostbyname(const char *name, int* system_error_retval)
    /* warn about blocking gethostbyname() calls */
    if (time > MAX_RESOLVER_BLOCKING) {
       WARNING((SGE_EVENT, "gethostbyname(%s) took %d seconds and returns %s\n", 
-            name, time, he?"success":
+            name, (int)time, he?"success":
           (l_errno == HOST_NOT_FOUND)?"HOST_NOT_FOUND":
           (l_errno == TRY_AGAIN)?"TRY_AGAIN":
           (l_errno == NO_RECOVERY)?"NO_RECOVERY":
@@ -777,7 +787,7 @@ struct hostent *sge_gethostbyaddr(const struct in_addr *addr, int* system_error_
 
    /* warn about blocking gethostbyaddr() calls */
    if (time > MAX_RESOLVER_BLOCKING) {
-      WARNING((SGE_EVENT, "gethostbyaddr() took %d seconds and returns %s\n", time, he?"success":
+      WARNING((SGE_EVENT, "gethostbyaddr() took %d seconds and returns %s\n", (int)time, he?"success":
           (l_errno == HOST_NOT_FOUND)?"HOST_NOT_FOUND":
           (l_errno == TRY_AGAIN)?"TRY_AGAIN":
           (l_errno == NO_RECOVERY)?"NO_RECOVERY":
@@ -1256,4 +1266,5 @@ bool sge_is_hgroup_ref(const char *string)
    }
    return ret;
 }
+
 

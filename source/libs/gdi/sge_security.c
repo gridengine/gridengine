@@ -304,8 +304,10 @@ int sge_ssl_setup_security_path(const char *progname) {
       user_local_dir = ca_local_root;
    } else {
       struct passwd *pw;
+      struct passwd pw_struct;
+      char buffer[2048];
 
-      pw = sge_getpwnam(uti_state_get_user_name());
+      pw = sge_getpwnam_r(uti_state_get_user_name(), &pw_struct, buffer, sizeof(buffer));
 
       if (!pw) {   
          CRITICAL((SGE_EVENT, MSG_SEC_USERNOTFOUND_S, uti_state_get_user_name()));
@@ -1485,6 +1487,8 @@ struct dispatch_entry *de
 
    if (krb_get_tgt(de->host, de->commproc, de->id, lGetUlong(jelem, JB_job_number), &tgt_creds) == 0) {
       struct passwd *pw;
+      struct passwd pw_struct;
+      char buffer[2048];
 
       if ((rc = krb_encrypt_tgt_creds(tgt_creds, &outbuf))) {
          ERROR((SGE_EVENT, MSG_SEC_KRBENCRYPTTGTUSER_SUS, lGetString(jelem, JB_owner),
@@ -1497,7 +1501,7 @@ struct dispatch_entry *de
       if (outbuf.length)
          krb5_xfree(outbuf.data);
 
-      pw = sge_getpwnam(lGetString(jelem, JB_owner));
+      pw = sge_getpwnam_r(lGetString(jelem, JB_owner), &pw_struct, buffer, sizeof(buffer));
 
       if (pw) {
          if (krb_store_forwarded_tgt(pw->pw_uid,

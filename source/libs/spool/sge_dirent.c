@@ -56,6 +56,7 @@ lList *sge_get_dirents(const char *path) {
    lList *entries = NULL;
    DIR *cwd;
    SGE_STRUCT_DIRENT *dent;
+   char dirent[SGE_PATH_MAX*2];
 
    DENTER(TOP_LAYER, "sge_get_dirents");
 
@@ -66,7 +67,7 @@ lList *sge_get_dirents(const char *path) {
       return (NULL);
    }
 
-   while ((dent = SGE_READDIR(cwd)) != NULL) {
+   while (SGE_READDIR_R(cwd, (SGE_STRUCT_DIRENT *)dirent, &dent)==0 && dent!=NULL) {
       if (!dent->d_name)
          continue;              
       if (!dent->d_name[0])

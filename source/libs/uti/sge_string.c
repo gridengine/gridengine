@@ -425,6 +425,7 @@ char *sge_strtok_r(const char *str, const char *delimitor,
       cp++;
    }
 
+   DEXIT;
    return NULL;
 }
 

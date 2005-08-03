@@ -4,6 +4,7 @@
 # search for symbols of non-reentrant functions in object modules, libraries and binaries
 #
 
+
 Filter1()
 {
    egrep '[^a-zA-Z_]asctime$|[^a-zA-Z_]localtime$|[^a-zA-Z_]ctime$|[^a-zA-Z_]gmtime$|[^a-zA-Z_]gethostbyname$|[^a-zA-Z_]gethostbyaddr$|[^a-zA-Z_]gethostent$|[^a-zA-Z_]getservbyname$|[^a-zA-Z_]getservbyport$|[^a-zA-Z_]getservent$|[^a-zA-Z_]strtok$|[^a-zA-Z_]getgrnam$|[^a-zA-Z_]getgrent$|[^a-zA-Z_]getgrgid$|[^a-zA-Z_]fgetgrent$|[^a-zA-Z_]getpwnam$|[^a-zA-Z_]getpwent$|[^a-zA-Z_]getpwuid$|[^a-zA-Z_]fgetpwent$|[^a-zA-Z_]getpwnam$|[^a-zA-Z_]getpwent$|[^a-zA-Z_]getpwuid$|[^a-zA-Z_]fgetpwent$|[^a-zA-Z_]getlogin$|[^a-zA-Z_]getspnam$|[^a-zA-Z_]getspent$|[^a-zA-Z_]fgetspent$|[^a-zA-Z_]readdir$|[^a-zA-Z_]ttyname|ctermid$|[^a-zA-Z_]tmpnam$|[^a-zA-Z_]tmpnam$'
@@ -27,7 +28,7 @@ Filter4()
 Filter()
 {
 case $arch in
-solaris|sol-sparc64|sol-x84|sol-amd64)
+sol-sparc|sol-sparc64|sol-x86|sol-amd64)
    Filter1
    ;;
 lx2*)
@@ -57,16 +58,56 @@ tru64)
 esac
 }
 
-arch=`$SGE_ROOT/util/arch`
-echo "ARCH = $arch"
+ge_nonreentrant=false
+arch=none
+waiver=false
+docheck=true
+
+while [ $# -ge 2 ]; do
+   case $1 in
+   -w)
+      waiver=true
+      shift
+      ;;
+   -a)
+      shift
+      arch=$1
+      shift
+      ;;
+   *)
+      break
+      ;;
+   esac
+done
+
+if [ $arch = "none" ]; then
+   arch=`$SGE_ROOT/util/arch`
+   echo "ARCH = $arch"
+fi
+
+if [ $waiver = true ]; then  
+   case $arch in 
+   sol-sparc|sol-sparc64|sol-x86|sol-amd64|lx2*)
+      ;;
+   *)
+      # when run with -w option we don't check at all in these cases
+      docheck=false
+      ;;
+   esac
+fi
 
 nonreentrant=0
 for f in $*; do
-   echo "### $f"
-   if [ `nm $f | Filter $f | wc -l` -gt 0 ]; then 
-      nonreentrant=1
-      # do it again just to get the output
-      nm $f | Filter $f
+   if [ $docheck = true ]; then
+      echo "### $f"
+      if [ `nm $f | Filter $f | wc -l` -gt 0 ]; then 
+         nonreentrant=1
+         # do it again just to get the output
+         nm $f | Filter $f
+	      if [ $waiver = true ]; then
+            rm $f
+	      fi
+      fi
    fi
 done
 exit $nonreentrant

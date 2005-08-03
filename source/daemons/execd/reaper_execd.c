@@ -1545,8 +1545,10 @@ int usage_mul_factor
       if (owner) {
          struct passwd *pw;
          struct group *pg;
+         struct passwd pw_struct;
+         char buffer[2048];
 
-         pw = sge_getpwnam(owner);
+         pw = sge_getpwnam_r(owner, &pw_struct, buffer, sizeof(buffer));
          if (pw) {
             if (use_qsub_gid) {
                char *tmp_qsub_gid = search_conf_val("qsub_gid");

@@ -433,6 +433,7 @@ int sge_rmdir(const char *cp, dstring *error)
    SGE_STRUCT_STAT statbuf;
    SGE_STRUCT_DIRENT *dent;
    DIR *dir;
+   char dirent[SGE_PATH_MAX*2];
    char fname[SGE_PATH_MAX];
 
    DENTER(TOP_LAYER, "sge_rmdir");
@@ -451,7 +452,7 @@ int sge_rmdir(const char *cp, dstring *error)
       return -1;
    }
  
-   while ((dent = SGE_READDIR(dir))) {
+   while (SGE_READDIR_R(dir, (SGE_STRUCT_DIRENT *)dirent, &dent)==0 && dent!=NULL) {
       if (strcmp(dent->d_name, ".") && strcmp(dent->d_name, "..")) {
  
          sprintf(fname, "%s/%s", cp, dent->d_name);

@@ -183,14 +183,20 @@ const char *fname
       return 1;
 
    while (fgets(buf, sizeof(buf), fp)) {
-      name = strtok(buf, " =");
+      struct saved_vars_s *context;
+      context = NULL;
+      name = sge_strtok_r(buf, " =", &context);
       if (!name) {
+         sge_free_saved_vars(context);
          break;
       }   
-      value = strtok(NULL, "\n");
+      value = sge_strtok_r(NULL, "\n", &context);
 
-      if (add_config_entry(name, value))
+      if (add_config_entry(name, value)) {
+         sge_free_saved_vars(context);
          return 2;
+      }
+      sge_free_saved_vars(context);
    }
    fclose(fp);
 

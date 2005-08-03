@@ -3070,7 +3070,7 @@ static int opt_list_append_opts_from_drmaa_attr(lList **args, const lList *attrs
       
       DPRINTF (("processing %s = \"%s\"\n", DRMAA_START_TIME, value));
       
-      if (!ulong_parse_date_time_from_string (&timeval, NULL, value)) {
+      if (!ulong_parse_date_time_from_string(&timeval, NULL, value)) {
          sge_dstring_copy_string (diag, MSG_DRMAA_INVALID_TIME_STRING);
          DEXIT;
          return DRMAA_ERRNO_DENIED_BY_DRM;

@@ -132,7 +132,8 @@ qmaster_messages:
 # rules to build binaries
 ###############################################################################
 sge_qmaster:	sge_qmaster_main.o $(QMASTER_OBJS) $(QMASTER_ADD_OBJS) $(QMASTER_LIB_DEPENDS)
-		$(LD_WRAPPER) $(CC) -o $@ $(LFLAGS) sge_qmaster_main.o $(QMASTER_OBJS) $(QMASTER_ADD_OBJS) $(QMASTER_ADD_LIBS) $(SLIBS) $(LIBS) 
+		$(LD_WRAPPER) $(CC) -o $@ $(LFLAGS) sge_qmaster_main.o $(QMASTER_OBJS) $(QMASTER_ADD_OBJS) $(QMASTER_ADD_LIBS) $(SLIBS) $(LIBS) \
+    && ../scripts/nonreentrant.sh -a `../dist/util/arch` -w $@
 
 test_sge_qmaster_timed_event:	test_sge_qmaster_timed_event.o $(QMASTER_OBJS) $(QMASTER_ADD_OBJS) $(QMASTER_LIB_DEPENDS)
 		$(LD_WRAPPER) $(CC) -o $@ $(LFLAGS) test_sge_qmaster_timed_event.o $(QMASTER_OBJS) $(QMASTER_ADD_OBJS) $(QMASTER_ADD_LIBS) $(SLIBS) $(LIBS) 

@@ -2163,8 +2163,10 @@ static int start_async_command(const char *descr, char *cmd)
    char err_str[512];
    char *cwd;
    struct passwd *pw=NULL;
+   struct passwd pw_struct;
+   char buffer[2048];
       
-   pw = sge_getpwnam(get_conf_val("job_owner"));
+   pw = sge_getpwnam_r(get_conf_val("job_owner"), &pw_struct, buffer, sizeof(buffer));
 
    if (!pw) {
       shepherd_error_sprintf("can't get password entry for user \"%s\"",
@@ -2507,6 +2509,8 @@ static int notify_tasker(u_long32 exit_status)
    } else {
       char *job_owner;
       struct passwd *pw=NULL;
+      struct passwd pw_struct;
+      char buffer[2048];
 
       fprintf(fp, "%s "sge_u32"\n", pvm_task_id, exit_status); 
       fclose(fp);
@@ -2514,7 +2518,7 @@ static int notify_tasker(u_long32 exit_status)
       /* sig_info_file has to be removed by tasker 
          and tasker runs in user mode */
       job_owner = get_conf_val("job_owner");
-      pw = sge_getpwnam(job_owner);
+      pw = sge_getpwnam_r(job_owner, &pw_struct, buffer, sizeof(buffer));
       if (!pw) {
          shepherd_error_sprintf("can't get password entry for user "
                                 "\"%s\"", job_owner);

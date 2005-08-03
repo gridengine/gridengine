@@ -446,6 +446,7 @@ tConfEntry conf[]
  * merge_configuration
  * Merge global and local configuration and set lpConfig list
  * set conf struct from lpConfig
+ * MT-NOTE: merge_configuration() is not MT safe
  *----------------------------------------------------------*/
 int merge_configuration(lListElem *global, lListElem *local,
                         sge_conf_type *pconf, lList **lpp) {

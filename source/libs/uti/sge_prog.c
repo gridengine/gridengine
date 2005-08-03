@@ -459,6 +459,15 @@ void sge_getme(u_long32 program_number)
  
    pthread_once(&prog_once, prog_once_init);
 
+   /* we need to detect cases when sge_getme() is called multiple times
+      for a thread. Due to sge_getme() doing an abort(2) upon user name
+      resolution we can utilize the user name as an indication sge_getme()
+      was already called and safe the effort of doing it again */
+   if (uti_state_get_user_name()!=NULL) {
+      DEXIT;
+      return;
+   }
+
    /* get program info */
    uti_state_set_mewho(program_number);
    uti_state_set_sge_formal_prog_name(prognames[program_number]);

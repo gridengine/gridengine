@@ -142,7 +142,6 @@ pid_t sge_peopen(const char *shell, int login_shell, const char *command,
    const char *not_root = MSG_SYSTEM_NOROOTRIGHTSTOSWITCHUSER;
    int i;
    char arg0[256];
-   struct passwd *pw;
    char err_str[256];
 #if !(defined(WIN32) || defined(INTERIX)) /* var not needed */
    int res;
@@ -202,9 +201,11 @@ pid_t sge_peopen(const char *shell, int login_shell, const char *command,
       dup(pipefds[1][1]);
  
       if (user) {
- 
-         pw = getpwnam(user);
-         if (!pw) {
+         struct passwd *pw;
+         struct passwd pw_struct;
+         char buffer[2048];
+
+         if (sge_getpwnam_r(user, &pw_struct, buffer, sizeof(buffer), &pw)) {
             sprintf(err_str, MSG_SYSTEM_NOUSERFOUND_SS , user, strerror(errno));            
             sprintf(err_str, "\n");
             write(2, err_str, strlen(err_str));

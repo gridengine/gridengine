@@ -1,3 +1,16 @@
+AH-2005-07-27-1: Bugfix:    - DRMAA can abort in the middle of a session if
+                              NIS becomes unavailable
+                            - Fixed problems with non-reentrant parsing of 
+                              -a datetime/-dl datetime
+                            - Removed all qmaster/libdrmaa link dependencies to non-reentrant
+                              C library functions for Solaris/Linux and added monitoring to 
+                              make procedure to ensure qmaster/libdrmaa remain free of 
+                              non-reentrant link dependencies
+                 Issue:     1727
+                 Bugtraq:   6303671
+                 Changed:   all
+                 Review:    CR, AA
+
 SG-2005-08-02-0: Bugfix:    fixed the scheduler on linux
                  Review:    RD
                  Changed:   all

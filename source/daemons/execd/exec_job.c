@@ -278,6 +278,8 @@ char *err_str
    lList *environmentList = NULL;
    const char *arch = sge_get_arch();
    sigset_t sigset, sigset_oset;
+   struct passwd pw_struct;
+   char buffer[2048];
 
    int write_osjob_id = 1;
 
@@ -318,7 +320,7 @@ char *err_str
          return -2;
       } 
 
-      pw = sge_getpwnam(lGetString(jep, JB_owner));
+      pw = sge_getpwnam_r(lGetString(jep, JB_owner), &pw_struct, buffer, sizeof(buffer));
       if (!pw) {
          sprintf(err_str, MSG_SYSTEM_GETPWNAMFAILED_S, lGetString(jep, JB_owner));
          DEXIT;

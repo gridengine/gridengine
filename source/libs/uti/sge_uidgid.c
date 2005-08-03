@@ -48,6 +48,7 @@
 #include "sge_mtutil.h"
 #include "msg_common.h"
 #include "msg_utilib.h"
+#include "sge_string.h"
 
 #if defined( INTERIX )
 #   include "misc.h"
@@ -246,7 +247,9 @@ int sge_set_admin_username(const char *user, char *err_str)
    if (!strcasecmp(user, "none")) {
       set_admin_user(getuid(), getgid());
    } else {
-      admin = sge_getpwnam(user);
+      struct passwd pw_struct;
+      char buffer[2048];
+      admin = sge_getpwnam_r(user, &pw_struct, buffer, sizeof(buffer));
       if (admin) {
          set_admin_user(admin->pw_uid, admin->pw_gid);
       } else {
@@ -759,6 +762,8 @@ int sge_set_uid_gid_addgrp(const char *user, const char *intermediate_user,
    int status;
 #endif
    struct passwd *pw;
+   struct passwd pw_struct;
+   char buffer[2048];
  
    sge_switch2start_user();
  
@@ -771,7 +776,7 @@ int sge_set_uid_gid_addgrp(const char *user, const char *intermediate_user,
       user = intermediate_user;            
    }
  
-   if (!(pw = sge_getpwnam(user))) {
+   if (!(pw = sge_getpwnam_r(user, &pw_struct, buffer, sizeof(buffer)))) {
       sprintf(err_str, MSG_SYSTEM_GETPWNAMFAILED_S , user);
       return 1;
    }
@@ -1014,45 +1019,6 @@ int sge_add_group(gid_t add_grp_id, char *err_str)
    return 0;
 }  
 
-/****** uti/uidgid/sge_getpwnam() *********************************************
-*  NAME
-*     sge_getpwnam() -- Return password file entry for certain user 
-*
-*  SYNOPSIS
-*     struct passwd* sge_getpwnam(const char *name) 
-*
-*  FUNCTION
-*     Return password file entry for certain user.
-*      
-*  INPUTS
-*     const char *name - Username 
-*
-*  NOTE
-*     MT-NOTE: sge_getpwnam() is not MT safe; should use getpwname_r() instead
-*
-*  RESULT
-*     struct passwd* - see getpwnam()
-*******************************************************************************/
-struct passwd *sge_getpwnam(const char *name)
-{
-   struct passwd *pw = NULL;
-   int i = MAX_NIS_RETRIES;
-
-   DENTER(UIDGID_LAYER, "sge_getpwnam");
-
-   while (i-- && !pw) {
-      pw = getpwnam(name);
-   }
-
-   /* sometime on failure struct is non NULL but name is empty */
-   if (pw && !pw->pw_name) { 
-      pw = NULL;
-   }
- 
-   DEXIT;
-   return pw;
-} /* sge_getpwnam */
-  
 /****** sge_uidgid/sge_getpwnam_r() ********************************************
 *  NAME
 *     sge_getpwnam_r() -- Return password file entry for a given user name. 
@@ -1410,16 +1376,19 @@ password_read_file(char **users[], char**encryped_pwds[], const char *filename)
          char input[10000];
          char *uname = NULL;
          char *pwd = NULL;
+         struct saved_vars_s *context;
+         context = NULL;
 
          if (fscanf(fp, "%[^\n]\n", input) == 1) {
-            uname = strtok(input, " ");
-            pwd = strtok(NULL, " ");
+            uname = sge_strtok_r(input, " ", &context);
+            pwd = sge_strtok_r(NULL, " ", &context);
             (*users)[i] = strdup(uname);
             (*encryped_pwds)[i] = strdup(pwd);
             i++;
          } else {
             do_loop = false;
          }
+         sge_free_saved_vars(context);
       }
       (*users)[i] = NULL;
       (*encryped_pwds)[i] = NULL; i++;

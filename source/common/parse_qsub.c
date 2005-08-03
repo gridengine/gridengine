@@ -98,7 +98,7 @@ static int set_yn_option (lList **opts, u_long32 opt, char *arg, char *value,
 ** DESCRIPTION
 **
 ** NOTES
-**    MT-NOTE: cull_parse_cmdline() is not MT safe
+**    MT-NOTE: cull_parse_cmdline() is MT safe
 */
 lList *cull_parse_cmdline(
 char **arg_list,
@@ -156,8 +156,7 @@ u_long32 flags
             return answer;
          }
 
-         if (!ulong_parse_date_time_from_string(&timeval, NULL, *sp)) /* MT-NOTE: !!!! */
-         {
+         if (!ulong_parse_date_time_from_string(&timeval, NULL, *sp)) {
             sprintf(str,
                MSG_ANSWER_WRONGTIMEFORMATEXSPECIFIEDTOAOPTION_S,
             *sp);
@@ -512,8 +511,7 @@ u_long32 flags
             return answer;
          }
 
-         if (!ulong_parse_date_time_from_string(&timeval, NULL, *sp)) /* MT-NOTE: !!!! */
-         {
+         if (!ulong_parse_date_time_from_string(&timeval, NULL, *sp)) {
             sprintf(str, MSG_PARSE_WRONGTIMEFORMATXSPECTODLOPTION_S ,
             *sp);
             answer_list_add(&answer, str, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);

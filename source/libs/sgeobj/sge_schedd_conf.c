@@ -2190,7 +2190,7 @@ bool sconf_is_job_category_filtering(void){
 u_long32 sconf_get_flush_submit_sec(void)
 {
    const lListElem *sc_ep = NULL;
-   u_long32 flush_sec = -1;
+   u_long32 flush_sec = (u_long32)-1;
   
    DENTER(TOP_LAYER, "sconf_get_flush_submit_sec");
    SGE_LOCK(LOCK_SCHED_CONF, LOCK_READ);
@@ -2226,7 +2226,7 @@ u_long32 sconf_get_flush_submit_sec(void)
 u_long32 sconf_get_flush_finish_sec(void)
 {
    const lListElem *sc_ep = NULL;
-   u_long32 flush_sec = -1;
+   u_long32 flush_sec = (u_long32)-1;
   
    DENTER(TOP_LAYER, "sconf_get_flush_finish_sec");
    SGE_LOCK(LOCK_SCHED_CONF, LOCK_READ);
@@ -2773,10 +2773,12 @@ bool sconf_validate_config_(lList **answer_list)
       pos.s_duration_offset = DEFAULT_DURATION_OFFSET; 
 
       if (sparams) {
+         struct saved_vars_s *context = NULL;
+
          if (pos.c_params == NULL) {
             pos.c_params = lCreateList("params", PARA_Type);
          }
-         for (s=sge_strtok(sparams, ",; "); s; s=sge_strtok(NULL, ",; ")) {
+         for (s=sge_strtok_r(sparams, ",; ", &context); s; s=sge_strtok_r(NULL, ",; ", &context)) {
             int i = 0;
             bool added = false;
             for(i=0; params[i].name ;i++ ){
@@ -2793,6 +2795,7 @@ bool sconf_validate_config_(lList **answer_list)
                ret = false;
             }
          }
+         sge_free_saved_vars(context);
       } else {
          lSetString(lFirst(Master_Sched_Config_List), SC_params, "none");
       }
@@ -2852,9 +2855,10 @@ bool sconf_validate_config_(lList **answer_list)
          ret = false;
       }
       else {
+         struct saved_vars_s *context = NULL;
          strcpy(buf, schedd_info);
          /* on/off or watch a set of jobs */
-         key = strtok(buf, " \t");
+         key = sge_strtok_r(buf, " \t", &context);
          if (!strcmp("true", key)) 
             ikey = SCHEDD_JOB_INFO_TRUE;
          else if (!strcmp("false", key)) 
@@ -2868,7 +2872,7 @@ bool sconf_validate_config_(lList **answer_list)
          }
          /* check list of groups */
          if (ikey == SCHEDD_JOB_INFO_JOB_LIST) {
-            key = strtok(NULL, "\n");
+            key = sge_strtok_r(NULL, "\n", &context);
             range_list_parse_from_string(&rlp, &alp, key, false, false, 
                                          INF_NOT_ALLOWED);
             if (rlp == NULL) {
@@ -2885,6 +2889,7 @@ bool sconf_validate_config_(lList **answer_list)
          else{
             pos.c_is_schedd_job_info = ikey;
          }
+         sge_free_saved_vars(context);
       }
    }
 

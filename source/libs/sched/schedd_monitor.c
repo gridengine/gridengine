@@ -68,6 +68,7 @@ int schedd_log(const char *logstr) {
    FILE *fp;
    static char schedd_log_file[SGE_PATH_MAX + 1] = "";
    char time_str[256 + 1];
+   char str[128];
 
    DENTER(TOP_LAYER, "schedd_log");
 
@@ -89,7 +90,7 @@ int schedd_log(const char *logstr) {
 
       now = (time_t)sge_get_gmt();
       /* strftime(time_str, sizeof(time_str), "%m-%d-%Y:%H:%M:%S ", localtime(&now)); */
-      strcpy(time_str, ctime((time_t *)&now));
+      strcpy(time_str, ctime_r((time_t *)&now, str));
       if (time_str[strlen(time_str) - 1] == '\n') {
          time_str[strlen(time_str) - 1] = '|';
       }

@@ -85,8 +85,6 @@ int sge_set_uid_gid_addgrp(const char *user, const char *intermediate_user,
                            int min_gid, int min_uid, int add_grp, 
                            char *err_str, int use_qsub_gid, gid_t qsub_gid);
 
-struct passwd *sge_getpwnam(const char *name); 
-
 #ifdef SGE_THREADSAFE_UTIL
 
 #include <grp.h>

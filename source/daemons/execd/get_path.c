@@ -245,10 +245,12 @@ char *exp_path,
 const char *user 
 ) {
    struct passwd *pwd;
+   struct passwd pw_struct;
+   char buffer[2048];
 
    DENTER(TOP_LAYER, "getHomeDir");
 
-   pwd = sge_getpwnam(user);
+   pwd = sge_getpwnam_r(user, &pw_struct, buffer, sizeof(buffer));
    if (!pwd) {
       ERROR((SGE_EVENT, MSG_EXECD_INVALIDUSERNAME_S, user));
       DEXIT;

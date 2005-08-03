@@ -408,7 +408,10 @@ lListElem *conf
 
 
       if (!strcmp(name, "admin_user")) {
-         if (strcasecmp(value, "none") && !getpwnam(value)) {
+         struct passwd pw_struct;
+         char buffer[2048];
+
+         if (strcasecmp(value, "none") && !sge_getpwnam_r(value, &pw_struct, buffer, sizeof(buffer))) {
             ERROR((SGE_EVENT, MSG_CONF_GOTINVALIDVALUEXASADMINUSER_S, value));
             answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
             DEXIT;

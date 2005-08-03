@@ -322,10 +322,14 @@ static drmaa_job_template_t *create_job_template(const char *job_path, int as_bu
    drmaa_set_attribute(jt, DRMAA_JOIN_FILES, "y", NULL, 0);
 
    /* path for output */
+#if 0
    if (!as_bulk_job)
       drmaa_set_attribute(jt, DRMAA_OUTPUT_PATH, ":"DRMAA_PLACEHOLDER_HD"/DRMAA_JOB", NULL, 0);
    else
       drmaa_set_attribute(jt, DRMAA_OUTPUT_PATH, ":"DRMAA_PLACEHOLDER_HD"/DRMAA_JOB."DRMAA_PLACEHOLDER_INCR, NULL, 0);
+#else
+      drmaa_set_attribute(jt, DRMAA_OUTPUT_PATH, ":/dev/null", NULL, 0);
+#endif
 
    return jt;
 }

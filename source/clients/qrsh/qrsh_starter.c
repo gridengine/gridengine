@@ -633,7 +633,6 @@ static int startJob(char *command, char *wrapper, int noshell)
       char *userName = NULL;
       int    argc = 0;
       const char **args = NULL;
-      struct passwd *pw = NULL;
       char *cmd = NULL;
       int cmdargc;
       char **cmdargs = NULL;
@@ -651,12 +650,16 @@ static int startJob(char *command, char *wrapper, int noshell)
       }
 
       if(!noshell) {
+         struct passwd *pw = NULL;
+         struct passwd pw_struct;
+         char buffer[2048];
+
          if((userName = search_conf_val("job_owner")) == NULL) {
             qrsh_error(MSG_QRSH_STARTER_CANNOTGETLOGIN_S, strerror(errno));
             exit(EXIT_FAILURE);
          }
 
-         if((pw = sge_getpwnam(userName)) == NULL) {
+         if ((pw = sge_getpwnam_r(userName, &pw_struct, buffer, sizeof(buffer))) == NULL) {
             qrsh_error(MSG_QRSH_STARTER_CANNOTGETUSERINFO_S, strerror(errno));
             exit(EXIT_FAILURE);
          }

@@ -3288,7 +3288,7 @@ sequential_max_host_slots(sge_assignment_t *a, lListElem *host) {
    bool is_np_adjustment = false;
    lList *requests = lGetList(a->job, JB_hard_resource_list);
 
-   DENTER(TOP_LAYER, "parallel_tag_hosts_queues");
+   DENTER(TOP_LAYER, "sequential_max_host_slots");
 
    for (next_queue = lGetElemHostFirst(a->queue_list, QU_qhostname, eh_name, &queue_iterator); 
        (qep = next_queue);

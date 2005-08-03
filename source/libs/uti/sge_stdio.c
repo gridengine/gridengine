@@ -205,7 +205,7 @@ pid_t sge_peopen(const char *shell, int login_shell, const char *command,
          struct passwd pw_struct;
          char buffer[2048];
 
-         if (sge_getpwnam_r(user, &pw_struct, buffer, sizeof(buffer), &pw)) {
+         if (!(pw=sge_getpwnam_r(user, &pw_struct, buffer, sizeof(buffer)))) {
             sprintf(err_str, MSG_SYSTEM_NOUSERFOUND_SS , user, strerror(errno));            
             sprintf(err_str, "\n");
             write(2, err_str, strlen(err_str));

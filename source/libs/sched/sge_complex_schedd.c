@@ -210,7 +210,7 @@ lListElem* get_attribute(const char *attrname, lList *config_attr, lList *actual
             lSetString(cplx_el,CE_pj_stringval, as_str);
          } else{
             sge_dstring_sprintf(reason, MSG_ATTRIB_ACTUALELEMENTTOATTRIBXMISSING_S, attrname);
-            cplx_el = lFreeElem(cplx_el);
+            lFreeElem(&cplx_el);
             DEXIT;
             return NULL;
          }
@@ -328,7 +328,7 @@ lListElem* get_attribute(const char *attrname, lList *config_attr, lList *actual
                   lSetDouble(cplx_el, CE_pj_doubleval, dval );
                }
             } /* end numerical load value */
-            load_adjustments = lFreeList(load_adjustments);
+            lFreeList(&load_adjustments);
          }/* end block */
       }
    }
@@ -348,7 +348,7 @@ lListElem* get_attribute(const char *attrname, lList *config_attr, lList *actual
          created = true;
       }
       if (!get_queue_resource(cplx_el, queue, attrname) && created)
-         cplx_el = lFreeElem(cplx_el);
+         lFreeElem(&cplx_el);
    }
    DEXIT;
    return cplx_el;
@@ -451,7 +451,7 @@ bool get_queue_resource(lListElem *queue_elem, const lListElem *queue, const cha
          }
       }
       else{ 
-         queue_elem = lFreeElem(queue_elem);
+         lFreeElem(&queue_elem);
          DPRINTF(("the sytem queue element %s has no value!\n", attrname));
          /* error */
       }
@@ -626,9 +626,7 @@ lList *centry_list
 ) {
    DENTER(TOP_LAYER, "global_complexes2scheduler");
 
-   if(*new_centry_list)
-      *new_centry_list = lFreeList(*new_centry_list);
-
+   lFreeList(new_centry_list);
    *new_centry_list = get_attribute_list(global_host, NULL, NULL, centry_list);
 
    DEXIT;
@@ -649,9 +647,7 @@ lList *centry_list
       DPRINTF(("!!missing host!!\n"));
    }
    /* build global complex and add it to result */
-   if ( *new_centry_list) 
-      *new_centry_list = lFreeList(*new_centry_list);
-
+   lFreeList(new_centry_list);
    *new_centry_list = get_attribute_list(host_list_locate(exechost_list, "global"), host, NULL, centry_list);
 
    DEXIT;
@@ -674,9 +670,7 @@ const lList *centry_list
 ) {
    DENTER(BASIS_LAYER, "queue_complexes2scheduler");
 
-   if (*new_centry_list) 
-      *new_centry_list = lFreeList(*new_centry_list);
-
+   lFreeList(new_centry_list);
    *new_centry_list = get_attribute_list(host_list_locate(exechost_list, "global"), 
                                          queue ? host_list_locate(exechost_list, lGetHost(queue, QU_qhostname)) : NULL, 
                                          queue, centry_list);
@@ -1292,10 +1286,10 @@ lListElem *get_attribute_by_name(lListElem* global, lListElem *host, lListElem *
       }   
       else if (global_el && host_el) {
          if(is_attr_prior(global_el, host_el)) {
-            host_el = lFreeElem(host_el);
+            lFreeElem(&host_el);
          }
          else{
-            global_el = lFreeElem(global_el);
+            lFreeElem(&global_el);
             ret_el = host_el;
          }
       }
@@ -1313,10 +1307,10 @@ lListElem *get_attribute_by_name(lListElem* global, lListElem *host, lListElem *
       }   
       else if (ret_el && queue_el) {
          if (is_attr_prior(ret_el, queue_el)) {
-            queue_el = lFreeElem(queue_el);
+            lFreeElem(&queue_el);
          }
          else {
-            ret_el = lFreeElem(ret_el);
+            lFreeElem(&ret_el);
             ret_el = queue_el;
          }
       }
@@ -1389,13 +1383,13 @@ char *object_name
       if (ret) {
          /* error message gets written by centry_list_fill_request into SGE_EVENT */
          answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-         lFreeElem(tmp_elem);
+         lFreeElem(&tmp_elem);
          DEXIT;
          return STATUS_EUNKNOWN;
       }
 
       lSetList(new_ep, nm, lCopyList("", lGetList(tmp_elem, nm)));
-      lFreeElem(tmp_elem);
+      lFreeElem(&tmp_elem);
 
       /* check whether this attrib is available due to complex configuration */
       if (ensure_attrib_available(alpp, new_ep, nm)) {

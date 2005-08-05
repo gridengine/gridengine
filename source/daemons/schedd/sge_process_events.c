@@ -304,21 +304,21 @@ int event_handler_default_scheduler()
    monitor_next_run = 0;
 
    /* .. which gets deleted after using */
-   copy.host_list = lFreeList(copy.host_list);
-   copy.queue_list = lFreeList(copy.queue_list);
-   copy.dis_queue_list = lFreeList(copy.dis_queue_list);
-   copy.all_queue_list = lFreeList(copy.all_queue_list);
-   copy.job_list = lFreeList(copy.job_list);
-   copy.centry_list = lFreeList(copy.centry_list);
-   copy.acl_list = lFreeList(copy.acl_list);
+   lFreeList(&(copy.host_list));
+   lFreeList(&(copy.queue_list));
+   lFreeList(&(copy.dis_queue_list));
+   lFreeList(&(copy.all_queue_list));
+   lFreeList(&(copy.job_list));
+   lFreeList(&(copy.centry_list));
+   lFreeList(&(copy.acl_list));
 
-   copy.dept_list = lFreeList(copy.dept_list);
+   lFreeList(&(copy.dept_list));
 
-   copy.pe_list = lFreeList(copy.pe_list);
-   copy.share_tree = lFreeList(copy.share_tree);
-   copy.user_list = lFreeList(copy.user_list);
-   copy.project_list = lFreeList(copy.project_list);
-   copy.ckpt_list = lFreeList(copy.ckpt_list);
+   lFreeList(&(copy.pe_list));
+   lFreeList(&(copy.share_tree));
+   lFreeList(&(copy.user_list));
+   lFreeList(&(copy.project_list));
+   lFreeList(&(copy.ckpt_list));
 
    PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM7);
    prof_free = prof_get_measurement_wallclock(SGE_PROF_CUSTOM7,true, NULL);

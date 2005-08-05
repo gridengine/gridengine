@@ -135,7 +135,7 @@ lList *centry_list
       lList *answer_list = NULL;
       if (!centry_elem_validate(ep,  centry_list, &answer_list)){
          answer_list_output(&answer_list);
-         ep = lFreeElem(ep);
+         lFreeElem(&ep);
       }
    }
 

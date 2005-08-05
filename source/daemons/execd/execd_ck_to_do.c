@@ -288,7 +288,7 @@ void force_job_rlimit()
          }
 
          if (usage_list)
-            lFreeList(usage_list);
+            lFreeList(&usage_list);
 
       }
    }
@@ -1074,7 +1074,7 @@ static bool should_reprioritize(void)
    }
 
    if (NULL != confl) {
-      confl = lFreeElem(confl);
+      lFreeElem(&confl);
    }
 
    DEXIT;

@@ -100,7 +100,7 @@ lList *gdi_kill(lList *id_list, const char *cell, u_long32 option_flags,
 
    if (action_flag & MASTER_KILL) {
       tmpalp = sge_gdi(SGE_MASTER_EVENT, SGE_GDI_TRIGGER, NULL, NULL, NULL);
-      lAddList(alp, tmpalp);
+      lAddList(alp, &tmpalp);
    }
 
    if (action_flag & SCHEDD_KILL) {
@@ -111,7 +111,7 @@ lList *gdi_kill(lList *id_list, const char *cell, u_long32 option_flags,
       id_list_created = true;
       lAddElemStr(&id_list, ID_str, buffer, ID_Type);
       tmpalp = sge_gdi(SGE_EVENT_LIST, SGE_GDI_TRIGGER, &id_list, NULL, NULL);
-      lAddList(alp, tmpalp);  
+      lAddList(alp, &tmpalp);  
    }
 
    if (action_flag & EVENTCLIENT_KILL) {
@@ -123,7 +123,7 @@ lList *gdi_kill(lList *id_list, const char *cell, u_long32 option_flags,
          lAddElemStr(&id_list, ID_str, buffer, ID_Type);
       }
       tmpalp = sge_gdi(SGE_EVENT_LIST, SGE_GDI_TRIGGER, &id_list, NULL, NULL);
-      lAddList(alp, tmpalp);  
+      lAddList(alp, &tmpalp);  
    }
 
    if ((action_flag & EXECD_KILL) || (action_flag & JOB_KILL)) {
@@ -146,12 +146,12 @@ lList *gdi_kill(lList *id_list, const char *cell, u_long32 option_flags,
          lAppendElem(hlp, hlep);
       }
       tmpalp = sge_gdi(SGE_EXECHOST_LIST, SGE_GDI_TRIGGER, &hlp, NULL, NULL);
-      lAddList(alp, tmpalp);
-      hlp = lFreeList(hlp);
+      lAddList(alp, &tmpalp);
+      lFreeList(&hlp);
    }
 
    if (id_list_created) {
-      id_list = lFreeList(id_list);
+      lFreeList(&id_list);
    }
 
    DEXIT;

@@ -125,7 +125,7 @@ static lListElem *job_create_from_file(u_long32 job_id, u_long32 ja_task_id,
 
          ja_task_list = lGetList(job, JB_ja_tasks);
          if (ja_task_list) {
-            lAddList(ja_task_list, ja_tasks);
+            lAddList(ja_task_list, &ja_tasks);
          } else {
             lSetList(job, JB_ja_tasks, ja_tasks);
          }
@@ -147,7 +147,7 @@ static lListElem *job_create_from_file(u_long32 job_id, u_long32 ja_task_id,
    return job;
 error:
    DEXIT;
-   job = lFreeElem(job);
+   lFreeElem(&job);
    return NULL;
 }
 
@@ -230,7 +230,7 @@ static lList *ja_task_list_create_from_file(u_long32 job_id,
                         }
                      }
                   }
-                  pe_task_entries = lFreeList(pe_task_entries);
+                  lFreeList(&pe_task_entries);
                   lSetList(ja_task, JAT_task_list, pe_tasks);
                } else {
                   ja_task = ja_task_create_from_file(job_id, ja_task_id, NULL, flags);
@@ -243,10 +243,10 @@ static lList *ja_task_list_create_from_file(u_long32 job_id,
                }
             }
          } 
-         ja_task_entries = lFreeList(ja_task_entries);
+         lFreeList(&ja_task_entries);
       }
    }
-   dir_entries = lFreeList(dir_entries);
+   lFreeList(&dir_entries);
 
    if (!lGetNumberOfElem(ja_tasks)) {
       DTRACE;
@@ -255,10 +255,10 @@ static lList *ja_task_list_create_from_file(u_long32 job_id,
    DEXIT;
    return ja_tasks;
 error:
-   ja_tasks = lFreeList(ja_tasks);
-   dir_entries = lFreeList(dir_entries);
-   ja_task_entries = lFreeList(ja_task_entries);  
-   pe_task_entries = lFreeList(pe_task_entries);
+   lFreeList(&ja_tasks);
+   lFreeList(&dir_entries);
+   lFreeList(&ja_task_entries);  
+   lFreeList(&pe_task_entries);
    DEXIT;
    return NULL; 
 }
@@ -828,7 +828,7 @@ int job_list_read_from_disk(lList **job_list, char *list_name, int check,
    sge_status_set_type(STATUS_DOTS);
    for (;
         (first_direntry = lFirst(first_direnties)); 
-        lRemoveElem(first_direnties, first_direntry)) {
+        lRemoveElem(first_direnties, &first_direntry)) {
       char second_dir[SGE_PATH_MAX] = "";
       lList *second_direnties;
       lListElem *second_direntry;
@@ -846,7 +846,7 @@ int job_list_read_from_disk(lList **job_list, char *list_name, int check,
       second_direnties = sge_get_dirents(second_dir);
       for (;
            (second_direntry = lFirst(second_direnties));
-           lRemoveElem(second_direnties, second_direntry)) { 
+           lRemoveElem(second_direnties, &second_direntry)) {
          char third_dir[SGE_PATH_MAX] = "";
          lList *third_direnties;
          lListElem *third_direntry;
@@ -864,7 +864,7 @@ int job_list_read_from_disk(lList **job_list, char *list_name, int check,
          third_direnties = sge_get_dirents(third_dir);
          for (;
               (third_direntry = lFirst(third_direnties));
-              lRemoveElem(third_direnties, third_direntry)) {
+              lRemoveElem(third_direnties, &third_direntry)) {
             lListElem *job, *ja_task;
             char job_dir[SGE_PATH_MAX] = "";
             char fourth_dir[SGE_PATH_MAX] = "";
@@ -924,7 +924,7 @@ int job_list_read_from_disk(lList **job_list, char *list_name, int check,
                          sge_u32c(lGetUlong(job, JB_job_number))));
                   job_list_add_job(&Master_Job_List, "job list", job, 0);
                   job_remove_spool_file(job_id, 0, NULL, SPOOL_DEFAULT);
-                  lRemoveElem(Master_Job_List, job);
+                  lRemoveElem(Master_Job_List, &job);
                   continue;
                }
             }  
@@ -952,11 +952,11 @@ int job_list_read_from_disk(lList **job_list, char *list_name, int check,
                suser_register_new_job(job, conf.max_u_jobs, 1);
             }
          }
-         third_direnties = lFreeList(third_direnties);
+         lFreeList(&third_direnties);
       }
-      second_direnties = lFreeList(second_direnties);
+      lFreeList(&second_direnties);
    } 
-   first_direnties = lFreeList(first_direnties);
+   lFreeList(&first_direnties);
 
    if (*job_list) {
       sge_status_end_turn();

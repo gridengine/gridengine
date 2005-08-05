@@ -138,8 +138,8 @@ int sge_read_configuration(lListElem *aSpoolContext, lList *anAnswer)
 
    ret = merge_configuration(global, local, &conf, NULL);
 
-   local = lFreeElem(local);
-   global = lFreeElem(global);
+   lFreeElem(&local);
+   lFreeElem(&global);
    
    if (0 != ret)
    {
@@ -269,7 +269,7 @@ int sge_mod_configuration(lListElem *aConf, lList **anAnswer, char *aUser, char 
       
       ret = do_mod_config(unique_name, old_conf, aConf, anAnswer);
       
-      lFreeElem(old_conf);
+      lFreeElem(&old_conf);
       
       if (ret == 0)
       {    
@@ -319,8 +319,8 @@ int sge_mod_configuration(lListElem *aConf, lList **anAnswer, char *aUser, char 
          ERROR((SGE_EVENT, MSG_CONF_CANTMERGECONFIGURATIONFORHOST_S, uti_state_get_qualified_hostname()));
       }
       
-      lFreeElem(local);
-      lFreeElem(global);
+      lFreeElem(&local);
+      lFreeElem(&global);
       
       sge_show_conf();
 
@@ -433,7 +433,7 @@ lListElem *conf
 
          /* .. checking userset names */
          ok = (userset_list_validate_acl_list(tmp, alpp)==STATUS_OK);
-         lFreeList(tmp);
+         lFreeList(&tmp);
          if (!ok) {
             DEXIT;
             return STATUS_EEXIST;
@@ -455,7 +455,7 @@ lListElem *conf
          /* .. checking project names */
          ok = (verify_userprj_list(alpp, tmp, Master_Project_List,
                     name, "configuration", conf_name)==STATUS_OK);
-         lFreeList(tmp);
+         lFreeList(&tmp);
          if (!ok) {
             DEXIT;
             return STATUS_EEXIST;
@@ -537,12 +537,12 @@ int sge_compare_configuration(lListElem *aHost, lList *aConf)
       if (master_version != conf_version)
       {
          DPRINTF(("%s: configuration for %s changed from version %ld to %ld\n", SGE_FUNC, host_name, master_version, conf_version));
-         lFreeElem(master_conf);
+         lFreeElem(&master_conf);
          DEXIT;
          return 1;
       }
       
-      lFreeElem(master_conf);
+      lFreeElem(&master_conf);
    }
 
    DEXIT;
@@ -568,14 +568,14 @@ lListElem *sge_get_configuration_entry_by_name(const char *aHost, const char *an
    if ((conf = sge_get_configuration_for_host(aHost)) != NULL) {
       elem = get_entry_from_conf(conf, anEntryName);
    }
-   conf = lFreeElem(conf);
+   lFreeElem(&conf);
    
    /* local configuration did not work, try global one */
    if ((elem == NULL) && ((conf = sge_get_configuration_for_host(SGE_GLOBAL_NAME)) != NULL)) {
       elem = get_entry_from_conf(conf, anEntryName);
    }
   
-   conf = lFreeElem(conf);
+   lFreeElem(&conf);
    DEXIT;
    return elem;
 }
@@ -717,7 +717,7 @@ bool sge_conf_is_reprioritize(void)
 
    res = sge_get_conf_reprioritize(conf);
 
-   conf = lFreeElem(conf);
+   lFreeElem(&conf);
 
    DEXIT;
    return res;
@@ -858,7 +858,7 @@ static int exchange_conf_by_name(char *aConfName, lListElem *anOldConf, lListEle
    
    elem = lGetElemHost(Cluster_Config.list, CONF_hname, aConfName);
 
-   lRemoveElem(Cluster_Config.list, elem);
+   lRemoveElem(Cluster_Config.list, &elem);
    
    elem = lCopyElem(aNewConf);
    
@@ -936,7 +936,7 @@ static int remove_conf_by_name(char *aConfName)
 
    elem = lGetElemHost(Cluster_Config.list, CONF_hname, aConfName);
 
-   lRemoveElem(Cluster_Config.list, elem);
+   lRemoveElem(Cluster_Config.list, &elem);
 
    sge_mutex_unlock("cluster_config_mutex", SGE_FUNC, __LINE__, &Cluster_Config.mutex);
    

@@ -226,7 +226,7 @@ char *rhost
       return ret;
    }
 
-   lFreeElem(lDechainElem(*userset_list, found));
+   lRemoveElem(*userset_list, &found);
 
    sge_event_spool(alpp, 0, sgeE_USERSET_DEL, 
                    0, 0, userset_name, NULL, NULL,
@@ -318,7 +318,7 @@ char *rhost
    }
 
    /* delete old userset */
-   lRemoveElem(*userset_list, found);
+   lRemoveElem(*userset_list, &found);
 
    /* insert modified userset */
    lAppendElem(*userset_list, lCopyElem(ep));
@@ -440,8 +440,8 @@ lList **alpp
    where = lWhere("%T(%I m= %u && %I != %s)", US_Type, US_type, US_DEPT,
                      US_name, lGetString(new_userset, US_name));
    depts = lSelect("Departments", userset_list, where, what);
-   lFreeWhere(where);
-   lFreeWhat(what);
+   lFreeWhere(&where);
+   lFreeWhat(&what);
 
    if (!depts) {
       DEXIT;
@@ -459,7 +459,7 @@ lList **alpp
          break;
    }
    
-   lFreeList(depts);
+   lFreeList(&depts);
    
    if (answers) {
       *alpp = answers;

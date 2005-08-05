@@ -365,8 +365,7 @@ char *err_str
       /* JG: TODO: create function write_pe_hostfile() */
       /* JG: TODO (254) use function sge_get_active_job.... */
       if (petep == NULL) {
-         if (processor_set)
-            processor_set = lFreeList(processor_set);
+         lFreeList(&processor_set);
 
          sprintf(hostfilename, "%s/%s/%s", execd_spool_dir, active_dir_buffer, PE_HOSTFILE);
          fp = fopen(hostfilename, "w");
@@ -405,8 +404,8 @@ char *err_str
                if (q_set && strcasecmp(q_set, "UNDEFINED")) {
                   range_list_parse_from_string(&processor_set, &alp, q_set,
                                                false, false, INF_ALLOWED);
-                  if (lGetNumberOfElem(alp))
-                     alp = lFreeList(alp);
+                  /* TODO: should we not print the answerlist in case of an error? */
+                  lFreeList(&alp);
                }
             }
          }
@@ -760,7 +759,7 @@ char *err_str
       sprintf(fname, "%s/config", active_dir_buffer);
       fp = fopen(fname, "w");
       if (!fp) {
-         lFreeList(environmentList);
+         lFreeList(&environmentList);
          sprintf(err_str, MSG_FILE_NOOPEN_SS, fname, strerror(errno));
          DEXIT;
          return -2;
@@ -779,7 +778,7 @@ char *err_str
    #     if defined(LINUX)
 
          if (!sup_groups_in_proc()) {
-            lFreeList(environmentList);
+            lFreeList(&environmentList);
             sprintf(err_str, MSG_EXECD_NOSGID); 
             fclose(fp);
             DEXIT;
@@ -793,9 +792,9 @@ char *err_str
          range_list_parse_from_string(&rlp, &alp, conf.gid_range,
                                       0, 0, INF_NOT_ALLOWED);
          if (rlp == NULL) {
-             lFreeList(alp);
+             lFreeList(&alp);
              sprintf(err_str, MSG_EXECD_NOPARSEGIDRANGE);
-             lFreeList(environmentList);
+             lFreeList(&environmentList);
              fclose(fp);
              DEXIT;
              return (-2);
@@ -808,7 +807,7 @@ char *err_str
             last_addgrpid = get_next_addgrpid (rlp, last_addgrpid);
             if (temp_id == last_addgrpid) {
                sprintf(err_str, MSG_EXECD_NOADDGID);
-               lFreeList(environmentList);
+               lFreeList(&environmentList);
                fclose(fp);
                DEXIT;
                return (-1);
@@ -824,8 +823,8 @@ char *err_str
             lSetString(petep, PET_osjobid, str_id);
          }
          
-         lFreeList(rlp);
-         lFreeList(alp);
+         lFreeList(&rlp);
+         lFreeList(&alp);
 
       }
 
@@ -1134,7 +1133,7 @@ char *err_str
          } else {
             sprintf(err_str, MSG_EXECD_NOXTERM); 
             fclose(fp);
-            lFreeList(environmentList);
+            lFreeList(&environmentList);
             DEXIT;
             return -2;
             /*
@@ -1204,8 +1203,8 @@ char *err_str
             if(error_string != NULL) {
                sprintf(err_str, error_string);
             }
-            lFreeList(answer_list);
-            lFreeList(environmentList);
+            lFreeList(&answer_list);
+            lFreeList(&environmentList);
             fclose(fp);
             DEXIT;
             return -1;
@@ -1215,7 +1214,7 @@ char *err_str
 
    
    if (arch_dep_config(fp, cplx, err_str)) {
-      lFreeList(environmentList);
+      lFreeList(&environmentList);
       fclose(fp);
       DEXIT;
       return -2;
@@ -1325,7 +1324,7 @@ char *err_str
    /* should a windows exec daemon use domain users */
    fprintf(fp, "enable_windomacc=%d", (int)enable_windomacc);
 
-   lFreeList(environmentList);
+   lFreeList(&environmentList);
    fclose(fp);
    /********************** finished writing config ************************/
 
@@ -1672,13 +1671,13 @@ lList *gdil_orig  /* JG_Type */
       where = lWhere("%T(!(%I h= %s))", JG_Type, JG_qhostname, 
               lGetHost(ep, JG_qhostname));
       if (!where) {
-         lFreeList(gdil_copy);
+         lFreeList(&gdil_copy);
          CRITICAL((SGE_EVENT, MSG_EXECD_NOWHERE4GDIL_S,"JG_qhostname"));
          DEXIT;
          return -1;
       }
       gdil_copy = lSelectDestroy(gdil_copy, where);   
-      lFreeWhere(where);
+      lFreeWhere(&where);
 
       nhosts++;
    }

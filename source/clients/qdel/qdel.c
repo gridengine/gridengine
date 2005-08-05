@@ -99,8 +99,8 @@ int main(int argc, char **argv) {
       for_each(aep, alp) {
          fprintf(stdout, "%s\n", lGetString(aep, AN_text));
       }
-      lFreeList(alp);
-      lFreeList(pcmdline);
+      lFreeList(&alp);
+      lFreeList(&pcmdline);
       SGE_EXIT(1);
    }
 
@@ -159,15 +159,11 @@ int main(int argc, char **argv) {
             if (lGetUlong(aep = lFirst(alp), AN_status) != STATUS_OK) {
                fprintf(stderr, "%s\n", lGetString(aep, AN_text));
             }
-            lFreeList(alp);
-            alp = NULL;
+            lFreeList(&alp);
          }
          goto error_exit;
       }  
-      if (alp != NULL) {
-         lFreeList(alp);
-         alp = NULL;
-      }
+      lFreeList(&alp);
    }
    /* delete the job */
    {
@@ -259,14 +255,14 @@ int main(int argc, char **argv) {
             }
 
             if (!do_again){
-               part_ref_list = lFreeList(part_ref_list);
+               lFreeList(&part_ref_list);
             }
-            alp = lFreeList(alp);
+            lFreeList(&alp);
 
             first_try = false;
          } while (do_again || (lGetNumberOfElem(cp_ref_list) > 0));
 
-         cp_ref_list = lFreeList(cp_ref_list);
+         lFreeList(&cp_ref_list);
 
          if (delete_mode == 7) {
             /* 
@@ -288,18 +284,18 @@ int main(int argc, char **argv) {
       }
    }
 
-   lFreeList(alp);
-   lFreeList(jlp);
-   lFreeList(ref_list);
+   lFreeList(&alp);
+   lFreeList(&jlp);
+   lFreeList(&ref_list);
    sge_gdi_shutdown();
    sge_prof_cleanup();
    SGE_EXIT(0);
    return 0;
 
 error_exit:
-   lFreeList(alp);
-   lFreeList(jlp);
-   lFreeList(ref_list);
+   lFreeList(&alp);
+   lFreeList(&jlp);
+   lFreeList(&ref_list);
    sge_gdi_shutdown();
    sge_prof_cleanup();
    SGE_EXIT(1); 
@@ -441,7 +437,7 @@ stringT str;
 
       while ((ep = lGetElemStr(*ppcmdline, SPA_switch, "-u"))) {
          lXchgList(ep, SPA_argval_lListT, ppuserlist);
-         lRemoveElem(*ppcmdline, ep);
+         lRemoveElem(*ppcmdline, &ep);
       } 
 
       if(parse_multi_stringlist(ppcmdline, "-u", &alp, ppuserlist, ST_Type, ST_name)) {

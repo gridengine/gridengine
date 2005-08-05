@@ -625,9 +625,9 @@ void update_job_usage(void)
       return;
    }
 
-   if (lGetNumberOfElem(usage_list)<=0) {
+   if (lGetNumberOfElem(usage_list) == 0) {
       /* could be an empty list head */
-      lFreeList(usage_list);
+      lFreeList(&usage_list);
       DEXIT;
       return;
    }
@@ -740,7 +740,7 @@ void update_job_usage(void)
          }
       }
    }
-   lFreeList(usage_list);
+   lFreeList(&usage_list);
 
    DEXIT;
    return;
@@ -884,7 +884,7 @@ calculate_reserved_usage(const lListElem *ja_task, const lListElem *pe_task,
                   lGetDouble(uep, UA_value) : 0;
          maxvmem = ((uep=lGetElemStr(jul, UA_name, USAGE_ATTR_MAXVMEM))) ?
                   lGetDouble(uep, UA_value) : 0;
-         lFreeList(jul);
+         lFreeList(&jul);
       }
    }
 #endif
@@ -1052,8 +1052,8 @@ static void get_reserved_usage(lList **job_usage_list)
    *job_usage_list = lSelect("PtfJobUsageList", temp_job_usage_list, NULL,
                              what);
 
-   lFreeList(temp_job_usage_list);
-   lFreeWhat(what);
+   lFreeList(&temp_job_usage_list);
+   lFreeWhat(&what);
 
    DEXIT;
 }

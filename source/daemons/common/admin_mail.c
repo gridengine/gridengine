@@ -286,7 +286,7 @@ int is_array
          free((char*)sge_mail_body_total);
    }
    if (lp_mail)
-      lFreeList(lp_mail);
+      lFreeList(&lp_mail);
 
    DEXIT;
    return;

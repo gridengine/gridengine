@@ -198,7 +198,7 @@ lList* sge_gdi(u_long32 target, u_long32 cmd, lList **lpp, lCondition *cp,
 
    alp = sge_gdi_extract_answer(cmd, target, id, mal, lpp);
 
-   mal = lFreeList(mal);
+   lFreeList(&mal);
 
    PROF_STOP_MEASUREMENT(SGE_PROF_GDI);
 
@@ -534,7 +534,7 @@ gdi_send_multi_async(lList **alpp, state_gdi_multi *state)
          INFO ((SGE_EVENT, lGetString (aep, AN_text)));
       }
    }
-   *alpp = lFreeList (*alpp);
+   lFreeList(alpp);
   
    DPRINTF(("send request with id "sge_U32CFormat"\n", sge_u32c(gdi_request_mid)));
    if (commlib_error != CL_RETVAL_OK) {
@@ -634,7 +634,7 @@ gdi_receive_multi_async(sge_gdi_request **answer, lList **malpp, bool is_sync)
       /* nothing todo... */
       return true;
    }
- 
+  
    /* recive answer */
    while (!(ret = sge_get_gdi_request_async(&commlib_error, rcv_rhost, rcv_commproc, &id, answer, gdi_request_mid, is_sync))) {
    
@@ -683,7 +683,7 @@ gdi_receive_multi_async(sge_gdi_request **answer, lList **malpp, bool is_sync)
       DEXIT;
       return false;
    }
-  
+ 
    for (an = (*answer); an; an = an->next) { 
       int an_operation, an_sub_command;
 
@@ -775,7 +775,7 @@ gdi_send_multi_sync(lList **alpp, state_gdi_multi *state, sge_gdi_request **answ
       }
    }
    
-   *alpp = lFreeList (*alpp);
+   lFreeList(alpp);
    
    if (status != 0) {
 
@@ -1485,10 +1485,10 @@ sge_gdi_request *free_gdi_request(sge_gdi_request *ar) {
       if (ar->commproc) free(ar->commproc);
       if (ar->auth_info) free(ar->auth_info);
 
-      lFreeList(ar->lp);
-      lFreeList(ar->alp);
-      lFreeWhere(ar->cp);
-      lFreeWhat(ar->enp);
+      lFreeList(&(ar->lp));
+      lFreeList(&(ar->alp));
+      lFreeWhere(&(ar->cp));
+      lFreeWhat(&(ar->enp));
 
       free(ar);
 

@@ -611,7 +611,10 @@ void sge_security_exit(int i)
 }
 
 
-int gdi_receive_sec_message(cl_com_handle_t* handle,char* un_resolved_hostname, char* component_name, unsigned long component_id, int synchron, unsigned long response_mid, cl_com_message_t** message, cl_com_endpoint_t** sender) {
+int gdi_receive_sec_message(cl_com_handle_t* handle,char* un_resolved_hostname, 
+                            char* component_name, unsigned long component_id, 
+                            int synchron, unsigned long response_mid, 
+                            cl_com_message_t** message, cl_com_endpoint_t** sender) {
 
    int ret;
    DENTER(TOP_LAYER, "gdi_receive_sec_message");

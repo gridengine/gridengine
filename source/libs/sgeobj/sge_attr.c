@@ -334,7 +334,7 @@ attr_list_add(lList **this_list, lList **answer_list, lListElem **attr,
          if (attr_elem != NULL) {
             if (flags & HOSTATTR_OVERWRITE) {
                object_set_any_type(attr_elem, value_nm, &value);
-               lFreeElem(*attr);
+               lFreeElem(attr);
 /* FIXME ??? */               
                *attr = attr_elem;
                ret = true;
@@ -394,7 +394,7 @@ attr_list_add(lList **this_list, lList **answer_list, lListElem **attr,
                lret &= href_list_find_all_references(tmp_href_list, NULL,
                                                      master_list, 
                                                      &new_host_list, NULL);
-               lFreeList(tmp_href_list);
+               lFreeList(&tmp_href_list);
             }
 
             /*
@@ -422,7 +422,7 @@ attr_list_add(lList **this_list, lList **answer_list, lListElem **attr,
       }
 
       if (created_list == true && ret == false) {
-         lFreeList(*this_list);
+         lFreeList(this_list);
       }
    } 
    DEXIT;
@@ -478,14 +478,14 @@ attr_list_add_set_del(lList **this_list, lList **answer_list,
    if (this_list && *this_list) {
       if (remove) {
          attr = attr_list_locate(*this_list, hostname, href_nm);
-         lRemoveElem(*this_list, attr);
+         lRemoveElem(*this_list, &attr);
       } else {
          attr = attr_create(answer_list, hostname, value, descriptor, 
                             href_nm, value_nm);
          ret = attr_list_add(this_list, answer_list,
                              &attr, HOSTATTR_OVERWRITE, NULL,
                              descriptor, href_nm, value_nm);
-/* FIXME ???   lFreeElem(attr); */
+/* FIXME ???   lFreeElem(&attr); */
       }
    }
    return ret;
@@ -562,8 +562,8 @@ attr_list_find_value(const lList *this_list, lList **answer_list,
                      break;
                   }
                }
-               host_list = lFreeList(host_list);
-               tmp_href_list = lFreeList(tmp_href_list);
+               lFreeList(&host_list);
+               lFreeList(&tmp_href_list);
             }
          }
          if (ret == false) {
@@ -905,7 +905,7 @@ attr_list_parse_from_string(lList **this_list, lList **answer_list,
                                      STATUS_ERROR1, ANSWER_QUALITY_ERROR);
                   }
                   if (!ret) {
-                     attr_elem = lFreeElem(attr_elem);
+                     lFreeElem(&attr_elem);
                   }
                } else {
                   ret = false;

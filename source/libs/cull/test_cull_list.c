@@ -96,7 +96,7 @@ int main(int argc, char *argv[])
    copy = lCopyElem(ep);
    printf("copy of element\n");
    lWriteElemTo(copy, stdout);
-   copy = lFreeElem(copy);
+   lFreeElem(&copy);
 
    /* test lCopyElemPartial */
    /* first copy the complete element */
@@ -106,8 +106,8 @@ int main(int argc, char *argv[])
    lCopyElemPartial(copy, &index, ep, enp, true); 
    printf("complete copy of element\n");
    lWriteElemTo(copy, stdout);
-   copy = lFreeElem(copy);
-   enp = lFreeWhat(enp);
+   lFreeElem(&copy);
+   lFreeWhat(&enp);
    /* now copy a reduced element */
    copy = lCreateElem(TEST_Type);
    enp = lWhat("%T(%I %I %I)", TEST_Type, TEST_string, TEST_float, TEST_double);
@@ -115,7 +115,7 @@ int main(int argc, char *argv[])
    lCopyElemPartial(copy, &index, ep, enp, true); 
    printf("partial copy of element\n");
    lWriteElemTo(copy, stdout);
-   copy = lFreeElem(copy);
+   lFreeElem(&copy);
    enp = lFreeWhat(enp);
 
    /* test reducing of elements */
@@ -126,7 +126,7 @@ int main(int argc, char *argv[])
    lWriteElemTo(ep, stdout);
 
    /* cleanup and exit */
-   lFreeElem(ep);                  
+   lFreeElem(&ep);                  
    return EXIT_SUCCESS;
 }
 

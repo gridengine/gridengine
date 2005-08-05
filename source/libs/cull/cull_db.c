@@ -222,7 +222,7 @@ lList *lJoinSublist(const char *name, int nm0, const lList *lp,
 
    /* create a temporary list to be used by lJoin */
    if (!(tlp = lCreateList("lJoinSublist: tlp", lGetListDescr(lp)))) {
-      lFreeList(dlp);
+      lFreeList(&dlp);
       LERROR(LECREATELIST);
       DEXIT;
       return NULL;
@@ -234,8 +234,8 @@ lList *lJoinSublist(const char *name, int nm0, const lList *lp,
 
          /* put each element in the tlp to be used by lJoin */
          if (lAppendElem(tlp, lCopyElem(ep)) == -1) {
-            lFreeList(tlp);
-            lFreeList(dlp);
+            lFreeList(&tlp);
+            lFreeList(&dlp);
             LERROR(LEAPPENDELEM);
             DEXIT;
             return NULL;
@@ -246,34 +246,33 @@ lList *lJoinSublist(const char *name, int nm0, const lList *lp,
                             NoName, sublist, cp1, enp1);
 
          if (!joinedlist) {
-            lFreeList(tlp);
-            lFreeList(dlp);
+            lFreeList(&tlp);
+            lFreeList(&dlp);
             LERROR(LEJOIN);
             DEXIT;
             return NULL;
          }
 
          /* joinedlist is freed in lAddList */
-         if (joinedlist && lAddList(dlp, joinedlist) == -1) {
+         if (joinedlist && lAddList(dlp, &joinedlist) == -1) {
             LERROR(LEADDLIST);
-            lFreeList(tlp);
-            lFreeList(dlp);
+            lFreeList(&tlp);
+            lFreeList(&dlp);
             DEXIT;
             return NULL;
          }
 
          /* dechain the only element from tlp and free it (copy) */
-         lFreeElem(lDechainElem(tlp, tlp->first));
+         lRemoveElem(tlp, &(tlp->first));
       }
    }
    /* temporary list has to be freed */
-   lFreeList(tlp);
+   lFreeList(&tlp);
 
    /* RETURN AN EMPTY LIST OR NULL THAT'S THE QUESTION */
 
    if (lGetNumberOfElem(dlp) == 0) {
-      lFreeList(dlp);
-      dlp = NULL;
+      lFreeList(&dlp);
    }
 
    DEXIT;
@@ -416,14 +415,14 @@ lList *lJoin(const char *name, int nm0, const lList *lp0,
          }
          if (!(ep = lJoinCopyElem(dlp->descr, ep0, enp0, ep1, enp1))) {
             LERROR(LEJOINCOPYELEM);
-            lFreeList(dlp);
+            lFreeList(&dlp);
             DEXIT;
             return NULL;
          }
          else {
             if (lAppendElem(dlp, ep) == -1) {
                LERROR(LEAPPENDELEM);
-               lFreeList(dlp);
+               lFreeList(&dlp);
                DEXIT;
                return NULL;
             }
@@ -434,8 +433,7 @@ lList *lJoin(const char *name, int nm0, const lList *lp0,
    /* RETURN AN EMPTY LIST OR NULL THAT'S THE QUESTION */
 
    if (lGetNumberOfElem(dlp) == 0) {
-      lFreeList(dlp);
-      dlp = NULL;
+      lFreeList(&dlp);
    }
 
    DEXIT;
@@ -500,17 +498,17 @@ int lSplit(lList **slp, lList **ulp, const char *ulp_name,
             ep = lDechainElem(*slp, ep);
             lAppendElem(*ulp, ep);
          } else {
-            lRemoveElem(*slp, ep);
+            lRemoveElem(*slp, &ep);
          }
       }
    }
 
    /* if no elements remain, free the list and return NULL */
    if (*slp && lGetNumberOfElem(*slp) == 0) {
-      *slp = lFreeList(*slp);
+      lFreeList(slp);
    }
    if (has_been_allocated && *ulp && lGetNumberOfElem(*ulp) == 0) {
-      *ulp = lFreeList(*ulp);
+      lFreeList(ulp);
    }
 
    DEXIT;
@@ -541,7 +539,7 @@ lList *lSelectDestroy(lList *slp, const lCondition *cp)
    DENTER(CULL_LAYER, "lSelectDestroy");
 
    if (lSplit(&slp, NULL, NULL, cp)) {
-      lFreeList(slp);
+      lFreeList(&slp);
       DEXIT;
       return NULL;
    }
@@ -661,7 +659,7 @@ lListElem *lSelectElemD(const lListElem *slp, const lCondition *cp,
       }
       
       if (lCopyElemPartial(new, &index, slp, enp, isHash)) {
-         lFreeElem(new);
+         lFreeElem(&new);
          DEXIT;
          return NULL;
       }
@@ -821,8 +819,8 @@ lList *lSelectD(const char *name, const lList *slp, const lCondition *cp,
       if ((new = lSelectElemD(ep, cp, dlp->descr, enp, isHash))){
          if (lAppendElem(dlp, new) == -1) {
             LERROR(LEAPPENDELEM);
-            lFreeElem(new);
-            lFreeList(dlp);
+            lFreeElem(&new);
+            lFreeList(&dlp);
             DEXIT;
             return NULL;
          }
@@ -838,8 +836,7 @@ lList *lSelectD(const char *name, const lList *slp, const lCondition *cp,
     */
    if (lGetNumberOfElem(dlp) == 0) {
       LERROR(LEGETNROFELEM);
-      lFreeList(dlp);
-      dlp = NULL;
+      lFreeList(&dlp);
    }
 
    DEXIT;
@@ -1099,8 +1096,7 @@ int lString2List(const char *s, lList **lpp, const lDescr *dp, int nm,
             }
             if (!lAddElemStr(lpp, nm, s, dp)) {
                sge_free_saved_vars(context);
-               lFreeList(*lpp);
-               *lpp = NULL;
+               lFreeList(lpp);
                DEXIT;
                return 1;
             }
@@ -1116,8 +1112,7 @@ int lString2List(const char *s, lList **lpp, const lDescr *dp, int nm,
             }
             if (!lAddElemHost(lpp, nm, s, dp)) {
                sge_free_saved_vars(context);
-               lFreeList(*lpp);
-               *lpp = NULL;
+               lFreeList(lpp);
                DEXIT;
                return 1;
             }
@@ -1179,22 +1174,22 @@ int lString2ListNone(const char *s, lList **lpp, const lDescr *dp,
       case lStringT:
          DPRINTF(("lString2ListNone: got lStringT data type\n"));
          if (lGetNumberOfElem(*lpp) > 1 && lGetElemCaseStr(*lpp, nm, "none")) {
-            *lpp = lFreeList(*lpp);
+            lFreeList(lpp);
             return 1;
          }
 
          if (lGetNumberOfElem(*lpp) == 1 && lGetElemCaseStr(*lpp, nm, "none"))
-            *lpp = lFreeList(*lpp);
+            lFreeList(lpp);
          break;
       case lHostT:
          DPRINTF(("lString2ListNone: got lHostT data type\n"));
          if (lGetNumberOfElem(*lpp) > 1 && lGetElemHost(*lpp, nm, "none")) {
-            *lpp = lFreeList(*lpp);
+            lFreeList(lpp);
             return 1;
          }
 
          if (lGetNumberOfElem(*lpp) == 1 && lGetElemHost(*lpp, nm, "none"))
-            *lpp = lFreeList(*lpp);
+            lFreeList(lpp);
          break;
 
       default:

@@ -47,7 +47,7 @@ int lResortElem(const lSortOrder *so, lListElem *ep, lList *lp);
 
 lSortOrder *lParseSortOrderVarArg(const lDescr *dp, const char *fmt, ...);
 lSortOrder *lParseSortOrder(const lDescr *dp, const char *fmt, va_list ap);
-lSortOrder *lFreeSortOrder(lSortOrder *so);
+void lFreeSortOrder(lSortOrder **so);
 
 /* for debugging purposes */
 void lWriteSortOrder(const lSortOrder *sp);

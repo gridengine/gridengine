@@ -139,8 +139,8 @@ centry_get_via_gdi(lList **answer_list, const char *name)
       where = lWhere("%T(%I==%s)", CE_Type, CE_name, name);
       gdi_answer_list = sge_gdi(SGE_CENTRY_LIST, SGE_GDI_GET, 
                                 &centry_list, where, what);
-      what = lFreeWhat(what);
-      where = lFreeWhere(where);
+      lFreeWhat(&what);
+      lFreeWhere(&where);
 
       if (!answer_list_has_error(&gdi_answer_list)) {
          ret = lFirst(centry_list);
@@ -184,7 +184,7 @@ centry_provide_modify_context(lListElem **this_elem, lList **answer_list)
                                              SP_FORM_ASCII, NULL, filename);
             
          if (answer_list_output (&alp)) {
-            centry = lFreeElem (centry);
+            lFreeElem(&centry);
          }
 
          if (centry != NULL) {
@@ -192,12 +192,12 @@ centry_provide_modify_context(lListElem **this_elem, lList **answer_list)
          }
 
          if (missing_field != NoName) {
-            centry = lFreeElem (centry);
+            lFreeElem(&centry);
             answer_list_output (&alp);
          }      
 
          if (centry != NULL) {
-            *this_elem = lFreeElem(*this_elem);
+            lFreeElem(this_elem);
             *this_elem = centry; 
             ret = true;
          } else {
@@ -211,7 +211,7 @@ centry_provide_modify_context(lListElem **this_elem, lList **answer_list)
       unlink(filename);
    } 
    
-   alp = lFreeList (alp);
+   lFreeList(&alp);
    DEXIT;
    return ret;
 }
@@ -257,7 +257,7 @@ centry_add_from_file(lList **answer_list, const char *filename)
                                           SP_FORM_ASCII, NULL, filename);
             
       if (answer_list_output (answer_list)) {
-         centry = lFreeElem (centry);
+         lFreeElem(&centry);
       }
 
       if (centry != NULL) {
@@ -265,7 +265,7 @@ centry_add_from_file(lList **answer_list, const char *filename)
       }
 
       if (missing_field != NoName) {
-         centry = lFreeElem (centry);
+         lFreeElem(&centry);
          answer_list_output (answer_list);
       }      
 
@@ -303,7 +303,7 @@ centry_modify(lList **answer_list, const char *name)
          ret &= centry_add_del_mod_via_gdi(centry, answer_list, SGE_GDI_MOD);
       }
       if (centry) {
-         centry = lFreeElem(centry);
+         lFreeElem(&centry);
       }
    }
 
@@ -328,7 +328,7 @@ centry_modify_from_file(lList **answer_list, const char *filename)
                                           SP_FORM_ASCII, NULL, filename);
             
       if (answer_list_output (answer_list)) {
-         centry = lFreeElem (centry);
+         lFreeElem(&centry);
       }
 
       if (centry != NULL) {
@@ -336,7 +336,7 @@ centry_modify_from_file(lList **answer_list, const char *filename)
       }
 
       if (missing_field != NoName) {
-         centry = lFreeElem (centry);
+         lFreeElem(&centry);
          answer_list_output (answer_list);
       }      
 
@@ -350,7 +350,7 @@ centry_modify_from_file(lList **answer_list, const char *filename)
          ret &= centry_add_del_mod_via_gdi(centry, answer_list, SGE_GDI_MOD);
       }
       if (centry) {
-         centry = lFreeElem(centry);
+         lFreeElem(&centry);
       }
    }
    
@@ -394,7 +394,7 @@ centry_show(lList **answer_list, const char *name)
             SGE_EXIT (1);
          }
 
-         centry = lFreeElem(centry);
+         lFreeElem(&centry);
       } else {
          sprintf(SGE_EVENT, MSG_CENTRY_DOESNOTEXIST_S, name);
          answer_list_add(answer_list, SGE_EVENT,
@@ -424,7 +424,7 @@ centry_list_show(lList **answer_list)
                                            NULL, false);
      
       FREE(filename);
-      centry_list = lFreeList(centry_list);
+      lFreeList(&centry_list);
 
       if (answer_list_output(answer_list)) {
          DEXIT;
@@ -446,7 +446,7 @@ centry_list_get_via_gdi(lList **answer_list)
    what = lWhat("%T(ALL)", CE_Type);
    gdi_answer_list = sge_gdi(SGE_CENTRY_LIST, SGE_GDI_GET,
                              &ret, NULL, what);
-   what = lFreeWhat(what);
+   lFreeWhat(&what);
 
    if (answer_list_has_error(&gdi_answer_list)) {
       answer_list_replace(answer_list, &gdi_answer_list);
@@ -454,7 +454,7 @@ centry_list_get_via_gdi(lList **answer_list)
 
    centry_list_sort(ret);
 
-   gdi_answer_list = lFreeList(gdi_answer_list);
+   lFreeList(&gdi_answer_list);
 
    DEXIT;
    return ret;
@@ -575,15 +575,15 @@ centry_list_add_del_mod_via_gdi(lList **this_list, lList **answer_list,
             if (object_has_differences(centry_elem, NULL, tmp_elem, false)) {
                lAppendElem(modify_list, centry_elem);
             } else {
-               centry_elem = lFreeElem(centry_elem);
+               lFreeElem(&centry_elem);
             }
-            lRemoveElem(*old_list, tmp_elem);
+            lRemoveElem(*old_list, &tmp_elem);
          } else {
             lDechainElem(*this_list, centry_elem);
             lAppendElem(add_list, centry_elem);
          }
       }
-      *this_list = lFreeList(*this_list);
+      lFreeList(this_list);
       
       {
          lList *gdi_answer_list = NULL;
@@ -627,9 +627,7 @@ centry_list_add_del_mod_via_gdi(lList **this_list, lList **answer_list,
                DTRACE;
                ret = false;
             }
-            if (*old_list != NULL) {
-               *old_list = lFreeList(*old_list);
-            }
+            lFreeList(old_list);
          }
          if (ret && do_mod) {
             int mode = (--number_req > 0) ? SGE_GDI_RECORD : SGE_GDI_SEND;
@@ -642,9 +640,7 @@ centry_list_add_del_mod_via_gdi(lList **this_list, lList **answer_list,
                DTRACE;
                ret = false;
             }
-            if (modify_list) {
-               modify_list = lFreeList(modify_list);
-            }
+            lFreeList(&modify_list);
          }
          if (ret && do_add) {
             int mode = (--number_req > 0) ? SGE_GDI_RECORD : SGE_GDI_SEND;
@@ -657,9 +653,7 @@ centry_list_add_del_mod_via_gdi(lList **this_list, lList **answer_list,
                DTRACE;
                ret = false;
             }
-            if (add_list != NULL){
-               add_list = lFreeList(add_list);
-            }
+            lFreeList(&add_list);
          }
 
          /*
@@ -693,12 +687,12 @@ centry_list_add_del_mod_via_gdi(lList **this_list, lList **answer_list,
                                     MSG_CENTRY_NOTCHANGED);
          }
 
-         gdi_answer_list = lFreeList(gdi_answer_list);
-         mal_answer_list = lFreeList(mal_answer_list);
+         lFreeList(&gdi_answer_list);
+         lFreeList(&mal_answer_list);
       }
 
-      add_list = lFreeList(add_list);
-      modify_list = lFreeList(modify_list);
+      lFreeList(&add_list);
+      lFreeList(&modify_list);
    }
    DEXIT;
    return ret;    
@@ -719,8 +713,8 @@ centry_list_modify(lList **answer_list)
          ret &= centry_list_add_del_mod_via_gdi(&centry_list, answer_list, &old_centry_list);  
       }
       
-      centry_list = lFreeList(centry_list);
-      old_centry_list = lFreeList(old_centry_list);
+      lFreeList(&centry_list);
+      lFreeList(&old_centry_list);
    }
    DEXIT;
    return ret;
@@ -741,7 +735,7 @@ centry_list_modify_from_file(lList **answer_list, const char *filename)
                                              SP_FORM_ASCII, NULL, filename);
             
       if (answer_list_output (answer_list)) {
-         centry_list = lFreeList (centry_list);
+         lFreeList(&centry_list);
       }
 
       old_centry_list = centry_list_get_via_gdi(answer_list); 
@@ -757,8 +751,8 @@ centry_list_modify_from_file(lList **answer_list, const char *filename)
                                                 &old_centry_list);  
       }
 
-      centry_list = lFreeList(centry_list);
-      old_centry_list = lFreeList(old_centry_list);
+      lFreeList(&centry_list);
+      lFreeList(&old_centry_list);
    }
    DEXIT;
    return ret;
@@ -796,11 +790,11 @@ centry_list_provide_modify_context(lList **this_list,
                                                 SP_FORM_ASCII, NULL, filename);
             
          if (answer_list_output (answer_list)) {
-            centry_list = lFreeList (centry_list);
+            lFreeList(&centry_list);
          }
 
          if (centry_list != NULL) {
-            *this_list = lFreeList(*this_list);
+            lFreeList(this_list);
             *this_list = centry_list; 
             ret = true;
          } else {

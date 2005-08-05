@@ -566,8 +566,8 @@ int main(int argc, char *argv[])
                /*   ec_unsubscribe(sgeE_JOB_ADD); */
                   
                   /* free the what and where mask */
-                  where = lFreeWhere(where);
-                  what = lFreeWhat(what);
+                  lFreeWhere(&where);
+                  lFreeWhat(&what);
                break;
             case QEVENT_JB_TASK_END:
             
@@ -585,8 +585,8 @@ int main(int argc, char *argv[])
                   ec_unsubscribe(sgeE_JATASK_MOD);
 
                   /* free the what and where mask */
-                  where = lFreeWhere(where);
-                  what = lFreeWhat(what);
+                  lFreeWhere(&where);
+                  lFreeWhat(&what);
                break;
          }        
       }
@@ -671,15 +671,15 @@ void qevent_testsuite_mode(void)
     what =  lIntVector2What(JB_Type, job_nm); 
 
    sge_mirror_subscribe(SGE_TYPE_JOB, print_jatask_event, NULL, NULL, where, what);
-   where = lFreeWhere(where);
-   what = lFreeWhat(what);
+   lFreeWhere(&where);
+   lFreeWhat(&what);
    
    where = NULL; 
    what = lIntVector2What(JAT_Type, jat_nm); 
 
    sge_mirror_subscribe(SGE_TYPE_JATASK, print_jatask_event, NULL, NULL, where, what);
-   where = lFreeWhere(where);
-   what = lFreeWhat(what);
+   lFreeWhere(&where);
+   lFreeWhat(&what);
  
    /* we want a 5 second event delivery interval */
    ec_set_edtime(5);

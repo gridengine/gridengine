@@ -830,21 +830,21 @@ int cull_unpack_list_partial(sge_pack_buffer *pb, lList **lpp, int flags)
    }
 
    if((ret = unpackint(pb, &n)) != PACK_SUCCESS) {
-      lFreeList(lp);
+      lFreeList(&lp);
       PROF_STOP_MEASUREMENT(SGE_PROF_PACKING);
       DEXIT;
       return ret;
    }
 
    if((ret = unpackstr(pb, &(lp->listname))) != PACK_SUCCESS) {
-      lFreeList(lp);
+      lFreeList(&lp);
       PROF_STOP_MEASUREMENT(SGE_PROF_PACKING);
       DEXIT;
       return ret;
    }
 
    if((ret = unpackint(pb, &c)) != PACK_SUCCESS) {
-      lFreeList(lp);
+      lFreeList(&lp);
       PROF_STOP_MEASUREMENT(SGE_PROF_PACKING);
       DEXIT;
       return ret;
@@ -853,7 +853,7 @@ int cull_unpack_list_partial(sge_pack_buffer *pb, lList **lpp, int flags)
 
    /* unpack descriptor */
    if((ret = cull_unpack_descr(pb, &(lp->descr))) != PACK_SUCCESS) {
-      lFreeList(lp);
+      lFreeList(&lp);
       PROF_STOP_MEASUREMENT(SGE_PROF_PACKING);
       DEXIT;
       return ret;
@@ -862,7 +862,7 @@ int cull_unpack_list_partial(sge_pack_buffer *pb, lList **lpp, int flags)
    /* unpack each list element */
    for(i = 0; i < n; i++) {
       if((ret = cull_unpack_elem_partial(pb, &ep, lp->descr, flags)) != PACK_SUCCESS) {
-         lFreeList(lp);
+         lFreeList(&lp);
          PROF_STOP_MEASUREMENT(SGE_PROF_PACKING);
          DEXIT;
          return ret;
@@ -1133,7 +1133,7 @@ lEnumeration **enpp
 
  error:
 
-   lFreeWhat(enp);
+   lFreeWhat(&enp);
    PROF_STOP_MEASUREMENT(SGE_PROF_PACKING);
    DEXIT;
    return ret;
@@ -1300,7 +1300,7 @@ lCondition **cpp
    }
 
    if ((ret = unpackint(pb, &i))) {
-      lFreeWhere(cp);
+      lFreeWhere(&cp);
       PROF_STOP_MEASUREMENT(SGE_PROF_PACKING);
       DEXIT;
       return ret;
@@ -1320,21 +1320,21 @@ lCondition **cpp
    case SUBSCOPE:
    case HOSTNAMECMP:
       if ((ret = unpackint(pb, &i))) {
-         lFreeWhere(cp);
+         lFreeWhere(&cp);
          PROF_STOP_MEASUREMENT(SGE_PROF_PACKING);
          DEXIT;
          return ret;
       }
       cp->operand.cmp.pos = i;
       if ((ret = unpackint(pb, &i))) {
-         lFreeWhere(cp);
+         lFreeWhere(&cp);
          PROF_STOP_MEASUREMENT(SGE_PROF_PACKING);
          DEXIT;
          return ret;
       }
       cp->operand.cmp.mt = i;
       if ((ret = unpackint(pb, &i))) {
-         lFreeWhere(cp);
+         lFreeWhere(&cp);
          PROF_STOP_MEASUREMENT(SGE_PROF_PACKING);
          DEXIT;
          return ret;
@@ -1343,14 +1343,14 @@ lCondition **cpp
 
       if (mt_get_type(cp->operand.cmp.mt) != lListT) {
          if ((ret = cull_unpack_switch(pb, &(cp->operand.cmp.val), mt_get_type(cp->operand.cmp.mt), 0))) {
-            lFreeWhere(cp);
+            lFreeWhere(&cp);
             PROF_STOP_MEASUREMENT(SGE_PROF_PACKING);
             DEXIT;
             return ret;
          }
       } else {
          if ((ret = cull_unpack_cond(pb, &(cp->operand.cmp.val.cp)))) {
-            lFreeWhere(cp);
+            lFreeWhere(&cp);
             PROF_STOP_MEASUREMENT(SGE_PROF_PACKING);
             DEXIT;
             return ret;
@@ -1360,7 +1360,7 @@ lCondition **cpp
 
    case NEG:
       if ((ret = cull_unpack_cond(pb, &(cp->operand.log.first)))) {
-         lFreeWhere(cp);
+         lFreeWhere(&cp);
          PROF_STOP_MEASUREMENT(SGE_PROF_PACKING);
          DEXIT;
          return ret;
@@ -1371,12 +1371,12 @@ lCondition **cpp
    case OR:
       if ((ret = cull_unpack_cond(pb, &(cp->operand.log.first)))) {
          PROF_STOP_MEASUREMENT(SGE_PROF_PACKING);
-         lFreeWhere(cp);
+         lFreeWhere(&cp);
          DEXIT;
          return ret;
       }
       if ((ret = cull_unpack_cond(pb, &(cp->operand.log.second)))) {
-         lFreeWhere(cp);
+         lFreeWhere(&cp);
          PROF_STOP_MEASUREMENT(SGE_PROF_PACKING);
          DEXIT;
          return ret;
@@ -1384,7 +1384,7 @@ lCondition **cpp
       break;
 
    default:
-      lFreeWhere(cp);
+      lFreeWhere(&cp);
       PROF_STOP_MEASUREMENT(SGE_PROF_PACKING);
       DEXIT;
       return PACK_FORMAT;

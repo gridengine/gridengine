@@ -317,7 +317,7 @@ lListElem *rootelem     /* in case of a recursive call this is the root elem
          i = cull_parse_simple_list(val, &child_list, "childnode list",
                                     STN_Type, print_elements);
          if (i) {
-            lFreeElem(ep);
+            lFreeElem(&ep);
             strcpy(errstr, MSG_STREE_NOPARSECHILDNODES);
             DEXIT;
             return NULL;
@@ -329,7 +329,7 @@ lListElem *rootelem     /* in case of a recursive call this is the root elem
                                 rootelem?rootelem:ep) &&
                 errstr[0]) {
                if (!rootelem) { /* we are at the root level */
-                  lFreeElem(ep);
+                  lFreeElem(&ep);
                }
                DEXIT;
                return NULL;
@@ -350,7 +350,7 @@ lListElem *rootelem     /* in case of a recursive call this is the root elem
    if (!rootelem && (unspecified = sge_search_unspecified_node(ep))) {
       sprintf(errstr, MSG_STREE_NOVALIDNODEREF_U, sge_u32c(lGetUlong(unspecified, STN_id)));
 
-      lFreeElem(ep);
+      lFreeElem(&ep);
       DEXIT;
       return NULL;
    }

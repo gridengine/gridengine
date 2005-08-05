@@ -922,7 +922,7 @@ lList **alpp
       const char *delis[] = {":", ",", NULL};
 
       ret = uni_print_list(NULL, str, sizeof(str) - 1, lp, fields, delis, FLG_NO_DELIS_STRINGS);
-      lp = lFreeList(lp);
+      lFreeList(&lp);
       if (ret) {
          DPRINTF(("Error %d formatting acl list\n", ret));
          sprintf(str, MSG_LIST_ERRORFORMATINGACLLIST);

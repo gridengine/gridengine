@@ -381,8 +381,8 @@ static void process_cmdline(char **anArgv)
       for_each(aep, alp) {
          fprintf(stderr, "%s", lGetString(aep, AN_text));
       }
-      lFreeList(alp);
-      lFreeList(pcmdline);
+      lFreeList(&alp);
+      lFreeList(&pcmdline);
       SGE_EXIT(1);
    }
 
@@ -394,14 +394,14 @@ static void process_cmdline(char **anArgv)
       for_each(aep, alp) {
          fprintf(stderr, "%s", lGetString(aep, AN_text));
       }
-      lFreeList(alp);
-      lFreeList(pcmdline);
+      lFreeList(&alp);
+      lFreeList(&pcmdline);
       SGE_EXIT(1);
    }
 
    if(help) {
       /* user wanted to see help. we can exit */
-      lFreeList(pcmdline);
+      lFreeList(&pcmdline);
       SGE_EXIT(0);
    }
 
@@ -1002,7 +1002,7 @@ static int setup_qmaster(void)
          calendar_update_queue_states(cep, NULL, NULL, &ppList, &monitor);
       }
 
-      ppList = lFreeList(ppList);
+      lFreeList(&ppList);
    }
 
    /* rebuild signal resend events */
@@ -1034,8 +1034,8 @@ static int setup_qmaster(void)
       lList *found = NULL;
       check_sharetree(&alp, ep, Master_User_List, Master_Project_List, 
             NULL, &found);
-      found = lFreeList(found);
-      alp = lFreeList(alp); 
+      lFreeList(&found);
+      lFreeList(&alp); 
    }
    
    /* RU: */
@@ -1083,7 +1083,7 @@ int user
 
          jobid = lGetUlong(upu, UPU_job_number);
          if (!job_list_locate(Master_Job_List, jobid)) {
-            lRemoveElem(lGetList(up, UP_debited_job_usage), upu);
+            lRemoveElem(lGetList(up, UP_debited_job_usage), &upu);
             WARNING((SGE_EVENT, "removing reference to no longer existing job "sge_u32" of %s "SFQ"\n",
                            jobid, user?"user":"project", lGetString(up, UP_name)));
             spool_me = 1;
@@ -1134,7 +1134,7 @@ static int debit_all_jobs_from_qs()
             if (!(qep = cqueue_list_locate_qinstance(*(object_type_get_master_list(SGE_TYPE_CQUEUE)), queue_name))) {
                ERROR((SGE_EVENT, MSG_CONFIG_CANTFINDQUEUEXREFERENCEDINJOBY_SU,  
                       queue_name, sge_u32c(lGetUlong(jep, JB_job_number))));
-               lRemoveElem(lGetList(jep, JB_ja_tasks), jatep);   
+               lRemoveElem(lGetList(jep, JB_ja_tasks), &jatep);
             } else {
                /* debit in all layers */
                debit_host_consumable(jep, host_list_locate(Master_Exechost_List,

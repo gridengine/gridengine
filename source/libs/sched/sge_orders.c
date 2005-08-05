@@ -165,8 +165,9 @@ lList
    DENTER(TOP_LAYER, "sge_create_orders");
    
    if (!job) {
+      lFreeList(&or_list);
       DEXIT;
-      return lFreeList(or_list);
+      return or_list;
    }
 
    /* create orders list if not existent */
@@ -250,7 +251,7 @@ lList
 
          sge_create_cull_order_pos(&order_pos, job, ja_task, jep, tempElem);    
          
-         tempElem = lFreeElem(tempElem);
+         lFreeElem(&tempElem);
       }
 
       ja_pos = &(order_pos->ja_task);
@@ -373,8 +374,7 @@ sge_send_orders2master( lList **orders )
       ret = answer_list_handle_request_answer_list(&alp, stderr);
    }
 
-   malp = lFreeList(malp);
-
+   lFreeList(&malp);
    DEXIT;
    return ret;
 }
@@ -440,7 +440,7 @@ lList *sge_join_orders(order_t *orders){
          orderlist = orders->jobStartOrderList;
       }
       else {
-         lAddList(orderlist, orders->jobStartOrderList);
+         lAddList(orderlist, &(orders->jobStartOrderList));
       }   
       orders->jobStartOrderList = NULL; 
     
@@ -449,13 +449,13 @@ lList *sge_join_orders(order_t *orders){
          orderlist = orders->pendingOrderList;
       }
       else {
-         lAddList(orderlist, orders->pendingOrderList);
+         lAddList(orderlist, &(orders->pendingOrderList));
       }
       orders->pendingOrderList= NULL;
 
       
       /* they have been send earlier, so we can remove them */
-      orders->sentOrderList = lFreeList(orders->sentOrderList);
+      lFreeList(&(orders->sentOrderList));
 
       return orderlist;
 }
@@ -535,9 +535,9 @@ int sge_send_job_start_orders(order_t *orders) {
    }
    else {
       /* check for a sucessful send */
-      malp = lFreeList(malp); 
+      lFreeList(&malp); 
    }
-  
+   
    /* figure out, what needs to be recorded, and what needs to be send */
    if (lGetNumberOfElem(orders->pendingOrderList) == 0 ) {
       if (lGetNumberOfElem(orders->jobStartOrderList) == 0) {
@@ -552,7 +552,7 @@ int sge_send_job_start_orders(order_t *orders) {
    if (lGetNumberOfElem(orders->configOrderList) > 0) {
       orders->numberSendOrders += lGetNumberOfElem(orders->configOrderList);
       sge_gdi_multi_sync(&alp, config_mode, SGE_ORDER_LIST, SGE_GDI_ADD,
-                               &orders->configOrderList, NULL, NULL, &malp, &state, false, false);
+                         &orders->configOrderList, NULL, NULL, &malp, &state, false, false);
       if (config_mode == SGE_GDI_SEND) {
          orders->numberSendPackages++;     
       }
@@ -561,7 +561,7 @@ int sge_send_job_start_orders(order_t *orders) {
    if (lGetNumberOfElem(orders->jobStartOrderList) > 0) {
       orders->numberSendOrders += lGetNumberOfElem(orders->jobStartOrderList);
       sge_gdi_multi_sync(&alp, start_mode, SGE_ORDER_LIST, SGE_GDI_ADD,
-                            &orders->jobStartOrderList, NULL, NULL, &malp, &state, false, false);
+                         &orders->jobStartOrderList, NULL, NULL, &malp, &state, false, false);
       if (start_mode == SGE_GDI_SEND) {
          orders->numberSendPackages++;     
       }
@@ -570,12 +570,12 @@ int sge_send_job_start_orders(order_t *orders) {
    if (lGetNumberOfElem(orders->pendingOrderList) > 0) {
       orders->numberSendOrders += lGetNumberOfElem(orders->pendingOrderList);
       sge_gdi_multi_sync(&alp, SGE_GDI_SEND, SGE_ORDER_LIST, SGE_GDI_ADD,
-                            &orders->pendingOrderList, NULL, NULL, &malp, &state, false, false);
+                         &orders->pendingOrderList, NULL, NULL, &malp, &state, false, false);
       orders->numberSendPackages++;                      
    }
 
-   malp = lFreeList(malp);
-   alp = lFreeList(alp);
+   lFreeList(&malp);
+   lFreeList(&alp);
 
    DEXIT;
    return true;

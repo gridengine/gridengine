@@ -630,7 +630,7 @@ int answer_list_print_err_warn(lList **answer_list,
          answer_print_text(answer, stdout, NULL, NULL);
       }
    }
-   *answer_list = lFreeList(*answer_list);
+   lFreeList(answer_list);
    DEXIT;
    return (int)status;
 }
@@ -676,7 +676,7 @@ int answer_list_handle_request_answer_list(lList **answer_list, FILE *stream) {
             }
          }
       }
-      *answer_list = lFreeList(*answer_list);
+      lFreeList(answer_list);
    } else {
       fprintf(stream, "%s\n", MSG_ANSWER_NOANSWERLIST);
       return STATUS_EUNKNOWN;
@@ -749,7 +749,7 @@ answer_list_add(lList **answer_list, const char *text,
       }
 
       if (!ret) {
-         answer = lFreeElem(answer);
+         lFreeElem(&answer);
       }
    }
    DEXIT;
@@ -798,7 +798,7 @@ void answer_list_replace(lList **answer_list, lList **new_list)
 {
    DENTER(ANSWER_LAYER, "answer_list_replace");
    if (answer_list != NULL) {
-      *answer_list = lFreeList(*answer_list);
+      lFreeList(answer_list);
 
       if (new_list != NULL) {
          *answer_list = *new_list; 
@@ -835,7 +835,7 @@ void answer_list_append_list(lList **answer_list, lList **new_list)
          *answer_list = lCreateList("", AN_Type);
       }
       if (*new_list != NULL) {
-         lAddList(*answer_list, *new_list);
+         lAddList(*answer_list, new_list);
          *new_list = NULL;
       }
    }
@@ -895,7 +895,7 @@ bool answer_list_log(lList **answer_list, bool is_free_list) {
          }
       }
       if (is_free_list) {
-         *answer_list = lFreeList(*answer_list);
+         lFreeList(answer_list);
       }
    }
 

@@ -253,7 +253,7 @@ void assignment_init(sge_assignment_t *a, lListElem *job, lListElem *ja_task, bo
 void assignment_copy(sge_assignment_t *dst, sge_assignment_t *src, bool move_gdil)
 {
    if (move_gdil) {
-      dst->gdil = lFreeList(dst->gdil);
+      lFreeList(&(dst->gdil));
    }
 
    memcpy(dst, src, sizeof(sge_assignment_t));
@@ -272,8 +272,8 @@ void assignment_copy(sge_assignment_t *dst, sge_assignment_t *src, bool move_gdi
 
 void assignment_release(sge_assignment_t *a)
 {
-   a->load_adjustments = lFreeList(a->load_adjustments);
-   a->gdil = lFreeList(a->gdil);
+   lFreeList(&(a->load_adjustments));
+   lFreeList(&(a->gdil));
 }
 
 static dispatch_t 
@@ -1360,7 +1360,7 @@ dispatch_t sge_queue_match_static(lListElem *queue, lListElem *job, const lListE
                         master_hgroup_list, true, true);
       resolved_qref = lGetElemStr(resolved_qref_list, QR_name, qinstance_name); 
       is_in_list = resolved_qref != NULL ? true : false;
-      resolved_qref_list = lFreeList(resolved_qref_list);
+      lFreeList(&(resolved_qref_list));
       if (!is_in_list) {
          DPRINTF(("Queue \"%s\" is not contained in the hard "
                   "queue list (-q) that was requested by job %d\n",
@@ -1393,7 +1393,7 @@ dispatch_t sge_queue_match_static(lListElem *queue, lListElem *job, const lListE
                         master_hgroup_list, true, true);
       resolved_qref = lGetElemStr(resolved_qref_list, QR_name, qinstance_name);
       is_in_list = resolved_qref != NULL ? true : false;
-      resolved_qref_list = lFreeList(resolved_qref_list);
+      lFreeList(&resolved_qref_list);
    
       /*
        * Tag queue
@@ -1658,8 +1658,8 @@ compute_soft_violations(const sge_assignment_t *a, lListElem *queue, int violati
             resolved_qref = lGetElemStr(resolved_qref_list, QR_name, 
                                         qinstance_name); 
             is_in_list = resolved_qref != NULL ? true : false;
-            resolved_qref_list = lFreeList(resolved_qref_list);
-            qr_list = lFreeList(qr_list);
+            lFreeList(&resolved_qref_list);
+            lFreeList(&(qr_list));
 
             if (!is_in_list) {
                DPRINTF(("Queue \"%s\" is not contained in the soft "
@@ -2158,13 +2158,13 @@ sge_load_alarm(char *reason, lListElem *qep, lList *threshold,
                               type, hep, hlep, lc_host, lc_global, 
                               load_adjustments, load_is_value)) {
          if (need_free_cep) {
-            cep = lFreeElem(cep);
+            lFreeElem(&cep);
          }
          DEXIT;
          return 1;
       }   
       if (need_free_cep) {
-         cep = lFreeElem(cep);
+         lFreeElem(&cep);
       }
    } 
 
@@ -2247,7 +2247,7 @@ char *sge_load_alarm_reason(lListElem *qep, lList *threshold,
          strncat(reason, buffer, reason_size);
       }
 
-      lFreeList(rlp);
+      lFreeList(&rlp);
    }   
 
    DEXIT;
@@ -2334,7 +2334,7 @@ u_long32 ttype
    /* split queues in unloaded and overloaded lists */
    where = lWhere("%T(%I == %u)", lGetListDescr(*unloaded), QU_tagged4schedule, 0);
    ret = lSplit(unloaded, overloaded, "overloaded queues", where);
-   lFreeWhere(where);
+   lFreeWhere(&where);
 
    if (overloaded) {
       for_each(qep, *overloaded) { /* make sure QU_tagged4schedule is 0 on exit */
@@ -2409,7 +2409,7 @@ int sge_split_queue_slots_free(lList **free, lList **full)
             lAppendElem(*full, this);
          } 
          else {
-            lFreeElem(this);
+            lFreeElem(&this);
          }   
       }
    }
@@ -2423,12 +2423,12 @@ int sge_split_queue_slots_free(lList **free, lList **full)
             full_queues = NULL;
          }
          else {
-            lAddList(*full, full_queues);
+            lAddList(*full, &full_queues);
             full_queues = NULL;
          }
       }
       else {
-         full_queues = lFreeList(full_queues);
+         lFreeList(&full_queues);
       }
    }
 
@@ -2477,7 +2477,7 @@ lList **suspended         /* QU_Type */
          QU_state, QI_SUSPENDED_ON_SUBORDINATE);
 
    ret = lSplit(queue_list, &lp, "full queues", where);
-   lFreeWhere(where);
+   lFreeWhere(&where);
 
    if (lp != NULL) {
       lListElem* mes_queue;
@@ -2498,12 +2498,12 @@ lList **suspended         /* QU_Type */
          lp = NULL;
       }
       else {
-         lAddList(*suspended, lp);
+         lAddList(*suspended, &lp);
          lp = NULL;
       }
    }
    else {
-      *suspended = lFreeList(*suspended);
+      lFreeList(suspended);
    }
       
    DEXIT;
@@ -2549,7 +2549,7 @@ sge_split_cal_disabled(lList **queue_list, lList **disabled)
    where = lWhere("%T(!(%I m= %u))", lGetListDescr(*queue_list), 
                   QU_state, QI_CAL_DISABLED);
    ret = lSplit(queue_list, disabled, "full queues", where);
-   lFreeWhere(where);
+   lFreeWhere(&where);
 
    if (*disabled != NULL) {
       lListElem* mes_queue;
@@ -2561,7 +2561,7 @@ sge_split_cal_disabled(lList **queue_list, lList **disabled)
       schedd_log_list(MSG_SCHEDD_LOGLIST_QUEUESDISABLEDANDDROPPED , *disabled, QU_full_name);
 
       if (do_free_list) {
-         *disabled = lFreeList(*disabled);
+         lFreeList(disabled);
       }
    }
    
@@ -2608,7 +2608,7 @@ sge_split_disabled(lList **queue_list, lList **disabled)
    where = lWhere("%T(!(%I m= %u) && !(%I m= %u))", lGetListDescr(*queue_list), 
                   QU_state, QI_DISABLED, QU_state, QI_CAL_DISABLED);
    ret = lSplit(queue_list, disabled, "full queues", where);
-   lFreeWhere(where);
+   lFreeWhere(&where);
 
    if (*disabled != NULL) {
       lListElem* mes_queue;
@@ -2620,7 +2620,7 @@ sge_split_disabled(lList **queue_list, lList **disabled)
       schedd_log_list(MSG_SCHEDD_LOGLIST_QUEUESDISABLEDANDDROPPED , *disabled, QU_full_name);
 
       if (do_free_list) {
-         *disabled = lFreeList(*disabled);
+         lFreeList(disabled);
       }
    }
    
@@ -3355,18 +3355,18 @@ sequential_max_host_slots(sge_assignment_t *a, lListElem *host) {
                if (!parse_ulong_val(&load, NULL, type, load_value, NULL, 0) ||
                    !parse_ulong_val(&threshold, NULL, type, limit_value, NULL, 0) ||
                    !parse_ulong_val(&adjustment, NULL, type, adj_value, NULL, 0)) {
-                   if (centry != NULL) centry = lFreeElem(centry);
+                   lFreeElem(&centry);
                   continue;
                }
 
                break;
 
             default:
-               if (centry != NULL) centry = lFreeElem(centry);
+               lFreeElem(&centry);
                continue;    
          }
          /* the string in load_value is not needed anymore, we can free the element */
-         if (centry != NULL) centry = lFreeElem(centry);
+         lFreeElem(&centry);
 
          /* a adjustment of NULL is ignored here. We can dispatch unlimited jobs based
             on the load value */
@@ -3568,7 +3568,7 @@ sge_sequential_assignment(sge_assignment_t *a)
          if (!a->is_reservation) 
             scheduled_fast_jobs++;
 
-         a->gdil = lFreeList(a->gdil);
+         lFreeList(&(a->gdil));
          a->gdil = gdil;
          if (a->start == DISPATCH_TIME_QUEUE_END) 
             a->start = job_start_time;
@@ -3964,13 +3964,13 @@ static int parallel_make_granted_destination_id_list( sge_assignment_t *a)
       DPRINTF(("- - - accu_host_slots %d total_slots %d\n", accu_host_slots, a->slots));
       if (last_accu_host_slots == accu_host_slots) {
          DPRINTF(("!!! NO MORE SLOTS !!!\n"));
-         lFreeList(gdil); 
+         lFreeList(&gdil); 
          DEXIT;
          return MATCH_LATER;
       }
    } while (allocation_rule == ALLOC_RULE_ROUNDROBIN && accu_host_slots < a->slots);
 
-   a->gdil = lFreeList(a->gdil);
+   lFreeList(&(a->gdil));
    a->gdil = gdil;
    a->soft_violations = total_soft_violations;
 
@@ -4622,7 +4622,7 @@ sge_get_double_qattr(double *dvalp, char *attrname, lListElem *q,
    }
 
    /* free */
-   ep = lFreeElem(ep);
+   lFreeElem(&ep);
 
    DEXIT; 
    return ret;
@@ -4664,7 +4664,7 @@ const lList *centry_list
       strncpy(dst, lGetString(ep, CE_stringval), dst_len);
 
    if(ep){
-      ep = lFreeElem(ep);
+      lFreeElem(&ep);
       ret = 0;
    }
    else
@@ -4760,7 +4760,7 @@ ri_time_by_slots(const sge_assignment_t *a, lListElem *rep, lList *load_attr, lL
 
    ret = match_static_resource(slots, rep, cplx_el, reason, false, false, allow_non_requestable);
    if (ret != DISPATCH_OK || !schedule_based) {
-      cplx_el = lFreeElem(cplx_el);
+      lFreeElem(&cplx_el);
       DEXIT;
       return ret;
    }
@@ -4773,7 +4773,7 @@ ri_time_by_slots(const sge_assignment_t *a, lListElem *rep, lList *load_attr, lL
          *start_time = now;
       }   
       DPRINTF(("%s: ri_time_by_slots(%s) <is no consumable>\n", object_name, attrname));
-      cplx_el = lFreeElem(cplx_el);
+      lFreeElem(&cplx_el);
       DEXIT;
       return DISPATCH_OK; /* already checked */
    }
@@ -4781,7 +4781,7 @@ ri_time_by_slots(const sge_assignment_t *a, lListElem *rep, lList *load_attr, lL
    /* we're done if there is no consumable capacity */
    if (!(capacitiy_el = lGetElemStr(config_attr, CE_name, attrname))) {
       DPRINTF(("%s: ri_time_by_slots(%s) <does not exist>\n", object_name, attrname));
-      cplx_el = lFreeElem(cplx_el);
+      lFreeElem(&cplx_el);
       DEXIT;
       return DISPATCH_MISSING_ATTR; /* does not exist */
    }
@@ -4792,11 +4792,11 @@ ri_time_by_slots(const sge_assignment_t *a, lListElem *rep, lList *load_attr, lL
    if (!parse_ulong_val(&request, NULL, lGetUlong(cplx_el, CE_valtype), 
       lGetString(rep, CE_stringval), NULL, 0)) {
       sge_dstring_append(reason, "wrong type");
-      cplx_el = lFreeElem(cplx_el);
+      lFreeElem(&cplx_el);
       DEXIT;
       return DISPATCH_NEVER_CAT;
    }
-   cplx_el = lFreeElem(cplx_el);
+   lFreeElem(&cplx_el);
 
    if (ready_time == DISPATCH_TIME_QUEUE_END) {
       double threshold = total - request * slots;
@@ -4965,13 +4965,13 @@ ri_slots_by_time(const sge_assignment_t *a, int *slots, int *slots_qend,
 
       ret = match_static_resource(1, request, cplx_el, reason, false, false, allow_non_requestable);
       if (ret != DISPATCH_OK) {
-         lFreeElem(cplx_el);
+         lFreeElem(&cplx_el);
          DEXIT;
          return ret;
       }
 
       if (ret == DISPATCH_OK && !lGetBool(cplx_el, CE_consumable)) {
-         lFreeElem(cplx_el);
+         lFreeElem(&cplx_el);
          *slots      = INT_MAX;
          *slots_qend = INT_MAX;
          DEXIT;
@@ -4980,14 +4980,14 @@ ri_slots_by_time(const sge_assignment_t *a, int *slots, int *slots_qend,
 
       /* we're done if there is no consumable capacity */
       if (!(tep=lGetElemStr(total_list, CE_name, name))) {
-         lFreeElem(cplx_el);
+         lFreeElem(&cplx_el);
          *slots      = INT_MAX;
          *slots_qend = INT_MAX;
          DEXIT;
          return DISPATCH_OK;
       }
 
-      lFreeElem(cplx_el);
+      lFreeElem(&cplx_el);
    }
 
    if (!tep && !(tep=lGetElemStr(total_list, CE_name, name))) {
@@ -5549,17 +5549,17 @@ void sge_remove_queue_from_load_list(lList **load_list, const lList *queue_list)
             }
          }
          if (is_found) {
-            lRemoveElem(queue_ref_list, queue_ref);
+            lRemoveElem(queue_ref_list, &queue_ref);
 
             if (lGetNumberOfElem(queue_ref_list) == 0) {
-               lRemoveElem(*load_list, load); 
+               lRemoveElem(*load_list, &load);
             }            
             break;
          }
       }
 
       if (lGetNumberOfElem(*load_list) == 0) {
-         *load_list = lFreeList(*load_list);
+         lFreeList(load_list);
          DEXIT;
          return;         
       }
@@ -5594,7 +5594,7 @@ void sge_remove_queue_from_load_list(lList **load_list, const lList *queue_list)
 void sge_free_load_list(lList **load_list) {
    DENTER(TOP_LAYER, "sge_free_load_list");
 
-   *load_list = lFreeList(*load_list);
+   lFreeList(load_list);
    
    DEXIT;
    return;

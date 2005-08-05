@@ -438,9 +438,9 @@ static void sge_ls_destroy_ls(lListElem *this_ls, int send_no_quit_command)
 
    sge_ls_stop_ls(this_ls, send_no_quit_command);
    lDechainElem(ls_list, this_ls);
-   lFreeElem(this_ls);
-   if (!lGetNumberOfElem(ls_list)) {
-      ls_list = lFreeList(ls_list);
+   lFreeElem(&this_ls);
+   if (lGetNumberOfElem(ls_list) == 0) {
+      lFreeList(&ls_list);
    }
    DEXIT;
    return;
@@ -1025,7 +1025,7 @@ void sge_ls_stop(int exited)
       nxt = lNext(ls_elem);
       sge_ls_destroy_ls(ls_elem, exited);
    }
-   lFreeList(ls_list);
+   lFreeList(&ls_list);
 
    DEXIT;
    return;

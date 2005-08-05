@@ -229,43 +229,45 @@ lSortOrder *lParseSortOrderVarArg(const lDescr *dp, const char *fmt,...)
 *******************************************************************************/
 lSortOrder *lParseSortOrder(const lDescr *dp, const char *fmt, va_list ap) 
 {
-   const char *s;
-   lSortOrder *sp;
+   const char *s = NULL;
+   lSortOrder *sp = NULL;
    int i, n;
    cull_parse_state state;
 
    DENTER(CULL_LAYER, "lParseSortOrder");
 
    if (!dp || !fmt) {
-      return NULL;
+      DRETURN(NULL);
    }
 
    /* how many fields are selected (for malloc) */
-   for (n = 0, s = fmt; *s; s++)
-      if (*s == '%')
+   for (n = 0, s = fmt; *s; s++) {
+      if (*s == '%') {
          n++;
+      }
+   }
 
    if (!(sp = (lSortOrder *) malloc(sizeof(lSortOrder) * (n + 1)))) {
       LERROR(LEMALLOC);
-      return NULL;
+      DRETURN(NULL);
    }
 
    memset(&state, 0, sizeof(state));
    scan(fmt, &state);                   /* Initialize scan */
    for (i = 0; i < n; i++) {
       sp[i].nm = va_arg(ap, int);
-      if ((sp[i].pos = lGetPosInDescr(dp, sp[i].nm)) < 0) {;
-         free(sp);
+      if ((sp[i].pos = lGetPosInDescr(dp, sp[i].nm)) < 0) {
+         FREE(sp);
          LERROR(LENAMENOT);
-         return NULL;
+         DRETURN(NULL);
       }
       sp[i].mt = dp[sp[i].pos].mt;
 
       /* next token */
       if (scan(NULL, &state) != FIELD) {
-         free(sp);
+         FREE(sp);
          LERROR(LESYNTAX);
-         return NULL;
+         DRETURN(NULL);
       }
       /* THIS IS FOR TYPE CHECKING */
       /* COMMENTED OUT
@@ -321,26 +323,21 @@ lSortOrder *lParseSortOrder(const lDescr *dp, const char *fmt, va_list ap)
          break;
       default:
          /* +/- is missing */
-         free(sp);
+         FREE(sp);
          LERROR(LESYNTAX);
-         return NULL;
+         DRETURN(NULL);
       }
       eat_token(&state);
    }
    sp[n].nm = NoName;
    sp[n].mt = lEndT;
 
-   DEXIT;
-
-   return sp;
+   DRETURN(sp);
 }
 
-lSortOrder *lFreeSortOrder(
-lSortOrder *so 
-) {
-   if (so)
-      free(so);
-   return NULL;
+void lFreeSortOrder(lSortOrder **so) 
+{
+   FREE(*so);
 }
 
 

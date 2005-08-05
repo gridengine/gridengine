@@ -146,7 +146,7 @@ int sge_read_host_group_entries_from_disk()
            sge_unlink(HGROUP_DIR, hostGroupEntry);
         }   
      } 
-     direntries = lFreeList(direntries);
+     lFreeList(&direntries);
   }
 
   /* everything is done very well ! */
@@ -192,14 +192,14 @@ int sge_read_user_mapping_entries_from_disk()
                lAppendElem(Master_Cuser_List, ep);
             } else {
                WARNING((SGE_EVENT, MSG_ANSWER_IGNORINGMAPPINGFOR_S,  ume ));  
-               ep = lFreeElem(ep);
+               lFreeElem(&ep);
                ep = NULL; 
             } 
          } else {
             sge_unlink(UME_DIR, ume);
          }
      } 
-     direntries = lFreeList(direntries);
+     lFreeList(&direntries);
   }
   
   /* everything is done very well ! */
@@ -237,7 +237,7 @@ int sge_read_exechost_list_from_disk(lList **list, const char *directory)
             ep = cull_read_in_host(directory, host, CULL_READ_SPOOL, EH_name, 
                                    NULL, NULL);
             if (!ep) {
-               direntries = lFreeList(direntries);
+               lFreeList(&direntries);
                DEXIT; 
                return -1;
             }
@@ -256,7 +256,7 @@ int sge_read_exechost_list_from_disk(lList **list, const char *directory)
                                      Master_CEntry_List, true, false, true);
 
             if (ensure_attrib_available(NULL, ep, EH_consumable_config_list)) {
-               ep = lFreeElem(ep);
+               lFreeElem(&ep);
                DEXIT;
                return -1;
             }
@@ -270,7 +270,7 @@ int sge_read_exechost_list_from_disk(lList **list, const char *directory)
       /* merge global and local objects */
       host_list_merge(*list);
       
-      direntries = lFreeList(direntries);
+      lFreeList(&direntries);
    }
 
    DEXIT;
@@ -303,14 +303,14 @@ int sge_read_adminhost_list_from_disk(lList **list, const char *directory)
             DPRINTF(("Host: %s\n", host));
             ep = cull_read_in_host(directory, host, CULL_READ_SPOOL, AH_name, NULL, NULL);
             if (!ep) {
-               direntries = lFreeList(direntries);
+               lFreeList(&direntries);
                DEXIT; 
                return -1;
             } 
 
             /* resolve hostname anew */
             if (reresolve_host(ep, AH_name, "admin host", directory)) {
-               direntries = lFreeList(direntries);
+               lFreeList(&direntries);
                DEXIT;
                return -1; /* general problems */
             }
@@ -320,7 +320,7 @@ int sge_read_adminhost_list_from_disk(lList **list, const char *directory)
             sge_unlink(directory, host);  
          }
       }
-      direntries = lFreeList(direntries);
+      lFreeList(&direntries);
    }
 
    DEXIT;
@@ -353,7 +353,7 @@ int sge_read_submithost_list_from_disk(lList **list, const char *directory)
             ep = cull_read_in_host(directory, host, CULL_READ_SPOOL, 
                SH_name, NULL, NULL);
             if (!ep) {
-               direntries = lFreeList(direntries);
+               lFreeList(&direntries);
                DEXIT; 
                return -1;
             } 
@@ -369,7 +369,7 @@ int sge_read_submithost_list_from_disk(lList **list, const char *directory)
             sge_unlink(directory, host);             
          }
       }
-      direntries = lFreeList(direntries);
+      lFreeList(&direntries);
    }
 
    DEXIT;
@@ -422,7 +422,7 @@ int sge_read_pe_list_from_disk(lList **list, const char *directory)
             sge_unlink(directory, pe);
          }
       }
-      direntries = lFreeList(direntries);
+      lFreeList(&direntries);
    }
 
    DEXIT;
@@ -475,7 +475,7 @@ int sge_read_cal_list_from_disk(lList **list, const char *directory)
                   s = MSG_UNKNOWNREASON;
                ERROR((SGE_EVENT,MSG_CONFIG_FAILEDPARSINGYEARENTRYINCALENDAR_SS, 
                      cal, s));
-               lFreeList(alp);
+               lFreeList(&alp);
                ret = -1;
                break;
             }
@@ -485,7 +485,7 @@ int sge_read_cal_list_from_disk(lList **list, const char *directory)
             sge_unlink(directory, cal);  
          }
       }
-      direntries = lFreeList(direntries);
+      lFreeList(&direntries);
    }
 
    DEXIT;
@@ -533,7 +533,7 @@ int sge_read_ckpt_list_from_disk(lList **list, const char *directory)
             sge_unlink(directory, ckpt);
          }
       }
-      direntries = lFreeList(direntries);
+      lFreeList(&direntries);
    }
    DEXIT;
    return 0;
@@ -578,7 +578,7 @@ int sge_read_qinstance_list_from_disk(lListElem *cqueue)
                sge_unlink(sge_dstring_get_string(&qinstance_dir), hostname);
             }
          }
-         lFreeList(dir_list);
+         lFreeList(&dir_list);
       }
    }
    sge_dstring_free(&qinstance_dir);
@@ -635,7 +635,7 @@ int sge_read_cqueue_list_from_disk(lList **list, const char *directory)
                   we do not keep the queue template in the main queue list 
                   to be compatible with other old code in the qmaster
                */
-               qep = lFreeElem(qep);
+               lFreeElem(&qep);
                sge_unlink(directory, lGetString(direntry, ST_name));
                WARNING((SGE_EVENT, MSG_CONFIG_OBSOLETEQUEUETEMPLATEFILEDELETED));
             }
@@ -644,7 +644,7 @@ int sge_read_cqueue_list_from_disk(lList **list, const char *directory)
                   oops!  found queue 'template', but not in file 'template'
                */
                ERROR((SGE_EVENT, MSG_CONFIG_FOUNDQUEUETEMPLATEBUTNOTINFILETEMPLATEIGNORINGIT));
-               qep = lFreeElem(qep);
+               lFreeElem(&qep);
             } else {
                lList *qinstance_list = NULL;
                lListElem *qinstance = NULL;
@@ -670,7 +670,7 @@ int sge_read_cqueue_list_from_disk(lList **list, const char *directory)
                   if (ensure_attrib_available(NULL, qinstance, QU_load_thresholds) ||
                       ensure_attrib_available(NULL, qinstance, QU_suspend_thresholds) ||
                       ensure_attrib_available(NULL, qinstance, QU_consumable_config_list)) {
-                     qep = lFreeElem(qep); 
+                     lFreeElem(&qep);
                      DEXIT;
                      return -1;
                   }
@@ -685,8 +685,8 @@ int sge_read_cqueue_list_from_disk(lList **list, const char *directory)
                      ERROR((SGE_EVENT, MSG_CONFIG_CANTRECREATEQEUEUE_SS,
                             lGetString(qinstance, QU_qname), 
                             lGetHost(qinstance, QU_qhostname)));
-                     qep = lFreeElem(qep);
-                     lFreeList(direntries);
+                     lFreeElem(&qep);
+                     lFreeList(&direntries);
                      DEXIT;
                      return -1;
                   } 
@@ -697,7 +697,7 @@ int sge_read_cqueue_list_from_disk(lList **list, const char *directory)
             sge_unlink(directory, queue_str);
          }
       }
-      lFreeList(direntries);
+      lFreeList(&direntries);
    }
    
 
@@ -757,7 +757,7 @@ int sge_read_project_list_from_disk(lList **list, const char *directory)
             sge_unlink(directory, userprj_str);
          }
       }
-      lFreeList(direntries);
+      lFreeList(&direntries);
    }
 
    DEXIT;
@@ -807,7 +807,7 @@ int sge_read_user_list_from_disk(lList **list, const char *directory)
             sge_unlink(directory, direntry_str);
          }
       }
-      direntries = lFreeList(direntries);
+      lFreeList(&direntries);
    }
 
    DEXIT;
@@ -855,13 +855,13 @@ int sge_read_userset_list_from_disk(lList **list, const char *directory)
             if(userset_validate_entries(ep, NULL, 1) == STATUS_OK) {
                lAppendElem(*list, ep);
             } else {
-               lFreeElem(ep);
+               lFreeElem(&ep);
             }
          } else {
             sge_unlink(directory, userset);
          }
       }
-      direntries = lFreeList(direntries);
+      lFreeList(&direntries);
    }
    
    DEXIT;
@@ -978,7 +978,7 @@ int read_all_centries(lList **list, const char *directory)
       el = cull_read_in_centry(directory, dent->d_name , 1,0, *list);
       if (answer) {
          ERROR((SGE_EVENT, lGetString(lFirst(answer), AN_text)));
-         answer = lFreeList(answer);
+         lFreeList(&answer);
          DEXIT;
          return -1;
       }
@@ -1102,7 +1102,7 @@ int read_all_configurations(lList **lpp,
          /* simply ignore it if it exists already */
          if (*lpp && lGetElemHost(*lpp, CONF_hname, new_name)) {
             free(old_name);
-            lFreeElem(el);
+            lFreeElem(&el);
             continue;
          }
 
@@ -1134,8 +1134,8 @@ int read_all_configurations(lList **lpp,
                }
             }
          }
-         lFreeList(alp);
-         free(old_name);
+         lFreeList(&alp);
+         FREE(old_name);
       }
 
       lAppendElem(*lpp, el);

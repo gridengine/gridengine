@@ -424,28 +424,28 @@ static int sge_ck_qmaster(const char *former_master_host)
                         
    alp = sge_gdi(SGE_MANAGER_LIST, SGE_GDI_GET, &lp, where, what);
    
-   where = lFreeWhere(where);
-   what = lFreeWhat(what);
+   lFreeWhere(&where);
+   lFreeWhat(&what);
 
    success = (lGetUlong(lFirst(alp), AN_status) == STATUS_OK);
    if (!success) {
       ERROR((SGE_EVENT, lGetString(lFirst(alp), AN_text)));
-      alp = lFreeList(alp);
-      lp = lFreeList(lp);
+      lFreeList(&alp);
+      lFreeList(&lp);
       DEXIT;
       return 1;                 /* we failed getting get manager list */
 
    }
-   alp = lFreeList(alp);
+   lFreeList(&alp);
 
    if (success && !lp) {
       ERROR((SGE_EVENT, MSG_SCHEDD_USERXMUSTBEMANAGERFORSCHEDDULING_S ,
              uti_state_get_user_name()));
-      lp = lFreeList(lp);
+      lFreeList(&lp);
       DEXIT;
       return -1;
    }
-   lp = lFreeList(lp);
+   lFreeList(&lp);
 
    /*-------------------------------------------------------------------
     * ensure admin host privileges for host
@@ -457,19 +457,19 @@ static int sge_ck_qmaster(const char *former_master_host)
                   AH_Type,
                   AH_name, uti_state_get_qualified_hostname());
    alp = sge_gdi(SGE_ADMINHOST_LIST, SGE_GDI_GET, &lp, where, what);
-   where = lFreeWhere(where);
-   what = lFreeWhat(what);
+   lFreeWhere(&where);
+   lFreeWhat(&what);
 
    success = (lGetUlong(lFirst(alp), AN_status) == STATUS_OK);
    if (!success) {
       ERROR((SGE_EVENT, lGetString(lFirst(alp), AN_text)));
-      alp = lFreeList(alp);
-      lp = lFreeList(lp);
+      lFreeList(&alp);
+      lFreeList(&lp);
       DEXIT;
       return 1;                 /* we failed getting admin host list */
    }
 
-   alp = lFreeList(alp);
+   lFreeList(&alp);
 
    if (success && !lp) {
       ERROR((SGE_EVENT, MSG_SCHEDD_HOSTXMUSTBEADMINHOSTFORSCHEDDULING_S ,
@@ -477,7 +477,7 @@ static int sge_ck_qmaster(const char *former_master_host)
       DEXIT;
       return -1;
    }
-   lp = lFreeList(lp);
+   lFreeList(&lp);
 
    DEXIT;
    return 0;
@@ -584,7 +584,7 @@ static int sge_setup_sge_schedd()
 
    sge_show_conf();
 
-   schedd_config_list = lFreeList(schedd_config_list);
+   lFreeList(&schedd_config_list);
    
    /* get aliased hostname from commd */
    reresolve_me_qualified_hostname();
@@ -640,8 +640,8 @@ int sge_before_dispatch(void)
       if (get_configuration(SGE_GLOBAL_NAME, &global, &local) == 0) {
          merge_configuration(global, local, &conf, NULL);
       }   
-      lFreeElem(global);
-      lFreeElem(local);
+      lFreeElem(&global);
+      lFreeElem(&local);
       new_global_config = 0;
    }
    

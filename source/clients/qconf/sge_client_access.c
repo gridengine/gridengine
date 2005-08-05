@@ -56,7 +56,7 @@ lList *new_answers
    DENTER(TOP_LAYER,"report_and_free_answers");
 
    if (alpp) { /* append all answers to existing list */
-      lAddList(*alpp, new_answers); 
+      lAddList(*alpp, &new_answers);
    } else { /* write errors to stderr */
       for_each (answer, new_answers) {
          answer_exit_if_not_recoverable(answer);
@@ -65,7 +65,7 @@ lList *new_answers
          }   
       }
 
-      lFreeList(new_answers);
+      lFreeList(&new_answers);
    }
 
    DEXIT;
@@ -112,7 +112,7 @@ lList *acl_args
    
          /* get old acl */
          answers = sge_gdi(SGE_USERSET_LIST, SGE_GDI_GET, &acl, where, what);
-         lFreeList(answers);
+         lFreeList(&answers);
 
          if (acl) {
             if (!lGetSubStr(lFirst(acl), UE_name, user_name, US_entries)) {
@@ -153,16 +153,16 @@ lList *acl_args
             } else {
                sprintf(SGE_EVENT, MSG_GDI_ADDTOACL_SS, user_name, acl_name);
             }
-            answers = lFreeList(answers);
+            lFreeList(&answers);
          }
          answer_list_add(alpp, SGE_EVENT, status, 
             ((status == STATUS_OK) ? ANSWER_QUALITY_INFO : ANSWER_QUALITY_ERROR));
-         acl = lFreeList(acl);
+         lFreeList(&acl);
 
       }
-      lFreeWhere(where);
+      lFreeWhere(&where);
    }
-   lFreeWhat(what);
+   lFreeWhat(&what);
    DEXIT;
    return 0;
 }
@@ -206,7 +206,7 @@ lList *acl_args
          /* get old acl */
          answers = sge_gdi(SGE_USERSET_LIST, SGE_GDI_GET, &acl, where, what);
          cp = sge_strdup(cp, lGetString(lFirst(answers), AN_text));
-         answers = lFreeList(answers);
+         lFreeList(&answers);
          if (acl) {
             free(cp);
             cp = NULL;
@@ -215,7 +215,7 @@ lList *acl_args
                answers = sge_gdi(SGE_USERSET_LIST, SGE_GDI_MOD, &acl, NULL, NULL);
                cp = sge_strdup(cp, lGetString(lFirst(answers), AN_text));
                status = lGetUlong(lFirst(answers), AN_status);
-               answers = lFreeList(answers);
+               lFreeList(&answers);
             }
             else
                status = STATUS_EEXIST + 1;
@@ -244,7 +244,7 @@ lList *acl_args
          }
          answer_list_add(alpp, SGE_EVENT, status, 
                         ((status == STATUS_OK) ? ANSWER_QUALITY_INFO : ANSWER_QUALITY_ERROR));
-         acl = lFreeList(acl);
+         lFreeList(&acl);
          
          if (cp) {
             free(cp);
@@ -254,9 +254,9 @@ lList *acl_args
             break;
             
       }
-      lFreeWhere(where);
+      lFreeWhere(&where);
    }
-   lFreeWhat(what);
+   lFreeWhat(&what);
 
    DEXIT;
    return 0;
@@ -303,8 +303,8 @@ lList **dst
    }
    what = lWhat("%T(ALL)", US_Type);
    answers = sge_gdi(SGE_USERSET_LIST, SGE_GDI_GET, dst, where, what);
-   lFreeWhat(what);
-   lFreeWhere(where);
+   lFreeWhat(&what);
+   lFreeWhere(&where);
 
    report_and_free_answers(alpp, answers);
 

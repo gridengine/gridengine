@@ -169,7 +169,7 @@ lListElem *lCopyElemHash(const lListElem *ep, bool isHash)
 
    for (index = 0; index<max ; index++) { 
       if (lCopySwitch(ep, new, index, index, isHash, NULL) != 0) {
-         lFreeElem(new);
+         lFreeElem(&new);
 
          LERROR(LECOPYSWITCH);
          DEXIT;
@@ -177,7 +177,7 @@ lListElem *lCopyElemHash(const lListElem *ep, bool isHash)
       }
    }
    if (!sge_bitfield_copy(&(ep->changed), &(new->changed))) {
-      lFreeElem(new);
+      lFreeElem(&new);
 
       LERROR(LECOPYSWITCH);
       DEXIT;
@@ -1035,7 +1035,7 @@ lList *lCreateElemList(const char *listname, const lDescr *descr, int nr_elem)
    for (i = 0; i < nr_elem; i++) {
       if (!(ep = lCreateElem(descr))) {
          LERROR(LECREATEELEM);
-         lFreeList(lp);
+         lFreeList(&lp);
          DEXIT;
          return NULL;
       }
@@ -1051,31 +1051,30 @@ lList *lCreateElemList(const char *listname, const lDescr *descr, int nr_elem)
 *     lFreeElem() -- Free a element including strings and sublists 
 *
 *  SYNOPSIS
-*     lListElem* lFreeElem(lListElem *ep) 
+*     void lFreeElem(lListElem **ep) 
 *
 *  FUNCTION
 *     Free a element including strings and sublists 
 *
 *  INPUTS
-*     lListElem *ep - element 
-*
-*  RESULT
-*     lListElem* - NULL 
+*     lListElem **ep - element, will be set to NULL 
 *
 *  NOTES
 *     MT-NOTE: lRemoveElem() is MT safe
 ******************************************************************************/
-lListElem *lFreeElem(lListElem *ep) 
+void lFreeElem(lListElem **ep1) 
 {
    int i = 0;
-
+   lListElem *ep = NULL;
+   
    DENTER(CULL_LAYER, "lFreeElem");
 
-   if (ep == NULL) {
-      DEXIT;
-      return NULL;
+   if (ep1 == NULL || *ep1 == NULL) {
+      DRETURN_VOID;
    }
 
+   ep = *ep1;
+   
    if (ep->descr == NULL) {
       LERROR(LEDESCRNULL);
       DPRINTF(("NULL descriptor not allowed !!!\n"));
@@ -1114,13 +1113,13 @@ lListElem *lFreeElem(lListElem *ep)
 
       case lListT:
          if (ep->cont[i].glp != NULL) {
-            lFreeList(ep->cont[i].glp);
+            lFreeList(&(ep->cont[i].glp));
          }   
          break;
 
       case lObjectT:
          if (ep->cont[i].obj != NULL) {
-            lFreeElem(ep->cont[i].obj);
+            lFreeElem(&(ep->cont[i].obj));
          }   
          break;
 
@@ -1142,10 +1141,8 @@ lListElem *lFreeElem(lListElem *ep)
 
    sge_bitfield_free_data(&(ep->changed));
 
-   free(ep);
-
-   DEXIT;
-   return NULL;
+   FREE(*ep1);
+   DRETURN_VOID;
 }
 
 /****** cull/list/lFreeList() *************************************************
@@ -1153,53 +1150,55 @@ lListElem *lFreeElem(lListElem *ep)
 *     lFreeList() -- Frees a list including all elements  
 *
 *  SYNOPSIS
-*     lList* lFreeList(lList *lp) 
+*     void lFreeList(lList **lp) 
 *
 *  FUNCTION
 *     Frees a list including all elements 
 *
 *  INPUTS
-*     lList *lp - list 
+*     lList **lp - list 
 *
 *  RESULT
-*     lList* - NULL 
+*     void
 *
 *  NOTES
 *     MT-NOTE: lFreeList() is MT safe
 ******************************************************************************/
-lList *lFreeList(lList *lp) 
+void lFreeList(lList **lp)
 {
    DENTER(CULL_LAYER, "lFreeList");
 
-   if (!lp) {
+   if (lp == NULL || *lp == NULL) {
       DEXIT;
-      return NULL;
+      return;
    }
 
    /* 
     * remove all hash tables, 
     * it is more efficient than removing it at the end 
     */
-   if (lp->descr != NULL) {
-      cull_hash_free_descr(lp->descr);
+   if ((*lp)->descr != NULL) {
+      cull_hash_free_descr((*lp)->descr);
    }   
 
-   while (lp->first) {
-      lRemoveElem(lp, lp->first);
+   while ((*lp)->first) {
+      lListElem *elem = (*lp)->first;
+      lRemoveElem(*lp, &elem);
    }   
 
-   if (lp->descr) {
-      free(lp->descr);
+   if ((*lp)->descr) {
+      free((*lp)->descr);
    }   
 
-   if (lp->listname) {
-      free(lp->listname);
+   if ((*lp)->listname) {
+      free((*lp)->listname);
    }
 
-   free(lp);
+   free(*lp);
+   *lp = NULL;
 
    DEXIT;
-   return NULL;
+   return;
 }
 
 
@@ -1231,7 +1230,7 @@ lList *lAddSubList(lListElem *ep, int nm, lList *to_add)
    lList *tmp;
    if (lGetNumberOfElem(to_add)) {
       if ((tmp=lGetList(ep, nm)))
-         lAddList(tmp, to_add);
+         lAddList(tmp, &to_add);
       else 
          lSetList(ep, nm, to_add);
    }
@@ -1243,14 +1242,14 @@ lList *lAddSubList(lListElem *ep, int nm, lList *to_add)
 *     lAddList() -- Concatenate two lists 
 *
 *  SYNOPSIS
-*     int lAddList(lList *lp0, lList *lp1) 
+*     int lAddList(lList *lp0, lList **lp1) 
 *
 *  FUNCTION
 *     Concatenate two lists of equal type throwing away the second list 
 *
 *  INPUTS
 *     lList *lp0 - first list 
-*     lList *lp1 - second list 
+*     lList **lp1 - second list 
 *
 *  RESULT
 *     int - error state
@@ -1260,13 +1259,13 @@ lList *lAddSubList(lListElem *ep, int nm, lList *to_add)
 *  NOTES
 *     MT-NOTE: lAddList() is MT safe
 ******************************************************************************/
-int lAddList(lList *lp0, lList *lp1) 
+int lAddList(lList *lp0, lList **lp1) 
 {
    /* No need to do any safety checks.  lAppendList will do them for us. */
    int res = 0;
    
    DENTER(CULL_LAYER, "lAddList");
-   res = lAppendList (lp0, lp1);
+   res = lAppendList(lp0, *lp1);
    lFreeList(lp1);
    DEXIT;
    return res;
@@ -1472,7 +1471,7 @@ lList *lCopyListHash(const char *name, const lList *src, bool hash)
 
    for (sep = src->first; sep; sep = sep->next) {
       if (lAppendElem(dst, lCopyElem(sep)) == -1) {
-         lFreeList(dst);
+         lFreeList(&dst);
          LERROR(LEAPPENDELEM);
          DEXIT;
          return NULL;
@@ -1650,7 +1649,7 @@ int lAppendElem(lList *lp, lListElem *ep)
 *
 *  INPUTS
 *     lList *lp     - list 
-*     lListElem *ep - element 
+*     lListElem **ep - element, will be set to NULL 
 *
 *  RESULT
 *     int - error state
@@ -1660,15 +1659,17 @@ int lAppendElem(lList *lp, lListElem *ep)
 *  NOTES
 *     MT-NOTE: lRemoveElem() is MT safe
 *******************************************************************************/
-int lRemoveElem(lList *lp, lListElem *ep) 
+int lRemoveElem(lList *lp, lListElem **ep1) 
 {
+   lListElem *ep = NULL;
    DENTER(CULL_LAYER, "lRemoveElem");
 
-   if (!lp || !ep) {
-      DEXIT;
-      return -1;
+   if (lp == NULL || ep1 == NULL || *ep1 == NULL) {
+      DRETURN(-1);
    }
 
+   ep = *ep1;
+   
    if (lp->descr != ep->descr) {
       CRITICAL((SGE_EVENT, "Dechaining element from other list !!!\n"));
       abort();
@@ -1694,10 +1695,8 @@ int lRemoveElem(lList *lp, lListElem *ep)
    lp->nelem--;
    lp->changed = true;
 
-   lFreeElem(ep);
-
-   DEXIT;
-   return 0;
+   lFreeElem(ep1);
+   DRETURN(0);
 }
 
 /****** cull/list/lDechainList() **********************************************
@@ -2222,7 +2221,7 @@ int lPSortList(lList * lp, const char *fmt,...)
    lSortList(lp, sp);
 
    va_end(ap);
-   lFreeSortOrder(sp);
+   lFreeSortOrder(&sp);
 
    DEXIT;
    return 0;
@@ -2369,7 +2368,7 @@ int lUniqStr(lList *lp, int keyfield)
       rep = lNext(ep);
       while (rep &&
           !strcmp(lGetString(rep, keyfield), lGetString(ep, keyfield))) {
-         lRemoveElem(lp, rep);
+         lRemoveElem(lp, &rep);
          rep = lNext(ep);
       }
       ep = lNext(ep);
@@ -2421,7 +2420,7 @@ int lUniqHost(lList *lp, int keyfield)
       rep = lNext(ep);
       while (rep &&
           !strcmp(lGetHost(rep, keyfield), lGetHost(ep, keyfield))) {
-         lRemoveElem(lp, rep);
+         lRemoveElem(lp, &rep);
          rep = lNext(ep);
       }
       ep = lNext(ep);

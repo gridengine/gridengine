@@ -759,7 +759,7 @@ monitoring_t *monitor
                                           true, true);
                            answer_list_output(&answer_list);
                         }
-                        lRemoveElem(lGetList(jatep, JAT_task_list), petask);
+                        lRemoveElem(lGetList(jatep, JAT_task_list), &petask);
                         
                         /* get rid of this job in case a task died from XCPU/XFSZ or 
                            exited with a core dump */

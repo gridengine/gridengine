@@ -392,7 +392,7 @@ int parsing_type
                }
 
                if (ssclp)
-                  lFreeList(ssclp);
+                  lFreeList(&ssclp);
 
                lSetList(cp, CF_sublist, NULL);  /* frees old list */
 
@@ -555,7 +555,7 @@ int main(int argc, char *argv[])
    if (write_userprj(NULL, ep, "/sge_home/andreas/andreas", NULL, 1, 1))
       perror("failed writing user object\n");
 
-   lFreeElem(ep);
+   lFreeElem(&ep);
 
    if (!(ep = read_userprj("/sge_home/andreas/andreas", 1, &alp)))
       fprintf(stderr, "failed reading user object: %s\n", 

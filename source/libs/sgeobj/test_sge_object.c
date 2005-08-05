@@ -143,7 +143,7 @@ int main(int argc, char *argv[])
 
    /* object_[gs]et_field_contents is tested in test_sge_spooling_utilities */
    
-   queue = lFreeElem(queue);
+   lFreeElem(&queue);
 
    return EXIT_SUCCESS;
 }

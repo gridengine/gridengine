@@ -300,7 +300,7 @@ load_object(bdb_info info, const char *key, const char *fname)
       }
    }
 
-   object = lFreeElem(object);
+   lFreeElem(&object);
 
    DEXIT;
    return ret;

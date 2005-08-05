@@ -828,13 +828,13 @@ static int read_CF_value(lListElem *ep, int nm, const char *buf,
                   if (min < GID_RANGE_NOT_ALLOWED_ID) {
                      WARNING((SGE_EVENT, MSG_CONFIG_CONF_GIDRANGELESSTHANNOTALLOWED_I, GID_RANGE_NOT_ALLOWED_ID));
    
-                     FREE (buffer);
-                     rlp = lFreeList(rlp);
+                     FREE(buffer);
+                     lFreeList(&rlp);
                      DEXIT;
                      return 0;
                   }                  
                }
-               rlp = lFreeList(rlp);
+               lFreeList(&rlp);
                lSetString(ep, CF_value, value);
             }
          }
@@ -1438,7 +1438,7 @@ static int read_CQ_hostlist (lListElem *ep, int nm, const char *buffer,
       if (strcasecmp("NONE", lGetHost(lFirst(lp), HR_name)) != 0) {
          lSetList(ep, CQ_hostlist, lp);
       } else {
-         lp = lFreeList(lp);
+         lFreeList(&lp);
       }
    }
 

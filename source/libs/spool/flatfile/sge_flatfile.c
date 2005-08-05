@@ -1996,7 +1996,7 @@ FF_DEBUG("after parsing list");
 
    /* if no objects could be read, we need no list */
    if (lGetNumberOfElem(list) == 0) {
-      list = lFreeList(list);
+      lFreeList(&list);
    }
 
    return list;

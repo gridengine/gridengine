@@ -132,7 +132,7 @@ int answer_error;
             (long) lGetUlong(ja_task, JAT_task_number)));
          ret = handle_job(job, ja_task, de, pb, 0);
          if(ret != 0) {
-            lFreeElem(job);
+            lFreeElem(&job);
          }
       }
    } else {
@@ -149,7 +149,7 @@ int answer_error;
 
       ret = handle_task(petrep, de, pb, apb, synchron);
 
-      lFreeElem(petrep);
+      lFreeElem(&petrep);
    }
    
    if(ret == 0) {
@@ -197,7 +197,7 @@ int answer_error;
    }
 
    if (ret)  {
-      lFreeElem(jelem);
+      lFreeElem(&jelem);
    } 
 
    DEXIT;
@@ -294,7 +294,7 @@ int slave
       DPRINTF(("Q: %s %d\n", qnm, slots));
    }
    /* trash envelope */
-   qlp = lFreeList(qlp);
+   lFreeList(&qlp);
 
    /* ------- optionally pe */
    if (lGetString(jatep, JAT_granted_pe)) {
@@ -441,7 +441,7 @@ Error:
    }
 
 Ignore:   
-   lFreeList(qlp);
+   lFreeList(&qlp);
    return -1;  
 }
 

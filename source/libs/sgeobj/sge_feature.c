@@ -564,7 +564,7 @@ static void feature_state_destroy(void* theState)
 {
    struct feature_state_t* state = (struct feature_state_t *)theState;
 
-   state->Master_FeatureSet_List = lFreeList(state->Master_FeatureSet_List);
+   lFreeList(&(state->Master_FeatureSet_List));
    free(state);
 }
 

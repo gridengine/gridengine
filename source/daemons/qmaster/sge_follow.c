@@ -319,7 +319,7 @@ sge_follow_order(lListElem *ep, lList **alpp, char *ruser, char *rhost,
          if(!q_name) {
             ERROR((SGE_EVENT, MSG_OBJ_NOQNAME));
             answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-            lFreeList(gdil);
+            lFreeList(&gdil);
             lSetString(jatp, JAT_granted_pe, NULL);
             DEXIT;
             return -2;
@@ -333,7 +333,7 @@ sge_follow_order(lListElem *ep, lList **alpp, char *ruser, char *rhost,
          if (!qep) {
             ERROR((SGE_EVENT, MSG_QUEUE_UNABLE2FINDQ_S, q_name));
             answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-            lFreeList(gdil);
+            lFreeList(&gdil);
             lSetString(jatp, JAT_granted_pe, NULL);
             DEXIT;
             return -2;
@@ -353,7 +353,7 @@ sge_follow_order(lListElem *ep, lList **alpp, char *ruser, char *rhost,
             /* try to repair schedd data */
             qinstance_add_event(qep, sgeE_QINSTANCE_MOD);
 
-            lFreeList(gdil);
+            lFreeList(&gdil);
             lSetString(jatp, JAT_granted_pe, NULL);
             DEXIT;
             return -1;
@@ -367,12 +367,12 @@ sge_follow_order(lListElem *ep, lList **alpp, char *ruser, char *rhost,
          xacl = lCopyList("xacl", lGetList(qep, QU_xacl));
          allowed = sge_has_access_(lGetString(jep, JB_owner), lGetString(jep, JB_group), 
                                     acl, xacl, Master_Userset_List);
-         lFreeList(acl); 
-         lFreeList(xacl); 
+         lFreeList(&acl); 
+         lFreeList(&xacl); 
          if (!allowed) {
             ERROR((SGE_EVENT, MSG_JOB_JOBACCESSQ_US, sge_u32c(job_number), q_name));
             answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-            lFreeList(gdil);
+            lFreeList(&gdil);
             lSetString(jatp, JAT_granted_pe, NULL);
             DEXIT;
             return -1;
@@ -383,7 +383,7 @@ sge_follow_order(lListElem *ep, lList **alpp, char *ruser, char *rhost,
             ERROR((SGE_EVENT, MSG_JOB_FREESLOTS_USUU, sge_u32c(q_slots), q_name, 
                   sge_u32c(job_number), sge_u32c(task_number)));
             answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-            lFreeList(gdil);
+            lFreeList(&gdil);
             lSetString(jatp, JAT_granted_pe, NULL);
             DEXIT;
             return -1;
@@ -392,7 +392,7 @@ sge_follow_order(lListElem *ep, lList **alpp, char *ruser, char *rhost,
          if (qinstance_state_is_error(qep)) {
             ERROR((SGE_EVENT, MSG_JOB_QMARKEDERROR_S, q_name));
             answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-            lFreeList(gdil);
+            lFreeList(&gdil);
             lSetString(jatp, JAT_granted_pe, NULL);
             DEXIT;
             return -1;
@@ -400,7 +400,7 @@ sge_follow_order(lListElem *ep, lList **alpp, char *ruser, char *rhost,
          if (qinstance_state_is_cal_suspended(qep)) {
             ERROR((SGE_EVENT, MSG_JOB_QSUSPCAL_S, q_name));
             answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-            lFreeList(gdil);
+            lFreeList(&gdil);
             lSetString(jatp, JAT_granted_pe, NULL);
             DEXIT;
             return -1;
@@ -408,7 +408,7 @@ sge_follow_order(lListElem *ep, lList **alpp, char *ruser, char *rhost,
          if (qinstance_state_is_cal_disabled(qep)) {
             ERROR((SGE_EVENT, MSG_JOB_QDISABLECAL_S, q_name));
             answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-            lFreeList(gdil);
+            lFreeList(&gdil);
             lSetString(jatp, JAT_granted_pe, NULL);
             DEXIT;
             return -1;
@@ -425,7 +425,7 @@ sge_follow_order(lListElem *ep, lList **alpp, char *ruser, char *rhost,
                      lGetHost(qep, QU_qhostname)))) {
             ERROR((SGE_EVENT, MSG_JOB_UNABLE2FINDHOST_S, lGetHost(qep, QU_qhostname)));
             answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-            lFreeList(gdil);
+            lFreeList(&gdil);
             lSetString(jatp, JAT_granted_pe, NULL);
             DEXIT;
             return -2;
@@ -442,7 +442,7 @@ sge_follow_order(lListElem *ep, lList **alpp, char *ruser, char *rhost,
                      ERROR((SGE_EVENT, MSG_JOB_UNABLE2STARTJOB_US, sge_u32c(lGetUlong(ruep, RU_job_number)),
                         lGetHost(qep, QU_qhostname)));
                      answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-                     lFreeList(gdil);
+                     lFreeList(&gdil);
                      lSetString(jatp, JAT_granted_pe, NULL);
                      DEXIT;
                      return -1;
@@ -452,8 +452,9 @@ sge_follow_order(lListElem *ep, lList **alpp, char *ruser, char *rhost,
          }
 
          /* the master host is the host of the master queue */
-         if (master_qep && !master_host) 
+         if (master_qep && !master_host) {
             master_host = hep;
+         }
 
          /* ------------------------------------------------ 
           *  build up granted_destin_identifier_list (gdil)
@@ -461,8 +462,6 @@ sge_follow_order(lListElem *ep, lList **alpp, char *ruser, char *rhost,
          gdil_ep = lAddElemStr(&gdil, JG_qname, q_name, JG_Type); /* free me on error! */
          lSetHost(gdil_ep, JG_qhostname, lGetHost(qep, QU_qhostname));
          lSetUlong(gdil_ep, JG_slots, q_slots);
-
-         
          
          /* ------------------------------------------------
           *  tag each gdil entry of slave exec host
@@ -947,7 +946,7 @@ sge_follow_order(lListElem *ep, lList **alpp, char *ruser, char *rhost,
                                ((curr_oep_hname=lGetHost(curr_oep_qep, QU_qhostname))) &&
                                !sge_hostcmp(oep_hname, curr_oep_hname)) {     /* CR SPEEDUP CANDIDATE */
                               job_tickets_on_host += lGetDouble(curr_oep, OQ_ticket);
-                              lRemoveElem(oeql, curr_oep);
+                              lRemoveElem(oeql, &curr_oep);
                            }
                         }
                         newep = lCopyElem(ep);
@@ -957,10 +956,10 @@ sge_follow_order(lListElem *ep, lList **alpp, char *ruser, char *rhost,
                      } else
                         ERROR((SGE_EVENT, MSG_ORD_UNABLE2FINDHOST_S, oep_qname ? oep_qname : MSG_OBJ_UNKNOWN));
 
-                     lRemoveElem(oeql, oep);
+                     lRemoveElem(oeql, &oep);
                   }
 
-                  lFreeList(oeql);
+                  lFreeList(&oeql);
 
                } 
                else if (lGetPosViaElem(jatp, JAT_granted_destin_identifier_list) !=-1 )
@@ -1186,8 +1185,8 @@ sge_follow_order(lListElem *ep, lList **alpp, char *ruser, char *rhost,
                   /* if passed old usage list is NULL, delete existing usage */
                   if (lGetList(ju, UPU_old_usage_list) == NULL) {
 
-                     lRemoveElem(lGetList(up_order, UP_debited_job_usage), ju);
-                     lRemoveElem(lGetList(up, UP_debited_job_usage), up_ju);
+                     lRemoveElem(lGetList(up_order, UP_debited_job_usage), &ju);
+                     lRemoveElem(lGetList(up, UP_debited_job_usage), &up_ju);
 
                   } else {
 
@@ -1210,7 +1209,7 @@ sge_follow_order(lListElem *ep, lList **alpp, char *ruser, char *rhost,
                      lInsertElem(tlp, NULL, ju);
                   } else {
                      /* do not chain in empty empty usage records */
-                     lFreeElem(ju);
+                     lFreeElem(&ju);
                   }
                }
             }
@@ -1388,7 +1387,7 @@ sge_follow_order(lListElem *ep, lList **alpp, char *ruser, char *rhost,
 
          if (sme != NULL) {
             if (Master_Job_Schedd_Info_List != NULL) {
-               Master_Job_Schedd_Info_List = lFreeList(Master_Job_Schedd_Info_List);
+               lFreeList(&Master_Job_Schedd_Info_List);
             }
 
             Master_Job_Schedd_Info_List = lCreateList("schedd info", SME_Type);
@@ -1443,14 +1442,14 @@ int distribute_ticket_orders( lList *ticket_orders, monitoring_t *monitor)
       if (!(jep = job_list_locate(Master_Job_List, jobid)) || 
           !(jatask = job_search_task(jep, NULL, jataskid))) { 
          ERROR((SGE_EVENT, MSG_JOB_MISSINGJOBTASK_UU, sge_u32c(jobid), sge_u32c(jataskid)));
-         lRemoveElem(ticket_orders, ep);
+         lRemoveElem(ticket_orders, &ep);
       }
  
       /* seek master queue */
       destin_elem = lFirst(lGetList(jatask, JAT_granted_destin_identifier_list));
       
       if (destin_elem == NULL) { /* the job has finished, while we are processing the events. No need to assign the */
-         lRemoveElem(ticket_orders, ep);
+         lRemoveElem(ticket_orders, &ep);
          continue;               /* the running tickets, since there is nothing running anymore and we do not have */
       }                          /* the information, where the job was running */
 
@@ -1474,13 +1473,13 @@ int distribute_ticket_orders( lList *ticket_orders, monitoring_t *monitor)
          other_jatask = job_search_task(other_jep, NULL, lGetUlong(other, OR_ja_task_number));
          if (!other_jep || !other_jatask) {
             ERROR((SGE_EVENT, MSG_JOB_MISSINGJOBTASK_UU, sge_u32c(jobid), sge_u32c(jataskid)));
-            lRemoveElem(ticket_orders, other);
+            lRemoveElem(ticket_orders, &other);
          }
          else { 
             destin_elem = lFirst(lGetList(jatask, JAT_granted_destin_identifier_list));
 
             if (destin_elem == NULL) { /* the job has finished, while we are processing the events. No need to assign the */
-               lRemoveElem(ticket_orders, other);
+               lRemoveElem(ticket_orders, &other);
                continue;               /* the running tickets, since there is nothing running anymore and we do not have */
             }                          /* the information, where the job was running */
       
@@ -1523,7 +1522,7 @@ int distribute_ticket_orders( lList *ticket_orders, monitoring_t *monitor)
                !hep?"no such host registered":"suppose host is down"));
       }
 
-      to_send = lFreeList(to_send);
+      lFreeList(&to_send);
    }
 
    DEXIT;

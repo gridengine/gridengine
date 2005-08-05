@@ -127,7 +127,7 @@ static void expand_range_list(lListElem *r, lList **rl)
             /* 
              ** r is fully contained within ep ==> delete it 
              */
-            lFreeElem(r);
+            lFreeElem(&r);
             break;
 
          } else if (rmin < lGetUlong(ep, RN_min)) {
@@ -145,7 +145,7 @@ static void expand_range_list(lListElem *r, lList **rl)
             lSetUlong(ep, RN_min, rmin);
 
             /* we're already sure we can free r */
-            lFreeElem(r);
+            lFreeElem(&r);
             rr = ep;
             ep = lNext(ep);
             while (ep) {
@@ -154,7 +154,7 @@ static void expand_range_list(lListElem *r, lList **rl)
                   /* it also contains this one */
                   r = ep;
                   ep = lNext(ep);
-                  lRemoveElem(*rl, r);
+                  lRemoveElem(*rl, &r);
 
                } else if (rmin <= lGetUlong(ep, RN_max)) {
 
@@ -163,7 +163,7 @@ static void expand_range_list(lListElem *r, lList **rl)
 
                   r = ep;
                   ep = lNext(ep);
-                  lRemoveElem(*rl, r);
+                  lRemoveElem(*rl, &r);
                   break;
 
                } else
@@ -181,7 +181,7 @@ static void expand_range_list(lListElem *r, lList **rl)
              ** ==> glue them
              */
             lSetUlong(ep, RN_max, rmax);
-            lFreeElem(r);
+            lFreeElem(&r);
             break;
          }
       }
@@ -329,7 +329,7 @@ void range_list_initialize(lList **this_list, lList **answer_list)
          while ((range = next_range)) {
             next_range = lNext(range);
 
-            lRemoveElem(*this_list, range);
+            lRemoveElem(*this_list, &range);
          }
       } else {
          *this_list = lCreateList("", RN_Type);
@@ -671,7 +671,7 @@ void range_list_sort_uniq_compress(lList *range_list, lList **answer_list)
             }
          }
 
-         lFreeList(tmp_list);
+         lFreeList(&tmp_list);
 
          /*
           * Join sequenced ranges
@@ -734,20 +734,20 @@ void range_list_compress(lList *range_list)
             end1 = end2;
             step1 = step2;
             range_set_all_ids(range1, start1, end1, step1);
-            lRemoveElem(range_list, range2);
+            lRemoveElem(range_list, &range2);
             range2 = NULL;
             next_range1 = range1;
          } else if (start1 == end1 && step1 == 1 && end1 == start2 - step2) {
             end1 = end2;
             step1 = step2;
             range_set_all_ids(range1, start1, end1, step1);
-            lRemoveElem(range_list, range2);
+            lRemoveElem(range_list, &range2);
             range2 = NULL;
             next_range1 = range1;
          } else if (start2 == end2 && step2 == 1 && end1 + step1 == end2) {
             end1 = end2;
             range_set_all_ids(range1, start1, end1, step1);
-            lRemoveElem(range_list, range2);
+            lRemoveElem(range_list, &range2);
             range2 = NULL;
             next_range1 = range1;
          } else if (start1 == end1 && start2 == end2 && step1 == step2 &&
@@ -755,7 +755,7 @@ void range_list_compress(lList *range_list)
             end1 = start2;
             step1 = end1 - start1;
             range_set_all_ids(range1, start1, end1, step1);
-            lRemoveElem(range_list, range2);
+            lRemoveElem(range_list, &range2);
             range2 = NULL;
             next_range1 = range1;
          } else {
@@ -980,7 +980,7 @@ void range_list_remove_id(lList **range_list, lList **answer_list, u_long32 id)
          range_get_all_ids(range, &start, &end, &step);
          if (id >= start && id <= end && ((id - start) % step) == 0) {
             if ((id == start) && ((id == end) || (id + step > end))) {
-               lRemoveElem(*range_list, range);
+               lRemoveElem(*range_list, &range);
                break;
             } else if (id == start) {
                start += step;
@@ -1006,7 +1006,7 @@ void range_list_remove_id(lList **range_list, lList **answer_list, u_long32 id)
          }
       }
       if (lGetNumberOfElem(*range_list) == 0) {
-         *range_list = lFreeList(*range_list);
+         lFreeList(range_list);
       }
    }
    DEXIT;
@@ -1321,7 +1321,7 @@ void range_list_calculate_union_set(lList **range_list,
 {
    DENTER(RANGE_LAYER, "range_list_calculate_union_set");
    if (range_list != NULL && (range_list1 != NULL || range_list2 != NULL)) {
-      *range_list = lFreeList(*range_list);
+      lFreeList(range_list);
 
       if (range_list1 != NULL) {
          *range_list = lCopyList("", range_list1);
@@ -1357,7 +1357,7 @@ void range_list_calculate_union_set(lList **range_list,
    return;
 
  error:
-   *range_list = lFreeList(*range_list);
+   lFreeList(range_list);
    answer_list_add(answer_list, "unable to calculate union set",
                    STATUS_ERROR1, ANSWER_QUALITY_ERROR);
    DEXIT;
@@ -1394,7 +1394,7 @@ void range_list_calculate_difference_set(lList **range_list,
 {
    DENTER(RANGE_LAYER, "range_list_calculate_difference_set");
    if (range_list != NULL && range_list1 != NULL) {
-      *range_list = lFreeList(*range_list);
+      lFreeList(range_list);
       *range_list = lCopyList("difference_set range list", range_list1);
       if (*range_list == NULL) {
          goto error;
@@ -1426,7 +1426,7 @@ void range_list_calculate_difference_set(lList **range_list,
    return;
 
  error:
-   *range_list = lFreeList(*range_list);
+   lFreeList(range_list);
    answer_list_add(answer_list, "unable to calculate union set",
                    STATUS_ERROR1, ANSWER_QUALITY_ERROR);
    DEXIT;
@@ -1462,7 +1462,7 @@ void range_list_calculate_intersection_set(lList **range_list,
                                            const lList *range_list2)
 {
    DENTER(RANGE_LAYER, "range_list_calculate_intersection_set");
-   *range_list = lFreeList(*range_list);
+   lFreeList(range_list);
    if (range_list1 && range_list2) {
       lListElem *range;
 
@@ -1495,7 +1495,7 @@ void range_list_calculate_intersection_set(lList **range_list,
    return;
 
  error:
-   *range_list = lFreeList(*range_list);
+   lFreeList(range_list);
    answer_list_add(answer_list, "unable to calculate intersection set",
                    STATUS_ERROR1, ANSWER_QUALITY_ERROR);
    DEXIT;
@@ -1596,7 +1596,7 @@ void range_parse_from_string(lListElem **range,
    if ((ldummy == 0) && (rstr == dptr)) {
       sprintf(msg, MSG_GDI_INITIALPORTIONSTRINGNODECIMAL_S, rstr);
       answer_list_add(answer_list, msg, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
-      lFreeElem(r);
+      lFreeElem(&r);
       DEXIT;
       *range = NULL;
       return;
@@ -1610,7 +1610,7 @@ void range_parse_from_string(lListElem **range,
          sprintf(msg, MSG_GDI_RANGESPECIFIERWITHUNKNOWNTRAILER_SS,
                  old_str, rstr);
          answer_list_add(answer_list, msg, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
-         lFreeElem(r);
+         lFreeElem(&r);
          DEXIT;
          *range = NULL;
          return;
@@ -1636,7 +1636,7 @@ void range_parse_from_string(lListElem **range,
             sprintf(msg, MSG_GDI_RANGESPECIFIERWITHUNKNOWNTRAILER_SS,
                     old_str, dptr);
             answer_list_add(answer_list, msg, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
-            lFreeElem(r);
+            lFreeElem(&r);
             DEXIT;
             *range = NULL;
             return;
@@ -1660,7 +1660,7 @@ void range_parse_from_string(lListElem **range,
                   sprintf(msg, MSG_GDI_INITIALPORTIONSTRINGNODECIMAL_S, rstr);
                   answer_list_add(answer_list, msg, STATUS_ESYNTAX,
                                   ANSWER_QUALITY_ERROR);
-                  lFreeElem(r);
+                  lFreeElem(&r);
                   DEXIT;
                   *range = NULL;
                   return;
@@ -1671,7 +1671,7 @@ void range_parse_from_string(lListElem **range,
                           rstr, dptr);
                   answer_list_add(answer_list, msg, STATUS_ESYNTAX,
                                   ANSWER_QUALITY_ERROR);
-                  lFreeElem(r);
+                  lFreeElem(&r);
                   DEXIT;
                   *range = NULL;
                   return;
@@ -1694,7 +1694,7 @@ void range_parse_from_string(lListElem **range,
                                 rstr);
                         answer_list_add(answer_list, msg, STATUS_ESYNTAX,
                                         ANSWER_QUALITY_ERROR);
-                        lFreeElem(r);
+                        lFreeElem(&r);
                         DEXIT;
                         *range = NULL;
                         return;
@@ -1705,7 +1705,7 @@ void range_parse_from_string(lListElem **range,
                              rstr);
                      answer_list_add(answer_list, msg, STATUS_ESYNTAX,
                                      ANSWER_QUALITY_ERROR);
-                     lFreeElem(r);
+                     lFreeElem(&r);
                      DEXIT;
                      *range = NULL;
                      return;
@@ -1714,7 +1714,7 @@ void range_parse_from_string(lListElem **range,
                      sprintf( msg, MSG_GDI_NEGATIVSTEP );
                      answer_list_add(answer_list, msg, STATUS_ESYNTAX,
                                      ANSWER_QUALITY_ERROR);
-                     lFreeElem(r);
+                     lFreeElem(&r);
                      DEXIT;
                      *range = NULL;
                      return;
@@ -1725,7 +1725,7 @@ void range_parse_from_string(lListElem **range,
                              rstr, dptr);
                      answer_list_add(answer_list, msg, STATUS_ESYNTAX,
                                      ANSWER_QUALITY_ERROR);
-                     lFreeElem(r);
+                     lFreeElem(&r);
                      DEXIT;
                      *range = NULL;
                      return;
@@ -1824,7 +1824,7 @@ range_list_parse_from_string(lList **this_list, lList **answer_list,
          }
       } else {
          if (just_parse) {
-            lFreeElem(range);
+            lFreeElem(&range);
          } else {
             expand_range_list(range, this_list);
          }

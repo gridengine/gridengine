@@ -479,7 +479,7 @@ int te_delete_one_time_event(te_type_t aType, u_long32 aKey1, u_long32 aKey2, co
 
       sge_mutex_unlock("event_control_mutex", SGE_FUNC, __LINE__, &Event_Control.mutex);
    
-      cond = lFreeWhere(cond);
+      lFreeWhere(&cond);
    
       DEXIT;
       return 0;  
@@ -508,7 +508,7 @@ int te_delete_one_time_event(te_type_t aType, u_long32 aKey1, u_long32 aKey2, co
 
    sge_mutex_unlock("event_control_mutex", SGE_FUNC, __LINE__, &Event_Control.mutex);
 
-   cond = lFreeWhere(cond);
+   lFreeWhere(&cond);
 
    DEXIT;
    return res;
@@ -948,7 +948,7 @@ static void* timed_event_thread(void* anArg)
       MONITOR_TET_EXEC((&monitor));
       
       lDechainElem(Event_Control.list, le);
-      lFreeElem(le);
+      lFreeElem(&le);
 
       sge_mutex_unlock("event_control_mutex", SGE_FUNC, __LINE__, &Event_Control.mutex);
         

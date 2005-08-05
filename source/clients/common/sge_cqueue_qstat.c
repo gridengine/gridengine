@@ -199,11 +199,11 @@ select_by_qref_list(lList *cqueue_list, const lList *hgrp_list, const lList *qre
       qref_list_resolve(queueref_list, NULL, &tmp_list, 
                         &found_something, cqueue_list, hgrp_list, true, true);
       if (!found_something) {
-         queueref_list = lFreeList(queueref_list);
+         lFreeList(&queueref_list);
          DEXIT;
          return -1;
       }
-      queueref_list = lFreeList(queueref_list);
+      lFreeList(&queueref_list);
       queueref_list = tmp_list;
       tmp_list = NULL;
    }
@@ -261,7 +261,7 @@ select_by_qref_list(lList *cqueue_list, const lList *hgrp_list, const lList *qre
       } 
    }
 
-   lFreeList(queueref_list);
+   lFreeList(&queueref_list);
 
    DEXIT;
    return ret;
@@ -339,7 +339,7 @@ lList *pe_list
    }
 
    if (pe_selected != NULL) {
-      lFreeList(pe_selected);
+      lFreeList(&pe_selected);
    }
    DEXIT;
    return nqueues;

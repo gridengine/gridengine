@@ -329,7 +329,7 @@ char* actual_opt;
       actual_opt = sge_strdup(NULL, lGetString(ep, SPA_switch));
       while(ep) {
          /* remove _all_ flags of same type */
-         lRemoveElem(*ppcmdline, ep);
+         lRemoveElem(*ppcmdline, &ep);
          ep = lGetElemStrLike(*ppcmdline, SPA_switch, actual_opt);
       }
       free(actual_opt);
@@ -372,7 +372,7 @@ int field
          for_each(sep, lGetList(ep, SPA_argval_lListT)) {
             sge_parse_string_list(ppdestlist, lGetString(sep, ST_name), field, type);
          }
-         lRemoveElem(*ppcmdline, ep);
+         lRemoveElem(*ppcmdline, &ep);
          ep = lGetElemStr(*ppcmdline, SPA_switch, opt);
       }
       DEXIT;
@@ -419,25 +419,25 @@ u_long32 action
                lGetString(sep, ST_name));
             answer_list_add(alpp, str, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
 
-            lRemoveElem(*ppcmdline, ep);
+            lRemoveElem(*ppcmdline, &ep);
             DEXIT;
             return false;
          }
          lSetUlong(idp, ID_action, action);
       }
       if (arrayDefList != NULL) {
-         lRemoveElem(*ppcmdline, arrayDef);
+         lRemoveElem(*ppcmdline, &arrayDef);
          arrayDef = NULL;
          arrayDefList = NULL;
       }
-      lRemoveElem(*ppcmdline, ep);
+      lRemoveElem(*ppcmdline, &ep);
    }
    
    if (is_run_once && (ep = lGetElemUlong(*ppcmdline, SPA_number, t_OPT )) != NULL) {
       sprintf(str, MSG_JOB_LONELY_TOPTION_S, lGetString(ep, SPA_switch_arg));
       answer_list_add(alpp, str, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
       while ((ep = lGetElemUlong(*ppcmdline, SPA_number, t_OPT )) != NULL) {
-         lRemoveElem(*ppcmdline, ep);
+         lRemoveElem(*ppcmdline, &ep);
       }  
       
       DEXIT;
@@ -464,7 +464,7 @@ char **str
          *str = sge_strdup(NULL, lGetString(ep2, ST_name));
       else
          *str = NULL;   
-      lRemoveElem(*ppcmdline, ep);
+      lRemoveElem(*ppcmdline, &ep);
 
       DEXIT;
       return true;

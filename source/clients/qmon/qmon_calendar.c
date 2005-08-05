@@ -115,7 +115,7 @@ XtPointer cld, cad;
    qmonMirrorMultiAnswer(CALENDAR_T, &alp);
    if (alp) {
       qmonMessageBox(w, alp, 0);
-      alp = lFreeList(alp);
+      lFreeList(&alp);
       /* set default cursor */
       XmtDisplayDefaultCursor(w);
       DEXIT;
@@ -431,9 +431,9 @@ XtPointer cld, cad;
             XmListSelectItem(cal_names, xcalname, True);
             XmStringFree(xcalname);
          }
-         lFreeWhat(what);
-         cal = lFreeList(cal);
-         alp = lFreeList(alp);
+         lFreeWhat(&what);
+         lFreeList(&cal);
+         lFreeList(&alp);
       }
    }
 
@@ -483,8 +483,8 @@ XtPointer cld, cad;
 
          qmonMessageBox(w, alp, 0);
 
-         lFreeWhat(what);
-         alp = lFreeList(alp);
+         lFreeWhat(&what);
+         lFreeList(&alp);
 
          updateCalendarList();
          XtVaGetValues( cal_names,
@@ -496,7 +496,7 @@ XtPointer cld, cad;
             qmonCalendarFillConf(cal_names, NULL);
 
       }
-      lp = lFreeList(lp);
+      lFreeList(&lp);
    }
    DEXIT;
 }

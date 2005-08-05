@@ -245,7 +245,7 @@ spool_postgres_create_context(lList **answer_list, const char *args)
          spool_type_add_rule(answer_list, type, rule, true);
       } else {
          /* error messages have been created earlier */
-         context = lFreeElem(context);
+         lFreeElem(&context);
       }
    }
 
@@ -1170,7 +1170,7 @@ spool_postgres_read_object(lList **answer_list, PGconn *connection,
                                        ANSWER_QUALITY_ERROR,
                                        MSG_CANTREADSUBLISTASPRIMARYKEYVALUEUNKNOWN_S , 
                                        lNm2Str(fields[i].nm));
-               ep = lFreeElem(ep);
+               lFreeElem(&ep);
                continue;
             } else {
                bool ret;
@@ -1185,7 +1185,7 @@ spool_postgres_read_object(lList **answer_list, PGconn *connection,
                          id, key);
                if (!ret) {
                   /* on error stop */
-                  ep = lFreeElem(ep);
+                  lFreeElem(&ep);
                   continue;
                } else {
                   if (sub_list != NULL) {
@@ -1940,7 +1940,7 @@ spool_postgres_write_sublist(lList **answer_list, PGconn *connection,
             } else {
                /* do not break processing, but delete the faulty id object */
                DPRINTF(("inconsistend id->key mapping\n"));
-               lRemoveElem(id_list, id_ep);
+               lRemoveElem(id_list, &id_ep);
             }
          }
       }

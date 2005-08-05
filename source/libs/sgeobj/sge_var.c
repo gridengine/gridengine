@@ -477,7 +477,7 @@ void var_list_copy_prefix_vars_undef(lList **varl,
    if (*varl == NULL) {
       *varl = lCreateList("", VA_Type);
    }
-   lAddList(*varl, var_list2); 
+   lAddList(*varl, &var_list2);
    DEXIT;
 }
 
@@ -613,7 +613,7 @@ void var_list_remove_prefix_vars(lList **varl, const char *prefix)
       next_var_elem = lNext(var_elem);
 
       if (!strncmp(prefix_name, prefix, prefix_len)) {
-         lRemoveElem(*varl, var_elem);
+         lRemoveElem(*varl, &var_elem);
       } 
    }
    DEXIT;
@@ -746,7 +746,7 @@ int var_list_add_as_set(lList *lp0, lList *lp1)
    }
 
    /* The second list is no longer needed. */
-   lFreeList(lp1);
+   lFreeList(&lp1);
 
    DEXIT;
    return 0;

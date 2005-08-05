@@ -232,7 +232,7 @@ str_list_transform_user_list(lList **this_list, lList **answer_list)
                   break;
                }
             } else if (strcmp(string, "*") == 0) {
-               *this_list = lFreeList(*this_list);
+               lFreeList(this_list);
                break;
             }
          }

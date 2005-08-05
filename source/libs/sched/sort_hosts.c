@@ -332,7 +332,7 @@ static int get_load_value(double *dvalp, lListElem *global, lListElem *host, con
       *dvalp = lGetDouble(cep, CE_pj_doubleval);
    }
 
-   cep = lFreeElem(cep);
+   lFreeElem(&cep);
 
    /*
     * No value available.
@@ -398,8 +398,8 @@ int *sort_hostlist
       lResortElem(so, hep, host_list);
    }
 
-   so = lFreeSortOrder(so);
-   job_load_adjustments = lFreeList(job_load_adjustments);
+   lFreeSortOrder(&so);
+   lFreeList(&job_load_adjustments);
 
    DEXIT; 
    return 0;

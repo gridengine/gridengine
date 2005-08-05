@@ -654,9 +654,7 @@ spool_classic_default_list_func(lList **answer_list,
             char err_str[1024];
       
             /* remove old sharetree */
-            if (*list != NULL) {
-               *list = lFreeList(*list);
-            }
+            lFreeList(list);
 
             /* read sharetree from disk */
             ep = read_sharetree(SHARETREE_FILE, NULL, 1, err_str, 1, NULL);
@@ -688,9 +686,8 @@ spool_classic_default_list_func(lList **answer_list,
 
             sge_dstring_init(&file_name, filename_buf, SGE_PATH_MAX);
 
-            if (*list != NULL) {
-               *list = lFreeList(*list);
-            }
+            lFreeList(list);
+            
             sge_dstring_sprintf(&file_name, "%s/%s", 
                                 lGetString(rule, SPR_url), SCHED_CONF_FILE);
             *list = read_sched_configuration(lGetString(rule, SPR_url), 

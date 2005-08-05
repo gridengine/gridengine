@@ -385,7 +385,7 @@ static int state_at(time_t now, const lList *ycal, lList *wcal, time_t *next_eve
    DPRINTF(("got state %d from %s calendar. Now: "sge_u32" Next event: "sge_u32"\n", 
          state, (w_is_active==-1)?"year":"week", now, next_event?*next_event:0));
 
-   lFreeElem(tm);
+   lFreeElem(&tm);
 
    if ((state & QI_DO_ENABLE)) {
       DEXIT;
@@ -485,7 +485,7 @@ static u_long32 is_week_entry_active(lListElem *tm, lListElem *week_entry, time_
       
          state = is_week_entry_active(new_tm, week_entry, limit, next_state);
 
-         new_tm = lFreeElem(new_tm);
+         lFreeElem(&new_tm);
       }
 
       /* there is no other state change */
@@ -580,7 +580,7 @@ static u_long32 is_year_entry_active(lListElem *tm, lListElem *year_entry, time_
       
          state = is_year_entry_active(new_tm, year_entry, limit);
 
-         new_tm = lFreeElem(new_tm);
+         lFreeElem(&new_tm);
       }
             
    }
@@ -877,7 +877,7 @@ static time_t compute_limit(bool today, bool active, const lList *year_time, con
             }
             if (is_allways_inactive) { /* the calendar is disabled for the whole week. No need to compute anything further */
                *is_end_of_day_reached = false;
-               lep = lFreeElem(lep);
+               lFreeElem(&lep);
                DEXIT;
                return 0;
             }
@@ -897,7 +897,7 @@ static time_t compute_limit(bool today, bool active, const lList *year_time, con
                begin = lFirst(lGetList(time, TMR_begin));
                if (tm_yday_cmp(now, begin) < 0 && 
                   (!lep || tm_yday_cmp(lep, begin) > 0)) {  
-                  lep = lFreeElem(lep); 
+                  lFreeElem(&lep);
                   lep = lCopyElem(begin);           
                }   
             }
@@ -911,7 +911,7 @@ static time_t compute_limit(bool today, bool active, const lList *year_time, con
                begin = lFirst(lGetList(time, TMR_begin));
                if (tm_wday_cmp(now, begin) < 0 && 
                   (!lep || tm_wday_cmp(lep, begin) > 0)) {     
-                  lep = lFreeElem(lep); 
+                  lFreeElem(&lep);
                   lep = lCopyElem(begin);  
                }
             }   
@@ -920,7 +920,7 @@ static time_t compute_limit(bool today, bool active, const lList *year_time, con
                for_each(time, week_time) {
                   begin = lFirst(lGetList(time, TMR_begin));
                   if (!lep || tm_wday_cmp(lep, begin) > 0) {     
-                     lep = lFreeElem(lep); 
+                     lFreeElem(&lep);
                      lep = lCopyElem(begin);  
                   }
                }              
@@ -948,7 +948,7 @@ static time_t compute_limit(bool today, bool active, const lList *year_time, con
       if (is_new_cal_entry) {
          uncullify_tm(lep, &tm_limit);
          if (is_full_day) {/* a full day calendar, nothing else is needed. */
-            lep = lFreeElem(lep);
+            lFreeElem(&lep);
          }
          else {
             today = true; /* we have to enable the calendar for today */
@@ -980,7 +980,7 @@ static time_t compute_limit(bool today, bool active, const lList *year_time, con
             begin = lFirst(lGetList(time, TMR_begin));
             if (tm_daytime_cmp(new_now, begin) < 0 && 
                (!lep || tm_daytime_cmp(lep, begin) > 0)) {
-               lep = lFreeElem(lep); 
+               lFreeElem(&lep);
                lep = lCopyElem(begin); 
             }
          }
@@ -1010,12 +1010,12 @@ static time_t compute_limit(bool today, bool active, const lList *year_time, con
       tm_limit.tm_hour = lGetUlong(lep, TM_hour);
       tm_limit.tm_min = lGetUlong(lep, TM_min);
       tm_limit.tm_sec = lGetUlong(lep, TM_sec);
-      lep = lFreeElem(lep);
+      lFreeElem(&lep);
       is_new_cal_entry = true;
    }
 
    if (is_new_now_copy) {
-       new_now = lFreeElem(new_now);
+       lFreeElem(&new_now);
    }         
 
    if (is_new_cal_entry) {
@@ -1121,7 +1121,7 @@ static int normalize_range_list(lList *rl, cmp_func_t cmp_func) {
                lGetUlong(t2, TM_sec))); */
 
             /* remove q */
-            lRemoveElem(rl, q);
+            lRemoveElem(rl, &q);
 
             /* prepare next loop iteration */
             q = r;
@@ -1264,8 +1264,7 @@ static int disabled_year_list(lList **alpp, const char *s, lList **cal, const ch
    return 0;
 
 ERROR:
-   if (cal)
-      lFreeList(*cal);
+   lFreeList(cal);
    SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_ANSWER_ERRORINDISABLYEAROFCALENDARXY_SS, 
          save_error(), cal_name));
    answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
@@ -1324,8 +1323,8 @@ SUCCESS:
    return 0;
 
 ERROR:
-   lFreeList(ydrl);
-   lFreeList(dtrl);
+   lFreeList(&ydrl);
+   lFreeList(&dtrl);
    DEXIT;
    return -1;
 }
@@ -1381,7 +1380,7 @@ static int year_day_range_list(lList **ydrl) {
       DEXIT;
       return -1;
    }
-   if (ydrl) {
+   if (ydrl != NULL) {
       *ydrl = lCreateList("year_day_range_list", TMR_Type);
       lAppendElem(*ydrl, tmr);
    }
@@ -1389,13 +1388,15 @@ static int year_day_range_list(lList **ydrl) {
    while (scan(NULL, NULL)==COMMA) {
       eat_token();
       if (year_day_range(&tmr)) {
-         if (ydrl)
-            *ydrl = lFreeList(*ydrl);
+         if (ydrl != NULL) {
+            lFreeList(ydrl);
+         }
          DEXIT;
          return -1;
       }
-      if (ydrl)
+      if (ydrl != NULL) {
          lAppendElem(*ydrl, tmr);
+      }
    }
 
    DEXIT;
@@ -1416,13 +1417,13 @@ static int year_day_range(lListElem **tmr) {
       eat_token();
 
       if (year_day(&t2)) {
-         lFreeElem(t1);
+         lFreeElem(&t1);
          DEXIT;
          return -1;
       }   
       if (tm_yday_cmp(t1, t2)>0) {
          sprintf(parse_error, MSG_ANSWER_FIRSTYESTERDAYINRANGEMUSTBEBEFORESECONDYESTERDAY );
-         lFreeElem(t1);
+         lFreeElem(&t1);
          DEXIT;
          return -1;   
       }
@@ -1445,8 +1446,8 @@ static int year_day_range(lListElem **tmr) {
       }
    }
 
-   lFreeElem(t1);
-   lFreeElem(t2);
+   lFreeElem(&t1);
+   lFreeElem(&t2);
 
 
    DEXIT;
@@ -1591,12 +1592,13 @@ static int daytime_range_list(lList **dtrl) {
    while (scan(NULL, NULL)==COMMA) {
       eat_token();
       if (daytime_range(&tmr)) {
-         if (dtrl)
-            *dtrl = lFreeList(*dtrl);
+         if (dtrl != NULL) {
+            lFreeList(dtrl);
+         }
          DEXIT;
          return -1;
       }
-      if (dtrl) {
+      if (dtrl != NULL) {
          lAppendElem(*dtrl, tmr);
          split_daytime_range(*dtrl, tmr);   
       }
@@ -1697,15 +1699,15 @@ static int daytime_range(lListElem **tmr) {
       lSetList(*tmr, TMR_end, tmlp);
    }
 
-   lFreeElem(t1);
-   lFreeElem(t2);
+   lFreeElem(&t1);
+   lFreeElem(&t2);
 
    DEXIT;
    return 0;
 
 ERROR:
-   lFreeElem(t1);
-   lFreeElem(t2);
+   lFreeElem(&t1);
+   lFreeElem(&t2);
    DEXIT;
    return -1;
 }
@@ -1858,9 +1860,7 @@ static int disabled_week_list(lList **alpp, const char *s, lList **cal, const ch
    return 0;
 
 ERROR:
-   if (cal) {
-      lFreeList(*cal);
-   }   
+   lFreeList(cal);
    SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_PARSE_ERRORINDISABLEDWEEKOFCALENDAR_SS, 
         cal_name, save_error()));
    answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
@@ -1932,8 +1932,8 @@ SUCCESS:
    return 0;
 
 ERROR:
-   lFreeList(wdrl);
-   lFreeList(dtrl);
+   lFreeList(&wdrl);
+   lFreeList(&dtrl);
    DEXIT;
    return -1;
 }
@@ -1959,9 +1959,7 @@ static int week_day_range_list(lList **wdrl) {
    while (scan(NULL, NULL)==COMMA) {
       eat_token();
       if (week_day_range(&tmr)) {
-         if (wdrl) {
-            *wdrl = lFreeList(*wdrl);
-         }   
+         lFreeList(wdrl);
          DEXIT;
          return -1;
       }
@@ -2062,7 +2060,7 @@ static void join_wday_range(lList *week_day)
             if (next1 == day_range2) {
                next1 = next2;
             }
-            lRemoveElem(week_day, day_range2);
+            lRemoveElem(week_day, &day_range2);
             day_range2 = NULL;
          }
         
@@ -2232,15 +2230,15 @@ static int week_day_range(lListElem **tmr) {
          lSetList(*tmr, TMR_end, tmlp);
       }
    }
-   lFreeElem(t1);
-   lFreeElem(t2);
+   lFreeElem(&t1);
+   lFreeElem(&t2);
 
    DEXIT;
    return 0;
 
 ERROR:
-   lFreeElem(t1);
-   lFreeElem(t2);
+   lFreeElem(&t1);
+   lFreeElem(&t2);
    DEXIT;
    return -1;
 }
@@ -2509,7 +2507,7 @@ calendar_parse_year(lListElem *cal, lList **answer_list)
       ret = false;               
    } else {
       lXchgList(cal, CAL_parsed_year_calendar, &yc);
-      lFreeList(yc); 
+      lFreeList(&yc); 
    }
 
    DEXIT;
@@ -2526,7 +2524,7 @@ bool calendar_parse_week(lListElem *cal, lList **answer_list) {
       ret = false;
    } else {
       lXchgList(cal, CAL_parsed_week_calendar, &wc);
-      lFreeList(wc); 
+      lFreeList(&wc); 
    }
    DEXIT;
    return ret;

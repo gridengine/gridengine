@@ -143,8 +143,8 @@ char **argv
       for_each(aep, alp) {
          fprintf(stderr, "%s\n", lGetString(aep, AN_text));
       }
-      lFreeList(alp);
-      lFreeList(pcmdline);
+      lFreeList(&alp);
+      lFreeList(&pcmdline);
       sge_prof_cleanup();
       SGE_EXIT(1);
    }
@@ -168,8 +168,8 @@ char **argv
       for_each(aep, alp) {
          fprintf(stderr, "%s\n", lGetString(aep, AN_text));
       }
-      alp = lFreeList(alp);
-      pcmdline = lFreeList(pcmdline);
+      lFreeList(&alp);
+      lFreeList(&pcmdline);
       sge_prof_cleanup();
       SGE_EXIT(1);
    }
@@ -229,7 +229,7 @@ char **argv
       */
       where = lWhere("%T(%I == %u)", EH_Type, EH_tagged, 1);
       lSplit(&ehl, NULL, NULL, where);
-      where = lFreeWhere(where);
+      lFreeWhere(&where);
    }
 
    /* scale load values and adjust consumable capacities */
@@ -242,7 +242,7 @@ char **argv
    ep = NULL;
    where = lWhere("%T(%I == %s)", EH_Type, EH_name, SGE_GLOBAL_NAME );
    ep = lDechainElem(ehl, lFindFirst(ehl, where));
-   lFreeWhere(where); 
+   lFreeWhere(&where);
    if (ep) {
       lInsertElem(ehl,NULL,ep); 
    }
@@ -265,8 +265,8 @@ char **argv
       sge_print_queues(ql, ep, jl, NULL, ehl, cl, pel, show);
    }   
 
-   lFreeList(ehl);
-   lFreeList(alp);
+   lFreeList(&ehl);
+   lFreeList(&alp);
    sge_prof_cleanup();
 
    SGE_EXIT(status==STATUS_OK?0:1); /* 0 means ok - others are errors */
@@ -308,7 +308,7 @@ lList *centry_list
       strncpy(arch_string, sge_get_dominant_stringval(lep, &dominant, &rs), 
                sizeof(arch_string)-1); 
       sge_dstring_clear(&rs);
-      lep = lFreeElem(lep);
+      lFreeElem(&lep);
    }            
    else
       strcpy(arch_string, "-");
@@ -321,7 +321,7 @@ lList *centry_list
       strncpy(num_proc, sge_get_dominant_stringval(lep, &dominant, &rs),
                sizeof(num_proc)-1); 
       sge_dstring_clear(&rs);
-      lep = lFreeElem(lep);
+      lFreeElem(&lep);
    }            
    else
       strcpy(num_proc, "-");
@@ -333,7 +333,7 @@ lList *centry_list
    if (lep) {
       reformatDoubleValue(load_avg, "%.2f%c", sge_get_dominant_stringval(lep, &dominant, &rs));
       sge_dstring_clear(&rs);
-      lep = lFreeElem(lep);
+      lFreeElem(&lep);
    }            
    else
       strcpy(load_avg, "-");
@@ -345,7 +345,7 @@ lList *centry_list
    if (lep) {
       reformatDoubleValue(mem_total, "%.1f%c", sge_get_dominant_stringval(lep, &dominant, &rs));
       sge_dstring_clear(&rs);
-      lep = lFreeElem(lep);
+      lFreeElem(&lep);
    }            
    else
       strcpy(mem_total, "-");
@@ -357,7 +357,7 @@ lList *centry_list
    if (lep) {
       reformatDoubleValue(mem_used, "%.1f%c", sge_get_dominant_stringval(lep, &dominant, &rs));
       sge_dstring_clear(&rs);
-      lep = lFreeElem(lep);
+      lFreeElem(&lep);
    }            
    else
       strcpy(mem_used, "-");
@@ -369,7 +369,7 @@ lList *centry_list
    if (lep) {
       reformatDoubleValue(swap_total, "%.1f%c", sge_get_dominant_stringval(lep, &dominant, &rs));
       sge_dstring_clear(&rs);
-      lep = lFreeElem(lep);
+      lFreeElem(&lep);
    }            
    else
       strcpy(swap_total, "-");
@@ -381,7 +381,7 @@ lList *centry_list
    if (lep) {
       reformatDoubleValue(swap_used, "%.1f%c", sge_get_dominant_stringval(lep, &dominant, &rs));
       sge_dstring_clear(&rs);
-      lep = lFreeElem(lep);
+      lFreeElem(&lep);
    }            
    else
       strcpy(swap_used, "-");
@@ -613,7 +613,7 @@ u_long32 show
          break;
       }
    }
-   lFreeList(rlp);
+   lFreeList(&rlp);
    sge_dstring_free(&resource_string);
    DEXIT;
 }
@@ -927,8 +927,8 @@ lWriteListTo(ehl, stdout);
    eh_all = lWhat("%T(ALL)", EH_Type);
    eh_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_EXECHOST_LIST, SGE_GDI_GET, 
                         NULL, where, eh_all, NULL, &state, true);
-   eh_all = lFreeWhat(eh_all);
-   where = lFreeWhere(where);
+   lFreeWhat(&eh_all);
+   lFreeWhere(&where);
 
    if (alp) {
       printf("%s\n", lGetString(lFirst(alp), AN_text));
@@ -938,8 +938,8 @@ lWriteListTo(ehl, stdout);
    q_all = lWhat("%T(ALL)", QU_Type);
    q_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_CQUEUE_LIST, SGE_GDI_GET, 
                         NULL, NULL, q_all, NULL, &state, true);
-   q_all = lFreeWhat(q_all);
-   qw = lFreeWhere(qw);
+   lFreeWhat(&q_all);
+   lFreeWhere(&qw);
 
    if (alp) {
       printf("%s\n", lGetString(lFirst(alp), AN_text));
@@ -1007,8 +1007,8 @@ lWriteListTo(ehl, stdout);
 
       j_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_JOB_LIST, SGE_GDI_GET, 
                            NULL, jw, j_all, NULL, &state, true);
-      j_all = lFreeWhat(j_all);
-      jw = lFreeWhere(jw);
+      lFreeWhat(&j_all);
+      lFreeWhere(&jw);
 
       if (alp) {
          printf("%s\n", lGetString(lFirst(alp), AN_text));
@@ -1022,7 +1022,7 @@ lWriteListTo(ehl, stdout);
    ce_all = lWhat("%T(ALL)", CE_Type);
    ce_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_CENTRY_LIST, SGE_GDI_GET, 
                         NULL, NULL, ce_all, NULL, &state, true);
-   ce_all = lFreeWhat(ce_all);
+   lFreeWhat(&ce_all);
 
    if (alp) {
       printf("%s\n", lGetString(lFirst(alp), AN_text));
@@ -1035,7 +1035,7 @@ lWriteListTo(ehl, stdout);
    pe_all = lWhat("%T(ALL)", PE_Type);
    pe_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_PE_LIST, SGE_GDI_GET, 
                            NULL, NULL, pe_all, NULL, &state, true);
-   pe_all = lFreeWhat(pe_all);
+   lFreeWhat(&pe_all);
 
    if (alp) {
       printf("%s\n", lGetString(lFirst(alp), AN_text));
@@ -1049,8 +1049,8 @@ lWriteListTo(ehl, stdout);
    gc_what = lWhat("%T(ALL)", CONF_Type);
    gc_id = sge_gdi_multi(&alp, SGE_GDI_SEND, SGE_CONFIG_LIST, SGE_GDI_GET,
                         NULL, gc_where, gc_what, &mal, &state, true);
-   gc_what = lFreeWhat(gc_what);
-   gc_where = lFreeWhere(gc_where);
+   lFreeWhat(&gc_what);
+   lFreeWhere(&gc_where);
 
    if (alp) {
       printf("%s\n", lGetString(lFirst(alp), AN_text));
@@ -1072,7 +1072,7 @@ lWriteListTo(ehl, stdout);
       printf("%s\n", lGetString(aep, AN_text));
       SGE_EXIT(1);
    }
-   alp = lFreeList(alp);
+   lFreeList(&alp);
 
    /* --- queue */
    alp = sge_gdi_extract_answer(SGE_GDI_GET, SGE_CQUEUE_LIST, q_id, 
@@ -1085,7 +1085,7 @@ lWriteListTo(ehl, stdout);
       printf("%s\n", lGetString(aep, AN_text));
       SGE_EXIT(1);
    }
-   alp = lFreeList(alp);
+   lFreeList(&alp);
 
    /* --- job */
    if (job_l && (show & QHOST_DISPLAY_JOBS)) {
@@ -1106,7 +1106,7 @@ lWriteListTo(ehl, stdout);
          for_each(jatep, lGetList(ep, JB_ja_tasks))
             lSetUlong(jatep, JAT_suitable, TAG_SHOW_IT);
 
-      alp = lFreeList(alp);
+      lFreeList(&alp);
    }
 
    /* --- complex attribute */
@@ -1120,7 +1120,7 @@ lWriteListTo(ehl, stdout);
       printf("%s\n", lGetString(aep, AN_text));
       SGE_EXIT(1);
    }
-   alp = lFreeList(alp);
+   lFreeList(&alp);
 
    /* --- pe */
    alp = sge_gdi_extract_answer(SGE_GDI_GET, SGE_PE_LIST, pe_id,
@@ -1133,7 +1133,7 @@ lWriteListTo(ehl, stdout);
       printf("%s\n", lGetString(aep, AN_text));
       SGE_EXIT(1);
    }
-   alp = lFreeList(alp);
+   lFreeList(&alp);
 
    /* --- apply global configuration for sge_hostcmp() scheme */
    alp = sge_gdi_extract_answer(SGE_GDI_GET, SGE_CONFIG_LIST, gc_id, mal, &conf_l);
@@ -1149,9 +1149,9 @@ lWriteListTo(ehl, stdout);
       lListElem *local = NULL;
       merge_configuration(lFirst(conf_l), local, &conf, NULL);
    }
-   alp = lFreeList(alp);
+   lFreeList(&alp);
 
-   mal = lFreeList(mal);
+   lFreeList(&mal);
 
    DEXIT;
    return;

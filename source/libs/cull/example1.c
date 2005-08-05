@@ -351,7 +351,7 @@ int main(int argc, char *argv[])
       selectedlist = lSelect("selectedlist", queuelist, where, what);
 
       /* release memory */
-      lFreeWhere(where);
+      lFreeWhere(&where);
       lFreeWhat(what);
 
       /* Show the result */
@@ -384,7 +384,7 @@ int main(int argc, char *argv[])
          printf("there is a list\n");
 
       /* release memory */
-      lFreeWhere(where);
+      lFreeWhere(&where);
 
       /* Show the result */
       printf("\n\nREDUCED QUEUELIST\n"
@@ -448,7 +448,7 @@ int main(int argc, char *argv[])
       element = lFindFirst(queuelist, where);
       lSetList(element, Q_ownerlist, lCopyList("ownerlist0",
                                                ownerlist[0]));
-      lFreeWhere(where);
+      lFreeWhere(&where);
 
       /* 
          Change the queuelist.ownerlist field where 
@@ -458,7 +458,7 @@ int main(int argc, char *argv[])
       element = lFindFirst(queuelist, where);
       lSetList(element, Q_ownerlist, lCopyList("ownerlist1",
                                                ownerlist[1]));
-      lFreeWhere(where);
+      lFreeWhere(&where);
 
       /* 
          Change the queuelist.ownerlist field where 
@@ -468,7 +468,7 @@ int main(int argc, char *argv[])
       element = lFindFirst(queuelist, where);
       lSetList(element, Q_ownerlist, lCopyList("ownerlist2",
                                                ownerlist[2]));
-      lFreeWhere(where);
+      lFreeWhere(&where);
 
       printf("\n\nQUEUELIST WITH OWNERLISTS\n\n");
       lWriteListTo(queuelist, stdout);
@@ -493,7 +493,7 @@ int main(int argc, char *argv[])
       lWriteListTo(selectedlist, stdout);
 
       /* release memory */
-      lFreeWhere(where);
+      lFreeWhere(&where);
       lFreeWhat(what);
 
       /* dump the resulting list to file */
@@ -539,7 +539,7 @@ int main(int argc, char *argv[])
       element = lFindFirst(queuelist, where);
       lSetList(element, Q_ownerlist, lCopyList("ownerlist0",
                                                ownerlist[0]));
-      lFreeWhere(where);
+      lFreeWhere(&where);
       /* 
          Change the queuelist.ownerlist field where 
          Q_hostname == "legolas" 
@@ -548,7 +548,7 @@ int main(int argc, char *argv[])
       element = lFindFirst(queuelist, where);
       lSetList(element, Q_ownerlist, lCopyList("ownerlist1",
                                                ownerlist[1]));
-      lFreeWhere(where);
+      lFreeWhere(&where);
       /*
          Change the queuelist.ownerlist field where 
          Q_hostname == "durin" 
@@ -557,7 +557,7 @@ int main(int argc, char *argv[])
       element = lFindFirst(queuelist, where);
       lSetList(element, Q_ownerlist, lCopyList("ownerlist2",
                                                ownerlist[2]));
-      lFreeWhere(where);
+      lFreeWhere(&where);
 
       /* 
          Select the elements which contain in the ownerlist 
@@ -591,8 +591,8 @@ int main(int argc, char *argv[])
       lWriteListTo(joinedsublist, stdout);
 
       /* release memory */
-      lFreeWhere(where);
-      lFreeWhere(subwhere);
+      lFreeWhere(&where);
+      lFreeWhere(&subwhere);
       lFreeWhat(what);
 
       break;
@@ -617,7 +617,7 @@ int main(int argc, char *argv[])
       for_each_where(element, hostlist, where)
          lSetString(element, H_os, "SunOS 4.2.1");
       /* free memory */
-      lFreeWhere(where);
+      lFreeWhere(&where);
 
       /* show result */
       printf("\n\nCHANGED HOSTLIST\n"
@@ -659,7 +659,7 @@ int main(int argc, char *argv[])
       element = lFindFirst(queuelist, where);
       lSetList(element, Q_ownerlist, lCopyList("ownerlist0",
                                                ownerlist[0]));
-      lFreeWhere(where);
+      lFreeWhere(&where);
       /* 
          Change the queuelist.ownerlist field where 
          Q_hostname == "legolas" 
@@ -668,7 +668,7 @@ int main(int argc, char *argv[])
       element = lFindFirst(queuelist, where);
       lSetList(element, Q_ownerlist, lCopyList("ownerlist1",
                                                ownerlist[1]));
-      lFreeWhere(where);
+      lFreeWhere(&where);
       /*
          Change the queuelist.ownerlist field where 
          Q_hostname == "durin" 
@@ -677,7 +677,7 @@ int main(int argc, char *argv[])
       element = lFindFirst(queuelist, where);
       lSetList(element, Q_ownerlist, lCopyList("ownerlist2",
                                                ownerlist[2]));
-      lFreeWhere(where);
+      lFreeWhere(&where);
 
       /* 
          Select the elements which contain in the ownerlist 
@@ -693,7 +693,7 @@ int main(int argc, char *argv[])
       selectedlist = lSelect("selectedlist", queuelist, where, what);
 
       /* release memory */
-      lFreeWhere(where);
+      lFreeWhere(&where);
       lFreeWhat(what);
 
       /* Show the result */
@@ -728,7 +728,7 @@ int main(int argc, char *argv[])
       selectedlist = lSelect("selectedlist", queuelist, where, what);
 
       /* release memory */
-      lFreeWhere(where);
+      lFreeWhere(&where);
       lFreeWhat(what);
 
       /* Show the result */
@@ -749,7 +749,7 @@ int main(int argc, char *argv[])
       if (lSplit(&queuelist, &unchained, "Unchained", where) == -1) {
          printf("lSplit failed\n");
       }
-      lFreeWhere(where);
+      lFreeWhere(&where);
 
       printf("Nach Split\n");
       lWriteListTo(queuelist, stdout);
@@ -775,8 +775,8 @@ int main(int argc, char *argv[])
       printf("Condition copied is:\n");
       where2 = lCopyWhere(where);
       lWriteWhereTo(where2, stdout);
-      where2 = lFreeWhere(where2);
-      where = lFreeWhere(where);
+      lFreeWhere(&where2);
+      lFreeWhere(&where);
       printf("Condition is:\n");
       lWriteWhereTo(where, stdout);
       printf("Condition copied is:\n");
@@ -788,8 +788,8 @@ int main(int argc, char *argv[])
       printf("Enumeration copied is:\n");
       what2 = lCopyWhat(what);
       lWriteWhatTo(what2, stdout);
-      what2 = lFreeWhat(what2);
-      what = lFreeWhat(what);
+      lFreeWhat(&what2);
+      lFreeWhat(&what);
       what = lWhat("%T(ALL)", QueueT);
       printf("Enumeration is:\n");
       lWriteWhatTo(what, stdout);
@@ -806,7 +806,7 @@ int main(int argc, char *argv[])
          lSetRef(element, Q_ref, &trala[i++]);         
       }
       lWriteListTo(queuelist, stdout);
-      queuelist = lFreeList(queuelist);
+      lFreeList(&queuelist);
       break;
       
 
@@ -816,20 +816,20 @@ int main(int argc, char *argv[])
 
    /* clean the house */
    if (hostlist)
-      lFreeList(hostlist);
+      lFreeList(&hostlist);
    if (queuelist)
-      lFreeList(queuelist);
+      lFreeList(&queuelist);
    if (joinedlist)
-      lFreeList(joinedlist);
+      lFreeList(&joinedlist);
    if (selectedlist)
-      lFreeList(selectedlist);
+      lFreeList(&selectedlist);
 
    if (allHostFields)
-      lFreeWhat(allHostFields);
+      lFreeWhat(&allHostFields);
    if (allQueueFields)
-      lFreeWhat(allQueueFields);
+      lFreeWhat(&allQueueFields);
    if (allOwnerFields)
-      lFreeWhat(allOwnerFields);
+      lFreeWhat(&allOwnerFields);
 
    DCLOSE;
    return 0;

@@ -2232,7 +2232,7 @@ int lSetPosObject(lListElem *ep, int pos, lListElem *value)
    if(value != ep->cont[pos].obj) {
       /* free old element */
       if (ep->cont[pos].obj != NULL) {
-         lFreeElem(ep->cont[pos].obj);
+         lFreeElem(&(ep->cont[pos].obj));
       }
 
       /* set new list */
@@ -2294,7 +2294,7 @@ int lSetPosList(lListElem *ep, int pos, lList *value)
    if(value != ep->cont[pos].glp) {
       /* free old list */
       if (ep->cont[pos].glp) {
-         lFreeList(ep->cont[pos].glp);
+         lFreeList(&(ep->cont[pos].glp));
       }
 
       /* set new list */
@@ -2467,7 +2467,7 @@ int lSetObject(lListElem *ep, int name, lListElem *value)
    if(value != ep->cont[pos].obj) {
       /* free old element */
       if (ep->cont[pos].obj) {
-         lFreeElem(ep->cont[pos].obj);
+         lFreeElem(&(ep->cont[pos].obj));
       }
 
       /* set new list */
@@ -2534,9 +2534,7 @@ int lSetList(lListElem *ep, int name, lList *value)
 
    if(value != ep->cont[pos].glp) {
       /* free old list */
-      if (ep->cont[pos].glp) {
-         lFreeList(ep->cont[pos].glp);
-      }
+      lFreeList(&(ep->cont[pos].glp));
 
       /* set new list */
       ep->cont[pos].glp = value;
@@ -3694,10 +3692,9 @@ int lDelElemStr(lList **lpp, int nm, const char *str)
    /* seek element */
    ep = lGetElemStr(*lpp, nm, str);
    if (ep) {
-      lFreeElem(lDechainElem(*lpp, ep));
+      lRemoveElem(*lpp, &ep);
       if (lGetNumberOfElem(*lpp) == 0) {
-         lFreeList(*lpp);
-         *lpp = NULL;
+         lFreeList(lpp);
       }
 
       DEXIT;
@@ -4270,10 +4267,9 @@ int lDelElemUlong(lList **lpp, int nm, lUlong val)
    /* seek element */
    ep = lGetElemUlong(*lpp, nm, val);
    if (ep) {
-      lFreeElem(lDechainElem(*lpp, ep));
+      lRemoveElem(*lpp, &ep);
       if (lGetNumberOfElem(*lpp) == 0) {
-         lFreeList(*lpp);
-         *lpp = NULL;
+         lFreeList(lpp);
       }
    }
 
@@ -4609,10 +4605,9 @@ int lDelElemCaseStr(lList **lpp, int nm, const char *str)
    /* seek elemtent */
    ep = lGetElemCaseStr(*lpp, nm, str);
    if (ep) {
-      lFreeElem(lDechainElem(*lpp, ep));
+      lRemoveElem(*lpp, &ep);
       if (lGetNumberOfElem(*lpp) == 0) {
-         lFreeList(*lpp);
-         *lpp = NULL;
+         lFreeList(lpp);
       }
    }
 
@@ -5057,10 +5052,9 @@ int lDelElemHost(lList **lpp, int nm, const char *str)
    /* seek elemtent */
    ep = lGetElemHost(*lpp, nm, str);
    if (ep) {
-      lFreeElem(lDechainElem(*lpp, ep));
+      lRemoveElem(*lpp, &ep);
       if (lGetNumberOfElem(*lpp) == 0) {
-         lFreeList(*lpp);
-         *lpp = NULL;
+         lFreeList(lpp);
       }
       DEXIT;
       return 1;

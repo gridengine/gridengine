@@ -239,9 +239,9 @@ int scheduler(sge_Sdescr_t *lists, lList **order) {
       
       schedd_log_list(MSG_SCHEDD_LOGLIST_QUEUESTEMPORARLYNOTAVAILABLEDROPPED, 
                       qlp, QU_full_name);
-      lFreeList(qlp);
-      lFreeWhere(where);
-      lFreeWhat(what);
+      lFreeList(&qlp);
+      lFreeWhere(&where);
+      lFreeWhat(&what);
    }
 
    /**
@@ -344,7 +344,7 @@ int scheduler(sge_Sdescr_t *lists, lList **order) {
    /* free all job lists */
    for (i = SPLIT_FIRST; i < SPLIT_LAST; i++) {
       if (splitted_job_lists[i]) {
-         *(splitted_job_lists[i]) = lFreeList(*(splitted_job_lists[i]));
+         lFreeList(splitted_job_lists[i]);
          splitted_job_lists[i] = NULL;
       }
    }
@@ -355,7 +355,7 @@ int scheduler(sge_Sdescr_t *lists, lList **order) {
       if (orderlist) {
          sge_send_orders2master(&orderlist);
          if (orderlist != NULL) {
-            orderlist = lFreeList(orderlist);
+            lFreeList(&orderlist);
          }
       }
    }
@@ -503,8 +503,8 @@ static int dispatch_jobs(sge_Sdescr_t *lists, order_t *orders,
          job_load_adjustments,
          NULL, false, false,
          QU_suspend_thresholds)) {
-      none_avail_queues = lFreeList(none_avail_queues);
-      job_load_adjustments = lFreeList(job_load_adjustments);
+      lFreeList(&none_avail_queues);
+      lFreeList(&job_load_adjustments);
       DPRINTF(("couldn't split queue list with regard to suspend thresholds\n"));
       DEXIT;
       return -1;
@@ -516,7 +516,7 @@ static int dispatch_jobs(sge_Sdescr_t *lists, order_t *orders,
    suspend_job_in_queues(none_avail_queues, 
                          *(splitted_job_lists[SPLIT_RUNNING]), 
                          orders); 
-   none_avail_queues = lFreeList(none_avail_queues);
+   lFreeList(&none_avail_queues);
 
    /*---------------------------------------------------------------------
     * FILTER QUEUES
@@ -525,7 +525,7 @@ static int dispatch_jobs(sge_Sdescr_t *lists, order_t *orders,
    if (sge_split_queue_load(&(lists->queue_list), NULL, 
          lists->host_list, lists->centry_list, job_load_adjustments,
          NULL, false, true, QU_load_thresholds)) {
-      job_load_adjustments = lFreeList(job_load_adjustments);
+      lFreeList(&job_load_adjustments);
       DPRINTF(("couldn't split queue list concerning load\n"));
       DEXIT;
       return -1;
@@ -534,7 +534,7 @@ static int dispatch_jobs(sge_Sdescr_t *lists, order_t *orders,
    /* remove cal_disabled queues - needed them for implementing suspend thresholds */
    if (sge_split_cal_disabled(&(lists->queue_list), &lists->dis_queue_list)) {
       DPRINTF(("couldn't split queue list concerning cal_disabled state\n"));
-      job_load_adjustments = lFreeList(job_load_adjustments);
+      lFreeList(&job_load_adjustments);
       DEXIT;
       return -1;
    }
@@ -542,23 +542,22 @@ static int dispatch_jobs(sge_Sdescr_t *lists, order_t *orders,
    /* trash disabled queues - needed them for implementing suspend thresholds */
    if (sge_split_disabled(&(lists->queue_list), &none_avail_queues)) {
       DPRINTF(("couldn't split queue list concerning disabled state\n"));
-      none_avail_queues = lFreeList(none_avail_queues);
-      job_load_adjustments = lFreeList(job_load_adjustments);
+      lFreeList(&none_avail_queues);
+      lFreeList(&job_load_adjustments);
       DEXIT;
       return -1;
    }
 
-   none_avail_queues = lFreeList(none_avail_queues);
+   lFreeList(&none_avail_queues);
    if (sge_split_queue_slots_free(&(lists->queue_list), &none_avail_queues)) {
       DPRINTF(("couldn't split queue list concerning free slots\n"));
-      none_avail_queues = lFreeList(none_avail_queues);
-      job_load_adjustments = lFreeList(job_load_adjustments);
+      lFreeList(&none_avail_queues);
+      lFreeList(&job_load_adjustments);
       DEXIT;
       return -1;
    }
    if (lists->dis_queue_list != NULL) {
-      lAddList(lists->dis_queue_list, none_avail_queues);
-      none_avail_queues = NULL;
+      lAddList(lists->dis_queue_list, &none_avail_queues);
    }
    else {
       lists->dis_queue_list = none_avail_queues;
@@ -605,9 +604,9 @@ static int dispatch_jobs(sge_Sdescr_t *lists, order_t *orders,
       }
 
       if( ret != 0){
-         lFreeList(user_list);
-         lFreeList(group_list);
-         job_load_adjustments = lFreeList(job_load_adjustments);
+         lFreeList(&user_list);
+         lFreeList(&group_list);
+         lFreeList(&job_load_adjustments);
          DEXIT;
          return -1;
       }
@@ -617,9 +616,9 @@ static int dispatch_jobs(sge_Sdescr_t *lists, order_t *orders,
         ((lGetNumberOfElem(lists->queue_list) == 0) && (lGetNumberOfElem(lists->dis_queue_list) == 0))) { /* reservation and no queues avail */
       DPRINTF(("queues dropped because of overload or full: ALL\n"));
       schedd_mes_add_global(SCHEDD_INFO_ALLALARMOVERLOADED_);
-      lFreeList(user_list);
-      lFreeList(group_list);
-      job_load_adjustments = lFreeList(job_load_adjustments);
+      lFreeList(&user_list);
+      lFreeList(&group_list);
+      lFreeList(&job_load_adjustments);
       DEXIT;
       return 0;
    } 
@@ -634,9 +633,9 @@ static int dispatch_jobs(sge_Sdescr_t *lists, order_t *orders,
    if (nr_pending_jobs == 0) {
       /* no jobs to schedule */
       SCHED_MON((log_string, MSG_SCHEDD_MON_NOPENDJOBSTOPERFORMSCHEDULINGON ));
-      lFreeList(user_list);
-      lFreeList(group_list);
-      job_load_adjustments = lFreeList(job_load_adjustments);
+      lFreeList(&user_list);
+      lFreeList(&group_list);
+      lFreeList(&job_load_adjustments);
       DEXIT;
       return 0;
    }
@@ -788,7 +787,7 @@ static int dispatch_jobs(sge_Sdescr_t *lists, order_t *orders,
                is_reserve,
                &consumable_load_list);
          } 
-         job = lFreeElem(job);
+         lFreeElem(&job);
       }     
   
 
@@ -934,10 +933,10 @@ static int dispatch_jobs(sge_Sdescr_t *lists, order_t *orders,
             prof_get_measurement_wallclock(SGE_PROF_CUSTOM4, false, NULL)));
    }
 
-   lFreeList(user_list);
-   lFreeList(group_list);
+   lFreeList(&user_list);
+   lFreeList(&group_list);
    sge_free_load_list(&consumable_load_list);
-   job_load_adjustments = lFreeList(job_load_adjustments);
+   lFreeList(&job_load_adjustments);
    
    DEXIT;
    return 0;
@@ -1203,7 +1202,7 @@ select_assign_debit(lList **queue_list, lList **dis_queue_list, lListElem *job, 
             *dis_queue_list = disabled_queues;
          }
          else {
-            lAddList(*dis_queue_list, disabled_queues);
+            lAddList(*dis_queue_list, &disabled_queues);
          }   
          disabled_queues = NULL;
       }
@@ -1239,7 +1238,7 @@ select_assign_debit(lList **queue_list, lList **dis_queue_list, lListElem *job, 
          *dis_queue_list = disabled_queues;
       }
       else {
-         lAddList(*dis_queue_list, disabled_queues);
+         lAddList(*dis_queue_list, &disabled_queues);
       }        
       disabled_queues = NULL;
    }
@@ -1553,7 +1552,7 @@ set_utilization(lList *uti_list, u_long32 from, u_long32 till, double uti)
             else { /* did not find it, remove the current elem and continue*/
                lListElem *next = lNext(uti_elem_next);
                past_uti = lGetDouble(uti_elem_next, RDE_amount);
-               lRemoveElem(uti_list, uti_elem_next);
+               lRemoveElem(uti_list, &uti_elem_next);
                uti_elem_next = next;
             }
          }

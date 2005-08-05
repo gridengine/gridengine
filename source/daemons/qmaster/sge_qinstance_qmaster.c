@@ -359,7 +359,7 @@ qinstance_modify_attribute(lListElem *this_elem, lList **answer_list,
                qinstance_reinit_consumable_actual_list(tmp_elem, answer_list);
                
                lXchgList(tmp_elem, attribute_name, &new_value);
-               tmp_elem = lFreeElem(tmp_elem);
+               lFreeElem(&tmp_elem);
                
                if (object_list_has_differences(old_value, answer_list,
                                                new_value, false)) {
@@ -378,7 +378,7 @@ qinstance_modify_attribute(lListElem *this_elem, lList **answer_list,
                    * qinstance_reinit_consumable_actual_list().  Either way, it
                    * has to be freed.
                    */
-                  new_value = lFreeList(new_value);
+                  lFreeList(&new_value);
                }
             }
             break;
@@ -479,8 +479,8 @@ qinstance_modify_attribute(lListElem *this_elem, lList **answer_list,
                   /*
                    * Cleanup
                    */
-                  suspended_so = lFreeList(suspended_so);
-                  unsuspended_so = lFreeList(unsuspended_so);
+                  lFreeList(&suspended_so);
+                  lFreeList(&unsuspended_so);
                }
             }
             break;

@@ -163,7 +163,7 @@ sge_build_job_category(dstring *category_str, lListElem *job, lList *acl_list)
       }
    }
 
-   lFreeList(cmdl);
+   lFreeList(&cmdl);
        
    DEXIT;
    return sge_dstring_get_string(category_str);
@@ -171,7 +171,7 @@ sge_build_job_category(dstring *category_str, lListElem *job, lList *acl_list)
 ERROR:
    ERROR((SGE_EVENT, MSG_CATEGORY_BUILDINGCATEGORYFORJOBXFAILED_U,  
          sge_u32c(lGetUlong(job, JB_job_number))));
-   lFreeList(cmdl);
+   lFreeList(&cmdl);
    DEXIT;
    return NULL;
 }

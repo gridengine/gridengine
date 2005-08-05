@@ -264,7 +264,7 @@ bool test_lCountWhat(void)
    ret &= (elements == 5);
    ret &= (elements == lCountWhat(what2, TEST_Type));
 
-   what1 = lFreeWhat(what1);
+   lFreeWhat(&what1);
    what2 = lFreeWhat(what2);
 
    return ret;
@@ -312,7 +312,7 @@ bool test_lReduceDescr(void)
    
    what1 = lFreeWhat(what1);
    what2 = lFreeWhat(what2);
-   what3 = lFreeWhat(what3);
+   lFreeWhat(&what3);
 
    return ret;
 }
@@ -376,9 +376,9 @@ bool test_lCopyWhat(void)
    what2 = lFreeWhat(what2);
    what3 = lFreeWhat(what3);
 
-   dst_what1 = lFreeWhat(dst_what1);
-   dst_what2 = lFreeWhat(dst_what2);
-   dst_what3 = lFreeWhat(dst_what3);
+   lFreeWhat(&dst_what1);
+   lFreeWhat(&dst_what2);
+   lFreeWhat(&dst_what3);
 
    return ret;
 }
@@ -422,9 +422,9 @@ bool test_lWhatXElem(void)
 
    ret &= (enumeration_compare(what1, what2) == 0);
 
-   elem1 = lFreeElem(elem1);
+   lFreeElem(&elem1);
    what1 = lFreeWhat(what1);
-   what2 = lFreeWhat(what1);
+   lFreeWhat(&what1);
 
    return ret;
 }
@@ -509,8 +509,8 @@ bool test_lWhat_lSelect(void)
 #endif
 
    what = lFreeWhat(what);
-   elem = lFreeElem(elem);
-   elem1 = lFreeElem(elem1);
+   lFreeElem(&elem);
+   lFreeElem(&elem1);
    return ret;
 }
 

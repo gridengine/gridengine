@@ -188,7 +188,7 @@ const char *s;
    }
 
    if(init_packbuffer(&pb, 0, 0) != PACK_SUCCESS) {
-      lFreeElem(petrep);
+      lFreeElem(&petrep);
       sprintf(lasterror, MSG_GDI_OUTOFMEMORY);
       DEXIT;
       return NULL;
@@ -201,7 +201,7 @@ const char *s;
 
    clear_packbuffer(&pb);
 
-   lFreeElem(petrep);
+   lFreeElem(&petrep);
 
    if (ret != CL_RETVAL_OK) {
       sprintf(lasterror, MSG_GDI_SENDTASKTOEXECDFAILED_SS , hostname, cl_get_error_text(ret));

@@ -370,7 +370,7 @@ int sge_del_ckpt(lListElem *ep, lList **alpp, char *ruser, char *rhost)
          ERROR((SGE_EVENT, "denied: %s", lGetString(answer, AN_text)));
          answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN,
                          ANSWER_QUALITY_ERROR);
-         local_answer_list = lFreeList(local_answer_list);
+         lFreeList(&local_answer_list);
          DEXIT;
          return STATUS_EUNKNOWN;
       }
@@ -386,7 +386,7 @@ int sge_del_ckpt(lListElem *ep, lList **alpp, char *ruser, char *rhost)
    }
 
    /* now we can remove the element */
-   lRemoveElem(*lpp, found);
+   lRemoveElem(*lpp, &found);
 
    INFO((SGE_EVENT, MSG_SGETEXT_REMOVEDFROMLIST_SSSS,
             ruser, rhost, ckpt_name, MSG_OBJ_CKPT));

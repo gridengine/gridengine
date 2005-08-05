@@ -130,7 +130,7 @@ int fields[]
    if (read_config_list(fp, &clp, &alp, CF_Type, CF_name, CF_value,
                         CF_sublist, NULL, read_config_list_flag, buf, size)) {
       ERROR((SGE_EVENT, lGetString(lFirst(alp), AN_text)));
-      alp = lFreeList(alp);
+      lFreeList(&alp);
       fclose(fp);
       free(buf);
       DEXIT;
@@ -145,9 +145,9 @@ int fields[]
    if (ret) {
       if (alp) 
          ERROR((SGE_EVENT, lGetString(lFirst(alp), AN_text)));
-      alp = lFreeList(alp);
-      clp = lFreeList(clp);
-      ep = lFreeElem(ep);
+      lFreeList(&alp);
+      lFreeList(&clp);
+      lFreeElem(&ep);
       DEXIT;
       return NULL;
    }
@@ -156,14 +156,14 @@ int fields[]
    if ((unused = lFirst(clp))) {
       ERROR((SGE_EVENT, MSG_SGETEXT_UNKNOWN_CONFIG_VALUE_SSS,
          lGetString(unused, CF_name), args->objname, fullname));
-      lFreeList(clp);
-      lFreeElem(ep);
+      lFreeList(&clp);
+      lFreeElem(&ep);
       DEXIT;
       return NULL;
    }
 
    /* remove warnings in alp */
-   alp = lFreeList(alp);
+   lFreeList(&alp);
 
    DEXIT;
    return ep;

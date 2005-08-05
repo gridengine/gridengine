@@ -360,7 +360,7 @@ char *argv[]
                                                  CAL_fields, &qconf_sfi,
                                                  SP_DEST_TMP, SP_FORM_ASCII,
                                                  NULL, false);
-            ep = lFreeElem(ep);
+            lFreeElem(&ep);
             if (answer_list_output(&alp)) {
                FREE(filename);
                sge_error_and_exit(NULL);
@@ -393,7 +393,7 @@ char *argv[]
             FREE(filename);
             
             if (answer_list_output (&alp)) {
-               ep = lFreeElem (ep);
+               lFreeElem(&ep);
             }
 
             if (ep != NULL) {
@@ -401,7 +401,7 @@ char *argv[]
             }
 
             if (missing_field != NoName) {
-               ep = lFreeElem (ep);
+               lFreeElem(&ep);
                answer_list_output (&alp);
             }      
             
@@ -418,7 +418,7 @@ char *argv[]
                                             CAL_fields, fields_out, true, &qconf_sfi,
                                             SP_FORM_ASCII, NULL, *spp);
             if (answer_list_output(&alp)) {
-               ep = lFreeElem (ep);
+               lFreeElem(&ep);
             }
 
             if (ep != NULL) {
@@ -426,7 +426,7 @@ char *argv[]
             }
 
             if (missing_field != NoName) {
-               ep = lFreeElem(ep);
+               lFreeElem(&ep);
                answer_list_output(&alp);
             }
             
@@ -446,8 +446,8 @@ char *argv[]
          answer_exit_if_not_recoverable(aep);
          fprintf(stderr, "%s\n", lGetString(aep, AN_text));
          
-         alp = lFreeList(alp);
-         lp = lFreeList(lp);
+         lFreeList(&alp);
+         lFreeList(&lp);
 
          spp++;
          continue;
@@ -476,7 +476,7 @@ char *argv[]
                sge_error_and_exit(NULL);
             }
 
-            ep = lFreeElem(ep);
+            lFreeElem(&ep);
             
             /* edit this file */
             status = sge_edit(filename);
@@ -503,7 +503,7 @@ char *argv[]
             FREE (filename);
             
             if (answer_list_output(&alp)) {
-               ep = lFreeElem (ep);
+               lFreeElem(&ep);
             }
 
             if (ep != NULL) {
@@ -511,12 +511,12 @@ char *argv[]
             }
 
             if (missing_field != NoName) {
-               ep = lFreeElem(ep);
+               lFreeElem(&ep);
                answer_list_output(&alp);
             }
             
             if ((ep != NULL) && (ckpt_validate(ep, &alp) != STATUS_OK)) {
-               ep = lFreeElem(ep);
+               lFreeElem(&ep);
                answer_list_output(&alp);
             }
             
@@ -534,7 +534,7 @@ char *argv[]
                                             SP_FORM_ASCII, NULL, *spp);
             
             if (answer_list_output(&alp)) {
-               ep = lFreeElem(ep);
+               lFreeElem(&ep);
             }
 
             if (ep != NULL) {
@@ -542,12 +542,12 @@ char *argv[]
             }
 
             if (missing_field != NoName) {
-               ep = lFreeElem(ep);
+               lFreeElem(&ep);
                answer_list_output(&alp);
             }
 
             if ((ep != NULL) && (ckpt_validate(ep, &alp) != STATUS_OK)) {
-               ep = lFreeElem(ep);
+               lFreeElem(&ep);
                answer_list_output(&alp);
             }
                
@@ -568,8 +568,8 @@ char *argv[]
          answer_exit_if_not_recoverable(aep);
          fprintf(stderr, "%s\n", lGetString(aep, AN_text));
          
-         alp = lFreeList(alp);
-         lp = lFreeList(lp);
+         lFreeList(&alp);
+         lFreeList(&lp);
 
          spp++;
          continue;
@@ -598,7 +598,7 @@ char *argv[]
                default:
                   fprintf(stderr, MSG_SGETEXT_CANTRESOLVEHOST_S, lGetHost(hep, EH_name));
                   fprintf(stderr, "\n");
-                  hep = lFreeElem(hep);
+                  lFreeElem(&hep);
                   SGE_EXIT(1);
                   break;
             }
@@ -614,8 +614,8 @@ char *argv[]
          where = lWhere("%T( %Ih=%s )", EH_Type, EH_name, host);
          what = lWhat("%T(ALL)", EH_Type);
          alp = sge_gdi(SGE_EXECHOST_LIST, SGE_GDI_GET, &arglp, where, what);
-         what = lFreeWhat(what);
-         where = lFreeWhere(where);
+         lFreeWhat(&what);
+         lFreeWhere(&where);
 
          aep = lFirst(alp);
          answer_exit_if_not_recoverable(aep);
@@ -648,19 +648,19 @@ char *argv[]
          default:
             fprintf(stderr, MSG_SGETEXT_CANTRESOLVEHOST_S, lGetHost(ep, EH_name));
             fprintf(stderr, "\n");
-            ep = lFreeElem(ep);
+            lFreeElem(&ep);
             SGE_EXIT(1);
             break;
          }
 
          host = sge_strdup(host, lGetHost(ep, EH_name));
-         arglp = lFreeList(arglp);
+         lFreeList(&arglp);
 
 
          lp = lCreateList("hosts to add", EH_Type);
          lAppendElem(lp, ep);
          alp = sge_gdi(SGE_EXECHOST_LIST, SGE_GDI_ADD, &lp, NULL, NULL);
-         lp = lFreeList(lp);
+         lFreeList(&lp);
 
          aep = lFirst(alp);
          answer_exit_if_not_recoverable(aep);
@@ -678,7 +678,7 @@ char *argv[]
             fprintf(stderr, "%s", lGetString(ep, AN_text));
          fprintf(stderr, "\n");
       
-         alp = lFreeList(alp);
+         lFreeList(&alp);
          spp++;
          continue;
       }
@@ -700,7 +700,7 @@ char *argv[]
                                          fields, fields_out, true, &qconf_sfi,
                                          SP_FORM_ASCII, NULL, *spp);
          if (answer_list_output(&alp)) {
-            ep = lFreeElem(ep);
+            lFreeElem(&ep);
          }
 
          if (ep != NULL) {
@@ -710,7 +710,7 @@ char *argv[]
          FREE (fields);
             
          if (missing_field != NoName) {
-            ep = lFreeElem(ep);
+            lFreeElem(&ep);
             answer_list_output(&alp);
          }
 
@@ -727,7 +727,7 @@ char *argv[]
          default:
             fprintf(stderr, MSG_SGETEXT_CANTRESOLVEHOST_S, lGetHost(ep, EH_name));
             fprintf(stderr, "\n");
-            ep = lFreeElem(ep);
+            lFreeElem(&ep);
             SGE_EXIT(1);
             break;
          }
@@ -738,8 +738,8 @@ char *argv[]
         
          answer_exit_if_not_recoverable(aep); 
          fprintf(stderr, "%s\n", lGetString(aep, AN_text));
-         alp = lFreeList(alp);
-         lp = lFreeList(lp);
+         lFreeList(&alp);
+         lFreeList(&lp);
 
          spp++;
          continue;
@@ -756,7 +756,7 @@ char *argv[]
             sge_parse_return = 1;
          }
          
-         lp = lFreeList(lp);
+         lFreeList(&lp);
 
          spp++;
          continue;
@@ -771,8 +771,8 @@ char *argv[]
          lString2List(*spp, &lp, MO_Type, MO_name, ", ");
          alp = sge_gdi(SGE_MANAGER_LIST, SGE_GDI_ADD, &lp, NULL, NULL);
          answer_list_on_error_print_or_exit(&alp, stderr);
-         alp = lFreeList(alp);
-         lp = lFreeList(lp);
+         lFreeList(&alp);
+         lFreeList(&lp);
 
          spp++;
          continue;
@@ -788,8 +788,8 @@ char *argv[]
          lString2List(*spp, &lp, MO_Type, MO_name, ", ");
          alp = sge_gdi(SGE_OPERATOR_LIST, SGE_GDI_ADD, &lp, NULL, NULL);
          answer_list_on_error_print_or_exit(&alp, stderr);
-         alp = lFreeList(alp);
-         lp = lFreeList(lp);
+         lFreeList(&alp);
+         lFreeList(&lp);
 
          spp++;
          continue;
@@ -814,7 +814,7 @@ char *argv[]
                                                  fields, &qconf_sfi,
                                                  SP_DEST_TMP, SP_FORM_ASCII,
                                                  NULL, false);
-            ep = lFreeElem(ep);
+            lFreeElem(&ep);
             
             if (answer_list_output(&alp)) {
                FREE(fields);
@@ -851,7 +851,7 @@ char *argv[]
             FREE(filename);
             
             if (answer_list_output(&alp)) {
-               ep = lFreeElem(ep);
+               lFreeElem(&ep);
             }
 
             if (ep != NULL) {
@@ -861,12 +861,12 @@ char *argv[]
             FREE (fields);
             
             if (missing_field != NoName) {
-               ep = lFreeElem(ep);
+               lFreeElem(&ep);
                answer_list_output(&alp);
             }
 
             if ((ep != NULL) && (pe_validate(ep, &alp, 0) != STATUS_OK)) {
-               ep = lFreeElem(ep);
+               lFreeElem(&ep);
                answer_list_output(&alp);
             }
             
@@ -884,7 +884,7 @@ char *argv[]
                                             SP_FORM_ASCII, NULL, *spp);
             
             if (answer_list_output(&alp)) {
-               ep = lFreeElem(ep);
+               lFreeElem(&ep);
             }
 
             if (ep != NULL) {
@@ -894,12 +894,12 @@ char *argv[]
             FREE (fields);
             
             if (missing_field != NoName) {
-               ep = lFreeElem(ep);
+               lFreeElem(&ep);
                answer_list_output(&alp);
             }
 
             if ((ep != NULL) && (pe_validate(ep, &alp, 0) != STATUS_OK)) {
-               ep = lFreeElem(ep);
+               lFreeElem(&ep);
                answer_list_output(&alp);
             }
 
@@ -920,8 +920,8 @@ char *argv[]
          answer_exit_if_not_recoverable(aep);
          fprintf(stderr, "%s\n", lGetString(aep, AN_text));
          
-         alp = lFreeList(alp);
-         lp = lFreeList(lp);
+         lFreeList(&alp);
+         lFreeList(&lp);
 
          spp++;
          continue;
@@ -941,7 +941,7 @@ char *argv[]
          ep = getUserPrjTemplate(); 
 
          newep = edit_userprj(ep, true);
-         ep = lFreeElem(ep);
+         lFreeElem(&ep);
 
          /* send it to qmaster */
          lp = lCreateList("User list to add", UP_Type); 
@@ -952,16 +952,16 @@ char *argv[]
          aep = lFirst(alp);
          answer_exit_if_not_recoverable(aep);
          if (answer_get_status(aep) != STATUS_OK) {
-            fprintf(stderr, "%s\n", lGetString(aep, AN_text)); 
-            alp = lFreeList(alp);
-            lp = lFreeList(lp);
+            fprintf(stderr, "%s\n", lGetString(aep, AN_text));          
+            lFreeList(&alp);
+            lFreeList(&lp);
             SGE_EXIT(1);
          } else {
             fprintf(stdout, "%s\n", lGetString(aep, AN_text));
          }
-         
-         alp = lFreeList(alp);
-         lp = lFreeList(lp);
+                  
+         lFreeList(&alp);
+         lFreeList(&lp);
 
          continue;
       }
@@ -978,7 +978,7 @@ char *argv[]
          ep = getUserPrjTemplate(); 
          
          newep = edit_userprj(ep, false);
-         ep = lFreeElem(ep);
+         lFreeElem(&ep);
 
          /* send it to qmaster */
          lp = lCreateList("Project list to add", UP_Type); 
@@ -989,9 +989,9 @@ char *argv[]
          aep = lFirst(alp);
          answer_exit_if_not_recoverable(aep);
          fprintf(stderr, "%s\n", lGetString(aep, AN_text));
-         
-         alp = lFreeList(alp);
-         lp = lFreeList(lp);
+                  
+         lFreeList(&alp);
+         lFreeList(&lp);
 
          spp++;
          continue;
@@ -1024,7 +1024,7 @@ char *argv[]
                                           file);
          
          if (answer_list_output(&alp)) {
-            ep = lFreeElem (ep);
+            lFreeElem(&ep);
          }
 
          if (ep != NULL) {
@@ -1034,7 +1034,7 @@ char *argv[]
          FREE (fields);
          
          if (missing_field != NoName) {
-            ep = lFreeElem(ep);
+            lFreeElem(&ep);
             answer_list_output(&alp);
          }
 
@@ -1053,15 +1053,15 @@ char *argv[]
          aep = lFirst(alp);
          answer_exit_if_not_recoverable(aep);
          if (answer_get_status(aep) != STATUS_OK) {
-            fprintf(stderr, "%s\n", lGetString(aep, AN_text)); 
-            alp = lFreeList(alp);
-            lp = lFreeList(lp);
+            fprintf(stderr, "%s\n", lGetString(aep, AN_text));          
+            lFreeList(&alp);
+            lFreeList(&lp);
             SGE_EXIT(1);
          } else {
             fprintf(stdout, "%s\n", lGetString(aep, AN_text));
-         }
-         alp = lFreeList(alp);
-         lp = lFreeList(lp);
+         }         
+         lFreeList(&alp);
+         lFreeList(&lp);
 
          spp++;
          continue;
@@ -1095,7 +1095,7 @@ char *argv[]
                                           file);
          
          if (answer_list_output(&alp)) {
-            ep = lFreeElem (ep);
+            lFreeElem(&ep);
          }
 
          if (ep != NULL) {
@@ -1105,7 +1105,7 @@ char *argv[]
          FREE (fields);
          
          if (missing_field != NoName) {
-            ep = lFreeElem(ep);
+            lFreeElem(&ep);
             answer_list_output(&alp);
          }
             
@@ -1122,13 +1122,13 @@ char *argv[]
          aep = lFirst(alp);
          answer_exit_if_not_recoverable(aep);
          fprintf(stderr, "%s\n", lGetString(aep, AN_text)); 
-         if (answer_get_status(aep) != STATUS_OK) {
-            alp = lFreeList(alp);
-            lp = lFreeList(lp);
+         if (answer_get_status(aep) != STATUS_OK) {         
+            lFreeList(&alp);
+            lFreeList(&lp);
             SGE_EXIT(1);
-         }
-         alp = lFreeList(alp);
-         lp = lFreeList(lp);
+         }         
+         lFreeList(&alp);
+         lFreeList(&lp);
 
          spp++;
          continue;
@@ -1143,7 +1143,7 @@ char *argv[]
          spp = sge_parser_get_next(spp);
          parse_name_list_to_cull("host to add", &lp, SH_Type, SH_name, *spp);
          add_host_of_type(lp, SGE_SUBMITHOST_LIST);
-         lp = lFreeList(lp);
+         lFreeList(&lp);
 
          spp++;
          continue;
@@ -1162,7 +1162,7 @@ char *argv[]
             /* get the sharetree .. */
             what = lWhat("%T(ALL)", STN_Type);
             alp = sge_gdi(SGE_SHARETREE_LIST, SGE_GDI_GET, &lp, NULL, what);
-            what = lFreeWhat(what);
+            lFreeWhat(&what);
 
             aep = lFirst(alp);
             answer_exit_if_not_recoverable(aep);
@@ -1171,13 +1171,13 @@ char *argv[]
                spp++;
                continue;
             }
-            alp = lFreeList(alp);
+            lFreeList(&alp);
     
             ep = lFirst(lp);
             if (!(ep=edit_sharetree(ep)))
                continue;
 
-            lp = lFreeList(lp);
+            lFreeList(&lp);
          } else {
             char errstr[1024];
             spooling_field *fields = sge_build_STN_field_list (false, true);
@@ -1191,7 +1191,7 @@ char *argv[]
                                             SP_FORM_ASCII, NULL, *spp);
             
             if (answer_list_output(&alp)) {
-               ep = lFreeElem (ep);
+               lFreeElem(&ep);
             }
 
             if (ep != NULL) {
@@ -1201,7 +1201,7 @@ char *argv[]
             FREE (fields);
             
             if (missing_field != NoName) {
-               ep = lFreeElem(ep);
+               lFreeElem(&ep);
                answer_list_output(&alp);
             }
                
@@ -1224,7 +1224,7 @@ char *argv[]
                     sge_u32c(lGetUlong(unspecified, STN_id)));
             fprintf(stderr, "\n");
 
-            lFreeElem(ep);
+            lFreeElem(&ep);
             spp++;
             continue;
          }
@@ -1234,7 +1234,7 @@ char *argv[]
 
          what = lWhat("%T(ALL)", STN_Type);
          alp = sge_gdi(SGE_SHARETREE_LIST, SGE_GDI_ADD, &newlp, NULL, what);
-         what = lFreeWhat(what);
+         lFreeWhat(&what);
 
          ep = lFirst(alp);
          answer_exit_if_not_recoverable(ep);
@@ -1242,7 +1242,7 @@ char *argv[]
             fprintf(stderr, "%s\n", MSG_TREE_CHANGEDSHARETREE);
          else
             fprintf(stderr, "%s\n", lGetString(ep, AN_text));
-         newlp = lFreeList(newlp);
+         lFreeList(&newlp);
          spp++;
          continue;
       }
@@ -1263,7 +1263,7 @@ char *argv[]
          /* get the sharetree .. */
          what = lWhat("%T(ALL)", STN_Type);
          alp = sge_gdi(SGE_SHARETREE_LIST, SGE_GDI_GET, &lp, NULL, what);
-         what = lFreeWhat(what);
+         lFreeWhat(&what);
 
          aep = lFirst(alp);
          answer_exit_if_not_recoverable(aep);
@@ -1272,7 +1272,7 @@ char *argv[]
             spp++;
             continue;
          }
-         alp = lFreeList(alp);
+         lFreeList(&alp);
  
          ep = lFirst(lp);
          if (!ep && opt == astnode_OPT) {
@@ -1358,19 +1358,19 @@ char *argv[]
 
             free(buf);
          }
-         arglp = lFreeList(arglp);
+         lFreeList(&arglp);
 
          if (modified) {
             what = lWhat("%T(ALL)", STN_Type);
             alp = sge_gdi(SGE_SHARETREE_LIST, SGE_GDI_MOD, &lp, NULL, what);
-            what = lFreeWhat(what);
+            lFreeWhat(&what);
             ep = lFirst(alp);
             answer_exit_if_not_recoverable(ep);
             if (answer_get_status(ep) == STATUS_OK)
                fprintf(stderr, "%s\n", MSG_TREE_MODIFIEDSHARETREE);
             else
                fprintf(stderr, "%s\n", lGetString(ep, AN_text));
-            alp = lFreeList(alp);
+            lFreeList(&alp);
          } else {
             fprintf(stderr, "%s\n", MSG_TREE_NOMIDIFIEDSHARETREE);
             if (print_usage)
@@ -1378,7 +1378,7 @@ char *argv[]
             SGE_EXIT(1);
          }
 
-         lp = lFreeList(lp);
+         lFreeList(&lp);
          spp++;
          continue;
       }
@@ -1406,10 +1406,10 @@ char *argv[]
          /* add all users/groups from lp to the acls in alp */
          sge_client_add_user(&alp, lp, arglp);
 
-         answer_list_on_error_print_or_exit(&alp, stderr);
-         alp = lFreeList(alp);
-         arglp = lFreeList(arglp);
-         lp = lFreeList(lp);
+         answer_list_on_error_print_or_exit(&alp, stderr);         
+         lFreeList(&alp);
+         lFreeList(&arglp);
+         lFreeList(&lp);
 
          spp++;
          continue;
@@ -1426,7 +1426,7 @@ char *argv[]
          /* get user list */
          what = lWhat("%T(ALL)", STN_Type);
          alp = sge_gdi(SGE_USER_LIST, SGE_GDI_GET, &lp, NULL, what);
-         what = lFreeWhat(what);
+         lFreeWhat(&what);
 
          aep = lFirst(alp);
          answer_exit_if_not_recoverable(aep);
@@ -1435,12 +1435,12 @@ char *argv[]
             spp++;
             continue;
          }
-         alp = lFreeList(alp);
+         lFreeList(&alp);
  
          /* get project list */
          what = lWhat("%T(ALL)", STN_Type);
          alp = sge_gdi(SGE_PROJECT_LIST, SGE_GDI_GET, &lp2, NULL, what);
-         what = lFreeWhat(what);
+         lFreeWhat(&what);
 
          aep = lFirst(alp);
          answer_exit_if_not_recoverable(aep);
@@ -1449,7 +1449,7 @@ char *argv[]
             spp++;
             continue;
          }
-         alp = lFreeList(alp);
+         lFreeList(&alp);
  
          /* clear user usage */
          for_each(ep, lp) {
@@ -1474,10 +1474,10 @@ char *argv[]
             alp = sge_gdi(SGE_PROJECT_LIST, SGE_GDI_MOD, &lp2, NULL, NULL);
             answer_list_on_error_print_or_exit(&alp, stderr);
          }
-
-         alp = lFreeList(alp);
-         lp = lFreeList(lp);
-         lp2 = lFreeList(lp2);
+         
+         lFreeList(&alp);
+         lFreeList(&lp);
+         lFreeList(&lp2);
          spp++;
          continue;
       }
@@ -1494,8 +1494,8 @@ char *argv[]
          lAppendElem(lp, ep);
          alp = sge_gdi(SGE_CALENDAR_LIST, SGE_GDI_DEL, &lp, NULL, NULL);
          answer_list_on_error_print_or_exit(&alp, stderr);
-         alp = lFreeList(alp);
-         lp = lFreeList(lp);
+         lFreeList(&alp);
+         lFreeList(&lp);
 
          spp++;
          continue;
@@ -1513,8 +1513,8 @@ char *argv[]
          lAppendElem(lp, ep);
          alp = sge_gdi(SGE_CKPT_LIST, SGE_GDI_DEL, &lp, NULL, NULL);
          answer_list_on_error_print_or_exit(&alp, stderr);
-         alp = lFreeList(alp);
-         lp = lFreeList(lp);
+         lFreeList(&alp);
+         lFreeList(&lp);
 
          spp++;
          continue;
@@ -1527,7 +1527,7 @@ char *argv[]
          spp = sge_parser_get_next(spp);
          parse_name_list_to_cull("host to del", &lp, EH_Type, EH_name, *spp);
          del_host_of_type(lp, SGE_EXECHOST_LIST);
-         lp = lFreeList(lp);
+         lFreeList(&lp);
          spp++;
          continue;
       }
@@ -1539,7 +1539,7 @@ char *argv[]
          spp = sge_parser_get_next(spp);
          parse_name_list_to_cull("host to del", &lp, AH_Type, AH_name, *spp);
          del_host_of_type(lp, SGE_ADMINHOST_LIST);
-         lp = lFreeList(lp);
+         lFreeList(&lp);
 
          spp++;
          continue;
@@ -1556,8 +1556,8 @@ char *argv[]
          lString2List(*spp, &lp, MO_Type, MO_name, ", ");
          alp = sge_gdi(SGE_MANAGER_LIST, SGE_GDI_DEL, &lp, NULL, NULL);
          answer_list_on_error_print_or_exit(&alp, stderr);
-         alp = lFreeList(alp);
-         lp = lFreeList(lp);
+         lFreeList(&alp);
+         lFreeList(&lp);
 
          spp++;
          continue;
@@ -1573,8 +1573,8 @@ char *argv[]
          lString2List(*spp, &lp, MO_Type, MO_name, ", ");
          alp = sge_gdi(SGE_OPERATOR_LIST, SGE_GDI_DEL, &lp, NULL, NULL);
          answer_list_on_error_print_or_exit(&alp, stderr);
-         alp = lFreeList(alp);
-         lp = lFreeList(lp);
+         lFreeList(&alp);
+         lFreeList(&lp);
 
          spp++;
          continue;
@@ -1593,8 +1593,8 @@ char *argv[]
          lAppendElem(lp, ep);
          alp = sge_gdi(SGE_PE_LIST, SGE_GDI_DEL, &lp, NULL, NULL);
          answer_list_on_error_print_or_exit(&alp, stderr);
-         alp = lFreeList(alp);
-         lp = lFreeList(lp);
+         lFreeList(&alp);
+         lFreeList(&lp);
 
          spp++;
          continue;
@@ -1607,7 +1607,7 @@ char *argv[]
          spp = sge_parser_get_next(spp);
          parse_name_list_to_cull("host to del", &lp, SH_Type, SH_name, *spp);
          del_host_of_type(lp, SGE_SUBMITHOST_LIST);
-         lp = lFreeList(lp);
+         lFreeList(&lp);
 
          spp++;
          continue;
@@ -1635,9 +1635,9 @@ char *argv[]
          /* remove users/groups from lp from the acls in alp */
          sge_client_del_user(&alp, lp, arglp);
          answer_list_on_error_print_or_exit(&alp, stderr);
-         lp = lFreeList(lp);
-         alp = lFreeList(alp);
-         arglp = lFreeList(arglp);
+         lFreeList(&lp);
+         lFreeList(&alp);
+         lFreeList(&arglp);
 
          spp++;
          continue;
@@ -1654,8 +1654,8 @@ char *argv[]
          lString2List(*spp, &lp, US_Type, US_name, ", ");
          alp = sge_gdi(SGE_USERSET_LIST, SGE_GDI_DEL, &lp, NULL, NULL);
          answer_list_on_error_print_or_exit(&alp, stderr);
-         alp = lFreeList(alp);
-         lp = lFreeList(lp);
+         lFreeList(&alp);
+         lFreeList(&lp);
 
          spp++;
          continue;
@@ -1671,8 +1671,8 @@ char *argv[]
          lString2List(*spp, &lp, UP_Type, UP_name, ", ");
          alp = sge_gdi(SGE_USER_LIST, SGE_GDI_DEL, &lp, NULL, NULL);
          answer_list_on_error_print_or_exit(&alp, stderr);
-         alp = lFreeList(alp);
-         lp = lFreeList(lp);
+         lFreeList(&alp);
+         lFreeList(&lp);
 
          spp++;
          continue;
@@ -1690,8 +1690,8 @@ char *argv[]
          lString2List(*spp, &lp, UP_Type, UP_name, ", ");
          alp = sge_gdi(SGE_PROJECT_LIST, SGE_GDI_DEL, &lp, NULL, NULL);
          answer_list_on_error_print_or_exit(&alp, stderr);
-         alp = lFreeList(alp);
-         lp = lFreeList(lp);
+         lFreeList(&alp);
+         lFreeList(&lp);
 
          spp++;
          continue;
@@ -1709,7 +1709,7 @@ char *argv[]
          /* get the sharetree .. */
          what = lWhat("%T(ALL)", STN_Type);
          alp = sge_gdi(SGE_SHARETREE_LIST, SGE_GDI_GET, &lp, NULL, what);
-         what = lFreeWhat(what);
+         lFreeWhat(&what);
 
          aep = lFirst(alp);
          answer_exit_if_not_recoverable(aep);
@@ -1718,7 +1718,7 @@ char *argv[]
             spp++;
             continue;
          }
-         alp = lFreeList(alp);
+         lFreeList(&alp);
  
          ep = lFirst(lp);
          if (!ep) {
@@ -1756,7 +1756,7 @@ char *argv[]
                                    lGetString(ancestors.nodes[i], STN_name));
                         fprintf(stderr, "\n");
                         siblings = lGetList(pnode, STN_children);
-                        lRemoveElem(siblings, node);
+                        lRemoveElem(siblings, &node);
                         if (lGetNumberOfElem(siblings) == 0)
                            lSetList(pnode, STN_children, NULL);
                      } else {
@@ -1774,25 +1774,25 @@ char *argv[]
 
             }
          }
-         arglp = lFreeList(arglp);
+         lFreeList(&arglp);
 
          if (modified) {
             what = lWhat("%T(ALL)", STN_Type);
             alp = sge_gdi(SGE_SHARETREE_LIST, SGE_GDI_MOD, &lp, NULL, what);
-            what = lFreeWhat(what);
+            lFreeWhat(&what);
             ep = lFirst(alp);
             answer_exit_if_not_recoverable(ep);
             if (answer_get_status(ep) == STATUS_OK)
                fprintf(stderr, "%s\n", MSG_TREE_MODIFIEDSHARETREE);
             else
                fprintf(stderr, "%s\n", lGetString(ep, AN_text));
-            alp = lFreeList(alp);
+            lFreeList(&alp);
          } else {
             fprintf(stderr, "%s\n", MSG_TREE_NOMIDIFIEDSHARETREE);
             SGE_EXIT(1);
          }
 
-         lp = lFreeList(lp);
+         lFreeList(&lp);
          spp++;
          continue;
       }
@@ -1806,8 +1806,8 @@ char *argv[]
          
          alp = sge_gdi(SGE_SHARETREE_LIST, SGE_GDI_DEL, NULL, NULL, NULL);
          answer_list_on_error_print_or_exit(&alp, stderr);
-         alp = lFreeList(alp);
-         lp = lFreeList(lp);
+         lFreeList(&alp);
+         lFreeList(&lp);
 
          spp++;
          continue;
@@ -1835,7 +1835,7 @@ char *argv[]
             answer_print_text(aep, stderr, NULL, NULL);
          }
 
-         alp = lFreeList(alp);
+         lFreeList(&alp);
 
          spp++;
          continue;
@@ -1848,7 +1848,7 @@ char *argv[]
          /* no adminhost/manager check needed here */
          alp = gdi_kill(NULL, uti_state_get_default_cell(), 0, MASTER_KILL);
          answer_list_on_error_print_or_exit(&alp, stderr);
-         alp = lFreeList(alp);
+         lFreeList(&alp);
 
          spp++;
          continue;
@@ -1873,8 +1873,8 @@ char *argv[]
             alp = gdi_kill(lp, uti_state_get_default_cell(), 0, opt);
          }      
          answer_list_on_error_print_or_exit(&alp, stderr);
-         alp = lFreeList(alp);
-         lp = lFreeList(lp);
+         lFreeList(&alp);
+         lFreeList(&lp);
          spp++;
          continue;
       }
@@ -1918,8 +1918,8 @@ char *argv[]
          }
 
          answer_list_on_error_print_or_exit(&alp, stderr);
-         alp = lFreeList(alp);
-         lp = lFreeList(lp);
+         lFreeList(&alp);
+         lFreeList(&lp);
          spp++;
          continue;
       }
@@ -1936,7 +1936,7 @@ char *argv[]
 
          centry_list_modify(&answer_list);
          show_gdi_request_answer_list(answer_list);
-         answer_list = lFreeList(answer_list);
+         lFreeList(&answer_list);
          spp++;
          continue;
       }
@@ -1956,8 +1956,8 @@ char *argv[]
             where = lWhere("%T( %I==%s )", CAL_Type, CAL_name, *spp);
             what = lWhat("%T(ALL)", CAL_Type);
             alp = sge_gdi(SGE_CALENDAR_LIST, SGE_GDI_GET, &lp, where, what);
-            where = lFreeWhere(where);
-            what = lFreeWhat(what);
+            lFreeWhere(&where);
+            lFreeWhat(&what);
 
             aep = lFirst(alp);
             answer_exit_if_not_recoverable(aep);
@@ -1966,7 +1966,7 @@ char *argv[]
                spp++;
                continue;
             }
-            alp = lFreeList(alp);
+            lFreeList(&alp);
 
             if (!lp) {
                fprintf(stderr, MSG_CALENDAR_XISNOTACALENDAR_S, *spp);
@@ -1984,7 +1984,7 @@ char *argv[]
                sge_error_and_exit(NULL);
             }
 
-            ep = lFreeElem(ep);
+            lFreeElem(&ep);
             
             /* edit this file */
             status = sge_edit(filename);
@@ -2008,7 +2008,7 @@ char *argv[]
             unlink(filename);
             
             if (answer_list_output(&alp)) {
-               ep = lFreeElem (ep);
+               lFreeElem(&ep);
             }
 
             if (ep != NULL) {
@@ -2016,7 +2016,7 @@ char *argv[]
             }
 
             if (missing_field != NoName) {
-               ep = lFreeElem(ep);
+               lFreeElem(&ep);
                answer_list_output(&alp);
             }
                
@@ -2034,7 +2034,7 @@ char *argv[]
                                             SP_FORM_ASCII, NULL, *spp);
             
             if (answer_list_output(&alp)) {
-               ep = lFreeElem (ep);
+               lFreeElem(&ep);
             }
 
             if (ep != NULL) {
@@ -2042,7 +2042,7 @@ char *argv[]
             }
 
             if (missing_field != NoName) {
-               ep = lFreeElem(ep);
+               lFreeElem(&ep);
                answer_list_output(&alp);
             }
                
@@ -2062,8 +2062,8 @@ char *argv[]
          answer_exit_if_not_recoverable(aep);
          fprintf(stderr, "%s\n", lGetString(aep, AN_text));
          
-         alp = lFreeList(alp);
-         lp = lFreeList(lp);
+         lFreeList(&alp);
+         lFreeList(&lp);
 
          spp++;
          continue;
@@ -2085,7 +2085,7 @@ char *argv[]
          }
          centry_list_modify_from_file(&answer_list, file);
          show_gdi_request_answer_list(answer_list);
-         answer_list = lFreeList(answer_list);
+         lFreeList(&answer_list);
          spp++;
          continue;
       }
@@ -2105,8 +2105,8 @@ char *argv[]
             where = lWhere("%T( %I==%s )", CK_Type, CK_name, *spp);
             what = lWhat("%T(ALL)", CK_Type);
             alp = sge_gdi(SGE_CKPT_LIST, SGE_GDI_GET, &lp, where, what);
-            lFreeWhere(where);
-            lFreeWhat(what);
+            lFreeWhere(&where);
+            lFreeWhat(&what);
 
             aep = lFirst(alp);
             answer_exit_if_not_recoverable(aep);
@@ -2115,7 +2115,7 @@ char *argv[]
                spp++;
                continue;
             }
-            alp = lFreeList(alp);
+            lFreeList(&alp);
 
             if (!lp) {
                fprintf(stderr, MSG_CKPT_XISNOTCHKPINTERFACEDEF_S, *spp);
@@ -2133,7 +2133,7 @@ char *argv[]
                sge_error_and_exit(NULL);
             }
 
-            ep = lFreeElem(ep);
+            lFreeElem(&ep);
             
             /* edit this file */
             status = sge_edit(filename);
@@ -2157,7 +2157,7 @@ char *argv[]
             unlink(filename);
             
             if (answer_list_output(&alp)) {
-               ep = lFreeElem(ep);
+               lFreeElem(&ep);
             }
 
             if (ep != NULL) {
@@ -2165,12 +2165,12 @@ char *argv[]
             }
 
             if (missing_field != NoName) {
-               ep = lFreeElem(ep);
+               lFreeElem(&ep);
                answer_list_output(&alp);
             }
 
             if ((ep != NULL) && (ckpt_validate(ep, &alp) != STATUS_OK)) {
-               ep = lFreeElem(ep);
+               lFreeElem(&ep);
                answer_list_output(&alp);
             }
                
@@ -2188,7 +2188,7 @@ char *argv[]
                                             SP_FORM_ASCII, NULL, *spp);
             
             if (answer_list_output(&alp)) {
-               ep = lFreeElem(ep);
+               lFreeElem(&ep);
             }
 
             if (ep != NULL) {
@@ -2196,12 +2196,12 @@ char *argv[]
             }
 
             if (missing_field != NoName) {
-               ep = lFreeElem(ep);
+               lFreeElem(&ep);
                answer_list_output(&alp);
             }
 
             if ((ep != NULL) && (ckpt_validate(ep, &alp) != STATUS_OK)) {
-               ep = lFreeElem(ep);
+               lFreeElem(&ep);
                answer_list_output(&alp);
             }
 
@@ -2222,8 +2222,8 @@ char *argv[]
          answer_exit_if_not_recoverable(aep);
          fprintf(stderr, "%s\n", lGetString(aep, AN_text));
          
-         alp = lFreeList(alp);
-         lp = lFreeList(lp);
+         lFreeList(&alp);
+         lFreeList(&lp);
 
          spp++;
          continue;
@@ -2248,7 +2248,7 @@ char *argv[]
                                          SP_FORM_ASCII, NULL, *spp);
          
          if (answer_list_output(&alp)) {
-            ep = lFreeElem (ep);
+            lFreeElem(&ep);
          }
 
          if (ep != NULL) {
@@ -2258,7 +2258,7 @@ char *argv[]
          FREE (fields);
          
          if (missing_field != NoName) {
-            ep = lFreeElem(ep);
+            lFreeElem(&ep);
             answer_list_output(&alp);
          }
 
@@ -2276,7 +2276,7 @@ char *argv[]
          default:
             fprintf(stderr, MSG_SGETEXT_CANTRESOLVEHOST_S, lGetHost(ep, EH_name));
             fprintf(stderr, "\n");
-            ep = lFreeElem(ep);
+            lFreeElem(&ep);
             SGE_EXIT(1);
             break;
          }
@@ -2286,8 +2286,8 @@ char *argv[]
          aep = lFirst(alp);
          answer_exit_if_not_recoverable(aep);
          fprintf(stderr, "%s\n", lGetString(aep, AN_text));
-         alp = lFreeList(alp);
-         lp = lFreeList(lp);
+         lFreeList(&alp);
+         lFreeList(&lp);
 
          spp++;
          continue;
@@ -2312,7 +2312,7 @@ char *argv[]
             default:
                fprintf(stderr, MSG_SGETEXT_CANTRESOLVEHOST_S, lGetHost(argep, EH_name));
                fprintf(stderr, "\n");
-               argep = lFreeElem(argep);
+               lFreeElem(&argep);
                SGE_EXIT(1);
                break;
             }
@@ -2322,8 +2322,8 @@ char *argv[]
             where = lWhere("%T( %Ih=%s )", EH_Type, EH_name, host);
             what = lWhat("%T(ALL)", EH_Type);
             alp = sge_gdi(SGE_EXECHOST_LIST, SGE_GDI_GET, &lp, where, what);
-            where = lFreeWhere(where);
-            what = lFreeWhat(what);
+            lFreeWhere(&where);
+            lFreeWhat(&what);
 
             aep = lFirst(alp);
             answer_exit_if_not_recoverable(aep);
@@ -2339,12 +2339,12 @@ char *argv[]
                spp++;
                continue;
             }
-            alp = lFreeList(alp);
+            lFreeList(&alp);
 
             ep=edit_exechost(lFirst(lp));
             if (!ep)
                continue;
-            lp = lFreeList(lp);
+            lFreeList(&lp);
             lp = lCreateList("host to mod", EH_Type);
             lAppendElem(lp, ep);
             
@@ -2379,8 +2379,8 @@ char *argv[]
             where = lWhere("%T( %I==%s )", PE_Type, PE_name, *spp);
             what = lWhat("%T(ALL)", PE_Type);
             alp = sge_gdi(SGE_PE_LIST, SGE_GDI_GET, &lp, where, what);
-            where = lFreeWhere(where);
-            what = lFreeWhat(what);
+            lFreeWhere(&where);
+            lFreeWhat(&what);
 
             aep = lFirst(alp);
             answer_exit_if_not_recoverable(aep);
@@ -2390,7 +2390,7 @@ char *argv[]
                spp++;
                continue;
             }
-            alp = lFreeList(alp);
+            lFreeList(&alp);
 
             if (!lp) {
                fprintf(stderr, MSG_PARALLEL_XNOTAPARALLELEVIRONMENT_S, *spp);
@@ -2412,7 +2412,7 @@ char *argv[]
                sge_error_and_exit(NULL);
             }
 
-            ep = lFreeElem(ep);
+            lFreeElem(&ep);
             
             /* edit this file */
             status = sge_edit(filename);
@@ -2440,7 +2440,7 @@ char *argv[]
             unlink(filename);
             
             if (answer_list_output(&alp)) {
-               ep = lFreeElem(ep);
+               lFreeElem(&ep);
             }
 
             if (ep != NULL) {
@@ -2450,12 +2450,12 @@ char *argv[]
             FREE (fields);
             
             if (missing_field != NoName) {
-               ep = lFreeElem(ep);
+               lFreeElem(&ep);
                answer_list_output(&alp);
             }
 
             if ((ep != NULL) && (pe_validate(ep, &alp, 0) != STATUS_OK)) {
-               ep = lFreeElem(ep);
+               lFreeElem(&ep);
                answer_list_output(&alp);
             }
                
@@ -2475,7 +2475,7 @@ char *argv[]
                                             SP_FORM_ASCII, NULL, *spp);
             
             if (answer_list_output(&alp)) {
-               ep = lFreeElem(ep);
+               lFreeElem(&ep);
             }
 
             if (ep != NULL) {
@@ -2485,12 +2485,12 @@ char *argv[]
             FREE (fields);
             
             if (missing_field != NoName) {
-               ep = lFreeElem(ep);
+               lFreeElem(&ep);
                answer_list_output(&alp);
             }
 
             if ((ep != NULL) && (pe_validate(ep, &alp, 0) != STATUS_OK)) {
-               ep = lFreeElem(ep);
+               lFreeElem(&ep);
                answer_list_output(&alp);
             }
                
@@ -2511,8 +2511,8 @@ char *argv[]
          answer_exit_if_not_recoverable(aep);
          fprintf(stderr, "%s\n", lGetString(aep, AN_text));
          
-         alp = lFreeList(alp);
-         lp = lFreeList(lp);
+         lFreeList(&alp);
+         lFreeList(&lp);
 
          spp++;
          continue;
@@ -2549,16 +2549,16 @@ char *argv[]
 
          what = lWhat("%T(ALL)", EH_Type);
          answer_list = sge_gdi(SGE_EXECHOST_LIST, SGE_GDI_GET, &list, NULL, what);
-         what = lFreeWhat(what);
+         lFreeWhat(&what);
 
          answer_ep = lFirst(answer_list);
          answer_exit_if_not_recoverable(answer_ep);
          if (answer_get_status(answer_ep) != STATUS_OK) {
             fprintf(stderr, "%s\n", lGetString(answer_ep, AN_text));
-            lFreeList(answer_list);
+            lFreeList(&answer_list);
             return 0;
          }
-         answer_list = lFreeList(answer_list);
+         lFreeList(&answer_list);
 
          for_each(elem, list) {
             const char *hostname = NULL;
@@ -2767,16 +2767,16 @@ char *argv[]
 
          what = lWhat("%T(ALL)", CQ_Type);
          answer_list = sge_gdi(SGE_CQUEUE_LIST, SGE_GDI_GET, &list, NULL, what);
-         what = lFreeWhat(what);
+         lFreeWhat(&what);
 
          answer_ep = lFirst(answer_list);
          answer_exit_if_not_recoverable(answer_ep);
          if (answer_get_status(answer_ep) != STATUS_OK) {
             fprintf(stderr, "%s\n", lGetString(answer_ep, AN_text));
-            lFreeList(answer_list);
+            lFreeList(&answer_list);
             return 0;
          }
-         answer_list = lFreeList(answer_list);
+         lFreeList(&answer_list);
 
          for_each(elem, list) {
             int index = 0;
@@ -2861,7 +2861,7 @@ char *argv[]
                         }
                         already_handled = true;
                      }
-                     tmp_attribute_list = lFreeList(tmp_attribute_list);
+                     lFreeList(&tmp_attribute_list);
                      if (already_handled) {
                         break;
                      }
@@ -2970,7 +2970,7 @@ char *argv[]
             } 
             fprintf(std_x, "%s\n", lGetString(aep, AN_text)); 
          }
-         alp = lFreeList(alp);   
+         lFreeList(&alp);   
          if (exit) {
             FREE (info_entry[1].fields);
             FREE (info_entry[2].fields);
@@ -3102,7 +3102,7 @@ char *argv[]
          }
 
       if (cqueue != NULL) {
-         cqueue = lFreeElem(cqueue);
+         lFreeElem(&cqueue);
       }
 
       FREE(attr); 
@@ -3126,7 +3126,7 @@ char *argv[]
                                          SP_FORM_ASCII, NULL, *spp);
 
          if (answer_list_output(&alp)) {
-            ep = lFreeElem (ep);
+            lFreeElem(&ep);
          }
          
          if (ep != NULL) {
@@ -3134,7 +3134,7 @@ char *argv[]
          }
 
          if (missing_field != NoName) {
-            ep = lFreeElem(ep);
+            lFreeElem(&ep);
             answer_list_output(&alp);
          }
          
@@ -3143,7 +3143,7 @@ char *argv[]
             lAppendElem (lp, ep);
             
             if (!sconf_validate_config (&alp, lp)) {
-               lp = lFreeList (lp);
+               lFreeList(&lp);
                answer_list_output(&alp);
             }
          }
@@ -3163,8 +3163,8 @@ char *argv[]
          else
             fprintf(stderr, "%s\n", lGetString(aep, AN_text));
 
-         alp = lFreeList(alp);
-         lp = lFreeList(lp);
+         lFreeList(&alp);
+         lFreeList(&lp);
 
          spp++;
          continue;
@@ -3181,7 +3181,7 @@ char *argv[]
          /* get the scheduler configuration .. */
          what = lWhat("%T(ALL)", SC_Type);
          alp = sge_gdi(SGE_SC_LIST, SGE_GDI_GET, &lp, NULL, what);
-         what = lFreeWhat(what);
+         lFreeWhat(&what);
 
          aep = lFirst(alp);
          answer_exit_if_not_recoverable(aep);
@@ -3190,22 +3190,22 @@ char *argv[]
             spp++;
             continue;
          }
-         alp = lFreeList(alp);
+         lFreeList(&alp);
 
          if (!(newlp=edit_sched_conf(lp)))
             continue;
 
-         lp = lFreeList(lp);
+         lFreeList(&lp);
          what = lWhat("%T(ALL)", SC_Type);
          alp = sge_gdi(SGE_SC_LIST, SGE_GDI_MOD, &newlp, NULL, what);
-         what = lFreeWhat(what);
+         lFreeWhat(&what);
          ep = lFirst(alp);
          answer_exit_if_not_recoverable(ep);
          if (answer_get_status(ep) == STATUS_OK)
             fprintf(stderr, "%s\n", MSG_SCHEDD_CHANGEDSCHEDULERCONFIGURATION);
          else
             fprintf(stderr, "%s\n", lGetString(ep, AN_text));
-         newlp = lFreeList(newlp);
+         lFreeList(&newlp);
          spp++;
          continue;
       }
@@ -3224,7 +3224,7 @@ char *argv[]
             /* get the sharetree .. */
             what = lWhat("%T(ALL)", STN_Type);
             alp = sge_gdi(SGE_SHARETREE_LIST, SGE_GDI_GET, &lp, NULL, what);
-            what = lFreeWhat(what);
+            lFreeWhat(&what);
 
             aep = lFirst(alp);
             answer_exit_if_not_recoverable(aep);
@@ -3233,13 +3233,13 @@ char *argv[]
                spp++;
                continue;
             }
-            alp = lFreeList(alp);
+            lFreeList(&alp);
     
             ep = lFirst(lp);
             if (!(ep=edit_sharetree(ep)))
                continue;
 
-            lp = lFreeList(lp);
+            lFreeList(&lp);
          } else {
             char errstr[1024];
             spooling_field *fields = sge_build_STN_field_list (false, true);
@@ -3253,7 +3253,7 @@ char *argv[]
                                             SP_FORM_ASCII, NULL, *spp);
             
             if (answer_list_output(&alp)) {
-               ep = lFreeElem (ep);
+               lFreeElem(&ep);
             }
          
             if (ep != NULL) {
@@ -3263,7 +3263,7 @@ char *argv[]
             FREE (fields);
             
             if (missing_field != NoName) {
-               ep = lFreeElem(ep);
+               lFreeElem(&ep);
                answer_list_output(&alp);
             }
                
@@ -3284,7 +3284,7 @@ char *argv[]
                     sge_u32c(lGetUlong(unspecified, STN_id)));
             fprintf(stderr, "\n");
 
-            lFreeElem(ep);
+            lFreeElem(&ep);
             spp++;
             continue;
          }
@@ -3294,14 +3294,14 @@ char *argv[]
 
          what = lWhat("%T(ALL)", STN_Type);
          alp = sge_gdi(SGE_SHARETREE_LIST, SGE_GDI_MOD, &newlp, NULL, what);
-         what = lFreeWhat(what);
+         lFreeWhat(&what);
          ep = lFirst(alp);
          answer_exit_if_not_recoverable(ep);
          if (answer_get_status(ep) == STATUS_OK)
             fprintf(stderr, "%s\n", MSG_TREE_CHANGEDSHARETREE);
          else
             fprintf(stderr, "%s\n", lGetString(ep, AN_text));
-         newlp = lFreeList(newlp);
+         lFreeList(&newlp);
          spp++;
          continue;
       }
@@ -3321,7 +3321,7 @@ char *argv[]
          parse_name_list_to_cull("usersets", &lp, US_Type, US_name, *spp);
 
          edit_usersets(lp);
-         lp = lFreeList(lp);
+         lFreeList(&lp);
 
          spp++;
          continue;
@@ -3354,7 +3354,7 @@ char *argv[]
                                          SP_FORM_ASCII, NULL, file);
          
          if (answer_list_output(&alp)) {
-            ep = lFreeElem(ep);
+            lFreeElem(&ep);
          }
          
          if (ep != NULL) {
@@ -3362,13 +3362,13 @@ char *argv[]
          }
 
          if (missing_field != NoName) {
-            ep = lFreeElem(ep);
+            lFreeElem(&ep);
             answer_list_output(&alp);
          }
 
          if ((ep != NULL) &&
              (userset_validate_entries(ep, &alp, 0) != STATUS_OK)) {
-            ep = lFreeElem(ep);
+            lFreeElem(&ep);
             answer_list_output(&alp);
          }
             
@@ -3381,16 +3381,16 @@ char *argv[]
          where = lWhere("%T( %I==%s )", US_Type, US_name, usersetname);
          what = lWhat("%T(ALL)", US_Type);
          alp = sge_gdi(SGE_USERSET_LIST, SGE_GDI_GET, &lp, where, what);
-         where = lFreeWhere(where);
-         what = lFreeWhat(what);
+         lFreeWhere(&where);
+         lFreeWhat(&what);
 
          aep = lFirst(alp);
          answer_exit_if_not_recoverable(aep);
          if (answer_get_status(aep) != STATUS_OK) {
             fprintf(stderr, "%s\n", lGetString(aep, AN_text));
-            alp = lFreeList(alp);
-            ep = lFreeElem(ep);
-            lp = lFreeList(lp);
+            lFreeList(&alp);
+            lFreeElem(&ep);
+            lFreeList(&lp);
             SGE_EXIT(1); 
          }
 
@@ -3399,11 +3399,11 @@ char *argv[]
             fprintf(stderr, "\n");
             fflush(stdout);
             fflush(stderr);
-            alp = lFreeList(alp);
-            ep = lFreeElem(ep);
+            lFreeList(&alp);
+            lFreeElem(&ep);
             SGE_EXIT(1); 
          }
-         alp = lFreeList(alp);
+         lFreeList(&alp);
 
          acl = lCreateList("modified usersetlist", US_Type); 
          lAppendElem(acl,ep);
@@ -3413,13 +3413,13 @@ char *argv[]
          answer_exit_if_not_recoverable(aep);
          if (answer_get_status(aep) != STATUS_OK) {
             fprintf(stderr, "%s\n", lGetString(aep, AN_text));
-            alp = lFreeList(alp);
-            acl = lFreeList(acl);
+            lFreeList(&alp);
+            lFreeList(&acl);
             SGE_EXIT(1);
          } 
          fprintf(stderr, "%s\n", lGetString(aep, AN_text));
-         alp = lFreeList(alp);
-         acl = lFreeList(acl);
+         lFreeList(&alp);
+         lFreeList(&acl);
          spp++;
          continue;
       }
@@ -3451,7 +3451,7 @@ char *argv[]
                                          SP_FORM_ASCII, NULL, file);
          
          if (answer_list_output(&alp)) {
-            ep = lFreeElem(ep);
+            lFreeElem(&ep);
          }
 
          if (ep != NULL) {
@@ -3459,12 +3459,12 @@ char *argv[]
          }
          
          if (missing_field != NoName) {
-            ep = lFreeElem(ep);
+            lFreeElem(&ep);
             answer_list_output(&alp);
          }
 
          if ((ep != NULL) && (userset_validate_entries(ep, &alp, 0) != STATUS_OK)) {
-            ep = lFreeElem(ep);
+            lFreeElem(&ep);
             answer_list_output(&alp);
          }
             
@@ -3480,13 +3480,13 @@ char *argv[]
          answer_exit_if_not_recoverable(aep);
          if (answer_get_status(aep) != STATUS_OK) {
             fprintf(stderr, "%s\n", lGetString(aep, AN_text));
-            alp = lFreeList(alp);
-            acl = lFreeList(acl);
+            lFreeList(&alp);
+            lFreeList(&acl);
             SGE_EXIT(1);
          } 
          fprintf(stderr, "%s\n", lGetString(aep, AN_text));
-         alp = lFreeList(alp);
-         acl = lFreeList(acl);
+         lFreeList(&alp);
+         lFreeList(&acl);
          spp++;
          continue;
       }
@@ -3506,8 +3506,8 @@ char *argv[]
          where = lWhere("%T( %I==%s )", UP_Type, UP_name, *spp);
          what = lWhat("%T(ALL)", UP_Type);
          alp = sge_gdi(SGE_USER_LIST, SGE_GDI_GET, &lp, where, what);
-         where = lFreeWhere(where);
-         what = lFreeWhat(what);
+         lFreeWhere(&where);
+         lFreeWhat(&what);
 
          aep = lFirst(alp);
          answer_exit_if_not_recoverable(aep);
@@ -3523,7 +3523,7 @@ char *argv[]
             spp++;
             continue;
          }
-         alp = lFreeList(alp);
+         lFreeList(&alp);
          ep = lFirst(lp);
          
          /* edit user */
@@ -3536,7 +3536,7 @@ char *argv[]
             SGE_EXIT(1);
          }
          else {
-            lp = lFreeList(lp);
+            lFreeList(&lp);
             /* send it to qmaster */
             lp = lCreateList("User list to modify", UP_Type); 
             lAppendElem(lp, newep);
@@ -3547,15 +3547,15 @@ char *argv[]
             answer_exit_if_not_recoverable(aep);
             if (answer_get_status(aep) != STATUS_OK) {
                fprintf(stderr, "%s\n", lGetString(aep, AN_text));
-               alp = lFreeList(alp);
-               lp = lFreeList(lp);
+               lFreeList(&alp);
+               lFreeList(&lp);
                SGE_EXIT(1);
             } else {
                fprintf(stdout, "%s\n", lGetString(aep, AN_text));
             }
          }
-         alp = lFreeList(alp);
-         lp = lFreeList(lp);
+         lFreeList(&alp);
+         lFreeList(&lp);
 
          spp++;
          continue;
@@ -3575,8 +3575,8 @@ char *argv[]
          where = lWhere("%T( %I==%s )", UP_Type, UP_name, *spp);
          what = lWhat("%T(ALL)", UP_Type);
          alp = sge_gdi(SGE_PROJECT_LIST, SGE_GDI_GET, &lp, where, what);
-         where = lFreeWhere(where);
-         what = lFreeWhat(what);
+         lFreeWhere(&where);
+         lFreeWhat(&what);
                   
          aep = lFirst(alp);
          answer_exit_if_not_recoverable(aep);
@@ -3591,7 +3591,7 @@ char *argv[]
             fprintf(stderr, "\n");
             continue;
          }
-         alp = lFreeList(alp);
+         lFreeList(&alp);
          ep = lFirst(lp);
          
          /* edit project */
@@ -3604,7 +3604,7 @@ char *argv[]
             aep = lFirst(alp);
             answer_exit_if_not_recoverable(aep);
             fprintf(stderr, "%s\n", lGetString(aep, AN_text));
-            alp = lFreeList(alp);
+            lFreeList(&alp);
          }*/
 
          /* send it to qmaster */
@@ -3617,8 +3617,8 @@ char *argv[]
          answer_exit_if_not_recoverable(aep);
          fprintf(stderr, "%s\n", lGetString(aep, AN_text));
          
-         alp = lFreeList(alp);
-         lp = lFreeList(lp);
+         lFreeList(&alp);
+         lFreeList(&lp);
 
          spp++;
          continue;
@@ -3654,7 +3654,7 @@ char *argv[]
                                          SP_FORM_ASCII, NULL, file);
          
          if (answer_list_output(&alp)) {
-            newep = lFreeElem (newep);
+            lFreeElem(&newep);
          }
          
          if (newep != NULL) {
@@ -3664,7 +3664,7 @@ char *argv[]
          FREE (fields);
          
          if (missing_field != NoName) {
-            newep = lFreeElem (newep);
+            lFreeElem(&newep);
             answer_list_output(&alp);
          }
 
@@ -3680,16 +3680,16 @@ char *argv[]
          where = lWhere("%T( %I==%s )", UP_Type, UP_name, username);
          what = lWhat("%T(ALL)", UP_Type);
          alp = sge_gdi(SGE_USER_LIST, SGE_GDI_GET, &lp, where, what);
-         where = lFreeWhere(where);
-         what = lFreeWhat(what);
+         lFreeWhere(&where);
+         lFreeWhat(&what);
                   
          aep = lFirst(alp);
          answer_exit_if_not_recoverable(aep);
          if (answer_get_status(aep) != STATUS_OK) {
             fprintf(stderr, "%s\n", lGetString(aep, AN_text));
-            alp = lFreeList(alp);
-            newep = lFreeElem(newep);
-            lp = lFreeList(lp);
+            lFreeList(&alp);
+            lFreeElem(&newep);
+            lFreeList(&lp);
             SGE_EXIT(1); 
          }
 
@@ -3698,11 +3698,11 @@ char *argv[]
             fprintf(stderr, "\n");
             fflush(stdout);
             fflush(stderr);
-            alp = lFreeList(alp);
-            newep = lFreeElem(newep);
+            lFreeList(&alp);
+            lFreeElem(&newep);
             SGE_EXIT(1); 
          }
-         alp = lFreeList(alp);
+         lFreeList(&alp);
          ep = lFirst(lp);
          
          /* edit user */
@@ -3718,15 +3718,15 @@ char *argv[]
          answer_exit_if_not_recoverable(aep);
          if (answer_get_status(aep) != STATUS_OK) {
            fprintf(stderr, "%s\n", lGetString(aep, AN_text));
-           alp = lFreeList(alp);
-           lp = lFreeList(lp);
+           lFreeList(&alp);
+           lFreeList(&lp);
            SGE_EXIT(1);
          } else {
            fprintf(stdout, "%s\n", lGetString(aep, AN_text));
          }
           
-         alp = lFreeList(alp);
-         lp = lFreeList(lp);
+         lFreeList(&alp);
+         lFreeList(&lp);
 
          spp++;
          continue;
@@ -3762,7 +3762,7 @@ char *argv[]
                                          SP_FORM_ASCII, NULL, file);
          
          if (answer_list_output(&alp)) {
-            newep = lFreeElem (newep);
+            lFreeElem(&newep);
          }
          
          if (newep != NULL) {
@@ -3772,7 +3772,7 @@ char *argv[]
          FREE (fields);
          
          if (missing_field != NoName) {
-            newep = lFreeElem (newep);
+            lFreeElem(&newep);
             answer_list_output (&alp);
          }
 
@@ -3786,16 +3786,16 @@ char *argv[]
          where = lWhere("%T( %I==%s )", UP_Type, UP_name, projectname);
          what = lWhat("%T(ALL)", UP_Type);
          alp = sge_gdi(SGE_PROJECT_LIST, SGE_GDI_GET, &lp, where, what);
-         where = lFreeWhere(where);
-         what = lFreeWhat(what);
+         lFreeWhere(&where);
+         lFreeWhat(&what);
                   
          aep = lFirst(alp);
          answer_exit_if_not_recoverable(aep);
          if (answer_get_status(aep) != STATUS_OK) {
             fprintf(stderr, "%s\n", lGetString(aep, AN_text));
-            alp = lFreeList(alp);
-            newep = lFreeElem(newep);
-            lp = lFreeList(lp);
+            lFreeList(&alp);
+            lFreeElem(&newep);
+            lFreeList(&lp);
             SGE_EXIT(1); 
          }
 
@@ -3804,11 +3804,11 @@ char *argv[]
             fprintf(stderr, "\n");
             fflush(stdout);
             fflush(stderr);
-            alp = lFreeList(alp);
-            newep = lFreeElem(newep);
+            lFreeList(&alp);
+            lFreeElem(&newep);
             SGE_EXIT(1); 
          }
-         alp = lFreeList(alp);
+         lFreeList(&alp);
          ep = lFirst(lp);
          
          /* edit project */
@@ -3824,8 +3824,8 @@ char *argv[]
          answer_exit_if_not_recoverable(aep);
          fprintf(stderr, "%s\n", lGetString(aep, AN_text));
          
-         alp = lFreeList(alp);
-         lp = lFreeList(lp);
+         lFreeList(&alp);
+         lFreeList(&lp);
 
          spp++;
          continue;
@@ -3839,7 +3839,7 @@ char *argv[]
 
          centry_list_show(&answer_list);
          show_gdi_request_answer(answer_list);
-         answer_list = lFreeList(answer_list);
+         lFreeList(&answer_list);
          spp++;
          continue;
       }
@@ -3853,8 +3853,8 @@ char *argv[]
          where = lWhere("%T( %I==%s )", CAL_Type, CAL_name, *spp);
          what = lWhat("%T(ALL)", CAL_Type);
          alp = sge_gdi(SGE_CALENDAR_LIST, SGE_GDI_GET, &lp, where, what);
-         where = lFreeWhere(where);
-         what = lFreeWhat(what);
+         lFreeWhere(&where);
+         lFreeWhat(&what);
 
          aep = lFirst(alp);
          answer_exit_if_not_recoverable(aep);
@@ -3863,7 +3863,7 @@ char *argv[]
             spp++;
             continue;
          }
-         alp = lFreeList(alp);
+         lFreeList(&alp);
 
          if (!lp) {
             fprintf(stderr, MSG_CALENDAR_XISNOTACALENDAR_S, *spp);
@@ -3955,7 +3955,7 @@ char *argv[]
                fprintf(stderr, MSG_SGETEXT_CANTRESOLVEHOST_SS, lGetHost(hep, EH_name), cl_get_error_text(ret));
                fprintf(stderr, "\n");
                FREE(host_list);
-               hep = lFreeElem(hep);
+               lFreeElem(&hep);
                SGE_EXIT(1);
                break;
             }
@@ -3973,7 +3973,7 @@ char *argv[]
          } /* end for */
          
          FREE(host_list);
-         hep = lFreeElem(hep);
+         lFreeElem(&hep);
 
          spp++;
          continue;
@@ -3988,8 +3988,8 @@ char *argv[]
          where = lWhere("%T( %I==%s )", CK_Type, CK_name, *spp);
          what = lWhat("%T(ALL)", CK_Type);
          alp = sge_gdi(SGE_CKPT_LIST, SGE_GDI_GET, &lp, where, what);
-         where = lFreeWhere(where);
-         what = lFreeWhat(what);
+         lFreeWhere(&where);
+         lFreeWhat(&what);
 
          aep = lFirst(alp);
          answer_exit_if_not_recoverable(aep);
@@ -3998,7 +3998,7 @@ char *argv[]
             spp++;
             continue;
          }
-         alp = lFreeList(alp);
+         lFreeList(&alp);
 
          if (!lp) {
             fprintf(stderr, MSG_CKPT_XISNOTCHKPINTERFACEDEF_S, *spp);
@@ -4064,7 +4064,7 @@ char *argv[]
                   fprintf(stderr, MSG_SGETEXT_CANTRESOLVEHOST_S, cp);
                   fprintf(stderr, "\n");
                   FREE(host_list);
-                  hep = lFreeElem(hep);
+                  lFreeElem(&hep);
                   SGE_EXIT(1);
                   break;
                }
@@ -4079,7 +4079,7 @@ char *argv[]
             } /* end for */
 
             FREE(host_list);
-            hep = lFreeElem(hep);
+            lFreeElem(&hep);
          }
          else {
             fprintf(stderr, MSG_ANSWER_NEEDHOSTNAMETODELLOCALCONFIG);
@@ -4105,7 +4105,7 @@ char *argv[]
          default:
             fprintf(stderr, MSG_SGETEXT_CANTRESOLVEHOST_S, lGetHost(hep, EH_name));
             fprintf(stderr, "\n");
-            hep = lFreeElem(hep);
+            lFreeElem(&hep);
             SGE_EXIT(1);
             break;
          }
@@ -4116,8 +4116,8 @@ char *argv[]
          where = lWhere("%T( %Ih=%s )", EH_Type, EH_name, host);
          what = lWhat("%T(ALL)", EH_Type);
          alp = sge_gdi(SGE_EXECHOST_LIST, SGE_GDI_GET, &lp, where, what);
-         where = lFreeWhere(where);
-         what = lFreeWhat(what);
+         lFreeWhere(&where);
+         lFreeWhat(&what);
 
          aep = lFirst(alp);
          answer_exit_if_not_recoverable(aep);
@@ -4126,7 +4126,7 @@ char *argv[]
             spp++;
             continue;
          }
-         alp = lFreeList(alp);
+         lFreeList(&alp);
 
          if (!lp) {
             fprintf(stderr, MSG_EXEC_XISNOTANEXECUTIONHOST_S, host);
@@ -4199,8 +4199,8 @@ char *argv[]
          where = lWhere("%T( %I==%s )", PE_Type, PE_name, *spp);
          what = lWhat("%T(ALL)", PE_Type);
          alp = sge_gdi(SGE_PE_LIST, SGE_GDI_GET, &lp, where, what);
-         where = lFreeWhere(where);
-         what = lFreeWhat(what);
+         lFreeWhere(&where);
+         lFreeWhat(&what);
 
          aep = lFirst(alp);
          answer_exit_if_not_recoverable(aep);
@@ -4209,7 +4209,7 @@ char *argv[]
             spp++;
             continue;
          }
-         alp = lFreeList(alp);
+         lFreeList(&alp);
 
          if (!lp) {
             fprintf(stderr,  MSG_PARALLEL_XNOTAPARALLELEVIRONMENT_S , *spp);
@@ -4260,7 +4260,7 @@ char *argv[]
          /* get the scheduler configuration .. */
          what = lWhat("%T(ALL)", SC_Type);
          alp = sge_gdi(SGE_SC_LIST, SGE_GDI_GET, &lp, NULL, what);
-         what = lFreeWhat(what);
+         lFreeWhat(&what);
 
          aep = lFirst(alp);
          answer_exit_if_not_recoverable(aep);
@@ -4269,7 +4269,7 @@ char *argv[]
             spp++;
             continue;
          }
-         alp = lFreeList(alp);
+         lFreeList(&alp);
  
          filename_stdout = spool_flatfile_write_object(&alp, lFirst(lp), false, SC_fields,
                                      &qconf_comma_sfi, SP_DEST_STDOUT,
@@ -4282,7 +4282,7 @@ char *argv[]
             continue;
          }
 
-         lp = lFreeList(lp);
+         lFreeList(&lp);
 
          spp++;
          continue;
@@ -4300,7 +4300,7 @@ char *argv[]
          /* get the sharetree .. */
          what = lWhat("%T(ALL)", STN_Type);
          alp = sge_gdi(SGE_SHARETREE_LIST, SGE_GDI_GET, &lp, NULL, what);
-         what = lFreeWhat(what);
+         lFreeWhat(&what);
 
          aep = lFirst(alp);
          answer_exit_if_not_recoverable(aep);
@@ -4309,7 +4309,7 @@ char *argv[]
             spp++;
             continue;
          }
-         alp = lFreeList(alp);
+         lFreeList(&alp);
  
          ep = lFirst(lp);
          if (!ep) {
@@ -4351,8 +4351,8 @@ char *argv[]
             SGE_EXIT(1);
          }
 
-         arglp = lFreeList(arglp);
-         lp = lFreeList(lp);
+         lFreeList(&arglp);
+         lFreeList(&lp);
          spp++;
          continue;
       }
@@ -4369,7 +4369,7 @@ char *argv[]
          /* get the sharetree .. */
          what = lWhat("%T(ALL)", STN_Type);
          alp = sge_gdi(SGE_SHARETREE_LIST, SGE_GDI_GET, &lp, NULL, what);
-         what = lFreeWhat(what);
+         lFreeWhat(&what);
 
          aep = lFirst(alp);
          answer_exit_if_not_recoverable(aep);
@@ -4378,7 +4378,7 @@ char *argv[]
             spp++;
             continue;
          }
-         alp = lFreeList(alp);
+         lFreeList(&alp);
  
          ep = lFirst(lp);
          if (!ep) {
@@ -4401,8 +4401,8 @@ char *argv[]
             SGE_EXIT(1);
          }
 
-         arglp = lFreeList(arglp);
-         lp = lFreeList(lp);
+         lFreeList(&arglp);
+         lFreeList(&lp);
          spp++;
          continue;
       }
@@ -4416,7 +4416,7 @@ char *argv[]
          /* get the sharetree .. */
          what = lWhat("%T(ALL)", STN_Type);
          alp = sge_gdi(SGE_SHARETREE_LIST, SGE_GDI_GET, &lp, NULL, what);
-         what = lFreeWhat(what);
+         lFreeWhat(&what);
 
          aep = lFirst(alp);
          answer_exit_if_not_recoverable(aep);
@@ -4425,7 +4425,7 @@ char *argv[]
             spp++;
             continue;
          }
-         alp = lFreeList(alp);
+         lFreeList(&alp);
  
          ep = lFirst(lp);
 
@@ -4442,7 +4442,7 @@ char *argv[]
             sge_error_and_exit(NULL);
          }
 
-         lp = lFreeList(lp);
+         lFreeList(&lp);
          spp++;
          continue;
       }
@@ -4454,7 +4454,7 @@ char *argv[]
          /* get the sharetree .. */
          what = lWhat("%T(ALL)", STN_Type);
          alp = sge_gdi(SGE_SHARETREE_LIST, SGE_GDI_GET, &lp, NULL, what);
-         what = lFreeWhat(what);
+         lFreeWhat(&what);
 
          aep = lFirst(alp);
          answer_exit_if_not_recoverable(aep);
@@ -4463,13 +4463,13 @@ char *argv[]
             spp++;
             continue;
          }
-         alp = lFreeList(alp);
+         lFreeList(&alp);
  
          ep = lFirst(lp);
 
          show_sharetree(ep, NULL);
 
-         lp = lFreeList(lp);
+         lFreeList(&lp);
          spp++;
          continue;
       }
@@ -4503,7 +4503,7 @@ char *argv[]
          parse_name_list_to_cull("acl`s to show", &lp, 
                US_Type, US_name, *spp);
          print_acl(lp);
-         lp = lFreeList(lp);
+         lFreeList(&lp);
 
          spp++;
          continue;
@@ -4542,7 +4542,7 @@ char *argv[]
          }
          cuser_modify_from_file(&answer_list, file);
          show_gdi_request_answer(answer_list);
-         answer_list = lFreeList(answer_list);
+         lFreeList(&answer_list);
          
          spp++;
          continue;
@@ -4559,7 +4559,7 @@ char *argv[]
          spp = sge_parser_get_next(spp);
          cuser_show(&answer_list, *spp);
          show_gdi_request_answer(answer_list);
-         answer_list = lFreeList(answer_list);
+         lFreeList(&answer_list);
          spp++;
          continue;
       }
@@ -4573,7 +4573,7 @@ char *argv[]
          spp = sge_parser_get_next(spp);
          centry_show(&answer_list, *spp);
          show_gdi_request_answer(answer_list);
-         answer_list = lFreeList(answer_list);
+         lFreeList(&answer_list);
          spp++;
          continue;
       }
@@ -4593,7 +4593,7 @@ char *argv[]
          sge_gdi_is_manager(uti_state_get_user_name());
          cuser_modify(&answer_list, *spp);
          show_gdi_request_answer(answer_list);
-         answer_list = lFreeList(answer_list);
+         lFreeList(&answer_list);
          spp++;
          continue;
       }
@@ -4614,7 +4614,7 @@ char *argv[]
          sge_gdi_is_manager(uti_state_get_user_name());
          centry_modify(&answer_list, *spp);
          show_gdi_request_answer(answer_list);
-         answer_list = lFreeList(answer_list);
+         lFreeList(&answer_list);
          spp++;
          continue;
       }
@@ -4633,7 +4633,7 @@ char *argv[]
          sge_gdi_is_manager(uti_state_get_user_name());
          cuser_delete(&answer_list, *spp);
          show_gdi_request_answer(answer_list);
-         answer_list = lFreeList(answer_list);
+         lFreeList(&answer_list);
          spp++;
          continue;
       }
@@ -4650,7 +4650,7 @@ char *argv[]
          sge_gdi_is_manager(uti_state_get_user_name());
          centry_delete(&answer_list, *spp);
          show_gdi_request_answer(answer_list); 
-         answer_list = lFreeList(answer_list);
+         lFreeList(&answer_list);
          spp++;
          continue;
       }
@@ -4676,7 +4676,7 @@ char *argv[]
    
          cuser_add_from_file(&answer_list, file);
          show_gdi_request_answer(answer_list); 
-         answer_list = lFreeList(answer_list);
+         lFreeList(&answer_list);
          spp++;
          continue;
       }
@@ -4696,7 +4696,7 @@ char *argv[]
          sge_gdi_is_manager(uti_state_get_user_name());
          cuser_add(&answer_list, *spp);
          show_gdi_request_answer(answer_list);
-         answer_list = lFreeList(answer_list);
+         lFreeList(&answer_list);
          spp++;
          continue;
       }
@@ -4719,7 +4719,7 @@ char *argv[]
          sge_gdi_is_manager(uti_state_get_user_name());
          centry_add(&answer_list, *spp);
          show_gdi_request_answer(answer_list);
-         answer_list = lFreeList(answer_list);
+         lFreeList(&answer_list);
          spp++;
          continue;
       }
@@ -4744,7 +4744,7 @@ char *argv[]
          }
          cuser_modify_from_file(&answer_list, file);
          show_gdi_request_answer(answer_list);
-         answer_list = lFreeList(answer_list);
+         lFreeList(&answer_list);
          
          spp++;
          continue;
@@ -4761,7 +4761,7 @@ char *argv[]
          spp = sge_parser_get_next(spp);
          cuser_show(&answer_list, *spp);
          show_gdi_request_answer(answer_list);
-         answer_list = lFreeList(answer_list);
+         lFreeList(&answer_list);
          spp++;
          continue;
       }
@@ -4777,7 +4777,7 @@ char *argv[]
          spp = sge_parser_get_next(spp);
          centry_show(&answer_list, *spp);
          show_gdi_request_answer(answer_list);
-         answer_list = lFreeList(answer_list);
+         lFreeList(&answer_list);
          spp++;
          continue;
       }
@@ -4797,7 +4797,7 @@ char *argv[]
          sge_gdi_is_manager(uti_state_get_user_name());
          cuser_modify(&answer_list, *spp);
          show_gdi_request_answer(answer_list);
-         answer_list = lFreeList(answer_list);
+         lFreeList(&answer_list);
          spp++;
          continue;
       }
@@ -4818,7 +4818,7 @@ char *argv[]
          sge_gdi_is_manager(uti_state_get_user_name());
          centry_modify(&answer_list, *spp);
          show_gdi_request_answer(answer_list);
-         answer_list = lFreeList(answer_list);
+         lFreeList(&answer_list);
          spp++;
          continue;
       }
@@ -4837,7 +4837,7 @@ char *argv[]
          sge_gdi_is_manager(uti_state_get_user_name());
          cuser_delete(&answer_list, *spp);
          show_gdi_request_answer(answer_list);
-         answer_list = lFreeList(answer_list);
+         lFreeList(&answer_list);
          spp++;
          continue;
       }
@@ -4864,7 +4864,7 @@ char *argv[]
          sge_gdi_is_manager(uti_state_get_user_name());
          ret = hgroup_modify(&answer_list, *spp);
          ret &= show_gdi_request_answer(answer_list);
-         answer_list = lFreeList(answer_list);
+         lFreeList(&answer_list);
          sge_parse_return = ret ? 0 : 1;
          
          spp++;
@@ -4887,7 +4887,7 @@ char *argv[]
          sge_gdi_is_manager(uti_state_get_user_name());
          ret = hgroup_modify_from_file(&answer_list, file);
          ret &= show_gdi_request_answer(answer_list);
-         answer_list = lFreeList(answer_list);
+         lFreeList(&answer_list);
          sge_parse_return = ret ? 0 : 1;
          
          spp++;
@@ -4914,7 +4914,7 @@ char *argv[]
          sge_gdi_is_manager(uti_state_get_user_name());
          ret = hgroup_add(&answer_list, group, is_validate_name);
          ret &= show_gdi_request_answer(answer_list);
-         answer_list = lFreeList(answer_list);
+         lFreeList(&answer_list);
          sge_parse_return = ret ? 0 : 1;
          
          spp++;
@@ -4937,7 +4937,7 @@ char *argv[]
          sge_gdi_is_manager(uti_state_get_user_name());
          ret = hgroup_add_from_file(&answer_list, file);
          ret &= show_gdi_request_answer(answer_list);
-         answer_list = lFreeList(answer_list);
+         lFreeList(&answer_list);
          sge_parse_return = ret ? 0 : 1;
          
          spp++;
@@ -4953,7 +4953,7 @@ char *argv[]
          sge_gdi_is_manager(uti_state_get_user_name());
          ret = hgroup_delete(&answer_list, *spp);
          ret &= show_gdi_request_answer(answer_list);
-         answer_list = lFreeList(answer_list);
+         lFreeList(&answer_list);
          sge_parse_return = ret ? 0 : 1;
          
          spp++;
@@ -4968,7 +4968,7 @@ char *argv[]
          spp = sge_parser_get_next(spp);
          ret = hgroup_show(&answer_list, *spp);
          ret &= show_gdi_request_answer(answer_list);
-         answer_list = lFreeList(answer_list);
+         lFreeList(&answer_list);
          sge_parse_return = ret ? 0 : 1;
          
          spp++;
@@ -4984,7 +4984,7 @@ char *argv[]
          spp = sge_parser_get_next(spp);
          ret = hgroup_show_structure(&answer_list, *spp, true);
          ret &= show_gdi_request_answer(answer_list);
-         answer_list = lFreeList(answer_list);
+         lFreeList(&answer_list);
          sge_parse_return = ret ? 0 : 1;
          
          spp++;
@@ -4999,7 +4999,7 @@ char *argv[]
          spp = sge_parser_get_next(spp);
          ret = hgroup_show_structure(&answer_list, *spp, false);
          ret &= show_gdi_request_answer(answer_list);
-         answer_list = lFreeList(answer_list);
+         lFreeList(&answer_list);
          sge_parse_return = ret ? 0 : 1;
          
          spp++;
@@ -5028,7 +5028,7 @@ char *argv[]
          sge_gdi_is_manager(uti_state_get_user_name());
          ret = cqueue_modify(&answer_list, *spp);
          ret &= show_gdi_request_answer(answer_list);
-         answer_list = lFreeList(answer_list);
+         lFreeList(&answer_list);
          sge_parse_return = ret ? 0 : 1;
          
          spp++;
@@ -5051,7 +5051,7 @@ char *argv[]
          }
          ret = cqueue_modify_from_file(&answer_list, file);
          ret &= show_gdi_request_answer(answer_list);
-         answer_list = lFreeList(answer_list);
+         lFreeList(&answer_list);
          sge_parse_return = ret ? 0 : 1;
          
          spp++;
@@ -5072,7 +5072,7 @@ char *argv[]
          sge_gdi_is_manager(uti_state_get_user_name());
          ret = cqueue_add(&answer_list, name);
          ret &= show_gdi_request_answer(answer_list);
-         answer_list = lFreeList(answer_list);
+         lFreeList(&answer_list);
          sge_parse_return = ret ? 0 : 1;
          
          spp++;
@@ -5096,7 +5096,7 @@ char *argv[]
          
          ret = cqueue_add_from_file(&answer_list, file);
          ret &= show_gdi_request_answer(answer_list);
-         answer_list = lFreeList(answer_list);
+         lFreeList(&answer_list);
          sge_parse_return = ret ? 0 : 1;
          
          spp++;
@@ -5114,7 +5114,7 @@ char *argv[]
          sge_gdi_is_manager(uti_state_get_user_name());
          ret = cqueue_delete(&answer_list, *spp);
          ret &= show_gdi_request_answer(answer_list);
-         answer_list = lFreeList(answer_list);
+         lFreeList(&answer_list);
          sge_parse_return = ret ? 0 : 1;
          
          spp++;
@@ -5132,9 +5132,9 @@ char *argv[]
          }
          
          ret = cqueue_show(&answer_list, arglp);
-         arglp = lFreeList(arglp);
+         lFreeList(&arglp);
          ret &= show_gdi_request_answer(answer_list);
-         answer_list = lFreeList(answer_list);
+         lFreeList(&answer_list);
          sge_parse_return = ret ? 0 : 1;
          
          spp++;
@@ -5150,8 +5150,8 @@ char *argv[]
          }
          alp = sge_gdi(SGE_CQUEUE_LIST, SGE_GDI_TRIGGER, &lp, NULL, NULL);
          answer_list_on_error_print_or_exit(&alp, stderr);
-         alp = lFreeList(alp);
-         lp = lFreeList(lp);
+         lFreeList(&alp);
+         lFreeList(&lp);
          spp++;
          continue;
       }
@@ -5161,7 +5161,7 @@ char *argv[]
 
          cqueue_list_sick(&answer_list);
          show_gdi_request_answer(answer_list);
-         answer_list = lFreeList(answer_list);
+         lFreeList(&answer_list);
          spp++;
          continue;
       }
@@ -5178,7 +5178,7 @@ char *argv[]
          sge_gdi_is_manager(uti_state_get_user_name());
          centry_delete(&answer_list, *spp);
          show_gdi_request_answer(answer_list); 
-         answer_list = lFreeList(answer_list);
+         lFreeList(&answer_list);
          spp++;
          continue;
       }
@@ -5204,7 +5204,7 @@ char *argv[]
    
          cuser_add_from_file(&answer_list, file);
          show_gdi_request_answer(answer_list); 
-         answer_list = lFreeList(answer_list);
+         lFreeList(&answer_list);
          spp++;
          continue;
       }
@@ -5224,7 +5224,7 @@ char *argv[]
          sge_gdi_is_manager(uti_state_get_user_name());
          cuser_add(&answer_list, *spp);
          show_gdi_request_answer(answer_list);
-         answer_list = lFreeList(answer_list);
+         lFreeList(&answer_list);
          spp++;
          continue;
       }
@@ -5245,7 +5245,7 @@ char *argv[]
          sge_gdi_is_manager(uti_state_get_user_name());
          centry_add(&answer_list, *spp);
          show_gdi_request_answer(answer_list);
-         answer_list = lFreeList(answer_list);
+         lFreeList(&answer_list);
          spp++;
          continue;
       }
@@ -5273,8 +5273,8 @@ char *argv[]
             where = lWhere("%T( %I==%s )", UP_Type, UP_name, user);
             what = lWhat("%T(ALL)", UP_Type);
             alp = sge_gdi(SGE_USER_LIST, SGE_GDI_GET, &lp, where, what);
-            where = lFreeWhere(where);
-            what = lFreeWhat(what);
+            lFreeWhere(&where);
+            lFreeWhat(&what);
                         
             if (first) {
                first = false;
@@ -5295,7 +5295,7 @@ char *argv[]
                fprintf(stderr, "\n");
                continue;
             }
-            alp = lFreeList(alp);
+            lFreeList(&alp);
             ep = lFirst(lp);
             
             /* print to stdout */
@@ -5303,7 +5303,7 @@ char *argv[]
             filename_stdout = spool_flatfile_write_object(&alp, ep, false, fields, &qconf_param_sfi,
                                                  SP_DEST_STDOUT, SP_FORM_ASCII, 
                                                  NULL, false);
-            alp = lFreeList(alp);
+            lFreeList(&alp);
             FREE (filename_stdout);
          }
          spp++;
@@ -5323,8 +5323,8 @@ char *argv[]
          where = lWhere("%T( %I==%s )", UP_Type, UP_name, *spp);
          what = lWhat("%T(ALL)", UP_Type);
          alp = sge_gdi(SGE_PROJECT_LIST, SGE_GDI_GET, &lp, where, what);
-         where = lFreeWhere(where);
-         what = lFreeWhat(what);
+         lFreeWhere(&where);
+         lFreeWhat(&what);
                   
          aep = lFirst(alp);
          answer_exit_if_not_recoverable(aep);
@@ -5340,7 +5340,7 @@ char *argv[]
             spp++;
             continue;
          }
-         alp = lFreeList(alp);
+         lFreeList(&alp);
          ep = lFirst(lp);
          
          /* print to stdout */
@@ -5348,7 +5348,7 @@ char *argv[]
          filename_stdout = spool_flatfile_write_object(&alp, ep, false, fields, &qconf_param_sfi,
                                               SP_DEST_STDOUT, SP_FORM_ASCII, 
                                               NULL, false);
-         alp = lFreeList(alp);
+         lFreeList(&alp);
          FREE (filename_stdout);
 
          spp++;
@@ -5405,7 +5405,7 @@ char *argv[]
 
          alp = gdi_tsm(NULL, NULL);
          answer_list_on_error_print_or_exit(&alp, stderr);
-         alp = lFreeList(alp);
+         lFreeList(&alp);
          
          spp++;
          continue;
@@ -5420,7 +5420,7 @@ char *argv[]
       SGE_EXIT(1);
    }
 
-   alp = lFreeList(alp);
+   lFreeList(&alp);
    DEXIT;
    return sge_parse_return;
 }
@@ -5587,8 +5587,8 @@ u_long32 target
          fprintf(stderr, "%s\n", lGetString(ep, AN_text));
       }
 
-      lp = lFreeList(lp);
-      alp = lFreeList(alp);
+      lFreeList(&lp);
+      lFreeList(&alp);
    }
 
    DEXIT;
@@ -5634,8 +5634,8 @@ u_long32 target
       answer_exit_if_not_recoverable(ep);
 		fprintf(stderr, "%s\n", lGetString(ep, AN_text));
 
-      alp = lFreeList(alp);
-      lp = lFreeList(lp);
+      lFreeList(&alp);
+      lFreeList(&lp);
    }
 
    DEXIT;
@@ -5663,7 +5663,7 @@ lListElem *ep
                                                   &qconf_sfi, SP_DEST_TMP,
                                                   SP_FORM_ASCII, filename,
                                                   false);
-   alp = lFreeList (alp);
+   lFreeList(&alp);
    status = sge_edit(filename);
 
    if (status < 0) {
@@ -5688,7 +5688,7 @@ lListElem *ep
                                    SP_FORM_ASCII, NULL, filename);
             
    if (answer_list_output (&alp)) {
-      hep = lFreeElem (hep);
+      lFreeElem(&hep);
    }
 
    if (hep != NULL) {
@@ -5696,7 +5696,7 @@ lListElem *ep
    }
 
    if (missing_field != NoName) {
-      hep = lFreeElem (hep);
+      lFreeElem(&hep);
       answer_list_output (&alp);
    }
    
@@ -5758,7 +5758,7 @@ lList *confl
                                    SP_FORM_ASCII, NULL, fname);
             
    if (answer_list_output (&alp)) {
-      ep = lFreeElem (ep);
+      lFreeElem(&ep);
    }
 
    if (ep != NULL) {
@@ -5766,7 +5766,7 @@ lList *confl
    }
 
    if (missing_field != NoName) {
-      ep = lFreeElem (ep);
+      lFreeElem(&ep);
       answer_list_output (&alp);
    }
 
@@ -5776,7 +5776,7 @@ lList *confl
    }
    
    if ((newconfl != NULL) && !sconf_validate_config (&alp, newconfl)) {
-      newconfl = lFreeList (newconfl);
+      lFreeList(&newconfl);
       answer_list_output(&alp);
    }
    
@@ -5787,7 +5787,7 @@ lList *confl
       FREE(fname);
       SGE_EXIT(1);
    }
-   alp = lFreeList(alp);
+   lFreeList(&alp);
    
    unlink(fname);
    FREE(fname);
@@ -5820,7 +5820,7 @@ bool user        /* =1 user, =0 project */
       sge_error_and_exit(NULL);
    }
 
-   alp = lFreeList(alp);
+   lFreeList(&alp);
 
    status = sge_edit(filename);
 
@@ -5844,7 +5844,7 @@ bool user        /* =1 user, =0 project */
                                     filename);
    
    if (answer_list_output(&alp)) {
-      newep = lFreeElem (newep);
+      lFreeElem(&newep);
    }
 
    if (newep != NULL) {
@@ -5854,7 +5854,7 @@ bool user        /* =1 user, =0 project */
    FREE (fields);
    
    if (missing_field != NoName) {
-      newep = lFreeElem (newep);
+      lFreeElem(&newep);
       answer_list_output (&alp);
    }
    
@@ -5902,7 +5902,7 @@ lListElem *ep
                                           fields, &qconf_name_value_list_sfi,
                                           SP_DEST_TMP, SP_FORM_ASCII,
                                           NULL, false);
-   ep = lFreeElem(ep);
+   lFreeElem(&ep);
 
    if (answer_list_output(&alp)) {
       FREE(fields);
@@ -5910,7 +5910,7 @@ lListElem *ep
       sge_error_and_exit(NULL);
    }
 
-   alp = lFreeList(alp);
+   lFreeList(&alp);
 
    status = sge_edit(filename);
 
@@ -5937,7 +5937,7 @@ lListElem *ep
                                       SP_FORM_ASCII, NULL, filename);
    
    if (answer_list_output(&alp)) {
-      newep = lFreeElem (newep);
+      lFreeElem(&newep);
    }
 
    if (newep != NULL) {
@@ -5947,7 +5947,7 @@ lListElem *ep
    FREE (fields);
    
    if (missing_field != NoName) {
-      newep = lFreeElem (newep);
+      lFreeElem(&newep);
       answer_list_output (&alp);
    }
 
@@ -6004,8 +6004,8 @@ char *name
    } 
 
    alp = sge_gdi(target, SGE_GDI_GET, &lp, where, what);
-   what = lFreeWhat(what);
-   where = lFreeWhere(where);
+   lFreeWhat(&what);
+   lFreeWhere(&where);
 
    lPSortList(lp, "%I+", keynm);
 
@@ -6043,8 +6043,8 @@ char *name
       fprintf(stderr, "\n");
    }
    
-   alp = lFreeList(alp);
-   lp = lFreeList(lp);
+   lFreeList(&alp);
+   lFreeList(&lp);
    
    DEXIT;
    return 0;
@@ -6061,7 +6061,7 @@ static int show_eventclients()
    what = lWhat("%T(%I %I %I)", EV_Type, EV_id, EV_name, EV_host);
 
    alp = sge_gdi(SGE_EVENT_LIST, SGE_GDI_GET, &lp, NULL, what);
-   what = lFreeWhat(what);
+   lFreeWhat(&what);
 
    ep = lFirst(alp);
    answer_exit_if_not_recoverable(ep);
@@ -6087,8 +6087,8 @@ static int show_eventclients()
       fprintf(stderr,  MSG_QCONF_NOEVENTCLIENTSREGISTERED); 
       fprintf(stderr, "\n");
    }
-   alp = lFreeList(alp);
-   lp = lFreeList(lp);
+   lFreeList(&alp);
+   lFreeList(&lp);
    
    DEXIT;
    return 0;
@@ -6112,8 +6112,8 @@ static int show_processors()
                   SGE_TEMPLATE_NAME, EH_name, SGE_GLOBAL_NAME);
 
    alp = sge_gdi(SGE_EXECHOST_LIST, SGE_GDI_GET, &lp, where, what);
-   what = lFreeWhat(what);
-   where = lFreeWhere(where);
+   lFreeWhat(&what);
+   lFreeWhere(&where);
 
    ep = lFirst(alp);
    answer_exit_if_not_recoverable(ep);
@@ -6151,8 +6151,8 @@ static int show_processors()
       fprintf(stderr, "\n");
    }
    
-   alp = lFreeList(alp);
-   lp = lFreeList(lp);
+   lFreeList(&alp);
+   lFreeList(&lp);
    
    DEXIT;
    return 0;
@@ -6247,7 +6247,7 @@ lList *arglp
          filename_stdout = spool_flatfile_write_object(&alp, ep, false, US_fields, &qconf_param_sfi,
                                      SP_DEST_STDOUT, SP_FORM_ASCII, NULL,
                                      false);
-         alp = lFreeList (alp);
+         lFreeList(&alp);
          FREE (filename_stdout);
       }
    }
@@ -6333,7 +6333,7 @@ lList *arglp
                                       SP_FORM_ASCII, NULL, fname);
       
       if (answer_list_output(&alp)) {
-         changed_ep = lFreeElem (changed_ep);
+         lFreeElem(&changed_ep);
       }
 
       if (changed_ep != NULL) {
@@ -6341,7 +6341,7 @@ lList *arglp
       }
 
       if (missing_field != NoName) {
-         changed_ep = lFreeElem (changed_ep);
+         lFreeElem(&changed_ep);
          answer_list_output (&alp);
       }
 
@@ -6356,7 +6356,7 @@ lList *arglp
       lp = lCreateList("userset list", US_Type);
       lAppendElem(lp, changed_ep);
       alp = sge_gdi(SGE_USERSET_LIST, cmd, &lp, NULL, NULL);
-      lp = lFreeList(lp);
+      lFreeList(&lp);
 
       for_each(aep, alp) 
          fprintf(stderr, "%s", lGetString(aep, AN_text));
@@ -6393,8 +6393,8 @@ const char *config_name
    where = lWhere("%T(%Ih=%s)", CONF_Type, CONF_hname, cfn);
    what = lWhat("%T(ALL)", CONF_Type);
    alp = sge_gdi(SGE_CONFIG_LIST, SGE_GDI_GET, &lp, where, what);
-   what = lFreeWhat(what);
-   where = lFreeWhere(where);
+   lFreeWhat(&what);
+   lFreeWhere(&where);
 
    ep = lFirst(alp);
    answer_exit_if_not_recoverable(ep);
@@ -6407,7 +6407,7 @@ const char *config_name
       if (!(ep = lFirst(lp))) {
          fprintf(stderr, MSG_ANSWER_CONFIGXNOTDEFINED_S, cfn);
          fprintf(stderr, "\n");
-         alp = lFreeList(alp);
+         lFreeList(&alp);
          DEXIT;
          return 1;
       }
@@ -6424,8 +6424,8 @@ const char *config_name
       }
    }
 
-   alp = lFreeList(alp);
-   lp = lFreeList(lp);
+   lFreeList(&alp);
+   lFreeList(&lp);
 
    DEXIT;
    return fail;
@@ -6452,8 +6452,8 @@ const char *config_name
    answer_exit_if_not_recoverable(ep);
    fail = !(answer_get_status(ep) == STATUS_OK);
 
-   alp = lFreeList(alp);
-   lp = lFreeList(lp);
+   lFreeList(&alp);
+   lFreeList(&lp);
 
    DEXIT;
    return fail;
@@ -6484,36 +6484,36 @@ u_long32 flags
    where = lWhere("%T(%Ih=%s)", CONF_Type, CONF_hname, cfn);
    what = lWhat("%T(ALL)", CONF_Type);
    alp = sge_gdi(SGE_CONFIG_LIST, SGE_GDI_GET, &lp, where, what);
-   what = lFreeWhat(what);
-   where = lFreeWhere(where);
+   lFreeWhat(&what);
+   lFreeWhere(&where);
 
    failed = false;
    ep = lFirst(alp);
    answer_exit_if_not_recoverable(ep);
    if (answer_get_status(ep) != STATUS_OK) {
       fprintf(stderr, "%s\n", lGetString(ep, AN_text));
-      alp = lFreeList(alp);
-      lp = lFreeList(lp);
+      lFreeList(&alp);
+      lFreeList(&lp);
       DEXIT;
       return 1;
    }
 
-   alp = lFreeList(alp);
+   lFreeList(&alp);
 
    ep = lCopyElem(lFirst(lp));
-   lp = lFreeList(lp);
+   lFreeList(&lp);
 
    if (ep && (flags == 1)) {
       fprintf(stderr, MSG_ANSWER_CONFIGXALREADYEXISTS_S, cfn);
       fprintf(stderr, "\n");
-      ep = lFreeElem(ep);
+      lFreeElem(&ep);
       DEXIT;
       return 2;
    }
    if (!ep && (flags == 2)) {
       fprintf(stderr, MSG_ANSWER_CONFIGXDOESNOTEXIST_S, cfn);
       fprintf(stderr, "\n");
-      ep = lFreeElem(ep);
+      lFreeElem(&ep);
       DEXIT;
       return 3;
    }
@@ -6533,7 +6533,7 @@ u_long32 flags
                                             &qconf_sfi, SP_DEST_TMP, SP_FORM_ASCII, 
                                             tmpname, false);
    
-      ep = lFreeElem(ep);
+      lFreeElem(&ep);
       status = sge_edit(tmpname);
       
       if (status != 0) {
@@ -6561,7 +6561,7 @@ u_long32 flags
                                       SP_FORM_ASCII, NULL, tmpname);
       
       if (answer_list_output(&alp)) {
-         ep = lFreeElem (ep);
+         lFreeElem(&ep);
          failed = true;
       }
 
@@ -6572,7 +6572,7 @@ u_long32 flags
       FREE (fields);
 
       if (missing_field != NoName) {
-         ep = lFreeElem (ep);
+         lFreeElem(&ep);
          answer_list_output (&alp);
          failed = true;
       }
@@ -6603,7 +6603,7 @@ u_long32 flags
                                       SP_FORM_ASCII, NULL, filename);
       
       if (answer_list_output(&alp)) {
-         ep = lFreeElem (ep);
+         lFreeElem(&ep);
       }
 
       if (ep != NULL) {
@@ -6613,7 +6613,7 @@ u_long32 flags
       FREE (fields);
       
       if (missing_field != NoName) {
-         ep = lFreeElem (ep);
+         lFreeElem(&ep);
          answer_list_output (&alp);
       }
             
@@ -6634,7 +6634,7 @@ u_long32 flags
    lAppendElem(lp, ep);
      
    alp = sge_gdi(SGE_CONFIG_LIST, SGE_GDI_MOD, &lp, NULL, NULL);
-   lp = lFreeList(lp);
+   lFreeList(&lp);
             
    /* report results */
    ep = lFirst(alp);                   
@@ -6644,7 +6644,7 @@ u_long32 flags
          
    fprintf(stderr, "%s\n", lGetString(ep, AN_text));
      
-   alp = lFreeList(alp);
+   lFreeList(&alp);
    
    DEXIT;
    return failed;
@@ -6683,7 +6683,7 @@ const char *user
    if (perm_return == true) {
      /* user is manager */
      if (alp != NULL) {
-        alp = lFreeList(alp);
+        lFreeList(&alp);
         alp = NULL;
      }
      DEXIT;
@@ -6707,7 +6707,7 @@ const char *user
    }
 
    if (alp != NULL) {
-      alp = lFreeList(alp);
+      lFreeList(&alp);
       alp = NULL;
    }
 
@@ -6755,18 +6755,18 @@ const char *host
    where = lWhere("%T(%Ih=%s)", AH_Type, AH_name, host);
    what = lWhat("%T(ALL)", AH_Type);
    alp = sge_gdi(SGE_ADMINHOST_LIST, SGE_GDI_GET, &lp, where, what);
-   what = lFreeWhat(what);
-   where = lFreeWhere(where);
+   lFreeWhat(&what);
+   lFreeWhere(&where);
 
    if (!alp) {
       SGE_EXIT(1);
    }
    if (lGetUlong(aep = lFirst(alp), AN_status) != STATUS_OK) {
       fprintf(stderr, "%s\n", lGetString(aep, AN_text));
-      alp = lFreeList(alp);
+      lFreeList(&alp);
       SGE_EXIT(1);
    }
-   alp = lFreeList(alp);
+   lFreeList(&alp);
 
    ep = host_list_locate(lp, host);
 
@@ -6774,13 +6774,13 @@ const char *host
       /*
       ** host is no adminhost
       */
-      lp = lFreeList(lp);
+      lFreeList(&lp);
       fprintf(stderr, MSG_ANSWER_DENIEDHOSTXISNOADMINHOST_S, host);
       fprintf(stderr, "\n");
       SGE_EXIT(1);
    }
 
-   lp = lFreeList(lp);
+   lFreeList(&lp);
    DEXIT;
    return 0;
 }
@@ -7020,9 +7020,9 @@ static int qconf_modify_attribute(lList **alpp, int from_file, char ***spp,
       *alpp = sge_gdi(info_entry->target, SGE_GDI_MOD | sub_command, &qlp, 
                       NULL, what);
    }
-   what = lFreeWhat(what);
-   qlp = lFreeList(qlp);
-   *epp = lFreeElem(*epp);
+   lFreeWhat(&what);
+   lFreeList(&qlp);
+   lFreeElem(epp);
    (*spp)++;
 
    DEXIT;

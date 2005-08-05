@@ -807,7 +807,7 @@ spool_berkeleydb_default_read_func(lList **answer_list,
                   (spooling_validate_func)lGetRef(rule, SPR_validate_func);
                bool ret = validate(answer_list, type, rule, ep, object_type);
                if (!ret) {
-                  ep = lFreeElem(ep);
+                  lFreeElem(&ep);
                }
             }
             break;

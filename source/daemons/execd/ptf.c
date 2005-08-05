@@ -803,7 +803,7 @@ static lListElem *ptf_get_job(u_long job_id)
 
    where = lWhere("%T(%I == %u)", JL_Type, JL_job_ID, job_id);
    job = lFindFirst(ptf_jobs, where);
-   lFreeWhere(where);
+   lFreeWhere(&where);
    return job;
 }
 
@@ -870,7 +870,7 @@ static lListElem *ptf_get_job_os(lList *job_list, osjobid_t os_job_id,
       }
    }
 
-   lFreeWhere(where);
+   lFreeWhere(&where);
    DEXIT;
    return osjob;
 }
@@ -1622,12 +1622,12 @@ int ptf_job_complete(u_long32 job_id, u_long32 ja_task_id, const char *pe_task_i
 
    DPRINTF(("PTF: Removing job " sge_u32 "." sge_u32 ", petask %s\n", 
             job_id, ja_task_id, pe_task_id == NULL ? "none" : pe_task_id));
-   lRemoveElem(osjobs, osjob);
+   lRemoveElem(osjobs, &osjob);
 
    if (lGetNumberOfElem(osjobs) == 0) {
       DPRINTF(("PTF: Removing job\n"));
       lDechainElem(ptf_jobs, ptf_job);
-      lFreeElem(ptf_job);
+      lFreeElem(&ptf_job);
    }
 
    DEXIT;
@@ -1934,8 +1934,8 @@ int ptf_get_usage(lList **job_usage_list)
 
    *job_usage_list = lSelect("PtfJobUsageList", temp_usage_list, NULL, what);
 
-   lFreeList(temp_usage_list);
-   lFreeWhat(what);
+   lFreeList(&temp_usage_list);
+   lFreeWhat(&what);
 
    DEXIT;
    return 0;
@@ -2015,8 +2015,7 @@ void ptf_stop(void)
       is_ptf_running = 0;
    }
 
-   ptf_jobs = lFreeList(ptf_jobs);
-
+   lFreeList(&ptf_jobs);
    DEXIT;
 }
 
@@ -2085,7 +2084,7 @@ void ptf_unregister_registered_job(u_long32 job_id, u_long32 ja_task_id ) {
                DPRINTF(("PTF: Notify PDC to remove data for osjobid " sge_u32 "\n",
                         lGetUlong(os_job, JO_OS_job_ID)));
                lDechainElem(os_job_list, os_job);
-               lFreeElem(os_job);
+               lFreeElem(&os_job);
             }
          }
 
@@ -2093,7 +2092,7 @@ void ptf_unregister_registered_job(u_long32 job_id, u_long32 ja_task_id ) {
             DPRINTF(("PTF: No more os_job_list entries, removing job\n"));
             DPRINTF(("PTF: Removing job " sge_u32 "\n", lGetUlong(job, JL_job_ID)));
             lDechainElem(ptf_jobs, job);
-            lFreeElem(job);
+            lFreeElem(&job);
          }
       }
    }
@@ -2124,13 +2123,13 @@ void ptf_unregister_registered_jobs(void)
          DPRINTF(("PTF: Notify PDC to remove data for osjobid " sge_u32 "\n",
                   lGetUlong(os_job, JO_OS_job_ID)));
          lDechainElem(os_job_list, os_job);
-         lFreeElem(os_job);
+         lFreeElem(&os_job);
       }
       DPRINTF(("PTF: Removing job " sge_u32 "\n", lGetUlong(job, JL_job_ID)));
       lDechainElem(ptf_jobs, job);
-      lFreeElem(job);
+      lFreeElem(&job);
    }
-   ptf_jobs = lFreeList(ptf_jobs);
+   lFreeList(&ptf_jobs);
    DPRINTF(("PTF: All jobs unregistered from PTF\n"));
    DEXIT;
 }

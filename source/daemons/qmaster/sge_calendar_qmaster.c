@@ -167,7 +167,7 @@ sge_del_calendar(lListElem *cep, lList **alpp, char *ruser, char *rhost)
          ERROR((SGE_EVENT, "denied: %s", lGetString(answer, AN_text)));
          answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC,
                          ANSWER_QUALITY_ERROR);
-         local_answer_list = lFreeList(local_answer_list);
+         lFreeList(&local_answer_list);
          DEXIT;
          return STATUS_ESEMANTIC;
       }
@@ -227,7 +227,7 @@ void sge_calendar_event_handler(te_event_t anEvent, monitoring_t *monitor)
    }
       
    calendar_update_queue_states(cep, 0, NULL, &ppList, monitor);
-   ppList = lFreeList(ppList);
+   lFreeList(&ppList);
 
    sge_free((char *)cal_name);
 
@@ -255,7 +255,7 @@ int calendar_update_queue_states(lListElem *cep, lListElem *old_cep, gdi_object_
    
    qinstance_change_state_on_calendar_all(cal_name, state, state_changes_list, monitor);
 
-   state_changes_list = lFreeList(state_changes_list);
+   lFreeList(&state_changes_list);
 
    if (when) {
       te_event_t ev;

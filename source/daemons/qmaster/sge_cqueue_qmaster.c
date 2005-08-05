@@ -403,12 +403,12 @@ cqueue_mod_hostlist(lListElem *cqueue, lList **answer_list,
             ret &= href_list_find_all_references(old_href_list, answer_list,
                                                  master_list, &tmp_hosts, NULL);
             ret &= href_list_remove_existing(add_hosts, answer_list, tmp_hosts);
-            tmp_hosts = lFreeList(tmp_hosts);
+            lFreeList(&tmp_hosts);
 
             ret &= href_list_find_all_references(href_list, answer_list,
                                                  master_list, &tmp_hosts, NULL);
             ret &= href_list_remove_existing(rem_hosts, answer_list, tmp_hosts);
-            tmp_hosts = lFreeList(tmp_hosts);
+            lFreeList(&tmp_hosts);
          }
 
 #if 0 /* EB: DEBUG */
@@ -418,9 +418,9 @@ cqueue_mod_hostlist(lListElem *cqueue, lList **answer_list,
          }
 #endif
 
-         old_href_list = lFreeList(old_href_list);
-         add_groups = lFreeList(add_groups);
-         rem_groups = lFreeList(rem_groups);
+         lFreeList(&old_href_list);
+         lFreeList(&add_groups);
+         lFreeList(&rem_groups);
       }
    }
    DEXIT;
@@ -700,8 +700,8 @@ int cqueue_mod(lList **answer_list, lListElem *cqueue, lListElem *reduced_elem,
    /*
     * Cleanup
     */
-   add_hosts = lFreeList(add_hosts);
-   rem_hosts = lFreeList(rem_hosts);
+   lFreeList(&add_hosts);
+   lFreeList(&rem_hosts);
 
    DEXIT;
    if (ret) {
@@ -837,7 +837,7 @@ void cqueue_commit(lListElem *cqueue)
          /*
           * Now we can remove the qinstance.
           */
-         lRemoveElem(qinstances, qinstance);
+         lRemoveElem(qinstances, &qinstance);
       }
    }
    if (lGetNumberOfElem(qinstances) == 0) {
@@ -983,8 +983,7 @@ int cqueue_del(lListElem *this_elem, lList **answer_list,
                if (sge_event_spool(answer_list, 0, sgeE_CQUEUE_DEL,
                                    0, 0, name, NULL, NULL,
                                    NULL, NULL, NULL, true, true)) {
-                  lRemoveElem(*(object_type_get_master_list(SGE_TYPE_CQUEUE)), 
-                              cqueue);
+                  lRemoveElem(*(object_type_get_master_list(SGE_TYPE_CQUEUE)), &cqueue);
 
                   INFO((SGE_EVENT, MSG_SGETEXT_REMOVEDFROMLIST_SSSS,
                         remote_user, remote_host, name , "cluster queue"));
@@ -1058,7 +1057,7 @@ cqueue_del_all_orphaned(lListElem *this_elem, lList **answer_list)
             if (sge_event_spool(answer_list, 0, sgeE_QINSTANCE_DEL,
                                 0, 0, cq_name, qi_name,
                                 NULL, NULL, NULL, NULL, true, true)) {
-               lRemoveElem(qinstance_list, qinstance);
+               lRemoveElem(qinstance_list, &qinstance);
                if (lGetNumberOfElem(qinstance_list) == 0) {
                   sge_rmdir(sge_dstring_get_string(&dir), NULL);
                }

@@ -328,7 +328,7 @@ char **argv
             range_list_parse_from_string(&task_id_range_list, &answer,
                                          argv[ii], false, true, INF_NOT_ALLOWED);
             if (!task_id_range_list) {
-               lFreeList(answer);
+               lFreeList(&answer);
                fprintf(stderr, MSG_HISTORY_INVALIDLISTOFTASKIDRANGES_S , argv[ii]);
                fprintf(stderr, "\n");
                show_the_way(stderr);
@@ -1575,7 +1575,7 @@ lList **hgrp_l
       what = lWhat("%T(ALL)", CE_Type);
       ce_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_CENTRY_LIST, SGE_GDI_GET,
                               NULL, NULL, what, NULL, &state, true);
-      what = lFreeWhat(what);
+      lFreeWhat(&what);
 
       if (alp) {
          ERROR((SGE_EVENT, lGetString(lFirst(alp), AN_text)));
@@ -1590,8 +1590,8 @@ lList **hgrp_l
       what = lWhat("%T(ALL)", EH_Type);
       eh_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_EXECHOST_LIST, SGE_GDI_GET,
                               NULL, where, what, NULL, &state, true);
-      what = lFreeWhat(what);
-      where = lFreeWhere(where);
+      lFreeWhat(&what);
+      lFreeWhere(&where);
 
       if (alp) {
          ERROR((SGE_EVENT, lGetString(lFirst(alp), AN_text)));
@@ -1606,7 +1606,7 @@ lList **hgrp_l
       what = lWhat("%T(ALL)", HGRP_Type);
       hgrp_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_HGROUP_LIST, SGE_GDI_GET, 
                            NULL, NULL, what, NULL, &state, true);
-      what = lFreeWhat(what);
+      lFreeWhat(&what);
 
       if (alp) {
          printf("%s", lGetString(lFirst(alp), AN_text));
@@ -1619,7 +1619,7 @@ lList **hgrp_l
    what = lWhat("%T(ALL)", QU_Type);
    q_id = sge_gdi_multi(&alp, SGE_GDI_SEND, SGE_CQUEUE_LIST, SGE_GDI_GET,
                            NULL, NULL, what, &mal, &state, true);
-   what = lFreeWhat(what);
+   lFreeWhat(&what);
 
    if (alp) {
       ERROR((SGE_EVENT, lGetString(lFirst(alp), AN_text)));
@@ -1641,7 +1641,7 @@ lList **hgrp_l
          ERROR((SGE_EVENT, lGetString(aep, AN_text)));
          SGE_EXIT(1);
       }
-      alp = lFreeList(alp);
+      lFreeList(&alp);
    }
 
    /* --- exec host */
@@ -1656,7 +1656,7 @@ lList **hgrp_l
          ERROR((SGE_EVENT, lGetString(aep, AN_text)));
          SGE_EXIT(1);
       }
-      alp = lFreeList(alp);
+      lFreeList(&alp);
    }
 
    /* --- queue */
@@ -1670,7 +1670,7 @@ lList **hgrp_l
       ERROR((SGE_EVENT, lGetString(aep, AN_text)));
       SGE_EXIT(1);
    }
-   alp = lFreeList(alp);
+   lFreeList(&alp);
 
    /* --- hgrp */
    if (hgrp_l) {
@@ -1684,10 +1684,10 @@ lList **hgrp_l
          printf("%s", lGetString(aep, AN_text));
          SGE_EXIT(1);
       }
-      alp = lFreeList(alp);
+      lFreeList(&alp);
    }
    /* --- end */
-   mal = lFreeList(mal);
+   lFreeList(&mal);
    DEXIT;
    return;
 }

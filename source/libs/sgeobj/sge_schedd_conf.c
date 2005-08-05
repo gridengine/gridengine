@@ -374,16 +374,9 @@ static void sconf_clear_pos(void){
 
 /* reseting cached values */
          pos.c_is_schedd_job_info = SCHEDD_JOB_INFO_UNDEF;
-         if (pos.c_schedd_job_info_range)
-            pos.c_schedd_job_info_range = lFreeList(pos.c_schedd_job_info_range);
-            
-         if (pos.c_halflife_decay_list)
-            pos.c_halflife_decay_list = lFreeList(pos.c_halflife_decay_list);
-
-         if (pos.c_params) {
-            pos.c_params = lFreeList(pos.c_params);
-         }   
-         
+         lFreeList(&(pos.c_schedd_job_info_range));
+         lFreeList(&(pos.c_halflife_decay_list));
+         lFreeList(&(pos.c_params));
          pos.c_default_duration = DEFAULT_DURATION_I;
 
 }
@@ -511,7 +504,7 @@ bool sconf_set_config(lList **config, lList **answer_list)
       SGE_LOCK(LOCK_SCHED_CONF, LOCK_WRITE);
       
       if (ret) {
-         store = lFreeList(store);
+         lFreeList(&store);
          *config = NULL;
       }
       else {
@@ -530,7 +523,7 @@ bool sconf_set_config(lList **config, lList **answer_list)
       }   
    }
    else {
-      Master_Sched_Config_List = lFreeList(Master_Sched_Config_List);
+      lFreeList(&Master_Sched_Config_List);
       sconf_clear_pos();
    }
   
@@ -2876,7 +2869,7 @@ bool sconf_validate_config_(lList **answer_list)
             range_list_parse_from_string(&rlp, &alp, key, false, false, 
                                          INF_NOT_ALLOWED);
             if (rlp == NULL) {
-               lFreeList(alp);
+               lFreeList(&alp);
                SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_ATTRIB_SCHEDDJOBINFONOVALIDJOBLIST));
                answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
                ret = false; 

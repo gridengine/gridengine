@@ -278,7 +278,7 @@ bool writeSetFuncs(ofstream& impl, map<string, List>::iterator& elem) {
       impl << prefix << key << ", " << prefix << it->name << ");" << endl;
       impl << indent << "alp = sge_api(apiListType";
       impl << ", SGE_API_MOD, &lp, NULL, what);" << endl;
-      impl << indent << "lFreeWhat(what);" << endl;
+      impl << indent << "lFreeWhat(&what);" << endl;
       impl << indent << "throwErrors(alp);" << endl;
       impl << indent << "return lastEvent;" << endl;
       impl << "}" << endl << endl;
@@ -408,14 +408,14 @@ bool writeSetContent(ofstream& impl, map<string, List>::iterator& elem) {
    impl << indent << "self = oldSelf;" << endl << endl;
    impl << indent << "// now set the state" << endl;
    impl << indent << "if(creation) {" << endl;
-   impl << indent << indent << "lFreeElem(self);" << endl;
+   impl << indent << indent << "lFreeElem(&self);" << endl;
    impl << indent << indent << "self = lCopyElem(lep);" << endl;
    impl << indent << "}" << endl;
    impl << indent << "else {" << endl;
    impl << indent << indent << "lListPtr alp;" << endl;
    impl << indent << indent << "lEnumeration* what = lIntVector2What(" << elem->second.type << ", nameVector);" << endl;
    impl << indent << indent << "alp = sge_api(apiListType, SGE_API_MOD, &lp, NULL, what);" << endl;
-   impl << indent << indent << "lFreeWhat(what);" << endl;
+   impl << indent << indent << "lFreeWhat(&what);" << endl;
    impl << indent << indent << "throwErrors(alp);" << endl;
    impl << indent << "}" << endl << endl;
    impl << indent << "return lastEvent;" << endl;

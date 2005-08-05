@@ -192,8 +192,8 @@ char **argv
       for_each(aep, alp) {
          fprintf(stderr, "%s\n", lGetString(aep, AN_text));
       }
-      lFreeList(alp);
-      lFreeList(pcmdline);
+      lFreeList(&alp);
+      lFreeList(&pcmdline);
       SGE_EXIT(1);
    }
 
@@ -219,9 +219,9 @@ char **argv
       for_each(aep, alp) {
          fprintf(stderr, "%s\n", lGetString(aep, AN_text));
       }
-      lFreeList(alp);
-      lFreeList(pcmdline);
-      lFreeList(ref_list);
+      lFreeList(&alp);
+      lFreeList(&pcmdline);
+      lFreeList(&ref_list);
       SGE_EXIT(1);
    }
 
@@ -266,7 +266,7 @@ char **argv
 
       if (!sconf_set_config(&schedd_config, &answer_list)){
          answer_list_output(&answer_list);
-         schedd_config = lFreeList(schedd_config);
+         lFreeList(&schedd_config);
          DEXIT;
          SGE_EXIT(-1);
       }
@@ -279,16 +279,16 @@ char **argv
    if (getenv("MORE_INFO")) {
       if(global_showjobs) {
          lWriteListTo(job_list, stdout);
-         lFreeList(job_list);
-         lFreeList(queue_list);
+         lFreeList(&job_list);
+         lFreeList(&queue_list);
          SGE_EXIT(0);
          return 0;
       }
 
       if(global_showqueues) {
          lWriteListTo(queue_list, stdout);
-         lFreeList(job_list);
-         lFreeList(queue_list);
+         lFreeList(&job_list);
+         lFreeList(&queue_list);
          SGE_EXIT(0);
          return 0;
       }
@@ -492,10 +492,10 @@ char **argv
          lList *qinstances = NULL;
 
          lXchgList(cqueue, CQ_qinstances, &qinstances);
-         lAddList(tmp_queue_list, qinstances);
+         lAddList(tmp_queue_list, &qinstances);
       }
       
-      queue_list = lFreeList(queue_list);
+      lFreeList(&queue_list);
       queue_list = tmp_queue_list;
       tmp_queue_list = NULL;
 
@@ -762,7 +762,7 @@ char **argv
       while (jatep) {
          tmp_jatep = lNext(jatep);
          if ((lGetUlong(jatep, JAT_suitable) & TAG_FOUND_IT)) {
-            lRemoveElem(task_list, jatep);
+            lRemoveElem(task_list, &jatep);
          }
          jatep = tmp_jatep;
       }
@@ -841,13 +841,13 @@ char **argv
       XML_out = NULL;   
       lWriteElemXMLTo(xml_elem, stdout);
   
-      xml_elem = lFreeElem(xml_elem);
+      lFreeElem(&xml_elem);
     
    }
    
-   lFreeList(zombie_list);
-   lFreeList(job_list);
-   lFreeList(queue_list);
+   lFreeList(&zombie_list);
+   lFreeList(&job_list);
+   lFreeList(&queue_list);
    SGE_EXIT(0);
    return 0;
 }
@@ -895,8 +895,8 @@ u_long32 show
    q_all = lWhat("%T(ALL)", CQ_Type);
    q_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_CQUEUE_LIST, SGE_GDI_GET,
                         NULL, NULL, q_all, NULL, &state, true);
-   q_all = lFreeWhat(q_all);
-   qw = lFreeWhere(qw);
+   lFreeWhat(&q_all);
+   lFreeWhere(&qw);
  
    if (alp) {
       printf("%s\n", lGetString(lFirst(alp), AN_text));
@@ -913,7 +913,7 @@ u_long32 show
       j_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_JOB_LIST, SGE_GDI_GET,
                            NULL, where, what, NULL, &state, true);
 
-      where = lFreeWhere(where);
+      lFreeWhere(&where);
 
       if (alp) {
          printf("%s\n", lGetString(lFirst(alp), AN_text));
@@ -935,7 +935,7 @@ u_long32 show
 
       z_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_ZOMBIE_LIST, SGE_GDI_GET, 
                            NULL, zw, qstat_get_JB_Type_filter(), NULL, &state, true);
-      zw = lFreeWhere(zw);
+      lFreeWhere(&zw);
 
       if (alp) {
          printf("%s\n", lGetString(lFirst(alp), AN_text));
@@ -949,7 +949,7 @@ u_long32 show
    ce_all = lWhat("%T(ALL)", CE_Type);
    ce_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_CENTRY_LIST, SGE_GDI_GET, 
                         NULL, NULL, ce_all, NULL, &state, true);
-   ce_all = lFreeWhat(ce_all);
+   lFreeWhat(&ce_all);
 
    if (alp) {
       printf("%s\n", lGetString(lFirst(alp), AN_text));
@@ -963,8 +963,8 @@ u_long32 show
    eh_all = lWhat("%T(ALL)", EH_Type);
    eh_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_EXECHOST_LIST, SGE_GDI_GET,
                         NULL, where, eh_all, NULL, &state, true);
-   eh_all = lFreeWhat(eh_all);
-   where = lFreeWhere(where);
+   lFreeWhat(&eh_all);
+   lFreeWhere(&where);
 
    if (alp) {
       printf("%s\n", lGetString(lFirst(alp), AN_text));
@@ -978,8 +978,8 @@ u_long32 show
       pe_all = lWhat("%T(%I%I%I%I%I)", PE_Type, PE_name, PE_slots, PE_job_is_first_task, PE_control_slaves, PE_urgency_slots);
       pe_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_PE_LIST, SGE_GDI_GET,
                            NULL, pw, pe_all, NULL, &state, true);
-      pe_all = lFreeWhat(pe_all);
-      pw = lFreeWhere(pw);
+      lFreeWhat(&pe_all);
+      lFreeWhere(&pw);
 
       if (alp) {
          printf("%s\n", lGetString(lFirst(alp), AN_text));
@@ -994,7 +994,7 @@ u_long32 show
       ckpt_all = lWhat("%T(%I)", CK_Type, CK_name);
       ckpt_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_CKPT_LIST, SGE_GDI_GET,
                            NULL, NULL, ckpt_all, NULL, &state, true);
-      ckpt_all = lFreeWhat(ckpt_all);
+      lFreeWhat(&ckpt_all);
 
       if (alp) {
          printf("%s\n", lGetString(lFirst(alp), AN_text));
@@ -1009,7 +1009,7 @@ u_long32 show
       acl_all = lWhat("%T(ALL)", US_Type);
       acl_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_USERSET_LIST, SGE_GDI_GET, 
                            NULL, NULL, acl_all, NULL, &state, true);
-      acl_all = lFreeWhat(acl_all);
+      lFreeWhat(&acl_all);
 
       if (alp) {
          printf("%s\n", lGetString(lFirst(alp), AN_text));
@@ -1027,7 +1027,7 @@ u_long32 show
 
    sc_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_SC_LIST, SGE_GDI_GET, 
                         NULL, NULL, sc_what, NULL, &state, true);
-   sc_what = lFreeWhat(sc_what);
+   lFreeWhat(&sc_what);
 
    if (alp) {
       printf("%s\n", lGetString(lFirst(alp), AN_text));
@@ -1040,7 +1040,7 @@ u_long32 show
    hgrp_what = lWhat("%T(ALL)", HGRP_Type);
    hgrp_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_HGROUP_LIST, SGE_GDI_GET, 
                         NULL, NULL, hgrp_what, NULL, &state, true);
-   hgrp_what = lFreeWhat(hgrp_what);
+   lFreeWhat(&hgrp_what);
 
    if (alp) {
       printf("%s\n", lGetString(lFirst(alp), AN_text));
@@ -1054,8 +1054,8 @@ u_long32 show
    gc_what = lWhat("%T(ALL)", CONF_Type);
    gc_id = sge_gdi_multi(&alp, SGE_GDI_SEND, SGE_CONFIG_LIST, SGE_GDI_GET,
                         NULL, gc_where, gc_what, &mal, &state, true);
-   gc_what = lFreeWhat(gc_what);
-   gc_where = lFreeWhere(gc_where);
+   lFreeWhat(&gc_what);
+   lFreeWhere(&gc_where);
 
    if (alp) {
       printf("%s\n", lGetString(lFirst(alp), AN_text));
@@ -1076,7 +1076,7 @@ u_long32 show
       printf("%s\n", lGetString(aep, AN_text));
       SGE_EXIT(1);
    }
-   alp = lFreeList(alp);
+   lFreeList(&alp);
 
    /* --- job */
    if (job_l) {
@@ -1109,7 +1109,7 @@ u_long32 show
          printf("%s\n", lGetString(aep, AN_text));
          SGE_EXIT(1);
       }
-      alp = lFreeList(alp);
+      lFreeList(&alp);
 
       /*
        * debug output to perform testsuite tests
@@ -1132,7 +1132,7 @@ u_long32 show
          printf("%s\n", lGetString(aep, AN_text));
          SGE_EXIT(1);
       }
-      alp = lFreeList(alp);
+      lFreeList(&alp);
    }
 
    /* --- complex */
@@ -1146,7 +1146,7 @@ u_long32 show
       printf("%s\n", lGetString(aep, AN_text));
       SGE_EXIT(1);
    }
-   alp = lFreeList(alp);
+   lFreeList(&alp);
 
    /* --- exec host */
    alp = sge_gdi_extract_answer(SGE_GDI_GET, SGE_EXECHOST_LIST, eh_id, 
@@ -1159,7 +1159,7 @@ u_long32 show
       printf("%s\n", lGetString(aep, AN_text));
       SGE_EXIT(1);
    }
-   alp = lFreeList(alp);
+   lFreeList(&alp);
 
    /* --- pe */
    if (pe_l) {
@@ -1173,7 +1173,7 @@ u_long32 show
          printf("%s\n", lGetString(aep, AN_text));
          SGE_EXIT(1);
       }
-      alp = lFreeList(alp);
+      lFreeList(&alp);
    }
 
    /* --- ckpt */
@@ -1188,7 +1188,7 @@ u_long32 show
          printf("%s\n", lGetString(aep, AN_text));
          SGE_EXIT(1);
       }
-      alp = lFreeList(alp);
+      lFreeList(&alp);
    }
 
    /* --- acl */
@@ -1203,7 +1203,7 @@ u_long32 show
          printf("%s\n", lGetString(aep, AN_text));
          SGE_EXIT(1);
       }
-      alp = lFreeList(alp);
+      lFreeList(&alp);
    }
 
    /* --- scheduler configuration */
@@ -1217,7 +1217,7 @@ u_long32 show
       SGE_EXIT(1);
    }
 
-   alp = lFreeList(alp);
+   lFreeList(&alp);
 
    /* --- hgrp */
    alp = sge_gdi_extract_answer(SGE_GDI_GET, SGE_HGROUP_LIST, hgrp_id, mal, 
@@ -1230,7 +1230,7 @@ u_long32 show
       printf("%s\n", lGetString(aep, AN_text));
       SGE_EXIT(1);
    }
-   alp = lFreeList(alp);
+   lFreeList(&alp);
 
    /* -- apply global configuration for sge_hostcmp() scheme */
    alp = sge_gdi_extract_answer(SGE_GDI_GET, SGE_CONFIG_LIST, gc_id, mal, &conf_l);
@@ -1246,9 +1246,9 @@ u_long32 show
       lListElem *local = NULL;
       merge_configuration(lFirst(conf_l), local, &conf, NULL);
    }
-   alp    = lFreeList(alp);
-   conf_l = lFreeList(conf_l);
-   mal    = lFreeList(mal);
+   lFreeList(&alp);
+   lFreeList(&conf_l);
+   lFreeList(&mal);
 
    DEXIT;
    return;
@@ -1307,7 +1307,7 @@ u_long32 *isXML
          *job_info = 1;
          if (argstr) {
             if (*ppljid) {
-               *ppljid = lFreeList(*ppljid);
+               lFreeList(ppljid);
             }
             str_list_parse_from_string(ppljid, argstr, ",");
             FREE(argstr);
@@ -1432,7 +1432,7 @@ u_long32 *isXML
          (*pfull) |= QSTAT_DISPLAY_QRESOURCES|QSTAT_DISPLAY_FULL;
          if (argstr) {
             if (*pplqresource) {
-               *pplqresource = lFreeList(*pplqresource);
+               lFreeList(pplqresource);
             }
             *pplqresource = centry_list_parse_from_string(*pplqresource, argstr, false);
             FREE(argstr);
@@ -1525,7 +1525,7 @@ u_long32 *isXML
 
       while (parse_multi_stringlist(ppcmdline, "-g", &alp, &plstringopt, ST_Type, ST_name)) {
          *group_opt |= parse_group_options(plstringopt, &alp);
-         lFreeList(plstringopt);    
+         lFreeList(&plstringopt);    
          continue;
       }
    }
@@ -1570,7 +1570,7 @@ u_long32 isXML
    /* get job scheduling information */
    what = lWhat("%T(ALL)", SME_Type);
    alp = sge_gdi(SGE_JOB_SCHEDD_INFO, SGE_GDI_GET, &ilp, NULL, what);
-   lFreeWhat(what);
+   lFreeWhat(&what);
 
    if (!isXML){
       for_each(aep, alp) {
@@ -1579,7 +1579,7 @@ u_long32 isXML
             schedd_info = false;
          }
       }
-      lFreeList(alp);
+      lFreeList(&alp);
    }
 
    /* build 'where' for all jobs */
@@ -1604,15 +1604,15 @@ u_long32 isXML
    what = lWhat("%T(ALL)", JB_Type);
    /* get job list */
    alp = sge_gdi(SGE_JOB_LIST, SGE_GDI_GET, &jlp, where, what);
-   lFreeWhere(where);
-   lFreeWhat(what);
+   lFreeWhere(&where);
+   lFreeWhat(&what);
 
    if (isXML){
       xml_qstat_show_job(&jlp, &ilp,  &alp, &jid_list);
    
-      lFreeList(jlp);
-      lFreeList(alp);
-      lFreeList(jid_list);
+      lFreeList(&jlp);
+      lFreeList(&alp);
+      lFreeList(&jid_list);
       DEXIT;
       return 0;
    }
@@ -1623,7 +1623,7 @@ u_long32 isXML
          jobs_exist = false;
       }
    }
-   lFreeList(alp);
+   lFreeList(&alp);
    if(!jobs_exist) {
 
       DEXIT;
@@ -1643,7 +1643,7 @@ u_long32 isXML
          
          if (elem2) {
             lDechainElem(jid_list, elem2);
-            lFreeElem(elem2);
+            lFreeElem(&elem2);
          }    
       }
       fprintf(stderr, "%s\n", MSG_QSTAT_FOLLOWINGDONOTEXIST);
@@ -1703,8 +1703,8 @@ u_long32 isXML
       }
    }
 
-   lFreeList(ilp);
-   lFreeList(jlp);
+   lFreeList(&ilp);
+   lFreeList(&jlp);
    DEXIT;
    return 0;
 }
@@ -1732,7 +1732,7 @@ static int qstat_show_job_info(u_long32 isXML)
    /* get job scheduling information */
    what = lWhat("%T(ALL)", SME_Type);
    alp = sge_gdi(SGE_JOB_SCHEDD_INFO, SGE_GDI_GET, &ilp, NULL, what);
-   lFreeWhat(what);
+   lFreeWhat(&what);
    if (isXML){
       xml_qstat_show_job_info(&ilp, &alp);
    }
@@ -1743,7 +1743,7 @@ static int qstat_show_job_info(u_long32 isXML)
             schedd_info = false;
          }
       }
-      lFreeList(alp);
+      lFreeList(&alp);
       if (!schedd_info) {
          DEXIT;
          return 1;
@@ -1801,7 +1801,7 @@ static int qstat_show_job_info(u_long32 isXML)
                      for_each(ref_jid, lGetList(ref_msg, MES_job_number_list)) {
                         if (lGetUlong(ref_jid, ULNG) == 
                             lGetUlong(flt_jid, ULNG)) {
-                           lRemoveElem(lGetList(flt_msg, MES_job_number_list), flt_jid);
+                           lRemoveElem(lGetList(flt_msg, MES_job_number_list), &flt_jid);
                            found_jid = 1;
                         }
                      }
@@ -1884,7 +1884,7 @@ static int qstat_show_job_info(u_long32 isXML)
       }
    }
 
-   lFreeList(ilp);
+   lFreeList(&ilp);
    
    DEXIT;
    return 0;

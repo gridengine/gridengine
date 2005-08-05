@@ -133,7 +133,7 @@ print_func_t ostream
    while ((cep=nxt)) {
       nxt = lNext(cep);
       if (strrchr(lGetString(cep, CF_name), '/')) 
-         lRemoveElem(clp_cluster, cep);
+         lRemoveElem(clp_cluster, &cep);
 
    }
 
@@ -179,7 +179,7 @@ print_func_t ostream
    while ((cep=nxt)) {
       nxt = lNext(cep);
       if (strrchr(lGetString(cep, CF_name), '/')) 
-         lRemoveElem(clp_user, cep);
+         lRemoveElem(clp_user, &cep);
    }
 
 #if 0
@@ -205,11 +205,11 @@ print_func_t ostream
 
       if ((cep_dest=lGetElemStr(clp_cluster, CF_name, ro_task_name))) {
          /* do not override cluster global task entry */
-         lRemoveElem(clp_user, cep);
+         lRemoveElem(clp_user, &cep);
       } else if ((cep_dest=lGetElemStr(clp_cluster, CF_name, task_name))) {
          /* override cluster global task entry */
          lSetString(cep_dest, CF_value, lGetString(cep, CF_value));
-         lRemoveElem(clp_user, cep);
+         lRemoveElem(clp_user, &cep);
       } else {
          /* no entry in cluster global task list 
             use entry from user task list */
@@ -221,10 +221,10 @@ print_func_t ostream
 
       free(ro_task_name);
    }
-   lFreeList(clp_user);
+   lFreeList(&clp_user);
 
-   if (task_config)
-      lFreeList(task_config);
+   
+   lFreeList(&task_config);
    task_config = clp_cluster;
 
    /* remove leading '!' from command names */
@@ -251,8 +251,8 @@ print_func_t ostream
    return 0;
 
 Error:
-   lFreeList(clp_cluster);
-   lFreeList(clp_user);
+   lFreeList(&clp_cluster);
+   lFreeList(&clp_user);
    return -1;
 }
 
@@ -498,7 +498,7 @@ print_func_t ostream
          mode_remote = force_remote?mode_remote:!getenv("JOB_ID");          
 /*          (*ostream) ("mode_remote = %d\n", mode_remote); */
       }
-      lFreeList(alp);
+      lFreeList(&alp);
    } else {
       mode_remote = 0;          
 /*       (*ostream) ("no $SGE_ROOT, running as normal tcsh\n"); */

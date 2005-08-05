@@ -260,7 +260,7 @@ XtPointer cld, cad;
                          USERSET_T | PROJECT_T, &alp);
    if (alp) {
       qmonMessageBox(w, alp, 0);
-      alp = lFreeList(alp);
+      lFreeList(&alp);
       /* set default cursor */
       XmtDisplayDefaultCursor(w);
       DEXIT;
@@ -309,7 +309,7 @@ static void updateHostListCB(Widget w, XtPointer cld, XtPointer cad)
    qmonMirrorMultiAnswer(ADMINHOST_T | SUBMITHOST_T | EXECHOST_T | HGROUP_T, &alp);
    if (alp) {
       qmonMessageBox(w, alp, 0);
-      alp = lFreeList(alp);
+      lFreeList(&alp);
       DEXIT;
       return;
    }
@@ -426,7 +426,7 @@ static void qmonHostFillList(void)
    lPSortList(lp, "%I+", EH_name);
    UpdateXmListFromCull(exechost_list, XmFONTLIST_DEFAULT_TAG, lp, EH_name);
    XmListMoveItemToPos(exechost_list, "global", 1);
-   lp = lFreeList(lp);
+   lFreeList(&lp);
    XmListSelectPos(exechost_list, 1, True);
 
    /* host groups */
@@ -822,7 +822,7 @@ XtPointer cld, cad;
          status = True;
 
       qmonMessageBox(w, alp, 0);
-      alp = lFreeList(alp);
+      lFreeList(&alp);
 
       if (status) {
          XtUnmanageChild(eh_ask_layout);
@@ -837,8 +837,8 @@ XtPointer cld, cad;
          qmonExecHostSetAsk(ehname);
       }   
 
-      lFreeWhat(what);
-      ehl = lFreeList(ehl);
+      lFreeWhat(&what);
+      lFreeList(&ehl);
    }
 
    DEXIT;
@@ -997,7 +997,7 @@ StringConst name
       lsep = lAddElemStr(&lsl, HS_name, lGetString(ep, CE_name), HS_Type);
       lSetDouble(lsep, HS_value, 1.0);
    }
-   entries = lFreeList(entries);
+   lFreeList(&entries);
       
    if (ehp) {
       ehsl = lGetList(ehp, EH_scaling_list);
@@ -1011,7 +1011,7 @@ StringConst name
    /* 
    ** set now fully configured load scaling list 
    */
-   host_data.scaling_list = lFreeList(host_data.scaling_list);
+   lFreeList(&(host_data.scaling_list));
    host_data.scaling_list = lsl;
 
    /*
@@ -1079,7 +1079,7 @@ StringConst name
    /* 
    ** set now fully configured usage scaling list 
    */
-   host_data.usage_scaling_list = lFreeList(host_data.usage_scaling_list);
+   lFreeList(&(host_data.usage_scaling_list));
    host_data.usage_scaling_list = usl;
 
    /*
@@ -1141,8 +1141,8 @@ XtPointer cld, cad;
    if (lp) {
       alp = gdi_kill(lp, uti_state_get_default_cell(), 0, EXECD_KILL); 
       qmonMessageBox(w, alp, 1);
-      lp = lFreeList(lp);
-      alp = lFreeList(alp);
+      lFreeList(&lp);
+      lFreeList(&alp);
    }
 
    DEXIT;
@@ -1204,9 +1204,9 @@ XtPointer cld, cad;
 
       updateHostList();
       
-      lFreeWhat(what);
-      lp = lFreeList(lp);
-      alp = lFreeList(alp);
+      lFreeWhat(&what);
+      lFreeList(&lp);
+      lFreeList(&alp);
    }
    DEXIT;
 }
@@ -1305,7 +1305,7 @@ XtPointer cld, cad;
             
             if (!(lp = lCreateElemList("AH", dp, 1))) {
                fprintf(stderr, "lCreateElemList failed\n");
-               lFreeWhat(what);
+               lFreeWhat(&what);
                DEXIT;
                return;
             }
@@ -1319,9 +1319,9 @@ XtPointer cld, cad;
             updateHostList();
             XmListSelectPos(list, 0, True);
             
-            lFreeWhat(what);
-            lp = lFreeList(lp);
-            alp = lFreeList(alp);
+            lFreeWhat(&what);
+            lFreeList(&lp);
+            lFreeList(&alp);
             break;
             
          default:
@@ -1350,7 +1350,7 @@ XtPointer cld, cad;
                            &alp);
    if (alp) {
       qmonMessageBox(w, alp, 0);
-      alp = lFreeList(alp);
+      lFreeList(&alp);
       DEXIT;
       return;
    }
@@ -1787,7 +1787,7 @@ XtPointer cld, cad;
    qmonMirrorMultiAnswer(HGROUP_T, &alp);
    if (alp) {
       qmonMessageBox(w, alp, 0);
-      alp = lFreeList(alp);
+      lFreeList(&alp);
       DEXIT;
       return;
    }
@@ -1862,7 +1862,7 @@ XtPointer cld, cad;
 
    if (lFirst(alp) && lGetUlong(lFirst(alp), AN_status) != STATUS_OK) {
       qmonMessageBox(w, alp, 0);
-      alp = lFreeList(alp);
+      lFreeList(&alp);
    } else {
       XtUnmanageChild(hg_ask_layout);
       updateHostListCB(w, NULL, NULL);

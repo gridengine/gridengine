@@ -82,7 +82,7 @@ lListElem *lWhatToElem(const lEnumeration *what)
                   setByteArray( (char*)pb.head_ptr,  pb.cpr.total_out, whereElem, PACK_String);
                   lSetBool(whatElem, PACK_Compressed, true);
                } else  {
-                  whatElem = lFreeElem(whatElem);
+                  lFreeElem(&whatElem);
                }
             } else
 #endif

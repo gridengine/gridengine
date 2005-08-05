@@ -727,7 +727,7 @@ Cardinal size
                                       0, 0, INF_ALLOWED);
          if (alp) {
             qmonMessageShow(w, True, (StringConst)lGetString(lFirst(alp), AN_text));
-            alp =lFreeList(alp);
+            lFreeList(&alp);
          }
       }
       if (type == QmonQTRN_Type) {
@@ -735,7 +735,7 @@ Cardinal size
                                       0, 1, INF_NOT_ALLOWED);
          if (alp) {
             qmonMessageShow(w, True, (StringConst)lGetString(lFirst(alp), AN_text));
-            alp =lFreeList(alp);
+            lFreeList(&alp);
          }
       }
       if (type == QmonQPN_Type) {
@@ -754,7 +754,7 @@ Cardinal size
          for_each (ep, sl) {
             lAddElemStr(&ret_list, JRE_job_name, lGetString(ep, ST_name), JRE_Type);
          }
-         sl = lFreeList(sl);
+         lFreeList(&sl);
       }
    }
    

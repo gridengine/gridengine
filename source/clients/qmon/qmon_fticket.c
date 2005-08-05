@@ -274,7 +274,7 @@ XtPointer cld, cad;
    qmonMirrorMultiAnswer(l2s(fticket_info.list_type), &alp);
    if (alp) {
       qmonMessageBox(w, alp, 0);
-      alp = lFreeList(alp);
+      lFreeList(&alp);
       DEXIT;
       return;
    }
@@ -312,8 +312,8 @@ XtPointer cld, cad;
 
          alp = sge_gdi(fticket_info.list_type, SGE_GDI_MOD,
                        tlp ? &tlp : &lp, NULL, NULL);
-         if (tlp)
-            lFreeList(tlp);
+         
+         lFreeList(&tlp);
       } else {
          what = lWhat("%T(ALL)", fticket_info.dp);
          alp = sge_gdi(fticket_info.list_type, SGE_GDI_MOD, &lp, NULL, what);
@@ -334,8 +334,8 @@ XtPointer cld, cad;
          printf("_______________________________________\n");
       }
 
-      alp = lFreeList(alp);
-      lFreeWhat(what); 
+      lFreeList(&alp);
+      lFreeWhat(&what); 
    }
 
    /*
@@ -348,7 +348,7 @@ XtPointer cld, cad;
    qmonMirrorMultiAnswer(SC_T, &alp);
    if (alp) {
       qmonMessageBox(w, alp, 0);
-      alp = lFreeList(alp);
+      lFreeList(&alp);
       DEXIT;
       return;
    }
@@ -377,8 +377,8 @@ XtPointer cld, cad;
          printf("_______________________________________\n");
       }
 
-      lFreeList(alp);
-      lFreeWhat(what);
+      lFreeList(&alp);
+      lFreeWhat(&what);
    }
 
 /*    XtUnmanageChild(qmon_fticket); */
@@ -793,7 +793,7 @@ XtPointer cld, cad;
    qmonMirrorMultiAnswer(SC_T | l2s(fticket_info.list_type), &alp);
    if (alp) {
       qmonMessageBox(w, alp, 0);
-      alp = lFreeList(alp);
+      lFreeList(&alp);
       DEXIT;
       return;
    }
@@ -806,8 +806,8 @@ XtPointer cld, cad;
       where = lWhere("%T(%I m= %u)", US_Type, US_type, US_DEPT);
       what = lWhat("%T(ALL)", US_Type);
       lp = lSelect("Departments", lp, where, what);
-      lFreeWhere(where);
-      lFreeWhat(what);
+      lFreeWhere(&where);
+      lFreeWhat(&what);
    } 
 
    /*
@@ -816,8 +816,9 @@ XtPointer cld, cad;
    lPSortList(lp, "%I+", fticket_info.field0);
    qmonFOTCullToMatrix(fticket_info.matrix, lp, 
                         fticket_info.field0, fticket_info.field1);
-   if (fticket_info.list_type == SGE_USERSET_LIST)
-      lp = lFreeList(lp);
+   if (fticket_info.list_type == SGE_USERSET_LIST) {
+      lFreeList(&lp);
+   }
 
    /*
    ** set the percentage
@@ -870,7 +871,7 @@ XtPointer cld, cad;
    qmonMirrorMultiAnswer(selector, &alp);
    if (alp) {
       qmonMessageBox(w, alp, 0);
-      alp = lFreeList(alp);
+      lFreeList(&alp);
       DEXIT;
       return;
    }
@@ -884,8 +885,8 @@ XtPointer cld, cad;
       where = lWhere("%T(%I m= %u)", US_Type, US_type, US_DEPT);
       what = lWhat("%T(ALL)", US_Type);
       lp = lSelect("Departments", lp, where, what);
-      where = lFreeWhere(where);
-      what = lFreeWhat(what);
+      lFreeWhere(&where);
+      lFreeWhat(&what);
    } 
 
    /*
@@ -894,8 +895,9 @@ XtPointer cld, cad;
    lPSortList(lp, "%I+", oticket_info.field0);
    qmonFOTCullToMatrix(oticket_info.matrix, lp, 
                         oticket_info.field0, oticket_info.field1);
-   if (oticket_info.list_type == SGE_USERSET_LIST)
-      lp = lFreeList(lp);
+   if (oticket_info.list_type == SGE_USERSET_LIST) {
+      lFreeList(&lp);
+   }
 
    DEXIT;
 }
@@ -915,7 +917,7 @@ XtPointer cld, cad;
    qmonMirrorMultiAnswer(oticket_info.list_type, &alp);
    if (alp) {
       qmonMessageBox(w, alp, 0);
-      alp = lFreeList(alp);
+      lFreeList(&alp);
       DEXIT;
       return;
    }
@@ -934,8 +936,8 @@ XtPointer cld, cad;
          tlp = lSelect("", lp, NULL, what);
          alp = sge_gdi(oticket_info.list_type, SGE_GDI_MOD,
                        tlp ? &tlp : &lp, NULL, NULL);
-         if (tlp)
-            lFreeList(tlp);
+         
+         lFreeList(&tlp);
       } else {
          what = lWhat("%T(ALL)", oticket_info.dp);
          alp = sge_gdi(oticket_info.list_type, SGE_GDI_MOD, &lp, NULL, what);
@@ -955,8 +957,8 @@ XtPointer cld, cad;
          printf("_______________________________________\n");
       }
 
-      lFreeList(alp);
-      lFreeWhat(what);
+      lFreeList(&alp);
+      lFreeWhat(&what);
    }
 
 /*    XtUnmanageChild(qmon_oticket); */

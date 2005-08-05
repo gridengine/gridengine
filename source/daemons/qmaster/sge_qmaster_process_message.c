@@ -550,7 +550,7 @@ static request_handling_t do_report_request(struct_msg_t *aMsg, monitoring_t *mo
    MONITOR_WAIT_TIME((type = eval_message_and_block(*aMsg)), monitor); 
 
    sge_c_report(aMsg->snd_host, aMsg->snd_name, aMsg->snd_id, rep, monitor);
-   lFreeList(rep);
+   lFreeList(&rep);
 
    DEXIT;
    return type;

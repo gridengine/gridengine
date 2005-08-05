@@ -166,7 +166,7 @@ void sge_clean_lists(void) {
    for(;gdi_object[i].target != 0 ; i++) {
       if (gdi_object[i].master_list != NULL) {
 /*          fprintf(stderr, "---> freeing list %s, it has %d elems\n", gdi_object[i].object_name, lGetNumberOfElem(*gdi_object[i].master_list)); */
-         *gdi_object[i].master_list = lFreeList(*gdi_object[i].master_list);
+         lFreeList(gdi_object[i].master_list);
       }   
    }
    
@@ -524,7 +524,7 @@ static int do_gdi_get_config_list(sge_gdi_request *aReq, sge_gdi_request *aRes, 
 
    aRes->lp = lSelectHash("qmaster_response", conf, aReq->cp, aReq->enp, false);
 
-   conf = lFreeList(conf);
+   lFreeList(&conf);
 
    *anAfterCnt = lGetNumberOfElem(aRes->lp);
 
@@ -552,7 +552,7 @@ static int do_gdi_get_sc_config_list(sge_gdi_request *aReq, sge_gdi_request *aRe
    sprintf(SGE_EVENT, MSG_GDI_OKNL);
    answer_list_add(&(aRes->alp), SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
 
-   conf = lFreeList(conf);
+   lFreeList(&conf);
    
    DEXIT;
    return 0;
@@ -623,7 +623,7 @@ static void sge_c_gdi_add(gdi_object_t *ao, char *host, sge_gdi_request *request
                                   (sub_command & SGE_GDI_RETURN_NEW_VERSION) ? 
                                   &(answer->lp) : NULL, 
                                   user, host, uid, gid, group, request, monitor);
-                     lFreeElem(clone);                
+                     lFreeElem(&clone);
                }
                
             } else {
@@ -715,7 +715,7 @@ static void sge_c_gdi_add(gdi_object_t *ao, char *host, sge_gdi_request *request
          }
 
          /* we could do postprocessing based on ppList here */
-         ppList = lFreeList(ppList);
+         lFreeList(&ppList);
       }
    }
    
@@ -732,7 +732,7 @@ static void sge_c_gdi_add(gdi_object_t *ao, char *host, sge_gdi_request *request
       } 
       SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
 
-      ticket_orders = lFreeList(ticket_orders);
+      lFreeList(&ticket_orders);
    }
 
    DEXIT;
@@ -1008,8 +1008,7 @@ static void sge_gdi_do_permcheck(char *host, sge_gdi_request *request, sge_gdi_r
       lSetUlong(ep, PERM_operator, value);
       if ((request->cp != NULL) && (request->enp != NULL)) {
          answer->lp = lSelect("permissions", lp, request->cp, request->enp);
-         lFreeList(lp); 
-         lp = NULL;
+         lFreeList(&lp); 
       } else {
          answer->lp = lp;
       }
@@ -1443,7 +1442,7 @@ static void sge_c_gdi_mod(gdi_object_t *ao, char *host, sge_gdi_request *request
       }
    }
 
-   ppList = lFreeList(ppList);
+   lFreeList(&ppList);
 
    DEXIT;
    return;
@@ -1869,8 +1868,8 @@ monitoring_t *monitor
             lAppendElem(*alpp, failure);
          }
       }
-      lFreeList(tmp_alp);
-      lFreeElem(new_obj);
+      lFreeList(&tmp_alp);
+      lFreeElem(&new_obj);
       DEXIT;
       return STATUS_EUNKNOWN;
    }  
@@ -1878,14 +1877,14 @@ monitoring_t *monitor
 
    /* write on file */
    if (object->writer(alpp, new_obj, object)) {
-      lFreeElem(new_obj);
-      lFreeList(tmp_alp);
+      lFreeElem(&new_obj);
+      lFreeList(&tmp_alp);
       DEXIT;
       return STATUS_EUNKNOWN;
    }
 
-   if (alpp) {
-      if (!*alpp) {
+   if (alpp != NULL) {
+      if (*alpp == NULL) {
          *alpp = lCreateList("answer", AN_Type);
       }
    
@@ -1899,7 +1898,7 @@ monitoring_t *monitor
          } 
       }
    }
-   tmp_alp = lFreeList(tmp_alp);
+   lFreeList(&tmp_alp);
    {
       lList **master_list = NULL;
 
@@ -1922,7 +1921,7 @@ monitoring_t *monitor
       object->on_success(new_obj, old_obj, object, ppList, monitor);
    }
 
-   lFreeElem(old_obj);
+   lFreeElem(&old_obj);
 
    INFO((SGE_EVENT, 
       add?MSG_SGETEXT_ADDEDTOLIST_SSSS:

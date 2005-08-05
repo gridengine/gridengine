@@ -312,7 +312,7 @@ sge_print_queue(lListElem *q, lList *exechost_list, lList *centry_list,
 */         
       }
 
-      lFreeList(rlp);
+      lFreeList(&rlp);
       sge_dstring_free(&resource_string);
 
    }
@@ -788,10 +788,10 @@ int queue_name_length
             sge_print_job(jep, lFirst(task_group), NULL, 1, NULL, 
                           &dyn_task_str, full_listing, 0, 0, ehl, 
                           centry_list, pe_list, "", group_opt, 0, queue_name_length);
-            task_group = lFreeList(task_group);
+            lFreeList(&task_group);
             sge_dstring_free(&dyn_task_str);
          }
-         ja_task_list = lFreeList(ja_task_list);
+         lFreeList(&ja_task_list);
       }
       if (jep != nxt && full_listing & QSTAT_DISPLAY_PENDING) {
 
@@ -1403,7 +1403,7 @@ int queue_name_length
       else
          printf("%-5.5f ", lGetDouble(up, UA_value)); 
 
-      lFreeList(job_usage_list);
+      lFreeList(&job_usage_list);
 
       /* get tickets for job/slot */
       /* braces needed to suppress compiler warnings */
@@ -1597,7 +1597,7 @@ int queue_name_length
 
                printf("%s%s=%s (default)\n", QSTAT_INDENT, name, lGetString(ce, CE_default));      
             }
-            lFreeList(attributes);
+            lFreeList(&attributes);
          }
 
          sge_show_ce_type_list_line_by_line(QSTAT_INDENT "Soft Resources:   ",

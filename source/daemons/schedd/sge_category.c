@@ -133,7 +133,7 @@ void sge_print_categories(void) {
    DEXIT;
 }
 /*-------------------------------------------------------------------------*/
-/*    add jobs' category to the´global category list, if it doesn´t        */
+/*    add jobs' category to theï¿½global category list, if it doesnï¿½t        */
 /*    already exist, and reference the category in the job element         */
 /*    The category_list is recreated for every scheduler run               */
 /*                                                                         */
@@ -231,7 +231,7 @@ int sge_add_job_category( lListElem *job, lList *acl_list ) {
 }
 
 /*-------------------------------------------------------------------------*/
-/*    delete job´s category if CT_refcount gets 0                          */
+/*    delete jobï¿½s category if CT_refcount gets 0                          */
 /*-------------------------------------------------------------------------*/
 int sge_delete_job_category(
 lListElem *job 
@@ -252,7 +252,7 @@ lListElem *job
       else {
          DPRINTF(("############## Removing %s from category list (refcount: " sge_u32 ")\n", 
                   lGetString(cat, CT_str), lGetUlong(cat, CT_refcount)));
-         lRemoveElem(CATEGORY_LIST, cat);
+         lRemoveElem(CATEGORY_LIST, &cat);
       }
    }
    lSetRef(job, JB_category, NULL);
@@ -280,7 +280,7 @@ lListElem *job
          for(i=0; (i < max && !found); i++) {
             for_each(ref, refs[i]) {
                if (lGetRef(ref, REF_ref) == job) {
-                  lRemoveElem(refs[i], ref);
+                  lRemoveElem(refs[i], &ref);
                   found = true;
                   break;
                }
@@ -289,7 +289,7 @@ lListElem *job
             if (found) { /* is category empty? */
                if ((lGetNumberOfElem(lGetList(cat, SCT_job_pending_ref)) == 0) &&
                    (lGetNumberOfElem(lGetList(cat, SCT_job_ref)) == 0)) {
-                  lRemoveElem(CS_CATEGORY_LIST, cat);
+                  lRemoveElem(CS_CATEGORY_LIST, &cat);
                }
                break;
             }
@@ -367,8 +367,8 @@ int sge_rebuild_job_category( lList *job_list, lList *acl_list) {
 
    DENTER(TOP_LAYER, "sge_rebuild_job_category");
 
-   CATEGORY_LIST = lFreeList(CATEGORY_LIST);
-   CS_CATEGORY_LIST = lFreeList(CS_CATEGORY_LIST);
+   lFreeList(&CATEGORY_LIST);
+   lFreeList(&CS_CATEGORY_LIST);
 
    for_each (job, job_list) {
       sge_add_job_category(job, acl_list);
@@ -552,5 +552,5 @@ lList *sge_category_job_copy(lList *queue_list, lList **orders) {
 /*-------------------------------------------------------------------------*/
 void sge_free_job_category(void)
 {
-   CATEGORY_LIST = lFreeList(CATEGORY_LIST);
+   lFreeList(&CATEGORY_LIST);
 }

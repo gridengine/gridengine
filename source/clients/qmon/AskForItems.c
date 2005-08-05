@@ -530,7 +530,7 @@ StringConst help_text_default
        ** if *out_list = NULL lFreeList returns
        ** otherwise it's an error anyway
        */
-       *out_list = lFreeList(*out_list);
+       lFreeList(out_list);
        *out_list = XmStringToCull(chosen_list, dp, nm1, ALL_ITEMS);
     }
 

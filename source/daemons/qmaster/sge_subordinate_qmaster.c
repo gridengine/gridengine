@@ -126,7 +126,7 @@ cqueue_list_x_on_subordinate_gdil(lList *this_list, bool suspend,
                }
             }
          }
-         resolved_so_list = lFreeList(resolved_so_list);
+         lFreeList(&resolved_so_list);
       } else {
          /* should never happen */
          ERROR((SGE_EVENT, MSG_QINSTANCE_NQIFOUND_SS, full_name, SGE_FUNC));
@@ -284,7 +284,7 @@ qinstance_find_suspended_subordinates(const lListElem *this_elem,
             if (!tst_sos(slots_used, slots, so)) {
                DPRINTF (("Removing %s because it's not suspended\n",
                          lGetString (so, SO_name)));
-               lRemoveElem(*resolved_so_list, so);
+               lRemoveElem(*resolved_so_list, &so);
             }
          }
       }
@@ -341,7 +341,7 @@ qinstance_initialize_sos_attr(lListElem *this_elem, monitoring_t *monitor)
                }
             } 
          }
-         resolved_so_list = lFreeList(resolved_so_list);
+         lFreeList(&resolved_so_list);
       }
    }
    DEXIT;

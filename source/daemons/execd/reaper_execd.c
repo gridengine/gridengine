@@ -320,7 +320,7 @@ lListElem *jr
    } else {
       if (usage) {
          lXchgList(jr, JR_usage, &usage);
-         lFreeList(usage);
+         lFreeList(&usage);
       }
    }
 
@@ -992,9 +992,9 @@ lListElem *jr
 
       if (pe_task_id_str) {
          /* unchain pe task element from task list */
-         lRemoveElem(lGetList(jatep, JAT_task_list), petep);
+         lRemoveElem(lGetList(jatep, JAT_task_list), &petep);
       } else {
-         lRemoveElem(Master_Job_List, jep);
+         lRemoveElem(Master_Job_List, &jep);
       }
       del_job_report(jr);   
 
@@ -1644,7 +1644,7 @@ int usage_mul_factor
 #endif   
 
          build_derived_final_usage(jr, usage_mul_factor);
-         cflp = lFreeList(cflp);
+         lFreeList(&cflp);
       }
       else {
          ERROR((SGE_EVENT, MSG_SHEPHERD_CANTOPENUSAGEFILEXFORJOBYZX_SUUS,

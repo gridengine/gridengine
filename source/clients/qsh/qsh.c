@@ -971,9 +971,9 @@ static const char *get_client_name(int is_rsh, int is_rlogin, int inherit_job)
    if(get_configuration(uti_state_get_qualified_hostname(), &global, &local) ||
       merge_configuration(global, local, &conf, &conf_list)) {
       ERROR((SGE_EVENT, MSG_CONFIG_CANTGETCONFIGURATIONFROMQMASTER));
-      conf_list = lFreeList(conf_list);
-      global    = lFreeElem(global);
-      local     = lFreeElem(local);
+      lFreeList(&conf_list);
+      lFreeElem(&global);
+      lFreeElem(&local);
       DEXIT;
       return NULL;
    }
@@ -982,9 +982,9 @@ static const char *get_client_name(int is_rsh, int is_rlogin, int inherit_job)
    qlogin_cmd_elem = lGetElemStr(conf_list, CF_name, config_name);
    if(!qlogin_cmd_elem) {
       ERROR((SGE_EVENT, MSG_CONFIG_CANTGETCONFIGURATIONFROMQMASTER));
-      conf_list = lFreeList(conf_list);
-      global    = lFreeElem(global);
-      local     = lFreeElem(local);
+      lFreeList(&conf_list);
+      lFreeElem(&global);
+      lFreeElem(&local);
       DEXIT;
       return NULL;
    }
@@ -1013,9 +1013,9 @@ static const char *get_client_name(int is_rsh, int is_rlogin, int inherit_job)
 
    client_name = strdup(client_name);
 
-   conf_list = lFreeList(conf_list);
-   global    = lFreeElem(global);
-   local     = lFreeElem(local);
+   lFreeList(&conf_list);
+   lFreeElem(&global);
+   lFreeElem(&local);
 
    return client_name;
 }
@@ -1286,7 +1286,7 @@ int main(int argc, char **argv)
    */
    opt_list_append_opts_from_default_files(&opts_defaults, &alp, environ);
    do_exit = parse_result_list(alp, &alp_error);
-   lFreeList(alp);
+   lFreeList(&alp);
 
    if (alp_error) {
       sge_prof_cleanup();
@@ -1298,7 +1298,7 @@ int main(int argc, char **argv)
    */
    alp = cull_parse_cmdline(argv + 1, environ, &opts_cmdline, FLG_USE_PSEUDOS);
    do_exit = parse_result_list(alp, &alp_error);
-   lFreeList(alp);
+   lFreeList(&alp);
 
    if (alp_error) {
       sge_prof_cleanup();
@@ -1312,7 +1312,7 @@ int main(int argc, char **argv)
       answer_list_add(&answer, SGE_EVENT, 
                       STATUS_EMALLOC, ANSWER_QUALITY_ERROR);
       do_exit = parse_result_list(alp, &alp_error);
-      answer = lFreeList(answer);
+      lFreeList(&answer);
       
       if (alp_error) {
          sge_prof_cleanup();
@@ -1328,13 +1328,13 @@ int main(int argc, char **argv)
 
    /* set verbosity */
    while ((ep = lGetElemStr(opts_cmdline, SPA_switch, "-verbose"))) {
-      lRemoveElem(opts_cmdline, ep);
+      lRemoveElem(opts_cmdline, &ep);
       log_state_set_log_verbose(1);
    }
 
    /* parse -noshell */
    while ((ep = lGetElemStr(opts_cmdline, SPA_switch, "-noshell"))) {
-      lRemoveElem(opts_cmdline, ep);
+      lRemoveElem(opts_cmdline, &ep);
       noshell = 1;
    }
 
@@ -1343,12 +1343,12 @@ int main(int argc, char **argv)
    */
    if(is_rsh) {
       while ((ep = lGetElemStr(opts_cmdline, SPA_switch, "-nostdin"))) {
-         lRemoveElem(opts_cmdline, ep);
+         lRemoveElem(opts_cmdline, &ep);
          nostdin = 1;
       }
      
       while ((ep = lGetElemStr(opts_cmdline, SPA_switch, "-inherit"))) {
-         lRemoveElem(opts_cmdline, ep);
+         lRemoveElem(opts_cmdline, &ep);
          inherit_job = 1;
       }
      
@@ -1429,10 +1429,10 @@ int main(int argc, char **argv)
 
       /* remove the binary option from commandline before proceeding */
       while ((ep = lGetElemStr(opts_defaults, SPA_switch, "-b"))) {
-         lRemoveElem(opts_defaults, ep);
+         lRemoveElem(opts_defaults, &ep);
       }
       while ((ep = lGetElemStr(opts_cmdline, SPA_switch, "-b"))) {
-         lRemoveElem(opts_cmdline, ep);
+         lRemoveElem(opts_cmdline, &ep);
       }
 
       /* set binary bit or handle script submission */
@@ -1460,7 +1460,7 @@ int main(int argc, char **argv)
          opt_list_append_opts_from_script(&opts_scriptfile, &alp, 
                                           opts_qrsh, environ);
          do_exit = parse_result_list(alp, &alp_error);
-         lFreeList(alp);
+         lFreeList(&alp);
 
          if (alp_error) {
             sge_prof_cleanup();
@@ -1470,11 +1470,11 @@ int main(int argc, char **argv)
          /* set length and script contents in job */
          if ((ep = lGetElemStr(opts_scriptfile, SPA_switch, STR_PSEUDO_SCRIPTLEN))) {
             lSetUlong(job, JB_script_size, lGetUlong(ep, SPA_argval_lUlongT));
-            lRemoveElem(opts_scriptfile, ep);
+            lRemoveElem(opts_scriptfile, &ep);
          }
          if ((ep = lGetElemStr(opts_scriptfile, SPA_switch, STR_PSEUDO_SCRIPTPTR))) {
             lSetString(job, JB_script_ptr, lGetString(ep, SPA_argval_lStringT));
-            lRemoveElem(opts_scriptfile, ep);
+            lRemoveElem(opts_scriptfile, &ep);
          }
       }   
    }
@@ -1493,8 +1493,8 @@ int main(int argc, char **argv)
 
    alp = cull_parse_qsh_parameter(opts_all, &job);
    do_exit = parse_result_list(alp, &alp_error);
-   lFreeList(alp);
-   lFreeList(opts_all);
+   lFreeList(&alp);
+   lFreeList(&opts_all);
    if (alp_error) {
       sge_prof_cleanup();
       SGE_EXIT(1);
@@ -1683,8 +1683,8 @@ int main(int argc, char **argv)
          do_exit = 1;
    
       if (do_exit) {
-         lFreeList(alp);
-         lFreeList(lp_jobs);
+         lFreeList(&alp);
+         lFreeList(&lp_jobs);
          if (status == STATUS_NOTOK_DOAGAIN) { 
             sge_prof_cleanup();
             SGE_EXIT(status);
@@ -1762,9 +1762,9 @@ int main(int argc, char **argv)
    
          do_exit = parse_result_list(alp, &alp_error);
    
-         lFreeWhere(where);
-         lFreeWhat(what);
-         alp = lFreeList(alp);
+         lFreeWhere(&where);
+         lFreeWhat(&what);
+         lFreeList(&alp);
    
          do_shut = shut_me_down;
          if (do_shut || do_exit) {
@@ -1832,7 +1832,7 @@ int main(int argc, char **argv)
                break;
          }
    
-         lp_poll = lFreeList(lp_poll);
+         lFreeList(&lp_poll);
 
          if(!do_exit && polling_interval < QSH_POLLING_MAX) {
             polling_interval *= 2;
@@ -1840,8 +1840,7 @@ int main(int argc, char **argv)
          }
       } /* end of while (1) polling */
    
-      lp_jobs = lFreeList(lp_jobs);
-   
+      lFreeList(&lp_jobs);
    }
 
    FREE(client_name);
@@ -1908,7 +1907,7 @@ static void remove_unknown_opts(lList *lp, u_long32 jb_now, int tightly_integrat
                sge_prof_cleanup();
                SGE_EXIT(EXIT_FAILURE);
             } else {
-               lRemoveElem(lp, ep);
+               lRemoveElem(lp, &ep);
                continue;
             }
          }
@@ -1931,7 +1930,7 @@ static void remove_unknown_opts(lList *lp, u_long32 jb_now, int tightly_integrat
                sge_prof_cleanup();
                SGE_EXIT(EXIT_FAILURE);
             } else {
-               lRemoveElem(lp, ep);
+               lRemoveElem(lp, &ep);
                continue;
             }
          }
@@ -1948,7 +1947,7 @@ static void remove_unknown_opts(lList *lp, u_long32 jb_now, int tightly_integrat
                   sge_prof_cleanup();
                   SGE_EXIT(EXIT_FAILURE);
                } else {
-                  lRemoveElem(lp, ep);
+                  lRemoveElem(lp, &ep);
                   continue;
                }
             }
@@ -1962,7 +1961,7 @@ static void remove_unknown_opts(lList *lp, u_long32 jb_now, int tightly_integrat
                   sge_prof_cleanup();
                   SGE_EXIT(EXIT_FAILURE);
                } else {
-                  lRemoveElem(lp, ep);
+                  lRemoveElem(lp, &ep);
                   continue;
                }
             }
@@ -1980,7 +1979,7 @@ static void remove_unknown_opts(lList *lp, u_long32 jb_now, int tightly_integrat
                   sge_prof_cleanup();
                   SGE_EXIT(EXIT_FAILURE);
                } else {
-                  lRemoveElem(lp, ep);
+                  lRemoveElem(lp, &ep);
                   continue;
                }
             }

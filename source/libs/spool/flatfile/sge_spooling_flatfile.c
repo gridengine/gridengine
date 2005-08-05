@@ -468,7 +468,7 @@ read_validate_object(lList **answer_list,
                     lGetRef(rule, SPR_validate_func);
       if (validate_func != NULL) {
          if (!validate_func(answer_list, type, rule, ep, object_type)) {
-            lFreeElem(ep);
+            lFreeElem(&ep);
             ep = NULL;
             ret = false;
          }

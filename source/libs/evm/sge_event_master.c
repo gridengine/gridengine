@@ -873,9 +873,9 @@ process_mod_event_client(monitoring_t *monitor)
             int i;
             for (i=0; i<sgeE_EVENTSIZE; i++){ 
                if (old_sub[i].where)
-                  lFreeWhere(old_sub[i].where);
+                  lFreeWhere(&(old_sub[i].where));
                if (old_sub[i].what)
-                  lFreeWhat(old_sub[i].what);
+                  lFreeWhat(&(old_sub[i].what));
                if (old_sub[i].descr){
                   cull_hash_free_descr(old_sub[i].descr);
                   free(old_sub[i].descr);
@@ -899,10 +899,10 @@ process_mod_event_client(monitoring_t *monitor)
             "em thread", "master host", lGetString(event_client, EV_name), MSG_EVE_EVENTCLIENT));
 
       unlock_client (id);
-      clio = lFreeElem(clio);
+      lFreeElem(&clio);
    }
 
-   temp_evc_list = lFreeList(temp_evc_list);
+   lFreeList(&temp_evc_list);
 
    DEXIT; 
    return;
@@ -1839,7 +1839,7 @@ static void process_sends(monitoring_t *monitor)
             if (!added) {
                MONITOR_EDT_SKIP(monitor);
             }
-            event = lFreeElem(event);
+            lFreeElem(&event);
             event = lFirst (event_list);
          } /* while */
       } else {
@@ -1866,7 +1866,7 @@ static void process_sends(monitoring_t *monitor)
                } 
                else {
                   MONITOR_EDT_SKIP(monitor);
-                  event = lFreeElem(event);
+                  lFreeElem(&event);
                }
                event = lFirst (event_list);
             } /* while */
@@ -1875,10 +1875,10 @@ static void process_sends(monitoring_t *monitor)
          unlock_client(ec_id);
       } /* else */
 
-      send = lFreeElem(send);
+      lFreeElem(&send);
    } /* while */
 
-   temp_send_events = lFreeList(temp_send_events);                   
+   lFreeList(&temp_send_events);
    DEXIT;
    return;
 } /* process_sends() */
@@ -2012,10 +2012,10 @@ static void process_acks(monitoring_t *monitor)
          unlock_client(ec_id);
       } /* else */
 
-      ack = lFreeElem (ack);
+      lFreeElem(&ack);
    } /* while */
 
-   temp_ack_list = lFreeList(temp_ack_list);
+   lFreeList(&temp_ack_list);
    
    DEXIT;
 } /* sge_handle_event_ack() */
@@ -2419,7 +2419,7 @@ static void* event_deliver_thread(void *anArg)
                               &next_prof_output);
    }
 
-   report_list = lFreeList(report_list);
+   lFreeList(&report_list);
    report = NULL;
   
    sge_monitor_free(&monitor);
@@ -2511,21 +2511,21 @@ static void remove_event_client(lListElem *client, int aClientID, bool lock_even
             Subscribed_Control.subscribed_events[i]--;
          }
          if (old_sub[i].where) {
-            lFreeWhere(old_sub[i].where);
+            lFreeWhere(&(old_sub[i].where));
          }   
-         if (old_sub[i].what) {
-            lFreeWhat(old_sub[i].what);
-         }   
+
+         lFreeWhat(&old_sub[i].what);
+
          if (old_sub[i].descr){
             cull_hash_free_descr(old_sub[i].descr);
-            free(old_sub[i].descr);
+            FREE(old_sub[i].descr);
          }
       } 
       
       sge_mutex_unlock("event_master_subscribed_events_mutex", "lock_client", __LINE__, 
                     &Subscribed_Control.subscribed_events_mutex);
       
-      free(old_sub);
+      FREE(old_sub);
       lSetRef(client, EV_sub_array, NULL);
    }
 
@@ -2535,8 +2535,7 @@ static void remove_event_client(lListElem *client, int aClientID, bool lock_even
       sge_mutex_lock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.mutex);
    }
 
-   lRemoveElem(Master_Control.clients, client);
-   client = NULL;
+   lRemoveElem(Master_Control.clients, &client);
    Master_Control.indices_dirty = true;
 
    if (lock_event_master) {
@@ -2776,8 +2775,7 @@ static void send_events(lListElem *report, lList *report_list, monitoring_t *mon
 
                   if (olp != NULL) {
                      /* This frees lp. */
-                     lAddList (olp, lp);
-                     lp = NULL;
+                     lAddList(olp, &lp);
                   }
                   else {
                      lSetList(event_client, EV_events, lp);
@@ -3000,10 +2998,10 @@ static void build_subscription(lListElem *event_el)
             Subscribed_Control.subscribed_events[i]--;
          }
          if (old_sub_array[i].where) {
-            lFreeWhere(old_sub_array[i].where);
+            lFreeWhere(&(old_sub_array[i].where));
          }   
          if (old_sub_array[i].what) {
-            lFreeWhat(old_sub_array[i].what);
+            lFreeWhat(&(old_sub_array[i].what));
          }   
          if (old_sub_array[i].descr){
             cull_hash_free_descr(old_sub_array[i].descr);
@@ -3195,7 +3193,7 @@ static int purge_event_list(lList* aList, ev_event anEvent)
          break;
       }
 
-      lRemoveElem(aList, tmp);
+      lRemoveElem(aList, &tmp);
       purged++;
    }
 
@@ -3226,7 +3224,7 @@ static void add_list_event_direct(lListElem *event_client, lListElem *event,
       /* the event client is not connected anymore, so we are not
          adding new events to it*/
       if (!copy_event) {
-         event = lFreeElem(event);
+         lFreeElem(&event);
       }
 
       return;
@@ -3266,14 +3264,14 @@ static void add_list_event_direct(lListElem *event_client, lListElem *event,
          /* no elements in the event list, no need for an event */
          if (!SEND_EVENTS[type] && lGetNumberOfElem(clp) == 0) {
             if (clp != NULL) {
-               clp = lFreeList(clp);
+               lFreeList(&clp);
             }
             
             /* we are not making a copy, so we have to restore the old element */
             lXchgList (event, ET_new_version, &lp);
                
             if (!copy_event) {
-               event = lFreeElem(event);
+               lFreeElem(&event);
             }
 
             DPRINTF (("Skipping event because it has no content for this client.\n"));
@@ -3284,7 +3282,7 @@ static void add_list_event_direct(lListElem *event_client, lListElem *event,
           * we are making a copy, freeing the list is the responsibility of the
           * calling function. */
          if (!copy_event) {
-            lp = lFreeList (lp);
+            lFreeList(&lp);
          }
       } /* if */
       /* If there's no what clause, and we want a copy, we copy the list */

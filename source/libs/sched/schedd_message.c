@@ -201,8 +201,8 @@ void schedd_mes_initialize(void)
 void schedd_mes_release(void)
 {
    DENTER(TOP_LAYER, "schedd_release_messages");
-   sme = lFreeElem(sme);
-   tmp_sme = lFreeElem(tmp_sme);
+   lFreeElem(&sme);
+   lFreeElem(&tmp_sme);
    DEXIT;
 }
 
@@ -259,7 +259,7 @@ void schedd_mes_commit(lList *job_list, int ignore_category, lRef jid_category) 
        */
       sme_mes_list = lGetList(sme, SME_message_list);
       lXchgList(tmp_sme, SME_message_list, &tmp_sme_list);
-      lAddList(sme_mes_list, tmp_sme_list);
+      lAddList(sme_mes_list, &tmp_sme_list);
       tmp_sme_list = lCreateList("job info messages", MES_Type);
       lSetList(tmp_sme, SME_message_list, tmp_sme_list);
    }
@@ -338,7 +338,7 @@ lListElem *schedd_mes_obtain_package(int *global_mes_count, int *job_mes_count)
 
    ret = sme; /* calling function is responsible to free messages! */
    sme = NULL; 
-   tmp_sme = lFreeElem(tmp_sme);
+   lFreeElem(&tmp_sme);
 
    DEXIT;
    return ret; 

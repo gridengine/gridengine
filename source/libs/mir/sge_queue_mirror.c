@@ -80,8 +80,7 @@ cqueue_update_master_list(sge_object_type type, sge_event_action action,
        * Replace CQ_qinstances list
        */         
       lXchgList(cqueue, CQ_qinstances, &qinstance_list);
-      qinstance_list = lFreeList(qinstance_list);
-
+      lFreeList(&qinstance_list);
    }
 
    DEXIT;

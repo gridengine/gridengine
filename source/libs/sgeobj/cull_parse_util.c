@@ -105,7 +105,7 @@ lList **pplist
    ep = lCreateElem(descr);
    if (!ep) {
       DPRINTF(("cull_parse_string_list: cannot create element\n"));
-      lFreeList(list);
+      lFreeList(&list);
       DEXIT;
       return -4;      
    }
@@ -119,7 +119,7 @@ lList **pplist
          ep = lCreateElem(descr);
          if (!ep) {
             DPRINTF(("cull_parse_string_list: cannot create another element\n"));
-            lFreeList(list);
+            lFreeList(&list);
             DEXIT;
             return -5;      
          }
@@ -138,7 +138,7 @@ lList **pplist
                if (sscanf(*pstrlist, "%f", &f) != 1) {
                   DPRINTF(("cull_parse_string_list: " \
                            "error interpreting float: %s\n", *pstrlist));
-                  lFreeList(list);
+                  lFreeList(&list);
                   DEXIT;
                   return -6;
                }
@@ -153,7 +153,7 @@ lList **pplist
                if (sscanf(*pstrlist, "%99lg", &dd) != 1) {
                   DPRINTF(("cull_parse_string_list: " \
                            "error interpreting double: %s\n", *pstrlist));
-                  lFreeList(list);
+                  lFreeList(&list);
                   DEXIT;
                   return -7;
                }
@@ -168,7 +168,7 @@ lList **pplist
                if (sscanf(*pstrlist, sge_u32, &ul) != 1) {
                   DPRINTF(("cull_parse_string_list: " \
                            "error interpreting ulong: %s\n", *pstrlist));
-                  lFreeList(list);
+                  lFreeList(&list);
                   DEXIT;
                   return -8;
                }
@@ -184,7 +184,7 @@ lList **pplist
                if (sscanf(*pstrlist, "%ld", &l) != 1) {
                   DPRINTF(("cull_parse_string_list: " \
                            "error interpreting long: %s\n", *pstrlist));
-                  lFreeList(list);
+                  lFreeList(&list);
                   DEXIT;
                   return -9;
                }
@@ -199,7 +199,7 @@ lList **pplist
                if (sscanf(*pstrlist, "%c", &c) != 1) {
                   DPRINTF(("cull_parse_string_list: " \
                            "error interpreting char: %s\n", *pstrlist));
-                  lFreeList(list);
+                  lFreeList(&list);
                   DEXIT;
                   return -10;
                }
@@ -214,7 +214,7 @@ lList **pplist
                if (sscanf(*pstrlist, "%d", &i) != 1) {
                   DPRINTF(("cull_parse_string_list: " \
                            "error interpreting int: %s\n", *pstrlist));
-                  lFreeList(list);
+                  lFreeList(&list);
                   DEXIT;
                   return -11;
                }
@@ -239,7 +239,7 @@ lList **pplist
 
          default:
             DPRINTF(("encountered unknown list field type %d\n", type));
-            lFreeList(list);
+            lFreeList(&list);
             DEXIT;
             return -12;
 
@@ -249,7 +249,7 @@ lList **pplist
 
    if (*rule != 0) {
       DPRINTF(("invalid number of entries specified\n"));
-      lFreeList(list);
+      lFreeList(&list);
       DEXIT;
       return -13;
    } 
@@ -611,12 +611,13 @@ int double_keys
          
          ep_other = lNext(ep_other);
          if (is_there) {
+            lListElem *prev = lPrev(ep_other);
             /*
             ** ep_other must always point to a valid element, 
             ** or next "increase" fails, the element that comes later on
             ** in the list is kept, because ep_other < ep_one always
             */
-            lRemoveElem(lp, lPrev(ep_other));
+            lRemoveElem(lp, &prev);
          }
       }
    }
@@ -1208,7 +1209,7 @@ int soft_field
                hard_list = lp;
             }   
             else {
-               lAddList(hard_list, lp);
+               lAddList(hard_list, &lp);
             }   
          }
          else {
@@ -1216,11 +1217,11 @@ int soft_field
                   soft_list = lp;
             }      
             else {
-               lAddList(soft_list, lp);
+               lAddList(soft_list, &lp);
             }   
          }
       }
-      lRemoveElem(cmdline, ep);
+      lRemoveElem(cmdline, &ep);
     }
 
     lSetList(job, hard_field, hard_list);
@@ -1259,7 +1260,7 @@ u_long32 flags
             if (!destlist) {
                destlist = lp;
             } else {
-               lAddList(destlist, lp);
+               lAddList(destlist, &lp);
                /*
                ** was freed by lAddList
                */
@@ -1271,20 +1272,21 @@ u_long32 flags
             }
          }
       } else if (flags & FLG_LIST_MERGE) {
-         if (lp) {
+         if (lp != NULL) {
             if (!destlist) {
                destlist = lp; 
             } else {
                cull_merge_definition_list(&destlist, lp, nm_var, nm_value);
-               lFreeList(lp);
+               lFreeList(&lp);
             }
          }
       } else {
-         if (destlist)
-            lFreeList(destlist);
+         if (destlist) {
+            lFreeList(&destlist);
+         }
          destlist = lp;
       } 
-      lRemoveElem(cmdline, ep);
+      lRemoveElem(cmdline, &ep);
    } 
 
    lSetList(job, field, destlist);

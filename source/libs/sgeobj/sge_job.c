@@ -357,7 +357,7 @@ void job_create_hold_id_lists(const lListElem *job, lList *id_list[8],
    id_list[0] = lCopyList("", lGetList(job, JB_ja_n_h_ids));
 
    for (i = 0; i < 7; i++) {
-      list[i] = lFreeList(list[i]);
+      lFreeList(&(list[i]));
    }
    DEXIT;
 }
@@ -387,7 +387,7 @@ void job_destroy_hold_id_lists(const lListElem *job, lList *id_list[8])
 
    DENTER(TOP_LAYER, "job_destroy_hold_id_lists");
    for (i = 0; i < 8; i++) {
-      id_list[i] = lFreeList(id_list[i]);
+      lFreeList(&(id_list[i]));
    }
    DEXIT;
 }
@@ -536,8 +536,8 @@ u_long32 job_get_not_enrolled_ja_tasks(const lListElem *job)
    ret += range_list_get_number_of_ids(lGetList(job, JB_ja_n_h_ids));
    ret += range_list_get_number_of_ids(uos_ids);
 
-   uos_ids = lFreeList(uos_ids);
-   uo_ids = lFreeList(uo_ids);
+   lFreeList(&uos_ids);
+   lFreeList(&uo_ids);
 
    DEXIT;
    return ret;

@@ -580,7 +580,7 @@ lListElem *lUndumpElemFp(FILE *fp, const lDescr *dp)
 
    if ((n = lCountDescr(dp)) <= 0) {
       LERROR(LECOUNTDESCR);
-      lFreeElem(ep);
+      lFreeElem(&ep);
       DEXIT;
       return NULL;
    }
@@ -589,7 +589,7 @@ lListElem *lUndumpElemFp(FILE *fp, const lDescr *dp)
    if (fGetBra(fp)) {
       printf("bra is missing\n");
       LERROR(LESYNTAX);
-      lFreeElem(ep);
+      lFreeElem(&ep);
       DEXIT;
       return NULL;
    }
@@ -639,14 +639,14 @@ lListElem *lUndumpElemFp(FILE *fp, const lDescr *dp)
          ret = fGetList(fp, &(ep->cont[i].glp));
          break;
       default:
-         lFreeElem(ep);
+         lFreeElem(&ep);
          unknownType("lUndumpElemFp");
       }
    }
 
    /* error handling for loop */
    if (ret != 0) {
-      lFreeElem(ep);
+      lFreeElem(&ep);
       LERROR(LEFIELDREAD);
       DEXIT;
       return NULL;
@@ -654,7 +654,7 @@ lListElem *lUndumpElemFp(FILE *fp, const lDescr *dp)
 
    /* read ket */
    if (fGetKet(fp)) {
-      lFreeElem(ep);
+      lFreeElem(&ep);
       printf("ket is missing\n");
       LERROR(LESYNTAX);
       DEXIT;
@@ -729,7 +729,7 @@ lListElem *lUndumpObject(FILE *fp)
 
    /* read ket */
    if (fGetKet(fp)) {
-      lFreeElem(ep);
+      lFreeElem(&ep);
       printf("ket is missing\n");
       LERROR(LESYNTAX);
       DEXIT;
@@ -831,14 +831,14 @@ lList *lUndumpList(FILE *fp, const char *name, const lDescr *dp)
 
    if ((n = lCountDescr(dp)) <= 0) {
       LERROR(LECOUNTDESCR);
-      lFreeList(lp);
+      lFreeList(&lp);
       DEXIT;
       return NULL;
    }
 
    if (!(found = (int *) malloc(sizeof(int) * n))) {
       LERROR(LEMALLOC);
-      lFreeList(lp);
+      lFreeList(&lp);
       DEXIT;
       return NULL;
    }
@@ -871,14 +871,14 @@ lList *lUndumpList(FILE *fp, const char *name, const lDescr *dp)
    for (k = 0; k < nelem; k++) {
       if (!(fep = lUndumpElemFp(fp, fdp))) {
          LERROR(LEUNDUMPELEM);
-         lFreeList(lp);
+         lFreeList(&lp);
          free(found);
          DEXIT;
          return NULL;
       }
 
       if (!(ep = lCreateElem(dp))) {
-         lFreeList(lp);
+         lFreeList(&lp);
          free(found);
          LERROR(LECREATEELEM);
          DEXIT;
@@ -886,21 +886,22 @@ lList *lUndumpList(FILE *fp, const char *name, const lDescr *dp)
       }
 
       for (i = 0; i < n; i++) {
-         if (found[i] == -1)
+         if (found[i] == -1) {
             continue;
+         } 
          else if (lCopySwitch(fep, ep, found[i], i, true, NULL) == -1) {
-            lFreeList(lp);
-            lFreeElem(ep);
+            lFreeList(&lp);
+            lFreeElem(&ep);
             free(found);
             LERROR(LECOPYSWITCH);
             DEXIT;
             return NULL;
          }
       }
-      lFreeElem(fep);
+      lFreeElem(&fep);
       if (lAppendElem(lp, ep) == -1) {
-         lFreeList(lp);
-         lFreeElem(ep);
+         lFreeList(&lp);
+         lFreeElem(&ep);
          free(found);
          LERROR(LEAPPENDELEM);
          DEXIT;
@@ -911,7 +912,7 @@ lList *lUndumpList(FILE *fp, const char *name, const lDescr *dp)
 
    /* read ket */
    if (fGetKet(fp)) {
-      lFreeList(lp);
+      lFreeList(&lp);
       printf("ket is missing\n");
       LERROR(LESYNTAX);
       DEXIT;

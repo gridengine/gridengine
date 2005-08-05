@@ -576,7 +576,7 @@ centry_list_sort(lList *this_list)
 
       order = lParseSortOrderVarArg(lGetListDescr(this_list), "%I+", CE_name);
       lSortList(this_list, order);
-      order = lFreeSortOrder(order);
+      lFreeSortOrder(&order);
    }
    DEXIT;
    return ret;
@@ -826,7 +826,7 @@ centry_list_parse_from_string(lList *complex_attributes,
 
       if (attr == NULL || *attr == '\0') {
          ERROR((SGE_EVENT, MSG_SGETEXT_UNKNOWN_RESOURCE_S, ""));
-         lFreeList(complex_attributes);
+         lFreeList(&complex_attributes);
          sge_free_saved_vars(context);
          DEXIT;
          return NULL;
@@ -834,7 +834,7 @@ centry_list_parse_from_string(lList *complex_attributes,
 
       if ((check_value) && (value == NULL || *value == '\0')) {
          ERROR((SGE_EVENT, MSG_CPLX_VALUEMISSING_S, attr));
-         lFreeList(complex_attributes);
+         lFreeList(&complex_attributes);
          sge_free_saved_vars(context);
          DEXIT;
          return NULL;
@@ -844,7 +844,7 @@ centry_list_parse_from_string(lList *complex_attributes,
       if ( (complex_attribute= lGetElemStr(complex_attributes, CE_name, attr)) == NULL) {
          if ((complex_attribute = lCreateElem(CE_Type)) == NULL) {
             ERROR((SGE_EVENT, MSG_PARSE_NOALLOCATTRELEM));
-            lFreeList(complex_attributes);
+            lFreeList(&complex_attributes);
             sge_free_saved_vars(context);
             DEXIT;
             return NULL;

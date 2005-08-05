@@ -130,7 +130,7 @@ XtPointer cld, cad;
    qmonMirrorMultiAnswer(PE_T | USERSET_T, &alp);
    if (alp) {
       qmonMessageBox(w, alp, 0);
-      alp = lFreeList(alp);
+      lFreeList(&alp);
       /* set default cursor */
       XmtDisplayDefaultCursor(w);
       DEXIT;
@@ -428,7 +428,7 @@ XtPointer cld, cad;
       UpdateXmListFromCull(list, XmFONTLIST_DEFAULT_TAG, ql_out,
                               US_name);
    }
-   ql_out = lFreeList(ql_out);
+   lFreeList(&ql_out);
 
    DEXIT;
 }
@@ -545,13 +545,11 @@ XtPointer cld, cad;
             XmListSelectItem(pe_names, xpename, True);
             XmStringFree(xpename);
          }
-         lFreeWhat(what);
-         alp = lFreeList(alp);
+         lFreeWhat(&what);
+         lFreeList(&alp);
       }
-      pel = lFreeList(pel);
+      lFreeList(&pel);
    }
-
-
    DEXIT;
 }
 
@@ -596,8 +594,8 @@ XtPointer cld, cad;
 
          qmonMessageBox(w, alp, 0);
 
-         lFreeWhat(what);
-         alp = lFreeList(alp);
+         lFreeWhat(&what);
+         lFreeList(&alp);
 
          updatePeList();
          XtVaGetValues( pe_names,
@@ -609,7 +607,7 @@ XtPointer cld, cad;
             qmonPEFillConf(pe_names, NULL);
 
       }
-      lp = lFreeList(lp);
+      lFreeList(&lp);
    }
    DEXIT;
 }

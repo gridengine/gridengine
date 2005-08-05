@@ -181,7 +181,7 @@ char **argv
          wait_for_job = 1;
       }
       
-      lRemoveElem(opts_all, ep);
+      lRemoveElem(opts_all, &ep);
    }
    
    if (wait_for_job) {
@@ -408,9 +408,9 @@ char **argv
    }
 
 Error:
-   FREE (jobid_string);
-   lFreeList(alp);
-   lFreeList(opts_all);
+   FREE(jobid_string);
+   lFreeList(&alp);
+   lFreeList(&opts_all);
    
    if ((tmp_ret = japi_exit (true, JAPI_EXIT_NO_FLAG, &diag)) != DRMAA_ERRNO_SUCCESS) {
       if (tmp_ret != DRMAA_ERRNO_NO_ACTIVE_SESSION) {

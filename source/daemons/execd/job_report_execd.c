@@ -162,7 +162,7 @@ get_job_report(u_long32 job_id, u_long32 ja_task_id, const char *pe_task_id)
 void del_job_report(
 lListElem *jr 
 ) {
-   lRemoveElem(jr_list, jr);
+   lRemoveElem(jr_list, &jr);
 }
 
 void cleanup_job_report(
@@ -183,7 +183,7 @@ u_long32 jataskid
 
          DPRINTF(("!!!! removing jobreport for "sge_u32"."sge_u32" task %s !!!!\n",
             jobid, jataskid, s?s:"master"));
-         lRemoveElem(jr_list, jr);
+         lRemoveElem(jr_list, &jr);
       }
    }
 

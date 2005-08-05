@@ -294,10 +294,10 @@ int *all_users
    if ((ep = lGetElemStr(cmdline, SPA_switch, "-help"))) {
       char str[1024];
 
-      lRemoveElem(cmdline, ep);
+      lRemoveElem(cmdline, &ep);
       sprintf(str, MSG_ANSWER_HELPNOTALLOWEDINCONTEXT);
       answer_list_add(&answer, str, STATUS_ENOIMP, ANSWER_QUALITY_ERROR);
-      job = lFreeElem(job);
+      lFreeElem(&job);
       DEXIT;
       return answer;
    }
@@ -307,13 +307,13 @@ int *all_users
    if (me_who != QRESUB) {
       while ((ep = lGetElemStr(cmdline, SPA_switch, "-a"))) {
          lSetUlong(job, JB_execution_time, lGetUlong(ep, SPA_argval_lUlongT));
-         lRemoveElem(cmdline, ep);
+         lRemoveElem(cmdline, &ep);
          nm_set(job_field, JB_execution_time);
       }
 
       while ((ep = lGetElemStr(cmdline, SPA_switch, "-A"))) {
          lSetString(job, JB_account, lGetString(ep, SPA_argval_lStringT));
-         lRemoveElem(cmdline, ep);
+         lRemoveElem(cmdline, &ep);
          nm_set(job_field, JB_account);
       }
  
@@ -328,7 +328,7 @@ int *all_users
          if (!getcwd(tmp_str, sizeof(tmp_str))) {
             answer_list_add(&answer, MSG_ANSWER_GETCWDFAILED, 
                             STATUS_EDISK, ANSWER_QUALITY_ERROR);
-            job = lFreeElem(job);
+            lFreeElem(&job);
             DEXIT;
             return answer;
          }
@@ -337,7 +337,7 @@ int *all_users
             if (!getcwd(tmp_str2, sizeof(tmp_str2))) {
                answer_list_add(&answer, MSG_ANSWER_GETCWDFAILED, 
                                STATUS_EDISK, ANSWER_QUALITY_ERROR);
-               job = lFreeElem(job);
+               lFreeElem(&job);
                DEXIT;
                return answer;
             }
@@ -349,7 +349,7 @@ int *all_users
             }
          }
          lSetString(job, JB_cwd, tmp_str);
-         lRemoveElem(cmdline, ep);
+         lRemoveElem(cmdline, &ep);
          nm_set(job_field, JB_cwd);
       }
 
@@ -363,19 +363,19 @@ int *all_users
             lSetUlong(job, JB_checkpoint_attr, lGetInt(ep, SPA_argval_lIntT));
             nm_set(job_field, JB_checkpoint_attr);
          }
-         lRemoveElem(cmdline, ep);
+         lRemoveElem(cmdline, &ep);
       }
 
 
       while ((ep = lGetElemStr(cmdline, SPA_switch, "-ckpt"))) {
          lSetString(job, JB_checkpoint_name, lGetString(ep, SPA_argval_lStringT));
-         lRemoveElem(cmdline, ep);
+         lRemoveElem(cmdline, &ep);
          nm_set(job_field, JB_checkpoint_name);
       }
 
       while ((ep = lGetElemStr(cmdline, SPA_switch, "-dl"))) {
          lSetUlong(job, JB_deadline, lGetUlong(ep, SPA_argval_lUlongT));
-         lRemoveElem(cmdline, ep);
+         lRemoveElem(cmdline, &ep);
          nm_set(job_field, JB_deadline);
       }
 
@@ -394,7 +394,7 @@ int *all_users
    if (lGetElemStr(cmdline, SPA_switch, STR_PSEUDO_JOBID)) {
       lList *jid_list = NULL;
       if (!parse_multi_jobtaskslist(&cmdline, STR_PSEUDO_JOBID, &answer, &jid_list, true, 0)) {
-         job = lFreeElem(job);
+         lFreeElem(&job);
          DEXIT;
          return answer;
       }                                                 
@@ -411,7 +411,7 @@ int *all_users
     
          lXchgList(ep, SPA_argval_lListT, &lp);
          lSetList(job, JB_user_list, lp);
-         lRemoveElem(cmdline, ep);
+         lRemoveElem(cmdline, &ep);
          nm_set(job_field, JB_user_list);
          users_flag = 1;
       }
@@ -425,7 +425,7 @@ int *all_users
       for_each (jid, lGetList(job, JB_job_identifier_list)) {
          lSetUlong(jid, ID_force, (u_long32) lGetInt(ep, SPA_argval_lIntT));
       }
-      lRemoveElem(cmdline, ep);
+      lRemoveElem(cmdline, &ep);
       nm_set(job_field, JB_ja_tasks);
       nm_set(job_field, JB_ja_structure);
    }
@@ -440,7 +440,7 @@ int *all_users
                DPRINTF(("-hold_jid %s\n", lGetString(sep, ST_name)));
                lAddElemStr(&jref_list, JRE_job_name, lGetString(sep, ST_name), JRE_Type);
             }
-            lRemoveElem(cmdline, ep);
+            lRemoveElem(cmdline, &ep);
          }
          lSetList(job, JB_jid_request_list , jref_list);
          nm_set(job_field, JB_jid_request_list );
@@ -449,13 +449,13 @@ int *all_users
 
       while ((ep = lGetElemStr(cmdline, SPA_switch, "-R"))) {
          lSetBool(job, JB_reserve, lGetInt(ep, SPA_argval_lIntT));
-         lRemoveElem(cmdline, ep);
+         lRemoveElem(cmdline, &ep);
          nm_set(job_field, JB_reserve);
       }
 
       while ((ep = lGetElemStr(cmdline, SPA_switch, "-j"))) {
          lSetBool(job, JB_merge_stderr, lGetInt(ep, SPA_argval_lIntT));
-         lRemoveElem(cmdline, ep);
+         lRemoveElem(cmdline, &ep);
          nm_set(job_field, JB_merge_stderr);
       }
 
@@ -480,7 +480,7 @@ int *all_users
             old_mail_opts = lGetUlong(job, JB_mail_options);
             lSetUlong(job, JB_mail_options, ul | old_mail_opts);
          }
-         lRemoveElem(cmdline, ep);
+         lRemoveElem(cmdline, &ep);
          nm_set(job_field, JB_mail_options);
       }
 
@@ -490,13 +490,13 @@ int *all_users
 
       while ((ep = lGetElemStr(cmdline, SPA_switch, "-N"))) {
          lSetString(job, JB_job_name, lGetString(ep, SPA_argval_lStringT));
-         lRemoveElem(cmdline, ep);
+         lRemoveElem(cmdline, &ep);
 /*         nm_set(job_field, JB_job_name); */
       }
 
       while ((ep = lGetElemStr(cmdline, SPA_switch, "-notify"))) {
          lSetBool(job, JB_notify, true);
-         lRemoveElem(cmdline, ep);
+         lRemoveElem(cmdline, &ep);
          nm_set(job_field, JB_notify);
       }
 
@@ -508,19 +508,19 @@ int *all_users
       while ((ep = lGetElemStr(cmdline, SPA_switch, "-p"))) {
          lSetUlong(job, JB_priority, 
             BASE_PRIORITY + lGetInt(ep, SPA_argval_lIntT));
-         lRemoveElem(cmdline, ep);
+         lRemoveElem(cmdline, &ep);
          nm_set(job_field, JB_priority);
       }
 
       while ((ep = lGetElemStr(cmdline, SPA_switch, "-js"))) {
          lSetUlong(job, JB_jobshare, lGetUlong(ep, SPA_argval_lUlongT));
-         lRemoveElem(cmdline, ep);
+         lRemoveElem(cmdline, &ep);
          nm_set(job_field, JB_jobshare);
       }
 
       while ((ep = lGetElemStr(cmdline, SPA_switch, "-P"))) {
          lSetString(job, JB_project, lGetString(ep, SPA_argval_lStringT));
-         lRemoveElem(cmdline, ep);
+         lRemoveElem(cmdline, &ep);
          nm_set(job_field, JB_project);
       }
 
@@ -528,7 +528,7 @@ int *all_users
          lSetString(job, JB_pe, lGetString(ep, SPA_argval_lStringT));
          /* put sublist from parsing into job */
          lSwapList(job, JB_pe_range, ep, SPA_argval_lListT);
-         lRemoveElem(cmdline, ep);
+         lRemoveElem(cmdline, &ep);
 
          /* cannot address fields separately in command line but in gdi interface */ 
          nm_set(job_field, JB_pe);
@@ -537,7 +537,7 @@ int *all_users
 
       while ((ep = lGetElemStr(cmdline, SPA_switch, "-ot"))) {
          lSetUlong(job, JB_override_tickets, lGetUlong(ep, SPA_argval_lUlongT));
-         lRemoveElem(cmdline, ep);
+         lRemoveElem(cmdline, &ep);
          nm_set(job_field, JB_override_tickets);
       }
 
@@ -555,21 +555,21 @@ int *all_users
     
       while ((ep = lGetElemStr(cmdline, SPA_switch, "-r"))) {
          lSetUlong(job, JB_restart, lGetInt(ep, SPA_argval_lIntT));
-         lRemoveElem(cmdline, ep);
+         lRemoveElem(cmdline, &ep);
          nm_set(job_field, JB_restart);
       }
 
       while ((ep = lGetElemStr(cmdline, SPA_switch, "-w"))) {
          lSetUlong(job, JB_verify_suitable_queues, lGetInt(ep, SPA_argval_lIntT));
-         lRemoveElem(cmdline, ep);
+         lRemoveElem(cmdline, &ep);
          nm_set(job_field, JB_verify_suitable_queues);
       }
 
       /* not needed in job struct - they are still used at this point */
       while ((ep = lGetElemStr(cmdline, SPA_switch, "-soft"))) 
-         lRemoveElem(cmdline, ep);
+         lRemoveElem(cmdline, &ep);
       while ((ep = lGetElemStr(cmdline, SPA_switch, "-hard"))) 
-         lRemoveElem(cmdline, ep);
+         lRemoveElem(cmdline, &ep);
 
       parse_list_simple(cmdline, "-S", job, JB_shell_list, 0, 0, FLG_LIST_APPEND);
       if (lGetList(job, JB_shell_list))
@@ -591,13 +591,13 @@ int *all_users
       */
       while ((ep = lGetElemStr(cmdline, SPA_switch, "-qs_args"))) {
          lSwapList(job, JB_qs_args, ep, SPA_argval_lListT);
-         lRemoveElem(cmdline, ep);
+         lRemoveElem(cmdline, &ep);
          nm_set(job_field, JB_qs_args);
       }
 
 
       if ((ep = lGetElemStr(cmdline, SPA_switch, "--"))) {
-         lRemoveElem(cmdline, ep);
+         lRemoveElem(cmdline, &ep);
          nm_set(job_field, JB_job_args);
       }
       {
@@ -607,7 +607,7 @@ int *all_users
     
          while ((ep = lGetElemStr(cmdline, SPA_switch, STR_PSEUDO_JOBARG))) {
             lAddElemStr(&lp, ST_name, lGetString(ep, SPA_argval_lStringT), ST_Type);
-            lRemoveElem(cmdline, ep);
+            lRemoveElem(cmdline, &ep);
             nm_set(job_field, JB_job_args);
          }
          lSetList(job, JB_job_args, lp);
@@ -621,12 +621,15 @@ int *all_users
             !strcmp(lGetString(ep, SPA_switch), "-dc") ||
             !strcmp(lGetString(ep, SPA_switch), "-sc")) {
             lListElem* temp;
-            if(!lGetList(job, JB_context))
+            if(!lGetList(job, JB_context)) {
                lSetList(job, JB_context, lCopyList("context", lGetList(ep, SPA_argval_lListT)));
-            else
-               lAddList(lGetList(job, JB_context), lCopyList("context", lGetList(ep, SPA_argval_lListT)));
+            }
+            else {
+               lList *copy = lCopyList("context", lGetList(ep, SPA_argval_lListT));
+               lAddList(lGetList(job, JB_context), &copy);
+            }
             temp = lNext(ep);
-            lRemoveElem(cmdline, ep);
+            lRemoveElem(cmdline, &ep);
             ep = temp;
             nm_set(job_field, JB_context);
          }
@@ -651,7 +654,7 @@ int *all_users
    }
 
    if ((ep = lGetElemStr(cmdline, SPA_switch, "-verify"))) {
-      lRemoveElem(cmdline, ep);
+      lRemoveElem(cmdline, &ep);
       verify = 1;
       nm_set(job_field, JB_env_list);
    } 
@@ -659,7 +662,7 @@ int *all_users
    if (job_field[1] == NoName) {
       answer_list_add(&answer, MSG_JOB_NOJOBATTRIBUTESELECTED, 
                       STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-      job = lFreeElem(job);
+      lFreeElem(&job);
       DEXIT;
       return answer;
    }
@@ -677,7 +680,7 @@ int *all_users
    if (!(what = lIntVector2What(JB_Type, job_field))) {
       answer_list_add(&answer, MSG_ANSWER_FAILDTOBUILDREDUCEDDESCRIPTOR, 
                         STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-      job = lFreeElem(job);
+      lFreeElem(&job);
       DEXIT;
       return answer;
    }
@@ -687,12 +690,12 @@ int *all_users
    if (rdp == NULL) {
       answer_list_add(&answer, MSG_ANSWER_FAILDTOBUILDREDUCEDDESCRIPTOR, 
                       STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-      job = lFreeElem(job);
+      lFreeElem(&job);
       DEXIT;
       return answer;
    }
    
-   lFreeWhat(what);
+   lFreeWhat(&what);
 
    /* if user uses -u or -uall flag and does not enter jids
       we will add a dummy job to send other parameters to qmaster */
@@ -729,7 +732,7 @@ int *all_users
          if (!strcmp(lGetString(ep, ID_str), "all") || (all_or_jidlist == ALL)) {
             answer_list_add(&answer, MSG_ANSWER_ALLANDJOBIDSARENOTVALID, 
                             STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
-            job = lFreeElem(job);
+            lFreeElem(&job);
             FREE(rdp);
             DEXIT;
             return answer;
@@ -738,7 +741,7 @@ int *all_users
          } else {
             answer_list_add(&answer, MSG_ANSWER_0ISNOTAVALIDJOBID,
                             STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
-            job = lFreeElem(job);
+            lFreeElem(&job);
             FREE(rdp);
             DEXIT;
             return answer;
@@ -768,7 +771,7 @@ int *all_users
          sprintf(SGE_EVENT, MSG_MEM_MEMORYALLOCFAILED_S, SGE_FUNC);
          answer_list_add(&answer, SGE_EVENT,
                          STATUS_EMALLOC, ANSWER_QUALITY_ERROR);
-         job = lFreeElem(job);
+         lFreeElem(&job);
          FREE(rdp);
          DEXIT;
          return answer;
@@ -796,7 +799,7 @@ int *all_users
          sprintf(SGE_EVENT, MSG_OPTIONWORKSONLYONJOB);
          answer_list_add(&answer, SGE_EVENT,
                          STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-         job = lFreeElem(job);
+         lFreeElem(&job);
          FREE(rdp);
          DEXIT;
          return answer;
@@ -881,13 +884,13 @@ int *all_users
       /* got no target */
       answer_list_add(&answer, MSG_JOB_MISSINGJOBID, 
                       STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
-      job = lFreeElem(job);
+      lFreeElem(&job);
       FREE(rdp);
       DEXIT;
       return answer;      
    }
 
-   job = lFreeElem(job);
+   lFreeElem(&job);
    FREE(rdp);
    DEXIT;
    return answer;

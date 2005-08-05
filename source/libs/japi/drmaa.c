@@ -496,8 +496,8 @@ int drmaa_delete_job_template(drmaa_job_template_t *jt, char *error_diagnosis, s
       return ret;
    }
 
-   jt->strings = lFreeList(jt->strings);
-   jt->string_vectors = lFreeList(jt->string_vectors);
+   lFreeList(&(jt->strings));
+   lFreeList(&(jt->string_vectors));
    free(jt); 
    jt = NULL;
 
@@ -1146,7 +1146,7 @@ int drmaa_run_job(char *job_id, size_t job_id_len, const drmaa_job_template_t *j
    }
 
    drmaa_errno = japi_run_job(&jobid, sge_job_template, diagp); 
-   sge_job_template = lFreeElem(sge_job_template);
+   lFreeElem(&sge_job_template);
 
    DEXIT;
    return drmaa_errno;
@@ -1232,7 +1232,7 @@ int drmaa_run_bulk_jobs(drmaa_job_ids_t **jobids, const drmaa_job_template_t *jt
 
    drmaa_errno = japi_run_bulk_jobs((drmaa_attr_values_t **)jobids, sge_job_template, 
          start, end, incr, diagp);
-   sge_job_template = lFreeElem(sge_job_template);
+   lFreeElem(&sge_job_template);
 
    DEXIT;
    return drmaa_errno;
@@ -2321,9 +2321,7 @@ static int drmaa_path2path_opt(const lList *attrs, lList **args, int is_bulk,
       }
    }
 
-   if (path_list != NULL) {
-      path_list = lFreeList(path_list);
-   }
+   lFreeList(&path_list);
 
    DEXIT;
    return drmaa_errno;
@@ -2505,7 +2503,7 @@ static int drmaa_job2sge_job(lListElem **jtp, const drmaa_job_template_t *drmaa_
    /* init range of jobids and put all tasks in 'active' state */
    if (job_set_submit_task_ids (jt, start, end, step) ||
        job_initialize_id_lists (jt, NULL)) {
-      jt = lFreeElem (jt);   
+      lFreeElem(&jt);
       japi_standard_error (DRMAA_ERRNO_NO_MEMORY, diag);
       DEXIT;
       return DRMAA_ERRNO_NO_MEMORY;
@@ -2536,8 +2534,8 @@ static int drmaa_job2sge_job(lListElem **jtp, const drmaa_job_template_t *drmaa_
    
    if (answer_list_has_error (&alp)) {
       answer_list_to_dstring (alp, diag);
-      lFreeList (alp);
-      jt = lFreeElem (jt);   
+      lFreeList(&alp);
+      lFreeElem(&jt);
       DEXIT;
       return DRMAA_ERRNO_DENIED_BY_DRM;
    }
@@ -2562,8 +2560,8 @@ static int drmaa_job2sge_job(lListElem **jtp, const drmaa_job_template_t *drmaa_
       
       if (answer_list_has_error (&alp)) {
          answer_list_to_dstring (alp, diag);
-         lFreeList (alp);
-         jt = lFreeElem (jt);   
+         lFreeList(&alp);
+         lFreeElem(&jt);
          DEXIT;
          return DRMAA_ERRNO_DENIED_BY_DRM;
       }
@@ -2572,7 +2570,7 @@ static int drmaa_job2sge_job(lListElem **jtp, const drmaa_job_template_t *drmaa_
    if ((drmaa_errno = opt_list_append_opts_from_drmaa_attr
                       (&opts_drmaa, drmaa_jt->strings, drmaa_jt->string_vectors,
                        is_bulk, diag)) != DRMAA_ERRNO_SUCCESS) {
-      jt = lFreeElem (jt);
+      lFreeElem(&jt);
       DEXIT;
       return drmaa_errno;
    }
@@ -2609,8 +2607,8 @@ static int drmaa_job2sge_job(lListElem **jtp, const drmaa_job_template_t *drmaa_
          
          if (path == NULL) {
             answer_list_to_dstring (alp, diag);
-            lFreeList (alp);
-            jt = lFreeElem (jt);   
+            lFreeList(&alp);
+            lFreeElem(&jt);
             DEXIT;
             return DRMAA_ERRNO_DENIED_BY_DRM;
          }
@@ -2636,8 +2634,8 @@ static int drmaa_job2sge_job(lListElem **jtp, const drmaa_job_template_t *drmaa_
       
       if (answer_list_has_error (&alp)) {
          answer_list_to_dstring (alp, diag);
-         lFreeList (alp);
-         jt = lFreeElem (jt);   
+         lFreeList(&alp);
+         lFreeElem(&jt);
          DEXIT;
          return DRMAA_ERRNO_DENIED_BY_DRM;
       }
@@ -2669,29 +2667,29 @@ static int drmaa_job2sge_job(lListElem **jtp, const drmaa_job_template_t *drmaa_
        * this long series of ifs becomes necessary. */
       if ((ep = lGetElemStr (opts_drmaa, SPA_switch, "-cat")) != NULL) {
          job_cat = strdup (lGetString (ep, SPA_argval_lStringT));
-         lRemoveElem (opts_drmaa, ep);
+         lRemoveElem(opts_drmaa, &ep);
       }
       else if ((ep = lGetElemStr (opts_scriptfile, SPA_switch, "-cat")) != NULL) {
          job_cat = strdup (lGetString (ep, SPA_argval_lStringT));
-         lRemoveElem (opts_scriptfile, ep);
+         lRemoveElem(opts_scriptfile, &ep);
       }
       else if ((ep = lGetElemStr (opts_native, SPA_switch, "-cat")) != NULL) {
          job_cat = strdup (lGetString (ep, SPA_argval_lStringT));
-         lRemoveElem (opts_native, ep);
+         lRemoveElem(opts_native, &ep);
       }
       else if ((ep = lGetElemStr (opts_defaults, SPA_switch, "-cat")) != NULL) {
          job_cat = strdup (lGetString (ep, SPA_argval_lStringT));
-         lRemoveElem (opts_defaults, ep);
+         lRemoveElem(opts_defaults, &ep);
       }
       else if ((ep = lGetElemStr (opts_default, SPA_switch, "-cat")) != NULL) {
          job_cat = strdup (lGetString (ep, SPA_argval_lStringT));
-         lRemoveElem (opts_default, ep);
+         lRemoveElem(opts_default, &ep);
       }
       else {
          /* This theoretically can't happen. */
          sge_dstring_copy_string (diag, MSG_DRMAA_SWITCH_WITH_NO_CAT);
-         lFreeList (alp);
-         jt = lFreeElem (jt);   
+         lFreeList(&alp);
+         lFreeElem(&jt);
          DEXIT;
          return DRMAA_ERRNO_DENIED_BY_DRM;
       }
@@ -2704,8 +2702,8 @@ static int drmaa_job2sge_job(lListElem **jtp, const drmaa_job_template_t *drmaa_
       
       if (answer_list_has_error (&alp)) {
          answer_list_to_dstring (alp, diag);
-         lFreeList (alp);
-         jt = lFreeElem (jt);   
+         lFreeList(&alp);
+         lFreeElem(&jt);
          DEXIT;
          return DRMAA_ERRNO_DENIED_BY_DRM;
       }
@@ -2718,7 +2716,7 @@ static int drmaa_job2sge_job(lListElem **jtp, const drmaa_job_template_t *drmaa_
          
          if (answer_list_has_error (&alp)) {
             answer_list_to_dstring (alp, diag);
-            jt = lFreeElem (jt);   
+            lFreeElem(&jt);
             DEXIT;
             return DRMAA_ERRNO_DENIED_BY_DRM;
          }
@@ -2733,7 +2731,7 @@ static int drmaa_job2sge_job(lListElem **jtp, const drmaa_job_template_t *drmaa_
                /* If we parsed the script file due to a -b n in the defaults files
                 * or the DRMAA defaults or because of no -b option, and a -b y
                 * is given in the job category, clear the script file options. */
-               opts_scriptfile = lFreeList (opts_scriptfile);
+               lFreeList(&opts_scriptfile);
             }
             else if (!opt_list_has_X (opts_native, "-b") &&
                 (!read_scriptfile && opt_list_is_X_true (opts_job_cat, "-b"))) {
@@ -2753,8 +2751,8 @@ static int drmaa_job2sge_job(lListElem **jtp, const drmaa_job_template_t *drmaa_
 
                if (answer_list_has_error (&alp)) {
                   answer_list_to_dstring (alp, diag);
-                  alp = lFreeList (alp);
-                  jt = lFreeElem (jt);   
+                  lFreeList(&alp);
+                  lFreeElem(&jt);
                   DEXIT;
                   return DRMAA_ERRNO_DENIED_BY_DRM;
                }
@@ -2764,8 +2762,8 @@ static int drmaa_job2sge_job(lListElem **jtp, const drmaa_job_template_t *drmaa_
       else {
          /* Bad job category */
          sge_dstring_copy_string (diag, MSG_DRMAA_UNKNOWN_JOB_CAT);
-         alp = lFreeList (alp);
-         jt = lFreeElem (jt);
+         lFreeList(&alp);
+         lFreeElem(&jt);
          DEXIT;
          return DRMAA_ERRNO_DENIED_BY_DRM;
       }
@@ -2781,8 +2779,8 @@ static int drmaa_job2sge_job(lListElem **jtp, const drmaa_job_template_t *drmaa_
    if (is_bulk) {
       if (drmaa_set_bulk_range (&opts_all, start, end, step, &alp) != 0) {
          answer_list_to_dstring (alp, diag);
-         jt = lFreeElem (jt);
-         opts_all = lFreeList (opts_all);
+         lFreeElem(&jt);
+         lFreeList(&opts_all);
          DEXIT;
          return DRMAA_ERRNO_DENIED_BY_DRM;
       }
@@ -2792,14 +2790,14 @@ static int drmaa_job2sge_job(lListElem **jtp, const drmaa_job_template_t *drmaa_
 
    if (answer_list_has_error (&alp)) {
       answer_list_to_dstring (alp, diag);
-      jt = lFreeElem (jt);
-      opts_all = lFreeList (opts_all);
+      lFreeElem(&jt);
+      lFreeList(&opts_all);
       DEXIT;
       return DRMAA_ERRNO_DENIED_BY_DRM;
    }
 
    *jtp = jt;
-   opts_all = lFreeList (opts_all);
+   lFreeList(&opts_all);
    
    DEXIT;
    return DRMAA_ERRNO_SUCCESS;
@@ -3226,10 +3224,10 @@ static void merge_drmaa_options(lList **opts_all, lList **opts_default,
       
       if (*opts_all == NULL) {
          *opts_all = *opts_default;
+         *opts_default = NULL;
       } else {
-         lAddList (*opts_all, *opts_default);
+         lAddList(*opts_all, opts_default);
       }
-      *opts_default = NULL;
    }
    
    if (*opts_defaults != NULL) {
@@ -3239,7 +3237,7 @@ static void merge_drmaa_options(lList **opts_all, lList **opts_default,
       if (*opts_all == NULL) {
          *opts_all = *opts_defaults;
       } else {
-         lAddList (*opts_all, *opts_defaults);
+         lAddList(*opts_all, opts_defaults);
       }
       *opts_defaults = NULL;
    }
@@ -3251,7 +3249,7 @@ static void merge_drmaa_options(lList **opts_all, lList **opts_default,
       if (*opts_all == NULL) {
          *opts_all = *opts_scriptfile;
       } else {
-         lAddList (*opts_all, *opts_scriptfile);
+         lAddList(*opts_all, opts_scriptfile);
       }
       *opts_scriptfile = NULL;
    }
@@ -3263,7 +3261,7 @@ static void merge_drmaa_options(lList **opts_all, lList **opts_default,
       if (*opts_all == NULL) {
          *opts_all = *opts_job_cat;
       } else {
-         lAddList (*opts_all, *opts_job_cat);
+         lAddList(*opts_all, opts_job_cat);
       }
       *opts_job_cat = NULL;
    }
@@ -3275,7 +3273,7 @@ static void merge_drmaa_options(lList **opts_all, lList **opts_default,
       if (*opts_all == NULL) {
          *opts_all = *opts_native;
       } else {
-         lAddList (*opts_all, *opts_native);
+         lAddList(*opts_all, opts_native);
       }
       *opts_native = NULL;
    }
@@ -3286,7 +3284,7 @@ static void merge_drmaa_options(lList **opts_all, lList **opts_default,
       if (*opts_all == NULL) {
          *opts_all = *opts_drmaa;
       } else {
-         lAddList (*opts_all, *opts_drmaa);
+         lAddList(*opts_all, opts_drmaa);
       }
       *opts_drmaa = NULL;
    }
@@ -3363,30 +3361,30 @@ o   -V                                     export all environment variables
    
    /* skip arguments that aren't supported */
    while ((element = lGetElemStr (args, SPA_switch, "-help"))) {
-      lRemoveElem (args, element);
+      lRemoveElem(args, &element);
    }
    
    /* This one isn't supported because bulk jobs are handled through the
     * drmaa_run_bulk_jobs() method. */
    while ((element = lGetElemStr (args, SPA_switch, "-t"))) {
-      lRemoveElem (args, element);
+      lRemoveElem(args, &element);
    }
    
    while ((element = lGetElemStr (args, SPA_switch, "-verify"))) {
-      lRemoveElem (args, element);
+      lRemoveElem(args, &element);
    }
    
    while ((element = lGetElemStrNext (args, SPA_switch, "-w", &i))) {
       int argval = lGetInt(element, SPA_argval_lIntT);
       
       if ((argval == JUST_VERIFY) || (argval == WARNING_VERIFY)) {      
-         lRemoveElem (args, element);
+         lRemoveElem(args, &element);
       }
    }
   
    if (sge_getenv (ENABLE_CWD_ENV) == NULL) {
       while ((element = lGetElemStr (args, SPA_switch, "-cwd"))) {
-         lRemoveElem (args, element);
+         lRemoveElem(args, &element);
       }
    }
    

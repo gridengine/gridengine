@@ -94,9 +94,7 @@ int target
       return 1;
    }
    
-   if ( *lpp ) 
-      *lpp = lFreeList(*lpp);
-
+   lFreeList(lpp);
    *lpp = lCreateList("man/op list", MO_Type);
 
    while (fscanf(fp, "%[^\n]\n", str) == 1) {
@@ -105,7 +103,7 @@ int target
          lSetString(ep, MO_name, str);
          lAppendElem(*lpp, ep);
       } else {
-         lFreeElem(ep);
+         lFreeElem(&ep);
       }
    }
 

@@ -2676,12 +2676,12 @@ static int test(int *argc, char **argv[], int parse_args)
 
             printf ("Getting job name for job %lu from GDI\n", (unsigned long)atol(jobid));
             {
-               lCondition* where = lWhere ("%T(%I==%u)", JB_Type, JB_job_number, (u_long32)atol(jobid));
-               lEnumeration *what = lWhat ("%T (%I %I)", JB_Type, JB_job_number, JB_job_name);
-               alp = sge_gdi (SGE_JOB_LIST, SGE_GDI_GET, &job_lp, where, what);
-               job_ep = lFirst (job_lp);
-               lFreeWhere (where);
-               lFreeWhat (what);
+               lCondition* where = lWhere("%T(%I==%u)", JB_Type, JB_job_number, (u_long32)atol(jobid));
+               lEnumeration *what = lWhat("%T (%I %I)", JB_Type, JB_job_number, JB_job_name);
+               alp = sge_gdi(SGE_JOB_LIST, SGE_GDI_GET, &job_lp, where, what);
+               job_ep = lFirst(job_lp);
+               lFreeWhere(&where);
+               lFreeWhat(&what);
             }
             {
                int tmp_ret = answer_list_print_err_warn(&alp, "GDI Error: ", "Message from GDI: ");
@@ -2691,7 +2691,7 @@ static int test(int *argc, char **argv[], int parse_args)
                   failed_test = 1;
                }
             }
-            alp = lFreeList(alp);         
+            lFreeList(&alp);
 
             if (job_ep == NULL) {
                printf ("No such job number.\n");
@@ -2704,7 +2704,7 @@ static int test(int *argc, char **argv[], int parse_args)
                failed_test = 1;
             }
 
-            job_lp = lFreeList (job_lp);
+            lFreeList(&job_lp);
             
             printf ("Checking job state\n");
             if (drmaa_job_ps(jobid, &job_state, diagnosis, sizeof(diagnosis)-1)
@@ -3144,12 +3144,12 @@ static int test(int *argc, char **argv[], int parse_args)
 
             printf ("Getting job name for job %lu from GDI\n", (unsigned long)atol(jobid));
             {
-               lCondition *where = lWhere ("%T(%I==%u)", JB_Type, JB_job_number, (u_long32)atol(jobid));
-               lEnumeration *what = lWhat ("%T (%I %I)", JB_Type, JB_job_number, JB_job_name);
-               alp = sge_gdi (SGE_JOB_LIST, SGE_GDI_GET, &job_lp, where, what);
-               job_ep = lFirst (job_lp);
-               lFreeWhere (where);
-               lFreeWhat (what);
+               lCondition *where = lWhere("%T(%I==%u)", JB_Type, JB_job_number, (u_long32)atol(jobid));
+               lEnumeration *what = lWhat("%T (%I %I)", JB_Type, JB_job_number, JB_job_name);
+               alp = sge_gdi(SGE_JOB_LIST, SGE_GDI_GET, &job_lp, where, what);
+               job_ep = lFirst(job_lp);
+               lFreeWhere(&where);
+               lFreeWhat(&what);
             }
             {
                int tmp_ret = answer_list_print_err_warn(&alp, "GDI Error: ", "Message from GDI: ");
@@ -3160,7 +3160,7 @@ static int test(int *argc, char **argv[], int parse_args)
                   continue;
                }
             }
-            alp = lFreeList(alp);         
+            lFreeList(&alp);         
 
             if (job_ep == NULL) {
                printf ("No such job number.\n");
@@ -3173,7 +3173,7 @@ static int test(int *argc, char **argv[], int parse_args)
                failed_test = 1;
             }
 
-            job_lp = lFreeList (job_lp);
+            lFreeList(&job_lp);
 
             printf ("Checking job state\n");
             if (drmaa_job_ps(jobid, &job_state, diagnosis, sizeof(diagnosis)-1)
@@ -3249,12 +3249,12 @@ static int test(int *argc, char **argv[], int parse_args)
 
             printf ("Getting job name for job %lu from GDI\n", (unsigned long)atol(jobid));
             {
-               lCondition *where = lWhere ("%T(%I==%u)", JB_Type, JB_job_number, (u_long32)atol(jobid));
-               lEnumeration *what = lWhat ("%T (%I %I)", JB_Type, JB_job_number, JB_job_name);
-               alp = sge_gdi (SGE_JOB_LIST, SGE_GDI_GET, &job_lp, where, what);
-               job_ep = lFirst (job_lp);
-               lFreeWhere (where);
-               lFreeWhat (what);
+               lCondition *where = lWhere("%T(%I==%u)", JB_Type, JB_job_number, (u_long32)atol(jobid));
+               lEnumeration *what = lWhat("%T (%I %I)", JB_Type, JB_job_number, JB_job_name);
+               alp = sge_gdi(SGE_JOB_LIST, SGE_GDI_GET, &job_lp, where, what);
+               job_ep = lFirst(job_lp);
+               lFreeWhere(&where);
+               lFreeWhat(&what);
             }
             {
                int tmp_ret = answer_list_print_err_warn(&alp, "GDI Error: ", "Message from GDI: ");
@@ -3264,7 +3264,7 @@ static int test(int *argc, char **argv[], int parse_args)
                   failed_test = 1;
                }
             }
-            alp = lFreeList(alp);         
+            lFreeList(&alp);         
 
             if (job_ep == NULL) {
                printf ("No such job number.\n");
@@ -3277,7 +3277,7 @@ static int test(int *argc, char **argv[], int parse_args)
                failed_test = 1;
             }
 
-            job_lp = lFreeList (job_lp);
+            lFreeList(&job_lp);
 
             printf ("Checking job state\n");
             if (drmaa_job_ps(jobid, &job_state, diagnosis, sizeof(diagnosis)-1)
@@ -3370,12 +3370,12 @@ static int test(int *argc, char **argv[], int parse_args)
 
             printf ("Getting job name for job %lu from GDI\n", (unsigned long)atol(jobid));
             {
-               lCondition* where = lWhere ("%T(%I==%u)", JB_Type, JB_job_number, (u_long32)atol(jobid));
-               lEnumeration *what = lWhat ("%T (%I %I)", JB_Type, JB_job_number, JB_job_name);
-               alp = sge_gdi (SGE_JOB_LIST, SGE_GDI_GET, &job_lp, where, what);
-               job_ep = lFirst (job_lp);
-               lFreeWhere (where);
-               lFreeWhat (what);
+               lCondition* where = lWhere("%T(%I==%u)", JB_Type, JB_job_number, (u_long32)atol(jobid));
+               lEnumeration *what = lWhat("%T (%I %I)", JB_Type, JB_job_number, JB_job_name);
+               alp = sge_gdi(SGE_JOB_LIST, SGE_GDI_GET, &job_lp, where, what);
+               job_ep = lFirst(job_lp);
+               lFreeWhere(&where);
+               lFreeWhat(&what);
             }
             {
                int tmp_ret = answer_list_print_err_warn(&alp, "GDI Error: ", "Message from GDI: ");
@@ -3386,7 +3386,7 @@ static int test(int *argc, char **argv[], int parse_args)
                   continue;
                }
             }
-            alp = lFreeList(alp);         
+            lFreeList(&alp);         
 
             if (job_ep == NULL) {
                printf ("No such job number.\n");
@@ -3399,7 +3399,7 @@ static int test(int *argc, char **argv[], int parse_args)
                failed_test = 1;
             }
 
-            job_lp = lFreeList (job_lp);
+            lFreeList(&job_lp);
 
             printf ("Checking job state\n");
             if (drmaa_job_ps(jobid, &job_state, diagnosis, sizeof(diagnosis)-1)
@@ -3476,11 +3476,11 @@ static int test(int *argc, char **argv[], int parse_args)
             printf ("Getting job name for job %lu from GDI\n", (unsigned long)atol(jobid));
             {
                lCondition *where = lWhere ("%T(%I==%u)", JB_Type, JB_job_number, (u_long32)atol(jobid));
-               lEnumeration *what = lWhat ("%T (%I %I)", JB_Type, JB_job_number, JB_job_name);
-               alp = sge_gdi (SGE_JOB_LIST, SGE_GDI_GET, &job_lp, where, what);
-               job_ep = lFirst (job_lp);
-               lFreeWhere (where);
-               lFreeWhat (what);
+               lEnumeration *what = lWhat("%T (%I %I)", JB_Type, JB_job_number, JB_job_name);
+               alp = sge_gdi(SGE_JOB_LIST, SGE_GDI_GET, &job_lp, where, what);
+               job_ep = lFirst(job_lp);
+               lFreeWhere(&where);
+               lFreeWhat(&what);
             }
             {
                int tmp_ret = answer_list_print_err_warn(&alp, "GDI Error: ", "Message from GDI: ");
@@ -3490,7 +3490,7 @@ static int test(int *argc, char **argv[], int parse_args)
                   failed_test = 1;
                }
             }
-            alp = lFreeList(alp);         
+            lFreeList(&alp);         
 
             if (job_ep == NULL) {
                printf ("No such job number.\n");
@@ -3503,7 +3503,7 @@ static int test(int *argc, char **argv[], int parse_args)
                failed_test = 1;
             }
 
-            job_lp = lFreeList (job_lp);
+            lFreeList(&job_lp);
 
             printf ("Checking job state\n");
             if (drmaa_job_ps(jobid, &job_state, diagnosis, sizeof(diagnosis)-1)

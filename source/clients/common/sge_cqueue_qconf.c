@@ -136,7 +136,7 @@ cqueue_add_del_mod_via_gdi(lListElem *this_elem, lList **answer_list,
                                    &cqueue_list, NULL, NULL);
          answer_list_replace(answer_list, &gdi_answer_list);
          lDechainElem(cqueue_list, this_elem);
-         cqueue_list = lFreeList(cqueue_list);
+         lFreeList(&cqueue_list);
       }
    }
    DEXIT;
@@ -159,16 +159,16 @@ cqueue_get_via_gdi(lList **answer_list, const char *name)
       where = lWhere("%T(%I==%s)", CQ_Type, CQ_name, name);
       gdi_answer_list = sge_gdi(SGE_CQUEUE_LIST, SGE_GDI_GET, 
                                 &cqueue_list, where, what);
-      what = lFreeWhat(what);
-      where = lFreeWhere(where);
+      lFreeWhat(&what);
+      lFreeWhere(&where);
 
       if (!answer_list_has_error(&gdi_answer_list)) {
          ret = lDechainElem(cqueue_list, lFirst(cqueue_list));
       } else {
          answer_list_replace(answer_list, &gdi_answer_list);
       }
-      cqueue_list = lFreeList(cqueue_list);
-      gdi_answer_list = lFreeList(gdi_answer_list);
+      lFreeList(&cqueue_list);
+      lFreeList(&gdi_answer_list);
    }
 
    DEXIT;
@@ -235,7 +235,7 @@ cqueue_hgroup_get_via_gdi(lList **answer_list, const lList *qref_list,
         
          hgrp_id = sge_gdi_multi(answer_list, SGE_GDI_RECORD, SGE_HGROUP_LIST, 
                                  SGE_GDI_GET, NULL, NULL, what, NULL, &state, true);
-         what = lFreeWhat(what);
+         lFreeWhat(&what);
       }  
       if (ret) {
          lEnumeration *what; 
@@ -244,7 +244,7 @@ cqueue_hgroup_get_via_gdi(lList **answer_list, const lList *qref_list,
          cq_id = sge_gdi_multi(answer_list, SGE_GDI_SEND, SGE_CQUEUE_LIST,
                                SGE_GDI_GET, NULL, cqueue_where, what,
                                &multi_answer_list, &state, true);
-         what = lFreeWhat(what);
+         lFreeWhat(&what);
       }
       if (ret && fetch_all_hgroup) {
          lList *local_answer_list = NULL;
@@ -260,7 +260,7 @@ cqueue_hgroup_get_via_gdi(lList **answer_list, const lList *qref_list,
                ret = false;
             }
          } 
-         lFreeList(local_answer_list);
+         lFreeList(&local_answer_list);
       }  
       if (ret) {
          lList *local_answer_list = NULL;
@@ -276,10 +276,10 @@ cqueue_hgroup_get_via_gdi(lList **answer_list, const lList *qref_list,
                ret = false;
             }
          } 
-         local_answer_list = lFreeList(local_answer_list);
+         lFreeList(&local_answer_list);
       }
-      multi_answer_list = lFreeList(multi_answer_list);
-      cqueue_where = lFreeWhere(cqueue_where);
+      lFreeList(&multi_answer_list);
+      lFreeWhere(&cqueue_where);
    }
    DEXIT;
    return ret;
@@ -305,14 +305,14 @@ cqueue_hgroup_get_all_via_gdi(lList **answer_list,
       hgrp_what = lWhat("%T(ALL)", HGRP_Type);
       hgrp_id = sge_gdi_multi(answer_list, SGE_GDI_RECORD, SGE_HGROUP_LIST,
                               SGE_GDI_GET, NULL, NULL, hgrp_what, NULL, &state, true);
-      hgrp_what = lFreeWhat(hgrp_what);
+      lFreeWhat(&hgrp_what);
 
       /* CQ */
       cqueue_what = lWhat("%T(ALL)", CQ_Type);
       cq_id = sge_gdi_multi(answer_list, SGE_GDI_SEND, SGE_CQUEUE_LIST,
                             SGE_GDI_GET, NULL, NULL, cqueue_what,
                             &multi_answer_list, &state, true);
-      cqueue_what = lFreeWhat(cqueue_what);
+      lFreeWhat(&cqueue_what);
 
       /* HGRP */
       local_answer_list = sge_gdi_extract_answer(SGE_GDI_GET,
@@ -326,7 +326,7 @@ cqueue_hgroup_get_all_via_gdi(lList **answer_list,
             ret = false;
          }
       }
-      local_answer_list = lFreeList(local_answer_list);
+      lFreeList(&local_answer_list);
       
       /* CQ */   
       local_answer_list = sge_gdi_extract_answer(SGE_GDI_GET, 
@@ -340,8 +340,8 @@ cqueue_hgroup_get_all_via_gdi(lList **answer_list,
             ret = false;
          }
       } 
-      local_answer_list = lFreeList(local_answer_list);
-      multi_answer_list = lFreeList(multi_answer_list);
+      lFreeList(&local_answer_list);
+      lFreeList(&multi_answer_list);
    }
    DEXIT;
    return ret;
@@ -381,7 +381,7 @@ cqueue_provide_modify_context(lListElem **this_elem, lList **answer_list,
                                              NULL, filename);
 
          if (answer_list_output(answer_list)) {
-            cqueue = lFreeElem (cqueue);
+            lFreeElem(&cqueue);
          }
 
          if (cqueue != NULL) {
@@ -390,7 +390,7 @@ cqueue_provide_modify_context(lListElem **this_elem, lList **answer_list,
          }
 
          if (missing_field != NoName) {
-            cqueue = lFreeElem (cqueue);
+            lFreeElem(&cqueue);
             answer_list_output (answer_list);
          }
 
@@ -398,7 +398,7 @@ cqueue_provide_modify_context(lListElem **this_elem, lList **answer_list,
             if (object_has_differences(*this_elem, answer_list, 
                                        cqueue, false) ||
                 ignore_unchanged_message) {
-               *this_elem = lFreeElem(*this_elem);
+               lFreeElem(this_elem);
                *this_elem = cqueue; 
                ret = true;
             } else {
@@ -444,7 +444,7 @@ cqueue_add(lList **answer_list, const char *name)
                                            SGE_GDI_ADD | SGE_GDI_SET_ALL); 
       }
 
-      cqueue = lFreeElem(cqueue);
+      lFreeElem(&cqueue);
    }  
   
    DEXIT;
@@ -468,7 +468,7 @@ cqueue_add_from_file(lList **answer_list, const char *filename)
                                           SP_FORM_ASCII, NULL, filename);
             
       if (answer_list_output(answer_list)) {
-         cqueue = lFreeElem (cqueue);
+         lFreeElem(&cqueue);
       }
 
       if (cqueue != NULL) {
@@ -476,7 +476,7 @@ cqueue_add_from_file(lList **answer_list, const char *filename)
       }
 
       if (missing_field != NoName) {
-         cqueue = lFreeElem(cqueue);
+         lFreeElem(&cqueue);
          answer_list_output(answer_list);
       }
 
@@ -488,7 +488,7 @@ cqueue_add_from_file(lList **answer_list, const char *filename)
                                            SGE_GDI_ADD | SGE_GDI_SET_ALL); 
       } 
 
-      cqueue = lFreeElem(cqueue);
+      lFreeElem(&cqueue);
    }  
   
    DEXIT;
@@ -518,7 +518,7 @@ cqueue_modify(lList **answer_list, const char *name)
                                            SGE_GDI_MOD | SGE_GDI_SET_ALL);
       }
       if (cqueue != NULL) {
-         cqueue = lFreeElem(cqueue);
+         lFreeElem(&cqueue);
       }
    }
 
@@ -543,7 +543,7 @@ cqueue_modify_from_file(lList **answer_list, const char *filename)
                                           SP_FORM_ASCII, NULL, filename);
             
       if (answer_list_output(answer_list)) {
-         cqueue = lFreeElem (cqueue);
+         lFreeElem(&cqueue);
       }
 
       if (cqueue != NULL) {
@@ -551,7 +551,7 @@ cqueue_modify_from_file(lList **answer_list, const char *filename)
       }
 
       if (missing_field != NoName) {
-         cqueue = lFreeElem(cqueue);
+         lFreeElem(&cqueue);
          answer_list_output(answer_list);
       }      
 
@@ -566,7 +566,7 @@ cqueue_modify_from_file(lList **answer_list, const char *filename)
                                            SGE_GDI_MOD | SGE_GDI_SET_ALL);
       }
       if (cqueue != NULL) {
-         cqueue = lFreeElem(cqueue);
+         lFreeElem(&cqueue);
       }
    }
 
@@ -587,7 +587,7 @@ cqueue_delete(lList **answer_list, const char *name)
          ret &= cqueue_add_del_mod_via_gdi(cqueue, answer_list, SGE_GDI_DEL); 
       }
 
-      cqueue = lFreeElem(cqueue);
+      lFreeElem(&cqueue);
    }
    DEXIT;
    return ret;
@@ -678,8 +678,8 @@ cqueue_show(lList **answer_list, const lList *qref_pattern_list)
                            FREE (filename_stdout);
                            
                            if (answer_list_output(answer_list)) {
-                              href_list = lFreeList(href_list);
-                              qref_list = lFreeList(qref_list);
+                              lFreeList(&href_list);
+                              lFreeList(&qref_list);
                               DEXIT;
                               SGE_EXIT(1);
                            }
@@ -690,8 +690,8 @@ cqueue_show(lList **answer_list, const lList *qref_pattern_list)
                   }
                }
 
-               href_list = lFreeList(href_list);
-               qref_list = lFreeList(qref_list);
+               lFreeList(&href_list);
+               lFreeList(&qref_list);
             } else if (has_hostname) {
                const char *h_pattern = sge_dstring_get_string(&host_domain);
                bool is_first = true;
@@ -790,11 +790,11 @@ cqueue_show(lList **answer_list, const lList *qref_pattern_list)
             sge_dstring_free(&host_domain);
             sge_dstring_free(&cqueue_name);
 
-            qref_list = lFreeList(qref_list);
+            lFreeList(&qref_list);
          }
       }
-      hgroup_list = lFreeList(hgroup_list);
-      cqueue_list = lFreeList(cqueue_list);
+      lFreeList(&hgroup_list);
+      lFreeList(&cqueue_list);
    } else {
       const char *filename;
       lListElem *cqueue = cqueue_create(answer_list, "template");
@@ -806,7 +806,7 @@ cqueue_show(lList **answer_list, const lList *qref_pattern_list)
                                              NULL, false);
                            
       FREE(filename);
-      cqueue = lFreeElem(cqueue);
+      lFreeElem(&cqueue);
 
       if (answer_list_output(answer_list)) {
          DEXIT;
@@ -922,10 +922,10 @@ cqueue_sick(lListElem *cqueue, lList **answer_list,
                              name, cqueue_name, name, cqueue_name);
                   }
 
-                  add_hosts = lFreeList(add_hosts);
-                  equity_hosts = lFreeList(equity_hosts); 
-                  used_hgroup_hosts = lFreeList(used_hgroup_hosts);
-                  used_hgroup_groups = lFreeList(used_hgroup_groups);
+                  lFreeList(&add_hosts);
+                  lFreeList(&equity_hosts);
+                  lFreeList(&used_hgroup_hosts);
+                  lFreeList(&used_hgroup_groups);
                } else {
                   DTRACE;
                }
@@ -948,8 +948,8 @@ cqueue_sick(lListElem *cqueue, lList **answer_list,
             
          index++;
       }
-      used_hosts = lFreeList(used_hosts);
-      used_groups = lFreeList(used_groups);
+      lFreeList(&used_hosts);
+      lFreeList(&used_groups);
    }
    
    DEXIT;

@@ -205,8 +205,8 @@ sge_gdi_qmod(char *host, sge_gdi_request *request, sge_gdi_request *answer, moni
                found = true;
             }
       }
-      qref_list = lFreeList(qref_list);
-      tmp_list = lFreeList(tmp_list);
+      lFreeList(&qref_list);
+      lFreeList(&tmp_list);
       }
       if (!found) {
          bool is_jobName_suport = false; 

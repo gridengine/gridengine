@@ -237,7 +237,7 @@ bool sge_ssi_job_start(const char *job_identifier, const char *pe, task_map task
    sge_send_orders2master(&order_list);
 
    if (order_list != NULL) {
-      order_list = lFreeList(order_list);
+      lFreeList(&order_list);
    }   
 
    DEXIT;

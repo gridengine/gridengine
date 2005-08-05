@@ -513,18 +513,18 @@ XtPointer cld, cad;
    if (alp && lGetUlong(lFirst(alp), AN_status) != STATUS_OK) {
       XmtMsgLinePrintf(st_message, "Failure");
       XmtMsgLineClear(st_message, DISPLAY_MESSAGE_DURATION); 
-      lp = lFreeList(lp);
-      alp = lFreeList(alp);
-      what = lFreeWhat(what);
+      lFreeList(&lp);
+      lFreeList(&alp);
+      lFreeWhat(&what);
       DEXIT;
       return;
    }   
    else {
       XmtMsgLinePrintf(st_message, "Success");
       XmtMsgLineClear(st_message, DISPLAY_MESSAGE_DURATION); 
-      lp = lFreeList(lp);
-      alp = lFreeList(alp);
-      what = lFreeWhat(what);
+      lFreeList(&lp);
+      lFreeList(&alp);
+      lFreeWhat(&what);
       dirty = False;
    }   
 
@@ -536,7 +536,7 @@ XtPointer cld, cad;
    qmonMirrorMultiAnswer(SC_T, &alp);
    if (alp) {
       qmonMessageBox(w, alp, 0);
-      alp = lFreeList(alp);
+      lFreeList(&alp);
       DEXIT;
       return;
    }
@@ -558,8 +558,8 @@ XtPointer cld, cad;
          printf("_______________________________________\n");
       }
 
-      lFreeList(alp);
-      lFreeWhat(what);
+      lFreeList(&alp);
+      lFreeWhat(&what);
    }
 
 
@@ -812,7 +812,7 @@ XtPointer cld, cad;
    }   
 
    CullToTree(tree, item, paste_tree);
-   paste_tree = lFreeList(paste_tree);
+   lFreeList(&paste_tree);
    ListTreeRefresh(tree);
    dirty = True;
    XtSetSensitive(st_paste, False);
@@ -1013,7 +1013,7 @@ XtPointer cld, cad;
    qmonMirrorMultiAnswer(USER_T | PROJECT_T, &alp);
    if (alp) {
       qmonMessageBox(w, alp, 0);
-      alp = lFreeList(alp);
+      lFreeList(&alp);
       DEXIT;
       return;
    }
@@ -1044,7 +1044,7 @@ XtPointer cld, cad;
 
    if (alp || alp2) {
       if (alp)
-         lAddList(alp, alp2);
+         lAddList(alp, &alp2);
       else   
          alp = alp2;
       if (!qmonMessageBox(w, alp, 0)) {
@@ -1056,7 +1056,7 @@ XtPointer cld, cad;
       }
    }
 
-   alp = lFreeList(alp);
+   lFreeList(&alp);
 
    DEXIT;
 }
@@ -1146,7 +1146,7 @@ XtPointer cld, cad;
    qmonMirrorMultiAnswer(SHARETREE_T | USER_T | PROJECT_T | SC_T| USERSET_T, &alp);
    if (alp) {
       qmonMessageBox(w, alp, 0);
-      alp = lFreeList(alp);
+      lFreeList(&alp);
       DEXIT;
       return;
    }
@@ -1212,7 +1212,7 @@ XtPointer cld, cad;
       CullToParameters(&ratio_data, schedd_conf);
       XmtDialogSetDialogValues(st_ratio, &ratio_data);
 
-      schedd_conf = lFreeElem(schedd_conf);
+      lFreeElem(&schedd_conf);
    }
    
    DEXIT;
@@ -1397,7 +1397,7 @@ XtPointer cld, cad;
       qmonMirrorMultiAnswer(SHARETREE_T, &alp);
       if (alp) {
          qmonMessageBox(w, alp, 0);
-         alp = lFreeList(alp);
+         lFreeList(&alp);
          DEXIT;
          return;
       }

@@ -97,7 +97,7 @@ u_long32 sge_count_dirents(char *directory_name)
          entries++;
       }
    }
-   dir_entries = lFreeList(dir_entries);
+   lFreeList(&dir_entries);
    return entries;
 }
 
@@ -121,6 +121,6 @@ int has_more_dirents(char *directory_name, u_long32 number_of_entries)
          }
       }
    }
-   dir_entries = lFreeList(dir_entries);
+   lFreeList(&dir_entries);
    return ret;  
 }

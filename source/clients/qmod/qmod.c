@@ -103,8 +103,8 @@ char **argv
       for_each(aep, alp) { 
          fprintf(stderr, "%s\n", lGetString(aep, AN_text));
       }
-      lFreeList(alp);
-      lFreeList(pcmdline);
+      lFreeList(&alp);
+      lFreeList(&pcmdline);
       SGE_EXIT(1);
    }
 
@@ -117,9 +117,9 @@ char **argv
       for_each(aep, alp) { 
          fprintf(stderr, "%s\n", lGetString(aep, AN_text));
       }
-      lFreeList(alp);
-      lFreeList(pcmdline);
-      lFreeList(ref_list);
+      lFreeList(&alp);
+      lFreeList(&pcmdline);
+      lFreeList(&ref_list);
       SGE_EXIT(1);
    }
    
@@ -141,9 +141,9 @@ char **argv
       fprintf(stdout, "%s\n", lGetString(aep, AN_text));
    }
 
-   lFreeList(alp);
-   lFreeList(ref_list);
-   lFreeList(pcmdline); 
+   lFreeList(&alp);
+   lFreeList(&ref_list);
+   lFreeList(&pcmdline); 
 
    sge_prof_cleanup();
 
@@ -400,7 +400,7 @@ int usageshowed = 0;
             if (parse_multi_stringlist( ppcmdline, options[i], &alp, &queueList, ST_Type, ST_name)){
                id_list_build_from_str_list(ppreflist, &alp, queueList, transitions[i], *pforce); 
             }
-            queueList = lFreeList(queueList);
+            lFreeList(&queueList);
          }
          i++;
       }

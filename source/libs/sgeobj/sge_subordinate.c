@@ -294,7 +294,7 @@ so_list_resolve(const lList *so_list, lList **answer_list,
                }
             }
 
-            qref_list = lFreeList (qref_list);
+            lFreeList(&qref_list);
          }
 
          sge_dstring_clear (&cq_name);

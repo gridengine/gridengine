@@ -244,7 +244,7 @@ job_move_first_pending_to_running(lListElem **pending_job, lList **splitted_jobs
     */
    if (!job_has_pending_tasks(*pending_job)) {
       lDechainElem(*(splitted_jobs[SPLIT_PENDING]), *pending_job);
-      *pending_job = lFreeElem(*pending_job); 
+      lFreeElem(pending_job);
       ret = true;
    }
 
@@ -270,7 +270,7 @@ int job_get_next_task(lListElem *job, lListElem **task_ret, u_long32 *id_ret)
       ja_task_id = range_list_get_first_id(lGetList(job, JB_ja_n_h_ids),
                                            &answer_list);
       if (answer_list_has_error(&answer_list)) {
-         answer_list = lFreeList(answer_list);
+         lFreeList(&answer_list);
          return -1;
       }
       ja_task = job_get_ja_task_template_pending(job, ja_task_id);
@@ -809,7 +809,7 @@ void split_jobs(lList **job_list, lList **answer_list,
          lXchgList(job, JB_ja_o_h_ids, &o_h_ids);
          lXchgList(job, JB_ja_s_h_ids, &s_h_ids);
       } else {
-         ja_task_list = lFreeList(ja_task_list);
+         lFreeList(&ja_task_list);
       }
    }
 
@@ -817,7 +817,7 @@ void split_jobs(lList **job_list, lList **answer_list,
     * Could we dispense all jobs?
     */
    if (lGetNumberOfElem(*job_list) == 0) {
-      *job_list = lFreeList(*job_list);
+      lFreeList(job_list);
    }
 
    DEXIT;
@@ -928,7 +928,7 @@ void trash_splitted_jobs(lList **splitted_job_lists[])
             schedd_mes_commit(*job_list, 1, NULL);
          } 
       }
-      *job_list = lFreeList(*job_list);
+      lFreeList(job_list);
    }
 } 
 

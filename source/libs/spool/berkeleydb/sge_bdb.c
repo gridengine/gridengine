@@ -965,7 +965,7 @@ spool_berkeleydb_write_object(lList **answer_list, bdb_info info,
 
    if (tmp_list != NULL) {
       lDechainElem(tmp_list, (lListElem *)object);
-      tmp_list = lFreeList(tmp_list);
+      lFreeList(&tmp_list);
    }
 
    DEXIT;

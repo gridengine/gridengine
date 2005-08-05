@@ -938,8 +938,8 @@ object_set_range_id(lListElem *object, int rnm, u_long32 start, u_long32 end,
       range_elem = lCreateElem(RN_Type);
       range_list = lCreateList("task_id_range", RN_Type);
       if (range_elem == NULL || range_list == NULL) {
-         range_elem = lFreeElem(range_elem);
-         range_list = lFreeList(range_list);
+         lFreeElem(&range_elem);
+         lFreeList(&range_list);
 
          /* No memory */
          ret = 1;
@@ -1057,11 +1057,11 @@ bool object_type_free_master_list(const sge_object_type type)
       ERROR((SGE_EVENT, MSG_OBJECT_INVALID_OBJECT_TYPE_SI, SGE_FUNC, type));
       ret = false;
    } else if (object_base[type].list){
-       *object_base[type].list = lFreeList(*object_base[type].list);
+       lFreeList(object_base[type].list);
        ret = true;
    } else if (object_base[type].getMasterList){
-      lList ** list = object_base[type].getMasterList();
-      *list = lFreeList(*list);
+      lList **list = object_base[type].getMasterList();
+      lFreeList(list);
       ret = object_base[type].commitMasterList(NULL);
    }
 
@@ -1340,7 +1340,7 @@ object_parse_list_from_string(lListElem *this_elem, lList **answer_list,
          if (strcasecmp(NONE_STR, first_string)) {
             lSetPosList(this_elem, pos, tmp_list);
          } else {
-            tmp_list = lFreeList(tmp_list);
+            lFreeList(&tmp_list);
          }
       } else {
          answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
@@ -1374,7 +1374,7 @@ object_parse_celist_from_string(lListElem *this_elem, lList **answer_list,
       if (!cull_parse_definition_list((char *)string, &tmp_list, "", CE_Type, rule)) {
          lSetPosList(this_elem, pos, tmp_list);
       } else {
-         tmp_list = lFreeList(tmp_list);
+         lFreeList(&tmp_list);
          answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
                                  ANSWER_QUALITY_ERROR,
                                  MSG_ERRORPARSINGVALUEFORNM_S, string);
@@ -1405,7 +1405,7 @@ object_parse_solist_from_string(lListElem *this_elem, lList **answer_list,
       lString2List(string, &tmp_list, SO_Type, SO_name, ", \t");
       if (tmp_list != NULL) {
          if (!strcasecmp("NONE", lGetString(lFirst(tmp_list), SO_name))) {
-            tmp_list = lFreeList(tmp_list);
+            lFreeList(&tmp_list);
          } else {
             for_each(tmp_elem, tmp_list) {
                const char *queue_value = lGetString(tmp_elem, SO_name);
@@ -1915,15 +1915,15 @@ attr_mod_sub_list(lList **alpp, lListElem *this_elem, int this_elem_name,
                         /* break; No "break" here. It will follow below! */
                      }
 
-                     lFreeElem(old_sub_elem);
+                     lFreeElem(&old_sub_elem);
                      lAppendElem(full_sublist, new_sub_elem);
 
                      restart_loop = 1;
                      break;
                   } else if (sub_command == SGE_GDI_REMOVE) {
 
-                     lFreeElem(old_sub_elem);
-                     lFreeElem(new_sub_elem);
+                     lFreeElem(&old_sub_elem);
+                     lFreeElem(&new_sub_elem);
 
                      restart_loop = 1;
                      break;

@@ -455,7 +455,7 @@ static int read_schedd_conf_work(lList **alpp, lList **clpp, int fields[],
 
    /* --------- SC_queue_sort_method */
    str = get_conf_value(&alp, *clpp, CF_name, CF_value, "queue_sort_method");
-   alp = lFreeList(alp);
+   lFreeList(&alp);
    if (str) {
       ul = str2qsm(str);
       if (ul == (u_long32) -1) {
@@ -470,7 +470,7 @@ static int read_schedd_conf_work(lList **alpp, lList **clpp, int fields[],
    }
    else {
       str = get_conf_value(&alp, *clpp, CF_name, CF_value, "sort_seq_no");
-      alp = lFreeList(alp);
+      lFreeList(&alp);
       if (!str) {
          SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_SCHEDCONF_INVALIDVALUEXFORQUEUESORTMETHOD_S, str));
          answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);

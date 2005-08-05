@@ -1107,7 +1107,7 @@ cqueue_mod_sublist(lListElem *this_elem, lList **answer_list,
             mod_elem = lGetElemHost(mod_list, sublist_host_name, name);
             if (mod_elem == NULL) {
                DPRINTF(("Removing attribute list for "SFQ"\n", name));
-               lRemoveElem(org_list, elem);
+               lRemoveElem(org_list, &elem);
             }
          }
       }
@@ -1653,7 +1653,7 @@ cqueue_trash_used_href_setting(lListElem *this_elem, lList **answer_list,
                next_elem = lNext(elem);
 
                if (!sge_hostcmp(hgroup_or_hostname, attr_hostname)) {
-                  lRemoveElem(list, elem);
+                  lRemoveElem(list, &elem);
                }
             }
          }

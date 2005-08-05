@@ -199,7 +199,7 @@ XtPointer cad)
    qmonMirrorMultiAnswer(CENTRY_T, &alp);
    if (alp) {
       qmonMessageBox(w, alp, 0);
-      alp = lFreeList(alp);
+      lFreeList(&alp);
       DEXIT;
       return;
    }
@@ -221,5 +221,5 @@ XtPointer cad)
    /*
    ** free the copied list
    */
-   entries = lFreeList(entries);
+   lFreeList(&entries);
 }         

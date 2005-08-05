@@ -114,7 +114,7 @@ report_source *report_sources
       } else {
          ret = CL_RETVAL_OK;
       }
-      lFreeList(report_list);
+      lFreeList(&report_list);
    }
 
    DEXIT;

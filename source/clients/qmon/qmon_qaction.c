@@ -872,7 +872,7 @@ XtPointer cld, cad;
 
    if (cq_dialog && XtIsManaged(cq_dialog)) {
 
-      current_qep = lFreeElem(current_qep);
+      lFreeElem(&current_qep);
    
       XtUnmanageChild(cq_dialog);
       XtPopdown(XtParent(cq_dialog));
@@ -1322,7 +1322,7 @@ XtPointer cld, cad;
    qmonMirrorMultiAnswer(USERSET_T | PROJECT_T | PE_T | CKPT_T, &alp);
    if (alp) {
       qmonMessageBox(w, alp, 0);
-      alp = lFreeList(alp);
+      lFreeList(&alp);
       DEXIT;
       return;
    }
@@ -1420,7 +1420,7 @@ XtPointer cld, cad;
    qmonMirrorMultiAnswer(CQUEUE_T, &alp);
    if (alp) {
       qmonMessageBox(w, alp, 0);
-      alp = lFreeList(alp);
+      lFreeList(&alp);
       DEXIT;
       return;
    }
@@ -1550,8 +1550,8 @@ XtPointer cld, cad;
    } else {
       dont_close = 1;
    }   
-   alp = lFreeList(alp);
-   copy = lFreeElem(copy);
+   lFreeList(&alp);
+   lFreeElem(&copy);
 
    if (!dont_close)
       qmonQCPopdown(w, NULL, NULL);
@@ -1580,7 +1580,7 @@ StringConst href
    ql = qmonMirrorList(SGE_CQUEUE_LIST);
 
    if (current_qep) {
-      current_qep = lFreeElem(current_qep);
+      lFreeElem(&current_qep);
    }   
    if (!strcmp(qname, "template")) {
          current_qep = cqueue_create(&alp, "template" );
@@ -1598,7 +1598,7 @@ StringConst href
 
    qmonCullToCQ(current_qep, data, href);
 
-   lFreeList(alp);
+   lFreeList(&alp);
 
    DEXIT;
 }   
@@ -2194,7 +2194,7 @@ void updateQCQ(void)
       UpdateXmListFromCull(cq_queue_set, XmFONTLIST_DEFAULT_TAG, qlf, QU_qname);
       XmtLayoutEnableLayout(cq_dialog);
 
-      qlf = lFreeList(qlf);
+      lFreeList(&qlf);
    }
    
    DEXIT;
@@ -2535,7 +2535,7 @@ const char *href
 /*       lWriteElemTo(qep, stdout); */
    }   
    
-   alp = lFreeList(alp);
+   lFreeList(&alp);
    
    
    DEXIT;
@@ -2631,7 +2631,7 @@ const char *href
    inter_attr_list_add_set_del(lGetListRef(qep, CQ_min_cpu_interval), &alp, href, NULL, True); 
    inter_attr_list_add_set_del(lGetListRef(qep, CQ_notify), &alp, href, NULL, True);
 
-   alp = lFreeList(alp);
+   lFreeList(&alp);
    
    if (qmon_debug) {
       lWriteElemTo(qep, stdout);

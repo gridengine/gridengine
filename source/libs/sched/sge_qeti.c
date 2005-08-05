@@ -134,7 +134,7 @@ static int sge_qeti_list_add(lList **lpp, const char *name, lList* rue_lp, doubl
    }
 
    if (!(ep = lCreateElem(QETI_Type))) {
-      *lpp = lFreeList(*lpp);
+      lFreeList(lpp);
       DEXIT;
       return -1;
    }
@@ -545,9 +545,9 @@ void sge_qeti_release(sge_qeti_t *qeti)
    if (!qeti)
       return;
 
-   lFreeList(qeti->cr_refs_pe);
-   lFreeList(qeti->cr_refs_global);
-   lFreeList(qeti->cr_refs_host);
-   lFreeList(qeti->cr_refs_queue);
+   lFreeList(&(qeti->cr_refs_pe));
+   lFreeList(&(qeti->cr_refs_global));
+   lFreeList(&(qeti->cr_refs_host));
+   lFreeList(&(qeti->cr_refs_queue));
    free(qeti);
 }

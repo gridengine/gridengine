@@ -265,8 +265,10 @@ char **argv
    DPRINTF(("use_qidle: %d\n", use_qidle));
 
    /* test load sensor (internal or external) */
-   lFreeList(sge_build_load_report());
-
+   {
+      lList *report_list = sge_build_load_report();
+      lFreeList(&report_list);
+   }
    execd_register();
 
    sge_write_pid(EXECD_PID_FILE);
@@ -349,7 +351,7 @@ char **argv
       }
    }
 
-   Master_Job_List = lFreeList(Master_Job_List); 
+   lFreeList(&Master_Job_List); 
   
    PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM1);
 
@@ -454,8 +456,8 @@ int sge_execd_register_at_qmaster(void) {
       sge_last_register_error_flag = 0;
       INFO((SGE_EVENT, MSG_EXECD_REGISTERED_AT_QMASTER_S, sge_get_master(false)));
    }
-   alp = lFreeList(alp);
-   hlp = lFreeList(hlp);
+   lFreeList(&alp);
+   lFreeList(&hlp);
    DEXIT;
    return return_value;
 }
@@ -573,14 +575,14 @@ char **argv
       for_each(aep, alp) {
          fprintf(stderr, "%s", lGetString(aep, AN_text));
       }
-      lFreeList(alp);
-      lFreeList(pcmdline);
+      lFreeList(&alp);
+      lFreeList(&pcmdline);
       SGE_EXIT(1);
    }
 
    alp = sge_parse_execd(&pcmdline, &ref_list, &help);
-   lFreeList(pcmdline);
-   lFreeList(ref_list);
+   lFreeList(&pcmdline);
+   lFreeList(&ref_list);
 
    if(alp) {
       /*
@@ -589,10 +591,10 @@ char **argv
       for_each(aep, alp) {
          fprintf(stderr, "%s", lGetString(aep, AN_text));
       }
-      lFreeList(alp);
+      lFreeList(&alp);
       SGE_EXIT(1);
    }
-   lFreeList(alp);
+   lFreeList(&alp);
 
    if(help) {
       /*

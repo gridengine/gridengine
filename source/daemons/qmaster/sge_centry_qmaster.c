@@ -394,7 +394,7 @@ int sge_del_centry(lListElem *centry, lList **answer_list,
                                       0, 0, name, NULL, NULL,
                                       NULL, NULL, NULL, true, true)) {
 
-                     lRemoveElem(master_centry_list, tmp_centry);
+                     lRemoveElem(master_centry_list, &tmp_centry);
                      INFO((SGE_EVENT, MSG_SGETEXT_REMOVEDFROMLIST_SSSS, 
                            remote_user, remote_host, name, MSG_OBJ_CPLX));
                      answer_list_add(answer_list, SGE_EVENT, 
@@ -412,7 +412,7 @@ int sge_del_centry(lListElem *centry, lList **answer_list,
                   ERROR((SGE_EVENT, "denied: %s", lGetString(answer, AN_text)));
                   answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN,
                                  ANSWER_QUALITY_ERROR);
-                  local_answer_list = lFreeList(local_answer_list);
+                  lFreeList(&local_answer_list);
                   ret = false;
                }
             } else {

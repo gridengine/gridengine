@@ -393,7 +393,7 @@ static void utilization_normalize(lList *diagram)
    while ((this=next)) {
       next = lNext(this);
       if (util_prev == lGetDouble(this, RDE_amount))
-         lRemoveElem(diagram, this);
+         lRemoveElem(diagram, &this);
       else
          util_prev = lGetDouble(this, RDE_amount);
    }

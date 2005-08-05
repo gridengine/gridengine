@@ -393,7 +393,7 @@ int user        /* =1 user, =0 project */
          ruser, rhost, name, user?MSG_OBJ_USER:MSG_OBJ_PRJ));
    answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
 
-   lRemoveElem(*upl, ep);
+   lRemoveElem(*upl, &ep);
 
    DEXIT;
    return STATUS_OK;
@@ -544,7 +544,7 @@ sge_add_auto_user(const char *user, lList **alpp, monitoring_t *monitor)
    
       /* add the auto user via GDI request */
       status = do_add_auto_user(uep, alpp, monitor); 
-      uep = lFreeElem(uep);
+      lFreeElem(&uep);
    }
 
    DEXIT;
@@ -581,7 +581,7 @@ static int do_add_auto_user(lListElem* anUser, lList** anAnswer, monitoring_t *m
                                  bootstrap_get_admin_user(), 
                                  uti_state_get_qualified_hostname(), 0, &ppList, monitor);
 
-   ppList = lFreeList(ppList);
+   lFreeList(&ppList);
    if ((STATUS_OK != res) && (NULL != tmpAnswer))
    {
       lListElem *err   = lFirst(tmpAnswer);
@@ -593,7 +593,7 @@ static int do_add_auto_user(lListElem* anUser, lList** anAnswer, monitoring_t *m
    }
 
    if (tmpAnswer != NULL) {
-      tmpAnswer = lFreeList(tmpAnswer);
+      lFreeList(&tmpAnswer);
    }
 
    DEXIT;

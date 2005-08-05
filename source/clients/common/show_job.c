@@ -353,7 +353,7 @@ void cull_show_job(lListElem *job, int flags)
          if (lGetNumberOfElem(print) > 0) {
             print_new_line = 0;
          }
-         lAddList(print, do_not_print);
+         lAddList(print, &do_not_print);
       }
       if (print_new_line) {
          printf("\n");

@@ -127,7 +127,7 @@ static void host_trash_nonstatic_load_values(lListElem *host)
 
       next_load_attr = lNext(load_attr);
       if (!sge_is_static_load_value(load_attr_name)) {
-         lRemoveElem(load_attr_list, load_attr);
+         lRemoveElem(load_attr_list, &load_attr);
       }
    }
    if (lGetNumberOfElem(load_attr_list) == 0) {
@@ -180,8 +180,8 @@ u_long32 target, monitoring_t *monitor
    }
    ret = sge_gdi_add_mod_generic(NULL, ep, 1, object, uti_state_get_user_name(), 
       uti_state_get_qualified_hostname(), 0, &ppList, monitor);
-   lFreeElem(ep);
-   ppList = lFreeList(ppList);
+   lFreeElem(&ep);
+   lFreeList(&ppList);
 
    DEXIT;
    return (ret == STATUS_OK) ? 0 : -1;
@@ -370,7 +370,7 @@ const lList* master_hGroup_List
    }
 
    /* delete found host element */
-   lRemoveElem(*host_list, ep);
+   lRemoveElem(*host_list, &ep);
 
    INFO((SGE_EVENT, MSG_SGETEXT_REMOVEDFROMLIST_SSSS, 
          ruser, rhost, unique, name));
@@ -975,7 +975,7 @@ u_long32 load_report_interval(lListElem *hep)
             timeout = 120;
          }
          
-         lFreeElem(conf_entry);
+         lFreeElem(&conf_entry);
       }
    
       DPRINTF(("%s: load value timeout for host %s is "sge_u32"\n", SGE_FUNC, host, timeout));
@@ -1007,7 +1007,7 @@ u_long32 sge_get_max_unheard_value(void)
          max_unheard_secs = 300;
       }
       
-      lFreeElem(conf_entry);
+      lFreeElem(&conf_entry);
    }
       
    DPRINTF(("%s: max unheard value is "sge_u32"\n", SGE_FUNC, max_unheard_secs)); 

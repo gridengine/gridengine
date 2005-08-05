@@ -269,7 +269,7 @@ lList *sge_set_defined_defaults(lList *lpCfg)
       sprintf(pConf->value, "%s/%s", path_state_get_cell_root(), SPOOL_DIR);
    }
    else if (lpCfg)
-      lFreeList(lpCfg);
+      lFreeList(&lpCfg);
       
    lpCfg = NULL;
    i = 0;       
@@ -354,7 +354,7 @@ lList *lpCfg
    if ((ep = lGetElemStr(lpCfg, CF_name, "user_lists"))) {
       lList *lp = NULL;
       if (!lString2ListNone(lGetString(ep, CF_value), &lp, US_Type, US_name, " \t,")) {
-         lFreeList(mconf->user_lists);
+         lFreeList(&(mconf->user_lists));
          mconf->user_lists = lp;
       }   
    }
@@ -362,7 +362,7 @@ lList *lpCfg
    if ((ep = lGetElemStr(lpCfg, CF_name, "xuser_lists"))) {
       lList *lp = NULL;
       if (!lString2ListNone(lGetString(ep, CF_value), &lp, US_Type, US_name, " \t,")) {
-         lFreeList(mconf->xuser_lists);
+         lFreeList(&(mconf->xuser_lists));
          mconf->xuser_lists = lp;
       }   
    }
@@ -370,7 +370,7 @@ lList *lpCfg
    if ((ep = lGetElemStr(lpCfg, CF_name, "projects"))) {
       lList *lp = NULL;
       if (!lString2ListNone(lGetString(ep, CF_value), &lp, UP_Type, UP_name, " \t,")) {
-         lFreeList(mconf->projects);
+         lFreeList(&(mconf->projects));
          mconf->projects = lp;
       }   
    }
@@ -378,7 +378,7 @@ lList *lpCfg
    if ((ep = lGetElemStr(lpCfg, CF_name, "xprojects"))) {
       lList *lp = NULL;
       if (!lString2ListNone(lGetString(ep, CF_value), &lp, UP_Type, UP_name, " \t,")) {
-         lFreeList(mconf->xprojects);
+         lFreeList(&(mconf->xprojects));
          mconf->xprojects = lp;
       }   
    }
@@ -753,7 +753,7 @@ int merge_configuration(lListElem *global, lListElem *local,
    }
 
    if (mlist) {
-      lFreeList(mlist);
+      lFreeList(&mlist);
    }
  
    if (!global) {
@@ -856,10 +856,10 @@ sge_conf_type *conf
    FREE(conf->enforce_project);
    FREE(conf->enforce_user);
    FREE(conf->administrator_mail);
-   lFreeList(conf->user_lists);
-   lFreeList(conf->xuser_lists);
-   lFreeList(conf->projects);
-   lFreeList(conf->xprojects);
+   lFreeList(&(conf->user_lists));
+   lFreeList(&(conf->xuser_lists));
+   lFreeList(&(conf->projects));
+   lFreeList(&(conf->xprojects));
    FREE(conf->set_token_cmd);
    FREE(conf->pag_cmd);
    FREE(conf->shepherd_cmd);

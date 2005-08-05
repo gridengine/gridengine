@@ -460,7 +460,7 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
       lList* temp = NULL;
       lXchgList(jep, JB_context, &temp); 
       set_context(temp, jep);
-      lFreeList(temp);
+      lFreeList(&temp);
    }
 
    if (!qref_list_is_valid(lGetList(jep, JB_hard_queue_list), alpp)) {
@@ -998,8 +998,8 @@ int sub_command, monitoring_t *monitor
          if (!manop_is_manager(ruser)) {
             ERROR((SGE_EVENT, MSG_JOB_FORCEDDELETEPERMS_S, ruser));
             answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
-            lFreeWhere(job_where);
-            lFreeWhere(user_where);
+            lFreeWhere(&job_where);
+            lFreeWhere(&user_where);
             DEXIT;
             return STATUS_EUNKNOWN;  
          }
@@ -1279,10 +1279,10 @@ int sub_command, monitoring_t *monitor
             INFO((SGE_EVENT, MSG_JOB_DISCONTINUEDTRANS_SU, ruser, 
                   sge_u32c(job_number)));
             answer_list_add(alpp, SGE_EVENT, STATUS_OK_DOAGAIN, ANSWER_QUALITY_INFO); 
-            lFreeWhere(job_where);
-            lFreeWhere(user_where);
+            lFreeWhere(&job_where);
+            lFreeWhere(&user_where);
             FREE(dupped_session);
-            range_list = lFreeList(range_list);
+            lFreeList(&range_list);
             DEXIT;
             return STATUS_OK;
          }
@@ -1291,13 +1291,12 @@ int sub_command, monitoring_t *monitor
       } while (rn != NULL);
 
       /* free task id range list of this iteration */
-      range_list = lFreeList(range_list);
-
+      lFreeList(&range_list);
       FREE(dupped_session);
    }
 
-   lFreeWhere(job_where);
-   lFreeWhere(user_where);
+   lFreeWhere(&job_where);
+   lFreeWhere(&user_where);
 
    if (!njobs && !deleted_tasks) {
       empty_job_list_filter(alpp, 0, user_list_flag,
@@ -1612,10 +1611,10 @@ static void get_rid_of_schedd_job_messages( u_long32 job_number )
                ** else => remove whole message 
                */
                if (lGetNumberOfElem(lGetList(mes, MES_job_number_list)) > 1) {
-                  lRemoveElem(lGetList(mes, MES_job_number_list), job_ulng);
+                  lRemoveElem(lGetList(mes, MES_job_number_list), &job_ulng);
                   DPRINTF(("Removed jobid "sge_u32" from list of scheduler messages\n", job_number));
                } else {
-                  lRemoveElem(mes_list, mes);
+                  lRemoveElem(mes_list, &mes);
                   DPRINTF(("Removed message from list of scheduler messages "sge_u32"\n", job_number));
                }
             }
@@ -1922,8 +1921,8 @@ int sub_command
       if (strcmp(ruser, lGetString(jobep, JB_owner)) && !manop_is_operator(ruser) && !manop_is_manager(ruser)) {
          ERROR((SGE_EVENT, MSG_SGETEXT_MUST_BE_JOB_OWN_TO_SUS, ruser, sge_u32c(jobid), MSG_JOB_CHANGEATTR));  
          answer_list_add(alpp, SGE_EVENT, STATUS_ENOTOWNER, ANSWER_QUALITY_ERROR);
-         lFreeWhere(job_where);
-         lFreeWhere(user_where);
+         lFreeWhere(&job_where);
+         lFreeWhere(&user_where);
          FREE(job_mod_name);
          DEXIT;
          return STATUS_ENOTOWNER;   
@@ -1942,12 +1941,12 @@ int sub_command
          if (!*alpp)
             *alpp = lCreateList("answer", AN_Type);
          lAppendElem(*alpp, failure);
-         lFreeList(tmp_alp);
-         lFreeElem(new_job);
+         lFreeList(&tmp_alp);
+         lFreeElem(&new_job);
 
          DPRINTF(("---------- removed messages\n"));
-         lFreeWhere(user_where);
-         lFreeWhere(job_where);
+         lFreeWhere(&user_where);
+         lFreeWhere(&job_where);
          FREE(job_mod_name); 
          DEXIT;
          return STATUS_EUNKNOWN;
@@ -1972,10 +1971,10 @@ int sub_command
             ERROR((SGE_EVENT, MSG_JOB_NOALTERNOWRITE_U, sge_u32c(jobid)));
             answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR);
             sge_dstring_free(&buffer);
-            lFreeList(tmp_alp);
-            lFreeElem(new_job);
-            lFreeWhere(job_where); 
-            lFreeWhere(user_where);
+            lFreeList(&tmp_alp);
+            lFreeElem(&new_job);
+            lFreeWhere(&job_where);
+            lFreeWhere(&user_where);
             FREE(job_mod_name);
             DEXIT;
             return STATUS_EDISK;
@@ -1986,7 +1985,7 @@ int sub_command
          /* all elems in tmp_alp need to be appended to alpp */
          if (!*alpp)
             *alpp = lCreateList("answer", AN_Type);
-         lAddList(*alpp, tmp_alp);
+         lAddList(*alpp, &tmp_alp);
 
          if (trigger & MOD_EVENT) {
             sge_add_job_event(sgeE_JOB_MOD, new_job, NULL);
@@ -2012,10 +2011,12 @@ int sub_command
                DPRINTF((" JOB #"sge_u32": P: "sge_u32"\n", jobid, pre_ident)); 
 
                if ((suc_jobep = job_list_locate(Master_Job_List, pre_ident))) {
+                  lListElem *temp_job = NULL;
+   
+                  temp_job = lGetElemUlong(lGetList(suc_jobep, JB_jid_sucessor_list), JRE_job_number, jobid);               
                   DPRINTF(("  JOB "sge_u32" removed from trigger "
                      "list of job "sge_u32"\n", jobid, pre_ident));
-                  lRemoveElem(lGetList(suc_jobep, JB_jid_sucessor_list), 
-                  lGetElemUlong(lGetList(suc_jobep, JB_jid_sucessor_list), JRE_job_number, jobid));
+                  lRemoveElem(lGetList(suc_jobep, JB_jid_sucessor_list), &temp_job);
                } 
             }
          }
@@ -2023,7 +2024,7 @@ int sub_command
          /* write data back into job list  */
          {
             lListElem *prev = lPrev(jobep);
-            lRemoveElem(Master_Job_List, jobep);
+            lRemoveElem(Master_Job_List, &jobep);
             lInsertElem(Master_Job_List, prev, new_job);
          }   
          /* no need to spool these mods */
@@ -2034,8 +2035,8 @@ int sub_command
                rhost, sge_u32c(jobid), MSG_JOB_JOB));
       }
    }
-   lFreeWhere(job_where);
-   lFreeWhere(user_where);
+   lFreeWhere(&job_where);
+   lFreeWhere(&user_where);
 
    if (!njobs) {
       const char *job_id_str = NULL;
@@ -2576,7 +2577,7 @@ int *trigger
                                          job_is_array(new_job), 0);
                   }
                }
-               range_list = lFreeList(range_list);
+               lFreeList(&range_list);
             }
             /*
              * Visit enrolled tasks
@@ -2939,14 +2940,14 @@ int *trigger
       if (job_verify_predecessors(new_job, alpp)) {
          lXchgList(new_job, JB_jid_request_list, &req_list);
          lXchgList(new_job, JB_jid_predecessor_list, &pred_list); 
-         lFreeList(req_list);
-         lFreeList(pred_list);
+         lFreeList(&req_list);
+         lFreeList(&pred_list);
          DEXIT;
          return STATUS_EUNKNOWN;
       }
    
-      req_list = lFreeList(req_list);
-      pred_list = lFreeList(pred_list);
+      lFreeList(&req_list);
+      lFreeList(&pred_list);
 
       new_pre_list = lGetList(new_job, JB_jid_predecessor_list);
 
@@ -2999,7 +3000,7 @@ int *trigger
                     sge_u32c(jobid), str_predec, str_exited);
          answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
       }  
-      lFreeList(exited_pre_list);
+      lFreeList(&exited_pre_list);
    }
 
    /* ---- JB_notify */
@@ -3088,7 +3089,7 @@ int *trigger
 
       pe_range = lCopyList("", lGetList(jep, JB_pe_range));
       if (job_verify_pe_range(alpp, pe_name, pe_range)!=STATUS_OK) {
-         pe_range = lFreeList(pe_range);
+         lFreeList(&pe_range);
          DEXIT;
          return STATUS_EUNKNOWN;
       }
@@ -3195,7 +3196,7 @@ int *trigger
       var_list_split_prefix_vars(&tmp_var_list, &prefix_vars, VAR_PREFIX);
       lSetList(new_job, JB_env_list, 
                lCopyList("", lGetList(jep, JB_env_list)));
-      lAddList(lGetList(new_job, JB_env_list), prefix_vars);
+      lAddList(lGetList(new_job, JB_env_list), &prefix_vars);
       sprintf(SGE_EVENT, MSG_SGETEXT_MOD_JOBS_SU, MSG_JOB_ENVLIST, sge_u32c(jobid));
       answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
    }
@@ -3542,8 +3543,9 @@ static int job_verify_predecessors(lListElem *job, lList **alpp)
             the job finished already */
       }
    }
-   if (lGetNumberOfElem(predecessors_id) == 0) 
-      predecessors_id = lFreeList(predecessors_id);
+   if (lGetNumberOfElem(predecessors_id) == 0) {
+      lFreeList(&predecessors_id);
+   }
    
    lSetList(job, JB_jid_predecessor_list, predecessors_id);
 
@@ -3582,7 +3584,7 @@ lList *rl     /* RE_Type */
             DPRINTF(("resource request -l "SFN"="SFN" overrides previous -l "SFN"="SFN"\n",
                attr_name, lGetString(ep, CE_stringval), 
                attr_name, lGetString(rm_ep, CE_stringval)));
-            lRemoveElem(rl, rm_ep);
+            lRemoveElem(rl, &rm_ep);
          }
       }
    }
@@ -3907,7 +3909,7 @@ int *trigger
                if (!a.queue_list)
                   a.queue_list = qinstance_list;
                else
-                  lAddList(a.queue_list, qinstance_list);
+                  lAddList(a.queue_list, &qinstance_list);
             }
 
             a.host_list        = Master_Exechost_List;
@@ -3941,7 +3943,7 @@ int *trigger
             /* stop dreaming */
             sconf_set_qs_state(QS_STATE_FULL);
 
-            a.queue_list = lFreeList(a.queue_list);
+            lFreeList(&(a.queue_list));
          }
 
          assignment_release(&a);
@@ -3952,9 +3954,9 @@ int *trigger
             if (verify_mode==JUST_VERIFY) {
                if (!*alpp)
                   *alpp = lCreateList("answer", AN_Type);
-               lAddList(*alpp, talp);
+               lAddList(*alpp, &talp);
             } else {
-               lFreeList(talp);
+               lFreeList(&talp);
             }
 
             SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_JOB_NOSUITABLEQ_S,
@@ -4055,7 +4057,7 @@ int sge_gdi_copy_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser, cha
    /* call add() method */
    ret = sge_gdi_add_job(new_jep, alpp, lpp, ruser, rhost, uid, gid, group, request, monitor);
 
-   new_jep = lFreeElem(new_jep);
+   lFreeElem(&new_jep);
 
    DEXIT;
    return ret;

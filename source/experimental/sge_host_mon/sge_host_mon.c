@@ -196,9 +196,9 @@ free_lists(lList *jobs, lList *hosts, lList *config)
    if (jobs)
       lFreeList(jobs);
    if (hosts)
-      lFreeList(hosts);
+      lFreeList(&hosts);
    if (config)
-      lFreeList(config);
+      lFreeList(&config);
    return 0;
 }
 

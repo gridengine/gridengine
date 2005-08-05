@@ -100,9 +100,7 @@ void opt_list_append_opts_from_default_files(lList **pcmdline,
    
    DENTER(TOP_LAYER, "opt_list_append_opts_from_default_files");
 
-   if (*answer_list) {
-      *answer_list = lFreeList(*answer_list);
-   }
+   lFreeList(answer_list);
 
    /* the sge root defaults file */
    def_files[0] = get_root_defaults_file_path();
@@ -427,9 +425,7 @@ void opt_list_append_opts_from_qsub_cmdline(lList **opts_cmdline,
                                             char **argv,
                                             char **envp)
 {
-   if (*answer_list != NULL) {
-      *answer_list = lFreeList(*answer_list);
-   }
+   lFreeList(answer_list);
    *answer_list = cull_parse_cmdline(argv, envp, opts_cmdline, FLG_USE_PSEUDOS);
 }
 
@@ -464,9 +460,7 @@ void opt_list_append_opts_from_qalter_cmdline(lList **opts_cmdline,
                                               char **argv,
                                               char **envp)
 {
-   if (*answer_list != NULL) {
-      *answer_list = lFreeList(*answer_list);
-   }
+   lFreeList(answer_list);
    *answer_list = cull_parse_cmdline(argv, envp, opts_cmdline, 
                                      FLG_USE_PSEUDOS | FLG_QALTER);
 }
@@ -519,9 +513,7 @@ void opt_list_append_opts_from_script(lList **opts_scriptfile,
    } else {
       prefix = default_prefix;
    }
-   if (*answer_list) {
-      *answer_list = lFreeList(*answer_list);
-   }
+   lFreeList(answer_list);
    *answer_list = parse_script_file(scriptfile, prefix, opts_scriptfile, 
                                     envp, FLG_DONT_ADD_SCRIPT);
 }
@@ -601,9 +593,7 @@ void opt_list_append_opts_from_script_path(lList **opts_scriptfile, const char *
       prefix = default_prefix;
    }
    
-   if (*answer_list) {
-      *answer_list = lFreeList(*answer_list);
-   }
+   lFreeList(answer_list);
    
    *answer_list = parse_script_file(scriptpath, prefix, opts_scriptfile, 
                                     envp, FLG_DONT_ADD_SCRIPT);
@@ -652,7 +642,7 @@ void opt_list_merge_command_lines(lList **opts_all,
       if (*opts_all == NULL) {
          *opts_all = *opts_defaults;
       } else {
-         lAddList(*opts_all, *opts_defaults);
+         lAddList(*opts_all, opts_defaults);
       }
       *opts_defaults = NULL;
    }
@@ -660,7 +650,7 @@ void opt_list_merge_command_lines(lList **opts_all,
       if (*opts_all == NULL) {
          *opts_all = *opts_scriptfile;
       } else {
-         lAddList(*opts_all, *opts_scriptfile);
+         lAddList(*opts_all, opts_scriptfile);
       }
       *opts_scriptfile = NULL;
    }
@@ -668,7 +658,7 @@ void opt_list_merge_command_lines(lList **opts_all,
       if (*opts_all == NULL) {
          *opts_all = *opts_cmdline;
       } else {
-         lAddList(*opts_all, *opts_cmdline);
+         lAddList(*opts_all, opts_cmdline);
       }
       *opts_cmdline = NULL;
    }

@@ -598,7 +598,7 @@ static void qping_print_line(char* buffer, int nonewline, int dump_tag) {
                            printf("rep: NULL\n");
                         }
                      }
-                     lFreeList(rep);
+                     lFreeList(&rep);
                      rep = NULL;
                      clear_packbuffer(&buf);
                   }
@@ -759,9 +759,7 @@ static void qping_print_line(char* buffer, int nonewline, int dump_tag) {
                      } else {
                         printf("could not unpack list elem\n");
                      }
-                     if(list_elem) {
-                        lFreeElem(list_elem);
-                     }
+                     lFreeElem(&list_elem);
                      clear_packbuffer(&buf);
                   }
                }

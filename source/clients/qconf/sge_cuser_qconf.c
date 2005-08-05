@@ -85,7 +85,7 @@ lListElem *cuser_get_via_gdi(lList **answer_list, const char *name)
       gdi_answer_list = sge_gdi(SGE_USER_MAPPING_LIST, SGE_GDI_GET, 
                                 &cuser_list, where, what);
       what = lFreeWhat(what);
-      where = lFreeWhere(where);
+      lFreeWhere(&where);
 
       if (!answer_list_has_error(&gdi_answer_list)) {
          ret = lFirst(cuser_list);
@@ -112,7 +112,7 @@ bool cuser_provide_modify_context(lListElem **this_elem, lList **answer_list)
 
          cuser = cull_read_in_ume(NULL, filename, 1, 0, 0, NULL);
          if (cuser != NULL) {
-            *this_elem = lFreeElem(*this_elem);
+            lFreeElem(this_elem);
             *this_elem = cuser; 
             ret = true;
          } else {
@@ -194,7 +194,7 @@ bool cuser_modify(lList **answer_list, const char *name)
          ret &= cuser_add_del_mod_via_gdi(cuser, answer_list, SGE_GDI_MOD);
       }
       if (cuser) {
-         cuser = lFreeElem(cuser);
+         lFreeElem(&cuser);
       }
    }
 
@@ -221,7 +221,7 @@ bool cuser_modify_from_file(lList **answer_list, const char *filename)
          ret &= cuser_add_del_mod_via_gdi(cuser, answer_list, SGE_GDI_MOD);
       }
       if (cuser != NULL) {
-         cuser = lFreeElem(cuser);
+         lFreeElem(&cuser);
       }
    }
 
@@ -255,7 +255,7 @@ bool cuser_show(lList **answer_list, const char *name)
    
       if (cuser != NULL) {
          write_ume(0, 0, cuser);
-         cuser = lFreeElem(cuser);
+         lFreeElem(&cuser);
       } else {
          sprintf(SGE_EVENT, MSG_CUSER_DOESNOTEXIST_S, name);
          answer_list_add(answer_list, SGE_EVENT,

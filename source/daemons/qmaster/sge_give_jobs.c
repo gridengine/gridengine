@@ -292,7 +292,7 @@ send_slave_jobs(const char *target, lListElem *jep, lListElem *jatep, lListElem 
    ** in qmaster's permanent job list
    */
    if (setCheckpointObj(tmpjep) != 0) {
-      tmpjep = lFreeElem(tmpjep); 
+      lFreeElem(&tmpjep);
       DEXIT;
       return -1;
    }
@@ -345,8 +345,8 @@ send_slave_jobs(const char *target, lListElem *jep, lListElem *jatep, lListElem 
 
    ret = send_slave_jobs_wc(target, tmpjep, jatep, pe, qlp, monitor);
 
-   lFreeElem(tmpjep);
-   lFreeList(qlp);
+   lFreeElem(&tmpjep);
+   lFreeList(&qlp);
 
    if (pe) { 
       lAppendElem(Master_Pe_List, pe);
@@ -587,7 +587,7 @@ send_job(const char *rhost, const char *target, lListElem *jep, lListElem *jatep
    ** in qmaster's permanent job list
    */
    if (setCheckpointObj(tmpjep) != 0) {
-      tmpjep = lFreeElem(tmpjep); 
+      lFreeElem(&tmpjep);
       DEXIT;
       return -1;
    }
@@ -663,16 +663,16 @@ send_job(const char *rhost, const char *target, lListElem *jep, lListElem *jatep
 #endif
    
    if(init_packbuffer(&pb, 0, 0) != PACK_SUCCESS) {
-      lFreeElem(tmpjep);
-      lFreeList(qlp);
+      lFreeElem(&tmpjep);
+      lFreeList(&qlp);
       DEXIT;
       return -1;
    }
 
    pack_job_delivery(&pb, tmpjep, qlp, pe);
    
-   lFreeElem(tmpjep);
-   lFreeList(qlp);
+   lFreeElem(&tmpjep);
+   lFreeList(&qlp);
 
    if (pe != NULL) {
       lAppendElem(Master_Pe_List, pe);
@@ -873,7 +873,7 @@ void sge_zombie_job_cleanup_handler(te_event_t anEvent, monitoring_t *monitor)
    while (Master_Zombie_List && (lGetNumberOfElem(Master_Zombie_List) > conf.zombie_jobs))
    {
       dep = lFirst(Master_Zombie_List);
-      lRemoveElem(Master_Zombie_List, dep);
+      lRemoveElem(Master_Zombie_List, &dep);
    }
 
    SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
@@ -1138,7 +1138,7 @@ void sge_commit_job(lListElem *jep, lListElem *jatep, lListElem *jr,
 
             for_each(pe_task, pe_task_list) {
                if(pe_task != container) {
-                  lRemoveElem(pe_task_list, pe_task);
+                  lRemoveElem(pe_task_list, &pe_task);
                }
             }
          }
@@ -1339,7 +1339,7 @@ static void sge_job_finish_event(lListElem *jep, lListElem *jatep, lListElem *jr
                  lGetString(jep, JB_session), jr);
 
    if (release_jr) {
-      lFreeElem(jr);
+      lFreeElem(&jr);
    }   
    else {
       lXchgList(jr, JR_usage, lGetListRef(jatep, JAT_usage_list));
@@ -1593,7 +1593,7 @@ static int sge_bury_job(lListElem *job, u_long32 job_id, lListElem *ja_task,
          sge_add_event( 0, sgeE_JOB_DEL, job_id, ja_task_id, 
                        NULL, NULL, lGetString(job, JB_session), NULL);
       }
-      lRemoveElem(Master_Job_List, job);
+      lRemoveElem(Master_Job_List, &job);
    } else {
       int is_enrolled = job_is_enrolled(job, ja_task_id);
 
@@ -1613,7 +1613,7 @@ static int sge_bury_job(lListElem *job, u_long32 job_id, lListElem *ja_task,
                              job_get_key(job_id, ja_task_id, NULL, &buffer));
          answer_list_output(&answer_list);
          sge_dstring_free(&buffer);
-         lRemoveElem(lGetList(job, JB_ja_tasks), ja_task);
+         lRemoveElem(lGetList(job, JB_ja_tasks), &ja_task);
       } else {
          job_delete_not_enrolled_ja_task(job, NULL, ja_task_id);
          if (spool_job) {
@@ -1749,7 +1749,7 @@ copyJob(lListElem *job, lListElem *ja_task)
       lSetList(job_copy, JB_ja_tasks, tmp_ja_task_list);
 
       if (lGetNumberOfElem(tmp_ja_task_list) == 0) { /* not enough memory */
-         job_copy = lFreeElem(job_copy); /* this also frees tmp_ja_task_list */
+         lFreeElem(&job_copy); /* this also frees tmp_ja_task_list */
       }
    }
 

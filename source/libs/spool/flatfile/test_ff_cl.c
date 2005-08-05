@@ -518,7 +518,7 @@ static void PE_test (void)
    
    /* Read a PE file using flatfile spooling */
    fields = sge_build_PE_field_list (false, false);
-   ep = lFreeElem (ep);
+   lFreeElem(&ep);
    ep = spool_flatfile_read_object(&alp, PE_Type, NULL,
                                    fields, NULL, true, &qconf_sfi,
                                    SP_FORM_ASCII, NULL, file1);
@@ -531,7 +531,7 @@ static void PE_test (void)
                                        SP_FORM_ASCII, 
                                        file2, false);
    
-   ep = lFreeElem (ep);
+   lFreeElem(&ep);
    ep = cull_read_in_pe (NULL, file2, 0, 0, NULL, NULL);
    unlink (file2);
    FREE (file2);
@@ -546,7 +546,7 @@ static void PE_test (void)
    FREE (file2);
    FREE (fields);
 
-   ep = lFreeElem (ep);
+   lFreeElem(&ep);
    ep = ep2;
    
    printf ("PE: spool = 1\n");
@@ -555,7 +555,7 @@ static void PE_test (void)
    
    /* Read a PE file using flatfile spooling */
    fields = sge_build_PE_field_list (true, false);
-   ep = lFreeElem (ep);
+   lFreeElem(&ep);
    ep = spool_flatfile_read_object(&alp, PE_Type, NULL,
                                    fields, NULL, true, &qconf_sfi,
                                    SP_FORM_ASCII, NULL, file1);
@@ -568,7 +568,7 @@ static void PE_test (void)
                                        SP_FORM_ASCII, 
                                        file2, true);
    
-   ep = lFreeElem (ep);
+   lFreeElem(&ep);
    ep = cull_read_in_pe (NULL, file2, 0, 0, NULL, NULL);
    unlink (file2);
    FREE (file2);
@@ -583,7 +583,7 @@ static void PE_test (void)
    FREE (file2);
    FREE (fields);
    
-   ep = lFreeElem (ep);
+   lFreeElem(&ep);
    
    answer_list_output(&alp);   
    alp = lFreeList (alp);
@@ -610,7 +610,7 @@ static void CAL_test (void)
    file1 = write_cal (0, 1, ep);
    
    /* Read a CAL file using flatfile spooling */
-   ep = lFreeElem (ep);
+   lFreeElem(&ep);
    ep = spool_flatfile_read_object(&alp, CAL_Type, NULL,
                                    CAL_fields, NULL, true, &qconf_sfi,
                                    SP_FORM_ASCII, NULL, file1);
@@ -623,7 +623,7 @@ static void CAL_test (void)
                                        SP_FORM_ASCII, 
                                        file2, false);
    
-   ep = lFreeElem (ep);
+   lFreeElem(&ep);
    ep = cull_read_in_cal (NULL, file2, 0, 0, NULL, NULL);
    unlink (file2);
    FREE (file2);
@@ -637,7 +637,7 @@ static void CAL_test (void)
    FREE (file1);
    FREE (file2);
    
-   ep = lFreeElem (ep);
+   lFreeElem(&ep);
    ep = ep2;
    
    printf ("CAL: spool = 1\n");
@@ -657,7 +657,7 @@ static void CAL_test (void)
                                        SP_FORM_ASCII, 
                                        file2, true);
    
-   ep = lFreeElem (ep);
+   lFreeElem(&ep);
    ep = cull_read_in_cal (NULL, file2, 0, 0, NULL, NULL);
    unlink (file2);
    FREE (file2);
@@ -671,7 +671,7 @@ static void CAL_test (void)
    FREE (file1);
    FREE (file2);
    
-   ep = lFreeElem (ep);
+   lFreeElem(&ep);
    
    answer_list_output(&alp);   
    alp = lFreeList (alp);
@@ -705,7 +705,7 @@ static void CK_test (void)
    file1 = write_ckpt (0, 1, ep);
    
    /* Read a CK file using flatfile spooling */
-   ep = lFreeElem (ep);
+   lFreeElem(&ep);
    ep = spool_flatfile_read_object(&alp, CK_Type, NULL,
                                    CK_fields, NULL, true, &qconf_sfi,
                                    SP_FORM_ASCII, NULL, file1);
@@ -718,7 +718,7 @@ static void CK_test (void)
                                        SP_FORM_ASCII, 
                                        file2, false);
    
-   ep = lFreeElem (ep);
+   lFreeElem(&ep);
    ep = cull_read_in_ckpt (NULL, file2, 0, 0, NULL, NULL);
    unlink (file2);
    FREE (file2);
@@ -732,7 +732,7 @@ static void CK_test (void)
    FREE (file1);
    FREE (file2);
 
-   ep = lFreeElem (ep);
+   lFreeElem(&ep);
    ep = ep2;
    
    printf ("CK: spool = 1\n");
@@ -740,7 +740,7 @@ static void CK_test (void)
    file1 = write_ckpt (1, 1, ep);
    
    /* Read a CK file using flatfile spooling */
-   ep = lFreeElem (ep);
+   lFreeElem(&ep);
    ep = spool_flatfile_read_object(&alp, CK_Type, NULL,
                                    CK_fields, NULL, true, &qconf_sfi,
                                    SP_FORM_ASCII, NULL, file1);
@@ -753,7 +753,7 @@ static void CK_test (void)
                                        SP_FORM_ASCII, 
                                        file2, true);
    
-   ep = lFreeElem (ep);
+   lFreeElem(&ep);
    ep = cull_read_in_ckpt (NULL, file2, 0, 0, NULL, NULL);
    unlink (file2);
    FREE (file2);
@@ -767,7 +767,7 @@ static void CK_test (void)
    FREE (file1);
    FREE (file2);
    
-   ep = lFreeElem (ep);
+   lFreeElem(&ep);
    
    answer_list_output(&alp);   
    alp = lFreeList (alp);
@@ -852,7 +852,7 @@ static void STN_test () {
 
    /* Read a STN file using flatfile spooling */
    fields = sge_build_STN_field_list (0, 0);
-   ep = lFreeElem (ep);
+   lFreeElem(&ep);
    ep = spool_flatfile_read_object(&alp, STN_Type, NULL,
                                    fields, NULL, true, &qconf_stn_sfi,
                                    SP_FORM_ASCII, NULL, file1);
@@ -865,7 +865,7 @@ static void STN_test () {
                                        SP_FORM_ASCII, 
                                        file2, false);
 
-   ep = lFreeElem (ep);
+   lFreeElem(&ep);
    ep = read_sharetree ((char *)file2, NULL, 0, buffer, 0, NULL);
    unlink (file2);
    FREE (file2);
@@ -881,7 +881,7 @@ static void STN_test () {
    
    printf ("STN: spool = 0, recurse = 0, root_node = 1 -- INVALID\n");
 
-   ep = lFreeElem (ep);
+   lFreeElem(&ep);
    ep = lCopyElem (ep2);
    
    printf ("STN: spool = 0, recurse = 1, root_node = 0\n");
@@ -890,7 +890,7 @@ static void STN_test () {
    
    /* Read a STN file using flatfile spooling */
    fields = sge_build_STN_field_list (0, 1);
-   ep = lFreeElem (ep);
+   lFreeElem(&ep);
    ep = spool_flatfile_read_object(&alp, STN_Type, NULL,
                                    fields, NULL, true, &qconf_stn_sfi,
                                    SP_FORM_ASCII, NULL, file1);
@@ -902,7 +902,7 @@ static void STN_test () {
                                        SP_DEST_TMP,
                                        SP_FORM_ASCII, 
                                        file2, false);
-   ep = lFreeElem (ep);
+   lFreeElem(&ep);
    ep = read_sharetree ((char *)file2, NULL, 0, buffer, 1, NULL);
    unlink (file2);
    FREE (file2);
@@ -916,7 +916,7 @@ static void STN_test () {
    unlink (file2);
    FREE (fields);
 
-   ep = lFreeElem (ep);
+   lFreeElem(&ep);
    ep = lCopyElem (ep2);
    
    printf ("STN: spool = 0, recurse = 1, root_node = 1\n");
@@ -925,7 +925,7 @@ static void STN_test () {
    
    /* Read a STN file using flatfile spooling */
    fields = sge_build_STN_field_list (0, 1);
-   ep = lFreeElem (ep);
+   lFreeElem(&ep);
    ep = spool_flatfile_read_object(&alp, STN_Type, NULL,
                                    fields, NULL, true, &qconf_stn_sfi,
                                    SP_FORM_ASCII, NULL, file1);
@@ -938,7 +938,7 @@ static void STN_test () {
                                        SP_FORM_ASCII, 
                                        file2, false);
 
-   ep = lFreeElem (ep);
+   lFreeElem(&ep);
    ep = read_sharetree ((char *)file2, NULL, 0, buffer, 1, NULL);
    unlink (file2);
    FREE (file2);
@@ -952,7 +952,7 @@ static void STN_test () {
    unlink (file2);
    FREE (fields);
 
-   ep = lFreeElem (ep);
+   lFreeElem(&ep);
    ep = lCopyElem (ep2);
    
    printf ("STN: spool = 1, recurse = 0, root_node = 0\n");
@@ -961,7 +961,7 @@ static void STN_test () {
    
    /* Read a STN file using flatfile spooling */
    fields = sge_build_STN_field_list (1, 0);
-   ep = lFreeElem (ep);
+   lFreeElem(&ep);
    ep = spool_flatfile_read_object(&alp, STN_Type, NULL,
                                    fields, NULL, true, &qconf_stn_sfi,
                                    SP_FORM_ASCII, NULL, file1);
@@ -974,7 +974,7 @@ static void STN_test () {
                                        SP_FORM_ASCII, 
                                        file2, false);
 
-   ep = lFreeElem (ep);
+   lFreeElem(&ep);
    ep = read_sharetree ((char *)file2, NULL, 1, buffer, 0, NULL);
    unlink (file2);
    FREE (file2);
@@ -990,7 +990,7 @@ static void STN_test () {
    
    printf ("STN: spool = 1, recurse = 0, root_node = 1 -- INVALID\n");
 
-   ep = lFreeElem (ep);
+   lFreeElem(&ep);
    ep = lCopyElem (ep2);
    
    printf ("STN: spool = 1, recurse = 1, root_node = 0\n");
@@ -999,7 +999,7 @@ static void STN_test () {
    
    /* Read a STN file using flatfile spooling */
    fields = sge_build_STN_field_list (1, 1);
-   ep = lFreeElem (ep);
+   lFreeElem(&ep);
    ep = spool_flatfile_read_object(&alp, STN_Type, NULL,
                                    fields, NULL, true, &qconf_stn_sfi,
                                    SP_FORM_ASCII, NULL, file1);
@@ -1012,7 +1012,7 @@ static void STN_test () {
                                        SP_FORM_ASCII, 
                                        file2, false);
 
-   ep = lFreeElem (ep);
+   lFreeElem(&ep);
    ep = read_sharetree ((char *)file2, NULL, 1, buffer, 1, NULL);
    unlink (file2);
    FREE (file2);
@@ -1026,7 +1026,7 @@ static void STN_test () {
    unlink (file2);
    FREE (fields);
 
-   ep = lFreeElem (ep);
+   lFreeElem(&ep);
    ep = ep2;
    
    printf ("STN: spool = 1, recurse = 1, root_node = 1\n");
@@ -1035,7 +1035,7 @@ static void STN_test () {
    
    /* Read a STN file using flatfile spooling */
    fields = sge_build_STN_field_list (1, 1);
-   ep = lFreeElem (ep);
+   lFreeElem(&ep);
    ep = spool_flatfile_read_object(&alp, STN_Type, NULL,
                                    fields, NULL, true, &qconf_stn_sfi,
                                    SP_FORM_ASCII, NULL, file1);
@@ -1048,7 +1048,7 @@ static void STN_test () {
                                        SP_FORM_ASCII, 
                                        file2, true);
 
-   ep = lFreeElem (ep);
+   lFreeElem(&ep);
    ep = read_sharetree ((char *)file2, NULL, 1, buffer, 1, NULL);
    unlink (file2);
    FREE (file2);
@@ -1062,7 +1062,7 @@ static void STN_test () {
    unlink (file2);
    FREE (fields);
    
-   ep = lFreeElem (ep);
+   lFreeElem(&ep);
    
    answer_list_output(&alp);   
    alp = lFreeList (alp);
@@ -1094,7 +1094,7 @@ static void CE_test (void)
    file1 = write_centry (0, 1, ep);
    
    /* Read a CE file using flatfile spooling */
-   ep = lFreeElem (ep);
+   lFreeElem(&ep);
    ep = spool_flatfile_read_object(&alp, CE_Type, NULL,
                                    CE_fields, NULL, true, &qconf_sfi,
                                    SP_FORM_ASCII, NULL, file1);
@@ -1107,7 +1107,7 @@ static void CE_test (void)
                                        SP_FORM_ASCII, 
                                        file2, false);
 
-   ep = lFreeElem (ep);
+   lFreeElem(&ep);
    ep = cull_read_in_centry (NULL, file2, 0, NULL, NULL);
    unlink (file2);
    FREE (file2);
@@ -1121,7 +1121,7 @@ static void CE_test (void)
    FREE (file1);
    FREE (file2);
    
-   ep = lFreeElem (ep);
+   lFreeElem(&ep);
    ep = ep2;
    
    printf ("CE: spool = 1\n");
@@ -1129,7 +1129,7 @@ static void CE_test (void)
    file1 = write_centry (1, 1, ep);
    
    /* Read a CE file using flatfile spooling */
-   ep = lFreeElem (ep);
+   lFreeElem(&ep);
    ep = spool_flatfile_read_object(&alp, CE_Type, NULL,
                                    CE_fields, NULL, true, &qconf_sfi,
                                    SP_FORM_ASCII, NULL, file1);
@@ -1142,7 +1142,7 @@ static void CE_test (void)
                                        SP_FORM_ASCII, 
                                        file2, true);
 
-   ep = lFreeElem (ep);
+   lFreeElem(&ep);
    ep = cull_read_in_centry (NULL, file2, 1, NULL, NULL);
    unlink (file2);
    FREE (file2);
@@ -1156,7 +1156,7 @@ static void CE_test (void)
    FREE (file1);
    FREE (file2);
    
-   ep = lFreeElem (ep);
+   lFreeElem(&ep);
    
    answer_list_output(&alp);   
    alp = lFreeList (alp);
@@ -1523,7 +1523,7 @@ static void UP_test (void) {
    write_userprj (&alp, ep, (char *)file1, NULL, 0, 0);
    
    /* Read a UP file using flatfile spooling */
-   ep = lFreeElem (ep);
+   lFreeElem(&ep);
    fields = sge_build_UP_field_list (0, 0);
    ep = spool_flatfile_read_object(&alp, UP_Type, NULL,
                                    fields, NULL, true, &qconf_sfi,
@@ -1537,7 +1537,7 @@ static void UP_test (void) {
                                      SP_FORM_ASCII, 
                                      file2, false);
 
-   ep = lFreeElem (ep);
+   lFreeElem(&ep);
    ep = cull_read_in_userprj (NULL, file2, 0, 0, NULL);
    unlink (file2);
    FREE (file2);
@@ -1551,7 +1551,7 @@ static void UP_test (void) {
    unlink (file2);
    FREE (fields);
    
-   ep = lFreeElem (ep);
+   lFreeElem(&ep);
    ep = ep2;
    
    printf ("UP: spool = 0, user = 1\n");
@@ -1559,7 +1559,7 @@ static void UP_test (void) {
    write_userprj (&alp, ep, (char *)file1, NULL, 0, 1);
    
    /* Read a UP file using flatfile spooling */
-   ep = lFreeElem (ep);
+   lFreeElem(&ep);
    fields = sge_build_UP_field_list (0, 1);
    ep = spool_flatfile_read_object(&alp, UP_Type, NULL,
                                    fields, NULL, true, &qconf_sfi,
@@ -1573,7 +1573,7 @@ static void UP_test (void) {
                                      SP_FORM_ASCII, 
                                      file2, false);
 
-   ep = lFreeElem (ep);
+   lFreeElem(&ep);
    ep = cull_read_in_userprj (NULL, file2, 0, 1, NULL);
    unlink (file2);
    FREE (file2);
@@ -1587,7 +1587,7 @@ static void UP_test (void) {
    unlink (file2);
    FREE (fields);
    
-   ep = lFreeElem (ep);
+   lFreeElem(&ep);
    
    printf ("UP: spool = 1, user = 0 -- INVALID\n");
    printf ("UP: spool = 1, user = 1 -- INVALID\n");
@@ -1634,7 +1634,7 @@ static void US_test(void)
    write_userset (&alp, ep, (char *)file1, NULL, 0);
    
    /* Read a CK file using flatfile spooling */
-   ep = lFreeElem (ep);
+   lFreeElem(&ep);
    ep = spool_flatfile_read_object(&alp, US_Type, NULL,
                                    US_fields, NULL, true, &qconf_sfi,
                                    SP_FORM_ASCII, NULL, file1);
@@ -1647,7 +1647,7 @@ static void US_test(void)
                                        SP_FORM_ASCII, 
                                        file2, false);
    
-   ep = lFreeElem (ep);
+   lFreeElem(&ep);
    ep = cull_read_in_userset (NULL, file2, 0, 0, NULL);
    unlink (file2);
    FREE (file2);
@@ -1660,7 +1660,7 @@ static void US_test(void)
    unlink (file1);
    unlink (file2);
    
-   ep = lFreeElem (ep);
+   lFreeElem(&ep);
    
    answer_list_output(&alp);   
    alp = lFreeList (alp);
@@ -1868,7 +1868,7 @@ static void EH_test (void)
    file1 = write_host (0, 1, ep, EH_name, NULL);
    
    /* Read a EH file using flatfile spooling */
-   ep = lFreeElem (ep);
+   lFreeElem(&ep);
    fields = sge_build_EH_field_list (false, false, false);
    ep = spool_flatfile_read_object(&alp, EH_Type, NULL,
                                    fields, NULL, true, &qconf_sfi,
@@ -1882,7 +1882,7 @@ static void EH_test (void)
                                        SP_FORM_ASCII, 
                                        file2, false);
    
-   ep = lFreeElem (ep);
+   lFreeElem(&ep);
    ep = cull_read_in_host (NULL, file2, 0, EH_name, 0, NULL);
    unlink (file2);
    FREE (file2);
@@ -1897,7 +1897,7 @@ static void EH_test (void)
    FREE (file2);
    FREE (fields);
 
-   ep = lFreeElem (ep);
+   lFreeElem(&ep);
    
    printf ("EH: spool = 1 -- INVALID\n");
    
@@ -2875,7 +2875,7 @@ static void CQ_test (void) {
    file1 = write_cqueue (0, 1, ep);
    
    /* Read a CQ file using flatfile spooling */
-   ep = lFreeElem (ep);
+   lFreeElem(&ep);
    ep = spool_flatfile_read_object(&alp, CQ_Type, NULL,
                                    CQ_fields, NULL, true, &qconf_sfi,
                                    SP_FORM_ASCII, NULL, file1);
@@ -2888,7 +2888,7 @@ static void CQ_test (void) {
                                        SP_FORM_ASCII, 
                                        file2, false);
    
-   ep = lFreeElem (ep);
+   lFreeElem(&ep);
    ep = cull_read_in_cqueue (NULL, file2, 0, 0, NULL, NULL);
    unlink (file2);
    FREE (file2);
@@ -2902,7 +2902,7 @@ static void CQ_test (void) {
    FREE (file1);
    FREE (file2);
    
-   ep = lFreeElem (ep);
+   lFreeElem(&ep);
    
    answer_list_output(&alp);   
    alp = lFreeList (alp);
@@ -3004,7 +3004,7 @@ static void SC_test (void)
    file1 = write_sched_configuration (0, 1, NULL, ep);
    
    /* Read a SC file using flatfile spooling */
-   ep = lFreeElem (ep);
+   lFreeElem(&ep);
    ep = spool_flatfile_read_object(&alp, SC_Type, NULL,
                                    SC_fields, NULL, true, &qconf_comma_sfi,
                                    SP_FORM_ASCII, NULL, file1);
@@ -3017,7 +3017,7 @@ static void SC_test (void)
                                        SP_FORM_ASCII, 
                                        file2, false);
    
-   ep = lFreeElem (ep);
+   lFreeElem(&ep);
    lp = read_sched_configuration (NULL, file2, 0, &alp);
    ep = lFirst (lp);
    unlink (file2);
@@ -3057,7 +3057,7 @@ static void QU_test (void)
    file1 = write_qinstance (0, 1, ep);
    
    /* Read a QU file using flatfile spooling */
-   ep = lFreeElem (ep);
+   lFreeElem(&ep);
    ep = spool_flatfile_read_object(&alp, QU_Type, NULL,
                                    fields, NULL, true, &qconf_sfi,
                                    SP_FORM_ASCII, NULL, file1);
@@ -3070,7 +3070,7 @@ static void QU_test (void)
                                        SP_FORM_ASCII, 
                                        file2, false);
    
-   ep = lFreeElem (ep);
+   lFreeElem(&ep);
    ep = cull_read_in_qinstance (NULL, file2, 0, 0, NULL, NULL);
    unlink (file2);
    FREE (file2);
@@ -3085,7 +3085,7 @@ static void QU_test (void)
    FREE (file2);
    FREE (fields);
    
-   ep = lFreeElem (ep);
+   lFreeElem(&ep);
    
    answer_list_output(&alp);   
    alp = lFreeList (alp);
@@ -3126,7 +3126,7 @@ static void HGRP_test (void)
    file1 = write_host_group (0, 1, ep);
    
    /* Read a HGRP file using flatfile spooling */
-   ep = lFreeElem (ep);
+   lFreeElem(&ep);
    ep = spool_flatfile_read_object(&alp, HGRP_Type, NULL,
                                    HGRP_fields, NULL, true, &qconf_sfi,
                                    SP_FORM_ASCII, NULL, file1);
@@ -3139,7 +3139,7 @@ static void HGRP_test (void)
                                        SP_FORM_ASCII, 
                                        file2, false);
    
-   ep = lFreeElem (ep);
+   lFreeElem(&ep);
    ep = cull_read_in_host_group (NULL, file2, 0, 0, NULL, NULL);
    unlink (file2);
    FREE (file2);
@@ -3153,7 +3153,7 @@ static void HGRP_test (void)
    FREE (file1);
    FREE (file2);
    
-   ep = lFreeElem (ep);
+   lFreeElem(&ep);
    
    answer_list_output(&alp);   
    alp = lFreeList (alp);
@@ -3262,7 +3262,7 @@ static void CU_test(void)
    file1 = write_ume (0, 1, ep);
    
    /* Read a CU file using flatfile spooling */
-   ep = lFreeElem (ep);
+   lFreeElem(&ep);
    ep = spool_flatfile_read_object(&alp, CU_Type, NULL,
                                    CU_fields, NULL, true, &qconf_comma_braced_sfi,
                                    SP_FORM_ASCII, NULL, file1);
@@ -3275,7 +3275,7 @@ static void CU_test(void)
                                        SP_FORM_ASCII, 
                                        file2, false);
    
-   ep = lFreeElem (ep);
+   lFreeElem(&ep);
    ep = cull_read_in_ume (NULL, file2, 0, 0, NULL, NULL);
    unlink (file2);
    FREE (file2);
@@ -3289,7 +3289,7 @@ static void CU_test(void)
    FREE (file1);
    FREE (file2);
    
-   ep = lFreeElem (ep);
+   lFreeElem(&ep);
    
    answer_list_output(&alp);   
    alp = lFreeList (alp);
@@ -3345,7 +3345,7 @@ static void CONF_test(void)
    write_configuration (0, &alp, (char *)file1, ep, NULL, 0L);
    
    /* Read a CU file using flatfile spooling */
-   ep = lFreeElem (ep);
+   lFreeElem(&ep);
    ep = spool_flatfile_read_object(&alp, CONF_Type, NULL,
                                    fields, NULL, false, &qconf_sfi,
                                    SP_FORM_ASCII, NULL, file1);
@@ -3358,7 +3358,7 @@ static void CONF_test(void)
                                        SP_FORM_ASCII, 
                                        file2, false);
    
-   ep = lFreeElem (ep);
+   lFreeElem(&ep);
    ep = read_configuration (file2, "Test_Name", 0L);
    unlink (file2);
    FREE (file2);
@@ -3372,7 +3372,7 @@ static void CONF_test(void)
    unlink (file2);
    FREE (fields);
    
-   ep = lFreeElem (ep);
+   lFreeElem(&ep);
    
    answer_list_output(&alp);   
    alp = lFreeList (alp);

@@ -1,3 +1,14 @@
+SG-2005-08-05-0: Cleanup:   - Cull cleanup. The signature of the following functions 
+                              has changed:
+                              - lListFree(**)
+                              - lFreeElem(**)
+                              - lAddList(*, **)
+                              - lRemoveElem(*, **)
+                              - lFreeWhat(**)
+                              - lFreeWhere(**)
+                 Changed:    all
+                 Review:     RD, AH
+
 AH-2005-07-27-1: Bugfix:    - DRMAA can abort in the middle of a session if
                               NIS becomes unavailable
                             - Fixed problems with non-reentrant parsing of 

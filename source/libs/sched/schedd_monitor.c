@@ -52,8 +52,7 @@ static lList **monitor_alpp = NULL;
 
 void clean_monitor_alp()
 {
-   if (monitor_alpp)
-      *monitor_alpp = lFreeList(*monitor_alpp);
+   lFreeList(monitor_alpp);
 }
 
 void set_monitor_alpp(
@@ -150,7 +149,7 @@ int schedd_log_list(const char *logstr, lList *lp, int nm) {
                         fields, delis, 0);
 #endif
          schedd_log(log_string);
-         lFreeList(lp_part);
+         lFreeList(&lp_part);
          lp_part = NULL;
       }
    }

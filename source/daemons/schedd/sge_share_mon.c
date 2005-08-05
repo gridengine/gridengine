@@ -66,7 +66,7 @@ setup_lists(lList **sharetree, lList **users, lList **projects, lList **config)
 
    what = lWhat("%T(ALL)", STN_Type);
    alp=sge_gdi(SGE_SHARETREE_LIST, SGE_GDI_GET, sharetree, NULL, what);
-   lFreeWhat(what);
+   lFreeWhat(&what);
 
    aep = lFirst(alp);
    answer_exit_if_not_recoverable(aep);
@@ -74,7 +74,7 @@ setup_lists(lList **sharetree, lList **users, lList **projects, lList **config)
       fprintf(stderr, "%s", lGetString(aep, AN_text));
       exit(1);
    }
-   lFreeList(alp);
+   lFreeList(&alp);
 
    if (!*sharetree || lFirst(*sharetree) == NULL) {
       fprintf(stderr, MSG_SGESHAREMON_NOSHARETREE );
@@ -87,7 +87,7 @@ setup_lists(lList **sharetree, lList **users, lList **projects, lList **config)
 
    what = lWhat("%T(ALL)", SC_Type);
    alp=sge_gdi(SGE_SC_LIST, SGE_GDI_GET, config, NULL, what);
-   lFreeWhat(what);
+   lFreeWhat(&what);
 
    aep = lFirst(alp);
    answer_exit_if_not_recoverable(aep);
@@ -95,7 +95,7 @@ setup_lists(lList **sharetree, lList **users, lList **projects, lList **config)
       fprintf(stderr, "%s", lGetString(aep, AN_text));
       exit(1);
    }
-   lFreeList(alp);
+   lFreeList(&alp);
 
    /*
     * get user and project list
@@ -103,18 +103,18 @@ setup_lists(lList **sharetree, lList **users, lList **projects, lList **config)
 
    what = lWhat("%T(ALL)", UP_Type);
    alp = sge_gdi(SGE_USER_LIST, SGE_GDI_GET, users, NULL, what);
-   lFreeWhat(what);
+   lFreeWhat(&what);
 
    what = lWhat("%T(ALL)", UP_Type);
    alp = sge_gdi(SGE_PROJECT_LIST, SGE_GDI_GET, projects, NULL, what);
-   lFreeWhat(what);
+   lFreeWhat(&what);
 
    aep = lFirst(alp);
    if (answer_get_status(aep) != STATUS_OK) {
       fprintf(stderr, "%s", lGetString(aep, AN_text));
       exit(3);
    }
-   lFreeList(alp);
+   lFreeList(&alp);
 
    return 0;
 }
@@ -123,14 +123,10 @@ setup_lists(lList **sharetree, lList **users, lList **projects, lList **config)
 static int
 free_lists(lList *sharetree, lList *users, lList *projects, lList *config)
 {
-   if (sharetree)
-      lFreeList(sharetree);
-   if (users)
-      lFreeList(users);
-   if (projects)
-      lFreeList(projects);
-   if (config)
-      lFreeList(config);
+   lFreeList(&sharetree);
+   lFreeList(&users);
+   lFreeList(&projects);
+   lFreeList(&config);
    return 0;
 }
 

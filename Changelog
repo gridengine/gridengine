@@ -1,3 +1,8 @@
+RC-2005-08-08-0: Bugfix:  wrong mem_total on MacOSX
+                 Issue:   1739 
+                 Changed: execd, loadcheck (lib/uti)
+                 Review:  pending
+
 SG-2005-08-05-0: Cleanup:   - Cull cleanup. The signature of the following functions 
                               has changed:
                               - lListFree(**)

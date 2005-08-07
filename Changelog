@@ -1,3 +1,8 @@
+RC-2005-08-08-0: Bugfix:  wrong mem_total on MacOSX
+                 Issue:   1739 
+                 Changed: execd, loadcheck (lib/uti)
+                 Review:  pending
+
 AH-2005-07-27-1: Bugfix:    Multi-threaded, multi-CPU username problems
                  Bugfix:    DRMAA can abort in the middle of a session if 
                             NIS becomes unavailable

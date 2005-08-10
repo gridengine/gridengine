@@ -20,7 +20,7 @@
    9.4. Tuning parameter for sharetree spooling (6.0u2)
    9.5. New man pages (6.0u2)
    9.6. Support for Solaris 10 on AMD64 (Opteron) (6.0u4)
-   9.7. Installatioin Improvements (6.0u4)
+   9.7. Installation Improvements (6.0u4)
 
 1) Who needs to read this document
 ----------------------------------

@@ -1,3 +1,79 @@
+Bugs fixed in SGE 6.0u6 since release 6.0u5
+-------------------------------------------
+
+Issue    Sun BugId Description
+-------- --------  ------------------------------------------------------------------------------------------
+1692     6294118   no newline for "qstat -f -explain A" 
+1718     6298056   INHERIT_ENV and SET_LIB_PATH are not reset by setting execd_params to NONE 
+-        6298233   no user notification or command hanging if an immediate job cannot be scheduled 
+-        6299345   No error messages in case SSL initialization failes 
+-        6299351   qrsh fails when execd_param INHERIT_ENV=false and no ARC set in sge_execd environment 
+-        6299939   distribution should contain all Berkeley DB utilities 
+-        6299943   distribution should contain documentation for the Berkeley DB utilities 
+
+
+Bugs fixed in SGE 6.0u5 since release 6.0u4
+-------------------------------------------
+
+Issue    Sun BugId Description
+-------- --------  ------------------------------------------------------------------------------------------
+403      4769608   qalter shows wrong priority number when using negative priorities with -p option 
+1084     5063313   no links for SGE startup scripts for shutdown created 
+1420     6218877   qstat -t is broken 
+1108     6245812   qmon failed to find SGE shared library due to user-defined LD_LIBRARY_PATH_64 
+1541     6250603   qmon crash (segmentation fault) on Solaris64 
+1547     6252469   missleading qstat -j messages in case of resource reservation 
+1625     6252525   qmon: complex attributes not removeable 
+1583     6260656   incomplete resource reservation with array jobs 
+1591     6262009   backup script does not backup sgeCA directory for CSP systems 
+1596     6263509   autoinstall fails, trying to install a execd on masterhost 
+1595     6264592   drmaa_control(DRMAA_JOB_IDS_SESSION_ALL, DRMAA_CONTROL_SUSPEND|RESUME) returns INVALID_JOB error 
+1597     6265154   Wildcards in PE Name Cause Unusual Behavior 
+1623     6266392   Performance problem with qconf -mattr exechost XX XX global 
+1624     6266450   performace bottleneck with subordinate list 
+1632     6267238   Multithreaded DRMAA may crash due to use of sge_strtok() 
+1598     6267245   Repeated logging of the same message produces giant logging files 
+1612     6267932   high CPU load of qmaster even on empty cluster 
+1620     6268707   job_load_adjustements is not correctly working when parallel jobs are submitted. 
+1621     6269305   qrsh/qsh/qlogin reject -js option 
+1654     6269411   Close integration cause jobscripts with multiple mprun commands to be killed. 
+1627     6272451   execd auto_install performance bottleneck 
+1610     6273006   qstat -j "" results in a segmentation fault 
+1657     6273217   race condition with qsub -sync and drmaa_wait() if job exits directly after being submitted 
+1446     6274467   qmon kills a system 
+1669     6277874   N1GE6U4 installation on Red Hat creates wrong rc*.d script names, such as /etc/rc3.d/S-1sgeexecd 
+1642     6277909   qconf -mq coredumps 
+1646     6278140   inst_sge -sm don't install a startup script 
+1647     6278146   inst_sge -db error on MacOS 
+1648     6278147   drmaa_job_ps() returns DRMAA_PS_QUEUED_ACTIVE for finished array job rather than DRMAA_PS_DONE 
+1656     6278727   qstat -xml -urg output contains badly formatted numbers 
+1659     6279402   drmaa_exit() causes qmaster error logging if host is no admin host 
+1616     6279409   qconf -tsm command generates too much data (very large schedd_runlog file) 
+1531     6280698   Resource filtering with qhost broken 
+1658     6281440   resource allocation shown by qstat/qhost not consistent with resource utilization 
+1601     6281462   qmaster profiling can only be turned on by restarting qmaster 
+1662     6283308   overhead with job execution could lead to overoptimistic backfilling and break resource reservation 
+1667     6285898   qconf -Xattr does not resolve fqdn hostnames 
+1665     6286510   delivery of queue based signals to execd repeated endlessly 
+1666     6286533   job wallclock monitoring and enforcement considers prolog/epilog runtime part of net job runtime 
+1481     6287824   Asking to have RC scripts removed INSTALLS on SUSE 
+1617     6287831   Bad check for jobs when removing execution hosts 
+1410     6287867   tight integration: temporary files are not deleted at task exit 
+1670     6287917   "dl.sh 0" doesn't unset SGE_ND 
+1652     6287953   getting many E messages "failed building category string for job N" 
+1671     6287958   suspend not working under Mac OS X 
+1673     6288156   sge_shepherd SEGV's when it tries to fopen the usage file 
+1674     6288588   jobs submitted with -v PATH do not retain $TMPDIR prefixed by N1GE as required for tight integration 
+1694     6294397   wrong drmaa jnilib link on MacOS 
+-        6294915   Document installation if domain users intend to use N1GE 
+-        6294979   update format specifier and command line options in qping(1) man page 
+-        6294980   add man page for sgepasswd command 
+-        6294982   document DURATION_OFFSET parameter 
+-        6294987   document ENABLE_WINDOMACC parameter if Windows domain user accounts should be used 
+1705     6295165   finished array job tasks can be rescheduled if master/scheduler daemons are stopped/started 
+1569     -         SGE install of libdb-4.2so conflicts with Fedora Core 3 version
+
+
 Bugs fixed in SGE 6.0u4 since release 6.0u3
 -------------------------------------------
 

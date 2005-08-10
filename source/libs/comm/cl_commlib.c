@@ -386,16 +386,30 @@ static int cl_commlib_check_callback_functions(void) {
 int cl_com_setup_commlib( cl_thread_mode_t t_mode, cl_log_t debug_level , cl_log_func_t flush_func ) {
    int ret_val = CL_RETVAL_OK;
    cl_thread_settings_t* thread_p = NULL;
+   cl_bool_t duplicate_call = CL_FALSE;
+   cl_bool_t different_thread_mode = CL_FALSE;
    
-   cl_com_create_threads = t_mode;
-
    /* setup global log list */
    pthread_mutex_lock(&cl_com_log_list_mutex);
+
+   if (cl_com_log_list != NULL) {
+      duplicate_call = CL_TRUE;
+      if (cl_com_handle_list != NULL) {
+         if (cl_raw_list_get_elem_count(cl_com_handle_list) > 0) {
+            if (cl_com_create_threads != t_mode) {
+               different_thread_mode = CL_TRUE;
+            }
+         }
+      }
+   }
+
+   cl_com_create_threads = t_mode;
+
    if (cl_com_log_list == NULL) {
 #ifdef CL_DO_COMMLIB_DEBUG
-      ret_val = cl_log_list_setup(&cl_com_log_list,"application thread",0, /* CL_LOG_FLUSHED */ CL_LOG_IMMEDIATE  , NULL ); 
+      ret_val = cl_log_list_setup(&cl_com_log_list,"initiator thread",0, /* CL_LOG_FLUSHED */ CL_LOG_IMMEDIATE  , NULL ); 
 #else
-      ret_val = cl_log_list_setup(&cl_com_log_list,"application thread",0, /* CL_LOG_FLUSHED */ CL_LOG_IMMEDIATE  , flush_func); 
+      ret_val = cl_log_list_setup(&cl_com_log_list,"initiator thread",0, /* CL_LOG_FLUSHED */ CL_LOG_IMMEDIATE  , flush_func); 
 #endif
       if (cl_com_log_list == NULL) {
          pthread_mutex_unlock(&cl_com_log_list_mutex);
@@ -406,6 +420,14 @@ int cl_com_setup_commlib( cl_thread_mode_t t_mode, cl_log_t debug_level , cl_log
    pthread_mutex_unlock(&cl_com_log_list_mutex);
    cl_log_list_set_log_level(cl_com_log_list, debug_level );
 
+   if (duplicate_call == CL_TRUE) {
+      CL_LOG(CL_LOG_WARNING,"duplicate call to cl_com_setup_commlib()");
+   }
+ 
+   if (different_thread_mode == CL_TRUE) {
+      CL_LOG(CL_LOG_ERROR,"duplicate call to cl_com_setup_commlib() with different thread mode");
+      cl_commlib_push_application_error(CL_RETVAL_COMMLIB_SETUP_ALREADY_CALLED, MSG_CL_COMMLIB_CANT_SWITCH_THREAD_MODE_WITH_EXISTING_HANDLES);
+   }
 
    /* setup global application error list */
    pthread_mutex_lock(&cl_com_application_error_list_mutex);
@@ -4463,11 +4485,11 @@ int cl_commlib_receive_message(cl_com_handle_t*      handle,
                         /* if the response_mid parameter is set we can't return this message because
                            the response id is not the same. -> We have to wait for the correct message */
                         if ( response_mid > connection->last_send_message_id || connection->last_send_message_id == 0 ) {
-                           CL_LOG(CL_LOG_ERROR,"protocol error: can't wait for unsent message!!!");
+                           CL_LOG(CL_LOG_WARNING, "protocol error: can't wait for unsent message!!!");
                         }
 
                         if ( response_mid > message_elem->message->message_response_id ) {
-                           CL_LOG(CL_LOG_ERROR,"protocol error: There is still a lower message id than requested");
+                           CL_LOG(CL_LOG_INFO, "protocol error: There is still a lower message id than requested");
                         }
 
                         message_match = 0;  
@@ -4478,7 +4500,7 @@ int cl_commlib_receive_message(cl_com_handle_t*      handle,
                      /* never return a message with response id  when response_mid is 0 */
                      if (message_elem->message->message_response_id != 0) {
                         if (handle->do_shutdown != 2) {
-                           CL_LOG_INT(CL_LOG_WARNING,"message response id is set for this message:", (int)message_elem->message->message_response_id);
+                           CL_LOG_INT(CL_LOG_INFO,"message response id is set for this message:", (int)message_elem->message->message_response_id);
                            message_match = 0;
                         } else {
                            /* this is handle shutdown mode without returning any message to application */

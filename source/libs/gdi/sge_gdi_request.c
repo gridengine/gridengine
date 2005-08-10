@@ -742,7 +742,7 @@ gdi_send_multi_sync(lList **alpp, state_gdi_multi *state, sge_gdi_request **answ
    lListElem *map = NULL;
    lListElem *aep = NULL;
    
-   DENTER(GDI_LAYER, "sge_gdi_multi");
+   DENTER(GDI_LAYER, "sge_gdi_multi_sync");
 
    /* the first request in the request list identifies the request uniquely */
    state->first->request_id = gdi_state_get_next_request_id();

@@ -4084,6 +4084,7 @@ void japi_version(unsigned int *major, unsigned int *minor)
 *  OUTPUTS
 *     dstring *drm  - Returns DRM name - on success
 *     dstring *diag - Returns diagnssis information - on error.
+*     int me        - Me.wo progname
 *
 *  RESULT
 *     int - DRMAA error codes
@@ -4091,14 +4092,16 @@ void japi_version(unsigned int *major, unsigned int *minor)
 *  NOTES
 *     MT-NOTE: japi_get_drm_system() is MT safe
 *******************************************************************************/
-int japi_get_drm_system(dstring *drm, dstring *diag)
+int japi_get_drm_system(dstring *drm, dstring *diag, int me)
 {
    dstring buffer = DSTRING_INIT;
    pthread_once(&japi_once_control, japi_once_init);
 
+   /* Set application prog number */
+   prog_number = me;
+
    /* per thread initialization */
    if (japi_init_mt(diag)!=DRMAA_ERRNO_SUCCESS) {
-/*       japi_standard_error(DRMAA_ERRNO_INTERNAL_ERROR, diag); */
       return DRMAA_ERRNO_INTERNAL_ERROR;
    }
 

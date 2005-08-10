@@ -546,7 +546,7 @@ int cl_log_list_log(cl_log_t log_type,int line, const char* function_name,const 
          }
 
          ret_val2 = cl_log_list_add_log( global_cl_log_list,
-                                         "unkown application thread",
+                                         "unknown thread",
                                          line, 
                                          function_name, 
                                          module_name,
@@ -687,16 +687,27 @@ int cl_log_list_flush(void) {        /* CR check */
    /* get the thread configuration for the calling thread */
    thread_config = cl_thread_get_thread_config();
    if (thread_config == NULL) {
-      return CL_RETVAL_LOG_NO_LOGLIST;
+      /* This thread has had no setup by commlib, it must be an
+       * application thread
+       */
+      list_p = global_cl_log_list;
+   } else {
+      /* This is a commlib internal thread use thread config */
+      list_p = thread_config->thread_log_list;
    }
-   list_p = thread_config->thread_log_list;
+
    if (list_p == NULL) {
       return CL_RETVAL_LOG_NO_LOGLIST;
    }
-   ldata = list_p->list_data;
-   if (ldata != NULL) {
-      return ldata->flush_function(list_p);
-   } 
+
+   /* here we have a log list pointer, check if
+    * there is a log function definition */
+   if (list_p->list_data != NULL) {
+      ldata = (cl_log_list_data_t*)list_p->list_data;
+      if (ldata->flush_function != NULL) {
+         return ldata->flush_function(list_p);
+      }
+   }
    return cl_log_list_flush_list(list_p);
 }
    

@@ -2187,13 +2187,13 @@ int cl_com_set_resolve_method(cl_host_resolve_method_t method, char* local_domai
    host_list_data->resolve_method = method;
    switch(host_list_data->resolve_method) {
       case CL_SHORT:
-         CL_LOG(CL_LOG_WARNING,"using short hostname for host compare operations");
+         CL_LOG(CL_LOG_INFO,"using short hostname for host compare operations");
          break;
       case CL_LONG:
-         CL_LOG(CL_LOG_WARNING,"using long hostname for host compare operations");
+         CL_LOG(CL_LOG_INFO,"using long hostname for host compare operations");
          break;
       default:
-         CL_LOG(CL_LOG_WARNING,"undefined resolving method");
+         CL_LOG(CL_LOG_ERROR,"undefined resolving method");
          break;
    }
    cl_raw_list_unlock(host_list);
@@ -2617,7 +2617,7 @@ int cl_com_read_alias_file(cl_raw_list_t* hostlist) {
       return CL_RETVAL_NO_ALIAS_FILE;
    }
    if (SGE_STAT(ldata->host_alias_file, &sb)) {
-      CL_LOG(CL_LOG_ERROR,"host alias file is not existing");
+      CL_LOG(CL_LOG_WARNING,"host alias file is not existing");
       return CL_RETVAL_ALIAS_FILE_NOT_FOUND;
    }
    fp = fopen(ldata->host_alias_file, "r");

@@ -1,10 +1,18 @@
-RD-2005-08-10-0: Bugfix:  missing newline for qconf -mu
+CR-2005-08-10-0: Bugfix:    - fixed broken test_drmaa module
+                            - enhanced commlib logging functions for unknown
+                              application threads
+                            - commlib will now check if cl_com_setup_commlib()
+                              is called twice
+                 Changed:   commlib gdi japi
+                 Review:    AH
 
-RC-2005-08-08-0: Bugfix:  wrong mem_total on MacOSX
-                 Issue:   1739 
-                 Bugtraq: 6307557
-                 Changed: execd, loadcheck (lib/uti)
-                 Review:  AH
+RD-2005-08-10-0: Bugfix:    missing newline for qconf -mu
+
+RC-2005-08-08-0: Bugfix:    wrong mem_total on MacOSX
+                 Issue:     1739 
+                 Bugtraq:   6307557
+                 Changed:   execd, loadcheck (lib/uti)
+                 Review:    AH
 
 SG-2005-08-05-0: Cleanup:   - Cull cleanup. The signature of the following functions 
                               has changed:
@@ -14,8 +22,8 @@ SG-2005-08-05-0: Cleanup:   - Cull cleanup. The signature of the following funct
                               - lRemoveElem(*, **)
                               - lFreeWhat(**)
                               - lFreeWhere(**)
-                 Changed:    all
-                 Review:     RD, AH
+                 Changed:   all
+                 Review:    RD, AH
 
 AH-2005-07-27-1: Bugfix:    - DRMAA can abort in the middle of a session if
                               NIS becomes unavailable

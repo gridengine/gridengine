@@ -102,6 +102,7 @@
 #define MSG_CL_COMMLIB_SSL_ACCEPT_ERROR               _MESSAGE(85063, _("ssl accept error for unresolvable client"))
 
 #define MSG_CL_COMMLIB_NO_ADDITIONAL_INFO             _MESSAGE(85064, _("no additional information available"))
+#define MSG_CL_COMMLIB_CANT_SWITCH_THREAD_MODE_WITH_EXISTING_HANDLES _MESSAGE(85065, _("can't switch commlib thread mode while communication handles are defined"))
 
 
 

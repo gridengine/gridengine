@@ -2014,7 +2014,7 @@ int drmaa_get_DRM_system(char *drm_system, size_t drm_system_len,
       sge_dstring_init(&diag, error_diagnosis, error_diag_len+1);
    }
    
-   return japi_get_drm_system(drm_system?&drm:NULL, error_diagnosis?&diag:NULL); 
+   return japi_get_drm_system(drm_system?&drm:NULL, error_diagnosis?&diag:NULL, DRMAA); 
 }
 
 /****** DRMAA/drmaa_get_DRMAA_implementation() *********************************

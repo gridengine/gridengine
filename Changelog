@@ -4,7 +4,7 @@ CR-2005-08-10-0: Bugfix:    - fixed broken test_drmaa module
                             - commlib will now check if cl_com_setup_commlib()
                               is called twice
                  Changed:   commlib gdi japi
-                 Review:    AH
+                 Review:    AH, RD
 
 RD-2005-08-10-0: Bugfix:    missing newline for qconf -mu
 

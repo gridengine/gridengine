@@ -6359,7 +6359,7 @@ lList *arglp
       lFreeList(&lp);
 
       for_each(aep, alp) 
-         fprintf(stderr, "%s", lGetString(aep, AN_text));
+         fprintf(stderr, "%s\n", lGetString(aep, AN_text));
    }
 
    FREE (fname);

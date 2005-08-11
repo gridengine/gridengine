@@ -262,6 +262,11 @@ BINFILES="sge_coshepherd \
           qhost qlogin qmake qmod qmon qresub qrls qrsh qselect qsh \
           qstat qsub qtcsh qping"
 
+WINBINFILES="sge_coshepherd sge_execd sge_shepherd  \
+             qacct qalter qconf qdel qhold qhost qlogin \
+             qmake qmod qresub qrls qrsh qselect qsh \
+             qstat qsub qtcsh qping qloadsensor.exe"
+
 UTILFILES="adminrun checkprog checkuser filestat gethostbyaddr gethostbyname \
            gethostname getservbyname loadcheck now qrsh_starter rlogin rsh rshd \
            testsuidroot uidgid infotext"
@@ -269,8 +274,7 @@ UTILFILES="adminrun checkprog checkuser filestat gethostbyaddr gethostbyname \
 THIRD_PARTY_FILES="openssl"
 
 if [ $SGE_ARCH = "win32-x86" ]; then
-   WINBINFILES="qloadsensor.exe"
-   BINFILES="$BINFILES $WINBINFILES"
+   BINFILES="$WINBINFILES"
 fi
 
    missing=false
@@ -285,7 +289,7 @@ fi
    #echo $CSP
 
    for f in $THIRD_PARTY_FILES; do
-      if [ $f = openssl -a $CSP = true ]; then
+      if [ $f = openssl -a "$CSP" = true ]; then
          if [ ! -f $SGE_UTILBIN/$f ]; then
            missing=true
            $INFOTEXT "missing program >%s< in directory >%s<" $f $SGE_BIN
@@ -304,21 +308,38 @@ fi
    done
 
    if [ $missing = true ]; then
-      $INFOTEXT "\nMissing Grid Engine binaries!\n\n" \
-      "A complete installation needs the following binaries in >%s<:\n\n" \
-      "qacct           qlogin          qrsh            sge_shepherd\n" \
-      "qalter          qmake           qselect         sge_coshepherd\n" \
-      "qconf           qmod            qsh             sge_execd\n" \
-      "qdel            qmon            qstat           sge_qmaster\n" \
-      "qhold           qresub          qsub            sge_schedd\n" \
-      "qhost           qrls            qtcsh           sge_shadowd\n" \
-      "qping\n\n" \
-      "The binaries in >%s< are:\n\n" \
-      "adminrun       gethostbyaddr  loadcheck      rlogin         uidgid\n" \
-      "checkprog      gethostbyname  now            rsh            infotext\n" \
-      "checkuser      gethostname    openssl        rshd\n" \
-      "filestat       getservbyname  qrsh_starter   testsuidroot\n\n" \
-      "Installation failed. Exit.\n" $SGE_BIN $SGE_UTILBIN
+      if [ "$SGE_ARCH" = "win32-x86" ]; then
+         $INFOTEXT "\nMissing Grid Engine binaries!\n\n" \
+         "A complete installation needs the following binaries in >%s<:\n\n" \
+         "qacct           qlogin          qrsh            sge_shepherd\n" \
+         "qalter          qmake           qselect         sge_coshepherd\n" \
+         "qconf           qmod            qsh             sge_execd\n" \
+         "qdel            qmon            qstat           qhold\n" \
+         "qresub          qsub            qhost           qrls\n" \
+         "qtcsh           qping           qloadsensor.exe\n\n" \
+         "The binaries in >%s< are:\n\n" \
+         "adminrun       gethostbyaddr  loadcheck      rlogin         uidgid\n" \
+         "checkprog      gethostbyname  now            rsh            infotext\n" \
+         "checkuser      gethostname    openssl        rshd\n" \
+         "filestat       getservbyname  qrsh_starter   testsuidroot\n\n" \
+         "Installation failed. Exit.\n" $SGE_BIN $SGE_UTILBIN
+      else
+         $INFOTEXT "\nMissing Grid Engine binaries!\n\n" \
+         "A complete installation needs the following binaries in >%s<:\n\n" \
+         "qacct           qlogin          qrsh            sge_shepherd\n" \
+         "qalter          qmake           qselect         sge_coshepherd\n" \
+         "qconf           qmod            qsh             sge_execd\n" \
+         "qdel            qmon            qstat           sge_qmaster\n" \
+         "qhold           qresub          qsub            sge_schedd\n" \
+         "qhost           qrls            qtcsh           sge_shadowd\n" \
+         "qping\n\n" \
+         "The binaries in >%s< are:\n\n" \
+         "adminrun       gethostbyaddr  loadcheck      rlogin         uidgid\n" \
+         "checkprog      gethostbyname  now            rsh            infotext\n" \
+         "checkuser      gethostname    openssl        rshd\n" \
+         "filestat       getservbyname  qrsh_starter   testsuidroot\n\n" \
+         "Installation failed. Exit.\n" $SGE_BIN $SGE_UTILBIN
+      fi
 
       $INFOTEXT -log "\nMissing Grid Engine binaries!\n\n" \
       "A complete installation needs the following binaries in >%s<:\n\n" \
@@ -889,7 +910,7 @@ PrintLocalConf()
 
    arg=$1
    if [ $arg = 1 ]; then
-      $ECHO "# Version: 6.0u4"
+      $ECHO "# Version: 6.0u5"
       $ECHO "#"
       $ECHO "# DO NOT MODIFY THIS FILE MANUALLY!"
       $ECHO "#"
@@ -901,7 +922,11 @@ PrintLocalConf()
    else
       $ECHO "xterm                  $XTERM"
    fi
-   $ECHO "qlogin_daemon          $QLOGIN_DAEMON"
+   if [ "$SGE_ARCH" = "win32-x86" ]; then
+      $ECHO "qlogin_daemon          $QLOGIN_DAEMON -i"
+   else
+      $ECHO "qlogin_daemon          $QLOGIN_DAEMON"
+   fi
    $ECHO "rlogin_daemon          $RLOGIN_DAEMON"
    if [ "$LOCAL_EXECD_SPOOL" != "undef" ]; then
       $ECHO "execd_spool_dir        $LOCAL_EXECD_SPOOL"
@@ -1505,8 +1530,8 @@ RestoreConfig()
          done
 
          for f in $BUP_COMMON_DIR_LIST; do
-            if [ -f /tmp/bup_tmp_$DATE/$f ]; then
-               ExecuteAsAdmin $CP /tmp/bup_tmp_$DATE/$f $SGE_ROOT/$SGE_CELL/common/
+            if [ -d /tmp/bup_tmp_$DATE/$f ]; then
+               ExecuteAsAdmin $CPR /tmp/bup_tmp_$DATE/$f $SGE_ROOT/$SGE_CELL/common/
             fi
          done
 
@@ -2064,9 +2089,9 @@ CreateTarArchive()
       if [ $? -eq 0 ]; then
          TAR=$TAR" -cvf"
          if [ "$spooling_method" = "berkeleydb" ]; then
-            ExecuteAsAdmin $TAR $bup_file $DATE.dump $BUP_COMMON_FILE_LIST $BUP_SPOOL_FILE_LIST
+            ExecuteAsAdmin $TAR $bup_file $DATE.dump $BUP_COMMON_FILE_LIST $BUP_SPOOL_FILE_LIST $BUP_COMMON_DIR_LIST
          else
-            ExecuteAsAdmin $TAR $bup_file $BUP_COMMON_FILE_LIST $BUP_SPOOL_FILE_LIST $BUP_CLASSIC_DIR_LIST
+            ExecuteAsAdmin $TAR $bup_file $BUP_COMMON_FILE_LIST $BUP_SPOOL_FILE_LIST $BUP_COMMON_DIR_LIST
          fi          
 
          ZIP=`which gzip`
@@ -2091,7 +2116,7 @@ CreateTarArchive()
 
       cd $backup_dir     
       RMF="rm -fR" 
-      ExecuteAsAdmin $RMF $DATE.dump.tar $DATE.dump $BUP_COMMON_FILE_LIST $BUP_SPOOL_FILE_LIST $BUP_CLASSIC_DIR_LIST
+      ExecuteAsAdmin $RMF $DATE.dump.tar $DATE.dump $BUP_COMMON_FILE_LIST $BUP_SPOOL_FILE_LIST $BUP_COMMON_DIR_LIST
 
       cd $SGE_ROOT
 
@@ -2124,9 +2149,9 @@ DoBackup()
       done
 
       for f in $BUP_BDB_COMMON_DIR_LIST_TMP; do
-         if [ -f $SGE_ROOT/$SGE_CELL/common/$f ]; then
+         if [ -d $SGE_ROOT/$SGE_CELL/common/$f ]; then
             BUP_COMMON_DIR_LIST="$BUP_COMMON_DIR_LIST $f"
-            ExecuteAsAdmin $CPF $SGE_ROOT/$SGE_CELL/common/$f $backup_dir
+            ExecuteAsAdmin $CPFR $SGE_ROOT/$SGE_CELL/common/$f $backup_dir
          fi
       done
 
@@ -2154,7 +2179,7 @@ DoBackup()
 
       for f in $BUP_CLASSIC_DIR_LIST_TMP; do
          if [ -d $SGE_ROOT/$SGE_CELL/common/$f ]; then
-            BUP_CLASSIC_DIR_LIST="$BUP_CLASSIC_DIR_LIST $f"
+            BUP_COMMON_DIR_LIST="$BUP_COMMON_DIR_LIST $f"
             ExecuteAsAdmin $CPFR $SGE_ROOT/$SGE_CELL/common/$f $backup_dir
          fi
       done
@@ -2176,7 +2201,7 @@ ExtractBackup()
             loop_stop="false"
          fi
       done
-      mkdir /tmp/bup_tmp_$DATE
+      Makedir /tmp/bup_tmp_$DATE
       $INFOTEXT -n "\nCopying backupfile to /tmp/bup_tmp_%s\n" $DATE
       cp $bup_file /tmp/bup_tmp_$DATE
       cd /tmp/bup_tmp_$DATE/
@@ -2343,7 +2368,7 @@ CheckServiceAndPorts()
           cat /etc/services | grep -w "$check_val/tcp" > /dev/null 2>&1
           ret=$? 
           if [ "$res" = 1 ]; then
-             pcat services.byname | grep -w "$check_val/tcp" > /dev/null 2>&1
+             ypcat services.byname | grep -w "$check_val/tcp" > /dev/null 2>&1
              ret=$?
           fi
        ;;

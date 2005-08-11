@@ -703,7 +703,7 @@ AddBootstrap()
 #
 PrintBootstrap()
 {
-   $ECHO "# Version: 6.0u4"
+   $ECHO "# Version: 6.0u5"
    $ECHO "#"
    if [ $ADMINUSER != default ]; then
       $ECHO "admin_user             $ADMINUSER"
@@ -763,7 +763,7 @@ AddConfiguration()
 #
 PrintConf()
 {
-   $ECHO "# Version: 6.0u2"
+   $ECHO "# Version: 6.0u5"
    $ECHO "#"
    $ECHO "# DO NOT MODIFY THIS FILE MANUALLY!"
    $ECHO "#"
@@ -789,7 +789,7 @@ PrintConf()
    $ECHO "reschedule_unknown     00:00:00"
    $ECHO "loglevel               log_warning"
    $ECHO "administrator_mail     $CFG_MAIL_ADDR"
-   if [ $AFS = true ]; then
+   if [ "$AFS" = true ]; then
       $ECHO "set_token_cmd          /path_to_token_cmd/set_token_cmd"
       $ECHO "pag_cmd                /usr/afsws/bin/pagsh"
       $ECHO "token_extend_time      24:0:0"
@@ -800,7 +800,13 @@ PrintConf()
    fi
    $ECHO "shepherd_cmd           none"
    $ECHO "qmaster_params         none"
-   $ECHO "execd_params           none"
+   if [ "$WINDOWS_SUPPORT" = "true" -a "$WIN_DOMAIN_ACCESS" = "true" ]; then
+      $ECHO "execd_params           enable_windomacc=true"
+   elif [ "$WINDOWS_SUPPORT" = "true" -a "$WIN_DOMAIN_ACCESS" = "false" ]; then
+      $ECHO "execd_params           enable_windomacc=false"
+   else
+      $ECHO "execd_params           none"
+   fi
    $ECHO "reporting_params       accounting=true reporting=false flush_time=00:00:15 joblog=false sharelog=00:00:00"
    $ECHO "finished_jobs          100"
    $ECHO "gid_range              $CFG_GID_RANGE"
@@ -1056,7 +1062,7 @@ CreateSettingsFile()
 InitCA()
 {
 
-   if [ "$CSP" = true -o "$WINDOWS_SUPPORT" = true ]; then
+   if [ "$CSP" = true -o \( "$WINDOWS_SUPPORT" = "true" -a "$WIN_DOMAIN_ACCESS" = "true" \) ]; then
       # Initialize CA, make directories and get DN info
       #
       util/sgeCA/sge_ca -init -days 365
@@ -1756,6 +1762,19 @@ WindowsSupport()
 
    if [ $? = 0 ]; then
       WINDOWS_SUPPORT=true
+      WindowsDomainUserAccess
+   fi
+}
+
+
+WindowsDomainUserAccess()
+{
+   $CLEAR
+   $INFOTEXT -u "Windows Domain User Access"
+   $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n "\nDo you want to use Windows Domain Users (answer: y)\n" \
+                                                  "or are you going to use local Windows Users (answer: n) (y/n) [y] >> "
+   if [ $? = 0 ]; then
+      WIN_DOMAIN_ACCESS=true
    fi
 }
 

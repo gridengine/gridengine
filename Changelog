@@ -1,3 +1,7 @@
+MD-2005-08-11-1: Enhancem.: - merged windows installation from V60u4win_BRANCH
+                              (missed sgepasswd binary check, message output)
+                            - inst_common.sh
+
 MD-2005-08-11-0: Enhancem.: - merged windows installation from V60u4win_BRANCH
                  Changed:   - inst_sge, inst_execd.sh, inst_common.sh, 
                               inst_qmaster.sh

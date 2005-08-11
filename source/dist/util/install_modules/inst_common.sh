@@ -265,7 +265,7 @@ BINFILES="sge_coshepherd \
 WINBINFILES="sge_coshepherd sge_execd sge_shepherd  \
              qacct qalter qconf qdel qhold qhost qlogin \
              qmake qmod qresub qrls qrsh qselect qsh \
-             qstat qsub qtcsh qping qloadsensor.exe"
+             qstat qsub qtcsh qping qloadsensor.exe sgepasswd"
 
 UTILFILES="adminrun checkprog checkuser filestat gethostbyaddr gethostbyname \
            gethostname getservbyname loadcheck now qrsh_starter rlogin rsh rshd \
@@ -286,7 +286,6 @@ fi
       fi
    done
 
-   #echo $CSP
 
    for f in $THIRD_PARTY_FILES; do
       if [ $f = openssl -a "$CSP" = true ]; then
@@ -316,7 +315,7 @@ fi
          "qconf           qmod            qsh             sge_execd\n" \
          "qdel            qmon            qstat           qhold\n" \
          "qresub          qsub            qhost           qrls\n" \
-         "qtcsh           qping           qloadsensor.exe\n\n" \
+         "qtcsh           qping           sgepasswd       qloadsensor.exe\n\n" \
          "The binaries in >%s< are:\n\n" \
          "adminrun       gethostbyaddr  loadcheck      rlogin         uidgid\n" \
          "checkprog      gethostbyname  now            rsh            infotext\n" \
@@ -1375,7 +1374,7 @@ CheckRunningDaemon()
 
       sge_execd )
        h=`hostname`
-       $SGE_BIN/qping -info $h $SGE_EXECD_PORT execd 1
+       $SGE_BIN/qping -info $h $SGE_EXECD_PORT execd 1 > /dev/null
        return $?      
       ;;
 

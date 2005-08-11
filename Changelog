@@ -1,3 +1,7 @@
+CR-2005-08-10-0: Bugfix:    - fixed broken test_drmaa module
+                 Changed:   libdrmaa.so (drmaa.c japi.c japi.h)
+                 Review:    AH
+
 RC-2005-08-08-0: Bugfix:  wrong mem_total on MacOSX
                  Issue:   1739 
                  Bugtraq: 6307557

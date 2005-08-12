@@ -33,6 +33,7 @@
 #___INFO__MARK_END__
 
 global file_procedure_logfile_wait_sp_id
+global last_file_extention
 
 #                                                             max. column:     |
 #****** file_procedures/test_file() ******
@@ -140,13 +141,21 @@ proc get_dir_names { path } {
 #     file_procedures/get_tmp_file_name()
 #*******************************************************************************
 proc get_tmp_directory_name { { hostname "" } { type "default" } { dir_ext "tmp" } { not_in_results 0 } } {
-   global CHECK_MAIN_RESULTS_DIR CHECK_HOST CHECK_USER CHECK_OUTPUT
+   global CHECK_MAIN_RESULTS_DIR CHECK_HOST CHECK_USER CHECK_OUTPUT last_file_extention
 
    if { $hostname == "" } {
       set hostname $CHECK_HOST
    }
 
-   set timestamp_sub_index 0
+   if { [info exists last_file_extention] == 0 } {
+      set last_file_extention 0
+      puts $CHECK_OUTPUT "set last file extention to initial value=$last_file_extention"
+   } else {
+      incr last_file_extention 1
+   }
+
+
+   set timestamp_sub_index $last_file_extention
    while { 1 } {
       set timestamp_appendix "[clock seconds]_$timestamp_sub_index"
       if { [ file isdirectory $CHECK_MAIN_RESULTS_DIR ] != 1 || $not_in_results != 0 } {
@@ -199,13 +208,21 @@ proc get_tmp_directory_name { { hostname "" } { type "default" } { dir_ext "tmp"
 #*******************************************************************************
 proc get_tmp_file_name { { hostname "" } { type "default" } { file_ext "tmp" } { not_in_results 0 } } {
    
-   global CHECK_MAIN_RESULTS_DIR CHECK_HOST CHECK_USER CHECK_OUTPUT
+   global CHECK_MAIN_RESULTS_DIR CHECK_HOST CHECK_USER CHECK_OUTPUT last_file_extention
 
    if { $hostname == "" } {
       set hostname $CHECK_HOST
    }
 
-   set timestamp_sub_index 0
+   if { [info exists last_file_extention] == 0 } {
+      set last_file_extention 0
+      puts $CHECK_OUTPUT "set last file extention to initial value=$last_file_extention"
+   } else {
+      incr last_file_extention 1
+   }
+
+   
+   set timestamp_sub_index $last_file_extention
    while { 1 } {
       set timestamp_appendix "[clock seconds]_$timestamp_sub_index"
       if { [ file isdirectory $CHECK_MAIN_RESULTS_DIR ] != 1  || $not_in_results != 0 } {

@@ -1,3 +1,20 @@
+CR-2005-08-12-2: Testsuite: - enhanced testsuite timeouts for drmaa test
+                            - modified test_drmaa module test binary to use
+                              local host for ST_INPUT_BECOMES_OUTPUT test
+                            - fixed problem for get_tmp_directory_name() and
+                              get_tmp_file_name() when the file isn't created
+                              before next call to tmp file name functions 
+                              (functions returned the same file/directory name)
+                 Review:    DT (drmaa)
+                 Changed:   drmaa/check.60.exp drmaaj/check.60.exp file_procedures.tcl
+                            test_drmaa.c
+
+CR-2005-08-12-1: Enhancem.: - commlib will now check if cl_com_setup_commlib()
+                              is called twice (part 2/2) and also return with
+                              error when tread model is changed
+                 Review:    RD 
+                 Changed:   cl_commlib.c
+
 MD-2005-08-11-1: Enhancem.: - merged windows installation from V60u4win_BRANCH
                               (missed sgepasswd binary check, message output)
                             - inst_common.sh
@@ -10,7 +27,7 @@ CR-2005-08-10-0: Bugfix:    - fixed broken test_drmaa module
                             - enhanced commlib logging functions for unknown
                               application threads
                             - commlib will now check if cl_com_setup_commlib()
-                              is called twice
+                              is called twice (part 1/2)
                  Changed:   commlib gdi japi
                  Review:    AH, RD
 

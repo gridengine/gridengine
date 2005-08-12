@@ -52,6 +52,7 @@
 #include "sgermon.h"
 
 #include "uti/sge_profiling.h"
+#include "commlib.h"
 
 #define JOB_CHUNK 8
 #define NTHREADS 3
@@ -494,7 +495,7 @@ static int submit_and_wait(int n);
 static int submit_sleeper(int n);
 static int submit_input_mirror(int n, const char *mirror_job, 
                                const char *input_path, const char *output_path,
-                               const char *error_path, int join);
+                               const char *error_path, int join, char* hostname);
 static int do_submit(drmaa_job_template_t *jt, int n);
 static int wait_all_jobs(int n);
 static int wait_n_jobs(int n);
@@ -1868,16 +1869,17 @@ static int test(int *argc, char **argv[], int parse_args)
          const char *mirror_job = "/bin/cat",
          *input_path  = NULL,
          *output_path = NULL;
-         FILE *fp;
+         FILE *fp = NULL;
          char buffer[1024];
          const char *mirror_text = "thefoxjumps...";
+         char* local_host_name = NULL;
 
          if (parse_args) {
             input_path  = NEXT_ARGV(argc, argv);
             output_path = NEXT_ARGV(argc, argv);
          }
 
-         if (!(fp = fopen(input_path, "w+"))) {
+         if (!(fp = fopen(input_path, "w"))) {
             fprintf(stderr, "fopen(w) failed: %s\n", strerror(errno));
             return 1;
          }
@@ -1890,10 +1892,17 @@ static int test(int *argc, char **argv[], int parse_args)
          }
          report_session_key();
 
-         if (submit_input_mirror(1, mirror_job, input_path, output_path, 
-               NULL, 1)!=DRMAA_ERRNO_SUCCESS) {
+         cl_com_gethostname(&local_host_name, NULL, NULL, NULL);
+         if (local_host_name == NULL) {
+            fprintf(stderr, "can't get local hostname\n");
             return 1;
          }
+         if (submit_input_mirror(1, mirror_job, input_path, output_path, 
+               NULL, 1, local_host_name)!=DRMAA_ERRNO_SUCCESS) {
+            return 1;
+         }
+         FREE(local_host_name);
+
          if (wait_n_jobs(1) != DRMAA_ERRNO_SUCCESS) {
             return 1;
          }
@@ -4371,7 +4380,7 @@ static int submit_sleeper(int n)
 
 static int submit_input_mirror(int n, const char *mirror_job, 
                                const char *input_path, const char *output_path,
-                               const char *error_path, int join)
+                               const char *error_path, int join, char* hostname)
 {
    drmaa_job_template_t *jt = NULL;
    char buffer[10000];
@@ -4385,6 +4394,15 @@ static int submit_input_mirror(int n, const char *mirror_job,
    
    if (ret == DRMAA_ERRNO_SUCCESS) {
       ret = drmaa_set_attribute(jt, DRMAA_REMOTE_COMMAND, mirror_job, NULL, 0);
+   }
+
+   /*
+    *  we use the local host for the cat job, because when job is running
+    *  on other hosts there my be NFS problems when reading the input_path file
+    */
+   if (ret == DRMAA_ERRNO_SUCCESS && hostname != NULL) {
+      snprintf(buffer, 10000, "-l h=%s", hostname);
+      ret = drmaa_set_attribute(jt, DRMAA_NATIVE_SPECIFICATION, buffer, NULL, 0);
    }
    
    if (ret == DRMAA_ERRNO_SUCCESS) {

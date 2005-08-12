@@ -84,7 +84,7 @@ proc drmaa_init_level {} {
            return 0
      } 
      "202" { 
-           return -1
+           return 0
      } 
   } 
   return -1  ;# no other level else
@@ -221,7 +221,7 @@ proc drmaa_check {} {
             shutdown_master_and_scheduler $CHECK_CORE_MASTER [get_qmaster_spool_dir] 
 
             # this test must fail when qmaster is down
-            set test_output [start_remote_prog $host $CHECK_USER $binary_path/test_drmaa ST_SUBMIT_WAIT ]
+            set test_output [start_remote_prog $host $CHECK_USER $binary_path/test_drmaa ST_SUBMIT_WAIT prg_exit_state 500]
 
             puts $CHECK_OUTPUT "exit status was $prg_exit_state"
             puts $CHECK_OUTPUT "output was\n$test_output"
@@ -322,8 +322,14 @@ proc drmaa_test_st_input_becomes_output { host binary_path } {
    # prepare output file name
    set output_file [get_tmp_file_name]
 
+   puts $CHECK_OUTPUT "input_file:  $input_file"
+   puts $CHECK_OUTPUT "output_file: $output_file"
+
+   if { $input_file == $output_file } {
+      add_proc_error drmaa_check -1 "input and output file are equal"
+   }
+
    puts $CHECK_OUTPUT "$binary_path/test_drmaa ST_INPUT_BECOMES_OUTPUT $input_file $output_file"
-   # wait_for_remote_file $host $CHECK_USER $input_file 500
 
    # run job
    set test_output [start_remote_prog $host $CHECK_USER $binary_path/test_drmaa "ST_INPUT_BECOMES_OUTPUT $input_file $output_file" prg_exit_state 500]
@@ -336,7 +342,7 @@ proc drmaa_test_st_input_becomes_output { host binary_path } {
    file delete "$output_file"
 
    if { $prg_exit_state != 0 } {
-      add_proc_error drmaa_check -1 "test_drmaa ST_INPUT_BECOMES_OUTPUT failed at host $host"
+      add_proc_error drmaa_check -1 "test_drmaa ST_INPUT_BECOMES_OUTPUT failed at host $host\nexit status was $prg_exit_state\noutput was $test_output"
    }
 }
 

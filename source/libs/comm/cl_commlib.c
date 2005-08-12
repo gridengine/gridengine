@@ -403,8 +403,6 @@ int cl_com_setup_commlib( cl_thread_mode_t t_mode, cl_log_t debug_level , cl_log
       }
    }
 
-   cl_com_create_threads = t_mode;
-
    if (cl_com_log_list == NULL) {
 #ifdef CL_DO_COMMLIB_DEBUG
       ret_val = cl_log_list_setup(&cl_com_log_list,"initiator thread",0, /* CL_LOG_FLUSHED */ CL_LOG_IMMEDIATE  , NULL ); 
@@ -427,6 +425,8 @@ int cl_com_setup_commlib( cl_thread_mode_t t_mode, cl_log_t debug_level , cl_log
    if (different_thread_mode == CL_TRUE) {
       CL_LOG(CL_LOG_ERROR,"duplicate call to cl_com_setup_commlib() with different thread mode");
       cl_commlib_push_application_error(CL_RETVAL_COMMLIB_SETUP_ALREADY_CALLED, MSG_CL_COMMLIB_CANT_SWITCH_THREAD_MODE_WITH_EXISTING_HANDLES);
+   } else {
+      cl_com_create_threads = t_mode;
    }
 
    /* setup global application error list */
@@ -520,6 +520,11 @@ int cl_com_setup_commlib( cl_thread_mode_t t_mode, cl_log_t debug_level , cl_log
  
    CL_LOG(CL_LOG_INFO,"ngc library setup done");
    cl_commlib_check_callback_functions();
+
+   if (different_thread_mode == CL_TRUE) {
+      return CL_RETVAL_COMMLIB_SETUP_ALREADY_CALLED;
+   }
+
    return CL_RETVAL_OK;
 }
 

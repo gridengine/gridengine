@@ -1,3 +1,8 @@
+DT-2005-08-12-0: Cleanup:   o Added TODO comment for handling of architecture-
+                              specific reentrant functions in AH-2005-07-27-1.
+                 Changed:   sge_hostname.c
+                 Review:    SG
+
 CR-2005-08-12-2: Testsuite: - enhanced testsuite timeouts for drmaa test
                             - modified test_drmaa module test binary to use
                               local host for ST_INPUT_BECOMES_OUTPUT test
@@ -15,6 +20,7 @@ CR-2005-08-12-1: Enhancem.: - commlib will now check if cl_com_setup_commlib()
                  Review:    RD 
                  Changed:   cl_commlib.c
 
+>>>>>>> 1.2999
 MD-2005-08-11-1: Enhancem.: - merged windows installation from V60u4win_BRANCH
                               (missed sgepasswd binary check, message output)
                             - inst_common.sh
@@ -745,7 +751,7 @@ JG-2005-06-08-0: Bugfix:    qalter -p <negative priority> shows wrong priority.
                  Review:    CR
 
 AH-2005-06-08-0: Bugfix:    drmaa_exit() and qsub -sync y causes qmaster 
-                            error logging if host is no admin host
+                            error logging if host is not admin host
                  Issue:     1659
                  Bugtraq:   6279402
                  Changed:   sge_qmaster
@@ -960,7 +966,7 @@ RD-2005-05-23-0: Bugfix:    execd auto_install performance bottleneck
                  Issue:     1627
                  Review:    MD
 
-SG-2005-05-22-0: Bugfix:    test_drmaa sec faulted on linux.
+SG-2005-05-22-0: Bugfix:    test_drmaa seg faulted on linux.
                  Changed:   test_drmaa
                  Review:    JG 
 

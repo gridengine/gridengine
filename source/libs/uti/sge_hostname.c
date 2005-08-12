@@ -86,6 +86,16 @@ static struct servent *sge_getservbyname_r(struct servent *se_result, const char
 
    int nisretry = SGE_MAXNISRETRY;
    while (nisretry--) {
+/*******************************************************************************
+ * TODO:
+ * Whoever extends this function to account for other architectures,
+ * DO NOT base the ifdef's on architecture names.  Instead, use the format:
+ * GETSERVBYNAM_R<num_args>.  For example, instead of "LINUX" below, you
+ * should use "GETSERVBYNAM_R6".  For architectures without a reentrant
+ * version of the function, use "GETSERVBYNAM_M" and use locks to make it MT
+ * safe.  This will require that you update aimk to include the correct defines
+ * for each architecture.
+ ******************************************************************************/
 #if defined(LINUX)
       if (getservbyname_r(service, "tcp", se_result, buffer, size, &se) != 0)
          se = NULL;

@@ -445,19 +445,21 @@ int sge_run_as_user(void)
 
 /****** uti/uidgid/sge_user2uid() *********************************************
 *  NAME
-*     sge_user2uid() -- resolves user name to uid  
+*     sge_user2uid() -- resolves user name to uid and gid 
 *
 *  SYNOPSIS
-*     int sge_user2uid(const char *user, uid_t *uidp, int retries) 
+*     int sge_user2uid(const char *user, uid_t *puid, gid_t *pgid, int retries) 
 *
 *  FUNCTION
-*     Resolves a username ('user') to its uid (stored in 'uidp').
+*     Resolves a username ('user') to it's uid (stored in 'puid') and
+*     it's primary gid (stored in 'pgid').
 *     'retries' defines the number of (e.g. NIS/DNS) retries.
-*     If 'uidp' is NULL the user name is resolved without saving it.
+*     If 'puid' is NULL the user name is resolved without saving it.
 *
 *  INPUTS
 *     const char *user - username 
-*     uid_t *uidp      - uid pointer 
+*     uid_t *puid      - uid pointer 
+*     gid_t *pgid      - gid pointer
 *     int retries      - number of retries 
 *
 *  NOTES
@@ -468,7 +470,7 @@ int sge_run_as_user(void)
 *         0 - OK
 *         1 - Error
 ******************************************************************************/
-int sge_user2uid(const char *user, uid_t *uidp, int retries) 
+int sge_user2uid(const char *user, uid_t *puid, uid_t *pgid, int retries) 
 {
    struct passwd *pw;
    struct passwd pwentry;
@@ -488,8 +490,11 @@ int sge_user2uid(const char *user, uid_t *uidp, int retries)
       }
    } while (pw == NULL);
 
-   if (uidp) {
-      *uidp = pw->pw_uid;
+   if(puid) {
+      *puid = pw->pw_uid;
+   }
+   if(pgid) {
+      *pgid = pw->pw_gid;
    }
 
    DEXIT; 

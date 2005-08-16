@@ -5,7 +5,7 @@ Source Code Review Form
 Date:
 
 1 Identification
-HP-2006-08-16-0: Bugfix:    fixed NFS spooling problem
+HP-2005-08-16-0: Bugfix:    fixed NFS spooling problem
                  Issue:     1752
                  Bugtraq:   6293411
                  Changed:   daemons/common/err_trace.c, 

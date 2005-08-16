@@ -1,3 +1,11 @@
+HP-2005-08-16-0: Bugfix:    fixed NFS spooling problem
+                 Issue:     1752
+                 Bugtraq:   6293411
+                 Changed:   daemons/common/err_trace.c,
+                            libs/uti/sge_uidgid.c, libs/uti/sge_uidgid.h
+                            review/HP-2005-08-10-0.txt
+                 Review:    AH
+
 SG-2005-08-12-0: Bugfix:    fixed the last, missing schema file
                  Changed:   message.xsd
                  Review:    DT

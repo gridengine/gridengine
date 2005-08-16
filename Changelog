@@ -1,4 +1,6 @@
-HP-2006-08-16-0: Bugfix:    fixed NFS spooling problem
+HP-2005-08-16-1: Enhancem.: Review document for HP-2005-08-16-0 added
+
+HP-2005-08-16-0: Bugfix:    fixed NFS spooling problem
                  Issue:     1752
                  Bugtraq:   6293411
                  Changed:   daemons/common/err_trace.c, 

@@ -1,3 +1,9 @@
+HP-2005-08-16-0: Enhancem.: man page sge_conf now explains execd_paramd
+                            ENABLE_WINDOMACC
+                 Changed:   sge_conf man page
+                 Bugtraq:   6294987
+                 Review:    AH
+
 DT-2005-08-12-0: Cleanup:   o Added TODO comment for handling of architecture-
                               specific reentrant functions in AH-2005-07-27-1.
                  Changed:   sge_hostname.c

@@ -129,12 +129,12 @@ void sge_set_next_spooling_time(void)
    sge_mutex_lock("follow_last_update_mutex", SGE_FUNC, __LINE__, &Follow_Control.last_update_mutex);
  
    if (Follow_Control.is_spooling != NOT_DEFINED) {
-      if ((Follow_Control.now + spool_time) < Follow_Control.last_update) {
+      if ((Follow_Control.now + mconf_get_spool_time()) < Follow_Control.last_update) {
          Follow_Control.last_update = Follow_Control.now;
       }   
       else if (Follow_Control.is_spooling == DO_SPOOL) {
-         Follow_Control.last_update = Follow_Control.now  + spool_time;
-         DPRINTF(("next spooling now:%ld next: %ld time:%d\n\n",Follow_Control.now, Follow_Control.last_update, spool_time));
+         Follow_Control.last_update = Follow_Control.now  + mconf_get_spool_time();
+         DPRINTF(("next spooling now:%ld next: %ld time:%d\n\n",Follow_Control.now, Follow_Control.last_update, mconf_get_spool_time()));
 
       }
       
@@ -1500,7 +1500,7 @@ int distribute_ticket_orders( lList *ticket_orders, monitoring_t *monitor)
          cl_commlib_get_last_message_time((cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0)),
                                         (char*)master_host_name, (char*)prognames[EXECD],1, &last_heard_from);
       }
-      if (  hep &&  last_heard_from + 10 * conf.load_report_time > now) {
+      if (  hep &&  last_heard_from + 10 * mconf_get_load_report_time() > now) {
 
          /* should have now all ticket orders for 'host' in 'to_send' */ 
          if (init_packbuffer(&pb, sizeof(u_long32)*3*n, 0)==PACK_SUCCESS) {

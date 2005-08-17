@@ -237,7 +237,7 @@ lListElem *jatep
          sge_sig2str(sig)));
 
    /* for simulated hosts do nothing */
-   if(simulate_hosts == 1 && 
+   if(mconf_get_simulate_hosts() && 
       (lGetUlong(jatep, JAT_status) & JSIMULATED)) {
 
       if(sig == SGE_SIGKILL) {

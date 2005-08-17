@@ -121,7 +121,7 @@ void reschedule_unknown_event(te_event_t anEvent, monitoring_t *monitor)
    /*
     * is the automatic rescheduling disabled
     */
-   if (disable_reschedule) {
+   if (mconf_get_disable_reschedule()) {
       DEXIT;
       goto Error;
    }         

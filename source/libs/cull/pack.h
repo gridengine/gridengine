@@ -38,10 +38,6 @@
 #   include "basis_types.h"
 #endif
 
-#ifdef COMMCOMPRESS
-#include "zlib.h"
-#endif
-
 #ifdef  __cplusplus
 extern "C" {
 #endif
@@ -100,9 +96,6 @@ extern "C" {
 #define CULL_VERSION 0x10020000
 
 typedef struct {
-#ifdef COMMCOMPRESS
-      z_stream cpr;
-#endif
       char *head_ptr;
       char *cur_ptr; 
       size_t mem_size;

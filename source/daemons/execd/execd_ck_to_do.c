@@ -543,7 +543,7 @@ execd_ck_to_do(struct dispatch_entry *de, sge_pack_buffer *pb, sge_pack_buffer *
    }
 
    /* check for end of simulated jobs */
-   if(simulate_hosts) {
+   if(mconf_get_simulate_hosts()) {
       for_each(jep, Master_Job_List) {
          for_each (jatep, lGetList(jep, JB_ja_tasks)) {
             if((lGetUlong(jatep, JAT_status) & JSIMULATED) && lGetUlong(jatep, JAT_end_time) <= now) {
@@ -585,7 +585,7 @@ execd_ck_to_do(struct dispatch_entry *de, sge_pack_buffer *pb, sge_pack_buffer *
    now = sge_get_gmt();
    if ( sge_get_flush_jr_flag() == true || next_report <= now) {
       if (next_report <= now) {
-         next_report = now + conf.load_report_time;
+         next_report = now + mconf_get_load_report_time();
       }
 
       if (last_report_send < now) {
@@ -785,7 +785,7 @@ lListElem *petep
 
    /* we might simulate another host */
    /* JG: TODO: make a function simulate_start_job_or_task() */
-   if(simulate_hosts == 1) {
+   if(mconf_get_simulate_hosts()) {
       const char *host = lGetHost(lFirst(lGetList(jatep, JAT_granted_destin_identifier_list)), JG_qhostname);
       if(sge_hostcmp(host, uti_state_get_qualified_hostname()) != 0) {
          lList *job_args;
@@ -1070,7 +1070,7 @@ static bool should_reprioritize(void)
    }
    else
    {
-      ret = conf.reprioritize ? true : false;
+      ret = mconf_get_reprioritize()? true : false;
    }
 
    if (NULL != confl) {

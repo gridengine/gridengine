@@ -419,7 +419,7 @@ send_slave_jobs_wc(const char *target, lListElem *tmpjep, lListElem *jatep,
       hostname = lGetHost(gdil_ep, JG_qhostname);
 
       /* map hostname if we are simulating hosts */
-      if(simulate_hosts == 1) {
+      if(mconf_get_simulate_hosts()) {
          const lListElem *simhost = lGetSubStr(hep, CE_name, "simhost", EH_consumable_config_list);
          if(simhost != NULL) {
             const char *real_host = lGetString(simhost, CE_stringval);
@@ -444,7 +444,7 @@ send_slave_jobs_wc(const char *target, lListElem *tmpjep, lListElem *jatep,
       /*
       ** get credential for job
       */
-      if ((do_credentials) && (cache_sec_cred(tmpjep, hostname))) { 
+      if ((mconf_get_do_credentials()) && (cache_sec_cred(tmpjep, hostname))) { 
          is_init_pb = true;
       }
   
@@ -536,7 +536,7 @@ send_job(const char *rhost, const char *target, lListElem *jep, lListElem *jatep
    DENTER(TOP_LAYER, "send_job");
 
    /* map hostname if we are simulating hosts */
-   if(simulate_hosts == 1) {
+   if(mconf_get_simulate_hosts()) {
       const lListElem *simhost = lGetSubStr(hep, CE_name, "simhost", EH_consumable_config_list);
       if(simhost != NULL) {
          const char *real_host = lGetString(simhost, CE_stringval);
@@ -639,7 +639,7 @@ send_job(const char *rhost, const char *target, lListElem *jep, lListElem *jatep
    /*
    ** get credential for job
    */
-   if (do_credentials) {
+   if (mconf_get_do_credentials()) {
       cache_sec_cred(tmpjep, rhost);
    }
   
@@ -870,7 +870,7 @@ void sge_zombie_job_cleanup_handler(te_event_t anEvent, monitoring_t *monitor)
 
    MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE), monitor);
 
-   while (Master_Zombie_List && (lGetNumberOfElem(Master_Zombie_List) > conf.zombie_jobs))
+   while (Master_Zombie_List && (lGetNumberOfElem(Master_Zombie_List) > mconf_get_zombie_jobs()))
    {
       dep = lFirst(Master_Zombie_List);
       lRemoveElem(Master_Zombie_List, &dep);
@@ -931,7 +931,7 @@ void sge_commit_job(lListElem *jep, lListElem *jatep, lListElem *jr,
    int spool_job = !(commit_flags & COMMIT_NO_SPOOLING);
    int no_events = (commit_flags & COMMIT_NO_EVENTS);
    int unenrolled_task = (commit_flags & COMMIT_UNENROLLED_TASK);
-   int handle_zombies = (conf.zombie_jobs > 0);
+   int handle_zombies = (mconf_get_zombie_jobs() > 0);
    u_long32 now = 0;
    const char *session;
    lList *answer_list = NULL;

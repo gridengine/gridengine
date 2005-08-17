@@ -380,8 +380,8 @@ lList *acl_list
    global_acl  = lGetList(ehep, EH_acl);
    global_xacl = lGetList(ehep, EH_xacl);
 
-   config_acl  = conf.user_lists;
-   config_xacl = conf.xuser_lists;
+   config_acl  = mconf_get_user_lists();
+   config_xacl = mconf_get_xuser_lists();
 
    for_each(cqueue, cqueue_list) {
       lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
@@ -466,6 +466,9 @@ lList *acl_list
          }
       }
    }
+
+   lFreeList(&config_acl);
+   lFreeList(&config_xacl);
    DEXIT;
    return nqueues;
 }

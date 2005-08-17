@@ -50,31 +50,28 @@
 **   executed on startup. This function is triggered by the execd
 **   dispatcher table when the tag TAG_GET_NEW_CONF is received.
 */
-int execd_get_new_conf(de, pb, apb, rcvtimeout, synchron, err_str, answer_error)
-struct dispatch_entry *de;
-sge_pack_buffer *pb, *apb; 
-u_long *rcvtimeout; 
-int *synchron; 
-char *err_str; 
-int answer_error;
+int execd_get_new_conf(dispatch_entry *de, sge_pack_buffer *pb, sge_pack_buffer *apb, u_long *rcvtimeout, 
+int *synchron, char *err_str, int answer_error)
 {
    int ret;
+   bool use_qidle = mconf_get_use_qidle();
    u_long32 dummy; /* always 0 */ 
-   dstring old_spool = DSTRING_INIT;
+   char* old_spool = NULL;
+   char* spool_dir = NULL;
 
    DENTER(TOP_LAYER, "execd_get_new_conf");
 
    unpackint(pb, &dummy);
 
-   sge_dstring_copy_string(&old_spool, conf.execd_spool_dir); 
+   old_spool = mconf_get_execd_spool_dir();  
 
    ret = get_merged_configuration(&Execd_Config_List);
-   
-   if (strcmp(sge_dstring_get_string(&old_spool), conf.execd_spool_dir)) {
+  
+   spool_dir = mconf_get_execd_spool_dir(); 
+   if (strcmp(old_spool, spool_dir)) {
       WARNING((SGE_EVENT, MSG_WARN_CHANGENOTEFFECTEDUNTILRESTARTOFEXECHOSTS, "execd_spool_dir"));
    }
 
-   sge_dstring_free(&old_spool);
    /*
    ** admin mail block is released on new conf
    */
@@ -82,6 +79,8 @@ int answer_error;
 
    sge_ls_qidle(use_qidle);
    DPRINTF(("use_qidle: %d\n", use_qidle));
+   FREE(old_spool);
+   FREE(spool_dir);
 
    DEXIT;
    return ret;

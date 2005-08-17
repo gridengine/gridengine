@@ -81,14 +81,16 @@
 
 static pthread_rwlock_t Global_Lock;
 static pthread_rwlock_t Schedd_Conf_Lock;
+static pthread_rwlock_t Master_Conf_Lock;
 
 /* watch out. The order in this array has to be the same as in the sge_locktype_t type */
-static pthread_rwlock_t *SGE_RW_Locks[NUM_OF_LOCK_TYPES] = {&Global_Lock, &Schedd_Conf_Lock};
+static pthread_rwlock_t *SGE_RW_Locks[NUM_OF_LOCK_TYPES] = {&Global_Lock, &Schedd_Conf_Lock, &Master_Conf_Lock};
 
 /* 'locktype_names' has to be in sync with the definition of 'sge_locktype_t' */
 static const char* locktype_names[NUM_OF_LOCK_TYPES] = {
    "global",  /* LOCK_GLOBAL */
-   "schedd_config" /* LOCK_SCHED_CONF */  
+   "schedd_config" /* LOCK_SCHED_CONF */ 
+   "master_config" /* LOCK_MASTER_CONF */ 
 };
 
 static void (*lock_callback) (sge_locktype_t, sge_lockmode_t, const char *func, sge_locker_t);
@@ -418,6 +420,7 @@ void sge_setup_lock_service(void)
    
    pthread_rwlock_init(&Global_Lock, NULL); 
    pthread_rwlock_init(&Schedd_Conf_Lock, NULL);
+   pthread_rwlock_init(&Master_Conf_Lock, NULL);
 
    sge_set_lock_callback(lock_callback_impl);
    sge_set_unlock_callback(unlock_callback_impl);

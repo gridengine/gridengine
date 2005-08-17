@@ -81,7 +81,7 @@ void cull_mail(lList *user_list, char *subj, char *buf, const char *mail_type) {
 
    DENTER(TOP_LAYER, "cull_mail");
 
-   mailer = conf.mailer;
+   mailer = mconf_get_mailer();
    mailer_has_subj_line = 1;
 
    if (!buf) {
@@ -94,6 +94,7 @@ void cull_mail(lList *user_list, char *subj, char *buf, const char *mail_type) {
          host = lGetHost(ep, MR_host);
          if (!user && !host) {
             ERROR((SGE_EVENT, MSG_MAIL_EMPTYUSERHOST));
+            FREE(mailer);
             DEXIT;
             return;
          } else if (!host) {
@@ -108,6 +109,7 @@ void cull_mail(lList *user_list, char *subj, char *buf, const char *mail_type) {
       }
    } 
 
+   FREE(mailer);
    DEXIT;
    return;
 }

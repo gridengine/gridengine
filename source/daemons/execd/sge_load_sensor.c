@@ -938,11 +938,13 @@ int sge_ls_get(lList **lpp)
 {
    lListElem *ls_elem;          /* LS_Type */
    lListElem *ep;
+   char* load_sensor = NULL;
 
    DENTER(TOP_LAYER, "sge_ls_get");
 
    sge_ls_initialize();
-   sge_ls_start(conf.load_sensor);
+   load_sensor = mconf_get_load_sensor();
+   sge_ls_start(load_sensor);
 
    for_each(ls_elem, ls_list) {
       int restart = 0;
@@ -991,6 +993,7 @@ int sge_ls_get(lList **lpp)
                                  lGetHost(ep, LR_host));
       }
    }
+   FREE(load_sensor);
 
    DEXIT;
    return 0;

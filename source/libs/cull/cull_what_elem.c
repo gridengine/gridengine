@@ -76,16 +76,6 @@ lListElem *lWhatToElem(const lEnumeration *what)
          if (cull_pack_enum(&pb, what) == PACK_SUCCESS) {
             whatElem = lCreateElem(PACK_Type);
             lSetUlong(whatElem, PACK_id, SGE_WHAT);
-#ifdef COMMCOMPRESS 
-            if (pb.mode == 0) {
-               if (flush_packbuffer(&pb) == PACK_SUCCESS){
-                  setByteArray( (char*)pb.head_ptr,  pb.cpr.total_out, whereElem, PACK_String);
-                  lSetBool(whatElem, PACK_Compressed, true);
-               } else  {
-                  lFreeElem(&whatElem);
-               }
-            } else
-#endif
             {
                setByteArray( (char*)pb.head_ptr, pb.bytes_used, whatElem, PACK_string);
                lSetBool(whatElem, PACK_compressed, false);

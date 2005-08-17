@@ -969,7 +969,7 @@ static const char *get_client_name(int is_rsh, int is_rlogin, int inherit_job)
   
    /* get configuration from qmaster */
    if(get_configuration(uti_state_get_qualified_hostname(), &global, &local) ||
-      merge_configuration(global, local, &conf, &conf_list)) {
+      merge_configuration(global, local, &conf_list)) {
       ERROR((SGE_EVENT, MSG_CONFIG_CANTGETCONFIGURATIONFROMQMASTER));
       lFreeList(&conf_list);
       lFreeElem(&global);

@@ -1,3 +1,7 @@
+RD-2005-08-16-0: Cleanup:   made the qmaster configuration thread safe
+                 Changed:   all
+                 Review:    SG, AA 
+
 HP-2005-08-16-0: Bugfix:    fixed NFS spooling problem
                  Issue:     1752
                  Bugtraq:   6293411

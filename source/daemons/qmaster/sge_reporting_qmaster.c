@@ -314,11 +314,11 @@ reporting_trigger_handler(te_event_t anEvent, monitoring_t *monitor)
          if (!reporting_create_sharelog_record(&answer_list, monitor)) {
             answer_list_output(&answer_list);
          }
-         flush_interval = sharelog_time;
+         flush_interval = mconf_get_sharelog_time();
          break;
       case TYPE_REPORTING_TRIGGER:
          /* only flush reporting file */
-         flush_interval = reporting_flush_time;
+         flush_interval = mconf_get_reporting_flush_time();
          break;
       default:
          return;
@@ -353,7 +353,7 @@ reporting_create_new_job_record(lList **answer_list, const lListElem *job)
 
    DENTER(TOP_LAYER, "reporting_create_new_job_record");
 
-   if (do_reporting && do_joblog && job != NULL) {
+   if (mconf_get_do_reporting() && mconf_get_do_joblog() && job != NULL) {
       dstring job_dstring = DSTRING_INIT;
 
       u_long32 job_number, priority, submission_time;
@@ -407,7 +407,7 @@ reporting_create_job_log(lList **answer_list,
 
    DENTER(TOP_LAYER, "reporting_create_job_log");
 
-   if (do_reporting && do_joblog && job != NULL) {
+   if (mconf_get_do_reporting() && mconf_get_do_joblog() && job != NULL) {
       dstring job_dstring = DSTRING_INIT;
 
       u_long32 job_id = 0;
@@ -544,7 +544,7 @@ reporting_create_acct_record(lList **answer_list,
    DENTER(TOP_LAYER, "reporting_create_acct_record");
 
    /* anything to do at all? */
-   if (do_reporting || do_accounting) {
+   if (mconf_get_do_reporting() || mconf_get_do_accounting()) {
       sge_dstring_init(&category_dstring, category_buffer, 
                        sizeof(category_buffer));
       category_string = sge_build_job_category(&category_dstring, job, 
@@ -554,7 +554,7 @@ reporting_create_acct_record(lList **answer_list,
    /* accounting records will only be written at job end, not for intermediate
     * reports
     */
-   if (do_accounting && !intermediate) {
+   if (mconf_get_do_accounting() && !intermediate) {
       job_string = sge_write_rusage(&job_dstring, job_report, job, ja_task, 
                                     category_string, REPORTING_DELIMITER, 
                                     false);
@@ -572,7 +572,7 @@ reporting_create_acct_record(lList **answer_list,
    /* reporting records will be written both for intermediate and final
     * job reports
     */
-   if (ret && do_reporting) {
+   if (ret && mconf_get_do_reporting()) {
       /* job_dstring might have been filled with accounting record - this one
        * contains total accounting values.
        * If we have written intermediate accounting records earlier, or this
@@ -633,7 +633,7 @@ reporting_write_consumables(lList **answer_list, dstring *buffer,
    
    DENTER(TOP_LAYER, "reporting_write_consumables");
 
-   if (do_reporting) {
+   if (mconf_get_do_reporting()) {
       for_each (cep, actual) {
          const char *name = lGetString(cep, RUE_name);
          lListElem *tep = lGetElemStr(total, CE_name, name);
@@ -688,7 +688,7 @@ reporting_create_queue_record(lList **answer_list,
 
    DENTER(TOP_LAYER, "reporting_create_queue_record");
 
-   if (do_reporting && queue != NULL) {
+   if (mconf_get_do_reporting() && queue != NULL) {
       dstring queue_dstring = DSTRING_INIT;
       char state_buffer[20];
       *state_buffer = '\0';
@@ -748,7 +748,7 @@ reporting_create_queue_consumable_record(lList **answer_list,
 
    DENTER(TOP_LAYER, "reporting_create_queue_consumable_record");
 
-   if (do_reporting && queue != NULL) {
+   if (mconf_get_do_reporting() && queue != NULL) {
       dstring consumable_dstring = DSTRING_INIT;
 
       /* dump consumables */
@@ -822,7 +822,7 @@ reporting_create_host_record(lList **answer_list,
 
    DENTER(TOP_LAYER, "reporting_create_host_record");
 
-   if (do_reporting && host != NULL) {
+   if (mconf_get_do_reporting() && host != NULL) {
       dstring load_dstring = DSTRING_INIT;
 
       reporting_write_load_values(answer_list, &load_dstring, 
@@ -889,7 +889,7 @@ reporting_create_host_consumable_record(lList **answer_list,
 
    DENTER(TOP_LAYER, "reporting_create_host_consumable_record");
 
-   if (do_reporting && host != NULL) {
+   if (mconf_get_do_reporting() && host != NULL) {
       dstring consumable_dstring = DSTRING_INIT;
 
       /* dump consumables */
@@ -953,7 +953,7 @@ reporting_create_sharelog_record(lList **answer_list, monitoring_t *monitor)
 
    DENTER(TOP_LAYER, "reporting_create_sharelog_record");
 
-   if (do_reporting && sharelog_time > 0) {
+   if (mconf_get_do_reporting() && mconf_get_sharelog_time() > 0) {
       /* only create sharelog entries if we have a sharetree */
       if (lGetNumberOfElem(Master_Sharetree_List) > 0) {
          rep_buf_t *buf;
@@ -1066,7 +1066,7 @@ reporting_is_intermediate_acct_required(const lListElem *job,
    DENTER(TOP_LAYER, "reporting_is_intermediate_acct_required");
 
    /* if reporting isn't active, we needn't write intermediate usage */
-   if (!do_reporting) {
+   if (!mconf_get_do_reporting()) {
       return false;
    }
 
@@ -1403,7 +1403,7 @@ reporting_flush(lList **answer_list, u_long32 flush, u_long32 *next_flush)
    }
      
    /* set time for next flush */  
-   *next_flush = flush + reporting_flush_time;
+   *next_flush = flush + mconf_get_reporting_flush_time();
 
    DEXIT;
    return ret;
@@ -1498,7 +1498,7 @@ config_sharelog(void) {
    static bool sharelog_running = false;
 
    /* sharelog shall be written according to global config */
-   if (sharelog_time > 0) {
+   if (mconf_get_sharelog_time() > 0) {
       /* if sharelog is not running: switch it on */
       if (!sharelog_running) {
          te_event_t ev = NULL;

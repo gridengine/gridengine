@@ -638,7 +638,7 @@ int sge_before_dispatch(void)
       lListElem *global = NULL, *local = NULL;
 
       if (get_configuration(SGE_GLOBAL_NAME, &global, &local) == 0) {
-         merge_configuration(global, local, &conf, NULL);
+         merge_configuration(global, local, NULL);
       }   
       lFreeElem(&global);
       lFreeElem(&local);

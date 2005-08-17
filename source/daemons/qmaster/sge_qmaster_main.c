@@ -80,13 +80,12 @@
 #include "sge_job_qmaster.h"
 #include "sge_profiling.h"
 #include "uti/sge_monitor.h"
+#include "sge_conf.h"
 
 #if !defined(INTERIX)
 static void init_sig_action_and_mask(void);
 #endif
 static int set_file_descriptor_limit(void);
-
-extern u_long32 monitor_time;
 
 /****** qmaster/sge_qmaster_main/sge_qmaster_application_status() ************
 *  NAME
@@ -127,7 +126,7 @@ extern u_long32 monitor_time;
 unsigned long sge_qmaster_application_status(char** info_message) 
 {
 
-   return sge_monitor_status(info_message, monitor_time);
+   return sge_monitor_status(info_message, mconf_get_monitor_time());
 }
 
 

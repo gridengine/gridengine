@@ -259,10 +259,10 @@ char **argv
 
 
    /* are we using qidle or not */
-   sge_ls_qidle(use_qidle);
+   sge_ls_qidle(mconf_get_use_qidle());
    sge_ls_gnu_ls(1);
    
-   DPRINTF(("use_qidle: %d\n", use_qidle));
+   DPRINTF(("use_qidle: %d\n", mconf_get_use_qidle()));
 
    /* test load sensor (internal or external) */
    {

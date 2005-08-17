@@ -393,8 +393,8 @@ int slave
    ** Execute command to store the client's DCE or Kerberos credentials.
    ** This also creates a forwardable credential for the user.
    */
-   if (do_credentials) {
-      if (store_sec_cred2(jelem, do_authentication, &general, SGE_EVENT) != 0) {
+   if (mconf_get_do_credentials()) {
+      if (store_sec_cred2(jelem, mconf_get_do_authentication(), &general, SGE_EVENT) != 0) {
          sge_dstring_copy_string(&err_str, SGE_EVENT);
          goto Error;
       }   

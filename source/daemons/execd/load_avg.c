@@ -98,7 +98,7 @@ execd_add_load_report(lList *report_list, u_long32 now, u_long32 *next_send)
    if (*next_send <= now) {
       lListElem *report;
 
-      *next_send = now + conf.load_report_time;
+      *next_send = now + mconf_get_load_report_time();
 
       /*
       ** problem: add some more error handling here
@@ -125,7 +125,7 @@ execd_add_conf_report(lList *report_list, u_long32 now, u_long32 *next_send)
    if (*next_send <= now) {
       lListElem *report;
 
-      *next_send = now + conf.load_report_time;
+      *next_send = now + mconf_get_load_report_time();
 
       /*
       ** 2. report about the configuration versions
@@ -151,7 +151,7 @@ execd_add_license_report(lList *report_list, u_long32 now, u_long32 *next_send)
    if (*next_send <= now) {
       lListElem *report;
 
-      *next_send = now + conf.load_report_time;
+      *next_send = now + mconf_get_load_report_time();
 
       /*
       ** 3. license report
@@ -190,7 +190,7 @@ execd_add_job_report(lList *report_list, u_long32 now, u_long32 *next_send)
 
    /* if report interval expired: send all reports */
    if (*next_send <= now) {
-      *next_send = now + conf.load_report_time;
+      *next_send = now + mconf_get_load_report_time();
       do_send = true;
    } else {
       /* if we shall flush reports: send only reports marked to flush */
@@ -601,7 +601,7 @@ void update_job_usage(void)
    DENTER(TOP_LAYER, "update_job_usage");
 
 #ifdef COMPILE_DC
-   if (!sharetree_reserved_usage) {
+   if (!mconf_get_sharetree_reserved_usage()) {
       int ptf_error;
 
       if ((ptf_error=ptf_get_usage(&usage_list))) {
@@ -617,7 +617,7 @@ void update_job_usage(void)
    }
 #endif
 
-   if (sharetree_reserved_usage)
+   if (mconf_get_sharetree_reserved_usage())
       get_reserved_usage(&usage_list);
 
    if (usage_list == NULL) {

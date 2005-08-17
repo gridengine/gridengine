@@ -310,8 +310,8 @@ volatile int* abort_flag
          }
       }
    }
-
-   ret = merge_configuration(global, local, &conf, NULL);
+  
+   ret = merge_configuration(global, local, NULL);
    if (ret) {
       DPRINTF((
          "Error %d merging configuration \"%s\"\n", ret, uti_state_get_qualified_hostname()));
@@ -358,7 +358,7 @@ lList **conf_list
       return -1;
    }
 
-   ret = merge_configuration(global, local, &conf, NULL);
+   ret = merge_configuration(global, local, NULL);
    if (ret) {
       ERROR((SGE_EVENT, MSG_CONF_NOMERGECONF_IS, ret, uti_state_get_qualified_hostname()));
       lFreeElem(&global);

@@ -708,8 +708,10 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
                JOB_TYPE_IS_NO_SHELL(lGetUlong(job, JB_type))))) {
             job_caused_failure = 1;
          } else if ((failed == SSTATE_NO_SHELL) && (master_queue != NULL)) {
+            char* shell_start_mode = mconf_get_shell_start_mode();
             const char *mode = job_get_shell_start_mode(job, master_queue, 
-                                                   conf.shell_start_mode);
+                                                   shell_start_mode);
+            FREE(shell_start_mode);
 
             if (!strcmp(mode, "unix_behavior") != 0) {
                job_caused_failure = 1;
@@ -935,11 +937,11 @@ lListElem *jr
       /*
       ** Execute command to delete the client's DCE or Kerberos credentials.
       */
-      if (do_credentials)
+      if (mconf_get_do_credentials())
          delete_credentials(jep);
 
       /* remove job/task active dir */
-      if (!keep_active && !getenv("SGE_KEEP_ACTIVE")) {
+      if (!mconf_get_keep_active() && !getenv("SGE_KEEP_ACTIVE")) {
          sge_get_active_job_file_path(&jobdir,
                                       job_id, ja_task_id, pe_task_id,
                                       NULL);
@@ -1061,7 +1063,7 @@ lListElem *jr
          job_remove_spool_file(job_id, ja_task_id, NULL, SPOOL_WITHIN_EXECD); 
 
          /* active dir */
-         if (!keep_active && !getenv("SGE_KEEP_ACTIVE")) {
+         if (!mconf_get_keep_active() && !getenv("SGE_KEEP_ACTIVE")) {
             DPRINTF(("removing active dir: %s\n", sge_dstring_get_string(&jobdir)));
             if (sge_rmdir(sge_dstring_get_string(&jobdir), &err_str)) {
                ERROR((SGE_EVENT, MSG_FILE_CANTREMOVEDIRECTORY_SS,
@@ -1550,7 +1552,7 @@ int usage_mul_factor
 
          pw = sge_getpwnam_r(owner, &pw_struct, buffer, sizeof(buffer));
          if (pw) {
-            if (use_qsub_gid) {
+            if (mconf_get_use_qsub_gid()) {
                char *tmp_qsub_gid = search_conf_val("qsub_gid");
                pw->pw_gid = atol(tmp_qsub_gid);
             } 
@@ -1733,9 +1735,9 @@ static void build_derived_final_usage(lListElem *jr, int usage_mul_factor)
 
    DPRINTF(("CPU/MEM/IO: M(%f/%f/%f) R(%f/%f/%f) acct: %s stree: %s\n",
          cpu, mem, io, r_cpu, r_mem, r_io,
-         acct_reserved_usage?"R":"M", sharetree_reserved_usage?"R":"M"));
+         mconf_get_acct_reserved_usage()?"R":"M", mconf_get_sharetree_reserved_usage()?"R":"M"));
 
-   if (acct_reserved_usage) {
+   if (mconf_get_acct_reserved_usage()) {
       add_usage(jr, USAGE_ATTR_CPU_ACCT, NULL, r_cpu);
       add_usage(jr, USAGE_ATTR_MEM_ACCT, NULL, r_mem);
       add_usage(jr, USAGE_ATTR_IO_ACCT,  NULL, r_io);
@@ -1751,7 +1753,7 @@ static void build_derived_final_usage(lListElem *jr, int usage_mul_factor)
          add_usage(jr, USAGE_ATTR_MAXVMEM_ACCT, NULL, maxvmem);
    }
 
-   if (sharetree_reserved_usage) {
+   if (mconf_get_sharetree_reserved_usage()) {
       add_usage(jr, USAGE_ATTR_CPU, NULL, r_cpu);
       add_usage(jr, USAGE_ATTR_MEM, NULL, r_mem);
       add_usage(jr, USAGE_ATTR_IO,  NULL, r_io);

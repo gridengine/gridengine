@@ -33,105 +33,99 @@
 /*___INFO__MARK_END__*/
 
 #include "sge_confL.h"
-/* #include "sge_mirror.h" */
 
 /* The scheduler configuration changes this configuration element only. It is
    not spooled and is not shown in qconf -mconf */
 #define REPRIORITIZE "reprioritize"
-
-struct confel {                       /* cluster configuration parameters */
-    char        *execd_spool_dir;     /* sge_spool directory base path */
-    char        *mailer;              /* path to e-mail delivery agent */
-    char        *xterm;               /* xterm path for interactive jobs */
-    char        *load_sensor;         /* path to a load sensor executable */    
-    char        *prolog;              /* start before jobscript may be none */
-    char        *epilog;              /* start after jobscript may be none */
-    char        *shell_start_mode;    /* script_from_stdin/posix_compliant/unix_behavior */
-    char        *login_shells;        /* list of shells to call as login shell */
-    u_long32    min_uid;              /* lower bound on UIDs that can qsub */
-    u_long32    min_gid;              /* lower bound on GIDs that can qsub */
-    u_long32    load_report_time;     /* how often to send in load */
-    u_long32    max_unheard;          /* how long before sge_execd considered dead */
-    u_long32    loglevel;             /* qmaster event logging level */
-    char        *enforce_project;     /* SGEEE attribute: "true" or "false" */
-    char        *enforce_user;        /* SGEEE attribute: "true" or "false" */
-    char        *administrator_mail;  /* list of mail addresses */
-    lList       *user_lists;          /* allowed user lists */
-    lList       *xuser_lists;         /* forbidden users lists */
-    lList       *projects;            /* allowed project list */
-    lList       *xprojects;           /* forbiddent project list */
-    char        *set_token_cmd;
-    char        *pag_cmd;
-    u_long32    token_extend_time;
-    char        *shepherd_cmd;
-    char        *qmaster_params;
-    char        *execd_params;
-    char        *reporting_params;
-    char        *gid_range;           /* Range of additional group ids */
-    u_long32    zombie_jobs;          /* jobs to save after execution */
-    char        *qlogin_daemon;       /* eg /usr/sbin/in.telnetd */
-    char        *qlogin_command;      /* eg telnet $HOST $PORT */
-    char        *rsh_daemon;          /* eg /usr/sbin/in.rshd */
-    char        *rsh_command;         /* eg rsh -p $PORT $HOST command */
-    char        *rlogin_daemon;       /* eg /usr/sbin/in.rlogind */
-    char        *rlogin_command;      /* eg rlogin -p $PORT $HOST */
-    u_long32    reschedule_unknown;   /* timout value used for auto. resch. */ 
-    u_long32    max_aj_instances;     /* max. number of ja instances of a job */
-    u_long32    max_aj_tasks;         /* max. size of an array job */
-    u_long32    max_u_jobs;           /* max. number of jobs per user */
-    u_long32    max_jobs;             /* max. number of jobs in the system */
-    u_long32    reprioritize;         /* reprioritize jobs based on the tickets or not */
-    u_long32    auto_user_fshare;     /* SGEEE automatic user fshare */
-    u_long32    auto_user_oticket;    /* SGEEE automatic user oticket */
-    char        *auto_user_default_project; /* SGEEE automatic user default project */
-    u_long32    auto_user_delete_time; /* SGEEE automatic user delete time */
-    char        *delegated_file_staging; /*drmaa attribute: "true" or "false" */
-};
-
-typedef struct confel sge_conf_type;
 
 typedef int (*tDaemonizeFunc)(void);
 
 /* This list is *ONLY* used by the execd and should be moved eventually */
 extern lList *Execd_Config_List;
 
-extern sge_conf_type conf;
-
-extern bool use_qidle;
-extern bool forbid_reschedule;
-extern bool forbid_apperror;
-extern bool do_credentials;   
-extern bool do_authentication;  
-extern bool acct_reserved_usage;
-extern bool sharetree_reserved_usage;
-extern bool keep_active;
-extern bool enable_windomacc;
-extern bool simulate_hosts;
-extern long ptf_max_priority;
-extern long ptf_min_priority;
-extern bool use_qsub_gid;
-extern int notify_susp_type;      
-extern char* notify_susp;       
-extern int notify_kill_type;      
-extern char* notify_kill;
-extern bool disable_reschedule;  
-extern int scheduler_timeout;
-extern int max_dynamic_event_clients;
-extern bool set_lib_path;
-extern bool inherit_env;
-extern int spool_time;
-extern u_long32 monitor_time;
-
-/* reporting params */
-extern bool do_accounting;
-extern bool do_reporting;
-extern bool do_joblog;
-extern int reporting_flush_time;
-extern int sharelog_time;
-
-lList *sge_set_defined_defaults(lList *lpCfg);
-int merge_configuration(lListElem *global, lListElem *local, sge_conf_type *pconf, lList **lpp);
+void sge_set_defined_defaults(lList **lpCfg);
+int merge_configuration(lListElem *global, lListElem *local, lList **lpp);
 void sge_show_conf(void);
 void conf_update_thread_profiling(const char *thread_name);
+
+char* mconf_get_execd_spool_dir(void);
+char* mconf_get_mailer(void);
+char* mconf_get_xterm(void);
+char* mconf_get_load_sensor(void);
+char* mconf_get_prolog(void);
+char* mconf_get_epilog(void);
+char* mconf_get_shell_start_mode(void);
+char* mconf_get_login_shells(void);
+u_long32 mconf_get_min_uid(void);
+u_long32 mconf_get_min_gid(void);
+u_long32 mconf_get_load_report_time(void);
+u_long32 mconf_get_max_unheard(void);
+u_long32 mconf_get_loglevel(void);
+char* mconf_get_enforce_project(void);
+char* mconf_get_enforce_user(void);
+char* mconf_get_administrator_mail(void);
+lList* mconf_get_user_lists(void);
+lList* mconf_get_xuser_lists(void);
+lList* mconf_get_projects(void);
+lList* mconf_get_xprojects(void);
+char* mconf_get_set_token_cmd(void);
+char* mconf_get_pag_cmd(void);
+u_long32 mconf_get_token_extend_time(void);
+char* mconf_get_shepherd_cmd(void);
+char* mconf_get_qmaster_params(void);
+char* mconf_get_execd_params(void);
+char* mconf_get_reporting_params(void);
+char* mconf_get_gid_range(void);
+u_long32 mconf_get_zombie_jobs(void);
+char* mconf_get_qlogin_daemon(void);
+char* mconf_get_qlogin_command(void);
+char* mconf_get_rsh_daemon(void);
+char* mconf_get_rsh_command(void);
+char* mconf_get_rlogin_daemon(void);
+char* mconf_get_rlogin_command(void);
+u_long32 mconf_get_reschedule_unknown(void);
+u_long32 mconf_get_max_aj_instances(void);
+u_long32 mconf_get_max_aj_tasks(void);
+u_long32 mconf_get_max_u_jobs(void);
+u_long32 mconf_get_max_jobs(void);
+u_long32 mconf_get_reprioritize(void);
+u_long32 mconf_get_auto_user_fshare(void);
+u_long32 mconf_get_auto_user_oticket(void);
+char* mconf_get_auto_user_default_project(void);
+u_long32 mconf_get_auto_user_delete_time(void);
+char* mconf_get_delegated_file_staging(void);
+
+/* params */
+bool mconf_get_use_qidle(void);
+bool mconf_get_forbid_reschedule(void);
+bool mconf_get_forbid_apperror(void);
+bool mconf_get_do_credentials(void);   
+bool mconf_get_do_authentication(void);  
+bool mconf_get_acct_reserved_usage(void);
+bool mconf_get_sharetree_reserved_usage(void);
+bool mconf_get_keep_active(void);
+bool mconf_get_enable_windomacc(void);
+bool mconf_get_simulate_hosts(void);
+long mconf_get_ptf_max_priority(void);
+long mconf_get_ptf_min_priority(void);
+bool mconf_get_use_qsub_gid(void);
+int mconf_get_notify_susp_type(void);      
+char* mconf_get_notify_susp(void);       
+int mconf_get_notify_kill_type(void);      
+char* mconf_get_notify_kill(void);
+bool mconf_get_disable_reschedule(void);  
+int mconf_get_scheduler_timeout(void);
+int mconf_get_max_dynamic_event_clients(void);
+void mconf_set_max_dynamic_event_clients(int value);
+bool mconf_get_set_lib_path(void);
+bool mconf_get_inherit_env(void);
+int mconf_get_spool_time(void);
+u_long32 mconf_get_monitor_time(void);
+bool mconf_get_do_accounting(void);
+bool mconf_get_do_reporting(void);
+bool mconf_get_do_joblog(void);
+int mconf_get_reporting_flush_time(void);
+int mconf_get_sharelog_time(void);
+bool mconf_get_enable_forced_qdel(void);
 
 #endif /* __SGE_CONF_H */

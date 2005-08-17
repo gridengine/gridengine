@@ -948,8 +948,8 @@ int job_list_read_from_disk(lList **job_list, char *list_name, int check,
             job_list_add_job(job_list, list_name, job, 0);
             
             if (!handle_as_zombie) {
-               job_list_register_new_job(Master_Job_List, conf.max_jobs, 1);
-               suser_register_new_job(job, conf.max_u_jobs, 1);
+               job_list_register_new_job(Master_Job_List, mconf_get_max_jobs(), 1);
+               suser_register_new_job(job, mconf_get_max_u_jobs(), 1);
             }
          }
          lFreeList(&third_direnties);

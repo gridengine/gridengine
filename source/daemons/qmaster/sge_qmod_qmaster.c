@@ -1092,7 +1092,7 @@ monitoring_t *monitor
       hnm = lGetHost(qep, QU_qhostname);
 
       /* map hostname if we are simulating hosts */
-      if(simulate_hosts == 1) {
+      if(mconf_get_simulate_hosts()) {
          lListElem *hep = NULL;
          const lListElem *simhost = NULL;
 

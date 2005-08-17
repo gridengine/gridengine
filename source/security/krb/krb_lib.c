@@ -862,15 +862,6 @@ int compressed
    }
 
    /* Can I safely call send_message_pb here ??? */
-#ifdef COMMCOMPRESS
-   if(pb.mode == 0) {
-      if(flush_packbuffer(&pb) == PACK_SUCCESS)
-         ret = send_message(synchron, tocomproc, toid, tohost, tag, (char*)pb.head_ptr, pb.cpr.total_out, mid, 1);
-      else
-         ret = CL_MALLOC;
-   }
-   else
-#endif
       ret = send_message(synchron, tocomproc, toid, tohost, tag, pb.head_ptr, pb.bytes_used, mid, 0);
 
  error:

@@ -119,6 +119,7 @@ int is_array
    const char *job_owner;   
    dstring ds;
    char buffer[128];
+   char* administrator_mail = NULL;
 
    DENTER(TOP_LAYER, "job_related_adminmail");
 
@@ -130,11 +131,16 @@ int is_array
       first = 0;
    }
 
-   if (!conf.administrator_mail) {
+   administrator_mail = mconf_get_administrator_mail();
+
+   if (administrator_mail == NULL) {
+      DEXIT;
       return;
    }
 
-   if (!strcasecmp(conf.administrator_mail, "none")) {
+   if (!strcasecmp(administrator_mail, "none")) {
+      FREE(administrator_mail);
+      DEXIT;
       return;
    }
 
@@ -172,12 +178,14 @@ int is_array
          */
          if ((admail_states[failed] & BIT_ADM_NEVER)) {
             DPRINTF(("NEVER SENDING ADMIN MAIL for state %d\n", failed));
+            FREE(administrator_mail);
             DEXIT;
             return;
          }
          if ((admail_states[failed] & BIT_ADM_NEW_CONF)) {
             if (admail_times[failed]) {
                DPRINTF(("NOT SENDING ADMIN MAIL AGAIN for state %d, again on conf\n", failed));
+               FREE(administrator_mail);
                DEXIT;
                return;
             }
@@ -185,6 +193,7 @@ int is_array
          if ((admail_states[failed] & BIT_ADM_QCHANGE)) {
             if (admail_times[failed]) {
                DPRINTF(("NOT SENDING ADMIN MAIL AGAIN for state %d, again on qchange\n", failed));
+               FREE(administrator_mail);
                DEXIT;
                return;
             }
@@ -192,6 +201,7 @@ int is_array
          if ((admail_states[failed] & BIT_ADM_HOUR)) {
             if ((now - admail_times[failed] < 3600))
                DPRINTF(("NOT SENDING ADMIN MAIL AGAIN for state %d, again next hour\n", failed));
+               FREE(administrator_mail);
                DEXIT;
                return;
          }
@@ -200,10 +210,11 @@ int is_array
       if (!(err_str=lGetString(jr, JR_err_str)))
          err_str = MSG_MAIL_UNKNOWN_REASON;
 
-      ret = mailrec_parse(&lp_mail, conf.administrator_mail);
+      ret = mailrec_parse(&lp_mail, administrator_mail);
       if (ret) {
          ERROR((SGE_EVENT, MSG_MAIL_PARSE_S,
-            (conf.administrator_mail ? conf.administrator_mail : MSG_NULL)));
+            (administrator_mail ? administrator_mail : MSG_NULL)));
+         FREE(administrator_mail);
          DEXIT;
          return;
       }
@@ -285,9 +296,8 @@ int is_array
       if (sge_mail_body_total)
          free((char*)sge_mail_body_total);
    }
-   if (lp_mail)
-      lFreeList(&lp_mail);
-
+   lFreeList(&lp_mail);
+   FREE(administrator_mail); 
    DEXIT;
    return;
 }

@@ -53,8 +53,7 @@
 #include "sgeobj/sge_answer.h"
 #include "sge_prog.h"
 #include "sge_mtutil.h"
-
-extern u_long32 monitor_time;
+#include "sge_conf.h"
 
 typedef struct {
    char snd_host[CL_MAXHOSTLEN]; /* sender hostname; NULL -> all              */
@@ -394,7 +393,7 @@ void *sge_qmaster_process_message(void *anArg, monitoring_t *monitor)
     *
     */
    MONITOR_IDLE_TIME((res = sge_get_any_request(msg.snd_host, msg.snd_name, &msg.snd_id, &msg.buf, 
-                                &msg.tag, 1, 0, &msg.request_mid)), monitor, monitor_time);
+                                &msg.tag, 1, 0, &msg.request_mid)), monitor, mconf_get_monitor_time());
    
    MONITOR_MESSAGES(monitor);      
    

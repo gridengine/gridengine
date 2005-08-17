@@ -1399,15 +1399,16 @@ static void ptf_set_OS_scheduling_parameters(lList *job_list, double min_share,
    
    DENTER(TOP_LAYER, "ptf_set_OS_scheduling_parameters");
 
-   if (ptf_min_priority != -999)
-      pri_min_tmp = ptf_min_priority;
-   else
+   
+   pri_min_tmp = mconf_get_ptf_min_priority();
+   if (pri_min_tmp == -999) {
       pri_min_tmp = PTF_MIN_PRIORITY;   
+   }
 
-   if (ptf_max_priority != -999)
-      pri_max_tmp = ptf_max_priority;
-   else
+   pri_max_tmp = mconf_get_ptf_max_priority();
+   if (pri_max_tmp == -999) {
       pri_max_tmp = PTF_MAX_PRIORITY;   
+   }
 
    /* 
     * For OS'es where we enforce the values of max and min priority verify

@@ -136,7 +136,7 @@ int sge_read_configuration(lListElem *aSpoolContext, lList *anAnswer)
       return -1;
    }
 
-   ret = merge_configuration(global, local, &conf, NULL);
+   ret = merge_configuration(global, local, NULL);
 
    lFreeElem(&local);
    lFreeElem(&global);
@@ -314,7 +314,7 @@ int sge_mod_configuration(lListElem *aConf, lList **anAnswer, char *aUser, char 
          ERROR((SGE_EVENT, MSG_CONFIG_NOGLOBAL));
       }
             
-      if (merge_configuration(global, local, &conf, NULL) != 0) 
+      if (merge_configuration(global, local, NULL) != 0) 
       {
          ERROR((SGE_EVENT, MSG_CONF_CANTMERGECONFIGURATIONFORHOST_S, uti_state_get_qualified_hostname()));
       }
@@ -325,7 +325,7 @@ int sge_mod_configuration(lListElem *aConf, lList **anAnswer, char *aUser, char 
       sge_show_conf();
 
       /* 'max_unheard' may have changed */
-      cl_commlib_set_connection_param(cl_com_get_handle("qmaster", 1), HEARD_FROM_TIMEOUT, conf.max_unheard);
+      cl_commlib_set_connection_param(cl_com_get_handle("qmaster", 1), HEARD_FROM_TIMEOUT, mconf_get_max_unheard());
    }
     
    new_config = 1; /* invalidate configuration cache */

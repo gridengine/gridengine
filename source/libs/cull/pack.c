@@ -91,17 +91,6 @@
 ****************************************************************************
 */
 
-/* compression_level is set to getenv("SGE_COMPRESSION_LEVEL") by
- * sge_setup(). must be from 0 (no compression) to 9 (best compression)
- * only buffers > compression_threshold are compressed. must be indicated
- * by a flag in the message header when sent. can be overridden at run-time
- * compression_threshold is set to getenv("SGE_COMPRESSION_THRESHOLD") by
- * sge_setup()
- */
-/* long compression_level = Z_NO_COMPRESSION; */
-long compression_level = 0;
-long compression_threshold = 10 * 1024;
-
 /* -------------------------------
 
    set chunk_size

@@ -56,8 +56,6 @@
 
 #include "msg_cull.h"
 
-extern long compression_level;
-
 /****** cull/file/lWriteElemToDisk() ******************************************
 *  NAME
 *     lWriteElemToDisk() -- Writes a element to file 
@@ -87,9 +85,6 @@ int lWriteElemToDisk(const lListElem *ep, const char *prefix, const char *name,
    stringT filename;
    sge_pack_buffer pb;
    int ret, size, fd;
-#ifdef COMMCOMPRESS
-   long old_compression_level;
-#endif
 
    DENTER(TOP_LAYER, "lWriteElemToDisk");
 
@@ -105,15 +100,7 @@ int lWriteElemToDisk(const lListElem *ep, const char *prefix, const char *name,
    size = pb_used(&pb);
    clear_packbuffer(&pb);
 
-#ifdef COMMCOMPRESS
-   /* this is a lousy trick to forbid compression of the element */
-   old_compression_level = compression_level;
-   compression_level = 0;
    ret = init_packbuffer(&pb, size, 0);
-   compression_level = old_compression_level;
-#else
-   ret = init_packbuffer(&pb, size, 0);
-#endif
 
    /* pack ListElement */
    if(ret == PACK_SUCCESS) {
@@ -165,20 +152,6 @@ int lWriteElemToDisk(const lListElem *ep, const char *prefix, const char *name,
    }
 
    /* write packing buffer */
-#ifdef COMMCOMPRESS
-   if(pb.mode == 0) {
-      if (flush_packbuffer(&pb) != PACK_SUCCESS || sge_writenbytes(fd, 
-          (char*)pb.head_ptr, pb.cpr.total_out) != pb.cpr.total_out) {
-         CRITICAL((SGE_EVENT, MSG_CULL_CANTWRITEXTOFILEY_SS , obj_name, 
-                  filename));
-         clear_packbuffer(&pb);
-         close(fd);
-         DEXIT;
-         return 1;
-      }
-   }
-   else
-#endif
       if (sge_writenbytes(fd, pb.head_ptr, pb_used(&pb)) != pb_used(&pb)) {
          CRITICAL((SGE_EVENT, MSG_CULL_CANTWRITEXTOFILEY_SS , obj_name, 
                   filename));

@@ -639,18 +639,18 @@ static void communication_setup(void)
       cl_com_add_allowed_host(com_handle,com_handle->local->comp_host);
 
       /* check dynamic event client count */
-      max_dynamic_event_clients = sge_set_max_dynamic_event_clients(max_dynamic_event_clients); 
+      mconf_set_max_dynamic_event_clients(sge_set_max_dynamic_event_clients(mconf_get_max_dynamic_event_clients())); 
 
       /* log startup info into qmaster messages file */
       log_state_set_log_level(LOG_INFO);
       INFO((SGE_EVENT, MSG_QMASTER_FD_HARD_LIMIT_SETTINGS_U, sge_u32c(qmaster_rlimits.rlim_max)));
       INFO((SGE_EVENT, MSG_QMASTER_FD_SOFT_LIMIT_SETTINGS_U, sge_u32c(qmaster_rlimits.rlim_cur)));
       INFO((SGE_EVENT, MSG_QMASTER_MAX_FILE_DESCRIPTORS_LIMIT_U, sge_u32c(max_connections)));
-      INFO((SGE_EVENT, MSG_QMASTER_MAX_EVC_LIMIT_U, sge_u32c( max_dynamic_event_clients)));
+      INFO((SGE_EVENT, MSG_QMASTER_MAX_EVC_LIMIT_U, sge_u32c(mconf_get_max_dynamic_event_clients())));
       log_state_set_log_level(old_ll);
    }
 
-   cl_commlib_set_connection_param(cl_com_get_handle("qmaster",1), HEARD_FROM_TIMEOUT, conf.max_unheard);
+   cl_commlib_set_connection_param(cl_com_get_handle("qmaster",1), HEARD_FROM_TIMEOUT, mconf_get_max_unheard());
 
    DEXIT;
    return;

@@ -916,7 +916,7 @@ static void* timed_event_thread(void* anArg)
 
       Event_Control.last = time(NULL);
 
-      MONITOR_IDLE_TIME(timed_event_wait_empty(), (&monitor), monitor_time);
+      MONITOR_IDLE_TIME(timed_event_wait_empty(), (&monitor), mconf_get_monitor_time());
       MONITOR_MESSAGES((&monitor));  
 
       MONITOR_TET_COUNT((&monitor));
@@ -931,7 +931,7 @@ static void* timed_event_thread(void* anArg)
          Event_Control.next = te->when;
          Event_Control.delete = false;
 
-         MONITOR_IDLE_TIME(timed_event_wait_next(te, now), (&monitor), monitor_time);
+         MONITOR_IDLE_TIME(timed_event_wait_next(te, now), (&monitor), mconf_get_monitor_time());
 
          if ((Event_Control.next < te->when) || (Event_Control.delete == true))
          {

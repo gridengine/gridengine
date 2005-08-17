@@ -40,7 +40,8 @@
 typedef enum {
    LOCK_GLOBAL  = 0,  /* global lock */
    LOCK_SCHED_CONF = 1,
-   NUM_OF_LOCK_TYPES = 2
+   LOCK_MASTER_CONF = 2,
+   NUM_OF_LOCK_TYPES = 3
 } sge_locktype_t;
 
 #if defined(LINUX)

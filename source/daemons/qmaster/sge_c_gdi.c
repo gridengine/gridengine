@@ -596,7 +596,7 @@ static void sge_c_gdi_add(gdi_object_t *ao, char *host, sge_gdi_request *request
             /* fill in authentication infos from request */
             lSetUlong(ep, EV_uid, uid);
 
-            max_dynamic_event_clients = sge_set_max_dynamic_event_clients(max_dynamic_event_clients);
+            mconf_set_max_dynamic_event_clients(sge_set_max_dynamic_event_clients(mconf_get_max_dynamic_event_clients()));
             
             sge_add_event_client(ep,&(answer->alp), (sub_command & SGE_GDI_RETURN_NEW_VERSION) ? &(answer->lp) : NULL, user, host, monitor);
          }
@@ -604,7 +604,7 @@ static void sge_c_gdi_add(gdi_object_t *ao, char *host, sge_gdi_request *request
          
          for_each(ep, request->lp) { /* is thread save. the global lock is used, when needed */
                                                    /* fill address infos from request into event client that must be added */
-            if(simulate_hosts == 1) { 
+            if(mconf_get_simulate_hosts()) { 
 
                int multi_job = 1;
                int i;

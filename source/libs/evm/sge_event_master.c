@@ -2378,7 +2378,7 @@ static void* event_deliver_thread(void *anArg)
       /*
        * did a new event arrive which has a flush time of 0 seconds?
        */
-      MONITOR_IDLE_TIME(event_master_wait_next(),(&monitor), monitor_time);
+      MONITOR_IDLE_TIME(event_master_wait_next(),(&monitor), mconf_get_monitor_time());
 
       sge_mutex_unlock("event_master_cond_mutex", SGE_FUNC, __LINE__, &Master_Control.cond_mutex);
 
@@ -2615,6 +2615,7 @@ static int get_number_of_subscriptions(u_long32 event_type) {
 *******************************************************************************/
 static void send_events(lListElem *report, lList *report_list, monitoring_t *monitor) {
    u_long32 timeout, busy_handling;
+   u_long32 scheduler_timeout = mconf_get_scheduler_timeout();
    lListElem *event_client;
    int ret, id; 
    int deliver_interval;

@@ -1147,7 +1147,7 @@ lWriteListTo(ehl, stdout);
    }
    if (lFirst(conf_l)) {
       lListElem *local = NULL;
-      merge_configuration(lFirst(conf_l), local, &conf, NULL);
+      merge_configuration(lFirst(conf_l), local, NULL);
    }
    lFreeList(&alp);
 

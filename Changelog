@@ -1,4 +1,10 @@
-SG-2005-08-17-0: Bugfix:    - performance enhancement for pe-ranges and 
+SG-2005-08-20-1: Bugfix:    qstat -j shows wrong message for parallel jobs which 
+                            can't be dispatched
+                 Issue:     814
+                 Bugtraq:   6287847
+                 Review:    RD
+
+SG-2005-08-20-0: Bugfix:    - performance enhancement for pe-ranges and 
                               sequential soft requests
                             -	consumables as thresholds are not working correctly with pe jobs
                             - Soft requirements on load values ignored

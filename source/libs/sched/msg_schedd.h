@@ -91,7 +91,7 @@
 #define MSG_SCHEDD_INFO_NOFORCEDRES_SS                _MESSAGE(47062, _("does not request 'forced' resource "SFQ" of host "SFN"") )  
 #define MSG_SCHEDD_INFO_NOGLOBFORCEDRES_SS            _MESSAGE(47063, _("does not request globally 'forced' resource "SFQ"") )    
 #define MSG_SCHEDD_INFO_CKPTNOTFOUND_                 _MESSAGE(47064, _("cannot run because requested ckpt object not found"))
-#define MSG_SCHEDD_INFO_PESLOTSNOTINRANGE_S           _MESSAGE(47065, _("cannot run because available slots combined under PE "SFQ" are not in range of job"))
+#define MSG_SCHEDD_INFO_PESLOTSNOTINRANGE_SI          _MESSAGE(47065, _("cannot run in PE "SFQ" because it only offers "sge_U32CFormat" slots"))
 #define MSG_SCHEDD_INFO_NOACCESSTOPE_S                _MESSAGE(47066, _("cannot run because no access to pe "SFQ"") ) 
 #define MSG_SCHEDD_INFO_QUEUEINALARM_SS               _MESSAGE(47067, _("queue instance "SFQ" is in suspend alarm: "SN_UNLIMITED) )        
 #define MSG_SCHEDD_INFO_QUEUEOVERLOADED_SS            _MESSAGE(47068, _("queue instance "SFQ" dropped because it is overloaded: "SN_UNLIMITED) ) 
@@ -210,6 +210,7 @@
 #define MSG_SCHEDD_UNKNOWN_HOST_SS                          _MESSAGE(47218, _("queue "SFQ" is referencing unknown host "SFQ))
 #define MSG_SCHEDD_NOCOMPLEXATTRIBUTEFORTHRESHOLD_S         _MESSAGE(47219, _("error: no complex attribute for threshold "SFN))
 #define MSG_SCHEDD_DUETORR                                  _MESSAGE(47220, _(" due to a reservation"))
+#define MSG_SCHEDD_NOMASTERHOST_U                           _MESSAGE(47221, _("no master host for job "sge_u32))
 #define MSG_SUBORDPOLICYCONFLICT_UUSS                       _MESSAGE(47288, _("Jobs "sge_U32CFormat" & "sge_U32CFormat" dispatched to master/subordinated queues "SFQ"/"SFQ". Suspend on subordinate to occur in same scheduling interval. Policy conflict!"))
 
 

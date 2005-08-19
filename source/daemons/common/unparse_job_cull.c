@@ -743,10 +743,12 @@ lList **alpp
       lListElem *ep_opt;
       int hard = (nm == JB_hard_resource_list);
       
-      if (hard) 
+      if (hard) {
          ep_opt = sge_add_noarg(pcmdline, hard_OPT, "-hard", NULL);
-      else
+      }
+      else {
          ep_opt = sge_add_noarg(pcmdline, soft_OPT, "-soft", NULL);
+      }
 
       ret = centry_list_append_to_string(lp, str, sizeof(str) - 1);
       if (ret) {

@@ -418,6 +418,14 @@ int sge_reset_job_category()
    DENTER(TOP_LAYER, "sge_reset_job_category");
 
    for_each (cat, CATEGORY_LIST) {
+      lListElem *cache = NULL;
+      lList *cache_list = lGetList(cat, CT_cache);
+
+      for_each(cache, cache_list) {
+         int *range = lGetRef(cache, CCT_pe_job_slots);
+         FREE(range); 
+      }
+      
       lSetUlong(cat, CT_rejected, 0);
       lSetInt(cat, CT_count, -1);
       lSetList(cat, CT_cache, NULL);

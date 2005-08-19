@@ -88,10 +88,6 @@
 /*#include "sge_qinstance_type.h" */
 #include "sig_handlers.h"
 
-/* profiling info */
-extern int scheduled_fast_jobs;
-extern int scheduled_complex_jobs;
-
 /* the global list descriptor for all lists needed by the default scheduler */
 sge_Sdescr_t lists =
 {NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL};
@@ -176,8 +172,7 @@ int scheduler(sge_Sdescr_t *lists, lList **order) {
 
    prof_job_count = lGetNumberOfElem(lists->job_list);
 
-   scheduled_fast_jobs    = 0;
-   scheduled_complex_jobs = 0;
+   sconf_reset_jobs();
    schedd_mes_initialize();
    schedd_mes_set_logging(1); 
 
@@ -304,14 +299,14 @@ int scheduler(sge_Sdescr_t *lists, lList **order) {
    if(prof_is_active(SGE_PROF_CUSTOM0)) {
       prof_stop_measurement(SGE_PROF_CUSTOM0, NULL); 
 
-      PROFILING((SGE_EVENT, "PROF: scheduled in %.3f (u %.3f + s %.3f = %.3f): %d sequential, %d parallel, %d orders, %d H, %d Q, %d QA, %d J(qw), %d J(r), %d J(s), %d J(h), %d J(e), %d J(x), %d J(all), %d C, %d ACL, %d PE, %d U, %d D, %d PRJ, %d ST, %d CKPT, %d RU, %d gMes, %d jMes, %d/%d pre-send\n",
+      PROFILING((SGE_EVENT, "PROF: scheduled in %.3f (u %.3f + s %.3f = %.3f): %d sequential, %d parallel, %d orders, %d H, %d Q, %d QA, %d J(qw), %d J(r), %d J(s), %d J(h), %d J(e), %d J(x), %d J(all), %d C, %d ACL, %d PE, %d U, %d D, %d PRJ, %d ST, %d CKPT, %d RU, %d gMes, %d jMes, %d/%d pre-send, %d/%d/%d pe-alg\n",
          prof_get_measurement_wallclock(SGE_PROF_CUSTOM0, true, NULL),
          prof_get_measurement_utime(SGE_PROF_CUSTOM0, true, NULL),
          prof_get_measurement_stime(SGE_PROF_CUSTOM0, true, NULL),
          prof_get_measurement_utime(SGE_PROF_CUSTOM0, true, NULL) + 
          prof_get_measurement_stime(SGE_PROF_CUSTOM0, true, NULL),
-         scheduled_fast_jobs,
-         scheduled_complex_jobs,
+         sconf_get_fast_jobs(),
+         sconf_get_comprehensive_jobs(),
          (int)(orders.numberSendOrders + sge_GetNumberOfOrders(&orders)), 
          lGetNumberOfElem(lists->host_list), 
          lGetNumberOfElem(lists->queue_list),
@@ -335,7 +330,10 @@ int scheduler(sge_Sdescr_t *lists, lList **order) {
          global_mes_count,
          job_mes_count,
          (int)orders.numberSendOrders,
-         (int)orders.numberSendPackages
+         (int)orders.numberSendPackages,
+         sconf_get_pe_alg_value(SCHEDD_PE_LOW_FIRST),
+         sconf_get_pe_alg_value(SCHEDD_PE_BINARY),
+         sconf_get_pe_alg_value(SCHEDD_PE_HIGH_FIRST)
       ));
    }
    
@@ -412,6 +410,9 @@ static int dispatch_jobs(sge_Sdescr_t *lists, order_t *orders,
    lList *job_load_adjustments = NULL;
    double total_running_job_tickets=0; 
    int nreservation = 0;
+   int fast_runs = 0;         /* sequential jobs */
+   int fast_soft_runs = 0;    /* sequential jobs with soft requests */
+   int comprehensive_runs = 0;      /* all kind of pe jobs */
 
    int global_lc = 0;
    int sort_hostlist = 1;       /* hostlist has to be sorted. Info returned by select_assign_debit */
@@ -701,236 +702,250 @@ static int dispatch_jobs(sge_Sdescr_t *lists, order_t *orders,
     * loop over the jobs that are left in priority order
     */
    {
-   bool is_immediate_array_job = false;
-   struct timeval now, later;
-   double time;
-   gettimeofday(&now, NULL);
+      bool is_immediate_array_job = false;
+      struct timeval now, later;
+      double time;
+      gettimeofday(&now, NULL);
 
-   while ( (orig_job = lFirst(*(splitted_job_lists[SPLIT_PENDING]))) != NULL) {
-      dispatch_t result = DISPATCH_NEVER_CAT;
-      u_long32 job_id; 
-      bool is_pjob_resort = false;
-      bool is_reserve;
-      bool is_start;
+      while ( (orig_job = lFirst(*(splitted_job_lists[SPLIT_PENDING]))) != NULL) {
+         dispatch_t result = DISPATCH_NEVER_CAT;
+         u_long32 job_id; 
+         bool is_pjob_resort = false;
+         bool is_reserve;
+         bool is_start;
 
-      job_id = lGetUlong(orig_job, JB_job_number);
+         job_id = lGetUlong(orig_job, JB_job_number);
 
-      /* 
-       * We don't try to get a reservation, if 
-       * - reservation is generally disabled 
-       * - maximum number of reservations is exceeded 
-       * - it's not desired for the job
-       * - the job is an immediate one
-       */
-      if (nreservation < max_reserve &&
-          lGetBool(orig_job, JB_reserve) &&
-          !JOB_TYPE_IS_IMMEDIATE(lGetUlong(orig_job, JB_type))) {
-         is_reserve = true;
-      }   
-      else {
-         is_reserve = false; 
-      }   
-
-      /* Don't need to look for a 'now' assignment if the last job 
-         of this category got no 'now' assignement either */
-      is_start = (sge_is_job_category_rejected(orig_job))?false:true;
-         
-      if (is_start || is_reserve) {
-         lListElem *job = NULL;
-         u_long32 ja_task_id; 
-         lListElem *ja_task;
-
-
-         /* sort the hostlist */
-         if(sort_hostlist) {
-            lPSortList(lists->host_list, "%I+", EH_sort_value);
-            sort_hostlist      = 0;
-            sconf_set_host_order_changed(true);
-         } 
+         /* 
+          * We don't try to get a reservation, if 
+          * - reservation is generally disabled 
+          * - maximum number of reservations is exceeded 
+          * - it's not desired for the job
+          * - the job is an immediate one
+          */
+         if (nreservation < max_reserve &&
+             lGetBool(orig_job, JB_reserve) &&
+             !JOB_TYPE_IS_IMMEDIATE(lGetUlong(orig_job, JB_type))) {
+            is_reserve = true;
+         }   
          else {
-            sconf_set_host_order_changed(false);
-         }  
+            is_reserve = false; 
+         }   
 
-         is_immediate_array_job = (is_immediate_array_job || 
-                                 (JOB_TYPE_IS_ARRAY(lGetUlong(orig_job, JB_type)) && 
-                                  JOB_TYPE_IS_IMMEDIATE(lGetUlong(orig_job, JB_type)))) ? true : false;
+         /* Don't need to look for a 'now' assignment if the last job 
+            of this category got no 'now' assignement either */
+         is_start = (sge_is_job_category_rejected(orig_job))?false:true;
+            
+         if (is_start || is_reserve) {
+            lListElem *job = NULL;
+            u_long32 ja_task_id; 
+            lListElem *ja_task;
 
 
-         if ((job = lCopyElem(orig_job)) == NULL) {
-            break;
+            /* sort the hostlist */
+            if(sort_hostlist) {
+               lPSortList(lists->host_list, "%I+", EH_sort_value);
+               sort_hostlist      = 0;
+               sconf_set_host_order_changed(true);
+            } 
+            else {
+               sconf_set_host_order_changed(false);
+            }  
+
+            is_immediate_array_job = (is_immediate_array_job || 
+                                    (JOB_TYPE_IS_ARRAY(lGetUlong(orig_job, JB_type)) && 
+                                     JOB_TYPE_IS_IMMEDIATE(lGetUlong(orig_job, JB_type)))) ? true : false;
+
+
+            if ((job = lCopyElem(orig_job)) == NULL) {
+               break;
+            }
+
+            if (job_get_next_task(job, &ja_task, &ja_task_id)!=0) {
+               DPRINTF(("Found job "sge_u32" with no job array tasks\n", job_id));
+            } 
+            else { 
+               DPRINTF(("Found pending job "sge_u32"."sge_u32". Try %sto start and %sto reserve\n", 
+                     job_id, ja_task_id, is_start?"":"not ", is_reserve?"":"not "));
+               DPRINTF(("-----------------------------------------\n"));
+
+               
+               result = select_assign_debit(
+                  &(lists->queue_list), 
+                  &(lists->dis_queue_list),
+                  job, ja_task, 
+                  lists->pe_list, 
+                  lists->ckpt_list, 
+                  lists->centry_list, 
+                  lists->host_list, 
+                  lists->acl_list,
+                  &user_list,
+                  &group_list,
+                  orders,
+                  &total_running_job_tickets, 
+                  &sort_hostlist, 
+                  is_start,
+                  is_reserve,
+                  &consumable_load_list);
+            } 
+            lFreeElem(&job);
+         }     
+  
+         /* collect profiling data */
+         switch (sconf_get_last_dispatch_type()) {
+            case DISPATCH_TYPE_FAST : fast_runs++;
+               break;
+            case DISPATCH_TYPE_FAST_SOFT_REQ : fast_soft_runs++;
+               break;
+            case DISPATCH_TYPE_COMPREHENSIVE : comprehensive_runs++;
+               break;
          }
 
-         if (job_get_next_task(job, &ja_task, &ja_task_id)!=0) {
-            DPRINTF(("Found job "sge_u32" with no job array tasks\n", job_id));
-         } 
-         else { 
-            DPRINTF(("Found pending job "sge_u32"."sge_u32". Try %sto start and %sto reserve\n", 
-                  job_id, ja_task_id, is_start?"":"not ", is_reserve?"":"not "));
-            DPRINTF(("-----------------------------------------\n"));
+         switch (result) {
+         case DISPATCH_OK: /* now assignment */
+            {
+               char *owner = strdup(lGetString(orig_job, JB_owner));
+               /* here the job got an assignment that will cause it be started immediately */
 
-            
-            result = select_assign_debit(
-               &(lists->queue_list), 
-               &(lists->dis_queue_list),
-               job, ja_task, 
-               lists->pe_list, 
-               lists->ckpt_list, 
-               lists->centry_list, 
-               lists->host_list, 
-               lists->acl_list,
-               &user_list,
-               &group_list,
-               orders,
-               &total_running_job_tickets, 
-               &sort_hostlist, 
-               is_start,
-               is_reserve,
-               &consumable_load_list);
-         } 
-         lFreeElem(&job);
-      }     
-  
+               DPRINTF(("Found NOW assignment\n"));
 
-      switch (result) {
-      case DISPATCH_OK: /* now assignment */
-         {
-            char *owner = strdup(lGetString(orig_job, JB_owner));
-            /* here the job got an assignment that will cause it be started immediately */
+               schedd_mes_rollback();
+               is_pjob_resort = job_move_first_pending_to_running(&orig_job, splitted_job_lists);
 
-            DPRINTF(("Found NOW assignment\n"));
+               /* 
+                * after sge_move_to_running() orig_job can be removed and job 
+                * should be used instead 
+                */
+               orig_job = NULL;
 
-            schedd_mes_rollback();
-            is_pjob_resort = job_move_first_pending_to_running(&orig_job, splitted_job_lists);
+               /* 
+                * drop idle jobs that exceed maxujobs limit 
+                * should be done after resort_job() 'cause job is referenced 
+                */
+               job_lists_split_with_reference_to_max_running(splitted_job_lists,
+                                                   &user_list, 
+                                                   owner,
+                                                   maxujobs);
+               FREE(owner);
 
-            /* 
-             * after sge_move_to_running() orig_job can be removed and job 
-             * should be used instead 
-             */
-            orig_job = NULL;
+               /* do not send job start orders inbetween, if we have an immediate array
+                  job. */
+               if (!is_immediate_array_job && (lGetNumberOfElem(orders->jobStartOrderList) > 10)) {
+                  gettimeofday(&later, NULL);
+                  time = later.tv_usec - now.tv_usec;
+                  time = (time / 1000000) + (later.tv_sec - now.tv_sec);
 
-            /* 
-             * drop idle jobs that exceed maxujobs limit 
-             * should be done after resort_job() 'cause job is referenced 
-             */
-            job_lists_split_with_reference_to_max_running(splitted_job_lists,
-                                                &user_list, 
-                                                owner,
-                                                maxujobs);
-            FREE(owner);
-
-            /* do not send job start orders inbetween, if we have an immediate array
-               job. */
-            if (!is_immediate_array_job && (lGetNumberOfElem(orders->jobStartOrderList) > 10)) {
-               gettimeofday(&later, NULL);
-               time = later.tv_usec - now.tv_usec;
-               time = (time / 1000000) + (later.tv_sec - now.tv_sec);
-
-               if (time > 0.5) {
-                  /*async gdi*/
-                  if (sge_send_job_start_orders(orders)) {
-                     gettimeofday(&now, NULL);
+                  if (time > 0.5) {
+                     /*async gdi*/
+                     if (sge_send_job_start_orders(orders)) {
+                        gettimeofday(&now, NULL);
+                     }
                   }
                }
             }
-         }
-         break;
+            break;
 
-      case DISPATCH_NOT_AT_TIME: /* reservation */
-         /* here the job got a reservation but can't be started now */
-         DPRINTF(("Got a RESERVATION\n"));
-         nreservation++;
+         case DISPATCH_NOT_AT_TIME: /* reservation */
+            /* here the job got a reservation but can't be started now */
+            DPRINTF(("Got a RESERVATION\n"));
+            nreservation++;
 
-         /* mark the category as rejected */
-         if ((cat = lGetRef(orig_job, JB_category))) {
-            DPRINTF(("SKIP JOB " sge_u32 " of category '%s' (rc: "sge_u32 ")\n", job_id, 
-                        lGetString(cat, CT_str), lGetUlong(cat, CT_refcount))); 
-            sge_reject_category(cat);
-         }
-         /* here no reservation was made for a job that couldn't be started now 
-            or the job is not dispatchable at all */
-         schedd_mes_commit(*(splitted_job_lists[SPLIT_PENDING]), 0, cat);       
-
-         {
-            u_long32 ja_task_number = range_list_get_first_id(lGetList(orig_job, JB_ja_n_h_ids), NULL);
-            object_delete_range_id(orig_job, NULL, JB_ja_n_h_ids, ja_task_number);
-         }
-         
-         /* Remove pending job if there are no pending tasks anymore */
-         if (!job_has_pending_tasks(orig_job) || (nreservation >= max_reserve )) {
-            lDechainElem(*(splitted_job_lists[SPLIT_PENDING]), orig_job);
-            if ((*(splitted_job_lists[SPLIT_NOT_STARTED])) == NULL) {
-               *(splitted_job_lists[SPLIT_NOT_STARTED]) = lCreateList("", lGetListDescr(*(splitted_job_lists[SPLIT_PENDING])));
+            /* mark the category as rejected */
+            if ((cat = lGetRef(orig_job, JB_category))) {
+               DPRINTF(("SKIP JOB " sge_u32 " of category '%s' (rc: "sge_u32 ")\n", job_id, 
+                           lGetString(cat, CT_str), lGetUlong(cat, CT_refcount))); 
+               sge_reject_category(cat);
             }
-            lAppendElem(*(splitted_job_lists[SPLIT_NOT_STARTED]), orig_job);
+            /* here no reservation was made for a job that couldn't be started now 
+               or the job is not dispatchable at all */
+            schedd_mes_commit(*(splitted_job_lists[SPLIT_PENDING]), 0, cat);       
+
+            {
+               u_long32 ja_task_number = range_list_get_first_id(lGetList(orig_job, JB_ja_n_h_ids), NULL);
+               object_delete_range_id(orig_job, NULL, JB_ja_n_h_ids, ja_task_number);
+            }
             
-            is_pjob_resort = false;
-         }
-         else {
-            is_pjob_resort = true;
-         }
-         orig_job = NULL;
-         break;
-
-      case DISPATCH_NEVER_CAT: /* never this category */
-         /* before deleting the element mark the category as rejected */
-         if ((cat = lGetRef(orig_job, JB_category))) {
-            DPRINTF(("SKIP JOB " sge_u32 " of category '%s' (rc: "sge_u32 ")\n", job_id, 
-                        lGetString(cat, CT_str), lGetUlong(cat, CT_refcount))); 
-            sge_reject_category(cat);
-         }
-      
-      case DISPATCH_NEVER_JOB: /* never this particular job */
-
-
-         /* here no reservation was made for a job that couldn't be started now 
-            or the job is not dispatchable at all */
-         schedd_mes_commit(*(splitted_job_lists[SPLIT_PENDING]), 0, cat);
-
-         if (JOB_TYPE_IS_IMMEDIATE(lGetUlong(orig_job, JB_type))) { /* immediate job */
-            /* delet the job, it will be deleted on master side anyway */
-
-            lDelElemUlong(splitted_job_lists[SPLIT_PENDING], JB_job_number, job_id); 
-         }
-         else {
-         /* prevent that we get the same job next time again */
-            lDechainElem(*(splitted_job_lists[SPLIT_PENDING]),orig_job);
-            if ((*(splitted_job_lists[SPLIT_NOT_STARTED])) == NULL) {
-               *(splitted_job_lists[SPLIT_NOT_STARTED]) = lCreateList("", lGetListDescr(*(splitted_job_lists[SPLIT_PENDING])));
+            /* Remove pending job if there are no pending tasks anymore */
+            if (!job_has_pending_tasks(orig_job) || (nreservation >= max_reserve )) {
+               lDechainElem(*(splitted_job_lists[SPLIT_PENDING]), orig_job);
+               if ((*(splitted_job_lists[SPLIT_NOT_STARTED])) == NULL) {
+                  *(splitted_job_lists[SPLIT_NOT_STARTED]) = lCreateList("", lGetListDescr(*(splitted_job_lists[SPLIT_PENDING])));
+               }
+               lAppendElem(*(splitted_job_lists[SPLIT_NOT_STARTED]), orig_job);
+               
+               is_pjob_resort = false;
             }
-            lAppendElem(*(splitted_job_lists[SPLIT_NOT_STARTED]), orig_job);
+            else {
+               is_pjob_resort = true;
+            }
+            orig_job = NULL;
+            break;
+
+         case DISPATCH_NEVER_CAT: /* never this category */
+            /* before deleting the element mark the category as rejected */
+            if ((cat = lGetRef(orig_job, JB_category))) {
+               DPRINTF(("SKIP JOB " sge_u32 " of category '%s' (rc: "sge_u32 ")\n", job_id, 
+                        lGetString(cat, CT_str), lGetUlong(cat, CT_refcount))); 
+               sge_reject_category(cat);
+            }
+         
+         case DISPATCH_NEVER_JOB: /* never this particular job */
+
+
+            /* here no reservation was made for a job that couldn't be started now 
+               or the job is not dispatchable at all */
+            schedd_mes_commit(*(splitted_job_lists[SPLIT_PENDING]), 0, cat);
+
+            if (JOB_TYPE_IS_IMMEDIATE(lGetUlong(orig_job, JB_type))) { /* immediate job */
+               /* delet the job, it will be deleted on master side anyway */
+
+               lDelElemUlong(splitted_job_lists[SPLIT_PENDING], JB_job_number, job_id); 
+            }
+            else {
+            /* prevent that we get the same job next time again */
+               lDechainElem(*(splitted_job_lists[SPLIT_PENDING]),orig_job);
+               if ((*(splitted_job_lists[SPLIT_NOT_STARTED])) == NULL) {
+                  *(splitted_job_lists[SPLIT_NOT_STARTED]) = lCreateList("", lGetListDescr(*(splitted_job_lists[SPLIT_PENDING])));
+               }
+               lAppendElem(*(splitted_job_lists[SPLIT_NOT_STARTED]), orig_job);
+            }
+            orig_job = NULL;
+            break;
+
+         case DISPATCH_MISSING_ATTR :  /* should not happen */
+         default:
+            break;
          }
-         orig_job = NULL;
-         break;
 
-      case DISPATCH_MISSING_ATTR :  /* should not happen */
-      default:
-         break;
-      }
+         /*------------------------------------------------------------------ 
+          * SGEEE mode - if we dispatch a job sub-task and the job has more
+          * sub-tasks, then the job is still first in the job list.
+          * We need to remove and reinsert the job back into the sorted job
+          * list in case another job is higher priority (i.e. has more tickets)
+          *------------------------------------------------------------------*/
 
-      /*------------------------------------------------------------------ 
-       * SGEEE mode - if we dispatch a job sub-task and the job has more
-       * sub-tasks, then the job is still first in the job list.
-       * We need to remove and reinsert the job back into the sorted job
-       * list in case another job is higher priority (i.e. has more tickets)
-       *------------------------------------------------------------------*/
+         if (is_pjob_resort) {
+            sgeee_resort_pending_jobs(splitted_job_lists[SPLIT_PENDING]);
+         }
 
-      if (is_pjob_resort) {
-         sgeee_resort_pending_jobs(splitted_job_lists[SPLIT_PENDING]);
-      }
+         /* no more free queues - then exit */
+         if (lGetNumberOfElem(lists->queue_list)==0) {
+            break;
+         }   
 
-      /* no more free queues - then exit */
-      if (lGetNumberOfElem(lists->queue_list)==0) {
-         break;
-      }   
-
-   } /* end of while */
+      } /* end of while */
    }
   
    if (prof_is_active(SGE_PROF_CUSTOM4)) {
       prof_stop_measurement(SGE_PROF_CUSTOM4, NULL);
 
-      PROFILING((SGE_EVENT, "PROF: job dispatching took %.3f s",
-            prof_get_measurement_wallclock(SGE_PROF_CUSTOM4, false, NULL)));
+      PROFILING((SGE_EVENT, "PROF: job dispatching took %.3f s (%d fast, %d comp, %d pe, %d res)",
+                 prof_get_measurement_wallclock(SGE_PROF_CUSTOM4, false, NULL),
+                 fast_runs,
+                 fast_soft_runs,
+                 comprehensive_runs,
+                 nreservation
+            ));
    }
 
    lFreeList(&user_list);

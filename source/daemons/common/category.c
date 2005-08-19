@@ -61,6 +61,7 @@
 
 /*-------------------------------------------------------------------------*/
 /* build the category string                                               */
+/* the category string includes now the soft requests                      */
 /*-------------------------------------------------------------------------*/
 const char* 
 sge_build_job_category(dstring *category_str, lListElem *job, lList *acl_list) 
@@ -101,6 +102,14 @@ sge_build_job_category(dstring *category_str, lListElem *job, lList *acl_list)
    ** -hard -l rlist
    */
    if (sge_unparse_resource_list(job, JB_hard_resource_list, 
+                                    &cmdl, NULL) != 0) {
+      goto ERROR;
+   }
+
+   /*
+   ** -hard -l rlist
+   */
+   if (sge_unparse_resource_list(job, JB_soft_resource_list, 
                                     &cmdl, NULL) != 0) {
       goto ERROR;
    }

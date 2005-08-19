@@ -1191,26 +1191,25 @@ static int sge_get_gdi_request_async(int *commlib_error,
       return -1;
    }
 
-
    ret = sge_unpack_gdi_request(&pb, arp);
    switch (ret) {
-   case PACK_SUCCESS:
-      break;
+      case PACK_SUCCESS:
+         break;
 
-   case PACK_ENOMEM:
-      ret = -2;
-      ERROR((SGE_EVENT, MSG_GDI_ERRORUNPACKINGGDIREQUEST_S, cull_pack_strerror(ret)));
-      break;
+      case PACK_ENOMEM:
+         ret = -2;
+         ERROR((SGE_EVENT, MSG_GDI_ERRORUNPACKINGGDIREQUEST_S, cull_pack_strerror(ret)));
+         break;
 
-   case PACK_FORMAT:
-      ret = -3;
-      ERROR((SGE_EVENT, MSG_GDI_ERRORUNPACKINGGDIREQUEST_S, cull_pack_strerror(ret)));
-      break;
+      case PACK_FORMAT:
+         ret = -3;
+         ERROR((SGE_EVENT, MSG_GDI_ERRORUNPACKINGGDIREQUEST_S, cull_pack_strerror(ret)));
+         break;
 
-   default:
-      ret = -1;
-      ERROR((SGE_EVENT, MSG_GDI_ERRORUNPACKINGGDIREQUEST_S, cull_pack_strerror(ret)));
-      break;
+      default:
+         ret = -1;
+         ERROR((SGE_EVENT, MSG_GDI_ERRORUNPACKINGGDIREQUEST_S, cull_pack_strerror(ret)));
+         break;
    }
 
    /* 

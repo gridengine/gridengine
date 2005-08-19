@@ -34,10 +34,12 @@
 
 #include "sge_schedd_confL.h"
 
+/* defines the last dispatched job */
 enum { 
-    DISPATCH_TYPE_NONE = 0, 
-    DISPATCH_TYPE_FAST, 
-    DISPATCH_TYPE_COMPREHENSIVE 
+    DISPATCH_TYPE_NONE = 0,      /* did not dispatch a job */
+    DISPATCH_TYPE_FAST,          /* dispatched a sequential job */
+    DISPATCH_TYPE_FAST_SOFT_REQ, /* dispatch a sequential job with soft requests */
+    DISPATCH_TYPE_COMPREHENSIVE  /* dispatched a pe job*/
 };
 
 enum schedd_job_info_key {
@@ -47,6 +49,15 @@ enum schedd_job_info_key {
    SCHEDD_JOB_INFO_UNDEF
 };
 
+/* defines the algorithm that should be used to compute pe-ranges */
+typedef enum {
+   SCHEDD_PE_AUTO=-1,      /* automatic, the scheduler will decide */
+   SCHEDD_PE_LOW_FIRST=0,  /* least slot first */
+   SCHEDD_PE_HIGH_FIRST,   /* highest slot first */
+   SCHEDD_PE_BINARY,       /* binary search */
+   SCHEDD_PE_ALG_MAX       /* number of algorithms */    /* number of algorithms */
+} schedd_pe_algorithm;
+
 typedef enum {
    FIRST_POLICY_VALUE,
    INVALID_POLICY = FIRST_POLICY_VALUE,
@@ -54,7 +65,6 @@ typedef enum {
    OVERRIDE_POLICY,
    FUNCTIONAL_POLICY,
    SHARE_TREE_POLICY,
-/*removed   DEADLINE_POLICY,*/
 
    /* TODO: shouldn't LAST_POLICY_VALUE equal SHARE_TREE_POLICY? 
     * POLICY_VALUES = 4, should probably be 3
@@ -202,5 +212,17 @@ void sconf_set_last_dispatch_type(int changed);
 u_long32  sconf_get_duration_offset(void);
 
 bool serf_get_active(void);
+
+schedd_pe_algorithm sconf_best_pe_alg(void);
+void sconf_update_pe_alg(int runs, int current, int max);
+int  sconf_get_pe_alg_value(schedd_pe_algorithm alg);
+
+void sconf_inc_fast_jobs(void); 
+int sconf_get_fast_jobs(void); 
+   
+void sconf_inc_comprehensive_jobs(void); 
+int sconf_get_comprehensive_jobs(void);
+
+void sconf_reset_jobs(void);
 
 #endif /* __SGE_SCHEDD_CONF_H */

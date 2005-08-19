@@ -126,6 +126,7 @@
 
 static pthread_key_t   sc_state_key;  
 
+/* a scheduling configuration structure which is stored thread local */
 typedef struct {
    qs_state_t queue_state;
    bool       global_load_correction;
@@ -133,8 +134,31 @@ typedef struct {
    int        schedd_job_info;
    bool       host_order_changed;
    int        last_dispatch_type;
+   int        search_alg[SCHEDD_PE_ALG_MAX]; /* stores the weighting for the different algorithms*/
+   int        scheduled_comprehensive_jobs;        /* counts the dispatched pe jobs */
+   int        scheduled_fast_jobs;           /* counts the dispatched sequential jobs */
 }  sc_state_t; 
 
+/****** sge_schedd_conf/sc_state_init() ****************************************
+*  NAME
+*     sc_state_init() -- resets the thread local structure
+*
+*  SYNOPSIS
+*     static void sc_state_init(sc_state_t* state) 
+*
+*  FUNCTION
+*     resets the thread local structure, which collects information during
+*     a scheduling run.
+*
+*  INPUTS
+*     sc_state_t* state - the thread local structure
+*
+*  NOTES
+*     MT-NOTE: sc_state_init() is MT safe 
+*
+*  SEE ALSO
+*     sc_state_destroy
+*******************************************************************************/
 static void sc_state_init(sc_state_t* state) 
 {
    state->queue_state = QS_STATE_FULL;
@@ -143,6 +167,11 @@ static void sc_state_init(sc_state_t* state)
    state->schedd_job_info = SCHEDD_JOB_INFO_FALSE;
    state->host_order_changed = true;
    state->last_dispatch_type = 0;
+   state->search_alg[SCHEDD_PE_LOW_FIRST] = 0;
+   state->search_alg[SCHEDD_PE_HIGH_FIRST] = 0;
+   state->search_alg[SCHEDD_PE_BINARY] = 0;
+   state->scheduled_fast_jobs = 0;
+   state->scheduled_comprehensive_jobs = 0;
 }
 
 static void sc_state_destroy(void* state) 
@@ -243,6 +272,7 @@ typedef struct{
 static bool schedd_profiling = false;
 static bool is_category_job_filtering = false;
 static bool current_serf_do_monitoring = false;
+static schedd_pe_algorithm  pe_algorithm = SCHEDD_PE_AUTO;
 
 static bool calc_pos(void);
 
@@ -270,6 +300,10 @@ sconf_eval_set_job_category_filtering(lList *param_list, lList **answer_list,
                                       const char* param);
 static bool 
 sconf_eval_set_duration_offset(lList *param_list, lList **answer_list, const char* param);                                      
+
+static bool 
+sconf_eval_set_pe_range_alg(lList *param_list, lList **answer_list, const char* param); 
+
 static char policy_hierarchy_enum2char(policy_type_t value);
 
 static policy_type_t policy_hierarchy_char2enum(char character);
@@ -300,6 +334,7 @@ const parameters_t params[] = {
    {"MONITOR",         sconf_eval_set_monitoring},
    {"JC_FILTER",       sconf_eval_set_job_category_filtering},
    {"DURATION_OFFSET", sconf_eval_set_duration_offset},
+   {"PE_RANGE_ALG",    sconf_eval_set_pe_range_alg},
    {"NONE",            NULL},
    {NULL,              NULL}
 };
@@ -1244,6 +1279,144 @@ void sconf_disable_schedd_job_info()
 {
    GET_SPECIFIC(sc_state_t, sc_state, sc_state_init, sc_state_key, "sconf_disable_schedd_job_info");
    sc_state->schedd_job_info = SCHEDD_JOB_INFO_FALSE;
+}
+
+/****** sge_schedd_conf/sconf_best_pe_alg() ************************************
+*  NAME
+*     sconf_best_pe_alg() -- returns the alg to use for pe-range jobs
+*
+*  SYNOPSIS
+*     schedd_pe_algorithm sconf_best_pe_alg() 
+*
+*  FUNCTION
+*     It checks for the alg. to use. If the user did not set a custom one, it
+*     will evaluate the weights and return the most sucessful one.
+*
+*  RESULT
+*     schedd_pe_algorithm - pe-range alg.
+*
+*  NOTES
+*     MT-NOTE: sconf_best_pe_alg() is MT safe 
+*
+*  SEE ALSO
+*     sconf_best_pe_alg
+
+*******************************************************************************/
+schedd_pe_algorithm sconf_best_pe_alg() 
+{
+   schedd_pe_algorithm alg;
+
+   DENTER(TOP_LAYER, "sconf_best_pe_alg");
+
+   SGE_LOCK(LOCK_SCHED_CONF, LOCK_READ);
+   alg = pe_algorithm;
+   SGE_UNLOCK(LOCK_SCHED_CONF, LOCK_READ); 
+
+   if (alg != SCHEDD_PE_AUTO) {
+      DRETURN(alg);
+   }
+   else {
+      GET_SPECIFIC(sc_state_t, sc_state, sc_state_init, sc_state_key, "sconf_best_pe_alg");
+    
+      if ((sc_state->search_alg[SCHEDD_PE_BINARY] >= sc_state->search_alg[SCHEDD_PE_LOW_FIRST]) &&
+          (sc_state->search_alg[SCHEDD_PE_BINARY] >= sc_state->search_alg[SCHEDD_PE_HIGH_FIRST])) {
+         DRETURN(SCHEDD_PE_BINARY);
+      }
+      else if (sc_state->search_alg[SCHEDD_PE_HIGH_FIRST] >= sc_state->search_alg[SCHEDD_PE_LOW_FIRST]){
+         DRETURN(SCHEDD_PE_HIGH_FIRST);
+      }
+      else {
+         DRETURN(SCHEDD_PE_LOW_FIRST);
+      }
+   }
+}
+
+/****** sge_schedd_conf/sconf_update_pe_alg() **********************************
+*  NAME
+*     sconf_update_pe_alg() -- updates the weights for the different algorithms
+*
+*  SYNOPSIS
+*     void sconf_update_pe_alg(int runs, int current, int max) 
+*
+*  FUNCTION
+*     updates the weights for the different algorithms. Since the alg. with
+*     the bigest number is taken, the numbers are negative. It uses the running
+*     averages to ensure, that the numbers are not getting to big and that the
+*     scheduler can reakt to changes. 
+*
+*
+*  INPUTS
+*     int runs    - number of runs it would have taken with the bin search alg.
+*     int current - number of runs it took
+*     int max     - max runs
+*
+*  NOTES
+*     MT-NOTE: sconf_update_pe_alg() is MT safe 
+*
+*  SEE ALSO
+*     sconf_best_pe_alg
+*
+*******************************************************************************/
+void sconf_update_pe_alg(int runs, int current, int max) 
+{
+   const int HISTORY = 66;
+   const int PRESENT = 34;
+
+   if (max > 1) {
+      int low_run = current+1;
+      int high_run = max - current+1;
+      GET_SPECIFIC(sc_state_t, sc_state, sc_state_init, sc_state_key, "sconf_update_pe_alg");
+
+      /* we calculate 2 digits behind the commma*/
+      runs *= 100;
+      low_run *= 100;
+      high_run *= 100;
+
+      sc_state->search_alg[SCHEDD_PE_BINARY]     = (sc_state->search_alg[SCHEDD_PE_BINARY]     * HISTORY) / 100;
+      sc_state->search_alg[SCHEDD_PE_HIGH_FIRST] = (sc_state->search_alg[SCHEDD_PE_HIGH_FIRST] * HISTORY) / 100;
+      sc_state->search_alg[SCHEDD_PE_LOW_FIRST]  = (sc_state->search_alg[SCHEDD_PE_LOW_FIRST]  * HISTORY) / 100; 
+
+      sc_state->search_alg[SCHEDD_PE_BINARY]     -= runs     * PRESENT / 100;
+      sc_state->search_alg[SCHEDD_PE_LOW_FIRST]  -= low_run  * PRESENT / 100;
+      sc_state->search_alg[SCHEDD_PE_HIGH_FIRST] -= high_run * PRESENT / 100;
+   }
+}
+
+int sconf_get_pe_alg_value(schedd_pe_algorithm alg)
+{
+   GET_SPECIFIC(sc_state_t, sc_state, sc_state_init, sc_state_key, "sconf_update_pe_alg");
+   return sc_state->search_alg[alg];
+}
+
+void sconf_inc_fast_jobs(void) 
+{
+   GET_SPECIFIC(sc_state_t, sc_state, sc_state_init, sc_state_key, "sconf_inc_fast_jobs");
+   sc_state->scheduled_fast_jobs++;
+}
+
+int sconf_get_fast_jobs(void) 
+{
+   GET_SPECIFIC(sc_state_t, sc_state, sc_state_init, sc_state_key, "sconf_get_fast_jobs");
+   return sc_state->scheduled_fast_jobs;
+}
+
+void sconf_inc_comprehensive_jobs(void) 
+{
+   GET_SPECIFIC(sc_state_t, sc_state, sc_state_init, sc_state_key, "sconf_inc_fast_jobs");
+   sc_state->scheduled_comprehensive_jobs++;
+}
+
+int sconf_get_comprehensive_jobs(void) 
+{
+   GET_SPECIFIC(sc_state_t, sc_state, sc_state_init, sc_state_key, "sconf_get_fast_jobs");
+   return sc_state->scheduled_comprehensive_jobs;
+}
+
+void sconf_reset_jobs(void)
+{
+   GET_SPECIFIC(sc_state_t, sc_state, sc_state_init, sc_state_key, "sconf_reset_jobs");
+   sc_state->scheduled_fast_jobs = 0;
+   sc_state->scheduled_comprehensive_jobs = 0;
 }
 
 /****** sge_schedd_conf/sconf_get_schedd_job_info() ****************************
@@ -2764,6 +2937,7 @@ bool sconf_validate_config_(lList **answer_list)
       is_category_job_filtering = false;
       current_serf_do_monitoring = false;
       pos.s_duration_offset = DEFAULT_DURATION_OFFSET; 
+      pe_algorithm = SCHEDD_PE_AUTO;
 
       if (sparams) {
          struct saved_vars_s *context = NULL;
@@ -3504,6 +3678,49 @@ static bool sconf_eval_set_duration_offset(lList *param_list, lList **answer_lis
    return true;
 }
 
+/****** sge_schedd_conf/sconf_eval_set_pe_range_alg() **************************
+*  NAME
+*     sconf_eval_set_pe_range_alg() -- parses the sched. param
+*
+*  SYNOPSIS
+*     static bool sconf_eval_set_pe_range_alg(lList *param_list, lList 
+*     **answer_list, const char* param) 
+*
+*  RESULT
+*     static bool - true, if successful
+*
+*  NOTES
+*     MT-NOTE: sconf_eval_set_pe_range_alg() is not MT safe, caller needs LOCK_SCHED_CONF(write)
+*
+*******************************************************************************/
+static bool sconf_eval_set_pe_range_alg(lList *param_list, lList **answer_list, const char* param)
+{
+   char *s;
+
+   DENTER(TOP_LAYER, "sconf_eval_set_monitoring");
+   
+   if ((s=strchr(param, '=')) != NULL) {
+      s++;
+      if (strncasecmp(s, "auto", sizeof("auto")-1)  == 0) {
+          pe_algorithm = SCHEDD_PE_AUTO;
+      }
+      else if (strncasecmp(s, "least", sizeof("least")-1)  == 0) {
+          pe_algorithm = SCHEDD_PE_LOW_FIRST;
+      }
+      else if (strncasecmp(s, "bin", sizeof("bin")-1)  == 0) {
+          pe_algorithm = SCHEDD_PE_BINARY;
+      }
+      else if (strncasecmp(s, "highest", sizeof("highest")-1)  == 0) {
+          pe_algorithm = SCHEDD_PE_HIGH_FIRST;
+      }
+      else {
+            DRETURN(false);
+      }
+      DRETURN(true);
+   }
+   
+   DRETURN(false);
+}
 
 /* 
    QS_STATE_FULL

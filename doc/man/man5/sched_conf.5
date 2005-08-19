@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sched_conf.5,v $     Last Update: $Date: 2005/06/22 14:41:53 $     Revision: $Revision: 1.25 $
+.\" $RCSfile: sched_conf.5,v $     Last Update: $Date: 2005/08/19 12:53:10 $     Revision: $Revision: 1.26 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH SCHED_CONF 5 "$Date: 2005/06/22 14:41:53 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH SCHED_CONF 5 "$Date: 2005/08/19 12:53:10 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 sched_conf \- xxQS_NAMExx default scheduler configuration file
@@ -373,6 +373,20 @@ each scheduling run.
 .IP "\fIMONITOR\fP"
 If set equal to 1, the scheduler records information for each scheduling run allowing 
 to reproduce job resources utilization in the file \fI<xxqs_name_sxx_root>/<cell>/common/schedule\fP.\"
+.\"
+.IP "\fISELECT_PE_RANGE_ALG\fP"
+This param sets the algorthim for the pe range computation. The default is automatic, which
+means that the sheduler will select the best one and it should not be necessary to 
+change it to a different setting in normal operation. If a custom setting is needed, the 
+following values are available:
+.br
+auto       : the scheduler selects the best algorithm
+.br
+least      : starts the resource-matching with the least slot amount first
+.br
+bin        : starts the resource-matching in the middle of the pe slot range
+.br
+highest    : starts the resource-matching with the highest slot amount first
 .\"
 .PP
 Changing \fBparams\fP will take immediate effect.

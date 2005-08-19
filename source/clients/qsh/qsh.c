@@ -102,7 +102,7 @@ static int start_client_program(const char *client_name,
                                 int sock);
 static int get_client_server_context(int msgsock, char **port, char **job_dir, char **utilbin_dir, const char **host);
 /* static char *get_rshd_name(char *hostname); */
-static const char *get_client_name(int is_rsh, int is_rlogin, int inherit_job);
+static char *get_client_name(int is_rsh, int is_rlogin, int inherit_job);
 /* static char *get_master_host(lListElem *jep); */
 static void set_job_info(lListElem *job, const char *name, int is_qlogin, int is_rsh, int is_rlogin);
 /* static lList *parse_script_options(lList *opts_cmdline); */
@@ -921,11 +921,11 @@ static int get_client_server_context(int msgsock, char **port, char **job_dir, c
 *     It is in the responsibility of the caller to free the client name!
 *
 *  MT-NOTE
-*     get_client_name is NOT thread safe due to static buffer.
+*     get_client_name is thread safe 
 ****************************************************************************
 *
 */
-static const char *get_client_name(int is_rsh, int is_rlogin, int inherit_job)
+static char *get_client_name(int is_rsh, int is_rlogin, int inherit_job)
 {
    lList     *conf_list       = NULL;
    lListElem *global          = NULL; 
@@ -934,8 +934,8 @@ static const char *get_client_name(int is_rsh, int is_rlogin, int inherit_job)
 
    static char *session_type = "telnet";
    char        *config_name  = "qlogin_command";
-   const char  *client_name  = NULL;
-   static char cache_name[SGE_PATH_MAX];
+   const char *client_name  = NULL;
+   char cache_name[SGE_PATH_MAX];
 
    DENTER(TOP_LAYER, "get_client_name");
 
@@ -961,7 +961,7 @@ static const char *get_client_name(int is_rsh, int is_rlogin, int inherit_job)
                fclose(cache);
                DPRINTF(("found cached client name: %s\n", cache_name));
                DEXIT;
-               return cache_name;
+               return strdup(cache_name);
             }
          }
       }
@@ -1011,13 +1011,11 @@ static const char *get_client_name(int is_rsh, int is_rlogin, int inherit_job)
       write_client_name_cache(cache_name, client_name);
    }
 
-   client_name = strdup(client_name);
-
    lFreeList(&conf_list);
    lFreeElem(&global);
    lFreeElem(&local);
 
-   return client_name;
+   return strdup(client_name);
 }
 
 /****** Interactive/qsh/write_client_name_cache() ******************************
@@ -1223,7 +1221,7 @@ int main(int argc, char **argv)
 
    const char *host = NULL;
    char name[MAX_JOB_NAME + 1];
-   const char *client_name = NULL;
+   char *client_name = NULL;
    char *port = NULL;
    char *job_dir = NULL;
    char *utilbin_dir = NULL;

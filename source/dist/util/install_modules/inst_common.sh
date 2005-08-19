@@ -2200,7 +2200,7 @@ ExtractBackup()
             loop_stop="false"
          fi
       done
-      Makedir /tmp/bup_tmp_$DATE
+      mkdir /tmp/bup_tmp_$DATE # don't call here Makedir because $ADMINUSER is not set
       $INFOTEXT -n "\nCopying backupfile to /tmp/bup_tmp_%s\n" $DATE
       cp $bup_file /tmp/bup_tmp_$DATE
       cd /tmp/bup_tmp_$DATE/

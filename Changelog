@@ -1,3 +1,7 @@
+CR-2005-08-19-0: Bugfix:    o fixed broken backup restore script
+                 Changed:   dist/util/install_modules/inst_common.sh
+                 Review:    RD
+
 DT-2005-08-18-0: Testsuite: o Added tests for backslash line continuation
 
 RD-2005-08-16-0: Cleanup:   made the qmaster configuration thread safe

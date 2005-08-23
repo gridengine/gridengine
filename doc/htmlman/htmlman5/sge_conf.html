@@ -53,7 +53,13 @@ execd_spool_dir
      restrictions mentioned above need to be met, however).
 
      Being a parameter set at installation time changing the glo-
-     bal execd_spool_dir in a running system is not supported.
+     bal execd_spool_dir in a running system is not supported. If
+     the change should still be proceeded it is required to  res-
+     tart  all effected execution daemons.  Please make sure run-
+     ning jobs have finished before doing so.  If you do so  run-
+     ning jobs will be lost.
+
+
      The default location for the execution daemon  spool  direc-
      tory is &lt;sge_root&gt;/&lt;cell&gt;/spool.
 
@@ -97,20 +103,18 @@ load_sensor
 
      Each <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B> may use a set of private load_sensor  pro-
      grams  or  scripts.  Changing  load_sensor  will take effect
-     after two load report intervalls (see  load_report_time).  A
+     after two load report intervals  (see  load_report_time).  A
      load  sensor  will  be  restarted  automatically if the file
      modification time of the load sensor executable changes.
-
      The  global  configuration  entry  for  this  value  may  be
      overwritten by the execution host local configuration.
 
      In addition to the load sensors configured via  load_sensor,
-     <B><A HREF="../htmlman8/sge_exec.html">sge_exec(8)</A></B>   searches   for   an   executable   file  named
-     <I>qloadsensor</I> in  the  execution  host's  Grid  Engine  binary
-     directory path.  If such a file is found, it is treated like
-     the configurable load sensors defined in  load_sensor.  This
-     facility  is intended for pre-installing a default load sen-
-     sor.
+     <B><A HREF="../htmlman8/sge_exec.html">sge_exec(8)</A></B>  searches for an executable file named <I>qloadsen-</I>
+     <I>sor</I> in the execution host's  Grid  Engine  binary  directory
+     path.   If such a file is found, it is treated like the con-
+     figurable load sensors defined in load_sensor. This facility
+     is intended for pre-installing a default load sensor.
 
 prolog
      The executable path of a shell script that is started before
@@ -202,12 +206,11 @@ prolog
           job has run.
 
      $<I>fs</I>_<I>stdin</I>_<I>path</I>
-          When delgated file staging is requested for  the  stdin
+          When delegated file staging is requested for the  stdin
           file,  this  is  the  pathname of the stdin file on the
           host $fs_stdin_host.
 
      $<I>fs</I>_<I>stdout</I>_<I>path</I>
-
      $<I>fs</I>_<I>stderr</I>_<I>path</I>
           When  delegated  file  staging  is  requested  for  the
           stdout/stderr   file,  this  is  the  pathname  of  the
@@ -261,14 +264,14 @@ epilog
      dard  output  and the error output stream are written to the
      same file used also for the standard output and error output
      of  each job.  This procedure is intended as a means for the
-     Grid Engine  administrator  to  automate  the  execution  of
-     general  site  specific  tasks  like the cleaning up of tem-
-     porary file systems with  the  need  for  the  same  context
-     information as the job.  Each <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B> may use a private
-     epilogue script. Correspondingly, the execution  host  local
-     configurations is can be overwritten by the queue configura-
-     tion  (see  <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>  ).   Changing  epilog  will  take
-     immediate effect.
+     Grid Engine administrator to automate the execution of  gen-
+     eral  site  specific tasks like the cleaning up of temporary
+     file systems with the need for the same context  information
+     as  the  job.   Each <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B> may use a private epilogue
+     script. Correspondingly, the execution host local configura-
+     tions  is can be overwritten by the queue configuration (see
+     <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>  ).   Changing  epilog  will  take   immediate
+     effect.
 
      The default for epilog is  the  special  value  NONE,  which
      prevents  from  execution  of  a epilogue script.  The  same
@@ -364,8 +367,6 @@ login_shells
 
      Changes to login_shells will  take  immediate  effect.   The
      default for login_shells is sh,csh,tcsh,ksh.
-
-
      This value is a global configuration parameter only. It can-
      not  be  overwritten  by the execution host local configura-
      tion.
@@ -513,7 +514,7 @@ reschedule_unknown
      rescheduled  if the host on which their master task executes
      is  in  unknown  state.  Checkpointing  jobs  will  only  be
      rescheduled when the when option of the corresponding check-
-     pointing environment containes  an  appropriate  flag.  (see
+     pointing environment  contains  an  appropriate  flag.  (see
      <B><A HREF="../htmlman5/checkpoint.html">checkpoint(5)</A></B>).   Interactive  jobs  (see  <B><A HREF="../htmlman1/qsh.html">qsh(1)</A></B>,  <B><A HREF="../htmlman1/qrsh.html">qrsh(1)</A></B>,
      <B><A HREF="../htmlman1/qtcsh.html">qtcsh(1)</A></B>) are not rescheduled.
 
@@ -617,7 +618,7 @@ max_u_jobs
 
 max_jobs
      The number of  active  (not  finished)  jobs  simultaneously
-     allowed  in Grid Engine.  is controlled by this parameter. A
+     allowed  in  Grid  Engine is controlled by this parameter. A
      value greater than 0 defines the limit. The default value  0
      means  "unlimited".  If  the max_jobs limit is exceeded by a
      job submission then the submission command exits  with  exit
@@ -843,9 +844,9 @@ qmaster_params
           state  when  a starting condition of the application is
           not fulfilled before the application  itself  has  been
           started, or when a clean up procedure (e.g. in the epi-
-          log) decides that it  is  neccessary  to  run  the  job
-          again,  by  returning  100 in the prolog, pe_start, job
-          script, pe_stop or epilog script.
+          log) decides that it is necessary to run the job again,
+          by  returning  100 in the prolog, pe_start, job script,
+          pe_stop or epilog script.
 
      <I>DISABLE</I>_<I>AUTO</I>_<I>RESCHEDULING</I>
           If set to "true" or "1", the <I>reschedule</I>_<I>unknown</I> parame-
@@ -860,6 +861,41 @@ qmaster_params
           number of file descriptors are shared among the connec-
           tions to all exec hosts, all event  clients,  and  file
           handles that the qmaster needs.
+
+     <I>PROF</I>_<I>SIGNAL</I>
+          Profiling provides the user with the possibility to get
+          system  measurements.  This can be useful for debugging
+          or optimisation of the  system.  The  profiling  output
+          will be done within the messages file.
+
+          Enables the profiling for qmaster signal thread.  (e.g.
+          PROF_SIGNAL=true)
+
+     <I>PROF</I>_<I>MESSAGE</I>
+          Enables  the  profiling  for  qmaster  message  thread.
+          (e.g. PROF_MESSAGE=true)
+
+     <I>PROF</I>_<I>DELIVER</I>
+          Enables the profiling for qmaster event deliver thread.
+          (e.g. PROF_DELIVER=true)
+
+     <I>PROF</I>_<I>TEVENT</I>
+          Enables the profiling for qmaster timed  event  thread.
+          (e.g. PROF_TEVENT=true)
+
+     Please note, that the cpu utime and stime  values  contained
+     in the profiling output are not per thread cpu times.  These
+     cpu usage statistics are per  process  statistics.   So  the
+     printed  profiling values for cpu mean "cpu time consumed by
+     sge_qmaster (all threads) while the reported profiling level
+     was active".
+
+     <I>STREE</I>_<I>SPOOL</I>_<I>INTERVAL</I>
+          Sets the  time  interval  for  spooling  the  sharetree
+          usage.  The  default  is  set  to 00:04:00. The setting
+          accepts colon-separated string or seconds. There is  no
+          setting  to  turn  the  sharetree  spooling  off. (e.g.
+          STREE_SPOOL_INTERVAL=00:02:00)
 
      Changing qmaster_params will  take  immediate  effect.   The
      default for qmaster_params is none.
@@ -885,10 +921,10 @@ execd_params
           job.
 
      <I>PTF</I>_<I>MIN</I>_<I>PRIORITY</I>, <I>PTF</I>_<I>MAX</I>_<I>PRIORITY</I>
-          The maximum/minumum priority  which  Grid  Engine  will
-          assign  to a job.  Typically this is a negative/postive
+          The maximum/minimum priority  which  Grid  Engine  will
+          assign to a job.  Typically this is a negative/positive
           value in the range of -20 (maximum) to 19 (minimum) for
-          systems  which  allow  setting  of  priorties  with the
+          systems  which  allow  setting  of  priorities with the
           <B><A HREF="../htmlman2/nice.html">nice(2)</A></B> system call. Other  systems  may  provide  dif-
           ferent ranges.
           The default priority range (varies from system to  sys-
@@ -897,6 +933,11 @@ execd_params
           See the "messages" file of the execution daemon for the
           predefined  default value on your hosts. The values are
           logged during the startup of the execution daemon.
+
+     <I>PROF</I>_<I>EXECD</I>
+          Enables the profiling for the execution daemon.   (e.g.
+          PROF_EXECD=true)
+
 
      <I>NOTIFY</I>_<I>KILL</I>
           The parameter allows you  to  change  the  notification
@@ -944,6 +985,40 @@ execd_params
           rsh_command  parameters  may  not  be  changed from the
           default).
 
+     <I>INHERIT</I>_<I>ENV</I>
+          This parameter indicates whether  the  shepherd  should
+          allow the environment inherited by the execution daemon
+          from the shell that started it to be inherited  by  the
+          job it's starting.  When true, any environment variable
+          that is set in the shell  which  starts  the  execution
+          daemon at the time the execution daemon is started will
+          be set in the environment of any jobs run by that  exe-
+          cution  daemon,  unless  the  environment  variable  is
+          explictly overridden, such as PATH or LOGNAME.  If  set
+          to  false,  each  job  starts with only the environment
+          variables that are explicitly passed on by  the  execu-
+          tion  daemon,  such  as  PATH and LOGNAME.  The default
+          value is true.
+
+     <I>SET</I>_<I>LIB</I>_<I>PATH</I>
+          This parameter tells the execution  daemon  whether  to
+          add  the  Grid  Engine  shared library directory to the
+          library path of executed jobs.  If  set  to  true,  and
+          INHERIT_ENV is also set to true, the Grid Engine shared
+          library directory will be prepended to the library path
+          which  is  inherited  from  the shell which started the
+          execution daemon.  If INHERIT_ENV is set to false,  the
+          library  path  will contain only the Grid Engine shared
+          library directory.  If set to false, and INHERIT_ENV is
+          set  to true, the library path exported to the job will
+          be the one inherited from the shell which  started  the
+          execution daemon.  If INHERIT_ENV is also set to false,
+          the library path will be empty.   After  the  execution
+          daemon  has  set  the  library  path, it may be further
+          altered by the shell in which the job is  executed,  or
+          by  the  job  script  itself.   The  default  value for
+          SET_LIB_PATH is false.
+
 reporting_params
      Used to define the behaviour of  reporting  modules  in  the
      Grid  Engine  qmaster. Changes to the reporting_params takes
@@ -951,7 +1026,7 @@ reporting_params
 
      <I>accounting</I>
           If this parameter is set to true, the  accounting  file
-          is  written.   The  accounting  file is prerequisit for
+          is  written.   The  accounting file is prerequisite for
           using the qacct command.
 
      <I>reporting</I>
@@ -966,6 +1041,7 @@ reporting_params
           ning that will consume the reporting file!  See <I>report-</I>
           <B><A HREF="../htmlman5/ing.html">ing(5)</A></B>  for  further  information about format and con-
           tents of the reporting file.
+
 
      <I>flush</I>_<I>time</I>
           Contents of the accounting and the reporting  file  are
@@ -989,17 +1065,17 @@ reporting_params
           tree information will be dumped.  It is set in the for-
           mat HH:MM:SS. A value of  00:00:00  configures  qmaster
           not to dump sharetree information. Intervals of several
-          minutes up  to  hours  are  sensible  values  for  this
-          parameter.   See  <B><A HREF="../htmlman5/reporting.html">reporting(5)</A></B>  for further information
-          about sharelog.
+          minutes up to hours are sensible values for this param-
+          eter.   See  <B><A HREF="../htmlman5/reporting.html">reporting(5)</A></B> for further information about
+          sharelog.
 
 finished_jobs
      Grid Engine stores a certain number of <I>just</I> <I>finished</I> jobs to
      provide  post  mortem  status information. The finished_jobs
-     parameter defines the number of finshed jobs  being  stored.
-     If  this  maximum  number is reached, the eldest finshed job
-     will be discarded for every  new  job  being  added  to  the
-     finshed job list.
+     parameter defines the number of finished jobs being  stored.
+     If  this  maximum number is reached, the eldest finished job
+     will be discarded for every new job being added to the  fin-
+     ished job list.
 
      Changing finished_jobs  will  take  immediate  effect.   The
      default for finished_jobs is 0.
@@ -1017,6 +1093,7 @@ qlogin_daemon
 
      Changing qlogin_daemon  will  take  immediate  effect.   The
      default for qlogin_daemon is none.
+
 
      The  global  configuration  entry  for  this  value  may  be
      overwritten by the execution host local configuration.
@@ -1042,6 +1119,7 @@ rlogin_daemon
      the  fully qualified pathname of the system's rlogin daemon.
      If no value is given, a specialized Grid Engine component is
      used.
+
      Changing  rlogin_daemon  will  take  immediate  effect.  The
      default for rlogin_daemon is none.
 
@@ -1056,7 +1134,7 @@ rlogin_command
      specialized Grid Engine component is used.  The  command  is
      automatically  started  with the target host and port number
      as parameters like required for <B><A HREF="../htmlman1/telnet.html">telnet(1)</A></B>.  The Grid  Engine
-     rlogin  client  has  been extened to accept and use the port
+     rlogin  client  has been extended to accept and use the port
      number argument. You can only  use  clients,  such  as  <I>ssh</I>,
      which also understand this syntax.
 
@@ -1068,10 +1146,11 @@ rlogin_command
 
 rsh_daemon
      This parameter  specifies  the  executable  that  is  to  be
-     started  on the server side of a <B><A HREF="../htmlman1/qrsh.html">qrsh(1)</A></B> request with a com-
-     mand argument to be executed remotely.  Usually this is  the
-     fully  qualified  pathname of the system's rsh daemon. If no
-     value is given, a specialized Grid Engine component is used.
+     started  on  the  server  side  of  a <B><A HREF="../htmlman1/qrsh.html">qrsh(1)</A></B> request with a
+     command argument to be executed remotely.  Usually  this  is
+     the  fully qualified pathname of the system's rsh daemon. If
+     no value is given, a specialized Grid  Engine  component  is
+     used.
 
      Changing rsh_daemon will take immediate effect. The  default
      for rsh_daemon is none.
@@ -1088,12 +1167,13 @@ rsh_command
      automatically  started  with the target host and port number
      as parameters like required for <B><A HREF="../htmlman1/telnet.html">telnet(1)</A></B> plus  the  command
      with  its arguments to be executed remotely. The Grid Engine
-     rsh client has been extened  to  accept  and  use  the  port
+     rsh client has been extended to  accept  and  use  the  port
      number  argument.  You  can  only  use clients, such as <I>ssh</I>,
      which also understand this syntax.
 
      Changing rsh_command will take immediate effect. The default
      for rsh_command is none.
+
      The  global  configuration  entry  for  this  value  may  be
      overwritten by the execution host local configuration.
 
@@ -1111,6 +1191,14 @@ delegated_file_staging
      the error handling mechanism can handle the error correctly.
      (See also FORBID_APPERROR).
 
+reprioritize
+     This flag enables or disables the reprioritization  of  jobs
+     based  on  their  ticket  amount.  The reprioritize_interval
+     takes only affect  if  reprioritize  is  set  to  true  (the
+     default). In case one wants to turn off the reprioritization
+     of jobs, one should set the reprioritize flag to  false  and
+     the reprioritize_interval to 0.
+
 SEE ALSO
      <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>,  <B><A HREF="../htmlman1/csh.html">csh(1)</A></B>,  <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>,  <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>,  <B><A HREF="../htmlman1/rsh.html">rsh(1)</A></B>,  <B><A HREF="../htmlman1/sh.html">sh(1)</A></B>,
      <B><A HREF="../htmlman3/getpwnam.html">getpwnam(3)</A></B>,       <B><A HREF="../htmlman3/drmaa_attributes.html">drmaa_attributes(3)</A></B>,       <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>,
@@ -1121,6 +1209,23 @@ SEE ALSO
 COPYRIGHT
      See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
      sions.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

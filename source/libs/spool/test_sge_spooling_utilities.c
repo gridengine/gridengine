@@ -109,8 +109,8 @@ int main(int argc, char *argv[])
    fields = spool_free_spooling_fields(fields);
 
    /* cleanup */
-   queue = lFreeElem(queue);
-   copy  = lFreeElem(copy);
+   lFreeElem(&queue);
+   lFreeElem(&copy);
 
    sge_dstring_free(&queue_str);
    sge_dstring_free(&copy_str);

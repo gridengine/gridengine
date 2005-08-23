@@ -92,7 +92,7 @@ int flags
       DEXIT;
       return alp;
    }
-   lFreeList(alp);
+   lFreeList(&alp);
 
    alp = write_defaults_file(cmdline, filename, flags);
    for_each(aep, alp) {
@@ -106,7 +106,7 @@ int flags
       DEXIT;
       return alp;
    }
-   lFreeList(alp);
+   lFreeList(&alp);
    
    DEXIT;
    return NULL;

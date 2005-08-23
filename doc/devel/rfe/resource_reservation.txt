@@ -18,7 +18,7 @@
    Resource Reservation 
       A job-specific reservation created by the scheduler for pending 
       jobs. During the reservation the resources are blocked for lower 
-      prior jobs.
+      priority jobs.
 
    Backfilling
       The process of starting jobs of the job priority list despite of 
@@ -59,8 +59,8 @@
    to jobs in jobs priority order. A good example which helps to comprehend 
    the problem solved with resource reservaiton/backfilling is the so-called 
    "large parallel job starvation problem". In this scenario there is one 
-   high prior pending job (possibly parallel) A that requires a larger quota 
-   of a particular resource and a stream of smaller and lower prior jobs B(i) 
+   high priority pending job (possibly parallel) A that requires a larger quota 
+   of a particular resource and a stream of smaller and lower priority jobs B(i) 
    requiring a smaller quota of the same resource.
  
    Without resource reservation an assignment for A can not be guaranteed
@@ -77,7 +77,7 @@
         
     
    With resource reservation job A gets a reservation that blocks lower 
-   prior B(i) jobs and thus guarantees resources will be available for
+   priority B(i) jobs and thus guarantees resources will be available for
    A as soon as possible:
 
         A
@@ -94,8 +94,8 @@
    a reservation by jobs of lower priority. Backfilling can take place only 
    if there is a runnable job with a prospective runtime small enough to allow 
    the blocked resource be used without endangering the reservation of a job
-   with high priority. In the example above a low prior job C of very short 
-   duration could be started prior A due to backfilling.
+   with high priority. In the example above a low priority job C of very short 
+   duration could be started prior to job A due to backfilling.
 
         A
         |                     
@@ -215,7 +215,7 @@
      <jobid>:         The jobs id.
      <taskid>:        The array task id or 1 in case of non-array jobs.
      <state>:         One of RUNNING/SUSPENDED/MIGRATING/STARTING/RESERVING.
-     <start_time>:    Start time in seconds after 1.1.1070.
+     <start_time>:    Start time in seconds after 1.1.1970.
      <duration>:      Assumed job duration in seconds.
      <level_char>:    One of {P,G,H;Q} standing for {PE,Global,Host,Queue}.
      <object_name>:   The name of the PE/global/host/queue.
@@ -293,7 +293,7 @@
    >          irrespective of the reservation request job reservation
    >          might   be   disabled    using    max_reservation    in
    >          sched_conf(5)  and  might  be limited only to a certain
-   >          number of high prior jobs.
+   >          number of high priority jobs.
    >
    >          By default jobs are submitted with -R n option.
    >
@@ -353,3 +353,134 @@
    >           $SGE_ROOT/<cell>/common/schedule.
    > 
 
+   yet another parameter was added to scheduler configuration 
+   sched_conf(5) to allow for modeling difference between net and gross
+   job runtimes:
+
+   >      DURATION_OFFSET
+   >           If set overrides the default  of  60  seconds  that  is
+   >           assumed  as  offset by N1GE scheduler when plan-
+   >           ning resource utilization  as  delta  between  net  job
+   >           runtimes  and  gross time until resources are available
+   >           again. Jobs net runtime as specified with  -l  h_rt=...
+   >           or  -l  s_rt=... or default_duration always differ from
+   >           jobs gross runtime  due  to  delays  before  and  after
+   >           actual job start. Amongst these delays before job start
+   >           is the time until the end of a  schedule_interval,  the
+   >           time  it takes to deliver a job to sge_execd(8) and the
+   >           delays prolog in  queue_conf(5)  ,  start_proc_args  in
+   >           sge_pe(5)   and  starter_method  in  queue_conf(5)  may
+   >           effectuate.  The  delays  after  a  jobs   actual   run
+   >           comprises  delays  due  to  a  forced  job  termination
+   >           (notify, terminate_method or checkpointing),  procedure
+   >           runs  after  acutal job finished such as stop_proc_args
+   >           in sge_pe(5) or epilog in queue_conf(5) and  the  delay
+   >           until a new schedule_interval.
+   >           If the offset is too  low  resource  reservations  (see
+   >           max_reservation) can be delayed repeatedly due to a too
+   >           optistic job circulation time.
+
+4. Implementation
+
+   For the reservation scheduling major reconstructions in scheduling code
+   were made. The new algorithm consists of parts that can be used both for 
+   sequential and parallel jobs and other parts where handling of sequential
+   and parallel jobs differs. Important steps of the algorithm with all parts
+   are summarized at large:
+
+   a) Common part of the algorithm that is used both for sequential and 
+      parallel jobs
+   
+      * jobs are processed in priority order to find suited assignments
+        (dispatch_jobs()) 
+
+      * if possible we try to make an assignment to start the job immediately
+        otherwise a reservation is made afterwards (select_assign_debit())
+
+      past that stage the algorithm splits for sequential and parallel jobs.
+
+   b) Parts of the algorithm that are used for sequential jobs only 
+   
+      * for sequential job assignments all the earliest job start time
+        is determined with each queue instance and the earliest one gets 
+        chosen. Secondary criterion for queue selection minimizing jobs soft 
+        requests (sge_sequential_assignment())
+
+      * for determining earliest start time per queue at first the earliest 
+        start time due to cluster-wide (=global) resource availability is 
+        determined, then for each queue instance the earliest start time due 
+        to host resource availability and due to queue instance resource 
+        availability is determined (sequential_tag_queues_suitable4job()) 
+
+      * for sequential jobs determining the earliest start time due to resource 
+        availability is done by ensuring various constraints are fulfulled and 
+        then determining earliest start time with resources of a resource 
+        container are fulfilled (sequential_queue_time(), 
+        sequential_global_time(), sequential_host_time())
+
+      * the earliest start time due to resources of a resource container is the 
+        maximum of the earliest start times for all resources comprised by the 
+        resource container that requested by a job (rc_time_by_slots())
+
+      * the earliest start time due to availability of a resource is determined 
+        by ensuring non-consumable resource requests are fulfilled or by finding
+        the earliest time utilization of a consumable resource is below the 
+        threshold required for the request (ri_time_by_slots())
+
+      * the earliest time a utilization is below a threshold is determined by
+        searching backwards in resource utilization diagrams (utilization_below())
+   
+   c) Parts of the algorithzm that are used for parallel jobs only 
+
+      * for parallel job assignments all the earliest job start time
+        of all parallel environments matching the parallel environment request
+        is determined by determining the earliest start time with each eligable
+        parallel environment. The earliest parallel environment is chosen. 
+        Afterwards for the chosen parallel environment assignment the slot amount 
+        is maximized in case of a slot range request 
+        (sge_select_parallel_environment())
+
+      * the earliest job start time for a parallel environment is determined
+        by iterating through all times where resource utilization within the 
+        schedule actually changes concerning the consumable resources requested 
+        by the job and checking whether resources would be sufficient for the 
+        job at that particular time. As an optimization for the time iteration 
+        a queue end time iterator (QETI) is used (parallel_reservation_max_time_slots()) 
+
+      * checking whether resources would be sufficient at a particular time with
+        a parallel environment is done by checking at first whether the 'slot' 
+        resource of the parallel environment is sufficient and then whether remaining
+        job resource requests can be fulfilled (parallel_assignment()) 
+
+      * checking whether remaining resources meet the request of the parallel job 
+        at a particular time is done by checking whether cluster-wide (=global) 
+        resources are sufficient and whether the slots available on all eligable 
+        hosts together(!) are sufficient for the parallel job
+        (parallel_tag_queues_suitable4job())
+
+      * at each host the number of slots available at a particular time for the 
+        parallel job is determined as the minimum of the slots available 
+        due to resource availability on a host at one hand and the slots
+        available on all eligable queues together(!) for the parallel job
+        (parallel_tag_hosts_queues)
+       
+      * the number of slots available for a parallel job at a particular time
+        in a resource container is determined by ensuring various constraints
+        are met and then determining the number of slots available due to 
+        resource requests and resource availability at the particular time
+        (parallel_queue_slots(), parallel_host_slots(), parallel_global_slots(),
+        parallel_available_slots())
+
+      * the number of slots available for a parallel job at a particular time
+        in a resource container is determined as the minimum of the slots 
+        available for all resources requested by the job and limited
+        in the resource container (rc_slots_by_time())
+
+      * the number of slots available with a resource can be zero for static 
+        resources or is determined based on maximum utilization within the 
+        specific time frame, the total amount of the resource and the per
+        task request of the parallel job (ri_slots_by_time())
+      
+      * the maximum utilization within a time frame is determined based
+        on information in resource utilization diagram for the consumable 
+        resource (utilization_max())

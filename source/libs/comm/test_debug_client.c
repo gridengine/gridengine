@@ -43,8 +43,6 @@
 #include "basis_types.h"
 
 void sighandler_client(int sig);
-static int pipe_signal = 0;
-static int hup_signal = 0;
 static int do_shutdown = 0;
 static cl_com_handle_t* handle = NULL; 
 
@@ -93,12 +91,10 @@ int sig
 ) {
 /*   thread_signal_receiver = pthread_self(); */
    if (sig == SIGPIPE) {
-      pipe_signal = 1;
       return;
    }
 
    if (sig == SIGHUP) {
-      hup_signal = 1;
       return;
    }
    printf("do_shutdown\n");
@@ -243,7 +239,7 @@ extern int main(int argc, char** argv)
 
 
   printf("startup commlib ...\n");
-  cl_com_setup_commlib(CL_NO_THREAD ,atoi(argv[1]), NULL );
+  cl_com_setup_commlib(CL_NO_THREAD, (cl_log_t)atoi(argv[1]), NULL );
 
   printf("setting up handle for connect port %d\n", atoi(argv[2]) );
   handle=cl_com_create_handle(NULL,CL_CT_TCP,CL_CM_CT_STREAM, CL_FALSE, atoi(argv[2]), /* CL_TCP_DEFAULT*/ CL_TCP_RESERVED_PORT ,"debug_client", 0, 1,0 );
@@ -264,7 +260,7 @@ extern int main(int argc, char** argv)
      cl_com_message_t*  message = NULL;
      cl_com_endpoint_t* sender  = NULL;
 
-     cl_commlib_trigger(handle);
+     cl_commlib_trigger(handle, 1);
      retval = cl_commlib_receive_message(handle, NULL, NULL, 0,      /* handle, comp_host, comp_name , comp_id, */
                                          CL_FALSE, 0,                 /* syncron, response_mid */
                                          &message, &sender );

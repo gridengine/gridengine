@@ -42,10 +42,6 @@
 #include <sys/resource.h>
 #include <sys/wait.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif
-
 #include "sge_string.h"
 #include "setup.h"
 #include "sge_unistd.h"
@@ -69,6 +65,7 @@
 #include "sge_spool.h"
 #include "qevent.h"
 #include "sge_profiling.h"
+#include "sge_mt_init.h"
 
 
 #if defined(SOLARIS) || defined(ALPHA)
@@ -130,7 +127,6 @@ bool print_event(sge_object_type type, sge_event_action action,
 bool print_jatask_event(sge_object_type type, sge_event_action action, 
                 lListElem *event, void *clientdata)
 {
-   int pos;
    char buffer[1024];
    u_long32 timestamp;
    dstring buffer_wrapper;
@@ -144,7 +140,7 @@ bool print_jatask_event(sge_object_type type, sge_event_action action,
 
    DPRINTF(("%s\n", event_text(event, &buffer_wrapper)));
 /*    fprintf(stdout,"%s\n",event_text(event, &buffer_wrapper)); */
-   if ((pos=lGetPosViaElem(event, ET_type))>=0) {
+   if (lGetPosViaElem(event, ET_type) >= 0) {
       u_long32 type = lGetUlong(event, ET_type);
       if (type == sgeE_JATASK_MOD) { 
          lList *jat = lGetList(event,ET_new_version);
@@ -155,7 +151,7 @@ bool print_jatask_event(sge_object_type type, sge_event_action action,
          int task_running = (job_status==JRUNNING || job_status==JTRANSFERING);
 
          if (task_running) {
-            fprintf(stdout,"JOB_START (%ld.%ld:ECL_TIME="U32CFormat")\n", job_id ,task_id,u32c(timestamp));
+            fprintf(stdout,"JOB_START (%ld.%ld:ECL_TIME="sge_U32CFormat")\n", job_id ,task_id,sge_u32c(timestamp));
             fflush(stdout);  
             Global_jobs_running++;
          }
@@ -168,7 +164,7 @@ bool print_jatask_event(sge_object_type type, sge_event_action action,
          u_long job_id = lGetUlong(event, ET_intkey);
          u_long task_id = lGetUlong(event, ET_intkey2);
          /* lWriteElemTo(event, stdout); */
-         fprintf(stdout,"JOB_FINISH (%ld.%ld:ECL_TIME="U32CFormat")\n", job_id, task_id,u32c(timestamp));
+         fprintf(stdout,"JOB_FINISH (%ld.%ld:ECL_TIME="sge_U32CFormat")\n", job_id, task_id,sge_u32c(timestamp));
          Global_jobs_running--;
          fflush(stdout);  
       }
@@ -181,14 +177,14 @@ bool print_jatask_event(sge_object_type type, sge_event_action action,
          if (job_project == NULL) {
             job_project = "NONE";
          }
-         fprintf(stdout,"JOB_ADD (%ld.%ld:ECL_TIME="U32CFormat":project=%s)\n", job_id, task_id, u32c(timestamp),job_project);
+         fprintf(stdout,"JOB_ADD (%ld.%ld:ECL_TIME="sge_U32CFormat":project=%s)\n", job_id, task_id, sge_u32c(timestamp),job_project);
          Global_jobs_registered++;
          fflush(stdout);  
       }
       if (type == sgeE_JOB_DEL) { 
          u_long job_id  = lGetUlong(event, ET_intkey);
          u_long task_id = lGetUlong(event, ET_intkey2);
-         fprintf(stdout,"JOB_DEL (%ld.%ld:ECL_TIME="U32CFormat")\n", job_id, task_id,u32c(timestamp));
+         fprintf(stdout,"JOB_DEL (%ld.%ld:ECL_TIME="sge_U32CFormat")\n", job_id, task_id,sge_u32c(timestamp));
          Global_jobs_registered--;
          fflush(stdout);  
       }
@@ -208,17 +204,13 @@ bool print_jatask_event(sge_object_type type, sge_event_action action,
 bool analyze_jatask_event(sge_object_type type, sge_event_action action, 
                 lListElem *event, void *clientdata)
 {
-   int pos;
    char buffer[1024];
-   u_long32 timestamp;
    dstring buffer_wrapper;
 
 
    sge_dstring_init(&buffer_wrapper, buffer, sizeof(buffer));
    
-   timestamp = sge_get_gmt();
-
-   if ((pos=lGetPosViaElem(event, ET_type))>=0) {
+   if (lGetPosViaElem(event, ET_type) >= 0) {
       u_long32 type = lGetUlong(event, ET_type);
 
       if (type == sgeE_JATASK_MOD) { 
@@ -311,7 +303,6 @@ static void qevent_start_trigger_script(int qevent_event, const char* script_fil
    }
 
    if (pid > 0) {
-      int pid2;
       int exit_status;
 
 #if !(defined(CRAY) || defined(INTERIX))
@@ -324,9 +315,9 @@ static void qevent_start_trigger_script(int qevent_event, const char* script_fil
          int status;
 #endif
 #if defined(CRAY) || defined(INTERIX)
-         pid2 = waitpid(pid, &status, 0);
+         waitpid(pid, &status, 0);
 #else
-         pid2 = wait3(&status, 0, &rusage);
+         wait3(&status, 0, &rusage);
 #endif
 #if defined(SVR3) || defined(_BSD)
          exit_status = status.w_retcode;
@@ -335,9 +326,9 @@ static void qevent_start_trigger_script(int qevent_event, const char* script_fil
 #endif
 
       if ( WEXITSTATUS(exit_status) == 0 ) {
-         INFO((SGE_EVENT,"exit status of script: "U32CFormat"\n", u32c(WEXITSTATUS(exit_status))));
+         INFO((SGE_EVENT,"exit status of script: "sge_U32CFormat"\n", sge_u32c(WEXITSTATUS(exit_status))));
       } else {
-         ERROR((SGE_EVENT,"exit status of script: "U32CFormat"\n", u32c(WEXITSTATUS(exit_status))));
+         ERROR((SGE_EVENT,"exit status of script: "sge_U32CFormat"\n", sge_u32c(WEXITSTATUS(exit_status))));
       }
       DEXIT;
       return;
@@ -345,8 +336,8 @@ static void qevent_start_trigger_script(int qevent_event, const char* script_fil
       
       /*      SETPGRP;  */
       /*      sge_close_all_fds(NULL); */
-      sprintf(buffer  ,""U32CFormat"",u32c(jobid));
-      sprintf(buffer2 ,""U32CFormat"",u32c(taskid)); 
+      sprintf(buffer  ,""sge_U32CFormat"",sge_u32c(jobid));
+      sprintf(buffer2 ,""sge_U32CFormat"",sge_u32c(taskid)); 
       execlp( script_file , sge_basename( script_file, '/' ), event_name, buffer, buffer2, 0 );
    }
    exit(1);
@@ -400,8 +391,8 @@ static void qevent_parse_command_line(int argc, char **argv, qevent_options *opt
          int ok = 0;
          if (option_struct->trigger_option_count >= MAX_TRIGGER_SCRIPTS ) {
             sge_dstring_sprintf(option_struct->error_message,
-                                "option \"-trigger\": only "U32CFormat" trigger arguments supported\n",
-                                u32c(MAX_TRIGGER_SCRIPTS) );
+                                "option \"-trigger\": only "sge_U32CFormat" trigger arguments supported\n",
+                                sge_u32c(MAX_TRIGGER_SCRIPTS) );
             break; 
          }
 
@@ -475,12 +466,12 @@ int main(int argc, char *argv[])
    qevent_options enabled_options;
    dstring errors = DSTRING_INIT;
    lList *alp = NULL;
-   int ret,i,gdi_setup;
+   int i,gdi_setup;
 
 
    DENTER_MAIN(TOP_LAYER, "qevent");
 
-   sge_prof_setup();
+   sge_mt_init();
 
    /* dump pid to file */
    qevent_dump_pid_file();
@@ -524,7 +515,7 @@ int main(int argc, char *argv[])
 
    sge_setup_sig_handlers(QEVENT);
 
-   if ((ret = reresolve_me_qualified_hostname()) != CL_RETVAL_OK) {
+   if (reresolve_me_qualified_hostname() != CL_RETVAL_OK) {
       sge_dstring_free(enabled_options.error_message);
       SGE_EXIT(1);
    }
@@ -575,8 +566,8 @@ int main(int argc, char *argv[])
                /*   ec_unsubscribe(sgeE_JOB_ADD); */
                   
                   /* free the what and where mask */
-                  where = lFreeWhere(where);
-                  what = lFreeWhat(what);
+                  lFreeWhere(&where);
+                  lFreeWhat(&what);
                break;
             case QEVENT_JB_TASK_END:
             
@@ -594,8 +585,8 @@ int main(int argc, char *argv[])
                   ec_unsubscribe(sgeE_JATASK_MOD);
 
                   /* free the what and where mask */
-                  where = lFreeWhere(where);
-                  what = lFreeWhat(what);
+                  lFreeWhere(&where);
+                  lFreeWhat(&what);
                break;
          }        
       }
@@ -680,24 +671,24 @@ void qevent_testsuite_mode(void)
     what =  lIntVector2What(JB_Type, job_nm); 
 
    sge_mirror_subscribe(SGE_TYPE_JOB, print_jatask_event, NULL, NULL, where, what);
-   where = lFreeWhere(where);
-   what = lFreeWhat(what);
+   lFreeWhere(&where);
+   lFreeWhat(&what);
    
    where = NULL; 
    what = lIntVector2What(JAT_Type, jat_nm); 
 
    sge_mirror_subscribe(SGE_TYPE_JATASK, print_jatask_event, NULL, NULL, where, what);
-   where = lFreeWhere(where);
-   what = lFreeWhat(what);
+   lFreeWhere(&where);
+   lFreeWhat(&what);
  
    /* we want a 5 second event delivery interval */
    ec_set_edtime(5);
 
    /* and have our events flushed immediately */
-   ec_set_flush(sgeE_JATASK_MOD, true, 0);
-   ec_set_flush(sgeE_JOB_FINAL_USAGE, true, 0);
-   ec_set_flush(sgeE_JOB_ADD, true, 0);
-   ec_set_flush(sgeE_JOB_DEL, true, 0);
+   ec_set_flush(sgeE_JATASK_MOD, true, 1);
+   ec_set_flush(sgeE_JOB_FINAL_USAGE, true, 1);
+   ec_set_flush(sgeE_JOB_ADD, true, 1);
+   ec_set_flush(sgeE_JOB_DEL, true, 1);
 
 #endif
    
@@ -710,8 +701,8 @@ void qevent_testsuite_mode(void)
 
       timestamp = sge_get_gmt();
 #ifndef QEVENT_SHOW_ALL
-      fprintf(stdout,"ECL_STATE (jobs_running=%ld:jobs_registered=%ld:ECL_TIME="U32CFormat")\n",
-              Global_jobs_running,Global_jobs_registered,u32c(timestamp));
+      fprintf(stdout,"ECL_STATE (jobs_running=%ld:jobs_registered=%ld:ECL_TIME="sge_U32CFormat")\n",
+              Global_jobs_running,Global_jobs_registered,sge_u32c(timestamp));
       fflush(stdout);  
 #endif
    }

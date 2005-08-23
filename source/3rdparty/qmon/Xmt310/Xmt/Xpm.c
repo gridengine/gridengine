@@ -1,6 +1,6 @@
 /* 
  * Motif Tools Library, Version 3.1
- * $Id: Xpm.c,v 1.1 2001/07/18 11:06:03 root Exp $
+ * $Id: Xpm.c,v 1.2 2005/05/20 14:39:02 andre Exp $
  * 
  * Written by David Flanagan.
  * Copyright (c) 1992-2001 by David Flanagan.
@@ -9,8 +9,15 @@
  * There is no warranty for this software.  See NO_WARRANTY for details.
  *
  * $Log: Xpm.c,v $
- * Revision 1.1  2001/07/18 11:06:03  root
- * Initial revision
+ * Revision 1.2  2005/05/20 14:39:02  andre
+ * AA-2005-05-20-0: Bugfix:    qmon crash (segmentation fault) on Solaris64
+ *                  Bugtraq:   6250603
+ *                  Issue:     1541
+ *                  Changed:   qmon
+ *                  Review:    CR
+ *
+ * Revision 1.1.1.1  2001/07/18 11:06:03  root
+ * Initial checkin.
  *
  * Revision 1.2  2001/06/12 16:25:28  andre
  * *** empty log message ***
@@ -33,7 +40,7 @@
  * correctly for the alpha.
  *				 -- fredrik_lundh@ivab.se 10/25/94
  */
-#ifdef __alpha
+#if defined(__alpha) || defined(TARGET_64BIT)
 #  ifndef LONG64
 #    define	LONG64
 #  endif

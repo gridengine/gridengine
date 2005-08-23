@@ -76,8 +76,8 @@ int correct_load(lList *running_jobs, lList *queue_list, lList *host_list,
          double host_lcf = 0.0;
 
 #if 1
-         DPRINTF(("JOB "u32"."u32" start_time = "u32" running_time "u32
-            " decay_time = "u32"\n", job_id, ja_task_id, 
+         DPRINTF(("JOB "sge_u32"."sge_u32" start_time = "sge_u32" running_time "sge_u32
+            " decay_time = "sge_u32"\n", job_id, ja_task_id, 
             lGetUlong(ja_task, JAT_start_time), running_time, 
             decay_time));
 #endif
@@ -96,7 +96,7 @@ int correct_load(lList *running_jobs, lList *queue_list, lList *host_list,
             qep = qinstance_list_locate2(queue_list, qnm);
             if (qep == NULL) {
                DPRINTF(("Unable to find queue \"%s\" from gdil "
-                        "list of job "u32"."u32"\n", qnm, job_id, ja_task_id));
+                        "list of job "sge_u32"."sge_u32"\n", qnm, job_id, ja_task_id));
                continue;
             }
            
@@ -104,7 +104,7 @@ int correct_load(lList *running_jobs, lList *queue_list, lList *host_list,
             hep = lGetElemHost(host_list, EH_name, hnm);
             if (hep == NULL) {
                DPRINTF(("Unable to find host \"%s\" from gdil "
-                        "list of job "u32"."u32"\n", hnm, job_id, ja_task_id));
+                        "list of job "sge_u32"."sge_u32"\n", hnm, job_id, ja_task_id));
                continue;
             } 
 
@@ -135,13 +135,13 @@ int correct_load(lList *running_jobs, lList *queue_list, lList *host_list,
                       lGetUlong(hep, EH_load_correction_factor));
 
 #if 1
-            DPRINTF(("JOB "u32"."u32" ["u32" slots] in queue %s increased lc of host "
-                     "%s by "u32" to "u32"\n", job_id, ja_task_id, slots, qnm, hnm, 
+            DPRINTF(("JOB "sge_u32"."sge_u32" ["sge_u32" slots] in queue %s increased lc of host "
+                     "%s by "sge_u32" to "sge_u32"\n", job_id, ja_task_id, slots, qnm, hnm, 
                      (u_long32)(100*host_lcf), lGetUlong(hep, EH_load_correction_factor)));
 #endif
-            SCHED_MON((log_string, "JOB "u32"."u32" ["u32"] in queue "SFN
-                       " increased absolute lc of host "SFN" by "u32" to "
-                       u32"", job_id, ja_task_id, slots, qnm, hnm, 
+            SCHED_MON((log_string, "JOB "sge_u32"."sge_u32" ["sge_u32"] in queue "SFN
+                       " increased absolute lc of host "SFN" by "sge_u32" to "
+                       sge_u32"", job_id, ja_task_id, slots, qnm, hnm, 
                        (u_long32)(host_lcf*100), lGetUlong(hep, 
                         EH_load_correction_factor)));
          }

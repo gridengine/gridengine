@@ -41,10 +41,6 @@
 #include <errno.h>
 #include <limits.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif   
-
 #include "sge.h"
 #include "sgermon.h"
 #include "sge_usageL.h"
@@ -112,7 +108,7 @@ char *rhost
 
    ret = check_sharetree(alpp, ep, Master_User_List, Master_Project_List, 
          NULL, &found);
-   lFreeList(found);
+   lFreeList(&found);
    if (ret) {
       /* alpp gets filled by check_sharetree() */
       DEXIT;
@@ -126,12 +122,13 @@ char *rhost
       adding = 1;
    }
    else {
+      lListElem *first = lFirst(*lpp);
       /* real action: change user or project
          We simply replace the old element with the new one. If there is no
          old we simle add the new. */
      
       prev_version = lGetUlong(lFirst(*lpp), STN_version); 
-      lRemoveElem(*lpp, lFirst(*lpp));
+      lRemoveElem(*lpp, &first);
       adding = 0;
    }
 
@@ -187,9 +184,7 @@ char *rhost
                    0, 0, NULL, NULL, NULL,
                    NULL, NULL, NULL, true, true);
 
-   lFreeList(*lpp);
-   *lpp = NULL;
-   
+   lFreeList(lpp);
 
    INFO((SGE_EVENT, MSG_SGETEXT_REMOVEDLIST_SSS, ruser, rhost, MSG_OBJ_SHARETREE));
    answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
@@ -233,7 +228,7 @@ lList **found  /* tmp list that contains one entry for each found u/p */
    /* Check for dangling or circular references. */
    if (name == NULL) {
       ERROR((SGE_EVENT, MSG_STREE_NOVALIDNODEREF_U,
-             u32c(lGetUlong(node, STN_id))));
+             sge_u32c(lGetUlong(node, STN_id))));
       answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       DEXIT;
       return -1;
@@ -290,7 +285,7 @@ lList **found  /* tmp list that contains one entry for each found u/p */
                answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
                /* restore old found list */
                if (save_found) {
-                  lFreeList(*found);
+                  lFreeList(found);
                   *found = save_found;
                }
                DEXIT;
@@ -302,7 +297,7 @@ lList **found  /* tmp list that contains one entry for each found u/p */
                found)) {
             /* restore old found list */
             if (save_found) {
-               lFreeList(*found);
+               lFreeList(found);
                *found = save_found;
             }
             DEXIT;
@@ -313,7 +308,7 @@ lList **found  /* tmp list that contains one entry for each found u/p */
 
       /* restore old found list */
       if (save_found) {
-         lFreeList(*found);
+         lFreeList(found);
          *found = save_found;
       }
 
@@ -387,7 +382,7 @@ lList **found  /* tmp list that contains one entry for each found u/p */
             }
          }
 
-         /* make sure this user or project is in the non­project sub-tree 
+         /* make sure this user or project is in the nonï¿½project sub-tree 
             portion of the share tree only once */
          if (lGetElemStr(*found, STN_name, name)) {
             ERROR((SGE_EVENT, MSG_STREE_USERPRJTWICE_SS, objname, name));

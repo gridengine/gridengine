@@ -37,10 +37,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif   
-       
 #include "sgermon.h"
 #include "sge.h"
 #include "sge_pe.h"
@@ -114,7 +110,7 @@ int answer_error;
       return 0;
    }
 
-   feature_activate(feature_set);
+   feature_activate((feature_id_t)feature_set);
 
    /* if request comes from qmaster: start a job
     * else it is a request to start a pe task
@@ -136,7 +132,7 @@ int answer_error;
             (long) lGetUlong(ja_task, JAT_task_number)));
          ret = handle_job(job, ja_task, de, pb, 0);
          if(ret != 0) {
-            lFreeElem(job);
+            lFreeElem(&job);
          }
       }
    } else {
@@ -153,7 +149,7 @@ int answer_error;
 
       ret = handle_task(petrep, de, pb, apb, synchron);
 
-      lFreeElem(petrep);
+      lFreeElem(&petrep);
    }
    
    if(ret == 0) {
@@ -185,7 +181,7 @@ int answer_error;
       return 0;
    }
 
-   feature_activate(feature_set);
+   feature_activate((feature_id_t)feature_set);
 
    /* ------- job */
    if (cull_unpack_elem(pb, &jelem, NULL)) {
@@ -201,7 +197,7 @@ int answer_error;
    }
 
    if (ret)  {
-      lFreeElem(jelem);
+      lFreeElem(&jelem);
    } 
 
    DEXIT;
@@ -228,7 +224,7 @@ int slave
 
    DENTER(TOP_LAYER, "handle_job");
 
-   DPRINTF(("got %s job "u32" from (%s/%s/%d)\n",
+   DPRINTF(("got %s job "sge_u32" from (%s/%s/%d)\n",
            slave ?"slave ":"", lGetUlong(jelem, JB_job_number),
            de->commproc, de->host, de->id));
 
@@ -248,7 +244,7 @@ int slave
    while(jep != NULL) {
       jep_jatep = job_search_task(jep, NULL, jataskid);
       if(jep_jatep != NULL) {
-         DPRINTF(("Job "u32"."u32" is already running - skip the new one\n", 
+         DPRINTF(("Job "sge_u32"."sge_u32" is already running - skip the new one\n", 
                   jobid, jataskid));
          DEXIT;
          goto Ignore;   /* don't set queue in error state */
@@ -266,7 +262,7 @@ int slave
    lSetUlong(jatep, JAT_status, slave?JSLAVE:JIDLE);
 
    /* now we have a queue and a job filled */
-   DPRINTF(("===>JOB_EXECUTION: >"u32"."u32"< with "u32" tickets\n", jobid, jataskid,
+   DPRINTF(("===>JOB_EXECUTION: >"sge_u32"."sge_u32"< with "sge_u32" tickets\n", jobid, jataskid,
                (u_long32)lGetDouble(jatep, JAT_tix)));
 
    if (cull_unpack_list(pb, &qlp)) {
@@ -281,7 +277,7 @@ int slave
       qnm=lGetString(gdil_ep, JG_qname);
       if (!(qep=qinstance_list_locate2(qlp, qnm))) {
          sge_dstring_sprintf(&err_str, MSG_JOB_MISSINGQINGDIL_SU, qnm, 
-                             u32c(lGetUlong(jelem, JB_job_number)));
+                             sge_u32c(lGetUlong(jelem, JB_job_number)));
          DEXIT;
          goto Error;
       }
@@ -298,7 +294,7 @@ int slave
       DPRINTF(("Q: %s %d\n", qnm, slots));
    }
    /* trash envelope */
-   qlp = lFreeList(qlp);
+   lFreeList(&qlp);
 
    /* ------- optionally pe */
    if (lGetString(jatep, JAT_granted_pe)) {
@@ -364,7 +360,7 @@ int slave
          if (!found_script) {
             /* We are root. Make the scriptfile readable for the jobs submitter,
                so shepherd can open (execute) it after changing to the user. */
-            fd = open(lGetString(jelem, JB_exec_file), O_CREAT | O_WRONLY, 0755);
+            fd = SGE_OPEN3(lGetString(jelem, JB_exec_file), O_CREAT | O_WRONLY, 0755);
             if (fd < 0) {
                sge_dstring_sprintf(&err_str, MSG_ERRORWRITINGFILE_SS, 
                                    lGetString(jelem, JB_exec_file), 
@@ -379,7 +375,7 @@ int slave
                DPRINTF(("errno: %d\n", errno));
                sge_dstring_sprintf(&err_str, MSG_EXECD_NOWRITESCRIPT_SIUS, 
                                    lGetString(jelem, JB_exec_file), nwritten, 
-                                   u32c(lGetUlong(jelem, JB_script_size)), 
+                                   sge_u32c(lGetUlong(jelem, JB_script_size)), 
                                    strerror(errno));
                close(fd);
                DEXIT;
@@ -397,8 +393,8 @@ int slave
    ** Execute command to store the client's DCE or Kerberos credentials.
    ** This also creates a forwardable credential for the user.
    */
-   if (do_credentials) {
-      if (store_sec_cred2(jelem, do_authentication, &general, SGE_EVENT) != 0) {
+   if (mconf_get_do_credentials()) {
+      if (store_sec_cred2(jelem, mconf_get_do_authentication(), &general, SGE_EVENT) != 0) {
          sge_dstring_copy_string(&err_str, SGE_EVENT);
          goto Error;
       }   
@@ -445,7 +441,7 @@ Error:
    }
 
 Ignore:   
-   lFreeList(qlp);
+   lFreeList(&qlp);
    return -1;  
 }
 
@@ -684,18 +680,18 @@ int *synchron
    }
    
    if (jep == NULL) {
-      ERROR((SGE_EVENT, MSG_JOB_TASKWITHOUTJOB_U, u32c(jobid))); 
+      ERROR((SGE_EVENT, MSG_JOB_TASKWITHOUTJOB_U, sge_u32c(jobid))); 
       goto Error;
    }
 
    if (jatep == NULL) { 
-      ERROR((SGE_EVENT, MSG_JOB_TASKNOTASKINJOB_UU, u32c(jobid), u32c(jataskid)));
+      ERROR((SGE_EVENT, MSG_JOB_TASKNOTASKINJOB_UU, sge_u32c(jobid), sge_u32c(jataskid)));
       goto Error;
    }
 
    /* do not accept the task if job is not parallel or 'control_slaves' is not active */
    if (!(pe=lGetObject(jatep, JAT_pe_object)) || !lGetBool(pe, PE_control_slaves)) {
-      ERROR((SGE_EVENT, MSG_JOB_TASKNOSUITABLEJOB_U, u32c(jobid)));
+      ERROR((SGE_EVENT, MSG_JOB_TASKNOSUITABLEJOB_U, sge_u32c(jobid)));
       goto Error;
    }
 
@@ -708,7 +704,7 @@ int *synchron
    /* generate unique task id by combining consecutive number 1-max(u_long32) */
    tid = MAX(1, lGetUlong(jatep, JAT_next_pe_task_id));
    sprintf(new_task_id, "%d.%s", tid, uti_state_get_unqualified_hostname());
-   DPRINTF(("using pe_task_id_str %s for job "u32"."u32"\n", new_task_id, jobid, jataskid));
+   DPRINTF(("using pe_task_id_str %s for job "sge_u32"."sge_u32"\n", new_task_id, jobid, jataskid));
    lSetString(petep, PET_id, new_task_id);
 
    /* set taskid for next task to be started */
@@ -724,7 +720,7 @@ int *synchron
 
    requested_queue = lGetString(petrep, PETR_queuename);
 
-   DPRINTF(("got task ("u32"/%s) from (%s/%s/%d) %s queue selection\n", 
+   DPRINTF(("got task ("sge_u32"/%s) from (%s/%s/%d) %s queue selection\n", 
             lGetUlong(jep, JB_job_number), new_task_id,
             de->commproc, de->host, de->id, 
             requested_queue != NULL ? "with" : "without"));
@@ -736,7 +732,7 @@ int *synchron
    }
          
    if(!gdil) {  /* also no already exited task found -> no way to start new task */
-      ERROR((SGE_EVENT, MSG_JOB_NOFREEQ_USSS, u32c(jobid), 
+      ERROR((SGE_EVENT, MSG_JOB_NOFREEQ_USSS, sge_u32c(jobid), 
              lGetString(petrep, PETR_owner), de->host, uti_state_get_qualified_hostname()));
       goto Error;
    }

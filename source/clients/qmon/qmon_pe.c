@@ -32,10 +32,6 @@
 #include <stdio.h>
 #include <ctype.h>
 
-#ifdef SOLARISAMD64
-#include <sys/stream.h>
-#endif
-
 #include <Xm/Xm.h>
 #include <Xm/List.h>
 #include <Xm/TextF.h>
@@ -85,6 +81,7 @@ static Widget pe_alloc_w = 0;
 static Widget pe_urgency_w = 0;
 static Widget pe_control_slaves_w = 0;
 static Widget pe_job_is_first_task_w = 0;
+static Widget pe_qsort_args_w = 0;
 static int add_mode = 0;
 
 /*-------------------------------------------------------------------------*/
@@ -133,7 +130,7 @@ XtPointer cld, cad;
    qmonMirrorMultiAnswer(PE_T | USERSET_T, &alp);
    if (alp) {
       qmonMessageBox(w, alp, 0);
-      alp = lFreeList(alp);
+      lFreeList(&alp);
       /* set default cursor */
       XmtDisplayDefaultCursor(w);
       DEXIT;
@@ -277,6 +274,12 @@ lListElem *ep
             (int)lGetBool(ep, PE_job_is_first_task) ? "true" : "false");
    items[i++] = XmStringCreateLocalized(buf);
 
+#ifdef SGE_PQS_API
+   /* qsort_args */
+   str = (StringConst)lGetString(ep, PE_qsort_args);
+   sprintf(buf, "%-20.20s %s", "Queue Sort Args", str ? str : "NONE" );
+   items[i++] = XmStringCreateLocalized(buf);
+#endif
    
    XtVaSetValues( pe_conf_list, 
                   XmNitems, items,
@@ -379,7 +382,12 @@ Widget parent
                            "pe_urgency_slots", &pe_urgency_w,
                            "pe_control_slaves", &pe_control_slaves_w,
                            "pe_job_is_first_task", &pe_job_is_first_task_w,
+                           "pe_qsort_args", &pe_qsort_args_w,
                            NULL);
+
+#ifndef SGE_PQS_API
+   XtUnmanageChild(pe_qsort_args_w);
+#endif
 
    XtAddCallback(pe_ok, XmNactivateCallback, 
                      qmonPEOk, NULL);
@@ -420,7 +428,7 @@ XtPointer cld, cad;
       UpdateXmListFromCull(list, XmFONTLIST_DEFAULT_TAG, ql_out,
                               US_name);
    }
-   ql_out = lFreeList(ql_out);
+   lFreeList(&ql_out);
 
    DEXIT;
 }
@@ -537,13 +545,11 @@ XtPointer cld, cad;
             XmListSelectItem(pe_names, xpename, True);
             XmStringFree(xpename);
          }
-         lFreeWhat(what);
-         alp = lFreeList(alp);
+         lFreeWhat(&what);
+         lFreeList(&alp);
       }
-      pel = lFreeList(pel);
+      lFreeList(&pel);
    }
-
-
    DEXIT;
 }
 
@@ -588,8 +594,8 @@ XtPointer cld, cad;
 
          qmonMessageBox(w, alp, 0);
 
-         lFreeWhat(what);
-         alp = lFreeList(alp);
+         lFreeWhat(&what);
+         lFreeList(&alp);
 
          updatePeList();
          XtVaGetValues( pe_names,
@@ -601,7 +607,7 @@ XtPointer cld, cad;
             qmonPEFillConf(pe_names, NULL);
 
       }
-      lp = lFreeList(lp);
+      lFreeList(&lp);
    }
    DEXIT;
 }
@@ -618,6 +624,9 @@ lListElem *pep
    StringConst stop_args = NULL;
    StringConst alloc_rule = NULL;
    StringConst urgency_slots = NULL;
+#ifdef SGE_PQS_API
+   StringConst qsort_args = NULL;
+#endif
 
    DENTER(GUI_LAYER, "qmonPESetAsk");
 
@@ -661,6 +670,12 @@ lListElem *pep
    XmToggleButtonSetState(pe_job_is_first_task_w, 
                lGetBool(pep, PE_job_is_first_task), False);
 
+#ifdef SGE_PQS_API
+   qsort_args = (StringConst)lGetString(pep, PE_qsort_args);
+   if (qsort_args)
+      XmtInputFieldSetString(pe_qsort_args_w, qsort_args);
+#endif
+
    DEXIT;
 }
 
@@ -693,6 +708,10 @@ static void qmonPEResetAsk(void)
 
    XmToggleButtonSetState(pe_job_is_first_task_w, 0, False);
 
+#ifdef SGE_PQS_API
+   XmtInputFieldSetString(pe_qsort_args_w, "NONE");
+#endif
+
    DEXIT;
 }
 
@@ -710,6 +729,9 @@ lListElem *pep
    String stop_args = NULL;
    String alloc_rule = NULL;
    String urgency_slots = NULL;
+#ifdef SGE_PQS_API
+   String qsort_args = NULL;
+#endif
 
    DENTER(GUI_LAYER, "qmonPEGetAsk");
 
@@ -762,6 +784,14 @@ lListElem *pep
 
    pe_job_is_first_task = XmToggleButtonGetState(pe_job_is_first_task_w); 
    lSetBool(pep, PE_job_is_first_task, pe_job_is_first_task);
+
+#ifdef SGE_PQS_API
+   qsort_args = XmtInputFieldGetString(pe_qsort_args_w);
+   if (!qsort_args || !strcasecmp(qsort_args, "none"))
+      lSetString(pep, PE_qsort_args, NULL);
+   else   
+      lSetString(pep, PE_qsort_args, qsort_args);
+#endif
 
    DEXIT;
    return True;

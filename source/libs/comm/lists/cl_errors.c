@@ -410,6 +410,12 @@ const char* cl_get_error_text(int error_id) {
       case CL_RETVAL_HOSTNAME_LENGTH_ERROR: {
          return MSG_CL_RETVAL_HOSTNAME_LENGTH_ERROR;
       }
+      case CL_RETVAL_HANDLE_SHUTDOWN_IN_PROGRESS: {
+         return MSG_CL_RETVAL_HANDLE_SHUTDOWN_IN_PROGRESS;
+      }
+      case CL_RETVAL_COMMLIB_SETUP_ALREADY_CALLED: {
+         return MSG_CL_RETVAL_COMMLIB_SETUP_ALREADY_CALLED;
+      }
    }
    return CL_RETVAL_UNDEFINED_STR;
 }

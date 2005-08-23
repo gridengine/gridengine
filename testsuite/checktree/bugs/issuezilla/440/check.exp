@@ -43,6 +43,7 @@ global check_highest_level
 global check_init_level_procedure
 global check_root_access_needs
 global env
+global ts_config check_440_num_hosts
 
 # set check_root_access_needs "yes"
 
@@ -53,8 +54,12 @@ set check_init_level_procedure "issue_440_init_level"
 # define test's name and run level descriptions
 set check_name            "issue_440"
 set check_category        "COMPATIBILITY SYSTEM L10N VERIFIED"
-set check_highest_level   0
-set check_description(0)  "qsub / qrsh command lines crash qmaster with arg. lines > 10 K"
+set check_highest_level   [expr [llength $ts_config(unique_arch_nodes)] -1]
+
+set check_440_num_hosts [llength $ts_config(unique_arch_nodes)]
+for {set i 0} {$i < $check_440_num_hosts} {incr i} {
+   set check_description($i) "qsub / qrsh command lines crash qmaster with arg. lines > 10 K, check on host [lindex $ts_config(unique_arch_nodes) $i]"
+}
 
 # define test's dependencies
 set check_needs           "init_core_system" 
@@ -70,16 +75,23 @@ lappend check_functions "issue_440_check_qrsh"
 global issue_440_MAX_KBYTE
 
 proc issue_440_init_level {} {
+   global ts_config
    global CHECK_ACT_LEVEL
-   global issue_440_MAX_KBYTE
+   global issue_440_MAX_KBYTE check_440_host check_440_num_hosts
 
 
-   set issue_440_MAX_KBYTE 20
 
-   switch -- $CHECK_ACT_LEVEL {
-      "0" { 
-         return 0    
-      } 
+   if {$CHECK_ACT_LEVEL < $check_440_num_hosts} {
+      set check_440_host [lindex $ts_config(unique_arch_nodes) $CHECK_ACT_LEVEL]
+      switch -exact [resolve_arch $check_440_host] {
+         irix65 {
+            set issue_440_MAX_KBYTE 10
+         }
+         default {
+            set issue_440_MAX_KBYTE 20
+         }
+      }
+      return 0
    }
 
    return -1  ;# no other level else
@@ -90,13 +102,12 @@ proc issue_440_init_level {} {
 proc issue_440_check_qsub {} {
    global ts_config
    global CHECK_OUTPUT CHECK_TESTSUITE_ROOT CHECK_SCRIPT_FILE_DIR 
-   global CHECK_CORE_MASTER issue_440_MAX_KBYTE
+   global CHECK_CORE_MASTER issue_440_MAX_KBYTE check_440_host
 
    set submit_script_path "$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/cmd_line_output.sh" 
    set start_length 0
    set end_length [ expr ( 1024 * $issue_440_MAX_KBYTE ) ]
-   set submit_host  [lindex $ts_config(execd_nodes) 0]
-   set submit_queue [get_queue_instance "all.q" $submit_host]
+   set submit_queue [get_queue_instance "all.q" $check_440_host]
 
    # submit different command line length jobs
    while { $start_length <= $end_length } {
@@ -123,7 +134,7 @@ proc issue_440_check_qsub {} {
       puts $CHECK_OUTPUT "submitting job with command line length: [string length $command_line]"
 
       # submit job and wait for jobend
-      set jobid [ submit_job $command_line 1 60 "" "" "" 0 ]
+      set jobid [ submit_job $command_line 1 60 $check_440_host "" "" 0 ]
       wait_for_jobstart  $jobid "long_cmd" 60 1 1
       wait_for_jobend $jobid "long_cmd" 60
       
@@ -153,7 +164,7 @@ proc issue_440_check_qsub {} {
       set output [string trim $output]   
       set arg_name [string trim $arg_name]
       if { [ string compare $output $arg_name ] != 0 } {
-            add_proc_error "issue_440_check_qsub" -1 "job output not equal to commandline input:\nstrlen(cmd_line) = [string length $arg_name]\nstrlen(output) = [string length $output]"
+            add_proc_error "issue_440_check_qsub" -1 "job output not equal to commandline input:\nstrlen(cmd_line) = [string length $arg_name]\nstrlen(output) = [string length $output] on host $check_440_host"
       }
 
 
@@ -167,7 +178,7 @@ proc issue_440_check_qsub {} {
          append output_errors "$f_error($i)\n"
       }
       if { $got_output_error != 0 } {
-         add_proc_error "issue_440_check_qsub" -1 "got error output from job script:\n$output_errors"
+         add_proc_error "issue_440_check_qsub" -1 "got error output from job script:\n$output_errors on host $check_440_host"
       }
 
       # increment next argument length
@@ -177,7 +188,7 @@ proc issue_440_check_qsub {} {
    puts $CHECK_OUTPUT "check if master and scheduler are running ..."
    set back [ are_master_and_scheduler_running $CHECK_CORE_MASTER [get_qmaster_spool_dir]]
    if { $back != 3 } {
-      add_proc_error "issue_440_check_qsub" -1 "are_master_and_scheduler_running returns $back"
+      add_proc_error "issue_440_check_qsub" -1 "are_master_and_scheduler_running returns $backafter submit on host $check_440_host"
    }   
 
    set_error 0 "ok"
@@ -185,8 +196,8 @@ proc issue_440_check_qsub {} {
 
 proc issue_440_check_qrsh {} {
    global ts_config
-   global CHECK_OUTPUT CHECK_TESTSUITE_ROOT CHECK_SCRIPT_FILE_DIR CHECK_HOST 
-   global CHECK_CORE_MASTER CHECK_USER issue_440_MAX_KBYTE
+   global CHECK_OUTPUT CHECK_TESTSUITE_ROOT CHECK_SCRIPT_FILE_DIR
+   global CHECK_CORE_MASTER CHECK_USER issue_440_MAX_KBYTE check_440_host
 
    # test script
    set submit_script_path "$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/cmd_line_output.sh" 
@@ -195,8 +206,8 @@ proc issue_440_check_qrsh {} {
    set start_length 0
    set end_length [ expr ( 1024 * $issue_440_MAX_KBYTE ) ]
 
-   set submit_host  [lindex $ts_config(execd_nodes) 0]
-   set submit_queue [get_queue_instance "all.q" $submit_host]
+   set submit_queue [get_queue_instance "all.q" $check_440_host]
+   set qrsh_command "$ts_config(product_root)/bin/[resolve_arch $check_440_host]/qrsh"
 
    # submit qrsh jobs with different command line length
    while { $start_length <= $end_length } {
@@ -219,13 +230,13 @@ proc issue_440_check_qrsh {} {
       puts $CHECK_OUTPUT "submitting qrsh job with command line length: [string length $command_line]"
 
       # start qrsh job
-      set output [ start_remote_prog $CHECK_HOST $CHECK_USER "qrsh" "$command_line" ]
+      set output [ start_remote_prog $check_440_host $CHECK_USER $qrsh_command "$command_line" ]
       puts $CHECK_OUTPUT "exit state: $prg_exit_state"
 
 
       # check for errors
       if { $prg_exit_state != 0 } {
-         add_proc_error "issue_440_check_qrsh" -1 "error in qrsh job:\nqueue was $submit_queue\n$output"
+         add_proc_error "issue_440_check_qrsh" -1 "error in qrsh job:\nqueue was $submit_queue\n$output on host $check_440_host"
          set start_length $end_length
       } else {
          set output [string trim $output]
@@ -247,7 +258,7 @@ proc issue_440_check_qrsh {} {
          set output [string trim $output]
          set arg_name [string trim $arg_name]
          if { [ string compare $output $arg_name ] != 0 } {
-            add_proc_error "issue_440_check_qrsh" -1 "job output not equal to commandline input:\nstrlen(cmd_line) = [string length $arg_name]\nstrlen(output) = [string length $output]"
+            add_proc_error "issue_440_check_qrsh" -1 "job output not equal to commandline input:\nstrlen(cmd_line) = [string length $arg_name]\nstrlen(output) = [string length $output] on host $check_440_host"
          }
       }
 
@@ -258,7 +269,7 @@ proc issue_440_check_qrsh {} {
    puts $CHECK_OUTPUT "check if master and scheduler are running ..."
    set back [ are_master_and_scheduler_running $CHECK_CORE_MASTER [get_qmaster_spool_dir]]
    if { $back != 3 } {
-      add_proc_error "issue_440_check_qrsh" -1 "are_master_and_scheduler_running returns $back"
+      add_proc_error "issue_440_check_qrsh" -1 "are_master_and_scheduler_running returns $back after submit on host $check_440_host"
    }   
 
    set_error 0 "ok"

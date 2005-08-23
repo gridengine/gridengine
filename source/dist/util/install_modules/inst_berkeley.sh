@@ -171,14 +171,6 @@ ExecuteRPCServerScript()
    ExecuteAsAdmin $SGE_ROOT/$SGE_CELL/common/sgebdb $1
 }
 
-DeleteServerScript()
-{
-   ExecuteRPCServerScript stop
-   rm $SGE_ROOT/$SGE_CELL/common/sgebdb   
-
-   # TODO: Delete startup script in /etc/init.d
-}
-
 DeleteSpoolingDir()
 {
    QMDIR="$SGE_ROOT/$SGE_CELL/qmaster"
@@ -186,116 +178,6 @@ DeleteSpoolingDir()
 
    ExecuteAsAdmin rm -fr $SPOOLING_DIR
    
-}
-
-
-InstallServerScript()
-{
-   euid=$1
-
-   $CLEAR
-   STARTUP_FILE_NAME=sgebdb
-   S95NAME=S95sgebdb
-
-   SGE_STARTUP_FILE=$SGE_ROOT_VAL/$COMMONDIR/$STARTUP_FILE_NAME
-
-
-   if [ $euid != 0 ]; then
-      return 0
-   fi
-
-   $INFOTEXT -u "\nBerkeley DB startup script"
-
-   # --- from here only if root installs ---
-   $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n \
-             "\nWe can install the startup script that\n" \
-             "Grid Engine is started at machine boot (y/n) [y] >> "
-   ret=$?
-
-   if [ $ret = 1 -o $AUTO = "true" -a $ADD_TO_RC = "false" ]; then
-      $CLEAR
-      return
-   fi
-
-   # If we have System V we need to put the startup script to $RC_PREFIX/init.d
-   # and make a link in $RC_PREFIX/rc2.d to $RC_PREFIX/init.d
-   if [ "$RC_FILE" = "sysv_rc" ]; then
-      $INFOTEXT "Installing startup script %s" "$RC_PREFIX/$RC_DIR/$S95NAME"
-      Execute rm -f $RC_PREFIX/$RC_DIR/$S95NAME
-      Execute cp $SGE_STARTUP_FILE $RC_PREFIX/init.d/$STARTUP_FILE_NAME
-      Execute chmod a+x $RC_PREFIX/init.d/$STARTUP_FILE_NAME
-      Execute ln -s $RC_PREFIX/init.d/$STARTUP_FILE_NAME $RC_PREFIX/$RC_DIR/$S95NAME
-
-      # runlevel management in Linux is different -
-      # each runlevel contains full set of links
-      # RedHat uses runlevel 5 and SUSE runlevel 3 for xdm
-      # RedHat uses runlevel 3 for full networked mode
-      # Suse uses runlevel 2 for full networked mode
-      # we already installed the script in level 3
-      if [ $SGE_ARCH = linux -o $SGE_ARCH = glinux -o $SGE_ARCH = alinux -o $SGE_ARCH = slinux ]; then
-         runlevel=`grep "^id:.:initdefault:"  /etc/inittab | cut -f2 -d:`
-         if [ "$runlevel" = 2 -o  "$runlevel" = 5 ]; then
-            $INFOTEXT "Installing startup script also in %s" "$RC_PREFIX/rc${runlevel}.d/$S95NAME"
-            Execute rm -f $RC_PREFIX/rc${runlevel}.d/$S95NAME
-            Execute ln -s $RC_PREFIX/init.d/$STARTUP_FILE_NAME $RC_PREFIX/rc${runlevel}.d/$S95NAME
-         fi
-      fi
-   elif [ "$RC_FILE" = "insserv-linux" ]; then
-      echo  cp $SGE_STARTUP_FILE $RC_PREFIX/$STARTUP_FILE_NAME
-      echo /sbin/insserv $RC_PREFIX/$STARTUP_FILE_NAME
-      Execute cp $SGE_STARTUP_FILE $RC_PREFIX/$STARTUP_FILE_NAME
-      /sbin/insserv $RC_PREFIX/$STARTUP_FILE_NAME
-   elif [ "$RC_FILE" = "freebsd" ]; then
-      echo  cp $SGE_STARTUP_FILE $RC_PREFIX/sge${RC_SUFFIX}
-      Execute cp $SGE_STARTUP_FILE $RC_PREFIX/sge${RC_SUFFIX}
-   else
-      # if this is not System V we simple add the call to the
-      # startup script to RC_FILE
-
-      # Start-up script already installed?
-      #------------------------------------
-      grep $STARTUP_FILE_NAME $RC_FILE > /dev/null 2>&1
-      status=$?
-      if [ $status != 0 ]; then
-         $INFOTEXT "Adding application startup to %s" $RC_FILE
-         # Add the procedure
-         #------------------
-         $ECHO "" >> $RC_FILE
-         $ECHO "" >> $RC_FILE
-         $ECHO "# Berkeley DB start up" >> $RC_FILE
-         $ECHO "#-$LINE---------" >> $RC_FILE
-         $ECHO $SGE_STARTUP_FILE >> $RC_FILE
-      else
-         $INFOTEXT "Found a call of %s in %s. Replacing with new call.\n" \
-                   "Your old file %s is saved as %s" $STARTUP_FILE_NAME $RC_FILE $RC_FILE $RC_FILE.org.1
-
-         mv $RC_FILE.org.3 $RC_FILE.org.4    2>/dev/null
-         mv $RC_FILE.org.2 $RC_FILE.org.3    2>/dev/null
-         mv $RC_FILE.org.1 $RC_FILE.org.2    2>/dev/null
-
-         # save original file modes of RC_FILE
-         uid=`$SGE_UTILBIN/filestat -uid $RC_FILE`
-         gid=`$SGE_UTILBIN/filestat -gid $RC_FILE`
-         perm=`$SGE_UTILBIN/filestat -mode $RC_FILE`
-
-         Execute cp $RC_FILE $RC_FILE.org.1
-
-         savedfile=`basename $RC_FILE`
-
-         sed -e "s%.*$STARTUP_FILE_NAME.*%$SGE_STARTUP_FILE%" \
-                 $RC_FILE > /tmp/$savedfile.1
-
-         Execute cp /tmp/$savedfile.1 $RC_FILE
-         Execute chown $uid $RC_FILE
-         Execute chgrp $gid $RC_FILE
-         Execute chmod $perm $RC_FILE
-         Execute rm -f /tmp/$savedfile.1
-      fi
-   fi
-
-   $INFOTEXT -wait -auto $AUTO -n "\nHit <RETURN> to continue >> "
-   $CLEAR
-
 }
 
 EditStartupScript()

@@ -32,6 +32,8 @@
 
 #include <unistd.h>
 #include <stdio.h>
+
+#ifdef SECURE
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <fcntl.h>
@@ -49,17 +51,25 @@
 
 #include "uti/sge_arch.h"
 #include "uti/sge_log.h"
-#include "uti/sge_base64.h"
 #include "uti/sge_unistd.h"
 #include "uti/sge_uidgid.h"
 #include "uti/sge_profiling.h"
 #include "uti/sge_bootstrap.h"
 #include "uti/setup_path.h"
 #include "uti/sge_prog.h"
+#include "uti/sge_stdio.h"
+#if defined(DEFINE_SGE_PASSWD_MAIN)
 #include "sgermon.h"
+#endif
 
 #include "sge_passwd.h"
 #include "msg_utilbin.h"
+
+#if !defined(DEFINE_SGE_PASSWD_MAIN)
+#define DENTER(x,y)
+#define DPRINTF(x)
+#define DEXIT
+#endif
 
 static void (*shared_ssl_func__X509_free)(X509 *a);
 static void (*shared_ssl_func__EVP_PKEY_free)(EVP_PKEY *pkey);
@@ -85,7 +95,9 @@ static X509* (*shared_ssl_func__d2i_X509)(X509 **a, unsigned char **in, long len
 #define shared_ssl_func__PEM_read_X509(fp,x,cb,u) (X509 *)shared_ssl_func__PEM_ASN1_read((char *(*)())shared_ssl_func__d2i_X509,PEM_STRING_X509,fp,(char **)x,cb,u)
 #define shared_ssl_func__PEM_read_PrivateKey(fp,x,cb,u) (EVP_PKEY *)shared_ssl_func__PEM_ASN1_read((char *(*)())shared_ssl_func__d2i_AutoPrivateKey,PEM_STRING_EVP_PKEY,fp,(char **)x,cb,u)
 
+#ifdef LOAD_OPENSSL
 static void* shared_ssl_lib = NULL;
+#endif
 
 int
 sge_init_shared_ssl_lib(void) 
@@ -93,7 +105,7 @@ sge_init_shared_ssl_lib(void)
    int ret;
 
    DENTER(TOP_LAYER, "sge_init_shared_ssl_lib");
-#if 1 
+#ifdef LOAD_OPENSSL
    if (shared_ssl_lib == NULL) {
 #  if defined(DARWIN)
 #     ifdef RTLD_NODELETE
@@ -181,8 +193,8 @@ sge_init_shared_ssl_lib(void)
         
          ret = 0;
       } else {
-         fprintf(stderr, "%s: unable to open ssl library\n", 
-                 prognames[SGE_PASSWD]);
+         fprintf(stderr, MSG_PWD_CANT_OPEN_SSL_LIB_S, prognames[SGE_PASSWD]);
+         fprintf(stderr, "\n");
          ret = 1;
       }
    } else {
@@ -293,13 +305,13 @@ sge_get_file_priv_key(void)
          const char *sge_cell = sge_get_default_cell();
          const char *user_key = "private/key.pem";
          const char *sge_qmaster_port = getenv("SGE_QMASTER_PORT");
-     
+
          if (sge_qmaster_port != NULL) { 
             sge_dstring_sprintf(&priv_key, "%s/port%s/%s/%s", 
                                 ca_local_dir, sge_qmaster_port, sge_cell, user_key);
          } else {
             sge_dstring_sprintf(&priv_key, "%s/sge_qmaster/%s/%s", 
-                                ca_local_dir, sge_qmaster_port, sge_cell, user_key);
+                                ca_local_dir, sge_cell, user_key);
          }
       }
       initialized = true;
@@ -341,7 +353,10 @@ static EVP_PKEY *
 read_private_key(const char *keyfile)
 {
    FILE *fp = NULL;
-   EVP_PKEY *pkey;
+   union {
+      EVP_PKEY *pkey;
+      void *pointer;
+   } pku;   
 
    DENTER(TOP_LAYER, "read_private_key");
    fp = fopen(keyfile, "r");
@@ -349,17 +364,21 @@ read_private_key(const char *keyfile)
       DEXIT;
       return NULL;
    }
+   
+   pku.pointer = NULL;
+   
 #if 1
-   pkey = shared_ssl_func__PEM_read_PrivateKey(fp, NULL, 0, NULL);
+   /* pointer to pkey must passed into function and will not be returned by function! */
+   shared_ssl_func__PEM_read_PrivateKey(fp, &pku.pointer, NULL, NULL);
 #else
-   pkey = PEM_read_PrivateKey(fp, NULL, 0, NULL);
+   pku.pkey = PEM_read_PrivateKey(fp, NULL, 0, NULL);
 #endif
    fclose (fp);
-   if (pkey == NULL) {
+   if (pku.pkey == NULL) {
       shared_ssl_func__ERR_print_errors_fp(stderr);
    }
    DEXIT;
-   return pkey;
+   return pku.pkey;
 }
 
 static void
@@ -415,7 +434,7 @@ buffer_read_from_stdin(char **buffer, size_t *size)
             memcpy(buffer_ptr + buffer_ptr_length, buffer, buffer_length);
             buffer_ptr_length += buffer_length;
          } else {
-            fprintf(stderr, MSG_PWD_MALLOC, prognames[SGE_PASSWD]);
+            fprintf(stderr, MSG_PWD_MALLOC_S, prognames[SGE_PASSWD]);
             exit(1);
          }
       }
@@ -447,14 +466,16 @@ buffer_encrypt(const char *buffer_in, size_t buffer_in_length,
    EVP_CIPHER_CTX ectx;
    unsigned char iv[EVP_MAX_IV_LENGTH];
 	unsigned char *ekey[1]; 
-	int ekeylen, net_ekeylen; 
+	int ekeylen=0, net_ekeylen=0;
 	EVP_PKEY *pubKey[1];
 	char ebuf[512];
+   int ret = 0;
 
    DENTER(TOP_LAYER, "buffer_encrypt");
    pubKey[0] = read_public_key(sge_get_file_pub_key());
 	if(!pubKey[0]) {
-      fprintf(stderr, MSG_PWD_LOAD_PUB, prognames[SGE_PASSWD], sge_get_file_pub_key());
+      fprintf(stderr, MSG_PWD_LOAD_PUB_SS, prognames[SGE_PASSWD], sge_get_file_pub_key());
+      fprintf(stderr, "\n");
       DEXIT;
       exit(1);
    }      
@@ -462,17 +483,28 @@ buffer_encrypt(const char *buffer_in, size_t buffer_in_length,
    ekey[0] = malloc(shared_ssl_func__EVP_PKEY_size(pubKey[0]));  
    if (!ekey[0]) {
 	   shared_ssl_func__EVP_PKEY_free(pubKey[0]); 
-      fprintf(stderr, MSG_PWD_MALLOC, prognames[SGE_PASSWD]);
+      fprintf(stderr, MSG_PWD_MALLOC_S, prognames[SGE_PASSWD]);
+      fprintf(stderr, "\n");
       DEXIT;
 	   exit(1);
 	}
 
  	memset(iv, '\0', sizeof(iv));
 #if 0
-	shared_ssl_func__EVP_SealInit(&ectx, EVP_des_ede3_cbc(), ekey, &ekeylen, iv, pubKey, 1); 
+	ret = shared_ssl_func__EVP_SealInit(&ectx, EVP_des_ede3_cbc(), ekey, &ekeylen, iv, pubKey, 1); 
 #else
-	shared_ssl_func__EVP_SealInit(&ectx, shared_ssl_func__EVP_rc4(), ekey, &ekeylen, iv, pubKey, 1); 
+	ret = shared_ssl_func__EVP_SealInit(&ectx, shared_ssl_func__EVP_rc4(), ekey, &ekeylen, iv, pubKey, 1); 
 #endif
+   if(ret == 0) {
+      printf("---> EVP_SealInit\n");
+      ERR_print_errors_fp(stdout);
+   }
+   
+   if(ekeylen == 0 || ekeylen > 10000) {
+      DPRINTF(("Setting ekeylen to 128, "
+               "because EVP_SealInit returned invalid value!\n"));
+      ekeylen = 128;
+   }
 	net_ekeylen = htonl(ekeylen);	
 
    buffer_append(buffer_out, buffer_out_size, buffer_out_length,
@@ -502,10 +534,10 @@ buffer_encrypt(const char *buffer_in, size_t buffer_in_length,
    DEXIT;
 }
 
-void 
+int
 buffer_decrypt(const char *buffer_in, size_t buffer_in_length,
                char **buffer_out, size_t *buffer_out_size,
-               size_t *buffer_out_length)
+               size_t *buffer_out_length, char *err_str)
 
 {
 	char buf[520];
@@ -517,14 +549,22 @@ buffer_decrypt(const char *buffer_in, size_t buffer_in_length,
 	unsigned int ekeylen; 
 	EVP_PKEY *privateKey;
    char *curr_ptr = (char*)buffer_in;
+   const char *file_priv_key=NULL;
+   int ret = 0;
 
    DENTER(TOP_LAYER, "buffer_decrypt");
 	memset(iv, '\0', sizeof(iv));
-	privateKey = read_private_key(sge_get_file_priv_key());
+   file_priv_key = sge_get_file_priv_key();
+	privateKey = read_private_key(file_priv_key);
 	if (!privateKey) {
-		fprintf(stderr, MSG_PWD_LOAD_PRIV, prognames[SGE_PASSWD], sge_get_file_priv_key());
+      sprintf(err_str, MSG_PWD_LOAD_PRIV_SS, 
+              prognames[SGE_PASSWD], file_priv_key);
+      sprintf(err_str, "\n");
+#ifdef DEFINE_SGE_PASSWD_MAIN
+		fprintf(stderr, err_str);
+#endif
       DEXIT;
-		exit(1);	
+      return 1;
 	}
 
    memcpy(&ekeylen, curr_ptr, sizeof(ekeylen));
@@ -533,17 +573,25 @@ buffer_decrypt(const char *buffer_in, size_t buffer_in_length,
 	ekeylen = ntohl(ekeylen);
 	if (ekeylen != shared_ssl_func__EVP_PKEY_size(privateKey)) {
       shared_ssl_func__EVP_PKEY_free(privateKey);
-		fprintf(stderr, MSG_PWD_DECR, prognames[SGE_PASSWD]);
+      sprintf(err_str, MSG_PWD_DECR_S, prognames[SGE_PASSWD]);
+      sprintf(err_str, "\n");
+#ifdef DEFINE_SGE_PASSWD_MAIN
+		fprintf(stderr, err_str);
+#endif
       DEXIT;
-		exit(1);	
+      return 1;
 	}
 
 	encryptKey = malloc(sizeof(char) * ekeylen);
 	if (!encryptKey) {
       shared_ssl_func__EVP_PKEY_free(privateKey);
-      fprintf(stderr, MSG_PWD_MALLOC, prognames[SGE_PASSWD]);
+      sprintf(err_str, MSG_PWD_MALLOC_S, prognames[SGE_PASSWD]);
+      sprintf(err_str, "\n");
+#ifdef DEFINE_SGE_PASSWD_MAIN
+      fprintf(stderr, err_str);
+#endif
       DEXIT;
-		exit(1);
+      return 1;
 	}
 
    memcpy(encryptKey, curr_ptr, ekeylen);
@@ -553,16 +601,18 @@ buffer_decrypt(const char *buffer_in, size_t buffer_in_length,
    curr_ptr += sizeof(iv);
    buffer_in_length -= sizeof(iv);
 #if 0
-	shared_ssl_func__EVP_OpenInit(&ectx, EVP_des_ede3_cbc(), encryptKey, ekeylen, iv, privateKey); 	
+	ret = shared_ssl_func__EVP_OpenInit(&ectx, EVP_des_ede3_cbc(), encryptKey, ekeylen, iv, privateKey); 	
 #else
-	shared_ssl_func__EVP_OpenInit(&ectx, shared_ssl_func__EVP_rc4(), encryptKey, ekeylen, iv, privateKey); 	
+	ret = shared_ssl_func__EVP_OpenInit(&ectx, shared_ssl_func__EVP_rc4(), encryptKey, ekeylen, iv, privateKey); 	
 #endif
-	while(1) {
+   if(ret == 0) {
+      printf("----> EVP_OpenInit\n");
+      ERR_print_errors_fp(stdout);
+   }
+	while (buffer_in_length > 0) {
       int readlen = 0;
 
-      if (buffer_in_length == 0) {
-         break;
-      } else if (buffer_in_length < sizeof(ebuf)) {
+      if (buffer_in_length < sizeof(ebuf)) {
          memcpy(&ebuf, curr_ptr, buffer_in_length);
          readlen = buffer_in_length;
          buffer_in_length = 0;
@@ -588,135 +638,127 @@ buffer_decrypt(const char *buffer_in, size_t buffer_in_length,
    shared_ssl_func__EVP_PKEY_free(privateKey);
 	free(encryptKey);
    DEXIT;
+   return 0;
 }
-
-static int 
-password_get_size(const char *filename)
-{
-   size_t ret = 0;
-   FILE *fp = NULL;
-
-   DENTER(TOP_LAYER, "password_get_size");
-   fp = fopen(filename, "r");   
-   if (fp != NULL) {
-      bool do_loop = true;
-
-      while (do_loop) {
-         char input[10000];
-
-         if (fscanf(fp, "%[^\n]\n", input) == 1) {
-            ret++;
-         } else {
-            do_loop = false;
-         }
-      }
-      fclose(fp); 
-   }
-   DEXIT;
-   return ret;
-}
-
-int
-password_read_file(char **users[], char**encryped_pwds[], const char *filename) 
-{
-   int ret = 0;
-   FILE *fp = NULL;
-
-   DENTER(TOP_LAYER, "password_read_file");
-   fp = fopen(filename, "r");   
-   if (fp != NULL) {
-      bool do_loop = true;
-      size_t size = password_get_size(filename) + 2;
-      size_t i = 0;
-
-      *users = malloc(size * sizeof(char*));
-      *encryped_pwds = malloc(size * sizeof(char*));
-      while (do_loop) {
-         char input[10000];
-         char *uname = NULL;
-         char *pwd = NULL;
-
-         if (fscanf(fp, "%[^\n]\n", input) == 1) {
-            uname = strtok(input, " ");
-            pwd = strtok(NULL, " ");
-            (*users)[i] = strdup(uname);
-            (*encryped_pwds)[i] = strdup(pwd);
-            i++;
-         } else {
-            do_loop = false;
-         }
-      }
-      (*users)[i] = NULL;
-      (*encryped_pwds)[i] = NULL; i++;
-      (*users)[i] = NULL;
-      (*encryped_pwds)[i] = NULL; i++;
-
-      fclose(fp); 
-   } else {
-      *users = malloc(2 * sizeof(char*));
-      *encryped_pwds = malloc(2 * sizeof(char*));
-      (*users)[0] = NULL;
-      (*encryped_pwds)[0] = NULL;
-      (*users)[1] = NULL;
-      (*encryped_pwds)[1] = NULL; 
-
-      /* Can't read passwd file */
-      ret = 1;
-   }
-   DEXIT;
-   return ret;
-}
-
-int
-password_find_entry(char *users[], char *encryped_pwds[], const char *user)
-{
-   int ret = -1;
-   size_t i = 0;
-
-   DENTER(TOP_LAYER, "password_find_entry");
-   while (users[i] != NULL) {
-      if (!strcmp(users[i], user)) {
-         ret = i;
-         break;
-      }
-      i++;
-   }
-   return ret;
-}
-
-#ifdef DEFINE_SGE_PASSWD_MAIN
-
-static const char*
-sge_get_file_passwd(void)
+const char*
+sge_get_file_dotpasswd(void)
 {
    static char file[4096] = "";
 
-   DENTER(TOP_LAYER, "sge_get_file_passwd");
+   DENTER(TOP_LAYER, "sge_get_file_dotpasswd");
    if (file[0] == '\0') {
       const char *sge_root = sge_get_root_dir(0, NULL, 0, 1);
       const char *sge_cell = sge_get_default_cell();
 
-      sprintf(file, "%s/%s/common/sgepasswd", sge_root, sge_cell);
+      sprintf(file, "%s/%s/common/.sgepasswd", sge_root, sge_cell);
    } 
    DEXIT;
    return file;
 }
 
+unsigned char *
+buffer_encode_hex(unsigned char *input, size_t len, unsigned char **output)
+{
+   size_t s;
+   int    ret;
+
+   DENTER(TOP_LAYER, "buffer_encode_hex");
+
+   s = len * 2 + 1;
+   DPRINTF(("len=%d, mallocing %d Bytes\n", len, s));
+
+   *output = malloc(s);
+   DPRINTF(("buffer output=%#x\n", *output));
+
+   if(*output != NULL) {
+      memset(*output, 0, s);
+
+      for (s = 0; s < len; s++) {
+         char buffer[32] = "";
+         int byte = input[s];
+
+         ret = snprintf(buffer, 3, "%02x", byte);
+         if(ret != 2) {
+            DPRINTF(("encode error: snprintf returned %d\n", ret));
+            free(*output);
+            *output=NULL;
+            return NULL;
+         }
+         strcat((char*) *output, buffer);
+      }
+   }
+   DEXIT;
+   return *output;
+}
+
+unsigned char *
+buffer_decode_hex(unsigned char *input, size_t *len, unsigned char **output) 
+{
+   size_t s;
+
+   DENTER(TOP_LAYER, "buffer_decode_hex");
+
+   s = *len / 2 + 1;
+   *output = malloc(s);
+   memset(*output, 0, s);
+
+   for (s = 0; s < *len; s+=2) {
+      char buffer[32] = "";
+      int byte = 0;
+
+      buffer[0] = input[s];
+      buffer[1] = input[s+1];
+
+      sscanf(buffer, "%02x", &byte);
+      (*output)[s/2] = byte;
+   }
+   *len = *len / 2;
+
+   DEXIT;
+   return *output;
+}
+
+#ifdef DEFINE_SGE_PASSWD_MAIN
+
 static void
-password_write_file(char *users[], char *encryped_pwds[], const char *filename) 
+password_write_file(char *users[], char *encryped_pwds[], 
+                    const char *backup_file, const char *filename) 
 {
    FILE *fp = NULL;
    size_t i = 0;
 
    DENTER(TOP_LAYER, "password_write_file");
-   fp = fopen(filename, "w");
+
+   FOPEN(fp, backup_file, "w");
    while (users[i] != NULL) {
       if (users[i][0] != '\0') {
-         fprintf(fp, "%s %s\n", users[i], encryped_pwds[i]);
+         FPRINTF((fp, "%s %s\n", users[i], encryped_pwds[i]));
       }
       i++;
    }
-   fclose(fp);
+   FCLOSE(fp);
+   rename(backup_file, filename);
+   goto FUNC_EXIT;
+
+
+FOPEN_ERROR:
+   fprintf(stderr, MSG_PWD_OPEN_SGEPASSWD_SSI, prognames[SGE_PASSWD],
+      strerror(errno), errno);
+   goto FUNC_EXIT;
+
+FPRINTF_ERROR:
+   fprintf(stderr, MSG_PWD_WRITE_SGEPASSWD_SSI, prognames[SGE_PASSWD],
+      strerror(errno), errno);
+   FCLOSE(fp);
+   goto FUNC_EXIT;
+
+FCLOSE_ERROR:
+   fprintf(stderr, MSG_PWD_CLOSE_SGEPASSWD_SSI, prognames[SGE_PASSWD],
+      strerror(errno), errno);
+   goto FUNC_EXIT;
+
+FUNC_EXIT:
+   fprintf(stderr, "\n");
    DEXIT;
 }
 
@@ -727,7 +769,7 @@ password_add_or_replace_entry(char **users[], char **encryped_pwds[],
    size_t i = 0;
    bool done = false;
 
-   DENTER(TOP_LAYER, "password_write_file");
+   DENTER(TOP_LAYER, "password_add_or_replace_entry");
    while ((*users)[i] != NULL) {
       if (!strcmp((*users)[i], user)) {
          free((*encryped_pwds)[i]);
@@ -741,14 +783,12 @@ password_add_or_replace_entry(char **users[], char **encryped_pwds[],
       (*encryped_pwds)[i] = strdup(encryped_pwd); 
    }
    DEXIT;
- 
 }
 
 static void
 sge_passwd_delete(const char *username, const char *domain)
 {
-   char only_user[128] = "";
-   char user[128] = "";
+   char user[256] = "";
    char **users = NULL;
    char **encryped_pwd = NULL;
    int i;
@@ -758,25 +798,12 @@ sge_passwd_delete(const char *username, const char *domain)
     */
    password_read_file(&users, &encryped_pwd, sge_get_file_passwd());
 
-   /*
-    * Get user name
-    */
-   if (username != NULL && username[0] != '\0') {
-      strcpy(only_user, username);
-   } else {
-      uid_t uid = getuid();
-
-      if (sge_uid2user(uid, only_user, sizeof(only_user), MAX_NIS_RETRIES)) {
-         fprintf(stderr, MSG_PWD_NO_USERNAME, prognames[SGE_PASSWD], (int) uid);
-         exit(7);
-      }
-   }
    if (domain != NULL && domain[0] != '\0') {
       strcpy(user, domain);
       strcat(user, "+");
-      strcat(user, only_user);
+      strcat(user, username);
    } else {
-      strcpy(user, only_user);
+      strcpy(user, username);
    }
 
    /*
@@ -790,7 +817,8 @@ sge_passwd_delete(const char *username, const char *domain)
    /* 
     * write new password table 
     */ 
-   password_write_file(users, encryped_pwd, sge_get_file_passwd());
+   password_write_file(users, encryped_pwd, 
+                       sge_get_file_dotpasswd(), sge_get_file_passwd());
 }
 
 #if 0
@@ -812,7 +840,7 @@ sge_passwd_show(const char *username)
       uid_t uid = getuid();
 
       if (sge_uid2user(uid, user, sizeof(user), MAX_NIS_RETRIES)) {
-         fprintf(stderr, MSG_PWD_NO_USERNAME, prognames[SGE_PASSWD], uid);
+         fprintf(stderr, MSG_PWD_NO_USERNAME_SU, prognames[SGE_PASSWD], uid);
          exit(7);
       }
    
@@ -841,8 +869,10 @@ sge_passwd_show(const char *username)
          buffer_deco_length = strlen(encryped_pwd[i]);
          buffer_decode_base64(encryped_pwd[i], &buffer_deco_length, 0, 
                               &err64, &buffer_deco);
-         buffer_decrypt(buffer_deco, buffer_deco_length, &buffer_decr, 
-                        &buffer_decr_size, &buffer_decr_length);
+         if(buffer_decrypt(buffer_deco, buffer_deco_length, &buffer_decr, 
+                        &buffer_decr_size, &buffer_decr_length)!=0) {
+            exit(1);
+         }
 
          fprintf(stdout, "%s\n", buffer_decr);
 
@@ -861,39 +891,26 @@ sge_passwd_show(const char *username)
 #endif
 
 static void
-sge_passwd_add_change(const char *username, const char *domain) 
+sge_passwd_add_change(const char *username, const char *domain, uid_t uid) 
 {
-   uid_t uid = getuid();
-   char only_user[128] = "";
    char user[128] = "";
    char **users = NULL;
    char **encryped_pwd = NULL;
+   char err_str[MAX_STRING_SIZE];
 
    DENTER(TOP_LAYER, "sge_passwd_add_change");
 
-   /*
-    * Get user name
-    */
-   if (username != NULL && username[0] != '\0') {
-      strcpy(only_user, username);
-   } else {
-      uid_t uid = getuid();
-
-      if (sge_uid2user(uid, only_user, sizeof(only_user), MAX_NIS_RETRIES)) {
-         fprintf(stderr, MSG_PWD_NO_USERNAME, prognames[SGE_PASSWD], (int) uid);
-         exit(7);
-      }
-   }
    if (domain != NULL && domain[0] != '\0') {
       strcpy(user, domain);
       strcat(user, "+");
-      strcat(user, only_user);
+      strcat(user, username);
    } else {
-      strcpy(user, only_user);
+      strcpy(user, username);
    }
    
    DPRINTF(("username: %s\n", user));
-   fprintf(stdout, MSG_PWD_CHANGE_FOR, user);
+   fprintf(stdout, MSG_PWD_CHANGE_FOR_S, user);
+   fprintf(stdout, "\n"); 
 
    /*
     * Read password table
@@ -921,7 +938,8 @@ sge_passwd_add_change(const char *username, const char *domain)
 #endif
 
          if (shared_ssl_func__EVP_read_pw_string(old_passwd, 128, "Old password: ", 0) != 0) {
-            fprintf(stderr, MSG_PWD_CHANGE_ABORT, prognames[SGE_PASSWD]);
+            fprintf(stderr, MSG_PWD_CHANGE_ABORT_S, prognames[SGE_PASSWD]);
+            fprintf(stderr, "\n"); 
             exit(2);
          }  
 
@@ -934,12 +952,14 @@ sge_passwd_add_change(const char *username, const char *domain)
                            &buffer_deco_length, &buffer_deco);
 #endif
 
-         buffer_decrypt((const char*)buffer_deco, buffer_deco_length, 
+         if(buffer_decrypt((const char*)buffer_deco, buffer_deco_length, 
                         &buffer_decr, 
-                        &buffer_decr_size, &buffer_decr_length);
-
+                        &buffer_decr_size, &buffer_decr_length, err_str)!=0) {
+            exit(1);
+         }
          if (strncmp(buffer_decr, old_passwd, 128)) {
-            fprintf(stderr, MSG_PWD_AUTH_FAILURE, prognames[SGE_PASSWD]);
+            fprintf(stderr, MSG_PWD_AUTH_FAILURE_S, prognames[SGE_PASSWD]);
+            fprintf(stderr, "\n"); 
             exit(7);
          }
 
@@ -967,22 +987,26 @@ sge_passwd_add_change(const char *username, const char *domain)
       unsigned char *buffer_enco = NULL;
 
       if (shared_ssl_func__EVP_read_pw_string(new_passwd, 128, "New password: ", 0) != 0) {
-         fprintf(stderr, MSG_PWD_CHANGE_ABORT, prognames[SGE_PASSWD]);
+         fprintf(stderr, MSG_PWD_CHANGE_ABORT_S, prognames[SGE_PASSWD]);
+         fprintf(stderr, "\n");
          exit(2);
       }  
       if (shared_ssl_func__EVP_read_pw_string(new_passwd2, 128, "Re-enter new password: ", 0) != 0) {
-         fprintf(stderr, MSG_PWD_CHANGE_ABORT, prognames[SGE_PASSWD]);
+         fprintf(stderr, MSG_PWD_CHANGE_ABORT_S, prognames[SGE_PASSWD]);
+         fprintf(stderr, "\n");
          exit(2);
       }  
       if (strncmp(new_passwd, new_passwd2, 128)) {
-         fprintf(stderr, MSG_PWD_NO_MATCH, prognames[SGE_PASSWD]);
+         fprintf(stderr, MSG_PWD_NO_MATCH_S, prognames[SGE_PASSWD]);
+         fprintf(stderr, "\n");
          exit(7);
       } 
 
       DPRINTF(("passwords are equivalent\n"));
 
       if (strlen(new_passwd) == 0) {
-         fprintf(stderr, MSG_PWD_INVALID, prognames[SGE_PASSWD]);
+         fprintf(stderr, MSG_PWD_INVALID_S, prognames[SGE_PASSWD]);
+         fprintf(stderr, "\n");
          exit(7);
       }
 
@@ -1011,9 +1035,11 @@ sge_passwd_add_change(const char *username, const char *domain)
    /* 
     * write new password table 
     */ 
-   password_write_file(users, encryped_pwd, sge_get_file_passwd());
+   password_write_file(users, encryped_pwd, 
+                       sge_get_file_dotpasswd(), sge_get_file_passwd());
    DPRINTF(("password table has been written\n"));
    fprintf(stdout, MSG_PWD_CHANGED);
+   fprintf(stdout, "\n");
    DEXIT;
 }
 
@@ -1026,11 +1052,13 @@ passwd_become_admin_user(void)
 
    if (sge_set_admin_username(bootstrap_get_admin_user(), str) == -1) {
       fprintf(stderr, SFN": "SFN"\n", prognames[SGE_PASSWD], str);
+      fprintf(stderr, "\n");
       exit(1);
    }
 
    if (sge_switch2admin_user()) {
-      fprintf(stderr, MSG_PWD_SWITCH_ADMIN, prognames[SGE_PASSWD]);
+      fprintf(stderr, MSG_PWD_SWITCH_ADMIN_S, prognames[SGE_PASSWD]);
+      fprintf(stderr, "\n");
       exit(1);
    }
 
@@ -1053,44 +1081,72 @@ sge_passwd_show_usage(void)
 
 int main(int argc, char *argv[])
 {
-   char domain[128] = "";
-   char username[128] = "";
-   bool do_delete = false;
+   char  domain[128] = "";
+   char  username[128] = "";
+   bool  do_delete = false;
+   uid_t starter_uid=-1;
+
+   char buffer[1024];
+   dstring bw;
 
    DENTER_MAIN(TOP_LAYER, "sgepasswd");
 
    /* 
     * Do initalisation and switch to admin_user
     */ 
-   { 
-      char buffer[1024];
-      dstring bw;
 
-      sge_init_shared_ssl_lib();
-      shared_ssl_func__ERR_load_crypto_strings();
-      sge_dstring_init(&bw, buffer, sizeof(buffer));
-      sge_prof_setup();
-      uidgid_mt_init();
-      path_mt_init();
-      bootstrap_mt_init();
-      sge_getme(SGE_PASSWD);
+   /*
+    * Check if euid is right, then switch to root
+    */
+   DPRINTF(("uid=%ld; gid=%ld; euid=%ld; egid=%ld\n", 
+         (long)getuid(), (long)getgid(), 
+         (long)geteuid(), (long)getegid()));
 
-      if (sge_setup_paths(sge_get_default_cell(), &bw) != true) {
-         fprintf(stderr, SFN": "SFN"\n", 
-                 prognames[SGE_PASSWD], sge_dstring_get_string(&bw));
-         exit(1);
-      }
-
-      if (sge_bootstrap(&bw) != true) {
-         fprintf(stderr, SFN": "SFN"\n", 
-                 prognames[SGE_PASSWD], sge_dstring_get_string(&bw));
- 
-         exit(1);
-      }
-
-      passwd_become_admin_user();
+   if(geteuid()!=SGE_SUPERUSER_UID) {
+      fprintf(stderr, SFN": Not Superuser, check file permissions!\n",
+              prognames[SGE_PASSWD]);
+      exit(1);
    }
 
+   if(sge_init_shared_ssl_lib()!=0) {
+      exit(1);
+   }
+
+   shared_ssl_func__ERR_load_crypto_strings();
+   sge_dstring_init(&bw, buffer, sizeof(buffer));
+   sge_prof_setup();
+   uidgid_mt_init();
+   path_mt_init();
+   bootstrap_mt_init();
+   sge_getme(SGE_PASSWD);
+
+   if (sge_setup_paths(sge_get_default_cell(), &bw) != true) {
+      fprintf(stderr, SFN": "SFN"\n", 
+              prognames[SGE_PASSWD], sge_dstring_get_string(&bw));
+      exit(1);
+   }
+
+   if (sge_bootstrap(&bw) != true) {
+      fprintf(stderr, SFN": "SFN"\n", 
+              prognames[SGE_PASSWD], sge_dstring_get_string(&bw));
+
+      exit(1);
+   }
+
+   /*
+    * switch to root
+    */
+   starter_uid = getuid();
+   setuid(SGE_SUPERUSER_UID);
+   setgid(SGE_SUPERUSER_GID);
+   DPRINTF(("uid=%ld; gid=%ld; euid=%ld; egid=%ld\n", 
+         (long)getuid(), (long)getgid(), 
+         (long)geteuid(), (long)getegid()));
+
+   passwd_become_admin_user();
+   DPRINTF(("uid=%ld; gid=%ld; euid=%ld; egid=%ld\n", 
+         (long)getuid(), (long)getgid(), 
+         (long)geteuid(), (long)getegid()));
    while (argc > 1) {
       if (!strcmp(argv[1],"-help")) {
          argc--; argv++;
@@ -1113,14 +1169,15 @@ int main(int argc, char *argv[])
          uid_t uid = getuid();
 
          if (uid != 0) {
-            fprintf(stderr, MSG_PWD_ONLY_ROOT, prognames[SGE_PASSWD]);
+            fprintf(stderr, MSG_PWD_ONLY_ROOT_S, prognames[SGE_PASSWD]);
+            fprintf(stderr, "\n");
             exit(1);
          }
 
          argc--; argv++;
          if (argc != 1 && sscanf(argv[1], "%s", username) == 1) {
             argc--; argv++;
-            do_delete = 1;
+            do_delete = true;
             continue;
          } else {
             sge_passwd_show_usage();
@@ -1132,7 +1189,8 @@ int main(int argc, char *argv[])
          uid_t uid = getuid();
 
          if (uid != 0) {
-            fprintf(stderr, MSG_PWD_ONLY_USER, prognames[SGE_PASSWD], username);
+            fprintf(stderr, MSG_PWD_ONLY_USER_SS, prognames[SGE_PASSWD], username);
+            fprintf(stderr, "\n");
             exit(1);
          }
          argc--; argv++;
@@ -1140,10 +1198,19 @@ int main(int argc, char *argv[])
       } 
    }
 
+   if (username == NULL || username[0] == '\0') {
+      if (sge_uid2user(starter_uid, username, sizeof(username), MAX_NIS_RETRIES)) {
+         fprintf(stderr, MSG_PWD_NO_USERNAME_SI, prognames[SGE_PASSWD],
+                 (int)starter_uid);
+         fprintf(stderr, "\n");
+         exit(7);
+      }
+   }
+
    if (do_delete) {
       sge_passwd_delete(username, domain);
    } else {
-      sge_passwd_add_change(username, domain);
+      sge_passwd_add_change(username, domain, starter_uid);
    }
 
    sge_done_shared_ssl_lib();
@@ -1152,6 +1219,15 @@ int main(int argc, char *argv[])
 	return 0;		
 }
 
-#endif
+#endif /* defined( DEFINE_SGE_PASSWD_MAIN ) */
+#else  /* defined( SECURE ) */
+#if defined( DEFINE_SGE_PASSWD_MAIN )
 
+int main(void)
+{
+   printf("sgepasswd built with option -no-secure and therefore not functional.\n");
+   return 1;
+}
 
+#endif /* defined( DEFINE_SGE_PASSWD_MAIN ) */
+#endif /* defined( SECURE ) */

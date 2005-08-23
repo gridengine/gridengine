@@ -35,10 +35,6 @@
 #include <stdlib.h>
 #include <limits.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif  
-
 #include "sge_bootstrap.h"
 #include "sge_prog.h"
 #include "sge_gdiP.h"
@@ -58,9 +54,6 @@
 
 #include "msg_common.h"
 #include "msg_gdilib.h"
-
-extern long compression_level;
-extern long compression_threshold;
 
 /****** setup/sge_setup() ******************************************************
 *  NAME
@@ -175,35 +168,6 @@ lList **alpp
       }
       SGE_EXIT(1);
    }
-
-#ifdef COMMCOMPRESS
-   {
-      char* cl;
-      cl = getenv("SGE_COMPRESSION_LEVEL");
-      if(cl) {
-         compression_level = (int)strtol(cl, NULL, 10);
-         if(compression_level == LONG_MIN || compression_level == LONG_MAX) {
-            SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_NOVALIDSGECOMPRESSIONLEVEL_S , cl));
-            compression_level = Z_DEFAULT_COMPRESSION;
-         }
-      }
-      DPRINTF((MSG_GDI_SETCOMPRESSIONLEVEL_D , u32c (compression_level)));
-      
-      cl = getenv("SGE_COMPRESSION_THRESHOLD");
-      if(cl) {
-         compression_threshold = (int)strtol(cl, NULL, 10);
-         if(compression_threshold == LONG_MIN || compression_threshold == LONG_MAX || compression_threshold < 0) {
-            SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_NOVALIDSGECOMPRESSIONTHRESHOLD_S , cl));
-            compression_threshold = 10 * 1024;
-         }
-      }
-      else
-         compression_threshold = 10 * 1024;
-      DPRINTF((MSG_GDI_SETCOMPRESSIONTHRESHOLD_D , u32c(compression_threshold)));
-   }
-#endif
-
-   
 
    DEXIT;
    return 0;

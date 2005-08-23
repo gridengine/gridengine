@@ -222,6 +222,9 @@ lDescr *lUndumpDescr(FILE *fp)
 *     int - error state
 *        -1 - Error
 *         0 - OK
+*
+*  NOTES
+*     MT-NOTE: lDumpElem() is not MT safe
 ******************************************************************************/
 int lDumpElem(const char *fname, const lListElem *ep, int indent) 
 {
@@ -258,6 +261,9 @@ int lDumpElem(const char *fname, const lListElem *ep, int indent)
 *     int - error state
 *         0 - OK
 *        -1 - Error 
+*
+*  NOTES
+*     MT-NOTE: lDumpElemFp() is not MT safe
 ******************************************************************************/
 int lDumpElemFp(FILE *fp, const lListElem *ep, int indent) 
 {
@@ -295,7 +301,7 @@ int lDumpElemFp(FILE *fp, const lListElem *ep, int indent)
                      space, lNm2Str(ep->descr[i].nm), lGetPosInt(ep, i));
          break;
       case lUlongT:
-         ret = fprintf(fp, "%s/* %-20.20s */ " u32 "\n",
+         ret = fprintf(fp, "%s/* %-20.20s */ " sge_u32 "\n",
                    space, lNm2Str(ep->descr[i].nm), lGetPosUlong(ep, i));
          break;
       case lStringT:
@@ -448,11 +454,14 @@ int lDumpObject(FILE *fp, const lListElem *ep, int indent)
 *     int - error state
 *         0 - OK
 *        -1 - Error
+*
+*  NOTES
+*     MT-NOTE: lDumpList() is not MT safe
 *******************************************************************************/
 int lDumpList(FILE *fp, const lList *lp, int indent) 
 {
    lListElem *ep;
-   int i, n, ret = ~EOF;
+   int i, ret = ~EOF;
 
    char space[256];
 
@@ -478,7 +487,7 @@ int lDumpList(FILE *fp, const lList *lp, int indent)
    ret = fprintf(fp, "%s/* LISTNAME               */ \"%s\"\n", space, 
                  lGetListName(lp));
    ret = fprintf(fp, "%s/* NUMBER OF ELEMENTS     */ %d\n", space, 
-                 n = lGetNumberOfElem(lp));
+                 lGetNumberOfElem(lp));
 
    ret = lDumpDescr(fp, lGetListDescr(lp), indent);
 
@@ -571,7 +580,7 @@ lListElem *lUndumpElemFp(FILE *fp, const lDescr *dp)
 
    if ((n = lCountDescr(dp)) <= 0) {
       LERROR(LECOUNTDESCR);
-      lFreeElem(ep);
+      lFreeElem(&ep);
       DEXIT;
       return NULL;
    }
@@ -580,7 +589,7 @@ lListElem *lUndumpElemFp(FILE *fp, const lDescr *dp)
    if (fGetBra(fp)) {
       printf("bra is missing\n");
       LERROR(LESYNTAX);
-      lFreeElem(ep);
+      lFreeElem(&ep);
       DEXIT;
       return NULL;
    }
@@ -630,14 +639,14 @@ lListElem *lUndumpElemFp(FILE *fp, const lDescr *dp)
          ret = fGetList(fp, &(ep->cont[i].glp));
          break;
       default:
-         lFreeElem(ep);
+         lFreeElem(&ep);
          unknownType("lUndumpElemFp");
       }
    }
 
    /* error handling for loop */
    if (ret != 0) {
-      lFreeElem(ep);
+      lFreeElem(&ep);
       LERROR(LEFIELDREAD);
       DEXIT;
       return NULL;
@@ -645,7 +654,7 @@ lListElem *lUndumpElemFp(FILE *fp, const lDescr *dp)
 
    /* read ket */
    if (fGetKet(fp)) {
-      lFreeElem(ep);
+      lFreeElem(&ep);
       printf("ket is missing\n");
       LERROR(LESYNTAX);
       DEXIT;
@@ -720,7 +729,7 @@ lListElem *lUndumpObject(FILE *fp)
 
    /* read ket */
    if (fGetKet(fp)) {
-      lFreeElem(ep);
+      lFreeElem(&ep);
       printf("ket is missing\n");
       LERROR(LESYNTAX);
       DEXIT;
@@ -822,14 +831,14 @@ lList *lUndumpList(FILE *fp, const char *name, const lDescr *dp)
 
    if ((n = lCountDescr(dp)) <= 0) {
       LERROR(LECOUNTDESCR);
-      lFreeList(lp);
+      lFreeList(&lp);
       DEXIT;
       return NULL;
    }
 
    if (!(found = (int *) malloc(sizeof(int) * n))) {
       LERROR(LEMALLOC);
-      lFreeList(lp);
+      lFreeList(&lp);
       DEXIT;
       return NULL;
    }
@@ -862,14 +871,14 @@ lList *lUndumpList(FILE *fp, const char *name, const lDescr *dp)
    for (k = 0; k < nelem; k++) {
       if (!(fep = lUndumpElemFp(fp, fdp))) {
          LERROR(LEUNDUMPELEM);
-         lFreeList(lp);
+         lFreeList(&lp);
          free(found);
          DEXIT;
          return NULL;
       }
 
       if (!(ep = lCreateElem(dp))) {
-         lFreeList(lp);
+         lFreeList(&lp);
          free(found);
          LERROR(LECREATEELEM);
          DEXIT;
@@ -877,21 +886,21 @@ lList *lUndumpList(FILE *fp, const char *name, const lDescr *dp)
       }
 
       for (i = 0; i < n; i++) {
-         if (found[i] == -1)
+         if (found[i] == -1) {
             continue;
-         else if (lCopySwitch(fep, ep, found[i], i, true, NULL) == -1) {
-            lFreeList(lp);
-            lFreeElem(ep);
+         } else if (lCopySwitchPack(fep, ep, found[i], i, true, NULL, NULL) == -1) {
+            lFreeList(&lp);
+            lFreeElem(&ep);
             free(found);
             LERROR(LECOPYSWITCH);
             DEXIT;
             return NULL;
          }
       }
-      lFreeElem(fep);
+      lFreeElem(&fep);
       if (lAppendElem(lp, ep) == -1) {
-         lFreeList(lp);
-         lFreeElem(ep);
+         lFreeList(&lp);
+         lFreeElem(&ep);
          free(found);
          LERROR(LEAPPENDELEM);
          DEXIT;
@@ -902,7 +911,7 @@ lList *lUndumpList(FILE *fp, const char *name, const lDescr *dp)
 
    /* read ket */
    if (fGetKet(fp)) {
-      lFreeList(lp);
+      lFreeList(&lp);
       printf("ket is missing\n");
       LERROR(LESYNTAX);
       DEXIT;
@@ -1085,7 +1094,7 @@ static int fGetUlong(FILE *fp, lUlong *up)
       return -1;
    }
 
-   if (sscanf(s, u32, up) != 1) {
+   if (sscanf(s, sge_u32, up) != 1) {
       LERROR(LESSCANF);
       DEXIT;
       return -1;
@@ -1131,8 +1140,9 @@ static int fGetString(FILE *fp, lString *tp)
       sge_dstring_append_char(&sp, s[i]);
    }
    if (s[i] != '"') {
+      bool done = false;
       /* String is diveded by a newline */
-      while ( true ) {
+      while ( !done ) {
          if (fGetLine(fp, line, READ_LINE_LENGHT)) {
             sge_dstring_free(&sp);
             LERROR(LEFGETLINE);
@@ -1144,10 +1154,11 @@ static int fGetString(FILE *fp, lString *tp)
             sge_dstring_append_char(&sp, s[j]);
          }
          if (s[j] == '"') {
+            done = true;
             break;
          }
       }
-   } 
+   }
 
    s = sge_dstring_get_string(&sp);
    if (s == NULL) {

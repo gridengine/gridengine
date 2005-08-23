@@ -136,7 +136,7 @@ TODO: ADOC Header !!!
 
 /* typical user function calls */
 
-int cl_commlib_trigger           (cl_com_handle_t* handle);
+int cl_commlib_trigger           (cl_com_handle_t* handle, int synchron);
 
 
 int cl_commlib_close_connection  (cl_com_handle_t* handle, 

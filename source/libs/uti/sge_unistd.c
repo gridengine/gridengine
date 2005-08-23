@@ -63,7 +63,7 @@ static file_type_t sge_get_file_type(const char *name);
 static file_type_t sge_get_file_type(const char *name)
 {
    SGE_STRUCT_STAT stat_buffer;
-   int ret = FILE_TYPE_NOT_EXISTING;
+   file_type_t ret = FILE_TYPE_NOT_EXISTING;
  
    if (SGE_STAT(name, &stat_buffer)) {
       ret = FILE_TYPE_NOT_EXISTING;
@@ -116,6 +116,12 @@ static int sge_domkdir(const char *path_, int fmode, int exit_on_error, int may_
          return -1;
       }
    }
+#if defined( INTERIX )
+   /*
+    * mkdir is buggy, chown dir manually
+    */
+   chown(path_, geteuid(), getegid());
+#endif
  
    DEXIT;
    return 0;
@@ -126,7 +132,7 @@ static int sge_domkdir(const char *path_, int fmode, int exit_on_error, int may_
 *     sge_unlink() -- delete a name and possibly the file it refers to
 *
 *  SYNOPSIS
-*     int sge_unlink(const char *prefix, const char *suffix) 
+*     bool sge_unlink(const char *prefix, const char *suffix) 
 *
 *  FUNCTION
 *     Replacement for unlink(). 'prefix' and 'suffix' will be combined
@@ -138,10 +144,10 @@ static int sge_domkdir(const char *path_, int fmode, int exit_on_error, int may_
 *
 *  RESULT
 *     int - error state
-*         0 - OK
-*        -1 - Error
+*         true  - OK
+*         false - Error
 ******************************************************************************/
-int sge_unlink(const char *prefix, const char *suffix) 
+bool sge_unlink(const char *prefix, const char *suffix) 
 {
    int status;
    stringT str;
@@ -151,7 +157,7 @@ int sge_unlink(const char *prefix, const char *suffix)
    if (!suffix) {
       ERROR((SGE_EVENT, MSG_POINTER_SUFFIXISNULLINSGEUNLINK ));
       DEXIT;
-      return -1;
+      return false;
    }
  
    if (prefix) {
@@ -166,10 +172,10 @@ int sge_unlink(const char *prefix, const char *suffix)
    if (status) {
       ERROR((SGE_EVENT, "ERROR: unlinking "SFQ": "SFN"\n", str, strerror(errno)));
       DEXIT;
-      return -1;
+      return false;
    } else {
       DEXIT;
-      return 0;
+      return true;
    }
 }  
 
@@ -344,14 +350,20 @@ int sge_mkdir(const char *path, int fmode, int exit_on_error, int may_not_exist)
          return -1;
       }
    }
- 
+
+   DPRINTF(("Making dir \"%s\"\n", path));
+
    memset(path_, 0, sizeof(path_));
    while ((unsigned char) path[i]) {
       path_[i] = path[i];
       if ((path[i] == '/') && (i != 0)) {
          path_[i] = (unsigned char) 0;
          res = sge_domkdir(path_, fmode, exit_on_error, 0);
+#if defined(INTERIX)
+         chown(path_, geteuid(), getegid());
+#endif 
          if (res) {
+            DPRINTF(("retval = %d\n", res));
             DEXIT;
             return res;
          }
@@ -362,6 +374,7 @@ int sge_mkdir(const char *path, int fmode, int exit_on_error, int may_not_exist)
  
    i = sge_domkdir(path_, fmode, exit_on_error, may_not_exist);
  
+   DPRINTF(("retval = %d\n", i));
    DEXIT;
    return i;
 }   
@@ -420,6 +433,7 @@ int sge_rmdir(const char *cp, dstring *error)
    SGE_STRUCT_STAT statbuf;
    SGE_STRUCT_DIRENT *dent;
    DIR *dir;
+   char dirent[SGE_PATH_MAX*2];
    char fname[SGE_PATH_MAX];
 
    DENTER(TOP_LAYER, "sge_rmdir");
@@ -438,7 +452,7 @@ int sge_rmdir(const char *cp, dstring *error)
       return -1;
    }
  
-   while ((dent = SGE_READDIR(dir))) {
+   while (SGE_READDIR_R(dir, (SGE_STRUCT_DIRENT *)dirent, &dent)==0 && dent!=NULL) {
       if (strcmp(dent->d_name, ".") && strcmp(dent->d_name, "..")) {
  
          sprintf(fname, "%s/%s", cp, dent->d_name);
@@ -514,7 +528,7 @@ int sge_is_executable(const char *name)
    SGE_STRUCT_STAT stat_buffer;
    int ret = SGE_STAT(name, &stat_buffer);
    if (!ret) { 
-      return (stat_buffer.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH));
+      return (int)(stat_buffer.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH));
    } else {
       return 0;
    }

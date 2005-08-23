@@ -45,10 +45,6 @@
 #include <link.h>
 #endif
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif   
-
 #include "rmon/sgermon.h"
 #include "uti/sge_log.h"
 #include "sgeobj/sge_answer.h"

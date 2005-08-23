@@ -233,8 +233,8 @@ void updateQueueList(void)
 #endif  
    /* EB: TODO: */
    qlp = lSelect("SQL", qmonMirrorList(SGE_CQUEUE_LIST), where, whatall); 
-   lFreeWhere(where);
-   lFreeWhat(whatall);
+   lFreeWhere(&where);
+   lFreeWhat(&whatall);
 
 #ifdef FIXME
    /*
@@ -606,8 +606,8 @@ lList *new_hl
    /*
    ** free the previously referenced queue elements
    */
-   prev_ql = lFreeList(prev_ql);
-   prev_hl = lFreeList(prev_hl);
+   lFreeList(&prev_ql);
+   lFreeList(&prev_hl);
 
    /* now the new_ql becomes the prev_ql */
    prev_ql = new_ql;
@@ -913,7 +913,7 @@ lListElem *qep
       rows++;
    }
 
-   ncl = lFreeList(ncl);
+   lFreeList(&ncl);
    
    DEXIT;
 }
@@ -1236,7 +1236,7 @@ XtPointer cld, cad;
                   bw + x, bw);
 
       /* draw a string into the pixmap */
-      sprintf(buf, "@f[SMALL]%s\nSlots: " u32 "("u32")", 
+      sprintf(buf, "@f[SMALL]%s\nSlots: " sge_u32 "("sge_u32")", 
                   qname, used, total);
                   
       str = XmtCreateXmString(buf);
@@ -1508,7 +1508,7 @@ XtPointer cld, cad;
 
       updateQueueList();
 
-      ql = lFreeList(ql);
+      lFreeList(&ql);
       alp = lFreeList(alp);
    }
    

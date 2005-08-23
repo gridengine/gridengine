@@ -13,30 +13,30 @@ DESCRIPTION
      <I>Qmake</I> is a parallel, distributed <B><A HREF="../htmlman1/make.html">make(1)</A></B> utility. Scheduling
      of  the  parallel  <I>make</I>  tasks is done by Grid Engine. It is
      based on <I>gmake</I> (GNU make), version 3.78.1. Both Grid  Engine
-     and  <I>gmake</I>  commandline  options  can be specified. They are
+     and  <I>gmake</I>  command  line options can be specified. They are
      separated by "--".
 
      All Grid Engine options valid with <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B> or <B><A HREF="../htmlman1/qrsh.html">qrsh(1)</A></B> can be
      specified  with  <I>qmake</I>  - see <B><A HREF="../htmlman1/submit.html">submit(1)</A></B> for a description of
-     all Grid Engine commandline  options.   The  <B><A HREF="../htmlman1/make.html">make(1)</A></B>  manual
-     page describes the <I>gmake</I> commandline syntax.
+     all Grid Engine command line options.   The  <B><A HREF="../htmlman1/make.html">make(1)</A></B>  manual
+     page describes the <I>gmake</I> command line syntax.
 
      The syntax of <I>qmake</I> makefiles corresponds to  <I>gmake</I>  and  is
      described in the "GNU Make Manual".
 
-     A typical qmake call will use the  Grid  Engine  commandline
+     A typical qmake call will use the Grid Engine  command  line
      options -cwd to have a scheduled make started in the current
      working directory on the execution host, -v PATH if the Grid
      Engine environment is not setup in the users .cshrc or .pro-
      file shell resource file and request  slots  in  a  parallel
      environment (see <B><A HREF="../htmlman5/sge_pe.html">sge_pe(5)</A></B> ).
 
-     If no resource request (Grid Engine commandline  option  -l)
+     If no resource request (Grid Engine command line option  -l)
      is  specified,  qmake  will  use  the  environment  variable
      SGE_ARCH to request the same architecture for task execution
      as  has  the submit host.  If SGE_ARCH is set, the architec-
      ture specified in SGE_ARCH will be  requested  by  inserting
-     the  option  -l arch=$SGE_ARCH into the commandline options.
+     the  option -l arch=$SGE_ARCH into the command line options.
      If SGE_ARCH is not set, the make tasks can  be  executed  on
      any available architecture.  As this is critical for typical
      make (compile) jobs, a warning will be output.
@@ -45,9 +45,9 @@ DESCRIPTION
      resources for the parallel execution of tasks:
 
      1. Allocation of resources using a parallel environment.  If
-     the  -pe option is used on the qmake commandline, a parallel
+     the -pe option is used on the qmake command line, a parallel
      job is scheduled by Grid Engine.  The make  rules  are  exe-
-     cuted as tasks withing this parallel job.
+     cuted as tasks within this parallel job.
 
      2. Dynamic allocation of resources. If no parallel  environ-
      ment  is  requested  when  submitting a qmake job, each make
@@ -55,7 +55,7 @@ DESCRIPTION
      resource  requests  given  to qmake will be inherited by the
      jobs processing the make rules.
      In dynamic allocation mode, additional resource requests for
-     individual  rules can be specified by preceeding the rule by
+     individual  rules  can be specified by preceding the rule by
      the definition of an environment variable SGE_RREQ. The rule
      then   takes  the  form  SGE_RREQ="&lt;request&gt;"  &lt;rule&gt;,  e.g.
      SGE_RREQ="-l lic=1" cc -c ...  If such  makefile  rules  are
@@ -69,7 +69,7 @@ EXAMPLES
      will request between 1 and 10 slots in parallel  environment
      "compiling".  If the SGE_ARCH environment variable is set to
      the  machines  architecture,  a  resource  request  will  be
-     inserted  into  the qmake commandline to start the qmake job
+     inserted  into the qmake command line to start the qmake job
      on the same architecture as the submit host. The <I>make</I>  tasks
      will  inherit the complete environment of the calling shell.
      It will execute as many parallel tasks as  slots  have  been
@@ -85,11 +85,11 @@ EXAMPLES
      will request the architecture sol-sparc.
 
      If the following Makefile is submitted with the  above  com-
-     mandline,  additional  resource  requests  will  be made for
+     mand  line,  additional  resource  requests will be made for
      individual rules:  For the compile and link rules,  compiler
      licenses   (comp)   and   linker  licenses  (link)  will  be
      requested, in addition to the resource request made for  the
-     whole job (-l arch=sol-sparc) on the commandline.
+     whole job (-l arch=sol-sparc) on the command line.
 
           all: test
 
@@ -106,7 +106,7 @@ EXAMPLES
                SGE_RREQ="-l comp=1" cc -c -DALIASPATH=
 
 
-     The commandline
+     The command line
           qmake -cwd -v PATH -l arch=sol-sparc64 -pe make 3 --
 
      will request 3 parallel <I>make</I> tasks to be executed  on  hosts
@@ -120,7 +120,7 @@ EXAMPLES
 
      can be submitted by
 
-          qsub -cwd -v PATH -pe make 1-10 [furter sge options] &lt;script&gt;
+          qsub -cwd -v PATH -pe make 1-10 [further sge options] &lt;script&gt;
 
      <I>Qmake</I> will inherit the resources granted for the job sumbit-
      ted above under parallel environment "make".
@@ -165,7 +165,7 @@ KNOWN PROBLEMS
 
   Multiple commands in one rule
      If multiple commands are executed in one rule, the  makefile
-     has to ensure that they are handled as one commandline.
+     has to ensure that they are handled as one command line.
 
      Example:
 

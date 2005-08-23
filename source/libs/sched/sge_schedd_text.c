@@ -147,8 +147,8 @@ const char* sge_get_schedd_text( int nr )
       case SCHEDD_INFO_CKPTNOTFOUND_            :
          return MSG_SCHEDD_INFO_CKPTNOTFOUND_             ;   
  
-      case SCHEDD_INFO_PESLOTSNOTINRANGE_S      :
-         return MSG_SCHEDD_INFO_PESLOTSNOTINRANGE_S       ;  
+      case SCHEDD_INFO_PESLOTSNOTINRANGE_SI      :
+         return MSG_SCHEDD_INFO_PESLOTSNOTINRANGE_SI       ;  
  
       case SCHEDD_INFO_NOACCESSTOPE_S           :
          return MSG_SCHEDD_INFO_NOACCESSTOPE_S            ;   

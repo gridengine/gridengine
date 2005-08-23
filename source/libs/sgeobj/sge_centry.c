@@ -33,10 +33,6 @@
 #include <string.h>
 #include <float.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif
-
 #include "sge.h"
 #include "sge_string.h"
 #include "sgermon.h"
@@ -242,7 +238,7 @@ centry_fill_and_check(lListElem *this_elem, bool allow_empty_boolean,
          break;
 
       default:
-         ERROR((SGE_EVENT, MSG_SGETEXT_UNKNOWN_ATTR_TYPE_U, u32c(type)));
+         ERROR((SGE_EVENT, MSG_SGETEXT_UNKNOWN_ATTR_TYPE_U, sge_u32c(type)));
          DEXIT;
          return -1;
    }
@@ -389,8 +385,7 @@ centry_create(lList **answer_list, const char *name)
 bool 
 centry_is_referenced(const lListElem *centry, lList **answer_list,
                      const lList *master_cqueue_list,
-                     const lList *master_exechost_list,
-                     const lList *master_sconf_list)
+                     const lList *master_exechost_list)
 {
    bool ret = false;
 
@@ -435,7 +430,7 @@ centry_is_referenced(const lListElem *centry, lList **answer_list,
          }
       }
       if (!ret) {
-         if (sconf_is_centry_referenced(sconf_get_config(), centry)) {
+         if (sconf_is_centry_referenced(centry)) {
             answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
                                     ANSWER_QUALITY_INFO, 
                                     MSG_CENTRYREFINSCONF_S, centry_name);
@@ -581,7 +576,7 @@ centry_list_sort(lList *this_list)
 
       order = lParseSortOrderVarArg(lGetListDescr(this_list), "%I+", CE_name);
       lSortList(this_list, order);
-      order = lFreeSortOrder(order);
+      lFreeSortOrder(&order);
    }
    DEXIT;
    return ret;
@@ -724,7 +719,7 @@ centry_list_are_queues_requestable(const lList *this_list)
       lListElem *centry = centry_list_locate(this_list, "qname");
       
       if (centry != NULL) {
-         ret = (lGetUlong(centry, CE_requestable) != REQU_NO);
+         ret = (lGetUlong(centry, CE_requestable) != REQU_NO) ? true : false;
       }
    }
    DEXIT;
@@ -793,13 +788,14 @@ centry_list_append_to_string(lList *this_list, char *buff,
 /* CLEANUP: add answer_list remove SGE_EVENT */
 /*
  * NOTE
- *    MT-NOTE: function is not MT safe
+ *    MT-NOTE: centry_list_parse_from_string() is MT safe
  */
 lList *
 centry_list_parse_from_string(lList *complex_attributes,
                               const char *str, bool check_value) 
 {
    const char *cp;
+   struct saved_vars_s *context = NULL;
 
    DENTER(TOP_LAYER, "centry_list_parse_from_string");
 
@@ -813,7 +809,7 @@ centry_list_parse_from_string(lList *complex_attributes,
    }
 
    /* str now points to the attr=value pairs */
-   while ((cp = sge_strtok(str, ", "))) {
+   while ((cp = sge_strtok_r(str, ", ", &context))) {
       lListElem *complex_attribute = NULL;
       const char *attr = NULL;
       char *value = NULL;
@@ -830,14 +826,16 @@ centry_list_parse_from_string(lList *complex_attributes,
 
       if (attr == NULL || *attr == '\0') {
          ERROR((SGE_EVENT, MSG_SGETEXT_UNKNOWN_RESOURCE_S, ""));
-         lFreeList(complex_attributes);
+         lFreeList(&complex_attributes);
+         sge_free_saved_vars(context);
          DEXIT;
          return NULL;
       }
 
       if ((check_value) && (value == NULL || *value == '\0')) {
          ERROR((SGE_EVENT, MSG_CPLX_VALUEMISSING_S, attr));
-         lFreeList(complex_attributes);
+         lFreeList(&complex_attributes);
+         sge_free_saved_vars(context);
          DEXIT;
          return NULL;
       }
@@ -846,7 +844,8 @@ centry_list_parse_from_string(lList *complex_attributes,
       if ( (complex_attribute= lGetElemStr(complex_attributes, CE_name, attr)) == NULL) {
          if ((complex_attribute = lCreateElem(CE_Type)) == NULL) {
             ERROR((SGE_EVENT, MSG_PARSE_NOALLOCATTRELEM));
-            lFreeList(complex_attributes);
+            lFreeList(&complex_attributes);
+            sge_free_saved_vars(context);
             DEXIT;
             return NULL;
          }
@@ -858,6 +857,8 @@ centry_list_parse_from_string(lList *complex_attributes,
       
       lSetString(complex_attribute, CE_stringval, value);
    }
+
+   sge_free_saved_vars(context);
 
    DEXIT;
    return complex_attributes;
@@ -967,7 +968,7 @@ bool centry_elem_validate(lListElem *centry, lList *centry_list,
 
       default : /* error unknown type */
                   answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR, 
-                                    MSG_SGETEXT_UNKNOWN_ATTR_TYPE_U, u32c(type));
+                                    MSG_SGETEXT_UNKNOWN_ATTR_TYPE_U, sge_u32c(type));
                   ret = false;
          break;
    } 
@@ -1045,7 +1046,7 @@ bool centry_elem_validate(lListElem *centry, lList *centry_list,
                break;
             default:
                answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR, 
-                                       MSG_SGETEXT_UNKNOWN_ATTR_TYPE_U, u32c(type));
+                                       MSG_SGETEXT_UNKNOWN_ATTR_TYPE_U, sge_u32c(type));
                ret = false;
          }
       }
@@ -1071,7 +1072,7 @@ bool centry_elem_validate(lListElem *centry, lList *centry_list,
 
             default:
                answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR, 
-                                       MSG_SGETEXT_UNKNOWN_ATTR_TYPE_U, u32c(type));
+                                       MSG_SGETEXT_UNKNOWN_ATTR_TYPE_U, sge_u32c(type));
                ret = false;
          }
       }
@@ -1201,7 +1202,7 @@ centry_urgency_contribution(int slots, const char *name, double value,
       break;
 
    default:
-      ERROR((SGE_EVENT, MSG_SGETEXT_UNKNOWN_ATTR_TYPE_U, u32c(complex_type)));
+      ERROR((SGE_EVENT, MSG_SGETEXT_UNKNOWN_ATTR_TYPE_U, sge_u32c(complex_type)));
       contribution = 0;
       break;
    }

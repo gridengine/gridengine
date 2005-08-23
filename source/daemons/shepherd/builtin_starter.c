@@ -102,7 +102,6 @@ extern int  shepherd_state;
 extern char shepherd_job_dir[];
 extern char **environ;
 
-
 /************************************************************************
  This is the shepherds buitin starter.
 
@@ -150,11 +149,17 @@ int truncate_stderr_out
    const char *fs_stdin_file="";
    const char *fs_stdout_file="";
    const char *fs_stderr_file="";
-   pid_t pid, ppid, pgrp, newpgrp;
+   pid_t pid, pgrp, newpgrp;
    gid_t add_grp_id = 0;
    gid_t gid;
    struct passwd *pw=NULL;
+   struct passwd pw_struct;
+   char buffer[2048];
 
+#if defined(INTERIX)
+#  define TARGET_USER_BUFFER_SIZE 1024
+   char target_user_buffer[TARGET_USER_BUFFER_SIZE];
+#endif
 
    foreground = 0; /* VX sends SIGTTOU if trace messages go to foreground */
 
@@ -200,16 +205,16 @@ int truncate_stderr_out
    if(qlogin_starter) {
       /* must force to run the qlogin starter as root, since it needs
          access to /dev/something */
-#ifndef INTERIX
-      target_user = "root";
+#if defined(INTERIX)
+      if(wl_get_superuser_name(target_user_buffer, TARGET_USER_BUFFER_SIZE)==0) {
+         target_user = target_user_buffer;
+      }
 #else
-/* HP: TODO: Handling for Interix */
-      target_user = wl_get_superuser_name();
+      target_user = "root";
 #endif
    }
 
    pid = getpid();
-   ppid = getppid();
    pgrp = GETPGRP;
 
 #ifdef SOLARIS
@@ -250,8 +255,13 @@ int truncate_stderr_out
        *  Additionally it prevents that a root procedures write to
        *  files which may not be accessable by the job owner 
        *  (e.g. /etc/passwd)
+       *
+       *  This workaround doesn't work for Interix - we have to find
+       *  another solution here!
        */
+#if !defined(INTERIX)
       intermediate_user = get_conf_val("job_owner");
+#endif
    }
 
 #if defined(ALPHA)
@@ -273,7 +283,9 @@ int truncate_stderr_out
                     (cp = getlogin()) ? cp : "<no login set>");
    shepherd_trace(err_str);
 
-   pw = sge_getpwnam(target_user);
+   shepherd_trace_sprintf("reading passwd information for user '%s'",
+         target_user ? target_user : "<NULL>");
+   pw = sge_getpwnam_r(target_user, &pw_struct, buffer, sizeof(buffer));
    if (!pw) {
       sprintf(err_str, "can't get password entry for user \"%s\"", target_user);
       shepherd_error(err_str);
@@ -288,8 +300,10 @@ int truncate_stderr_out
       }   
    }
    
+   shepherd_trace("setting limits");
    setrlimits(!strcmp(childname, "job"));
 
+   shepherd_trace("setting environment");
    sge_set_environment();
 
 	/* Create the "error" and the "exit" status file here.
@@ -299,8 +313,11 @@ int truncate_stderr_out
 	 * file ownership to the job owner immediately after opening the file, 
 	 * so the job owner can reopen the file if the exec() fails.
 	 */
+   shepherd_trace("Initializing error file");
 	shepherd_error_init( );
 
+   shepherd_trace_sprintf("now doing chown(%s) of trace and error files",
+         target_user ? target_user : "<NULL>");
    shepherd_trace_chown( target_user );
    shepherd_error_chown( target_user );
 	
@@ -320,7 +337,9 @@ int truncate_stderr_out
        use_qsub_gid = 0;
        gid = 0;
     }
-/* --- switch to intermediate user */                                                                      
+
+/* --- switch to intermediate user */
+   shepherd_trace("switching to intermediate/target user");
    if(qlogin_starter) { 
       ret = sge_set_uid_gid_addgrp(target_user, intermediate_user, 0, 0, 
                                    0, err_str, use_qsub_gid, gid);
@@ -329,6 +348,7 @@ int truncate_stderr_out
                                    min_uid, add_grp_id, err_str, use_qsub_gid, 
                                    gid);
    }   
+
    if (ret < 0) {
       shepherd_trace(err_str);
       sprintf(err_str, "try running further with uid=%d", (int)getuid());
@@ -340,6 +360,9 @@ int truncate_stderr_out
       */
       shepherd_error(err_str);
    }
+   shepherd_trace_sprintf("now running with uid="uid_t_fmt", euid="uid_t_fmt, 
+         getuid(), geteuid());
+
    shell_start_mode = get_conf_val("shell_start_mode");
 
    shepherd_trace("closing all filedescriptors");
@@ -573,7 +596,7 @@ int truncate_stderr_out
 
    in = 0;
    if (!strcasecmp(shell_start_mode, "script_from_stdin")) {
-      in = open(script_file, O_RDONLY);
+      in = SGE_OPEN2(script_file, O_RDONLY);
       if (in == -1) {
          sprintf(err_str,  "error: can't open %s script file \"%s\": %s", 
                childname, script_file, strerror(errno));
@@ -581,7 +604,7 @@ int truncate_stderr_out
       }
    } else {
       /* need to open a file as fd0 */
-      in = open(stdin_path, O_RDONLY); 
+      in = SGE_OPEN2(stdin_path, O_RDONLY); 
 
       if (in == -1) {
          shepherd_state = SSTATE_OPEN_OUTPUT;
@@ -605,9 +628,9 @@ int truncate_stderr_out
    /* open stdout - not for interactive jobs */
    if (!is_interactive && !is_qlogin) {
       if (truncate_stderr_out) {
-         out = open(stdout_path, O_WRONLY | O_CREAT | O_APPEND | O_TRUNC, 0644);
+         out = SGE_OPEN3(stdout_path, O_WRONLY | O_CREAT | O_APPEND | O_TRUNC, 0644);
       } else {
-         out = open(stdout_path, O_WRONLY | O_CREAT | O_APPEND, 0644);
+         out = SGE_OPEN3(stdout_path, O_WRONLY | O_CREAT | O_APPEND, 0644);
       }
       
       if (out==-1) {
@@ -627,9 +650,9 @@ int truncate_stderr_out
          dup2(1, 2);
       } else {
          if (truncate_stderr_out) {
-            err = open(stderr_path, O_WRONLY | O_CREAT | O_TRUNC | O_APPEND, 0644);
+            err = SGE_OPEN3(stderr_path, O_WRONLY | O_CREAT | O_TRUNC | O_APPEND, 0644);
          } else {
-            err = open(stderr_path, O_WRONLY | O_CREAT | O_APPEND, 0644);
+            err = SGE_OPEN3(stderr_path, O_WRONLY | O_CREAT | O_APPEND, 0644);
          }
 
          if (err == -1) {
@@ -739,6 +762,8 @@ int truncate_stderr_out
          shepherd_error(err_str);
       }
    }
+   shepherd_trace_sprintf("now running with uid="uid_t_fmt", euid="uid_t_fmt, 
+      (int)getuid(), (int)geteuid());
 
    /*
    ** if we dont check if the script_file exists, then in case of
@@ -1601,7 +1626,7 @@ static bool inherit_env ()
       }
    }
    
-   return (inherit_environ == 1);
+   return (inherit_environ == 1) ? true : false;
 }
 
 #if 0 /* Not currently used, but looks kinda useful... */

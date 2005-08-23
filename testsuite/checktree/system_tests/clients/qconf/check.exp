@@ -71,6 +71,7 @@ lappend check_functions "qconf_Auser"
 lappend check_functions "qconf_muser"
 lappend check_functions "qconf_Muser"
 lappend check_functions "qconf_de_check"
+lappend check_functions "qconf_segfault"
 
 # TODO: check all options
 #lappend check_functions "qconf_aattr_check"
@@ -123,7 +124,7 @@ proc init_level {} {
 
   set queue_names     ""
   for { set i 0 } { $i < 1000 }  {incr i 1} {
-     lappend queue_names "qconf.$i"
+     lappend queue_names "q.$i"
   }
 
   switch -- $CHECK_ACT_LEVEL {
@@ -932,6 +933,23 @@ proc qconf_de_check {} {
    puts $CHECK_OUTPUT $result
 
    puts $CHECK_OUTPUT "added execd $execd to cluster"
+
+   set_error 0 "ok"
+}
+
+proc qconf_segfault {} {
+   global ts_config CHECK_OUTPUT CHECK_ARCH CHECK_HOST CHECK_USER
+
+   set output [start_remote_prog $CHECK_HOST $CHECK_USER "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-as \"\""]
+   if { [string match "*egmentation fault*" $output] == 1 } {
+      puts $CHECK_OUTPUT $output
+      add_proc_error "qconf_segfault" -1 "qconf -as \"\" failed - see Issue: 1732"
+   }
+   set output [start_remote_prog $CHECK_HOST $CHECK_USER "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-ah \"\""]
+   if { [string match "*egmentation fault*" $output] == 1 } {
+      puts $CHECK_OUTPUT $output
+      add_proc_error "qconf_segfault" -1 "qconf -ah \"\" failed - see Issue: 1732"
+   }
 
    set_error 0 "ok"
 }

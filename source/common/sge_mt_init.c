@@ -30,10 +30,6 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif       
-
 #include "sge_mt_init.h"
 
 #include "sge_uidgid.h"
@@ -42,6 +38,8 @@
 #include "sge_feature.h"
 #include "gdi_setup.h"
 #include "sge_profiling.h"
+
+#include "sgeobj/sge_schedd_conf.h"
 
 /****** common/sge_mt_init/sge_mt_init() ***************************************
 *  NAME
@@ -81,6 +79,7 @@ void sge_mt_init(void)
    bootstrap_mt_init(); 
    feature_mt_init();
 
+   sc_init_mt();
    gdi_mt_init();
 
 } /* sge_mt_init */

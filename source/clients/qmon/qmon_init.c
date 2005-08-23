@@ -227,7 +227,7 @@ String name
 
 
 /*-------------------------------------------------------------------------*/
-void qmonInitSge( char *progname) 
+void qmonInitSge( char *progname, int usage) 
 {
    int error = 0;
    int endless_loop = 0;
@@ -244,8 +244,10 @@ void qmonInitSge( char *progname)
    }
    log_state_set_log_gui(True);
    sge_gdi_param(SET_MEWHO, QMON, NULL);
-   sge_gdi_param(SET_ISALIVE, 1, NULL);
-   if ((error=sge_gdi_setup(prognames[QMON], &alp))) {
+   if (!usage) {
+      sge_gdi_param(SET_ISALIVE, 1, NULL);
+   }   
+   if ((error=sge_gdi_setup(prognames[QMON], &alp)) != AE_OK) {
       answer_list_output(&alp);
       
       if ( sge_get_master(0) != NULL) {
@@ -256,18 +258,18 @@ void qmonInitSge( char *progname)
              error == CL_RETVAL_CONNECTION_NOT_FOUND) {
             SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_UNABLE_TO_CONNECT_SUS,
                                    prognames[QMASTER], 
-                                   u32c(sge_get_qmaster_port()), 
+                                   sge_u32c(sge_get_qmaster_port()), 
                                    sge_get_master(0)));
          }
          /* For unusual errors, give more detail */
          else {
             SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_CANT_SEND_MESSAGE_TO_PORT_ON_HOST_SUSS,
                                    prognames[QMASTER], 
-                                   u32c(sge_get_qmaster_port()), 
+                                   sge_u32c(sge_get_qmaster_port()), 
                                    sge_get_master(0), cl_get_error_text(error)));
          }
          
-         fprintf(stderr, SGE_EVENT);
+         fprintf(stderr, "%s\n", SGE_EVENT);
       }
       if (endless_loop == 0) {
          qmonExitFunc(1);
@@ -467,7 +469,7 @@ DTRACE;
       fprintf(stderr, "Wrong Version of Application Defaults file\n");
       DEXIT;
       qmonExitFunc(1);
-   }      
+   } 
 
    /* 
     * Register Xmt Pixmap and Bitmap converters 

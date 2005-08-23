@@ -134,7 +134,9 @@ enum {
    CCT_ignore_queues,         /* stores all queues, which now cannot run this job category */ 
    CCT_ignore_hosts,          /* stores all hosts, which now cannot run this job category */
    CCT_queue_violations,      /* stores in a case of soft requests, for each queue the number of violations */
-   CCT_job_messages           /* stores the error messages, which a job got during its dispatching */ 
+   CCT_job_messages,          /* stores the error messages, which a job got during its dispatching */ 
+   CCT_pe_job_slots,          /* stores the posible pe slots */   
+   CCT_pe_job_slot_count      /* number of values in the array */   
 };
 
 ILISTDEF(CCT_Type, Categories, SGE_CT_LIST)
@@ -143,6 +145,8 @@ ILISTDEF(CCT_Type, Categories, SGE_CT_LIST)
    SGE_LIST(CCT_ignore_hosts, CTI_Type, CULL_DEFAULT)
    SGE_LIST(CCT_queue_violations, CTQV_Type, CULL_DEFAULT)
    SGE_LIST(CCT_job_messages, MES_Type, CULL_DEFAULT)
+   SGE_REF(CCT_pe_job_slots, CULL_ANY_SUBTYPE, CULL_DEFAULT)
+   SGE_ULONG(CCT_pe_job_slot_count, CULL_DEFAULT)
 LISTEND 
 
 NAMEDEF(CCTN)
@@ -151,6 +155,8 @@ NAMEDEF(CCTN)
    NAME("CCT_ignore_hosts")
    NAME("CCT_queue_violations")
    NAME("CCT_job_messages")
+   NAME("CCT_pe_name")
+   NAME("CCT_pe_job_slot_count")
 NAMEEND
 
 #define CCTS sizeof(CCTN)/sizeof(char*)

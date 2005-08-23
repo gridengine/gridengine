@@ -74,6 +74,7 @@ static void expand_range_list(lListElem *r, lList **rl);
 /* we keep a descending sorted list of non overlapping ranges */
 
 /* why descending? don't ask me! ask the initiator of this function */
+/* MT-NOTE: expand_range_list() is MT safe */
 static void expand_range_list(lListElem *r, lList **rl)
 {
    u_long32 rmin, rmax, rstep;
@@ -126,7 +127,7 @@ static void expand_range_list(lListElem *r, lList **rl)
             /* 
              ** r is fully contained within ep ==> delete it 
              */
-            lFreeElem(r);
+            lFreeElem(&r);
             break;
 
          } else if (rmin < lGetUlong(ep, RN_min)) {
@@ -144,7 +145,7 @@ static void expand_range_list(lListElem *r, lList **rl)
             lSetUlong(ep, RN_min, rmin);
 
             /* we're already sure we can free r */
-            lFreeElem(r);
+            lFreeElem(&r);
             rr = ep;
             ep = lNext(ep);
             while (ep) {
@@ -153,7 +154,7 @@ static void expand_range_list(lListElem *r, lList **rl)
                   /* it also contains this one */
                   r = ep;
                   ep = lNext(ep);
-                  lRemoveElem(*rl, r);
+                  lRemoveElem(*rl, &r);
 
                } else if (rmin <= lGetUlong(ep, RN_max)) {
 
@@ -162,7 +163,7 @@ static void expand_range_list(lListElem *r, lList **rl)
 
                   r = ep;
                   ep = lNext(ep);
-                  lRemoveElem(*rl, r);
+                  lRemoveElem(*rl, &r);
                   break;
 
                } else
@@ -180,7 +181,7 @@ static void expand_range_list(lListElem *r, lList **rl)
              ** ==> glue them
              */
             lSetUlong(ep, RN_max, rmax);
-            lFreeElem(r);
+            lFreeElem(&r);
             break;
          }
       }
@@ -265,6 +266,9 @@ void range_correct_end(lListElem *this_range)
 *
 *  SEE ALSO
 *     sgeobj/range/RN_Type 
+*
+*  NOTES
+*     MT-NOTE: range_is_overlapping() is MT safe
 *******************************************************************************/
 static bool range_is_overlapping(const lListElem *this_elem,
                                  const lListElem *range)
@@ -325,7 +329,7 @@ void range_list_initialize(lList **this_list, lList **answer_list)
          while ((range = next_range)) {
             next_range = lNext(range);
 
-            lRemoveElem(*this_list, range);
+            lRemoveElem(*this_list, &range);
          }
       } else {
          *this_list = lCreateList("", RN_Type);
@@ -616,6 +620,9 @@ double range_list_get_average(const lList *this_list, u_long32 upperbound)
 *
 *  SEE ALSO
 *     sgeobj/range/RN_Type 
+*
+*  NOTES
+*     MT-NOTE: range_list_sort_uniq_compress() is MT safe
 ******************************************************************************/
 void range_list_sort_uniq_compress(lList *range_list, lList **answer_list)
 {
@@ -664,7 +671,7 @@ void range_list_sort_uniq_compress(lList *range_list, lList **answer_list)
             }
          }
 
-         lFreeList(tmp_list);
+         lFreeList(&tmp_list);
 
          /*
           * Join sequenced ranges
@@ -704,6 +711,9 @@ void range_list_sort_uniq_compress(lList *range_list, lList **answer_list)
 *
 *  SEE ALSO
 *     sgeobj/range/RN_Type 
+*
+*  NOTES
+*     MT-NOTE: range_list_compress() is MT safe
 ******************************************************************************/
 void range_list_compress(lList *range_list)
 {
@@ -724,20 +734,20 @@ void range_list_compress(lList *range_list)
             end1 = end2;
             step1 = step2;
             range_set_all_ids(range1, start1, end1, step1);
-            lRemoveElem(range_list, range2);
+            lRemoveElem(range_list, &range2);
             range2 = NULL;
             next_range1 = range1;
          } else if (start1 == end1 && step1 == 1 && end1 == start2 - step2) {
             end1 = end2;
             step1 = step2;
             range_set_all_ids(range1, start1, end1, step1);
-            lRemoveElem(range_list, range2);
+            lRemoveElem(range_list, &range2);
             range2 = NULL;
             next_range1 = range1;
          } else if (start2 == end2 && step2 == 1 && end1 + step1 == end2) {
             end1 = end2;
             range_set_all_ids(range1, start1, end1, step1);
-            lRemoveElem(range_list, range2);
+            lRemoveElem(range_list, &range2);
             range2 = NULL;
             next_range1 = range1;
          } else if (start1 == end1 && start2 == end2 && step1 == step2 &&
@@ -745,7 +755,7 @@ void range_list_compress(lList *range_list)
             end1 = start2;
             step1 = end1 - start1;
             range_set_all_ids(range1, start1, end1, step1);
-            lRemoveElem(range_list, range2);
+            lRemoveElem(range_list, &range2);
             range2 = NULL;
             next_range1 = range1;
          } else {
@@ -970,7 +980,7 @@ void range_list_remove_id(lList **range_list, lList **answer_list, u_long32 id)
          range_get_all_ids(range, &start, &end, &step);
          if (id >= start && id <= end && ((id - start) % step) == 0) {
             if ((id == start) && ((id == end) || (id + step > end))) {
-               lRemoveElem(*range_list, range);
+               lRemoveElem(*range_list, &range);
                break;
             } else if (id == start) {
                start += step;
@@ -996,7 +1006,7 @@ void range_list_remove_id(lList **range_list, lList **answer_list, u_long32 id)
          }
       }
       if (lGetNumberOfElem(*range_list) == 0) {
-         *range_list = lFreeList(*range_list);
+         lFreeList(range_list);
       }
    }
    DEXIT;
@@ -1087,6 +1097,9 @@ void range_list_move_first_n_ids(lList **range_list, lList **answer_list,
 *     sgeobj/range/RN_Type 
 *     sgeobj/range/range_list_compress()
 *     sgeobj/range/range_list_sort_uniq_compress()
+*
+*  NOTES
+*     MT-NOTE: range_list_insert_id() is MT safe
 ******************************************************************************/
 void range_list_insert_id(lList **range_list, lList **answer_list, u_long32 id)
 {
@@ -1254,6 +1267,9 @@ void range_get_all_ids(const lListElem *range, u_long32 *min, u_long32 *max,
 *
 *  SEE ALSO
 *     sgeobj/range/RN_Type 
+*
+*  NOTES
+*     MT-NOTE: range_set_all_ids() is MT safe
 ******************************************************************************/
 void range_set_all_ids(lListElem *range, u_long32 min, u_long32 max,
                        u_long32 step)
@@ -1305,7 +1321,7 @@ void range_list_calculate_union_set(lList **range_list,
 {
    DENTER(RANGE_LAYER, "range_list_calculate_union_set");
    if (range_list != NULL && (range_list1 != NULL || range_list2 != NULL)) {
-      *range_list = lFreeList(*range_list);
+      lFreeList(range_list);
 
       if (range_list1 != NULL) {
          *range_list = lCopyList("", range_list1);
@@ -1341,7 +1357,7 @@ void range_list_calculate_union_set(lList **range_list,
    return;
 
  error:
-   *range_list = lFreeList(*range_list);
+   lFreeList(range_list);
    answer_list_add(answer_list, "unable to calculate union set",
                    STATUS_ERROR1, ANSWER_QUALITY_ERROR);
    DEXIT;
@@ -1378,7 +1394,7 @@ void range_list_calculate_difference_set(lList **range_list,
 {
    DENTER(RANGE_LAYER, "range_list_calculate_difference_set");
    if (range_list != NULL && range_list1 != NULL) {
-      *range_list = lFreeList(*range_list);
+      lFreeList(range_list);
       *range_list = lCopyList("difference_set range list", range_list1);
       if (*range_list == NULL) {
          goto error;
@@ -1410,7 +1426,7 @@ void range_list_calculate_difference_set(lList **range_list,
    return;
 
  error:
-   *range_list = lFreeList(*range_list);
+   lFreeList(range_list);
    answer_list_add(answer_list, "unable to calculate union set",
                    STATUS_ERROR1, ANSWER_QUALITY_ERROR);
    DEXIT;
@@ -1446,7 +1462,7 @@ void range_list_calculate_intersection_set(lList **range_list,
                                            const lList *range_list2)
 {
    DENTER(RANGE_LAYER, "range_list_calculate_intersection_set");
-   *range_list = lFreeList(*range_list);
+   lFreeList(range_list);
    if (range_list1 && range_list2) {
       lListElem *range;
 
@@ -1479,7 +1495,7 @@ void range_list_calculate_intersection_set(lList **range_list,
    return;
 
  error:
-   *range_list = lFreeList(*range_list);
+   lFreeList(range_list);
    answer_list_add(answer_list, "unable to calculate intersection set",
                    STATUS_ERROR1, ANSWER_QUALITY_ERROR);
    DEXIT;
@@ -1518,19 +1534,20 @@ void range_to_dstring(u_long32 start, u_long32 end, int step,
    }
 
    if (start == end) {
-      sprintf(tail, u32, start);
+      sprintf(tail, sge_u32, start);
    } else if (start + step == end) {
-      sprintf(tail, u32 "," u32, start, end);
+      sprintf(tail, sge_u32 "," sge_u32, start, end);
    } else {
       if (ignore_step) {
-         sprintf(tail, u32 "-" u32, start, end);
+         sprintf(tail, sge_u32 "-" sge_u32, start, end);
       } else {
-         sprintf(tail, u32 "-" u32 ":%d", start, end, step);
+         sprintf(tail, sge_u32 "-" sge_u32 ":%d", start, end, step);
       }
    }
    sge_dstring_append(dyn_taskrange_str, tail);
 }
 
+/* MT-NOTE: range_parse_from_string() is MT safe */
 void range_parse_from_string(lListElem **range,
                              lList **answer_list,
                              const char *rstr,
@@ -1579,7 +1596,7 @@ void range_parse_from_string(lListElem **range,
    if ((ldummy == 0) && (rstr == dptr)) {
       sprintf(msg, MSG_GDI_INITIALPORTIONSTRINGNODECIMAL_S, rstr);
       answer_list_add(answer_list, msg, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
-      lFreeElem(r);
+      lFreeElem(&r);
       DEXIT;
       *range = NULL;
       return;
@@ -1593,7 +1610,7 @@ void range_parse_from_string(lListElem **range,
          sprintf(msg, MSG_GDI_RANGESPECIFIERWITHUNKNOWNTRAILER_SS,
                  old_str, rstr);
          answer_list_add(answer_list, msg, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
-         lFreeElem(r);
+         lFreeElem(&r);
          DEXIT;
          *range = NULL;
          return;
@@ -1619,7 +1636,7 @@ void range_parse_from_string(lListElem **range,
             sprintf(msg, MSG_GDI_RANGESPECIFIERWITHUNKNOWNTRAILER_SS,
                     old_str, dptr);
             answer_list_add(answer_list, msg, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
-            lFreeElem(r);
+            lFreeElem(&r);
             DEXIT;
             *range = NULL;
             return;
@@ -1643,7 +1660,7 @@ void range_parse_from_string(lListElem **range,
                   sprintf(msg, MSG_GDI_INITIALPORTIONSTRINGNODECIMAL_S, rstr);
                   answer_list_add(answer_list, msg, STATUS_ESYNTAX,
                                   ANSWER_QUALITY_ERROR);
-                  lFreeElem(r);
+                  lFreeElem(&r);
                   DEXIT;
                   *range = NULL;
                   return;
@@ -1654,7 +1671,7 @@ void range_parse_from_string(lListElem **range,
                           rstr, dptr);
                   answer_list_add(answer_list, msg, STATUS_ESYNTAX,
                                   ANSWER_QUALITY_ERROR);
-                  lFreeElem(r);
+                  lFreeElem(&r);
                   DEXIT;
                   *range = NULL;
                   return;
@@ -1677,7 +1694,7 @@ void range_parse_from_string(lListElem **range,
                                 rstr);
                         answer_list_add(answer_list, msg, STATUS_ESYNTAX,
                                         ANSWER_QUALITY_ERROR);
-                        lFreeElem(r);
+                        lFreeElem(&r);
                         DEXIT;
                         *range = NULL;
                         return;
@@ -1688,7 +1705,7 @@ void range_parse_from_string(lListElem **range,
                              rstr);
                      answer_list_add(answer_list, msg, STATUS_ESYNTAX,
                                      ANSWER_QUALITY_ERROR);
-                     lFreeElem(r);
+                     lFreeElem(&r);
                      DEXIT;
                      *range = NULL;
                      return;
@@ -1697,7 +1714,7 @@ void range_parse_from_string(lListElem **range,
                      sprintf( msg, MSG_GDI_NEGATIVSTEP );
                      answer_list_add(answer_list, msg, STATUS_ESYNTAX,
                                      ANSWER_QUALITY_ERROR);
-                     lFreeElem(r);
+                     lFreeElem(&r);
                      DEXIT;
                      *range = NULL;
                      return;
@@ -1708,7 +1725,7 @@ void range_parse_from_string(lListElem **range,
                              rstr, dptr);
                      answer_list_add(answer_list, msg, STATUS_ESYNTAX,
                                      ANSWER_QUALITY_ERROR);
-                     lFreeElem(r);
+                     lFreeElem(&r);
                      DEXIT;
                      *range = NULL;
                      return;
@@ -1749,8 +1766,8 @@ void range_parse_from_string(lListElem **range,
    if answer_list is delivered no exit occurs instead the function fills the 
    answer list and returns NULL, *answer_list must be NULL !
 
+   MT-NOTE: range_list_parse_from_string() is MT safe
 */
-
 void 
 range_list_parse_from_string(lList **this_list, lList **answer_list, 
                              const char *string, bool just_parse, 
@@ -1760,6 +1777,7 @@ range_list_parse_from_string(lList **this_list, lList **answer_list,
    lListElem *range = NULL;
    lList *range_list = NULL;
    bool undefined = false, first = true;
+   struct saved_vars_s *context = NULL;
 
    DENTER(TOP_LAYER, "parse_ranges");
 
@@ -1767,11 +1785,12 @@ range_list_parse_from_string(lList **this_list, lList **answer_list,
       this_list = &range_list;
    }
 
-   for (s = sge_strtok(string, RANGE_SEPARATOR_CHARS);
-        s; s = sge_strtok(NULL, RANGE_SEPARATOR_CHARS)) {
+   for (s = sge_strtok_r(string, RANGE_SEPARATOR_CHARS, &context);
+        s; s = sge_strtok_r(NULL, RANGE_SEPARATOR_CHARS, &context)) {
       if (!first && undefined) {
          /* first was undefined - no more ranges allowed */
          ERROR((SGE_EVENT, MSG_GDI_UNEXPECTEDRANGEFOLLOWINGUNDEFINED));
+         sge_free_saved_vars(context);
          if (answer_list) {
             answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX,
                             ANSWER_QUALITY_ERROR);
@@ -1792,6 +1811,7 @@ range_list_parse_from_string(lList **this_list, lList **answer_list,
          } else {
             /* second range may not be undefined ! */
             ERROR((SGE_EVENT, MSG_GDI_UNEXPECTEDUNDEFINEDFOLLOWINGRANGE));
+            sge_free_saved_vars(context);
             if (answer_list) {
                answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX,
                                ANSWER_QUALITY_ERROR);
@@ -1804,7 +1824,7 @@ range_list_parse_from_string(lList **this_list, lList **answer_list,
          }
       } else {
          if (just_parse) {
-            lFreeElem(range);
+            lFreeElem(&range);
          } else {
             expand_range_list(range, this_list);
          }
@@ -1813,6 +1833,8 @@ range_list_parse_from_string(lList **this_list, lList **answer_list,
       first = false;
    }
    
+   sge_free_saved_vars(context);
+
    DEXIT;
    return;
 }

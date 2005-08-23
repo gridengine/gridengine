@@ -325,7 +325,7 @@ static void get_policy_info()
 
       /* free allocated memory */
       sge_dstring_free(&hosts);
-      host_list = lFreeList(host_list);
+      lFreeList(&host_list);
    }
 }
 
@@ -473,7 +473,7 @@ static void simple_scheduler()
    /* if all requested slots could be granted, procs should be 0 */
    if(procs > 0) {
       DPRINTF(("job could not be scheduled\n"));
-      lFreeList(allocated_queues);
+      lFreeList(&allocated_queues);
       return;
    }
 
@@ -499,7 +499,7 @@ static void simple_scheduler()
          map[num_allocated_queues].procs = 0;
          map[num_allocated_queues].host_name = NULL;
 
-         sprintf(id, U32CFormat"."U32CFormat, u32c(lGetUlong(job, JB_job_number)), u32c(lGetUlong(ja_task, JAT_task_number)));
+         sprintf(id, sge_U32CFormat"."sge_U32CFormat, sge_u32c(lGetUlong(job, JB_job_number)), sge_u32c(lGetUlong(ja_task, JAT_task_number)));
 
          sge_ssi_job_start(id, pe_name, map);
 
@@ -521,8 +521,8 @@ static void delete_some_jobs()
       for_each(ja_task, lGetList(job, JB_ja_tasks)) {
          if((lGetUlong(ja_task, JAT_start_time) + 120) < now) {
             char id[100];
-            sprintf(id, U32CFormat"."U32CFormat, 
-                    u32c(lGetUlong(job, JB_job_number)), u32c(lGetUlong(ja_task, JAT_task_number)));
+            sprintf(id, sge_U32CFormat"."sge_U32CFormat, 
+                    sge_u32c(lGetUlong(job, JB_job_number)), sge_u32c(lGetUlong(ja_task, JAT_task_number)));
             sge_ssi_job_cancel(id, false);
          }
       }

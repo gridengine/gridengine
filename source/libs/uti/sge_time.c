@@ -60,7 +60,6 @@ static struct tms end[NESTLEVEL];
  
 static time_t wtot[NESTLEVEL];
 static time_t wbegin[NESTLEVEL];
-static time_t wend[NESTLEVEL];
 static time_t wprev[NESTLEVEL];
 static time_t wdiff[NESTLEVEL];
  
@@ -179,7 +178,7 @@ const char *sge_ctime(time_t i, dstring *buffer)
    struct tm *tm;
 
    if (!i)
-      i = sge_get_gmt();
+      i = (time_t)sge_get_gmt();
 #ifndef HAS_LOCALTIME_R
    tm = localtime(&i);
 #else
@@ -191,6 +190,28 @@ const char *sge_ctime(time_t i, dstring *buffer)
 
    return sge_dstring_get_string(buffer);
 }
+
+const char *sge_ctimeXML(time_t i, dstring *buffer) 
+{
+#ifdef HAS_LOCALTIME_R
+   struct tm tm_buffer;
+#endif
+   struct tm *tm;
+
+   if (!i)
+      i = (time_t)sge_get_gmt();
+#ifndef HAS_LOCALTIME_R
+   tm = localtime(&i);
+#else
+   tm = (struct tm *)localtime_r(&i, &tm_buffer);
+#endif
+   sge_dstring_sprintf(buffer, "%04d-%02d-%02dT%02d:%02d:%02d",
+           1900 + tm->tm_year, tm->tm_mon + 1, tm->tm_mday,
+           tm->tm_hour, tm->tm_min, tm->tm_sec);
+
+   return sge_dstring_get_string(buffer);
+}
+
 
 /****** uti/time/sge_ctime32() ************************************************
 *  NAME
@@ -227,7 +248,7 @@ const char *sge_ctime32(u_long32 *i, dstring *buffer)
 #if SOLARIS64
    volatile
 #endif
-   time_t temp = *i;
+   time_t temp = (time_t)*i;
 
 #ifndef HAS_CTIME_R
    /* if ctime_r() does not exist a mutex must be used to guard *all* ctime() calls */
@@ -271,7 +292,7 @@ const char *sge_at_time(time_t i, dstring *buffer)
    struct tm *tm;
 
    if (!i)
-      i = sge_get_gmt();
+      i = (time_t)sge_get_gmt();
 #ifndef HAS_LOCALTIME_R
    tm = localtime(&i);
 #else
@@ -353,7 +374,7 @@ void sge_stopwatch_start(int i)
  
       clock_tick = sysconf(_SC_CLK_TCK);
       for (j = 0; j < NESTLEVEL; j++) {
-         wtot[j] = wbegin[j] = wend[j] = wprev[j] = wdiff[j] = 0;
+         wtot[j] = wbegin[j] = wprev[j] = wdiff[j] = 0;
          sprintf(buf, "SGE_TIMELOG%d", j);
          if ((cp = getenv(buf)) && (atoi(cp) >= 0)) {
             time_log_interval[j] = atoi(cp);

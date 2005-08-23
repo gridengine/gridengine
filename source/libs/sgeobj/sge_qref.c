@@ -32,10 +32,6 @@
 
 #include <string.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif 
-
 #include "basis_types.h"
 #include "sgermon.h" 
 #include "sge_string.h"
@@ -155,7 +151,7 @@ qref_list_resolve_qinstance_names(const lList *cq_qref_list,
          lAddElemStr(qref_list, QR_name, qi_name, QR_Type);
          *found_something = true;
       }
-      qi_ref_list = lFreeList(qi_ref_list);
+      lFreeList(&qi_ref_list);
    }
    DEXIT;
    return ret;
@@ -229,7 +225,7 @@ qref_list_resolve_qdomain_names(const lList *cq_qref_list,
          }
       }
    }
-   href_list = lFreeList(href_list);
+   lFreeList(&href_list);
    DEXIT;
    return ret;
 }
@@ -403,7 +399,7 @@ qref_list_resolve(const lList *src_qref_list, lList **answer_list,
          if (tmp_found_something) {
             *found_something = true;
          } 
-         cq_ref_list = lFreeList(cq_ref_list);
+         lFreeList(&cq_ref_list);
          sge_dstring_free(&host_or_hgroup);
          sge_dstring_free(&cqueue_name);
       } 
@@ -479,14 +475,14 @@ qref_list_trash_some_elemts(lList **this_list, const char *full_name)
           * Same cluster queue or different host?
           */
          if (!strcmp(cqueue1, cqueue) || strcmp(host1, host)) {
-            lRemoveElem(*this_list, qref);
+            lRemoveElem(*this_list, &qref);
          }
 
          sge_dstring_clear(&cqueue_buffer);
          sge_dstring_clear(&host_or_hgroup_buffer);
       }
       if (lGetNumberOfElem(*this_list) == 0) {
-         *this_list = lFreeList(*this_list);
+         lFreeList(this_list);
       }
 
       sge_dstring_free(&cqueue_buffer);
@@ -573,8 +569,8 @@ qref_list_is_valid(const lList *this_list, lList **answer_list)
                   found_matching_qinstance = true;
                }
             }
-            qref_list = lFreeList(qref_list);
-            resolved_qref_list = lFreeList(resolved_qref_list);
+            lFreeList(&qref_list);
+            lFreeList(&resolved_qref_list);
             if (!found_matching_qinstance) {
                ERROR((SGE_EVENT, MSG_QREF_QUNKNOWN_S, qref_pattern));
                answer_list_add(answer_list, SGE_EVENT,

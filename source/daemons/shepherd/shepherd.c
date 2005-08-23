@@ -101,6 +101,10 @@ struct rusage {
 #include "sge_processes_irix.h"
 #endif
 
+#if defined(INTERIX)
+#include "../../../utilbin/sge_passwd.h"
+#endif
+
 #if defined(SOLARIS) || defined(ALPHA)
 /* ALPHA4 only has wait3() prototype if _XOPEN_SOURCE_EXTENDED is defined */
 pid_t wait3(int *, int, struct rusage *);
@@ -231,7 +235,7 @@ static int do_prolog(int timeout, int ckpt_type)
       exit_status = start_child("prolog", command, NULL, timeout, ckpt_type);
 
       if (n_exit_status<(i=count_exit_status())) {
-         shepherd_trace_sprintf("exit states increased from %d to %d\n", n_exit_status, i);
+         shepherd_trace_sprintf("exit states increased from %d to %d", n_exit_status, i);
          /* in this case the child didnt get to the exec call or it failed */
          shepherd_trace("failed starting prolog");
          return SSTATE_BEFORE_PROLOG;
@@ -283,7 +287,7 @@ static int do_epilog(int timeout, int ckpt_type)
                      prolog_epilog_variables);
       exit_status = start_child("epilog", command, NULL, timeout, ckpt_type);
       if (n_exit_status<(i=count_exit_status())) {
-         shepherd_trace_sprintf("exit states increased from %d to %d\n", 
+         shepherd_trace_sprintf("exit states increased from %d to %d", 
                                 n_exit_status, i);
          /*
          ** in this case the child didnt get to the exec call or it failed
@@ -340,7 +344,7 @@ static int do_pe_start(int timeout, int ckpt_type, pid_t *pe_pid)
       */
       exit_status = start_child("pe_start", command, pe_pid, timeout, ckpt_type);
       if (n_exit_status<(i=count_exit_status())) {
-         shepherd_trace_sprintf("exit states increased from %d to %d\n", 
+         shepherd_trace_sprintf("exit states increased from %d to %d", 
                                 n_exit_status, i);
          /*
          ** in this case the child didnt get to the exec call or it failed
@@ -406,7 +410,7 @@ static int do_pe_stop(int timeout, int ckpt_type, pid_t *pe_pid)
        */
 
       if (n_exit_status<(i=count_exit_status())) {
-         shepherd_trace_sprintf("exit states increased from %d to %d\n", 
+         shepherd_trace_sprintf("exit states increased from %d to %d", 
                                 n_exit_status, i);
          /*
          ** in this case the child didnt get to the exec call or it failed
@@ -542,6 +546,9 @@ int main(int argc, char **argv)
       }
    }
    sge_mt_init();
+#if defined( INTERIX )
+   sge_init_shared_ssl_lib();
+#endif
 	shepherd_trace_init( );
 
    sge_dstring_init(&ds, buffer, sizeof(buffer));
@@ -578,8 +585,8 @@ int main(int argc, char **argv)
        * this is done in case where our getuid() is root and our
        * geteuid() is a normal user id
        */
-
-      if (getuid() == 0 && geteuid() != 0) {
+       if(getuid() == SGE_SUPERUSER_UID &&
+          geteuid() != SGE_SUPERUSER_UID) { 
           char name[128];
           if (!sge_uid2user(geteuid(), name, sizeof(name), MAX_NIS_RETRIES)) {
              sge_set_admin_username(name, NULL);
@@ -593,6 +600,9 @@ int main(int argc, char **argv)
          shepherd_error("can't read configuration file: malloc() failure");
       }
    }
+#if defined( INTERIX )
+   wl_set_use_sgepasswd((bool)get_conf_val("enable_windomacc"));
+#endif
 
    /* init admin user stuff */
    admin_user = get_conf_val("admin_user");
@@ -601,7 +611,7 @@ int main(int argc, char **argv)
    }
 
    if (sge_switch2admin_user()) {
-      shepherd_error(err_str);
+      shepherd_error("can't switch to admin user: sge_switch2admin_user() failed");
    }
 
 	/* finalize initialization of shepherd_trace - give the trace file
@@ -862,6 +872,7 @@ int ckpt_type
    u_long32 wait_status = 0;
    FILE *fp;
    int core_dumped, ckpt_interval, ckpt_pid;
+   int wexit_flag_true = 1; /* to please IRIX compiler */
 
 #if defined(IRIX)
    ash_t ash = 0;
@@ -1014,7 +1025,7 @@ int ckpt_type
 
       exit_status = 128 + child_signal;
 
-      wait_status = SGE_SET_WSIGNALED(wait_status, 1);
+      wait_status = SGE_SET_WSIGNALED(wait_status, wexit_flag_true);
       wait_status = SGE_SET_WCOREDUMP(wait_status, core_dumped);
       wait_status = SGE_SET_WSIGNAL(wait_status, sge_map_signal(child_signal));
    } else {
@@ -1036,7 +1047,7 @@ int ckpt_type
             (exit_status==RESCHEDULE_EXIT_STATUS || exit_status==APPERROR_EXIT_STATUS)?
             " -> rescheduling":"");
 
-         wait_status = SGE_SET_WEXITED(wait_status, 1);
+         wait_status = SGE_SET_WEXITED(wait_status, wexit_flag_true);
          wait_status = SGE_SET_WEXITSTATUS(wait_status, exit_status);
 
       } else {
@@ -1077,7 +1088,17 @@ int ckpt_type
 
    if (!strcmp("job", childname)) {
       if (search_conf_val("rsh_daemon") != NULL) {
-         int qrsh_exit_code = get_exit_code_of_qrsh_starter();
+         int qrsh_exit_code = -1;
+         int success = 1; 
+
+         sge_switch2start_user();
+         success = get_exit_code_of_qrsh_starter(&qrsh_exit_code);
+         delete_qrsh_pid_file();
+         sge_switch2admin_user();
+
+         if (success != 0) {
+            shepherd_trace("can't get qrsh_exit_code");
+         }
 
          /* normal exit */
          if (WIFEXITED(qrsh_exit_code)) {
@@ -1087,11 +1108,11 @@ int ckpt_type
 
             qrsh_error = get_error_of_qrsh_starter();
             if (qrsh_error != NULL) {
-               shepherd_error_sprintf("startup of qrsh job failed: "SFN"\n",
+               shepherd_error_sprintf("startup of qrsh job failed: "SFN"",
                                       qrsh_error);
                FREE(qrsh_error);
             } else {
-               shepherd_trace_sprintf("job exited normally, exit code is %d\n", 
+               shepherd_trace_sprintf("job exited normally, exit code is %d", 
                                       exit_status);
             }
          }
@@ -1101,14 +1122,14 @@ int ckpt_type
             child_signal = WTERMSIG(qrsh_exit_code);
             exit_status = 128 + child_signal;
             shepherd_trace_sprintf("job exited on signal %d, exit code is "
-                                   "%d\n", child_signal, exit_status);
+                                   "%d", child_signal, exit_status);
          }
       }
    
       /******* write usage to file "usage" ************/
       fp = fopen("usage", "w");
       if (!fp) {
-         shepherd_trace_sprintf("error: can't open \"usage\" file: %s", 
+         shepherd_error_sprintf("error: can't open \"usage\" file: %s", 
                                 strerror(errno));
       } 
       
@@ -1116,44 +1137,44 @@ int ckpt_type
 
       /* the wait status is returned by japi_wait()
          see sge_reportL.h for bitmask and makro definition */
-      fprintf(fp, "wait_status="u32"\n", wait_status);
+      fprintf(fp, "wait_status="sge_u32"\n", wait_status);
 
       fprintf(fp, "exit_status=%d\n", exit_status);
       fprintf(fp, "signal=%d\n", child_signal);
 
       fprintf(fp, "start_time=%d\n", (int) start_time);
       fprintf(fp, "end_time=%d\n", (int) end_time);
-      fprintf(fp, "ru_wallclock="u32"\n", (u_long32) end_time-start_time);
+      fprintf(fp, "ru_wallclock="sge_u32"\n", (u_long32) end_time-start_time);
 
 #if defined(NEC_ACCOUNTING_ENTRIES)
       /* Additional accounting information for NEC SX-4 SX-5 */
 #if defined(NECSX4) || defined(NECSX5)
 #if defined(NECSX4)
-      fprintf(fp, "necsx_necsx4="u32"\n", 1);
+      fprintf(fp, "necsx_necsx4="sge_u32"\n", 1);
 #elif defined(NECSX5)
-      fprintf(fp, "necsx_necsx5="u32"\n", 1);
+      fprintf(fp, "necsx_necsx5="sge_u32"\n", 1);
 #endif
-      fprintf(fp, "necsx_base_prty="u32"\n", 0);
-      fprintf(fp, "necsx_time_slice="u32"\n", 0);
-      fprintf(fp, "necsx_num_procs="u32"\n", 0);
-      fprintf(fp, "necsx_kcore_min="u32"\n", 0);
-      fprintf(fp, "necsx_mean_size="u32"\n", 0);
-      fprintf(fp, "necsx_maxmem_size="u32"\n", 0);
-      fprintf(fp, "necsx_chars_trnsfd="u32"\n", 0);
-      fprintf(fp, "necsx_blocks_rw="u32"\n", 0);
-      fprintf(fp, "necsx_inst="u32"\n", 0);
-      fprintf(fp, "necsx_vector_inst="u32"\n", 0);
-      fprintf(fp, "necsx_vector_elmt="u32"\n", 0);
-      fprintf(fp, "necsx_vec_exe="u32"\n", 0);
-      fprintf(fp, "necsx_flops="u32"\n", 0);
-      fprintf(fp, "necsx_conc_flops="u32"\n", 0);
-      fprintf(fp, "necsx_fpec="u32"\n", 0);
-      fprintf(fp, "necsx_cmcc="u32"\n", 0);
-      fprintf(fp, "necsx_bccc="u32"\n", 0);
-      fprintf(fp, "necsx_mt_open="u32"\n", 0);
-      fprintf(fp, "necsx_io_blocks="u32"\n", 0);
-      fprintf(fp, "necsx_multi_single="u32"\n", 0);
-      fprintf(fp, "necsx_max_nproc="u32"\n", 0);
+      fprintf(fp, "necsx_base_prty="sge_u32"\n", 0);
+      fprintf(fp, "necsx_time_slice="sge_u32"\n", 0);
+      fprintf(fp, "necsx_num_procs="sge_u32"\n", 0);
+      fprintf(fp, "necsx_kcore_min="sge_u32"\n", 0);
+      fprintf(fp, "necsx_mean_size="sge_u32"\n", 0);
+      fprintf(fp, "necsx_maxmem_size="sge_u32"\n", 0);
+      fprintf(fp, "necsx_chars_trnsfd="sge_u32"\n", 0);
+      fprintf(fp, "necsx_blocks_rw="sge_u32"\n", 0);
+      fprintf(fp, "necsx_inst="sge_u32"\n", 0);
+      fprintf(fp, "necsx_vector_inst="sge_u32"\n", 0);
+      fprintf(fp, "necsx_vector_elmt="sge_u32"\n", 0);
+      fprintf(fp, "necsx_vec_exe="sge_u32"\n", 0);
+      fprintf(fp, "necsx_flops="sge_u32"\n", 0);
+      fprintf(fp, "necsx_conc_flops="sge_u32"\n", 0);
+      fprintf(fp, "necsx_fpec="sge_u32"\n", 0);
+      fprintf(fp, "necsx_cmcc="sge_u32"\n", 0);
+      fprintf(fp, "necsx_bccc="sge_u32"\n", 0);
+      fprintf(fp, "necsx_mt_open="sge_u32"\n", 0);
+      fprintf(fp, "necsx_io_blocks="sge_u32"\n", 0);
+      fprintf(fp, "necsx_multi_single="sge_u32"\n", 0);
+      fprintf(fp, "necsx_max_nproc="sge_u32"\n", 0);
 #endif
 #endif       
 
@@ -2142,8 +2163,10 @@ static int start_async_command(const char *descr, char *cmd)
    char err_str[512];
    char *cwd;
    struct passwd *pw=NULL;
+   struct passwd pw_struct;
+   char buffer[2048];
       
-   pw = sge_getpwnam(get_conf_val("job_owner"));
+   pw = sge_getpwnam_r(get_conf_val("job_owner"), &pw_struct, buffer, sizeof(buffer));
 
    if (!pw) {
       shepherd_error_sprintf("can't get password entry for user \"%s\"",
@@ -2263,11 +2286,11 @@ static void start_clean_command(char *cmd)
  and uses it instead of the pid. If reading or killing fails, the normal
  mechanism is used.
  ****************************************************************/
-static void shepherd_signal_job(
-pid_t pid,
-int sig 
-) {
+static void 
+shepherd_signal_job(pid_t pid, int sig) 
+{
 #if defined(IRIX) || defined(CRAY) || defined(NECSX4) || defined(NECSX5)
+   bool do_while_end = false;
    FILE *fp;
    static int first = 1;
    int n;
@@ -2349,7 +2372,7 @@ int sig
 #     endif
       sge_switch2admin_user();
 
-   } while (0);
+   } while (do_while_end);
 
 #elif defined(SOLARIS) || defined(LINUX) || defined(ALPHA)
 #if 0
@@ -2486,14 +2509,16 @@ static int notify_tasker(u_long32 exit_status)
    } else {
       char *job_owner;
       struct passwd *pw=NULL;
+      struct passwd pw_struct;
+      char buffer[2048];
 
-      fprintf(fp, "%s "u32"\n", pvm_task_id, exit_status); 
+      fprintf(fp, "%s "sge_u32"\n", pvm_task_id, exit_status); 
       fclose(fp);
 
       /* sig_info_file has to be removed by tasker 
          and tasker runs in user mode */
       job_owner = get_conf_val("job_owner");
-      pw = sge_getpwnam(job_owner);
+      pw = sge_getpwnam_r(job_owner, &pw_struct, buffer, sizeof(buffer));
       if (!pw) {
          shepherd_error_sprintf("can't get password entry for user "
                                 "\"%s\"", job_owner);

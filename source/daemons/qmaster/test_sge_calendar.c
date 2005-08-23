@@ -462,11 +462,11 @@ static lListElem *createCalObject(cal_entry_t *calendar)
    
    if (0 != calendar_mod(&answerList, destCal, sourceCal, 1, "", "", NULL, 0)) {
       lWriteListTo(answerList, stdout);
-      destCal = lFreeElem(destCal);
-      answerList = lFreeList(answerList);
+      lFreeElem(&destCal);
+      lFreeList(&answerList);
    }
   
-   sourceCal = lFreeElem(sourceCal);
+   lFreeElem(&sourceCal);
 
    return destCal;
 }
@@ -536,12 +536,12 @@ static int test(date_entry_t *test, cal_entry_t *calendar, int test_nr)
       else {
          printf("wrong state: expected %d, got %lu\n", test->state1, current_state);
       }
-      state_changes_list = lFreeList(state_changes_list);
+      lFreeList(&state_changes_list);
    }
    
    /* test cleanup */
    printf("----------------\n");
-   destCal = lFreeElem(destCal);
+   lFreeElem(&destCal);
    
    return ret;
 }

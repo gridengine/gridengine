@@ -31,10 +31,6 @@
 /*___INFO__MARK_END__*/
 
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif  
-
 #include "basis_types.h"
 #include "sgermon.h" 
 #include "sge_string.h"
@@ -344,8 +340,8 @@ href_list_find_effective_diff(lList **answer_list, const lList *add_groups,
                                  *rem_hosts, &tmp_add_hosts,
                                  &tmp_rem_hosts, NULL, NULL);
       if (ret) {
-         *add_hosts = lFreeList(*add_hosts);
-         *rem_hosts = lFreeList(*rem_hosts);
+         lFreeList(add_hosts);
+         lFreeList(rem_hosts);
          *add_hosts = tmp_add_hosts;
          *rem_hosts = tmp_rem_hosts;
          tmp_add_hosts = NULL;
@@ -547,7 +543,7 @@ href_list_find_all_references(const lList *this_list, lList **answer_list,
          if (ret) {
             if (used_hosts != NULL && used_sub_hosts != NULL) {
                if (*used_hosts != NULL) {
-                  lAddList(*used_hosts, used_sub_hosts);
+                  lAddList(*used_hosts, &used_sub_hosts);
                } else {
                   *used_hosts = used_sub_hosts;
                   used_sub_hosts = NULL;
@@ -555,7 +551,7 @@ href_list_find_all_references(const lList *this_list, lList **answer_list,
             }
             if (used_groups != NULL && used_sub_groups != NULL) {
                if (*used_groups != NULL) {
-                  lAddList(*used_groups, used_sub_groups);
+                  lAddList(*used_groups, &used_sub_groups);
                } else {
                   *used_groups = used_sub_groups;
                   used_sub_groups = NULL;
@@ -565,7 +561,7 @@ href_list_find_all_references(const lList *this_list, lList **answer_list,
       }
 
       if (free_tmp_list) {
-         tmp_used_groups = lFreeList(tmp_used_groups);
+         lFreeList(&tmp_used_groups);
       }
    } 
    DEXIT;
@@ -697,7 +693,7 @@ href_list_find_all_referencees(const lList *this_list, lList **answer_list,
                                                &occupant_sub_groups);
 
          if (occupant_sub_groups != NULL && ret) {
-            lAddList(*occupant_groups, occupant_sub_groups);
+            lAddList(*occupant_groups, &occupant_sub_groups);
             occupant_sub_groups = NULL;
          } 
       }
@@ -849,11 +845,11 @@ href_list_remove_existing(lList **this_list, lList **answer_list,
 
          if (existing_href != NULL) {
             DTRACE;
-            lRemoveElem(*this_list, existing_href);
+            lRemoveElem(*this_list, &existing_href);
          }
       }
       if (lGetNumberOfElem(*this_list) == 0) {
-         *this_list = lFreeList(*this_list);
+         lFreeList(this_list);
       }
    }
    DEXIT;
@@ -938,7 +934,7 @@ href_list_make_uniq(lList *this_list, lList **answer_list)
       elem2 = lGetElemHostFirst(this_list, HR_name, 
                                 lGetHost(elem, HR_name), &iterator); 
       if (elem2 != NULL && elem != elem2) {
-         lRemoveElem(this_list, elem);
+         lRemoveElem(this_list, &elem);
       }
    }
    DEXIT;

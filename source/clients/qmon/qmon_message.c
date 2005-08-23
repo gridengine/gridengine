@@ -149,6 +149,7 @@ int show_always
 
       if (qmonBrowserObjectEnabled(BROWSE_MSG)) {
          qmonBrowserShow(msg);
+         qmonBrowserShow("\n");
       }
 
       if (!msg)

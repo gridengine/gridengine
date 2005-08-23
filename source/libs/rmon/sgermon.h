@@ -52,6 +52,16 @@
    if (rmon_condition(xaybzc, TRACE))       \
       rmon_menter (SGE_FUNC)
 
+#define DRETURN(ret)                            \
+   if (rmon_condition(xaybzc, TRACE))           \
+      rmon_mexit(SGE_FUNC, __FILE__, __LINE__); \
+   return ret
+
+#define DRETURN_VOID                            \
+   if (rmon_condition(xaybzc, TRACE))           \
+      rmon_mexit(SGE_FUNC, __FILE__, __LINE__); \
+   return 
+
 #define DEXIT                                   \
    if (rmon_condition(xaybzc, TRACE))           \
       rmon_mexit(SGE_FUNC, __FILE__, __LINE__)
@@ -89,6 +99,8 @@
 #define DENTER_MAIN( layer, program )
 #define DENTER( layer, function)
 #define DEXIT
+#define DRETURN(x) return x
+#define DRETURN_VOID return
 #define DTRACE
 #define DLOCKPRINTF(x)
 #define DPRINTF(x)

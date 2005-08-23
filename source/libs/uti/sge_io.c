@@ -269,7 +269,7 @@ int sge_copy_append(char *src, const char *dst, sge_mode_t mode)
    }   
  
    /* Return if source file doesn't exist */
-   if ((fdsrc = open(src, O_RDONLY)) == -1) {
+   if ((fdsrc = SGE_OPEN2(src, O_RDONLY)) == -1) {
       DEXIT;
       return -1;
    }   
@@ -279,13 +279,13 @@ int sge_copy_append(char *src, const char *dst, sge_mode_t mode)
    else
       modus = O_WRONLY | O_CREAT;      
     
-   if ((fddst = open(dst, modus, 0666)) == -1) {
+   if ((fddst = SGE_OPEN3(dst, modus, 0666)) == -1) {
       DEXIT;
       return -1;
    }    
     
    error = false;
-   while (true) {
+   while (!error) {
       rs = read(fdsrc, buf, 512);
       if (rs == -1 && errno == EINTR)
          continue;
@@ -293,7 +293,7 @@ int sge_copy_append(char *src, const char *dst, sge_mode_t mode)
          error = true;
     
       if (!error && rs > 0) {      
-         while (true) {   
+         while (!error) {   
             ws = write(fddst, buf, rs);
             if (ws == -1 && errno == EINTR)   
                continue;
@@ -373,7 +373,7 @@ char *sge_bin2string(FILE *fp, int size)
 
    error = false;
 
-   while (1) {
+   while (!error) {
       i = read(fd, inbuf, BUFFER);
       if (i > 0) {
          inp = inbuf;

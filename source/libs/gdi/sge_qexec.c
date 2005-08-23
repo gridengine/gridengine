@@ -38,10 +38,6 @@
 #include <sys/wait.h>
 #include <errno.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif       
-
 #include "cull.h"
 #include "commlib.h"
 #include "commd_message_flags.h"
@@ -145,7 +141,7 @@ const char *s;
       return NULL;
    }
 
-   if(sscanf(s, u32, &jobid) != 1) {
+   if(sscanf(s, sge_u32, &jobid) != 1) {
       sprintf(lasterror, MSG_GDI_STRINGISINVALID_SS, s, "JOB_ID");
       DEXIT;
       return NULL;
@@ -155,7 +151,7 @@ const char *s;
       if(strcmp(s, "undefined") == 0) {
          jataskid = 1;
       } else {
-         if(sscanf(s, u32, &jataskid) != 1) {
+         if(sscanf(s, sge_u32, &jataskid) != 1) {
             sprintf(lasterror, MSG_GDI_STRINGISINVALID_SS, s, env_var_name);
             DEXIT;
             return NULL;
@@ -192,7 +188,7 @@ const char *s;
    }
 
    if(init_packbuffer(&pb, 0, 0) != PACK_SUCCESS) {
-      lFreeElem(petrep);
+      lFreeElem(&petrep);
       sprintf(lasterror, MSG_GDI_OUTOFMEMORY);
       DEXIT;
       return NULL;
@@ -205,7 +201,7 @@ const char *s;
 
    clear_packbuffer(&pb);
 
-   lFreeElem(petrep);
+   lFreeElem(&petrep);
 
    if (ret != CL_RETVAL_OK) {
       sprintf(lasterror, MSG_GDI_SENDTASKTOEXECDFAILED_SS , hostname, cl_get_error_text(ret));
@@ -297,7 +293,6 @@ int tag
    sge_pack_buffer pb;
    u_short from_id;
    char host[1024];
-   u_short compressed;
 
    lListElem *rt_rcv;
    u_long32 exit_status=0;
@@ -310,7 +305,7 @@ int tag
    do {
       /* FIX_CONST */
       ret = gdi_receive_message((char*)prognames[EXECD], &from_id, host, &tag, 
-                                &msg, &msg_len, (options & OPT_SYNCHRON) ? 1:0, &compressed);
+                                &msg, &msg_len, (options & OPT_SYNCHRON) ? 1:0);
       if ( ret != CL_RETVAL_OK && ret != CL_RETVAL_SYNC_RECEIVE_TIMEOUT) {
          sprintf(lasterror, MSG_GDI_MESSAGERECEIVEFAILED_SI , cl_get_error_text(ret), ret);
          DEXIT;
@@ -323,7 +318,7 @@ int tag
       return 1;
    }
 
-   ret = init_packbuffer_from_buffer(&pb, msg, msg_len, compressed);     
+   ret = init_packbuffer_from_buffer(&pb, msg, msg_len);     
    if(ret != PACK_SUCCESS) {
       sprintf(lasterror,  MSG_GDI_ERRORUNPACKINGGDIREQUEST_S, cull_pack_strerror(ret));
       DEXIT;

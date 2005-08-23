@@ -69,7 +69,7 @@
 *     sgeobj/var/var_list_get_string()
 *     sgeobj/var/var_list_set_string()
 *     sgeobj/var/var_list_set_int()
-*     sgeobj/var/var_list_set_u32()
+*     sgeobj/var/var_list_set_sge_u32()
 *     sgeobj/var/var_list_set_sharedlib_path()
 *     sgeobj/var/var_list_remove_prefix_vars()
 ******************************************************************************/
@@ -137,7 +137,7 @@ const char *var_get_sharedlib_path_name(void)
 *
 *  SEE ALSO
 *     sgeobj/var/var_list_set_int()
-*     sgeobj/var/var_list_set_u32() 
+*     sgeobj/var/var_list_set_sge_u32() 
 *     sgeobj/var/var_list_set_sharedlib_path()
 ******************************************************************************/
 void var_list_set_string(lList **varl, const char *name, const char *value) 
@@ -178,7 +178,7 @@ void var_list_set_string(lList **varl, const char *name, const char *value)
 *
 *  SEE ALSO
 *     sgeobj/var/var_list_set_string()
-*     sgeobj/var/var_list_set_u32() 
+*     sgeobj/var/var_list_set_sge_u32() 
 *     sgeobj/var/var_list_set_sharedlib_path()
 ******************************************************************************/
 void var_list_set_int(lList **varl, const char *name, int value)
@@ -191,12 +191,12 @@ void var_list_set_int(lList **varl, const char *name, int value)
    DEXIT;
 }
 
-/****** sgeobj/var/var_list_set_u32() *****************************************
+/****** sgeobj/var/var_list_set_sge_u32() *****************************************
 *  NAME
-*     var_list_set_u32 -- add/change a variable
+*     var_list_set_sge_u32 -- add/change a variable
 *
 *  SYNOPSIS
-*     void var_list_set_u32(lList **varl, 
+*     void var_list_set_sge_u32(lList **varl, 
 *                           const char *name, 
 *                           u_long32 value);
 *
@@ -215,12 +215,12 @@ void var_list_set_int(lList **varl, const char *name, int value)
 *     sgeobj/var/var_list_set_int()
 *     sgeobj/var/var_list_set_sharedlib_path()
 ******************************************************************************/
-void var_list_set_u32(lList **varl, const char *name, u_long32 value)
+void var_list_set_sge_u32(lList **varl, const char *name, u_long32 value)
 {
    char buffer[2048];
 
-   DENTER(TOP_LAYER, "var_list_set_u32");
-   sprintf(buffer, u32, value);
+   DENTER(TOP_LAYER, "var_list_set_sge_u32");
+   sprintf(buffer, sge_u32, value);
    var_list_set_string(varl, name, buffer);
    DEXIT;
 }
@@ -245,7 +245,7 @@ void var_list_set_u32(lList **varl, const char *name, u_long32 value)
 *     sgeobj/var/var_get_sharedlib_path_name()
 *     sgeobj/var/var_list_set_string()
 *     sgeobj/var/var_list_set_int()
-*     sgeobj/var/var_list_set_u32() 
+*     sgeobj/var/var_list_set_sge_u32() 
 ******************************************************************************/
 void var_list_set_sharedlib_path(lList **varl)
 {
@@ -262,13 +262,13 @@ void var_list_set_sharedlib_path(lList **varl)
                         strlen("/lib/") + strlen(sge_get_arch()) + 1);
    sprintf(sge_sharedlib_path, "%s/lib/%s", sge_root, sge_get_arch());
 
-   /* if allready in environment: extend by SGE sharedlib path, else set */
+   /* if already in environment: extend by SGE sharedlib path, else set */
    sharedlib_elem = lGetElemStr(*varl, VA_variable, sharedlib_path_name);
    if(sharedlib_elem != NULL) {
       const char *old_value = lGetString(sharedlib_elem, VA_value);
 
       if(old_value && strlen(old_value) > 0) {
-         DPRINTF(("sharedlib path %s allready set:\n", sharedlib_path_name));
+         DPRINTF(("sharedlib path %s already set:\n", sharedlib_path_name));
          
          sharedlib_path = sge_malloc(strlen(old_value) + 1 + 
                           strlen(sge_sharedlib_path) + 1);
@@ -347,7 +347,7 @@ void var_list_dump_to_file(const lList *varl, FILE *file)
 *  SEE ALSO
 *     sgeobj/var/var_list_set_string()
 *     sgeobj/var/var_list_set_int()
-*     sgeobj/var/var_list_set_u32() 
+*     sgeobj/var/var_list_set_sge_u32() 
 *     sgeobj/var/var_list_set_sharedlib_path()
 ******************************************************************************/
 const char* var_list_get_string(lList *varl, const char *variable)
@@ -477,7 +477,7 @@ void var_list_copy_prefix_vars_undef(lList **varl,
    if (*varl == NULL) {
       *varl = lCreateList("", VA_Type);
    }
-   lAddList(*varl, var_list2); 
+   lAddList(*varl, &var_list2);
    DEXIT;
 }
 
@@ -613,7 +613,7 @@ void var_list_remove_prefix_vars(lList **varl, const char *prefix)
       next_var_elem = lNext(var_elem);
 
       if (!strncmp(prefix_name, prefix, prefix_len)) {
-         lRemoveElem(*varl, var_elem);
+         lRemoveElem(*varl, &var_elem);
       } 
    }
    DEXIT;
@@ -746,7 +746,7 @@ int var_list_add_as_set(lList *lp0, lList *lp1)
    }
 
    /* The second list is no longer needed. */
-   lFreeList(lp1);
+   lFreeList(&lp1);
 
    DEXIT;
    return 0;

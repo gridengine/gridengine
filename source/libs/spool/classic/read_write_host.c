@@ -441,7 +441,7 @@ char *file
             if (printed) {
                FPRINTF((fp, ","));
             } 
-            FPRINTF((fp, u32" "u32"="u32, lGetUlong(sep, RU_job_number),
+            FPRINTF((fp, sge_u32" "sge_u32"="sge_u32, lGetUlong(sep, RU_job_number),
                lGetUlong(sep, RU_task_number), lGetUlong(sep, RU_state)));
             printed=1;
          }

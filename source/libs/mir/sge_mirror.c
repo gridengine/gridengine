@@ -33,10 +33,6 @@
 #include <stdlib.h>
 #include <sys/types.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif   
-
 #include "sge_time.h"
 #include "sge_profiling.h"
 
@@ -330,9 +326,9 @@ sge_mirror_error sge_mirror_subscribe(sge_object_type type,
    }
 
    if(type == SGE_TYPE_ALL) {
-      int i;
+      sge_object_type i;
 
-      for(i = 0; i < SGE_TYPE_ALL; i++) {
+      for(i = SGE_TYPE_ADMINHOST; i < SGE_TYPE_ALL; i++) {
          if((ret = _sge_mirror_subscribe(i, callback_before, callback_after, clientdata, NULL, NULL)) != SGE_EM_OK) {
             break;
          }
@@ -668,9 +664,9 @@ _sge_mirror_subscribe(sge_object_type type,
    mirror_base[type].clientdata      = clientdata;
 
    if (where_el)
-      where_el = lFreeElem(where_el);
+      lFreeElem(&where_el);
    if (what_el)
-      what_el = lFreeElem(what_el);
+      lFreeElem(&what_el);
 
    return SGE_EM_OK;
 }   
@@ -710,9 +706,9 @@ sge_mirror_error sge_mirror_unsubscribe(sge_object_type type)
    }
 
    if(type == SGE_TYPE_ALL) {
-      int i;
+      sge_object_type i;
       
-      for(i = 0; i < SGE_TYPE_ALL; i++) {
+      for(i = SGE_TYPE_ADMINHOST; i < SGE_TYPE_ALL; i++) {
          if(i != SGE_TYPE_SHUTDOWN && i != SGE_TYPE_QMASTER_GOES_DOWN) {
             _sge_mirror_unsubscribe(i);
          }
@@ -929,8 +925,6 @@ static sge_mirror_error _sge_mirror_unsubscribe(sge_object_type type)
 *******************************************************************************/
 sge_mirror_error sge_mirror_process_events(void)
 {
-   static u_long32 last_heared = 0;
-   u_long32 now;
    lList *event_list = NULL;
    sge_mirror_error ret = SGE_EM_OK;
    static int test_debug = 0;
@@ -939,14 +933,12 @@ sge_mirror_error sge_mirror_process_events(void)
 
    PROF_START_MEASUREMENT(SGE_PROF_MIRROR);
 
-   now = sge_get_gmt();
    num_events = 0;
 
    if(ec_get(&event_list, false)) {
-      last_heared = now;
       if(event_list != NULL) {
          ret = sge_mirror_process_event_list(event_list);
-         lFreeList(event_list);
+         lFreeList(&event_list);
       }
    } else {
       WARNING((SGE_EVENT, MSG_MIRROR_QMASTERALIVETIMEOUTEXPIRED));
@@ -965,13 +957,11 @@ sge_mirror_error sge_mirror_process_events(void)
    }
 
    if (prof_is_active(SGE_PROF_MIRROR)) {
-      u_long32 saved_logginglevel = log_state_get_log_level();
       prof_stop_measurement(SGE_PROF_MIRROR, NULL);
       
-      log_state_set_log_level(LOG_INFO); 
-      INFO((SGE_EVENT, "PROF: sge_mirror processed %d events in %.3f s\n", 
-            num_events, prof_get_measurement_wallclock(SGE_PROF_MIRROR, false, NULL)));
-      log_state_set_log_level(saved_logginglevel);          
+      PROFILING((SGE_EVENT, "PROF: sge_mirror processed %d events in %.3f s\n", 
+                 num_events, prof_get_measurement_wallclock(SGE_PROF_MIRROR, 
+                 false, NULL)));
    }
 
    
@@ -1664,7 +1654,7 @@ sge_mirror_update_master_list(lList **list, const lDescr *list_descr,
          }
          
          /* remove element */
-         lRemoveElem(*list, ep);
+         lRemoveElem(*list, &ep);
          break;
 
       case SGE_EMA_MOD:
@@ -1674,7 +1664,7 @@ sge_mirror_update_master_list(lList **list, const lDescr *list_descr,
             DEXIT;
             return SGE_EM_KEY_NOT_FOUND;
          }
-         lRemoveElem(*list, ep);
+         lRemoveElem(*list, &ep);
          data_list = lGetList(event, ET_new_version);
          lAppendElem(*list, lDechainElem(data_list, lFirst(data_list)));
          break;

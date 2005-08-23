@@ -34,10 +34,6 @@
 #include <string.h>
 #include <errno.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif   
-
 #include "sgermon.h"
 #include "sge_schedd_conf.h"
 #include "sge_usageL.h"
@@ -84,7 +80,7 @@ int sge_read_sched_configuration(lListElem *aSpoolContext, lList **anAnswer)
    
    if (!sconf_set_config(&sched_conf, anAnswer))
    {
-      lFreeList(sched_conf);
+      lFreeList(&sched_conf);
       DEXIT;
       return -1;
    } 
@@ -109,7 +105,6 @@ char *ruser,
 char *rhost 
 ) {
    lList *temp_conf_list = NULL;
-   const lListElem *config = NULL;
    
    DENTER(TOP_LAYER, "sge_mod_sched_configuration");
 
@@ -119,20 +114,17 @@ char *rhost
       DEXIT;
       return STATUS_EUNKNOWN;
    }
-   config = sconf_get_config();
    temp_conf_list = lCreateList("sched config", SC_Type);
 
-   if (config) {
-      lSetUlong(confp, SC_weight_tickets_override, 
-      lGetUlong(config, SC_weight_tickets_override));
-   }
+   lSetUlong(confp, SC_weight_tickets_override, 
+             sconf_get_weight_tickets_override());
 
    confp = lCopyElem(confp);
    lAppendElem(temp_conf_list, confp);
 
    /* just check and log */
    if (!sconf_set_config(&temp_conf_list, alpp)) {
-      lFreeList(temp_conf_list);
+      lFreeList(&temp_conf_list);
       DEXIT;
       return STATUS_EUNKNOWN;
    }
@@ -170,7 +162,7 @@ static void check_reprioritize_interval(lList **alpp, char *ruser, char *rhost)
 
    sge_mod_configuration(conf, alpp, ruser, rhost);
 
-   conf = lFreeElem(conf);
+   lFreeElem(&conf);
 
    DEXIT;
    return;

@@ -34,10 +34,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif   
-
 #include "sgermon.h"
 #include "sge_log.h"
 #include "sge_bootstrap.h"
@@ -62,15 +58,15 @@ static void usage(const char *argv0)
 {
    fprintf(stderr, "%s\n %s %s\n\n", MSG_UTILBIN_USAGE, argv0, 
                                      MSG_SPOOLINIT_COMMANDINTRO0);
-   fprintf(stderr, "%s", MSG_SPOOLINIT_COMMANDINTRO1);
-   fprintf(stderr, "%s", MSG_SPOOLINIT_COMMANDINTRO2);
-   fprintf(stderr, "%s", MSG_SPOOLINIT_COMMANDINTRO3);
-   fprintf(stderr, "%s", MSG_SPOOLINIT_COMMANDINTRO4);
-   fprintf(stderr, "%s", MSG_SPOOLINIT_COMMANDINTRO5);
-   fprintf(stderr, "%s", MSG_SPOOLINIT_COMMANDINTRO6);
-   fprintf(stderr, "%s", MSG_SPOOLINIT_COMMANDINTRO7);
-   fprintf(stderr, "%s", MSG_SPOOLINIT_COMMANDINTRO8);
-   fprintf(stderr, "%s", MSG_SPOOLINIT_COMMANDINTRO9);
+   fprintf(stderr, "%s\n", MSG_SPOOLINIT_COMMANDINTRO1);
+   fprintf(stderr, "%s\n", MSG_SPOOLINIT_COMMANDINTRO2);
+   fprintf(stderr, "%s\n", MSG_SPOOLINIT_COMMANDINTRO3);
+   fprintf(stderr, "%s\n", MSG_SPOOLINIT_COMMANDINTRO4);
+   fprintf(stderr, "%s\n", MSG_SPOOLINIT_COMMANDINTRO5);
+   fprintf(stderr, "%s\n", MSG_SPOOLINIT_COMMANDINTRO6);
+   fprintf(stderr, "%s\n", MSG_SPOOLINIT_COMMANDINTRO7);
+   fprintf(stderr, "%s\n", MSG_SPOOLINIT_COMMANDINTRO8);
+   fprintf(stderr, "%s\n", MSG_SPOOLINIT_COMMANDINTRO9);
 }
 
 static int init_framework(const char *method, const char *shlib, 

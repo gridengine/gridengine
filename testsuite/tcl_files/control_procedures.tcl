@@ -244,9 +244,9 @@ proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result 
    set env(EDITOR) [get_binary_path "$CHECK_HOST" "vim"]
    set env(SGE_SINGLE_LINE) 1
    set result -100
-   set id [ open_remote_spawn_process $CHECK_HOST $CHECK_USER "$prog_binary" "$prog_args" 0 env]
+   set id [ open_remote_spawn_process $CHECK_HOST $CHECK_USER "$prog_binary" "$prog_args"]
       set sp_id [ lindex $id 1 ] 
-      debug_puts "starting -> $prog_binary $prog_args"
+#      debug_puts "starting -> $prog_binary $prog_args"
       if {$CHECK_DEBUG_LEVEL != 0} {
          log_user 1
          set send_speed .05
@@ -260,10 +260,9 @@ proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result 
       set stop_line_wait 0
       set timeout 10
 
-      set start_time [ timestamp ] 
       send -i $sp_id "G"
-      #set timeout 1
       set timeout_count 0
+      set start_time 0
       while { $stop_line_wait == 0 } {
          expect {
             -i $sp_id full_buffer {
@@ -271,7 +270,9 @@ proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result 
                set stop_line_wait 1
             }
             -i $sp_id "100%" {
-               after 100
+               set start_time [ timestamp ] 
+#               debug_puts "handle_vi_edit(5.1)"
+#               debug_puts "start_time = $start_time"
                send -i $sp_id "1G"      ;# go to first line
                set stop_line_wait 1
             }
@@ -287,6 +288,12 @@ proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result 
                   set stop_line_wait 1
                }
             }
+            
+            -i $sp_id "o lines in buffer" {
+               set start_time [ timestamp ] 
+               set stop_line_wait 1
+            }
+            
             -i $sp_id "erminal too wide" {
                add_proc_error "handle_vi_edit" -2 "got terminal to wide vi error"
                set stop_line_wait 1
@@ -319,21 +326,19 @@ proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result 
             }
          }
 
-         after 50
+         after 25
       }
 
-      # wait 1 second for new file date!!! 
-      after 1000
+      # wait for file time older one second
       while { [ timestamp ] <= $start_time } { 
-         after 1000
+         after 100
       }
       send -i $sp_id ":wq\n"
-      set timeout 100
+      set timeout 30
       set doStop 0
-      debug_puts "handle_vi_edit(6)"
+#      debug_puts "handle_vi_edit(6)"
 
       if { [string compare "" $expected_result ] == 0 } {
-         set timeout 0
          set doStop 0
          while { $doStop == 0 } {
             expect {
@@ -726,8 +731,8 @@ proc get_ps_info { { pid 0 } { host "local"} { variable ps_info } {additional_ru
       "irix6" -
       "irix65" { 
          set myenvironment(COLUMNS) "500"
-         set result [start_remote_prog "$host" "$CHECK_USER" "ps" "-eo \"pid pgid ppid uid state stime vsz time args\"" prg_exit_state 60 0 myenvironment]
-         set index_names "  PID  PGID  PPID   UID S    STIME {VSZ   }        TIME COMMAND"
+         set result [start_remote_prog "$host" "$CHECK_USER" "ps" "-eo \"pid,pgid,ppid,uid=LONGUID,state,stime,vsz,time,args\"" prg_exit_state 60 0 myenvironment]
+         set index_names "  PID  PGID  PPID LONGUID S    STIME {VSZ   }        TIME COMMAND"
          set pid_pos     0
          set gid_pos     1
          set ppid_pos    2
@@ -1399,6 +1404,11 @@ proc resolve_host { name { long 0 } } {
    global CHECK_OUTPUT
    global resolve_host_cache
 
+   # we cannot resolve hostgroups.
+   if {[string range $name 0 0] == "@" } {
+      puts $CHECK_OUTPUT "hostgroups ($name) cannot be resolved"
+      return $name
+   }
    
    if { $long != 0 } {
       if {[info exists resolve_host_cache($name,long)]} {
@@ -1438,7 +1448,49 @@ proc resolve_host { name { long 0 } } {
 }
 
 
+#****** control_procedures/resolve_queue() *************************************
+#  NAME
+#     resolve_queue() -- resolve queue instance name
+#
+#  SYNOPSIS
+#     resolve_queue { queue } 
+#
+#  FUNCTION
+#     This function resolves the hostname of the queue instance and returns 
+#     the corresponding name
+#
+#  INPUTS
+#     queue - queue name e.g. "queue1@testhost"
+#
+#*******************************************************************************
+proc resolve_queue { queue } { 
+   global CHECK_OUTPUT
+   set at_sign [string first "@" $queue]
+   set new_queue_name $queue
+   if { $at_sign >= 0 } {
+      incr at_sign 1
+      set host_name  [string range $queue $at_sign end]
+      incr at_sign -2
+      set queue_name [string range $queue 0 $at_sign]
+      debug_puts "queue name:          \"$queue_name\""
+      debug_puts "host name:           \"$host_name\""
+      set resolved_name [resolve_host $host_name 1]
+      if { $resolved_name != "unknown" } {
+         set resolved_host_name $resolved_name
+         debug_puts "resolved host name:  \"$resolved_host_name\""
+         set new_queue_name "$queue_name@$resolved_host_name"
+      } else {
+         puts $CHECK_OUTPUT "can't resolve host \"$host_name\""
+      }
+   }
+   puts $CHECK_OUTPUT "queue \"$queue\" resolved to \"$new_queue_name\""
 
+   if { [string length $new_queue_name] > 30 } {
+      add_proc_error "resolve_queue" -3 "The length of the queue name \"$new_queue_name\" will exceed qstat queue name output"
+   }
+
+   return $new_queue_name 
+}
 
 # main
 #if { [info exists argc ] != 0 } {

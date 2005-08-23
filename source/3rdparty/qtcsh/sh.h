@@ -1,4 +1,4 @@
-/* $Header: /home/nfs/collabnet/CVSROOT/gridengine/source/3rdparty/qtcsh/sh.h,v 1.10 2005/03/24 12:04:42 ron Exp $ */
+/* $Header: /home/nfs/collabnet/CVSROOT/gridengine/source/3rdparty/qtcsh/sh.h,v 1.12 2005/06/16 16:29:07 andreas Exp $ */
 /*
  * sh.h: Catch it all globals and includes file!
  */
@@ -221,7 +221,16 @@ typedef int sigret_t;
 
 
 #if !defined(_MINIX) && !defined(_VMS_POSIX) && !defined(WINNT)
+/*
+ * On some systems, sys/param.h includes unistd.h
+ * As such, we have to copy the set/getpgrp trick from where
+ * we include unistd.h later on
+ */
+# define getpgrp __getpgrp
+# define setpgrp __setpgrp
 # include <sys/param.h>
+# undef getpgrp
+# undef setpgrp
 #endif /* !_MINIX && !_VMS_POSIX && !WINNT */
 #include <sys/stat.h>
 
@@ -265,6 +274,10 @@ typedef int sigret_t;
 #ifdef sonyrisc
 # include <sys/ttold.h>
 #endif /* sonyrisc */
+
+#ifdef REMOTEHOST
+# include <netdb.h>
+#endif /* REMOTEHOST */
 
 #if defined(POSIX) && !defined(WINNT)
 /*
@@ -529,10 +542,6 @@ extern void		DebugFree	__P((ptr_t, char *, int));
 #ifdef HESIOD
 # include <hesiod.h>
 #endif /* HESIOD */
-
-#ifdef REMOTEHOST
-# include <netdb.h>
-#endif /* REMOTEHOST */
 
 #ifndef MAXHOSTNAMELEN
 # if defined(SCO) && (SYSVREL > 3)

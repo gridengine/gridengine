@@ -32,10 +32,6 @@
 
 #include <string.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif   
-
 #include "sge.h"
 #include "cull.h"
 #include "sgermon.h"
@@ -112,10 +108,10 @@ lListElem **lepp
    }
 
    if (*gepp) {
-      *gepp = lFreeElem(*gepp);
+      lFreeElem(gepp);
    }
    if (lepp && *lepp) {
-      *lepp = lFreeElem(*lepp);
+      lFreeElem(lepp);
    }
 
    if (!strcasecmp(config_name, "global")) {
@@ -129,7 +125,7 @@ lListElem **lepp
 
       if (ret != CL_RETVAL_OK) {
          DPRINTF(("get_configuration: error %d resolving host %s: %s\n", ret, config_name, cl_get_error_text(ret)));
-         hep = lFreeElem(hep);
+         lFreeElem(&hep);
          ERROR((SGE_EVENT, MSG_SGETEXT_CANTRESOLVEHOST_S, config_name));
          DEXIT;
          return -2;
@@ -151,7 +147,7 @@ lListElem **lepp
                                     handle->local->comp_name,
                                     handle->local->comp_id));
             }
-            hep = lFreeElem(hep);
+            lFreeElem(&hep);
             DEXIT;
             return -6;
          case CL_RETVAL_ACCESS_DENIED:
@@ -164,17 +160,22 @@ lListElem **lepp
                                     handle->local->comp_id));
             }
 
-            hep = lFreeElem(hep);
+            lFreeElem(&hep);
             DEXIT;
             return -6;
          default:
-            ERROR((SGE_EVENT, cl_get_error_text(commlib_error)));
+            break;
+            /*
+             * no need to log an error to the messages file, because
+             * commlib errors are logged via general_communication_error()
+             * callback function
+             */
       }
    }
 
    if (!is_global_requested && !lepp) {
       ERROR((SGE_EVENT, MSG_NULLPOINTER));
-      lFreeElem(hep);
+      lFreeElem(&hep);
       DEXIT;
       return -3;
    }
@@ -194,8 +195,8 @@ lListElem **lepp
    what = lWhat("%T(ALL)", CONF_Type);
    alp = sge_gdi(SGE_CONFIG_LIST, SGE_GDI_GET, &lp, where, what);
 
-   lFreeWhat(what);
-   lFreeWhere(where);
+   lFreeWhat(&what);
+   lFreeWhere(&where);
 
    success = ((status= lGetUlong(lFirst(alp), AN_status)) == STATUS_OK);
    if (!success) {
@@ -204,13 +205,13 @@ lListElem **lepp
          already_logged = 1;       
       }
                    
-      lFreeList(alp);
-      lFreeList(lp);
-      lFreeElem(hep);
+      lFreeList(&alp);
+      lFreeList(&lp);
+      lFreeElem(&hep);
       DEXIT;
       return (status != STATUS_EDENIED2HOST)?-4:-7;
    }
-   lFreeList(alp);
+   lFreeList(&alp);
 
    if (lGetNumberOfElem(lp) > (2 - is_global_requested)) {
       WARNING((SGE_EVENT, MSG_CONF_REQCONF_II, 2 - is_global_requested, lGetNumberOfElem(lp)));
@@ -218,8 +219,8 @@ lListElem **lepp
 
    if (!(*gepp = lGetElemHost(lp, CONF_hname, SGE_GLOBAL_NAME))) {
       ERROR((SGE_EVENT, MSG_CONF_NOGLOBAL));
-      lFreeList(lp);
-      lFreeElem(hep);
+      lFreeList(&lp);
+      lFreeElem(&hep);
       DEXIT;
       return -5;
    }
@@ -230,8 +231,8 @@ lListElem **lepp
          if (*gepp) {
             WARNING((SGE_EVENT, MSG_CONF_NOLOCAL_S, lGetHost(hep, EH_name)));
          }
-         lFreeList(lp);
-         lFreeElem(hep);
+         lFreeList(&lp);
+         lFreeElem(&hep);
          already_logged = 0;
          DEXIT;
          return 0;
@@ -239,8 +240,8 @@ lListElem **lepp
       lDechainElem(lp, *lepp);
    }
    
-   lFreeElem(hep);
-   lFreeList(lp);
+   lFreeElem(&hep);
+   lFreeList(&lp);
    already_logged = 0;
    DEXIT;
    return 0;
@@ -248,7 +249,8 @@ lListElem **lepp
 
 int get_conf_and_daemonize(
 tDaemonizeFunc dfunc,
-lList **conf_list
+lList **conf_list,
+volatile int* abort_flag
 ) {
    lListElem *global = NULL;
    lListElem *local = NULL;
@@ -256,7 +258,6 @@ lList **conf_list
    cl_com_handle_t* handle = NULL;
    int ret_val;
    int ret;
-   time_t now, last;
 
    DENTER(TOP_LAYER, "get_conf_and_daemonize");
    /*
@@ -265,7 +266,6 @@ lList **conf_list
     */
    DPRINTF(("qualified hostname: %s\n",  uti_state_get_qualified_hostname()));
 
-   now = last = (time_t) sge_get_gmt();
    while ((ret = get_configuration(uti_state_get_qualified_hostname(), &global, &local))) {
       if (ret==-6 || ret==-7) {
          /* confict: COMMPROC ALREADY REGISTERED */
@@ -278,11 +278,9 @@ lList **conf_list
          if (!getenv("SGE_ND") && sleep_counter > 2) {
             ERROR((SGE_EVENT, MSG_CONF_NOCONFBG));
             dfunc();
-         } else {
-            WARNING((SGE_EVENT, MSG_CONF_NOCONFSLEEP));
          }
          handle = cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0);
-         ret_val = cl_commlib_trigger(handle);
+         ret_val = cl_commlib_trigger(handle, 1);
          switch(ret_val) {
             case CL_RETVAL_SELECT_TIMEOUT:
             case CL_RETVAL_OK:
@@ -295,7 +293,7 @@ lList **conf_list
       } else {
          DTRACE;
          handle = cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0);
-         ret_val = cl_commlib_trigger(handle);
+         ret_val = cl_commlib_trigger(handle, 1);
          switch(ret_val) {
             case CL_RETVAL_SELECT_TIMEOUT:
             case CL_RETVAL_OK:
@@ -304,17 +302,16 @@ lList **conf_list
                sleep(1);
                break;
          }
-         now = (time_t) sge_get_gmt();
-         if (last > now)
-            last=now;
-         if (now - last > 1800) {
-            last = now;
-            ERROR((SGE_EVENT, MSG_CONF_NOCONFSTILL));
+      }
+      if (abort_flag != NULL) {
+         if (*abort_flag != 0) {
+            DEXIT;
+            return -2;
          }
       }
    }
-
-   ret = merge_configuration(global, local, &conf, NULL);
+  
+   ret = merge_configuration(global, local, NULL);
    if (ret) {
       DPRINTF((
          "Error %d merging configuration \"%s\"\n", ret, uti_state_get_qualified_hostname()));
@@ -326,7 +323,7 @@ lList **conf_list
     */
    lSetList(global, CONF_entries, NULL);
    lSetList(local, CONF_entries, NULL);
-   *conf_list = lFreeList(*conf_list);
+   lFreeList(conf_list);
    *conf_list = lCreateList("config list", CONF_Type);
    lAppendElem(*conf_list, global);
    lAppendElem(*conf_list, local);
@@ -356,16 +353,16 @@ lList **conf_list
    ret = get_configuration(uti_state_get_qualified_hostname(), &global, &local);
    if (ret) {
       ERROR((SGE_EVENT, MSG_CONF_NOREADCONF_IS, ret, uti_state_get_qualified_hostname()));
-      lFreeElem(global);
-      lFreeElem(local);
+      lFreeElem(&global);
+      lFreeElem(&local);
       return -1;
    }
 
-   ret = merge_configuration(global, local, &conf, NULL);
+   ret = merge_configuration(global, local, NULL);
    if (ret) {
       ERROR((SGE_EVENT, MSG_CONF_NOMERGECONF_IS, ret, uti_state_get_qualified_hostname()));
-      lFreeElem(global);
-      lFreeElem(local);
+      lFreeElem(&global);
+      lFreeElem(&local);
       return -2;
    }
    /*
@@ -375,7 +372,7 @@ lList **conf_list
    lSetList(global, CONF_entries, NULL);
    lSetList(local, CONF_entries, NULL);
 
-   *conf_list = lFreeList(*conf_list);
+   lFreeList(conf_list);
    *conf_list = lCreateList("config list", CONF_Type);
    lAppendElem(*conf_list, global);
    lAppendElem(*conf_list, local);

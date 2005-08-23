@@ -43,10 +43,6 @@
 #include <errno.h>
 #include <limits.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif   
-
 #include "sge_unistd.h"
 #include "sgermon.h"
 #include "sge_gdi_request.h"
@@ -149,17 +145,17 @@ int user        /* =1 user, =0 project */
    {
       lList *pul;
 
-      FPRINTF((fp, "oticket " u32 "\n", lGetUlong(ep, UP_oticket)));
-      FPRINTF((fp, "fshare " u32 "\n", lGetUlong(ep, UP_fshare)));
+      FPRINTF((fp, "oticket " sge_u32 "\n", lGetUlong(ep, UP_oticket)));
+      FPRINTF((fp, "fshare " sge_u32 "\n", lGetUlong(ep, UP_fshare)));
 #if defined(allow_delete_time_modification)
       if (user)
-         FPRINTF((fp, "delete_time " u32 "\n", lGetUlong(ep, UP_delete_time)));
+         FPRINTF((fp, "delete_time " sge_u32 "\n", lGetUlong(ep, UP_delete_time)));
 #endif
 
       if (spool) {
 #if !defined(allow_delete_time_modification)
          if (user)
-            FPRINTF((fp, "delete_time " u32 "\n", lGetUlong(ep, UP_delete_time)));
+            FPRINTF((fp, "delete_time " sge_u32 "\n", lGetUlong(ep, UP_delete_time)));
 #endif
          FPRINTF((fp, "usage "));
          ret = uni_print_list(fp, NULL, 0, lGetList(ep, UP_usage), 
@@ -168,7 +164,7 @@ int user        /* =1 user, =0 project */
             goto FPRINTF_ERROR;
          }
          FPRINTF((fp, "\n"));
-         FPRINTF((fp, "usage_time_stamp " u32 "\n", 
+         FPRINTF((fp, "usage_time_stamp " sge_u32 "\n", 
                         lGetUlong(ep, UP_usage_time_stamp)));
          FPRINTF((fp, "long_term_usage "));
          ret = uni_print_list(fp, NULL, 0, lGetList(ep, UP_long_term_usage),
@@ -235,7 +231,7 @@ int user        /* =1 user, =0 project */
                   
    if (spool) {
       for_each (ju, lGetList(ep, UP_debited_job_usage)) {
-         FPRINTF((fp, u32" ", lGetUlong(ju, UPU_job_number)));
+         FPRINTF((fp, sge_u32" ", lGetUlong(ju, UPU_job_number)));
          ret = uni_print_list(fp, NULL, 0, lGetList(ju, UPU_old_usage_list), 
                         intprt_as_usage, delis,0);
          if (ret < 0) {
@@ -396,7 +392,7 @@ int parsing_type
                }
 
                if (ssclp)
-                  lFreeList(ssclp);
+                  lFreeList(&ssclp);
 
                lSetList(cp, CF_sublist, NULL);  /* frees old list */
 
@@ -466,7 +462,7 @@ int parsing_type
 
          if (!(upu = lAddSubUlong(ep, UPU_job_number, job_number, 
                                     UP_debited_job_usage, UPU_Type))) {
-            SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_JOB_FOUNDJOBXTWICE_U, u32c(job_number)));
+            SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_JOB_FOUNDJOBXTWICE_U, sge_u32c(job_number)));
             answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
             DEXIT;
             return -1;
@@ -559,7 +555,7 @@ int main(int argc, char *argv[])
    if (write_userprj(NULL, ep, "/sge_home/andreas/andreas", NULL, 1, 1))
       perror("failed writing user object\n");
 
-   lFreeElem(ep);
+   lFreeElem(&ep);
 
    if (!(ep = read_userprj("/sge_home/andreas/andreas", 1, &alp)))
       fprintf(stderr, "failed reading user object: %s\n", 

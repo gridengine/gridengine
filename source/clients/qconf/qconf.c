@@ -30,10 +30,6 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif
-
 #include "sge_unistd.h"
 #include "sge_all_listsL.h"
 #include "usage.h"
@@ -58,7 +54,6 @@ int main(int argc, char *argv[]);
 /************************************************************************/
 int main(int argc, char **argv)
 {
-   int ret;
    lList *alp = NULL;
    
    DENTER_MAIN(TOP_LAYER, "qconf");
@@ -77,7 +72,7 @@ int main(int argc, char **argv)
 
    sge_setup_sig_handlers(QCONF);
 
-   if ((ret = reresolve_me_qualified_hostname()) != CL_RETVAL_OK) {
+   if (reresolve_me_qualified_hostname() != CL_RETVAL_OK) {
       SGE_EXIT(1);
    }
 

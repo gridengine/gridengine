@@ -35,10 +35,6 @@
 
 #include <fnmatch.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif      
-
 #include "sgermon.h"
 #include "sge_log.h"
 #include "commlib.h"
@@ -361,7 +357,7 @@ void job_create_hold_id_lists(const lListElem *job, lList *id_list[8],
    id_list[0] = lCopyList("", lGetList(job, JB_ja_n_h_ids));
 
    for (i = 0; i < 7; i++) {
-      list[i] = lFreeList(list[i]);
+      lFreeList(&(list[i]));
    }
    DEXIT;
 }
@@ -391,7 +387,7 @@ void job_destroy_hold_id_lists(const lListElem *job, lList *id_list[8])
 
    DENTER(TOP_LAYER, "job_destroy_hold_id_lists");
    for (i = 0; i < 8; i++) {
-      id_list[i] = lFreeList(id_list[i]);
+      lFreeList(&(id_list[i]));
    }
    DEXIT;
 }
@@ -491,10 +487,10 @@ u_long32 job_get_ja_tasks(const lListElem *job)
    DENTER(TOP_LAYER, "job_get_ja_tasks");
    n = job_get_not_enrolled_ja_tasks(job);
    ret += n;
-   DPRINTF(("Not enrolled ja_tasks: "u32"\n", n));
+   DPRINTF(("Not enrolled ja_tasks: "sge_u32"\n", n));
    n = job_get_enrolled_ja_tasks(job);
    ret += n;
-   DPRINTF(("Enrolled ja_tasks: "u32"\n", n));
+   DPRINTF(("Enrolled ja_tasks: "sge_u32"\n", n));
    DEXIT;
    return ret;
 }
@@ -540,8 +536,8 @@ u_long32 job_get_not_enrolled_ja_tasks(const lListElem *job)
    ret += range_list_get_number_of_ids(lGetList(job, JB_ja_n_h_ids));
    ret += range_list_get_number_of_ids(uos_ids);
 
-   uos_ids = lFreeList(uos_ids);
-   uo_ids = lFreeList(uo_ids);
+   lFreeList(&uos_ids);
+   lFreeList(&uo_ids);
 
    DEXIT;
    return ret;
@@ -795,7 +791,14 @@ void job_add_as_zombie(lListElem *zombie, lList **answer_list,
 *******************************************************************************/
 bool job_has_soft_requests(lListElem *job) 
 {
-   return lGetList(job, JB_soft_resource_list) || lGetList(job, JB_soft_queue_list);
+   bool ret = false;
+   
+   if (lGetList(job, JB_soft_resource_list) != NULL || 
+       lGetList(job, JB_soft_queue_list) != NULL) {
+      ret = true;
+   }
+
+   return ret;
 }
 
 /****** sgeobj/job/job_set_hold_state() ***************************************

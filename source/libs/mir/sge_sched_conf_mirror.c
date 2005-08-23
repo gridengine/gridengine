@@ -30,10 +30,6 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif   
-
 #include "sge.h"
 #include "sgermon.h"
 #include "sge_log.h"
@@ -107,7 +103,7 @@ schedd_conf_update_master_list(sge_object_type type,
    }
 
    if (sconf_set_config(&list, &answer_list)){
-      list = lFreeList(list);
+      lFreeList(&list);
       answer_list_output(&answer_list);
    }
 

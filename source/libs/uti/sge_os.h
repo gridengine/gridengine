@@ -64,6 +64,17 @@ typedef struct fd_set {
 #  define PSCMD "/bin/ps -e"
 #endif
 
+/*
+ * typedef for sge_daemonize_prepare() and sge_daemonize_finalize() 
+ * max. supported number = 999 
+ */
+typedef enum uti_deamonize_state_type {
+   SGE_DEAMONIZE_OK           = 0,
+   SGE_DAEMONIZE_DEAD_CHILD   = 100,
+   SGE_DAEMONIZE_TIMEOUT      = 101
+} uti_deamonize_state_t;
+
+
 int sge_get_pids(pid_t *, int, const char *, const char *);
 
 int sge_contains_pid(pid_t, pid_t *, int);
@@ -75,6 +86,11 @@ void sge_close_all_fds(fd_set *keep_open);
 int sge_daemonize(fd_set *keep_open);
  
 int sge_occupy_first_three(void);
+
+int sge_daemonize_prepare(void);
+int sge_daemonize_finalize(void);
+
+
  
 #endif /* __SGE_PIDS_H */
 

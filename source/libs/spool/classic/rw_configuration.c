@@ -34,10 +34,6 @@
 #include <string.h>
 #include <ctype.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif   
-
 #include "sgermon.h"
 #include "sge_gdi_request.h"
 #include "rw_configuration.h"
@@ -97,9 +93,9 @@ u_long32 flags
    } 
 
    if (flags & FLG_CONF_SPOOL) {
-      FPRINTF((fp, "%-25s " u32"\n", "conf_version", 
+      FPRINTF((fp, "%-25s " sge_u32"\n", "conf_version", 
             lGetUlong(epc, CONF_version)));
-      DPRINTF(("writing conf %s version " u32 "\n", fname, 
+      DPRINTF(("writing conf %s version " sge_u32 "\n", fname, 
                lGetUlong(epc, CONF_version)));
    }
 
@@ -179,8 +175,8 @@ u_long32 flags
                DEXIT;
                return NULL;
             }
-            sscanf(value, u32, &conf_version);
-            DPRINTF(("read conf %s version " u32"\n", conf_name, conf_version));
+            sscanf(value, sge_u32, &conf_version);
+            DPRINTF(("read conf %s version " sge_u32"\n", conf_name, conf_version));
             continue;
          } else {
             WARNING((SGE_EVENT, MSG_CONFIG_CONF_VERSIONNOTFOUNDONREADINGSPOOLFILE));
@@ -190,7 +186,7 @@ u_long32 flags
       ep = lAddElemStr(&lp, CF_name, name, CF_Type);
       if (!ep) {
          WARNING((SGE_EVENT, MSG_CONFIG_CONF_ERRORSTORINGCONFIGVALUE_S, name));
-         lFreeList(lp);
+         lFreeList(&lp);
          fclose(fp);
          DEXIT;
          return NULL;
@@ -204,12 +200,12 @@ u_long32 flags
                lSetString(ep, CF_value, value);
             } else {
                range_list_parse_from_string(&rlp, &alp, value, 
-                                            0, 0, INF_NOT_ALLOWED);
+                                            false, false, INF_NOT_ALLOWED);
                if (rlp == NULL) {
                   WARNING((SGE_EVENT, MSG_CONFIG_CONF_INCORRECTVALUEFORCONFIGATTRIB_SS, 
                            name, value));
-                  alp = lFreeList(alp);
-                  lp = lFreeList(lp);
+                  lFreeList(&alp);
+                  lFreeList(&lp);
                   fclose(fp);
                   DEXIT;
                   return NULL;
@@ -217,20 +213,20 @@ u_long32 flags
                   lListElem *rep;
 
                   for_each (rep, rlp) {
-                     long min;
+                     u_long32 min;
 
                      min = lGetUlong(rep, RN_min);
                      if (min < GID_RANGE_NOT_ALLOWED_ID) {
                         WARNING((SGE_EVENT, MSG_CONFIG_CONF_GIDRANGELESSTHANNOTALLOWED_I, GID_RANGE_NOT_ALLOWED_ID));
-                        alp = lFreeList(alp);
-                        lp = lFreeList(lp);
+                        lFreeList(&alp);
+                        lFreeList(&lp);
                         fclose(fp);
                         DEXIT;
                         return (NULL);
                      }                  
                   }
-                  alp = lFreeList(alp);
-                  rlp = lFreeList(rlp);
+                  lFreeList(&alp);
+                  lFreeList(&rlp);
                   lSetString(ep, CF_value, value);
                }
             }
@@ -244,7 +240,7 @@ u_long32 flags
             lSetString(ep, CF_value, value);
          } else {
             WARNING((SGE_EVENT, MSG_CONFIG_CONF_NOVALUEFORCONFIGATTRIB_S, name));
-            lp = lFreeList(lp);
+            lFreeList(&lp);
             fclose(fp);
             DEXIT;
             return NULL;
@@ -272,7 +268,7 @@ u_long32 flags
          if (!(value = strtok(NULL, "\t\n"))) {
             /* return line if value is empty */
             WARNING((SGE_EVENT, MSG_CONFIG_CONF_NOVALUEFORCONFIGATTRIB_S, name));
-            lp = lFreeList(lp);
+            lFreeList(&lp);
             fclose(fp);
             DEXIT;
             return NULL;
@@ -285,7 +281,7 @@ u_long32 flags
       } else {
          if (!(value = strtok(NULL, " \t\n"))) {
             WARNING((SGE_EVENT, MSG_CONFIG_CONF_NOVALUEFORCONFIGATTRIB_S, name));
-            lp = lFreeList(lp);
+            lFreeList(&lp);
             fclose(fp);
             DEXIT;
             return NULL;

@@ -34,10 +34,6 @@
 #include <string.h>
 #include <fnmatch.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif  
-
 #ifdef WIN32NATIVE
 #  include "win32nativetypes.h"
 #endif
@@ -214,7 +210,7 @@ lListElem* get_attribute(const char *attrname, lList *config_attr, lList *actual
             lSetString(cplx_el,CE_pj_stringval, as_str);
          } else{
             sge_dstring_sprintf(reason, MSG_ATTRIB_ACTUALELEMENTTOATTRIBXMISSING_S, attrname);
-            cplx_el = lFreeElem(cplx_el);
+            lFreeElem(&cplx_el);
             DEXIT;
             return NULL;
          }
@@ -236,6 +232,7 @@ lListElem* get_attribute(const char *attrname, lList *config_attr, lList *actual
          if (!cplx_el){
             cplx_el = lCopyElem(lGetElemStr(centry_list, CE_name, attrname));
                if(!cplx_el){
+                  DEXIT;
                   /* error */
                   return NULL;
                }         
@@ -266,8 +263,10 @@ lListElem* get_attribute(const char *attrname, lList *config_attr, lList *actual
                char err_str[256];
                char sval[100];
                u_long32 dom_type = DOMINANT_TYPE_LOAD;
+               lList *load_adjustments = sconf_get_job_load_adjustments();
  
-               job_load=lGetElemStr(sconf_get_job_load_adjustments(), CE_name, attrname);
+               job_load=lGetElemStr(load_adjustments, CE_name, attrname);
+
                if (parse_ulong_val(&dval, NULL, type, load_value, NULL, 0)) {
 
                strncpy(sval, load_value, 100);
@@ -329,6 +328,7 @@ lListElem* get_attribute(const char *attrname, lList *config_attr, lList *actual
                   lSetDouble(cplx_el, CE_pj_doubleval, dval );
                }
             } /* end numerical load value */
+            lFreeList(&load_adjustments);
          }/* end block */
       }
    }
@@ -339,6 +339,7 @@ lListElem* get_attribute(const char *attrname, lList *config_attr, lList *actual
       if(!cplx_el){
          cplx_el = lCopyElem(lGetElemStr(centry_list, CE_name, attrname));
          if(!cplx_el){
+            DEXIT;
             /* error */
             return NULL;
          }         
@@ -347,7 +348,7 @@ lListElem* get_attribute(const char *attrname, lList *config_attr, lList *actual
          created = true;
       }
       if (!get_queue_resource(cplx_el, queue, attrname) && created)
-         cplx_el = lFreeElem(cplx_el);
+         lFreeElem(&cplx_el);
    }
    DEXIT;
    return cplx_el;
@@ -409,7 +410,7 @@ bool get_queue_resource(lListElem *queue_elem, const lListElem *queue, const cha
       switch(type) {
       case TYPE_INT:
          dval = (double)lGetUlong(queue, queue_resource[pos].field);
-         snprintf(as_str, 100, u32, lGetUlong(queue, queue_resource[pos].field));
+         snprintf(as_str, 100, sge_u32, lGetUlong(queue, queue_resource[pos].field));
          break;
 
       case TYPE_TIM:
@@ -450,7 +451,7 @@ bool get_queue_resource(lListElem *queue_elem, const lListElem *queue, const cha
          }
       }
       else{ 
-         queue_elem = lFreeElem(queue_elem);
+         lFreeElem(&queue_elem);
          DPRINTF(("the sytem queue element %s has no value!\n", attrname));
          /* error */
       }
@@ -549,10 +550,9 @@ bool is_attr_prior(lListElem *upper_el, lListElem *lower_el){
    lower_value = lGetDouble(lower_el, used_dom_val);
 
    if (relop == CMPLXGE_OP || relop == CMPLXGT_OP ){
-      ret = upper_value >= lower_value; 
-   }
-   else{
-      ret =  upper_value <= lower_value; 
+      ret = upper_value >= lower_value ? true : false;
+   } else {
+      ret = upper_value <= lower_value ? true : false;
    }
 
    DEXIT;
@@ -610,10 +610,9 @@ static bool is_attr_prior2(lListElem *upper_el, double lower_value, int t_value,
    upper_value = lGetDouble(upper_el, t_value); 
 
    if (relop == CMPLXGE_OP || relop == CMPLXGT_OP ){
-      ret = upper_value >= lower_value;
-   }
-   else{
-      ret = upper_value <= lower_value;
+      ret = upper_value >= lower_value ? true : false;
+   } else {
+      ret = upper_value <= lower_value ? true : false;
    }
    DEXIT;
    return ret;
@@ -627,9 +626,7 @@ lList *centry_list
 ) {
    DENTER(TOP_LAYER, "global_complexes2scheduler");
 
-   if(*new_centry_list)
-      *new_centry_list = lFreeList(*new_centry_list);
-
+   lFreeList(new_centry_list);
    *new_centry_list = get_attribute_list(global_host, NULL, NULL, centry_list);
 
    DEXIT;
@@ -650,9 +647,7 @@ lList *centry_list
       DPRINTF(("!!missing host!!\n"));
    }
    /* build global complex and add it to result */
-   if ( *new_centry_list) 
-      *new_centry_list = lFreeList(*new_centry_list);
-
+   lFreeList(new_centry_list);
    *new_centry_list = get_attribute_list(host_list_locate(exechost_list, "global"), host, NULL, centry_list);
 
    DEXIT;
@@ -675,9 +670,7 @@ const lList *centry_list
 ) {
    DENTER(BASIS_LAYER, "queue_complexes2scheduler");
 
-   if (*new_centry_list) 
-      *new_centry_list = lFreeList(*new_centry_list);
-
+   lFreeList(new_centry_list);
    *new_centry_list = get_attribute_list(host_list_locate(exechost_list, "global"), 
                                          queue ? host_list_locate(exechost_list, lGetHost(queue, QU_qhostname)) : NULL, 
                                          queue, centry_list);
@@ -996,7 +989,6 @@ int force_existence
    type = lGetUlong(src_cplx, CE_valtype);
    relop = lGetUlong(src_cplx, CE_relop);
 
-
    if (is_threshold) {
       switch (relop) {
       case CMPLXLE_OP:
@@ -1248,70 +1240,77 @@ lListElem *get_attribute_by_name(lListElem* global, lListElem *host, lListElem *
    lListElem *host_el=NULL;
    lListElem *queue_el=NULL;
    lListElem *ret_el = NULL;
-   u_long32 ulc_factor = 0;
-   double lc_factor = 0;
    lList *load_attr = NULL;
    lList *config_attr = NULL;
    lList *actual_attr = NULL; 
 
    DENTER(BASIS_LAYER, "get_attribute_by_name");
 
-   if(global){
+   if (global) {
+      double lc_factor = 0;
       load_attr = lGetList(global, EH_load_list);  
       config_attr = lGetList(global, EH_consumable_config_list);
       actual_attr = lGetList(global, EH_resource_utilization);
 
       /* is there a multiplier for load correction (may be not in qstat, qmon etc) */
       if (lGetPosViaElem(global, EH_load_correction_factor) >= 0) {
-         if ((ulc_factor=lGetUlong(global, EH_load_correction_factor)))
-            lc_factor = ((double)ulc_factor)/100;
+         if ((lc_factor=lGetUlong(global, EH_load_correction_factor)) != 0) {
+            lc_factor = ((double)lc_factor)/100;
+         }   
       }
+      /* SG: this should be an error case */
+      
       global_el = get_attribute(attrname, config_attr, actual_attr, load_attr, 
                                 centry_list, NULL, DOMINANT_LAYER_GLOBAL, 
                                 lc_factor, NULL, false, start_time, duration);
       ret_el = global_el;
    } 
 
-   if(host){
+   if (host) {   
+      double lc_factor = 0;
       load_attr = lGetList(host, EH_load_list); 
       config_attr = lGetList(host, EH_consumable_config_list);
       actual_attr = lGetList(host, EH_resource_utilization);
 
       /* is there a multiplier for load correction (may be not in qstat, qmon etc) */
       if (lGetPosViaElem(host, EH_load_correction_factor) >= 0) {
-         if ((ulc_factor=lGetUlong(host, EH_load_correction_factor)))
-            lc_factor = ((double)ulc_factor)/100;
+         if ((lc_factor=lGetUlong(host, EH_load_correction_factor)) != 0) {
+            lc_factor = ((double)lc_factor)/100;
+         }
       }
+      /* SG: this should be an error case */
       host_el = get_attribute(attrname, config_attr, actual_attr, load_attr, centry_list, NULL, DOMINANT_LAYER_HOST, 
                               lc_factor, NULL, false, start_time, duration);
-      if(!global_el && host_el)
+      if (!global_el && host_el) {
          ret_el = host_el;
-      else if(global_el && host_el){
-         if(is_attr_prior(global_el, host_el)){
-            host_el = lFreeElem(host_el);
+      }   
+      else if (global_el && host_el) {
+         if(is_attr_prior(global_el, host_el)) {
+            lFreeElem(&host_el);
          }
          else{
-            global_el = lFreeElem(global_el);
+            lFreeElem(&global_el);
             ret_el = host_el;
          }
       }
    }
 
-   if(queue){
+   if (queue) {
       config_attr = lGetList(queue, QU_consumable_config_list);
       actual_attr = lGetList(queue, QU_resource_utilization);
       
       queue_el = get_attribute(attrname, config_attr, actual_attr, NULL, centry_list, queue, DOMINANT_LAYER_QUEUE, 
                               0.0, NULL, false, start_time, duration);
 
-      if(!ret_el)
+      if (!ret_el) {
          ret_el = queue_el;
-      else if(ret_el && queue_el){
-         if(is_attr_prior(ret_el, queue_el)){
-            queue_el = lFreeElem(queue_el);
+      }   
+      else if (ret_el && queue_el) {
+         if (is_attr_prior(ret_el, queue_el)) {
+            lFreeElem(&queue_el);
          }
-         else{
-            ret_el = lFreeElem(ret_el);
+         else {
+            lFreeElem(&ret_el);
             ret_el = queue_el;
          }
       }
@@ -1378,19 +1377,19 @@ char *object_name
 
       tmp_elem = lCopyElem(new_ep); 
       attr_mod_sub_list(alpp, tmp_elem, nm, primary_key, qep,
-         sub_command, attr_name, object_name, 0); 
+                        sub_command, attr_name, object_name, 0); 
 
       ret=centry_list_fill_request(lGetList(tmp_elem, nm), Master_CEntry_List, true, false, false);
       if (ret) {
          /* error message gets written by centry_list_fill_request into SGE_EVENT */
          answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-         lFreeElem(tmp_elem);
+         lFreeElem(&tmp_elem);
          DEXIT;
          return STATUS_EUNKNOWN;
       }
 
       lSetList(new_ep, nm, lCopyList("", lGetList(tmp_elem, nm)));
-      lFreeElem(tmp_elem);
+      lFreeElem(&tmp_elem);
 
       /* check whether this attrib is available due to complex configuration */
       if (ensure_attrib_available(alpp, new_ep, nm)) {

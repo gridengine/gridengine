@@ -172,8 +172,9 @@ int read_config_list(FILE *fp, lList **lpp, lList **alpp, lDescr *dp, int nm1,
       }
    }
    
-   if (last)
+   if (last) {
       sge_free_saved_vars(last);
+   }   
    DEXIT;
    return 0; 
 
@@ -611,10 +612,8 @@ int *interpretation_rule
    }
 
    {
-      int ret;
-
-      if ((ret = cull_parse_definition_list(str, &tmplp, key, descr, 
-            interpretation_rule))) {
+      if (cull_parse_definition_list(str, &tmplp, key, descr, 
+            interpretation_rule) != 0) {
          DEXIT;
          return false;
       }
@@ -755,7 +754,7 @@ bool set_conf_enum(lList **alpp, lList **clpp, int fields[], const char *key,
       SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_CONFIGINVALIDQUEUESPECIFIED ));
       answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
       DEXIT;
-      return -1;
+      return false;
    }
 
    lSetUlong(ep, name_nm, uval);
@@ -853,7 +852,7 @@ bool set_conf_list(lList **alpp, lList **clpp, int fields[], const char *key,
          DEXIT;
          return true;
       } else {
-         lFreeList(tmplp);
+         lFreeList(&tmplp);
       }
    }
 
@@ -1370,8 +1369,9 @@ int subval_nm
       }
    }
    
-   if(!strcasecmp("NONE", lGetString(lFirst(tmplp), subname_nm)))
-      tmplp = lFreeList(tmplp);
+   if (!strcasecmp("NONE", lGetString(lFirst(tmplp), subname_nm))) {
+      lFreeList(&tmplp);
+   }   
 
    lSetList(ep, name_nm, tmplp);
    lDelElemStr(clpp, CF_name, key);

@@ -98,7 +98,7 @@ int cl_host_alias_list_append_host(cl_raw_list_t* list_p, char* local_resolved_n
    }
  
    if ( cl_host_alias_list_get_alias_name(list_p, local_resolved_name, &help ) == CL_RETVAL_OK) {
-      CL_LOG_STR(CL_LOG_ERROR,"alias for host exists allready:", help);
+      CL_LOG_STR(CL_LOG_ERROR,"alias for host exists already:", help);
       free(help);
       return CL_RETVAL_ALIAS_EXISTS;
    }
@@ -113,7 +113,7 @@ int cl_host_alias_list_append_host(cl_raw_list_t* list_p, char* local_resolved_n
     */
 
    if ( cl_host_alias_list_get_local_resolved_name(list_p, alias_name, &help ) == CL_RETVAL_OK) {
-      CL_LOG_STR(CL_LOG_ERROR,"hostname for alias exists allready:", help);
+      CL_LOG_STR(CL_LOG_ERROR,"hostname for alias exists already:", help);
       free(help);
       return CL_RETVAL_ALIAS_EXISTS;
    }

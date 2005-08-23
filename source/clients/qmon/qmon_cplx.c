@@ -34,10 +34,6 @@
 #include <stdio.h>
 #include <ctype.h>
 
-#ifdef SOLARISAMD64
-#include <sys/stream.h>
-#endif
-
 #include <Xm/Xm.h>
 #include <Xm/List.h>
 #include <Xm/Text.h>
@@ -133,7 +129,7 @@ XtPointer cld, cad;
    qmonMirrorMultiAnswer(CENTRY_T, &alp);
    if (alp) {
       qmonMessageBox(w, alp, 0);
-      alp = lFreeList(alp);
+      lFreeList(&alp);
       /* set default cursor */
       XmtDisplayDefaultCursor(w);
       DEXIT;
@@ -281,7 +277,7 @@ XtPointer cld, cad;
    /* centry_list_add_del_mod_via_gdi free entries and old_entries */
    centry_list_add_del_mod_via_gdi(&entries, &alp, &old_entries);                     
    error = qmonMessageBox(w, alp, 0);
-   alp = lFreeList(alp);
+   lFreeList(&alp);
 
    if (error == -1) {
       DEXIT;
@@ -291,7 +287,7 @@ XtPointer cld, cad;
    qmonMirrorMultiAnswer(CENTRY_T, &alp);
    if (alp) {
       qmonMessageBox(w, alp, 0);
-      alp = lFreeList(alp);
+      lFreeList(&alp);
       DEXIT;
       return;
    }
@@ -311,7 +307,7 @@ static void qmonCplxAddAttr(Widget matrix, Boolean modify_mode)
    int num_columns = 8;
    int row, i;
    int row_to_change = 0;
-   String str;
+   String str = NULL;
    int req_state;
    int requestable = 0;
    int valtype = 0;
@@ -401,12 +397,12 @@ static void qmonCplxAddAttr(Widget matrix, Boolean modify_mode)
 
    if (!centry_elem_validate(new_entry, NULL, &alp)) {
       qmonMessageBox(matrix, alp, 0);
-      alp = lFreeList(alp);
-      new_entry = lFreeElem(new_entry);
+      lFreeList(&alp);
+      lFreeElem(&new_entry);
       goto error;
    }   
 
-   new_entry = lFreeElem(new_entry);
+   lFreeElem(&new_entry);
 
 
    /*
@@ -587,7 +583,7 @@ static void qmonCplxLoadAttr(Widget matrix)
       /* fill the matrix with the values from list */ 
       if (alp) {
          qmonMessageBox(matrix, alp, 0);
-         alp = lFreeList(alp);
+         lFreeList(&alp);
          DEXIT;
          return;
       }
@@ -596,7 +592,7 @@ static void qmonCplxLoadAttr(Widget matrix)
       ** fill the values into the matrix
       */
       qmonSetCE_Type(matrix, entries, CE_TYPE_FULL);
-      lFreeList(entries);
+      lFreeList(&entries);
    }        
    
    DEXIT;
@@ -627,8 +623,8 @@ static void qmonCplxSaveAttr(Widget matrix)
       /* Save Cplx Dialog Box */
       write_cmplx(0, filename, entries, NULL, &alp); 
       qmonMessageBox(matrix, alp, 0);
-      alp = lFreeList(alp);
-      entries = lFreeList(entries);
+      lFreeList(&alp);
+      lFreeList(&entries);
    }
    
    DEXIT;
@@ -868,7 +864,7 @@ static void qmonCplxSortAttr(Widget w, XtPointer cld, XtPointer cad)
       cbs->column=0;
    lPSortList(entries, "%I+%I+", column_nm[cbs->column], column_nm[0]); 
    qmonSetCE_Type(attr_mx, entries, CE_TYPE_FULL);
-   entries = lFreeList(entries);
+   lFreeList(&entries);
    
    DEXIT;
 }

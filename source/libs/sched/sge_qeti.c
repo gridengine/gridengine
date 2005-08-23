@@ -32,10 +32,6 @@
 
 #include <string.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif 
-
 #include "sge.h"
 #include "cull.h"
 #include "sgermon.h"
@@ -138,7 +134,7 @@ static int sge_qeti_list_add(lList **lpp, const char *name, lList* rue_lp, doubl
    }
 
    if (!(ep = lCreateElem(QETI_Type))) {
-      *lpp = lFreeList(*lpp);
+      lFreeList(lpp);
       DEXIT;
       return -1;
    }
@@ -156,7 +152,7 @@ static int sge_add_qeti_resource_container(lList **qeti_to_add, lList* rue_list,
 {
    lListElem *req, *actual, *tep;
    const char *name;
-   lListElem *centry_config;
+   lListElem *centry_config = NULL;
 
    DENTER(TOP_LAYER, "sge_add_qeti_resource_container");
 
@@ -267,6 +263,7 @@ sge_qeti_t *sge_qeti_allocate(lListElem *job, lListElem *pe, lListElem *ckpt,
       if (sge_host_match_static(job, NULL, hep, centry_list, acl_list) == DISPATCH_NEVER_CAT) {
          continue;
       }   
+
       if (!strcmp((eh_name=lGetHost(hep, EH_name)), SGE_GLOBAL_NAME)) {
          continue;
       }   
@@ -279,41 +276,35 @@ sge_qeti_t *sge_qeti_allocate(lListElem *job, lListElem *pe, lListElem *ckpt,
           (qep = next_queue);
            next_queue = lGetElemHostNext(queue_list, QU_qhostname, eh_name, &queue_iterator)) {
 
-         if (qinstance_is_pe_referenced(qep, pe)) {
-            is_relevant = true;
-            break;
+         if (!qinstance_is_pe_referenced(qep, pe)) {
+            continue;
          }
+
+         /* consider only those queues that match this job (statically) */
+         if (sge_queue_match_static(qep, job, pe, ckpt, centry_list, acl_list) != DISPATCH_OK) { 
+            continue;
+         }   
+
+         if (sge_add_qeti_resource_container(&iter->cr_refs_queue, 
+                  lGetList(qep, QU_resource_utilization), lGetList(qep, QU_consumable_config_list), 
+                        centry_list, requests, false)!=0) {
+            sge_qeti_release(iter);
+            DEXIT;
+            return NULL;
+         }
+         
+         is_relevant = true; 
+            
       }
-      if (!is_relevant) {
-         continue;
-      }   
+      if (is_relevant) {
 
-      if (sge_add_qeti_resource_container(&iter->cr_refs_host, 
-               lGetList(hep, EH_resource_utilization), lGetList(hep, EH_consumable_config_list), 
-                     centry_list, requests, false)!=0) {
-         sge_qeti_release(iter);
-         DEXIT;
-         return NULL;
-      }
-   }
-
-   /* add references to per queue resource utilization entries 
-      that might affect jobs queue end time */
-   for_each (qep, queue_list) {
-      if (!strcmp(lGetString(qep, QU_qname), SGE_TEMPLATE_NAME))
-         continue;
-
-      /* consider only those queues that match this job (statically) */
-      if (sge_queue_match_static(qep, job, pe, ckpt, centry_list, acl_list) != DISPATCH_OK) { 
-         continue;
-      }   
-
-      if (sge_add_qeti_resource_container(&iter->cr_refs_queue, 
-               lGetList(qep, QU_resource_utilization), lGetList(qep, QU_consumable_config_list), 
-                     centry_list, requests, false)!=0) {
-         sge_qeti_release(iter);
-         DEXIT;
-         return NULL;
+         if (sge_add_qeti_resource_container(&iter->cr_refs_host, 
+                  lGetList(hep, EH_resource_utilization), lGetList(hep, EH_consumable_config_list), 
+                        centry_list, requests, false)!=0) {
+            sge_qeti_release(iter);
+            DEXIT;
+            return NULL;
+         }
       }
    }
 
@@ -364,7 +355,7 @@ static void sge_qeti_max_end_time(u_long32 *max_time, const lList *cref_lp)
          DPRINTF(("   QETI END: %s\n", lGetString(rue_ep, RUE_name)));
          continue;
       }
-      DPRINTF(("   QETI END: %s "U32CFormat" ("U32CFormat")\n", 
+      DPRINTF(("   QETI END: %s "sge_U32CFormat" ("sge_U32CFormat")\n", 
             lGetString(rue_ep, RUE_name), lGetUlong(ref, RDE_time), tmp_time));
       tmp_time = MAX(tmp_time, lGetUlong(ref, RDE_time));
    }
@@ -396,7 +387,7 @@ static void sge_qeti_switch_to_next(u_long32 time, lList *cref_lp)
          ref = lPrev(ref);
       }
 
-      DPRINTF(("   QETI NEXT: %s set to "U32CFormat" (%p)\n", 
+      DPRINTF(("   QETI NEXT: %s set to "sge_U32CFormat" (%p)\n", 
             lGetString(rue_ep, RUE_name), ref?lGetUlong(ref, RDE_time):0, ref));
       lSetRef(cr_ep, QETI_queue_end_next, ref);
    }
@@ -473,7 +464,7 @@ u_long32 sge_qeti_first(sge_qeti_t *qeti)
    sge_qeti_max_end_time(&all_resources_queue_end_time, qeti->cr_refs_host);
    sge_qeti_max_end_time(&all_resources_queue_end_time, qeti->cr_refs_queue);
 
-   DPRINTF(("sge_qeti_first() determines "u32"\n", all_resources_queue_end_time));
+   DPRINTF(("sge_qeti_first() determines "sge_u32"\n", all_resources_queue_end_time));
 
    /* switch to the next entry with all queue end next references whose 
       time is larger (?) or equal to all resources queue end time */
@@ -519,7 +510,7 @@ u_long32 sge_qeti_next(sge_qeti_t *qeti)
    sge_qeti_max_end_time(&all_resources_queue_end_time, qeti->cr_refs_host);
    sge_qeti_max_end_time(&all_resources_queue_end_time, qeti->cr_refs_queue);
 
-   DPRINTF(("sge_qeti_next() determines "u32"\n", all_resources_queue_end_time));
+   DPRINTF(("sge_qeti_next() determines "sge_u32"\n", all_resources_queue_end_time));
 
    /* switch to the next entry with all queue end next references whose 
       time is larger (?) or equal to all resources queue end time */
@@ -554,9 +545,9 @@ void sge_qeti_release(sge_qeti_t *qeti)
    if (!qeti)
       return;
 
-   lFreeList(qeti->cr_refs_pe);
-   lFreeList(qeti->cr_refs_global);
-   lFreeList(qeti->cr_refs_host);
-   lFreeList(qeti->cr_refs_queue);
+   lFreeList(&(qeti->cr_refs_pe));
+   lFreeList(&(qeti->cr_refs_global));
+   lFreeList(&(qeti->cr_refs_host));
+   lFreeList(&(qeti->cr_refs_queue));
    free(qeti);
 }

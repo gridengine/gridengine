@@ -32,10 +32,6 @@
 #include <stdio.h>
 #include <ctype.h>
 
-#ifdef SOLARISAMD64
-#include <sys/stream.h>
-#endif
-
 #include <Xm/Xm.h>
 #include <Xm/List.h>
 #include <Xm/TextF.h>
@@ -136,7 +132,7 @@ XtPointer cld, cad;
    qmonMirrorMultiAnswer(CKPT_T, &alp);
    if (alp) {
       qmonMessageBox(w, alp, 0);
-      alp = lFreeList(alp);
+      lFreeList(&alp);
       /* set default cursor */
       XmtDisplayDefaultCursor(w);
       DEXIT;
@@ -476,12 +472,11 @@ XtPointer cld, cad;
             XmListSelectItem(ckpt_names, xckpt_name, True);
             XmStringFree(xckpt_name);
          }
-         lFreeWhat(what);
-         alp = lFreeList(alp);
+         lFreeWhat(&what);
+         lFreeList(&alp);
       }
-      ckptl = lFreeList(ckptl);
+      lFreeList(&ckptl);
    }
-
 
    DEXIT;
 }
@@ -527,8 +522,8 @@ XtPointer cld, cad;
 
          qmonMessageBox(w, alp, 0);
 
-         lFreeWhat(what);
-         alp = lFreeList(alp);
+         lFreeWhat(&what);
+         lFreeList(&alp);
 
          updateCkptList();
          XtVaGetValues( ckpt_names,
@@ -540,7 +535,7 @@ XtPointer cld, cad;
             qmonCkptFillConf(ckpt_names, NULL);
 
       }
-      lp = lFreeList(lp);
+      lFreeList(&lp);
    }
    DEXIT;
 }

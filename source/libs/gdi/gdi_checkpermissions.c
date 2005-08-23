@@ -32,10 +32,6 @@
 
 #include <string.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif   
-
 #include "sge_all_listsL.h"
 #include "sge_gdi.h"
 #include "sge_any_request.h"
@@ -108,10 +104,8 @@ bool sge_gdi_get_mapping_name(const char *requestedHost, char *buf,
          strcpy(buf,mapName);
          DPRINTF(("Mapping name is: '%s'\n", buf));
    
-         lFreeList(permList);
-         permList = NULL;
-         lFreeList(alp);
-         alp = NULL;
+         lFreeList(&permList);
+         lFreeList(&alp);
   
          DEXIT;
          return true;
@@ -121,10 +115,8 @@ bool sge_gdi_get_mapping_name(const char *requestedHost, char *buf,
    DPRINTF(("No mapname found!\n"));
    strcpy(buf,"");
    
-   lFreeList(permList);
-   permList = NULL;
-   lFreeList(alp);
-   alp = NULL;
+   lFreeList(&permList);
+   lFreeList(&alp);
    
    DEXIT;
    return false;
@@ -148,7 +140,7 @@ bool sge_gdi_get_mapping_name(const char *requestedHost, char *buf,
 *     int option - check flag (MANAGER_CHECK or OPERATOR_CHECK)
 *
 *  RESULT
-*     int true if caller has the right, false if not (-10 if qmaster 
+*     bool true if caller has the right, false if not (false if qmaster 
 *     not reachable)
 * 
 *  SEE ALSO
@@ -174,11 +166,11 @@ bool sge_gdi_check_permission(lList **alpp, int option)
         if (*alpp == NULL) {
            *alpp = alp;
         } else {
-           lAddList(*alpp, alp); 
+           lAddList(*alpp, &alp);
         }       
      }
      failed_checks++;
-     return -10;
+     return false;
   } else {
      if (permList->first == NULL) {
        DPRINTF(("Permlist has no entries\n")); 
@@ -209,10 +201,8 @@ bool sge_gdi_check_permission(lList **alpp, int option)
      }
   }
 
-  lFreeList(permList);
-  permList = NULL;
-  lFreeList(alp);
-  alp = NULL;
+  lFreeList(&permList);
+  lFreeList(&alp);
 
   if (failed_checks == 0) {
     access_status = true;

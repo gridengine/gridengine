@@ -79,9 +79,11 @@ const char *sge_basename(const char *name, int delim)
    DENTER(BASIS_LAYER, "sge_basename");
 
    if (!name) {
+      DEXIT;
       return NULL;
    }
    if (name[0] == '\0') {
+      DEXIT;
       return NULL;
    }
 
@@ -100,6 +102,60 @@ const char *sge_basename(const char *name, int delim)
          return cp;
       }
    }
+}
+
+/****** sge_string/sge_jobname() ***********************************************
+*  NAME
+*     sge_jobname() -- get jobname of command line string 
+*
+*  SYNOPSIS
+*     const char* sge_jobname(const char *name) 
+*
+*  FUNCTION
+*     Determine the jobname of a command line. The following definition is used
+*     for the jobname:
+*     - take everything up to the first semicolon
+*     - take everything up to the first whitespace
+*     - take the basename
+*
+*  INPUTS
+*     const char *name - contains the input string (command line)
+*
+*  RESULT
+*     const char* - pointer to the jobname
+*                   NULL if name is NULL or only '\0'
+*
+*  EXAMPLE
+*  Command line                       jobname
+*  ----------------------------------------------
+*  "cd /home/me/5five; hostname" --> cd
+*  "/home/me/4Ujob"              --> 4Ujob (invalid, will be denied)
+*  "cat /tmp/5five"              --> cat
+*  "bla;blub"                    --> bla
+*  "a b"                         --> a
+*      
+*
+*  NOTES
+*     MT-NOTE: sge_jobname() is not MT safe 
+*
+*  SEE ALSO
+*     sge_basename()
+*******************************************************************************/
+const char *sge_jobname(const char *name) {
+
+   const char *cp = NULL;
+   
+   DENTER(BASIS_LAYER, "sge_jobname");
+   if (name && name[0] != '\0' ) {
+
+      cp = sge_strtok(name, ";");
+      cp = sge_strtok(cp, " ");
+      cp = sge_basename(cp, '/');
+
+   }
+
+   DEXIT;
+   return cp;
 }
 
 /****** uti/string/sge_dirname() **********************************************
@@ -194,6 +250,7 @@ char *sge_strtok(const char *str, const char *delimitor)
    static char *static_str = NULL;
    static unsigned int alloc_len = 0;
    unsigned int n;
+   bool done;
 
    DENTER(BASIS_LAYER, "sge_strtok");
 
@@ -217,16 +274,18 @@ char *sge_strtok(const char *str, const char *delimitor)
    }
 
    /* seek first character which is no '\0' and no delimitor */
-   while (1) {
+   done = false;
+   while (!done) {
 
       /* found end of string */
-      if (*saved_cp == '\0') {
+      if (saved_cp == NULL || *saved_cp == '\0') {
          DEXIT;
          return NULL;
       }
 
       /* eat white spaces */
       if (!IS_DELIMITOR((int) saved_cp[0], delimitor)) {
+         done = true;
          break;
       }
 
@@ -235,7 +294,8 @@ char *sge_strtok(const char *str, const char *delimitor)
 
    /* seek end of string given by '\0' or delimitor */
    cp = saved_cp;
-   while (1) {
+   done = false;
+   while (!done) {
       if (!cp[0]) {
          static_cp = cp;
 
@@ -254,6 +314,9 @@ char *sge_strtok(const char *str, const char *delimitor)
       }
       cp++;
    }
+
+   DEXIT;
+   return NULL;
 }
 
 /****** uti/string/sge_strtok_r() *********************************************
@@ -292,6 +355,7 @@ char *sge_strtok_r(const char *str, const char *delimitor,
    char *cp;
    char *saved_cp;
    struct saved_vars_s *saved;
+   bool done;
 
    DENTER(BASIS_LAYER, "sge_strtok_r");
 
@@ -320,16 +384,18 @@ char *sge_strtok_r(const char *str, const char *delimitor,
    }
 
    /* seek first character which is no '\0' and no delimitor */
-   while (1) {
+   done = false;
+   while (!done) {
 
       /* found end of string */
-      if (*saved_cp == '\0') {
+      if (saved_cp == NULL || *saved_cp == '\0') {
          DEXIT;
          return NULL;
       }
 
       /* eat white spaces */
       if (!IS_DELIMITOR((int) saved_cp[0], delimitor)) {
+         done = true;
          break;
       }
 
@@ -338,7 +404,8 @@ char *sge_strtok_r(const char *str, const char *delimitor,
 
    /* seek end of string given by '\0' or delimitor */
    cp = saved_cp;
-   while (1) {
+   done = false;
+   while (!done) {
       if (!cp[0]) {
          saved->static_cp = cp;
 
@@ -357,6 +424,9 @@ char *sge_strtok_r(const char *str, const char *delimitor,
       }
       cp++;
    }
+
+   DEXIT;
+   return NULL;
 }
 
 /****** uti/string/sge_free_saved_vars() **************************************
@@ -380,10 +450,12 @@ char *sge_strtok_r(const char *str, const char *delimitor,
 ******************************************************************************/
 void sge_free_saved_vars(struct saved_vars_s *context) 
 {
-   if (context->static_str) {
-      free(context->static_str);
+   if (context) {
+      if (context->static_str) {
+         free(context->static_str);
+      }
+      free(context);
    }
-   free(context);
 }
 
 /****** uti/string/sge_strdup() ***********************************************
@@ -543,12 +615,13 @@ void sge_strip_white_space_at_eol(char *str)
 ******************************************************************************/
 char *sge_delim_str(char *str, char **delim_pos, const char *delim) 
 {
-   char *cp, *tstr;
+   char *cp = NULL; 
+   char *tstr = NULL;
 
    DENTER(BASIS_LAYER, "sge_delim_str");
 
    /* we want it non-destructive --> we need a copy of str */
-   if (!(tstr = strdup(str))) {
+   if ((tstr = strdup(str)) == NULL) {
       DEXIT;
       return NULL;
    }
@@ -565,10 +638,12 @@ char *sge_delim_str(char *str, char **delim_pos, const char *delim)
    }
 
    /* cp now either points to a closing \0 or to a delim character */
-   if (*cp)                     /* if it points to a delim character */
-      *cp = '\0';               /* terminate str with a \0 */
-   if (delim_pos)               /* give back delimiting position for name */
+   if (*cp) {                    /* if it points to a delim character */
+      *cp = '\0';                /* terminate str with a \0 */
+   }
+   if (delim_pos) {              /* give back delimiting position for name */
       *delim_pos = str + strlen(tstr);
+   }
    /* delim_pos either points to the delimiter or the closing \0 in str */
 
    DEXIT;
@@ -1140,6 +1215,7 @@ char **string_list(char *str, char *delis, char **pstr)
    int is_space = 0;
    int found_first_quote = 0;
    char **head = NULL;
+   bool done;
 
    DENTER(BASIS_LAYER, "string_list");
 
@@ -1170,11 +1246,13 @@ char **string_list(char *str, char *delis, char **pstr)
       head = pstr;
    }
 
-   while (1) {
+   done = false;
+   while (!done) {
       while (str[i] && strchr(delis, str[i])) {
          i++;
       }
       if (str[i] == '\0') {
+         done = true;
          break;
       }
       head[j] = &str[i];
@@ -1199,6 +1277,7 @@ char **string_list(char *str, char *delis, char **pstr)
          }
       }
       if (str[i] == '\0') {
+         done = true;
          break;
       }
 

@@ -34,10 +34,6 @@
 #include <stdlib.h>
 #include <errno.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif 
-
 #include "sge_log.h"
 #include "sgermon.h"
 #include "basis_types.h"
@@ -78,7 +74,7 @@ int read_master_file
       return NULL;
    }
 
-   DPRINTF(("got qmaster host \"%s\"\n", cached_master_name));
+   DPRINTF(("(re-)reading act_qmaster file. Got master host \"%s\"\n", cached_master_name));
    DEXIT;
    return cached_master_name;
 }
@@ -155,6 +151,7 @@ char *err_str
       if (err_str)
          sprintf(err_str, MSG_GDI_MASTERHOSTNAMEEXCEEDSCHARS_SI , 
                  master_file, (int) CL_MAXHOSTLEN);
+         sprintf(err_str, "\n");
       fclose(fp);
       DEXIT;
       return -1;

@@ -129,7 +129,7 @@ int slots
 
 int sge_debit_job_from_pe(lListElem *pep, lListElem *jep, int slots)
 {
-   u_long n; 
+   int n; 
   
    n = pe_get_slots_used(pep);
    n += slots;
@@ -157,13 +157,14 @@ int sge_debit_job_from_pe(lListElem *pep, lListElem *jep, int slots)
 *     bool only_static_checks - ??? 
 *
 *  RESULT
-*     int - 0 ok 
-*          -1 assignment will never be possible for all jobs of that category
+*     dispatch_t - DISPATCH_OK        ok 
+*                  DISPATCH_NEVER_CAT assignment will never be possible for all
+*                                     jobs of that category
 *
 *  NOTES
 *     MT-NOTE: pe_restricted() is not MT safe 
 *******************************************************************************/
-int pe_match_static(
+dispatch_t pe_match_static(
 lListElem *job,
 lListElem *pe,
 lList *acl_list
@@ -175,12 +176,12 @@ lList *acl_list
    total_slots = (int)lGetUlong(pe, PE_slots);
    if (total_slots == 0) { 
       /* because there are not enough PE slots in total */
-      DPRINTF(("total slots %d of PE \"%s\" not in range of job "u32"\n",
+      DPRINTF(("total slots %d of PE \"%s\" not in range of job "sge_u32"\n",
             total_slots, lGetString(pe, PE_name), lGetUlong(job, JB_job_number)));
          schedd_mes_add((lGetUlong(job, JB_job_number)), SCHEDD_INFO_TOTALPESLOTSNOTINRANGE_S,
             lGetString(pe, PE_name));
       DEXIT;
-      return -1;
+      return DISPATCH_NEVER_CAT;
    }
 
    if (!sge_has_access_(lGetString(job, JB_owner), lGetString(job, JB_group),
@@ -190,10 +191,10 @@ lList *acl_list
       schedd_mes_add(lGetUlong(job, JB_job_number), SCHEDD_INFO_NOACCESSTOPE_S, 
             lGetString(pe, PE_name));
       DEXIT;
-      return -1;
+      return DISPATCH_NEVER_CAT;
    }
 
    DEXIT;
-   return 0;
+   return DISPATCH_OK;
 }
 

@@ -37,8 +37,8 @@
 /* 
 ** schedd/sge_complex_schedd.c
 */ 
-#define MSG_ATTRIB_ACTUALELEMENTTOATTRIBXMISSING_S    _MESSAGE(47014, _("missing actual element to attrib "SFN"\n"))
-#define MSG_SCHEDD_LOADADJUSTMENTSVALUEXNOTNUMERIC_S  _MESSAGE(47020, _("load adjustments value "SFQ" must be of numeric type\n"))
+#define MSG_ATTRIB_ACTUALELEMENTTOATTRIBXMISSING_S    _MESSAGE(47014, _("missing actual element to attrib "SFN))
+#define MSG_SCHEDD_LOADADJUSTMENTSVALUEXNOTNUMERIC_S  _MESSAGE(47020, _("load adjustments value "SFQ" must be of numeric type"))
 
 /* 
 ** schedd/sge_job_schedd.c
@@ -48,24 +48,24 @@
 #define MSG_LOG_JOBSDROPPEDBECAUSEOFXHOLD             _MESSAGE(47023, _("jobs dropped because of hold: "))
 #define MSG_LOG_JOBSDROPPEDBECAUSEDEPENDENCIES        _MESSAGE(47024, _("jobs dropped because of job dependencies: "))
 /* #define MSG_LOG_JOBSDROPPEDBECAUSEUSRGRPLIMIT         _message(47025, _("jobs dropped because of user limitations: ")) __TS Removed automatically from testsuite!! TS__*/
-/* #define MSG_EVENT_CKPTOBJXFORJOBYNOTFOUND_SI          _message(47026, _("can't find requested CKPT object "SFQ" for job %d\n")) __TS Removed automatically from testsuite!! TS__*/
+/* #define MSG_EVENT_CKPTOBJXFORJOBYNOTFOUND_SI          _message(47026, _("can't find requested CKPT object "SFQ" for job %d")) __TS Removed automatically from testsuite!! TS__*/
 
 /* 
 ** schedd/sge_schedd_text.c
 */ 
-#define MSG_SGETEXT_INVALIDHOSTINQUEUE_SS          _MESSAGE(47028, _("invalid hostname "SFQ" associated with queue instance "SFQ"\n"))
-#define MSG_SGETEXT_CONSUMABLE_AS_LOAD             _MESSAGE(47029, _("Consumables as load threshold is disabled\n"))
-/* #define MSG_SGETEXT_CANTRESOLVEUSER_S           _message(47030, _("unknown user name "SFQ"\n") )    __TS Removed automatically from testsuite!! TS__*/
-/* #define MSG_SGETEXT_CANTRESOLVEGROUP_S          _message(47031, _("unknown group name "SFQ"\n") )   __TS Removed automatically from testsuite!! TS__*/
-/* #define MSG_SGETEXT_NOCOMMD_SS                  _message(47032, _("unable to contact commd at host "SFN" using service "SFN"\n")) __TS Removed automatically from testsuite!! TS__*/
-/* #define MSG_SGETEXT_NOPERM                      _message(47033, _("no permissions for this operation\n")) __TS Removed automatically from testsuite!! TS__*/
-/* #define MSG_SGETEXT_CANTFINDACL_S               _message(47034, _("unable to find referenced access list "SFQ"\n")) __TS Removed automatically from testsuite!! TS__*/
-/* #define MSG_SGETEXT_SHOULD_BE_ROOT_S            _message(47035, _("should be root to start "SFN"\n") )  __TS Removed automatically from testsuite!! TS__*/
-/* #define MSG_SGETEXT_STILL_REFERENCED_SS         _message(47036, _("remove reference to "SFQ" in subordinates of queue "SFQ" before deletion\n") )  __TS Removed automatically from testsuite!! TS__*/
-/* #define MSG_SGETEXT_NO_SECURITY_LEVEL_FOR_S           _message(47037, _("denied: missing security level for "SFN"\n")) __TS Removed automatically from testsuite!! TS__*/
-/* #define MSG_SGETEXT_MAY_NOT_CHG_QHOST_S               _message(47038, _("may not change host of queue "SFQ"\n")) __TS Removed automatically from testsuite!! TS__*/
-/* #define MSG_SGETEXT_UP_REFERENCED_TWICE_SS            _message(47039, _("denied: share tree contains reference to unknown "SFN" "SFQ"\n") )    __TS Removed automatically from testsuite!! TS__*/
-/* #define MSG_SGETEXT_UNABLETORETRIEVE_I                _message(47041, _("unable to retrieve value for system limit (%d)\n") )      __TS Removed automatically from testsuite!! TS__*/
+#define MSG_SGETEXT_INVALIDHOSTINQUEUE_SS          _MESSAGE(47028, _("invalid hostname "SFQ" associated with queue instance "SFQ))
+#define MSG_SGETEXT_CONSUMABLE_AS_LOAD             _MESSAGE(47029, _("Consumables as load threshold is disabled"))
+/* #define MSG_SGETEXT_CANTRESOLVEUSER_S           _message(47030, _("unknown user name "SFQ) )    __TS Removed automatically from testsuite!! TS__*/
+/* #define MSG_SGETEXT_CANTRESOLVEGROUP_S          _message(47031, _("unknown group name "SFQ) )   __TS Removed automatically from testsuite!! TS__*/
+/* #define MSG_SGETEXT_NOCOMMD_SS                  _message(47032, _("unable to contact commd at host "SFN" using service "SFN)) __TS Removed automatically from testsuite!! TS__*/
+/* #define MSG_SGETEXT_NOPERM                      _message(47033, _("no permissions for this operation")) __TS Removed automatically from testsuite!! TS__*/
+/* #define MSG_SGETEXT_CANTFINDACL_S               _message(47034, _("unable to find referenced access list "SFQ)) __TS Removed automatically from testsuite!! TS__*/
+/* #define MSG_SGETEXT_SHOULD_BE_ROOT_S            _message(47035, _("should be root to start "SFN) )  __TS Removed automatically from testsuite!! TS__*/
+/* #define MSG_SGETEXT_STILL_REFERENCED_SS         _message(47036, _("remove reference to "SFQ" in subordinates of queue "SFQ" before deletion") )  __TS Removed automatically from testsuite!! TS__*/
+/* #define MSG_SGETEXT_NO_SECURITY_LEVEL_FOR_S           _message(47037, _("denied: missing security level for "SFN)) __TS Removed automatically from testsuite!! TS__*/
+/* #define MSG_SGETEXT_MAY_NOT_CHG_QHOST_S               _message(47038, _("may not change host of queue "SFQ)) __TS Removed automatically from testsuite!! TS__*/
+/* #define MSG_SGETEXT_UP_REFERENCED_TWICE_SS            _message(47039, _("denied: share tree contains reference to unknown "SFN" "SFQ) )    __TS Removed automatically from testsuite!! TS__*/
+/* #define MSG_SGETEXT_UNABLETORETRIEVE_I                _message(47041, _("unable to retrieve value for system limit (%d)") )      __TS Removed automatically from testsuite!! TS__*/
 
 
 #define MSG_SCHEDD_INFO_CANNOTRUNATHOST_SSS           _MESSAGE(47042, _("(-l "SFN") cannot run at host "SFQ" because "SFN"" ) ) 
@@ -87,11 +87,11 @@
 #define MSG_SCHEDD_INFO_NOSLOTSINQUEUE_S              _MESSAGE(47058, _("cannot run in queue instance "SFQ" because it has \"0\" slots"))
 #define MSG_SCHEDD_INFO_CANNOTRUNINQUEUE_SSS          _MESSAGE(47059, _("(-l "SFN") cannot run in queue instance "SFQ" because "SFN"") ) 
 #define MSG_SCHEDD_INFO_NORESOURCESPE_                _MESSAGE(47060, _("cannot run because resources requested are not available for parallel job"))
-#define MSG_SCHEDD_INFO_CANNOTRUNGLOBALLY_SS          _MESSAGE(47061, _("(-l "SFN") cannot run globally because "SFN"\n") ) 
+#define MSG_SCHEDD_INFO_CANNOTRUNGLOBALLY_SS          _MESSAGE(47061, _("(-l "SFN") cannot run globally because "SFN) ) 
 #define MSG_SCHEDD_INFO_NOFORCEDRES_SS                _MESSAGE(47062, _("does not request 'forced' resource "SFQ" of host "SFN"") )  
 #define MSG_SCHEDD_INFO_NOGLOBFORCEDRES_SS            _MESSAGE(47063, _("does not request globally 'forced' resource "SFQ"") )    
 #define MSG_SCHEDD_INFO_CKPTNOTFOUND_                 _MESSAGE(47064, _("cannot run because requested ckpt object not found"))
-#define MSG_SCHEDD_INFO_PESLOTSNOTINRANGE_S           _MESSAGE(47065, _("cannot run because available slots combined under PE "SFQ" are not in range of job"))
+#define MSG_SCHEDD_INFO_PESLOTSNOTINRANGE_SI          _MESSAGE(47065, _("cannot run in PE "SFQ" because it only offers "sge_U32CFormat" slots"))
 #define MSG_SCHEDD_INFO_NOACCESSTOPE_S                _MESSAGE(47066, _("cannot run because no access to pe "SFQ"") ) 
 #define MSG_SCHEDD_INFO_QUEUEINALARM_SS               _MESSAGE(47067, _("queue instance "SFQ" is in suspend alarm: "SN_UNLIMITED) )        
 #define MSG_SCHEDD_INFO_QUEUEOVERLOADED_SS            _MESSAGE(47068, _("queue instance "SFQ" dropped because it is overloaded: "SN_UNLIMITED) ) 
@@ -167,7 +167,7 @@
 #define MSG_SCHEDD_INFO_TOTALPESLOTSNOTINRANGE_S      _MESSAGE(47134, _("cannot run because total slots of pe "SFQ" not in range of job"))
 #define MSG_SCHEDD_INFO_TOTALPESLOTSNOTINRANGE        _MESSAGE(47135, _("Jobs can not run because total slots of pe are not in range of job") )
 #define MSG_SCHEDD_INFO_JOB_CATEGORY_FILTER_          _MESSAGE(47136, _("Job Filter: this job got ignored in the last scheduling run, because to many other jobs with the same resource request are in the pending list before this one."))
-#define MSG_SCHEDD_INFO_CANNOTRUNINQUEUECAL_SU        _MESSAGE(47137, _("cannot run in queue instance "SFQ" because the job runtime of "U32CFormat" sec. is too long") ) 
+#define MSG_SCHEDD_INFO_CANNOTRUNINQUEUECAL_SU        _MESSAGE(47137, _("cannot run in queue instance "SFQ" because the job runtime of "sge_U32CFormat" sec. is too long") ) 
 #define MSG_SCHEDD_INFO_JOB_CATEGORY_FILTER           _MESSAGE(47138, _("Job Filter: Jobs can not run because the resource requirements cannot be satisfied."))
 #define MSG_SCHEDD_INFO_CANNOTRUNINQUEUECAL           _MESSAGE(47139, _("Jobs cannot run because a calendar will disable a queue soon")) 
 
@@ -182,18 +182,19 @@
 /* 
 ** schedd/sge_schedd.c
 */
-#define MSG_FILE_REDIRECTFILEDESCRIPTORFAILED_I             _MESSAGE(47195, _("can't redirect file descriptor #%d\n"))
+#define MSG_FILE_REDIRECTFILEDESCRIPTORFAILED_I             _MESSAGE(47195, _("can't redirect file descriptor #%d"))
 #define MSG_SCHEDD_STARTSCHEDONMASTERHOST_S                 _MESSAGE(47196, _("please start schedd on same host as qmaster ("SFN")."))
 #define MSG_SCHEDD_CANTGOFURTHER                            _MESSAGE(47197, _("can't go on further"))
-#define MSG_SCHEDD_USERXMUSTBEMANAGERFORSCHEDDULING_S       _MESSAGE(47198, _("user "SFQ" must be manager for scheduling\n"))
+#define MSG_SCHEDD_USERXMUSTBEMANAGERFORSCHEDDULING_S       _MESSAGE(47198, _("user "SFQ" must be manager for scheduling"))
 #define MSG_SCHEDD_HOSTXMUSTBEADMINHOSTFORSCHEDDULING_S     _MESSAGE(47199, _("host "SFQ" must be an admin host for scheduling"))
+#define MSG_SCHEDD_SCHEDD_ABORT_BY_USER                     _MESSAGE(47200, _("abort by user"))
 #define MSG_SCHEDD_ALRADY_RUNNING                           _MESSAGE(47201, _("scheduler already running"))
 
 #define MSG_SCHEDD_CANTINSTALLALGORITHMXUSINGDEFAULT_S      _MESSAGE(47202, _("can't install scheduling algorithm "SFQ" - using \"default\" algorithm"))
 #define MSG_SCHEDD_UNKNOWN                                  _MESSAGE(47203, _("<unknown>"))
 #define MSG_SCHEDD_CANTSWITCHTOADMINUSER                    _MESSAGE(47204, _("can't switch to amin_user"))
-#define MSG_SCHEDD_CANTSTARTUP                              _MESSAGE(47205, _("can't startup schedd\n"))
-#define MSG_QMASTERMOVEDEXITING_SS                          _MESSAGE(47287, _("qmaster moved from "SFQ" to "SFQ": exiting\n"))
+#define MSG_SCHEDD_CANTSTARTUP                              _MESSAGE(47205, _("can't startup schedd"))
+#define MSG_QMASTERMOVEDEXITING_SS                          _MESSAGE(47287, _("qmaster moved from "SFQ" to "SFQ": exiting"))
 
 /* 
 ** schedd/sge_select_queue.c
@@ -205,99 +206,101 @@
 #define MSG_SCHEDD_LOGLIST_QUEUESFULLANDDROPPED             _MESSAGE(47214, _("queues dropped because they are full: "))
 #define MSG_SCHEDD_LOGLIST_QUEUESSUSPENDEDANDDROPPED        _MESSAGE(47215, _("queues dropped because they are suspended: "))
 #define MSG_SCHEDD_LOGLIST_QUEUESDISABLEDANDDROPPED         _MESSAGE(47216, _("queues dropped because they are disabled: "))
-#define MSG_SCHEDD_NOMASTERQUEUE_SU                         _MESSAGE(47217, _("found no master queue at host "SFQ" for job "U32CFormat))
+#define MSG_SCHEDD_NOMASTERQUEUE_SU                         _MESSAGE(47217, _("found no master queue at host "SFQ" for job "sge_U32CFormat))
 #define MSG_SCHEDD_UNKNOWN_HOST_SS                          _MESSAGE(47218, _("queue "SFQ" is referencing unknown host "SFQ))
-#define MSG_SCHEDD_NOCOMPLEXATTRIBUTEFORTHRESHOLD_S         _MESSAGE(47219, _("\terror: no complex attribute for threshold "SFN))
-#define MSG_SUBORDPOLICYCONFLICT_UUSS                       _MESSAGE(47288, _("Jobs "U32CFormat" & "U32CFormat" dispatched to master/subordinated queues "SFQ"/"SFQ". Suspend on subordinate to occur in same scheduling interval. Policy conflict!"))
+#define MSG_SCHEDD_NOCOMPLEXATTRIBUTEFORTHRESHOLD_S         _MESSAGE(47219, _("error: no complex attribute for threshold "SFN))
+#define MSG_SCHEDD_DUETORR                                  _MESSAGE(47220, _(" due to a reservation"))
+#define MSG_SCHEDD_NOMASTERHOST_U                           _MESSAGE(47221, _("no master host for job "sge_u32))
+#define MSG_SUBORDPOLICYCONFLICT_UUSS                       _MESSAGE(47288, _("Jobs "sge_U32CFormat" & "sge_U32CFormat" dispatched to master/subordinated queues "SFQ"/"SFQ". Suspend on subordinate to occur in same scheduling interval. Policy conflict!"))
 
 
 /* 
 ** schedd/sge_update_lists.c
 */ 
-#define MSG_SCHEDD_ENSUREVALIDWHERE_LWHEREFORQUEUEFAILED    _MESSAGE(47221, _("ensure_valid_where(): lWhere() for queue failed\n"))
-#define MSG_SCHEDD_ENSUREVALIDWHERE_LWHEREFORALLQUEUESFAILED  _MESSAGE(47222, _("ensure_valid_where(): lWhere() for all queues failed\n" ))
-#define MSG_SCHEDD_ENSUREVALIDWHERE_LWHEREFORHOSTFAILED     _MESSAGE(47223, _("ensure_valid_where(): lWhere() for host failed\n"))
-#define MSG_SCHEDD_ENSUREVALIDWHERE_LWHEREFORDEPTFAILED     _MESSAGE(47224, _("ensure_valid_where(): lWhere() for dept failed\n"))
-#define MSG_SCHEDD_ENSUREVALIDWHERE_LWHEREFORACLFAILED      _MESSAGE(47225, _("ensure_valid_where(): lWhere() for acl failed\n"))
-#define MSG_SCHEDD_ENSUREVALIDWHERE_LWHEREFORJOBFAILED      _MESSAGE(47226, _("ensure_valid_where(): lWhat() for job failed\n"))
+#define MSG_SCHEDD_ENSUREVALIDWHERE_LWHEREFORQUEUEFAILED    _MESSAGE(47221, _("ensure_valid_where(): lWhere() for queue failed"))
+#define MSG_SCHEDD_ENSUREVALIDWHERE_LWHEREFORALLQUEUESFAILED  _MESSAGE(47222, _("ensure_valid_where(): lWhere() for all queues failed" ))
+#define MSG_SCHEDD_ENSUREVALIDWHERE_LWHEREFORHOSTFAILED     _MESSAGE(47223, _("ensure_valid_where(): lWhere() for host failed"))
+#define MSG_SCHEDD_ENSUREVALIDWHERE_LWHEREFORDEPTFAILED     _MESSAGE(47224, _("ensure_valid_where(): lWhere() for dept failed"))
+#define MSG_SCHEDD_ENSUREVALIDWHERE_LWHEREFORACLFAILED      _MESSAGE(47225, _("ensure_valid_where(): lWhere() for acl failed"))
+#define MSG_SCHEDD_ENSUREVALIDWHERE_LWHEREFORJOBFAILED      _MESSAGE(47226, _("ensure_valid_where(): lWhat() for job failed"))
 
 /* 
 ** schedd/scheduler.c
 */ 
 #define MSG_SCHEDD_LOGLIST_QUEUESTEMPORARLYNOTAVAILABLEDROPPED _MESSAGE(47227, _("queues dropped because they are temporarily not available: "))
 #define MSG_SCHEDD_MON_NOPENDJOBSTOPERFORMSCHEDULINGON         _MESSAGE(47228, _("no pending jobs to perform scheduling on"))
-
+#define MSG_SCHEDD_SHOULDHAVEFINISHED_UUU                      _MESSAGE(47289, _("job "sge_U32CFormat"."sge_U32CFormat" should have finished since "sge_U32CFormat"s"))
 
 /* 
 ** schedd/sge.c
 */ 
-/* #define MSG_FILE_OPENSTDOUTASFILEFAILED            _message(47229, _("Could not open stdout as file\n")) __TS Removed automatically from testsuite!! TS__*/
-/* #define MSG_SGE_UNABLETODUMPJOBLIST                _message(47230, _("Unable to dump job list\n")) __TS Removed automatically from testsuite!! TS__*/
+/* #define MSG_FILE_OPENSTDOUTASFILEFAILED            _message(47229, _("Could not open stdout as file")) __TS Removed automatically from testsuite!! TS__*/
+/* #define MSG_SGE_UNABLETODUMPJOBLIST                _message(47230, _("Unable to dump job list")) __TS Removed automatically from testsuite!! TS__*/
 
 /* 
 ** schedd/sge_share_mon.c
 */ 
 #define MSG_USAGE				_MESSAGE(47231, _("usage:"))
 #define MSG_SGESHAREMON_NOSHARETREE             _MESSAGE(47232, _("No share tree"))
-#define MSG_SGESHAREMON_c_OPT_USAGE             _MESSAGE(47233, _("number of collections (default is infinite)\n"))
-#define MSG_SGESHAREMON_d_OPT_USAGE             _MESSAGE(47234, _("delimiter between columns (default is <TAB>)\n"))
-#define MSG_SGESHAREMON_f_OPT_USAGE             _MESSAGE(47235, _("list of fields to print\n"))
-#define MSG_SGESHAREMON_h_OPT_USAGE             _MESSAGE(47236, _("print a header containing the field names\n"))
-#define MSG_SGESHAREMON_i_OPT_USAGE             _MESSAGE(47237, _("collection interval in seconds (default is 15)\n"))
-#define MSG_SGESHAREMON_l_OPT_USAGE             _MESSAGE(47238, _("delimiter between nodes (default is <CR>)\n"))
-#define MSG_SGESHAREMON_m_OPT_USAGE             _MESSAGE(47239, _("output file fopen mode (default is \"w\")\n"))
-#define MSG_SGESHAREMON_n_OPT_USAGE             _MESSAGE(47240, _("use name=value format\n"))
-#define MSG_SGESHAREMON_o_OPT_USAGE             _MESSAGE(47241, _("output file\n"))
-#define MSG_SGESHAREMON_r_OPT_USAGE             _MESSAGE(47242, _("delimiter between collection records (default is <CR>)\n"))
-#define MSG_SGESHAREMON_s_OPT_USAGE             _MESSAGE(47243, _("format of displayed strings (default is %%s)\n"))
-#define MSG_SGESHAREMON_t_OPT_USAGE             _MESSAGE(47244, _("show formatted times\n"))
-#define MSG_SGESHAREMON_u_OPT_USAGE             _MESSAGE(47245, _("show decayed usage (since timestamp) in nodes\n"))
-#define MSG_SGESHAREMON_x_OPT_USAGE             _MESSAGE(47246, _("exclude non-leaf nodes\n"))
+#define MSG_SGESHAREMON_c_OPT_USAGE             _MESSAGE(47233, _("number of collections (default is infinite)"))
+#define MSG_SGESHAREMON_d_OPT_USAGE             _MESSAGE(47234, _("delimiter between columns (default is <TAB>)"))
+#define MSG_SGESHAREMON_f_OPT_USAGE             _MESSAGE(47235, _("list of fields to print"))
+#define MSG_SGESHAREMON_h_OPT_USAGE             _MESSAGE(47236, _("print a header containing the field names"))
+#define MSG_SGESHAREMON_i_OPT_USAGE             _MESSAGE(47237, _("collection interval in seconds (default is 15)"))
+#define MSG_SGESHAREMON_l_OPT_USAGE             _MESSAGE(47238, _("delimiter between nodes (default is <CR>)"))
+#define MSG_SGESHAREMON_m_OPT_USAGE             _MESSAGE(47239, _("output file fopen mode (default is \"w\")"))
+#define MSG_SGESHAREMON_n_OPT_USAGE             _MESSAGE(47240, _("use name=value format"))
+#define MSG_SGESHAREMON_o_OPT_USAGE             _MESSAGE(47241, _("output file"))
+#define MSG_SGESHAREMON_r_OPT_USAGE             _MESSAGE(47242, _("delimiter between collection records (default is <CR>)"))
+#define MSG_SGESHAREMON_s_OPT_USAGE             _MESSAGE(47243, _("format of displayed strings (default is %%s)"))
+#define MSG_SGESHAREMON_t_OPT_USAGE             _MESSAGE(47244, _("show formatted times"))
+#define MSG_SGESHAREMON_u_OPT_USAGE             _MESSAGE(47245, _("show decayed usage (since timestamp) in nodes"))
+#define MSG_SGESHAREMON_x_OPT_USAGE             _MESSAGE(47246, _("exclude non-leaf nodes"))
 
-#define MSG_ERROR_XISNOTAVALIDINTERVAL_S        _MESSAGE(47247, _(""SFN" is not a valid interval\n"))
-#define MSG_ERROR_XISNOTAVALIDCOUNT_S           _MESSAGE(47248, _(""SFN" is not a valid count\n"))
-#define MSG_FILE_COULDNOTOPENXFORY_SS           _MESSAGE(47249, _("could not open "SFN" for "SFN"\n"))
+#define MSG_ERROR_XISNOTAVALIDINTERVAL_S        _MESSAGE(47247, _(""SFN" is not a valid interval"))
+#define MSG_ERROR_XISNOTAVALIDCOUNT_S           _MESSAGE(47248, _(""SFN" is not a valid count"))
+#define MSG_FILE_COULDNOTOPENXFORY_SS           _MESSAGE(47249, _("could not open "SFN" for "SFN))
 
 /* 
 ** schedd/schedd_conf.c
 */ 
-#define MSG_ATTRIB_ALGORITHMNOVALIDNAME_S       _MESSAGE(47250, _("attribute " SFQ " is not a valid algorithm name.\n"))
-#define MSG_ATTRIB_SCHEDDJOBINFONOVALIDPARAM    _MESSAGE(47251, _("attribute \"schedd_job_info \" is not a valid parameter\n"))
-#define MSG_ATTRIB_SCHEDDJOBINFONOVALIDJOBLIST  _MESSAGE(47252, _("attribute \"schedd_job_info\" is not a valid job_list\n"))
-#define MSG_ATTRIB_USINGXASY_SS                 _MESSAGE(47253, _("using "SFQ" as "SFN"\n"))
-#define MSG_ATTRIB_XISNOTAY_SS                  _MESSAGE(47254, _("attribute "SFQ" is not a "SFN"\n"))
-#define MSG_ATTRIB_USINGXFORY_SS                _MESSAGE(47255, _("using "SFQ" for "SFN"\n"))
-#define MSG_ATTRIB_USINGXFORY_US                _MESSAGE(47256, _("using " U32CFormat " for "SFN"\n"))
-#define MSG_ATTRIB_USINGXFORY_6FS               _MESSAGE(47257, _("using %.6g for "SFN"\n"))
+#define MSG_ATTRIB_ALGORITHMNOVALIDNAME_S       _MESSAGE(47250, _("attribute " SFQ " is not a valid algorithm name."))
+#define MSG_ATTRIB_SCHEDDJOBINFONOVALIDPARAM    _MESSAGE(47251, _("attribute \"schedd_job_info \" is not a valid parameter"))
+#define MSG_ATTRIB_SCHEDDJOBINFONOVALIDJOBLIST  _MESSAGE(47252, _("attribute \"schedd_job_info\" is not a valid job_list"))
+#define MSG_ATTRIB_USINGXASY_SS                 _MESSAGE(47253, _("using "SFQ" as "SFN))
+#define MSG_ATTRIB_XISNOTAY_SS                  _MESSAGE(47254, _("attribute "SFQ" is not a "SFN))
+#define MSG_ATTRIB_USINGXFORY_SS                _MESSAGE(47255, _("using "SFQ" for "SFN))
+#define MSG_ATTRIB_USINGXFORY_US                _MESSAGE(47256, _("using " sge_U32CFormat " for "SFN))
+#define MSG_ATTRIB_USINGXFORY_6FS               _MESSAGE(47257, _("using %.6g for "SFN))
 #define MSG_TRUE                                _MESSAGE(47258, _("true"))
 #define MSG_FALSE                               _MESSAGE(47259, _("false"))
-#define MSG_READ_PARAM_S                        _MESSAGE(47260, _("using param: "SFQ"\n"))
-#define MSG_UNKNOWN_PARAM_S                     _MESSAGE(47261, _("found unknown param: "SFQ"\n"))
-#define MSG_ATTRIB_WRONG_SETTING_SS             _MESSAGE(47262, _("invalid setting for param: "SFQ"(should be "SFQ")\n"))
+#define MSG_READ_PARAM_S                        _MESSAGE(47260, _("using param: "SFQ))
+#define MSG_UNKNOWN_PARAM_S                     _MESSAGE(47261, _("found unknown param: "SFQ))
+#define MSG_ATTRIB_WRONG_SETTING_SS             _MESSAGE(47262, _("invalid setting for param: "SFQ"(should be "SFQ")"))
 /* 
 ** schedd/schedd_message.c
 */ 
-#define MSG_SCHEDDMESSAGE_CREATEJOBINFOFORMESSAGEFAILED_U      _MESSAGE(47270, _("can not create schedd_job_info for message "U32CFormat"\n"))
+#define MSG_SCHEDDMESSAGE_CREATEJOBINFOFORMESSAGEFAILED_U      _MESSAGE(47270, _("can not create schedd_job_info for message "sge_U32CFormat))
 
 /* 
 ** schedd/valid_queue_user.c
 */ 
-#define MSG_VALIDQUEUEUSER_GRPXALLREADYINUSERSETY_SS  _MESSAGE(47300, _("Group "SFQ" already contained in userset "SFQ"\n"))
-#define MSG_VALIDQUEUEUSER_USRXALLREADYINUSERSETY_SS  _MESSAGE(47301, _("User "SFQ" already contained in userset "SFQ"\n"))
+#define MSG_VALIDQUEUEUSER_GRPXALLREADYINUSERSETY_SS  _MESSAGE(47300, _("Group "SFQ" already contained in userset "SFQ))
+#define MSG_VALIDQUEUEUSER_USRXALLREADYINUSERSETY_SS  _MESSAGE(47301, _("User "SFQ" already contained in userset "SFQ))
 
 
 /* 
 ** schedd/sge_select_queue.c
 */
-#define MSG_SCHEDD_WHYEXCEEDINVALIDLOAD_SS            _MESSAGE(47310, _("invalid load value "SFQ" for theshold "SFN"\n"))
-#define MSG_SCHEDD_WHYEXCEEDINVALIDTHRESHOLD_SS       _MESSAGE(47311, _("invalid threshold value "SFN"="SFN"\n"))
-#define MSG_SCHEDD_WHYEXCEEDINVALIDLOADADJUST_SS      _MESSAGE(47312, _("invalid load adjustment value "SFN"="SFN"\n"))
-#define MSG_SCHEDD_WHYEXCEEDBOOLVALUE_SSSSS           _MESSAGE(47313, _(SFN"="SFN" ("SN_UNLIMITED") "SFN" "SFN"\n"))
-#define MSG_SCHEDD_WHYEXCEEDFLOATVALUE_SFSSS          _MESSAGE(47314, _(SFN"=%f ("SN_UNLIMITED") "SFN" "SFN"\n"))
+#define MSG_SCHEDD_WHYEXCEEDINVALIDLOAD_SS            _MESSAGE(47310, _("invalid load value "SFQ" for theshold "SFN))
+#define MSG_SCHEDD_WHYEXCEEDINVALIDTHRESHOLD_SS       _MESSAGE(47311, _("invalid threshold value "SFN"="SFN))
+#define MSG_SCHEDD_WHYEXCEEDINVALIDLOADADJUST_SS      _MESSAGE(47312, _("invalid load adjustment value "SFN"="SFN))
+#define MSG_SCHEDD_WHYEXCEEDBOOLVALUE_SSSSS           _MESSAGE(47313, _(SFN"="SFN" ("SN_UNLIMITED") "SFN" "SFN))
+#define MSG_SCHEDD_WHYEXCEEDFLOATVALUE_SFSSS          _MESSAGE(47314, _(SFN"=%f ("SN_UNLIMITED") "SFN" "SFN))
 #define MSG_SCHEDD_WHYEXCEEDSTRINGVALUE_SSSS          _MESSAGE(47315, _(SFN"="SFN" "SFN" "SFN))
-#define MSG_SCHEDD_WHYEXCEEDCOMPLEXTYPE_S             _MESSAGE(47316, _("unknown complex attribute type for threshold "SFN"\n"))
-#define MSG_SCHEDD_WHYEXCEEDNOHOST_S                  _MESSAGE(47317, _("no such host "SFN" for that queue\n"))
-#define MSG_SCHEDD_WHYEXCEEDNOCOMPLEX_S               _MESSAGE(47318, _("no such complex attribute for threshold "SFQ"\n"))
+#define MSG_SCHEDD_WHYEXCEEDCOMPLEXTYPE_S             _MESSAGE(47316, _("unknown complex attribute type for threshold "SFN))
+#define MSG_SCHEDD_WHYEXCEEDNOHOST_S                  _MESSAGE(47317, _("no such host "SFN" for that queue"))
+#define MSG_SCHEDD_WHYEXCEEDNOCOMPLEX_S               _MESSAGE(47318, _("no such complex attribute for threshold "SFQ))
 
 #define MSG_SCHEDD_LCDIAGHOSTNP_SFI                   _MESSAGE(47330, _(SFN" * %f with nproc=%d"))
 #define MSG_SCHEDD_LCDIAGHOST_SF                      _MESSAGE(47331, _(SFN" * %f"))
@@ -310,26 +313,26 @@
 /* 
  * libs/sched/sge_ssi.c
  */
-#define MSG_SSI_ERRORPARSINGJOBIDENTIFIER_S           _MESSAGE(47350, _("error parsing job identifier "SFQ"\n"))
-#define MSG_SSI_MISSINGHOSTNAMEINTASKLIST             _MESSAGE(47351, _("missing hostname in task list\n"))
-#define MSG_SSI_COULDNOTFINDQUEUEFORHOST_S            _MESSAGE(47352, _("could not find a queue for host "SFQ"\n"))
+#define MSG_SSI_ERRORPARSINGJOBIDENTIFIER_S           _MESSAGE(47350, _("error parsing job identifier "SFQ))
+#define MSG_SSI_MISSINGHOSTNAMEINTASKLIST             _MESSAGE(47351, _("missing hostname in task list"))
+#define MSG_SSI_COULDNOTFINDQUEUEFORHOST_S            _MESSAGE(47352, _("could not find a queue for host "SFQ))
 
 /*
  * daemons/sched/sge_process_events.c
  */
-#define MSG_CANTFINDJOBINMASTERLIST_S                 _MESSAGE(47360, _("could not find job "SFQ" in master list\n")) 
-#define MSG_CANTFINDTASKINJOB_UU                      _MESSAGE(47361, _("could not find task "U32CFormat" in job "U32CFormat"\n")) 
+#define MSG_CANTFINDJOBINMASTERLIST_S                 _MESSAGE(47360, _("could not find job "SFQ" in master list")) 
+#define MSG_CANTFINDTASKINJOB_UU                      _MESSAGE(47361, _("could not find task "sge_U32CFormat" in job "sge_U32CFormat)) 
 
 /* 
  * libs/sched/sge_complex_schedd.c
  */
-#define MSG_GDI_NO_ATTRIBUTE_S                        _MESSAGE(47370, _("denied: attribute "SFQ" is no complex attribute\n"))
-#define MSG_COMPLEX_MISSING                           _MESSAGE(47371, _("name filter in get_attribute_list is not big enought\n"))
+#define MSG_GDI_NO_ATTRIBUTE_S                        _MESSAGE(47370, _("denied: attribute "SFQ" is no complex attribute"))
+#define MSG_COMPLEX_MISSING                           _MESSAGE(47371, _("name filter in get_attribute_list is not big enought"))
 
 /*
  * sgeobj/sge_schedd_conf.c 
  */
-#define MSG_RR_REQUIRES_DEFAULT_DURATION              _MESSAGE(47295, _("denied: resource reservation requires valid default duration\n"))
+#define MSG_RR_REQUIRES_DEFAULT_DURATION              _MESSAGE(47295, _("denied: resource reservation requires valid default duration"))
 #define MSG_SCHEDD_NOVALUEFORATTR_S                   _MESSAGE(47296, _("no value for complex attribute "SFQ))
 #define MSG_SCHEDD_JOB_LOAD_ADJUSTMENTS_S             _MESSAGE(47297, _("cannot parse job load adjustment list "SFQ))  
 #define MSG_SCHEDD_USAGE_WEIGHT_LIST_S                _MESSAGE(47298, _("cannot parse usage weight list "SFQ))
@@ -337,6 +340,6 @@
 #define MSG_INCOMPLETE_SCHEDD_CONFIG                  _MESSAGE(47400, _("The scheduler configuration is incomplete"))
 #define MSG_USE_DEFAULT_CONFIG                        _MESSAGE(47401, _("Using the scheduler default configuration"))
 #define MSG_INVALID_PARAM_SETTING_S                   _MESSAGE(47402, _("Invalid scheduler param setting: "SFQ)) 
-#define MSG_QINSTANCE_VALUEMISSINGMASTERDOWN_S        _MESSAGE(47404, _("\terror: no value for "SFQ" because execd is in unknown state\n"))
+#define MSG_QINSTANCE_VALUEMISSINGMASTERDOWN_S        _MESSAGE(47404, _("error: no value for "SFQ" because execd is in unknown state"))
 
 #endif /* __MSG_SCHEDD_H */

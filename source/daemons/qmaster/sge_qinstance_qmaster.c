@@ -38,10 +38,6 @@
 #include <errno.h>
 #include <limits.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif   
-
 #include "sge.h"
 #include "sgermon.h"
 #include "sge_time.h"
@@ -83,7 +79,8 @@ typedef struct {
 } change_state_t;
 
 static bool
-qinstance_change_state_on_calender_(lListElem *qi_elem, u_long32 cal_order, lList **state_change_list);
+qinstance_change_state_on_calender_(lListElem *qi_elem, u_long32 cal_order, 
+                                    lList **state_change_list, monitoring_t *monitor);
 
 bool
 qinstance_modify_attribute(lListElem *this_elem, lList **answer_list,
@@ -96,7 +93,9 @@ qinstance_modify_attribute(lListElem *this_elem, lList **answer_list,
                            const char **matching_group,
                            bool *is_ambiguous, 
                            bool *has_changed_conf_attr, 
-                           bool *has_changed_state_attr)
+                           bool *has_changed_state_attr,
+                           const bool initial_modify, 
+                           monitoring_t *monitor)
 {
 #if 0 /* EB: DEBUG: enable debugging for qinstance_modify_attribute() */
 #define QINSTANCE_MODIFY_DEBUG
@@ -142,7 +141,7 @@ qinstance_modify_attribute(lListElem *this_elem, lList **answer_list,
                            new_value ? new_value : "<null>"));
 #endif
                   if (calendar != NULL) { 
-                     qinstance_change_state_on_calendar(this_elem, calendar);
+                     qinstance_change_state_on_calendar(this_elem, calendar, monitor);
                   } else {
                      qinstance_state_set_cal_disabled(this_elem, false);
                      qinstance_state_set_cal_suspended(this_elem, false);
@@ -165,7 +164,7 @@ qinstance_modify_attribute(lListElem *this_elem, lList **answer_list,
                                            is_ambiguous);
                if (old_value != new_value) {
 #ifdef QINSTANCE_MODIFY_DEBUG
-                  DPRINTF(("Changed "SFQ" from "u32" to "u32"\n",
+                  DPRINTF(("Changed "SFQ" from "sge_u32" to "sge_u32"\n",
                            lNm2Str(attribute_name), old_value, new_value));
 #endif
                   lSetUlong(this_elem, attribute_name, new_value);
@@ -360,7 +359,7 @@ qinstance_modify_attribute(lListElem *this_elem, lList **answer_list,
                qinstance_reinit_consumable_actual_list(tmp_elem, answer_list);
                
                lXchgList(tmp_elem, attribute_name, &new_value);
-               tmp_elem = lFreeElem(tmp_elem);
+               lFreeElem(&tmp_elem);
                
                if (object_list_has_differences(old_value, answer_list,
                                                new_value, false)) {
@@ -379,7 +378,7 @@ qinstance_modify_attribute(lListElem *this_elem, lList **answer_list,
                    * qinstance_reinit_consumable_actual_list().  Either way, it
                    * has to be freed.
                    */
-                  new_value = lFreeList(new_value);
+                  lFreeList(&new_value);
                }
             }
             break;
@@ -429,13 +428,18 @@ qinstance_modify_attribute(lListElem *this_elem, lList **answer_list,
 #ifdef QINSTANCE_MODIFY_DEBUG
                   DPRINTF(("Changed "SFQ"\n", lNm2Str(attribute_name)));
 #endif
+
                   /*
                    * If this queue instance itself is a subordinated queue
                    * than it might we necessary to set the sos state.
                    * We have to check the subordinated list of all
                    * other queue instances to intitialize the state.
+                   *
+                   * This queue can't be subordinated if the queue was freshly added.
                    */
-                  qinstance_initialize_sos_attr(this_elem);
+                  if (initial_modify == false) {
+                     qinstance_initialize_sos_attr(this_elem, monitor);
+                  }
    
 
                   /*
@@ -468,16 +472,15 @@ qinstance_modify_attribute(lListElem *this_elem, lList **answer_list,
                    * (Un)suspend subordinated queue instances
                    */
                   cqueue_list_x_on_subordinate_so(master_list, answer_list, 
-                                                  false, unsuspended_so, false);
+                                                  false, unsuspended_so, false, monitor);
                   cqueue_list_x_on_subordinate_so(master_list, answer_list, 
-                                                  true, suspended_so, false);
+                                                  true, suspended_so, false, monitor);
 
                   /*
                    * Cleanup
                    */
-                  suspended_so = lFreeList(suspended_so);
-                  unsuspended_so = lFreeList(unsuspended_so);
-
+                  lFreeList(&suspended_so);
+                  lFreeList(&unsuspended_so);
                }
             }
             break;
@@ -521,7 +524,7 @@ qinstance_modify_attribute(lListElem *this_elem, lList **answer_list,
                                             matching_group, is_ambiguous);
                   if (old_value != new_value) {
 #ifdef QINSTANCE_MODIFY_DEBUG
-                     DPRINTF(("Changed "SFQ" from "u32" to "u32"\n",
+                     DPRINTF(("Changed "SFQ" from "sge_u32" to "sge_u32"\n",
                               lNm2Str(attribute_name),
                               old_value, new_value));
 #endif
@@ -543,7 +546,7 @@ qinstance_modify_attribute(lListElem *this_elem, lList **answer_list,
                break;
             case lBoolT:
                {
-                  bool old_value = lGetBool(this_elem, attribute_name);
+                  bool old_value = lGetBool(this_elem, attribute_name) ? true : false;
                   bool new_value;
 
                   bool_attr_list_find_value(attr_list, answer_list,
@@ -576,7 +579,7 @@ bool
 qinstance_change_state_on_command(lListElem *this_elem, lList**answer_list,
                                   u_long32 transition, bool force_transition,
                                   const char *user, const char *host,
-                                  bool is_operator, bool is_owner)
+                                  bool is_operator, bool is_owner, monitoring_t *monitor)
 {
    bool ret = true;
    dstring buffer = DSTRING_INIT;
@@ -627,14 +630,14 @@ qinstance_change_state_on_command(lListElem *this_elem, lList**answer_list,
                   if ((!qinstance_state_is_susp_on_sub(this_elem) &&
                        !qinstance_state_is_cal_suspended(this_elem)) ||
                       force_transition) {
-                     sge_signal_queue(SGE_SIGSTOP, this_elem, NULL, NULL);
+                     sge_signal_queue(SGE_SIGSTOP, this_elem, NULL, NULL, monitor);
                      did_something = true;
                   }   
                break;
             case QI_DO_UNSUSPEND :    
                   if (!qinstance_state_is_susp_on_sub(this_elem) &&
                       !qinstance_state_is_cal_suspended(this_elem)) {
-                     sge_signal_queue(SGE_SIGCONT, this_elem, NULL, NULL);
+                     sge_signal_queue(SGE_SIGCONT, this_elem, NULL, NULL, monitor);
                      did_something = true;
                   }   
                break;
@@ -691,7 +694,7 @@ qinstance_change_state_on_command(lListElem *this_elem, lList**answer_list,
                 * Rollback
                 */
                if (!force_transition) {
-                  transitions[i].set_state(this_elem, !(transitions[i].set));
+                  transitions[i].set_state(this_elem, transitions[i].set ? false : true);
                }
             }
          }
@@ -735,7 +738,7 @@ qinstance_change_state_on_command(lListElem *this_elem, lList**answer_list,
 *
 *******************************************************************************/
 bool qinstance_change_state_on_calendar(lListElem *this_elem, 
-                                   const lListElem *calendar)
+                                   const lListElem *calendar, monitoring_t *monitor)
 {
    bool ret = true;
 
@@ -748,7 +751,7 @@ bool qinstance_change_state_on_calendar(lListElem *this_elem,
 
       state = calender_state_changes(calendar, &state_changes_list, &when, NULL);
 
-      ret = qinstance_change_state_on_calender_(this_elem, state, &state_changes_list);
+      ret = qinstance_change_state_on_calender_(this_elem, state, &state_changes_list, monitor);
 
    }
    DEXIT;
@@ -779,8 +782,8 @@ bool qinstance_change_state_on_calendar(lListElem *this_elem,
 *     Directly access the cluster queue list
 *
 *******************************************************************************/
-bool qinstance_change_state_on_calendar_all(const char* cal_name, 
-                                            u_long32 cal_order, const lList *state_change_list)
+bool qinstance_change_state_on_calendar_all(const char* cal_name, u_long32 cal_order, 
+                                            const lList *state_change_list, monitoring_t *monitor)
 {
    bool ret = true;
    lListElem *cqueue;
@@ -798,7 +801,7 @@ bool qinstance_change_state_on_calendar_all(const char* cal_name,
 
          if (queue_calendar != NULL && !strcmp(queue_calendar, cal_name)) {
             lList *copy_state_change_list = lCopyList("state list", state_change_list);
-            ret = qinstance_change_state_on_calender_(qinstance, cal_order, &copy_state_change_list);
+            ret = qinstance_change_state_on_calender_(qinstance, cal_order, &copy_state_change_list, monitor);
          }
       }
    }
@@ -830,14 +833,14 @@ bool qinstance_change_state_on_calendar_all(const char* cal_name,
 *     MT-NOTE: qinstance_change_state_on_calender_() is MT safe 
 *
 *******************************************************************************/
-static bool qinstance_change_state_on_calender_(lListElem *this_elem, 
-                                                u_long32 cal_order, lList **state_change_list) 
+static bool qinstance_change_state_on_calender_(lListElem *this_elem, u_long32 cal_order, 
+                                                lList **state_change_list, monitoring_t *monitor) 
 {
    bool ret = true;
    bool old_cal_disabled = qinstance_state_is_cal_disabled(this_elem);
    bool old_cal_suspended = qinstance_state_is_cal_suspended(this_elem);
-   bool new_cal_disabled = (cal_order == QI_DO_CAL_DISABLE);
-   bool new_cal_suspended = (cal_order == QI_DO_CAL_SUSPEND);
+   bool new_cal_disabled = (cal_order == QI_DO_CAL_DISABLE) ? true : false;
+   bool new_cal_suspended = (cal_order == QI_DO_CAL_SUSPEND) ? true : false;
    bool state_changed = false;
 
    DENTER(TOP_LAYER, "qinstance_signal_on_calendar_");
@@ -860,7 +863,7 @@ static bool qinstance_change_state_on_calender_(lListElem *this_elem,
          } else if (qinstance_state_is_manual_suspended(this_elem)) {
             INFO((SGE_EVENT, MSG_QINSTANCE_NOUSADM_S, name));
          } else {
-            sge_signal_queue(SGE_SIGSTOP, this_elem, NULL, NULL);
+            sge_signal_queue(SGE_SIGSTOP, this_elem, NULL, NULL, monitor);
          }
       } else {
          if (qinstance_state_is_susp_on_sub(this_elem)) {
@@ -868,7 +871,7 @@ static bool qinstance_change_state_on_calender_(lListElem *this_elem,
          } else if (qinstance_state_is_manual_suspended(this_elem)) {
             INFO((SGE_EVENT, MSG_QINSTANCE_NOSADM_S, name));
          } else {
-            sge_signal_queue(SGE_SIGCONT, this_elem, NULL, NULL);
+            sge_signal_queue(SGE_SIGCONT, this_elem, NULL, NULL, monitor);
          }
       }
       state_changed = true;

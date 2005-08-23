@@ -72,7 +72,7 @@ static void          log_once_init(void);
 static void          log_buffer_destroy(void* theState);
 static log_buffer_t* log_buffer_getspecific(pthread_key_t aKey);
 
-static void sge_do_log(int, const char*, const char*); 
+static void sge_do_log(int, const char*); 
 
 
 /****** uti/log/log_get_log_buffer() ******************************************
@@ -441,7 +441,6 @@ void log_state_set_log_as_admin_user(int i)
 int sge_log(int log_level, const char *mesg, const char *file__, const char *func__, int line__) 
 {
    char buf[128*4];
-   char newline[2*4];
    int levelchar;
    char levelstring[32*4];
 
@@ -455,13 +454,8 @@ int sge_log(int log_level, const char *mesg, const char *file__, const char *fun
               mesg ? MSG_LOG_ZEROLENGTH : MSG_POINTER_NULL);
       mesg = buf;
    }
-   if (mesg[strlen(mesg)-1] != '\n') {
-      strcpy(newline,"\n");
-   } else {
-      strcpy(newline, "\0");
-   }
 
-   DPRINTF(("%s %d %s%s", file__, line__, mesg, newline));
+   DPRINTF(("%s %d %s\n", file__, line__, mesg));
 
    /* quick exit if nothing to log */
    if (log_level > MAX(log_state_get_log_level(), LOG_WARNING)) {
@@ -473,6 +467,10 @@ int sge_log(int log_level, const char *mesg, const char *file__, const char *fun
    }
 
    switch(log_level) {
+      case LOG_PROF:
+         strcpy(levelstring, MSG_LOG_PROFILING);
+         levelchar = 'P';
+         break;
       case LOG_CRIT:
          strcpy(levelstring, MSG_LOG_CRITICALERROR);
          levelchar = 'C';
@@ -505,12 +503,12 @@ int sge_log(int log_level, const char *mesg, const char *file__, const char *fun
 
    /* avoid double output in debug mode */
    if (!uti_state_get_daemonized() && !rmon_condition(TOP_LAYER, INFOPRINT) && 
-       (log_state_get_log_verbose() || log_level == LOG_ERR || log_level == LOG_CRIT)) {
-      fprintf(stderr, "%s%s%s", levelstring, mesg, newline);
+       (log_state_get_log_verbose() || log_level <= LOG_ERR)) {
+      fprintf(stderr, "%s%s\n", levelstring, mesg);
    } 
    if (uti_state_get_mewho() == QMASTER || uti_state_get_mewho() == EXECD   || uti_state_get_mewho() == QSTD ||
        uti_state_get_mewho() == SCHEDD ||  uti_state_get_mewho() == SHADOWD || uti_state_get_mewho() == COMMD) {
-      sge_do_log(levelchar, mesg, newline);
+      sge_do_log(levelchar, mesg);
    }
 
    DEXIT;
@@ -523,7 +521,6 @@ int sge_log(int log_level, const char *mesg, const char *file__, const char *fun
 *
 *  SYNOPSIS
 *     static void sge_do_log(int aLevel, const char *aMessage, const char 
-*     *aNewLine) 
 *
 *  FUNCTION
 *     ??? 
@@ -531,7 +528,6 @@ int sge_log(int log_level, const char *mesg, const char *file__, const char *fun
 *  INPUTS
 *     int aLevel           - log level
 *     const char *aMessage - log message
-*     const char *aNewLine - either newline or '\0' 
 *
 *  RESULT
 *     void - none
@@ -540,11 +536,11 @@ int sge_log(int log_level, const char *mesg, const char *file__, const char *fun
 *     MT-NOTE: sge_do_log() is MT safe.
 *
 *******************************************************************************/
-static void sge_do_log(int aLevel, const char *aMessage, const char *aNewLine) 
+static void sge_do_log(int aLevel, const char *aMessage) 
 {
    int fd;
 
-   if ((fd = open(log_state_get_log_file(), O_WRONLY | O_APPEND | O_CREAT, 0666)) >= 0) {
+   if ((fd = SGE_OPEN3(log_state_get_log_file(), O_WRONLY | O_APPEND | O_CREAT, 0666)) >= 0) {
       char msg2log[4*MAX_STRING_SIZE];
       char date[256], tmp_date[256], time_buf[256];
       dstring ds, msg;
@@ -553,13 +549,12 @@ static void sge_do_log(int aLevel, const char *aMessage, const char *aNewLine)
       sprintf(tmp_date, "%s", sge_ctime(0, &ds));
       sscanf(tmp_date, "%[^\n]", date);
 
-      sge_dstring_sprintf(&msg, "%s|%s|%s|%c|%s%s",
+      sge_dstring_sprintf(&msg, "%s|%s|%s|%c|%s\n",
               date,
               uti_state_get_sge_formal_prog_name(),
               uti_state_get_unqualified_hostname(),
               aLevel,
-              aMessage,
-              aNewLine);
+              aMessage);
       write(fd, msg2log, strlen(msg2log));
       close(fd);
    }

@@ -1,4 +1,4 @@
-/* $Id: IconList.c,v 1.2 2005/02/11 18:15:37 andre Exp $ */
+/* $Id: IconList.c,v 1.3 2005/05/03 09:18:02 roland Exp $ */
 /*
  * Copyright 1996 John L. Cwikla
  *
@@ -50,7 +50,7 @@
 #include <Xm/Traversal.h>
 #endif
 
-#ifndef SOLARISAMD64
+#ifndef SOLARIS
 #if XmVersion >= 2000
 extern void _XmResizeObject(
                         Widget g,

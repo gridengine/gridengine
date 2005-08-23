@@ -36,10 +36,6 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif   
-
 #include "sgermon.h"
 #include "sge.h"
 #include "sge_cqueue.h"
@@ -1230,7 +1226,7 @@ write_cqueue(int spool, int how, const lListElem *ep)
          u_long32 tag = lGetUlong(qinstance, QU_tag);
          dstring qi_dir = DSTRING_INIT;
 
-         DPRINTF(("QU_tag == "u32"\n", tag));
+         DPRINTF(("QU_tag == "sge_u32"\n", tag));
          if (how == 2 && (tag == SGE_QI_TAG_MOD || tag == SGE_QI_TAG_ADD)) {
             sge_dstring_sprintf(&qi_dir, "%s/%s", QINSTANCES_DIR, 
                                 lGetString(qinstance, QU_qname));

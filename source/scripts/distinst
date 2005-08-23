@@ -42,7 +42,8 @@ HASARCHDIR="bin lib examples/jobsbin utilbin"
 
 DEFAULTPROG="sge_qmaster sge_execd sge_shadowd sge_schedd \
              sge_shepherd sge_coshepherd qstat qsub qalter qconf qdel \
-             qacct qmod qsh utilbin jobs qmon qhost qmake qtcsh qping qloadsensor.exe"
+             qacct qmod qsh utilbin jobs qmon qhost qmake qtcsh qping \
+             qloadsensor.exe sgepasswd"
 
 UTILITYBINARIES="uidgid gethostname gethostbyname gethostbyaddr \
                  getservbyname filestat checkprog loadcheck now checkuser \
@@ -50,7 +51,7 @@ UTILITYBINARIES="uidgid gethostname gethostbyname gethostbyaddr \
                  sge_share_mon infotext spooldefaults spooledit spoolinit \
                  fstype"
 
-BDBUTILITYBINARIES="berkeley_db_svc db_dump db_load db_archive db_checkpoint"
+BDBUTILITYBINARIES="berkeley_db_svc db_archive db_checkpoint db_deadlock db_dump db_load db_printlog db_recover db_stat db_upgrade db_verify"
 
 SSLUTILITYBINARIES="openssl"
 
@@ -348,9 +349,8 @@ MakeDir()
 {
    if [ ! -d $DEST_SGE_ROOT/$1 ]; then
       Execute mkdir $DEST_SGE_ROOT/$1
-   else
-      Execute chmod 755 $DEST_SGE_ROOT/$1
    fi
+   Execute chmod 755 $DEST_SGE_ROOT/$1
 }
 
 #-------------------------------------------------------------------------
@@ -380,9 +380,10 @@ Install()
       Execute chown $target_uid $4
       Execute chgrp $target_gid $4
    fi
-   Execute chmod $2 $4
-   if [ $verbose = true ]; then
-      echo
+   if [ -d $4 ]; then
+      Execute chmod $2 $4/`basename $3`
+   else
+      Execute chmod $2 $4
    fi
 }
 
@@ -972,7 +973,7 @@ if [ $instcommon = true ]; then
              echo Installing `basename $filename`
              Execute rm -f $DEST_SGE_ROOT/lib/`basename $filename`
              MakeDir lib
-             Install 0.0 755 $filename $DEST_SGE_ROOT/lib
+             Install 0.0 644 $filename $DEST_SGE_ROOT/lib
          fi
       done
       Cleanup include
@@ -1025,6 +1026,7 @@ if [ $instcommon = true ]; then
       echo Installing \"man/\" and \"catman/\"
       Execute rm -rf $DEST_SGE_ROOT/man $DEST_SGE_ROOT/catman
       Execute cp -r MANSBUILD_$MANSRCDIR/SEDMAN/man $DEST_SGE_ROOT
+
       if [ -d MANSBUILD_$MANSRCDIR/ASCMAN/catman ]; then
          Execute cp -r MANSBUILD_$MANSRCDIR/ASCMAN/catman $DEST_SGE_ROOT
       fi
@@ -1036,13 +1038,19 @@ if [ $instcommon = true ]; then
             dir_num=`basename $dir | cut -d"n" -f2`
             for file in `ls $SOURCEDIR/$dir`; do
                if [ ! -d "$DESTDIR/cat$dir_num" ]; then
-                  mkdir -p $DESTDIR/cat$dir_num
+                  Execute mkdir -p $DESTDIR/cat$dir_num
                fi
                Execute cp $SOURCEDIR/$dir/$file $DESTDIR/cat$dir_num/$file.$dir_num
             done
          done
       fi
 
+      Execute find $DEST_SGE_ROOT/man -type d | xargs chmod 755
+      Execute find $DEST_SGE_ROOT/man -type f | xargs chmod 644
+
+      Execute find $DEST_SGE_ROOT/catman -type d | xargs chmod 755
+      Execute find $DEST_SGE_ROOT/catman -type f | xargs chmod 644
+      
       Cleanup man catman
    fi
 
@@ -1066,12 +1074,16 @@ if [ $instcommon = true ]; then
    fi
 
    if [ $instjavadoc = true ]; then
-      if [ -d ../doc/javadocs ]; then
+      if [ -d JAVADOCS ]; then
          echo "Installing doc/javadocs"
          Execute rm -rf $DEST_SGE_ROOT/doc/javadocs
-         MakeDir doc/javadocs
-         Execute cp -R ../doc/javadocs $DEST_SGE_ROOT/doc
-         Execute chmod -R a+r $DEST_SGE_ROOT/doc/javadocs
+         MakeDir $DEST_SGE_ROOT/doc/javadocs
+
+         Execute cp -R JAVADOCS/* $DEST_SGE_ROOT/doc/javadocs
+
+         Execute find $DEST_SGE_ROOT/doc/javadocs -type d | xargs chmod 755
+         Execute find $DEST_SGE_ROOT/doc/javadocs -type f | xargs chmod 644
+
          Cleanup doc/javadocs
       fi
    fi
@@ -1222,7 +1234,7 @@ for i in $ARCH; do
                fi
             elif [ $prog = testsuidroot ]; then
                InstallProgSUID $prog
-            elif [ $prog = berkeley_db_svc -o $prog = db_dump -o $prog = db_load -o $prog = db_archive -o $prog = db_checkpoint ]; then
+            elif [ $prog = berkeley_db_svc -o $prog = db_archive -o $prog = db_checkpoint -o $prog = db_deadlock -o $prog = db_dump -o $prog = db_load -o $prog = db_printlog -o $prog = db_recover -o $prog = db_stat -o $prog = db_upgrade -o $prog = db_verify ]; then
                if [ "$DSTARCH" != "win32-x86" ]; then
                   InstallProg $BERKELEYDBBASE/$DSTARCH/bin/$prog
                fi
@@ -1307,12 +1319,14 @@ for i in $ARCH; do
          done
 
          for lib in $QMON_NEED_SHARED_LIBRARIES; do
-            libname="../3rdparty/qmon/$ARCHBIN/$lib.$shlibext"
-            if [ -f $libname ]; then
-               InstallProg $libname
-            elif [ $exit_on_error = true ]; then
-               echo "\"$libname\" not found. Installation failed."
-               exit 1
+            if [ "$DSTARCH" != "win32-x86" ]; then
+               libname="../3rdparty/qmon/$ARCHBIN/$lib.$shlibext"
+               if [ -f $libname ]; then
+                  InstallProg $libname
+               elif [ $exit_on_error = true ]; then
+                  echo "\"$libname\" not found. Installation failed."
+                  exit 1
+               fi
             fi
          done
 
@@ -1371,13 +1385,13 @@ for i in $ARCH; do
 
 # On MacOS X, the JVM expects a special JNI extension for shared libraries
             if [ $shlibext != $jnilibext ]; then
-               echo Linking $lib.$jnilibext to $lib.$shlibext
-
-               if [ -f $DEST_SGE_ROOT/lib/$DSTARCH/4lib.$jnilibext ]; then
-                  rm $DEST_SGE_ROOT/lib/$DSTARCH/$lib.$jnilibext
+               ( echo Linking $lib.$jnilibext to $lib.$shlibext
+               cd $DEST_SGE_ROOT/lib/$DSTARCH
+               if [ -f lib.$jnilibext ]; then
+                  rm $lib.$jnilibext
                fi
 
-               ln -s $DEST_SGE_ROOT/lib/$DSTARCH/$lib.$shlibext $DEST_SGE_ROOT/lib/$DSTARCH/$lib.$jnilibext
+               ln -s $lib.$shlibext $lib.$jnilibext )
             fi
          fi
       fi

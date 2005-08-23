@@ -413,4 +413,24 @@ public class JobTemplateImplTest extends TestCase {
       
       session.deleteJobTemplate (jt2);
    }
+   
+   public void testUnsetProperties () throws DrmaaException {
+      System.out.println ("testUnsetProperties");
+      
+      assertSame (null, jt.getArgs ());
+      assertSame (null, jt.getEmail ());
+      assertSame (null, jt.getErrorPath ());
+      assertSame (null, jt.getInputPath ());
+      assertSame (null, jt.getJobCategory ());
+      assertSame (null, jt.getJobEnvironment ());
+      assertSame (null, jt.getJobName ());
+      assertSame (null, jt.getNativeSpecification ());
+      assertSame (null, jt.getOutputPath ());
+      assertSame (null, jt.getRemoteCommand ());
+      assertSame (null, jt.getStartTime ());
+      assertSame (null, jt.getWorkingDirectory ());
+      assertEquals (false, jt.getBlockEmail ());
+      assertEquals (false, jt.getJoinFiles ());
+      assertEquals (jt.ACTIVE, jt.getJobSubmissionState ());
+   }
 }

@@ -57,6 +57,10 @@ int main(int argc, char *argv[])
     printf(uid_t_fmt"\n", getuid());
  else if (!strcmp(argv[1], "-euid"))
 #if defined(INTERIX)
+    /*
+     * In Interix, return 0 instead of Administrator ID,
+     * because the Installation script tests always for 0.
+     */
     if(wl_is_user_id_superuser(geteuid())) {
        printf("0\n");
     } else {

@@ -180,15 +180,15 @@ SGEJob::~SGEJob()
   delete queueName;
   
   if(jobs)
-    lFreeList(jobs);
+    lFreeList(&jobs);
   if(answer)
     lFreeList(answer);
   if(tasks)
-    lFreeList(tasks);
+    lFreeList(&tasks);
   if(what)
     lFreeWhat(what);
   if(where)
-    lFreeWhere(where);
+    lFreeWhere(&where);
 }
 
 //=================== getters ========================
@@ -516,7 +516,7 @@ void SGEJob::freeSGEVars()
   if(what)
     lFreeWhat(what);
   if(where)
-    lFreeWhere(where);
+    lFreeWhere(&where);
 
   // So destructor doesn't try to free again
   jobs = 0;

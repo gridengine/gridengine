@@ -102,7 +102,7 @@ bool manop_is_manager(const char *user_name)
 ******************************************************************************/
 bool manop_is_operator(const char *user_name) 
 {
-   int ret = false;
+   bool ret = false;
 
    DENTER(TOP_LAYER, "manop_is_operator");
    if (user_name == NULL) {

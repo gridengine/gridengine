@@ -49,6 +49,8 @@
 /* how often will the database be checkpointed (cache written to disk) */
 #define BERKELEYDB_CHECKPOINT_INTERVAL 60
 
+/* to please IRIX compiler: this is the minimum of clear and checkpoint interval */
+#define BERKELEYDB_MIN_INTERVAL BERKELEYDB_CHECKPOINT_INTERVAL
 
 /* Berkeley DB data structures:
  * We have a bdb_info object per spooling rule.

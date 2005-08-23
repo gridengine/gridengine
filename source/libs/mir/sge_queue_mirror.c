@@ -30,10 +30,6 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif   
-
 #include "sge.h"
 #include "sgermon.h"
 #include "sge_log.h"
@@ -84,8 +80,7 @@ cqueue_update_master_list(sge_object_type type, sge_event_action action,
        * Replace CQ_qinstances list
        */         
       lXchgList(cqueue, CQ_qinstances, &qinstance_list);
-      qinstance_list = lFreeList(qinstance_list);
-
+      lFreeList(&qinstance_list);
    }
 
    DEXIT;
@@ -114,7 +109,7 @@ qinstance_update_cqueue_list(sge_object_type type, sge_event_action action,
       
       lListElem *qinstance = qinstance_list_locate(list, hostname, NULL);
       const char *key = NULL;
-      bool is_list = (list != NULL);
+      bool is_list = list != NULL ? true : false;
       
       sge_dstring_sprintf(&key_buffer, SFN"@"SFN, name, hostname);
       key = sge_dstring_get_string(&key_buffer);

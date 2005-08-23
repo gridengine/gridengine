@@ -34,9 +34,10 @@
 /*___INFO__MARK_END__*/
 
 #include "cull.h"
+#include "uti/sge_monitor.h"
 
-
-void sge_c_ack(char *aHost, char *aCommproc, sge_pack_buffer *aPb);
+void sge_c_ack(char *aHost, char *aCommproc, sge_pack_buffer *aPb, 
+               monitoring_t *monitor);
 
 #endif /* _SGE_C_ACK_H_ */
 

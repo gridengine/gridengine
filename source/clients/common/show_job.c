@@ -33,6 +33,8 @@
 #include <string.h>
 
 #include "sge_all_listsL.h"
+#include "sgermon.h"
+#include "sge_unistd.h"
 #include "show_job.h"
 #include "parse_qsub.h"
 #include "sgermon.h"
@@ -49,6 +51,10 @@
 #include "sge_ulong.h"
 #include "sge_centry.h"
 #include "sge_urgency.h"
+#include "sge_cqueue.h"
+#include "sge_qinstance_state.h"
+#include "sge_gdi.h"
+#include "sge_answer.h"
 
 static void sge_show_checkpoint(int how, int op);
 static void sge_show_y_n(int op, int how);
@@ -81,12 +87,12 @@ void cull_show_job(lListElem *job, int flags)
          printf("exec_file:                  %s\n", lGetString(job, JB_exec_file));
 
    if (lGetPosViaElem(job, JB_submission_time)>=0)
-      if ((ultime = lGetUlong(job, JB_submission_time))) {
+      if ((ultime = (time_t)lGetUlong(job, JB_submission_time))) {
          printf("submission_time:            %s", ctime((time_t *) &ultime));
       }
 
    if (lGetPosViaElem(job, JB_deadline)>=0)
-      if ((ultime = lGetUlong(job, JB_deadline))) {
+      if ((ultime = (time_t)lGetUlong(job, JB_deadline))) {
          printf("deadline:                   %s", ctime((time_t *) &ultime));
       }
 
@@ -146,7 +152,7 @@ void cull_show_job(lListElem *job, int flags)
    }
 
    if (lGetPosViaElem(job, JB_execution_time)>=0)
-      if ((ultime = lGetUlong(job, JB_execution_time)))
+      if ((ultime = (time_t)lGetUlong(job, JB_execution_time)))
          printf("execution_time:             %s", ctime((time_t *) &ultime));
 
    if (lGetPosViaElem(job, JB_account)>=0)
@@ -285,7 +291,7 @@ void cull_show_job(lListElem *job, int flags)
 
    if (lGetPosViaElem(job, JB_jobshare)>=0) {
       printf("jobshare:                   ");
-      printf(u32"\n", lGetUlong(job, JB_jobshare));
+      printf(sge_u32"\n", lGetUlong(job, JB_jobshare));
    }
 
    if (lGetPosViaElem(job, JB_hard_queue_list)>=0)
@@ -347,7 +353,7 @@ void cull_show_job(lListElem *job, int flags)
          if (lGetNumberOfElem(print) > 0) {
             print_new_line = 0;
          }
-         lAddList(print, do_not_print);
+         lAddList(print, &do_not_print);
       }
       if (print_new_line) {
          printf("\n");
@@ -395,7 +401,7 @@ void cull_show_job(lListElem *job, int flags)
 
    if (lGetPosViaElem(job, JB_script_size)>=0)
       if (lGetUlong(job, JB_script_size))
-         printf("script_size:                "uu32"\n", lGetUlong(job, JB_script_size));
+         printf("script_size:                "sge_uu32"\n", lGetUlong(job, JB_script_size));
 
    if (lGetPosViaElem(job, JB_script_file)>=0)
       if (lGetString(job, JB_script_file))
@@ -414,7 +420,7 @@ void cull_show_job(lListElem *job, int flags)
          dstring range_string = DSTRING_INIT;
 
          range_list_print_to_string(lGetList(job, JB_pe_range), 
-                                    &range_string, 1);
+                                    &range_string, true);
          printf("parallel environment:  %s range: %s\n",
                 lGetString(job, JB_pe), sge_dstring_get_string(&range_string));
          sge_dstring_free(&range_string);
@@ -456,12 +462,12 @@ void cull_show_job(lListElem *job, int flags)
          printf("verify_suitable_queues:     %d\n", (int)lGetUlong(job, JB_verify_suitable_queues));
 
    if (lGetPosViaElem(job, JB_soft_wallclock_gmt)>=0)
-      if ((ultime = lGetUlong(job, JB_soft_wallclock_gmt))) {
+      if ((ultime = (time_t)lGetUlong(job, JB_soft_wallclock_gmt))) {
          printf("soft_wallclock_gmt:         %s", ctime((time_t *) &ultime));
       }
 
    if (lGetPosViaElem(job, JB_hard_wallclock_gmt)>=0)
-      if ((ultime = lGetUlong(job, JB_hard_wallclock_gmt))) {
+      if ((ultime = (time_t)lGetUlong(job, JB_hard_wallclock_gmt))) {
          printf("hard_wallclock_gmt:         %s", ctime((time_t *) &ultime));
       }
 
@@ -485,7 +491,7 @@ void cull_show_job(lListElem *job, int flags)
 
       job_get_submit_task_ids(job, &start, &end, &step);
       if (job_is_array(job))
-         printf("job-array tasks:            "u32"-"u32":"u32"\n", start, end, step);
+         printf("job-array tasks:            "sge_u32"-"sge_u32":"sge_u32"\n", start, end, step);
    }
 
    if (lGetPosViaElem(job, JB_context)>=0)

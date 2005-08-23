@@ -367,7 +367,6 @@ static void lWriteElemXML_(const lListElem *ep, int nesting_level, FILE *fp)
          case lRefT:
             /* connot print a ref */
             continue;
-            break;
          }   
          
          attr_name = lNm2Str(ep->descr[i].nm);
@@ -387,9 +386,9 @@ static void lWriteElemXML_(const lListElem *ep, int nesting_level, FILE *fp)
             break;
          case lUlongT:
             if (!fp) {
-               DPRINTF(( u32, lGetPosUlong(ep, i)));
+               DPRINTF(( sge_u32, lGetPosUlong(ep, i)));
             } else {
-               fprintf(fp, u32, lGetPosUlong(ep, i));
+               fprintf(fp, sge_u32, lGetPosUlong(ep, i));
             }
             break;
          case lStringT:
@@ -516,16 +515,16 @@ static void lWriteElemXML_(const lListElem *ep, int nesting_level, FILE *fp)
 
 lListElem *xml_append_Attr_D(lList *attributeList, const char *name, double value) {
    char buffer[20];
-   sprintf(buffer,"%7.5f",value); 
+   sprintf(buffer,"%.5f",value); 
    return append_Attr_S(attributeList, name, buffer);
 }
 
 lListElem *xml_append_Attr_D8(lList *attributeList, const char *name, double value) {
    char buffer[20];
    if (value > 99999999)
-      sprintf(buffer,"%8.3g", value);
+      sprintf(buffer,"%.3g", value);
    else
-      sprintf(buffer,"%8.0f", value);
+      sprintf(buffer,"%.0f", value);
    return append_Attr_S(attributeList, name, buffer);
 }
 
@@ -570,8 +569,6 @@ static bool lAttributesToString_(const lList *attr_list, dstring *attr){
 }
 
 static void lWriteXMLHead_(const lListElem *ep, int nesting_level, FILE *fp) {
-   char indent[128];
-   int i;
    const lListElem *elem = NULL;
    const char *name = NULL;
    dstring attr = DSTRING_INIT;
@@ -582,15 +579,6 @@ static void lWriteXMLHead_(const lListElem *ep, int nesting_level, FILE *fp) {
    if (!ep){
       DEXIT;
       return;
-   }
-
-   {
-      int max = nesting_level * 3;
-      if (max > 128)
-      max = 128;
-      for (i = 0; i < nesting_level * 3; i++)
-         indent[i] = ' ';
-      indent[i] = '\0';
    }
 
    name = lGetString(ep, XMLH_Name);

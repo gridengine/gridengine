@@ -92,7 +92,8 @@ enum {
  JAPI            ,       /* 40 */
  JAPI_EC         ,       /* 41 */
  DRMAA           ,       /* 42 */
- QPING                   /* 43 */
+ QPING           ,       /* 43 */
+ SGE_PASSWD              /* 44 */
 };
 
 
@@ -111,13 +112,13 @@ u_long32        uti_state_get_gid(void);
 int             uti_state_get_daemonized(void);
 const char *    uti_state_get_user_name(void);
 const char *    uti_state_get_default_cell(void);
-int             uti_state_get_exit_on_error(void);
+bool            uti_state_get_exit_on_error(void);
 sge_exit_func_t uti_state_get_exit_func(void);
 
 void uti_state_set_qualified_hostname(const char *s);
 void uti_state_set_daemonized(int daemonized);
 void uti_state_set_mewho(u_long32 who);
-void uti_state_set_exit_on_error(int i);
+void uti_state_set_exit_on_error(bool i);
 void uti_state_set_exit_func(sge_exit_func_t f);
 
 #endif /* __SGE_PROGNAMES_H */

@@ -57,9 +57,9 @@ int spool_line;
 int spool_return_whitespace;
 int spool_finish_line;
 static int spool_cat_line;
-static char spool_tmp_str[MAX_STRING_SIZE];
+static char *spool_tmp_str = NULL;
 
-int spool_scanner_initialize(FILE *input)
+int spool_scanner_initialize(FILE *input, off_t file_size)
 {
    spool_line = 1;
    spool_return_whitespace = 0;
@@ -67,11 +67,26 @@ int spool_scanner_initialize(FILE *input)
    spool_cat_line = 0;
    spool_restart(input);
 
+   if (spool_tmp_str != NULL) {
+      free(spool_tmp_str);
+      spool_tmp_str = NULL;
+   }
+
+   spool_tmp_str = malloc(file_size);
+   if (spool_tmp_str == NULL) {
+      return SPFT_ERROR_NO_MEMORY;
+   }
+   memset((void*) spool_tmp_str, '\0', file_size);
+
    return spool_lex();
 }
 
 void spool_scanner_shutdown(void)
 {
+   if (spool_tmp_str != NULL) {
+      free(spool_tmp_str);
+      spool_tmp_str = NULL;
+   }
 }
 
 %}

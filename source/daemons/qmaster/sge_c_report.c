@@ -30,10 +30,6 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif   
-
 #include "sge_c_report.h"
 
 #include <string.h>
@@ -81,7 +77,7 @@ static int update_license_data(lListElem *hep, lList *lp_lic);
 *     MT-NOTE: sge_c_report() is MT safe
 *
 ******************************************************************************/
-void sge_c_report(char *rhost, char *commproc, int id, lList *report_list)
+void sge_c_report(char *rhost, char *commproc, int id, lList *report_list, monitoring_t *monitor)
 {
    lListElem *hep = NULL;
    u_long32 rep_type;
@@ -121,7 +117,7 @@ void sge_c_report(char *rhost, char *commproc, int id, lList *report_list)
    
    this_seqno = lGetUlong(lFirst(report_list), REP_seqno);
    
-   SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE); 
+   MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE), monitor); 
    /* need exec host for all types of reports */
    if (!(hep = host_list_locate(Master_Exechost_List, rhost))) {
       ERROR((SGE_EVENT, MSG_GOTSTATUSREPORTOFUNKNOWNEXECHOST_S, rhost));
@@ -140,7 +136,7 @@ void sge_c_report(char *rhost, char *commproc, int id, lList *report_list)
       /* this must be an old report, log and then ignore it */
       SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
       INFO((SGE_EVENT, MSG_QMASTER_RECEIVED_OLD_LOAD_REPORT_UUS, 
-               u32c(this_seqno), u32c(last_seqno), rhost));
+               sge_u32c(this_seqno), sge_u32c(last_seqno), rhost));
       DEXIT;
       return;
    }
@@ -190,7 +186,7 @@ void sge_c_report(char *rhost, char *commproc, int id, lList *report_list)
          {
             is_pb_used = true;
             if(init_packbuffer(&pb, 1024, 0) == PACK_SUCCESS) {
-               process_job_report(report, hep, rhost, commproc, &pb);
+               process_job_report(report, hep, rhost, commproc, &pb, monitor);
             }
          }
          break;
@@ -207,7 +203,7 @@ void sge_c_report(char *rhost, char *commproc, int id, lList *report_list)
          lList *alp = NULL;
          /* send all stuff packed during processing to execd */
          sge_send_any_request(0, NULL, rhost, commproc, id, &pb, TAG_ACK_REQUEST, 0, &alp); 
-         
+         MONITOR_MESSAGES_OUT(monitor); 
          answer_list_output (&alp);
       }
       clear_packbuffer(&pb);
@@ -267,7 +263,7 @@ static int update_license_data(lListElem *hep, lList *lp_lic)
    if (processors != old_processors) {
       lList *answer_list = NULL;
 
-      DPRINTF(("%s has " u32 " processors\n",
+      DPRINTF(("%s has " sge_u32 " processors\n",
          lGetHost(hep, EH_name), processors));
       sge_event_spool(&answer_list, 0, sgeE_EXECHOST_MOD, 
                       0, 0, lGetHost(hep, EH_name), NULL, NULL,

@@ -30,10 +30,6 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/                                   
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif   
-
 #include "sgermon.h"
 #include "sge_log.h"
 
@@ -144,7 +140,7 @@ spool_free_context(lList **answer_list, lListElem *context)
                               SGE_FUNC);
    } else {
       spool_shutdown_context(answer_list, context);
-      context = lFreeElem(context);
+      lFreeElem(&context);
    }
 
    PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLING);
@@ -1171,7 +1167,7 @@ spool_write_object(lList **answer_list, const lListElem *context,
                    const lListElem *object, const char *key, 
                    const sge_object_type object_type)
 {
-   int ret = false;
+   bool ret = false;
 
    DENTER(TOP_LAYER, "spool_write_object");
    PROF_START_MEASUREMENT(SGE_PROF_SPOOLING);
@@ -1273,7 +1269,7 @@ bool
 spool_delete_object(lList **answer_list, const lListElem *context, 
                     const sge_object_type object_type, const char *key)
 {
-   int ret = false;
+   bool ret = false;
 
    DENTER(TOP_LAYER, "spool_delete_object");
    PROF_START_MEASUREMENT(SGE_PROF_SPOOLING);

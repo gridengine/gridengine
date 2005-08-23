@@ -47,7 +47,7 @@ FORMAT
      assigned to the  hosts  and  are  used  to  sort  the  hosts
      corresponding  to the weighted load. The sorted host list is
      used to sort queues subsequently.
-     The default load formula is "load_avg".
+     The default load formula is "np_load_avg".
 
   job_load_adjustments
      The load, which is imposed by the Grid Engine  jobs  running
@@ -80,12 +80,12 @@ FORMAT
      load_formula (see above) and to compare the load and consum-
      able  values against the load threshold lists defined in the
      queue   configurations   (see   <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>).    If   your
-     load_formula simply consists of the CPU load average parame-
-     ter <I>load</I>_<I>avg</I> and if your jobs are  very  compute  intensive,
-     you  might  want  to  set  the  job_load_adjustments list to
-     <I>load</I>_<I>avg</I>=<I>100</I>, which means that every new job dispatched to a
-     host will require 100 % CPU time and thus the machine's load
-     is instantly raised by 100.
+     load_formula simply consists of the default CPU load average
+     parameter <I>np</I>_<I>load</I>_<I>avg</I> and if  your  jobs  are  very  compute
+     intensive,  you  might  want to set the job_load_adjustments
+     list to <I>np</I>_<I>load</I>_<I>avg</I>=<I>1</I>.<I>00</I>, which means  that  every  new  job
+     dispatched  to  a  host will require 100 % CPU time and thus
+     the machine's load is instantly raised by 1.00.
 
   load_adjustment_decay_time
      The load  corrections  in  the  "job_load_adjustments"  list
@@ -97,9 +97,9 @@ FORMAT
      "load_adjustment_decay_time" greatly depend upon the load or
      consumable   parameters  used  and  the  specific  operating
      system(s). Therefore, they can only  be  determined  on-site
-     and experimentally.  For the default <I>load</I>_<I>avg</I> load parameter
-     a "load_adjustment_decay_time" of 7 minutes  has  proven  to
-     yield reasonable results.
+     and experimentally.  For the default <I>np</I>_<I>load</I>_<I>avg</I> load param-
+     eter a "load_adjustment_decay_time" of 7 minutes has  proven
+     to yield reasonable results.
 
   maxujobs
      The maximum number of jobs any user may have  running  in  a
@@ -254,7 +254,7 @@ FORMAT
      mand qstat -j.
 
   params
-     This is foreseen for passing additional paramters to the  N1
+     This is foreseen for passing additional  parameters  to  the
      Grid Engine scheduler. The following values are recognized:
 
      <I>JC</I>_<I>FILTER</I>
@@ -269,7 +269,7 @@ FORMAT
           free slots in the system.
 
           A exception are jobs, which request a resource reserva-
-          tion.  They  are  included regardsless of the number of
+          tion.  They  are  included  regardless of the number of
           jobs in a category.
 
           This setting is turned off per default, because in very
@@ -309,7 +309,7 @@ FORMAT
      large amount of jobs by setting this param to "false".
 
   halflife_decay_list
-     The halflive_decay_list allows to configure different  decay
+     The halflife_decay_list allows to configure different  decay
      rates  for  the "finished_jobs usage types, which is used in
      the pending job ticket calculation to account for jobs which
      have just ended. This allows the user the pending jobs algo-
@@ -351,7 +351,7 @@ FORMAT
 
   share_override_tickets
      If set to "true" or "1", override tickets  of  any  override
-     object  instance  are  shared  equaly among all running jobs
+     object  instance  are  shared equally among all running jobs
      associated with the object. The pending  jobs  will  get  as
      many  override  tickets,  as they would have, when they were
      running. If set to "false" or "0", each job  gets  the  full
@@ -407,7 +407,7 @@ FORMAT
   default_duration
      When job  reservation  is  enabled  through  max_reservation
      <B><A HREF="../htmlman5/sched_conf.html">sched_conf(5)</A></B>  parameter  the default duration is assumed as
-     runtime for  jobs  that  have  neiter  -l  h_rt=...  nor  -l
+     runtime for jobs  that  have  neither  -l  h_rt=...  nor  -l
      s_rt=...  specified.  In  contrast to a h_rt/s_rt time limit
      the default_duration is not enforced.
 

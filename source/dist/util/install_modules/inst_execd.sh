@@ -502,7 +502,7 @@ GetLocalExecdSpoolDir()
       fi
    done
 
-   if [ "$ret" = 1 ]; then
+   if [ "$ret" = 1 -a "$LOCAL_EXECD_SPOOL" = "undef" ]; then
       MakeHostSpoolDir
    fi
 
@@ -623,4 +623,75 @@ ExecdAlreadyInstalled()
    else
       return 1
    fi 
+
+}
+
+
+CheckWinAdminUser()
+{
+   if [ "$SGE_ARCH" != "win32-x86" ]; then
+      return
+   fi
+
+   if [ -f $SGE_ROOT/$SGE_CELL/common/bootstrap ]; then
+      win_admin_user=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep admin_user | awk '{ print $2 }'`
+      if [ "$win_admin_user" = "default" -o "$win_admin_user" = "root" -o "$win_admin_user" = "none" ]; then
+         ADMINUSER=default
+      fi
+   else
+      $INFOTEXT "bootstrap file could not be found, please check your installation! Exiting now ..."
+      exit 1
+   fi
+
+   if [ "$win_admin_user" != "default" -a "$win_admin_user" != "root" -a "$win_admin_user" != "none" ]; then
+      WIN_HOST_NAME=`hostname | tr [a-z] [A-Z]`
+      ADMINUSER=$WIN_HOST_NAME"+$win_admin_user"
+
+      tmp_path=$PATH
+      PATH=/usr/contrib/win32/bin:/common:$SAVED_PATH
+      export PATH
+      eval net user $win_admin_user > /dev/null 2>&1
+      ret=$?
+      if [ "$ret" = 127 ]; then
+         /usr/contrib/win32/bin/net user $win_admin_user > /dev/null 2>&1
+         ret=$?
+         if [ "$ret" = 127 ]; then
+	         $INFOTEXT "The net binary could not be found!\nPlease, check your $PATH variable or your installation!"
+            exit 1
+         fi
+      fi
+      if [ "$ret" != 0 ]; then
+         while [ "$ret" != 0 ]; do
+            $INFOTEXT -u "Local Admin User"
+            $INFOTEXT "\nThe local admin user %s, does not exist!\n The script tries to create the admin user." $win_admin_user
+            $INFOTEXT "Please enter a password for your admin user >> "
+            stty_orig=`stty -g`
+            stty -echo
+            read SECRET
+            stty $stty_orig
+            $INFOTEXT "Creating admin user %s, now ...\n" $win_admin_user
+            eval net user $win_admin_user $SECRET /add
+            ret=$?
+            unset SECRET
+         done
+         ExecuteAsAdmin regpwd
+         $INFOTEXT -wait "Admin user created, hit <ENTER> to continue!"
+         is_nis=`mapadmin.exe | grep "UNIX Users and Groups Source" | cut -d ":" -f2 | cut -d " " -f2`
+         if [ "$is_nis" = "NIS" ]; then
+            $INFOTEXT "Your system is using NIS Domain setup. To setup the right Windows Domain\n" \
+                      "Unix Domain mapping we need your Unix Nis Domain.\n\n"
+            $INFOTEXT -n "Please enter your Unix Nis Domain now >> "
+            NIS_DOMAIN=`Enter`
+         else
+            NIS_DOMAIN="PCNFS"
+         fi
+         
+         mapadmin.exe ADD -wu "$WIN_HOST_NAME\\$win_admin_user" -uu "$NIS_DOMAIN\\$win_admin_user" -setprimary
+         
+         $SGE_BIN/qconf -am $WIN_HOST_NAME"+"$win_admin_user
+      fi
+      PATH=$tmp_path
+      export PATH 
+   fi
+
 }

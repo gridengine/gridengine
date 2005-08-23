@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="UTF-8" ?>
-
+<?xml version="1.0" encoding="UTF-8"?>
 <!--___INFO__MARK_BEGIN__
 /*************************************************************************
  * 
@@ -31,195 +30,153 @@
  * 
  ************************************************************************/
 ___INFO__MARK_END__-->
-
-<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" 
-            targetNamespace="http://www.sun.com/gridengine" 
-            xmlns="http://www.sun.com/gridengine">
-
-   <xsd:element name="job_info">
-      <xsd:complexType>
-         <xsd:annotation>
-            <xsd:documentation> 
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" 
+           elementFormDefault="qualified">
+	<xs:element name="job_info">
+		<xs:complexType>
+			<xs:annotation>
+				<xs:documentation> 
                This schema describes most of the qstat outputs. There are extra
                schema defintions for "qstat -j" and and "qstat -j job".
-            </xsd:documentation>
-         </xsd:annotation>
-         <xsd:sequence>
-            <xsd:element name="queue_info" type="queue_info_t" minOccurs="0" maxOccurs="unbounded"/>
-            <xsd:element name="job_info" type="job_info_t" minOccurs="0" maxOccurs="unbounded"/>
-            <xsd:element name="cluster_queue_summary" type="cqueue_summary_t" minOccurs="0" maxOccurs="unbounded"/>
-         </xsd:sequence>
-      </xsd:complexType>   
-   </xsd:element>
+              </xs:documentation>
+			</xs:annotation>
+			<xs:sequence>
+				<xs:element name="queue_info" type="queue_info_t" minOccurs="0" maxOccurs="unbounded"/>
+				<xs:element name="job_info" type="job_info_t" minOccurs="0" maxOccurs="unbounded"/>
+				<xs:element name="cluster_queue_summary" type="cqueue_summary_t" minOccurs="0" maxOccurs="unbounded"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
 
 <!-- ======================================= -->
 <!-- general qstat output                    -->
 
-   <xsd:element name="cqueue_summary_t">
-      <xsd:complexType>
-         <xsd:annotation>
-            <xsd:documentation></xsd:documentation>
-         </xsd:annotation>
-         <xsd:sequence>
-            <xsd:element name="name" type="xsd:String"/>
-            <xsd:element name="used" type="xsd:positiveInteger"/>
-            <xsd:element name="available" type="xsd:positiveInteger"/>
-            <xsd:element name="total" type="xsd:positiveInteger"/>
-            <xsd:element name="temp_disabled" type="xsd:positiveInteger"/>
-            <xsd:element name="manual_intervention" type="xsd:positiveInteger"/>
-         
-            <xsd:element name="suspend_manual" type="xsd:positiveInteger" minOccurs="0" maxOccurs="1"/>
-            <xsd:element name="suspend_threshold" type="xsd:positiveInteger" minOccurs="0" maxOccurs="1"/>
-            <xsd:element name="suspend_on_subordinate" type="xsd:positiveInteger" minOccurs="0" maxOccurs="1"/>
-            <xsd:element name="suspend_calendar" type="xsd:positiveInteger" minOccurs="0" maxOccurs="1"/>
-            <xsd:element name="unknown" type="xsd:positiveInteger" minOccurs="0" maxOccurs="1"/>
-            <xsd:element name="load_alarm" type="xsd:positiveInteger" minOccurs="0" maxOccurs="1"/>
-            <xsd:element name="disabled_manual" type="xsd:positiveInteger" minOccurs="0" maxOccurs="1"/>
-            <xsd:element name="disabled_calendar" type="xsd:positiveInteger" minOccurs="0" maxOccurs="1"/>
-            <xsd:element name="ambiguous" type="xsd:positiveInteger" minOccurs="0" maxOccurs="1"/>
-            <xsd:element name="orphaned" type="xsd:positiveInteger" minOccurs="0" maxOccurs="1"/>
-            <xsd:element name="error" type="xsd:positiveInteger" minOccurs="0" maxOccurs="1"/>
-         </xsd:sequence>
-      </xsd:complexType>
-   </xsd:element> 
+	<xs:complexType name="cqueue_summary_t">
+		<xs:sequence>
+			<xs:element name="name" type="xs:string"/>
+			<xs:element name="used" type="xs:unsignedInt"/>
+			<xs:element name="available" type="xs:unsignedInt"/>
+			<xs:element name="total" type="xs:unsignedInt"/>
+			<xs:element name="temp_disabled" type="xs:unsignedInt"/>
+			<xs:element name="manual_intervention" type="xs:unsignedInt"/>
+			<xs:element name="suspend_manual" type="xs:unsignedInt" minOccurs="0"/>
+			<xs:element name="suspend_threshold" type="xs:unsignedInt" minOccurs="0"/>
+			<xs:element name="suspend_on_subordinate" type="xs:unsignedInt" minOccurs="0"/>
+			<xs:element name="suspend_calendar" type="xs:unsignedInt" minOccurs="0"/>
+			<xs:element name="unknown" type="xs:unsignedInt" minOccurs="0"/>
+			<xs:element name="load_alarm" type="xs:unsignedInt" minOccurs="0"/>
+			<xs:element name="disabled_manual" type="xs:unsignedInt" minOccurs="0"/>
+			<xs:element name="disabled_calendar" type="xs:unsignedInt" minOccurs="0"/>
+			<xs:element name="ambiguous" type="xs:unsignedInt" minOccurs="0"/>
+			<xs:element name="orphaned" type="xs:unsignedInt" minOccurs="0"/>
+			<xs:element name="error" type="xs:unsignedInt" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
 
-   <xsd:element name="queue_info_t">
-      <xsd:complexType>
-         <xsd:annotation>
-            <xsd:documentation></xsd:documentation>
-         </xsd:annotation>
-         <xsd:sequence>
-            <xsd:element name="name" type="xsd:String" minOccurs="0" maxOccurs="1"/>
-            <xsd:element name="qtype" type="xsd:String" minOccurs="0" maxOccurs="1"/>
-            <xsd:element name="slots_used" type="xsd:positiveInteger" minOccurs="0" maxOccurs="1"/>
-            <xsd:element name="slots_total" type="xsd:positiveInteger" minOccurs="0" maxOccurs="1"/>
-            <xsd:element name="load_avg" type="xsd:float" minOccurs="0" maxOccurs="1"/>
-            <xsd:element name="arch" type="xsd:String" minOccurs="0" maxOccurs="1"/>
-            <xsd:element name="state" type="xsd:String" minOccurs="0" maxOccurs="1"/>
-          
-            <xsd:element name="message" type="xsd:String" minOccurs="0" maxOccurs="unbounded"/>
-          
-            <xsd:element name="resource" type="resource_t" minOccurs="0" maxOccurs="unbounded"/>
-           
-            <xsd:element name="job_list" type="job_list_t" minOccurs="0" maxOccurs="unbounded"/>
-            
-         </xsd:sequence>
-      </xsd:complexType>
-   </xsd:element> 
+	<xs:complexType name="queue_info_t">
+		<xs:sequence minOccurs="0" maxOccurs="unbounded">
+			<xs:element name="Queue-List" type="queue_list_t" minOccurs="0"/>
+			<xs:element name="job_list" type="job_list_t" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:complexType>
 
-   <xsd:element name="job_info_t">
-      <xsd:complexType>
-         <xsd:annotation>
-            <xsd:documentation></xsd:documentation>
-         </xsd:annotation>
-         <xsd:sequence>
-            <xsd:element name="job_list" type="job_list_t" minOccurs="0" maxOccurs="unbounded"/>
-         </xsd:sequence>
-      </xsd:complexType>
-   </xsd:element> 
+	<xs:complexType name="queue_list_t">
+		<xs:sequence minOccurs="0">
+			<xs:element name="name" type="xs:string" minOccurs="0"/>
+			<xs:element name="qtype" type="xs:string" minOccurs="0"/>
+			<xs:element name="slots_used" type="xs:unsignedInt" minOccurs="0"/>
+			<xs:element name="slots_total" type="xs:unsignedInt" minOccurs="0"/>
+			<xs:element name="load_avg" type="xs:float" minOccurs="0"/>
+			<xs:element name="arch" type="xs:string" minOccurs="0"/>
+			<xs:element name="state" type="xs:string" minOccurs="0"/>
+			<xs:element name="message" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="resource" type="resource_t" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="job_list" type="job_list_t" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:complexType>
 
-   <xsd:element name="job_list_t">
-      <xsd:complexType>
-         <xsd:annotation>
-            <xsd:documentation></xsd:documentation>
-         </xsd:annotation>
-         <xsd:sequence>
-            <xsd:element name="JB_job_number" type="xsd:positiveInteger"/>  
-            <xsd:element name="JAT_prio" type="xsd:float"/>
-            <xsd:element name="JAT_ntix" type="xsd:float" minOccurs="0" maxOccurs="1"/>
-            
-            <xsd:element name="JB_nurg" type="xsd:float" minOccurs="0" maxOccurs="1"/>
-            <xsd:element name="JB_urg" type="xsd:positiveInteger" minOccurs="0" maxOccurs="1"/>
-            <xsd:element name="JB_rrcontr" type="xsd:positiveInteger" minOccurs="0" maxOccurs="1"/>
-            <xsd:element name="JB_wtcontr" type="xsd:positiveInteger" minOccurs="0" maxOccurs="1"/>
-            <xsd:element name="JB_dlcontr" type="xsd:positiveInteger" minOccurs="0" maxOccurs="1"/>
-            <xsd:element name="JB_priority" type="xsd:positiveInteger" minOccurs="0" maxOccurs="1"/>
-            
-            <xsd:element name="JB_name" type="xsd:String"/>
-            <xsd:element name="JB_owner" type="xsd:String"/>
-            <xsd:element name="JB_project" type="xsd:String" minOccurs="0" maxOccurs="1"/>
-            <xsd:element name="JB_department" type="xsd:String" minOccurs="0" maxOccurs="1"/>
+	<xs:complexType name="job_info_t">
+		<xs:sequence>
+			<xs:element name="job_list" type="job_list_t" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:complexType>
 
-            <xsd:element name="state" type="xsd:String"/>
-            
-            <xsd:element name="JB_submission_time" type="xsd:dateTime" minOccurs="0" maxOccurs="1"/>
-            <xsd:element name="JAT_start_time" type="xsd:dateTime" minOccurs="0" maxOccurs="1"/>
-            <xsd:element name="JB_deadline" type="xsd:dateTime" minOccurs="0" maxOccurs="1"/>
+	<xs:complexType name="job_list_t">
+		<xs:sequence>
+			<xs:element name="JB_job_number" type="xs:unsignedInt"/>
+			<xs:element name="JAT_prio" type="xs:float"/>
+			<xs:element name="JAT_ntix" type="xs:float" minOccurs="0"/>
 
-            <xsd:element name="cpu_usage" type="xsd:float" minOccurs="0" maxOccurs="1"/>
-            <xsd:element name="mem_usage" type="xsd:float" minOccurs="0" maxOccurs="1"/>
-            <xsd:element name="io_usage" type="xsd:float" minOccurs="0" maxOccurs="1"/>
+			<xs:element name="JB_nppri" type="xs:float" minOccurs="0"/>
+			<xs:element name="JB_nurg" type="xs:float" minOccurs="0"/>
+			<xs:element name="JB_urg" type="xs:unsignedInt" minOccurs="0"/>
+			<xs:element name="JB_rrcontr" type="xs:unsignedInt" minOccurs="0"/>
+			<xs:element name="JB_wtcontr" type="xs:unsignedInt" minOccurs="0"/>
+			<xs:element name="JB_dlcontr" type="xs:unsignedInt" minOccurs="0"/>
+			<xs:element name="JB_priority" type="xs:unsignedInt" minOccurs="0"/>
 
-            <xsd:element name="tickets" type="xsd:positiveInteger" minOccurs="0" maxOccurs="1"/> 
-            <xsd:element name="JB_override_tickets" type="xsd:positiveInteger" minOccurs="0" maxOccurs="1"/>
-            <xsd:element name="JB_jobshare" type="xsd:positiveInteger" minOccurs="0" maxOccurs="1"/>
-            <xsd:element name="otickets" type="xsd:positiveInteger" minOccurs="0" maxOccurs="1"/>
-            <xsd:element name="ftickets" type="xsd:positiveInteger" minOccurs="0" maxOccurs="1"/>
-            <xsd:element name="stickets" type="xsd:positiveInteger" minOccurs="0" maxOccurs="1"/>
-            <xsd:element name="JAT_share" type="xsd:float" minOccurs="0" maxOccurs="1"/>
-            
-            <xsd:element name="queue_name" type="xsd:String" minOccurs="0" maxOccurs="1"/>
-            <xsd:element name="master" type="xsd:String" minOccurs="0" maxOccurs="1"/>
-            
-            <xsd:element name="slots" type="xsd:positiveInteger"/> 
-            <xsd:element name="tasks" type="xsd:String" minOccurs="0" maxOccurs="1"/>
+			<xs:element name="JB_name" type="xs:string"/>
+			<xs:element name="JB_owner" type="xs:string"/>
+			<xs:element name="JB_project" type="xs:string" minOccurs="0"/>
+			<xs:element name="JB_department" type="xs:string" minOccurs="0"/>
 
-            <xsd:element name="requested_PE" type="requested_PE_t" minOccurs="0" maxOccurs="1"/>
-            <xsd:element name="granted_PE" type="granted_PE_t" minOccurs="0" maxOccurs="1"/>
-            <xsd:element name="JB_checkpoint_name" type="xsd:String" minOccurs="0" maxOccurs="1"/>
-            <xsd:element name="hard_request" type="request_t" minOccurs="0" maxOccurs="unbounded"/>
-            <xsd:element name="def_hard_request" type="request_t" minOccurs="0" maxOccurs="unbounded"/>
-            <xsd:element name="soft_request" type="request_t" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="state" type="xs:string"/>
 
-            <xsd:element name="hard_req_queue" type="xsd:String" minOccurs="0" maxOccurs="unbounded"/>
-            <xsd:element name="soft_req_queue" type="xsd:String" minOccurs="0" maxOccurs="unbounded"/>
-            <xsd:element name="master_hard_req_queue" type="xsd:String" minOccurs="0" maxOccurs="unbounded"/>
-            <xsd:element name="predecessor_jobs_req" type="xsd:String" minOccurs="0" maxOccurs="unbounded"/>
-            <xsd:element name="predecessor_jobs" type="xsd:positiveInteger" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="JB_submission_time" type="xs:dateTime" minOccurs="0"/>
+			<xs:element name="JAT_start_time" type="xs:dateTime" minOccurs="0"/>
+			<xs:element name="JB_deadline" type="xs:dateTime" minOccurs="0"/>
 
-         </xsd:sequence>
-         <xsd:attribute name="state" type="xsd:string" use="required"/>
-      </xsd:complexType>
-   </xsd:element> 
+			<xs:element name="cpu_usage" type="xs:float" minOccurs="0"/>
+			<xs:element name="mem_usage" type="xs:float" minOccurs="0"/>
+			<xs:element name="io_usage" type="xs:float" minOccurs="0"/>
+
+			<xs:element name="tickets" type="xs:unsignedInt" minOccurs="0"/>
+			<xs:element name="JB_override_tickets" type="xs:unsignedInt" minOccurs="0"/>
+			<xs:element name="JB_jobshare" type="xs:unsignedInt" minOccurs="0"/>
+			<xs:element name="otickets" type="xs:unsignedInt" minOccurs="0"/>
+			<xs:element name="ftickets" type="xs:unsignedInt" minOccurs="0"/>
+			<xs:element name="stickets" type="xs:unsignedInt" minOccurs="0"/>
+			<xs:element name="JAT_share" type="xs:float" minOccurs="0"/>
+
+			<xs:element name="queue_name" type="xs:string" minOccurs="0"/>
+			<xs:element name="master" type="xs:string" minOccurs="0"/>
+
+			<xs:element name="slots" type="xs:unsignedInt"/>
+			<xs:element name="tasks" type="xs:string" minOccurs="0"/>
+
+			<xs:element name="requested_PE" type="requested_PE_t" minOccurs="0"/>
+			<xs:element name="granted_PE" type="granted_PE_t" minOccurs="0"/>
+			<xs:element name="JB_checkpoint_name" type="xs:string" minOccurs="0"/>
+			<xs:element name="hard_request" type="request_t" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="def_hard_request" type="request_t" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="soft_request" type="request_t" minOccurs="0" maxOccurs="unbounded"/>
+
+			<xs:element name="hard_req_queue" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="soft_req_queue" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="master_hard_req_queue" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="predecessor_jobs_req" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="predecessor_jobs" type="xs:unsignedInt" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+		<xs:attribute name="state" type="xs:string" use="required"/>
+	</xs:complexType>
 
 <!-- ======================================= -->
 
-   <xsd:element name="request_t" type="xsd:string">
-      <xsd:complexType>
-         <xsd:annotation>
-            <xsd:documentation></xsd:documentation>
-         </xsd:annotation>
-         <xsd:attribute name="name" type="xsd:string" use="required"/>
-          <xsd:attribute name="resource_contribution" type="xsd:float" use="implied"/>
-      </xsd:complexType>
-   </xsd:element>
+	<xs:complexType name="request_t">
+		<xs:attribute name="name" type="xs:string" use="required"/>
+		<xs:attribute name="resource_contribution" type="xs:float"/>
+	</xs:complexType>
 
-   <xsd:element name="granted_PE_t" type="xsd:positiveInteger">
-      <xsd:complexType>
-         <xsd:annotation>
-            <xsd:documentation></xsd:documentation>
-         </xsd:annotation>
-         <xsd:attribute name="name" type="xsd:string" use="required"/>
-      </xsd:complexType>
-   </xsd:element>
+	<xs:complexType name="granted_PE_t">
+		<xs:attribute name="name" type="xs:string" use="required"/>
+	</xs:complexType>
 
-   <xsd:element name="requested_PE_t" type="xsd:string">
-      <xsd:complexType>
-         <xsd:annotation>
-            <xsd:documentation></xsd:documentation>
-         </xsd:annotation>
-         <xsd:attribute name="name" type="xsd:string" use="required"/>
-      </xsd:complexType>
-   </xsd:element>
+	<xs:complexType name="requested_PE_t">
+		<xs:attribute name="name" type="xs:string" use="required"/>
+	</xs:complexType>
 
-   <xsd:element name="resource_t" type="xsd:string">
-      <xsd:complexType>
-         <xsd:annotation>
-            <xsd:documentation></xsd:documentation>
-         </xsd:annotation>
-         <xsd:attribute name="name" type="xsd:string" use="required"/>
-         <xsd:attribute name="type" type="xsd:string" use="required"/>
-      </xsd:complexType>
-   </xsd:element>
-
-</xsd:schema>                        
+	<xs:complexType name="resource_t">
+		<xs:attribute name="name" type="xs:string" use="required"/>
+		<xs:attribute name="type" type="xs:string" use="required"/>
+	</xs:complexType>
+</xs:schema>

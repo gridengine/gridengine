@@ -49,13 +49,19 @@ struct cl_raw_list_elem_type {
 
 
 typedef struct cl_raw_list_type {
-   char*              list_name;       /* name of list */
-   int                list_type;       /* type of list CL_THREAD_LIST, CL_LOG_LIST */
-   pthread_mutex_t*   list_mutex;      /* list lock mutex */                 
-   unsigned long      elem_count;      /* number of list entries */
-   void*              list_data;       /* user list data */
-   cl_raw_list_elem_t* first_elem;
-   cl_raw_list_elem_t* last_elem;
+   char*                 list_name;       /* name of list */
+   int                   list_type;       /* type of list CL_THREAD_LIST, CL_LOG_LIST */
+   pthread_mutex_t*      list_mutex;      /* list lock mutex */
+   unsigned long         elem_count;      /* number of list entries */
+   void*                 list_data;       /* user list data */
+
+#ifdef CL_DO_COMMLIB_DEBUG
+   char* last_locker;
+   unsigned long         lock_count;
+   unsigned long         unlock_count;
+#endif
+   cl_raw_list_elem_t*   first_elem;
+   cl_raw_list_elem_t*   last_elem;
 } cl_raw_list_t;
 
 /***********************************************************************/

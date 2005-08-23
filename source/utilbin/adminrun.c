@@ -38,13 +38,14 @@
 
 #include "basis_types.h"
 #include "msg_utilbin.h"
+#include "sge_uidgid.h"
 
 
 void usage(void)
 {
    fprintf(stderr,"%s\n adminrun username command ...\n\n", MSG_UTILBIN_USAGE );
    fprintf(stderr,MSG_COMMAND_RUNCOMMANDASUSERNAME_S, "<username>" );
-
+   fprintf(stderr, "\n");
    exit(1);
 }
 
@@ -56,14 +57,11 @@ int main(int argc, char **argv)
    if (argc < 3)
       usage();
 
-#if defined( INTERIX )
-   if (geteuid() != 197108 ) {
-#else
-   if (geteuid() != 0) {
-#endif 
+   if(geteuid() != SGE_SUPERUSER_UID) {
       argv+=2;
       execvp(argv[0], argv);
       fprintf(stderr, MSG_COMMAND_EXECUTEFAILED_S , argv[0]);
+      fprintf(stderr, "\n");
       return 127;
    }
 
@@ -73,6 +71,7 @@ int main(int argc, char **argv)
  
    if (!pw || !pw->pw_name) {
       fprintf(stderr, MSG_SYSTEM_RESOLVEUSERFAILED_S , argv[1]);
+      fprintf(stderr, "\n");
       return 1;
    }
    
@@ -83,5 +82,6 @@ int main(int argc, char **argv)
    execvp(argv[0], argv);
 
    fprintf(stderr, MSG_COMMAND_EXECUTEFAILED_S , argv[0]);
+   fprintf(stderr, "\n");
    return 127;
 }

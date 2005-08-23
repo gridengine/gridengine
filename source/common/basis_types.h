@@ -75,23 +75,23 @@ typedef enum {
 #define NONE_LEN  4
 
 #if defined(FREEBSD) || defined(NETBSD) || defined(LINUXAMD64)
-#  define U32CFormat "%u"  
-#  define u32c(x)  (unsigned int)(x)
+#  define sge_U32CFormat "%u"  
+#  define sge_u32c(x)  (unsigned int)(x)
 
-#  define X32CFormat "%x"
-#  define x32c(x)  (unsigned int)(x)
+#  define sge_X32CFormat "%x"
+#  define sge_x32c(x)  (unsigned int)(x)
 #else
-#  define U32CFormat "%ld"
-#  define u32c(x)  (unsigned long)(x)
+#  define sge_U32CFormat "%ld"
+#  define sge_u32c(x)  (unsigned long)(x)
 
-#  define X32CFormat "%lx"
-#  define x32c(x)  (unsigned long)(x)
+#  define sge_X32CFormat "%lx"
+#  define sge_x32c(x)  (unsigned long)(x)
 #endif
 
 
 #if defined(IRIX)
-#define u64 "%lld"
-#define u64c(x)  (unsigned long long)(x)
+#define sge_u64 "%lld"
+#define sge_u64c(x)  (unsigned long long)(x)
 #endif
 
 #if defined(HP11) || defined(HP1164)
@@ -118,18 +118,18 @@ extern "C" {
 
 #define U_LONG32_MAX 4294967295UL
 
-/* set u32 and x32 for 64 or 32 bit machines */
-/* uu32 for strictly unsigned, not nice, but did I use %d for an unsigned? */
+/* set sge_u32 and sge_x32 for 64 or 32 bit machines */
+/* sge_uu32 for strictly unsigned, not nice, but did I use %d for an unsigned? */
 #if defined(TARGET_64BIT) || defined(FREEBSD)
-#  define u32    "%d"
-#  define uu32   "%u"
-#  define x32    "%x"
-#  define fu32   "d"
+#  define sge_u32    "%d"
+#  define sge_uu32   "%u"
+#  define sge_x32    "%x"
+#  define sge_fu32   "d"
 #else
-#  define u32    "%ld"
-#  define uu32   "%lu"
-#  define x32    "%lx"
-#  define fu32   "ld"
+#  define sge_u32    "%ld"
+#  define sge_uu32   "%lu"
+#  define sge_x32    "%lx"
+#  define sge_fu32   "ld"
 #endif
 
 /* -------------------------------
@@ -208,6 +208,12 @@ typedef char stringT[MAX_STRING_SIZE];
 #  define seteuid(euid) setresuid(-1, euid, -1)
 #  define setegid(egid) setresgid(-1, egid, -1)
 #endif
+
+#if defined(INTERIX)
+#  define seteuid(euid) setreuid(-1, euid)
+#  define setegid(egid) setregid(-1, egid)
+#  define getgrgid_r getgrgid_nomembers_r
+#endif
     
 
 #ifdef  __cplusplus
@@ -220,8 +226,8 @@ typedef char stringT[MAX_STRING_SIZE];
 #endif
 
 #define GET_SPECIFIC(type, variable, init_func, key, func_name) \
-   type * variable; \
-   if(!pthread_getspecific(key)) { \
+   type *variable = pthread_getspecific(key); \
+   if(variable == NULL) { \
       int ret; \
       variable = (type *)malloc(sizeof(type)); \
       init_func(variable); \
@@ -231,8 +237,6 @@ typedef char stringT[MAX_STRING_SIZE];
          abort(); \
       } \
    } \
-   else \
-      variable = pthread_getspecific(key)
 
 #define COMMLIB_GET_SPECIFIC(type, variable, init_func, key, func_name) \
    type * variable; \

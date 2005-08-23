@@ -35,10 +35,6 @@
 #include <errno.h>
 #include <float.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif     
-
 #include <pwd.h>
 #include <sys/types.h>
 #include <sys/time.h>
@@ -180,7 +176,7 @@ void sge_reap_children_execd()
             failed = ESSTATE_SHEPHERD_EXIT;
       } else {
          /* not signaled and not exited - so what else happend with this guy? */
-         WARNING((SGE_EVENT, MSG_WAITPIDNOSIGNOEXIT_UI, u32c(pid), status));
+         WARNING((SGE_EVENT, MSG_WAITPIDNOSIGNOEXIT_UI, sge_u32c(pid), status));
          continue;
       }
   
@@ -222,16 +218,16 @@ void sge_reap_children_execd()
          if (child_signal)
             ERROR((SGE_EVENT, MSG_SHEPHERD_VSHEPHERDOFJOBWXDIEDTHROUGHSIGNALYZ_SUUSI,
                      (petep ? MSG_SLAVE : "" ),
-                     u32c(jobid), 
-                     u32c(jataskid),
+                     sge_u32c(jobid), 
+                     sge_u32c(jataskid),
                      core_dumped ? MSG_COREDUMPED: "",
                      child_signal));
 
          if (exit_status) {
             ERROR((SGE_EVENT, MSG_SHEPHERD_WSHEPHERDOFJOBXYEXITEDWITHSTATUSZ_SUUI, 
                   (petep ? MSG_SLAVE : "" ), 
-                  u32c(jobid), 
-                  u32c(jataskid), 
+                  sge_u32c(jobid), 
+                  sge_u32c(jataskid), 
                   exit_status));
          }
 
@@ -240,18 +236,18 @@ void sge_reap_children_execd()
           *  if not it should be a job kept with SGE_KEEP_ACTIVE (without
           *  keeping job object itself)
           */
-         DPRINTF(("Job: "u32", JA-Task: "u32", PE-Task: %s\n", jobid, jataskid, 
+         DPRINTF(("Job: "sge_u32", JA-Task: "sge_u32", PE-Task: %s\n", jobid, jataskid, 
             petep != NULL ? lGetString(petep, PET_id) : ""));
          if (!(jr=get_job_report(jobid, jataskid, petep != NULL ? lGetString(petep, PET_id) : NULL))) {
             ERROR((SGE_EVENT, MSG_JOB_MISSINGJOBXYINJOBREPORTFOREXITINGJOBADDINGIT_UU, 
-                   u32c(jobid), u32c(jataskid)));
+                   sge_u32c(jobid), sge_u32c(jataskid)));
             jr = add_job_report(jobid, jataskid, petep != NULL ? lGetString(petep, PET_id) : NULL, jep);
          }
 
          /* when restarting execd it happens that cleanup_old_jobs()
             has already cleaned up this job */
          if (lGetUlong(jr, JR_state)==JEXITING) {
-            DPRINTF(("State of job "u32" already changed to JEXITING\n", jobid));
+            DPRINTF(("State of job "sge_u32" already changed to JEXITING\n", jobid));
             continue;
          }
 
@@ -320,11 +316,11 @@ lListElem *jr
    ptf_error = ptf_job_complete(job_id, ja_task_id, pe_task_id, &usage);
    if (ptf_error) {
       WARNING((SGE_EVENT, MSG_JOB_REAPINGJOBXPTFCOMPLAINSY_US,
-               u32c(job_id), ptf_errstr(ptf_error)));
+               sge_u32c(job_id), ptf_errstr(ptf_error)));
    } else {
       if (usage) {
          lXchgList(jr, JR_usage, &usage);
-         lFreeList(usage);
+         lFreeList(&usage);
       }
    }
 
@@ -544,7 +540,7 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
 
       slots = (s=get_conf_val("pe_slots"))?atoi(s):1;
       usage_mul_factor = execd_get_acct_multiplication_factor(pe, slots, 
-                                                         pe_task_id != NULL);
+                                                         (pe_task_id != NULL) ? true : false);
    }
 
    if (read_dusage(jr, sge_dstring_get_string(&jobdir), job_id, ja_task_id, failed, usage_mul_factor)) {
@@ -583,16 +579,16 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
          if ((sge_signo=sge_map_signal(signo)) != -1)
             lSetDouble(du, UA_value, (double)sge_signo);
       }
-   }
-      
-   if (du && ((u_long32)lGetDouble(du, UA_value) == 0xffffffff)) {
-      if (!failed) {
-         failed = SSTATE_FAILURE_AFTER_JOB;
-         if (!*error)
-            sprintf(error, MSG_JOB_CANTREADUSEDRESOURCESFORJOB);
+
+      if ((u_long32)lGetDouble(du, UA_value) == 0xffffffff) {
+         if (!failed) {
+            failed = SSTATE_FAILURE_AFTER_JOB;
+            if (!*error)
+               sprintf(error, MSG_JOB_CANTREADUSEDRESOURCESFORJOB);
+         }
       }
    }
-
+      
    DTRACE;
 
    /* Be careful: the checkpointing checking is done at the end. It will
@@ -621,7 +617,7 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
                                 "job_pid");
       if (!SGE_STAT(sge_dstring_get_string(&fname), &statbuf)) {
          if ((fp = fopen(sge_dstring_get_string(&fname), "r"))) {
-            if (!fscanf(fp, u32 , &job_pid))
+            if (!fscanf(fp, sge_u32 , &job_pid))
                job_pid = 0;
             fclose(fp);
          }
@@ -712,8 +708,10 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
                JOB_TYPE_IS_NO_SHELL(lGetUlong(job, JB_type))))) {
             job_caused_failure = 1;
          } else if ((failed == SSTATE_NO_SHELL) && (master_queue != NULL)) {
+            char* shell_start_mode = mconf_get_shell_start_mode();
             const char *mode = job_get_shell_start_mode(job, master_queue, 
-                                                   conf.shell_start_mode);
+                                                   shell_start_mode);
+            FREE(shell_start_mode);
 
             if (!strcmp(mode, "unix_behavior") != 0) {
                job_caused_failure = 1;
@@ -875,7 +873,7 @@ lListElem *jr
    sge_dstring_init(&err_str, err_str_buffer, sizeof(err_str_buffer));
 
    if (ja_task_id == 0) {
-      ERROR((SGE_EVENT, MSG_SHEPHERD_REMOVEACKEDJOBEXITCALLEDWITHX_U, u32c(job_id)));
+      ERROR((SGE_EVENT, MSG_SHEPHERD_REMOVEACKEDJOBEXITCALLEDWITHX_U, sge_u32c(job_id)));
       DEXIT;
       return;
    }
@@ -906,7 +904,7 @@ lListElem *jr
 
          if (!petep) {
             ERROR((SGE_EVENT, MSG_JOB_XYHASNOTASKZ_UUS, 
-                   u32c(job_id), u32c(ja_task_id), pe_task_id_str));
+                   sge_u32c(job_id), sge_u32c(ja_task_id), pe_task_id_str));
             del_job_report(jr);
             DEXIT;
             return;
@@ -939,11 +937,11 @@ lListElem *jr
       /*
       ** Execute command to delete the client's DCE or Kerberos credentials.
       */
-      if (do_credentials)
+      if (mconf_get_do_credentials())
          delete_credentials(jep);
 
       /* remove job/task active dir */
-      if (!keep_active && !getenv("SGE_KEEP_ACTIVE")) {
+      if (!mconf_get_keep_active() && !getenv("SGE_KEEP_ACTIVE")) {
          sge_get_active_job_file_path(&jobdir,
                                       job_id, ja_task_id, pe_task_id,
                                       NULL);
@@ -996,9 +994,9 @@ lListElem *jr
 
       if (pe_task_id_str) {
          /* unchain pe task element from task list */
-         lRemoveElem(lGetList(jatep, JAT_task_list), petep);
+         lRemoveElem(lGetList(jatep, JAT_task_list), &petep);
       } else {
-         lRemoveElem(Master_Job_List, jep);
+         lRemoveElem(Master_Job_List, &jep);
       }
       del_job_report(jr);   
 
@@ -1008,7 +1006,7 @@ lListElem *jr
       /* clean up active jobs entry */
       if (!pe_task_id_str) {
          ERROR((SGE_EVENT, MSG_SHEPHERD_ACKNOWLEDGEFORUNKNOWNJOBXYZ_UUS, 
-                u32c(job_id),  u32c(ja_task_id), 
+                sge_u32c(job_id),  sge_u32c(ja_task_id), 
                 (pe_task_id_str ? pe_task_id_str : MSG_MASTER)));
 
       /*
@@ -1022,7 +1020,7 @@ lListElem *jr
                                       NULL);
          if (SGE_STAT(sge_dstring_get_string(&jobdir), &statbuf)) {
             ERROR((SGE_EVENT, MSG_SHEPHERD_CANTFINDACTIVEJOBSDIRXFORREAPINGJOBY_SU, 
-                  sge_dstring_get_string(&jobdir), u32c(job_id)));
+                  sge_dstring_get_string(&jobdir), sge_u32c(job_id)));
          } else {
             /*** read config file written by exec_job ***/ 
             sprintf(fname, "%s/config", sge_dstring_get_string(&jobdir));
@@ -1054,7 +1052,7 @@ lListElem *jr
                  (!(qname = get_conf_val("queue"))) || 
              (!(job_owner = get_conf_val("job_owner")))) {
                ERROR((SGE_EVENT, MSG_SHEPHERD_INCORRECTCONFIGFILEFORJOBXY_UU, 
-                     u32c(job_id), u32c(ja_task_id)));
+                     sge_u32c(job_id), sge_u32c(ja_task_id)));
             } else {
                DPRINTF(("removing queue_tmpdir %s\n", tmpdir));
                sge_remove_tmpdir(tmpdir, job_owner, job_id, ja_task_id, qname);
@@ -1065,7 +1063,7 @@ lListElem *jr
          job_remove_spool_file(job_id, ja_task_id, NULL, SPOOL_WITHIN_EXECD); 
 
          /* active dir */
-         if (!keep_active && !getenv("SGE_KEEP_ACTIVE")) {
+         if (!mconf_get_keep_active() && !getenv("SGE_KEEP_ACTIVE")) {
             DPRINTF(("removing active dir: %s\n", sge_dstring_get_string(&jobdir)));
             if (sge_rmdir(sge_dstring_get_string(&jobdir), &err_str)) {
                ERROR((SGE_EVENT, MSG_FILE_CANTREMOVEDIRECTORY_SS,
@@ -1136,7 +1134,7 @@ int failed
    ERROR((SGE_EVENT, 
       (failed==SSTATE_FAILURE_BEFORE_JOB)?
          MSG_SHEPHERD_CANTSTARTJOBXY_US:
-         MSG_SHEPHERD_PROBLEMSAFTERSTART_DS, u32c(jobid), error_string));
+         MSG_SHEPHERD_PROBLEMSAFTERSTART_DS, sge_u32c(jobid), error_string));
 
    jr = get_job_report(jobid, jataskid, petaskid);
    if (!jr) {
@@ -1185,7 +1183,7 @@ char *qname
    DENTER(TOP_LAYER, "job_unknown");
 
    ERROR((SGE_EVENT, MSG_SHEPHERD_JATASKXYISKNOWNREPORTINGITTOQMASTER, 
-     u32c(jobid), u32c(jataskid)));
+     sge_u32c(jobid), sge_u32c(jataskid)));
 
    jr = add_job_report(jobid, jataskid, NULL, NULL);
    if (jr) {
@@ -1404,14 +1402,14 @@ examine_job_task_from_file(int startup, char *dir, lListElem *jep,
                to write the pid file -> No Logging */
       if (startup && startup_time >= lGetUlong(jatep, JAT_start_time)) {
          ERROR((SGE_EVENT, MSG_SHEPHERD_CANTREADPIDFILEXFORJOBYSTARTTIMEZX_SSUS,
-                fname, dir, u32c(lGetUlong(jatep, JAT_start_time)), strerror(errno)));
+                fname, dir, sge_u32c(lGetUlong(jatep, JAT_start_time)), strerror(errno)));
          /* seek job report for this job - it must be contained in job report
             If this is a newly started execd we can assume the execd was broken
             in the interval between making the jobs active directory and writing
             the shepherds pid (done by the started shepherd). So we just remove
             and report this job. */
          if (!(jr=get_job_report(jobid, jataskid, pe_task_id_str))) {
-            CRITICAL((SGE_EVENT, MSG_SHEPHERD_MISSINGJOBXINJOBREPORTFOREXITINGJOB_U, u32c(jobid)));
+            CRITICAL((SGE_EVENT, MSG_SHEPHERD_MISSINGJOBXINJOBREPORTFOREXITINGJOB_U, sge_u32c(jobid)));
             jr = add_job_report(jobid, jataskid, pe_task_id_str, NULL);
          }
          lSetUlong(jr, JR_state, JEXITING);
@@ -1440,7 +1438,7 @@ examine_job_task_from_file(int startup, char *dir, lListElem *jep,
 
    /* report this information */
    sprintf(err_str, MSG_SHEPHERD_SHEPHERDFORJOBXHASPIDYANDISZALIVE_SUS, 
-           dir, u32c(pid), (shepherd_alive ? "": MSG_NOT));
+           dir, sge_u32c(pid), (shepherd_alive ? "": MSG_NOT));
    if (startup) {
       INFO((SGE_EVENT, err_str));
    }
@@ -1463,7 +1461,7 @@ examine_job_task_from_file(int startup, char *dir, lListElem *jep,
          } else {
             /* found job in active jobs directory 
                but not in spool directory of execd */
-            ERROR((SGE_EVENT, MSG_SHEPHERD_INCONSISTENTDATAFORJOBX_U, u32c(jobid)));
+            ERROR((SGE_EVENT, MSG_SHEPHERD_INCONSISTENTDATAFORJOBX_U, sge_u32c(jobid)));
             jr = add_job_report(jobid, jataskid, pe_task_id_str, NULL);
             lSetUlong(jr, JR_state, JEXITING);
          }
@@ -1474,7 +1472,7 @@ examine_job_task_from_file(int startup, char *dir, lListElem *jep,
 
    /* seek job report for this job - it must be contained in job report */
    if (!(jr=get_job_report(jobid, jataskid, pe_task_id_str))) {
-      CRITICAL((SGE_EVENT, MSG_SHEPHERD_MISSINGJOBXYINJOBREPORT_UU, u32c(jobid), u32c(jataskid)));
+      CRITICAL((SGE_EVENT, MSG_SHEPHERD_MISSINGJOBXYINJOBREPORT_UU, sge_u32c(jobid), sge_u32c(jataskid)));
       jr = add_job_report(jobid, jataskid, pe_task_id_str, jep);
       DEXIT;
       return;
@@ -1483,7 +1481,7 @@ examine_job_task_from_file(int startup, char *dir, lListElem *jep,
    /* if the state is already JEXITING work is done  
       for this job and we wait for ACK from qmaster */
    if (lGetUlong(jr, JR_state)==JEXITING) {
-      DPRINTF(("State of job "u32"."u32" already changed to JEXITING\n", jobid, jataskid));
+      DPRINTF(("State of job "sge_u32"."sge_u32" already changed to JEXITING\n", jobid, jataskid));
       DEXIT;
       return;
    }
@@ -1524,12 +1522,12 @@ int usage_mul_factor
    if (failed != ESSTATE_NO_PID) {
       fp = fopen(pid_file, "r");
       if (fp) {
-         fscanf(fp, u32 , &pid);
+         fscanf(fp, sge_u32 , &pid);
          fclose(fp);
       }
       else
          ERROR((SGE_EVENT, MSG_SHEPHERD_CANTOPENPIDFILEXFORJOBYZ_SUU,
-                pid_file, u32c(jobid), u32c(jataskid)));
+                pid_file, sge_u32c(jobid), sge_u32c(jataskid)));
    }
 
    if (failed != ESSTATE_NO_CONFIG) {
@@ -1549,10 +1547,12 @@ int usage_mul_factor
       if (owner) {
          struct passwd *pw;
          struct group *pg;
+         struct passwd pw_struct;
+         char buffer[2048];
 
-         pw = sge_getpwnam(owner);
+         pw = sge_getpwnam_r(owner, &pw_struct, buffer, sizeof(buffer));
          if (pw) {
-            if (use_qsub_gid) {
+            if (mconf_get_use_qsub_gid()) {
                char *tmp_qsub_gid = search_conf_val("qsub_gid");
                pw->pw_gid = atol(tmp_qsub_gid);
             } 
@@ -1646,11 +1646,11 @@ int usage_mul_factor
 #endif   
 
          build_derived_final_usage(jr, usage_mul_factor);
-         cflp = lFreeList(cflp);
+         lFreeList(&cflp);
       }
       else {
          ERROR((SGE_EVENT, MSG_SHEPHERD_CANTOPENUSAGEFILEXFORJOBYZX_SUUS,
-                usage_file, u32c(jobid), u32c(jataskid), strerror(errno)));
+                usage_file, sge_u32c(jobid), sge_u32c(jataskid), strerror(errno)));
          DEXIT;
          return -1;
       }
@@ -1735,9 +1735,9 @@ static void build_derived_final_usage(lListElem *jr, int usage_mul_factor)
 
    DPRINTF(("CPU/MEM/IO: M(%f/%f/%f) R(%f/%f/%f) acct: %s stree: %s\n",
          cpu, mem, io, r_cpu, r_mem, r_io,
-         acct_reserved_usage?"R":"M", sharetree_reserved_usage?"R":"M"));
+         mconf_get_acct_reserved_usage()?"R":"M", mconf_get_sharetree_reserved_usage()?"R":"M"));
 
-   if (acct_reserved_usage) {
+   if (mconf_get_acct_reserved_usage()) {
       add_usage(jr, USAGE_ATTR_CPU_ACCT, NULL, r_cpu);
       add_usage(jr, USAGE_ATTR_MEM_ACCT, NULL, r_mem);
       add_usage(jr, USAGE_ATTR_IO_ACCT,  NULL, r_io);
@@ -1753,7 +1753,7 @@ static void build_derived_final_usage(lListElem *jr, int usage_mul_factor)
          add_usage(jr, USAGE_ATTR_MAXVMEM_ACCT, NULL, maxvmem);
    }
 
-   if (sharetree_reserved_usage) {
+   if (mconf_get_sharetree_reserved_usage()) {
       add_usage(jr, USAGE_ATTR_CPU, NULL, r_cpu);
       add_usage(jr, USAGE_ATTR_MEM, NULL, r_mem);
       add_usage(jr, USAGE_ATTR_IO,  NULL, r_io);
@@ -1800,7 +1800,7 @@ u_long32 *valuep
 
    if (!(s = get_conf_value(NULL, *cflpp, CF_name, CF_value, name)))
       return -1;
-   ret = sscanf(s, u32, valuep);
+   ret = sscanf(s, sge_u32, valuep);
    lDelElemStr(cflpp, CF_name, name);
    return (ret == 1)?0:-1;
 }
@@ -1849,12 +1849,12 @@ lListElem *jr
     */
 
    if ((ep=lGetSubStr(jr, UA_name, "start_time", JR_usage)))
-      strcpy(sge_mail_start, sge_ctime((u_long32)lGetDouble(ep, UA_value), &ds));
+      strcpy(sge_mail_start, sge_ctime((time_t)lGetDouble(ep, UA_value), &ds));
    else   
       strcpy(sge_mail_start, MSG_MAIL_UNKNOWN_NAME);
 
    if ((ep=lGetSubStr(jr, UA_name, "end_time", JR_usage)))
-      strcpy(sge_mail_end, sge_ctime((u_long32)lGetDouble(ep, UA_value), &ds));
+      strcpy(sge_mail_end, sge_ctime((time_t)lGetDouble(ep, UA_value), &ds));
    else   
       strcpy(sge_mail_end, MSG_MAIL_UNKNOWN_NAME);
 
@@ -1901,7 +1901,7 @@ lListElem *jr
       double_print_time_to_dstring(ru_wallclock, &wtime_string);
       if (job_is_array(jep)) {
          sprintf(sge_mail_subj, MSG_MAIL_SUBJECT_JA_TASK_COMP_UUS, 
-                 u32c(jobid), u32c(taskid), lGetString(jep, JB_job_name));
+                 sge_u32c(jobid), sge_u32c(taskid), lGetString(jep, JB_job_name));
          sprintf(sge_mail_body,
                  MSG_MAIL_BODY_COMP_SSSSSSSSSSSI, 
                  sge_mail_subj,
@@ -1918,7 +1918,7 @@ lListElem *jr
                  exit_status);
       } else {
          sprintf(sge_mail_subj, MSG_MAIL_SUBJECT_JOB_COMP_US,
-                 u32c(jobid), lGetString(jep, JB_job_name));
+                 sge_u32c(jobid), lGetString(jep, JB_job_name));
          sprintf(sge_mail_body, 
                  MSG_MAIL_BODY_COMP_SSSSSSSSSSSI,
                  sge_mail_subj,
@@ -1973,8 +1973,8 @@ lListElem *jr
          if (job_is_array(jep)) {
             sprintf(sge_mail_subj,
                     MSG_MAIL_SUBJECT_JA_TASK_STATE_UUSS,
-                    u32c(jobid),
-                    u32c(taskid),
+                    sge_u32c(jobid),
+                    sge_u32c(taskid),
                     lGetString(jep, JB_job_name),
                     action);
             sprintf(sge_mail_body,
@@ -1991,7 +1991,7 @@ lListElem *jr
          } else {
             sprintf(sge_mail_subj,
                     MSG_MAIL_SUBJECT_JOB_STATE_USS,
-                    u32c(jobid),
+                    sge_u32c(jobid),
                     lGetString(jep, JB_job_name),
                     action);
             sprintf(sge_mail_body, 

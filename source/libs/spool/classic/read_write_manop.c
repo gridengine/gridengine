@@ -32,10 +32,6 @@
 #include <errno.h>
 #include <string.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif   
-
 #include "sge_unistd.h"
 #include "sge.h"
 #include "sgermon.h"
@@ -98,9 +94,7 @@ int target
       return 1;
    }
    
-   if ( *lpp ) 
-      *lpp = lFreeList(*lpp);
-
+   lFreeList(lpp);
    *lpp = lCreateList("man/op list", MO_Type);
 
    while (fscanf(fp, "%[^\n]\n", str) == 1) {
@@ -109,7 +103,7 @@ int target
          lSetString(ep, MO_name, str);
          lAppendElem(*lpp, ep);
       } else {
-         lFreeElem(ep);
+         lFreeElem(&ep);
       }
    }
 

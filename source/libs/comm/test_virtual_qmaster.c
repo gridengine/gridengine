@@ -44,8 +44,6 @@
 #include "cl_commlib.h"
 
 void sighandler_client(int sig);
-static int pipe_signal = 0;
-static int hup_signal = 0;
 static int do_shutdown = 0;
 
 /* counters */
@@ -83,12 +81,10 @@ int sig
 ) {
 /*   thread_signal_receiver = pthread_self(); */
    if (sig == SIGPIPE) {
-      pipe_signal = 1;
       return;
    }
 
    if (sig == SIGHUP) {
-      hup_signal = 1;
       return;
    }
    /* shutdown all sockets */
@@ -137,12 +133,12 @@ extern int main(int argc, char** argv)
 
 
   printf("startup commlib ...\n");
-  cl_com_setup_commlib(CL_RW_THREAD ,atoi(argv[1]), NULL );
+  cl_com_setup_commlib(CL_RW_THREAD /* CL_THREAD_POOL */ , (cl_log_t)atoi(argv[1]), NULL );
   cl_com_set_status_func(my_application_status); 
 
 
   printf("setting up service on port %d\n", atoi(argv[2]) );
-  handle=cl_com_create_handle(NULL,CL_CT_TCP,CL_CM_CT_MESSAGE , 1, atoi(argv[2]) , CL_TCP_DEFAULT,"virtual_master", 1 , 1,0 );
+  handle=cl_com_create_handle(NULL,CL_CT_TCP,CL_CM_CT_MESSAGE , CL_TRUE, atoi(argv[2]) , CL_TCP_DEFAULT,"virtual_master", 1 , 1,0 );
   if (handle == NULL) {
      printf("could not get handle\n");
      exit(1);
@@ -157,11 +153,11 @@ extern int main(int argc, char** argv)
 
   printf("create application threads ...\n");
   cl_thread_list_setup(&thread_list,"thread list");
-  cl_thread_list_create_thread(thread_list, &dummy_thread_p,cl_com_get_log_list(), "message_thread 1", 100, my_message_thread);
+  cl_thread_list_create_thread(thread_list, &dummy_thread_p,cl_com_get_log_list(), "message_thread 1", 100, my_message_thread, NULL, NULL);
 #if 1
-  cl_thread_list_create_thread(thread_list, &dummy_thread_p,cl_com_get_log_list(), "message_thread 2", 101, my_message_thread);
+  cl_thread_list_create_thread(thread_list, &dummy_thread_p,cl_com_get_log_list(), "message_thread 2", 101, my_message_thread, NULL, NULL);
 #endif
-  cl_thread_list_create_thread(thread_list, &dummy_thread_p,cl_com_get_log_list(), "event_thread__", 3, my_event_thread);
+  cl_thread_list_create_thread(thread_list, &dummy_thread_p,cl_com_get_log_list(), "event_thread__", 3, my_event_thread, NULL, NULL);
 
   gettimeofday(&last,NULL);
   usec_last = (last.tv_sec * 1000000.0) + last.tv_usec;
@@ -184,16 +180,18 @@ extern int main(int argc, char** argv)
      interval = usec_now - usec_last;
      interval /= 1000000.0;
 
-     rcv_m_sec  = rcv_messages / interval;
-     snd_m_sec  = snd_messages / interval;
-     nr_evc_sec = evc_count    / interval;
-     snd_ev_sec = events_sent  / interval;
+     if (interval > 0.0) {
+        rcv_m_sec  = rcv_messages / interval;
+        snd_m_sec  = snd_messages / interval;
+        nr_evc_sec = evc_count    / interval;
+        snd_ev_sec = events_sent  / interval;
+     }
 
      cl_com_get_actual_statistic_data(handle, &statistic_data);
      if (statistic_data != NULL) {
-        unread_msg = statistic_data->unread_message_count;
-        unsend_msg = statistic_data->unsend_message_count;
-        nr_of_connections = statistic_data->nr_of_connections;
+        unread_msg = (int)statistic_data->unread_message_count;
+        unsend_msg = (int)statistic_data->unsend_message_count;
+        nr_of_connections = (int)statistic_data->nr_of_connections;
         cl_com_free_handle_statistic(&statistic_data);
      }
      printf("|%.5f|[s] received|%d|%.3f|[nr.|1/s] sent|%d|%.3f|[nr.|1/s] event clients|%d|%.3f|[nr.|1/s] events sent|%d|%.3f|[nr.|1/s] rcv_buf|%d|snd_buf|%d| nr_connections|%d|\n", 
@@ -266,9 +264,9 @@ void *my_message_thread(void *t_conf) {
 
       cl_thread_func_testcancel(thread_config);
 
-      cl_commlib_trigger(handle);
+      cl_commlib_trigger(handle, 1);
       ret_val = cl_commlib_receive_message(handle, NULL, NULL, 0,      /* handle, comp_host, comp_name , comp_id, */
-                                           0, 0,                       /* syncron, response_mid */
+                                           CL_FALSE, 0,                       /* syncron, response_mid */
                                            &message, &sender );
       if (ret_val == CL_RETVAL_OK) {
          rcv_messages++;
@@ -300,15 +298,15 @@ void *my_message_thread(void *t_conf) {
             } 
          } else {
             /* no event client, just return message to sender */
-            char data[3000];
-            memset(data, 0, 3000);
+            char data[13000];
+            memset(data, 0, 13000);
             sprintf(data,"gdi response");
 #if 0
             printf(" \"%s\" -> send gdi response to %s/%s/%ld\n", thread_config->thread_name, 
                            sender->comp_host, sender->comp_name, sender->comp_id);
 #endif
 
-#if 1
+#if 0
            /* simulate a work for the gdi thread */
            {
               int d;
@@ -319,8 +317,8 @@ void *my_message_thread(void *t_conf) {
 #endif
             ret_val = cl_commlib_send_message(handle, sender->comp_host, sender->comp_name, sender->comp_id,
                                       CL_MIH_MAT_NAK,
-                                      (cl_byte_t*) data , 3000,
-                                      NULL, 0, 0 , 1, 0 );
+                                      (cl_byte_t*) data , 13000,
+                                      NULL, 0, 0 , CL_TRUE, CL_FALSE );
             if (ret_val == CL_RETVAL_OK) {
                snd_messages++;
             }
@@ -374,8 +372,8 @@ void *my_event_thread(void *t_conf) {
          for (i=0;i<MAX_EVENT_CLIENTS;i++) {
             cl_com_endpoint_t* client = event_client_array[i];
             if ( client != NULL) {
-               char help[3000];
-               memset(help, 0, 3000);
+               char help[13000];
+               memset(help, 0, 13000);
    
 
                if (first == 0) {
@@ -388,8 +386,8 @@ void *my_event_thread(void *t_conf) {
                                                                  client->comp_host, client->comp_name, client->comp_id  );
 #endif
                ret_val = cl_commlib_send_message(handle, client->comp_host, client->comp_name, client->comp_id,
-                                                 CL_MIH_MAT_NAK, (cl_byte_t*) help , 3000,
-                                                 NULL, 0, 0 , 1, 0 );
+                                                 CL_MIH_MAT_NAK, (cl_byte_t*) help , 13000,
+                                                 NULL, 0, 0 , CL_TRUE, CL_FALSE );
              
                if ( ret_val != CL_RETVAL_OK) {
                   cl_com_free_endpoint(&(event_client_array[i])); /* should be locked at this point */

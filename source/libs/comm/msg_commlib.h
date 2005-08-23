@@ -59,8 +59,8 @@
 #define MSG_CL_TCP_FW_IP_ADDRESS_RESOLVING_X_NOT_Y_SS                         _MESSAGE(85023, _("IP based host name resolving "SFQ" doesn't match client host name from connect message "SFQ""))
 #define MSG_CL_TCP_FW_CANT_RESOLVE_CLIENT_IP                                  _MESSAGE(85024, _("can't resolve client IP address"))
 #define MSG_CL_TCP_FW_EMPTY_REMOTE_HOST                                       _MESSAGE(85025, _("got no remote host name from client"))
-#define MSG_CL_TCP_FW_ENDPOINT_X_DOESNT_MATCH_Y_SSUSSU                        _MESSAGE(85026, _("local endpoint \""SFN"/"SFN"/"U32CFormat"\" doesn't match requested endpoint \""SFN"/"SFN"/"U32CFormat"\""))
-#define MSG_CL_TCP_FW_ENDPOINT_X_ALREADY_CONNECTED_SSU                        _MESSAGE(85027, _("endpoint \""SFN"/"SFN"/"U32CFormat"\" is already connected"))
+#define MSG_CL_TCP_FW_ENDPOINT_X_DOESNT_MATCH_Y_SSUSSU                        _MESSAGE(85026, _("local endpoint \""SFN"/"SFN"/"sge_U32CFormat"\" doesn't match requested endpoint \""SFN"/"SFN"/"sge_U32CFormat"\""))
+#define MSG_CL_TCP_FW_ENDPOINT_X_ALREADY_CONNECTED_SSU                        _MESSAGE(85027, _("endpoint \""SFN"/"SFN"/"sge_U32CFormat"\" is already connected"))
 #define MSG_CL_TCP_FW_ALLOWED_HOST_LIST_NOT_DEFINED                           _MESSAGE(85028, _("no allowed host list defined"))
 #define MSG_CL_TCP_FW_HOST_X_NOT_IN_ALOWED_HOST_LIST_S                        _MESSAGE(85029, _("host "SFQ" is not in allowed host list"))
 #define MSG_CL_TCP_FW_CONNECTION_STATUS_TEXT_OK                               _MESSAGE(85030, _("ok"))
@@ -70,19 +70,19 @@
 #define MSG_CL_TCP_FW_CONNECTION_STATUS_TEXT_CLIENT_NOT_IN_ALLOWED_HOST_LIST  _MESSAGE(85034, _("client is not in allowed host list"))
 #define MSG_CL_TCP_FW_RESERVED_SOCKET_ERROR                                   _MESSAGE(85035, _("call to rresvport() returned value < 0"))
 #define MSG_CL_TCP_FW_RESERVED_PORT_CONNECT_ERROR                             _MESSAGE(85036, _("debug client did not use a reserved port < 1024"))
-#define MSG_CL_TCP_FW_ENDPOINT_X_NOT_FROM_RESERVED_PORT_SSU                   _MESSAGE(85037, _("debug client \""SFN"/"SFN"/"U32CFormat"\" did not use a reserved port below 1024"))
-#define MSG_CL_TCP_FW_ENDPOINT_X_NOT_FROM_LOCAL_HOST_SSUS                     _MESSAGE(85038, _("debug client \""SFN"/"SFN"/"U32CFormat"\" is not running on host "SFQ""))
+#define MSG_CL_TCP_FW_ENDPOINT_X_NOT_FROM_RESERVED_PORT_SSU                   _MESSAGE(85037, _("debug client \""SFN"/"SFN"/"sge_U32CFormat"\" did not use a reserved port below 1024"))
+#define MSG_CL_TCP_FW_ENDPOINT_X_NOT_FROM_LOCAL_HOST_SSUS                     _MESSAGE(85038, _("debug client \""SFN"/"SFN"/"sge_U32CFormat"\" is not running on host "SFQ""))
 #define MSG_CL_TCP_FW_LOCAL_HOST_CONNECT_ERROR                                _MESSAGE(85039, _("debug client is not running on local host"))
-#define MSG_CL_TCP_FW_STANDARD_ENDPOINT_X_NOT_FROM_RESERVED_PORT_SSU          _MESSAGE(85040, _("client \""SFN"/"SFN"/"U32CFormat"\" did not use a reserved port below 1024"))
+#define MSG_CL_TCP_FW_STANDARD_ENDPOINT_X_NOT_FROM_RESERVED_PORT_SSU          _MESSAGE(85040, _("client \""SFN"/"SFN"/"sge_U32CFormat"\" did not use a reserved port below 1024"))
 #define MSG_CL_TCP_FW_SSL_CONNECT_TIMEOUT                                     _MESSAGE(85041, _("connect timeout error"))
-#define MSG_CL_SSL_FW_OPEN_SSL_CRYPTO_FAILED                                  _MESSAGE(85042, _("Unable to open the OpenSSL library.  Please make sure libssl is accessible from your shared library path.\n"))
-#define MSG_CL_SSL_FW_LOAD_CRYPTO_SYMBOL_FAILED                               _MESSAGE(85043, _("Unable to load symbol from libssl.\n"))
+#define MSG_CL_SSL_FW_OPEN_SSL_CRYPTO_FAILED                                  _MESSAGE(85042, _("Unable to open the OpenSSL library.  Please make sure libssl is accessible from your shared library path."))
+#define MSG_CL_SSL_FW_LOAD_CRYPTO_SYMBOL_FAILED                               _MESSAGE(85043, _("Unable to load symbol from libssl."))
 
-#define MSG_CL_COMMLIB_CLOSING_SSU                                            _MESSAGE(85044, _("closing \""SFN"/"SFN"/"U32CFormat"\""))
+#define MSG_CL_COMMLIB_CLOSING_SSU                                            _MESSAGE(85044, _("closing \""SFN"/"SFN"/"sge_U32CFormat"\""))
 #define MSG_CL_COMMLIB_COMPILE_SOURCE_WITH_LARGER_FD_SETSIZE                  _MESSAGE(85045, _("compile source code with larger FD_SETSIZE value"))
 #define MSG_CL_COMMLIB_CHECK_SSL_CERTIFICATE                                  _MESSAGE(85046, _("please check certificate validity"))
-#define MSG_CL_COMMLIB_HOSTNAME_EXEEDS_MAX_HOSTNAME_LENGTH_SU                 _MESSAGE(85047, _("hostname "SFQ" exceeds MAXHOSTNAMELEN(="U32CFormat")"))
-#define MSG_CL_COMMLIB_SSL_ERROR_USS                                          _MESSAGE(85048, _("SSL error(nr.:"U32CFormat") in %s: %s"))
+#define MSG_CL_COMMLIB_HOSTNAME_EXEEDS_MAX_HOSTNAME_LENGTH_SU                 _MESSAGE(85047, _("hostname "SFQ" exceeds MAXHOSTNAMELEN(="sge_U32CFormat")"))
+#define MSG_CL_COMMLIB_SSL_ERROR_USS                                          _MESSAGE(85048, _("SSL error(nr.:"sge_U32CFormat") in %s: %s"))
 
 
 #define MSG_CL_COMMLIB_SSL_CLIENT_CERTIFICATE_ERROR   _MESSAGE(85049, _("client certificate doesn't verify"))
@@ -101,6 +101,8 @@
 #define MSG_CL_COMMLIB_SSL_ACCEPT_ERROR_S             _MESSAGE(85062, _("ssl accept error for client "SFQ""))
 #define MSG_CL_COMMLIB_SSL_ACCEPT_ERROR               _MESSAGE(85063, _("ssl accept error for unresolvable client"))
 
+#define MSG_CL_COMMLIB_NO_ADDITIONAL_INFO             _MESSAGE(85064, _("no additional information available"))
+#define MSG_CL_COMMLIB_CANT_SWITCH_THREAD_MODE_WITH_EXISTING_HANDLES _MESSAGE(85065, _("can't switch commlib thread mode while communication handles are defined"))
 
 
 

@@ -63,36 +63,10 @@ static int sge_parse_hold_list(char *hold_str);
 static int sge_parse_mail_options(char *mail_str); 
 static int cull_parse_destination_identifier_list(lList **lpp, char *dest_str);
 static int sge_parse_checkpoint_interval(char *time_str); 
-static int parse_hard_soft(int hs);
-static int is_hard_soft(void);
 static int set_yn_option (lList **opts, u_long32 opt, char *arg, char *value,
                           lList **alp);
 
 
-static int hard_soft_flag = 0;
-
-/*
-** 0 is not yet set
-** 1 is hard
-** 2 is soft
-*/
-static int parse_hard_soft(
-int hs 
-) {
-   DENTER(TOP_LAYER, "parse_hard_soft");
-   /* be quiet at starting up */
-   hard_soft_flag = hs; 
-
-   DEXIT;
-   return 0;
-}
-
-static int is_hard_soft(void)
-{
-   DENTER(TOP_LAYER, "usage_hard_soft");
-   DEXIT;
-   return hard_soft_flag;
-}
 
 /*
 ** NAME
@@ -122,6 +96,9 @@ static int is_hard_soft(void)
 **   STATUS_ESEMANTIC  - option that should have an argument had none
 **   STATUS_ESYNTAX    - error parsing option argument
 ** DESCRIPTION
+**
+** NOTES
+**    MT-NOTE: cull_parse_cmdline() is MT safe
 */
 lList *cull_parse_cmdline(
 char **arg_list,
@@ -137,6 +114,7 @@ u_long32 flags
    int i_ret;
    u_long32 is_qalter = flags & FLG_QALTER;
    bool is_hold_option = false;
+   int hard_soft_flag = 0;
 
    DENTER(TOP_LAYER, "cull_parse_cmdline");
 
@@ -150,7 +128,7 @@ u_long32 flags
    sp = arg_list;
 
    /* reset hard/soft flag */
-   parse_hard_soft(0);
+   hard_soft_flag = 0;
    while (*sp) {
 
 /*----------------------------------------------------------------------------*/
@@ -178,8 +156,7 @@ u_long32 flags
             return answer;
          }
 
-         if (!ulong_parse_date_time_from_string(&timeval, NULL, *sp))
-         {
+         if (!ulong_parse_date_time_from_string(&timeval, NULL, *sp)) {
             sprintf(str,
                MSG_ANSWER_WRONGTIMEFORMATEXSPECIFIEDTOAOPTION_S,
             *sp);
@@ -287,7 +264,7 @@ u_long32 flags
 
          DPRINTF(("\"-b %s\"\n", *sp));
 
-         if (set_yn_option (pcmdline, b_OPT, *(sp - 1), *sp, &answer) == 0) {
+         if (set_yn_option(pcmdline, b_OPT, *(sp - 1), *sp, &answer) == 0) {
             return answer;
          }
 
@@ -511,39 +488,11 @@ u_long32 flags
 
       }
 
-#ifdef METACOMPUTING
-/*-----------------------------------------------------------------------------*/
-      /* "-show-hosts -- only for qsh " */
-
-      if (!strcmp("-show-hosts", *sp)) {
-
-         DPRINTF(("\"-show-hosts\n"));
-
-         /* dummy opt for qsh -- Metacomputing */
-         ep_opt = sge_add_noarg(pcmdline, 0, *sp, NULL);
-
-         sp++;
-         continue;
-
-      }
-#endif
-
 /*----------------------------------------------------------------------------*/
       /* "-dl date_time */
 
       if (!strcmp("-dl", *sp)) {
          u_long32 timeval;
-
-/* We do not have the userset_list here for the moment.
-   So rely on the master deny if we are not a deadline user.
-
-         if (!userset_is_deadline_user(userset_list, uti_state_get_user_name())) {
-            sprintf(str, "%s you are not a deadline user\n", uti_state_get_user_name());
-            answer_list_add(&answer, str, STATUS_DENIED, ANSWER_QUALITY_ERROR);
-            DEXIT;
-            return answer;
-         }
-*/
 
          if (lGetElemStr(*pcmdline, SPA_switch, *sp)) {
             sprintf(str,
@@ -562,8 +511,7 @@ u_long32 flags
             return answer;
          }
 
-         if (!ulong_parse_date_time_from_string(&timeval, NULL, *sp))
-         {
+         if (!ulong_parse_date_time_from_string(&timeval, NULL, *sp)) {
             sprintf(str, MSG_PARSE_WRONGTIMEFORMATXSPECTODLOPTION_S ,
             *sp);
             answer_list_add(&answer, str, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
@@ -704,7 +652,7 @@ u_long32 flags
 
          DPRINTF(("\"%s\"\n", *sp));
 
-         parse_hard_soft(1);
+         hard_soft_flag = 1;
          ep_opt = sge_add_noarg(pcmdline, hard_OPT, *sp, NULL);
 
          sp++;
@@ -783,7 +731,7 @@ u_long32 flags
 
          DPRINTF(("\"-j %s\"\n", *sp));
 
-         if (set_yn_option (pcmdline, j_OPT, *(sp - 1), *sp, &answer) == 0) {
+         if (set_yn_option(pcmdline, j_OPT, *(sp - 1), *sp, &answer) == 0) {
             return answer;
          }
 
@@ -890,7 +838,7 @@ u_long32 flags
 
          ep_opt = sge_add_arg(pcmdline, l_OPT, lListT, *(sp - 1), *sp);
          lSetList(ep_opt, SPA_argval_lListT, resource_list);
-         lSetInt(ep_opt, SPA_argval_lIntT, is_hard_soft());
+         lSetInt(ep_opt, SPA_argval_lIntT, hard_soft_flag);
 
          sp++;
          continue;
@@ -1076,7 +1024,7 @@ u_long32 flags
          
          DPRINTF(("\"-now %s\"\n", *sp));
          
-         if (set_yn_option (pcmdline, now_OPT, *(sp - 1), *sp, &answer) == 0) {
+         if (set_yn_option(pcmdline, now_OPT, *(sp - 1), *sp, &answer) == 0) {
             return answer;
          }
 
@@ -1247,7 +1195,7 @@ DTRACE;
          }
 
          range_list_parse_from_string(&pe_range, &answer, *sp, 
-                                      0, 0, INF_ALLOWED);
+                                      false, false, INF_ALLOWED);
 
          if (!pe_range) {
             DEXIT;
@@ -1276,7 +1224,7 @@ DTRACE;
          sp++;
          if (!*sp) {
              sprintf(str, MSG_PARSE_QOPTIONMUSTHAVEDESTIDLISTARGUMENT);
-             answer_list_add(&answer, str, STATUS_ESEMANTIC, 0);
+             answer_list_add(&answer, str, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
              DEXIT;
              return answer;
          }
@@ -1292,7 +1240,7 @@ DTRACE;
          }
          ep_opt = sge_add_arg(pcmdline, q_OPT, lListT, *(sp - 1), *sp);
          lSetList(ep_opt, SPA_argval_lListT, id_list);
-         lSetInt(ep_opt, SPA_argval_lIntT, is_hard_soft());
+         lSetInt(ep_opt, SPA_argval_lIntT, hard_soft_flag);
 
          sp++;
          continue;
@@ -1366,7 +1314,7 @@ DTRACE;
 
          DPRINTF(("\"-R %s\"\n", *sp));
 
-         if (set_yn_option (pcmdline, R_OPT, *(sp - 1), *sp, &answer) == 0) {
+         if (set_yn_option(pcmdline, R_OPT, *(sp - 1), *sp, &answer) == 0) {
             return answer;
          }
 
@@ -1415,7 +1363,7 @@ DTRACE;
       if (!strcmp("-soft", *sp)) {
 
          DPRINTF(("\"%s\"\n", *sp));
-         parse_hard_soft(2);
+         hard_soft_flag = 2;
          ep_opt = sge_add_noarg(pcmdline, soft_OPT, *sp, NULL);
 
          sp++;
@@ -1534,7 +1482,7 @@ DTRACE;
          DPRINTF(("\"-t %s\"\n", *sp));
 
          range_list_parse_from_string(&task_id_range_list, &answer, *sp,
-                                      0, 1, INF_NOT_ALLOWED);
+                                      false, true, INF_NOT_ALLOWED);
          if (!task_id_range_list) {
             DEXIT;
             return answer;
@@ -1542,7 +1490,8 @@ DTRACE;
 
          range_list_sort_uniq_compress(task_id_range_list, &answer);
          if (lGetNumberOfElem(task_id_range_list) > 1) {
-            answer_list_add(&answer, MSG_QCONF_ONLYONERANGE, STATUS_ESYNTAX, 0);
+            answer_list_add(&answer, MSG_QCONF_ONLYONERANGE, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+            lFreeList(&task_id_range_list);
             DEXIT;
             return answer;
          }
@@ -1728,7 +1677,7 @@ DTRACE;
 
          DPRINTF(("\"-@ %s\"\n", *sp));
 
-         alp = parse_script_file(*sp, "", pcmdline, envp, FLG_USE_NO_PSEUDOS);
+         alp = parse_script_file(*sp, "", pcmdline, envp, FLG_USE_NO_PSEUDOS); /* MT-NOTE: !!!! */
          for_each(aep, alp) {
             u_long32 quality;
 
@@ -1739,7 +1688,7 @@ DTRACE;
             lAppendElem(answer, lCopyElem(aep));
          }
 
-         lFreeList(alp);
+         lFreeList(&alp);
          if (do_exit) {
             DEXIT;
             return answer;
@@ -1917,6 +1866,7 @@ DTRACE;
 
 /***********************************************************************/
 /* "-h [hold_list]" */
+/* MT-NOTE: sge_parse_hold_list() is MT safe */
 static int sge_parse_hold_list(
 char *hold_str 
 ) {
@@ -2041,6 +1991,7 @@ char *hold_str
 }
 
 /***********************************************************************/
+/* MT-NOTE: sge_parse_mail_options() is MT safe */
 static int sge_parse_mail_options(
 char *mail_str 
 
@@ -2113,6 +2064,8 @@ char *time_str
 *        0 = okay
 *        1 = error 
 *
+*  NOTES
+*     MT-NOTE: cull_parse_path_list() is MT safe
 *******************************************************************************/
 int cull_parse_path_list(
 lList **lpp,
@@ -2134,11 +2087,11 @@ char *path_str
    char **pstr = NULL;
    lListElem *ep = NULL;
    char *path_string = NULL;
-   bool ret_error=false;
+   bool ret_error = false;
 
    DENTER(TOP_LAYER, "cull_parse_path_list");
 
-   ret_error = !lpp;
+   ret_error = (lpp == NULL) ? true : false;
 /*
    if (!lpp) {
       DEXIT;
@@ -2148,7 +2101,7 @@ char *path_str
 
    if(!ret_error){
       path_string = sge_strdup(NULL, path_str);
-      ret_error = !path_string;
+      ret_error = (path_string == NULL) ? true : false;
    }
 /*
    if (!path_string) {
@@ -2159,7 +2112,7 @@ char *path_str
 */
    if(!ret_error){
       str_str = string_list(path_string, ",", NULL);
-      ret_error = !str_str || !*str_str;
+      ret_error = (str_str == NULL || *str_str == NULL) ? true : false;
    }
 /*
    if (!str_str || !*str_str) {
@@ -2171,7 +2124,7 @@ char *path_str
 */
    if ( (!ret_error) && (!*lpp)) {
       *lpp = lCreateList("path_list", PN_Type);
-      ret_error = !*lpp;
+      ret_error = (*lpp == NULL) ? true : false;
 /*
       if (!*lpp) {
          FREE(path_string);
@@ -2223,6 +2176,7 @@ char *path_str
 
 
 /***************************************************************************/
+/* MT-NOTE: sge_parse_priority() is MT safe */
 static int sge_parse_priority(
 lList **alpp,
 int *valp,
@@ -2261,6 +2215,9 @@ char *priority_str
 *     static int - error state
 *         0 - OK
 *        >0 - Error   
+*
+*  NOTES
+*     MT-NOTES: var_list_parse_from_environment() is MT safe
 *******************************************************************************/
 static int var_list_parse_from_environment(lList **lpp, char **envp) 
 {
@@ -2284,6 +2241,7 @@ static int var_list_parse_from_environment(lList **lpp, char **envp)
       char *env_description;
       char *env_entry;
       lListElem *ep;
+      struct saved_vars_s *context;
 
       ep = lCreateElem(VA_Type);
       lAppendElem(*lpp, ep);
@@ -2291,14 +2249,17 @@ static int var_list_parse_from_environment(lList **lpp, char **envp)
       env_entry = sge_strdup(NULL, *envp);
       SGE_ASSERT((env_entry));
 
-      env_name = sge_strtok(env_entry, "=");
+      context = NULL;
+      env_name = sge_strtok_r(env_entry, "=", &context);
       SGE_ASSERT((env_name));
       lSetString(ep, VA_variable, env_name);
 
-      env_description = sge_strtok((char *) 0, "\n");
+      env_description = sge_strtok_r((char *) 0, "\n", &context);
       if (env_description)
          lSetString(ep, VA_value, env_description);
       FREE(env_entry);
+      sge_free_saved_vars(context);
+
    }
 
    DEXIT;
@@ -2306,6 +2267,7 @@ static int var_list_parse_from_environment(lList **lpp, char **envp)
 }
 
 /***************************************************************************/
+/* MT-NOTE: cull_parse_destination_identifier_list() is MT safe */
 static int cull_parse_destination_identifier_list(
 lList **lpp, /* QR_Type */
 char *dest_str 
@@ -2351,6 +2313,7 @@ char *dest_str
 }
 
 /***************************************************************************/
+/*   MT-NOTE: cull_parse_jid_hold_list() is MT safe */
 int cull_parse_jid_hold_list(
 lList **lpp,
 char *str 
@@ -2426,6 +2389,9 @@ char *str
 *     int - error state
 *         0 - OK
 *        >0 - Error
+*
+*  NOTES
+*     MT-NOTE: var_list_parse_from_string() is MT safe
 *******************************************************************************/
 int var_list_parse_from_string(lList **lpp, const char *variable_str,
                                int check_environment)
@@ -2471,11 +2437,13 @@ int var_list_parse_from_string(lList **lpp, const char *variable_str,
    }
 
    for (pstr = str_str; *pstr; pstr++) {
+      struct saved_vars_s *context;
       ep = lCreateElem(VA_Type);
       /* SGE_ASSERT(ep); */
       lAppendElem(*lpp, ep);
-
-      variable = sge_strtok(*pstr, "=");
+      
+      context = NULL;
+      variable = sge_strtok_r(*pstr, "=", &context);
       SGE_ASSERT((variable));
       var_len=strlen(variable);
       lSetString(ep, VA_variable, variable);
@@ -2498,6 +2466,7 @@ int var_list_parse_from_string(lList **lpp, const char *variable_str,
       else {
          lSetString(ep, VA_value, NULL);
       }
+      sge_free_saved_vars(context);
    }
 
    FREE(va_string);

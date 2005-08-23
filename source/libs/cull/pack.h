@@ -38,10 +38,6 @@
 #   include "basis_types.h"
 #endif
 
-#ifdef COMMCOMPRESS
-#include "zlib.h"
-#endif
-
 #ifdef  __cplusplus
 extern "C" {
 #endif
@@ -100,31 +96,34 @@ extern "C" {
 #define CULL_VERSION 0x10020000
 
 typedef struct {
-#ifdef COMMCOMPRESS
-      z_stream cpr;
-#endif
       char *head_ptr;
       char *cur_ptr; 
       size_t mem_size;
       size_t bytes_used;
       int just_count;
-      int  mode;  /* 0 for compression, 1 for decompression, -1 for neither */
       int  version;
 } sge_pack_buffer;   
 
-int init_packbuffer(sge_pack_buffer *pb, int initial_size, int just_count);     
+int 
+init_packbuffer(sge_pack_buffer *pb, int initial_size, int just_count);     
 
-int init_packbuffer_from_buffer(sge_pack_buffer *pb, char *buf, u_long32 buflen, int compressed);
-void clear_packbuffer(sge_pack_buffer *pb);
-int flush_packbuffer(sge_pack_buffer *pb);
+int 
+init_packbuffer_from_buffer(sge_pack_buffer *pb, char *buf, u_long32 buflen);
+
+void 
+clear_packbuffer(sge_pack_buffer *pb);
 
 int pb_filled(sge_pack_buffer *pb);
 int pb_unused(sge_pack_buffer *pb);
 int pb_used(sge_pack_buffer *pb);  
 
+bool pb_are_equivalent(sge_pack_buffer *pb1, sge_pack_buffer *pb2);
+void pb_print_to(sge_pack_buffer *pb, bool only_header, FILE*);
+
 int pack_set_chunk(int sz);
 int pack_get_chunk(void);  
 
+int repackint(register sge_pack_buffer *, register u_long32);
 int packint(register sge_pack_buffer *, register u_long32);
 int packdouble(register sge_pack_buffer *, double);
 int packstr(register sge_pack_buffer *, register const char *);

@@ -31,10 +31,6 @@
 /*___INFO__MARK_END__*/
 #include <string.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif    
-
 #include "symbols.h"
 #include "sge_options.h"
 #include "sge_ja_task.h"
@@ -237,7 +233,7 @@ int flags
    ** -js
    */
    if ((ul = lGetUlong(job, JB_jobshare)) != 0)  {
-      sprintf(str, u32, ul);
+      sprintf(str, sge_u32, ul);
       ep_opt = sge_add_arg(pcmdline, js_OPT, lUlongT, "-js", str);
       lSetUlong(ep_opt, SPA_argval_lUlongT, ul);
    }
@@ -669,14 +665,14 @@ lList **alpp
       }
       else {
          sprintf(str, MSG_JOB_INVALIDVALUEFORCHECKPOINTATTRIBINJOB_U, 
-            u32c(lGetUlong(job, JB_job_number)));
+            sge_u32c(lGetUlong(job, JB_job_number)));
          answer_list_add(alpp, str, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
          return -1;
       }
    }
    
    if ((ul = lGetUlong(job, JB_checkpoint_interval))) {
-      sprintf(str, uu32, ul);
+      sprintf(str, sge_uu32, ul);
       ep_opt = sge_add_arg(pcmdline, c_OPT, lLongT, "-c", str);
       lSetLong(ep_opt, SPA_argval_lLongT, (long) ul);
    }
@@ -722,7 +718,7 @@ lList **alpp
    
    if ((cp = lGetUlong(job, nm))) {
       char number[50];
-      snprintf(number, 49, u32, cp);
+      snprintf(number, 49, sge_u32, cp);
       ep_opt = sge_add_arg(pcmdline, 0, lUlongT, option, number);
       lSetUlong(ep_opt, SPA_argval_lUlongT, cp);
    }
@@ -747,10 +743,12 @@ lList **alpp
       lListElem *ep_opt;
       int hard = (nm == JB_hard_resource_list);
       
-      if (hard) 
+      if (hard) {
          ep_opt = sge_add_noarg(pcmdline, hard_OPT, "-hard", NULL);
-      else
+      }
+      else {
          ep_opt = sge_add_noarg(pcmdline, soft_OPT, "-soft", NULL);
+      }
 
       ret = centry_list_append_to_string(lp, str, sizeof(str) - 1);
       if (ret) {
@@ -807,7 +805,7 @@ lList **alpp
       {
          dstring range_string = DSTRING_INIT;
 
-         range_list_print_to_string(lp, &range_string, 1);
+         range_list_print_to_string(lp, &range_string, true);
          sge_dstring_append(&string_buffer, 
                             sge_dstring_get_string(&range_string));
          sge_dstring_free(&range_string);
@@ -910,7 +908,6 @@ lList **alpp
    int ret = 0;
    char str[BUFSIZ];
    lListElem *ap = NULL;
-   lListElem *ep_opt = NULL;
 
    DENTER(TOP_LAYER, "sge_unparse_acl");
 
@@ -927,7 +924,7 @@ lList **alpp
       const char *delis[] = {":", ",", NULL};
 
       ret = uni_print_list(NULL, str, sizeof(str) - 1, lp, fields, delis, FLG_NO_DELIS_STRINGS);
-      lp = lFreeList(lp);
+      lFreeList(&lp);
       if (ret) {
          DPRINTF(("Error %d formatting acl list\n", ret));
          sprintf(str, MSG_LIST_ERRORFORMATINGACLLIST);
@@ -935,7 +932,7 @@ lList **alpp
          DEXIT;
          return ret;
       }
-      ep_opt = sge_add_arg(pcmdline, q_OPT, lListT, option, str);
+      sge_add_arg(pcmdline, q_OPT, lListT, option, str);
    }
 
    DEXIT;

@@ -811,11 +811,13 @@ proc enable_queue { queuelist } {
 #     E(rror)
 #
 #*******************************
-proc get_queue_state { queue } {
+proc get_queue_state { queue_name } {
   global ts_config
 
   global CHECK_ARCH
 
+  # resolve the queue name
+  set queue [resolve_queue $queue_name]
   set catch_return [ catch { 
      eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qstat -f -q $queue" 
   } result ]

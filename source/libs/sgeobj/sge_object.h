@@ -295,11 +295,11 @@ attr_mod_sub_list(lList **alpp, lListElem *this_elem, int this_elem_name,
                   const char *object_name, int no_info); 
 
 bool  
-object_has_differences(lListElem *this_elem, lList **answer_list,
-                       lListElem *old_elem, bool modify_changed_flag);
+object_has_differences(const lListElem *this_elem, lList **answer_list,
+                       const lListElem *old_elem, bool modify_changed_flag);
 
 bool
-object_list_has_differences(lList *this_elem, lList **answer_list,
-                            lList *old_elem, bool modify_changed_flag);
+object_list_has_differences(const lList *this_elem, lList **answer_list,
+                            const lList *old_elem, bool modify_changed_flag);
 
 #endif /* __SGE_OBJECT_H */

@@ -77,7 +77,7 @@ Codine_UserSet_impl::~Codine_UserSet_impl() {
    DPRINTF(("Name: %s\n", (const char*)key));
    
    if(creation != 0)
-      lFreeElem(self);
+      lFreeElem(&self);
 }
 
 // inherited from Codine_Object
@@ -124,7 +124,7 @@ lListElem* Codine_UserSet_impl::getSelf() {
 
    lCondition* cp = lWhere("%T(%I==%s)", US_Type, US_name, (const char*)key);
    self = lFindFirst(Master_Userset_List, cp);
-   lFreeWhere(cp);
+   lFreeWhere(&cp);
     
    if(!self) {  
       // we must not destroy ourselves here because the other thread
@@ -195,7 +195,7 @@ void Codine_UserSet_impl::changed(lListElem* _newSelf) {
    // This works as long as there is only one CORBA thread, so there
    // can be only one request dispatched at one time.
    // If more client requests were able to execute simultanously,
-   // they would overwrite this local variable => !&%$&/§$§%
+   // they would overwrite this local variable => !&%$&/ï¿½$ï¿½%
    lastEvent = qidl_event_count;
 
    // build header

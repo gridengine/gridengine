@@ -207,9 +207,6 @@ static int set_processor_range(char *crange, int proc_set_num, char *err_str)
 {
    int ret;
    FILE *fp;
-#if defined(__sgi)
-   int initial_proc_set_num;
-#endif
 #if defined(__sgi) || defined(ALPHA)
    sbv_t proc_vec;
 #endif

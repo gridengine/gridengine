@@ -188,7 +188,7 @@ Qmon*qmon_cq.cq.cq_cqfolder.clusterqueue_layout*cluster_queue_settings.menuPost:
 Qmon**del_menu.items: \
    Title "@{@fBOperations}"; \
    ------;\
-   "@{_Delete}" [Ctrl-D] DeleteLines(*cluster_queue_settings);
+   "@{_Delete}" [Ctrl-D] DeleteClusterQueue(*cluster_queue_settings);
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!! qinstance_layout

@@ -51,6 +51,12 @@ set write_mail_to_file 0
 global do_close_rlogin
 set do_close_rlogin 0
 
+# if we know the config is ok, we don't want to check it, 
+# e.g. we don't want to connect to all hosts during setup
+#      or check the CVS version at every testsuite startup
+global fast_setup
+set fast_setup 0
+
 global do_compile
 global CHECK_TESTSUITE_LOCKFILE
 set CHECK_TESTSUITE_LOCKFILE "testsuite_lockfile"
@@ -511,141 +517,6 @@ proc add_proc_error { proc_name result text } {
    }
 }
 
-#                                                             max. column:     |
-#****** check/show_proc_error() ******
-# 
-#  NAME
-#     show_proc_error -- ??? 
-#
-#  SYNOPSIS
-#     show_proc_error { result new_error } 
-#
-#  FUNCTION
-#     ??? 
-#
-#  INPUTS
-#     result    - ??? 
-#     new_error - ??? 
-#
-#  RESULT
-#     ??? 
-#
-#  EXAMPLE
-#     ??? 
-#
-#  NOTES
-#     ??? 
-#
-#  BUGS
-#     ??? 
-#
-#  SEE ALSO
-#     ???/???
-#*******************************
-proc show_proc_error { result new_error } {
-   global CHECK_CUR_PROC_ERRORS CHECK_CUR_PROC_RESULTS CHECK_CUR_PROC_NAME CHECK_OUTPUT check_name CHECK_TESTSUITE_ROOT
-   global CHECK_ARCH CHECK_HOST CHECK_PRODUCT_ROOT CHECK_ACT_LEVEL CHECK_CORE_MASTER CHECK_CORE_EXECD
-   global CHECK_SEND_ERROR_MAILS
-
-   if { $result != 0 } {
-      set category "error"
-      if { $result == -3 } {
-         set category "unsupported test warning"
-      }
-      puts $CHECK_OUTPUT ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
-      puts $CHECK_OUTPUT ">>> $category"
-      puts $CHECK_OUTPUT ">>> runlevel    : \"[get_run_level_name $CHECK_ACT_LEVEL]\", ($CHECK_ACT_LEVEL)"
-      puts $CHECK_OUTPUT ">>> "
-      set error_output [ create_error_message $new_error ]
-      puts $CHECK_OUTPUT $error_output 
-
-
-      flush $CHECK_OUTPUT
-      if { $CHECK_SEND_ERROR_MAILS == 1 } {
-         append mail_body "\nDate                     : [exec date]\n"
-         append mail_body "testsuite root directory : \"$CHECK_TESTSUITE_ROOT\"\n"
-         append mail_body "check host               : \"$CHECK_HOST\"\n"
-         append mail_body "architecture             : \"$CHECK_ARCH\"\n"
-         append mail_body "product version          : \"[get_version_info]\"\n"
-         append mail_body "product root directory   : \"$CHECK_PRODUCT_ROOT\"\n"
-         append mail_body "master host              : \"$CHECK_CORE_MASTER\"\n"
-         append mail_body "execution hosts          : \"$CHECK_CORE_EXECD\"\n\n"
-         append mail_body "-----------------------------------------------------\n\n"
-         append mail_body "check_name  : \"$check_name\"\n"
-         append mail_body "category    : \"$category\"\n"
-         append mail_body "runlevel    : \"[get_run_level_name $CHECK_ACT_LEVEL]\", ($CHECK_ACT_LEVEL)\n"
-         append mail_body "$error_output"
-         catch {
-            foreach level "1 2 3 4" {
-               upvar $level expect_out out
-               if {[info exists out]} {
-                  append mail_body "----- expect buffer in upper level $level --------\n"
-                  foreach i [array names out] {
-                     append mail_body "$i:\t$out($i)\n"
-                  }
-               }
-            }
-         }
-         mail_report "testsuite $category - $check_name" $mail_body
-      }
-    }
-}
-
-#                                                             max. column:     |
-#****** check/create_error_message() ******
-# 
-#  NAME
-#     create_error_message -- ??? 
-#
-#  SYNOPSIS
-#     create_error_message { error_array } 
-#
-#  FUNCTION
-#     ??? 
-#
-#  INPUTS
-#     error_array - ??? 
-#
-#  RESULT
-#     ??? 
-#
-#  EXAMPLE
-#     ??? 
-#
-#  NOTES
-#     ??? 
-#
-#  BUGS
-#     ??? 
-#
-#  SEE ALSO
-#     ???/???
-#*******************************
-proc create_error_message { error_array} {
-
-  set catch_return [catch {
-  #set err_string [lindex $error_array 0]
-  set err_string $error_array
-  } ]
-  if { $catch_return != 0 } {
-     set err_string "catch error: error reading error_array"
-  }
-  
-  set err_complete [ split $err_string "|" ]
-  set err_procedure [ lindex $err_complete 0 ]
-  set err_text      [ lindex $err_complete 1 ]
-  set err_checkname [ lindex $err_complete 2 ]
-  set err_calledby  [ lindex $err_complete 3 ]
-  set output ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n"
-  append output ">>> check \"$err_checkname\", procedure \"$err_procedure\"\n"
-  if { [ string compare $err_calledby $err_procedure ] != 0 } {
-     append output ">>> called from \"$err_calledby\":\n"
-  }
-  append output "\"$err_text\"\n"
-  append output ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n\n"
-
-  return $output
-}
 
 #                                                             max. column:     |
 #****** check/have_ssh_access() ******
@@ -1027,6 +898,10 @@ proc send_mail { address cc subject body } {
   global CHECK_MAILS_SENT CHECK_ENABLE_MAIL CHECK_USER CHECK_MAX_ERROR_MAILS
   global write_mail_to_file CHECK_MAIL_OUTPUT_FILE CHECK_ENABLE_MAIL
 
+  set erg [sendmail_wrapper $address $cc $subject $body]
+  if { $erg == 0 } {
+     return
+  }
 
   if { $write_mail_to_file != 0 } {
      set fd [ open $CHECK_MAIL_OUTPUT_FILE "a" ]
@@ -2079,6 +1954,15 @@ puts $CHECK_OUTPUT "entering update_ts_config_version"
       wait_for_enter
       return 0
    }
+
+   if { $ts_config(version) == "1.8" } {
+      puts $CHECK_OUTPUT "\ntestsuite configuration update from 1.8 to 1.9 ..."
+      config_build_ts_config_1_9
+      show_config ts_config
+      wait_for_enter
+      return 0
+   }
+
    
    puts $CHECK_OUTPUT "\nunexpected version $ts_config(version), need version $actual_ts_config_version"
    return -1
@@ -2132,12 +2016,9 @@ proc setup2 { } {
    global ts_config ts_host_config ts_user_config actual_ts_config_version
    global CHECK_OUTPUT CHECK_DO_SETUP
    global CHECK_DEFAULTS_FILE do_nomain
-   global env be_quiet be_quiet
+   global env be_quiet fast_setup
    global check_name CHECK_ACT_LEVEL have_defaults
    global CHECK_USER CHECK_CURRENT_WORKING_DIR
-
-
-
    global CHECK_PRODUCT_TYPE
    global CHECK_PRODUCT_VERSION_NUMBER
    global CHECK_PRODUCT_ROOT
@@ -2336,6 +2217,8 @@ proc enhanced_setup {} {
    set env(SGE_ROOT) $CHECK_PRODUCT_ROOT;
    set env(SGE_CELL) $ts_config(cell)
    set env(SGE_SINGLE_LINE) 1
+#   don't enable this without rework of qstat parsing
+#   set env(SGE_LONG_QNAMES) 40
 
    set_users_environment $CHECK_HOST
 
@@ -3745,21 +3628,11 @@ proc run_test_level {path runcompleted level {do_save 1}} {
    if { [info exists check_functions] } {
       # if we have a level specific setup function: execute it
       set setup_error 0
-      if { $check_setup_level_function != "" } {
-         set errorInfo ""
-         set CHECK_CUR_PROC_NAME $check_setup_level_function
-         puts $CHECK_OUTPUT "starting level setup function $check_setup_level_function"
-         set setup_catch_return [ catch { $check_setup_level_function } setup_catch_message ]
-         if { $setup_catch_return != 0 } {
-            add_proc_error "run_test_level" "-2" "setup level function failed\n${errorInfo}" 
-            set setup_error 1
-         } else {
-            if { $setup_catch_message != 0 } {
-               add_proc_error "run_test_level" "-2" "setup level function returned error $setup_catch_message"
-               set setup_error 1
-            }
-         }
+      set setup_ret [execute_setup_cleanup_function $check_setup_level_function "setup_level"]
+      if {!$setup_ret} {
+         set setup_error 1
       }
+
       if { ! $setup_error } {
       foreach elem $check_functions {
          puts $CHECK_OUTPUT "\n>>>>>>>>>>>>>>>>>>>>>>"
@@ -3865,20 +3738,9 @@ proc run_test_level {path runcompleted level {do_save 1}} {
       }
 
       # if we have a level specific cleanup function: execute it
-      if { $check_cleanup_level_function != "" } {
-         set errorInfo ""
-         set CHECK_CUR_PROC_NAME $check_cleanup_level_function
-         puts $CHECK_OUTPUT "starting level cleanup function $check_cleanup_level_function"
-         set setup_catch_return [ catch { $check_cleanup_level_function } setup_catch_message ]
-         if { $setup_catch_return != 0 } {
-            add_proc_error "run_test_level" "-2" "cleanup level function returns not 0\n${errorInfo}" 
-            set was_error 1
-         } else {
-            if { $setup_catch_message != 0 } {
-               add_proc_error "run_test_level" "-2" "cleanup level function returned error $setup_catch_message"
-               set was_error 1
-            }
-         } 
+      set cleanup_ret [execute_setup_cleanup_function $check_cleanup_level_function "cleanup_level"]
+      if {!$cleanup_ret} {
+         set was_error 1
       }
 
       if { $setup_error } {
@@ -3999,6 +3861,92 @@ proc delete_temp_script_files { } {
      file delete $del_file_name     
   } 
 }
+
+#****** check/execute_setup_cleanup_function() *********************************
+#  NAME
+#     execute_setup_cleanup_function() -- execute a setup/cleanup function
+#
+#  SYNOPSIS
+#     execute_setup_cleanup_function { func_name type } 
+#
+#  FUNCTION
+#     execute_setup_cleanup_function is used to execute a setup/cleanup
+#     function for a check and/or a check level.
+#
+#  INPUTS
+#     func_name - name of the procedure to execute
+#     type      - descriptive text (e.g. "setup_level", or "cleanup")
+#
+#  RESULT
+#     0 - failure
+#     1 - ok
+#     2 - empty function name
+#
+#*******************************************************************************
+proc execute_setup_cleanup_function {func_name type} {
+   global CHECK_OUTPUT CHECK_CUR_PROC_RESULTS
+
+   set ret 1
+
+   # if no setup/cleanup function is set, func_name will be ""
+   if { $func_name == "" } {
+      set ret 2
+   }
+
+   if {$ret == 1} {
+      # check, if the function exists
+      if { [info procs $func_name] != $func_name } {
+         set ret 0
+         add_proc_error "execute_setup_cleanup_function" -2 "$type procedure \"$func_name\" doesn't exist"
+      }
+   }
+
+   # remember the number of stored results (errors) for this check
+   # if it increases during execution of func_name, we will treat this as an error
+   set num_proc_results 0
+   if {[info exists CHECK_CUR_PROC_RESULTS]} {
+      set num_proc_results [llength $CHECK_CUR_PROC_RESULTS]
+   }
+
+   # execute the setup/cleanup function
+   if {$ret == 1} {
+      puts $CHECK_OUTPUT "starting $type function $func_name"
+      set catch_return [ catch { $func_name } catch_message ]
+      # catch returnes an error - may be a TCL error
+      if { $catch_return != 0 } {
+         add_proc_error "run_test" "-2" "$type function \"$func_name\" failed:\n$catch_message" 
+         set ret 0
+      } else {
+         # function returns not 0 - setup/cleanup function failed
+         if { $catch_message != 0 } {
+            add_proc_error "run_test" "-2" "setup function \"$func_name\" didn't return 0:\n$catch_message"
+            set ret 0
+         }
+      }
+   }
+
+   # check if error occured during execution of the setup/cleanup function
+   if {$ret == 1} {
+      set new_proc_results 0
+      if {[info exists CHECK_CUR_PROC_RESULTS]} {
+         set new_proc_results [llength $CHECK_CUR_PROC_RESULTS]
+      }
+      # CHECK_CUR_PROC_RESULTS contains error codes as well as OK status (0)
+      # search for entries != 0, if found, treat as error
+      if {$num_proc_results < $new_proc_results} {
+         for {set i $num_proc_results} {$i < $new_proc_results} {incr i} {
+            set proc_result [lindex $CHECK_CUR_PROC_RESULTS $i]
+            if {$proc_result != 0} {
+               set ret 0
+               break
+            }
+         }
+      }
+   }
+
+   return $ret
+}
+
 # run test
 #                                                             max. column:     |
 #****** check/run_test() ******
@@ -4151,20 +4099,9 @@ proc run_test {path runcompleted {run_single_test "all"} { send_mail_report 1 } 
       return 2 
    }
 
-   # if we have a specific setup function: execute it
-   if { $check_setup_function != "" } {
-      set errorInfo ""
-      puts $CHECK_OUTPUT "starting setup function $check_setup_function"
-      set setup_catch_return [ catch { $check_setup_function } setup_catch_message ]
-      if { $setup_catch_return != 0 } {
-         add_proc_error "run_test" "-2" "setup function returns not 0\n${errorInfo}" 
-         set immediate_return -1
-      } else {
-         if { $setup_catch_message != 0 } {
-            add_proc_error "run_test" "-2" "setup function returned error $setup_catch_message"
-            set immediate_return -1
-         }
-      }
+   set setup_ret [execute_setup_cleanup_function $check_setup_function "setup"]
+   if {!$setup_ret} {
+      set immediate_return -1
    }
 
    if { $immediate_return == 0 } {
@@ -4227,19 +4164,9 @@ proc run_test {path runcompleted {run_single_test "all"} { send_mail_report 1 } 
    }
 
    # if we have a specific cleanup function: execute it
-   if { $check_cleanup_function != "" } {
-      set errorInfo ""
-      puts $CHECK_OUTPUT "starting cleanup function $check_cleanup_function"
-      set setup_catch_return [ catch { $check_cleanup_function } setup_catch_message ]
-      if { $setup_catch_return != 0 } {
-         add_proc_error "run_test" "-2" "cleanup function returns not 0\n${errorInfo}" 
-         set immediate_return -1
-      } else {
-         if { $setup_catch_message != 0 } {
-            add_proc_error "run_test" "-2" "cleanup function returned error $setup_catch_message"
-            set immediate_return -1
-         }
-      } 
+   set cleanup_ret [execute_setup_cleanup_function $check_cleanup_function "cleanup"]
+   if {!$cleanup_ret} {
+      set immediate_return -1
    }
 
    if { $immediate_return != 0 } {
@@ -4535,7 +4462,7 @@ proc check_display {} {
         puts "no debug x display set"
         return -1
      } 
-     start_remote_prog "$CHECK_CORE_MASTER" "$CHECK_USER" "/usr/openwin/bin/xterm" "-bg darkolivegreen -fg navajowhite -sl 5000 -sb -j -display $CHECK_DISPLAY_OUTPUT -e sleep 1"
+     start_remote_prog "$CHECK_CORE_MASTER" "$CHECK_USER" "/usr/bin/X11/xterm" "-bg darkolivegreen -fg navajowhite -sl 5000 -sb -j -display $CHECK_DISPLAY_OUTPUT -e sleep 1"
      if { $prg_exit_state != 0 } {
          puts "can't open display $CHECK_DISPLAY_OUTPUT as user $CHECK_USER from host $CHECK_CORE_MASTER"    
          return -1
@@ -4544,7 +4471,7 @@ proc check_display {} {
      if { [ have_root_passwd ] != 0 } {
          set_root_passwd
      }
-     start_remote_prog "$CHECK_CORE_MASTER" "root" "/usr/openwin/bin/xterm" "-bg darkolivegreen -fg navajowhite -sl 5000 -sb -j -display $CHECK_DISPLAY_OUTPUT -e sleep 1"
+     start_remote_prog "$CHECK_CORE_MASTER" "root" "/usr/bin/X11/xterm" "-bg darkolivegreen -fg navajowhite -sl 5000 -sb -j -display $CHECK_DISPLAY_OUTPUT -e sleep 1"
      if { $prg_exit_state != 0 } {
          puts "can't open display $CHECK_DISPLAY_OUTPUT as user root from host $CHECK_CORE_MASTER"    
          return -1
@@ -7191,6 +7118,7 @@ set do_nomain         0
 set do_prog_start     0
 set do_only_reset_config 0
 set be_quiet          0
+set fast_setup        0
 set CHECK_CUR_PROC_NAME "main"
 set check_name "main"
 set CHECK_ACTUAL_TEST_PATH "not in testmode"
@@ -7198,7 +7126,6 @@ set mail_subject "testsuite error - main"
 set mail_body    "date: [exec date]\n:\n"
 
 for { set i 0 } { $i < $argc } { incr i } {
-   
    if {([string compare [lindex $argv $i] "--setup"] == 0) || ([string compare [lindex $argv $i] "setup"] == 0) } {
       set catch_return [ catch { eval exec "cp ${CHECK_DEFAULTS_FILE} ${CHECK_DEFAULTS_FILE}.[timestamp]" } ]
       if { $catch_return == 0 } { 
@@ -7213,6 +7140,12 @@ for { set i 0 } { $i < $argc } { incr i } {
       set be_quiet 1
       continue
    }
+
+   if {([string compare [lindex $argv $i] "--fast_setup"] == 0) || ([string compare [lindex $argv $i] "fast_setup"] == 0) } {
+      set fast_setup 1
+      continue
+   }
+
    if {([string compare [lindex $argv $i] "--close_rlogin"] == 0) || ([string compare [lindex $argv $i] "close_rlogin"] == 0) } {
       set do_close_rlogin 1
       continue
@@ -7269,6 +7202,8 @@ for { set i 0 } { $i < $argc } { incr i } {
       puts "                      0=no debug, 1=more output, 2=1+user response"
       puts ""
       puts "quiet                 no output on setup"
+      puts ""
+      puts "fast_setup            suppress configuration checks at startup (setup phase)"
       puts ""
       puts "no_local_spool        ignore local spool directories from host configuration file"
       puts ""

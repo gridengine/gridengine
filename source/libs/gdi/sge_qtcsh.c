@@ -39,10 +39,6 @@
 #include <errno.h>
 #include <pthread.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif   
-
 #include "sge_gdi.h"
 #include "sge_answer.h"
 #include "sge_any_request.h"
@@ -55,6 +51,7 @@
 #include "sge_prog.h"
 #include "sge_conf.h"
 #include "lck/sge_mtutil.h"
+#include "sge_string.h"
 
 #include "msg_common.h"
 
@@ -65,9 +62,6 @@ static int mode_verbose = 0;
 static int mode_remote = 1;
 static int force_remote = 0;
 static int mode_immediate = 1;
-
-/* prevent remote execution before everything is initialized */
-static int catch_exec_initialized = 0;
 
 static int init_qtask_config(lList **alpp, print_func_t ostream);
 
@@ -139,7 +133,7 @@ print_func_t ostream
    while ((cep=nxt)) {
       nxt = lNext(cep);
       if (strrchr(lGetString(cep, CF_name), '/')) 
-         lRemoveElem(clp_cluster, cep);
+         lRemoveElem(clp_cluster, &cep);
 
    }
 
@@ -185,7 +179,7 @@ print_func_t ostream
    while ((cep=nxt)) {
       nxt = lNext(cep);
       if (strrchr(lGetString(cep, CF_name), '/')) 
-         lRemoveElem(clp_user, cep);
+         lRemoveElem(clp_user, &cep);
    }
 
 #if 0
@@ -211,11 +205,11 @@ print_func_t ostream
 
       if ((cep_dest=lGetElemStr(clp_cluster, CF_name, ro_task_name))) {
          /* do not override cluster global task entry */
-         lRemoveElem(clp_user, cep);
+         lRemoveElem(clp_user, &cep);
       } else if ((cep_dest=lGetElemStr(clp_cluster, CF_name, task_name))) {
          /* override cluster global task entry */
          lSetString(cep_dest, CF_value, lGetString(cep, CF_value));
-         lRemoveElem(clp_user, cep);
+         lRemoveElem(clp_user, &cep);
       } else {
          /* no entry in cluster global task list 
             use entry from user task list */
@@ -227,10 +221,10 @@ print_func_t ostream
 
       free(ro_task_name);
    }
-   lFreeList(clp_user);
+   lFreeList(&clp_user);
 
-   if (task_config)
-      lFreeList(task_config);
+   
+   lFreeList(&task_config);
    task_config = clp_cluster;
 
    /* remove leading '!' from command names */
@@ -257,8 +251,8 @@ print_func_t ostream
    return 0;
 
 Error:
-   lFreeList(clp_cluster);
-   lFreeList(clp_user);
+   lFreeList(&clp_cluster);
+   lFreeList(&clp_user);
    return -1;
 }
 
@@ -350,23 +344,27 @@ int close_stdin /* use of qrsh's -nostdin option */
 
 /* This method counts the number of arguments in the string using a quick and
  * dirty algorithm.  The algorithm may incorrectly report the number of arguments
- * to be too large because it does not parse quotations correctly. */
+ * to be too large because it does not parse quotations correctly. 
+ * MT-NOTE: sge_quick_count_num_args() is MT safe
+ */
 int sge_quick_count_num_args (
 const char* args /* The argument string to count by whitespace tokens */
 ) {
    int num_args = 0;
    char *resreq = (char *)malloc (strlen (args)+1);
    char *s;
+   struct saved_vars_s *context = NULL;
    
    DENTER (TOP_LAYER, "count_num_qtask_args");
    
    /* This function may return a larger number than required since it does not
     * parse quotes.  This is ok, however, since it's current usage is for
     * mallocing arrays, and a little too big is fine. */
-   strcpy (resreq, args);
-   for (s=strtok (resreq, " \t"); s; s=strtok(NULL, " \t"))
+   strcpy(resreq, args);
+   for (s=sge_strtok_r(resreq, " \t", &context); s; s=sge_strtok_r(NULL, " \t", &context))
       num_args++;
    free(resreq);
+   sge_free_saved_vars(context);
    
    DEXIT;
    return num_args;
@@ -479,15 +477,11 @@ lList *alp /* For returning error information */
 void sge_init(
 print_func_t ostream 
 ) {
-   lListElem *aep;
    lList *alp = NULL;
 
    sge_gdi_param(SET_EXIT_ON_ERROR, 0, NULL);
    if (sge_gdi_setup("qtcsh", NULL)==AE_OK) {
       if (init_qtask_config(&alp, ostream)) {
-         const char *s;
-         if (!alp || !(aep=lFirst(alp)) || !(s=lGetString(aep, AN_text)))
-            s = "unknown reason";
          mode_remote = 0;          
       } else {
          /* Remote execution is default.
@@ -504,13 +498,12 @@ print_func_t ostream
          mode_remote = force_remote?mode_remote:!getenv("JOB_ID");          
 /*          (*ostream) ("mode_remote = %d\n", mode_remote); */
       }
-      lFreeList(alp);
+      lFreeList(&alp);
    } else {
       mode_remote = 0;          
 /*       (*ostream) ("no $SGE_ROOT, running as normal tcsh\n"); */
    }
 
-   catch_exec_initialized = 1;
    return;
 }
 

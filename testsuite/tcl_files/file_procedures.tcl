@@ -33,6 +33,7 @@
 #___INFO__MARK_END__
 
 global file_procedure_logfile_wait_sp_id
+global last_file_extention
 
 #                                                             max. column:     |
 #****** file_procedures/test_file() ******
@@ -140,13 +141,21 @@ proc get_dir_names { path } {
 #     file_procedures/get_tmp_file_name()
 #*******************************************************************************
 proc get_tmp_directory_name { { hostname "" } { type "default" } { dir_ext "tmp" } { not_in_results 0 } } {
-   global CHECK_MAIN_RESULTS_DIR CHECK_HOST CHECK_USER CHECK_OUTPUT
+   global CHECK_MAIN_RESULTS_DIR CHECK_HOST CHECK_USER CHECK_OUTPUT last_file_extention
 
    if { $hostname == "" } {
       set hostname $CHECK_HOST
    }
 
-   set timestamp_sub_index 0
+   if { [info exists last_file_extention] == 0 } {
+      set last_file_extention 0
+      puts $CHECK_OUTPUT "set last file extention to initial value=$last_file_extention"
+   } else {
+      incr last_file_extention 1
+   }
+
+
+   set timestamp_sub_index $last_file_extention
    while { 1 } {
       set timestamp_appendix "[clock seconds]_$timestamp_sub_index"
       if { [ file isdirectory $CHECK_MAIN_RESULTS_DIR ] != 1 || $not_in_results != 0 } {
@@ -199,13 +208,21 @@ proc get_tmp_directory_name { { hostname "" } { type "default" } { dir_ext "tmp"
 #*******************************************************************************
 proc get_tmp_file_name { { hostname "" } { type "default" } { file_ext "tmp" } { not_in_results 0 } } {
    
-   global CHECK_MAIN_RESULTS_DIR CHECK_HOST CHECK_USER CHECK_OUTPUT
+   global CHECK_MAIN_RESULTS_DIR CHECK_HOST CHECK_USER CHECK_OUTPUT last_file_extention
 
    if { $hostname == "" } {
       set hostname $CHECK_HOST
    }
 
-   set timestamp_sub_index 0
+   if { [info exists last_file_extention] == 0 } {
+      set last_file_extention 0
+      puts $CHECK_OUTPUT "set last file extention to initial value=$last_file_extention"
+   } else {
+      incr last_file_extention 1
+   }
+
+   
+   set timestamp_sub_index $last_file_extention
    while { 1 } {
       set timestamp_appendix "[clock seconds]_$timestamp_sub_index"
       if { [ file isdirectory $CHECK_MAIN_RESULTS_DIR ] != 1  || $not_in_results != 0 } {
@@ -327,11 +344,12 @@ proc create_gnuplot_xy_gif { data_array_name row_array_name } {
 
    # check gnuplot supporting gif terminals:
    set terminal_type "gif"
-   set test_file [get_tmp_file_name "" "gnuplot_test"]
-   set test_file [open $command_file w]
+   set test_file_name [get_tmp_file_name "" "gnuplot_test"]
+   set test_file [open $test_file_name w]
    puts $test_file "set terminal gif" 
+   flush $test_file
    close $test_file
-   set result [start_remote_prog $CHECK_HOST $CHECK_USER gnuplot $test_file prg_exit_state 60 0 "" 1 0 0]
+   set result [start_remote_prog $CHECK_HOST $CHECK_USER gnuplot $test_file_name prg_exit_state 60 0 "" 1 0 0]
    if { $prg_exit_state != 0 } {
       puts $CHECK_OUTPUT "gnuplot does not support gif terminal, using png terminal ..."
       set terminal_type "png"
@@ -631,7 +649,6 @@ proc spool_array_finish {filename {data_array spool_array_data}} {
 proc save_file { filename array_name } {
    global CHECK_OUTPUT
    upvar  $array_name data
-
    
    set file [open $filename "w"]
    set last_line $data(0)
@@ -669,10 +686,9 @@ proc save_file { filename array_name } {
 #     file_procedures/save_file()
 #*******************************************************************************
 proc read_file { filename array_name } {
-
    global CHECK_OUTPUT
    upvar  $array_name data
-   
+
    if { [file isfile $filename] != 1 } {
       set data(0) 0
       puts $CHECK_OUTPUT "read_file - returning empty file data structure, no such file"
@@ -1457,6 +1473,9 @@ proc del_job_files { jobid job_output_directory expected_file_count } {
 #                                  if not 1:       don't source settings file
 #     { set_shared_lib_path 1 }  - if 1 (default): set shared lib path
 #                                  if not 1:       don't set shared lib path
+#     { without_start_output 0 } - if 0 (default): put out start/end mark of output
+#                                  if not 0:       don't print out start/end marks
+#
 #
 #  EXAMPLE
 #     set envlist(COLUMNS) 500
@@ -1475,9 +1494,10 @@ proc create_shell_script { scriptfile
                            { no_setup 0 } 
                            { source_settings_file 1 } 
                            { set_shared_lib_path 1 }
+                           { without_start_output 0 }
                          } {
    global ts_config
-   global CHECK_OUTPUT CHECK_PRODUCT_TYPE CHECK_COMMD_PORT CHECK_PRODUCT_ROOT
+   global CHECK_OUTPUT CHECK_PRODUCT_TYPE CHECK_PRODUCT_ROOT
    global CHECK_DEBUG_LEVEL 
  
    upvar $envlist users_env
@@ -1494,6 +1514,10 @@ proc create_shell_script { scriptfile
       return
    }
 
+   catch { exec chmod 0755 $scriptfile } result
+   debug_puts $result
+
+
    # script header
    puts $script "#!${script_path}"
    puts $script "# Automatic generated script from Grid Engine Testsuite"
@@ -1506,6 +1530,7 @@ proc create_shell_script { scriptfile
       puts $script "umask 022"
 
       if { $set_shared_lib_path == 1 } {
+         puts $script "# settup shared library path"
          get_shared_lib_path $host shared_var shared_value
          puts $script "if \[ x\$$shared_var = x \]; then"
          puts $script "   $shared_var=$shared_value"
@@ -1516,20 +1541,22 @@ proc create_shell_script { scriptfile
          puts $script "fi"
       }
       if { $source_settings_file == 1 } {
+         puts $script "# source settings file"
          puts $script "if \[ -f $CHECK_PRODUCT_ROOT/$ts_config(cell)/common/settings.sh \]; then"
          puts $script "   . $CHECK_PRODUCT_ROOT/$ts_config(cell)/common/settings.sh"
          puts $script "else"
       }
+      puts $script "# set testsuite environment"
       puts $script "   unset GRD_ROOT"
       puts $script "   unset CODINE_ROOT"
       puts $script "   unset GRD_CELL"
       puts $script "   unset CODINE_CELL"
-      if { [info exists CHECK_COMMD_PORT] } {
-         puts $script "   COMMD_PORT=$CHECK_COMMD_PORT"
+      if { [info exists ts_config(commd_port)] } {
+         puts $script "   COMMD_PORT=$ts_config(commd_port)"
          puts $script "   export COMMD_PORT"
-         puts $script "   SGE_QMASTER_PORT=$CHECK_COMMD_PORT"
+         puts $script "   SGE_QMASTER_PORT=$ts_config(commd_port)"
          puts $script "   export SGE_QMASTER_PORT"
-         set my_execd_port [expr ($CHECK_COMMD_PORT + 1) ]
+         set my_execd_port [expr ($ts_config(commd_port) + 1) ]
          puts $script "   SGE_EXECD_PORT=$my_execd_port"
          puts $script "   export SGE_EXECD_PORT"
       }
@@ -1537,23 +1564,33 @@ proc create_shell_script { scriptfile
          puts $script "   SGE_ROOT=$CHECK_PRODUCT_ROOT"
          puts $script "   export SGE_ROOT"
       }
+      puts $script "   SGE_CELL=$ts_config(cell)"
+      puts $script "   export SGE_CELL"
+    
       if { $source_settings_file == 1 } {
          puts $script "fi"
       }
 
-      puts $script "SGE_CELL=$ts_config(cell)"
-      puts $script "export SGE_CELL"
-
+      puts $script "# don't break long lines with qstat"
       puts $script "SGE_SINGLE_LINE=1"
       puts $script "export SGE_SINGLE_LINE"
-   
-      foreach u_env [ array names users_env ] {
-         set u_val [set users_env($u_env)] 
-         debug_puts "setting $u_env to $u_val"
-         puts $script "${u_env}=${u_val}"
-         puts $script "export ${u_env}"
+#      do not enable this without rework of qstat parsing routines
+#      puts $script "SGE_LONG_QNAMES=40"
+#      puts $script "export SGE_LONG_QNAMES"
+
+      set user_env_names [array names users_env]
+      if { [llength $user_env_names] > 0 } {
+         puts $script "# setting users environment variables"
+         foreach u_env $user_env_names {
+            set u_val [set users_env($u_env)] 
+            debug_puts "setting $u_env to $u_val"
+            puts $script "${u_env}=\"${u_val}\""
+            puts $script "export ${u_env}"
+         }
       }
-      puts $script "echo \"_start_mark_:(\$?)\""
+      if { $without_start_output == 0 } {
+         puts $script "echo \"_start_mark_:(\$?)\""
+      }
    }
 
    puts $script "$exec_command $exec_arguments"
@@ -1561,8 +1598,10 @@ proc create_shell_script { scriptfile
    if { $no_setup == 0 } { 
       puts $script "exit_val=\"\$?\""
       puts $script "trap 0"
-      puts $script "echo \"_exit_status_:(\$exit_val)\""
-      puts $script "echo \"script done.\""
+      if { $without_start_output == 0 } {
+         puts $script "echo \"_exit_status_:(\$exit_val)\""
+         puts $script "echo \"script done.\""
+      }
    }
    flush $script
    close $script
@@ -1811,14 +1850,15 @@ proc copy_directory { source target } {
 #     file_procedures/delete_directory()
 #*******************************
 proc cleanup_spool_dir { topleveldir subdir } {
-   global CHECK_COMMD_PORT CHECK_OUTPUT
+   global ts_config
+   global CHECK_OUTPUT
 
    set spooldir "$topleveldir"
 
    puts $CHECK_OUTPUT "->spool toplevel directory is $spooldir"
    
    if { [ file isdirectory $spooldir ] == 1 } {
-      set spooldir "$spooldir/$CHECK_COMMD_PORT"
+      set spooldir "$spooldir/$ts_config(commd_port)"
       if { [ file isdirectory $spooldir ] != 1 } { 
           puts $CHECK_OUTPUT "creating directory \"$spooldir\""
           file mkdir $spooldir
@@ -1874,15 +1914,19 @@ proc check_local_spool_directories { { do_delete 0 } } {
    foreach host $ts_config(execd_hosts) {
        
       puts $CHECK_OUTPUT "host ${host}:"
-      puts $CHECK_OUTPUT "checking testsuite spool root dir ..."
-      set result [start_remote_prog $host "root" "du" "-k -s $ts_host_config($host,spooldir)/"]
+      set my_spool_dir $ts_host_config($host,spooldir)
+      if { $my_spool_dir == "" } {
+         set my_spool_dir "no_spool_dir_defined"
+      }
+      puts $CHECK_OUTPUT "checking testsuite spool root dir ($my_spool_dir) ..."
+      set result [start_remote_prog $host "root" "du" "-k -s $my_spool_dir/" prg_exit_state 120 ]
       puts $CHECK_OUTPUT $result
       set testsuite($host,spooldir_size) [lindex $result 0]
       set testsuite($host,spooldir_size,state) $prg_exit_state
 
       foreach dir "execd qmaster spooldb" {
          puts $CHECK_OUTPUT "checking testsuite \"$dir\" spool dir for port \"$ts_config(commd_port)\" ..."
-         set result [start_remote_prog $host "root" "du" "-k -s $ts_host_config($host,spooldir)/$ts_config(commd_port)/$dir/"]
+         set result [start_remote_prog $host "root" "du" "-k -s $my_spool_dir/$ts_config(commd_port)/$dir/" prg_exit_state 120]
          puts $CHECK_OUTPUT $result
          set testsuite($host,$dir,spooldir_size) [lindex $result 0]
          set testsuite($host,$dir,spooldir_size,state) $prg_exit_state
@@ -1890,26 +1934,26 @@ proc check_local_spool_directories { { do_delete 0 } } {
    }
 
    foreach host $ts_config(execd_hosts) {
-      puts $CHECK_OUTPUT "$host: testsuite uses $testsuite($host,spooldir_size) bytes in $ts_host_config($host,spooldir)"
-      if { $testsuite($host,spooldir_size) > 1000000 } {
-         add_proc_error "check_local_spool_directories" -3 "$host: testsuite uses $testsuite($host,spooldir_size) bytes in $ts_host_config($host,spooldir)"
+      puts $CHECK_OUTPUT "$host: testsuite uses $testsuite($host,spooldir_size) bytes in $my_spool_dir"
+      if { $testsuite($host,spooldir_size) > 1000000 && $testsuite($host,spooldir_size,state) == 0 } {
+         add_proc_error "check_local_spool_directories" -3 "$host: testsuite uses $testsuite($host,spooldir_size) bytes in $my_spool_dir"
       }
 
       foreach dir "execd qmaster spooldb" {
          if { $testsuite($host,$dir,spooldir_size,state) != 0 } {
-            puts $CHECK_OUTPUT "skipping \"$ts_host_config($host,spooldir)/$ts_config(commd_port)/$dir\" (no directory found)"
+            puts $CHECK_OUTPUT "skipping \"$my_spool_dir/$ts_config(commd_port)/$dir\" (no directory found)"
             continue
          }
          puts $CHECK_OUTPUT "$host ($dir): spool dir size is $testsuite($host,$dir,spooldir_size)"
          if { $do_delete != 0 && $testsuite($host,$dir,spooldir_size) > 10 } {
-            puts -nonewline $CHECK_OUTPUT "delete directory \"$ts_host_config($host,spooldir)/$ts_config(commd_port)/$dir\" (y/n)? "
+            puts -nonewline $CHECK_OUTPUT "delete directory \"$my_spool_dir/$ts_config(commd_port)/$dir\" (y/n)? "
             set input [ wait_for_enter 1]
             if { $input == "y" } {
-               puts $CHECK_OUTPUT "deleting \"$ts_host_config($host,spooldir)/$ts_config(commd_port)/$dir\" ..."
-               cleanup_spool_dir_for_host $host $ts_host_config($host,spooldir) $dir
-               set result [start_remote_prog $host "root" "du" "-k -s $ts_host_config($host,spooldir)/$ts_config(commd_port)/$dir"]
+               puts $CHECK_OUTPUT "deleting \"$my_spool_dir/$ts_config(commd_port)/$dir\" ..."
+               cleanup_spool_dir_for_host $host $my_spool_dir $dir
+               set result [start_remote_prog $host "root" "du" "-k -s $my_spool_dir/$ts_config(commd_port)/$dir"]
                if { [lindex $result 0] > 10 } {
-                  add_proc_error "check_local_spool_directories" -1 "could not delete \"$ts_host_config($host,spooldir)/$ts_config(commd_port)/$dir\" on host $host"
+                  add_proc_error "check_local_spool_directories" -1 "could not delete \"$my_spool_dir/$ts_config(commd_port)/$dir\" on host $host"
                }
             }
          }
@@ -1942,14 +1986,15 @@ proc check_local_spool_directories { { do_delete 0 } } {
 #     file_procedures/cleanup_spool_dir()
 #*******************************************************************************
 proc cleanup_spool_dir_for_host { hostname topleveldir subdir } {
-   global CHECK_COMMD_PORT CHECK_OUTPUT CHECK_DEBUG_LEVEL
+   global ts_config
+   global CHECK_OUTPUT
 
    set spooldir "$topleveldir"
 
    puts $CHECK_OUTPUT "->spool toplevel directory is $spooldir"
    
    if { [ remote_file_isdirectory $hostname $spooldir ] == 1 } {
-      set spooldir "$spooldir/$CHECK_COMMD_PORT"
+      set spooldir "$spooldir/$ts_config(commd_port)"
       if { [ remote_file_isdirectory $hostname $spooldir ] != 1 } { 
           puts $CHECK_OUTPUT "creating directory \"$spooldir\""
           remote_file_mkdir $hostname $spooldir
@@ -1958,7 +2003,14 @@ proc cleanup_spool_dir_for_host { hostname topleveldir subdir } {
               add_proc_error "cleanup_spool_dir" "-1" "could not create directory \"$spooldir\""
           }
       }
+
       set spooldir "$spooldir/$subdir"
+      
+      # spooldir might be shared between multiple hosts - e.g. Solaris zones.
+      # clean only the spooldir of the specific exec host.
+      if { $subdir == "execd" } {
+         set spooldir "$spooldir/$hostname"
+      }
 
       if { [ remote_file_isdirectory $hostname $spooldir ] != 1 } {
           puts $CHECK_OUTPUT "creating directory \"$spooldir\""
@@ -2004,7 +2056,55 @@ proc remote_file_isdirectory { hostname dir } {
 }
 
 proc remote_file_mkdir { hostname dir } {
-  start_remote_prog $hostname "ts_def_con2" "mkdir" "$dir" prg_exit_state 60 0 "" 1 0 1
+  start_remote_prog $hostname "ts_def_con2" "mkdir" "-p $dir" prg_exit_state 60 0 "" 1 0 1
+}
+
+proc check_for_core_files {hostname path} {
+   global CHECK_OUTPUT CHECK_USER
+
+   puts $CHECK_OUTPUT "looking for core files in directory $path on host $hostname"
+
+   # if directory does not (yet) exist, there can be no cores
+   if {![remote_file_isdirectory $hostname $path]} {
+      return
+   }
+
+   # try to find core files in path
+   set core_files [start_remote_prog $hostname "ts_def_con2" "find" "$path -name core -print" prg_exit_state 60 0 "" 1 0 1]
+   if { $prg_exit_state != 0 } {
+      add_proc_error "check_for_core_files" -1 "find core files in directory $path on host $hostname failed: $core_files"
+   } else {
+      set core_list [split $core_files "\n"]
+      # process all cores found
+      foreach core $core_list {
+         # strip trailing empty lines
+         set core [string trim $core]
+         if {[string length $core] > 0} {
+            puts $CHECK_OUTPUT "found core $core"
+
+            # we need root access to determine file type (file may belong root)
+            # and to change owner (for later delete)
+            if { [ have_root_passwd ] == -1 } {
+               set_root_passwd 
+            }
+
+            # get file info of core file
+            set core_info [start_remote_prog $hostname "root" "file" "$core" prg_exit_state 60 0 "" 1 0 1]
+            if {$prg_exit_state != 0} {
+               add_proc_error "check_for_core_files" -1 "determining file type of core file $core on host $hostname failed: $core_info"
+            } else {
+               add_proc_error "check_for_core_files" -3 "found core file $core on host $hostname\n$core_info"
+            }
+
+            # chown core to $CHECK_USER.
+            puts $CHECK_OUTPUT "changing owner of core file $core to $CHECK_USER"
+            set output [start_remote_prog $hostname "root" "chown" "$CHECK_USER $core" prg_exit_state 60 0 "" 1 0 1]
+            if {$prg_exit_state != 0} {
+               add_proc_error "check_for_core_files" -1 "changing owner of core file $core on host $hostname failed: $output"
+            }
+         }
+      }
+   }
 }
 
 proc remote_delete_directory { hostname path } { 
@@ -2138,7 +2238,6 @@ proc delete_file_at_startup { filename } {
 #     file_procedures/delete_directory
 #*******************************
 proc delete_file { filename { do_wait_for_file 1 } } { 
- 
    global CHECK_OUTPUT CHECK_TESTSUITE_ROOT
 
    if { $do_wait_for_file == 1 } {
@@ -2305,7 +2404,7 @@ proc wait_for_remote_file { hostname user path { mytimeout 60 } } {
       if { [timestamp] > $my_mytimeout } {
          break
       }
-      sleep 1
+      after 1000
    }
    if { $is_ok == 1 } {
       puts $CHECK_OUTPUT "ok"
@@ -2505,6 +2604,8 @@ proc init_logfile_wait { hostname logfile  } {
    log_user 1 
    puts $CHECK_OUTPUT "init_logfile_wait done"
    set file_procedure_logfile_wait_sp_id $sid
+
+   return $sid
 }
 
 #****** file_procedures/logfile_wait() *****************************************
@@ -2561,7 +2662,6 @@ proc logfile_wait { { wait_string "" } { mytimeout 60 } { close_connection 1 } {
 
    upvar $return_err_code back_value
 
-
    set back_value 0
 
    set sp_id [ lindex $file_procedure_logfile_wait_sp_id 1 ]
@@ -2583,7 +2683,7 @@ proc logfile_wait { { wait_string "" } { mytimeout 60 } { close_connection 1 } {
       expect {
          -i $sp_id -- full_buffer {
             if { $add_errors == 1 } {
-               add_proc_error "init_logfile_wait" "-1" "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
+               add_proc_error "logfile_wait" "-1" "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
             }
             set back_value -2
             break
@@ -2591,14 +2691,14 @@ proc logfile_wait { { wait_string "" } { mytimeout 60 } { close_connection 1 } {
 
          -i $sp_id eof {
             if { $add_errors == 1 } {
-               add_proc_error "init_logfile_wait" "-1" "unexpected end of file"
+               add_proc_error "logfile_wait" "-1" "unexpected end of file"
             }
             set back_value -3
             break
          }
          -i $sp_id -- "_exit_status_" { 
             if { $add_errors == 1 } {
-               add_proc_error "init_logfile_wait" "-1" "unexpected end of tail command"
+               add_proc_error "logfile_wait" "-1" "unexpected end of tail command"
             }
             set back_value -4
             break
@@ -2814,3 +2914,118 @@ proc check_output_is_tty {} {
 
    return $ret
 }
+
+#****** file_procedures/get_local_spool_dir() ********************************************
+#  NAME
+#     get_local_spool_dir() -- get local spool dir for an host
+#
+#  SYNOPSIS
+#     get_local_spool_dir { host subdir {do_cleanup 1} } 
+#
+#  FUNCTION
+#     This procedure returns the path to the local spool directory for the given
+#     host
+#
+#  INPUTS
+#     host           - hostname
+#     subdir         - "execd" or "qmaster"
+#     {do_cleanup 1} - if 1: delete spool dir contents
+#
+#  RESULT
+#     path to spool directory 
+#
+#  SEE ALSO
+#     file_procedures/get_spool_dir()
+#*******************************************************************************
+proc get_local_spool_dir {host subdir {do_cleanup 1}} {
+   global ts_config ts_host_config 
+   global CHECK_OUTPUT
+   global check_do_not_use_spool_config_entries
+
+   set spooldir ""
+
+   # special case: suppress local spooldirectories
+   if {$check_do_not_use_spool_config_entries == 1 } {
+      puts $CHECK_OUTPUT "\"no_local_spool\" option is set - returning empty spool dir" 
+      return $spooldir
+   }
+
+   # host might be a virtual host - to query local spooldir we need the real host
+   set physical_host [node_get_host $host]
+
+   # read local spool dir from host config
+   if { [info exist ts_host_config($physical_host,spooldir)] } {
+      set spooldir $ts_host_config($physical_host,spooldir)
+      set local_spooldir 1
+   }
+
+   # if we have a toplevel spooldir, we can construct the real spooldir
+   # and trigger cleanup if requested
+   if {$spooldir != ""} {
+      puts $CHECK_OUTPUT "host $host has local toplevel spool directory $spooldir"
+      if { $do_cleanup == 1 } {
+         debug_puts "cleanup spooldir!"
+         set result "cleanup spooldir"
+         cleanup_spool_dir_for_host $host $spooldir $subdir
+      } else {
+         debug_puts "don't cleanup spooldir!"
+         set result "no cleanup"
+      }
+      set spooldir "$spooldir/$ts_config(commd_port)/$subdir"
+      debug_puts $result
+      debug_puts $spooldir
+   }
+
+   return $spooldir
+}
+
+#****** file_procedures/get_spool_dir() ****************************************
+#  NAME
+#     get_spool_dir() -- get the spooldir for qmaster or an exec host
+#
+#  SYNOPSIS
+#     get_spool_dir { host subdir } 
+#
+#  FUNCTION
+#     Returns the spool directory for qmaster or an exec host.
+#     This can either be a local or a global spool directory.
+#
+#  INPUTS
+#     host   - host on which the component is running
+#     subdir - qmaster or execd
+#
+#  RESULT
+#     String in one of the following forms:
+#     <local_toplevel_dir>/<port>/qmaster
+#     <local_toplevel_dir>/<port>/execd/<host>
+#     <sge_root>/<sge_cell>/spool/qmaster
+#     <sge_root>/<sge_cell>/spool/<host>
+#
+#  SEE ALSO
+#     file_procedures/get_local_spool_dir()
+#*******************************************************************************
+proc get_spool_dir {host subdir} {
+   global ts_config
+   global CHECK_OUTPUT
+
+   # first try to get a local spooldir
+   set spooldir [get_local_spool_dir $host $subdir 0]
+
+   # if we have no local spooldir, build path of global spooldir
+   if {$spooldir == ""} {
+      set spooldir "$ts_config(product_root)/$ts_config(cell)/spool"
+      puts $CHECK_OUTPUT "host $host has global toplevel spool directory $spooldir"
+   
+      switch -exact $subdir {
+         "qmaster" {
+            set spooldir "$spooldir/$subdir"
+         }
+         "execd" {
+            set spooldir "$spooldir/$host"
+         }
+      }
+   }
+
+   return $spooldir
+}
+

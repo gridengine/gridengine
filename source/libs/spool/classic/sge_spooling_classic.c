@@ -35,10 +35,6 @@
 #include <string.h>
 #include <errno.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif   
-
 #include "sgermon.h"
 #include "sge_log.h"
 
@@ -421,11 +417,8 @@ spool_classic_default_maintenance_func(lList **answer_list,
                                     const char *args)
 {
    bool ret = true;
-   const char *spool_dir;
 
    DENTER(TOP_LAYER, "spool_classic_default_maintenance_func");
-
-   spool_dir = lGetString(rule, SPR_url);
 
    switch (cmd) {
       case SPM_init:
@@ -661,9 +654,7 @@ spool_classic_default_list_func(lList **answer_list,
             char err_str[1024];
       
             /* remove old sharetree */
-            if (*list != NULL) {
-               *list = lFreeList(*list);
-            }
+            lFreeList(list);
 
             /* read sharetree from disk */
             ep = read_sharetree(SHARETREE_FILE, NULL, 1, err_str, 1, NULL);
@@ -695,9 +686,8 @@ spool_classic_default_list_func(lList **answer_list,
 
             sge_dstring_init(&file_name, filename_buf, SGE_PATH_MAX);
 
-            if (*list != NULL) {
-               *list = lFreeList(*list);
-            }
+            lFreeList(list);
+            
             sge_dstring_sprintf(&file_name, "%s/%s", 
                                 lGetString(rule, SPR_url), SCHED_CONF_FILE);
             *list = read_sched_configuration(lGetString(rule, SPR_url), 
@@ -834,9 +824,8 @@ spool_classic_default_read_func(lList **answer_list,
          break;
       case SGE_TYPE_SHARETREE:
          {
-            lListElem *ep;
             char err_str[1024];
-            ep = read_sharetree(SHARETREE_FILE, NULL, 1, err_str, 1, NULL);
+            read_sharetree(SHARETREE_FILE, NULL, 1, err_str, 1, NULL);
          }
          break;
       case SGE_TYPE_PE:
@@ -1193,16 +1182,16 @@ spool_classic_default_delete_func(lList **answer_list,
 
    switch (object_type) {
       case SGE_TYPE_ADMINHOST:
-         ret = sge_unlink(ADMINHOST_DIR, key) == 0;
+         ret = sge_unlink(ADMINHOST_DIR, key);
          break;
       case SGE_TYPE_CALENDAR:
-         ret = sge_unlink(CAL_DIR, key) == 0;
+         ret = sge_unlink(CAL_DIR, key);
          break;
       case SGE_TYPE_CKPT:
-         ret = sge_unlink(CKPTOBJ_DIR, key) == 0;
+         ret = sge_unlink(CKPTOBJ_DIR, key);
          break;
       case SGE_TYPE_CENTRY:
-         ret = sge_unlink(CENTRY_DIR, key) == 0;
+         ret = sge_unlink(CENTRY_DIR, key);
          break;
       case SGE_TYPE_CONFIG:
          if (sge_hostcmp(key, "global") == 0) {
@@ -1216,11 +1205,11 @@ spool_classic_default_delete_func(lList **answer_list,
             sge_dstring_init(&dir_name, dir_name_buf, SGE_PATH_MAX);
             sge_dstring_sprintf(&dir_name, "%s/%s",
                                 lGetString(rule, SPR_url), LOCAL_CONF_DIR);
-            ret = sge_unlink(sge_dstring_get_string(&dir_name), key) == 0;
+            ret = sge_unlink(sge_dstring_get_string(&dir_name), key);
          }
          break;
       case SGE_TYPE_EXECHOST:
-         ret = sge_unlink(EXECHOST_DIR, key) == 0;
+         ret = sge_unlink(EXECHOST_DIR, key);
          break;
       case SGE_TYPE_JOB:
       case SGE_TYPE_JATASK:   
@@ -1235,8 +1224,8 @@ spool_classic_default_delete_func(lList **answer_list,
    
             DPRINTF(("spooling job %d.%d %s\n", job_id, ja_task_id, 
                      pe_task_id != NULL ? pe_task_id : "<null>"));
-            ret = job_remove_spool_file(job_id, ja_task_id, pe_task_id, 
-                                        SPOOL_DEFAULT) == 0;
+            ret = (job_remove_spool_file(job_id, ja_task_id, pe_task_id, 
+                                         SPOOL_DEFAULT) == 0) ? true : false;
             free(dup);
          }
          break;
@@ -1247,19 +1236,19 @@ spool_classic_default_delete_func(lList **answer_list,
          write_manop(1, SGE_OPERATOR_LIST);
          break;
       case SGE_TYPE_SHARETREE:
-         ret = sge_unlink(NULL, SHARETREE_FILE) == 0;
+         ret = sge_unlink(NULL, SHARETREE_FILE);
          break;
       case SGE_TYPE_PE:
-         ret = sge_unlink(PE_DIR, key) == 0;
+         ret = sge_unlink(PE_DIR, key);
          break;
       case SGE_TYPE_PROJECT:
-         ret = sge_unlink(PROJECT_DIR, key) == 0;
+         ret = sge_unlink(PROJECT_DIR, key);
          break;
       case SGE_TYPE_CQUEUE:
-         ret = sge_unlink(CQUEUE_DIR, key) == 0;
+         ret = sge_unlink(CQUEUE_DIR, key);
          break;
       case SGE_TYPE_QINSTANCE:
-         ret = sge_unlink(QINSTANCES_DIR, key) == 0;
+         ret = sge_unlink(QINSTANCES_DIR, key);
          break;
       case SGE_TYPE_SCHEDD_CONF:
          answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
@@ -1268,21 +1257,21 @@ spool_classic_default_delete_func(lList **answer_list,
          ret = false;
          break;
       case SGE_TYPE_SUBMITHOST:
-         ret = sge_unlink(SUBMITHOST_DIR, key) == 0;
+         ret = sge_unlink(SUBMITHOST_DIR, key);
          break;
       case SGE_TYPE_USER:
-         ret = sge_unlink(USER_DIR, key) == 0;
+         ret = sge_unlink(USER_DIR, key);
          break;
       case SGE_TYPE_USERSET:
-         ret = sge_unlink(USERSET_DIR, key) == 0;
+         ret = sge_unlink(USERSET_DIR, key);
          break;
 #ifndef __SGE_NO_USERMAPPING__
       case SGE_TYPE_CUSER:
-         ret = sge_unlink(UME_DIR, key) == 0;
+         ret = sge_unlink(UME_DIR, key);
          break;
 #endif
       case SGE_TYPE_HGROUP:
-         ret = sge_unlink(HGROUP_DIR, key) == 0;
+         ret = sge_unlink(HGROUP_DIR, key);
          break;
       default:
          answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 

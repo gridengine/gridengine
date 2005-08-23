@@ -33,10 +33,6 @@
 #include <errno.h>
 #include <stdlib.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif   
-
 #include "sge.h"
 #include "sge_ja_task.h"
 #include "sge_job_refL.h"
@@ -99,7 +95,8 @@
 void sge_job_exit(
 lListElem *jr,
 lListElem *jep,
-lListElem *jatep 
+lListElem *jatep,
+monitoring_t *monitor
 ) {
    lListElem *queueep;
    const char *err_str;
@@ -135,7 +132,7 @@ lListElem *jatep
     */
    lSetUlong(jatep, JAT_pvm_ckpt_pid, lGetUlong(jr, JR_job_pid));
 
-   DPRINTF(("reaping job "u32"."u32" in queue >%s< job_pid %d\n", 
+   DPRINTF(("reaping job "sge_u32"."sge_u32" in queue >%s< job_pid %d\n", 
       jobid, jataskid, qname, (int) lGetUlong(jatep, JAT_pvm_ckpt_pid)));
 
    if (!(queueep = cqueue_list_locate_qinstance(*(object_type_get_master_list(SGE_TYPE_CQUEUE)), qname))) {
@@ -148,14 +145,14 @@ lListElem *jatep
    }
 
    if (failed) {        /* a problem occured */
-      WARNING((SGE_EVENT, MSG_JOB_FAILEDONHOST_UUSSSS, u32c(jobid), 
-               u32c(jataskid), 
+      WARNING((SGE_EVENT, MSG_JOB_FAILEDONHOST_UUSSSS, sge_u32c(jobid), 
+               sge_u32c(jataskid), 
                hostname,
                general_failure ? MSG_GENERAL : "",
                get_sstate_description(failed), err_str));
    }
    else
-      INFO((SGE_EVENT, MSG_JOB_JFINISH_UUS,  u32c(jobid), u32c(jataskid), 
+      INFO((SGE_EVENT, MSG_JOB_JFINISH_UUS,  sge_u32c(jobid), sge_u32c(jataskid), 
             hostname));
 
 
@@ -164,7 +161,7 @@ lListElem *jatep
    /* test if this job is in state JRUNNING or JTRANSFERING */
    if (lGetUlong(jatep, JAT_status) != JRUNNING && 
        lGetUlong(jatep, JAT_status) != JTRANSFERING) {
-      ERROR((SGE_EVENT, MSG_JOB_JEXITNOTRUN_UU, u32c(lGetUlong(jep, JB_job_number)), u32c(jataskid)));
+      ERROR((SGE_EVENT, MSG_JOB_JEXITNOTRUN_UU, sge_u32c(lGetUlong(jep, JB_job_number)), sge_u32c(jataskid)));
       return;
    }
 
@@ -181,7 +178,7 @@ lListElem *jatep
       /* JG: TODO: we need more information in the log message */
       reporting_create_job_log(NULL, timestamp, JL_DELETED, MSG_EXECD, hostname, jr, jep, jatep, NULL, MSG_LOG_JREMOVED);
 
-      sge_commit_job(jep, jatep, jr, COMMIT_ST_FINISHED_FAILED_EE, COMMIT_DEFAULT | COMMIT_NEVER_RAN);
+      sge_commit_job(jep, jatep, jr, COMMIT_ST_FINISHED_FAILED_EE, COMMIT_DEFAULT | COMMIT_NEVER_RAN, monitor);
    } 
      /*
       * case 2: set job in error state
@@ -191,7 +188,7 @@ lListElem *jatep
       *    --> application controlled job error
       */
    else if ((failed && general_failure==GFSTATE_JOB)) {
-      DPRINTF(("set job "u32"."u32" in ERROR state\n", 
+      DPRINTF(("set job "sge_u32"."sge_u32" in ERROR state\n", 
                lGetUlong(jep, JB_job_number), jataskid));
       reporting_create_acct_record(NULL, jr, jep, jatep, false);
       /* JG: TODO: we need more information in the log message */
@@ -199,7 +196,7 @@ lListElem *jatep
                                jr, jep, jatep, NULL, MSG_LOG_JERRORSET);
       lSetUlong(jatep, JAT_start_time, 0);
       ja_task_message_add(jatep, 1, err_str);
-      sge_commit_job(jep, jatep, jr, COMMIT_ST_FAILED_AND_ERROR, COMMIT_DEFAULT);
+      sge_commit_job(jep, jatep, jr, COMMIT_ST_FAILED_AND_ERROR, COMMIT_DEFAULT, monitor);
    }
       /*
        * case 3: job being rescheduled because it wasnt even started
@@ -212,7 +209,7 @@ lListElem *jatep
                                hostname, jr, jep, jatep, NULL, 
                                MSG_LOG_JNOSTARTRESCHEDULE);
       ja_task_message_add(jatep, 1, err_str);
-      sge_commit_job(jep, jatep, jr, COMMIT_ST_RESCHEDULED, COMMIT_DEFAULT);
+      sge_commit_job(jep, jatep, jr, COMMIT_ST_RESCHEDULED, COMMIT_DEFAULT, monitor);
       reporting_create_acct_record(NULL, jr, jep, jatep, false);
       lSetUlong(jatep, JAT_start_time, 0);
    }
@@ -233,7 +230,7 @@ lListElem *jatep
       /* JG: TODO: we need more information in the log message */
       reporting_create_job_log(NULL, timestamp, JL_RESTART, MSG_EXECD, hostname, jr, jep, jatep, NULL, MSG_LOG_JRERUNRESCHEDULE);
       lSetUlong(jatep, JAT_start_time, 0);
-      sge_commit_job(jep, jatep, jr, COMMIT_ST_RESCHEDULED, COMMIT_DEFAULT);
+      sge_commit_job(jep, jatep, jr, COMMIT_ST_RESCHEDULED, COMMIT_DEFAULT, monitor);
    }
       /*
        * case 5: job being rescheduled because it was interrupted and a checkpoint exists
@@ -248,7 +245,7 @@ lListElem *jatep
       reporting_create_acct_record(NULL, jr, jep, jatep, false);
       reporting_create_job_log(NULL, timestamp, JL_MIGRATE, MSG_EXECD, hostname, jr, jep, jatep, NULL, MSG_LOG_JCKPTRESCHEDULE);
       lSetUlong(jatep, JAT_start_time, 0);
-      sge_commit_job(jep, jatep, jr, COMMIT_ST_RESCHEDULED, COMMIT_DEFAULT);
+      sge_commit_job(jep, jatep, jr, COMMIT_ST_RESCHEDULED, COMMIT_DEFAULT, monitor);
    }
       /*
        * case 6: job being rescheduled because of exit 99 
@@ -262,7 +259,7 @@ lListElem *jatep
       reporting_create_acct_record(NULL, jr, jep, jatep, false);
       reporting_create_job_log(NULL, timestamp, JL_RESTART, MSG_EXECD, hostname, jr, jep, jatep, NULL, MSG_LOG_JNORESRESCHEDULE);
       lSetUlong(jatep, JAT_start_time, 0);
-      sge_commit_job(jep, jatep, jr, COMMIT_ST_RESCHEDULED, COMMIT_DEFAULT);
+      sge_commit_job(jep, jatep, jr, COMMIT_ST_RESCHEDULED, COMMIT_DEFAULT, monitor);
    }
       /*
        * case 7: job finished 
@@ -270,7 +267,7 @@ lListElem *jatep
    else {
       reporting_create_acct_record(NULL, jr, jep, jatep, false);
       reporting_create_job_log(NULL, timestamp, JL_FINISHED, MSG_EXECD, hostname, jr, jep, jatep, NULL, MSG_LOG_EXITED);
-      sge_commit_job(jep, jatep, jr, COMMIT_ST_FINISHED_FAILED_EE, COMMIT_DEFAULT);
+      sge_commit_job(jep, jatep, jr, COMMIT_ST_FINISHED_FAILED_EE, COMMIT_DEFAULT, monitor);
    }
 
    if (queueep != NULL) {
@@ -284,7 +281,7 @@ lListElem *jatep
          dstring error = DSTRING_INIT; 
 
          sge_dstring_sprintf(&error, MSG_LOG_QERRORBYJOBHOST_SUS,
-                             lGetString(queueep, QU_qname), u32c(jobid),
+                             lGetString(queueep, QU_qname), sge_u32c(jobid),
                              hostname);
          
          /* general error -> this queue cant run any job */
@@ -324,7 +321,7 @@ lListElem *jatep
                   qinstance_state_set_error(qinstance, true);
                   reporting_create_queue_record(NULL, qinstance, timestamp);
 
-                  sge_dstring_sprintf(&error, MSG_LOG_QERRORBYJOBHOST_SUS, lGetString(qinstance, QU_qname), u32c(jobid), host);
+                  sge_dstring_sprintf(&error, MSG_LOG_QERRORBYJOBHOST_SUS, lGetString(qinstance, QU_qname), sge_u32c(jobid), host);
                   qinstance_message_add(qinstance, QI_ERROR, sge_dstring_get_string(&error)); 
                   ERROR((SGE_EVENT, sge_dstring_get_string(&error)));
                   if (qinstance != queueep) {

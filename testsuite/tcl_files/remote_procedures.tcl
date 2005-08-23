@@ -44,7 +44,7 @@ puts "    *********************************************"
 puts "    * CONNECTION SETUP (remote_procedures.tcl)"
 puts "    *********************************************"
 puts "    * descriptors = $descriptors"
-set rlogin_max_open_connections [expr ($descriptors - 12) / 3]
+set rlogin_max_open_connections [expr ($descriptors - 15) / 3]
 puts "    * rlogin_max_open_connections = $rlogin_max_open_connections"
 puts "    *********************************************"
 
@@ -114,7 +114,6 @@ proc setup_qping_dump { log_array  } {
    set qping_env(SGE_QPING_OUTPUT_FORMAT) "\"s:1 s:2 s:3 s:4 s:5 s:6 s:7 s:8 s:9 s:10 s:11 s:12 s:13 s:14 s:15\""
 
    if { $ts_config(gridengine_version) >= 60 } {
-
       set sid [open_remote_spawn_process $master_host "root" $qping_binary $qping_arguments 0 qping_env]
       set sp_id [lindex $sid 1]
    } else {
@@ -713,9 +712,19 @@ proc start_remote_prog { hostname
 #  SEE ALSO
 #     ???/???
 #*******************************************************************************
-proc sendmail { to subject body { send_html 0 } { cc "" } { bcc "" } { from "" } { replyto "" } { organisation "" } } {
-   global CHECK_HOST CHECK_USER CHECK_OUTPUT
+proc sendmail { to subject body { send_html 0 } { cc "" } { bcc "" } { from "" } { replyto "" } { organisation "" } { force_mail 0 } } {
+   global CHECK_HOST CHECK_USER CHECK_OUTPUT ts_config CHECK_ENABLE_MAIL CHECK_MAILS_SENT CHECK_MAX_ERROR_MAILS
 
+   if { $CHECK_ENABLE_MAIL != 1 && $force_mail == 0 } {
+     puts $CHECK_OUTPUT "mail sending disabled, mails sent: $CHECK_MAILS_SENT"
+     puts $CHECK_OUTPUT "mail subject: $subject"
+     puts $CHECK_OUTPUT "mail body:"
+     puts $CHECK_OUTPUT "$body"
+     return -1
+   }
+
+
+   puts $CHECK_OUTPUT "--> sending mail to $to from host $ts_config(mailx_host) ...\n"
    # setup mail message    
    set mail_file [get_tmp_file_name]
    set file [open $mail_file "w"]
@@ -743,8 +752,17 @@ proc sendmail { to subject body { send_html 0 } { cc "" } { bcc "" } { from "" }
    foreach elem $bcc {
       puts $file "Bcc: $elem"
    }
-   puts $file "Subject: $subject"
-   puts $file $body
+
+   set new_subject "[get_version_info] ($ts_config(cell)) - $subject"
+
+   puts $file "Subject: $new_subject"
+   puts $file ""
+   # after this line the mail begins
+   puts $file "Grid Engine Version: [get_version_info]"
+   puts $file "Subject            : $subject"
+   puts $file ""
+   puts $file "$body"
+   puts $file ""
    puts $file "."
    close $file
 
@@ -757,13 +775,152 @@ proc sendmail { to subject body { send_html 0 } { cc "" } { bcc "" } { from "" }
    set command "/usr/lib/sendmail"
    set arguments "-B 8BITMIME -t < $mail_file"
 
-   set result [start_remote_prog $CHECK_HOST $CHECK_USER $command $arguments prg_exit_state 60 0 "" 1 0]
+   set result [start_remote_prog $ts_config(mailx_host) $CHECK_USER $command $arguments prg_exit_state 60 0 "" 1 0]
    if { $prg_exit_state != 0 } {
+      puts $CHECK_OUTPUT "=================================="
       puts $CHECK_OUTPUT "COULD NOT SEND MAIL:\n$result"
+      puts $CHECK_OUTPUT "=================================="
       return -1
    }
+   incr CHECK_MAILS_SENT 1
+   if { $CHECK_MAILS_SENT == $CHECK_MAX_ERROR_MAILS } {
+      set CHECK_ENABLE_MAIL 0
+      sendmail $to "max mail count reached" "" 0 "" "" "" "" "" 1
+   }
+     
    return 0
 }
+
+
+proc sendmail_wrapper { address cc subject body } {
+   global CHECK_HOST CHECK_OUTPUT ts_config CHECK_USER
+
+#   set html_text ""
+#   foreach line [split $body "\n"] {
+#      append html_text [create_html_text $line]
+#   }
+#   return [sendmail $address $subject $html_text 1 $cc "" $address $address "Gridware"]
+
+   if { $ts_config(mail_application) == "mailx" } {
+      puts $CHECK_OUTPUT "using mailx to send mail ..."
+      return 1
+   }
+   if { $ts_config(mail_application) == "sendmail" } {
+      puts $CHECK_OUTPUT "using sendmail to send mail ..."
+      sendmail $address $subject $body 0 $cc "" $address $address "Gridware"
+      return 0
+   }
+
+   
+
+   puts $CHECK_OUTPUT "starting $ts_config(mail_application) on host $$ts_config(mailx_host) to send mail ..."
+   set tmp_file [get_tmp_file_name]
+   set script [ open "$tmp_file" "w" "0755" ]
+   puts $script "Grid Engine Version: [get_version_info]"
+   puts $script "Subject            : $subject"
+   puts $script ""
+   puts $script $body
+   puts $script ""
+   flush $script
+   close $script
+
+   set new_subject "[get_version_info] ($ts_config(cell)) - $subject"
+
+   wait_for_remote_file $ts_config(mailx_host) $CHECK_USER $tmp_file
+   set result [start_remote_prog $ts_config(mailx_host) $CHECK_USER $ts_config(mail_application) "\"$address\" \"$cc\" \"$new_subject\" \"$tmp_file\""]
+   puts $CHECK_OUTPUT "mail application returned exit code $prg_exit_state:"
+   puts $CHECK_OUTPUT $result
+   return 0
+}
+
+proc create_error_message { error_array} {
+  global CHECK_OUTPUT
+  set catch_return [catch {
+  set err_string [lindex $error_array 0]
+  #set err_string $error_array
+  } ]
+  if { $catch_return != 0 } {
+     set err_string "catch error: error reading error_array"
+  }
+  
+  set err_complete  [split $err_string "|"]
+  set err_procedure [ lindex $err_complete 0 ]
+  set err_text      [ lindex $err_complete 1 ]
+  set err_checkname [ lindex $err_complete 2 ]
+  set err_calledby  [ lindex $err_complete 3 ]
+  
+  append output "check       : $err_checkname\n"
+  append output "procedure   : $err_procedure\n"
+  if { [ string compare $err_calledby $err_procedure ] != 0 } {
+     append output "called from : $err_calledby\n"
+  }
+  append output "----------------------------------------------------------------\n"
+  append output "\"$err_text\"\n"
+  append output "----------------------------------------------------------------\n"
+
+  return $output
+}
+
+
+
+proc show_proc_error { result new_error } {
+   global CHECK_CUR_PROC_ERRORS CHECK_CUR_PROC_RESULTS CHECK_CUR_PROC_NAME CHECK_OUTPUT check_name CHECK_TESTSUITE_ROOT
+   global CHECK_ARCH CHECK_HOST CHECK_PRODUCT_ROOT CHECK_ACT_LEVEL CHECK_CORE_MASTER CHECK_CORE_EXECD
+   global CHECK_SEND_ERROR_MAILS ts_config
+
+   if { $result != 0 } {
+      set category "error"
+      if { $result == -3 } {
+         set category "unsupported test warning"
+      }
+      puts $CHECK_OUTPUT ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
+      puts $CHECK_OUTPUT "$category"
+      puts $CHECK_OUTPUT "runlevel    : \"[get_run_level_name $CHECK_ACT_LEVEL]\", ($CHECK_ACT_LEVEL)"
+      puts $CHECK_OUTPUT ""
+      set error_output [ create_error_message $new_error ]
+      puts $CHECK_OUTPUT $error_output 
+      puts $CHECK_OUTPUT ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
+
+
+
+      flush $CHECK_OUTPUT
+      if { $CHECK_SEND_ERROR_MAILS == 1 } {
+         append mail_body "\n"
+         append mail_body "Date            : [exec date]\n"
+         append mail_body "check_name      : $check_name\n"
+         append mail_body "category        : $category\n"
+         append mail_body "runlevel        : [get_run_level_name $CHECK_ACT_LEVEL] (level: $CHECK_ACT_LEVEL)\n"
+         append mail_body "check host      : $CHECK_HOST\n"
+         append mail_body "product version : [get_version_info]\n"
+         append mail_body "SGE_ROOT        : $CHECK_PRODUCT_ROOT\n"
+         append mail_body "master host     : $CHECK_CORE_MASTER\n"
+         append mail_body "execution hosts : $CHECK_CORE_EXECD\n\n"
+
+         append mail_body "$error_output"
+         catch {
+            foreach level "1 2 3 4" {
+               upvar $level expect_out out
+               if {[info exists out]} {
+                  append mail_body "----- expect buffer in upper level $level --------\n"
+                  foreach i [array names out] {
+                     append mail_body "$i:\t$out($i)\n"
+                  }
+               }
+            }
+         }
+       
+         append mail_body "\nTestsuite configuration (ts_config):\n"
+         append mail_body "====================================\n"
+         show_config ts_config 0 mail_body
+
+         mail_report "testsuite $category - $check_name" $mail_body
+      }
+    }
+}
+
+
+
+
 
 
 
@@ -850,6 +1007,7 @@ proc open_remote_spawn_process { hostname
   global rlogin_in_use_buffer
 
   upvar $envlist users_env
+  upvar 1 error_info error_info
 
   uplevel 1 { set remote_spawn_nr_of_shells 0 }
 
@@ -868,10 +1026,12 @@ proc open_remote_spawn_process { hostname
   debug_puts "exec_command:   $exec_command"
   debug_puts "exec_arguments: $exec_arguments"
 
+   set error_info "connection to host \"$hostname\" as user \"$user\""
+
   if { [string compare $user $CHECK_USER] != 0 } {
      if { [string match "ts_def_con*" $user] != 1 } {
         if {[have_root_passwd] == -1} {
-            add_proc_error "open_remote_spawn_process" -2 "root access required"
+            add_proc_error "open_remote_spawn_process" -2 "${error_info}\nroot access required"
             return "" 
          }
      }
@@ -965,10 +1125,11 @@ proc open_remote_spawn_process { hostname
       uplevel 1 { set open_remote_spawn__id "$open_spawn_buffer" }
 
       if {$pid == 0 } {
-        add_proc_error "open_remote_spawn_process" -2 "could not spawn! (ret_pid = $pid)" 
+        add_proc_error "open_remote_spawn_process" -2 "${error_info}\ncould not spawn! (ret_pid = $pid)" 
+        return "" 
       }
       match_max -i $sp_id $CHECK_EXPECT_MATCH_MAX_BUFFER
-      debug_puts "open_remote_spawn_process -> buffer size is: [match_max]"
+      debug_puts "open_remote_spawn_process -> buffer size is: [match_max -i $sp_id]"
       # wait for shell to start
       set catch_return [ catch {
           uplevel 1 {
@@ -976,13 +1137,14 @@ proc open_remote_spawn_process { hostname
              if { $CHECK_DEBUG_LEVEL != 0 } {
                 log_user 1
              }
-             set my_tries 30
+             set my_tries 60
              while { 1 } {
                 set timeout 1
                 expect {
                    -i $spawn_id full_buffer {
-                      add_proc_error "open_remote_spawn_process" -1 "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
-                      break
+                      add_proc_error "open_remote_spawn_process" -1 "${error_info}\nbuffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
+                      catch { close -i $spawn_id }
+                      return ""
                    }
                    -i $spawn_id "The authenticity of host*" {
                       after 100
@@ -994,7 +1156,7 @@ proc open_remote_spawn_process { hostname
                    -i $spawn_id "Please type 'yes' or 'no'*" {
                       send -i $spawn_id "yes\n"
                    }
-                   -i $spawn_id "*" {
+                   -i $spawn_id {*[A-Za-z]*} {
                        debug_puts "startup ..."
                        break;
                    }
@@ -1005,8 +1167,9 @@ proc open_remote_spawn_process { hostname
                            flush $CHECK_OUTPUT
                            continue
                        } else { 
-                          add_proc_error "open_remote_spawn_process" -1 "startup timeout" 
-                          break
+                          add_proc_error "open_remote_spawn_process" -1 "${error_info}\nstartup timeout" 
+                          catch { close -i $spawn_id }
+                          return ""
                        }
                    }
                 }
@@ -1015,13 +1178,14 @@ proc open_remote_spawn_process { hostname
              set timeout 1
 #            On some architectures it makes problems when trying to send
 #            to a just openend shell, so this line is not active
-#            send -i $spawn_id "\n$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/shell_start_output.sh\n"
+            send -i $spawn_id "\n$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/shell_start_output.sh\n"
              set open_remote_spawn__tries 30
              while { $open_remote_spawn__tries > 0 } {
                 expect {
                   -i $spawn_id full_buffer {
-                     add_proc_error "open_remote_spawn_process" -1 "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
-                     break
+                     add_proc_error "open_remote_spawn_process" -1 "${error_info}\nbuffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
+                     catch { close -i $spawn_id }
+                     return ""
                   }
                   -i $spawn_id timeout {
                       send -i $spawn_id "$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/shell_start_output.sh\n"
@@ -1041,14 +1205,15 @@ proc open_remote_spawn_process { hostname
                      break
                   }
                   -i $spawn_id eof {
-                     add_proc_error "open_remote_spawn_process" -2 "unexpected eof"
-                     break
+                     add_proc_error "open_remote_spawn_process" -2 "${error_info}\nunexpected eof"
+                     catch { close -i $spawn_id }
+                     return ""
                   }
                }
             }
             if { $open_remote_spawn__tries <= 0 } {
-               add_proc_error "open_remote_spawn_process" -1 "timeout waiting for shell response prompt (b)"
-                catch { send -i $spawn_id "\003" } ;# send CTRL+C to stop evtl. running processes
+               add_proc_error "open_remote_spawn_process" -1 "${error_info}\ntimeout waiting for shell response prompt (b)"
+                catch { send -i $spawn_id "\003" } ;# send CTRL+C to stop poss. running processes
                 puts $CHECK_OUTPUT "closing spawn process ..."
                 flush $CHECK_OUTPUT
                 catch { close -i $spawn_id }
@@ -1065,8 +1230,9 @@ proc open_remote_spawn_process { hostname
              while { $ok != 1 } {
                 expect {
                    -i $spawn_id full_buffer {
-                      add_proc_error "open_remote_spawn_process" -1 "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
-                      set ok 1
+                      add_proc_error "open_remote_spawn_process" -1 "${error_info}\nbuffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
+                      catch { close -i $spawn_id }
+                      return ""
                    }
                    -i $spawn_id timeout {
                       puts -nonewline $CHECK_OUTPUT "   \r$mytries\r"
@@ -1080,7 +1246,7 @@ proc open_remote_spawn_process { hostname
                       incr mytries -1 ; 
                       if  { $mytries < 0 } { 
                           set ok 1
-                          add_proc_error "open_remote_spawn_process" -2 "shell doesn't start or runs not as user $open_remote_spawn__check_user on host $open_remote_spawn__hostname" 
+                          add_proc_error "open_remote_spawn_process" -2 "${error_info}\nshell doesn't start or runs not as user $open_remote_spawn__check_user on host $open_remote_spawn__hostname" 
                           puts $CHECK_OUTPUT "sending CTRL + C to spawn id $spawn_id ..."
                           flush $CHECK_OUTPUT
                           
@@ -1135,7 +1301,8 @@ proc open_remote_spawn_process { hostname
          }
       } catch_error_message ]
       if { $catch_return != 0 } {
-         add_proc_error "open_remote_spawn_process" -2 "error starting shell:\n$catch_error_message" 
+         add_proc_error "open_remote_spawn_process" -2 "${error_info}\nerror starting shell:\n$catch_error_message" 
+         catch { close -i $spawn_id }
          return ""
       }
       catch {
@@ -1150,15 +1317,21 @@ proc open_remote_spawn_process { hostname
                expect {
                   -i $spawn_id full_buffer {
                      set open_remote_spawn__stop -1
-                     add_proc_error "open_remote_spawn_process" -1 "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
+                     add_proc_error "open_remote_spawn_process" -1 "${error_info}\nbuffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
+                     catch { close -i $spawn_id }
+                     return ""
                   }
                   -i $spawn_id timeout {
                      set open_remote_spawn__stop -1
-                     add_proc_error "open_remote_spawn_process" -2 "rlogin timeout"
+                     add_proc_error "open_remote_spawn_process" -2 "${error_info}\nrlogin timeout"
+                     catch { close -i $spawn_id }
+                     return ""
                   } 
                   -i $spawn_id -- "ermission denied" {
                         set open_remote_spawn__stop -1
-                        add_proc_error "open_remote_spawn_process" -2 "permission denied"
+                        add_proc_error "open_remote_spawn_process" -2 "${error_info}\npermission denied"
+                        catch { close -i $spawn_id }
+                        return ""
                   }
                   -i $spawn_id -- "\n" {
                         debug_puts "login sequence for user $CHECK_USER ..."
@@ -1189,7 +1362,9 @@ proc open_remote_spawn_process { hostname
                   }
                   -i $spawn_id eof {
                      set open_remote_spawn__stop -1
-                     add_proc_error "open_remote_spawn_process" -2 "unexpected eof on rlogin command"
+                     add_proc_error "open_remote_spawn_process" -2 "${error_info}\nunexpected eof on rlogin command"
+                     catch { close -i $spawn_id }
+                     return ""
                   }
                }
             }
@@ -1207,13 +1382,19 @@ proc open_remote_spawn_process { hostname
                }
                expect {
                   -i $spawn_id full_buffer {
-                     add_proc_error "open_remote_spawn_process" -1 "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
+                     add_proc_error "open_remote_spawn_process" -1 "${error_info}\nbuffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
+                     catch { close -i $spawn_id }
+                     return ""
                   }
                   -i $spawn_id timeout {
-                     add_proc_error "open_remote_spawn_process" -2 "timeout waiting for password question"
+                     add_proc_error "open_remote_spawn_process" -2 "${error_info}\ntimeout waiting for password question"
+                     catch { close -i $spawn_id }
+                     return ""
                   }  
                   -i $spawn_id -- "ermission denied" {
-                     add_proc_error "open_remote_spawn_process" -2 "permission denied error"
+                     add_proc_error "open_remote_spawn_process" -2 "${error_info}\npermission denied error"
+                     catch { close -i $spawn_id }
+                     return ""
                   }
                   -i $spawn_id -- "assword:" {
                      log_user 0
@@ -1226,7 +1407,9 @@ proc open_remote_spawn_process { hostname
                      }
                   }
                   -i $spawn_id eof {
-                     add_proc_error "open_remote_spawn_process" -2 "unexpected eof on rlogin command"
+                     add_proc_error "open_remote_spawn_process" -2 "${error_info}\nunexpected eof on rlogin command"
+                     catch { close -i $spawn_id }
+                     return ""
                   }
                }
                log_user 1
@@ -1273,14 +1456,15 @@ proc open_remote_spawn_process { hostname
       while { $open_remote_spawn__tries > 0 } {
          expect {
             -i $open_remote_spawn__id full_buffer {
-               add_proc_error "open_remote_spawn_process" -1 "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
-               break
+               add_proc_error "open_remote_spawn_process" -1 "${error_info}\nbuffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
+               catch { close -i $open_remote_spawn__spawn_id }
+               return ""
             }
             -i $open_remote_spawn__id timeout {
                 send -i $open_remote_spawn__id "$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/file_check.sh $open_remote_spawn__script_name\n"
                 incr open_remote_spawn__tries -1
                 if { $open_remote_spawn__tries <= 0 } {
-                   add_proc_error "open_remote_spawn_process" -1 "timeout waiting for ls command"
+                   add_proc_error "open_remote_spawn_process" -1 "${error_info}\ntimeout waiting for ls command"
                    catch { send -i $open_remote_spawn__id "\003" } ;# send CTRL+C to stop evtl. running processes
                    puts $CHECK_OUTPUT "closing spawn process ..."
                    flush $CHECK_OUTPUT
@@ -1293,8 +1477,9 @@ proc open_remote_spawn_process { hostname
                break
             }
             -i $open_remote_spawn__id eof {
-               add_proc_error "open_remote_spawn_process" -2 "unexpected eof"
-               break
+               add_proc_error "open_remote_spawn_process" -2 "${error_info}\nunexpected eof"
+               catch { close -i $open_remote_spawn__spawn_id }
+               return ""
             }
          }
       }
@@ -1496,7 +1681,10 @@ proc add_open_spawn_rlogin_session { hostname user spawn_id spawn_pid nr_of_shel
       lappend cl_id $remove_sp_id
       lappend cl_id $closes       ;# nr of open shells
       unset rlogin_spawn_session_buffer($remove_sp_id)
-      close_spawn_process $cl_id 0 2
+      # close the connection. We are not intested in the exit code of the 
+      # previously executed command, so don't make close_spawn_process check
+      # the exit code
+      close_spawn_process $cl_id 1 2
    }
 
    debug_puts "Adding spawn_id=$spawn_id, rlogin pid=$spawn_pid to"
@@ -1922,6 +2110,8 @@ proc close_spawn_process { id { check_exit_state 0 } {my_uplevel 1}} {
    if { $con_data(pid) != 0 } {
       debug_puts "sending CTRL + C to spawn id $sp_id ..."
       send -i $sp_id "\003" ;# send CTRL+C to stop evtl. running processes in that shell
+      # wait for CTRL-C to have effect
+      after 200
       debug_puts "Will not close spawn id \"$sp_id\", this is rlogin connection to"
       debug_puts "host \"$con_data(hostname)\", user \"$con_data(user)\""
       set rlogin_in_use_buffer($sp_id) 0
@@ -1941,6 +2131,8 @@ proc close_spawn_process { id { check_exit_state 0 } {my_uplevel 1}} {
        debug_puts "-->sending $nr_of_shells exit(s) to shell on id $sp_id"
        send -s -i $sp_id "\003" ;# send CTRL+C to stop evtl. running processes in that shell
 
+       # wait for CTRL-C to have effect
+       after 200
        for {set i 0} {$i < $nr_of_shells } {incr i 1} {
           send -s -i $sp_id "exit\n"
           set timeout 15
@@ -1997,31 +2189,38 @@ proc close_spawn_process { id { check_exit_state 0 } {my_uplevel 1}} {
    log_user 1
    set wait_return "" 
    catch { set wait_return [ uplevel $my_uplevel { wait -i $open_spawn_buffer } ] }
+   set wait_pid      [lindex $wait_return 0]
+   set wait_spawn_id [lindex $wait_return 1]
+   set wait_error    [lindex $wait_return 2]
+   set wait_code     [lindex $wait_return 3]
 
    debug_puts "closed buffer: $open_spawn_buffer"
-   if { ([ string compare $open_spawn_buffer [lindex $wait_return 1] ] != 0) && ($check_exit_state == 0)} {
-      add_proc_error "close_spawn_process" "-1" "wrong spawn id closed: expected $open_spawn_buffer, got [lindex $wait_return 1]"
+   debug_puts "wait pid        : $wait_pid"
+   debug_puts "wait spawn id   : $wait_spawn_id"
+   debug_puts "wait error      : $wait_error (-1 = operating system error, 0 = exit)"
+   debug_puts "wait code       : $wait_code  (os error code or exit status)"
+
+   # did we close the correct spawn id?
+   if { ([ string compare $open_spawn_buffer $wait_spawn_id ] != 0) && ($check_exit_state == 0)} {
+      add_proc_error "close_spawn_process" "-1" "wrong spawn id closed: expected $open_spawn_buffer, got $wait_spawn_id"
    }
-   
 
-   debug_puts "wait pid        : [lindex $wait_return 0]"
-   debug_puts "wait spawn id   : [lindex $wait_return 1]"
-
-   if { [lindex $wait_return 2] == 0 } {
-      if { ([lindex $wait_return 3] != 0) && ($check_exit_state == 0) } {
-         add_proc_error "close_spawn_process" -1 "wait exit status: [lindex $wait_return 3]"
+   # on regular exit: check exit code, shall be 0
+   if { $wait_error == 0 } {
+      if { ($wait_code != 0) && ($check_exit_state == 0) } {
+         add_proc_error "close_spawn_process" -1 "wait exit status: $wait_code"
       }
    } else {
-         puts $CHECK_OUTPUT "*** operating system error: [lindex $wait_return 3]"
-         puts $CHECK_OUTPUT "spawn id: [lindex $wait_return 1]"
-         puts $CHECK_OUTPUT "wait pid: [lindex $wait_return 0]"
+         puts $CHECK_OUTPUT "*** operating system error: $wait_code"
+         puts $CHECK_OUTPUT "spawn id: $wait_spawn_id"
+         puts $CHECK_OUTPUT "wait pid: $wait_pid"
          if { ($check_exit_state == 0) } {
-            add_proc_error "close_spawn_process" -1 "operating system error: [lindex $wait_return 3]"
+            add_proc_error "close_spawn_process" -1 "operating system error: $wait_code"
          }
    }
    flush $CHECK_OUTPUT
    set rlogin_in_use_buffer($sp_id) 0
-   return [lindex $wait_return 3] ;# return exit state
+   return $wait_code ;# return exit state
 }
 
 

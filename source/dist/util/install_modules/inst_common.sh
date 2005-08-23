@@ -153,13 +153,19 @@ Enter()
 #
 Makedir()
 {
-   file=$1
-   if [ ! -d $file ]; then
-       $INFOTEXT "creating directory: %s" "$file"
-       ExecuteAsAdmin $MKDIR -p $1
+   dir=$1
+
+   if [ ! -d $dir ]; then
+       $INFOTEXT "creating directory: %s" "$dir"
+       if [ "`$SGE_UTILBIN/filestat -owner $SGE_ROOT`" != "$ADMINUSER" ]; then
+         Execute $MKDIR -p $dir
+         Execute $CHOWN $ADMINUSER $dir
+       else
+         ExecuteAsAdmin $MKDIR -p $dir
+       fi
    fi
 
-   ExecuteAsAdmin $CHMOD $DIRPERM $file
+   ExecuteAsAdmin $CHMOD $DIRPERM $dir
 }
 
 #-------------------------------------------------------------------------
@@ -256,6 +262,11 @@ BINFILES="sge_coshepherd \
           qhost qlogin qmake qmod qmon qresub qrls qrsh qselect qsh \
           qstat qsub qtcsh qping"
 
+WINBINFILES="sge_coshepherd sge_execd sge_shepherd  \
+             qacct qalter qconf qdel qhold qhost qlogin \
+             qmake qmod qresub qrls qrsh qselect qsh \
+             qstat qsub qtcsh qping qloadsensor.exe sgepasswd"
+
 UTILFILES="adminrun checkprog checkuser filestat gethostbyaddr gethostbyname \
            gethostname getservbyname loadcheck now qrsh_starter rlogin rsh rshd \
            testsuidroot uidgid infotext"
@@ -263,8 +274,7 @@ UTILFILES="adminrun checkprog checkuser filestat gethostbyaddr gethostbyname \
 THIRD_PARTY_FILES="openssl"
 
 if [ $SGE_ARCH = "win32-x86" ]; then
-   WINBINFILES="qloadsensor.exe"
-   BINFILES="$BINFILES $WINBINFILES"
+   BINFILES="$WINBINFILES"
 fi
 
    missing=false
@@ -276,10 +286,9 @@ fi
       fi
    done
 
-   #echo $CSP
 
    for f in $THIRD_PARTY_FILES; do
-      if [ $f = openssl -a $CSP = true ]; then
+      if [ $f = openssl -a "$CSP" = true ]; then
          if [ ! -f $SGE_UTILBIN/$f ]; then
            missing=true
            $INFOTEXT "missing program >%s< in directory >%s<" $f $SGE_BIN
@@ -298,21 +307,38 @@ fi
    done
 
    if [ $missing = true ]; then
-      $INFOTEXT "\nMissing Grid Engine binaries!\n\n" \
-      "A complete installation needs the following binaries in >%s<:\n\n" \
-      "qacct           qlogin          qrsh            sge_shepherd\n" \
-      "qalter          qmake           qselect         sge_coshepherd\n" \
-      "qconf           qmod            qsh             sge_execd\n" \
-      "qdel            qmon            qstat           sge_qmaster\n" \
-      "qhold           qresub          qsub            sge_schedd\n" \
-      "qhost           qrls            qtcsh           sge_shadowd\n" \
-      "qping\n\n" \
-      "The binaries in >%s< are:\n\n" \
-      "adminrun       gethostbyaddr  loadcheck      rlogin         uidgid\n" \
-      "checkprog      gethostbyname  now            rsh            infotext\n" \
-      "checkuser      gethostname    openssl        rshd\n" \
-      "filestat       getservbyname  qrsh_starter   testsuidroot\n\n" \
-      "Installation failed. Exit.\n" $SGE_BIN $SGE_UTILBIN
+      if [ "$SGE_ARCH" = "win32-x86" ]; then
+         $INFOTEXT "\nMissing Grid Engine binaries!\n\n" \
+         "A complete installation needs the following binaries in >%s<:\n\n" \
+         "qacct           qlogin          qrsh            sge_shepherd\n" \
+         "qalter          qmake           qselect         sge_coshepherd\n" \
+         "qconf           qmod            qsh             sge_execd\n" \
+         "qdel            qmon            qstat           qhold\n" \
+         "qresub          qsub            qhost           qrls\n" \
+         "qtcsh           qping           sgepasswd       qloadsensor.exe\n\n" \
+         "The binaries in >%s< are:\n\n" \
+         "adminrun       gethostbyaddr  loadcheck      rlogin         uidgid\n" \
+         "checkprog      gethostbyname  now            rsh            infotext\n" \
+         "checkuser      gethostname    openssl        rshd\n" \
+         "filestat       getservbyname  qrsh_starter   testsuidroot\n\n" \
+         "Installation failed. Exit.\n" $SGE_BIN $SGE_UTILBIN
+      else
+         $INFOTEXT "\nMissing Grid Engine binaries!\n\n" \
+         "A complete installation needs the following binaries in >%s<:\n\n" \
+         "qacct           qlogin          qrsh            sge_shepherd\n" \
+         "qalter          qmake           qselect         sge_coshepherd\n" \
+         "qconf           qmod            qsh             sge_execd\n" \
+         "qdel            qmon            qstat           sge_qmaster\n" \
+         "qhold           qresub          qsub            sge_schedd\n" \
+         "qhost           qrls            qtcsh           sge_shadowd\n" \
+         "qping\n\n" \
+         "The binaries in >%s< are:\n\n" \
+         "adminrun       gethostbyaddr  loadcheck      rlogin         uidgid\n" \
+         "checkprog      gethostbyname  now            rsh            infotext\n" \
+         "checkuser      gethostname    openssl        rshd\n" \
+         "filestat       getservbyname  qrsh_starter   testsuidroot\n\n" \
+         "Installation failed. Exit.\n" $SGE_BIN $SGE_UTILBIN
+      fi
 
       $INFOTEXT -log "\nMissing Grid Engine binaries!\n\n" \
       "A complete installation needs the following binaries in >%s<:\n\n" \
@@ -626,7 +652,11 @@ CheckWhoInstallsSGE()
          $INFOTEXT -n "\nPlease enter a valid user name >> "
          INP=`Enter ""`
          if [ "$AUTO" = "true" ]; then
-            INP=`Enter $ADMIN_USER`
+            if [ "$ADMIN_USER" = "" ]; then
+               INP=`Enter root`
+            else
+               INP=`Enter $ADMIN_USER`
+            fi
          fi
 
          if [ "$INP" != "" ]; then
@@ -879,7 +909,7 @@ PrintLocalConf()
 
    arg=$1
    if [ $arg = 1 ]; then
-      $ECHO "# Version: 6.0u4"
+      $ECHO "# Version: 6.0u5"
       $ECHO "#"
       $ECHO "# DO NOT MODIFY THIS FILE MANUALLY!"
       $ECHO "#"
@@ -891,7 +921,11 @@ PrintLocalConf()
    else
       $ECHO "xterm                  $XTERM"
    fi
-   $ECHO "qlogin_daemon          $QLOGIN_DAEMON"
+   if [ "$SGE_ARCH" = "win32-x86" ]; then
+      $ECHO "qlogin_daemon          $QLOGIN_DAEMON -i"
+   else
+      $ECHO "qlogin_daemon          $QLOGIN_DAEMON"
+   fi
    $ECHO "rlogin_daemon          $RLOGIN_DAEMON"
    if [ "$LOCAL_EXECD_SPOOL" != "undef" ]; then
       $ECHO "execd_spool_dir        $LOCAL_EXECD_SPOOL"
@@ -926,6 +960,8 @@ CreateSGEStartUpScripts()
 
    if [ -f $TMP_SGE_STARTUP_FILE ]; then
       Execute rm $TMP_SGE_STARTUP_FILE
+      Execute touch $TMP_SGE_STARTUP_FILE
+      Execute $CHMOD a+rx $TMP_SGE_STARTUP_FILE
    fi
    if [ -f ${TMP_SGE_STARTUP_FILE}.0 ]; then
       Execute rm ${TMP_SGE_STARTUP_FILE}.0
@@ -1016,15 +1052,23 @@ AddSGEStartUpScript()
       TMP_SGE_STARTUP_FILE=/tmp/sgemaster.$$
       STARTUP_FILE_NAME=sgemaster
       S95NAME=S95sgemaster
+      K03NAME=K03sgemaster
       DAEMON_NAME="qmaster/scheduler"
+   elif [ $hosttype = "bdb" ]; then
+      TMP_SGE_STARTUP_FILE=/tmp/sgebdb.$$
+      STARTUP_FILE_NAME=sgebdb
+      S95NAME=S94sgebdb
+      K03NAME=K04sgebdb
+      DAEMON_NAME="berkeleydb"
    else
       TMP_SGE_STARTUP_FILE=/tmp/sgeexecd.$$
       STARTUP_FILE_NAME=sgeexecd
       S95NAME=S96sgeexecd
+      K03NAME=K02sgeexecd
       DAEMON_NAME="execd"
    fi
 
-   SGE_STARTUP_FILE=$SGE_ROOT_VAL/$COMMONDIR/$STARTUP_FILE_NAME
+   SGE_STARTUP_FILE=$SGE_ROOT/$SGE_CELL/common/$STARTUP_FILE_NAME
 
    InstallRcScript 
 
@@ -1062,14 +1106,45 @@ InstallRcScript()
       echo /usr/lib/lsb/install_initd $RC_PREFIX/$STARTUP_FILE_NAME
       Execute cp $SGE_STARTUP_FILE $RC_PREFIX/$STARTUP_FILE_NAME
       Execute /usr/lib/lsb/install_initd $RC_PREFIX/$STARTUP_FILE_NAME
+      # Several old Red Hat releases do not create proper startup links from LSB conform
+      # scripts. So we need to check if the proper links were created.
+      # See RedHat: https://bugzilla.redhat.com/bugzilla/long_list.cgi?buglist=106193
+      if [ -f "/etc/redhat-release" -o -f "/etc/fedora-release" ]; then
+         # According to Red Hat documentation all rcX.d directories are in /etc/rc.d
+         # we hope this will never change for Red Hat
+         RCD_PREFIX="/etc/rc.d"
+         for runlevel in 0 1 2 3 4 5 6; do
+            # check for a corrupted startup link
+            if [ -L "$RCD_PREFIX/rc$runlevel.d/S-1$STARTUP_FILE_NAME" ]; then
+               Execute rm -f $RCD_PREFIX/rc$runlevel.d/S-1$STARTUP_FILE_NAME
+               # create new correct startup link
+               if [ $runlevel -eq 3 -o $runlevel -eq 5 ]; then
+                  Execute rm -f $RCD_PREFIX/rc$runlevel.d/$S95NAME
+                  Execute ln -s $RC_PREFIX/$STARTUP_FILE_NAME $RCD_PREFIX/rc$runlevel.d/$S95NAME
+               fi
+            fi
+            # check for a corrupted shutdown link
+            if [ -L "$RCD_PREFIX/rc$runlevel.d/K-1$STARTUP_FILE_NAME" ]; then
+               Execute rm -f $RCD_PREFIX/rc$runlevel.d/K-1$STARTUP_FILE_NAME
+               Execute rm -f $RCD_PREFIX/rc$runlevel.d/$K03NAME
+               # create new correct shutdown link
+               if [ $runlevel -eq 0 -o $runlevel -eq 1 -o $runlevel -eq 2 -o $runlevel -eq 6 ]; then
+                  Execute rm -f $RCD_PREFIX/rc$runlevel.d/$K03NAME
+                  Execute ln -s $RC_PREFIX/$STARTUP_FILE_NAME $RCD_PREFIX/rc$runlevel.d/$K03NAME
+               fi
+            fi
+         done
+      fi
    # If we have System V we need to put the startup script to $RC_PREFIX/init.d
    # and make a link in $RC_PREFIX/rc2.d to $RC_PREFIX/init.d
    elif [ "$RC_FILE" = "sysv_rc" ]; then
-      $INFOTEXT "Installing startup script %s" "$RC_PREFIX/$RC_DIR/$S95NAME"
+      $INFOTEXT "Installing startup script %s and %s" "$RC_PREFIX/$RC_DIR/$S95NAME" "$RC_PREFIX/$RC_DIR/$K03NAME"
       Execute rm -f $RC_PREFIX/$RC_DIR/$S95NAME
+      Execute rm -f $RC_PREFIX/$RC_DIR/$K03NAME
       Execute cp $SGE_STARTUP_FILE $RC_PREFIX/init.d/$STARTUP_FILE_NAME
       Execute chmod a+x $RC_PREFIX/init.d/$STARTUP_FILE_NAME
       Execute ln -s $RC_PREFIX/init.d/$STARTUP_FILE_NAME $RC_PREFIX/$RC_DIR/$S95NAME
+      Execute ln -s $RC_PREFIX/init.d/$STARTUP_FILE_NAME $RC_PREFIX/$RC_DIR/$K03NAME
 
       # runlevel management in Linux is different -
       # each runlevel contains full set of links
@@ -1082,9 +1157,11 @@ InstallRcScript()
       lx2?-*)
          runlevel=`grep "^id:.:initdefault:"  /etc/inittab | cut -f2 -d:`
          if [ "$runlevel" = 2 -o  "$runlevel" = 5 ]; then
-            $INFOTEXT "Installing startup script also in %s" "$RC_PREFIX/rc${runlevel}.d/$S95NAME"
+            $INFOTEXT "Installing startup script also in %s and %s" "$RC_PREFIX/rc${runlevel}.d/$S95NAME" "$RC_PREFIX/rc${runlevel}.d/$K03NAME"
             Execute rm -f $RC_PREFIX/rc${runlevel}.d/$S95NAME
+            Execute rm -f $RC_PREFIX/rc${runlevel}.d/$K03NAME
             Execute ln -s $RC_PREFIX/init.d/$STARTUP_FILE_NAME $RC_PREFIX/rc${runlevel}.d/$S95NAME
+            Execute ln -s $RC_PREFIX/init.d/$STARTUP_FILE_NAME $RC_PREFIX/rc${runlevel}.d/$K03NAME
          fi
          ;;
        esac
@@ -1099,10 +1176,48 @@ InstallRcScript()
       echo  cp $SGE_STARTUP_FILE $RC_PREFIX/$STARTUP_FILE_NAME
       echo /usr/sbin/update-rc.d $STARTUP_FILE_NAME
       Execute cp $SGE_STARTUP_FILE $RC_PREFIX/$STARTUP_FILE_NAME
-      /usr/sbin/update-rc.d $STARTUP_FILE_NAME defaults 95
+      /usr/sbin/update-rc.d $STARTUP_FILE_NAME defaults 95 03
    elif [ "$RC_FILE" = "freebsd" ]; then
       echo  cp $SGE_STARTUP_FILE $RC_PREFIX/sge${RC_SUFFIX}
       Execute cp $SGE_STARTUP_FILE $RC_PREFIX/sge${RC_SUFFIX}
+   elif [ "$RC_FILE" = "SGE" ]; then
+      echo  mkdir -p "$RC_PREFIX/$RC_DIR"
+      Execute mkdir -p "$RC_PREFIX/$RC_DIR"
+
+cat << PLIST > "$RC_PREFIX/$RC_DIR/StartupParameters.plist"
+{
+   Description = "SUN Grid Engine";
+   Provides = ("SGE");
+   Requires = ("Disks", "NFS", "Resolver");
+   Uses = ("NetworkExtensions");
+   OrderPreference = "Late";
+   Messages =
+   {
+     start = "Starting SUN Grid Engine";
+     stop = "Stopping SUN Grid Engine";
+     restart = "Restarting SUN Grid Engine";
+   };
+}
+PLIST
+
+     if [ $hosttype = "master" ]; then
+        DARWIN_GEN_REPLACE="#GENMASTERRC"
+     elif [ $hosttype = "bdb" ]; then
+        DARWIN_GEN_REPLACE="#GENBDBRC"
+     else
+        DARWIN_GEN_REPLACE="#GENEXECDRC"
+     fi
+
+     if [ -f "$RC_PREFIX/$RC_DIR/$RC_FILE" ]; then
+        DARWIN_TEMPLATE="$RC_PREFIX/$RC_DIR/$RC_FILE"
+     else
+        DARWIN_TEMPLATE="util/rctemplates/darwin_template"
+     fi
+
+     Execute sed -e "s%${DARWIN_GEN_REPLACE}%${SGE_STARTUP_FILE}%g" \
+          "$DARWIN_TEMPLATE" > "$RC_PREFIX/$RC_DIR/$RC_FILE.$$"
+     Execute chmod a+x "$RC_PREFIX/$RC_DIR/$RC_FILE.$$"
+     Execute mv "$RC_PREFIX/$RC_DIR/$RC_FILE.$$" "$RC_PREFIX/$RC_DIR/$RC_FILE"
    else
       # if this is not System V we simple add the call to the
       # startup script to RC_FILE
@@ -1259,7 +1374,7 @@ CheckRunningDaemon()
 
       sge_execd )
        h=`hostname`
-       $SGE_BIN/qping -info $h $SGE_EXECD_PORT execd 1
+       $SGE_BIN/qping -info $h $SGE_EXECD_PORT execd 1 > /dev/null
        return $?      
       ;;
 
@@ -1278,10 +1393,11 @@ CheckRunningDaemon()
 BackupConfig()
 {
    DATE=`date '+%Y-%m-%d_%H_%M_%S'`
-   BUP_BDB_COMMON_FILE_LIST_TMP="accounting bootstrap qtask settings.sh act_qmaster sgemaster host_aliases settings.csh sgeexecd sgebdb shadow_masters" 
+   BUP_BDB_COMMON_FILE_LIST_TMP="accounting bootstrap qtask settings.sh act_qmaster sgemaster host_aliases settings.csh sgeexecd sgebdb shadow_masters"
+   BUP_BDB_COMMON_DIR_LIST_TMP="sgeCA"
    BUP_BDB_SPOOL_FILE_LIST_TMP="jobseqnum"
    BUP_CLASSIC_COMMON_FILE_LIST_TMP="configuration sched_configuration accounting bootstrap qtask settings.sh act_qmaster sgemaster host_aliases settings.csh sgeexecd shadow_masters"
-   BUP_CLASSIC_DIR_LIST_TMP="local_conf" 
+   BUP_CLASSIC_DIR_LIST_TMP="sgeCA local_conf" 
    BUP_CLASSIC_SPOOL_FILE_LIST_TMP="jobseqnum admin_hosts calendars centry ckpt cqueues exec_hosts hostgroups managers operators pe projects qinstances schedd submit_hosts usermapping users usersets zombies"
    BUP_COMMON_FILE_LIST=""
    BUP_SPOOL_FILE_LIST=""
@@ -1341,10 +1457,11 @@ BackupConfig()
 RestoreConfig()
 {
    DATE=`date '+%H_%M_%S'`
-   BUP_COMMON_FILE_LIST="accounting bootstrap qtask settings.sh act_qmaster sgemaster host_aliases settings.csh sgeexecd sgebdb shadow_masters" 
+   BUP_COMMON_FILE_LIST="accounting bootstrap qtask settings.sh act_qmaster sgemaster host_aliases settings.csh sgeexecd sgebdb shadow_masters"
+   BUP_COMMON_DIR_LIST="sgeCA"
    BUP_SPOOL_FILE_LIST="jobseqnum"
    BUP_CLASSIC_COMMON_FILE_LIST="configuration sched_configuration accounting bootstrap qtask settings.sh act_qmaster sgemaster host_aliases settings.csh sgeexecd shadow_masters"
-   BUP_CLASSIC_DIR_LIST="local_conf" 
+   BUP_CLASSIC_DIR_LIST="sgeCA local_conf" 
    BUP_CLASSIC_SPOOL_FILE_LIST="jobseqnum admin_hosts calendars centry ckpt cqueues exec_hosts hostgroups managers operators pe projects qinstances schedd submit_hosts usermapping users usersets zombies"
 
    MKDIR="mkdir -p"
@@ -1408,6 +1525,12 @@ RestoreConfig()
          for f in $BUP_COMMON_FILE_LIST; do
             if [ -f /tmp/bup_tmp_$DATE/$f ]; then
                ExecuteAsAdmin $CP /tmp/bup_tmp_$DATE/$f $SGE_ROOT/$SGE_CELL/common/
+            fi
+         done
+
+         for f in $BUP_COMMON_DIR_LIST; do
+            if [ -d /tmp/bup_tmp_$DATE/$f ]; then
+               ExecuteAsAdmin $CPR /tmp/bup_tmp_$DATE/$f $SGE_ROOT/$SGE_CELL/common/
             fi
          done
 
@@ -1693,11 +1816,19 @@ RemoveRcScript()
       TMP_SGE_STARTUP_FILE=/tmp/sgemaster.$$
       STARTUP_FILE_NAME=sgemaster
       S95NAME=S95sgemaster
+      K03NAME=K03sgemaster
       DAEMON_NAME="qmaster/scheduler"
+   elif [ $hosttype = "bdb" ]; then
+      TMP_SGE_STARTUP_FILE=/tmp/sgebdb.$$
+      STARTUP_FILE_NAME=sgebdb
+      S95NAME=S94sgebdb
+      K03NAME=K04sgebdb
+      DAEMON_NAME="berkeleydb"
    else
       TMP_SGE_STARTUP_FILE=/tmp/sgeexecd.$$
       STARTUP_FILE_NAME=sgeexecd
       S95NAME=S96sgeexecd
+      K03NAME=K02sgeexecd
       DAEMON_NAME="execd"
    fi
 
@@ -1726,11 +1857,34 @@ RemoveRcScript()
       fi
    fi
 
+   # If system is Linux Standard Base (LSB) compliant, use the install_initd utility
+   if [ "$RC_FILE" = lsb ]; then
+      echo /usr/lib/lsb/remove_initd $RC_PREFIX/$STARTUP_FILE_NAME
+      Execute /usr/lib/lsb/remove_initd $RC_PREFIX/$STARTUP_FILE_NAME
+      # Several old Red Hat releases do not create/remove startup links from LSB conform
+      # scripts. So we need to check if the links were deleted.
+      # See RedHat: https://bugzilla.redhat.com/bugzilla/long_list.cgi?buglist=106193
+      if [ -f "/etc/redhat-release" -o -f "/etc/fedora-release" ]; then
+         RCD_PREFIX="/etc/rc.d"
+         # Are all startup links correctly removed?
+         for runlevel in 3 5; do
+            if [ -L "$RCD_PREFIX/rc$runlevel.d/$S95NAME" ]; then
+               Execute rm -f $RCD_PREFIX/rc$runlevel.d/$S95NAME
+            fi
+         done
+         # Are all shutdown links correctly removed?
+         for runlevel in 0 1 2 6; do
+            if [ -L "$RCD_PREFIX/rc$runlevel.d/$K03NAME" ]; then
+               Execute rm -f $RCD_PREFIX/rc$runlevel.d/$K03NAME
+            fi
+         done
+      fi
    # If we have System V we need to put the startup script to $RC_PREFIX/init.d
    # and make a link in $RC_PREFIX/rc2.d to $RC_PREFIX/init.d
-   if [ "$RC_FILE" = "sysv_rc" ]; then
-      $INFOTEXT "Removing startup script %s" "$RC_PREFIX/$RC_DIR/$S95NAME"
+   elif [ "$RC_FILE" = "sysv_rc" ]; then
+      $INFOTEXT "Removing startup script %s and %s" "$RC_PREFIX/$RC_DIR/$S95NAME" "$RC_PREFIX/$RC_DIR/$K03NAME"
       Execute rm -f $RC_PREFIX/$RC_DIR/$S95NAME
+      Execute rm -f $RC_PREFIX/$RC_DIR/$K03NAME
       Execute rm -f $RC_PREFIX/init.d/$STARTUP_FILE_NAME
 
       # runlevel management in Linux is different -
@@ -1744,20 +1898,41 @@ RemoveRcScript()
       lx2?-*)
          runlevel=`grep "^id:.:initdefault:"  /etc/inittab | cut -f2 -d:`
          if [ "$runlevel" = 2 -o  "$runlevel" = 5 ]; then
-            $INFOTEXT "Removing startup script %s" "$RC_PREFIX/rc${runlevel}.d/$S95NAME"
+            $INFOTEXT "Removing startup script %s and %s" "$RC_PREFIX/rc${runlevel}.d/$S95NAME" "$RC_PREFIX/rc${runlevel}.d/$K03NAME"
             Execute rm -f $RC_PREFIX/rc${runlevel}.d/$S95NAME
+            Execute rm -f $RC_PREFIX/rc${runlevel}.d/$K03NAME
          fi
          ;;
        esac
 
    elif [ "$RC_FILE" = "insserv-linux" ]; then
-      echo  cp $SGE_STARTUP_FILE $RC_PREFIX/$STARTUP_FILE_NAME
-      echo /sbin/insserv $RC_PREFIX/$STARTUP_FILE_NAME
-      Execute cp $SGE_STARTUP_FILE $RC_PREFIX/$STARTUP_FILE_NAME
-      /sbin/insserv $RC_PREFIX/$STARTUP_FILE_NAME
+      echo  rm $SGE_STARTUP_FILE $RC_PREFIX/$STARTUP_FILE_NAME
+      echo /sbin/insserv -r $RC_PREFIX/$STARTUP_FILE_NAME
+      Execute rm $SGE_STARTUP_FILE $RC_PREFIX/$STARTUP_FILE_NAME
+      /sbin/insserv -r $RC_PREFIX/$STARTUP_FILE_NAME
    elif [ "$RC_FILE" = "freebsd" ]; then
-      echo  cp $SGE_STARTUP_FILE $RC_PREFIX/sge${RC_SUFFIX}
-      Execute cp $SGE_STARTUP_FILE $RC_PREFIX/sge${RC_SUFFIX}
+      echo  rm $SGE_STARTUP_FILE $RC_PREFIX/sge${RC_SUFFIX}
+      Execute rm $SGE_STARTUP_FILE $RC_PREFIX/sge${RC_SUFFIX}
+   elif [ "$RC_FILE" = "SGE" ]; then
+      if [ $hosttype = "master" ]; then
+        DARWIN_GEN_REPLACE="#GENMASTERRC"
+      elif [ $hosttype = "bdb" ]; then
+        DARWIN_GEN_REPLACE="#GENBDBRC"
+      else
+        DARWIN_GEN_REPLACE="#GENEXECDRC"
+      fi
+
+      Execute sed -e "s%${SGE_STARTUP_FILE}%${DARWIN_GEN_REPLACE}%g" \
+          "$RC_PREFIX/$RC_DIR/$RC_FILE" > "$RC_PREFIX/$RC_DIR/$RC_FILE.$$"
+      Execute chmod a+x "$RC_PREFIX/$RC_DIR/$RC_FILE.$$"
+      Execute mv "$RC_PREFIX/$RC_DIR/$RC_FILE.$$" "$RC_PREFIX/$RC_DIR/$RC_FILE"
+
+      if [ "`grep '#GENMASTERRC' $RC_PREFIX/$RC_DIR/$RC_FILE`" = "" -o \
+           "`grep '#GENBDBRC' $RC_PREFIX/$RC_DIR/$RC_FILE`" = "" -o \
+           "`grep '#GENEXECDRC' $RC_PREFIX/$RC_DIR/$RC_FILE`" ]; then
+         echo rm -rf "$RC_PREFIX/$RC_DIR"
+         Execute  rm -rf "$RC_PREFIX/$RC_DIR"
+      fi
    else
       # if this is not System V we simple add the call to the
       # startup script to RC_FILE
@@ -1913,9 +2088,9 @@ CreateTarArchive()
       if [ $? -eq 0 ]; then
          TAR=$TAR" -cvf"
          if [ "$spooling_method" = "berkeleydb" ]; then
-            ExecuteAsAdmin $TAR $bup_file $DATE.dump $BUP_COMMON_FILE_LIST $BUP_SPOOL_FILE_LIST
+            ExecuteAsAdmin $TAR $bup_file $DATE.dump $BUP_COMMON_FILE_LIST $BUP_SPOOL_FILE_LIST $BUP_COMMON_DIR_LIST
          else
-            ExecuteAsAdmin $TAR $bup_file $BUP_COMMON_FILE_LIST $BUP_SPOOL_FILE_LIST $BUP_CLASSIC_DIR_LIST
+            ExecuteAsAdmin $TAR $bup_file $BUP_COMMON_FILE_LIST $BUP_SPOOL_FILE_LIST $BUP_COMMON_DIR_LIST
          fi          
 
          ZIP=`which gzip`
@@ -1940,7 +2115,7 @@ CreateTarArchive()
 
       cd $backup_dir     
       RMF="rm -fR" 
-      ExecuteAsAdmin $RMF $DATE.dump.tar $DATE.dump $BUP_COMMON_FILE_LIST $BUP_SPOOL_FILE_LIST $BUP_CLASSIC_DIR_LIST
+      ExecuteAsAdmin $RMF $DATE.dump.tar $DATE.dump $BUP_COMMON_FILE_LIST $BUP_SPOOL_FILE_LIST $BUP_COMMON_DIR_LIST
 
       cd $SGE_ROOT
 
@@ -1972,6 +2147,13 @@ DoBackup()
          fi
       done
 
+      for f in $BUP_BDB_COMMON_DIR_LIST_TMP; do
+         if [ -d $SGE_ROOT/$SGE_CELL/common/$f ]; then
+            BUP_COMMON_DIR_LIST="$BUP_COMMON_DIR_LIST $f"
+            ExecuteAsAdmin $CPFR $SGE_ROOT/$SGE_CELL/common/$f $backup_dir
+         fi
+      done
+
       for f in $BUP_BDB_SPOOL_FILE_LIST_TMP; do
          if [ -f $master_spool/$f ]; then
             BUP_SPOOL_FILE_LIST="$BUP_SPOOL_FILE_LIST $f"
@@ -1996,7 +2178,7 @@ DoBackup()
 
       for f in $BUP_CLASSIC_DIR_LIST_TMP; do
          if [ -d $SGE_ROOT/$SGE_CELL/common/$f ]; then
-            BUP_CLASSIC_DIR_LIST="$BUP_CLASSIC_DIR_LIST $f"
+            BUP_COMMON_DIR_LIST="$BUP_COMMON_DIR_LIST $f"
             ExecuteAsAdmin $CPFR $SGE_ROOT/$SGE_CELL/common/$f $backup_dir
          fi
       done
@@ -2018,7 +2200,7 @@ ExtractBackup()
             loop_stop="false"
          fi
       done
-      Makedir /tmp/bup_tmp_$DATE
+      mkdir /tmp/bup_tmp_$DATE # don't call here Makedir because $ADMINUSER is not set
       $INFOTEXT -n "\nCopying backupfile to /tmp/bup_tmp_%s\n" $DATE
       cp $bup_file /tmp/bup_tmp_$DATE
       cd /tmp/bup_tmp_$DATE/
@@ -2185,7 +2367,7 @@ CheckServiceAndPorts()
           cat /etc/services | grep -w "$check_val/tcp" > /dev/null 2>&1
           ret=$? 
           if [ "$res" = 1 ]; then
-             pcat services.byname | grep -w "$check_val/tcp" > /dev/null 2>&1
+             ypcat services.byname | grep -w "$check_val/tcp" > /dev/null 2>&1
              ret=$?
           fi
        ;;

@@ -35,10 +35,6 @@
 #include <string.h>
 #include <errno.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif   
-
 #include "uti/sge_string.h"
 #include "sge_all_listsL.h"
 #include "sge_bootstrap.h"
@@ -65,12 +61,12 @@ static void
 usage(const char *argv0)
 {
    fprintf(stderr, "%s\n %s command\n\n", MSG_UTILBIN_USAGE, argv0);
-   fprintf(stderr, "%s", MSG_DBSTAT_COMMANDINTRO1);
-   fprintf(stderr, "%s", MSG_DBSTAT_COMMANDINTRO2);
-   fprintf(stderr, "%s", MSG_DBSTAT_LIST);
-   fprintf(stderr, "%s", MSG_DBSTAT_DUMP);
-   fprintf(stderr, "%s", MSG_DBSTAT_LOAD);
-   fprintf(stderr, "%s", MSG_DBSTAT_DELETE);
+   fprintf(stderr, "%s\n", MSG_DBSTAT_COMMANDINTRO1);
+   fprintf(stderr, "%s\n", MSG_DBSTAT_COMMANDINTRO2);
+   fprintf(stderr, "%s\n", MSG_DBSTAT_LIST);
+   fprintf(stderr, "%s\n", MSG_DBSTAT_DUMP);
+   fprintf(stderr, "%s\n", MSG_DBSTAT_LOAD);
+   fprintf(stderr, "%s\n", MSG_DBSTAT_DELETE);
 }
 
 static int 
@@ -235,7 +231,7 @@ dump_object(bdb_info info, const char *key)
 
    /* close the transaction */
    dbret = spool_berkeleydb_end_transaction(&answer_list, info, 
-                                            ret == EXIT_SUCCESS);
+                                            (ret == EXIT_SUCCESS) ? true : false);
    if (!dbret) {
       answer_list_output(&answer_list);
       ret = EXIT_FAILURE;
@@ -296,7 +292,7 @@ load_object(bdb_info info, const char *key, const char *fname)
 
          /* close the transaction */
          dbret = spool_berkeleydb_end_transaction(&answer_list, info, 
-                                                  ret == EXIT_SUCCESS);
+                                                  (ret == EXIT_SUCCESS) ? true : false);
          if (!dbret) {
             answer_list_output(&answer_list);
             ret = EXIT_FAILURE;
@@ -304,7 +300,7 @@ load_object(bdb_info info, const char *key, const char *fname)
       }
    }
 
-   object = lFreeElem(object);
+   lFreeElem(&object);
 
    DEXIT;
    return ret;
@@ -341,7 +337,7 @@ delete_object( bdb_info info, const char *key)
 
    /* close the transaction */
    dbret = spool_berkeleydb_end_transaction(&answer_list, info, 
-                                            ret == EXIT_SUCCESS);
+                                            (ret == EXIT_SUCCESS) ? true : false);
    if (!dbret) {
       answer_list_output(&answer_list);
       ret = EXIT_FAILURE;

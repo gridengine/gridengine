@@ -19,6 +19,8 @@
    9.3. New options to optimize memory overhead and speed of qstat (6.0u2)
    9.4. Tuning parameter for sharetree spooling (6.0u2)
    9.5. New man pages (6.0u2)
+   9.6. Support for Solaris 10 on AMD64 (Opteron) (6.0u4)
+   9.7. Installation Improvements (6.0u4)
 
 1) Who needs to read this document
 ----------------------------------
@@ -127,8 +129,8 @@
 
       - you choose the BDB spooling option (not needed for classic
         spooling) either locally or with the BDB RPC option, and you are
-        upgrading your cluster from SGE 6.0 or SGE 6.0u1 to SGE 6.0u2 or
-        higher.
+        upgrading your cluster from SGE 6.0 or SGE 6.0u1 or SGE 6.0u2 or 
+        SGE 6.0u3 to SGE 6.0u4 or higher.  
 
    6.1. Backup BDB
    ---------------
@@ -296,3 +298,29 @@
       getservbyname(1) - man page for commands in <sge_root>/utilbin/<arch>
       qping(1)         - man page for utility to monitor Grid Engine daemon
                          communication
+   - Renamed man pages:
+      sge_h_aliases.z -> host_aliases.z
+      sge_h_aliases.5 -> host_aliases.5
+
+   - Pre formatted and uncompressed man pages have been added to
+
+      <sge-root>/catman/cat/cat{1,3,5,8}
+
+   9.6. Support for Solaris 10 on AMD64 (Opteron) (6.0u4)
+   ------------------------------------------------------
+   
+   A new binary architecture was introduced for Solaris 10 with 64bit 
+   support on AMD64 Opteron CPUs. The new architecture is fully supported
+   like all other architectures.
+
+   9.7. Installation Improvements (6.0u4)
+   --------------------------------------
+
+   - Berkeley DB (BDB) RPC server auto installation and de-installation is now
+    supported
+   - Backup/restore for classic and BDB RPC server spooling supported
+   - Daemon startup scripts create Linux LSB conforming "lock" file
+   - Improved diagnosis messages during auto installation
+   - Execution daemon un-installation leaves no references to de-installed
+    execution host
+

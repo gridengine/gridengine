@@ -32,10 +32,6 @@
 #include <string.h>
 #include <sys/types.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif   
-
 #include "sge.h"
 #include "sge_log.h"
 #include "sgermon.h"
@@ -230,7 +226,7 @@ char *rhost
       return ret;
    }
 
-   lFreeElem(lDechainElem(*userset_list, found));
+   lRemoveElem(*userset_list, &found);
 
    sge_event_spool(alpp, 0, sgeE_USERSET_DEL, 
                    0, 0, userset_name, NULL, NULL,
@@ -322,7 +318,7 @@ char *rhost
    }
 
    /* delete old userset */
-   lRemoveElem(*userset_list, found);
+   lRemoveElem(*userset_list, &found);
 
    /* insert modified userset */
    lAppendElem(*userset_list, lCopyElem(ep));
@@ -369,7 +365,7 @@ sge_change_queue_version_acl(const char *acl_name)
          lList *xacl_list = lGetList(qinstance, QU_xacl);
          lListElem *acl = lGetElemStr(acl_list, US_name, acl_name);
          lListElem *xacl = lGetElemStr(xacl_list, US_name, acl_name);
-         bool is_used = ((acl != NULL) || (xacl != NULL));
+         bool is_used = ((acl != NULL) || (xacl != NULL)) ? true : false;
 
          if (is_used) {
             lList *answer_list = NULL;
@@ -444,8 +440,8 @@ lList **alpp
    where = lWhere("%T(%I m= %u && %I != %s)", US_Type, US_type, US_DEPT,
                      US_name, lGetString(new_userset, US_name));
    depts = lSelect("Departments", userset_list, where, what);
-   lFreeWhere(where);
-   lFreeWhat(what);
+   lFreeWhere(&where);
+   lFreeWhat(&what);
 
    if (!depts) {
       DEXIT;
@@ -463,7 +459,7 @@ lList **alpp
          break;
    }
    
-   lFreeList(depts);
+   lFreeList(&depts);
    
    if (answers) {
       *alpp = answers;
@@ -503,13 +499,13 @@ static int dept_is_valid_defaultdepartment(lListElem *dept,
       /* test 'type' */
       if (!(lGetUlong(dept, US_type) & US_DEPT)) {
          ERROR((SGE_EVENT, MSG_QMASTER_DEPTFORDEFDEPARTMENT));
-         answer_list_add(answer_list, SGE_EVENT, STATUS_ESEMANTIC, 0);
+         answer_list_add(answer_list, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
          ret = 0;
       }
       /* test user list */
       if (lGetNumberOfElem(lGetList(dept, US_entries)) > 0 ) {
          ERROR((SGE_EVENT, MSG_QMASTER_AUTODEFDEPARTMENT));
-         answer_list_add(answer_list, SGE_EVENT, STATUS_ESEMANTIC, 0);
+         answer_list_add(answer_list, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
          ret = 0;
       }
    }
@@ -544,12 +540,12 @@ static int acl_is_valid_acl(lListElem *acl,
       if (!(lGetUlong(acl, US_type) & US_DEPT)) {
          if (lGetUlong(acl, US_fshare) > 0) {
             ERROR((SGE_EVENT, MSG_QMASTER_ACLNOSHARE));
-            answer_list_add(answer_list, SGE_EVENT, STATUS_ESEMANTIC, 0);
+            answer_list_add(answer_list, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
             ret = 0;
          }
          if (lGetUlong(acl, US_oticket) > 0) {
             ERROR((SGE_EVENT, MSG_QMASTER_ACLNOTICKET));
-            answer_list_add(answer_list, SGE_EVENT, STATUS_ESEMANTIC, 0);
+            answer_list_add(answer_list, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
             ret = 0;
          }
       }
@@ -679,6 +675,7 @@ const char *userset_name
    int ret = STATUS_OK;
    lListElem *ep;
    lListElem *cqueue;
+   lList* user_lists;
 
    DENTER(TOP_LAYER, "verify_userset_deletion");
 
@@ -755,19 +752,23 @@ const char *userset_name
    }
 
    /* global configuration */
-   if (lGetElemStr(conf.user_lists, US_name, userset_name)) {
+   user_lists = mconf_get_user_lists();
+   if (lGetElemStr(user_lists, US_name, userset_name)) {
       ERROR((SGE_EVENT, MSG_SGETEXT_USERSETSTILLREFERENCED_SSSS, userset_name, 
             MSG_OBJ_USERLIST, MSG_OBJ_CONF, MSG_OBJ_GLOBAL));
       answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       ret = STATUS_EUNKNOWN;
    }
+   lFreeList(&user_lists);
 
-   if (lGetElemStr(conf.xuser_lists, US_name, userset_name)) {
+   user_lists = mconf_get_xuser_lists();
+   if (lGetElemStr(user_lists, US_name, userset_name)) {
       ERROR((SGE_EVENT, MSG_SGETEXT_USERSETSTILLREFERENCED_SSSS, userset_name, 
             MSG_OBJ_XUSERLIST, MSG_OBJ_CONF, MSG_OBJ_GLOBAL));
       answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       ret = STATUS_EUNKNOWN;
    }
+   lFreeList(&user_lists);
 
    DEXIT;
    return ret;

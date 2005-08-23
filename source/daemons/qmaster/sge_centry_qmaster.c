@@ -36,10 +36,6 @@
 #include <string.h>
 #include <errno.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif  
-
 #include "sge_c_gdi.h"
 #include "sge.h"
 #include "sgermon.h"
@@ -83,7 +79,7 @@ sge_change_queue_version_centry(void);
 int 
 centry_mod(lList **answer_list, lListElem *centry, lListElem *reduced_elem, 
            int add, const char *remote_user, const char *remote_host, 
-           gdi_object_t *object, int sub_command) 
+           gdi_object_t *object, int sub_command, monitoring_t *monitor) 
 {
    bool ret = true;
    bool is_slots_attr = false;
@@ -134,7 +130,7 @@ centry_mod(lList **answer_list, lListElem *centry, lListElem *reduced_elem,
          if (is_slots_attr) {
             type = TYPE_INT;
          }
-         DPRINTF(("Got CE_valtype: "u32"\n", type));
+         DPRINTF(("Got CE_valtype: "sge_u32"\n", type));
          lSetUlong(centry, CE_valtype, type);
       }
    }
@@ -151,7 +147,7 @@ centry_mod(lList **answer_list, lListElem *centry, lListElem *reduced_elem,
          if (is_slots_attr) {
             relop = CMPLXLE_OP;
          }
-         DPRINTF(("Got CE_relop: "u32"\n", relop));
+         DPRINTF(("Got CE_relop: "sge_u32"\n", relop));
          lSetUlong(centry, CE_relop, relop);
       }
    }
@@ -168,7 +164,7 @@ centry_mod(lList **answer_list, lListElem *centry, lListElem *reduced_elem,
          if (is_slots_attr) {
             request = REQU_YES;
          }
-         DPRINTF(("Got CE_requestable: "u32"\n", request));
+         DPRINTF(("Got CE_requestable: "sge_u32"\n", request));
          lSetUlong(centry, CE_requestable, request);
       }
    }
@@ -180,12 +176,12 @@ centry_mod(lList **answer_list, lListElem *centry, lListElem *reduced_elem,
       pos = lGetPosViaElem(reduced_elem, CE_consumable);
 
       if (pos >= 0) {
-         bool consumable = lGetPosBool(reduced_elem, pos);
+         bool consumable = lGetPosBool(reduced_elem, pos) ? true : false;
 
          if (is_slots_attr) {
             consumable = true;
          }
-         DPRINTF(("Got CE_consumable: "u32"\n", (u_long32)consumable));
+         DPRINTF(("Got CE_consumable: "sge_u32"\n", (u_long32)consumable));
          lSetBool(centry, CE_consumable, consumable);
       }
    }
@@ -314,7 +310,7 @@ centry_spool(lList **alpp, lListElem *cep, gdi_object_t *object)
 *
 *******************************************************************************/
 int 
-centry_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object, lList **ppList) 
+centry_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object, lList **ppList, monitoring_t *monitor) 
 {
    bool rebuild_consumables = false;
 
@@ -331,8 +327,8 @@ centry_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object, lList **p
        * it is a consumable and the default value has changed,
        * queue / host values for these consumables have to be rebuilt.
        */
-      bool consumable = lGetBool(ep, CE_consumable);
-      bool old_consumable = lGetBool(old_ep, CE_consumable);
+      bool consumable = lGetBool(ep, CE_consumable) ? true : false;
+      bool old_consumable = lGetBool(old_ep, CE_consumable) ? true : false;
       if ((consumable && !old_consumable) ||
           (!consumable && old_consumable)) {
             rebuild_consumables = true;
@@ -393,13 +389,12 @@ int sge_del_centry(lListElem *centry, lList **answer_list,
             if (tmp_centry != NULL) {
                if (!centry_is_referenced(tmp_centry, &local_answer_list, 
                         *(object_type_get_master_list(SGE_TYPE_CQUEUE)),
-                        Master_Exechost_List, 
-                        *(object_type_get_master_list(SGE_TYPE_SCHEDD_CONF)))) {
+                        Master_Exechost_List )) {
                   if (sge_event_spool(answer_list, 0, sgeE_CENTRY_DEL, 
                                       0, 0, name, NULL, NULL,
                                       NULL, NULL, NULL, true, true)) {
 
-                     lRemoveElem(master_centry_list, tmp_centry);
+                     lRemoveElem(master_centry_list, &tmp_centry);
                      INFO((SGE_EVENT, MSG_SGETEXT_REMOVEDFROMLIST_SSSS, 
                            remote_user, remote_host, name, MSG_OBJ_CPLX));
                      answer_list_add(answer_list, SGE_EVENT, 
@@ -417,25 +412,25 @@ int sge_del_centry(lListElem *centry, lList **answer_list,
                   ERROR((SGE_EVENT, "denied: %s", lGetString(answer, AN_text)));
                   answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN,
                                  ANSWER_QUALITY_ERROR);
-                  local_answer_list = lFreeList(local_answer_list);
+                  lFreeList(&local_answer_list);
                   ret = false;
                }
             } else {
                ERROR((SGE_EVENT, MSG_SGETEXT_DOESNOTEXIST_SS, 
                      MSG_OBJ_CPLX, name));
-               answer_list_add(answer_list, SGE_EVENT, STATUS_EEXIST, 0);
+               answer_list_add(answer_list, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
                ret = false;
             }
          }
       } else {
          CRITICAL((SGE_EVENT, MSG_SGETEXT_MISSINGCULLFIELD_SS,
                    lNm2Str(CE_name), SGE_FUNC));
-         answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN, 0);
+         answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          ret = false;
       }
    } else {
       CRITICAL((SGE_EVENT, MSG_SGETEXT_NULLPTRPASSED_S, SGE_FUNC));
-      answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN, 0);
+      answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       ret = false;
    }
 

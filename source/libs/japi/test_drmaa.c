@@ -41,10 +41,6 @@
 /* this timeout is in effect with SGE commprocs */
 #define SGE_COMMPROC_TIMEOUT 60*5
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif   
-
 #include "drmaa.h"
 #include "cull_list.h"
 #include "sge_gdi.h"
@@ -56,6 +52,7 @@
 #include "sgermon.h"
 
 #include "uti/sge_profiling.h"
+#include "commlib.h"
 
 #define JOB_CHUNK 8
 #define NTHREADS 3
@@ -70,6 +67,11 @@ enum {
    ST_SUBMIT_WAIT,    
       /* - one thread 
          - submit jobs 
+         - wait for jobend */
+
+   ST_SUBMIT_NO_RUN_WAIT,    
+      /* - one thread 
+         - submit jobs that won't run
          - wait for jobend */
 
    MT_SUBMIT_WAIT,        
@@ -421,7 +423,6 @@ const struct test_name2number_map {
    { "ST_MULT_EXIT",                              ST_MULT_EXIT,                              0, "" },
    { "ST_SUPPORTED_ATTR",                         ST_SUPPORTED_ATTR,                         0, "" },
    { "ST_SUPPORTED_VATTR",                        ST_SUPPORTED_VATTR,                        0, "" },
-   { "ST_ATTRIBUTE_CHECK",                        ST_ATTRIBUTE_CHECK,                       2, "<exit_arg_job> <email_addr>" },
    { "ST_VERSION",                                ST_VERSION,                                0, "" },
    { "ST_DRM_SYSTEM",                             ST_DRM_SYSTEM,                             0, "" },
    { "ST_DRMAA_IMPL",                             ST_DRMAA_IMPL,                             0, "" },
@@ -431,6 +432,7 @@ const struct test_name2number_map {
    { "ST_EMPTY_SESSION_SYNCHRONIZE_NODISPOSE",    ST_EMPTY_SESSION_SYNCHRONIZE_NODISPOSE,    0, "" },
    { "ST_EMPTY_SESSION_CONTROL",                  ST_EMPTY_SESSION_CONTROL,                  1, "DRMAA_CONTROL_*" },
    { "ST_SUBMIT_WAIT",                            ST_SUBMIT_WAIT,                            1, "<sleeper_job>" },
+   { "ST_SUBMIT_NO_RUN_WAIT",                     ST_SUBMIT_NO_RUN_WAIT,                     1, "<sleeper_job>" },
    { "ST_BULK_SUBMIT_WAIT",                       ST_BULK_SUBMIT_WAIT,                       1, "<sleeper_job>" },
    { "ST_BULK_SINGLESUBMIT_WAIT_INDIVIDUAL",      ST_BULK_SINGLESUBMIT_WAIT_INDIVIDUAL,      1, "<sleeper_job>" },
    { "ST_SUBMITMIXTURE_SYNC_ALL_DISPOSE",         ST_SUBMITMIXTURE_SYNC_ALL_DISPOSE,         1, "<sleeper_job>" },
@@ -448,7 +450,6 @@ const struct test_name2number_map {
    { "ST_BULK_SUBMIT_IN_HOLD_SINGLE_RELEASE",     ST_BULK_SUBMIT_IN_HOLD_SINGLE_RELEASE,     1, "<sleeper_job>" },
    { "ST_BULK_SUBMIT_IN_HOLD_SESSION_DELETE",     ST_BULK_SUBMIT_IN_HOLD_SESSION_DELETE,     1, "<sleeper_job>" },
    { "ST_BULK_SUBMIT_IN_HOLD_SINGLE_DELETE",      ST_BULK_SUBMIT_IN_HOLD_SINGLE_DELETE,      1, "<sleeper_job>" },
-   { "ST_SUBMIT_SUSPEND_RESUME_WAIT",             ST_SUBMIT_SUSPEND_RESUME_WAIT,             1, "<sleeper_job>" },
    { "ST_SUBMIT_POLLING_WAIT_TIMEOUT",            ST_SUBMIT_POLLING_WAIT_TIMEOUT,            1, "<sleeper_job>" },
    { "ST_SUBMIT_POLLING_WAIT_ZEROTIMEOUT",        ST_SUBMIT_POLLING_WAIT_ZEROTIMEOUT,        1, "<sleeper_job>" },
    { "ST_SUBMIT_POLLING_SYNCHRONIZE_TIMEOUT",     ST_SUBMIT_POLLING_SYNCHRONIZE_TIMEOUT,     1, "<sleeper_job>" },
@@ -460,9 +461,12 @@ const struct test_name2number_map {
    { "MT_EXIT_DURING_SUBMIT",                    MT_EXIT_DURING_SUBMIT,                      1, "<sleeper_job>" },
    { "MT_SUBMIT_MT_WAIT",                        MT_SUBMIT_MT_WAIT,                          1, "<sleeper_job>" },
    { "MT_EXIT_DURING_SUBMIT_OR_WAIT",            MT_EXIT_DURING_SUBMIT_OR_WAIT,              1, "<sleeper_job>" },
-   
+  
+   /* ------------------------------------------------------------------------------------ */
    /* tests that require test suite to be run in an automated fashion (file name creation) */
    { "ST_INPUT_BECOMES_OUTPUT",                  ST_INPUT_BECOMES_OUTPUT,                    2, "<input_path> <output_path>" },
+   { "ST_ATTRIBUTE_CHECK",                       ST_ATTRIBUTE_CHECK,                         2, "<exit_arg_job> <email_addr>" },
+   { "ST_SUBMIT_SUSPEND_RESUME_WAIT",            ST_SUBMIT_SUSPEND_RESUME_WAIT,              1, "<sleeper_job>" },
 
    /* tests that test_drmaa can't test in an automated fashion (so far) */
    { "ST_DRMAA_JOB_PS",                          ST_DRMAA_JOB_PS,                            1, "<jobid> ..."   },
@@ -491,7 +495,7 @@ static int submit_and_wait(int n);
 static int submit_sleeper(int n);
 static int submit_input_mirror(int n, const char *mirror_job, 
                                const char *input_path, const char *output_path,
-                               const char *error_path, int join);
+                               const char *error_path, int join, char* hostname);
 static int do_submit(drmaa_job_template_t *jt, int n);
 static int wait_all_jobs(int n);
 static int wait_n_jobs(int n);
@@ -510,6 +514,8 @@ static int str2drmaa_errno(const char *str);
 static const char *drmaa_state2str(int state);
 static const char *drmaa_ctrl2str(int control);
 static const char *drmaa_errno2str(int ctrl);
+
+static void array_job_run_sequence_adapt(int **sequence, int job_id, int count); 
 
 static int set_path_attribute_plus_colon(drmaa_job_template_t *jt, const char *name, 
    const char *value, char *error_diagnosis, size_t error_diag_len);
@@ -624,11 +630,12 @@ int main(int argc, char *argv[])
          usage();
 
       if (test_case == ALL_TESTS) {
+         int success = 1;
          sleeper_job = NEXT_ARGV(&argc, &argv);
          exit_job    = NEXT_ARGV(&argc, &argv);
          email_addr  = NEXT_ARGV(&argc, &argv);
 
-         for (i=1; test_map[i].test_name && test_map[i].test_number != FIRST_NON_AUTOMATED_TEST; i++) {
+         for (i=1; test_map[i].test_name && test_map[i].test_number != FIRST_NON_AUTOMATED_TEST && success; i++) {
             test_case = test_map[i].test_number;
             printf("---------------------\n");
             printf("starting test #%d (%s)\n", i, test_map[i].test_name);
@@ -664,6 +671,9 @@ int main(int argc, char *argv[])
                   printf("successfully finished test #%d\n", i);
                break;
             }
+            
+            if (failed)
+               success = 0;
          }
       } else {
          printf("starting test \"%s\"\n", test_map[i].test_name);
@@ -690,6 +700,7 @@ static int test(int *argc, char **argv[], int parse_args)
    char diagnosis[DRMAA_ERROR_STRING_BUFFER];
    drmaa_job_template_t *jt = NULL;
    int drmaa_errno=0;
+   int do_while_end = 0;
 
    switch (test_case) {
    case ST_MULT_INIT:
@@ -733,8 +744,9 @@ static int test(int *argc, char **argv[], int parse_args)
       break;
 
    case ST_SUBMIT_WAIT:
+   case ST_SUBMIT_NO_RUN_WAIT:
       {
-         int n = -1;
+         int n = (test_case == ST_SUBMIT_WAIT)?JOB_CHUNK:1;
          char jobid[1024];
 
          if (parse_args)
@@ -751,7 +763,11 @@ static int test(int *argc, char **argv[], int parse_args)
             return 1;
          }
 
-         for (i=0; i<JOB_CHUNK; i++) {
+         if (test_case == ST_SUBMIT_NO_RUN_WAIT) {
+            drmaa_set_attribute(jt, DRMAA_NATIVE_SPECIFICATION, "-l a=fantasy_os -now yes -w n", NULL, 0);
+         }
+
+         for (i=0; i<n; i++) {
             if (drmaa_run_job(jobid, sizeof(jobid)-1, jt, diagnosis, sizeof(diagnosis)-1)!=DRMAA_ERRNO_SUCCESS) {
                fprintf(stderr, "drmaa_run_job() failed: %s\n", diagnosis);
                return 1;
@@ -1853,16 +1869,17 @@ static int test(int *argc, char **argv[], int parse_args)
          const char *mirror_job = "/bin/cat",
          *input_path  = NULL,
          *output_path = NULL;
-         FILE *fp;
+         FILE *fp = NULL;
          char buffer[1024];
          const char *mirror_text = "thefoxjumps...";
+         char* local_host_name = NULL;
 
          if (parse_args) {
             input_path  = NEXT_ARGV(argc, argv);
             output_path = NEXT_ARGV(argc, argv);
          }
 
-         if (!(fp = fopen(input_path, "w+"))) {
+         if (!(fp = fopen(input_path, "w"))) {
             fprintf(stderr, "fopen(w) failed: %s\n", strerror(errno));
             return 1;
          }
@@ -1875,10 +1892,17 @@ static int test(int *argc, char **argv[], int parse_args)
          }
          report_session_key();
 
-         if (submit_input_mirror(1, mirror_job, input_path, output_path, 
-               NULL, 1)!=DRMAA_ERRNO_SUCCESS) {
+         cl_com_gethostname(&local_host_name, NULL, NULL, NULL);
+         if (local_host_name == NULL) {
+            fprintf(stderr, "can't get local hostname\n");
             return 1;
          }
+         if (submit_input_mirror(1, mirror_job, input_path, output_path, 
+               NULL, 1, local_host_name)!=DRMAA_ERRNO_SUCCESS) {
+            return 1;
+         }
+         FREE(local_host_name);
+
          if (wait_n_jobs(1) != DRMAA_ERRNO_SUCCESS) {
             return 1;
          }
@@ -2236,7 +2260,7 @@ static int test(int *argc, char **argv[], int parse_args)
                const char *session_all[] = { DRMAA_JOB_IDS_SESSION_ALL, NULL };
                /* drmaa_synchronize(DRMAA_JOB_IDS_SESSION_ALL) must return DRMAA_ERRNO_SUCCESS */
                if ((drmaa_errno=drmaa_synchronize(session_all, DRMAA_TIMEOUT_WAIT_FOREVER, 
-                    ST_EMPTY_SESSION_SYNCHRONIZE_DISPOSE?0:1, 
+                    (test_case == ST_EMPTY_SESSION_SYNCHRONIZE_DISPOSE) ? 1 : 0, 
                      diagnosis, sizeof(diagnosis)-1))!=DRMAA_ERRNO_SUCCESS) {
                   fprintf(stderr, "drmaa_synchronize(empty session) failed: %s\n", diagnosis);
                   return 1;
@@ -2615,7 +2639,7 @@ static int test(int *argc, char **argv[], int parse_args)
             else if (!failed_test) {
                printf ("Test succeeded!\n");
             }
-         } while (0);
+         } while (do_while_end);
          
          if (jt != NULL) { drmaa_delete_job_template(jt, NULL, 0); jt = NULL; }
          
@@ -2661,12 +2685,12 @@ static int test(int *argc, char **argv[], int parse_args)
 
             printf ("Getting job name for job %lu from GDI\n", (unsigned long)atol(jobid));
             {
-               lCondition* where = lWhere ("%T(%I==%u)", JB_Type, JB_job_number, (u_long32)atol(jobid));
-               lEnumeration *what = lWhat ("%T (%I %I)", JB_Type, JB_job_number, JB_job_name);
-               alp = sge_gdi (SGE_JOB_LIST, SGE_GDI_GET, &job_lp, where, what);
-               job_ep = lFirst (job_lp);
-               lFreeWhere (where);
-               lFreeWhat (what);
+               lCondition* where = lWhere("%T(%I==%u)", JB_Type, JB_job_number, (u_long32)atol(jobid));
+               lEnumeration *what = lWhat("%T (%I %I)", JB_Type, JB_job_number, JB_job_name);
+               alp = sge_gdi(SGE_JOB_LIST, SGE_GDI_GET, &job_lp, where, what);
+               job_ep = lFirst(job_lp);
+               lFreeWhere(&where);
+               lFreeWhat(&what);
             }
             {
                int tmp_ret = answer_list_print_err_warn(&alp, "GDI Error: ", "Message from GDI: ");
@@ -2676,7 +2700,7 @@ static int test(int *argc, char **argv[], int parse_args)
                   failed_test = 1;
                }
             }
-            alp = lFreeList(alp);         
+            lFreeList(&alp);
 
             if (job_ep == NULL) {
                printf ("No such job number.\n");
@@ -2689,7 +2713,7 @@ static int test(int *argc, char **argv[], int parse_args)
                failed_test = 1;
             }
 
-            job_lp = lFreeList (job_lp);
+            lFreeList(&job_lp);
             
             printf ("Checking job state\n");
             if (drmaa_job_ps(jobid, &job_state, diagnosis, sizeof(diagnosis)-1)
@@ -2733,7 +2757,7 @@ static int test(int *argc, char **argv[], int parse_args)
             if (!failed_test) {
                printf ("Test succeeded!\n");
             }
-         } while (0);
+         } while (do_while_end);
          
          if (jt != NULL) { drmaa_delete_job_template(jt, NULL, 0); jt = NULL; }
          
@@ -2831,7 +2855,7 @@ static int test(int *argc, char **argv[], int parse_args)
             else if (!failed_test) {
                printf ("Test succeeded!\n");
             }
-         } while (0);
+         } while (do_while_end);
          
          if (jt != NULL) { drmaa_delete_job_template(jt, NULL, 0); jt = NULL; }
 
@@ -2916,7 +2940,7 @@ static int test(int *argc, char **argv[], int parse_args)
             else if (!failed_test) {
                printf ("Test succeeded!\n");
             }
-         } while (0);
+         } while (do_while_end);
 
          if (jt != NULL) { drmaa_delete_job_template(jt, NULL, 0); jt = NULL; }
          
@@ -3077,7 +3101,7 @@ static int test(int *argc, char **argv[], int parse_args)
             else if (!failed_test) {
                printf ("Test succeeded!\n");
             }
-         } while (0);
+         } while (do_while_end);
 
          if (jt != NULL) { drmaa_delete_job_template(jt, NULL, 0); jt = NULL; }
 
@@ -3129,12 +3153,12 @@ static int test(int *argc, char **argv[], int parse_args)
 
             printf ("Getting job name for job %lu from GDI\n", (unsigned long)atol(jobid));
             {
-               lCondition *where = lWhere ("%T(%I==%u)", JB_Type, JB_job_number, (u_long32)atol(jobid));
-               lEnumeration *what = lWhat ("%T (%I %I)", JB_Type, JB_job_number, JB_job_name);
-               alp = sge_gdi (SGE_JOB_LIST, SGE_GDI_GET, &job_lp, where, what);
-               job_ep = lFirst (job_lp);
-               lFreeWhere (where);
-               lFreeWhat (what);
+               lCondition *where = lWhere("%T(%I==%u)", JB_Type, JB_job_number, (u_long32)atol(jobid));
+               lEnumeration *what = lWhat("%T (%I %I)", JB_Type, JB_job_number, JB_job_name);
+               alp = sge_gdi(SGE_JOB_LIST, SGE_GDI_GET, &job_lp, where, what);
+               job_ep = lFirst(job_lp);
+               lFreeWhere(&where);
+               lFreeWhat(&what);
             }
             {
                int tmp_ret = answer_list_print_err_warn(&alp, "GDI Error: ", "Message from GDI: ");
@@ -3145,7 +3169,7 @@ static int test(int *argc, char **argv[], int parse_args)
                   continue;
                }
             }
-            alp = lFreeList(alp);         
+            lFreeList(&alp);         
 
             if (job_ep == NULL) {
                printf ("No such job number.\n");
@@ -3158,7 +3182,7 @@ static int test(int *argc, char **argv[], int parse_args)
                failed_test = 1;
             }
 
-            job_lp = lFreeList (job_lp);
+            lFreeList(&job_lp);
 
             printf ("Checking job state\n");
             if (drmaa_job_ps(jobid, &job_state, diagnosis, sizeof(diagnosis)-1)
@@ -3234,12 +3258,12 @@ static int test(int *argc, char **argv[], int parse_args)
 
             printf ("Getting job name for job %lu from GDI\n", (unsigned long)atol(jobid));
             {
-               lCondition *where = lWhere ("%T(%I==%u)", JB_Type, JB_job_number, (u_long32)atol(jobid));
-               lEnumeration *what = lWhat ("%T (%I %I)", JB_Type, JB_job_number, JB_job_name);
-               alp = sge_gdi (SGE_JOB_LIST, SGE_GDI_GET, &job_lp, where, what);
-               job_ep = lFirst (job_lp);
-               lFreeWhere (where);
-               lFreeWhat (what);
+               lCondition *where = lWhere("%T(%I==%u)", JB_Type, JB_job_number, (u_long32)atol(jobid));
+               lEnumeration *what = lWhat("%T (%I %I)", JB_Type, JB_job_number, JB_job_name);
+               alp = sge_gdi(SGE_JOB_LIST, SGE_GDI_GET, &job_lp, where, what);
+               job_ep = lFirst(job_lp);
+               lFreeWhere(&where);
+               lFreeWhat(&what);
             }
             {
                int tmp_ret = answer_list_print_err_warn(&alp, "GDI Error: ", "Message from GDI: ");
@@ -3249,7 +3273,7 @@ static int test(int *argc, char **argv[], int parse_args)
                   failed_test = 1;
                }
             }
-            alp = lFreeList(alp);         
+            lFreeList(&alp);         
 
             if (job_ep == NULL) {
                printf ("No such job number.\n");
@@ -3262,7 +3286,7 @@ static int test(int *argc, char **argv[], int parse_args)
                failed_test = 1;
             }
 
-            job_lp = lFreeList (job_lp);
+            lFreeList(&job_lp);
 
             printf ("Checking job state\n");
             if (drmaa_job_ps(jobid, &job_state, diagnosis, sizeof(diagnosis)-1)
@@ -3306,7 +3330,7 @@ static int test(int *argc, char **argv[], int parse_args)
             else if (!failed_test) {
                printf ("Test succeeded!\n");
             }
-         } while (0);
+         } while (do_while_end);
 
          if (jt != NULL) { drmaa_delete_job_template(jt, NULL, 0); jt = NULL; }
          
@@ -3355,12 +3379,12 @@ static int test(int *argc, char **argv[], int parse_args)
 
             printf ("Getting job name for job %lu from GDI\n", (unsigned long)atol(jobid));
             {
-               lCondition* where = lWhere ("%T(%I==%u)", JB_Type, JB_job_number, (u_long32)atol(jobid));
-               lEnumeration *what = lWhat ("%T (%I %I)", JB_Type, JB_job_number, JB_job_name);
-               alp = sge_gdi (SGE_JOB_LIST, SGE_GDI_GET, &job_lp, where, what);
-               job_ep = lFirst (job_lp);
-               lFreeWhere (where);
-               lFreeWhat (what);
+               lCondition* where = lWhere("%T(%I==%u)", JB_Type, JB_job_number, (u_long32)atol(jobid));
+               lEnumeration *what = lWhat("%T (%I %I)", JB_Type, JB_job_number, JB_job_name);
+               alp = sge_gdi(SGE_JOB_LIST, SGE_GDI_GET, &job_lp, where, what);
+               job_ep = lFirst(job_lp);
+               lFreeWhere(&where);
+               lFreeWhat(&what);
             }
             {
                int tmp_ret = answer_list_print_err_warn(&alp, "GDI Error: ", "Message from GDI: ");
@@ -3371,7 +3395,7 @@ static int test(int *argc, char **argv[], int parse_args)
                   continue;
                }
             }
-            alp = lFreeList(alp);         
+            lFreeList(&alp);         
 
             if (job_ep == NULL) {
                printf ("No such job number.\n");
@@ -3384,7 +3408,7 @@ static int test(int *argc, char **argv[], int parse_args)
                failed_test = 1;
             }
 
-            job_lp = lFreeList (job_lp);
+            lFreeList(&job_lp);
 
             printf ("Checking job state\n");
             if (drmaa_job_ps(jobid, &job_state, diagnosis, sizeof(diagnosis)-1)
@@ -3461,11 +3485,11 @@ static int test(int *argc, char **argv[], int parse_args)
             printf ("Getting job name for job %lu from GDI\n", (unsigned long)atol(jobid));
             {
                lCondition *where = lWhere ("%T(%I==%u)", JB_Type, JB_job_number, (u_long32)atol(jobid));
-               lEnumeration *what = lWhat ("%T (%I %I)", JB_Type, JB_job_number, JB_job_name);
-               alp = sge_gdi (SGE_JOB_LIST, SGE_GDI_GET, &job_lp, where, what);
-               job_ep = lFirst (job_lp);
-               lFreeWhere (where);
-               lFreeWhat (what);
+               lEnumeration *what = lWhat("%T (%I %I)", JB_Type, JB_job_number, JB_job_name);
+               alp = sge_gdi(SGE_JOB_LIST, SGE_GDI_GET, &job_lp, where, what);
+               job_ep = lFirst(job_lp);
+               lFreeWhere(&where);
+               lFreeWhat(&what);
             }
             {
                int tmp_ret = answer_list_print_err_warn(&alp, "GDI Error: ", "Message from GDI: ");
@@ -3475,7 +3499,7 @@ static int test(int *argc, char **argv[], int parse_args)
                   failed_test = 1;
                }
             }
-            alp = lFreeList(alp);         
+            lFreeList(&alp);         
 
             if (job_ep == NULL) {
                printf ("No such job number.\n");
@@ -3488,7 +3512,7 @@ static int test(int *argc, char **argv[], int parse_args)
                failed_test = 1;
             }
 
-            job_lp = lFreeList (job_lp);
+            lFreeList(&job_lp);
 
             printf ("Checking job state\n");
             if (drmaa_job_ps(jobid, &job_state, diagnosis, sizeof(diagnosis)-1)
@@ -3532,7 +3556,7 @@ static int test(int *argc, char **argv[], int parse_args)
             else if (!failed_test) {
                printf ("Test succeeded!\n");
             }
-         } while (0);
+         } while (do_while_end);
 
          if (jt != NULL) { drmaa_delete_job_template(jt, NULL, 0); jt = NULL; }
 
@@ -3635,7 +3659,7 @@ static int test(int *argc, char **argv[], int parse_args)
             else if (!failed_test) {
                printf ("Test succeeded!\n");
             }
-         } while (0);
+         } while (do_while_end);
             
          if (jt != NULL) { drmaa_delete_job_template(jt, NULL, 0); jt = NULL; }
 
@@ -3728,7 +3752,7 @@ static int test(int *argc, char **argv[], int parse_args)
             else if (!failed_test) {
                printf ("Test succeeded!\n");
             }
-         } while (0);
+         } while (do_while_end);
          
          if (jt != NULL) { drmaa_delete_job_template(jt, NULL, 0); jt = NULL; }
 
@@ -3796,7 +3820,7 @@ static int test(int *argc, char **argv[], int parse_args)
             }
 
             printf ("Check for email to find out if the test succeeded.\n");
-         } while (0);
+         } while (do_while_end);
          
          if (jt != NULL) { drmaa_delete_job_template(jt, NULL, 0); jt = NULL; }
          
@@ -3865,7 +3889,7 @@ static int test(int *argc, char **argv[], int parse_args)
             }
 
             printf ("Check for email to find out if the test failed.\n");
-         } while (0);
+         } while (do_while_end);
          
          if (jt != NULL) { drmaa_delete_job_template(jt, NULL, 0); jt = NULL; }
 
@@ -4356,7 +4380,7 @@ static int submit_sleeper(int n)
 
 static int submit_input_mirror(int n, const char *mirror_job, 
                                const char *input_path, const char *output_path,
-                               const char *error_path, int join)
+                               const char *error_path, int join, char* hostname)
 {
    drmaa_job_template_t *jt = NULL;
    char buffer[10000];
@@ -4370,6 +4394,15 @@ static int submit_input_mirror(int n, const char *mirror_job,
    
    if (ret == DRMAA_ERRNO_SUCCESS) {
       ret = drmaa_set_attribute(jt, DRMAA_REMOTE_COMMAND, mirror_job, NULL, 0);
+   }
+
+   /*
+    *  we use the local host for the cat job, because when job is running
+    *  on other hosts there my be NFS problems when reading the input_path file
+    */
+   if (ret == DRMAA_ERRNO_SUCCESS && hostname != NULL) {
+      snprintf(buffer, 10000, "-l h=%s", hostname);
+      ret = drmaa_set_attribute(jt, DRMAA_NATIVE_SPECIFICATION, buffer, NULL, 0);
    }
    
    if (ret == DRMAA_ERRNO_SUCCESS) {
@@ -4423,10 +4456,12 @@ static int do_submit(drmaa_job_template_t *jt, int n)
    char jobid[100];
    int drmaa_errno = DRMAA_ERRNO_SUCCESS;
    int error = DRMAA_ERRNO_SUCCESS;
+   bool done;
 
    for (i=0; i<n; i++) {
       /* submit job */
-      while (true) {
+      done = false;
+      while (!done) {
          drmaa_errno = drmaa_run_job(jobid, sizeof(jobid)-1, jt, diagnosis, sizeof(diagnosis)-1);
 
          if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
@@ -4437,16 +4472,15 @@ static int do_submit(drmaa_job_template_t *jt, int n)
          if (drmaa_errno == DRMAA_ERRNO_TRY_LATER) {
             printf("retry: %s\n", diagnosis);
             sleep(1);
-         }
-         else {
+         } else {
+            done = true;
             break; /* while */
          }
       }
       
       if (drmaa_errno == DRMAA_ERRNO_SUCCESS) {
          printf("submitted job \"%s\"\n", jobid);
-      }
-      else {
+      } else {
          printf("unable to submit job\n");
       }
       
@@ -4508,9 +4542,11 @@ static int wait_n_jobs(int n)
    int i, stat;
    int drmaa_errno = DRMAA_ERRNO_SUCCESS;
    int error = DRMAA_ERRNO_SUCCESS;
+   bool done;
 
    for (i=0; i<n; i++) {
-      while (true) {
+      done = false;
+      while (!done) {
          drmaa_errno = drmaa_wait(DRMAA_JOB_IDS_SESSION_ANY, jobid,
                                   sizeof(jobid)-1, &stat,
                                   DRMAA_TIMEOUT_WAIT_FOREVER, NULL, NULL, 0);
@@ -4523,16 +4559,15 @@ static int wait_n_jobs(int n)
          if (drmaa_errno == DRMAA_ERRNO_TRY_LATER) {
             printf("retry...\n");
             sleep(1);
-         }
-         else {
+         } else {
+            done = true;
             break;
          }
       }
 
       if (drmaa_errno == DRMAA_ERRNO_SUCCESS) {
          printf("waited job \"%s\"\n", jobid);
-      }
-      else {
+      } else {
          /* If there is ever an error, we will return an error. */
          error = drmaa_errno;
       }
@@ -4824,6 +4859,90 @@ static void report_wrong_job_finish(const char *comment, const char *jobid, int 
    }
 }
 
+static bool extract_array_command(char *command_line, int *start, int *end, int *incr) 
+{
+   bool ret = false;
+   char *t_option = NULL;
+   char *start_value = NULL;
+   char *end_value = NULL;
+   char *incr_value = NULL;
+   char *end_t_option = NULL;
+
+   *start = 1;
+   *end = 1;
+   *incr = 1;
+
+   t_option = strstr(command_line, "-t");
+  
+   if (t_option != NULL) {
+      ret = true;
+      start_value = t_option + 3;
+
+      *start = atoi(start_value);
+
+      if (*start <= 0) {
+         goto error;
+      }
+
+      end_t_option = strstr(start_value, " ");
+      end_value = strstr(start_value, "-");
+      incr_value = strstr(start_value, ":");
+
+      if ((end_value != NULL) && (end_value < end_t_option)) {
+         *end = atoi(end_value+1);
+
+         if (*end <= 0) {
+            goto error;
+         }
+     
+         if ((incr_value != NULL) && (incr_value < end_t_option)) {
+            *incr = atoi(incr_value+1);
+
+            if (*incr <= 0) {
+               *incr = 1;
+            }
+         }
+     
+      }
+      else {
+         goto error;
+      }
+
+      if (end_t_option != NULL) {
+         strcpy(t_option, end_t_option+1);
+      }
+      else {
+         t_option = '\0';
+      }
+   }/* end if */
+   
+   return ret;
+
+error:
+   if (end_t_option != NULL) {
+      strcpy(t_option, end_t_option);
+   }
+   else {
+      t_option = '\0';
+   }   
+   *start = 1;
+   *end = 1;
+   *incr = 1;
+   ret = false;
+   fprintf(stderr, "could not parse \"%s\" for -t option\n", command_line);
+
+   if (end_t_option != NULL) {
+      strcpy(t_option, end_t_option);
+   }
+   else {
+      t_option = '\0';
+   }   
+
+   
+   return ret;
+}
+
+
 static int test_dispatch_order_njobs(int njobs, test_job_t job[], char *jsr_str)
 {
    char diagnosis[DRMAA_ERROR_STRING_BUFFER];
@@ -4842,17 +4961,47 @@ static int test_dispatch_order_njobs(int njobs, test_job_t job[], char *jsr_str)
    
    /* submit jobs in hold */
    for (i=0; i<njobs; i++) {
+      int start = 0;
+      int end = 0;
+      int incr = 1;
+      bool bulk_job = false;
+
+      bulk_job = extract_array_command(job[i].native, &start, &end, &incr);
+
       jt = create_sleeper_job_template(job[i].time, 0, 1);
       drmaa_set_attribute(jt, DRMAA_NATIVE_SPECIFICATION, job[i].native, NULL, 0);
-      if (drmaa_run_job(jobid, sizeof(jobid)-1, jt, diagnosis, sizeof(diagnosis)-1)!=DRMAA_ERRNO_SUCCESS) {
-         fprintf(stderr, "drmaa_run_job() failed: %s\n", diagnosis);
-         return -1;
+      if (bulk_job) {
+         int counter = 0;
+         drmaa_job_ids_t *bulkJobId;
+         if (drmaa_run_bulk_jobs(&bulkJobId, jt, start, end, incr, 
+                                 diagnosis, sizeof(diagnosis)-1) != DRMAA_ERRNO_SUCCESS) {
+            fprintf(stderr, "drmaa_run_job() failed: %s\n", diagnosis);
+            return -1;
+         }
+         
+         while (drmaa_get_next_job_id(bulkJobId, jobid, sizeof(jobid)-1) == DRMAA_ERRNO_SUCCESS) {
+            all_jobids[pos++] = strdup(jobid);
+            printf("submitted job \"%s\"\n", jobid);
+            counter++;
+         }
+          array_job_run_sequence_adapt(order,i,counter);
+          drmaa_release_job_ids(bulkJobId);
       }
-      printf("submitted job \"%s\"\n", jobid);
-      all_jobids[pos++] = strdup(jobid);
+      else {
+         if (drmaa_run_job(jobid, sizeof(jobid)-1, jt, diagnosis, sizeof(diagnosis)-1) != DRMAA_ERRNO_SUCCESS) {
+            fprintf(stderr, "drmaa_run_job() failed: %s\n", diagnosis);
+            return -1;
+         }
+      
+         printf("submitted job \"%s\"\n", jobid);
+         all_jobids[pos++] = strdup(jobid);
+      }
       drmaa_delete_job_template(jt, NULL, 0);
    }
    all_jobids[pos] = NULL;
+
+   nwait = pos;
+   njobs = pos;
 
    /* release all three jobs in one operation to ensure they get runnable at once for scheduler */
    if (drmaa_control(DRMAA_JOB_IDS_SESSION_ALL, DRMAA_CONTROL_RELEASE, diagnosis, sizeof(diagnosis)-1)!=DRMAA_ERRNO_SUCCESS) {
@@ -4941,11 +5090,6 @@ static int job_run_sequence_verify(int pos, char *all_jobids[], int *order[])
 }
 
 
-   
-   
-
-
-
 /****** test_drmaa/job_run_sequence_parse() ************************************
 *  NAME
 *     job_run_sequence_parse() -- ??? 
@@ -4981,33 +5125,33 @@ static int job_run_sequence_verify(int pos, char *all_jobids[], int *order[])
 *        int *st_order[] = { st0, st1, st2, NULL };
 *******************************************************************************/
 #define GROUP_CHUNK 5
-#define NUMBER_CHUNK 5
+#define NUMBER_CHUNK 10
 static int **job_run_sequence_parse(char *jrs_str)
 {
-   char *s, *group_str;
+   char *s = NULL, *group_str = NULL;
 
    /* control outer loop */
-   char *iter_dash = NULL;
+   char *jrs_str_cp = strdup(jrs_str);
+   char  *iter_dash = NULL;
    int **sequence = NULL;
    int groups_total = GROUP_CHUNK;
    int groups_used = 0;
    int i = 0;
 
-   /* control inner loop */
-   char *iter_comma;
-   int *group;
-   int numbers_total;
-   int numbers_used;
-   int j;
 
-
-   printf("parsing sequence: \"%s\"\n", jrs_str);
+   printf("parsing sequence: \"%s\"\n", jrs_str_cp);
 
    sequence = malloc(sizeof(int *)*(GROUP_CHUNK+1));
 
    /* groups are delimited by dashes '-' */
-   for (group_str=strtok_r(jrs_str, "-", &iter_dash); group_str; group_str=strtok_r(NULL, "-", &iter_dash)) {
+   for (group_str=strtok_r(jrs_str_cp, "-", &iter_dash); group_str; group_str=strtok_r(NULL, "-", &iter_dash)) {
 
+   char  *iter_comma = NULL;
+   int *group;
+   int numbers_total;
+   int numbers_used;
+   int j = 0;
+   
       if (++groups_used > groups_total) {
          groups_total += GROUP_CHUNK;
          sequence = realloc(sequence, groups_total+1);
@@ -5017,8 +5161,6 @@ static int **job_run_sequence_parse(char *jrs_str)
       numbers_used = 0;
 
       group = malloc(sizeof(int *)*(NUMBER_CHUNK+1));
-      iter_comma = NULL;
-      j = 0;
 
       /* sequence numbers within a group are delimited by comma ',' */
       for (s=strtok_r(group_str, ",", &iter_comma); s; s=strtok_r(NULL, ",", &iter_comma)) {
@@ -5037,6 +5179,58 @@ static int **job_run_sequence_parse(char *jrs_str)
       i++;
    }
    sequence[i] = NULL;
+   
+   free(jrs_str_cp);
+   jrs_str_cp = NULL;
 
    return sequence;
 }
+
+static void array_job_run_sequence_adapt(int **sequence, int job_id, int count) 
+{
+   int x = 0;
+   int y = 0;
+
+   if (count <= 1) {
+      return;
+   }
+
+   printf("modify finish order:\n");
+
+   while (sequence[x] != NULL) { 
+      y = 0;
+      while (sequence[x][y] != -1) {
+         
+         if (sequence[x][y] == job_id) {
+            int dy = 0;
+           
+            printf("%d ", sequence[x][y]);
+           
+            while (sequence[x][y] != -1) {
+               y++;
+            }
+            
+            for (; dy < (count-1); dy++) {
+               sequence[x][y+dy] = job_id + dy + 1; 
+               sequence[x][y+dy+1] = -1;
+               printf("[%d] ", sequence[x][y+dy]);
+            }
+            
+            y += dy - 1; 
+         }
+         else if (sequence[x][y] > job_id) {
+            sequence[x][y] += (count-1);
+            printf("(%d) ", sequence[x][y]);
+
+         }
+         else {
+            printf("%d ", sequence[x][y]);
+
+         }
+         y++;
+      }
+      printf("\n");
+      x++;
+   }
+}
+

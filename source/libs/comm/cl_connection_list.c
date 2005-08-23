@@ -39,10 +39,15 @@
 
 
 #include "cl_connection_list.h"
+#include "cl_app_message_queue.h"
 #include "cl_message_list.h"
 #include "cl_communication.h"
 
 
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "cl_connection_list_setup()"
 int cl_connection_list_setup(cl_raw_list_t** list_p, char* list_name, int enable_locking) {
    cl_connection_list_data_t* ldata = NULL;
    int ret_val;
@@ -64,6 +69,10 @@ int cl_connection_list_setup(cl_raw_list_t** list_p, char* list_name, int enable
    return ret_val;
 }
 
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "cl_connection_list_cleanup()"
 int cl_connection_list_cleanup(cl_raw_list_t** list_p) {
    cl_connection_list_data_t* ldata = NULL;
 
@@ -89,6 +98,10 @@ int cl_connection_list_cleanup(cl_raw_list_t** list_p) {
 }
 
 
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "cl_connection_list_append_connection()"
 int cl_connection_list_append_connection(cl_raw_list_t* list_p,cl_com_connection_t* connection , int do_lock) {
 
    int ret_val;
@@ -132,6 +145,10 @@ int cl_connection_list_append_connection(cl_raw_list_t* list_p,cl_com_connection
 }
 
 
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "cl_connection_list_remove_connection()"
 int cl_connection_list_remove_connection(cl_raw_list_t* list_p, cl_com_connection_t* connection, int do_lock ) {  /* CR check */
    int function_return = CL_RETVAL_CONNECTION_NOT_FOUND;
    int ret_val = CL_RETVAL_OK;
@@ -236,7 +253,7 @@ int cl_connection_list_destroy_connections_to_close(cl_raw_list_t* list_p, int d
             if( cl_raw_list_get_elem_count(connection->received_message_list) == 0 &&
                 cl_raw_list_get_elem_count(connection->send_message_list) == 0) {
                  connection->connection_state = CL_CLOSING;   
-                 connection->connection_sub_state = CL_COM_DONE_FLUSHED;
+                 connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
                  CL_LOG(CL_LOG_INFO,"setting connection state to close this connection");
             } else {
                struct timeval now;
@@ -244,7 +261,7 @@ int cl_connection_list_destroy_connections_to_close(cl_raw_list_t* list_p, int d
                if ( connection->connection_close_time.tv_sec <= now.tv_sec || cl_com_get_ignore_timeouts_flag() == CL_TRUE) {
                   CL_LOG(CL_LOG_ERROR,"close connection timeout - shutdown of connection");
                   connection->connection_state = CL_CLOSING;   
-                  connection->connection_sub_state = CL_COM_DONE_FLUSHED;
+                  connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
                   CL_LOG(CL_LOG_INFO,"setting connection state to close this connection");
                } else {
                   CL_LOG(CL_LOG_WARNING,"wait for empty message buffers");
@@ -297,6 +314,7 @@ int cl_connection_list_destroy_connections_to_close(cl_raw_list_t* list_p, int d
                            CL_LOG_STR(CL_LOG_WARNING,"component name:            ", connection->remote->comp_name );
                            CL_LOG_INT(CL_LOG_WARNING,"component id:              ", (int)connection->remote->comp_id );
                            connection->connection_state = CL_CLOSING;
+                           connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
                         } else {
                            CL_LOG(CL_LOG_WARNING,"unsent messages in send list, don't close connection");
                         }
@@ -304,6 +322,7 @@ int cl_connection_list_destroy_connections_to_close(cl_raw_list_t* list_p, int d
                   } else {
                      CL_LOG(CL_LOG_WARNING,"closing unconnected connection object");
                      connection->connection_state = CL_CLOSING;
+                     connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
                   }
                } 
                if (connection->data_flow_type == CL_CM_CT_STREAM) {
@@ -328,28 +347,30 @@ int cl_connection_list_destroy_connections_to_close(cl_raw_list_t* list_p, int d
                      CL_LOG(CL_LOG_WARNING,"removing undefined connection object");
                   }
                   connection->connection_state = CL_CLOSING;
+                  connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
                }
             }
          }
       }
 
       if (connection->connection_state == CL_CLOSING ) {
-         ret_val=cl_com_connection_complete_shutdown(connection);
-         if (ret_val != CL_RETVAL_OK) {
-            struct timeval now;
-            gettimeofday(&now,NULL);
-            if ( connection->connection_close_time.tv_sec <= now.tv_sec || cl_com_get_ignore_timeouts_flag() == CL_TRUE) {
-               CL_LOG(CL_LOG_ERROR,"close connection timeout - skipping another connection shutdown");
-            } else {
-               if (ret_val == CL_RETVAL_UNCOMPLETE_READ || ret_val == CL_RETVAL_UNCOMPLETE_WRITE) {
-                  CL_LOG_STR(CL_LOG_WARNING,"cl_com_connection_complete_shutdown() returned:", cl_get_error_text(ret_val));
-                  connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
-                  continue;
+         if (connection->connection_sub_state == CL_COM_DO_SHUTDOWN) {
+            ret_val=cl_com_connection_complete_shutdown(connection);
+            if (ret_val != CL_RETVAL_OK) {
+               struct timeval now;
+               gettimeofday(&now,NULL);
+               if ( connection->connection_close_time.tv_sec <= now.tv_sec || cl_com_get_ignore_timeouts_flag() == CL_TRUE) {
+                  CL_LOG(CL_LOG_ERROR,"close connection timeout - skipping another connection shutdown");
+                  connection->connection_sub_state = CL_COM_SHUTDOWN_DONE;
+               } else {
+                  if (ret_val == CL_RETVAL_UNCOMPLETE_READ || ret_val == CL_RETVAL_UNCOMPLETE_WRITE) {
+                     CL_LOG_STR(CL_LOG_WARNING,"cl_com_connection_complete_shutdown() returned:", cl_get_error_text(ret_val));
+                     continue;
+                  }
+                  CL_LOG_STR(CL_LOG_ERROR,"skipping another connection shutdown, last one returned:", cl_get_error_text(ret_val));
                }
             }
-            connection->connection_sub_state = CL_COM_DONE;
-            CL_LOG_STR(CL_LOG_ERROR,"skipping another connection shutdown, last one returned:", cl_get_error_text(ret_val));
-            CL_LOG(CL_LOG_ERROR,"skipping shutdown");
+            connection->connection_sub_state = CL_COM_SHUTDOWN_DONE;
          }
 
          if (delete_connections == NULL) {
@@ -358,16 +379,16 @@ int cl_connection_list_destroy_connections_to_close(cl_raw_list_t* list_p, int d
                continue;
             }
          }
-         cl_raw_list_dechain_elem(list_p, elem2->raw_elem); 
-         cl_raw_list_append_dechained_elem(delete_connections, elem2->raw_elem);
-   
-         connection = elem2->connection;
+
          if (connection->handler != NULL) {
             connection->handler->statistic->bytes_sent +=  connection->statistic->bytes_sent;
             connection->handler->statistic->bytes_received +=  connection->statistic->bytes_received;
             connection->handler->statistic->real_bytes_sent +=  connection->statistic->real_bytes_sent;
             connection->handler->statistic->real_bytes_received +=  connection->statistic->real_bytes_received;
          }
+
+         cl_raw_list_dechain_elem(list_p, elem2->raw_elem); 
+         cl_raw_list_append_dechained_elem(delete_connections, elem2->raw_elem);
       }
    } 
 
@@ -391,6 +412,13 @@ int cl_connection_list_destroy_connections_to_close(cl_raw_list_t* list_p, int d
             message = message_list_elem->message;
             if (message->message_state == CL_MS_READY) {
                CL_LOG(CL_LOG_ERROR,"deleting unread message for connection");
+               if (connection->handler != NULL) {
+                  /* decrease counter for ready messages */
+                  pthread_mutex_lock(connection->handler->messages_ready_mutex);
+                  connection->handler->messages_ready_for_read = connection->handler->messages_ready_for_read - 1;
+                  cl_app_message_queue_remove(connection->handler->received_message_queue, connection, 1, CL_FALSE);
+                  pthread_mutex_unlock(connection->handler->messages_ready_mutex);
+               }
             }
             if (message->message_length != 0) {
                CL_LOG_INT(CL_LOG_ERROR,"connection sub_state:",connection->connection_sub_state);
@@ -431,6 +459,10 @@ int cl_connection_list_destroy_connections_to_close(cl_raw_list_t* list_p, int d
 
 
 
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "cl_connection_list_get_first_elem()"
 cl_connection_list_elem_t* cl_connection_list_get_first_elem(cl_raw_list_t* list_p) {   /* CR check */
    cl_raw_list_elem_t* raw_elem = cl_raw_list_get_first_elem(list_p);
    if (raw_elem) {
@@ -439,6 +471,10 @@ cl_connection_list_elem_t* cl_connection_list_get_first_elem(cl_raw_list_t* list
    return NULL;
 }
 
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "cl_connection_list_get_least_elem()"
 cl_connection_list_elem_t* cl_connection_list_get_least_elem(cl_raw_list_t* list_p) {   /* CR check */
    cl_raw_list_elem_t* raw_elem = cl_raw_list_get_least_elem(list_p);
    if (raw_elem) {
@@ -448,6 +484,10 @@ cl_connection_list_elem_t* cl_connection_list_get_least_elem(cl_raw_list_t* list
 }
 
 
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "cl_connection_list_get_next_elem()"
 cl_connection_list_elem_t* cl_connection_list_get_next_elem(cl_connection_list_elem_t* elem) {  /* CR check */
 
    cl_raw_list_elem_t* next_raw_elem = NULL;
@@ -463,6 +503,10 @@ cl_connection_list_elem_t* cl_connection_list_get_next_elem(cl_connection_list_e
 }
 
 
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "cl_connection_list_get_last_elem()"
 cl_connection_list_elem_t* cl_connection_list_get_last_elem(cl_connection_list_elem_t* elem) {  /* CR check */
 
    cl_raw_list_elem_t* last_raw_elem = NULL;

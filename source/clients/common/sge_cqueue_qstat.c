@@ -199,11 +199,11 @@ select_by_qref_list(lList *cqueue_list, const lList *hgrp_list, const lList *qre
       qref_list_resolve(queueref_list, NULL, &tmp_list, 
                         &found_something, cqueue_list, hgrp_list, true, true);
       if (!found_something) {
-         queueref_list = lFreeList(queueref_list);
+         lFreeList(&queueref_list);
          DEXIT;
          return -1;
       }
-      queueref_list = lFreeList(queueref_list);
+      lFreeList(&queueref_list);
       queueref_list = tmp_list;
       tmp_list = NULL;
    }
@@ -249,7 +249,7 @@ select_by_qref_list(lList *cqueue_list, const lList *hgrp_list, const lList *qre
          qinstance_list = lGetList(cqueue, CQ_qinstances);
          for_each(qinstance, qinstance_list) {
             u_long32 tag = lGetUlong(qinstance, QU_tag);
-            bool selected = (tag & TAG_SELECT_IT) != 0;
+            bool selected = ((tag & TAG_SELECT_IT) != 0) ? true : false;
 
             if (!selected) {
                tag &= ~(TAG_SELECT_IT | TAG_SHOW_IT);
@@ -261,7 +261,7 @@ select_by_qref_list(lList *cqueue_list, const lList *hgrp_list, const lList *qre
       } 
    }
 
-   lFreeList(queueref_list);
+   lFreeList(&queueref_list);
 
    DEXIT;
    return ret;
@@ -304,7 +304,7 @@ lList *pe_list
       lAppendElem(pe_selected, copy_pe);
    }
    if (lGetNumberOfElem(pe_selected)==0) {
-      fprintf(stderr, MSG_PE_NOSUCHPARALLELENVIRONMENT);
+      fprintf(stderr, "%s\n", MSG_PE_NOSUCHPARALLELENVIRONMENT);
       return -1;
    }
 
@@ -339,7 +339,7 @@ lList *pe_list
    }
 
    if (pe_selected != NULL) {
-      lFreeList(pe_selected);
+      lFreeList(&pe_selected);
    }
    DEXIT;
    return nqueues;
@@ -380,8 +380,8 @@ lList *acl_list
    global_acl  = lGetList(ehep, EH_acl);
    global_xacl = lGetList(ehep, EH_xacl);
 
-   config_acl  = conf.user_lists;
-   config_xacl = conf.xuser_lists;
+   config_acl  = mconf_get_user_lists();
+   config_xacl = mconf_get_xuser_lists();
 
    for_each(cqueue, cqueue_list) {
       lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
@@ -466,6 +466,9 @@ lList *acl_list
          }
       }
    }
+
+   lFreeList(&config_acl);
+   lFreeList(&config_xacl);
    DEXIT;
    return nqueues;
 }
@@ -556,14 +559,14 @@ u_long32 empty_qs
    /* prepare request */
    for_each(cqueue, queue_list) {
       lListElem *qep;
-      int selected;
+      bool selected;
       lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
 
       for_each(qep, qinstance_list) {
          if (empty_qs)
             sconf_set_qs_state(QS_STATE_EMPTY);
 
-         selected = sge_select_queue(resource_list, qep, NULL, exechost_list, centry_list, 1, -1);
+         selected = sge_select_queue(resource_list, qep, NULL, exechost_list, centry_list, true, -1);
          if (empty_qs)
             sconf_set_qs_state(QS_STATE_FULL);
 

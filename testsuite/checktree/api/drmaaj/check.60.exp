@@ -147,11 +147,11 @@ proc drmaaj_check {} {
       # resume.  On most architectures other than Solaris, /bin/sleep wakes up
       # on SIGCONT.  This script notes the time before it sleeps and keeps
       # sleeping until the given duration is reached.
-      start_remote_prog $host $CHECK_USER "/usr/bin/rm" $my_sleeper prg_exit_state 500
-      start_remote_prog $host $CHECK_USER "/usr/bin/ln" "-s $CHECK_ACTUAL_TEST_PATH/sleeper.sh $my_sleeper" prg_exit_state 500
+      start_remote_prog $host $CHECK_USER "rm" $my_sleeper prg_exit_state 80
+      start_remote_prog $host $CHECK_USER "ln" "-s $CHECK_ACTUAL_TEST_PATH/sleeper.sh $my_sleeper" prg_exit_state 80
       set test_output [ start_remote_prog $host $CHECK_USER $JAVA "$options -cp $classpath junit.textui.TestRunner DrmaaSuite" prg_exit_state 500 ]
       # Remove script file
-      start_remote_prog $host $CHECK_USER "/usr/bin/rm" $my_sleeper prg_exit_state 500
+      start_remote_prog $host $CHECK_USER "rm" $my_sleeper prg_exit_state 80
 
       if { $prg_exit_state != 0 } {
          add_proc_error drmaa_check -1 "DRMAA-J JUnit test suite failed at host $host:\n$test_output"

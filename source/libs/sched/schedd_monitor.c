@@ -52,8 +52,7 @@ static lList **monitor_alpp = NULL;
 
 void clean_monitor_alp()
 {
-   if (monitor_alpp)
-      *monitor_alpp = lFreeList(*monitor_alpp);
+   lFreeList(monitor_alpp);
 }
 
 void set_monitor_alpp(
@@ -68,6 +67,7 @@ int schedd_log(const char *logstr) {
    FILE *fp;
    static char schedd_log_file[SGE_PATH_MAX + 1] = "";
    char time_str[256 + 1];
+   char str[128];
 
    DENTER(TOP_LAYER, "schedd_log");
 
@@ -87,9 +87,9 @@ int schedd_log(const char *logstr) {
          DPRINTF(("schedd log file >>%s<<\n", schedd_log_file));
       }
 
-      now = sge_get_gmt();
+      now = (time_t)sge_get_gmt();
       /* strftime(time_str, sizeof(time_str), "%m-%d-%Y:%H:%M:%S ", localtime(&now)); */
-      strcpy(time_str, ctime((time_t *)&now));
+      strcpy(time_str, ctime_r((time_t *)&now, str));
       if (time_str[strlen(time_str) - 1] == '\n') {
          time_str[strlen(time_str) - 1] = '|';
       }
@@ -149,7 +149,7 @@ int schedd_log_list(const char *logstr, lList *lp, int nm) {
                         fields, delis, 0);
 #endif
          schedd_log(log_string);
-         lFreeList(lp_part);
+         lFreeList(&lp_part);
          lp_part = NULL;
       }
    }
@@ -168,7 +168,7 @@ u_long32 jobid
    static char descr[20];
 
    if (jobid) {
-      sprintf(descr, "Job "u32, jobid);
+      sprintf(descr, "Job "sge_u32, jobid);
       return descr;
    } else
       return "Job";

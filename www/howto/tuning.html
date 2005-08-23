@@ -221,6 +221,39 @@ get a reservation from the scheduler should be as small as possible.
 This is done by setting a small number for <b>max_reservation</b> in <b>schedd_conf(5)</b>.<br>
       </ul>
       <ul>
+        <li>
+          <p><b>optimization of qmaster memory consumption</b><br>
+          </p>
+        </li>
+      </ul>
+      <ul>
+In clusters with large quantities of jobs a limiting factor is often the memory 
+footprint required to store all job properties. Experience shows large parts of 
+the memory occupied by the qmaster are used to store
+each job's environment as specified via "<b>-v variable_list</b>" or "<b>-V</b>".
+End users sometimes perceive it as convenient to simply use "<b>-V</b>", even
+though it would have been entirely sufficient to inherit a handful of specific 
+environment variables from the submission environment. Conscious and sparing 
+use of job environment variables has been shown to greatly increase the maximum 
+number of jobs that can be processed with a given amount of main memory by Grid Engine.
+      </ul>
+      <ul>
+        <li>
+          <p><b>intentional use "<b>-b y</b>" to disburden qmaster (V6.0)</b><br>
+          </p>
+        </li>
+      </ul>
+      <ul>
+Per default Grid Engine <b>qsub</b> job submission sends the job scripts together 
+with the job itself. Since version 6 the <b>-b y</b> option can be used to prevent 
+job scripts from being sent, instead simply sending the path to the executable along 
+with the job. This technique requires that the script be made available elsewhere, 
+but in many cases the script is already available or could easily be made available 
+by means shared file systems. Use of <b>-b y</b> has a beneficial impact on cluster 
+scalability because job scripts do not need to be stored on disk by the qmaster at 
+submission time or be packed with the job when it is delivered to the execd.
+      </ul>
+      <ul>
         <li><b>EXPERIMENTAL: job filter based on job clases (V6.0u1)</b></li>
       </ul>
       <ul>

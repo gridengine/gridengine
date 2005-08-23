@@ -110,6 +110,7 @@ Qmon*pe_ask_shell.pe_ask_layout.xmtChildren: \
    InputField     pe_stop_proc_args; \
    InputField     pe_allocation_rule; \
    InputField     pe_urgency_slots; \
+   InputField     pe_qsort_args; \
    XmToggleButton pe_control_slaves; \
    XmToggleButton pe_job_is_first_task; \
    XmPushButton   pe_ok, pe_cancel, pe_usersPB, pe_xusersPB;
@@ -139,6 +140,7 @@ Qmon*pe_ask_layout.layout: \
             Fixed pe_control_slaves \
             Fixed pe_job_is_first_task \
          } \
+         Fixed Caption tl "@{Qsort Args} " pe_qsort_args \
       } \
       Fixed Shadowed Col { \
          Fixed pe_ok \

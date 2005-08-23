@@ -35,10 +35,6 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif
-
 #ifndef WIN32NATIVE
 #	include <unistd.h>
 #endif
@@ -75,10 +71,6 @@ static bool
 gdi_send_multi_sync(lList **alpp, state_gdi_multi *state, sge_gdi_request **answer, 
                     lList **malpp);
 
-static int 
-sge_send_receive_gdi_request(int *commlib_error, const char *rhost, const char *commproc, 
-                             u_short id, sge_gdi_request *out, sge_gdi_request **in,
-                             lList **alpp);
 
 static int 
 sge_get_gdi_request(int *commlib_error, char *rhost, char *commproc, u_short *id, 
@@ -87,6 +79,9 @@ sge_get_gdi_request(int *commlib_error, char *rhost, char *commproc, u_short *id
 static int 
 sge_get_gdi_request_async(int *commlib_error, char *host, char *commproc, u_short *id,
                           sge_gdi_request** arp, unsigned long request_mid, bool is_sync);                    
+
+static bool
+sge_pack_gdi_info(u_long32 command);
 
 /****** gdi/request/sge_gdi() *************************************************
 *  NAME
@@ -202,7 +197,7 @@ lList* sge_gdi(u_long32 target, u_long32 cmd, lList **lpp, lCondition *cp,
 
    alp = sge_gdi_extract_answer(cmd, target, id, mal, lpp);
 
-   mal = lFreeList(mal);
+   lFreeList(&mal);
 
    PROF_STOP_MEASUREMENT(SGE_PROF_GDI);
 
@@ -411,11 +406,23 @@ int sge_gdi_multi_sync(lList **alpp, int mode, u_long32 target, u_long32 cmd,
               (int)uid, strerror(errno)));
       goto error;
    }
+#if defined( INTERIX )
+   /* Strip Windows domain name from user name */
+   {
+      char *plus_sign;
+
+      plus_sign = strstr(username, "+");
+      if(plus_sign!=NULL) {
+         plus_sign++;
+         strcpy(username, plus_sign);
+      }
+   }
+#endif
    gid = getgid();
    if (sge_gid2group(gid, groupname, sizeof(groupname), 
          MAX_NIS_RETRIES)) {
       SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_GETGRGIDXFAILEDERRORX_U,
-                             u32c(gid)));
+                             sge_u32c(gid)));
       goto error; 
    }
 
@@ -526,9 +533,9 @@ gdi_send_multi_async(lList **alpp, state_gdi_multi *state)
          INFO ((SGE_EVENT, lGetString (aep, AN_text)));
       }
    }
-   *alpp = lFreeList (*alpp);
+   lFreeList(alpp);
   
-   DPRINTF(("send request with id "U32CFormat"\n", u32c(gdi_request_mid)));
+   DPRINTF(("send request with id "sge_U32CFormat"\n", sge_u32c(gdi_request_mid)));
    if (commlib_error != CL_RETVAL_OK) {
       if (( commlib_error = check_isalive(rhost)) != CL_RETVAL_OK) {
          /* gdi error */
@@ -538,7 +545,7 @@ gdi_send_multi_async(lList **alpp, state_gdi_multi *state)
              commlib_error == CL_RETVAL_CONNECTION_NOT_FOUND ) {
             SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_UNABLE_TO_CONNECT_SUS,
                                    prognames[QMASTER],
-                                   u32c(sge_get_qmaster_port()), 
+                                   sge_u32c(sge_get_qmaster_port()), 
                                    sge_get_master(false)));
          }
          /* For unusual errors, give more detail */
@@ -546,7 +553,7 @@ gdi_send_multi_async(lList **alpp, state_gdi_multi *state)
             SGE_ADD_MSG_ID(sprintf(SGE_EVENT, 
                                    MSG_GDI_CANT_SEND_MESSAGE_TO_PORT_ON_HOST_SUSS,
                                    prognames[QMASTER],
-                                   u32c(sge_get_qmaster_port()), 
+                                   sge_u32c(sge_get_qmaster_port()), 
                                    sge_get_master(false),
                                    cl_get_error_text(commlib_error)));
          }
@@ -626,7 +633,7 @@ gdi_receive_multi_async(sge_gdi_request **answer, lList **malpp, bool is_sync)
       /* nothing todo... */
       return true;
    }
-   
+  
    /* recive answer */
    while (!(ret = sge_get_gdi_request_async(&commlib_error, rcv_rhost, rcv_commproc, &id, answer, gdi_request_mid, is_sync))) {
    
@@ -655,7 +662,7 @@ gdi_receive_multi_async(sge_gdi_request **answer, lList **malpp, bool is_sync)
                 commlib_error == CL_RETVAL_CONNECTION_NOT_FOUND ) {
                SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_UNABLE_TO_CONNECT_SUS,
                                       prognames[QMASTER],
-                                      u32c(sge_get_qmaster_port()), 
+                                      sge_u32c(sge_get_qmaster_port()), 
                                       sge_get_master(false)));
             }
             /* For unusual errors, give more detail */
@@ -663,7 +670,7 @@ gdi_receive_multi_async(sge_gdi_request **answer, lList **malpp, bool is_sync)
                SGE_ADD_MSG_ID(sprintf(SGE_EVENT, 
                                       MSG_GDI_CANT_SEND_MESSAGE_TO_PORT_ON_HOST_SUSS,
                                       prognames[QMASTER],
-                                      u32c(sge_get_qmaster_port()), 
+                                      sge_u32c(sge_get_qmaster_port()), 
                                       sge_get_master(false),
                                       cl_get_error_text(commlib_error)));
             }
@@ -675,7 +682,7 @@ gdi_receive_multi_async(sge_gdi_request **answer, lList **malpp, bool is_sync)
       DEXIT;
       return false;
    }
-  
+ 
    for (an = (*answer); an; an = an->next) { 
       int an_operation, an_sub_command;
 
@@ -693,7 +700,7 @@ gdi_receive_multi_async(sge_gdi_request **answer, lList **malpp, bool is_sync)
    }
 
    (*answer) = free_gdi_request((*answer));
-  
+
    gdi_state_clear_last_gdi_request();
    
    return true;
@@ -734,14 +741,15 @@ gdi_send_multi_sync(lList **alpp, state_gdi_multi *state, sge_gdi_request **answ
    lListElem *map = NULL;
    lListElem *aep = NULL;
    
-   DENTER(GDI_LAYER, "sge_gdi_multi");
+   DENTER(GDI_LAYER, "sge_gdi_multi_sync");
 
    /* the first request in the request list identifies the request uniquely */
    state->first->request_id = gdi_state_get_next_request_id();
 
 #ifdef KERBEROS
    /* request that the Kerberos library forward the TGT */
-   if (target == SGE_JOB_LIST && operation == SGE_GDI_ADD) {
+   if (state->first->target == SGE_JOB_LIST && 
+         SGE_GDI_GET_OPERATION(state->first->op) == SGE_GDI_ADD) {
       krb_set_client_flags(krb_get_client_flags() | KRB_FORWARD_TGT);
       krb_set_tgt_id(state->first->request_id);
    }
@@ -753,7 +761,8 @@ gdi_send_multi_sync(lList **alpp, state_gdi_multi *state, sge_gdi_request **answ
 
 #ifdef KERBEROS
    /* clear the forward TGT request */
-   if (target == SGE_JOB_LIST && operation == SGE_GDI_ADD) {
+   if (state->first->target == SGE_JOB_LIST && 
+         SGE_GDI_GET_OPERATION(state->first->op) == SGE_GDI_ADD) {
       krb_set_client_flags(krb_get_client_flags() & ~KRB_FORWARD_TGT);
       krb_set_tgt_id(0);
    }
@@ -767,7 +776,7 @@ gdi_send_multi_sync(lList **alpp, state_gdi_multi *state, sge_gdi_request **answ
       }
    }
    
-   *alpp = lFreeList (*alpp);
+   lFreeList(alpp);
    
    if (status != 0) {
 
@@ -788,7 +797,7 @@ gdi_send_multi_sync(lList **alpp, state_gdi_multi *state, sge_gdi_request **answ
                 commlib_error == CL_RETVAL_CONNECTION_NOT_FOUND ) {
                SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_UNABLE_TO_CONNECT_SUS,
                                       prognames[QMASTER],
-                                      u32c(sge_get_qmaster_port()), 
+                                      sge_u32c(sge_get_qmaster_port()), 
                                       sge_get_master(false)));
             }
             /* For unusual errors, give more detail */
@@ -796,7 +805,7 @@ gdi_send_multi_sync(lList **alpp, state_gdi_multi *state, sge_gdi_request **answ
                SGE_ADD_MSG_ID(sprintf(SGE_EVENT, 
                                       MSG_GDI_CANT_SEND_MESSAGE_TO_PORT_ON_HOST_SUSS,
                                       prognames[QMASTER],
-                                      u32c(sge_get_qmaster_port()), 
+                                      sge_u32c(sge_get_qmaster_port()), 
                                       sge_get_master(false),
                                       cl_get_error_text(commlib_error)));
             }
@@ -808,6 +817,7 @@ gdi_send_multi_sync(lList **alpp, state_gdi_multi *state, sge_gdi_request **answ
             SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_GENERALERRORXSENDRECEIVEGDIREQUEST_I , status));
             break;
       }
+      DPRINTF(("re-read act_qmaster file (gdi_send_multi_sync)\n"));
       sge_get_master(true);
       return false;
    }
@@ -950,7 +960,7 @@ lList *sge_gdi_extract_answer(u_long32 cmd, u_long32 target, int id,
 *  NOTES
 *     MT-NOTE: sge_send_receive_gdi_request() is MT safe (assumptions)
 ******************************************************************************/
-static int sge_send_receive_gdi_request(int *commlib_error,
+int sge_send_receive_gdi_request(int *commlib_error,
                                         const char *rhost, 
                                         const char *commproc, 
                                         u_short id, 
@@ -984,7 +994,7 @@ static int sge_send_receive_gdi_request(int *commlib_error,
    *commlib_error = ret;
 
 
-   DPRINTF(("send request with id "U32CFormat"\n", u32c(gdi_request_mid)));
+   DPRINTF(("send request with id "sge_U32CFormat"\n", sge_u32c(gdi_request_mid)));
    if (ret != CL_RETVAL_OK) {
       if (( *commlib_error = check_isalive(rhost)) != CL_RETVAL_OK) {
          DEXIT;
@@ -1061,13 +1071,16 @@ static int sge_send_receive_gdi_request(int *commlib_error,
 *  NOTES
 *     MT-NOTE: sge_send_gdi_request() is MT safe (assumptions)
 *******************************************************************************/
-int sge_send_gdi_request(int sync, 
-                         const char *rhost, const char *commproc, int id, 
-                         sge_gdi_request *ar,
-                         u_long32 *mid, unsigned long response_id, lList **alpp) 
+int 
+sge_send_gdi_request(int sync, const char *rhost, const char *commproc, int id, 
+                     sge_gdi_request *ar, u_long32 *mid, 
+                     unsigned long response_id, lList **alpp) 
 {
+   int ret = 0;
+   bool local_ret;
    sge_pack_buffer pb;
-   int ret, size;
+   int pack_ret, size;
+   lList *answer_list = NULL;
 
    DENTER(GDI_LAYER, "sge_send_gdi_request");
 
@@ -1076,51 +1089,41 @@ int sge_send_gdi_request(int sync,
    ** retrieve packbuffer size to avoid large realloc's while packing 
    */
    init_packbuffer(&pb, 0, 1);
-   ret = sge_pack_gdi_request(&pb, ar);
+   local_ret = request_list_pack_results(ar, &answer_list, &pb);
    size = pb_used(&pb);
    clear_packbuffer(&pb);
 
-   if (ret == PACK_SUCCESS) {
+   if (local_ret) {
       /*
       ** now we do the real packing
       */
-      if((ret = init_packbuffer(&pb, size, 0)) == PACK_SUCCESS) {
-         ret = sge_pack_gdi_request(&pb, ar);
+      if((pack_ret = init_packbuffer(&pb, size, 0)) == PACK_SUCCESS) {
+         local_ret = request_list_pack_results(ar, &answer_list, &pb);
       }
    }
+   if (!local_ret) {
+      lListElem *answer = lFirst(answer_list);
 
-   switch (ret) {
-   case PACK_SUCCESS:
-      break;
-
-   case PACK_ENOMEM:
-      ERROR((SGE_EVENT, MSG_GDI_MEMORY_NOTENOUGHMEMORYFORPACKINGGDIREQUEST ));
-      clear_packbuffer(&pb);
-      PROF_STOP_MEASUREMENT(SGE_PROF_GDI_REQUEST);
-      DEXIT;
-      return -2;
-
-   case PACK_FORMAT:
-      ERROR((SGE_EVENT, MSG_GDI_REQUESTFORMATERROR ));
-      clear_packbuffer(&pb);
-      PROF_STOP_MEASUREMENT(SGE_PROF_GDI_REQUEST);
-      DEXIT;
-      return -3;
-
-   default:
-      ERROR((SGE_EVENT, MSG_GDI_UNEXPECTEDERRORWHILEPACKINGGDIREQUEST ));
-      clear_packbuffer(&pb);
-      PROF_STOP_MEASUREMENT(SGE_PROF_GDI_REQUEST);
-      DEXIT;
-      return -1;
+      if (answer != NULL) {
+         switch (answer_get_status(answer)) {
+            case STATUS_ERROR2:
+               ret = -2;
+               break;
+            case STATUS_ERROR3:
+               ret = -3;
+               break;
+            default:
+               ret = -1;
+         }
+      }
+   } else {
+      ret = sge_send_any_request(sync, mid, rhost, commproc, id, &pb,
+                                 TAG_GDI_REQUEST, response_id, alpp);
    }
-
-   ret = sge_send_any_request(sync, mid, rhost, commproc, id, &pb,
-                              TAG_GDI_REQUEST, response_id, alpp);
    clear_packbuffer(&pb);
+   lFreeList(&answer_list);
 
    PROF_STOP_MEASUREMENT(SGE_PROF_GDI_REQUEST);
-
    DEXIT;
    return ret;
 }
@@ -1182,26 +1185,25 @@ static int sge_get_gdi_request_async(int *commlib_error,
       return -1;
    }
 
-
    ret = sge_unpack_gdi_request(&pb, arp);
    switch (ret) {
-   case PACK_SUCCESS:
-      break;
+      case PACK_SUCCESS:
+         break;
 
-   case PACK_ENOMEM:
-      ret = -2;
-      ERROR((SGE_EVENT, MSG_GDI_ERRORUNPACKINGGDIREQUEST_S, cull_pack_strerror(ret)));
-      break;
+      case PACK_ENOMEM:
+         ret = -2;
+         ERROR((SGE_EVENT, MSG_GDI_ERRORUNPACKINGGDIREQUEST_S, cull_pack_strerror(ret)));
+         break;
 
-   case PACK_FORMAT:
-      ret = -3;
-      ERROR((SGE_EVENT, MSG_GDI_ERRORUNPACKINGGDIREQUEST_S, cull_pack_strerror(ret)));
-      break;
+      case PACK_FORMAT:
+         ret = -3;
+         ERROR((SGE_EVENT, MSG_GDI_ERRORUNPACKINGGDIREQUEST_S, cull_pack_strerror(ret)));
+         break;
 
-   default:
-      ret = -1;
-      ERROR((SGE_EVENT, MSG_GDI_ERRORUNPACKINGGDIREQUEST_S, cull_pack_strerror(ret)));
-      break;
+      default:
+         ret = -1;
+         ERROR((SGE_EVENT, MSG_GDI_ERRORUNPACKINGGDIREQUEST_S, cull_pack_strerror(ret)));
+         break;
    }
 
    /* 
@@ -1264,11 +1266,8 @@ int sge_unpack_gdi_request(sge_pack_buffer *pb, sge_gdi_request **arp)
       **                 together with (hopefully coming) further communication
       **                 redesign.
       */
-DTRACE;      
       if ((ret=cull_unpack_list(pb, &(ar->lp)) )) goto error;
-DTRACE;      
       if ((ret=cull_unpack_list(pb, &(ar->alp)) )) goto error;
-DTRACE;      
       if ((ret=cull_unpack_cond(pb, &(ar->cp)) )) goto error;
       if ((ret=cull_unpack_enum(pb, &(ar->enp)) )) goto error;
       
@@ -1315,7 +1314,7 @@ DTRACE;
          DPRINTF(("unpacking copy request\n"));
          break;
       default:
-         ERROR((SGE_EVENT, MSG_GDI_ERROR_INVALIDVALUEXFORARTOOP_D, u32c(ar->op)));
+         ERROR((SGE_EVENT, MSG_GDI_ERROR_INVALIDVALUEXFORARTOOP_D, sge_u32c(ar->op)));
          goto error;
       }
 
@@ -1341,85 +1340,228 @@ DTRACE;
    return ret;
 }
 
-/*--------------------------------------------------------------
- * sge_pack_gdi_request
- *
- * NOTES
- *    MT-NOTE: sge_pack_gdi_request() is MT safe
- *--------------------------------------------------------------*/
-int sge_pack_gdi_request(sge_pack_buffer *pb, sge_gdi_request *ar) 
+static bool
+sge_pack_gdi_info(u_long32 command) 
 {
-   int ret;
+   bool ret = true;
 
-   DENTER(GDI_LAYER, "sge_pack_gdi_request");
+   DENTER(GDI_LAYER, "sge_pack_gdi_info");
+   switch (command) {
+   case SGE_GDI_GET:
+      DPRINTF(("packing SGE_GDI_GET request\n"));
+      break;
+   case SGE_GDI_ADD:
+   case SGE_GDI_ADD | SGE_GDI_RETURN_NEW_VERSION:
+   case SGE_GDI_ADD | SGE_GDI_SET_ALL:
+      DPRINTF(("packing SGE_GDI_ADD request\n"));
+      break;
+   case SGE_GDI_DEL:
+   case SGE_GDI_DEL | SGE_GDI_ALL_JOBS:
+   case SGE_GDI_DEL | SGE_GDI_ALL_USERS:
+   case SGE_GDI_DEL | SGE_GDI_ALL_JOBS | SGE_GDI_ALL_USERS:
+      DPRINTF(("packing SGE_GDI_DEL request\n"));
+      break;
+   case SGE_GDI_MOD:
 
-   while (ar) {
-      switch (ar->op) {
-      case SGE_GDI_GET:
-         DPRINTF(("packing SGE_GDI_GET request\n"));
-         break;
-      case SGE_GDI_ADD:
-      case SGE_GDI_ADD | SGE_GDI_RETURN_NEW_VERSION:
-      case SGE_GDI_ADD | SGE_GDI_SET_ALL:
-         DPRINTF(("packing SGE_GDI_ADD request\n"));
-         break;
-      case SGE_GDI_DEL:
-      case SGE_GDI_DEL | SGE_GDI_ALL_JOBS:
-      case SGE_GDI_DEL | SGE_GDI_ALL_USERS:
-      case SGE_GDI_DEL | SGE_GDI_ALL_JOBS | SGE_GDI_ALL_USERS:
-         DPRINTF(("packing SGE_GDI_DEL request\n"));
-         break;
-      case SGE_GDI_MOD:
+   case SGE_GDI_MOD | SGE_GDI_ALL_JOBS:
+   case SGE_GDI_MOD | SGE_GDI_ALL_USERS:
+   case SGE_GDI_MOD | SGE_GDI_ALL_JOBS | SGE_GDI_ALL_USERS:
 
-      case SGE_GDI_MOD | SGE_GDI_ALL_JOBS:
-      case SGE_GDI_MOD | SGE_GDI_ALL_USERS:
-      case SGE_GDI_MOD | SGE_GDI_ALL_JOBS | SGE_GDI_ALL_USERS:
+   case SGE_GDI_MOD | SGE_GDI_APPEND:
+   case SGE_GDI_MOD | SGE_GDI_REMOVE:
+   case SGE_GDI_MOD | SGE_GDI_CHANGE:
+   case SGE_GDI_MOD | SGE_GDI_SET_ALL:
 
-      case SGE_GDI_MOD | SGE_GDI_APPEND:
-      case SGE_GDI_MOD | SGE_GDI_REMOVE:
-      case SGE_GDI_MOD | SGE_GDI_CHANGE:
-      case SGE_GDI_MOD | SGE_GDI_SET_ALL:
+      DPRINTF(("packing SGE_GDI_MOD request\n"));
+      break;
+   case SGE_GDI_TRIGGER:
+      DPRINTF(("packing SGE_GDI_TRIGGER request\n"));
+      break;
+   case SGE_GDI_PERMCHECK:
+      DPRINTF(("packing SGE_GDI_PERMCHECK request\n"));
+      break;
+   case SGE_GDI_SPECIAL:
+      DPRINTF(("packing special things\n"));
+      break;
+   case SGE_GDI_COPY:
+      DPRINTF(("request denied\n"));
+      break;
+   default:
+      ERROR((SGE_EVENT, MSG_GDI_ERROR_INVALIDVALUEXFORARTOOP_D, 
+             sge_u32c(command)));
+      DEXIT;
+      return PACK_FORMAT;
+   }
+   DEXIT;
+   return ret;
+}
 
-         DPRINTF(("packing SGE_GDI_MOD request\n"));
-         break;
-      case SGE_GDI_TRIGGER:
-         DPRINTF(("packing SGE_GDI_TRIGGER request\n"));
-         break;
-      case SGE_GDI_PERMCHECK:
-         DPRINTF(("packing SGE_GDI_PERMCHECK request\n"));
-         break;
-      case SGE_GDI_SPECIAL:
-         DPRINTF(("packing special things\n"));
-         break;
-      case SGE_GDI_COPY:
-         DPRINTF(("request denied\n"));
-         break;
-      default:
-         ERROR((SGE_EVENT, MSG_GDI_ERROR_INVALIDVALUEXFORARTOOP_D , u32c(ar->op)));
-         DEXIT;
-         return PACK_FORMAT;
+bool 
+gdi_request_map_pack_error(int pack_ret, lList **answer_list)
+{
+   bool ret = true;
+
+   DENTER(GDI_LAYER, "gdi_request_map_pack_error");
+   switch (pack_ret) {
+   case PACK_SUCCESS:
+      break;
+   case PACK_ENOMEM:
+      answer_list_add_sprintf(answer_list, STATUS_ERROR2,
+                              ANSWER_QUALITY_ERROR,
+                   MSG_GDI_MEMORY_NOTENOUGHMEMORYFORPACKINGGDIREQUEST);
+      break;
+   case PACK_FORMAT:
+      answer_list_add_sprintf(answer_list, STATUS_ERROR3,
+                              ANSWER_QUALITY_ERROR,
+                              MSG_GDI_REQUESTFORMATERROR);
+      break;
+   default:
+      answer_list_add_sprintf(answer_list, STATUS_ERROR1,
+                              ANSWER_QUALITY_ERROR,
+                     MSG_GDI_UNEXPECTEDERRORWHILEPACKINGGDIREQUEST);
+      break;
+   }
+   ret = (pack_ret == PACK_SUCCESS) ? true : false;
+   DEXIT;
+   return ret;
+}
+
+bool
+gdi_request_pack_prefix(sge_gdi_request *ar, lList **answer_list,
+                        sge_pack_buffer *pb)
+{
+   bool ret = true;
+   
+   DENTER(GDI_LAYER, "gdi_request_pack_prefix");
+   if (ar != NULL) {
+      int pack_ret = PACK_SUCCESS;
+
+      sge_pack_gdi_info(ar->op);
+      
+      pack_ret = packint(pb, ar->op);
+      if (pack_ret != PACK_SUCCESS) {
+         goto handle_error; 
+      }
+      pack_ret = packint(pb, ar->target);
+      if (pack_ret != PACK_SUCCESS) {
+         goto handle_error; 
+      }
+      pack_ret = packint(pb, ar->version);
+      if (pack_ret != PACK_SUCCESS) {
+         goto handle_error; 
+      }
+ handle_error:
+      ret = gdi_request_map_pack_error(pack_ret, answer_list);
+   }
+   DEXIT;
+   return ret;
+}
+
+bool
+gdi_request_pack_suffix(sge_gdi_request *ar, lList **answer_list,
+                        sge_pack_buffer *pb)
+{
+   bool ret = true;
+   
+   DENTER(GDI_LAYER, "gdi_request_pack_suffix");
+   if (ar != NULL) {
+      int pack_ret = PACK_SUCCESS;
+
+      pack_ret = cull_pack_list(pb, ar->alp);
+      if (pack_ret != PACK_SUCCESS) {
+         goto handle_error;
+      }
+      pack_ret = cull_pack_cond(pb, ar->cp);
+      if (pack_ret != PACK_SUCCESS) {
+         goto handle_error;
+      }
+      pack_ret = cull_pack_enum(pb, ar->enp);
+      if (pack_ret != PACK_SUCCESS) {
+         goto handle_error;
+      }
+      pack_ret = packstr(pb, ar->auth_info);
+      if (pack_ret != PACK_SUCCESS) {
+         goto handle_error;
+      }
+      pack_ret = packint(pb, ar->sequence_id);
+      if (pack_ret != PACK_SUCCESS) {
+         goto handle_error;
+      }
+      pack_ret = packint(pb, ar->request_id);
+      if (pack_ret != PACK_SUCCESS) {
+         goto handle_error;
+      }
+      pack_ret = packint(pb, ar->next ? 1 : 0);
+      if (pack_ret != PACK_SUCCESS) {
+         goto handle_error;
+      }
+ handle_error:
+      ret = gdi_request_map_pack_error(pack_ret, answer_list);
+   }
+   DEXIT;
+   return ret;
+}
+
+/*
+ * NOTES
+ *    MT-NOTE: gdi_request_pack_result() is MT safe
+ */
+bool
+gdi_request_pack_result(sge_gdi_request *ar, lList **answer_list,
+                        sge_pack_buffer *pb)
+{
+   bool ret = true;
+   int old_size;
+
+   DENTER(GDI_LAYER, "gdi_request_pack_result");
+   if (ar != NULL && pb != NULL) {
+      int pack_ret = PACK_SUCCESS;
+
+      ret &= gdi_request_pack_prefix(ar, answer_list, pb);
+      if (!ret) {
+         goto exit_this_function;
       }
 
-      if ((ret=packint(pb, ar->op) )) goto error;
-      if ((ret=packint(pb, ar->target) )) goto error;
-      if ((ret=packint(pb, ar->version) )) goto error;
-      if ((ret=cull_pack_list(pb, ar->lp) )) goto error;
-      if ((ret=cull_pack_list(pb, ar->alp) )) goto error;
-      if ((ret=cull_pack_cond(pb, ar->cp) )) goto error;
-      if ((ret=cull_pack_enum(pb, ar->enp) )) goto error;
+      old_size = pb->bytes_used;
 
-      if ((ret=packstr(pb, ar->auth_info) )) goto error;
-      if ((ret=packint(pb, ar->sequence_id) )) goto error;
-      if ((ret=packint(pb, ar->request_id) )) goto error;
-      if ((ret=packint(pb, ar->next ? 1 : 0) )) goto error;
-   
+      pack_ret = cull_pack_list(pb, ar->lp);
+      if (pack_ret != PACK_SUCCESS) {
+         goto handle_error; 
+      }
+
+      ret &= gdi_request_pack_suffix(ar, answer_list, pb);
+      if (!ret) {
+         goto exit_this_function;
+      }
+ handle_error:
+      ret = gdi_request_map_pack_error(pack_ret, answer_list);
+   }
+ exit_this_function:
+   DEXIT;
+   return ret;
+}
+
+
+
+/*--------------------------------------------------------------
+ * request_list_pack_results
+ *
+ * NOTES
+ *    MT-NOTE: request_list_pack_results() is MT safe
+ *--------------------------------------------------------------*/
+bool
+request_list_pack_results(sge_gdi_request *ar, lList **answer_list,
+                          sge_pack_buffer *pb)
+{
+   bool ret = true;
+
+   DENTER(GDI_LAYER, "request_list_pack_results");
+
+   while (ret && ar != NULL) {
+      ret = gdi_request_pack_result(ar, answer_list, pb);
+
       ar = ar->next;
    }
-
-   DEXIT;
-   return PACK_SUCCESS;
-
- error:
    DEXIT;
    return ret;
 }
@@ -1476,10 +1618,10 @@ sge_gdi_request *free_gdi_request(sge_gdi_request *ar) {
       if (ar->commproc) free(ar->commproc);
       if (ar->auth_info) free(ar->auth_info);
 
-      lFreeList(ar->lp);
-      lFreeList(ar->alp);
-      lFreeWhere(ar->cp);
-      lFreeWhat(ar->enp);
+      lFreeList(&(ar->lp));
+      lFreeList(&(ar->alp));
+      lFreeWhere(&(ar->cp));
+      lFreeWhat(&(ar->enp));
 
       free(ar);
 

@@ -32,10 +32,6 @@
 
 #include <string.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif   
-
 #include "sge.h"
 #include "sgermon.h"
 #include "cull.h"
@@ -104,7 +100,7 @@ int main(int argc, char *argv[])
 
    /* sge_qeti_first() */
    for (pe_time = sge_qeti_first(iter); pe_time; pe_time = sge_qeti_next(iter)) {
-      printf("QETI returns "u32"\n", pe_time);
+      printf("QETI returns "sge_u32"\n", pe_time);
    }
 
    return 0;
@@ -212,9 +208,9 @@ void utilization_print(const lListElem *cr, const char *object_name)
          object_name?object_name:"<unknown_object>", lGetString(cr, RUE_name),
             lGetDouble(cr, RUE_utilized_now)));
    for_each (rde, lGetList(cr, RUE_utilized)) {
-      DPRINTF(("\t"U32CFormat"  %f\n", lGetUlong(rde, RDE_time), lGetDouble(rde, RDE_amount))); 
+      DPRINTF(("\t"sge_U32CFormat"  %f\n", lGetUlong(rde, RDE_time), lGetDouble(rde, RDE_amount))); 
 #ifdef MODULE_TEST_SGE_RESOURCE_UTILIZATION
-      printf("\t"U32CFormat"  %f\n", lGetUlong(rde, RDE_time), lGetDouble(rde, RDE_amount)); 
+      printf("\t"sge_U32CFormat"  %f\n", lGetUlong(rde, RDE_time), lGetDouble(rde, RDE_amount)); 
 #endif
    }
 
@@ -397,7 +393,7 @@ static void utilization_normalize(lList *diagram)
    while ((this=next)) {
       next = lNext(this);
       if (util_prev == lGetDouble(this, RDE_amount))
-         lRemoveElem(diagram, this);
+         lRemoveElem(diagram, &this);
       else
          util_prev = lGetDouble(this, RDE_amount);
    }
@@ -552,7 +548,7 @@ u_long32 utilization_below(const lListElem *cr, double max_util, const char *obj
    if (when == DISPATCH_TIME_NOW) {
       DPRINTF(("no utilization\n"));
    } else {
-      DPRINTF(("utilization below %f (%f) starting at "U32CFormat"\n", 
+      DPRINTF(("utilization below %f (%f) starting at "sge_U32CFormat"\n", 
          max_util, util, when));
    }
 
@@ -672,7 +668,7 @@ rc_add_job_utilization(lListElem *jep, u_long32 task_id, const char *type,
 
    if (!ep) {
       ERROR((SGE_EVENT, "rc_add_job_utilization NULL object "
-            "(job "u32" obj %s type %s) slots %d ep %p\n", 
+            "(job "sge_u32" obj %s type %s) slots %d ep %p\n", 
             lGetUlong(jep, JB_job_number), obj_name, type, slots, ep));
       DEXIT;
       return 0;
@@ -680,7 +676,7 @@ rc_add_job_utilization(lListElem *jep, u_long32 task_id, const char *type,
 
    if (!slots) {
       ERROR((SGE_EVENT, "rc_add_job_utilization 0 slot amount "
-            "(job "u32" obj %s type %s) slots %d ep %p\n", 
+            "(job "sge_u32" obj %s type %s) slots %d ep %p\n", 
             lGetUlong(jep, JB_job_number), obj_name, type, slots, ep));
       DEXIT;
       return 0;

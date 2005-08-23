@@ -102,7 +102,7 @@ int main(int argc, char *argv[])
 
    printf("element after packing and unpacking\n");
    lWriteElemTo(copy, stdout);
-   copy = lFreeElem(copy);
+   lFreeElem(&copy);
 
    /* test partial packing */
    if((pack_ret = init_packbuffer(&pb, 100, 0)) != PACK_SUCCESS) {
@@ -131,7 +131,7 @@ int main(int argc, char *argv[])
 
    printf("element after partial packing and unpacking\n");
    lWriteElemTo(copy, stdout);
-   copy = lFreeElem(copy);
+   lFreeElem(&copy);
 
    /* test lDump functions */
    if(lDumpElem("test_cull_pack.txt", ep, 1)) {
@@ -152,10 +152,10 @@ int main(int argc, char *argv[])
    fclose(fd);
    printf("element after dumping and undumping\n");
    lWriteElemTo(copy, stdout);
-   copy = lFreeElem(copy);
+   lFreeElem(&copy);
 
    /* cleanup and exit */
-   lFreeElem(ep);                  
+   lFreeElem(&ep);
    return EXIT_SUCCESS;
 }
 

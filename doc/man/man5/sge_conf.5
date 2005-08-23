@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2005/04/13 15:09:49 $     Revision: $Revision: 1.44 $
+.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2005/08/16 12:28:03 $     Revision: $Revision: 1.46 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2005/04/13 15:09:49 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2005/08/16 12:28:03 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 xxqs_name_sxx_conf \- xxQS_NAMExx configuration files
@@ -965,6 +965,15 @@ the number of file descriptors the system has. The number of file
 descriptors are shared among the connections to all exec hosts, all 
 event clients, and file handles that the qmaster needs.
 .PP
+.IP "\fIMONITOR_TIME\fP"
+Specifies the time interval when the monitoring information should be printed. The
+monitoring is disabled per default and can be enabled by specifying an interval.
+The monitoring is per thread and is written to the messages file or displayed by
+the "qping -f" command line tool. Example: MONITOR_TIME=0:0:10 generates the
+monitoring information most likely every 10 seconds and prints it. The specified
+time is a guideline and not a fixed interval. The used interval is printed and
+can be everything between 9 seconds and 20 in this example. 
+.PP
 .IP "\fIPROF_SIGNAL\fP"
 Profiling provides the user with the possibility to get system measurements.
 This can be useful for debugging or optimisation of the system. The profiling 
@@ -1011,6 +1020,15 @@ to the xxQS_NAMExx execution daemon. The following values are recognized:
 If this parameter is set to true, for reserved usage is used for the
 accounting entries \fBcpu\fP, \fBmem\fP and \fBio\fP instead of the
 measured usage.
+.PP
+.IP "\fIENABLE_WINDOMACC\fP"
+If this parameter is set to true, on Windows hosts Windows Domain accounts (WinDomAcc)
+are used. These require the use of
+.M sgepasswd 1
+(see also
+.M sgepasswd 5 ).
+If this parameter is set to false or is not set, local Windows accounts are used.
+On non-Windows hosts, this parameter is ignored.
 .PP
 .IP "\fIKEEP_ACTIVE\fP"
 This value should only be set for debugging purposes. If set to true, the

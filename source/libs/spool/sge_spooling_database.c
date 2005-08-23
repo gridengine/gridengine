@@ -32,10 +32,6 @@
 
 #include <string.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif
-
 #include "sgermon.h"
 #include "sge_log.h"
 
@@ -998,7 +994,7 @@ spool_database_delete_id(lList **answer_list,
          lListElem *parent_ep = lGetElemStr(*id_list, SPM_key, parent_key);
          if (parent_ep != NULL) {
             if (key == NULL) {
-               lRemoveElem(*id_list, parent_ep);
+               lRemoveElem(*id_list, &parent_ep);
                ret = true;
             } else {
                if (lDelSubStr(parent_ep, SPM_key, key, SPM_sublist)) {
@@ -1010,7 +1006,7 @@ spool_database_delete_id(lList **answer_list,
          /* don't use lDelElemStr - we don't write back id_list! */
          lListElem *ep = lGetElemStr(*id_list, SPM_key, key);
          if (ep != NULL) {
-            lRemoveElem(*id_list, ep);
+            lRemoveElem(*id_list, &ep);
             ret = true;
          }
       }
@@ -1395,7 +1391,7 @@ spool_database_assign_table_description(lList **answer_list, spooling_field *fie
          /* processing for subfields succeeded. Create info for this level */
          if (ret) {
             table_description *description;
-            description = spool_database_create_table_description(answer_list, table_name, prefix, key_nm, sublevel || recursive_table);
+            description = spool_database_create_table_description(answer_list, table_name, prefix, key_nm, (bool)(sublevel || recursive_table));
 
             if (description == NULL) {
                /* error messages created in spool_database_create_table_description */

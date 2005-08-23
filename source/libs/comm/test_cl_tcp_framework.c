@@ -50,7 +50,6 @@ void *server_thread(void *t_conf);
 void *client_thread(void *t_conf);
 
 static int pipe_signal = 0;
-static int hup_signal = 0;
 static int do_shutdown = 0;
 char data[] = "> * * * Welcome to the tcp framework module! * * * <";
 
@@ -118,14 +117,14 @@ extern int main(int argc, char** argv)
 
      printf("debug4\n");
 
-     cl_thread_list_create_thread(thread_list, &dummy_thread_p,log_list, "client1", 2, client_thread );   
+     cl_thread_list_create_thread(thread_list, &dummy_thread_p,log_list, "client1", 2, client_thread, NULL, NULL);   
      printf("debug5\n");
 
   }
   printf("debug6\n");
 
   if (strcmp( argv[1], "server") == 0 || strcmp( argv[1], "both") == 0) {
-     cl_thread_list_create_thread(thread_list, &dummy_thread_p,log_list, "server", 1, server_thread ); 
+     cl_thread_list_create_thread(thread_list, &dummy_thread_p,log_list, "server", 1, server_thread, NULL, NULL); 
   }
 #if 0
   cl_thread_list_create_thread(thread_list, log_list, "client2", 3, client_thread );   
@@ -196,7 +195,6 @@ int sig
    }
 
    if (sig == SIGHUP) {
-      hup_signal = 1;
       return;
    }
 
@@ -217,6 +215,7 @@ void server_cleanup_conlist(cl_raw_list_t** connection_list) {
       while(con_elem) {
          cl_com_connection_t* connection = con_elem->connection;
          connection->connection_state = CL_CLOSING;
+         connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
          CL_LOG(CL_LOG_INFO,"marking connection to close");
          con_elem = cl_connection_list_get_next_elem(con_elem);
       }
@@ -296,17 +295,18 @@ void *server_thread(void *t_conf) {
    /* ok, thread main */
 
    while (do_exit == 0) {
+      int pthread_cleanup_pop_execute = 0; /* workaround for irix compiler warning */
       cl_connection_list_elem_t* con_elem = NULL;
  
       cl_com_connection_t*  connection = NULL;
 
-      pthread_cleanup_push((void *) server_cleanup, (void*) &con );
-      pthread_cleanup_push((void *) server_cleanup_conlist, (void*) &connection_list);
+      pthread_cleanup_push((void (*)(void *)) server_cleanup, (void*) &con );
+      pthread_cleanup_push((void (*)(void *)) server_cleanup_conlist, (void*) &connection_list);
       cl_thread_func_testcancel(thread_config);
-      pthread_cleanup_pop(0); /* list cleanup */
-      pthread_cleanup_pop(0); /* server cleanup */
+      pthread_cleanup_pop(pthread_cleanup_pop_execute); /* list cleanup */
+      pthread_cleanup_pop(pthread_cleanup_pop_execute); /* server cleanup */
 
-      CL_LOG_INT( CL_LOG_INFO, "--> nr of connections: ", cl_raw_list_get_elem_count(connection_list) );
+      CL_LOG_INT( CL_LOG_INFO, "--> nr of connections: ", (int)cl_raw_list_get_elem_count(connection_list) );
 
       new_con = NULL;
       if (con->data_read_flag == CL_COM_DATA_READY) {
@@ -354,6 +354,7 @@ void *server_thread(void *t_conf) {
                   con_elem = cl_connection_list_get_next_elem(con_elem);
                   CL_LOG( CL_LOG_INFO, "set connection close flag");
                   connection->connection_state = CL_CLOSING;
+                  connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
                   continue;
                }
                CL_LOG_STR( CL_LOG_WARNING, "data is:", (char*)connection->data_read_buffer);
@@ -368,9 +369,9 @@ void *server_thread(void *t_conf) {
          cl_raw_list_unlock(connection_list);
       }
 
-      CL_LOG_INT(CL_LOG_INFO, "--> nr of connections: ", cl_raw_list_get_elem_count(connection_list) );
+      CL_LOG_INT(CL_LOG_INFO, "--> nr of connections: ", (int)cl_raw_list_get_elem_count(connection_list) );
       cl_connection_list_destroy_connections_to_close(connection_list,1);
-      CL_LOG_INT(CL_LOG_INFO, "--> nr of connections: ", cl_raw_list_get_elem_count(connection_list) );
+      CL_LOG_INT(CL_LOG_INFO, "--> nr of connections: ", (int)cl_raw_list_get_elem_count(connection_list) );
 
 #if 1
       if ((ret_val = cl_thread_wait_for_event(thread_config,2,100000)) != CL_RETVAL_OK) {  /* nothing to do */
@@ -444,11 +445,10 @@ void *client_thread(void *t_conf) {
 
    /* ok, thread main */
    while (do_exit == 0) {
-      unsigned long size;
-
-      pthread_cleanup_push((void *) client_cleanup_function, (void*) &con );
+      int pthread_cleanup_pop_execute = 0; /* workaround for irix compiler warning */
+      pthread_cleanup_push((void (*)(void *)) client_cleanup_function, (void*) &con );
       cl_thread_func_testcancel(thread_config);
-      pthread_cleanup_pop(0);  /* client_thread_cleanup */
+      pthread_cleanup_pop(pthread_cleanup_pop_execute);  /* client_thread_cleanup */
 
       if (con == NULL) {
          cl_com_tcp_setup_connection(&con, 5000, 5000,CL_CM_CT_STREAM, CL_CM_AC_DISABLED, CL_CT_TCP, CL_CM_DF_BIN, CL_TCP_DEFAULT );
@@ -492,7 +492,6 @@ void *client_thread(void *t_conf) {
       
 #if 1
       if (con != NULL) {
-         size = 0;
          gettimeofday(&now,NULL);
          con->read_buffer_timeout_time = now.tv_sec + 5;
          retval = cl_com_read(con, con->data_read_buffer, sizeof(data), NULL); 

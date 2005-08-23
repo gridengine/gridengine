@@ -34,10 +34,6 @@
 #include <string.h>
 #include <unistd.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif 
-
 #include "sge_ja_task.h"
 #include "sge_job_schedd.h"
 #include "sge_log.h"
@@ -65,6 +61,7 @@
 
 /*-------------------------------------------------------------------------*/
 /* build the category string                                               */
+/* the category string includes now the soft requests                      */
 /*-------------------------------------------------------------------------*/
 const char* 
 sge_build_job_category(dstring *category_str, lListElem *job, lList *acl_list) 
@@ -105,6 +102,14 @@ sge_build_job_category(dstring *category_str, lListElem *job, lList *acl_list)
    ** -hard -l rlist
    */
    if (sge_unparse_resource_list(job, JB_hard_resource_list, 
+                                    &cmdl, NULL) != 0) {
+      goto ERROR;
+   }
+
+   /*
+   ** -hard -l rlist
+   */
+   if (sge_unparse_resource_list(job, JB_soft_resource_list, 
                                     &cmdl, NULL) != 0) {
       goto ERROR;
    }
@@ -167,15 +172,15 @@ sge_build_job_category(dstring *category_str, lListElem *job, lList *acl_list)
       }
    }
 
-   lFreeList(cmdl);
+   lFreeList(&cmdl);
        
    DEXIT;
    return sge_dstring_get_string(category_str);
 
 ERROR:
    ERROR((SGE_EVENT, MSG_CATEGORY_BUILDINGCATEGORYFORJOBXFAILED_U,  
-         u32c(lGetUlong(job, JB_job_number))));
-   lFreeList(cmdl);
+         sge_u32c(lGetUlong(job, JB_job_number))));
+   lFreeList(&cmdl);
    DEXIT;
    return NULL;
 }
@@ -214,13 +219,13 @@ sge_build_job_cs_category(dstring *category_str, lListElem *job, lListElem *cat_
    /* 
     *  deadline
     */
-   sge_dstring_sprintf_append(category_str, "-dl "u32, lGetUlong(job, JB_deadline));
+   sge_dstring_sprintf_append(category_str, "-dl "sge_u32, lGetUlong(job, JB_deadline));
    /*
     * priority
     */
-   sge_dstring_sprintf_append(category_str, "-p "u32, lGetUlong(job, JB_priority));
-   sge_dstring_sprintf_append(category_str, "-ot "u32, lGetUlong(job, JB_override_tickets));
-   sge_dstring_sprintf_append(category_str, "-js "u32, lGetUlong(job, JB_jobshare));
+   sge_dstring_sprintf_append(category_str, "-p "sge_u32, lGetUlong(job, JB_priority));
+   sge_dstring_sprintf_append(category_str, "-ot "sge_u32, lGetUlong(job, JB_override_tickets));
+   sge_dstring_sprintf_append(category_str, "-js "sge_u32, lGetUlong(job, JB_jobshare));
    sge_dstring_sprintf_append(category_str, "-u %s", lGetString(job, JB_owner));
 
    /*

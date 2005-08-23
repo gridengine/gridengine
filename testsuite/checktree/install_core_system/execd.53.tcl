@@ -217,9 +217,9 @@ proc install_execd {} {
       set ADD_DEFAULT_QUEUE            [translate $exec_host 0 1 0 [sge_macro DISTINST_ADD_DEFAULT_QUEUE] ]
       set INSTALL_SCRIPT               [translate $exec_host 0 1 0 [sge_macro DISTINST_INSTALL_SCRIPT] ]
       set IF_NOT_OK_STOP_INSTALLATION  [translate $exec_host 0 1 0 [sge_macro DISTINST_IF_NOT_OK_STOP_INSTALLATION] ]
-      set LOCAL_CONFIG_FOR_HOST        [translate $exec_host 0 1 0 [sge_macro DISTINST_LOCAL_CONFIG_FOR_HOST] "$exec_host"]
+      set LOCAL_CONFIG_FOR_HOST        [translate $exec_host 0 1 0 [sge_macro DISTINST_LOCAL_CONFIG_FOR_HOST] "*"]
       set MESSAGES_LOGGING             [translate $exec_host 0 1 0 [sge_macro DISTINST_MESSAGES_LOGGING] ]
-      set CELL_NAME_FOR_QMASTER        [translate $exec_host 0 1 0 [sge_macro DISTINST_CELL_NAME_FOR_QMASTER] ]
+      set CELL_NAME_FOR_QMASTER        [translate $exec_host 0 1 0 [sge_macro DISTINST_CELL_NAME_FOR_QMASTER] "default" ]
       set USE_CONFIGURATION_PARAMS     [translate $exec_host 0 1 0 [sge_macro DISTINST_USE_CONFIGURATION_PARAMS] ]
 
       cd "$ts_config(product_root)"
@@ -329,7 +329,7 @@ proc install_execd {} {
 
             -i $sp_id $LOCAL_CONFIG_FOR_HOST {
                puts $CHECK_OUTPUT "\n -->testsuite: reconfigure configuration for spool dir\n"
-               set spooldir [get_spool_dir $exec_host execd]
+               set spooldir [get_local_spool_dir $exec_host execd]
                puts $CHECK_OUTPUT "spooldir on host $exec_host is $spooldir"
 
                if { $spooldir != "" } {

@@ -37,11 +37,11 @@
 #
 # set -x
 
-DIST_VERSION="6.0u4beta"
-SCRIPT_VERSION="4"
+SCRIPT_VERSION="5"
 
 #Reset PATH to a safe value
 #
+SAVED_PATH=$PATH
 PATH=/bin:/usr/bin:/usr/sbin:/usr/bsd:/usr/ucb
 
 # Easy way to prevent clearing of screen
@@ -96,6 +96,7 @@ CONFIG_FILE="undef"
 SGE_NOMSG="undef"
 
 WINDOWS_SUPPORT=false
+WIN_DOMAIN_ACCESS=false
 WIN_ADMIN_NAME=Administrator
 
 BasicSettings
@@ -309,7 +310,6 @@ fi
 if [ "$BERKELEY" = "install" ]; then
    
    if [ "$DB_SPOOLING_SERVER" = "" -o "$HOST" = "$DB_SPOOLING_SERVER" -o "$NOREMOTE" = "true" ]; then
-      #BasicSettings
       CheckWhoInstallsSGE
       ProcessSGERoot
       GetCell
@@ -317,7 +317,7 @@ if [ "$BERKELEY" = "install" ]; then
       Makedir $SGE_CELL
       Makedir $COMMONDIR 
       SetSpoolingOptions
-      InstallServerScript $euid
+      AddSGEStartUpScript $euid bdb
       GiveBerkelyHints
    else
       $INFOTEXT -log "remote berkeley rpc server installation on host %s" $DB_SPOOLING_SERVER
@@ -379,49 +379,58 @@ fi
 if [ "$EXECD" = "install" -a "$UPDATE" != "true" ]; then
  if [ "$AUTO" = "true" ]; then
     . $SGE_ROOT/$SGE_CELL/common/settings.sh
-    AddHostsAuto
 
-    for h in $EXEC_HOST_LIST; do
+    if [ "$NOREMOTE" = false ]; then
 
-       ExecdAlreadyInstalled $h
-       installed=$?
+      LOCALINST=false
+
+      for h in $EXEC_HOST_LIST; do
+
+         ExecdAlreadyInstalled $h
+         installed=$?
    
-      if [ $h = `$SGE_UTILBIN/gethostname -name` -a "$installed" = 0 ]; then
-  
-         WelcomeTheUserExecHost
-         CheckForLocalHostResolving
-         ProcessSGERoot
-         CheckQmasterInstallation
-         CheckCellDirectory
-         CheckCSP
-         CheckHostNameResolving
-         GetLocalExecdSpoolDir
-         AddLocalConfiguration_With_Qconf
-         AddSGEStartUpScript $euid execd 
-         StartExecd
-         AddQueue
-         GiveHints
-         CheckRunningDaemon sge_execd
+         if [ "$installed" = 0 ]; then
+	         if [ $h = `$SGE_UTILBIN/gethostname -name` ]; then
+		      LOCALINST=true
+            else
+               $INFOTEXT -log "remote installation on host %s" $h
+               qconf -ah $h
+               echo ". $SGE_ROOT/$SGE_CELL/common/settings.sh; cd $SGE_ROOT && ./inst_sge -x -auto $FILE -noremote" | $SHELL_NAME $h /bin/sh &
+            fi
+         else 
+            $INFOTEXT -log "Host %s already installed" $h
+         fi
+
+      done
+
+   else
+      LOCALINST=true
+   fi
+
+   if [ "$LOCALINST" = true ]; then
+      WelcomeTheUserExecHost
+      CheckForLocalHostResolving
+      ProcessSGERoot
+      CheckQmasterInstallation
+      CheckCellDirectory
+      CheckCSP
+      CheckHostNameResolving
+      GetLocalExecdSpoolDir
+      AddLocalConfiguration_With_Qconf
+      AddSGEStartUpScript $euid execd 
+      StartExecd
+      AddQueue
+      GiveHints
+      CheckRunningDaemon sge_execd
          
-         if [ $? = 0 ]; then
-            $INFOTEXT -log "Execd on host %s is running!\n" $h
-         else
-            $INFOTEXT -log "Execd on host %s is not started!\n" $h
-         fi
-
-         if [ $AUTO = "true" ]; then
-            MoveLog
-         fi
-
+      if [ $? = 0 ]; then
+         $INFOTEXT -log "Execd on host %s is running!\n" $h
       else
-         if [ $QMASTER = "install" -o $NOREMOTE = "false" ]; then
-            $INFOTEXT -log "remote installation on host %s" $h
-            echo ". $SGE_ROOT/$SGE_CELL/common/settings.sh; cd $SGE_ROOT && ./inst_sge -x -auto $FILE -noremote" | $SHELL_NAME $h /bin/sh &
-         fi
-
+          $INFOTEXT -log "Execd on host %s is not started!\n" $h
       fi
+      MoveLog
 
-    done
+   fi
  
  else
       WelcomeTheUserExecHost
@@ -430,6 +439,7 @@ if [ "$EXECD" = "install" -a "$UPDATE" != "true" ]; then
       CheckQmasterInstallation
       CheckCellDirectory
       . $SGE_ROOT/$SGE_CELL/common/settings.sh
+      CheckWinAdminUser
       CheckCSP
       CheckHostNameResolving
       GetLocalExecdSpoolDir
@@ -439,10 +449,7 @@ if [ "$EXECD" = "install" -a "$UPDATE" != "true" ]; then
       AddQueue
       GiveHints
       
-      if [ $AUTO = "true" ]; then
-         MoveLog
-      fi
-
+      # This code will be executed in case inst_sge -x -host <remote host> 
       if [ -f $EXEC_HOST_LIST ]; then
          for h in `cat $EXEC_HOST_LIST`; do
            if [ $QMASTER = "install" -o $NOREMOTE = "false" ]; then
@@ -527,13 +534,15 @@ fi
 if [ $BERKELEY = "uninstall" ]; then
 
    if [ "$AUTO" = "true" ]; then
-      $INFOTEXT -log "Starting berekey rpc uninstallation!"
+      $INFOTEXT -log "Starting berkeley rpc uninstallation!"
    fi
-   if [ "$HOST" = "$DB_SPOOLING_SERVER" -o "$NOREMOTE" = "true" ]; then
+   if [ "$DB_SPOOLING_SERVER" = "" -o "$HOST" = "$DB_SPOOLING_SERVER" -o "$NOREMOTE" = "true" ]; then
+      euid=`$SGE_UTILBIN/uidgid -euid`
       ProcessSGERoot
       GetCell
       ADMINUSER=`$SGE_UTILBIN/filestat -owner . 2> /dev/null`
-      DeleteServerScript
+      ExecuteRPCServerScript stop
+      RemoveRcScript $HOST bdb $euid
       DeleteSpoolingDir
    else
       $INFOTEXT -log "remote berkeley rpc server uninstallation on host %s" $DB_SPOOLING_SERVER
@@ -576,7 +585,7 @@ if [ $SHADOW = "install" ]; then
                       "shadow host,\n has read/write permissions to the qmaster spool " \
                       "and SGE_ROOT/<cell>/common \ndirectory! For using a shadow master it " \
                       "is recommended to set up a \nBerkeley DB Spooling Server\n\n Hit <RETURN> to continue >> "
-      
+      CheckWhoInstallsSGE
       CheckForLocalHostResolving
       ProcessSGERoot
 
@@ -584,6 +593,7 @@ if [ $SHADOW = "install" ]; then
 
       SGE_CELL=`Enter default`
       export SGE_CELL
+      . $SGE_ROOT/$SGE_CELL/common/settings.sh
    
       CheckHostNameResolving
  
@@ -636,15 +646,20 @@ if [ $SHADOW = "install" ]; then
       $INFOTEXT "Creating shadow_masters file for host %s\n" $SHADOW_HOST
       $INFOTEXT "Starting sge_shadowd on host %s\n" $SHADOW_HOST    
       mod_file="echo $SHADOW_HOST"
+      ExecuteAsAdmin touch $SGE_ROOT/$SGE_CELL/common/shadow_masters
+      ExecuteAsAdmin chmod a+rw $SGE_ROOT/$SGE_CELL/common/shadow_masters
       ExecuteAsAdmin $mod_file >> $SGE_ROOT/$SGE_CELL/common/shadow_masters
+      ExecuteAsAdmin chmod go-w $SGE_ROOT/$SGE_CELL/common/shadow_masters
  
       if [ $SHADOW_HOST = `$SGE_UTILBIN/gethostname -aname` ]; then
          . $SGE_ROOT/$SGE_CELL/common/settings.sh
          SGE_ARCH=`$SGE_ROOT/util/arch`
          $SGE_ROOT/bin/$SGE_ARCH/sge_shadowd &
+         AddSGEStartUpScript $euid master 
       else
         for shs in `cat $SGE_ROOT/$SGE_CELL/common/shadow_masters`; do
            echo ". $SGE_ROOT/$SGE_CELL/common/settings.sh; SGE_ARCH=`$SGE_ROOT/util/arch`; $SGE_ROOT/bin/$SGE_ARCH/sge_shadowd &" | $SHELL_NAME $shs /bin/sh &
+           #TODO: install rc script
         done
       fi
 
@@ -652,9 +667,13 @@ if [ $SHADOW = "install" ]; then
    else
       $INFOTEXT -log "Starting sge_shadowd on host %s" $SHADOW_HOST    
       mod_file="echo $SHADOW_HOST"
+      ExecuteAsAdmin touch $SGE_ROOT/$SGE_CELL/common/shadow_masters
+      ExecuteAsAdmin chmod a+rw $SGE_ROOT/$SGE_CELL/common/shadow_masters
       ExecuteAsAdmin $mod_file >> $SGE_ROOT/$SGE_CELL/common/shadow_masters
+      ExecuteAsAdmin chmod go-w $SGE_ROOT/$SGE_CELL/common/shadow_masters
       for shs in `cat $SGE_ROOT/$SGE_CELL/common/shadow_masters`; do
          echo ". $SGE_ROOT/$SGE_CELL/common/settings.sh; SGE_ARCH=`$SGE_ROOT/util/arch`; $SGE_ROOT/bin/$SGE_ARCH/sge_shadowd &" | $SHELL_NAME $shs /bin/sh &
+         #TODO: install rc script
       done
    fi
 fi

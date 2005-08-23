@@ -34,10 +34,6 @@
 #include <pwd.h>
 #include <pthread.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif 
-
 #include "cull.h"
 #include "sgermon.h"
 #include "sge_gdiP.h"
@@ -111,10 +107,10 @@ static void dump_rcv_info(cl_com_message_t** message, cl_com_endpoint_t** sender
          sge_dstring_init(&ds, buffer, sizeof(buffer));
 
       DEBUG((SGE_EVENT,"<<<<<<<<<<<<<<<<<<<<\n"));
-      DEBUG((SGE_EVENT,"gdi_rcv: reseived message from %s/%s/"U32CFormat": \n",(*sender)->comp_host, (*sender)->comp_name, u32c((*sender)->comp_id)));
+      DEBUG((SGE_EVENT,"gdi_rcv: reseived message from %s/%s/"sge_U32CFormat": \n",(*sender)->comp_host, (*sender)->comp_name, sge_u32c((*sender)->comp_id)));
       DEBUG((SGE_EVENT,"gdi_rcv: cl_xml_ack_type_t: %s\n",            cl_com_get_mih_mat_string((*message)->message_mat)));
       DEBUG((SGE_EVENT,"gdi_rcv: message tag:       %s\n",            sge_dump_message_tag( (*message)->message_tag) ));
-      DEBUG((SGE_EVENT,"gdi_rcv: message id:        "U32CFormat"\n",  u32c((*message)->message_id) ));
+      DEBUG((SGE_EVENT,"gdi_rcv: message id:        "sge_U32CFormat"\n",  sge_u32c((*message)->message_id) ));
       DEBUG((SGE_EVENT,"gdi_rcv: receive time:      %s\n",            sge_ctime((*message)->message_receive_time.tv_sec, &ds)));
       DEBUG((SGE_EVENT,"<<<<<<<<<<<<<<<<<<<<\n"));
    }
@@ -131,11 +127,11 @@ static void dump_snd_info(char* un_resolved_hostname, char* component_name, unsi
 
    if (un_resolved_hostname != NULL && component_name != NULL) {
       DEBUG((SGE_EVENT,">>>>>>>>>>>>>>>>>>>>\n"));
-      DEBUG((SGE_EVENT,"gdi_snd: sending message to %s/%s/"U32CFormat": \n", (char*)un_resolved_hostname,(char*)component_name ,u32c(component_id)));
+      DEBUG((SGE_EVENT,"gdi_snd: sending message to %s/%s/"sge_U32CFormat": \n", (char*)un_resolved_hostname,(char*)component_name ,sge_u32c(component_id)));
       DEBUG((SGE_EVENT,"gdi_snd: cl_xml_ack_type_t: %s\n",            cl_com_get_mih_mat_string(ack_type)));
       DEBUG((SGE_EVENT,"gdi_snd: message tag:       %s\n",            sge_dump_message_tag( tag) ));
       if (mid) {
-         DEBUG((SGE_EVENT,"gdi_snd: message id:        "U32CFormat"\n",  u32c(*mid) ));
+         DEBUG((SGE_EVENT,"gdi_snd: message id:        "sge_U32CFormat"\n",  sge_u32c(*mid) ));
       } else {
          DEBUG((SGE_EVENT,"gdi_snd: message id:        not handled by caller\n"));
       }
@@ -308,8 +304,10 @@ int sge_ssl_setup_security_path(const char *progname) {
       user_local_dir = ca_local_root;
    } else {
       struct passwd *pw;
+      struct passwd pw_struct;
+      char buffer[2048];
 
-      pw = sge_getpwnam(uti_state_get_user_name());
+      pw = sge_getpwnam_r(uti_state_get_user_name(), &pw_struct, buffer, sizeof(buffer));
 
       if (!pw) {   
          CRITICAL((SGE_EVENT, MSG_SEC_USERNOTFOUND_S, uti_state_get_user_name()));
@@ -544,8 +542,22 @@ int sge_security_initialize(const char *name)
 
 #ifdef SECURE
    {
+
+     /*
+      * The dummy_string is only neccessary to be able to check with
+      * strings command in installation scripts whether the SECURE
+      * compile option was used at compile time.
+      * 
+      */
       static const char* dummy_string = NULL;
+
       dummy_string = sge_dummy_sec_string;
+      if (dummy_string != NULL) {
+         DPRINTF(("secure dummy string: %s\n", dummy_string));
+      } else {
+         DPRINTF(("secure dummy string not available\n"));
+      }
+
       if (feature_is_enabled(FEATURE_CSP_SECURITY)) {
          if (sge_ssl_setup_security_path(name)) {
             DEXIT;
@@ -599,13 +611,16 @@ void sge_security_exit(int i)
 }
 
 
-int gdi_receive_sec_message(cl_com_handle_t* handle,char* un_resolved_hostname, char* component_name, unsigned long component_id, int synchron, unsigned long response_mid, cl_com_message_t** message, cl_com_endpoint_t** sender) {
+int gdi_receive_sec_message(cl_com_handle_t* handle,char* un_resolved_hostname, 
+                            char* component_name, unsigned long component_id, 
+                            int synchron, unsigned long response_mid, 
+                            cl_com_message_t** message, cl_com_endpoint_t** sender) {
 
    int ret;
    DENTER(TOP_LAYER, "gdi_receive_sec_message");
 
    ret = cl_commlib_receive_message(handle, un_resolved_hostname,  component_name,  component_id,  
-                                     synchron, response_mid,  message,  sender);
+                                     (cl_bool_t)synchron, response_mid,  message,  sender);
    if (message != NULL) {
       dump_rcv_info(message,sender);
    }
@@ -614,20 +629,23 @@ int gdi_receive_sec_message(cl_com_handle_t* handle,char* un_resolved_hostname, 
    return ret;
 }
 
-int gdi_send_sec_message(cl_com_handle_t* handle,
-                            char* un_resolved_hostname, char* component_name, unsigned long component_id, 
-                            cl_xml_ack_type_t ack_type, 
-                            cl_byte_t* data, unsigned long size , 
-                            unsigned long* mid, unsigned long response_mid, unsigned long tag ,
-                            int copy_data,
-                            int wait_for_ack) {
+int 
+gdi_send_sec_message(cl_com_handle_t* handle, char* un_resolved_hostname, 
+                     char* component_name, unsigned long component_id, 
+                     cl_xml_ack_type_t ack_type, cl_byte_t* data, 
+                     unsigned long size, unsigned long* mid, 
+                     unsigned long response_mid, unsigned long tag,
+                     int copy_data, int wait_for_ack) 
+{
    int ret;
    DENTER(TOP_LAYER, "gdi_send_sec_message");
 
-   ret = cl_commlib_send_message(handle, un_resolved_hostname,  component_name,  component_id, 
-                                  ack_type, data,  size ,
-                                  mid,  response_mid,  tag , copy_data, wait_for_ack);
-   dump_snd_info(un_resolved_hostname, component_name, component_id, ack_type, tag, mid);
+   ret = cl_commlib_send_message(handle, un_resolved_hostname, component_name,
+                                 component_id, ack_type, data, size, mid,  
+                                 response_mid, tag, (cl_bool_t)copy_data, 
+                                 (cl_bool_t)wait_for_ack);
+   dump_snd_info(un_resolved_hostname, component_name, 
+                 component_id, ack_type, tag, mid);
    DEXIT;
    return ret;
 
@@ -643,21 +661,16 @@ int gdi_send_sec_message(cl_com_handle_t* handle,
    NOTES
       MT-NOTE: gdi_send_message() is MT safe (assumptions)
 *************************************************************/
-int gdi_send_message(
-int synchron,
-const char *tocomproc,
-int toid,
-const char *tohost,
-int tag,
-char *buffer,
-int buflen,
-u_long32 *mid,
-int compressed 
-) {
+int 
+gdi_send_message(int synchron, const char *tocomproc, int toid, 
+                 const char *tohost, int tag, char *buffer, 
+                 int buflen, u_long32 *mid) 
+{
    int ret;
    cl_com_handle_t* handle = NULL;
    cl_xml_ack_type_t ack_type;
    unsigned long dummy_mid;
+   unsigned long* mid_pointer = NULL;
    int use_execd_handle = 0;
    DENTER(TOP_LAYER, "gdi_send_message");
 
@@ -723,21 +736,21 @@ int compressed
       ack_type = CL_MIH_MAT_ACK;
    }
    if (mid != NULL) {
-      dummy_mid = *mid;
+      mid_pointer = &dummy_mid;
    }
 
-   ret = gdi_send_sec_message( handle, 
-                                  (char*)tohost ,(char*)tocomproc ,toid , 
-                                  ack_type , 
-                                  (cl_byte_t*)buffer ,(unsigned long)buflen,
-                                  &dummy_mid , 0 ,tag,1 , synchron);
+   ret = gdi_send_sec_message(handle, 
+                              (char*)tohost ,(char*)tocomproc ,toid , 
+                              ack_type , 
+                              (cl_byte_t*)buffer ,(unsigned long)buflen,
+                              mid_pointer, 0 ,tag,1 , synchron);
    if (ret != CL_RETVAL_OK) {
       /* try again ( if connection timed out) */
-      ret = gdi_send_sec_message( handle, 
-                                     (char*)tohost ,(char*)tocomproc ,toid ,
-                                     ack_type , 
-                                     (cl_byte_t*)buffer ,(unsigned long)buflen,
-                                     &dummy_mid , 0 ,tag,1 , synchron);
+      ret = gdi_send_sec_message(handle, 
+                                 (char*)tohost ,(char*)tocomproc ,toid ,
+                                 ack_type , 
+                                 (cl_byte_t*)buffer ,(unsigned long)buflen,
+                                 mid_pointer, 0 ,tag,1 , synchron);
    }
 
    if (mid != NULL) {
@@ -755,16 +768,10 @@ int compressed
  *     MT-NOTE: gdi_receive_message() is MT safe (major assumptions!)
  *
  */
-int gdi_receive_message(
-char *fromcommproc,
-u_short *fromid,
-char *fromhost,
-int *tag,
-char **buffer,
-u_long32 *buflen,
-int synchron,
-u_short *compressed 
-) {
+int 
+gdi_receive_message(char *fromcommproc, u_short *fromid, char *fromhost, 
+                    int *tag, char **buffer, u_long32 *buflen, int synchron) 
+{
    int ret;
    cl_com_handle_t* handle = NULL;
    cl_com_message_t* message = NULL;
@@ -835,7 +842,7 @@ u_short *compressed
       if ( fromcommproc[0] != '\0' && fromhost[0] != '\0' ) {
           /* The connection was closed, reopen it */
           ret = cl_commlib_open_connection(handle,fromhost,fromcommproc, *fromid);
-          INFO((SGE_EVENT,"reopen connection to %s,%s,"U32CFormat" (1)\n", fromhost , fromcommproc , u32c(*fromid)));
+          INFO((SGE_EVENT,"reopen connection to %s,%s,"sge_U32CFormat" (1)\n", fromhost , fromcommproc , sge_u32c(*fromid)));
           if (ret == CL_RETVAL_OK) {
              INFO((SGE_EVENT,"reconnected successfully\n"));
              ret = gdi_receive_sec_message( handle,fromhost ,fromcommproc ,*fromid , synchron, 0 ,&message, &sender );
@@ -850,14 +857,11 @@ u_short *compressed
       message->message = NULL;
       *buflen = message->message_length;
       if (tag) {
-         *tag = message->message_tag;
-      }
-      if (compressed) {
-         *compressed = 0;
+         *tag = (int)message->message_tag;
       }
 
       if (sender != NULL) {
-         DEBUG((SGE_EVENT,"received from: %s,"U32CFormat"\n",sender->comp_host, u32c(sender->comp_id)));
+         DEBUG((SGE_EVENT,"received from: %s,"sge_U32CFormat"\n",sender->comp_host, sge_u32c(sender->comp_id)));
          if (fromcommproc != NULL && fromcommproc[0] == '\0') {
             strcpy(fromcommproc, sender->comp_name);
          }
@@ -865,7 +869,7 @@ u_short *compressed
             strcpy(fromhost, sender->comp_host);
          }
          if (fromid != NULL) {
-            *fromid = sender->comp_id;
+            *fromid = (u_short)sender->comp_id;
          }
       }
    }
@@ -922,7 +926,7 @@ int set_sec_cred(lListElem *job)
       sprintf(binary, "%s/util/get_token_cmd", path_state_get_sge_root());
 
       if (sge_get_token_cmd(binary, NULL) != 0) {
-         fprintf(stderr, MSG_QSH_QSUBFAILED);
+         fprintf(stderr, "%s\n", MSG_QSH_QSUBFAILED);
          SGE_EXIT(1);
       }   
       
@@ -930,6 +934,7 @@ int set_sec_cred(lListElem *job)
 
       if (command_pid == -1) {
          fprintf(stderr, MSG_QSUB_CANTSTARTCOMMANDXTOGETTOKENQSUBFAILED_S, binary);
+         fprintf(stderr, "\n");
          SGE_EXIT(1);
       }
 
@@ -953,7 +958,7 @@ int set_sec_cred(lListElem *job)
       sprintf(binary, "%s/utilbin/%s/get_cred", path_state_get_sge_root(), sge_get_arch());
 
       if (sge_get_token_cmd(binary, NULL) != 0) {
-         fprintf(stderr, MSG_QSH_QSUBFAILED);
+         fprintf(stderr, "%s\n", MSG_QSH_QSUBFAILED);
          SGE_EXIT(1);
       }   
 
@@ -963,6 +968,7 @@ int set_sec_cred(lListElem *job)
 
       if (command_pid == -1) {
          fprintf(stderr, MSG_QSH_CANTSTARTCOMMANDXTOGETCREDENTIALSQSUBFAILED_S, binary);
+         fprintf(stderr, "\n");
          SGE_EXIT(1);
       }
 
@@ -976,7 +982,7 @@ int set_sec_cred(lListElem *job)
       ret = sge_peclose(command_pid, fp_in, fp_out, fp_err, NULL);
 
       if (ret) {
-         fprintf(stderr, MSG_QSH_CANTGETCREDENTIALS);
+         fprintf(stderr, "%s\n", MSG_QSH_CANTGETCREDENTIALS);
       }
       
       lSetString(job, JB_cred, str);
@@ -1123,7 +1129,7 @@ bool cache_sec_cred(lListElem *jep, const char *rhost)
       char *env[2];
 
       /* set up credentials cache for this job */
-      sprintf(ccname, "KRB5CCNAME=FILE:/tmp/krb5cc_qmaster_" u32,
+      sprintf(ccname, "KRB5CCNAME=FILE:/tmp/krb5cc_qmaster_" sge_u32,
               lGetUlong(jep, JB_job_number));
       env[0] = ccname;
       env[1] = NULL;
@@ -1139,7 +1145,7 @@ bool cache_sec_cred(lListElem *jep, const char *rhost)
 
          if (command_pid == -1) {
             ERROR((SGE_EVENT, MSG_SEC_NOSTARTCMD4GETCRED_SU, 
-                   binary, u32c(lGetUlong(jep, JB_job_number))));
+                   binary, sge_u32c(lGetUlong(jep, JB_job_number))));
          }
 
          str = sge_bin2string(fp_out, 0);
@@ -1155,11 +1161,11 @@ bool cache_sec_cred(lListElem *jep, const char *rhost)
 
          if (ret) {
             ERROR((SGE_EVENT, MSG_SEC_NOCRED_USSI, 
-                   u32c(lGetUlong(jep, JB_job_number)), rhost, binary, ret));
+                   sge_u32c(lGetUlong(jep, JB_job_number)), rhost, binary, ret));
          }
       } else {
          ERROR((SGE_EVENT, MSG_SEC_NOCREDNOBIN_US,  
-                u32c(lGetUlong(jep, JB_job_number)), binary));
+                sge_u32c(lGetUlong(jep, JB_job_number)), binary));
          ret_value = false;       
       }
    }
@@ -1196,7 +1202,7 @@ void delete_credentials(lListElem *jep)
       char tmpstr[1024];
 
       /* set up credentials cache for this job */
-      sprintf(ccfile, "/tmp/krb5cc_qmaster_" u32,
+      sprintf(ccfile, "/tmp/krb5cc_qmaster_" sge_u32,
               lGetUlong(jep, JB_job_number));
       sprintf(ccenv, "FILE:%s", ccfile);
       sprintf(ccname, "KRB5CCNAME=%s", ccenv);
@@ -1215,7 +1221,7 @@ void delete_credentials(lListElem *jep)
          if (command_pid == -1) {
             strcpy(tmpstr, SGE_EVENT);
             ERROR((SGE_EVENT, MSG_SEC_STARTDELCREDCMD_SU,
-                   binary, u32c(lGetUlong(jep, JB_job_number))));
+                   binary, sge_u32c(lGetUlong(jep, JB_job_number))));
             strcpy(SGE_EVENT, tmpstr);
          }
 
@@ -1232,14 +1238,14 @@ void delete_credentials(lListElem *jep)
          if (ret != 0) {
             strcpy(tmpstr, SGE_EVENT);
             ERROR((SGE_EVENT, MSG_SEC_DELCREDRETCODE_USI,
-                   u32c(lGetUlong(jep, JB_job_number)), binary, ret));
+                   sge_u32c(lGetUlong(jep, JB_job_number)), binary, ret));
             strcpy(SGE_EVENT, tmpstr);
          }
 
       } else {
          strcpy(tmpstr, SGE_EVENT);
          ERROR((SGE_EVENT, MSG_SEC_DELCREDNOBIN_US,  
-                u32c(lGetUlong(jep, JB_job_number)), binary));
+                sge_u32c(lGetUlong(jep, JB_job_number)), binary));
          strcpy(SGE_EVENT, tmpstr);
       }
    }
@@ -1272,14 +1278,14 @@ int store_sec_cred(sge_gdi_request *request, lListElem *jep, int do_authenticati
       char *env[2];
 
       if (do_authentication && lGetString(jep, JB_cred) == NULL) {
-         ERROR((SGE_EVENT, MSG_SEC_NOAUTH_U, u32c(lGetUlong(jep, JB_job_number))));
+         ERROR((SGE_EVENT, MSG_SEC_NOAUTH_U, sge_u32c(lGetUlong(jep, JB_job_number))));
          answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          DEXIT;
          return -1;
       }
 
       /* set up credentials cache for this job */
-      sprintf(ccname, "KRB5CCNAME=FILE:/tmp/krb5cc_qmaster_" u32,
+      sprintf(ccname, "KRB5CCNAME=FILE:/tmp/krb5cc_qmaster_" sge_u32,
               lGetUlong(jep, JB_job_number));
       env[0] = ccname;
       env[1] = NULL;
@@ -1293,7 +1299,7 @@ int store_sec_cred(sge_gdi_request *request, lListElem *jep, int do_authenticati
 
          if (command_pid == -1) {
             ERROR((SGE_EVENT, MSG_SEC_NOSTARTCMD4GETCRED_SU,
-                   binary, u32c(lGetUlong(jep, JB_job_number))));
+                   binary, sge_u32c(lGetUlong(jep, JB_job_number))));
          }
 
          sge_string2bin(fp_in, lGetString(jep, JB_cred));
@@ -1307,7 +1313,7 @@ int store_sec_cred(sge_gdi_request *request, lListElem *jep, int do_authenticati
 
          if (ret) {
             ERROR((SGE_EVENT, MSG_SEC_NOSTORECRED_USI,
-                   u32c(lGetUlong(jep, JB_job_number)), binary, ret));
+                   sge_u32c(lGetUlong(jep, JB_job_number)), binary, ret));
          }
 
          /*
@@ -1315,7 +1321,7 @@ int store_sec_cred(sge_gdi_request *request, lListElem *jep, int do_authenticati
           */
 
          if (do_authentication && (ret != 0)) {
-            ERROR((SGE_EVENT, MSG_SEC_NOAUTH_U, u32c(lGetUlong(jep, JB_job_number))));
+            ERROR((SGE_EVENT, MSG_SEC_NOAUTH_U, sge_u32c(lGetUlong(jep, JB_job_number))));
             answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             DEXIT;
             return -1;
@@ -1323,7 +1329,7 @@ int store_sec_cred(sge_gdi_request *request, lListElem *jep, int do_authenticati
 
       } else {
          ERROR((SGE_EVENT, MSG_SEC_NOSTORECREDNOBIN_US, 
-                u32c(lGetUlong(jep, JB_job_number)), binary));
+                sge_u32c(lGetUlong(jep, JB_job_number)), binary));
       }
    }
 #ifdef KERBEROS
@@ -1392,10 +1398,10 @@ int store_sec_cred2(lListElem *jelem, int do_authentication, int *general, char*
       lListElem *vep;
 
       /* set up credentials cache for this job */
-      sprintf(ccfile, "/tmp/krb5cc_%s_" u32, "sge", lGetUlong(jelem, JB_job_number));
+      sprintf(ccfile, "/tmp/krb5cc_%s_" sge_u32, "sge", lGetUlong(jelem, JB_job_number));
       sprintf(ccenv, "FILE:%s", ccfile);
       sprintf(ccname, "KRB5CCNAME=%s", ccenv);
-      sprintf(jobstr, "JOB_ID="u32, lGetUlong(jelem, JB_job_number));
+      sprintf(jobstr, "JOB_ID="sge_u32, lGetUlong(jelem, JB_job_number));
       env[0] = ccname;
       env[1] = jobstr;
       env[2] = NULL;
@@ -1414,7 +1420,7 @@ int store_sec_cred2(lListElem *jelem, int do_authentication, int *general, char*
          command_pid = sge_peopen("/bin/sh", 0, cmd, NULL, env, &fp_in, &fp_out, &fp_err, false);
 
          if (command_pid == -1) {
-            ERROR((SGE_EVENT, MSG_SEC_NOSTARTCMD4GETCRED_SU, binary, u32c(lGetUlong(jelem, JB_job_number))));
+            ERROR((SGE_EVENT, MSG_SEC_NOSTARTCMD4GETCRED_SU, binary, sge_u32c(lGetUlong(jelem, JB_job_number))));
          }
 
          sge_string2bin(fp_in, lGetString(jelem, JB_cred));
@@ -1427,7 +1433,7 @@ int store_sec_cred2(lListElem *jelem, int do_authentication, int *general, char*
          ret = sge_peclose(command_pid, fp_in, fp_out, fp_err, NULL);
 
          if (ret) {
-            ERROR((SGE_EVENT, MSG_SEC_NOSTORECRED_USI, u32c(lGetUlong(jelem, JB_job_number)), binary, ret));
+            ERROR((SGE_EVENT, MSG_SEC_NOSTORECRED_USI, sge_u32c(lGetUlong(jelem, JB_job_number)), binary, ret));
          }
 
          /*
@@ -1436,15 +1442,15 @@ int store_sec_cred2(lListElem *jelem, int do_authentication, int *general, char*
                                                               
          if (do_authentication && (ret != 0)) {               
             ERROR((SGE_EVENT, MSG_SEC_KRBAUTHFAILURE,
-                   u32c(lGetUlong(jelem, JB_job_number))));         
+                   sge_u32c(lGetUlong(jelem, JB_job_number))));         
             sprintf(err_str, MSG_SEC_KRBAUTHFAILUREONHOST,
-                    u32c(lGetUlong(jelem, JB_job_number)),
+                    sge_u32c(lGetUlong(jelem, JB_job_number)),
                     uti_state_get_unqualified_hostname());                 
             *general = GFSTATE_JOB;                            
          }                                                    
       } 
       else {
-         ERROR((SGE_EVENT, MSG_SEC_NOSTORECREDNOBIN_US, u32c(lGetUlong(jelem, JB_job_number)), binary));
+         ERROR((SGE_EVENT, MSG_SEC_NOSTORECREDNOBIN_US, sge_u32c(lGetUlong(jelem, JB_job_number)), binary));
       }
    }
    DEXIT;
@@ -1472,10 +1478,12 @@ struct dispatch_entry *de
 
    if (krb_get_tgt(de->host, de->commproc, de->id, lGetUlong(jelem, JB_job_number), &tgt_creds) == 0) {
       struct passwd *pw;
+      struct passwd pw_struct;
+      char buffer[2048];
 
       if ((rc = krb_encrypt_tgt_creds(tgt_creds, &outbuf))) {
          ERROR((SGE_EVENT, MSG_SEC_KRBENCRYPTTGTUSER_SUS, lGetString(jelem, JB_owner),
-                u32c(lGetUlong(jelem, JB_job_number)), error_message(rc)));
+                sge_u32c(lGetUlong(jelem, JB_job_number)), error_message(rc)));
       }
 
       if (rc == 0)
@@ -1484,7 +1492,7 @@ struct dispatch_entry *de
       if (outbuf.length)
          krb5_xfree(outbuf.data);
 
-      pw = sge_getpwnam(lGetString(jelem, JB_owner));
+      pw = sge_getpwnam_r(lGetString(jelem, JB_owner), &pw_struct, buffer, sizeof(buffer));
 
       if (pw) {
          if (krb_store_forwarded_tgt(pw->pw_uid,
@@ -1499,7 +1507,7 @@ struct dispatch_entry *de
          }
 
       } else {
-         ERROR((SGE_EVENT, MSG_SEC_NOUID_SU, lGetString(jelem, JB_owner), u32c(lGetUlong(jelem, JB_job_number))));
+         ERROR((SGE_EVENT, MSG_SEC_NOUID_SU, lGetString(jelem, JB_owner), sge_u32c(lGetUlong(jelem, JB_job_number))));
       }
 
       /* clear TGT out of client entry (this frees the TGT credentials) */
@@ -1537,7 +1545,7 @@ void tgt2cc(lListElem *jep, const char *rhost, const char* target)
       inbuf.data = krb_str2bin(tgtstr, NULL, &inbuf.length);
       if (inbuf.length) {
          if ((rc = krb_decrypt_tgt_creds(&inbuf, &tgt_creds))) {
-            ERROR((SGE_EVENT, MSG_SEC_KRBDECRYPTTGT_US, u32c(jid),
+            ERROR((SGE_EVENT, MSG_SEC_KRBDECRYPTTGT_US, sge_u32c(jid),
                    error_message(rc)));
          }
       }
@@ -1877,8 +1885,8 @@ int sge_security_verify_user(const char *host, const char *commproc, u_long32 id
                as root, they also can be stared as admin user */
 
       if (!is_daemon(commproc)) {
-         DPRINTF(("endpoint "SFN"/"SFN"/"U32CFormat" has the unique identifier "SFQ", gdi user = "SFQ"\n", 
-                  dummy_host, dummy_commproc, u32c(id), dummy_unique_user, dummy_gdi_user));
+         DPRINTF(("endpoint "SFN"/"SFN"/"sge_U32CFormat" has the unique identifier "SFQ", gdi user = "SFQ"\n", 
+                  dummy_host, dummy_commproc, sge_u32c(id), dummy_unique_user, dummy_gdi_user));
          if (strcmp(dummy_gdi_user,dummy_unique_user) != 0) {
             DPRINTF(("endpoint certificate user name doesn't match gdi user name\n"));
             free(unique_identifier);
@@ -1887,8 +1895,8 @@ int sge_security_verify_user(const char *host, const char *commproc, u_long32 id
             return False;
          }
       } else {
-         DPRINTF(("ignoring verify user request for endpoint "SFN"/"SFN"/"U32CFormat", gdi user = "SFQ"\n",
-                  dummy_host, dummy_commproc, u32c(id), dummy_gdi_user));
+         DPRINTF(("ignoring verify user request for endpoint "SFN"/"SFN"/"sge_U32CFormat", gdi user = "SFQ"\n",
+                  dummy_host, dummy_commproc, sge_u32c(id), dummy_gdi_user));
       }
       if (unique_identifier != NULL) {
          free(unique_identifier);
@@ -1911,7 +1919,7 @@ int sge_security_verify_user(const char *host, const char *commproc, u_long32 id
 }   
 
 /* MT-NOTE: sge_security_ck_to_do() is MT safe (assumptions) */
-void sge_security_event_handler(te_event_t anEvent)
+void sge_security_event_handler(te_event_t anEvent, monitoring_t *monitor)
 {
 #ifdef SECURE
 #if 0

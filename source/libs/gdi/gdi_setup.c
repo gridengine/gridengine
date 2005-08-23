@@ -35,10 +35,6 @@
 #include <string.h>
 #include <pthread.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif    
-
 #ifdef WIN32NATIVE
 #  include "win32nativetypes.h"
 #endif /* WIN32NATIVE */
@@ -361,9 +357,12 @@ int sge_gdi_setup(const char *programname, lList **alpp)
    bool alpp_was_null = true;
    DENTER(TOP_LAYER, "sge_gdi_setup");
 
+   lInit(nmv);
+
    if (alpp != NULL && *alpp != NULL) {
      alpp_was_null = false;
    }
+
    /* initialize libraries */
    pthread_once(&gdi_once_control, gdi_once_init);
    if (gdi_state_get_made_setup()) {
@@ -387,8 +386,6 @@ int sge_gdi_setup(const char *programname, lList **alpp)
                          (textdomain_func_type)     textdomain);
    sge_init_language(NULL,NULL);   
 #endif /* __SGE_COMPILE_WITH_GETTEXT__  */
-
-   lInit(nmv);
 
    if (sge_setup(uti_state_get_mewho(), alpp)) {
       if (alpp_was_null) {
@@ -480,7 +477,7 @@ int sge_gdi_param(int param, int intval, char *strval)
       uti_state_set_exit_func((sge_exit_func_t) strval);
       break;
    case SET_EXIT_ON_ERROR:
-      uti_state_set_exit_on_error(intval);
+      uti_state_set_exit_on_error(intval ? true : false);
       break;
    default:
       DEXIT;

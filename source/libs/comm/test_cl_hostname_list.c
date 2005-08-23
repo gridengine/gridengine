@@ -64,7 +64,7 @@ main(int argc, char** argv)
   }
 
   printf("commlib setup ...\n");
-  retval = cl_com_setup_commlib(CL_NO_THREAD , atoi(argv[1]), NULL );
+  retval = cl_com_setup_commlib(CL_NO_THREAD, (cl_log_t)atoi(argv[1]), NULL );
   printf("%s\n\n",cl_get_error_text(retval));
 
   printf("reslovling host addr 129.157.141.10 ...\n");

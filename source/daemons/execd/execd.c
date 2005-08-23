@@ -34,10 +34,6 @@
 #include <errno.h>
 #include <stdlib.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif  
-
 #include "sge_unistd.h"
 #include "sge.h"
 #include "sge_gdi.h"
@@ -87,6 +83,8 @@
 #include "msg_common.h"
 #include "msg_execd.h"
 #include "msg_gdilib.h"
+
+#include "uti/sge_monitor.h"
 
 #ifdef COMPILE_DC
 #   include "ptf.h"
@@ -165,69 +163,9 @@ int main(int argc, char *argv[]);
 *  NOTES
 *     This function is MT save
 *******************************************************************************/
-unsigned long sge_execd_application_status(char** info_message) {
-   char buffer[1024];
-   unsigned long status = 0;
-   const char* status_message = NULL;
-   double last_execd_main_time          = 0.0;
-   sge_thread_alive_times_t* thread_times       = NULL;
-
-   struct timeval now;
-
-   status_message = MSG_EXECD_APPL_STATE_OK;
-   sge_lock_alive_time_mutex();
-   gettimeofday(&now,NULL);
-   
-   thread_times = sge_get_thread_alive_times();
-   if ( thread_times != NULL ) {
-      int warning_count = 0;
-      int error_count = 0;
-      double time1;
-      double time2;
-      time1 = now.tv_sec + (now.tv_usec / 1000000.0);
-
-      time2 = thread_times->execd_main.timestamp.tv_sec + (thread_times->execd_main.timestamp.tv_usec / 1000000.0);
-      last_execd_main_time          = time1 - time2;
-
-      /* always set running state */
-      thread_times->execd_main.state   = 'R';
-
-      /* check for warning */
-      if ( thread_times->execd_main.warning_timeout > 0 ) {
-         if ( last_execd_main_time > thread_times->execd_main.warning_timeout ) {
-            thread_times->execd_main.state = 'W';
-            warning_count++;
-         }
-      }
-
-      /* check for error */
-      if ( thread_times->execd_main.error_timeout > 0 ) {
-         if ( last_execd_main_time > thread_times->execd_main.error_timeout ) {
-            thread_times->execd_main.state = 'E';
-            error_count++;
-         }
-      }
-
-      if ( error_count > 0 ) {
-         status = 2;
-         status_message = MSG_EXECD_APPL_STATE_TIMEOUT_ERROR;
-      } else if ( warning_count > 0 ) {
-         status = 1; 
-         status_message = MSG_EXECD_APPL_STATE_TIMEOUT_WARNING;
-      }
-
-      snprintf(buffer, 1024, MSG_EXECD_APPL_STATE_CFS,
-                    thread_times->execd_main.state,
-                    last_execd_main_time,
-                    status_message);
-      if (info_message != NULL && *info_message == NULL) {
-         *info_message = strdup(buffer);
-      }
-   } else {
-      status = 3;
-   }
-   sge_unlock_alive_time_mutex();
-   return status;
+unsigned long sge_execd_application_status(char** info_message) 
+{
+   return sge_monitor_status(info_message, 0);
 }
 
 /*-------------------------------------------------------------------------*/
@@ -264,7 +202,7 @@ char **argv
       
    /* Initialize path for temporary logging until we chdir to spool */
    my_pid = getpid();
-   sprintf(tmp_err_file_name,"%s."U32CFormat"",TMP_ERR_FILE_EXECD,u32c(my_pid));
+   sprintf(tmp_err_file_name,"%s."sge_U32CFormat"",TMP_ERR_FILE_EXECD,sge_u32c(my_pid));
    log_state_set_log_file(tmp_err_file_name);
 
    /* exit func for SGE_EXIT() */
@@ -321,14 +259,16 @@ char **argv
 
 
    /* are we using qidle or not */
-   sge_ls_qidle(use_qidle);
+   sge_ls_qidle(mconf_get_use_qidle());
    sge_ls_gnu_ls(1);
    
-   DPRINTF(("use_qidle: %d\n", use_qidle));
+   DPRINTF(("use_qidle: %d\n", mconf_get_use_qidle()));
 
    /* test load sensor (internal or external) */
-   lFreeList(sge_build_load_report());
-
+   {
+      lList *report_list = sge_build_load_report();
+      lFreeList(&report_list);
+   }
    execd_register();
 
    sge_write_pid(EXECD_PID_FILE);
@@ -411,12 +351,12 @@ char **argv
       }
    }
 
-   Master_Job_List = lFreeList(Master_Job_List); 
+   lFreeList(&Master_Job_List); 
   
    PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM1);
 
    if (prof_is_active(SGE_PROF_ALL)) {
-     time_t now = sge_get_gmt();
+     time_t now = (time_t)sge_get_gmt();
 
       if (now > next_prof_output) {
          prof_output_info(SGE_PROF_ALL, false, "profiling summary:\n");
@@ -503,6 +443,7 @@ int sge_execd_register_at_qmaster(void) {
    lAppendElem(hlp, hep);
 
    /* register at qmaster */
+   DPRINTF(("*****  Register at qmaster   *****\n"));
    alp = sge_gdi(SGE_EXECHOST_LIST, SGE_GDI_ADD, &hlp, NULL, NULL);
    aep = lFirst(alp);
    if (!alp || (lGetUlong(aep, AN_status) != STATUS_OK)) {
@@ -515,8 +456,8 @@ int sge_execd_register_at_qmaster(void) {
       sge_last_register_error_flag = 0;
       INFO((SGE_EVENT, MSG_EXECD_REGISTERED_AT_QMASTER_S, sge_get_master(false)));
    }
-   alp = lFreeList(alp);
-   hlp = lFreeList(hlp);
+   lFreeList(&alp);
+   lFreeList(&hlp);
    DEXIT;
    return return_value;
 }
@@ -570,7 +511,7 @@ static void execd_register(void)
                handle = cl_com_get_handle((char*)prognames[EXECD],1);
             }
 
-            ret_val = cl_commlib_trigger(handle);
+            ret_val = cl_commlib_trigger(handle, 1);
             switch(ret_val) {
                case CL_RETVAL_SELECT_TIMEOUT:
                case CL_RETVAL_OK:
@@ -593,8 +534,8 @@ static void execd_register(void)
                ERROR((SGE_EVENT, MSG_GDI_CANT_GET_COM_HANDLE_SSUUS, 
                                  uti_state_get_qualified_hostname(),
                                  (char*) prognames[uti_state_get_mewho()],
-                                 u32c(handle_local_comp_id), 
-                                 u32c(handle_service_port),
+                                 sge_u32c(handle_local_comp_id), 
+                                 sge_u32c(handle_service_port),
                                  cl_get_error_text(commlib_error)));
             }
          }
@@ -634,14 +575,14 @@ char **argv
       for_each(aep, alp) {
          fprintf(stderr, "%s", lGetString(aep, AN_text));
       }
-      lFreeList(alp);
-      lFreeList(pcmdline);
+      lFreeList(&alp);
+      lFreeList(&pcmdline);
       SGE_EXIT(1);
    }
 
    alp = sge_parse_execd(&pcmdline, &ref_list, &help);
-   lFreeList(pcmdline);
-   lFreeList(ref_list);
+   lFreeList(&pcmdline);
+   lFreeList(&ref_list);
 
    if(alp) {
       /*
@@ -650,10 +591,10 @@ char **argv
       for_each(aep, alp) {
          fprintf(stderr, "%s", lGetString(aep, AN_text));
       }
-      lFreeList(alp);
+      lFreeList(&alp);
       SGE_EXIT(1);
    }
-   lFreeList(alp);
+   lFreeList(&alp);
 
    if(help) {
       /*

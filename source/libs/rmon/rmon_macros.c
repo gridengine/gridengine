@@ -62,7 +62,9 @@ monitoring_level DEBUG_ON_STORAGE = { {0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L} };
 static const char* empty = "    ";
 
 static u_long mtype = RMON_NONE;
+#ifdef DEBUG_CLIENT_SUPPORT
 static u_long mtype_storage = RMON_NONE;
+#endif
 static FILE* rmon_fp;
 
 static void mwrite(char *message);
@@ -295,7 +297,9 @@ void rmon_mopen(int *argc, char *argv[], char *programname)
    }
 
    mtype = RMON_LOCAL;
+#ifdef DEBUG_CLIENT_SUPPORT
    mtype_storage = mtype;
+#endif
 
    return;
 } /* rmon_mopen */

@@ -38,9 +38,9 @@
 
 #include "sge_orders.h"
 
-int
+bool
 sge_select_queue(lList *reqested_attr, lListElem *queue, lListElem *host, lList *exechost_list,
-                 lList *centry_list, int allow_non_requestable, int slots); 
+                 lList *centry_list, bool allow_non_requestable, int slots); 
 
 /* --- is there a load alarm on this queue ---------------------------- */
 
@@ -69,6 +69,7 @@ int sge_split_queue_load(lList **unloaded, lList **overloaded, lList *exechost_l
 
 int sge_split_queue_slots_free(lList **unloaded, lList **overloaded);
 
+int sge_split_cal_disabled(lList **unloaded, lList **overloaded);
 int sge_split_disabled(lList **unloaded, lList **overloaded);
 
 int sge_split_suspended(lList **queue_list, lList **suspended);
@@ -96,7 +97,7 @@ typedef struct {
    lListElem  *ckpt;              /* the checkpoint interface (CK_Type)             */
    lListElem  *gep;               /* the global host (EH_Type)                      */
    u_long32   duration;           /* jobs time of the assignment                    */
-   const lList *load_adjustments; /* shall load adjustmend be considered (CE_Type)  */
+   lList      *load_adjustments;  /* shall load adjustmend be considered (CE_Type)  */
    lList      *host_list;         /* the hosts (EH_Type)                            */
    lList      *queue_list;        /* the queues (QU_Type)                           */
    lList      *centry_list;       /* the complex entries (CE_Type)                  */
@@ -110,7 +111,7 @@ typedef struct {
    int        soft_violations;    /* number of soft request violations              */
 } sge_assignment_t;
 
-void assignment_init(sge_assignment_t *a, lListElem *job, lListElem *ja_task);
+void assignment_init(sge_assignment_t *a, lListElem *job, lListElem *ja_task, bool is_load_adj);
 void assignment_copy(sge_assignment_t *dst, sge_assignment_t *src, bool move_gdil);
 void assignment_release(sge_assignment_t *a);
 

@@ -36,6 +36,8 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+#include "basis_types.h"
+
 #undef FALSE
 #undef TRUE
 
@@ -172,13 +174,14 @@ static void* signal_emitter(void* anArg)
 {
    int sig[3] = {SIGPIPE, SIGUSR1, SIGUSR2};
    unsigned int i = (unsigned int)pthread_self(); /* seed */
+   bool done = false;
 
-
-   while (TRUE) {
+   while (!done) {
       int j = (rand_r(&i) % 3);
 
       if (should_quit() == TRUE) {
          printf("signal_emitter: will terminate\n");
+         done = true;
          break;
       }
 
@@ -257,6 +260,7 @@ static void* signal_waiter(void* anArg)
 {
    sigset_t set;
    int num;
+   bool exit = false;
 
 
    printf("signal_waiter started\n");
@@ -270,7 +274,7 @@ static void* signal_waiter(void* anArg)
    sigaddset(&set, SIGUSR1);
    sigaddset(&set, SIGUSR2);
 
-   while (TRUE)
+   while (!exit)
    {
       printf("signal_waiter is waiting for signal\n");
 
@@ -280,7 +284,7 @@ static void* signal_waiter(void* anArg)
          case SIGINT:
             printf("signal_waiter: got signal SIGINT\n");
             reap_thrds();
-            return NULL;
+            exit = true;
             break;
          case SIGALRM:
             printf("signal_waiter: got signal SIGALRM\n");
@@ -296,6 +300,7 @@ static void* signal_waiter(void* anArg)
             break;
          default:
             printf("signal_waiter: got signal %d\n", num);
+            break;
       }
    }
 

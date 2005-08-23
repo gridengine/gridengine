@@ -114,8 +114,8 @@ void ja_task_list_print_to_string(const lList *ja_task_list,
       range_list_insert_id(&range_list, NULL, tid);      
    } 
    range_list_sort_uniq_compress(range_list, NULL); 
-   range_list_print_to_string(range_list, range_string, 0); 
-   range_list = lFreeList(range_list);
+   range_list_print_to_string(range_list, range_string, false); 
+   lFreeList(&range_list);
    DEXIT;
 }
 
@@ -158,7 +158,7 @@ lList* ja_task_list_split_group(lList **ja_task_list)
                         JAT_status, status, JAT_state, state,
                         JAT_hold, hold);
          lSplit(ja_task_list, &ret_list, NULL, where);
-         where = lFreeWhere(where);
+         lFreeWhere(&where);
       }
    }
    return ret_list;
@@ -205,7 +205,7 @@ bool ja_task_add_finished_pe_task(lListElem *ja_task, const char *pe_task_id)
 
    pe_task = lGetSubStr(ja_task, FPET_id, pe_task_id, JAT_finished_task_list);
    if (pe_task != NULL) {
-      DPRINTF(("already handled exit of pe task "SFQ" in ja_task "U32CFormat
+      DPRINTF(("already handled exit of pe task "SFQ" in ja_task "sge_U32CFormat
                "\n", pe_task_id, lGetUlong(ja_task, JAT_task_number)));
       DEXIT;
       return false;
@@ -255,7 +255,7 @@ bool ja_task_clear_finished_pe_tasks(lListElem *ja_task)
    /* get list of finished pe tasks */
    pe_task_list = lGetList(ja_task, JAT_finished_task_list);
    if (pe_task_list == NULL) {
-      DPRINTF(("no finished pe task list to clear in ja_task "U32CFormat"\n",
+      DPRINTF(("no finished pe task list to clear in ja_task "sge_U32CFormat"\n",
                lGetUlong(ja_task, JAT_task_number)));
       DEXIT;
       return false;
@@ -264,7 +264,7 @@ bool ja_task_clear_finished_pe_tasks(lListElem *ja_task)
    /* if we have such a list, delete it (lSetList will free the list) */
    lSetList(ja_task, JAT_finished_task_list, NULL);
 
-   DPRINTF(("cleared finished pe task list in ja_task "U32CFormat"\n",
+   DPRINTF(("cleared finished pe task list in ja_task "sge_U32CFormat"\n",
             lGetUlong(ja_task, JAT_task_number)));
 
    DEXIT;
@@ -333,7 +333,7 @@ int sge_parse_jobtasks( lList **ipp, lListElem **idp, const char *str_jobtask,
          token[0] = '\0';
          token++;
          range_list_parse_from_string(&task_id_range_list, alpp, token,
-                                      0, 1, INF_NOT_ALLOWED);
+                                      false, true, INF_NOT_ALLOWED);
          if (*alpp || !task_id_range_list) {
             ret = -1;
          }
@@ -353,7 +353,8 @@ int sge_parse_jobtasks( lList **ipp, lListElem **idp, const char *str_jobtask,
          task_id_range_list = lCopyList(lGetListName(arrayDefList), arrayDefList);
       }
       else {
-         lAddList(task_id_range_list, lCopyList("", arrayDefList));
+         lList *copy = lCopyList("", arrayDefList);
+         lAddList(task_id_range_list, &copy);
       }
    }
 

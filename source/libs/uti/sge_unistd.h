@@ -44,6 +44,14 @@
 #  include "../wingrid/misc.h"
 #endif
 
+#if defined(SOLARIS) || defined(LINUX) || defined(IRIX)
+#  define SGE_OPEN2(filename, oflag)       open64(filename, oflag)
+#  define SGE_OPEN3(filename, oflag, mode) open64(filename, oflag, mode)
+#else
+#  define SGE_OPEN2(filename, oflag)       open(filename, oflag)
+#  define SGE_OPEN3(filename, oflag, mode) open(filename, oflag, mode)
+#endif                
+
 #ifdef IRIX
 #  define SGE_STAT(filename, buffer) stat64(filename, buffer)
 #  define SGE_LSTAT(filename, buffer) lstat64(filename, buffer)
@@ -74,13 +82,15 @@
 #  define SGE_OFF_T off_t
 #endif                
 
-#ifdef IRIX
+#if defined(IRIX) || defined(SOLARIS) || defined(LINUX)
 #  define SGE_READDIR(directory) readdir64(directory)
+#  define SGE_READDIR_R(directory, entry, result) readdir64_r(directory, entry, result)
 #  define SGE_TELLDIR(directory) telldir64(directory)
 #  define SGE_SEEKDIR(directory, offset) seekdir64(directory, offset)
 #  define SGE_STRUCT_DIRENT struct dirent64
 #else
 #  define SGE_READDIR(directory) readdir(directory)
+#  define SGE_READDIR_R(directory, entry, result) readdir_r(directory, entry, result)
 #  define SGE_TELLDIR(directory) telldir(directory)
 #  define SGE_SEEKDIR(directory, offset) seekdir(directory, offset)
 #  define SGE_STRUCT_DIRENT struct dirent
@@ -110,7 +120,7 @@ int sge_mkdir2(const char *base_dir, const char *name, int fmode,
 
 int sge_rmdir(const char *cp, dstring *err_str);
 
-int sge_unlink(const char *prefix, const char *suffix); 
+bool sge_unlink(const char *prefix, const char *suffix); 
  
 int sge_is_directory(const char *name);
  

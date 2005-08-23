@@ -50,6 +50,7 @@
 #include "cull_hash.h"
 #include "cull_state.h"
 #include "pack.h"
+#include "cull_pack.h"
 
 /* do not compile in monitoring code */
 #ifndef NO_SGE_COMPILE_DEBUG
@@ -168,8 +169,8 @@ lListElem *lCopyElemHash(const lListElem *ep, bool isHash)
    }
 
    for (index = 0; index<max ; index++) { 
-      if (lCopySwitch(ep, new, index, index, isHash, NULL) != 0) {
-         lFreeElem(new);
+      if (lCopySwitchPack(ep, new, index, index, isHash, NULL, NULL) != 0) {
+         lFreeElem(&new);
 
          LERROR(LECOPYSWITCH);
          DEXIT;
@@ -177,7 +178,7 @@ lListElem *lCopyElemHash(const lListElem *ep, bool isHash)
       }
    }
    if (!sge_bitfield_copy(&(ep->changed), &(new->changed))) {
-      lFreeElem(new);
+      lFreeElem(&new);
 
       LERROR(LECOPYSWITCH);
       DEXIT;
@@ -218,25 +219,28 @@ int lModifyWhat(lListElem *dst, const lListElem *src, const lEnumeration *enp)
 
    DENTER(CULL_LAYER, "lModifyWhat");
 
-   ret = lCopyElemPartial(dst, &i, src, enp, true);
+   ret = lCopyElemPartialPack(dst, &i, src, enp, true, NULL);
 
    DEXIT;
    return ret;
 }
 
-/****** cull/list/lCopyElemPartial() ****************************************
+/****** cull/list/lCopyElemPartialPack() **************************************
 *  NAME
-*     lCopyElemPartial() -- Copies parts of an element 
+*     lCopyElemPartialPack() -- Copies parts of an element 
 *
 *  SYNOPSIS
-*     int lCopyElemPartial(lListElem *dst, int *jp, 
-*                          const lListElem *src, 
-*                          const lEnumeration *enp, bool isHash) 
+*     int 
+*     lCopyElemPartialPack(lListElem *dst, int *jp, const lListElem *src, 
+*                          const lEnumeration *enp, bool isHash,
+*                          sge_pack_buffer *pb) 
 *
 *  FUNCTION
 *     Copies elements from list element 'src' to 'dst' using the
 *     enumeration 'enp' as a mask or copies all elements if
-*     'enp' is NULL. Copying starts at index *jp. 
+*     'enp' is NULL. Copying starts at index *jp. If pb is not NULL
+*     then the elements will be stored in the packbuffer 'pb' instead of
+*     being copied.
 *
 *  INPUTS
 *     lListElem *dst          - destination element 
@@ -244,20 +248,23 @@ int lModifyWhat(lListElem *dst, const lListElem *src, const lEnumeration *enp)
 *     const lListElem *src    - src element 
 *     const lEnumeration *enp - enumeration 
 *     bool                    - generate hash or not
+*     sge_pack_buffer *pb     - packbuffer
 *
 *  RESULT
 *     int - error state
 *         0 - OK
 *        -1 - Error
 *******************************************************************************/
-int lCopyElemPartial(lListElem *dst, int *jp, const lListElem *src, 
-                     const lEnumeration *enp, bool isHash) 
+int 
+lCopyElemPartialPack(lListElem *dst, int *jp, const lListElem *src, 
+                     const lEnumeration *enp, bool isHash,
+                     sge_pack_buffer *pb) 
 {
    int i;
 
-   DENTER(CULL_LAYER, "lCopyElemPartial");
+   DENTER(CULL_LAYER, "lCopyElemPartialPack");
 
-   if (!enp || !dst || !jp) {
+   if (!enp || (!dst && !pb) || !jp) {
       LERROR(LEENUMNULL);
       DEXIT;
       return -1;
@@ -265,16 +272,22 @@ int lCopyElemPartial(lListElem *dst, int *jp, const lListElem *src,
 
    switch (enp[0].pos) {
    case WHAT_ALL:               /* all fields of element src is copied */
-      for (i = 0; src->descr[i].nm != NoName; i++, (*jp)++) {
-         if (lCopySwitch(src, dst, i, *jp, isHash, enp[0].ep) != 0) {
-            LERROR(LECOPYSWITCH);
-            DEXIT;
-            return -1;
+      if (pb == NULL) {
+         for (i = 0; src->descr[i].nm != NoName; i++, (*jp)++) {
+            if (lCopySwitchPack(src, dst, i, *jp, isHash, enp[0].ep, pb) != 0) {
+               LERROR(LECOPYSWITCH);
+               DEXIT;
+               return -1;
+            }
+#if 0 /* TODO EB: we need to decide if we want this or not */
+            /* copy changed field information */
+            if(sge_bitfield_get(&(src->changed), i)) {
+               sge_bitfield_set(&(dst->changed), *jp);
+            }
+#endif
          }
-         /* copy changed field information */
-         if(sge_bitfield_get(&(src->changed), i)) {
-            sge_bitfield_set(&(dst->changed), *jp);
-         }
+      } else {
+         cull_pack_elem(pb, src);
       }
       break;
 
@@ -282,57 +295,66 @@ int lCopyElemPartial(lListElem *dst, int *jp, const lListElem *src,
       break;
 
    default:                     /* copy only the in enp enumerated elems */
-      for (i = 0; enp[i].nm != NoName; i++, (*jp)++) {
-         if (lCopySwitch(src, dst, enp[i].pos, *jp, isHash, enp[i].ep) != 0) {
-            LERROR(LECOPYSWITCH);
-            DEXIT;
-            return -1;
+      if (pb == NULL) {
+         for (i = 0; enp[i].nm != NoName; i++, (*jp)++) {
+            if (lCopySwitchPack(src, dst, enp[i].pos, *jp, isHash, enp[i].ep, pb) != 0) {
+               LERROR(LECOPYSWITCH);
+               DEXIT;
+               return -1;
+            }
+#if 0 /* TODO EB: we need to decide if we want this or not */
+            /* copy changed field information */
+            if(sge_bitfield_get(&(src->changed), enp[i].pos)) {
+               sge_bitfield_set(&(dst->changed), *jp);
+            }
+#endif
          }
-         /* copy changed field information */
-         if(sge_bitfield_get(&(src->changed), enp[i].pos)) {
-            sge_bitfield_set(&(dst->changed), *jp);
-         }
+      } else {
+         cull_pack_elem_partial(pb, src, enp, 0);
       }
    }
    DEXIT;
    return 0;
 }
 
-/****** cull/list/lCopySwitch() ***********************************************
+/****** cull/list/lCopySwitchPack() *******************************************
 *  NAME
-*     lCopySwitch() -- Copy parts of elements indedendent from type 
+*     lCopySwitchPacPackk() -- Copy parts of elements indedendent from type 
 *
 *  SYNOPSIS
-*     int lCopySwitch(const lListElem *sep, lListElem *dep, 
-*                     int src_idx, int dst_idx, isHash) 
+*     int 
+*     lCopySwitchPack(const lListElem *sep, lListElem *dep, int src_idx, 
+*                 int dst_idx, bool isHash, sge_pack_buffer *pb) 
 *
 *  FUNCTION
 *     Copies from the element 'sep' (using index 'src_idx') to
 *     the element 'dep' (using index 'dst_idx') in dependence 
-*     of the type. 
+*     of the type or it copies the it directly into pb. 
 *
 *  INPUTS
 *     const lListElem *sep - source element 
 *     lListElem *dep       - destination element 
 *     int src_idx          - source index 
 *     int dst_idx          - destination index 
+*     bool isHash          - create Hash or not
 *     lEnumeration *ep     - enumeration oiter to be used for sublists
-*     bool                 - create Hash or not
+*     sge_pack_buffer *pb  - pack buffer
 *
 *  RESULT
 *     int - error state
 *         0 - OK
 *        -1 - Error
 *******************************************************************************/
-int lCopySwitch(const lListElem *sep, lListElem *dep, 
-                int src_idx, int dst_idx, bool isHash, lEnumeration *ep) 
+int 
+lCopySwitchPack(const lListElem *sep, lListElem *dep, int src_idx, int dst_idx, 
+                bool isHash, lEnumeration *ep, sge_pack_buffer *pb) 
 {
    lList *tlp;
    lListElem *tep;
 
-   DENTER(CULL_LAYER, "lCopySwitch");
+   DENTER(CULL_LAYER, "lCopySwitchPack");
 
-   if (!dep || !sep) {
+   if ((!dep && !pb) || !sep) {
       DEXIT;
       return -1;
    }
@@ -360,15 +382,16 @@ int lCopySwitch(const lListElem *sep, lListElem *dep,
    case lListT:
       if ((tlp = sep->cont[src_idx].glp) == NULL) 
          dep->cont[dst_idx].glp = NULL;
-      else { 
-         dep->cont[dst_idx].glp = lSelectHash(NULL, tlp, NULL, ep, isHash);
+      else {
+         dep->cont[dst_idx].glp = lSelectHashPack(tlp->listname, tlp, NULL, 
+                                                  ep, isHash, pb);
       }
       break;
    case lObjectT:
       if ((tep = sep->cont[src_idx].obj) == NULL) {
          dep->cont[dst_idx].obj = NULL;
       } else {
-         lListElem *new = lSelectElem(tep, NULL, ep, isHash);
+         lListElem *new = lSelectElemPack(tep, NULL, ep, isHash, pb);
          new->status = OBJECT_ELEM;
          dep->cont[dst_idx].obj = new;
       }   
@@ -686,7 +709,7 @@ static void lWriteElem_(const lListElem *ep, dstring *buffer, int nesting_level)
          sge_dstring_sprintf_append(buffer, "%s%-20.20s (Integer) %c = %d\n", space, lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', lGetPosInt(ep, i));
          break;
       case lUlongT:
-         sge_dstring_sprintf_append(buffer, "%s%-20.20s (Ulong)   %c = " u32"\n", space, lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', lGetPosUlong(ep, i));
+         sge_dstring_sprintf_append(buffer, "%s%-20.20s (Ulong)   %c = " sge_u32"\n", space, lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', lGetPosUlong(ep, i));
          break;
       case lStringT:
          str = lGetPosString(ep, i);
@@ -937,9 +960,9 @@ lList *lCreateListHash(const char *listname, const lDescr *descr, bool hash)
    lList *lp;
    int i, n;
 
-   DENTER(CULL_LAYER, "lCreateList");
+   DENTER(CULL_LAYER, "lCreateListHash");
 
-   if (!listname) {
+   if (listname == NULL) {
       listname = "No list name specified";
    }
 
@@ -1035,7 +1058,7 @@ lList *lCreateElemList(const char *listname, const lDescr *descr, int nr_elem)
    for (i = 0; i < nr_elem; i++) {
       if (!(ep = lCreateElem(descr))) {
          LERROR(LECREATEELEM);
-         lFreeList(lp);
+         lFreeList(&lp);
          DEXIT;
          return NULL;
       }
@@ -1051,31 +1074,30 @@ lList *lCreateElemList(const char *listname, const lDescr *descr, int nr_elem)
 *     lFreeElem() -- Free a element including strings and sublists 
 *
 *  SYNOPSIS
-*     lListElem* lFreeElem(lListElem *ep) 
+*     void lFreeElem(lListElem **ep) 
 *
 *  FUNCTION
 *     Free a element including strings and sublists 
 *
 *  INPUTS
-*     lListElem *ep - element 
-*
-*  RESULT
-*     lListElem* - NULL 
+*     lListElem **ep - element, will be set to NULL 
 *
 *  NOTES
 *     MT-NOTE: lRemoveElem() is MT safe
 ******************************************************************************/
-lListElem *lFreeElem(lListElem *ep) 
+void lFreeElem(lListElem **ep1) 
 {
    int i = 0;
-
+   lListElem *ep = NULL;
+   
    DENTER(CULL_LAYER, "lFreeElem");
 
-   if (ep == NULL) {
-      DEXIT;
-      return NULL;
+   if (ep1 == NULL || *ep1 == NULL) {
+      DRETURN_VOID;
    }
 
+   ep = *ep1;
+   
    if (ep->descr == NULL) {
       LERROR(LEDESCRNULL);
       DPRINTF(("NULL descriptor not allowed !!!\n"));
@@ -1101,23 +1123,27 @@ lListElem *lFreeElem(lListElem *ep)
          break;
 
       case lStringT:
-         if (ep->cont[i].str != NULL)
+         if (ep->cont[i].str != NULL) {
             free(ep->cont[i].str);
+         }   
          break;
 
       case lHostT:
-         if (ep->cont[i].host != NULL)
+         if (ep->cont[i].host != NULL) {
             free(ep->cont[i].host);
+         }   
          break;
 
       case lListT:
-         if (ep->cont[i].glp != NULL)
-            lFreeList(ep->cont[i].glp);
+         if (ep->cont[i].glp != NULL) {
+            lFreeList(&(ep->cont[i].glp));
+         }   
          break;
 
       case lObjectT:
-         if (ep->cont[i].obj != NULL)
-            lFreeElem(ep->cont[i].obj);
+         if (ep->cont[i].obj != NULL) {
+            lFreeElem(&(ep->cont[i].obj));
+         }   
          break;
 
       default:
@@ -1138,10 +1164,8 @@ lListElem *lFreeElem(lListElem *ep)
 
    sge_bitfield_free_data(&(ep->changed));
 
-   free(ep);
-
-   DEXIT;
-   return NULL;
+   FREE(*ep1);
+   DRETURN_VOID;
 }
 
 /****** cull/list/lFreeList() *************************************************
@@ -1149,53 +1173,55 @@ lListElem *lFreeElem(lListElem *ep)
 *     lFreeList() -- Frees a list including all elements  
 *
 *  SYNOPSIS
-*     lList* lFreeList(lList *lp) 
+*     void lFreeList(lList **lp) 
 *
 *  FUNCTION
 *     Frees a list including all elements 
 *
 *  INPUTS
-*     lList *lp - list 
+*     lList **lp - list 
 *
 *  RESULT
-*     lList* - NULL 
+*     void
 *
 *  NOTES
 *     MT-NOTE: lFreeList() is MT safe
 ******************************************************************************/
-lList *lFreeList(lList *lp) 
+void lFreeList(lList **lp)
 {
    DENTER(CULL_LAYER, "lFreeList");
 
-   if (!lp) {
+   if (lp == NULL || *lp == NULL) {
       DEXIT;
-      return NULL;
+      return;
    }
 
    /* 
     * remove all hash tables, 
     * it is more efficient than removing it at the end 
     */
-   if (lp->descr != NULL) {
-      cull_hash_free_descr(lp->descr);
+   if ((*lp)->descr != NULL) {
+      cull_hash_free_descr((*lp)->descr);
    }   
 
-   while (lp->first) {
-      lRemoveElem(lp, lp->first);
+   while ((*lp)->first) {
+      lListElem *elem = (*lp)->first;
+      lRemoveElem(*lp, &elem);
    }   
 
-   if (lp->descr) {
-      free(lp->descr);
+   if ((*lp)->descr) {
+      free((*lp)->descr);
    }   
 
-   if (lp->listname) {
-      free(lp->listname);
+   if ((*lp)->listname) {
+      free((*lp)->listname);
    }
 
-   free(lp);
+   free(*lp);
+   *lp = NULL;
 
    DEXIT;
-   return NULL;
+   return;
 }
 
 
@@ -1227,7 +1253,7 @@ lList *lAddSubList(lListElem *ep, int nm, lList *to_add)
    lList *tmp;
    if (lGetNumberOfElem(to_add)) {
       if ((tmp=lGetList(ep, nm)))
-         lAddList(tmp, to_add);
+         lAddList(tmp, &to_add);
       else 
          lSetList(ep, nm, to_add);
    }
@@ -1239,14 +1265,14 @@ lList *lAddSubList(lListElem *ep, int nm, lList *to_add)
 *     lAddList() -- Concatenate two lists 
 *
 *  SYNOPSIS
-*     int lAddList(lList *lp0, lList *lp1) 
+*     int lAddList(lList *lp0, lList **lp1) 
 *
 *  FUNCTION
 *     Concatenate two lists of equal type throwing away the second list 
 *
 *  INPUTS
 *     lList *lp0 - first list 
-*     lList *lp1 - second list 
+*     lList **lp1 - second list 
 *
 *  RESULT
 *     int - error state
@@ -1256,13 +1282,13 @@ lList *lAddSubList(lListElem *ep, int nm, lList *to_add)
 *  NOTES
 *     MT-NOTE: lAddList() is MT safe
 ******************************************************************************/
-int lAddList(lList *lp0, lList *lp1) 
+int lAddList(lList *lp0, lList **lp1) 
 {
    /* No need to do any safety checks.  lAppendList will do them for us. */
    int res = 0;
    
    DENTER(CULL_LAYER, "lAddList");
-   res = lAppendList (lp0, lp1);
+   res = lAppendList(lp0, *lp1);
    lFreeList(lp1);
    DEXIT;
    return res;
@@ -1466,9 +1492,13 @@ lList *lCopyListHash(const char *name, const lList *src, bool hash)
       return NULL;
    }
 
+#if 0 /* TODO EB:  need to decide if we want this or not*/
+   dst->changed = src->changed;
+#endif
+
    for (sep = src->first; sep; sep = sep->next) {
       if (lAppendElem(dst, lCopyElem(sep)) == -1) {
-         lFreeList(dst);
+         lFreeList(&dst);
          LERROR(LEAPPENDELEM);
          DEXIT;
          return NULL;
@@ -1646,7 +1676,7 @@ int lAppendElem(lList *lp, lListElem *ep)
 *
 *  INPUTS
 *     lList *lp     - list 
-*     lListElem *ep - element 
+*     lListElem **ep - element, will be set to NULL 
 *
 *  RESULT
 *     int - error state
@@ -1656,15 +1686,17 @@ int lAppendElem(lList *lp, lListElem *ep)
 *  NOTES
 *     MT-NOTE: lRemoveElem() is MT safe
 *******************************************************************************/
-int lRemoveElem(lList *lp, lListElem *ep) 
+int lRemoveElem(lList *lp, lListElem **ep1) 
 {
+   lListElem *ep = NULL;
    DENTER(CULL_LAYER, "lRemoveElem");
 
-   if (!lp || !ep) {
-      DEXIT;
-      return -1;
+   if (lp == NULL || ep1 == NULL || *ep1 == NULL) {
+      DRETURN(-1);
    }
 
+   ep = *ep1;
+   
    if (lp->descr != ep->descr) {
       CRITICAL((SGE_EVENT, "Dechaining element from other list !!!\n"));
       abort();
@@ -1690,10 +1722,8 @@ int lRemoveElem(lList *lp, lListElem *ep)
    lp->nelem--;
    lp->changed = true;
 
-   lFreeElem(ep);
-
-   DEXIT;
-   return 0;
+   lFreeElem(ep1);
+   DRETURN(0);
 }
 
 /****** cull/list/lDechainList() **********************************************
@@ -2218,7 +2248,7 @@ int lPSortList(lList * lp, const char *fmt,...)
    lSortList(lp, sp);
 
    va_end(ap);
-   lFreeSortOrder(sp);
+   lFreeSortOrder(&sp);
 
    DEXIT;
    return 0;
@@ -2365,7 +2395,7 @@ int lUniqStr(lList *lp, int keyfield)
       rep = lNext(ep);
       while (rep &&
           !strcmp(lGetString(rep, keyfield), lGetString(ep, keyfield))) {
-         lRemoveElem(lp, rep);
+         lRemoveElem(lp, &rep);
          rep = lNext(ep);
       }
       ep = lNext(ep);
@@ -2417,7 +2447,7 @@ int lUniqHost(lList *lp, int keyfield)
       rep = lNext(ep);
       while (rep &&
           !strcmp(lGetHost(rep, keyfield), lGetHost(ep, keyfield))) {
-         lRemoveElem(lp, rep);
+         lRemoveElem(lp, &rep);
          rep = lNext(ep);
       }
       ep = lNext(ep);

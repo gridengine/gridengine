@@ -38,9 +38,9 @@
 #include "sge_dstring.h"
 #include "sge_rangeL.h"
 
-#define JUST_PARSE        1
-#define INF_ALLOWED       1
-#define INF_NOT_ALLOWED   0
+#define JUST_PARSE        true
+#define INF_ALLOWED       true
+#define INF_NOT_ALLOWED   false
 
 #define MAX_IDS_PER_LINE  8
 #define MAX_LINE_LEN      70

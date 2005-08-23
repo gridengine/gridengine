@@ -32,18 +32,20 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+#include "uti/sge_monitor.h"
+
 bool
 cqueue_list_x_on_subordinate_gdil(lList *this_list, bool suspend,
-                                  const lList *gdil);
+                                  const lList *gdil, monitoring_t *monitor);
 
 bool
 cqueue_list_x_on_subordinate_so(lList *this_list, lList **answer_list,
                                 bool suspend, const lList *resolved_so_list,
-                                bool do_recompute_caches);
+                                bool do_recompute_caches, monitoring_t *monitor);
 
 bool
 qinstance_x_on_subordinate(lListElem *this_elem, bool suspend,
-                           bool rebuild_cache);
+                           bool rebuild_cache, monitoring_t *monitor);
 
 bool
 qinstance_find_suspended_subordinates(const lListElem *this_elem,
@@ -51,7 +53,7 @@ qinstance_find_suspended_subordinates(const lListElem *this_elem,
                                       lList **resolved_so_list);
 
 bool
-qinstance_initialize_sos_attr(lListElem *this_elem);
+qinstance_initialize_sos_attr(lListElem *this_elem, monitoring_t *monitor);
 
 
 
@@ -70,10 +72,6 @@ suspend_all(lList *sl, bool recompute_cache);
 
 bool 
 unsuspend_all(lList *sl, bool recompute_cache); 
-
-bool
-qinstance_x_on_subordinate(lListElem *this_elem, bool do_suspend,
-                           bool rebuild_cache);
 
 #endif /* __SUBORDINATE_QMASTER_H */
 

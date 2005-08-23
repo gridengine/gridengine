@@ -34,6 +34,7 @@
 
 #include "sge_eventL.h"
 #include "sge_qmaster_timed_event.h"
+#include "uti/sge_monitor.h"
 
 
 bool
@@ -43,7 +44,7 @@ bool
 sge_shutdown_persistence(lList **answer_list);
 
 void
-spooling_trigger_handler(te_event_t anEvent);
+spooling_trigger_handler(te_event_t anEvent, monitoring_t *monitor);
 
 bool
 sge_event_spool(lList **answer_list, u_long32 timestamp, ev_event type, 

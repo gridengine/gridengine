@@ -66,9 +66,9 @@ void opt_list_merge_command_lines(lList **opts_all,
                                   lList **opts_scriptfile,
                                   lList **opts_cmdline);
 
-int opt_list_has_X(lList *opts, const char *option);
+bool opt_list_has_X(lList *opts, const char *option);
 
-int opt_list_is_X_true(lList *opts, const char *option);
+bool opt_list_is_X_true(lList *opts, const char *option);
 
 #endif /* __READ_DEFAULTS_H */
 

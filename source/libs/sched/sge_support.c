@@ -38,10 +38,6 @@
 #include <limits.h>
 #include <math.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif   
-
 #ifndef NO_SGE_COMPILE_DEBUG   
 #   define NO_SGE_COMPILE_DEBUG
 #endif
@@ -85,7 +81,7 @@ decay_usage( lList *usage_list,
       lListElem *ua_elem = lCreateElem(UA_Type);
       ua_value_pos = lGetPosViaElem(ua_elem, UA_value);
       ua_name_pos = lGetPosViaElem(ua_elem, UA_name);
-      lFreeElem(ua_elem);
+      lFreeElem(&ua_elem);
    }
 
    if (usage_list) {
@@ -140,8 +136,8 @@ decay_userprj_usage( lListElem *userprj,
       up_usage_pos = lGetPosViaElem(up_elem, UP_usage);
       up_project_pos = lGetPosViaElem(up_elem, UP_project);
       upp_usage_pos = lGetPosViaElem(upp_elem, UPP_usage);
-      lFreeElem(up_elem);
-      lFreeElem(upp_elem);
+      lFreeElem(&up_elem);
+      lFreeElem(&upp_elem);
    }
 
    if (userprj && seqno != lGetPosUlong(userprj, up_usage_seqno_pos)) {
@@ -310,7 +306,6 @@ sge_calc_node_usage( lListElem *node,
    lListElem *child_node;
    lList *children;
    lListElem *userprj = NULL;
-   const lList *usage_weight_list = NULL;
    lList *usage_list=NULL;
    lListElem *usage_weight, *usage_elem;
    double sum_of_usage_weights = 0;
@@ -321,7 +316,6 @@ sge_calc_node_usage( lListElem *node,
    static int sn_usage_list_pos = -1;
    static int ua_name_pos = -1;
    static int ua_value_pos = -1;
-   static int up_usage_pos = -1;
 
    DENTER(TOP_LAYER, "sge_calc_node_usage");
 
@@ -335,10 +329,9 @@ sge_calc_node_usage( lListElem *node,
       sn_name_pos = lGetPosViaElem(node, STN_name);
       ua_name_pos = lGetPosViaElem(ua_elem, UA_name);
       ua_value_pos = lGetPosViaElem(ua_elem, UA_value);
-      up_usage_pos = lGetPosViaElem(up_elem, UP_usage);
-      lFreeElem(ua_elem);
-      lFreeElem(sc_elem);
-      lFreeElem(up_elem);
+      lFreeElem(&ua_elem);
+      lFreeElem(&sc_elem);
+      lFreeElem(&up_elem);
    }
 
    children = lGetPosList(node, sn_children_pos);
@@ -401,6 +394,7 @@ sge_calc_node_usage( lListElem *node,
    }
 
    if (usage_list) {
+      lList *usage_weight_list = NULL;
 
       /*-------------------------------------------------------------
        * Decay usage
@@ -438,6 +432,8 @@ sge_calc_node_usage( lListElem *node,
             }
          }
       }
+
+      lFreeList(&usage_weight_list);
 
       /*-------------------------------------------------------------
        * Store other usage values in node usage list
@@ -503,10 +499,9 @@ sge_calc_node_usage( lListElem *node,
             project usage. Then, we add this usage to all of the nodes
             leading to the "default" user node. */
 
-         lListElem *default_node;
          ancestors_t ancestors;
          int i;
-         if ((default_node=search_ancestors(node, "default", &ancestors, 1))) {
+         if (search_ancestors(node, "default", &ancestors, 1)) {
             double default_usage = usage_value - child_usage;
             if (default_usage > 1.0) {
                for(i=1; i<ancestors.depth; i++) {
@@ -993,7 +988,7 @@ void sgeee_sort_jobs( lList **job_list )              /* JB_Type */
       lSetUlong(tmp_sge_job, SGEJ_job_number, lGetUlong(job, JB_job_number));
       lSetRef(tmp_sge_job, SGEJ_job_reference, job);
 #if 1
-      DPRINTF(("JOB: "u32" PRIORITY: "u32"\n", 
+      DPRINTF(("JOB: "sge_u32" PRIORITY: "sge_u32"\n", 
          lGetUlong(tmp_sge_job, SGEJ_job_number), 
          lGetDouble(tmp_sge_job, SGEJ_priority)));
 #endif
@@ -1017,7 +1012,7 @@ void sgeee_sort_jobs( lList **job_list )              /* JB_Type */
    /*-----------------------------------------------------------------
     * Release tmp list
     *-----------------------------------------------------------------*/
-   lFreeList(tmp_list);
+   lFreeList(&tmp_list);
 
    DEXIT;
    return;

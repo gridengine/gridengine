@@ -338,7 +338,7 @@ int main(int argc, char *argv[])
          printf("\n\n**** ERGLIST ****\n\n");
          if (erglist) {
             lWriteList(erglist);
-            lFreeList(erglist);
+            lFreeList(&erglist);
             erglist = NULL;
          }
       }
@@ -386,8 +386,8 @@ int main(int argc, char *argv[])
                  N_complexname, lGetList(queue, Q_complexname), NULL, w0,
                                    C_name, COMPLEXLIST, NULL, w1);
 
-            lFreeWhat(w0);
-            lFreeWhat(w1);
+            lFreeWhat(&w0);
+            lFreeWhat(&w1);
 
             /* 
                try to find a hard request of this job 
@@ -414,9 +414,9 @@ int main(int argc, char *argv[])
                               C_attribute, queuecomplexes, NULL, nothing,
                                          ComplexAttributeT, where, all);
 
-               lFreeWhere(where);
-               lFreeWhat(nothing);
-               lFreeWhat(all);
+               lFreeWhere(&where);
+               lFreeWhat(&nothing);
+               lFreeWhat(&all);
 
                /* 
                   if we get an empty list then the queue has 
@@ -456,13 +456,13 @@ int main(int argc, char *argv[])
                      break;     /* leave attribute loop */
                }
 
-               lFreeList(attributes);
+               lFreeList(&attributes);
 
                if (!fulfilled)
                   break;        /* leave request loop */
             }
 
-            lFreeList(queuecomplexes);
+            lFreeList(&queuecomplexes);
 
             if (fulfilled) {
                lWriteElem(queue);
@@ -540,7 +540,7 @@ int main(int argc, char *argv[])
                               C_attribute, queuecomplexes, NULL, nothing,
                                          ComplexAttributeT, where, all);
 
-               lFreeWhere(where);
+               lFreeWhere(&where);
 
                /* 
                   if we get an empty list then the queue has 
@@ -608,9 +608,9 @@ int main(int argc, char *argv[])
    if (queuelist)
       lFreeList(queuelist);
    if (joblist)
-      lFreeList(joblist);
+      lFreeList(&joblist);
    if (COMPLEXLIST)
-      lFreeList(COMPLEXLIST);
+      lFreeList(&COMPLEXLIST);
 
    DCLOSE;
    return 0;
@@ -638,11 +638,11 @@ lList *requestlist
          /* associate complexname with a complex */
          cs = lWhere("%T( %I == %s )", ComplexT, C_name, lGetString(cnep, N_complexname));
          if (!(cep = lFindFirst(COMPLEXLIST, cs))) {
-            lFreeWhere(cs);
+            lFreeWhere(&cs);
             printf("matchRequest: Warning complex %s does not exist\n", lGetString(cnep, N_complexname));
             continue;
          }
-         lFreeWhere(cs);
+         lFreeWhere(&cs);
 
          /* The names of the ComplexAttribute and the requested attribute must match */
          match = lWhere("%T( %I == %s )",
@@ -654,7 +654,7 @@ lList *requestlist
 /********* Here a real operator/type dependend compare function is necessary *******/
             result = (!strcmp(lGetString(caep, A_value), lGetString(request, R_value)));
          }
-         lFreeWhere(match);
+         lFreeWhere(&match);
 
          if (result)
             break;

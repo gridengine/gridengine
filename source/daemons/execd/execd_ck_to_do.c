@@ -37,10 +37,6 @@
 #include <stdlib.h>
 #include <fcntl.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif    
-             
 #include "sgermon.h"
 #include "sge.h"
 #include "sge_conf.h"
@@ -261,7 +257,7 @@ void force_job_rlimit()
 
          }
 
-         DPRINTF(("JOB "u32" %s %10.5f %s %10.5f\n", 
+         DPRINTF(("JOB "sge_u32" %s %10.5f %s %10.5f\n", 
             jobid,
             cpu_ep?USAGE_ATTR_CPU:"("USAGE_ATTR_CPU")",  
             cpu_val, 
@@ -271,7 +267,7 @@ void force_job_rlimit()
          if (h_cpu < cpu_val || h_vmem < vmem_val) {
             cpu_exceeded = (h_cpu < cpu_val);
             WARNING((SGE_EVENT, MSG_JOB_EXCEEDHLIM_USSFF, 
-                     u32c(jobid), cpu_exceeded ? "h_cpu" : "h_vmem",
+                     sge_u32c(jobid), cpu_exceeded ? "h_cpu" : "h_vmem",
                      q?lGetString(q, QU_full_name) : "-",
                      cpu_exceeded ? cpu_val : vmem_val,
                      cpu_exceeded ? h_cpu : h_vmem));
@@ -282,7 +278,7 @@ void force_job_rlimit()
          if (s_cpu < cpu_val || s_vmem < vmem_val) {
             cpu_exceeded = (s_cpu < cpu_val);
             WARNING((SGE_EVENT, MSG_JOB_EXCEEDSLIM_USSFF,
-                     u32c(jobid),
+                     sge_u32c(jobid),
                      cpu_exceeded ? "s_cpu" : "s_vmem",
                      q?lGetString(q, QU_full_name) : "-",
                      cpu_exceeded ? cpu_val : vmem_val,
@@ -292,7 +288,7 @@ void force_job_rlimit()
          }
 
          if (usage_list)
-            lFreeList(usage_list);
+            lFreeList(&usage_list);
 
       }
    }
@@ -419,7 +415,7 @@ execd_ck_to_do(struct dispatch_entry *de, sge_pack_buffer *pb, sge_pack_buffer *
                            responsible_queue(job, jatask, NULL);
                   priority = atoi(lGetString(master_queue, QU_priority));
 
-                  DPRINTF(("Set priority of job "u32"."u32" running in"
+                  DPRINTF(("Set priority of job "sge_u32"."sge_u32" running in"
                      " queue  %s to %d\n", 
                      lGetUlong(job, JB_job_number), 
                      lGetUlong(jatask, JAT_task_number),
@@ -434,7 +430,7 @@ execd_ck_to_do(struct dispatch_entry *de, sge_pack_buffer *pb, sge_pack_buffer *
                      master_queue = 
                            responsible_queue(job, jatask, petask);
                      priority = atoi(lGetString(master_queue, QU_priority));
-                     DPRINTF(("EB Set priority of task "u32"."u32"-%s running "
+                     DPRINTF(("EB Set priority of task "sge_u32"."sge_u32"-%s running "
                         "in queue %s to %d\n", 
                         lGetUlong(job, JB_job_number), 
                         lGetUlong(jatask, JAT_task_number),
@@ -470,12 +466,27 @@ execd_ck_to_do(struct dispatch_entry *de, sge_pack_buffer *pb, sge_pack_buffer *
       jobs_to_start = 0;
    }
 
+   if (dead_children != 0) {
+      /* reap all jobs, who generated a SIGCLD */
+
+      /* set dead_children to 0 before reaping children
+         because SIGCLD's can be lost otherwise */
+      dead_children = 0;
+      sge_reap_children_execd();
+   }
+
    now = sge_get_gmt();
    if (next_signal <= now) {
       next_signal = now + SIGNAL_RESEND_INTERVAL;
       /* resend signals to shepherds */
       for_each(jep, Master_Job_List) {
          for_each (jatep, lGetList(jep, JB_ja_tasks)) {
+
+            /* don't start wallclock before job acutally started */
+            if (lGetUlong(jatep, JAT_status) == JWAITING4OSJID ||
+                  lGetUlong(jatep, JAT_status) == JEXITING)
+               continue;
+
             if (!lGetUlong(jep, JB_hard_wallclock_gmt)) {
                lList *gdil_list = lGetList(jatep, 
                                            JAT_granted_destin_identifier_list);
@@ -488,8 +499,8 @@ execd_ck_to_do(struct dispatch_entry *de, sge_pack_buffer *pb, sge_pack_buffer *
             if (now >= lGetUlong(jep, JB_hard_wallclock_gmt) ) {
                if (!(lGetUlong(jatep, JAT_pending_signal_delivery_time)) ||
                    (now > lGetUlong(jatep, JAT_pending_signal_delivery_time))) {
-                  INFO((SGE_EVENT, MSG_EXECD_EXCEEDHWALLCLOCK_UU,
-                       u32c(lGetUlong(jep, JB_job_number)), u32c(lGetUlong(jatep, JAT_task_number)))); 
+                  WARNING((SGE_EVENT, MSG_EXECD_EXCEEDHWALLCLOCK_UU,
+                       sge_u32c(lGetUlong(jep, JB_job_number)), sge_u32c(lGetUlong(jatep, JAT_task_number)))); 
                   if (sge_execd_ja_task_is_tightly_integrated(jatep)) {
                      sge_kill_petasks(jep, jatep);
                   }
@@ -507,8 +518,8 @@ execd_ck_to_do(struct dispatch_entry *de, sge_pack_buffer *pb, sge_pack_buffer *
             if (now >= lGetUlong(jep, JB_soft_wallclock_gmt)) {
                if (!(lGetUlong(jatep, JAT_pending_signal_delivery_time)) ||
                    (now > lGetUlong(jatep, JAT_pending_signal_delivery_time))) {
-                  INFO((SGE_EVENT, MSG_EXECD_EXCEEDSWALLCLOCK_UU,
-                       u32c(lGetUlong(jep, JB_job_number)), u32c(lGetUlong(jatep, JAT_task_number))));  
+                  WARNING((SGE_EVENT, MSG_EXECD_EXCEEDSWALLCLOCK_UU,
+                       sge_u32c(lGetUlong(jep, JB_job_number)), sge_u32c(lGetUlong(jatep, JAT_task_number))));  
                   if (sge_execd_ja_task_is_tightly_integrated(jatep)) {
                      sge_kill_petasks(jep, jatep);
                   }
@@ -526,19 +537,13 @@ execd_ck_to_do(struct dispatch_entry *de, sge_pack_buffer *pb, sge_pack_buffer *
       }
    }
 
-   if (dead_children) {
-      /* reap all jobs, who generated a SIGCLD */
-      sge_reap_children_execd();
-      dead_children = 0;
-   }
-
    if (next_old_job <= now) {
       next_old_job = now + OLD_JOB_INTERVAL;
       clean_up_old_jobs(0);
    }
 
    /* check for end of simulated jobs */
-   if(simulate_hosts) {
+   if(mconf_get_simulate_hosts()) {
       for_each(jep, Master_Job_List) {
          for_each (jatep, lGetList(jep, JB_ja_tasks)) {
             if((lGetUlong(jatep, JAT_status) & JSIMULATED) && lGetUlong(jatep, JAT_end_time) <= now) {
@@ -549,11 +554,11 @@ execd_ck_to_do(struct dispatch_entry *de, sge_pack_buffer *pb, sge_pack_buffer *
                jobid = lGetUlong(jep, JB_job_number);
                jataskid = lGetUlong(jatep, JAT_task_number);
 
-               DPRINTF(("Simulated job "u32"."u32" is exiting\n", jobid, jataskid));
+               DPRINTF(("Simulated job "sge_u32"."sge_u32" is exiting\n", jobid, jataskid));
 
                if ((jr=get_job_report(jobid, jataskid, NULL)) == NULL) {
                   ERROR((SGE_EVENT, MSG_JOB_MISSINGJOBXYINJOBREPORTFOREXITINGJOBADDINGIT_UU, 
-                         u32c(jobid), u32c(jataskid)));
+                         sge_u32c(jobid), sge_u32c(jataskid)));
                   jr = add_job_report(jobid, jataskid, NULL, jep);
                }
 
@@ -580,16 +585,16 @@ execd_ck_to_do(struct dispatch_entry *de, sge_pack_buffer *pb, sge_pack_buffer *
    now = sge_get_gmt();
    if ( sge_get_flush_jr_flag() == true || next_report <= now) {
       if (next_report <= now) {
-         next_report = now + conf.load_report_time;
+         next_report = now + mconf_get_load_report_time();
       }
 
       if (last_report_send < now) {
          last_report_send = now;
          /* send all reports */
          was_communication_error = sge_send_all_reports(now, 0, execd_report_sources);
-         DPRINTF(("----> was_communication_error: "SFQ" ("U32CFormat")\n", 
+         DPRINTF(("----> was_communication_error: "SFQ" ("sge_U32CFormat")\n", 
                   cl_get_error_text(was_communication_error), 
-                  u32c(was_communication_error)));
+                  sge_u32c(was_communication_error)));
       }
    }
 
@@ -780,13 +785,13 @@ lListElem *petep
 
    /* we might simulate another host */
    /* JG: TODO: make a function simulate_start_job_or_task() */
-   if(simulate_hosts == 1) {
+   if(mconf_get_simulate_hosts()) {
       const char *host = lGetHost(lFirst(lGetList(jatep, JAT_granted_destin_identifier_list)), JG_qhostname);
       if(sge_hostcmp(host, uti_state_get_qualified_hostname()) != 0) {
          lList *job_args;
          u_long32 duration = 60;
 
-         DPRINTF(("Simulating job "u32"."u32"\n", 
+         DPRINTF(("Simulating job "sge_u32"."sge_u32"\n", 
                   job_id, ja_task_id));
          lSetUlong(jatep, JAT_start_time, now);
          lSetUlong(jatep, JAT_status, JRUNNING | JSIMULATED);
@@ -857,7 +862,7 @@ lListElem *petep
       DEXIT;
       return 0;
    }
-   DTIMEPRINTF(("TIME IN EXECD FOR STARTING THE JOB: " u32 "\n",
+   DTIMEPRINTF(("TIME IN EXECD FOR STARTING THE JOB: " sge_u32 "\n",
                 sge_get_gmt()-now));
    
    if(petep != NULL) {
@@ -866,7 +871,7 @@ lListElem *petep
       lSetUlong(jatep, JAT_pid, pid);
    }
 
-   DPRINTF(("***EXECING "u32"."u32" on %s (tid = %s) (pid = %d)\n",
+   DPRINTF(("***EXECING "sge_u32"."sge_u32" on %s (tid = %s) (pid = %d)\n",
             job_id, ja_task_id, 
             uti_state_get_unqualified_hostname(), pe_task_id != NULL ? pe_task_id : "null", pid));
 
@@ -893,7 +898,7 @@ lListElem *pe_task
    u_long32 ja_task_id;   
    const char *pe_task_id = NULL;
 
-   int success, newerrno;
+   int success;
    FILE *fp;
    SGE_STRUCT_STAT sb;
 
@@ -943,7 +948,6 @@ lListElem *pe_task
 
    /* read addgrpid */
    success = (fscanf(fp, gid_t_fmt, &addgrpid)==1);
-   newerrno = errno;
    fclose(fp);
    if (!success) {
       /* can happen that shepherd has opend the file but not written */
@@ -1002,7 +1006,6 @@ lListElem *pe_task
    sge_dstring_free(&osjobid_path);      
 
    success = (fscanf(fp, OSJOBID_FMT, &osjobid)==1);
-   newerrno = errno;
    fclose(fp);
    if (!success) {
       /* can happen that shepherd has opend the file but not written */
@@ -1063,15 +1066,15 @@ static bool should_reprioritize(void)
    {
       const char* value;
       value = lGetString(ep, CF_value);
-      ret = strncasecmp(value, "0", sizeof("0"));
+      ret = (strncasecmp(value, "0", sizeof("0")) == 0) ? false : true;
    }
    else
    {
-      ret = conf.reprioritize;
+      ret = mconf_get_reprioritize()? true : false;
    }
 
    if (NULL != confl) {
-      confl = lFreeElem(confl);
+      lFreeElem(&confl);
    }
 
    DEXIT;

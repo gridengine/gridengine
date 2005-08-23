@@ -196,9 +196,9 @@ free_lists(lList *jobs, lList *hosts, lList *config)
    if (jobs)
       lFreeList(jobs);
    if (hosts)
-      lFreeList(hosts);
+      lFreeList(&hosts);
    if (config)
-      lFreeList(config);
+      lFreeList(&config);
    return 0;
 }
 
@@ -250,7 +250,7 @@ FILE *fpdchu;
             "finished jobs")) {
          DPRINTF(("couldn't split job list concerning finished state\n"));
 #ifdef TEST_CALC_HOST_USAGE
-         fprintf(fpdchu, MSG_JOB_SPLITJOBLISTFINISHSTATEFAILED );
+         fprintf(fpdchu, "%s\n", MSG_JOB_SPLITJOBLISTFINISHSTATEFAILED );
          fclose(fpdchu);
 #endif
          DEXIT;
@@ -267,7 +267,7 @@ FILE *fpdchu;
       DPRINTF(("couldn't split job list in running and non running ones\n"));
 #ifdef TEST_CALC_HOST_USAGE
 
-         fprintf(fpdchu, MSG_JOB_SPLITJOBLISTRUNNINGSTATEFAILED );
+         fprintf(fpdchu, "%s\n", MSG_JOB_SPLITJOBLISTRUNNINGSTATEFAILED );
          fclose(fpdchu);
 #endif
       DEXIT;
@@ -701,7 +701,7 @@ print_host_field(FILE *out, item_t *item, format_t *format)
 
    switch(item->type) {
       case ULONG_T:
-        fprintf(out, u32, *(lUlong *)item->val);
+        fprintf(out, sge_u32, *(lUlong *)item->val);
         break;
       case DATE_T:
         {
@@ -713,7 +713,7 @@ print_host_field(FILE *out, item_t *item, format_t *format)
               fprintf(out, format->str_format, tc);
               if (tc) free(tc);
            } else {
-              fprintf(out, u32, (u_long32) t);
+              fprintf(out, sge_u32, (u_long32) t);
            }
         }
         break;
@@ -857,20 +857,20 @@ lListElem *hep;
 void host_usage(void)
 {
    fprintf(stderr, "%s sge_host_mon [-cdfhilmnorsux] [host_names ...]\n\n" ,MSG_SGEHOSTMON_USAGE ); 
-   fprintf(stderr, " -c count          %s", MSG_SGEHOSTMON_c_OPT_USAGE);
-   fprintf(stderr, " -d delimiter      %s", MSG_SGEHOSTMON_d_OPT_USAGE);
-   fprintf(stderr, " -f field[,field]  %s", MSG_SGEHOSTMON_f_OPT_USAGE);
-   fprintf(stderr, " -h                %s", MSG_SGEHOSTMON_h_OPT_USAGE);
-   fprintf(stderr, " -i interval       %s", MSG_SGEHOSTMON_i_OPT_USAGE);
-   fprintf(stderr, " -l delimiter      %s", MSG_SGEHOSTMON_l_OPT_USAGE);
-   fprintf(stderr, " -m output_mode    %s", MSG_SGEHOSTMON_m_OPT_USAGE);
-   fprintf(stderr, " -n                %s", MSG_SGEHOSTMON_n_OPT_USAGE);
-   fprintf(stderr, " -o output_file    %s", MSG_SGEHOSTMON_o_OPT_USAGE);
-   fprintf(stderr, " -r delimiter      %s", MSG_SGEHOSTMON_r_OPT_USAGE);
-   fprintf(stderr, " -s string_format  %s", MSG_SGEHOSTMON_s_OPT_USAGE);
-   fprintf(stderr, " -t                %s", MSG_SGEHOSTMON_t_OPT_USAGE);
-   fprintf(stderr, " -u                %s", MSG_SGEHOSTMON_u_OPT_USAGE);
-   fprintf(stderr, " -x                %s", MSG_SGEHOSTMON_x_OPT_USAGE);
+   fprintf(stderr, " -c count          %s\n", MSG_SGEHOSTMON_c_OPT_USAGE);
+   fprintf(stderr, " -d delimiter      %s\n", MSG_SGEHOSTMON_d_OPT_USAGE);
+   fprintf(stderr, " -f field[,field]  %s\n", MSG_SGEHOSTMON_f_OPT_USAGE);
+   fprintf(stderr, " -h                %s\n", MSG_SGEHOSTMON_h_OPT_USAGE);
+   fprintf(stderr, " -i interval       %s\n", MSG_SGEHOSTMON_i_OPT_USAGE);
+   fprintf(stderr, " -l delimiter      %s\n", MSG_SGEHOSTMON_l_OPT_USAGE);
+   fprintf(stderr, " -m output_mode    %s\n", MSG_SGEHOSTMON_m_OPT_USAGE);
+   fprintf(stderr, " -n                %s\n", MSG_SGEHOSTMON_n_OPT_USAGE);
+   fprintf(stderr, " -o output_file    %s\n", MSG_SGEHOSTMON_o_OPT_USAGE);
+   fprintf(stderr, " -r delimiter      %s\n", MSG_SGEHOSTMON_r_OPT_USAGE);
+   fprintf(stderr, " -s string_format  %s\n", MSG_SGEHOSTMON_s_OPT_USAGE);
+   fprintf(stderr, " -t                %s\n", MSG_SGEHOSTMON_t_OPT_USAGE);
+   fprintf(stderr, " -u                %s\n", MSG_SGEHOSTMON_u_OPT_USAGE);
+   fprintf(stderr, " -x                %s\n", MSG_SGEHOSTMON_x_OPT_USAGE);
    fprintf(stderr,"\n");
 }
 
@@ -921,12 +921,14 @@ int main(int argc, char **argv)
          case 'i':
             if (sscanf(optarg, "%d", &interval) != 1) {
         	fprintf(stderr, MSG_ERROR_XISNOTAVALIDINTERVAL_S , optarg);
+         fprintf(stderr, "\n");
         	err++;
             }
             break;
          case 'c':
             if (sscanf(optarg, "%d", &count) != 1) {
         	fprintf(stderr, MSG_ERROR_XISNOTAVALIDCOUNT_S , optarg);
+         fprintf(stderr, "\n");
         	err++;
             }
             break;
@@ -979,6 +981,7 @@ int main(int argc, char **argv)
    if (ofile) {
       if ((outfile = fopen(ofile, output_mode)) == NULL) {
          fprintf(stderr, MSG_FILE_COULDNOTOPENXFORY_SS , ofile, output_mode);
+         fprintf(stderr, "\n");
          exit(1);
       }
    }

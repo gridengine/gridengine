@@ -34,10 +34,6 @@
 #include <string.h>
 #include <strings.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif   
-
 #include "cull.h"
 #include "sge_gdi.h"
 #include "sgermon.h"
@@ -59,6 +55,7 @@
 #include "sge_ssi.h"
 
 
+/* MT-NOTE: parse_job_identifier() is not MT safe */
 static bool parse_job_identifier(const char *id, u_long32 *job_id, u_long32 *ja_task_id)
 {
    char *copy;
@@ -106,6 +103,8 @@ static bool parse_job_identifier(const char *id, u_long32 *job_id, u_long32 *ja_
 *
 *  SEE ALSO
 *     schedlib/ssi/sge_ssi/job_start()
+*
+*  MT-NOTE: sge_ssi_job_cancel() is not MT safe
 *******************************************************************************/
 bool sge_ssi_job_cancel(const char *job_identifier, bool reschedule) 
 {
@@ -128,7 +127,7 @@ bool sge_ssi_job_cancel(const char *job_identifier, bool reschedule)
    }
 
    /* create id structure */
-   sprintf(job_id_str, U32CFormat, u32c(job_id));
+   sprintf(job_id_str, sge_U32CFormat, sge_u32c(job_id));
    ref_ep = lAddElemStr(&ref_list, ID_str, job_id_str, ID_Type);
    ref_ep = lAddSubUlong(ref_ep, RN_min, ja_task_id, ID_ja_structure, RN_Type);
    lSetUlong(ref_ep, RN_max, ja_task_id);
@@ -238,7 +237,7 @@ bool sge_ssi_job_start(const char *job_identifier, const char *pe, task_map task
    sge_send_orders2master(&order_list);
 
    if (order_list != NULL) {
-      order_list = lFreeList(order_list);
+      lFreeList(&order_list);
    }   
 
    DEXIT;

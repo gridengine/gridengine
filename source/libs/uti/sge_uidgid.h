@@ -46,20 +46,28 @@
 #  define seteuid(euid) setreuid(-1, euid)
 #  define setegid(egid) setregid(-1, egid)
 #  define getgrgid_r getgrgid_nomembers_r
+#  define SGE_SUPERUSER_UID wl_get_superuser_id()
+#  define SGE_SUPERUSER_GID wl_get_superuser_gid() 
+#else
+#  define SGE_SUPERUSER_UID 0
+#  define SGE_SUPERUSER_GID 0
 #endif
 
 #ifndef MAX_NIS_RETRIES
-#   define MAX_NIS_RETRIES 10
+#  define MAX_NIS_RETRIES 10
 #endif    
 
 void uidgid_mt_init(void);
 
 bool sge_is_start_user_superuser(void);
+int password_read_file(char **users[], char**encryped_pwds[], const char *filename);
+const char* sge_get_file_passwd(void);
+
 int sge_set_admin_username(const char *username, char *err_str);
 int sge_switch2admin_user(void);
 int sge_switch2start_user(void);
 int sge_run_as_user(void);
-int sge_user2uid(const char *user, uid_t *uidp, int retries);  
+int sge_user2uid(const char *user, uid_t *puid, gid_t *pgid, int retries);  
 int sge_group2gid(const char *gname, gid_t *gidp, int retries);
 int sge_uid2user(uid_t uid, char *dst, size_t sz, int retries); 
 int sge_gid2group(gid_t gid, char *dst, size_t sz, int retries);
@@ -67,7 +75,7 @@ int sge_add_group(gid_t newgid, char *err_str);
 int sge_set_uid_gid_addgrp(const char *user, const char *intermediate_user,
                            int min_gid, int min_uid, int add_grp, 
                            char *err_str, int use_qsub_gid, gid_t qsub_gid);
- 
+
 struct passwd *sge_getpwnam_r(const char *name, struct passwd *pw_struct, char *buffer, int buflen);
  
 /*
@@ -76,8 +84,6 @@ struct passwd *sge_getpwnam_r(const char *name, struct passwd *pw_struct, char *
 int sge_set_uid_gid_addgrp(const char *user, const char *intermediate_user,
                            int min_gid, int min_uid, int add_grp, 
                            char *err_str, int use_qsub_gid, gid_t qsub_gid);
-
-struct passwd *sge_getpwnam(const char *name); 
 
 #ifdef SGE_THREADSAFE_UTIL
 

@@ -33,10 +33,6 @@
 #include <stdlib.h>
 #include <fnmatch.h>
 
-#ifdef SOLARISAMD64
-#include <sys/stream.h>
-#endif
-
 #include <Xm/Xm.h>
 #include <Xm/List.h>
 #include <Xm/ToggleB.h>
@@ -525,7 +521,7 @@ int nm
    
    strcpy(buf, "");
    for_each(jep, pred) {
-      sprintf(buf, "%s "u32, buf, lGetUlong(jep, JRE_job_number));
+      sprintf(buf, "%s "sge_u32, buf, lGetUlong(jep, JRE_job_number));
    }
    str = XtNewString(buf);
 
@@ -942,7 +938,7 @@ int nm
    ** prepare task ids, if the job contains only one job array task the job id!    ** is sufficient
    */
    if (jat) {
-      sprintf(buf, u32, lGetUlong(jat, JAT_task_number));
+      sprintf(buf, sge_u32, lGetUlong(jat, JAT_task_number));
    }
    else if (eleml) {
       buf[0] = '\0';
@@ -967,7 +963,7 @@ int nm
 
    DENTER(GUI_LAYER, "PrintJobId");
 
-   sprintf(buf, u32, lGetUlong(ep, JB_job_number));
+   sprintf(buf, sge_u32, lGetUlong(ep, JB_job_number));
 
    str = XtNewString(buf);
 
@@ -990,13 +986,13 @@ int nm
    /*
    ** prepare task ids, if the job contains only one job array task the job id!    ** is sufficient
    */
-   sge_dstring_sprintf(&dyn_buf, u32, lGetUlong(ep, JB_job_number));
+   sge_dstring_sprintf(&dyn_buf, sge_u32, lGetUlong(ep, JB_job_number));
    if (job_is_array(ep)) {
       dstring dyn_buf2 = DSTRING_INIT;
       const char* tmp_string = NULL;
 
       if (jat) {
-         sge_dstring_sprintf(&dyn_buf2, u32, lGetUlong(jat, JAT_task_number)); 
+         sge_dstring_sprintf(&dyn_buf2, sge_u32, lGetUlong(jat, JAT_task_number)); 
       } else if (eleml) {
          lListElem *first_elem = lFirst(eleml);
 
@@ -1394,7 +1390,7 @@ XtPointer cld,cad;
    ** get the strings to do a wildmatch against
    */
    owner_str = XmtInputFieldGetString(jobfilter_owner);
-   jobfilter_owners = lFreeList(jobfilter_owners);
+   lFreeList(&jobfilter_owners);
    lString2List(owner_str, &jobfilter_owners, ST_Type, ST_name, NULL); 
 
    jobfilter_compact = XmToggleButtonGetState(jobfilter_arrays_compressed);
@@ -1447,7 +1443,7 @@ XtPointer cld, cad;
 
    qmonMessageBox(w, alp, 0);
 
-   alp = lFreeList(alp);
+   lFreeList(&alp);
 
    DEXIT;
 }
@@ -1856,10 +1852,10 @@ XtPointer cld, cad;
 
    DENTER(GUI_LAYER, "qmonJobFilterClear");
 
-   jobfilter_resources = lFreeList(jobfilter_resources);
+   lFreeList(&jobfilter_resources);
    qmonRequestDraw(jobfilter_sr, jobfilter_resources, 1);
 
-   jobfilter_owners = lFreeList(jobfilter_owners);
+   lFreeList(&jobfilter_owners);
    XmtInputFieldSetString(jobfilter_owner, "");
    
    XmToggleButtonSetState(jobfilter_arrays_compressed, 1, False);
@@ -1897,7 +1893,7 @@ XtPointer cld, cad;
    qmonRequestDraw(jobfilter_ar, arl, 0);
    qmonRequestDraw(jobfilter_sr, jobfilter_resources, 1);
 
-   arl = lFreeList(arl);
+   lFreeList(&arl);
 
    DEXIT;
 }
@@ -1975,7 +1971,7 @@ XtPointer cld, cad;
          
       qmonRequestDraw(jobfilter_sr, jobfilter_resources, 1);
    }
-   arl = lFreeList(arl);
+   lFreeList(&arl);
 
    DEXIT;
 }
@@ -2007,9 +2003,9 @@ XtPointer cld, cad;
       }       
             
       if (found) {
-         lRemoveElem(jobfilter_resources, dep);
+         lRemoveElem(jobfilter_resources, &dep);
          if (lGetNumberOfElem(jobfilter_resources) == 0)
-            jobfilter_resources = lFreeList(jobfilter_resources);
+            lFreeList(&jobfilter_resources);
          qmonRequestDraw(jobfilter_sr, jobfilter_resources, 1);
       }
    }
@@ -2079,13 +2075,13 @@ lList *exechost_list
       return False;
    }
    if (!is_cqueue_selected(*queue_list)) {
-      *queue_list = lFreeList(*queue_list);
+      lFreeList(queue_list);
       DEXIT;
       return True;
    }
 
    filtered_queue_list = lSelect("FQL", *queue_list, tagged_queues, all_fields);  
-   *queue_list = lFreeList(*queue_list);
+   lFreeList(queue_list);
    *queue_list = filtered_queue_list;
 
    DEXIT;
@@ -2145,12 +2141,13 @@ lList *request_list
       else {
          dep = jep;
          jep = lNext(jep);
-         lRemoveElem(*job_list, dep);
+         lRemoveElem(*job_list, &dep);
       }
    } 
 
-   if (lGetNumberOfElem(*job_list) == 0)
-      *job_list = lFreeList(*job_list);
+   if (lGetNumberOfElem(*job_list) == 0) {
+      lFreeList(job_list);
+   }
 
    DEXIT;
    return True;

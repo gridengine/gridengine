@@ -35,10 +35,6 @@
 #include <fnmatch.h>
 #include <ctype.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif   
-
 #include "sgermon.h"
 #include "symbols.h"
 #include "sge.h"
@@ -300,11 +296,15 @@ void qstat_filter_add_t_attributes(void)
    
    const int nm_JAT_Type_list[] = {
       JAT_task_list,
+      JAT_usage_list,
+      JAT_scaled_usage_list,
       NoName
    };
 
    const int nm_JAT_Type_template[] = {
       JAT_task_list,
+      JAT_usage_list,
+      JAT_scaled_usage_list,
       NoName
    };
    

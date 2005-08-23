@@ -44,10 +44,6 @@
 #include <string.h>
 #include <unistd.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif
-
 #include "sge_profiling.h"
 #include "sge.h"
 #include "sge_string.h"
@@ -97,7 +93,6 @@ extern int start_on_master_host;
 extern int new_global_config;
 
 static bool rebuild_categories = true;
-static bool is_fc_filtering = false;
 
 const lCondition 
       *where_queue = NULL,
@@ -178,7 +173,7 @@ int event_handler_default_scheduler()
       /* category references are used in the access tree
          so rebuilding categories makes necessary to rebuild
          the access tree */
-      rebuild_categories = 0;   
+      rebuild_categories = false;   
    }
 
    sge_before_dispatch();
@@ -309,21 +304,21 @@ int event_handler_default_scheduler()
    monitor_next_run = 0;
 
    /* .. which gets deleted after using */
-   copy.host_list = lFreeList(copy.host_list);
-   copy.queue_list = lFreeList(copy.queue_list);
-   copy.dis_queue_list = lFreeList(copy.dis_queue_list);
-   copy.all_queue_list = lFreeList(copy.all_queue_list);
-   copy.job_list = lFreeList(copy.job_list);
-   copy.centry_list = lFreeList(copy.centry_list);
-   copy.acl_list = lFreeList(copy.acl_list);
+   lFreeList(&(copy.host_list));
+   lFreeList(&(copy.queue_list));
+   lFreeList(&(copy.dis_queue_list));
+   lFreeList(&(copy.all_queue_list));
+   lFreeList(&(copy.job_list));
+   lFreeList(&(copy.centry_list));
+   lFreeList(&(copy.acl_list));
 
-   copy.dept_list = lFreeList(copy.dept_list);
+   lFreeList(&(copy.dept_list));
 
-   copy.pe_list = lFreeList(copy.pe_list);
-   copy.share_tree = lFreeList(copy.share_tree);
-   copy.user_list = lFreeList(copy.user_list);
-   copy.project_list = lFreeList(copy.project_list);
-   copy.ckpt_list = lFreeList(copy.ckpt_list);
+   lFreeList(&(copy.pe_list));
+   lFreeList(&(copy.share_tree));
+   lFreeList(&(copy.user_list));
+   lFreeList(&(copy.project_list));
+   lFreeList(&(copy.ckpt_list));
 
    PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM7);
    prof_free = prof_get_measurement_wallclock(SGE_PROF_CUSTOM7,true, NULL);
@@ -332,13 +327,9 @@ int event_handler_default_scheduler()
    prof_event = prof_get_measurement_wallclock(SGE_PROF_CUSTOM6,true, NULL);
  
    if(prof_is_active(SGE_PROF_CUSTOM6)){
-      u_long32 saved_logginglevel = log_state_get_log_level();
-      log_state_set_log_level(LOG_INFO); 
-
-      INFO((SGE_EVENT, "PROF: schedd run took: %.3f s (init: %.3f s, copy: %.3f s, run:%.3f, free: %.3f s, jobs: %d, categories: %d/%d)\n",
+      PROFILING((SGE_EVENT, "PROF: schedd run took: %.3f s (init: %.3f s, copy: %.3f s, run:%.3f, free: %.3f s, jobs: %d, categories: %d/%d)",
             prof_event, prof_init, prof_copy, prof_run, prof_free, lGetNumberOfElem(Master_Job_List), sge_category_count(), sge_cs_category_count() ));
 
-      log_state_set_log_level(saved_logginglevel);
    }
 
    if (getenv("SGE_ND") != NULL) {
@@ -506,12 +497,10 @@ DTRACE;
             " !(%I m= %u) &&"
             " !(%I m= %u) &&"
             " !(%I m= %u) &&"
-            " !(%I m= %u) &&"
             " !(%I m= %u))",
             queue_des,    
             QU_state, QI_SUSPENDED,        /* only not suspended queues      */
             QU_state, QI_SUSPENDED_ON_SUBORDINATE, 
-            QU_state, QI_CAL_DISABLED,
             QU_state, QI_CAL_SUSPENDED, 
             QU_state, QI_ERROR,            /* no queues in error state       */
             QU_state, QI_UNKNOWN,
@@ -520,7 +509,8 @@ DTRACE;
             );         /* only known queues              */
            
          where_queue2 = lWhere("%T("
-            " ((%I m= %u) || (%I m= %u)) &&" 
+            "  (%I m= %u) &&" 
+            " !(%I m= %u) &&" 
             " !(%I m= %u) &&" 
             " !(%I m= %u) &&"
             " !(%I m= %u) &&"
@@ -729,8 +719,6 @@ sge_process_schedd_conf_event_before(sge_object_type type, sge_event_action acti
    old = sconf_get_config(); 
    new = lFirst(lGetList(event, ET_new_version));
 
-   is_fc_filtering = sconf_is_job_category_filtering();
-
    if (new == NULL) {
       ERROR((SGE_EVENT, "> > > > > no scheduler configuration available < < < < <\n"));
       DEXIT;
@@ -752,20 +740,21 @@ sge_process_schedd_conf_event_before(sge_object_type type, sge_event_action acti
                lSetString(new, SC_load_formula, "none");
 
       }
-      else{
-         char *copy;  
+      else {
 
          int n = strlen(new_load_formula);
-         if (n) {
+         if (n > 0) {
+            char *copy = NULL;  
+
+         
             copy = malloc(n + 1);
-            if (copy) {
+            if (copy != NULL) {
                strcpy(copy, new_load_formula);
+
+               sge_strip_blanks(copy);
+               lSetString(new, SC_load_formula, copy);
             }
-
-            sge_strip_blanks(copy);
-            lSetString(new, SC_load_formula, copy);
-
-            free(copy);
+            FREE(copy);
          }
       }
    }
@@ -774,6 +763,7 @@ sge_process_schedd_conf_event_before(sge_object_type type, sge_event_action acti
    {
       const char *time = lGetString(new, SC_schedule_interval); 
       u_long32 schedule_interval;  
+      
       if (extended_parse_ulong_val(NULL, &schedule_interval, TYPE_TIM, time, NULL, 0, 0) ) {
          if (ec_get_edtime() != schedule_interval) {
            ec_set_edtime(schedule_interval);
@@ -872,7 +862,7 @@ bool sge_process_job_event_after(sge_object_type type, sge_event_action action,
    
    switch (action) {
       case SGE_EMA_LIST:
-         rebuild_categories = 1;
+         rebuild_categories = true;
          sge_do_priority(Master_Job_List, NULL); /* recompute the priorities */
          break;
 
@@ -886,10 +876,10 @@ bool sge_process_job_event_after(sge_object_type type, sge_event_action action,
             job_get_submit_task_ids(job, &start, &end, &step);
 
             if (job_is_array(job)) {
-               DPRINTF(("Added job-array "u32"."u32"-"u32":"u32"\n", 
+               DPRINTF(("Added job-array "sge_u32"."sge_u32"-"sge_u32":"sge_u32"\n", 
                         job_id, start, end, step));
             } else {
-               DPRINTF(("Added job "u32"\n", job_id));
+               DPRINTF(("Added job "sge_u32"\n", job_id));
             } 
          }
          break;
@@ -921,7 +911,7 @@ bool sge_process_job_event_after(sge_object_type type, sge_event_action action,
 
                      if (ja_task == NULL) {
                         ERROR((SGE_EVENT, MSG_CANTFINDTASKINJOB_UU, 
-                               u32c(ja_task_id), u32c(job_id)));
+                               sge_u32c(ja_task_id), sge_u32c(job_id)));
                         DEXIT;
                         return false;
                      }
@@ -1010,7 +1000,7 @@ bool sge_process_userset_event_after(sge_object_type type,
 {
    DENTER(GDI_LAYER, "sge_process_userset_event");
    DPRINTF(("callback processing userset event after default rule\n"));
-   rebuild_categories = 1;
+   rebuild_categories = true;
    DEXIT;
    return true;
 }

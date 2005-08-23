@@ -34,10 +34,6 @@
 #include <string.h>
 #include <float.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif     
-
 #include "sge_ja_task.h"
 #include "sge_pe_task.h"
 #include "sge_usageL.h"
@@ -102,7 +98,7 @@ execd_add_load_report(lList *report_list, u_long32 now, u_long32 *next_send)
    if (*next_send <= now) {
       lListElem *report;
 
-      *next_send = now + conf.load_report_time;
+      *next_send = now + mconf_get_load_report_time();
 
       /*
       ** problem: add some more error handling here
@@ -129,7 +125,7 @@ execd_add_conf_report(lList *report_list, u_long32 now, u_long32 *next_send)
    if (*next_send <= now) {
       lListElem *report;
 
-      *next_send = now + conf.load_report_time;
+      *next_send = now + mconf_get_load_report_time();
 
       /*
       ** 2. report about the configuration versions
@@ -155,7 +151,7 @@ execd_add_license_report(lList *report_list, u_long32 now, u_long32 *next_send)
    if (*next_send <= now) {
       lListElem *report;
 
-      *next_send = now + conf.load_report_time;
+      *next_send = now + mconf_get_load_report_time();
 
       /*
       ** 3. license report
@@ -194,7 +190,7 @@ execd_add_job_report(lList *report_list, u_long32 now, u_long32 *next_send)
 
    /* if report interval expired: send all reports */
    if (*next_send <= now) {
-      *next_send = now + conf.load_report_time;
+      *next_send = now + mconf_get_load_report_time();
       do_send = true;
    } else {
       /* if we shall flush reports: send only reports marked to flush */
@@ -605,7 +601,7 @@ void update_job_usage(void)
    DENTER(TOP_LAYER, "update_job_usage");
 
 #ifdef COMPILE_DC
-   if (!sharetree_reserved_usage) {
+   if (!mconf_get_sharetree_reserved_usage()) {
       int ptf_error;
 
       if ((ptf_error=ptf_get_usage(&usage_list))) {
@@ -621,7 +617,7 @@ void update_job_usage(void)
    }
 #endif
 
-   if (sharetree_reserved_usage)
+   if (mconf_get_sharetree_reserved_usage())
       get_reserved_usage(&usage_list);
 
    if (usage_list == NULL) {
@@ -629,9 +625,9 @@ void update_job_usage(void)
       return;
    }
 
-   if (lGetNumberOfElem(usage_list)<=0) {
+   if (lGetNumberOfElem(usage_list) == 0) {
       /* could be an empty list head */
-      lFreeList(usage_list);
+      lFreeList(&usage_list);
       DEXIT;
       return;
    }
@@ -661,7 +657,7 @@ void update_job_usage(void)
          /* search matching job report */
          if (!(jr = get_job_report(job_id, ja_task_id, NULL))) {
             /* should not happen in theory */
-            ERROR((SGE_EVENT, "removing unreferenced job "u32"."u32" without job report from ptf",job_id ,ja_task_id ));
+            ERROR((SGE_EVENT, "removing unreferenced job "sge_u32"."sge_u32" without job report from ptf",job_id ,ja_task_id ));
 #ifdef COMPILE_DC
             ptf_unregister_registered_job(job_id ,ja_task_id);
 #endif
@@ -695,7 +691,7 @@ void update_job_usage(void)
             add_usage(jr, USAGE_ATTR_MAXVMEM, NULL, lGetDouble(uep, UA_value));
          }
 
-         DPRINTF(("---> updating job report usage for job "u32"."u32"\n",
+         DPRINTF(("---> updating job report usage for job "sge_u32"."sge_u32"\n",
              job_id, ja_task_id));
 
          for_each(pe_task, lGetList(ja_task, JAT_task_list)) {
@@ -704,7 +700,7 @@ void update_job_usage(void)
             /* search matching job report */
             if (!(jr = get_job_report(job_id, ja_task_id, pe_task_id))) {
                /* should not happen in theory */
-               ERROR((SGE_EVENT, "could not find job report for job "u32"."u32" "
+               ERROR((SGE_EVENT, "could not find job report for job "sge_u32"."sge_u32" "
                   "task %s contained in job usage from ptf", job_id, ja_task_id, pe_task_id));
 #ifdef COMPILE_DC
                ptf_show_registered_jobs();
@@ -738,13 +734,13 @@ void update_job_usage(void)
                add_usage(jr, USAGE_ATTR_MAXVMEM, NULL, lGetDouble(uep, UA_value));
             }
 
-            DPRINTF(("---> updating job report usage for job "u32"."u32" task \"%s\"\n",
+            DPRINTF(("---> updating job report usage for job "sge_u32"."sge_u32" task \"%s\"\n",
                 job_id, ja_task_id, pe_task_id));
 
          }
       }
    }
-   lFreeList(usage_list);
+   lFreeList(&usage_list);
 
    DEXIT;
    return;
@@ -888,7 +884,7 @@ calculate_reserved_usage(const lListElem *ja_task, const lListElem *pe_task,
                   lGetDouble(uep, UA_value) : 0;
          maxvmem = ((uep=lGetElemStr(jul, UA_name, USAGE_ATTR_MAXVMEM))) ?
                   lGetDouble(uep, UA_value) : 0;
-         lFreeList(jul);
+         lFreeList(&jul);
       }
    }
 #endif
@@ -1056,8 +1052,8 @@ static void get_reserved_usage(lList **job_usage_list)
    *job_usage_list = lSelect("PtfJobUsageList", temp_job_usage_list, NULL,
                              what);
 
-   lFreeList(temp_job_usage_list);
-   lFreeWhat(what);
+   lFreeList(&temp_job_usage_list);
+   lFreeWhat(&what);
 
    DEXIT;
 }

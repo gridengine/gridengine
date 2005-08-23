@@ -40,10 +40,6 @@
 #include <Xmt/InputField.h>
 #include <Xmt/MsgLine.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif   
-
 #include "sge_gdi.h"
 #include "sge_all_listsL.h"
 #include "sge_answer.h"
@@ -213,7 +209,7 @@ XtPointer cld, cad;
    */
    if (qmonTOVUpdateFill(qmon_tov, &alp)) {
       qmonMessageBox(w, alp, 0);
-      alp = lFreeList(alp);
+      lFreeList(&alp);
       DEXIT;
       return;
    }
@@ -501,7 +497,7 @@ XtPointer cld, cad;
    qmonMirrorMultiAnswer(SC_T, &alp);
    if (alp) {
       qmonMessageBox(w, alp, 0);
-      alp = lFreeList(alp);
+      lFreeList(&alp);
       DEXIT;
       return;
    }
@@ -524,7 +520,7 @@ XtPointer cld, cad;
 
       data_changed = False;
 
-      lFreeList(alp);
+      lFreeList(&alp);
    }
    
    DEXIT;

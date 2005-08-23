@@ -33,10 +33,6 @@
 #include <stdlib.h>
 #include <ctype.h>
 
-#ifdef SOLARISAMD64
-#include <sys/stream.h>
-#endif
-
 #include <Xm/Xm.h>
 #include <Xm/List.h>
 #include <Xm/TextF.h>
@@ -453,7 +449,7 @@ XtPointer cld, cad;
    qmonMirrorMultiAnswer(CONFIG_T | EXECHOST_T, &alp);
    if (alp) {
       qmonMessageBox(w, alp, 0);
-      alp = lFreeList(alp);
+      lFreeList(&alp);
       /* set default cursor */
       XmtDisplayDefaultCursor(w);
       DEXIT;
@@ -928,9 +924,9 @@ XtPointer cld, cad;
       XmStringFree(xhost);
    
     
-      lFreeWhat(what);
-      confl = lFreeList(confl);
-      alp = lFreeList(alp);
+      lFreeWhat(&what);
+      lFreeList(&confl);
+      lFreeList(&alp);
    }
    
    if (status)
@@ -1049,8 +1045,8 @@ XtPointer cld, cad;
 
          qmonMessageBox(w, alp, 0);
 
-         lFreeWhat(what);
-         alp = lFreeList(alp);
+         lFreeWhat(&what);
+         lFreeList(&alp);
 
          updateClusterList();
          XtVaGetValues( cluster_host_list,
@@ -1066,7 +1062,7 @@ XtPointer cld, cad;
             
          
       }
-      lp = lFreeList(lp);
+      lFreeList(&lp);
    }
    DEXIT;
 
@@ -1402,13 +1398,13 @@ int local
             incorrect_gid_range = 1;
          } else if (range_list_containes_id_less_than(range_list,
                                                     GID_RANGE_NOT_ALLOWED_ID)) {
-            range_list = lFreeList(range_list);
+            lFreeList(&range_list);
             incorrect_gid_range = 1;
          }
 
          if (incorrect_gid_range) {
             strcpy(errstr, "Cannot parse GID Range !");
-            alp = lFreeList(alp);
+            lFreeList(&alp);
             goto error;
          } else {
             ep = lGetElemStr(confl, CF_name, "gid_range");
@@ -1641,13 +1637,13 @@ int local
             incorrect_gid_range = 1;
          } else if (range_list_containes_id_less_than(range_list,
                                                    GID_RANGE_NOT_ALLOWED_ID)) {
-            range_list = lFreeList(range_list);
+            lFreeList(&range_list);
             incorrect_gid_range = 1;
          }
 
          if (incorrect_gid_range) {
             strcpy(errstr, "Cannot parse GID Range !");
-            alp = lFreeList(alp);
+            lFreeList(&alp);
             goto error;
          } else {
             ep = lGetElemStr(confl, CF_name, "gid_range");
@@ -1884,7 +1880,7 @@ int local
    }
 
    if (lGetNumberOfElem(lp) == 0) {
-      lp = lFreeList(lp);
+      lFreeList(&lp);
       *lpp  = NULL;
       DEXIT;
       return True;
@@ -1897,7 +1893,7 @@ int local
 
    error:
       qmonMessageShow(w, True, errstr);
-      lp = lFreeList(lp);
+      lFreeList(&lp);
       *lpp = NULL;
       DEXIT;
       return False;
@@ -2035,13 +2031,13 @@ tCClEntry *clen
 /*       clen->logmail = 1; */
 
    if ((ep = lGetElemStr(confl, CF_name, "user_lists"))) {
-      clen->cluster_users = lFreeList(clen->cluster_users);
+      lFreeList(&(clen->cluster_users));
       lString2ListNone(lGetString(ep, CF_value), &clen->cluster_users, 
                            US_Type, US_name, NULL);
    }
 
    if ((ep = lGetElemStr(confl, CF_name, "xuser_lists"))) {
-      clen->cluster_xusers = lFreeList(clen->cluster_xusers);
+      lFreeList(&clen->cluster_xusers);
       lString2ListNone(lGetString(ep, CF_value), &clen->cluster_xusers, 
                            US_Type, US_name, NULL);
    }
@@ -2074,13 +2070,13 @@ tCClEntry *clen
       clen->enforce_user = 1;
 
    if ((ep = lGetElemStr(confl, CF_name, "projects"))) {
-      clen->cluster_projects = lFreeList(clen->cluster_projects);
+      lFreeList(&clen->cluster_projects);
       lString2ListNone(lGetString(ep, CF_value), &clen->cluster_projects, 
                            UP_Type, UP_name, NULL);
    }
 
    if ((ep = lGetElemStr(confl, CF_name, "xprojects"))) {
-      clen->cluster_xprojects = lFreeList(clen->cluster_xprojects);
+      lFreeList(&(clen->cluster_xprojects));
       lString2ListNone(lGetString(ep, CF_value), &clen->cluster_xprojects, 
                            UP_Type, UP_name, NULL);
    }
@@ -2240,10 +2236,10 @@ tCClEntry *clen
    }
    clen->loglevel = 0; 
    clen->logmail = 0;    
-   clen->cluster_users = lFreeList(clen->cluster_users);
-   clen->cluster_xusers = lFreeList(clen->cluster_xusers);
-   clen->cluster_projects = lFreeList(clen->cluster_projects);
-   clen->cluster_xprojects = lFreeList(clen->cluster_xprojects);
+   lFreeList(&(clen->cluster_users));
+   lFreeList(&(clen->cluster_xusers));
+   lFreeList(&(clen->cluster_projects));
+   lFreeList(&(clen->cluster_xprojects));
    clen->dfs = 1;    
    clen->enforce_project = 1;    
    clen->enforce_user = 1;    
@@ -2338,7 +2334,7 @@ XtPointer cld, cad;
    qmonMirrorMultiAnswer(USERSET_T, &alp);
    if (alp) {
       qmonMessageBox(w, alp, 0);
-      alp = lFreeList(alp);
+      lFreeList(&alp);
       DEXIT;
       return;
    }
@@ -2353,8 +2349,7 @@ XtPointer cld, cad;
       UpdateXmListFromCull(list, XmFONTLIST_DEFAULT_TAG, ql_out,
                               US_name);
    }
-   ql_out = lFreeList(ql_out);
-
+   lFreeList(&ql_out);
    DEXIT;
 }
 
@@ -2374,7 +2369,7 @@ XtPointer cld, cad;
    qmonMirrorMultiAnswer(PROJECT_T, &alp);
    if (alp) {
       qmonMessageBox(w, alp, 0);
-      alp = lFreeList(alp);
+      lFreeList(&alp);
       DEXIT;
       return;
    }
@@ -2389,7 +2384,7 @@ XtPointer cld, cad;
       UpdateXmListFromCull(list, XmFONTLIST_DEFAULT_TAG, ql_out,
                               UP_name);
    }
-   ql_out = lFreeList(ql_out);
+   lFreeList(&ql_out);
 
    DEXIT;
 }

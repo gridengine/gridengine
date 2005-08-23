@@ -34,10 +34,6 @@
 #include <string.h>
 #include <time.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif   
-
 #include "rmon/sgermon.h"
 
 #include "uti/config_file.h"
@@ -404,8 +400,7 @@ spool_berkeleydb_trigger_func(lList **answer_list, const lListElem *rule,
       ret = false;
 
       /* nothing can be done - but set new trigger!! */
-      *next_trigger = trigger + MIN(BERKELEYDB_CLEAR_INTERVAL, 
-                                    BERKELEYDB_CHECKPOINT_INTERVAL);
+      *next_trigger = trigger + BERKELEYDB_MIN_INTERVAL;
    } 
 
    if (ret) {
@@ -812,7 +807,7 @@ spool_berkeleydb_default_read_func(lList **answer_list,
                   (spooling_validate_func)lGetRef(rule, SPR_validate_func);
                bool ret = validate(answer_list, type, rule, ep, object_type);
                if (!ret) {
-                  ep = lFreeElem(ep);
+                  lFreeElem(&ep);
                }
             }
             break;

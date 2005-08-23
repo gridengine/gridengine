@@ -33,10 +33,6 @@
 
 #include <string.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif   
-
 #include "sge_c_ack.h"
 #include "sge.h"
 #include "sge_job_qmaster.h"
@@ -60,7 +56,8 @@
 #include "spool/sge_spooling.h"
 
 
-static void sge_c_job_ack(char *, char *, u_long32, u_long32, u_long32);
+static void sge_c_job_ack(char *, char *, u_long32, u_long32, u_long32, 
+                          monitoring_t *monitor);
 
 /****************************************************
  Master code.
@@ -75,15 +72,15 @@ static void sge_c_job_ack(char *, char *, u_long32, u_long32, u_long32);
  if the counterpart uses the dispatcher ack_tag is the
  TAG we sent to the counterpart.
  ****************************************************/
-void sge_c_ack(
-char *host,
-char *commproc,
-sge_pack_buffer *pb 
-) {
+void sge_c_ack(char *host, char *commproc, sge_pack_buffer *pb, 
+               monitoring_t *monitor) 
+{
 
    u_long32 ack_tag, ack_ulong, ack_ulong2;
 
    DENTER(TOP_LAYER, "sge_c_ack");
+
+   MONITOR_ACK(monitor); 
 
    /* Do some validity tests */
    while (!unpackint(pb, &ack_tag)) {
@@ -103,15 +100,15 @@ sge_pack_buffer *pb
       case TAG_SIGJOB:
       case TAG_SIGQUEUE:
          /* an execd sends a job specific acknowledge ack_ulong == jobid of received job */
-         sge_c_job_ack(host, commproc, ack_tag, ack_ulong, ack_ulong2);
+         sge_c_job_ack(host, commproc, ack_tag, ack_ulong, ack_ulong2, monitor);
          break;
 
       case ACK_EVENT_DELIVERY:
-         sge_handle_event_ack(ack_ulong2, ack_ulong);
+         sge_handle_event_ack(ack_ulong2, (ev_event)ack_ulong);
          break;
 
       default:
-         WARNING((SGE_EVENT, MSG_COM_UNKNOWN_TAG, u32c(ack_tag)));
+         WARNING((SGE_EVENT, MSG_COM_UNKNOWN_TAG, sge_u32c(ack_tag)));
          break;
       }
    }
@@ -121,22 +118,18 @@ sge_pack_buffer *pb
 }
 
 /***************************************************************/
-static void sge_c_job_ack(
-char *host, 
-char *commproc, 
-u_long32 ack_tag, 
-u_long32 ack_ulong,
-u_long32 ack_ulong2 
-) {
+static void sge_c_job_ack(char *host, char *commproc, u_long32 ack_tag, 
+                          u_long32 ack_ulong, u_long32 ack_ulong2, 
+                          monitoring_t *monitor) 
+{
    lListElem *qinstance = NULL;
    lListElem *jep = NULL;
    lListElem *jatep = NULL;
    lList *answer_list = NULL;
-/*   const char *qinstance_name = NULL; */
 
    DENTER(TOP_LAYER, "sge_c_job_ack");
 
-   SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE);
+   MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE), monitor); 
 
    if (strcmp(prognames[EXECD], commproc) &&
       strcmp(prognames[QSTD], commproc)) {
@@ -151,20 +144,20 @@ u_long32 ack_ulong2
       DPRINTF(("TAG_SIGJOB\n"));
       /* ack_ulong is the jobid */
       if (!(jep = job_list_locate(Master_Job_List, ack_ulong))) {
-         ERROR((SGE_EVENT, MSG_COM_ACKEVENTFORUNKOWNJOB_U, u32c(ack_ulong) ));
+         ERROR((SGE_EVENT, MSG_COM_ACKEVENTFORUNKOWNJOB_U, sge_u32c(ack_ulong) ));
          SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
          DEXIT;
          return;
       }
       jatep = job_search_task(jep, NULL, ack_ulong2);
       if (jatep == NULL) {
-         ERROR((SGE_EVENT, MSG_COM_ACKEVENTFORUNKNOWNTASKOFJOB_UU, u32c(ack_ulong2), u32c(ack_ulong)));
+         ERROR((SGE_EVENT, MSG_COM_ACKEVENTFORUNKNOWNTASKOFJOB_UU, sge_u32c(ack_ulong2), sge_u32c(ack_ulong)));
          SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
          DEXIT;
          return;
       }
 
-      DPRINTF(("JOB "u32": SIGNAL ACK\n", lGetUlong(jep, JB_job_number)));
+      DPRINTF(("JOB "sge_u32": SIGNAL ACK\n", lGetUlong(jep, JB_job_number)));
       lSetUlong(jatep, JAT_pending_signal, 0);
       te_delete_one_time_event(TYPE_SIGNAL_RESEND_EVENT, ack_ulong, ack_ulong2, NULL);
       {
@@ -193,7 +186,7 @@ u_long32 ack_ulong2
             }
          }
          if (qinstance == NULL) {
-            ERROR((SGE_EVENT, MSG_COM_ACK_QUEUE_U, u32c(ack_ulong)));
+            ERROR((SGE_EVENT, MSG_COM_ACK_QUEUE_U, sge_u32c(ack_ulong)));
             SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
             DEXIT;
             return;
@@ -210,9 +203,6 @@ u_long32 ack_ulong2
 
    default:
       ERROR((SGE_EVENT, MSG_COM_ACK_UNKNOWN));
-      SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
-      DEXIT;
-      return;
    }
 
    SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);

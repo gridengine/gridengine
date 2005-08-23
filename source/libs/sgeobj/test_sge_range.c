@@ -84,7 +84,7 @@ bool check_range_get_all_ids(void)
       }
    }
 
-   range = lFreeElem(range);
+   lFreeElem(&range);
    return failed;
 }
 
@@ -132,7 +132,7 @@ bool check_range_set_all_ids(void)
       }
    }
 
-   range = lFreeElem(range);
+   lFreeElem(&range);
    return failed;
 }
 int main(int argc, char *argv[])

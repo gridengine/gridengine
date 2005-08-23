@@ -47,7 +47,7 @@ typedef enum {
 } featureset_product_name_id_t;
 
 typedef enum {
-   FEATURE_UNINITIALIZED, 
+   FEATURE_UNINITIALIZED = 0, 
    FEATURE_NO_SECURITY,             /* No security mode active */
    FEATURE_AFS_SECURITY,            /* AFS security */
    FEATURE_DCE_SECURITY,            /* DCE security */

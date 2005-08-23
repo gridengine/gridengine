@@ -52,6 +52,7 @@ SGEOBJLIB_SRC = \
          sge_centry.c \
          sge_conf.c \
          sge_cqueue.c \
+         sge_cqueue_verify.c \
          sge_ckpt.c \
          sge_cuser.c \
          sge_event.c \
@@ -114,15 +115,15 @@ sgeobjlib_messages:
 ###############################################################################
 # rules to build library
 ###############################################################################
-libsgeobj.a:	$(SGEOBJLIB_OBJS) 
-	$(AR) $(ARFLAGS) libsgeobj.a $(SGEOBJLIB_OBJS)
+libsgeobj.a:	$(SGEOBJLIB_OBJS) version.o
+	$(AR) $(ARFLAGS) libsgeobj.a $(SGEOBJLIB_OBJS) version.o
 	$(RANLIB) libsgeobj.a
 
 libsgeobj$(SHAREDEXT): $(SGEOBJLIB_OBJS) $(SGEOBJDLIB) $(COMMLIB) $(CULLLIB) $(UTILIB) $(RMONLIB) $(LCKLIB)
 	$(SHAREDLD) $(SHARED_LFLAGS) -o libsgeobj$(SHAREDEXT) $(SGEOBJLIB_OBJS) -lsgeobjd -lcomm -lcommlists -lcull -luti -lrmon -llck $(LIBS) -lc
 
-libsgeobjd.a:	$(SGEOBJDLIB_OBJS)
-	$(AR) $(ARFLAGS) libsgeobjd.a $(SGEOBJDLIB_OBJS) 
+libsgeobjd.a:	$(SGEOBJDLIB_OBJS) version.o
+	$(AR) $(ARFLAGS) libsgeobjd.a $(SGEOBJDLIB_OBJS) version.o
 	$(RANLIB) libsgeobjd.a
 
 libsgeobjd$(SHAREDEXT): $(SGEOBJDLIB_OBJS) $(CULLLIB) $(UTILIB) $(RMONLIB) $(LCKLIB)
@@ -159,6 +160,9 @@ sge_conf.o: $(SGEOBJLIB_DIR)/sge_conf.c
 
 sge_cqueue.o: $(SGEOBJLIB_DIR)/sge_cqueue.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_cqueue.c
+
+sge_cqueue_verify.o: $(SGEOBJLIB_DIR)/sge_cqueue_verify.c 
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_cqueue_verify.c
 
 sge_cuser.o: $(SGEOBJLIB_DIR)/sge_cuser.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_cuser.c

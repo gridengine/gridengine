@@ -446,7 +446,7 @@ public class JobTemplateImpl extends JobTemplate {
     * <LI>ConflictingAttributeValuesException</LI>
     * </UL>
     */	
-   public void setEmailAddresses (String[] email) throws DrmaaException {
+   public void setEmail (String[] email) throws DrmaaException {
       this.setAttribute (EMAIL_ADDRESS, Arrays.asList (email));
    }
    
@@ -455,7 +455,7 @@ public class JobTemplateImpl extends JobTemplate {
     * @return The list of email addresses used to report the job completion
     * and status or null if they have not been set
     */	
-   public String[] getEmailAddresses () {
+   public String[] getEmail () {
       String[] emails = this.getAttribute (EMAIL_ADDRESS);
       
       return emails;

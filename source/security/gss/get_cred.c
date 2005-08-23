@@ -57,6 +57,7 @@ usage(char *progname)
    char *p;
    p = (NULL == (p = strrchr(progname,'/'))) ? progname : p+1;
    fprintf(stderr, MSG_GSS_GETCRED_USAGE, p);
+   fprintf(stderr, "\n");
    exit(1);
 }
 
@@ -120,13 +121,15 @@ main(int argc, char **argv)
     */
 
    if (cred.length) {
-      if (verbose)
+      if (verbose) {
          fprintf(stderr, MSG_GSS_WRITINGXBYTESTOSTDOUT_I, (int) cred.length);
+         fprintf(stderr, "\n");
+      }
       gsslib_packint(cred.length, lenbuf);
       write(1, lenbuf, GSSLIB_INTSIZE);
       write(1, cred.value, cred.length);
    } else {
-      fprintf(stderr, MSG_GSS_GETCREDNOCREDENTIALSFOUND );
+      fprintf(stderr, "%s\n", MSG_GSS_GETCREDNOCREDENTIALSFOUND );
       cc = 1;
    }
 

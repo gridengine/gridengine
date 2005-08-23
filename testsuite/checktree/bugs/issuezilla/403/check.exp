@@ -86,29 +86,42 @@ proc issue_403_check {} {
    global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_HOST CHECK_USER
    global ts_config 
 
-   set priority "-2"
-   set p_option "-p $priority"
+   set priority 0
    set the_command "-h $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 3600"
 
-   # try to submit one job using a colon in account string
+   # submit a job in hold state
    set qsub_arguments "$the_command"
    set job_id [submit_job $qsub_arguments 1]
 
-   if { ( [ string compare $ts_config(dns_for_install_script) "none" ] == 0 ) } {
-      set the_hostname "${CHECK_HOST}.$ts_config(dns_domain)"
-   } else {
-      set the_hostname "${CHECK_HOST}"
-   }
+   # call qalter on each architecture
+   foreach host $ts_config(unique_arch_nodes) {
+      puts $CHECK_OUTPUT "calling qalter on host $host"
 
-   if { $ts_config(gridengine_version) == 53 } {
-      set EXPECTED_MESSAGE [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_PRIOSET_SSUI] $CHECK_USER [resolve_host $the_hostname] $job_id $priority]
-   } else {
-      set EXPECTED_MESSAGE [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_PRIOSET_SSUU] $CHECK_USER [resolve_host $the_hostname] $job_id $priority]
-   }
-   set qalterresult [ catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qalter $p_option $job_id" } qalteroutput ]
-   if { ( [ string compare $qalterresult $EXPECTED_MESSAGE ] != 0 ) } {
-      add_proc_error "issue_314_check" "-1" \
-                     "Success message of qalter -p <neg> priority shows wrong msg:\nExpected: $EXPECTED_MESSAGE\nbut got:  $qalteroutput"
+      # decrease priority with each qalter call by one
+      set priority [expr $priority -1]
+      set p_option "-p $priority"
+
+      # build expected qalter output
+      # the macro has been changed due to the bugfix for IZ 403.
+      # versions with IZ 403 use MSG_JOB_PRIOSET_SSUU, fixed versions use MSG_JOB_PRIOSET_SSUI
+      set macro [sge_macro MSG_JOB_PRIOSET_SSUU 0]
+      if {[string compare $macro "-1"] == 0} {
+         # resolve the expected macro
+         set macro [sge_macro MSG_JOB_PRIOSET_SSUI]
+      }
+      set EXPECTED_MESSAGE [translate $CHECK_HOST 1 0 0 $macro $CHECK_USER [resolve_host $CHECK_HOST 1] $job_id $priority]
+
+      # do qalter -p -2
+      set qalterresult [ catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qalter $p_option $job_id" } qalteroutput ]
+
+      puts $CHECK_OUTPUT "expecting: $EXPECTED_MESSAGE"
+      puts $CHECK_OUTPUT "received:  $qalteroutput"
+
+      # evaluate result
+      if { ( [ string compare $qalteroutput $EXPECTED_MESSAGE ] != 0 ) } {
+         add_proc_error "issue_314_check" "-1" \
+                        "Success message of qalter -p <neg> priority shows wrong msg:\nExpected: \"$EXPECTED_MESSAGE\"\nbut got:  \"$qalteroutput\"\n"
+      }
    }
 
    # delete the submitted job
@@ -121,6 +134,7 @@ proc issue_403_cleanup  {} {
    global CHECK_OUTPUT
 
    delete_all_jobs
+   wait_for_end_of_all_jobs 60
 
    set_error 0 "ok"
 }

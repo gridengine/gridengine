@@ -29,10 +29,6 @@
  *
  ************************************************************************/
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif   
-
 #include "sge.h"
 #include "sgermon.h"
 #include "sge_conf.h"
@@ -156,8 +152,8 @@ lListElem *hgroup_get_via_gdi(lList **answer_list, const char *name)
                      name);
       gdi_answer_list = sge_gdi(SGE_HGROUP_LIST, SGE_GDI_GET, 
                                 &houstgroup_list, where, what);
-      what = lFreeWhat(what);
-      where = lFreeWhere(where);
+      lFreeWhat(&what);
+      lFreeWhere(&where);
 
       if (!answer_list_has_error(&gdi_answer_list)) {
          ret = lFirst(houstgroup_list);
@@ -201,7 +197,7 @@ bool hgroup_provide_modify_context(lListElem **this_elem, lList **answer_list,
                                          SP_FORM_ASCII, NULL, filename);
             
          if (answer_list_output (answer_list)) {
-            hgroup = lFreeElem (hgroup);
+            lFreeElem(&hgroup);
          }
 
          if (hgroup != NULL) {
@@ -209,7 +205,7 @@ bool hgroup_provide_modify_context(lListElem **this_elem, lList **answer_list,
          }
 
          if (missing_field != NoName) {
-            hgroup = lFreeElem (hgroup);
+            lFreeElem(&hgroup);
             answer_list_output (answer_list);
          }      
 
@@ -217,7 +213,7 @@ bool hgroup_provide_modify_context(lListElem **this_elem, lList **answer_list,
             if (object_has_differences(*this_elem, answer_list,
                                        hgroup, false) || 
                 ignore_unchanged_message) {
-               *this_elem = lFreeElem(*this_elem);
+               lFreeElem(this_elem);
                *this_elem = hgroup; 
                ret = true;
             } else {
@@ -301,7 +297,7 @@ bool hgroup_add_from_file(lList **answer_list, const char *filename)
                                       SP_FORM_ASCII, NULL, filename);
             
       if (answer_list_output (answer_list)) {
-         hgroup = lFreeElem (hgroup);
+         lFreeElem(&hgroup);
       }
 
       if (hgroup != NULL) {
@@ -309,7 +305,7 @@ bool hgroup_add_from_file(lList **answer_list, const char *filename)
       }
 
       if (missing_field != NoName) {
-         hgroup = lFreeElem (hgroup);
+         lFreeElem(&hgroup);
          answer_list_output (answer_list);
       }      
 
@@ -346,7 +342,7 @@ bool hgroup_modify(lList **answer_list, const char *name)
          ret = hgroup_add_del_mod_via_gdi(hgroup, answer_list, SGE_GDI_MOD);
       }
       if (hgroup) {
-         hgroup = lFreeElem(hgroup);
+         lFreeElem(&hgroup);
       }
    }
 
@@ -370,7 +366,7 @@ bool hgroup_modify_from_file(lList **answer_list, const char *filename)
                                       SP_FORM_ASCII, NULL, filename);
             
       if (answer_list_output (answer_list)) {
-         hgroup = lFreeElem (hgroup);
+         lFreeElem(&hgroup);
       }
 
       if (hgroup != NULL) {
@@ -378,7 +374,7 @@ bool hgroup_modify_from_file(lList **answer_list, const char *filename)
       }
 
       if (missing_field != NoName) {
-         hgroup = lFreeElem (hgroup);
+         lFreeElem(&hgroup);
          answer_list_output (answer_list);
       }      
 
@@ -392,7 +388,7 @@ bool hgroup_modify_from_file(lList **answer_list, const char *filename)
          ret = hgroup_add_del_mod_via_gdi(hgroup, answer_list, SGE_GDI_MOD);
       }
       if (hgroup) {
-         hgroup = lFreeElem(hgroup);
+         lFreeElem(&hgroup);
       }
    }
 
@@ -434,7 +430,7 @@ bool hgroup_show(lList **answer_list, const char *name)
             SGE_EXIT (1);
          }
 
-         hgroup = lFreeElem(hgroup);
+         lFreeElem(&hgroup);
       } else {
          sprintf(SGE_EVENT, MSG_HGROUP_NOTEXIST_S, name);
          answer_list_add(answer_list, SGE_EVENT,
@@ -461,13 +457,13 @@ bool hgroup_show_structure(lList **answer_list, const char *name,
 
       what = lWhat("%T(ALL)", HGRP_Type);
       alp = sge_gdi(SGE_HGROUP_LIST, SGE_GDI_GET, &hgroup_list, NULL, what);
-      what = lFreeWhat(what);
+      lFreeWhat(&what);
 
       alep = lFirst(alp);
       answer_exit_if_not_recoverable(alep);
       if (answer_get_status(alep) != STATUS_OK) {
          fprintf(stderr, "%s\n", lGetString(alep, AN_text));
-         return 0;
+         return false;
       }
 
       hgroup = lGetElemHost(hgroup_list, HGRP_name, name); 

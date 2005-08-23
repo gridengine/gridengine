@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sched_conf.5,v $     Last Update: $Date: 2005/01/12 16:48:17 $     Revision: $Revision: 1.23 $
+.\" $RCSfile: sched_conf.5,v $     Last Update: $Date: 2005/08/19 12:53:10 $     Revision: $Revision: 1.26 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH SCHED_CONF 5 "$Date: 2005/01/12 16:48:17 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH SCHED_CONF 5 "$Date: 2005/08/19 12:53:10 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 sched_conf \- xxQS_NAMExx default scheduler configuration file
@@ -321,6 +321,34 @@ The user can obtain the collected information with the command qstat -j.
 This is foreseen for passing additional parameters to the xxQS_NAMExx
 scheduler. The following values are recognized:
 .\"
+.IP "\fIDURATION_OFFSET\fP"
+If set overrides the default of 60 seconds that is assumed as offset by 
+xxQS_NAMExx scheduler when planning resource utilization as delta
+between net job runtimes and gross time until resources are available 
+again. Jobs net runtime as specified with -l h_rt=...  or -l s_rt=... or 
+\fBdefault_duration\fP always differ from jobs gross runtime due to delays before
+and after actual job start. Amongst these delays before job start is the time 
+until the end of a \fBschedule_interval\fP, the time it takes to deliver a job to 
+.M sge_execd 8
+and the delays \fBprolog\fP in
+.M queue_conf 5
+, \fBstart_proc_args\fP in
+.M sge_pe 5
+and \fBstarter_method\fP in
+.M queue_conf 5 
+may effectuate. The 
+delays after a jobs actual run comprises delays due to a forced job termination 
+(\fBnotify\fP, \fBterminate_method\fP or \fBcheckpointing\fP), procedure runs 
+after acutal job 
+finished such as \fBstop_proc_args\fP in
+.M sge_pe 5 
+or \fBepilog\fP in
+.M queue_conf 5 
+and the delay until a new \fBschedule_interval\fP. 
+.br
+If the offset is too low resource reservations (see \fBmax_reservation\fP)  
+can be delayed repeatedly due to a too optistic job circulation time.
+.\"
 .IP "\fIJC_FILTER\fP"
 If set to true, the scheduler limits the number of jobs it looks at during
 a scheduling run. At the beginning of the scheduling run it assigns each
@@ -346,11 +374,25 @@ each scheduling run.
 If set equal to 1, the scheduler records information for each scheduling run allowing 
 to reproduce job resources utilization in the file \fI<xxqs_name_sxx_root>/<cell>/common/schedule\fP.\"
 .\"
+.IP "\fISELECT_PE_RANGE_ALG\fP"
+This param sets the algorthim for the pe range computation. The default is automatic, which
+means that the sheduler will select the best one and it should not be necessary to 
+change it to a different setting in normal operation. If a custom setting is needed, the 
+following values are available:
+.br
+auto       : the scheduler selects the best algorithm
+.br
+least      : starts the resource-matching with the least slot amount first
+.br
+bin        : starts the resource-matching in the middle of the pe slot range
+.br
+highest    : starts the resource-matching with the highest slot amount first
+.\"
 .PP
 Changing \fBparams\fP will take immediate effect.
 The default for \fBparams\fP is none.
 .\"
-.SS \fBreprioritize_interval\fP"
+.SS \fBreprioritize_interval\fP
 Interval (HH:MM:SS) to reprioritize jobs on the exec hosts based on the 
 current ticket amount for the running jobs. If the interval is set to 
 00:00:00 the reprioritization is turned off. The default value is 00:00:00.

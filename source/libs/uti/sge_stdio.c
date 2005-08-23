@@ -49,6 +49,7 @@
 #include "msg_common.h"
 #include "msg_utilib.h"
 #include "sge_log.h"     
+#include "sge_uidgid.h"
 
 #ifdef NO_SGE_COMPILE_DEBUG
 #   undef SGE_EXIT
@@ -141,7 +142,6 @@ pid_t sge_peopen(const char *shell, int login_shell, const char *command,
    const char *not_root = MSG_SYSTEM_NOROOTRIGHTSTOSWITCHUSER;
    int i;
    char arg0[256];
-   struct passwd *pw;
    char err_str[256];
 #if !(defined(WIN32) || defined(INTERIX)) /* var not needed */
    int res;
@@ -177,6 +177,7 @@ pid_t sge_peopen(const char *shell, int login_shell, const char *command,
          if (fd == -1) {
             sprintf(err_str, MSG_ERROROPENINGFILEFORWRITING_SS, "/dev/null", 
                     strerror(errno));
+            sprintf(err_str, "\n");
             write(2, err_str, strlen(err_str));
             SGE_EXIT(1);
          }
@@ -200,10 +201,14 @@ pid_t sge_peopen(const char *shell, int login_shell, const char *command,
       dup(pipefds[1][1]);
  
       if (user) {
- 
-         pw = getpwnam(user);
-         if (!pw) {
-            sprintf(err_str, MSG_SYSTEM_NOUSERFOUND_SS , user, strerror(errno));            write(2, err_str, strlen(err_str));
+         struct passwd *pw;
+         struct passwd pw_struct;
+         char buffer[2048];
+
+         if (!(pw=sge_getpwnam_r(user, &pw_struct, buffer, sizeof(buffer)))) {
+            sprintf(err_str, MSG_SYSTEM_NOUSERFOUND_SS , user, strerror(errno));            
+            sprintf(err_str, "\n");
+            write(2, err_str, strlen(err_str));
             SGE_EXIT(1);
          }
  
@@ -212,8 +217,7 @@ pid_t sge_peopen(const char *shell, int login_shell, const char *command,
          if (myuid != pw->pw_uid) {
  
             /* Only change user if we differ from the wanted user */
- 
-            if (myuid != 0) {
+            if(myuid != SGE_SUPERUSER_UID) {
                write(2, not_root, sizeof(not_root));
                SGE_EXIT(1);
             }                             
@@ -229,6 +233,7 @@ pid_t sge_peopen(const char *shell, int login_shell, const char *command,
             {
                sprintf(err_str, MSG_SYSTEM_INITGROUPSFORUSERFAILED_ISS ,
                      res, user, strerror(errno));
+               sprintf(err_str, "\n");
                write(2, err_str, strlen(err_str));
                SGE_EXIT(1);
             }
@@ -237,6 +242,7 @@ pid_t sge_peopen(const char *shell, int login_shell, const char *command,
             if (setuid(pw->pw_uid)) {
                sprintf(err_str, MSG_SYSTEM_SWITCHTOUSERFAILED_SS , user,
                      strerror(errno));
+               sprintf(err_str, "\n");
                write(2, err_str, strlen(err_str));
                SGE_EXIT(1);
             }

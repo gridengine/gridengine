@@ -39,10 +39,6 @@
 #include <Xmt/InputField.h>
 #include <Xmt/Procedures.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif   
-
 #include "sge_usageL.h"
 
 #include "cull.h"

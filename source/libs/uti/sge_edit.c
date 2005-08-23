@@ -44,11 +44,8 @@
 #include "sge_edit.h"
 #include "sge_unistd.h"
 
-int sge_edit(
-char *fname 
-
-) {
-
+int sge_edit(const char *fname)
+{
    SGE_STRUCT_STAT before, after;
    pid_t pid;
    int status;
@@ -62,7 +59,7 @@ char *fname
       return (-1);
    }
 
-   chown(fname, uti_state_get_uid(), uti_state_get_gid());
+   chown(fname, (uid_t)uti_state_get_uid(), (gid_t)uti_state_get_gid());
 
    pid = fork();
    if (pid) {

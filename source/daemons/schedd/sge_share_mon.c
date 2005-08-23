@@ -35,10 +35,6 @@
 #include <string.h>
 #include <time.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif   
-
 #include "sge_dstring.h"
 
 #include "sge_gdi.h"
@@ -61,7 +57,7 @@ static int
 setup_lists(lList **sharetree, lList **users, lList **projects, lList **config)
 {
    lList *alp;
-   lListElem *aep, *root;
+   lListElem *aep;
    lEnumeration *what;
 
    /*
@@ -70,7 +66,7 @@ setup_lists(lList **sharetree, lList **users, lList **projects, lList **config)
 
    what = lWhat("%T(ALL)", STN_Type);
    alp=sge_gdi(SGE_SHARETREE_LIST, SGE_GDI_GET, sharetree, NULL, what);
-   lFreeWhat(what);
+   lFreeWhat(&what);
 
    aep = lFirst(alp);
    answer_exit_if_not_recoverable(aep);
@@ -78,9 +74,9 @@ setup_lists(lList **sharetree, lList **users, lList **projects, lList **config)
       fprintf(stderr, "%s", lGetString(aep, AN_text));
       exit(1);
    }
-   lFreeList(alp);
+   lFreeList(&alp);
 
-   if (!*sharetree || (root = lFirst(*sharetree)) == NULL) {
+   if (!*sharetree || lFirst(*sharetree) == NULL) {
       fprintf(stderr, MSG_SGESHAREMON_NOSHARETREE );
       exit(2);
    }
@@ -91,7 +87,7 @@ setup_lists(lList **sharetree, lList **users, lList **projects, lList **config)
 
    what = lWhat("%T(ALL)", SC_Type);
    alp=sge_gdi(SGE_SC_LIST, SGE_GDI_GET, config, NULL, what);
-   lFreeWhat(what);
+   lFreeWhat(&what);
 
    aep = lFirst(alp);
    answer_exit_if_not_recoverable(aep);
@@ -99,7 +95,7 @@ setup_lists(lList **sharetree, lList **users, lList **projects, lList **config)
       fprintf(stderr, "%s", lGetString(aep, AN_text));
       exit(1);
    }
-   lFreeList(alp);
+   lFreeList(&alp);
 
    /*
     * get user and project list
@@ -107,18 +103,18 @@ setup_lists(lList **sharetree, lList **users, lList **projects, lList **config)
 
    what = lWhat("%T(ALL)", UP_Type);
    alp = sge_gdi(SGE_USER_LIST, SGE_GDI_GET, users, NULL, what);
-   lFreeWhat(what);
+   lFreeWhat(&what);
 
    what = lWhat("%T(ALL)", UP_Type);
    alp = sge_gdi(SGE_PROJECT_LIST, SGE_GDI_GET, projects, NULL, what);
-   lFreeWhat(what);
+   lFreeWhat(&what);
 
    aep = lFirst(alp);
    if (answer_get_status(aep) != STATUS_OK) {
       fprintf(stderr, "%s", lGetString(aep, AN_text));
       exit(3);
    }
-   lFreeList(alp);
+   lFreeList(&alp);
 
    return 0;
 }
@@ -127,14 +123,10 @@ setup_lists(lList **sharetree, lList **users, lList **projects, lList **config)
 static int
 free_lists(lList *sharetree, lList *users, lList *projects, lList *config)
 {
-   if (sharetree)
-      lFreeList(sharetree);
-   if (users)
-      lFreeList(users);
-   if (projects)
-      lFreeList(projects);
-   if (config)
-      lFreeList(config);
+   lFreeList(&sharetree);
+   lFreeList(&users);
+   lFreeList(&projects);
+   lFreeList(&config);
    return 0;
 }
 
@@ -146,20 +138,20 @@ usage(void)
 {
       fprintf(stderr, "%s sge_share_mon [-cdfhilmnorsux] [node_names ...]\n", MSG_USAGE); 
       fprintf(stderr, "\n" );
-      fprintf(stderr, "   -c count          %s", MSG_SGESHAREMON_c_OPT_USAGE );
-      fprintf(stderr, "   -d delimiter      %s", MSG_SGESHAREMON_d_OPT_USAGE );
-      fprintf(stderr, "   -f field[,field]  %s", MSG_SGESHAREMON_f_OPT_USAGE );
-      fprintf(stderr, "   -h                %s", MSG_SGESHAREMON_h_OPT_USAGE );
-      fprintf(stderr, "   -i interval       %s", MSG_SGESHAREMON_i_OPT_USAGE );
-      fprintf(stderr, "   -l delimiter      %s", MSG_SGESHAREMON_l_OPT_USAGE );
-      fprintf(stderr, "   -m output_mode    %s", MSG_SGESHAREMON_m_OPT_USAGE );
-      fprintf(stderr, "   -n                %s", MSG_SGESHAREMON_n_OPT_USAGE );
-      fprintf(stderr, "   -o output_file    %s", MSG_SGESHAREMON_o_OPT_USAGE );
-      fprintf(stderr, "   -r delimiter      %s", MSG_SGESHAREMON_r_OPT_USAGE );
-      fprintf(stderr, "   -s string_format  %s", MSG_SGESHAREMON_s_OPT_USAGE );
-      fprintf(stderr, "   -t                %s", MSG_SGESHAREMON_t_OPT_USAGE );
-      fprintf(stderr, "   -u                %s", MSG_SGESHAREMON_u_OPT_USAGE );
-      fprintf(stderr, "   -x                %s", MSG_SGESHAREMON_x_OPT_USAGE );
+      fprintf(stderr, "   -c count          %s\n", MSG_SGESHAREMON_c_OPT_USAGE );
+      fprintf(stderr, "   -d delimiter      %s\n", MSG_SGESHAREMON_d_OPT_USAGE );
+      fprintf(stderr, "   -f field[,field]  %s\n", MSG_SGESHAREMON_f_OPT_USAGE );
+      fprintf(stderr, "   -h                %s\n", MSG_SGESHAREMON_h_OPT_USAGE );
+      fprintf(stderr, "   -i interval       %s\n", MSG_SGESHAREMON_i_OPT_USAGE );
+      fprintf(stderr, "   -l delimiter      %s\n", MSG_SGESHAREMON_l_OPT_USAGE );
+      fprintf(stderr, "   -m output_mode    %s\n", MSG_SGESHAREMON_m_OPT_USAGE );
+      fprintf(stderr, "   -n                %s\n", MSG_SGESHAREMON_n_OPT_USAGE );
+      fprintf(stderr, "   -o output_file    %s\n", MSG_SGESHAREMON_o_OPT_USAGE );
+      fprintf(stderr, "   -r delimiter      %s\n", MSG_SGESHAREMON_r_OPT_USAGE );
+      fprintf(stderr, "   -s string_format  %s\n", MSG_SGESHAREMON_s_OPT_USAGE );
+      fprintf(stderr, "   -t                %s\n", MSG_SGESHAREMON_t_OPT_USAGE );
+      fprintf(stderr, "   -u                %s\n", MSG_SGESHAREMON_u_OPT_USAGE );
+      fprintf(stderr, "   -x                %s\n", MSG_SGESHAREMON_x_OPT_USAGE );
       fprintf(stderr,"\n");
 }
 
@@ -172,6 +164,7 @@ open_output(const char *file_name, const char *mode)
       file = fopen(file_name, mode);
       if (file == NULL) {
          fprintf(stderr, MSG_FILE_COULDNOTOPENXFORY_SS , file_name, mode);
+         fprintf(stderr, "\n");
          exit(1);
       }
    }

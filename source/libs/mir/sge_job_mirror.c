@@ -30,10 +30,6 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif   
-
 #include "sge.h"
 #include "sgermon.h"
 #include "sge_log.h"
@@ -47,7 +43,7 @@
 #include "sge_ja_task_mirror.h"
 #include "sge_pe_task_mirror.h"
 
-static int job_update_master_list_usage(lListElem *event);
+static bool job_update_master_list_usage(lListElem *event);
 
 /****** Eventmirror/job/job_update_master_list_usage() *************************
 *  NAME
@@ -74,9 +70,9 @@ static int job_update_master_list_usage(lListElem *event);
 *     Eventmirror/ja_task/pe_task_update_master_list_usage()
 *     Eventmirror/pe_task/pe_task_update_master_list_usage()
 *******************************************************************************/
-static int job_update_master_list_usage(lListElem *event)
+static bool job_update_master_list_usage(lListElem *event)
 {
-   int ret = true;
+   bool ret = true;
    u_long32 job_id, ja_task_id;
    const char *pe_task_id;
 
@@ -170,7 +166,7 @@ bool job_update_master_list(sge_object_type type, sge_event_action action,
          * Preferable would probably be to send MOD events for the different
          * object types.
          */
-         int ret = job_update_master_list_usage(event);
+         bool ret = job_update_master_list_usage(event);
          DEXIT;
          return ret;
       } else {
@@ -196,7 +192,7 @@ bool job_update_master_list(sge_object_type type, sge_event_action action,
    }
 
    if(sge_mirror_update_master_list(list, list_descr, job, job_get_id_string(job_id, 0, NULL), action, event) != SGE_EM_OK) {
-      ja_tasks = lFreeList(ja_tasks);
+      lFreeList(&ja_tasks);
       DEXIT;
       return false;
    }
@@ -208,13 +204,13 @@ bool job_update_master_list(sge_object_type type, sge_event_action action,
       if(job == NULL) {
          ERROR((SGE_EVENT, MSG_JOB_CANTFINDJOBFORUPDATEIN_SS,
                 job_get_id_string(job_id, 0, NULL), "job_update_master_list"));
-         ja_tasks = lFreeList(ja_tasks);
+         lFreeList(&ja_tasks);
          DEXIT;
          return false;
       }
 
       lXchgList(job, JB_ja_tasks, &ja_tasks);
-      ja_tasks = lFreeList(ja_tasks);
+      lFreeList(&ja_tasks);
    }
 
    DEXIT;
@@ -238,9 +234,7 @@ job_schedd_info_update_master_list(sge_object_type type,
    list_descr = SME_Type;
 
    /* We always update the whole list (consisting of one list element) */
-   if(*list != NULL) {
-      *list = lFreeList(*list);
-   }
+   lFreeList(list);
 
    if((data_list = lGetList(event, ET_new_version)) != NULL) {
       if((ep = lFirst(data_list)) != NULL) {

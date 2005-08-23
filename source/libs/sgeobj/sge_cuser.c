@@ -32,10 +32,6 @@
 
 #include <stdlib.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif   
-
 #include "sge_string.h"
 #include "sgermon.h"
 #include "sge_log.h"
@@ -215,4 +211,5 @@ cuser_list_map_user(const lList *this_list, lList **answer_list,
    DEXIT;
    return ret;
 }
+
 #endif

@@ -32,10 +32,6 @@
 #include <string.h>
 #include <strings.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif   
-
 #include "sge.h"
 #include "sge_any_request.h"
 #include "sge_usageL.h"
@@ -118,7 +114,7 @@ report_source *report_sources
       } else {
          ret = CL_RETVAL_OK;
       }
-      lFreeList(report_list);
+      lFreeList(&report_list);
    }
 
    DEXIT;

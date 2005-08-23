@@ -48,8 +48,12 @@
 #include "sge_unistd.h"
 
 /* compare hosts with FQDN or not */
-#ifndef CL_MAXHOSTLEN
-#define CL_MAXHOSTLEN 256
+#if !defined(CL_MAXHOSTLEN) && defined(MAXHOSTNAMELEN)
+   #define CL_MAXHOSTLEN MAXHOSTNAMELEN
+#endif
+
+#if !defined(CL_MAXHOSTLEN) && !defined(MAXHOSTNAMELEN)
+   #define CL_MAXHOSTLEN 256
 #endif
 
 /* char introducing a hostgroup name */

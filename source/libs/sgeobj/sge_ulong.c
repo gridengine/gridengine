@@ -224,6 +224,28 @@ bool double_print_to_dstring(double value, dstring *string)
    return ret;
 }
 
+/****** sge_ulong/ulong_parse_date_time_from_string() **************************
+*  NAME
+*     ulong_parse_date_time_from_string() -- Parse string into date/time ulong
+*
+*  SYNOPSIS
+*     bool ulong_parse_date_time_from_string(u_long32 *this_ulong, lList 
+*     **answer_list, const char *string) 
+*
+*  FUNCTION
+*     ??? 
+*
+*  INPUTS
+*     u_long32 *this_ulong - ??? 
+*     lList **answer_list  - ??? 
+*     const char *string   - ??? 
+*
+*  RESULT
+*     bool - 
+*
+*  NOTES
+*     MT-NOTE: ulong_parse_date_time_from_string() is MT safe 
+*******************************************************************************/
 bool 
 ulong_parse_date_time_from_string(u_long32 *this_ulong, 
                                   lList **answer_list, const char *string) 
@@ -236,7 +258,9 @@ ulong_parse_date_time_from_string(u_long32 *this_ulong,
    stringT inp_date_str;
 
    time_t gmt_secs;
+   struct tm res;
    struct tm *tmp_timeptr,timeptr;
+   struct saved_vars_s *context = NULL;
 
    DENTER(TOP_LAYER, "ulong_parse_date_time_from_string");
 
@@ -269,8 +293,8 @@ ulong_parse_date_time_from_string(u_long32 *this_ulong,
    }
 
    strcpy(inp_date_str, string);
-   non_seconds=sge_strtok(inp_date_str,".");
-   seconds=sge_strtok(NULL,".");
+   non_seconds=sge_strtok_r(inp_date_str, ".", &context);
+   seconds=sge_strtok_r(NULL, ".", &context);
 
    if (seconds) {
       i=strlen(seconds);
@@ -279,6 +303,7 @@ ulong_parse_date_time_from_string(u_long32 *this_ulong,
    }
 
    if ((i != 0) && (i != 2)) {
+      sge_free_saved_vars(context);
       SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_PARSE_INVALIDSECONDS));
       if (answer_list) {
          answer_list_add(answer_list, SGE_EVENT, 
@@ -294,6 +319,7 @@ ulong_parse_date_time_from_string(u_long32 *this_ulong,
    i=strlen(non_seconds);
 
    if ((i != 8) && (i != 10) && (i != 12)) {
+      sge_free_saved_vars(context);
       SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_PARSE_INVALIDHOURMIN));
       if (answer_list) {
          answer_list_add(answer_list, SGE_EVENT, 
@@ -328,8 +354,8 @@ ulong_parse_date_time_from_string(u_long32 *this_ulong,
       }
       non_seconds+=year_fieldlen;
    } else {
-      gmt_secs=sge_get_gmt();
-      tmp_timeptr=localtime(&gmt_secs);
+      gmt_secs=(time_t)sge_get_gmt();
+      tmp_timeptr=localtime_r(&gmt_secs, &res);
       timeptr.tm_year=tmp_timeptr->tm_year;
    }
 
@@ -337,6 +363,7 @@ ulong_parse_date_time_from_string(u_long32 *this_ulong,
    memcpy(tmp_str, non_seconds, 2);
    timeptr.tm_mon=atoi(tmp_str)-1;/* 00==Jan, we don't like that do we */
    if ((timeptr.tm_mon>11)||(timeptr.tm_mon<0)) {
+      sge_free_saved_vars(context);
       SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_PARSE_INVALIDMONTH));
       if (answer_list) {
          answer_list_add(answer_list, SGE_EVENT, 
@@ -359,6 +386,7 @@ ulong_parse_date_time_from_string(u_long32 *this_ulong,
    /* yea, we should do it by mon ths */
    if ((timeptr.tm_mday > 31) || (timeptr.tm_mday < 1)) {
       /* actually mktime() should frigging do it */
+      sge_free_saved_vars(context);
       SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_PARSE_INVALIDDAY));
       if (answer_list) {
          answer_list_add(answer_list, SGE_EVENT, 
@@ -394,6 +422,7 @@ ulong_parse_date_time_from_string(u_long32 *this_ulong,
    timeptr.tm_min=atoi(tmp_str);
 
    if ((timeptr.tm_min > 59)||(timeptr.tm_min < 0)) {
+      sge_free_saved_vars(context);
       SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_PARSE_INVALIDMINUTE));
       if (answer_list) {
          answer_list_add(answer_list, SGE_EVENT, 
@@ -410,6 +439,7 @@ ulong_parse_date_time_from_string(u_long32 *this_ulong,
       timeptr.tm_sec=atoi(seconds);
    }
    if ((timeptr.tm_sec>59)||(timeptr.tm_mday<0)) {
+      sge_free_saved_vars(context);
       SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_PARSE_INVALIDSECOND));
       if (answer_list) {
          answer_list_add(answer_list, SGE_EVENT, 
@@ -432,7 +462,7 @@ ulong_parse_date_time_from_string(u_long32 *this_ulong,
    DPRINTF(("mktime returned: %ld\n",gmt_secs));
 
    if (gmt_secs < 0) {
-      DPRINTF(("input to mktime: %s\n",asctime(&timeptr)));
+      sge_free_saved_vars(context);
       SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_PARSE_NODATEFROMINPUT));
       if (answer_list) {
          answer_list_add(answer_list, SGE_EVENT, 
@@ -445,7 +475,7 @@ ulong_parse_date_time_from_string(u_long32 *this_ulong,
       return false;
    }
 
-   DPRINTF(("%s",ctime((time_t *)&gmt_secs)));
+   sge_free_saved_vars(context);
 
    *this_ulong = gmt_secs;
    DEXIT;

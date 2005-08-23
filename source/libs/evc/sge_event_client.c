@@ -35,10 +35,6 @@
 #include <string.h>
 #include <strings.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif 
-
 #include "sge_any_request.h"
 #include "sge_ack.h"
 #include "sge_unistd.h"
@@ -659,7 +655,7 @@ ec_prepare_registration(ev_registration_id id, const char *name)
 
    if (id >= EV_ID_FIRST_DYNAMIC || name == NULL || *name == 0) {
       WARNING((SGE_EVENT, MSG_EVENT_ILLEGAL_ID_OR_NAME_US, 
-               u32c(id), name != NULL ? name : "NULL" ));
+               sge_u32c(id), name != NULL ? name : "NULL" ));
    } else {
       ec = lCreateElem(EV_Type);
 
@@ -899,7 +895,7 @@ ec_set_flush_delay(int flush_delay)
    if (ec == NULL) {
       ERROR((SGE_EVENT, MSG_EVENT_UNINITIALIZED_EC));
    } else {
-      ret = (lGetUlong(ec, EV_flush_delay) != flush_delay);
+      ret = (lGetUlong(ec, EV_flush_delay) != flush_delay) ? true : false;
 
       if (ret) {
          lSetUlong(ec, EV_flush_delay, flush_delay);
@@ -991,7 +987,7 @@ ec_set_busy_handling(ev_busy_handling handling)
    if (ec == NULL) {
       ERROR((SGE_EVENT, MSG_EVENT_UNINITIALIZED_EC));
    } else {
-      ret = (lGetUlong(ec, EV_busy_handling) != handling);
+      ret = (lGetUlong(ec, EV_busy_handling) != handling) ? true : false;
 
       if (ret) {
          lSetUlong(ec, EV_busy_handling, handling);
@@ -1033,7 +1029,7 @@ ec_get_busy_handling(void)
    if (ec == NULL) {
       ERROR((SGE_EVENT, MSG_EVENT_UNINITIALIZED_EC));
    } else {
-      handling = lGetUlong(ec, EV_busy_handling);
+      handling = (ev_busy_handling)lGetUlong(ec, EV_busy_handling);
    }
 
    DEXIT;
@@ -1131,7 +1127,7 @@ ec_register(bool exit_on_qmaster_down, lList** alpp)
     
       aep = lFirst(alp);
     
-      ret = (lGetUlong(aep, AN_status)==STATUS_OK);   
+      ret = (lGetUlong(aep, AN_status) == STATUS_OK) ? true : false;
 
       if (ret) { 
          lListElem *new_ec;
@@ -1144,7 +1140,7 @@ ec_register(bool exit_on_qmaster_down, lList** alpp)
 
          if (new_id != 0) {
             lSetUlong(ec, EV_id, new_id);
-            DPRINTF(("REGISTERED with id "U32CFormat"\n", new_id));
+            DPRINTF(("REGISTERED with id "sge_U32CFormat"\n", new_id));
             lSetBool(ec, EV_changed, false);
             need_register = false;
             
@@ -1153,9 +1149,10 @@ ec_register(bool exit_on_qmaster_down, lList** alpp)
          if (lGetUlong(aep, AN_quality) == ANSWER_QUALITY_ERROR) {
             ERROR((SGE_EVENT, "%s", lGetString(aep, AN_text)));
             answer_list_add(alpp, lGetString(aep, AN_text), 
-                  lGetUlong(aep, AN_status), lGetUlong(aep, AN_quality));
-            lFreeList(lp); 
-            lFreeList(alp);
+                  lGetUlong(aep, AN_status), 
+                  (answer_quality_t)lGetUlong(aep, AN_quality));
+            lFreeList(&lp); 
+            lFreeList(&alp);
             if (exit_on_qmaster_down) {
                DPRINTF(("exiting in ec_register()\n"));
                SGE_EXIT(1);
@@ -1166,8 +1163,8 @@ ec_register(bool exit_on_qmaster_down, lList** alpp)
          }   
       }
 
-      lFreeList(lp); 
-      lFreeList(alp);
+      lFreeList(&lp); 
+      lFreeList(&alp);
    }
 
    PROF_STOP_MEASUREMENT(SGE_PROF_EVENTCLIENT);
@@ -1230,7 +1227,7 @@ ec_deregister(void)
          if (send_ret == CL_RETVAL_OK) {
             /* error message is output from sge_send_any_request */
             /* clear state of this event client instance */
-            ec = lFreeElem(ec);
+            lFreeElem(&ec);
             need_register = true;
             ec_reg_id = 0;
             lSetBool(ec, EV_changed, false);
@@ -1294,8 +1291,8 @@ ec_subscribe(ev_event event)
    }
 
    if (event == sgeE_ALL_EVENTS) {
-      int i;
-      for(i = 0; i < sgeE_EVENTSIZE; i++) {
+      ev_event i;
+      for(i = sgeE_ALL_EVENTS; i < sgeE_EVENTSIZE; i++) {
          ec_add_subscriptionElement(ec, i, EV_NOT_FLUSHED, -1);
       }
    } else {
@@ -1442,7 +1439,7 @@ static void ec_remove_subscriptionElement(lListElem *event_el, ev_event event) {
          sub_el = lGetElemUlong(subscribed, EVS_id, event);
       
          if (sub_el) {
-            if (lRemoveElem(subscribed, sub_el) == 0){
+            if (lRemoveElem(subscribed, &sub_el) == 0) {
                lSetBool(ec, EV_changed, true);
             }
          }
@@ -1538,8 +1535,8 @@ ec_unsubscribe(ev_event event)
    }
 
    if (event == sgeE_ALL_EVENTS) {
-      int i;
-      for(i = 0; i < sgeE_EVENTSIZE; i++) {
+      ev_event i;
+      for(i = sgeE_ALL_EVENTS; i < sgeE_EVENTSIZE; i++) {
          ec_remove_subscriptionElement(ec, i);
       }
       ec_add_subscriptionElement(ec, sgeE_QMASTER_GOES_DOWN, EV_FLUSHED, 0);
@@ -1924,7 +1921,7 @@ ec_get_busy(void)
       ERROR((SGE_EVENT, MSG_EVENT_UNINITIALIZED_EC));
    } else {
       /* JG: TODO: EV_busy should be boolean datatype */
-      ret = lGetUlong(ec, EV_busy) > 0;
+      ret = (lGetUlong(ec, EV_busy) > 0) ? true : false;
    }
 
    DEXIT;
@@ -2025,11 +2022,11 @@ ev_registration_id ec_get_id(void)
    if (ec == NULL) {
       ERROR((SGE_EVENT, MSG_EVENT_UNINITIALIZED_EC));
       DEXIT;
-      return -1;
+      return EV_ID_INVALID;
    }
    
    DEXIT;
-   return lGetUlong(ec, EV_id);
+   return (ev_registration_id)lGetUlong(ec, EV_id);
 }
 
 /****** Eventclient/Client/ec_config_changed() ********************************
@@ -2116,10 +2113,10 @@ ec_commit(void)
        *  - if this event client is already enrolled at qmaster
        */
       alp = sge_gdi(SGE_EVENT_LIST, SGE_GDI_MOD, &lp, NULL, NULL);
-      lFreeList(lp); 
+      lFreeList(&lp); 
       
-      ret = (lGetUlong(lFirst(alp), AN_status)==STATUS_OK);   
-      lFreeList(alp);
+      ret = (lGetUlong(lFirst(alp), AN_status) == STATUS_OK) ? true : false;
+      lFreeList(&alp);
       
       if (ret) {
          lSetBool(ec, EV_changed, false);
@@ -2196,7 +2193,7 @@ ec_commit_multi(lList **malpp, state_gdi_multi *state)
       commit_id = sge_gdi_multi(&alp, SGE_GDI_SEND, SGE_EVENT_LIST, SGE_GDI_MOD,
                                 &lp, NULL, NULL, malpp, state, false);
       if (lp != NULL) {                                 
-         lp = lFreeList(lp); 
+         lFreeList(&lp);
       }
 
       if (alp != NULL) {
@@ -2310,7 +2307,7 @@ ec_get(lList **event_list, bool exit_on_qmaster_down)
       int max_fetch;
       int sync = 1;
 
-      now = sge_get_gmt();
+      now = (time_t)sge_get_gmt();
 
       /* initialize last_fetch_ok_time */
       if (last_fetch_ok_time == 0) {
@@ -2337,25 +2334,25 @@ ec_get(lList **event_list, bool exit_on_qmaster_down)
          if ((fetch_ok = get_event_list(sync, &report_list,&commlib_error))) {
             lList *new_events = NULL;
             lXchgList(lFirst(report_list), REP_list, &new_events);
-            report_list = lFreeList(report_list);
+            lFreeList(&report_list);
             if (!ck_event_number(new_events, &next_event, &wrong_number)) {
                /*
                 *  may be we got an old event, that was sent before
                 *  reregistration at qmaster
                 */
-               *event_list = lFreeList(*event_list);
-               new_events = lFreeList(new_events);
+               lFreeList(event_list);
+               lFreeList(&new_events);
                ec_mark4registration();
                ret = false;
                done = true;
                continue;
             }
 
-            DPRINTF(("got %d events till "u32"\n", 
+            DPRINTF(("got %d events till "sge_u32"\n", 
                      lGetNumberOfElem(new_events), next_event-1));
 
             if (*event_list != NULL) {
-               lAddList(*event_list, new_events);
+               lAddList(*event_list, &new_events);
             } else {
                *event_list = new_events;
             }
@@ -2390,7 +2387,7 @@ ec_get(lList **event_list, bool exit_on_qmaster_down)
             DPRINTF(("SGE_EM_TIMEOUT reached\n"));
             ret = false;
          } else {
-            DPRINTF(("SGE_EM_TIMEOUT in "U32CFormat" seconds\n", u32c(last_fetch_ok_time + timeout - now) ));
+            DPRINTF(("SGE_EM_TIMEOUT in "sge_U32CFormat" seconds\n", sge_u32c(last_fetch_ok_time + timeout - now) ));
          }
 
          /* check for communicaton error */
@@ -2407,7 +2404,7 @@ ec_get(lList **event_list, bool exit_on_qmaster_down)
          }
       } else {
          /* set last_fetch_ok_time, because we had success */
-         last_fetch_ok_time = sge_get_gmt();
+         last_fetch_ok_time = (time_t)sge_get_gmt();
 
          /* send an ack to the qmaster for all received events */
          if (sge_send_ack_to_qmaster(0, ACK_EVENT_DELIVERY, next_event - 1,
@@ -2500,7 +2497,7 @@ ck_event_number(lList *lp, u_long32 *waiting_for, u_long32 *wrong_number)
       /* got a dummy event list for alive protocol */
       DPRINTF(("received empty event list\n"));
    } else {
-      DPRINTF(("Checking %d events (" u32"-"u32 ") while waiting for #"u32"\n",
+      DPRINTF(("Checking %d events (" sge_u32"-"sge_u32 ") while waiting for #"sge_u32"\n",
             lGetNumberOfElem(lp), 
             lGetUlong(lFirst(lp), ET_number),
             lGetUlong(lLast(lp), ET_number),
@@ -2514,7 +2511,7 @@ ck_event_number(lList *lp, u_long32 *waiting_for, u_long32 *wrong_number)
             *wrong_number = j;
 
          ERROR((SGE_EVENT, MSG_EVENT_HIGHESTEVENTISXWHILEWAITINGFORY_UU , 
-                     u32c(j), u32c(i)));
+                     sge_u32c(j), sge_u32c(i)));
       }
 
       /* ensure number of first event is lower or equal "waiting_for" */
@@ -2524,7 +2521,7 @@ ck_event_number(lList *lp, u_long32 *waiting_for, u_long32 *wrong_number)
             *wrong_number = j;
          }   
          ERROR((SGE_EVENT, MSG_EVENT_SMALLESTEVENTXISGRTHYWAITFOR_UU,
-                  u32c(j), u32c(i)));
+                  sge_u32c(j), sge_u32c(i)));
          ret = false;
       } else {
 
@@ -2534,7 +2531,7 @@ ck_event_number(lList *lp, u_long32 *waiting_for, u_long32 *wrong_number)
          ep = lFirst(lp);
          while (ep && lGetUlong(ep, ET_number) < i) {
             tmp = lNext(ep);
-            lRemoveElem(lp, ep);
+            lRemoveElem(lp, &ep);
             ep = tmp;
             skipped++;
          }

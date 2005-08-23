@@ -83,6 +83,8 @@ int me_who
    sigdelset(&default_mask, SIGTTIN);
    sigdelset(&default_mask, SIGTTOU);
    sigdelset(&default_mask, SIGFPE);
+/* Allow SIGTRAP for debuggin purpose */
+   sigdelset(&default_mask, SIGTRAP); 
 #if !(defined(CRAY) || defined(NECSX4) || defined(NECSX5))
    sigdelset(&default_mask, SIGVTALRM);
    sigdelset(&default_mask, SIGPROF);
@@ -118,6 +120,8 @@ int me_who
    sigdelset(&io_mask, SIGTTIN);
    sigdelset(&io_mask, SIGTTOU);
    sigdelset(&io_mask, SIGFPE);
+/* Allow SIGTRAP for debuggin purpose */
+   sigdelset(&io_mask, SIGTRAP);
 #if !( defined(CRAY) || defined(NECSX4) || defined(NECSX5) )
    sigdelset(&io_mask, SIGVTALRM);
    sigdelset(&io_mask, SIGPROF);
@@ -191,15 +195,16 @@ static void sge_alarmclock(int dummy)
 /***************************************************************************/
 static void sge_terminate(int dummy)
 {
+   /* set shut-me-down variable */
+   shut_me_down = 1;
+
+   /* inform commlib to ignore all timeouts */
+   cl_com_ignore_timeouts(CL_TRUE);
+
+   /* This is not the best way to shut down a process. 
+      TODO: remove the exit call, applications should check shut_me_down */
    if (!in_main_loop) {
-      cl_com_ignore_timeouts(CL_TRUE);
-      cl_com_cleanup_commlib();
-      /* leave_commd() */
       exit(1);
-   }
-   else {
-      cl_com_ignore_timeouts(CL_TRUE);
-      shut_me_down = 1;
    }
 }
 

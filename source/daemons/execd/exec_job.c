@@ -39,10 +39,6 @@
 #include <stdlib.h>
 #include <signal.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif  
-
 #ifdef __sgi
 #   include <sys/schedctl.h>
 #endif
@@ -282,6 +278,8 @@ char *err_str
    lList *environmentList = NULL;
    const char *arch = sge_get_arch();
    sigset_t sigset, sigset_oset;
+   struct passwd pw_struct;
+   char buffer[2048];
 
    int write_osjob_id = 1;
 
@@ -293,6 +291,13 @@ char *err_str
       u_long32 job_id;
       u_long32 ja_task_id;
       const char *pe_task_id = NULL;
+
+      char* shell_start_mode = NULL;
+      char* pag_cmd = NULL;
+      char* notify_kill = NULL;
+      char* notify_susp = NULL;
+      char* shepherd_cmd = NULL;
+      char* set_token_cmd = NULL;
 
       DENTER(TOP_LAYER, "sge_exec_job");
 
@@ -322,7 +327,7 @@ char *err_str
          return -2;
       } 
 
-      pw = sge_getpwnam(lGetString(jep, JB_owner));
+      pw = sge_getpwnam_r(lGetString(jep, JB_owner), &pw_struct, buffer, sizeof(buffer));
       if (!pw) {
          sprintf(err_str, MSG_SYSTEM_GETPWNAMFAILED_S, lGetString(jep, JB_owner));
          DEXIT;
@@ -367,8 +372,7 @@ char *err_str
       /* JG: TODO: create function write_pe_hostfile() */
       /* JG: TODO (254) use function sge_get_active_job.... */
       if (petep == NULL) {
-         if (processor_set)
-            processor_set = lFreeList(processor_set);
+         lFreeList(&processor_set);
 
          sprintf(hostfilename, "%s/%s/%s", execd_spool_dir, active_dir_buffer, PE_HOSTFILE);
          fp = fopen(hostfilename, "w");
@@ -406,9 +410,9 @@ char *err_str
                host_slots += slots;
                if (q_set && strcasecmp(q_set, "UNDEFINED")) {
                   range_list_parse_from_string(&processor_set, &alp, q_set,
-                                               0, 0, INF_ALLOWED);
-                  if (lGetNumberOfElem(alp))
-                     alp = lFreeList(alp);
+                                               false, false, INF_ALLOWED);
+                  /* TODO: should we not print the answerlist in case of an error? */
+                  lFreeList(&alp);
                }
             }
          }
@@ -426,14 +430,6 @@ char *err_str
          return -2;        /* general */
       }
       
-      /* write inherited environment first, to be sure that some task specific variables
-      ** will be overridden
-      */
-      {
-         char buffer[2048];
-         sprintf(buffer, "%s:/usr/local/bin:/usr/ucb:/bin:/usr/bin:", tmpdir);
-         var_list_set_string(&environmentList, "PATH", buffer);
-      }
 
       /* write environment of job */
       var_list_copy_env_vars_and_value(&environmentList, 
@@ -447,6 +443,22 @@ char *err_str
                                           VAR_COMPLEX_PREFIX);
       }
      
+      {
+         lListElem *user_path;
+         dstring buffer = DSTRING_INIT;
+         if ((user_path=lGetElemStr(environmentList, VA_variable, "PATH")))
+            sge_dstring_sprintf(&buffer, "%s:%s", tmpdir, lGetString(user_path, VA_value));
+         else
+            sge_dstring_sprintf(&buffer, "%s:/usr/local/bin:/usr/ucb:/bin:/usr/bin:", tmpdir);
+            /*
+             * The default path is insufficient: #6288626 / #1695
+             * irix65: "/usr/sbin:/usr/bsd:/sbin:/usr/bin"
+             * sol-*: "/bin:/usr/bin:/usr/ucb"
+             */
+         var_list_set_string(&environmentList, "PATH", sge_dstring_get_string(&buffer));
+         sge_dstring_free(&buffer);
+      }
+
       /* 1.) try to read cwd from pe task */
       if(petep != NULL) {
          cwd = lGetString(petep, PET_cwd);
@@ -533,7 +545,7 @@ char *err_str
          } else {
             if (lGetString(jep, JB_script_file) != NULL) {
                /* JG: TODO: use some function to create path */
-               sprintf(script_file, "%s/%s/" u32, execd_spool_dir, EXEC_DIR,
+               sprintf(script_file, "%s/%s/" sge_u32, execd_spool_dir, EXEC_DIR,
                        job_id);
             } else {
                /* 
@@ -576,7 +588,7 @@ char *err_str
                token = sge_strtok(buffer, delim);
                while (token != NULL) {
                   if (is_first_token) { 
-                     sge_dstring_sprintf(&new_qrsh_command, "%s/%s/" u32, 
+                     sge_dstring_sprintf(&new_qrsh_command, "%s/%s/" sge_u32, 
                                          execd_spool_dir, EXEC_DIR, job_id); 
                      is_first_token = 0;
                   } else {
@@ -614,7 +626,7 @@ char *err_str
       var_list_set_string(&environmentList, "HOSTNAME", lGetHost(master_q, QU_qhostname));
       var_list_set_string(&environmentList, "QUEUE", lGetString(master_q, QU_qname));
       /* JB: TODO (ENV): shouldn't we better have a SGE_JOB_ID? */
-      var_list_set_u32(&environmentList, "JOB_ID", job_id);
+      var_list_set_sge_u32(&environmentList, "JOB_ID", job_id);
      
       /* JG: TODO (ENV): shouldn't we better use SGE_JATASK_ID and have an additional SGE_PETASK_ID? */
       if (job_is_array(jep)) {
@@ -622,10 +634,10 @@ char *err_str
 
          job_get_submit_task_ids(jep, &start, &end, &step);
 
-         var_list_set_u32(&environmentList, VAR_PREFIX "TASK_ID", ja_task_id);
-         var_list_set_u32(&environmentList, VAR_PREFIX "TASK_FIRST", start);
-         var_list_set_u32(&environmentList, VAR_PREFIX "TASK_LAST", end);
-         var_list_set_u32(&environmentList, VAR_PREFIX "TASK_STEPSIZE", step);
+         var_list_set_sge_u32(&environmentList, VAR_PREFIX "TASK_ID", ja_task_id);
+         var_list_set_sge_u32(&environmentList, VAR_PREFIX "TASK_FIRST", start);
+         var_list_set_sge_u32(&environmentList, VAR_PREFIX "TASK_LAST", end);
+         var_list_set_sge_u32(&environmentList, VAR_PREFIX "TASK_STEPSIZE", step);
       } else {
          const char *udef = "undefined";
 
@@ -704,7 +716,7 @@ char *err_str
       /* Bugfix: Issuezilla 1300
        * Because this change could break pre-existing installations, it's been
        * made optional. */
-      if (set_lib_path) {
+      if (mconf_get_set_lib_path()) {
          /* If we're supposed to be inheriting the environment from shell that
           * spawned the execd, we end up clobbering the lib path with the
           * following call because what we write out overwrites what gets
@@ -720,7 +732,7 @@ char *err_str
           * execd mostly likely had the SGE lib set in its lib path.  The hassle
           * of checking through the lib path to see if the SGE lib is already
           * set is not worth it, in my opinion. */
-         if (inherit_env) {
+         if (mconf_get_inherit_env()) {
             const char *lib_path_env = var_get_sharedlib_path_name();
             const char *lib_path = sge_getenv(lib_path_env);
 
@@ -754,7 +766,7 @@ char *err_str
       sprintf(fname, "%s/config", active_dir_buffer);
       fp = fopen(fname, "w");
       if (!fp) {
-         lFreeList(environmentList);
+         lFreeList(&environmentList);
          sprintf(err_str, MSG_FILE_NOOPEN_SS, fname, strerror(errno));
          DEXIT;
          return -2;
@@ -769,11 +781,11 @@ char *err_str
          lList *alp = NULL;
          gid_t temp_id;
          char str_id[256];
-         
+         char* gid_range = NULL;
    #     if defined(LINUX)
 
          if (!sup_groups_in_proc()) {
-            lFreeList(environmentList);
+            lFreeList(&environmentList);
             sprintf(err_str, MSG_EXECD_NOSGID); 
             fclose(fp);
             DEXIT;
@@ -781,15 +793,17 @@ char *err_str
          }
 
    #     endif
-         
+       
          /* parse range add create list */
-         DPRINTF(("gid_range = %s\n", conf.gid_range));
-         range_list_parse_from_string(&rlp, &alp, conf.gid_range,
+         gid_range = mconf_get_gid_range();
+         DPRINTF(("gid_range = %s\n", gid_range));
+         range_list_parse_from_string(&rlp, &alp, gid_range,
                                       0, 0, INF_NOT_ALLOWED);
+         FREE(gid_range);
          if (rlp == NULL) {
-             lFreeList(alp);
+             lFreeList(&alp);
              sprintf(err_str, MSG_EXECD_NOPARSEGIDRANGE);
-             lFreeList(environmentList);
+             lFreeList(&environmentList);
              fclose(fp);
              DEXIT;
              return (-2);
@@ -802,7 +816,7 @@ char *err_str
             last_addgrpid = get_next_addgrpid (rlp, last_addgrpid);
             if (temp_id == last_addgrpid) {
                sprintf(err_str, MSG_EXECD_NOADDGID);
-               lFreeList(environmentList);
+               lFreeList(&environmentList);
                fclose(fp);
                DEXIT;
                return (-1);
@@ -818,8 +832,8 @@ char *err_str
             lSetString(petep, PET_osjobid, str_id);
          }
          
-         lFreeList(rlp);
-         lFreeList(alp);
+         lFreeList(&rlp);
+         lFreeList(&alp);
 
       }
 
@@ -968,8 +982,8 @@ char *err_str
    fprintf(fp, "shell_path=%s\n", shell_path);
    fprintf(fp, "script_file=%s\n", script_file);
    fprintf(fp, "job_owner=%s\n", lGetString(jep, JB_owner));
-   fprintf(fp, "min_gid=" u32 "\n", conf.min_gid);
-   fprintf(fp, "min_uid=" u32 "\n", conf.min_uid);
+   fprintf(fp, "min_gid=" sge_u32 "\n", mconf_get_min_gid());
+   fprintf(fp, "min_uid=" sge_u32 "\n", mconf_get_min_uid());
    
    /* do path substitutions also for cwd */
    if ((cp = expand_path(cwd, job_id, job_is_array(jep) ? ja_task_id : 0,
@@ -992,12 +1006,17 @@ char *err_str
 
    /* do not start prolog/epilog in case of pe tasks */
    if(petep == NULL) {
+      char* prolog = mconf_get_prolog();
+      char* epilog = mconf_get_epilog();
+
       fprintf(fp, "prolog=%s\n", 
               ((cp=lGetString(master_q, QU_prolog)) && strcasecmp(cp, "none"))?
-              cp: conf.prolog);
+              cp: prolog);
       fprintf(fp, "epilog=%s\n", 
               ((cp=lGetString(master_q, QU_epilog)) && strcasecmp(cp, "none"))?
-              cp: conf.epilog);
+              cp: epilog);
+      FREE(prolog);
+      FREE(epilog);
    } else {
       fprintf(fp, "prolog=%s\n", "none");
       fprintf(fp, "epilog=%s\n", "none");
@@ -1027,6 +1046,10 @@ char *err_str
                                        lGetString(pep, PE_start_proc_args):"none");
       fprintf(fp, "pe_stop=%s\n",   pep != NULL && lGetString(pep, PE_stop_proc_args)?
                                        lGetString(pep, PE_stop_proc_args):"none");
+#ifdef SGE_PQS_API
+      fprintf(fp, "pe_qsort=%s\n",   pep != NULL && lGetString(pep, PE_qsort_args)?
+                                       lGetString(pep, PE_qsort_args):"none");
+#endif
 
       /* build path for stdout of pe scripts */
       sge_get_path(lGetList(jep, JB_stdout_path_list), cwd, 
@@ -1046,10 +1069,11 @@ char *err_str
                    SGE_PAR_STDERR, pe_stderr_path);
       fprintf(fp, "pe_stderr_path=%s\n", pe_stderr_path);
    }
-
+  
+   shell_start_mode = mconf_get_shell_start_mode(); 
    fprintf(fp, "shell_start_mode=%s\n", 
-           job_get_shell_start_mode(jep, master_q, conf.shell_start_mode));
-
+         job_get_shell_start_mode(jep, master_q, shell_start_mode));
+   FREE(shell_start_mode);
    /* we need the basename for loginshell test */
    shell = strrchr(shell_path, '/');
    if (!shell)
@@ -1062,18 +1086,18 @@ char *err_str
    /* the following values are needed by the reaper */
    if (mailrec_unparse(lGetList(jep, JB_mail_list), 
             mail_str, sizeof(mail_str))) {
-      ERROR((SGE_EVENT, MSG_MAIL_MAILLISTTOOLONG_U, u32c(job_id)));
+      ERROR((SGE_EVENT, MSG_MAIL_MAILLISTTOOLONG_U, sge_u32c(job_id)));
    }
    fprintf(fp, "mail_list=%s\n", mail_str);
-   fprintf(fp, "mail_options=" u32 "\n", lGetUlong(jep, JB_mail_options));
-   fprintf(fp, "forbid_reschedule=%d\n", forbid_reschedule);
-   fprintf(fp, "forbid_apperror=%d\n", forbid_apperror);
+   fprintf(fp, "mail_options=" sge_u32 "\n", lGetUlong(jep, JB_mail_options));
+   fprintf(fp, "forbid_reschedule=%d\n", mconf_get_forbid_reschedule());
+   fprintf(fp, "forbid_apperror=%d\n", mconf_get_forbid_apperror());
    fprintf(fp, "queue=%s\n", lGetString(master_q, QU_qname));
    fprintf(fp, "host=%s\n", lGetHost(master_q, QU_qhostname));
    {
       dstring range_string = DSTRING_INIT;
 
-      range_list_print_to_string(processor_set, &range_string, 1);
+      range_list_print_to_string(processor_set, &range_string, true);
       fprintf(fp, "processors=%s", sge_dstring_get_string(&range_string)); 
       sge_dstring_free(&range_string);
    }
@@ -1083,23 +1107,23 @@ char *err_str
    } else {
       fprintf(fp, "job_name=%s\n", lGetString(jep, JB_job_name));
    }
-   fprintf(fp, "job_id="u32"\n", job_id);
-   fprintf(fp, "ja_task_id="u32"\n", job_is_array(jep) ? ja_task_id : 0);
+   fprintf(fp, "job_id="sge_u32"\n", job_id);
+   fprintf(fp, "ja_task_id="sge_u32"\n", job_is_array(jep) ? ja_task_id : 0);
    if(petep != NULL) {
       fprintf(fp, "pe_task_id=%s\n", pe_task_id);
    }
    fprintf(fp, "account=%s\n", (lGetString(jep, JB_account) ? lGetString(jep, JB_account) : DEFAULT_ACCOUNT));
    if(petep != NULL) {
-      fprintf(fp, "submission_time=" u32 "\n", lGetUlong(petep, PET_submission_time));
+      fprintf(fp, "submission_time=" sge_u32 "\n", lGetUlong(petep, PET_submission_time));
    } else {
-      fprintf(fp, "submission_time=" u32 "\n", lGetUlong(jep, JB_submission_time));
+      fprintf(fp, "submission_time=" sge_u32 "\n", lGetUlong(jep, JB_submission_time));
    }
 
    {
       u_long32 notify = 0;
       if (lGetBool(jep, JB_notify))
          parse_ulong_val(NULL, &notify, TYPE_TIM, lGetString(master_q, QU_notify), NULL, 0);
-      fprintf(fp, "notify=" u32 "\n", notify);
+      fprintf(fp, "notify=" sge_u32 "\n", notify);
    }
    
    /*
@@ -1116,21 +1140,26 @@ char *err_str
       if (!(JOB_TYPE_IS_QLOGIN(jb_now) || 
            JOB_TYPE_IS_QRSH(jb_now) || 
            JOB_TYPE_IS_QRLOGIN(jb_now))) {
+         char* xterm = mconf_get_xterm();
+         DPRINTF(("interactive job\n"));
          /*
          ** get xterm configuration value
          */
-         if (conf.xterm) {
-            fprintf(fp, "exec_file=%s\n", conf.xterm);
+
+         if (xterm) {
+            fprintf(fp, "exec_file=%s\n", xterm);
+            DPRINTF(("exec_file=%s\n", xterm));
          } else {
             sprintf(err_str, MSG_EXECD_NOXTERM); 
             fclose(fp);
-            lFreeList(environmentList);
+            lFreeList(&environmentList);
             DEXIT;
             return -2;
             /*
             ** this causes a general failure
             */
          }
+         FREE(xterm);
       }
    }
 
@@ -1194,8 +1223,8 @@ char *err_str
             if(error_string != NULL) {
                sprintf(err_str, error_string);
             }
-            lFreeList(answer_list);
-            lFreeList(environmentList);
+            lFreeList(&answer_list);
+            lFreeList(&environmentList);
             fclose(fp);
             DEXIT;
             return -1;
@@ -1205,35 +1234,44 @@ char *err_str
 
    
    if (arch_dep_config(fp, cplx, err_str)) {
-      lFreeList(environmentList);
+      lFreeList(&environmentList);
       fclose(fp);
       DEXIT;
       return -2;
    } 
 
    /* if "pag_cmd" is not set, do not use AFS setup for this host */
-   if (feature_is_enabled(FEATURE_AFS_SECURITY) && conf.pag_cmd &&
-       strlen(conf.pag_cmd) && strcasecmp(conf.pag_cmd, "none")) {
+   pag_cmd = mconf_get_pag_cmd();
+   if (feature_is_enabled(FEATURE_AFS_SECURITY) && pag_cmd &&
+       strlen(pag_cmd) && strcasecmp(pag_cmd, "none")) {
       fprintf(fp, "use_afs=1\n");
       
       shepherd_name = SGE_COSHEPHERD;
       sprintf(coshepherd_path, "%s/%s/%s", bootstrap_get_binary_path(), sge_get_arch(), shepherd_name);
       fprintf(fp, "coshepherd=%s\n", coshepherd_path);
-      fprintf(fp, "set_token_cmd=%s\n", conf.set_token_cmd ? conf.set_token_cmd : "none");
-      fprintf(fp, "token_extend_time=%d\n", (int) conf.token_extend_time);
+      set_token_cmd = mconf_get_set_token_cmd();
+      fprintf(fp, "set_token_cmd=%s\n", set_token_cmd ? set_token_cmd : "none");
+      FREE(set_token_cmd);
+      fprintf(fp, "token_extend_time=%d\n", (int) mconf_get_token_extend_time());
    }
-   else
+   else {
       fprintf(fp, "use_afs=0\n");
+   }
+   FREE(pag_cmd);
 
    fprintf(fp, "admin_user=%s\n", bootstrap_get_admin_user());
 
    /* notify method */
-   fprintf(fp, "notify_kill_type=%d\n", notify_kill_type);
+   fprintf(fp, "notify_kill_type=%d\n", mconf_get_notify_kill_type());
+   notify_kill = mconf_get_notify_kill();
    fprintf(fp, "notify_kill=%s\n", notify_kill?notify_kill:"default");
-   fprintf(fp, "notify_susp_type=%d\n", notify_susp_type);
+   FREE(notify_kill);
+   fprintf(fp, "notify_susp_type=%d\n", mconf_get_notify_susp_type());
+   notify_susp = mconf_get_notify_susp();
    fprintf(fp, "notify_susp=%s\n", notify_susp?notify_susp:"default");   
-   if (use_qsub_gid)
-      fprintf(fp, "qsub_gid="u32"\n", lGetUlong(jep, JB_gid));
+   FREE(notify_susp);
+   if (mconf_get_use_qsub_gid())
+      fprintf(fp, "qsub_gid="sge_u32"\n", lGetUlong(jep, JB_gid));
    else
       fprintf(fp, "qsub_gid=%s\n", "no");
 
@@ -1265,20 +1303,24 @@ char *err_str
          sprintf(daemon, "%s/utilbin/%s/", path_state_get_sge_root(), arch);
         
          if(JOB_TYPE_IS_QLOGIN(jb_now)) {
-            fprintf(fp, "qlogin_daemon=%s\n", conf.qlogin_daemon);
+            char* qlogin_daemon = mconf_get_qlogin_daemon();
+            fprintf(fp, "qlogin_daemon=%s\n", qlogin_daemon);
+            FREE(qlogin_daemon);
          } else {
             if(JOB_TYPE_IS_QRSH(jb_now)) {
+               char* rsh_daemon = mconf_get_rsh_daemon();
                strcat(daemon, "rshd");
-               if(strcasecmp(conf.rsh_daemon, "none") == 0) {
+               if(strcasecmp(rsh_daemon, "none") == 0) {
                   strcat(daemon, " -l");
                   fprintf(fp, "rsh_daemon=%s\n", daemon);
                   write_osjob_id = 0; /* will be done by our rshd */
                } else {
-                  fprintf(fp, "rsh_daemon=%s\n", conf.rsh_daemon);
-                  if(strncmp(daemon, conf.rsh_daemon, strlen(daemon)) == 0) {
+                  fprintf(fp, "rsh_daemon=%s\n", rsh_daemon);
+                  if(strncmp(daemon, rsh_daemon, strlen(daemon)) == 0) {
                      write_osjob_id = 0; /* will be done by our rshd */
                   }
                }
+               FREE(rsh_daemon);
 
                fprintf(fp, "qrsh_tmpdir=%s\n", tmpdir);
 
@@ -1289,17 +1331,19 @@ char *err_str
                }
             } else {
                if(JOB_TYPE_IS_QRLOGIN(jb_now)) {
+                  char* rlogin_daemon = mconf_get_rlogin_daemon();
                   strcat(daemon, "rlogind");
-                  if(strcasecmp(conf.rlogin_daemon, "none") == 0) {
+                  if(strcasecmp(rlogin_daemon, "none") == 0) {
                      strcat(daemon, " -l");
                      fprintf(fp, "rlogin_daemon=%s\n", daemon);
                      write_osjob_id = 0; /* will be done by our rlogind */
                   } else {   
-                     fprintf(fp, "rlogin_daemon=%s\n", conf.rlogin_daemon);
-                     if(strncmp(daemon, conf.rlogin_daemon, strlen(daemon)) == 0) {
+                     fprintf(fp, "rlogin_daemon=%s\n", rlogin_daemon);
+                     if(strncmp(daemon, rlogin_daemon, strlen(daemon)) == 0) {
                         write_osjob_id = 0; /* will be done by our rlogind */
                      }
                   }   
+                  FREE(rlogin_daemon);
                }
             }
          }   
@@ -1310,9 +1354,12 @@ char *err_str
    fprintf(fp, "write_osjob_id=%d\n", write_osjob_id);
    
    /* should the job inherit the execd's environment */
-   fprintf(fp, "inherit_env=%d", (int)inherit_env);
+   fprintf(fp, "inherit_env=%d\n", (int)mconf_get_inherit_env());
 
-   lFreeList(environmentList);
+   /* should a windows exec daemon use domain users */
+   fprintf(fp, "enable_windomacc=%d", (int)mconf_get_enable_windomacc());
+
+   lFreeList(&environmentList);
    fclose(fp);
    /********************** finished writing config ************************/
 
@@ -1346,25 +1393,31 @@ char *err_str
       }
    }
 
-   if (conf.shepherd_cmd && strlen(conf.shepherd_cmd) &&
-       strcasecmp(conf.shepherd_cmd, "none")) {
-      if (SGE_STAT(conf.shepherd_cmd, &buf)) {
-         sprintf(err_str, MSG_EXECD_NOSHEPHERDWRAP_SS, conf.shepherd_cmd, strerror(errno));
+   pag_cmd = mconf_get_pag_cmd();
+   shepherd_cmd = mconf_get_shepherd_cmd();
+   if (shepherd_cmd && strlen(shepherd_cmd) &&
+       strcasecmp(shepherd_cmd, "none")) {
+      if (SGE_STAT(shepherd_cmd, &buf)) {
+         sprintf(err_str, MSG_EXECD_NOSHEPHERDWRAP_SS, shepherd_cmd, strerror(errno));
+         FREE(pag_cmd);
+         FREE(shepherd_cmd);
          DEXIT;
          return -2;
       }
    }
-   else if (do_credentials && feature_is_enabled(FEATURE_DCE_SECURITY)) {
+   else if (mconf_get_do_credentials() && feature_is_enabled(FEATURE_DCE_SECURITY)) {
       sprintf(dce_wrapper_cmd, "/%s/utilbin/%s/starter_cred",
               path_state_get_sge_root(), arch);
       if (SGE_STAT(dce_wrapper_cmd, &buf)) {
          sprintf(err_str, MSG_DCE_NOSHEPHERDWRAP_SS, dce_wrapper_cmd, strerror(errno));
+         FREE(pag_cmd);
+         FREE(shepherd_cmd);
          DEXIT;
          return -2;
       }
    }
-   else if (feature_is_enabled(FEATURE_AFS_SECURITY) && conf.pag_cmd &&
-            strlen(conf.pag_cmd) && strcasecmp(conf.pag_cmd, "none")) {
+   else if (feature_is_enabled(FEATURE_AFS_SECURITY) && pag_cmd &&
+            strlen(pag_cmd) && strcasecmp(pag_cmd, "none")) {
       int fd, len;
       const char *cp;
 
@@ -1373,21 +1426,29 @@ char *err_str
          sprintf(coshepherd_path, "%s/%s", bootstrap_get_binary_path(), shepherd_name);
          if (SGE_STAT(coshepherd_path, &buf)) {
             sprintf(err_str, MSG_EXECD_NOCOSHEPHERD_SSS, arch, coshepherd_path, strerror(errno));
+            FREE(pag_cmd);
+            FREE(shepherd_cmd);
             DEXIT;
             return -2;
          }
       }
-      if (!conf.set_token_cmd ||
-          !strlen(conf.set_token_cmd) || !conf.token_extend_time) {
+      set_token_cmd = mconf_get_set_token_cmd();
+      if (!set_token_cmd ||
+          !strlen(set_token_cmd) || !mconf_get_token_extend_time()) {
          sprintf(err_str, MSG_EXECD_AFSCONFINCOMPLETE);
+         FREE(pag_cmd);
+         FREE(shepherd_cmd);
          DEXIT;
          return -2;
       }
+      FREE(set_token_cmd);
 
    /* JG: TODO (254) use function sge_get_active_job.... */
       sprintf(fname, "%s/%s", active_dir_buffer, TOKEN_FILE);
-      if ((fd = open(fname, O_RDWR | O_CREAT | O_TRUNC, 0600)) == -1) {
+      if ((fd = SGE_OPEN3(fname, O_RDWR | O_CREAT | O_TRUNC, 0600)) == -1) {
          sprintf(err_str, MSG_EXECD_NOCREATETOKENFILE_S, strerror(errno));
+         FREE(pag_cmd);
+         FREE(shepherd_cmd);
          DEXIT;
          return -2;
       }   
@@ -1395,16 +1456,22 @@ char *err_str
       cp = lGetString(jep, JB_tgt);
       if (!cp || !(len = strlen(cp))) {
          sprintf(err_str, MSG_EXECD_TOKENZERO);
+         FREE(pag_cmd);
+         FREE(shepherd_cmd);
          DEXIT;
          return -3; /* problem of this user */
       }
       if (write(fd, cp, len) != len) {
          sprintf(err_str, MSG_EXECD_NOWRITETOKEN_S, strerror(errno));
+         FREE(pag_cmd);
+         FREE(shepherd_cmd);
          DEXIT;
          return -2;
       }
       close(fd);
    }
+   FREE(pag_cmd);
+   FREE(shepherd_cmd);
 
    /* send mail to users if requested */
    if(petep == NULL) {
@@ -1414,24 +1481,24 @@ char *err_str
 
       mail_users = lGetList(jep, JB_mail_list);
       mail_options = lGetUlong(jep, JB_mail_options);
-      strcpy(sge_mail_start, sge_ctime(lGetUlong(jatep, JAT_start_time), &ds));
+      strcpy(sge_mail_start, sge_ctime((time_t)lGetUlong(jatep, JAT_start_time), &ds));
       if (VALID(MAIL_AT_BEGINNING, mail_options)) {
          if (job_is_array(jep)) {
-            sprintf(sge_mail_subj, MSG_MAIL_STARTSUBJECT_UUS, u32c(job_id),
-                    u32c(ja_task_id), lGetString(jep, JB_job_name));
+            sprintf(sge_mail_subj, MSG_MAIL_STARTSUBJECT_UUS, sge_u32c(job_id),
+                    sge_u32c(ja_task_id), lGetString(jep, JB_job_name));
             sprintf(sge_mail_body, MSG_MAIL_STARTBODY_UUSSSSS,
-                u32c(job_id),
-                u32c(ja_task_id),
+                sge_u32c(job_id),
+                sge_u32c(ja_task_id),
                 lGetString(jep, JB_job_name),
                 lGetString(jep, JB_owner), 
                 lGetString(master_q, QU_qname),
                 lGetHost(master_q, QU_qhostname), sge_mail_start);
          } 
          else {
-            sprintf(sge_mail_subj, MSG_MAIL_STARTSUBJECT_US, u32c(job_id),
+            sprintf(sge_mail_subj, MSG_MAIL_STARTSUBJECT_US, sge_u32c(job_id),
                lGetString(jep, JB_job_name));
             sprintf(sge_mail_body, MSG_MAIL_STARTBODY_USSSSS,
-                u32c(job_id),
+                sge_u32c(job_id),
                 lGetString(jep, JB_job_name),
                 lGetString(jep, JB_owner),
                 lGetString(master_q, QU_qname),
@@ -1523,30 +1590,41 @@ char *err_str
        lGetString(jep, JB_cred)) {
 
       char ccname[1024];
-      sprintf(ccname, "KRB5CCNAME=FILE:/tmp/krb5cc_%s_" u32, "sge",
+      sprintf(ccname, "KRB5CCNAME=FILE:/tmp/krb5cc_%s_" sge_u32, "sge",
 	      job_id);
       putenv(ccname);
    }
 
+#if defined(INTERIX)
+   /*
+    * In Interix, we have to start the shepherd as Administrator,
+    * because there seems to be some bug with inheriting euid
+    * over a fork.
+    */
+   seteuid(SGE_SUPERUSER_UID);
+#endif
+
    DPRINTF(("**********************CHILD*********************\n"));
    shepherd_name = SGE_SHEPHERD;
-   sprintf(ps_name, "%s-"u32, shepherd_name, job_id);
+   sprintf(ps_name, "%s-"sge_u32, shepherd_name, job_id);
 
-   if (conf.shepherd_cmd && strlen(conf.shepherd_cmd) && 
-      strcasecmp(conf.shepherd_cmd, "none")) {
+   pag_cmd = mconf_get_pag_cmd();
+   shepherd_cmd = mconf_get_shepherd_cmd();
+   if (shepherd_cmd && strlen(shepherd_cmd) && 
+      strcasecmp(shepherd_cmd, "none")) {
       DPRINTF(("CHILD - About to exec shepherd wrapper job ->%s< under queue -<%s<\n", 
               lGetString(jep, JB_job_name), 
               lGetString(master_q, QU_full_name)));
-      execlp(conf.shepherd_cmd, ps_name, NULL);
+      execlp(mconf_get_shepherd_cmd(), ps_name, NULL);
    }
-   else if (do_credentials && feature_is_enabled(FEATURE_DCE_SECURITY)) {
+   else if (mconf_get_do_credentials() && feature_is_enabled(FEATURE_DCE_SECURITY)) {
       DPRINTF(("CHILD - About to exec DCE shepherd wrapper job ->%s< under queue -<%s<\n", 
               lGetString(jep, JB_job_name), 
               lGetString(master_q, QU_full_name)));
       execlp(dce_wrapper_cmd, ps_name, NULL);
    }
-   else if (!feature_is_enabled(FEATURE_AFS_SECURITY) || !conf.pag_cmd ||
-            !strlen(conf.pag_cmd) || !strcasecmp(conf.pag_cmd, "none")) {
+   else if (!feature_is_enabled(FEATURE_AFS_SECURITY) || !pag_cmd ||
+            !strlen(pag_cmd) || !strcasecmp(pag_cmd, "none")) {
       DPRINTF(("CHILD - About to exec ->%s< under queue -<%s<\n",
               lGetString(jep, JB_job_name), 
               lGetString(master_q, QU_full_name)));
@@ -1566,15 +1644,18 @@ char *err_str
       else
         sprintf(commandline, "exec %s -bg", shepherd_path);
 
-      execlp(conf.pag_cmd, conf.pag_cmd, "-c", commandline, NULL);
+      execlp(pag_cmd, pag_cmd, "-c", commandline, NULL);
    }
+   FREE(pag_cmd);
+   FREE(shepherd_cmd);
+
 
    /*---------------------------------------------------*/
    /* exec() failed - do what shepherd does if it fails */
 
    fp = fopen("error", "w");
    if (fp) {
-      fprintf(fp, "failed to exec shepherd for job" u32"\n", job_id);
+      fprintf(fp, "failed to exec shepherd for job" sge_u32"\n", job_id);
       fclose(fp);
    }
 
@@ -1598,37 +1679,43 @@ char *err_str
 static int ck_login_sh(
 char *shell 
 ) {
-   char *cp;
+   char* cp;
+   char* login_shells;
    int ret; 
 
    DENTER(TOP_LAYER, "ck_login_sh");
 
-   cp = conf.login_shells;
+   login_shells = mconf_get_login_shells();
   
-   if (!cp) {
+   if (login_shells == NULL) {
       DEXIT; 
       return 0;
-   }   
+   }  
+
+   cp = login_shells; 
 
    while (*cp) {
 
       /* skip delimiters */
-      while (*cp && ( *cp == ',' || *cp == ' ' || *cp == '\t'))
+      while (*cp && ( *cp == ',' || *cp == ' ' || *cp == '\t')) {
          cp++;
+      }
    
       ret = strncmp(cp, shell, strlen(shell));
       DPRINTF(("strncmp(\"%s\", \"%s\", %d) = %d\n",
               cp, shell, strlen(shell), ret));
       if (!ret) {
+         FREE(login_shells);
          DEXIT;  
          return 1;
       }
 
       /* skip name of shell, proceed until next delimiter */
-      while (*cp && *cp != ',' && *cp != ' ' && *cp != '\t')
+      while (*cp && *cp != ',' && *cp != ' ' && *cp != '\t') {
           cp++;
+      }
    }
-
+  FREE(login_shells);
   DEXIT;
   return 0;
 }
@@ -1650,13 +1737,13 @@ lList *gdil_orig  /* JG_Type */
       where = lWhere("%T(!(%I h= %s))", JG_Type, JG_qhostname, 
               lGetHost(ep, JG_qhostname));
       if (!where) {
-         lFreeList(gdil_copy);
+         lFreeList(&gdil_copy);
          CRITICAL((SGE_EVENT, MSG_EXECD_NOWHERE4GDIL_S,"JG_qhostname"));
          DEXIT;
          return -1;
       }
       gdil_copy = lSelectDestroy(gdil_copy, where);   
-      lFreeWhere(where);
+      lFreeWhere(&where);
 
       nhosts++;
    }

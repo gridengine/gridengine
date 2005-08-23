@@ -33,10 +33,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif   
-
 #include "sgermon.h"
 #include "sge_log.h"
 
@@ -116,7 +112,7 @@ static object_description object_base[SGE_TYPE_ALL] = {
    { &Master_Project_List,         NULL,           NULL,                 "PROJECT",           UP_Type,   UP_name           },
    { &Master_CQueue_List,          NULL,           NULL,                 "CQUEUE",            CQ_Type,   CQ_name           },
    { NULL,                         NULL,           NULL,                 "QINSTANCE",         QU_Type,   QU_qname          },
-   { NULL,                 sconf_get_config_list, sconf_validate_config_, "SCHEDD_CONF",      SC_Type,   NoName            },
+   { NULL,                         NULL,         sconf_validate_config_, "SCHEDD_CONF",       SC_Type,   NoName            },
    { NULL,                         NULL,           NULL,                 "SCHEDD_MONITOR",    NULL,      NoName            },
    { NULL,                         NULL,           NULL,                 "SHUTDOWN",          NULL,      NoName            },
    { NULL,                         NULL,           NULL,                 "QMASTER_GOES_DOWN", NULL,      NoName            },
@@ -547,7 +543,7 @@ object_append_raw_field_to_dstring(const lListElem *object, lList **answer_list,
             result = sge_dstring_sprintf_append(buffer, "%lf", lGetPosDouble(object, pos));
             break;
          case lUlongT:
-            result = sge_dstring_sprintf_append(buffer, U32CFormat, lGetPosUlong(object, pos));
+            result = sge_dstring_sprintf_append(buffer, sge_U32CFormat, lGetPosUlong(object, pos));
             break;
          case lLongT:
             result = sge_dstring_sprintf_append(buffer, "%ld", lGetPosLong(object, pos));
@@ -942,8 +938,8 @@ object_set_range_id(lListElem *object, int rnm, u_long32 start, u_long32 end,
       range_elem = lCreateElem(RN_Type);
       range_list = lCreateList("task_id_range", RN_Type);
       if (range_elem == NULL || range_list == NULL) {
-         range_elem = lFreeElem(range_elem);
-         range_list = lFreeList(range_list);
+         lFreeElem(&range_elem);
+         lFreeList(&range_list);
 
          /* No memory */
          ret = 1;
@@ -1012,7 +1008,8 @@ lList **object_type_get_master_list(const sge_object_type type)
    return ret;
 }
 
-bool object_type_commit_master_list(const sge_object_type type, lList **answer_list) {
+bool object_type_commit_master_list(const sge_object_type type, lList **answer_list) 
+{
    bool ret = true;
    
    DENTER(OBJECT_LAYER, "object_type_set_master_list");
@@ -1060,11 +1057,11 @@ bool object_type_free_master_list(const sge_object_type type)
       ERROR((SGE_EVENT, MSG_OBJECT_INVALID_OBJECT_TYPE_SI, SGE_FUNC, type));
       ret = false;
    } else if (object_base[type].list){
-       *object_base[type].list = lFreeList(*object_base[type].list);
+       lFreeList(object_base[type].list);
        ret = true;
    } else if (object_base[type].getMasterList){
-      lList ** list = object_base[type].getMasterList();
-      *list = lFreeList(*list);
+      lList **list = object_base[type].getMasterList();
+      lFreeList(list);
       ret = object_base[type].commitMasterList(NULL);
    }
 
@@ -1134,9 +1131,9 @@ const char *object_type_get_name(const sge_object_type type)
 sge_object_type object_name_get_type(const char *name)
 {
    sge_object_type ret = SGE_TYPE_ALL;
-   int i;
+   sge_object_type i;
 
-   for (i = 0; i < SGE_TYPE_ALL; i++) {
+   for (i = SGE_TYPE_ADMINHOST; i < SGE_TYPE_ALL; i++) {
       int length = strlen(object_base[i].type_name);
 
       if (!strncasecmp(object_base[i].type_name, name, length)) {
@@ -1144,6 +1141,7 @@ sge_object_type object_name_get_type(const char *name)
          break;
       }
    }
+
    return ret;
 }
 
@@ -1342,7 +1340,7 @@ object_parse_list_from_string(lListElem *this_elem, lList **answer_list,
          if (strcasecmp(NONE_STR, first_string)) {
             lSetPosList(this_elem, pos, tmp_list);
          } else {
-            tmp_list = lFreeList(tmp_list);
+            lFreeList(&tmp_list);
          }
       } else {
          answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
@@ -1376,7 +1374,7 @@ object_parse_celist_from_string(lListElem *this_elem, lList **answer_list,
       if (!cull_parse_definition_list((char *)string, &tmp_list, "", CE_Type, rule)) {
          lSetPosList(this_elem, pos, tmp_list);
       } else {
-         tmp_list = lFreeList(tmp_list);
+         lFreeList(&tmp_list);
          answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
                                  ANSWER_QUALITY_ERROR,
                                  MSG_ERRORPARSINGVALUEFORNM_S, string);
@@ -1407,7 +1405,7 @@ object_parse_solist_from_string(lListElem *this_elem, lList **answer_list,
       lString2List(string, &tmp_list, SO_Type, SO_name, ", \t");
       if (tmp_list != NULL) {
          if (!strcasecmp("NONE", lGetString(lFirst(tmp_list), SO_name))) {
-            tmp_list = lFreeList(tmp_list);
+            lFreeList(&tmp_list);
          } else {
             for_each(tmp_elem, tmp_list) {
                const char *queue_value = lGetString(tmp_elem, SO_name);
@@ -1710,47 +1708,47 @@ object_parse_float_from_string(lListElem *this_elem, lList **answer_list,
 bool
 object_set_any_type(lListElem *this_elem, int name, void *value)
 {
-   int ret = true;
+   int cull_ret = 0;
    int pos = lGetPosViaElem(this_elem, name);
    int type = lGetPosType(lGetElemDescr(this_elem), pos);
 
    DENTER(OBJECT_LAYER, "object_set_any_type");
    if (type == lStringT) {
-      ret = lSetPosString(this_elem, pos, *((const char **)value));
+      cull_ret = lSetPosString(this_elem, pos, *((const char **)value));
    } else if (type == lHostT) {
-      ret = lSetPosHost(this_elem, pos, *((const char **)value));
+      cull_ret = lSetPosHost(this_elem, pos, *((const char **)value));
    } else if (type == lUlongT) {
-      ret = lSetPosUlong(this_elem, pos, *((lUlong*)value));
+      cull_ret = lSetPosUlong(this_elem, pos, *((lUlong*)value));
    } else if (type == lDoubleT) {
-      ret = lSetPosDouble(this_elem, pos, *((lDouble*)value));
+      cull_ret = lSetPosDouble(this_elem, pos, *((lDouble*)value));
    } else if (type == lFloatT) {
-      ret = lSetPosFloat(this_elem, pos, *((lFloat*)value));
+      cull_ret = lSetPosFloat(this_elem, pos, *((lFloat*)value));
    } else if (type == lLongT) {
-      ret = lSetPosLong(this_elem, pos, *((lLong*)value));
+      cull_ret = lSetPosLong(this_elem, pos, *((lLong*)value));
    } else if (type == lCharT) {
-      ret = lSetPosChar(this_elem, pos, *((lChar*)value));
+      cull_ret = lSetPosChar(this_elem, pos, *((lChar*)value));
    } else if (type == lBoolT) {
-      ret = lSetPosBool(this_elem, pos, *((bool*)value));
+      cull_ret = lSetPosBool(this_elem, pos, *((bool*)value));
    } else if (type == lIntT) {
-      ret = lSetPosInt(this_elem, pos, *((int*)value));
+      cull_ret = lSetPosInt(this_elem, pos, *((int*)value));
    } else if (type == lObjectT) {
-      ret = lSetPosObject(this_elem, pos, *((lListElem **)value));
+      cull_ret = lSetPosObject(this_elem, pos, *((lListElem **)value));
    } else if (type == lRefT) {
-      ret = lSetPosRef(this_elem, pos, *((lRef*)value));
+      cull_ret = lSetPosRef(this_elem, pos, *((lRef*)value));
    } else if (type == lListT) {
-      ret = lSetPosList(this_elem, pos, lCopyList("", *((lList **)value)));
+      cull_ret = lSetPosList(this_elem, pos, lCopyList("", *((lList **)value)));
    } else {
       /* not possible */
-      ret = false;
+      cull_ret = -1;
    }
    DEXIT;
-   return ret;
+   return cull_ret == 0 ? true : false;
 }
 
 bool
 object_replace_any_type(lListElem *this_elem, int name, lListElem *org_elem)
 {
-   int ret = true;
+   int cull_ret = 0;
    int out_pos = lGetPosViaElem(this_elem, name);
    int in_pos = lGetPosViaElem(org_elem, name);
    int type = lGetPosType(lGetElemDescr(this_elem), out_pos);
@@ -1759,53 +1757,53 @@ object_replace_any_type(lListElem *this_elem, int name, lListElem *org_elem)
    if (type == lStringT) {
       const char *value = lGetPosString(org_elem, in_pos);
 
-      ret = lSetPosString(this_elem, out_pos, value);
+      cull_ret = lSetPosString(this_elem, out_pos, value);
    } else if (type == lHostT) {
       const char *value = lGetPosHost(org_elem, in_pos);
       
-      ret = lSetPosHost(this_elem, out_pos, value);
+      cull_ret = lSetPosHost(this_elem, out_pos, value);
    } else if (type == lUlongT) {
       u_long32 value = lGetPosUlong(org_elem, in_pos);
    
-      ret = lSetPosUlong(this_elem, out_pos, value);
+      cull_ret = lSetPosUlong(this_elem, out_pos, value);
    } else if (type == lDoubleT) {
       double value = lGetPosDouble(org_elem, in_pos);
    
-      ret = lSetPosDouble(this_elem, out_pos, value);
+      cull_ret = lSetPosDouble(this_elem, out_pos, value);
    } else if (type == lFloatT) {
       float value = lGetPosFloat(org_elem, in_pos);
 
-      ret = lSetPosFloat(this_elem, out_pos, value);
+      cull_ret = lSetPosFloat(this_elem, out_pos, value);
    } else if (type == lLongT) {
       int value = lGetPosLong(org_elem, in_pos);
 
-      ret = lSetPosLong(this_elem, out_pos, value);
+      cull_ret = lSetPosLong(this_elem, out_pos, value);
    } else if (type == lCharT) {
       char value = lGetPosChar(org_elem, in_pos);
 
-      ret = lSetPosChar(this_elem, out_pos, value);
+      cull_ret = lSetPosChar(this_elem, out_pos, value);
    } else if (type == lBoolT) {
-      bool value = lGetPosBool(org_elem, in_pos);
+      bool value = lGetPosBool(org_elem, in_pos) ? true : false;
    
-      ret = lSetPosBool(this_elem, out_pos, value);
+      cull_ret = lSetPosBool(this_elem, out_pos, value);
    } else if (type == lIntT) {
       int value = lGetPosInt(org_elem, in_pos);
       
-      ret = lSetPosInt(this_elem, out_pos, value);
+      cull_ret = lSetPosInt(this_elem, out_pos, value);
    } else if (type == lObjectT) {
       lListElem *value = lGetPosObject(org_elem, in_pos);
       
-      ret = lSetPosObject(this_elem, out_pos, value);
+      cull_ret = lSetPosObject(this_elem, out_pos, value);
    } else if (type == lRefT) {
       void *value = lGetPosRef(org_elem, in_pos);
 
-      ret = lSetPosRef(this_elem, out_pos, value);
+      cull_ret = lSetPosRef(this_elem, out_pos, value);
    } else {
       /* not possible */
-      ret = false;
+      cull_ret = -1;
    }
    DEXIT;
-   return ret;
+   return cull_ret == 0 ? true : false;
 }
 
 void 
@@ -1896,7 +1894,8 @@ attr_mod_sub_list(lList **alpp, lListElem *this_elem, int this_elem_name,
                   fstring = lGetHost(full_element, this_elem_primary_key);
                }
 
-               if (!strcmp(rstring, fstring)) {
+               if (((type == lStringT) && strcmp(rstring, fstring) == 0) ||
+                   ((type == lHostT) && sge_hostcmp(rstring, fstring) == 0)) {
                   lListElem *new_sub_elem;
                   lListElem *old_sub_elem;
 
@@ -1916,15 +1915,15 @@ attr_mod_sub_list(lList **alpp, lListElem *this_elem, int this_elem_name,
                         /* break; No "break" here. It will follow below! */
                      }
 
-                     lFreeElem(old_sub_elem);
+                     lFreeElem(&old_sub_elem);
                      lAppendElem(full_sublist, new_sub_elem);
 
                      restart_loop = 1;
                      break;
                   } else if (sub_command == SGE_GDI_REMOVE) {
 
-                     lFreeElem(old_sub_elem);
-                     lFreeElem(new_sub_elem);
+                     lFreeElem(&old_sub_elem);
+                     lFreeElem(&new_sub_elem);
 
                      restart_loop = 1;
                      break;
@@ -2017,12 +2016,13 @@ attr_mod_sub_list(lList **alpp, lListElem *this_elem, int this_elem_name,
 }
 
 bool 
-object_has_differences(lListElem *this_elem, lList **answer_list,
-                       lListElem *old_elem, bool modify_changed_flag)
+object_has_differences(const lListElem *this_elem, lList **answer_list,
+                       const lListElem *old_elem, bool modify_changed_flag)
 {
    bool ret = false;
 
    DENTER(TOP_LAYER, "object_has_differences");
+
    if (this_elem != NULL && old_elem != NULL) {
       lDescr *this_elem_descr = this_elem->descr;
       lDescr *old_elem_descr = old_elem->descr;
@@ -2031,7 +2031,7 @@ object_has_differences(lListElem *this_elem, lList **answer_list,
 
       /*
        * Compare each attribute of the given elements
-       */ 
+       */
       for (tmp_decr1 = this_elem_descr, tmp_decr2 = old_elem_descr; 
            tmp_decr1->nm != NoName && tmp_decr2->nm != NoName; 
            tmp_decr1++, tmp_decr2++) {
@@ -2058,25 +2058,25 @@ object_has_differences(lListElem *this_elem, lList **answer_list,
           */
          switch (mt_get_type(type1)) {
             case lFloatT:
-               equiv = (lGetPosFloat(this_elem, pos) == lGetPosFloat(old_elem, pos));
+               equiv = (lGetPosFloat(this_elem, pos) == lGetPosFloat(old_elem, pos)) ? true : false;
                break;
             case lDoubleT:
-               equiv = (lGetPosDouble(this_elem, pos) == lGetPosDouble(old_elem, pos));
+               equiv = (lGetPosDouble(this_elem, pos) == lGetPosDouble(old_elem, pos)) ? true : false;
                break;
             case lUlongT:
-               equiv = (lGetPosUlong(this_elem, pos) == lGetPosUlong(old_elem, pos));
+               equiv = (lGetPosUlong(this_elem, pos) == lGetPosUlong(old_elem, pos)) ? true : false;
                break;
             case lLongT:
-               equiv = (lGetPosLong(this_elem, pos) == lGetPosLong(old_elem, pos));
+               equiv = (lGetPosLong(this_elem, pos) == lGetPosLong(old_elem, pos)) ? true : false;
                break;
             case lCharT:
-               equiv = (lGetPosChar(this_elem, pos) == lGetPosChar(old_elem, pos));
+               equiv = (lGetPosChar(this_elem, pos) == lGetPosChar(old_elem, pos)) ? true : false;
                break;
             case lBoolT:
-               equiv = (lGetPosBool(this_elem, pos) == lGetPosBool(old_elem, pos));
+               equiv = (lGetPosBool(this_elem, pos) == lGetPosBool(old_elem, pos)) ? true : false;
                break;
             case lIntT:
-               equiv = (lGetPosInt(this_elem, pos) == lGetPosInt(old_elem, pos));
+               equiv = (lGetPosInt(this_elem, pos) == lGetPosInt(old_elem, pos)) ? true : false;
                break;
             case lStringT:
                {
@@ -2085,12 +2085,11 @@ object_has_differences(lListElem *this_elem, lList **answer_list,
 
                   if ((new_str == NULL && old_str != NULL) || 
                       (new_str != NULL && old_str == NULL)) {
-                     DTRACE;
                      equiv = false;
                   } else if (new_str == old_str) {
                      equiv = true;
                   } else {
-                     equiv = (strcmp(new_str, old_str) == 0);
+                     equiv = (strcmp(new_str, old_str) == 0) ? true : false;
                   }
                }
                break;
@@ -2101,35 +2100,41 @@ object_has_differences(lListElem *this_elem, lList **answer_list,
 
                   if ((new_str == NULL && old_str != NULL) || 
                       (new_str != NULL && old_str == NULL)) {
-                     DTRACE;
                      equiv = false;
                   } else if (new_str == old_str) {
                      equiv = true;
                   } else {
-                     equiv = (sge_hostcmp(new_str, old_str) == 0);
+                     equiv = (sge_hostcmp(new_str, old_str) == 0) ? true : false;
                   }
                }
                break;
             case lRefT:
-               equiv = (lGetPosRef(this_elem, pos) == lGetPosRef(old_elem, pos));
+               equiv = (lGetPosRef(this_elem, pos) == lGetPosRef(old_elem, pos)) ? true : false;
                break;
             case lObjectT:
+      {
                {
-                  lListElem *new_obj = lGetPosRef(this_elem, pos);
-                  lListElem *old_obj = lGetPosRef(old_elem, pos);
+                  lListElem *new_obj = lGetPosObject(this_elem, pos);
+                  lListElem *old_obj = lGetPosObject(old_elem, pos);
 
-                  equiv = object_has_differences(new_obj, answer_list, 
-                                                 old_obj, modify_changed_flag);
+                  equiv = !object_has_differences(new_obj, answer_list, 
+                                                  old_obj, modify_changed_flag);
                }
+
+}
                break;
             case lListT:
                {
                   lList *new_list = lGetPosList(this_elem, pos);
                   lList *old_list = lGetPosList(old_elem, pos);
 
-                  equiv = !object_list_has_differences(new_list, answer_list,
-                                                       old_list, 
-                                                       modify_changed_flag);
+                  if (object_list_has_differences(new_list, answer_list,
+                                                  old_list, 
+                                                  modify_changed_flag)) {
+                     equiv = false;
+                  } else {
+                     equiv = true;
+                  }
                }
                break;
             default:
@@ -2159,15 +2164,14 @@ object_has_differences(lListElem *this_elem, lList **answer_list,
 }
                    
 bool 
-object_list_has_differences(lList *this_list, lList **answer_list,
-                            lList *old_list, bool modify_changed_flag)
+object_list_has_differences(const lList *this_list, lList **answer_list,
+                            const lList *old_list, bool modify_changed_flag)
 {
    bool ret = false;
 
    DENTER(BASIS_LAYER, "object_list_has_differences");
 
    if (this_list == NULL && old_list == NULL) {
-      DTRACE;
       ret = false;
    } else if (lGetNumberOfElem(this_list) == lGetNumberOfElem(old_list)) {
       lListElem *new_elem;

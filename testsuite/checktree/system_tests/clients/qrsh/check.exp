@@ -76,7 +76,7 @@ lappend check_functions "qrsh_qsub_gid"              ;# qsub gid set correctly?
 lappend check_functions "qrsh_batch"                 ;# run qrsh in batch mode
 lappend check_functions "qrsh_limits"                ;# limits (e.g. cpu) passed correctly
 lappend check_functions "qrsh_env"                   ;# test the -v VAR=val and -v VAR options
-
+lappend check_functions "qrsh_reservation"           ;# test the -R y option
 
 # test specific global variables
 global qrsh_hostlist
@@ -718,20 +718,20 @@ proc qrsh_accounting {} {
 #     ???/???
 #*******************************
 proc qrsh_suspend {} {
-   global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_ACTUAL_TEST_PATH
-   global CHECK_USER CHECK_FIRST_FOREIGN_SYSTEM_USER
-   global qrsh_hostlist qrsh_submithost open_spawn_buffer
+   global ts_config
+   global CHECK_OUTPUT CHECK_ARCH
+   global qrsh_hostlist qrsh_submithost
 
    if { [have_root_passwd] == -1 } {
       set_error -3 "root access required"
       return
    } 
 
-
    puts $CHECK_OUTPUT "check if a process started by qrsh can be (un)suspended using qmod"
 
    foreach host $qrsh_hostlist {
-      switch -exact [resolve_arch $host] {
+      set arch [resolve_arch $host]
+      switch -exact $arch {
          aix42 -
          aix43 -
          aix51 {
@@ -744,7 +744,7 @@ proc qrsh_suspend {} {
          }
       }
       # start qrsh job (shell script that outputs its pid)
-      set qrsh_id [open_remote_spawn_process $qrsh_submithost "ts_def_con" $CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qrsh "-l hostname=$host $CHECK_ACTUAL_TEST_PATH/sleep_pid.sh 60"]
+      set qrsh_id [open_remote_spawn_process $qrsh_submithost "ts_def_con" $ts_config(product_root)/bin/$CHECK_ARCH/qrsh "-l hostname=$host $ts_config(testsuite_root_dir)/scripts/work_pid.sh 60"]
       
       # evaluate pid and JOB_ID
       set done 0
@@ -782,51 +782,61 @@ proc qrsh_suspend {} {
          }
       }
 
+      # continue only, if job is running correctly
       if { [info exists job_pid] && [info exists job_id] } {
          # check process status (should be sleeping or running)
          get_ps_info $job_pid $host 
          
          if { $ps_info($job_pid,error) != 0 } {
-               close_spawn_process $qrsh_id
-               set_error -1 "cannot get info about process $job_pid on host $host"
-               continue
+            close_spawn_process $qrsh_id
+            set_error -1 "cannot get info about process $job_pid on host $host"
+            continue
          }
+         puts $CHECK_OUTPUT "job should be running"
          puts $CHECK_OUTPUT $ps_info($job_pid,index_names) 
          puts $CHECK_OUTPUT $ps_info($job_pid,string)
          if {[string first $ps_info($job_pid,state) $running_state] == -1} {
-               close_spawn_process $qrsh_id
-               set_error -1 "process $job_pid on host $host is in unexpected state $ps_info($job_pid,state)\nps output:\n$ps_info($job_pid,index_names)\n$ps_info($job_pid,string)\n"
-               continue
+            close_spawn_process $qrsh_id
+            set_error -1 "process $job_pid on host $host is in unexpected state $ps_info($job_pid,state)\nps output:\n$ps_info($job_pid,index_names)\n$ps_info($job_pid,string)\n"
+            continue
          }
+
          # suspend job
          suspend_job $job_id
          sleep 10
          # process status should be suspended
          get_ps_info $job_pid $host
+         if { $ps_info($job_pid,error) != 0 } {
+            set_error -1 "cannot get info about process $job_pid on host $host"
+            close_spawn_process $qrsh_id
+            continue
+         }
+         puts $CHECK_OUTPUT "job should be suspended"
+         puts $CHECK_OUTPUT $ps_info($job_pid,index_names) 
+         puts $CHECK_OUTPUT $ps_info($job_pid,string)
+         if {$ps_info($job_pid,state) != $suspended_state} {
+            set_error -1 "process $job_pid on host $host is in unexpected state $ps_info($job_pid,state)"
+            close_spawn_process $qrsh_id
+            continue
+         }
+
          # unsuspend job
          unsuspend_job $job_id
-         if { $ps_info($job_pid,error) != 0 } {
-               set_error -1 "cannot get info about process $job_pid on host $host"
-               close_spawn_process $qrsh_id
-               continue
-         }
-         if {$ps_info($job_pid,state) != $suspended_state} {
-               set_error -1 "process $job_pid on host $host is in unexpected state $ps_info($job_pid,state)"
-               close_spawn_process $qrsh_id
-               continue
-         }
          sleep 10
          # process status should be sleeping or running
          get_ps_info $job_pid $host
          if { $ps_info($job_pid,error) != 0 } {
-               set_error -1 "cannot get info about process $job_pid on host $host"
-               close_spawn_process $qrsh_id
-               continue
+            set_error -1 "cannot get info about process $job_pid on host $host"
+            close_spawn_process $qrsh_id
+            continue
          }
+         puts $CHECK_OUTPUT "job should be running"
+         puts $CHECK_OUTPUT $ps_info($job_pid,index_names) 
+         puts $CHECK_OUTPUT $ps_info($job_pid,string)
          if {[string first $ps_info($job_pid,state) $running_state] == -1} {
-               set_error -1 "process $job_pid on host $host is in unexpected state $ps_info($job_pid,state)"
-               close_spawn_process $qrsh_id
-               continue
+            set_error -1 "process $job_pid on host $host is in unexpected state $ps_info($job_pid,state)"
+            close_spawn_process $qrsh_id
+            continue
          }
       }
 
@@ -1234,6 +1244,7 @@ proc qrsh_qsub_gid {} {
    puts $CHECK_OUTPUT "check if qsub gid is propagated to qrsh job"
 
    foreach host $qrsh_hostlist {
+      puts $CHECK_OUTPUT "using host $host"
       # dump commandfile to file
       set f [open $CHECK_PROTOCOL_DIR/qrsh.sh w]
       switch -exact [resolve_arch $host] {
@@ -1645,6 +1656,17 @@ proc qrsh_limits {} {
       close_spawn_process $qrsh_id
    }
 
+   set_error 0 "ok"
+}
+
+proc qrsh_reservation {} {
+   global ts_config CHECK_OUTPUT CHECK_ARCH CHECK_HOST CHECK_USER
+
+   set output [start_remote_prog $CHECK_HOST $CHECK_USER "$ts_config(product_root)/bin/$CHECK_ARCH/qrsh" "-R y echo bla"]
+   puts $CHECK_OUTPUT $output
+   if { [string match "error: Unknown option*" $output] == 1 } {
+      add_proc_error "qrsh_reservation" -1 "qrsh -R y failed - see Issue: 1306"
+   }
    set_error 0 "ok"
 }
 

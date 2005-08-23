@@ -44,6 +44,7 @@ extern "C" {
 
 /* documentation see libs/evc/sge_event_client.c */
 typedef enum {
+   EV_ID_INVALID = -1,
    EV_ID_ANY = 0,            /* qmaster will give the ev a unique id */
    EV_ID_SCHEDD = 1,         /* schedd registers at qmaster */
    EV_ID_FIRST_DYNAMIC = 11  /* first id given by qmaster for EV_ID_ANY registration */ 
@@ -53,10 +54,10 @@ typedef enum {
 /* documentation see libs/evc/sge_event_client.c */
 /* #define EV_NO_FLUSH -1*/
 
-#define EV_NOT_SUBSCRIBED 0 
-#define EV_SUBSCRIBED 1 
-#define EV_FLUSHED 1 
-#define EV_NOT_FLUSHED 0
+#define EV_NOT_SUBSCRIBED false 
+#define EV_SUBSCRIBED true
+#define EV_FLUSHED true
+#define EV_NOT_FLUSHED false
 #define EV_MAX_FLUSH 0x3f
 #define EV_NO_FLUSH -1 
 
@@ -313,7 +314,7 @@ typedef enum {
    sgeE_HGROUP_MOD,
 
    sgeE_EVENTSIZE 
-}ev_event;
+} ev_event;
 
 #define IS_TOTAL_UPDATE_EVENT(x) \
   (((x)==sgeE_ADMINHOST_LIST) || \

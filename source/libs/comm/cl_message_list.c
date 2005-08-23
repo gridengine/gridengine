@@ -58,22 +58,21 @@ int cl_message_list_append_message(cl_raw_list_t* list_p,cl_com_message_t* messa
       return CL_RETVAL_PARAMS;
    }
 
+   /* add new element list */
+   new_elem = (cl_message_list_elem_t*) malloc(sizeof(cl_message_list_elem_t));
+   if (new_elem == NULL) {
+      return CL_RETVAL_MALLOC;
+   }
+   new_elem->message = message;
+
    /* lock the list */
    if (lock_list == 1) {
       if (  ( ret_val = cl_raw_list_lock(list_p)) != CL_RETVAL_OK) {
+         free(new_elem);
          return ret_val;
       }
    }
 
-   /* add new element list */
-   new_elem = (cl_message_list_elem_t*) malloc(sizeof(cl_message_list_elem_t));
-   if (new_elem == NULL) {
-      if (lock_list == 1) {
-         cl_raw_list_unlock(list_p);
-      }
-      return CL_RETVAL_MALLOC;
-   }
-   new_elem->message = message;
    new_elem->raw_elem = cl_raw_list_append_elem(list_p, (void*) new_elem);
    if ( new_elem->raw_elem == NULL) {
       free(new_elem);

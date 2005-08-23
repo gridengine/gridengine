@@ -33,10 +33,6 @@
 #include <string.h>
 #include <fnmatch.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif   
-
 #include "sge.h"
 #include "sge_pe.h"
 #include "sge_ja_task.h"
@@ -76,7 +72,7 @@ int add,
 const char *ruser,
 const char *rhost,
 gdi_object_t *object,
-int sub_command 
+int sub_command, monitoring_t *monitor
 ) {
    int ret;
    const char *s, *pe_name;
@@ -180,6 +176,23 @@ int sub_command
       lSetString(new_pe, PE_urgency_slots, s);
    }
 
+#ifdef SGE_PQS_API
+   /* -------- PE_qsort_args */
+   if (lGetPosViaElem(pe, PE_qsort_args)>=0) {
+      void *handle=NULL, *fn=NULL;
+
+      s = lGetString(pe, PE_qsort_args);
+
+      if ((ret=pe_validate_qsort_args(alpp, s, new_pe,
+                  &handle, &fn))!=STATUS_OK) {
+         DEXIT;
+         return ret;
+      }
+      lSetString(new_pe, PE_qsort_args, s);
+      /* lSetUlong(new_pe, PE_qsort_validated, 1); */
+   }
+#endif
+
    /* -------- PE_resource_utilization */
    if (add) {
       if (pe_set_slots_used(new_pe, 0)) {
@@ -221,7 +234,7 @@ int pe_spool(lList **alpp, lListElem *pep, gdi_object_t *object)
    return dbret ? 0 : 1;
 }
 
-int pe_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object, lList **ppList) 
+int pe_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object, lList **ppList, monitoring_t *monitor) 
 {
    const char *pe_name;
 
@@ -289,7 +302,7 @@ int sge_del_pe(lListElem *pep, lList **alpp, char *ruser, char *rhost)
          ERROR((SGE_EVENT, "denied: %s", lGetString(answer, AN_text)));
          answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, 
                          ANSWER_QUALITY_ERROR);
-         local_answer_list = lFreeList(local_answer_list);
+         lFreeList(&local_answer_list);
          DEXIT;
          return STATUS_EUNKNOWN;
       }
@@ -305,7 +318,7 @@ int sge_del_pe(lListElem *pep, lList **alpp, char *ruser, char *rhost)
    }
 
    /* delete found pe element */
-   lRemoveElem(Master_Pe_List, ep);
+   lRemoveElem(Master_Pe_List, &ep);
 
    INFO((SGE_EVENT, MSG_SGETEXT_REMOVEDFROMLIST_SSSS, 
          ruser, rhost, pe, object_name ));

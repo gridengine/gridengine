@@ -46,18 +46,14 @@
 
 void sighandler_issue_tests(int sig);
 
-static int pipe_signal = 0;
-static int hup_signal = 0;
 static int do_shutdown = 0;
 
 void sighandler_issue_tests(int sig) {
    if (sig == SIGPIPE) {
-      pipe_signal = 1;
       return;
    }
 
    if (sig == SIGHUP) {
-      hup_signal = 1;
       return;
    }
 
@@ -329,7 +325,7 @@ extern int main(int argc, char** argv)
            cl_raw_list_unlock(handle->connection_list);
         }
 
-        cl_commlib_trigger(handle); 
+        cl_commlib_trigger(handle, 1); 
    
         ret_val = cl_commlib_receive_message(handle,NULL, NULL, 0, CL_FALSE, 0, &message, &sender);
         if (message != NULL) {
@@ -402,7 +398,7 @@ extern int main(int argc, char** argv)
         printf("starting measurement...\n");
         gettimeofday(&start,NULL);
         while(do_shutdown == 0 ) {
-           cl_commlib_trigger(handle); 
+           cl_commlib_trigger(handle, 1); 
            ret_val = cl_commlib_receive_message(handle,NULL, NULL, 0, CL_FALSE, 0, &message, &sender);
            if (ret_val != CL_RETVAL_OK && ret_val != CL_RETVAL_NO_MESSAGE) {
               printf("cl_commlib_receive_message returned: %s\n", cl_get_error_text(ret_val));
@@ -421,10 +417,10 @@ extern int main(int argc, char** argv)
         gettimeofday(&now,NULL);
         runtime = now.tv_sec - start.tv_sec;
         printf("send/receive took %d seconds\n", runtime );
-        if (data_size < 60*1024*1024) {
+        if (data_size < 30*1024*1024) {
            data_size = data_size * 2;
         } else {
-           data_size = data_size + 32*1024*1024;
+           data_size = data_size + 16*1024*1024;
         }
      }
 

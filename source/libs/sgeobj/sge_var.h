@@ -64,7 +64,7 @@ void var_list_set_string(lList **varl, const char *name, const char *value);
 
 void var_list_set_int(lList **varl, const char *name, int value);
 
-void var_list_set_u32(lList **varl, const char *name, u_long32 value);
+void var_list_set_sge_u32(lList **varl, const char *name, u_long32 value);
 
 void var_list_set_sharedlib_path(lList **varl);
 

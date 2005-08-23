@@ -125,6 +125,9 @@ reporting_create_record(lList **answer_list,
                         const char *data);
 
 static bool
+reporting_create_sharelog_record(lList **answer_list, monitoring_t *monitor);
+
+static bool
 reporting_write_load_values(lList **answer_list, dstring *buffer, 
                             const lList *load_list, const lList *variables);
 
@@ -211,7 +214,7 @@ reporting_initialize(lList **answer_list)
     */
    ev = te_new_event(time(NULL), TYPE_REPORTING_TRIGGER, ONE_TIME_EVENT, 1, 0, NULL);
    te_add_event(ev);
-   te_free_event(ev);
+   te_free_event(&ev);
 
    /* the sharelog timed events can be switched on or off */
    config_sharelog();
@@ -294,7 +297,7 @@ reporting_shutdown(lList **answer_list)
 *     Timeeventmanager/te_add()
 *******************************************************************************/
 void
-reporting_trigger_handler(te_event_t anEvent)
+reporting_trigger_handler(te_event_t anEvent, monitoring_t *monitor)
 {
    u_long32 flush_interval = 0;
    u_long32 next_flush = 0;
@@ -308,14 +311,14 @@ reporting_trigger_handler(te_event_t anEvent)
    switch (te_get_type(anEvent)) {
       case TYPE_SHARELOG_TRIGGER:
          /* dump sharetree usage and flush reporting file */
-         if (!reporting_create_sharelog_record(&answer_list)) {
+         if (!reporting_create_sharelog_record(&answer_list, monitor)) {
             answer_list_output(&answer_list);
          }
-         flush_interval = sharelog_time;
+         flush_interval = mconf_get_sharelog_time();
          break;
       case TYPE_REPORTING_TRIGGER:
          /* only flush reporting file */
-         flush_interval = reporting_flush_time;
+         flush_interval = mconf_get_reporting_flush_time();
          break;
       default:
          return;
@@ -334,9 +337,9 @@ reporting_trigger_handler(te_event_t anEvent)
       u_long32 next = time(NULL) + flush_interval;
       te_event_t ev = NULL;
 
-      ev = te_new_event(next, te_get_type(anEvent), ONE_TIME_EVENT, 1, 0, NULL);
+      ev = te_new_event((time_t)next, te_get_type(anEvent), ONE_TIME_EVENT, 1, 0, NULL);
       te_add_event(ev);
-      te_free_event(ev);
+      te_free_event(&ev);
    }
 
    DEXIT;
@@ -350,7 +353,7 @@ reporting_create_new_job_record(lList **answer_list, const lListElem *job)
 
    DENTER(TOP_LAYER, "reporting_create_new_job_record");
 
-   if (do_reporting && do_joblog && job != NULL) {
+   if (mconf_get_do_reporting() && mconf_get_do_joblog() && job != NULL) {
       dstring job_dstring = DSTRING_INIT;
 
       u_long32 job_number, priority, submission_time;
@@ -366,7 +369,7 @@ reporting_create_new_job_record(lList **answer_list, const lListElem *job)
       department        = lGetStringNotNull(job, JB_department);
       account           = lGetStringNotNull(job, JB_account);
 
-      sge_dstring_sprintf(&job_dstring, U32CFormat"%c"U32CFormat"%c%d%c%s%c%s%c%s%c%s%c%s%c%s%c%s%c"U32CFormat"\n", 
+      sge_dstring_sprintf(&job_dstring, sge_U32CFormat"%c"sge_U32CFormat"%c%d%c%s%c%s%c%s%c%s%c%s%c%s%c%s%c"sge_U32CFormat"\n", 
                           submission_time, REPORTING_DELIMITER,
                           job_number, REPORTING_DELIMITER,
                           -1, REPORTING_DELIMITER, /* means: no ja_task yet */
@@ -404,7 +407,7 @@ reporting_create_job_log(lList **answer_list,
 
    DENTER(TOP_LAYER, "reporting_create_job_log");
 
-   if (do_reporting && do_joblog && job != NULL) {
+   if (mconf_get_do_reporting() && mconf_get_do_joblog() && job != NULL) {
       dstring job_dstring = DSTRING_INIT;
 
       u_long32 job_id = 0;
@@ -460,7 +463,7 @@ reporting_create_job_log(lList **answer_list,
       department        = lGetStringNotNull(job, JB_department);
       account           = lGetStringNotNull(job, JB_account);
 
-      sge_dstring_sprintf(&job_dstring, U32CFormat"%c%s%c"U32CFormat"%c%d%c%s%c%s%c%s%c%s%c"U32CFormat"%c"U32CFormat"%c"U32CFormat"%c%s%c%s%c%s%c%s%c%s%c%s%c%s\n", 
+      sge_dstring_sprintf(&job_dstring, sge_U32CFormat"%c%s%c"sge_U32CFormat"%c%d%c%s%c%s%c%s%c%s%c"sge_U32CFormat"%c"sge_U32CFormat"%c"sge_U32CFormat"%c%s%c%s%c%s%c%s%c%s%c%s%c%s\n", 
                           event_time, REPORTING_DELIMITER,
                           event, REPORTING_DELIMITER,
                           job_id, REPORTING_DELIMITER,
@@ -541,7 +544,7 @@ reporting_create_acct_record(lList **answer_list,
    DENTER(TOP_LAYER, "reporting_create_acct_record");
 
    /* anything to do at all? */
-   if (do_reporting || do_accounting) {
+   if (mconf_get_do_reporting() || mconf_get_do_accounting()) {
       sge_dstring_init(&category_dstring, category_buffer, 
                        sizeof(category_buffer));
       category_string = sge_build_job_category(&category_dstring, job, 
@@ -551,7 +554,7 @@ reporting_create_acct_record(lList **answer_list,
    /* accounting records will only be written at job end, not for intermediate
     * reports
     */
-   if (do_accounting && !intermediate) {
+   if (mconf_get_do_accounting() && !intermediate) {
       job_string = sge_write_rusage(&job_dstring, job_report, job, ja_task, 
                                     category_string, REPORTING_DELIMITER, 
                                     false);
@@ -569,7 +572,7 @@ reporting_create_acct_record(lList **answer_list,
    /* reporting records will be written both for intermediate and final
     * job reports
     */
-   if (ret && do_reporting) {
+   if (ret && mconf_get_do_reporting()) {
       /* job_dstring might have been filled with accounting record - this one
        * contains total accounting values.
        * If we have written intermediate accounting records earlier, or this
@@ -630,7 +633,7 @@ reporting_write_consumables(lList **answer_list, dstring *buffer,
    
    DENTER(TOP_LAYER, "reporting_write_consumables");
 
-   if (do_reporting) {
+   if (mconf_get_do_reporting()) {
       for_each (cep, actual) {
          const char *name = lGetString(cep, RUE_name);
          lListElem *tep = lGetElemStr(total, CE_name, name);
@@ -685,14 +688,14 @@ reporting_create_queue_record(lList **answer_list,
 
    DENTER(TOP_LAYER, "reporting_create_queue_record");
 
-   if (do_reporting && queue != NULL) {
+   if (mconf_get_do_reporting() && queue != NULL) {
       dstring queue_dstring = DSTRING_INIT;
       char state_buffer[20];
       *state_buffer = '\0';
       queue_or_job_get_states(QU_state, state_buffer, 
                               lGetUlong(queue, QU_state));
 
-      sge_dstring_sprintf(&queue_dstring, "%s%c%s%c"U32CFormat"%c%s\n", 
+      sge_dstring_sprintf(&queue_dstring, "%s%c%s%c"sge_U32CFormat"%c%s\n", 
                           lGetString(queue, QU_qname),
                           REPORTING_DELIMITER,
                           lGetHost(queue, QU_qhostname),
@@ -745,7 +748,7 @@ reporting_create_queue_consumable_record(lList **answer_list,
 
    DENTER(TOP_LAYER, "reporting_create_queue_consumable_record");
 
-   if (do_reporting && queue != NULL) {
+   if (mconf_get_do_reporting() && queue != NULL) {
       dstring consumable_dstring = DSTRING_INIT;
 
       /* dump consumables */
@@ -760,7 +763,7 @@ reporting_create_queue_consumable_record(lList **answer_list,
          queue_or_job_get_states(QU_state, state_buffer, 
                                  lGetUlong(queue, QU_state));
 
-         sge_dstring_sprintf(&queue_dstring, "%s%c%s%c"U32CFormat"%c%s%c%s\n", 
+         sge_dstring_sprintf(&queue_dstring, "%s%c%s%c"sge_U32CFormat"%c%s%c%s\n", 
                              lGetString(queue, QU_qname),
                              REPORTING_DELIMITER,
                              lGetHost(queue, QU_qhostname),
@@ -819,7 +822,7 @@ reporting_create_host_record(lList **answer_list,
 
    DENTER(TOP_LAYER, "reporting_create_host_record");
 
-   if (do_reporting && host != NULL) {
+   if (mconf_get_do_reporting() && host != NULL) {
       dstring load_dstring = DSTRING_INIT;
 
       reporting_write_load_values(answer_list, &load_dstring, 
@@ -831,7 +834,7 @@ reporting_create_host_record(lList **answer_list,
        */
       if (sge_dstring_strlen(&load_dstring) > 0) {
          dstring host_dstring = DSTRING_INIT;
-         sge_dstring_sprintf(&host_dstring, "%s%c"U32CFormat"%c%s%c%s\n", 
+         sge_dstring_sprintf(&host_dstring, "%s%c"sge_U32CFormat"%c%s%c%s\n", 
                              lGetHost(host, EH_name),
                              REPORTING_DELIMITER,
                              report_time,
@@ -886,7 +889,7 @@ reporting_create_host_consumable_record(lList **answer_list,
 
    DENTER(TOP_LAYER, "reporting_create_host_consumable_record");
 
-   if (do_reporting && host != NULL) {
+   if (mconf_get_do_reporting() && host != NULL) {
       dstring consumable_dstring = DSTRING_INIT;
 
       /* dump consumables */
@@ -897,7 +900,7 @@ reporting_create_host_consumable_record(lList **answer_list,
       if (sge_dstring_strlen(&consumable_dstring) > 0) {
          dstring host_dstring = DSTRING_INIT;
 
-         sge_dstring_sprintf(&host_dstring, "%s%c"U32CFormat"%c%s%c%s\n", 
+         sge_dstring_sprintf(&host_dstring, "%s%c"sge_U32CFormat"%c%s%c%s\n", 
                              lGetHost(host, EH_name),
                              REPORTING_DELIMITER,
                              report_time,
@@ -933,7 +936,8 @@ reporting_create_host_consumable_record(lList **answer_list,
 *     ??? 
 *
 *  INPUTS
-*     lList **answer_list - used to return error messages
+*     lList **answer_list   - used to return error messages
+*     monitoring_t *monitor - monitors the use of the global lock
 *
 *  RESULT
 *     bool -  true on success, false on error
@@ -942,14 +946,14 @@ reporting_create_host_consumable_record(lList **answer_list,
 *     MT-NOTE: reporting_create_sharelog_record() is most probably MT safe
 *              (depends on sge_sharetree_print with uncertain MT safety)
 *******************************************************************************/
-bool
-reporting_create_sharelog_record(lList **answer_list)
+static bool
+reporting_create_sharelog_record(lList **answer_list, monitoring_t *monitor)
 {
    bool ret = true;
 
    DENTER(TOP_LAYER, "reporting_create_sharelog_record");
 
-   if (do_reporting && sharelog_time > 0) {
+   if (mconf_get_do_reporting() && mconf_get_sharelog_time() > 0) {
       /* only create sharelog entries if we have a sharetree */
       if (lGetNumberOfElem(Master_Sharetree_List) > 0) {
          rep_buf_t *buf;
@@ -961,7 +965,7 @@ reporting_create_sharelog_record(lList **answer_list)
          delim[1] = '\0';
 
          /* we need a prefix containing the reporting file std fields */
-         sge_dstring_sprintf(&prefix_dstring, U32CFormat"%csharelog%c",
+         sge_dstring_sprintf(&prefix_dstring, sge_U32CFormat"%csharelog%c",
                              sge_get_gmt(),
                              REPORTING_DELIMITER, REPORTING_DELIMITER);
 
@@ -976,7 +980,7 @@ reporting_create_sharelog_record(lList **answer_list)
          format.line_prefix  = sge_dstring_get_string(&prefix_dstring);
 
          /* dump the sharetree data */
-         SGE_LOCK(LOCK_GLOBAL, LOCK_READ);
+         MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_READ), monitor);
 
          sge_sharetree_print(&data_dstring, Master_Sharetree_List, 
                              Master_User_List,
@@ -1055,15 +1059,14 @@ reporting_is_intermediate_acct_required(const lListElem *job,
                                         const lListElem *pe_task)
 {
    bool ret = false;
-   time_t last_intermediate, now;
-   u_long32 start_time;
+   time_t last_intermediate, now, start_time;
    struct tm tm_last_intermediate, tm_now;
 
 
    DENTER(TOP_LAYER, "reporting_is_intermediate_acct_required");
 
    /* if reporting isn't active, we needn't write intermediate usage */
-   if (!do_reporting) {
+   if (!mconf_get_do_reporting()) {
       return false;
    }
 
@@ -1077,7 +1080,7 @@ reporting_is_intermediate_acct_required(const lListElem *job,
    /* 
     * optimization: only do the following actions "shortly after midnight" 
     */
-   now = sge_get_gmt();
+   now = (time_t)sge_get_gmt();
    localtime_r(&now, &tm_now);
 #if 1
    if (tm_now.tm_hour != 0 || tm_now.tm_min > INTERMEDIATE_ACCT_WINDOW) {
@@ -1090,9 +1093,9 @@ reporting_is_intermediate_acct_required(const lListElem *job,
     * "started a short time before"
     */
    if (pe_task != NULL) {
-      start_time = lGetUlong(pe_task, PET_start_time);
+      start_time = (time_t)lGetUlong(pe_task, PET_start_time);
    } else {
-      start_time = lGetUlong(ja_task, JAT_start_time);
+      start_time = (time_t)lGetUlong(ja_task, JAT_start_time);
    }
 
    if ((now - start_time) < (INTERMEDIATE_MIN_RUNTIME + tm_now.tm_min * 60 + 
@@ -1105,11 +1108,11 @@ reporting_is_intermediate_acct_required(const lListElem *job,
     * if no intermediate report has been written so far, use start time 
     */
    if (pe_task != NULL) {
-      last_intermediate = usage_list_get_ulong_usage(
+      last_intermediate = (time_t)usage_list_get_ulong_usage(
                              lGetList(pe_task, PET_reported_usage), 
                              LAST_INTERMEDIATE, 0);
    } else {
-      last_intermediate = usage_list_get_ulong_usage(
+      last_intermediate = (time_t)usage_list_get_ulong_usage(
                              lGetList(ja_task, JAT_reported_usage_list), 
                              LAST_INTERMEDIATE, 0);
    }
@@ -1201,7 +1204,7 @@ reporting_create_record(lList **answer_list,
    DENTER(TOP_LAYER, "reporting_create_record");
 
    sge_mutex_lock(buf->mtx_name, SGE_FUNC, __LINE__, &(buf->mtx));
-   sge_dstring_sprintf_append(&(buf->buffer), U32CFormat"%c%s%c%s",
+   sge_dstring_sprintf_append(&(buf->buffer), sge_U32CFormat"%c%s%c%s",
                               sge_get_gmt(),
                               REPORTING_DELIMITER,
                               type,
@@ -1400,7 +1403,7 @@ reporting_flush(lList **answer_list, u_long32 flush, u_long32 *next_flush)
    }
      
    /* set time for next flush */  
-   *next_flush = flush + reporting_flush_time;
+   *next_flush = flush + mconf_get_reporting_flush_time();
 
    DEXIT;
    return ret;
@@ -1495,14 +1498,14 @@ config_sharelog(void) {
    static bool sharelog_running = false;
 
    /* sharelog shall be written according to global config */
-   if (sharelog_time > 0) {
+   if (mconf_get_sharelog_time() > 0) {
       /* if sharelog is not running: switch it on */
       if (!sharelog_running) {
          te_event_t ev = NULL;
          ev = te_new_event(time(NULL), TYPE_SHARELOG_TRIGGER , ONE_TIME_EVENT, 
                            1, 0, NULL);
          te_add_event(ev);
-         te_free_event(ev);
+         te_free_event(&ev);
          sharelog_running = true;
       }
    } else {

@@ -35,10 +35,6 @@
 #include <errno.h>
 #include <sys/types.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif  
-       
 #include "sgermon.h"
 #include "sge_path_alias.h"
 #include "sge_log.h"
@@ -339,7 +335,7 @@ int path_alias_list_initialize(lList **path_alias_list,
       where = lWhere("%T(%I == %s || %I == %s)", PA_Type, 
                      PA_submit_host, "*", PA_submit_host, host);
       *path_alias_list = lSelectDestroy(*path_alias_list, where);
-      where = lFreeWhere(where);
+      lFreeWhere(&where);
    }
 
    DEXIT;

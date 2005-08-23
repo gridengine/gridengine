@@ -32,10 +32,6 @@
 #include <sys/types.h>
 #include <string.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif  
-
 #include "setup.h"
 #include "sge_gdiP.h"
 #include "sge_any_request.h"
@@ -171,17 +167,12 @@ static int gdi_log_flush_func(cl_raw_list_t* list_p) {
 
    while ( (elem = cl_log_list_get_first_elem(list_p) ) != NULL) {
       char* param;
-      char* module;
       if (elem->log_parameter == NULL) {
          param = "";
       } else {
          param = elem->log_parameter;
       }
-      if (elem->log_module_name == NULL) {
-         module = "";
-      } else {
-         module = elem->log_module_name;
-      }
+
       switch(elem->log_type) {
          case CL_LOG_ERROR: 
             if ( log_state_get_log_level() >= LOG_ERR) {
@@ -367,13 +358,15 @@ void prepare_enroll(const char *name)
       CRITICAL((SGE_EVENT, MSG_GDI_NO_VALID_PROGRAMM_NAME));
       SGE_EXIT(1);
    }
-   
-   /* TODO: activate mutlithreaded communication for SCHEDD and EXECD !!!
-            This can only by done when the daemonize functions of SCHEDD and EXECD
-            are thread save and reresolve qualified hostname for each thread */
+ 
+   /* here the we start up some daemons and clients with multithreaded
+      communication library */  
 
-   if ( uti_state_get_mewho() == QMASTER || uti_state_get_mewho() == QMON 
-        /* || uti_state_get_mewho() == EXECD || uti_state_get_mewho() == SCHEDD */ ) {
+
+   if ( uti_state_get_mewho() == QMASTER ||
+        uti_state_get_mewho() == QMON    ||
+        uti_state_get_mewho() == DRMAA   ||
+        uti_state_get_mewho() == SCHEDD      ) {
       INFO((SGE_EVENT,MSG_GDI_MULTI_THREADED_STARTUP));
       ret_val = cl_com_setup_commlib(CL_RW_THREAD,CL_LOG_OFF,gdi_log_flush_func);
    } else {
@@ -461,6 +454,7 @@ void prepare_enroll(const char *name)
       switch(me_who) {
          case EXECD:
             /* add qmaster as known endpoint */
+            DPRINTF(("re-read actual qmaster file (prepare_enroll)\n"));
             cl_com_append_known_endpoint_from_name((char*)sge_get_master(true), 
                                                    (char*) prognames[QMASTER],
                                                    1 ,
@@ -477,8 +471,8 @@ void prepare_enroll(const char *name)
                      ERROR((SGE_EVENT, MSG_GDI_CANT_GET_COM_HANDLE_SSUUS, 
                                           uti_state_get_qualified_hostname(),
                                           (char*) prognames[uti_state_get_mewho()],
-                                          u32c(my_component_id), 
-                                          u32c(execd_port),
+                                          sge_u32c(my_component_id), 
+                                          sge_u32c(execd_port),
                                           cl_get_error_text(commlib_error)));
                }
             }
@@ -497,10 +491,13 @@ void prepare_enroll(const char *name)
                      ERROR((SGE_EVENT, MSG_GDI_CANT_GET_COM_HANDLE_SSUUS, 
                                           uti_state_get_qualified_hostname(),
                                           (char*) prognames[uti_state_get_mewho()],
-                                          u32c(my_component_id), 
-                                          u32c(sge_get_qmaster_port()),
+                                          sge_u32c(my_component_id), 
+                                          sge_u32c(sge_get_qmaster_port()),
                                           cl_get_error_text(commlib_error)));
                }
+            }
+            else {
+               cl_com_set_synchron_receive_timeout(handle, 5);
             }
             break;
          case QMON:
@@ -514,8 +511,8 @@ void prepare_enroll(const char *name)
                      ERROR((SGE_EVENT, MSG_GDI_CANT_CONNECT_HANDLE_SSUUS, 
                                           uti_state_get_qualified_hostname(),
                                           (char*) prognames[uti_state_get_mewho()],
-                                          u32c(my_component_id), 
-                                          u32c(sge_get_qmaster_port()),
+                                          sge_u32c(my_component_id), 
+                                          sge_u32c(sge_get_qmaster_port()),
                                           cl_get_error_text(commlib_error)));
                }
             }
@@ -532,8 +529,8 @@ void prepare_enroll(const char *name)
                      ERROR((SGE_EVENT, MSG_GDI_CANT_CONNECT_HANDLE_SSUUS, 
                                           uti_state_get_qualified_hostname(),
                                           (char*) prognames[uti_state_get_mewho()],
-                                          u32c(my_component_id), 
-                                          u32c(sge_get_qmaster_port()),
+                                          sge_u32c(my_component_id), 
+                                          sge_u32c(sge_get_qmaster_port()),
                                           cl_get_error_text(commlib_error)));
                }
             }
@@ -559,9 +556,8 @@ void prepare_enroll(const char *name)
          communication lib setup */
       DPRINTF(("waiting for 15 seconds, because environment SGE_TEST_SOCKET_BIND is set\n"));
       while ( handle != NULL && now.tv_sec - handle->start_time.tv_sec  <= 15 ) {
-         int retval = CL_RETVAL_OK;
-         DPRINTF(("timeout: "U32CFormat"\n",u32c(now.tv_sec - handle->start_time.tv_sec)));
-         retval = cl_commlib_trigger(handle);
+         DPRINTF(("timeout: "sge_U32CFormat"\n",sge_u32c(now.tv_sec - handle->start_time.tv_sec)));
+         cl_commlib_trigger(handle, 1);
          gettimeofday(&now,NULL);
       }
       DPRINTF(("continue with setup\n"));
@@ -579,17 +575,17 @@ void prepare_enroll(const char *name)
  *          return value of gdi_send_message() for other errors
  *
  *  NOTES
- *     MT-NOTE: sge_send_gdi_request() is MT safe (assumptions)
+ *     MT-NOTE: sge_send_any_request() is MT safe (assumptions)
  *---------------------------------------------------------*/
 int sge_send_any_request(int synchron, u_long32 *mid, const char *rhost, 
                          const char *commproc, int id, sge_pack_buffer *pb, 
                          int tag, u_long32  response_id, lList **alpp)
 {
    int i;
-   u_long32 me_who;
    cl_xml_ack_type_t ack_type;
    cl_com_handle_t* handle = NULL;
    unsigned long dummy_mid = 0;
+   unsigned long* mid_pointer = NULL;
 
    DENTER(GDI_LAYER, "sge_send_any_request");
 
@@ -602,16 +598,19 @@ int sge_send_any_request(int synchron, u_long32 *mid, const char *rhost,
       return CL_RETVAL_PARAMS;
    }
    
-   me_who = uti_state_get_mewho();
    handle = cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0);
    if (handle == NULL) {
-      answer_list_add(alpp, MSG_GDI_NOCOMMHANDLE, STATUS_NOCOMMD, ANSWER_QUALITY_ERROR);
+      answer_list_add(alpp, MSG_GDI_NOCOMMHANDLE, 
+                      STATUS_NOCOMMD, ANSWER_QUALITY_ERROR);
       DEXIT;
       return CL_RETVAL_HANDLE_NOT_FOUND;
    }
 
    if (strcmp(commproc, (char*)prognames[QMASTER]) == 0 && id == 1) {
-      cl_com_append_known_endpoint_from_name((char*)rhost, (char*)prognames[QMASTER], 1 , sge_get_qmaster_port(), CL_CM_AC_DISABLED ,CL_TRUE);
+      cl_com_append_known_endpoint_from_name((char*)rhost, 
+                                             (char*)prognames[QMASTER], 1 , 
+                                             sge_get_qmaster_port(), 
+                                             CL_CM_AC_DISABLED, CL_TRUE);
    }
    
    if (synchron) {
@@ -623,18 +622,23 @@ int sge_send_any_request(int synchron, u_long32 *mid, const char *rhost,
                           (unsigned long) pb->bytes_used));
    answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
 #endif
-   i = gdi_send_sec_message( handle,
-                                (char*) rhost,(char*) commproc , id, 
-                                ack_type , 
-                                (cl_byte_t*)pb->head_ptr ,(unsigned long) pb->bytes_used , 
-                                &dummy_mid , response_id, tag, 1, synchron);
+
+   if (mid) {
+      mid_pointer = &dummy_mid;
+   }
+
+   i = gdi_send_sec_message(handle,
+                            (char*) rhost,(char*) commproc, id, 
+                            ack_type, (cl_byte_t*)pb->head_ptr,
+                            (unsigned long) pb->bytes_used, 
+                            mid_pointer, response_id, tag, 1, synchron);
    if (i != CL_RETVAL_OK) {
       /* try again ( if connection timed out ) */
-      i = gdi_send_sec_message( handle,
-                                   (char*)rhost, (char*)commproc , id, 
-                                   ack_type ,
-                                   (cl_byte_t*)pb->head_ptr ,(unsigned long) pb->bytes_used , 
-                                   &dummy_mid ,response_id,tag,1 , synchron);
+      i = gdi_send_sec_message(handle,
+                               (char*)rhost, (char*)commproc, id, 
+                               ack_type, (cl_byte_t*)pb->head_ptr,
+                               (unsigned long) pb->bytes_used, mid_pointer, 
+                               response_id, tag, 1, synchron);
    }
    
    if (mid) {
@@ -699,7 +703,7 @@ sge_get_any_request(char *rhost, char *commproc, u_short *id, sge_pack_buffer *p
    handle = cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0);
 
    /* trigger communication or wait for a new message (select timeout) */
-   cl_commlib_trigger(handle);
+   cl_commlib_trigger(handle, synchron);
 
    i = gdi_receive_sec_message( handle, rhost, commproc, usid, synchron, for_request_mid, &message, &sender);
 
@@ -707,7 +711,7 @@ sge_get_any_request(char *rhost, char *commproc, u_short *id, sge_pack_buffer *p
       if ( commproc[0] != '\0' && rhost[0] != '\0' ) {
          /* The connection was closed, reopen it */
          i = cl_commlib_open_connection(handle,rhost,commproc,usid);
-         INFO((SGE_EVENT,"reopen connection to %s,%s,"U32CFormat" (2)\n", rhost, commproc, u32c(usid)));
+         INFO((SGE_EVENT,"reopen connection to %s,%s,"sge_U32CFormat" (2)\n", rhost, commproc, sge_u32c(usid)));
          if (i == CL_RETVAL_OK) {
             INFO((SGE_EVENT,"reconnected successfully\n"));
             i = gdi_receive_sec_message( handle, rhost, commproc, usid, synchron, for_request_mid, &message, &sender);
@@ -737,10 +741,10 @@ sge_get_any_request(char *rhost, char *commproc, u_short *id, sge_pack_buffer *p
    /* ok, we received a message */
    if (message != NULL ) {
       if (sender != NULL && id) {
-         *id = sender->comp_id;
+         *id = (u_short)sender->comp_id;
       }
       if (tag) {
-        *tag = message->message_tag;
+        *tag = (int)message->message_tag;
       }  
       if (mid) {
         *mid = message->message_id;
@@ -748,7 +752,7 @@ sge_get_any_request(char *rhost, char *commproc, u_short *id, sge_pack_buffer *p
 
 
       /* fill it in the packing buffer */
-      i = init_packbuffer_from_buffer(pb, (char*)message->message, message->message_length , 0);
+      i = init_packbuffer_from_buffer(pb, (char*)message->message, message->message_length);
 
       /* TODO: the packbuffer must be hold, not deleted !!! */
       message->message = NULL;
@@ -761,7 +765,7 @@ sge_get_any_request(char *rhost, char *commproc, u_short *id, sge_pack_buffer *p
       } 
 
       if (sender != NULL ) {
-         DEBUG((SGE_EVENT,"received from: %s,"U32CFormat"\n",sender->comp_host, u32c(sender->comp_id) ));
+         DEBUG((SGE_EVENT,"received from: %s,"sge_U32CFormat"\n",sender->comp_host, sge_u32c(sender->comp_id) ));
          if (rhost[0] == '\0') {
             strcpy(rhost, sender->comp_host); /* If we receive from anybody return the sender */
          }
@@ -801,21 +805,12 @@ int gdi_send_message_pb(int synchron, const char *tocomproc, int toid,
 
    if ( !pb ) {
        DPRINTF(("no pointer for sge_pack_buffer\n"));
-       ret = gdi_send_message(synchron, tocomproc, toid, tohost, tag, NULL, 0, mid, 0);
+       ret = gdi_send_message(synchron, tocomproc, toid, tohost, tag, NULL, 0, mid);
        DEXIT;
        return ret;
    }
 
-#ifdef COMMCOMPRESS
-   if(pb->mode == 0) {
-      if(flush_packbuffer(pb) == PACK_SUCCESS)
-         ret = gdi_send_message(synchron, tocomproc, toid, tohost, tag, (char*)pb->head_ptr, pb->cpr.total_out, mid, 1);
-      else
-         ret = CL_MALLOC;
-   }
-   else
-#endif
-      ret = gdi_send_message(synchron, tocomproc, toid, tohost, tag, pb->head_ptr, pb->bytes_used, mid, 0);
+   ret = gdi_send_message(synchron, tocomproc, toid, tohost, tag, pb->head_ptr, pb->bytes_used, mid);
 
    DEXIT;
    return ret;
@@ -883,7 +878,7 @@ int check_isalive(const char *masterhost)
    }
 
    if (status != NULL) {
-      DEBUG((SGE_EVENT,MSG_GDI_ENDPOINT_UPTIME_UU, u32c( status->runtime) , u32c( status->application_status) ));
+      DEBUG((SGE_EVENT,MSG_GDI_ENDPOINT_UPTIME_UU, sge_u32c( status->runtime) , sge_u32c( status->application_status) ));
       cl_com_free_sirm_message(&status);
    }
  

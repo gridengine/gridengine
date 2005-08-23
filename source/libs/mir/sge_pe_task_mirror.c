@@ -30,10 +30,6 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif   
-
 #include "sge.h"
 #include "sgermon.h"
 
@@ -209,7 +205,7 @@ pe_task_update_master_list(sge_object_type type, sge_event_action action,
                                      job_get_id_string(job_id, ja_task_id, 
                                                        pe_task_id), 
                                      action, event) != SGE_EM_OK) {
-      lFreeList(usage);
+      lFreeList(&usage);
       DEXIT;
       return false;
    }
@@ -220,13 +216,13 @@ pe_task_update_master_list(sge_object_type type, sge_event_action action,
       if (pe_task == NULL) {
          ERROR((SGE_EVENT, MSG_JOB_CANTFINDPETASKFORUPDATEIN_SS, 
                 job_get_id_string(job_id, ja_task_id, pe_task_id), SGE_FUNC));
-         lFreeList(usage);       
+         lFreeList(&usage);       
          DEXIT;
          return false;
       }
 
       lXchgList(pe_task, PET_scaled_usage, &usage);
-      usage = lFreeList(usage);
+      lFreeList(&usage);
    }
 
    /* first petask add event could have created new pe_task list for job */

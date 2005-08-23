@@ -34,10 +34,6 @@
 #include <string.h>
 #include <errno.h>
 
-#ifdef SOLARISAMD64
-#  include <sys/stream.h>
-#endif   
-
 #include "sge_unistd.h"
 #include "sge.h"
 #include "cull.h"
@@ -208,8 +204,8 @@ int spool
    };
    FPRINTF((fp,"\n"));
 
-   FPRINTF((fp, "oticket    " u32 "\n", lGetUlong(ep, US_oticket)));
-   FPRINTF((fp, "fshare     " u32 "\n", lGetUlong(ep, US_fshare)));
+   FPRINTF((fp, "oticket    " sge_u32 "\n", lGetUlong(ep, US_oticket)));
+   FPRINTF((fp, "fshare     " sge_u32 "\n", lGetUlong(ep, US_fshare)));
 
    FPRINTF((fp, "entries    "));
    ret = uni_print_list(fp, NULL, 0, lGetList(ep, US_entries), print_elements,

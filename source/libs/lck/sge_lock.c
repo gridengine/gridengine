@@ -31,8 +31,12 @@
 /*___INFO__MARK_END__*/
 
 #include <stdlib.h>
+#include <pthread.h>
 
 #include "sge_lock.h"
+#include "sge_mtutil.h"
+
+#include "uti/sge_log.h"
 
 #include <stdio.h>
 #include "sgermon.h"
@@ -75,15 +79,28 @@
 *     sge_lock/sge_lock.h
 *******************************************************************************/
 
+static pthread_rwlock_t Global_Lock;
+static pthread_rwlock_t Schedd_Conf_Lock;
+static pthread_rwlock_t Master_Conf_Lock;
+
+/* watch out. The order in this array has to be the same as in the sge_locktype_t type */
+static pthread_rwlock_t *SGE_RW_Locks[NUM_OF_LOCK_TYPES] = {&Global_Lock, &Schedd_Conf_Lock, &Master_Conf_Lock};
 
 /* 'locktype_names' has to be in sync with the definition of 'sge_locktype_t' */
-static const char* locktype_names[NUM_OF_TYPES] = {
-   "global"  /* LOCK_GLOBAL */
+static const char* locktype_names[NUM_OF_LOCK_TYPES] = {
+   "global",  /* LOCK_GLOBAL */
+   "schedd_config" /* LOCK_SCHED_CONF */ 
+   "master_config" /* LOCK_MASTER_CONF */ 
 };
 
 static void (*lock_callback) (sge_locktype_t, sge_lockmode_t, const char *func, sge_locker_t);
 static void (*unlock_callback) (sge_locktype_t, sge_lockmode_t, const char *func, sge_locker_t); 
 static sge_locker_t (*id_callback) (void);
+
+/* lock service provider */
+static void lock_callback_impl(sge_locktype_t, sge_lockmode_t, const char *func, sge_locker_t);
+static void unlock_callback_impl(sge_locktype_t, sge_lockmode_t, const char *func, sge_locker_t);
+static sge_locker_t id_callback_impl(void);
 
 
 /****** sge_lock/sge_lock() ****************************************************
@@ -225,7 +242,7 @@ const char* sge_type_name(sge_locktype_t aType)
 
    DENTER(TOP_LAYER, "sge_type_name");
 
-   s = (i < NUM_OF_TYPES) ? locktype_names[i] : NULL;
+   s = (i < NUM_OF_LOCK_TYPES) ? locktype_names[i] : NULL;
 
    DEXIT;
    return s;
@@ -259,7 +276,7 @@ int sge_num_locktypes(void)
 
    DENTER(TOP_LAYER, "sge_num_locktypes");
 
-   i = (int)NUM_OF_TYPES;
+   i = (int)NUM_OF_LOCK_TYPES;
 
    DEXIT;
    return i;
@@ -369,4 +386,199 @@ void sge_set_id_callback(sge_locker_t (*aFunc)(void))
    DEXIT;
    return;
 } /* sge_set_id_callback */
+
+/****** libs/lck/sge_setup_lock_service() **************************
+*  NAME
+*     sge_setup_lock_service() -- setup lock service 
+*
+*  SYNOPSIS
+*     static void sge_setup_lock_service(void) 
+*
+*  FUNCTION
+*     Determine number of locks needed. Create and initialize the respective
+*     mutexes. Register the callbacks required by the locking API 
+*
+*  INPUTS
+*     void - none 
+*
+*  RESULT
+*     void - none 
+*
+*  NOTES
+*     MT-NOTE: sge_setup_lock_service() is NOT MT safe. 
+*
+*     Currently we do not use so called recursive mutexes. This may change
+*     *without* warning, if necessary!
+*
+*  SEE ALSO
+*     libs/lck/sge_lock.c
+*
+*******************************************************************************/
+void sge_setup_lock_service(void)
+{
+   DENTER(TOP_LAYER, "sge_setup_lock_service");
+   
+   pthread_rwlock_init(&Global_Lock, NULL); 
+   pthread_rwlock_init(&Schedd_Conf_Lock, NULL);
+   pthread_rwlock_init(&Master_Conf_Lock, NULL);
+
+   sge_set_lock_callback(lock_callback_impl);
+   sge_set_unlock_callback(unlock_callback_impl);
+   sge_set_id_callback(id_callback_impl);
+   
+   DEXIT;
+   return;
+} /* sge_setup_lock_service() */
+
+/****** libs/lck/sge_teardown_lock_service() ***********************
+*  NAME
+*     sge_teardown_lock_service() -- teardown lock service 
+*
+*  SYNOPSIS
+*     static void sge_teardown_lock_service(void) 
+*
+*  FUNCTION
+*     Destroy and free mutexes created with 'sge_setup_lock_service()' 
+*
+*  INPUTS
+*     void - none 
+*
+*  RESULT
+*     void - none
+*
+*  NOTES
+*     MT-NOTE: sge_teardown_lock_service() is NOT MT safe. 
+*
+*******************************************************************************/
+void sge_teardown_lock_service(void)
+{
+   DENTER(TOP_LAYER, "sge_teardown_lock_service");
+
+   DEXIT;
+   return;
+} /* sge_teardown_lock_service() */
+
+/****** libs/lck/lock_callback_impl() *******************************
+*  NAME
+*     lock_callback_impl() -- lock callback 
+*
+*  SYNOPSIS
+*     static void lock_callback_impl(sge_locktype_t aType, sge_lockmode_t aMode, 
+*     sge_locker_t anID) 
+*
+*  FUNCTION
+*     Acquire global lock determined by 'aType' in mode 'aMode'. 
+*
+*  INPUTS
+*     sge_locktype_t aType - lock type 
+*     sge_lockmode_t aMode - lock mode 
+*     sge_locker_t anID    - locker id
+*
+*  RESULT
+*     void - none
+*
+*  NOTES
+*     MT-NOTE: lock_callback_impl() is MT safe. 
+*
+*     Currently a global lock is just a 'pthread_mutex_t'. This does imply
+*     that the lock mode has no effect.
+*
+*******************************************************************************/
+static void lock_callback_impl(sge_locktype_t aType, sge_lockmode_t aMode, const char *func,  sge_locker_t anID)
+{
+   DENTER(TOP_LAYER, "lock_callback_impl");
+
+   if (aMode == LOCK_READ) {
+       sge_rwlock_rdlock("Global_Lock_read", func, __LINE__, SGE_RW_Locks[aType]);
+   }
+   else if (aMode == LOCK_WRITE) {
+       sge_rwlock_wrlock("Global_Lock_write", func, __LINE__, SGE_RW_Locks[aType]);
+   }
+   else {
+      ERROR((SGE_EVENT, "wrong lock type for global lock\n")); 
+   }
+
+   DEXIT;
+   return;
+} /* lock_callback_impl() */
+
+/****** libs/lck/unlock_callback_impl() *****************************
+*  NAME
+*     unlock_callback_impl() -- unlock callback 
+*
+*  SYNOPSIS
+*     static void unlock_callback_impl(sge_locktype_t aType, sge_lockmode_t aMode, 
+*     sge_locker_t anID) 
+*
+*  FUNCTION
+*     Release global lock 'aType' which has been acquired in mode 'aMode'
+*     previously. 
+*
+*  INPUTS
+*     sge_locktype_t aType - lock type 
+*     sge_lockmode_t aMode - lock mode 
+*     sge_locker_t anID    - locker id 
+*
+*  RESULT
+*     void - none
+*
+*  NOTES
+*     MT-NOTE: unlock_callback_impl() is MT safe. 
+*
+*     Currently a global lock is just a 'pthread_mutex_t'. This does imply
+*     that the lock mode has no effect.
+*
+*******************************************************************************/
+static void unlock_callback_impl(sge_locktype_t aType, sge_lockmode_t aMode, const char *func, sge_locker_t anID)
+{
+   DENTER(TOP_LAYER, "unlock_callback_impl");
+
+   if (aMode == LOCK_READ) {
+       sge_rwlock_unlock("Global_Lock_read", func, __LINE__, SGE_RW_Locks[aType]);
+   }
+   else if (aMode == LOCK_WRITE) {
+       sge_rwlock_unlock("Global_Lock_write", func, __LINE__, SGE_RW_Locks[aType]);
+   }
+  else {
+      ERROR((SGE_EVENT, "wrong lock type for global lock\n"));
+   }
+   
+
+   DEXIT;
+   return;
+} /* unlock_callback_impl() */
+
+/****** libs/lck/id_callback_impl() *********************************
+*  NAME
+*     id_callback_impl() -- locker ID callback 
+*
+*  SYNOPSIS
+*     static sge_locker_t id_callback_impl(void) 
+*
+*  FUNCTION
+*     Return ID of current locker. 
+*
+*  INPUTS
+*     void - none 
+*
+*  RESULT
+*     sge_locker_t - locker id
+*
+*  NOTES
+*     MT-NOTE: id_callback() is MT safe. 
+*
+*******************************************************************************/
+static sge_locker_t id_callback_impl(void)
+{
+   sge_locker_t id;
+
+   DENTER(TOP_LAYER, "id_callback_impl");
+   
+   id = (sge_locker_t)pthread_self();
+
+   DEXIT;
+   return id;
+} /* id_callback */
+
+
 

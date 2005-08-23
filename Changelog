@@ -1,3 +1,7 @@
+AA-2005-08-23-0: Bugfix:    lFreeList missing
+                 Changed:   all
+                 Review:    RH
+                 
 EB-2005-08-23-0: Enhancem.: improved packing for qstat
                  Changed:   qmaster
                  Review:    (AH), SG

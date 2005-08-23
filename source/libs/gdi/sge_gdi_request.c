@@ -71,10 +71,6 @@ static bool
 gdi_send_multi_sync(lList **alpp, state_gdi_multi *state, sge_gdi_request **answer, 
                     lList **malpp);
 
-static int 
-sge_send_receive_gdi_request(int *commlib_error, const char *rhost, const char *commproc, 
-                             u_short id, sge_gdi_request *out, sge_gdi_request **in,
-                             lList **alpp);
 
 static int 
 sge_get_gdi_request(int *commlib_error, char *rhost, char *commproc, u_short *id, 
@@ -752,7 +748,8 @@ gdi_send_multi_sync(lList **alpp, state_gdi_multi *state, sge_gdi_request **answ
 
 #ifdef KERBEROS
    /* request that the Kerberos library forward the TGT */
-   if (target == SGE_JOB_LIST && operation == SGE_GDI_ADD) {
+   if (state->first->target == SGE_JOB_LIST && 
+         SGE_GDI_GET_OPERATION(state->first->op) == SGE_GDI_ADD) {
       krb_set_client_flags(krb_get_client_flags() | KRB_FORWARD_TGT);
       krb_set_tgt_id(state->first->request_id);
    }
@@ -764,7 +761,8 @@ gdi_send_multi_sync(lList **alpp, state_gdi_multi *state, sge_gdi_request **answ
 
 #ifdef KERBEROS
    /* clear the forward TGT request */
-   if (target == SGE_JOB_LIST && operation == SGE_GDI_ADD) {
+   if (state->first->target == SGE_JOB_LIST && 
+         SGE_GDI_GET_OPERATION(state->first->op) == SGE_GDI_ADD) {
       krb_set_client_flags(krb_get_client_flags() & ~KRB_FORWARD_TGT);
       krb_set_tgt_id(0);
    }
@@ -962,7 +960,7 @@ lList *sge_gdi_extract_answer(u_long32 cmd, u_long32 target, int id,
 *  NOTES
 *     MT-NOTE: sge_send_receive_gdi_request() is MT safe (assumptions)
 ******************************************************************************/
-static int sge_send_receive_gdi_request(int *commlib_error,
+int sge_send_receive_gdi_request(int *commlib_error,
                                         const char *rhost, 
                                         const char *commproc, 
                                         u_short id, 
@@ -1123,6 +1121,8 @@ sge_send_gdi_request(int sync, const char *rhost, const char *commproc, int id,
                                  TAG_GDI_REQUEST, response_id, alpp);
    }
    clear_packbuffer(&pb);
+   lFreeList(&answer_list);
+
    PROF_STOP_MEASUREMENT(SGE_PROF_GDI_REQUEST);
    DEXIT;
    return ret;

@@ -583,19 +583,11 @@ static krb5_error_code krb_get_forwardable_tgt(char *host,
    return rc;
 }
 
-
 int
-krb_send_message(
-int synchron,
-const char *tocomproc,
-int toid,
-const char *tohost,
-int tag,
-char *buffer,
-int buflen,
-u_long32 *mid,
-int compressed 
-) {
+krb_send_message(int synchron, const char *tocomproc, int toid, 
+                 const char *tohost, int tag, char *buffer, 
+                 int buflen, u_long32 *mid) 
+{
    krb5_error_code rc;
    krb5_timestamp time_now;
    int ret = SEC_SEND_FAILED;
@@ -850,8 +842,13 @@ int compressed
    packint(&pb, ap_req.length);
    packint(&pb, outbuf.length);
    packint(&pb, tgtbuf.length);
-   /* must store if the original buffer was compressed */
-   packint(&pb, compressed);
+#if 1 /* 
+       * TODO EB: following code should be removed for the next version
+       *          where it is possible to change the packbuffer format
+       */
+   /* unused int in pb; was previously used to store if data is compressed */
+   packint(&pb, -1);
+#endif
    if (ap_req.length)
       packbuf(&pb, ap_req.data, ap_req.length);
    if (outbuf.length)
@@ -861,9 +858,7 @@ int compressed
       packbuf(&pb, tgtbuf.data, tgtbuf.length);
    }
 
-   /* Can I safely call send_message_pb here ??? */
-      ret = send_message(synchron, tocomproc, toid, tohost, tag, pb.head_ptr, pb.bytes_used, mid, 0);
-
+   ret = send_message(synchron, tocomproc, toid, tohost, tag, pb.head_ptr, pb.bytes_used, mid, 0);
  error:
 
    if (server)
@@ -887,17 +882,14 @@ int compressed
    return ret;
 }
 
-int krb_unpackmsg(sge_pack_buffer *pb, krb5_data *buf1, krb5_data *buf2, krb5_data *buf3, u_long32 *tgt_id, u_short *compressed);
+static int 
+krb_unpackmsg(sge_pack_buffer *pb, krb5_data *buf1, krb5_data *buf2, 
+              krb5_data *buf3, u_long32 *tgt_id);
 
-int
-krb_unpackmsg(
-sge_pack_buffer *pb,
-krb5_data *buf1,
-krb5_data *buf2,
-krb5_data *buf3,
-u_long32 *tgt_id,
-u_short *compressed 
-) {
+static int
+krb_unpackmsg(sge_pack_buffer *pb, krb5_data *buf1, krb5_data *buf2, 
+              krb5_data *buf3, u_long32 *tgt_id) 
+{
    int ret;
    u_long32 len1=0, len2=0, len3=0, cpr=0;
    *tgt_id = 0;
@@ -905,9 +897,12 @@ u_short *compressed
    if ((ret=unpackint(pb, &len1))) goto error;
    if ((ret=unpackint(pb, &len2))) goto error;
    if ((ret=unpackint(pb, &len3))) goto error;
+#if 1 /* 
+       * TODO EB: following code should be removed for the next version
+       *          where it is possible to change the packbuffer format
+       */
    if ((ret=unpackint(pb, &cpr))) goto error;
-   if(compressed)
-      *compressed = (u_short)cpr;
+#endif
    if ((buf1->length = len1)) {
       if ((ret=unpackbuf(pb, &buf1->data, buf1->length))) goto error;
    } else
@@ -927,7 +922,6 @@ u_short *compressed
    return ret;
 }
 
-
 static int
 krb_send_auth_failure(
 char *tocommproc,
@@ -944,16 +938,9 @@ char *tohost
 
 
 int
-krb_receive_message(
-char *fromcommproc,
-u_short *fromid,
-char *fromhost,
-int *tag,
-char **buffer,
-u_long32 *buflen,
-int synchron,
-u_short *compressed      /* this one is for the original message */
-) {
+krb_receive_message(char *fromcommproc, u_short *fromid, char *fromhost, 
+                    int *tag, char **buffer, u_long32 *buflen, int synchron) 
+{
    krb5_error_code rc;
    int ret = SEC_RECEIVE_FAILED;
    krb5_auth_context auth=NULL;
@@ -971,7 +958,6 @@ u_short *compressed      /* this one is for the original message */
    u_short tmpid=0;
    int tmptag=0;
    u_long32 tgt_id=0;
-   u_short krb_compressed;  /* this one if for the krb message */
 
    DENTER(TOP_LAYER,"krb_receive_message");
 
@@ -1000,7 +986,7 @@ u_short *compressed      /* this one is for the original message */
    if (tag) tmptag = *tag;
 
    ret = receive_message(tmpcommproc, &tmpid, tmphost, &tmptag,
-			 buffer, &tmplen, synchron, &krb_compressed);
+			                buffer, &tmplen, synchron);
 
    if (buflen) *buflen = tmplen;
    if (fromcommproc) strcpy(fromcommproc, tmpcommproc);
@@ -1032,7 +1018,7 @@ u_short *compressed      /* this one is for the original message */
    /* unpack AP_REQ and encrypted message */
 
    {
-      int pack_ret = init_packbuffer_from_buffer(&pb, *buffer, tmplen, krb_compressed);
+      int pack_ret = init_packbuffer_from_buffer(&pb, *buffer, tmplen);
       if(pack_ret != PACK_SUCCESS) {
          ERROR((SGE_EVENT, MSG_KRB_INITPACKBUFFERFAILED_S, cull_pack_strerror(pack_ret)));
          ret = SEC_RECEIVE_FAILED;
@@ -1040,7 +1026,7 @@ u_short *compressed      /* this one is for the original message */
       }
    }   
 
-   if (krb_unpackmsg(&pb, &ap_req, &inbuf, &tgtbuf, &tgt_id, compressed)) {
+   if (krb_unpackmsg(&pb, &ap_req, &inbuf, &tgtbuf, &tgt_id)) {
 
       ERROR((SGE_EVENT, MSG_KRB_INVALIDMESSAGEUNPACKFAILURE ));
 

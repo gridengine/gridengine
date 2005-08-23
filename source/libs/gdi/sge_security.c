@@ -629,20 +629,23 @@ int gdi_receive_sec_message(cl_com_handle_t* handle,char* un_resolved_hostname,
    return ret;
 }
 
-int gdi_send_sec_message(cl_com_handle_t* handle,
-                            char* un_resolved_hostname, char* component_name, unsigned long component_id, 
-                            cl_xml_ack_type_t ack_type, 
-                            cl_byte_t* data, unsigned long size , 
-                            unsigned long* mid, unsigned long response_mid, unsigned long tag ,
-                            int copy_data,
-                            int wait_for_ack) {
+int 
+gdi_send_sec_message(cl_com_handle_t* handle, char* un_resolved_hostname, 
+                     char* component_name, unsigned long component_id, 
+                     cl_xml_ack_type_t ack_type, cl_byte_t* data, 
+                     unsigned long size, unsigned long* mid, 
+                     unsigned long response_mid, unsigned long tag,
+                     int copy_data, int wait_for_ack) 
+{
    int ret;
    DENTER(TOP_LAYER, "gdi_send_sec_message");
 
-   ret = cl_commlib_send_message(handle, un_resolved_hostname,  component_name,  component_id, 
-                                  ack_type, data,  size ,
-                                  mid,  response_mid,  tag , (cl_bool_t)copy_data, (cl_bool_t)wait_for_ack);
-   dump_snd_info(un_resolved_hostname, component_name, component_id, ack_type, tag, mid);
+   ret = cl_commlib_send_message(handle, un_resolved_hostname, component_name,
+                                 component_id, ack_type, data, size, mid,  
+                                 response_mid, tag, (cl_bool_t)copy_data, 
+                                 (cl_bool_t)wait_for_ack);
+   dump_snd_info(un_resolved_hostname, component_name, 
+                 component_id, ack_type, tag, mid);
    DEXIT;
    return ret;
 
@@ -658,17 +661,11 @@ int gdi_send_sec_message(cl_com_handle_t* handle,
    NOTES
       MT-NOTE: gdi_send_message() is MT safe (assumptions)
 *************************************************************/
-int gdi_send_message(
-int synchron,
-const char *tocomproc,
-int toid,
-const char *tohost,
-int tag,
-char *buffer,
-int buflen,
-u_long32 *mid,
-int compressed 
-) {
+int 
+gdi_send_message(int synchron, const char *tocomproc, int toid, 
+                 const char *tohost, int tag, char *buffer, 
+                 int buflen, u_long32 *mid) 
+{
    int ret;
    cl_com_handle_t* handle = NULL;
    cl_xml_ack_type_t ack_type;
@@ -771,16 +768,10 @@ int compressed
  *     MT-NOTE: gdi_receive_message() is MT safe (major assumptions!)
  *
  */
-int gdi_receive_message(
-char *fromcommproc,
-u_short *fromid,
-char *fromhost,
-int *tag,
-char **buffer,
-u_long32 *buflen,
-int synchron,
-u_short *compressed 
-) {
+int 
+gdi_receive_message(char *fromcommproc, u_short *fromid, char *fromhost, 
+                    int *tag, char **buffer, u_long32 *buflen, int synchron) 
+{
    int ret;
    cl_com_handle_t* handle = NULL;
    cl_com_message_t* message = NULL;
@@ -867,9 +858,6 @@ u_short *compressed
       *buflen = message->message_length;
       if (tag) {
          *tag = (int)message->message_tag;
-      }
-      if (compressed) {
-         *compressed = 0;
       }
 
       if (sender != NULL) {

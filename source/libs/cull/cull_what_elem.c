@@ -76,10 +76,9 @@ lListElem *lWhatToElem(const lEnumeration *what)
          if (cull_pack_enum(&pb, what) == PACK_SUCCESS) {
             whatElem = lCreateElem(PACK_Type);
             lSetUlong(whatElem, PACK_id, SGE_WHAT);
-            {
-               setByteArray( (char*)pb.head_ptr, pb.bytes_used, whatElem, PACK_string);
-               lSetBool(whatElem, PACK_compressed, false);
-            }
+
+            setByteArray( (char*)pb.head_ptr, pb.bytes_used, whatElem, PACK_string);
+            lSetBool(whatElem, PACK_compressed, false);
          }
       }
       clear_packbuffer(&pb); 
@@ -102,7 +101,7 @@ lEnumeration *lWhatFromElem(const lListElem *what){
       size = getByteArray(&buffer, what, PACK_string);
       if (size <= 0){
          ERROR((SGE_EVENT, MSG_PACK_INVALIDPACKDATA ));
-      } else if ((ret = init_packbuffer_from_buffer(&pb, buffer, size, compressed)) == PACK_SUCCESS){
+      } else if ((ret = init_packbuffer_from_buffer(&pb, buffer, size)) == PACK_SUCCESS) {
          cull_unpack_enum(&pb, &cond);
          clear_packbuffer(&pb); 
       } else {

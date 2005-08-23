@@ -575,7 +575,7 @@ void prepare_enroll(const char *name)
  *          return value of gdi_send_message() for other errors
  *
  *  NOTES
- *     MT-NOTE: sge_send_gdi_request() is MT safe (assumptions)
+ *     MT-NOTE: sge_send_any_request() is MT safe (assumptions)
  *---------------------------------------------------------*/
 int sge_send_any_request(int synchron, u_long32 *mid, const char *rhost, 
                          const char *commproc, int id, sge_pack_buffer *pb, 
@@ -600,13 +600,17 @@ int sge_send_any_request(int synchron, u_long32 *mid, const char *rhost,
    
    handle = cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0);
    if (handle == NULL) {
-      answer_list_add(alpp, MSG_GDI_NOCOMMHANDLE, STATUS_NOCOMMD, ANSWER_QUALITY_ERROR);
+      answer_list_add(alpp, MSG_GDI_NOCOMMHANDLE, 
+                      STATUS_NOCOMMD, ANSWER_QUALITY_ERROR);
       DEXIT;
       return CL_RETVAL_HANDLE_NOT_FOUND;
    }
 
    if (strcmp(commproc, (char*)prognames[QMASTER]) == 0 && id == 1) {
-      cl_com_append_known_endpoint_from_name((char*)rhost, (char*)prognames[QMASTER], 1 , sge_get_qmaster_port(), CL_CM_AC_DISABLED ,CL_TRUE);
+      cl_com_append_known_endpoint_from_name((char*)rhost, 
+                                             (char*)prognames[QMASTER], 1 , 
+                                             sge_get_qmaster_port(), 
+                                             CL_CM_AC_DISABLED, CL_TRUE);
    }
    
    if (synchron) {
@@ -624,17 +628,17 @@ int sge_send_any_request(int synchron, u_long32 *mid, const char *rhost,
    }
 
    i = gdi_send_sec_message(handle,
-                            (char*) rhost,(char*) commproc , id, 
-                            ack_type , 
-                            (cl_byte_t*)pb->head_ptr ,(unsigned long) pb->bytes_used , 
+                            (char*) rhost,(char*) commproc, id, 
+                            ack_type, (cl_byte_t*)pb->head_ptr,
+                            (unsigned long) pb->bytes_used, 
                             mid_pointer, response_id, tag, 1, synchron);
    if (i != CL_RETVAL_OK) {
       /* try again ( if connection timed out ) */
       i = gdi_send_sec_message(handle,
-                               (char*)rhost, (char*)commproc , id, 
-                               ack_type ,
-                               (cl_byte_t*)pb->head_ptr ,(unsigned long) pb->bytes_used , 
-                               mid_pointer, response_id,tag,1 , synchron);
+                               (char*)rhost, (char*)commproc, id, 
+                               ack_type, (cl_byte_t*)pb->head_ptr,
+                               (unsigned long) pb->bytes_used, mid_pointer, 
+                               response_id, tag, 1, synchron);
    }
    
    if (mid) {
@@ -748,7 +752,7 @@ sge_get_any_request(char *rhost, char *commproc, u_short *id, sge_pack_buffer *p
 
 
       /* fill it in the packing buffer */
-      i = init_packbuffer_from_buffer(pb, (char*)message->message, message->message_length , 0);
+      i = init_packbuffer_from_buffer(pb, (char*)message->message, message->message_length);
 
       /* TODO: the packbuffer must be hold, not deleted !!! */
       message->message = NULL;
@@ -801,21 +805,12 @@ int gdi_send_message_pb(int synchron, const char *tocomproc, int toid,
 
    if ( !pb ) {
        DPRINTF(("no pointer for sge_pack_buffer\n"));
-       ret = gdi_send_message(synchron, tocomproc, toid, tohost, tag, NULL, 0, mid, 0);
+       ret = gdi_send_message(synchron, tocomproc, toid, tohost, tag, NULL, 0, mid);
        DEXIT;
        return ret;
    }
 
-#ifdef COMMCOMPRESS
-   if(pb->mode == 0) {
-      if(flush_packbuffer(pb) == PACK_SUCCESS)
-         ret = gdi_send_message(synchron, tocomproc, toid, tohost, tag, (char*)pb->head_ptr, pb->cpr.total_out, mid, 1);
-      else
-         ret = CL_MALLOC;
-   }
-   else
-#endif
-      ret = gdi_send_message(synchron, tocomproc, toid, tohost, tag, pb->head_ptr, pb->bytes_used, mid, 0);
+   ret = gdi_send_message(synchron, tocomproc, toid, tohost, tag, pb->head_ptr, pb->bytes_used, mid);
 
    DEXIT;
    return ret;

@@ -456,6 +456,7 @@ static void       process_acks(monitoring_t *monitor);
 static void       process_mod_event_client(monitoring_t *monitor);
 static void       process_sends(monitoring_t *monitor);
 static void       set_flush (void);
+
 #if 0
 static bool       should_flush_event_client (u_long32 id, ev_event type,
                                              bool has_lock);
@@ -3259,7 +3260,8 @@ static void add_list_event_direct(lListElem *event_client, lListElem *event,
          
          if (!list_select(subscription, type, &clp, lp, selection, fields,
                           descr)){
-            clp = lSelectD("updating list", lp, selection, descr, fields, false);
+            clp = lSelectDPack("updating list", lp, selection, descr, 
+                               fields, false, NULL, NULL);
          }
 
          /* no elements in the event list, no need for an event */
@@ -3662,10 +3664,10 @@ static lListElem *elem_select(subscription_t *subscription, lListElem *element,
       }
       else if (!dp) {
          /* for some reason, we did not get a descriptor for the target element */
-         el = lSelectElem(element, selection, fields, false);
+         el = lSelectElemPack(element, selection, fields, false, NULL);
       }
       else {
-         el = lSelectElemD(element, selection, dp, fields, false);
+         el = lSelectElemDPack(element, selection, dp, fields, false, NULL, NULL);
       }
 
       /* if we have a new reduced main element */
@@ -3674,8 +3676,8 @@ static lListElem *elem_select(subscription_t *subscription, lListElem *element,
          for(counter = 0; counter < ids_size; counter ++) {
             if (sub_list[counter] && (lGetPosViaElem(el, ids[counter]) != -1)) {
                lSetList(el, ids[counter],
-                        lSelectD("", sub_list[counter], sub_selection,
-                                 sub_descr, sub_fields, false));
+                        lSelectDPack("", sub_list[counter], sub_selection,
+                                     sub_descr, sub_fields, false, NULL, NULL));
             }            
          } 
       }
@@ -3690,7 +3692,7 @@ static lListElem *elem_select(subscription_t *subscription, lListElem *element,
    /* .... do a simple select */
    else {
       DPRINTF(("no sub filter specified\n"));
-      el = lSelectElemD(element, selection, dp, fields, false);
+      el = lSelectElemDPack(element, selection, dp, fields, false, NULL, NULL);
    }   
 
    DEXIT;

@@ -2016,12 +2016,13 @@ attr_mod_sub_list(lList **alpp, lListElem *this_elem, int this_elem_name,
 }
 
 bool 
-object_has_differences(lListElem *this_elem, lList **answer_list,
-                       lListElem *old_elem, bool modify_changed_flag)
+object_has_differences(const lListElem *this_elem, lList **answer_list,
+                       const lListElem *old_elem, bool modify_changed_flag)
 {
    bool ret = false;
 
    DENTER(TOP_LAYER, "object_has_differences");
+
    if (this_elem != NULL && old_elem != NULL) {
       lDescr *this_elem_descr = this_elem->descr;
       lDescr *old_elem_descr = old_elem->descr;
@@ -2030,7 +2031,7 @@ object_has_differences(lListElem *this_elem, lList **answer_list,
 
       /*
        * Compare each attribute of the given elements
-       */ 
+       */
       for (tmp_decr1 = this_elem_descr, tmp_decr2 = old_elem_descr; 
            tmp_decr1->nm != NoName && tmp_decr2->nm != NoName; 
            tmp_decr1++, tmp_decr2++) {
@@ -2084,7 +2085,6 @@ object_has_differences(lListElem *this_elem, lList **answer_list,
 
                   if ((new_str == NULL && old_str != NULL) || 
                       (new_str != NULL && old_str == NULL)) {
-                     DTRACE;
                      equiv = false;
                   } else if (new_str == old_str) {
                      equiv = true;
@@ -2100,7 +2100,6 @@ object_has_differences(lListElem *this_elem, lList **answer_list,
 
                   if ((new_str == NULL && old_str != NULL) || 
                       (new_str != NULL && old_str == NULL)) {
-                     DTRACE;
                      equiv = false;
                   } else if (new_str == old_str) {
                      equiv = true;
@@ -2113,13 +2112,16 @@ object_has_differences(lListElem *this_elem, lList **answer_list,
                equiv = (lGetPosRef(this_elem, pos) == lGetPosRef(old_elem, pos)) ? true : false;
                break;
             case lObjectT:
+      {
                {
-                  lListElem *new_obj = lGetPosRef(this_elem, pos);
-                  lListElem *old_obj = lGetPosRef(old_elem, pos);
+                  lListElem *new_obj = lGetPosObject(this_elem, pos);
+                  lListElem *old_obj = lGetPosObject(old_elem, pos);
 
-                  equiv = object_has_differences(new_obj, answer_list, 
-                                                 old_obj, modify_changed_flag);
+                  equiv = !object_has_differences(new_obj, answer_list, 
+                                                  old_obj, modify_changed_flag);
                }
+
+}
                break;
             case lListT:
                {
@@ -2162,15 +2164,14 @@ object_has_differences(lListElem *this_elem, lList **answer_list,
 }
                    
 bool 
-object_list_has_differences(lList *this_list, lList **answer_list,
-                            lList *old_list, bool modify_changed_flag)
+object_list_has_differences(const lList *this_list, lList **answer_list,
+                            const lList *old_list, bool modify_changed_flag)
 {
    bool ret = false;
 
    DENTER(BASIS_LAYER, "object_list_has_differences");
 
    if (this_list == NULL && old_list == NULL) {
-      DTRACE;
       ret = false;
    } else if (lGetNumberOfElem(this_list) == lGetNumberOfElem(old_list)) {
       lListElem *new_elem;

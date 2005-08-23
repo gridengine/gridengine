@@ -1397,6 +1397,7 @@ char *argv[]
             sge_usage(stderr);
             SGE_EXIT(1);
          }
+
          lString2List(*spp, &lp, UE_Type, UE_name, ",  ");
          
          /* get list_name list */

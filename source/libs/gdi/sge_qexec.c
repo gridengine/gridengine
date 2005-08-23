@@ -293,7 +293,6 @@ int tag
    sge_pack_buffer pb;
    u_short from_id;
    char host[1024];
-   u_short compressed;
 
    lListElem *rt_rcv;
    u_long32 exit_status=0;
@@ -306,7 +305,7 @@ int tag
    do {
       /* FIX_CONST */
       ret = gdi_receive_message((char*)prognames[EXECD], &from_id, host, &tag, 
-                                &msg, &msg_len, (options & OPT_SYNCHRON) ? 1:0, &compressed);
+                                &msg, &msg_len, (options & OPT_SYNCHRON) ? 1:0);
       if ( ret != CL_RETVAL_OK && ret != CL_RETVAL_SYNC_RECEIVE_TIMEOUT) {
          sprintf(lasterror, MSG_GDI_MESSAGERECEIVEFAILED_SI , cl_get_error_text(ret), ret);
          DEXIT;
@@ -319,7 +318,7 @@ int tag
       return 1;
    }
 
-   ret = init_packbuffer_from_buffer(&pb, msg, msg_len, compressed);     
+   ret = init_packbuffer_from_buffer(&pb, msg, msg_len);     
    if(ret != PACK_SUCCESS) {
       sprintf(lasterror,  MSG_GDI_ERRORUNPACKINGGDIREQUEST_S, cull_pack_strerror(ret));
       DEXIT;

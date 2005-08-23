@@ -84,6 +84,9 @@ static int
 sge_get_gdi_request_async(int *commlib_error, char *host, char *commproc, u_short *id,
                           sge_gdi_request** arp, unsigned long request_mid, bool is_sync);                    
 
+static bool
+sge_pack_gdi_info(u_long32 command);
+
 /****** gdi/request/sge_gdi() *************************************************
 *  NAME
 *     sge_gdi() -- request, change or delete data in the master daemon
@@ -1070,13 +1073,16 @@ static int sge_send_receive_gdi_request(int *commlib_error,
 *  NOTES
 *     MT-NOTE: sge_send_gdi_request() is MT safe (assumptions)
 *******************************************************************************/
-int sge_send_gdi_request(int sync, 
-                         const char *rhost, const char *commproc, int id, 
-                         sge_gdi_request *ar,
-                         u_long32 *mid, unsigned long response_id, lList **alpp) 
+int 
+sge_send_gdi_request(int sync, const char *rhost, const char *commproc, int id, 
+                     sge_gdi_request *ar, u_long32 *mid, 
+                     unsigned long response_id, lList **alpp) 
 {
+   int ret = 0;
+   bool local_ret;
    sge_pack_buffer pb;
-   int ret, size;
+   int pack_ret, size;
+   lList *answer_list = NULL;
 
    DENTER(GDI_LAYER, "sge_send_gdi_request");
 
@@ -1085,51 +1091,39 @@ int sge_send_gdi_request(int sync,
    ** retrieve packbuffer size to avoid large realloc's while packing 
    */
    init_packbuffer(&pb, 0, 1);
-   ret = sge_pack_gdi_request(&pb, ar);
+   local_ret = request_list_pack_results(ar, &answer_list, &pb);
    size = pb_used(&pb);
    clear_packbuffer(&pb);
 
-   if (ret == PACK_SUCCESS) {
+   if (local_ret) {
       /*
       ** now we do the real packing
       */
-      if((ret = init_packbuffer(&pb, size, 0)) == PACK_SUCCESS) {
-         ret = sge_pack_gdi_request(&pb, ar);
+      if((pack_ret = init_packbuffer(&pb, size, 0)) == PACK_SUCCESS) {
+         local_ret = request_list_pack_results(ar, &answer_list, &pb);
       }
    }
+   if (!local_ret) {
+      lListElem *answer = lFirst(answer_list);
 
-   switch (ret) {
-   case PACK_SUCCESS:
-      break;
-
-   case PACK_ENOMEM:
-      ERROR((SGE_EVENT, MSG_GDI_MEMORY_NOTENOUGHMEMORYFORPACKINGGDIREQUEST ));
-      clear_packbuffer(&pb);
-      PROF_STOP_MEASUREMENT(SGE_PROF_GDI_REQUEST);
-      DEXIT;
-      return -2;
-
-   case PACK_FORMAT:
-      ERROR((SGE_EVENT, MSG_GDI_REQUESTFORMATERROR ));
-      clear_packbuffer(&pb);
-      PROF_STOP_MEASUREMENT(SGE_PROF_GDI_REQUEST);
-      DEXIT;
-      return -3;
-
-   default:
-      ERROR((SGE_EVENT, MSG_GDI_UNEXPECTEDERRORWHILEPACKINGGDIREQUEST ));
-      clear_packbuffer(&pb);
-      PROF_STOP_MEASUREMENT(SGE_PROF_GDI_REQUEST);
-      DEXIT;
-      return -1;
+      if (answer != NULL) {
+         switch (answer_get_status(answer)) {
+            case STATUS_ERROR2:
+               ret = -2;
+               break;
+            case STATUS_ERROR3:
+               ret = -3;
+               break;
+            default:
+               ret = -1;
+         }
+      }
+   } else {
+      ret = sge_send_any_request(sync, mid, rhost, commproc, id, &pb,
+                                 TAG_GDI_REQUEST, response_id, alpp);
    }
-
-   ret = sge_send_any_request(sync, mid, rhost, commproc, id, &pb,
-                              TAG_GDI_REQUEST, response_id, alpp);
    clear_packbuffer(&pb);
-
    PROF_STOP_MEASUREMENT(SGE_PROF_GDI_REQUEST);
-
    DEXIT;
    return ret;
 }
@@ -1272,11 +1266,8 @@ int sge_unpack_gdi_request(sge_pack_buffer *pb, sge_gdi_request **arp)
       **                 together with (hopefully coming) further communication
       **                 redesign.
       */
-DTRACE;      
       if ((ret=cull_unpack_list(pb, &(ar->lp)) )) goto error;
-DTRACE;      
       if ((ret=cull_unpack_list(pb, &(ar->alp)) )) goto error;
-DTRACE;      
       if ((ret=cull_unpack_cond(pb, &(ar->cp)) )) goto error;
       if ((ret=cull_unpack_enum(pb, &(ar->enp)) )) goto error;
       
@@ -1349,85 +1340,228 @@ DTRACE;
    return ret;
 }
 
-/*--------------------------------------------------------------
- * sge_pack_gdi_request
- *
- * NOTES
- *    MT-NOTE: sge_pack_gdi_request() is MT safe
- *--------------------------------------------------------------*/
-int sge_pack_gdi_request(sge_pack_buffer *pb, sge_gdi_request *ar) 
+static bool
+sge_pack_gdi_info(u_long32 command) 
 {
-   int ret;
+   bool ret = true;
 
-   DENTER(GDI_LAYER, "sge_pack_gdi_request");
+   DENTER(GDI_LAYER, "sge_pack_gdi_info");
+   switch (command) {
+   case SGE_GDI_GET:
+      DPRINTF(("packing SGE_GDI_GET request\n"));
+      break;
+   case SGE_GDI_ADD:
+   case SGE_GDI_ADD | SGE_GDI_RETURN_NEW_VERSION:
+   case SGE_GDI_ADD | SGE_GDI_SET_ALL:
+      DPRINTF(("packing SGE_GDI_ADD request\n"));
+      break;
+   case SGE_GDI_DEL:
+   case SGE_GDI_DEL | SGE_GDI_ALL_JOBS:
+   case SGE_GDI_DEL | SGE_GDI_ALL_USERS:
+   case SGE_GDI_DEL | SGE_GDI_ALL_JOBS | SGE_GDI_ALL_USERS:
+      DPRINTF(("packing SGE_GDI_DEL request\n"));
+      break;
+   case SGE_GDI_MOD:
 
-   while (ar) {
-      switch (ar->op) {
-      case SGE_GDI_GET:
-         DPRINTF(("packing SGE_GDI_GET request\n"));
-         break;
-      case SGE_GDI_ADD:
-      case SGE_GDI_ADD | SGE_GDI_RETURN_NEW_VERSION:
-      case SGE_GDI_ADD | SGE_GDI_SET_ALL:
-         DPRINTF(("packing SGE_GDI_ADD request\n"));
-         break;
-      case SGE_GDI_DEL:
-      case SGE_GDI_DEL | SGE_GDI_ALL_JOBS:
-      case SGE_GDI_DEL | SGE_GDI_ALL_USERS:
-      case SGE_GDI_DEL | SGE_GDI_ALL_JOBS | SGE_GDI_ALL_USERS:
-         DPRINTF(("packing SGE_GDI_DEL request\n"));
-         break;
-      case SGE_GDI_MOD:
+   case SGE_GDI_MOD | SGE_GDI_ALL_JOBS:
+   case SGE_GDI_MOD | SGE_GDI_ALL_USERS:
+   case SGE_GDI_MOD | SGE_GDI_ALL_JOBS | SGE_GDI_ALL_USERS:
 
-      case SGE_GDI_MOD | SGE_GDI_ALL_JOBS:
-      case SGE_GDI_MOD | SGE_GDI_ALL_USERS:
-      case SGE_GDI_MOD | SGE_GDI_ALL_JOBS | SGE_GDI_ALL_USERS:
+   case SGE_GDI_MOD | SGE_GDI_APPEND:
+   case SGE_GDI_MOD | SGE_GDI_REMOVE:
+   case SGE_GDI_MOD | SGE_GDI_CHANGE:
+   case SGE_GDI_MOD | SGE_GDI_SET_ALL:
 
-      case SGE_GDI_MOD | SGE_GDI_APPEND:
-      case SGE_GDI_MOD | SGE_GDI_REMOVE:
-      case SGE_GDI_MOD | SGE_GDI_CHANGE:
-      case SGE_GDI_MOD | SGE_GDI_SET_ALL:
+      DPRINTF(("packing SGE_GDI_MOD request\n"));
+      break;
+   case SGE_GDI_TRIGGER:
+      DPRINTF(("packing SGE_GDI_TRIGGER request\n"));
+      break;
+   case SGE_GDI_PERMCHECK:
+      DPRINTF(("packing SGE_GDI_PERMCHECK request\n"));
+      break;
+   case SGE_GDI_SPECIAL:
+      DPRINTF(("packing special things\n"));
+      break;
+   case SGE_GDI_COPY:
+      DPRINTF(("request denied\n"));
+      break;
+   default:
+      ERROR((SGE_EVENT, MSG_GDI_ERROR_INVALIDVALUEXFORARTOOP_D, 
+             sge_u32c(command)));
+      DEXIT;
+      return PACK_FORMAT;
+   }
+   DEXIT;
+   return ret;
+}
 
-         DPRINTF(("packing SGE_GDI_MOD request\n"));
-         break;
-      case SGE_GDI_TRIGGER:
-         DPRINTF(("packing SGE_GDI_TRIGGER request\n"));
-         break;
-      case SGE_GDI_PERMCHECK:
-         DPRINTF(("packing SGE_GDI_PERMCHECK request\n"));
-         break;
-      case SGE_GDI_SPECIAL:
-         DPRINTF(("packing special things\n"));
-         break;
-      case SGE_GDI_COPY:
-         DPRINTF(("request denied\n"));
-         break;
-      default:
-         ERROR((SGE_EVENT, MSG_GDI_ERROR_INVALIDVALUEXFORARTOOP_D , sge_u32c(ar->op)));
-         DEXIT;
-         return PACK_FORMAT;
+bool 
+gdi_request_map_pack_error(int pack_ret, lList **answer_list)
+{
+   bool ret = true;
+
+   DENTER(GDI_LAYER, "gdi_request_map_pack_error");
+   switch (pack_ret) {
+   case PACK_SUCCESS:
+      break;
+   case PACK_ENOMEM:
+      answer_list_add_sprintf(answer_list, STATUS_ERROR2,
+                              ANSWER_QUALITY_ERROR,
+                   MSG_GDI_MEMORY_NOTENOUGHMEMORYFORPACKINGGDIREQUEST);
+      break;
+   case PACK_FORMAT:
+      answer_list_add_sprintf(answer_list, STATUS_ERROR3,
+                              ANSWER_QUALITY_ERROR,
+                              MSG_GDI_REQUESTFORMATERROR);
+      break;
+   default:
+      answer_list_add_sprintf(answer_list, STATUS_ERROR1,
+                              ANSWER_QUALITY_ERROR,
+                     MSG_GDI_UNEXPECTEDERRORWHILEPACKINGGDIREQUEST);
+      break;
+   }
+   ret = (pack_ret == PACK_SUCCESS) ? true : false;
+   DEXIT;
+   return ret;
+}
+
+bool
+gdi_request_pack_prefix(sge_gdi_request *ar, lList **answer_list,
+                        sge_pack_buffer *pb)
+{
+   bool ret = true;
+   
+   DENTER(GDI_LAYER, "gdi_request_pack_prefix");
+   if (ar != NULL) {
+      int pack_ret = PACK_SUCCESS;
+
+      sge_pack_gdi_info(ar->op);
+      
+      pack_ret = packint(pb, ar->op);
+      if (pack_ret != PACK_SUCCESS) {
+         goto handle_error; 
+      }
+      pack_ret = packint(pb, ar->target);
+      if (pack_ret != PACK_SUCCESS) {
+         goto handle_error; 
+      }
+      pack_ret = packint(pb, ar->version);
+      if (pack_ret != PACK_SUCCESS) {
+         goto handle_error; 
+      }
+ handle_error:
+      ret = gdi_request_map_pack_error(pack_ret, answer_list);
+   }
+   DEXIT;
+   return ret;
+}
+
+bool
+gdi_request_pack_suffix(sge_gdi_request *ar, lList **answer_list,
+                        sge_pack_buffer *pb)
+{
+   bool ret = true;
+   
+   DENTER(GDI_LAYER, "gdi_request_pack_suffix");
+   if (ar != NULL) {
+      int pack_ret = PACK_SUCCESS;
+
+      pack_ret = cull_pack_list(pb, ar->alp);
+      if (pack_ret != PACK_SUCCESS) {
+         goto handle_error;
+      }
+      pack_ret = cull_pack_cond(pb, ar->cp);
+      if (pack_ret != PACK_SUCCESS) {
+         goto handle_error;
+      }
+      pack_ret = cull_pack_enum(pb, ar->enp);
+      if (pack_ret != PACK_SUCCESS) {
+         goto handle_error;
+      }
+      pack_ret = packstr(pb, ar->auth_info);
+      if (pack_ret != PACK_SUCCESS) {
+         goto handle_error;
+      }
+      pack_ret = packint(pb, ar->sequence_id);
+      if (pack_ret != PACK_SUCCESS) {
+         goto handle_error;
+      }
+      pack_ret = packint(pb, ar->request_id);
+      if (pack_ret != PACK_SUCCESS) {
+         goto handle_error;
+      }
+      pack_ret = packint(pb, ar->next ? 1 : 0);
+      if (pack_ret != PACK_SUCCESS) {
+         goto handle_error;
+      }
+ handle_error:
+      ret = gdi_request_map_pack_error(pack_ret, answer_list);
+   }
+   DEXIT;
+   return ret;
+}
+
+/*
+ * NOTES
+ *    MT-NOTE: gdi_request_pack_result() is MT safe
+ */
+bool
+gdi_request_pack_result(sge_gdi_request *ar, lList **answer_list,
+                        sge_pack_buffer *pb)
+{
+   bool ret = true;
+   int old_size;
+
+   DENTER(GDI_LAYER, "gdi_request_pack_result");
+   if (ar != NULL && pb != NULL) {
+      int pack_ret = PACK_SUCCESS;
+
+      ret &= gdi_request_pack_prefix(ar, answer_list, pb);
+      if (!ret) {
+         goto exit_this_function;
       }
 
-      if ((ret=packint(pb, ar->op) )) goto error;
-      if ((ret=packint(pb, ar->target) )) goto error;
-      if ((ret=packint(pb, ar->version) )) goto error;
-      if ((ret=cull_pack_list(pb, ar->lp) )) goto error;
-      if ((ret=cull_pack_list(pb, ar->alp) )) goto error;
-      if ((ret=cull_pack_cond(pb, ar->cp) )) goto error;
-      if ((ret=cull_pack_enum(pb, ar->enp) )) goto error;
+      old_size = pb->bytes_used;
 
-      if ((ret=packstr(pb, ar->auth_info) )) goto error;
-      if ((ret=packint(pb, ar->sequence_id) )) goto error;
-      if ((ret=packint(pb, ar->request_id) )) goto error;
-      if ((ret=packint(pb, ar->next ? 1 : 0) )) goto error;
-   
+      pack_ret = cull_pack_list(pb, ar->lp);
+      if (pack_ret != PACK_SUCCESS) {
+         goto handle_error; 
+      }
+
+      ret &= gdi_request_pack_suffix(ar, answer_list, pb);
+      if (!ret) {
+         goto exit_this_function;
+      }
+ handle_error:
+      ret = gdi_request_map_pack_error(pack_ret, answer_list);
+   }
+ exit_this_function:
+   DEXIT;
+   return ret;
+}
+
+
+
+/*--------------------------------------------------------------
+ * request_list_pack_results
+ *
+ * NOTES
+ *    MT-NOTE: request_list_pack_results() is MT safe
+ *--------------------------------------------------------------*/
+bool
+request_list_pack_results(sge_gdi_request *ar, lList **answer_list,
+                          sge_pack_buffer *pb)
+{
+   bool ret = true;
+
+   DENTER(GDI_LAYER, "request_list_pack_results");
+
+   while (ret && ar != NULL) {
+      ret = gdi_request_pack_result(ar, answer_list, pb);
+
       ar = ar->next;
    }
-
-   DEXIT;
-   return PACK_SUCCESS;
-
- error:
    DEXIT;
    return ret;
 }

@@ -85,13 +85,20 @@ struct _gdi_object_t {
 
 gdi_object_t *get_gdi_object(u_long32);
 
-int sge_gdi_add_mod_generic(lList **alpp, lListElem *instructions, int add, gdi_object_t *object, const char *ruser, const char *rhost, int sub_command, lList **ppList, monitoring_t *monitor);
+void 
+sge_c_gdi(char *host, sge_gdi_request *request, sge_gdi_request *answer,
+          sge_pack_buffer *pb, monitoring_t *monitor);
 
-void sge_c_gdi(char *host, sge_gdi_request *request, sge_gdi_request *answer, monitoring_t *monitor);
+int 
+sge_gdi_add_mod_generic(lList **alpp, lListElem *instructions, int add, 
+                        gdi_object_t *object, const char *ruser, 
+                        const char *rhost, int sub_command, lList **ppList, 
+                        monitoring_t *monitor);
 
 void sge_clean_lists(void); 
 
-int verify_request_version(lList **alpp, u_long32 version, char *host, char *commproc, int id);
+int verify_request_version(lList **alpp, u_long32 version, char *host, 
+                           char *commproc, int id);
 
 #endif /* __SGE_C_GDI_H */
 

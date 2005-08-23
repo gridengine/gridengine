@@ -50,6 +50,7 @@
 #include "cull_hash.h"
 #include "cull_state.h"
 #include "pack.h"
+#include "cull_pack.h"
 
 /* do not compile in monitoring code */
 #ifndef NO_SGE_COMPILE_DEBUG
@@ -168,7 +169,7 @@ lListElem *lCopyElemHash(const lListElem *ep, bool isHash)
    }
 
    for (index = 0; index<max ; index++) { 
-      if (lCopySwitch(ep, new, index, index, isHash, NULL) != 0) {
+      if (lCopySwitchPack(ep, new, index, index, isHash, NULL, NULL) != 0) {
          lFreeElem(&new);
 
          LERROR(LECOPYSWITCH);
@@ -218,25 +219,28 @@ int lModifyWhat(lListElem *dst, const lListElem *src, const lEnumeration *enp)
 
    DENTER(CULL_LAYER, "lModifyWhat");
 
-   ret = lCopyElemPartial(dst, &i, src, enp, true);
+   ret = lCopyElemPartialPack(dst, &i, src, enp, true, NULL);
 
    DEXIT;
    return ret;
 }
 
-/****** cull/list/lCopyElemPartial() ****************************************
+/****** cull/list/lCopyElemPartialPack() **************************************
 *  NAME
-*     lCopyElemPartial() -- Copies parts of an element 
+*     lCopyElemPartialPack() -- Copies parts of an element 
 *
 *  SYNOPSIS
-*     int lCopyElemPartial(lListElem *dst, int *jp, 
-*                          const lListElem *src, 
-*                          const lEnumeration *enp, bool isHash) 
+*     int 
+*     lCopyElemPartialPack(lListElem *dst, int *jp, const lListElem *src, 
+*                          const lEnumeration *enp, bool isHash,
+*                          sge_pack_buffer *pb) 
 *
 *  FUNCTION
 *     Copies elements from list element 'src' to 'dst' using the
 *     enumeration 'enp' as a mask or copies all elements if
-*     'enp' is NULL. Copying starts at index *jp. 
+*     'enp' is NULL. Copying starts at index *jp. If pb is not NULL
+*     then the elements will be stored in the packbuffer 'pb' instead of
+*     being copied.
 *
 *  INPUTS
 *     lListElem *dst          - destination element 
@@ -244,20 +248,23 @@ int lModifyWhat(lListElem *dst, const lListElem *src, const lEnumeration *enp)
 *     const lListElem *src    - src element 
 *     const lEnumeration *enp - enumeration 
 *     bool                    - generate hash or not
+*     sge_pack_buffer *pb     - packbuffer
 *
 *  RESULT
 *     int - error state
 *         0 - OK
 *        -1 - Error
 *******************************************************************************/
-int lCopyElemPartial(lListElem *dst, int *jp, const lListElem *src, 
-                     const lEnumeration *enp, bool isHash) 
+int 
+lCopyElemPartialPack(lListElem *dst, int *jp, const lListElem *src, 
+                     const lEnumeration *enp, bool isHash,
+                     sge_pack_buffer *pb) 
 {
    int i;
 
-   DENTER(CULL_LAYER, "lCopyElemPartial");
+   DENTER(CULL_LAYER, "lCopyElemPartialPack");
 
-   if (!enp || !dst || !jp) {
+   if (!enp || (!dst && !pb) || !jp) {
       LERROR(LEENUMNULL);
       DEXIT;
       return -1;
@@ -265,16 +272,22 @@ int lCopyElemPartial(lListElem *dst, int *jp, const lListElem *src,
 
    switch (enp[0].pos) {
    case WHAT_ALL:               /* all fields of element src is copied */
-      for (i = 0; src->descr[i].nm != NoName; i++, (*jp)++) {
-         if (lCopySwitch(src, dst, i, *jp, isHash, enp[0].ep) != 0) {
-            LERROR(LECOPYSWITCH);
-            DEXIT;
-            return -1;
+      if (pb == NULL) {
+         for (i = 0; src->descr[i].nm != NoName; i++, (*jp)++) {
+            if (lCopySwitchPack(src, dst, i, *jp, isHash, enp[0].ep, pb) != 0) {
+               LERROR(LECOPYSWITCH);
+               DEXIT;
+               return -1;
+            }
+#if 0 /* TODO EB: we need to decide if we want this or not */
+            /* copy changed field information */
+            if(sge_bitfield_get(&(src->changed), i)) {
+               sge_bitfield_set(&(dst->changed), *jp);
+            }
+#endif
          }
-         /* copy changed field information */
-         if(sge_bitfield_get(&(src->changed), i)) {
-            sge_bitfield_set(&(dst->changed), *jp);
-         }
+      } else {
+         cull_pack_elem(pb, src);
       }
       break;
 
@@ -282,57 +295,66 @@ int lCopyElemPartial(lListElem *dst, int *jp, const lListElem *src,
       break;
 
    default:                     /* copy only the in enp enumerated elems */
-      for (i = 0; enp[i].nm != NoName; i++, (*jp)++) {
-         if (lCopySwitch(src, dst, enp[i].pos, *jp, isHash, enp[i].ep) != 0) {
-            LERROR(LECOPYSWITCH);
-            DEXIT;
-            return -1;
+      if (pb == NULL) {
+         for (i = 0; enp[i].nm != NoName; i++, (*jp)++) {
+            if (lCopySwitchPack(src, dst, enp[i].pos, *jp, isHash, enp[i].ep, pb) != 0) {
+               LERROR(LECOPYSWITCH);
+               DEXIT;
+               return -1;
+            }
+#if 0 /* TODO EB: we need to decide if we want this or not */
+            /* copy changed field information */
+            if(sge_bitfield_get(&(src->changed), enp[i].pos)) {
+               sge_bitfield_set(&(dst->changed), *jp);
+            }
+#endif
          }
-         /* copy changed field information */
-         if(sge_bitfield_get(&(src->changed), enp[i].pos)) {
-            sge_bitfield_set(&(dst->changed), *jp);
-         }
+      } else {
+         cull_pack_elem_partial(pb, src, enp, 0);
       }
    }
    DEXIT;
    return 0;
 }
 
-/****** cull/list/lCopySwitch() ***********************************************
+/****** cull/list/lCopySwitchPack() *******************************************
 *  NAME
-*     lCopySwitch() -- Copy parts of elements indedendent from type 
+*     lCopySwitchPacPackk() -- Copy parts of elements indedendent from type 
 *
 *  SYNOPSIS
-*     int lCopySwitch(const lListElem *sep, lListElem *dep, 
-*                     int src_idx, int dst_idx, isHash) 
+*     int 
+*     lCopySwitchPack(const lListElem *sep, lListElem *dep, int src_idx, 
+*                 int dst_idx, bool isHash, sge_pack_buffer *pb) 
 *
 *  FUNCTION
 *     Copies from the element 'sep' (using index 'src_idx') to
 *     the element 'dep' (using index 'dst_idx') in dependence 
-*     of the type. 
+*     of the type or it copies the it directly into pb. 
 *
 *  INPUTS
 *     const lListElem *sep - source element 
 *     lListElem *dep       - destination element 
 *     int src_idx          - source index 
 *     int dst_idx          - destination index 
+*     bool isHash          - create Hash or not
 *     lEnumeration *ep     - enumeration oiter to be used for sublists
-*     bool                 - create Hash or not
+*     sge_pack_buffer *pb  - pack buffer
 *
 *  RESULT
 *     int - error state
 *         0 - OK
 *        -1 - Error
 *******************************************************************************/
-int lCopySwitch(const lListElem *sep, lListElem *dep, 
-                int src_idx, int dst_idx, bool isHash, lEnumeration *ep) 
+int 
+lCopySwitchPack(const lListElem *sep, lListElem *dep, int src_idx, int dst_idx, 
+                bool isHash, lEnumeration *ep, sge_pack_buffer *pb) 
 {
    lList *tlp;
    lListElem *tep;
 
-   DENTER(CULL_LAYER, "lCopySwitch");
+   DENTER(CULL_LAYER, "lCopySwitchPack");
 
-   if (!dep || !sep) {
+   if ((!dep && !pb) || !sep) {
       DEXIT;
       return -1;
    }
@@ -360,15 +382,16 @@ int lCopySwitch(const lListElem *sep, lListElem *dep,
    case lListT:
       if ((tlp = sep->cont[src_idx].glp) == NULL) 
          dep->cont[dst_idx].glp = NULL;
-      else { 
-         dep->cont[dst_idx].glp = lSelectHash(NULL, tlp, NULL, ep, isHash);
+      else {
+         dep->cont[dst_idx].glp = lSelectHashPack(tlp->listname, tlp, NULL, 
+                                                  ep, isHash, pb);
       }
       break;
    case lObjectT:
       if ((tep = sep->cont[src_idx].obj) == NULL) {
          dep->cont[dst_idx].obj = NULL;
       } else {
-         lListElem *new = lSelectElem(tep, NULL, ep, isHash);
+         lListElem *new = lSelectElemPack(tep, NULL, ep, isHash, pb);
          new->status = OBJECT_ELEM;
          dep->cont[dst_idx].obj = new;
       }   
@@ -937,9 +960,9 @@ lList *lCreateListHash(const char *listname, const lDescr *descr, bool hash)
    lList *lp;
    int i, n;
 
-   DENTER(CULL_LAYER, "lCreateList");
+   DENTER(CULL_LAYER, "lCreateListHash");
 
-   if (!listname) {
+   if (listname == NULL) {
       listname = "No list name specified";
    }
 
@@ -1468,6 +1491,10 @@ lList *lCopyListHash(const char *name, const lList *src, bool hash)
       DEXIT;
       return NULL;
    }
+
+#if 0 /* TODO EB:  need to decide if we want this or not*/
+   dst->changed = src->changed;
+#endif
 
    for (sep = src->first; sep; sep = sep->next) {
       if (lAppendElem(dst, lCopyElem(sep)) == -1) {

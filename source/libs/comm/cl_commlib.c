@@ -1992,8 +1992,14 @@ int cl_com_remove_host_alias(char* alias_name) {
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_com_append_known_endpoint_from_name()"
-int cl_com_append_known_endpoint_from_name(char* unresolved_comp_host, char* comp_name, unsigned long comp_id, int comp_port, cl_xml_connection_autoclose_t autoclose, cl_bool_t is_static) {
-
+int 
+cl_com_append_known_endpoint_from_name(char* unresolved_comp_host, 
+                                       char* comp_name, 
+                                       unsigned long comp_id, 
+                                       int comp_port, 
+                                       cl_xml_connection_autoclose_t autoclose,
+                                       cl_bool_t is_static) 
+{
    int retval = CL_RETVAL_OK;
    int function_return = CL_RETVAL_OK;
 
@@ -6131,15 +6137,14 @@ static int cl_commlib_send_message_to_endpoint(cl_com_handle_t*   handle,
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_commlib_send_message()"
-int cl_commlib_send_message(cl_com_handle_t* handle,
-                            char* un_resolved_hostname, char* component_name, unsigned long component_id, 
-                            cl_xml_ack_type_t ack_type, 
-                            cl_byte_t* data, unsigned long size , 
-                            unsigned long* mid, unsigned long response_mid, unsigned long tag ,
-                            cl_bool_t copy_data,
-                            cl_bool_t wait_for_ack) {
-
-
+int 
+cl_commlib_send_message(cl_com_handle_t* handle, char *un_resolved_hostname, 
+                        char *component_name, unsigned long component_id, 
+                        cl_xml_ack_type_t ack_type, cl_byte_t *data, 
+                        unsigned long size, unsigned long *mid, 
+                        unsigned long response_mid, unsigned long tag ,
+                        cl_bool_t copy_data, cl_bool_t wait_for_ack) 
+{
    cl_com_connection_t* connection = NULL;
    cl_connection_list_elem_t* elem = NULL;
    cl_com_message_t* message = NULL;

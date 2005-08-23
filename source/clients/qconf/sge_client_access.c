@@ -114,18 +114,17 @@ lList *acl_args
          answers = sge_gdi(SGE_USERSET_LIST, SGE_GDI_GET, &acl, where, what);
          lFreeList(&answers);
 
-         if (acl) {
+         if (acl && lGetNumberOfElem(acl) > 0) {
             if (!lGetSubStr(lFirst(acl), UE_name, user_name, US_entries)) {
                lAddSubStr(lFirst(acl), UE_name, user_name, US_entries, UE_Type);
 
                /* mod the acl */
                answers = sge_gdi(SGE_USERSET_LIST, SGE_GDI_MOD, &acl, 
                         NULL, NULL);   
-            }
-            else
+            } else {
                already = 1;
-         }
-         else {
+            }
+         } else {
             /* build new list */
             lAddElemStr(&acl, US_name, acl_name, US_Type);
             lAddSubStr(lFirst(acl), UE_name, user_name, US_entries, UE_Type);

@@ -51,21 +51,30 @@
 #include "cull_whereP.h"
 #include "cull_pack.h"
 #include "cull_parse.h"
+#include "cull_what_print.h"
 
 /* =========== implementation ================================= */
 
 static int cull_unpack_switch(sge_pack_buffer *pb, lMultiType *dst, int type, int flags);
-static int cull_pack_switch(sge_pack_buffer *pb, const lMultiType *src, int type, int flags);
+
+static int 
+cull_pack_switch(sge_pack_buffer *pb, const lMultiType *src, lEnumeration *what,
+                 int type, int flags);
 
 static int cull_unpack_descr(sge_pack_buffer *pb, lDescr **dpp);
 static int cull_pack_descr(sge_pack_buffer *pb, const lDescr *dp);
 
 static int cull_unpack_cont(sge_pack_buffer *pb, lMultiType **mpp, const lDescr *dp, int flags);
-static int cull_pack_cont(sge_pack_buffer *pb, const lMultiType *mp, const lDescr *dp, int flags);
+
+static int 
+cull_pack_cont(sge_pack_buffer *pb, const lMultiType *cp, const lDescr *dp,
+               const lEnumeration *what, int flags);
 
 static int cull_unpack_object(sge_pack_buffer *pb, lListElem **epp, int flags);
 static int cull_pack_object(sge_pack_buffer *pb, const lListElem *ep, int flags);
-
+static int
+cull_pack_enum_as_descr(sge_pack_buffer * pb, const lEnumeration *what,
+                        const lDescr *dp);
 
 /* ------------------------------------------------------------
 
@@ -152,12 +161,9 @@ int flags
    PACK_FORMAT
 
  */
-static int cull_pack_switch(
-sge_pack_buffer *pb,
-const lMultiType *src,
-int type,
-int flags
-) {
+static int 
+cull_pack_switch(sge_pack_buffer *pb, const lMultiType *src, lEnumeration *what,
+                 int type, int flags) {
    int ret;
 
    DENTER(CULL_LAYER, "cull_pack_switch");
@@ -181,7 +187,7 @@ int flags
       break;
 
    case lListT:
-      ret = cull_pack_list_partial(pb, src->glp, flags);
+      ret = cull_pack_list_partial(pb, src->glp, what, flags);
       break;
 
    case lObjectT:
@@ -370,10 +376,8 @@ lDescr **dpp
    PACK_FORMAT
 
  */
-static int cull_pack_descr(
-sge_pack_buffer *pb,
-const lDescr *dp 
-) {
+static int cull_pack_descr(sge_pack_buffer *pb, const lDescr *dp) 
+{
    int i, ret;
 
    DENTER(CULL_LAYER, "cull_pack_descr");
@@ -399,6 +403,61 @@ const lDescr *dp
    return PACK_SUCCESS;
 }
 
+/* TODO EB: doc is missing */
+/* TODO EB: remove not needed exit points */
+static int
+cull_pack_enum_as_descr(sge_pack_buffer * pb, const lEnumeration *what,
+                        const lDescr *descr)
+{
+   int i, ret;
+
+   DENTER(CULL_LAYER, "cull_pack_enum_as_descr");
+
+   PROF_START_MEASUREMENT(SGE_PROF_PACKING);
+   /* pack the number of lDescr fields (without end mark) */
+   if ((ret = packint(pb, lCountWhat(what, descr)))) {
+      PROF_STOP_MEASUREMENT(SGE_PROF_PACKING);
+      DEXIT;
+      return ret;
+   }
+   switch (what[0].pos) {
+   case WHAT_ALL:               
+      for (i = 0; descr[i].nm != NoName; i++) {
+         if ((ret = packint(pb, descr[i].nm))) {
+            PROF_STOP_MEASUREMENT(SGE_PROF_PACKING);
+            DEXIT;
+            return ret;
+         }
+         if ((ret = packint(pb, descr[i].mt))) {
+            PROF_STOP_MEASUREMENT(SGE_PROF_PACKING);
+            DEXIT;
+            return ret;
+         }
+      }
+      break;
+   case WHAT_NONE:
+      break;
+   default:                
+      /* pack the lEnumeration field similar to lDescr fields */
+      for (i = 0; what[i].nm != NoName; i++) {
+         if ((ret = packint(pb, what[i].nm))) {    
+            PROF_STOP_MEASUREMENT(SGE_PROF_PACKING);
+            DEXIT;
+            return ret;
+         }
+         if ((ret = packint(pb, what[i].mt))) {
+            PROF_STOP_MEASUREMENT(SGE_PROF_PACKING);
+            DEXIT;
+            return ret;
+         }
+      }
+      break;
+   }
+   PROF_STOP_MEASUREMENT(SGE_PROF_PACKING);
+   DEXIT;
+   return PACK_SUCCESS;
+}
+
 /* ================================================================ */
 
 /* ------------------------------------------------------------
@@ -411,25 +470,34 @@ const lDescr *dp
    PACK_FORMAT
 
  */
-static int cull_pack_cont(
-sge_pack_buffer *pb,
-const lMultiType *cp,
-const lDescr *dp,
-int flags
-) {
+static int 
+cull_pack_cont(sge_pack_buffer *pb, const lMultiType *cp, const lDescr *dp,
+               const lEnumeration *what, int flags) 
+{
    int i, ret;
    int n;
 
    DENTER(CULL_LAYER, "cull_pack_cont");
 
-   n = lCountDescr(dp);
-
-   for (i = 0; i < n; i++) {
-      /* if flags are given, pack only fields matching flags, e.g. CULL_SPOOL */
-      if (flags == 0 || (dp[i].mt & flags) != 0) {
-         if ((ret = cull_pack_switch(pb, &cp[i], mt_get_type(dp[i].mt), flags))) {
-            DEXIT;
-            return ret;
+   if (what == NULL) {
+      n = lCountDescr(dp);
+      for (i = 0; i < n; i++) {
+         /* if flags are given, pack only fields matching flags, e.g. CULL_SPOOL */
+         if (flags == 0 || (dp[i].mt & flags) != 0) {
+            if ((ret = cull_pack_switch(pb, &cp[i], NULL, mt_get_type(dp[i].mt), flags))) {
+               DEXIT;
+               return ret;
+            }
+         }
+      }
+   } else {
+      for (i = 0; what[i].nm != NoName; i++) {
+         if (flags == 0 || (what[i].mt & flags) != 0) {
+            if ((ret = cull_pack_switch(pb, &cp[what[i].pos], what[i].ep,
+                                        mt_get_type(what[i].mt), flags))) {
+               DEXIT;
+               return ret;
+            }
          }
       }
    }
@@ -503,13 +571,15 @@ int cull_pack_elem(sge_pack_buffer *pb, const lListElem *ep)
    int ret;
 
    DENTER(TOP_LAYER, "cull_pack_elem");
-   ret = cull_pack_elem_partial(pb, ep, 0);
+   ret = cull_pack_elem_partial(pb, ep, NULL, 0);
    DEXIT;
    return ret;
 }
 
 
-int cull_pack_elem_partial(sge_pack_buffer *pb, const lListElem *ep, int flags)
+int 
+cull_pack_elem_partial(sge_pack_buffer *pb, const lListElem *ep, 
+                       const lEnumeration *what, int flags)
 {
    int ret;
 
@@ -529,20 +599,50 @@ int cull_pack_elem_partial(sge_pack_buffer *pb, const lListElem *ep, int flags)
    }
 
    if(ep->status == FREE_ELEM) {
-      if((ret = cull_pack_descr(pb, ep->descr)) != PACK_SUCCESS) {
+      if (what == NULL) {
+         if((ret = cull_pack_descr(pb, ep->descr)) != PACK_SUCCESS) {
+            PROF_STOP_MEASUREMENT(SGE_PROF_PACKING);
+            DEXIT;
+            return ret;
+         }
+      } else {
+         if ((ret = cull_pack_enum_as_descr(pb, what, ep->descr)) != PACK_SUCCESS) {
+            PROF_STOP_MEASUREMENT(SGE_PROF_PACKING);
+            DEXIT;
+            return ret;
+         }
+      }
+   }
+
+   /*
+    * pack dummy bitfield: later on this space might be used to store
+    * the elements changed-bitfield
+    */
+   {
+      bitfield field;
+
+      if (what == NULL) {
+         if (!sge_bitfield_init(&field, lCountDescr(ep->descr))) {
+            PROF_STOP_MEASUREMENT(SGE_PROF_PACKING);
+            DEXIT;
+            return PACK_ENOMEM;
+         }
+      } else {
+         if (!sge_bitfield_init(&field, lCountWhat(what, ep->descr))) {
+            PROF_STOP_MEASUREMENT(SGE_PROF_PACKING);
+            DEXIT;
+            return PACK_ENOMEM;
+         }
+      }
+      if((ret = packbitfield(pb, &(field))) != PACK_SUCCESS) {
          PROF_STOP_MEASUREMENT(SGE_PROF_PACKING);
          DEXIT;
          return ret;
       }
+      sge_bitfield_free_data(&field);
    }
 
-   if((ret = packbitfield(pb, &(ep->changed))) != PACK_SUCCESS) {
-      PROF_STOP_MEASUREMENT(SGE_PROF_PACKING);
-      DEXIT;
-      return ret;
-   }
-
-   ret = cull_pack_cont(pb, ep->cont, ep->descr, flags);
+   ret = cull_pack_cont(pb, ep->cont, ep->descr, what, flags);
 
    PROF_STOP_MEASUREMENT(SGE_PROF_PACKING);
    DEXIT;
@@ -688,7 +788,7 @@ int flags
       }
 
       /* pack list element */
-      if((ret = cull_pack_elem_partial(pb, ep, flags)) != PACK_SUCCESS) {
+      if((ret = cull_pack_elem_partial(pb, ep, NULL, flags)) != PACK_SUCCESS) {
          DEXIT;
          return ret;
       }
@@ -713,13 +813,94 @@ int cull_pack_list(sge_pack_buffer *pb, const lList *lp)
    int ret;
 
    DENTER(CULL_LAYER, "cull_pack_list");
-   ret = cull_pack_list_partial(pb, lp, 0);
+   ret = cull_pack_list_partial(pb, lp, NULL, 0);
    DEXIT;
    return ret;
 }
 
+int
+cull_pack_list_summary(sge_pack_buffer *pb, const lList *lp,
+                       const lEnumeration *what, const char *name,
+                       size_t *offset, size_t *used)
+{     
+   int ret;
+         
+   DENTER(CULL_LAYER, "cull_pack_list_summary");
 
-int cull_pack_list_partial(sge_pack_buffer *pb, const lList *lp, int flags) 
+   PROF_START_MEASUREMENT(SGE_PROF_PACKING);
+   if((ret = packint(pb, lp != NULL)) != PACK_SUCCESS) {
+      PROF_STOP_MEASUREMENT(SGE_PROF_PACKING);
+      DEXIT;
+      return ret;
+   }
+
+   if (lp != NULL) {
+      /*
+       * TODO: The next release where it is possible to change the pb-format
+       *       makes it possible to delete this hack 
+       *       Then it is possible to remove the argument 'bytes_used'
+       *
+       * Future implementation:
+       *    The number of elements can't be written before the list
+       *    elements. Instead each element has to be introduced by an int.
+       *    0 means that no element will follow. 1 means that an element
+       *    will follow    
+       */
+      *offset = pb->cur_ptr - pb->head_ptr;
+      *used = pb->bytes_used;
+
+      /*
+       * pack number of elements contained in the list 
+       */
+      if((ret = packint(pb, lp->nelem)) != PACK_SUCCESS) {
+         PROF_STOP_MEASUREMENT(SGE_PROF_PACKING);
+         DEXIT;
+         return ret;
+      }
+     
+      /*
+       * name of the list
+       */ 
+      if (name == NULL) {
+         name = lp->listname;
+      }
+      if((ret = packstr(pb, name)) != PACK_SUCCESS) {
+         PROF_STOP_MEASUREMENT(SGE_PROF_PACKING);
+         DEXIT;
+         return ret;
+      }
+
+      /* changed variable */
+      if((ret = packint(pb, lp->changed)) != PACK_SUCCESS) {
+         PROF_STOP_MEASUREMENT(SGE_PROF_PACKING);
+         DEXIT;
+         return ret;
+      }
+
+      /* pack descriptor */
+      if (what == NULL) {
+         ret = cull_pack_descr(pb, lp->descr);
+         if(ret != PACK_SUCCESS) {
+            PROF_STOP_MEASUREMENT(SGE_PROF_PACKING);
+            DEXIT;
+            return ret;
+         }
+      } else {
+         ret = cull_pack_enum_as_descr(pb, what, lp->descr);
+         if (ret != PACK_SUCCESS) {
+            PROF_STOP_MEASUREMENT(SGE_PROF_PACKING);
+            DEXIT;
+            return ret;
+         }
+      }
+   }
+
+   DEXIT;
+   return PACK_SUCCESS;
+}        
+
+int cull_pack_list_partial(sge_pack_buffer *pb, const lList *lp, 
+                           lEnumeration *what, int flags) 
 {
    int ret;
    lListElem *ep;
@@ -733,13 +914,13 @@ int cull_pack_list_partial(sge_pack_buffer *pb, const lList *lp, int flags)
       return ret;
    }
 
-   if(lp != NULL) {
+   if (lp != NULL) {
       if((ret = packint(pb, lp->nelem)) != PACK_SUCCESS) {
          PROF_STOP_MEASUREMENT(SGE_PROF_PACKING);
          DEXIT;
          return ret;
       }
-      
+
       if((ret = packstr(pb, lp->listname)) != PACK_SUCCESS) {
          PROF_STOP_MEASUREMENT(SGE_PROF_PACKING);
          DEXIT;
@@ -753,15 +934,24 @@ int cull_pack_list_partial(sge_pack_buffer *pb, const lList *lp, int flags)
       }
 
       /* pack descriptor */
-      if((ret = cull_pack_descr(pb, lp->descr)) != PACK_SUCCESS) {
-         PROF_STOP_MEASUREMENT(SGE_PROF_PACKING);
-         DEXIT;
-         return ret;
+      if (what == NULL) {
+         if((ret = cull_pack_descr(pb, lp->descr)) != PACK_SUCCESS) {
+            PROF_STOP_MEASUREMENT(SGE_PROF_PACKING);
+            DEXIT;
+            return ret;
+         }
+      } else {
+         if ((ret = cull_pack_enum_as_descr(pb, what, lp->descr)) != PACK_SUCCESS) {
+            PROF_STOP_MEASUREMENT(SGE_PROF_PACKING);
+            DEXIT;
+            return ret;
+         }
       }
-
+   }
+   if (lp != NULL) {
       /* pack each list element */
       for_each(ep, lp) {
-         if((ret = cull_pack_elem_partial(pb, ep, flags)) != PACK_SUCCESS) {
+         if((ret = cull_pack_elem_partial(pb, ep, what, flags)) != PACK_SUCCESS) {
             PROF_STOP_MEASUREMENT(SGE_PROF_PACKING);
             DEXIT;
             return ret;
@@ -1211,7 +1401,8 @@ const lCondition *cp
       }
 
       if (mt_get_type(cp->operand.cmp.mt) != lListT) {
-         if ((ret = cull_pack_switch(pb, &(cp->operand.cmp.val), mt_get_type(cp->operand.cmp.mt), 0))) {
+         if ((ret = cull_pack_switch(pb, &(cp->operand.cmp.val), NULL,
+                                     mt_get_type(cp->operand.cmp.mt), 0))) {
             PROF_STOP_MEASUREMENT(SGE_PROF_PACKING);
             DEXIT;
             return ret;

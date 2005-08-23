@@ -1,3 +1,7 @@
+EB-2005-08-23-0: Enhancem.: improved packing for qstat
+                 Changed:   qmaster
+                 Review:    (AH), SG
+
 RD-2005-08-19-0: Bugfix:    Qrsh tries to free invalid pointer
                  Changed:   qrsh
                  Issue:     1758

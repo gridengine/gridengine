@@ -118,7 +118,7 @@ int pack_get_chunk(void)
    return cull_state_get_chunk_size();
 }
 
-/****** cull/pack/init_packbuffer() *************************************************
+/****** cull/pack/init_packbuffer() *******************************************
 *  NAME
 *     init_packbuffer() -- initialize packing buffer
 *
@@ -161,11 +161,9 @@ int pack_get_chunk(void)
 *  NOTES
 *     MT-NOTE: init_packbuffer() is MT safe (assumptions)
 *******************************************************************************/
-int init_packbuffer(
-sge_pack_buffer *pb,
-int initial_size,
-int just_count 
-) {
+int 
+init_packbuffer(sge_pack_buffer *pb, int initial_size, int just_count) 
+{
    DENTER(PACK_LAYER, "init_packbuffer");
 
    if (pb == NULL) {
@@ -183,6 +181,7 @@ int just_count
       }
       
       memset(pb, 0, sizeof(sge_pack_buffer));
+ 
       pb->head_ptr = malloc(initial_size);
       if (!pb->head_ptr) {
          ERROR((SGE_EVENT, MSG_CULL_NOTENOUGHMEMORY_D, initial_size));
@@ -191,7 +190,9 @@ int just_count
       }
       pb->cur_ptr = pb->head_ptr;
       pb->mem_size = initial_size;
-      pb->mode = -1;    /* this indicates no compression/decompression */
+
+      pb->cur_ptr = pb->head_ptr;
+      pb->mem_size = initial_size;
 
       pb->bytes_used = 0;
       pb->just_count = 0;
@@ -201,7 +202,6 @@ int just_count
    } else {
       pb->head_ptr = pb->cur_ptr = NULL;
       pb->mem_size = 0;
-      pb->mode = 0;    /* this indicates compression */
       pb->bytes_used = 0;
       pb->just_count = 1;
    }
@@ -217,21 +217,12 @@ int just_count
  NOTES
     MT-NOTE: init_packbuffer_from_buffer() is MT safe (assumptions)
  **************************************************************/
-int init_packbuffer_from_buffer(
-sge_pack_buffer *pb,
-char *buf,
-u_long32 buflen,
-int compressed 
-) {
+int 
+init_packbuffer_from_buffer(sge_pack_buffer *pb, char *buf, u_long32 buflen) 
+{
    DENTER(PACK_LAYER, "init_packbuffer_from_buffer");
 
    if (!pb && !buf) {
-      DEXIT;
-      return PACK_FORMAT;
-   }   
-
-   /* don't understand compressed buffers */
-   if(compressed) {
       DEXIT;
       return PACK_FORMAT;
    }   
@@ -242,7 +233,6 @@ int compressed
    pb->cur_ptr = buf;
    pb->mem_size = buflen;
    pb->bytes_used = 0;
-   pb->mode = compressed?1:-1;    /* must decompress or not ? */
 
    /* check cull version (only if buffer contains any data) */
    if(buflen > 0) {
@@ -275,13 +265,6 @@ int compressed
 }
 
 /**************************************************************/
-int flush_packbuffer(
-sge_pack_buffer *pb 
-) {
-   return PACK_SUCCESS;
-}
-
-/**************************************************************/
 /* MT-NOTE: clear_packbuffer() is MT safe */
 void clear_packbuffer(
 sge_pack_buffer *pb 
@@ -292,6 +275,7 @@ sge_pack_buffer *pb
          pb->head_ptr = NULL;
       }
    }
+   return;
 }
 
 /*************************************************************
@@ -364,6 +348,24 @@ int packint(sge_pack_buffer *pb, u_long32 i)
    return PACK_SUCCESS;
 }
 
+int repackint(sge_pack_buffer *pb, u_long32 i) 
+{
+   u_long32 J=0;
+
+   DENTER(PACK_LAYER, "packint");
+
+   if (!pb->just_count) {
+      {
+         J = htonl(i);
+         memcpy(pb->cur_ptr, (((char *) &J) + INTOFF), INTSIZE);
+         pb->cur_ptr += INTSIZE;
+      }
+   }
+
+   DEXIT;
+   return PACK_SUCCESS;
+}
+
 #define DOUBLESIZE 8
 
 /*
@@ -383,7 +385,7 @@ int packdouble(sge_pack_buffer *pb, double d) {
    DENTER(PACK_LAYER, "packdouble");
 
    if (!pb->just_count) {
-      if (pb->mode == -1 && pb->bytes_used + DOUBLESIZE > pb->mem_size) {
+      if (pb->bytes_used + DOUBLESIZE > pb->mem_size) {
          DPRINTF(("realloc(%d + %d)\n", pb->mem_size, cull_state_get_chunk_size()));
          pb->mem_size += cull_state_get_chunk_size();
          pb->head_ptr = realloc(pb->head_ptr, pb->mem_size);
@@ -431,10 +433,10 @@ int packdouble(sge_pack_buffer *pb, double d) {
 #endif
 
       memcpy(pb->cur_ptr, buf, DOUBLESIZE);
-/* we have to increment the buffer even through WIN32 will not use it */
+      /* we have to increment the buffer even through WIN32 will not use it */
       pb->cur_ptr += DOUBLESIZE;
 
-#if !(defined(WIN32) || defined(INTERIX))                      /* XDR not called */
+#if !(defined(WIN32) || defined(INTERIX)) /* XDR not called */
       xdr_destroy(&xdrs);
 #endif
 #if defined(INTERIX)
@@ -582,7 +584,7 @@ u_long32 buf_size
 
    if (!pb->just_count) {
       /* is realloc necessary */
-#if !(defined(WIN32))                                        /* cast */
+#if !(defined(WIN32)) /* cast */
       if (buf_size + (u_long32) pb->bytes_used > (u_long32) pb->mem_size) {
 #else
       if (buf_size + pb->bytes_used > pb->mem_size) {
@@ -669,7 +671,6 @@ int unpackdouble(sge_pack_buffer *pb, double *dp)
 
    DENTER(PACK_LAYER, "unpackdouble");
 
-
    /* are there enough bytes ? */
    if (pb->bytes_used + DOUBLESIZE > pb->mem_size) {
       *dp = 0;
@@ -731,6 +732,7 @@ int unpackstr(sge_pack_buffer *pb, char **str)
 
    DENTER(PACK_LAYER, "unpackstr");
 
+   /* determine string length */
    if (!pb->cur_ptr[0]) {
 
       *str = NULL;
@@ -747,8 +749,7 @@ int unpackstr(sge_pack_buffer *pb, char **str)
 
       DEXIT;
       return PACK_SUCCESS;
-   }
-   else {
+   } else {
       n = strlen(pb->cur_ptr) + 1;
 
       /* are there enough bytes ? */
@@ -777,11 +778,8 @@ int unpackstr(sge_pack_buffer *pb, char **str)
    PACK_ENOMEM
    PACK_FORMAT
  */
-int unpackbuf(
-sge_pack_buffer *pb,
-char **buf_ptr,
-int buf_size 
-) {
+int unpackbuf(sge_pack_buffer *pb, char **buf_ptr, int buf_size) 
+{
 
    DENTER(PACK_LAYER, "unpackbuf");
 
@@ -791,7 +789,7 @@ int buf_size
    }
 
    /* are there enough bytes ? */
-   if (pb->mode == -1 && (buf_size + pb->bytes_used) > pb->mem_size) {
+   if ((buf_size + pb->bytes_used) > pb->mem_size) {
       DEXIT;
       return PACK_FORMAT;
    }
@@ -811,7 +809,7 @@ int buf_size
    return PACK_SUCCESS;
 }
 
-/****** cull/pack/unpackbitfield() ****************************************************
+/****** cull/pack/unpackbitfield() ********************************************
 *  NAME
 *     unpackbitfield() -- unpack a bitfield 
 *
@@ -893,6 +891,78 @@ const char *cull_pack_strerror(int errnum)
       default:
          /* JG: TODO: we should have some global error message for all strerror functions */
          return "";
+   }
+}
+
+/****** cull/pack/pb_are_equivalent() *****************************************
+*  NAME
+*     pb_are_equivalent() -- check if both buffers are equivalent 
+*
+*  SYNOPSIS
+*     bool pb_are_equivalent(sge_pack_buffer *pb1, sge_pack_buffer *pb2) 
+*
+*  FUNCTION
+*     Check if size and content of both packbuffers is equivalent 
+*
+*  INPUTS
+*     sge_pack_buffer *pb1 - packbuffer 
+*     sge_pack_buffer *pb2 - packbuffer 
+*
+*  RESULT
+*     bool - equivalent?
+*        true  - yes
+*        false - no
+*******************************************************************************/
+bool
+pb_are_equivalent(sge_pack_buffer *pb1, sge_pack_buffer *pb2)
+{
+   bool ret = true;
+
+   if (pb1 != NULL && pb2 != NULL) {
+      ret &= (pb1->bytes_used == pb2->bytes_used);
+      ret &= (memcmp(pb1->head_ptr, pb2->head_ptr, pb1->bytes_used) == 0);
+   }
+   return ret;
+}
+
+/****** cull/pack/pb_print_to() ***********************************************
+*  NAME
+*     pb_print_to() -- Print content of packbuffer 
+*
+*  SYNOPSIS
+*     void pb_print_to(sge_pack_buffer *pb, FILE* file) 
+*
+*  FUNCTION
+*     Print content of packbuffer into file 
+*
+*  INPUTS
+*     sge_pack_buffer *pb - packbuffer pointer 
+*     bool only_header    - show only summary information 
+*     FILE* file          - file stream (e.g. stderr) 
+*
+*  RESULT
+*     void - NONE
+*******************************************************************************/
+void
+pb_print_to(sge_pack_buffer *pb, bool only_header, FILE* file)
+{
+   int i;
+
+   fprintf(file, "head_ptr: %p\n", pb->head_ptr);
+   fprintf(file, "cur_ptr: %p\n", pb->cur_ptr);
+#if 0
+   fprintf(file, "mem_size: %d\n", pb->mem_size);
+   fprintf(file, "bytes_used: %d\n", pb->bytes_used);
+#endif
+   fprintf(file, "buffer:\n");
+   if (!only_header) {
+      for (i = 0; i < pb->bytes_used; i++) {
+         fprintf(file, "%3d ", pb->head_ptr[i]);
+         if ((i + 1) % 15 == 0) {
+            fprintf(file, "\n");
+         }
+      }
+      fprintf(file, "\n");
    }
 }
 

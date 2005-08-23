@@ -152,14 +152,14 @@ int lWriteElemToDisk(const lListElem *ep, const char *prefix, const char *name,
    }
 
    /* write packing buffer */
-      if (sge_writenbytes(fd, pb.head_ptr, pb_used(&pb)) != pb_used(&pb)) {
-         CRITICAL((SGE_EVENT, MSG_CULL_CANTWRITEXTOFILEY_SS , obj_name, 
-                  filename));
-         clear_packbuffer(&pb);
-         close(fd);
-         DEXIT;
-         return 1;
-      }
+   if (sge_writenbytes(fd, pb.head_ptr, pb_used(&pb)) != pb_used(&pb)) {
+      CRITICAL((SGE_EVENT, MSG_CULL_CANTWRITEXTOFILEY_SS , obj_name, 
+               filename));
+      clear_packbuffer(&pb);
+      close(fd);
+      DEXIT;
+      return 1;
+   }
 
    /* close file and exit */
    close(fd);
@@ -260,8 +260,7 @@ lListElem *lReadElemFromDisk(const char *prefix, const char *name,
       return NULL;
    }
 
-   /* unpack lListElem, never compressed */
-   if((ret = init_packbuffer_from_buffer(&pb, buf, statbuf.st_size, 0)) != PACK_SUCCESS) {
+   if((ret = init_packbuffer_from_buffer(&pb, buf, statbuf.st_size)) != PACK_SUCCESS) {
       ERROR((SGE_EVENT, MSG_CULL_ERRORININITPACKBUFFER_S, cull_pack_strerror(ret)));
    }
    ret = cull_unpack_elem(&pb, &ep, type);

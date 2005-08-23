@@ -383,7 +383,6 @@ static int receive_message_cach_n_ack( dispatch_entry*    de,
    dispatch_entry deact, lastde;
    int i, receive_blocking;
    u_long32 tmpul, tmpul2;
-   u_short compressed;
 
    DENTER(TOP_LAYER, "receive_message_cach_n_ack");
 
@@ -417,10 +416,8 @@ static int receive_message_cach_n_ack( dispatch_entry*    de,
       copy_de(&deact, de);
 
 
-      i = gdi_receive_message(deact.commproc, &deact.id, deact.host, &deact.tag, 
-                          &buffer, &buflen, receive_blocking, &compressed);
-
-
+      i = gdi_receive_message(deact.commproc, &deact.id, deact.host, 
+                              &deact.tag, &buffer, &buflen, receive_blocking);
 
 /*
       receive_blocking = 0;   */  /* second receive is always non blocking */
@@ -436,7 +433,7 @@ static int receive_message_cach_n_ack( dispatch_entry*    de,
          alloc_de(new->de);
          copy_de(new->de, &deact);
          new->next = 0;
-         pack_ret = init_packbuffer_from_buffer(new->pb, buffer, buflen, compressed);
+         pack_ret = init_packbuffer_from_buffer(new->pb, buffer, buflen);
          if(pack_ret != PACK_SUCCESS) {
             ERROR((SGE_EVENT, MSG_EXECD_INITPACKBUFFERFAILED_S, cull_pack_strerror(pack_ret)));
             continue;

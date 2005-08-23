@@ -47,7 +47,8 @@
 #include "cull_lerrnoP.h"
 #include "cull_hash.h"
 #include "sge_string.h"
-
+#include "cull_pack.h"
+#include "pack.h"
 
 static lListElem *lJoinCopyElem(const lDescr *dp, 
                                 const lListElem *sep0, 
@@ -104,13 +105,13 @@ static lListElem *lJoinCopyElem(const lDescr *dp,
    }
 
    i = 0;
-   if (lCopyElemPartial(dst, &i, src0, enp0, true) == -1) {
+   if (lCopyElemPartialPack(dst, &i, src0, enp0, true, NULL) == -1) {
       free(dst);
       LERROR(LECOPYELEMPART);
       DEXIT;
       return NULL;
    }
-   if (lCopyElemPartial(dst, &i, src1, enp1, true) == -1) {
+   if (lCopyElemPartialPack(dst, &i, src1, enp1, true, NULL) == -1) {
       free(dst);
       LERROR(LECOPYELEMPART);
       DEXIT;
@@ -547,34 +548,38 @@ lList *lSelectDestroy(lList *slp, const lCondition *cp)
    return slp;
 }
 
-/****** cull/db/lSelectElem() *************************************************
+/****** cull/db/lSelectElemPack() *********************************************
 *  NAME
-*     lSelectElem() -- Extracts some elements fulfilling a condition 
+*     lSelectElemPack() -- Extracts some elements fulfilling a condition 
 *
 *  SYNOPSIS
-*     lListElem* lSelect(const lListElem *slp, 
-*                        const lCondition *cp, 
-*                        const lEnumeration *enp, bool isHash) 
+*     lListElem* 
+*     lSelectElemPack(const lListElem *slp, const lCondition *cp, 
+*                     const lEnumeration *enp, bool isHash, 
+*                     sge_pack_buffer *pb) 
 *
 *  FUNCTION
 *     Creates a new list from the list 'slp' extracting the elements
-*     fulfilling the condition 'cp'. 
+*     fulfilling the condition 'cp' or extracts the elements and
+*     stores the contend in 'pb'. 
 *
 *  INPUTS
 *     const lListElem *slp    - source list pointer 
 *     const lCondition *cp    - selects rows 
 *     const lEnumeration *enp - selects columns 
 *     bool isHash             - create hash or not
+*     sge_pack_buffer *pb     - packbuffer
 *
 *  RESULT
 *     lListElem* - list containing the extracted elements
 ******************************************************************************/
-lListElem *lSelectElem(const lListElem *slp, const lCondition *cp,
-                       const lEnumeration *enp, bool isHash) 
+lListElem *
+lSelectElemPack(const lListElem *slp, const lCondition *cp,
+                const lEnumeration *enp, bool isHash, sge_pack_buffer *pb) 
 {
    lListElem *new = NULL;
 
-   DENTER(CULL_LAYER, "lSelectElem");
+   DENTER(CULL_LAYER, "lSelectElemPack");
 
    if (!slp) {
       DEXIT;
@@ -583,6 +588,7 @@ lListElem *lSelectElem(const lListElem *slp, const lCondition *cp,
    if (enp != NULL) {
       lDescr *dp;
       int n, index = 0;
+      u_long32 elements = 0;
 
       /* create new lList with partial descriptor */
       if ((n = lCountWhat(enp, slp->descr)) <= 0) {
@@ -603,7 +609,7 @@ lListElem *lSelectElem(const lListElem *slp, const lCondition *cp,
          return NULL;
       }
       /* create reduced element */
-      new = lSelectElemD(slp, cp, dp, enp, isHash);
+      new = lSelectElemDPack(slp, cp, dp, enp, isHash, pb, &elements);
       /* free the descriptor, it has been copied by lCreateList */
       cull_hash_free_descr(dp);
       free(dp);
@@ -615,53 +621,68 @@ lListElem *lSelectElem(const lListElem *slp, const lCondition *cp,
    return new;
 }
 
-/****** cull/db/lSelectElemD() ************************************************
+/****** cull/db/lSelectElemDPack() ********************************************
 *  NAME
-*     lSelectElemD() -- Extracts some elements fulfilling a condition 
+*     lSelectElemDPack() -- Extracts some elements fulfilling a condition 
 *
 *  SYNOPSIS
-*     lListElem* lSelectElemD(const lListelem *slp, 
-*                             const lCondition *cp, const lEnumeration *enp) 
+*     lListElem* 
+*     lSelectElemDPack(const lListelem *slp, const lCondition *cp, 
+*                      const lEnumeration *enp, bool isHash, 
+*                      sge_pack_buffer *pb) 
 *
 *  FUNCTION
 *     Creates a new list from the list 'slp' extracting the elements
-*     fulfilling the condition 'cp'. 
+*     fulfilling the condition 'cp' or it packs those elemets into 'pb' if 
+*     it is not NULL. 
 *
 *  INPUTS
 *     const lListElem *slp     - source list pointer 
 *     const lCondition *cp     - selects rows 
 *     const lDescr *dp         - target descriptor for the element
 *     bool  isHash             - creates hash or not
+*     sge_pack_buffer *pb      - packbuffer
+*     u_long32 *elements       - increases the number of elems, if one is
+*                                added to the pb. Only, when elements is 
+*                                not NULL (only used if pb != NULL)
 *
 *  RESULT
 *     lListElem* - list containing the extracted elements
 ******************************************************************************/
-lListElem *lSelectElemD(const lListElem *slp, const lCondition *cp,
-               const lDescr *dp, const lEnumeration *enp, bool isHash) 
+lListElem *
+lSelectElemDPack(const lListElem *slp, const lCondition *cp, const lDescr *dp, 
+                 const lEnumeration *enp, bool isHash, sge_pack_buffer *pb,
+                 u_long32 *elements) 
 {
    lListElem *new = NULL;
    int index = 0;
-   DENTER(CULL_LAYER, "lSelectElemD");
 
-   if (!slp || !dp) {
+   DENTER(CULL_LAYER, "lSelectElemDPack");
+   if (!slp || (!dp && !pb)) {
       DEXIT;
       return NULL;
    }
-
    /*
-      iterate through the source list call lCompare and add
-      depending on result of lCompare
+    * iterate through the source list call lCompare and add
+    * depending on result of lCompare
     */
    if (lCompare(slp, cp)) {
-      if (!(new = lCreateElem(dp))) {
-         DEXIT;
-         return NULL;
-      }
-      
-      if (lCopyElemPartial(new, &index, slp, enp, isHash)) {
-         lFreeElem(&new);
-         DEXIT;
-         return NULL;
+      if (pb == NULL) {
+         if (!(new = lCreateElem(dp))) {
+            DEXIT;
+            return NULL;
+         }
+         
+         if (lCopyElemPartialPack(new, &index, slp, enp, isHash, pb)) {
+            lFreeElem(&new);
+         }
+      } else {
+         if (elements != NULL) {
+            (*elements)++;
+         }
+
+         lCopyElemPartialPack(NULL, &index, slp, enp, isHash, pb);
+         new = NULL;
       }
    }
    DEXIT;
@@ -691,20 +712,23 @@ lListElem *lSelectElemD(const lListElem *slp, const lCondition *cp,
 ******************************************************************************/
 lList *lSelect(const char *name, const lList *slp, const lCondition *cp,
                const lEnumeration *enp) {
-   return lSelectHash(name, slp, cp, enp, true);               
+   return lSelectHashPack(name, slp, cp, enp, true, NULL);               
 }               
 
-/****** cull/db/lSelectHash() *************************************************
+/****** cull/db/lSelectHashPack() *********************************************
 *  NAME
-*     lSelectHash() -- Extracts some elements fulfilling a condition 
+*     lSelectHashPack() -- Extracts some elements fulfilling a condition 
 *
 *  SYNOPSIS
-*     lList* lSelectHash(const char *name, const lList *slp, 
-*                    const lCondition *cp, const lEnumeration *enp, bool isHash) 
+*     lList* 
+*     lSelectHashPack(const char *name, const lList *slp, 
+*                     const lCondition *cp, const lEnumeration *enp, 
+*                     bool isHash, sge_pack_buffer *pb) 
 *
 *  FUNCTION
 *     Creates a new list from the list 'slp' extracting the elements
-*     fulfilling the condition 'cp'. 
+*     fulfilling the condition 'cp' or fills the packbuffer if pb is 
+*     not NULL.
 *
 *  INPUTS
 *     const char *name        - name for the new list 
@@ -712,73 +736,121 @@ lList *lSelect(const char *name, const lList *slp, const lCondition *cp,
 *     const lCondition *cp    - selects rows 
 *     const lEnumeration *enp - selects columns 
 *     bool  isHash            - enables/disables the hash generation
+*     sge_pack_buffer *pb     - packbuffer
 *
 *  RESULT
 *     lList* - list containing the extracted elements
 ******************************************************************************/
-lList *lSelectHash(const char *name, const lList *slp, const lCondition *cp,
-                   const lEnumeration *enp, bool isHash) 
+lList *lSelectHashPack(const char *name, const lList *slp, 
+                       const lCondition *cp, const lEnumeration *enp, 
+                       bool isHash, sge_pack_buffer *pb) 
 {
+   lList *ret = NULL;
 
-   lList *dlp = (lList *) NULL;
-   lDescr *dp;
-   int n, index;
-
-   DENTER(CULL_LAYER, "lSelectHash");
-
-   if (!slp) {
+   DENTER(CULL_LAYER, "lSelectHashPack");
+   if (slp == NULL && pb == NULL) {
       DEXIT;
       return NULL;
    }
 
    if (enp != NULL) {
-      /* create new lList with partial descriptor */
-      if ((n = lCountWhat(enp, slp->descr)) <= 0) {
-         LERROR(LECOUNTWHAT);
-         DEXIT;
-         return NULL;
-      }
+      if (pb == NULL) {
+         lDescr *dp;
+         int n, index;
 
-      if (!(dp = (lDescr *) malloc(sizeof(lDescr) * (n + 1)))) {
-         LERROR(LEMALLOC);
-         DEXIT;
-         return NULL;
-      }
+         /* create new lList with partial descriptor */
+         n = lCountWhat(enp, slp->descr);
+         if (n <= 0) {
+            LERROR(LECOUNTWHAT);
+            DEXIT;
+            return NULL;
+         }
 
-      /* INITIALIZE THE INDEX IF YOU BUILD A NEW DESCRIPTOR */
-      index = 0;
-      if (lPartialDescr(enp, slp->descr, dp, &index) < 0) {
-         LERROR(LEPARTIALDESCR);
+         dp = malloc(sizeof(lDescr) * (n + 1));
+         if (dp == NULL) {
+            LERROR(LEMALLOC);
+            DEXIT;
+            return NULL;
+         }
+
+         /* INITIALIZE THE INDEX IF YOU BUILD A NEW DESCRIPTOR */
+         index = 0;
+         if (lPartialDescr(enp, slp->descr, dp, &index) < 0) {
+            LERROR(LEPARTIALDESCR);
+            free(dp);
+            DEXIT;
+            return NULL;
+         }
+         ret = lSelectDPack(name, slp, cp, dp, enp, isHash, NULL, NULL);
+
+         /* free the descriptor, it has been copied by lCreateList */
+         cull_hash_free_descr(dp);
          free(dp);
-         DEXIT;
-         return NULL;
+      } else {
+         u_long32 number_of_packed_elements = 0;
+         size_t offset = 0;
+         size_t used = 0;
+         const char *pack_name = "";
+
+         if (name != NULL) {
+            pack_name = name;
+         } else if (slp != NULL) {
+            pack_name = slp->listname;
+         }
+
+         cull_pack_list_summary(pb, slp, enp, pack_name, &offset, &used);
+
+         lSelectDPack(name, slp, cp, NULL, enp, isHash, pb, 
+                      &number_of_packed_elements);
+  
+         /*
+          * change number of elements contained in the packbuffer 
+          */
+         if (slp != NULL && pb != NULL) {
+            char *old_cur_ptr = NULL;
+            size_t old_used = 0;
+            int local_ret;
+
+            old_cur_ptr = pb->cur_ptr;
+            old_used = pb->bytes_used;
+            pb->cur_ptr = pb->head_ptr + offset;
+            pb->bytes_used = used;
+
+            local_ret = repackint(pb, number_of_packed_elements);
+            if(local_ret != PACK_SUCCESS) {
+               LERROR(LEMALLOC);
+               DEXIT;
+               return NULL;
+            }
+            pb->cur_ptr = old_cur_ptr;
+            pb->bytes_used = old_used;
+         } 
       }
-
-      dlp = lSelectD(name, slp, cp, dp, enp, isHash);
-      
-      /* free the descriptor, it has been copied by lCreateList */
-      cull_hash_free_descr(dp);
-      free(dp);
    } else {
-      dlp = lCopyListHash("", slp, isHash);
+      if (pb == NULL) {
+         ret = lCopyListHash(slp->listname, slp, isHash);
+      } else {
+         cull_pack_list(pb, slp);
+      }
    }
-
    DEXIT;
-   return dlp;
+   return ret;
 }
 
-/****** cull_db/lSelectD() *****************************************************
+/****** cull_db/lSelectDPack() ************************************************
 *  NAME
-*     lSelectD() --  Extracts some elements fulfilling a condition 
+*     lSelectDPack() --  Extracts some elements fulfilling a condition 
 *
 *  SYNOPSIS
-*     lList* lSelectD(const char *name, const lList *slp, const lCondition *cp, 
-*     const lDescr *dp, bool isHash) 
+*     lList* lSelectDPack(const char *name, const lList *slp, 
+*                         const lCondition *cp, const lDescr *dp, 
+*                         bool isHash, sge_pack_buffer *pb) 
 *
 *
 *  FUNCTION
 *     Creates a new list from the list 'slp' extracting the elements
-*     fulfilling the condition 'cp'. 
+*     fulfilling the condition 'cp' or packs the elements into the
+*     packbuffer 'pb' if it is not NULL. 
 *
 *  INPUTS
 *     const char *name        - name for the new list 
@@ -787,28 +859,37 @@ lList *lSelectHash(const char *name, const lList *slp, const lCondition *cp,
 *     const lDescr *dp        - descriptor for the new list
 *     const lEnumeration *enp - selects columns
 *     bool  isHash            - enables/disables the hash table creation 
+*     sge_pack_buffer *pb     - packbuffer
+*     u_long32 *elements      - number of packed elements 
+*                               (only used if pb != NULL)
 *
 *  RESULT
 *     lList* - list containing the extracted elements
 *******************************************************************************/
-lList *lSelectD(const char *name, const lList *slp, const lCondition *cp,
-               const lDescr *dp, const lEnumeration *enp, bool isHash) 
+lList *lSelectDPack(const char *name, const lList *slp, const lCondition *cp,
+                    const lDescr *dp, const lEnumeration *enp, bool isHash,
+                    sge_pack_buffer *pb, u_long32 *elements) 
 {
 
    lListElem *ep, *new;
    lList *dlp = (lList *) NULL;
+   const lDescr *descr = NULL;
 
-   DENTER(CULL_LAYER, "lSelectD");
+   DENTER(CULL_LAYER, "lSelectDPack");
 
-   if (!slp || !dp) {
+   if (!slp || (!dp && !pb)) {
       DEXIT;
       return NULL;
    }
 
-   if (!(dlp = lCreateListHash(name, dp, false))) {
-      LERROR(LECREATELIST);
-      DEXIT;
-      return NULL;
+   if (pb == NULL) {
+      if (!(dlp = lCreateListHash(name, dp, false))) {
+         LERROR(LECREATELIST);
+         DEXIT;
+         return NULL;
+      }
+      dlp->changed = slp->changed;
+      descr = dlp->descr;
    }
 
    /*
@@ -816,7 +897,8 @@ lList *lSelectD(const char *name, const lList *slp, const lCondition *cp,
       depending on result of lCompare
     */
    for (ep = slp->first; ep; ep = ep->next) {
-      if ((new = lSelectElemD(ep, cp, dlp->descr, enp, isHash))){
+      new = lSelectElemDPack(ep, cp, descr, enp, isHash, pb, elements);
+      if (new != NULL) {
          if (lAppendElem(dlp, new) == -1) {
             LERROR(LEAPPENDELEM);
             lFreeElem(&new);
@@ -826,17 +908,19 @@ lList *lSelectD(const char *name, const lList *slp, const lCondition *cp,
          }
       }
    }
-   if (isHash) {
+   
+   if (pb == NULL && isHash) {
       /* now create the hash tables */
       cull_hash_create_hashtables(dlp);
-   }
-   /* 
-      This is a question of philosophy.
-      To return an empty list or not to return.
-    */
-   if (lGetNumberOfElem(dlp) == 0) {
-      LERROR(LEGETNROFELEM);
-      lFreeList(&dlp);
+
+      /* 
+       * This is a question of philosophy.
+       * To return an empty list or not to return.
+       */
+      if (lGetNumberOfElem(dlp) == 0) {
+         LERROR(LEGETNROFELEM);
+         lFreeList(&dlp);
+      }
    }
 
    DEXIT;

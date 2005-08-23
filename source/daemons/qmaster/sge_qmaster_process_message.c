@@ -48,12 +48,14 @@
 #include "sge_c_ack.h"
 #include "sge_c_report.h"
 #include "sge_qmaster_main.h"
-#include "msg_qmaster.h"
-#include "msg_common.h"
 #include "sgeobj/sge_answer.h"
 #include "sge_prog.h"
 #include "sge_mtutil.h"
 #include "sge_conf.h"
+
+#include "msg_qmaster.h"
+#include "msg_common.h"
+/*#include "msg_gdilib.h"*/
 
 typedef struct {
    char snd_host[CL_MAXHOSTLEN]; /* sender hostname; NULL -> all              */
@@ -439,9 +441,9 @@ void *sge_qmaster_process_message(void *anArg, monitoring_t *monitor)
 *     static void do_gdi_request(struct_msg_t *aMsg) 
 *
 *  FUNCTION
-*     Process GDI request messages (TAG_GDI_REQUEST). Unpack a GDI request from
-*     the pack buffer, which is part of 'aMsg'. Process GDI request and send a
-*     response to 'commd'.
+*     Process GDI request messages (TAG_GDI_REQUEST). Unpack a GDI request 
+*     from the pack buffer, which is part of 'aMsg'. 
+*     Process GDI request and send a response to 'commd'.
 *
 *  INPUTS
 *     struct_msg_t *aMsg - GDI request message
@@ -450,62 +452,79 @@ void *sge_qmaster_process_message(void *anArg, monitoring_t *monitor)
 *     void - none
 *
 *  NOTES
-*     A pack buffer may contain more than a single GDI request. This is a so 
-*     called 'multi' GDI request. In case of a multi GDI request, the 'sge_gdi_request'
-*     structure filled in by 'sge_unpack_gdi_request' is the head of a linked
-*     list of 'sge_gdi_request' structures.
-*
+*     A pack buffer may contain more than a single GDI request. 
+*     This is a so called 'multi' GDI request. In case of a multi GDI 
+*     request, the 'sge_gdi_request' structure filled in by 
+*     'sge_unpack_gdi_request' is the head of a linked list of 
+*     'sge_gdi_request' structures.
 *******************************************************************************/
-static request_handling_t do_gdi_request(struct_msg_t *aMsg, monitoring_t *monitor)
+static request_handling_t 
+do_gdi_request(struct_msg_t *aMsg, monitoring_t *monitor)
 {
-   enum { ASYNC = 0, SYNC = 1 };
-   lList *alp = NULL;
    request_handling_t type = ATOMIC_NONE;
 
    sge_pack_buffer *buf = &(aMsg->buf);
    sge_gdi_request *req_head = NULL;  /* head of request linked list */
    sge_gdi_request *resp_head = NULL; /* head of response linked list */
-   sge_gdi_request *req = NULL;
-   sge_gdi_request *resp = NULL;
+   sge_pack_buffer pb;
 
    DENTER(TOP_LAYER, "do_gid_request");
 
    MONITOR_GDI(monitor);   
 
    if (sge_unpack_gdi_request(buf, &req_head)) {
-      ERROR((SGE_EVENT, MSG_GDI_FAILEDINSGEUNPACKGDIREQUEST_SSI, (char *)aMsg->snd_host, (char *)aMsg->snd_name, (int)aMsg->snd_id));
-      return type;
-   }
-   resp_head = new_gdi_request();
+      ERROR((SGE_EVENT, MSG_GDI_FAILEDINSGEUNPACKGDIREQUEST_SSI, 
+            (char *)aMsg->snd_host, (char *)aMsg->snd_name, 
+            (int)aMsg->snd_id));
+   } else {
+      enum { ASYNC = 0, SYNC = 1 };
+      lList *alp = NULL;
+      sge_gdi_request *req = NULL;
+      sge_gdi_request *resp = NULL;
 
-   MONITOR_WAIT_TIME((type = eval_gdi_and_block(req_head)), monitor);
+      resp_head = new_gdi_request();
+      init_packbuffer(&pb, 0, 0);
 
-   for (req = req_head; req; req = req->next) {
-      req->id = aMsg->snd_id;
-      req->commproc = sge_strdup(NULL, aMsg->snd_name);
-      req->host = sge_strdup(NULL, aMsg->snd_host);
+      MONITOR_WAIT_TIME((type = eval_gdi_and_block(req_head)), monitor);
+
+      for (req = req_head; req; req = req->next) {
+         req->id = aMsg->snd_id;
+         req->commproc = sge_strdup(NULL, aMsg->snd_name);
+         req->host = sge_strdup(NULL, aMsg->snd_host);
 
 #ifndef __SGE_NO_USERMAPPING__
-      sge_map_gdi_request(req);
+         sge_map_gdi_request(req);
 #endif
-   
-      if (req == req_head) {
-         resp = resp_head;
-      } else {
-         resp->next = new_gdi_request();
-         resp = resp->next;
-      }
-      
-      sge_c_gdi(aMsg->snd_host, req, resp, monitor);
-   }
 
-   sge_send_gdi_request(ASYNC, aMsg->snd_host, aMsg->snd_name,
+         if (req == req_head) {
+            resp = resp_head;
+         } else {
+            resp->next = new_gdi_request();
+            resp = resp->next;
+         }
+
+         /* this is needed to identify a multi-gdi pack buffer */
+         resp->next = ((req->next != NULL) ? resp : NULL);
+
+
+         sge_c_gdi(aMsg->snd_host, req, resp, &pb, monitor);
+      }
+
+#if 0
+      sge_send_gdi_request(ASYNC, aMsg->snd_host, aMsg->snd_name,
                         (int)aMsg->snd_id, resp_head, NULL, aMsg->request_mid,
                         &alp);
-   MONITOR_MESSAGES_OUT(monitor);
+#else
+      sge_send_any_request(ASYNC, NULL, aMsg->snd_host,
+                           aMsg->snd_name, aMsg->snd_id, &pb,
+                           TAG_GDI_REQUEST, aMsg->request_mid, &alp);
+#endif
 
-   answer_list_output (&alp);
-
+      clear_packbuffer(&pb);
+      MONITOR_MESSAGES_OUT(monitor);
+      answer_list_output (&alp);
+   }
+   
    free_gdi_request(resp_head);
    free_gdi_request(req_head);
 

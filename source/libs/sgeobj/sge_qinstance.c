@@ -78,8 +78,6 @@
 
 #define QINSTANCE_LAYER TOP_LAYER
 
-/* EB: ADOC: add commets */
-
 /****** sgeobj/qinstance/qinstance_list_locate() ******************************
 *  NAME
 *     qinstance_list_locate() -- find a qinstance 
@@ -653,11 +651,11 @@ qinstance_reinit_consumable_actual_list(lListElem *this_elem,
 *     qinstance_list_find_matching() -- find certain qinstances 
 *
 *  SYNOPSIS
-*     bool 
+*     bool
 *     qinstance_list_find_matching(const lList *this_list, 
-*                                  lList **answer_list, 
+*                                  lList **answer_list,
 *                                  const char *hostname_pattern, 
-*                                  lList **qref_list) 
+*                                  lList **qref_list)
 *
 *  FUNCTION
 *     Finds all qinstances in "this_list" whose hostname part matches
@@ -716,7 +714,8 @@ qinstance_list_find_matching(const lList *this_list, lList **answer_list,
 *     qinstance_slots_used() -- Returns the number of currently used slots 
 *
 *  SYNOPSIS
-*     int qinstance_slots_used(const lListElem *this_elem) 
+*     int 
+*     qinstance_slots_used(const lListElem *this_elem) 
 *
 *  FUNCTION
 *     Returns the number of currently used slots. 
@@ -754,7 +753,8 @@ qinstance_slots_used(const lListElem *this_elem)
 *     qinstance_set_slots_used() -- Modifies the number of used slots 
 *
 *  SYNOPSIS
-*     void qinstance_set_slots_used(lListElem *this_elem, int new_slots) 
+*     void 
+*     qinstance_set_slots_used(lListElem *this_elem, int new_slots) 
 *
 *  FUNCTION
 *     Modifies the number of used slots 
@@ -786,31 +786,28 @@ qinstance_set_slots_used(lListElem *this_elem, int new_slots)
    DEXIT;
 }
 
-/* slots2config_list(lListElem *qep) */
-void 
-qinstance_set_conf_slots_used(lListElem *this_elem)
-{
-   lListElem *slots;
-
-   DENTER(QINSTANCE_LAYER, "qinstance_set_conf_slots_used");
-   slots = lGetSubStr(this_elem, CE_name, "slots", 
-                      QU_consumable_config_list);
-   if (slots == NULL) {
-      slots = lAddSubStr(this_elem, CE_name, "slots", 
-                         QU_consumable_config_list, CE_Type);
-   }
-   if (slots != NULL) {
-      dstring buffer = DSTRING_INIT;
-      u_long32 slots_value = lGetUlong(this_elem, QU_job_slots);
-
-      sge_dstring_sprintf(&buffer, sge_u32, slots_value);
-      lSetDouble(slots, CE_doubleval, slots_value);
-      lSetString(slots, CE_stringval, sge_dstring_get_string(&buffer));
-      sge_dstring_free(&buffer);
-   }
-   DEXIT;
-}
-
+/****** sgeobj/qinstance/qinstance_check_unknown_state() **********************
+*  NAME
+*     qinstance_check_unknown_state() -- Modifies the number of used slots 
+*
+*  SYNOPSIS
+*     void
+*     qinstance_check_unknown_state(lListElem *this_elem)
+*
+*  FUNCTION
+*     Checks if there are nonstatic load values avaialable for the
+*     qinstance. If this is the case, then then the "unknown" state 
+*     of that machine will be released. 
+*
+*  INPUTS
+*     lListElem *this_elem - QU_Type 
+*
+*  RESULT
+*     void - NONE 
+*
+*  NOTES
+*     MT-NOTE: qinstance_check_unknown_state() is MT safe 
+*******************************************************************************/
 void
 qinstance_check_unknown_state(lListElem *this_elem)
 {
@@ -839,6 +836,40 @@ qinstance_check_unknown_state(lListElem *this_elem)
    return;
 }
 
+/****** sgeobj/qinstance/qinstance_debit_consumable() *************************
+*  NAME
+*     qinstance_debit_consumable() -- Debits/Undebits consumables
+*
+*  SYNOPSIS
+*     int
+*     qinstance_debit_consumable(lListElem *qep, 
+*                                lListElem *jep, 
+*                                lList *centry_list,
+*                                int slots)
+*
+*  FUNCTION
+*     Checks if there are nonstatic load values avaialable for the
+*     qinstance. If this is the case, then then the "unknown" state 
+*     of that machine will be released. 
+*
+*  INPUTS
+*     lListElem *qep     - Qinstance resource container
+*     lListElem *jep     - The job (JB_Type) defining which resources and how
+*                          much of them need to be (un)debited
+*     lList *centry_list - The global complex list that is needed to interpret
+*                          the jobs' resource requests.
+*     int slots          - The number of slots for which we are debiting.
+*                          Positive slots numbers cause debiting, negative
+*                          ones cause undebiting.
+*
+*  RESULT
+*     Returns -1 in case of an error. Otherwise the number of (un)debitations 
+*     that actually took place is returned. If 0 is returned that means the
+*     consumable resources of the 'ep' object has not changed.
+*
+*  NOTES
+*     MT-NOTE: qinstance_debit_consumable() is MT safe 
+*******************************************************************************/
 int 
 qinstance_debit_consumable(lListElem *qep, lListElem *jep, lList *centry_list, 
                            int slots)
@@ -847,6 +878,311 @@ qinstance_debit_consumable(lListElem *qep, lListElem *jep, lList *centry_list,
                               QU_consumable_config_list, 
                               QU_resource_utilization,
                               lGetString(qep, QU_qname));
+}
+
+/****** sgeobj/qinstance/qinstance_message_add() *****************************
+*  NAME
+*     qinstance_message_add() -- Adds a message to the qinstance structure 
+*
+*  SYNOPSIS
+*     bool
+*     qinstance_message_add(lListElem *this_elem, u_long32 type, 
+*                           const char *message)
+*
+*  FUNCTION
+*     Adds a message to the qinstance structure
+*
+*  INPUTS
+*     lListElem *this_elem - QU_Type 
+*     u_long32 type        - message type
+*     const char *message  - message
+*
+*  RESULT
+*     bool - error state
+*        true  - success
+*        false - error 
+*
+*  NOTES
+*     MT-NOTE: qinstance_message_add() is MT safe 
+*******************************************************************************/
+bool
+qinstance_message_add(lListElem *this_elem, u_long32 type, const char *message)
+{
+   bool ret = true;
+
+   DENTER(TOP_LAYER, "qinstance_message_add");
+   object_message_add(this_elem, QU_message_list, type, message);
+   DEXIT;
+   return ret;
+}
+
+/****** sgeobj/qinstance/qinstance_message_trash_all_of_type_X() **************
+*  NAME
+*     qinstance_message_trash_all_of_type_X() -- Trash messages 
+*
+*  SYNOPSIS
+*     bool
+*     qinstance_message_trash_all_of_type_X(lListElem *this_elem, 
+*                                           u_long32 type)
+*
+*  FUNCTION
+*     Removes all messages with the message "type" id. 
+*
+*  INPUTS
+*     lListElem *this_elem - QU_Type 
+*     u_long32 type        - message type
+*
+*  RESULT
+*     bool - error state
+*        true  - success
+*        false - error 
+*
+*  NOTES
+*     MT-NOTE: qinstance_message_trash_all_of_type_X() is MT safe 
+*******************************************************************************/
+bool
+qinstance_message_trash_all_of_type_X(lListElem *this_elem, u_long32 type)
+{
+   bool ret = true;
+
+   DENTER(TOP_LAYER, "qinstance_message_trash_all_of_type_X");
+   object_message_trash_all_of_type_X(this_elem, QU_message_list, type);
+   DEXIT;
+   return ret;
+}
+
+/****** sgeobj/qinstance/qinstance_set_full_name() ****************************
+*  NAME
+*     qinstance_set_full_name() -- set the full name of the qinstance 
+*
+*  SYNOPSIS
+*     void
+*     qinstance_set_full_name(lListElem *this_elem)
+*
+*  FUNCTION
+*     Set the full name of the qinstance. The QU_qname name attribute
+*     will be used as input for the cqueue part and QU_qhostname
+*     as hostname part of the full name.
+*
+*  INPUTS
+*     lListElem *this_elem - QU_Type 
+*
+*  RESULT
+*     void - NONE
+*
+*  NOTES
+*     MT-NOTE: qinstance_set_full_name() is MT safe 
+*******************************************************************************/
+void
+qinstance_set_full_name(lListElem *this_elem) 
+{
+   dstring buffer = DSTRING_INIT;
+   const char *cqueue_name = lGetString(this_elem, QU_qname);
+   const char *hostname = lGetHost(this_elem, QU_qhostname);
+
+   sge_dstring_sprintf(&buffer, "%s@%s", cqueue_name, hostname);
+   lSetString(this_elem, QU_full_name, 
+              sge_dstring_get_string(&buffer));
+   sge_dstring_free(&buffer);
+}
+
+/****** sgeobj/qinstance/qinstance_validate() *********************************
+*  NAME
+*     qinstance_validate() -- validates and initializes qinstances 
+*
+*  SYNOPSIS
+*     bool
+*     qinstance_validate(lListElem *this_elem, lList **answer_list)
+*
+*  FUNCTION
+*     Validates qinstance attributes and initializes them if necessary.
+*
+*  INPUTS
+*     lListElem *this_elem - QU_Type 
+*     lList **answer_list - AN_Type
+*
+*  RESULT
+*     void - error result
+*        true  - success
+*        false - error 
+*
+*  NOTES
+*     MT-NOTE: qinstance_validate() is MT safe 
+*******************************************************************************/
+bool
+qinstance_validate(lListElem *this_elem, lList **answer_list)
+{
+   bool ret = true;
+   lList *centry_master_list = *(centry_list_get_master_list());
+
+   DENTER(TOP_LAYER, "qinstance_validate");
+
+   /* QU_full_name isn't spooled, if it is not set, create it */
+   if (lGetString(this_elem, QU_full_name) == NULL) {
+      qinstance_set_full_name(this_elem);
+   }
+   
+   /* handle slots from now on as a consumble attribute of queue */
+   qinstance_set_conf_slots_used(this_elem); 
+
+   /* remove all queue message, which are regenerated during the unspooling
+      the queue */
+   qinstance_message_trash_all_of_type_X(this_elem, ~QI_ERROR);   
+
+   /* setup actual list of queue */
+   qinstance_debit_consumable(this_elem, NULL, centry_master_list, 0);
+
+   /* init double values of consumable configuration */
+   centry_list_fill_request(lGetList(this_elem, QU_consumable_config_list), 
+                     centry_master_list, true, false, true);
+
+      if (ensure_attrib_available(NULL, this_elem, 
+                                  QU_load_thresholds) ||
+          ensure_attrib_available(NULL, this_elem, 
+                                  QU_suspend_thresholds) ||
+          ensure_attrib_available(NULL, this_elem, 
+                                  QU_consumable_config_list)) {
+         ret = false;
+      }
+
+   /* qinstance state */
+   if (ret) {
+      qinstance_state_set_unknown(this_elem, true);
+      qinstance_state_set_cal_disabled(this_elem, false);
+      qinstance_state_set_cal_suspended(this_elem, false);
+      qinstance_set_slots_used(this_elem, 0);
+      
+      if (host_list_locate(Master_Exechost_List, 
+                           lGetHost(this_elem, QU_qhostname)) == NULL) {
+         answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                 ANSWER_QUALITY_ERROR, 
+                                 MSG_QINSTANCE_HOSTFORQUEUEDOESNOTEXIST_SS,
+                                 lGetString(this_elem, QU_qname), 
+                                 lGetHost(this_elem, QU_qhostname));
+         ret = false;
+      }
+   }
+   
+   DEXIT;
+   return ret;
+}
+
+/****** sgeobj/qinstance/qinstance_list_validate() ****************************
+*  NAME
+*     qinstance_list_validate() -- validates and initializes qinstances 
+*
+*  SYNOPSIS
+*     bool
+*     qinstance_list_validate(lList *this_list, lList **answer_list)
+*
+*  FUNCTION
+*     Validates qinstances attributes and initializes them if necessary.
+*
+*  INPUTS
+*     lList *this_list - QU_Type list
+*     lList **answer_list - AN_Type
+*
+*  RESULT
+*     void - error result
+*        true  - success
+*        false - error 
+*
+*  NOTES
+*     MT-NOTE: qinstance_list_validate() is MT safe 
+*******************************************************************************/
+bool
+qinstance_list_validate(lList *this_list, lList **answer_list)
+{
+   bool ret = true;
+   lListElem *qinstance;
+
+   DENTER(TOP_LAYER, "qinstance_list_validate");
+
+   for_each(qinstance, this_list) {
+      if (!qinstance_validate(qinstance, answer_list)) {
+         ret = false;
+         break;
+      }
+   }
+
+   DEXIT;
+   return ret;
+}
+
+/****** sgeobj/qinstance/qinstance_list_get_max_qinstance_number() ************
+*  NAME
+*     qinstance_list_get_max_qinstance_number() -- find the maximum id 
+*
+*  SYNOPSIS
+*     u_long32
+*     qinstance_list_get_max_qinstance_number(lList *this_list)
+*
+*  FUNCTION
+*     Finds the maximum qinstance number used in the list of qinstances. 
+*
+*  INPUTS
+*     lList *this_list - QU_Type list
+*     lList **answer_list - AN_Type
+*
+*  RESULT
+*     void - maximum number or 0 if ther is no maxiumum
+*
+*  NOTES
+*     MT-NOTE: qinstance_list_get_max_qinstance_number() is MT safe 
+*******************************************************************************/
+u_long32
+qinstance_list_get_max_qinstance_number(lList *this_list)
+{
+   u_long32 ret = 0;
+   lListElem *qinstance;
+
+   DENTER(TOP_LAYER, "qinstance_list_get_max_qinstance_number");
+   for_each(qinstance, this_list) {
+      ret = MAX(ret, lGetUlong(qinstance, QU_queue_number));
+   }
+   DEXIT;
+   return ret;
+}
+
+/****** sgeobj/qinstance/qinstance_list_number_is_used() **********************
+*  NAME
+*     qinstance_list_number_is_used() -- checks if a number is already used 
+*
+*  SYNOPSIS
+*     bool
+*     qinstance_list_number_is_used(lList *this_list, u_long32 number)
+*
+*  FUNCTION
+*     Checks if "number" is already used as qinstance number for
+*     one of the give qinstances.
+*
+*  INPUTS
+*     lList *this_list - QU_Type list
+*     u_long32 number - qinstance number 
+*
+*  RESULT
+*     bool - result
+*        true  - number is used
+*        false - number is not used
+*
+*  NOTES
+*     MT-NOTE: qinstance_list_number_is_used() is MT safe 
+*******************************************************************************/
+bool
+qinstance_list_number_is_used(lList *this_list, u_long32 number)
+{
+   bool ret = false;
+   lListElem *qinstance;
+
+   DENTER(TOP_LAYER, "qinstance_list_number_is_used");
+   for_each(qinstance, this_list) {
+      if (lGetUlong(qinstance, QU_queue_number) == number) {
+         ret = true;
+         break;
+      }
+   } 
+   DEXIT;
+   return ret;
 }
 
 /****** lib/sgeobj/debit_consumable() ****************************************
@@ -891,8 +1227,7 @@ qinstance_debit_consumable(lListElem *qep, lListElem *jep, lList *centry_list,
 *     Returns -1 in case of an error. Otherwise the number of (un)debitations 
 *     that actually took place is returned. If 0 is returned that means the
 *     consumable resources of the 'ep' object has not changed.
-********************************************************************************
-*/
+******************************************************************************/
 int 
 rc_debit_consumable(lListElem *jep, lListElem *ep, lList *centry_list, 
                     int slots, int config_nm, int actual_nm, 
@@ -949,147 +1284,28 @@ rc_debit_consumable(lListElem *jep, lListElem *ep, lList *centry_list,
    return mods;
 }
 
-/* EB: ADOC: add commets */
-
-bool
-qinstance_message_add(lListElem *this_elem, u_long32 type, const char *message)
+/* slots2config_list(lListElem *qep) */
+void 
+qinstance_set_conf_slots_used(lListElem *this_elem)
 {
-   bool ret = true;
+   lListElem *slots;
 
-   DENTER(TOP_LAYER, "qinstance_message_add");
-   object_message_add(this_elem, QU_message_list, type, message);
-   DEXIT;
-   return ret;
-}
-
-bool
-qinstance_message_trash_all_of_type_X(lListElem *this_elem, u_long32 type)
-{
-   bool ret = true;
-
-   DENTER(TOP_LAYER, "qinstance_message_trash_all_of_type_X");
-   object_message_trash_all_of_type_X(this_elem, QU_message_list, type);
-   DEXIT;
-   return ret;
-}
-
-void
-qinstance_set_full_name(lListElem *this_elem) 
-{
-   dstring buffer = DSTRING_INIT;
-   const char *cqueue_name = lGetString(this_elem, QU_qname);
-   const char *hostname = lGetHost(this_elem, QU_qhostname);
-
-   sge_dstring_sprintf(&buffer, "%s@%s", cqueue_name, hostname);
-   lSetString(this_elem, QU_full_name, 
-              sge_dstring_get_string(&buffer));
-   sge_dstring_free(&buffer);
-}
-
-bool
-qinstance_validate(lListElem *this_elem, lList **answer_list)
-{
-   bool ret = true;
-   lList *centry_master_list = *(centry_list_get_master_list());
-
-   DENTER(TOP_LAYER, "qinstance_validate");
-
-   /* QU_full_name isn't spooled, if it is not set, create it */
-   if (lGetString(this_elem, QU_full_name) == NULL) {
-      qinstance_set_full_name(this_elem);
+   DENTER(QINSTANCE_LAYER, "qinstance_set_conf_slots_used");
+   slots = lGetSubStr(this_elem, CE_name, "slots", 
+                      QU_consumable_config_list);
+   if (slots == NULL) {
+      slots = lAddSubStr(this_elem, CE_name, "slots", 
+                         QU_consumable_config_list, CE_Type);
    }
-   
-   /* handle slots from now on as a consumble attribute of queue */
-   qinstance_set_conf_slots_used(this_elem); 
+   if (slots != NULL) {
+      dstring buffer = DSTRING_INIT;
+      u_long32 slots_value = lGetUlong(this_elem, QU_job_slots);
 
-   /* remove all queue message, which are regenerated during the unspooling
-      the queue */
-   qinstance_message_trash_all_of_type_X(this_elem, ~QI_ERROR);   
-
-   /* setup actual list of queue */
-   qinstance_debit_consumable(this_elem, NULL, centry_master_list, 0);
-
-   /* init double values of consumable configuration */
-   centry_list_fill_request(lGetList(this_elem, QU_consumable_config_list), 
-                     centry_master_list, true, false, true);
-
-      if (ensure_attrib_available(NULL, this_elem, 
-                                  QU_load_thresholds) ||
-          ensure_attrib_available(NULL, this_elem, 
-                                  QU_suspend_thresholds) ||
-          ensure_attrib_available(NULL, this_elem, 
-                                  QU_consumable_config_list)) {
-         ret = false;
-      }
-
-   if (ret) {
-      qinstance_state_set_unknown(this_elem, true);
-      qinstance_state_set_cal_disabled(this_elem, false);
-      qinstance_state_set_cal_suspended(this_elem, false);
-      qinstance_set_slots_used(this_elem, 0);
-      
-      if (host_list_locate(Master_Exechost_List, 
-                           lGetHost(this_elem, QU_qhostname)) == NULL) {
-         answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                 ANSWER_QUALITY_ERROR, 
-                                 MSG_QINSTANCE_HOSTFORQUEUEDOESNOTEXIST_SS,
-                                 lGetString(this_elem, QU_qname), 
-                                 lGetHost(this_elem, QU_qhostname));
-         ret = false;
-      }
-   }
-   
-   DEXIT;
-   return ret;
-}
-
-bool
-qinstance_list_validate(lList *this_list, lList **answer_list)
-{
-   bool ret = true;
-   lListElem *qinstance;
-
-   DENTER(TOP_LAYER, "qinstance_list_validate");
-
-   for_each(qinstance, this_list) {
-      if (!qinstance_validate(qinstance, answer_list)) {
-         ret = false;
-         break;
-      }
-   }
-
-   DEXIT;
-   return ret;
-}
-
-u_long32
-qinstance_list_get_max_qinstance_number(lList *this_list)
-{
-   u_long32 ret = 0;
-   lListElem *qinstance;
-
-   DENTER(TOP_LAYER, "qinstance_list_get_max_qinstance_number");
-   for_each(qinstance, this_list) {
-      ret = MAX(ret, lGetUlong(qinstance, QU_queue_number));
+      sge_dstring_sprintf(&buffer, sge_u32, slots_value);
+      lSetDouble(slots, CE_doubleval, slots_value);
+      lSetString(slots, CE_stringval, sge_dstring_get_string(&buffer));
+      sge_dstring_free(&buffer);
    }
    DEXIT;
-   return ret;
-}
-
-bool
-qinstance_list_number_is_used(lList *this_list, u_long32 number)
-{
-   bool ret = false;
-   lListElem *qinstance;
-
-   DENTER(TOP_LAYER, "qinstance_list_number_is_used");
-   for_each(qinstance, this_list) {
-      if (lGetUlong(qinstance, QU_queue_number) == number) {
-         ret = true;
-         break;
-      }
-   } 
-   DEXIT;
-   return ret;
 }
 

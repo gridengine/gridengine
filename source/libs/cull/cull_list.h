@@ -37,6 +37,7 @@
 
 #include "basis_types.h"
 #include "cull/cull_hashP.h"
+#include "pack.h"
 
 #ifdef  __cplusplus
 extern "C" {
@@ -228,8 +229,13 @@ lListElem *lCopyElemHash(const lListElem *src, bool isHash);
 
 int lModifyWhat(lListElem *dst, const lListElem *src, const lEnumeration *enp);
 
-int lCopyElemPartial(lListElem *dst, int *jp, const lListElem *src, const lEnumeration *ep, bool isHash);
-int lCopySwitch(const lListElem *sep, lListElem *dep, int src_idx, int dst_idx, bool isHash, lEnumeration *ep);
+int 
+lCopyElemPartialPack(lListElem *dst, int *jp, const lListElem *src, 
+                     const lEnumeration *ep, bool isHash, sge_pack_buffer *pb);
+
+int 
+lCopySwitchPack(const lListElem *sep, lListElem *dep, int src_idx, int dst_idx,
+                bool isHash, lEnumeration *ep, sge_pack_buffer *pb);
 
 int lAppendElem(lList *lp, lListElem *ep);
 lListElem *lDechainElem(lList *lp, lListElem *ep);

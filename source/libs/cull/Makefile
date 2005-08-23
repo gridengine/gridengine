@@ -193,6 +193,13 @@ test_cull_pack.o: $(CULLLIB_DIR)/test_cull_pack.c
 	$(CC) $(CFLAGS) -c $(CULLLIB_DIR)/test_cull_pack.c
 
 #---
+test_cull_db_pack: test_cull_db_pack.o $(SGELIB) $(CULLLIB) $(UTILIB) $(RMONLIB) $(LCKLIB)
+	$(LD_WRAPPER) $(CC) $(CFLAGS) -o test_cull_db_pack $(LFLAGS) test_cull_db_pack.o $(SGELIB) $(CULLLIB) $(UTILIB) $(RMONLIB) $(LCKLIB) $(LIBS)
+
+test_cull_db_pack.o: $(CULLLIB_DIR)/test_cull_db_pack.c
+	$(CC) $(CFLAGS) -c $(CULLLIB_DIR)/test_cull_db_pack.c
+
+#---
 test_cull_hash: test_cull_hash.o $(CULLLIB) $(UTILIB) $(RMONLIB) $(LCKLIB)
 	$(LD_WRAPPER) $(CC) $(CFLAGS) -o test_cull_hash test_cull_hash.o $(LFLAGS) $(CULLLIB) $(UTILIB) $(RMONLIB) $(LCKLIB) $(LIBS) -lmalloc $(LIBS)
 

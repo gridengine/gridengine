@@ -498,7 +498,7 @@ static void qping_print_line(char* buffer, int nonewline, int dump_tag) {
                   sge_gdi_request *req = NULL;
    
    
-                  if ( init_packbuffer_from_buffer(&buf, (char*)binary_buffer, buffer_length , 0) == PACK_SUCCESS) {
+                  if (init_packbuffer_from_buffer(&buf, (char*)binary_buffer, buffer_length) == PACK_SUCCESS) {
                      if ( sge_unpack_gdi_request(&buf, &req_head ) == 0) {
                         int req_no = 0;
                         printf("      unpacked gdi request (binary buffer length %lu):\n", buffer_length );
@@ -587,7 +587,7 @@ static void qping_print_line(char* buffer, int nonewline, int dump_tag) {
                if (  cl_util_get_binary_buffer(message_debug_data, &binary_buffer , &buffer_length) == CL_RETVAL_OK) {
                   sge_pack_buffer buf;
    
-                  if ( init_packbuffer_from_buffer(&buf, (char*)binary_buffer, buffer_length , 0) == PACK_SUCCESS) {
+                  if (init_packbuffer_from_buffer(&buf, (char*)binary_buffer, buffer_length) == PACK_SUCCESS) {
                      lList *rep = NULL;
    
                      if (cull_unpack_list(&buf, &rep) == 0) {
@@ -610,7 +610,7 @@ static void qping_print_line(char* buffer, int nonewline, int dump_tag) {
                if (  cl_util_get_binary_buffer(message_debug_data, &binary_buffer , &buffer_length) == CL_RETVAL_OK) {
                   sge_pack_buffer buf;
    
-                  if ( init_packbuffer_from_buffer(&buf, (char*)binary_buffer, buffer_length , 0) == PACK_SUCCESS) {
+                  if (init_packbuffer_from_buffer(&buf, (char*)binary_buffer, buffer_length) == PACK_SUCCESS) {
                      u_long32 client_id = 0;
                      if (unpackint(&buf, &client_id) == PACK_SUCCESS) {
                         printf("      unpacked event client exit (binary buffer length %lu):\n", buffer_length );
@@ -626,7 +626,7 @@ static void qping_print_line(char* buffer, int nonewline, int dump_tag) {
                if (  cl_util_get_binary_buffer(message_debug_data, &binary_buffer , &buffer_length) == CL_RETVAL_OK) {
                   sge_pack_buffer buf;
    
-                  if ( init_packbuffer_from_buffer(&buf, (char*)binary_buffer, buffer_length , 0) == PACK_SUCCESS) {
+                  if (init_packbuffer_from_buffer(&buf, (char*)binary_buffer, buffer_length) == PACK_SUCCESS) {
                      u_long32 ack_tag, ack_ulong, ack_ulong2;
    
                      while(unpackint(&buf,  &ack_tag ) == PACK_SUCCESS) {
@@ -747,7 +747,7 @@ static void qping_print_line(char* buffer, int nonewline, int dump_tag) {
                if (  cl_util_get_binary_buffer(message_debug_data, &binary_buffer , &buffer_length) == CL_RETVAL_OK) {
                   sge_pack_buffer buf;
    
-                  if ( init_packbuffer_from_buffer(&buf, (char*)binary_buffer, buffer_length , 0) == PACK_SUCCESS) {
+                  if (init_packbuffer_from_buffer(&buf, (char*)binary_buffer, buffer_length) == PACK_SUCCESS) {
                      u_long32 feature_set;
                      lListElem* list_elem = NULL;
                      if (unpackint(&buf, &feature_set) == PACK_SUCCESS) {
@@ -770,7 +770,7 @@ static void qping_print_line(char* buffer, int nonewline, int dump_tag) {
                if (  cl_util_get_binary_buffer(message_debug_data, &binary_buffer , &buffer_length) == CL_RETVAL_OK) {
                   sge_pack_buffer buf;
    
-                  if ( init_packbuffer_from_buffer(&buf, (char*)binary_buffer, buffer_length , 0) == PACK_SUCCESS) {
+                  if (init_packbuffer_from_buffer(&buf, (char*)binary_buffer, buffer_length) == PACK_SUCCESS) {
                      u_long32 jobid_pre = 0;
                      u_long32 jataskid_pre = 0;
                      u_long32 jobid    = 0;
@@ -821,7 +821,7 @@ static void qping_print_line(char* buffer, int nonewline, int dump_tag) {
    
                   printf("binary buffer length is %lu\n",buffer_length);  
    
-                  if ( init_packbuffer_from_buffer(&buf, (char*)binary_buffer, buffer_length , 0) == PACK_SUCCESS) {
+                  if (init_packbuffer_from_buffer(&buf, (char*)binary_buffer, buffer_length) == PACK_SUCCESS) {
                      u_long32 jobid_pre = 0;
                      u_long32 jataskid_pre = 0;
                      u_long32 jobid    = 0;

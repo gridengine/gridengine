@@ -1388,8 +1388,9 @@ lChar lGetChar(const lListElem *ep, int name)
 lRef lGetPosRef(const lListElem *ep, int pos) 
 {
    DENTER(CULL_BASIS_LAYER, "lGetPosRef");
-   if (mt_get_type(ep->descr[pos].mt) != lRefT)
+   if (mt_get_type(ep->descr[pos].mt) != lRefT) {
       incompatibleType("lGetPosRef");
+   }
    DEXIT;
    return ep->cont[pos].ref;
 }
@@ -3504,7 +3505,7 @@ lListElem *lAddElemStr(lList **lpp, int nm, const char *str, const lDescr *dp)
 
    if (!*lpp) {
       /* ensure existence of a str list in ep */
-      *lpp = lCreateList("string_sublist", dp);
+      *lpp = lCreateList("", dp);
    }
 
    /* add new host str element to sublist */
@@ -3731,21 +3732,23 @@ int lDelElemStr(lList **lpp, int nm, const char *str)
 lListElem *lGetSubStr(const lListElem *ep, int nm, const char *str, int snm) 
 {
    int sublist_pos;
-   lListElem *ret;
+   lListElem *ret = NULL;
 
    DENTER(CULL_LAYER, "lGetSubStr");
 
-   /* get position of sublist in ep */
-   sublist_pos = lGetPosViaElem(ep, snm);
+   if (ep != NULL) {
+      /* get position of sublist in ep */
+      sublist_pos = lGetPosViaElem(ep, snm);
 
-   /* run time type checking */
-   if (sublist_pos < 0) {
-      CRITICAL((SGE_EVENT, MSG_CULL_GETSUBSTRERRORXRUNTIMETYPE_S , lNm2Str(snm)));
-      DEXIT;
-      abort();
+      /* run time type checking */
+      if (sublist_pos < 0) {
+         CRITICAL((SGE_EVENT, MSG_CULL_GETSUBSTRERRORXRUNTIMETYPE_S , lNm2Str(snm)));
+         DEXIT;
+         abort();
+      }
+
+      ret = lGetElemStr(ep->cont[sublist_pos].glp, nm, str);
    }
-
-   ret = lGetElemStr(ep->cont[sublist_pos].glp, nm, str);
 
    DEXIT;
    return ret;

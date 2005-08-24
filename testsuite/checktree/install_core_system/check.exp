@@ -298,8 +298,6 @@ proc cleanup_system { } {
    global CHECK_ARCH env check_errno
    global check_use_installed_system CHECK_OUTPUT CHECK_USER
 
-#puts "press RETURN"
-#set anykey [wait_for_enter 1]
    # check if the system is running and qmaster accessable
    set catch_return [ catch { exec "$ts_config(product_root)/bin/$CHECK_ARCH/qstat" } result ]
    if { $catch_return != 0 } {
@@ -825,7 +823,6 @@ proc setup_execd_conf {} {
         }
         set tmp_config(execd_spool_dir) $have_exec_spool_dir
         puts $CHECK_OUTPUT "spooldir (new): $tmp_config(execd_spool_dir)"
-        wait_for_enter
      }
      puts $CHECK_OUTPUT $output
      if { $counter != $expected_entries } {
@@ -968,10 +965,8 @@ proc setup_deadlineuser {} {
   global CHECK_ARCH CHECK_USER CHECK_OUTPUT
 
   puts $CHECK_OUTPUT "add_access_list $CHECK_USER deadlineusers ..."
-  wait_for_enter
   add_access_list $CHECK_USER deadlineusers
 
-  wait_for_enter
   set_error 0 "ok"
 }
 

@@ -1,3 +1,5 @@
+SG-2005-08-25-0: fixed build for linux 2.6
+
 JG-2005-08-24-0: Testsuite: Removed debug code requiring user input during 
                             cluster installation.
 

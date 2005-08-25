@@ -1,3 +1,6 @@
+EB-2005-08-25-0: Bugfix:    fixed build for irix 6.5
+                 Review:    SG 
+
 SG-2005-08-25-0: fixed build for linux 2.6
 
 EB-2005-08-23-1: CVS        Created V60s2_BRANCH

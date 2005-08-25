@@ -83,10 +83,13 @@ sge_get_gdi_request_async(int *commlib_error, char *host, char *commproc, u_shor
 static bool
 sge_pack_gdi_info(u_long32 command);
 
-static int 
-sge_send_receive_gdi_request(int *commlib_error, const char *rhost, const char *commproc, 
-                             u_short id, sge_gdi_request *out, sge_gdi_request **in, 
-                             lList **alpp);
+static int sge_send_receive_gdi_request(int *commlib_error,
+                                        const char *rhost,
+                                        const char *commproc,
+                                        u_short id,
+                                        sge_gdi_request *out,
+                                        sge_gdi_request **in,
+                                        lList **alpp);
 
 /****** gdi/request/sge_gdi() *************************************************
 *  NAME
@@ -965,10 +968,13 @@ lList *sge_gdi_extract_answer(u_long32 cmd, u_long32 target, int id,
 *  NOTES
 *     MT-NOTE: sge_send_receive_gdi_request() is MT safe (assumptions)
 ******************************************************************************/
-static int 
-sge_send_receive_gdi_request(int *commlib_error, const char *rhost, const char *commproc, 
-                             u_short id, sge_gdi_request *out, sge_gdi_request **in, 
-                             lList **alpp)
+static int sge_send_receive_gdi_request(int *commlib_error,
+                                        const char *rhost, 
+                                        const char *commproc, 
+                                        u_short id, 
+                                        sge_gdi_request *out,
+                                        sge_gdi_request **in,
+                                        lList **alpp)
 {
    int ret;
    char rcv_rhost[CL_MAXHOSTLEN+1];
@@ -1081,7 +1087,7 @@ sge_send_gdi_request(int sync, const char *rhost, const char *commproc, int id,
    int ret = 0;
    bool local_ret;
    sge_pack_buffer pb;
-   int pack_ret, size;
+   int size;
    lList *answer_list = NULL;
 
    DENTER(GDI_LAYER, "sge_send_gdi_request");
@@ -1099,7 +1105,7 @@ sge_send_gdi_request(int sync, const char *rhost, const char *commproc, int id,
       /*
       ** now we do the real packing
       */
-      if((pack_ret = init_packbuffer(&pb, size, 0)) == PACK_SUCCESS) {
+      if(init_packbuffer(&pb, size, 0) == PACK_SUCCESS) {
          local_ret = request_list_pack_results(ar, &answer_list, &pb);
       }
    }
@@ -1391,8 +1397,7 @@ sge_pack_gdi_info(u_long32 command)
    default:
       ERROR((SGE_EVENT, MSG_GDI_ERROR_INVALIDVALUEXFORARTOOP_D, 
              sge_u32c(command)));
-      DEXIT;
-      return PACK_FORMAT;
+      ret = false;
    }
    DEXIT;
    return ret;
@@ -1513,7 +1518,6 @@ gdi_request_pack_result(sge_gdi_request *ar, lList **answer_list,
                         sge_pack_buffer *pb)
 {
    bool ret = true;
-   int old_size;
 
    DENTER(GDI_LAYER, "gdi_request_pack_result");
    if (ar != NULL && pb != NULL) {
@@ -1523,8 +1527,6 @@ gdi_request_pack_result(sge_gdi_request *ar, lList **answer_list,
       if (!ret) {
          goto exit_this_function;
       }
-
-      old_size = pb->bytes_used;
 
       pack_ret = cull_pack_list(pb, ar->lp);
       if (pack_ret != PACK_SUCCESS) {

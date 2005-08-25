@@ -83,6 +83,11 @@ sge_get_gdi_request_async(int *commlib_error, char *host, char *commproc, u_shor
 static bool
 sge_pack_gdi_info(u_long32 command);
 
+static int 
+sge_send_receive_gdi_request(int *commlib_error, const char *rhost, const char *commproc, 
+                             u_short id, sge_gdi_request *out, sge_gdi_request **in, 
+                             lList **alpp);
+
 /****** gdi/request/sge_gdi() *************************************************
 *  NAME
 *     sge_gdi() -- request, change or delete data in the master daemon
@@ -960,13 +965,10 @@ lList *sge_gdi_extract_answer(u_long32 cmd, u_long32 target, int id,
 *  NOTES
 *     MT-NOTE: sge_send_receive_gdi_request() is MT safe (assumptions)
 ******************************************************************************/
-int sge_send_receive_gdi_request(int *commlib_error,
-                                        const char *rhost, 
-                                        const char *commproc, 
-                                        u_short id, 
-                                        sge_gdi_request *out,
-                                        sge_gdi_request **in,
-                                        lList **alpp)
+static int 
+sge_send_receive_gdi_request(int *commlib_error, const char *rhost, const char *commproc, 
+                             u_short id, sge_gdi_request *out, sge_gdi_request **in, 
+                             lList **alpp)
 {
    int ret;
    char rcv_rhost[CL_MAXHOSTLEN+1];

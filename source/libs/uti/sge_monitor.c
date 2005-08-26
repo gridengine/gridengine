@@ -60,22 +60,22 @@ typedef struct {
    thread_error_t   error_timeout;   /* how long can the thread be blocked before an error is shown */
    time_t           update_time;     /* last update time */
    dstring*         output;          /* thread specific info line */
+   pthread_mutex_t  Output_Mutex;    /* gards one line */
 }Output_t;
 
 #define MAX_OUTPUT_LINES 10           /* number of threads to monitor, currently 10 threads at max
                                          at the same time*/
-static pthread_mutex_t  Output_Mutex = PTHREAD_MUTEX_INITIALIZER; 
 static Output_t Output[MAX_OUTPUT_LINES] = {
-                                             {NULL, {0,0}, NO_WARNING, NO_ERROR, 0, NULL},
-                                             {NULL, {0,0}, NO_WARNING, NO_ERROR, 0, NULL},
-                                             {NULL, {0,0}, NO_WARNING, NO_ERROR, 0, NULL},
-                                             {NULL, {0,0}, NO_WARNING, NO_ERROR, 0, NULL},
-                                             {NULL, {0,0}, NO_WARNING, NO_ERROR, 0, NULL},
-                                             {NULL, {0,0}, NO_WARNING, NO_ERROR, 0, NULL},
-                                             {NULL, {0,0}, NO_WARNING, NO_ERROR, 0, NULL},
-                                             {NULL, {0,0}, NO_WARNING, NO_ERROR, 0, NULL},
-                                             {NULL, {0,0}, NO_WARNING, NO_ERROR, 0, NULL},
-                                             {NULL, {0,0}, NO_WARNING, NO_ERROR, 0, NULL},
+                                             {NULL, {0,0}, NO_WARNING, NO_ERROR, 0, NULL, PTHREAD_MUTEX_INITIALIZER},
+                                             {NULL, {0,0}, NO_WARNING, NO_ERROR, 0, NULL, PTHREAD_MUTEX_INITIALIZER},
+                                             {NULL, {0,0}, NO_WARNING, NO_ERROR, 0, NULL, PTHREAD_MUTEX_INITIALIZER},
+                                             {NULL, {0,0}, NO_WARNING, NO_ERROR, 0, NULL, PTHREAD_MUTEX_INITIALIZER},
+                                             {NULL, {0,0}, NO_WARNING, NO_ERROR, 0, NULL, PTHREAD_MUTEX_INITIALIZER},
+                                             {NULL, {0,0}, NO_WARNING, NO_ERROR, 0, NULL, PTHREAD_MUTEX_INITIALIZER},
+                                             {NULL, {0,0}, NO_WARNING, NO_ERROR, 0, NULL, PTHREAD_MUTEX_INITIALIZER},
+                                             {NULL, {0,0}, NO_WARNING, NO_ERROR, 0, NULL, PTHREAD_MUTEX_INITIALIZER},
+                                             {NULL, {0,0}, NO_WARNING, NO_ERROR, 0, NULL, PTHREAD_MUTEX_INITIALIZER},
+                                             {NULL, {0,0}, NO_WARNING, NO_ERROR, 0, NULL, PTHREAD_MUTEX_INITIALIZER},
                                            };
 
 /** a static dstring used as a temporary buffer to build the comlib info string */
@@ -122,14 +122,14 @@ void sge_monitor_free(monitoring_t *monitor)
    DENTER(TOP_LAYER, "sge_monitor_free");
   
    if(monitor->pos != -1) {
-      sge_mutex_lock("sge_monitor_init", SGE_FUNC, __LINE__, &Output_Mutex);
+      sge_mutex_lock("sge_monitor_init", SGE_FUNC, __LINE__, &(Output[monitor->pos].Output_Mutex));
 
       Output[monitor->pos].output = NULL;
       Output[monitor->pos].name = NULL;
       Output[monitor->pos].warning_timeout = NO_WARNING;
       Output[monitor->pos].error_timeout = NO_ERROR;
    
-      sge_mutex_unlock("sge_monitor_init", SGE_FUNC, __LINE__, &Output_Mutex);
+      sge_mutex_unlock("sge_monitor_init", SGE_FUNC, __LINE__, &(Output[monitor->pos].Output_Mutex));
    }
 
    
@@ -263,9 +263,8 @@ sge_monitor_init(monitoring_t *monitor, const char *thread_name, extension_t ext
 
       gettimeofday(&time, NULL);
       
-      sge_mutex_lock("sge_monitor_init", SGE_FUNC, __LINE__, &Output_Mutex);
-      
       for (i = 0; i < MAX_OUTPUT_LINES; i++) {
+         sge_mutex_lock("sge_monitor_init", SGE_FUNC, __LINE__, &(Output[i].Output_Mutex));
          if (Output[i].name == NULL) {
             monitor->pos = i;
             Output[i].output = monitor->output_line1;
@@ -273,11 +272,11 @@ sge_monitor_init(monitoring_t *monitor, const char *thread_name, extension_t ext
             Output[i].warning_timeout = warning_timeout;
             Output[i].error_timeout = error_timeout;
             Output[i].update_time = time.tv_sec; 
+            sge_mutex_unlock("sge_monitor_init", SGE_FUNC, __LINE__, &(Output[i].Output_Mutex));
             break;
-         }
+         }      
+         sge_mutex_unlock("sge_monitor_init", SGE_FUNC, __LINE__, &(Output[i].Output_Mutex));
       }
-      
-      sge_mutex_unlock("sge_monitor_init", SGE_FUNC, __LINE__, &Output_Mutex);
       
       sge_set_last_wait_time(monitor, time);
    }
@@ -342,8 +341,8 @@ u_long32 sge_monitor_status(char **info_message, u_long32 monitor_time)
       char   state = 'R';
       gettimeofday(&now,NULL);
       
-      sge_mutex_lock("sge_monitor_status", SGE_FUNC, __LINE__, &Output_Mutex);
       for (i = 0; i < MAX_OUTPUT_LINES; i++) {
+         sge_mutex_lock("sge_monitor_status", SGE_FUNC, __LINE__, &(Output[i].Output_Mutex));
          if (Output[i].name != NULL) {
             time = now.tv_usec - Output[i].last_wait_time.tv_usec;
             time = now.tv_sec - Output[i].last_wait_time.tv_sec + (time /1000000);
@@ -362,8 +361,8 @@ u_long32 sge_monitor_status(char **info_message, u_long32 monitor_time)
             } 
             sge_dstring_sprintf_append(&Info_Line, MSG_UTI_MONITOR_INFO_SCF, Output[i].name, state, time);
          }
+         sge_mutex_unlock("sge_monitor_status", SGE_FUNC, __LINE__, &(Output[i].Output_Mutex));
       }
-      sge_mutex_unlock("sge_monitor_status", SGE_FUNC, __LINE__, &Output_Mutex);
 
       if (error_count == 0) {
          sge_dstring_append(&Info_Line, MSG_UTI_MONITOR_OK);
@@ -384,16 +383,16 @@ u_long32 sge_monitor_status(char **info_message, u_long32 monitor_time)
       sge_dstring_append(&Info_Line, MSG_UTI_MONITOR); 
       sge_dstring_append(&Info_Line, "\n");
 
-      sge_mutex_lock("sge_monitor_status", SGE_FUNC, __LINE__, &Output_Mutex);
       for (i = 0; i < MAX_OUTPUT_LINES; i++) {
+         sge_mutex_lock("sge_monitor_status", SGE_FUNC, __LINE__, &(Output[i].Output_Mutex));
          if (Output[i].name != NULL) {
             append_time(Output[i].update_time, &Info_Line);
             sge_dstring_append(&Info_Line, " | ");
             sge_dstring_append_dstring(&Info_Line, Output[i].output);
             sge_dstring_append(&Info_Line,"\n");
          }
+         sge_mutex_unlock("sge_monitor_status", SGE_FUNC, __LINE__, &(Output[i].Output_Mutex));
       }
-      sge_mutex_unlock("sge_monitor_status", SGE_FUNC, __LINE__, &Output_Mutex);
    }
    else {
       sge_dstring_append(&Info_Line, MSG_UTI_MONITOR_DISABLED);
@@ -432,11 +431,11 @@ void sge_set_last_wait_time(monitoring_t *monitor, struct timeval wait_time)
    DENTER(TOP_LAYER, "sge_set_last_wait_time");
 
    if (monitor->pos != -1) {
-      sge_mutex_lock("sge_monitor_init", SGE_FUNC, __LINE__, &Output_Mutex);
+      sge_mutex_lock("sge_monitor_init", SGE_FUNC, __LINE__, &(Output[monitor->pos].Output_Mutex));
 
       Output[monitor->pos].last_wait_time = wait_time;
 
-      sge_mutex_unlock("sge_monitor_init", SGE_FUNC, __LINE__, &Output_Mutex);
+      sge_mutex_unlock("sge_monitor_init", SGE_FUNC, __LINE__, &(Output[monitor->pos].Output_Mutex));
    }
    DEXIT;
 }
@@ -496,17 +495,20 @@ void sge_monitor_output(monitoring_t *monitor)
                                  monitor->message_out_count/time,
                                  (time - monitor->idle)/monitor->message_in_count,
                                  monitor->idle/time*100, monitor->wait/time*100,time);           
-      
-      sge_log(LOG_PROF, sge_dstring_get_string(monitor->work_line),__FILE__,SGE_FUNC,__LINE__); 
+    
+      /* only log into the message file, if the user wants it */
+      if (monitor->log_monitor_mes) {
+         sge_log(LOG_PROF, sge_dstring_get_string(monitor->work_line),__FILE__,SGE_FUNC,__LINE__); 
+      }
      
       if (monitor->pos != -1) {
          dstring *tmp = NULL;
 
-         sge_mutex_lock("sge_monitor_init", SGE_FUNC, __LINE__, &Output_Mutex);
+         sge_mutex_lock("sge_monitor_init", SGE_FUNC, __LINE__, &(Output[monitor->pos].Output_Mutex));
          tmp = Output[monitor->pos].output;
          Output[monitor->pos].output = monitor->work_line;
          Output[monitor->pos].update_time = after.tv_sec;         
-         sge_mutex_unlock("sge_monitor_init", SGE_FUNC, __LINE__, &Output_Mutex);
+         sge_mutex_unlock("sge_monitor_init", SGE_FUNC, __LINE__, &(Output[monitor->pos].Output_Mutex));
 
          monitor->work_line = tmp;
        }
@@ -627,8 +629,14 @@ static void ext_gdi_output(dstring *message, void *monitoring_extension, double 
 {
    m_gdi_t *gdi_ext = (m_gdi_t*) monitoring_extension;
 
-   sge_dstring_sprintf_append(message, MSG_UTI_MONITOR_GDIEXT_FFF,
-            gdi_ext->load_count/time, gdi_ext->gdi_count/time,
+   sge_dstring_sprintf_append(message, MSG_UTI_MONITOR_GDIEXT_FFFFFFF,
+            gdi_ext->eload_count/time, gdi_ext->ejob_count/time, 
+            gdi_ext->econf_count/time, gdi_ext->eproc_count/time,
+            gdi_ext->eack_count/time, 
+            gdi_ext->gdi_add_count/time, gdi_ext->gdi_get_count/time,
+            gdi_ext->gdi_mod_count/time, gdi_ext->gdi_del_count/time,
+            gdi_ext->gdi_cp_count/time, gdi_ext->gdi_trig_count/time, 
+            gdi_ext->gdi_perm_count/time,
             gdi_ext->ack_count/time); 
 }
 

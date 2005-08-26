@@ -2112,7 +2112,6 @@ object_has_differences(const lListElem *this_elem, lList **answer_list,
                equiv = (lGetPosRef(this_elem, pos) == lGetPosRef(old_elem, pos)) ? true : false;
                break;
             case lObjectT:
-      {
                {
                   lListElem *new_obj = lGetPosObject(this_elem, pos);
                   lListElem *old_obj = lGetPosObject(old_elem, pos);
@@ -2120,8 +2119,6 @@ object_has_differences(const lListElem *this_elem, lList **answer_list,
                   equiv = (object_has_differences(new_obj, answer_list, 
                                                   old_obj, modify_changed_flag) ? false : true);
                }
-
-}
                break;
             case lListT:
                {

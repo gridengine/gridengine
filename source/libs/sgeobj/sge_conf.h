@@ -94,8 +94,12 @@ u_long32 mconf_get_auto_user_oticket(void);
 char* mconf_get_auto_user_default_project(void);
 u_long32 mconf_get_auto_user_delete_time(void);
 char* mconf_get_delegated_file_staging(void);
+void mconf_set_new_config(bool new_config);
+bool mconf_is_new_config(void);
+
 
 /* params */
+bool mconf_is_monitor_message(void);
 bool mconf_get_use_qidle(void);
 bool mconf_get_forbid_reschedule(void);
 bool mconf_get_forbid_apperror(void);

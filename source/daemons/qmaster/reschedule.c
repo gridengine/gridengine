@@ -1053,7 +1053,6 @@ void update_reschedule_unknown_timeout(lListElem *host)
 *******************************************************************************/
 u_long32 reschedule_unknown_timeout(lListElem *hep) 
 {
-   extern int new_config;
    static int not_init = 1;
    u_long32 timeout = 0;
    const char *host = NULL;
@@ -1064,7 +1063,7 @@ u_long32 reschedule_unknown_timeout(lListElem *hep)
    timeout = lGetUlong(hep, EH_reschedule_unknown);
 
    /* cache reschedule_unknown parameter in execd host to prevent host name resolving */
-   if (new_config || not_init)
+   if (mconf_is_new_config() || not_init)
    {
       lListElem *conf_entry = NULL;
       

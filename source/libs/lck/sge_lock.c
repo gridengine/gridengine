@@ -132,7 +132,7 @@ static sge_locker_t id_callback_impl(void);
 *******************************************************************************/
 void sge_lock(sge_locktype_t aType, sge_lockmode_t aMode, const char *func, sge_locker_t anID)
 {
-   DENTER(TOP_LAYER, "sge_lock");
+   DENTER(BASIS_LAYER, "sge_lock");
 
    if (NULL != lock_callback) {
       lock_callback(aType, aMode, func, anID);
@@ -169,7 +169,7 @@ void sge_lock(sge_locktype_t aType, sge_lockmode_t aMode, const char *func, sge_
 *******************************************************************************/
 void sge_unlock(sge_locktype_t aType, sge_lockmode_t aMode, const char *func, sge_locker_t anID)
 {
-   DENTER(TOP_LAYER, "sge_unlock");
+   DENTER(BASIS_LAYER, "sge_unlock");
 
    if (NULL != unlock_callback) {
       unlock_callback(aType, aMode, func, anID);
@@ -205,7 +205,7 @@ sge_locker_t sge_locker_id(void)
 {
    sge_locker_t id = 0;
 
-   DENTER(TOP_LAYER, "sge_locker_id");
+   DENTER(BASIS_LAYER, "sge_locker_id");
 
    if (NULL != id_callback) {
       id = (sge_locker_t)id_callback();
@@ -240,7 +240,7 @@ const char* sge_type_name(sge_locktype_t aType)
    const char *s = NULL;
    int i = (int)aType;
 
-   DENTER(TOP_LAYER, "sge_type_name");
+   DENTER(BASIS_LAYER, "sge_type_name");
 
    s = (i < NUM_OF_LOCK_TYPES) ? locktype_names[i] : NULL;
 
@@ -274,7 +274,7 @@ int sge_num_locktypes(void)
 {
    int i = 0;
 
-   DENTER(TOP_LAYER, "sge_num_locktypes");
+   DENTER(BASIS_LAYER, "sge_num_locktypes");
 
    i = (int)NUM_OF_LOCK_TYPES;
 
@@ -307,7 +307,7 @@ int sge_num_locktypes(void)
 *******************************************************************************/
 void sge_set_lock_callback(void (*aFunc)(sge_locktype_t, sge_lockmode_t, const char *, sge_locker_t))
 {
-   DENTER(TOP_LAYER, "sge_set_lock_callback");
+   DENTER(BASIS_LAYER, "sge_set_lock_callback");
 
    if (NULL != aFunc) {
       lock_callback = aFunc;
@@ -342,7 +342,7 @@ void sge_set_lock_callback(void (*aFunc)(sge_locktype_t, sge_lockmode_t, const c
 *******************************************************************************/
 void sge_set_unlock_callback(void (*aFunc)(sge_locktype_t, sge_lockmode_t, const char *, sge_locker_t))
 {
-   DENTER(TOP_LAYER, "sge_set_unlock_callback");
+   DENTER(BASIS_LAYER, "sge_set_unlock_callback");
 
    if (NULL != aFunc) {
       unlock_callback = aFunc;
@@ -377,7 +377,7 @@ void sge_set_unlock_callback(void (*aFunc)(sge_locktype_t, sge_lockmode_t, const
 *******************************************************************************/
 void sge_set_id_callback(sge_locker_t (*aFunc)(void))
 {
-   DENTER(TOP_LAYER, "sge_set_id_callback");
+   DENTER(BASIS_LAYER, "sge_set_id_callback");
 
    if (NULL != aFunc) {
       id_callback = aFunc;
@@ -416,7 +416,7 @@ void sge_set_id_callback(sge_locker_t (*aFunc)(void))
 *******************************************************************************/
 void sge_setup_lock_service(void)
 {
-   DENTER(TOP_LAYER, "sge_setup_lock_service");
+   DENTER(BASIS_LAYER, "sge_setup_lock_service");
    
    pthread_rwlock_init(&Global_Lock, NULL); 
    pthread_rwlock_init(&Schedd_Conf_Lock, NULL);
@@ -452,7 +452,7 @@ void sge_setup_lock_service(void)
 *******************************************************************************/
 void sge_teardown_lock_service(void)
 {
-   DENTER(TOP_LAYER, "sge_teardown_lock_service");
+   DENTER(BASIS_LAYER, "sge_teardown_lock_service");
 
    DEXIT;
    return;
@@ -486,7 +486,7 @@ void sge_teardown_lock_service(void)
 *******************************************************************************/
 static void lock_callback_impl(sge_locktype_t aType, sge_lockmode_t aMode, const char *func,  sge_locker_t anID)
 {
-   DENTER(TOP_LAYER, "lock_callback_impl");
+   DENTER(BASIS_LAYER, "lock_callback_impl");
 
    if (aMode == LOCK_READ) {
        sge_rwlock_rdlock("Global_Lock_read", func, __LINE__, SGE_RW_Locks[aType]);
@@ -531,7 +531,7 @@ static void lock_callback_impl(sge_locktype_t aType, sge_lockmode_t aMode, const
 *******************************************************************************/
 static void unlock_callback_impl(sge_locktype_t aType, sge_lockmode_t aMode, const char *func, sge_locker_t anID)
 {
-   DENTER(TOP_LAYER, "unlock_callback_impl");
+   DENTER(BASIS_LAYER, "unlock_callback_impl");
 
    if (aMode == LOCK_READ) {
        sge_rwlock_unlock("Global_Lock_read", func, __LINE__, SGE_RW_Locks[aType]);
@@ -572,7 +572,7 @@ static sge_locker_t id_callback_impl(void)
 {
    sge_locker_t id;
 
-   DENTER(TOP_LAYER, "id_callback_impl");
+   DENTER(BASIS_LAYER, "id_callback_impl");
    
    id = (sge_locker_t)pthread_self();
 

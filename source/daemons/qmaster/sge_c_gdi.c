@@ -226,16 +226,20 @@ int id
       return 0;
    }
 
-   for (vp = &vdict[0]; vp->version; vp++)
-      if (version == vp->version)
+   for (vp = &vdict[0]; vp->version; vp++) {
+      if (version == vp->version) {
          client_version = vp->release;
+      }
+   }
 
-   if (client_version)
+   if (client_version) {
       WARNING((SGE_EVENT, MSG_GDI_WRONG_GDI_SSISS,
          host, commproc, id, client_version, feature_get_product_name(FS_VERSION, &ds)));
-   else
+   }
+   else {
       WARNING((SGE_EVENT, MSG_GDI_WRONG_GDI_SSIUS,
          host, commproc, id, sge_u32c(version), feature_get_product_name(FS_VERSION, &ds)));
+   }
    answer_list_add(alpp, SGE_EVENT, STATUS_EVERSION, ANSWER_QUALITY_ERROR);
 
    DEXIT;
@@ -333,24 +337,31 @@ sge_c_gdi(char *host, sge_gdi_request *request, sge_gdi_request *response,
    switch (request->op) {
    case SGE_GDI_GET:
       operation_name = "GET";
+      MONITOR_GDI_GET(monitor);
       break;
    case SGE_GDI_ADD:
       operation_name = "ADD";
+      MONITOR_GDI_ADD(monitor);
       break;
    case SGE_GDI_DEL:
       operation_name = "DEL";
+      MONITOR_GDI_DEL(monitor);
       break;
    case SGE_GDI_MOD:
       operation_name = "MOD";
+      MONITOR_GDI_MOD(monitor);
       break;
    case SGE_GDI_COPY:
       operation_name = "COPY";
+      MONITOR_GDI_CP(monitor);
       break;
    case SGE_GDI_TRIGGER:
       operation_name = "TRIGGER";
+      MONITOR_GDI_TRIG(monitor);
       break;
    case SGE_GDI_PERMCHECK:
       operation_name = "PERMCHECK";
+      MONITOR_GDI_PERM(monitor);
       break; 
    default:
       operation_name = "???";
@@ -886,18 +897,18 @@ sge_c_gdi_add(gdi_object_t *ao, char *host, sge_gdi_request *request,
       }
    }
    
-   if (ticket_orders) {
-
-      MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE), monitor);
-
+   if (ticket_orders != NULL) {
       if (sge_conf_is_reprioritize()) {
+
+         MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE), monitor);
          distribute_ticket_orders(ticket_orders, monitor);
+         SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
+
       }
       else {
          /* tickets not needed at execd's if no repriorization is done */
          DPRINTF(("NO TICKET DELIVERY\n"));
       } 
-      SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
 
       lFreeList(&ticket_orders);
    }

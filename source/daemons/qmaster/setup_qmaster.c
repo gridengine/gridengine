@@ -751,7 +751,6 @@ static int setup_qmaster(void)
 {
    lListElem *jep, *ep, *tmpqep;
    static bool first = true;
-   extern int new_config;
    lListElem *spooling_context = NULL;
    lList *answer_list = NULL;
    time_t time_start, time_end;
@@ -802,7 +801,7 @@ static int setup_qmaster(void)
       return -1;
    }
    
-   new_config = 1;
+   mconf_set_new_config(true);
 
    /* get aliased hostname from commd */
    reresolve_me_qualified_hostname();

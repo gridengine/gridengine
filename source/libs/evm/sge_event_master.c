@@ -2379,7 +2379,7 @@ static void* event_deliver_thread(void *anArg)
       /*
        * did a new event arrive which has a flush time of 0 seconds?
        */
-      MONITOR_IDLE_TIME(event_master_wait_next(),(&monitor), mconf_get_monitor_time());
+      MONITOR_IDLE_TIME(event_master_wait_next(),(&monitor), mconf_get_monitor_time(), mconf_is_monitor_message());
 
       sge_mutex_unlock("event_master_cond_mutex", SGE_FUNC, __LINE__, &Master_Control.cond_mutex);
 

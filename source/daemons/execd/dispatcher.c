@@ -203,7 +203,7 @@ int dispatch( dispatch_entry*   table,
             de.id = 0;
       }
 
-      MONITOR_IDLE_TIME((i = receive_message(&de, &pb, tagarray, errfunc)), (&monitor), monitor_time);
+      MONITOR_IDLE_TIME((i = receive_message(&de, &pb, tagarray, errfunc)), (&monitor), monitor_time, false);
       MONITOR_MESSAGES((&monitor));
       
       switch (i) {

@@ -66,26 +66,17 @@
 
 #include "sge_persistence_qmaster.h"
 #include "spool/sge_spooling.h"
+#include "lck/sge_lock.h"
 
 #include "msg_common.h"
 #include "msg_qmaster.h"
 
-/*
- * make chached values from configuration invalid.
- * 
- * TODO: Replace this stupid global variable by a function, e.g.
- * 'bool sge_configuration_did_change()'.
- */
-int new_config = 1;
-
-
 typedef struct { 
-   pthread_mutex_t  mutex;  /* used for thread exclusion                           */
    lList*           list;   /* 'CONF_Type' list, holding the cluster configuration */
 } cluster_config_t;
 
 
-static cluster_config_t Cluster_Config = {PTHREAD_MUTEX_INITIALIZER, NULL};
+static cluster_config_t Cluster_Config = {NULL};
 
 /* Static configuration entries may be changed at runtime with a warning */
 static char *Static_Conf_Entries[] = { "execd_spool_dir", NULL };
@@ -100,7 +91,8 @@ static bool has_reschedule_unknown_change(lList *theOldConfEntries, lList *theNe
 static int do_add_config(char *aConfName, lListElem *aConf, lList**anAnswer);
 static int remove_conf_by_name(char *aConfName);
 static lListElem *get_entry_from_conf(lListElem *aConf, const char *anEntryName);
-
+static u_long32 sge_get_config_version_for_host(const char* aName);
+static bool sge_get_conf_reprioritize(lListElem *aConf);
 
 /* 
  * Read the cluster configuration from secondary storage using 'aSpoolContext'.
@@ -115,11 +107,11 @@ int sge_read_configuration(lListElem *aSpoolContext, lList *anAnswer)
 
    DENTER(TOP_LAYER, "sge_read_configuration");
    
-   sge_mutex_lock("cluster_config_mutex", SGE_FUNC, __LINE__, &Cluster_Config.mutex);
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_WRITE);
 
    spool_read_list(&anAnswer, aSpoolContext, &Cluster_Config.list, SGE_TYPE_CONFIG);
 
-   sge_mutex_unlock("cluster_config_mutex", SGE_FUNC, __LINE__, &Cluster_Config.mutex);
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_WRITE);
    
    answer_list_output(&anAnswer);
 
@@ -211,8 +203,9 @@ int sge_del_configuration(lListElem *aConf, lList **anAnswer, char *aUser, char 
    
    update_reschedule_unknown_timout_values(unique_name);
 
-   new_config = 1; /* invalidate cached configuration values */
-   
+   /* invalidate cached configuration values */
+   mconf_set_new_config(true);
+    
    DEXIT;
    return STATUS_OK;
 }
@@ -328,7 +321,8 @@ int sge_mod_configuration(lListElem *aConf, lList **anAnswer, char *aUser, char 
       cl_commlib_set_connection_param(cl_com_get_handle("qmaster", 1), HEARD_FROM_TIMEOUT, mconf_get_max_unheard());
    }
     
-   new_config = 1; /* invalidate configuration cache */
+   /* invalidate configuration cache */
+   mconf_set_new_config(true);
    
    DEXIT;
    return STATUS_OK;
@@ -516,33 +510,21 @@ int sge_compare_configuration(lListElem *aHost, lList *aConf)
    
    for_each(conf_entry, aConf)
    {
-      lListElem *master_conf = NULL;
       const char *host_name = NULL;
-      u_long32 conf_version, master_version;
+      u_long32 conf_version;
+      u_long32 master_version;
       
       host_name = lGetHost(conf_entry, CONF_hname);
-      
-      master_conf = sge_get_configuration_for_host(host_name);
+      master_version = sge_get_config_version_for_host(host_name); 
             
-      if (NULL == master_conf)
-      {
-         DPRINTF(("%s: no master configuration for %s found\n", SGE_FUNC, host_name));
-         DEXIT;
-         return 1;
-      }
-      
       conf_version = lGetUlong(conf_entry, CONF_version);
-      master_version = lGetUlong(master_conf, CONF_version);
       
       if (master_version != conf_version)
       {
          DPRINTF(("%s: configuration for %s changed from version %ld to %ld\n", SGE_FUNC, host_name, master_version, conf_version));
-         lFreeElem(&master_conf);
          DEXIT;
          return 1;
       }
-      
-      lFreeElem(&master_conf);
    }
 
    DEXIT;
@@ -601,14 +583,48 @@ lList* sge_get_configuration(void)
    
    DENTER(TOP_LAYER, "sge_get_configuration");
 
-   sge_mutex_lock("cluster_config_mutex", SGE_FUNC, __LINE__, &Cluster_Config.mutex);
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
    
    conf = lCopyListHash(lGetListName(Cluster_Config.list), Cluster_Config.list, false);
 
-   sge_mutex_unlock("cluster_config_mutex", SGE_FUNC, __LINE__, &Cluster_Config.mutex);
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
    
    DEXIT;
    return conf;
+}
+
+static u_long32 sge_get_config_version_for_host(const char* aName)
+{
+   lListElem *conf = NULL;
+   u_long32 version = 0;
+   char unique_name[CL_MAXHOSTLEN];
+   int ret = -1;
+
+   DENTER(TOP_LAYER, "sge_get_configuration_for_host");
+
+   ret = sge_resolve_hostname(aName, unique_name, EH_name);
+   
+   if (CL_RETVAL_OK != ret)
+   {
+      DPRINTF(("%s: error %s resolving host %s\n", SGE_FUNC, cl_get_error_text(ret), aName));
+      ERROR((SGE_EVENT, MSG_SGETEXT_CANTRESOLVEHOST_S, aName));
+      DEXIT;
+      return 0;
+   }
+
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+   
+   conf = lGetElemHost(Cluster_Config.list, CONF_hname, unique_name);
+   if (NULL == conf) {
+      DPRINTF(("%s: no master configuration for %s found\n", SGE_FUNC, aName));
+   }
+   else {
+      version = lGetUlong(conf, CONF_version);
+   }
+   
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+
+   DRETURN(version);  
 }
 
 /*
@@ -636,11 +652,11 @@ lListElem* sge_get_configuration_for_host(const char* aName)
       return NULL;
    }
 
-   sge_mutex_lock("cluster_config_mutex", SGE_FUNC, __LINE__, &Cluster_Config.mutex);
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
    
    conf = lCopyElem(lGetElemHost(Cluster_Config.list, CONF_hname, unique_name));
 
-   sge_mutex_unlock("cluster_config_mutex", SGE_FUNC, __LINE__, &Cluster_Config.mutex);
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
 
    DEXIT;
    return conf;
@@ -675,7 +691,7 @@ void sge_set_conf_reprioritize(lListElem *aConf, bool aFlag)
 } /* sge_set_conf_reprioritize */
 
 
-bool sge_get_conf_reprioritize(lListElem *aConf)
+static bool sge_get_conf_reprioritize(lListElem *aConf)
 {
    lList *entries = NULL;
    lListElem *ep = NULL;
@@ -689,12 +705,10 @@ bool sge_get_conf_reprioritize(lListElem *aConf)
 
    ep = lGetElemStr(entries, CF_name, REPRIORITIZE);
 
-   if (NULL == ep)
-   {
+   if (NULL == ep) {
       res = false; /* no conf value */
    }
-   else
-   {
+   else {
       const char *val;
 
       val = lGetString(ep, CF_value);
@@ -713,11 +727,12 @@ bool sge_conf_is_reprioritize(void)
 
    DENTER(TOP_LAYER, "sge_conf_is_reprioritize");
 
-   conf = sge_get_configuration_for_host(SGE_GLOBAL_NAME);
-
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+   
+   conf = lCopyElem(lGetElemHost(Cluster_Config.list, CONF_hname, SGE_GLOBAL_NAME));   
    res = sge_get_conf_reprioritize(conf);
 
-   lFreeElem(&conf);
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
 
    DEXIT;
    return res;
@@ -854,7 +869,7 @@ static int exchange_conf_by_name(char *aConfName, lListElem *anOldConf, lListEle
    /* Make sure, 'aNewConf' does have a unique name */
    lSetHost(aNewConf, CONF_hname, aConfName);   
 
-   sge_mutex_lock("cluster_config_mutex", SGE_FUNC, __LINE__, &Cluster_Config.mutex);
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_WRITE);
    
    elem = lGetElemHost(Cluster_Config.list, CONF_hname, aConfName);
 
@@ -864,7 +879,7 @@ static int exchange_conf_by_name(char *aConfName, lListElem *anOldConf, lListEle
    
    lAppendElem(Cluster_Config.list, elem);
 
-   sge_mutex_unlock("cluster_config_mutex", SGE_FUNC, __LINE__, &Cluster_Config.mutex);
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_WRITE);
 
    sge_event_spool(anAnswer, 0, sgeE_CONFIG_MOD, 0, 0, aConfName, NULL, NULL, elem, NULL, NULL, true, true);
    
@@ -914,11 +929,11 @@ static int do_add_config(char *aConfName, lListElem *aConf, lList**anAnswer)
 
    elem = lCopyElem(aConf);
 
-   sge_mutex_lock("cluster_config_mutex", SGE_FUNC, __LINE__, &Cluster_Config.mutex);
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_WRITE);
    
    lAppendElem(Cluster_Config.list, elem);
 
-   sge_mutex_unlock("cluster_config_mutex", SGE_FUNC, __LINE__, &Cluster_Config.mutex);
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_WRITE);
 
    sge_event_spool(anAnswer, 0, sgeE_CONFIG_ADD, 0, 0, aConfName, NULL, NULL, elem, NULL, NULL, true, true);
    
@@ -932,13 +947,13 @@ static int remove_conf_by_name(char *aConfName)
    
    DENTER(TOP_LAYER, "remove_conf_by_name");
 
-   sge_mutex_lock("cluster_config_mutex", SGE_FUNC, __LINE__, &Cluster_Config.mutex);
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_WRITE);
 
    elem = lGetElemHost(Cluster_Config.list, CONF_hname, aConfName);
 
    lRemoveElem(Cluster_Config.list, &elem);
 
-   sge_mutex_unlock("cluster_config_mutex", SGE_FUNC, __LINE__, &Cluster_Config.mutex);
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_WRITE);
    
    DEXIT;
    return 0;

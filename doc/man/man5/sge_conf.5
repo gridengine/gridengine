@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2005/08/16 12:28:03 $     Revision: $Revision: 1.46 $
+.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2005/08/26 09:27:31 $     Revision: $Revision: 1.47 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2005/08/16 12:28:03 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2005/08/26 09:27:31 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 xxqs_name_sxx_conf \- xxQS_NAMExx configuration files
@@ -973,6 +973,13 @@ the "qping -f" command line tool. Example: MONITOR_TIME=0:0:10 generates the
 monitoring information most likely every 10 seconds and prints it. The specified
 time is a guideline and not a fixed interval. The used interval is printed and
 can be everything between 9 seconds and 20 in this example. 
+.PP
+.IP "\fILOG_MONITOR_MESSAGE\fP"
+The monitoring information is logged into the messages files per default. In addition
+it is provided for qping and can be requested by it. The messages files can become
+quite big, if the monitoring is enabled all the time, therefore this switch allows
+to disable the logging into the messages files and the monitoring data will only
+be available via "qping -f".
 .PP
 .IP "\fIPROF_SIGNAL\fP"
 Profiling provides the user with the possibility to get system measurements.

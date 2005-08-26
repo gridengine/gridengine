@@ -792,7 +792,8 @@ static void* signal_thread(void* anArg)
    conf_update_thread_profiling("Signal Thread");
 
    while (is_continue) {
-      MONITOR_IDLE_TIME(sigwait(&sig_set, &sig_num), (&monitor), mconf_get_monitor_time());
+      MONITOR_IDLE_TIME(sigwait(&sig_set, &sig_num), (&monitor), mconf_get_monitor_time(), 
+                        mconf_is_monitor_message());
 
       thread_start_stop_profiling();
 

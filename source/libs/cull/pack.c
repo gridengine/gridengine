@@ -93,29 +93,12 @@
 
 /* -------------------------------
 
-   set chunk_size
-
-   returns chunk_size used before
-
- */
-int pack_set_chunk(
-int sz 
-) {
-   int oldsz = cull_state_get_chunk_size();
-   
-   cull_state_set_chunk_size(sz);
-
-   return oldsz;
-}
-
-/* -------------------------------
-
    get chunk_size
 
  */
 int pack_get_chunk(void)
 {
-   return cull_state_get_chunk_size();
+   return CHUNK;
 }
 
 /****** cull/pack/init_packbuffer() *******************************************
@@ -175,7 +158,7 @@ init_packbuffer(sge_pack_buffer *pb, int initial_size, int just_count)
 
    if (!just_count) {
       if (initial_size == 0) {
-         initial_size = cull_state_get_chunk_size();
+         initial_size = CHUNK;
       } else {
          initial_size += 2 * INTSIZE;  /* space for version information */
       }
@@ -327,8 +310,8 @@ int packint(sge_pack_buffer *pb, u_long32 i)
 
    if (!pb->just_count) {
       if (pb->bytes_used + INTSIZE > pb->mem_size) {
-         DPRINTF(("realloc(%d + %d)\n", pb->mem_size, cull_state_get_chunk_size()));
-         pb->mem_size += cull_state_get_chunk_size();
+         DPRINTF(("realloc(%d + %d)\n", pb->mem_size, CHUNK));
+         pb->mem_size += CHUNK;
          pb->head_ptr = realloc(pb->head_ptr, pb->mem_size);
          if (!pb->head_ptr) {
             DEXIT;
@@ -386,8 +369,8 @@ int packdouble(sge_pack_buffer *pb, double d) {
 
    if (!pb->just_count) {
       if (pb->bytes_used + DOUBLESIZE > pb->mem_size) {
-         DPRINTF(("realloc(%d + %d)\n", pb->mem_size, cull_state_get_chunk_size()));
-         pb->mem_size += cull_state_get_chunk_size();
+         DPRINTF(("realloc(%d + %d)\n", pb->mem_size, CHUNK));
+         pb->mem_size += CHUNK;
          pb->head_ptr = realloc(pb->head_ptr, pb->mem_size);
          if (!pb->head_ptr) {
             DEXIT;
@@ -468,8 +451,8 @@ int packstr(sge_pack_buffer *pb, const char *str)
          if ((pb->bytes_used + 1) > pb->mem_size) {
 
             /* realloc */
-            DPRINTF(("realloc(%d + %d)\n", pb->mem_size, cull_state_get_chunk_size()));
-            pb->mem_size += cull_state_get_chunk_size();
+            DPRINTF(("realloc(%d + %d)\n", pb->mem_size, CHUNK));
+            pb->mem_size += CHUNK;
             pb->head_ptr = realloc(pb->head_ptr, pb->mem_size);
             if (!pb->head_ptr) {
                DEXIT;
@@ -491,9 +474,9 @@ int packstr(sge_pack_buffer *pb, const char *str)
          /* is realloc necessary */
          if ((pb->bytes_used + n) > pb->mem_size) {
             /* realloc */
-            DPRINTF(("realloc(%d + %d)\n", pb->mem_size, cull_state_get_chunk_size()));
+            DPRINTF(("realloc(%d + %d)\n", pb->mem_size, CHUNK));
             while ((pb->bytes_used + n) > pb->mem_size)
-               pb->mem_size += cull_state_get_chunk_size();
+               pb->mem_size += CHUNK;
             pb->head_ptr = realloc(pb->head_ptr, pb->mem_size);
             if (!pb->head_ptr) {
                DEXIT;
@@ -591,8 +574,8 @@ u_long32 buf_size
 #endif /* WIN32 */
 
          /* realloc */
-         DPRINTF(("realloc(%d + %d)\n", pb->mem_size, cull_state_get_chunk_size()));
-         pb->mem_size += cull_state_get_chunk_size();
+         DPRINTF(("realloc(%d + %d)\n", pb->mem_size, CHUNK));
+         pb->mem_size += CHUNK;
          pb->head_ptr = realloc(pb->head_ptr, pb->mem_size);
          if (!(pb->head_ptr)) {
             DEXIT;

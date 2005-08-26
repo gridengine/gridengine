@@ -146,6 +146,7 @@ typedef struct {
    /*--- init data ------------*/
    const char *thread_name;
    u_long32    monitor_time;        /* stores the time interval for the mesuring run */
+   bool        log_monitor_mes;     /* if true, it logs the monitoring info into the message file */
    /*--- output data ----------*/
    dstring *output_line1;
    dstring *output_line2;
@@ -179,7 +180,7 @@ void sge_monitor_reset(monitoring_t *monitor);
  * MACRO section
  ****************/
 
-#define MONITOR_IDLE_TIME(execute, monitor, output_time)    { \
+#define MONITOR_IDLE_TIME(execute, monitor, output_time, is_log)    { \
                                  struct timeval before;  \
                                  gettimeofday(&before, NULL); \
                                  sge_set_last_wait_time(monitor, before); \
@@ -189,6 +190,7 @@ void sge_monitor_reset(monitoring_t *monitor);
                                     double time; \
                                     \
                                     monitor->monitor_time = output_time; \
+                                    monitor->log_monitor_mes = is_log; \
                                     gettimeofday(&before, NULL); \
                                     if (monitor->now.tv_sec == 0) { \
                                        monitor->now = before; \
@@ -257,17 +259,38 @@ void sge_monitor_reset(monitoring_t *monitor);
 /* GDI message thread extensions */
 
 typedef struct {
-   u_long32    gdi_count; /* counts the gdi requests (a gdi-multi is only one request */
-   u_long32    load_count;/* counts the execd load/job reports*/
-   u_long32    ack_count; /* counts all kind of aknowledges */
+   u_long32    gdi_add_count;    /* counts the gdi add requests */
+   u_long32    gdi_mod_count;    /* counts the gdi mod requests */
+   u_long32    gdi_get_count;    /* counts the gdi get requests */
+   u_long32    gdi_del_count;    /* counts teh gdi del requests */
+   u_long32    gdi_cp_count;     /* counts the gdi cp requests */
+   u_long32    gdi_trig_count;   /* counts the gdi trig requests */
+   u_long32    gdi_perm_count;   /* counts the gdi perm requests */
+
+   u_long32    eload_count; /* counts the execd load reports */
+   u_long32    econf_count; /* counts the execd conf version requests */
+   u_long32    ejob_count;  /* counts the execd job reports */
+   u_long32    eproc_count; /* counts the execd processor reports */
+   u_long32    eack_count;  /* counts the execd acks */
+
+   u_long32    ack_count;   /* counts the event client aknowledges */
 }m_gdi_t;
 
-#define MONITOR_GDI(monitor)     if ((monitor->monitor_time > 0) && (monitor->ext_type == GDI_EXT)) ((m_gdi_t*)(monitor->ext_data))->gdi_count++
+#define MONITOR_GDI_ADD(monitor)    if ((monitor->monitor_time > 0) && (monitor->ext_type == GDI_EXT)) ((m_gdi_t*)(monitor->ext_data))->gdi_add_count++
+#define MONITOR_GDI_GET(monitor)    if ((monitor->monitor_time > 0) && (monitor->ext_type == GDI_EXT)) ((m_gdi_t*)(monitor->ext_data))->gdi_get_count++
+#define MONITOR_GDI_MOD(monitor)    if ((monitor->monitor_time > 0) && (monitor->ext_type == GDI_EXT)) ((m_gdi_t*)(monitor->ext_data))->gdi_mod_count++
+#define MONITOR_GDI_DEL(monitor)    if ((monitor->monitor_time > 0) && (monitor->ext_type == GDI_EXT)) ((m_gdi_t*)(monitor->ext_data))->gdi_del_count++
+#define MONITOR_GDI_CP(monitor)     if ((monitor->monitor_time > 0) && (monitor->ext_type == GDI_EXT)) ((m_gdi_t*)(monitor->ext_data))->gdi_cp_count++
+#define MONITOR_GDI_TRIG(monitor)   if ((monitor->monitor_time > 0) && (monitor->ext_type == GDI_EXT)) ((m_gdi_t*)(monitor->ext_data))->gdi_trig_count++
+#define MONITOR_GDI_PERM(monitor)   if ((monitor->monitor_time > 0) && (monitor->ext_type == GDI_EXT)) ((m_gdi_t*)(monitor->ext_data))->gdi_perm_count++
 
 #define MONITOR_ACK(monitor)     if ((monitor->monitor_time > 0) && (monitor->ext_type == GDI_EXT)) ((m_gdi_t*)(monitor->ext_data))->ack_count++
 
-#define MONITOR_LOAD(monitor)    if ((monitor->monitor_time > 0) && (monitor->ext_type == GDI_EXT)) ((m_gdi_t*)(monitor->ext_data))->load_count++
-
+#define MONITOR_ELOAD(monitor)    if ((monitor->monitor_time > 0) && (monitor->ext_type == GDI_EXT)) ((m_gdi_t*)(monitor->ext_data))->eload_count++
+#define MONITOR_ECONF(monitor)    if ((monitor->monitor_time > 0) && (monitor->ext_type == GDI_EXT)) ((m_gdi_t*)(monitor->ext_data))->econf_count++
+#define MONITOR_EJOB(monitor)    if ((monitor->monitor_time > 0) && (monitor->ext_type == GDI_EXT)) ((m_gdi_t*)(monitor->ext_data))->ejob_count++
+#define MONITOR_EPROC(monitor)    if ((monitor->monitor_time > 0) && (monitor->ext_type == GDI_EXT)) ((m_gdi_t*)(monitor->ext_data))->eproc_count++
+#define MONITOR_EACK(monitor)    if ((monitor->monitor_time > 0) && (monitor->ext_type == GDI_EXT)) ((m_gdi_t*)(monitor->ext_data))->eack_count++
 /* event master thread extension */
 
 typedef struct {

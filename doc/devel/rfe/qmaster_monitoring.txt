@@ -3,6 +3,7 @@
    
                              Stephan Grell
                              05 July 2005
+                           (work in progress)  
                                
 0. Introduction
 
@@ -36,7 +37,29 @@
    The implementation documentation and how to use the monitoring in ones
    own code is described in the files 'source/uti/sge_monitor.[c|h]'
 
-2. Monitoring Data:
+2. New switches:
+
+   The monitoring is only implemented for the qmaster. Therefore it qconf -mconf
+   got 2 new switches for the qmaster_params documented in sge_conf(5):
+
+>   MONITOR_TIME
+>      Specifies the time interval when the monitoring information should be printed. The
+>      monitoring is disabled per default and can be enabled by specifying an interval.
+>      The monitoring is per thread and is written to the messages file or displayed by
+>      the "qping -f" command line tool. Example: MONITOR_TIME=0:0:10 generates the
+>      monitoring information most likely every 10 seconds and prints it. The specified
+>      time is a guideline and not a fixed interval. The used interval is printed and
+>      can be everything between 9 seconds and 20 in this example. 
+
+
+   LOG_MONITOR_MESSAGE
+>      The monitoring information is logged into the messages files per default. In addition
+>      it is provided for qping and can be requested by it. The messages files can become
+>      quite big, if the monitoring is enabled all the time, therefore this switch allows
+>      to disable the logging into the messages files and the monitoring data will only
+>      be available via "qping -f".
+
+3. Monitoring Data:
 
    GDI thread (MT):
 
@@ -45,17 +68,21 @@
    Timed Event Thread (TET):
       
       
-2. Format:
+4. Format:
 
    Each monioring result for a thread is printed in one line. 
    Example:
    
    TET: runs: 0.10r/s out: 0.00m/s APT: 0.0001s/m idle: 100.00% \
         wait: 0.00% time: 10.00s
-   MT(1): runs: 0.40r/s (reports 0.40/s requests 0.00/s acks: 0.00/s) \
-          out: 0.00m/s APT: 0.0025s/m idle: 99.90% wait: 0.00% time: 5.00s
-   MT(2): runs: 0.59r/s (reports 0.59/s requests 0.00/s acks: 0.00/s) \
-          out: 0.00m/s APT: 0.0024s/m idle: 99.86% wait: 0.00% time: 5.05s
+   MT(1): runs: 0.14r/s (execd (l:0.00,j:0.00,c:0.00,p:0.00,a:0.00)/s \
+          GDI (a:0.00,g:0.00,m:0.00,d:0.00,c:0.00,t:0.00,p:0.00)/s \
+          event-acks: 0.00/s) out: 0.00m/s APT: 0.0000s/m idle: 100.00% \
+          wait: 0.00% time: 7.01s
+   MT(2): runs: 0.14r/s (execd (l:0.00,j:0.00,c:0.00,p:0.00,a:0.00)/s \
+          GDI (a:0.00,g:0.00,m:0.00,d:0.00,c:0.00,t:0.00,p:0.00)/s \
+          event-acks: 0.00/s) out: 0.00m/s APT: 0.0000s/m idle: 100.00% \
+          wait: 0.00% time: 7.01s
    EDT: runs: 2.00r/s out: 0.00m/s APT: 0.0007s/m idle: 99.87% \
         wait: 0.00% time: 5.00s
 
@@ -80,7 +107,7 @@
    <TIME>:          The length of the timeframe the meassuring was done in
                     seconds.
         
-3. Monitoring Data:
+5. Monitoring Data:
 
    3.1 GDI thread (MT):
 
@@ -91,17 +118,24 @@
       
       <OPTIONAL> : will have two settings: a default and an extended monitoring
          Default:
-            <REPORTS>:  number of load and job reports processed per second
-            <REQUESTS>: number of GDI requests per second. A multi GDI request
-                        is only counted as one.
-            <ACKS>:     number of event client acknowledges and execd acknowledges
+            <execd>:  number of messages from the execd, in detail
+               l:  - number of (l)oad reports
+               j:  - number of (j)ob reports
+               c:  - number of execd (c)onfig version compares
+               p:  - number of (p)rocessor reports
+               a:  - number of (a)cknowledges
+               
+            <GDI>: number of GDI requests, in detail
+               a:  - number of (a)dd requests
+               g:  - number of (g)et requests
+               m:  - number of (m)odify requests
+               d:  - number of (d)elete requests
+               c:  - number of (c)opy requests
+               t:  - number of (t)rigger requests
+               p:  - number of verify (p)ermission requests
+
+            <event-acks>:  number of event client acknowledges and execd acknowledges
       
-         Extended:
-            Is not defined yet. It should give enough information to understand
-            bottlenecks and what is going on in the master. This most likely means,
-            that each of the default categories will be broken apart and printed
-            much more precisely. A qmaster_param will turn it on.
-            
    3.2 Event Master Thread (EDT): (Under construction)
       <RUNS> : Number of times the EDT was triggered
       <OUT>  : Number of messages send per second to the event client

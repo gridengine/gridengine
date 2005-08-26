@@ -120,9 +120,6 @@ int pb_used(sge_pack_buffer *pb);
 bool pb_are_equivalent(sge_pack_buffer *pb1, sge_pack_buffer *pb2);
 void pb_print_to(sge_pack_buffer *pb, bool only_header, FILE*);
 
-int pack_set_chunk(int sz);
-int pack_get_chunk(void);  
-
 int repackint(register sge_pack_buffer *, register u_long32);
 int packint(register sge_pack_buffer *, register u_long32);
 int packdouble(register sge_pack_buffer *, double);

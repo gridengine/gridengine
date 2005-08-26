@@ -680,8 +680,9 @@ lList *lp
       is_static = lGetUlong(ep, LR_static);
 
       /* erroneous load report */
-      if (!name || !value || !host)
+      if (!name || !value || !host) {
          continue;
+      }   
 
       /* handle global or exec host? */
       if(global) {
@@ -689,49 +690,6 @@ lList *lp
       } else {
          hepp = &host_ep;
       }
-
-#if 0
-      /* AH: this section needs to be rewritten:
-         - hepp must refer either to global_ep or host_ep
-         - this code sends exec host modify events for each load value for simulated
-      */
-      /* we get load values for another host */
-      if(*hepp && sge_hostcmp(lGetHost(*hepp, EH_name), host)) {
-         /* output error from previous host, if any */
-         if (report_host) {
-            INFO((SGE_EVENT, MSG_CANT_ASSOCIATE_LOAD_SS, rhost, report_host));
-         }
-         /*
-         ** if static load values (eg arch) have changed
-         ** then spool
-         */
-         if (statics_changed && host_ep) {
-            write_host(1, 2, host_ep, EH_name, NULL);
-         }
-
-         /* if non static load values arrived, this indicates that 
-         ** host is not unknown 
-         */
-         if (added_non_static) {
-            lListElem *qep;
-            u_long32 state;
-            const char* tmp_hostname;
-
-
-            tmp_hostname = lGetHost(host_ep, EH_name);
-            cqueue_list_set_unknown_state(
-                  *(object_type_get_master_list(SGE_TYPE_CQUEUE)),
-                  tmp_hostname, true, false);
-         }
-
-         sge_add_event( 0, sgeE_EXECHOST_MOD, 0, 0, lGetHost(*hepp, EH_name), NULL, *hepp);
-
-         added_non_static = false;
-         statics_changed = false;
-         *hepp = NULL;
-         report_host = NULL;
-      }
-#endif
 
       /* update load value list of rhost */
       if ( !*hepp) {
@@ -783,7 +741,7 @@ lList *lp
    }
 
    /* if non static load values arrived, this indicates that 
-   ** host is not unknown 
+   ** host is known 
    */
    if (added_non_static) {
       const char* tmp_hostname;
@@ -829,7 +787,6 @@ lList *lp
 */
 void sge_load_value_cleanup_handler(te_event_t anEvent, monitoring_t *monitor)
 {
-   extern int new_config;
    lListElem *hep, *ep, *nextep; 
    lList *h_list;
    const char *host;
@@ -944,7 +901,7 @@ void sge_load_value_cleanup_handler(te_event_t anEvent, monitoring_t *monitor)
       } 
    }
 
-   new_config = 0;
+   mconf_set_new_config(false);
 
    SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
 
@@ -954,7 +911,6 @@ void sge_load_value_cleanup_handler(te_event_t anEvent, monitoring_t *monitor)
 
 u_long32 load_report_interval(lListElem *hep)
 {
-   extern int new_config;
    u_long32 timeout; 
    const char *host;
 
@@ -963,7 +919,7 @@ u_long32 load_report_interval(lListElem *hep)
    host = lGetHost(hep, EH_name);
 
    /* cache load report interval in exec host to prevent host name resolving each epoch */
-   if (new_config || !lGetUlong(hep, EH_load_report_interval))
+   if (mconf_is_new_config() || !lGetUlong(hep, EH_load_report_interval))
    {
       lListElem *conf_entry = NULL;
       

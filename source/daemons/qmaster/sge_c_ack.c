@@ -80,8 +80,6 @@ void sge_c_ack(char *host, char *commproc, sge_pack_buffer *pb,
 
    DENTER(TOP_LAYER, "sge_c_ack");
 
-   MONITOR_ACK(monitor); 
-
    /* Do some validity tests */
    while (!unpackint(pb, &ack_tag)) {
       if (unpackint(pb, &ack_ulong)) {
@@ -99,11 +97,13 @@ void sge_c_ack(char *host, char *commproc, sge_pack_buffer *pb,
       switch (ack_tag) {
       case TAG_SIGJOB:
       case TAG_SIGQUEUE:
+         MONITOR_EACK(monitor);
          /* an execd sends a job specific acknowledge ack_ulong == jobid of received job */
          sge_c_job_ack(host, commproc, ack_tag, ack_ulong, ack_ulong2, monitor);
          break;
 
       case ACK_EVENT_DELIVERY:
+         MONITOR_ACK(monitor); 
          sge_handle_event_ack(ack_ulong2, (ev_event)ack_ulong);
          break;
 

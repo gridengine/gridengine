@@ -126,12 +126,13 @@ static sge_conf_type Master_Config = { NULL, NULL, NULL, NULL, NULL, NULL, NULL,
                                        NULL, 0, NULL, NULL, NULL, NULL, NULL, 0, NULL,
                                        NULL, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0, 0, 0,
                                        0, NULL, 0, NULL };
-
+static bool is_new_config = false;
 static bool forbid_reschedule = false;
 static bool forbid_apperror = false;
 static bool enable_forced_qdel = false;
 static bool do_credentials = true;
 static bool do_authentication = true;
+static bool is_monitor_message = true;
 static bool use_qidle = false;
 static bool disable_reschedule = false;
 static bool prof_message_thrd = false;
@@ -581,6 +582,7 @@ int merge_configuration(lListElem *global, lListElem *local, lList **lpp) {
       enable_forced_qdel = false;
       do_credentials = true;
       do_authentication = true;
+      is_monitor_message = true;
       spool_time = STREESPOOLTIMEDEF;
       use_qidle = false;
       disable_reschedule = false;   
@@ -641,6 +643,9 @@ int merge_configuration(lListElem *global, lListElem *local, lList **lpp) {
             continue;
          } 
          if (parse_bool_param(s, "DISABLE_AUTO_RESCHEDULING", &disable_reschedule)) {
+            continue;
+         }
+         if (parse_bool_param(s, "LOG_MONITOR_MESSAGE", &is_monitor_message)) {
             continue;
          }
          if (parse_bool_param(s, "SIMULATE_HOSTS", &simulate_hosts)) {
@@ -1408,6 +1413,30 @@ char* mconf_get_rsh_daemon(void) {
    DRETURN(rsh_daemon);
 }
 
+void mconf_set_new_config(bool new_config)
+{
+   DENTER(TOP_LAYER, "mconf_set_new_config");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_WRITE);
+   
+   is_new_config = new_config;
+   
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_WRITE);
+   DEXIT;
+}
+
+/* make chached values from configuration invalid. */
+bool mconf_is_new_config(void) {
+   bool is;
+
+   DENTER(TOP_LAYER, "mconf_is_new_config");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+
+   is = is_new_config;
+
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN(is);
+}
+
 /* returned pointer needs to be freed */
 char* mconf_get_rsh_command(void) {
    char* rsh_command = NULL;
@@ -1583,6 +1612,18 @@ char* mconf_get_delegated_file_staging(void) {
 
 
 /* params */
+bool mconf_is_monitor_message(void) {
+  bool is;
+
+   DENTER(TOP_LAYER, "mconf_is_monitor_message");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+
+   is = is_monitor_message;
+
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN(is);
+}
+
 bool mconf_get_use_qidle(void) {
    bool idle;
 

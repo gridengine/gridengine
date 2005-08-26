@@ -78,7 +78,6 @@ lListElem *lWhatToElem(const lEnumeration *what)
             lSetUlong(whatElem, PACK_id, SGE_WHAT);
 
             setByteArray( (char*)pb.head_ptr, pb.bytes_used, whatElem, PACK_string);
-            lSetBool(whatElem, PACK_compressed, false);
          }
       }
       clear_packbuffer(&pb); 
@@ -92,12 +91,10 @@ lEnumeration *lWhatFromElem(const lListElem *what){
    sge_pack_buffer pb;
    int size=0;
    char *buffer;
-   bool compressed = false;
    int ret=0;
    DENTER(CULL_LAYER, "lWhatFromCull");
    
    if (lGetUlong(what, PACK_id) == SGE_WHAT) {
-      compressed = lGetBool(what, PACK_compressed) ? true : false;
       size = getByteArray(&buffer, what, PACK_string);
       if (size <= 0){
          ERROR((SGE_EVENT, MSG_PACK_INVALIDPACKDATA ));

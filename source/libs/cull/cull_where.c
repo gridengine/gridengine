@@ -444,7 +444,6 @@ lListElem *lWhereToElem(const lCondition *where){
             whereElem = lCreateElem(PACK_Type);
             lSetUlong(whereElem, PACK_id, SGE_WHERE);
             setByteArray( (char*)pb.head_ptr, pb.bytes_used, whereElem, PACK_string);
-            lSetBool(whereElem, PACK_compressed, false);
          }
       }
       clear_packbuffer(&pb); 
@@ -458,13 +457,11 @@ lCondition *lWhereFromElem(const lListElem *where){
    sge_pack_buffer pb;
    int size=0;
    char *buffer;
-   bool compressed = false;
    int ret=0;
    DENTER(CULL_LAYER, "lWhereFromCull");
 
    if (lGetUlong(where, PACK_id) == SGE_WHERE) {
 
-      compressed = lGetBool(where, PACK_compressed) ? true : false;
       size = getByteArray(&buffer, where, PACK_string);
       if (size <= 0){
          ERROR((SGE_EVENT, MSG_PACK_INVALIDPACKDATA ));

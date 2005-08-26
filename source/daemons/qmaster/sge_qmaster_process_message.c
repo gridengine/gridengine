@@ -395,7 +395,8 @@ void *sge_qmaster_process_message(void *anArg, monitoring_t *monitor)
     *
     */
    MONITOR_IDLE_TIME((res = sge_get_any_request(msg.snd_host, msg.snd_name, &msg.snd_id, &msg.buf, 
-                                &msg.tag, 1, 0, &msg.request_mid)), monitor, mconf_get_monitor_time());
+                                &msg.tag, 1, 0, &msg.request_mid)), monitor, mconf_get_monitor_time(),
+                                mconf_is_monitor_message());
    
    MONITOR_MESSAGES(monitor);      
    
@@ -469,8 +470,6 @@ do_gdi_request(struct_msg_t *aMsg, monitoring_t *monitor)
    sge_pack_buffer pb;
 
    DENTER(TOP_LAYER, "do_gid_request");
-
-   MONITOR_GDI(monitor);   
 
    if (sge_unpack_gdi_request(buf, &req_head)) {
       ERROR((SGE_EVENT, MSG_GDI_FAILEDINSGEUNPACKGDIREQUEST_SSI, 
@@ -557,8 +556,6 @@ static request_handling_t do_report_request(struct_msg_t *aMsg, monitoring_t *mo
    request_handling_t type = ATOMIC_NONE;
 
    DENTER(TOP_LAYER, "do_report_request");
-
-   MONITOR_LOAD(monitor);   
 
    if (cull_unpack_list(&(aMsg->buf), &rep)) {
       ERROR((SGE_EVENT,MSG_CULL_FAILEDINCULLUNPACKLISTREPORT));

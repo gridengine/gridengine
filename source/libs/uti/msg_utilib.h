@@ -222,7 +222,7 @@
 */
 #define MSG_UTI_MONITOR_DEFLINE_SF             _MESSAGE(59120, _(SFN": runs: %.2fr/s"))
 #define MSG_UTI_MONITOR_DEFLINE_FFFFF          _MESSAGE(59121, _(" out: %.2fm/s APT: %.4fs/m idle: %.2f%% wait: %.2f%% time: %.2fs"))
-#define MSG_UTI_MONITOR_GDIEXT_FFF             _MESSAGE(59122, _("reports %.2f/s requests %.2f/s acks: %.2f/s"))
+#define MSG_UTI_MONITOR_GDIEXT_FFFFFFF         _MESSAGE(59122, _("execd (l:%.2f,j:%.2f,c:%.2f,p:%.2f,a:%.2f)/s GDI (a:%.2f,g:%.2f,m:%.2f,d:%.2f,c:%.2f,t:%.2f,p:%.2f)/s event-acks: %.2f/s"))
 #define MSG_UTI_MONITOR_DISABLED               _MESSAGE(59123, _("Monitor:                  disabled"))         
 #define MSG_UTI_MONITOR                        _MESSAGE(59124, _("Monitor:"))
 #define MSG_UTI_MONITOR_OK                     _MESSAGE(59125, _("OK"))

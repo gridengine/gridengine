@@ -1,4 +1,7 @@
-SG-2005-08-26-0: cleanup:   - fixed the build for irix 6.5
+CR-2005-08-29-0: Cleanup:   - removed unused message macros and double message
+                              ids.
+
+SG-2005-08-26-0: Cleanup:   - fixed the build for irix 6.5
                             - enhanced RD-2005-08-16-0 (some global variables were
                               missing)
                             - extended the monitoring output

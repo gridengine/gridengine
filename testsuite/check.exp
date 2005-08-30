@@ -7117,6 +7117,7 @@ set do_category       0
 set do_nomain         0
 set do_prog_start     0
 set do_only_reset_config 0
+set do_only_diff_macros 0
 set be_quiet          0
 set fast_setup        0
 set CHECK_CUR_PROC_NAME "main"
@@ -7158,6 +7159,12 @@ for { set i 0 } { $i < $argc } { incr i } {
       puts "help                  show this"
       puts ""
       puts "setup_help            show setup informations"
+      puts ""
+      puts "check_macros DUMPFILE_A DUMPFILE_B IGNORE_BACKSLASH"
+      puts "                      check if all message macros from DUMPFILE_A are in DUMPFILE_B and compare"
+      puts "                      the messages. If IGNORE_BACKSLASH is set to 0 backslashes at the end of"
+      puts "                      a message macro not ignored. If set to 1 the backslashes are removed before"
+      puts "                      comparing the messages."
       puts ""
       puts "install               just install core system and exit"
       puts ""
@@ -7235,6 +7242,27 @@ for { set i 0 } { $i < $argc } { incr i } {
       show_setup_information
       exit 1
    }
+
+   if {([string compare [lindex $argv $i] "--check_macros"] == 0) || ([string compare [lindex $argv $i] "check_macros"] == 0) } {
+      incr i
+      set global_macro_file1 [lindex $argv $i]
+      incr i
+      set global_macro_file2 [lindex $argv $i]
+      incr i
+      set global_macro_ignore_flag [lindex $argv $i]
+      if { $global_macro_ignore_flag == ""  } {
+         set global_macro_ignore_flag 0
+      }
+      puts $CHECK_OUTPUT "checking difference for \n\"$global_macro_file1\"\n and \n\"$global_macro_file2\""
+      if { $global_macro_ignore_flag != 0 } {
+         puts $CHECK_OUTPUT "ignoring backslashes at the end of macros"
+      } else {
+         puts $CHECK_OUTPUT "don't ignore backslashes at the end of macros"
+      }
+
+      set do_only_diff_macros 1
+   }
+
    
    if { ( [string compare [lindex $argv $i] "--no_local_spool"] == 0 ) || ([string compare [lindex $argv $i] "no_local_spool"] == 0) } {
       set check_do_not_use_spool_config_entries 1
@@ -7450,6 +7478,13 @@ for { set i 0 } { $i < $argc } { incr i } {
 #__setup   ;# old setup
 
 source_tcl_files
+
+if { $do_only_diff_macros == 1 } {
+   exit [diff_macro_files $global_macro_file1 $global_macro_file2 $global_macro_ignore_flag]
+}
+
+
+
 setup2
 source_tcl_files
 
@@ -7559,6 +7594,7 @@ if { $do_kill } {
    shutdown_core_system
    exit 0   
 }
+
 
 if { $do_only_reset_config == 1 } {
   set result 1

@@ -1,3 +1,7 @@
+MD-2005-08-31-0: Bugfix:    - added some help text in inst_template.conf comment
+                            - a new line was missing
+                 Changed:   inst_template.conf, inst_execd_uninst.conf         
+
 CR-2005-08-29-0: Cleanup:   - removed unused message macros and double message
                               ids.
 

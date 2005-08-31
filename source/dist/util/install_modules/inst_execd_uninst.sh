@@ -61,6 +61,7 @@ FetchHostname()
 {
    euid=`$SGE_UTILBIN/uidgid -euid`
 
+
    if [ $AUTO = "true" ]; then
       HOST=$EXEC_HOST_LIST_RM
    fi

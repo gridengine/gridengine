@@ -70,6 +70,10 @@ SpoolingQueryChange()
                   SPOOLING_DIR=`dirname $QMDIR`"/spooldb" 
                   SPOOLING_DIR=`Enter $SPOOLING_DIR`        
      fi
+
+     if [ "$AUTO" = "true" ]; then
+        SPOOLING_DIR=$DB_SPOOLING_DIR
+     fi
  
    fi
 }

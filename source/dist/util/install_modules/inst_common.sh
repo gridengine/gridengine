@@ -826,7 +826,6 @@ GiveHints()
 {
 
    if [ $AUTO = true ]; then
-      $INFOTEXT -log "sge_qmaster successfully installed!"
       return
    fi
 
@@ -1297,11 +1296,21 @@ MoveLog()
 
       if [ -d $master_spool_dir ]; then
          if [ $EXECD = "uninstall" -o $QMASTER = "uninstall" ]; then
-            cp /tmp/$LOGSNAME $master_spool_dir/uninstall_`hostname`_$DATE.log 2>&1
+            if [ -f /tmp/$LOGSNAME ]; then
+               cp /tmp/$LOGSNAME $master_spool_dir/uninstall_`hostname`_$DATE.log 2>&1
+            fi
+            RestoreStdout
+            $INFOTEXT "Install log can be found in: %s" $master_spool_dir/uninstall_`hostname`_$DATE.log
          else
-            cp /tmp/$LOGSNAME $master_spool_dir/install_`hostname`_$DATE.log 2>&1
+            if [ -f /tmp/$LOGSNAME ]; then
+               cp /tmp/$LOGSNAME $master_spool_dir/install_`hostname`_$DATE.log 2>&1
+            fi
+            RestoreStdout
+            $INFOTEXT "Install log can be found in: %s" $master_spool_dir/install_`hostname`_$DATE.log
          fi
-         rm /tmp/$LOGSNAME 2>&1
+         if [ -f /tmp/$LOGSNAME ]; then
+            rm /tmp/$LOGSNAME 2>&1
+         fi
       else
          RestoreStdout
          $INFOTEXT "%s does not exist.\n Please check your installation!" $master_spool_dir
@@ -1330,6 +1339,10 @@ fi
 
 Stdout2Log()
 {
+   CLEAR=:
+   SGE_NOMSG=1
+   export SGE_NOMSG
+   CreateLog
    # make Filedescriptor(FD) 4 a copy of stdout (FD 1)
    exec 4>&1
    # open logfile for writing

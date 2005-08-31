@@ -1,3 +1,10 @@
+MD-2005-08-31-0: Bugfix:    auto installation doesn't provide 
+                            sufficient diagnosis output
+                 Issue:     1330
+                 Bugtraq:   6239653
+                 Changed:   autoinstall
+                 Review:    CR
+
 MD-2005-08-31-0: Bugfix:    - added some help text in inst_template.conf comment
                             - a new line was missing
                  Changed:   inst_template.conf, inst_execd_uninst.conf         

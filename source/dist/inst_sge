@@ -90,6 +90,7 @@ HOST="undef"
 HOSTRANGE="undef"
 LOCAL_EXECD_SPOOL="undef"
 SHELL_NAME="ssh"
+COPY_COMMAND="scp"
 EXEC_HOST_LIST="undef"
 CONFIG_FILE="undef"
 
@@ -98,6 +99,13 @@ SGE_NOMSG="undef"
 WINDOWS_SUPPORT=false
 WIN_DOMAIN_ACCESS=false
 WIN_ADMIN_NAME=Administrator
+
+CSP_COUNTRY_CODE="undef"
+CSP_STATE="undef"
+CSP_LOCATION="undef"
+CSP_ORGA="undef"
+CSP_ORGA_UNIT="undef"
+CSP_MAIL_ADRESS="undef"
 
 BasicSettings
 SetUpInfoText
@@ -121,10 +129,6 @@ while [ $ARGC != 0 ]; do
      fi
      shift
      ARGC=`expr $ARGC - 1`
-     CLEAR=:
-     SGE_NOMSG=1
-     export SGE_NOMSG
-     CreateLog
      Stdout2Log
      GetConfigFromFile
      CheckPath
@@ -331,6 +335,7 @@ fi
 if [ "$QMASTER" = "install" -a "$UPDATE" != "true" ]; then
 
  if [ "$AUTO" = "true" ]; then
+    Stdout2Log
     $INFOTEXT -log "Starting qmaster installation!"
  fi
 
@@ -368,7 +373,13 @@ if [ "$QMASTER" = "install" -a "$UPDATE" != "true" ]; then
  AddHosts
  SetScheddConfig
  GiveHints
+ CheckRunningDaemon sge_qmaster
 
+ if [ $? = 0 ]; then
+    $INFOTEXT -log "sge_qmaster successfully installed!\n" 
+ else
+    $INFOTEXT -log "sge_qmaster not successfully installed!\n" 
+ fi
  if [ "$AUTO" = "true" ]; then
     MoveLog
  fi
@@ -378,6 +389,7 @@ fi
 
 if [ "$EXECD" = "install" -a "$UPDATE" != "true" ]; then
  if [ "$AUTO" = "true" ]; then
+    Stdout2Log
     . $SGE_ROOT/$SGE_CELL/common/settings.sh
 
     if [ "$NOREMOTE" = false ]; then
@@ -534,6 +546,7 @@ fi
 if [ $BERKELEY = "uninstall" ]; then
 
    if [ "$AUTO" = "true" ]; then
+      Stdout2Log
       $INFOTEXT -log "Starting berkeley rpc uninstallation!"
    fi
    if [ "$DB_SPOOLING_SERVER" = "" -o "$HOST" = "$DB_SPOOLING_SERVER" -o "$NOREMOTE" = "true" ]; then
@@ -556,6 +569,7 @@ fi
 if [ $QMASTER = "uninstall" ]; then
 
    if [ "$AUTO" = "true" ]; then
+      Stdout2Log
       $INFOTEXT -log "Starting qmaster uninstallation!"
    fi
    
@@ -665,6 +679,7 @@ if [ $SHADOW = "install" ]; then
 
       $INFOTEXT "Shadowhost installation completed!"
    else
+      Stdout2Log
       $INFOTEXT -log "Starting sge_shadowd on host %s" $SHADOW_HOST    
       mod_file="echo $SHADOW_HOST"
       ExecuteAsAdmin touch $SGE_ROOT/$SGE_CELL/common/shadow_masters
@@ -684,6 +699,7 @@ if [ $SHADOW = "uninstall" ]; then
    s_pid=`cat $SGE_ROOT/$SGE_CELL/spool/qmaster/shadowd_$s_host.pid`
 
    if [ $AUTO = "true" ]; then
+      Stdout2Log
       ret=$SGE_UTILBIN/checkprog $s_pid shadowd
       if [ $ret = 0 ]; then
          $INFOTEXT -log "Stopping shadowd!" 
@@ -802,6 +818,10 @@ if [ $UPDATEDB = "true" ]; then
    
    $CLEAR
    UpgradeDB
+fi
+
+if [ "$AUTO" = true ]; then
+   MoveLog
 fi
 
 exit 0

@@ -1,3 +1,6 @@
+CR-2005-09-01-0: Testsuite: merged shutdown timeout changes from 
+                            maintrunk for test_virtual_xyz module tests
+
 HP-2005-08-16-1: Enhancem.: Review document for HP-2005-08-16-0 added
 
 HP-2005-08-16-0: Bugfix:    fixed NFS spooling problem

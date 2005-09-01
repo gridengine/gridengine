@@ -957,6 +957,7 @@ int read_all_centries(lList **list, const char *directory)
          continue;
       }
 #if 0
+      /* Enable this code for debugging */
       if (!sge_silent_get()) {
          printf("\t");
          printf(MSG_SETUP_COMPLEX_ATTR_S, dent->d_name);

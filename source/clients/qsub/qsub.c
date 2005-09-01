@@ -224,6 +224,7 @@ char **argv
       qsub_setup_sig_handlers(); 
 
       if (pthread_create (&sigt, NULL, sig_thread, (void *)NULL) != 0) {
+         fprintf(stderr, "\n");
          fprintf(stderr, MSG_QSUB_COULDNOTINITIALIZEENV_S,
                  " error preparing signal handling thread");
          fprintf(stderr, "\n");
@@ -235,6 +236,7 @@ char **argv
       if (japi_enable_job_wait (NULL, &session_key_out, error_handler, &diag) ==
                                        DRMAA_ERRNO_DRM_COMMUNICATION_FAILURE) {
          const char *msg = sge_dstring_get_string (&diag);
+         fprintf(stderr, "\n");
          fprintf(stderr, MSG_QSUB_COULDNOTINITIALIZEENV_S,
                  msg?msg:" error starting event client thread");
          fprintf(stderr, "\n");
@@ -383,6 +385,7 @@ char **argv
                           NULL, &diag)) != DRMAA_ERRNO_SUCCESS) {
                if ((tmp_ret != DRMAA_ERRNO_EXIT_TIMEOUT) &&
                    (tmp_ret != DRMAA_ERRNO_NO_ACTIVE_SESSION)) {
+                  fprintf(stderr, "\n");
                   fprintf(stderr, MSG_QSUB_COULDNOTWAITFORJOB_S, sge_dstring_get_string (&diag));
                   fprintf(stderr, "\n");
                }
@@ -534,6 +537,7 @@ static void qsub_terminate(void)
       in which case, we just quietly give up and go away. */
    if ((tmp_ret != DRMAA_ERRNO_SUCCESS) &&
        (tmp_ret != DRMAA_ERRNO_NO_ACTIVE_SESSION)) {
+      fprintf(stderr, "\n");
       fprintf(stderr, MSG_QSUB_COULDNOTFINALIZEENV_S,
               sge_dstring_get_string (&diag));
       fprintf(stderr, "\n");

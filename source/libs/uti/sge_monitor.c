@@ -380,7 +380,7 @@ u_long32 sge_monitor_status(char **info_message, u_long32 monitor_time)
 
    if (monitor_time != 0) { /* generates the output monitoring output data */
       int i;
-      sge_dstring_append(&Info_Line, MSG_UTI_MONITOR); 
+      sge_dstring_append(&Info_Line, MSG_UTI_MONITOR_COLON); 
       sge_dstring_append(&Info_Line, "\n");
 
       for (i = 0; i < MAX_OUTPUT_LINES; i++) {

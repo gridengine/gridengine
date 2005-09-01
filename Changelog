@@ -1,3 +1,9 @@
+CR-2005-09-01-0: Bugfix:    Merged CR-2005-09-01-0 from V60s2_BRANCH
+                            (- fixed message macro typos and output formats)
+                 Changed:   qmod, qsub, qmaster, schedd, spoollib, utilib
+                            (all binaries have to be re-builded)
+                 Review:    AA
+
 JG-2005-09-01-0: Testsuite: Fixed checks for SGE(EE) 5.3 (with CSP security):
                             - functional/job_environment
                             - functional/tight_integration

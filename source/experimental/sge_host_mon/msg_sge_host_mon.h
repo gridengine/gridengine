@@ -47,7 +47,7 @@
 #define MSG_SGEHOSTMON_m_OPT_USAGE              _MESSAGE(37010, _("output file fopen mode (default is \"w\")"))
 #define MSG_SGEHOSTMON_n_OPT_USAGE              _MESSAGE(37011, _("use name=value format"))
 #define MSG_SGEHOSTMON_o_OPT_USAGE              _MESSAGE(37012, _("output file"))
-#define MSG_SGEHOSTMON_r_OPT_USAGE              _MESSAGE(37013, _("delimiter between collection records (default is <CR>"))
+#define MSG_SGEHOSTMON_r_OPT_USAGE              _MESSAGE(37013, _("delimiter between collection records (default is <CR>)"))
 #define MSG_SGEHOSTMON_s_OPT_USAGE              _MESSAGE(37014, _("format of displayed strings (default is %%s)"))
 #define MSG_SGEHOSTMON_t_OPT_USAGE              _MESSAGE(37015, _("show formatted times"))
 #define MSG_SGEHOSTMON_u_OPT_USAGE              _MESSAGE(37016, _("show decayed usage (since timestamp) in nodes"))

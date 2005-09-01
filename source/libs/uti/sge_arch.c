@@ -240,25 +240,10 @@ const char *sge_get_root_dir(int do_exit, char *buffer, size_t size, int do_erro
 
 error:
    if (do_error_log) {
-      switch(error_number) {
-         case 4:
-            if (buffer != NULL) {
-               strncpy(buffer, MSG_SGEROOTNOTSET, size);
-            }
-            else {
-               CRITICAL((SGE_EVENT, MSG_SGEROOTNOTSET));
-            }
-            
-            break;
-         default:
-            if (buffer != NULL) {
-               strncpy(buffer, MSG_UNKNOWNERRORINSGEROOT, size);
-            }
-            else {
-               CRITICAL((SGE_EVENT, MSG_UNKNOWNERRORINSGEROOT));
-            }
-            
-            break;
+      if (buffer != NULL) {
+         strncpy(buffer, MSG_SGEROOTNOTSET, size);
+      } else {
+         CRITICAL((SGE_EVENT, MSG_SGEROOTNOTSET));
       }
    }
 

@@ -1012,7 +1012,7 @@
 #define MSG_NMNOTINELEMENT_S              _MESSAGE(60401, _("attribute "SFQ" not contained in given object"))
 #define MSG_INVALIDCULLDATATYPE_D         _MESSAGE(60402, _("invalid cull datatype %d"))
 #define MSG_ERRORCREATINGOBJECT           _MESSAGE(60403, _("error creating object"))
-#define MSG_ERRORCREATINGLIST           _MESSAGE(60404, _("error creating listn"))
+#define MSG_ERRORCREATINGLIST           _MESSAGE(60404, _("error creating list"))
 
 #define MSG_SEC_NOCRED_USSI           _MESSAGE(60406, _("could not get credentials for job " sge_U32CFormat " for execution host "SFN" - command "SFQ" failed with return code %d"))
 #define MSG_SEC_STARTDELCREDCMD_SU    _MESSAGE(60407, _("can't start command "SFQ" for job " sge_U32CFormat " to delete credentials"))

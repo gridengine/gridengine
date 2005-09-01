@@ -1,3 +1,9 @@
+CR-2005-09-01-1: Testsuite: Merged CR-2005-09-01-1 from V60s2_BRANCH
+                            - modified test_cl_commlib module test to support
+                              environment variable CL_RUNS which is used to
+                              stop the program execution after $CL_RUNS times.
+
+
 CR-2005-09-01-0: Bugfix:    Merged CR-2005-09-01-0 from V60s2_BRANCH
                             (- fixed message macro typos and output formats)
                  Changed:   qmod, qsub, qmaster, schedd, spoollib, utilib

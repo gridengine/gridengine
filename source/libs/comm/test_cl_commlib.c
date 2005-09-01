@@ -156,6 +156,7 @@ extern int main(int argc, char** argv)
 {
   struct sigaction sa;
   cl_ssl_setup_t ssl_config;
+  static int runs = 100;
 
 
   int handle_port = 0;
@@ -290,17 +291,20 @@ extern int main(int argc, char** argv)
 
   cl_com_append_known_endpoint_from_name(handle->local->comp_host, "server", 1, 5000, CL_CM_AC_ENABLED, CL_FALSE );
 
-
+  if (getenv("CL_RUNS")) { 
+     runs = atoi(getenv("CL_RUNS"));
+  }
   while(do_shutdown != 1) {
      int ret_val;
-     static int runs = 100;
 
      CL_LOG(CL_LOG_INFO,"main()");
      cl_commlib_trigger(handle, 1); 
 
-#if 0
-     runs--;
-#endif
+     if (getenv("CL_RUNS")) { 
+        printf("runs: %d\n", runs);
+        runs--;
+     }
+
      if (runs<= 0) {
         do_shutdown = 1;
      }

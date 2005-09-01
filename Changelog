@@ -1,3 +1,9 @@
+CR-2005-09-01-1: Testsuite: - modified test_cl_commlib module test to support
+                              environment variable CL_RUNS which is used to
+                              stop the program execution after $CL_RUNS times.
+                 Changed:   test_cl_commlib
+
+
 CR-2005-09-01-0: Bugfix:    - fixed message macro typos and output formats
                  Changed:   qmod, qsub, qmaster, schedd, spoollib, utilib
                             (all binaries have to be re-builded)

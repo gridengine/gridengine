@@ -40,8 +40,8 @@
 ** qmod.c
 */
 #define MSG_QMOD_c_OPT_USAGE      _MESSAGE(11008, _("clear error state"))
-#define MSG_QMOD_c_OPT_USAGE_Q    _MESSAGE(11009, _("clear queue error staten"))
-#define MSG_QMOD_c_OPT_USAGE_J    _MESSAGE(11010, _("clear job error staten"))
+#define MSG_QMOD_c_OPT_USAGE_Q    _MESSAGE(11009, _("clear queue error state"))
+#define MSG_QMOD_c_OPT_USAGE_J    _MESSAGE(11010, _("clear job error state"))
 #define MSG_QMOD_r_OPT_USAGE      _MESSAGE(11011, _("reschedule jobs (running in queue)"))
 #define MSG_QMOD_r_OPT_USAGE_J    _MESSAGE(11012, _("reschedule jobs"))
 #define MSG_QMOD_r_OPT_USAGE_Q    _MESSAGE(11013, _("reschedule all jobs in a queue"))

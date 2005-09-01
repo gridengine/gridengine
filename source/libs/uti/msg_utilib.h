@@ -49,7 +49,6 @@
 ** utilib/sge_arch.c
 */       
 #define MSG_SGEROOTNOTSET           _MESSAGE(49006, _("Please set the environment variable SGE_ROOT."))
-#define MSG_UNKNOWNERRORINSGEROOT   _MESSAGE(49010, _("Unknown error in function sge_root()"))
 #define MSG_MEMORY_MALLOCFAILEDFORPATHTOHOSTALIASFILE _MESSAGE(49011, _("can't malloc() for path to host alias file"))
 
 /* 
@@ -224,7 +223,7 @@
 #define MSG_UTI_MONITOR_DEFLINE_FFFFF          _MESSAGE(59121, _(" out: %.2fm/s APT: %.4fs/m idle: %.2f%% wait: %.2f%% time: %.2fs"))
 #define MSG_UTI_MONITOR_GDIEXT_FFFFFFF         _MESSAGE(59122, _("execd (l:%.2f,j:%.2f,c:%.2f,p:%.2f,a:%.2f)/s GDI (a:%.2f,g:%.2f,m:%.2f,d:%.2f,c:%.2f,t:%.2f,p:%.2f)/s event-acks: %.2f/s"))
 #define MSG_UTI_MONITOR_DISABLED               _MESSAGE(59123, _("Monitor:                  disabled"))         
-#define MSG_UTI_MONITOR                        _MESSAGE(59124, _("Monitor:"))
+#define MSG_UTI_MONITOR_COLON                  _MESSAGE(59124, _("Monitor:"))
 #define MSG_UTI_MONITOR_OK                     _MESSAGE(59125, _("OK"))
 #define MSG_UTI_MONITOR_WARNING                _MESSAGE(59126, _("WARNING"))
 #define MSG_UTI_MONITOR_ERROR                  _MESSAGE(59127, _("ERROR"))

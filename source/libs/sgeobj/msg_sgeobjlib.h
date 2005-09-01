@@ -254,7 +254,7 @@
 #define MSG_QINSTANCE_NCONFAMB         _MESSAGE(64253, _("not configuration ambiguous"))
 #define MSG_QINSTANCE_NORPHANED        _MESSAGE(64254, _("not orphaned"))
 #define MSG_QINSTANCE_MISSLOTS_S       _MESSAGE(64255, _("missing \"slots\" entry in consumable actual list of queue "SFQ))
-#define MSG_CALENDAR_REFINQUEUE_SS     _MESSAGE(64256, _("Calendar "SFQ" is still referenced in queue "SFQ"n"))
+#define MSG_CALENDAR_REFINQUEUE_SS     _MESSAGE(64256, _("Calendar "SFQ" is still referenced in queue "SFQ))
 #define MSG_STR_INVALIDSTR             _MESSAGE(64257, _("Encountered invalid id"))
 #define MSG_QINSTANCE_INVALIDACTION    _MESSAGE(64258, _("Invalid action" ))
 #define MSG_QINSTANCE_INVALIDOPTION    _MESSAGE(64259, _("Invalid option flag"))

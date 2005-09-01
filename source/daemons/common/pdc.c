@@ -2432,7 +2432,7 @@ usage(void)
    fprintf(stderr, "\n%s\n\n", MSG_SGE_USAGE);
    fprintf(stderr, "\t-s\t%s\n",  MSG_SGE_s_OPT_USAGE);
    fprintf(stderr, "\t-n\t%s\n",  MSG_SGE_n_OPT_USAGE);
-   fprintf(stderr, "\t-p\nt%s\n",  MSG_SGE_p_OPT_USAGE);
+   fprintf(stderr, "\t-p\t%s\n",  MSG_SGE_p_OPT_USAGE);
    fprintf(stderr, "\t-i\t%s\n",  MSG_SGE_i_OPT_USAGE);
    fprintf(stderr, "\t-g\t%s\n",  MSG_SGE_g_OPT_USAGE);
    fprintf(stderr, "\t-j\t%s\n",  MSG_SGE_j_OPT_USAGE);

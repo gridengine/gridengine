@@ -1,3 +1,8 @@
+CR-2005-09-01-0: Bugfix:    - fixed message macro typos and output formats
+                 Changed:   qmod, qsub, qmaster, schedd, spoollib, utilib
+                            (all binaries have to be re-builded)
+                 Review:    AA
+
 MD-2005-08-31-1: Bugfix:    auto installation doesn't provide 
                             sufficient diagnosis output
                  Issue:     1330

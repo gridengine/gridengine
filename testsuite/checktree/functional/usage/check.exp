@@ -506,15 +506,20 @@ proc usage_tight {} {
    global submit_command
    global master_host
 
-   foreach master_host $ts_config(unique_arch_nodes) {
-      puts $CHECK_OUTPUT "usage: tightly integrated parallel job submitted with $submit_command, master_host is $master_host"
+   # tight integration with csp is not working in SGE(EE) 5.3
+   if {$ts_config(gridengine_version) == 53 && $ts_config(product_feature) == "csp"} {
+      add_proc_error usage_tight -3 "tight integration is not available in SGE(EE) 5.3 with CSP enabled"
+   } else {
+      foreach master_host $ts_config(unique_arch_nodes) {
+         puts $CHECK_OUTPUT "usage: tightly integrated parallel job submitted with $submit_command, master_host is $master_host"
 
-      set queue [get_queue_instance "usage.q" $master_host]
-      set id [submit_with_method $submit_command "-pe tight 4 -N usage -masterq $queue" "$ts_config(testsuite_root_dir)/$CHECK_SCRIPT_FILE_DIR/pe_job.sh" "$ts_config(testsuite_root_dir)/$CHECK_SCRIPT_FILE_DIR/pe_task.sh 1 120" $master_host]
+         set queue [get_queue_instance "usage.q" $master_host]
+         set id [submit_with_method $submit_command "-pe tight 4 -N usage -masterq $queue" "$ts_config(testsuite_root_dir)/$CHECK_SCRIPT_FILE_DIR/pe_job.sh" "$ts_config(testsuite_root_dir)/$CHECK_SCRIPT_FILE_DIR/pe_task.sh 1 120" $master_host]
 
-      usage_monitor_check $id "usage_tight" 5
+         usage_monitor_check $id "usage_tight" 5
+      }
    }
-
+   
    set_error 0 "ok"
 }
 

@@ -1,3 +1,12 @@
+JG-2005-09-01-0: Testsuite: Fixed checks for SGE(EE) 5.3 (with CSP security):
+                            - functional/job_environment
+                            - functional/tight_integration
+                            - functional/usage
+                            - install_core_system
+                            - system_tests/clients/qalter
+                            - system_tests/clients/qdel
+                            - system_tests/qmaster/spooling
+
 MD-2005-08-31-1: Bugfix:    auto installation doesn't provide
                             sufficient diagnosis output
                  Issue:     1330
@@ -7,11 +16,11 @@ MD-2005-08-31-1: Bugfix:    auto installation doesn't provide
 
 CR-2005-08-30-0: Testsuite: added new command line switch to parse message macro
                             dump files:
-                               check_macros DUMPFILE_A DUMPFILE_B IGNORE_BACKSLASH
+                            check_macros DUMPFILE_A DUMPFILE_B IGNORE_BACKSLASH
 
 SG-2005-08-26-0: Cleanup:   - fixed the build for irix 6.5
-                            - enhanced RD-2005-08-16-0 (some global variables were
-                              missing)
+                            - enhanced RD-2005-08-16-0 (some global variables 
+                              were missing)
                             - extended the monitoring output
                  Review:    EB, (JG)
                  Changed:   qmaster, man-page

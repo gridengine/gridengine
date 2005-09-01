@@ -409,16 +409,15 @@ proc submit_testjobs { { user "" } { additional_job_args "" }} {
 
   if { [string compare "" $user] == 0 } {
      # no user specified (using local user name (starter of testsuite))
-     for {set count 1} {$count <= 4} {incr count +1} {
+     for {set count 1} {$count <= 4} {incr count} {
        set jobresult [submit_job $jobargs]     ;# submit_job has it's own error handling
        if {$jobresult > 0 } {
           lappend joblist $jobresult
        }
      }
   } else {
-     # perform su to user and submit jobs as user $user
-     
-     set result [ run_command_as_user "$CHECK_HOST" "$user" "qsub" "$jobargs" 4]
+      # perform su to user and submit jobs as user $user
+      set result [ run_command_as_user "$CHECK_HOST" "$user" "qsub" "$jobargs" 4]
       if { $ts_config(gridengine_version) == 60 } {
          set JOB_SUBMITTED       [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QSUB_YOURJOBHASBEENSUBMITTED_SS] "*" "*"]
          set JOB_SUBMITTED_DUMMY [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QSUB_YOURJOBHASBEENSUBMITTED_SS] "__JOB_ID__" "__JOB_NAME__"]

@@ -213,11 +213,11 @@ proc issue_126_check {} {
       set work_script "$ts_config(testsuite_root_dir)/scripts/work_pid.sh 360"
       set sleep_script "$CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 360"
 
-      set job1_args "-N $job_name1 -l q=$q1 "
+      set job1_args "-o /dev/null -j y -N $job_name1 -l q=$q1 "
       set job1_id [submit_job "$job1_args $work_script"]
       append error_output "[exec date] submitted job $job1_id ($job1_args $work_script)\n"
 
-      set job2_args "-N $job_name2 -l q=$q2 "
+      set job2_args "-o /dev/null -j y -N $job_name2 -l q=$q2 "
       set job2_id [submit_job "$job2_args $sleep_script"]
       append error_output "[exec date] submitted job $job2_id ($job2_args $sleep_script)\n"
 

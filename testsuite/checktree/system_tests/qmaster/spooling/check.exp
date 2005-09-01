@@ -118,27 +118,32 @@ proc cmp_config { conf_a conf_b fields check} {
 
 # check if spooled projects are still available after qmaster restart
 proc qmaster_spooling_prj_restart {} {
+   global ts_config
    global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_USER
 
-   set check_fields "name oticket fshare acl xacl"
+   if {$ts_config(product_type) != "sgeee"} {
+      add_proc_error qmaster_spooling_prj_restart -3 "this can only run in sgeee clusters"
+   } else {
+      set check_fields "name oticket fshare acl xacl"
 
-   set config(name) "spool_prj"
-   set config(oticket) "123"
-   set config(fshare)  "234"
-   set config(acl)  "deadlineusers"
-   set config(xacl)  "defaultdepartment"
+      set config(name) "spool_prj"
+      set config(oticket) "123"
+      set config(fshare)  "234"
+      set config(acl)  "deadlineusers"
+      set config(xacl)  "defaultdepartment"
 
 # JG: TODO: make add_prj and get_prj return info if it was successfull.
 #           use this information and do some status output
-   add_prj config
+      add_prj config
 
-   shutdown_and_restart_qmaster
+      shutdown_and_restart_qmaster
 
-   get_prj "spool_prj" new_config
+      get_prj "spool_prj" new_config
 
-   cmp_config config new_config $check_fields "qmaster_spooling_prj_restart"
+      cmp_config config new_config $check_fields "qmaster_spooling_prj_restart"
 
-   del_prj "spool_prj"
+      del_prj "spool_prj"
+   }
 
    set_error 0 "ok"
 }

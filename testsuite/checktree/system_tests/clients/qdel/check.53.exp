@@ -67,35 +67,48 @@ set qdel_help_lines 14
 #     ???/???
 #*******************************
 proc qdel_verify {} {
-  global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH env
+   global ts_config
+   global CHECK_OUTPUT CHECK_USER
 
 
-  # submit jobs to delete
-  set job_list [submit_testjobs]
+   # submit jobs to delete
+   set job_list [submit_testjobs]
 
-  set result [ catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qdel -verify $job_list" } qdel_output ] 
+   set arch [resolve_arch $ts_config(master_host)]
+   set qdel_output [start_remote_prog $ts_config(master_host) $CHECK_USER "$ts_config(product_root)/bin/$arch/qdel" "-verify $job_list" result]
+#  set result [ catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qdel -verify $job_list" } qdel_output ] 
 
-  puts $CHECK_OUTPUT "qdel_result = $result"
-  puts $CHECK_OUTPUT "qdel_output = $qdel_output"
+   puts $CHECK_OUTPUT "qdel_result = $result"
+   puts $CHECK_OUTPUT "qdel_output = $qdel_output"
 
-  if { $result != 0 } {
-     set_error -1 "exit state is not 0"
-  } 
+   if { $result != 0 } {
+      set_error -1 "exit state is not 0"
+   } 
 
-  set nr_of_jobs [llength $job_list]
-  set qd_out [split $qdel_output "\n"]
-  set nr_of_output_lines [llength $qd_out]
+   set nr_of_jobs [llength $job_list]
+   set qd_out [split $qdel_output "\n"]
+   set nr_of_output_lines 0
+   foreach line $qd_out {
+      if {[string trim $line] != ""} {
+         incr nr_of_output_lines
+      }
+   }
+   #set nr_of_output_lines [llength $qd_out]
+   
+   puts $CHECK_OUTPUT "nr_of_jobs = $nr_of_jobs"
+   puts $CHECK_OUTPUT "nr_of_output_lines = $nr_of_output_lines"
+   
+   if { $nr_of_jobs != $nr_of_output_lines } {
+      set_error -1 "nr of jobs doesn't match output lines"
+   }
 
-  puts $CHECK_OUTPUT "nr_of_jobs = $nr_of_jobs"
-  puts $CHECK_OUTPUT "nr_of_output_lines = $nr_of_output_lines"
+   foreach job $job_list {
+      delete_job $job
+   }
 
-  if { $nr_of_jobs != $nr_of_output_lines } {
-     set_error -1 "nr of jobs doesn't match output lines"
-  }
+  #catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qdel $job_list" }  
 
-  catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qdel $job_list" }  
-
-  set_error 0 "ok"
+   set_error 0 "ok"
 }
 
 

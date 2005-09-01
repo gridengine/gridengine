@@ -100,6 +100,11 @@ proc tight_integration_init_level {} {
    set num_hosts [llength $ts_config(execd_nodes)]
    set TIGHT_INTEGRATION_FUNCTIONAL_SLOTS $num_hosts
 
+   # tight integration with csp is not working in SGE(EE) 5.3
+   if {$ts_config(gridengine_version) == 53 && $ts_config(product_feature) == "csp"} {
+      return -1
+   }
+
    switch -- $CHECK_ACT_LEVEL {
       "0" { 
          set submit_command qsub

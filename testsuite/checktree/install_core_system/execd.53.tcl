@@ -73,96 +73,24 @@ proc install_execd {} {
 
    set_error "0" "install_execd - no errors"
 
-   set feature_install_options ""
-   if { $ts_config(product_feature) == "csp" } {
+   if {! $check_use_installed_system} {
+      set feature_install_options ""
+      if { $ts_config(product_feature) == "csp" } {
          set feature_install_options "-csp"
          set my_csp_host_list $ts_config(execd_nodes)
          foreach elem $CHECK_SUBMIT_ONLY_HOSTS {
            lappend my_csp_host_list $elem
          }
          foreach exec_host $my_csp_host_list {
-         if { $exec_host == $CHECK_CORE_MASTER } {
-            continue;
-         }
-         set remote_arch [resolve_arch $exec_host]    
-         puts $CHECK_OUTPUT "installing CA keys"
-         puts $CHECK_OUTPUT "=================="
-         puts $CHECK_OUTPUT "host:         $exec_host"
-         puts $CHECK_OUTPUT "architecture: $remote_arch"
-         puts $CHECK_OUTPUT "port:         $CHECK_COMMD_PORT"
-         puts $CHECK_OUTPUT "source:       \"/var/sgeCA/port${CHECK_COMMD_PORT}/\" on host $CHECK_CORE_MASTER"
-         puts $CHECK_OUTPUT "target:       \"/var/sgeCA/port${CHECK_COMMD_PORT}/\" on host $exec_host"
-
-         if { $CHECK_ADMIN_USER_SYSTEM == 0 } { 
-             puts $CHECK_OUTPUT "we have root access, fine !"
-             set CA_ROOT_DIR "/var/sgeCA/"
-
-             puts $CHECK_OUTPUT "removing evtl. existing tar file \"$CA_ROOT_DIR/port${CHECK_COMMD_PORT}.tar\" ..."
-             set result [ start_remote_prog "$CHECK_CORE_MASTER" "root" "rm" "$CA_ROOT_DIR/port${CHECK_COMMD_PORT}.tar" ]
-             puts $CHECK_OUTPUT $result
-
-             puts $CHECK_OUTPUT "taring Certificate Authority (CA) directory into \"$CA_ROOT_DIR/port${CHECK_COMMD_PORT}.tar\""
-             set tar_bin [get_binary_path $CHECK_CORE_MASTER "tar"]
-             set remote_command_param "$CA_ROOT_DIR; ${tar_bin} -cvf port${CHECK_COMMD_PORT}.tar ./port${CHECK_COMMD_PORT}/*"
-             set result [ start_remote_prog "$CHECK_CORE_MASTER" "root" "cd" "$remote_command_param" ]
-             puts $CHECK_OUTPUT $result
-
-             if { $prg_exit_state != 0 } {
-                 add_proc_error "install_execd" -2 "could not tar Certificate Authority (CA) directory into \"$CA_ROOT_DIR/port${CHECK_COMMD_PORT}.tar\""
-             } else {
-                 puts $CHECK_OUTPUT "changing permissions for tar file \"$CA_ROOT_DIR/port${CHECK_COMMD_PORT}.tar\" ..."
-                 set result [ start_remote_prog "$CHECK_CORE_MASTER" "root" "chmod" "700 $CA_ROOT_DIR/port${CHECK_COMMD_PORT}.tar" ]
-                 puts $CHECK_OUTPUT $result
-                 if { $prg_exit_state != 0 } {
-                    add_proc_error "install_execd" -2 "could not change file permissions for \"$CA_ROOT_DIR/port${CHECK_COMMD_PORT}.tar\""
-                 } else {
-                    puts $CHECK_OUTPUT "copy tar file \"$CA_ROOT_DIR/port${CHECK_COMMD_PORT}.tar\"\nto \"$CHECK_MAIN_RESULTS_DIR/port${CHECK_COMMD_PORT}.tar\" ..."
-                    set result [ start_remote_prog "$CHECK_CORE_MASTER" "root" "cp" "$CA_ROOT_DIR/port${CHECK_COMMD_PORT}.tar $CHECK_MAIN_RESULTS_DIR/port${CHECK_COMMD_PORT}.tar" ]
-                    puts $CHECK_OUTPUT $result
-                    
-                    puts $CHECK_OUTPUT "copy tar file \"$CHECK_MAIN_RESULTS_DIR/port${CHECK_COMMD_PORT}.tar\"\nto \"$CA_ROOT_DIR/port${CHECK_COMMD_PORT}.tar\" on host $exec_host ..."
-                    set result [ start_remote_prog "$exec_host" "root" "cp" "$CHECK_MAIN_RESULTS_DIR/port${CHECK_COMMD_PORT}.tar $CA_ROOT_DIR/port${CHECK_COMMD_PORT}.tar" ]
-                    puts $CHECK_OUTPUT $result
-
-                    set tar_bin [get_binary_path $exec_host "tar"]
-
-                    puts $CHECK_OUTPUT "untaring Certificate Authority (CA) directory in \"$CA_ROOT_DIR\""
-                    start_remote_prog "$exec_host" "root" "cd" "$CA_ROOT_DIR" 
-                    if { $prg_exit_state != 0 } { 
-                       set result [ start_remote_prog "$exec_host" "root" "mkdir" "$CA_ROOT_DIR" ]
-                    }   
-                    set result [ start_remote_prog "$exec_host" "root" "cd" "$CA_ROOT_DIR; ${tar_bin} -xvf port${CHECK_COMMD_PORT}.tar" ]
-                    puts $CHECK_OUTPUT $result
-                    if { $prg_exit_state != 0 } {
-                       add_proc_error "install_execd" -2 "could not untar \"$CA_ROOT_DIR/port${CHECK_COMMD_PORT}.tar\" on host $exec_host;\ntar-bin:$tar_bin"
-                    } 
-
-                    puts $CHECK_OUTPUT "removing tar file \"$CA_ROOT_DIR/port${CHECK_COMMD_PORT}.tar\" on host $exec_host ..."
-                    set result [ start_remote_prog "$exec_host" "root" "rm" "$CA_ROOT_DIR/port${CHECK_COMMD_PORT}.tar" ]
-                    puts $CHECK_OUTPUT $result
-
-                    puts $CHECK_OUTPUT "removing tar file \"$CHECK_MAIN_RESULTS_DIR/port${CHECK_COMMD_PORT}.tar\" ..."
-                    set result [ start_remote_prog "$CHECK_CORE_MASTER" "root" "rm" "$CHECK_MAIN_RESULTS_DIR/port${CHECK_COMMD_PORT}.tar" ]
-                    puts $CHECK_OUTPUT $result
-
-                 }
-                  
-             }
-             
-             puts $CHECK_OUTPUT "removing existing tar file \"$CA_ROOT_DIR/port${CHECK_COMMD_PORT}.tar\" ..."
-             set result [ start_remote_prog "$CHECK_CORE_MASTER" "root" "rm" "$CA_ROOT_DIR/port${CHECK_COMMD_PORT}.tar" ]
-             puts $CHECK_OUTPUT $result
-         } else {
-            puts $CHECK_OUTPUT "can not copy this files as user $CHECK_USER"
-            puts $CHECK_OUTPUT "installation error"
-            add_proc_error "install_execd" -2 "exec host: $exec_host"
-            continue
+            if { $exec_host == $CHECK_CORE_MASTER } {
+               continue;
+            }
+            copy_certificates $exec_host
          }
       }
    }
  
    foreach exec_host $ts_config(execd_nodes) {
-
       puts $CHECK_OUTPUT "installing execd on host $exec_host ($ts_config(product_type) system) ..."
       if {[lsearch $ts_config(execd_nodes) $exec_host] == -1 } {
          set_error "-1" "install_execd - host $exec_host is not in execd list"

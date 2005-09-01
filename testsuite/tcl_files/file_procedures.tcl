@@ -2408,7 +2408,7 @@ proc wait_for_remote_file { hostname user path { mytimeout 60 } } {
    }
    if { $is_ok == 1 } {
       puts $CHECK_OUTPUT "ok"
-      puts $CHECK_OUTPUT "found prog: $output"
+      puts $CHECK_OUTPUT "found file: $output"
       return 0;
    } else {
       puts $CHECK_OUTPUT "timeout"

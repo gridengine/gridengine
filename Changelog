@@ -1,3 +1,7 @@
+CR-2005-09-02-0: Bugfix:    - fixed memory leak in gethostbyaddr binary
+                 Changed:   gethostbyaddr
+                 Review:    AA
+
 CR-2005-09-01-1: Testsuite: - modified test_cl_commlib module test to support
                               environment variable CL_RUNS which is used to
                               stop the program execution after $CL_RUNS times.

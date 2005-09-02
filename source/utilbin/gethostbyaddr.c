@@ -170,6 +170,7 @@ int main(int argc, char *argv[])
      if (resolved_name != NULL && all_option) {
         printf("SGE name: %s\n",resolved_name);
         free(resolved_name);
+        resolved_name = NULL;
      } 
    
      if (he != NULL) {
@@ -187,7 +188,10 @@ int main(int argc, char *argv[])
      }
   }
   sge_free_hostent(&he);
-
+  if (resolved_name != NULL) {
+     free(resolved_name);
+     resolved_name = NULL;
+  }
   retval = cl_com_cleanup_commlib();
   if (retval != CL_RETVAL_OK) {
      fprintf(stderr,"%s\n",cl_get_error_text(retval));

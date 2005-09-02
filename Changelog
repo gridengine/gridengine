@@ -1,3 +1,9 @@
+AA-2005-09-05-0: Bugfix:    sge_ca -usercert
+                 Bugtraq:   6318659
+                 Issue:     1778
+                 Changed:   sge_ca
+                 Review:    CR
+
 CR-2005-09-02-1: Bugfix:    - fixed possible wrong errno usage
                  Changed:   commlib
                  Review:    AA

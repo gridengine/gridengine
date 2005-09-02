@@ -1,3 +1,17 @@
+AA-2005-09-01-2: Bugfix:   merge from maintrunc AA-2005-05-24-1: qmon usage output
+                 Changed:  qmon
+                 Review:   CR
+
+AA-2005-09-01-1: Bugfix:   sec_lib.c closing of file pointers
+                 Changed:  all
+                 Review:   CR
+
+AA-2005-09-01-0: Bugfix:   sge_ca -usercert
+                           sge_ca renewal of certificates
+                 Bugtraq:  6318659, 6232120          
+                 Changed:  sge_ca script 
+                 Review:   CR 
+                 
 JG-2005-06-13-0: Bugfix:    Fixed missing initialization.
                  Changed:   all
                  Review:    CR

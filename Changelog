@@ -1,3 +1,7 @@
+CR-2005-09-02-1: Bugfix:    - fixed possible wrong errno usage
+                 Changed:   commlib
+                 Review:    AA
+
 CR-2005-09-02-0: Bugfix:    - fixed memory leak in gethostbyaddr binary
                  Changed:   gethostbyaddr
                  Review:    AA

@@ -1,3 +1,9 @@
+CR-2005-09-02-1: Bugfix:    Merged  CR-2005-09-02-1 from V60s2_BRANCH
+                            - fixed possible wrong errno usage
+                 Changed:   commlib
+                 Review:    AA
+
+
 CR-2005-09-02-0: Bugfix:    Merged CR-2005-09-02-0 from V60s2_BRANCH
                             - fixed memory leak in gethostbyaddr binary
                  Changed:   gethostbyaddr

@@ -1867,12 +1867,12 @@ int cl_com_gethostname(char **unique_hostname,struct in_addr *copy_addr,struct h
    char localhostname[CL_MAXHOSTNAMELEN_LENGTH + 1];
    int retval = CL_RETVAL_OK;
    
-   
+   errno = 0;
    if (gethostname(localhostname,CL_MAXHOSTNAMELEN_LENGTH) != 0) {
-      CL_LOG(CL_LOG_ERROR, cl_get_error_text(CL_RETVAL_LOCAL_HOSTNAME_ERROR));
       if (system_error_value != NULL) {
          *system_error_value = errno;
       }
+      CL_LOG(CL_LOG_ERROR, cl_get_error_text(CL_RETVAL_LOCAL_HOSTNAME_ERROR));
       return CL_RETVAL_LOCAL_HOSTNAME_ERROR;
    }
    CL_LOG_STR( CL_LOG_DEBUG, "local gethostname() returned: ", localhostname);

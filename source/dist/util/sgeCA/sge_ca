@@ -379,14 +379,10 @@ MakeRandFile()
    fi
    $INFOTEXT "Creating RANDFILE from '%s' in '%s'" $rfile $1
 
-   RANDFILE=$rfile; export RANDFILE;
-
-   if [ $ADMINUSER != default -a $rootinstalls = true ]; then
-   	$OPENSSL rand -rand $rfile -out $1 2048
-   	$CHOWN $ADMINUSER $1
-   else 
-        $V5UTILBIN/adminrun $2 $OPENSSL rand -rand $rfile -out $1 2048
-   fi
+   $V5UTILBIN/adminrun $2 dd if=$rfile of=/tmp/.rand count=2048
+   RANDFILE=/tmp/.rand; export RANDFILE;
+   $V5UTILBIN/adminrun $2 $OPENSSL rand -rand /tmp/.rand -out $1 2048
+   $V5UTILBIN/adminrun $2 $RM /tmp/.rand
    $V5UTILBIN/adminrun $2 $CHMOD 644 $1
    # echo "--------------"
    # ls -l $rfile $1
@@ -409,13 +405,23 @@ MakeUserCerts()
       exit 1
    fi
 
-   cat $1 | while read line; do
+   userfile=$1
+
+   cat $userfile | while read line; do
       unixuser=`echo $line|cut -d: -f1`
       gecos=`echo $line|cut -d: -f2`
       email=`echo $line|cut -d: -f3`
-      $INFOTEXT "Generating certificate and key for '%s' ('%s','%s')." \
-         "$unixuser" "$gecos" "$email"
-      MakeCert user "$unixuser" "$gecos" "$email"
+      
+      entries=`$V5UTILBIN/adminrun $ADMINUSER grep "CN=$gecos" $CATOP/index.txt|grep '^V'|wc -l`
+      if [ $entries = 0 ]; then
+         $INFOTEXT "Generating certificate and key for '%s' ('%s','%s')." \
+            "$unixuser" "$gecos" "$email"
+         MakeCert user "$unixuser" "$gecos" "$email"
+      else   
+         $INFOTEXT "Please renew certificate for '%s' ('%s','%s') instead." \
+            "$unixuser" "$gecos" "$email"
+         # RenewCert user $unixuser
+      fi
    done   
 }
 
@@ -451,9 +457,14 @@ DumpUsers()
    RSFILE=/tmp/rand
 
    # create rand.seed file
-   MakeRandFile $RSFILE $2
+   MakeRandFile $RSFILE $USER
 
    RANDFILE=$RSFILE; export RANDFILE
+
+   $INFOTEXT "Dumping users to $outdir/dumped_users.txt"
+   for i in `ls $CERTDIR`; do
+      $X509 -in $CERTDIR/$i/cert.pem -subject -noout|$AWK -F '/' '{print $8 ":" $7 ":" $9}' | sed -e 's/UID=//' -e 's/CN=//' -e 's/emailAddress=//' >> $outdir/dumped_users.txt
+   done
 }
 
 #--------------------------------------------------------------------------
@@ -495,7 +506,7 @@ MakeCert()
    fi
 
    # create rand.seed file
-   MakeRandFile $RSFILE $2
+   MakeRandFile $RSFILE $ADMINUSER
 
    RANDFILE=$RSFILE; export RANDFILE
 
@@ -609,7 +620,7 @@ RenewCert()
    fi
 
    # create rand.seed file
-   MakeRandFile $RSFILE $2
+   # rand.seed already exists, therefore no MakeRandFile $RSFILE $2
    RANDFILE=$RSFILE; export RANDFILE
 
    if [ $rootinstalls = true ]; then
@@ -620,10 +631,10 @@ RenewCert()
    Execute $CHMOD 511 $KEYDIR
    if [ $1 = daemon ]; then
       ExecuteAsAdmin $CHMOD 644 $CERTFILE
-      ExecuteAsAdmin $CHMOD 644 $RSFILE
+      ExecuteAsAdmin $CHMOD 666 $RSFILE
    else
       Execute $CHMOD 644 $CERTFILE
-      Execute $CHMOD 644 $RSFILE
+      Execute $CHMOD 666 $RSFILE
    fi
    ExecuteAsAdmin $CA -config $TMPFILE1 -policy policy_anything \
                       -batch $DAYS \
@@ -714,8 +725,8 @@ MakeCADirs()
       exit 1
    fi
 
-   Execute $RM -rf $CALOCALTOP >/dev/null 2>/dev/null
-   ExecuteAsAdmin $RM -rf $CATOP >/dev/null 2>/dev/null
+   Execute $RM -rf $CALOCALTOP 2>&1 /dev/null
+   ExecuteAsAdmin $RM -rf $CATOP 2>&1 /dev/null
 
    if [ -f $CATOP -o -d $CATOP -o -f $CALOCALTOP -o -d $CALOCALTOP ]; then
       $INFOTEXT "Can't delete the CA directories\n   %s or %s" \
@@ -1089,7 +1100,7 @@ pkcs12)
     RET=$?
     ;;
 version)
-    echo "sge_ca 6.0u4"
+    echo "sge_ca 6.0u7"
     ;;
 dumpusers)
     DumpUsers

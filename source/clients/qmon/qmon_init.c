@@ -219,15 +219,17 @@ String name
 
 
 /*-------------------------------------------------------------------------*/
-void qmonInitSge( char *progname) 
+void qmonInitSge( char *progname, int usage) 
 {
    int error = 0;
    DENTER(GUI_LAYER, "qmonInitSge");
    
    sge_qmon_log(True);
    sge_gdi_param(SET_MEWHO, QMON, NULL);
-   sge_gdi_param(SET_ISALIVE, 1, NULL);
-   if ((error=sge_gdi_setup(prognames[QMON]))) {
+   if (!usage) {
+      sge_gdi_param(SET_ISALIVE, 1, NULL);
+   }
+   if ((error=sge_gdi_setup(prognames[QMON])) != AE_OK) {
       /* fills SGE_EVENT with diagnosis information */
       if (error == AE_QMASTER_DOWN ||
           error == CL_FIRST_FREE_EC+2 || 

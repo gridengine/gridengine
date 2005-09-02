@@ -9,6 +9,7 @@ AA-2005-09-01-1: Bugfix:   sec_lib.c closing of file pointers
 AA-2005-09-01-0: Bugfix:   sge_ca -usercert
                            sge_ca renewal of certificates
                  Bugtraq:  6318659, 6232120          
+                 Issue:    1515,1784
                  Changed:  sge_ca script 
                  Review:   CR 
                  

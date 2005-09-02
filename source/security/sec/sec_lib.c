@@ -744,7 +744,10 @@ static int sec_files()
       i = -1;
       goto error;
    }
-   fclose(fp);
+   if (fp) {
+      fclose(fp);
+      fp = NULL;
+   }   
 
    if (!sec_verify_certificate(gsd.x509)) {
       ERROR((SGE_EVENT, MSG_SEC_FAILEDVERIFYOWNCERT));
@@ -764,7 +767,10 @@ static int sec_files()
       goto error;
    }
    gsd.private_key = PEM_read_PrivateKey(fp, NULL, NULL, PREDEFINED_PW);
-   fclose(fp);
+   if (fp) {
+      fclose(fp);
+      fp = NULL;
+   }   
 
    if (!gsd.private_key) {
       sec_error();
@@ -776,8 +782,10 @@ static int sec_files()
    return 0;
     
    error:
-      if (fp) 
+      if (fp) {
          fclose(fp);
+         fp = NULL;
+      }   
       DEXIT;
       return i;
 }

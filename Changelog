@@ -1,3 +1,8 @@
+AH-2005-09-05-0: Bugfix:    aimk -spool-classic doesn't compile on linux/solaris
+                 Issue:     1764
+                 Changed:   all
+                 Review:    JG
+
 AA-2005-09-05-0: Bugfix:    sge_ca -usercert
                  Bugtraq:   6318659
                  Issue:     1778

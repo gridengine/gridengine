@@ -154,12 +154,13 @@ u_long32 flags
    
    lp = NULL;
    while (fgets(buf, sizeof(buf), fp)) {
+      char *lasts = NULL;
       /* set chrptr to the first non blank character
        * If line is empty continue with next line   
        * sge_strtok() led to a error here because of recursive use
        * in parse_qconf.c
        */
-      if(!(name = strtok(buf, " \t\n")))
+      if(!(name = strtok_r(buf, " \t\n", &lasts)))
          continue;
 
       /* allow commentaries */
@@ -169,7 +170,7 @@ u_long32 flags
       if ((flags & FLG_CONF_SPOOL) && first_line) {
          first_line = 0;
          if (!strcmp(name, "conf_version")) {
-            if (!(value = strtok(NULL, " \t\n"))) {
+            if (!(value = strtok_r(NULL, " \t\n", &lasts))) {
                WARNING((SGE_EVENT, MSG_CONFIG_CONF_NOVALUEFORCONFIGATTRIB_S, name));
                fclose(fp);
                DEXIT;
@@ -194,7 +195,7 @@ u_long32 flags
 
       /* validate input */
       if (!strcmp(name, "gid_range")) {
-         if ((value= strtok(NULL, " \t\n"))) {
+         if ((value= strtok_r(NULL, " \t\n", &lasts))) {
             if (!strcmp(value, "none") ||
                 !strcmp(value, "NONE")) {
                lSetString(ep, CF_value, value);
@@ -233,7 +234,7 @@ u_long32 flags
          }
       } 
       else if (!strcmp(name, "admin_user")) {
-         value = strtok(NULL, " \t\n");
+         value = strtok_r(NULL, " \t\n", &lasts);
          while (value[0] && isspace((int) value[0]))
             value++;
          if (value) {
@@ -265,7 +266,7 @@ u_long32 flags
          !strcmp(name, "qlogin_daemon") ||
          !strcmp(name, "rlogin_daemon") ||
          !strcmp(name, "rsh_daemon")) {
-         if (!(value = strtok(NULL, "\t\n"))) {
+         if (!(value = strtok_r(NULL, "\t\n", &lasts))) {
             /* return line if value is empty */
             WARNING((SGE_EVENT, MSG_CONFIG_CONF_NOVALUEFORCONFIGATTRIB_S, name));
             lFreeList(&lp);
@@ -279,7 +280,7 @@ u_long32 flags
 
          lSetString(ep, CF_value, value);
       } else {
-         if (!(value = strtok(NULL, " \t\n"))) {
+         if (!(value = strtok_r(NULL, " \t\n", &lasts))) {
             WARNING((SGE_EVENT, MSG_CONFIG_CONF_NOVALUEFORCONFIGATTRIB_S, name));
             lFreeList(&lp);
             fclose(fp);
@@ -289,7 +290,7 @@ u_long32 flags
            
          lSetString(ep, CF_value, value);
 
-         if (strtok(NULL, " \t\n")) {
+         if (strtok_r(NULL, " \t\n", &lasts)) {
             /* Allow only one value per line */
             WARNING((SGE_EVENT, MSG_CONFIG_CONF_ONLYSINGLEVALUEFORCONFIGATTRIB_S, name));
             fclose(fp);

@@ -866,6 +866,7 @@ int job_list_read_from_disk(lList **job_list, char *list_name, int check,
               (third_direntry = lFirst(third_direnties));
               lRemoveElem(third_direnties, &third_direntry)) {
             lListElem *job, *ja_task;
+            char *lasts = NULL;
             char job_dir[SGE_PATH_MAX] = "";
             char fourth_dir[SGE_PATH_MAX] = "";
             char job_id_string[SGE_PATH_MAX] = "";
@@ -881,8 +882,8 @@ int job_list_read_from_disk(lList **job_list, char *list_name, int check,
                     lGetString(second_direntry, ST_name),
                     lGetString(third_direntry, ST_name)); 
             job_id = (u_long32) strtol(job_id_string, NULL, 10);
-            strtok(job_id_string, ".");
-            ja_task_id_string = strtok(NULL, ".");
+            strtok_r(job_id_string, ".", &lasts);
+            ja_task_id_string = strtok_r(NULL, ".", &lasts);
             if (ja_task_id_string) {
                ja_task_id = (u_long32) strtol(ja_task_id_string, NULL, 10);
             } else {

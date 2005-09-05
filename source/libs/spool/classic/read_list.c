@@ -931,6 +931,7 @@ int read_all_centries(lList **list, const char *directory)
 {
    DIR *dir;
    SGE_STRUCT_DIRENT *dent;
+   char dirent[SGE_PATH_MAX*2];
    char fstr[256];
    int fd;
    lListElem *el;
@@ -952,7 +953,7 @@ int read_all_centries(lList **list, const char *directory)
    if (!sge_silent_get())
       printf("%s\n", MSG_CONFIG_READINGINCOMPLEXATTRS);
 
-   while ((dent=SGE_READDIR(dir)) != NULL) {
+   while (SGE_READDIR_R(dir, (SGE_STRUCT_DIRENT *)dirent, &dent)==0 && dent!=NULL) {
       if (!strcmp(dent->d_name,"..") || !strcmp(dent->d_name,".")) {
          continue;
       }
@@ -1010,6 +1011,7 @@ int read_all_configurations(lList **lpp,
 {
    DIR *dir;
    SGE_STRUCT_DIRENT *dent;
+   char dirent[SGE_PATH_MAX*2];
    char fstr[256];
    lListElem *el;
    int ret;
@@ -1064,7 +1066,7 @@ int read_all_configurations(lList **lpp,
       return -2;
    }
 
-   while ((dent=SGE_READDIR(dir)) != NULL) {
+   while (SGE_READDIR_R(dir, (SGE_STRUCT_DIRENT *)dirent, &dent)==0 && dent!=NULL) {
       if (!dent->d_name)
                   continue;              /* May happen */
       if (!dent->d_name[0])

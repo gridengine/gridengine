@@ -1,0 +1,6 @@
+# This tests tabs as field/value delimiter
+name		userlist1
+type		ACL DEPT
+fshare	0
+oticket	0
+entries	root,bin,sys

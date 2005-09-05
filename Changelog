@@ -1,3 +1,12 @@
+DT-2005-09-05-0: Bugfix:    o Rewrote Flex parser for qconf
+                            o Fixed backslash line breaks in output from qconf
+                            o Added test cases
+                            o Cleaned up test comments
+                 Issue:     1749, 1780?
+                 Bugtraq:   6319228, 6256590?
+                 Changed:   flatfile spooling
+                 Review:    JG*2
+
 AH-2005-09-05-0: Bugfix:    aimk -spool-classic doesn't compile on linux/solaris
                  Issue:     1764
                  Changed:   all

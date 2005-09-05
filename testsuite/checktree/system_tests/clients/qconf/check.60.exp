@@ -54,6 +54,13 @@ lappend check_functions "qconf_backslash_comma_output_check"
 #
 #  FUNCTION
 #     This function tests the parsing of backslash line continuation in files.
+#     All files named backslash_setup_hostgroup* will be added as hostgroups
+#     via "qconf -Ahgrp".  All files named backslash_space_hostgroup* will be
+#     added as hostgroups via "qconf -Ahgrp" and checked that the hostlist field
+#     contains all of the hostgroups added from the backslash_setup_hostgroup*
+#     files.  All files named backslash_space_fail_hostgroup* will be added
+#     via "qconf -Ahgrp" and checked to be sure the operation failed.  Finally,
+#     all added hostgroups will be removed.
 #
 #  RESULT
 #     -1 on failure, 0 on success
@@ -139,6 +146,27 @@ proc qconf_backslash_default_space_check {} {
    set_error 0 "ok"
 }
 
+#                                                             max. column:     |
+#****** qconf/qconf_backslash_default_comma_check() ******
+# 
+#  NAME
+#     qconf_backslash_default_comma_check -- tests backslash line continuation
+#
+#  SYNOPSIS
+#     qconf_backslash_default_comma_check { } 
+#
+#  FUNCTION
+#     This function tests the parsing of backslash line continuation in files.
+#     All files named backslash_comma_userlist* will be added as user lists
+#     via "qconf -Au" and checked that the entries field contains root, bin, and
+#     sys.  All files named backslash_comma_fail_userlist* will be added via
+#     "qconf -Au" and checked to be sure the operation failed.  Finally, all
+#     added user lists will be removed.
+#
+#  RESULT
+#     -1 on failure, 0 on success
+#
+#*******************************
 proc qconf_backslash_default_comma_check {} {
    global CHECK_ACTUAL_TEST_PATH CHECK_OUTPUT CHECK_PRODUCT_TYPE CHECK_HOST
    global CHECK_USER
@@ -205,6 +233,13 @@ proc qconf_backslash_default_comma_check {} {
 #
 #  FUNCTION
 #     This function tests the parsing of backslash line continuation in files.
+#     All files named backslash_setup_userlist* will be added as user lists
+#     via "qconf -Au".  All files named backslash_space_queue* will be
+#     added as queues via "qconf -Aq" and checked that the user_lists field
+#     contains all of the user lists added from the backslash_setup_userlist*
+#     files.  All files named backslash_space_fail_queue* will be added
+#     via "qconf -Aq" and checked to be sure the operation failed.  Finally,
+#     all added user lists and queues will be removed.
 #
 #  RESULT
 #     -1 on failure, 0 on success
@@ -299,6 +334,13 @@ proc qconf_backslash_custom_space_check {} {
 #
 #  FUNCTION
 #     This function tests the parsing of backslash line continuation in files.
+#     All files named backslash_setup_userlist* will be added as user lists
+#     via "qconf -Au".  All files named backslash_space_queue* will be
+#     added as queues via "qconf -Aq" and checked that the user_lists field
+#     contains all of the user lists added from the backslash_setup_userlist*
+#     files.  All files named backslash_space_fail_queue* will be added
+#     via "qconf -Aq" and checked to be sure the operation failed.  Finally,
+#     all added user lists and queues will be removed.
 #
 #  RESULT
 #     -1 on failure, 0 on success
@@ -398,7 +440,7 @@ proc qconf_backslash_custom_comma_check {} {
 #     This function tests the outputing of backslash continued lines by qconf.
 #     It uses three hostgroup name classes: short, medium, and long.  The short
 #     names are just that: short.  The medium name is shorter than a line, but
-#     long enough to cause a line wrap in combination with two short names.  The
+#     long enough to cause a line wrap in combination with two short names.
 #     The long name is longer than a line.  In order to test border cases, the
 #     sizes of the names are calulated to produce lines of length 78, 79, 80,
 #     and 81 when taken in various combinations.
@@ -593,9 +635,9 @@ proc qconf_backslash_space_output_check {} {
 #
 #  FUNCTION
 #     This function tests the outputing of backslash continued lines by qconf.
-#     It uses three hostgroup name classes: short, medium, and long.  The short
-#     names are just that: short.  The medium name is shorter than a line, but
-#     long enough to cause a line wrap in combination with two short names.  The
+#     It uses three complex variable name classes: short, medium, and long.  The
+#     short names are just that: short.  The medium name is shorter than a line,
+#     but long enough to cause a line wrap in combination with two short names.
 #     The long name is longer than a line.  In order to test border cases, the
 #     sizes of the names are calulated to produce lines of length 78, 79, 80,
 #     and 81 when taken in various combinations.

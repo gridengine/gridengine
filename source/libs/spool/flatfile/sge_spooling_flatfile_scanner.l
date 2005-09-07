@@ -89,7 +89,6 @@ static void remove_markers(void)
       char *rw = tmp_str;
       char *ff = tmp_str + 1;
       bool add_space = false;
-      int offset = 0;
 
       /* Replace the marker with a space */
       *tmp_str = ' ';

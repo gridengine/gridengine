@@ -1,3 +1,13 @@
+DT-2005-09-07-0: Bugfix:    o Rewrote Flex parser for qconf
+                            o Fixed backslash line breaks in output from qconf
+                            - Merged from DT-2005-09-05-0
+                            o Fixed broken build
+                            - Merged from DT-2005-09-07-1 and DT-2005-09-07-2
+                 Issue:     1749, 1780
+                 Bugtraq:   6319228, 6256590
+                 Changed:   flatfile spooling
+                 Review:    JG*2
+
 AA-2005-09-05-0: Bugfix:    sge_ca -usercert
                  Bugtraq:   6318659
                  Issue:     1778

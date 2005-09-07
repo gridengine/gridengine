@@ -76,7 +76,7 @@
 #include "uti/sge_spool.h"
 
 static void spool_flatfile_add_line_breaks (dstring *buffer);
-   
+
 #ifdef DEBUG_FLATFILE
 bool flatfile_debugging = true;
 
@@ -1195,7 +1195,6 @@ spool_flatfile_read_object(lList **answer_list, const lDescr *descr,
    lListElem *object = NULL;
    const spooling_field *fields = NULL;
    spooling_field *my_fields = NULL;
-   struct stat file_buf;
 
    DENTER(TOP_LAYER, "spool_flatfile_read_object");
 
@@ -1219,8 +1218,7 @@ spool_flatfile_read_object(lList **answer_list, const lDescr *descr,
    }
 
    /* initialize scanner */
-   stat(filepath, &file_buf);
-   token = spool_scanner_initialize(file, file_buf.st_size);
+   token = spool_scanner_initialize(file);
 
    if (token == SPFT_ERROR_NO_MEMORY) {
       /* messages generated in spool_get_fields_to_spool */
@@ -1792,7 +1790,6 @@ spool_flatfile_read_list(lList **answer_list, const lDescr *descr,
    lList *list = NULL;
    const spooling_field *fields = NULL;
    spooling_field *my_fields = NULL;
-   struct stat file_buf;
 
    DENTER(TOP_LAYER, "spool_flatfile_read_list");
 
@@ -1817,8 +1814,7 @@ spool_flatfile_read_list(lList **answer_list, const lDescr *descr,
    }
 
    /* initialize scanner */
-   stat(filepath, &file_buf);
-   token = spool_scanner_initialize(file, file_buf.st_size);
+   token = spool_scanner_initialize(file);
 
    if (token == SPFT_ERROR_NO_MEMORY) {
       /* messages generated in spool_get_fields_to_spool */
@@ -2144,7 +2140,8 @@ static void spool_flatfile_add_line_breaks (dstring *buffer)
    sge_dstring_clear (buffer);
 
    str_buf[0] = '\0';
-   
+
+   /* Loop as long as the string is longer than the max length. */
    while (strlen (strp) > MAX_LINE_LENGTH - word) {
       /* Account for newlines */
       char *newlp = strchr (strp, '\n');
@@ -2187,15 +2184,11 @@ static void spool_flatfile_add_line_breaks (dstring *buffer)
             word++;
          }
          
-         indent_str = (char *)malloc (word * sizeof (char) + 4);
+         indent_str = (char *)malloc ((word + 4) * sizeof (char));
          indent_str[0] = ' ';
          indent_str[1] = '\\';
          indent_str[2] = '\n';
-
-         for (index = 0; index < word; index++) {
-            indent_str[index + 3] = ' ';
-         }
-
+         memset(indent_str + 3, ' ', word);
          indent_str[word + 3] = '\0';
       }
       
@@ -2210,21 +2203,26 @@ static void spool_flatfile_add_line_breaks (dstring *buffer)
       /* We have to account for the fact that on all lines after the first, the
        * line length is decreased by the indentation. */
       /* On the first line, we have to start looking at the end of the line and
-       * stop looking before we reach the delimiter before the second word. */
+       * stop looking before we reach the delimiter before the second word.  In
+       * both cases, we start two charcters from the "end" so that there's
+       * room for a space and a backslash. */
       if (first_line) {
-         for (index = MAX_LINE_LENGTH - 1; index > word; index--) {
-            if (isspace (strp[index]) || (strp[index] == ',')) {
+         for (index = MAX_LINE_LENGTH - 2; index > word; index--) {
+            if (isspace (strp[index]) || 
+                ((index < MAX_LINE_LENGTH - 2) && (strp[index] == ','))) {
                break;
             }
          }
       }
       /* On later lines, we start looking at the end of the line, adjusted for
        * the amount of space we will indent it, and we stop looking at the
-       * second character on the line since having the first character as a
+       * second character on the line, since having the first character as a
        * break point is useless. */
       else {
-         for (index = MAX_LINE_LENGTH - word - 1; index >= 1; index--) {
-            if (isspace (strp[index]) || (strp[index] == ',')) {
+         for (index = MAX_LINE_LENGTH - word - 2; index >= 1; index--) {
+            if (isspace (strp[index]) ||
+                ((index < MAX_LINE_LENGTH - word - 2) &&
+                 (strp[index] == ','))) {
                break;
             }
          }
@@ -2259,7 +2257,7 @@ static void spool_flatfile_add_line_breaks (dstring *buffer)
           * line length is decreased by the indentation. */
          /* On the first line, we start looking at the end of the line. */
          if (first_line) {
-            index = MAX_LINE_LENGTH;
+            index = MAX_LINE_LENGTH - 2;
 
             while ((index < MAX_STRING_SIZE - 1) && (strp[index] != '\0')) {
                if (isspace (strp[index]) || (strp[index] == ',') ||
@@ -2273,7 +2271,7 @@ static void spool_flatfile_add_line_breaks (dstring *buffer)
          /* On later lines, we start looking at the end of the line, adjusted for
           * the amount of space we will indent it. */
          else {
-            index = MAX_LINE_LENGTH - word;
+            index = MAX_LINE_LENGTH - word - 2;
 
             while ((index < MAX_STRING_SIZE - 1) && (strp[index] != '\0')) {
                if (isspace (strp[index]) || (strp[index] == ',') ||

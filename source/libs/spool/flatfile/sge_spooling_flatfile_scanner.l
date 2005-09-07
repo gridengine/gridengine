@@ -36,7 +36,7 @@
  */
 
 %option noyywrap
-%array
+%pointer
 
 %{
 /* need this for the system calls below */
@@ -47,46 +47,121 @@
 
 #include "spool/flatfile/sge_spooling_flatfile_scanner.h"
 #include "basis_types.h"
+#include "uti/sge_log.h"
 
+/* Internal function declarations */
+static void remove_markers(void);
+static void remove_backslash(void);
+static void remove_newline(void);
+
+/* We define SGE_FUNC so that we can use SGE_ASSERT. */
+#define SGE_FUNC "spool_lex"
 #define YY_BREAK
-#define YY_NO_UNPUT
 #ifndef YYLMAX
 #  define YYLMAX MAX_STRING_SIZE
 #endif
+
 int spool_line;
 int spool_return_whitespace;
 int spool_finish_line;
-static int spool_cat_line;
-static char *spool_tmp_str = NULL;
+static char* tmp_str = NULL;
 
-int spool_scanner_initialize(FILE *input, off_t file_size)
+int spool_scanner_initialize(FILE *input)
 {
    spool_line = 1;
    spool_return_whitespace = 0;
    spool_finish_line = 0;
-   spool_cat_line = 0;
    spool_restart(input);
-
-   if (spool_tmp_str != NULL) {
-      free(spool_tmp_str);
-      spool_tmp_str = NULL;
-   }
-
-   spool_tmp_str = malloc(file_size);
-   if (spool_tmp_str == NULL) {
-      return SPFT_ERROR_NO_MEMORY;
-   }
-   memset((void*) spool_tmp_str, '\0', file_size);
 
    return spool_lex();
 }
 
 void spool_scanner_shutdown(void)
 {
-   if (spool_tmp_str != NULL) {
-      free(spool_tmp_str);
-      spool_tmp_str = NULL;
+}
+
+static void remove_markers(void)
+{
+   tmp_str = (char *)strchr(spool_text, '\xFF');
+
+   /* Find continuation markers. */
+   while (tmp_str != NULL) {
+      char *rw = tmp_str;
+      char *ff = tmp_str + 1;
+      bool add_space = false;
+
+      /* Replace the marker with a space */
+      *tmp_str = ' ';
+
+      /* Find previous non-whitespace character. */
+      while (rw != spool_text) {
+         if (!isspace(*rw)) {
+            if (*rw != ',') {
+               add_space = true;
+            }
+
+            break;
+         }
+
+         rw--;
+      }
+
+      /* Find next non-whitespace character. */
+      while (*ff != '\0') {
+         if (!isspace(*ff)) {
+            break;
+         }
+
+         ff++;
+      }
+
+      /* Advance to first whitespace character. */
+      if (rw != spool_text) {
+         rw++;
+      }
+
+      /* Add a space if needed. */
+      if (add_space) {
+         *rw = ' ';
+         rw++;
+      }
+
+      /* Overwrite the whitespace with the remainder
+         of the string. */
+      while (*ff != '\0') {
+         *rw = *ff;
+         rw++;
+         ff++;
+      }
+
+      /* Terminate the new string. */
+      *rw = '\0';
+
+      /* Look for the next marker. */
+      tmp_str = (char *)strchr(spool_text, '\xFF');
    }
+}
+
+static void remove_backslash(void)
+{
+   /* Replace the blackslash with a marker. */
+   tmp_str = (char *)strrchr(spool_text, '\\');
+
+   /* VERY BAD */
+   SGE_ASSERT(tmp_str != NULL);
+
+   *tmp_str = '\xFF';
+}
+
+static void remove_newline(void)
+{
+   /* Replace the newline with a space. */
+   tmp_str = (char *)strrchr(spool_text, '\n');
+
+   /* VERY BAD */
+   SGE_ASSERT(tmp_str != NULL);
+
+   *tmp_str = ' ';
 }
 
 %}
@@ -98,7 +173,15 @@ DELIMITER [,;:|={}[\]]
 COMPOP   [=<>!]
 NL       \r?\n
 
+%x finish_line
+
 %%
+   if (spool_finish_line) {
+      BEGIN(finish_line);
+   }
+   else  {
+      BEGIN(INITIAL);
+   }
 
 {DIGIT}+{COLON}{DIGIT}+{COLON}{DIGIT}+  return SPFT_TIME;
 
@@ -116,161 +199,80 @@ NL       \r?\n
 
 #[^\n]*{NL}   spool_line++; break;        /* eat up comments */
 
-[\\][ \t\r]*{NL}  spool_line++; break;    /* Ignore newlines preceeded by \ */
-
 ^[ \t\r]*{NL}   spool_line++; break;      /* Ignore blank lines */
 
-[ \t\r]*{NL}  { 
-                  strcpy(spool_text, "\n");
-                  /* JG: TODO: has to be initialized for each scan run */
-                  spool_line++; 
-                  return SPFT_NEWLINE; 
-              } 
+ /* Ignore newlines preceeded by \ */
+[\\][ \t\r]*{NL} {
+   unput(' ');
+   spool_line++;
+   break;
+}
 
-[ \t\r]+       { /* whitespace */
-                  if(spool_return_whitespace) {
-                     strcpy(spool_text, " ");
-                     return SPFT_WHITESPACE;
-                  }
+ /* In order to make sure that whitespace before the newline gets removed, we
+  * need these two rules.  Just using unput() doesn't work because it could
+  * change the token order. */
+ /* Newlines. */
+{NL} {
+   spool_line++;
+   return SPFT_NEWLINE;
+} 
 
-                  break;
-               } 
+[ \t\r]*{NL} {
+   unput('\n');
+   break;
+} 
 
-                  /* Match whole lines not ending in \ */
-^[^\n]*[^ \t\r\n\\][ \t\r]*$  %{
-                                 if (!spool_cat_line) { REJECT; }
-                                 else {
-                                    int count;
-                                    char *tmp_str = spool_text;
-                                    
-                                    /* Remove leading spaces */
-                                    while (isspace (*tmp_str)) {
-                                       tmp_str++;
-                                    }
+ /* In order to make sure that whitespace gets compressed into a
+  * single space, we need these three rules.  Just using unput() doesn't work
+  * because that can result in the token order being changed. */
+ /* Whitespace longer than 1 character. */
+[ \t\r]{2,} { 
+   unput(' ');
+   break;
+}
 
-                                    strcat (spool_tmp_str, tmp_str);
-                                    strcpy (spool_text, spool_tmp_str);
-                                    spool_cat_line = 0;
+ /* Single whitespace that isn't a space. */
+[\t\r] {
+   unput(' ');
+   break;
+}
 
-                                    /* Remove trailing spaces */
-                                    for (count = strlen (spool_text) - 1; count >= 0; count--) {
-                                       if (!isspace (spool_text[count])) {
-                                          spool_text[count + 1] = '\0';
-                                          break;
-                                       }
-                                    }
+ /* Single whitespace that is a space. */
+[ ] {
+   if (spool_return_whitespace) {
+      return SPFT_WHITESPACE;
+   }
 
-                                    if (count == -1) {
-                                       spool_text[0] = '\0';
-                                    }
+   break;
+}
 
-                                    spool_tmp_str[0] = '\0';
-                                    spool_line++;
+ /* Here's the algorithm continuable value fields.  If a line ends in backslash,
+  * replace the backslash with \0xFF, replace the newline with a space, and call
+  * yymore().  If a line ends normally, search the line for \0xFF.  Every time
+  * one is found, remove all whitespace before and after it, up to the first
+  * non-whitespace character.  If the first preceeding non-whitespace character
+  * is not a comma, leave a space. */
 
-                                    return SPFT_WORD;
-                                 }
-                              %}
-                /* Match whole lines ending in \ */
-^[^\n]*[\\][ \t\r]*\n %{
-                        if (!spool_cat_line) { REJECT; }
-                        else {
-                           char *tmp_str = spool_text;
+ /* Match lines ending in backslash. */
+<finish_line>[^\n]*[\\][ \t\r]*{NL} %{
+   remove_backslash();
+   remove_newline();
+   spool_line++;
 
-                           /* Remove leading spaces */
-                           while (isspace (*tmp_str)) {
-                              tmp_str++;
-                           }
+   /* Append the next line to the current line. */
+   yymore ();
+   break;
+%}
 
-                           strcat (spool_tmp_str, tmp_str);
-                           tmp_str = (char *)strrchr (spool_tmp_str, '\\') - 1;
+ /* Match lines not ending in backslash. */
+<finish_line>[^\n]*[ \t\r]*$ %{
+   remove_markers();
+   spool_line++;
 
-                           /* Remove trailing spaces and backslash */
-                           while (tmp_str != spool_tmp_str) {
-                              if (!isspace (*tmp_str)) {
-                                 /* If the last character is a comma, don't add
-                                  * any spaces */
-                                 if (*tmp_str == ',') {
-                                    tmp_str[1] = '\0';
-                                 }
-                                 /* Otherwise, add a single space to the end*/
-                                 else {
-                                    tmp_str[1] = ' ';
-                                    tmp_str[2] = '\0';
-                                 }
+   return SPFT_WORD;
+%}
 
-                                 break;
-                              }
-
-                              tmp_str--;
-                           }
-
-                           if (spool_tmp_str == tmp_str) {
-                              spool_tmp_str[0] = '\0';
-                           }
-
-                           spool_line++;
-
-                           break;
-                        }
-                      %}
-                    /* Match remainders of lines not ending in \ */
-[^ \t\r\n][^\n]*[^ \t\r\n\\][ \t\r]*$  %{
-                                          if (!spool_finish_line) { REJECT; }
-                                          else {
-                                             /* Remove trailing whitespace. */
-                                             int count = strlen (spool_text) - 1;
-
-                                             while ((count >= 0) && isspace (spool_text[count])) {
-                                                count--;
-                                             }
-
-                                             spool_text[count + 1] = '\0';
-
-                                             spool_line++;
-                                             return SPFT_WORD;
-                                          }
-                                       %}
-                   /* Match remainders of lines ending in \ */
-[^ \t\r\n][^\n]*[\\][ \t\r]*\n  %{
-                                    if (!spool_finish_line) { REJECT; }
-                                    else {
-                                       char *tmp_str = NULL;
-
-                                       spool_cat_line = 1;
-                                       strcpy (spool_tmp_str, spool_text);
-                                       tmp_str = (char *)strrchr (spool_tmp_str, '\\') - 1;
-
-                                       /* Remove trailing spaces and backslash */
-                                       while (tmp_str != spool_tmp_str) {
-                                          if (!isspace (*tmp_str)) {
-                                             /* If the last character is a comma, don't add
-                                              * any spaces */
-                                             if (*tmp_str == ',') {
-                                                tmp_str[1] = '\0';
-                                             }
-                                             /* Otherwise, add a single space to the end*/
-                                             else {
-                                                tmp_str[1] = ' ';
-                                                tmp_str[2] = '\0';
-                                             }
-
-                                             break;
-                                          }
-
-                                          tmp_str--;
-                                       }
-
-                                       if (spool_tmp_str == tmp_str) {
-                                          spool_tmp_str[0] = '\0';
-                                       }
-
-                                       spool_line++;
-
-                                       break;
-                                    }
-                                %}
-.           return SPFT_UNKNOWN;
-
+<*>.           return SPFT_UNKNOWN;
 %%
 
 #ifdef BUILD_FLATFILE_SCANNER_MAIN 

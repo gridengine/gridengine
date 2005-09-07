@@ -51,10 +51,10 @@ typedef enum {
 extern int spool_line;
 extern int spool_return_whitespace;
 extern int spool_finish_line;
-extern char spool_text[];
+extern char *spool_text;
 
 int spool_lex(void);
-int spool_scanner_initialize(FILE *input, off_t file_size);
+int spool_scanner_initialize(FILE *input);
 void spool_scanner_shutdown(void);
 
 #endif /* __SGE_SPOOLING_FLATFILE_SCANNER_H */    

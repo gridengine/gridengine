@@ -1,3 +1,6 @@
+DT-2005-09-07-0: Bugfix:    o Fixed broken build on IRIX 6.5
+                 Changed:   flatfile spooling
+
 EB-2005-09-05-0: Bugfix:    eleminated static buffer in dstring implementation
                  Issue:     265
                  Review:    AH 
@@ -6,8 +9,8 @@ DT-2005-09-05-0: Bugfix:    o Rewrote Flex parser for qconf
                             o Fixed backslash line breaks in output from qconf
                             o Added test cases
                             o Cleaned up test comments
-                 Issue:     1749, 1780?
-                 Bugtraq:   6319228, 6256590?
+                 Issue:     1749, 1780
+                 Bugtraq:   6319228, 6256590
                  Changed:   flatfile spooling
                  Review:    JG*2
 

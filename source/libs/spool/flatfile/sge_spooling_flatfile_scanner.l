@@ -50,9 +50,9 @@
 #include "uti/sge_log.h"
 
 /* Internal function declarations */
-static void remove_markers();
-static void remove_backslash();
-static void remove_newline();
+static void remove_markers(void);
+static void remove_backslash(void);
+static void remove_newline(void);
 
 /* We define SGE_FUNC so that we can use SGE_ASSERT. */
 #define SGE_FUNC "spool_lex"
@@ -64,7 +64,6 @@ static void remove_newline();
 int spool_line;
 int spool_return_whitespace;
 int spool_finish_line;
-static int spool_cat_line;
 static char* tmp_str = NULL;
 
 int spool_scanner_initialize(FILE *input)
@@ -72,7 +71,6 @@ int spool_scanner_initialize(FILE *input)
    spool_line = 1;
    spool_return_whitespace = 0;
    spool_finish_line = 0;
-   spool_cat_line = 0;
    spool_restart(input);
 
    return spool_lex();
@@ -82,7 +80,7 @@ void spool_scanner_shutdown(void)
 {
 }
 
-static void remove_markers()
+static void remove_markers(void)
 {
    tmp_str = (char *)strchr(spool_text, '\xFF');
 
@@ -145,7 +143,7 @@ static void remove_markers()
    }
 }
 
-static void remove_backslash()
+static void remove_backslash(void)
 {
    /* Replace the blackslash with a marker. */
    tmp_str = (char *)strrchr(spool_text, '\\');
@@ -156,7 +154,7 @@ static void remove_backslash()
    *tmp_str = '\xFF';
 }
 
-static void remove_newline()
+static void remove_newline(void)
 {
    /* Replace the newline with a space. */
    tmp_str = (char *)strrchr(spool_text, '\n');
@@ -186,8 +184,7 @@ NL       \r?\n
       BEGIN(INITIAL);
    }
 
-{DIGIT}+{COLON}{DIGIT}+{COLON}{DIGIT}+
-return SPFT_TIME;
+{DIGIT}+{COLON}{DIGIT}+{COLON}{DIGIT}+  return SPFT_TIME;
 
 {DIGIT}+    return SPFT_INT; /* JG: TODO: handle negative */
 

@@ -1,3 +1,7 @@
+EB-2005-09-05-0: Bugfix:    eleminated static buffer in dstring implementation
+                 Issue:     265
+                 Review:    AH 
+
 DT-2005-09-05-0: Bugfix:    o Rewrote Flex parser for qconf
                             o Fixed backslash line breaks in output from qconf
                             o Added test cases

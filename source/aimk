@@ -408,6 +408,7 @@ set REMOTE           = 1
 set QMAKE            = 1
 set QTCSH            = 1
 set MAKESTRPTIME     = 0
+set MAKESNPRINTF     = 0
 set MAKEFNMATCH      = 0
 set MAKEWINGRIDLIB   = 0
 set MAKEWINGRIDAPP   = 0
@@ -1041,6 +1042,10 @@ case AIX51:
    breaksw
 
 case ALPHA5:
+   if ( $CORE == 1 ) then
+      set MAKESNPRINTF = 1
+   endif
+
    set MAKEWINGRIDLIB   = 0
    set MAKEWINGRIDAPP   = 0
    set COMPILE_DC = 1
@@ -1235,6 +1240,9 @@ case NETBSD_*:
 
 
 case IRIX65:
+   if ( $CORE == 1 ) then
+      set MAKESNPRINTF = 1
+   endif
    set MAKEWINGRIDLIB   = 0
    set MAKEWINGRIDAPP   = 0
    if ( $OPTIMIZATION == 1 ) then
@@ -2099,6 +2107,33 @@ if ( "$MAKESTRPTIME" == 1 ) then
    cd $COMPILE_ARCH
 
   $MAKE $MAKEOPT -f $SOURCE/3rdparty/strptime/Makefile "MAKE=$MAKE" "CC=$CC" \
+      "COMPILE_ARCH=$COMPILE_ARCH" \
+      "CFLAGS=$CFLAGS" "SOURCE=$SOURCE" \
+      "KRBLIBS=$KRBLIBS" \
+      "LFLAGS=$LFLAGS $KLFLAGS" "STRIP=$STRIP" "RANLIB=$RANLIB" \
+      "AR=$AR" "ARFLAGS=$ARFLAGS" \
+      "SHARED_CFLAGS=$SHARED_CFLAGS" "SHARED_LFLAGS=$SHARED_LFLAGS" \
+      "DEPEND_FLAGS=$DEPEND_FLAGS" \
+      "SHAREDLD=$SHAREDLD" "SHAREDEXT=$SHAREDEXT" "LIBEXT=$LIBEXT" $argv
+
+   if ( $status != 0 ) then
+      echo not done
+      exit 1
+   endif
+
+   cd $SOURCE
+endif
+
+if ( "$MAKESNPRINTF" == 1 ) then
+   echo ______3_r_d_p_a_r_t_y__S_N_P_R_I_N_T_F___
+
+   set TPLIB = "$TPLIB libsnprintf.a"
+   set LIBS = "$LIBS -L$SOURCE/$COMPILE_ARCH -lsnprintf"
+   set CFLAGS = "-DUSE_SNPRINTF $CFLAGS"
+   set CFLAGS = "-I$SOURCE/3rdparty/snprintf $CFLAGS"
+   cd $COMPILE_ARCH
+
+  $MAKE $MAKEOPT -f $SOURCE/3rdparty/snprintf/Makefile "MAKE=$MAKE" "CC=$CC" \
       "COMPILE_ARCH=$COMPILE_ARCH" \
       "CFLAGS=$CFLAGS" "SOURCE=$SOURCE" \
       "KRBLIBS=$KRBLIBS" \

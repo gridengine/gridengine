@@ -1391,8 +1391,7 @@ sge_pack_gdi_info(u_long32 command)
    default:
       ERROR((SGE_EVENT, MSG_GDI_ERROR_INVALIDVALUEXFORARTOOP_D, 
              sge_u32c(command)));
-      DEXIT;
-      return false;
+      ret = false;
    }
    DEXIT;
    return ret;

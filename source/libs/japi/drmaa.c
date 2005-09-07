@@ -646,7 +646,7 @@ int drmaa_set_attribute(drmaa_job_template_t *jt, const char *name, const char *
       diagp = &diag;
    }
 
-   if (jt == NULL) {
+   if (!name || !value || jt == NULL) {
       japi_standard_error(DRMAA_ERRNO_INVALID_ARGUMENT, diagp);
       DEXIT;
       return DRMAA_ERRNO_INVALID_ARGUMENT;

@@ -1,3 +1,8 @@
+AH-2005-09-07-0: Bugfix:    aimk -spool-classic doesn't compile on linux/solaris
+                 Issue:     1764
+                 Changed:   all
+                 Review:    JG
+
 DT-2005-09-07-0: Bugfix:    o Rewrote Flex parser for qconf
                             o Fixed backslash line breaks in output from qconf
                             - Merged from DT-2005-09-05-0

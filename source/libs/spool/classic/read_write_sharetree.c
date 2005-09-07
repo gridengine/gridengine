@@ -217,13 +217,14 @@ lListElem *rootelem     /* in case of a recursive call this is the root elem
    }
 
    while (!complete && fgets(buf, sizeof(buf), fp)) {
+      char *lasts = NULL;
       line++;
 
       if (buf[0] == '\0' || buf[0] == '#' || buf[0] == '\n')
          continue;
 
-      name = strtok(buf, "=\n");
-      val = strtok(NULL, "\n");
+      name = strtok_r(buf, "=\n", &lasts);
+      val = strtok_r(NULL, "\n", &lasts);
 
       if (!strcmp(name, "name")) {
          if (!ep && recurse) {

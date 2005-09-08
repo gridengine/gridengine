@@ -1,3 +1,7 @@
+MD-2005-09-08-0: Enhancem:  - sge_ca auto enabled
+                 Changed:   sge_ca
+                 Review:    AA
+
 DT-2005-09-08-0: Testsuite: o Fixed test for Issue 1780
 
 DT-2005-09-07-2: Bugfix:    o Fixed broken build

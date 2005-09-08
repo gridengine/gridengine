@@ -1,3 +1,7 @@
+MD-2005-09-08-1: Enhancem:  - sge_ca auto enabled
+                 Changed:   sge_ca
+                 Review:    AA
+
 AH-2005-09-07-0: Bugfix:    aimk -spool-classic doesn't compile on linux/solaris
                  Issue:     1764
                  Changed:   all

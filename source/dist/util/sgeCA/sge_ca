@@ -89,7 +89,7 @@ InitCA()
 
    if [ -d $CATOP -o -d $CALOCALTOP ]; then
       $INFOTEXT -e "\nThere are already directories of the CA infrastructure in\n   %s\n   or\n   %s\n" "$CATOP" "$CALOCALTOP"
-      $INFOTEXT -auto $autoinst -ask "y" "n" -def "y" -n \
+      $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n \
          "Do you want to recreate your SGE CA infrastructure (y/n) [y] >> "
       if [ $? != 0 ]; then
          $INFOTEXT "We will not reinitialize your SGE CA infrastructure."
@@ -219,75 +219,83 @@ MakeCAcert()
    "   - the organizational unit, e.g. your department\n" \
    "   - the email address of the CA administrator (you!)\n"
 
-   $INFOTEXT -wait -auto $autoinst -n "\nHit <RETURN> to continue >> "
+   $INFOTEXT -wait -auto $AUTO -n "\nHit <RETURN> to continue >> "
    # $CLEAR
 
    done=false
    while [ $done = false ]; do
 
-      dndone=false
-      while [ $dndone = false ]; do
-         $INFOTEXT -n "Please enter your two letter country code, e.g. 'US' >> "
-         INP=`Enter ""`
-         if [ "$INP != " -a `echo $INP | wc -c` = 3 ]; then
-            CA_C=`echo $INP | env LC_ALL=C tr "[a-z]" "[A-Z]"`
-            dndone=true
-         fi
-      done
+      if [ "$AUTO" = "true" ]; then
+            CA_C=`echo $CSP_COUNTRY_CODE | env LC_ALL=C tr "[a-z]" "[A-Z]"`
+            CA_ST="$CSP_STATE"
+            CA_L="$CSP_LOCATION"
+            CA_O="$CSP_ORGA"
+            CA_OU="$CSP_ORGA_UNIT"
+            CA_EMAIL="$CSP_MAIL_ADRESS"
+      else
+         dndone=false
+         while [ $dndone = false ]; do
+            $INFOTEXT -n "Please enter your two letter country code, e.g. 'US' >> "
+            INP=`Enter ""`
+            if [ "$INP != " -a `echo $INP | wc -c` = 3 ]; then
+               CA_C=`echo $INP | env LC_ALL=C tr "[a-z]" "[A-Z]"`
+               dndone=true
+            fi
+         done
 
-      dndone=false
-      while [ $dndone = false ]; do
-         $INFOTEXT -n "Please enter your state >> "
-         INP=`Enter ""`
-         CA_ST="$INP"
-         if [ "$INP" != "" ]; then
+         dndone=false
+         while [ $dndone = false ]; do
+            $INFOTEXT -n "Please enter your state >> "
+            INP=`Enter ""`
             CA_ST="$INP"
-            dndone=true
-         fi
-      done
+            if [ "$INP" != "" ]; then
+               CA_ST="$INP"
+               dndone=true
+            fi
+         done
 
-
-      dndone=false
-      while [ $dndone = false ]; do
-         $INFOTEXT -n "Please enter your location, e.g city or buildingcode >> "
-         INP=`Enter ""`
-         CA_L="$INP"
-         if [ "$INP" != "" ]; then
+         dndone=false
+         while [ $dndone = false ]; do
+            $INFOTEXT -n "Please enter your location, e.g city or buildingcode >> "
+            INP=`Enter ""`
             CA_L="$INP"
-            dndone=true
-         fi
-      done
+            if [ "$INP" != "" ]; then
+               CA_L="$INP"
+               dndone=true
+            fi
+         done
 
-      dndone=false
-      while [ $dndone = false ]; do
-         $INFOTEXT -n "Please enter the name of your organization >> "
-         INP=`Enter ""`   
-         if [ "$INP" != "" ]; then
-            CA_O="$INP"
-            dndone=true
-         fi
-      done
+         dndone=false
+         while [ $dndone = false ]; do
+            $INFOTEXT -n "Please enter the name of your organization >> "
+            INP=`Enter ""`   
+            if [ "$INP" != "" ]; then
+               CA_O="$INP"
+               dndone=true
+            fi
+         done
 
-      dndone=false
-      while [ $dndone = false ]; do
-         $INFOTEXT -n "Please enter your organizational unit, e.g. your department >> "
-         INP=`Enter ""`    
-         CA_OU="$INP"
-         if [ "$INP" != "" ]; then
+         dndone=false
+         while [ $dndone = false ]; do
+            $INFOTEXT -n "Please enter your organizational unit, e.g. your department >> "
+            INP=`Enter ""`    
             CA_OU="$INP"
-            dndone=true
-         fi
-      done
+            if [ "$INP" != "" ]; then
+               CA_OU="$INP"
+               dndone=true
+            fi
+         done
 
-      dndone=false
-      while [ $dndone = false ]; do
-         $INFOTEXT -n "Please enter the email address of the CA administrator >> "
-         INP=`Enter ""`   
-         if [ "$INP" != "" ]; then
-            CA_EMAIL="$INP"
-            dndone=true
-         fi
-      done
+         dndone=false
+         while [ $dndone = false ]; do
+            $INFOTEXT -n "Please enter the email address of the CA administrator >> "
+            INP=`Enter ""`   
+            if [ "$INP" != "" ]; then
+               CA_EMAIL="$INP"
+               dndone=true
+            fi
+         done
+      fi
 
 
       $CLEAR
@@ -300,7 +308,7 @@ MakeCAcert()
       "Organizational unit:  %s=%s\n" \
       "CA email address:     %s=%s\n" \
       C "$CA_C" ST "$CA_ST" L "$CA_L" O "$CA_O" OU "$CA_OU" emailAddress "$CA_EMAIL"
-      $INFOTEXT -auto $autoinst -ask "y" "n" -def "y" -n \
+      $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n \
          "Do you want to use these data (y/n) [y] >> "
       if [ $? = 0 ]; then
          done=true
@@ -352,7 +360,7 @@ MakeCAcert()
       fi
    done
 
-   $INFOTEXT -wait -auto $autoinst -n "\nHit <RETURN> to continue >> "
+   $INFOTEXT -wait -auto $AUTO -n "\nHit <RETURN> to continue >> "
    $CLEAR
 }
 
@@ -749,28 +757,34 @@ MakeCADirs()
    ExecuteAsAdmin $MKDIR ${CATOP}/certs
 
    $INFOTEXT "Creating %s" ${CATOP}/crl
+   $INFOTEXT -log "Creating %s" ${CATOP}/crl
    ExecuteAsAdmin $MKDIR ${CATOP}/crl
 
    $INFOTEXT "Creating %s" ${CATOP}/newcerts
+   $INFOTEXT -log "Creating %s" ${CATOP}/newcerts
    ExecuteAsAdmin $MKDIR ${CATOP}/newcerts
 
    $INFOTEXT "Creating %s" ${CATOP}/serial
+   $INFOTEXT -log "Creating %s" ${CATOP}/serial
    TruncCreateAndMakeWriteable ${CATOP}/serial
    echo "01" > ${CATOP}/serial
    ExecuteAsAdmin $CHMOD 644 ${CATOP}/serial
 
    $INFOTEXT "Creating %s" ${CATOP}/index.txt
+   $INFOTEXT -log "Creating %s" ${CATOP}/index.txt
    ExecuteAsAdmin $TOUCH ${CATOP}/index.txt   
 
    $INFOTEXT "Creating %s" ${CALOCALTOP}/userkeys
+   $INFOTEXT -log "Creating %s" ${CALOCALTOP}/userkeys
    ExecuteAsAdmin $MKDIR ${CALOCALTOP}/userkeys   
 
    umask 077
    $INFOTEXT "Creating %s" ${CALOCALTOP}/private
+   $INFOTEXT -log "Creating %s" ${CALOCALTOP}/private
    ExecuteAsAdmin $MKDIR ${CALOCALTOP}/private
    umask 022
 
-   $INFOTEXT -wait -auto $autoinst -n "\nHit <RETURN> to continue >> "
+   $INFOTEXT -wait -auto $AUTO -n "\nHit <RETURN> to continue >> "
    $CLEAR
 
 }
@@ -863,6 +877,8 @@ fi
 ME=`whoami`
 if [ "$ME" = "" ]; then
    $INFOTEXT "Can't determine your username with \"%s\" command. Exit" whoami
+   $INFOTEXT -log "Can't determine your username with \"%s\" command. Exit" whoami
+   MoveLog
    exit 1
 fi
 
@@ -872,6 +888,7 @@ CACERT=cacert.pem
 CONFIG_DIR=$SGE_ROOT/util/sgeCA
 OPENSSL=$V5UTILBIN/openssl
 
+AUTO="false"
 #-----------------------------
 # CommandLine Argument Parsing
 #
@@ -888,6 +905,12 @@ nodes="-nodes"
 ARGC=$#
 while [ $ARGC != 0 ]; do
    case $1 in
+   -auto)
+      AUTO="true"
+      . $2
+      shift
+      ARGC=`expr $ARGC - 1`
+      ;;
    -env)
       WHICH="env"
       ;;

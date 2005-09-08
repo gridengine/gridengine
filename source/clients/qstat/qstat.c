@@ -1346,7 +1346,7 @@ u_long32 show
 #ifdef TEST_GDI2      
       merge_configuration(ctx->get_cell_root(ctx), lFirst(conf_l), local, NULL);
 #else
-      merge_configuration(uti_state_get_cell_root(), lFirst(conf_l), local, NULL);
+      merge_configuration(path_state_get_cell_root(), lFirst(conf_l), local, NULL);
 #endif
    }
    lFreeList(&alp);

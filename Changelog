@@ -1,4 +1,8 @@
-MD-2005-09-08-1: Enhancem:  - sge_ca auto enabled
+MD-2005-09-08-1: Enhancem:  - added some config parameters to autoinstall
+                              config file
+                 Changed:   inst_template.conf
+
+MD-2005-09-08-0: Enhancem:  - sge_ca auto enabled
                  Changed:   sge_ca
                  Review:    AA
 

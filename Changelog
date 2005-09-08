@@ -1,3 +1,5 @@
+DT-2005-09-08-0: Testsuite: o Fixed test for Issue 1780
+
 DT-2005-09-07-2: Bugfix:    o Fixed broken build
                  Changed:   flatfile spooling
 

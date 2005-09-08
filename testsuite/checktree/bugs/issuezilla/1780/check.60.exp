@@ -65,7 +65,13 @@ proc issue_1780_run  {} {
    global ts_config CHECK_ARCH CHECK_OUTPUT CHECK_USER CHECK_HOST
    set queue_name "@$CHECK_HOST"
 
-   set output [start_remote_prog $CHECK_HOST $CHECK_USER "ypcat" "hosts" result 10 ]
+   catch {set output [start_remote_prog $CHECK_HOST $CHECK_USER "ypcat" "hosts" result 10 ]}
+
+   if {$prg_exit_state != 0} {
+      puts $CHECK_OUTPUT "Unable to call ypcat.  Skipping host."
+      set_error -3 "skipping host"
+      return
+   }
 
    set hostlist [split $output "\n"]
    set max_count 3000
@@ -115,4 +121,3 @@ proc issue_1780_run  {} {
 
    set_error 0 "ok"
 }
-

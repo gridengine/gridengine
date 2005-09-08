@@ -423,6 +423,10 @@ char **allowed
       just_check = 1;
    }
 
+   if (!src) {
+      return 1;
+   }
+   
    sp=src; 
    while (*sp) {
       switch (*sp) {

@@ -95,6 +95,7 @@
 #include "sge_var.h"
 #include "sge_answer.h"
 #include "sge_ulong.h"
+#include "sge_ja_task.h"
 
 extern char **environ;
 
@@ -904,6 +905,7 @@ XtPointer cld, cad;
    XmToggleButtonCallbackStruct *cbs = (XmToggleButtonCallbackStruct*) cad;
    char buf[512];
    String dsp;
+   const char* qualified_hostname = uti_state_get_qualified_hostname();
 
    DENTER(GUI_LAYER, "qmonSubmitInteractive");
 
@@ -929,8 +931,7 @@ XtPointer cld, cad;
       XmtInputFieldSetString(submit_name, "INTERACTIVE"); 
       dsp = DisplayString(XtDisplay(w));
       if (!strcmp(dsp, ":0") || !strcmp(dsp, ":0.0"))
-         sprintf(buf, "DISPLAY=%s%s", uti_state_get_qualified_hostname(), 
-                        dsp); 
+         sprintf(buf, "DISPLAY=%s%s", qualified_hostname, dsp); 
       else
          sprintf(buf, "DISPLAY=%s", dsp); 
       XmtInputFieldSetString(submit_env, buf); 
@@ -975,6 +976,7 @@ int mode,
 int submode 
 ) {
    Boolean sensitive, sensitive2;
+   const char *username = uti_state_get_user_name();
 
    DENTER(GUI_LAYER, "qmonSubmitSetSensitive");
 
@@ -1028,7 +1030,7 @@ int submode
    ** set sensitivity of deadline field
    */
    if (userset_is_deadline_user(qmonMirrorList(SGE_USERSET_LIST),
-            uti_state_get_user_name())) {
+            username)) {
       if (sensitive) {      
          XtSetSensitive(submit_deadline, sensitive2);
          XtSetSensitive(submit_deadlinePB, sensitive2);
@@ -1279,6 +1281,7 @@ XtPointer cld, cad;
    Boolean status = False;
    u_long32 job_number;
    int just_verify = 0;
+   const char *username = uti_state_get_user_name();
   
    DENTER(GUI_LAYER, "qmonSubmitJobSubmit");
 
@@ -1485,7 +1488,7 @@ XtPointer cld, cad;
       }
 
       if (userset_is_deadline_user(qmonMirrorList(SGE_USERSET_LIST),
-            uti_state_get_user_name())) 
+            username)) 
          nm_set((int*)qalter_fields, JB_deadline);
 
       if (!(what = lIntVector2What(JB_Type, (int*) qalter_fields))) {
@@ -1827,6 +1830,8 @@ char *prefix
    StringConst project;
    StringConst ckpt_obj;
    const char* tmp_string;
+   const char* username = uti_state_get_user_name();
+   const char* qualified_hostname = uti_state_get_qualified_hostname();
    
    DENTER(GUI_LAYER, "qmonCullToSM");
 
@@ -1899,9 +1904,9 @@ char *prefix
    data->mail_list = lCopyList("JB_mail_list", lGetList(jep, JB_mail_list));
    if (!data->mail_list) {
       lListElem* entry = lAddElemStr(&(data->mail_list), MR_user, 
-                                    uti_state_get_user_name(), MR_Type);
+                                    username, MR_Type);
       if (entry)
-         lSetHost(entry, MR_host, uti_state_get_qualified_hostname());
+         lSetHost(entry, MR_host, qualified_hostname);
    }
 
    {
@@ -2021,6 +2026,8 @@ int save
    lList *perl = NULL;
    lList *alp = NULL;
    lList *path_alias = NULL;
+   const char *username = uti_state_get_user_name();
+   const char *qualified_hostname = uti_state_get_qualified_hostname();
    
    DENTER(GUI_LAYER, "qmonSMToCull");
 
@@ -2143,8 +2150,8 @@ int save
       /*
       ** path aliasing
       */
-      if (path_alias_list_initialize(&path_alias, &alp, (StringConst)uti_state_get_user_name(), 
-                                     (StringConst)uti_state_get_qualified_hostname()) == -1) {
+      if (path_alias_list_initialize(&path_alias, &alp, (StringConst)username, 
+                                     (StringConst)qualified_hostname) == -1) {
          if (alp) {
             qmonMessageBox(qmon_submit, alp, 0);
             lFreeList(&alp);
@@ -2200,8 +2207,8 @@ int save
    if (!data->mail_list && !save) {
       data->mail_list = lCreateElemList("ML", MR_Type, 1);
       if (data->mail_list) {
-         lSetString(lFirst(data->mail_list), MR_user, uti_state_get_user_name());
-         lSetHost(lFirst(data->mail_list), MR_host, uti_state_get_qualified_hostname());
+         lSetString(lFirst(data->mail_list), MR_user, username);
+         lSetHost(lFirst(data->mail_list), MR_host, qualified_hostname);
       }
    }
    lSetList(jep, JB_mail_list, lCopyList("ML", data->mail_list));
@@ -3046,6 +3053,8 @@ static void qmonSubmitClear(w, cld, cad)
 Widget w;
 XtPointer cld, cad;
 {
+   const char *qualified_hostname = uti_state_get_qualified_hostname();
+
    DENTER(GUI_LAYER, "qmonSubmitClear");
    
    /*
@@ -3070,8 +3079,7 @@ XtPointer cld, cad;
       XmtInputFieldSetString(submit_name, "INTERACTIVE"); 
       dsp = DisplayString(XtDisplay(w));
       if (!strcmp(dsp, ":0") || !strcmp(dsp, ":0.0"))
-         sprintf(buf, "DISPLAY=%s%s", uti_state_get_qualified_hostname(), 
-                        dsp); 
+         sprintf(buf, "DISPLAY=%s%s", qualified_hostname, dsp); 
       else
          sprintf(buf, "DISPLAY=%s", dsp); 
       XmtInputFieldSetString(submit_env, buf); 

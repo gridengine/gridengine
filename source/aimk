@@ -1241,7 +1241,7 @@ case NETBSD_*:
 
 case IRIX65:
    if ( $CORE == 1 ) then
-      set MAKESNPRINTF = 1
+      set MAKESNPRINTF = 0
    endif
    set MAKEWINGRIDLIB   = 0
    set MAKEWINGRIDAPP   = 0

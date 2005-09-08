@@ -936,6 +936,9 @@ static char *get_client_name(int is_rsh, int is_rlogin, int inherit_job)
    char        *config_name  = "qlogin_command";
    const char *client_name  = NULL;
    char cache_name[SGE_PATH_MAX];
+   const char *qualified_hostname = uti_state_get_qualified_hostname();
+   const char *cell_root = path_state_get_cell_root();
+
 
    DENTER(TOP_LAYER, "get_client_name");
 
@@ -968,8 +971,8 @@ static char *get_client_name(int is_rsh, int is_rlogin, int inherit_job)
    }
   
    /* get configuration from qmaster */
-   if(get_configuration(uti_state_get_qualified_hostname(), &global, &local) ||
-      merge_configuration(global, local, &conf_list)) {
+   if(get_configuration(qualified_hostname, &global, &local) ||
+      merge_configuration(cell_root, global, local, &conf_list)) {
       ERROR((SGE_EVENT, MSG_CONFIG_CANTGETCONFIGURATIONFROMQMASTER));
       lFreeList(&conf_list);
       lFreeElem(&global);
@@ -1231,6 +1234,8 @@ int main(int argc, char **argv)
    lListElem *ep = NULL;
 
    int sock;
+   const char* progname = uti_state_get_sge_formal_prog_name();
+   const char* qualified_hostname = uti_state_get_qualified_hostname();
 
    DENTER_MAIN(TOP_LAYER, "qsh");
 
@@ -1542,7 +1547,7 @@ int main(int argc, char **argv)
       lList *envlp = NULL;
 
       sock = open_qrsh_socket(&my_port);
-      sprintf(buffer, "%s:%d", uti_state_get_qualified_hostname(), my_port);
+      sprintf(buffer, "%s:%d", qualified_hostname, my_port);
 
       if((envlp = lGetList(job, JB_env_list)) == NULL) {
          envlp = lCreateList("environment list", VA_Type);
@@ -1581,12 +1586,12 @@ int main(int argc, char **argv)
 #if 0
       /* if we had a connection to qmaster commd (to get configuration), close it and reset commproc id */
       /* leave_commd() for old commlib */
-      cl_commlib_close_connection(cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name(),0),
+      cl_commlib_close_connection(cl_com_get_handle((char*)progname,0),
                                  (char*) sge_get_master(0),
                                  (char*) prognames[QMASTER],
                                  1, CL_FALSE);
 #else
-      cl_commlib_shutdown_handle(cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name(),0),CL_FALSE);
+      cl_commlib_shutdown_handle(cl_com_get_handle((char*)progname,0),CL_FALSE);
 #endif
 
       tid = sge_qexecve(host, NULL, 
@@ -1712,7 +1717,7 @@ int main(int argc, char **argv)
 
          /* leave commd while waiting for connection / sleeping while polling (CR -> old commlib comment) */
          /* next enroll will _not_ ask commd to get same client id as before (CR -> old commlib comment) */
-         cl_commlib_close_connection(cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name(),0),
+         cl_commlib_close_connection(cl_com_get_handle((char*)progname,0),
                                      (char*) sge_get_master(0),
                                      (char*) prognames[QMASTER],
                                      1, CL_FALSE);
@@ -1780,7 +1785,7 @@ int main(int argc, char **argv)
          if (!lp_poll || !(jep = lFirst(lp_poll))) {
             WARNING((SGE_EVENT, "\n"));
             log_state_set_log_verbose(1);
-            WARNING((SGE_EVENT, MSG_QSH_REQUESTCANTBESCHEDULEDTRYLATER_S, uti_state_get_sge_formal_prog_name()));
+            WARNING((SGE_EVENT, MSG_QSH_REQUESTCANTBESCHEDULEDTRYLATER_S, progname));
             do_exit = 1;
             exit_status = 1;
             continue;

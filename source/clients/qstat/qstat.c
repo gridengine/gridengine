@@ -87,6 +87,50 @@
 
 #include "sge_mt_init.h"
 
+
+#ifdef TEST_GDI2
+
+#include "sge_gdi_ctx.h"
+#include "sge_gdi2.h"
+#include "sge_profiling.h"
+
+
+static void showError(sge_error_class_t *eh) {
+   sge_error_iterator_class_t *iter = NULL;
+   dstring ds = DSTRING_INIT;
+   bool first = TRUE;
+   
+   DENTER(TOP_LAYER, "showError");
+   
+   iter = eh->iterator(eh);
+
+   while (iter && iter->next(iter)) {
+      if (first) {
+         first = FALSE;
+      } else {   
+         sge_dstring_append(&ds, "\n");
+      }   
+      sge_dstring_append(&ds, iter->get_message(iter));
+   }
+   printf("%s\n", sge_dstring_get_string(&ds));
+   sge_dstring_free(&ds);
+
+   DEXIT;
+}
+
+static sge_gdi_ctx_class_t *ctx = NULL;
+
+#define sge_gdi_multi(a, b, c, d, e, f, g, h, i, j) ctx->gdi_multi(ctx, a, b, c, d, e, f, g, h, i, j)
+
+#else
+
+#include "setup_path.h"
+
+#endif
+
+
+
+
 #define FORMAT_I_20 "%I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I "
 #define FORMAT_I_10 "%I %I %I %I %I %I %I %I %I %I "
 #define FORMAT_I_5 "%I %I %I %I %I "
@@ -153,9 +197,62 @@ char **argv
    u_long32 isXML = false;
    lList *XML_out = NULL;
    int longest_queue_length=30;
+   const char *username = NULL;
+   const char *cell_root = NULL;
+
+#ifdef TEST_GDI2
+   sge_error_class_t *eh = NULL;
+#endif   
 
    DENTER_MAIN(TOP_LAYER, "qstat");
 
+#ifdef TEST_GDI2
+   {
+      int ret;
+      char url[BUFSIZ];
+/* sge_mt_init { */
+   sge_prof_setup();
+/*    uidgid_mt_init(); */
+/*    path_mt_init(); */
+/*    bootstrap_mt_init();  */
+/*    feature_mt_init(); */
+/*    sc_init_mt(); */
+/*    gdi_mt_init(); */
+/* } end sge_mt_init */
+
+log_state_set_log_gui(1);
+
+      eh = sge_error_class_create();
+      if (!eh) {
+         printf("couldn't create error handler\n");
+         SGE_EXIT(1);
+      }
+
+      sprintf(url, "bootstrap://%s@%s:%s", getenv("SGE_ROOT"), 
+               getenv("SGE_CELL")?getenv("SGE_CELL"):DEFAULT_CELL, 
+               getenv("SGE_QMASTER_PORT"));
+      printf("using url: %s\n", url);
+
+      ctx = sge_gdi_ctx_class_create_from_bootstrap(QSTAT, url, "aa114085", "troet", eh); 
+      if (!ctx) {
+         showError(eh);
+         sge_error_class_destroy(&eh);
+         DEXIT;
+         return -1;
+      }
+      ret = ctx->connect(ctx, eh);
+      
+      if (!ret) {
+         showError(eh);
+         sge_error_class_destroy(&eh);
+         DEXIT;
+         return -1;
+      }
+
+      username = ctx->get_username(ctx);
+      cell_root = ctx->get_cell_root(ctx);
+   }
+#else
    sge_mt_init();
 
    log_state_set_log_gui(1);
@@ -165,7 +262,9 @@ char **argv
       answer_list_output(&alp);
       SGE_EXIT(1);
    }
-
+   username = uti_state_get_user_name();
+   cell_root = path_state_get_cell_root();
+#endif
    sge_setup_sig_handlers(QSTAT);
 
    if (!strcmp(sge_basename(*argv++, '/'), "qselect")) {
@@ -177,9 +276,9 @@ char **argv
       dstring file = DSTRING_INIT;
       if (qselect_mode == 0) { /* the .sge_qstat file should only be used in the qstat mode */
          switch_list_qstat_parse_from_file(&pcmdline, &alp, qselect_mode, 
-                                           get_root_qstat_file_path(&file));
+                                           get_root_qstat_file_path(cell_root, &file));
          switch_list_qstat_parse_from_file(&pcmdline, &alp, qselect_mode, 
-                                           get_home_qstat_file_path(&file, &alp));
+                                           get_home_qstat_file_path(username, &file, &alp));
       }                                  
       switch_list_qstat_parse_from_cmdline(&pcmdline, &alp, qselect_mode, argv);
       sge_dstring_free(&file);
@@ -1244,7 +1343,11 @@ u_long32 show
    }
    if (lFirst(conf_l)) {
       lListElem *local = NULL;
-      merge_configuration(lFirst(conf_l), local, NULL);
+#ifdef TEST_GDI2      
+      merge_configuration(ctx->get_cell_root(ctx), lFirst(conf_l), local, NULL);
+#else
+      merge_configuration(uti_state_get_cell_root(), lFirst(conf_l), local, NULL);
+#endif
    }
    lFreeList(&alp);
    lFreeList(&conf_l);

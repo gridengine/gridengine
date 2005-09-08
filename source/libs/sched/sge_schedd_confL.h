@@ -93,7 +93,7 @@ enum {
    SC_default_duration
    };
 
-
+#if 0
 ILISTDEF(SC_Type, SchedConf, SGE_SC_LIST)
    /*
     * configuration values used by both SGE and SGEEE
@@ -166,6 +166,80 @@ ILISTDEF(SC_Type, SchedConf, SGE_SC_LIST)
                                                                             * that specify no h_rt/s_rt. May not be   *
                                                                             * null if reservation is enabled */
 LISTEND 
+#else
+ILISTDEF(SC_Type, SchedConf, SGE_SC_LIST)
+   /*
+    * configuration values used by both SGE and SGEEE
+    */
+   SGE_STRING_D(SC_algorithm, CULL_DEFAULT | CULL_SPOOL, "default")
+   SGE_STRING_D(SC_schedule_interval, CULL_DEFAULT | CULL_SPOOL, "0:0:15")
+   SGE_ULONG_D(SC_maxujobs, CULL_DEFAULT | CULL_SPOOL, 0)
+   SGE_ULONG_D(SC_queue_sort_method, CULL_DEFAULT | CULL_SPOOL, 0)    /* see at top of file for valid values */
+   SGE_LIST(SC_job_load_adjustments, CE_Type, CULL_DEFAULT | CULL_SPOOL)        /* CE_Type */
+   SGE_STRING_D(SC_load_adjustment_decay_time, CULL_DEFAULT | CULL_SPOOL, "0:7:30")
+   SGE_STRING_D(SC_load_formula, CULL_DEFAULT | CULL_SPOOL, "np_load_avg")
+   SGE_STRING_D(SC_schedd_job_info, CULL_DEFAULT | CULL_SPOOL, "true")
+   SGE_ULONG_D(SC_flush_submit_sec, CULL_DEFAULT | CULL_SPOOL, 0)            /* specifies the time after a job submit       *
+                                                                         * to run the scheduler                        */
+   SGE_ULONG_D(SC_flush_finish_sec, CULL_DEFAULT | CULL_SPOOL, 0)            /* specifies the time after a job has finished *   
+                                                                         * to run the scheduler                        */
+   SGE_STRING_D(SC_params, CULL_DEFAULT | CULL_SPOOL, "none")
+
+   /* 
+    * SGEEE specific configuration values
+    */
+   SGE_STRING_D(SC_reprioritize_interval, CULL_DEFAULT | CULL_SPOOL, "0:0:0")
+   SGE_ULONG_D(SC_halftime, CULL_DEFAULT | CULL_SPOOL, 168)
+   SGE_LIST(SC_usage_weight_list, UA_Type, CULL_DEFAULT | CULL_SPOOL)   /* SGEEE - UA_Type; gives    *
+                                                                         * weights for building the  * 
+                                                                         * usage usage = cpu * w_cpu *
+                                                                         * + xxx * w_xxx + ...       */
+   SGE_DOUBLE_D(SC_compensation_factor, CULL_DEFAULT | CULL_SPOOL, 5.0)
+
+   SGE_DOUBLE_D(SC_weight_user, CULL_DEFAULT | CULL_SPOOL, 0.25)                  /* gives weights between different *
+                                                                           * functional scheduling targets   */
+   SGE_DOUBLE_D(SC_weight_project, CULL_DEFAULT | CULL_SPOOL, 0.25)
+   SGE_DOUBLE_D(SC_weight_department, CULL_DEFAULT | CULL_SPOOL, 0.25)
+   SGE_DOUBLE_D(SC_weight_job, CULL_DEFAULT | CULL_SPOOL, 0.25)
+
+   SGE_ULONG_D(SC_weight_tickets_functional, CULL_DEFAULT | CULL_SPOOL, 0)      /* weight between different scheduling targets */
+   SGE_ULONG_D(SC_weight_tickets_share, CULL_DEFAULT | CULL_SPOOL, 0)
+   SGE_ULONG_D(SC_weight_tickets_override, CULL_DEFAULT | CULL_SPOOL, 0)
+   SGE_BOOL(SC_share_override_tickets, CULL_DEFAULT | CULL_SPOOL)          /* Override tickets of any object instance *
+                                                                            * are shared equally among all jobs       *
+                                                                            * associated with the object.             */
+   SGE_BOOL(SC_share_functional_shares, CULL_DEFAULT | CULL_SPOOL)         /* Functional shares of any object instance*
+                                                                            * are shared among all the jobs associated*
+                                                                            * with the object.                        */
+   SGE_ULONG_D(SC_max_functional_jobs_to_schedule, CULL_DEFAULT | CULL_SPOOL, 200)/* The maximum number of functional pending* 
+                                                                            * jobs to scheduling using the brute-force* 
+                                                                            * method.                                 */
+   SGE_BOOL(SC_report_pjob_tickets, CULL_DEFAULT | CULL_SPOOL)             /* report tickets to the qmaster or not    */ 
+   SGE_ULONG_D(SC_max_pending_tasks_per_job, CULL_DEFAULT | CULL_SPOOL, 50)      /* The number of subtasks per pending job  *
+                                                                            * to schedule. This parameter exists in   *
+                                                                            * order to reduce overhead.               */
+   SGE_STRING_D(SC_halflife_decay_list,CULL_DEFAULT | CULL_SPOOL, "none")            /* A list of halflife decay values (UA_Type)*/
+   SGE_STRING_D(SC_policy_hierarchy,CULL_DEFAULT | CULL_SPOOL, "OFS")               /* defines the order of the ticket         *
+                                                                            * computation                             */
+   SGE_DOUBLE_D(SC_weight_ticket, CULL_DEFAULT | CULL_SPOOL, 0.01)                 /* weight in SGEEE priority formula applied */
+                                                                           /* on normalized ticket amount             */
+   SGE_DOUBLE_D(SC_weight_waiting_time, CULL_DEFAULT | CULL_SPOOL, 0.0)           /* weight applied in SGEEE static urgency  *
+                                                                            * formula on waiting time                 */
+   SGE_DOUBLE_D(SC_weight_deadline, CULL_DEFAULT | CULL_SPOOL, 3600000.0)               /* dividend used in SGEEE static urgency   *
+                                                                            * formula with deadline initiation time   */
+   SGE_DOUBLE_D(SC_weight_urgency, CULL_DEFAULT | CULL_SPOOL, 0.1)                /* weight in SGEEE priority formula applied *
+                                                                            * on normalized urgency                   */
+   SGE_DOUBLE_D(SC_weight_priority, CULL_DEFAULT | CULL_SPOOL, 1.0)               /* weight in SGEEE priority formula applied *
+                                                                            * on normalized posix priority */
+   SGE_ULONG_D(SC_max_reservation, CULL_DEFAULT | CULL_SPOOL, 0)                /* Maximum number of reservations within a *
+                                                                            * schedule run. The value U_LONG32_MAX    *
+                                                                            * stands for 'infinity'                   */
+   SGE_STRING_D(SC_default_duration, CULL_DEFAULT | CULL_SPOOL, "0:10:0")              /* Default duration assumed for in         *
+                                                                            * reseration scheduling mode for jobs     *
+                                                                            * that specify no h_rt/s_rt. May not be   *
+                                                                            * null if reservation is enabled */
+LISTEND 
+#endif
 
 NAMEDEF(SCN)
    NAME("SC_algorithm")
@@ -220,7 +294,7 @@ enum {
    PARA_value
 };
 
-ILISTDEF(PARA_Type, Params, SGE_PARA_LIST)
+LISTDEF(PARA_Type)
    SGE_STRING(PARA_name, CULL_PRIMARY_KEY | CULL_DEFAULT)
    SGE_STRING(PARA_value, CULL_DEFAULT)
 LISTEND

@@ -47,6 +47,7 @@
 #include "commlib.h"
 #include "gdi_conf.h"
 #include "sge_any_request.h"
+#include "setup_path.h"
 
 #include "msg_gdilib.h"
 #include "msg_sgeobjlib.h"
@@ -311,7 +312,7 @@ volatile int* abort_flag
       }
    }
   
-   ret = merge_configuration(global, local, NULL);
+   ret = merge_configuration(path_state_get_cell_root(), global, local, NULL);
    if (ret) {
       DPRINTF((
          "Error %d merging configuration \"%s\"\n", ret, uti_state_get_qualified_hostname()));
@@ -358,7 +359,7 @@ lList **conf_list
       return -1;
    }
 
-   ret = merge_configuration(global, local, NULL);
+   ret = merge_configuration(path_state_get_cell_root(), global, local, NULL);
    if (ret) {
       ERROR((SGE_EVENT, MSG_CONF_NOMERGECONF_IS, ret, uti_state_get_qualified_hostname()));
       lFreeElem(&global);

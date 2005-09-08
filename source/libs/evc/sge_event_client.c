@@ -1098,6 +1098,8 @@ ec_register(bool exit_on_qmaster_down, lList** alpp)
       lAppendElem(lp, lCopyElem(ec));
 
 
+#if 1
+      /* TODO: is this code section really necessary */
       /* closing actual connection to qmaster and reopen new connection. This will delete all
          buffered messages  - CR */
       com_handle = cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name(), 0);
@@ -1116,6 +1118,7 @@ ec_register(bool exit_on_qmaster_down, lList** alpp)
             ERROR((SGE_EVENT, "error opening new connection to qmaster: "SFQ"\n", cl_get_error_text(ngc_error)));
          }
       }
+#endif      
 
       /*
        *  to add may also means to modify
@@ -1230,7 +1233,6 @@ ec_deregister(void)
             lFreeElem(&ec);
             need_register = true;
             ec_reg_id = 0;
-            lSetBool(ec, EV_changed, false);
             next_event = 1;
 
             ret = true;

@@ -62,7 +62,8 @@ JOBBINARIES="work"
 SHARED_LIBRARIES="libcom libcull libgdi librmon libsched libsge libuti \
                   libspool libspoolb libspoold libspoolc libspoolf \
                   libsgeobj libsgeobjd \
-                  libevc libevm libmir"
+                  libevc libevm libmir \
+                  libjgdi"
 
 QMON_SHARED_LIBRARIES="libXbae libXicon libXmt libXspin libXtab"
 QMON_NEED_SHARED_LIBRARIES="libXltree"
@@ -1236,7 +1237,11 @@ for i in $ARCH; do
                InstallProgSUID $prog
             elif [ $prog = berkeley_db_svc -o $prog = db_archive -o $prog = db_checkpoint -o $prog = db_deadlock -o $prog = db_dump -o $prog = db_load -o $prog = db_printlog -o $prog = db_recover -o $prog = db_stat -o $prog = db_upgrade -o $prog = db_verify ]; then
                if [ "$DSTARCH" != "win32-x86" ]; then
-                  InstallProg $BERKELEYDBBASE/$DSTARCH/bin/$prog
+                  if [ -f $BERKELEYDBBASE/$DSTARCH/bin/$prog ]; then
+                     InstallProg $BERKELEYDBBASE/$DSTARCH/bin/$prog
+                  elif [ -f $BERKELEYDBBASE/bin/$prog ]; then
+                     InstallProg $BERKELEYDBBASE/bin/$prog
+                  fi
                fi
             elif [ $prog = spoolinit -o $prog = spooldefaults ]; then
                if [ $instclassictargets = false ]; then

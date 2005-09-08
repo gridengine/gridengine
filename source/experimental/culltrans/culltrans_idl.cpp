@@ -69,6 +69,7 @@ static void writeHeader(ofstream& idl, map<string, List>::iterator& elem) {
       if(it->listType == "ST_Type")
          continue;
 
+cout << "it->listType:" << it->listType << endl;   
       list = lists.find(it->listType);
       if(list != lists.end())
          idl << "#include \"" << list->second.name << ".idl\"" << endl;
@@ -82,7 +83,9 @@ static bool writeElem(ofstream& idl, vector<Elem>::iterator& it, map<string, Lis
    map<string, List>::iterator list = lists.end();
 
    idl << indent << indent;
+cout << "it->type:" << it->type << endl;   
    if(it->type == lListT) {
+cout << "it->listType:" << it->listType << endl;   
       list = lists.find(it->listType);
       if(list != lists.end())
          if(it->object)
@@ -94,9 +97,10 @@ static bool writeElem(ofstream& idl, vector<Elem>::iterator& it, map<string, Lis
          return false;
       }
    }
-   else if(it->type == lBoolT)
-      buffer += "boolean ";
+   // else if(it->type == lBoolT)
+   //     buffer += "boolean ";
    else {
+      cout << it->type << ":" << multiType2idlType[it->type] << endl; 
       buffer += multiType2idlType[it->type];
       buffer += ' ';
    }

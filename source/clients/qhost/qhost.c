@@ -884,6 +884,7 @@ u_long32 show
    lList *conf_l = NULL;
    int q_id, j_id = 0, ce_id, eh_id, pe_id, gc_id;
    state_gdi_multi state = STATE_GDI_MULTI_INIT;
+   const char *cell_root = path_state_get_cell_root();
 
    DENTER(TOP_LAYER, "get_all_lists");
    
@@ -1147,7 +1148,7 @@ lWriteListTo(ehl, stdout);
    }
    if (lFirst(conf_l)) {
       lListElem *local = NULL;
-      merge_configuration(lFirst(conf_l), local, NULL);
+      merge_configuration(cell_root, lFirst(conf_l), local, NULL);
    }
    lFreeList(&alp);
 

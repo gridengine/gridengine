@@ -47,8 +47,10 @@
 #include "sge_stdlib.h"
 #include "sge_string.h"
 #include "sge_unistd.h"
-
 #include "sge_prog.h"
+#include "sge_answer.h"
+#include "sge_error_class.h"
+#include "msg_utilib.h"
 
 /* Must match Qxxx defines in sge_prog.h */
 const char *prognames[] =
@@ -100,7 +102,7 @@ const char *prognames[] =
    "sgepasswd"         /* 44  */
 };
  
-typedef struct {
+typedef struct prog_state_str {
    char*           sge_formal_prog_name;  /* taken from prognames[] */
    char*           qualified_hostname;
    char*           unqualified_hostname;
@@ -109,10 +111,12 @@ typedef struct {
    u_long32        gid;
    int             daemonized;
    char*           user_name;
+   /* TODO: remove from prog_state, saved in sge_env_state_t */
    char*           default_cell;
    sge_exit_func_t exit_func;
    bool            exit_on_error;
 } prog_state_t;
+
 
 static pthread_once_t prog_once = PTHREAD_ONCE_INIT;
 static pthread_key_t  prog_state_key;
@@ -129,6 +133,34 @@ static void uti_state_set_gid(u_long32 gid);
 static void uti_state_set_user_name(const char *s);
 static void uti_state_set_default_cell(const char *s);
 
+
+
+typedef struct prog_state_str sge_prog_state_t;
+
+static bool sge_prog_state_setup(sge_prog_state_class_t *thiz, sge_env_state_class_t *sge_env, u_long32 program_number, sge_error_class_t *eh);
+static void sge_prog_state_dprintf(sge_prog_state_class_t *thiz);
+static const char* get_sge_formal_prog_name(sge_prog_state_class_t *thiz);
+static const char* get_qualified_hostname(sge_prog_state_class_t *thiz);
+static const char* get_unqualified_hostname(sge_prog_state_class_t *thiz);
+static u_long32 get_who(sge_prog_state_class_t *thiz);
+static u_long32 get_uid(sge_prog_state_class_t *thiz);
+static u_long32 get_gid(sge_prog_state_class_t *thiz);
+static u_long32 get_daemonized(sge_prog_state_class_t *thiz);
+static const char* get_user_name(sge_prog_state_class_t *thiz);
+static const char* get_default_cell(sge_prog_state_class_t *thiz);
+static bool get_exit_on_error(sge_prog_state_class_t *thiz);
+static sge_exit_func_t get_exit_func(sge_prog_state_class_t *thiz);
+static void set_sge_formal_prog_name(sge_prog_state_class_t *thiz, const char *prog_name);
+static void set_qualified_hostname(sge_prog_state_class_t *thiz, const char *qualified_hostname);
+static void set_unqualified_hostname(sge_prog_state_class_t *thiz, const char *unqualified_hostname);
+static void set_who(sge_prog_state_class_t *thiz, u_long32 who);
+static void set_uid(sge_prog_state_class_t *thiz, u_long32 uid);
+static void set_gid(sge_prog_state_class_t *thiz, u_long32 gid);
+static void set_daemonized(sge_prog_state_class_t *thiz, u_long32 daemonized);
+static void set_user_name(sge_prog_state_class_t *thiz, const char* user_name);
+static void set_default_cell(sge_prog_state_class_t *thiz, const char* default_cell);
+static void set_exit_on_error(sge_prog_state_class_t *thiz, bool exit_on_error);
+static void set_exit_func(sge_prog_state_class_t *thiz, sge_exit_func_t exit_func);
 
 /****** libs/uti/uti_state_get_????() ************************************
 *  NAME
@@ -706,3 +738,301 @@ static void prog_state_init(prog_state_t *theState)
 
    return;
 }
+
+
+/*-------------------------------------------------------------------------*/
+sge_prog_state_class_t *sge_prog_state_class_create(sge_env_state_class_t *sge_env, u_long32 program_number, sge_error_class_t *eh)
+{
+   sge_prog_state_class_t *ret = (sge_prog_state_class_t *)sge_malloc(sizeof(sge_prog_state_class_t));
+
+   DENTER(TOP_LAYER, "sge_prog_state_class_create");
+
+   if (!ret) {
+      eh->error(eh, STATUS_EMALLOC, ANSWER_QUALITY_ERROR, MSG_MEMORY_MALLOCFAILED);
+      DEXIT;
+      return NULL;
+   }   
+   
+   ret->dprintf = sge_prog_state_dprintf;
+   
+   ret->get_sge_formal_prog_name = get_sge_formal_prog_name;
+   ret->get_qualified_hostname = get_qualified_hostname;
+   ret->get_unqualified_hostname = get_unqualified_hostname;
+   ret->get_who = get_who;
+   ret->get_uid = get_uid;
+   ret->get_gid = get_gid;
+   ret->get_daemonized = get_daemonized;
+   ret->get_user_name = get_user_name;
+   ret->get_default_cell = get_default_cell;
+   ret->get_exit_on_error = get_exit_on_error;
+   ret->get_exit_func = get_exit_func;
+
+   ret->set_sge_formal_prog_name = set_sge_formal_prog_name;
+   ret->set_qualified_hostname = set_qualified_hostname;
+   ret->set_unqualified_hostname = set_unqualified_hostname;
+   ret->set_who = set_who;
+   ret->set_uid = set_uid;
+   ret->set_gid = set_gid;
+   ret->set_daemonized = set_daemonized;
+   ret->set_user_name = set_user_name;
+   ret->set_default_cell = set_default_cell;
+   ret->set_exit_on_error = set_exit_on_error;
+   ret->set_exit_func = set_exit_func;
+
+   ret->sge_prog_state_handle = sge_malloc(sizeof(sge_prog_state_t));
+   if (ret->sge_prog_state_handle == NULL) {
+      eh->error(eh, STATUS_EMALLOC, ANSWER_QUALITY_ERROR, MSG_MEMORY_MALLOCFAILED);
+      FREE(ret);
+      DEXIT;
+      return NULL;
+   }
+   memset(ret->sge_prog_state_handle, 0, sizeof(sge_prog_state_t));
+   
+   if (!sge_prog_state_setup(ret, sge_env, program_number, eh)) {
+      sge_prog_state_class_destroy(&ret);
+      DEXIT;
+      return NULL;
+   }
+
+   DEXIT;
+   return ret;
+}   
+
+void sge_prog_state_class_destroy(sge_prog_state_class_t **pst)
+{
+   DENTER(TOP_LAYER, "sge_prog_state_class_destroy");
+   if (!pst || !*pst) {
+      DEXIT;
+      return;
+   }   
+      
+   prog_state_destroy((*pst)->sge_prog_state_handle);
+   FREE(*pst);
+   *pst = NULL;
+
+   DEXIT;
+}
+
+
+static bool sge_prog_state_setup(sge_prog_state_class_t *thiz, sge_env_state_class_t *sge_env, u_long32 program_number, sge_error_class_t *eh)
+{
+   stringT tmp_str;
+   bool ret = TRUE;
+
+   DENTER(TOP_LAYER, "sge_prog_state_setup");
+ 
+   thiz->set_who(thiz, program_number);
+   thiz->set_sge_formal_prog_name(thiz, prognames[program_number]);
+   thiz->set_default_cell(thiz, sge_env->get_sge_cell(sge_env));
+
+   if (gethostname(tmp_str, sizeof(tmp_str)) != 0) {
+      eh->error(eh, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR, "gethostname failed %s", tmp_str);
+      ret = FALSE;
+   }
+   if (ret) {
+      char *unqualified_hostname = NULL;
+      char *qualified_hostname = NULL;
+      struct hostent *hent = NULL;
+      if (!(hent = sge_gethostbyname(tmp_str, NULL))) {
+         eh->error(eh, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR, "sge_gethostbyname failed");
+         ret = FALSE;
+      } else {
+         unqualified_hostname = sge_dirname(hent->h_name, '.');
+         if (!strcmp(hent->h_name, unqualified_hostname)) {
+            char tmp_addr[8];
+            struct hostent *hent2 = NULL;
+            memcpy(tmp_addr, hent->h_addr, hent->h_length);
+            if (!(hent2 = sge_gethostbyaddr((const struct in_addr *)&tmp_addr, NULL))) {
+               eh->error(eh, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR, "sge_gethostbyaddr failed");
+               ret = FALSE;
+            } else {
+               qualified_hostname = sge_strdup(NULL, hent2->h_name);
+               FREE(unqualified_hostname);
+               unqualified_hostname = sge_dirname(hent2->h_name, '.');
+               sge_free_hostent(&hent2);
+            }
+         } else {
+            qualified_hostname = sge_strdup(qualified_hostname, unqualified_hostname);
+         }
+         sge_free_hostent(&hent);
+      }
+      thiz->set_qualified_hostname(thiz, qualified_hostname);
+      thiz->set_unqualified_hostname(thiz, unqualified_hostname);
+      FREE(unqualified_hostname);
+      FREE(qualified_hostname);
+   }
+   
+   if (ret) {
+      struct passwd *paswd = NULL;
+      char buffer[2048];
+      struct passwd pwentry;
+      thiz->set_uid(thiz, getuid());
+      thiz->set_gid(thiz, getgid());
+      if ((getpwuid_r((uid_t)getuid(), &pwentry, buffer, sizeof(buffer), &paswd)) != 0) {
+         eh->error(eh, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR, "getpwuid failed");
+         ret = FALSE;
+      } else {
+         thiz->set_user_name(thiz, paswd->pw_name);
+      }
+   }   
+ 
+   if (ret) {
+      thiz->dprintf(thiz);
+   }
+
+   DEXIT;
+   return ret;
+}
+
+static void sge_prog_state_dprintf(sge_prog_state_class_t *thiz)
+{
+   sge_prog_state_t *ps = (sge_prog_state_t *) thiz->sge_prog_state_handle;
+
+   DENTER(TOP_LAYER, "sge_prog_state_dprintf");
+
+   DPRINTF(("who                      >%d<\n", ps->who));
+   DPRINTF(("sge_formal_prog_name     >%s<\n", ps->sge_formal_prog_name));
+   DPRINTF(("qualified_hostname       >%s<\n", ps->qualified_hostname));
+   DPRINTF(("unqualified_hostname     >%s<\n", ps->unqualified_hostname));
+   DPRINTF(("uid                      >%d<\n", (int) ps->uid));
+   DPRINTF(("gid                      >%d<\n", (int) ps->gid));
+   DPRINTF(("daemonized               >%d<\n", ps->daemonized));
+   DPRINTF(("user_name                >%s<\n", ps->user_name));
+   DPRINTF(("default_cell             >%s<\n", ps->default_cell));
+
+   DEXIT;
+}   
+
+static const char* get_sge_formal_prog_name(sge_prog_state_class_t *thiz) 
+{
+   sge_prog_state_t *ps = (sge_prog_state_t *) thiz->sge_prog_state_handle;
+   return ps->sge_formal_prog_name;
+}
+
+static const char* get_qualified_hostname(sge_prog_state_class_t *thiz)
+{
+   sge_prog_state_t *ps = (sge_prog_state_t *) thiz->sge_prog_state_handle;
+   return ps->qualified_hostname;
+}
+
+static const char* get_unqualified_hostname(sge_prog_state_class_t *thiz)
+{
+   sge_prog_state_t *ps = (sge_prog_state_t *) thiz->sge_prog_state_handle;
+   return ps->unqualified_hostname;
+}
+
+static u_long32 get_who(sge_prog_state_class_t *thiz)
+{
+   sge_prog_state_t *ps = (sge_prog_state_t *) thiz->sge_prog_state_handle;
+   return ps->who;
+}
+
+static u_long32 get_uid(sge_prog_state_class_t *thiz)
+{
+   sge_prog_state_t *ps = (sge_prog_state_t *) thiz->sge_prog_state_handle;
+   return ps->uid;
+}
+
+static u_long32 get_gid(sge_prog_state_class_t *thiz)
+{
+   sge_prog_state_t *ps = (sge_prog_state_t *) thiz->sge_prog_state_handle;
+   return ps->gid;
+}
+
+static u_long32 get_daemonized(sge_prog_state_class_t *thiz)
+{
+   sge_prog_state_t *ps = (sge_prog_state_t *) thiz->sge_prog_state_handle;
+   return ps->daemonized;
+}
+
+static const char* get_user_name(sge_prog_state_class_t *thiz)
+{
+   sge_prog_state_t *ps = (sge_prog_state_t *) thiz->sge_prog_state_handle;
+   return ps->user_name;
+}
+
+static const char* get_default_cell(sge_prog_state_class_t *thiz)
+{
+   sge_prog_state_t *ps = (sge_prog_state_t *) thiz->sge_prog_state_handle;
+   return ps->default_cell;
+}
+
+static bool get_exit_on_error(sge_prog_state_class_t *thiz)
+{
+   sge_prog_state_t *ps = (sge_prog_state_t *) thiz->sge_prog_state_handle;
+   return ps->exit_on_error;
+}
+
+static sge_exit_func_t get_exit_func(sge_prog_state_class_t *thiz)
+{
+   sge_prog_state_t *ps = (sge_prog_state_t *) thiz->sge_prog_state_handle;
+   return ps->exit_func;
+}
+
+
+static void set_sge_formal_prog_name(sge_prog_state_class_t *thiz, const char *prog_name)
+{
+   sge_prog_state_t *ps = (sge_prog_state_t *) thiz->sge_prog_state_handle;
+   ps->sge_formal_prog_name = sge_strdup(ps->sge_formal_prog_name, prog_name);
+}
+
+static void set_qualified_hostname(sge_prog_state_class_t *thiz, const char *qualified_hostname)
+{
+   sge_prog_state_t *ps = (sge_prog_state_t *) thiz->sge_prog_state_handle;
+   ps->qualified_hostname = sge_strdup(ps->qualified_hostname, qualified_hostname);
+}
+
+static void set_unqualified_hostname(sge_prog_state_class_t *thiz, const char *unqualified_hostname)
+{
+   sge_prog_state_t *ps = (sge_prog_state_t *) thiz->sge_prog_state_handle;
+   ps->unqualified_hostname = sge_strdup(ps->unqualified_hostname, unqualified_hostname);
+}
+
+static void set_who(sge_prog_state_class_t *thiz, u_long32 who)
+{
+   sge_prog_state_t *ps = (sge_prog_state_t *) thiz->sge_prog_state_handle;
+   ps->who = who; 
+}
+
+static void set_uid(sge_prog_state_class_t *thiz, u_long32 uid)
+{
+   sge_prog_state_t *ps = (sge_prog_state_t *) thiz->sge_prog_state_handle;
+   ps->uid = uid; 
+}
+
+static void set_gid(sge_prog_state_class_t *thiz, u_long32 gid)
+{
+   sge_prog_state_t *ps = (sge_prog_state_t *) thiz->sge_prog_state_handle;
+   ps->gid = gid; 
+}
+
+static void set_daemonized(sge_prog_state_class_t *thiz, u_long32 daemonized)
+{
+   sge_prog_state_t *ps = (sge_prog_state_t *) thiz->sge_prog_state_handle;
+   ps->daemonized = daemonized; 
+}
+
+static void set_user_name(sge_prog_state_class_t *thiz, const char* user_name)
+{
+   sge_prog_state_t *ps = (sge_prog_state_t *) thiz->sge_prog_state_handle;
+   ps->user_name = sge_strdup(ps->user_name, user_name);
+}
+
+static void set_default_cell(sge_prog_state_class_t *thiz, const char* default_cell)
+{
+   sge_prog_state_t *ps = (sge_prog_state_t *) thiz->sge_prog_state_handle;
+   ps->default_cell = sge_strdup(ps->default_cell, default_cell);
+}
+
+static void set_exit_on_error(sge_prog_state_class_t *thiz, bool exit_on_error)
+{
+   sge_prog_state_t *ps = (sge_prog_state_t *) thiz->sge_prog_state_handle;
+   ps->exit_on_error = exit_on_error; 
+}
+
+static void set_exit_func(sge_prog_state_class_t *thiz, sge_exit_func_t exit_func)
+{
+   sge_prog_state_t *ps = (sge_prog_state_t *) thiz->sge_prog_state_handle;
+   ps->exit_func = exit_func; 
+}
+

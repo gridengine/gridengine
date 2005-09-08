@@ -115,6 +115,7 @@ u_long32 flags
    u_long32 is_qalter = flags & FLG_QALTER;
    bool is_hold_option = false;
    int hard_soft_flag = 0;
+   u_long32 prog_number = uti_state_get_mewho();
 
    DENTER(TOP_LAYER, "cull_parse_cmdline");
 
@@ -1848,12 +1849,12 @@ DTRACE;
    }
 
    if (!is_hold_option) {
-      if (uti_state_get_mewho() == QHOLD) { 
+      if (prog_number == QHOLD) { 
          ep_opt = sge_add_arg(pcmdline, h_OPT, lIntT, "-h", "u");
          lSetInt(ep_opt, SPA_argval_lIntT, MINUS_H_TGT_USER);
 
       }
-      else if (uti_state_get_mewho() == QRLS) {
+      else if (prog_number == QRLS) {
          ep_opt = sge_add_arg(pcmdline, h_OPT, lIntT, "-h", "u");
          lSetInt(ep_opt, SPA_argval_lIntT, MINUS_H_CMD_SUB | MINUS_H_TGT_USER);
       }
@@ -1873,6 +1874,7 @@ char *hold_str
    int i, j;
    int target = 0;
    int op_code = 0;
+   u_long32 prog_number = uti_state_get_mewho();
 
    DENTER(TOP_LAYER, "sge_parse_hold_list");
 
@@ -1881,8 +1883,8 @@ char *hold_str
    for (j = 0; j < i; j++) {
       switch (hold_str[j]) {
       case 'n':
-         if ((uti_state_get_mewho() == QHOLD)  || 
-             (uti_state_get_mewho() == QRLS) || 
+         if ((prog_number == QHOLD)  || 
+             (prog_number == QRLS) || 
              (op_code && op_code != MINUS_H_CMD_SUB)) {
             target = -1;
             break;
@@ -1891,7 +1893,7 @@ char *hold_str
          target = MINUS_H_TGT_USER|MINUS_H_TGT_OPERATOR|MINUS_H_TGT_SYSTEM;
          break;
       case 's':
-         if (uti_state_get_mewho() == QRLS) {
+         if (prog_number == QRLS) {
             if (op_code && op_code != MINUS_H_CMD_SUB) {
                target = -1;
                break;
@@ -1909,7 +1911,7 @@ char *hold_str
          }   
          break;
       case 'o':
-         if (uti_state_get_mewho() == QRLS) {
+         if (prog_number == QRLS) {
             if (op_code && op_code != MINUS_H_CMD_SUB) {
                target = -1;
                break;
@@ -1928,7 +1930,7 @@ char *hold_str
          break;
          
       case 'u':
-         if (uti_state_get_mewho() == QRLS) {
+         if (prog_number == QRLS) {
             if (op_code && op_code != MINUS_H_CMD_SUB) {
                target = -1;
                break;
@@ -1946,8 +1948,8 @@ char *hold_str
          }
          break;
       case 'S':
-         if ((uti_state_get_mewho() == QHOLD)  || 
-             (uti_state_get_mewho() == QRLS) || 
+         if ((prog_number == QHOLD)  || 
+             (prog_number == QRLS) || 
              (op_code && op_code != MINUS_H_CMD_SUB)) {
             target = -1;
             break;
@@ -1956,8 +1958,8 @@ char *hold_str
          target = target|MINUS_H_TGT_SYSTEM;
          break;
       case 'U':
-         if ((uti_state_get_mewho() == QHOLD)  || 
-             (uti_state_get_mewho() == QRLS) || 
+         if ((prog_number == QHOLD)  || 
+             (prog_number == QRLS) || 
              (op_code && op_code != MINUS_H_CMD_SUB)) {
             target = -1;
             break;
@@ -1966,8 +1968,8 @@ char *hold_str
          target = target|MINUS_H_TGT_USER;
          break;
       case 'O':
-         if ((uti_state_get_mewho() == QHOLD)  || 
-             (uti_state_get_mewho() == QRLS) || 
+         if ((prog_number == QHOLD)  || 
+             (prog_number == QRLS) || 
              (op_code && op_code != MINUS_H_CMD_SUB)) {
             target = -1;
             break;

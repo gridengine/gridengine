@@ -35,7 +35,6 @@
 #include "sge_boundaries.h"
 #include "cull.h"
 #include "sge_strL.h"
-#include "cull_list.h"
 
 #ifdef  __cplusplus
 extern "C" {

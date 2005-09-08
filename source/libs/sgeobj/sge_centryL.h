@@ -113,7 +113,7 @@ enum {
    CE_urgency_weight
 };
 
-SLISTDEF(CE_Type, ComplexEntry)
+ILISTDEF(CE_Type, ComplexEntry, SGE_CENTRY_LIST)
    SGE_STRING(CE_name, CULL_PRIMARY_KEY | CULL_HASH | CULL_UNIQUE | CULL_SPOOL | CULL_SUBLIST | CULL_PRIMARY_KEY)          /* full name of attribute */
    SGE_STRING(CE_shortcut, CULL_HASH | CULL_UNIQUE | CULL_SPOOL)      /* shortcut name of attribute */
    SGE_ULONG(CE_valtype, CULL_DEFAULT | CULL_SPOOL)        /* type */

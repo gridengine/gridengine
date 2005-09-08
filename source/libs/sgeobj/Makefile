@@ -89,7 +89,8 @@ SGEOBJLIB_SRC = \
          sge_userprj.c \
          sge_userset.c \
          sge_utility.c \
-         sge_var.c 
+         str2nm_converter.c \
+         sge_var.c
 
 SGEOBJDLIB_OBJS = $(SGEOBJDLIB_SRC:.c=.o)
 
@@ -283,6 +284,9 @@ sge_utility.o: $(SGEOBJLIB_DIR)/sge_utility.c
 sge_var.o: $(SGEOBJLIB_DIR)/sge_var.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_var.c
 
+str2nm_converter.o: $(SGEOBJLIB_DIR)/str2nm_converter.c 
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/str2nm_converter.c
+		
 ###############################################################################
 # rules to build object codes for CULL data types
 ###############################################################################
@@ -324,3 +328,5 @@ test_sge_hgroup.o: $(SGEOBJLIB_DIR)/test_sge_hgroup.c
 test_sge_attr.o: $(SGEOBJLIB_DIR)/test_sge_attr.c
 	$(CC) $(CFLAGS) -c $(SGEOBJLIB_DIR)/test_sge_attr.c
 
+str2nm_converter: str2nm_converter.o $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB)
+	$(LD_WRAPPER) $(CC) $(CFLAGS) -o str2nm_converter $(LFLAGS) str2nm_converter.o $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB) $(LIBS)

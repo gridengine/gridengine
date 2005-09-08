@@ -293,8 +293,9 @@ sge_c_gdi(char *host, sge_gdi_request *request, sge_gdi_request *response,
       return;
    }
 
-   if (!sge_security_verify_user(request->host, request->commproc, 
-                                 request->id, user)) {
+   DPRINTF(("uid/username = %d/%s, gid/groupname = %d/%s\n", (int) uid, user, (int) gid, group));
+
+   if (!sge_security_verify_user(request->host, request->commproc, request->id, user)) {
       CRITICAL((SGE_EVENT, MSG_SEC_CRED_SSSI, user, request->host, 
                 request->commproc, request->id));
       answer_list_add(&(response->alp), SGE_EVENT, 

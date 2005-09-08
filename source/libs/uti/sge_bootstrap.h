@@ -34,6 +34,7 @@
 
 #include "basis_types.h"
 #include "sge_dstring.h"
+#include "setup_path.h"
 
 void bootstrap_mt_init(void);
 
@@ -58,5 +59,36 @@ void bootstrap_set_qmaster_spool_dir(const char *value);
 void bootstrap_set_security_mode(const char *value);
 
 bool sge_bootstrap(dstring *error_dstring);
+
+typedef struct sge_bootstrap_state_class_str sge_bootstrap_state_class_t; 
+
+struct sge_bootstrap_state_class_str {
+   void *sge_bootstrap_state_handle;
+
+   void (*dprintf)(sge_bootstrap_state_class_t *thiz);
+   
+   const char* (*get_admin_user)(sge_bootstrap_state_class_t *thiz);
+   const char* (*get_default_domain)(sge_bootstrap_state_class_t *thiz);
+   bool (*get_ignore_fqdn)(sge_bootstrap_state_class_t *thiz);
+   const char* (*get_spooling_method)(sge_bootstrap_state_class_t *thiz);
+   const char* (*get_spooling_lib)(sge_bootstrap_state_class_t *thiz);
+   const char* (*get_spooling_params)(sge_bootstrap_state_class_t *thiz);
+   const char* (*get_binary_path)(sge_bootstrap_state_class_t *thiz);
+   const char* (*get_qmaster_spool_dir)(sge_bootstrap_state_class_t *thiz);
+   const char* (*get_security_mode)(sge_bootstrap_state_class_t *thiz);
+
+   void (*set_admin_user)(sge_bootstrap_state_class_t *thiz, const char *admin_user);
+   void (*set_default_domain)(sge_bootstrap_state_class_t *thiz, const char *default_domain);
+   void (*set_ignore_fqdn)(sge_bootstrap_state_class_t *thiz, bool ignore_fqdn);
+   void (*set_spooling_method)(sge_bootstrap_state_class_t *thiz, const char *spooling_method);
+   void (*set_spooling_lib)(sge_bootstrap_state_class_t *thiz, const char *spooling_lib);
+   void (*set_spooling_params)(sge_bootstrap_state_class_t *thiz, const char *spooling_params);
+   void (*set_binary_path)(sge_bootstrap_state_class_t *thiz, const char *binary_path);
+   void (*set_qmaster_spool_dir)(sge_bootstrap_state_class_t *thiz, const char *qmaster_spool_dir);
+   void (*set_security_mode)(sge_bootstrap_state_class_t *thiz, const char *security_mode);
+};
+
+sge_bootstrap_state_class_t *sge_bootstrap_state_class_create(sge_path_state_class_t *sge_paths, sge_error_class_t *eh);
+void sge_bootstrap_state_class_destroy(sge_bootstrap_state_class_t **pst);
 
 #endif /* __SGE_BOOTSTRAP_H */

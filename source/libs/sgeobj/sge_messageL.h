@@ -49,7 +49,7 @@ enum {
    SME_global_message_list
 };
 
-LISTDEF(SME_Type)
+ILISTDEF(SME_Type, JobSchedulerInfo, SGE_JOB_SCHEDD_INFO)
    SGE_LIST(SME_message_list, MES_Type, CULL_DEFAULT)         /* MES_Type */
    SGE_LIST(SME_global_message_list, MES_Type, CULL_DEFAULT)  /* MES_Type */
 LISTEND 

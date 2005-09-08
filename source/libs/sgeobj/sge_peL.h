@@ -124,6 +124,7 @@ enum {
 };
 
 
+#if 0
 ILISTDEF(PE_Type, ParallelEnvironment, SGE_PE_LIST)
    SGE_STRING(PE_name, CULL_PRIMARY_KEY | CULL_HASH | CULL_UNIQUE | CULL_SPOOL)
    SGE_ULONG(PE_slots, CULL_DEFAULT | CULL_SPOOL)
@@ -141,6 +142,25 @@ ILISTDEF(PE_Type, ParallelEnvironment, SGE_PE_LIST)
    SGE_STRING(PE_qsort_args, CULL_DEFAULT | CULL_SPOOL)
 #endif
 LISTEND 
+#else
+ILISTDEF(PE_Type, ParallelEnvironment, SGE_PE_LIST)
+   SGE_STRING_D(PE_name, CULL_PRIMARY_KEY | CULL_HASH | CULL_UNIQUE | CULL_SPOOL, "template")
+   SGE_ULONG(PE_slots, CULL_DEFAULT | CULL_SPOOL)
+   SGE_LIST(PE_user_list, US_Type, CULL_DEFAULT | CULL_SPOOL) 
+   SGE_LIST(PE_xuser_list, US_Type, CULL_DEFAULT | CULL_SPOOL) 
+   SGE_STRING_D(PE_start_proc_args, CULL_DEFAULT | CULL_SPOOL, "/bin/true")
+   SGE_STRING_D(PE_stop_proc_args, CULL_DEFAULT | CULL_SPOOL, "/bin/true")
+   SGE_STRING_D(PE_allocation_rule, CULL_DEFAULT | CULL_SPOOL, "$pe_slots")
+   SGE_BOOL_D(PE_control_slaves, CULL_DEFAULT | CULL_SPOOL, FALSE)
+   SGE_BOOL_D(PE_job_is_first_task, CULL_DEFAULT | CULL_SPOOL, TRUE)
+   SGE_ULONG(PE_free_slots, CULL_DEFAULT)
+   SGE_LIST(PE_resource_utilization, RUE_Type, CULL_DEFAULT)
+   SGE_STRING_D(PE_urgency_slots, CULL_DEFAULT | CULL_SPOOL, "min")
+#ifdef SGE_PQS_API
+   SGE_STRING(PE_qsort_args, CULL_DEFAULT | CULL_SPOOL)
+#endif
+LISTEND 
+#endif
 
 NAMEDEF(PEN)
    NAME("PE_name")

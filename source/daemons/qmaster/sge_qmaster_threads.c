@@ -157,6 +157,8 @@ void sge_gdi_kill_master(char *host, sge_gdi_request *request, sge_gdi_request *
       return;
    }
 
+   DPRINTF(("uid/username = %d/%s, gid/groupname = %d/%s\n", (int) uid, username, (int) gid, groupname));
+
    if (!manop_is_manager(username)) {
       ERROR((SGE_EVENT, MSG_SHUTDOWN_SHUTTINGDOWNQMASTERREQUIRESMANAGERPRIVILEGES));
       answer_list_add(&(answer->alp), SGE_EVENT, STATUS_ENOMGR, ANSWER_QUALITY_ERROR);

@@ -95,56 +95,6 @@ static bool is_master(const char* progname);
 static bool sge_encrypt(char *intext, int inlen, char *outbuf, int outsize);
 static bool sge_decrypt(char *intext, int inlen, char *outbuf, int *outsize);
 static bool change_encoding(char *cbuf, int* csize, unsigned char* ubuf, int* usize, int mode);
-static void dump_rcv_info(cl_com_message_t** message, cl_com_endpoint_t** sender);
-static void dump_snd_info(char* un_resolved_hostname, char* component_name, unsigned long component_id, cl_xml_ack_type_t ack_type, unsigned long tag, unsigned long* mid );
-
-static void dump_rcv_info(cl_com_message_t** message, cl_com_endpoint_t** sender) {
-   DENTER(TOP_LAYER, "dump_rcv_info");
-   if ( message  != NULL && sender   != NULL && *message != NULL && *sender  != NULL &&
-        (*sender)->comp_host != NULL && (*sender)->comp_name != NULL ) {
-         char buffer[512];
-         dstring ds;
-         sge_dstring_init(&ds, buffer, sizeof(buffer));
-
-      DEBUG((SGE_EVENT,"<<<<<<<<<<<<<<<<<<<<\n"));
-      DEBUG((SGE_EVENT,"gdi_rcv: reseived message from %s/%s/"sge_U32CFormat": \n",(*sender)->comp_host, (*sender)->comp_name, sge_u32c((*sender)->comp_id)));
-      DEBUG((SGE_EVENT,"gdi_rcv: cl_xml_ack_type_t: %s\n",            cl_com_get_mih_mat_string((*message)->message_mat)));
-      DEBUG((SGE_EVENT,"gdi_rcv: message tag:       %s\n",            sge_dump_message_tag( (*message)->message_tag) ));
-      DEBUG((SGE_EVENT,"gdi_rcv: message id:        "sge_U32CFormat"\n",  sge_u32c((*message)->message_id) ));
-      DEBUG((SGE_EVENT,"gdi_rcv: receive time:      %s\n",            sge_ctime((*message)->message_receive_time.tv_sec, &ds)));
-      DEBUG((SGE_EVENT,"<<<<<<<<<<<<<<<<<<<<\n"));
-   }
-   DEXIT;
-}
-
-static void dump_snd_info(char* un_resolved_hostname, char* component_name, unsigned long component_id, 
-                          cl_xml_ack_type_t ack_type, unsigned long tag, unsigned long* mid ) {
-   char buffer[512];
-   dstring ds;
-
-   DENTER(TOP_LAYER, "dump_snd_info");
-   sge_dstring_init(&ds, buffer, sizeof(buffer));
-
-   if (un_resolved_hostname != NULL && component_name != NULL) {
-      DEBUG((SGE_EVENT,">>>>>>>>>>>>>>>>>>>>\n"));
-      DEBUG((SGE_EVENT,"gdi_snd: sending message to %s/%s/"sge_U32CFormat": \n", (char*)un_resolved_hostname,(char*)component_name ,sge_u32c(component_id)));
-      DEBUG((SGE_EVENT,"gdi_snd: cl_xml_ack_type_t: %s\n",            cl_com_get_mih_mat_string(ack_type)));
-      DEBUG((SGE_EVENT,"gdi_snd: message tag:       %s\n",            sge_dump_message_tag( tag) ));
-      if (mid) {
-         DEBUG((SGE_EVENT,"gdi_snd: message id:        "sge_U32CFormat"\n",  sge_u32c(*mid) ));
-      } else {
-         DEBUG((SGE_EVENT,"gdi_snd: message id:        not handled by caller\n"));
-      }
-      DEBUG((SGE_EVENT,"gdi_snd: send time:         %s\n",            sge_ctime(0, &ds)));
-      DEBUG((SGE_EVENT,">>>>>>>>>>>>>>>>>>>>\n"));
-   } else {
-      DEBUG((SGE_EVENT,">>>>>>>>>>>>>>>>>>>>\n"));
-      DEBUG((SGE_EVENT,"gdi_snd: some parameters are not set\n"));
-      DEBUG((SGE_EVENT,">>>>>>>>>>>>>>>>>>>>\n"));
-   }
-   DEXIT;
-}
-
 
 #ifdef SECURE
 
@@ -611,46 +561,6 @@ void sge_security_exit(int i)
 }
 
 
-int gdi_receive_sec_message(cl_com_handle_t* handle,char* un_resolved_hostname, 
-                            char* component_name, unsigned long component_id, 
-                            int synchron, unsigned long response_mid, 
-                            cl_com_message_t** message, cl_com_endpoint_t** sender) {
-
-   int ret;
-   DENTER(TOP_LAYER, "gdi_receive_sec_message");
-
-   ret = cl_commlib_receive_message(handle, un_resolved_hostname,  component_name,  component_id,  
-                                     (cl_bool_t)synchron, response_mid,  message,  sender);
-   if (message != NULL) {
-      dump_rcv_info(message,sender);
-   }
-
-   DEXIT;
-   return ret;
-}
-
-int 
-gdi_send_sec_message(cl_com_handle_t* handle, char* un_resolved_hostname, 
-                     char* component_name, unsigned long component_id, 
-                     cl_xml_ack_type_t ack_type, cl_byte_t* data, 
-                     unsigned long size, unsigned long* mid, 
-                     unsigned long response_mid, unsigned long tag,
-                     int copy_data, int wait_for_ack) 
-{
-   int ret;
-   DENTER(TOP_LAYER, "gdi_send_sec_message");
-
-   ret = cl_commlib_send_message(handle, un_resolved_hostname, component_name,
-                                 component_id, ack_type, data, size, mid,  
-                                 response_mid, tag, (cl_bool_t)copy_data, 
-                                 (cl_bool_t)wait_for_ack);
-   dump_snd_info(un_resolved_hostname, component_name, 
-                 component_id, ack_type, tag, mid);
-   DEXIT;
-   return ret;
-
-}
-
 /************************************************************
    COMMLIB/SECURITY WRAPPERS
    FIXME: FUNCTIONPOINTERS SHOULD BE SET IN sge_security_initialize !!!
@@ -739,18 +649,14 @@ gdi_send_message(int synchron, const char *tocomproc, int toid,
       mid_pointer = &dummy_mid;
    }
 
-   ret = gdi_send_sec_message(handle, 
-                              (char*)tohost ,(char*)tocomproc ,toid , 
-                              ack_type , 
-                              (cl_byte_t*)buffer ,(unsigned long)buflen,
-                              mid_pointer, 0 ,tag,1 , synchron);
+   ret = cl_commlib_send_message(handle, (char*)tohost ,(char*)tocomproc ,toid , 
+                                 ack_type, (cl_byte_t*)buffer, (unsigned long)buflen,
+                                 mid_pointer, 0, tag, (cl_bool_t)1, (cl_bool_t)synchron);
    if (ret != CL_RETVAL_OK) {
       /* try again ( if connection timed out) */
-      ret = gdi_send_sec_message(handle, 
-                                 (char*)tohost ,(char*)tocomproc ,toid ,
-                                 ack_type , 
-                                 (cl_byte_t*)buffer ,(unsigned long)buflen,
-                                 mid_pointer, 0 ,tag,1 , synchron);
+      ret = cl_commlib_send_message(handle, (char*)tohost ,(char*)tocomproc ,toid , 
+                                    ack_type, (cl_byte_t*)buffer, (unsigned long)buflen,
+                                    mid_pointer, 0, tag, (cl_bool_t)1, (cl_bool_t)synchron);
    }
 
    if (mid != NULL) {
@@ -836,7 +742,7 @@ gdi_receive_message(char *fromcommproc, u_short *fromid, char *fromhost,
       }
    } 
 
-   ret = gdi_receive_sec_message( handle,fromhost ,fromcommproc ,*fromid , synchron, 0 ,&message, &sender );
+   ret = cl_commlib_receive_message(handle, fromhost, fromcommproc, *fromid, (cl_bool_t)synchron, 0, &message, &sender);
 
    if (ret == CL_RETVAL_CONNECTION_NOT_FOUND ) {
       if ( fromcommproc[0] != '\0' && fromhost[0] != '\0' ) {
@@ -845,7 +751,7 @@ gdi_receive_message(char *fromcommproc, u_short *fromid, char *fromhost,
           INFO((SGE_EVENT,"reopen connection to %s,%s,"sge_U32CFormat" (1)\n", fromhost , fromcommproc , sge_u32c(*fromid)));
           if (ret == CL_RETVAL_OK) {
              INFO((SGE_EVENT,"reconnected successfully\n"));
-             ret = gdi_receive_sec_message( handle,fromhost ,fromcommproc ,*fromid , synchron, 0 ,&message, &sender );
+             ret = cl_commlib_receive_message(handle, fromhost, fromcommproc, *fromid, (cl_bool_t) synchron, 0, &message, &sender);
           } 
       } else {
          DEBUG((SGE_EVENT,"can't reopen a connection to unspecified host or commproc (1)\n"));
@@ -1356,7 +1262,7 @@ int store_sec_cred(sge_gdi_request *request, lListElem *jep, int do_authenticati
                        krb_bin2str(outbuf.data, outbuf.length, NULL));
 
 	 if (outbuf.length)
-	    krb5_xfree(outbuf.data);
+	    krb5_free_data(outbuf.data);
 
          /* get rid of the TGT credentials */
          krb_put_tgt(request->host, request->commproc, request->id,
@@ -1594,8 +1500,8 @@ void tgtcclr(lListElem *jep, const char *rhost, const char* target)
 **    MT-NOTE: sge_set_auth_info() is not MT safe when -DCRYPTO is set
 **
 */
-int sge_set_auth_info(sge_gdi_request *request, uid_t uid, char *user, 
-                        gid_t gid, char *group)
+int sge_set_auth_info(sge_gdi_request *request, uid_t uid, const char *user, 
+                        gid_t gid, const char *group)
 {
    char buffer[SGE_SEC_BUFSIZE];
    char obuffer[3*SGE_SEC_BUFSIZE];

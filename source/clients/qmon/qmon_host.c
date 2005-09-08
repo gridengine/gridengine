@@ -1126,6 +1126,7 @@ XtPointer cld, cad;
    lList *lp = NULL;
    lList *alp = NULL;
    static lCondition *where = NULL;
+   const char *default_cell = uti_state_get_default_cell();
 
    DENTER(GUI_LAYER, "qmonExecHostShutdown");
 
@@ -1139,7 +1140,7 @@ XtPointer cld, cad;
     * deletes all hosts if list is empty
     */
    if (lp) {
-      alp = gdi_kill(lp, uti_state_get_default_cell(), 0, EXECD_KILL); 
+      alp = gdi_kill(lp, default_cell, 0, EXECD_KILL); 
       qmonMessageBox(w, alp, 1);
       lFreeList(&lp);
       lFreeList(&alp);

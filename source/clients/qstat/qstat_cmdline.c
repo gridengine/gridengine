@@ -61,12 +61,12 @@
 #include "msg_clients_common.h"
 
 const char *
-get_root_qstat_file_path(dstring *file_path) 
+get_root_qstat_file_path(const char *cell_root, dstring *file_path) 
 {
    const char *ret;
 
    DENTER (TOP_LAYER, "get_root_qstat_file_path");
-   sge_dstring_sprintf (file_path, "%s/%s", path_state_get_cell_root(),
+   sge_dstring_sprintf (file_path, "%s/%s", cell_root,
                         SGE_COMMON_DEF_QSTAT_FILE);
    ret = sge_dstring_get_string(file_path);
    DEXIT;
@@ -74,7 +74,7 @@ get_root_qstat_file_path(dstring *file_path)
 }
 
 const char *
-get_home_qstat_file_path(dstring *file_path, lList **answer_list) 
+get_home_qstat_file_path(const char* username, dstring *file_path, lList **answer_list) 
 {
    const char *ret;
    struct passwd *pwd;
@@ -85,22 +85,22 @@ get_home_qstat_file_path(dstring *file_path, lList **answer_list)
 
    DENTER (TOP_LAYER, "get_home_qstat_file_path");
 #ifdef HAS_GETPWNAM_R
-   pwd = sge_getpwnam_r(uti_state_get_user_name(), &pw_struct, 
+   pwd = sge_getpwnam_r(username, &pw_struct, 
                         buffer, sizeof(buffer));
 #else
-   pwd = sge_getpwnam(uti_state_get_user_name());
+   pwd = sge_getpwnam(username);
 #endif
   if (!pwd) {
       answer_list_add_sprintf(answer_list, STATUS_ENOSUCHUSER, 
                               ANSWER_QUALITY_ERROR, MSG_USER_INVALIDNAMEX_S,
-                              uti_state_get_user_name());
+                              username);
       DEXIT;
       return NULL;
    }
    if (!pwd->pw_dir) {
       answer_list_add_sprintf(answer_list, STATUS_EDISK, ANSWER_QUALITY_ERROR,
                               MSG_USER_NOHOMEDIRFORUSERX_S, 
-                              uti_state_get_user_name());
+                              username);
       DEXIT;
       return NULL;
    }

@@ -68,7 +68,11 @@
 static void default_exit_func(int i);
 static void gdi_init_mt(void);
 
-struct gdi_state_t {
+static pthread_key_t   gdi_state_key;
+
+static pthread_once_t gdi_once_control = PTHREAD_ONCE_INIT;
+
+typedef struct {
    /* gdi request base */
    u_long32 request_id;     /* incremented with each GDI request to have a unique request ID
                                it is ensured that the request ID is also contained in answer */
@@ -82,11 +86,8 @@ struct gdi_state_t {
    char     cached_master_name[CL_MAXHOSTLEN];
 
    gdi_send_t *async_gdi; /* used to store a async GDI request.*/
-};
+} gdi_state_t;
 
-static pthread_key_t   gdi_state_key;
-
-static pthread_once_t gdi_once_control = PTHREAD_ONCE_INIT;
 
 static void gdi_state_destroy(void* state) {
    free(state);
@@ -112,7 +113,7 @@ void gdi_once_init(void) {
    path_mt_init();
 }
 
-static void gdi_state_init(struct gdi_state_t* state) {
+static void gdi_state_init(gdi_state_t* state) {
    state->request_id = 0;
    state->daemon_first = 1;
    state->first_time = 1;
@@ -167,13 +168,13 @@ void gdi_mt_init(void)
 
 u_long32 gdi_state_get_request_id(void)
 {
-   GET_SPECIFIC(struct gdi_state_t, gdi_state, gdi_state_init, gdi_state_key, "gdi_state_get_request_id");
+   GET_SPECIFIC(gdi_state_t, gdi_state, gdi_state_init, gdi_state_key, "gdi_state_get_request_id");
    return gdi_state->request_id;
 }
 
 u_long32 gdi_state_get_next_request_id(void)
 {
-   GET_SPECIFIC(struct gdi_state_t, gdi_state, gdi_state_init, gdi_state_key, "gdi_state_get_request_id");
+   GET_SPECIFIC(gdi_state_t, gdi_state, gdi_state_init, gdi_state_key, "gdi_state_get_request_id");
    gdi_state->request_id++;
    return gdi_state->request_id;
 }
@@ -181,43 +182,43 @@ u_long32 gdi_state_get_next_request_id(void)
 
 int gdi_state_get_daemon_first(void)
 {
-   GET_SPECIFIC(struct gdi_state_t, gdi_state, gdi_state_init, gdi_state_key, "gdi_state_get_daemon_first");
+   GET_SPECIFIC(gdi_state_t, gdi_state, gdi_state_init, gdi_state_key, "gdi_state_get_daemon_first");
    return gdi_state->daemon_first;
 }
 
 int gdi_state_get_first_time(void)
 {
-   GET_SPECIFIC(struct gdi_state_t, gdi_state, gdi_state_init, gdi_state_key, "gdi_state_get_first_time");
+   GET_SPECIFIC(gdi_state_t, gdi_state, gdi_state_init, gdi_state_key, "gdi_state_get_first_time");
    return gdi_state->first_time;
 }
 
 int gdi_state_get_commd_state(void)
 {
-   GET_SPECIFIC(struct gdi_state_t, gdi_state, gdi_state_init, gdi_state_key, "gdi_state_get_commd_state");
+   GET_SPECIFIC(gdi_state_t, gdi_state, gdi_state_init, gdi_state_key, "gdi_state_get_commd_state");
    return gdi_state->commd_state;
 }
 
 int gdi_state_get_made_setup(void)
 {
-   GET_SPECIFIC(struct gdi_state_t, gdi_state, gdi_state_init, gdi_state_key, "gdi_state_get_made_setup");
+   GET_SPECIFIC(gdi_state_t, gdi_state, gdi_state_init, gdi_state_key, "gdi_state_get_made_setup");
    return gdi_state->made_setup;
 }
 
 int gdi_state_get_isalive(void)
 {
-   GET_SPECIFIC(struct gdi_state_t, gdi_state, gdi_state_init, gdi_state_key, "gdi_state_get_isalive");
+   GET_SPECIFIC(gdi_state_t, gdi_state, gdi_state_init, gdi_state_key, "gdi_state_get_isalive");
    return gdi_state->isalive;
 }
 
 char *gdi_state_get_cached_master_name(void)
 {
-   GET_SPECIFIC(struct gdi_state_t, gdi_state, gdi_state_init, gdi_state_key, "gdi_state_get_cached_master_name");
+   GET_SPECIFIC(gdi_state_t, gdi_state, gdi_state_init, gdi_state_key, "gdi_state_get_cached_master_name");
    return gdi_state->cached_master_name;
 }
 
 gdi_send_t*
 gdi_state_get_last_gdi_request(void) {
-   GET_SPECIFIC(struct gdi_state_t, gdi_state, gdi_state_init, gdi_state_key, 
+   GET_SPECIFIC(gdi_state_t, gdi_state, gdi_state_init, gdi_state_key, 
                 "gdi_state_get_last_gdi_request");
 
    return gdi_state->async_gdi;
@@ -226,7 +227,7 @@ gdi_state_get_last_gdi_request(void) {
 void 
 gdi_state_clear_last_gdi_request(void) 
 {
-   GET_SPECIFIC(struct gdi_state_t, gdi_state, gdi_state_init, gdi_state_key, 
+   GET_SPECIFIC(gdi_state_t, gdi_state, gdi_state_init, gdi_state_key, 
                 "gdi_state_clear_last_gdi_request");
    gdi_free_request(&(gdi_state->async_gdi));
 }
@@ -263,7 +264,7 @@ gdi_set_request(const char* rhost, const char* commproc, u_short id,
    out->sequence_id = 0;
  
    { /* set thread specific value */
-      GET_SPECIFIC(struct gdi_state_t, gdi_state, gdi_state_init, gdi_state_key, 
+      GET_SPECIFIC(gdi_state_t, gdi_state, gdi_state_init, gdi_state_key, 
                    "gdi_set_request");
       if (gdi_state->async_gdi != NULL) {
          gdi_free_request(&(gdi_state->async_gdi));
@@ -286,37 +287,37 @@ gdi_set_request(const char* rhost, const char* commproc, u_short id,
 
 void gdi_state_set_request_id(u_long32 id)
 {
-   GET_SPECIFIC(struct gdi_state_t, gdi_state, gdi_state_init, gdi_state_key, "gdi_state_set_request_id");
+   GET_SPECIFIC(gdi_state_t, gdi_state, gdi_state_init, gdi_state_key, "gdi_state_set_request_id");
    gdi_state->request_id = id;
 }
 
 void gdi_state_set_daemon_first(int i)
 {
-   GET_SPECIFIC(struct gdi_state_t, gdi_state, gdi_state_init, gdi_state_key, "gdi_state_set_daemon_first");
+   GET_SPECIFIC(gdi_state_t, gdi_state, gdi_state_init, gdi_state_key, "gdi_state_set_daemon_first");
    gdi_state->daemon_first = i;
 }
 
 void gdi_state_set_first_time(int i)
 {
-   GET_SPECIFIC(struct gdi_state_t, gdi_state, gdi_state_init, gdi_state_key, "gdi_state_set_first_time");
+   GET_SPECIFIC(gdi_state_t, gdi_state, gdi_state_init, gdi_state_key, "gdi_state_set_first_time");
    gdi_state->first_time = i;
 }
 
 void gdi_state_set_commd_state(int i)
 {
-   GET_SPECIFIC(struct gdi_state_t, gdi_state, gdi_state_init, gdi_state_key, "gdi_state_set_commd_state");
+   GET_SPECIFIC(gdi_state_t, gdi_state, gdi_state_init, gdi_state_key, "gdi_state_set_commd_state");
    gdi_state->commd_state = i;
 }
 
 void gdi_state_set_made_setup(int i)
 {
-   GET_SPECIFIC(struct gdi_state_t, gdi_state, gdi_state_init, gdi_state_key, "gdi_state_set_made_setup");
+   GET_SPECIFIC(gdi_state_t, gdi_state, gdi_state_init, gdi_state_key, "gdi_state_set_made_setup");
    gdi_state->made_setup = i;
 }
 
 void gdi_state_set_isalive(int i)
 {
-   GET_SPECIFIC(struct gdi_state_t, gdi_state, gdi_state_init, gdi_state_key, "gdi_state_set_isalive");
+   GET_SPECIFIC(gdi_state_t, gdi_state, gdi_state_init, gdi_state_key, "gdi_state_set_isalive");
    gdi_state->isalive = i;
 }
 

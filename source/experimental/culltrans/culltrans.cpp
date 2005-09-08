@@ -77,10 +77,13 @@ const char *multiType2sgeType[] = {
    "GE_sge_ulong",
    "GE_sge_long",
    "GE_sge_char",
+   "GE_sge_bool"
    "GE_sge_int",
    "GE_sge_string",
    "",   // lListT undefined
-   "CORBA_Boolean"
+   "GE_sge_object",
+   "GE_sge_ref",
+   "GE_sge_host"
 };
 
 const char *multiType2idlType[] = {
@@ -90,10 +93,13 @@ const char *multiType2idlType[] = {
    "sge_ulong",
    "sge_long",
    "sge_char",
+   "boolean",
    "sge_int",
    "sge_string",
    "",   // lListT undefined
-   "boolean"
+   "lObjectT",
+   "lRefT",
+   "lHostT"
 };
 
 const char *multiType2getType[] = {
@@ -103,10 +109,13 @@ const char *multiType2getType[] = {
    "Ulong",
    "Long",
    "Char",
+   "Bool",
    "Int",
    "String",
    "List",
-   "Ulong"
+   "Object",
+   "Ref",
+   "Host"
 };
 
 // checkArgs

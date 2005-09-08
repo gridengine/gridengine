@@ -65,7 +65,8 @@ enum {
    US_entries
 };
 
-ILISTDEF(US_Type, UserSet, SGE_USERSET_LIST)
+#if 0
+   ILISTDEF(US_Type, UserSet, SGE_USERSET_LIST)
    SGE_STRING(US_name, CULL_PRIMARY_KEY | CULL_HASH | CULL_UNIQUE | CULL_SPOOL | CULL_SUBLIST)       /* configured name spooled */
    SGE_ULONG(US_type, CULL_DEFAULT | CULL_SPOOL)         /* configured type spooled */
    SGE_ULONG(US_fshare, CULL_DEFAULT | CULL_SPOOL)       /* configured share spooled */
@@ -74,6 +75,18 @@ ILISTDEF(US_Type, UserSet, SGE_USERSET_LIST)
    SGE_ULONG(US_pending_job_cnt, CULL_DEFAULT) /* local to schedd */
    SGE_LIST(US_entries, UE_Type, CULL_DEFAULT  | CULL_SPOOL)     /* UE_Type */
 LISTEND 
+#else
+
+ILISTDEF(US_Type, UserSet, SGE_USERSET_LIST)
+   SGE_STRING(US_name, CULL_PRIMARY_KEY | CULL_HASH | CULL_UNIQUE | CULL_SPOOL | CULL_SUBLIST)       /* configured name spooled */
+   SGE_ULONG_D(US_type, CULL_DEFAULT | CULL_SPOOL, 1)         /* configured type spooled */
+   SGE_ULONG(US_fshare, CULL_DEFAULT | CULL_SPOOL)       /* configured share spooled */
+   SGE_ULONG(US_oticket, CULL_DEFAULT | CULL_SPOOL)      /* configured override tickets spooled */
+   SGE_ULONG(US_job_cnt, CULL_DEFAULT)     /* local to schedd */
+   SGE_ULONG(US_pending_job_cnt, CULL_DEFAULT) /* local to schedd */
+   SGE_LIST(US_entries, UE_Type, CULL_DEFAULT  | CULL_SPOOL)     /* UE_Type */
+LISTEND 
+#endif
 
 NAMEDEF(USEN)
    NAME("US_name")

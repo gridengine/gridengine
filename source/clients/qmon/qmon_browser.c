@@ -146,13 +146,14 @@ XtPointer cld, cad;
    char *host = (char*)cld;
    char filename[SGE_PATH_MAX];
    lList *alp = NULL;
+   const char *default_cell = uti_state_get_default_cell();
 
    DENTER(GUI_LAYER, "qmonBrowserMessages");
 
    /*
    ** get the path to the messages file
    */
-   sprintf(filename, "%s/%s/spool/", SGE_ROOT, uti_state_get_default_cell());
+   sprintf(filename, "%s/%s/spool/", SGE_ROOT, default_cell);
 
    if (!host || !strcmp(host , "global"))
       strcat(filename, "qmaster");

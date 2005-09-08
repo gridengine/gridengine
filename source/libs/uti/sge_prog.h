@@ -34,6 +34,7 @@
 
 #include "basis_types.h"
 #include "sge_arch.h"
+#include "sge_env.h"
 
 #define SGE_PREFIX      "sge_"
 #define SGE_COMMD       "sge_commd"
@@ -96,8 +97,41 @@ enum {
  SGE_PASSWD              /* 44 */
 };
 
-
 typedef void (*sge_exit_func_t)(int);
+
+typedef struct sge_prog_state_class_str sge_prog_state_class_t; 
+
+struct sge_prog_state_class_str {
+   void *sge_prog_state_handle;
+   void (*dprintf)(sge_prog_state_class_t *thiz);
+   const char* (*get_sge_formal_prog_name)(sge_prog_state_class_t *thiz);
+   const char* (*get_qualified_hostname)(sge_prog_state_class_t *thiz);
+   const char* (*get_unqualified_hostname)(sge_prog_state_class_t *thiz);
+   u_long32 (*get_who)(sge_prog_state_class_t *thiz);
+   u_long32 (*get_uid)(sge_prog_state_class_t *thiz);
+   u_long32 (*get_gid)(sge_prog_state_class_t *thiz);
+   u_long32 (*get_daemonized)(sge_prog_state_class_t *thiz);
+   const char* (*get_user_name)(sge_prog_state_class_t *thiz);
+   const char* (*get_default_cell)(sge_prog_state_class_t *thiz);
+   bool (*get_exit_on_error)(sge_prog_state_class_t *thiz);
+   sge_exit_func_t (*get_exit_func)(sge_prog_state_class_t *thiz);
+
+   void (*set_sge_formal_prog_name)(sge_prog_state_class_t *thiz, const char *prog_name);
+   void (*set_qualified_hostname)(sge_prog_state_class_t *thiz, const char *qualified_hostname);
+   void (*set_unqualified_hostname)(sge_prog_state_class_t *thiz, const char *unqualified_hostname);
+   void (*set_who)(sge_prog_state_class_t *thiz, u_long32 who);
+   void (*set_uid)(sge_prog_state_class_t *thiz, u_long32 uid);
+   void (*set_gid)(sge_prog_state_class_t *thiz, u_long32 gid);
+   void (*set_daemonized)(sge_prog_state_class_t *thiz, u_long32 daemonized);
+   void (*set_user_name)(sge_prog_state_class_t *thiz, const char* user_name);
+   void (*set_default_cell)(sge_prog_state_class_t *thiz, const char* default_cell);
+   void (*set_exit_on_error)(sge_prog_state_class_t *thiz, bool exit_on_error);
+   void (*set_exit_func)(sge_prog_state_class_t *thiz, sge_exit_func_t exit_func);
+};
+
+sge_prog_state_class_t *sge_prog_state_class_create(sge_env_state_class_t *sge_env, u_long32 program_number, sge_error_class_t *eh);
+void sge_prog_state_class_destroy(sge_prog_state_class_t **pst);
+
 
 extern const char *prognames[];
 

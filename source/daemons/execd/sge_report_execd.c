@@ -74,6 +74,7 @@ report_source *report_sources
    static u_long32 next_alive_time = 0;
    int ret = -1;
    int i;
+   const char* qualified_hostname = uti_state_get_qualified_hostname();
 
    DENTER(TOP_LAYER, "sge_send_all_reports");
 
@@ -97,7 +98,7 @@ report_source *report_sources
       for (i=0; report_sources[i].type; i++) {
          if (!which || which == report_sources[i].type) {
             DPRINTF(("%s\n", report_types[report_sources[i].type - 1]));
-            report_sources[i].func(report_list, now, &(report_sources[i].next_send));
+            report_sources[i].func(qualified_hostname, report_list, now, &(report_sources[i].next_send));
          }
       }
 

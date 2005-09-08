@@ -1045,6 +1045,8 @@ void sge_gdi_kill_exechost(char *host,
       return;
    }
 
+   DPRINTF(("uid/username = %d/%s, gid/groupname = %d/%s\n", (int) uid, user, (int) gid, group));
+
    if (!manop_is_manager(user)) {
       ERROR((SGE_EVENT, MSG_OBJ_SHUTDOWNPERMS)); 
       answer_list_add(&(answer->alp), SGE_EVENT, STATUS_ENOMGR, 

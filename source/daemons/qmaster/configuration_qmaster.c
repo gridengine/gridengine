@@ -128,7 +128,7 @@ int sge_read_configuration(lListElem *aSpoolContext, lList *anAnswer)
       return -1;
    }
 
-   ret = merge_configuration(global, local, NULL);
+   ret = merge_configuration(path_state_get_cell_root(), global, local, NULL);
 
    lFreeElem(&local);
    lFreeElem(&global);
@@ -307,7 +307,7 @@ int sge_mod_configuration(lListElem *aConf, lList **anAnswer, char *aUser, char 
          ERROR((SGE_EVENT, MSG_CONFIG_NOGLOBAL));
       }
             
-      if (merge_configuration(global, local, NULL) != 0) 
+      if (merge_configuration(path_state_get_cell_root(), global, local, NULL) != 0) 
       {
          ERROR((SGE_EVENT, MSG_CONF_CANTMERGECONFIGURATIONFORHOST_S, uti_state_get_qualified_hostname()));
       }

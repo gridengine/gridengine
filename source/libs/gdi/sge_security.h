@@ -56,19 +56,6 @@ gdi_send_message(int synchron, const char *tocomproc, int toid,
                  const char *tohost, int tag, char *buffer, int buflen, 
                  u_long32 *mid);
 
-int 
-gdi_receive_sec_message(cl_com_handle_t* handle, char* un_resolved_hostname, 
-                        char* component_name, unsigned long component_id, 
-                        int synchron, unsigned long response_mid, 
-                        cl_com_message_t** message, cl_com_endpoint_t** sender);
-
-int 
-gdi_send_sec_message(cl_com_handle_t* handle, char* un_resolved_hostname, 
-                     char* component_name, unsigned long component_id, 
-                     cl_xml_ack_type_t ack_type, cl_byte_t* data, 
-                     unsigned long size, unsigned long* mid, 
-                     unsigned long response_mid, unsigned long tag ,
-                     int copy_data, int wait_for_ack);
 
 int set_sec_cred(lListElem *job);
 
@@ -93,8 +80,8 @@ void tgt2cc(lListElem *jep, const char *rhost, const char* target);
 
 void tgtcclr(lListElem *jep, const char *rhost, const char* target);
 
-int sge_set_auth_info(sge_gdi_request *request, uid_t uid, char *user, 
-                        gid_t gid, char *group);
+int sge_set_auth_info(sge_gdi_request *request, uid_t uid, const char *user, 
+                        gid_t gid, const char *group);
 
 int sge_get_auth_info(sge_gdi_request *request, uid_t *uid, char *user, 
                         gid_t *gid, char *group);

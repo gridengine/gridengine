@@ -56,34 +56,19 @@ void qmonAboutMsg(w, cld, cad)
 Widget w;
 XtPointer cld, cad;
 {
-#if 0
-   dstring ds;
    char buffer[256];
-
-   DENTER(TOP_LAYER, "qmonAboutMsg");
-   
-   sge_dstring_init(&ds, buffer, sizeof(buffer));
-   XmtDisplayMessage(w, "about_msg", "Help", header, 
-                     "About Qmon", NULL, None, XmDIALOG_MODELESS,
-                     XmDIALOG_INFORMATION, 
-                     uti_state_get_user_name(), uti_state_get_qualified_hostname(), 
-                     feature_get_product_name(FS_LONG_VERSION, &ds), 
-                     uti_state_get_default_cell(), 
-                     XmtLocalize(w, mailto, "mailto_msg"), SFLN_ELN); 
-   sge_dstring_free(&ds);
-   DEXIT;
-#else
-   char buffer[256];
+   const char* username = uti_state_get_user_name();
+   const char* qualified_hostname = uti_state_get_qualified_hostname();
+   const char* default_cell = uti_state_get_default_cell();
 
    DENTER(TOP_LAYER, "qmonAboutMsg");
    sprintf(buffer, "%s %s", GE_LONGNAME, GDI_VERSION);  
    XmtDisplayMessage(w, "about_msg", "Help", header, 
                      "About Qmon", NULL, None, XmDIALOG_MODELESS,
                      XmDIALOG_INFORMATION, 
-                     uti_state_get_user_name(), uti_state_get_qualified_hostname(), 
+                     username, qualified_hostname, 
                      buffer, 
-                     uti_state_get_default_cell(), 
+                     default_cell, 
                      XmtLocalize(w, mailto, "mailto_msg"), SFLN_ELN); 
    DEXIT;
-#endif
 }

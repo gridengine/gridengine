@@ -43,6 +43,8 @@ GDILIB_SRC = gdi_setup.c \
          pack_job_delivery.c \
          sge_any_request.c \
          sge_gdi_request.c \
+         sge_gdi_ctx.c \
+         sge_gdi2.c \
          sge_ack.c \
          sge_qexec.c \
          qm_name.c \
@@ -107,6 +109,12 @@ sge_qexec.o:	$(GDILIB_DIR)/sge_qexec.c
 sge_gdi_request.o:	$(GDILIB_DIR)/sge_gdi_request.c
 		$(CC) -o $@ $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/sge_gdi_request.c
 
+sge_gdi2.o:	$(GDILIB_DIR)/sge_gdi2.c
+		$(CC) -o $@ $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/sge_gdi2.c
+		
+sge_gdi_ctx.o:	$(GDILIB_DIR)/sge_gdi_ctx.c
+		$(CC) -o $@ $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/sge_gdi_ctx.c
+		
 sge_any_request.o:	$(GDILIB_DIR)/sge_any_request.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/sge_any_request.c
 

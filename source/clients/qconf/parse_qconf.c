@@ -330,6 +330,10 @@ char *argv[]
    const char *filename_stdout;
    int fields_out[MAX_NUM_FIELDS];
    int missing_field = NoName;
+   const char* qualified_hostname = uti_state_get_qualified_hostname();
+   const char* username = uti_state_get_user_name();
+   const char* default_cell = uti_state_get_default_cell();
+   u_long32 prog_number = uti_state_get_mewho();
 
    DENTER(TOP_LAYER, "sge_parse_qconf");
 
@@ -349,8 +353,8 @@ char *argv[]
       if ((strcmp("-acal", *spp) == 0) ||
           (strcmp("-Acal", *spp) == 0)) {
          if (!strcmp("-acal", *spp)) {
-            sge_gdi_is_adminhost(uti_state_get_qualified_hostname());
-            sge_gdi_is_manager(uti_state_get_user_name());
+            sge_gdi_is_adminhost(qualified_hostname);
+            sge_gdi_is_manager(username);
 
             spp = sge_parser_get_next(spp);
            
@@ -460,8 +464,8 @@ char *argv[]
           (strcmp("-Ackpt", *spp) == 0)) {
 
          if (!strcmp("-ackpt", *spp)) {
-            sge_gdi_is_adminhost(uti_state_get_qualified_hostname());
-            sge_gdi_is_manager(uti_state_get_user_name());
+            sge_gdi_is_adminhost(qualified_hostname);
+            sge_gdi_is_manager(username);
 
             spp = sge_parser_get_next(spp);
 
@@ -582,8 +586,8 @@ char *argv[]
          lListElem *hep = NULL;
 
          cp = NULL;
-         sge_gdi_is_adminhost(uti_state_get_qualified_hostname());
-         sge_gdi_is_manager(uti_state_get_user_name());
+         sge_gdi_is_adminhost(qualified_hostname);
+         sge_gdi_is_manager(username);
          if (!sge_next_is_an_opt(spp)) {
             spp = sge_parser_get_next(spp);
             host = sge_strdup(host, *spp);
@@ -803,8 +807,8 @@ char *argv[]
          spooling_field *fields = sge_build_PE_field_list (false, false);
 
          if (!strcmp("-ap", *spp)) {
-            sge_gdi_is_adminhost(uti_state_get_qualified_hostname());
-            sge_gdi_is_manager(uti_state_get_user_name());
+            sge_gdi_is_adminhost(qualified_hostname);
+            sge_gdi_is_manager(username);
            
             spp = sge_parser_get_next(spp);
 
@@ -932,8 +936,8 @@ char *argv[]
       /* "-auser" */
 
       if (strcmp("-auser", *spp) == 0) {
-         sge_gdi_is_adminhost(uti_state_get_qualified_hostname());
-         sge_gdi_is_manager(uti_state_get_user_name());
+         sge_gdi_is_adminhost(qualified_hostname);
+         sge_gdi_is_manager(username);
 
          spp++;
         
@@ -971,8 +975,8 @@ char *argv[]
       /* "-aprj" */
 
       if (strcmp("-aprj", *spp) == 0) {
-         sge_gdi_is_adminhost(uti_state_get_qualified_hostname());
-         sge_gdi_is_manager(uti_state_get_user_name());
+         sge_gdi_is_adminhost(qualified_hostname);
+         sge_gdi_is_manager(username);
         
          /* get a template for editing */
          ep = getUserPrjTemplate(); 
@@ -1156,8 +1160,8 @@ char *argv[]
          lListElem *unspecified = NULL;
          
          if(strcmp("-astree", *spp) == 0) {
-            sge_gdi_is_adminhost(uti_state_get_qualified_hostname());
-            sge_gdi_is_manager(uti_state_get_user_name());
+            sge_gdi_is_adminhost(qualified_hostname);
+            sge_gdi_is_manager(username);
 
             /* get the sharetree .. */
             what = lWhat("%T(ALL)", STN_Type);
@@ -1421,8 +1425,8 @@ char *argv[]
       if (strcmp("-clearusage", *spp) == 0) {
          lList *lp2=NULL;
 
-         sge_gdi_is_adminhost(uti_state_get_qualified_hostname());
-         sge_gdi_is_manager(uti_state_get_user_name());
+         sge_gdi_is_adminhost(qualified_hostname);
+         sge_gdi_is_manager(username);
 
          /* get user list */
          what = lWhat("%T(ALL)", STN_Type);
@@ -1828,7 +1832,7 @@ char *argv[]
       if (strcmp("-ks", *spp) == 0) {
          /* no adminhost/manager check needed here */
 
-         alp = gdi_kill(NULL, uti_state_get_default_cell(), 0, SCHEDD_KILL);
+         alp = gdi_kill(NULL, default_cell, 0, SCHEDD_KILL);
          for_each(aep, alp) {
             answer_exit_if_not_recoverable(aep);
             if (answer_get_status(aep) != STATUS_OK)
@@ -1847,7 +1851,7 @@ char *argv[]
 
       if (strcmp("-km", *spp) == 0) {
          /* no adminhost/manager check needed here */
-         alp = gdi_kill(NULL, uti_state_get_default_cell(), 0, MASTER_KILL);
+         alp = gdi_kill(NULL, default_cell, 0, MASTER_KILL);
          answer_list_on_error_print_or_exit(&alp, stderr);
          lFreeList(&alp);
 
@@ -1868,10 +1872,10 @@ char *argv[]
          spp = sge_parser_get_next(spp);
          /* found namelist -> process */
          if(strcmp(*spp, "all") == 0) { /* kill all dynamic event clients (EV_ID_ANY) */
-            alp = gdi_kill(NULL, uti_state_get_default_cell(), 0, opt);
+            alp = gdi_kill(NULL, default_cell, 0, opt);
          } else {
             lString2List(*spp, &lp, ID_Type, ID_str, ", ");
-            alp = gdi_kill(lp, uti_state_get_default_cell(), 0, opt);
+            alp = gdi_kill(lp, default_cell, 0, opt);
          }      
          answer_list_on_error_print_or_exit(&alp, stderr);
          lFreeList(&alp);
@@ -1893,7 +1897,7 @@ char *argv[]
             case 'e':
                break;
             default:
-               ERROR((SGE_EVENT, MSG_ANSWER_XISNOTAVALIDOPTIONY_SU, *spp, sge_u32c(uti_state_get_mewho())));
+               ERROR((SGE_EVENT, MSG_ANSWER_XISNOTAVALIDOPTIONY_SU, *spp, sge_u32c(prog_number)));
                sge_usage(stderr);
                SGE_EXIT(1);
          }
@@ -1911,11 +1915,11 @@ char *argv[]
          }
 
          if(strcmp(*spp, "all") == 0) { /* kill all dynamic event clients (EV_ID_ANY) */
-            alp = gdi_kill(NULL, uti_state_get_default_cell(), 0, opt);
+            alp = gdi_kill(NULL, default_cell, 0, opt);
          } else {   
             /* found namelist -> process */
             lString2List(*spp, &lp, EH_Type, EH_name, ", ");
-            alp = gdi_kill(lp, uti_state_get_default_cell(), 0, opt);
+            alp = gdi_kill(lp, default_cell, 0, opt);
          }
 
          answer_list_on_error_print_or_exit(&alp, stderr);
@@ -1932,8 +1936,8 @@ char *argv[]
       if (strcmp("-mc", *spp) == 0) {
          lList *answer_list = NULL;
 
-         sge_gdi_is_adminhost(uti_state_get_qualified_hostname());
-         sge_gdi_is_manager(uti_state_get_user_name());
+         sge_gdi_is_adminhost(qualified_hostname);
+         sge_gdi_is_manager(username);
 
          centry_list_modify(&answer_list);
          show_gdi_request_answer_list(answer_list);
@@ -1949,8 +1953,8 @@ char *argv[]
       if ((strcmp("-mcal", *spp) == 0) || 
           (strcmp("-Mcal", *spp) == 0)) {
          if (!strcmp("-mcal", *spp)) {
-            sge_gdi_is_adminhost(uti_state_get_qualified_hostname());
-            sge_gdi_is_manager(uti_state_get_user_name());
+            sge_gdi_is_adminhost(qualified_hostname);
+            sge_gdi_is_manager(username);
 
             spp = sge_parser_get_next(spp);
            
@@ -2097,8 +2101,8 @@ char *argv[]
       if ((strcmp("-mckpt", *spp) == 0) || 
           (strcmp("-Mckpt", *spp) == 0)) {
          if (strcmp("-mckpt", *spp) == 0) {
-            sge_gdi_is_adminhost(uti_state_get_qualified_hostname());
-            sge_gdi_is_manager(uti_state_get_user_name());
+            sge_gdi_is_adminhost(qualified_hostname);
+            sge_gdi_is_manager(username);
 
             spp = sge_parser_get_next(spp);
 
@@ -2298,8 +2302,8 @@ char *argv[]
       /* "-me [server_name,...]" */
 
       if (strcmp("-me", *spp) == 0) {
-         sge_gdi_is_adminhost(uti_state_get_qualified_hostname());
-         sge_gdi_is_manager(uti_state_get_user_name());
+         sge_gdi_is_adminhost(qualified_hostname);
+         sge_gdi_is_manager(username);
          
          spp = sge_parser_get_next(spp);
          parse_name_list_to_cull("hosts to change", &arglp, EH_Type, EH_name, 
@@ -2371,8 +2375,8 @@ char *argv[]
          spooling_field *fields = sge_build_PE_field_list (false, false);
 
          if (!strcmp("-mp", *spp)) {
-            sge_gdi_is_adminhost(uti_state_get_qualified_hostname());
-            sge_gdi_is_manager(uti_state_get_user_name());
+            sge_gdi_is_adminhost(qualified_hostname);
+            sge_gdi_is_manager(username);
          
             spp = sge_parser_get_next(spp);
 
@@ -3116,8 +3120,8 @@ char *argv[]
 /*----------------------------------------------------------------------------*/
       /* "-Msconf" */
       if (strcmp("-Msconf", *spp) == 0) {
-         sge_gdi_is_adminhost(uti_state_get_qualified_hostname());
-         sge_gdi_is_manager(uti_state_get_user_name());
+         sge_gdi_is_adminhost(qualified_hostname);
+         sge_gdi_is_manager(username);
          
          spp = sge_parser_get_next(spp);
 
@@ -3176,8 +3180,8 @@ char *argv[]
       /* "-msconf"  modify scheduler configuration */
 
       if (strcmp("-msconf", *spp) == 0) {
-         sge_gdi_is_adminhost(uti_state_get_qualified_hostname());
-         sge_gdi_is_manager(uti_state_get_user_name());
+         sge_gdi_is_adminhost(qualified_hostname);
+         sge_gdi_is_manager(username);
 
          /* get the scheduler configuration .. */
          what = lWhat("%T(ALL)", SC_Type);
@@ -3219,8 +3223,8 @@ char *argv[]
          lListElem *unspecified = NULL;
          
          if(strcmp("-mstree", *spp) == 0) {
-            sge_gdi_is_adminhost(uti_state_get_qualified_hostname());
-            sge_gdi_is_manager(uti_state_get_user_name());
+            sge_gdi_is_adminhost(qualified_hostname);
+            sge_gdi_is_manager(username);
 
             /* get the sharetree .. */
             what = lWhat("%T(ALL)", STN_Type);
@@ -3313,8 +3317,8 @@ char *argv[]
 
       if (strcmp("-mu", *spp) == 0) {
          /* check for adminhost and manager privileges */
-         sge_gdi_is_adminhost(uti_state_get_qualified_hostname());
-         sge_gdi_is_manager(uti_state_get_user_name());
+         sge_gdi_is_adminhost(qualified_hostname);
+         sge_gdi_is_manager(username);
 
          spp = sge_parser_get_next(spp);
 
@@ -3498,8 +3502,8 @@ char *argv[]
       /* "-muser username" */
 
       if (strcmp("-muser", *spp) == 0) {
-         sge_gdi_is_adminhost(uti_state_get_qualified_hostname());
-         sge_gdi_is_manager(uti_state_get_user_name());
+         sge_gdi_is_adminhost(qualified_hostname);
+         sge_gdi_is_manager(username);
 
          spp = sge_parser_get_next(spp);
         
@@ -3567,8 +3571,8 @@ char *argv[]
       /* "-mprj projectname" */
 
       if (strcmp("-mprj", *spp) == 0) {
-         sge_gdi_is_adminhost(uti_state_get_qualified_hostname());
-         sge_gdi_is_manager(uti_state_get_user_name());
+         sge_gdi_is_adminhost(qualified_hostname);
+         sge_gdi_is_manager(username);
 
          spp = sge_parser_get_next(spp);
         
@@ -3908,13 +3912,13 @@ char *argv[]
          const char *host;
 
          if (!strcmp("-aconf", *spp)) {
-            sge_gdi_is_manager(uti_state_get_user_name());
-            sge_gdi_is_adminhost(uti_state_get_qualified_hostname());
+            sge_gdi_is_manager(username);
+            sge_gdi_is_adminhost(qualified_hostname);
             action = 1;
          }
          else if (!strcmp("-mconf", *spp)) {
-            sge_gdi_is_manager(uti_state_get_user_name());
-            if (sge_gdi_is_adminhost(uti_state_get_qualified_hostname()) != 0) {
+            sge_gdi_is_manager(username);
+            if (sge_gdi_is_adminhost(qualified_hostname) != 0) {
                SGE_EXIT(1);
             }
             action = 2;
@@ -4587,11 +4591,11 @@ char *argv[]
       if (strcmp("-mumap", *spp) == 0) {
          lList *answer_list = NULL;
 
-         sge_gdi_is_adminhost(uti_state_get_qualified_hostname());
-         sge_gdi_is_manager(uti_state_get_user_name());
+         sge_gdi_is_adminhost(qualified_hostname);
+         sge_gdi_is_manager(username);
 
          spp = sge_parser_get_next(spp);
-         sge_gdi_is_manager(uti_state_get_user_name());
+         sge_gdi_is_manager(username);
          cuser_modify(&answer_list, *spp);
          show_gdi_request_answer(answer_list);
          lFreeList(&answer_list);
@@ -4608,11 +4612,11 @@ char *argv[]
       if (strcmp("-mce", *spp) == 0) {
          lList *answer_list = NULL;
 
-         sge_gdi_is_adminhost(uti_state_get_qualified_hostname());
-         sge_gdi_is_manager(uti_state_get_user_name());
+         sge_gdi_is_adminhost(qualified_hostname);
+         sge_gdi_is_manager(username);
 
          spp = sge_parser_get_next(spp);
-         sge_gdi_is_manager(uti_state_get_user_name());
+         sge_gdi_is_manager(username);
          centry_modify(&answer_list, *spp);
          show_gdi_request_answer(answer_list);
          lFreeList(&answer_list);
@@ -4631,7 +4635,7 @@ char *argv[]
          lList *answer_list = NULL;
 
          spp = sge_parser_get_next(spp);
-         sge_gdi_is_manager(uti_state_get_user_name());
+         sge_gdi_is_manager(username);
          cuser_delete(&answer_list, *spp);
          show_gdi_request_answer(answer_list);
          lFreeList(&answer_list);
@@ -4648,7 +4652,7 @@ char *argv[]
          lList *answer_list = NULL;
    
          spp = sge_parser_get_next(spp);
-         sge_gdi_is_manager(uti_state_get_user_name());
+         sge_gdi_is_manager(username);
          centry_delete(&answer_list, *spp);
          show_gdi_request_answer(answer_list); 
          lFreeList(&answer_list);
@@ -4690,11 +4694,11 @@ char *argv[]
       if (strcmp("-aumap", *spp) == 0) {
          lList *answer_list = NULL;
 
-         sge_gdi_is_adminhost(uti_state_get_qualified_hostname());
-         sge_gdi_is_manager(uti_state_get_user_name());
+         sge_gdi_is_adminhost(qualified_hostname);
+         sge_gdi_is_manager(username);
 
          spp = sge_parser_get_next(spp);
-         sge_gdi_is_manager(uti_state_get_user_name());
+         sge_gdi_is_manager(username);
          cuser_add(&answer_list, *spp);
          show_gdi_request_answer(answer_list);
          lFreeList(&answer_list);
@@ -4713,11 +4717,11 @@ char *argv[]
       if (strcmp("-ace", *spp) == 0) {
          lList *answer_list = NULL;
 
-         sge_gdi_is_adminhost(uti_state_get_qualified_hostname());
-         sge_gdi_is_manager(uti_state_get_user_name());
+         sge_gdi_is_adminhost(qualified_hostname);
+         sge_gdi_is_manager(username);
 
          spp = sge_parser_get_next(spp);
-         sge_gdi_is_manager(uti_state_get_user_name());
+         sge_gdi_is_manager(username);
          centry_add(&answer_list, *spp);
          show_gdi_request_answer(answer_list);
          lFreeList(&answer_list);
@@ -4791,11 +4795,11 @@ char *argv[]
       if (strcmp("-mumap", *spp) == 0) {
          lList *answer_list = NULL;
 
-         sge_gdi_is_adminhost(uti_state_get_qualified_hostname());
-         sge_gdi_is_manager(uti_state_get_user_name());
+         sge_gdi_is_adminhost(qualified_hostname);
+         sge_gdi_is_manager(username);
 
          spp = sge_parser_get_next(spp);
-         sge_gdi_is_manager(uti_state_get_user_name());
+         sge_gdi_is_manager(username);
          cuser_modify(&answer_list, *spp);
          show_gdi_request_answer(answer_list);
          lFreeList(&answer_list);
@@ -4812,11 +4816,11 @@ char *argv[]
       if (strcmp("-mce", *spp) == 0) {
          lList *answer_list = NULL;
 
-         sge_gdi_is_adminhost(uti_state_get_qualified_hostname());
-         sge_gdi_is_manager(uti_state_get_user_name());
+         sge_gdi_is_adminhost(qualified_hostname);
+         sge_gdi_is_manager(username);
 
          spp = sge_parser_get_next(spp);
-         sge_gdi_is_manager(uti_state_get_user_name());
+         sge_gdi_is_manager(username);
          centry_modify(&answer_list, *spp);
          show_gdi_request_answer(answer_list);
          lFreeList(&answer_list);
@@ -4835,7 +4839,7 @@ char *argv[]
          lList *answer_list = NULL;
 
          spp = sge_parser_get_next(spp);
-         sge_gdi_is_manager(uti_state_get_user_name());
+         sge_gdi_is_manager(username);
          cuser_delete(&answer_list, *spp);
          show_gdi_request_answer(answer_list);
          lFreeList(&answer_list);
@@ -4861,8 +4865,8 @@ char *argv[]
          bool ret = true;
 
          spp = sge_parser_get_next(spp);
-         sge_gdi_is_adminhost(uti_state_get_qualified_hostname());
-         sge_gdi_is_manager(uti_state_get_user_name());
+         sge_gdi_is_adminhost(qualified_hostname);
+         sge_gdi_is_manager(username);
          ret = hgroup_modify(&answer_list, *spp);
          ret &= show_gdi_request_answer(answer_list);
          lFreeList(&answer_list);
@@ -4884,8 +4888,8 @@ char *argv[]
          } else {
             sge_error_and_exit(MSG_FILE_NOFILEARGUMENTGIVEN); 
          }
-         sge_gdi_is_adminhost(uti_state_get_qualified_hostname());
-         sge_gdi_is_manager(uti_state_get_user_name());
+         sge_gdi_is_adminhost(qualified_hostname);
+         sge_gdi_is_manager(username);
          ret = hgroup_modify_from_file(&answer_list, file);
          ret &= show_gdi_request_answer(answer_list);
          lFreeList(&answer_list);
@@ -4911,8 +4915,8 @@ char *argv[]
             is_validate_name = true;
          }
          
-         sge_gdi_is_adminhost(uti_state_get_qualified_hostname());
-         sge_gdi_is_manager(uti_state_get_user_name());
+         sge_gdi_is_adminhost(qualified_hostname);
+         sge_gdi_is_manager(username);
          ret = hgroup_add(&answer_list, group, is_validate_name);
          ret &= show_gdi_request_answer(answer_list);
          lFreeList(&answer_list);
@@ -4934,8 +4938,8 @@ char *argv[]
          } else {
             sge_error_and_exit(MSG_FILE_NOFILEARGUMENTGIVEN); 
          }
-         sge_gdi_is_adminhost(uti_state_get_qualified_hostname());
-         sge_gdi_is_manager(uti_state_get_user_name());
+         sge_gdi_is_adminhost(qualified_hostname);
+         sge_gdi_is_manager(username);
          ret = hgroup_add_from_file(&answer_list, file);
          ret &= show_gdi_request_answer(answer_list);
          lFreeList(&answer_list);
@@ -4951,7 +4955,7 @@ char *argv[]
          bool ret = true;
    
          spp = sge_parser_get_next(spp);
-         sge_gdi_is_manager(uti_state_get_user_name());
+         sge_gdi_is_manager(username);
          ret = hgroup_delete(&answer_list, *spp);
          ret &= show_gdi_request_answer(answer_list);
          lFreeList(&answer_list);
@@ -5025,8 +5029,8 @@ char *argv[]
 
          spp = sge_parser_get_next(spp);
 
-         sge_gdi_is_adminhost(uti_state_get_qualified_hostname());
-         sge_gdi_is_manager(uti_state_get_user_name());
+         sge_gdi_is_adminhost(qualified_hostname);
+         sge_gdi_is_manager(username);
          ret = cqueue_modify(&answer_list, *spp);
          ret &= show_gdi_request_answer(answer_list);
          lFreeList(&answer_list);
@@ -5042,8 +5046,8 @@ char *argv[]
          char* file = NULL;
          bool ret = true;
 
-         sge_gdi_is_adminhost(uti_state_get_qualified_hostname());
-         sge_gdi_is_manager(uti_state_get_user_name());
+         sge_gdi_is_adminhost(qualified_hostname);
+         sge_gdi_is_manager(username);
          if (!sge_next_is_an_opt(spp)) {
             spp = sge_parser_get_next(spp);
             file = *spp;
@@ -5069,8 +5073,8 @@ char *argv[]
             spp = sge_parser_get_next(spp);
             name = *spp;
          }
-         sge_gdi_is_adminhost(uti_state_get_qualified_hostname());
-         sge_gdi_is_manager(uti_state_get_user_name());
+         sge_gdi_is_adminhost(qualified_hostname);
+         sge_gdi_is_manager(username);
          ret = cqueue_add(&answer_list, name);
          ret &= show_gdi_request_answer(answer_list);
          lFreeList(&answer_list);
@@ -5086,8 +5090,8 @@ char *argv[]
          char* file = NULL;
          bool ret = true;
 
-         sge_gdi_is_adminhost(uti_state_get_qualified_hostname());
-         sge_gdi_is_manager(uti_state_get_user_name());
+         sge_gdi_is_adminhost(qualified_hostname);
+         sge_gdi_is_manager(username);
          if (!sge_next_is_an_opt(spp)) {
             spp = sge_parser_get_next(spp);
             file = *spp;
@@ -5111,8 +5115,8 @@ char *argv[]
 
          spp = sge_parser_get_next(spp);
 
-         sge_gdi_is_adminhost(uti_state_get_qualified_hostname());
-         sge_gdi_is_manager(uti_state_get_user_name());
+         sge_gdi_is_adminhost(qualified_hostname);
+         sge_gdi_is_manager(username);
          ret = cqueue_delete(&answer_list, *spp);
          ret &= show_gdi_request_answer(answer_list);
          lFreeList(&answer_list);
@@ -5176,7 +5180,7 @@ char *argv[]
          lList *answer_list = NULL;
    
          spp = sge_parser_get_next(spp);
-         sge_gdi_is_manager(uti_state_get_user_name());
+         sge_gdi_is_manager(username);
          centry_delete(&answer_list, *spp);
          show_gdi_request_answer(answer_list); 
          lFreeList(&answer_list);
@@ -5218,11 +5222,11 @@ char *argv[]
       if (strcmp("-aumap", *spp) == 0) {
          lList *answer_list = NULL;
 
-         sge_gdi_is_adminhost(uti_state_get_qualified_hostname());
-         sge_gdi_is_manager(uti_state_get_user_name());
+         sge_gdi_is_adminhost(qualified_hostname);
+         sge_gdi_is_manager(username);
 
          spp = sge_parser_get_next(spp);
-         sge_gdi_is_manager(uti_state_get_user_name());
+         sge_gdi_is_manager(username);
          cuser_add(&answer_list, *spp);
          show_gdi_request_answer(answer_list);
          lFreeList(&answer_list);
@@ -5239,11 +5243,11 @@ char *argv[]
       if (strcmp("-ace", *spp) == 0) {
          lList *answer_list = NULL;
 
-         sge_gdi_is_adminhost(uti_state_get_qualified_hostname());
-         sge_gdi_is_manager(uti_state_get_user_name());
+         sge_gdi_is_adminhost(qualified_hostname);
+         sge_gdi_is_manager(username);
 
          spp = sge_parser_get_next(spp);
-         sge_gdi_is_manager(uti_state_get_user_name());
+         sge_gdi_is_manager(username);
          centry_add(&answer_list, *spp);
          show_gdi_request_answer(answer_list);
          lFreeList(&answer_list);

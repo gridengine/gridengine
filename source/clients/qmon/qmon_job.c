@@ -83,6 +83,7 @@
 #include "sge_cqueue.h"
 #include "sge_qinstance.h"
 #include "sge_qinstance_state.h"
+#include "sge_ja_task.h"
 
 enum {
    JOB_DISPLAY_MODE_RUNNING,

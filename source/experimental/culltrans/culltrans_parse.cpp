@@ -52,7 +52,7 @@
 void newList(const char* type, const char* name, const char* sge_list_type, const bool interface) {
    if(disthdr)
       fprintf(disthdr, "LISTDEF( %s )", type);
-
+cout << "yyin_name, sge_list_type:" << yyin_name << ", " << sge_list_type <<endl;
    pair<map<string, List>::iterator, bool> status;
    List  l(type, name, yyin_name, sge_list_type, interface);
    status = lists.insert(map<string, List>::value_type(type, l));
@@ -82,7 +82,7 @@ void newElem(const int type, const char* name, const bool readonly, const bool i
    if(disthdr && !idlonly) {
       switch(type) {
          case lBoolT:
-            fprintf(disthdr, "   SGE_ULONG");
+            fprintf(disthdr, "   SGE_BOOL");
             break;
          case lFloatT:
             fprintf(disthdr, "   SGE_FLOAT");

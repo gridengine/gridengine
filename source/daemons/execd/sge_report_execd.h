@@ -36,7 +36,7 @@
 
 #include "cull.h"
 
-typedef int (*report_func_type)(lList *, u_long32 now, u_long32 *next_send);
+typedef int (*report_func_type)(const char* qualified_hostname, lList *, u_long32 now, u_long32 *next_send);
 
 typedef struct report_source {
   int type;

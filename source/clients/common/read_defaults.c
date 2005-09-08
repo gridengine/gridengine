@@ -145,13 +145,14 @@ void opt_list_append_opts_from_default_files(lList **pcmdline,
 *******************************************************************************/
 static char *get_root_defaults_file_path () {
    char *file = NULL;
+   const char *cell_root = path_state_get_cell_root();
    
    DENTER (TOP_LAYER, "get_root_defaults_file_path");
    
-   file = (char *)malloc(strlen(path_state_get_cell_root()) +
+   file = (char *)malloc(strlen(cell_root) +
                        strlen(SGE_COMMON_DEF_REQ_FILE) + 3);
    
-   sprintf (file, "%s/%s", path_state_get_cell_root(),
+   sprintf (file, "%s/%s", cell_root,
             SGE_COMMON_DEF_REQ_FILE);
    
    DEXIT;
@@ -195,23 +196,24 @@ static char *get_user_home_defaults_file_path(lList **answer_list)
 #endif
 
    char *file = NULL;
+   const char *username = uti_state_get_user_name();
    
    DENTER (TOP_LAYER, "get_user_home_defaults_file_path");
 
 #ifdef HAS_GETPWNAM_R
-   pwd = sge_getpwnam_r(uti_state_get_user_name(), &pw_struct, buffer, sizeof(buffer));
+   pwd = sge_getpwnam_r(username, &pw_struct, buffer, sizeof(buffer));
 #else
-   pwd = sge_getpwnam(uti_state_get_user_name());
+   pwd = sge_getpwnam(username);
 #endif
    if (!pwd) {
-      sprintf(str, MSG_USER_INVALIDNAMEX_S, uti_state_get_user_name());
+      sprintf(str, MSG_USER_INVALIDNAMEX_S, username);
       answer_list_add(answer_list, str, STATUS_ENOSUCHUSER, 
                       ANSWER_QUALITY_ERROR);
       DEXIT;
       return NULL;
    }
    if (!pwd->pw_dir) {
-      sprintf(str, MSG_USER_NOHOMEDIRFORUSERX_S, uti_state_get_user_name());
+      sprintf(str, MSG_USER_NOHOMEDIRFORUSERX_S, username);
       answer_list_add(answer_list, str, STATUS_EDISK, ANSWER_QUALITY_ERROR);
       DEXIT;
       return NULL;

@@ -43,6 +43,7 @@
 extern "C" {
 #endif
 
+
 #define NoName -1
 
 typedef struct _lDescr lDescr;
@@ -97,6 +98,7 @@ enum _enum_lMultiType {
 #define CULL_SUBLIST       0x00010000
 #define CULL_SPOOL_PROJECT 0x00020000
 #define CULL_SPOOL_USER    0x00040000
+#define CULL_RO            0x00080000
 
 #ifdef __SGE_GDI_LIBRARY_HOME_OBJECT_FILE__
 
@@ -119,6 +121,22 @@ enum _enum_lMultiType {
 #define SGE_OBJECT(name,type,flags) { name, lObjectT | flags, NULL },
 #define SGE_REF(name,type,flags)    { name, lRefT    | flags, NULL },
 
+#if 1
+
+#define SGE_INT_D(name,flags,def)         { name, lIntT    | flags, NULL },
+#define SGE_HOST_D(name,flags,def)        { name, lHostT   | flags, NULL },
+#define SGE_STRING_D(name,flags,def)      { name, lStringT | flags, NULL },
+#define SGE_FLOAT_D(name,flags,def)       { name, lFloatT  | flags, NULL },
+#define SGE_DOUBLE_D(name,flags,def)      { name, lDoubleT | flags, NULL },
+#define SGE_CHAR_D(name,flags,def)        { name, lCharT   | flags, NULL },
+#define SGE_LONG_D(name,flags,def)        { name, lLongT   | flags, NULL },
+#define SGE_ULONG_D(name,flags,def)       { name, lUlongT  | flags, NULL },
+#define SGE_BOOL_D(name,flags,def)        { name, lBoolT   | flags, NULL },
+#define SGE_LIST_D(name,type,flags,def)   { name, lListT   | flags, NULL },
+#define SGE_OBJECT_D(name,type,flags,def) { name, lObjectT | flags, NULL },
+#define SGE_REF_D(name,type,flags,def)    { name, lRefT    | flags, NULL },
+
+#endif
 /* 
  * For lists, objects and references the type of the subordinate object(s) 
  * must be specified.
@@ -131,7 +149,8 @@ enum _enum_lMultiType {
 #define NAME( name ) name ,
 #define NAMEEND    };
 
-#else
+#else 
+
 #ifdef __SGE_GDI_LIBRARY_SUBLIST_FILE__
 
 #define LISTDEF( name )
@@ -152,6 +171,21 @@ enum _enum_lMultiType {
 #define SGE_LIST(name,type,flags) __SUBTYPE_MAPPING__ name type
 #define SGE_OBJECT(name,type,flags)
 #define SGE_REF(name,type,flags)
+
+#if 1
+#define SGE_INT_D(name,flags,def)
+#define SGE_HOST_D(name,flags,def)
+#define SGE_STRING_D(name,flags,def)
+#define SGE_FLOAT_D(name,flags,def)
+#define SGE_DOUBLE_D(name,flags,def)
+#define SGE_CHAR_D(name,flags,def)
+#define SGE_LONG_D(name,flags,def)
+#define SGE_ULONG_D(name,flags,def)
+#define SGE_BOOL_D(name,flags,def)
+#define SGE_LIST_D(name,type,flags,def)
+#define SGE_OBJECT_D(name,type,flags,def)
+#define SGE_REF_D(name,type,flags,def)
+#endif
 
 #define NAMEDEF( name ) 
 #define NAME( name )
@@ -177,6 +211,21 @@ enum _enum_lMultiType {
 #define SGE_LIST(name,type,flags)
 #define SGE_OBJECT(name,type,flags)
 #define SGE_REF(name,type,flags)
+
+#if 1
+#define SGE_INT_D(name,flags,def)
+#define SGE_HOST_D(name,flags,def)
+#define SGE_STRING_D(name,flags,def)
+#define SGE_FLOAT_D(name,flags,def)
+#define SGE_DOUBLE_D(name,flags,def)
+#define SGE_CHAR_D(name,flags,def)
+#define SGE_LONG_D(name,flags,def)
+#define SGE_ULONG_D(name,flags,def)
+#define SGE_BOOL_D(name,flags,def)
+#define SGE_LIST_D(name,type,flags,def)
+#define SGE_OBJECT_D(name,type,flags,def)
+#define SGE_REF_D(name,type,flags,def)
+#endif
 
 #define NAMEDEF( name ) extern char *name[];
 #define NAME( name )
@@ -282,6 +331,7 @@ bool lListElem_clear_changed_info(lListElem *lp);
    for (ep=lFindFirst(lp,cp);ep;ep=lFindNext(ep,cp))
 #define for_each_where_rev(ep,lp,cp) \
    for (ep=lFindLast(lp,cp);ep;ep=lFindPrev(ep,cp))
+
 
 #ifdef  __cplusplus
 }

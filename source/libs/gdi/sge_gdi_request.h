@@ -88,6 +88,14 @@ sge_gdi_request* free_gdi_request(sge_gdi_request *ar);
 
 sge_gdi_request* new_gdi_request(void);
 
+#if 0
+int 
+sge_send_receive_gdi_request(int *commlib_error, const char *rhost, const char *commproc, 
+                             u_short id, sge_gdi_request *out, sge_gdi_request **in,
+                             lList **alpp);
+
+#endif
+
 #ifdef  __cplusplus
 }
 #endif

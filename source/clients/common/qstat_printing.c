@@ -67,6 +67,7 @@
 #include "sge_urgency.h"
 #include "sge_pe.h"
 #include "sge_ulong.h"
+#include "sge_ja_task.h"
 
 static int sge_print_job(lListElem *job, lListElem *jatep, lListElem *qep, int print_jobid, 
                          char *master, dstring *task_str, u_long32 full_listing, int

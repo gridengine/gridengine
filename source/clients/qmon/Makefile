@@ -127,7 +127,7 @@ QMON_ADD_LIBS = -L../3rdparty/qmon/$(COMPILE_ARCH) -lXbae -lXmt -lXspin -lXicon 
                 -lcomm -lcommlists -luti -llck $(DLLIB)
 
 QMON_LIB_DEPENDS = $(XBAELIB) $(XMTLIB) $(XSPINLIB) $(XICONLIB) \
-                   $(XLTREELIB) $(XTABLIB) $(SPOOLCLIB) $(SPOOLLIB) $(SPOOLFLIB) \
+                   $(XLTREELIB) $(XTABLIB) $(SPOOLFLIB) $(SPOOLCLIB) $(SPOOLLIB) \
                    $(SCHEDLIB) $(EVCLIB) $(GDILIB) $(SGEOBJLIB) \
                    $(SGEOBJDLIB) $(SECLIBS) $(KRBLIBS) $(CULLLIB) \
                    $(RMONLIB) $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(TPLIB)

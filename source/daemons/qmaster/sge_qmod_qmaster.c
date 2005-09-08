@@ -151,6 +151,9 @@ sge_gdi_qmod(char *host, sge_gdi_request *request, sge_gdi_request *answer, moni
       return;
    }
 
+
+   DPRINTF(("uid/username = %d/%s, gid/groupname = %d/%s\n", (int) uid, user, (int) gid, group));
+
    /*
    ** loop over the ids and change queue or job state and signal them
    ** if necessary

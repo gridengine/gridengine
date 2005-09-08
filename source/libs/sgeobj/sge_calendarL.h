@@ -53,6 +53,7 @@ enum {
    CAL_parsed_week_calendar
 };
 
+#if 0
 ILISTDEF(CAL_Type, Calendar, SGE_CALENDAR_LIST)
    SGE_STRING(CAL_name, CULL_PRIMARY_KEY | CULL_HASH | CULL_UNIQUE | CULL_SPOOL)
    SGE_STRING(CAL_year_calendar, CULL_DEFAULT | CULL_SPOOL)
@@ -61,6 +62,18 @@ ILISTDEF(CAL_Type, Calendar, SGE_CALENDAR_LIST)
    SGE_LIST(CAL_parsed_year_calendar, CA_Type, CULL_DEFAULT)
    SGE_LIST(CAL_parsed_week_calendar, CA_Type, CULL_DEFAULT)
 LISTEND 
+#else
+ILISTDEF(CAL_Type, Calendar, SGE_CALENDAR_LIST)
+   SGE_STRING_D(CAL_name, CULL_PRIMARY_KEY | CULL_HASH | CULL_UNIQUE | CULL_SPOOL, "template")
+   SGE_STRING_D(CAL_year_calendar, CULL_DEFAULT | CULL_SPOOL, "none")
+   SGE_STRING_D(CAL_week_calendar, CULL_DEFAULT | CULL_SPOOL, "none")
+   /* non spooling fields */
+   SGE_LIST(CAL_parsed_year_calendar, CA_Type, CULL_DEFAULT)
+   SGE_LIST(CAL_parsed_week_calendar, CA_Type, CULL_DEFAULT)
+LISTEND 
+
+#endif
+
 
 NAMEDEF(CALN)
    NAME("CAL_name")

@@ -63,6 +63,7 @@
 #include "uti/config_file.h"
 
 #include "sgeobj/msg_sgeobjlib.h"
+#include "sge_gdi_ctx.h"
 
 #define SGE_BIN "bin"
 #define STREESPOOLTIMEDEF 240
@@ -222,6 +223,7 @@ typedef struct {
   char *envp;              /* pointer to environment variable */
 } tConfEntry;
 
+static void sge_set_defined_defaults(const char *cell_root, lList **lpCfg);
 static void setConfFromCull(lList *lpCfg);
 static tConfEntry *getConfEntry(char *name, tConfEntry conf_entries[]);
 static void clean_conf(void);
@@ -302,7 +304,7 @@ static tConfEntry conf_entries[] = {
  * Initialize config list with compiled in values
  * set spool directorys from cell 
  *-------------------------------------------------------*/
-void sge_set_defined_defaults(lList **lpCfg)
+static void sge_set_defined_defaults(const char *cell_root, lList **lpCfg)
 {
    int i = 0; 
    lListElem *ep = NULL;
@@ -312,8 +314,8 @@ void sge_set_defined_defaults(lList **lpCfg)
 
    pConf = getConfEntry("execd_spool_dir", conf_entries);
    if ( pConf->value == NULL ) {
-      pConf->value = malloc(strlen(path_state_get_cell_root()) + strlen(SPOOL_DIR) + 2);
-      sprintf(pConf->value, "%s/%s", path_state_get_cell_root(), SPOOL_DIR);
+      pConf->value = malloc(strlen(cell_root) + strlen(SPOOL_DIR) + 2);
+      sprintf(pConf->value, "%s/%s", cell_root, SPOOL_DIR);
    }
 
    lFreeList(lpCfg);
@@ -525,15 +527,16 @@ tConfEntry conf[]
 *     MT-NOTE: merge_configuration() is MT safe 
 *
 *******************************************************************************/
-int merge_configuration(lListElem *global, lListElem *local, lList **lpp) {
+int merge_configuration(const char *cell_root, lListElem *global, lListElem *local, lList **lpp) {
    lList *cl;
    lListElem *elem, *ep2;
    lList *mlist = NULL;
+   
    DENTER(TOP_LAYER, "merge_configuration");
    if (lpp == NULL) {
       lpp = &mlist;
    }
-   sge_set_defined_defaults(lpp);
+   sge_set_defined_defaults(cell_root, lpp);
 
    /* Merge global configuration */
    /*

@@ -127,7 +127,7 @@ enum {
    HGRP_cqueue_list
 };
 
-LISTDEF(HGRP_Type)
+ILISTDEF(HGRP_Type, Hostgroups, SGE_HGROUP_LIST)
    SGE_HOST(HGRP_name, CULL_PRIMARY_KEY | CULL_HASH | CULL_UNIQUE | CULL_SPOOL)
    SGE_LIST(HGRP_host_list, HR_Type, CULL_SPOOL) 
    SGE_LIST(HGRP_cqueue_list, CQ_Type, CULL_DEFAULT) 

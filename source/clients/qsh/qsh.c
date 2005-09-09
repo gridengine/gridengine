@@ -883,8 +883,8 @@ static int get_client_server_context(int msgsock, char **port, char **job_dir, c
 *     get_client_name -- get path and name of client program to start
 *
 *  SYNOPSIS
-*     static char *get_client_name(int is_rsh, int is_rlogin, 
-*                                  int inherit_job);
+*     static const char *
+*     get_client_name(int is_rsh, int is_rlogin, int inherit_job);
 *
 *  FUNCTION
 *     Determines path and name of the client program to start 
@@ -918,7 +918,8 @@ static int get_client_server_context(int msgsock, char **port, char **job_dir, c
 ****************************************************************************
 *
 */
-static const char *get_client_name(int is_rsh, int is_rlogin, int inherit_job)
+static const char *
+get_client_name(int is_rsh, int is_rlogin, int inherit_job)
 {
    lList     *conf_list       = NULL;
    lListElem *global          = NULL; 
@@ -954,7 +955,7 @@ static const char *get_client_name(int is_rsh, int is_rlogin, int inherit_job)
                fclose(cache);
                DPRINTF(("found cached client name: %s\n", cache_name));
                DEXIT;
-               return cache_name;
+               return strdup(cache_name);
             }
          }
       }

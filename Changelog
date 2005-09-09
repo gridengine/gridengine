@@ -1,3 +1,9 @@
+JG-2005-09-09-0: Bugfix:    Qrsh tries to free invalid pointer
+                 Changed:   qsh (qrsh, qlogin)
+                 Issue:     1758
+                 Bugtraq:   6313445
+                 Review:    DT
+
 CR-2005-09-01-0: Testsuite: merged shutdown timeout changes from 
                             maintrunk for test_virtual_xyz module tests
 

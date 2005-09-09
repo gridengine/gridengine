@@ -206,7 +206,6 @@ const char *sge_get_root_dir(int do_exit, char *buffer, size_t size, int do_erro
 {
    char *sge_root; 
    char *s;
-   int error_number = 0;
 
    DENTER(TOP_LAYER, "sge_get_root_dir");
 
@@ -221,11 +220,9 @@ const char *sge_get_root_dir(int do_exit, char *buffer, size_t size, int do_erro
    if (sge_root) {
       s = sge_root;
    } else {
-      error_number = 4;
       goto error;
    } 
    if (!s || strlen(s)==0) { 
-      error_number = 4;
       goto error;
    } else {
       /*

@@ -66,6 +66,7 @@
  *                       configuration is requested, CONF_Type, should point
  *                       to NULL or otherwise will be freed
  * RETURN
+ *    0   on success
  *   -1   NULL pointer received
  *   -2   error resolving host
  *   -3   invalid NULL pointer received for local configuration

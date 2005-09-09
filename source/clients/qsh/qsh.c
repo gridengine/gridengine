@@ -102,7 +102,7 @@ static int start_client_program(const char *client_name,
                                 int sock);
 static int get_client_server_context(int msgsock, char **port, char **job_dir, char **utilbin_dir, const char **host);
 /* static char *get_rshd_name(char *hostname); */
-static char *get_client_name(int is_rsh, int is_rlogin, int inherit_job);
+static const char *get_client_name(int is_rsh, int is_rlogin, int inherit_job);
 /* static char *get_master_host(lListElem *jep); */
 static void set_job_info(lListElem *job, const char *name, int is_qlogin, int is_rsh, int is_rlogin);
 /* static lList *parse_script_options(lList *opts_cmdline); */
@@ -890,8 +890,8 @@ static int get_client_server_context(int msgsock, char **port, char **job_dir, c
 *     get_client_name -- get path and name of client program to start
 *
 *  SYNOPSIS
-*     static char *get_client_name(int is_rsh, int is_rlogin, 
-*                                  int inherit_job);
+*     static const char *
+*     get_client_name(int is_rsh, int is_rlogin, int inherit_job);
 *
 *  FUNCTION
 *     Determines path and name of the client program to start 
@@ -925,51 +925,79 @@ static int get_client_server_context(int msgsock, char **port, char **job_dir, c
 ****************************************************************************
 *
 */
-static char *get_client_name(int is_rsh, int is_rlogin, int inherit_job)
+static const char *
+get_client_name(int is_rsh, int is_rlogin, int inherit_job)
 {
+   /* this is what we return */
+   const char *client_name  = NULL;
+
+   /* config lists and entries to retrieve client_name from qmaster */
    lList     *conf_list       = NULL;
    lListElem *global          = NULL; 
    lListElem *local           = NULL;
    lListElem *qlogin_cmd_elem = NULL;
 
-   static char *session_type = "telnet";
-   char        *config_name  = "qlogin_command";
-   const char *client_name  = NULL;
-   char cache_name[SGE_PATH_MAX];
+   /* session type and config entry name */
+   const char *session_type;
+   const char *config_name;
+
+   /* filename of client command cache in case of qrsh -inherit */
+   char cache_name_buffer[SGE_PATH_MAX];
+   dstring cache_name_dstring;
+   const char *cache_name = NULL;
 
    DENTER(TOP_LAYER, "get_client_name");
 
-   if(is_rsh) { 
-      session_type = "rsh"; 
-      config_name  = "rsh_command";
-   }
-              
-   if(is_rlogin) { 
-      session_type = "rlogin"; 
-      config_name  = "rlogin_command";
-   }
-  
-   /* if rsh, try to read from file */
-   if(inherit_job) {
+   /* 
+    * In case of qrsh -inherit, try to read client_command from a cache file.
+    * The cache file is created in the jobs TMPDIR.
+    */
+   if (inherit_job) {
       char *tmpdir = getenv("TMPDIR");
-      *cache_name = 0;
-      if(tmpdir) {
+      /*
+       * If TMPDIR is not set for some reason (should never occur), 
+       * we cannot read a cache.
+       * cache_name remains NULL, which is checked by the code trying
+       * to write the cache file later on
+       */
+      if (tmpdir != NULL) {
          FILE *cache;
-         sprintf(cache_name, "%s/%s", tmpdir, QRSH_CLIENT_CACHE);
-         if((cache = fopen(cache_name, "r")) != NULL) {
-            if(fgets(cache_name, SGE_PATH_MAX, cache) != NULL) {
+
+         /* build filename of cache file */
+         sge_dstring_init(&cache_name_dstring, cache_name_buffer, SGE_PATH_MAX);
+         cache_name = sge_dstring_sprintf(&cache_name_dstring, "%s/%s", 
+                                          tmpdir, QRSH_CLIENT_CACHE);
+         /* try to read cache file - TODO: better call stat before? */
+         cache = fopen(cache_name, "r");
+         if (cache != NULL) {
+            char cached_command[SGE_PATH_MAX];
+
+            if (fgets(cached_command, SGE_PATH_MAX, cache) != NULL) {
                fclose(cache);
-               DPRINTF(("found cached client name: %s\n", cache_name));
+               DPRINTF(("found cached client name: %s\n", cached_command));
                DEXIT;
-               return strdup(cache_name);
+               return strdup(cached_command);
             }
+            fclose(cache);
          }
       }
    }
+ 
+   /* set session type and the corresponding config entry name */
+   if(is_rsh) { 
+      session_type = "rsh"; 
+      config_name  = "rsh_command";
+   } else if(is_rlogin) { 
+      session_type = "rlogin"; 
+      config_name  = "rlogin_command";
+   } else {
+      session_type = "telnet"; 
+      config_name  = "qlogin_command";
+   }
   
    /* get configuration from qmaster */
-   if(get_configuration(uti_state_get_qualified_hostname(), &global, &local) ||
-      merge_configuration(global, local, &conf_list)) {
+   if(get_configuration(uti_state_get_qualified_hostname(), &global, &local) != 0 ||
+      merge_configuration(global, local, &conf_list) != 0) {
       ERROR((SGE_EVENT, MSG_CONFIG_CANTGETCONFIGURATIONFROMQMASTER));
       lFreeList(&conf_list);
       lFreeElem(&global);
@@ -980,7 +1008,7 @@ static char *get_client_name(int is_rsh, int is_rlogin, int inherit_job)
 
    /* search for config entry */
    qlogin_cmd_elem = lGetElemStr(conf_list, CF_name, config_name);
-   if(!qlogin_cmd_elem) {
+   if(qlogin_cmd_elem == NULL) {
       ERROR((SGE_EVENT, MSG_CONFIG_CANTGETCONFIGURATIONFROMQMASTER));
       lFreeList(&conf_list);
       lFreeElem(&global);
@@ -989,25 +1017,34 @@ static char *get_client_name(int is_rsh, int is_rlogin, int inherit_job)
       return NULL;
    }
 
+   /* use config entry, if found */
    client_name = lGetString(qlogin_cmd_elem, CF_value);
 
-   /* default handling */
-   if(client_name == NULL || !strcmp(client_name, "none")) {
+   /* 
+    * If no command is configured, or none is configured as command,
+    * use a default: The rsh/rlogin distributed with SGE or telnet.
+    */
+   if(client_name == NULL || sge_strnullcasecmp(client_name, "none") == 0) {
       if(is_rsh || is_rlogin) {
-         /* use path $ROOT/utilbin/$ARCH/sessionType */
-         /* JG: TODO: use a dstring here */
-         static char cmdpath[SGE_PATH_MAX];
+         char default_buffer[SGE_PATH_MAX];
+         dstring default_dstring;
 
-         sprintf(cmdpath, "%s/utilbin/%s/%s", path_state_get_sge_root(), sge_get_arch(), session_type);
-         client_name = cmdpath;
+         sge_dstring_init(&default_dstring, default_buffer, SGE_PATH_MAX);
+         sge_dstring_sprintf(&default_dstring, "%s/utilbin/%s/%s", 
+                             path_state_get_sge_root(), sge_get_arch(), 
+                             session_type);
+         client_name = strdup(sge_dstring_get_string(&default_dstring));
       } else {
          /* try to find telnet in PATH */
-         client_name = session_type;
+         client_name = strdup(session_type);
       }
-   } 
+   } else {
+      client_name = strdup(client_name);
+   }
+
 
    if(inherit_job) {
-      /* cache client_name for use of further qrexec calls */
+      /* cache client_name for use in further qrsh -inherit calls */
       write_client_name_cache(cache_name, client_name);
    }
 
@@ -1015,7 +1052,7 @@ static char *get_client_name(int is_rsh, int is_rlogin, int inherit_job)
    lFreeElem(&global);
    lFreeElem(&local);
 
-   return strdup(client_name);
+   return client_name;
 }
 
 /****** Interactive/qsh/write_client_name_cache() ******************************
@@ -1052,17 +1089,14 @@ static char *get_client_name(int is_rsh, int is_rlogin, int inherit_job)
 *******************************************************************************/
 void write_client_name_cache(const char *cache_path, const char *client_name) 
 {
-   if(cache_path && *cache_path && client_name && *client_name) {
+   if (cache_path != NULL && *cache_path != '\0' && 
+       client_name != NULL && *client_name != '\0') {
       FILE *cache = NULL;
    
       if((cache = fopen(cache_path, "w")) != NULL) {
          fprintf(cache, client_name);
          fclose(cache);
       }
-
-#if 0
-      fprintf(stderr, "Wrote cached client name %s to file %s\n", client_name, cache_path);
-#endif      
    }
 }
 
@@ -1221,7 +1255,7 @@ int main(int argc, char **argv)
 
    const char *host = NULL;
    char name[MAX_JOB_NAME + 1];
-   char *client_name = NULL;
+   const char *client_name = NULL;
    char *port = NULL;
    char *job_dir = NULL;
    char *utilbin_dir = NULL;

@@ -1,3 +1,9 @@
+DT-2005-09-09-0: Testsuite: o Reworked TS/jUnit integration to pass in env vars
+                            o Updated SessionImplJobTest to use new env vars
+                            o Added jUnit test for Issue 1770
+                            o Updated drmaaj test to use drmaa-test.jar from
+                              source directory
+
 JG-2005-09-09-0: Bugfix:    Fixed fix for IZ 1758, some cleanup.
                             Fixed broken build on irix65.
                  Changed:   qsh (qrsh, qlogin)

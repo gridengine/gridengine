@@ -565,7 +565,9 @@ int portable_vsnprintf(char *str, size_t str_m, const char *fmt, va_list ap) {
       }
       p += n; str_l += n;
     } else {
+#if defined(PERL_COMPATIBLE) || defined(LINUX_COMPATIBLE)
       const char *starting_p;
+#endif
       size_t min_field_width = 0, precision = 0;
       int zero_padding = 0, precision_specified = 0, justify_left = 0;
       int alternate_form = 0, force_sign = 0;
@@ -594,7 +596,9 @@ int portable_vsnprintf(char *str, size_t str_m, const char *fmt, va_list ap) {
 
       str_arg = credits;/* just to make compiler happy (defined but not used)*/
       str_arg = NULL;
+#if defined(PERL_COMPATIBLE) || defined(LINUX_COMPATIBLE)
       starting_p = p; p++;  /* skip '%' */
+#endif
    /* parse flags */
       while (*p == '0' || *p == '-' || *p == '+' ||
              *p == ' ' || *p == '#' || *p == '\'') {

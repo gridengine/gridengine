@@ -1,3 +1,10 @@
+DT-2005-09-12-1: Bugfix:    o Fixed quote processing
+                            - Merged from DT-2005-09-12-1
+                 Changed:   sge_string.c
+                 Issue:     1556
+                 Bugtraq:   6253860
+                 Review:    EB
+
 JG-2005-09-09-0: Bugfix:    Fixed fix for IZ 1758, some cleanup.
                             Fixed broken build on irix65.
                  Changed:   qsh (qrsh, qlogin)

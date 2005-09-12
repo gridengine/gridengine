@@ -733,8 +733,8 @@ MakeCADirs()
       exit 1
    fi
 
-   Execute $RM -rf $CALOCALTOP 2>&1 /dev/null
-   ExecuteAsAdmin $RM -rf $CATOP 2>&1 /dev/null
+   Execute $RM -rf $CALOCALTOP > /dev/null 2>&1 
+   ExecuteAsAdmin $RM -rf $CATOP > /dev/null 2>&1
 
    if [ -f $CATOP -o -d $CATOP -o -f $CALOCALTOP -o -d $CALOCALTOP ]; then
       $INFOTEXT "Can't delete the CA directories\n   %s or %s" \

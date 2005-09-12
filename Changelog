@@ -1,3 +1,7 @@
+AA-2005-09-12-0: Bugfix:    ooops, removing /dev/null in sge_ca
+                 Changed:   sge_ca
+                 Review:    MD
+                 
 DT-2005-09-12-1: Bugfix:    o Fixed quote processing
                  Changed:   sge_string.c
                  Issue:     1556

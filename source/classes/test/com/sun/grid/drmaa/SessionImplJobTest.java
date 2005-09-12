@@ -30,7 +30,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 /*
- * SessionImplTest.java
+ * SessionImplJobTest.java
  * JUnit based test
  *
  * Created on November 15, 2004, 10:41 AM
@@ -41,13 +41,14 @@ package com.sun.grid.drmaa;
 import java.util.*;
 import junit.framework.*;
 import org.ggf.drmaa.*;
+import com.sun.grid.Settings;
 
 /**
  *
  * @author dan.templeton@sun.com
  */
 public class SessionImplJobTest extends TestCase {
-   private static final String SCRIPT = "/tmp/drmaaj_sleeper.sh";
+   private static final String SCRIPT = Settings.get (Settings.TEST_PATH) + "/sleeper.sh";
    private Session session = null;
    
    public SessionImplJobTest (java.lang.String testName) {

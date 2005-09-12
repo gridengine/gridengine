@@ -1135,20 +1135,26 @@ void sge_compress_slashes(char *str)
 ******************************************************************************/
 void sge_strip_quotes(char **pstr) 
 {
-   char *cp, *cp2;
+   char *cp = NULL;
+   char *cp2 = NULL;
 
    DENTER(TOP_LAYER, "sge_strip_quotes");
+   
    if (!pstr) {
       DEXIT;
       return;
    }
+   
    for (; *pstr; pstr++) {
       for (cp2 = cp = *pstr; *cp; cp++) {
-         if (*cp == '"') {
+         if (*cp != '"') {
             *cp2++ = *cp;
          }
       }
+      
+      *cp2 = '\0';
    }
+   
    DEXIT;
    return;
 }

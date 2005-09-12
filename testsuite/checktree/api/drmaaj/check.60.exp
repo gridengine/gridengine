@@ -84,7 +84,7 @@ proc drmaaj_init_level {} {
 
 # here the actual test is done
 proc drmaaj_check {} {
-   global ts_config
+   global ts_config env
    global CHECK_OUTPUT CHECK_TESTSUITE_ROOT CHECK_ACTUAL_TEST_PATH
    global CHECK_HOST CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_USER
 
@@ -129,29 +129,20 @@ proc drmaaj_check {} {
       }
 
       set compile_arch_mt "[resolve_build_arch $host]"
-      set classpath "$CHECK_PRODUCT_ROOT/lib/drmaa.jar:$CHECK_TESTSUITE_ROOT/lib/drmaa-test.jar:$CHECK_TESTSUITE_ROOT/lib/junit.jar"
+      set classpath "$CHECK_PRODUCT_ROOT/lib/drmaa.jar:$ts_config(source_dir)/CLASSES/drmaa-test.jar:$CHECK_TESTSUITE_ROOT/lib/junit.jar"
       puts $CHECK_OUTPUT "host is $host has arch $compile_arch_mt with classpath $classpath"
 
-      set options ""
+      set options [build_java_env_list]
 
       if { $binary_arch == "sol-sparc64" } {
          puts $CHECK_OUTPUT "using 64-bit VM"
          set options "-d64 $options"
       }
 
-      # Make sleeper script file available.  We have a problem in that JUnit
-      # doesn't allow arguments to be passed to the test program.  In order for
-      # the test program to find the sleeper script, it has to be in a
-      # predetermined location.  We have to use this special sleeper script
-      # because the test program requires that the script survive a suspend and
-      # resume.  On most architectures other than Solaris, /bin/sleep wakes up
-      # on SIGCONT.  This script notes the time before it sleeps and keeps
-      # sleeping until the given duration is reached.
-      start_remote_prog $host $CHECK_USER "rm" $my_sleeper prg_exit_state 80
-      start_remote_prog $host $CHECK_USER "ln" "-s $CHECK_ACTUAL_TEST_PATH/sleeper.sh $my_sleeper" prg_exit_state 80
-      set test_output [ start_remote_prog $host $CHECK_USER $JAVA "$options -cp $classpath junit.textui.TestRunner DrmaaSuite" prg_exit_state 500 ]
-      # Remove script file
-      start_remote_prog $host $CHECK_USER "rm" $my_sleeper prg_exit_state 80
+      set options "-cp $classpath $options"
+
+      puts $CHECK_OUTPUT "Starting VM: $JAVA $options junit.textui.TestRunner DrmaaSuite"
+      set test_output [ start_remote_prog $host $CHECK_USER $JAVA "$options junit.textui.TestRunner DrmaaSuite" prg_exit_state 500 ]
 
       if { $prg_exit_state != 0 } {
          add_proc_error drmaa_check -1 "DRMAA-J JUnit test suite failed at host $host:\n$test_output"

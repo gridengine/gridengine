@@ -1,3 +1,36 @@
+AA-2005-09-12-0: Bugfix:    ooops, removing /dev/null in sge_ca
+                 Changed:   sge_ca
+                 Review:    MD
+                 
+DT-2005-09-12-1: Bugfix:    o Fixed quote processing
+                 Changed:   sge_string.c
+                 Issue:     1556
+                 Bugtraq:   6253860
+                 Review:    EB
+
+DT-2005-09-12-0: Testsuite: o Added test for issue 1556
+
+DT-2005-09-09-0: Testsuite: o Reworked TS/jUnit integration to pass in env vars
+                            o Updated SessionImplJobTest to use new env vars
+                            o Added jUnit test for Issue 1770
+                            o Updated drmaaj test to use drmaa-test.jar from
+                              source directory
+
+JG-2005-09-09-0: Bugfix:    Fixed fix for IZ 1758, some cleanup.
+                            Fixed broken build on irix65.
+                 Changed:   qsh (qrsh, qlogin)
+                 Issue:     1758
+                 Bugtraq:   6313445
+                 Review:    DT
+
+MD-2005-09-08-1: Enhancem:  - added some config parameters to autoinstall
+                              config file
+                 Changed:   inst_template.conf
+
+MD-2005-09-08-0: Enhancem:  - sge_ca auto enabled
+                 Changed:   sge_ca
+                 Review:    AA
+
 DT-2005-09-08-0: Testsuite: o Fixed test for Issue 1780
 
 DT-2005-09-07-2: Bugfix:    o Fixed broken build

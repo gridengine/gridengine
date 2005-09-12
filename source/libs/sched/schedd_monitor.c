@@ -35,7 +35,7 @@
 #include <limits.h>
 
 #include "sge_all_listsL.h"
-/* #include "sge_schedd.h" */
+#include "sge_stdio.h" 
 #include "schedd_monitor.h"
 #include "sgermon.h"
 #include "cull_parse_util.h"
@@ -105,11 +105,14 @@ int schedd_log(const char *logstr) {
 
       fprintf(fp, "%s", time_str);
       fprintf(fp, "%s\n", logstr);
-      fclose(fp);
+      FCLOSE(fp);
    }
 
    DEXIT;
    return 0;
+FCLOSE_ERROR:
+   DEXIT;
+   return -1;
 }
 
 

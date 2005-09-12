@@ -47,6 +47,7 @@
 #include "basis_types.h"
 #include "sge_dstring.h"
 #include "sge_string.h"
+#include "sge_stdio.h"
 
 #define READ_LINE_LENGHT 255
 
@@ -237,9 +238,11 @@ int lDumpElem(const char *fname, const lListElem *ep, int indent)
    }
 
    ret = lDumpElemFp(fp, ep, indent);
-   fclose(fp);
+   FCLOSE(fp);
 
    return ret;
+FCLOSE_ERROR:
+   return -1;
 }
 
 /****** cull/dump_scan/lDumpElemFp() ******************************************

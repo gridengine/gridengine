@@ -44,6 +44,7 @@
 #include "symbols.h"
 #include "sge_conf.h"
 #include "sge_str.h"
+#include "sge_stdio.h"
 #include "sge_sched.h"
 #include "sge_feature.h"
 #include "sge_manop.h"
@@ -3746,10 +3747,9 @@ void sge_init_job_number(void) {
       if (fscanf(fp, sge_u32, &job_nr) != 1) {
          ERROR((SGE_EVENT, MSG_JOB_NOSEQNRREAD_SS, SEQ_NUM_FILE, strerror(errno)));
       }
-      fclose(fp);
+      FCLOSE(fp);
       fp = NULL;
-   }
-   else {
+   } else {
       WARNING((SGE_EVENT, MSG_JOB_NOSEQFILEOPEN_SS, SEQ_NUM_FILE, strerror(errno)));
    }  
    
@@ -3763,6 +3763,9 @@ void sge_init_job_number(void) {
    sge_mutex_unlock("job_number_mutex", "sge_init_job_number", __LINE__, 
                   &job_number_control.job_number_mutex);   
                   
+   DEXIT;
+   return;
+FCLOSE_ERROR:
    DEXIT;
    return;
 }
@@ -3786,12 +3789,14 @@ void sge_store_job_number(te_event_t anEvent, monitoring_t *monitor) {
    if(changed) {
       if (!(fp = fopen(SEQ_NUM_FILE, "w"))) {
          ERROR((SGE_EVENT, MSG_JOB_NOSEQFILECREATE_SS, SEQ_NUM_FILE, strerror(errno)));
-      }         
-      else {
+      } else {
          fprintf(fp, sge_u32"\n", job_nr);
-         fclose(fp);
+         FCLOSE(fp);
       }   
    }
+   DEXIT;
+   return;
+FCLOSE_ERROR:
    DEXIT;
    return;
 }

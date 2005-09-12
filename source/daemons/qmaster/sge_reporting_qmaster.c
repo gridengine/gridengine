@@ -42,6 +42,7 @@
 /* uti */
 #include "uti/sge_log.h"
 #include "uti/sge_string.h"
+#include "uti/sge_stdio.h"
 #include "uti/sge_dstring.h"
 #include "uti/setup_path.h"
 #include "uti/sge_stdlib.h"
@@ -1264,10 +1265,13 @@ reporting_flush_report_file(lList **answer_list,
                       rep_buf_t *buf)
 {
    bool ret = true;
-   
+   dstring error_dstring;
+   char error_buffer[MAX_STRING_SIZE];
    size_t size;
 
    DENTER(TOP_LAYER, "reporting_flush_report_file");
+
+   sge_dstring_init(&error_dstring, error_buffer, sizeof(error_buffer));
 
    size = sge_dstring_strlen(&(buf->buffer));
 
@@ -1276,10 +1280,6 @@ reporting_flush_report_file(lList **answer_list,
       FILE *fp;
       bool write_comment = false;
       SGE_STRUCT_STAT statbuf;
-      char error_buffer[MAX_STRING_SIZE];
-      dstring error_dstring;
-
-      sge_dstring_init(&error_dstring, error_buffer, sizeof(error_buffer));
 
       /* if file doesn't exist: write a comment after creating it */
       if (SGE_STAT(filename, &statbuf)) {
@@ -1352,18 +1352,7 @@ reporting_flush_report_file(lList **answer_list,
 
       /* close file */
       if (fp != NULL) {
-         if (fclose(fp) != 0) {
-            if (answer_list == NULL) {
-               ERROR((SGE_EVENT, MSG_ERRORCLOSINGFILE_SS, filename, 
-                      sge_strerror(errno, &error_dstring)));
-            } else {
-               answer_list_add_sprintf(answer_list, STATUS_EDISK, 
-                                       ANSWER_QUALITY_ERROR, 
-                                       MSG_ERRORCLOSINGFILE_SS, filename, 
-                                       sge_strerror(errno, &error_dstring));
-            }
-            ret = false;
-         }
+         FCLOSE(fp);
       }
 
       /* clear the buffer. We do this regardless of the result of
@@ -1377,6 +1366,18 @@ reporting_flush_report_file(lList **answer_list,
 
    DEXIT;
    return ret;
+FCLOSE_ERROR:
+   if (answer_list == NULL) {
+      ERROR((SGE_EVENT, MSG_ERRORCLOSINGFILE_SS, filename, 
+             sge_strerror(errno, &error_dstring)));
+   } else {
+      answer_list_add_sprintf(answer_list, STATUS_EDISK, 
+                              ANSWER_QUALITY_ERROR, 
+                              MSG_ERRORCLOSINGFILE_SS, filename, 
+                              sge_strerror(errno, &error_dstring));
+   }
+   DEXIT;
+   return false;
 }
 /*
 * NOTES

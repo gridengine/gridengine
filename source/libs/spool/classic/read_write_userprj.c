@@ -242,13 +242,14 @@ int user        /* =1 user, =0 project */
    }
 
    if (fname) {
-      fclose(fp);
+      FCLOSE(fp);
    }
 
    DEXIT;
    return 0;
 
 FPRINTF_ERROR:
+FCLOSE_ERROR:
    answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR); 
    DEXIT;
    return -1;   

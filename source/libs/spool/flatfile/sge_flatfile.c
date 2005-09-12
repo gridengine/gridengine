@@ -831,19 +831,18 @@ spool_flatfile_close_file(lList **answer_list, FILE *file, const char *filepath,
 #if !defined(AIX42) && !defined(DARWIN6)
       funlockfile(file);
 #endif
-      return true;
-   }
-
-   if (fclose(file) != 0) {
-      answer_list_add_sprintf(answer_list, STATUS_EDISK,
-                              ANSWER_QUALITY_ERROR, 
-                              MSG_ERRORCLOSINGFILE_SS, 
-                              filepath != NULL ? filepath : "<null>", 
-                              strerror(errno));
-      return false;
+   } else {
+      FCLOSE(file);
    }
 
    return true;
+FCLOSE_ERROR:
+   answer_list_add_sprintf(answer_list, STATUS_EDISK,
+                           ANSWER_QUALITY_ERROR,
+                           MSG_ERRORCLOSINGFILE_SS,
+                           filepath != NULL ? filepath : "<null>",
+                           strerror(errno));
+   return false;
 }
 
 static const char *
@@ -868,7 +867,7 @@ spool_flatfile_write_data(lList **answer_list, const void *data, int data_len,
    }
 
    if (print_header && (sge_spoolmsg_write(file, COMMENT_CHAR, 
-         feature_get_product_name(FS_VERSION, &ds)) < 0)) {
+      feature_get_product_name(FS_VERSION, &ds)) < 0)) {
       /* on error just don't print the header */
    }
 
@@ -1227,7 +1226,7 @@ spool_flatfile_read_object(lList **answer_list, const lDescr *descr,
                               ANSWER_QUALITY_ERROR, 
                               MSG_GDI_OUTOFMEMORY);
       if (file_opened) {
-         fclose (file);
+         FCLOSE(file);
       }
       DEXIT;
       return NULL;
@@ -1243,7 +1242,7 @@ spool_flatfile_read_object(lList **answer_list, const lDescr *descr,
          /* messages generated in spool_get_fields_to_spool */
          spool_scanner_shutdown();
          if (file_opened) {
-            fclose (file);
+            FCLOSE(file);
          }
          DEXIT;
          return NULL;
@@ -1260,7 +1259,7 @@ spool_flatfile_read_object(lList **answer_list, const lDescr *descr,
 
    /* if we opened the file, we also have to close it */
    if (file_opened) {
-      fclose(file);
+      FCLOSE(file);
    }
 
    /* if we created our own fields */
@@ -1270,6 +1269,9 @@ spool_flatfile_read_object(lList **answer_list, const lDescr *descr,
 
    DEXIT;
    return object;
+FCLOSE_ERROR:
+   DEXIT;
+   return NULL;
 }
 
 static lListElem *
@@ -1825,7 +1827,7 @@ spool_flatfile_read_list(lList **answer_list, const lDescr *descr,
                               MSG_GDI_OUTOFMEMORY);
 
       if (file_opened) {
-         fclose (file);
+         FCLOSE(file);
       }
       DEXIT;
       return NULL;
@@ -1841,7 +1843,7 @@ spool_flatfile_read_list(lList **answer_list, const lDescr *descr,
          /* messages generated in spool_get_fields_to_spool */
          spool_scanner_shutdown();
          if (file_opened) {
-            fclose (file);
+            FCLOSE(file);
          }
          DEXIT;
          return NULL;
@@ -1857,7 +1859,7 @@ spool_flatfile_read_list(lList **answer_list, const lDescr *descr,
 
    /* if we opened the file, we also have to close it */
    if (file_opened) {
-      fclose(file);
+      FCLOSE(file);
    }
 
    /* if we created our own fields */
@@ -1867,6 +1869,9 @@ spool_flatfile_read_list(lList **answer_list, const lDescr *descr,
 
    DEXIT;
    return list;
+FCLOSE_ERROR:
+   DEXIT;
+   return NULL;
 }
 
 static lList *

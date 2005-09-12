@@ -38,6 +38,7 @@
 #include <fcntl.h>
 #include <errno.h>
 
+#include "sge_stdio.h"
 #include "sgermon.h"
 #include "sge_log.h"
 #include "sge_io.h"
@@ -548,7 +549,7 @@ char *sge_file2string(const char *fname, int *len)
    }
  
    if ((str = malloc(size+1)) == NULL) {
-      fclose(fp);
+      FCLOSE(fp);
       DEXIT;
       return NULL;
    }
@@ -570,7 +571,7 @@ char *sge_file2string(const char *fname, int *len)
       i = fread(str, 1, size, fp);
       if (i == 0) {
          free(str);
-         fclose(fp);
+         FCLOSE(fp);
          DEXIT;
          return NULL;
       }
@@ -583,7 +584,7 @@ char *sge_file2string(const char *fname, int *len)
       if (i != 1) {
          ERROR((SGE_EVENT, MSG_FILE_FREADFAILED_SS, fname, strerror(errno)));
          free(str);
-         fclose(fp);
+         FCLOSE(fp);
          DEXIT;
          return NULL;
       }
@@ -594,10 +595,13 @@ char *sge_file2string(const char *fname, int *len)
 #endif
    } 
  
-   fclose(fp);
+   FCLOSE(fp);
 
    DEXIT;
    return str;
+FCLOSE_ERROR:
+   DEXIT;
+   return NULL;
 }
  
 /****** uti/io/sge_stream2string() ********************************************
@@ -708,15 +712,18 @@ int sge_string2file(const char *str, int len, const char *fname)
    if (fwrite(str, len, 1, fp) != 1) {
       int old_errno = errno;
       ERROR((SGE_EVENT, MSG_FILE_WRITEBYTESFAILED_IS, len, fname));
-      fclose(fp);
+      FCLOSE(fp);
       unlink(fname);
       errno = old_errno;
       DEXIT;
       return -1;
    }
  
-   fclose(fp);
+   FCLOSE(fp);
    DEXIT;
    return 0;
+FCLOSE_ERROR:
+   DEXIT;
+   return -1;
 }          
 

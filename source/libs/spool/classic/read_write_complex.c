@@ -373,10 +373,12 @@ lList *read_cmplx(const char *fname, const char *cmplx_name, lList **alpp)
       lAppendElem(lp, ep);
    }
 
-   fclose(fp);
-
+   FCLOSE(fp);
    DEXIT;
    return lp;
+FCLOSE_ERROR:
+   DEXIT;
+   return NULL;
 }
 
 static int parse_flag(
@@ -523,13 +525,14 @@ lList **alpp
    FPRINTF((fp, "# "SFN"\n", MSG_COMPLEX_STARTSCOMMENTBUTNOSAVE));
    
    if (fname) {
-      fclose(fp);
+      FCLOSE(fp);
    }
 
    DEXIT;
    return 0;
 
 FPRINTF_ERROR:
+FCLOSE_ERROR:
    ERROR((SGE_EVENT, MSG_ERRORWRITINGFILE_SS, fname, strerror(errno)));
    if (alpp) 
       answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR); 

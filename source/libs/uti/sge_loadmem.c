@@ -38,6 +38,7 @@
 #endif
 
 #include "sge_loadmem.h"
+#include "sge_stdio.h"
 #include "sgermon.h"
 #include "sge_log.h"
 #include "sge_os.h"
@@ -704,13 +705,15 @@ int sge_loadmem(sge_mem_info_t *mem_info)
          READ_VALUE(KEY_CACHED,    cached);
 
       }
-      fclose(fp);
+      FCLOSE(fp);
    } else {
       return 1;
    }
    mem_info->mem_free += buffers+cached;
 
    return 0;
+FCLOSE_ERROR:
+   return 1;
 }
 #endif /* LINUX */
 

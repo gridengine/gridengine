@@ -34,6 +34,8 @@
 #include <errno.h>
 #include <string.h>
 
+#include "uti/sge_stdio.h"
+
 #include "sgermon.h"
 #include "sge_log.h"
 #include "qmaster_heartbeat.h"
@@ -62,14 +64,17 @@ char *file
    }
 
    if (fscanf(fp, "%d", &hb) != 1) {
-      fclose(fp);
+      FCLOSE(fp);
       DEXIT;
       return -1;
    }
 
-   fclose(fp);
+   FCLOSE(fp);
    DEXIT;
    return hb;
+FCLOSE_ERROR:
+   DEXIT;
+   return -1;
 }
 
 /*--------------------------------------------------------------
@@ -104,13 +109,14 @@ char *file
 
    fseek(fp, 0, 0);
    if (fprintf(fp, "%d\n", hb) == EOF) {
-      fclose(fp);
+      FCLOSE(fp);
       DEXIT;
       return -1;
    }
-
-   fclose(fp);
-
+   FCLOSE(fp);
    DEXIT;
    return 0;
+FCLOSE_ERROR:
+   DEXIT;
+   return -1;
 }

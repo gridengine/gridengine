@@ -894,7 +894,6 @@ int job_list_read_from_disk(lList **job_list, char *list_name, int check,
 
             /* check directory name */
             if (strcmp(fourth_dir, job_dir)) {
-               fprintf(stderr, "%s %s\n", fourth_dir, job_dir);
                DPRINTF(("Invalid directory "SFN"\n", fourth_dir));
                continue;
             }

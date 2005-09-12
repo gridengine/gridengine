@@ -168,14 +168,17 @@ int root_node
       }
    }
 
-   if (fname)
-      fclose(fp);
+   if (fname) {
+      FCLOSE(fp);
+   }
 
    DEXIT;
    return 0;
 FPRINTF_ERROR:
-   if (fname)
-      fclose(fp); 
+   if (fname) {
+      FCLOSE(fp); 
+   }
+FCLOSE_ERROR:
    answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
    DEXIT;
    return -1;

@@ -45,6 +45,7 @@
 #include <netdb.h>
 
 #include "sge_hostname.h"
+#include "sge_stdio.h"
 #include "cl_commlib.h"
 #include "cl_util.h"
 #include "cl_data_types.h"
@@ -2657,7 +2658,7 @@ int cl_com_read_alias_file(cl_raw_list_t* hostlist) {
             cl_com_free_hostent(&he);
             if (main_name == NULL) {
                CL_LOG(CL_LOG_ERROR,"malloc() error");
-               fclose(fp);
+               FCLOSE(fp);
                return CL_RETVAL_MALLOC;
             }
          } else {
@@ -2677,10 +2678,12 @@ int cl_com_read_alias_file(cl_raw_list_t* hostlist) {
          main_name = NULL;
       }
    }
-   fclose(fp);
-
+   FCLOSE(fp);
 
    return CL_RETVAL_OK;
+FCLOSE_ERROR:
+   CL_LOG(CL_LOG_ERROR,"can't close host alias file");
+   return CL_RETVAL_OPEN_ALIAS_FILE_FAILED;
 }
 
 #ifdef __CL_FUNCTION__

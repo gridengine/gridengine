@@ -188,7 +188,7 @@ const lListElem *ep
            (s=lGetString(ep, CAL_week_calendar))?s:"NONE"));
 
    if (how != 0) {
-      fclose(fp);
+      FCLOSE(fp);
    }
    if (how == 2) {
       if (rename(filename, real_filename) == -1) {
@@ -203,6 +203,7 @@ const lListElem *ep
    return how==1?sge_strdup(NULL, filename):filename;
 
 FPRINTF_ERROR:
+FCLOSE_ERROR:
    DEXIT;
    return NULL;  
 }

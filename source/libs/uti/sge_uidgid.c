@@ -41,6 +41,7 @@
 #include <pthread.h>
 
 #include "basis_types.h"
+#include "sge_stdio.h"
 #include "sgermon.h"
 #include "sge_unistd.h"
 #include "sge_log.h"
@@ -1354,10 +1355,13 @@ password_get_size(const char *filename)
             do_loop = false;
          }
       }
-      fclose(fp); 
+      FCLOSE(fp); 
    }
    DEXIT;
    return ret;
+FCLOSE_ERROR:
+   DEXIT;
+   return -1;
 }
 
 /* Not MT-Safe */
@@ -1400,7 +1404,7 @@ password_read_file(char **users[], char**encryped_pwds[], const char *filename)
       (*users)[i] = NULL;
       (*encryped_pwds)[i] = NULL; i++;
 
-      fclose(fp); 
+      FCLOSE(fp); 
    } else {
       *users = malloc(2 * sizeof(char*));
       *encryped_pwds = malloc(2 * sizeof(char*));
@@ -1414,6 +1418,9 @@ password_read_file(char **users[], char**encryped_pwds[], const char *filename)
    }
    DEXIT;
    return ret;
+FCLOSE_ERROR:
+   DEXIT;
+   return 1;
 }
 
 /* Not MT-Safe */

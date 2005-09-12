@@ -244,8 +244,9 @@ const lListElem *ep
    FPRINTF((fp, "signal             %s\n", lGetString(ep, CK_signal)));
 
    FPRINTF((fp, "when               %s\n", lGetString(ep, CK_when)));
-   if (how!=0)
-      fclose(fp);
+   if (how!=0) {
+      FCLOSE(fp);
+   }
 
    if (how == 2) {
       if (rename(filename, real_filename) == -1) {
@@ -260,6 +261,7 @@ const lListElem *ep
    return how==1?sge_strdup(NULL, filename):filename;
 
 FPRINTF_ERROR:
+FCLOSE_ERROR:
    DEXIT;
    return NULL; 
 }

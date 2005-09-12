@@ -325,7 +325,7 @@ read_public_key(const char *certfile)
 {
    FILE *fp = NULL;
    X509 *x509;
-   EVP_PKEY *pkey;
+   EVP_PKEY *pkey = NULL;
 
    DENTER(TOP_LAYER, "read_public_key");
    fp = fopen(certfile, "r");
@@ -339,12 +339,13 @@ read_public_key(const char *certfile)
       DEXIT;
       return NULL;
    }
-   fclose (fp);
+   FCLOSE (fp);
    pkey = shared_ssl_func__X509_extract_key(x509);
    shared_ssl_func__X509_free(x509);
    if (pkey == NULL) {
       shared_ssl_func__ERR_print_errors_fp(stderr);
    }
+FCLOSE_ERROR:
    DEXIT;
    return pkey;
 }
@@ -352,6 +353,7 @@ read_public_key(const char *certfile)
 static EVP_PKEY *
 read_private_key(const char *keyfile)
 {
+   EVP_PKEY *ret = NULL;
    FILE *fp = NULL;
    union {
       EVP_PKEY *pkey;
@@ -373,12 +375,14 @@ read_private_key(const char *keyfile)
 #else
    pku.pkey = PEM_read_PrivateKey(fp, NULL, 0, NULL);
 #endif
-   fclose (fp);
+   FCLOSE(fp);
    if (pku.pkey == NULL) {
       shared_ssl_func__ERR_print_errors_fp(stderr);
    }
+   ret = pku.pkey;
+FCLOSE_ERROR:
    DEXIT;
-   return pku.pkey;
+   return ret;
 }
 
 static void

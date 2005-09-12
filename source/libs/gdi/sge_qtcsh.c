@@ -41,6 +41,7 @@
 
 #include "sge_gdi.h"
 #include "sge_answer.h"
+#include "sge_stdio.h"
 #include "sge_any_request.h"
 #include "sgermon.h"
 #include "sge_log.h"
@@ -122,10 +123,10 @@ print_func_t ostream
       /* read in config file */
       if (read_config_list(fp, &clp_cluster, alpp, CF_Type, CF_name, CF_value,
                         CF_sublist, NULL, RCL_NO_VALUE, buffer, sizeof(buffer)-1)) {
-         fclose(fp);
+         FCLOSE(fp);
          goto Error;
       }
-      fclose(fp);
+      FCLOSE(fp);
    }
 
    /* skip tasknames containing '/' */
@@ -168,10 +169,10 @@ print_func_t ostream
       /* read in config file */
       if (read_config_list(fp, &clp_user, alpp, CF_Type, CF_name, CF_value,
                            CF_sublist, NULL, RCL_NO_VALUE, buffer, sizeof(buffer)-1)) {
-         fclose(fp);
+         FCLOSE(fp);
          goto Error;
       }
-      fclose(fp);
+      FCLOSE(fp);
    }
 
    /* skip tasknames containing '/' */
@@ -251,6 +252,7 @@ print_func_t ostream
    return 0;
 
 Error:
+FCLOSE_ERROR:
    lFreeList(&clp_cluster);
    lFreeList(&clp_user);
    return -1;

@@ -229,10 +229,13 @@ static int path_alias_read_from_file(lList **path_alias_list, lList **alpp,
 
    } /* while (fgets) */
 
-   fclose(fd);
+   FCLOSE(fd);
 
    DEXIT;
    return ret;
+FCLOSE_ERROR:
+   DEXIT;
+   return -1;
 }
 
 /****** sgeobj/path_alias/path_alias_list_initialize() ************************

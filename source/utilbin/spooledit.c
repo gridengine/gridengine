@@ -36,6 +36,7 @@
 #include <errno.h>
 
 #include "uti/sge_string.h"
+#include "uti/sge_stdio.h"
 #include "sge_all_listsL.h"
 #include "sge_bootstrap.h"
 #include "sgermon.h"
@@ -268,7 +269,7 @@ load_object(bdb_info info, const char *key, const char *fname)
          ret = EXIT_FAILURE;
       } else {
          object = lUndumpElemFp(fd, descr);
-         fclose(fd);
+         FCLOSE(fd);
          if (object == NULL) {
             ERROR((SGE_EVENT, MSG_DBSTAT_ERRORUNDUMPING_S, fname));
             ret = EXIT_FAILURE;
@@ -304,6 +305,10 @@ load_object(bdb_info info, const char *key, const char *fname)
 
    DEXIT;
    return ret;
+FCLOSE_ERROR:
+   ERROR((SGE_EVENT, MSG_ERRORCLOSINGFILE_SS, fname, strerror(errno)));
+   DEXIT;
+   return EXIT_FAILURE;
 }
 
 static int 

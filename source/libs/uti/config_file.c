@@ -36,11 +36,13 @@
 
 #include "sgermon.h"
 #include "sge_log.h"
+#include "sge_stdio.h"
 #include "basis_types.h"
 #include "sge_string.h"
 #include "err_trace.h"
 #include "sge_parse_num_par.h"
 #include "config_file.h"
+
 #include "msg_daemons_common.h"
 
 
@@ -198,9 +200,11 @@ const char *fname
       }
       sge_free_saved_vars(context);
    }
-   fclose(fp);
+   FCLOSE(fp);
 
    return 0;
+FCLOSE_ERROR:
+   return 1;
 }
 
 /******************************************************/

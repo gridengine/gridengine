@@ -1,3 +1,5 @@
+DT-2005-09-12-0: Testsuite: o Added test for issue 1556
+
 DT-2005-09-09-0: Testsuite: o Reworked TS/jUnit integration to pass in env vars
                             o Updated SessionImplJobTest to use new env vars
                             o Added jUnit test for Issue 1770

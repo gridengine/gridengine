@@ -309,9 +309,9 @@ sge_gdi_qmod(char *host, sge_gdi_request *request, sge_gdi_request *answer, moni
                         if ((taskid >= start && taskid <= end &&
                            ((taskid-start)%step) == 0) || alltasks) {
                            DPRINTF(("Modify job: "sge_u32"."sge_u32"\n", jobid,
-                              taskid));
+                                    taskid));
                            sge_change_job_state(user, host, job, NULL, taskid,
-                               action, lGetUlong(dep, ID_force), &alp, monitor);   
+                                                action, lGetUlong(dep, ID_force), &alp, monitor);   
                            found = true;
                         }
                      }
@@ -321,14 +321,15 @@ sge_gdi_qmod(char *host, sge_gdi_request *request, sge_gdi_request *answer, moni
                   for_each (range, lGetList(job, JB_ja_s_h_ids)) {
                      range_get_all_ids(range, &min, &max, &step);
                      for (taskid=min; taskid<=max; taskid+= step) {
-                        if (range_list_is_id_within(lGetList(job, JB_ja_u_h_ids), taskid))
+                        if (range_list_is_id_within(lGetList(job, JB_ja_u_h_ids), taskid)) {
                            continue;
+                        }
                         if ((taskid >= start && taskid <= end &&
                            ((taskid-start)%step) == 0) || alltasks) {
                            DPRINTF(("Modify job: "sge_u32"."sge_u32"\n", jobid,
-                              taskid));
+                                    taskid));
                            sge_change_job_state(user, host, job, NULL, taskid,
-                               action, lGetUlong(dep, ID_force), &alp, monitor);   
+                                                action, lGetUlong(dep, ID_force), &alp, monitor);   
                            found = true;
                         }
                      }
@@ -339,14 +340,15 @@ sge_gdi_qmod(char *host, sge_gdi_request *request, sge_gdi_request *answer, moni
                      range_get_all_ids(range, &min, &max, &step);
                      for (taskid=min; taskid<=max; taskid+= step) {
                         if (range_list_is_id_within(lGetList(job, JB_ja_u_h_ids), taskid) ||
-                            range_list_is_id_within(lGetList(job, JB_ja_s_h_ids), taskid))
+                            range_list_is_id_within(lGetList(job, JB_ja_s_h_ids), taskid)) {
                            continue;
+                        }
                         if ((taskid >= start && taskid <= end &&
                            ((taskid-start)%step) == 0) || alltasks) {
                            DPRINTF(("Modify job: "sge_u32"."sge_u32"\n", jobid,
-                              taskid));
+                                    taskid));
                            sge_change_job_state(user, host, job, NULL, taskid,
-                               action, lGetUlong(dep, ID_force), &alp, monitor);   
+                                                action, lGetUlong(dep, ID_force), &alp, monitor);   
                            found = true;
                         }
                      }

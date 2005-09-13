@@ -40,9 +40,9 @@
 #include "sge_profiling.h"
 
  
-void calendar_event_handler(te_event_t anEvent);
-void signal_resend_event_handler(te_event_t anEvent);
-void job_resend_event_handler(te_event_t anEvent);
+void calendar_event_handler(te_event_t anEvent, monitoring_t *monitor);
+void signal_resend_event_handler(te_event_t anEvent, monitoring_t *monitor);
+void job_resend_event_handler(te_event_t anEvent, monitoring_t *monitor);
 
 static void test_delete_nonexistent_event(void);
 static void test_add_one_time_event_without_handler(void);
@@ -53,7 +53,6 @@ static void test_multiple_one_time_events_delivery(void);
 static void test_recurring_event_delivery(void);
 static void test_add_earlier_one_time_event(void);
 static void test_add_earlier_recurring_event(void);
-
 
 int main(int argc, char* argv[])
 {
@@ -107,7 +106,7 @@ int main(int argc, char* argv[])
    return 0;
 } /* main() */
 
-void calendar_event_handler(te_event_t anEvent)
+void calendar_event_handler(te_event_t anEvent, monitoring_t *monitor)
 {
    DENTER(TOP_LAYER, "calendar_event_handler");
 
@@ -117,7 +116,7 @@ void calendar_event_handler(te_event_t anEvent)
    return;
 } /* calendar_event_handler() */
 
-void signal_resend_event_handler(te_event_t anEvent)
+void signal_resend_event_handler(te_event_t anEvent, monitoring_t *monitor)
 {
    DENTER(TOP_LAYER, "signal_resend_event_handler");
 
@@ -127,7 +126,7 @@ void signal_resend_event_handler(te_event_t anEvent)
    return;
 } /* signal_resend_event_handler() */
 
-void job_resend_event_handler(te_event_t anEvent)
+void job_resend_event_handler(te_event_t anEvent, monitoring_t *monitor)
 {
    DENTER(TOP_LAYER, "job_resend_event_handler");
 
@@ -150,7 +149,7 @@ static void test_add_one_time_event_without_handler(void)
 
    ev1 = te_new_event(time(NULL), TYPE_CALENDAR_EVENT, ONE_TIME_EVENT, 0, 0, "calendar_event-1");
    te_add_event(ev1);
-   te_free_event(ev1);
+   te_free_event(&ev1);
 
    sleep(3);
 
@@ -164,7 +163,7 @@ static void test_delete_one_time_event(void)
 
    ev1 = te_new_event(when, TYPE_CALENDAR_EVENT, ONE_TIME_EVENT, 0, 0, "calendar_event-2");
    te_add_event(ev1);
-   te_free_event(ev1);
+   te_free_event(&ev1);
 
    sleep(3);
 
@@ -183,17 +182,17 @@ static void test_delete_multiple_one_time_events(void)
    when1 = time(NULL) + 10;
    ev1 = te_new_event(when1, TYPE_CALENDAR_EVENT, ONE_TIME_EVENT, 0, 0, "calendar_event-3");
    te_add_event(ev1);
-   te_free_event(ev1);
+   te_free_event(&ev1);
 
    when1 = time(NULL) + 20;
    ev1 = te_new_event(when1, TYPE_CALENDAR_EVENT, ONE_TIME_EVENT, 0, 0, "calendar_event-3");
    te_add_event(ev1);
-   te_free_event(ev1);
+   te_free_event(&ev1);
 
    when2 = time(NULL) + 30;
    ev1 = te_new_event(when2, TYPE_CALENDAR_EVENT, ONE_TIME_EVENT, 0, 0, "calendar_event-3");
    te_add_event(ev1);
-   te_free_event(ev1);
+   te_free_event(&ev1);
 
    sleep(3);
 
@@ -211,7 +210,7 @@ static void test_one_time_event_delivery(void)
    te_register_event_handler(calendar_event_handler, TYPE_CALENDAR_EVENT);
    ev1 = te_new_event(time(NULL), TYPE_CALENDAR_EVENT, ONE_TIME_EVENT, 0, 0, "calendar_event-4");
    te_add_event(ev1);
-   te_free_event(ev1);
+   te_free_event(&ev1);
 
    sleep(2);
 
@@ -233,9 +232,9 @@ static void test_multiple_one_time_events_delivery(void)
    te_add_event(ev2);
    te_add_event(ev3);
 
-   te_free_event(ev1);
-   te_free_event(ev2);
-   te_free_event(ev3);
+   te_free_event(&ev1);
+   te_free_event(&ev2);
+   te_free_event(&ev3);
 
    sleep(4);
 
@@ -248,7 +247,7 @@ static void test_recurring_event_delivery(void)
 
    ev1 = te_new_event(20, TYPE_SIGNAL_RESEND_EVENT, RECURRING_EVENT, 0, 0, "signal-resend-event-2");
    te_add_event(ev1);
-   te_free_event(ev1);
+   te_free_event(&ev1);
 
    sleep(45);
 
@@ -261,7 +260,7 @@ static void test_add_earlier_one_time_event(void)
 
    ev1 = te_new_event(time(NULL), TYPE_JOB_RESEND_EVENT, ONE_TIME_EVENT, 0, 0, "job-resend-event-2");
    te_add_event(ev1);
-   te_free_event(ev1);
+   te_free_event(&ev1);
 
    sleep(20);
 
@@ -274,7 +273,7 @@ static void test_add_earlier_recurring_event(void)
 
    ev1 = te_new_event(5, TYPE_JOB_RESEND_EVENT, RECURRING_EVENT, 0, 0, "job-resend-event-3");
    te_add_event(ev1);
-   te_free_event(ev1);
+   te_free_event(&ev1);
 
    sleep(20);
 

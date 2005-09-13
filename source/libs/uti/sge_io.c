@@ -702,8 +702,9 @@ int sge_string2file(const char *str, int len, const char *fname)
       DEXIT;
       return -1;
    }
-   if (!len)
+   if (!len) {
       len = strlen(str);
+   }
  
    if (fwrite(str, len, 1, fp) != 1) {
       int old_errno = errno;

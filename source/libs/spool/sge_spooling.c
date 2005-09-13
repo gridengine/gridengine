@@ -496,7 +496,7 @@ spool_trigger_context(lList **answer_list, lListElem *context,
          }
       }
    }
-   
+
    PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLING);
    DEXIT;
    return ret;
@@ -534,7 +534,7 @@ bool spool_transaction(lList **answer_list, lListElem *context,
          }
       }
    }
-   
+
    PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLING);
    DEXIT;
    return ret;
@@ -1168,7 +1168,6 @@ spool_write_object(lList **answer_list, const lListElem *context,
                    const sge_object_type object_type)
 {
    bool ret = false;
-
    DENTER(TOP_LAYER, "spool_write_object");
    PROF_START_MEASUREMENT(SGE_PROF_SPOOLING);
 
@@ -1270,7 +1269,7 @@ spool_delete_object(lList **answer_list, const lListElem *context,
                     const sge_object_type object_type, const char *key)
 {
    bool ret = false;
-
+   
    DENTER(TOP_LAYER, "spool_delete_object");
    PROF_START_MEASUREMENT(SGE_PROF_SPOOLING);
 

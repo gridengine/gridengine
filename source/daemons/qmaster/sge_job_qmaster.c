@@ -803,6 +803,7 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
       ERROR((SGE_EVENT, MSG_JOB_NOWRITE_U, sge_u32c(job_number)));
       answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR);
       SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
+      unlink(lGetString(jep, JB_exec_file));
       DEXIT;
       return STATUS_EDISK;
    }
@@ -2011,8 +2012,9 @@ int sub_command
          sge_dstring_free(&buffer);
 
          /* all elems in tmp_alp need to be appended to alpp */
-         if (!*alpp)
+         if (!*alpp) {
             *alpp = lCreateList("answer", AN_Type);
+         }   
          lAddList(*alpp, &tmp_alp);
 
          if (trigger & MOD_EVENT) {
@@ -2586,9 +2588,9 @@ int *trigger
             /*
              * Visit all unenrolled tasks
              */
-            while(list_id[++i] != -1) {
+            while (list_id[++i] != -1) {
                lList *range_list = 
-                              lCopyList("", lGetList(new_job, list_id[i]));
+                              lCopyList("task_id_range", lGetList(new_job, list_id[i]));
                lListElem *range = NULL;
                u_long32 id;
  
@@ -2793,7 +2795,6 @@ int *trigger
          DEXIT;
          return status;
       }
-
       lSetList(new_job, JB_stderr_path_list, 
             lCopyList("", lGetList(jep, JB_stderr_path_list)));
       sprintf(SGE_EVENT, MSG_SGETEXT_MOD_JOBS_SU, MSG_JOB_STDERRPATHLIST, sge_u32c(jobid));
@@ -2960,7 +2961,7 @@ int *trigger
       DPRINTF(("got new JB_jid_predecessor_list\n"));
 
       if (lGetNumberOfElem(lGetList(jep, JB_jid_request_list )) > 0)
-         req_list = lCopyList("requested jid list", lGetList(jep, JB_jid_request_list )); 
+         req_list = lCopyList("requested_jid_list", lGetList(jep, JB_jid_request_list )); 
 
       lXchgList(new_job, JB_jid_request_list, &req_list);
       lXchgList(new_job, JB_jid_predecessor_list, &pred_list);  

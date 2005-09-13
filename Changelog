@@ -1,3 +1,10 @@
+SG-2005-09-13-0: Bugfix:    second part of SG-2005-08-02-0, Tasks in hold
+                            state were not printed correctly and not covered
+                            in the schema
+                 Issue:     1733
+                 Bugtraq:   6305095
+                 Review:    RD
+
 RD-2005-09-13-0: Bugfix:    qstat output for alarm state reasons broken
                  Changed    qstat, qmon
                  Issue:     1775

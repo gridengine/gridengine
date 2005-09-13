@@ -1571,9 +1571,10 @@ static int sge_bury_job(lListElem *job, u_long32 job_id, lListElem *ja_task,
       /* 
        * do not try to remove script file for interactive jobs 
        */
-      if (lGetString(job, JB_script_file) != NULL) {
+      if (lGetString(job, JB_exec_file) != NULL) {
          PROF_START_MEASUREMENT(SGE_PROF_JOBSCRIPT);
          unlink(lGetString(job, JB_exec_file));
+         lSetString(job, JB_exec_file, NULL);
          PROF_STOP_MEASUREMENT(SGE_PROF_JOBSCRIPT);
       }
       {
@@ -1671,6 +1672,7 @@ static int sge_to_zombies(lListElem *job, lListElem *ja_task, int spool_job)
          lXchgList(job, JB_ja_n_h_ids, &n_h_ids);
          lXchgList(job, JB_ja_u_h_ids, &u_h_ids);
          lXchgList(job, JB_ja_o_h_ids, &o_h_ids);
+         lXchgList(job, JB_ja_s_h_ids, &s_h_ids);
          lXchgList(job, JB_ja_tasks, &ja_tasks);
          lAppendElem(Master_Zombie_List, zombie);
       }

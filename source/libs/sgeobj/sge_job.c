@@ -354,7 +354,7 @@ void job_create_hold_id_lists(const lListElem *job, lList *id_list[8],
    range_list_calculate_difference_set(&id_list[1], NULL, list[4], id_list[4]);
    
    /* UOS -> 0 */
-   id_list[0] = lCopyList("", lGetList(job, JB_ja_n_h_ids));
+   id_list[0] = lCopyList("task_id_range", lGetList(job, JB_ja_n_h_ids));
 
    for (i = 0; i < 7; i++) {
       lFreeList(&(list[i]));
@@ -640,7 +640,7 @@ lListElem *job_enroll(lListElem *job, lList **answer_list,
       template_task = job_get_ja_task_template_pending(job, ja_task_number); 
 
       if (ja_task_list == NULL) {
-         ja_task_list = lCreateList("", lGetElemDescr(template_task) );
+         ja_task_list = lCreateList("ulong_sublist", lGetElemDescr(template_task) );
          lSetList(job, JB_ja_tasks, ja_task_list);
       }
       ja_task = lCopyElem(template_task);
@@ -1600,7 +1600,7 @@ int job_initialize_id_lists(lListElem *job, lList **answer_list)
    lList *n_h_list = NULL;    /* RN_Type */
 
    DENTER(TOP_LAYER, "job_initialize_id_lists");
-   n_h_list = lCopyList("", lGetList(job, JB_ja_structure));
+   n_h_list = lCopyList("task_id_range", lGetList(job, JB_ja_structure));
    if (n_h_list == NULL) {
       sprintf(SGE_EVENT, MSG_MEM_MEMORYALLOCFAILED_S, SGE_FUNC);
       answer_list_add(answer_list, SGE_EVENT, 

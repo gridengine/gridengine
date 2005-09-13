@@ -2587,9 +2587,9 @@ int *trigger
             /*
              * Visit all unenrolled tasks
              */
-            while(list_id[++i] != -1) {
+            while (list_id[++i] != -1) {
                lList *range_list = 
-                              lCopyList("", lGetList(new_job, list_id[i]));
+                              lCopyList("task_id_range", lGetList(new_job, list_id[i]));
                lListElem *range = NULL;
                u_long32 id;
  
@@ -2794,7 +2794,6 @@ int *trigger
          DEXIT;
          return status;
       }
-
       lSetList(new_job, JB_stderr_path_list, 
             lCopyList("", lGetList(jep, JB_stderr_path_list)));
       sprintf(SGE_EVENT, MSG_SGETEXT_MOD_JOBS_SU, MSG_JOB_STDERRPATHLIST, sge_u32c(jobid));
@@ -2961,7 +2960,7 @@ int *trigger
       DPRINTF(("got new JB_jid_predecessor_list\n"));
 
       if (lGetNumberOfElem(lGetList(jep, JB_jid_request_list )) > 0)
-         req_list = lCopyList("requested jid list", lGetList(jep, JB_jid_request_list )); 
+         req_list = lCopyList("requested_jid_list", lGetList(jep, JB_jid_request_list )); 
 
       lXchgList(new_job, JB_jid_request_list, &req_list);
       lXchgList(new_job, JB_jid_predecessor_list, &pred_list);  

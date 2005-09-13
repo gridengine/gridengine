@@ -86,6 +86,11 @@ ___INFO__MARK_END__-->
                 <xs:element name="JB_mail_options" type="xs:unsignedInt" />
                 <xs:element name="JB_mail_list" type="JB_mail_t"/>
                 <xs:element name="JB_ja_structure" type="JB_ja_structure_t"/>
+                <xs:element name="JB_ja_n_h_ids" type="JB_ja_structure_t" minOccurs="0"/>
+                <xs:element name="JB_ja_u_h_ids" type="JB_ja_structure_t" minOccurs="0"/>
+                <xs:element name="JB_ja_s_h_ids" type="JB_ja_structure_t" minOccurs="0"/>
+                <xs:element name="JB_ja_o_h_ids" type="JB_ja_structure_t" minOccurs="0"/>
+                <xs:element name="JB_ja_z_ids" type="JB_hja_structure_t" minOccurs="0"/>
                 <xs:element name="JB_ja_template" type="ja_task_t"/>
                 <xs:element name="JB_ja_tasks" type="ja_task_t"/>
                 <xs:element name="JB_host" type="xs:string"/>
@@ -177,9 +182,16 @@ ___INFO__MARK_END__-->
 	
 	<xs:complexType name="JB_ja_structure_t">
 		<xs:sequence>
+			<xs:element name="task_id_range" type="JB_ja_structure_element_t"/>
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:complexType name="JB_hja_structure_t">
+		<xs:sequence>
 			<xs:element name="element" type="JB_ja_structure_element_t"/>
 		</xs:sequence>
 	</xs:complexType>
+
 	
 	<xs:complexType name="JB_ja_structure_element_t">
 		<xs:sequence >
@@ -202,7 +214,7 @@ ___INFO__MARK_END__-->
 
 	<xs:complexType name="ja_task_t">
 		<xs:sequence minOccurs="0" maxOccurs="unbounded">
-			<xs:element name="element" type="ja_task_element_t"/>
+			<xs:element name="ulong_sublist" type="ja_task_element_t"/>
 		</xs:sequence>
 	</xs:complexType>
 

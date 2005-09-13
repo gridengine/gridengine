@@ -1,3 +1,17 @@
+SG-2005-09-13-1: Bugfix:    - fixed the timed event module test
+                            - fixed a script removel issue (performance)
+                            - fixed the los of tasks in system hold (memory leak)
+                 Issue:     1773
+                 Bugtraq:   6318660
+                 Review:    JG
+
+SG-2005-09-13-0: Bugfix:    second part of SG-2005-08-02-0, Tasks in hold
+                            state were not printed correctly and not covered
+                            in the schema
+                 Issue:     1733
+                 Bugtraq:   6305095
+                 Review:    RD
+
 RD-2005-09-13-1: Bugfix:    qmaster keeps sending signals to execds
                  Changed:   qmaster
                  Issue:     1665 

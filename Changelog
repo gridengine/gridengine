@@ -1,3 +1,9 @@
+RD-2005-09-13-1: Bugfix:    qmaster keeps sending signals to execds
+                 Changed:   qmaster
+                 Issue:     1665 
+                 Bugtraq:   6286510
+                 Review:    AH
+
 RD-2005-09-13-0: Bugfix:    qstat output for alarm state reasons broken
                  Changed    qstat, qmon
                  Issue:     1775

@@ -155,6 +155,10 @@ global consumable_resources_saved_slot_count
 proc consumable_resources_init_level {} {
    global CHECK_ACT_LEVEL
 
+   if { $CHECK_ACT_LEVEL != 0 } {
+      return -1
+   }
+
    switch -- $CHECK_ACT_LEVEL {
       "0" { 
          return 0
@@ -277,7 +281,7 @@ proc check_qhost_broken { complex count } {
    }
 }
 
-proc consumable_resources_submit_pejobs_and_wait { job_arguments job_count run_job_count } {
+proc consumable_resources_submit_pejobs_and_wait { job_arguments job_count run_job_count case } {
    global ts_config CHECK_OUTPUT CHECK_ARCH
 
    set job_id [submit_job "-pe round_robin 1-$job_count $job_arguments $ts_config(product_root)/examples/jobs/sleeper.sh 100"]
@@ -295,7 +299,7 @@ proc consumable_resources_submit_pejobs_and_wait { job_arguments job_count run_j
       }
 
       if { $job_state == -1 } {
-         add_proc_error "consumable_resources_submit_jobs_and_wait" -2 "job was not submitted - stop"
+         add_proc_error "case $case) consumable_resources_submit_jobs_and_wait" -2 "job was not submitted - stop"
          set error 1
          break
       }
@@ -305,7 +309,7 @@ proc consumable_resources_submit_pejobs_and_wait { job_arguments job_count run_j
          break
       }
       if { $running_jobs != 0 } {
-         add_proc_error "consumable_resources_submit_jobs_and_wait" -2 "job ran with the wrong slot count $running_jobs expected $run_job_count"
+         add_proc_error "case $case) consumable_resources_submit_jobs_and_wait" -2 "job ran with the wrong slot count $running_jobs expected $run_job_count"
          set error 1
          break
       }
@@ -315,7 +319,7 @@ proc consumable_resources_submit_pejobs_and_wait { job_arguments job_count run_j
    wait_for_end_of_all_jobs 60
 }
 
-proc consumable_resources_submit_jobs_and_wait { job_arguments job_count run_job_count job_arguments2 { schedd_info "" } { queue_state "" } } {
+proc consumable_resources_submit_jobs_and_wait { job_arguments job_count run_job_count job_arguments2 case { schedd_info "" } { queue_state "" } } {
    global ts_config CHECK_OUTPUT CHECK_ARCH
 
    if { $job_arguments2 == "" } {
@@ -341,7 +345,7 @@ proc consumable_resources_submit_jobs_and_wait { job_arguments job_count run_job
             incr running_jobs 1
          }
          if { $job_state == -1 } {
-            add_proc_error "consumable_resources_submit_jobs_and_wait" -2 "job was not submitted - stop"
+            add_proc_error "case $case) consumable_resources_submit_jobs_and_wait" -2 "job was not submitted - stop"
             set error 1
             break
          }
@@ -359,7 +363,7 @@ proc consumable_resources_submit_jobs_and_wait { job_arguments job_count run_job
 
    if { $job_count != $run_job_count } {
       if { $schedd_info == "" } {
-         add_proc_error "consumable_resources_submit_jobs_and_wait" -2 "got not running job, but no schedule info to search for"
+         add_proc_error "case $case) consumable_resources_submit_jobs_and_wait" -2 "got not running job, but no schedule info to search for"
       } else {
          set sched_info_tries 10
          set ok 0
@@ -383,7 +387,7 @@ proc consumable_resources_submit_jobs_and_wait { job_arguments job_count run_job
             after 1000
          }
          if { $ok != 1 } {
-            add_proc_error "consumable_resources_submit_jobs_and_wait" -2 "can't find matching scheduler info:\nexpected: $schedd_info\ngot: $qstat_j_info(scheduling info)"
+            add_proc_error "case $case) consumable_resources_submit_jobs_and_wait" -2 "can't find matching scheduler info:\nexpected: $schedd_info\ngot: $qstat_j_info(scheduling info)"
          }
       }
    }
@@ -426,8 +430,8 @@ proc consumable_resources_test {} {
       set job_arguments "-o /dev/null -e /dev/null"
       set job_count 6
       set run_job_count 6
-      consumable_resources_submit_jobs_and_wait $job_arguments $job_count $run_job_count ""
-      consumable_resources_submit_pejobs_and_wait $job_arguments $job_count $run_job_count  
+      consumable_resources_submit_jobs_and_wait $job_arguments $job_count $run_job_count "" "a"
+      consumable_resources_submit_pejobs_and_wait $job_arguments $job_count $run_job_count "a"  
   
       # case b) 
       #           5 jobs run, 1 have to wait
@@ -435,8 +439,8 @@ proc consumable_resources_test {} {
       set job_arguments "-l test1=1 -o /dev/null -e /dev/null"
       set job_count 6
       set run_job_count 5
-      consumable_resources_submit_jobs_and_wait $job_arguments $job_count $run_job_count "" $GLOBALLY
-      consumable_resources_submit_pejobs_and_wait $job_arguments $job_count $run_job_count 
+      consumable_resources_submit_jobs_and_wait $job_arguments $job_count $run_job_count "" "b" $GLOBALLY
+      consumable_resources_submit_pejobs_and_wait $job_arguments $job_count $run_job_count "b" 
    
       # case c)
       #           5 jobs run, 1 have to wait
@@ -447,8 +451,8 @@ proc consumable_resources_test {} {
       set job_arguments "-o /dev/null -e /dev/null"
       set job_count 6
       set run_job_count 5
-      consumable_resources_submit_jobs_and_wait $job_arguments $job_count $run_job_count "" $GLOBALLY
-      consumable_resources_submit_pejobs_and_wait $job_arguments $job_count $run_job_count 
+      consumable_resources_submit_jobs_and_wait $job_arguments $job_count $run_job_count "" "c" $GLOBALLY
+      consumable_resources_submit_pejobs_and_wait $job_arguments $job_count $run_job_count "c" 
 
       # case d)
       #           5 jobs run, 1 have to wait
@@ -456,8 +460,8 @@ proc consumable_resources_test {} {
       set job_arguments "-l test1=0 -o /dev/null -e /dev/null"
       set job_count 6
       set run_job_count 6
-      consumable_resources_submit_jobs_and_wait $job_arguments $job_count $run_job_count "" $GLOBALLY
-      consumable_resources_submit_pejobs_and_wait $job_arguments $job_count $run_job_count 
+      consumable_resources_submit_jobs_and_wait $job_arguments $job_count $run_job_count "" "d" $GLOBALLY
+      consumable_resources_submit_pejobs_and_wait $job_arguments $job_count $run_job_count "d" 
 
       # case e)
       #        2 jobs run, 4 have to wait
@@ -470,7 +474,7 @@ proc consumable_resources_test {} {
       set_queue "res.q" $consumable_resources_test_hosts queue_settings
       set job_count 6
       set run_job_count 2
-      consumable_resources_submit_jobs_and_wait $job_arguments $job_count $run_job_count "" $GLOBALLY
+      consumable_resources_submit_jobs_and_wait $job_arguments $job_count $run_job_count "" "e" $GLOBALLY
 
 # this tests issue 1745. enable the code, when the issue is fixed.
       puts $CHECK_OUTPUT "---> found issue 1745"
@@ -512,8 +516,8 @@ proc consumable_resources_test {} {
       set job_arguments "-l h=$host_a -o /dev/null -e /dev/null"
       set job_count 6
       set run_job_count 6
-      consumable_resources_submit_jobs_and_wait $job_arguments $job_count $run_job_count ""
-      consumable_resources_submit_pejobs_and_wait $job_arguments $job_count $run_job_count 
+      consumable_resources_submit_jobs_and_wait $job_arguments $job_count $run_job_count "" "a"
+      consumable_resources_submit_pejobs_and_wait $job_arguments $job_count $run_job_count "a" 
    
       # case b) 
       #           5 jobs run, 1 have to wait
@@ -522,8 +526,8 @@ proc consumable_resources_test {} {
       set job_arguments "-l h=$host_a,test2=1 -o /dev/null -e /dev/null"
       set job_count 6
       set run_job_count 5
-      consumable_resources_submit_jobs_and_wait $job_arguments $job_count $run_job_count "" $RUNATHOST
-      consumable_resources_submit_pejobs_and_wait $job_arguments $job_count $run_job_count 
+      consumable_resources_submit_jobs_and_wait $job_arguments $job_count $run_job_count "" "b" $RUNATHOST
+      consumable_resources_submit_pejobs_and_wait $job_arguments $job_count $run_job_count "b"
    
       # case c)
       #           5 jobs run, 1 have to wait
@@ -535,8 +539,8 @@ proc consumable_resources_test {} {
       set job_arguments "-l h=$host_a -o /dev/null -e /dev/null"
       set job_count 6
       set run_job_count 5
-      consumable_resources_submit_jobs_and_wait $job_arguments $job_count $run_job_count "" $RUNATHOST
-      consumable_resources_submit_pejobs_and_wait $job_arguments $job_count $run_job_count 
+      consumable_resources_submit_jobs_and_wait $job_arguments $job_count $run_job_count "" "c" $RUNATHOST
+      consumable_resources_submit_pejobs_and_wait $job_arguments $job_count $run_job_count "c" 
    
       # case d)
       #           6 jobs run, 0 have to wait
@@ -544,8 +548,8 @@ proc consumable_resources_test {} {
       set job_arguments "-l h=$host_a,test2=0 -o /dev/null -e /dev/null"
       set job_count 6
       set run_job_count 6
-      consumable_resources_submit_jobs_and_wait $job_arguments $job_count $run_job_count "" $RUNATHOST
-      consumable_resources_submit_pejobs_and_wait $job_arguments $job_count $run_job_count  
+      consumable_resources_submit_jobs_and_wait $job_arguments $job_count $run_job_count "" "d" $RUNATHOST
+      consumable_resources_submit_pejobs_and_wait $job_arguments $job_count $run_job_count "d"  
 
       # case e)
       #        2 jobs run, 4 have to wait
@@ -558,8 +562,8 @@ proc consumable_resources_test {} {
       set_queue "res.q" $consumable_resources_test_hosts queue_settings
       set job_count 6
       set run_job_count 2
-      consumable_resources_submit_jobs_and_wait $job_arguments $job_count $run_job_count "" $RUNATHOST
-      consumable_resources_submit_pejobs_and_wait $job_arguments $job_count $run_job_count 
+      consumable_resources_submit_jobs_and_wait $job_arguments $job_count $run_job_count "" "e" $RUNATHOST
+      consumable_resources_submit_pejobs_and_wait $job_arguments $job_count $run_job_count "e" 
 
       #clean up
       set queue_settings(load_thresholds) "np_load_avg=11.75"
@@ -593,16 +597,16 @@ proc consumable_resources_test {} {
       set job_arguments "-o /dev/null -e /dev/null"
       set job_count 11
       set run_job_count 11
-      consumable_resources_submit_jobs_and_wait $job_arguments $job_count $run_job_count ""
-      consumable_resources_submit_pejobs_and_wait $job_arguments $job_count $run_job_count  
+      consumable_resources_submit_jobs_and_wait $job_arguments $job_count $run_job_count "" "a"
+      consumable_resources_submit_pejobs_and_wait $job_arguments $job_count $run_job_count "a"  
 
       # case b
       puts $CHECK_OUTPUT "\ncase b)"
       set job_arguments "-l test3=1 -o /dev/null -e /dev/null"
       set job_count 11
       set run_job_count 10
-      consumable_resources_submit_jobs_and_wait $job_arguments $job_count $run_job_count "" $RUNINQUEUE
-      consumable_resources_submit_pejobs_and_wait $job_arguments $job_count $run_job_count  
+      consumable_resources_submit_jobs_and_wait $job_arguments $job_count $run_job_count "" "b" $RUNINQUEUE
+      consumable_resources_submit_pejobs_and_wait $job_arguments $job_count $run_job_count "b"  
 
       # case c
       puts $CHECK_OUTPUT "\ncase c)"
@@ -612,8 +616,8 @@ proc consumable_resources_test {} {
       set job_arguments "-o /dev/null -e /dev/null"
       set job_count 11
       set run_job_count 10
-      consumable_resources_submit_jobs_and_wait $job_arguments $job_count $run_job_count "" $RUNINQUEUE
-      consumable_resources_submit_pejobs_and_wait $job_arguments $job_count $run_job_count  
+      consumable_resources_submit_jobs_and_wait $job_arguments $job_count $run_job_count "" "c" $RUNINQUEUE
+      consumable_resources_submit_pejobs_and_wait $job_arguments $job_count $run_job_count "c"  
 
       set RUNINQUEUE [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SCHEDD_INFO_CANNOTRUNINQUEUE_SSS] "*" "*" "*test3=2*"]
       #case d
@@ -621,8 +625,8 @@ proc consumable_resources_test {} {
       set job_arguments "-l test3=3 -o /dev/null -e /dev/null"
       set job_count 11
       set run_job_count 2
-      consumable_resources_submit_jobs_and_wait $job_arguments $job_count $run_job_count "" $RUNINQUEUE
-      consumable_resources_submit_pejobs_and_wait $job_arguments $job_count $run_job_count  
+      consumable_resources_submit_jobs_and_wait $job_arguments $job_count $run_job_count "" "d" $RUNINQUEUE
+      consumable_resources_submit_pejobs_and_wait $job_arguments $job_count $run_job_count "d"  
 
       set queue_settings(complex_values) "NONE"
       set_queue "res.q" $consumable_resources_test_hosts queue_settings
@@ -667,8 +671,8 @@ proc consumable_resources_test {} {
       set job_arguments "-l test1=1 -o /dev/null -e /dev/null"
       set job_count 3
       set run_job_count 2
-      consumable_resources_submit_jobs_and_wait $job_arguments $job_count $run_job_count "" $RUNINQUEUE
-      consumable_resources_submit_pejobs_and_wait $job_arguments $job_count $run_job_count  
+      consumable_resources_submit_jobs_and_wait $job_arguments $job_count $run_job_count "" "a" $RUNINQUEUE
+      consumable_resources_submit_pejobs_and_wait $job_arguments $job_count $run_job_count "a" 
 
       #case aa
       puts $CHECK_OUTPUT "\ncase aa)"
@@ -677,8 +681,8 @@ proc consumable_resources_test {} {
       set job_arguments "-l test1=1,h=$host_a  -o /dev/null -e /dev/null"
       set job_count 6
       set run_job_count 3
-      consumable_resources_submit_jobs_and_wait $job_arguments $job_count $run_job_count "" $RUNINQUEUE
-      consumable_resources_submit_pejobs_and_wait $job_arguments $job_count $run_job_count       
+      consumable_resources_submit_jobs_and_wait $job_arguments $job_count $run_job_count "" "aa" $RUNATHOST
+      consumable_resources_submit_pejobs_and_wait $job_arguments $job_count $run_job_count "aa"      
 
       #case ab
       puts $CHECK_OUTPUT "\ncase ab)"
@@ -687,8 +691,8 @@ proc consumable_resources_test {} {
       set job_arguments "-l test1=1  -o /dev/null -e /dev/null"
       set job_count 6
       set run_job_count 5
-      consumable_resources_submit_jobs_and_wait $job_arguments $job_count $run_job_count "" $RUNINQUEUE
-      consumable_resources_submit_pejobs_and_wait $job_arguments $job_count $run_job_count  
+      consumable_resources_submit_jobs_and_wait $job_arguments $job_count $run_job_count "" "ab" $GLOBALLY
+      consumable_resources_submit_pejobs_and_wait $job_arguments $job_count $run_job_count  "ab"
 
       #case b
       puts $CHECK_OUTPUT "\ncase b)"
@@ -697,8 +701,8 @@ proc consumable_resources_test {} {
       set job_arguments "-l test1=1,h=$host_a -o /dev/null -e /dev/null"
       set job_count 4
       set run_job_count 3
-      consumable_resources_submit_jobs_and_wait $job_arguments $job_count $run_job_count "" $RUNATHOST
-      consumable_resources_submit_pejobs_and_wait $job_arguments $job_count $run_job_count  
+      consumable_resources_submit_jobs_and_wait $job_arguments $job_count $run_job_count "" "b" $RUNATHOST
+      consumable_resources_submit_pejobs_and_wait $job_arguments $job_count $run_job_count "b" 
 
       #case c
       puts $CHECK_OUTPUT "\ncase c)"
@@ -706,8 +710,8 @@ proc consumable_resources_test {} {
       set job_arguments2 "-l test1=1 -o /dev/null -e /dev/null"
       set job_count 6
       set run_job_count 5
-      consumable_resources_submit_jobs_and_wait $job_arguments1 $job_count $run_job_count $job_arguments2 $GLOBALLY
-      consumable_resources_submit_pejobs_and_wait $job_arguments2 $job_count $run_job_count  
+      consumable_resources_submit_jobs_and_wait $job_arguments1 $job_count $run_job_count $job_arguments2 "c" $GLOBALLY
+      consumable_resources_submit_pejobs_and_wait $job_arguments2 $job_count $run_job_count "c" 
 
       set queue_settings(complex_values) "NONE"
       set_queue "res.q" $consumable_resources_test_hosts queue_settings
@@ -742,8 +746,8 @@ proc consumable_resources_test {} {
       set job_arguments2 ""
       set job_count 1
       set run_job_count 0
-      consumable_resources_submit_jobs_and_wait $job_arguments1 $job_count $run_job_count $job_arguments2 $FORCED
-      consumable_resources_submit_pejobs_and_wait $job_arguments1 $job_count $run_job_count  
+      consumable_resources_submit_jobs_and_wait $job_arguments1 $job_count $run_job_count $job_arguments2 "a" $FORCED
+      consumable_resources_submit_pejobs_and_wait $job_arguments1 $job_count $run_job_count "a" 
 
 
       # case b
@@ -752,9 +756,8 @@ proc consumable_resources_test {} {
       set job_arguments2 ""
       set job_count 1
       set run_job_count 1
-      consumable_resources_submit_jobs_and_wait $job_arguments1 $job_count $run_job_count $job_arguments2
-      consumable_resources_submit_pejobs_and_wait $job_arguments1 $job_count $run_job_count  
-
+      consumable_resources_submit_jobs_and_wait $job_arguments1 $job_count $run_job_count $job_arguments2 "b"
+      consumable_resources_submit_pejobs_and_wait $job_arguments1 $job_count $run_job_count "b"  
 
       set queue_settings(complex_values) "NONE"
       set_queue "res.q" $consumable_resources_test_hosts queue_settings
@@ -801,8 +804,8 @@ proc consumable_resources_test {} {
       lappend queue_check "res.q@$host_a"
       lappend queue_check "a"
 
-      consumable_resources_submit_jobs_and_wait $job_arguments1 $job_count $run_job_count $job_arguments2 "" $queue_check
-      consumable_resources_submit_pejobs_and_wait $job_arguments1 $job_count $run_job_count  
+      consumable_resources_submit_jobs_and_wait $job_arguments1 $job_count $run_job_count $job_arguments2 "" "a" $queue_check
+      consumable_resources_submit_pejobs_and_wait $job_arguments1 $job_count $run_job_count "a"  
 
       set queue_settings(load_thresholds) "np_load_avg=11.75"
       set queue_settings(complex_values) "NONE"

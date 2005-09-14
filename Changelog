@@ -1,3 +1,5 @@
+JG-2005-09-14-0: Testsuite: Fixed check bugs/issuezilla/1780.
+
 RD-2005-09-13-1: Bugfix:    qmaster keeps sending signals to execds
                  Changed:   qmaster
                  Issue:     1665 

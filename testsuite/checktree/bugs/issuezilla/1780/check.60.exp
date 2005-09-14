@@ -65,9 +65,9 @@ proc issue_1780_run  {} {
    global ts_config CHECK_ARCH CHECK_OUTPUT CHECK_USER CHECK_HOST
    set queue_name "@$CHECK_HOST"
 
-   catch {set output [start_remote_prog $CHECK_HOST $CHECK_USER "ypcat" "hosts" result 10 ]}
+   set output [start_remote_prog $CHECK_HOST $CHECK_USER "ypcat" "hosts" result]
 
-   if {$prg_exit_state != 0} {
+   if {$result != 0} {
       puts $CHECK_OUTPUT "Unable to call ypcat.  Skipping host."
       set_error -3 "skipping host"
       return
@@ -77,9 +77,13 @@ proc issue_1780_run  {} {
    set max_count 3000
    set count 0
 
+   # skip hosts we already have in our cluster to avoid duplicate entries
+   foreach host $ts_config(execd_nodes) {
+      set valid_hosts($host) 0
+   }
+
    set vi_commands ""
    lappend vi_commands "/slots\nA,\\\n"
-
    foreach host $hostlist {
       if {[regexp {^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}[ \t]+([a-zA-Z0-9.-]+)} $host match hostname] == 1} {
          if {[info exists valid_hosts($hostname)] != 1} {
@@ -104,7 +108,7 @@ proc issue_1780_run  {} {
 
    if {$count < $max_count} {
       puts $CHECK_OUTPUT "Ran out of hostnames"
-      add_proc_error "issue_1780" -1 "unable to add enough hosts to test issue 1780"
+      add_proc_error "issue_1780" -3 "unable to add enough hosts to test issue 1780"
       return
    }
 

@@ -155,10 +155,6 @@ global consumable_resources_saved_slot_count
 proc consumable_resources_init_level {} {
    global CHECK_ACT_LEVEL
 
-   if { $CHECK_ACT_LEVEL != 0 } {
-      return -1
-   }
-
    switch -- $CHECK_ACT_LEVEL {
       "0" { 
          return 0

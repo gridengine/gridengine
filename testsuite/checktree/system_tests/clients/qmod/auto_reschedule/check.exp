@@ -162,15 +162,21 @@ global stored_auto_reschedule_host1_config
 #*******************************
 #
 proc init_level {} {
-   global ts_config CHECK_OUTPUT CHECK_ACT_LEVEL
+   global ts_config CHECK_OUTPUT CHECK_ACT_LEVEL CHECK_HOST
    global global_resch auto_reschedule_host1 auto_reschedule_host2
   
    if { [ llength $ts_config(execd_hosts) ] < 2 } {
       return -1
    }
 
-   set auto_reschedule_host1  [ lindex $ts_config(execd_nodes) 0  ]
-   set auto_reschedule_host2  [ lindex $ts_config(execd_nodes) 1  ]
+   # This test only works if auto_reschedule_host2 is not the testsuite host
+   if { [lindex $ts_config(execd_nodes) 0] != $CHECK_HOST } {
+      set auto_reschedule_host2  [ lindex $ts_config(execd_nodes) 0  ]
+      set auto_reschedule_host1  [ lindex $ts_config(execd_nodes) 1  ]
+   } else {
+      set auto_reschedule_host2  [ lindex $ts_config(execd_nodes) 1  ]
+      set auto_reschedule_host1  [ lindex $ts_config(execd_nodes) 0 ]
+   }
 
    set global_resch 1
 
@@ -270,6 +276,9 @@ proc auto_reschedule_setup {} {
          close_spawn_process $tail_id
       }
    }
+
+    close_spawn_process $tail_id
+
 
    wait_for_load_from_all_queues 200 
    puts $CHECK_OUTPUT "submitting job to queue $queue1 ..."
@@ -491,6 +500,8 @@ proc auto_reschedule_cleanup {} {
          close_spawn_process $tail_id
       }
    }
+
+   close_spawn_process $tail_id
 
    wait_for_load_from_all_queues 200 
 

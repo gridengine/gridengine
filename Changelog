@@ -1,3 +1,5 @@
+SG-2005-09-14-0: Testsuite: fixed resource_consumable test
+
 RD-2005-09-14-0: Testsuite: fixed qmod_auto_reschedule test
                  Review:    CR
 

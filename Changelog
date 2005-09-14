@@ -1,6 +1,10 @@
+JG-2005-09-14-0: Bugfix:    Fixed broken build and install 
+                            (aimk.site, distinst.site).
+
 SG-2005-09-13-1: Bugfix:    - fixed the timed event module test
-                            - fixed a script removel issue (performance)
-                            - fixed the los of tasks in system hold (memory leak)
+                            - fixed a script removal issue (performance)
+                            - fixed the loss of tasks in system hold (memory 
+                              leak)
                  Issue:     1773
                  Bugtraq:   6318660
                  Review:    JG

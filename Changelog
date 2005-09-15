@@ -1,3 +1,8 @@
+SG-2005-09-15-0: Bugfix:    fixed the qmaster calendar crash
+                 Issue:     1787
+                 Bugtraq:   6322498
+                 Review:    RD
+
 JG-2005-09-14-0: Bugfix:    Fixed broken build and install 
                             (aimk.site, distinst.site).
 

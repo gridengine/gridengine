@@ -1,3 +1,9 @@
+CR-2005-09-15-1: Testsuite: fixed commlib module test binaries 
+                            test_virtual_event_client and 
+                            test_virtual_qmaster. Testsuite test "commlib"
+                            failed because of long shutdown timeouts for
+                            virtual qmaster module test binary.
+
 SG-2005-09-15-0: Bugfix:    fixed the qmaster calendar crash
                  Issue:     1787
                  Bugtraq:   6322498

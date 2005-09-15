@@ -1,3 +1,8 @@
+SG-2005-09-15-0: Bugfix:    fixed the qmaster calendar crash
+                 Issue:     1787
+                 Bugtraq:   6322498
+                 Review:    RD
+
 SG-2005-09-14-0: Testsuite: fixed resource_consumable test
 
 RD-2005-09-14-0: Testsuite: fixed qmod_auto_reschedule test

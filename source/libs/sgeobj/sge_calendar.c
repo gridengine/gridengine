@@ -170,7 +170,7 @@ static int range_number(int min, int max, int *ip, const char *name);
 
 static int tm_daytime_cmp(const lListElem *t1, const lListElem *t2);
 
-static u_long32 is_week_entry_active(lListElem *tm, lListElem *week_entry, time_t *limit, u_long32 *next_state);
+static u_long32 is_week_entry_active(lListElem *tm, lListElem *week_entry, time_t *limit, u_long32 *next_state, int rec_count);
 
 static u_long32 is_year_entry_active(lListElem *tm, lListElem *year_entry, time_t *limit);
 
@@ -341,8 +341,7 @@ static int state_at(time_t now, const lList *ycal, lList *wcal, time_t *next_eve
          isOverlapping = false;
          
          for_each (wc, wcal) {
-            
-            if ((w_is_active = is_week_entry_active(tm, wc, &limit, &next_state))) {
+            if ((w_is_active = is_week_entry_active(tm, wc, &limit, &next_state, 0))) {
                state |= w_is_active;
             }   
             
@@ -357,7 +356,7 @@ static int state_at(time_t now, const lList *ycal, lList *wcal, time_t *next_eve
                   cullify_tm(tm, tm_now);
 
                   temp_next_event = 0;
-                  if ((w_is_active = is_week_entry_active(tm, wc, &limit, &next_state))) {
+                  if ((w_is_active = is_week_entry_active(tm, wc, &limit, &next_state, 0))) {
                      state |= w_is_active;
                   }                 
                }
@@ -377,7 +376,7 @@ static int state_at(time_t now, const lList *ycal, lList *wcal, time_t *next_eve
 
       FREE(visited);
    }  
-  
+
    if (next_event != NULL) {
       *next_event = temp_next_event;
    }   
@@ -417,7 +416,7 @@ lListElem *week_entry,  CA_Type
 *
 *  SYNOPSIS
 *     static u_long32 is_week_entry_active(lListElem *tm, lListElem 
-*     *week_entry, time_t *limit) 
+*     *week_entry, time_t *limit, int rec_count) 
 *
 *  FUNCTION
 *     Computes the current queue state based on its calendar setting. It also figures
@@ -433,7 +432,8 @@ lListElem *week_entry,  CA_Type
 *  INPUTS
 *     lListElem *tm         - TM_Type - represeting now (time)
 *     lListElem *week_entry - CA_Type - calendar entries for the week setup
-*     time_t *limit         - next state changea (0, if there is no further state change)
+*     time_t    *limit      - next state changea (0, if there is no further state change)
+*     int       rec_count   - current recoursion level
 *
 *  RESULT
 *     static u_long32 - the current state
@@ -442,9 +442,10 @@ lListElem *week_entry,  CA_Type
 *     MT-NOTE: is_week_entry_active() is MT safe 
 *
 *******************************************************************************/
-static u_long32 is_week_entry_active(lListElem *tm, lListElem *week_entry, time_t *limit, u_long32 *next_state) {
+static u_long32 is_week_entry_active(lListElem *tm, lListElem *week_entry, time_t *limit, u_long32 *next_state, int rec_count) {
    u_long32 state;
    bool in_wday_range, in_daytime_range = false;
+
 
    DENTER(TOP_LAYER, "is_week_entry_active");
 
@@ -482,8 +483,14 @@ static u_long32 is_week_entry_active(lListElem *tm, lListElem *week_entry, time_
          /* cullify struct tm */
          new_tm= lCreateElem(TM_Type);
          cullify_tm(new_tm, tm_now);
-      
-         state = is_week_entry_active(new_tm, week_entry, limit, next_state);
+    
+         /* more than 2 recorsion should never be needed, we allow 4 to be save.*/
+         if (rec_count < 4) {
+            state = is_week_entry_active(new_tm, week_entry, limit, next_state, rec_count++); 
+         }
+         else {
+            ERROR((SGE_EVENT, MSG_CALENDAR_CALCTERMINATED));
+         }
 
          lFreeElem(&new_tm);
       }
@@ -628,7 +635,7 @@ u_long32 calender_state_changes(const lListElem *cep, lList **state_changes_list
    u_long32 state1 = 0;
    u_long32 state2 = 0; 
    lListElem *state_change = NULL;
- 
+
    if (cep == NULL || state_changes_list == NULL) {
       return 0;
    }
@@ -697,10 +704,10 @@ u_long32 calender_state_changes(const lListElem *cep, lList **state_changes_list
          struct tm *tm_limit;
          struct tm res; 
                   /* convert time_t format into struct tm format */
-         tm_limit= localtime_r(&when, &res);
+         tm_limit= localtime_r(when, &res);
 
          DPRINTF(("first change: state %d, time "sge_u32", sec:%d min:%d hour:%d mday:%d mon:%d year:%d wday:%d yday:%d isdst:%d\n",
-            state,
+            state0,
             (u_long32) when,
             tm_limit->tm_sec,
             tm_limit->tm_min,
@@ -712,11 +719,11 @@ u_long32 calender_state_changes(const lListElem *cep, lList **state_changes_list
             tm_limit->tm_yday,
             tm_limit->tm_isdst));
 
-         tm_limit= localtime_r(&when2, &res);
+         tm_limit= localtime_r(&when1, &res);
 
          DPRINTF(("second change: state %d, time "sge_u32", sec:%d min:%d hour:%d mday:%d mon:%d year:%d wday:%d yday:%d isdst:%d\n",
-            state2,
-            (u_long32) when2,
+            state1,
+            (u_long32) when1,
             tm_limit->tm_sec,
             tm_limit->tm_min,
             tm_limit->tm_hour,
@@ -799,17 +806,17 @@ static time_t compute_limit(bool today, bool active, const lList *year_time, con
 
    if (day_time == NULL) {
       DPRINTF(("no day time calendar is set "));
-      return 0;
+      DRETURN(0);
    }
 
    if (year_time != NULL && week_time != NULL) {
       DPRINTF(("year and week calendar are set. It should only be one of them"));
-      return 0;
+      DRETURN(0);
    }
 
    if (year_time == NULL && week_time == NULL) {
       DPRINTF(("we have no a calendar time definition. It is most likely set to \"off\" or \"suspended\""));
-      return 0;
+      DRETURN(0);
    }
 
    time = lFirst(day_time);
@@ -963,7 +970,7 @@ static time_t compute_limit(bool today, bool active, const lList *year_time, con
    /* the current calendar changes the state during the day, we have to compute the exact time, when
       that happens */
    if (!is_full_day && new_now != NULL && today) {
-
+      
       if (active) {
          /* inside of range - seek nearest end of range */
          /* seek end of active daytime range */ 
@@ -978,10 +985,20 @@ static time_t compute_limit(bool today, bool active, const lList *year_time, con
          /* outside of range - seek nearest begin of range */
          for_each (time, day_time) {
             begin = lFirst(lGetList(time, TMR_begin));
-            if (tm_daytime_cmp(new_now, begin) < 0 && 
-               (!lep || tm_daytime_cmp(lep, begin) > 0)) {
-               lFreeElem(&lep);
-               lep = lCopyElem(begin); 
+            if (year_time != NULL) {
+               if (tm_daytime_cmp(new_now, begin) < 0 && 
+                  (!lep || tm_daytime_cmp(lep, begin) > 0)) {
+                  lFreeElem(&lep);
+                  lep = lCopyElem(begin); 
+               }
+            } 
+            else { /* a day starts at 0:0:0 o'clock, therefore we have to check,
+                      if we hit the start date right away or if we are smaller */
+               if (tm_daytime_cmp(new_now, begin) <= 0 && 
+                  (!lep || tm_daytime_cmp(lep, begin) > 0)) {
+                  lFreeElem(&lep);
+                  lep = lCopyElem(begin); 
+               }
             }
          }
       }
@@ -1019,7 +1036,7 @@ static time_t compute_limit(bool today, bool active, const lList *year_time, con
    }         
 
    if (is_new_cal_entry) {
-/*   
+#if 0
       DPRINTF(("sec:%d min:%d hour:%d mday:%d mon:%d year:%d wday:%d yday:%d isdst:%d\n",
          tm_limit.tm_sec,
          tm_limit.tm_min,
@@ -1029,8 +1046,8 @@ static time_t compute_limit(bool today, bool active, const lList *year_time, con
          tm_limit.tm_year,
          tm_limit.tm_wday,
          tm_limit.tm_yday,
-         tm_limit.tm_isdst)); */
-
+         tm_limit.tm_isdst)); 
+#endif
       limit = mktime(&tm_limit);
 
       DPRINTF(("limit: "sge_u32"\n", (u_long32) limit)); 

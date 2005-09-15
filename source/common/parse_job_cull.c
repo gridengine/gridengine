@@ -217,7 +217,7 @@ lList *cull_parse_job_parameter(lList *cmdline, lListElem **pjob)
    ep = lGetElemStr(cmdline, SPA_switch, "-t");
    if (ep != NULL) {
       lList *range_list = lGetList(ep, SPA_argval_lListT);
-      lList *new_range_list = lCopyList("",  range_list);
+      lList *new_range_list = lCopyList("task_id_range",  range_list);
 
       lSetList(*pjob, JB_ja_structure, new_range_list);
       lRemoveElem(cmdline, &ep);
@@ -368,7 +368,7 @@ lList *cull_parse_job_parameter(lList *cmdline, lListElem **pjob)
    /* -h */
    while ((ep = lGetElemStr(cmdline, SPA_switch, "-h"))) {
       if (lGetInt(ep, SPA_argval_lIntT) & MINUS_H_TGT_USER) {
-         lSetList(*pjob, JB_ja_u_h_ids, lCopyList("user hold ids",
+         lSetList(*pjob, JB_ja_u_h_ids, lCopyList("task_id_range",
                   lGetList(*pjob, JB_ja_n_h_ids)));
          lSetList(*pjob, JB_ja_n_h_ids, NULL);
       }

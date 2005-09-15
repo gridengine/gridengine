@@ -263,7 +263,7 @@ lList *cull_parse_qsh_parameter(lList *cmdline, lListElem **pjob)
 
    while ((ep = lGetElemStr(cmdline, SPA_switch, "-h"))) {
       if (lGetInt(ep, SPA_argval_lIntT) & MINUS_H_TGT_USER) {
-         lSetList(*pjob, JB_ja_u_h_ids, lCopyList("user hold ids",
+         lSetList(*pjob, JB_ja_u_h_ids, lCopyList("task_id_range",
             lGetList(*pjob, JB_ja_n_h_ids)));
       }
       lSetList(*pjob, JB_ja_n_h_ids, NULL);

@@ -1112,7 +1112,7 @@ void range_list_insert_id(lList **range_list, lList **answer_list, u_long32 id)
 
    range = NULL;
    if (*range_list == NULL) {
-      *range_list = lCreateList("", RN_Type);
+      *range_list = lCreateList("task_id_range", RN_Type);
       if (*range_list == NULL) {
          answer_list_add(answer_list, "unable to insert id into range",
                          STATUS_ERROR1, ANSWER_QUALITY_ERROR);

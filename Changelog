@@ -1,3 +1,39 @@
+SG-2005-09-14-0: Testsuite: fixed resource_consumable test
+
+RD-2005-09-14-0: Testsuite: fixed qmod_auto_reschedule test
+                 Review:    CR
+
+SG-2005-09-14-0: Testsuite: added a qmaster monitoring test.
+                 Issue:     1765
+
+JG-2005-09-14-0: Testsuite: Fixed check bugs/issuezilla/1780.
+
+RD-2005-09-13-1: Bugfix:    qmaster keeps sending signals to execds
+                 Changed:   qmaster
+                 Issue:     1665 
+                 Bugtraq:   6286510
+                 Review:    AH
+
+SG-2005-09-13-1: Bugfix:    - fixed the timed event module test
+                            - fixed a script removel issue (performance)
+                            - fixed the los of tasks in system hold (memory leak)
+                 Issue:     1773
+                 Bugtraq:   6318660
+                 Review:    JG
+
+SG-2005-09-13-0: Bugfix:    second part of SG-2005-08-02-0, Tasks in hold
+                            state were not printed correctly and not covered
+                            in the schema
+                 Issue:     1733
+                 Bugtraq:   6305095
+                 Review:    RD
+
+RD-2005-09-13-0: Bugfix:    qstat output for alarm state reasons broken
+                 Changed    qstat, qmon
+                 Issue:     1775
+                 Bugtraq:   6323047
+                 Review:    CR
+
 AA-2005-09-12-0: Bugfix:    ooops, removing /dev/null in sge_ca
                  Changed:   sge_ca
                  Review:    MD

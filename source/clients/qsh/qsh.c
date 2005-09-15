@@ -937,10 +937,14 @@ get_client_name(int is_rsh, int is_rlogin, int inherit_job)
    lListElem *local           = NULL;
    lListElem *qlogin_cmd_elem = NULL;
 
-   static char *session_type = "telnet";
-   char        *config_name  = "qlogin_command";
-   const char *client_name  = NULL;
-   char cache_name[SGE_PATH_MAX];
+   /* session type and config entry name */
+   const char *session_type;
+   const char *config_name;
+
+   /* filename of client command cache in case of qrsh -inherit */
+   char cache_name_buffer[SGE_PATH_MAX];
+   dstring cache_name_dstring;
+   const char *cache_name = NULL;
    const char *qualified_hostname = uti_state_get_qualified_hostname();
    const char *cell_root = path_state_get_cell_root();
 

@@ -113,7 +113,7 @@ centry_mod(lList **answer_list, lListElem *centry, lListElem *reduced_elem,
       if (pos >= 0) {
          const char *shortcut = lGetPosString(reduced_elem, pos);
 
-         DPRINTF(("Got CE_shortcut: "SFQ"\n", shortcut));
+         DPRINTF(("Got CE_shortcut: "SFQ"\n", shortcut ? shortcut : "-NA-"));
          lSetString(centry, CE_shortcut, shortcut);
       }
    }

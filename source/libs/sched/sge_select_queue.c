@@ -2312,6 +2312,7 @@ char *sge_load_alarm_reason(lListElem *qep, lList *threshold,
    if (threshold != NULL) {
       lList *rlp = NULL;
       lListElem *tep;
+      bool first = true;
 
       /* get actual complex values for queue */
       queue_complexes2scheduler(&rlp, qep, exechost_list, centry_list);
@@ -2327,6 +2328,12 @@ char *sge_load_alarm_reason(lListElem *qep, lList *threshold,
          const char *limit_value;      /* limit defined by threshold */
 
          name = lGetString(tep, CE_name);
+
+         if ( first == true ) {
+            first = false;
+         } else {
+            strncat(reason, "\n\t", reason_size);
+         }
 
          /* find actual complex attribute */
          if ((cep = lGetElemStr(rlp, CE_name, name)) == NULL) {

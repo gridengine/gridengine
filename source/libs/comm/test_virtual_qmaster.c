@@ -47,6 +47,7 @@ void sighandler_client(int sig);
 static int do_shutdown = 0;
 
 /* counters */
+
 static int rcv_messages = 0;
 static int snd_messages = 0;
 static int evc_count = 0;
@@ -153,11 +154,11 @@ extern int main(int argc, char** argv)
 
   printf("create application threads ...\n");
   cl_thread_list_setup(&thread_list,"thread list");
-  cl_thread_list_create_thread(thread_list, &dummy_thread_p,cl_com_get_log_list(), "message_thread 1", 100, my_message_thread);
+  cl_thread_list_create_thread(thread_list, &dummy_thread_p,cl_com_get_log_list(), "message_thread_1", 100, my_message_thread);
 #if 1
-  cl_thread_list_create_thread(thread_list, &dummy_thread_p,cl_com_get_log_list(), "message_thread 2", 101, my_message_thread);
+  cl_thread_list_create_thread(thread_list, &dummy_thread_p,cl_com_get_log_list(), "message_thread_2", 101, my_message_thread);
 #endif
-  cl_thread_list_create_thread(thread_list, &dummy_thread_p,cl_com_get_log_list(), "event_thread__", 3, my_event_thread);
+  cl_thread_list_create_thread(thread_list, &dummy_thread_p,cl_com_get_log_list(), "event_thread", 3, my_event_thread);
 
   gettimeofday(&last,NULL);
   usec_last = (last.tv_sec * 1000000.0) + last.tv_usec;
@@ -209,13 +210,19 @@ extern int main(int argc, char** argv)
      }
   }
   printf("shutdown threads ...\n");
-  cl_com_ignore_timeouts(CL_TRUE);
-
   /* delete all threads */
   while ( (thread_p=cl_thread_list_get_first_thread(thread_list)) != NULL ) {
+     gettimeofday(&now,NULL);
+     printf("shutting down therad %s (%ld)...", thread_p->thread_name, (unsigned long) now.tv_sec);
+     fflush(stdout);
      cl_thread_list_delete_thread(thread_list, thread_p);
+     gettimeofday(&now,NULL);
+     printf(" done (%ld)\n", (unsigned long)now.tv_sec);
   }
   cl_thread_list_cleanup(&thread_list);
+
+  
+  cl_com_ignore_timeouts(CL_TRUE);
 
   printf("shutdown commlib ...\n");
   cl_com_cleanup_commlib();

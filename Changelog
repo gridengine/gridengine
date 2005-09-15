@@ -1,3 +1,10 @@
+CR-2005-09-15-1: Testsuite: fixed commlib module test binaries 
+                            test_virtual_event_client and 
+                            test_virtual_qmaster. Testsuite test "commlib"
+                            failed because of long shutdown timeouts for
+                            virtual qmaster module test binary.
+
+
 JG-2005-09-09-0: Bugfix:    Qrsh tries to free invalid pointer
                  Changed:   qsh (qrsh, qlogin)
                  Issue:     1758

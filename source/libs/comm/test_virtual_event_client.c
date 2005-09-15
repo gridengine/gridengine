@@ -164,6 +164,7 @@ extern int main(int argc, char** argv)
             /* shutdown when virtual qmaster is not running anymore */
             if (events_received > 0) {
                do_shutdown = 1;
+               printf("lost connection to  %s/%s/%d\n", argv[3], "virtual_master", 1);
             }
             retval = cl_commlib_open_connection(handle, argv[3], "virtual_master", 1);
             if (retval == CL_RETVAL_OK) {

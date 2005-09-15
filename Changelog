@@ -1,3 +1,6 @@
+CR-2005-09-15-0: Testsuite: modified testsuite commlib test to wait between
+                            single test runs
+
 SG-2005-09-15-0: Bugfix:    fixed the qmaster calendar crash
                  Issue:     1787
                  Bugtraq:   6322498

@@ -1,3 +1,5 @@
+RC-2005-09-17-0: Enhancem:  support gcc4 as the build compiler
+
 JG-2005-09-15-0: Testsuite: Fixed checks functional/job_environment and
                             system_tests/qmaster/monitoring.
 

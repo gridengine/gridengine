@@ -1,3 +1,5 @@
+CR-2005-09-19-0: Testsuite: extended cvs update timeout
+
 JG-2005-09-17-0: Testsuite: Fixed check system_tests/config/path_alias.
                  Review:    CR
 

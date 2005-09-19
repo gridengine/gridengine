@@ -1,3 +1,6 @@
+RD-2005-09-19-0: CVS        Created V60s2snapshot1_TAG
+---------------------------------------------------------
+
 CR-2005-09-15-1: Testsuite: fixed commlib module test binaries 
                             test_virtual_event_client and 
                             test_virtual_qmaster. Testsuite test "commlib"

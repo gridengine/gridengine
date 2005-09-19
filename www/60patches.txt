@@ -1,5 +1,53 @@
-Bugs fixed in SGE 6.0u6 since release 6.0u5
+Bugs fixed in SGE 6.0s2snapshot1 since release 6.0u6
 -------------------------------------------
+
+Issue    Sun BugId Description
+-------- --------  ------------------------------------------------------------------------------------------
+1149     5056331   autoinstall hangs if root owns the files on $SGE_ROOT 
+1248     5090187   Install scripts fails in adding >sge_request< options file with $ADMINUSER 
+1330     6239653   auto installation doesn't provide sufficient diagnosis output 
+1451     6239658   inst_sge -ux -host <host> might be incomplete if not run from an admin host 
+1490     6242169   Multi-threaded, multi-CPU username problems 
+1556     6253860   First character is lost in quoting 
+1780     6256590   qconf -mq disallows 2057 hostspecific profiles in slots configuration 
+1626     6275789   Soft requirements on load values ignored 
+1628     6277104   Problem with large job output files on 32-bit Linux nodes 
+1661     6282996   Using of IP addresses as host names breaks unique host name resolving 
+1665     6286510   delivery of queue based signals to execd repeated endlessly 
+1200     R6287501   rctemplates lack of requirement 
+814      6287847   qstat -j shows wrong message for parallel jobs which can't be dispatched 
+1028     6287850   Allow SIGTRAP to enable debugging 
+1306     6287862   qhost -l for complexes broken 
+1363     6287865   qrsh default job names must be consistent with limitations generally imposed on job names 
+1655     6287955   strange reservation 
+185      6287967   certain error situations when writing spool files are not handled 
+1249     6289240   Install will fail if non-root ADMINUSER selected and they don't own $SGE_ROOT 
+1731     6289455   bug in qstat -XML output (does not match the schema) 
+1475     6291023   qstat -j <name> doesn't print delimiter between jobs 
+1691     6294052   Suspend on threshold not working for calendar disabled queues 
+1650     6295231   Java language binding email property doesn't work 
+1651     6295233   JobTemplate property getters throw InvalidAttributeException 
+1720     6295791   qacct -h shall not resolve hostnames 
+1724     6299982   Slow submission rate with drmaa_run_job() 
+1727     6303671   DRMAA can abort in the middle of a session if NIS becomes unavailable 
+1715     6304466   qmaster crashes with large number of qconf -aattr calls 
+1687     6304471   qlogin -R does not work like documented 
+1732     6304490   qconf -as/-ah "" segfault 
+1733     6305095   qstat schema files are incomplete 
+1738     6306229   wrong soft requests decission 
+1742     6306834   consumables as thresholds are not working correctly with pe jobs 
+1739     6307557   qhost returns wrong total_memory value on MacOSX 10.3 
+1758     6313445   Qrsh tries to free invalid pointer 
+1763     6317048   Memory leaks in drmaa library, japi_wait and drmaa_job2sge_job 
+1778     6318659   sge_ca -usercert fails when executed more than once 
+1773     6318660   the system hold on an array task can vanish 
+1749     6319228   Backslash line continuation is broken for host groups 
+1770     6320683   Binary switch reversed in job category and can cause application to hang 
+1787     6322498   calendar syntax "week  mon=0-21" corrupts SGE and may crash qmaster 
+1775     6323047   qstat output for alarm state reasons broken 
+
+
+Bugs fixed in SGE 6.0u6 since release 6.0u5
 
 Issue    Sun BugId Description
 -------- --------  ------------------------------------------------------------------------------------------

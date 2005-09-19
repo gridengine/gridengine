@@ -97,7 +97,7 @@ proc job_environment_INHERIT_ENV {} {
    if {[job_environment_qsub_job "jobenv.sh" job_env "-o /dev/null -e /dev/null"]} {
       # Check for presence of TERM env var
       if {![info exists job_env(TERM)]} {
-         add_proc_error "job_environment_INHERIT_ENV" -1 "Failed for none after INHERIT_ENV=false"
+         add_proc_error "job_environment_INHERIT_ENV" -1 "Failed for none after execd_params=none (case 1)"
       }
    } else {
       add_proc_error "job_environment_INHERIT_ENV" -1 "Failed submitting job"
@@ -127,7 +127,7 @@ proc job_environment_INHERIT_ENV {} {
    if {[job_environment_qsub_job "jobenv.sh" job_env "-o /dev/null -e /dev/null"]} {
       # Check for presence of TERM env var
       if {![info exists job_env(TERM)]} {
-         add_proc_error "job_environment_INHERIT_ENV" -1 "Failed for none after INHERIT_ENV=true"
+         add_proc_error "job_environment_INHERIT_ENV" -1 "Failed for none after execd_params=none (case 2)"
       }
    } else {
       add_proc_error "job_environment_INHERIT_ENV" -1 "Failed submitting job"
@@ -162,10 +162,12 @@ proc job_environment_get_shlib_path_var { array } {
 }
 
 proc job_environment_SET_LIB_PATH {} {
-   global ts_config CHECK_ARCH CHECK_OUTPUT
+   global ts_config CHECK_OUTPUT
+   global test_host
 
-   set sge_path "$ts_config(product_root)/lib/$CHECK_ARCH"
-   puts $CHECK_OUTPUT "SGE lib path is $sge_path"
+   set arch [resolve_arch $test_host]
+   set sge_path "$ts_config(product_root)/lib/$arch"
+   puts $CHECK_OUTPUT "expected SGE lib path is $sge_path"
 
    # Set INHERIT_ENV=true, SET_LIB_PATH=true
    get_config old_config

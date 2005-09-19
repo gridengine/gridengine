@@ -167,6 +167,9 @@ static cal_entry_t calendars[] = {
                                    {"NONE", "off", "queue is always off"},
                                    {"NONE", "suspended", "queue is always suspended"},
 
+/* issue 1787 */                   {"NONE","mon=0:0:0-21:0:0", "queue is off every monday from 0 to 21 hours"},
+
+
 /* end of definition */            {NULL, NULL}
                                 };
 /**
@@ -206,7 +209,7 @@ static date_entry_t tests[] = { {0, {0,0,0, 1,0,104, 0,0,0}, {0,0,0, 1,1,104, 0,
                                 {4, {0,0,10, 2,2,104, 0,0,0}, {0,0,18, 2,2,104, 0,0,0}, QI_DO_CAL_SUSPEND, {0,0,9, 3,2,104, 0,0,0}, QI_DO_NOTHING},
                                 {4, {0,0,19, 2,2,104, 0,0,0}, {0,0, 9, 3,2,104, 0,0,0}, QI_DO_NOTHING, {0,0,18, 3,2,104, 0,0,0}, QI_DO_CAL_SUSPEND},
                                 {4, {0,0,0, 2,4,104, 0,0,0}, {0,0,1, 1,0, 70, 0,0,0}, QI_DO_NOTHING, {0,0,1, 1,0, 70, 0,0,0}, -1}, 
-                                
+                          
                                 {5, {0,0, 0, 1,0,104, 0,0,0}, {0,0,18, 1,1,104, 0,0,0}, QI_DO_NOTHING, {0,0, 9, 2,1,104, 0,0,0}, QI_DO_CAL_SUSPEND},
                                 {5, {0,0,20, 1,2,104, 0,0,0}, {0,0, 9, 2,2,104, 0,0,0}, QI_DO_CAL_SUSPEND, {0,0,18, 2,2,104, 0,0,0}, QI_DO_NOTHING},
                                 {5, {0,0,10, 2,2,104, 0,0,0}, {0,0,18, 2,2,104, 0,0,0}, QI_DO_NOTHING, {0,0,9, 3,2,104, 0,0,0}, QI_DO_CAL_SUSPEND},
@@ -253,8 +256,13 @@ static date_entry_t tests[] = { {0, {0,0,0, 1,0,104, 0,0,0}, {0,0,0, 1,1,104, 0,
                                 {22, {0,0, 0, 1,2,104, 0,0,0}, {0,0,1, 1,0, 70, 0,0,0}, QI_DO_CAL_DISABLE, {0,0,1, 1,0, 70, 0,0,0}, -1}, 
                                 {23, {0,0, 0, 1,2,104, 0,0,0}, {0,0,1, 1,0, 70, 0,0,0}, QI_DO_CAL_SUSPEND, {0,0,1, 1,0, 70, 0,0,0}, -1},
                                 {24, {0,0, 0, 1,2,104, 0,0,0}, {0,0,1, 1,0, 70, 0,0,0}, QI_DO_CAL_DISABLE, {0,0,1, 1,0, 70, 0,0,0}, -1},
-                                {25, {0,0, 0, 1,2,104, 0,0,0}, {0,0,1, 1,0, 70, 0,0,0}, QI_DO_CAL_SUSPEND, {0,0,1, 1,0, 70, 0,0,0}, -1},                                
-
+                                {25, {0,0, 0, 1,2,104, 0,0,0}, {0,0,1, 1,0, 70, 0,0,0}, QI_DO_CAL_SUSPEND, {0,0,1, 1,0, 70, 0,0,0}, -1},
+                               
+                                {26, {0,0, 0, 1,2,104, 0,0,0}, {0,0,21, 1,2, 104, 0,0,0}, QI_DO_CAL_DISABLE, {0,0,0, 8,2, 104, 0,0,0}, QI_DO_NOTHING}, 
+                                {26, {0,0, 10, 1,2,104, 0,0,0}, {0,0,21, 1,2, 104, 0,0,0}, QI_DO_CAL_DISABLE, {0,0,0, 8,2, 104, 0,0,0}, QI_DO_NOTHING},
+                                {26, {0,0, 22, 1,2,104, 0,0,0}, {0,0,0, 8,2, 104, 0,0,0}, QI_DO_NOTHING, {0,0,21, 8,2, 104, 0,0,0}, QI_DO_CAL_DISABLE}, 
+                                {26, {0,0, 12, 3,2,104, 0,0,0}, {0,0,0, 8,2, 104, 0,0,0}, QI_DO_NOTHING, {0,0,21, 8,2, 104, 0,0,0}, QI_DO_CAL_DISABLE},  
+                                
                                 {-1, {0,0,0, 0,0,104, 0,0,0}, {0,0,0, 0,0,104, 0,0,0}, -1, {0,0,0, 0,0,104, 0,0,0}, -1}
                                   };
 
@@ -342,7 +350,7 @@ static int test_state_change(lListElem *stateObject, u_long32 state, struct tm *
 *     MT-NOTE: test_state_change_list() is MT safe 
 *
 *******************************************************************************/
-static int test_state_change_list (date_entry_t *test, lList *state_changes) 
+static int test_state_change_list(date_entry_t *test, lList *state_changes) 
 {
    int ret = 0;
    int nr;
@@ -448,9 +456,12 @@ static void printDateError(time_t *when, struct tm *time)
 *******************************************************************************/
 static lListElem *createCalObject(cal_entry_t *calendar) 
 {
+   monitoring_t monitor;
    lListElem *sourceCal = NULL;
    lListElem *destCal = NULL;
    lList *answerList = NULL;
+   
+   sge_monitor_init(&monitor, "cal_test", NONE_EXT, NO_WARNING, NO_ERROR);
    
    sourceCal = lCreateElem(CAL_Type);
 
@@ -460,13 +471,15 @@ static lListElem *createCalObject(cal_entry_t *calendar)
 
    destCal = lCreateElem(CAL_Type);
    
-   if (0 != calendar_mod(&answerList, destCal, sourceCal, 1, "", "", NULL, 0)) {
+   if (0 != calendar_mod(&answerList, destCal, sourceCal, 1, "", "", NULL, 0, &monitor)) {
       lWriteListTo(answerList, stdout);
       lFreeElem(&destCal);
       lFreeList(&answerList);
    }
   
    lFreeElem(&sourceCal);
+   
+   sge_monitor_free(&monitor);
 
    return destCal;
 }
@@ -500,7 +513,7 @@ static int test(date_entry_t *test, cal_entry_t *calendar, int test_nr)
    int ret = 1;
 
    /* test output*/
-   printf("\n==> Test Nr:     %d\n", test_nr);
+   printf("\n==> Test Nr:     %d(%d)\n", test_nr, test->cal_nr);
    printf("==> Description: %s\n", calendar->description);
    printf("==> Time:        %d/%d/%d %d:%d:%d  (wday:%d yday:%d Summer time: %s)\n\n",
       (test->now.tm_mon + 1),      
@@ -522,7 +535,7 @@ static int test(date_entry_t *test, cal_entry_t *calendar, int test_nr)
       time_t when = 0;
       time_t now  = mktime(&test->now);
       lList *state_changes_list = NULL;
-     
+    
       if (test->state1 == (current_state = calender_state_changes(destCal, &state_changes_list, &when, &now))) {
          if (when == mktime(&test->result1)) {
             if ((ret = test_state_change_list(test, state_changes_list)) == 0) {

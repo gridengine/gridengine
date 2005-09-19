@@ -1,3 +1,25 @@
+JG-2005-09-17-0: Testsuite: Fixed check system_tests/config/path_alias.
+                 Review:    CR
+
+RC-2005-09-17-0: Enhancem:  support gcc4 as the build compiler
+
+JG-2005-09-15-0: Testsuite: Fixed checks functional/job_environment and
+                            system_tests/qmaster/monitoring.
+
+CR-2005-09-15-1: Testsuite: fixed commlib module test binaries 
+                            test_virtual_event_client and 
+                            test_virtual_qmaster. Testsuite test "commlib"
+                            failed because of long shutdown timeouts for
+                            virtual qmaster module test binary.
+
+CR-2005-09-15-0: Testsuite: modified testsuite commlib test to wait between
+                            single test runs
+
+SG-2005-09-15-0: Bugfix:    fixed the qmaster calendar crash
+                 Issue:     1787
+                 Bugtraq:   6322498
+                 Review:    RD
+
 SG-2005-09-14-0: Testsuite: fixed resource_consumable test
 
 RD-2005-09-14-0: Testsuite: fixed qmod_auto_reschedule test

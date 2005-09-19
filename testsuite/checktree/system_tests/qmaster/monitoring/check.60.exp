@@ -80,9 +80,9 @@ set check_cleanup_function qmaster_monitoring_cleanup
 # define test's procedure order
 set check_functions ""
 lappend check_functions "qmaster_monitoring_dynamic"
-#lappend check_functions "qmaster_monitoring_restart"
-#lappend check_functions "qmaster_monitoring_dynamic_qping"
-#lappend check_functions "qmaster_monitoring_restart_qping"
+lappend check_functions "qmaster_monitoring_restart"
+lappend check_functions "qmaster_monitoring_dynamic_qping"
+lappend check_functions "qmaster_monitoring_restart_qping"
 
 proc qmaster_monitoring_init_level {} {
    global CHECK_ACT_LEVEL
@@ -132,13 +132,13 @@ proc qmaster_monitoring_cleanup  {} {
 
 
 
-proc qmaster_monitoring_monitor {id expected_prof qping {tail_timeout 10}} {
+proc qmaster_monitoring_monitor {id expected_prof qping {tail_timeout 20}} {
    global CHECK_OUTPUT
 
    # some information output
    switch -exact $expected_prof {
       NONE {
-         puts $CHECK_OUTPUT "expecting that no profiling message shows up the next $tail_timeout s"
+         puts $CHECK_OUTPUT "expecting that no monitoring message shows up the next $tail_timeout s"
       }
       CONSUME {
          puts $CHECK_OUTPUT "consuming messages for $tail_timeout s"
@@ -148,11 +148,11 @@ proc qmaster_monitoring_monitor {id expected_prof qping {tail_timeout 10}} {
       }
    }
 
-   # initialize counters for profiling messages
-   set prof(PROF_SIGNAL) 0
-   set prof(PROF_MESSAGE) 0
-   set prof(PROF_DELIVER) 0
-   set prof(PROF_TEVENT) 0
+   # initialize counters for monitoring messages
+   set prof(SIGT) 0
+   set prof(MT) 0
+   set prof(EDT) 0
+   set prof(TET) 0
 
    # this is the spawn id of our tail to qmaster messages file
    set sp_id [lindex $id 1]
@@ -170,15 +170,15 @@ proc qmaster_monitoring_monitor {id expected_prof qping {tail_timeout 10}} {
             puts $CHECK_OUTPUT "[expr $end -$now]\r"
          }
          -i $sp_id full_buffer {
-            add_proc_error qmaster_profiling_monitor -1 "buffer overflow, please increase CHECK_EXPECT_MATCH_MAX_BUFFER"
+            add_proc_error qmaster_monitoring_monitor -1 "buffer overflow, please increase CHECK_EXPECT_MATCH_MAX_BUFFER"
          }
          -i $sp_id eof {
-            add_proc_error qmaster_profiling_monitor -1 "unexpected eof"
+            add_proc_error qmaster_monitoring_monitor -1 "unexpected eof"
          }
          -i $sp_id "?*\n" {
             # parse new lines in messages file
             #puts $CHECK_OUTPUT "received new line in messages file"
-            if { $qping == 1 } { 
+            if { $qping == 1 } {
                foreach line [ string trim [split $expect_out(0,string) "\n"]] {
                   set line [string trim $line]
                   if {[string length $line] > 0} {
@@ -187,20 +187,20 @@ proc qmaster_monitoring_monitor {id expected_prof qping {tail_timeout 10}} {
                      set message [lindex $split_line 1]
                         switch -glob -- $message {
                            "*SIGT: runs*" {
-                              incr prof(PROF_SIGNAL)
+                              incr prof(SIGT)
                            }
                            "*MT(*): runs*" {
-                              incr prof(PROF_MESSAGE)
+                              incr prof(MT)
                               #parse_monitor_tet $message
                            }
                            "*EDT: runs*" {
-                              incr prof(PROF_DELIVER)
+                              incr prof(EDT)
                               set tmp [lindex $split_line 2]
                               set message "$message $tmp"
                               #parse_monitor_tet $message
                            }
                            "*TET: runs*" {
-                              incr prof(PROF_TEVENT)
+                              incr prof(TET)
                               #parse_monitor_tet $message
                            }
                            default {
@@ -216,26 +216,26 @@ proc qmaster_monitoring_monitor {id expected_prof qping {tail_timeout 10}} {
                   if {[string length $line] > 0} {
                      #puts $CHECK_OUTPUT "processing line: $line"
                      set split_line [split $line "|"]
-                     set profiling [lindex $split_line 3]   
+                     set monitoring [lindex $split_line 3]   
                      set message [lindex $split_line 4]
-                     switch -glob -- $profiling {
+                     switch -glob -- $monitoring {
                         "P" {
                            switch -glob -- $message {
                               "SIGT*" {
-                                 incr prof(PROF_SIGNAL)
+                                 incr prof(SIGT)
                               }
                               "MT(*)*" {
-                                 incr prof(PROF_MESSAGE)
+                                 incr prof(MT)
                                  #parse_monitor_tet $message
                               }
                               "EDT*" {
-                                 incr prof(PROF_DELIVER)
+                                 incr prof(EDT)
                                  set tmp [lindex $split_line 5]
                                  set message "$message $tmp"
                                  #parse_monitor_tet $message
                               }
                               "TET*" {
-                                 incr prof(PROF_TEVENT)
+                                 incr prof(TET)
                                  #parse_monitor_tet $message
                               }
                               default {
@@ -257,27 +257,27 @@ proc qmaster_monitoring_monitor {id expected_prof qping {tail_timeout 10}} {
    } ;# while
 
    # some informational output
-   puts $CHECK_OUTPUT "PROF_SIGNAL:  $prof(PROF_SIGNAL)"
-   puts $CHECK_OUTPUT "PROF_MESSAGE: $prof(PROF_MESSAGE)"
-   puts $CHECK_OUTPUT "PROF_DELIVER: $prof(PROF_DELIVER)"
-   puts $CHECK_OUTPUT "PROF_TEVENT:  $prof(PROF_TEVENT)"
+   puts $CHECK_OUTPUT "SIGT: $prof(SIGT)"
+   puts $CHECK_OUTPUT "MT:   $prof(MT)"
+   puts $CHECK_OUTPUT "EDT:  $prof(EDT)"
+   puts $CHECK_OUTPUT "TET:  $prof(TET)"
 
    # now check for the expected result
    puts $CHECK_OUTPUT "verifying results"
    switch -exact $expected_prof {
       NONE {
-         # here we may not have received any profiling messages
+         # here we may not have received any monitoring messages
          set error 0
-         set message "expected no profiling message to show up, but got"
-         foreach thread "PROF_SIGNAL PROF_MESSAGE PROF_DELIVER PROF_TEVENT" {
+         set message "expected no monitoring message to show up, but got"
+         foreach thread "SIGT MT EDT TET" {
             if {$prof($thread) > 0} {
                set error 1
-               append message "\n$prof($thread) $thread profiling messages"
+               append message "\n$prof($thread) $thread monitoring messages"
             }
          }
 
          if {$error} {
-            add_proc_error qmaster_profiling_monitor -1 $message
+            add_proc_error qmaster_monitoring_monitor -1 $message
          }
       }
       CONSUME {
@@ -287,16 +287,16 @@ proc qmaster_monitoring_monitor {id expected_prof qping {tail_timeout 10}} {
          # here we shall have expected n messages for the requested thread, 
          # 0 messages for the other ones
          set error 0
-         set message "expected $expected_prof profiling messages to show up, but got"
-         foreach thread "PROF_MESSAGE PROF_DELIVER PROF_TEVENT" {
+         set message "expected $expected_prof monitoring messages to show up, but got"
+         foreach thread "MT EDT TET" {
             if {$prof($thread) == 0} {
                set error 1
-               append message "\n$prof($thread) $thread profiling messages"
+               append message "\n$prof($thread) $thread monitoring messages"
             }
          }
 
          if {$error} {
-            add_proc_error qmaster_profiling_monitor -1 $message
+            add_proc_error qmaster_monitoring_monitor -1 $message
          }
       }
    }   
@@ -313,7 +313,7 @@ proc qmaster_monitoring_dynamic_qping {} {
    puts $CHECK_OUTPUT "starting qping monitor on host $qping_host"
    set id [ open_remote_spawn_process $qping_host $CHECK_FIRST_FOREIGN_SYSTEM_USER "$ts_config(product_root)/bin/$qping_arch/qping" "-i $ps_interval -f $ts_config(master_host) $ts_config(commd_port) qmaster 1"]      
    
-   # wait for PROF messages - no such messages may show up
+   # wait for monitoring messages - no such messages may show up
    qmaster_monitoring_monitor $id NONE 1
 
    set prof "MONITOR_TIME"
@@ -328,7 +328,7 @@ proc qmaster_monitoring_dynamic_qping {} {
    set global_conf(qmaster_params) "$prof=0:0:1"
    set_config global_conf
 
-   # wait for PROF messages for this thread
+   # wait for monitoring messages for this thread
    qmaster_monitoring_monitor $id $prof 1
 
 # 3)
@@ -337,13 +337,13 @@ proc qmaster_monitoring_dynamic_qping {} {
 
    set global_conf(qmaster_params) "$prof=0:0:1,LOG_MONITOR_MESSAGE=false"
    set_config global_conf
-   # consume PROF messages that may have shown up while we switched monitoring off
+   # consume monitoring messages that may have shown up while we switched monitoring off
    qmaster_monitoring_monitor $id $prof 1
 
    set global_conf(qmaster_params) "$prof=0:0:1,LOG_MONITOR_MESSAGE=true"
    set_config global_conf
 
-   # wait for PROF messages for this thread
+   # wait for monitoring messages for this thread
    qmaster_monitoring_monitor $id $prof 1
    
 # 4)
@@ -353,8 +353,8 @@ proc qmaster_monitoring_dynamic_qping {} {
    # switch off monitoring
    set global_conf(qmaster_params) "$prof=0:0:0"
    set_config global_conf
-   # consume PROF messages that may have shown up while we switched monitoring off
-   qmaster_monitoring_monitor $id CONSUME  1 5
+   # consume monitoring messages that may have shown up while we switched monitoring off
+   qmaster_monitoring_monitor $id CONSUME  1 10
 
    # no further message may appear
    qmaster_monitoring_monitor $id NONE 1
@@ -367,16 +367,16 @@ proc qmaster_monitoring_dynamic_qping {} {
    set global_conf(qmaster_params) "$prof=0:0:1"
    set_config global_conf
 
-   # wait for PROF messages for this thread
-   qmaster_monitoring_monitor $id $prof 0
+   # wait for monitoring messages for this thread
+   qmaster_monitoring_monitor $id $prof 1
 
    set global_conf(qmaster_params) "NONE"
    set_config global_conf
-   # consume PROF messages that may have shown up while we switched monitoring off
-   qmaster_monitoring_monitor $id CONSUME  0 5
+   # consume monitoring messages that may have shown up while we switched monitoring off
+   qmaster_monitoring_monitor $id CONSUME 1 10
 
    # no further message may appear
-   qmaster_monitoring_monitor $id NONE 0
+   qmaster_monitoring_monitor $id NONE 1
 
 
    
@@ -395,7 +395,7 @@ proc qmaster_monitoring_dynamic {} {
    set id [init_logfile_wait $ts_config(master_host) "$spooldir/messages"]
 
    
-   # wait for PROF messages - no such messages may show up
+   # wait for monitoring messages - no such messages may show up
    qmaster_monitoring_monitor $id NONE 0
 
    set prof "MONITOR_TIME"
@@ -409,17 +409,17 @@ proc qmaster_monitoring_dynamic {} {
    set global_conf(qmaster_params) "$prof=0:0:1"
    set_config global_conf
 
-   # wait for PROF messages for this thread
+   # wait for monitoring messages for this thread
    qmaster_monitoring_monitor $id $prof 0
 
 # 2)
-#ächeck, wether the log monitoring message to false turns the messages off
+# check, wether the log monitoring message to false turns the messages off
 #
 
    set global_conf(qmaster_params) "$prof=0:0:1,LOG_MONITOR_MESSAGE=false"
    set_config global_conf
-   # consume PROF messages that may have shown up while we switched monitoring off
-   qmaster_monitoring_monitor $id CONSUME  0 5
+   # consume monitoring messages that may have shown up while we switched monitoring off
+   qmaster_monitoring_monitor $id CONSUME  0 10
 
    # no further message may appear
    qmaster_monitoring_monitor $id NONE 0
@@ -431,7 +431,7 @@ proc qmaster_monitoring_dynamic {} {
    set global_conf(qmaster_params) "$prof=0:0:1,LOG_MONITOR_MESSAGE=true"
    set_config global_conf
 
-   # wait for PROF messages for this thread
+   # wait for monitoring messages for this thread
    qmaster_monitoring_monitor $id $prof 0
 
 # 4)
@@ -441,8 +441,8 @@ proc qmaster_monitoring_dynamic {} {
    # switch off monitoring
    set global_conf(qmaster_params) "$prof=0:0:0"
    set_config global_conf
-   # consume PROF messages that may have shown up while we switched monitoring off
-   qmaster_monitoring_monitor $id CONSUME  0 5
+   # consume monitoring messages that may have shown up while we switched monitoring off
+   qmaster_monitoring_monitor $id CONSUME  0 10
 
    # no further message may appear
    qmaster_monitoring_monitor $id NONE 0
@@ -455,13 +455,13 @@ proc qmaster_monitoring_dynamic {} {
    set global_conf(qmaster_params) "$prof=0:0:1"
    set_config global_conf
 
-   # wait for PROF messages for this thread
+   # wait for monitoring messages for this thread
    qmaster_monitoring_monitor $id $prof 0
 
    set global_conf(qmaster_params) "NONE"
    set_config global_conf
-   # consume PROF messages that may have shown up while we switched monitoring off
-   qmaster_monitoring_monitor $id CONSUME  0 5
+   # consume monitoring messages that may have shown up while we switched monitoring off
+   qmaster_monitoring_monitor $id CONSUME  0 10
 
    # no further message may appear
    qmaster_monitoring_monitor $id NONE 0
@@ -488,10 +488,8 @@ proc qmaster_monitoring_restart {} {
    set global_conf(qmaster_params) "MONITOR_TIME=0:0:1"
    set_config global_conf
 
-   # wait for PROF messages to show up
-   qmaster_monitoring_monitor $id PROF_MESSAGE 0
-
-   
+   # wait for monitoring messages to show up
+   qmaster_monitoring_monitor $id MT 0
 
    # shutdown qmaster
    shutdown_qmaster $ts_config(master_host) $spooldir
@@ -499,16 +497,14 @@ proc qmaster_monitoring_restart {} {
    # restart qmaster
    startup_qmaster 0
 
-   # wait for PROF messages
-   qmaster_monitoring_monitor $id PROF_MESSAGE 0
-
-
+   # wait for monitoring messages
+   qmaster_monitoring_monitor $id MT 0
    
    # switch off monitoring
    set global_conf(qmaster_params) "MONITOR_TIME=0:0:0"
    set_config global_conf
-   # consume PROF messages that may have shown up while we switched monitoring off
-   qmaster_monitoring_monitor $id CONSUME 0 5
+   # consume monitoring messages that may have shown up while we switched monitoring off
+   qmaster_monitoring_monitor $id CONSUME 0 10
 
    # no further message may appear
    qmaster_monitoring_monitor $id NONE 0
@@ -537,10 +533,8 @@ proc qmaster_monitoring_restart_qping {} {
    set global_conf(qmaster_params) "MONITOR_TIME=0:0:1"
    set_config global_conf
 
-   # wait for PROF messages to show up
-   qmaster_monitoring_monitor $id PROF_MESSAGE 1
-
-   
+   # wait for monitoring messages to show up
+   qmaster_monitoring_monitor $id MT 1
 
    # shutdown qmaster
    shutdown_qmaster $ts_config(master_host) $spooldir
@@ -548,22 +542,18 @@ proc qmaster_monitoring_restart_qping {} {
    # restart qmaster
    startup_qmaster 0
 
-   # wait for PROF messages
-   qmaster_monitoring_monitor $id PROF_MESSAGE 1
+   # wait for monitoring messages
+   qmaster_monitoring_monitor $id MT 1
 
-
-   
    # switch off monitoring
    set global_conf(qmaster_params) "MONITOR_TIME=0:0:0"
    set_config global_conf
-   # consume PROF messages that may have shown up while we switched monitoring off
-   qmaster_monitoring_monitor $id CONSUME 1 5
+   # consume monitoring messages that may have shown up while we switched monitoring off
+   qmaster_monitoring_monitor $id CONSUME 1 10
 
    # no further message may appear
    qmaster_monitoring_monitor $id NONE 1
 
-
-   
    # stop the tail -f
    close_spawn_process $id
 

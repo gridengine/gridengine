@@ -1,3 +1,8 @@
+RD-2005-09-20-0: Bugfix:    qacct -o -D output hard to parse
+                 Issue:     1686
+                 Bugtraq:   6326150
+                 Review:    SG 
+
 CR-2005-09-19-0: Testsuite: extended cvs update timeout
 
 JG-2005-09-17-0: Testsuite: Fixed check system_tests/config/path_alias.

@@ -4,6 +4,11 @@ CR-2005-09-15-1: Testsuite: fixed commlib module test binaries
                             failed because of long shutdown timeouts for
                             virtual qmaster module test binary.
 
+RD-2005-09-13-1: Bugfix:    qmaster keeps sending signals to execds
+                 Changed:   qmaster
+                 Issue:     1665 
+                 Bugtraq:   6286510
+                 Review:    AH
 
 JG-2005-09-09-0: Bugfix:    Qrsh tries to free invalid pointer
                  Changed:   qsh (qrsh, qlogin)

@@ -200,11 +200,12 @@ u_long32 ack_ulong2
          }
       }
       
-      DPRINTF(("QUEUE %s: SIGNAL ACK\n", lGetString(qinstance, QU_qname)));
-               lSetUlong(qinstance, QU_pending_signal, 0);
-      te_delete_one_time_event(TYPE_SIGNAL_RESEND_EVENT, 0, 0, lGetString(qinstance, QU_qname));
+      DPRINTF(("QUEUE %s: SIGNAL ACK\n", lGetString(qinstance, QU_full_name)));
+
+      lSetUlong(qinstance, QU_pending_signal, 0);
+      te_delete_one_time_event(TYPE_SIGNAL_RESEND_EVENT, 0, 0, lGetString(qinstance, QU_full_name));
       spool_write_object(&answer_list, spool_get_default_context(), qinstance, 
-                         lGetString(qinstance, QU_qname), SGE_TYPE_QINSTANCE);
+                         lGetString(qinstance, QU_full_name), SGE_TYPE_QINSTANCE);
       answer_list_output(&answer_list);
       break;
 

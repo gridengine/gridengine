@@ -1,10 +1,12 @@
+MD-2005-09-21-0: Enhancem:  support gcc4 as the build compiler 
+                            (merged: RC-2005-09-17-0)
+
 RD-2005-09-20-0: Bugfix:    qacct -o -D output hard to parse
                  Issue:     1686
                  Bugtraq:   6326150
                  Review:    SG 
 
 RD-2005-09-19-0: CVS        Created V60s2snapshot1_TAG
----------------------------------------------------------
 
 CR-2005-09-15-1: Testsuite: fixed commlib module test binaries 
                             test_virtual_event_client and 

@@ -42,6 +42,7 @@ lappend check_functions "qconf_backslash_custom_space_check"
 lappend check_functions "qconf_backslash_custom_comma_check"
 lappend check_functions "qconf_backslash_space_output_check"
 lappend check_functions "qconf_backslash_comma_output_check"
+lappend check_functions "qconf_issue1767"
 
 #                                                             max. column:     |
 #****** qconf/qconf_backslash_default_space_check() ******
@@ -850,6 +851,94 @@ proc qconf_backslash_comma_output_check {} {
       add_proc_error "qconf_backslash_comma_output_check" "-1" "error printing hostgroup in qconf_backslash_comma_output_check -- failed for $failures"
       return
    }
+
+   set_error 0 "ok"
+}
+
+#****** check.60/check_double_output() *****************************************
+#  NAME
+#     check_double_output() 
+#
+#  SYNOPSIS
+#     check_double_output { string1 string2 } 
+#
+#  FUNCTION
+#     Search in string2 for a sequence of characters that exactly match multiple
+#     times the characters in string1.
+#
+#     The function sets the variable set_error if no string was found and if
+#     the string was found 2 times.
+#
+#  INPUTS
+#     string1 - string which could be 2 time in string1 
+#     string2 - string to search in 
+#
+#*******************************************************************************
+proc check_double_output { string1 string2 } {
+   global CHECK_OUTPUT
+
+   set index [ string last "$string1" "$string2" ]
+   if { $index > 0 } {
+      set string2 [ string range "$string2" 0 $index ] 
+      if { [ string first "$string1" "$string2" ] >= 0 } {
+         set_error "-1" "detected issue 1767\n$string1 printed 2 or more times" 
+      } 
+   } elseif { $index < 0 } {
+      set_error "-1" "qconf doesn't reject invalid values"
+   }
+}
+
+#****** check.60/qconf_issue1767() *********************************************
+#  NAME
+#     qconf_issue1767()  
+#
+#  SYNOPSIS
+#     qconf_issue1767 { } 
+#
+#  FUNCTION
+#     Tests for Issue 1767 
+#
+#     Some error messages were printed 2 times because a library function was
+#     called which called the ERROR macro and returned an answer_list.
+#
+#  SEE ALSO
+#     check_double_output
+#*******************************************************************************
+proc qconf_issue1767 {} {
+   global ts_config CHECK_OUTPUT CHECK_ARCH
+   
+   set tmp_file1 [ get_tmp_file_name ]
+   set tmp_file2 [ get_tmp_file_name ]
+
+   #invalid urgency_slots setting
+   set REJECTED [translate $ts_config(master_host) 1 0 0 [ sge_macro MSG_PE_REJECTINGURGENCYSLOTS_S ] "invalid" ]
+   set exit_code [catch { exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" -sp mytestpe > $tmp_file1  } result ]
+   set exit_code [catch { exec sed "s/min/invalid/" $tmp_file1 > $tmp_file2  } result ]
+   set exit_code [catch { exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" -Mp $tmp_file2  } result ]
+   check_double_output $REJECTED $result
+
+   #invalid pe name
+   set REJECTED [translate $ts_config(master_host) 1 0 0 [ sge_macro MSG_PE_INVALIDCHARACTERINPE_S ] ".mytestpe" ]
+   set exit_code [catch { exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" -sp mytestpe > $tmp_file1  } result ]
+   set exit_code [catch { exec sed "s/mytestpe/.mytestpe/" $tmp_file1 > $tmp_file2  } result ]
+   set exit_code [catch { exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" -Ap $tmp_file2  } result ]
+   check_double_output $REJECTED $result
+
+   #invalid startprocargs 
+   set REJECTED [translate $ts_config(master_host) 1 0 0 [ sge_macro  MSG_PE_STARTPROCARGS_SS ] "mytestpe" "unknown variable \"invalid\"" ]
+   set exit_code [catch { exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" -sp mytestpe | sed /start_proc_args/d > $tmp_file1  } result ]
+   set exit_code [catch { exec echo "start_proc_args '\$invalid'" >> $tmp_file1 } result ]
+   puts $CHECK_OUTPUT $result
+   set exit_code [catch { exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" -Mp $tmp_file1  } result ]
+   check_double_output $REJECTED $result
+
+   #invalid stopprocargs 
+   set REJECTED [translate $ts_config(master_host) 1 0 0 [ sge_macro MSG_PE_STOPPROCARGS_SS ] "mytestpe" "unknown variable \"invalid\"" ]
+   set exit_code [catch { exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" -sp mytestpe | sed /stop_proc_args/d > $tmp_file1  } result ]
+   set exit_code [catch { exec echo "stop_proc_args '\$invalid'" >> $tmp_file1 } result ]
+   puts $CHECK_OUTPUT $result
+   set exit_code [catch { exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" -Mp $tmp_file1  } result ]
+   check_double_output $REJECTED $result
 
    set_error 0 "ok"
 }

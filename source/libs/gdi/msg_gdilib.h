@@ -105,16 +105,6 @@
 #define MSG_GDI_READMASTERNAMEFAILED_S                   _MESSAGE(43107, _("unable to read qmaster name: "SFN))
 
 
-
-/* 
-** gdilib/setup.c
-*/
-#define MSG_GDI_NOVALIDSGECOMPRESSIONLEVEL_S             _MESSAGE(43109, _(""SFN" is not a valid SGE_COMPRESSION_LEVEL"))
-#define MSG_GDI_SETCOMPRESSIONLEVEL_D                    _MESSAGE(43110, _("Setting compression level to "sge_U32CFormat))
-#define MSG_GDI_NOVALIDSGECOMPRESSIONTHRESHOLD_S         _MESSAGE(43111, _(""SFN" is not a valid SGE_COMPRESSION_THRESHOLD"))
-#define MSG_GDI_SETCOMPRESSIONTHRESHOLD_D                _MESSAGE(43112, _("Setting compression threshold to "sge_U32CFormat))
-
-
 /* 
 ** gdilib/sge_gdi_request.c
 */

@@ -1,3 +1,8 @@
+RD-2005-09-21-0: Bugfix:    Double error message
+                 Issue:     1767
+                 Bugtraq:   6316995
+                 Review:    RH
+
 RD-2005-09-20-0: Bugfix:    qacct -o -D output hard to parse
                  Issue:     1686
                  Bugtraq:   6326150

@@ -118,6 +118,7 @@ enum _enum_lMultiType {
 #define SGE_ULONG(name,flags)       { name, lUlongT  | flags, NULL },
 #define SGE_BOOL(name,flags)        { name, lBoolT   | flags, NULL },
 #define SGE_LIST(name,type,flags)   { name, lListT   | flags, NULL },
+#define SGE_MAP(name,type,flags)   { name, lListT   | flags, NULL },
 #define SGE_OBJECT(name,type,flags) { name, lObjectT | flags, NULL },
 #define SGE_REF(name,type,flags)    { name, lRefT    | flags, NULL },
 
@@ -133,6 +134,7 @@ enum _enum_lMultiType {
 #define SGE_ULONG_D(name,flags,def)       { name, lUlongT  | flags, NULL },
 #define SGE_BOOL_D(name,flags,def)        { name, lBoolT   | flags, NULL },
 #define SGE_LIST_D(name,type,flags,def)   { name, lListT   | flags, NULL },
+#define SGE_MAP_D(name,type,flags,def)   { name, lListT   | flags, NULL },
 #define SGE_OBJECT_D(name,type,flags,def) { name, lObjectT | flags, NULL },
 #define SGE_REF_D(name,type,flags,def)    { name, lRefT    | flags, NULL },
 
@@ -169,6 +171,7 @@ enum _enum_lMultiType {
 #define SGE_ULONG(name,flags)
 #define SGE_BOOL(name,flags)
 #define SGE_LIST(name,type,flags) __SUBTYPE_MAPPING__ name type
+#define SGE_MAP(name,type,flags) __SUBTYPE_MAPPING__ name type
 #define SGE_OBJECT(name,type,flags)
 #define SGE_REF(name,type,flags)
 
@@ -183,6 +186,7 @@ enum _enum_lMultiType {
 #define SGE_ULONG_D(name,flags,def)
 #define SGE_BOOL_D(name,flags,def)
 #define SGE_LIST_D(name,type,flags,def)
+#define SGE_MAP_D(name,type,flags,def)
 #define SGE_OBJECT_D(name,type,flags,def)
 #define SGE_REF_D(name,type,flags,def)
 #endif
@@ -209,6 +213,8 @@ enum _enum_lMultiType {
 #define SGE_ULONG(name,flags)
 #define SGE_BOOL(name,flags)
 #define SGE_LIST(name,type,flags)
+#define SGE_MAP(name,type,flags)
+#define SGE_MAP(name,type,flags)
 #define SGE_OBJECT(name,type,flags)
 #define SGE_REF(name,type,flags)
 
@@ -223,6 +229,7 @@ enum _enum_lMultiType {
 #define SGE_ULONG_D(name,flags,def)
 #define SGE_BOOL_D(name,flags,def)
 #define SGE_LIST_D(name,type,flags,def)
+#define SGE_MAP_D(name,type,flags,def)
 #define SGE_OBJECT_D(name,type,flags,def)
 #define SGE_REF_D(name,type,flags,def)
 #endif

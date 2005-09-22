@@ -1,3 +1,9 @@
+RD-2005-09-22-0: Bugfix:    qstat -s p doesn't show pending array tasks while 
+                            there are tasks of this job running
+                 Issue:     1800
+                 Bugtraq:   6301047
+                 Review:    AH
+
 SG-2005-09-22-0: Bugfix:    - getting many E messages "failed building category 
                               string for job N"
                             - fixed some module tests

@@ -1,3 +1,43 @@
+RD-2005-09-22-0: Bugfix:    qstat -s p doesn't show pending array tasks while 
+                            there are tasks of this job running
+                 Issue:     1800
+                 Bugtraq:   6301047
+                 Review:    AH
+
+CR-2005-09-22-0: Testsuite: bugs/issuezilla/193:
+                            - test now is verifying if the remote execd is
+                              down after qconf -ke in scenario
+                              "issue193_deleted_job"
+
+CR-2005-09-22-0: Testsuite: new optional parameter for shutdown_system_daemon():
+                            - do_term_signal_kill_first: if 0 the procedure sends
+                              immediately a SIG_KILL signal
+
+SG-2005-09-22-0: Bugfix:    - getting many E messages "failed building category 
+                              string for job N"
+                            - fixed some module tests
+                            - module test for category generation
+                            - qmaster and common module tests are build per 
+                              default now.
+                 Bugtraq:   2127607 	
+                 Issue:     1652
+                 Review:    RD
+
+JG-2005-09-22-0: QA:        Updated review template and doc.
+                 Review:    RD
+
+RD-2005-09-21-0: Bugfix:    Double error message
+                 Issue:     1767
+                 Bugtraq:   6316995
+                 Review:    RH
+
+RD-2005-09-20-0: Bugfix:    qacct -o -D output hard to parse
+                 Issue:     1686
+                 Bugtraq:   6326150
+                 Review:    SG 
+
+CR-2005-09-19-0: Testsuite: extended cvs update timeout
+
 JG-2005-09-17-0: Testsuite: Fixed check system_tests/config/path_alias.
                  Review:    CR
 

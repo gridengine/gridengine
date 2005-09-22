@@ -370,8 +370,8 @@ lCondition *qstat_get_JB_Type_selection(lList *user_list, u_long32 show)
             /*
              * All jobs not running (= all pending)
              */
-            tmp_nw = lWhere("%T(!(%I -> %T((%I m= %u))))", JB_Type, JB_ja_tasks, 
-                        JAT_Type, JAT_status, JRUNNING);
+            tmp_nw = lWhere("%T(%I -> %T((%I > %u)))", JB_Type, JB_ja_n_h_ids, 
+                        RN_Type, RN_min, 0);
             if (nw == NULL) {
                nw = tmp_nw;
             } else {

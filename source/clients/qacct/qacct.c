@@ -1237,8 +1237,6 @@ static void print_full_ulong(int full_length, u_long32 value) {
 static void print_full(int full_length, const char* string) {
 
    int string_length=0;
-   int i = 0;
-   int spaces = 0;
 
    DENTER(TOP_LAYER, "print_full");
   
@@ -1246,21 +1244,18 @@ static void print_full(int full_length, const char* string) {
       printf("%s",string); 
       string_length = strlen(string);
    }
-   if (full_length > string_length) {
-      spaces = full_length - string_length;
-   }
-   for (i = 0 ; i < spaces ; i++) {
+   while (full_length > string_length) {
       printf(" ");
-   }  
+      string_length++;
+   }
    DEXIT;
+   return;
 }
 
 static void calc_column_sizes(lListElem* ep, sge_qacct_columns* column_size_data) {
    lListElem* lep = NULL;
    DENTER(TOP_LAYER, "calc_column_sizes");
    
-
-
    if ( column_size_data == NULL ) {
       DPRINTF(("no column size data!\n"));
       DEXIT;
@@ -1311,7 +1306,7 @@ static void calc_column_sizes(lListElem* ep, sge_qacct_columns* column_size_data
          tmp_string = lGetHost(lep, QAJ_host);
          if ( tmp_string != NULL ) {
             tmp_length = strlen(tmp_string);
-            if (column_size_data->host < tmp_length) {
+            if (column_size_data->host <= tmp_length) {
                column_size_data->host  = tmp_length + 1;
             }
          } 
@@ -1319,7 +1314,7 @@ static void calc_column_sizes(lListElem* ep, sge_qacct_columns* column_size_data
          tmp_string = lGetString(lep, QAJ_queue);
          if ( tmp_string != NULL ) {
             tmp_length = strlen(tmp_string);
-            if (column_size_data->queue < tmp_length) {
+            if (column_size_data->queue <= tmp_length) {
                column_size_data->queue  = tmp_length + 1;
             }
          } 
@@ -1327,7 +1322,7 @@ static void calc_column_sizes(lListElem* ep, sge_qacct_columns* column_size_data
          tmp_string = lGetString(lep, QAJ_group) ;
          if ( tmp_string != NULL ) {
             tmp_length = strlen(tmp_string);
-            if (column_size_data->group < tmp_length) {
+            if (column_size_data->group <= tmp_length) {
                column_size_data->group  = tmp_length + 1;
             }
          } 
@@ -1335,7 +1330,7 @@ static void calc_column_sizes(lListElem* ep, sge_qacct_columns* column_size_data
          tmp_string = lGetString(lep, QAJ_owner);
          if ( tmp_string != NULL ) {
             tmp_length = strlen(tmp_string);
-            if (column_size_data->owner < tmp_length) {
+            if (column_size_data->owner <= tmp_length) {
                column_size_data->owner  = tmp_length + 1;
             }
          } 
@@ -1343,7 +1338,7 @@ static void calc_column_sizes(lListElem* ep, sge_qacct_columns* column_size_data
          tmp_string = lGetString(lep, QAJ_project);
          if ( tmp_string != NULL ) {
             tmp_length = strlen(tmp_string);
-            if (column_size_data->project < tmp_length) {
+            if (column_size_data->project <= tmp_length) {
                column_size_data->project  = tmp_length + 1;
             }
          } 
@@ -1352,7 +1347,7 @@ static void calc_column_sizes(lListElem* ep, sge_qacct_columns* column_size_data
          tmp_string = lGetString(lep, QAJ_department);
          if ( tmp_string != NULL ) {
             tmp_length = strlen(tmp_string);
-            if (column_size_data->department < tmp_length) {
+            if (column_size_data->department <= tmp_length) {
                column_size_data->department  = tmp_length + 1;
             }
          } 
@@ -1360,7 +1355,7 @@ static void calc_column_sizes(lListElem* ep, sge_qacct_columns* column_size_data
          tmp_string = lGetString(lep, QAJ_granted_pe) ;
          if ( tmp_string != NULL ) {
             tmp_length = strlen(tmp_string);
-            if (column_size_data->granted_pe < tmp_length) {
+            if (column_size_data->granted_pe <= tmp_length) {
                column_size_data->granted_pe  = tmp_length + 1;
             }
          } 
@@ -1368,7 +1363,7 @@ static void calc_column_sizes(lListElem* ep, sge_qacct_columns* column_size_data
          /* slots */
          sprintf(tmp_buf,"%5"sge_fu32, lGetUlong(lep, QAJ_slots));
          tmp_length = strlen(tmp_buf);
-         if (column_size_data->slots < tmp_length) {
+         if (column_size_data->slots <= tmp_length) {
             column_size_data->slots  = tmp_length + 1;
          }
          lep = lNext(lep);

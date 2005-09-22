@@ -52,6 +52,9 @@
 #define MSG_JOB_XISINVALIDJOBTASKID_S                    _MESSAGE(64024, _("ERROR! "SFQ" is an invalid job-task identifier"))
 #define MSG_JOB_LONELY_TOPTION_S                          _MESSAGE(64025, _("found lonely '-t "SFN"' option (The -t option needs a leading job name)."))
 
+#define MSG_VALIDQUEUEUSER_GRPXALLREADYINUSERSETY_SS  _MESSAGE(64026, _("Group "SFQ" already contained in userset "SFQ))
+#define MSG_VALIDQUEUEUSER_USRXALLREADYINUSERSETY_SS  _MESSAGE(64027, _("User "SFQ" already contained in userset "SFQ))
+
 #define MSG_JOB_JLPPNULL                  _MESSAGE(64028, _("jlpp == NULL in job_add_job()"))                                                        
 #define MSG_JOB_JEPNULL                   _MESSAGE(64029, _("jep == NULL in job_add_job()"))
 #define MSG_JOB_JOBALREADYEXISTS_S        _MESSAGE(64030, _("can't add job "SFN" - job already exists") )
@@ -289,5 +292,18 @@
 
 #define MSG_QINSTANCE_HOSTFORQUEUEDOESNOTEXIST_SS   _MESSAGE(64309, _("can't create queue "SFQ": host "SFQ" is not known"))
 #define MSG_CALENDAR_CALCTERMINATED    _MESSAGE(64310, _("Calendar calculation terminated due to inf. loop!"))
+#define MSG_PE_INVALIDCHARACTERINPE_S   _MESSAGE(64311, _("Invalid character in pe name of pe "SFQ))
+#define MSG_PE_UNKNOWN_URGENCY_SLOT_SS  _MESSAGE(64312, _("unknown urgency_slot_setting "SFQ" for PE "SFQ))
+
+#ifdef SGE_PQS_API
+#define MSG_PQS_NODYNAMICLIBRARY_S       _MESSAGE(64313, _("No dynamic library specified for pe_qsort_args for PE "SFQ))
+#define MSG_PQS_UNABLETOOPENLIBRARY_SSS  _MESSAGE(64314, _("Unable to open "SFQ" library in pe_qsort_args for PE "SFQ" - "SFQ))
+#define MSG_PQS_NOFUNCTIONNAME_S         _MESSAGE(64315, _("No function name specified in pe_qsort_args for PE "SFQ))
+#define MSG_PQS_UNABLELOCATESYMBOL_SSSS  _MESSAGE(64316, _("Unable to locate "SFQ" symbol in "SFQ" library for pe_qsort_args in PE "SFQ" - "SFQ))
+#endif
+
+#define MSG_CQUEUE_CQUEUEISNULL_SSSII      _MESSAGE(64317, _("cqueue_list_locate_qinstance("SFQ"): cqueue == NULL("SFQ", "SFQ", %d, %d"))
+#define MSG_CQUEUE_FULLNAMEISNULL        _MESSAGE(64318, _("cqueue_list_locate_qinstance(): full_name == NULL"))
+#define MSG_PE_REJECTINGURGENCYSLOTS_S  _MESSAGE(64319, _("rejecting invalid urgency_slots setting "SFQ))
 
 #endif /* __MSG_SGEOBJLIB_H */

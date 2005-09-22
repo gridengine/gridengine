@@ -345,3 +345,45 @@ userset_list_append_to_dstring(const lList *this_list, dstring *string)
    return ret;
 }
 
+
+
+/* sge_contained_in_access_list() returns 
+   1  yes it is contained in the acl
+   0  no 
+
+   user, group: may be NULL
+*/   
+int sge_contained_in_access_list(const char *user, const char *group, 
+                                 const lListElem *acl, lList **alpp) 
+{
+   const char *entry_name = NULL;
+   lListElem *acl_entry = NULL;
+   
+   DENTER(TOP_LAYER,"sge_contained_in_access_list");
+
+   for_each (acl_entry, lGetList(acl, US_entries)) {
+      entry_name = lGetString(acl_entry,UE_name);
+      if (!entry_name) {
+          continue;
+      }    
+      if (entry_name[0] == '@') {
+         if (group && !strcmp(&entry_name[1], group)) {
+            if (alpp) {
+               SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_VALIDQUEUEUSER_GRPXALLREADYINUSERSETY_SS, group, lGetString(acl, US_name)));
+               answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
+            }
+            DRETURN(1);
+         }
+      } 
+      else {
+         if (user && !strcmp(entry_name, user)) {
+            if (alpp) {
+               SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_VALIDQUEUEUSER_USRXALLREADYINUSERSETY_SS, user, lGetString(acl, US_name)));
+               answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
+            }
+            DRETURN(1);
+         }
+      }
+   }
+   DRETURN(0);
+}

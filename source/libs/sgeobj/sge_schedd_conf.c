@@ -2679,7 +2679,7 @@ void sconf_print_config(void){
    DENTER(TOP_LAYER, "sconf_print_config");
 
    if (!sconf_is()){
-      ERROR((SGE_EVENT, "sconf_printf_config: no config to validate\n"));
+      ERROR((SGE_EVENT, MSG_SCONF_NO_CONFIG));
       DEXIT;
       return;
    }

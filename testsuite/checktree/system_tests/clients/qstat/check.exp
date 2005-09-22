@@ -47,11 +47,14 @@ set check_needs          "init_core_system"      ;# dependencies of this check (
 # define a level initialization procedure:
 set check_init_level_procedure "init_level"
 
-set check_functions      "check_core_queues"     ;# functions to call (in order)
+set check_functions      "";
+lappend check_functions      "check_core_queues"     ;# functions to call (in order)
 lappend check_functions  "qstat_option_l"
 lappend check_functions  "qstat_option_q"
 lappend check_functions  "qstat_option_pe"
-lappend check_functions  "qstat_option_U"
+#lappend check_functions  "qstat_option_U"
+lappend check_functions  "qstat_option_s"
+
 set check_errno          "-1"                    ;# 0 -> OK , != 0 means error
 set check_errstr         "was never running"     ;# string for error description
 
@@ -542,4 +545,38 @@ proc qstat_option_U {} {
   set_error 0 "ok"
 }
 
+proc qstat_option_s {} {
+  global ts_config CHECK_OUTPUT CHECK_ARCH
+   
+  puts $CHECK_OUTPUT "submitting an array job ..."   
+  set job_id_list ""
+  set arguments "-o /dev/null -e /dev/null -t 1-1000"
+  set job_id [ submit_job "$arguments $ts_config(product_root)/examples/jobs/sleeper.sh 1000" ]
 
+  wait_for_jobstart $job_id "Sleeper" 60
+
+  puts $CHECK_OUTPUT "\nrunning qstat -s p ..."
+  set exit_code [catch {exec "$ts_config(product_root)/bin/$CHECK_ARCH/qstat" -s p } result]
+  puts $CHECK_OUTPUT $result
+  if { $exit_code == 0 } {
+     if { [info exists jobinfo] } {
+        unset jobinfo
+     }  
+     parse_qstat result jobinfo "" 0
+     set shown_jobs [ split $jobinfo(index) "," ]
+     set nr_jobs [llength $shown_jobs]
+     puts $CHECK_OUTPUT "number of jobs: $nr_jobs"
+     if { $nr_jobs == 0 } {
+        add_proc_error "qstat_option_s" -1 "qstat -s p shows no pending jobs"
+    }
+  } else {
+     add_proc_error "qstat_option_s" -1 "qstat -s p exit status not 0"
+  }
+
+
+  puts $CHECK_OUTPUT "\nrunning qdel \"*\" ..."
+  set exit_code [catch {exec "$ts_config(product_root)/bin/$CHECK_ARCH/qdel" "*" } result]
+  puts $CHECK_OUTPUT $result
+
+  set_error 0 "ok"
+}

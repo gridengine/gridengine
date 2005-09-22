@@ -210,7 +210,7 @@
 #define MSG_SCHEDD_UNKNOWN_HOST_SS                          _MESSAGE(47218, _("queue "SFQ" is referencing unknown host "SFQ))
 #define MSG_SCHEDD_NOCOMPLEXATTRIBUTEFORTHRESHOLD_S         _MESSAGE(47219, _("error: no complex attribute for threshold "SFN))
 #define MSG_SCHEDD_DUETORR                                  _MESSAGE(47220, _(" due to a reservation"))
-#define MSG_SCHEDD_NOMASTERHOST_U                           _MESSAGE(47221, _("no master host for job "sge_u32))
+#define MSG_SCHEDD_NOMASTERHOST_U                           _MESSAGE(47226, _("no master host for job "sge_u32))
 #define MSG_SUBORDPOLICYCONFLICT_UUSS                       _MESSAGE(47288, _("Jobs "sge_U32CFormat" & "sge_U32CFormat" dispatched to master/subordinated queues "SFQ"/"SFQ". Suspend on subordinate to occur in same scheduling interval. Policy conflict!"))
 
 
@@ -283,13 +283,6 @@
 #define MSG_SCHEDDMESSAGE_CREATEJOBINFOFORMESSAGEFAILED_U      _MESSAGE(47270, _("can not create schedd_job_info for message "sge_U32CFormat))
 
 /* 
-** schedd/valid_queue_user.c
-*/ 
-#define MSG_VALIDQUEUEUSER_GRPXALLREADYINUSERSETY_SS  _MESSAGE(47300, _("Group "SFQ" already contained in userset "SFQ))
-#define MSG_VALIDQUEUEUSER_USRXALLREADYINUSERSETY_SS  _MESSAGE(47301, _("User "SFQ" already contained in userset "SFQ))
-
-
-/* 
 ** schedd/sge_select_queue.c
 */
 #define MSG_SCHEDD_WHYEXCEEDINVALIDLOAD_SS            _MESSAGE(47310, _("invalid load value "SFQ" for theshold "SFN))
@@ -340,6 +333,7 @@
 #define MSG_INCOMPLETE_SCHEDD_CONFIG                  _MESSAGE(47400, _("The scheduler configuration is incomplete"))
 #define MSG_USE_DEFAULT_CONFIG                        _MESSAGE(47401, _("Using the scheduler default configuration"))
 #define MSG_INVALID_PARAM_SETTING_S                   _MESSAGE(47402, _("Invalid scheduler param setting: "SFQ)) 
+#define MSG_SCONF_NO_CONFIG                           _MESSAGE(47403, _("sconf_printf_config: no config to validate"))
 #define MSG_QINSTANCE_VALUEMISSINGMASTERDOWN_S        _MESSAGE(47404, _("error: no value for "SFQ" because execd is in unknown state"))
 
 #endif /* __MSG_SCHEDD_H */

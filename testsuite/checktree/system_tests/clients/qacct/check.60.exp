@@ -63,12 +63,6 @@ set check_description(6)  ""
 set check_description(7)  ""
 set check_description(8)  ""
 
-
-
-
-
-
-
 # define test's dependencies
 set check_needs           "init_core_system" 
 
@@ -81,6 +75,7 @@ set check_cleanup_function qacct_cleanup
 # define test's procedure order
 set check_functions ""
 lappend check_functions "qacct_issue1720"
+lappend check_functions "qacct_issue1686"
 
 
 global qacct_test_hosts
@@ -159,4 +154,19 @@ proc qacct_issue1720 {} {
    set_error 0 "ok"
 }
 
+proc qacct_issue1686 {} {
+   global CHECK_TESTSUITE_ROOT CHECK_ARCH CHECK_OUTPUT CHECK_ACT_LEVEL ts_config
 
+   set acct_file "$CHECK_TESTSUITE_ROOT/checktree/system_tests/clients/qacct/accounting_issue1686"
+
+   if { $CHECK_ACT_LEVEL == 0 } {
+         set exit_code [catch { exec "$ts_config(product_root)/bin/$CHECK_ARCH/qacct" -o -D -f $acct_file } result ]
+         puts $CHECK_OUTPUT $result
+         if { [ string first "No such file or directory" $result ] > 0 } {
+            set_error "-1" "$acct_file No such file or directory"
+         } elseif { [ string first "testuser1defaultdepartment" $result ] > 0 } {
+            set_error "-1" "detected issue 1686" 
+         } 
+   }
+   set_error 0 "ok"
+}

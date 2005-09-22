@@ -155,11 +155,14 @@ int sge_add_job_category( lListElem *job, lList *acl_list ) {
       Builds the category for the resource matching
    */   
    
-   cstr = sge_build_job_category(&category_str, job, acl_list);
+   sge_build_job_category_dstring(&category_str, job, acl_list);
 
-   if (cstr == NULL)  {
+   if (sge_dstring_strlen(&category_str) == 0) {
       cstr = sge_dstring_copy_string(&category_str, no_requests);
    }   
+   else {
+      cstr = sge_dstring_get_string(&category_str);
+   }
 
    if (CATEGORY_LIST == NULL) {
       CATEGORY_LIST = lCreateList("new category list", CT_Type);
@@ -180,7 +183,7 @@ int sge_add_job_category( lListElem *job, lList *acl_list ) {
    /* 
    ** free category_str
    */
-   sge_dstring_free(&category_str);
+   sge_dstring_clear(&category_str);
 
    /* Second part:
       Builds the category for the category scheduler. We need the

@@ -58,7 +58,7 @@ CULLLIB_SRC 	= cull_list.c \
 
 CULLLIB_OBJS = $(CULLLIB_SRC:.c=.o)
 
-CULL_ALL 	= example1 
+CULL_ALL 	= example1 example2 test_cull_list test_cull_pack test_cull_db_pack test_cull_hash test_enumeration
 
 ###############################################################################
 # global rules: all, clean, depend, messages

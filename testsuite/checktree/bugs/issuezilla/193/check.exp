@@ -677,6 +677,9 @@ proc issue193_deleted_job {} {
    catch {exec $CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf -ke $no_rerun_host} output
    puts $output
 
+   shutdown_system_daemon $no_rerun_host execd
+
+
    puts $CHECK_OUTPUT "deleting job $job_id ..."
    delete_job $job_id
 
@@ -697,7 +700,7 @@ proc issue193_deleted_job {} {
    startup_execd $no_rerun_host
    wait_for_load_from_all_queues 200 
 
-   wait_for_jobend $job_id "Sleeper" 200 0
+   wait_for_jobend $job_id "Sleeper" 300 0
    
    set_error 0 "ok"
 }

@@ -1,3 +1,13 @@
+SG-2005-09-22-0: Bugfix:    - getting many E messages "failed building category 
+                              string for job N"
+                            - fixed some module tests
+                            - module test for category generation
+                            - qmaster and common module tests are build per 
+                              default now.
+                 Bugtraq:   2127607 	
+                 Issue:     1652
+                 Review:    RD
+
 JG-2005-09-22-0: QA:        Updated review template and doc.
                  Review:    RD
 

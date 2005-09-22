@@ -283,13 +283,6 @@
 #define MSG_SCHEDDMESSAGE_CREATEJOBINFOFORMESSAGEFAILED_U      _MESSAGE(47270, _("can not create schedd_job_info for message "sge_U32CFormat))
 
 /* 
-** schedd/valid_queue_user.c
-*/ 
-#define MSG_VALIDQUEUEUSER_GRPXALLREADYINUSERSETY_SS  _MESSAGE(47300, _("Group "SFQ" already contained in userset "SFQ))
-#define MSG_VALIDQUEUEUSER_USRXALLREADYINUSERSETY_SS  _MESSAGE(47301, _("User "SFQ" already contained in userset "SFQ))
-
-
-/* 
 ** schedd/sge_select_queue.c
 */
 #define MSG_SCHEDD_WHYEXCEEDINVALIDLOAD_SS            _MESSAGE(47310, _("invalid load value "SFQ" for theshold "SFN))

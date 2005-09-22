@@ -547,8 +547,10 @@ reporting_create_acct_record(lList **answer_list,
    if (mconf_get_do_reporting() || mconf_get_do_accounting()) {
       sge_dstring_init(&category_dstring, category_buffer, 
                        sizeof(category_buffer));
-      category_string = sge_build_job_category(&category_dstring, job, 
-                                          *(userset_list_get_master_list()));
+
+      sge_build_job_category_dstring(&category_dstring, job, 
+                                     *(userset_list_get_master_list()));
+      category_string = sge_dstring_get_string(&category_dstring);                                          
    }
 
    /* accounting records will only be written at job end, not for intermediate

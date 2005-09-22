@@ -52,6 +52,9 @@
 #define MSG_JOB_XISINVALIDJOBTASKID_S                    _MESSAGE(64024, _("ERROR! "SFQ" is an invalid job-task identifier"))
 #define MSG_JOB_LONELY_TOPTION_S                          _MESSAGE(64025, _("found lonely '-t "SFN"' option (The -t option needs a leading job name)."))
 
+#define MSG_VALIDQUEUEUSER_GRPXALLREADYINUSERSETY_SS  _MESSAGE(64026, _("Group "SFQ" already contained in userset "SFQ))
+#define MSG_VALIDQUEUEUSER_USRXALLREADYINUSERSETY_SS  _MESSAGE(64027, _("User "SFQ" already contained in userset "SFQ))
+
 #define MSG_JOB_JLPPNULL                  _MESSAGE(64028, _("jlpp == NULL in job_add_job()"))                                                        
 #define MSG_JOB_JEPNULL                   _MESSAGE(64029, _("jep == NULL in job_add_job()"))
 #define MSG_JOB_JOBALREADYEXISTS_S        _MESSAGE(64030, _("can't add job "SFN" - job already exists") )

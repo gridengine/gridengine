@@ -274,6 +274,7 @@ int main(int argc, char* argv[])
    int max_enroll_tries;
    int ret_val;
    int file_descriptor_settings_result = 0;
+   int last_prepare_enroll_error = CL_RETVAL_OK;
    DENTER_MAIN(TOP_LAYER, "qmaster");
 
    sge_prof_setup();
@@ -315,7 +316,7 @@ int main(int argc, char* argv[])
    /* this must be done as root user to be able to bind ports < 1024 */
    max_enroll_tries = 30;
    while ( cl_com_get_handle((char*)prognames[QMASTER],1) == NULL) {
-      prepare_enroll(prognames[QMASTER]); 
+      prepare_enroll(prognames[QMASTER], &last_prepare_enroll_error); 
       max_enroll_tries--;
       if ( max_enroll_tries <= 0 ) {
          /* exit after 30 seconds */

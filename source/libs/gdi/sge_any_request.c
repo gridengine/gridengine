@@ -342,7 +342,7 @@ int sge_get_communication_error(void) {
  * NOTES
  *    MT-NOTE: prepare_enroll() is MT safe
  *-----------------------------------------------------------------------*/
-void prepare_enroll(const char *name)
+int prepare_enroll(const char *name, int* last_commlib_error)
 {
    int ret_val;
    u_long32 me_who;
@@ -350,6 +350,7 @@ void prepare_enroll(const char *name)
    cl_host_resolve_method_t resolve_method = CL_SHORT;
    cl_framework_t  communication_framework = CL_CT_TCP;
    const char* default_domain = NULL;
+   int commlib_error = CL_RETVAL_OK;
 
 
    DENTER(TOP_LAYER, "prepare_enroll");
@@ -358,32 +359,38 @@ void prepare_enroll(const char *name)
       CRITICAL((SGE_EVENT, MSG_GDI_NO_VALID_PROGRAMM_NAME));
       SGE_EXIT(1);
    }
+
+   if (last_commlib_error == NULL) {
+      CRITICAL((SGE_EVENT, MSG_GDI_INITCOMMLIBFAILED));
+      SGE_EXIT(2);
+   }
  
    /* here the we start up some daemons and clients with multithreaded
       communication library */  
 
-
-   if ( uti_state_get_mewho() == QMASTER ||
-        uti_state_get_mewho() == QMON    ||
-        uti_state_get_mewho() == DRMAA   ||
-        uti_state_get_mewho() == SCHEDD      ) {
-      INFO((SGE_EVENT,MSG_GDI_MULTI_THREADED_STARTUP));
-      ret_val = cl_com_setup_commlib(CL_RW_THREAD,CL_LOG_OFF,gdi_log_flush_func);
-   } else {
-      INFO((SGE_EVENT,MSG_GDI_SINGLE_THREADED_STARTUP));
-      ret_val = cl_com_setup_commlib(CL_NO_THREAD,CL_LOG_OFF,gdi_log_flush_func);
-   }
-   if (ret_val != CL_RETVAL_OK) {
-      ERROR((SGE_EVENT, cl_get_error_text(ret_val)) );
-      CRITICAL((SGE_EVENT, MSG_GDI_INITCOMMLIBFAILED));
-      SGE_EXIT(1);
+   if (cl_com_setup_commlib_complete() == CL_FALSE) {
+      if ( uti_state_get_mewho() == QMASTER ||
+           uti_state_get_mewho() == QMON    ||
+           uti_state_get_mewho() == DRMAA   ||
+           uti_state_get_mewho() == SCHEDD      ) {
+         INFO((SGE_EVENT,MSG_GDI_MULTI_THREADED_STARTUP));
+         ret_val = cl_com_setup_commlib(CL_RW_THREAD,CL_LOG_OFF,gdi_log_flush_func);
+      } else {
+         INFO((SGE_EVENT,MSG_GDI_SINGLE_THREADED_STARTUP));
+         ret_val = cl_com_setup_commlib(CL_NO_THREAD,CL_LOG_OFF,gdi_log_flush_func);
+      }
+      if (ret_val != CL_RETVAL_OK) {
+         ERROR((SGE_EVENT, cl_get_error_text(ret_val)) );
+         CRITICAL((SGE_EVENT, MSG_GDI_INITCOMMLIBFAILED));
+         SGE_EXIT(1);
+      }
    }
  
    /* set alias file */
    {
       char *alias_path = sge_get_alias_path();
       ret_val = cl_com_set_alias_file(alias_path);
-      if (ret_val != CL_RETVAL_OK) {
+      if (ret_val != CL_RETVAL_OK && ret_val != *last_commlib_error) {
          ERROR((SGE_EVENT, cl_get_error_text(ret_val)) );
       }
       FREE(alias_path);
@@ -398,7 +405,7 @@ void prepare_enroll(const char *name)
    }
    ret_val = cl_com_set_resolve_method(resolve_method, (char*)default_domain);
 
-   if (ret_val != CL_RETVAL_OK) {
+   if (ret_val != CL_RETVAL_OK && ret_val != *last_commlib_error) {
       ERROR((SGE_EVENT, cl_get_error_text(ret_val)) );
    }
 
@@ -407,19 +414,19 @@ void prepare_enroll(const char *name)
 
    /* set error function */
    ret_val = cl_com_set_error_func(general_communication_error);
-   if (ret_val != CL_RETVAL_OK) {
+   if (ret_val != CL_RETVAL_OK && ret_val != *last_commlib_error) {
       ERROR((SGE_EVENT, cl_get_error_text(ret_val)) );
    }
 
    /* set tag name function */
    ret_val = cl_com_set_tag_name_func(sge_dump_message_tag);
-   if (ret_val != CL_RETVAL_OK) {
+   if (ret_val != CL_RETVAL_OK && ret_val != *last_commlib_error) {
       ERROR((SGE_EVENT, cl_get_error_text(ret_val)) );
    }
 #ifdef DEBUG_CLIENT_SUPPORT
    /* set debug client callback function to rmon's debug client callback */
    ret_val = cl_com_set_application_debug_client_callback_func(rmon_debug_client_callback);
-   if (ret_val != CL_RETVAL_OK) {
+   if (ret_val != CL_RETVAL_OK && ret_val != *last_commlib_error) {
       ERROR((SGE_EVENT, cl_get_error_text(ret_val)) );
    }
 #endif
@@ -443,7 +450,6 @@ void prepare_enroll(const char *name)
    if (handle == NULL) {
       int my_component_id = 0; /* 1 for daemons, 0=automatical for clients */
       int execd_port = 0;
-      int commlib_error = CL_RETVAL_OK;
       if ( me_who == QMASTER ||
            me_who == EXECD   ||
            me_who == SCHEDD  || 
@@ -466,14 +472,13 @@ void prepare_enroll(const char *name)
                                           (char*)prognames[uti_state_get_mewho()], my_component_id , 1 , 0 );
             cl_com_set_auto_close_mode(handle, CL_CM_AC_ENABLED );
             if (handle == NULL) {
-               switch (commlib_error) {
-                  default:
-                     ERROR((SGE_EVENT, MSG_GDI_CANT_GET_COM_HANDLE_SSUUS, 
-                                          uti_state_get_qualified_hostname(),
-                                          (char*) prognames[uti_state_get_mewho()],
-                                          sge_u32c(my_component_id), 
-                                          sge_u32c(execd_port),
-                                          cl_get_error_text(commlib_error)));
+               if (commlib_error != *last_commlib_error) {
+                  ERROR((SGE_EVENT, MSG_GDI_CANT_GET_COM_HANDLE_SSUUS, 
+                                    uti_state_get_qualified_hostname(),
+                                    (char*) prognames[uti_state_get_mewho()],
+                                    sge_u32c(my_component_id), 
+                                    sge_u32c(execd_port),
+                                    cl_get_error_text(commlib_error)));
                }
             }
             break;
@@ -486,8 +491,7 @@ void prepare_enroll(const char *name)
                                           1 , 0 );           
                                        /* select timeout is set to 1 second 0 usec       */
             if (handle == NULL) {
-               switch (commlib_error) {
-                  default:
+               if (commlib_error != *last_commlib_error) {   
                      ERROR((SGE_EVENT, MSG_GDI_CANT_GET_COM_HANDLE_SSUUS, 
                                           uti_state_get_qualified_hostname(),
                                           (char*) prognames[uti_state_get_mewho()],
@@ -506,8 +510,7 @@ void prepare_enroll(const char *name)
                                          (char*)prognames[uti_state_get_mewho()], my_component_id , 1 , 0 );
             cl_com_set_auto_close_mode(handle, CL_CM_AC_ENABLED );
             if (handle == NULL) {
-               switch (commlib_error) {
-                  default:
+               if (commlib_error != *last_commlib_error) {
                      ERROR((SGE_EVENT, MSG_GDI_CANT_CONNECT_HANDLE_SSUUS, 
                                           uti_state_get_qualified_hostname(),
                                           (char*) prognames[uti_state_get_mewho()],
@@ -524,8 +527,7 @@ void prepare_enroll(const char *name)
             handle = cl_com_create_handle(&commlib_error, communication_framework, CL_CM_CT_MESSAGE, CL_FALSE, sge_get_qmaster_port(), CL_TCP_DEFAULT,
                                          (char*)prognames[uti_state_get_mewho()], my_component_id , 1 , 0 );
             if (handle == NULL) {
-               switch (commlib_error) {
-                  default:
+               if (commlib_error != *last_commlib_error) {
                      ERROR((SGE_EVENT, MSG_GDI_CANT_CONNECT_HANDLE_SSUUS, 
                                           uti_state_get_qualified_hostname(),
                                           (char*) prognames[uti_state_get_mewho()],
@@ -537,9 +539,6 @@ void prepare_enroll(const char *name)
             break;
       }
 
-      if (handle != NULL) {
-         INFO((SGE_EVENT, MSG_GDI_HANDLE_CREATED_FOR_S, uti_state_get_sge_formal_prog_name() ));
-      }
    } 
 
 #ifdef DEBUG_CLIENT_SUPPORT
@@ -563,7 +562,10 @@ void prepare_enroll(const char *name)
       DPRINTF(("continue with setup\n"));
    }
 
+   /* Store the actual commlib error in order to not log the same error twice */
+   *last_commlib_error = commlib_error;
    DEXIT;
+   return commlib_error;
 }
 
 

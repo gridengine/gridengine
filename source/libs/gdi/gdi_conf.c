@@ -136,41 +136,11 @@ lListElem **lepp
       handle = cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0);
       commlib_error = sge_get_communication_error();
 
-      switch (commlib_error) {
-         case CL_RETVAL_OK:
-            break;
-         case CL_RETVAL_ENDPOINT_NOT_UNIQUE:
-            if (handle == NULL) {
-               ERROR((SGE_EVENT, cl_get_error_text(commlib_error)));
-            } else {
-               ERROR((SGE_EVENT, MSG_GDI_ALREADY_CONECTED_SSU,
-                                    handle->local->comp_host,
-                                    handle->local->comp_name,
-                                    handle->local->comp_id));
-            }
-            lFreeElem(&hep);
-            DEXIT;
-            return -6;
-         case CL_RETVAL_ACCESS_DENIED:
-            if (handle == NULL) {
-               ERROR((SGE_EVENT, cl_get_error_text(commlib_error)));
-            } else {
-               ERROR((SGE_EVENT, MSG_GDI_ACCESS_DENIED_SSU,
-                                    handle->local->comp_host,
-                                    handle->local->comp_name,
-                                    handle->local->comp_id));
-            }
-
-            lFreeElem(&hep);
-            DEXIT;
-            return -6;
-         default:
-            break;
-            /*
-             * no need to log an error to the messages file, because
-             * commlib errors are logged via general_communication_error()
-             * callback function
-             */
+      if (commlib_error == CL_RETVAL_ACCESS_DENIED || 
+          commlib_error == CL_RETVAL_ENDPOINT_NOT_UNIQUE ) {
+         lFreeElem(&hep);
+         DEXIT;
+         return -6;
       }
    }
 
@@ -287,20 +257,23 @@ volatile int* abort_flag
             case CL_RETVAL_OK:
                break;
             default:
-               sleep(1);
+               sleep(1);  /* for other errors */
                break;
          }
          sleep_counter++;
       } else {
+         /* here we are daemonized, we do a longer sleep when there is no connection */
          DTRACE;
          handle = cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0);
          ret_val = cl_commlib_trigger(handle, 1);
          switch(ret_val) {
             case CL_RETVAL_SELECT_TIMEOUT:
+               sleep(30);  /* If we could not establish the connection */
+               break;
             case CL_RETVAL_OK:
                break;
             default:
-               sleep(1);
+               sleep(30);  /* for other errors */
                break;
          }
       }

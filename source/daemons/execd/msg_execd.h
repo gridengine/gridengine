@@ -283,7 +283,7 @@
 #define MSG_EXECD_STARTPDCANDPTF      _MESSAGE(29173, _("successfully started PDC and PTF"))
 #define MSG_COM_RECEIVEREQUEST_S      _MESSAGE(29174, _("can't receive request: "SFN))
 #define MSG_COM_CANTREGISTER_S        _MESSAGE(29175, _("can't register at \"qmaster\": "SFN))
-#define MSG_COM_ERROR                 _MESSAGE(29176, _("communication error"))
+#define MSG_COM_ERROR                 _MESSAGE(29176, _("abort execd startup due to communication errors"))
 #define MSG_PARSE_INVALIDARG_S        _MESSAGE(29178, _("invalid command line argument "SFQ))
 #define MSG_PARSE_TOOMANYARGS         _MESSAGE(29179, _("too many command line options"))
 

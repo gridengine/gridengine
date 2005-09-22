@@ -235,17 +235,17 @@ int dispatch( dispatch_entry*   table,
          
          de.tag = -1;
 
-         if ( now - last_qmaster_file_read >= 5 ) {
-            /* re-read act qmaster file (max. every 5 seconds) */
+         if ( now - last_qmaster_file_read >= 30 ) {
+            /* re-read act qmaster file (max. every 30 seconds) */
             DPRINTF(("re-read actual qmaster file\n"));
             sge_get_master(true);
             last_qmaster_file_read = now;
-         }
-         if (i != CL_RETVAL_CONNECTION_NOT_FOUND &&
-             i != CL_RETVAL_CONNECT_ERROR) {
-            /* re-register at qmaster when connection is up again */
-            if ( sge_execd_register_at_qmaster() == 0) {
-               do_re_register = false;
+            if (i != CL_RETVAL_CONNECTION_NOT_FOUND &&
+                i != CL_RETVAL_CONNECT_ERROR) {
+               /* re-register at qmaster when connection is up again */
+               if ( sge_execd_register_at_qmaster() == 0) {
+                  do_re_register = false;
+               }
             }
          }
       }

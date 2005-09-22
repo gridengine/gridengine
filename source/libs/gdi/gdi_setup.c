@@ -355,6 +355,7 @@ void gdi_state_set_isalive(int i)
 int sge_gdi_setup(const char *programname, lList **alpp)
 {
    bool alpp_was_null = true;
+   int last_enroll_error = CL_RETVAL_OK;
    DENTER(TOP_LAYER, "sge_gdi_setup");
 
    lInit(nmv);
@@ -397,7 +398,7 @@ int sge_gdi_setup(const char *programname, lList **alpp)
       return AE_QMASTER_DOWN;
    }
 
-   prepare_enroll(programname);
+   prepare_enroll(programname, &last_enroll_error);
 
    /* ensure gdi default exit func is used if no-one has been specified */
    if (!uti_state_get_exit_func())

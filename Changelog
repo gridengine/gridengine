@@ -1,3 +1,8 @@
+CR-2005-09-22-0: Testsuite: bugs/issuezilla/193:
+                            - test now is verifying if the remote execd is
+                              down after qconf -ke in scenario
+                              "issue193_deleted_job"
+
 CR-2005-09-22-0: Testsuite: new optional parameter for shutdown_system_daemon():
                             - do_term_signal_kill_first: if 0 the procedure sends
                               immediately a SIG_KILL signal

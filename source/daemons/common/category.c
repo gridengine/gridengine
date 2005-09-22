@@ -56,133 +56,146 @@
 #include "parse.h"
 #include "category.h"
 #include "sge_job.h"
+#include "lck/sge_mtutil.h"
 
 #include "msg_daemons_common.h"
+
+/* struct containing the cull field position of the job target structures
+   and the reduced order elements */
+typedef struct {
+   int JB_hard_queue_list_pos;
+   int JB_master_hard_queue_list_pos;
+   int JB_hard_resource_list_pos;
+   int JB_soft_resource_list_pos;
+   int JB_checkpoint_name_pos;
+   int JB_type_pos;
+   int JB_owner_pos;
+   int JB_group_pos;
+   int JB_project_pos;
+   int JB_pe_pos;
+   int JB_range_pos;
+} order_pos_t;
+
+typedef struct {
+   pthread_mutex_t cull_order_mutex; /* gards the last_update access */
+   order_pos_t cull_order_pos;        /* stores cull positions in the job, ja-task, and order structure */
+} sge_category_t;
+
+static sge_category_t Category_Control = {PTHREAD_MUTEX_INITIALIZER, {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}};
 
 /*-------------------------------------------------------------------------*/
 /* build the category string                                               */
 /* the category string includes now the soft requests                      */
 /*-------------------------------------------------------------------------*/
-const char* 
-sge_build_job_category(dstring *category_str, lListElem *job, lList *acl_list) 
-{
-   lList *cmdl = NULL;
-   lListElem *ep;
-   const char *owner, *group;
-   bool first;
+/****** category/sge_build_job_category_dstring() ******************************
+*  NAME
+*     sge_build_job_category_dstring() -- build the category string   
+*
+*  SYNOPSIS
+*     void sge_build_job_category_dstring(dstring *category_str, lListElem 
+*     *job, lList *acl_list) 
+*
+*  FUNCTION
+*     The following parameter are put into the category:
+*        hard_queue_list
+*        master_hard_queue_list
+*        hard_resource_list
+*        soft_resource_list
+*        checkpoint_name
+*        type
+*        owner
+*        group
+*        project
+*        pe
+*
+*  INPUTS
+*     dstring *category_str - target string, contains the category or nothing
+*     lListElem *job        - the job for the category creating
+*     lList *acl_list       - global access list
+*
+*  NOTES
+*     MT-NOTE: sge_build_job_category_dstring() is MT safe as long as the caller is
+*
+*******************************************************************************/
+void sge_build_job_category_dstring(dstring *category_str, lListElem *job, lList *acl_list) 
+{   
 
-   DENTER(TOP_LAYER, "sge_build_job_category");
+   const char *owner = NULL;
+   const char *group = NULL;
+
+   DENTER(TOP_LAYER, "sge_build_job_category_dstring");
+
+   sge_mutex_lock("cull_order_mutex", SGE_FUNC, __LINE__, &Category_Control.cull_order_mutex);
+
+   if (Category_Control.cull_order_pos.JB_hard_queue_list_pos == -1) {
+      Category_Control.cull_order_pos.JB_hard_queue_list_pos = lGetPosViaElem(job, JB_hard_queue_list);
+      Category_Control.cull_order_pos.JB_master_hard_queue_list_pos = lGetPosViaElem(job, JB_master_hard_queue_list);
+      Category_Control.cull_order_pos.JB_hard_resource_list_pos = lGetPosViaElem(job, JB_hard_resource_list);
+      Category_Control.cull_order_pos.JB_soft_resource_list_pos = lGetPosViaElem(job, JB_soft_resource_list);
+      Category_Control.cull_order_pos.JB_checkpoint_name_pos = lGetPosViaElem(job, JB_checkpoint_name);
+      Category_Control.cull_order_pos.JB_type_pos = lGetPosViaElem(job, JB_type);
+      Category_Control.cull_order_pos.JB_owner_pos = lGetPosViaElem(job, JB_owner);
+      Category_Control.cull_order_pos.JB_group_pos = lGetPosViaElem(job, JB_group);
+      Category_Control.cull_order_pos.JB_project_pos = lGetPosViaElem(job, JB_project);
+      Category_Control.cull_order_pos.JB_pe_pos = lGetPosViaElem(job, JB_pe);
+      Category_Control.cull_order_pos.JB_range_pos = lGetPosViaElem(job, JB_pe_range);
+   }
+   sge_mutex_unlock("cull_order_mutex", SGE_FUNC, __LINE__, &Category_Control.cull_order_mutex);
    
    /*
    ** owner -> acl
    */
-   owner = lGetString(job, JB_owner);
-   group = lGetString(job, JB_group);
-   if (sge_unparse_acl(owner, group, "-U", acl_list, &cmdl, NULL) != 0) {
-      goto ERROR;
-   }
-
+   owner = lGetPosString(job, Category_Control.cull_order_pos.JB_owner_pos);
+   group = lGetPosString(job, Category_Control.cull_order_pos.JB_group_pos);
+   sge_unparse_acl_dstring(category_str, owner, group, acl_list, "-U");
+  
    /*
    ** -hard -q qlist
    */
-   if (sge_unparse_id_list(job, JB_hard_queue_list, "-q",  
-                                    &cmdl, NULL) != 0) {
-      goto ERROR;
-   }
+   sge_unparse_queue_list_dstring(category_str, job, Category_Control.cull_order_pos.JB_hard_queue_list_pos, "-q");  
 
    /*
    ** -masterq qlist
    */
-   if (sge_unparse_id_list(job, JB_master_hard_queue_list, "-masterq",  
-                                    &cmdl, NULL) != 0) {
-      goto ERROR;
-   }
+   sge_unparse_queue_list_dstring(category_str, job, Category_Control.cull_order_pos.JB_master_hard_queue_list_pos, "-masterq");
 
    /*
-   ** -hard -l rlist
+   ** -l rlist (hard resource list)
    */
-   if (sge_unparse_resource_list(job, JB_hard_resource_list, 
-                                    &cmdl, NULL) != 0) {
-      goto ERROR;
-   }
-
+   sge_unparse_resource_list_dstring(category_str, job, Category_Control.cull_order_pos.JB_hard_resource_list_pos, "-l");
+   
    /*
-   ** -hard -l rlist
+   ** -soft -l rlist
    */
-   if (sge_unparse_resource_list(job, JB_soft_resource_list, 
-                                    &cmdl, NULL) != 0) {
-      goto ERROR;
-   }
+   sge_unparse_resource_list_dstring(category_str, job, Category_Control.cull_order_pos.JB_soft_resource_list_pos, "-soft -l");
 
    /*
    ** -pe pe_name pe_range
    */
-   if (sge_unparse_pe(job, &cmdl, NULL) != 0) {
-      goto ERROR;
-   }
-
+   sge_unparse_pe_dstring(category_str, job, Category_Control.cull_order_pos.JB_pe_pos, 
+                          Category_Control.cull_order_pos.JB_range_pos, "-pe");
    /*
    ** -ckpt ckpt_name 
    */
-   if (sge_unparse_string_option(job, JB_checkpoint_name, "-ckpt", 
-            &cmdl, NULL) != 0) {
-      goto ERROR;
-   }
+   sge_unparse_string_option_dstring(category_str, job, Category_Control.cull_order_pos.JB_checkpoint_name_pos, "-ckpt");
 
    /*
    ** interactive jobs
    */
-   if (JOB_TYPE_IS_IMMEDIATE(lGetUlong(job, JB_type))) {
-      ep = sge_add_arg(&cmdl, 0, lIntT, "-I", "y");
-      if (ep == NULL) {
-         goto ERROR;
+   if (JOB_TYPE_IS_IMMEDIATE(lGetPosUlong(job, Category_Control.cull_order_pos.JB_type_pos))) {
+      if (sge_dstring_strlen(category_str) > 0) {
+         sge_dstring_sprintf_append(category_str, " -I y");
       }
-      lSetInt(ep, SPA_argval_lIntT, true);
+      else {
+         sge_dstring_sprintf_append(category_str, "-I y");
+      }
    }
       
    /*
    ** project
    */
-   if (sge_unparse_string_option(job, JB_project, "-P", 
-            &cmdl, NULL) != 0) {
-      goto ERROR;
-   }
-
-   /*
-    * create the category string
-    */
-   lDelElemStr(&cmdl, SPA_switch, "-hard");
-   first = true;
-   for_each (ep, cmdl) {
-      const char *args = lGetString(ep, SPA_switch_arg);
-
-      /* delimiter between multiple requests */
-      if (!first) {
-         sge_dstring_append(category_str, " ");
-      } else {
-         first = false;
-      }
-      
-      /* append switch, e.g. -l, -pe */
-      sge_dstring_append(category_str, lGetString(ep, SPA_switch));
-
-      /* if switch has arguments, append them, e.g. -l arch=solaris */
-      if (args != NULL) {
-         sge_dstring_sprintf_append(category_str, " %s", args);
-      }
-   }
-
-   lFreeList(&cmdl);
-       
-   DEXIT;
-   return sge_dstring_get_string(category_str);
-
-ERROR:
-   ERROR((SGE_EVENT, MSG_CATEGORY_BUILDINGCATEGORYFORJOBXFAILED_U,  
-         sge_u32c(lGetUlong(job, JB_job_number))));
-   lFreeList(&cmdl);
-   DEXIT;
-   return NULL;
+   sge_unparse_string_option_dstring(category_str, job, Category_Control.cull_order_pos.JB_project_pos, "-P");
+   DRETURN_VOID;
 }
 
 /****** category/sge_build_job_cs_category() ***********************************

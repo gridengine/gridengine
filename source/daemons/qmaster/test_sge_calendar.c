@@ -312,11 +312,11 @@ static int test_state_change(lListElem *stateObject, u_long32 state, struct tm *
 
    if (lGetUlong(stateObject, CQU_state) != state) {
       ret = 1;
-      printf("wrong state in state list (elem %d): expected %lu, got %lu\n", elemNr, state, lGetUlong(stateObject, CQU_state));
+      printf("wrong state in state list (elem %d): expected %d, got %d\n", elemNr, (int) state, (int) lGetUlong(stateObject, CQU_state));
    }
    else {
       time_t now  = mktime(time);
-      time_t result = lGetUlong(stateObject, CQU_till);
+      time_t result = (time_t) lGetUlong(stateObject, CQU_till);
       if (result != now) {
          ret = 1;
          printf("state list elem %d: ", elemNr);
@@ -547,7 +547,7 @@ static int test(date_entry_t *test, cal_entry_t *calendar, int test_nr)
          }
       }
       else {
-         printf("wrong state: expected %d, got %lu\n", test->state1, current_state);
+         printf("wrong state: expected %d, got %d\n", test->state1, (int) current_state);
       }
       lFreeList(&state_changes_list);
    }

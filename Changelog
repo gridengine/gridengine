@@ -1,3 +1,13 @@
+SG-2005-09-22-0: Bugfix:    - getting many E messages "failed building category 
+                              string for job N"
+                            - fixed some module tests
+                            - module test for category generation
+                            - qmaster and common module tests are build per 
+                              default now.
+                 Bugtraq:   2127607 	
+                 Issue:     1652
+                 Review:    RD
+
 MD-2005-09-21-0: Enhancem:  support gcc4 as the build compiler 
                             (merged: RC-2005-09-17-0)
 
@@ -134,6 +144,7 @@ CR-2005-08-29-0: Cleanup:   - removed unused message macros and double message
                               ids.
 
 SG-2005-08-26-0: Cleanup:   - fixed the build for irix 6.5
+>>>>>>> 1.3011.2.30
                             - enhanced RD-2005-08-16-0 (some global variables were
                               missing)
                             - extended the monitoring output

@@ -352,7 +352,7 @@ int main(int argc, char *argv[])
 
       /* release memory */
       lFreeWhere(&where);
-      lFreeWhat(what);
+      lFreeWhat(&what);
 
       /* Show the result */
       printf("\n\nREDUCED SELECTED QUEUELIST\n"
@@ -494,7 +494,7 @@ int main(int argc, char *argv[])
 
       /* release memory */
       lFreeWhere(&where);
-      lFreeWhat(what);
+      lFreeWhat(&what);
 
       /* dump the resulting list to file */
       if (!(fp = fopen(DATA_DIR "dump.dmp", "w"))) {
@@ -593,7 +593,7 @@ int main(int argc, char *argv[])
       /* release memory */
       lFreeWhere(&where);
       lFreeWhere(&subwhere);
-      lFreeWhat(what);
+      lFreeWhat(&what);
 
       break;
 
@@ -694,7 +694,7 @@ int main(int argc, char *argv[])
 
       /* release memory */
       lFreeWhere(&where);
-      lFreeWhat(what);
+      lFreeWhat(&what);
 
       /* Show the result */
       printf("SELECTED LIST\n\n");
@@ -729,7 +729,7 @@ int main(int argc, char *argv[])
 
       /* release memory */
       lFreeWhere(&where);
-      lFreeWhat(what);
+      lFreeWhat(&what);
 
       /* Show the result */
       lWriteListTo(queuelist, stdout);

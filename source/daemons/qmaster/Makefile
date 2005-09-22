@@ -101,10 +101,12 @@ QMASTER_LIB_DEPENDS = $(SCHEDLIB) $(EVMLIB) $(GDILIB) $(SGEOBJLIB) \
                       $(TPLIB)
 
 QMASTER_TEST_OBJS = \
-              test_sge_qmaster_timed_event.o
+              test_sge_qmaster_timed_event.o \
+              test_sge_calendar.o 
 
 QMASTER_TEST_PROGS = \
-              test_sge_qmaster_timed_event
+              test_sge_qmaster_timed_event \
+              test_sge_calendar
 
 QMASTER_TEST_ADD_LIBS = $(QMASTER_ADD_LIBS)
 
@@ -114,7 +116,7 @@ QMASTER_TEST_LIB_DEPENDS = $(SGEOBJLIB) $(SGEOBJDLIB) $(CULLLIB) $(COMMLIB) $(CO
 ###############################################################################
 # global rules: all, clean, depend, messages
 ###############################################################################
-qmaster: $(QMASTER_TARGETS)
+qmaster: $(QMASTER_TARGETS) $(QMASTER_TEST_PROGS)
 	
 qmaster_clean:
 	$(RM) $(QMASTER_TARGETS) sge_qmaster_main.o $(QMASTER_OBJS) $(QMASTER_TEST_OBJS) $(QMASTER_TEST_PROGS)

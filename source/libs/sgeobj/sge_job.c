@@ -60,6 +60,9 @@
 #include "sge_mesobj.h"
 #include "sge_parse_num_par.h"
 
+#include "sgeobj/sge_userset.h"
+#include "sgeobj/sge_qrefL.h"
+
 #include "msg_sgeobjlib.h"
 #include "msg_gdilib.h"
 #include "msg_common.h"
@@ -2569,5 +2572,260 @@ void queue_or_job_get_states(int nm, char *str, u_long32 op)
 
    DEXIT;
    return;
+}
+
+
+/****** sge_job/sge_unparse_acl_dstring() **************************************
+*  NAME
+*     sge_unparse_acl_dstring() -- creates a string from teh access lists and user
+*
+*  SYNOPSIS
+*     bool sge_unparse_acl_dstring(dstring *category_str, const char *owner, 
+*     const char *group, const lList *acl_list, const char *option) 
+*
+*  FUNCTION
+*     ??? 
+*
+*  INPUTS
+*     dstring *category_str - target string
+*     const char *owner     - job owner
+*     const char *group     - group owner
+*     const lList *acl_list - a list of all access lists
+*     const char *option    - string option to put in infront of the generated string
+*
+*  RESULT
+*     bool - true, if everything was fine
+*
+*  NOTES
+*     MT-NOTE: sge_unparse_acl_dstring() is MT safe 
+*
+*******************************************************************************/
+bool sge_unparse_acl_dstring(dstring *category_str, const char *owner, const char *group, 
+                             const lList *acl_list, const char *option) 
+{
+   bool first = true;
+   const lListElem *elem = NULL;
+  
+   DENTER(TOP_LAYER, "sge_unparse_acl_dstring");  
+
+   for_each (elem, acl_list) {
+      if (sge_contained_in_access_list(owner, group, elem, NULL)) {
+         if (first) {      
+            if (sge_dstring_strlen(category_str) > 0) {
+               sge_dstring_sprintf_append(category_str, " ");
+            }
+            sge_dstring_sprintf_append(category_str, "%s %s", option, lGetString(elem, US_name));
+            first = false;
+         }
+         else {
+            sge_dstring_sprintf_append(category_str, ",%s", lGetString(elem, US_name));
+         }
+      }
+   }
+
+   DRETURN(true);
+}
+
+
+/****** sge_job/sge_unparse_queue_list_dstring() *******************************
+*  NAME
+*     sge_unparse_queue_list_dstring() -- creates a string from a queue name list
+*
+*  SYNOPSIS
+*     bool sge_unparse_queue_list_dstring(dstring *category_str, const 
+*     lListElem *job_elem, int nm, const char *option) 
+*
+*  FUNCTION
+*     ??? 
+*
+*  INPUTS
+*     dstring *category_str     - target string
+*     const lListElem *job_elem - a job structure
+*     int nm                    - position in of the queue list attribute in the job 
+*     const char *option        - string option to put in infront of the generated string
+*
+*  RESULT
+*     bool - true, if everything was fine
+*
+*  NOTES
+*     MT-NOTE: sge_unparse_queue_list_dstring() is MT safe 
+*
+*******************************************************************************/
+bool sge_unparse_queue_list_dstring(dstring *category_str, lListElem *job_elem, 
+                                    int nm, const char *option) 
+{
+   bool first = true;
+   lList *print_list = NULL;
+   const lListElem *sub_elem = NULL;
+   
+   DENTER(TOP_LAYER, "sge_unparse_queue_list_dstring");  
+  
+   if ((print_list = lGetPosList(job_elem, nm)) != NULL) {
+      lPSortList(print_list, "%I+", QR_name);
+      for_each (sub_elem, print_list) {
+         if (first) {      
+            if (sge_dstring_strlen(category_str) > 0) {
+               sge_dstring_sprintf_append(category_str, " ");
+            }
+            sge_dstring_sprintf_append(category_str, "%s %s", option, lGetString(sub_elem, QR_name));
+            first = false;
+         }
+         else {
+            sge_dstring_sprintf_append(category_str, ",%s", lGetString(sub_elem, QR_name));
+         }
+      }
+   }
+
+   DRETURN(true);
+}
+
+/****** sge_job/sge_unparse_resource_list_dstring() ****************************
+*  NAME
+*     sge_unparse_resource_list_dstring() -- creates a string from resource requests
+*
+*  SYNOPSIS
+*     bool sge_unparse_resource_list_dstring(dstring *category_str, lListElem 
+*     *job_elem, int nm, const char *option) 
+*
+*  FUNCTION
+*     ??? 
+*
+*  INPUTS
+*     dstring *category_str - target string
+*     lListElem *job_elem   - a job structure
+*     int nm                - position of the resource list attribute in the job
+*     const char *option    - string option to put in infront of the generated string
+*
+*  RESULT
+*     bool - true, if everything was fine
+*
+*  NOTES
+*     MT-NOTE: sge_unparse_resource_list_dstring() is MT safe 
+*
+*******************************************************************************/
+bool sge_unparse_resource_list_dstring(dstring *category_str, lListElem *job_elem, 
+                                       int nm, const char *option) 
+{
+   bool first = true;
+   lList *print_list = NULL;
+   const lListElem *sub_elem = NULL;
+   
+   DENTER(TOP_LAYER, "sge_unparse_resource_list_dstring"); 
+
+   if ((print_list = lGetPosList(job_elem, nm)) != NULL) {
+      lPSortList(print_list, "%I+", CE_name);
+
+       for_each (sub_elem, print_list) {
+         if (first) {
+            if (sge_dstring_strlen(category_str) > 0) {
+               sge_dstring_sprintf_append(category_str, " ");
+            }
+         
+            sge_dstring_sprintf_append(category_str, "%s %s=%s", option, lGetString(sub_elem, CE_name), 
+                                                           lGetString(sub_elem, CE_stringval));
+            first = false;
+         }
+         else {
+            sge_dstring_sprintf_append(category_str, ",%s=%s", lGetString(sub_elem, CE_name), 
+                                                 lGetString(sub_elem, CE_stringval));
+         }
+      }
+   }
+   
+   DRETURN(true);
+}
+
+/****** sge_job/sge_unparse_pe_dstring() ***************************************
+*  NAME
+*     sge_unparse_pe_dstring() -- creates a string from a pe request
+*
+*  SYNOPSIS
+*     bool sge_unparse_pe_dstring(dstring *category_str, const lListElem 
+*     *job_elem, int pe_pos, int range_pos, const char *option) 
+*
+*  FUNCTION
+*     ??? 
+*
+*  INPUTS
+*     dstring *category_str     - target string
+*     const lListElem *job_elem - a job structure
+*     int pe_pos                - position of the pe name attribute in the job
+*     int range_pos             - position of the pe range request attribute in the job
+*     const char *option        - string option to put in infront of the generated string
+*
+*  RESULT
+*     bool - true, if everything was fine
+*
+*  NOTES
+*     MT-NOTE: sge_unparse_pe_dstring() is MT safe 
+*
+*******************************************************************************/
+bool sge_unparse_pe_dstring(dstring *category_str, const lListElem *job_elem, int pe_pos, int range_pos,
+                            const char *option) 
+{
+   const lList *range_list = NULL;
+   
+   DENTER(TOP_LAYER, "sge_unparse_pe_dstring"); 
+
+   if (lGetPosString(job_elem, pe_pos) != NULL) {
+      if ((range_list = lGetPosList(job_elem, range_pos)) == NULL) {
+         DPRINTF(("Job has parallel environment with no ranges\n"));
+         DRETURN(false);
+      }
+      else {
+         dstring range_string = DSTRING_INIT;
+
+         range_list_print_to_string(range_list, &range_string, true);
+         if (sge_dstring_strlen(category_str) > 0) {
+            sge_dstring_sprintf_append(category_str, " ");
+         }
+         sge_dstring_sprintf_append(category_str, "%s %s %s", option, lGetString(job_elem, JB_pe), 
+                                                 sge_dstring_get_string(&range_string)); 
+         sge_dstring_free(&range_string);
+      }
+      
+   }
+
+   DRETURN(true);
+}
+
+/****** sge_job/sge_unparse_string_option_dstring() ****************************
+*  NAME
+*     sge_unparse_string_option_dstring() -- copies a string into a dstring
+*
+*  SYNOPSIS
+*     bool sge_unparse_string_option_dstring(dstring *category_str, const 
+*     lListElem *job_elem, int nm, char *option) 
+*
+*  FUNCTION
+*     ??? 
+*
+*  INPUTS
+*     dstring *category_str     - target string
+*     const lListElem *job_elem - a job structure
+*     int nm                    - position of the string attribute in the job
+*     char *option              - string option to put in infront of the generated string
+*
+*  RESULT
+*     bool - true, if everything was fine
+*
+*  NOTES
+*     MT-NOTE: sge_unparse_string_option_dstring() is MT safe 
+*
+*******************************************************************************/
+bool sge_unparse_string_option_dstring(dstring *category_str, const lListElem *job_elem, 
+                               int nm, char *option)
+{
+   const char *string = NULL;
+
+   DENTER(TOP_LAYER, "sge_unparse_string_option_dstring");
+   
+   if ((string = lGetPosString(job_elem, nm)) != NULL) {            
+      if (sge_dstring_strlen(category_str) > 0) {
+         sge_dstring_sprintf_append(category_str, " ");
+      }
+      sge_dstring_sprintf_append(category_str, "%s %s", option, string);
+   }
+   DRETURN(true);
 }
 

@@ -178,6 +178,8 @@ char **argv
    int max_enroll_tries;
    int my_pid;
    int ret_val;
+   int printed_points = 0;
+   int last_execd_error = CL_RETVAL_OK;
    static char tmp_err_file_name[SGE_PATH_MAX];
    time_t next_prof_output = 0;
 
@@ -228,17 +230,29 @@ char **argv
    /* exit if we can't get communication handle (bind port) */
    max_enroll_tries = 30;
    while ( cl_com_get_handle((char*)prognames[EXECD],1) == NULL) {
-      prepare_enroll(prognames[EXECD]);
+      prepare_enroll(prognames[EXECD], &last_execd_error);
       max_enroll_tries--;
       if ( max_enroll_tries <= 0 || shut_me_down ) {
          /* exit after 30 seconds */
+         if (printed_points != 0) {
+            printf("\n");
+         }
          CRITICAL((SGE_EVENT, MSG_COM_ERROR));
          SGE_EXIT(1);
       }
       if (  cl_com_get_handle((char*)prognames[EXECD],1) == NULL) {
         /* sleep when prepare_enroll() failed */
         sleep(1);
+        if (max_enroll_tries < 27) {
+           printf(".");
+           printed_points++;
+           fflush(stdout);
+        }
       }
+   }
+
+   if (printed_points != 0) {
+      printf("\n");
    }
 
    /*
@@ -487,6 +501,7 @@ static void execd_register(void)
 {
    int had_problems = 0;
    int last_commlib_error = CL_RETVAL_OK;
+   int last_enroll_error  = CL_RETVAL_OK; 
 
    DENTER(TOP_LAYER, "execd_register");
 
@@ -494,50 +509,47 @@ static void execd_register(void)
       DPRINTF(("*****Checking In With qmaster*****\n"));
 
       if (had_problems != 0) {
-         int i;
+         int ret_val;
          cl_com_handle_t* handle = NULL;
          int commlib_error = CL_RETVAL_OK;
          /*  trigger communication
           *  =====================
           *  cl_commlib_trigger() will block 1 second , when there are no messages to read/write 
           */
-         for (i = 0; i< 10 ; i++) {
-            int ret_val;
-            
+         
+         handle = cl_com_get_handle((char*)prognames[EXECD],1);
+         if ( handle == NULL) {
+            DPRINTF(("preparing reenroll"));
+            prepare_enroll(prognames[EXECD], &last_enroll_error);
             handle = cl_com_get_handle((char*)prognames[EXECD],1);
-            if ( handle == NULL) {
-               DPRINTF(("preparing reenroll"));
-               prepare_enroll(prognames[EXECD]);
-               handle = cl_com_get_handle((char*)prognames[EXECD],1);
-            }
+         }
 
-            ret_val = cl_commlib_trigger(handle, 1);
-            switch(ret_val) {
-               case CL_RETVAL_SELECT_TIMEOUT:
-               case CL_RETVAL_OK:
-                  break;
-               default:
-                  DPRINTF(("cl_commlib_trigger reported an error - sleeping 1 s"));
-                  sleep(1);
-                  break;
-            }
+         ret_val = cl_commlib_trigger(handle, 1);
+         switch(ret_val) {
+            case CL_RETVAL_SELECT_TIMEOUT:
+            case CL_RETVAL_OK:
+               break;
+            default:
+               DPRINTF(("cl_commlib_trigger reported an error - sleeping 30 s"));
+               sleep(30); /* For other errors */
+               break;
+         }
 
-            commlib_error = sge_get_communication_error();
-            if ( commlib_error != CL_RETVAL_OK && commlib_error != last_commlib_error ) {
-               u_long32 handle_local_comp_id = 0;
-               u_long32 handle_service_port = 0;
-               last_commlib_error = commlib_error;
-               if (handle != NULL) {
-                  handle_local_comp_id = handle->local->comp_id;
-                  handle_service_port = handle->service_port;
-               }
-               ERROR((SGE_EVENT, MSG_GDI_CANT_GET_COM_HANDLE_SSUUS, 
-                                 uti_state_get_qualified_hostname(),
-                                 (char*) prognames[uti_state_get_mewho()],
-                                 sge_u32c(handle_local_comp_id), 
-                                 sge_u32c(handle_service_port),
-                                 cl_get_error_text(commlib_error)));
+         commlib_error = sge_get_communication_error();
+         if ( commlib_error != CL_RETVAL_OK && commlib_error != last_commlib_error ) {
+            u_long32 handle_local_comp_id = 0;
+            u_long32 handle_service_port = 0;
+            last_commlib_error = commlib_error;
+            if (handle != NULL) {
+               handle_local_comp_id = handle->local->comp_id;
+               handle_service_port = handle->service_port;
             }
+            ERROR((SGE_EVENT, MSG_GDI_CANT_GET_COM_HANDLE_SSUUS, 
+                              uti_state_get_qualified_hostname(),
+                              (char*) prognames[uti_state_get_mewho()],
+                              sge_u32c(handle_local_comp_id), 
+                              sge_u32c(handle_service_port),
+                              cl_get_error_text(commlib_error)));
          }
       }
 

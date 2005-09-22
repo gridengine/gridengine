@@ -379,6 +379,44 @@ static int cl_commlib_check_callback_functions(void) {
 }
 
 
+/****** cl_commlib/cl_com_setup_commlib_complete() *****************************
+*  NAME
+*     cl_com_setup_commlib_complete() -- check whether commlib setup was called
+*
+*  SYNOPSIS
+*     cl_bool_t cl_com_setup_commlib_complete(void) 
+*
+*  FUNCTION
+*     This function returns CL_TRUE when cl_com_setup_commlib() was called
+*     at least one time.
+*
+*  RESULT
+*     cl_bool_t - CL_TRUE:  cl_com_setup_commlib() was done
+*                 CL_FALSE: There was no commlib setup till now
+*
+*  NOTES
+*     MT-NOTE: cl_com_setup_commlib_complete() is MT safe 
+*
+*  SEE ALSO
+*     cl_commlib/cl_com_setup_commlib()
+*******************************************************************************/
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "cl_com_setup_commlib_complete()"
+cl_bool_t cl_com_setup_commlib_complete(void) {
+   cl_bool_t setup_complete = CL_FALSE;
+
+   pthread_mutex_lock(&cl_com_log_list_mutex);
+   if (cl_com_log_list != NULL) {
+      setup_complete = CL_TRUE;
+   }
+   pthread_mutex_unlock(&cl_com_log_list_mutex);
+   return setup_complete;
+}
+
+
+
 #ifdef __CL_FUNCTION__
 #undef __CL_FUNCTION__
 #endif

@@ -137,6 +137,7 @@ char **argv
    u_long32 job_number = 0;
    stringT job_name;
    int jobfound=0;
+   int last_prepare_enroll_error = CL_RETVAL_OK;
 
    time_t begin_time = -1, end_time = -1;
    
@@ -278,7 +279,7 @@ char **argv
                hostflag = 1;
             } else {
                int ret;
-               prepare_enroll("qacct");
+               prepare_enroll("qacct", &last_prepare_enroll_error);
                ret = getuniquehostname(argv[++ii], host, 0);
                if (ret != CL_RETVAL_OK) {
                    /*
@@ -615,7 +616,7 @@ char **argv
          }
          /* lDumpList(stdout, complex_options, 0); */
          if (!is_path_setup) {
-            prepare_enroll(prognames[QACCT]);
+            prepare_enroll(prognames[QACCT], &last_prepare_enroll_error);
             if (!sge_get_master(1)) {
                SGE_EXIT(1);
             }

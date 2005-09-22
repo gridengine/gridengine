@@ -1,3 +1,9 @@
+CR-2005-09-22-2: Bugfix:    confusing execd startup messages and delays 
+                            in case of problems (merged from maintrunk)
+                 Bugtraq:   6268799
+                 Issue:     1801
+                 Review:    MD
+
 RD-2005-09-22-0: Bugfix:    qstat -s p doesn't show pending array tasks while 
                             there are tasks of this job running
                  Issue:     1800

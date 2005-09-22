@@ -2651,11 +2651,11 @@ bool sge_unparse_acl_dstring(dstring *category_str, const char *owner, const cha
 *     MT-NOTE: sge_unparse_queue_list_dstring() is MT safe 
 *
 *******************************************************************************/
-bool sge_unparse_queue_list_dstring(dstring *category_str, const lListElem *job_elem, 
+bool sge_unparse_queue_list_dstring(dstring *category_str, lListElem *job_elem, 
                                     int nm, const char *option) 
 {
    bool first = true;
-   const lList *print_list = NULL;
+   lList *print_list = NULL;
    const lListElem *sub_elem = NULL;
    
    DENTER(TOP_LAYER, "sge_unparse_queue_list_dstring");  

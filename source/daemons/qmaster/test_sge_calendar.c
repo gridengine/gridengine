@@ -535,7 +535,7 @@ static int test(date_entry_t *test, cal_entry_t *calendar, int test_nr)
       time_t when = 0;
       time_t now  = mktime(&test->now);
       lList *state_changes_list = NULL;
-    
+
       if (test->state1 == (current_state = calender_state_changes(destCal, &state_changes_list, &when, &now))) {
          if (when == mktime(&test->result1)) {
             if ((ret = test_state_change_list(test, state_changes_list)) == 0) {

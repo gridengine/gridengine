@@ -237,7 +237,7 @@ static lList *test_create_request(const char *requestStr, int count)
        }
    }
 end:
-   if (reqeust_cp != NULL) {
+   if (request_cp != NULL) {
       free(request_cp);
       request_cp = NULL;
    }

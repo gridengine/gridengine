@@ -289,7 +289,7 @@ bool sge_unparse_pe_dstring(dstring *category_str, const lListElem *job_elem, in
 bool sge_unparse_resource_list_dstring(dstring *category_str, lListElem *job_elem, 
                                        int nm, const char *option);
 
-bool sge_unparse_queue_list_dstring(dstring *category_str, const lListElem *job_elem, 
+bool sge_unparse_queue_list_dstring(dstring *category_str, lListElem *job_elem, 
                                     int nm, const char *option);   
 
 bool sge_unparse_acl_dstring(dstring *category_str, const char *owner, const char *group, 

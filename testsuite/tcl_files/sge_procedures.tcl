@@ -6294,6 +6294,11 @@ proc is_pid_with_name_existing { host pid proc_name } {
 #  INPUTS
 #     host     - remote host 
 #     typelist - list of processes to kill (commd, execd, qmaster or sched)
+#     { do_term_signal_kill_first 1 } - if set to 1 the first kill signal is
+#                                       SIG_TERM and SIG_KILL only if SIG_TERM
+#                                       wasn't successful
+#                                     - if 0 the procedure sends immediately a
+#                                       SIG_KILL signal.
 #
 #  RESULT
 #     none 
@@ -6317,7 +6322,7 @@ proc is_pid_with_name_existing { host pid proc_name } {
 #     sge_procedures/startup_shadowd()
 #*******************************
 #
-proc shutdown_system_daemon { host typelist } {
+proc shutdown_system_daemon { host typelist { do_term_signal_kill_first 1 } } {
    global ts_config
    global CHECK_ARCH 
    global CHECK_CORE_MASTER CHECK_CORE_INSTALLED CHECK_OUTPUT CHECK_USER 
@@ -6368,9 +6373,11 @@ proc shutdown_system_daemon { host typelist } {
                } else {
                    set kill_user $CHECK_USER
                }
-               puts $CHECK_OUTPUT "killing process $ps_info(pid,$elem) on host $host, kill user is $kill_user"
-               puts $CHECK_OUTPUT [ start_remote_prog $host $kill_user kill $ps_info(pid,$elem) ]
-               after 10000
+               if { $do_term_signal_kill_first == 1 } {
+                  puts $CHECK_OUTPUT "killing (SIG_TERM) process $ps_info(pid,$elem) on host $host, kill user is $kill_user"
+                  puts $CHECK_OUTPUT [ start_remote_prog $host $kill_user kill $ps_info(pid,$elem) ]
+                  after 10000
+               }
                if { [ is_pid_with_name_existing $host $ps_info(pid,$elem) $process_name ] == 0 } {
                    puts $CHECK_OUTPUT "killing (SIG_KILL) process $ps_info(pid,$elem) on host $host, kill user is $kill_user"
                    puts $CHECK_OUTPUT [ start_remote_prog $host $kill_user kill "-9 $ps_info(pid,$elem)" ]

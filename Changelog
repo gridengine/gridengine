@@ -1,3 +1,7 @@
+CR-2005-09-22-0: Testsuite: new optional parameter for shutdown_system_daemon():
+                            - do_term_signal_kill_first: if 0 the procedure sends
+                              immediately a SIG_KILL signal
+
 SG-2005-09-22-0: Bugfix:    - getting many E messages "failed building category 
                               string for job N"
                             - fixed some module tests

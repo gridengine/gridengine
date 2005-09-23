@@ -1065,7 +1065,16 @@ InitCA()
    if [ "$CSP" = true -o \( "$WINDOWS_SUPPORT" = "true" -a "$WIN_DOMAIN_ACCESS" = "true" \) ]; then
       # Initialize CA, make directories and get DN info
       #
-      util/sgeCA/sge_ca -init -days 365
+      if [ "$AUTO" = "true" ]; then
+         if [ "$CSP_RECREATE" = "true" ]; then
+            util/sgeCA/sge_ca -init -days 365 -auto $FILE
+            #if [ -f "$CSP_USERFILE" ]; then
+            #   util/sgeCA/sge_ca -usercert $CSP_USERFILE
+            #fi
+         fi
+      else
+         util/sgeCA/sge_ca -init -days 365
+      fi
 
       if [ $? != 0 ]; then
          CAErrUsage
@@ -1710,6 +1719,7 @@ SetScheddConfig()
       elif [ $SCHEDD_CONF = "3" ]; then
          is_selected="Max"
       else
+         SCHEDD_CONF=1
          is_selected="Normal"
       fi
 

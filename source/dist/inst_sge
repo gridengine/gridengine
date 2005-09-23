@@ -100,6 +100,8 @@ WINDOWS_SUPPORT=false
 WIN_DOMAIN_ACCESS=false
 WIN_ADMIN_NAME=Administrator
 
+CSP_RECREATE="false"
+CSP_COPY_CERTS="false"
 CSP_COUNTRY_CODE="undef"
 CSP_STATE="undef"
 CSP_LOCATION="undef"
@@ -129,7 +131,7 @@ while [ $ARGC != 0 ]; do
      fi
      shift
      ARGC=`expr $ARGC - 1`
-     Stdout2Log
+     #Stdout2Log
      GetConfigFromFile
      CheckPath
      ;;
@@ -437,10 +439,13 @@ if [ "$EXECD" = "install" -a "$UPDATE" != "true" ]; then
          
       if [ $? = 0 ]; then
          $INFOTEXT -log "Execd on host %s is running!\n" $h
+         MoveLog
+         exit 0
       else
           $INFOTEXT -log "Execd on host %s is not started!\n" $h
+          MoveLog
+          exit 1
       fi
-      MoveLog
 
    fi
  
@@ -503,13 +508,12 @@ if [ "$EXECD" = "install" -a "$UPDATE" != "true" ]; then
                   $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
                   echo ". $SGE_ROOT/$SGE_CELL/common/settings.sh; cd $SGE_ROOT && ./inst_sge -x -auto $CONFIG -noremote" | $SHELL_NAME $h /bin/sh &
               fi
-         done
+            done
          fi
       fi
 
-  fi
-
- 
+ fi
+ exit 0 
 fi
 
 if [ "$EXECD" = "uninstall" ]; then

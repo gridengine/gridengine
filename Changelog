@@ -1,3 +1,9 @@
+JG-2005-09-23-0: Testsuite: Added a testsuite test calling our module tests
+                            on all platforms.
+                            Fixed a number of compile errors in some module 
+                            tests and made them part of a standard build.
+                 Review:    RD
+
 CR-2005-09-23-1: Cleanup:   updated comments in header files
 
 CR-2005-09-23-0: Bugfix:    fixed duplicate message id entries
@@ -24,8 +30,8 @@ CR-2005-09-22-0: Testsuite: bugs/issuezilla/193:
                               "issue193_deleted_job"
 
 CR-2005-09-22-0: Testsuite: new optional parameter for shutdown_system_daemon():
-                            - do_term_signal_kill_first: if 0 the procedure sends
-                              immediately a SIG_KILL signal
+                            do_term_signal_kill_first: if 0 the procedure sends
+                            immediately a SIG_KILL signal
 
 SG-2005-09-22-0: Bugfix:    - getting many E messages "failed building category 
                               string for job N"

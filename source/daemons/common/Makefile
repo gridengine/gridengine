@@ -78,7 +78,7 @@ daemons_common_messages:
 # rules to build binaries
 ###############################################################################
 
-test_category:	test_category.o category.o unparse_job_cull.o $(SGEOBJLIB) $(SGEOBJDLIB) $(COMMLIB) $(COMMLISTSLIB) $(CULLLIB) $(UTILIB) $(LCKLIB) $(RMONLIB) $(DLLIB) 
+test_category:	test_category.o category.o unparse_job_cull.o $(SGEOBJLIB) $(SGEOBJDLIB) $(COMMLIB) $(COMMLISTSLIB) $(CULLLIB) $(UTILIB) $(LCKLIB) $(RMONLIB)
 		$(LD_WRAPPER) $(CC) -o $@ $(LFLAGS) test_category.o category.o unparse_job_cull.o $(SGEOBJLIB) $(COMMLIB) $(COMMLISTSLIB) $(SGEOBJDLIB) $(CULLLIB) $(UTILIB) $(LCKLIB) $(DLLIB) $(RMONLIB) $(SLIBS) $(LIBS) 
 
 ###############################################################################

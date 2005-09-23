@@ -3,7 +3,9 @@
 #include <string.h>
 
 #define __SGE_GDI_LIBRARY_HOME_OBJECT_FILE__
-#include "cull.h"
+#include "cull/cull.h"
+
+#include "uti/sge_profiling.h"
 
 enum {
    TEST_host = 1,
@@ -54,6 +56,7 @@ int main(int argc, char *argv[])
    char *buffer;
 
    lInit(nmv);
+   sge_prof_setup();
 
    /* create an element */
    ep = lCreateElem(TEST_Type);
@@ -88,7 +91,7 @@ int main(int argc, char *argv[])
 
    buffer = (char *)malloc(pb.bytes_used);
    memcpy(buffer, pb.head_ptr, pb.bytes_used);
-   if((pack_ret = init_packbuffer_from_buffer(&copy_pb, buffer, pb.bytes_used, 0)) != PACK_SUCCESS) {
+   if((pack_ret = init_packbuffer_from_buffer(&copy_pb, buffer, pb.bytes_used)) != PACK_SUCCESS) {
       printf("initializing packbuffer from packed data failed: %s\n", cull_pack_strerror(pack_ret));
       return EXIT_FAILURE;
    }
@@ -110,14 +113,14 @@ int main(int argc, char *argv[])
       return EXIT_FAILURE;
    }
 
-   if((pack_ret = cull_pack_elem_partial(&pb, ep, CULL_SPOOL)) != PACK_SUCCESS) {
+   if((pack_ret = cull_pack_elem_partial(&pb, ep, NULL, CULL_SPOOL)) != PACK_SUCCESS) {
       printf("partially packing element failed: %s\n", cull_pack_strerror(pack_ret));
       return EXIT_FAILURE;
    }
 
    buffer = (char *)malloc(pb.bytes_used);
    memcpy(buffer, pb.head_ptr, pb.bytes_used);
-   if((pack_ret = init_packbuffer_from_buffer(&copy_pb, buffer, pb.bytes_used, 0)) != PACK_SUCCESS) {
+   if((pack_ret = init_packbuffer_from_buffer(&copy_pb, buffer, pb.bytes_used)) != PACK_SUCCESS) {
       printf("initializing packbuffer from partially packed data failed: %s\n", cull_pack_strerror(pack_ret));
       return EXIT_FAILURE;
    }

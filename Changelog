@@ -1,3 +1,5 @@
+CR-2005-09-23-1: Cleanup:   updated comments in header files
+
 CR-2005-09-23-0: Bugfix:    fixed duplicate message id entries
 
 RD-2005-09-23-1: Testsuite: qconf_issue1800 cleanup

@@ -78,7 +78,7 @@
                       "ccrm" = connection close response message (CCRM) 
       MIH_MAT:     Message Acknowledge Type:
                       "nak"  = not acknowledged
-                      "ack"  = acknowledged after application has read the message from NGC, 
+                      "ack"  = acknowledged after commlib has read the message
                       "sync" = acknowledged after application has read the message from NGC AND processed the message
       MIH_TAG:     User defined
       MIH_RID:     Response ID

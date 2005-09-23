@@ -1,3 +1,5 @@
+CR-2005-09-23-1: Cleanup:   updated comments in header files
+
 CR-2005-09-22-2: Bugfix:    confusing execd startup messages and delays 
                             in case of problems (merged from maintrunk)
                  Bugtraq:   6268799

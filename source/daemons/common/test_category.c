@@ -111,14 +111,14 @@ static char *result_category[] = { NULL,
                                    "-l arch=test_arch,lic=1,memory=1GB -ckpt my_check -P my_pr",
                                    "-soft -l arch=test_arch,lic=1,memory=1GB",
                                    "-l arch=test_arch,lic=1,memory=1GB -soft -l arch=test_arch,lic=1,memory=1GB -ckpt my_check -P my_pr",
-                                   "-q my.q@test,m1.q@what-ever,test@*",
-                                   "-q my.q@test,m1.q@what-ever,test@* -l arch=test_arch,lic=1,memory=1GB -soft -l arch=test_arch,lic=1,memory=1GB -ckpt my_check -P my_pr",
-                                   "-masterq my.q@test,m1.q@what-ever,test@*",
-                                   "-q my.q@test,m1.q@what-ever,test@* -masterq my.q@test,m1.q@what-ever,test@* -l arch=test_arch,lic=1,memory=1GB -soft -l arch=test_arch,lic=1,memory=1GB -ckpt my_check -P my_pr",
+                                   "-q m1.q@what-ever,my.q@test,test@*",
+                                   "-q m1.q@what-ever,my.q@test,test@* -l arch=test_arch,lic=1,memory=1GB -soft -l arch=test_arch,lic=1,memory=1GB -ckpt my_check -P my_pr",
+                                   "-masterq m1.q@what-ever,my.q@test,test@*",
+                                   "-q m1.q@what-ever,my.q@test,test@* -masterq m1.q@what-ever,my.q@test,test@* -l arch=test_arch,lic=1,memory=1GB -soft -l arch=test_arch,lic=1,memory=1GB -ckpt my_check -P my_pr",
                                    "-pe my_pe 1-10",
-                                   "-q my.q@test,m1.q@what-ever,test@* -masterq my.q@test,m1.q@what-ever,test@* -l arch=test_arch,lic=1,memory=1GB -soft -l arch=test_arch,lic=1,memory=1GB -pe my_pe 1-10 -ckpt my_check -P my_pr",
+                                   "-q m1.q@what-ever,my.q@test,test@* -masterq m1.q@what-ever,my.q@test,test@* -l arch=test_arch,lic=1,memory=1GB -soft -l arch=test_arch,lic=1,memory=1GB -pe my_pe 1-10 -ckpt my_check -P my_pr",
                                    "-U test2_acc,test1_acc",
-                                   "-U test2_acc,test1_acc -q my.q@test,m1.q@what-ever,test@* -masterq my.q@test,m1.q@what-ever,test@* -l arch=test_arch,lic=1,memory=1GB -soft -l arch=test_arch,lic=1,memory=1GB -pe my_pe 1-10 -ckpt my_check -P my_pr",
+                                   "-U test2_acc,test1_acc -q m1.q@what-ever,my.q@test,test@* -masterq m1.q@what-ever,my.q@test,test@* -l arch=test_arch,lic=1,memory=1GB -soft -l arch=test_arch,lic=1,memory=1GB -pe my_pe 1-10 -ckpt my_check -P my_pr",
                                    NULL
                                  };
 
@@ -518,8 +518,6 @@ static int test(data_entry_t *test, char *result, int count)
    if (job_elem != NULL) {
        dstring category_str = DSTRING_INIT;
 
-       printf("expected: <%s>\n", result!=NULL? result:"<NULL>");
-
        sge_build_job_category_dstring(&category_str, job_elem, access_list);
 
        printf("got     : <%s>\n", sge_dstring_get_string(&category_str)!=NULL?sge_dstring_get_string(&category_str):"<NULL>");
@@ -529,13 +527,14 @@ static int test(data_entry_t *test, char *result, int count)
          }
          else {
             ret = 1;
-
+            printf("expected: <%s>\n", result!=NULL? result:"<NULL>");
          }
        }
        else if (result == NULL &&  sge_dstring_get_string(&category_str) == NULL) {
        }
        else {
          ret = 1;
+         printf("expected: <%s>\n", result!=NULL? result:"<NULL>");
        }
        
        if (ret == 0) {
@@ -548,7 +547,7 @@ static int test(data_entry_t *test, char *result, int count)
             job_elem = test_create_job(test, i);
             if (job_elem) {
                double time = test_performance(job_elem, max, access_list); 
-               if (time > 5) {
+               if (time > 1) {
                   max /= 10;
                }
             }

@@ -1,4 +1,6 @@
-RD-2005-09-23-1: Textsuite: qconf_issue1800 cleanup
+CR-2005-09-23-0: Bugfix:    fixed duplicate message id entries
+
+RD-2005-09-23-1: Testsuite: qconf_issue1800 cleanup
                  Review:    JG
 
 CR-2005-09-22-2: Bugfix:    confusing execd startup messages and delays 

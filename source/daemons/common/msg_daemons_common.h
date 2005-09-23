@@ -72,8 +72,6 @@
 #define MSG_JOB_JOBHASPEWITHNORANGES       _MESSAGE(27021, _("Job has parallel environment with no ranges"))
 #define MSG_LIST_ERRORFORMATINGRANGESINPE       _MESSAGE(27022, _("Error formatting ranges in -pe"))
 #define MSG_LIST_ERRORFORMATINGPATHLIST       _MESSAGE(27023, _("Error formatting path_list"))
-#define MSG_LIST_ERRORFORMATINGIDLIST       _MESSAGE(27024, _("Error formatting id list"))
-#define MSG_LIST_ERRORFORMATINGACLLIST       _MESSAGE(27025, _("Error formatting acl list"))
 
 
 /*
@@ -142,7 +140,6 @@
 /* 
  * sge_category.c
  */ 
-#define MSG_CATEGORY_BUILDINGCATEGORYFORJOBXFAILED_U  _MESSAGE(27063, _("failed building category string for job "sge_U32CFormat))
 
 /*
  * Additional messages

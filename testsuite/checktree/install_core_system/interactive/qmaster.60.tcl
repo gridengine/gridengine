@@ -161,6 +161,7 @@ proc install_qmaster {} {
  set DATABASE_DIR_NOT_ON_LOCAL_FS [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_DATABASE_DIR_NOT_ON_LOCAL_FS] "*"]
  set STARTUP_RPC_SERVER [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_STARTUP_RPC_SERVER]]
  set DONT_KNOW_HOW_TO_TEST_FOR_LOCAL_FS [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_DONT_KNOW_HOW_TO_TEST_FOR_LOCAL_FS]]
+ set CSP_COPY_CERTS [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_CSP_COPY_CERTS]]
 
  cd "$ts_config(product_root)"
 
@@ -398,7 +399,7 @@ proc install_qmaster {} {
        }
 
       -i $sp_id $WILL_NOT_VERIFY_FILE_PERMISSIONS {
-          puts $CHECK_OUTPUT "\n -->testsuite: sending >RETURN<"
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >RETURN<(21)"
           if {$do_log_output == 1} {
                puts "press RETURN"
                set anykey [wait_for_enter 1]
@@ -426,7 +427,7 @@ proc install_qmaster {} {
        }
 
        -i $sp_id "Please hit <RETURN> to continue once you set your file permissions" {
-          puts $CHECK_OUTPUT "\n -->testsuite: sending >return<"
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >return<(1)"
           if {$do_log_output == 1} {
                puts "press RETURN"
                set anykey [wait_for_enter 1]
@@ -437,7 +438,7 @@ proc install_qmaster {} {
 
        -i $sp_id $IF_NOT_OK_STOP_INSTALLATION {
           if { $CHECK_ADMIN_USER_SYSTEM != 0 } {
-             puts $CHECK_OUTPUT "\n -->testsuite: sending >RETURN<"
+             puts $CHECK_OUTPUT "\n -->testsuite: sending >RETURN<(2)"
              if {$do_log_output == 1} {
                   puts "press RETURN"
                   set anykey [wait_for_enter 1]
@@ -498,7 +499,7 @@ proc install_qmaster {} {
        }
 
        -i $sp_id $MESSAGES_LOGGING {
-          puts $CHECK_OUTPUT "\n -->testsuite: sending >RETURN<"
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >RETURN<(3)"
           if {$do_log_output == 1} {
                puts "press RETURN"
                set anykey [wait_for_enter 1]
@@ -533,7 +534,7 @@ proc install_qmaster {} {
             set local_master_spool_set 1
           } else {
             # use default spool dir
-            puts $CHECK_OUTPUT "\n -->testsuite: sending >RETURN<"
+            puts $CHECK_OUTPUT "\n -->testsuite: sending >RETURN<(4)"
             if {$do_log_output == 1} {
                puts "press RETURN"
                set anykey [wait_for_enter 1]
@@ -557,7 +558,7 @@ proc install_qmaster {} {
             set local_execd_spool_set 1
           } else {
             # use default spool dir
-            puts $CHECK_OUTPUT "\n -->testsuite: sending >RETURN<"
+            puts $CHECK_OUTPUT "\n -->testsuite: sending >RETURN<(5)"
             if {$do_log_output == 1} {
                puts "press RETURN"
                set anykey [wait_for_enter 1]
@@ -581,7 +582,7 @@ proc install_qmaster {} {
             set local_execd_spool_set 1
           } else {
             # use default spool dir
-            puts $CHECK_OUTPUT "\n -->testsuite: sending >RETURN<"
+            puts $CHECK_OUTPUT "\n -->testsuite: sending >RETURN<(6)"
             if {$do_log_output == 1} {
                puts "press RETURN"
                set anykey [wait_for_enter 1]
@@ -643,7 +644,7 @@ proc install_qmaster {} {
        }
    
        -i $sp_id $FINISHED_ADDING_HOSTS {
-          puts $CHECK_OUTPUT "\n -->testsuite: sending >RETURN<"
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >RETURN<(7)"
           if {$do_log_output == 1} {
                puts "press RETURN"
                set anykey [wait_for_enter 1]
@@ -699,7 +700,7 @@ proc install_qmaster {} {
 
        -i $sp_id $ENTER_HOSTS {
          if {$hostcount >= [llength $ts_config(all_nodes)]} {
-             puts $CHECK_OUTPUT "\n -->testsuite: sending >RETURN<"
+             puts $CHECK_OUTPUT "\n -->testsuite: sending >RETURN<(8)"
              send -i $sp_id "\n"
          } else {
             set exechost [lindex $ts_config(all_nodes) $hostcount]
@@ -809,7 +810,7 @@ proc install_qmaster {} {
        }
 
       -i $sp_id $ENTER_SCHEDLUER_SETUP {
-         puts $CHECK_OUTPUT "\n -->testsuite: sending >RETURN<"
+         puts $CHECK_OUTPUT "\n -->testsuite: sending >RETURN<(9)"
          if {$do_log_output == 1} {
             puts "press RETURN"
             set anykey [wait_for_enter 1]
@@ -828,7 +829,7 @@ proc install_qmaster {} {
             puts $CHECK_OUTPUT "\n -->testsuite: sending $ts_config(bdb_dir)"
          } else {
             set input "\n"
-            puts $CHECK_OUTPUT "\n -->testsuite: sending >RETURN<"
+            puts $CHECK_OUTPUT "\n -->testsuite: sending >RETURN<(11)"
          }
          if {$do_log_output == 1} {
             puts "press RETURN"
@@ -846,7 +847,7 @@ proc install_qmaster {} {
          }
   
          if { $spooldir == "" } {
-            puts $CHECK_OUTPUT "\n -->testsuite: sending >RETURN<"
+            puts $CHECK_OUTPUT "\n -->testsuite: sending >RETURN<(12)"
             if {$do_log_output == 1} {
                puts "press RETURN"
                set anykey [wait_for_enter 1]
@@ -885,7 +886,7 @@ proc install_qmaster {} {
       # during qmaster install. currently no shadowhost will be added
       #
       -i $sp_id $ADD_SHADOWHOST_ASK {
-         puts $CHECK_OUTPUT "\n -->testsuite: sending >RETURN<"
+         puts $CHECK_OUTPUT "\n -->testsuite: sending >RETURN<(13)"
          if {$do_log_output == 1} {
             puts "press RETURN"
             set anykey [wait_for_enter 1]
@@ -897,7 +898,7 @@ proc install_qmaster {} {
 
 
       -i $sp_id $ADD_SHADOWHOST_FROM_FILE_ASK {
-         puts $CHECK_OUTPUT "\n -->testsuite: sending >RETURN<"
+         puts $CHECK_OUTPUT "\n -->testsuite: sending >RETURN<(14)"
          if {$do_log_output == 1} {
             puts "press RETURN"
             set anykey [wait_for_enter 1]
@@ -909,13 +910,13 @@ proc install_qmaster {} {
 
 
       -i $sp_id $ENTER_HOSTS {
-            puts $CHECK_OUTPUT "\n -->testsuite: sending >RETURN<"
+            puts $CHECK_OUTPUT "\n -->testsuite: sending >RETURN<(15)"
 
          if {$do_log_output == 1} {
             puts "press RETURN"
             set anykey [wait_for_enter 1]
          }
-            send -i $sp_id "\n"
+         send -i $sp_id "\n"
          continue;
       }
       
@@ -926,16 +927,19 @@ proc install_qmaster {} {
       # 
       # SGE 6.0 Cluster Queues
       #
-      -i $sp_id $CREATING_ALL_QUEUE_HOSTGROUP {
-         puts $CHECK_OUTPUT "\n -->testsuite: sending >RETURN<"
-         if {$do_log_output == 1} {
-            puts "press RETURN"
-            set anykey [wait_for_enter 1]
-         }
+  # Due to a testsuite bug during installation of qmaster host
+  # One install question -> 2 return have been sent.
 
-         send -i $sp_id "\n"
-         continue;
-      }
+  #    -i $sp_id $CREATING_ALL_QUEUE_HOSTGROUP {
+  #       puts $CHECK_OUTPUT "\n -->testsuite: sending >RETURN<(16)"
+  #       if {$do_log_output == 1} {
+  #          puts "press RETURN"
+  #          set anykey [wait_for_enter 1]
+  #       }
+
+  #       send -i $sp_id "\n"
+  #       continue;
+  #    }
 
       #
       # end SGE 6.0 Cluster Queues
@@ -982,7 +986,7 @@ proc install_qmaster {} {
        }
    
        -i $sp_id $USING_GID_RANGE_HIT_RETURN {
-          puts $CHECK_OUTPUT "\n -->testsuite: sending >RETURN<"
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >RETURN<(17)"
           if {$do_log_output == 1} {
                puts "-->testsuite: press RETURN"
                set anykey [wait_for_enter 1]
@@ -992,7 +996,7 @@ proc install_qmaster {} {
        }
 
        -i $sp_id $HIT_RETURN_TO_CONTINUE {
-          puts $CHECK_OUTPUT "\n -->testsuite: sending >RETURN<"
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >RETURN<(18)"
           if {$do_log_output == 1} {
                puts "-->testsuite: press RETURN"
                set anykey [wait_for_enter 1]
@@ -1002,7 +1006,7 @@ proc install_qmaster {} {
        }
      
        -i $sp_id $CURRENT_GRID_ROOT_DIRECTORY {
-          puts $CHECK_OUTPUT "\n -->testsuite: sending >RETURN<"
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >RETURN<(19)"
           if {$do_log_output == 1} {
                puts "-->testsuite: press RETURN"
                set anykey [wait_for_enter 1]
@@ -1024,12 +1028,22 @@ proc install_qmaster {} {
        }
 
        -i $sp_id $WE_CONFIGURE_WITH_X_SETTINGS {
-          puts $CHECK_OUTPUT "\n -->testsuite: sending >RETURN<"
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >RETURN<(20)"
           if {$do_log_output == 1} {
                puts "-->testsuite: press RETURN"
                set anykey [wait_for_enter 1]
           }
           send -i $sp_id "\n"
+          continue;
+       }
+
+       -i $sp_id $CSP_COPY_CERTS {
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >$ANSWER_NO<(14)"
+          if {$do_log_output == 1} {
+               puts "press RETURN"
+               set anykey [wait_for_enter 1]
+          }
+          send -i $sp_id "$ANSWER_NO\n"
           continue;
        }
 

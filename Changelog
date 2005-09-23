@@ -1,3 +1,9 @@
+MD-2005-09-23-1: Enhancem:  - Added autoinstall support to testsuite
+                            - added test for Issue 1330, only possible
+                              with autoinstall support
+                 Changed:   install_core_system
+                 Review:    CR
+
 MD-2005-09-23-0: Enhancem:  Check in inst_qmaster.sh, which I have forgotten
                             with check in MD-2005-09-08-0
                  Changed:   inst_qmaster.sh

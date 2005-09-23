@@ -60,7 +60,9 @@ set fast_setup 0
 global do_compile
 global CHECK_TESTSUITE_LOCKFILE
 set CHECK_TESTSUITE_LOCKFILE "testsuite_lockfile"
-
+global CHECK_TESTSUITE_INSTALL_MODE
+set CHECK_TESTSUITE_INSTALL_MODE "manual" ;# sets the install mode. allowed are: automatic and manual
+ 
 # path/file variables
 global CHECK_TESTSUITE_ROOT        ;# path to TESTSUITE directory
 global CHECK_CHECKTREE_ROOT        ;# path where checktree lies

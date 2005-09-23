@@ -1,0 +1,199 @@
+#!/vol2/TCL_TK/glinux/bin/expect
+#___INFO__MARK_BEGIN__
+##########################################################################
+#
+#  The Contents of this file are made available subject to the terms of
+#  the Sun Industry Standards Source License Version 1.2
+#
+#  Sun Microsystems Inc., March, 2001
+#
+#
+#  Sun Industry Standards Source License Version 1.2
+#  =================================================
+#  The contents of this file are subject to the Sun Industry Standards
+#  Source License Version 1.2 (the "License"); You may not use this file
+#  except in compliance with the License. You may obtain a copy of the
+#  License at http://gridengine.sunsource.net/Gridengine_SISSL_license.html
+#
+#  Software provided under this License is provided on an "AS IS" basis,
+#  WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING,
+#  WITHOUT LIMITATION, WARRANTIES THAT THE SOFTWARE IS FREE OF DEFECTS,
+#  MERCHANTABLE, FIT FOR A PARTICULAR PURPOSE, OR NON-INFRINGING.
+#  See the License for the specific provisions governing your rights and
+#  obligations concerning the Software.
+#
+#  The Initial Developer of the Original Code is: Sun Microsystems, Inc.
+#
+#  Copyright: 2001 by Sun Microsystems, Inc.
+#
+#  All Rights Reserved.
+#
+##########################################################################
+#___INFO__MARK_END__
+
+
+
+# Template for testsuite check
+# 
+# 1) replace the following symbols by your test specific names
+#    o Autoinstall_test   name of your test (e.g. consumable_test)
+#    o 
+#
+# 2) set check_root_access_needs to "yes" or "no" (if you need root access)
+#
+# 3) set check_category
+#
+# 4) set check_highest_level ( e.g.: runlevel "short" has reserved values from 0 to 99 ) 
+#
+# 5) set check_needs (e.g.: "init_core_system" this means that this test is not 
+#    started without succesfull run of "init_core_system" test
+# 6) implement the default functions (e.g.: Autoinstall_test_init_level)
+#
+# 7) you can add any function name to check_functions (all function (no paramters allowed) are started 
+#    within each runlevel number
+#    PLEASE finish each check_function with a set_error() function call
+#    PLEASE use add_proc_error() to submit errors
+#    add_proc_error() is used in many testsuite standard functions, so not every 
+#    function call must check the return state.
+# 
+
+
+
+# define global variable in this namespace
+global check_name 
+global check_category 
+global check_description 
+global check_needs
+global check_functions 
+global check_errno 
+global check_errstr 
+global check_highest_level
+global check_init_level_procedure
+global check_root_access_needs
+global env
+global CHECK_ACTUAL_TEST_PATH
+
+ts_source $CHECK_ACTUAL_TEST_PATH/../../../install_core_system/init_cluster
+ts_source $CHECK_ACTUAL_TEST_PATH/../../../install_core_system/automatic/bdb_rpc
+ts_source $CHECK_ACTUAL_TEST_PATH/../../../install_core_system/automatic/qmaster
+ts_source $CHECK_ACTUAL_TEST_PATH/../../../install_core_system/automatic/execd
+ts_source $CHECK_ACTUAL_TEST_PATH/../../../install_core_system/automatic/shadowd
+
+set check_root_access_needs "yes"
+
+# define a level initialization procedure:
+set check_init_level_procedure "Autoinstall_test_init_level"
+
+# define test's name and run level descriptions
+set check_name            "Autoinstall_test"
+set check_category        "COMPATIBILITY SYSTEM VERIFIED"
+set check_highest_level  0 
+set check_description(0)  "This test installs sge using the automatic installation"
+set check_description(1)  ""
+set check_description(2)  ""
+set check_description(3)  ""
+set check_description(4)  ""
+set check_description(5)  ""
+set check_description(6)  ""
+set check_description(7)  ""
+set check_description(8)  ""
+
+
+
+
+
+
+
+# define test's dependencies
+#set check_needs           "init_core_system" 
+
+# setup and cleanup functions
+set check_setup_function Autoinstall_test_setup
+set check_cleanup_function Autoinstall_test_cleanup
+
+
+
+# define test's procedure order
+set check_functions ""
+lappend check_functions "kill_running_system"
+lappend check_functions "create_autoinst_config"
+lappend check_functions "install_qmaster"
+lappend check_functions "reread_bootstrap"
+lappend check_functions "install_shadowd"
+lappend check_functions "install_execd"
+lappend check_functions "cleanup_system"
+lappend check_functions "setup_queues"
+lappend check_functions "setup_testcheckpointobject"
+lappend check_functions "setup_conf" 
+lappend check_functions "setup_execd_conf"
+lappend check_functions "setup_mytestproject" 
+lappend check_functions "setup_mytestpe" 
+lappend check_functions "setup_deadlineuser" 
+lappend check_functions "setup_schedconf" 
+lappend check_functions "setup_default_calendars"
+lappend check_functions "setup_check_user_permissions"
+lappend check_functions "setup_check_messages_files"
+lappend check_functions "setup_inhouse_cluster"
+
+global Autoinstall_test_test_hosts
+global Autoinstall_test_saved_slot_count
+
+proc Autoinstall_test_init_level {} {
+   global CHECK_ACT_LEVEL
+
+   switch -- $CHECK_ACT_LEVEL {
+      "0" { 
+         return 0
+      } 
+      "1" {
+         return -1 
+      }
+      "2" {
+         return -1
+      }
+      "3" {
+         return -1
+      }
+      "4" {
+         return -1
+      }
+      "5" {
+         return -1
+      }
+      "6" {
+         return -1
+      }
+      "7" {
+         return -1
+      }
+      "8" {
+         return -1
+      }
+   } 
+
+   return -1  ;# no other level 
+}
+
+
+
+
+# -------- local test procedures: initialization------------------------------
+
+
+proc Autoinstall_test_setup  {} {
+   global CHECK_OUTPUT ts_config
+
+   puts $CHECK_OUTPUT "this is a dummy setup function"
+
+   set_error 0 "ok"
+}
+
+proc Autoinstall_test_cleanup  {} {
+   global CHECK_OUTPUT ts_config
+
+#   delete_all_jobs
+#   wait_for_end_of_all_jobs 60
+   puts $CHECK_OUTPUT "this is a dummy cleanup function"
+
+   set_error 0 "ok"
+}

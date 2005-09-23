@@ -147,7 +147,8 @@ proc sge_macro { macro_name {raise_error 1} } {
       "DISTINST_RPC_START_SERVER" { set value "Shall the installation script try to start the RPC server? (y/n) \[y\] >>" }     
       "DISTINST_RPC_SERVER_STARTED" { set value "Please remember these values, during Qmaster installation\n you will be asked for! Hit <RETURN> to continue!" }     
       "DISTINST_RPC_INSTALL_RC_SCRIPT" { set value "We can install the startup script that\nGrid Engine is started at machine boot (y/n) \[y\] >> " }     
-      "DISTINST_RPC_SERVER_COMPLETE" { set value "e.g. * * * * * <full path to scripts> <sge-root dir> <sge-cell> <bdb-dir>\n" }     
+      "DISTINST_RPC_SERVER_COMPLETE" { set value "e.g. * * * * * <full path to scripts> <sge-root dir> <sge-cell> <bdb-dir>\n" }
+      "DISTINST_CSP_COPY_CERTS" { set value "Should the script try to copy the cert files, for you, to each\nexecution host? (y/n) \[y\] >>" }     
 
    }
 

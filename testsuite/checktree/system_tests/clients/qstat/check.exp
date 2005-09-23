@@ -48,11 +48,11 @@ set check_needs          "init_core_system"      ;# dependencies of this check (
 set check_init_level_procedure "init_level"
 
 set check_functions      "";
-#lappend check_functions  "check_core_queues"     ;# functions to call (in order)
-#lappend check_functions  "qstat_option_l"
-#lappend check_functions  "qstat_option_q"
-#lappend check_functions  "qstat_option_pe"
-#lappend check_functions  "qstat_option_U"
+lappend check_functions  "check_core_queues"     ;# functions to call (in order)
+lappend check_functions  "qstat_option_l"
+lappend check_functions  "qstat_option_q"
+lappend check_functions  "qstat_option_pe"
+lappend check_functions  "qstat_option_U"
 lappend check_functions  "qstat_issue1800"
 
 set check_errno          "-1"                    ;# 0 -> OK , != 0 means error

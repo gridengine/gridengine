@@ -1,3 +1,8 @@
+RD-2005-09-26-0: Bugfix:    fstype does not recognize nfs4 share in all cases
+                 Issue:     1814
+                 Bugtraq:   6328703
+                 Review:    JG
+
 MD-2005-09-23-1: Enhancem:  - Added autoinstall support to testsuite
                             - added test for Issue 1330, only possible
                               with autoinstall support

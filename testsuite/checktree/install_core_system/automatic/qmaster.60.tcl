@@ -187,6 +187,12 @@ proc create_autoinst_config {} {
    set execd_port [expr $ts_config(commd_port) + 1]
    set gid_range [get_gid_range $CHECK_USER $ts_config(commd_port)]
 
+   if { $ts_config(bdb_dir) == "none" } {
+      set db_dir $ts_config(product_root)/$ts_config(cell)/spool/qmaster/spooldb
+   } else {
+      set db_dir $ts_config(bdb_dir)
+   }
+
    set_error "0" "inst_sge - no errors"
 
    if { [file isfile "$ts_config(product_root)/autoinst_config.conf"] == 1} {
@@ -206,7 +212,7 @@ proc create_autoinst_config {} {
    puts $fdo "GID_RANGE=\"$gid_range\""
    puts $fdo "SPOOLING_METHOD=\"$ts_config(spooling_method)\""
    puts $fdo "DB_SPOOLING_SERVER=\"none\""
-   puts $fdo "DB_SPOOLING_DIR=\"$ts_config(bdb_dir)\""
+   puts $fdo "DB_SPOOLING_DIR=\"$db_dir\""
    puts $fdo "ADMIN_HOST_LIST=\"$ts_config(execd_hosts)\""
    puts $fdo "SUBMIT_HOST_LIST=\"$ts_config(submit_only_hosts)\""
    puts $fdo "EXECD_SPOOL_DIR_LOCAL=\"/usr/local/testsuite/$ts_config(commd_port)/execd\""

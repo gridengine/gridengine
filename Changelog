@@ -1,3 +1,8 @@
+MD-2005-09-27-0: Testsuite: using a default dbd spooling dir, if not
+                            configured in testsuite config.
+                 Changed:   autoinstall configfile creation
+                 Review:    CR
+
 RD-2005-09-26-0: Bugfix:    fstype does not recognize nfs4 share in all cases
                  Issue:     1814
                  Bugtraq:   6328703

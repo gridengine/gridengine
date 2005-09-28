@@ -578,13 +578,13 @@ int main(int argc, char *argv[])
                      break;
                }
 
-               lFreeList(attributes);
+               lFreeList(&attributes);
 
                if (!fulfilled)
                   break;
             }
 
-            lFreeList(queuecomplexes);
+            lFreeList(&queuecomplexes);
 
             if (fulfilled) {
                printf("=================================================\n");
@@ -595,8 +595,8 @@ int main(int argc, char *argv[])
          }
       }
 
-      lFreeWhat(w0);
-      lFreeWhat(w1);
+      lFreeWhat(&w0);
+      lFreeWhat(&w1);
 
       break;
 #endif
@@ -606,7 +606,7 @@ int main(int argc, char *argv[])
 
    /* free lists if necessary */
    if (queuelist)
-      lFreeList(queuelist);
+      lFreeList(&queuelist);
    if (joblist)
       lFreeList(&joblist);
    if (COMPLEXLIST)

@@ -547,6 +547,7 @@ static int sge_setup_sge_schedd()
    char err_str[1024];
    lList *schedd_config_list = NULL;
 
+   int last_prepare_enroll_error = CL_RETVAL_OK;
 
    DENTER(TOP_LAYER, "sge_setup_sge_schedd");
 
@@ -567,7 +568,7 @@ static int sge_setup_sge_schedd()
    /*
     * setup communication as admin user
     */
-   prepare_enroll(prognames[SCHEDD]);
+   prepare_enroll(prognames[SCHEDD], &last_prepare_enroll_error );
 
    ret = get_conf_and_daemonize(daemonize_schedd, &schedd_config_list, &shut_me_down);
    switch(ret) {

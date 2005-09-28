@@ -70,9 +70,8 @@ enum {
 };
 
 const char* sge_dump_message_tag(unsigned long tag);
-int check_isalive(const char *masterhost);
 int check_isalive_(const char *masterhost, const char *progname);
-void prepare_enroll(const char *name);
+int prepare_enroll(const char *name, int* commlib_error);
 int sge_send_any_request(int synchron, u_long32 *mid, const char *rhost, const char *commproc, int id, sge_pack_buffer *pb, int tag, u_long32 response_id, lList **alpp);
 int sge_get_any_request(char *rhost, char *commproc, u_short *id, sge_pack_buffer *pb, int *tag, int synchron,  u_long32 for_request_mid, u_long32* mid);
 int gdi_send_message_pb(int synchron, const char *tocomproc, int toid, const char *tohost, int tag, sge_pack_buffer *pb, u_long32 *mid);

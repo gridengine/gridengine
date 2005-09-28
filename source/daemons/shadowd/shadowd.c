@@ -156,6 +156,7 @@ main(int argc, char **argv)
    char shadowd_pidfile[SGE_PATH_MAX];
    dstring ds;
    char buffer[256];
+   int last_prepare_enroll_error = CL_RETVAL_OK;
 
    DENTER_MAIN(TOP_LAYER, "sge_shadowd");
    
@@ -214,7 +215,7 @@ main(int argc, char **argv)
             }
          }
 
-         prepare_enroll(prognames[SHADOWD]);
+         prepare_enroll(prognames[SHADOWD], &last_prepare_enroll_error );
 
          /* is there a running shadowd on this host (with aliased name) */
          sprintf(shadowd_pidfile, "%s/"SHADOWD_PID_FILE, conf_string, uti_state_get_qualified_hostname());
@@ -227,7 +228,7 @@ main(int argc, char **argv)
             }
          }  
       } else {
-         prepare_enroll(prognames[SHADOWD]);
+         prepare_enroll(prognames[SHADOWD], &last_prepare_enroll_error );
       }
    }
 

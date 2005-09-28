@@ -75,7 +75,7 @@ static char execd_messages_file[SGE_PATH_MAX];
 void sge_setup_sge_execd(const char* tmp_err_file_name)
 {
    char err_str[1024];
-   int allowed_get_conf_errors     = 3;
+   int allowed_get_conf_errors     = 5;
    char* spool_dir = NULL;
 
    DENTER(TOP_LAYER, "sge_setup_sge_execd");
@@ -85,7 +85,7 @@ void sge_setup_sge_execd(const char* tmp_err_file_name)
          CRITICAL((SGE_EVENT, MSG_EXECD_CANT_GET_CONFIGURATION_EXIT));
          SGE_EXIT(1);
       }
-      sleep(5);
+      sleep(1);
    }
    sge_show_conf();         
 

@@ -177,7 +177,7 @@
 #define MSG_CULL_LESORTORDNULL           _MESSAGE(41125, _("lSortOrder is NULL"))
 #define MSG_CULL_LESUM                   _MESSAGE(41126, _("sum in where.c failure"))
 #define MSG_CULL_LEOPUNKNOWN             _MESSAGE(41127, _("operator of lCondition struct unknown"))
-#define MSG_CULL_LECOPYELEMPART          _MESSAGE(41128, _("lCopyElemPartial failure"))
+#define MSG_CULL_LECOPYELEMPART          _MESSAGE(41128, _("lCopyElemPartialPack failure"))
 #define MSG_CULL_LENULLARGS              _MESSAGE(41129, _("function argument is NULL"))
 #define MSG_CULL_LEFALSEFIELD            _MESSAGE(41130, _("field is not allowed here"))
 #define MSG_CULL_LEJOINDESCR             _MESSAGE(41131, _("lJoinDescr failure"))

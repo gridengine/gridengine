@@ -60,7 +60,7 @@ typedef enum cl_tcp_connect_def {
 typedef enum cl_framework_def {
    CL_CT_UNDEFINED = 0,
    CL_CT_TCP,        /* tcp/ip framework */
-   CL_CT_SSL         /* secure socket layer  -> on work */
+   CL_CT_SSL         /* secure socket layer */
 } cl_framework_t;
 
 

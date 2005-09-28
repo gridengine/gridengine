@@ -445,6 +445,7 @@ int cl_xml_parse_SIRM(unsigned char* buffer, unsigned long buffer_length, cl_com
 int cl_xml_parse_CCM(unsigned char* buffer, unsigned long buffer_length, cl_com_CCM_t** message );
 int cl_xml_parse_CCRM(unsigned char* buffer, unsigned long buffer_length, cl_com_CCRM_t** message );
 
-
+int cl_com_transformString2XML(const char* input, char** output);
+int cl_com_transformXML2String(const char* input, char** output);
 #endif /* __CL_XML_PARSING_H */
 

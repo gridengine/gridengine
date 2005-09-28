@@ -91,4 +91,7 @@ struct sge_bootstrap_state_class_str {
 sge_bootstrap_state_class_t *sge_bootstrap_state_class_create(sge_path_state_class_t *sge_paths, sge_error_class_t *eh);
 void sge_bootstrap_state_class_destroy(sge_bootstrap_state_class_t **pst);
 
+void sge_bootstrap_state_set_thread_local(sge_bootstrap_state_class_t* ctx);
+
+
 #endif /* __SGE_BOOTSTRAP_H */

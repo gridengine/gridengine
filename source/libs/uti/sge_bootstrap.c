@@ -58,16 +58,22 @@ typedef struct {
     char* binary_path;
     char* qmaster_spool_dir;
     char* security_mode;
-} bootstrap_state_t;
+} sge_bootstrap_state_t;
+
+typedef struct {
+   sge_bootstrap_state_class_t* current;
+   sge_bootstrap_state_class_t* original;
+} sge_bootstrap_thread_local_t;
 
 static pthread_once_t bootstrap_once = PTHREAD_ONCE_INIT;
-static pthread_key_t bootstrap_state_key;
+static pthread_key_t sge_bootstrap_thread_local_key;
 
-static void bootstrap_once_init(void);
-static void bootstrap_state_destroy(void* theState);
-static void bootstrap_state_init(bootstrap_state_t* theState);
+static void bootstrap_thread_local_once_init(void);
+static void bootstrap_thread_local_destroy(void* theState);
+static void bootstrap_thread_local_init(sge_bootstrap_thread_local_t* theState);
  
-typedef bootstrap_state_t sge_bootstrap_state_t;
+
+static void bootstrap_state_destroy(sge_bootstrap_state_t* theState);
 
 static bool sge_bootstrap_state_setup(sge_bootstrap_state_class_t *thiz, sge_path_state_class_t *sge_paths, sge_error_class_t *eh);
 static void sge_bootstrap_state_dprintf(sge_bootstrap_state_class_t *thiz);
@@ -90,6 +96,7 @@ static void set_qmaster_spool_dir(sge_bootstrap_state_class_t *thiz, const char 
 static void set_security_mode(sge_bootstrap_state_class_t *thiz, const char *security_mode);
 static void set_ignore_fqdn(sge_bootstrap_state_class_t *thiz, bool ignore_fqdn);
 
+static bool sge_bootstrap_state_class_init(sge_bootstrap_state_class_t *st, sge_error_class_t *eh);
 
 /*** AA **/ 
 
@@ -119,139 +126,184 @@ static void set_ignore_fqdn(sge_bootstrap_state_class_t *thiz, bool ignore_fqdn)
 *******************************************************************************/
 void bootstrap_mt_init(void)
 {
-   pthread_once(&bootstrap_once, bootstrap_once_init);
+   pthread_once(&bootstrap_once, bootstrap_thread_local_once_init);
 }
 
+void sge_bootstrap_state_set_thread_local(sge_bootstrap_state_class_t* ctx) {
+   DENTER(TOP_LAYER, "sge_bootstrap_state_set_thread_local");
+   
+   bootstrap_mt_init();
+   {   
+      GET_SPECIFIC(sge_bootstrap_thread_local_t, handle, bootstrap_thread_local_init, sge_bootstrap_thread_local_key, 
+                   "bootstrap_get_admin_user");
+      if (ctx != NULL) {
+         handle->current = ctx;
+      } else {
+         handle->current = handle->original;
+      }
+   }
+   DEXIT;
+}
 const char *bootstrap_get_admin_user(void)
 {
-   GET_SPECIFIC(bootstrap_state_t, bootstrap, bootstrap_state_init, bootstrap_state_key, 
+   sge_bootstrap_state_class_t* bootstrap = NULL;
+   GET_SPECIFIC(sge_bootstrap_thread_local_t, handle, bootstrap_thread_local_init, sge_bootstrap_thread_local_key, 
                 "bootstrap_get_admin_user");
-   return bootstrap->admin_user;
+   bootstrap = handle->current;                
+   return bootstrap->get_admin_user(bootstrap);
 }
 
 const char *bootstrap_get_default_domain(void)
 {
-   GET_SPECIFIC(bootstrap_state_t, bootstrap, bootstrap_state_init, bootstrap_state_key, 
+   sge_bootstrap_state_class_t* bootstrap = NULL;
+   GET_SPECIFIC(sge_bootstrap_thread_local_t, handle, bootstrap_thread_local_init, sge_bootstrap_thread_local_key, 
                 "bootstrap_get_default_domain");
-   return bootstrap->default_domain;
+   bootstrap = handle->current;                
+   return bootstrap->get_default_domain(bootstrap);
 }
 
 bool bootstrap_get_ignore_fqdn(void)
 {
-   GET_SPECIFIC(bootstrap_state_t, bootstrap, bootstrap_state_init, bootstrap_state_key, 
+   sge_bootstrap_state_class_t* bootstrap = NULL;
+   GET_SPECIFIC(sge_bootstrap_thread_local_t, handle, bootstrap_thread_local_init, sge_bootstrap_thread_local_key, 
                 "bootstrap_get_ignore_fqdn");
-   return bootstrap->ignore_fqdn;
+   bootstrap = handle->current;                
+   return bootstrap->get_ignore_fqdn(bootstrap);
 }
 
 const char *bootstrap_get_spooling_method(void)
 {
-   GET_SPECIFIC(bootstrap_state_t, bootstrap, bootstrap_state_init, bootstrap_state_key, 
+   sge_bootstrap_state_class_t* bootstrap = NULL;
+   GET_SPECIFIC(sge_bootstrap_thread_local_t, handle, bootstrap_thread_local_init, sge_bootstrap_thread_local_key, 
                 "bootstrap_get_spooling_method");
-   return bootstrap->spooling_method;
+   bootstrap = handle->current;                
+   return bootstrap->get_spooling_method(bootstrap);
 }
 
 const char *bootstrap_get_spooling_lib(void)
 {
-   GET_SPECIFIC(bootstrap_state_t, bootstrap, bootstrap_state_init, bootstrap_state_key, 
+   sge_bootstrap_state_class_t* bootstrap = NULL;
+   GET_SPECIFIC(sge_bootstrap_thread_local_t, handle, bootstrap_thread_local_init, sge_bootstrap_thread_local_key, 
                 "bootstrap_get_spooling_lib");
-   return bootstrap->spooling_lib;
+   bootstrap = handle->current;                
+   return bootstrap->get_spooling_lib(bootstrap);
 }
 
 const char *bootstrap_get_spooling_params(void)
 {
-   GET_SPECIFIC(bootstrap_state_t, bootstrap, bootstrap_state_init, bootstrap_state_key, 
+   sge_bootstrap_state_class_t* bootstrap = NULL;
+   GET_SPECIFIC(sge_bootstrap_thread_local_t, handle, bootstrap_thread_local_init, sge_bootstrap_thread_local_key, 
                 "bootstrap_get_spooling_params");
-   return bootstrap->spooling_params;
+   bootstrap = handle->current;                
+   return bootstrap->get_spooling_params(bootstrap);
 }
 
 const char *bootstrap_get_binary_path(void)
 {
-   GET_SPECIFIC(bootstrap_state_t, bootstrap, bootstrap_state_init, bootstrap_state_key, 
+   sge_bootstrap_state_class_t* bootstrap = NULL;
+   GET_SPECIFIC(sge_bootstrap_thread_local_t, handle, bootstrap_thread_local_init, sge_bootstrap_thread_local_key, 
                 "bootstrap_get_binary_path");
-   return bootstrap->binary_path;
+   bootstrap = handle->current;                
+   return bootstrap->get_binary_path(bootstrap);
 }
 
 const char *bootstrap_get_qmaster_spool_dir(void)
 {
-   GET_SPECIFIC(bootstrap_state_t, bootstrap, bootstrap_state_init, bootstrap_state_key, 
+   sge_bootstrap_state_class_t* bootstrap = NULL;
+   GET_SPECIFIC(sge_bootstrap_thread_local_t, handle, bootstrap_thread_local_init, sge_bootstrap_thread_local_key, 
                 "bootstrap_get_qmaster_spool_dir");
-   return bootstrap->qmaster_spool_dir;
+   bootstrap = handle->current;                
+   return bootstrap->get_qmaster_spool_dir(bootstrap);
 }
 
 const char *bootstrap_get_security_mode(void)
 {
-   GET_SPECIFIC(bootstrap_state_t, bootstrap, bootstrap_state_init, bootstrap_state_key, 
+   sge_bootstrap_state_class_t* bootstrap = NULL;
+   GET_SPECIFIC(sge_bootstrap_thread_local_t, handle, bootstrap_thread_local_init, sge_bootstrap_thread_local_key, 
                 "bootstrap_get_security_mode");
-   return bootstrap->security_mode;
+   bootstrap = handle->current;                
+   return bootstrap->get_security_mode(bootstrap);
 }
 
 void bootstrap_set_admin_user(const char *value)
 {
-   GET_SPECIFIC(bootstrap_state_t, bootstrap, bootstrap_state_init, bootstrap_state_key, 
+   sge_bootstrap_state_class_t* bootstrap = NULL;
+   GET_SPECIFIC(sge_bootstrap_thread_local_t, handle, bootstrap_thread_local_init, sge_bootstrap_thread_local_key, 
                 "bootstrap_set_admin_user");
-   bootstrap->admin_user = sge_strdup((char *)bootstrap->admin_user, value);
+   bootstrap = handle->current;                
+   bootstrap->set_admin_user(bootstrap, value);
 }
 
 void bootstrap_set_default_domain(const char *value)
 {
-   GET_SPECIFIC(bootstrap_state_t, bootstrap, bootstrap_state_init, bootstrap_state_key, 
+   sge_bootstrap_state_class_t* bootstrap = NULL;
+   GET_SPECIFIC(sge_bootstrap_thread_local_t, handle, bootstrap_thread_local_init, sge_bootstrap_thread_local_key, 
                 "bootstrap_set_default_domain");
-   bootstrap->default_domain = sge_strdup((char *)bootstrap->default_domain, 
-                                          value);
+   bootstrap = handle->current;                
+   bootstrap->set_default_domain(bootstrap, value);
 }
 
 void bootstrap_set_ignore_fqdn(bool value)
 {
-   GET_SPECIFIC(bootstrap_state_t, bootstrap, bootstrap_state_init, bootstrap_state_key, 
+   sge_bootstrap_state_class_t* bootstrap = NULL;
+   GET_SPECIFIC(sge_bootstrap_thread_local_t, handle, bootstrap_thread_local_init, sge_bootstrap_thread_local_key, 
                 "bootstrap_set_ignore_fqdn");
-   bootstrap->ignore_fqdn = value;
+   bootstrap = handle->current;                
+   bootstrap->set_ignore_fqdn(bootstrap, value);
 }
 
 void bootstrap_set_spooling_method(const char *value)
 {
-   GET_SPECIFIC(bootstrap_state_t, bootstrap, bootstrap_state_init, bootstrap_state_key, 
+   sge_bootstrap_state_class_t* bootstrap = NULL;
+   GET_SPECIFIC(sge_bootstrap_thread_local_t, handle, bootstrap_thread_local_init, sge_bootstrap_thread_local_key, 
                 "bootstrap_set_spooling_method");
-   bootstrap->spooling_method = sge_strdup((char *)bootstrap->spooling_method, 
-                                           value);
+   bootstrap = handle->current;                
+   bootstrap->set_spooling_method(bootstrap, value);
 }
 
 void bootstrap_set_spooling_lib(const char *value)
 {
-   GET_SPECIFIC(bootstrap_state_t, bootstrap, bootstrap_state_init, bootstrap_state_key, 
+   sge_bootstrap_state_class_t* bootstrap = NULL;
+   GET_SPECIFIC(sge_bootstrap_thread_local_t, handle, bootstrap_thread_local_init, sge_bootstrap_thread_local_key, 
                 "bootstrap_set_spooling_lib");
-   bootstrap->spooling_lib = sge_strdup((char *)bootstrap->spooling_lib, value);
+   bootstrap = handle->current;                
+   bootstrap->set_spooling_lib(bootstrap, value);
 }
 
 void bootstrap_set_spooling_params(const char *value)
 {
-   GET_SPECIFIC(bootstrap_state_t, bootstrap, bootstrap_state_init, bootstrap_state_key, 
+   sge_bootstrap_state_class_t* bootstrap = NULL;
+   GET_SPECIFIC(sge_bootstrap_thread_local_t, handle, bootstrap_thread_local_init, sge_bootstrap_thread_local_key, 
                 "bootstrap_set_spooling_params");
-   bootstrap->spooling_params = sge_strdup((char *)bootstrap->spooling_params, 
-                                           value);
+   bootstrap = handle->current;                
+   bootstrap->set_spooling_params(bootstrap, value);
 }
 
 void bootstrap_set_binary_path(const char *value)
 {
-   GET_SPECIFIC(bootstrap_state_t, bootstrap, bootstrap_state_init, bootstrap_state_key, 
+   sge_bootstrap_state_class_t* bootstrap = NULL;
+   GET_SPECIFIC(sge_bootstrap_thread_local_t, handle, bootstrap_thread_local_init, sge_bootstrap_thread_local_key, 
                 "bootstrap_set_binary_path");
-   bootstrap->binary_path = sge_strdup((char *)bootstrap->binary_path, 
-                                           value);
+   bootstrap = handle->current;                
+   bootstrap->set_binary_path(bootstrap, value);
 }
 
 void bootstrap_set_qmaster_spool_dir(const char *value)
 {
-   GET_SPECIFIC(bootstrap_state_t, bootstrap, bootstrap_state_init, bootstrap_state_key, 
+   sge_bootstrap_state_class_t* bootstrap = NULL;
+   GET_SPECIFIC(sge_bootstrap_thread_local_t, handle, bootstrap_thread_local_init, sge_bootstrap_thread_local_key, 
                 "bootstrap_set_qmaster_spool_dir");
-   bootstrap->qmaster_spool_dir = sge_strdup((char *)bootstrap->qmaster_spool_dir, 
-                                           value);
+   bootstrap = handle->current;                
+   bootstrap->set_qmaster_spool_dir(bootstrap, value);
 }
 
 void bootstrap_set_security_mode(const char *value)
 {
-   GET_SPECIFIC(bootstrap_state_t, bootstrap, bootstrap_state_init, bootstrap_state_key, 
+   sge_bootstrap_state_class_t* bootstrap = NULL;
+   GET_SPECIFIC(sge_bootstrap_thread_local_t, handle, bootstrap_thread_local_init, sge_bootstrap_thread_local_key, 
                 "bootstrap_set_security_mode");
-   bootstrap->security_mode = sge_strdup((char *)bootstrap->security_mode, 
-                                           value);
+   bootstrap = handle->current;                
+   bootstrap->set_security_mode(bootstrap, value ); 
 }
 
 /****** sge_bootstrap/sge_bootstrap() ******************************************
@@ -354,12 +406,12 @@ bool sge_bootstrap(dstring *error_dstring)
 }
 
 
-/****** uti/sge_bootstrap/bootstrap_once_init() ********************************
+/****** uti/sge_bootstrap/bootstrap_thread_local_once_init() ********************************
 *  NAME
-*     bootstrap_once_init() -- One-time bootstrap code initialization.
+*     bootstrap_thread_local_once_init() -- One-time bootstrap code initialization.
 *
 *  SYNOPSIS
-*     static bootstrap_once_init(void) 
+*     static bootstrap_thread_local_once_init(void) 
 *
 *  FUNCTION
 *     Create access key for thread local storage. Register cleanup function.
@@ -373,12 +425,154 @@ bool sge_bootstrap(dstring *error_dstring)
 *     void - none 
 *
 *  NOTES
-*     MT-NOTE: bootstrap_once_init() is MT safe. 
+*     MT-NOTE: bootstrap_thread_local_once_init() is MT safe. 
 *
 *******************************************************************************/
-static void bootstrap_once_init(void)
+static void bootstrap_thread_local_once_init(void)
 {
-   pthread_key_create(&bootstrap_state_key, bootstrap_state_destroy);
+   pthread_key_create(&sge_bootstrap_thread_local_key, bootstrap_thread_local_destroy);
+}
+
+/****** uti/sge_bootstrap/bootstrap_thread_local_destroy() ****************************
+*  NAME
+*     bootstrap_thread_local_destroy() -- Free thread local storage
+*
+*  SYNOPSIS
+*     static void bootstrap_thread_local_destroy(void* theState) 
+*
+*  FUNCTION
+*     Free thread local storage.
+*
+*  INPUTS
+*     void* theState - Pointer to memory which should be freed.
+*
+*  RESULT
+*     static void - none
+*
+*  NOTES
+*     MT-NOTE: bootstrap_thread_local_destroy() is MT safe.
+*
+*******************************************************************************/
+static void bootstrap_thread_local_destroy(void* theState)
+{
+   sge_bootstrap_thread_local_t *handle = (sge_bootstrap_thread_local_t*)theState;
+   sge_bootstrap_state_class_destroy(&(handle->original));
+   handle->current = NULL;
+}
+
+/****** uti/sge_bootstrap/bootstrap_thread_local_init() *******************************
+*  NAME
+*     bootstrap_thread_local_init() -- Initialize bootstrap state.
+*
+*  SYNOPSIS
+*     static void bootstrap_thread_local_init(sge_bootstrap_state_class_t* theState) 
+*
+*  FUNCTION
+*     Initialize bootstrap state.
+*
+*  INPUTS
+*     bootstrap_state_t* theState - Pointer to bootstrap state structure.
+*
+*  RESULT
+*     static void - none
+*
+*  NOTES
+*     MT-NOTE: bootstrap_thread_local_init() is MT safe. 
+*
+*******************************************************************************/
+static void bootstrap_thread_local_init(sge_bootstrap_thread_local_t* theState)
+{
+   memset(theState, 0, sizeof(sge_bootstrap_thread_local_t));
+   theState->original = (sge_bootstrap_state_class_t *)sge_malloc(sizeof(sge_bootstrap_state_class_t));
+   
+   sge_bootstrap_state_class_init(theState->original, NULL);
+   theState->current = theState->original;
+}
+
+
+/*-------------------------------------------------------------------------*/
+
+sge_bootstrap_state_class_t *sge_bootstrap_state_class_create(sge_path_state_class_t *sge_paths, sge_error_class_t *eh)
+{
+   sge_bootstrap_state_class_t *ret = (sge_bootstrap_state_class_t *)sge_malloc(sizeof(sge_bootstrap_state_class_t));
+
+   DENTER(TOP_LAYER, "sge_bootstrap_state_class_create");
+
+   if (!ret) {
+      eh->error(eh, STATUS_EMALLOC, ANSWER_QUALITY_ERROR, MSG_MEMORY_MALLOCFAILED);
+      DEXIT;
+      return NULL;
+   }
+   
+   if( !sge_bootstrap_state_class_init(ret, eh) ) {
+      sge_bootstrap_state_class_destroy(&ret);
+      DEXIT;
+      return NULL;
+   }
+
+   /* TODO move the following block into sge_bootstrap_state_class_init and
+           delete bootstrap_setup */
+   if (!sge_bootstrap_state_setup(ret, sge_paths, eh)) {
+      sge_bootstrap_state_class_destroy(&ret);
+      DEXIT;
+      return NULL;
+   }
+
+   DEXIT;
+   return ret;
+}   
+
+static bool sge_bootstrap_state_class_init(sge_bootstrap_state_class_t *st, sge_error_class_t *eh) {
+   
+   DENTER(TOP_LAYER, "sge_bootstrap_state_class_init");
+   
+   st->dprintf = sge_bootstrap_state_dprintf;
+
+   st->get_admin_user = get_admin_user;
+   st->get_default_domain = get_default_domain;
+   st->get_ignore_fqdn = get_ignore_fqdn;
+   st->get_spooling_method = get_spooling_method;
+   st->get_spooling_lib = get_spooling_lib;
+   st->get_spooling_params = get_spooling_params;
+   st->get_binary_path = get_binary_path;
+   st->get_qmaster_spool_dir = get_qmaster_spool_dir;
+   st->get_security_mode = get_security_mode;
+
+   st->set_admin_user = set_admin_user;
+   st->set_default_domain = set_default_domain;
+   st->set_ignore_fqdn = set_ignore_fqdn;
+   st->set_spooling_method = set_spooling_method;
+   st->set_spooling_lib = set_spooling_lib;
+   st->set_spooling_params = set_spooling_params;
+   st->set_binary_path = set_binary_path;
+   st->set_qmaster_spool_dir = set_qmaster_spool_dir;
+   st->set_security_mode = set_security_mode;   
+   
+   st->sge_bootstrap_state_handle = sge_malloc(sizeof(sge_bootstrap_state_t));
+   
+   if (st->sge_bootstrap_state_handle == NULL ) {
+      if (eh != NULL) {
+         eh->error(eh, STATUS_EMALLOC, ANSWER_QUALITY_ERROR, MSG_MEMORY_MALLOCFAILED);
+      }
+      DEXIT;
+      return false;
+   }
+   memset(st->sge_bootstrap_state_handle, 0, sizeof(sge_bootstrap_state_t));
+   return true;
+}
+
+void sge_bootstrap_state_class_destroy(sge_bootstrap_state_class_t **pst)
+{
+   DENTER(TOP_LAYER, "sge_bootstrap_state_class_destroy");
+   if (!pst || !*pst) {
+      DEXIT;
+      return;
+   }   
+   bootstrap_state_destroy((*pst)->sge_bootstrap_state_handle);
+   FREE(*pst);
+   *pst = NULL;
+
+   DEXIT;
 }
 
 /****** uti/sge_bootstrap/bootstrap_state_destroy() ****************************
@@ -401,113 +595,17 @@ static void bootstrap_once_init(void)
 *     MT-NOTE: bootstrap_state_destroy() is MT safe.
 *
 *******************************************************************************/
-static void bootstrap_state_destroy(void* theState)
+static void bootstrap_state_destroy(sge_bootstrap_state_t* theState)
 {
-   FREE(((bootstrap_state_t*)theState)->admin_user);
-   FREE(((bootstrap_state_t*)theState)->default_domain);
-   FREE(((bootstrap_state_t*)theState)->spooling_method);
-   FREE(((bootstrap_state_t*)theState)->spooling_lib);
-   FREE(((bootstrap_state_t*)theState)->spooling_params);
-   FREE(((bootstrap_state_t*)theState)->binary_path);
-   FREE(((bootstrap_state_t*)theState)->qmaster_spool_dir);
-   FREE(((bootstrap_state_t*)theState)->security_mode);
+   FREE(theState->admin_user);
+   FREE(theState->default_domain);
+   FREE(theState->spooling_method);
+   FREE(theState->spooling_lib);
+   FREE(theState->spooling_params);
+   FREE(theState->binary_path);
+   FREE(theState->qmaster_spool_dir);
+   FREE(theState->security_mode);
    free(theState);
-}
-
-/****** uti/sge_bootstrap/bootstrap_state_init() *******************************
-*  NAME
-*     bootstrap_state_init() -- Initialize bootstrap state.
-*
-*  SYNOPSIS
-*     static void bootstrap_state_init(bootstrap_state_t* theState) 
-*
-*  FUNCTION
-*     Initialize bootstrap state.
-*
-*  INPUTS
-*     bootstrap_state_t* theState - Pointer to bootstrap state structure.
-*
-*  RESULT
-*     static void - none
-*
-*  NOTES
-*     MT-NOTE: bootstrap_state_init() is MT safe. 
-*
-*******************************************************************************/
-static void bootstrap_state_init(bootstrap_state_t* theState)
-{
-   memset(theState, 0, sizeof(bootstrap_state_t));
-}
-
-
-/*-------------------------------------------------------------------------*/
-
-sge_bootstrap_state_class_t *sge_bootstrap_state_class_create(sge_path_state_class_t *sge_paths, sge_error_class_t *eh)
-{
-   sge_bootstrap_state_class_t *ret = (sge_bootstrap_state_class_t *)sge_malloc(sizeof(sge_bootstrap_state_class_t));
-
-   DENTER(TOP_LAYER, "sge_bootstrap_state_class_create");
-
-   if (!ret) {
-      eh->error(eh, STATUS_EMALLOC, ANSWER_QUALITY_ERROR, MSG_MEMORY_MALLOCFAILED);
-      DEXIT;
-      return NULL;
-   }
-   
-   ret->dprintf = sge_bootstrap_state_dprintf;
-
-   ret->get_admin_user = get_admin_user;
-   ret->get_default_domain = get_default_domain;
-   ret->get_ignore_fqdn = get_ignore_fqdn;
-   ret->get_spooling_method = get_spooling_method;
-   ret->get_spooling_lib = get_spooling_lib;
-   ret->get_spooling_params = get_spooling_params;
-   ret->get_binary_path = get_binary_path;
-   ret->get_qmaster_spool_dir = get_qmaster_spool_dir;
-   ret->get_security_mode = get_security_mode;
-
-   ret->set_admin_user = set_admin_user;
-   ret->set_default_domain = set_default_domain;
-   ret->set_ignore_fqdn = set_ignore_fqdn;
-   ret->set_spooling_method = set_spooling_method;
-   ret->set_spooling_lib = set_spooling_lib;
-   ret->set_spooling_params = set_spooling_params;
-   ret->set_binary_path = set_binary_path;
-   ret->set_qmaster_spool_dir = set_qmaster_spool_dir;
-   ret->set_security_mode = set_security_mode;
-
-   ret->sge_bootstrap_state_handle = sge_malloc(sizeof(sge_bootstrap_state_t));
-   
-   if (ret->sge_bootstrap_state_handle == NULL ) {
-      eh->error(eh, STATUS_EMALLOC, ANSWER_QUALITY_ERROR, MSG_MEMORY_MALLOCFAILED);
-      FREE(ret);
-      DEXIT;
-      return NULL;
-   }
-   memset(ret->sge_bootstrap_state_handle, 0, sizeof(sge_bootstrap_state_t));
-
-   if (!sge_bootstrap_state_setup(ret, sge_paths, eh)) {
-      sge_bootstrap_state_class_destroy(&ret);
-      DEXIT;
-      return NULL;
-   }
-
-   DEXIT;
-   return ret;
-}   
-
-void sge_bootstrap_state_class_destroy(sge_bootstrap_state_class_t **pst)
-{
-   DENTER(TOP_LAYER, "sge_bootstrap_state_class_destroy");
-   if (!pst || !*pst) {
-      DEXIT;
-      return;
-   }   
-   bootstrap_state_destroy((*pst)->sge_bootstrap_state_handle);
-   FREE(*pst);
-   *pst = NULL;
-
-   DEXIT;
 }
 
 static bool sge_bootstrap_state_setup(sge_bootstrap_state_class_t *thiz, sge_path_state_class_t *sge_paths, sge_error_class_t *eh)

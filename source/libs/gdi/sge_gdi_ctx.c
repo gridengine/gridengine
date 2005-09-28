@@ -87,6 +87,62 @@ typedef struct {
    
 } sge_gdi_ctx_t;
 
+typedef struct {
+   sge_gdi_ctx_class_t* ctx;   
+} sge_gdi_ctx_thread_local_t;
+
+static pthread_once_t sge_gdi_ctx_once = PTHREAD_ONCE_INIT;
+static pthread_key_t  sge_gdi_ctx_key;
+static void sge_gdi_thread_local_ctx_once_init(void);
+static void sge_gdi_thread_local_ctx_destroy(void* theState);
+static void sge_gdi_thread_local_ctx_init(sge_gdi_ctx_thread_local_t* theState);
+
+
+
+static void sge_gdi_thread_local_ctx_once_init(void)
+{
+   pthread_key_create(&sge_gdi_ctx_key, sge_gdi_thread_local_ctx_destroy);
+}
+
+static void sge_gdi_thread_local_ctx_destroy(void* theState) {
+   sge_gdi_ctx_thread_local_t *tl = (sge_gdi_ctx_thread_local_t*)theState;
+   tl->ctx = NULL;
+   free(theState);
+}
+
+static void sge_gdi_thread_local_ctx_init(sge_gdi_ctx_thread_local_t* theState)
+{
+   memset(theState, 0, sizeof(sge_gdi_ctx_thread_local_t));
+}
+
+
+sge_gdi_ctx_class_t* sge_gdi_get_thread_local_ctx() {
+
+   pthread_once(&sge_gdi_ctx_once, sge_gdi_thread_local_ctx_once_init);
+   
+   GET_SPECIFIC(sge_gdi_ctx_thread_local_t, tl, sge_gdi_thread_local_ctx_init, sge_gdi_ctx_key,
+                "sge_gdi_get_thread_local_ctx");
+   return tl->ctx;
+}
+
+void sge_gdi_set_thread_local_ctx(sge_gdi_ctx_class_t* ctx) {
+ 
+   DENTER(GDI_LAYER, "sge_gdi_set_thread_local_ctx");
+   
+   pthread_once(&sge_gdi_ctx_once, sge_gdi_thread_local_ctx_once_init);
+   
+   GET_SPECIFIC(sge_gdi_ctx_thread_local_t, tl, sge_gdi_thread_local_ctx_init, sge_gdi_ctx_key,
+                "set_thread_local_ctx");
+   tl->ctx = ctx;
+
+   if (ctx != NULL) {
+      sge_bootstrap_state_set_thread_local(ctx->get_sge_bootstrap_state(ctx));
+   } else {
+      sge_bootstrap_state_set_thread_local(NULL);
+   }
+   DEXIT;
+}
+
 static bool sge_gdi_ctx_setup(sge_gdi_ctx_class_t *thiz, 
                               int prog_number, 
                               const char* username,

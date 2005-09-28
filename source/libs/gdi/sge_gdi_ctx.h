@@ -101,6 +101,9 @@ sge_gdi_ctx_class_t *sge_gdi_ctx_class_create_from_bootstrap(int prog_number,
 
 void sge_gdi_ctx_class_destroy(sge_gdi_ctx_class_t **pst);
 
+sge_gdi_ctx_class_t* sge_gdi_get_thread_local_ctx(void);
+void sge_gdi_set_thread_local_ctx(sge_gdi_ctx_class_t* ctx);
+
 #endif /* __SGE_GDI_CTX_H */
 
 

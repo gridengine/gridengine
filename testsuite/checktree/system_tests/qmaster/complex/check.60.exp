@@ -1,0 +1,505 @@
+#!/vol2/TCL_TK/glinux/bin/expect
+#___INFO__MARK_BEGIN__
+##########################################################################
+#
+#  The Contents of this file are made available subject to the terms of
+#  the Sun Industry Standards Source License Version 1.2
+#
+#  Sun Microsystems Inc., March, 2001
+#
+#
+#  Sun Industry Standards Source License Version 1.2
+#  =================================================
+#  The contents of this file are subject to the Sun Industry Standards
+#  Source License Version 1.2 (the "License"); You may not use this file
+#  except in compliance with the License. You may obtain a copy of the
+#  License at http://gridengine.sunsource.net/Gridengine_SISSL_license.html
+#
+#  Software provided under this License is provided on an "AS IS" basis,
+#  WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING,
+#  WITHOUT LIMITATION, WARRANTIES THAT THE SOFTWARE IS FREE OF DEFECTS,
+#  MERCHANTABLE, FIT FOR A PARTICULAR PURPOSE, OR NON-INFRINGING.
+#  See the License for the specific provisions governing your rights and
+#  obligations concerning the Software.
+#
+#  The Initial Developer of the Original Code is: Sun Microsystems, Inc.
+#
+#  Copyright: 2001 by Sun Microsystems, Inc.
+#
+#  All Rights Reserved.
+#
+##########################################################################
+#___INFO__MARK_END__
+
+#****** checks/complexes ***************************************************
+#  NAME
+#     complexes -- check complexes functionality
+#
+#  FUNCTION
+#     The purpose of this testsuite check is to test the complete complexes
+#     infrastructure.
+#
+#     It tests the following features:
+#        - adding complexes of all data types
+#        - deleting the complexes again
+#        - setting complex values from a load sensor
+#        - setting complex values in global host, exec host and queue 
+#          by long and by short name
+#        - requesting complexes of all types, by long and by short name
+#
+#     Further complexes related features are covered by the following tests:
+#     consumable_resources
+#        - consumables on global, host and queue instance level,
+#        - as load thresholds
+#        - set by loadsensor
+#     issue_1161
+#        - qconf -mc (parsing, incomplete line)
+#     issue_1198
+#        - qconf -sq shows slots in complex_values line
+#     issue_1473
+#        - performance adding/modifying/deleting large number of complexes
+#     pe_ranges
+#        - modify complex
+#     qconf
+#        - qconf -mc (parsing, backslash continuation)
+#     qhost
+#        - qhost -l <unknown resource>
+#     resource_reservation
+#        - modify complex, consumables, urgency
+#     soft_requests
+#        - us of complexes as soft request
+#     urgency
+#        - modify complex, consumables with urgency
+#
+#  NOTES
+#
+#  BUGS
+#
+#  SEE ALSO
+#     checks/qconf
+#     checks/qhost
+#*******************************************************************************
+#
+# define global variable in this namespace
+global check_name 
+global check_category
+global check_description 
+global check_needs
+global check_functions 
+global check_errno 
+global check_errstr 
+global check_highest_level
+global check_init_level_procedure
+global check_root_access_needs
+global env
+
+set check_root_access_needs "no"
+
+
+# define a level initialization procedure:
+set check_init_level_procedure "complex_init_level"
+
+# define test's name and run level descriptions
+set check_name            "complex"
+set check_category        "COMPATIBILITY SYSTEM L10N VERIFIED"
+set check_highest_level   0
+set check_description(0)  "Test complex attributes and loadsensor"
+
+# define test's dependencies
+set check_needs           "init_core_system" 
+
+
+# setup and cleanup functions
+set check_setup_function complex_setup
+set check_cleanup_function complex_cleanup
+
+# define test's procedure order
+set check_functions ""
+lappend check_functions "complex_loadsensor_test"
+lappend check_functions "complex_global_host"
+lappend check_functions "complex_host"
+lappend check_functions "complex_queue"
+
+global complex_host
+global complex_old_config
+
+
+proc complex_init_level {} {
+   global ts_config CHECK_OUTPUT
+   global CHECK_ACT_LEVEL
+   global complex_host
+
+   set complex_host [lindex $ts_config(execd_nodes) 0]
+
+   switch -- $CHECK_ACT_LEVEL {
+      "0" {
+         return 0
+      }
+   }
+
+   return -1  ;# no other level else
+}
+
+# -------- local test procedures -----------------------------------------------
+
+
+proc complex_setup  {} {
+   global ts_config CHECK_OUTPUT CHECK_USER
+   global complex_host
+   global complex_old_config complex_global_host_backup complex_host_backup
+
+   # create new complex attributes
+   #           name            short  type    op.   requ.  cons. default  urgency
+   set complex(test_integer)  "ti     INT       <=    YES    YES   1        0"
+   set complex(test_double)   "td     DOUBLE    >=    NO     NO    0        0"
+   set complex(test_time)     "tt     TIME      <=    YES    NO    0:0:0    0"
+   set complex(test_memory)   "tm     MEMORY    <=    YES    NO    0        0"
+   set complex(test_bool)     "tb     BOOL      ==    YES    NO    0        0"
+   set complex(test_string)   "ts     STRING    ==    YES    NO    none     0"
+   set complex(test_cstring)  "tc     CSTRING   ==    YES    NO    none     0"
+   set complex(test_restring) "tr     RESTRING  ==    YES    NO    none     0"
+   set complex(test_hostname) "th     HOST      ==    YES    NO    none     0"
+   set_complex complex
+
+   # backup global and specific host
+   get_exechost complex_global_host_backup "global"
+   get_exechost complex_host_backup $complex_host
+
+   # we install a loadsensor delivering the above complex attributes
+   # backup host config and make sure, load_sensor gets deleted at restore
+   get_config complex_old_config $complex_host
+   if {![info exists complex_old_config(load_sensor)]} {
+      set complex_old_config(load_sensor) "" 
+   }
+
+   # our load sensor needs a file in $SGE_ROOT
+   set filename "$ts_config(product_root)/testsuite_dns_domain"
+   set fout [open $filename "w"]
+   puts $fout $ts_config(dns_domain)
+   close $fout
+   wait_for_remote_file $complex_host $CHECK_USER $filename 
+
+   # install loadsensor
+   set new_config(load_sensor) "$ts_config(testsuite_root_dir)/scripts/loadsensor.sh"
+   set_config new_config $complex_host
+
+   # wait for loadsensor to have effect
+   sleep 35
+
+   # create a test queue
+   set queue(slots)           10
+   set queue(load_thresholds) "np_load_avg=10"
+   add_queue "complex" $complex_host queue
+  
+   # disable the all.q
+   set queue_list {}
+   foreach host $ts_config(execd_nodes) {
+      lappend queue_list [get_queue_instance "all.q" $host]
+   }
+   disable_queue $queue_list
+
+   # enable immediate scheduling to speed up test
+   set schedd_conf(flush_submit_secs) 1
+   set_schedd_config schedd_conf
+
+   set_error 0 "ok"
+}
+
+proc complex_cleanup  {} {
+   global ts_config CHECK_OUTPUT
+   global complex_host complex_old_config complex_global_host_backup complex_host_backup
+
+   # cleanup
+   delete_all_jobs
+   wait_for_end_of_all_jobs 60
+
+   # reset host complex, stop loadsensor
+   puts $CHECK_OUTPUT "resetting configuration for host $complex_host"
+   set_config complex_old_config $complex_host
+
+   # wait for loadsensor to be down
+   sleep 120
+
+   # reset global and specific host setup
+   set_exechost complex_global_host_backup "global"
+   set_exechost complex_host_backup $complex_host
+
+   # delete a file the loadsensor script was using
+   delete_file "$ts_config(product_root)/testsuite_dns_domain"
+
+   # delete the test queue
+   del_queue "complex" $complex_host  0 1
+
+   # delete our test complex attributes
+   set complex(test_integer)  ""
+   set complex(test_double)   ""
+   set complex(test_time)     ""
+   set complex(test_memory)   ""
+   set complex(test_bool)     ""
+   set complex(test_string)   ""
+   set complex(test_cstring)  ""
+   set complex(test_restring) ""
+   set complex(test_hostname) ""
+   set_complex complex
+
+   # we changed the schedd config - reset to defaults
+   reset_schedd_config
+
+   # enable the all.q
+   set queue_list {}
+   foreach host $ts_config(execd_nodes) {
+      lappend queue_list [get_queue_instance "all.q" $host]
+   }
+   enable_queue $queue_list
+
+   set_error 0 "ok"
+}
+
+
+proc complex_loadsensor_test {} {
+   global ts_config CHECK_OUTPUT
+   global complex_host
+
+   get_qconf_se_info $complex_host
+   if { [string first "test_string=TEST_ARCH" $qconf_se_info(load_values) ] < 0 } {
+      add_proc_error "complex_loadsensor_test" "-1" "no test_string load value reported"
+   }
+   if { [string first "test_hostname=" $qconf_se_info(load_values) ] < 0 } {
+      add_proc_error "complex_loadsensor_test" "-1" "no test_hostname load value reported"
+   }
+   if { [string first "test_double=55.55" $qconf_se_info(load_values) ] < 0 } {
+      add_proc_error "complex_loadsensor_test" "-1" "no test_double load value reported"
+   }
+   if { [string first "test_memory=123456789" $qconf_se_info(load_values) ] < 0 } {
+      add_proc_error "complex_loadsensor_test" "-1" "no test_memory load value reported"
+   }
+   if { [string first "test_integer=123456" $qconf_se_info(load_values) ] < 0 } {
+      add_proc_error "complex_loadsensor_test" "-1" "no test_integer load value reported"
+   }
+
+   set jobargs "-o /dev/null -e /dev/null $ts_config(product_root)/examples/jobs/sleeper.sh" 
+   set job_ids ""
+   lappend job_ids [submit_job "-l test_string=TEST_ARCH $jobargs 30"]
+   lappend job_ids [submit_job "-l test_hostname=$complex_host $jobargs 35"]
+   set not_requestable_job [submit_job "-l test_double=55.55 $jobargs 60" 0 ]
+   if { $not_requestable_job != -10 } {
+       add_proc_error "complex_loadsensor_test" -1 "resource test_double should not be requestable"
+   }
+   lappend job_ids [submit_job "-l test_memory=123321 $jobargs 40"]
+   lappend job_ids [submit_job "-l test_integer=123456 $jobargs 45"]
+ 
+   foreach elem $job_ids {
+      if { $elem >= 0 } {  
+         wait_for_jobstart $elem "Sleeper" 60
+      }
+   }
+   foreach elem $job_ids {
+      if { $elem >= 0 } {  
+         wait_for_jobend $elem "Sleeper" 60
+      }
+   }
+
+   set_error 0 "ok"
+}
+
+proc complex_run_job {scenario variable value submittable pending} {
+   global ts_config CHECK_OUTPUT
+
+   set job_script "$ts_config(product_root)/examples/jobs/sleeper.sh 20"
+   set job_args   "-o /dev/null -j y -l $variable=$value"
+   set job_id [submit_job "$job_args $job_script" $submittable]
+   
+   # if job submission shall fail, jobid may not be > 0
+   if {!$submittable} { 
+      if {$job_id > 0} {
+         add_proc_error "complex_run_job" -1 "scenario $scenario, $job_args should have failed"
+         delete_job $job_id
+      } else {
+         puts $CHECK_OUTPUT "ok, submission failed with status $job_id"
+      }
+   } else {
+      # submit errors are handled in submit_job, but don't continue, if submission failed
+      if {$job_id > 0} {
+         # job should start within some seconds - wait 10 seconds
+         set ret [wait_for_jobstart $job_id "Sleeper" 10 0]
+
+         # test case: job should not be scheduled
+         if {$pending} {
+            if {$ret == 0} {
+               add_proc_error "complex_run_job" -1 "scenario $scenario, $job_args should not be running"
+            } else {
+               puts $CHECK_OUTPUT "ok, job is not running"
+            }
+
+            delete_job $job_id
+         } else {
+            # test case: job should be scheduled and running by now
+            if {$ret == 0} {
+               puts $CHECK_OUTPUT "ok, job is running"
+               wait_for_jobend $job_id "Sleeper" 60
+            } else {
+               get_qstat_j_info $job_id
+               set schedd_info $qstat_j_info(scheduling info)
+               add_proc_error "complex_run_job" -1 "scenario $scenario, $job_args should be running\n$schedd_info"
+               delete_job $job_id
+            }
+
+         }
+      }
+   }
+}
+
+proc complex_global_host {} {
+   global ts_config CHECK_OUTPUT
+
+   # set all test attributes in global host
+   set config(complex_values)    "test_integer=1"
+   append config(complex_values) ",td=10.0"
+   append config(complex_values) ",tt=0:10:0"
+   append config(complex_values) ",tm=100M"
+   append config(complex_values) ",tb=TRUE"
+   append config(complex_values) ",tc=GLobaL"
+   append config(complex_values) ",tr=global"
+   set_exechost config "global"
+ 
+   #               szenario variable       value     submittable pending
+   complex_run_job "global" "ti"           1         1           0
+   complex_run_job "global" "test_integer" 2         1           1
+   complex_run_job "global" "ti"           "X"       0           0
+
+   complex_run_job "global" "td"           2         0           0
+   complex_run_job "global" "test_double"  2         0           0
+   complex_run_job "global" "td"           "X"       0           0
+
+   complex_run_job "global" "tt"           "0:8:0"   1           0
+   complex_run_job "global" "test_time"    "0:11:0"  1           1
+   complex_run_job "global" "tt"           "500"     1           0
+   complex_run_job "global" "tt"           "800"     1           1
+   complex_run_job "global" "tt"           "X"       0           1
+
+   complex_run_job "global" "tm"           "50M"     1           0
+   complex_run_job "global" "test_memory"  "150M"    1           1
+   complex_run_job "global" "tm"           "X"       0           0
+
+   complex_run_job "global" "tb"           "TRUE"    1           0
+   complex_run_job "global" "test_bool"    "FALSE"   1           1
+   complex_run_job "global" "tb"           "X"       0           0
+  
+   complex_run_job "global" "tc"           "global"  1           0
+   complex_run_job "global" "tc"           "xxxbal"  1           1
+  
+   complex_run_job "global" "tr"           "global"  1           0
+   complex_run_job "global" "tr"           "g*"      1           0
+   complex_run_job "global" "tr"           "*lobal"  1           0
+   complex_run_job "global" "tr"           "g*l"     1           0
+   complex_run_job "global" "tr"           "g*b*l"   1           0
+   complex_run_job "global" "tr"           "*global*" 1           0
+   complex_run_job "global" "tr"           "*loba*"  1           0
+   complex_run_job "global" "tr"           "xxxbal"  1           1
+   complex_run_job "global" "tr"           "x*"      1           1
+   complex_run_job "global" "tr"           "*xxx"    1           1
+  
+  
+   # cleanup
+   set config(complex_values) "NONE"
+   set_exechost config "global"
+  
+   set_error 0 "ok"
+}
+
+proc complex_host {} {
+   global ts_config CHECK_OUTPUT
+   global complex_host
+
+   # set a consumable in global host, to be overwritten by specific host
+   set config(complex_values)    "test_integer=1"
+   set_exechost config "global"
+
+   # set host specific complexes
+   set config(complex_values)    "ti=2"
+   append config(complex_values) ",td=10"
+   append config(complex_values) ",tt=600"
+   append config(complex_values) ",tm=104857600"
+   append config(complex_values) ",tb=FALSE"
+   append config(complex_values) ",ts=global"
+   append config(complex_values) ",th=$ts_config(master_host)"
+   set_exechost config $complex_host
+
+   #               szenario variable       value     submittable pending
+   complex_run_job "host"   "ti"           1         1           0
+   complex_run_job "host"   "ti"           2         1           1  ;# exec host can only set more restrictive value!
+
+   complex_run_job "host"   "td"           2         0           0
+
+   complex_run_job "host"   "tt"           "0:8:0"   1           0
+   complex_run_job "host"   "tt"           "0:11:0"  1           1
+   complex_run_job "host"   "tt"           "500"     1           0
+   complex_run_job "host"   "tt"           "800"     1           1
+
+   complex_run_job "host"   "tm"           "50M"     1           0
+   complex_run_job "host"   "test_memory"  "150M"    1           1
+
+   complex_run_job "host"   "tb"           "TRUE"    1           1
+   complex_run_job "host"   "test_bool"    "FALSE"   1           0
+   complex_run_job "host"   "tb"           "1"       1           1
+   complex_run_job "host"   "test_bool"    "0"       1           0
+
+   complex_run_job "global" "ts"           "global"  1           0
+   complex_run_job "global" "ts"           "Global"  1           1
+  
+   complex_run_job "global" "th"           "$ts_config(master_host)"      1           0
+   complex_run_job "global" "th"           "this_host_is_not_resolvable"  0           0
+  
+   # cleanup
+   set config(complex_values) "NONE"
+   set_exechost config "global"
+   set_exechost config $complex_host
+
+   set_error 0 "ok"
+}
+
+proc complex_queue {} {
+   global ts_config CHECK_OUTPUT
+   global complex_host
+
+   # set a consumable in global host, to be overwritten by specific host
+   set config(complex_values)    "test_integer=3"
+   set_exechost config "global"
+
+   # set host specific complexes
+   set config(complex_values)    "ti=2"
+   set_exechost config $complex_host
+
+   set config(complex_values)    "ti=1"
+   append config(complex_values) ",td=-10"
+   append config(complex_values) ",tt=0:10:0"
+   append config(complex_values) ",tm=102400K"
+   append config(complex_values) ",tb=1"
+   mqattr "complex_values" $config(complex_values) [get_queue_instance "complex" $complex_host]
+
+   #               szenario variable       value     submittable pending
+   complex_run_job "queue"  "ti"           1         1           0
+   complex_run_job "queue"  "ti"           2         1           1
+
+   complex_run_job "queue"  "td"           2         0           0
+
+   complex_run_job "queue"  "tt"           "0:8:0"   1           0
+   complex_run_job "queue"  "tt"           "0:11:0"  1           1
+
+   complex_run_job "queue"  "tm"           "50M"     1           0
+   complex_run_job "queue"  "test_memory"  "150M"    1           1
+
+   complex_run_job "queue"  "tb"           "TRUE"    1           0
+   complex_run_job "queue"  "test_bool"    "FALSE"   1           1
+   complex_run_job "queue"  "tb"           "1"       1           0
+   complex_run_job "queue"  "test_bool"    "0"       1           1
+ 
+   # cleanup
+   set config(complex_values) "NONE"
+   set_exechost config "global"
+   set_exechost config $complex_host
+   mqattr "complex_values" "NONE" [get_queue_instance "complex" $complex_host]
+
+   set_error 0 "ok"
+}
+

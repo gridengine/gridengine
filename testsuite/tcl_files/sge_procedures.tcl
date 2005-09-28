@@ -3792,11 +3792,13 @@ proc submit_job { args {do_error_check 1} {submit_timeout 60} {host ""} {user ""
      set JOB_SUBMITTED_DUMMY [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QSUB_YOURJOBHASBEENSUBMITTED_SS] "__JOB_ID__" "__JOB_NAME__"]
      set SUCCESSFULLY        [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QSUB_YOURIMMEDIATEJOBXHASBEENSUCCESSFULLYSCHEDULED_S] "*"]
      set UNKNOWN_RESOURCE2 [translate $CHECK_HOST 1 0 0 [sge_macro MSG_SCHEDD_JOBREQUESTSUNKOWNRESOURCE_S] ]
+     set WRONG_TYPE          [translate $CHECK_HOST 0 0 0 [sge_macro MSG_QSUB_COULDNOTRUNJOB_S] "*"]
   } else {
      set JOB_SUBMITTED       [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_SUBMITJOB_USS] "*" "*" "*"]
      set JOB_SUBMITTED_DUMMY [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_SUBMITJOB_USS] "__JOB_ID__" "__JOB_NAME__" "__JOB_ARG__"]
      set SUCCESSFULLY        [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QSUB_YOURIMMEDIATEJOBXHASBEENSUCCESSFULLYSCHEDULED_U] "*"]
      set UNKNOWN_RESOURCE2   [translate $CHECK_HOST 1 0 0 [sge_macro MSG_SCHEDD_JOBREQUESTSUNKOWNRESOURCE] ]
+     set WRONG_TYPE          [translate $CHECK_HOST 1 0 0 [sge_macro MSG_CPLX_WRONGTYPE_SSS] "*" "*" "*"]
   }
 
   set ERROR_OPENING       [translate $CHECK_HOST 1 0 0 [sge_macro MSG_FILE_ERROROPENINGXY_SS] "*" "*"]
@@ -4178,6 +4180,9 @@ proc submit_job { args {do_error_check 1} {submit_timeout 60} {host ""} {user ""
           -i $sp_id -- $NO_DEADLINE_USER {
              set return_value -22
           }
+          -i $sp_id -- $WRONG_TYPE {
+             set return_value -23
+          }
         }
      }
  
@@ -4213,6 +4218,7 @@ proc submit_job { args {do_error_check 1} {submit_timeout 60} {host ""} {user ""
           "-20" { add_proc_error "submit_job" -1 [get_submit_error $return_value]  }
           "-21" { add_proc_error "submit_job" -1 [get_submit_error $return_value]  }
           "-22" { add_proc_error "submit_job" -1 [get_submit_error $return_value]  }
+          "-23" { add_proc_error "submit_job" -1 [get_submit_error $return_value]  }
 
 
           default { add_proc_error "submit_job" 0 "job $return_value submitted - ok" }
@@ -4272,6 +4278,7 @@ proc get_submit_error { error_id } {
       "-20" { return "negative step in range is not allowed" }
       "-21" { return "-t step of range must be a decimal number" }
       "-22" { return "user is not in access list deadlineusers" }
+      "-23" { return "wrong type for submit -l option" }
 
       default { return "unknown error" }
    }
@@ -4771,17 +4778,19 @@ proc get_qstat_j_info {jobid {variable qstat_j_info}} {
 #      parser/parse_qconf_se()
 #*******************************************************************************
 proc get_qconf_se_info {hostname {variable qconf_se_info}} {
-  global ts_config
-   global CHECK_ARCH
-   global CHECK_OUTPUT
+   global ts_config CHECK_OUTPUT CHECK_USER
    upvar $variable jobinfo
 
-   set exit_code [catch { eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf -se $hostname" } result]
-   if { $exit_code == 0 } {
+   set arch [resolve_arch $ts_config(master_host)]
+   set qconf "$ts_config(product_root)/bin/$arch/qconf"
+   set result [start_remote_prog $ts_config(master_host) $CHECK_USER $qconf "-se $hostname"]
+   puts $CHECK_OUTPUT $result
+   if { $prg_exit_state == 0 } {
       set result "$result\n"
       parse_qconf_se result jobinfo $hostname 
       return 1
    }
+
    return 0
 }
 
@@ -4886,10 +4895,12 @@ proc get_qacct {jobid {variable qacct_info}} {
 #     sge_procedures/is_pid_with_name_existing()
 #*******************************
 proc is_job_running { jobid jobname } {
-  global ts_config
-   global CHECK_ARCH CHECK_OUTPUT check_timestamp
+   global ts_config
+   global CHECK_USER CHECK_OUTPUT check_timestamp
 
-   set catch_state [ catch { exec "$ts_config(product_root)/bin/$CHECK_ARCH/qstat" "-f" } result ]
+   set arch [resolve_arch $ts_config(master_host)]
+   set qstat "$ts_config(product_root)/bin/$arch/qstat"
+   set result [start_remote_prog $ts_config(master_host) $CHECK_USER $qstat "-f" catch_state]
 
    set mytime [timestamp]
    if { $mytime == $check_timestamp } {

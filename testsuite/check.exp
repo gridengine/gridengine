@@ -3526,7 +3526,6 @@ proc unlock_testsuite {} {
 }
 
 
-
 # run_test_level: returns
 # -1 on error, 
 # -2 check can not run
@@ -3564,7 +3563,6 @@ proc unlock_testsuite {} {
 #     ??? 
 #
 #  SEE ALSO
-#     ???/???
 #*******************************
 proc run_test_level {path runcompleted level {do_save 1}} {
    global check_needs CHECK_RESULT_DIR check_name CHECK_ACTUAL_TEST_PATH
@@ -3838,10 +3836,10 @@ proc check_root_access {path} {
   global check_root_access_needs 
   global CHECK_INFORMATION_FILE CHECK_INFORMATION_EXT
 
-  set check_root_access_needs ""  
+  set check_root_access_needs "no"  
   ts_source $path/$CHECK_INFORMATION_FILE $CHECK_INFORMATION_EXT
 
-  if { [string compare "" $check_root_access_needs ] != 0 } {
+  if { [string compare -nocase "yes" $check_root_access_needs] == 0 } {
      return 0
   } 
 
@@ -4009,7 +4007,7 @@ proc run_test {path runcompleted {run_single_test "all"} { send_mail_report 1 } 
   set check_cleanup_level_function ""
   set check_highest_level 0
   set check_init_level_procedure "--"
-  set check_root_access_needs   "" 
+  set check_root_access_needs   "no" 
 
   ts_source $path/$CHECK_INFORMATION_FILE $CHECK_INFORMATION_EXT
   if { [string compare $run_single_test "all"] != 0 } {
@@ -4018,7 +4016,8 @@ proc run_test {path runcompleted {run_single_test "all"} { send_mail_report 1 } 
      set check_functions "$run_single_test"
   }
 
-  if { ( [string compare "" $check_root_access_needs] != 0) && ([have_root_passwd] == -1 ) } {
+  if { ( [string compare -nocase "yes" $check_root_access_needs] == 0) && ([have_root_passwd] == -1 ) } {
+     puts $CHECK_OUTPUT "test needs root access ..."
      set_root_passwd
   }
 
@@ -7582,6 +7581,7 @@ if { $do_compile } {
       exit 0
    }
 }
+
 if { $do_one_test } {
    set CHECK_ACT_PATH "$CHECK_CHECKTREE_ROOT/$do_one_test_name"
    set dirs [ get_dir_names $CHECK_ACT_PATH ]
@@ -7601,7 +7601,6 @@ if { $do_one_test } {
    run_tests $CHECK_ACT_PATH 0
 
    exit 0
-
 }
 
 if { $do_all } {

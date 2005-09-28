@@ -1,3 +1,7 @@
+JG-2005-09-28-0: Testsuite: Added test system_tests/qmaster/complex.
+                            Cleanup.
+                 Review:    CR
+
 MD-2005-09-27-0: Testsuite: using a default dbd spooling dir, if not
                             configured in testsuite config.
                  Changed:   autoinstall configfile creation

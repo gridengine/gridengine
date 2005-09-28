@@ -199,7 +199,7 @@ proc complex_setup  {} {
    disable_queue $queue_list
 
    # enable immediate scheduling to speed up test
-   set schedd_conf(flush_submit_secs) 1
+   set schedd_conf(flush_submit_sec) 1
    set_schedd_config schedd_conf
 
    set_error 0 "ok"
@@ -343,7 +343,6 @@ proc complex_run_job {scenario variable value submittable pending} {
                add_proc_error "complex_run_job" -1 "scenario $scenario, $job_args should be running\n$schedd_info"
                delete_job $job_id
             }
-
          }
       }
    }
@@ -392,7 +391,6 @@ proc complex_global_host {} {
    complex_run_job "global" "tr"           "g*"      1           0
    complex_run_job "global" "tr"           "*lobal"  1           0
    complex_run_job "global" "tr"           "g*l"     1           0
-   complex_run_job "global" "tr"           "g*b*l"   1           0
    complex_run_job "global" "tr"           "*global*" 1           0
    complex_run_job "global" "tr"           "*loba*"  1           0
    complex_run_job "global" "tr"           "xxxbal"  1           1

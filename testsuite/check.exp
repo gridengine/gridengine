@@ -33,6 +33,112 @@
 ##########################################################################
 #___INFO__MARK_END__
 
+
+#****** framework/setup_cleanup_functions ******
+#  NAME
+#     setup_cleanup_functions -- setup and cleanup for testsuite checks
+#
+#  FUNCTION
+#     Before starting the actual testsuite test, usually some setup 
+#     (e.g. creating queues, parallel environments etc.) has to be done.
+#     After the check finished, these resources have to be deleted again.
+#
+#     In former versions of testsuite, the corresponding setup and cleanup 
+#     functions were simply defined as check functions. But this approach has 
+#     the disadvantage, that the cleanup function was not run, when a 
+#     critical error (e.g. a TCL error) occured during the execution of the 
+#     check functions.
+#     Another disadvantage was, that setup and cleanup were done for each 
+#     individual check level, but often the same setup is valid for all 
+#     check levels.
+#
+#     Therefore special setup and cleanup functions were introduced into 
+#     testsuite.
+#
+#     The following functions can be defined in the test procedure (check.exp):
+#
+#     check_setup_function
+#        setup function that is called before the check is run.
+#        NOTE: Do not use the check_setup_function to shutdown any Grid Engine 
+#        components. Before checks are run in a certain level, testsuite checks
+#        if the system is up and running. You can savely use the 
+#        check_setup_level_function to shutdown Grid Engine.
+#
+#     check_cleanup_function
+#        cleanup function that is called after the whole check (all runlevels) 
+#        ran through. It is also called when the check_setup_function failed 
+#        and the actual check cannot be run.
+#
+#     check_setup_level_function
+#        per level setup function. It is called after the init_level_function 
+#        and before the first check_function is called.
+#        Use this function for configuration that only applies to a specific 
+#        level, or if you have to shutdown Grid Engine for the test.
+#
+#     check_cleanup_level_function
+#        per level cleanup function that is called after the check_functions 
+#        have been run in a certain level. It is also called, when the 
+#        check_setup_level_function failed and the check cannot be run in the 
+#        actual level.
+#
+#     Both types of setup/cleanup functions can be combined in a single check.
+#
+#  EXAMPLE
+#     1. per check setup/cleanup
+#     #define a level initialization procedure:
+#     set check_init_level_procedure "access_lists_init_level"
+#     # define test's name and run level descriptions
+#     set check_name            "access_lists"
+#     set check_category        "COMPATIBILITY SYSTEM L10N VERIFIED"
+#     set check_highest_level   0
+#     set check_description(0)  "Test (x)user_lists access for queue/cluster/pe"
+#
+#     # define test's dependencies
+#     set check_needs           "init_core_system"
+#
+#     # setup and cleanup functions
+#     set check_setup_function "access_lists_setup"
+#     set check_cleanup_function "access_lists_cleanup"
+#     
+#     # define test's procedure order
+#     set check_functions ""
+#     lappend check_functions "access_lists_global_host"
+#     lappend check_functions "access_lists_exec_host"
+#     lappend check_functions "access_lists_queue"
+#     lappend check_functions "access_lists_cluster_config"
+#     lappend check_functions "access_lists_pe"
+#     
+#     
+#     2. per level setup/cleanup
+#     
+#     
+#     # define a level initialization procedure:
+#     set check_init_level_procedure "usage_init_level"
+#     
+#     # define test's name and run level descriptions
+#     set check_name            "usage"
+#     set check_category        "COMPATIBILITY SYSTEM VERIFIED"
+#     set check_highest_level   1
+#     set check_description(0)  "check reserved usage of jobs submitted with qsub"
+#     set check_description(1)  "check reserved usage of jobs submitted with qrsh"
+#     
+#     # define test's dependencies
+#     set check_needs           "init_core_system"
+#     
+#     # setup and cleanup functions
+#     set check_setup_level_function "usage_setup"
+#     set check_cleanup_level_function "usage_cleanup"
+#     
+#     # define test's procedure order
+#     set check_functions ""
+#     lappend check_functions "usage_single"
+#     lappend check_functions "usage_tight"
+#     lappend check_functions "usage_loose1"
+#     lappend check_functions "usage_loose2"
+#     
+#*******************************
+#
+
 global last_debug_msec
 set last_debug_msec [clock clicks -milliseconds]
 global daemon_debug 

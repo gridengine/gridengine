@@ -1,5 +1,11 @@
+JG-2005-09-28-1: Testsuite: Added documentation (ADOC) for setup and cleanup 
+                            functions.
+                 Review:    CR
+                 Issue:     888
+
 JG-2005-09-28-0: Testsuite: Added test system_tests/qmaster/complex.
                             Cleanup.
+                 Issue:     117
                  Review:    CR
 
 MD-2005-09-27-0: Testsuite: using a default dbd spooling dir, if not

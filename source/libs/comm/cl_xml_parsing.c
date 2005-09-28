@@ -49,10 +49,229 @@
 #define CL_DO_XML_DEBUG 0
 
 
+typedef struct cl_xml_sequence_type {
+   char  character;
+   char* sequence;
+   int   sequence_length;
+} cl_xml_sequence_t;
+
+/* 
+ * sequence array for XML escape sequences (used by cl_com_transformXML2String()
+ * and cl_com_transformString2XML(). The first character has to be an "&" for sequence.
+ * This is because cl_com_transformXML2String() is only checking for "&" characters when
+ * parsing XML string in order to find sequences.
+ */
+#define CL_XML_SEQUENCE_ARRAY_SIZE 8 
+static const cl_xml_sequence_t cl_com_sequence_array[CL_XML_SEQUENCE_ARRAY_SIZE] = {
+                                                   {'\n', "&#x0D;" , 6}, /* carriage return */
+                                                   {'\r', "&#x0A;" , 6}, /* linefeed */
+                                                   {'\t', "&#x09;" , 6}, /* tab */
+                                                   {'&',  "&amp;"  , 5}, /* amp */
+                                                   {'<',  "&lt;"   , 4}, /* lower than */
+                                                   {'>',  "&gt;"   , 4}, /* greater than */
+                                                   {'"',  "&quot;" , 6}, /* quote */
+                                                   {'\'', "&apos;" , 6}  /* apostrophe */
+};
+
+
+
+
 static cl_bool_t cl_xml_parse_is_version(char* buffer, unsigned long start, unsigned long buffer_length );
 
+/****** commlib/cl_xml_parsing/cl_com_transformXML2String() ****************************
+*  NAME
+*     cl_com_transformXML2String() -- convert xml escape sequences to string
+*
+*  SYNOPSIS
+*     int cl_com_transformXML2String(const char* input, char** output) 
+*
+*  FUNCTION
+*     Converts a xml string into standard string witout XML escape sequences.
+*
+*
+*     Character      XML escape sequence        name
+*
+*       '\n'         "&#x0D;"                   carriage return
+*       '\r'         "&#x0A;"                   linefeed
+*       '\t'         "&#x09;"                   tab
+*       '&'          "&amp;"                    amp
+*       '<'          "&lt;"                     lower than
+*       '>'          "&gt;"                     greater than
+*       '"'          "&quot;"                   quote
+*       '\''         "&apos;"                   apostrophe
+*
+*  INPUTS
+*     const char* input - xml sequence string
+*     char** output     - pointer to empty string pointer. The function will
+*                         malloc() memory for the output string and return
+*                         the input string with xml escape sequences converted to
+*                         standard string characters.
+*
+*  RESULT
+*     int - CL_RETVAL_OK     - no errors
+*           CL_RETVAL_PARAMS - input or output are not correctly initialized
+*           CL_RETVAL_MALLOC - can't malloc() memory for output string
+*
+*  NOTES
+*     MT-NOTE: cl_com_transformXML2String() is MT safe 
+*
+*  SEE ALSO
+*     commlib/cl_xml_parsing/cl_com_transformString2XML()
+*******************************************************************************/
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "cl_com_transformXML2String()"
+int cl_com_transformXML2String(const char* input, char** output) {
+   int i,pos,s;
+   int input_length = 0;
+   int output_length = 0;
+   int seq_count;
+   int matched;
+
+   if (input == NULL || output == NULL) {
+      return CL_RETVAL_PARAMS;
+   }
+
+   if (*output != NULL) {
+      return CL_RETVAL_PARAMS;
+   }
+
+   input_length = strlen(input);
+   
+   /* since output is shorter than input we don't calculate the output length */
+   output_length = input_length;
+   *output = (char*)malloc((sizeof(char) * (1 + output_length)));
+   if (*output == NULL) {
+      return CL_RETVAL_MALLOC;
+   }
+   
+   pos = 0;
+   seq_count = 0;
+   for (i=0;i<input_length;i++) {
+      if ( input[i] == '&' ) {
+         /* found possible escape sequence */
+         for (s=0;s<CL_XML_SEQUENCE_ARRAY_SIZE;s++) {
+            matched = 0;
+            for (seq_count=0; i + seq_count < input_length && seq_count < cl_com_sequence_array[s].sequence_length ; seq_count++) {
+               if ( input[i+seq_count] != cl_com_sequence_array[s].sequence[seq_count] ) {
+                  break;
+               }
+               if ( seq_count + 1 == cl_com_sequence_array[s].sequence_length ) {
+                  /* match */
+                  (*output)[pos++] = cl_com_sequence_array[s].character;
+                  i += cl_com_sequence_array[s].sequence_length - 1;
+                  matched = 1;
+                  break;;
+               }
+            }
+            if (matched == 1) {
+               break;
+            }
+         }
+         continue;
+      }
+      (*output)[pos++] = input[i];
+   }
+   (*output)[pos] = 0;
+   return CL_RETVAL_OK;
+}
+
+/****** commlib/cl_xml_parsing/cl_com_transformString2XML() ****************************
+*  NAME
+*     cl_com_transformString2XML() -- convert special chars to escape sequences
+*
+*  SYNOPSIS
+*     int cl_com_transformString2XML(const char* input, char** output) 
+*
+*  FUNCTION
+*     This function will parse the input char string and replace the character
+*     by escape sequences in the output string. The user has to free() the 
+*     output string.
+*
+*  INPUTS
+*     const char* input - input string without xml escape sequences
+*     char** output     - pointer to empty string pointer. The function will
+*                         malloc() memory for the output string and return
+*                         the input string with xml escape squences.
+*
+*     Character      XML escape sequence        name
+*
+*       '\n'         "&#x0D;"                   carriage return
+*       '\r'         "&#x0A;"                   linefeed
+*       '\t'         "&#x09;"                   tab
+*       '&'          "&amp;"                    amp
+*       '<'          "&lt;"                     lower than
+*       '>'          "&gt;"                     greater than
+*       '"'          "&quot;"                   quote
+*       '\''         "&apos;"                   apostrophe
+*
+*  RESULT
+*     int - CL_RETVAL_OK     - no errors
+*           CL_RETVAL_PARAMS - input or output are not correctly initialized
+*           CL_RETVAL_MALLOC - can't malloc() memory for output string
+*
+*  NOTES
+*     MT-NOTE: cl_com_transformString2XML() is MT safe 
+*
+*  SEE ALSO
+*     commlib/cl_xml_parsing/cl_com_transformXML2String()
+*******************************************************************************/
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "cl_com_transformString2XML()"
+int cl_com_transformString2XML(const char* input, char** output) {
+
+   int i,s,add_length,pos,x;
+   int input_length = 0;
+   int output_length = 0;
+
+   if (input == NULL || output == NULL) {
+      return CL_RETVAL_PARAMS;
+   }
+   if (*output != NULL) {
+      return CL_RETVAL_PARAMS;
+   }
+
+   input_length = strlen(input);
+   for (i=0;i<input_length;i++) {
+      add_length = 1;
+      for (s=0;s<CL_XML_SEQUENCE_ARRAY_SIZE;s++) {
+         if ( input[i] == cl_com_sequence_array[s].character ) {
+            add_length = cl_com_sequence_array[s].sequence_length;
+            break;
+         }
+      }
+      output_length += add_length;
+   }
+
+   *output = (char*)malloc((sizeof(char) * (1 + output_length)));
+   if (*output == NULL) {
+      return CL_RETVAL_MALLOC;
+   }
+
+   pos = 0;
+   for (i=0;i<input_length;i++) {
+      add_length = 1;
+      for (s=0;s<CL_XML_SEQUENCE_ARRAY_SIZE;s++) {
+         if ( input[i] == cl_com_sequence_array[s].character ) {
+            add_length = cl_com_sequence_array[s].sequence_length;
+            for(x=0;x<add_length;x++) {
+               (*output)[pos++] = (cl_com_sequence_array[s].sequence)[x];
+            }
+            break;
+         }
+      }
+      if (add_length == 1) {
+         (*output)[pos++] = input[i];
+      }
+   }
+   (*output)[pos] = 0;
 
 
+   return CL_RETVAL_OK;
+}
 
 #ifdef __CL_FUNCTION__
 #undef __CL_FUNCTION__
@@ -1644,11 +1863,9 @@ int cl_xml_parse_SIRM(unsigned char* buffer, unsigned long buffer_length, cl_com
    if (info_begin > 0 && info_end > 0 && info_end >= info_begin) {
       character = buffer[info_end];
       buffer[info_end] = '\0';
-      
-      (*message)->info = (char*) malloc(info_end - info_begin + 1);
-      if ((*message)->info != NULL) {
-         strcpy((*message)->info, (char*)&(buffer[info_begin]));
-      }
+
+      cl_com_transformXML2String( (char*)&(buffer[info_begin]), &((*message)->info) );
+
 
       buffer[info_end] = character;
    }

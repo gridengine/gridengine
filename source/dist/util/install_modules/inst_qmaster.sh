@@ -416,7 +416,7 @@ SetSpoolingOptionsBerkeleyDB()
 
             CheckLocalFilesystem $SPOOLING_DIR
             ret=$?
-            if [ $ret -eq 0 ]; then
+            if [ $ret -eq 0 -a "$AUTO" = "false" ]; then
                $INFOTEXT "\nThe database directory\n\n" \
                             "   %s\n\n" \
                             "is not on a local filesystem. Please choose a local filesystem or\n" \

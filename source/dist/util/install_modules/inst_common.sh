@@ -435,21 +435,23 @@ GetConfigFromFile()
   IFS="
 "
   if [ $FILE != "undef" ]; then
-     $INFOTEXT -log "Reading configuration from file %s" $FILE
+     $INFOTEXT "Reading configuration from file %s" $FILE
      . $FILE
   else
-     $INFOTEXT -log "No config file. Please, start the installation with\n a valid configuration file"
+     $INFOTEXT "No config file. Please, start the installation with\n a valid configuration file"
   fi
   IFS="   
 "
   #CheckConfigFile
-  SGE_CELL=$CELL_NAME
-  DB_SPOOLING_SERVER=`ResolveHosts $DB_SPOOLING_SERVER`
-  ADMIN_HOST_LIST=`ResolveHosts $ADMIN_HOST_LIST`
-  SUBMIT_HOST_LIST=`ResolveHosts $SUBMIT_HOST_LIST`
-  EXEC_HOST_LIST=`ResolveHosts $EXEC_HOST_LIST`
-  SHADOW_HOST=`ResolveHosts $SHADOW_HOST`
-  EXEC_HOST_LIST_RM=`ResolveHosts $EXEC_HOST_LIST_RM`
+   if [ "$BACKUP" = "false" ]; then
+      SGE_CELL=$CELL_NAME
+      DB_SPOOLING_SERVER=`ResolveHosts $DB_SPOOLING_SERVER`
+      ADMIN_HOST_LIST=`ResolveHosts $ADMIN_HOST_LIST`
+      SUBMIT_HOST_LIST=`ResolveHosts $SUBMIT_HOST_LIST`
+      EXEC_HOST_LIST=`ResolveHosts $EXEC_HOST_LIST`
+      SHADOW_HOST=`ResolveHosts $SHADOW_HOST`
+      EXEC_HOST_LIST_RM=`ResolveHosts $EXEC_HOST_LIST_RM`
+   fi
   
 }
 
@@ -1291,6 +1293,11 @@ AddDefaultOperator()
 
 MoveLog()
 {
+   if [ "$BACKUP" = "true" -a "$AUTO" = "true" ]; then
+      mv /tmp/$LOGSNAME $backup_dir/backup.log 
+      return   
+   fi
+
    if [ -f $SGE_ROOT/$SGE_CELL/common/bootstrap ]; then
       master_spool_dir=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep qmaster_spool_dir | awk '{ print $2 }'`
 
@@ -1416,6 +1423,9 @@ BackupConfig()
    BUP_SPOOL_FILE_LIST=""
    BUP_SPOOL_DIR_LIST=""
 
+   if [ "$AUTO" = "true" ]; then
+      Stdout2Log
+   fi
 
    $INFOTEXT -u "SGE Configuration Backup"
    $INFOTEXT -n "\nThis feature does a backup of all configuration you made\n" \
@@ -1455,10 +1465,10 @@ BackupConfig()
    $INFOTEXT -n "\n... backup completed"
    $INFOTEXT -n "\nAll information is saved in \n[%s]\n\n" $backup_dir
 
-   if [ $AUTO = "true" ]; then
-      MV="mv"
-      ExecuteAsAdmin $MV /tmp/$LOGSNAME $backup_dir
+   if [ "$AUTO" = "true" ]; then
+      MoveLog
    fi  
+   exit 0
 }
 
 
@@ -2119,7 +2129,7 @@ CreateTarArchive()
          fi
        else
          $INFOTEXT -n "tar could not be found! No tar archive can be created!\n You will find your backup files" \
-                      "in: \n$backup_dir\n" 
+                      "in: \n%s\n" $backup_dir 
        fi   
 
       cd $SGE_ROOT
@@ -2133,8 +2143,7 @@ CreateTarArchive()
       cd $SGE_ROOT
 
       if [ $AUTO = "true" ]; then
-         MV="mv"
-         ExecuteAsAdmin $MV /tmp/$LOGSNAME $backup_dir
+         MoveLog
       fi 
 
       exit 0

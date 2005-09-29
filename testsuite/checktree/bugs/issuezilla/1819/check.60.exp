@@ -1,0 +1,172 @@
+#!/vol2/TCL_TK/glinux/bin/expect
+#___INFO__MARK_BEGIN__
+##########################################################################
+#
+#  The Contents of this file are made available subject to the terms of
+#  the Sun Industry Standards Source License Version 1.2
+#
+#  Sun Microsystems Inc., March, 2001
+#
+#
+#  Sun Industry Standards Source License Version 1.2
+#  =================================================
+#  The contents of this file are subject to the Sun Industry Standards
+#  Source License Version 1.2 (the "License"); You may not use this file
+#  except in compliance with the License. You may obtain a copy of the
+#  License at http://gridengine.sunsource.net/Gridengine_SISSL_license.html
+#
+#  Software provided under this License is provided on an "AS IS" basis,
+#  WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING,
+#  WITHOUT LIMITATION, WARRANTIES THAT THE SOFTWARE IS FREE OF DEFECTS,
+#  MERCHANTABLE, FIT FOR A PARTICULAR PURPOSE, OR NON-INFRINGING.
+#  See the License for the specific provisions governing your rights and
+#  obligations concerning the Software.
+#
+#  The Initial Developer of the Original Code is: Sun Microsystems, Inc.
+#
+#  Copyright: 2001 by Sun Microsystems, Inc.
+#
+#  All Rights Reserved.
+#
+##########################################################################
+#___INFO__MARK_END__
+
+
+
+# define global variable in this namespace
+global check_name 
+global check_category 
+global check_description 
+global check_needs
+global check_functions 
+global check_errno 
+global check_errstr 
+global check_highest_level
+global check_init_level_procedure
+global check_root_access_needs
+global env
+
+#set check_root_access_needs "yes"
+
+# define a level initialization procedure:
+set check_init_level_procedure "auto_backup_init_level"
+
+# define test's name and run level descriptions
+set check_name            "auto_backup"
+set check_category        "COMPATIBILITY SYSTEM VERIFIED"
+set check_highest_level   0
+set check_description(0)  "Create a autobackup config file and execute the automatic backup"
+
+
+# define test's dependencies
+set check_needs           "init_core_system" 
+
+# setup and cleanup functions
+set check_setup_function auto_backup_setup
+set check_cleanup_function auto_backup_cleanup
+
+
+
+# define test's procedure order
+set check_functions ""
+lappend check_functions "auto_backup_create_config"
+lappend check_functions "auto_backup_do_backup"
+
+
+global auto_backup_test_hosts
+global auto_backup_saved_slot_count
+
+proc auto_backup_init_level {} {
+   global CHECK_ACT_LEVEL
+
+   switch -- $CHECK_ACT_LEVEL {
+      "0" { 
+         return 0
+      } 
+   } 
+
+   return -1  ;# no other level 
+}
+
+
+
+
+# -------- local test procedures: initialization------------------------------
+
+
+proc auto_backup_setup  {} {
+   global CHECK_OUTPUT ts_config
+   set_error 0 "ok"
+}
+
+proc auto_backup_cleanup  {} {
+   global CHECK_OUTPUT ts_config
+
+#   delete_all_jobs
+#   wait_for_end_of_all_jobs 60
+   puts $CHECK_OUTPUT "Removing the backup directories!"
+
+   set dir_names [get_dir_names "$ts_config(product_root)"]
+
+   foreach dir $dir_names {
+      if { [string match "*auto_backup_*" $dir] } {
+         delete_directory $ts_config(product_root)/$dir
+         puts $CHECK_OUTPUT $dir
+      }
+   }
+
+   set_error 0 "ok"
+}
+
+
+proc auto_backup_create_config {} {
+   global auto_backup_test_hosts check_description CHECK_ARCH
+   global CHECK_OUTPUT ts_config CHECK_CORE_MASTER CHECK_ACT_LEVEL CHECK_SCRIPT_FILE_DIR
+
+
+   puts $CHECK_OUTPUT $check_description($CHECK_ACT_LEVEL)
+
+
+   if { [file isfile "$ts_config(product_root)/autobackup_config.conf"] == 1} {
+      delete_file $ts_config(product_root)/autobackup_config.conf
+   }
+
+   puts $CHECK_OUTPUT "creating automatic backup config file ..."
+   set fdo [open $ts_config(product_root)/autobackup_config.conf w]
+
+   puts $fdo "SGE_ROOT=\"$ts_config(product_root)\""
+   puts $fdo "SGE_CELL=\"$ts_config(cell)\""
+   puts $fdo "BACKUP_DIR=\"$ts_config(product_root)/auto_backup\""
+   puts $fdo "TAR=\"true\""
+   puts $fdo "BACKUP_FILE=\"backup.tar\""
+   close $fdo
+
+   puts $CHECK_OUTPUT "automatic backup config file successfully created ..."
+   set_error 0 "ok"
+}
+
+
+proc auto_backup_do_backup {} {
+
+   global auto_backup_test_hosts check_description CHECK_ARCH CHECK_USER
+   global CHECK_OUTPUT ts_config CHECK_CORE_MASTER CHECK_ACT_LEVEL CHECK_SCRIPT_FILE_DIR
+
+   set prod_type_var "SGE_ROOT"
+   set my_timeout 500
+   set exit_val 0
+
+   if { $ts_config(bdb_server) == "none" } {
+      set output [start_remote_prog "$CHECK_CORE_MASTER" "$CHECK_USER" "cd" "$$prod_type_var; ./inst_sge -bup -auto $ts_config(product_root)/autobackup_config.conf" "exit_val" $my_timeout ]
+   } else {
+      set output [start_remote_prog "$ts_config(bdb_server)" "$CHECK_USER" "cd" "$$prod_type_var; ./inst_sge -bup -auto $ts_config(product_root)/autobackup_config.conf" "exit_val" $my_timeout ]
+   }
+
+   if { $exit_val == 0 } {
+    set_error "0" "ok"
+    return
+   } else { 
+    set_error "-2" "autobackup failed"
+    add_proc_error "autobackup" "-2" "$output"
+    return
+   }
+}

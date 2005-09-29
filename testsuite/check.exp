@@ -139,6 +139,58 @@
 #*******************************
 #
 
+#****** framework/solaris_zones ******
+#  NAME
+#     solaris_zones -- use of testsuite with Solaris zones
+#
+#  FUNCTION
+#     Testsuite has some special handling for Solaris zones.
+#
+#     The testsuite host configuration allows to specify a
+#     list of zones (zone hostnames) for each configured host.
+#
+#     If zones are configured on a host being part of a testsuite cluster,
+#     testsuite will use the zones as execution hosts instead of the
+#     real host (master zone).
+#     qmaster and shadowd will run in the master zone (real hostname).
+#
+#     The testsuite configuration database (TCL array ts_config) contains
+#     the following entries, that are affected by zone configuration:
+#        - execd_hosts: The real hostnames configured as exec hosts
+#        - execd_nodes: - for hosts having no zones: The real hostname.
+#                       - for hosts having zones, execd_nodes will contain
+#                         all zones of the host, but not the host itself.
+#        - unique_execd_nodes: Similar to execd_nodes, but for hosts having
+#                              zones, only the first zone is contained.
+#        - unique_arch_nodes: For each architecture present in the cluster,
+#                             one host or zone is contained, selected from 
+#                             unique_execd_nodes.
+#
+#     Testsuite checks intending to run tests on all configured execution
+#     hosts should use ts_config(execd_nodes).
+#
+#     Testsuite checks intending to run tests on all architectures available
+#     in the cluster should use ts_config(unique_arch_nodes).
+#
+#  EXAMPLE
+#     We have the hosts "host" and "zhost".
+#     On host "zhost", 2 zones are installed: zone00 and zone01.
+#
+#     ts_config(execd_hosts): "host zhost"
+#     ts_config(execd_nodes): "host zone00 zone01"
+#     ts_config(unique_execd_nodes): host zone00"
+#
+#     If we run testsuite on "host",
+#     qmaster will run on "host",
+#     execution daemons will be running on "host", "zone00", and "zone01".
+#
+#     If we run testsuite on "zhost",
+#     qmaster will run on "zhost",
+#     execution daemons will be running on "host", "zone00", and "zone01".
+#     
+#*******************************
+#
+
 global last_debug_msec
 set last_debug_msec [clock clicks -milliseconds]
 global daemon_debug 

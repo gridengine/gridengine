@@ -1,3 +1,41 @@
+CR-2005-09-29-0: Testsuite: - added new host configuration parameters:
+                              NFS-ROOT2NOBODY and NFS-ROOT2ROOT
+                            - added new global variable actual_user_system
+                              (install_core_system should use this to install
+                               an admin/normal/root user system)
+                            - removed parameter initialization for bdb_server,
+                              bdb_dir, spooling_method and cell to force this
+                              installation setup questions when running 
+                              testsuite from scratch.
+                            - added additional optional parameter to 
+                              handle_vi_edit (additional_expected_result4)
+                            - transform_date_time() had tcl error when the
+                              transform value was "-/-" (empty)
+                            - improved timing of remote procedures
+                            - do a qmod -c "*" in delete_all_jobs() for 60 systems
+                            - get_config() did not return error values
+                            - set_config() now supports also a change of spool
+                              directories
+                            - new optional parameter for is_job_running():
+                                 turn off job name parsing
+                            - shutdown_system_daemon(): improved shutdown
+                            - added new functions:
+                                 get_string_value_between()
+                                 get_uid()
+                                 get_gid()
+                                 get_execd_spooldir()
+                                 get_file_uid()
+                                 get_file_gid()
+                                 switch_execd_spool_dir()
+                                 submit_wait_type_job()
+                            - following functions should be implemented soon:
+                                 switch_to_normal_user_system()
+                                 switch_to_admin_user_system()
+                                 switch_to_root_user_system()
+                            - added new test: /system_tests/shepherd/job_start
+                 Review:    JG, HP (job_start_test)
+                 Issue:     1753
+
 MD-2005-09-29-0: Bugfix:    Using "-bup" with "-auto" breaks with later 
                             update release
                  Issue:     1819

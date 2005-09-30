@@ -149,7 +149,7 @@ proc get_tmp_directory_name { { hostname "" } { type "default" } { dir_ext "tmp"
 
    if { [info exists last_file_extention] == 0 } {
       set last_file_extention 0
-      puts $CHECK_OUTPUT "set last file extention to initial value=$last_file_extention"
+      debug_puts "set last file extention to initial value=$last_file_extention"
    } else {
       incr last_file_extention 1
    }
@@ -216,7 +216,7 @@ proc get_tmp_file_name { { hostname "" } { type "default" } { file_ext "tmp" } {
 
    if { [info exists last_file_extention] == 0 } {
       set last_file_extention 0
-      puts $CHECK_OUTPUT "set last file extention to initial value=$last_file_extention"
+      debug_puts "set last file extention to initial value=$last_file_extention"
    } else {
       incr last_file_extention 1
    }
@@ -1420,7 +1420,7 @@ proc del_job_files { jobid job_output_directory expected_file_count } {
       puts $CHECK_OUTPUT "waiting for $expected_file_count jobfiles of job $jobid"
       puts $CHECK_OUTPUT "files found: [llength $files]"
       puts $CHECK_OUTPUT "file list  : \"$files\""
-      sleep 1 
+      after 500
    }   
    # ok delete the list 
 
@@ -1616,7 +1616,7 @@ proc create_shell_script { scriptfile
          puts $CHECK_OUTPUT "===================================================================="
          puts $CHECK_OUTPUT "--> file size of \"$scriptfile\": $file_size ; waiting for filesize > 0"
          puts $CHECK_OUTPUT "===================================================================="
-         after 500
+         after 250
       } else {
          break
       }
@@ -2345,7 +2345,7 @@ proc wait_for_file { path_to_file seconds { to_go_away 0 } { do_error_check 1 } 
            set wasok 0
            break
         }
-        sleep 1
+        after 500
       }
       if { ($wasok != 0) && ($do_error_check == 1) } {
          add_proc_error "wait_for_file" -1 "timeout error while waiting for creation of file \"$path_to_file\""
@@ -2404,7 +2404,7 @@ proc wait_for_remote_file { hostname user path { mytimeout 60 } } {
       if { [timestamp] > $my_mytimeout } {
          break
       }
-      after 1000
+      after 500
    }
    if { $is_ok == 1 } {
       puts $CHECK_OUTPUT "ok"
@@ -2412,7 +2412,7 @@ proc wait_for_remote_file { hostname user path { mytimeout 60 } } {
       return 0;
    } else {
       puts $CHECK_OUTPUT "timeout"
-      add_proc_error "wait_for_remote_file" -1 "timeout while waiting for file $path on host $hostname"
+      add_proc_error "wait_for_remote_file" -1 "timeout while waiting for remote file $path on host $hostname"
       return -1;
    }
 }
@@ -2978,6 +2978,142 @@ proc get_local_spool_dir {host subdir {do_cleanup 1}} {
 
    return $spooldir
 }
+
+#****** file_procedures/get_execd_spooldir() ***********************************
+#  NAME
+#     get_execd_spooldir() -- get configured execd spool directory
+#
+#  SYNOPSIS
+#     get_execd_spooldir { host type { only_base 0 } } 
+#
+#  FUNCTION
+#     Returns the spool directory for the host and requested type
+#     "cell", "local", "NFS-ROOT2NOBODY" or "NFS-ROOT2ROOT" with
+#     testsuite configuration port and "execd" string.
+#
+#  INPUTS
+#     host            - execd host name
+#     type            - "cell"   => spool directory in $SGE_ROOT/$SGE_CELL
+#                       "local"  => local spool dir from testsuite config
+#                       "NFS-ROOT2NOBODY"
+#                                => NFS-ROOT2NOBODY entry in host config
+#                       "NFS-ROOT2ROOT"
+#                                => NFS-ROOT2ROOT entry in host config
+#
+#     { only_base 0 } - if not 0: don't add port and "execd" string
+#
+#  RESULT
+#     string to execds spool directory
+#
+#*******************************************************************************
+proc get_execd_spooldir { host type { only_base 0 } } {
+   global ts_config ts_host_config 
+   global CHECK_OUTPUT
+   global check_do_not_use_spool_config_entries
+
+   set spooldir ""
+
+   if {$check_do_not_use_spool_config_entries == 1} {
+      add_proc_error "get_execd_spooldir" -1 "check_do_not_use_spool_config_entries=1 can't set local spool directory"
+      return $spooldir
+   }
+   
+   # host might be a virtual host - to query local spooldir we need the real host
+   set physical_host [node_get_host $host]
+
+   # read local spool dir from host config
+   switch -exact $type {
+      "cell" {
+         set spooldir "$ts_config(product_root)/$ts_config(cell)/spool"
+      }
+
+      "local" { 
+         if { [info exist ts_host_config($physical_host,spooldir)] } {
+            set spooldir $ts_host_config($physical_host,spooldir)
+         }
+      }
+
+      "NFS-ROOT2NOBODY" {
+         if { [info exist ts_host_config(NFS-ROOT2NOBODY)] } {
+            set spooldir $ts_host_config(NFS-ROOT2NOBODY)
+         }
+      }
+
+      "NFS-ROOT2ROOT" {
+         if { [info exist ts_host_config(NFS-ROOT2ROOT)] } {
+            set spooldir $ts_host_config(NFS-ROOT2ROOT)
+         }
+      }
+   }
+
+   # if we have a toplevel spooldir, we can construct the real spooldir
+   if {$spooldir != "" && $only_base == 0 } {
+      set spooldir "$spooldir/$ts_config(commd_port)/execd"
+   }
+
+   return $spooldir
+}
+
+
+#****** file_procedures/get_file_uid() *****************************************
+#  NAME
+#     get_file_uid() -- get uid of file on host
+#
+#  SYNOPSIS
+#     get_file_uid { user host file } 
+#
+#  FUNCTION
+#     Returns the uid of the given file on the remote host.
+#
+#  INPUTS
+#     user - user name
+#     host - host name
+#     file - full path to file
+#
+#  RESULT
+#     string containing the uid of the file
+#
+#  SEE ALSO
+#     file_procedures/get_file_uid()
+#     file_procedures/get_file_gid()
+#*******************************************************************************
+proc get_file_uid { user host file } {
+   global CHECK_OUTPUT
+
+   wait_for_remote_file $host $user $file 
+   set output [start_remote_prog $host $user ls "-n $file"]
+   return [lindex $output 2]
+}
+
+#****** file_procedures/get_file_gid() *****************************************
+#  NAME
+#     get_file_gid() -- get gid of file on host
+#
+#  SYNOPSIS
+#     get_file_gid { user host file } 
+#
+#  FUNCTION
+#     Returns the gid of the given file on the remote host.
+#
+#  INPUTS
+#     user - user name
+#     host - host name
+#     file - full path to file
+#
+#  RESULT
+#     string containing the gid of the file
+#
+#  SEE ALSO
+#     file_procedures/get_file_uid()
+#     file_procedures/get_file_gid()
+#*******************************************************************************
+proc get_file_gid { user host file } {
+   global CHECK_OUTPUT
+   wait_for_remote_file $host $user $file 
+   set output [start_remote_prog $host $user ls "-n $file"]
+   return [lindex $output 3]
+}
+
 
 #****** file_procedures/get_spool_dir() ****************************************
 #  NAME

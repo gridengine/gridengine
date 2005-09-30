@@ -76,6 +76,47 @@ proc dump_array_to_tmpfile { change_array } {
    return $tmpfile
 }
 
+
+#****** control_procedures/get_string_value_between() **************************
+#  NAME
+#     get_string_value_between() -- string parsing function
+#
+#  SYNOPSIS
+#     get_string_value_between { start end line } 
+#
+#  FUNCTION
+#     This function will return the content between the strings $start and
+#     $end which must occur in $line.
+#
+#  INPUTS
+#     start - first search parameter (first occurance)
+#     end   - second search parameter 
+#             if $start == $end: (last occurance)
+#             if -1            : get content till end of $line 
+#     line  - string to parse 
+#
+#  RESULT
+#     string
+#*******************************************************************************
+proc get_string_value_between { start end line } {
+   global CHECK_OUTPUT
+   set pos1 [string first "$start" $line]
+   incr pos1 [string length $start]
+
+   if { $end != -1 } {
+      if { $start == $end } {
+         set pos2 [string last "$end"   $line]
+      } else {
+         set pos2 [string first "$end"   $line]
+      }
+      incr pos2 -1
+      return [string trim [string range $line $pos1 $pos2]]
+   } else {
+ 
+      return [string trim [string range $line $pos1 end]]
+   }
+}
+
 # take a name/value array and build a vi command to set new values
 proc build_vi_command { change_array {current_array no_current_array_has_been_passed}} {
    upvar $change_array  chgar
@@ -177,7 +218,7 @@ proc build_vi_command { change_array {current_array no_current_array_has_been_pa
 #  SEE ALSO
 #     ???/???
 #*******************************
-proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result {additional_expected_result "___ABCDEFG___"} {additional_expected_result2 "___ABCDEFG___"} {additional_expected_result3 "___ABCDEFG___"}} {
+proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result {additional_expected_result "___ABCDEFG___"} {additional_expected_result2 "___ABCDEFG___"} {additional_expected_result3 "___ABCDEFG___"} {additional_expected_result4 "___ABCDEFG___"}} {
    global CHECK_OUTPUT env CHECK_HOST CHECK_DEBUG_LEVEL CHECK_USER
 
 
@@ -237,6 +278,17 @@ proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result 
       }
    }
 
+   # removing * at end of expected_result (expect has problems with it)
+   while { [set help2 [string length $additional_expected_result4]] > 0 } {
+      set help1 [string last "*" $additional_expected_result4]
+      incr help2 -1
+      if { $help1 == $help2 } {
+         incr help2 -1 
+         set additional_expected_result4 [string range $additional_expected_result4 0 $help2 ]
+      } else {
+         break
+      }
+   }
 
 
    debug_puts "handle_vi_edit(5)"
@@ -379,6 +431,10 @@ proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result 
                -i $sp_id -- "$additional_expected_result3" {
                   set result -4
                }
+               -i $sp_id -- "$additional_expected_result4" {
+                  set result -5
+               }
+
                -i $sp_id timeout {
                   set result -1
                   set doStop 1
@@ -408,6 +464,7 @@ proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result 
                      append message_txt "   \"$additional_expected_result\"\n"
                      append message_txt "   \"$additional_expected_result2\"\n"
                      append message_txt "   \"$additional_expected_result3\"\n"
+                     append message_txt "   \"$additional_expected_result4\"\n"
                      add_proc_error "handle_vi_edit" -1 $message_txt
                   }
                   set doStop 1
@@ -481,6 +538,87 @@ proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result 
   return $result
 }
 
+
+#****** control_procedures/get_uid() *******************************************
+#  NAME
+#     get_uid() -- get user id for user on host
+#
+#  SYNOPSIS
+#     get_uid { user host } 
+#
+#  FUNCTION
+#     The function returns the user id of user $user on host $host
+#
+#  INPUTS
+#     user - username
+#     host - hostname 
+#
+#  RESULT
+#     string containing user id
+#
+#  SEE ALSO
+#     control_procedures/get_uid()
+#     control_procedures/get_gid()
+#*******************************************************************************
+proc get_uid { user host } {
+   global CHECK_OUTPUT
+   set my_uid -1
+
+   set output [start_remote_prog $host $user id ""]
+   set output [string trim [split $output " =()"]]
+   set found_uid 0
+   foreach line $output {
+      if { $found_uid == 1 } {
+         set my_uid $line
+         break
+      }
+      if { $line == "uid" } {
+         set found_uid 1
+      }
+   }
+   return $my_uid
+}
+
+
+#****** control_procedures/get_gid() *******************************************
+#  NAME
+#     get_gid() -- get group id for user on host
+#
+#  SYNOPSIS
+#     get_gid { user host } 
+#
+#  FUNCTION
+#     The function returns the group id of user $user on host $host
+#
+#  INPUTS
+#     user - username 
+#     host - hostname 
+#
+#  RESULT
+#     string containing group id
+#
+#  SEE ALSO
+#     control_procedures/get_uid()
+#     control_procedures/get_gid()
+#*******************************************************************************
+proc get_gid { user host } {
+   global CHECK_OUTPUT
+   set my_gid -1
+
+   set output [start_remote_prog $host $user id ""]
+   set output [string trim [split $output " =()"]]
+   set found_gid 0
+   foreach line $output {
+      if { $found_gid == 1 } {
+         set my_gid $line
+         break
+      }
+      if { $line == "gid" } {
+         set found_gid 1
+      }
+   }
+   return $my_gid
+}
 
 
 
@@ -1532,7 +1670,7 @@ proc get_pid_from_file { pid_file } {
             }
          }
       }   
-      after 2000
+      after 500
    }
 
    return $pid

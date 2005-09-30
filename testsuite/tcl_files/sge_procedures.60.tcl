@@ -252,6 +252,186 @@ proc assign_queues_with_pe_object { qname hostlist pe_obj } {
    }
 }
 
+
+#****** sge_procedures.60/switch_to_admin_user_system() ************************
+#  NAME
+#     switch_to_admin_user_system() -- switch to a admin user system
+#
+#  SYNOPSIS
+#     switch_to_admin_user_system { } 
+#
+#  FUNCTION
+#     run install core system and install admin user system
+#
+#  INPUTS
+#
+#  RESULT
+#     0 - on success
+#
+#  NOTES
+#     not implemented
+#
+#  SEE ALSO
+#     sge_procedures.60/switch_to_admin_user_system()
+#     sge_procedures.60/switch_to_normal_user_system()
+#     sge_procedures.60/switch_to_root_user_system()
+#*******************************************************************************
+proc switch_to_admin_user_system {} {
+   global CHECK_OUTPUT actual_user_system
+
+   if { $actual_user_system != "admin user system" } {
+      puts $CHECK_OUTPUT "switching from $actual_user_system to admin user system ..."
+      add_proc_error "switch_to_admin_user_system" -3 "Function not implemented"
+      set actual_user_system "admin user system"
+   }
+
+   return 0
+}
+
+#****** sge_procedures.60/switch_to_root_user_system() *************************
+#  NAME
+#     switch_to_root_user_system() -- switch to a root user system
+#
+#  SYNOPSIS
+#     switch_to_root_user_system { } 
+#
+#  FUNCTION
+#     run install core system and install root user system
+#
+#  INPUTS
+#
+#  RESULT
+#     0 - on success
+#
+#  NOTES
+#     not implemented
+#
+#  SEE ALSO
+#     sge_procedures.60/switch_to_admin_user_system()
+#     sge_procedures.60/switch_to_normal_user_system()
+#     sge_procedures.60/switch_to_root_user_system()
+#*******************************************************************************
+proc switch_to_root_user_system {} {
+   global CHECK_OUTPUT actual_user_system
+    
+   add_proc_error "switch_to_root_user_system" -3 "Function not implemented"
+   return 1
+
+   if { $actual_user_system != "root user system" } {
+      puts $CHECK_OUTPUT "switching from $actual_user_system to root user system ..."
+      set actual_user_system "root user system"
+   }
+}
+
+#****** sge_procedures.60/switch_to_normal_user_system() ***********************
+#  NAME
+#     switch_to_normal_user_system() -- switch to a standard user system
+#
+#  SYNOPSIS
+#     switch_to_normal_user_system { } 
+#
+#  FUNCTION
+#      run install core system and install standard user system
+#
+#  INPUTS
+#
+#  RESULT
+#     0 - on success
+#
+#  NOTES
+#     not implemented
+#
+#  SEE ALSO
+#     sge_procedures.60/switch_to_admin_user_system()
+#     sge_procedures.60/switch_to_normal_user_system()
+#     sge_procedures.60/switch_to_root_user_system()
+#*******************************************************************************
+proc switch_to_normal_user_system {} {
+   global CHECK_OUTPUT actual_user_system
+
+   add_proc_error "switch_to_root_user_system" -3 "Function not implemented"
+   return 1
+
+   if { $actual_user_system != "normal user system" } {
+      puts $CHECK_OUTPUT "switching from $actual_user_system to normal user system ..."
+      set actual_user_system "normal user system"
+   }
+}
+
+#****** sge_procedures.60/switch_execd_spool_dir() *****************************
+#  NAME
+#     switch_execd_spool_dir() -- switch execd spool directory
+#
+#  SYNOPSIS
+#     switch_execd_spool_dir { host spool_type { force_restart 0 } } 
+#
+#  FUNCTION
+#     This function will shutdown the execd running on $host, switch the
+#     spool type depending on $spool_type if the spool directory doesn't
+#     match. The optional parameter force_restart can be used to 
+#     shutdown/restart the execd even when the spool directory is already
+#     set to the correct value.
+#
+#  INPUTS
+#     host                - host of execd
+#     spool_type          - "cell", "local", "NFS-ROOT2NOBODY" or "NFS-ROOT2ROOT"
+#     { force_restart 0 } - optional if 1: do shutdown/restart even when
+#                           spool directory is already matching
+#
+#  RESULT
+#     0 - on success
+#
+#  SEE ALSO
+#     file_procedures/get_execd_spooldir()
+#*******************************************************************************
+proc switch_execd_spool_dir { host spool_type { force_restart 0 } } {
+   global CHECK_OUTPUT
+
+   set spool_dir [get_execd_spooldir $host $spool_type]
+   set base_spool_dir [get_execd_spooldir $host $spool_type 1]
+
+   if { [info exists execd_config] } {
+      unset execd_config
+   }
+   if { [get_config execd_config $host] != 0 } {
+      add_proc_error "switch_execd_spool_dir" -1 "can't get configuration for host $host"
+      return -1
+   }
+
+   if { $execd_config(execd_spool_dir) == $spool_dir && $force_restart == 0 } {
+      debug_puts "spool dir is already set to $spool_dir"
+      return 0
+   }
+   
+   puts $CHECK_OUTPUT "$host: actual spool dir: $execd_config(execd_spool_dir)"
+   puts $CHECK_OUTPUT "$host: new spool dir   : $spool_dir"
+ 
+   delete_all_jobs
+   wait_for_end_of_all_jobs 60
+
+   shutdown_system_daemon $host execd
+
+   puts $CHECK_OUTPUT "changing execd_spool_dir for host $host ..."
+   set execd_config(execd_spool_dir) $spool_dir
+   set_config execd_config $host
+
+   if { [ remote_file_isdirectory $host $base_spool_dir ] != 1 } {
+      puts $CHECK_OUTPUT "creating not existing base spool directory:\n\"$base_spool_dir\""
+      remote_file_mkdir $hostname $base_spool_dir
+   }   
+
+   puts $CHECK_OUTPUT "cleaning up spool dir $spool_dir ..."
+   cleanup_spool_dir_for_host $host $base_spool_dir "execd"
+   
+
+   startup_execd $host
+
+   wait_for_load_from_all_queues 100
+
+   return 0
+}
+
+
 proc validate_checkpointobj { change_array } {
    global CHECK_OUTPUT
 

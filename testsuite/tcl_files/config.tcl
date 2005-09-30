@@ -4295,7 +4295,7 @@ proc config_build_ts_config_1_4 {} {
 
    # new parameter bdb_server
    set parameter "bdb_server"
-   set ts_config($parameter)            "none"
+   set ts_config($parameter)            ""
    set ts_config($parameter,desc)       "Berkeley Database RPC server (none for local spooling)"
    set ts_config($parameter,default)    "none"
    set ts_config($parameter,setup_func) "config_testsuite_bdb_server"
@@ -4306,7 +4306,7 @@ proc config_build_ts_config_1_4 {} {
 
    # new parameter bdb_dir
    set parameter "bdb_dir"
-   set ts_config($parameter)            "none"
+   set ts_config($parameter)            ""
    set ts_config($parameter,desc)       "Berkeley Database database directory"
    set ts_config($parameter,default)    "none"
    set ts_config($parameter,setup_func) "config_testsuite_bdb_dir"
@@ -4334,7 +4334,7 @@ proc config_build_ts_config_1_5 {} {
 
    # new parameter spooling method
    set parameter "spooling_method"
-   set ts_config($parameter)            "berkeleydb"
+   set ts_config($parameter)            ""
    set ts_config($parameter,desc)       "Spooling method for dynamic spooling"
    set ts_config($parameter,default)    "berkeleydb"
    set ts_config($parameter,setup_func) "config_testsuite_spooling_method"
@@ -4362,7 +4362,7 @@ proc config_build_ts_config_1_6 {} {
 
    # new parameter spooling method
    set parameter "cell"
-   set ts_config($parameter)            "default"
+   set ts_config($parameter)            ""
    set ts_config($parameter,desc)       "cell name (SGE_CELL)"
    set ts_config($parameter,default)    "default"
    set ts_config($parameter,setup_func) "config_testsuite_cell"

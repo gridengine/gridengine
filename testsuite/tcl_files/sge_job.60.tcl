@@ -46,5 +46,10 @@ proc delete_all_jobs {} {
 
    puts $CHECK_OUTPUT $output
 
+   puts $CHECK_OUTPUT "do a qmod -c \"*\" ..."
+   set qmod "$ts_config(product_root)/bin/$arch/qmod"
+   set output2 [start_remote_prog $ts_config(master_host) $CHECK_USER $qmod "-c \"*\""]
+   puts $CHECK_OUTPUT $output2
+
    return $ret
 }

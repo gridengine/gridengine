@@ -199,6 +199,8 @@ global master_debug
 set master_debug 0
 global schedd_debug
 set schedd_debug 0
+global actual_user_system
+set actual_user_system "admin user system" ;# system type installed at install core system test
 
 global no_action                   ;# just used for testing/debug  procedures
 set no_action 0
@@ -2025,6 +2027,58 @@ proc update_ts_host_config_version { filename } {
       }
       set ts_host_config(version) "1.4"
      
+      show_config ts_host_config
+      wait_for_enter
+      if { [ save_host_configuration $filename] != 0} {
+         puts $CHECK_OUTPUT "Could not save host configuration"
+         wait_for_enter
+         return
+      }
+      return 0
+   }
+
+   if { $ts_host_config(version) == "1.4" && $actual_ts_host_config_version == "1.5" } {
+      puts $CHECK_OUTPUT "\ntestsuite host configuration update from 1.4 to 1.5 ..."
+
+      # insert new parameter after version parameter
+      set insert_pos $ts_host_config(version,pos)
+      incr insert_pos 1
+
+      # move positions of following parameters for 2 steps
+      set new_parameter_cont 2
+      set names [array names ts_host_config "*,pos"]
+      foreach name $names {
+         if { $ts_host_config($name) >= $insert_pos } {
+            set ts_host_config($name) [ expr ( $ts_host_config($name) + $new_parameter_cont ) ]
+         }
+      }
+
+      # parameter 1
+      set parameter "NFS-ROOT2NOBODY"
+      set ts_host_config($parameter)            ""
+      set ts_host_config($parameter,desc)       "NFS shared directory with root to nobody mapping"
+      set ts_host_config($parameter,default)    ""
+      set ts_host_config($parameter,setup_func) "host_config_$parameter"
+      set ts_host_config($parameter,onchange)   "install"
+      set ts_host_config($parameter,pos)        $insert_pos
+
+       
+      # increment position for the second parameter 
+      incr insert_pos 1
+
+      # parameter 2
+      set parameter "NFS-ROOT2ROOT"
+      set ts_host_config($parameter)            ""
+      set ts_host_config($parameter,desc)       "NFS shared directory with root read/write rights"
+      set ts_host_config($parameter,default)    ""
+      set ts_host_config($parameter,setup_func) "host_config_$parameter"
+      set ts_host_config($parameter,onchange)   "install"
+      set ts_host_config($parameter,pos)        $insert_pos
+
+ 
+      # now we have version 1.5
+      set ts_host_config(version) "1.5"
+
       show_config ts_host_config
       wait_for_enter
       if { [ save_host_configuration $filename] != 0} {

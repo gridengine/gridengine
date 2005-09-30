@@ -1,3 +1,8 @@
+MD-2005-09-30-0: Testsuite: - used wrong local spooldirectory in autoinstall
+                            - adding exechosts to submithost list in autoinstall
+                 Changed:   automatic/qmaster.60.tcl
+                 Review:    CR
+ 
 CR-2005-09-29-0: Testsuite: - added new host configuration parameters:
                               NFS-ROOT2NOBODY and NFS-ROOT2ROOT
                             - added new global variable actual_user_system

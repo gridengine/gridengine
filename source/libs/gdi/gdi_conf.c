@@ -99,7 +99,6 @@ lListElem **lepp
    int success;
    static int already_logged = 0;
    u_long32 status;
-   cl_com_handle_t* handle = NULL;
    
    DENTER(TOP_LAYER, "get_configuration");
 
@@ -133,7 +132,6 @@ lListElem **lepp
       }
       DPRINTF(("get_configuration: unique for %s: %s\n", config_name, lGetHost(hep, EH_name)));
 
-      handle = cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0);
       commlib_error = sge_get_communication_error();
 
       if (commlib_error == CL_RETVAL_ACCESS_DENIED || 

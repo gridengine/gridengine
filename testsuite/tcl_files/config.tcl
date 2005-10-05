@@ -669,7 +669,7 @@ proc config_testsuite_root_dir { only_check name config_array } {
       puts -nonewline $CHECK_OUTPUT "> "
       set input [ wait_for_enter 1]
       if { [ string length $input] > 0 } {
-         set value $input 
+         set value [tail_directory_name $input]
       } else {
          puts $CHECK_OUTPUT "using default value"
       }
@@ -680,6 +680,11 @@ proc config_testsuite_root_dir { only_check name config_array } {
       # is full path ?
       if { [ string first "/" $value ] != 0 } {
          puts $CHECK_OUTPUT "Path \"$value\" doesn't start with \"/\""
+         return -1
+      }
+
+      if { [tail_directory_name $value] != $value } {
+         puts $CHECK_OUTPUT "\nPath \"$value\" is not a valid directory name, try \"[tail_directory_name $value]\""
          return -1
       }
 
@@ -763,7 +768,7 @@ proc config_checktree_root_dir { only_check name config_array } {
       puts -nonewline $CHECK_OUTPUT "> "
       set input [ wait_for_enter 1]
       if { [ string length $input] > 0 } {
-         set value $input 
+         set value [tail_directory_name $input]
       } else {
          puts $CHECK_OUTPUT "using default value"
       }
@@ -782,6 +787,11 @@ proc config_checktree_root_dir { only_check name config_array } {
       # is full path ?
       if { [ string first "/" $value ] != 0 } {
          puts $CHECK_OUTPUT "Path \"$value\" doesn't start with \"/\""
+         return -1
+      }
+
+      if { [tail_directory_name $value] != $value } {
+         puts $CHECK_OUTPUT "\nPath \"$value\" is not a valid directory name, try \"[tail_directory_name $value]\""
          return -1
       }
 
@@ -857,7 +867,7 @@ proc config_results_dir { only_check name config_array } {
       puts -nonewline $CHECK_OUTPUT "> "
       set input [ wait_for_enter 1]
       if { [ string length $input] > 0 } {
-         set value $input 
+         set value [tail_directory_name $input]
       } else {
          puts $CHECK_OUTPUT "using default value"
       }
@@ -868,6 +878,11 @@ proc config_results_dir { only_check name config_array } {
       # is full path ?
       if { [ string first "/" $value ] != 0 } {
          puts $CHECK_OUTPUT "Path \"$value\" doesn't start with \"/\""
+         return -1
+      }
+
+      if { [tail_directory_name $value] != $value } {
+         puts $CHECK_OUTPUT "\nPath \"$value\" is not a valid directory name, try \"[tail_directory_name $value]\""
          return -1
       }
 
@@ -1045,7 +1060,7 @@ proc config_source_dir { only_check name config_array } {
       puts -nonewline $CHECK_OUTPUT "> "
       set input [ wait_for_enter 1]
       if { [ string length $input] > 0 } {
-         set value $input 
+         set value [tail_directory_name $input]
       } else {
          puts $CHECK_OUTPUT "using default value"
       }
@@ -1056,6 +1071,11 @@ proc config_source_dir { only_check name config_array } {
       # is full path ?
       if { [ string first "/" $value ] != 0 } {
          puts $CHECK_OUTPUT "Path \"$value\" doesn't start with \"/\""
+         return -1
+      }
+ 
+      if { [tail_directory_name $value] != $value } {
+         puts $CHECK_OUTPUT "\nPath \"$value\" is not a valid directory name, try \"[tail_directory_name $value]\""
          return -1
       }
 
@@ -2122,13 +2142,19 @@ proc config_product_root { only_check name config_array } {
       puts -nonewline $CHECK_OUTPUT "> "
       set input [ wait_for_enter 1]
       if { [ string length $input] > 0 } {
-         set value $input 
+         set value [tail_directory_name $input]
       } else {
          puts $CHECK_OUTPUT "using default value"
       }
    } 
 
    if {!$fast_setup} {
+
+      if { [tail_directory_name $value] != $value } {
+         puts $CHECK_OUTPUT "\nPath \"$value\" is not a valid directory name, try \"[tail_directory_name $value]\""
+         return -1
+      }
+
       # is full path ?
       if { [ string first "/" $value ] != 0 } {
          puts $CHECK_OUTPUT "Path \"$value\" doesn't start with \"/\""
@@ -2566,7 +2592,13 @@ proc config_package_directory { only_check name config_array } {
       puts -nonewline $CHECK_OUTPUT "> "
       set input [ wait_for_enter 1]
       if { [ string length $input] > 0 } {
-         set value $input 
+         if { [string compare "none" $input ] != 0 } {
+            # only tail to directory name when != "none"
+            set value [tail_directory_name $input]
+         } else {
+            # we don't have a directory
+            set value $input 
+         }
       } else {
          puts $CHECK_OUTPUT "using default value"
       }
@@ -2575,6 +2607,12 @@ proc config_package_directory { only_check name config_array } {
    # package dir configured?
    if {!$fast_setup} {
       if { [string compare "none" $value ] != 0 } {
+
+         if { [tail_directory_name $value] != $value } {
+            puts $CHECK_OUTPUT "\nPath \"$value\" is not a valid directory name, try \"[tail_directory_name $value]\""
+            return -1
+         }
+
          # directory doesn't exist? If we shall generate packages, create dir
          if { ![file isdirectory $value] } {
             if { $config(package_type) == "create_tar" } {
@@ -3604,12 +3642,27 @@ proc config_testsuite_bdb_dir { only_check name config_array } {
       puts -nonewline $CHECK_OUTPUT "> "
       set input [ wait_for_enter 1]
       if { [ string length $input] > 0 } {
-         set value $input 
+         if { [string compare "none" $input ] != 0 } {
+            # only tail to directory name when != "none"
+            set value [tail_directory_name $input]
+         } else {
+            # we don't have a directory
+            set value $input 
+         }
       } else {
          puts $CHECK_OUTPUT "using default value"
       }
    } 
 
+   if {!$fast_setup} {
+      if { [string compare "none" $value ] != 0 } {
+         if { [tail_directory_name $value] != $value } {
+            puts $CHECK_OUTPUT "\nPath \"$value\" is not a valid directory name, try \"[tail_directory_name $value]\""
+            return -1
+         }
+      }
+   }
+ 
    return $value
 }
 

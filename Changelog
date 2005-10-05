@@ -1,3 +1,7 @@
+CR-2005-10-05-0: Testsuite: make testsuite configuration more steady. Checking
+                            directory path names.
+                 Review:    MD
+
 MD-2005-09-30-0: Testsuite: - used wrong local spooldirectory in autoinstall
                             - adding exechosts to submithost list in autoinstall
                  Changed:   automatic/qmaster.60.tcl

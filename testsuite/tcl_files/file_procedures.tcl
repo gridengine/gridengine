@@ -392,6 +392,29 @@ proc create_gnuplot_xy_gif { data_array_name row_array_name } {
 
 
 
+#****** file_procedures/tail_directory_name() **********************************
+#  NAME
+#     tail_directory_name() -- remove unnecessarily directory path content
+#
+#  SYNOPSIS
+#     tail_directory_name { directory } 
+#
+#  FUNCTION
+#     This function will remove all additional "/" signs inside the given
+#     directory path.
+#
+#  INPUTS
+#     directory - path to a directory
+#
+#  RESULT
+#     string with clean path
+# 
+#*******************************************************************************
+proc tail_directory_name { directory } {
+   return "[file dirname $directory]/[file tail $directory]"
+}
+
+
 #****** file_procedures/dump_array_data() **************************************
 #  NAME
 #     dump_array_data() -- dump array data to $CHECK_OUTPUT

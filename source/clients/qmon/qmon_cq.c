@@ -2383,7 +2383,7 @@ u_long32 queue_states)
   
    /* unselect all queues not selected by a -U (if exist) */
    if (lGetNumberOfElem(queue_user_list)>0) {
-      if ((nqueues=select_by_queue_user_list(exechost_list, queue_list, queue_user_list, acl_list))<0) {
+      if ((nqueues=select_by_queue_user_list(exechost_list, queue_list, queue_user_list, acl_list, NULL))<0) {
          DEXIT;
          return -1;
       }

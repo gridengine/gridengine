@@ -1,3 +1,16 @@
+RD-2005-10-05-0: Bugfix:    - qstat -s p doesn't show pending array tasks while 
+                              there are tasks of this job running
+                            - stat -U does not consider queue access for job
+                              and project access for queues
+                            - qstat -pe filter does not work
+                            - cull cleanup, removed XLISTDEF, ILISTDEF and 
+                              SLISTDEF
+                            - fixed typo in JB_Type & inst_qmaster.sh
+                 Changed:   inst_qmaster.sh, cull, qstat
+                 Issue:     1800, 1821, 1822
+                 Bugtraq:   6301047, 6332876, 6332877
+                 Review:    EB
+
 CR-2005-10-05-0: Testsuite: make testsuite configuration more steady. Checking
                             directory path names.
                  Review:    MD

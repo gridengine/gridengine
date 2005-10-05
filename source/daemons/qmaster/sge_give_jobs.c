@@ -1357,7 +1357,7 @@ lListElem *jep
 
    DENTER(TOP_LAYER, "release_successor_jobs");
 
-   for_each(jid, lGetList(jep, JB_jid_sucessor_list)) {
+   for_each(jid, lGetList(jep, JB_jid_successor_list)) {
       suc_jep = job_list_locate(Master_Job_List, lGetUlong(jid, JRE_job_number));
       if (suc_jep) {
          /* if we don't find it by job id we try it with the name */

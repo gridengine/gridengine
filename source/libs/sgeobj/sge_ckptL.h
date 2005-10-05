@@ -61,7 +61,7 @@ enum {
    CK_clean_command
 };
 
-ILISTDEF(CK_Type, Checkpoint, SGE_CKPT_LIST)
+LISTDEF(CK_Type)
    SGE_STRING(CK_name, CULL_PRIMARY_KEY | CULL_HASH | CULL_UNIQUE | CULL_SPOOL)
    SGE_STRING(CK_interface, CULL_DEFAULT | CULL_SPOOL)
    SGE_STRING(CK_ckpt_command, CULL_DEFAULT | CULL_SPOOL)

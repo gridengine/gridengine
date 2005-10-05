@@ -67,7 +67,7 @@ enum {
    UP_version
 };
 
-ILISTDEF(UP_Type, UserProject, SGE_PROJECT_LIST)
+LISTDEF(UP_Type)
    SGE_STRING(UP_name, CULL_PRIMARY_KEY | CULL_HASH | CULL_UNIQUE | CULL_SPOOL | CULL_SUBLIST)       /* configured user/project name spooled */
    SGE_ULONG(UP_oticket, CULL_DEFAULT | CULL_SPOOL)      /* configured override tickets (set by Qmon,
                                * used by SGEEE schedd) spooled */

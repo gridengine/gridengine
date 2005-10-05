@@ -101,9 +101,6 @@ enum _enum_lMultiType {
 #ifdef __SGE_GDI_LIBRARY_HOME_OBJECT_FILE__
 
 #define LISTDEF( name ) lDescr name[] = {
-#define XLISTDEF( name, idlname ) lDescr name[] = {
-#define ILISTDEF( name, idlname, listname ) lDescr name[] = {
-#define SLISTDEF( name, idlname ) lDescr name[] = {
 #define LISTEND {NoName, lEndT, NULL}};
 
 #define SGE_INT(name,flags)         { name, lIntT    | flags, NULL },
@@ -135,9 +132,6 @@ enum _enum_lMultiType {
 #ifdef __SGE_GDI_LIBRARY_SUBLIST_FILE__
 
 #define LISTDEF( name )
-#define XLISTDEF( name, idlname ) 
-#define ILISTDEF( name, idlname, listname ) 
-#define SLISTDEF( name, idlname ) 
 #define LISTEND
 
 #define SGE_INT(name,flags)
@@ -160,9 +154,6 @@ enum _enum_lMultiType {
 #else
 
 #define LISTDEF( name ) extern lDescr name[];
-#define XLISTDEF( name, idlname ) extern lDescr name[];
-#define ILISTDEF( name, idlname, listname ) extern lDescr name[];
-#define SLISTDEF( name, idlname ) extern lDescr name[];
 #define LISTEND
 
 #define SGE_INT(name,flags)

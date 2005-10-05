@@ -60,7 +60,7 @@ enum {
    XMLA_Value
 };
 
-SLISTDEF(XMLA_Type, XML_Attribute)
+LISTDEF(XMLA_Type)
    SGE_STRING(XMLA_Name, CULL_DEFAULT)
    SGE_STRING(XMLA_Value, CULL_DEFAULT)        
 LISTEND        
@@ -83,7 +83,7 @@ enum {
    XMLS_Version
 };
 
-SLISTDEF(XMLS_Type, XML_Stylesheet)
+LISTDEF(XMLS_Type)
    SGE_STRING(XMLS_Name, CULL_DEFAULT)
    SGE_STRING(XMLS_Value, CULL_DEFAULT)        
    SGE_STRING(XMLS_Version, CULL_DEFAULT)
@@ -111,7 +111,7 @@ enum {
    XMLH_Element
 };
 
-SLISTDEF(XMLH_Type, XML_Head)
+LISTDEF(XMLH_Type)
    SGE_STRING(XMLH_Version, CULL_DEFAULT)
    SGE_STRING(XMLH_Name, CULL_DEFAULT)
    SGE_LIST(XMLH_Stylesheet, XMLS_Type, CULL_DEFAULT)
@@ -141,7 +141,7 @@ enum {
    XMLE_List
 };
 
-SLISTDEF(XMLE_Type, XML_Element)
+LISTDEF(XMLE_Type)
    SGE_LIST(XMLE_Attribute, XMLA_Type, CULL_DEFAULT)
    SGE_BOOL(XMLE_Print, CULL_DEFAULT)
    SGE_OBJECT(XMLE_Element, CULL_ANY_SUBTYPE, CULL_DEFAULT)

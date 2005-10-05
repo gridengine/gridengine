@@ -65,7 +65,7 @@ enum {
    US_entries
 };
 
-ILISTDEF(US_Type, UserSet, SGE_USERSET_LIST)
+LISTDEF(US_Type)
    SGE_STRING(US_name, CULL_PRIMARY_KEY | CULL_HASH | CULL_UNIQUE | CULL_SPOOL | CULL_SUBLIST)       /* configured name spooled */
    SGE_ULONG(US_type, CULL_DEFAULT | CULL_SPOOL)         /* configured type spooled */
    SGE_ULONG(US_fshare, CULL_DEFAULT | CULL_SPOOL)       /* configured share spooled */
@@ -102,7 +102,7 @@ enum {
    UE_name = UE_LOWERBOUND   /* user or @group name */
 };
 
-SLISTDEF(UE_Type, UserEntry)
+LISTDEF(UE_Type)
    SGE_STRING(UE_name, CULL_PRIMARY_KEY | CULL_HASH | CULL_UNIQUE | CULL_SUBLIST)
 LISTEND 
 

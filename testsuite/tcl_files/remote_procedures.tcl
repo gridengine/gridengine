@@ -537,11 +537,11 @@ proc start_remote_prog { hostname
 
    while { $do_stop == 0 } {
       expect {
-        -i $myspawn_id -- full_buffer {
+        -i $myspawn_id full_buffer {
            add_proc_error "start_remote_prog" "-1" "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
            set do_stop 1 
         }
-        -i $myspawn_id -- "*\n" {
+        -i $myspawn_id "*\n" {
            
            foreach line [split $expect_out(0,string) "\n"] {
               if { $line == "" } {
@@ -590,34 +590,34 @@ proc start_remote_prog { hostname
            }
         }
 
-        -i $myspawn_id -- timeout {
+        -i $myspawn_id timeout {
            debug_puts "timeout ..."
 
            set do_stop 1 
            add_proc_error "start_remote_prog" "-1" "timeout error(1):\nmaybe the shell is expecting an interactive answer from user?\nexec commando was: \"$exec_command $exec_arguments\"\n$expect_out(buffer)\nmore information in next error message in 5 seconds!!!"
            set timeout 5
            expect {
-              -i $myspawn_id -- full_buffer {
+              -i $myspawn_id full_buffer {
                  add_proc_error "start_remote_prog" "-1" "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
               }
-              -i $myspawn_id -- timeout {
+              -i $myspawn_id timeout {
                  add_proc_error "start_remote_prog" "-1" "no more output available"
               }
-              -i $myspawn_id -- "*" {
+              -i $myspawn_id "*" {
                  add_proc_error "start_remote_prog" "-1" "expect buffer:\n$expect_out(buffer)"
               }
-              -i $myspawn_id -- default {
+              -i $myspawn_id default {
                  add_proc_error "start_remote_prog" "-1" "default - no more output available"
               }
            }
         }
 
-        -i $myspawn_id -- eof {
+        -i $myspawn_id eof {
            debug_puts "eof ..."
            set do_stop 1 
         }
 
-        -i $myspawn_id -- default {
+        -i $myspawn_id default {
            debug_puts "default ..."
            set do_stop 0
         }

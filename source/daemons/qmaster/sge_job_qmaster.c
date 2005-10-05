@@ -322,7 +322,7 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
    lSetUlong(jep, JB_submission_time, sge_get_gmt());
 
    lSetList(jep, JB_ja_tasks, NULL);
-   lSetList(jep, JB_jid_sucessor_list, NULL);
+   lSetList(jep, JB_jid_successor_list, NULL);
 
    if (lGetList(jep, JB_ja_template) == NULL) {
       lAddSubUlong(jep, JAT_task_number, 0, JB_ja_template, JAT_Type);
@@ -2043,10 +2043,10 @@ int sub_command
                if ((suc_jobep = job_list_locate(Master_Job_List, pre_ident))) {
                   lListElem *temp_job = NULL;
    
-                  temp_job = lGetElemUlong(lGetList(suc_jobep, JB_jid_sucessor_list), JRE_job_number, jobid);               
+                  temp_job = lGetElemUlong(lGetList(suc_jobep, JB_jid_successor_list), JRE_job_number, jobid);               
                   DPRINTF(("  JOB "sge_u32" removed from trigger "
                      "list of job "sge_u32"\n", jobid, pre_ident));
-                  lRemoveElem(lGetList(suc_jobep, JB_jid_sucessor_list), &temp_job);
+                  lRemoveElem(lGetList(suc_jobep, JB_jid_successor_list), &temp_job);
                } 
             }
          }
@@ -2163,12 +2163,12 @@ lListElem *jep
             }
          }
          if (!Exited) {
-            DPRINTF(("adding jid "sge_u32" into sucessor list of job "sge_u32"\n",
+            DPRINTF(("adding jid "sge_u32" into successor list of job "sge_u32"\n",
                lGetUlong(jep, JB_job_number), pre_ident));
 
-            /* add jid to sucessor_list of parent job */
+            /* add jid to successor_list of parent job */
             lAddSubUlong(parent_jep, JRE_job_number, lGetUlong(jep, JB_job_number), 
-               JB_jid_sucessor_list, JRE_Type);
+               JB_jid_successor_list, JRE_Type);
             
             prep = lNext(prep);
             
@@ -3459,7 +3459,7 @@ static u_long32 job_is_referenced_by_jobname(lListElem *jep)
 
    DENTER(TOP_LAYER, "job_is_referenced_by_jobname");
 
-   succ_lp = lGetList(jep, JB_jid_sucessor_list);
+   succ_lp = lGetList(jep, JB_jid_successor_list);
    if (succ_lp) {
       lListElem *succ_ep, *succ_jep;
       const char *job_name = lGetString(jep, JB_job_name);

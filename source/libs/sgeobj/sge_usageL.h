@@ -80,7 +80,7 @@ enum {
    UA_value                  /* usage value */
 };
 
-SLISTDEF(UA_Type, Usage)
+LISTDEF(UA_Type)
    SGE_STRING(UA_name, CULL_PRIMARY_KEY | CULL_HASH | CULL_UNIQUE | CULL_SUBLIST)
    SGE_DOUBLE(UA_value, CULL_DEFAULT | CULL_SUBLIST)       /* 960710 SVD - changed from to */
 LISTEND 

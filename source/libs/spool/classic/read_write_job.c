@@ -945,7 +945,7 @@ int job_list_read_from_disk(lList **job_list, char *list_name, int check,
                init_function(job);
             }
 
-            lSetList(job, JB_jid_sucessor_list, NULL); 
+            lSetList(job, JB_jid_successor_list, NULL); 
             job_list_add_job(job_list, list_name, job, 0);
             
             if (!handle_as_zombie) {

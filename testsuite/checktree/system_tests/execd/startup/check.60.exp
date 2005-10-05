@@ -354,7 +354,7 @@ proc startup_execd_test1 {} {
    
    # check for only one running execd on $hostname
    puts $CHECK_OUTPUT "test if there is only one execd running on host $hostname ..."
-   set found_p [ ps_grep "$ts_config(product_root)/" $hostname ]
+   set found_p [ ps_grep "$ts_config(product_root)" $hostname ]
    set execd_count 0
    foreach elem $found_p {
       if { [string match "*sge_execd*" $ps_info(string,$elem)] } {

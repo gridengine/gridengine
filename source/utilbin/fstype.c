@@ -73,13 +73,17 @@ int main(int argc, char *argv[]) {
 #elif defined(SOLARIS)
    struct statvfs buf; 
    struct mntinfo_kstat mnt_info;
-   ulong_t fsid;
+   minor_t fsid;
    kstat_ctl_t    *kc = NULL;
    kstat_t        *ksp;
    kstat_named_t  *knp;
 
    ret = statvfs(argv[1], &buf); 
-   fsid = (minor_t)(buf.f_fsid & 0xfff);
+   /*
+      statfs returns dev_t (32bit - 14bit major + 18bit minor number)
+      the kstat_instance is the minor number
+   */
+   fsid = (minor_t)(buf.f_fsid & 0x3ffff);
  
    if ( strcmp(buf.f_basetype, "nfs") == 0) {
             kc = kstat_open();
@@ -95,11 +99,13 @@ int main(int argc, char *argv[]) {
                   printf("error\n");
                   return 2;
                }
-               if ( fsid  == ksp->ks_instance)
+               if ( fsid  == ksp->ks_instance) {
                   if ( mnt_info.mik_vers >= 4 ) {
                      sprintf(buf.f_basetype, "%s%i", buf.f_basetype, mnt_info.mik_vers);
                   }
+                  break;
                }
+            }
             ret = kstat_close(kc);
    }
 #else   

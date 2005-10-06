@@ -37,6 +37,8 @@
 #include "sge_peL.h"
 #include "sge_qrefL.h"
 #include "sge_strL.h"
+#include "sge_userprjL.h"
+#include "sge_userprj.c"
 #include "sge_cqueueL.h"
 #include "sge_qinstance.h"
 #include "sge_qinstance_state.h"
@@ -357,7 +359,8 @@ int select_by_queue_user_list(
 lList *exechost_list,
 lList *cqueue_list,
 lList *queue_user_list,
-lList *acl_list 
+lList *acl_list, 
+lList *project_list
 ) {
    int nqueues = 0;
    lListElem *qu = NULL;
@@ -370,7 +373,12 @@ lList *acl_list
    lList *global_xacl = NULL;
    lList *config_acl = NULL;
    lList *config_xacl = NULL;
- 
+   lList *prj = NULL;
+   lList *xprj = NULL;
+   lList *h_prj = NULL;
+   lList *h_xprj = NULL;
+   lList *global_prj = NULL;
+   lList *global_xprj = NULL;
 
    DENTER(TOP_LAYER, "select_by_queue_user_list");
 
@@ -379,6 +387,8 @@ lList *acl_list
    ehep = host_list_locate(exechost_list, "global"); 
    global_acl  = lGetList(ehep, EH_acl);
    global_xacl = lGetList(ehep, EH_xacl);
+   global_prj = lGetList(ehep, EH_prj);
+   global_xprj = lGetList(ehep, EH_xprj);
 
    config_acl  = mconf_get_user_lists();
    config_xacl = mconf_get_xuser_lists();
@@ -390,6 +400,9 @@ lList *acl_list
          int access = 0;
          const char *host_name = NULL;
 
+         prj = lGetList(qep, QU_projects);
+         xprj = lGetList(qep, QU_xprojects);
+
          /* get exec host list element for current queue 
             and its access lists */
          host_name = lGetHost(qep, QU_qhostname);
@@ -397,9 +410,12 @@ lList *acl_list
          if (ehep != NULL) {
             h_acl  = lGetList(ehep, EH_acl);
             h_xacl = lGetList(ehep, EH_xacl);
+            h_prj = lGetList(ehep, EH_prj);
+            h_xprj = lGetList(ehep, EH_xprj);
          }
 
          for_each (qu, queue_user_list) {
+            lListElem *pep = NULL;
             int q_access = 0;
             int h_access = 0;
             int gh_access = 0;
@@ -420,6 +436,40 @@ lList *acl_list
             } else {
                DPRINTF(("ok\n"));
             }
+            if (project_list != NULL) {
+                DPRINTF(("testing queue projects lists\n"));
+                for_each(pep, prj) {
+                   const char *prj_name;
+                   lListElem *prj;
+                   if ((prj_name = lGetString(pep, UP_name))!=NULL) {
+                      if ((prj = userprj_list_locate(project_list, prj_name)) != NULL) {
+                         q_access &= (name[0]=='@')?
+                            sge_has_access_(NULL, &name[1], lGetList(prj, UP_acl), lGetList(prj, UP_xacl), acl_list): 
+                            sge_has_access_(name, NULL, lGetList(prj, UP_acl), lGetList(prj, UP_xacl), acl_list); 
+                      } else {
+                        DPRINTF(("no reference object for project %s\n", prj_name));
+                      }   
+                    } 
+                }
+                for_each(pep, xprj) {
+                   const char *prj_name;
+                   lListElem *prj;
+                   if ((prj_name = lGetString(pep, UP_name))!=NULL) {
+                      if ((prj = userprj_list_locate(project_list, prj_name)) != NULL) {
+                         q_access &= (name[0]=='@')?
+                            !sge_has_access_(NULL, &name[1], lGetList(prj, UP_acl), lGetList(prj, UP_xacl), acl_list): 
+                            !sge_has_access_(name, NULL, lGetList(prj, UP_acl), lGetList(prj, UP_xacl), acl_list); 
+                      } else {
+                        DPRINTF(("no reference object for project %s\n", prj_name));
+                      }   
+                    }
+                }
+                if (!q_access) {
+                   DPRINTF(("no access\n"));
+                } else {
+                   DPRINTF(("ok\n"));
+                }
+            }
 
             DPRINTF(("testing host access lists\n"));
             h_access = (name[0]=='@')?
@@ -430,6 +480,40 @@ lList *acl_list
             }else {
                DPRINTF(("ok\n"));
             }
+            if (project_list != NULL) {
+                DPRINTF(("testing host projects lists\n"));
+                for_each(pep, h_prj) {
+                   const char *prj_name;
+                   lListElem *prj;
+                   if ((prj_name = lGetString(pep, UP_name))!=NULL) {
+                      if ((prj = userprj_list_locate(project_list, prj_name)) != NULL) {
+                         q_access &= (name[0]=='@')?
+                            sge_has_access_(NULL, &name[1], lGetList(prj, UP_acl), lGetList(prj, UP_xacl), acl_list): 
+                            sge_has_access_(name, NULL, lGetList(prj, UP_acl), lGetList(prj, UP_xacl), acl_list); 
+                      } else {
+                        DPRINTF(("no reference object for project %s\n", prj_name));
+                      }   
+                    }
+                }
+                for_each(pep, h_xprj) {
+                   const char *prj_name;
+                   lListElem *prj;
+                   if ((prj_name = lGetString(pep, UP_name))!=NULL) {
+                      if ((prj = userprj_list_locate(project_list, prj_name)) != NULL) {
+                         q_access &= (name[0]=='@')?
+                            !sge_has_access_(NULL, &name[1], lGetList(prj, UP_acl), lGetList(prj, UP_xacl), acl_list): 
+                            !sge_has_access_(name, NULL, lGetList(prj, UP_acl), lGetList(prj, UP_xacl), acl_list); 
+                      } else {
+                        DPRINTF(("no reference object for project %s\n", prj_name));
+                      }   
+                    }
+                }
+                if (!q_access) {
+                   DPRINTF(("no access\n"));
+                } else {
+                   DPRINTF(("ok\n"));
+                }
+            }
 
             DPRINTF(("testing global host access lists\n"));
             gh_access = (name[0]=='@')?
@@ -439,6 +523,40 @@ lList *acl_list
                DPRINTF(("no access\n"));
             }else {
                DPRINTF(("ok\n"));
+            }
+            if (project_list != NULL) {
+                DPRINTF(("testing host projects lists\n"));
+                for_each(pep, global_prj) {
+                   const char *prj_name;
+                   lListElem *prj;
+                   if ((prj_name = lGetString(pep, UP_name))!=NULL) {
+                      if ((prj = userprj_list_locate(project_list, prj_name)) != NULL) {
+                         q_access &= (name[0]=='@')?
+                            sge_has_access_(NULL, &name[1], lGetList(prj, UP_acl), lGetList(prj, UP_xacl), acl_list): 
+                            sge_has_access_(name, NULL, lGetList(prj, UP_acl), lGetList(prj, UP_xacl), acl_list); 
+                      } else {
+                        DPRINTF(("no reference object for project %s\n", prj_name));
+                      }   
+                    }
+                }
+                for_each(pep, global_xprj) {
+                   const char *prj_name;
+                   lListElem *prj;
+                   if ((prj_name = lGetString(pep, UP_name))!=NULL) {
+                      if ((prj = userprj_list_locate(project_list, prj_name)) != NULL) {
+                         q_access &= (name[0]=='@')?
+                            !sge_has_access_(NULL, &name[1], lGetList(prj, UP_acl), lGetList(prj, UP_xacl), acl_list): 
+                            !sge_has_access_(name, NULL, lGetList(prj, UP_acl), lGetList(prj, UP_xacl), acl_list); 
+                      } else {
+                        DPRINTF(("no reference object for project %s\n", prj_name));
+                      }   
+                    }
+                }
+                if (!q_access) {
+                   DPRINTF(("no access\n"));
+                } else {
+                   DPRINTF(("ok\n"));
+                }
             }
 
             DPRINTF(("testing cluster config access lists\n"));
@@ -540,7 +658,7 @@ int select_by_resource_list(
 lList *resource_list,
 lList *exechost_list,
 lList *queue_list,
-lList *centry_list, 
+lList *centry_list,
 u_long32 empty_qs
 ) {
    lListElem *cqueue = NULL;
@@ -566,7 +684,7 @@ u_long32 empty_qs
          if (empty_qs)
             sconf_set_qs_state(QS_STATE_EMPTY);
 
-         selected = sge_select_queue(resource_list, qep, NULL, exechost_list, centry_list, true, -1);
+         selected = sge_select_queue(resource_list, qep, NULL, exechost_list, centry_list, true, -1, NULL, NULL, NULL);
          if (empty_qs)
             sconf_set_qs_state(QS_STATE_FULL);
 

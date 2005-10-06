@@ -1,3 +1,14 @@
+RD-2005-10-05-0: Bugfix:    - qstat -s p doesn't show pending array tasks while 
+                              there are tasks of this job running
+                            - stat -U does not consider queue access for job
+                              and project access for queues
+                            - qstat -pe filter does not work
+                            - fixed typo in inst_qmaster.sh
+                 Changed:   qstat, qhost, qacct, inst_qmaster.sh
+                 Issue:     1800, 1821, 1822
+                 Bugtraq:   6301047, 6332876, 6332877
+                 Review:    EB
+
 MD-2005-09-29-0: Bugfix:    Using "-bup" with "-auto" breaks with later 
                             update release
                  Issue:     1819
@@ -177,7 +188,6 @@ CR-2005-08-29-0: Cleanup:   - removed unused message macros and double message
                               ids.
 
 SG-2005-08-26-0: Cleanup:   - fixed the build for irix 6.5
->>>>>>> 1.3011.2.30
                             - enhanced RD-2005-08-16-0 (some global variables were
                               missing)
                             - extended the monitoring output

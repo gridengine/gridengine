@@ -786,7 +786,8 @@ char **argv
    
          sconf_set_qs_state(QS_STATE_EMPTY);
 
-         selected = sge_select_queue(complex_options,queue, NULL, exechost_list, centry_list, true, 1);
+         selected = sge_select_queue(complex_options,queue, NULL, exechost_list,
+                    centry_list, true, 1, NULL, NULL, NULL);
   
          if (!selected) {
             continue;

@@ -1,3 +1,7 @@
+RC-2005-10-07-0: Enhancem:  PDC for HP-UX
+                 Changed :  execd, shepherd
+                 Review  :  AH
+
 RD-2005-10-05-0: Bugfix:    - qstat -s p doesn't show pending array tasks while 
                               there are tasks of this job running
                             - stat -U does not consider queue access for job

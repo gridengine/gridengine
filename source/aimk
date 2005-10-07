@@ -1292,6 +1292,7 @@ case HP1164:
    else
       set HOSTRESOLVEFLAGS = "-DGETHOSTBYNAME -DGETHOSTBYADDR_M"
       set MEMFLAG = +DD64
+      set COMPILE_DC = 1
    endif
    if ($CC == gcc) then
       if ( $DEBUGGED == 0 ) then

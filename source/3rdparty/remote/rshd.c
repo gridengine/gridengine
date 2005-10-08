@@ -1,4 +1,4 @@
-/*	$Id: rshd.c,v 1.18 2005/05/04 20:11:34 joga Exp $	*/
+/*	$Id: rshd.c,v 1.19 2005/10/08 05:53:47 ron Exp $	*/
 
 /*-
  * Copyright (c) 1988, 1989, 1992, 1993, 1994
@@ -601,7 +601,7 @@ fail:
 		syslog(LOG_INFO|LOG_AUTH, "%s@%s as %s: cmd='%.80s'",
 		    remuser, hostname, locuser, cmdbuf);
 	}
-	execl(pwd->pw_shell, cp, "-c", cmdbuf, 0);
+	execl(pwd->pw_shell, cp, "-c", cmdbuf, (char *) NULL);
 	perror(pwd->pw_shell);
 	exit(1);
 }

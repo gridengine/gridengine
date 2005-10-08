@@ -1,3 +1,7 @@
+RC-2005-10-08-1: Enhancem:  support gcc4 as the build compiler (con't)
+                 Changed:   3rdparty/remote/rshd.c
+                 Review  :  pending
+
 RC-2005-10-08-0: Enhancem:  PDC for AIX
                  Changed :  execd, shepherd
                  Review  :  pending

@@ -139,7 +139,7 @@ void setosjobid(pid_t sid, gid_t *add_grp_id_ptr, struct passwd *pw)
          shepherd_error("can't open \"addgrpid\" file");   
       fprintf(fp, gid_t_fmt"\n", *add_grp_id_ptr);
       fclose(fp);
-#elif defined(HP1164)
+# elif defined(HP1164) || defined(AIX)
     {
       if (!(fp = fopen("addgrpid", "w")))
          shepherd_error("can't open \"addgrpid\" file");

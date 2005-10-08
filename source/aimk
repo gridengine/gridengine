@@ -1013,6 +1013,8 @@ case AIX43:
 case AIX51:
    set MAKEWINGRIDLIB   = 0
    set MAKEWINGRIDAPP   = 0
+   set COMPILE_DC = 1
+
    if ( $DEBUGGED == 1 ) then
       set DEBUG_FLAG = "$DEBUG_FLAG -qinitauto=01 -qro -qroconst"
    endif

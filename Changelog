@@ -1,3 +1,6 @@
+RC-2005-10-07-0: Enhancem:  PDC for AIX
+                 Changed :  execd, shepherd
+
 RC-2005-10-07-0: Enhancem:  PDC for HP-UX
                  Changed :  execd, shepherd
                  Review  :  AH

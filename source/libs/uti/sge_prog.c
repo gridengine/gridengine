@@ -114,7 +114,7 @@ typedef struct {
    bool            exit_on_error;
 } prog_state_t;
 
-static pthread_once_t prog_once = PTHREAD_ONCE_INIT;
+static pthread_once_t prog_once = { PTHREAD_ONCE_INIT };
 static pthread_key_t  prog_state_key;
 
 static void          prog_once_init(void);

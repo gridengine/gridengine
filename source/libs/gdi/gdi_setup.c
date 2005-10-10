@@ -86,7 +86,7 @@ struct gdi_state_t {
 
 static pthread_key_t   gdi_state_key;
 
-static pthread_once_t gdi_once_control = PTHREAD_ONCE_INIT;
+static pthread_once_t gdi_once_control = { PTHREAD_ONCE_INIT };
 
 static void gdi_state_destroy(void* state) {
    free(state);

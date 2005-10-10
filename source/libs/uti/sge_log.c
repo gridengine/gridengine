@@ -65,7 +65,7 @@ typedef struct {
 
 static log_state_t Log_State;
 
-static pthread_once_t log_once = PTHREAD_ONCE_INIT;
+static pthread_once_t log_once = { PTHREAD_ONCE_INIT };
 static pthread_key_t  log_buffer_key;
 
 static void          log_once_init(void);

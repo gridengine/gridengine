@@ -1,3 +1,7 @@
+RD-2005-10-10-0: Bugfix:    gcc build on solaris
+                 Changed:   aimk
+                 Review:    JG
+
 MD-2005-10-10-0: Testsuite: added missing autoinst config line
                  Changed:   install_core_system/automatic/qmaster.60.tcl
                  Review:    RD

@@ -1638,6 +1638,10 @@ case SOLARISAMD64:
    set MAKEWINGRIDLIB   = 0
    set MAKEWINGRIDAPP   = 0
    set COMPILE_DC = 1
+
+   set CFLAGS = "$CFLAGS -DSOLARIS -D$BUILDARCH -D__EXTENSIONS__ -D_POSIX_C_SOURCE=199506L -DGETHOSTBYNAME_R5 -DGETHOSTBYADDR_R7 "
+   set SHAREDLD = $CC
+
    if ($OPTIMIZATION == 1) then 
       if ( $CC == gcc ) then
          set OFLAG = "-O3"
@@ -1691,45 +1695,45 @@ case SOLARISAMD64:
    endif
 
    set DEPEND_FLAGS = "$CFLAGS -D$BUILDARCH $XMTINCD"
-
    set MEMFLAG = ""
-   if ( $BUILDARCH == SOLARIS64 ) then
-      if ( $CC == cc ) then
-         set MEMFLAG = "-xarch=v9"
-         set LFLAGS = "-xarch=v9 -xildoff $LFLAGS"
-      endif
-   else
-      set CFLAGS = "-D_LARGEFILE64_SOURCE=1 $CFLAGS"
-      if ( $BUILDARCH == SOLARISAMD64 ) then
-         set MEMFLAG = "-xarch=amd64"
-         set LFLAGS = "-xarch=amd64 $LFLAGS"
-      else
-         set MEMFLAG = "-xarch=generic"
-      endif
-      if ( $CC == cc ) then
-         set MEMCFLAG = "-Xa"
-         set LFLAGS = "-xildoff $LFLAGS"
-      endif
-   endif
 
    if ( $CC == cc ) then
-      set CFLAGS = "-Xc -v $OFLAG $MEMFLAG -ftrap=division $CFLAGS -DSOLARIS -D$BUILDARCH -D__EXTENSIONS__ -D_POSIX_C_SOURCE=199506L -DGETHOSTBYNAME_R5 -DGETHOSTBYADDR_R7 $DEBUG_FLAG"
-   endif
+      set LFLAGS = "-xildoff $LFLAGS"
+      set SHARED_CFLAGS = "-KPIC"
 
-   set SHAREDLD = $CC
-   if ( $CC == gcc ) then
+      if ( $BUILDARCH == SOLARIS64 ) then
+         set MEMFLAG = "-xarch=v9"
+         set LFLAGS = "-xarch=v9 $LFLAGS"
+         set SHARED_LFLAGS = "$SHARED_LFLAGS -L. -G -xarch=v9"
+      else if ( $BUILDARCH == SOLARISAMD64 ) then
+         set CFLAGS = "-D_LARGEFILE64_SOURCE=1 $CFLAGS"
+         set MEMFLAG = "-xarch=amd64"
+         set LFLAGS = "-xarch=amd64 $LFLAGS"
+	      set SHARED_LFLAGS = "$SHARED_LFLAGS -L. -G -xarch=amd64"
+      else
+         set CFLAGS = "-D_LARGEFILE64_SOURCE=1 $CFLAGS"
+         set MEMFLAG = "-xarch=generic"
+         set SHARED_LFLAGS = "$SHARED_LFLAGS -L. -G"
+      endif
+      set CFLAGS = "-Xc -v $OFLAG $MEMFLAG -ftrap=division $CFLAGS $DEBUG_FLAG"
+   else if ( $CC == gcc) then
+      #set CFLAGS = "-Wall -Werror -Wstrict-prototypes $CFLAGS"
+      set CFLAGS = "-Wall -Wstrict-prototypes $CFLAGS"
       set SHARED_CFLAGS = "-fPIC"
       set SHARED_LFLAGS = "$SHARED_LFLAGS -L. -shared"
-   else
-      set SHARED_CFLAGS = "-KPIC"
+
       if ( $BUILDARCH == SOLARIS64 ) then
-         set SHARED_LFLAGS = "$SHARED_LFLAGS -L. -G -xarch=v9"
+         set CFLAGS = "-m64 $CFLAGS"
+         set MEMFLAG = "-m64"
+         set LFLAGS = "-m64 $LFLAGS"
+         set SHARED_LFLAGS = "$SHARED_LFLAGS -L. -G -m64"
+      else if ( $BUILDARCH == SOLARISAMD64 ) then
+         set CFLAGS = "-m64 $CFLAGS"
+         set MEMFLAG = "-m64"
+         set LFLAGS = "-m64 $LFLAGS"
+         set SHARED_LFLAGS = "$SHARED_LFLAGS -L. -G -m64"
       else
-	 if ( $BUILDARCH == SOLARISAMD64 ) then
-	   set SHARED_LFLAGS = "$SHARED_LFLAGS -L. -G -xarch=amd64"
-	 else
-           set SHARED_LFLAGS = "$SHARED_LFLAGS -L. -G"
-	 endif
+         set SHARED_LFLAGS = "$SHARED_LFLAGS -L. -G"
       endif
    endif
 

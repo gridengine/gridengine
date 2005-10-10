@@ -65,7 +65,7 @@ struct path_state_t {
     char* shadow_masters_file;
 };
 
-static pthread_once_t path_once = PTHREAD_ONCE_INIT;
+static pthread_once_t path_once = { PTHREAD_ONCE_INIT };
 static pthread_key_t path_state_key;
 
 static void path_once_init(void);

@@ -221,6 +221,7 @@ proc create_autoinst_config {} {
    puts $fdo "DB_SPOOLING_DIR=\"$db_dir\""
    puts $fdo "ADMIN_HOST_LIST=\"$ts_config(execd_hosts)\""
    puts $fdo "SUBMIT_HOST_LIST=\"$ts_config(execd_hosts) $ts_config(submit_only_hosts)\""
+   puts $fdo "EXEC_HOST_LIST=\"$ts_config(execd_hosts)\""
    puts $fdo "EXECD_SPOOL_DIR_LOCAL=\"/usr/local/testsuite/$ts_config(commd_port)/execd\""
    puts $fdo "HOSTNAME_RESOLVING=\"true\""
    puts $fdo "SHELL_NAME=\"rsh\""

@@ -194,7 +194,7 @@ typedef int kernel_fd_type;
 static long percentages(int cnt, double *out, long *new, long *old, long *diffs);   
 #endif
 
-#if defined(ALPHA4) || defined(ALPHA5) || defined(HPUX) || defined(SOLARIS) || defined(IRIX) || defined(LINUX) || defined(DARWIN) || defined(TEST_AIX51)
+#if defined(ALPHA4) || defined(ALPHA5) || defined(HPUX) || defined(IRIX) || defined(LINUX) || defined(DARWIN) || defined(TEST_AIX51)
 
 #ifndef DARWIN
 static int get_load_avg(double loadv[], int nelem);    
@@ -210,6 +210,8 @@ static char* skip_token(char *p);
 
 #if defined(ALPHA4) || defined(ALPHA5) || defined(IRIX) || defined(HP10) || defined(FREEBSD) || defined(TEST_AIX51)
 
+static kernel_fd_type kernel_fd;
+
 static int sge_get_kernel_fd(kernel_fd_type *kernel_fd);
 
 static int sge_get_kernel_address(char *name, long *address);
@@ -220,10 +222,6 @@ static int getkval(unsigned long offset, int *ptr, int size, char *refstr);
 
 /* MT-NOTE: code basing on kernel_initialized global variable needs not to be MT safe */
 static int kernel_initialized = 0;
-
-#if !defined(LINUX)
-static kernel_fd_type kernel_fd;
-#endif
 
 #if defined(ALPHA4) || defined(ALPHA5) || defined(IRIX) || defined(HP10) || defined(FREEBSD) || defined(TEST_AIX51)
 
@@ -514,13 +512,8 @@ int kupdate(int avenrun[3])
    return(ncpu);
 }
 
-double get_cpu_load() {
-   static unsigned long *cpu_offset = NULL;
-   kernel_fd_type kernel_fd;
-   static long address_cpu = 0;
-   static long address_ncpus = 0;
+double get_cpu_load(void) {
    int cpus_found, i, j;
-   static int number_of_cpus;
    double cpu_load = -1.0;
    static long cpu_time[CPUSTATES] = { 0L, 0L, 0L, 0L, 0L};
    static long cpu_old[CPUSTATES]  = { 0L, 0L, 0L, 0L, 0L};

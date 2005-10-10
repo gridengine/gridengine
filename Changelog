@@ -1,3 +1,7 @@
+RD-2005-10-10-0: Bugfix:    gcc build on solaris
+                 Changed:   aimk
+                 Review:    JG
+
 RD-2005-10-06-0: Bugfix:    fstype does not recognize nfs4 share in all cases
                             - merge from maintrunc RD-2005-09-26-0
                   Issue:     1814

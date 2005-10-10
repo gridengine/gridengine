@@ -124,7 +124,7 @@
 *     JAPI/-JAPI_Interface 
 *******************************************************************************/
 
-static pthread_once_t japi_once_control = PTHREAD_ONCE_INIT;
+static pthread_once_t japi_once_control = { PTHREAD_ONCE_INIT };
 
 
 /****** JAPI/-JAPI_Session_state *******************************************

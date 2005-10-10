@@ -103,11 +103,14 @@ const char *queue_name
 
    sprintf(tmpstr, "%s/"sge_u32"."sge_u32".%s", dir, jobid, jataskid, queue_name);
    DPRINTF(("recursively unlinking \"%s\"\n", tmpstr));
+   sge_switch2start_user();
    if (sge_rmdir(tmpstr, &err_str)) {
       ERROR((SGE_EVENT, MSG_FILE_RECURSIVERMDIR_SS, 
              tmpstr, err_str_buffer));
+      sge_switch2admin_user();
       return -1;
    }
+   sge_switch2admin_user();
 
    DEXIT;
    return 0;

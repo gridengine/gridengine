@@ -219,21 +219,28 @@ int is_array
          return;
       }
 
-      if (general == GFSTATE_QUEUE) {
-         sprintf(str_general, MSG_GFSTATE_QUEUE_S, q);
+      if (lGetString(jr, JR_pe_task_id_str) == NULL) {
+          /* This is a regular job */
+          if (general == GFSTATE_QUEUE) {
+             sprintf(str_general, MSG_GFSTATE_QUEUE_S, q);
+          }
+          else if (general == GFSTATE_HOST) {
+             sprintf(str_general, MSG_GFSTATE_HOST_S, h);
+          }
+          else if (general == GFSTATE_JOB) {
+             if (is_array)
+                sprintf(str_general, MSG_GFSTATE_JOB_UU, sge_u32c(jobid), sge_u32c(jataskid));
+             else
+                sprintf(str_general, MSG_GFSTATE_JOB_U, sge_u32c(jobid));
+          }
+          else {
+             sprintf(str_general, MSG_NONE);
+          }
+      } else {
+          /* This is a pe task */
+          sprintf(str_general, MSG_GFSTATE_PEJOB_U, sge_u32c(jobid));
       }
-      else if (general == GFSTATE_HOST) {
-         sprintf(str_general, MSG_GFSTATE_HOST_S, h);
-      }
-      else if (general == GFSTATE_JOB) {
-         if (is_array)
-            sprintf(str_general, MSG_GFSTATE_JOB_UU, sge_u32c(jobid), sge_u32c(jataskid));
-         else
-            sprintf(str_general, MSG_GFSTATE_JOB_U, sge_u32c(jobid));
-      }
-      else {
-         sprintf(str_general, MSG_NONE);
-      }
+
       if (is_array)
          sprintf(sge_mail_subj, MSG_MAIL_SUBJECT_SUU, 
                  feature_get_product_name(FS_SHORT_VERSION, &ds), sge_u32c(jobid), sge_u32c(jataskid));

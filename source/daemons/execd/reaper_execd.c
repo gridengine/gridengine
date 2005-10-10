@@ -748,7 +748,7 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
    case SSTATE_BEFORE_EPILOG:
    case SSTATE_EPILOG_FAILED:
    case SSTATE_PROCSET_NOTFREED:
-      general_failure = 0;
+      general_failure = GFSTATE_NO_HALT;
       lSetUlong(jr, JR_general_failure, general_failure);
       job_related_adminmail(jr, is_array);
       break;
@@ -765,12 +765,12 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
       /*
       ** test for admin mail here
       */
-      general_failure = 0;
+      general_failure = GFSTATE_NO_HALT;
       lSetUlong(jr, JR_general_failure, general_failure);
       job_related_adminmail(jr, is_array);
       break;
    default: 
-      general_failure = 0;
+      general_failure = GFSTATE_NO_HALT;
       /*
       ** this is no error, because not all failures apply to general_failure
       */
@@ -957,11 +957,9 @@ lListElem *jr
       used_slots = qinstance_slots_used(master_q) - 1;
       qinstance_set_slots_used(master_q, used_slots);
       if (!used_slots) {
-         sge_switch2start_user();
          sge_remove_tmpdir(lGetString(master_q, QU_tmpdir), 
             lGetString(jep, JB_owner), lGetUlong(jep, JB_job_number), 
             ja_task_id, lGetString(master_q, QU_qname));
-         sge_switch2admin_user();
       }
 
       if (!pe_task_id_str) {

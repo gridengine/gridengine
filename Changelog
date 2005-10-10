@@ -1,3 +1,12 @@
+RD-2005-10-10-1: Bugfix:    - admin mail information is incorrect or queue
+                              error state setting does not work
+                            - tight integration - qrsh_exit_code file not
+                              written
+                 Changed:   execd, shepherd
+                 Issue:     1680, 1679
+                 CR:        6292751, 6292742 
+                 Review:    HP
+
 RD-2005-10-10-0: Bugfix:    gcc build on solaris
                  Changed:   aimk
                  Review:    JG
@@ -26,7 +35,7 @@ RD-2005-10-05-0: Bugfix:    - qstat -s p doesn't show pending array tasks while
                             - cull cleanup, removed XLISTDEF, ILISTDEF and 
                               SLISTDEF
                             - fixed typo in JB_Type & inst_qmaster.sh
-                 Changed:   inst_qmaster.sh, cull, qstat
+                 Changed:   inst_qmaster.sh, cull, qstat, qhost, qacct
                  Issue:     1800, 1821, 1822
                  Bugtraq:   6301047, 6332876, 6332877
                  Review:    EB

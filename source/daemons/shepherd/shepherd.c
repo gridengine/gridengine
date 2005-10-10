@@ -1096,7 +1096,7 @@ int ckpt_type
          delete_qrsh_pid_file();
          sge_switch2admin_user();
 
-         if (success != 0) { 
+         if (success != 0) {
             /* This case should never happen */
             /* See Issue 1679 */
             shepherd_error_sprintf("can't get qrsh_exit_code\n");

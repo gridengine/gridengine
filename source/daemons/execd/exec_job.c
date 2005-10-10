@@ -355,8 +355,8 @@ char *err_str
             sprintf(err_str, MSG_SYSTEM_CANTGETTMPDIR);
             DEXIT;
             return -2;
-         }                    
-         
+         }
+
          if (SGE_STAT(tmpdir, &statbuf)) {
             sprintf(err_str, "can't open tmpdir %s", tmpdir);
             DEXIT;

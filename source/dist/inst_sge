@@ -377,13 +377,12 @@ if [ "$QMASTER" = "install" -a "$UPDATE" != "true" ]; then
  GiveHints
  CheckRunningDaemon sge_qmaster
 
- if [ $? = 0 ]; then
-    $INFOTEXT -log "sge_qmaster successfully installed!\n" 
+ if [ $? = 0 -a "$AUTO" = "true" ]; then
+    $INFOTEXT -log "sge_qmaster successfully installed!\n"
  else
     $INFOTEXT -log "sge_qmaster not successfully installed!\n" 
- fi
- if [ "$AUTO" = "true" ]; then
     MoveLog
+    exit 1 
  fi
 
 fi

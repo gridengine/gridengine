@@ -1,3 +1,8 @@
+MD-2005-10-10-1: Enhancem:  changed inst_sge to provide a clear exit status
+                            to the testsuite
+                 Changed:   inst_sge
+                 Review:    HP
+
 RD-2005-10-10-0: Bugfix:    gcc build on solaris
                  Changed:   aimk
                  Review:    JG

@@ -1097,7 +1097,9 @@ int ckpt_type
          sge_switch2admin_user();
 
          if (success != 0) {
-            shepherd_trace("can't get qrsh_exit_code");
+            /* This case should never happen */
+            /* See Issue 1679 */
+            shepherd_error_sprintf("can't get qrsh_exit_code\n");
          }
 
          /* normal exit */
@@ -2412,6 +2414,7 @@ shepherd_signal_job(pid_t pid, int sig)
    */
    {
       static int first_kill = 1;
+      static u_long32 first_kill_ts = 0;
    
       if(first_kill == 1 || sig != SIGKILL) {
          if(search_conf_val("qrsh_pid_file") != NULL) {
@@ -2434,17 +2437,29 @@ shepherd_signal_job(pid_t pid, int sig)
          }
       }
 
-      if(sig == SIGKILL) {
-         first_kill = 0;
+     /*
+      * It is possible that one signal requests from qmaster contains severeal
+      * kills for the same process. If this process is a tight integrated job
+      * the master task can be killed twice. For the slave tasks this means the
+      * qrsh -d is killed in the same time as the qrsh_starter child and so no
+      * qrsh_exit_code file is written (see Issue: 1679)
+      */
+      if ( (first_kill == 1) || (sge_get_gmt() - first_kill_ts > 10) || (sig != SIGKILL) ) {
+        shepherd_trace_sprintf("now sending signal %s to pid "pid_t_fmt, 
+                               sge_sys_sig2str(sig), pid);
+        sge_switch2start_user();
+        kill(pid, sig);
+        sge_switch2admin_user();
+      } else {
+        shepherd_trace_sprintf("ignored signal %s to pid "pid_t_fmt, 
+                             sge_sys_sig2str(sig), pid);
       }
 
-      shepherd_trace_sprintf("now sending signal %s to pid "pid_t_fmt, 
-                             sge_sys_sig2str(sig), pid);
+      if(sig == SIGKILL) {
+        first_kill = 0;
+        first_kill_ts = sge_get_gmt();
+      }
    }
-
-   sge_switch2start_user();
-   kill(pid, sig);
-   sge_switch2admin_user();
 }
 
 static int notify_tasker(u_long32 exit_status) 

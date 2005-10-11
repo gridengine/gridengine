@@ -340,7 +340,7 @@ char *err_str
       umask(022);
 
       /* make tmpdir only when this is the first task that gets started 
-         in this queue. QU_job_slots_used holds actual number of used 
+         in this queue instance. QU_job_slots_used holds actual number of used 
          slots for this job in the queue */
       if (!(used_slots=qinstance_slots_used(master_q))) {
          if (!(sge_make_tmpdir(master_q, job_id, ja_task_id, 
@@ -350,11 +350,18 @@ char *err_str
             return -2;
          }
       } else {
+         SGE_STRUCT_STAT statbuf;
          if(!(sge_get_tmpdir(master_q, job_id, ja_task_id, tmpdir))) {
             sprintf(err_str, MSG_SYSTEM_CANTGETTMPDIR);
             DEXIT;
             return -2;
-         }                    
+         }         
+
+         if (SGE_STAT(tmpdir, &statbuf)) {
+            sprintf(err_str, "can't open tmpdir %s", tmpdir);
+            DEXIT;
+            return -2;
+         }
       }
 
       /* increment used slots */

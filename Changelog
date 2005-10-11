@@ -1,3 +1,12 @@
+RD-2005-10-10-1: Bugfix:    - admin mail information is incorrect or queue
+                              error state setting does not work
+                            - tight integration - qrsh_exit_code file not
+                              written
+                 Changed:   execd, shepherd
+                 Issue:     1680, 1679
+                 CR:        6292751, 6292742 
+                 Review:    HP
+
 MD-2005-10-10-1: Enhancem:  changed inst_sge to provide a clear exit status
                             to the testsuite
                  Changed:   inst_sge

@@ -1,10 +1,16 @@
+SG-2005-10-12-0: Bugfix:    Doing a qalter -l rsc=val on running jobs breaks consumable debitation
+                 Changed:   sge_qmaster
+                 Issue:     1761
+                 Bugtraq:   6315111
+                 Review:    RD
+
 RD-2005-10-10-1: Bugfix:    - admin mail information is incorrect or queue
                               error state setting does not work
                             - tight integration - qrsh_exit_code file not
                               written
                  Changed:   execd, shepherd
                  Issue:     1680, 1679
-                 CR:        6292751, 6292742 
+                 Bugtraq:   6292751, 6292742 
                  Review:    HP
 
 MD-2005-10-10-1: Enhancem:  changed inst_sge to provide a clear exit status

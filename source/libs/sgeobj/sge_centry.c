@@ -663,7 +663,8 @@ centry_list_fill_request(lList *this_list, lList *master_centry_list,
                          bool allow_non_requestable, bool allow_empty_boolean,
                          bool allow_neg_consumable)
 {
-   lListElem *entry, *cep;
+   lListElem *entry = NULL;
+   lListElem *cep = NULL;
 
    DENTER(CENTRY_LAYER, "centry_list_fill_request");
 

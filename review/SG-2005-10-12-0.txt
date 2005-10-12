@@ -98,7 +98,7 @@ Successfull execution
 
 
 7 Accepted
-7 [ ] yes
+7 [X] yes
 7 [ ] no - comment:
 
 

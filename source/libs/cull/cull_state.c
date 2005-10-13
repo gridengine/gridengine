@@ -49,7 +49,7 @@ typedef struct {
    const lNameSpace* name_space;        /* name vector              */
 } cull_state_t;
 
-static pthread_once_t cull_once = { PTHREAD_ONCE_INIT };
+static pthread_once_t cull_once = PTHREAD_ONCE_INIT;
 static pthread_key_t cull_state_key;  
 
 static void          cull_once_init(void);

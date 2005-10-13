@@ -210,8 +210,6 @@ static char* skip_token(char *p);
 
 #if defined(ALPHA4) || defined(ALPHA5) || defined(IRIX) || defined(HP10) || defined(FREEBSD) || defined(TEST_AIX51)
 
-static kernel_fd_type kernel_fd;
-
 static int sge_get_kernel_fd(kernel_fd_type *kernel_fd);
 
 static int sge_get_kernel_address(char *name, long *address);
@@ -219,6 +217,10 @@ static int sge_get_kernel_address(char *name, long *address);
 static int getkval(unsigned long offset, int *ptr, int size, char *refstr);  
 
 #endif 
+
+#if !defined(LINUX) && !defined(SOLARIS)
+static kernel_fd_type kernel_fd;
+#endif
 
 /* MT-NOTE: code basing on kernel_initialized global variable needs not to be MT safe */
 static int kernel_initialized = 0;

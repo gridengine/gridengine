@@ -419,7 +419,7 @@ static event_master_control_t Master_Control = {PTHREAD_MUTEX_INITIALIZER,
                                                 0, 0, false, false, false,
                                                 false, NULL, NULL, NULL, NULL,
                                                 NULL, NULL, NULL, false};
-static pthread_once_t         Event_Master_Once = { PTHREAD_ONCE_INIT };
+static pthread_once_t         Event_Master_Once = PTHREAD_ONCE_INIT;
 static pthread_t              Event_Thread;
 
 static void       event_master_once_init(void);

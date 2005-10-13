@@ -491,10 +491,10 @@ void shepherd_write_exit_status(const char *exit_status)
 			shepherd_exit_status_fp = shepherd_trace_init_intern( st_exit_status );
 		}
 		if( shepherd_exit_status_fp ) {
-   		sh_str2file(exit_status, NULL, shepherd_exit_status_fp);
+   		    sh_str2file(exit_status, NULL, shepherd_exit_status_fp);
 		} else {
-         shepherd_trace("could not write exit_status file\n");
-      }
+            shepherd_trace("could not write exit_status file\n");
+        }
 		if(old_euid != SGE_SUPERUSER_UID) {
 			seteuid( old_euid );
 		}
@@ -502,7 +502,7 @@ void shepherd_write_exit_status(const char *exit_status)
        * for every write.
        */
       if(!g_keep_files_open) {
-         shepherd_error_exit();
+            shepherd_error_exit();
       }
 	}
 }
@@ -755,7 +755,7 @@ static FILE* shepherd_trace_init_intern( st_shepherd_file_t shepherd_file )
 	}
 
   	sprintf(tmppath, "%s/%s",path, g_shepherd_file_name[shepherd_file]);
-   strncpy(g_shepherd_file_path[shepherd_file], tmppath, SGE_PATH_MAX);
+    strncpy(g_shepherd_file_path[shepherd_file], tmppath, SGE_PATH_MAX);
 
    /*
     * Work around for CR 6293411:

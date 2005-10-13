@@ -234,7 +234,7 @@ static int do_prolog(int timeout, int ckpt_type)
       replace_params(prolog, command, sizeof(command)-1, prolog_epilog_variables);
       exit_status = start_child("prolog", command, NULL, timeout, ckpt_type);
 
-      if (n_exit_status<(i=count_exit_status())) {
+      if (n_exit_status < (i=count_exit_status()) ) {
          shepherd_trace_sprintf("exit states increased from %d to %d", n_exit_status, i);
          /* in this case the child didnt get to the exec call or it failed */
          shepherd_trace("failed starting prolog");
@@ -824,7 +824,7 @@ int main(int argc, char **argv)
       fclose(fp);
    } else {
       /* ensure an exit status file exists */
-		shepherd_write_exit_status( "0" );
+	  shepherd_write_exit_status( "0" );
       return_code = 0;
    }
 
@@ -919,9 +919,11 @@ int ckpt_type
          son(childname, script_file, 0);
       }
    }
+
    if (pid == -1) {
       shepherd_error_sprintf("can't fork \"%s\"", childname);
    }
+
    shepherd_trace_sprintf("forked \"%s\" with pid %d", childname, pid);
 
    change_shepherd_signal_mask();

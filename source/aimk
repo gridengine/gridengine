@@ -1684,7 +1684,7 @@ case SOLARISAMD64:
    endif
 
    set DEPEND_FLAGS = "$CFLAGS -D$BUILDARCH $XMTINCD"
-   set MEMFLAG = ""
+   set MEMCFLAG = "-Xa"
 
    if ( $CC == cc ) then
       set LFLAGS = "-xildoff $LFLAGS"
@@ -1723,6 +1723,7 @@ case SOLARISAMD64:
          set SHARED_LFLAGS = "$SHARED_LFLAGS -L. -G -m64"
       else
          set SHARED_LFLAGS = "$SHARED_LFLAGS -L. -G"
+         set MEMFLAG = ""
       endif
    endif
 
@@ -1736,7 +1737,7 @@ case SOLARISAMD64:
    set XINCD    = "-I/usr/dt/include -I/usr/openwin/include $XMTINCD $XINCD"
    set XLIBD    = "-L/usr/dt/lib -L/usr/openwin/lib"
 
-   set XCFLAGS  = "-Xc -DNeedFunctionPrototypes -DNeedVarargsPrototypes $XMTDEF $XINCD"
+   set XCFLAGS  = "-DNeedFunctionPrototypes -DNeedVarargsPrototypes $XMTDEF $XINCD"
    set XLFLAGS  = "$XLIBD"
    set XLIBS    = "-lXm -lXt -lXext -lXmu -lX11 -lw -lgen"
 

@@ -75,7 +75,7 @@ struct uidgid_state_t {
 
 static admin_user_t admin_user = {PTHREAD_MUTEX_INITIALIZER, -1, -1, false};
 
-static pthread_once_t uidgid_once = { PTHREAD_ONCE_INIT };
+static pthread_once_t uidgid_once = PTHREAD_ONCE_INIT;
 static pthread_key_t  uidgid_state_key;
 
 static void uidgid_once_init(void);

@@ -59,7 +59,7 @@ struct bootstrap_state_t {
     const char* security_mode;
 };
 
-static pthread_once_t bootstrap_once = { PTHREAD_ONCE_INIT };
+static pthread_once_t bootstrap_once = PTHREAD_ONCE_INIT;
 static pthread_key_t bootstrap_state_key;
 
 static void bootstrap_once_init(void);

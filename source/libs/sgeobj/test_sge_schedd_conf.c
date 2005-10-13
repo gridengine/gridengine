@@ -98,7 +98,7 @@ test(conf_settings_t *setting, schedd_conf_t *test, int test_counter)
 
       switch (test->type) {
          case lStringT :
-               lSetString(schedd_conf, conf_tests->test_attribute, setting->test_value);
+               lSetString(schedd_conf, (int)conf_tests->test_attribute, setting->test_value);
             break;
          case lDoubleT :
             break;

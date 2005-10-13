@@ -68,7 +68,7 @@ static const featureset_names_t featureset_list[] = {
 };
 /* *INDENT-ON* */
 
-static pthread_once_t feature_once = {PTHREAD_ONCE_INIT};
+static pthread_once_t feature_once = PTHREAD_ONCE_INIT;
 static pthread_key_t feature_state_key;
 
 static void feature_once_init(void);

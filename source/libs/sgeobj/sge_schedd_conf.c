@@ -2679,7 +2679,7 @@ void sconf_print_config(void){
    DENTER(TOP_LAYER, "sconf_print_config");
 
    if (!sconf_is()){
-      ERROR((SGE_EVENT, "sconf_printf_config: no config to validate\n"));
+      ERROR((SGE_EVENT, MSG_SCONF_NO_CONFIG));
       DEXIT;
       return;
    }
@@ -3078,24 +3078,33 @@ bool sconf_validate_config_(lList **answer_list)
       s = get_halflife_decay_list_str();
       if (s && (strcasecmp(s, "none") != 0)) {
          lList *halflife_decay_list = NULL;
-         lListElem *ep;
-         const char *s0,*s1,*s2,*s3;
+         lListElem *ep = NULL;
+         const char *s0 = NULL;
+         const char *s1 = NULL;
+         const char *s2 = NULL; 
+         const char *s3 = NULL;
          double value;
-         struct saved_vars_s *sv1=NULL, *sv2=NULL;
+         struct saved_vars_s *sv1=NULL; 
+         struct saved_vars_s *sv2=NULL;
          s0 = s; 
          for(s1=sge_strtok_r(s0, ":", &sv1); s1;
              s1=sge_strtok_r(NULL, ":", &sv1)) {
-            if ((s2=sge_strtok_r(s1, "=", &sv2)) &&
-                (s3=sge_strtok_r(NULL, "=", &sv2)) &&
-                (sscanf(s3, "%lf", &value)==1)) {
+            if (((s2=sge_strtok_r(s1, "=", &sv2)) != NULL) &&
+                ((s3=sge_strtok_r(NULL, "=", &sv2)) != NULL) &&
+                (sscanf(s3, "%lf", &value) == 1)) {
                ep = lAddElemStr(&halflife_decay_list, UA_name, s2, UA_Type);
                lSetDouble(ep, UA_value, value);
             }
-            if (sv2)
-               free(sv2);
+            FREE(sv2);
          }
-         if (sv1)
-            free(sv1);
+         FREE(sv1);
+        
+         if (lGetNumberOfElem(halflife_decay_list) == 0) {
+            answer_list_add(answer_list, MSG_GDI_INVALIDHALFLIFE_DECAY, STATUS_ESYNTAX, 
+                            ANSWER_QUALITY_ERROR); 
+            ret = false;
+         }
+
          pos.c_halflife_decay_list = halflife_decay_list;   
       } 
    }

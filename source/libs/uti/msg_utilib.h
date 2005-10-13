@@ -242,5 +242,7 @@
 #define MSG_UTI_DAEMONIZE_DEAD_CHILD           _MESSAGE(59143, _("daemonize error: child exited before sending daemonize state"))
 #define MSG_UTI_DAEMONIZE_TIMEOUT              _MESSAGE(59144, _("daemonize error: timeout while waiting for daemonize state"))
 
+#define MSG_POINTER_INVALIDSTRTOKCALL1         _MESSAGE(49053, _("Invalid sge_strtok_r call, last is NULL"))
+                                                                                                                                                 
 #endif /* __MSG_UTILIB_H */
 

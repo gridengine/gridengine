@@ -1,0 +1,241 @@
+#!/vol2/TCL_TK/glinux/bin/expect
+#___INFO__MARK_BEGIN__
+##########################################################################
+#
+#  The Contents of this file are made available subject to the terms of
+#  the Sun Industry Standards Source License Version 1.2
+#
+#  Sun Microsystems Inc., March, 2001
+#
+#
+#  Sun Industry Standards Source License Version 1.2
+#  =================================================
+#  The contents of this file are subject to the Sun Industry Standards
+#  Source License Version 1.2 (the "License"); You may not use this file
+#  except in compliance with the License. You may obtain a copy of the
+#  License at http://gridengine.sunsource.net/Gridengine_SISSL_license.html
+#
+#  Software provided under this License is provided on an "AS IS" basis,
+#  WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING,
+#  WITHOUT LIMITATION, WARRANTIES THAT THE SOFTWARE IS FREE OF DEFECTS,
+#  MERCHANTABLE, FIT FOR A PARTICULAR PURPOSE, OR NON-INFRINGING.
+#  See the License for the specific provisions governing your rights and
+#  obligations concerning the Software.
+#
+#  The Initial Developer of the Original Code is: Sun Microsystems, Inc.
+#
+#  Copyright: 2001 by Sun Microsystems, Inc.
+#
+#  All Rights Reserved.
+#
+##########################################################################
+#___INFO__MARK_END__
+
+
+# define global variable in this namespace
+global check_name 
+global check_category 
+global check_description 
+global check_needs
+global check_functions 
+global check_errno 
+global check_errstr 
+global check_highest_level
+global check_init_level_procedure
+global check_root_access_needs
+global env
+
+set check_root_access_needs "yes"
+
+# define a level initialization procedure:
+set check_init_level_procedure "LSB_lockfile_test_init_level"
+
+# define test's name and run level descriptions
+set check_name            "LSB_lockfile_test"
+set check_category        "COMPATIBILITY SYSTEM VERIFIED"
+set check_highest_level  0 
+set check_description(0)  "This test checks the sens of error message which is printed out, if rc-scripts\nare started by the wrong user"
+
+
+# define test's dependencies
+set check_needs           "init_core_system" 
+
+# setup and cleanup functions
+set check_setup_function LSB_lockfile_test_setup
+set check_cleanup_function LSB_lockfile_test_cleanup
+
+
+
+# define test's procedure order
+set check_functions ""
+lappend check_functions "LSB_lockfile_test_test1"
+
+
+global LSB_lockfile_test_test_hosts
+global LSB_lockfile_test_saved_slot_count
+
+proc LSB_lockfile_test_init_level {} {
+   global CHECK_ACT_LEVEL
+
+   switch -- $CHECK_ACT_LEVEL {
+      "0" { 
+         return 0
+      } 
+      "1" {
+         return -1 
+      }
+      "2" {
+         return -1
+      }
+      "3" {
+         return -1
+      }
+      "4" {
+         return -1
+      }
+      "5" {
+         return -1
+      }
+      "6" {
+         return -1
+      }
+      "7" {
+         return -1
+      }
+      "8" {
+         return -1
+      }
+   } 
+
+   return -1  ;# no other level 
+}
+
+
+
+
+# -------- local test procedures: initialization------------------------------
+
+
+proc LSB_lockfile_test_setup  {} {
+   global CHECK_OUTPUT ts_config
+   set_error 0 "ok"
+}
+
+proc LSB_lockfile_test_cleanup  {} {
+   global CHECK_OUTPUT ts_config
+
+#   delete_all_jobs
+#   wait_for_end_of_all_jobs 60
+   set_error 0 "ok"
+}
+
+
+proc LSB_lockfile_test_test1 {} {
+   global LSB_lockfile_test_test_hosts check_description CHECK_ARCH
+   global CHECK_OUTPUT ts_config CHECK_CORE_MASTER CHECK_ACT_LEVEL CHECK_SCRIPT_FILE_DIR CHECK_USER
+
+   set prod_type_var "SGE_ROOT"
+   set my_timeout 500
+   set exit_val 0
+   set found_linux 0
+
+   puts $CHECK_OUTPUT $check_description($CHECK_ACT_LEVEL)
+
+   if { $CHECK_ACT_LEVEL == 0 } {
+      puts $CHECK_OUTPUT "this is the test for runlevel $CHECK_ACT_LEVEL"
+   }
+
+   foreach exec_host $ts_config(execd_nodes) {
+      set test_arch [ resolve_arch $exec_host ]
+
+      switch -glob -- $test_arch {
+         lx2* {
+                set output [start_remote_prog "$exec_host" "$CHECK_USER" "ls" "-la /var/lock | grep subsys" "exit_val" $my_timeout ]
+                if { "$output" != "" } {
+                   set execd_found [is_daemon_running "$exec_host" "sge_execd"]
+                   if { "$execd_found" == 0 } {
+                      continue
+                   } 
+                   set found_linux 1
+                   puts $CHECK_OUTPUT "try to stop sge_execd as user $CHECK_USER ..."
+                   set output [start_remote_prog "$exec_host" "$CHECK_USER" "$ts_config(product_root)/$ts_config(cell)/common/sgeexecd" "stop" "exit_val" $my_timeout ]
+                   if { "$exit_val" != 1 } {
+                      set_error -1 "failed - rc-script tries to shutdown daemons, without having permissions"
+                      return
+                   }
+                   puts $CHECK_OUTPUT "ok"
+                   puts $CHECK_OUTPUT "checking /var/lock/subsys/sageexecd file ..."
+                   set output [start_remote_prog "$exec_host" "$CHECK_USER" "ls" "-la /var/lock/subsys | grep sgeexecd" "exit_val" $my_timeout ]
+                   if { "$exit_val" != 0 } {
+                      set_error -1 "failed - /var/lock/subsys/sgeexecd has been deleted by $CHECK_USER, not allowed!"
+                      return
+                   }
+                   puts $CHECK_OUTPUT "ok"
+                   puts $CHECK_OUTPUT "try to stop sge_execd as user root ..."
+                   set output [start_remote_prog "$exec_host" "root" "$ts_config(product_root)/$ts_config(cell)/common/sgeexecd" "stop" "exit_val" $my_timeout ]
+                   if { "$exit_val" != 0 } {
+                      set_error -1 "failed - rc-script runs into any other error, tried to stop as user root"
+                      return
+                   }
+                   puts $CHECK_OUTPUT "ok"
+                   puts $CHECK_OUTPUT "checking /var/lock/subsys/sageexecd file ..."
+                   set output [start_remote_prog "$exec_host" "$CHECK_USER" "ls" "-la /var/lock/subsys | grep sgeexecd" "exit_val" $my_timeout ]
+                   if { "$exit_val" == 0 } {
+                      set_error -1 "failed - /var/lock/subsys/sgeexecd has not been deleted!"
+                      return
+                   }                 
+                   puts $CHECK_OUTPUT "ok"
+                   puts $CHECK_OUTPUT "try to start sge_execd as user $CHECK_USER ..."
+                   set output [start_remote_prog "$exec_host" "$CHECK_USER" "$ts_config(product_root)/$ts_config(cell)/common/sgeexecd" "start" "exit_val" $my_timeout ]
+                   if { "$exit_val" != 0 } {
+                      puts $CHECK_OUTPUT $output 
+                      set_error -1 "failed - rc-script runs into any error, tried to start as user $CHECK_USER" 
+                      return
+                   }
+                   puts $CHECK_OUTPUT "ok"
+                   puts $CHECK_OUTPUT "checking /var/lock/subsys/sageexecd file ..."
+                   set output [start_remote_prog "$exec_host" "$CHECK_USER" "ls" "-la /var/lock/subsys | grep sgeexecd" "exit_val" $my_timeout ]
+                   if { "$exit_val" == 0 } {
+                      set_error -1 "failed - /var/lock/subsys/sgeexecd may not be created by user $CHECK_USER!"
+                      return
+                   }
+                   puts $CHECK_OUTPUT "ok"
+                   puts $CHECK_OUTPUT "try to stop sge_execd as user $CHECK_USER ..."
+                   set output [start_remote_prog "$exec_host" "$CHECK_USER" "$ts_config(product_root)/$ts_config(cell)/common/sgeexecd" "stop" "exit_val" $my_timeout ]
+                   if { "$exit_val" != 0 } {
+                      set_error -1 "failed - rc-script runs into any error, tried to stop as $CHECK_USER"
+                      return
+                   }
+                   puts $CHECK_OUTPUT "ok"
+                   puts $CHECK_OUTPUT "try to start sge_execd as user root ..."
+                   set output [start_remote_prog "$exec_host" "root" "$ts_config(product_root)/$ts_config(cell)/common/sgeexecd" "start" "exit_val" $my_timeout ]
+                   if { "$exit_val" != 0 } {
+                      puts $CHECK_OUTPUT "$output $exit_val"
+                      set_error -1 "failed - rc-script runs into any error, tried to start as user root"
+                      return
+                   }
+                   puts $CHECK_OUTPUT "ok"
+                   puts $CHECK_OUTPUT "checking /var/lock/subsys/sageexecd file ..."
+                   set output [start_remote_prog "$exec_host" "$CHECK_USER" "ls" "-la /var/lock/subsys | grep sgeexecd" "exit_val" $my_timeout ]
+                   if { "$exit_val" != 0 } {
+                      set_error -1 "failed - /var/lock/subsys/sgeexecd has not be created by rc-script!"
+                      return
+                   }
+                   puts $CHECK_OUTPUT "ok"
+                }
+              
+         }
+
+         default {
+               puts $CHECK_OUTPUT "looking for linux hosts ...."
+
+         }
+
+      }
+   }
+   if { "$found_linux" == 0 } {
+      add_proc_error "LSB_lockfile_test_test1" -3 "test not possible, no linux host found in configuration!"
+   }
+
+   set_error 0 "ok"
+}

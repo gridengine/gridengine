@@ -7484,3 +7484,51 @@ proc copy_certificates { host } {
    }
 }
 
+
+#                                                             max. column:     |
+#****** sge_procedures/is_daemon_running() ******
+# 
+#  NAME
+#     is_daemon_running 
+#
+#  SYNOPSIS
+#     is_daemon_running { hostname daemon } 
+#
+#  FUNCTION
+#     Checks, if a daemon is running of the given host.
+#     This function does a ps_grep, which seeks for the given
+#     daemon name running within the actual SGE_ROOT directory.
+#     The daemon can be clearly identified. 
+#
+#  INPUTS
+#     hostname  - name of host which should be checked
+#     daemon    - name of daemon (sge_execd, sge_qmaster, ...) 
+#
+#  RESULT
+#     0 - the given daemon is not running on given host 
+#     Otherwise the number of running daemons is returned 
+#
+#  SEE ALSO
+#     sge_procedures/is_daemon_running
+#
+#*******************************
+#
+
+proc is_daemon_running { hostname daemon } {
+   global ts_config CHECK_OUTPUT
+
+   set found_p [ ps_grep $ts_config(product_root) $hostname ]
+   set execd_count 0
+
+   foreach elem $found_p {
+      if { [string match "*$daemon*" $ps_info(string,$elem)] } {
+         puts $CHECK_OUTPUT $ps_info(string,$elem)
+         incr execd_count 1
+      }
+   }
+   if { $execd_count > 1 } {
+      add_proc_error "is_daemon_running" -1 "Host: $hostname -> Found 2 running $daemon in one environment!" 
+
+   }
+   return $execd_count
+}

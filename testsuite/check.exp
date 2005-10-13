@@ -5038,7 +5038,7 @@ proc show_tests {path full} {
 }
 
 proc change_dir { { have_input "" } } {
-  global CHECK_ACT_PATH ts_checktree
+  global CHECK_ACT_PATH ts_checktree CHECK_OUTPUT
 
   set index_start 1
 
@@ -5076,8 +5076,8 @@ proc change_dir { { have_input "" } } {
      set input $have_input
   }
 
-  # here we have an input
 
+  # here we have an input
   for { set i 0 } { $i < [llength $dirs] } { incr i 1 } {
      if { [file tail [lindex $dirs $i]] == $input || [lindex $dirs $i] == $input } {
         set input $i 
@@ -5086,7 +5086,7 @@ proc change_dir { { have_input "" } } {
   }
 
   # here input contains the number (switch to newdir($input)
-  if { ($input == 1) || ($input == "..") }  {
+  if { $input == ".." }  {
      if { $have_input == "" } {
         puts "go to upper dir ..."
      }
@@ -5106,32 +5106,74 @@ proc change_dir { { have_input "" } } {
      return
   }
 
-  set matches ""
+  if { [info exists ts_checktree($input)] == 1 } {
+     set CHECK_ACT_PATH $ts_checktree($ts_checktree($input),dir_name)
+     return
+  }
+
+  # here we try to find check names and dir names
+  set matches {}
   # here we try to find a test name
   for {set i 0} {$i< $ts_checktree(act_nr)} {incr i 1} {
      if { $ts_checktree($i,test_available) == 1 } {
         if { $ts_checktree($i,check_name) == $input } {
-           set matches $i
+           set found 0
+           foreach elem $matches {
+              if { $elem == $i } {
+                 set found 1
+              }
+           }
+           if { $found == 0 } {
+              lappend matches $i
+           }
+        }
+     }
+     if { [file tail $ts_checktree($i,dir_name)] == $input } {
+        set found 0
+        foreach elem $matches {
+           if { $elem == $i } {
+              set found 1
+           }
+        }
+        if { $found == 0 } {
+           lappend matches $i
         }
      }
   }
-  
-  if { $matches != "" } {
-     set CHECK_ACT_PATH $ts_checktree($matches,dir_name)
-     return
-  }
 
-  set matches ""
-  # here we try to find a test name
-  for {set i 0} {$i< $ts_checktree(act_nr)} {incr i 1} {
-     if { [file tail $ts_checktree($i,dir_name)] == $input } {
-        lappend matches $i
-     }
-  } 
   if { [llength $matches] == 1 } {
      set CHECK_ACT_PATH $ts_checktree($matches,dir_name)
      return
   } 
+
+  if { $matches > 1 } {
+     puts "found [llength $matches] matches for \"$input\" ..."
+     if {[info exists selection]} {
+        unset selection
+     }
+     for {set i 0} {$i< [llength $matches]} {incr i 1} {
+        set text ""
+        if { $ts_checktree($i,test_available) == 1 } {
+           if { $ts_checktree($i,check_name) == $input} {
+              set text "check name"
+           }
+        }
+        if { $text == "" } {
+           set text "directory name"
+        }
+        puts " ([expr ( $i + 1 )]) => via $text: $ts_checktree([lindex $matches $i],dir_name)"
+        set selection([expr ( $i + 1 )]) $ts_checktree([lindex $matches $i],dir_name)
+     }
+
+     puts -nonewline "\nEnter number:\n> "
+     set input [wait_for_enter 1] 
+     if { [info exists selection($input)] } {
+        set CHECK_ACT_PATH $selection($input)
+        return
+     }
+  }
+  puts "no match!"
+  wait_for_enter
 }
 
 
@@ -7201,7 +7243,7 @@ proc menu {} {
 
   set input [wait_for_enter 1]; 
 
-  clear_screen
+#  clear_screen
 
   switch -- $input {
     "20" { restart_debug_daemons } 
@@ -7361,7 +7403,7 @@ proc menu {} {
         }
      }
    }
-  menu
+   menu
 }
 
 proc update_compile_html_output { content } {

@@ -1,3 +1,6 @@
+CR-2005-10-13-1: Testsuite: added support for additional checktrees
+                            (better "change directory" search)
+
 MD-2005-10-13-0: Bugfix:    sge qmaster startup and shutdown (non critical) 
                             error message as non root
                  Issue:     1823

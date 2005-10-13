@@ -359,11 +359,9 @@ char *sge_strtok_r(const char *str, const char *delimitor,
 
    DENTER(BASIS_LAYER, "sge_strtok_r");
 
-   if (str) {
-      if (*context) {
-         ERROR((SGE_EVENT, MSG_POINTER_INVALIDSTRTOKCALL ));
-         DEXIT;
-         abort();
+   if (str != NULL) {
+      if (*context != NULL) {
+         ERROR((SGE_EVENT, MSG_POINTER_INVALIDSTRTOKCALL));
       }
       *context = (struct saved_vars_s *)malloc(sizeof(struct saved_vars_s));
       memset(*context, 0, sizeof(struct saved_vars_s));
@@ -375,9 +373,8 @@ char *sge_strtok_r(const char *str, const char *delimitor,
       saved_cp = saved->static_str;
    } else {
       if (*context == NULL) {
-         ERROR((SGE_EVENT, MSG_POINTER_INVALIDSTRTOKCALL));
-         DEXIT;
-         abort();
+         ERROR((SGE_EVENT, MSG_POINTER_INVALIDSTRTOKCALL1));
+         DRETURN(NULL);
       }
       saved = *context;
       saved_cp = saved->static_cp;
@@ -389,8 +386,7 @@ char *sge_strtok_r(const char *str, const char *delimitor,
 
       /* found end of string */
       if (saved_cp == NULL || *saved_cp == '\0') {
-         DEXIT;
-         return NULL;
+         DRETURN(NULL);
       }
 
       /* eat white spaces */
@@ -409,8 +405,7 @@ char *sge_strtok_r(const char *str, const char *delimitor,
       if (!cp[0]) {
          saved->static_cp = cp;
 
-         DEXIT;
-         return saved_cp;
+         DRETURN(saved_cp);
       }
 
       /* test if we found a delimitor */
@@ -419,14 +414,12 @@ char *sge_strtok_r(const char *str, const char *delimitor,
          cp++;
          saved->static_cp = cp;
 
-         DEXIT;
-         return saved_cp;
+         DRETURN(saved_cp);
       }
       cp++;
    }
 
-   DEXIT;
-   return NULL;
+   DRETURN(NULL);
 }
 
 /****** uti/string/sge_free_saved_vars() **************************************

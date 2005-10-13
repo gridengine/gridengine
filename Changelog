@@ -1,3 +1,9 @@
+SG-2005-10-13-0: Bugfix:    configuring the halflife_decay_list crashes the qmaster
+                 Changed:   qmaster, scheduler, qstat
+                 Issue:     1826
+                 Bugtraq:   6333407
+                 Review:    RD
+
 RD-2005-10-12-0: Bugfix:    fixed broken builds 
                  Review:    MD    
 

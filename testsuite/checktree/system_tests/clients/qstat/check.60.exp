@@ -45,7 +45,7 @@ set check_category       "COMPATIBILITY SYSTEM L10N VERIFIED"
 set check_description(0) "checking qstat functionality"
 set check_needs          "init_core_system"      ;# dependencies of this check (name of other check)
 # define a level initialization procedure:
-set check_init_level_procedure "init_level"
+set check_init_level_procedure "qstat_init_level"
 
 set check_functions      "";
 lappend check_functions  "check_core_queues"     ;# functions to call (in order)
@@ -61,7 +61,7 @@ set check_errstr         "was never running"     ;# string for error description
 
 # JG: TODO: we have to create an own queue for this test!
 
-proc init_level {} {
+proc qstat_init_level {} {
    global CHECK_ACT_LEVEL
 
    if {$CHECK_ACT_LEVEL == 0} {

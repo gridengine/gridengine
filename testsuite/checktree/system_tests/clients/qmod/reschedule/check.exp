@@ -48,7 +48,7 @@ global env
 set check_root_access_needs "yes"
 
 # define a level initialization procedure:
-set check_init_level_procedure "init_level"
+set check_init_level_procedure "qmod_reschedule_init_level"
 
 # define test's name and run level descriptions
 set check_name            "qmod_reschedule"
@@ -95,38 +95,7 @@ lappend pe_names      "reschpe_fill"
 lappend pe_alloc_rule "\$fill_up"
 
 
-#
-#                                                             max. column:     |
-#
-#****** check/init_level() ******
-#  NAME
-#     init_level -- ??? 
-#
-#  SYNOPSIS
-#     init_level { } 
-#
-#  FUNCTION
-#     ??? 
-#
-#  INPUTS
-#
-#  RESULT
-#     ??? 
-#
-#  EXAMPLE
-#     ??? 
-#
-#  NOTES
-#     ??? 
-#
-#  BUGS
-#     ??? 
-#
-#  SEE ALSO
-#     ???/???
-#*******************************
-#
-proc init_level {} {
+proc qmod_reschedule_init_level {} {
    global CHECK_ACT_LEVEL CHECK_HOST hold_state pending_state queue
    global rerun_host no_rerun_host CHECK_CORE_EXECD CHECK_OUTPUT
 

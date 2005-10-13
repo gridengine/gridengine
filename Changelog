@@ -1,3 +1,6 @@
+CR-2005-10-13-0: Testsuite: added support for additional checktrees
+                 Review:    RH (MD)
+
 SG-2005-10-13-0: Bugfix:    configuring the halflife_decay_list crashes the qmaster
                  Changed:   qmaster, scheduler, qstat
                  Issue:     1826

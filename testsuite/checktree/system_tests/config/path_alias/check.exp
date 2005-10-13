@@ -48,7 +48,7 @@ global env
 
 
 # define a level initialization procedure:
-set check_init_level_procedure "init_level"
+set check_init_level_procedure "path_alias_init_level"
 
 
 # define test's name and run level descriptions
@@ -75,7 +75,7 @@ global PATH_ALIAS_OUTPUT2
 global path_alias_test
 set path_alias_test 0
 
-proc init_level {} {
+proc path_alias_init_level {} {
   global CHECK_ACT_LEVEL
   global path_alias_test
 

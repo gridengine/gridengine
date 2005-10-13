@@ -37,7 +37,7 @@ global check_init_level_procedure check_category
 global check_root_access_needs
 global prj_count node_count stree tmp_name
 
-set check_init_level_procedure "init_level"
+set check_init_level_procedure "issue_1251_init_level"
 
 set check_category            "COMPATIBILITY SYSTEM VERIFIED"
 set check_name                "issue_1251"
@@ -54,7 +54,7 @@ set check_highest_level       0
 set my_pid [pid]
 set tmp_name "/tmp/tmp1251.$my_pid"
 
-proc init_level {} {
+proc issue_1251_init_level {} {
    global CHECK_ACT_LEVEL ts_config
 
    # setup levels 

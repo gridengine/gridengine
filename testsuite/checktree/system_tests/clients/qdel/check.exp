@@ -47,7 +47,7 @@ global env
 set check_root_access_needs "yes"
 
 # define a level initialization procedure:
-set check_init_level_procedure "init_level"
+set check_init_level_procedure "qdel_init_level"
 
 
 # define test's name and run level descriptions
@@ -84,37 +84,7 @@ global hold_state
 global pending_state
 global queue
 
-# run level initialization
-#                                                             max. column:     |
-#****** qdel/init_level() ******
-# 
-#  NAME
-#     init_level -- ??? 
-#
-#  SYNOPSIS
-#     init_level { } 
-#
-#  FUNCTION
-#     ??? 
-#
-#  INPUTS
-#
-#  RESULT
-#     ??? 
-#
-#  EXAMPLE
-#     ??? 
-#
-#  NOTES
-#     ??? 
-#
-#  BUGS
-#     ??? 
-#
-#  SEE ALSO
-#     ???/???
-#*******************************
-proc init_level {} {
+proc qdel_init_level {} {
   global CHECK_ACT_LEVEL hold_state pending_state queue
 
   set queue "qdel.q"

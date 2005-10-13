@@ -132,7 +132,7 @@ global check_init_level_procedure check_category
 global check_root_access_needs
 
 set check_root_access_needs  "yes"
-set check_init_level_procedure "init_level"
+set check_init_level_procedure "throughput_init_level"
 set check_category            "PERFORMANCE VERIFIED"
 set check_name                "throughput"
 set check_description(0)      "Functional test, submit 300 jobs with enabled queues"
@@ -210,7 +210,7 @@ set throughput_subdir ""
 global throughput_num_data_sets
 set throughput_num_data_sets 26
 
-proc init_level {} {
+proc throughput_init_level {} {
    global ts_config
    global CHECK_ACT_LEVEL CHECK_PRODUCT_TYPE
    global end_job_count                      ;# number of jobs

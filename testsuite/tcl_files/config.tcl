@@ -809,6 +809,93 @@ proc config_checktree_root_dir { only_check name config_array } {
 }
 
 
+
+proc config_additional_checktree_dirs { only_check name config_array } {
+   global CHECK_OUTPUT 
+   global CHECK_TESTSUITE_ROOT
+   global CHECK_TESTSUITE_LOCKFILE
+   global CHECK_CHECKTREE_ROOT
+   global CHECK_USER CHECK_HOST
+   global CHECK_GROUP
+   global env fast_setup
+
+   upvar $config_array config
+   
+   set actual_value  $config($name)
+   set default_value $config($name,default)
+   set description   $config($name,desc)
+
+   set value $actual_value
+   if { $actual_value == "" } {
+      set value $default_value
+      if { $default_value == "" } { 
+         set value "none"
+      }
+   }
+
+   if { $only_check == 0 } {
+      # do setup
+      puts $CHECK_OUTPUT "" 
+      puts $CHECK_OUTPUT "Please enter the full pathname of an additional checktree directory or press >RETURN<"
+      puts $CHECK_OUTPUT "to use the default value."
+      puts $CHECK_OUTPUT "The checktree directory contains all tests in its subdirectory structure. You can"
+      puts $CHECK_OUTPUT "add more than one directory by using a space as seperator."
+      puts $CHECK_OUTPUT "If you enter the keyword \"none\" no additional checktree directory is supported."
+      puts $CHECK_OUTPUT "(default: $value)"
+      puts -nonewline $CHECK_OUTPUT "> "
+      set input [ wait_for_enter 1]
+      if { [ string length $input] > 0 } {
+         set value $input
+      } else {
+         puts $CHECK_OUTPUT "using default value"
+      }
+   }
+
+   # now verify
+
+   if {!$fast_setup} {
+      set not_set 1 
+      foreach directory $value {
+         if { $directory == "none" } {
+            set not_set 0
+         }
+      }
+
+      if { $not_set == 1 } {
+         set new_value ""
+         foreach directory $value {
+            append new_value " [tail_directory_name $directory]"
+         }
+         set value [string trim $new_value]
+
+         foreach directory $value {
+            # is full path ?
+            if { [ string first "/" $directory ] != 0 } {
+               puts $CHECK_OUTPUT "Path \"$directory\" doesn't start with \"/\""
+               return -1
+            }
+
+            if { [tail_directory_name $directory] != $directory } {
+               puts $CHECK_OUTPUT "\nPath \"$directory\" is not a valid directory name, try \"[tail_directory_name $directory]\""
+               return -1
+            }
+
+            # is file ?
+            if { [ file isdirectory $directory ] != 1 } {
+               puts $CHECK_OUTPUT "Directory \"$directory\" not found"
+               return -1
+            }
+         }
+      } else {
+         set value "none"
+      }
+   }
+
+   return $value
+}
+
+
+
 #****** config/config_results_dir() *********************************************
 #  NAME
 #     config_results_dir() -- results directory setup
@@ -4009,6 +4096,15 @@ proc config_build_ts_config {} {
    set ts_config($parameter,pos)        $ts_pos
    incr ts_pos 1
 
+   set parameter "additional_checktree_dirs"
+   set ts_config($parameter)            ""
+   set ts_config($parameter,desc)       "Additional Testsuite's checktree directories"
+   set ts_config($parameter,default)    ""   ;# depend on testsuite root dir 
+   set ts_config($parameter,setup_func) "config_additional_checktree_dirs"
+   set ts_config($parameter,onchange)   "stop"
+   set ts_config($parameter,pos)        $ts_pos
+   incr ts_pos 1
+
    set parameter "results_dir"
    set ts_config($parameter)            ""
    set ts_config($parameter,desc)       "Testsuite's directory to save test results (html/txt files)"
@@ -4507,10 +4603,38 @@ proc config_build_ts_config_1_9 {} {
    set ts_config(version) "1.9"
 }
 
+proc config_build_ts_config_1_91 {} {
+   global ts_config
+
+   # insert new parameter after checktree_root_dir
+   set insert_pos $ts_config(checktree_root_dir,pos)
+   incr insert_pos 1
+
+   # move positions of following parameters
+   set names [array names ts_config "*,pos"]
+   foreach name $names {
+      if { $ts_config($name) >= $insert_pos } {
+         set ts_config($name) [ expr ( $ts_config($name) + 1 ) ]
+      }
+   }
+
+   set parameter "additional_checktree_dirs"
+   set ts_config($parameter)            ""
+   set ts_config($parameter,desc)       "Additional Testsuite's checktree directories"
+   set ts_config($parameter,default)    ""   ;# depend on testsuite root dir 
+   set ts_config($parameter,setup_func) "config_additional_checktree_dirs"
+   set ts_config($parameter,onchange)   "stop"
+   set ts_config($parameter,pos)        $insert_pos
+
+   # now we have a configuration version 1.91
+   set ts_config(version) "1.91"
+}
+
+
 
 # MAIN
 global actual_ts_config_version      ;# actual config version number
-set actual_ts_config_version "1.9"
+set actual_ts_config_version "1.91"
 
 # first source of config.tcl: create ts_config
 if {![info exists ts_config]} {
@@ -4524,5 +4648,6 @@ if {![info exists ts_config]} {
    config_build_ts_config_1_7
    config_build_ts_config_1_8
    config_build_ts_config_1_9
+   config_build_ts_config_1_91
 }
 

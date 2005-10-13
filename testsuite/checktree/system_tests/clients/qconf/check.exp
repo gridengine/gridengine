@@ -46,7 +46,7 @@ global env
 global check_category
 
 # define a level initialization procedure:
-set check_init_level_procedure "init_level"
+set check_init_level_procedure "qconf_init_level"
 
 # define test's name and run level descriptions
 set check_name            "qconf"
@@ -88,37 +88,7 @@ global queue_names
 
 global submitjob_jobid
 
-# run level initialization
-#                                                             max. column:     |
-#****** qconf/init_level() ******
-# 
-#  NAME
-#     init_level -- ??? 
-#
-#  SYNOPSIS
-#     init_level { } 
-#
-#  FUNCTION
-#     ??? 
-#
-#  INPUTS
-#
-#  RESULT
-#     ??? 
-#
-#  EXAMPLE
-#     ??? 
-#
-#  NOTES
-#     ??? 
-#
-#  BUGS
-#     ??? 
-#
-#  SEE ALSO
-#     ???/???
-#*******************************
-proc init_level {} {
+proc qconf_init_level {} {
    global ts_config
    global CHECK_ACT_LEVEL hold_state pending_state queue_names
 

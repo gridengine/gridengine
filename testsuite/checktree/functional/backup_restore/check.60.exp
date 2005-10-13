@@ -34,7 +34,7 @@
 # define global variable in this namespace
 
 # define a level initialization procedure:
-set check_init_level_procedure "init_level"
+set check_init_level_procedure "backup_restore_init_level"
 
 # define test's name and run level descriptions
 set check_name            "backup_restore"
@@ -55,7 +55,7 @@ set check_fuctions   ""
 lappend check_functions "backup_restore_setup"
 set check_highest_level       0
 
-proc init_level {} {
+proc backup_restore_init_level {} {
    global ts_config
    global CHECK_ACT_LEVEL
 

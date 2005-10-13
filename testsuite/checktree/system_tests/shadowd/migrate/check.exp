@@ -47,7 +47,7 @@ global env
 set check_root_access_needs "yes"
 
 # define a level initialization procedure:
-set check_init_level_procedure "init_level"
+set check_init_level_procedure "shadowd_migrate_init_level"
 
 
 # define test's name and run level descriptions
@@ -84,37 +84,7 @@ set shadowd_master_spool_dir "undefined"
 set shadowd_original_master_spool_dir "undefined"
 set shadowd_moved_master_dir 0
 
-# run level initialization
-#                                                             max. column:     |
-#****** migrate/init_level() ******
-# 
-#  NAME
-#     init_level -- ??? 
-#
-#  SYNOPSIS
-#     init_level { } 
-#
-#  FUNCTION
-#     ??? 
-#
-#  INPUTS
-#
-#  RESULT
-#     ??? 
-#
-#  EXAMPLE
-#     ??? 
-#
-#  NOTES
-#     ??? 
-#
-#  BUGS
-#     ??? 
-#
-#  SEE ALSO
-#     ???/???
-#*******************************
-proc init_level {} {
+proc shadowd_migrate_init_level {} {
    global ts_config
    global CHECK_ACT_LEVEL hold_state pending_state
 

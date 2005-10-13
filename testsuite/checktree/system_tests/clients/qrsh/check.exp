@@ -45,7 +45,7 @@ global check_root_access_needs
 global env
 
 # define a level initialization procedure:
-set check_init_level_procedure "init_level"
+set check_init_level_procedure "qrsh_init_level"
 
 # define test's name and run level descriptions
 set check_name            "qrsh"
@@ -86,37 +86,8 @@ global CHECK_FIRST_FOREIGN_SYSTEM_USER CHECK_FIRST_FOREIGN_SYSTEM_GROUP CHECK_SE
 set QSUB_GID_USER   "$CHECK_FIRST_FOREIGN_SYSTEM_USER"
 set QSUB_GID_GROUPS "$CHECK_FIRST_FOREIGN_SYSTEM_GROUP"
 
-# run level initialization
-#                                                             max. column:     |
-#****** qrsh/init_level() ******
-# 
-#  NAME
-#     init_level -- ??? 
-#
-#  SYNOPSIS
-#     init_level { } 
-#
-#  FUNCTION
-#     ??? 
-#
-#  INPUTS
-#
-#  RESULT
-#     ??? 
-#
-#  EXAMPLE
-#     ??? 
-#
-#  NOTES
-#     ??? 
-#
-#  BUGS
-#     ??? 
-#
-#  SEE ALSO
-#     ???/???
-#*******************************
-proc init_level {} {
+
+proc qrsh_init_level {} {
    global ts_config
    global CHECK_ACT_LEVEL CHECK_OUTPUT
    global qrsh_hostlist qrsh_submithost

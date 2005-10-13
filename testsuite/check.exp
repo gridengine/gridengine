@@ -379,7 +379,7 @@ global check_cur_proc_result       ;# 0 -> OK , != 0 means error (-2 = break tes
 # testsuite intern
 global CHECK_INFORMATION_FILE      ;# filename of check information (check.exp)
 global CHECK_INFORMATION_EXT       ;# fileextension of check information (check.exp)
-global CHECK_DIRECTORIES           ;# all sub directories with check's in actual checkpath
+global ts_checktree                ;# structure which contains checktree directory informations (see build_checktree)
 global CHECK_REPORT_FILE           ;# filename (with path) for report
 global CHECK_MAIN_RESULTS_DIR      ;# check result root directory for all RESULTS
 global CHECK_CONFIG_DIR            ;# global configuration testsuite directory
@@ -390,7 +390,6 @@ global CHECK_CUR_PROC_ERRORS       ;# list of procedure errors   ({error text} {
 global CHECK_CUR_PROC_RESULTS      ;# list of procedure results  (0 -1 -2 0 ...)
 global CHECK_ENABLED_RUNLEVELS      ;# enabled runlevels
 global CHECK_ENABLED_CATEGORIES     ;# enabled categories
-global CHECK_MAX_LEVEL             ;# highest level number of all subtests
 global CHECK_ACT_PATH              ;# actual checkpath (while switching in menu mode)
 global arch_cache                  ;# cache for architecture names (lower case) e.g. solaris64
 global pe_for_version_check_result ;# cache for pe/checkpnt version
@@ -2177,6 +2176,13 @@ puts $CHECK_OUTPUT "entering update_ts_config_version"
       return 0
    }
 
+   if { $ts_config(version) == "1.9" } {
+      puts $CHECK_OUTPUT "\ntestsuite configuration update from 1.9 to 1.91 ..."
+      config_build_ts_config_1_91
+      show_config ts_config
+      wait_for_enter
+      return 0
+   }
    
    puts $CHECK_OUTPUT "\nunexpected version $ts_config(version), need version $actual_ts_config_version"
    return -1
@@ -2421,7 +2427,7 @@ proc enhanced_setup {} {
    global env CHECK_COMMD_PORT CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_HOST
 
    if { $be_quiet == 0 } { 
-      puts "starting enhanced setup ..."
+      puts "   starting enhanced setup ..."
    }
    set check_name "enhanced_setup"
 
@@ -2436,23 +2442,46 @@ proc enhanced_setup {} {
 
    set_users_environment $CHECK_HOST
 
-   get_max_level_count $CHECK_CHECKTREE_ROOT
+# now search for further checktree configurations
+# ===============================================
 
-   set CHECK_ENABLED_RUNLEVELS "0" ;# 100 200 300 400" ;#$CHECK_MAX_LEVEL is 400
+   if { $ts_config(additional_checktree_dirs) != "none" } {
+      if { $be_quiet == 0 } { 
+         puts "   exploring other checktrees ..."
+         foreach dir $ts_config(additional_checktree_dirs) {
+            puts "   $dir ..."
+
+         }
+      }
+   }
+
+   puts "   setting up checktree ..."
+   if {[build_checktree] != 0} {
+      exit 1
+   }
+
+
+   set CHECK_ENABLED_RUNLEVELS "0" ;# 100 200 300 400" ;# max level is 400
    # JG: changed default categories to VERIFIED, reset to SYSTEM, once we get
    #     rid of the VERFIED category (when all tests are verified).
    set CHECK_ENABLED_CATEGORIES "VERIFIED" ;# [get_categories $CHECK_CHECKTREE_ROOT ]
 
-   delete_tests $CHECK_CHECKTREE_ROOT 1
+   puts "   checking testsuite results directories ..."
 
+   delete_tests "root" 1
+
+   puts "   setting up shared library path ..."
    setup_shared_lib_path
+   
+   puts "   checking all shell scripts to be executable ..."
    check_executable_files
    
    if { $be_quiet == 0 } { 
       puts "   architecture: $CHECK_ARCH";
       puts "   local host:   $CHECK_HOST";
-      puts "starting enhanced setup ... ok"
    }
+
+   puts "   reading message macros ..."
    update_macro_messages_list
 #
 # uncomment the following line, if the unused macros should be removed from source code
@@ -2462,58 +2491,219 @@ proc enhanced_setup {} {
 }
 
 
-# get directories with checkprog
-#                                                             max. column:     |
-#****** check/get_check_dirs() ******
-# 
-#  NAME
-#     get_check_dirs -- ??? 
-#
-#  SYNOPSIS
-#     get_check_dirs { path } 
-#
-#  FUNCTION
-#     ??? 
-#
-#  INPUTS
-#     path - ??? 
-#
-#  RESULT
-#     ??? 
-#
-#  EXAMPLE
-#     ??? 
-#
-#  NOTES
-#     ??? 
-#
-#  BUGS
-#     ??? 
-#
-#  SEE ALSO
-#     ???/???
-#*******************************
-proc get_check_dirs { path } {
+
+proc build_checktree {} {
+   global ts_config ts_checktree
+   global CHECK_OUTPUT 
+   
+   if { [info exists ts_checktree] } {
+      unset ts_checktree
+   }
+   set ts_checktree(act_nr) 1             ;# contains the next free number for a checktree directory element
+   
+   set ts_checktree(0,dir_name) "root"    ;# set directory name of root element
+   set ts_checktree(0,test_available) 0   ;# there is no test available for the directory entry 0
+   set ts_checktree(0,upper_nrs) 0        ;# upper_nrs contains the directory number of the parent checktree
+                                          ;# directory element
+   set ts_checktree(root) 0               ;# maps the directory path to directory number
+
+   # read_checktree_nodes is setting additional information in the checktree !!!
+ 
+   puts $CHECK_OUTPUT "reading checktree nodes ..."  
+   set error [read_checktree_nodes $ts_config(checktree_root_dir)] 
+   if { $error != 0 } {
+      return -1
+   }
+   puts $CHECK_OUTPUT "reading additional checktrees ..."
+   if { $ts_config(additional_checktree_dirs) != "none" } {
+      foreach dir $ts_config(additional_checktree_dirs) {
+         set error [read_checktree_nodes $dir]
+         if { $error != 0 } {
+            return -1
+         }
+      }
+   }
+
+   
+
+   puts $CHECK_OUTPUT "verify checktree ..."
+   
+   for {set i 0} {$i< $ts_checktree(act_nr)} {incr i 1} {
+#      puts $CHECK_OUTPUT "test $i $ts_checktree($i,dir_name) , up-dir=$ts_checktree($i,upper_nrs), subdir(s)=$ts_checktree($i,sub_nrs)"
+      set ts_checktree($i,max_level_count) [get_max_level_count $ts_checktree($i,dir_name)]
+#      puts $CHECK_OUTPUT "dir $ts_checktree($i,dir_name) has max level state: $ts_checktree($i,max_level_count)"
+      if { $ts_checktree($i,test_available) == 1 } {
+         set ts_checktree($i,check_levels) [get_check_levels $ts_checktree($i,dir_name)]
+#         puts $CHECK_OUTPUT "test $ts_checktree($i,check_name) has checklevels: $ts_checktree($i,check_levels)"
+#         puts $CHECK_OUTPUT "name $ts_checktree($i,check_name), $ts_checktree($i,check_category), $ts_checktree($i,check_highest_level)"
+         for { set j [expr ( $i + 1 ) ] } {$j< $ts_checktree(act_nr)} {incr j 1} {
+            if { $ts_checktree($j,test_available) == 1 } {
+               if { $ts_checktree($i,check_name) == $ts_checktree($j,check_name) } {
+                  set error_text ""
+                  append error_text "check_name \"$ts_checktree($i,check_name)\" is not unique:\n"
+                  append error_text "please check the following tests directories:\n"
+                  append error_text "$ts_checktree($i,dir_name)\n"
+                  append error_text "$ts_checktree($j,dir_name)\n" 
+                  add_proc_error "build_checktree" -1 $error_text
+                  wait_for_enter
+                  return -1
+               }
+               if { $ts_checktree($i,check_init_level_procedure) == $ts_checktree($j,check_init_level_procedure) } {
+                  set error_text ""
+                  append error_text "check_init_level_procedure \"$ts_checktree($i,check_init_level_procedure)\" is not unique:\n"
+                  append error_text "please check the following tests directories:\n"
+                  append error_text "$ts_checktree($i,dir_name)\n"
+                  append error_text "$ts_checktree($j,dir_name)\n" 
+                  add_proc_error "build_checktree" -1 $error_text
+                  wait_for_enter
+                  return -1
+               }
+            }
+         }
+
+      }
+      
+   }
+#   puts $CHECK_OUTPUT "roots: $ts_checktree(0,sub_nrs)"
+   return 0
+}
+
+
+proc read_checktree_nodes { path } {
+   global ts_checktree CHECK_INFORMATION_FILE CHECK_INFORMATION_EXT
+   global CHECK_OUTPUT
    global ts_config
-   global CHECK_DIRECTORIES 
-   global CHECK_INFORMATION_FILE CHECK_INFORMATION_EXT
+   global check_highest_level check_init_level_procedure check_name
+   global check_category 
+   global CHECK_ACT_LEVEL
+
+   set old_check_name $check_name
 
    # get all files and subdirectories
    set files [get_file_names $path] 
    set dirs [get_dir_names $path]
 
-   # look for check.exp and check.<version>.exp
+#   puts $CHECK_OUTPUT "-> $path"
+
    set dep_name "$CHECK_INFORMATION_FILE.$ts_config(gridengine_version).$CHECK_INFORMATION_EXT"
    set indep_name "$CHECK_INFORMATION_FILE.$CHECK_INFORMATION_EXT"
+
+   set nr $ts_checktree(act_nr)
+   
+   incr ts_checktree(act_nr) 1
+
    if { [lsearch $files $dep_name] >= 0 || [lsearch $files $indep_name] >= 0 }  {
-      lappend CHECK_DIRECTORIES $path;
-   } 
+      # here is a test file
+      set ts_checktree($nr,test_available) 1
+
+      set check_highest_level 0 
+      set check_init_level_procedure "--"
+      set check_category ""
+      ts_source $path/$CHECK_INFORMATION_FILE $CHECK_INFORMATION_EXT
+      set ts_checktree($nr,check_name) $check_name
+      set ts_checktree($nr,check_init_level_procedure) $check_init_level_procedure
+      set ts_checktree($nr,check_highest_level) $check_highest_level
+      set ts_checktree($nr,check_category) $check_category
+   } else {
+      set ts_checktree($nr,test_available) 0
+   }
+   set ts_checktree($nr,dir_name) $path
+   set ts_checktree($path)        $nr
+   
+
+   if {[info exists ts_checktree($nr,sub_nrs)] == 0} {   ;# ts_checktree($nr,sub_nrs) contains the 
+      set ts_checktree($nr,sub_nrs) {}                   ;# list of numbers of subdirectories checktree elements
+   }
+   set upper_dir [file dirname $path]
+   if { [info exists ts_checktree($upper_dir) ] } {
+      set ts_checktree($nr,upper_nrs) $ts_checktree($upper_dir)
+   } else {
+      set ts_checktree($nr,upper_nrs) 0
+      lappend ts_checktree(0,sub_nrs) $nr               ;# this is for the "root" element. Additional checktree
+                                                        ;# directories are children of the "root" tree. The sub_nr
+                                                        ;# can't be initalized by the directory list.
+   }
 
    # recursive call on subdirectories
    foreach element $dirs {
-      get_check_dirs "$path/$element"
+      read_checktree_nodes "$path/$element"
+      lappend ts_checktree($nr,sub_nrs) $ts_checktree($path/$element)
    }
+   
+   set check_name $old_check_name
+   return 0
 }
+
+proc get_tests_from_checktree { { path "root" } } {
+   global ts_checktree CHECK_OUTPUT
+
+   set selected_dirs ""
+
+   if { [info exists ts_checktree($path)] } {
+     set selected_dirs $ts_checktree($path)
+   } else {
+     add_proc_error "get_tests_from_checktree" -1 "path=$path not found in checktree"
+   }
+
+
+   set all_nrs {}
+   foreach nr $selected_dirs {
+      lappend all_nrs $nr
+      set ret_val {}
+      lappend_sub_nrs_from_checktree $nr ret_val
+      foreach sub_nr $ret_val {
+         lappend all_nrs $sub_nr
+      }
+   }
+
+   # now we have all directory numbers, generate path list
+   set path_list {}
+   foreach nr $all_nrs {
+      if { $ts_checktree($nr,test_available) == 1 } {
+         lappend path_list $ts_checktree($nr,dir_name)
+      }
+   }
+   return $path_list
+}
+
+proc lappend_sub_nrs_from_checktree { dir_nr result } {
+   global ts_checktree CHECK_OUTPUT
+   upvar $result res
+ 
+   foreach nr $ts_checktree($dir_nr,sub_nrs) {
+      lappend res $nr
+      lappend_sub_nrs_from_checktree $nr res
+   }  
+
+}
+
+
+proc get_checktree_dir_names { path { only_basename 0 } } {
+   global ts_checktree CHECK_OUTPUT
+
+   # first find entry directory numbers
+   set selected_dirs {}
+   if { [info exists ts_checktree($path)] } {
+     set nr $ts_checktree($path)
+     set selected_dirs $ts_checktree($nr,sub_nrs)
+   } else {
+     add_proc_error "get_tests_from_checktree" -1 "path=$path not found in checktree"
+   }
+
+   # now we have all directory numbers, generate path list
+   set path_list {}
+   foreach nr $selected_dirs {
+      if { $only_basename == 0 } {
+         lappend path_list $ts_checktree($nr,dir_name)
+      } else {
+         lappend path_list [file tail $ts_checktree($nr,dir_name)]
+      }
+   }
+   return $path_list
+
+}
+
+
 
 
 # check dependencies
@@ -2762,62 +2952,32 @@ proc save_result {path runtime level} {
 
 } 
 
-# get_check_name
-#                                                             max. column:     |
-#****** check/get_check_name() ******
-# 
-#  NAME
-#     get_check_name -- ??? 
-#
-#  SYNOPSIS
-#     get_check_name { path } 
-#
-#  FUNCTION
-#     ??? 
-#
-#  INPUTS
-#     path - ??? 
-#
-#  RESULT
-#     ??? 
-#
-#  EXAMPLE
-#     ??? 
-#
-#  NOTES
-#     ??? 
-#
-#  BUGS
-#     ??? 
-#
-#  SEE ALSO
-#     ???/???
-#*******************************
 proc get_check_name {path} {
-   global CHECK_INFORMATION_FILE CHECK_INFORMATION_EXT
-   global check_name
-
-   set check_name ""
-   ts_source $path/$CHECK_INFORMATION_FILE $CHECK_INFORMATION_EXT
-  
-   return $check_name
+   global ts_checktree
+   
+   set name ""
+   if { [info exists ts_checktree($path)] } {
+      set nr $ts_checktree($path)
+      if { $ts_checktree($nr,test_available) == 1 } {
+         set name $ts_checktree($nr,check_name)
+      }
+   }
+   return $name
 }
 
+
 proc get_check_levels { path } {
-   global CHECK_INFORMATION_FILE CHECK_INFORMATION_EXT
-   global CHECK_ACT_LEVEL check_highest_level
+   global CHECK_ACT_LEVEL
+   global ts_checktree
 
    set saved_level $CHECK_ACT_LEVEL
-   set check_highest_level 0
-   set check_init_level_procedure "blub"
-   unset check_init_level_procedure
-
-   set levels ""
-   if { [ts_source $path/$CHECK_INFORMATION_FILE $CHECK_INFORMATION_EXT] } {
-      if { $check_highest_level > 0 && [info exists check_init_level_procedure] == 1} {
-         for {set i 0} {$i <= $check_highest_level} {incr i 1} {
+   set levels {}
+   if { [info exists ts_checktree($path)] } {
+      set nr $ts_checktree($path)
+      if { $ts_checktree($nr,check_highest_level) > 0 && $ts_checktree($nr,check_init_level_procedure) != "--" } {
+         for {set i 0} {$i <= $ts_checktree($nr,check_highest_level)} {incr i 1} {
             set CHECK_ACT_LEVEL $i
-            if { [$check_init_level_procedure ]  != 0 } { 
+            if { [$ts_checktree($nr,check_init_level_procedure)] != 0 } { 
                continue 
             }
             lappend levels $CHECK_ACT_LEVEL
@@ -2829,6 +2989,20 @@ proc get_check_levels { path } {
    set CHECK_ACT_LEVEL $saved_level
    return $levels
 }
+
+
+proc get_checktree_levels { path } {
+   global CHECK_ACT_LEVEL
+   global ts_checktree
+
+   set levels {}
+   if { [info exists ts_checktree($path)] } {
+      set nr $ts_checktree($path)
+      return $ts_checktree($nr,check_levels)
+   }
+   return $levels
+}
+
 
 # get test result
 #                                                             max. column:     |
@@ -3127,74 +3301,32 @@ proc is_level_enabled { level_nr } {
     return -1
 }
 
-proc get_check_category { path } {
-   global CHECK_INFORMATION_FILE CHECK_INFORMATION_EXT
-   global check_category
-
-   ts_source $path/$CHECK_INFORMATION_FILE $CHECK_INFORMATION_EXT
-   return $check_category
-}
 
 proc is_category_enabled { path } {
-   global CHECK_ENABLED_CATEGORIES CHECK_OUTPUT
-   set checks_cat [get_check_category $path]
-
+   global CHECK_ENABLED_CATEGORIES ts_checktree
+   set checks_cat ""
+   if { [info exists ts_checktree($path)] } {
+      set nr $ts_checktree($path)
+      set checks_cat $ts_checktree($nr,check_category)
+   }
    foreach elem $checks_cat {
       if { [ lsearch $CHECK_ENABLED_CATEGORIES $elem] != -1 } {
          return 0
       }
    }
-
    return -1
 }
 
-# delete tests
-#                                                             max. column:     |
-#****** check/delete_tests() ******
-# 
-#  NAME
-#     delete_tests -- ??? 
-#
-#  SYNOPSIS
-#     delete_tests { path { only_if_not_there 0 } } 
-#
-#  FUNCTION
-#     ??? 
-#
-#  INPUTS
-#     path                    - ??? 
-#     { only_if_not_there 0 } - ??? 
-#
-#  RESULT
-#     ??? 
-#
-#  EXAMPLE
-#     ??? 
-#
-#  NOTES
-#     ??? 
-#
-#  BUGS
-#     ??? 
-#
-#  SEE ALSO
-#     ???/???
-#*******************************
 proc delete_tests {path { only_if_not_there 0 } } {
-  global CHECK_DIRECTORIES check_errno check_errstr check_functions validate_needs check_name
+  global check_errno check_errstr check_functions validate_needs check_name
   global CHECK_OUTPUT check_highest_level check_name check_description
   global check_init_level_procedure CHECK_ACT_LEVEL CHECK_OUTPUT
   global CHECK_INFORMATION_FILE CHECK_INFORMATION_EXT
 
 
   set old_check_name $check_name
-
-  set CHECK_DIRECTORIES ""
-  get_check_dirs $path 
-
-  if { [info exists CHECK_DIRECTORIES] == 1 } {
-    foreach elem $CHECK_DIRECTORIES {
-#       puts "--"
+  set selected_tests [get_tests_from_checktree $path]
+  foreach elem $selected_tests {
        set check_highest_level 0
        set check_errstr ""
        set check_errno ""
@@ -3235,9 +3367,7 @@ proc delete_tests {path { only_if_not_there 0 } } {
                 }
              }
           }
-
        }
-  }
   }
   set check_name $old_check_name
 }
@@ -3275,286 +3405,279 @@ proc delete_tests {path { only_if_not_there 0 } } {
 #     ???/???
 #*******************************
 proc run_tests { path runcompleted } {
-    global CHECK_DIRECTORIES CHECK_OUTPUT CHECK_HOST check_errstr CHECK_RESULT_DIR
+    global CHECK_OUTPUT CHECK_HOST check_errstr CHECK_RESULT_DIR
     global CHECK_MAILS_SENT CHECK_ENABLE_MAIL CHECK_MAX_ERROR_MAILS CHECK_CORE_RESULT_DIR
     global CHECK_CHECKTREE_ROOT CHECK_ACT_PATH check_use_installed_system ts_config
     global check_reinit_on_tcl_error CHECK_CORE_MASTER CHECK_PRODUCT_ROOT CHECK_ARCH
 
-    set CHECK_DIRECTORIES ""
-    get_check_dirs $path 
-
     set CHECK_MAILS_SENT 0  ;# clear mail counter
-
-    if { [info exists CHECK_DIRECTORIES] == 1 } {
-       
-        set checks_to_do ""
-        foreach elem $CHECK_DIRECTORIES {
-           if { [is_category_enabled $elem ] == 0 } {
-               set test_name [get_check_name $elem] 
-               set tests_runlevels [get_check_levels $elem]
-               foreach tests_runlevel $tests_runlevels {
-                  if { ( [file isfile "$CHECK_RESULT_DIR/$test_name.res.$tests_runlevel"] == 1) } {
-                     continue
-                  }
-                  if { ( [file isfile "$CHECK_CORE_RESULT_DIR/$test_name.res.$tests_runlevel"] == 1) } {
-                     continue
-                  }
-                  lappend checks_to_do $elem
-                  break
-               }
+ 
+    set check_directories [get_tests_from_checktree $path]
+   
+    set checks_to_do ""
+    foreach elem $check_directories {
+       if { [is_category_enabled $elem ] == 0 } {
+           set test_name [get_check_name $elem] 
+           set tests_runlevels [get_checktree_levels $elem]
+           foreach tests_runlevel $tests_runlevels {
+              if { ( [file isfile "$CHECK_RESULT_DIR/$test_name.res.$tests_runlevel"] == 1) } {
+                 continue
+              }
+              if { ( [file isfile "$CHECK_CORE_RESULT_DIR/$test_name.res.$tests_runlevel"] == 1) } {
+                 continue
+              }
+              lappend checks_to_do $elem
+              break
            }
-        }
-        set checks_to_do [lsort $checks_to_do]
-        if {[llength $checks_to_do] == 0} {
-           return
-        }
+       }
+    }
+    set checks_to_do [lsort $checks_to_do]
+    if {[llength $checks_to_do] == 0} {
+       return
+    }
 
-        # check if root password is needed
-        foreach elem $checks_to_do {
-            debug_puts "checking whether test in directory $elem needs root access ..."
-            if { ([check_root_access $elem ] == 0) && ([have_root_passwd] == -1 ) } {
-                puts $CHECK_OUTPUT "test in directory $elem needs root access ..."
-                set_root_passwd
-            }
+    # check if root password is needed
+    foreach elem $checks_to_do {
+        debug_puts "checking whether test in directory $elem needs root access ..."
+        if { ([check_root_access $elem ] == 0) && ([have_root_passwd] == -1 ) } {
+            puts $CHECK_OUTPUT "test in directory $elem needs root access ..."
+            set_root_passwd
         }
+    }
 
-        set stop 0
-        set pass_no 1
-        set last_to_do -1
-        set check_ok_name     ""
-        set check_ok_state    "" 
-        set check_ok_date     ""
-        set check_ok_pass     ""
+    set stop 0
+    set pass_no 1
+    set last_to_do -1
+    set check_ok_name     ""
+    set check_ok_state    "" 
+    set check_ok_date     ""
+    set check_ok_pass     ""
 #        set check_ok_text     ""
-        set check_error_name  ""
-        set check_error_state ""
-        set check_error_date  ""
-        set check_error_pass  ""
+    set check_error_name  ""
+    set check_error_state ""
+    set check_error_date  ""
+    set check_error_pass  ""
 #        set check_error_text  ""
-        set check_missing_dep ""
-        set check_warning_name ""
-        set check_warning_state ""
-        set check_warning_date ""
-        set check_warning_pass ""
-        set check_missing_dep ""
+    set check_missing_dep ""
+    set check_warning_name ""
+    set check_warning_state ""
+    set check_warning_date ""
+    set check_warning_pass ""
+    set check_missing_dep ""
 #        set check_warning_text ""
 
-        while { $stop == 0 } {
-           set todo [ llength $checks_to_do ]
-           puts $CHECK_OUTPUT "---PASS${pass_no}----------------------------------------"
-           puts $CHECK_OUTPUT "   Nr. of tests remaining: $todo"
-           puts $CHECK_OUTPUT "------------------------------------------------" 
+    while { $stop == 0 } {
+       set todo [ llength $checks_to_do ]
+       puts $CHECK_OUTPUT "---PASS${pass_no}----------------------------------------"
+       puts $CHECK_OUTPUT "   Nr. of tests remaining: $todo"
+       puts $CHECK_OUTPUT "------------------------------------------------" 
 
-           # start tests
-           foreach check $checks_to_do {
-              set test_result [ run_test $check $runcompleted ]
+       # start tests
+       foreach check $checks_to_do {
+          set test_result [ run_test $check $runcompleted ]
 
-              switch -- $test_result {
-                       0 { 
-                            # test OK
-                            lappend check_ok_name  $check
-                            lappend check_ok_state $test_result
-                            lappend check_ok_date  [ exec date ]
-                            lappend check_ok_pass  $pass_no 
+          switch -- $test_result {
+                   0 { 
+                        # test OK
+                        lappend check_ok_name  $check
+                        lappend check_ok_state $test_result
+                        lappend check_ok_date  [ exec date ]
+                        lappend check_ok_pass  $pass_no 
 #                            foreach err_message $check_errstr {
 #                               lappend check_ok_text("$check") "{$err_message}"
 #                            }
 
-                         }
-                      -2 { 
-                            # dependencies - try again
-                            lappend check_missing_dep  $check
-                         }
-                      -3 {
-                            # impossible / unusefull to run this test
-                            lappend check_warning_name $check 
-                            lappend check_warning_state $test_result
-                            lappend check_warning_date [ exec date ]
-                            lappend check_warning_pass  $pass_no 
-                            foreach err_message $check_errstr {
-                               if { [info exists check_warning_text("$check") ] } {
-                                  lappend check_warning_text("$check") "{$err_message}"
-                               } else {
-                                  set check_warning_text("$check") "{$err_message}"
-                               }
-                            }
-                         }
-                       1 { 
-                            # test was allready done in an earlier run
-                            # no action
-                            puts $CHECK_OUTPUT "run_tests - check allready done"
-                         }
-
-                       2 {  
-                            # test has no valid test in this run level
-                            # no action
-                            puts $CHECK_OUTPUT "test does not support actual runlevel"
-                         }
-                    -101 {
-                            # check failed due to tcl error
-                            lappend check_error_name  $check
-                            lappend check_error_state $test_result
-                            lappend check_error_date  [ exec date ]
-                            lappend check_error_pass  $pass_no 
-                                    
-                            foreach err_message $check_errstr {
-                               if { [info exists check_error_text("$check") ] } {
-                                  lappend check_error_text("$check") "{$err_message}"
-                               } else {
-                                  set check_error_text("$check") "{$err_message}"
-                               }
-                            }
-     
-                            if { $check_reinit_on_tcl_error == 1 } {
-                               # reinit system
-                               puts $CHECK_OUTPUT "deleting all jobs"
-                               delete_all_jobs
-                               wait_for_end_of_all_jobs 60
-
-                               set save_installed_value $check_use_installed_system
-                               set save_CHECK_ACT_PATH $CHECK_ACT_PATH
-                               set check_use_installed_system 1
-                               set CHECK_ACT_PATH "$CHECK_CHECKTREE_ROOT/install_core_system"  
-                               close_open_rlogin_sessions  ;# session reset
-                               if { [run_test $CHECK_ACT_PATH 1] != 0 } {
-                                  set CHECK_ACT_PATH "$CHECK_CHECKTREE_ROOT/install_core_system" 
-                                  run_test $CHECK_ACT_PATH 1
-                               }
-                               set CHECK_ACT_PATH $save_CHECK_ACT_PATH
-                               set check_use_installed_system $save_installed_value
-                            }
-                         }
-
-                 default {
-                            # check failed
-                            lappend check_error_name  $check
-                            lappend check_error_state $test_result
-                            lappend check_error_date  [ exec date ]
-                            lappend check_error_pass  $pass_no 
-                                    
-                            foreach err_message $check_errstr {
-                               if { [info exists check_error_text("$check") ] } {
-                                  lappend check_error_text("$check") "{$err_message}"
-                               } else {
-                                  set check_error_text("$check") "{$err_message}"
-                               }
-                            }
-                            if { $check_reinit_on_tcl_error == 1 } {
-                               # reinit system
-                               # reinit system
-                               puts $CHECK_OUTPUT "deleting all jobs"
-                               delete_all_jobs
-                               wait_for_end_of_all_jobs 60
-
-                               set save_installed_value $check_use_installed_system
-                               set save_CHECK_ACT_PATH $CHECK_ACT_PATH
-                               set check_use_installed_system 1
-                               set CHECK_ACT_PATH "$CHECK_CHECKTREE_ROOT/install_core_system"  
-                               close_open_rlogin_sessions  ;# session reset
-                               if { [run_test $CHECK_ACT_PATH 1] != 0 } {
-                                  set CHECK_ACT_PATH "$CHECK_CHECKTREE_ROOT/install_core_system" 
-                                  run_test $CHECK_ACT_PATH 1
-                               }
-                               set CHECK_ACT_PATH $save_CHECK_ACT_PATH
-                               set check_use_installed_system $save_installed_value
+                     }
+                  -2 { 
+                        # dependencies - try again
+                        lappend check_missing_dep  $check
+                     }
+                  -3 {
+                        # impossible / unusefull to run this test
+                        lappend check_warning_name $check 
+                        lappend check_warning_state $test_result
+                        lappend check_warning_date [ exec date ]
+                        lappend check_warning_pass  $pass_no 
+                        foreach err_message $check_errstr {
+                           if { [info exists check_warning_text("$check") ] } {
+                              lappend check_warning_text("$check") "{$err_message}"
+                           } else {
+                              set check_warning_text("$check") "{$err_message}"
                            }
-                         }
+                        }
+                     }
+                   1 { 
+                        # test was allready done in an earlier run
+                        # no action
+                        puts $CHECK_OUTPUT "run_tests - check allready done"
+                     }
+
+                   2 {  
+                        # test has no valid test in this run level
+                        # no action
+                        puts $CHECK_OUTPUT "test does not support actual runlevel"
+                     }
+                -101 {
+                        # check failed due to tcl error
+                        lappend check_error_name  $check
+                        lappend check_error_state $test_result
+                        lappend check_error_date  [ exec date ]
+                        lappend check_error_pass  $pass_no 
+                                
+                        foreach err_message $check_errstr {
+                           if { [info exists check_error_text("$check") ] } {
+                              lappend check_error_text("$check") "{$err_message}"
+                           } else {
+                              set check_error_text("$check") "{$err_message}"
+                           }
+                        }
+ 
+                        if { $check_reinit_on_tcl_error == 1 } {
+                           # reinit system
+                           puts $CHECK_OUTPUT "deleting all jobs"
+                           delete_all_jobs
+                           wait_for_end_of_all_jobs 60
+
+                           set save_installed_value $check_use_installed_system
+                           set save_CHECK_ACT_PATH $CHECK_ACT_PATH
+                           set check_use_installed_system 1
+                           set CHECK_ACT_PATH "$CHECK_CHECKTREE_ROOT/install_core_system"  
+                           close_open_rlogin_sessions  ;# session reset
+                           if { [run_test $CHECK_ACT_PATH 1] != 0 } {
+                              set CHECK_ACT_PATH "$CHECK_CHECKTREE_ROOT/install_core_system" 
+                              run_test $CHECK_ACT_PATH 1
+                           }
+                           set CHECK_ACT_PATH $save_CHECK_ACT_PATH
+                           set check_use_installed_system $save_installed_value
+                        }
+                     }
+
+             default {
+                        # check failed
+                        lappend check_error_name  $check
+                        lappend check_error_state $test_result
+                        lappend check_error_date  [ exec date ]
+                        lappend check_error_pass  $pass_no 
+                                
+                        foreach err_message $check_errstr {
+                           if { [info exists check_error_text("$check") ] } {
+                              lappend check_error_text("$check") "{$err_message}"
+                           } else {
+                              set check_error_text("$check") "{$err_message}"
+                           }
+                        }
+                        if { $check_reinit_on_tcl_error == 1 } {
+                           # reinit system
+                           # reinit system
+                           puts $CHECK_OUTPUT "deleting all jobs"
+                           delete_all_jobs
+                           wait_for_end_of_all_jobs 60
+
+                           set save_installed_value $check_use_installed_system
+                           set save_CHECK_ACT_PATH $CHECK_ACT_PATH
+                           set check_use_installed_system 1
+                           set CHECK_ACT_PATH "$CHECK_CHECKTREE_ROOT/install_core_system"  
+                           close_open_rlogin_sessions  ;# session reset
+                           if { [run_test $CHECK_ACT_PATH 1] != 0 } {
+                              set CHECK_ACT_PATH "$CHECK_CHECKTREE_ROOT/install_core_system" 
+                              run_test $CHECK_ACT_PATH 1
+                           }
+                           set CHECK_ACT_PATH $save_CHECK_ACT_PATH
+                           set check_use_installed_system $save_installed_value
+                       }
+                     }
+          }
+       }
+
+       if { [llength $check_missing_dep] > 0 } {
+          # missing dependencies , run again
+          set checks_to_do $check_missing_dep
+          incr pass_no 1
+          if { $todo == $last_to_do } {
+             set stop 1
+          } else {
+             puts $CHECK_OUTPUT "restarting test with missing dependencies ..."
+             set check_missing_dep ""
+          } 
+          set last_to_do $todo
+       } else {
+          # all done
+          set stop 1
+       } 
+    }  ;# while stop == 0
+
+    puts $CHECK_OUTPUT "Number of completed tests     : [llength $check_ok_name]"  
+    puts $CHECK_OUTPUT "Number of failed tests        : [llength $check_error_name]"  
+    puts $CHECK_OUTPUT "Number of unsupported tests   : [llength $check_warning_name]"
+    puts $CHECK_OUTPUT "Number of dependencies errors : [llength $check_missing_dep]"
+
+
+    set mail_body "Testsuite run on host $CHECK_HOST complete\n\n"
+
+
+    # dependencies errors
+    if { [llength $check_missing_dep ] > 0 } { 
+       append mail_body "missing dependencies:\n"
+       append mail_body "=====================\n\n"
+       foreach elem $check_missing_dep {
+          append mail_body "check [get_check_name $elem] in directory\n$elem\n" 
+       } 
+       append mail_body "\n"
+    }
+    # tests ok
+
+    append mail_body "completed tests:\n"
+    append mail_body "================\n\n"
+    for {set index 0} {$index < [llength $check_ok_name]} {incr index 1} {
+        append mail_body "Date: [ lindex $check_ok_date $index ]\n" 
+        append mail_body "Test: [ lindex $check_ok_name $index ]\n"
+        append mail_body "Info: Pass[lindex $check_ok_pass $index], State: [lindex $check_ok_state $index]\n\n"
+    }
+    set nr_complete [llength $check_ok_name] 
+    append mail_body "Number of completed tests: $nr_complete"        
+
+    # tests failed
+    append mail_body "\n\nfailed tests:\n"
+    append mail_body "=============\n"
+    for {set index 0} {$index < [llength $check_error_name]} {incr index 1} {
+        append mail_body "Date: [ lindex $check_error_date $index ]\n" 
+        append mail_body "Test: [ lindex $check_error_name $index ]\n"
+        append mail_body "Info: Pass[lindex $check_error_pass $index], State: [lindex $check_error_state $index]\n\n"
+        foreach err_message $check_error_text("[ lindex $check_error_name $index ]") {
+            foreach sm $err_message {
+               set error_output [ create_error_message $sm ]
+               append mail_body $error_output
+            }
+        }
+    }
+    set nr_failed [llength $check_error_name]
+    append mail_body "Number of failed tests: $nr_failed"  
+
+    # test run not usefull (warning)
+    append mail_body "\n\nunsupported tests:\n"
+    append mail_body "==================\n"
+    for {set index 0} {$index < [llength $check_warning_name]} {incr index 1} {
+        append mail_body "Date: [ lindex $check_warning_date $index ]\n" 
+        append mail_body "Test: [ lindex $check_warning_name $index ]\n"
+        append mail_body "Info: Pass[lindex $check_warning_pass $index], State: [lindex $check_warning_state $index]\n\n"
+        if { [info exists check_warning_text("[ lindex $check_warning_name $index ]")] } {
+           foreach err_message $check_warning_text("[ lindex $check_warning_name $index ]") {
+              foreach sm $err_message {
+                 set error_output [ create_error_message $sm ]
+                 append mail_body $error_output
               }
            }
-   
-           if { [llength $check_missing_dep] > 0 } {
-              # missing dependencies , run again
-              set checks_to_do $check_missing_dep
-              incr pass_no 1
-              if { $todo == $last_to_do } {
-                 set stop 1
-              } else {
-                 puts $CHECK_OUTPUT "restarting test with missing dependencies ..."
-                 set check_missing_dep ""
-              } 
-              set last_to_do $todo
-           } else {
-              # all done
-              set stop 1
-           } 
-        }  ;# while stop == 0
-
-        puts $CHECK_OUTPUT "Number of completed tests     : [llength $check_ok_name]"  
-        puts $CHECK_OUTPUT "Number of failed tests        : [llength $check_error_name]"  
-        puts $CHECK_OUTPUT "Number of unsupported tests   : [llength $check_warning_name]"
-        puts $CHECK_OUTPUT "Number of dependencies errors : [llength $check_missing_dep]"
- 
-
-        set mail_body "Testsuite run on host $CHECK_HOST complete\n\n"
-
-
-        # dependencies errors
-        if { [llength $check_missing_dep ] > 0 } { 
-           append mail_body "missing dependencies:\n"
-           append mail_body "=====================\n\n"
-           foreach elem $check_missing_dep {
-              append mail_body "check [get_check_name $elem] in directory\n$elem\n" 
-           } 
-           append mail_body "\n"
         }
-        # tests ok
-
-        append mail_body "completed tests:\n"
-        append mail_body "================\n\n"
-        for {set index 0} {$index < [llength $check_ok_name]} {incr index 1} {
-            append mail_body "Date: [ lindex $check_ok_date $index ]\n" 
-            append mail_body "Test: [ lindex $check_ok_name $index ]\n"
-            append mail_body "Info: Pass[lindex $check_ok_pass $index], State: [lindex $check_ok_state $index]\n\n"
-        }
-        set nr_complete [llength $check_ok_name] 
-        append mail_body "Number of completed tests: $nr_complete"        
-
-        # tests failed
-        append mail_body "\n\nfailed tests:\n"
-        append mail_body "=============\n"
-        for {set index 0} {$index < [llength $check_error_name]} {incr index 1} {
-            append mail_body "Date: [ lindex $check_error_date $index ]\n" 
-            append mail_body "Test: [ lindex $check_error_name $index ]\n"
-            append mail_body "Info: Pass[lindex $check_error_pass $index], State: [lindex $check_error_state $index]\n\n"
-            foreach err_message $check_error_text("[ lindex $check_error_name $index ]") {
-                foreach sm $err_message {
-                   set error_output [ create_error_message $sm ]
-                   append mail_body $error_output
-                }
-            }
-        }
-        set nr_failed [llength $check_error_name]
-        append mail_body "Number of failed tests: $nr_failed"  
-
-        # test run not usefull (warning)
-        append mail_body "\n\nunsupported tests:\n"
-        append mail_body "==================\n"
-        for {set index 0} {$index < [llength $check_warning_name]} {incr index 1} {
-            append mail_body "Date: [ lindex $check_warning_date $index ]\n" 
-            append mail_body "Test: [ lindex $check_warning_name $index ]\n"
-            append mail_body "Info: Pass[lindex $check_warning_pass $index], State: [lindex $check_warning_state $index]\n\n"
-            if { [info exists check_warning_text("[ lindex $check_warning_name $index ]")] } {
-               foreach err_message $check_warning_text("[ lindex $check_warning_name $index ]") {
-                  foreach sm $err_message {
-                     set error_output [ create_error_message $sm ]
-                     append mail_body $error_output
-                  }
-               }
-            }
-        }
-        set nr_unsupported [llength $check_warning_name]
-        append mail_body "Number of unsupported tests: $nr_unsupported"  
-        if { [llength $check_missing_dep ] > 0 } {
-           set mail_subject "testsuite run complete - ok:$nr_complete;failed:$nr_failed;unsup.:$nr_unsupported;depend:[llength $check_missing_dep]"
-        } else {
-           set mail_subject "testsuite run complete - ok:$nr_complete;failed:$nr_failed;unsup.:$nr_unsupported"
-        }
-        mail_report "$mail_subject" $mail_body
-      
- 
-    } else {
-       puts $CHECK_OUTPUT "check directories not found"
     }
+    set nr_unsupported [llength $check_warning_name]
+    append mail_body "Number of unsupported tests: $nr_unsupported"  
+    if { [llength $check_missing_dep ] > 0 } {
+       set mail_subject "testsuite run complete - ok:$nr_complete;failed:$nr_failed;unsup.:$nr_unsupported;depend:[llength $check_missing_dep]"
+    } else {
+       set mail_subject "testsuite run complete - ok:$nr_complete;failed:$nr_failed;unsup.:$nr_unsupported"
+    }
+    mail_report "$mail_subject" $mail_body
+  
 
 }
 
@@ -4593,7 +4716,7 @@ proc select_runlevel {} {
      global CHECK_ENABLED_RUNLEVELS CHECK_ENABLED_CATEGORIES CHECK_CHECKTREE_ROOT
 
      set data ""
-     set my_cats [get_categories $CHECK_CHECKTREE_ROOT]
+     set my_cats [get_checktree_categories "root"]
 
      while { $data != 0 } {
        
@@ -4792,87 +4915,76 @@ proc set_command_line_options {} {
      } 
 }
 
-#                                                             max. column:     |
-#****** check/get_max_level_count() ******
-# 
+#****** check/get_max_level_count() ********************************************
 #  NAME
-#     get_max_level_count -- ??? 
+#     get_max_level_count() -- get runleves of check
 #
 #  SYNOPSIS
 #     get_max_level_count { path } 
 #
 #  FUNCTION
-#     ??? 
+#     This function returns all runlevel numbers for the check specified by
+#     its testsuite path.
 #
 #  INPUTS
-#     path - ??? 
+#     path - full path name of check
 #
 #  RESULT
-#     ??? 
+#     a list of runlevel numbers
 #
-#  EXAMPLE
-#     ??? 
-#
-#  NOTES
-#     ??? 
-#
-#  BUGS
-#     ??? 
-#
-#  SEE ALSO
-#     ???/???
-#*******************************
+#*******************************************************************************
 proc get_max_level_count {path} {
-  global CHECK_DIRECTORIES CHECK_INFORMATION_FILE CHECK_INFORMATION_EXT check_highest_level 
-  global CHECK_MAX_LEVEL check_init_level_procedure CHECK_ACT_LEVEL check_name
+  global CHECK_ACT_LEVEL
+  global ts_checktree
  
-  set old_check_name $check_name
-
-  set CHECK_DIRECTORIES ""
-  set CHECK_MAX_LEVEL "0"
-  get_check_dirs $path  
-  if { [info exists CHECK_DIRECTORIES] == 1 } {
-    foreach elem $CHECK_DIRECTORIES {
-       set check_highest_level 0 
-       set check_init_level_procedure "--"
-       ts_source $elem/$CHECK_INFORMATION_FILE $CHECK_INFORMATION_EXT
-       if { [string compare $check_init_level_procedure "--" ] != 0 } {
-          for {set x 0 } {$x <= $check_highest_level} {incr x 1 } {
-             set CHECK_ACT_LEVEL $x
-             if { [$check_init_level_procedure ]  == 0 } {
-                if { [lsearch $CHECK_MAX_LEVEL $x] < 0 } {
-                   lappend CHECK_MAX_LEVEL $x
-                }
-             }
-          } 
-       }
-    }  
-  }
-  set check_name $old_check_name
-  return $CHECK_MAX_LEVEL
+  set check_directories [get_tests_from_checktree $path]
+  set max_level {}
+  foreach elem $check_directories {
+     set nr $ts_checktree($elem)
+     if { [string compare $ts_checktree($nr,check_init_level_procedure) "--" ] != 0 } {
+        for {set x 0 } {$x <= $ts_checktree($nr,check_highest_level)} {incr x 1 } {
+           set CHECK_ACT_LEVEL $x
+           if { [$ts_checktree($nr,check_init_level_procedure)]  == 0 } {
+              if { [lsearch $max_level $x] < 0 } {
+                 lappend max_level $x
+              }
+           }
+        } 
+     }
+  }  
+  return $max_level
 }
 
-proc get_categories {path} {
-  global CHECK_DIRECTORIES CHECK_INFORMATION_FILE CHECK_INFORMATION_EXT check_highest_level 
-  global CHECK_MAX_LEVEL check_init_level_procedure CHECK_ACT_LEVEL
-  global check_category
+proc get_checktree_max_level_count {path} {
+  global CHECK_ACT_LEVEL
+  global ts_checktree
  
-  set CHECK_DIRECTORIES ""
-  set CHECK_MAX_LEVEL "0"
-  set back ""
-  get_check_dirs $path  
-  if { [info exists CHECK_DIRECTORIES] == 1 } {
-    foreach elem $CHECK_DIRECTORIES {
-       clean_up_globals
-       ts_source $elem/$CHECK_INFORMATION_FILE $CHECK_INFORMATION_EXT
-       if { [info exists check_category] } {
-          foreach elem $check_category {
-             if { [ lsearch -exact $back $elem ] == -1 } {
-                lappend back $elem
-             }
-          }
-       }
-    }  
+  if { [info exists ts_checktree($path)] }  {
+     set nr $ts_checktree($path)
+     return $ts_checktree($nr,max_level_count)
+  }
+  return ""
+}
+
+
+
+
+
+
+proc get_checktree_categories {path} {
+  global ts_checktree
+ 
+  set check_directories [get_tests_from_checktree $path]
+  set back {}
+  foreach elem $check_directories {
+     set nr $ts_checktree($elem)
+     if { [info exists ts_checktree($nr,check_category)] } {
+        foreach elem $ts_checktree($nr,check_category) {
+           if { [ lsearch -exact $back $elem ] == -1 } {
+              lappend back $elem
+           }
+        }
+     }
   }
   set back [lsort $back]
   return $back
@@ -4914,70 +5026,45 @@ proc get_categories {path} {
 #     ???/???
 #*******************************
 proc show_tests {path full} {
-  global CHECK_DIRECTORIES
+  global ts_checktree
 
-  set CHECK_DIRECTORIES ""
-  get_check_dirs $path 
+  set check_directories [get_tests_from_checktree $path]
 
-  if { [info exists CHECK_DIRECTORIES] == 1 } {
-    foreach elem $CHECK_DIRECTORIES {
-      clear_screen
-      show_test $elem $full
-      wait_for_enter
-    }  
-  }
+  foreach elem $check_directories {
+     clear_screen
+     show_test $elem $full
+     wait_for_enter
+  }  
 }
 
-# change directory
-#                                                             max. column:     |
-#****** check/change_dir() ******
-# 
-#  NAME
-#     change_dir -- ??? 
-#
-#  SYNOPSIS
-#     change_dir { } 
-#
-#  FUNCTION
-#     ??? 
-#
-#  INPUTS
-#
-#  RESULT
-#     ??? 
-#
-#  EXAMPLE
-#     ??? 
-#
-#  NOTES
-#     ??? 
-#
-#  BUGS
-#     ??? 
-#
-#  SEE ALSO
-#     ???/???
-#*******************************
 proc change_dir { { have_input "" } } {
-  global CHECK_ACT_PATH CHECK_CHECKTREE_ROOT 
-  set index_start 1
-  print_menu_header
+  global CHECK_ACT_PATH ts_checktree
 
-  set dirs [ get_dir_names $CHECK_ACT_PATH ]
+  set index_start 1
+
+  if { $have_input == "" } {
+     print_menu_header
+  }
+
+  set dirs [ get_checktree_dir_names $CHECK_ACT_PATH 0]
 
   set count 1 
 
-  if {[string compare $CHECK_ACT_PATH $CHECK_CHECKTREE_ROOT] != 0 } {
-    puts "($count) - up"
+  if {[string compare $CHECK_ACT_PATH "root"] != 0 } {
+    if { $have_input == "" } {
+       puts "($count) - up"
+    }
     incr count 1
     incr index_start 1
   }
-  puts "($count) - stay"
+  if { $have_input == "" } {
+     puts "($count) - stay"
+  }
   incr count 1
   incr index_start 1
 
   foreach elem $dirs {
-#     puts "($count) - go to \"$elem\""
+     # puts "($count) - go to \"$elem\""
      set newdir($count) $elem
      incr count 1
   }
@@ -4988,27 +5075,63 @@ proc change_dir { { have_input "" } } {
   } else {
      set input $have_input
   }
-  set nr_of_dirs [llength $dirs]
-  for { set i 0 } { $i < $nr_of_dirs } { incr i 1 } {
-     if { [lindex $dirs $i] == $input } {
+
+  # here we have an input
+
+  for { set i 0 } { $i < [llength $dirs] } { incr i 1 } {
+     if { [file tail [lindex $dirs $i]] == $input || [lindex $dirs $i] == $input } {
         set input $i 
         incr input $index_start
      }
   }
-  
-  if { ($input == 1) && ([string compare $CHECK_ACT_PATH $CHECK_CHECKTREE_ROOT] != 0)}  {
-     puts "go to upper dir ..."
-     set test [split $CHECK_ACT_PATH "/\/"] 
-     set CHECK_ACT_PATH [lrange $test 0 [expr [llength $test] - 2] ]
-     set CHECK_ACT_PATH [ join $CHECK_ACT_PATH "/"]  
+
+  # here input contains the number (switch to newdir($input)
+  if { ($input == 1) || ($input == "..") }  {
+     if { $have_input == "" } {
+        puts "go to upper dir ..."
+     }
+     if { [info exists ts_checktree($CHECK_ACT_PATH)] } {
+        set nr $ts_checktree($CHECK_ACT_PATH)
+        set updir $ts_checktree($nr,upper_nrs); 
+        set CHECK_ACT_PATH $ts_checktree($updir,dir_name)
+     }
      return
   }
 
   if { [info exists newdir($input)] == 1 } {
-     puts "go to dir $newdir($input) ..."
-     set CHECK_ACT_PATH "$CHECK_ACT_PATH/$newdir($input)"
+     if { $have_input == "" } {
+        puts "go to dir $newdir($input) ..."
+     }
+     set CHECK_ACT_PATH "$newdir($input)"
      return
   }
+
+  set matches ""
+  # here we try to find a test name
+  for {set i 0} {$i< $ts_checktree(act_nr)} {incr i 1} {
+     if { $ts_checktree($i,test_available) == 1 } {
+        if { $ts_checktree($i,check_name) == $input } {
+           set matches $i
+        }
+     }
+  }
+  
+  if { $matches != "" } {
+     set CHECK_ACT_PATH $ts_checktree($matches,dir_name)
+     return
+  }
+
+  set matches ""
+  # here we try to find a test name
+  for {set i 0} {$i< $ts_checktree(act_nr)} {incr i 1} {
+     if { [file tail $ts_checktree($i,dir_name)] == $input } {
+        lappend matches $i
+     }
+  } 
+  if { [llength $matches] == 1 } {
+     set CHECK_ACT_PATH $ts_checktree($matches,dir_name)
+     return
+  } 
 }
 
 
@@ -5155,12 +5278,12 @@ proc clear_screen {} {
 #     ???/???
 #*******************************
 proc print_menu_header {} {
-  global CHECK_ACT_PATH CHECK_DIRECTORIES CHECK_RESULT_DIR 
+  global CHECK_ACT_PATH CHECK_RESULT_DIR 
   global CHECK_USER CHECK_REPORT_FILE CHECK_OUTPUT CHECK_HOST CHECK_BAD_RESULT_DIR 
   global CHECK_CORE_RESULT_DIR CHECK_CORE_BAD_RESULT_DIR CHECK_MAIN_RESULTS_DIR 
-  global CHECK_ENABLED_RUNLEVELS CHECK_MAX_LEVEL CHECK_PRODUCT_VERSION_NUMBER
+  global CHECK_ENABLED_RUNLEVELS CHECK_PRODUCT_VERSION_NUMBER
   global CHECK_ENABLED_CATEGORIES CHECK_USER CHECK_GROUP
-  global ts_config
+  global ts_config ts_checktree
 
   clear_screen
   set_users_environment $CHECK_HOST env 1
@@ -5170,44 +5293,47 @@ proc print_menu_header {} {
   puts " system version     :  $CHECK_PRODUCT_VERSION_NUMBER ($ts_config(gridengine_version))"
   puts " feature            :  $ts_config(product_feature)"
   puts " current dir        :  [ format_output "                       " 54 $CHECK_ACT_PATH ]"
-#  puts " user group         :  $CHECK_GROUP"
-#  puts " user name          :  $CHECK_USER"
-  set dirs [ get_dir_names $CHECK_ACT_PATH ]
-  set files [get_file_names $CHECK_ACT_PATH ]
-  if { [ llength $dirs ] == 0 } {
-     lappend dirs "."
-  }
+
+  set dirs [ get_checktree_dir_names $CHECK_ACT_PATH ]
+  lappend dirs $CHECK_ACT_PATH
   set test_counts ""
   set test_text ""
   set time_count 0
   foreach elem $dirs {
      set test_name ""
-     set CHECK_DIRECTORIES ""
-     get_check_dirs "$CHECK_ACT_PATH/$elem"
+     set check_directories [get_tests_from_checktree $elem]
      set count 0
-     foreach test $CHECK_DIRECTORIES {
+     foreach test $check_directories {
         if { [is_category_enabled $test] == 0 } {
            set run_test_ok 0
-           debug_puts "print_menu_header: get_check_levels"
-           set tests_runlevels [get_check_levels $test]
+           set tests_runlevels [get_checktree_levels $test]
             
+           # test if the check was already successful
+           set test_name [get_check_name $test]
            foreach tests_runlevel $tests_runlevels {
-              debug_puts "print_menu_header: is_level_enabled"
               if { [ is_level_enabled $tests_runlevel ] == 0 } {
-                 set test_name [get_check_name $test]
-                 if { ( [file isfile "$CHECK_RESULT_DIR/$test_name.res.$tests_runlevel"] == 1) } {
-                    continue
+                 set state_text "done"
+                 if { ( [file isfile "$CHECK_RESULT_DIR/$test_name.res.$tests_runlevel"] != 1) } {
+                    if { ( [file isfile "$CHECK_CORE_RESULT_DIR/$test_name.res.$tests_runlevel"] != 1) } {
+                       set run_test_ok 1
+                       incr time_count [get_run_level_time $tests_runlevel] 
+                       set state_text "on"
+                    }
                  }
-                 if { ( [file isfile "$CHECK_CORE_RESULT_DIR/$test_name.res.$tests_runlevel"] == 1) } {
-                    continue
-                 }
-                 set run_test_ok 1
-                 incr time_count [get_run_level_time $tests_runlevel] 
+              } else {
+                 set state_text "off"
+              }
+              if { [string first [get_run_level_name $tests_runlevel] $test_name] < 0 } {
+                 append test_name " [get_run_level_name $tests_runlevel]=$state_text"
               }
            }
            if { $run_test_ok == 1 } {
+              # we have to run this check
               incr count 1  
            }
+        } else {
+           set test_name [get_check_name $test]
+           append test_name " (category not enabled)"  
         }
      }
      if { $count > 9 } {
@@ -5216,21 +5342,34 @@ proc print_menu_header {} {
         set blank "  "
      }
      lappend test_counts "$count"
-     if { ${elem} == "." } {
-        lappend test_text   " test name: $test_name"
+
+     # do we have a test in local directory?
+     set we_have_a_test 0
+     if { [info exists ts_checktree($CHECK_ACT_PATH)] } {
+        set nr $ts_checktree($CHECK_ACT_PATH)
+        if { $ts_checktree($nr,test_available) == 1 } {
+           set we_have_a_test 1
+        }
+     }
+
+     if { $elem == $CHECK_ACT_PATH } {
+        if { $we_have_a_test == 1 } {
+           lappend test_text   " test name: $test_name"
+        }
      } else {
-        lappend test_text   "${blank}${count} test(s) available in subdir: ${elem}"
+        if { $elem != $CHECK_ACT_PATH } {
+           lappend test_text   "${blank}${count} test(s) available in subdir: [file tail $elem]"
+        }
      }
   }
-  set test_count 0
-  foreach elem $test_counts {
-     incr test_count $elem 
-  }
 
-  get_max_level_count $CHECK_ACT_PATH
+  set test_count [llength $test_counts]
+  puts "==============================================================================="
+
+
   set possible_levels ""
 
-  foreach elem $CHECK_MAX_LEVEL {
+  foreach elem [get_checktree_max_level_count $CHECK_ACT_PATH] {
      set a_level [ get_run_level_name $elem ] 
      if { [string first $a_level $possible_levels ] < 0 } {
         set possible_levels "$possible_levels $a_level"
@@ -5251,7 +5390,7 @@ proc print_menu_header {} {
 
   set selected_levels [ lsort $selected_levels ]
   puts " selected runlevels :  $selected_levels"
-  set my_cats [get_categories $CHECK_ACT_PATH]
+  set my_cats [get_checktree_categories $CHECK_ACT_PATH]
   puts -nonewline " categories         :  "
   foreach elem $my_cats {
      puts -nonewline "$elem "
@@ -5271,14 +5410,7 @@ proc print_menu_header {} {
   foreach elem $test_text {
      puts $elem
   }
-#  puts "===============================================================================" 
-#  set blank "  "
-#  if { $test_count > 9 } {
-#     set blank " "
-#  }  
-#  puts "${blank}$test_count test(s) available in current subdirs"
   puts "===============================================================================" 
-  return $files
 }
 
 #                                                             max. column:     |
@@ -6915,16 +7047,17 @@ proc restart_debug_daemons { { shutdown 0 } } {
    wait_for_load_from_all_queues 300 
 }
 
-proc got_command {  } {
+proc no_blocking_input {  } {
 
   fconfigure stdin -blocking FALSE
-  set data [wait_for_enter 1]
-  if { [string length $data] > 0 } {
-     return $data
-  }  
-  fconfigure stdin -blocking TRUE
-
-  return 0
+  while { 1 } {
+     set data [read -nonewline stdin ]
+     if { [string length $data] > 0 } {
+        fconfigure stdin -blocking TRUE
+        return $data
+     }  
+     after 250
+  }
 }
 
 #                                                             max. column:     |
@@ -7004,22 +7137,19 @@ proc ask_user_yes_or_no { question } {
 #*******************************
 proc menu {} {
    global ts_config
-  global CHECK_ACT_PATH CHECK_DIRECTORIES CHECK_INFORMATION_FILE CHECK_INFORMATION_EXT CHECK_RESULT_DIR 
+  global CHECK_ACT_PATH CHECK_INFORMATION_FILE CHECK_INFORMATION_EXT CHECK_RESULT_DIR 
   global CHECK_USER CHECK_REPORT_FILE CHECK_OUTPUT CHECK_HOST CHECK_BAD_RESULT_DIR 
   global CHECK_CORE_RESULT_DIR CHECK_CORE_BAD_RESULT_DIR CHECK_MAIN_RESULTS_DIR 
-  global CHECK_ENABLED_RUNLEVELS CHECK_MAX_LEVEL CHECK_PRODUCT_VERSION_NUMBER CHECK_SETUP_NAMES
+  global CHECK_ENABLED_RUNLEVELS CHECK_PRODUCT_VERSION_NUMBER CHECK_SETUP_NAMES
   global daemon_debug CHECK_DEBUG_LEVEL CHECK_DEFAULTS_FILE CHECK_DO_SETUP
   global CHECK_PACKAGE_DIRECTORY CHECK_SETUP_CHANGES CHECK_PACKAGE_TYPE
-  global check_reinit_on_tcl_error
+  global check_reinit_on_tcl_error ts_checktree
 
   delete_temp_script_files
 
-  source_tcl_files
-
-  set files [  print_menu_header ]
+  print_menu_header
  
   puts "  (0) select runlevels/categories"
-  puts "  (1) change dir"
   puts "  (2) run not completed tests (including subdirectories)"
   puts "  (3) show test descriptions"
   puts "  (4) exit (press ^C to exit without shutdown of the cluster)"
@@ -7033,12 +7163,14 @@ proc menu {} {
   } else {
      puts " (10) use \"stdout\" for output"
   }
-   set dep_name "$CHECK_INFORMATION_FILE.$ts_config(gridengine_version).$CHECK_INFORMATION_EXT"
-   set indep_name "$CHECK_INFORMATION_FILE.$CHECK_INFORMATION_EXT"
-   set localtest [lsearch $files $dep_name]
-   if { $localtest < 0 } {
-      set localtest [lsearch $files $indep_name]
-   }
+
+  set localtest -1
+  if {[info exists ts_checktree($CHECK_ACT_PATH)]} {
+     set local_dir_nr $ts_checktree($CHECK_ACT_PATH)
+     if { $ts_checktree($local_dir_nr,test_available) == 1 } {
+        set localtest 0
+     }
+  }
 
   if { $localtest >= 0 } {
     puts " (11) show test descriptions of local test"
@@ -7060,8 +7192,12 @@ proc menu {} {
     puts " (27) set command line options"
     puts " (28) restart cluster"
     puts " (29) check spool directory content"
+    puts " (30) re-read checktree and re-source tcl-files"
 
-  puts -nonewline "\nEnter number or subdirectory name:\n> "
+   puts "\nYou can select a menu number,"
+   puts "enter a relative/absolute path or \"..\" to switch the directory."
+   puts "You can also enter a test name to switch directly to the test directory."
+   puts -nonewline "\n> "
 
   set input [wait_for_enter 1]; 
 
@@ -7135,8 +7271,14 @@ proc menu {} {
          check_local_spool_directories 1
          wait_for_enter
     }
+    "30" {
+         source_tcl_files
+         wait_for_enter
+         build_checktree
+         wait_for_enter
+    }
+
     "0" { select_runlevel }
-    "1" { change_dir; }
     "2" { set saved_check_reinit_on_tcl_error $check_reinit_on_tcl_error 
           set check_reinit_on_tcl_error 1
           run_tests $CHECK_ACT_PATH 0
@@ -7443,6 +7585,7 @@ for { set i 0 } { $i < $argc } { incr i } {
       puts ""
       puts "check PATH RUNLEVEL   run test in checktree sub-path automatically up to runlevel"
       puts "                      RUNLEVEL. PATH is as check sub-path, relative to checktree."
+      puts "                      If PATH begins with \"/\" then the path is used absolute"
       puts "                      (RUNLEVEL is a value from 0=short tests, up to 4=week tests)"
       puts ""
       puts "execute_func ARGS     just run this procedure with given arguments"
@@ -7749,7 +7892,7 @@ bootstrap_sge_config
 if { $do_category == 1 } {
    set CHECK_ENABLED_CATEGORIES $do_category_list
 }
-set CHECK_ACT_PATH $CHECK_CHECKTREE_ROOT
+set CHECK_ACT_PATH "root"
 
 
 set mail_body "$mail_body product version is [get_version_info]\n"
@@ -7795,11 +7938,15 @@ if { $do_compile } {
 }
 
 if { $do_one_test } {
-   set CHECK_ACT_PATH "$CHECK_CHECKTREE_ROOT/$do_one_test_name"
+   # ts_checktree ok
+   if { [string first "/" $do_one_test_name] == 0 || [string first "\\" $do_one_test_name] == 0 } {
+      set CHECK_ACT_PATH "$do_one_test_name"
+   } else {
+      set CHECK_ACT_PATH "$CHECK_CHECKTREE_ROOT/$do_one_test_name"
+   }
    set dirs [ get_dir_names $CHECK_ACT_PATH ]
    set files [get_file_names $CHECK_ACT_PATH ]
    
-   get_max_level_count $CHECK_ACT_PATH
    set selected_levels ""
    set CHECK_ENABLED_RUNLEVELS ""
    for {set i 0} {$i<= $do_one_test_level} {incr i 1} {
@@ -7816,14 +7963,13 @@ if { $do_one_test } {
 }
 
 if { $do_all } {
-   set CHECK_ACT_PATH "$CHECK_CHECKTREE_ROOT"
+   # ts_checktree ok
+   set CHECK_ACT_PATH "root"
    delete_tests $CHECK_ACT_PATH
-
-   set CHECK_ACT_PATH "$CHECK_CHECKTREE_ROOT"
+   set CHECK_ACT_PATH "root"
    set dirs [ get_dir_names $CHECK_ACT_PATH ]
    set files [get_file_names $CHECK_ACT_PATH ]
    
-   get_max_level_count $CHECK_ACT_PATH
    set selected_levels ""
    set CHECK_ENABLED_RUNLEVELS ""
    for {set i 0} {$i<= $do_all_runlevel} {incr i 1} {
@@ -7839,8 +7985,9 @@ if { $do_all } {
 } 
 
 if { $do_install } {
+   # ts_checktree ok
    puts "installing core system on host $CHECK_HOST ..."
-   set CHECK_ACT_PATH "$CHECK_ACT_PATH/install_core_system"  
+   set CHECK_ACT_PATH "$CHECK_CHECKTREE_ROOT/install_core_system"  
    run_test $CHECK_ACT_PATH 1
    exit 0 
 }
@@ -7853,8 +8000,8 @@ if { $do_kill } {
 
 if { $do_only_reset_config == 1 } {
   set result 1
- 
-  set CHECK_ACT_PATH "$CHECK_ACT_PATH/install_core_system"
+  # ts_checktree ok
+  set CHECK_ACT_PATH "$CHECK_CHECKTREE_ROOT/install_core_system"
   run_test $CHECK_ACT_PATH 1 "setup_queues" 0
   run_test $CHECK_ACT_PATH 1 "setup_testcheckpointobject" 0
   run_test $CHECK_ACT_PATH 1 "setup_conf" 0

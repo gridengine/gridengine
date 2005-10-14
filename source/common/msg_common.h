@@ -299,7 +299,7 @@
 ** sge_schedd_conf.c
 */
 #define MSG_GDI_INVALIDPOLICYSTRING     _MESSAGE(23288, _("Invalid policy hierachy string. Disabling policy hierachy."))
-#define MSG_GDI_INVALIDHALFLIFE_DECAY _MESSAGE(23289, _("Invalid halflife_day_list. Ignoring the setting."))
+#define MSG_GDI_INVALIDHALFLIFE_DECAY _MESSAGE(23291, _("Invalid halflife_day_list. Ignoring the setting."))
 
 /*
  * usage.c

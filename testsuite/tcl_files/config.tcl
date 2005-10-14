@@ -4096,15 +4096,6 @@ proc config_build_ts_config {} {
    set ts_config($parameter,pos)        $ts_pos
    incr ts_pos 1
 
-   set parameter "additional_checktree_dirs"
-   set ts_config($parameter)            ""
-   set ts_config($parameter,desc)       "Additional Testsuite's checktree directories"
-   set ts_config($parameter,default)    ""   ;# depend on testsuite root dir 
-   set ts_config($parameter,setup_func) "config_additional_checktree_dirs"
-   set ts_config($parameter,onchange)   "stop"
-   set ts_config($parameter,pos)        $ts_pos
-   incr ts_pos 1
-
    set parameter "results_dir"
    set ts_config($parameter)            ""
    set ts_config($parameter,desc)       "Testsuite's directory to save test results (html/txt files)"

@@ -1,3 +1,7 @@
+CR-2005-10-14-2: Testsuite: enhancement: make a real install_core_system call when
+                            the first install (re-init active) fails after a 
+                            check has failed
+
 CR-2005-10-14-1: Testsuite: fixed problem for additional checktrees config when
                             creating a config from scratch
 

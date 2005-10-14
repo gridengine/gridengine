@@ -3544,6 +3544,7 @@ proc run_tests { path runcompleted } {
                            set CHECK_ACT_PATH "$CHECK_CHECKTREE_ROOT/install_core_system"  
                            close_open_rlogin_sessions  ;# session reset
                            if { [run_test $CHECK_ACT_PATH 1] != 0 } {
+                              set check_use_installed_system 0
                               set CHECK_ACT_PATH "$CHECK_CHECKTREE_ROOT/install_core_system" 
                               run_test $CHECK_ACT_PATH 1
                            }
@@ -3579,6 +3580,7 @@ proc run_tests { path runcompleted } {
                            set CHECK_ACT_PATH "$CHECK_CHECKTREE_ROOT/install_core_system"  
                            close_open_rlogin_sessions  ;# session reset
                            if { [run_test $CHECK_ACT_PATH 1] != 0 } {
+                              set check_use_installed_system 0
                               set CHECK_ACT_PATH "$CHECK_CHECKTREE_ROOT/install_core_system" 
                               run_test $CHECK_ACT_PATH 1
                            }

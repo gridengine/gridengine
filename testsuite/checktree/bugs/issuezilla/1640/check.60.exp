@@ -1,0 +1,138 @@
+#!/vol2/TCL_TK/glinux/bin/expect
+#___INFO__MARK_BEGIN__
+##########################################################################
+#
+#  The Contents of this file are made available subject to the terms of
+#  the Sun Industry Standards Source License Version 1.2
+#
+#  Sun Microsystems Inc., March, 2001
+#
+#
+#  Sun Industry Standards Source License Version 1.2
+#  =================================================
+#  The contents of this file are subject to the Sun Industry Standards
+#  Source License Version 1.2 (the "License"); You may not use this file
+#  except in compliance with the License. You may obtain a copy of the
+#  License at http://gridengine.sunsource.net/Gridengine_SISSL_license.html
+#
+#  Software provided under this License is provided on an "AS IS" basis,
+#  WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING,
+#  WITHOUT LIMITATION, WARRANTIES THAT THE SOFTWARE IS FREE OF DEFECTS,
+#  MERCHANTABLE, FIT FOR A PARTICULAR PURPOSE, OR NON-INFRINGING.
+#  See the License for the specific provisions governing your rights and
+#  obligations concerning the Software.
+#
+#  The Initial Developer of the Original Code is: Sun Microsystems, Inc.
+#
+#  Copyright: 2001 by Sun Microsystems, Inc.
+#
+#  All Rights Reserved.
+#
+##########################################################################
+#___INFO__MARK_END__
+
+# define global variable in this namespace
+global check_name 
+global check_category
+global check_description 
+global check_needs
+global check_functions 
+global check_errno 
+global check_errstr 
+global check_highest_level
+global check_init_level_procedure
+global check_root_access_needs
+global env
+
+# set check_root_access_needs "yes"
+
+
+# define a level initialization procedure:
+set check_init_level_procedure "issue_1640_init_level"
+
+# define test's name and run level descriptions
+set check_name            "issue_1640"
+set check_category        "COMPATIBILITY SYSTEM L10N VERIFIED"
+set check_highest_level   0
+set check_description(0)  "check if qconf gets confused by shortcuts"
+
+# define test's dependencies
+set check_needs           "init_core_system" 
+
+
+# setup and cleanup functions
+set check_setup_function "issue_1640_setup"
+set check_cleanup_function "issue_1640_cleanup"
+
+# define test's procedure order
+set check_functions ""
+lappend check_functions "issue_1640_test"
+
+proc issue_1640_init_level {} {
+   global CHECK_ACT_LEVEL
+   global CHECK_PRODUCT_TYPE
+   global test_array_jobs 
+
+  switch -- $CHECK_ACT_LEVEL {
+     "0" { 
+           return 0    
+     } 
+  } 
+
+  return -1  ;# no other level else
+}
+
+# -------- local test procedures -----------------------------------------------
+
+proc issue_1640_setup  {} {
+   global CHECK_OUTPUT CHECK_PROTOCOL_DIR CHECK_PRODUCT_ROOT CHECK_ARCH
+   global num_queues complex_backup
+
+   set_error 0 "ok"
+}
+
+proc issue_1640_cleanup  {} {
+   global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_CORE_MASTER
+   global num_queues complex_backup
+
+   set_error 0 "ok"
+}
+
+proc issue_1640_test {} {
+   global CHECK_OUTPUT CHECK_ACTUAL_TEST_PATH CHECK_PRODUCT_ROOT CHECK_ARCH
+
+   #
+   # Scenario:
+   #     qconf -mattr exechost complex_values re=false global
+   #     qconf -mattr exechost complex_values re=true global
+   #
+   # Bug exists if complex_values has the value 
+   #     rerun=false,rerun=true
+   #
+
+   set catch_return [ catch {
+      eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf -mattr exechost complex_values re=false global"
+   } result ]
+   if { $catch_return != 0 } {
+      add_proc_error "issue_1640_test" -1 "error: qconf -mattr exechost complex_values re=false global"
+   }
+
+   set catch_return [ catch {
+      eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf -mattr exechost complex_values re=true global"
+   } result ]
+   if { $catch_return != 0 } {
+      add_proc_error "issue_1640_test" -1 "error: qconf -mattr exechost complex_values re=true global"
+   }
+
+   set command "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf -se global"
+   set expected_output "rerun=false"
+   set result [ catch { eval exec "$command \| grep \"$expected_output\" " } qstatoutput ]
+   if { ( $result == 0 ) } {
+      add_proc_error "issue_1640_check" "-1" \
+                     "IZ 1640 is present: qconf gets confused by shortcuts"
+      return
+   }
+
+   set_error 0 "ok"
+}
+

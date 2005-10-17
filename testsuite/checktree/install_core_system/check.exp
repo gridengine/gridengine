@@ -968,10 +968,8 @@ proc setup_deadlineuser {} {
   global CHECK_ARCH CHECK_USER CHECK_OUTPUT
 
   puts $CHECK_OUTPUT "add_access_list $CHECK_USER deadlineusers ..."
-  wait_for_enter
   add_access_list $CHECK_USER deadlineusers
 
-  wait_for_enter
   set_error 0 "ok"
 }
 

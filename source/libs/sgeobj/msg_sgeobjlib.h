@@ -280,6 +280,7 @@
 #define MSG_QSTAT_WRONGGCHAR_C         _MESSAGE(64276, _("wrong character \'%c\' for -g option"))
 #define MSG_CQUEUE_UNKNOWNCENTRY_S     _MESSAGE(64277, _("Complex attribute "SFQ" does not exist"))
 #define MSG_OBJECT_ALREADYEXIN_SSS     _MESSAGE(64278, _("No modification because "SFQ" already exists in "SFQ" of "SFQ))
+#define MSG_OBJECT_VALUEMISSING        _MESSAGE(64279, _("Value missing"))
 #define MSG_CONF_USING_SS              _MESSAGE(64300, _("using "SFQ" for "SFN))
 #define MSG_CONF_NOCONFIGFROMMASTER    _MESSAGE(64301, _("could not get configuration from qmaster - using defaults"))
 #define MSG_CONF_NR_DYNAMIC_EVENT_CLIENT_EXCEEDS_MAX_FILEDESCR_U _MESSAGE(64302, _("nr of dynamic event clients exceeds max file descriptor limit, setting MAX_DYN_EC="sge_U32CFormat))

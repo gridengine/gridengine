@@ -1355,34 +1355,45 @@ int main(int argc, char *argv[], char *envp[])
 #endif
 
 
-int attr_mod_threshold(
-lList **alpp,
-lListElem *qep,
-lListElem *new_ep,
-int nm,
-int primary_key,
-int sub_command,
-char *attr_name,
-char *object_name 
-) {
+int 
+attr_mod_threshold(lList **alpp, lListElem *qep, lListElem *new_ep, int nm,
+                   int primary_key, int sub_command, char *attr_name, 
+                   char *object_name) 
+{
    int ret;
 
    DENTER(TOP_LAYER, "attr_mod_threshold");
 
    /* ---- attribute nm */
    if (lGetPosViaElem(qep, nm)>=0) {
-      lListElem *tmp_elem;
+      lListElem *tmp_elem = NULL;
 
       DPRINTF(("got new %s\n", attr_name));
 
-      tmp_elem = lCopyElem(new_ep); 
-      attr_mod_sub_list(alpp, tmp_elem, nm, primary_key, qep,
-                        sub_command, attr_name, object_name, 0); 
+      if (ensure_attrib_available(alpp, qep, nm)) {
+         DEXIT;
+         return STATUS_EUNKNOWN;
+      }
 
-      ret=centry_list_fill_request(lGetList(tmp_elem, nm), Master_CEntry_List, true, false, false);
+      tmp_elem = lCopyElem(new_ep); 
+      
+      ret = attr_mod_sub_list(alpp, tmp_elem, nm, primary_key, qep,
+                              sub_command, attr_name, object_name, 0); 
+      if (!ret) {
+         lFreeElem(&tmp_elem);
+         DEXIT;
+         return STATUS_EUNKNOWN;
+      }
+
+      ret = centry_list_fill_request(lGetList(tmp_elem, nm), 
+                                     Master_CEntry_List, true, false, false);
       if (ret) {
-         /* error message gets written by centry_list_fill_request into SGE_EVENT */
-         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+         /* 
+          * error message gets written by centry_list_fill_request 
+          * into SGE_EVENT 
+          */
+         answer_list_add(alpp, SGE_EVENT, 
+                         STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          lFreeElem(&tmp_elem);
          DEXIT;
          return STATUS_EUNKNOWN;
@@ -1390,12 +1401,6 @@ char *object_name
 
       lSetList(new_ep, nm, lCopyList("", lGetList(tmp_elem, nm)));
       lFreeElem(&tmp_elem);
-
-      /* check whether this attrib is available due to complex configuration */
-      if (ensure_attrib_available(alpp, new_ep, nm)) {
-         DEXIT;
-         return STATUS_EUNKNOWN;
-      }
    }
 
    DEXIT;

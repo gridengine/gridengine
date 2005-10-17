@@ -1894,8 +1894,16 @@ attr_mod_sub_list(lList **alpp, lListElem *this_elem, int this_elem_name,
                   fstring = lGetHost(full_element, this_elem_primary_key);
                }
 
-               if (((type == lStringT) && strcmp(rstring, fstring) == 0) ||
-                   ((type == lHostT) && sge_hostcmp(rstring, fstring) == 0)) {
+               if (rstring == NULL || fstring == NULL) {
+                  ERROR((SGE_EVENT, MSG_OBJECT_VALUEMISSING));
+                  answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC,
+                                  ANSWER_QUALITY_ERROR);
+                  ret = false;
+               }
+
+               if (ret && 
+                   (((type == lStringT) && strcmp(rstring, fstring) == 0) ||
+                   ((type == lHostT) && sge_hostcmp(rstring, fstring) == 0))) {
                   lListElem *new_sub_elem;
                   lListElem *old_sub_elem;
 
@@ -1941,6 +1949,7 @@ attr_mod_sub_list(lList **alpp, lListElem *this_elem, int this_elem_name,
              sub_command == SGE_GDI_APPEND ||
              sub_command == SGE_GDI_REMOVE)) {
             next_reduced_element = lFirst(reduced_sublist);
+
             while ((reduced_element = next_reduced_element)) {
                int pos, type;
                const char *rstring = NULL;
@@ -1956,34 +1965,43 @@ attr_mod_sub_list(lList **alpp, lListElem *this_elem, int this_elem_name,
                   rstring = lGetHost(reduced_element, this_elem_primary_key);
                }
 
-               if (!no_info && sub_command == SGE_GDI_REMOVE) {
-                  INFO((SGE_EVENT, SFQ" does not exist in "SFQ" of "SFQ"\n",
-                        rstring, sub_list_name, object_name));
-                  answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
-               } else {
-                  if (!full_sublist) {
-                     if (!no_info && sub_command == SGE_GDI_CHANGE) {
-                        INFO((SGE_EVENT, SFQ" of "SFQ" is empty - "
-                           "Adding new element(s).\n",
-                           sub_list_name, object_name));
-                        answer_list_add(alpp, SGE_EVENT, STATUS_OK, 
-                                        ANSWER_QUALITY_INFO);
-                     }
-                     lSetList(this_elem, this_elem_name, lCopyList("",
-                        lGetList(delta_elem, this_elem_name)));
-                     full_sublist = lGetList(this_elem, this_elem_name);
-                     break;
+               if (rstring == NULL) {
+                  ERROR((SGE_EVENT, MSG_OBJECT_VALUEMISSING));
+                  answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC,
+                                  ANSWER_QUALITY_ERROR);
+                  ret = false;
+               }
+
+               if (ret) {
+                  if (!no_info && sub_command == SGE_GDI_REMOVE) {
+                     INFO((SGE_EVENT, SFQ" does not exist in "SFQ" of "SFQ"\n",
+                           rstring, sub_list_name, object_name));
+                     answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
                   } else {
-                     if (!no_info && sub_command == SGE_GDI_CHANGE) {
-                        INFO((SGE_EVENT, "Unable to find "SFQ" in "SFQ" of "SFQ
-                           " - Adding new element.\n", rstring,
-                           sub_list_name, object_name));
-                        answer_list_add(alpp, SGE_EVENT, STATUS_OK, 
-                                        ANSWER_QUALITY_INFO);
+                     if (!full_sublist) {
+                        if (!no_info && sub_command == SGE_GDI_CHANGE) {
+                           INFO((SGE_EVENT, SFQ" of "SFQ" is empty - "
+                              "Adding new element(s).\n",
+                              sub_list_name, object_name));
+                           answer_list_add(alpp, SGE_EVENT, STATUS_OK, 
+                                           ANSWER_QUALITY_INFO);
+                        }
+                        lSetList(this_elem, this_elem_name, lCopyList("",
+                           lGetList(delta_elem, this_elem_name)));
+                        full_sublist = lGetList(this_elem, this_elem_name);
+                        break;
+                     } else {
+                        if (!no_info && sub_command == SGE_GDI_CHANGE) {
+                           INFO((SGE_EVENT, "Unable to find "SFQ" in "SFQ" of "SFQ
+                              " - Adding new element.\n", rstring,
+                              sub_list_name, object_name));
+                           answer_list_add(alpp, SGE_EVENT, STATUS_OK, 
+                                           ANSWER_QUALITY_INFO);
+                        }
+                        new_sub_elem =
+                           lDechainElem(reduced_sublist, reduced_element);
+                        lAppendElem(full_sublist, new_sub_elem);
                      }
-                     new_sub_elem =
-                        lDechainElem(reduced_sublist, reduced_element);
-                     lAppendElem(full_sublist, new_sub_elem);
                   }
                }
             }

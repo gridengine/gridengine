@@ -13,7 +13,7 @@ SNPRINTF_OBJS = $(SNPRINTF_SRC:.c=.o)
 ###############################################################################
 all: $(SNPRINTF_LIB)
 
-snprintf_clean:
+clean:
 	$(RM) $(SNPRINTF_OBJS) libsnprintf.a
 
 depend:

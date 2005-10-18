@@ -119,6 +119,9 @@ int main(int argc,char *argv[])
 #endif
 
 #if defined(AIX)
+#  if defined(_ALL_SOURCE)
+#     undef _ALL_SOURCE
+#  endif
 #include <procinfo.h>
 #include <sys/types.h>
 #endif

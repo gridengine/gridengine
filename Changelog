@@ -1,3 +1,6 @@
+HP-2005-10-18-0: Bugfix:    Fixed broken builds on aix43, irix65 and win32-x86
+                 Changed:   qtcsh, pdc, libsgeobj
+
 EB-2005-10-17-0: Bugfix:    qconf -mattr can crash qmaster
                             qconf -[dm]attr gets confused by shortcuts
                  Issue:     1798, 1640

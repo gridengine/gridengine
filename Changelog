@@ -1,3 +1,12 @@
+DT-2005-10-19-0: Bugfix:    o Fixed DRMAA memory leaks
+                            o Fixed handing of -b in DRMAA
+                            o Moved messages into header file
+                            - Merged from DT-2005-10-19-0 (Maintrunk)
+                 Issue:     1763, 1770
+                 Bugtraq:   6317048, 6320683
+                 Changed:   DRMAA
+                 Review:    AH
+
 HP-2005-10-19-0: Bugfix:    Fixed broken build on win32-x86
                  Changed:   qtcsh, libsgeobj 
 

@@ -1,3 +1,8 @@
+MD-2005-10-19-0: Bugfix:    - added reprioritize param to default config
+                            - reprioritize man page description
+                 Changed:   inst_qmaster.sh
+                 Review:    SG, MD
+
 EB-2005-10-17-0: Bugfix:    qconf -mattr can crash qmaster
                             qconf -[dm]attr gets confused by shortcuts
                  Issue:     1798, 1640

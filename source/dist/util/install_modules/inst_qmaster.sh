@@ -344,7 +344,7 @@ SetSpoolingOptionsBerkeleyDB()
          exit 1 
       fi
       SpoolingCheckParams
-      params_ok=1
+      params_ok=$?
    fi
    if [ "$QMASTER" = "install" ]; then
       $INFOTEXT -n "\nThe Berkeley DB spooling method provides two configurations!\n\n" \
@@ -822,7 +822,7 @@ PrintConf()
    $ECHO "auto_user_default_project none"
    $ECHO "auto_user_delete_time  86400"
    $ECHO "delegated_file_staging false"
-
+   $ECHO "reprioritize           0"
 }
 
 

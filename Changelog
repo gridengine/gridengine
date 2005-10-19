@@ -1,3 +1,8 @@
+MD-2005-10-19-0: Bugfix:    - added reprioritize param to default config
+                            - reprioritize man page description
+                 Changed:   inst_qmaster.sh
+                 Review:    SG, MD
+ 
 HP-2005-10-18-0: Bugfix:    Fixed broken builds on aix43, irix65 and win32-x86
                  Changed:   qtcsh, pdc, libsgeobj
 

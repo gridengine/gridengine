@@ -65,6 +65,8 @@ public class Issues extends TestCase {
    }
 
    public void testIssue1770 () throws DrmaaException {
+      System.out.println ("testIssue1770");
+      
       String hostname = Settings.get (Settings.HOSTNAME);
       String pid = Settings.get (Settings.PID);
       String homeDir = Settings.get (Settings.HOME_DIR);
@@ -74,6 +76,7 @@ public class Issues extends TestCase {
       File script = new File ("/tmp", "script" + hostname + pid + ".sh");
       File output1 = new File ("/tmp", "1770" + hostname + pid);
       File output2 = null;
+      Session s = SessionFactory.getFactory ().getSession ();
       
       try {
          try {
@@ -118,8 +121,6 @@ public class Issues extends TestCase {
          }
          
          // Initialize the session
-         Session s = SessionFactory.getFactory ().getSession ();
-
          s.init ("");
 
          LockBox lock = new LockBox ();
@@ -177,11 +178,10 @@ public class Issues extends TestCase {
          }
 
          assertEquals (catname2, line);
-
-         // Clean up
-         s.exit ();
       }
       finally {
+         // Clean up
+         s.exit ();
          qtask.delete ();
          script.delete ();
          output1.delete ();
@@ -192,6 +192,32 @@ public class Issues extends TestCase {
       }
    }
 
+   public void testIssue1709 () throws DrmaaException {
+      System.out.println ("testIssue1709");
+      
+      Session s = SessionFactory.getFactory ().getSession ();
+      
+      s.init ("");
+      
+      JobTemplate jt = s.createJobTemplate ();
+
+      /* We have to submit a job so that we can find out what the last valid
+       * job id is.  We can then synchronize on the next id. */
+      jt.setRemoteCommand ("/bin/date");
+      String id = s.runJob (jt);
+      String nextId = Integer.toString (Integer.parseInt (id) + 1);
+      
+      try {
+         s.synchronize (Collections.singletonList (nextId), s.TIMEOUT_WAIT_FOREVER, false);
+         fail ("Synchronize on non-existant job id succeeded.  Issue 1709 still exists");
+      }
+      catch (InvalidJobException e) {
+         // Success!
+      }
+      
+      s.exit ();
+   }
+   
    private class Thread1770 extends Thread {
       private Session s = null;
       private String script = null;

@@ -48,7 +48,18 @@ extern "C" {
 #define MSG_JAPI_NO_HANDLE_S    _MESSAGE(45507, _("Unable to open a connection to the qmaster: "SFN))
 #define MSG_JAPI_NEGATIVE_TIMEOUT  _MESSAGE(45508, _("Negative timeout values are not allowed."))
 #define MSG_JAPI_EC_THREAD_NOT_STARTED_S  _MESSAGE(45509, _("Couldn't create event client thread: "SFN))
-
+#define MSG_JAPI_JOB_DOESNT_EXIST_S  _MESSAGE(45510, _("Job with given job id does not exist: "SFQ))
+#ifdef ENABLE_PERSISTENT_JAPI_SESSIONS
+#define MSG_JAPI_PWNAM_FAILED_S  _MESSAGE(45511, _("Unable to determine home directory for user "SFQ))
+#define MSG_JAPI_MKDIR_FAILED_SS  _MESSAGE(45512, _("Unable to create directory, "SFN": "SFN))
+#endif
+#define MSG_JAPI_CANNOT_REOPEN_SESSION_S  _MESSAGE(45513, _("Unable to reopen session "SFQ))
+#define MSG_JAPI_CANNOT_CLOSE_COMMLIB_S  _MESSAGE(45514, _("Unable to shutdown commlib handle: "SFN))
+#define MSG_JAPI_BAD_GDI_ANSWER_LIST  _MESSAGE(45515, _("Error reading answer list from qmaster"))
+#define MSG_JAPI_JOB_ALREADY_EXISTS_S  _MESSAGE(45516, _("Job with given job id already exists: "SFQ))
+#define MSG_JAPI_TASK_REF_TWICE_UU  _MESSAGE(45517, _("Task "sge_U32CFormat" of jobid "sge_U32CFormat" referenced twice"))
+#define MSG_JAPI_BAD_JOB_ID_S  _MESSAGE(45518, _("Job id, "SFQ", is not a valid job id"))
+#define MSG_JAPI_BAD_BULK_JOB_ID_S  _MESSAGE(45518, _("Job id, "SFQ", is not a valid bulk job id"))
 #ifdef	__cplusplus
 }
 #endif

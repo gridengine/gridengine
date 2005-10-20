@@ -1,6 +1,3 @@
-RD-2005-10-20-1: Bugfix:    testsuite does not tag some tests as completed
-                 Review:    CR
-
 RD-2005-10-20-0: Bugfix:    - shepherd doesn't handle qrlogin/qrsh jobs
                               correctly
                             - default PATH variable set for job insufficient

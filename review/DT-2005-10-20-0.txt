@@ -2,11 +2,10 @@ Source Code Review Form
 =======================
 (version 1.2)
 
-Date: Oct 19, 2005
+Date: Oct 20, 2005
 
 1 Identification
-Issue 1763: Memory leaks in drmaa library, japi_wait and drmaa_job2sge_job
-Issue 1770: Binary switch reversed in job category and can cause application to hang
+Issue 1831: Unset properties cause NullPointerExceptions
 
 2 Conformance to specification
 
@@ -37,8 +36,8 @@ Issue 1770: Binary switch reversed in job category and can cause application to 
 3.5 [ ] no - comment:
 
 3.6 Bugster CR and Issuezilla
-3.6 [X] yes
-3.6 [ ] no - comment:
+3.6 [ ] yes
+3.6 [X] no - comment: The issue was not present in u6
 
 3.7 Issuezilla
 3.7 [X] yes
@@ -62,14 +61,14 @@ Issue 1770: Binary switch reversed in job category and can cause application to 
 
 5 Tests
 
-5.1 flawfinder diff
+5.1 PMD source code scanner
 No new flaws.
 5.1 [X] yes
 5.1 [ ] no
 
 5.2 Used memory leak debugger
-5.2 [X] yes
-5.2 [ ] no - comment:
+5.2 [ ] yes
+5.2 [X] no - comment: N/A
 
 5.3 Manual tests
 Description: N/A

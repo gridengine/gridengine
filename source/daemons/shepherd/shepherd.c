@@ -549,7 +549,7 @@ int main(int argc, char **argv)
 #if defined( INTERIX )
    sge_init_shared_ssl_lib();
 #endif
-	shepherd_trace_init( );
+   shepherd_trace_init( );
 
    sge_dstring_init(&ds, buffer, sizeof(buffer));
 
@@ -618,7 +618,7 @@ int main(int argc, char **argv)
 	 * to the job owner so not only root/admin user but also he can use
 	 * the trace file later.
 	 */
-	shepherd_trace_chown( get_conf_val("job_owner"));
+   shepherd_trace_chown( get_conf_val("job_owner"));
 	
    sprintf(err_str, "starting up %s", feature_get_product_name(FS_VERSION, &ds));
    if (shepherd_trace(err_str)) {
@@ -824,7 +824,7 @@ int main(int argc, char **argv)
       fclose(fp);
    } else {
       /* ensure an exit status file exists */
-		shepherd_write_exit_status( "0" );
+	  shepherd_write_exit_status( "0" );
       return_code = 0;
    }
 
@@ -836,7 +836,7 @@ int main(int argc, char **argv)
       write_exit_code_to_qrsh(exit_status_for_qrsh);
    }
 	
-	shepherd_trace_exit( );
+   shepherd_trace_exit( );
    return return_code;
 }
 

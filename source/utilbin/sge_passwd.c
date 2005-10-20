@@ -563,7 +563,6 @@ buffer_decrypt(const char *buffer_in, size_t buffer_in_length,
 	if (!privateKey) {
       sprintf(err_str, MSG_PWD_LOAD_PRIV_SS, 
               prognames[SGE_PASSWD], file_priv_key);
-      sprintf(err_str, "\n");
 #ifdef DEFINE_SGE_PASSWD_MAIN
 		fprintf(stderr, err_str);
 #endif
@@ -578,7 +577,6 @@ buffer_decrypt(const char *buffer_in, size_t buffer_in_length,
 	if (ekeylen != shared_ssl_func__EVP_PKEY_size(privateKey)) {
       shared_ssl_func__EVP_PKEY_free(privateKey);
       sprintf(err_str, MSG_PWD_DECR_S, prognames[SGE_PASSWD]);
-      sprintf(err_str, "\n");
 #ifdef DEFINE_SGE_PASSWD_MAIN
 		fprintf(stderr, err_str);
 #endif
@@ -590,7 +588,6 @@ buffer_decrypt(const char *buffer_in, size_t buffer_in_length,
 	if (!encryptKey) {
       shared_ssl_func__EVP_PKEY_free(privateKey);
       sprintf(err_str, MSG_PWD_MALLOC_S, prognames[SGE_PASSWD]);
-      sprintf(err_str, "\n");
 #ifdef DEFINE_SGE_PASSWD_MAIN
       fprintf(stderr, err_str);
 #endif

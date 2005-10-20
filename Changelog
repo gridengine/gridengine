@@ -1,3 +1,12 @@
+RD-2005-10-20-0: Bugfix:    - shepherd doesn't handle qrlogin/qrsh jobs
+                              correctly
+                            - default PATH variable set for job insufficient
+                              for non-login shell jobs
+                 Issue:     1772, 1695
+                 Bugtraq:   6318018, 6288626
+                 Changed:   shepherd, execd
+                 Review:    HP, CR
+
 DT-2005-10-19-0: Bugfix:    o Fixed DRMAA memory leaks
                             o Fixed handing of -b in DRMAA
                             o Moved messages into header file

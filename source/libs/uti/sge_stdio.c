@@ -253,7 +253,7 @@ pid_t sge_peopen(const char *shell, int login_shell, const char *command,
          addenv("SHELL", pw->pw_shell);
          addenv("USER", pw->pw_name);
          addenv("LOGNAME", pw->pw_name);
-         addenv("PATH", "/usr/local/bin:/usr/ucb:/bin:/usr/bin:");
+         addenv("PATH", SGE_DEFAULT_PATH);
       }
  
       if (login_shell)

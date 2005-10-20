@@ -875,12 +875,12 @@ int sge_set_uid_gid_addgrp(const char *user, const char *intermediate_user,
          char buf[1000]="\0";
          err_str[0]='\0';
 
-         if(uidgid_read_passwd(pw->pw_name, &pass, err_str)!=0) {
+         if(uidgid_read_passwd(pw->pw_name, &pass, err_str) != 0) {
             FREE(pass);
             return 1;
          }
 
-         if(wl_setuser(pw->pw_uid, pw->pw_gid, pass, err_str)!=0) {
+         if(wl_setuser(pw->pw_uid, pw->pw_gid, pass, err_str) != 0) {
             FREE(pass);
             sprintf(buf, MSG_SYSTEM_SETUSERFAILED_UU, sge_u32c(pw->pw_uid),
                     sge_u32c(pw->pw_gid));

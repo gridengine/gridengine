@@ -1,3 +1,11 @@
+CR-2005-10-20-1: Testsuite: - testsuite performance tests
+                              (checktree/testsuite/check.60.exp) now tests 
+                              all possible users on all possible hosts
+                            - new testsuite functions:
+                              file_procedures/print_xy_array()
+                              file_procedures/is_remote_file()
+                 Review:    RH
+
 RD-2005-10-20-0: Bugfix:    - shepherd doesn't handle qrlogin/qrsh jobs
                               correctly
                             - default PATH variable set for job insufficient
@@ -9,6 +17,7 @@ RD-2005-10-20-0: Bugfix:    - shepherd doesn't handle qrlogin/qrsh jobs
                  Review:    HP, CR
 
 CR-2005-10-20-0: Testsuite: fixed bug in testsuite checktree setup
+                 Review:    RH           
 
 DT-2005-10-19-0: Bugfix:    o Fixed DRMAA memory leaks
                             o Fixed handing of -b in DRMAA

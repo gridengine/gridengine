@@ -1,3 +1,9 @@
+DT-2005-10-20-0: Bugfix:    o Fixed NullPointerException in property setters and
+                              getters
+                 Issue:     1831
+                 Changed:   DRMAA-J
+                 Review:    SG
+
 RD-2005-10-20-0: Bugfix:    - shepherd doesn't handle qrlogin/qrsh jobs
                               correctly
                             - default PATH variable set for job insufficient

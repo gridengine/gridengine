@@ -647,7 +647,7 @@ proc submit_error_job { jobargs } {
 #*******************************************************************************
 proc submit_wait_type_job { job_type host user {variable qacct_info} } {
    global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_HOST CHECK_DEBUG_LEVEL CHECK_USER
-   global CHECK_DISPLAY_OUTPUT
+   global CHECK_DISPLAY_OUTPUT ts_config
    upvar $variable qacctinfo
 
 
@@ -676,7 +676,51 @@ proc submit_wait_type_job { job_type host user {variable qacct_info} } {
          set sid [open_remote_spawn_process $CHECK_HOST $user qrsh "$remote_host_arg"]
          set sp_id [lindex $sid 1]
          set timeout 1
-         set max_timeouts 15
+         set my_tries 60
+
+         while {1} {
+            expect {
+               -i $sp_id "_start_mark_*\n" {
+                  puts $CHECK_OUTPUT "got start mark ..."
+                  break;
+               }
+               -i $sp_id default {
+                       if { $my_tries > 0 } {
+                           incr my_tries -1
+                           puts -nonewline $CHECK_OUTPUT "."
+                           flush $CHECK_OUTPUT
+                           continue
+                       } else { 
+                          add_proc_error "submit_wait_type_job" -1 "startup timeout" 
+                          break;
+                       }
+                   }
+            }
+         }
+         
+         set my_tries 60
+         while {1} {
+            expect {
+               -i $sp_id {*[A-Za-z]*} {
+                       puts $CHECK_OUTPUT "startup ..."
+                       break;
+                   }
+               -i $sp_id default {
+                       if { $my_tries > 0 } {
+                           incr my_tries -1
+                           puts -nonewline $CHECK_OUTPUT "."
+                           flush $CHECK_OUTPUT
+                           continue
+                       } else { 
+                          add_proc_error "submit_wait_type_job" -1 "startup timeout" 
+                          break;
+                       }
+                   }
+
+            }
+         }
+
+         set max_timeouts 60 
          set done 0
          while {!$done} {
             expect {
@@ -687,14 +731,17 @@ proc submit_wait_type_job { job_type host user {variable qacct_info} } {
                -i $sp_id timeout {
                   incr max_timeouts -1
 
-                  set job_list [get_standard_job_info 0 0 1]
-                  foreach job $job_list {
-                     puts $CHECK_OUTPUT $job
-                     if { [lindex $job 2] == "QRLOGIN" && [lindex $job 3] == $user } {
-                        puts $CHECK_OUTPUT "qrlogin job id is [lindex $job 0]"
-                        set job_id [lindex $job 0]
-                        send -i $sp_id "exit\n"
+                  if { $job_id == 0 } {
+                     set job_list [get_standard_job_info 0 0 1]
+                     foreach job $job_list {
+                        puts $CHECK_OUTPUT $job
+                        if { [lindex $job 2] == "QRLOGIN" && [lindex $job 3] == $user && [lindex $job 4] == "r"  } {
+                           puts $CHECK_OUTPUT "qrlogin job id is [lindex $job 0]"
+                           set job_id [lindex $job 0]
+                        }
                      }
+                  } else {
+                     send -i $sp_id "\n$ts_config(testsuite_root_dir)/$CHECK_SCRIPT_FILE_DIR/shell_start_output.sh\n"
                   }
 
                   if { $max_timeouts <= 0 } {
@@ -702,6 +749,11 @@ proc submit_wait_type_job { job_type host user {variable qacct_info} } {
                      set done 1 
                   }
                }
+               -i $sp_id "testsuite shell response" {
+                  puts $CHECK_OUTPUT "found matching shell response text! Sending exit ..."
+                  send -i $sp_id "exit\n"
+               }
+
                -i $sp_id eof {
                   add_proc_error "submit_with_method" -1 "got eof"
                   set done 1
@@ -820,7 +872,7 @@ proc submit_wait_type_job { job_type host user {variable qacct_info} } {
                      foreach job $job_list {
                         puts $CHECK_OUTPUT $job
                         if { [lindex $job 2] == "QLOGIN" && [lindex $job 3] == $user } {
-                           puts $CHECK_OUTPUT "qrlogin job id is [lindex $job 0]"
+                           puts $CHECK_OUTPUT "qlogin job id is [lindex $job 0]"
                            set job_id [lindex $job 0]
                         }
                      }
@@ -855,7 +907,7 @@ proc submit_wait_type_job { job_type host user {variable qacct_info} } {
                      foreach job $job_list {
                         puts $CHECK_OUTPUT $job
                         if { [lindex $job 2] == "QLOGIN" && [lindex $job 3] == $user } {
-                           puts $CHECK_OUTPUT "qrlogin job id is [lindex $job 0]"
+                           puts $CHECK_OUTPUT "qlogin job id is [lindex $job 0]"
                            set job_id [lindex $job 0]
                         }
                      }
@@ -891,7 +943,6 @@ proc submit_wait_type_job { job_type host user {variable qacct_info} } {
          set sid [open_remote_spawn_process $CHECK_HOST $user qsh "$remote_host_arg -now yes" 0 my_qsh_env]
          set sp_id [lindex $sid 1]
          set timeout 1
-         set max_timeouts 20
          set done 0
          while {!$done} {
             expect {
@@ -900,7 +951,6 @@ proc submit_wait_type_job { job_type host user {variable qacct_info} } {
                   set done 1
                }
                -i $sp_id timeout {
-                  incr max_timeouts -1
 
                   if { $job_id == 0 } {
                      set job_list [get_standard_job_info 0 0 1]
@@ -912,17 +962,9 @@ proc submit_wait_type_job { job_type host user {variable qacct_info} } {
                         }
                      }
                   } else {
-                     puts $CHECK_OUTPUT "job is running, waiting ..."
-                     if { $max_timeouts <= 3 } {
                         puts $CHECK_OUTPUT "ok, now deleting job $job_id ..."
                         delete_job $job_id
                         set done 1
-                     }
-                  }
-
-                  if { $max_timeouts <= 0 } {
-                     add_proc_error "submit_with_method" -1 "got 15 timeout errors - break"
-                     set done 1 
                   }
                }
                -i $sp_id eof {
@@ -1071,6 +1113,25 @@ proc submit_wait_type_job { job_type host user {variable qacct_info} } {
          break
       }
    }
+
+   puts $CHECK_OUTPUT "waiting for accounting file to have information about job $job_id slave"
+   if { $job_type == "tight_integrated" } {
+      set my_timeout [timestamp]
+      incr my_timeout 60
+      while { 1 } {
+         get_qacct $job_id qacctinfo
+         if { [llength $qacctinfo(exit_status)] == 2 } {
+            break
+         } 
+         after 500
+         puts -nonewline $CHECK_OUTPUT "."
+         flush $CHECK_OUTPUT
+         if { [timestamp] > $my_timeout } {
+            break
+         }
+      }
+   }
+
    puts $CHECK_OUTPUT ""
 
    if { [ get_qacct $job_id qacctinfo ] != 1 } {

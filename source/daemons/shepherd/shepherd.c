@@ -234,7 +234,7 @@ static int do_prolog(int timeout, int ckpt_type)
       replace_params(prolog, command, sizeof(command)-1, prolog_epilog_variables);
       exit_status = start_child("prolog", command, NULL, timeout, ckpt_type);
 
-      if (n_exit_status < (i=count_exit_status()) ) {
+      if (n_exit_status<(i=count_exit_status())) {
          shepherd_trace_sprintf("exit states increased from %d to %d", n_exit_status, i);
          /* in this case the child didnt get to the exec call or it failed */
          shepherd_trace("failed starting prolog");
@@ -549,7 +549,7 @@ int main(int argc, char **argv)
 #if defined( INTERIX )
    sge_init_shared_ssl_lib();
 #endif
-	shepherd_trace_init( );
+   shepherd_trace_init( );
 
    sge_dstring_init(&ds, buffer, sizeof(buffer));
 
@@ -618,7 +618,7 @@ int main(int argc, char **argv)
 	 * to the job owner so not only root/admin user but also he can use
 	 * the trace file later.
 	 */
-	shepherd_trace_chown( get_conf_val("job_owner"));
+   shepherd_trace_chown( get_conf_val("job_owner"));
 	
    sprintf(err_str, "starting up %s", feature_get_product_name(FS_VERSION, &ds));
    if (shepherd_trace(err_str)) {
@@ -836,7 +836,7 @@ int main(int argc, char **argv)
       write_exit_code_to_qrsh(exit_status_for_qrsh);
    }
 	
-	shepherd_trace_exit( );
+   shepherd_trace_exit( );
    return return_code;
 }
 

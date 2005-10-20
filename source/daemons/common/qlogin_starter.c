@@ -446,9 +446,6 @@ int qlogin_starter(const char *cwd, char *daemon, char** env)
 
    len = sizeof(serv_addr);
 
-   SHEPHERD_TRACE((err_str, "uid = " uid_t_fmt ", euid = " uid_t_fmt ", gid = " gid_t_fmt ", egid = " gid_t_fmt "", 
-                   getuid(), geteuid(), getgid(), getegid()));
-   
    /* must be root because we must access /dev/something */
    if( setgid(SGE_SUPERUSER_GID) ||
        setuid(SGE_SUPERUSER_UID) ||

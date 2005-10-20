@@ -3108,6 +3108,37 @@ proc get_file_uid { user host file } {
    return [lindex $output 2]
 }
 
+#****** file_procedures/get_file_perms() ***************************************
+#  NAME
+#     get_file_perm() -- get permission of file on host
+#
+#  SYNOPSIS
+#     get_file_perms { user host file } 
+#
+#  FUNCTION
+#     Returns the permission of the given file on the remote host
+#
+#  INPUTS
+#     user - user name
+#     host - host name
+#     file - full path to file
+#
+#  RESULT
+#     string containing the file permissions
+#     eg: -rw-r--r--
+#
+#  SEE ALSO
+#     file_procedures/get_file_uid()
+#     file_procedures/get_file_gid()
+#*******************************************************************************
+proc get_file_perm { user host file } {
+   global CHECK_OUTPUT
+
+   wait_for_remote_file $host $user $file 
+   set output [start_remote_prog $host $user ls "-l $file"]
+   return [lindex $output 0]
+}
+
 #****** file_procedures/get_file_gid() *****************************************
 #  NAME
 #     get_file_gid() -- get gid of file on host

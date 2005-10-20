@@ -141,4 +141,13 @@ void print_option_syntax(FILE *fp, const char *option, const char *meaning);
 
 bool sge_check_stdout_stream(FILE *file, int fd);
 
+#if defined(SOLARIS)
+#define SGE_DEFAULT_PATH "/usr/local/bin:/bin:/usr/bin:/usr/ucb"
+#elif defined(IRIX) 
+#define SGE_DEFAULT_PATH "/usr/local/bin:/bin:/usr/bin:/usr/bsd"
+#else
+#define SGE_DEFAULT_PATH "/usr/local/bin:/bin:/usr/bin"
+#endif
+
+
 #endif /* __SGE_STDIO_H */

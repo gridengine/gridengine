@@ -2548,7 +2548,8 @@ proc build_checktree {} {
                   wait_for_enter
                   return -1
                }
-               if { $ts_checktree($i,check_init_level_procedure) == $ts_checktree($j,check_init_level_procedure) } {
+               if { $ts_checktree($i,check_init_level_procedure) != "--" && 
+                    $ts_checktree($i,check_init_level_procedure) == $ts_checktree($j,check_init_level_procedure) } {
                   set error_text ""
                   append error_text "check_init_level_procedure \"$ts_checktree($i,check_init_level_procedure)\" is not unique:\n"
                   append error_text "please check the following tests directories:\n"

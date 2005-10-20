@@ -1,3 +1,5 @@
+CR-2005-10-20-0: Testsuite: fixed bug in testsuite checktree setup
+
 DT-2005-10-19-0: Bugfix:    o Fixed DRMAA memory leaks
                             o Fixed handing of -b in DRMAA
                             o Moved messages into header file

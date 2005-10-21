@@ -1,3 +1,6 @@
+CR-2005-10-21-0: Testsuite: fixed login problem on fast hosts for root login password
+                            question
+
 DT-2005-10-20-0: Bugfix:    o Fixed NullPointerException in property setters and
                               getters
                  Issue:     1831

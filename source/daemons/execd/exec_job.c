@@ -51,6 +51,7 @@
 #include "sge_conf.h"
 #include "sge_time.h"
 #include "sge_pe.h"
+#include "sge_stdio.h"
 #include "sge_ja_task.h"
 #include "sge_pe_task.h"
 #include "sge_str.h"
@@ -459,14 +460,9 @@ char *err_str
          if ((user_path=lGetElemStr(environmentList, VA_variable, "PATH")))
             sge_dstring_sprintf(&buffer, "%s:%s", tmpdir, lGetString(user_path, VA_value));
          else
-            sge_dstring_sprintf(&buffer, "%s:/usr/local/bin:/usr/ucb:/bin:/usr/bin:", tmpdir);
-            /*
-             * The default path is insufficient: #6288626 / #1695
-             * irix65: "/usr/sbin:/usr/bsd:/sbin:/usr/bin"
-             * sol-*: "/bin:/usr/bin:/usr/ucb"
-             */
-         var_list_set_string(&environmentList, "PATH", sge_dstring_get_string(&buffer));
-         sge_dstring_free(&buffer);
+            sge_dstring_sprintf(&buffer, "%s:%s", tmpdir, SGE_DEFAULT_PATH);
+            var_list_set_string(&environmentList, "PATH", sge_dstring_get_string(&buffer));
+            sge_dstring_free(&buffer);
       }
 
       /* 1.) try to read cwd from pe task */

@@ -2189,16 +2189,11 @@ int save
       lSetUlong(jep, JB_type, jb_now);
    }   
 
-   if (!reduced_job) {
-      if (data->cwd) {
-         const char *env_value = job_get_env_string(jep, VAR_PREFIX "O_HOME");
-         lSetString(jep, JB_cwd, cwd_string(env_value));
-         lSetList(jep, JB_path_aliases, lCopyList("PathAliases", path_alias));
-         lFreeList(&path_alias);
-      }
-#if 0 /* JG: removed JB_cell from job object */     
-      lSetString(jep, JB_cell, data->cell);
-#endif      
+   if (data->cwd) {
+      const char *env_value = job_get_env_string(jep, VAR_PREFIX "O_HOME");
+      lSetString(jep, JB_cwd, cwd_string(env_value));
+      lSetList(jep, JB_path_aliases, lCopyList("PathAliases", path_alias));
+      lFreeList(&path_alias);
    }
 
    lSetString(jep, JB_account, data->account_string);

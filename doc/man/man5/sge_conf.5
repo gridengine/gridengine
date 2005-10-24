@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2005/08/26 09:27:31 $     Revision: $Revision: 1.47 $
+.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2005/10/24 14:06:45 $     Revision: $Revision: 1.47.2.1 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2005/08/26 09:27:31 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2005/10/24 14:06:45 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 xxqs_name_sxx_conf \- xxQS_NAMExx configuration files
@@ -1343,9 +1343,12 @@ correctly. (See also FORBID_APPERROR).
 .SH "\fBreprioritize\fP"
 This flag enables or disables the reprioritization of jobs based on their
 ticket amount. The \fBreprioritize_interval\fP takes
-only affect if \fBreprioritize\fP is set to true (the default). In case one wants
+only affect if \fBreprioritize\fP is set to true. In case one wants
 to turn off the reprioritization of jobs, one should set the \fBreprioritize\fP flag
-to false and the \fBreprioritize_interval\fP to 0.
+to false and the \fBreprioritize_interval\fP to 0 (the default).
+.sp 1
+This value is a global configuration parameter only. It cannot be
+overwritten by the execution host local configuration.
 .\"
 .\"
 .\"

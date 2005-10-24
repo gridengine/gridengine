@@ -440,6 +440,37 @@ lCondition *qstat_get_JB_Type_selection(lList *user_list, u_long32 show)
             } else {
                nw = lOrWhere(nw, tmp_nw);
             } 
+            /*
+             * Array Jobs with one or more tasks pending
+             */
+            tmp_nw = lWhere("%T(%I -> %T((%I > %u)))", JB_Type, JB_ja_n_h_ids, 
+                        RN_Type, RN_min, 0);
+            if (nw == NULL) {
+               nw = tmp_nw;
+            } else {
+               nw = lOrWhere(nw, tmp_nw);
+            } 
+            tmp_nw = lWhere("%T(%I -> %T((%I > %u)))", JB_Type, JB_ja_u_h_ids, 
+                        RN_Type, RN_min, 0);
+            if (nw == NULL) {
+               nw = tmp_nw;
+            } else {
+               nw = lOrWhere(nw, tmp_nw);
+            } 
+            tmp_nw = lWhere("%T(%I -> %T((%I > %u)))", JB_Type, JB_ja_s_h_ids, 
+                        RN_Type, RN_min, 0);
+            if (nw == NULL) {
+               nw = tmp_nw;
+            } else {
+               nw = lOrWhere(nw, tmp_nw);
+            } 
+            tmp_nw = lWhere("%T(%I -> %T((%I > %u)))", JB_Type, JB_ja_o_h_ids, 
+                        RN_Type, RN_min, 0);
+            if (nw == NULL) {
+               nw = tmp_nw;
+            } else {
+               nw = lOrWhere(nw, tmp_nw);
+            } 
          } else {
             /*
              * User Hold 

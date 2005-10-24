@@ -88,8 +88,6 @@ proc drmaaj_check {} {
    global CHECK_OUTPUT CHECK_TESTSUITE_ROOT CHECK_ACTUAL_TEST_PATH
    global CHECK_HOST CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_USER
 
-   set my_sleeper "/tmp/drmaaj_sleeper.sh"
-
    puts $CHECK_OUTPUT "arch is $CHECK_ARCH"
    puts $CHECK_OUTPUT "host is $CHECK_HOST"
 
@@ -145,7 +143,7 @@ proc drmaaj_check {} {
       set test_output [ start_remote_prog $host $CHECK_USER $JAVA "$options junit.textui.TestRunner DrmaaSuite" prg_exit_state 500 ]
 
       if { $prg_exit_state != 0 } {
-         add_proc_error drmaa_check -1 "DRMAA-J JUnit test suite failed at host $host:\n$test_output"
+         add_proc_error drmaa_check -1 "DRMAA-J jUnit test suite failed at host $host:\n$test_output"
       }
    }
 

@@ -244,6 +244,99 @@ proc get_tmp_file_name { { hostname "" } { type "default" } { file_ext "tmp" } {
    return $file_name
 }
 
+
+#****** file_procedures/print_xy_array() ***************************************
+#  NAME
+#     print_xy_array() -- print out an tcl x-y array
+#
+#  SYNOPSIS
+#     print_xy_array { x_values y_values xy_data_array } 
+#
+#  FUNCTION
+#     This function can be used to format data like: 
+#
+#     set x_values "sgetest1 sgetest2 root cr114091"
+#     set y_values "es-ergb01-01 balrog"
+#
+#                  | sgetest1 | sgetest2 |     root | cr114091 | 
+#     -------------|----------|----------|----------|----------|
+#     es-ergb01-01 |      639 |      639 |      739 |      639 | 
+#     balrog       |     1409 |     1409 |     1659 |     1869 | 
+#
+#
+#  INPUTS
+#     x_values      - x value list
+#     y_values      - y value list 
+#     xy_data_array - array with data for e.g. $data($x,$y) 
+#
+#  EXAMPLE
+#     set x_values "sgetest1 sgetest2 root cr114091"
+#     set y_values "es-ergb01-01 balrog"
+#     set data(sgetest1,es-ergb01-01) 639
+#     ...
+#     ...
+#     puts [print_xy_array $x_values $y_values data]
+#
+#  RESULT
+#     string containing the xy_array data
+#
+#  SEE ALSO
+#     ???/???
+#*******************************************************************************
+proc print_xy_array { x_values y_values xy_data_array } {
+   upvar $xy_data_array result_array
+
+   # calculate max. x/y string length
+   set max_x_values_len 0
+   set max_y_values_len 0
+
+   foreach x $x_values {
+      if { $max_x_values_len < [string length $x] } {
+         set max_x_values_len [string length $x]
+      }
+   }
+
+   foreach y $y_values {
+      if { $max_y_values_len < [string length $y] } {
+         set max_y_values_len [string length $y]
+      }
+   }
+
+   set output_text ""
+   append output_text [format "%-${max_y_values_len}s | " ""]
+   foreach x $x_values {
+      append output_text [format "%${max_x_values_len}s | " $x]
+   }
+   append output_text "\n"
+
+   set line_length [expr ( $max_y_values_len + 1)]
+   for {set i 0} {$i < $line_length } {incr i 1} {
+      append output_text "-"
+   }
+   append output_text "|"
+   
+   set line_length [expr ( [llength $x_values] * ($max_x_values_len + 3) )]
+   for {set i 1} {$i <= $line_length } {incr i 1} {
+      set fill_sign "-"
+      if { [ expr ( $i % ( $max_x_values_len + 3 ) ) ] == 0 } {
+         set fill_sign "|"
+      }
+      append output_text $fill_sign
+   }
+
+   append output_text "\n"
+
+   foreach y $y_values {
+      append output_text [format "%-${max_y_values_len}s | " $y]
+      foreach x $x_values {
+         append output_text [format "%${max_x_values_len}s | " $result_array($x,$y) ]
+      }
+      append output_text "\n"
+   }
+   return $output_text
+}
+
+
 #****** file_procedures/create_gnuplot_xy_gif() ********************************
 #  NAME
 #     create_gnuplot_xy_gif() -- create xy chart with gnuplot application
@@ -2410,6 +2503,7 @@ proc wait_for_file { path_to_file seconds { to_go_away 0 } { do_error_check 1 } 
 #
 #  SEE ALSO
 #     file_procedures/wait_for_file()
+#     file_procedures/wait_for_remote_file()
 #*******************************************************************************
 proc wait_for_remote_file { hostname user path { mytimeout 60 } } {
    global CHECK_OUTPUT
@@ -2438,6 +2532,43 @@ proc wait_for_remote_file { hostname user path { mytimeout 60 } } {
       add_proc_error "wait_for_remote_file" -1 "timeout while waiting for remote file $path on host $hostname"
       return -1;
    }
+}
+
+
+#****** file_procedures/is_remote_file() ***************************************
+#  NAME
+#     is_remote_file() -- check if file exists on remote host
+#
+#  SYNOPSIS
+#     is_remote_file { hostname user path } 
+#
+#  FUNCTION
+#     This function is starting an ls command on the remote host as specified
+#     user. If the exit status of the ls $path is 0 the function returns 1.
+#
+#  INPUTS
+#     hostname - remote host name
+#     user     - user who should start the ls
+#     path     - full path name of file
+#
+#  RESULT
+#     1 - file found
+#     0 - file not found
+#
+#  SEE ALSO
+#     file_procedures/wait_for_file()
+#     file_procedures/wait_for_remote_file()
+#*******************************************************************************
+proc is_remote_file { hostname user path } {
+   global CHECK_OUTPUT
+
+   set output [ start_remote_prog $hostname $user "ls" "$path" prg_exit_state 60 0 "" 0]
+   if { $prg_exit_state == 0 } {
+      puts $CHECK_OUTPUT "found file: $hostname:$path"
+      return 1;
+   } 
+   puts $CHECK_OUTPUT "file not found: $hostname:$path"
+   return 0;
 }
 
 
@@ -3106,6 +3237,37 @@ proc get_file_uid { user host file } {
    wait_for_remote_file $host $user $file 
    set output [start_remote_prog $host $user ls "-n $file"]
    return [lindex $output 2]
+}
+
+#****** file_procedures/get_file_perms() ***************************************
+#  NAME
+#     get_file_perm() -- get permission of file on host
+#
+#  SYNOPSIS
+#     get_file_perms { user host file } 
+#
+#  FUNCTION
+#     Returns the permission of the given file on the remote host
+#
+#  INPUTS
+#     user - user name
+#     host - host name
+#     file - full path to file
+#
+#  RESULT
+#     string containing the file permissions
+#     eg: -rw-r--r--
+#
+#  SEE ALSO
+#     file_procedures/get_file_uid()
+#     file_procedures/get_file_gid()
+#*******************************************************************************
+proc get_file_perm { user host file } {
+   global CHECK_OUTPUT
+
+   wait_for_remote_file $host $user $file 
+   set output [start_remote_prog $host $user ls "-l $file"]
+   return [lindex $output 0]
 }
 
 #****** file_procedures/get_file_gid() *****************************************

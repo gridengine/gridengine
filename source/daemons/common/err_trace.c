@@ -131,6 +131,8 @@ void shepherd_trace_init( void )
 
 void shepherd_trace_exit( void )
 {
+    int         old_euid = SGE_SUPERUSER_UID;
+
    /*
     * Work around for CR 6293411:
     * Some NFS Server have a bug. They test permissions on 
@@ -142,7 +144,10 @@ void shepherd_trace_exit( void )
     * The work around consists of switching to root and back
     * for writing and closing the file.
     */
-    sge_switch2start_user();
+    if(getuid() == SGE_SUPERUSER_UID) {
+        old_euid = geteuid();
+        seteuid(SGE_SUPERUSER_UID);
+     }
 
 	if( shepherd_trace_fp ) {
 		fclose( shepherd_trace_fp );
@@ -152,7 +157,10 @@ void shepherd_trace_exit( void )
    /*
     * Switch back to admin user?
     */
-    sge_switch2admin_user();
+    if(old_euid != SGE_SUPERUSER_UID) {
+	   seteuid(old_euid);
+	}
+
 	shepherd_error_exit();
 }
 
@@ -206,11 +214,16 @@ void shepherd_error_init( )
 
 void shepherd_error_exit( void )
 {
+    int         old_euid = SGE_SUPERUSER_UID;
+
    /*
     * Work around for CR 6293411:
     * See shepherd_trace_exit() for details.
     */
-   sge_switch2start_user();
+    if(getuid() == SGE_SUPERUSER_UID) {
+        old_euid = geteuid();
+        seteuid(SGE_SUPERUSER_UID);
+    }
 
    /*
     * Close file handles
@@ -227,7 +240,9 @@ void shepherd_error_exit( void )
    /*
     * Switch back to admin user?
     */
-    sge_switch2admin_user(); 
+    if(old_euid != SGE_SUPERUSER_UID) {
+	   seteuid(old_euid);
+	}
 }
 
 /****** shepherd_error_chown **************************************************
@@ -391,6 +406,8 @@ void shepherd_error_impl(const char *str, int do_exit)
    char        header_str[256];
 	struct stat statbuf;
 
+    shepherd_trace(str);
+
 	/* File was closed (e.g. by an exec()) but fp was not set to NULL */
 	if( shepherd_error_fp 
 	    && fstat( fileno( shepherd_error_fp ), &statbuf )==-1
@@ -471,7 +488,7 @@ void shepherd_error_impl(const char *str, int do_exit)
 void shepherd_write_exit_status(const char *exit_status)
 {
 	struct stat statbuf;
-	int         old_euid = SGE_SUPERUSER_UID;
+    int         old_euid = SGE_SUPERUSER_UID;
 
 	if( exit_status ) {
 		/* set euid=0. Local files: root can write to every file.
@@ -735,40 +752,30 @@ static int sh_str2file(const char *header_str, const char *str, FILE* fp )
 static FILE* shepherd_trace_init_intern( st_shepherd_file_t shepherd_file )
 {
    static char     path[SGE_PATH_MAX];
-	static int      called = 0;
+   static bool     called = false;
    SGE_STRUCT_STAT statbuf;
    dstring         ds;
    char            buffer[SGE_PATH_MAX+128];
-	char            tmppath[SGE_PATH_MAX];
+   char            tmppath[SGE_PATH_MAX];
    int             fd       = -1;
    FILE            *fp      = NULL;
    int             do_chown = 0;
-   int             old_euid = SGE_SUPERUSER_UID;
 
   	/* 
   	 *  after changing into the jobs cwd we need an 
   	 *  absolute path to the error/trace file 
   	 */
-	if( !called ) { 
-   	getcwd(path, sizeof(path)); 
-		called++;
+	if( called == false) { 
+   	    getcwd(path, sizeof(path)); 
+		called=true;
 	}
 
   	sprintf(tmppath, "%s/%s",path, g_shepherd_file_name[shepherd_file]);
     strncpy(g_shepherd_file_path[shepherd_file], tmppath, SGE_PATH_MAX);
 
-   /*
-    * Work around for CR 6293411:
-    * See shepherd_trace_exit() for details.
-    */
-   if(getuid() == SGE_SUPERUSER_UID) {
-      old_euid = geteuid();
-      seteuid(SGE_SUPERUSER_UID);
-   }
-
 	/* If the file does not exist, create it. Otherwise just open it. */
 	if( SGE_STAT( tmppath, &statbuf )) {
-	   fd = SGE_OPEN3( tmppath, O_RDWR | O_CREAT | O_APPEND, 0644 );
+	  fd = SGE_OPEN3( tmppath, O_RDWR | O_CREAT | O_APPEND, 0644 );
       if (fd<0) {
          sge_dstring_init(&ds, buffer, sizeof(buffer));
          sge_dstring_sprintf(&ds, "creat(%s) failed: %s", tmppath, strerror(errno));
@@ -803,6 +810,17 @@ static FILE* shepherd_trace_init_intern( st_shepherd_file_t shepherd_file )
        * It can't be done here because we don't know if we are in 
        * case a) (exec failed) or case b) (after execution of prolog/job).
        */
+       int             old_euid = SGE_SUPERUSER_UID;
+
+       /*
+        * Work around for CR 6293411:
+        * See shepherd_trace_exit() for details.
+        */
+       if(getuid() == SGE_SUPERUSER_UID) {
+          old_euid = geteuid();
+          seteuid(SGE_SUPERUSER_UID);
+       }
+
       fd = SGE_OPEN2( tmppath, O_RDWR | O_APPEND );
       if (fd<0) {
          sge_dstring_init(&ds, buffer, sizeof(buffer));
@@ -811,13 +829,13 @@ static FILE* shepherd_trace_init_intern( st_shepherd_file_t shepherd_file )
          shepherd_panic(buffer);
       }
       do_chown = 0;
-	}
 
-   /*
-    * Switch back to admin user?
-    */
-   if(old_euid != SGE_SUPERUSER_UID) {
-	   seteuid( old_euid );
+      /*
+       * Switch back to admin user?
+       */
+      if(old_euid != SGE_SUPERUSER_UID) {
+          seteuid( old_euid );
+      }
 	}
 
 	/* Something went wrong. */
@@ -847,7 +865,7 @@ static FILE* shepherd_trace_init_intern( st_shepherd_file_t shepherd_file )
       shepherd_panic(buffer);
       return NULL;
    }
-	if( do_chown && strlen( g_job_owner )>0 ) {
+	if( do_chown && strlen(g_job_owner) > 0 ) {
 		shepherd_trace_chown_intern( g_job_owner, fp, shepherd_file );
 	}
 	return fp;
@@ -876,11 +894,11 @@ static void shepherd_trace_chown_intern( const char* job_owner, FILE* fp,
 {
 	int   fd;
 	uid_t jobuser_id;
-   gid_t jobuser_gid;
-   char  buffer[1024];
+    gid_t jobuser_gid;
+    char  buffer[1024];
 	int   old_euid = SGE_SUPERUSER_UID;
 
-	if( fp && strlen( job_owner )>0 ) {
+	if( fp && strlen(job_owner) > 0 ) {
 		fd = fileno( fp );
       
       /* If uid != 0, the system is installed as a test user system.
@@ -888,56 +906,55 @@ static void shepherd_trace_chown_intern( const char* job_owner, FILE* fp,
 		if(getuid() == SGE_SUPERUSER_UID) {
 			/* root */
 			strcpy( g_job_owner, job_owner );
-			if(sge_user2uid(job_owner, &jobuser_id, &jobuser_gid, 1)==0)
-      	{
+			if(sge_user2uid(job_owner, &jobuser_id, &jobuser_gid, 1)==0) {
 				/* Now try to give the file to the job user. root (and later
-             * the admin user) will still be able to write to it through
-             * the open file descriptor.
-             * We must do this as root, because only root has the permissons
-             * to change the ownership of a file. 
+                 * the admin user) will still be able to write to it through
+                 * the open file descriptor.
+                 * We must do this as root, because only root has the permissons
+                 * to change the ownership of a file. 
  	 	 	 	 */
 				old_euid = geteuid();
-            seteuid(SGE_SUPERUSER_UID);
+                seteuid(SGE_SUPERUSER_UID);
            
-            /* Have to use chown() here, because fchown() has some bugs
-             * on True64 and Irix.*/
-            if(chown(g_shepherd_file_path[shepherd_file], 
+                /* Have to use chown() here, because fchown() has some bugs
+                 * on True64 and Irix.*/
+                if(chown(g_shepherd_file_path[shepherd_file], 
                                      jobuser_id, jobuser_gid)!=0) {
-			 		/* chown failed. This means that user root is a normal user
-                * for the file system (due to NFS rights). So we have no
-                * other chance than open the file for writing for everyone. 
-                * We must do this as file owner = admin user.
-	    	 	 	 */
-					seteuid(old_euid);
-	   			if( fchmod( fd, 0666 )==-1) {
-                  sprintf(buffer, "can't fchmod(fd, 0666): %s\n", strerror(errno));
-                  shepherd_panic(buffer);
-                  return;
-					}
-   			} else {
-               /* chown worked. But when we can chown but are on a NFS
-                * mounted drive (which means root has all privileges on this
-                * mounted drive), we cannot append from two places
-                * (shepherd and son/job) to the shepherd files. So we
-                * have to open and close the files for every write, which
-                * is possible because we are root with all privileges
-                * and we give the ownership to the
-                * prolog/pe_start/job/pe_stop/epilog user.
-                */
-               if(g_keep_files_open && nfs_mounted(".")) {
-                  g_keep_files_open = false;
-               }
-            }
+                    /* chown failed. This means that user root is a normal user
+                     * for the file system (due to NFS rights). So we have no
+                     * other chance than open the file for writing for everyone. 
+                     * We must do this as file owner = admin user.
+                     */
+                    seteuid(old_euid);
+                    if( fchmod( fd, 0666 )==-1) {
+                        sprintf(buffer, "can't fchmod(fd, 0666): %s\n", strerror(errno));
+                        shepherd_panic(buffer);
+                        return;
+                    }
+   			    } else {
+                   /* chown worked. But when we can chown but are on a NFS
+                    * mounted drive (which means root has all privileges on this
+                    * mounted drive), we cannot append from two places
+                    * (shepherd and son/job) to the shepherd files. So we
+                    * have to open and close the files for every write, which
+                    * is possible because we are root with all privileges
+                    * and we give the ownership to the
+                    * prolog/pe_start/job/pe_stop/epilog user.
+                    */
+                   if(g_keep_files_open && nfs_mounted(".")) {
+                        g_keep_files_open = false;
+                   }
+                }
 				seteuid(old_euid);
-			} else {
-				/* Can't get jobuser_id -> grant access for everyone */
-				if (fchmod( fd, 0666 )==-1) {
-               sprintf(buffer, "could not fchmod(): %s", strerror(errno));
-               shepherd_panic(buffer);
+            } else {
+                /* Can't get jobuser_id -> grant access for everyone */
+                if (fchmod( fd, 0666 )==-1) {
+                    sprintf(buffer, "could not fchmod(): %s", strerror(errno));
+                    shepherd_panic(buffer);
+                }
             }
-			}
 		}
-	}	
+	} 
 }
 
 static bool nfs_mounted(const char *path)

@@ -1356,7 +1356,7 @@ proc open_remote_spawn_process { hostname
          }
       }
    
-   
+
       catch {
          if { ([string compare $user $CHECK_USER ] != 0) && ([have_ssh_access] == 0) } {
             uplevel 1 { 
@@ -1381,6 +1381,8 @@ proc open_remote_spawn_process { hostname
                      return ""
                   }
                   -i $spawn_id -- "assword:" {
+                     debug_puts "got root password question"
+                     after 1000
                      log_user 0
                      set send_slow "1 .1"
                      send -i $spawn_id -s "[get_root_passwd]\n"

@@ -1,3 +1,58 @@
+AA-2005-10-24-0: Bugfix:    - Changing the cwd flag in qmon - qalter has no effect
+                 Issue:     1838
+                 Bugtraq:   6336519
+                 Changed:   qmon
+                 Review:    SG
+
+CR-2005-10-21-0: Testsuite: fixed login problem on fast hosts for root login password
+                            question
+
+DT-2005-10-20-0: Bugfix:    o Fixed NullPointerException in property setters and
+                              getters
+                 Issue:     1831
+                 Changed:   DRMAA-J
+                 Review:    SG
+
+CR-2005-10-20-1: Testsuite: - testsuite performance tests
+                              (checktree/testsuite/check.60.exp) now tests 
+                              all possible users on all possible hosts
+                            - new testsuite functions:
+                              file_procedures/print_xy_array()
+                              file_procedures/is_remote_file()
+                 Review:    RH
+
+RD-2005-10-20-0: Bugfix:    - shepherd doesn't handle qrlogin/qrsh jobs
+                              correctly
+                            - default PATH variable set for job insufficient
+                              for non-login shell jobs
+                            - fixed system_tests/shepherd/job_start
+                 Issue:     1772, 1695
+                 Bugtraq:   6318018, 6288626
+                 Changed:   shepherd, execd
+                 Review:    HP, CR
+
+CR-2005-10-20-0: Testsuite: fixed bug in testsuite checktree setup
+                 Review:    RH           
+
+DT-2005-10-19-0: Bugfix:    o Fixed DRMAA memory leaks
+                            o Fixed handing of -b in DRMAA
+                            o Moved messages into header file
+                 Testsuite: o Added test for 1709 for C binding
+                            o Added test for 1770
+                            o Clean up in TCL for Java language binding test
+                 Issue:     1763, 1770
+                 Bugtraq:   6317048, 6320683
+                 Changed:   DRMAA
+                 Review:    AH
+
+MD-2005-10-19-0: Bugfix:    - added reprioritize param to default config
+                            - reprioritize man page description
+                 Changed:   inst_qmaster.sh
+                 Review:    SG, MD
+ 
+HP-2005-10-18-0: Bugfix:    Fixed broken builds on aix43, irix65 and win32-x86
+                 Changed:   qtcsh, pdc, libsgeobj
+
 EB-2005-10-17-0: Bugfix:    qconf -mattr can crash qmaster
                             qconf -[dm]attr gets confused by shortcuts
                  Issue:     1798, 1640

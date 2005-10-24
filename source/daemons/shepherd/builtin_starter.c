@@ -188,21 +188,15 @@ int truncate_stderr_out
    if( !strcasecmp(script_file, "QLOGIN") 
     || !strcasecmp(script_file, "QRSH")
     || !strcasecmp(script_file, "QRLOGIN")) {
+      shepherd_trace("processing qlogin job");
+      qlogin_starter = 1;
       is_qlogin = 1;
 
       if(!strcasecmp(script_file, "QRSH")) {
          is_rsh = 1;
-      }   
-
-      if(!strcasecmp(script_file, "QRLOGIN")) {
+      } else if(!strcasecmp(script_file, "QRLOGIN")) {
          is_rlogin = 1;
-      }   
-
-      shepherd_trace("processing qlogin job");
-      qlogin_starter = 1;
-   } 
-
-   if(qlogin_starter) {
+      }
       /* must force to run the qlogin starter as root, since it needs
          access to /dev/something */
 #if defined(INTERIX)
@@ -314,13 +308,8 @@ int truncate_stderr_out
 	 * so the job owner can reopen the file if the exec() fails.
 	 */
    shepherd_trace("Initializing error file");
-	shepherd_error_init( );
+   shepherd_error_init( );
 
-   shepherd_trace_sprintf("now doing chown(%s) of trace and error files",
-         target_user ? target_user : "<NULL>");
-   shepherd_trace_chown( target_user );
-   shepherd_error_chown( target_user );
-	
    min_gid = atoi(get_conf_val("min_gid"));
    min_uid = atoi(get_conf_val("min_uid"));
 
@@ -360,8 +349,6 @@ int truncate_stderr_out
       */
       shepherd_error(err_str);
    }
-   shepherd_trace_sprintf("now running with uid="uid_t_fmt", euid="uid_t_fmt, 
-         getuid(), geteuid());
 
    shell_start_mode = get_conf_val("shell_start_mode");
 

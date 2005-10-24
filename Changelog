@@ -1,3 +1,9 @@
+AA-2005-10-24-0: Bugfix:    - Changing the cwd flag in qmon - qalter has no effect
+                 Issue:     1838
+                 Bugtraq:   6336519
+                 Changed:   qmon
+                 Review:    SG
+
 CR-2005-10-21-0: Testsuite: fixed login problem on fast hosts for root login password
                             question
 

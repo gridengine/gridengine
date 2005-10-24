@@ -1,3 +1,10 @@
+AA-2005-10-18-0: Bugfix:   scheduler dies when array jobs are submitted 
+                           with -now y 
+                 Bugtraq:  6340741
+                 Issue:    1840
+                 Changed:  schedd
+                 Review:   SG
+                 
 AA-2005-09-12-0: Bugfix:   merge from maintrunc AA-2005-09-12-0
                  Changed:  sge_ca
                  Review:   MD

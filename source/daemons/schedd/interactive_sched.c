@@ -67,9 +67,10 @@ lList **opp      /* OR_Type */
       if (!JB_NOW_IS_IMMEDIATE(lGetUlong(job, JB_now)))
          continue;
 
+      lp = lGetList(job, JB_ja_tasks);
+
       /* .. and non idle jobs */
-      if ((lp =lGetList(job, JB_ja_tasks)) && 
-            lGetUlong(lFirst(lp), JAT_status)==JIDLE) 
+      if (lp && lFirst(lp) && lGetUlong(lFirst(lp), JAT_status)==JIDLE) 
          continue;    
   
       for_each (ja_task, lGetList(job, JB_ja_tasks)) {

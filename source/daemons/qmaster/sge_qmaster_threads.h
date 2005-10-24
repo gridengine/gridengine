@@ -47,6 +47,8 @@ void sge_start_heartbeat(void);
 void sge_start_periodic_tasks(void);
 void sge_qmaster_shutdown(void);
 void sge_register_event_handler(void); 
+int sge_shutdown_qmaster_via_signal_thread(int i);
+int sge_get_qmaster_exit_state(void);
 
 #endif /* _SGE_QMASTER_THREADS_H_ */
 

@@ -2353,7 +2353,7 @@ proc delete_file_at_startup { filename } {
 #  SEE ALSO
 #     file_procedures/delete_directory
 #*******************************
-proc delete_file { filename { do_wait_for_file 1 } } { 
+proc delete_file { filename { do_wait_for_file 1 } } {
    global CHECK_OUTPUT CHECK_TESTSUITE_ROOT
 
    if { $do_wait_for_file == 1 } {

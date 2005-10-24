@@ -303,10 +303,13 @@ int sge_chdir(const char *dir)
 ******************************************************************************/
 void sge_exit(int i) 
 {
-   sge_exit_func_t exit_func = uti_state_get_exit_func();
-   if (exit_func) 
+   sge_exit_func_t exit_func = NULL;
+   DENTER(TOP_LAYER, "sge_exit");
+   exit_func = uti_state_get_exit_func();
+   if (exit_func) {
       exit_func(i);
- 
+   }
+   DEXIT;
    exit(i);
 }
  

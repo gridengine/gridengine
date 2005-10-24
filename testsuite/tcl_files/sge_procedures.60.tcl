@@ -481,10 +481,11 @@ proc validate_checkpointobj { change_array } {
 #     sge_procedures/startup_execd()
 #     sge_procedures/startup_shadowd()
 #*******************************
-proc startup_shadowd { hostname } {
+proc startup_shadowd { hostname {env_list ""} } {
   global ts_config
    global CHECK_OUTPUT
    global CHECK_CORE_MASTER CHECK_ADMIN_USER_SYSTEM CHECK_USER
+   upvar $env_list envlist
 
 
    if { $CHECK_ADMIN_USER_SYSTEM == 0 } {  
@@ -500,7 +501,7 @@ proc startup_shadowd { hostname } {
 
    puts $CHECK_OUTPUT "starting up shadowd on host \"$hostname\" as user \"$startup_user\""
 
-   set output [start_remote_prog "$hostname" "$startup_user" "$ts_config(product_root)/$ts_config(cell)/common/sgemaster" "-shadowd start"]
+   set output [start_remote_prog "$hostname" "$startup_user" "$ts_config(product_root)/$ts_config(cell)/common/sgemaster" "-shadowd start" prg_exit_state 60 0 envlist]
    puts $CHECK_OUTPUT $output
    if { [string first "starting sge_shadowd" $output] >= 0 } {
        return 0

@@ -105,6 +105,7 @@
 #define MSG_GDI_READMASTERNAMEFAILED_S                   _MESSAGE(43107, _("unable to read qmaster name: "SFN))
 
 
+
 /* 
 ** gdilib/sge_gdi_request.c
 */
@@ -146,12 +147,9 @@
 #define MSG_GDI_SINGLE_THREADED_STARTUP      _MESSAGE(43296, _("starting up communication without threads"))
 #define MSG_GDI_CANT_GET_COM_HANDLE_SSUUS    _MESSAGE(43297, _("communication error for \""SFN"/"SFN"/"sge_U32CFormat"\" running on port "sge_U32CFormat": "SFQ))
 #define MSG_GDI_CANT_CONNECT_HANDLE_SSUUS    _MESSAGE(43298, _("communication error for \""SFN"/"SFN"/"sge_U32CFormat"\" using connect port "sge_U32CFormat": "SFQ))
-#define MSG_GDI_HANDLE_CREATED_FOR_S         _MESSAGE(43300, _("created communication handle for component name "SFQ))
 #define MSG_GDI_COULD_NOT_GET_COM_HANDLE_S   _MESSAGE(43301, _("alive check of qmaster failed for component "SFQ))
 #define MSG_GDI_QMASTER_STILL_RUNNING        _MESSAGE(43302, _("qmaster is still running"))
 #define MSG_GDI_ENDPOINT_UPTIME_UU           _MESSAGE(43303, _("endpoint is up since "sge_U32CFormat" seconds and has status "sge_U32CFormat))
-#define MSG_GDI_ALREADY_CONECTED_SSU         _MESSAGE(43304, _("there is already a client endpoint %s/%s/"sge_U32CFormat" connected to qmaster service"))
-#define MSG_GDI_ACCESS_DENIED_SSU            _MESSAGE(43305, _("qmaster service denies access from local endpoint %s/%s/"sge_U32CFormat))
 #define MSG_GDI_CANT_CREATE_HANDLE_TOEXECD_S _MESSAGE(43306, _("can't create handle to execd \"%s\""))
 
 
@@ -165,6 +163,11 @@
 #define MSG_SEC_CERTFILENOTFOUND_S       _MESSAGE(55006, _("certificate "SFQ" doesn't exist"))
 #define MSG_SEC_RANDFILENOTFOUND_S       _MESSAGE(55005, _("random data file "SFQ" doesn't exist"))
 #define MSG_SEC_CERT_VERIFY_FUNC_NO_VAL  _MESSAGE(55011, _("certificate verify callback function called without value"))
+
+
+#define MSG_GDI_WAITING_FOR_MASTER_HOST_X_SHUTDOWN_S _MESSAGE(55012, _("waiting for shutdown of qmaster on host "SFQ))
+#define MSG_GDI_MASTER_ON_HOST_X_RUNINNG_TERMINATE_S _MESSAGE(55013, _("qmaster on host "SFQ" is still running - terminating"))
+
 
 
 #endif /* __MSG_GDILIB_H */

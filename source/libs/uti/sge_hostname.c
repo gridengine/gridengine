@@ -1234,13 +1234,15 @@ int sge_hostcmp(const char *h1, const char*h2)
  
    DENTER(BASIS_LAYER, "sge_hostcmp");
  
-   sge_hostcpy(h1_cpy,h1);
-   sge_hostcpy(h2_cpy,h2);
+   if (h1 != NULL && h2 != NULL) {
+      sge_hostcpy(h1_cpy,h1);
+      sge_hostcpy(h2_cpy,h2);
  
-   if (h1_cpy && h2_cpy) {
-     cmp = SGE_STRCASECMP(h1_cpy, h2_cpy);
+      if (h1_cpy && h2_cpy) {
+        cmp = SGE_STRCASECMP(h1_cpy, h2_cpy);
  
-     DPRINTF(("sge_hostcmp(%s, %s) = %d\n", h1_cpy, h2_cpy));
+        DPRINTF(("sge_hostcmp(%s, %s) = %d\n", h1_cpy, h2_cpy));
+      }
    }
  
    DEXIT;

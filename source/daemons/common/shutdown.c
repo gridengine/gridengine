@@ -72,7 +72,7 @@ void starting_up()
 }
 
 /******************************************************************************/
-void sge_shutdown()
+void sge_shutdown(int i)
 {
    u_long32 old_ll = log_state_get_log_level();
    dstring ds;
@@ -99,5 +99,5 @@ void sge_shutdown()
    log_state_set_log_level(old_ll);
 
    DEXIT;
-   SGE_EXIT(0); /* call sge_exit() */
+   SGE_EXIT(i); /* call sge_exit() */
 }

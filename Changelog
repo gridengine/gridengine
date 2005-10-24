@@ -1,3 +1,14 @@
+CR-2005-10-24-0: Bugfix:    - sgemaster -migrate may not delete qmaster lock file 
+                              and may break shadowd functionality
+                            - sge_qmaster daemon is running on both the master
+                              and shadow nodes after a long network failure
+                            - added test_heartbeat test binary
+                            - INFO text wasn't localized
+                            - testsuite test shadowd/migrate
+                 Bugtraq:   6333467, 6320869
+                 Issue:     1828, 1820
+                 Review:    AH       
+
 JG-2005-10-24-0: Bugfix:    Fixed broken build on hp11.
                  Review:    CR
 

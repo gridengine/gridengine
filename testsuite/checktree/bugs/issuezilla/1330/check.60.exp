@@ -105,7 +105,7 @@ set check_description(8)  ""
 
 
 # define test's dependencies
-#set check_needs           "init_core_system" 
+set check_needs           "init_core_system" 
 
 # setup and cleanup functions
 set check_setup_function Autoinstall_test_setup

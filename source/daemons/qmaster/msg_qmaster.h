@@ -607,7 +607,6 @@
 #define MSG_GOTSTATUSREPORTOFUNKNOWNEXECHOST_S    _MESSAGE(33598, _("got load report of unknown exec host "SFQ))
 #define MSG_CONF_CANTNOTIFYEXECHOSTXOFNEWCONF_S    _MESSAGE(33599, _("can't notify exec host "SFQ" of new conf"))
 #define MSG_LICENCE_ERRORXUPDATINGLICENSEDATA_I    _MESSAGE(33600, _("error %d updating license data"))
-#define MSG_HEARTBEAT_FAILEDTOINCREMENTHEARBEATFILEXINSPOOLDIR_S    _MESSAGE(33601, _("failed to increment heartbeat file "SFQ" in spool directory"))
 #define MSG_QMASTER_LOCKFILE_ALREADY_EXISTS  _MESSAGE(33602, _("Unable to create lock file. Found existing one."))
 
 /*
@@ -743,6 +742,7 @@
 #define MSG_QMASTER_FD_HARD_LIMIT_SETTINGS_U        _MESSAGE(33918, _("qmaster hard descriptor limit is set to "sge_U32CFormat))
 
 
+#define MSG_QMASTER_READ_JDB_WITH_X_ENTR_IN_Y_SECS_UU _MESSAGE(33919, _("read job database with "sge_U32CFormat" entries in "sge_U32CFormat" seconds"))
 
 #endif
 

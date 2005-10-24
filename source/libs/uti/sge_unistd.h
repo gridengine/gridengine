@@ -52,6 +52,7 @@
 #  define SGE_OPEN3(filename, oflag, mode) open(filename, oflag, mode)
 #endif                
 
+
 #ifdef IRIX
 #  define SGE_STAT(filename, buffer) stat64(filename, buffer)
 #  define SGE_LSTAT(filename, buffer) lstat64(filename, buffer)

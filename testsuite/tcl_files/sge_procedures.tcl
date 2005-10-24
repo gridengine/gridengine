@@ -240,6 +240,50 @@ proc get_execd_spool_dir {host} {
   }
 }
 
+proc seek_and_desroy_sge_processes {} {
+   global ts_host_config CHECK_OUTPUT CHECK_USER
+
+   set answer_text ""
+   if { [info exists kill_list] } {
+      unset kill_list
+   }
+
+   foreach host $ts_host_config(hostlist) {
+      puts $CHECK_OUTPUT "host $host ..."
+
+      get_ps_info 0 $host ps_info
+      for {set i 0} {$i < $ps_info(proc_count) } {incr i 1} {
+         if { [string match "*$CHECK_USER*" $ps_info(string,$i)] } {
+            if { [string match "*sge_*" $ps_info(string,$i)]   || 
+                 [string match "*qevent*" $ps_info(string,$i)] ||
+                 [string match "*qping*" $ps_info(string,$i)]   } {
+               puts "ps_info(pid,$i)     = $ps_info(string,$i)"
+               append answer_text "host $host: pid $ps_info(pid,$i)\n"
+               if {[info exists kill_list($host)]} {
+                  lappend kill_list($host) $ps_info(pid,$i)
+               } else {
+                  set kill_list($host) $ps_info(pid,$i)
+               }
+            }
+         }
+      }
+
+   }
+
+   if { $answer_text != "" } {
+      puts $CHECK_OUTPUT "found matching prozesses:"
+      puts $CHECK_OUTPUT "$answer_text"
+      foreach host $ts_host_config(hostlist) {
+         if { [info exists kill_list($host)] } {
+            foreach pid $kill_list($host) {
+               puts $CHECK_OUTPUT "killing pid $pid on host $host ..."
+            }
+         }
+      }         
+   }
+   wait_for_enter
+}
+
 
 #****** sge_procedures/check_messages_files() **********************************
 #  NAME
@@ -6060,31 +6104,21 @@ proc wait_for_jobend { jobid jobname seconds {runcheck 1} { wait_for_end 0 } } {
 }
 
 
-#                                                             max. column:     |
-#****** sge_procedures/startup_qmaster() ******
-# 
+#****** sge_procedures/startup_qmaster() ***************************************
 #  NAME
-#     startup_qmaster -- ??? 
+#     startup_qmaster() -- startup qmaster (and scheduler) daemon
 #
 #  SYNOPSIS
-#     startup_qmaster { } 
+#     startup_qmaster { {and_scheduler 1}  {env_list ""}  } 
 #
 #  FUNCTION
-#     ??? 
+#     Startup the qmaster daemon on the configured testsuite host. An environ
+#     ment can be set which is used as parameter for the start_remote_prog()
+#     call.
 #
 #  INPUTS
-#
-#  RESULT
-#     ??? 
-#
-#  EXAMPLE
-#     ??? 
-#
-#  NOTES
-#     ??? 
-#
-#  BUGS
-#     ??? 
+#     {and_scheduler 1} - optional: also start the schedd daemon 
+#     env_list          - optional: use given environment
 #
 #  SEE ALSO
 #     sge_procedures/shutdown_core_system()
@@ -6094,13 +6128,20 @@ proc wait_for_jobend { jobid jobname seconds {runcheck 1} { wait_for_end 0 } } {
 #     sge_procedures/startup_qmaster()
 #     sge_procedures/startup_execd()
 #     sge_procedures/startup_shadowd()
-#*******************************
-proc startup_qmaster { {and_scheduler 1} } {
-  global ts_config
+#*******************************************************************************
+proc startup_qmaster { {and_scheduler 1} {env_list ""} {on_host ""} } {
+   global ts_config
    global CHECK_OUTPUT
    global CHECK_CORE_MASTER CHECK_ADMIN_USER_SYSTEM CHECK_USER
    global CHECK_SCRIPT_FILE_DIR CHECK_TESTSUITE_ROOT CHECK_DEBUG_LEVEL
    global schedd_debug master_debug CHECK_DISPLAY_OUTPUT CHECK_SGE_DEBUG_LEVEL
+   upvar $env_list envlist
+
+   set start_host $CHECK_CORE_MASTER
+
+   if { $on_host != "" } {
+      set start_host $on_host
+   }
 
    if { $CHECK_ADMIN_USER_SYSTEM == 0 } { 
       if { [have_root_passwd] != 0  } {
@@ -6117,14 +6158,15 @@ proc startup_qmaster { {and_scheduler 1} } {
    } else {
       set schedd_message ""
    }
-   puts $CHECK_OUTPUT "starting up qmaster $schedd_message on host \"$CHECK_CORE_MASTER\" as user \"$startup_user\""
-   set arch [resolve_arch $CHECK_CORE_MASTER]
+   puts $CHECK_OUTPUT "starting up qmaster $schedd_message on host \"$start_host\" as user \"$startup_user\""
+   set arch [resolve_arch $start_host]
 
    if { $master_debug != 0 } {
       puts $CHECK_OUTPUT "using DISPLAY=${CHECK_DISPLAY_OUTPUT}"
-      start_remote_prog "$CHECK_CORE_MASTER" "$startup_user" "/usr/bin/X11/xterm" "-bg darkolivegreen -fg navajowhite -sl 5000 -sb -j -display $CHECK_DISPLAY_OUTPUT -e $CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/debug_starter.sh /tmp/out.$CHECK_USER.qmaster.$CHECK_CORE_MASTER \"$CHECK_SGE_DEBUG_LEVEL\" $ts_config(product_root)/bin/${arch}/sge_qmaster &" prg_exit_state 60 2 ""
+      start_remote_prog "$start_host" "$startup_user" "/usr/bin/X11/xterm" "-bg darkolivegreen -fg navajowhite -sl 5000 -sb -j -display $CHECK_DISPLAY_OUTPUT -e $CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/debug_starter.sh /tmp/out.$CHECK_USER.qmaster.$start_host \"$CHECK_SGE_DEBUG_LEVEL\" $ts_config(product_root)/bin/${arch}/sge_qmaster &" prg_exit_state 60 2 ""
    } else {
-      start_remote_prog "$CHECK_CORE_MASTER" "$startup_user" "$ts_config(product_root)/bin/${arch}/sge_qmaster" ";sleep 2"
+      start_remote_prog "$start_host" "$startup_user" "$ts_config(product_root)/bin/${arch}/sge_qmaster" ";sleep 2" prg_exit_state 60 0 envlist
+
    }
 
    if {$and_scheduler} {
@@ -6132,10 +6174,10 @@ proc startup_qmaster { {and_scheduler 1} } {
       if { $schedd_debug != 0 } {
          puts $CHECK_OUTPUT "using DISPLAY=${CHECK_DISPLAY_OUTPUT}"
          puts $CHECK_OUTPUT "starting schedd as $startup_user" 
-         start_remote_prog "$CHECK_CORE_MASTER" "$startup_user" "/usr/bin/X11/xterm" "-bg darkolivegreen -fg navajowhite -sl 5000 -sb -j -display $CHECK_DISPLAY_OUTPUT -e $CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/debug_starter.sh /tmp/out.$CHECK_USER.schedd.$CHECK_CORE_MASTER \"$CHECK_SGE_DEBUG_LEVEL\" $ts_config(product_root)/bin/${arch}/sge_schedd &" prg_exit_state 60 2 ""
+         start_remote_prog "$start_host" "$startup_user" "/usr/bin/X11/xterm" "-bg darkolivegreen -fg navajowhite -sl 5000 -sb -j -display $CHECK_DISPLAY_OUTPUT -e $CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/debug_starter.sh /tmp/out.$CHECK_USER.schedd.$start_host \"$CHECK_SGE_DEBUG_LEVEL\" $ts_config(product_root)/bin/${arch}/sge_schedd &" prg_exit_state 60 2 ""
       } else {
          puts $CHECK_OUTPUT "starting schedd as $startup_user" 
-         set result [start_remote_prog "$CHECK_CORE_MASTER" "$startup_user" "$ts_config(product_root)/bin/${arch}/sge_schedd" ";sleep 5"]
+         set result [start_remote_prog "$start_host" "$startup_user" "$ts_config(product_root)/bin/${arch}/sge_schedd" ";sleep 5" prg_exit_state 60 0 envlist]
          puts $CHECK_OUTPUT $result
       }
    }
@@ -6841,13 +6883,13 @@ proc is_pid_with_name_existing { host pid proc_name } {
 #     shutdown_system_daemon { host type } 
 #
 #  FUNCTION
-#     This procedure will kill all commd, execd, qmaster or sched processes on 
-#     the given host. It does not matter weather the system is sgeee or sge
-#     (sge or sgeee). 
+#     This procedure will kill all commd, execd, qmaster, shadowd or sched 
+#     processes on the given host. 
+#     It does not matter weather the system is sgeee or sge (sge or sgeee). 
 #
 #  INPUTS
 #     host     - remote host 
-#     typelist - list of processes to kill (commd, execd, qmaster or sched)
+#     typelist - list of processes to kill (commd, execd, qmaster, shadowd or sched)
 #     { do_term_signal_kill_first 1 } - if set to 1 the first kill signal is
 #                                       SIG_TERM and SIG_KILL only if SIG_TERM
 #                                       wasn't successful
@@ -6898,10 +6940,13 @@ proc shutdown_system_daemon { host typelist { do_term_signal_kill_first 1 } } {
       if { [ string compare $type "commd" ] == 0 } {
          lappend process_names "sge_commd" 
       }
+      if { [ string compare $type "shadowd" ] == 0 } {
+         lappend process_names "sge_shadowd" 
+      }
    }
 
    if { [llength $process_names] != [llength $typelist] } {
-      add_proc_error "shutdown_system_daemon" -1 "type should be commd, execd, qmaster or sched"
+      add_proc_error "shutdown_system_daemon" -1 "type should be commd, execd, qmaster, shadowd or sched"
       puts $CHECK_OUTPUT "shutdown_system_daemon ... done"
       return -1
    }

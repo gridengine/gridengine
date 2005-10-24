@@ -1,0 +1,567 @@
+#!/vol2/TCL_TK/glinux/bin/expect
+# global variables ... (defined in main check routine, but you can use it)
+#___INFO__MARK_BEGIN__
+##########################################################################
+#
+#  The Contents of this file are made available subject to the terms of
+#  the Sun Industry Standards Source License Version 1.2
+#
+#  Sun Microsystems Inc., March, 2001
+#
+#
+#  Sun Industry Standards Source License Version 1.2
+#  =================================================
+#  The contents of this file are subject to the Sun Industry Standards
+#  Source License Version 1.2 (the "License"); You may not use this file
+#  except in compliance with the License. You may obtain a copy of the
+#  License at http://gridengine.sunsource.net/Gridengine_SISSL_license.html
+#
+#  Software provided under this License is provided on an "AS IS" basis,
+#  WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING,
+#  WITHOUT LIMITATION, WARRANTIES THAT THE SOFTWARE IS FREE OF DEFECTS,
+#  MERCHANTABLE, FIT FOR A PARTICULAR PURPOSE, OR NON-INFRINGING.
+#  See the License for the specific provisions governing your rights and
+#  obligations concerning the Software.
+#
+#  The Initial Developer of the Original Code is: Sun Microsystems, Inc.
+#
+#  Copyright: 2001 by Sun Microsystems, Inc.
+#
+#  All Rights Reserved.
+#
+##########################################################################
+#___INFO__MARK_END__
+
+# Define the global veriables to give them back
+global check_name check_description check_needs check_functions check_errno check_errstr 
+global check_category check_root_access_needs
+
+
+
+set check_root_access_needs  "yes"
+
+set check_name           "qstat"
+set check_category       "COMPATIBILITY SYSTEM L10N VERIFIED"
+set check_description(0) "checking qstat functionality"
+set check_needs          "init_core_system"      ;# dependencies of this check (name of other check)
+# define a level initialization procedure:
+set check_init_level_procedure "qstat_init_level"
+
+set check_functions      "";
+lappend check_functions  "check_core_queues"     ;# functions to call (in order)
+lappend check_functions  "qstat_option_l"
+lappend check_functions  "qstat_option_q"
+lappend check_functions  "qstat_option_pe"
+lappend check_functions  "qstat_option_U"
+lappend check_functions  "qstat_option_s"
+lappend check_functions  "qstat_issue1800"
+
+set check_errno          "-1"                    ;# 0 -> OK , != 0 means error
+set check_errstr         "was never running"     ;# string for error description
+
+# JG: TODO: we have to create an own queue for this test!
+
+proc qstat_init_level {} {
+   global CHECK_ACT_LEVEL
+
+   if {$CHECK_ACT_LEVEL == 0} {
+      return 0
+   }
+
+   return -1
+}
+
+#                                                             max. column:     |
+#****** qstat/get_numb_proc() ******
+# 
+#  NAME
+#     get_numb_proc -- ??? 
+#
+#  SYNOPSIS
+#     get_numb_proc { } 
+#
+#  FUNCTION
+#     ??? 
+#
+#  INPUTS
+#
+#  RESULT
+#     ??? 
+#
+#  EXAMPLE
+#     ??? 
+#
+#  NOTES
+#     ??? 
+#
+#  BUGS
+#     ??? 
+#
+#  SEE ALSO
+#     ???/???
+#*******************************
+proc get_numb_proc {} {
+  global CHECK_PRODUCT_ROOT CHECK_ARCH
+  set result ""
+  catch {exec "$CHECK_PRODUCT_ROOT/utilbin/$CHECK_ARCH/loadcheck" } result
+#
+#Original output of loadcheck looks like this:
+#>loadcheck 
+#arch            irix6
+#num_proc        1
+  
+  # split each line as listelement
+  set help [split $result "\n"]
+
+  foreach elem $help {
+     if {[string compare [lindex $elem 0] "num_proc"] == 0} {
+        set numproc [lindex $elem 1]
+     }
+  }
+
+  return $numproc    
+}
+
+#****** check/qstat_count_jobs() ***********************************************
+#  NAME
+#     qstat_count_jobs() -- count the jobs of the qstat output with the
+#                           given options 
+#
+#  SYNOPSIS
+#     qstat_count_jobs { func_name qstat_options expected_jobs } 
+#
+#  FUNCTION
+#     ??? 
+#
+#  INPUTS
+#     func_name     - name of the calling function. needed for add_proc_error 
+#     qstat_options - options for qstat 
+#     expected_jobs - the nr of the expected job count
+#
+#*******************************************************************************
+proc qstat_count_jobs { func_name qstat_options expected_jobs } {
+   global ts_config CHECK_OUTPUT CHECK_USER
+   set arch [ resolve_arch $ts_config(master_host) ]
+   
+   puts $CHECK_OUTPUT "\nrunning qstat $qstat_options"
+   set result [ start_remote_prog $ts_config(master_host) $CHECK_USER "$ts_config(product_root)/bin/$arch/qstat" "$qstat_options" exit_code ]
+   puts $CHECK_OUTPUT $result
+   if { $exit_code == 0 } {
+      if { [info exists jobinfo] } {
+         unset jobinfo
+      }  
+      parse_qstat result jobinfo "" 0
+      set shown_jobs [ split $jobinfo(index) "," ]
+      set nr_jobs [llength $shown_jobs]
+      # parse_qstat add always a "<jobid>,". Split then returns <jobnr>+1 so we need to adjust the nr of jobs. 
+      if { $nr_jobs > 0 } {
+         incr nr_jobs -1
+      }
+      puts $CHECK_OUTPUT "number of jobs: $nr_jobs"
+      if { $nr_jobs != $expected_jobs } {
+         add_proc_error "$func_name" -1 "qstat $qstat_options broken, got $nr_jobs but expected $expected_jobs"
+      }
+   } else {
+      add_proc_error "$func_name" -1 "qstat $qstat_options exit status not 0"
+   }
+}
+
+# here starts the test
+#                                                             max. column:     |
+#****** qstat/check_core_queues() ******
+# 
+#  NAME
+#     check_core_queues -- ??? 
+#
+#  SYNOPSIS
+#     check_core_queues { } 
+#
+#  FUNCTION
+#     ??? 
+#
+#  INPUTS
+#
+#  RESULT
+#     ??? 
+#
+#  EXAMPLE
+#     ??? 
+#
+#  NOTES
+#     ??? 
+#
+#  BUGS
+#     ??? 
+#
+#  SEE ALSO
+#     ???/???
+#*******************************
+proc check_core_queues {} {
+  global check_errno check_errstr CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_CORE_EXECD CHECK_HOST CHECK_OUTPUT
+
+  wait_for_load_from_all_queues 300
+
+  set result ""
+
+  catch {exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qstat" "-f"} result
+#
+#Original output of qstat -f looks like this:
+#>qstat -f
+#queuename            qtype used/tot. load_avg arch    states
+#----------------------------------------------------------------------------
+#all.q@balrog             BI    0/2       1.42     solaris64 
+#----------------------------------------------------------------------------
+#all.q@dwain              BI    1/1       2.00     irix6     a
+#     2     0 Sleeper    crei         r     05/15/2000 13:09:48 MASTER           
+#
+############################################################################
+# - PENDING JOBS - PENDING JOBS - PENDING JOBS - PENDING JOBS - PENDING JOBS
+############################################################################
+#     3     0 Sleeper    crei         qw    05/15/2000 13:09:49          
+
+  # split each line as listelement
+  set help [split $result "\n"]
+ 
+  #remove first line
+  set help [lreplace $help 0 0]
+  set data ""
+
+  #get every line after "----..." line 
+  set len [llength $help]
+  for {set ind 0} {$ind < $len } {incr ind 1} {
+     if {[lsearch [lindex $help $ind] "------*"] >= 0 } {
+        lappend data [lindex $help [expr ( $ind + 1 )]] 
+     }
+  }
+
+
+  set qcount [ llength $data]
+  set qnames ""
+  set slots ""
+  set load ""
+
+  # get line data information for queuename used/tot and load_avg
+  foreach elem $data {
+     set linedata $elem
+     lappend qnames [lindex $linedata 0]
+     set used_tot [lindex $linedata 2]
+     set pos1 [ expr ( [string first "/" $used_tot] + 1 ) ]
+     set pos2 [ expr ( [string length $used_tot]          - 1 ) ]
+
+     lappend slots [string range $used_tot $pos1 $pos2 ]
+     lappend load [lindex $linedata 3]
+  }
+ 
+  
+
+  # check if number of queues matches core system queue count
+  if { [llength $CHECK_CORE_EXECD] != $qcount } {
+     set_error -1 "check_core_queues - queue count doesn't match (number of queues should be [llength $CHECK_CORE_EXECD])"
+     return
+  }
+
+  # check if slots for host $CHECK_HOST are correct (needs successfully tested "loadcheck" check)
+  set numofproc [get_numb_proc]
+  puts $CHECK_OUTPUT "got $numofproc slots"
+  if { [lindex $slots [lsearch $qnames "all.q@$CHECK_HOST"] ] != [expr ( $numofproc * 10 )] } {
+     set_error -1 "check_core_queues - queue all.q@$CHECK_HOST shoud have [expr ( $numofproc * 10 )] slots) (cpu count * 10)"
+     return
+  } 
+
+  # check if load of an host is set > 99 (no exed report)
+  set ind 0
+  foreach elem $load {
+    if {$elem >= 99} {
+       set_error -1 "check_core_queues - queue [lindex $qnames $ind] has load > 99"
+       return
+    }
+    incr ind 1
+  }
+
+  puts $CHECK_OUTPUT "check_core_queues\n- number of queues: $qcount\n- qnames: $qnames\n- slots: $slots\n- load: $load"
+
+  # ok - no errors, very very nice ;-) 
+  set_error 0 "check_core_queues - no errors"
+}
+
+proc qstat_option_l {} {
+  global CHECK_OUTPUT CHECK_CORE_EXECD CHECK_PRODUCT_ROOT CHECK_ARCH
+
+  puts $CHECK_OUTPUT "checking qstat -l option ..."
+
+  set my_arch [resolve_arch [lindex $CHECK_CORE_EXECD 0]]
+
+  puts $CHECK_OUTPUT "submitting job requesting arch=$my_arch ..."   
+  
+  set job_id_list ""
+  set arguments "-o /dev/null -e /dev/null -h -l arch=$my_arch"
+  set job_id [ submit_job "$arguments $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 1000" ]
+  lappend job_id_list $job_id
+  set job_id [ submit_job "$arguments $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 1000" ]
+  lappend job_id_list $job_id
+  set job_id [ submit_job "$arguments $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 1000" ]
+  lappend job_id_list $job_id
+
+  puts $CHECK_OUTPUT "submitting job requesting arch=undefined_arch ..."  
+  set arguments "-o /dev/null -e /dev/null -h -l arch=undefined_arch"
+  set job_id [ submit_job "$arguments $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 1000" ]
+  lappend job_id_list $job_id
+    
+   qstat_count_jobs "qstat_option_l" "-l arch=$my_arch" 3 
+
+   qstat_count_jobs "qstat_option_l" "-l arch=undefined_arch" 0 
+
+  delete_all_jobs
+
+  set_error 0 "ok"
+}
+
+proc qstat_option_q {} {
+  global CHECK_OUTPUT CHECK_CORE_EXECD CHECK_PRODUCT_ROOT CHECK_ARCH
+
+  puts $CHECK_OUTPUT "checking qstat -q option ..."
+
+  puts $CHECK_OUTPUT "submitting jobs requesting each queue ..."   
+  set job_id_list ""
+  set counter 0
+  foreach host $CHECK_CORE_EXECD {
+     set qname [get_queue_instance all.q ${host}]
+     puts $CHECK_OUTPUT "\nsubmitting -q $qname ..."
+     
+     set arguments "-o /dev/null -e /dev/null -h -q $qname"
+     set job_id [ submit_job "$arguments $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 1000" ]
+     lappend job_id_list $job_id
+     set queue_job_array($qname) $job_id
+  }
+
+  foreach host $CHECK_CORE_EXECD {
+     set qname [get_queue_instance all.q ${host}]
+     qstat_count_jobs "qstat_option_q" "-q $qname" 1 
+  }
+
+  delete_all_jobs
+ 
+  wait_for_end_of_all_jobs 60
+
+  set_error 0 "ok"
+}
+
+
+proc qstat_option_pe {} {
+   global CHECK_OUTPUT CHECK_CORE_EXECD CHECK_PRODUCT_ROOT CHECK_ARCH 
+
+   puts $CHECK_OUTPUT "checking qstat -pe option ..."
+
+   set hostname [lindex $CHECK_CORE_EXECD 0]
+
+   set testq(load_thresholds) "np_load_avg=7.00"
+   set testq(slots) 10
+   add_queue test1.q $hostname testq
+
+   set mype1(pe_name) "mype1"
+   set mype1(slots) 6 
+   set mype1(allocation_rule) "\$pe_slots"
+   add_pe mype1
+   assign_queues_with_pe_object test1.q $hostname mype1
+
+   add_queue test2.q $hostname testq
+
+   set mype2(pe_name) "mype2"
+   set mype2(slots) 2
+   set mype2(allocation_rule) "\$pe_slots"
+   add_pe mype2
+   assign_queues_with_pe_object test2.q $hostname mype2
+
+   puts $CHECK_OUTPUT "submitting job requesting pe mype1 ..."   
+  
+   set job_id_list ""
+   set arguments "-o /dev/null -e /dev/null -pe mype1 2"
+   set job_id [ submit_job "$arguments $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 1000" ]
+   lappend job_id_list $job_id
+   set job_id [ submit_job "$arguments $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 1000" ]
+   lappend job_id_list $job_id
+   set job_id [ submit_job "$arguments $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 1000" ]
+   lappend job_id_list $job_id
+
+
+   puts $CHECK_OUTPUT "submitting job requesting pe mype2 ..."  
+   set arguments "-o /dev/null -e /dev/null -pe mype2 2"
+   set job_id [ submit_job "$arguments $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 1000" ]
+   lappend job_id_list $job_id
+   wait_for_jobstart $job_id "Sleeper" 60
+  
+   qstat_count_jobs "qstat_option_pe" "-pe mype1" 3
+   
+   qstat_count_jobs "qstat_option_pe" "-pe mype2" 1 
+   
+   delete_all_jobs
+   
+   foreach jobid $job_id_list {
+      wait_for_jobend $jobid "Sleeper" 60 0 1
+   }
+      
+   del_pe mype1
+   del_pe mype2
+
+   del_queue test1.q $hostname 0 1
+   del_queue test2.q $hostname 0 1
+
+   set_error 0 "ok"
+}
+
+
+proc qstat_option_U {} {
+  global CHECK_OUTPUT CHECK_CORE_EXECD CHECK_PRODUCT_ROOT CHECK_ARCH 
+  global CHECK_USER CHECK_FIRST_FOREIGN_SYSTEM_USER
+
+  puts $CHECK_OUTPUT "checking qstat -U option ..."
+
+  set hostname [lindex $CHECK_CORE_EXECD 0]
+
+  set testq(load_thresholds) "np_load_avg=7.00"
+  set testq(slots) 10
+  set testq(user_lists) deadlineusers 
+  add_queue test.q $hostname testq
+  set qname [get_queue_instance test.q $hostname]
+
+  puts $CHECK_OUTPUT "submitting jobs as user $CHECK_USER ..."   
+  
+  set job_id_list ""
+  set arguments "-o /dev/null -e /dev/null -h -q $qname"
+  set job_id [ submit_job "$arguments $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 1000" 1 30 "" $CHECK_USER]
+  lappend job_id_list $job_id
+  set job_id [ submit_job "$arguments $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 1000" 1 30 "" $CHECK_USER]
+  lappend job_id_list $job_id
+  set job_id [ submit_job "$arguments $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 1000" 1 30 "" $CHECK_USER]
+  lappend job_id_list $job_id
+
+
+  puts $CHECK_OUTPUT "submitting job as user $CHECK_FIRST_FOREIGN_SYSTEM_USER ..."  
+  set arguments "-o /dev/null -e /dev/null -h -q $qname"
+  set job_id [ submit_job "$arguments $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 1000" 1 30 "" $CHECK_FIRST_FOREIGN_SYSTEM_USER]
+  lappend job_id_list $job_id
+  
+  qstat_count_jobs "qstat_option_U" "-U $CHECK_USER" 4
+
+  qstat_count_jobs "qstat_option_U" "-U $CHECK_FIRST_FOREIGN_SYSTEM_USER" 0
+
+  delete_all_jobs
+
+  wait_for_end_of_all_jobs 60
+
+  del_queue test.q $hostname 0 1
+
+  set_error 0 "ok"
+}
+
+proc qstat_option_s {} {
+  global ts_config CHECK_OUTPUT CHECK_USER 
+
+  set arch [ resolve_arch $ts_config(master_host) ]
+
+  puts $CHECK_OUTPUT "submitting a long running batch job ..."   
+  set job_id_list ""
+  set arguments "-o /dev/null -e /dev/null"
+  set job_id [ submit_job "$arguments $ts_config(product_root)/examples/jobs/sleeper.sh 100000" ]
+  wait_for_jobstart $job_id "Sleeper" 60
+
+  puts $CHECK_OUTPUT "submitting & suspending a batch job ..."   
+  set job_id_list ""
+  set arguments "-o /dev/null -e /dev/null"
+  set job_id [ submit_job "$arguments $ts_config(product_root)/examples/jobs/sleeper.sh 100000" ]
+  wait_for_jobstart $job_id "Sleeper" 60
+  set result [ start_remote_prog $ts_config(master_host) $CHECK_USER "$ts_config(product_root)/bin/$arch/qmod" "-s $job_id" exit_code ]
+
+  puts $CHECK_OUTPUT "submitting an user hold batch job ..."   
+  set job_id_list ""
+  set arguments "-h -o /dev/null -e /dev/null"
+  set job_id [ submit_job "$arguments $ts_config(product_root)/examples/jobs/sleeper.sh 1000" ]
+
+  puts $CHECK_OUTPUT "submitting an system hold batch job ..."   
+  set job_id_list ""
+  set arguments "-h -o /dev/null -e /dev/null"
+  set job_id [ submit_job "$arguments $ts_config(product_root)/examples/jobs/sleeper.sh 1000" ]
+  set result [ start_remote_prog $ts_config(master_host) $CHECK_USER "$ts_config(product_root)/bin/$arch/qalter" "-h s $job_id" exit_code ]
+  set result [ start_remote_prog $ts_config(master_host) $CHECK_USER "$ts_config(product_root)/bin/$arch/qalter" "-h U $job_id" exit_code ]
+
+  puts $CHECK_OUTPUT "submitting an operator hold batch job ..."   
+  set job_id_list ""
+  set arguments "-h -o /dev/null -e /dev/null"
+  set job_id [ submit_job "$arguments $ts_config(product_root)/examples/jobs/sleeper.sh 1000" ]
+  set result [ start_remote_prog $ts_config(master_host) $CHECK_USER "$ts_config(product_root)/bin/$arch/qalter" "-h o $job_id" exit_code ]
+  set result [ start_remote_prog $ts_config(master_host) $CHECK_USER "$ts_config(product_root)/bin/$arch/qalter" "-h U $job_id" exit_code ]
+
+  puts $CHECK_OUTPUT "submitting an dependency hold batch job ..."   
+  set job_id_list ""
+  set arguments "-hold_jid \"Sleeper\" -o /dev/null -e /dev/null"
+  set job_id [ submit_job "$arguments $ts_config(product_root)/examples/jobs/sleeper.sh 1000" ]
+
+  #-s a
+  qstat_count_jobs "qstat_option_s" "-s a" 6
+
+  #-s h
+  qstat_count_jobs "qstat_option_s" "-s h" 4 
+
+  #-s hu
+  qstat_count_jobs "qstat_option_s" "-s hu" 1 
+
+  #-s hs
+  qstat_count_jobs "qstat_option_s" "-s hs" 1 
+
+  #-s ho
+  qstat_count_jobs "qstat_option_s" "-s ho" 1 
+
+  #-s hj
+  qstat_count_jobs "qstat_option_s" "-s hj" 1 
+
+  #-s p
+  qstat_count_jobs "qstat_option_s" "-s p" 4 
+
+  #-s r
+  qstat_count_jobs "qstat_option_s" "-s r" 1 
+
+  #-s s 
+  qstat_count_jobs "qstat_option_s" "-s s" 1 
+
+  #-s ha
+  puts $CHECK_OUTPUT "submitting an date hold batch job ..."   
+  set job_id_list ""
+  set arguments "-a 01011000 -o /dev/null -e /dev/null"
+  set job_id [ submit_job "$arguments $ts_config(product_root)/examples/jobs/sleeper.sh 1000" ]
+  qstat_count_jobs "qstat_option_s" "-s ha" 1 
+
+  #TODO test critical states & combinations
+
+  delete_all_jobs
+  set_error 0 "ok"
+}
+
+proc qstat_issue1800 {} {
+  global ts_config CHECK_OUTPUT CHECK_USER 
+
+  set arch [ resolve_arch $ts_config(master_host) ]
+  set first_host [ lindex $ts_config(execd_nodes) 0 ]
+   
+  puts $CHECK_OUTPUT "submitting an array job ..."   
+  set job_id_list ""
+  set arguments "-l h=$first_host -o /dev/null -e /dev/null -t 1-1000"
+  set job_id [ submit_job "$arguments $ts_config(product_root)/examples/jobs/sleeper.sh 1000" ]
+
+  wait_for_jobstart $job_id "Sleeper" 60
+  qstat_count_jobs "qstat_issue1800" "-s p" 1 
+
+  qstat_count_jobs "qstat_issue1800" "-s hu" 0 
+  set result [ start_remote_prog $ts_config(master_host) $CHECK_USER "$ts_config(product_root)/bin/$arch/qalter" "-h u $job_id" exit_code ]
+  qstat_count_jobs "qstat_issue1800" "-s hu" 1 
+
+  qstat_count_jobs "qstat_issue1800" "-s hs" 0 
+  set result [ start_remote_prog $ts_config(master_host) $CHECK_USER "$ts_config(product_root)/bin/$arch/qalter" "-h s $job_id" exit_code ]
+  qstat_count_jobs "qstat_issue1800" "-s hs" 1 
+   
+  qstat_count_jobs "qstat_issue1800" "-s ho" 0 
+  set result [ start_remote_prog $ts_config(master_host) $CHECK_USER "$ts_config(product_root)/bin/$arch/qalter" "-h o $job_id" exit_code ]
+  qstat_count_jobs "qstat_issue1800" "-s ho" 1 
+
+  delete_all_jobs
+  set_error 0 "ok"
+}

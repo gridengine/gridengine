@@ -52,22 +52,8 @@ set check_init_level_procedure "qhost_init_level"
 # define test's name and run level descriptions
 set check_name            "qhost"
 set check_category        "COMPATIBILITY SYSTEM VERIFIED"
-set check_highest_level   8
+set check_highest_level   0
 set check_description(0)  "test qhost functionality"
-set check_description(1)  ""
-set check_description(2)  ""
-set check_description(3)  ""
-set check_description(4)  ""
-set check_description(5)  ""
-set check_description(6)  ""
-set check_description(7)  ""
-set check_description(8)  ""
-
-
-
-
-
-
 
 # define test's dependencies
 set check_needs           "init_core_system" 
@@ -77,47 +63,19 @@ set check_setup_function qhost_setup
 set check_cleanup_function qhost_cleanup
 
 
-
 # define test's procedure order
 set check_functions ""
 lappend check_functions "qhost_issue1306"
 
 
-global qhost_test_hosts
-global qhost_saved_slot_count
-
 proc qhost_init_level {} {
    global CHECK_ACT_LEVEL
 
    switch -- $CHECK_ACT_LEVEL {
-      "0" { 
+      "0" {
          return 0
-      } 
-      "1" {
-         return -1 
       }
-      "2" {
-         return -1
-      }
-      "3" {
-         return -1
-      }
-      "4" {
-         return -1
-      }
-      "5" {
-         return -1
-      }
-      "6" {
-         return -1
-      }
-      "7" {
-         return -1
-      }
-      "8" {
-         return -1
-      }
-   } 
+   }
 
    return -1  ;# no other level 
 }
@@ -142,18 +100,17 @@ proc qhost_cleanup  {} {
 
 
 proc qhost_issue1306 {} {
-   global qhost_test_hosts check_description CHECK_ARCH CHECK_HOST CHECK_USER
-   global CHECK_OUTPUT ts_config CHECK_CORE_MASTER CHECK_ACT_LEVEL CHECK_SCRIPT_FILE_DIR
+   global ts_config CHECK_OUTPUT
+   global CHECK_USER
 
+   set arch [resolve_arch $ts_config(master_host)]
+   set output [start_remote_prog $ts_config(master_host) $CHECK_USER "$ts_config(product_root)/bin/$arch/qhost" "-l bla"]
+   puts $CHECK_OUTPUT $output
 
-   puts $CHECK_OUTPUT $check_description($CHECK_ACT_LEVEL)
+   set expected_output [translate $ts_config(master_host) 1 0 0 [sge_macro MSG_SGETEXT_UNKNOWN_RESOURCE_S] "bla"]
 
-   if { $CHECK_ACT_LEVEL == 0 } {
-         set output [start_remote_prog $CHECK_HOST $CHECK_USER "$ts_config(product_root)/bin/$CHECK_ARCH/qhost" "-l bla"]
-         puts $CHECK_OUTPUT $output
-         if { [string match "error: unknown resource*" $output] == 0 } {
-            set_error "-1" "qhost does not recognize unknown complex - Issue: 1306"
-         }
+   if { [string match "*$expected_output" [string trim $output]] == 0 } {
+      add_proc_error "-1" "qhost_issue1306" "qhost does not recognize unknown complex: $output"
    }
 
    set_error 0 "ok"

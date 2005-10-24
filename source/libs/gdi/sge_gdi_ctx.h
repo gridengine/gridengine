@@ -36,25 +36,28 @@
 #include "sge_prog.h"
 #include "setup_path.h"
 #include "sge_bootstrap.h"
+#include "sge_error_class.h"
 
 typedef struct sge_gdi_ctx_class_str sge_gdi_ctx_class_t; 
 
 struct sge_gdi_ctx_class_str {
    void *sge_gdi_ctx_handle;
-
+   
+   sge_error_class_t *eh;
 
    sge_env_state_class_t* (*get_sge_env_state)(sge_gdi_ctx_class_t *thiz);
    sge_prog_state_class_t* (*get_sge_prog_state)(sge_gdi_ctx_class_t *thiz);
    sge_path_state_class_t* (*get_sge_path_state)(sge_gdi_ctx_class_t *thiz);
    sge_bootstrap_state_class_t* (*get_sge_bootstrap_state)(sge_gdi_ctx_class_t *thiz);
    
-   bool (*connect)(sge_gdi_ctx_class_t *thiz, sge_error_class_t *eh);
-   bool (*is_alive)(sge_gdi_ctx_class_t *thiz, sge_error_class_t *eh);
-   lList* (*gdi)(sge_gdi_ctx_class_t *thiz, int target, int cmd, lList **lp, lCondition *where, lEnumeration *what, sge_error_class_t *eh);
+   bool (*connect)(sge_gdi_ctx_class_t *thiz);
+   bool (*is_alive)(sge_gdi_ctx_class_t *thiz);
+   lList* (*gdi)(sge_gdi_ctx_class_t *thiz, int target, int cmd, lList **lp, lCondition *where, lEnumeration *what);
    int (*gdi_multi)(sge_gdi_ctx_class_t* ctx, lList **alpp, int mode, u_long32 target, u_long32 cmd,
                   lList **lp, lCondition *cp, lEnumeration *enp, lList **malpp, state_gdi_multi *state, bool do_copy);
    
    const char* (*get_master)(sge_gdi_ctx_class_t *thiz);
+   u_long32 (*get_sge_qmaster_port)(sge_gdi_ctx_class_t *thiz);
    const char* (*get_progname)(sge_gdi_ctx_class_t *thiz);
    const char* (*get_username)(sge_gdi_ctx_class_t *thiz);
    const char* (*get_cell_root)(sge_gdi_ctx_class_t *thiz);
@@ -66,7 +69,7 @@ struct sge_gdi_ctx_class_str {
    cl_com_handle_t* (*get_com_handle)(sge_gdi_ctx_class_t *thiz);
    void (*set_com_handle)(sge_gdi_ctx_class_t *thiz, cl_com_handle_t*com_handle);
    
-   /* dump cuurent settings */
+   /* dump current settings */
    void (*dprintf)(sge_gdi_ctx_class_t *thiz);
 };
 

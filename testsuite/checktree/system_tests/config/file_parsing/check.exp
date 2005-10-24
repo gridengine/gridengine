@@ -48,7 +48,7 @@ global env
 
 
 # define a level initialization procedure:
-set check_init_level_procedure "init_level"
+set check_init_level_procedure "file_parsing_init_level"
 
 # define test's name and run level descriptions
 set check_name            "file_parsing"
@@ -72,7 +72,7 @@ global file_parsing_cluster_request_file
 global file_parsing_home_request_file
 global file_parsing_local_request_file
 
-proc init_level {} {
+proc file_parsing_init_level {} {
    global ts_config
   global CHECK_ACT_LEVEL
   global CHECK_PRODUCT_ROOT

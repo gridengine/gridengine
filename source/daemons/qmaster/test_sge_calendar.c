@@ -79,7 +79,7 @@ typedef struct {
    int         state1;   /* the expected curret state */
    struct tm   result2;  /* the expected state change date */
    int         state2;   /* the expected curret stat   */
-}date_entry_t;
+} date_entry_t;
 
 
 

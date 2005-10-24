@@ -77,11 +77,6 @@
 #include "sge_time.h"
 
                                       
-#if 0
-static int sge_gdi2_log_flush_func(cl_raw_list_t* list_p);
-static int gdi2_check_isalive(sge_gdi_ctx_class_t* ctx);
-#endif
-
 static void dump_send_info(const char* comp_host, const char* comp_name, int comp_id, cl_xml_ack_type_t ack_type, unsigned long tag, unsigned long* mid );
 
 
@@ -109,472 +104,12 @@ static int sge_get_gdi2_request_async(int *commlib_error,
                                bool is_sync);
 static void dump_receive_info(cl_com_message_t** message, cl_com_endpoint_t** sender);
 
-#if 0
-int sge_gdi2_connect(const char* progname, const char* url,
-                     const char* username, const char* credentials,
-                     sge_gdi_ctx_class_t** ctx, lList **alpp) {
-                        
+#ifdef ASYNC_GDI2
 
-   int ret = 0;
-   dstring bw = DSTRING_INIT;
-   
-   const sge_path_state_class_t *path_state = NULL;
-   const sge_bootstrap_state_class_t *bootstrap_state = NULL;
-   
-   DENTER(TOP_LAYER, "sge_gdi2_connect");
-   
-   /* TODO: profiling init, is this possible */
-   sge_prof_set_enabled(false);
-   sge_prof_setup();
-
-   /* TODO: global state setup must be removed */
-   gdi_mt_init();
-
-   *ctx = sge_gdi_ctx_class_create_from_bootstrap(progname, url, username, credentials);
-   if(*ctx == NULL ) {
-      answer_list_add(alpp,"sge_gdi_ctx_class_create failed", STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-      DEXIT;
-      return FALSE;
-   }
-   
-   /* context setup is complete => setup the commlib */
-   ret = cl_com_setup_commlib(CL_NO_THREAD,CL_LOG_OFF, sge_gdi2_log_flush_func);
-   if (ret != CL_RETVAL_OK) {
-      answer_list_add(alpp,"cl_com_setup_commlib failed", STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-      sge_gdi_ctx_class_destroy(ctx);
-      DEXIT;
-      return FALSE;
-   }
-   
-   path_state = (*ctx)->get_sge_path_state(*ctx);
-   bootstrap_state = (*ctx)->get_bootstrap_state(*ctx);
-   
-   /* set the alias file */
-   /* TODO cl_com_set_alias_file needs (char*)! why? */
-   ret = cl_com_set_alias_file((char*)(path_state->get_alias_file(path_state)));
-   if (ret != CL_RETVAL_OK) {
-      answer_list_add(alpp,"cl_com_set_alias_file failed", STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-      sge_gdi_ctx_class_destroy(ctx);      
-      DEXIT;
-      return FALSE;
-   }
-
-   /* setup the resolve method */
-   {
-      cl_host_resolve_method_t resolve_method = CL_SHORT;
-      if( bootstrap_state->get_ignore_fqdn(bootstrap_state) == false ) {
-         resolve_method = CL_LONG;
-      }
-      
-      /* TODO cl_com_set_resolve_method needs (char*)! why? */
-      ret = cl_com_set_resolve_method(resolve_method, (const char*)bootstrap_state->get_default_domain(*bootstrap_state));
-      if( ret != CL_RETVAL_OK ) {
-         answer_list_add(alpp,"cl_com_set_resolve_method failed", STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-         sge_gdi_ctx_class_destroy(ctx);
-         ERROR((SGE_EVENT, cl_get_error_text(ret)) );
-         DEXIT;
-         return FALSE;
-      }
-      
-   }
-   
-   /* TODO set a general_communication_error */   
-   ret = cl_com_set_error_func(general_communication_error);
-   if (ret != CL_RETVAL_OK) {
-      char buf[1024];
-      sprintf(buf, "cl_com_set_error_func failed: %s", cl_get_error_text(ret));
-      answer_list_add(alpp, buf, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-      sge_gdi_ctx_class_destroy(ctx);
-      DEXIT;
-      return FALSE;
-   }*/
-   
-   /* TODO set tag name function */
-   ret = cl_com_set_tag_name_func(sge_dump_message_tag);
-   if (ret != CL_RETVAL_OK) {
-      char buf[1024];
-      sprintf(buf, "cl_com_set_tag_name_func failed: %s", cl_get_error_text(ret));
-      answer_list_add(alpp, buf, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-      sge_gdi_ctx_class_destroy(ctx);
-      DEXIT;
-      return FALSE;
-   }
-   
-   (*ctx)->handle = cl_com_get_handle((*ctx)->progname ,0);
-   
-   if( (*ctx)->handle == NULL ) {
-      /* handle does not exits, create one */
-      int commlib_error = 0;      
-      DTRACE;
-      (*ctx)->handle = cl_com_create_handle( &commlib_error,
-                                             (*ctx)->communication_framework,
-                                             CL_CM_CT_MESSAGE,
-                                             CL_FALSE,
-                                             (*ctx)->toport,
-                                             CL_TCP_DEFAULT,
-                                             (*ctx)->progname,
-                                             (*ctx)->from->comp_id,
-                                             1, 0 );
-                                           
-      if( (*ctx)->handle == NULL ) {
-         ERROR((SGE_EVENT, MSG_GDI_CANT_CONNECT_HANDLE_SSUUS, 
-               (*ctx)->to->comp_host,
-               (*ctx)->progname,
-               (*ctx)->from->comp_id, 
-               (*ctx)->toport,
-               cl_get_error_text(commlib_error)));
-         sge_gdi2_close(*ctx);
-         DEXIT;
-         return FALSE;
-      }
-   }
-
-/*    TODO: gdi_state_set_made_setup(1); */
-
-   /* check if master is alive */
-/*    if (gdi_state_get_isalive()) { */
-   {
-      const char * master = sge_get_master(1);
-      DPRINTF(("sge_get_master(1) = %s\n", master)); 
-      if (gdi2_check_isalive(*ctx) != CL_RETVAL_OK) {
-         DEXIT;
-         return FALSE;
-      }
-   }
-
-/*    } */
-
-   DEXIT;
-   return TRUE;
-}
-
-/*
-** requires a valid sge_gdi_ctx_t no check in function
-*/
-static int gdi2_check_isalive(sge_gdi_ctx_t* ctx) 
-{
-   int alive = CL_RETVAL_OK;
-   cl_com_SIRM_t* status = NULL;
-   int ret;
- 
-   DENTER(TOP_LAYER, "gdi2_check_isalive");
-
-   DPRINTF(("ctx->to->comp_host, ctx->to->comp_name, ctx->to->comp_id: %s/%s/%d\n", ctx->to->comp_host, ctx->to->comp_name, ctx->to->comp_id));
-   ret = cl_commlib_get_endpoint_status(ctx->handle,(char*)ctx->to->comp_host, ctx->to->comp_name, ctx->to->comp_id, &status);
-   if (ret != CL_RETVAL_OK) {
-      DPRINTF(("cl_commlib_get_endpoint_status() returned "SFQ"\n", cl_get_error_text(ret)));
-      alive = ret;
-   } else {
-      DEBUG((SGE_EVENT,MSG_GDI_QMASTER_STILL_RUNNING));   
-      alive = CL_RETVAL_OK;
-   }
-
-   if (status != NULL) {
-      DEBUG((SGE_EVENT,MSG_GDI_ENDPOINT_UPTIME_UU, sge_u32c( status->runtime) , sge_u32c( status->application_status) ));
-      cl_com_free_sirm_message(&status);
-   }
- 
-   DEXIT;
-   return alive;
-}
-
-int sge_gdi2_close(sge_gdi_ctx_t *ctx) {
- 
-   DENTER(TOP_LAYER, "sge_gdi2_close");
-   
-   if( ctx->handle != NULL ) {
-      cl_commlib_shutdown_handle(ctx->handle, CL_TRUE);
-      ctx->handle = NULL;
-   }
-   
-   if( ctx->ssl_setup != NULL ) {
-      FREE(ctx->ssl_setup);
-      ctx->ssl_setup = NULL;
-   }
-   
-   if( ctx->security_mode != NULL ) {
-      FREE(ctx->security_mode);
-      ctx->security_mode = NULL;
-   }
-   
-   if( ctx->default_domain != NULL ) {
-     FREE(ctx->default_domain);
-     ctx->default_domain = NULL;
-   }
-   
-   if( ctx->to != NULL ) {
-      cl_com_free_endpoint(&(ctx->to));
-   }
-   
-   if( ctx->from != NULL ) {
-      cl_com_free_endpoint(&(ctx->from));
-   }
-   
-   FREE(ctx->aliasfile);
-   ctx->aliasfile = NULL;
-   
-   FREE(ctx->progname);
-   ctx->progname = NULL;
-   FREE(ctx->groupname);
-   ctx->groupname = NULL;
-   FREE(ctx->username);
-   ctx->username = NULL;
-
-   sge_prog_state_class_destroy(&(ctx->sge_prog_state_object));
-
-   DEXIT;
-   return true;
-}
-
-static int sge_gdi2_init_ctx_bootstrap(sge_gdi_ctx_t* ctx, 
-                                       const char* progname, 
-                                       const char* url, 
-                                       const char* username, 
-                                       const char* credentials) 
-{
-   char sge_root[BUFSIZ];
-   char sge_cell[BUFSIZ];
-   char sge_qmaster_port[BUFSIZ];
-   char *token = NULL;
-   char sge_url[BUFSIZ];
-   
-   int ret = true;
-
-   const int num_bootstrap = 3;
-   const char *name[] = { "default_domain",
-                          "ignore_fqdn",
-                          "security_mode"
-                        };
-
-   char value[num_bootstrap][1025];
-
-   dstring bootstrap_file = DSTRING_INIT;
-   dstring error_dstring = DSTRING_INIT;
-   
-   dstring qmaster_file = DSTRING_INIT;
-   char*   resolved_name = NULL;
-   char    master_name[CL_MAXHOSTLEN];
-   char    err_str[BUFSIZ];
-   struct  saved_vars_s *url_ctx = NULL;
-   sge_env_state_class_t *sge_env = NULL;   
-   int sge_qmaster_p = 0;
-   int sge_execd_p = 0;
-   
-   DENTER(TOP_LAYER, "sge_gdi2_init_ctx_bootstrap");
-
-   sge_env = sge_env_state_class_create();
-   if (!sge_env) {
-      DPRINTF(("sge_env_state_class_create failed\n"));
-      DEXIT;
-      return FALSE;
-   }
-
-   DPRINTF(("url = %s\n", url));
-   
-   sscanf(url, "bootstrap://%s", sge_url);
-   DPRINTF(("sge_url = %s\n", sge_url));
-   token = sge_strtok_r(sge_url, "@", &url_ctx);
-   strcpy(sge_root, token);
-   token = sge_strtok_r(NULL, ":", &url_ctx);
-   strcpy(sge_cell, token);
-   token = sge_strtok_r(NULL, NULL, &url_ctx);
-   strcpy(sge_qmaster_port, token);
-   sge_free_saved_vars(url_ctx);
-   
-   sge_qmaster_port = atoi(sge_qmaster_port);
-
-   ctx->toport = atoi(sge_qmaster_port);
-   
-   sge_env->set_sge_root(sge_env, sge_root); 
-   sge_env->set_sge_cell(sge_env, sge_cell); 
-   sge_env->set_sge_qmaster_port(sge_env, sge_cell); 
-   
-   DPRINTF(("sge_root = %s, sge_cell = %s, port = %s\n", sge_root, sge_cell, sge_qmaster_port));
-   
-   sge_dstring_sprintf(&bootstrap_file,"%s/%s/%s/bootstrap", 
-                        sge_root, sge_cell, COMMON_DIR );
-   /* read bootstrapping information */   
-   ret = sge_get_confval_array(sge_dstring_get_string(&bootstrap_file), 
-                               num_bootstrap, name, 
-                               value, &error_dstring);
-                                    
-   sge_dstring_free(&bootstrap_file);
-   
-   /* TODO: fill prog_state, progname or prog number ??? */
-   ctx->prog_state_object = prog_state_class_create(QCONF); 
-
-   if (ret) {
-      /* TODO provide a error message */
-      sge_dstring_free(&error_dstring);
-      DEXIT;
-      return FALSE;
-   } else {
-      sge_dstring_free(&error_dstring);
-      
-      /* store bootstrapping information in the context */
-      ctx->default_domain = sge_strdup(NULL, value[0]);
-      ctx->security_mode = sge_strdup(NULL, value[2]);
-      {
-         u_long32 uval;
-         parse_ulong_val(NULL, &uval, TYPE_BOO, value[1], 
-                         NULL, 0);
-         ctx->ignore_fqdn = uval ? true : false;                        
-      }
-   }
-   
-   /* read act qmaster file and initialize to endpoint */
-   sge_dstring_sprintf(&qmaster_file, "%s/%s/common/act_qmaster", sge_root, sge_cell );
-   
-   ret = get_qm_name(master_name, sge_dstring_get_string(&qmaster_file), err_str);
-   
-   DPRINTF(("master_name = %s\n", master_name));
-   
-   sge_dstring_free(&qmaster_file);
-   
-   if (ret) {
-      ERROR((SGE_EVENT, MSG_GDI_READMASTERNAMEFAILED_S , err_str));
-      DEXIT;
-      return FALSE;
-   }
-
-   ret = cl_com_cached_gethostbyname(master_name, &resolved_name, NULL, NULL, NULL );
-   if (ret != CL_RETVAL_OK) {
-      DEXIT;
-      return ret;
-   }
-   
-   DPRINTF(("resolved_name = %s\n", resolved_name));
-
-   ctx->to = cl_com_create_endpoint(resolved_name, prognames[QMASTER] , 1);
-   if (ctx->to == NULL) {
-      FREE(resolved_name); 
-      DEXIT;
-      return FALSE;
-   }
-
-   /* get own hostname and initialize from endpoint */
-   {
-      char hostname[CL_MAXHOSTLEN];
-
-      /* Fetch hostnames */
-/*       SGE_ASSERT((gethostname(hostname, CL_MAXHOSTLEN) == 0)); */
-      gethostname(hostname, CL_MAXHOSTLEN);
-
-      DPRINTF(("my hostname = %s\n", hostname));
-      
-      resolved_name = NULL;
-      ret = cl_com_cached_gethostbyname(hostname, &resolved_name, NULL, NULL, NULL );
-      if (ret != CL_RETVAL_OK) {
-         DEXIT;
-         return FALSE;
-      }
-   
-      DPRINTF(("resolved_name = %s\n", resolved_name));
-
-      ctx->from = cl_com_create_endpoint(resolved_name,(char*) ctx->progname, 0 );
-      if (ctx->from == NULL) {
-         FREE(resolved_name); 
-         DEXIT;
-         return FALSE;
-      }
-      
-      /* TODO: component id depends on progname */
-      ctx->from->comp_id = 0;
-      
-   }
-   
-   /* init alias file */   
-   {
-      dstring tmp_alias_file = DSTRING_INIT;
-      sge_dstring_sprintf(&tmp_alias_file, "%s/%s/%s/%s", sge_root, sge_cell, COMMON_DIR, ALIAS_FILE );
-      
-      ctx->aliasfile = sge_strdup(NULL, sge_dstring_get_string(&tmp_alias_file));
-      sge_dstring_free(&tmp_alias_file);
-   }
-
-   /* init security */
-   {
-      if( strcasecmp( value[2], "csp" ) == 0 ) {
-         ctx->communication_framework = CL_CT_SSL;
-         // TODO call sge_ssl_setup_security_path with parameter
-         //      sge_root and sge_cell
-      }
-      
-   }
-   
-   DEXIT;
-   return TRUE;
-   
-}
-
-static int sge_gdi2_log_flush_func(cl_raw_list_t* list_p) {
-   int ret_val;
-   cl_log_list_elem_t* elem = NULL;
-   DENTER(COMMD_LAYER, "sge_gdi2_log_flush_func");
-
-   if (list_p == NULL) {
-      DEXIT;
-      return CL_RETVAL_LOG_NO_LOGLIST;
-   }
-
-   if (  ( ret_val = cl_raw_list_lock(list_p)) != CL_RETVAL_OK) {
-      DEXIT;
-      return ret_val;
-   }
-
-   while ( (elem = cl_log_list_get_first_elem(list_p) ) != NULL) {
-      char* param;
-      if (elem->log_parameter == NULL) {
-         param = "";
-      } else {
-         param = elem->log_parameter;
-      }
-
-      switch(elem->log_type) {
-         case CL_LOG_ERROR: 
-            if ( log_state_get_log_level() >= LOG_ERR) {
-               ERROR((SGE_EVENT,  "%s %-20s=> %s %s\n", elem->log_module_name, elem->log_thread_name, elem->log_message, param ));
-            } else {
-               printf("%s %-20s=> %s %s\n", elem->log_module_name, elem->log_thread_name, elem->log_message, param);
-            }
-            break;
-         case CL_LOG_WARNING:
-            if ( log_state_get_log_level() >= LOG_WARNING) {
-               WARNING((SGE_EVENT,"%s %-20s=> %s %s\n", elem->log_module_name, elem->log_thread_name, elem->log_message, param ));
-            } else {
-               printf("%s %-20s=> %s %s\n", elem->log_module_name, elem->log_thread_name, elem->log_message, param);
-            }
-            break;
-         case CL_LOG_INFO:
-            if ( log_state_get_log_level() >= LOG_INFO) {
-               INFO((SGE_EVENT,   "%s %-20s=> %s %s\n", elem->log_module_name, elem->log_thread_name, elem->log_message, param ));
-            } else {
-               printf("%s %-20s=> %s %s\n", elem->log_module_name, elem->log_thread_name, elem->log_message, param);
-            }
-            break;
-         case CL_LOG_DEBUG:
-            if ( log_state_get_log_level() >= LOG_DEBUG) { 
-               DEBUG((SGE_EVENT,  "%s %-20s=> %s %s\n", elem->log_module_name, elem->log_thread_name, elem->log_message, param ));
-            } else {
-               printf("%s %-20s=> %s %s\n", elem->log_module_name, elem->log_thread_name, elem->log_message, param);
-            }
-            break;
-         case CL_LOG_OFF:
-            break;
-      }
-      cl_log_list_del_log(list_p);
-   }
-   
-   if (  ( ret_val = cl_raw_list_unlock(list_p)) != CL_RETVAL_OK) {
-      DEXIT;
-      return ret_val;
-   } 
-   DEXIT;
-   return CL_RETVAL_OK;
-}
+static bool gdi2_receive_multi_async(sge_gdi_ctx_class_t* ctx, sge_gdi_request **answer, lList **malpp, bool is_sync);
+static bool gdi2_send_multi_async(sge_gdi_ctx_class_t *ctx, lList **alpp, state_gdi_multi *state);
 
 #endif
-
 
 lList* sge_gdi2(sge_gdi_ctx_class_t *ctx, u_long32 target, u_long32 cmd, lList **lpp, lCondition *cp,
                lEnumeration *enp) 
@@ -741,14 +276,14 @@ int sge_gdi2_multi_sync(sge_gdi_ctx_class_t* ctx, lList **alpp, int mode, u_long
    }
    
    if (mode == SGE_GDI_SEND) {
-#ifdef GDI2   
-       gdi2_receive_multi_async(&answer, malpp, true);
+#ifdef ASYNC_GDI2   
+       gdi2_receive_multi_async(ctx, &answer, malpp, true);
        if (do_sync) {
 #endif
          if (!gdi2_send_multi_sync(ctx, alpp, state, &answer, malpp)) {
             goto error;
          }
-#ifdef GDI2   
+#ifdef ASYNC_GDI2   
        }
        else { 
           /* if this is null, we did not get an answer..., which means we return 0;*/
@@ -756,7 +291,7 @@ int sge_gdi2_multi_sync(sge_gdi_ctx_class_t* ctx, lList **alpp, int mode, u_long
             ret = 0;
           }
 
-          if (!gdi_send_multi_async(alpp, state)) {
+          if (!gdi2_send_multi_async(ctx, alpp, state)) {
              goto error;
           }
        }
@@ -866,7 +401,7 @@ gdi2_send_multi_sync(sge_gdi_ctx_class_t* ctx, lList **alpp, state_gdi_multi *st
             break;
       }
       DPRINTF(("re-read act_qmaster file (gdi_send_multi_sync)\n"));
-#ifdef GDI2      
+#ifdef TODO      
       /* TODO: call reinit ctx instead of sge_get_master */
       sge_get_master(true);
 #endif      
@@ -933,7 +468,7 @@ static int sge_send_receive_gdi2_request(int *commlib_error,
                                         lList **alpp)
 {
    int ret;
-#ifdef GDI2   
+#ifdef TODO   
    char rcv_rhost[CL_MAXHOSTLEN+1];
    char rcv_commproc[CL_MAXHOSTLEN+1];
 #endif   
@@ -962,7 +497,7 @@ static int sge_send_receive_gdi2_request(int *commlib_error,
 
    DPRINTF(("send request with id "sge_U32CFormat"\n", sge_u32c(gdi_request_mid)));
    if (ret != CL_RETVAL_OK) {
-      if (!ctx->is_alive(ctx, NULL /* TODO use error handler class */ )) {
+      if (!ctx->is_alive(ctx)) {
          DEXIT;
          return -4;
       } else {
@@ -971,7 +506,7 @@ static int sge_send_receive_gdi2_request(int *commlib_error,
       }
    }
 
-#ifdef GDI2
+#ifdef TODO
    /* TODO check if this is necessary */
    strcpy(rcv_rhost, rhost);
    strcpy(rcv_commproc, commproc);
@@ -996,7 +531,7 @@ static int sge_send_receive_gdi2_request(int *commlib_error,
    }
 
    if (ret) {
-      if (!ctx->is_alive(ctx, NULL /* TODO use error handler class */ )) {
+      if (!ctx->is_alive(ctx)) {
          DEXIT;
          return -4;
       } 
@@ -1359,7 +894,7 @@ sge_gdi2_get_any_request(sge_gdi_ctx_class_t *ctx, sge_pack_buffer *pb,
    /* ok, we received a message */
    if (message != NULL ) {
       dump_receive_info(&message, &sender);
-#ifdef GDI2      
+#ifdef TODO      
       /* TODO: there are two cases for any and addressed communication partner, 
                two functions are needed */
       if (sender != NULL && id) {
@@ -1387,7 +922,7 @@ sge_gdi2_get_any_request(sge_gdi_ctx_class_t *ctx, sge_pack_buffer *pb,
          return CL_RETVAL_READ_ERROR;
       } 
 
-#ifdef GDI2
+#ifdef TODO
       /* TODO: there are two cases for any and addressed communication partner, 
                two functions are needed */
       if (sender != NULL ) {
@@ -1409,7 +944,7 @@ sge_gdi2_get_any_request(sge_gdi_ctx_class_t *ctx, sge_pack_buffer *pb,
    return CL_RETVAL_OK;
 }
 
-#ifdef GDI2
+#ifdef ASYNC_GDI2
 
 /****** sge_gdi_request/gdi_receive_multi_async() ******************************
 *  NAME
@@ -1443,8 +978,8 @@ sge_gdi2_get_any_request(sge_gdi_ctx_class_t *ctx, sge_pack_buffer *pb,
 *     sge_gdi_request/gdi_send_multi_sync
 *     sge_gdi_request/gdi_send_multi_async
 *******************************************************************************/
-bool
-gdi2_receive_multi_async(sge_gdi_request **answer, lList **malpp, bool is_sync)
+static bool
+gdi2_receive_multi_async(sge_gdi_ctx_class_t* ctx, sge_gdi_request **answer, lList **malpp, bool is_sync)
 {
    char *rcv_rhost;
    char *rcv_commproc;
@@ -1459,10 +994,11 @@ gdi2_receive_multi_async(sge_gdi_request **answer, lList **malpp, bool is_sync)
    sge_gdi_request *an = NULL;
    lListElem *map = NULL; 
 
-   DENTER(GDI_LAYER, "gdi_receive_multi_async");
+   DENTER(GDI_LAYER, "gdi2_receive_multi_async");
 
    /* we have to check for an ongoing gdi reqest, if there is none, we have to exit */
    if ((async_gdi = gdi_state_get_last_gdi_request()) != NULL) {
+      /* TODO: we deliver ctx, is rcv_rhost, rcv_commproc changing ??? */
       rcv_rhost = async_gdi->rhost;
       rcv_commproc = async_gdi->commproc;
       id = async_gdi->id;
@@ -1474,9 +1010,9 @@ gdi2_receive_multi_async(sge_gdi_request **answer, lList **malpp, bool is_sync)
       return true;
    }
    
-   /* recive answer */
-   while (!(ret = sge_get_gdi2_request_async(&commlib_error, rcv_rhost, rcv_commproc, &id, answer, gdi_request_mid, is_sync))) {
-   
+   /* receive answer */
+/*    while (!(ret = sge_get_gdi_request_async(&commlib_error, rcv_rhost, rcv_commproc, &id, answer, gdi_request_mid, is_sync))) { */
+   while (!(ret = sge_get_gdi2_request_async(&commlib_error, ctx, answer, gdi_request_mid, is_sync))) {
       DPRINTF(("in: request_id=%d, sequence_id=%d, target=%d, op=%d\n",
             (*answer)->request_id, (*answer)->sequence_id, (*answer)->target, (*answer)->op));
       DPRINTF(("out: request_id=%d, sequence_id=%d, target=%d, op=%d\n",
@@ -1494,7 +1030,8 @@ gdi2_receive_multi_async(sge_gdi_request **answer, lList **malpp, bool is_sync)
    /* process return code */
    if (ret) {
       if (is_sync) {
-         if ( (commlib_error = gdi2_check_isalive(rcv_rhost)) != CL_RETVAL_OK) {
+/*          if ( (commlib_error = gdi2_check_isalive(rcv_rhost)) != CL_RETVAL_OK) { */
+         if ( (commlib_error = ctx->is_alive(ctx)) != CL_RETVAL_OK) {
             /* gdi error */
 
             /* For the default case, just print a simple message */
@@ -1573,23 +1110,26 @@ gdi2_receive_multi_async(sge_gdi_request **answer, lList **malpp, bool is_sync)
 *     sge_gdi_request/gdi_receive_multi_async
 *******************************************************************************/
 static bool
-gdi2_send_multi_async(lList **alpp, state_gdi_multi *state)
+gdi2_send_multi_async(sge_gdi_ctx_class_t *ctx, lList **alpp, state_gdi_multi *state)
 {
    int commlib_error = CL_RETVAL_OK;
    lListElem *aep = NULL;
 
+   u_long32 gdi_request_mid = 0;
+   u_long32 masterport = sge_get_qmaster_port();
+   const char *masterhost = sge_get_master(false);
+   
+   DENTER(GDI_LAYER, "gdi2_send_multi_async");
+
    u_short id = 1;
    const char *rhost = sge_get_master(false);
    const char *commproc = prognames[QMASTER];
-   u_long32 gdi_request_mid = 0;
-   
-   DENTER(GDI_LAYER, "gdi_send_multi_async");
+
 
    /* the first request in the request list identifies the request uniquely */
    state->first->request_id = gdi_state_get_next_request_id();
 
-   commlib_error = sge_send_gdi2_request(0, rhost, commproc, id, state->first, 
-                                        &gdi_request_mid, 0, alpp);
+   commlib_error = sge_send_gdi2_request(0, ctx, state->first, &gdi_request_mid, 0, alpp);
    
    /* Print out non-error messages */
    /* TODO SG: check for error messages and warnings */
@@ -1598,28 +1138,28 @@ gdi2_send_multi_async(lList **alpp, state_gdi_multi *state)
          INFO ((SGE_EVENT, lGetString (aep, AN_text)));
       }
    }
-   *alpp = lFreeList (*alpp);
+   lFreeList(alpp);
   
    DPRINTF(("send request with id "sge_U32CFormat"\n", sge_u32c(gdi_request_mid)));
    if (commlib_error != CL_RETVAL_OK) {
-      if (( commlib_error = gdi2_check_isalive(rhost)) != CL_RETVAL_OK) {
+      if (( commlib_error = ctx->is_alive(ctx)) != CL_RETVAL_OK) {
          /* gdi error */
 
          /* For the default case, just print a simple message */
          if (commlib_error == CL_RETVAL_CONNECT_ERROR ||
              commlib_error == CL_RETVAL_CONNECTION_NOT_FOUND ) {
             SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_UNABLE_TO_CONNECT_SUS,
-                                   prognames[QMASTER],
-                                   sge_u32c(sge_get_qmaster_port()), 
-                                   sge_get_master(false)));
+                                   ctx->get_progname(ctx),
+                                   ctx->get_sge_qmaster_port(ctx), 
+                                   ctx->get_master(ctx)));
          }
          /* For unusual errors, give more detail */
          else {
             SGE_ADD_MSG_ID(sprintf(SGE_EVENT, 
                                    MSG_GDI_CANT_SEND_MESSAGE_TO_PORT_ON_HOST_SUSS,
-                                   prognames[QMASTER],
-                                   sge_u32c(sge_get_qmaster_port()), 
-                                   sge_get_master(false),
+                                   ctx->get_progname(ctx),
+                                   ctx->get_sge_qmaster_port(ctx), 
+                                   ctx->get_master(ctx),
                                    cl_get_error_text(commlib_error)));
          }
          

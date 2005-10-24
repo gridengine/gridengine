@@ -127,7 +127,7 @@ enum {
                               */
 };
 
-ILISTDEF(EH_Type, ExecHost, SGE_EXECHOST_LIST)
+LISTDEF(EH_Type)
    SGE_HOST(EH_name, CULL_PRIMARY_KEY | CULL_HASH | CULL_UNIQUE | CULL_SPOOL)
    SGE_LIST(EH_scaling_list, HS_Type, CULL_DEFAULT | CULL_SPOOL)
    SGE_LIST(EH_consumable_config_list, CE_Type, CULL_DEFAULT | CULL_SPOOL)
@@ -317,7 +317,7 @@ enum {
    HL_last_update
 };
 
-SLISTDEF(HL_Type, HostLoad)
+LISTDEF(HL_Type)
    SGE_STRING(HL_name, CULL_PRIMARY_KEY | CULL_HASH | CULL_UNIQUE | CULL_SUBLIST)
    SGE_STRING(HL_value, CULL_DEFAULT | CULL_SUBLIST)
    SGE_ULONG(HL_last_update, CULL_DEFAULT)
@@ -339,7 +339,7 @@ enum {
    HS_value
 };
 
-SLISTDEF(HS_Type, LoadScaling)
+LISTDEF(HS_Type)
    SGE_STRING(HS_name, CULL_PRIMARY_KEY | CULL_DEFAULT | CULL_SUBLIST)
    SGE_DOUBLE(HS_value, CULL_DEFAULT | CULL_SUBLIST)
 LISTEND 

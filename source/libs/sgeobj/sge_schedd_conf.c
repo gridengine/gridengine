@@ -3062,12 +3062,15 @@ bool sconf_validate_config_(lList **answer_list)
 
    /* --- SC_reprioritize_interval */
    s = reprioritize_interval_str();
-   if (s == NULL || !extended_parse_ulong_val(NULL, &uval, TYPE_TIM, s, tmp_error, sizeof(tmp_error),0)) {
+   if (s == NULL || !extended_parse_ulong_val(NULL, &uval, TYPE_TIM, s, tmp_error, 
+                                              sizeof(tmp_error),0)) {
       if (s == NULL) {
-         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_ATTRIB_XISNOTAY_SS , "schedule_interval", "not defined"));
+         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_ATTRIB_XISNOTAY_SS , "schedule_interval", 
+                        "not defined"));
       }   
       else {   
-         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_ATTRIB_XISNOTAY_SS , "reprioritize_interval", tmp_error));    
+         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_ATTRIB_XISNOTAY_SS , "reprioritize_interval", 
+                        tmp_error));    
       }   
       answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
       ret = false; 
@@ -3078,42 +3081,55 @@ bool sconf_validate_config_(lList **answer_list)
       s = get_halflife_decay_list_str();
       if (s && (strcasecmp(s, "none") != 0)) {
          lList *halflife_decay_list = NULL;
-         lListElem *ep;
-         const char *s0,*s1,*s2,*s3;
+         lListElem *ep = NULL;
+         const char *s0 = NULL;
+         const char *s1 = NULL;
+         const char *s2 = NULL; 
+         const char *s3 = NULL;
          double value;
-         struct saved_vars_s *sv1=NULL, *sv2=NULL;
+         struct saved_vars_s *sv1=NULL; 
+         struct saved_vars_s *sv2=NULL;
          s0 = s; 
-         for(s1=sge_strtok_r(s0, ":", &sv1); s1;
+         for(s1=sge_strtok_r(s0, ":", &sv1); s1 != NULL;
              s1=sge_strtok_r(NULL, ":", &sv1)) {
-            if ((s2=sge_strtok_r(s1, "=", &sv2)) &&
-                (s3=sge_strtok_r(NULL, "=", &sv2)) &&
-                (sscanf(s3, "%lf", &value)==1)) {
+            if (((s2=sge_strtok_r(s1, "=", &sv2)) != NULL) &&
+                ((s3=sge_strtok_r(NULL, "=", &sv2)) != NULL) &&
+                (sscanf(s3, "%lf", &value) == 1)) {
                ep = lAddElemStr(&halflife_decay_list, UA_name, s2, UA_Type);
                lSetDouble(ep, UA_value, value);
             }
-            if (sv2)
-               free(sv2);
+            FREE(sv2);
          }
-         if (sv1)
-            free(sv1);
+         FREE(sv1);
+        
+         if (lGetNumberOfElem(halflife_decay_list) == 0) {
+            answer_list_add(answer_list, MSG_GDI_INVALIDHALFLIFE_DECAY, STATUS_ESYNTAX, 
+                            ANSWER_QUALITY_ERROR); 
+            ret = false;
+         }
+         
          pos.c_halflife_decay_list = halflife_decay_list;   
       } 
    }
   
    /* --- SC_policy_hierarchy */
    {
-      const char *value_string = lGetString(lFirst(Master_Sched_Config_List), SC_policy_hierarchy);
+      const char *value_string = lGetString(lFirst(Master_Sched_Config_List), 
+                                            SC_policy_hierarchy);
       if (value_string) {
          if (policy_hierarchy_verify_value(value_string) != 0) {
-            answer_list_add(answer_list, MSG_GDI_INVALIDPOLICYSTRING, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);  
+            answer_list_add(answer_list, MSG_GDI_INVALIDPOLICYSTRING, STATUS_ESYNTAX, 
+                            ANSWER_QUALITY_ERROR);  
             ret = false;
-            lSetString(lFirst(Master_Sched_Config_List), SC_policy_hierarchy, policy_hierarchy_chars);
+            lSetString(lFirst(Master_Sched_Config_List), SC_policy_hierarchy, 
+                       policy_hierarchy_chars);
          }
       } 
       else {
          if (!s)
          value_string = "not defined";
-         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_ATTRIB_XISNOTAY_SS , "policy hierarchy", value_string));    
+         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_ATTRIB_XISNOTAY_SS , "policy hierarchy", 
+                                value_string));    
          answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
          ret = false;          
       }
@@ -3123,12 +3139,15 @@ bool sconf_validate_config_(lList **answer_list)
    {
       const char *s = get_default_duration_str();
 
-      if (s == NULL || !extended_parse_ulong_val(NULL, &uval, TYPE_TIM, s, tmp_error, sizeof(tmp_error),0) ) {
+      if (s == NULL || !extended_parse_ulong_val(NULL, &uval, TYPE_TIM, s, tmp_error, 
+                                                 sizeof(tmp_error),0) ) {
          if (s == NULL) {
-            SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_ATTRIB_XISNOTAY_SS , "default_duration", "not defined"));   
+            SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_ATTRIB_XISNOTAY_SS , "default_duration", 
+                                   "not defined"));   
          }   
          else {
-            SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_ATTRIB_XISNOTAY_SS , "default_duration", tmp_error));    
+            SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_ATTRIB_XISNOTAY_SS , "default_duration", 
+                                   tmp_error));    
          }   
          answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
          ret =  false;

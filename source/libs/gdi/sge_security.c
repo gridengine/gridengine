@@ -135,6 +135,7 @@ int sge_ssl_setup_security_path(const char *progname) {
    char *sge_certfile = NULL;
    int  len;
    char *cp = NULL;
+   const char *username = uti_state_get_user_name();
 
 #define SGE_QMASTER_PORT_ENVIRONMENT_NAME "SGE_QMASTER_PORT"
 #define SGE_COMMD_SERVICE "sge_qmaster"
@@ -257,10 +258,10 @@ int sge_ssl_setup_security_path(const char *progname) {
       struct passwd pw_struct;
       char buffer[2048];
 
-      pw = sge_getpwnam_r(uti_state_get_user_name(), &pw_struct, buffer, sizeof(buffer));
+      pw = sge_getpwnam_r(username, &pw_struct, buffer, sizeof(buffer));
 
       if (!pw) {   
-         CRITICAL((SGE_EVENT, MSG_SEC_USERNOTFOUND_S, uti_state_get_user_name()));
+         CRITICAL((SGE_EVENT, MSG_SEC_USERNOTFOUND_S, username));
          SGE_EXIT(1);
       }
       userdir = sge_malloc(strlen(pw->pw_dir) + strlen(SGESecPath) +
@@ -287,8 +288,8 @@ int sge_ssl_setup_security_path(const char *progname) {
    if (SGE_STAT(key_file, &sbuf)) { 
       free(key_file);
       key_file = sge_malloc(strlen(ca_local_root) + (sizeof("userkeys")-1) + 
-                              strlen(uti_state_get_user_name()) + strlen(UserKey) + 4);
-      sprintf(key_file, "%s/userkeys/%s/%s", ca_local_root, uti_state_get_user_name(), UserKey);
+                              strlen(username) + strlen(UserKey) + 4);
+      sprintf(key_file, "%s/userkeys/%s/%s", ca_local_root, username, UserKey);
    }   
 
    rand_file = sge_malloc(strlen(user_local_dir) + (sizeof("private")-1) + strlen(RandFile) + 3);
@@ -297,8 +298,8 @@ int sge_ssl_setup_security_path(const char *progname) {
    if (SGE_STAT(rand_file, &sbuf)) { 
       free(rand_file);
       rand_file = sge_malloc(strlen(ca_local_root) + (sizeof("userkeys")-1) + 
-                              strlen(uti_state_get_user_name()) + strlen(RandFile) + 4);
-      sprintf(rand_file, "%s/userkeys/%s/%s", ca_local_root, uti_state_get_user_name(), RandFile);
+                              strlen(username) + strlen(RandFile) + 4);
+      sprintf(rand_file, "%s/userkeys/%s/%s", ca_local_root, username, RandFile);
    }   
 
    if (SGE_STAT(key_file, &sbuf)) { 
@@ -323,8 +324,8 @@ int sge_ssl_setup_security_path(const char *progname) {
    if (SGE_STAT(cert_file, &sbuf)) {
       free(cert_file);
       cert_file = sge_malloc(strlen(ca_local_root) + (sizeof("userkeys")-1) + 
-                              strlen(uti_state_get_user_name()) + strlen(UserCert) + 4);
-      sprintf(cert_file, "%s/userkeys/%s/%s", ca_local_root, uti_state_get_user_name(), UserCert);
+                              strlen(username) + strlen(UserCert) + 4);
+      sprintf(cert_file, "%s/userkeys/%s/%s", ca_local_root, username, UserCert);
    }   
 
    if (SGE_STAT(cert_file, &sbuf)) { 
@@ -582,6 +583,9 @@ gdi_send_message(int synchron, const char *tocomproc, int toid,
    unsigned long dummy_mid;
    unsigned long* mid_pointer = NULL;
    int use_execd_handle = 0;
+   u_long32 progid = uti_state_get_mewho();
+   const char *progname = uti_state_get_sge_formal_prog_name();
+   
    DENTER(TOP_LAYER, "gdi_send_message");
 
 
@@ -598,7 +602,7 @@ gdi_send_message(int synchron, const char *tocomproc, int toid,
    if ( tocomproc[0] == '\0') {
       DEBUG((SGE_EVENT,"tocomproc is empty string\n"));
    }
-   switch (uti_state_get_mewho()) {
+   switch (progid) {
       case QMASTER:
       case EXECD:
          use_execd_handle = 0;
@@ -617,7 +621,7 @@ gdi_send_message(int synchron, const char *tocomproc, int toid,
    if (use_execd_handle == 0) {
       /* normal gdi send to qmaster */
       DEBUG((SGE_EVENT,"standard gdi request to qmaster\n"));
-      handle = cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0);
+      handle = cl_com_get_handle((char*)progname ,0);
    } else {
       /* we have to send a message to another component than qmaster */
       DEBUG((SGE_EVENT,"search handle to \"%s\"\n", tocomproc));
@@ -683,6 +687,8 @@ gdi_receive_message(char *fromcommproc, u_short *fromid, char *fromhost,
    cl_com_message_t* message = NULL;
    cl_com_endpoint_t* sender = NULL;
    int use_execd_handle = 0;
+   u_long32 progid = uti_state_get_mewho();
+   const char* progname = uti_state_get_sge_formal_prog_name();
 
    DENTER(TOP_LAYER, "gdi_receive_message");
 
@@ -699,7 +705,7 @@ gdi_receive_message(char *fromcommproc, u_short *fromid, char *fromhost,
    if ( fromcommproc[0] == '\0') {
       DEBUG((SGE_EVENT,"fromcommproc is empty string\n"));
    }
-   switch (uti_state_get_mewho()) {
+   switch (progid) {
       case QMASTER:
       case EXECD:
          use_execd_handle = 0;
@@ -717,7 +723,7 @@ gdi_receive_message(char *fromcommproc, u_short *fromid, char *fromhost,
    if (use_execd_handle == 0) {
       /* normal gdi send to qmaster */
       DEBUG((SGE_EVENT,"standard gdi request to qmaster\n"));
-      handle = cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0);
+      handle = cl_com_get_handle((char*)progname, 0);
    } else {
       /* we have to send a message to another component than qmaster */
       DEBUG((SGE_EVENT,"search handle to \"%s\"\n", fromcommproc));
@@ -824,12 +830,13 @@ int set_sec_cred(lListElem *job)
    char binary[1024];
    char cmd[2048];
    char line[1024];
+   const char *sge_root = path_state_get_sge_root();
 
 
    DENTER(TOP_LAYER, "set_sec_cred");
    
    if (feature_is_enabled(FEATURE_AFS_SECURITY)) {
-      sprintf(binary, "%s/util/get_token_cmd", path_state_get_sge_root());
+      sprintf(binary, "%s/util/get_token_cmd", sge_root);
 
       if (sge_get_token_cmd(binary, NULL) != 0) {
          fprintf(stderr, "%s\n", MSG_QSH_QSUBFAILED);
@@ -861,7 +868,7 @@ int set_sec_cred(lListElem *job)
 
    if (feature_is_enabled(FEATURE_DCE_SECURITY) ||
        feature_is_enabled(FEATURE_KERBEROS_SECURITY)) {
-      sprintf(binary, "%s/utilbin/%s/get_cred", path_state_get_sge_root(), sge_get_arch());
+      sprintf(binary, "%s/utilbin/%s/get_cred", sge_root, sge_get_arch());
 
       if (sge_get_token_cmd(binary, NULL) != 0) {
          fprintf(stderr, "%s\n", MSG_QSH_QSUBFAILED);
@@ -909,7 +916,7 @@ int set_sec_cred(lListElem *job)
          int ret;
          char binary[1024];
 
-         sprintf(binary, "%s/util/get_token_cmd", path_state_get_sge_root());
+         sprintf(binary, "%s/util/get_token_cmd", sge_root);
 
          if (sge_get_token_cmd(binary, buf))
             goto error;
@@ -945,7 +952,7 @@ int set_sec_cred(lListElem *job)
          int ret;
          char line[1024];
 
-         sprintf(binary, "%s/utilbin/%s/get_cred", path_state_get_sge_root(), sge_get_arch());
+         sprintf(binary, "%s/utilbin/%s/get_cred", sge_root, sge_get_arch());
 
          if (sge_get_token_cmd(binary, buf) != 0)
             goto error;
@@ -1015,6 +1022,8 @@ int set_sec_cred(lListElem *job)
 bool cache_sec_cred(lListElem *jep, const char *rhost)
 {
    bool ret_value = true;
+   const char *sge_root = path_state_get_sge_root();
+
    DENTER(TOP_LAYER, "cache_sec_cred");
 
    /* 
@@ -1040,7 +1049,7 @@ bool cache_sec_cred(lListElem *jep, const char *rhost)
       env[0] = ccname;
       env[1] = NULL;
 
-      sprintf(binary, "%s/utilbin/%s/get_cred", path_state_get_sge_root(), sge_get_arch());
+      sprintf(binary, "%s/utilbin/%s/get_cred", sge_root, sge_get_arch());
 
       if (sge_get_token_cmd(binary, NULL) == 0) {
          char line[1024];
@@ -1090,6 +1099,7 @@ bool cache_sec_cred(lListElem *jep, const char *rhost)
  */
 void delete_credentials(lListElem *jep)
 {
+   const char *sge_root = path_state_get_sge_root();
 
    DENTER(TOP_LAYER, "delete_credentials");
 
@@ -1115,7 +1125,7 @@ void delete_credentials(lListElem *jep)
       env[0] = ccname;
       env[1] = NULL;
 
-      sprintf(binary, "%s/utilbin/%s/delete_cred", path_state_get_sge_root(), sge_get_arch());
+      sprintf(binary, "%s/utilbin/%s/delete_cred", sge_root, sge_get_arch());
 
       if (sge_get_token_cmd(binary, NULL) == 0) {
          char line[1024];
@@ -1170,6 +1180,7 @@ void delete_credentials(lListElem *jep)
  */
 int store_sec_cred(sge_gdi_request *request, lListElem *jep, int do_authentication, lList** alpp)
 {
+   const char *sge_root = path_state_get_sge_root();
 
    DENTER(TOP_LAYER, "store_sec_cred");
 
@@ -1196,7 +1207,7 @@ int store_sec_cred(sge_gdi_request *request, lListElem *jep, int do_authenticati
       env[0] = ccname;
       env[1] = NULL;
 
-      sprintf(binary, "%s/utilbin/%s/put_cred", path_state_get_sge_root(), sge_get_arch());
+      sprintf(binary, "%s/utilbin/%s/put_cred", sge_root, sge_get_arch());
 
       if (sge_get_token_cmd(binary, NULL) == 0) {
          sprintf(cmd, "%s -s %s -u %s", binary, "sge", lGetString(jep, JB_owner));
@@ -1288,6 +1299,8 @@ int store_sec_cred2(lListElem *jelem, int do_authentication, int *general, char*
 {
    int ret = 0;
    const char *cred;
+   const char* unqualified_hostname = uti_state_get_unqualified_hostname();
+   const char *sge_root = path_state_get_sge_root();
    
    DENTER(TOP_LAYER, "store_sec_cred2");
 
@@ -1314,8 +1327,7 @@ int store_sec_cred2(lListElem *jelem, int do_authentication, int *general, char*
       vep = lAddSubStr(jelem, VA_variable, "KRB5CCNAME", JB_env_list, VA_Type);
       lSetString(vep, VA_value, ccenv);
 
-      sprintf(binary, "%s/utilbin/%s/put_cred", path_state_get_sge_root(),
-              sge_get_arch());
+      sprintf(binary, "%s/utilbin/%s/put_cred", sge_root, sge_get_arch());
 
       if (sge_get_token_cmd(binary, NULL) == 0) {
          char line[1024];
@@ -1351,7 +1363,7 @@ int store_sec_cred2(lListElem *jelem, int do_authentication, int *general, char*
                    sge_u32c(lGetUlong(jelem, JB_job_number))));         
             sprintf(err_str, MSG_SEC_KRBAUTHFAILUREONHOST,
                     sge_u32c(lGetUlong(jelem, JB_job_number)),
-                    uti_state_get_unqualified_hostname());                 
+                    unqualified_hostname);                 
             *general = GFSTATE_JOB;                            
          }                                                    
       } 
@@ -1768,6 +1780,7 @@ int sge_security_verify_user(const char *host, const char *commproc, u_long32 id
       char* dummy_unique_user = "NULL";
       cl_com_handle_t* handle = NULL;
       char* unique_identifier = NULL;
+      const char *progname = uti_state_get_sge_formal_prog_name();
 
       if (gdi_user != NULL) {
          dummy_gdi_user = gdi_user;
@@ -1779,7 +1792,7 @@ int sge_security_verify_user(const char *host, const char *commproc, u_long32 id
          dummy_host = host;
       }
 
-      handle = cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0);
+      handle = cl_com_get_handle((char*)progname, 0);
       if (cl_com_ssl_get_unique_id(handle, (char*)host, (char*)commproc, (unsigned long)id, &unique_identifier) == CL_RETVAL_OK) {
          dummy_unique_user = unique_identifier;
          DPRINTF(("unique identifier = "SFQ"\n", dummy_unique_user));

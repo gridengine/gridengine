@@ -669,7 +669,7 @@ proc config_testsuite_root_dir { only_check name config_array } {
       puts -nonewline $CHECK_OUTPUT "> "
       set input [ wait_for_enter 1]
       if { [ string length $input] > 0 } {
-         set value $input 
+         set value [tail_directory_name $input]
       } else {
          puts $CHECK_OUTPUT "using default value"
       }
@@ -680,6 +680,11 @@ proc config_testsuite_root_dir { only_check name config_array } {
       # is full path ?
       if { [ string first "/" $value ] != 0 } {
          puts $CHECK_OUTPUT "Path \"$value\" doesn't start with \"/\""
+         return -1
+      }
+
+      if { [tail_directory_name $value] != $value } {
+         puts $CHECK_OUTPUT "\nPath \"$value\" is not a valid directory name, try \"[tail_directory_name $value]\""
          return -1
       }
 
@@ -763,7 +768,7 @@ proc config_checktree_root_dir { only_check name config_array } {
       puts -nonewline $CHECK_OUTPUT "> "
       set input [ wait_for_enter 1]
       if { [ string length $input] > 0 } {
-         set value $input 
+         set value [tail_directory_name $input]
       } else {
          puts $CHECK_OUTPUT "using default value"
       }
@@ -785,6 +790,11 @@ proc config_checktree_root_dir { only_check name config_array } {
          return -1
       }
 
+      if { [tail_directory_name $value] != $value } {
+         puts $CHECK_OUTPUT "\nPath \"$value\" is not a valid directory name, try \"[tail_directory_name $value]\""
+         return -1
+      }
+
       # is file ?
       if { [ file isdirectory $value ] != 1 } {
          puts $CHECK_OUTPUT "Directory \"$value\" not found"
@@ -797,6 +807,93 @@ proc config_checktree_root_dir { only_check name config_array } {
 
    return $value
 }
+
+
+
+proc config_additional_checktree_dirs { only_check name config_array } {
+   global CHECK_OUTPUT 
+   global CHECK_TESTSUITE_ROOT
+   global CHECK_TESTSUITE_LOCKFILE
+   global CHECK_CHECKTREE_ROOT
+   global CHECK_USER CHECK_HOST
+   global CHECK_GROUP
+   global env fast_setup
+
+   upvar $config_array config
+   
+   set actual_value  $config($name)
+   set default_value $config($name,default)
+   set description   $config($name,desc)
+
+   set value $actual_value
+   if { $actual_value == "" } {
+      set value $default_value
+      if { $default_value == "" } { 
+         set value "none"
+      }
+   }
+
+   if { $only_check == 0 } {
+      # do setup
+      puts $CHECK_OUTPUT "" 
+      puts $CHECK_OUTPUT "Please enter the full pathname of an additional checktree directory or press >RETURN<"
+      puts $CHECK_OUTPUT "to use the default value."
+      puts $CHECK_OUTPUT "The checktree directory contains all tests in its subdirectory structure. You can"
+      puts $CHECK_OUTPUT "add more than one directory by using a space as seperator."
+      puts $CHECK_OUTPUT "If you enter the keyword \"none\" no additional checktree directory is supported."
+      puts $CHECK_OUTPUT "(default: $value)"
+      puts -nonewline $CHECK_OUTPUT "> "
+      set input [ wait_for_enter 1]
+      if { [ string length $input] > 0 } {
+         set value $input
+      } else {
+         puts $CHECK_OUTPUT "using default value"
+      }
+   }
+
+   # now verify
+
+   if {!$fast_setup} {
+      set not_set 1 
+      foreach directory $value {
+         if { $directory == "none" } {
+            set not_set 0
+         }
+      }
+
+      if { $not_set == 1 } {
+         set new_value ""
+         foreach directory $value {
+            append new_value " [tail_directory_name $directory]"
+         }
+         set value [string trim $new_value]
+
+         foreach directory $value {
+            # is full path ?
+            if { [ string first "/" $directory ] != 0 } {
+               puts $CHECK_OUTPUT "Path \"$directory\" doesn't start with \"/\""
+               return -1
+            }
+
+            if { [tail_directory_name $directory] != $directory } {
+               puts $CHECK_OUTPUT "\nPath \"$directory\" is not a valid directory name, try \"[tail_directory_name $directory]\""
+               return -1
+            }
+
+            # is file ?
+            if { [ file isdirectory $directory ] != 1 } {
+               puts $CHECK_OUTPUT "Directory \"$directory\" not found"
+               return -1
+            }
+         }
+      } else {
+         set value "none"
+      }
+   }
+
+   return $value
+}
+
 
 
 #****** config/config_results_dir() *********************************************
@@ -857,7 +954,7 @@ proc config_results_dir { only_check name config_array } {
       puts -nonewline $CHECK_OUTPUT "> "
       set input [ wait_for_enter 1]
       if { [ string length $input] > 0 } {
-         set value $input 
+         set value [tail_directory_name $input]
       } else {
          puts $CHECK_OUTPUT "using default value"
       }
@@ -868,6 +965,11 @@ proc config_results_dir { only_check name config_array } {
       # is full path ?
       if { [ string first "/" $value ] != 0 } {
          puts $CHECK_OUTPUT "Path \"$value\" doesn't start with \"/\""
+         return -1
+      }
+
+      if { [tail_directory_name $value] != $value } {
+         puts $CHECK_OUTPUT "\nPath \"$value\" is not a valid directory name, try \"[tail_directory_name $value]\""
          return -1
       }
 
@@ -1045,7 +1147,7 @@ proc config_source_dir { only_check name config_array } {
       puts -nonewline $CHECK_OUTPUT "> "
       set input [ wait_for_enter 1]
       if { [ string length $input] > 0 } {
-         set value $input 
+         set value [tail_directory_name $input]
       } else {
          puts $CHECK_OUTPUT "using default value"
       }
@@ -1056,6 +1158,11 @@ proc config_source_dir { only_check name config_array } {
       # is full path ?
       if { [ string first "/" $value ] != 0 } {
          puts $CHECK_OUTPUT "Path \"$value\" doesn't start with \"/\""
+         return -1
+      }
+ 
+      if { [tail_directory_name $value] != $value } {
+         puts $CHECK_OUTPUT "\nPath \"$value\" is not a valid directory name, try \"[tail_directory_name $value]\""
          return -1
       }
 
@@ -2122,13 +2229,19 @@ proc config_product_root { only_check name config_array } {
       puts -nonewline $CHECK_OUTPUT "> "
       set input [ wait_for_enter 1]
       if { [ string length $input] > 0 } {
-         set value $input 
+         set value [tail_directory_name $input]
       } else {
          puts $CHECK_OUTPUT "using default value"
       }
    } 
 
    if {!$fast_setup} {
+
+      if { [tail_directory_name $value] != $value } {
+         puts $CHECK_OUTPUT "\nPath \"$value\" is not a valid directory name, try \"[tail_directory_name $value]\""
+         return -1
+      }
+
       # is full path ?
       if { [ string first "/" $value ] != 0 } {
          puts $CHECK_OUTPUT "Path \"$value\" doesn't start with \"/\""
@@ -2566,7 +2679,13 @@ proc config_package_directory { only_check name config_array } {
       puts -nonewline $CHECK_OUTPUT "> "
       set input [ wait_for_enter 1]
       if { [ string length $input] > 0 } {
-         set value $input 
+         if { [string compare "none" $input ] != 0 } {
+            # only tail to directory name when != "none"
+            set value [tail_directory_name $input]
+         } else {
+            # we don't have a directory
+            set value $input 
+         }
       } else {
          puts $CHECK_OUTPUT "using default value"
       }
@@ -2575,6 +2694,12 @@ proc config_package_directory { only_check name config_array } {
    # package dir configured?
    if {!$fast_setup} {
       if { [string compare "none" $value ] != 0 } {
+
+         if { [tail_directory_name $value] != $value } {
+            puts $CHECK_OUTPUT "\nPath \"$value\" is not a valid directory name, try \"[tail_directory_name $value]\""
+            return -1
+         }
+
          # directory doesn't exist? If we shall generate packages, create dir
          if { ![file isdirectory $value] } {
             if { $config(package_type) == "create_tar" } {
@@ -3604,12 +3729,27 @@ proc config_testsuite_bdb_dir { only_check name config_array } {
       puts -nonewline $CHECK_OUTPUT "> "
       set input [ wait_for_enter 1]
       if { [ string length $input] > 0 } {
-         set value $input 
+         if { [string compare "none" $input ] != 0 } {
+            # only tail to directory name when != "none"
+            set value [tail_directory_name $input]
+         } else {
+            # we don't have a directory
+            set value $input 
+         }
       } else {
          puts $CHECK_OUTPUT "using default value"
       }
    } 
 
+   if {!$fast_setup} {
+      if { [string compare "none" $value ] != 0 } {
+         if { [tail_directory_name $value] != $value } {
+            puts $CHECK_OUTPUT "\nPath \"$value\" is not a valid directory name, try \"[tail_directory_name $value]\""
+            return -1
+         }
+      }
+   }
+ 
    return $value
 }
 
@@ -4295,7 +4435,7 @@ proc config_build_ts_config_1_4 {} {
 
    # new parameter bdb_server
    set parameter "bdb_server"
-   set ts_config($parameter)            "none"
+   set ts_config($parameter)            ""
    set ts_config($parameter,desc)       "Berkeley Database RPC server (none for local spooling)"
    set ts_config($parameter,default)    "none"
    set ts_config($parameter,setup_func) "config_testsuite_bdb_server"
@@ -4306,7 +4446,7 @@ proc config_build_ts_config_1_4 {} {
 
    # new parameter bdb_dir
    set parameter "bdb_dir"
-   set ts_config($parameter)            "none"
+   set ts_config($parameter)            ""
    set ts_config($parameter,desc)       "Berkeley Database database directory"
    set ts_config($parameter,default)    "none"
    set ts_config($parameter,setup_func) "config_testsuite_bdb_dir"
@@ -4334,7 +4474,7 @@ proc config_build_ts_config_1_5 {} {
 
    # new parameter spooling method
    set parameter "spooling_method"
-   set ts_config($parameter)            "berkeleydb"
+   set ts_config($parameter)            ""
    set ts_config($parameter,desc)       "Spooling method for dynamic spooling"
    set ts_config($parameter,default)    "berkeleydb"
    set ts_config($parameter,setup_func) "config_testsuite_spooling_method"
@@ -4362,7 +4502,7 @@ proc config_build_ts_config_1_6 {} {
 
    # new parameter spooling method
    set parameter "cell"
-   set ts_config($parameter)            "default"
+   set ts_config($parameter)            ""
    set ts_config($parameter,desc)       "cell name (SGE_CELL)"
    set ts_config($parameter,default)    "default"
    set ts_config($parameter,setup_func) "config_testsuite_cell"
@@ -4454,10 +4594,38 @@ proc config_build_ts_config_1_9 {} {
    set ts_config(version) "1.9"
 }
 
+proc config_build_ts_config_1_91 {} {
+   global ts_config
+
+   # insert new parameter after checktree_root_dir
+   set insert_pos $ts_config(checktree_root_dir,pos)
+   incr insert_pos 1
+
+   # move positions of following parameters
+   set names [array names ts_config "*,pos"]
+   foreach name $names {
+      if { $ts_config($name) >= $insert_pos } {
+         set ts_config($name) [ expr ( $ts_config($name) + 1 ) ]
+      }
+   }
+
+   set parameter "additional_checktree_dirs"
+   set ts_config($parameter)            ""
+   set ts_config($parameter,desc)       "Additional Testsuite's checktree directories"
+   set ts_config($parameter,default)    ""   ;# depend on testsuite root dir 
+   set ts_config($parameter,setup_func) "config_additional_checktree_dirs"
+   set ts_config($parameter,onchange)   "stop"
+   set ts_config($parameter,pos)        $insert_pos
+
+   # now we have a configuration version 1.91
+   set ts_config(version) "1.91"
+}
+
+
 
 # MAIN
 global actual_ts_config_version      ;# actual config version number
-set actual_ts_config_version "1.9"
+set actual_ts_config_version "1.91"
 
 # first source of config.tcl: create ts_config
 if {![info exists ts_config]} {
@@ -4471,5 +4639,6 @@ if {![info exists ts_config]} {
    config_build_ts_config_1_7
    config_build_ts_config_1_8
    config_build_ts_config_1_9
+   config_build_ts_config_1_91
 }
 

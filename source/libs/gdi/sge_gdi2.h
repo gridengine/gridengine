@@ -60,31 +60,6 @@ int sge_gdi2_send_any_request(int synchron, u_long32 *mid, sge_gdi_ctx_class_t *
 
 int sge_gdi2_send_ack_to_qmaster(sge_gdi_ctx_class_t *ctx, int sync, u_long32 type, u_long32 ulong_val, 
                             u_long32 ulong_val_2, lList **alpp);
-/*
-
-typedef struct {
-
-   sge_gdi_ctx_t *gdi_ctx;
-
-} ec2_ctx_t;
-
-bool ec2_register(sge_gdi_ctx_t *ctx, bool exit_on_qmaster_down, lList** alpp, ec2_ctx_t **ec_ctx);
-
-bool ec2_deregister(sge_gdi_ctx_t *ctx);
-
-bool ec2_subscribe(sge_gdi_ctx_t *ctx, ev_event event);
-
-bool ec2_subscribe_all(sge_gdi_ctx_t *ctx);
-
-bool ec2_unsubscribe(sge_gdi_ctx_t *ctx, ev_event event);
-
-bool ec2_unsubscribe_all(sge_gdi_ctx_t *ctx);
-
-int ec_get_flush(ec2_ctx *ctx, ev_event event);
-bool ec_set_flush(ec2_ctx *ctx, ev_event event, bool flush, int interval);
-bool ec_unset_flush(ec2_ctx *ctx, ev_event event);
-
-*/
 
 #ifdef  __cplusplus
 }

@@ -112,6 +112,9 @@ lList *cull_parse_job_parameter(lList *cmdline, lListElem **pjob)
    lList *answer = NULL;
    lList *path_alias = NULL;
    char error_string[1024 + 1];
+   u_long32 uid = uti_state_get_uid();
+   const char *username = uti_state_get_user_name();
+   const char *qualified_hostname = uti_state_get_qualified_hostname();
 
    DENTER(TOP_LAYER, "cull_parse_job_parameter"); 
 
@@ -154,15 +157,14 @@ lList *cull_parse_job_parameter(lList *cmdline, lListElem **pjob)
       lSetUlong(*pjob, JB_submission_time, sge_get_gmt());
    }
    if (!lGetString(*pjob, JB_owner)) {
-      lSetString(*pjob, JB_owner, uti_state_get_user_name());
+      lSetString(*pjob, JB_owner, username);
    }
-   lSetUlong(*pjob, JB_uid, uti_state_get_uid());
+   lSetUlong(*pjob, JB_uid, uid);
 
    /*
    ** path aliasing
    */
-   if (path_alias_list_initialize(&path_alias, &answer, uti_state_get_user_name(), 
-                                  uti_state_get_qualified_hostname()) == -1) {
+   if (path_alias_list_initialize(&path_alias, &answer, username, qualified_hostname) == -1) {
       DEXIT;
       return answer;
    }
@@ -436,8 +438,8 @@ lList *cull_parse_job_parameter(lList *cmdline, lListElem **pjob)
 
 #ifndef USE_CLIENT_QALTER
    if (!lGetList(*pjob, JB_mail_list)) {   
-      ep = lAddSubStr(*pjob, MR_user, uti_state_get_user_name(), JB_mail_list, MR_Type);
-      lSetHost(ep, MR_host, uti_state_get_qualified_hostname());
+      ep = lAddSubStr(*pjob, MR_user, username, JB_mail_list, MR_Type);
+      lSetHost(ep, MR_host, qualified_hostname);
    }
 #endif
 

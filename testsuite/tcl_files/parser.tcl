@@ -854,7 +854,7 @@ proc transform_cpu { s_cpu } {
 #     ???/???
 #*******************************
 proc transform_date_time { value } {
-   if { $value == "" } {
+   if { $value == "" || $value == "-/-" } {
       return ""
    } else {
       return [clock scan $value]

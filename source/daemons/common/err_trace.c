@@ -131,8 +131,6 @@ void shepherd_trace_init( void )
 
 void shepherd_trace_exit( void )
 {
-   uid_t old_euid = SGE_SUPERUSER_UID;
-
    /*
     * Work around for CR 6293411:
     * Some NFS Server have a bug. They test permissions on 
@@ -144,23 +142,17 @@ void shepherd_trace_exit( void )
     * The work around consists of switching to root and back
     * for writing and closing the file.
     */
-   if(getuid() == SGE_SUPERUSER_UID) {
-      old_euid = geteuid();
-      seteuid(SGE_SUPERUSER_UID);
-   }
+    sge_switch2start_user();
 
 	if( shepherd_trace_fp ) {
 		fclose( shepherd_trace_fp );
-      shepherd_trace_fp=NULL;
+        shepherd_trace_fp=NULL;
 	}
 
    /*
     * Switch back to admin user?
     */
-   if(old_euid != SGE_SUPERUSER_UID) {
-      seteuid(old_euid);
-      old_euid = SGE_SUPERUSER_UID;
-   }
+    sge_switch2admin_user();
 	shepherd_error_exit();
 }
 
@@ -214,36 +206,28 @@ void shepherd_error_init( )
 
 void shepherd_error_exit( void )
 {
-   uid_t old_euid = SGE_SUPERUSER_UID;
-
    /*
     * Work around for CR 6293411:
     * See shepherd_trace_exit() for details.
     */
-   if(getuid() == SGE_SUPERUSER_UID) {
-      old_euid = geteuid();
-      seteuid(SGE_SUPERUSER_UID);
-   }
+   sge_switch2start_user();
 
    /*
     * Close file handles
     */
 	if( shepherd_error_fp ) {
 		fclose( shepherd_error_fp );
-      shepherd_error_fp=NULL;
+        shepherd_error_fp=NULL;
 	}
 	if( shepherd_exit_status_fp ) {
 		fclose( shepherd_exit_status_fp );
-      shepherd_exit_status_fp=NULL;
+        shepherd_exit_status_fp=NULL;
 	}	
 
    /*
     * Switch back to admin user?
     */
-   if(old_euid != SGE_SUPERUSER_UID) {
-      seteuid(old_euid);
-      old_euid = SGE_SUPERUSER_UID;
-   }
+    sge_switch2admin_user(); 
 }
 
 /****** shepherd_error_chown **************************************************
@@ -417,12 +401,12 @@ void shepherd_error_impl(const char *str, int do_exit)
 		shepherd_error_fp = shepherd_trace_init_intern( st_error );
 	}
 	if( shepherd_error_fp ) {
-   	sge_dstring_init(&ds, buffer, sizeof(buffer));
+   	    sge_dstring_init(&ds, buffer, sizeof(buffer));
      
-   	sprintf(header_str, "%s ["uid_t_fmt":"pid_t_fmt"]: ",
-			sge_ctime(0, &ds), geteuid(), getpid());
+   	    sprintf(header_str, "%s ["uid_t_fmt":"pid_t_fmt"]: ",
+			    sge_ctime(0, &ds), geteuid(), getpid());
 
-	   sh_str2file(header_str, str, shepherd_error_fp);
+	    sh_str2file(header_str, str, shepherd_error_fp);
 	}
 
    if (foreground)
@@ -438,8 +422,8 @@ void shepherd_error_impl(const char *str, int do_exit)
 		shepherd_exit_status_fp = shepherd_trace_init_intern( st_exit_status );
 	}
 	if( shepherd_exit_status_fp ) {
-   	sprintf(header_str, "%d", shepherd_state);
-   	sh_str2file(header_str, NULL, shepherd_exit_status_fp);
+   	    sprintf(header_str, "%d", shepherd_state);
+   	    sh_str2file(header_str, NULL, shepherd_exit_status_fp);
 	}
 	
    if (coshepherd_pid > 0) {
@@ -456,7 +440,7 @@ void shepherd_error_impl(const char *str, int do_exit)
    }
    if (do_exit) {
 		/* close all trace files before exit */
-		shepherd_trace_exit( );
+	  shepherd_trace_exit( );
       exit(shepherd_state);
 	}
    /* There are cases where we have to open and close the files 
@@ -507,10 +491,10 @@ void shepherd_write_exit_status(const char *exit_status)
 			shepherd_exit_status_fp = shepherd_trace_init_intern( st_exit_status );
 		}
 		if( shepherd_exit_status_fp ) {
-   		sh_str2file(exit_status, NULL, shepherd_exit_status_fp);
+   		    sh_str2file(exit_status, NULL, shepherd_exit_status_fp);
 		} else {
-         shepherd_trace("could not write exit_status file\n");
-      }
+            shepherd_trace("could not write exit_status file\n");
+        }
 		if(old_euid != SGE_SUPERUSER_UID) {
 			seteuid( old_euid );
 		}
@@ -518,7 +502,7 @@ void shepherd_write_exit_status(const char *exit_status)
        * for every write.
        */
       if(!g_keep_files_open) {
-         shepherd_error_exit();
+            shepherd_error_exit();
       }
 	}
 }
@@ -771,7 +755,7 @@ static FILE* shepherd_trace_init_intern( st_shepherd_file_t shepherd_file )
 	}
 
   	sprintf(tmppath, "%s/%s",path, g_shepherd_file_name[shepherd_file]);
-   strncpy(g_shepherd_file_path[shepherd_file], tmppath, SGE_PATH_MAX);
+    strncpy(g_shepherd_file_path[shepherd_file], tmppath, SGE_PATH_MAX);
 
    /*
     * Work around for CR 6293411:

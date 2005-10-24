@@ -4954,12 +4954,18 @@ static int cl_commlib_send_sirm_message(cl_com_connection_t* connection,
                                         unsigned long application_status,
                                         char* infotext ) {
    cl_byte_t* sirm_message_data = NULL;
+   char* xml_infotext = NULL;
    unsigned long sirm_message_size = 0;
    int ret_val = CL_RETVAL_OK;
    cl_com_message_t* sirm_message = NULL;
 
-   if (connection == NULL|| message == NULL ) {
+   if (connection == NULL|| message == NULL || infotext == NULL ) {
       return CL_RETVAL_PARAMS;
+   }
+
+   ret_val = cl_com_transformString2XML(infotext, &xml_infotext);
+   if (ret_val != CL_RETVAL_OK) {
+      return ret_val;
    }
 
    sirm_message_size = CL_SIRM_MESSAGE_SIZE;
@@ -4971,10 +4977,14 @@ static int cl_commlib_send_sirm_message(cl_com_connection_t* connection,
    sirm_message_size = sirm_message_size + cl_util_get_ulong_number_length(buffered_write_messages);
    sirm_message_size = sirm_message_size + cl_util_get_ulong_number_length(connection_count);
    sirm_message_size = sirm_message_size + cl_util_get_ulong_number_length(application_status);
-   sirm_message_size = sirm_message_size + strlen(infotext);
+   sirm_message_size = sirm_message_size + strlen(xml_infotext);
 
    sirm_message_data = (cl_byte_t*)malloc(sizeof(cl_byte_t)* ( sirm_message_size + 1) ) ;
    if (sirm_message_data == NULL) {
+      if (xml_infotext != NULL) {
+         free(xml_infotext);
+         xml_infotext = NULL;
+      }
       return CL_RETVAL_MALLOC;
    }
    sprintf((char*)sirm_message_data, CL_SIRM_MESSAGE , 
@@ -4986,7 +4996,12 @@ static int cl_commlib_send_sirm_message(cl_com_connection_t* connection,
            buffered_write_messages,
            connection_count,
            application_status,
-           infotext );
+           xml_infotext );
+
+   if (xml_infotext != NULL) {
+      free(xml_infotext);
+      xml_infotext = NULL;
+   }
 
    ret_val = cl_com_setup_message(&sirm_message, connection, sirm_message_data , sirm_message_size , CL_MIH_MAT_NAK , 0 ,0);
    if (ret_val != CL_RETVAL_OK) {

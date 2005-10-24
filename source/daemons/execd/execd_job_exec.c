@@ -467,12 +467,13 @@ Ignore:
 static lList *job_set_queue_info_in_task(const char *qname, lListElem *petep)
 {
    lListElem *jge;
+   const char *qualified_hostname = uti_state_get_qualified_hostname();
 
    DENTER(TOP_LAYER, "job_set_queue_info_in_task");
 
    jge = lAddSubStr(petep, JG_qname, qname, 
                     PET_granted_destin_identifier_list, JG_Type);
-   lSetHost(jge, JG_qhostname, uti_state_get_qualified_hostname());
+   lSetHost(jge, JG_qhostname, qualified_hostname);
    lSetUlong(jge, JG_slots, 1);
    DPRINTF(("selected queue %s for task\n", qname));
 
@@ -595,6 +596,7 @@ job_get_queue_for_task(lListElem *jatep, lListElem *petep,
                        const char *queuename) 
 {
    lListElem *this_q, *gdil_ep;
+   const char *qualified_hostname = uti_state_get_qualified_hostname();
 
    DENTER(TOP_LAYER, "job_get_queue_for_task");
 
@@ -613,7 +615,7 @@ job_get_queue_for_task(lListElem *jatep, lListElem *petep,
       /* Queue must exist and be on this host */
       if (this_q != NULL && 
                      sge_hostcmp(lGetHost(gdil_ep, JG_qhostname), 
-                     uti_state_get_qualified_hostname()) == 0) {
+                                 qualified_hostname) == 0) {
 
          DTRACE;
 

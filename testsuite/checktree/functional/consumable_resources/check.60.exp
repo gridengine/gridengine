@@ -104,7 +104,8 @@
 #
 # Bugfixes:
 # - Issue: 1306, Bugster: 6287862 - qhost -l for complexes broken
-
+# - Issue: 1761, Bugster: 6315111 -	Doing a qalter -l rsc=val on running jobs breaks consumable debitation
+# - Issue: 1745
 
 # define global variable in this namespace
 global check_name 
@@ -275,6 +276,79 @@ proc check_qhost_broken { complex count } {
       add_proc_error "check_qhost_broken" -2 "qhost is broken - see Issue: 1306, returned $output hosts but $count is expected"
       set error 1
    }
+}
+
+proc consumable_resources_submit_jobs_and_alter { job_arguments resource resource2 case } {
+   global ts_config CHECK_OUTPUT CHECK_ARCH CHECK_USER
+
+   set job_id [submit_job "$job_arguments $ts_config(product_root)/examples/jobs/sleeper.sh 100"]
+
+   while { 1 } {
+      catch {  eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-tsm" } catch_result
+      set running_jobs 0
+      set error 0
+
+      set job_state [is_job_running $job_id "leeper"]
+      if { $job_state == 1 } {
+         incr running_jobs 1
+      }
+      if { $job_state == -1 } {
+         add_proc_error "case $case) consumable_resources_submit_jobs_and_wait" -2 "job was not submitted - stop"
+         set error 1
+         break
+      }
+
+      puts $CHECK_OUTPUT "running jobs count: $running_jobs"
+      if { $running_jobs == 1 || $error != 0 } {
+         break
+      }
+   }
+
+   
+   set arch [resolve_arch $ts_config(master_host)]
+
+   set alter_result [ start_remote_prog $ts_config(master_host) $CHECK_USER "$ts_config(product_root)/bin/$arch/qalter" "-l $resource=4 $job_id" exit_code ]
+   if { $exit_code != 1 } {
+      puts $CHECK_OUTPUT "Issue 1761 found!"
+      puts $CHECK_OUTPUT "qalter -l $resource=4 $job_id"
+      puts $CHECK_OUTPUT "qalter result: $alter_result - $exit_code"
+      set error 1
+   }
+
+   set alter_result [ start_remote_prog $ts_config(master_host) $CHECK_USER "$ts_config(product_root)/bin/$arch/qalter" "-l $resource=4,$resource2=2 $job_id" exit_code ]
+   if { $exit_code != 1 } {
+      puts $CHECK_OUTPUT "Issue 1761 found!"
+      puts $CHECK_OUTPUT "qalter -l $resource=4 $job_id"
+      puts $CHECK_OUTPUT "qalter result: $alter_result - $exit_code"
+      set error 1
+   }
+
+   set alter_result [ start_remote_prog $ts_config(master_host) $CHECK_USER "$ts_config(product_root)/bin/$arch/qalter" "-l $resource2=1 $job_id" exit_code ]
+   if { $exit_code != 1 } {
+      puts $CHECK_OUTPUT "Issue 1761 found!"
+      puts $CHECK_OUTPUT "qalter -l $resource=4 $job_id"
+      puts $CHECK_OUTPUT "qalter result: $alter_result - $exit_code"
+      set error 1
+   }
+
+   set alter_result [ start_remote_prog $ts_config(master_host) $CHECK_USER "$ts_config(product_root)/bin/$arch/qalter" "-l $resource=1 $job_id" exit_code ]
+   if { $exit_code != 0 } {
+      puts $CHECK_OUTPUT "Issue 1761 found!"
+      puts $CHECK_OUTPUT "qalter -l $resource=1 $job_id"
+      puts $CHECK_OUTPUT "qalter result: $alter_result - $exit_code"
+      set error 1
+   }
+
+   set alter_result [ start_remote_prog $ts_config(master_host) $CHECK_USER "$ts_config(product_root)/bin/$arch/qalter" "-l \"\" $job_id" exit_code ]
+   if { $exit_code != 1 } {
+      puts $CHECK_OUTPUT "Issue 1761 found!"
+      puts $CHECK_OUTPUT "qalter -l \"\" $job_id"
+      puts $CHECK_OUTPUT "qalter result: $alter_result - $exit_code"
+      set error 1
+   }
+ 
+   delete_all_jobs  
+   wait_for_end_of_all_jobs 60
 }
 
 proc consumable_resources_submit_pejobs_and_wait { job_arguments job_count run_job_count case } {
@@ -497,6 +571,7 @@ proc consumable_resources_test {} {
 
       # create test2 complex
       set test2_complex(test2) "t2 INT <= YES YES 0 1000"
+      set test2_complex(test3) "t3 int <= YES YES 0 1000"
       set_complex test2_complex
 
       set host_a [lindex $consumable_resources_test_hosts 0]
@@ -505,7 +580,7 @@ proc consumable_resources_test {} {
       get_exechost orig_host_a_host $host_a
    
       # modify complex_values of host_a host
-      set host_a_host(complex_values) "test2=5"
+      set host_a_host(complex_values) "test2=5,test3=5"
       set_exechost host_a_host $host_a
       check_qhost_broken "test2=1" 1
 
@@ -524,7 +599,14 @@ proc consumable_resources_test {} {
       set run_job_count 5
       consumable_resources_submit_jobs_and_wait $job_arguments $job_count $run_job_count "" "b" $RUNATHOST
       consumable_resources_submit_pejobs_and_wait $job_arguments $job_count $run_job_count "b"
-   
+     
+      # case ba)
+      #   issue : 1761
+      #   checks wether qalter can modify a consumable
+      puts $CHECK_OUTPUT "\ncase ba  - Issue: 1761)"
+      set job_arguments "-l h=$host_a,test2=1 -o /dev/null -e /dev/null"
+      consumable_resources_submit_jobs_and_alter $job_arguments "test2" "test3" "f"  
+
       # case c)
       #           5 jobs run, 1 have to wait
       puts $CHECK_OUTPUT "\ncase c)"

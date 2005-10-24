@@ -115,7 +115,7 @@ enum {
    UE_name = UE_LOWERBOUND   /* user or @group name */
 };
 
-SLISTDEF(UE_Type, UserEntry)
+LISTDEF(UE_Type)
    SGE_STRING(UE_name, CULL_PRIMARY_KEY | CULL_HASH | CULL_UNIQUE | CULL_SUBLIST)
 LISTEND 
 

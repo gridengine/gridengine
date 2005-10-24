@@ -1295,7 +1295,7 @@ static bool ec_register(sge_evc_class_t *thiz, bool exit_on_qmaster_down, lList*
        *  to add may also means to modify
        *  - if this event client is already enrolled at qmaster
        */
-      alp = sge_gdi_ctx->gdi(sge_gdi_ctx, SGE_EVENT_LIST, SGE_GDI_ADD | SGE_GDI_RETURN_NEW_VERSION, &lp, NULL, NULL, NULL);
+      alp = sge_gdi_ctx->gdi(sge_gdi_ctx, SGE_EVENT_LIST, SGE_GDI_ADD | SGE_GDI_RETURN_NEW_VERSION, &lp, NULL, NULL);
     
       aep = lFirst(alp);
     
@@ -2295,7 +2295,7 @@ static bool ec_commit(sge_evc_class_t *thiz)
        *  to add may also means to modify
        *  - if this event client is already enrolled at qmaster
        */
-      alp = sge_gdi_ctx->gdi(sge_gdi_ctx, SGE_EVENT_LIST, SGE_GDI_MOD, &lp, NULL, NULL, NULL);
+      alp = sge_gdi_ctx->gdi(sge_gdi_ctx, SGE_EVENT_LIST, SGE_GDI_MOD, &lp, NULL, NULL);
       lFreeList(&lp); 
       
       ret = (lGetUlong(lFirst(alp), AN_status) == STATUS_OK) ? true : false;

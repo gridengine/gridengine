@@ -108,8 +108,14 @@ proc install_qmaster {} {
     append feature_install_options "-csp"
    }
 
-   if {[file isdirectory "$ts_config(bdb_dir)"] == 1} {
-    set catch_result [ catch { eval exec "rm -R $ts_config(bdb_dir)" } ] 
+   if { $ts_config(bdb_dir) == "none" } {
+      set db_dir [get_local_spool_dir $CHECK_CORE_MASTER spooldb 0 ]
+   } else {
+      set db_dir $ts_config(bdb_dir)
+   }
+
+   if {[file isdirectory "$db_dir"] == 1} {
+    delete_directory $db_dir 
    }
 
    set my_timeout 500
@@ -188,7 +194,7 @@ proc create_autoinst_config {} {
    set gid_range [get_gid_range $CHECK_USER $ts_config(commd_port)]
 
    if { $ts_config(bdb_dir) == "none" } {
-      set db_dir $ts_config(product_root)/$ts_config(cell)/spool/qmaster/spooldb
+      set db_dir [get_local_spool_dir $CHECK_CORE_MASTER spooldb 0 ]
    } else {
       set db_dir $ts_config(bdb_dir)
    }
@@ -214,7 +220,8 @@ proc create_autoinst_config {} {
    puts $fdo "DB_SPOOLING_SERVER=\"none\""
    puts $fdo "DB_SPOOLING_DIR=\"$db_dir\""
    puts $fdo "ADMIN_HOST_LIST=\"$ts_config(execd_hosts)\""
-   puts $fdo "SUBMIT_HOST_LIST=\"$ts_config(submit_only_hosts)\""
+   puts $fdo "SUBMIT_HOST_LIST=\"$ts_config(execd_hosts) $ts_config(submit_only_hosts)\""
+   puts $fdo "EXEC_HOST_LIST=\"$ts_config(execd_hosts)\""
    puts $fdo "EXECD_SPOOL_DIR_LOCAL=\"/usr/local/testsuite/$ts_config(commd_port)/execd\""
    puts $fdo "HOSTNAME_RESOLVING=\"true\""
    puts $fdo "SHELL_NAME=\"rsh\""

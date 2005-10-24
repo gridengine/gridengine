@@ -298,6 +298,7 @@ proc tight_integration_monitor {id started_var finished_var jobid_var info_var {
    set sp_id [lindex $id 1]
    set timeout 180
 
+   set unexpected_output ""
    
    expect_user {
       -i $sp_id timeout {
@@ -380,13 +381,24 @@ proc tight_integration_monitor {id started_var finished_var jobid_var info_var {
                      puts $CHECK_OUTPUT "got \"script done.\" from remote prog shell script"
                   }
                   default {
-                     add_proc_error tight_integration_monitor -1 "unexpected job output $line"
-                     set ret "error"
+                     # something we didn't expect.
+                     # store all unexpected lines and send them in one mail
+                     # at the end
+                     if {$unexpected_output != ""} {
+                        append unexpected_output "\n"
+                     }
+                     append unexpected_output $line
                   }
                }
             }
          }
       }
+   }
+
+   # send unexpected output
+   if {$unexpected_output != ""} {
+      add_proc_error tight_integration_monitor -3 "unexpected job output $unexpected_output"
+      #set ret "error"
    }
 
    return $ret

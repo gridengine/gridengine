@@ -51,7 +51,7 @@
 typedef struct {
     char* admin_user;      
     char* default_domain;
-    bool        ignore_fqdn;
+    bool  ignore_fqdn;
     char* spooling_method;
     char* spooling_lib;
     char* spooling_params;
@@ -132,7 +132,6 @@ void bootstrap_mt_init(void)
 void sge_bootstrap_state_set_thread_local(sge_bootstrap_state_class_t* ctx) {
    DENTER(TOP_LAYER, "sge_bootstrap_state_set_thread_local");
    
-   bootstrap_mt_init();
    {   
       GET_SPECIFIC(sge_bootstrap_thread_local_t, handle, bootstrap_thread_local_init, sge_bootstrap_thread_local_key, 
                    "bootstrap_get_admin_user");
@@ -499,7 +498,9 @@ sge_bootstrap_state_class_t *sge_bootstrap_state_class_create(sge_path_state_cla
    DENTER(TOP_LAYER, "sge_bootstrap_state_class_create");
 
    if (!ret) {
-      eh->error(eh, STATUS_EMALLOC, ANSWER_QUALITY_ERROR, MSG_MEMORY_MALLOCFAILED);
+      if (eh != NULL) {
+         eh->error(eh, STATUS_EMALLOC, ANSWER_QUALITY_ERROR, MSG_MEMORY_MALLOCFAILED);
+      }
       DEXIT;
       return NULL;
    }
@@ -558,6 +559,8 @@ static bool sge_bootstrap_state_class_init(sge_bootstrap_state_class_t *st, sge_
       return false;
    }
    memset(st->sge_bootstrap_state_handle, 0, sizeof(sge_bootstrap_state_t));
+   bootstrap_mt_init();
+
    return true;
 }
 

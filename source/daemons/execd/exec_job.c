@@ -277,6 +277,9 @@ char *err_str
    lListElem *env;
    lList *environmentList = NULL;
    const char *arch = sge_get_arch();
+   const char *sge_root = path_state_get_sge_root();
+   const char *qualified_hostname = uti_state_get_qualified_hostname();
+   const char *default_cell = uti_state_get_default_cell();
    sigset_t sigset, sigset_oset;
    struct passwd pw_struct;
    char buffer[2048];
@@ -340,7 +343,7 @@ char *err_str
       umask(022);
 
       /* make tmpdir only when this is the first task that gets started 
-         in this queue. QU_job_slots_used holds actual number of used 
+         in this queue instance. QU_job_slots_used holds actual number of used 
          slots for this job in the queue */
       if (!(used_slots=qinstance_slots_used(master_q))) {
          if (!(sge_make_tmpdir(master_q, job_id, ja_task_id, 
@@ -350,11 +353,18 @@ char *err_str
             return -2;
          }
       } else {
+         SGE_STRUCT_STAT statbuf;
          if(!(sge_get_tmpdir(master_q, job_id, ja_task_id, tmpdir))) {
             sprintf(err_str, MSG_SYSTEM_CANTGETTMPDIR);
             DEXIT;
             return -2;
-         }                    
+         }
+
+         if (SGE_STAT(tmpdir, &statbuf)) {
+            sprintf(err_str, "can't open tmpdir %s", tmpdir);
+            DEXIT;
+            return -2;
+         }
       }
 
       /* increment used slots */
@@ -475,7 +485,7 @@ char *err_str
       if(cwd != NULL) {
          /* path aliasing only for cwd flag set */
          path_alias_list_get_path(path_aliases, NULL,
-                                  cwd, uti_state_get_qualified_hostname(), 
+                                  cwd, qualified_hostname, 
                                   &cwd_out);
          cwd = sge_dstring_get_string(&cwd_out);
          var_list_set_string(&environmentList, "PWD", cwd);
@@ -491,7 +501,7 @@ char *err_str
          }
       }
 
-      var_list_set_string(&environmentList, VAR_PREFIX "CELL", uti_state_get_default_cell());
+      var_list_set_string(&environmentList, VAR_PREFIX "CELL", default_cell);
 
       var_list_set_string(&environmentList, "HOME", pw->pw_dir);
       var_list_set_string(&environmentList, "SHELL", pw->pw_shell);
@@ -536,7 +546,7 @@ char *err_str
             if (sfile != NULL) {
                dstring script_file_out = DSTRING_INIT;
                path_alias_list_get_path(lGetList(jep, JB_path_aliases), NULL, 
-                                        sfile, uti_state_get_qualified_hostname(), 
+                                        sfile, qualified_hostname, 
                                         &script_file_out);
                strncpy(script_file, sge_dstring_get_string(&script_file_out), 
                        SGE_PATH_MAX);
@@ -608,7 +618,7 @@ char *err_str
                dstring script_file_out = DSTRING_INIT;
 
                path_alias_list_get_path(lGetList(jep, JB_path_aliases), NULL,
-                                        sfile, uti_state_get_qualified_hostname(),
+                                        sfile, qualified_hostname,
                                         &script_file_out);
                var_list_set_string(&environmentList, var_name, 
                                    sge_dstring_get_string(&script_file_out));
@@ -661,7 +671,7 @@ char *err_str
       if ((cp=getenv("SGE_EXECD_PORT")) && strlen(cp))
          var_list_set_string(&environmentList, "SGE_EXECD_PORT", cp);
 
-      var_list_set_string(&environmentList, VAR_PREFIX "ROOT", path_state_get_sge_root());
+      var_list_set_string(&environmentList, VAR_PREFIX "ROOT", sge_root);
 
       var_list_set_int(&environmentList, "NQUEUES", 
          lGetNumberOfElem(lGetList(jatep, JAT_granted_destin_identifier_list)));
@@ -989,7 +999,7 @@ char *err_str
    if ((cp = expand_path(cwd, job_id, job_is_array(jep) ? ja_task_id : 0,
          lGetString(jep, JB_job_name),
          lGetString(jep, JB_owner), 
-         uti_state_get_qualified_hostname()))) 
+         qualified_hostname))) 
       cwd = sge_dstring_sprintf(&cwd_out, "%s", cp);
    fprintf(fp, "cwd=%s\n", cwd);
 #if defined(IRIX)
@@ -1300,7 +1310,7 @@ char *err_str
             fprintf(fp, "qrsh_control_port=%s\n", lGetString(elem, VA_value));
          }
         
-         sprintf(daemon, "%s/utilbin/%s/", path_state_get_sge_root(), arch);
+         sprintf(daemon, "%s/utilbin/%s/", sge_root, arch);
         
          if(JOB_TYPE_IS_QLOGIN(jb_now)) {
             char* qlogin_daemon = mconf_get_qlogin_daemon();
@@ -1407,7 +1417,7 @@ char *err_str
    }
    else if (mconf_get_do_credentials() && feature_is_enabled(FEATURE_DCE_SECURITY)) {
       sprintf(dce_wrapper_cmd, "/%s/utilbin/%s/starter_cred",
-              path_state_get_sge_root(), arch);
+              sge_root, arch);
       if (SGE_STAT(dce_wrapper_cmd, &buf)) {
          sprintf(err_str, MSG_DCE_NOSHEPHERDWRAP_SS, dce_wrapper_cmd, strerror(errno));
          FREE(pag_cmd);

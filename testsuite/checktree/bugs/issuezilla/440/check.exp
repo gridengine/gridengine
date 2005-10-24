@@ -69,6 +69,7 @@ set check_cleanup_function "issue_440_cleanup"
 
 # define test's procedure order
 set check_functions ""
+lappend check_functions "issue_440_set_parameters"
 lappend check_functions "issue_440_check_qsub"
 lappend check_functions "issue_440_check_qrsh"
 
@@ -79,7 +80,19 @@ proc issue_440_init_level {} {
    global CHECK_ACT_LEVEL
    global issue_440_MAX_KBYTE check_440_host check_440_num_hosts
 
+   if {$CHECK_ACT_LEVEL < $check_440_num_hosts} {
+      return 0
+   }
 
+   return -1  ;# no other level else
+}
+
+# -------- local test procedures -----------------------------------------------
+
+proc issue_440_set_parameters {} {
+   global ts_config
+   global CHECK_ACT_LEVEL CHECK_OUTPUT
+   global issue_440_MAX_KBYTE check_440_host check_440_num_hosts
 
    if {$CHECK_ACT_LEVEL < $check_440_num_hosts} {
       set check_440_host [lindex $ts_config(unique_arch_nodes) $CHECK_ACT_LEVEL]
@@ -91,13 +104,10 @@ proc issue_440_init_level {} {
             set issue_440_MAX_KBYTE 20
          }
       }
-      return 0
+      puts $CHECK_OUTPUT "testing with MAX_KBYTE=$issue_440_MAX_KBYTE"
    }
-
-   return -1  ;# no other level else
+   set_error 0 "ok"
 }
-
-# -------- local test procedures -----------------------------------------------
 
 proc issue_440_check_qsub {} {
    global ts_config

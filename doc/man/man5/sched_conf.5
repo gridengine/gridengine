@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sched_conf.5,v $     Last Update: $Date: 2005/08/19 12:53:10 $     Revision: $Revision: 1.26 $
+.\" $RCSfile: sched_conf.5,v $     Last Update: $Date: 2005/10/24 12:57:22 $     Revision: $Revision: 1.26.4.1 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH SCHED_CONF 5 "$Date: 2005/08/19 12:53:10 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH SCHED_CONF 5 "$Date: 2005/10/24 12:57:22 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 sched_conf \- xxQS_NAMExx default scheduler configuration file
@@ -212,9 +212,11 @@ When executing under a share based policy, the scheduler "ages" (i.e. decreases)
 usage to implement a sliding window for achieving the share entitlements
 as defined by the share tree. The \fBhalftime\fP defines
 the time interval in which accumulated usage will have been decayed
-to half its original value. Valid values are specified of type time as
-specified in
+to half its original value. Valid values are specified in hours or accoring to 
+the time format as specified in
 .M queue_conf 5 .
+.br
+If the value is set to 0, the usage is not decayed.
 .\"
 .SS "\fBusage_weight_list\fP"
 xxQS_NAMExx accounts for the consumption of the resources CPU-time, memory and IO
@@ -411,11 +413,23 @@ The halflife_decay_list allows to configure different decay rates for the
 "finished_jobs usage types, which is used in the pending job ticket calculation
 to account for jobs which have just ended. This allows the user the pending jobs
 algorithm to count finished jobs against a user or project for a configurable decayed 
-time period. The default is set so, that finished jobs are not considered. It is also
-used to determine if the job usage has been added to the user or project usage_list.
+time period. This feature is turned off per default and the halftime is used in stead.
 .br
 The halflife_decay_list also allows to configure different decay rates for each usage 
-type being tracked (cpu, io, and mem).
+type being tracked (cpu, io, and mem). The list is specified in the following format:
+.sp 1
+.nf
+.RS
+.br
+<USAGE_TYPE>=<TIME>[:<USAGE_TYPE>=<TIME>[:<USAGE_TYPE>=<TIME>]]
+.RE
+.fi
+.sp 1
+.br
+<Usage_TYPE> can be one of the following: cpu, io, or mem.
+.br
+<TIME> can be -1, 0 or a timespan specified in minutes. If <TIME> is -1 only the usage
+of currently running jobs is used. 0 means that the usage is not decayed.
 .\"
 .SS "\fBpolicy_hierarchy\fP"
 This parameter sets up a dependency chain of ticket based

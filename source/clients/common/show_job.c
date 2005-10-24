@@ -447,13 +447,13 @@ void cull_show_job(lListElem *job, int flags)
             fields, delis, 0);
       }
 
-   if (lGetPosViaElem(job, JB_jid_sucessor_list)>=0)
-      if (lGetList(job, JB_jid_sucessor_list)) {
+   if (lGetPosViaElem(job, JB_jid_successor_list)>=0)
+      if (lGetList(job, JB_jid_successor_list)) {
          int fields[] = { JRE_job_number, 0 };
 
          delis[0] = "";
-         printf("jid_sucessor_list:          ");
-         uni_print_list(stdout, NULL, 0, lGetList(job, JB_jid_sucessor_list), 
+         printf("jid_successor_list:          ");
+         uni_print_list(stdout, NULL, 0, lGetList(job, JB_jid_successor_list), 
             fields, delis, 0);
       }
 

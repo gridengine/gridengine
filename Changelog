@@ -1,3 +1,168 @@
+EB-2005-10-17-0: Bugfix:    qconf -mattr can crash qmaster
+                            qconf -[dm]attr gets confused by shortcuts
+                 Issue:     1798, 1640
+                 Bugtraq:   6292926, 6287946
+                 Changed:   sge_qmaster
+                 Review:    SG
+
+DT-2005-10-14-0: Bugfix:    o Fixed message number conflict
+                 Changed:   msg_common.h
+
+CR-2005-10-14-2: Testsuite: enhancement: make a real install_core_system call when
+                            the first install (re-init active) fails after a 
+                            check has failed
+
+CR-2005-10-14-1: Testsuite: fixed problem for additional checktrees config when
+                            creating a config from scratch
+
+CR-2005-10-13-1: Testsuite: added support for additional checktrees
+                            (better "change directory" search)
+
+MD-2005-10-13-0: Bugfix:    sge qmaster startup and shutdown (non critical) 
+                            error message as non root
+                 Issue:     1823
+                 Bugtraq:   6252471
+                 Review:    CR
+
+CR-2005-10-13-0: Testsuite: added support for additional checktrees
+                 Review:    RH (MD)
+
+SG-2005-10-13-0: Bugfix:    configuring the halflife_decay_list crashes the qmaster
+                 Changed:   qmaster, scheduler, qstat
+                 Issue:     1826
+                 Bugtraq:   6333407
+                 Review:    RD
+
+RD-2005-10-12-0: Bugfix:    fixed broken builds 
+                 Review:    MD    
+
+SG-2005-10-12-0: Bugfix:    Doing a qalter -l rsc=val on running jobs breaks consumable debitation
+                 Changed:   sge_qmaster
+                 Issue:     1761
+                 Bugtraq:   6315111
+                 Review:    RD
+
+MD-2005-10-10-1: Enhancem:  changed inst_sge to provide a clear exit status
+                            to the testsuite
+                 Changed:   inst_sge
+                 Review:    HP
+
+RD-2005-10-10-1: Bugfix:    - admin mail information is incorrect or queue
+                              error state setting does not work
+                            - tight integration - qrsh_exit_code file not
+                              written
+                 Changed:   execd, shepherd
+                 Issue:     1680, 1679
+                 Bugtraq:   6292751, 6292742 
+                 Review:    HP
+
+RD-2005-10-10-0: Bugfix:    gcc build on solaris
+                 Changed:   aimk
+                 Review:    JG
+
+MD-2005-10-10-0: Testsuite: added missing autoinst config line
+                 Changed:   install_core_system/automatic/qmaster.60.tcl
+                 Review:    RD
+
+RC-2005-10-08-1: Enhancem:  support gcc4 as the build compiler (con't)
+                 Changed:   3rdparty/remote/rshd.c
+                 Review  :  pending
+
+RC-2005-10-08-0: Enhancem:  PDC for AIX
+                 Changed :  execd, shepherd
+                 Review  :  pending
+
+RC-2005-10-07-0: Enhancem:  PDC for HP-UX
+                 Changed :  execd, shepherd
+                 Review  :  AH
+
+RD-2005-10-05-0: Bugfix:    - qstat -s p doesn't show pending array tasks while 
+                              there are tasks of this job running
+                            - stat -U does not consider queue access for job
+                              and project access for queues
+                            - qstat -pe filter does not work
+                            - cull cleanup, removed XLISTDEF, ILISTDEF and 
+                              SLISTDEF
+                            - fixed typo in JB_Type & inst_qmaster.sh
+                 Changed:   inst_qmaster.sh, cull, qstat, qhost, qacct
+                 Issue:     1800, 1821, 1822
+                 Bugtraq:   6301047, 6332876, 6332877
+                 Review:    EB
+
+CR-2005-10-05-0: Testsuite: make testsuite configuration more steady. Checking
+                            directory path names.
+                 Review:    MD
+
+MD-2005-09-30-0: Testsuite: - used wrong local spooldirectory in autoinstall
+                            - adding exechosts to submithost list in autoinstall
+                 Changed:   automatic/qmaster.60.tcl
+                 Review:    CR
+ 
+CR-2005-09-29-0: Testsuite: - added new host configuration parameters:
+                              NFS-ROOT2NOBODY and NFS-ROOT2ROOT
+                            - added new global variable actual_user_system
+                              (install_core_system should use this to install
+                               an admin/normal/root user system)
+                            - removed parameter initialization for bdb_server,
+                              bdb_dir, spooling_method and cell to force this
+                              installation setup questions when running 
+                              testsuite from scratch.
+                            - added additional optional parameter to 
+                              handle_vi_edit (additional_expected_result4)
+                            - transform_date_time() had tcl error when the
+                              transform value was "-/-" (empty)
+                            - improved timing of remote procedures
+                            - do a qmod -c "*" in delete_all_jobs() for 60 systems
+                            - get_config() did not return error values
+                            - set_config() now supports also a change of spool
+                              directories
+                            - new optional parameter for is_job_running():
+                                 turn off job name parsing
+                            - shutdown_system_daemon(): improved shutdown
+                            - added new functions:
+                                 get_string_value_between()
+                                 get_uid()
+                                 get_gid()
+                                 get_execd_spooldir()
+                                 get_file_uid()
+                                 get_file_gid()
+                                 switch_execd_spool_dir()
+                                 submit_wait_type_job()
+                            - following functions should be implemented soon:
+                                 switch_to_normal_user_system()
+                                 switch_to_admin_user_system()
+                                 switch_to_root_user_system()
+                            - added new test: /system_tests/shepherd/job_start
+                 Review:    JG, HP (job_start_test)
+                 Issue:     1753
+
+MD-2005-09-29-0: Bugfix:    Using "-bup" with "-auto" breaks with later 
+                            update release
+                 Issue:     1819
+                 Bugtraq:   6314306
+                 Changed:   inst_backup.sh   
+                 Review:    CR
+
+JG-2005-09-29-0: Testsuite: Added documentation (ADOC) for use of Solaris zones
+                            in testsuite.
+                 Review:    CR
+                 Issue:     1503
+
+CR-2005-09-28-0: Bugfix:    qping core dump with enabled message content dump
+                 Issue:     1810
+                 Bugtraq:   6327427
+                 Review:    AA
+
+JG-2005-09-28-1: Testsuite: Added documentation (ADOC) for setup and cleanup 
+                            functions.
+                 Review:    CR
+                 Issue:     888
+
+JG-2005-09-28-0: Testsuite: Added test system_tests/qmaster/complex.
+                            Cleanup.
+                 Issue:     117
+                 Review:    CR
+
 MD-2005-09-27-0: Testsuite: using a default dbd spooling dir, if not
                             configured in testsuite config.
                  Changed:   autoinstall configfile creation

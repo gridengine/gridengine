@@ -100,7 +100,6 @@ lListElem **lepp
    int success;
    static int already_logged = 0;
    u_long32 status;
-   cl_com_handle_t* handle = NULL;
    
    DENTER(TOP_LAYER, "get_configuration");
 
@@ -134,7 +133,6 @@ lListElem **lepp
       }
       DPRINTF(("get_configuration: unique for %s: %s\n", config_name, lGetHost(hep, EH_name)));
 
-      handle = cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0);
       commlib_error = sge_get_communication_error();
 
       if (commlib_error == CL_RETVAL_ACCESS_DENIED || 
@@ -230,15 +228,18 @@ volatile int* abort_flag
    cl_com_handle_t* handle = NULL;
    int ret_val;
    int ret;
+   const char *qualified_hostname = uti_state_get_qualified_hostname();
+   const char *progname = uti_state_get_sge_formal_prog_name();
+   const char *cell_root = path_state_get_cell_root();
 
    DENTER(TOP_LAYER, "get_conf_and_daemonize");
    /*
     * for better performance retrieve 2 configurations
     * in one gdi call
     */
-   DPRINTF(("qualified hostname: %s\n",  uti_state_get_qualified_hostname()));
+   DPRINTF(("qualified hostname: %s\n",  qualified_hostname));
 
-   while ((ret = get_configuration(uti_state_get_qualified_hostname(), &global, &local))) {
+   while ((ret = get_configuration(qualified_hostname, &global, &local))) {
       if (ret==-6 || ret==-7) {
          /* confict: COMMPROC ALREADY REGISTERED */
          DEXIT;
@@ -251,7 +252,7 @@ volatile int* abort_flag
             ERROR((SGE_EVENT, MSG_CONF_NOCONFBG));
             dfunc();
          }
-         handle = cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0);
+         handle = cl_com_get_handle((char*)progname, 0);
          ret_val = cl_commlib_trigger(handle, 1);
          switch(ret_val) {
             case CL_RETVAL_SELECT_TIMEOUT:
@@ -265,7 +266,7 @@ volatile int* abort_flag
       } else {
          /* here we are daemonized, we do a longer sleep when there is no connection */
          DTRACE;
-         handle = cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0);
+         handle = cl_com_get_handle((char*)progname, 0);
          ret_val = cl_commlib_trigger(handle, 1);
          switch(ret_val) {
             case CL_RETVAL_SELECT_TIMEOUT:
@@ -286,10 +287,9 @@ volatile int* abort_flag
       }
    }
   
-   ret = merge_configuration(path_state_get_cell_root(), global, local, NULL);
+   ret = merge_configuration(cell_root, global, local, NULL);
    if (ret) {
-      DPRINTF((
-         "Error %d merging configuration \"%s\"\n", ret, uti_state_get_qualified_hostname()));
+      DPRINTF(("Error %d merging configuration \"%s\"\n", ret, qualified_hostname));
    }
 
    /*
@@ -321,21 +321,23 @@ lList **conf_list
    lListElem *global = NULL;
    lListElem *local = NULL;
    int ret;
+   const char *qualified_hostname = uti_state_get_qualified_hostname();
+   const char *cell_root = path_state_get_cell_root();
 
    DENTER(TOP_LAYER, "get_merged_configuration");
 
-   DPRINTF(("qualified hostname: %s\n",  uti_state_get_qualified_hostname()));
-   ret = get_configuration(uti_state_get_qualified_hostname(), &global, &local);
+   DPRINTF(("qualified hostname: %s\n",  qualified_hostname));
+   ret = get_configuration(qualified_hostname, &global, &local);
    if (ret) {
-      ERROR((SGE_EVENT, MSG_CONF_NOREADCONF_IS, ret, uti_state_get_qualified_hostname()));
+      ERROR((SGE_EVENT, MSG_CONF_NOREADCONF_IS, ret, qualified_hostname));
       lFreeElem(&global);
       lFreeElem(&local);
       return -1;
    }
 
-   ret = merge_configuration(path_state_get_cell_root(), global, local, NULL);
+   ret = merge_configuration(cell_root, global, local, NULL);
    if (ret) {
-      ERROR((SGE_EVENT, MSG_CONF_NOMERGECONF_IS, ret, uti_state_get_qualified_hostname()));
+      ERROR((SGE_EVENT, MSG_CONF_NOMERGECONF_IS, ret, qualified_hostname));
       lFreeElem(&global);
       lFreeElem(&local);
       return -2;

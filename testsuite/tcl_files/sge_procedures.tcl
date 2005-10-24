@@ -615,6 +615,471 @@ proc submit_error_job { jobargs } {
     return [submit_job "-S __no_shell $jobargs"]
 }
 
+#****** sge_procedures/submit_wait_type_job() **********************************
+#  NAME
+#     submit_wait_type_job() -- submit job and wait for accouting info
+#
+#  SYNOPSIS
+#     submit_wait_type_job { job_type host user {variable qacct_info} } 
+#
+#  FUNCTION
+#     This function can be used to submit different job types (standard
+#     qsub job, qsh, qrsh, qrlogin, qlogin and tight integrated jobs) and
+#     wait for the jobs to appear in the accouting file. The function
+#     returns the job id of the job.
+#
+#  INPUTS
+#     job_type              - "qsub", "qsh", "qrsh", "qrlogin", "qlogin" or
+#                             "tight_integrated"
+#     host                  - host where the job should run
+#     user                  - user who should submit the job
+#     {variable qacct_info} - return value for job accounting information
+#
+#  INFO 
+#     1) user must be != $CHECK_USER
+#
+#     2) "tight_integrated" job need pe "tight_job_start"
+# 
+#
+#  RESULT
+#     job id (>= 1) or -1 on error
+#
+#*******************************************************************************
+proc submit_wait_type_job { job_type host user {variable qacct_info} } {
+   global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_HOST CHECK_DEBUG_LEVEL CHECK_USER
+   global CHECK_DISPLAY_OUTPUT
+   upvar $variable qacctinfo
+
+
+   if { $user == $CHECK_USER } {
+      add_proc_error "submit_wait_type_job" -1 "This procedure only works for users != \$CHECK_USER ($CHECK_USER)"
+      return -1
+   }
+   delete_all_jobs
+   wait_for_end_of_all_jobs 30
+
+   set job_id 0
+   set remote_host_arg "-l h=$host"
+   set output_argument "-o /dev/null -e /dev/null"
+   set job_argument "$CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5"
+
+   puts $CHECK_OUTPUT "submitting job type \"$job_type\" ..."
+   switch -exact $job_type {
+      "qsub" {
+         set job_id [submit_job "$remote_host_arg $output_argument $job_argument" 1 60 "" $user]
+         wait_for_jobstart $job_id "leeper" 30 1 1
+         wait_for_jobend $job_id "leeper" 30 1 1
+      }
+
+      "qrlogin" { ;# without command (qrsh without command)
+         puts $CHECK_OUTPUT "starting qrsh $remote_host_arg as user $user on host $CHECK_HOST ..."
+         set sid [open_remote_spawn_process $CHECK_HOST $user qrsh "$remote_host_arg"]
+         set sp_id [lindex $sid 1]
+         set timeout 1
+         set max_timeouts 15
+         set done 0
+         while {!$done} {
+            expect {
+               -i $sp_id full_buffer {
+                  add_proc_error "submit_with_method" -1 "expect full_buffer error"
+                  set done 1
+               }
+               -i $sp_id timeout {
+                  incr max_timeouts -1
+
+                  set job_list [get_standard_job_info 0 0 1]
+                  foreach job $job_list {
+                     puts $CHECK_OUTPUT $job
+                     if { [lindex $job 2] == "QRLOGIN" && [lindex $job 3] == $user } {
+                        puts $CHECK_OUTPUT "qrlogin job id is [lindex $job 0]"
+                        set job_id [lindex $job 0]
+                        send -i $sp_id "exit\n"
+                     }
+                  }
+
+                  if { $max_timeouts <= 0 } {
+                     add_proc_error "submit_with_method" -1 "got 15 timeout errors - break"
+                     set done 1 
+                  }
+               }
+               -i $sp_id eof {
+                  add_proc_error "submit_with_method" -1 "got eof"
+                  set done 1
+               }
+               -i $sp_id "_start_mark_" {
+                  puts $CHECK_OUTPUT "remote command started"
+                  set done 0
+               }
+               -i $sp_id "_exit_status_" {
+                  puts $CHECK_OUTPUT "remote command terminated"
+                  set done 1
+               }
+               -i $sp_id "assword" {
+                  add_proc_error "submit_wait_type_job" -1 "unexpected password question for user $user on host $host"
+                  set done 1
+               }
+               -i $sp_id "*\n" {
+                  set output $expect_out(buffer)
+                  set output [ split $output "\n" ]
+                  foreach line $output {
+                     set line [string trim $line]
+                     if { [string length $line] == 0 } {
+                        continue
+                     }
+                     puts $CHECK_OUTPUT $line
+                  }
+               }
+               -i $sp_id default {
+               }
+            }
+         }
+         close_spawn_process $sid
+      }
+
+      "qrsh" { ;# with sleeper job
+         set sid [open_remote_spawn_process $CHECK_HOST $user qrsh "$remote_host_arg $job_argument"]
+         set sp_id [lindex $sid 1]
+         set timeout 1
+         set max_timeouts 15
+         set done 0
+         while {!$done} {
+            expect {
+               -i $sp_id full_buffer {
+                  add_proc_error "submit_with_method" -1 "expect full_buffer error"
+                  set done 1
+               }
+               -i $sp_id timeout {
+                  incr max_timeouts -1
+
+                  set job_list [get_standard_job_info 0 0 1]
+                  foreach job $job_list {
+                     puts $CHECK_OUTPUT $job
+                     if { [lindex $job 2] == "sleeper.sh" && [lindex $job 3] == $user } {
+                        puts $CHECK_OUTPUT "qrsh job id is [lindex $job 0]"
+                        set job_id [lindex $job 0]
+                     }
+                  }
+
+                  if { $max_timeouts <= 0 } {
+                     add_proc_error "submit_with_method" -1 "got 15 timeout errors - break"
+                     set done 1 
+                  }
+               }
+               -i $sp_id eof {
+                  add_proc_error "submit_with_method" -1 "got eof"
+                  set done 1
+               }
+               -i $sp_id "_start_mark_" {
+                  puts $CHECK_OUTPUT "remote command started"
+                  set done 0
+               }
+               -i $sp_id "_exit_status_" {
+                  puts $CHECK_OUTPUT "remote command terminated"
+                  set done 1
+               }
+               -i $sp_id "assword" {
+                  add_proc_error "submit_wait_type_job" -1 "unexpected password question for user $user on host $host"
+                  set done 1
+               }
+               -i $sp_id "*\n" {
+                  set output $expect_out(buffer)
+                  set output [ split $output "\n" ]
+                  foreach line $output {
+                     set line [string trim $line]
+                     if { [string length $line] == 0 } {
+                        continue
+                     }
+                     puts $CHECK_OUTPUT $line
+                  }
+               }
+               -i $sp_id default {
+               }
+            }
+         }
+         close_spawn_process $sid
+      }
+
+      "qlogin" {
+         puts $CHECK_OUTPUT "starting qlogin $remote_host_arg ..."
+         set sid [open_remote_spawn_process $CHECK_HOST $user qlogin "$remote_host_arg"]
+         set sp_id [lindex $sid 1]
+         set timeout 1
+         set max_timeouts 15
+         set done 0
+         while {!$done} {
+            expect {
+               -i $sp_id full_buffer {
+                  add_proc_error "submit_with_method" -1 "expect full_buffer error"
+                  set done 1
+               }
+               -i $sp_id timeout {
+                  incr max_timeouts -1
+
+                  if { $job_id == 0 } {
+                     set job_list [get_standard_job_info 0 0 1]
+                     foreach job $job_list {
+                        puts $CHECK_OUTPUT $job
+                        if { [lindex $job 2] == "QLOGIN" && [lindex $job 3] == $user } {
+                           puts $CHECK_OUTPUT "qrlogin job id is [lindex $job 0]"
+                           set job_id [lindex $job 0]
+                        }
+                     }
+                  }
+
+                  if { $max_timeouts <= 0 } {
+                     add_proc_error "submit_with_method" -1 "got 15 timeout errors - break"
+                     set done 1 
+                  }
+               }
+               -i $sp_id eof {
+                  add_proc_error "submit_with_method" -1 "got eof"
+                  set done 1
+               }
+               -i $sp_id "_start_mark_" {
+                  puts $CHECK_OUTPUT "remote command started"
+                  set done 0
+               }
+               -i $sp_id "_exit_status_" {
+                  puts $CHECK_OUTPUT "remote command terminated"
+                  set done 1
+               }
+
+               -i $sp_id "login:" {
+                  send -i $sp_id "$user\n"
+               }
+
+               -i $sp_id "assword" { 
+                  puts $CHECK_OUTPUT "got password question for user $user on host $host"
+                  if { $job_id == 0 } {
+                     set job_list [get_standard_job_info 0 0 1]
+                     foreach job $job_list {
+                        puts $CHECK_OUTPUT $job
+                        if { [lindex $job 2] == "QLOGIN" && [lindex $job 3] == $user } {
+                           puts $CHECK_OUTPUT "qrlogin job id is [lindex $job 0]"
+                           set job_id [lindex $job 0]
+                        }
+                     }
+                  }
+                  puts $CHECK_OUTPUT "deleting job with id $job_id, because we don't know user password ..."
+                  delete_job $job_id
+               }
+
+               -i $sp_id "*\n" {
+                  set output $expect_out(buffer)
+                  set output [ split $output "\n" ]
+                  foreach line $output {
+                     set line [string trim $line]
+                     if { [string length $line] == 0 } {
+                        continue
+                     }
+                     puts $CHECK_OUTPUT $line
+                  }
+               }
+               -i $sp_id default {
+               }
+            }
+         }
+         close_spawn_process $sid
+      }
+
+      "qsh" {
+         puts $CHECK_OUTPUT "starting qsh $remote_host_arg on host $CHECK_HOST as user $user ..."
+         puts $CHECK_OUTPUT "setting DISPLAY=$CHECK_DISPLAY_OUTPUT"
+         
+         set my_qsh_env(DISPLAY) $CHECK_DISPLAY_OUTPUT
+         
+         set sid [open_remote_spawn_process $CHECK_HOST $user qsh "$remote_host_arg -now yes" 0 my_qsh_env]
+         set sp_id [lindex $sid 1]
+         set timeout 1
+         set max_timeouts 20
+         set done 0
+         while {!$done} {
+            expect {
+               -i $sp_id full_buffer {
+                  add_proc_error "submit_with_method" -1 "expect full_buffer error"
+                  set done 1
+               }
+               -i $sp_id timeout {
+                  incr max_timeouts -1
+
+                  if { $job_id == 0 } {
+                     set job_list [get_standard_job_info 0 0 1]
+                     foreach job $job_list {
+                        puts $CHECK_OUTPUT $job
+                        if { [lindex $job 2] == "INTERACTIV" && [lindex $job 3] == $user && [lindex $job 4] == "r" } {
+                           puts $CHECK_OUTPUT "qsh job id is [lindex $job 0]"
+                           set job_id [lindex $job 0]
+                        }
+                     }
+                  } else {
+                     puts $CHECK_OUTPUT "job is running, waiting ..."
+                     if { $max_timeouts <= 3 } {
+                        puts $CHECK_OUTPUT "ok, now deleting job $job_id ..."
+                        delete_job $job_id
+                        set done 1
+                     }
+                  }
+
+                  if { $max_timeouts <= 0 } {
+                     add_proc_error "submit_with_method" -1 "got 15 timeout errors - break"
+                     set done 1 
+                  }
+               }
+               -i $sp_id eof {
+                  add_proc_error "submit_with_method" -1 "got eof"
+                  set done 1
+               }
+               -i $sp_id "_start_mark_" {
+                  puts $CHECK_OUTPUT "remote command started"
+                  set done 0
+               }
+               -i $sp_id "_exit_status_" {
+                  puts $CHECK_OUTPUT "remote command terminated"
+                  set done 0
+               }
+
+               -i $sp_id "*\n" {
+                  set output $expect_out(buffer)
+                  set output [ split $output "\n" ]
+                  foreach line $output {
+                     set line [string trim $line]
+                     if { [string length $line] == 0 } {
+                        continue
+                     }
+                     puts $CHECK_OUTPUT $line
+                  }
+               }
+               -i $sp_id default {
+               }
+            }
+         }
+         close_spawn_process $sid
+      }
+
+      "tight_integrated" {
+         set master_task_id [submit_job "$remote_host_arg $output_argument -pe tight_job_start 1 $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 30" 1 60 "" $user]
+         wait_for_jobstart $master_task_id "leeper" 30 1 1
+         puts $CHECK_OUTPUT "tight integration job has been submitted, now submitting task ..."
+
+         set my_tight_env(JOB_ID) $master_task_id
+         set my_tight_env(SGE_TASK_ID) 1
+
+         puts $CHECK_OUTPUT "starting qrsh -inherit $host $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 80 ..."
+         set sid [open_remote_spawn_process $CHECK_HOST $user qrsh "-inherit $host $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 15" 0 my_tight_env]
+         set sp_id [lindex $sid 1]
+         set timeout 1
+         set max_timeouts 30
+         set done 0
+         while {!$done} {
+            expect {
+               -i $sp_id full_buffer {
+                  add_proc_error "submit_with_method" -1 "expect full_buffer error"
+                  set done 1
+               }
+               -i $sp_id timeout {
+                  incr max_timeouts -1
+
+                  set job_list [get_standard_job_info 0 0 1]
+                  foreach job $job_list {
+                     puts $CHECK_OUTPUT $job
+                     if { [lindex $job 2] == "Sleeper" && [lindex $job 3] == $user } {
+                        puts $CHECK_OUTPUT "qrsh job id is [lindex $job 0]"
+                        set job_id [lindex $job 0]
+                        
+                     }
+                  }
+
+                  if { $max_timeouts <= 0 } {
+                     add_proc_error "submit_with_method" -1 "got 15 timeout errors - break"
+                     set done 1 
+                  }
+               }
+               -i $sp_id eof {
+                  add_proc_error "submit_with_method" -1 "got eof"
+                  set done 1
+               }
+               -i $sp_id "_start_mark_" {
+                  puts $CHECK_OUTPUT "remote command started"
+                  set done 0
+               }
+               -i $sp_id "_exit_status_" {
+                  puts $CHECK_OUTPUT "remote command terminated"
+                  set done 1
+               }
+               -i $sp_id "assword" {
+                  add_proc_error "submit_wait_type_job" -1 "unexpected password question for user $user on host $host"
+                  set done 1
+               }
+               -i $sp_id "*\n" {
+                  set output $expect_out(buffer)
+                  set output [ split $output "\n" ]
+                  foreach line $output {
+                     set line [string trim $line]
+                     if { [string length $line] == 0 } {
+                        continue
+                     }
+                     puts $CHECK_OUTPUT $line
+                  }
+               }
+               -i $sp_id default {
+               }
+            }
+         }
+         close_spawn_process $sid
+
+         wait_for_jobend $master_task_id "leeper" 60 1 1
+      }
+
+   }
+
+   if { $job_id == 0 } {
+      add_proc_error "submit_wait_type_job" -1 "could not submit \"$job_type\" job to host \"$host\" as user \"$user\". XWindow DISPLAY=$CHECK_DISPLAY_OUTPUT."
+      return -1
+   }
+
+   
+   puts $CHECK_OUTPUT "waiting for job $job_id to disapear ..."
+   set my_timeout [timestamp]
+   incr my_timeout 30
+   while { [is_job_running $job_id "" ] != -1 } {
+      after 500
+      puts -nonewline $CHECK_OUTPUT "."
+      flush $CHECK_OUTPUT
+      if { [timestamp] > $my_timeout } {
+         break
+      }
+   }
+   puts $CHECK_OUTPUT ""
+
+
+
+   # if job is now still running or pending, the job had problems => error
+   if { [is_job_running $job_id "" ] != -1 } {
+      add_proc_error "submit_wait_type_job" -1 "job still registered! Skipping test for \"$job_type\" job to host \"$host\" as user \"$user\". XWindow DISPLAY=$CHECK_DISPLAY_OUTPUT."
+      return -1
+   }
+   
+
+   set my_timeout [timestamp]
+   incr my_timeout 60
+   puts $CHECK_OUTPUT "waiting for accounting file to have information about job $job_id"
+   while { [ get_qacct $job_id qacctinfo ] != 1 } {
+      after 500
+      puts -nonewline $CHECK_OUTPUT "."
+      flush $CHECK_OUTPUT
+      if { [timestamp] > $my_timeout } {
+         break
+      }
+   }
+   puts $CHECK_OUTPUT ""
+
+   if { [ get_qacct $job_id qacctinfo ] != 1 } {
+         add_proc_error "submit_wait_type_job" -1 "could not get qacct information"
+         return -1
+   }
+   return $job_id
+}
+
 #****** sge_procedures/submit_time_job() ***************************************
 #  NAME
 #     submit_time_job() -- Submit a job with execution time
@@ -1102,6 +1567,8 @@ proc get_hosts { } {
 #     set change_array(xterm)   "/bin/xterm"
 #     set change_array(enforce_project) "true"
 #     ...
+#     0  - on success
+#     -1 - on error
 #     
 #
 #  EXAMPLE
@@ -1152,10 +1619,14 @@ proc get_config { change_array {host global}} {
   global CHECK_ARCH CHECK_OUTPUT
   upvar $change_array chgar
 
+  if { [info exists chgar] } {
+     unset chgar
+  }
+
   set catch_result [ catch {  eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-sconf" "$host"} result ]
   if { $catch_result != 0 } {
      add_proc_error "get_config" "-1" "qconf error or binary not found ($ts_config(product_root)/bin/$CHECK_ARCH/qconf)\n$result"
-     return
+     return -1
   } 
 
   # split each line as listelement
@@ -1167,6 +1638,7 @@ proc get_config { change_array {host global}} {
        set chgar($id) $value
      }
   }
+  return 0
 }
 
 #****** sge_procedures/get_checkpointobj() *************************************
@@ -1307,22 +1779,24 @@ proc set_config { change_array {host global} {do_add 0} {ignore_error 0}} {
   
   set GIDRANGE [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_CONFIG_CONF_GIDRANGELESSTHANNOTALLOWED_I] "*"]
 
+  set EDIT_FAILED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_PARSE_EDITFAILED]]
+
   if { $ts_config(gridengine_version) == 60 } {
      set MODIFIED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_MODIFIEDINLIST_SSSS] $CHECK_USER "*" "*" "*"]
      set ADDED    [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_ADDEDTOLIST_SSSS] $CHECK_USER "*" "*" "*"]
+     set EFFECT   [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_WARN_CHANGENOTEFFECTEDUNTILRESTARTOFEXECHOSTS] "execd_spool_dir"]
+     set result [ handle_vi_edit "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "$qconf_cmd $host" $vi_commands $MODIFIED $EDIT_FAILED $ADDED $GIDRANGE $EFFECT]
+
   } else {
      set MODIFIED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_CONFIG_MODIFIEDINLIST_SSS] $CHECK_USER "*" "*"]
      set ADDED    [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_CONFIG_ADDEDTOLIST_SSS] $CHECK_USER "*" "*"]
+     set result [ handle_vi_edit "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "$qconf_cmd $host" $vi_commands $MODIFIED $EDIT_FAILED $ADDED $GIDRANGE ]
   }
-
-  set EDIT_FAILED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_PARSE_EDITFAILED]]
-
-  set result [ handle_vi_edit "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "$qconf_cmd $host" $vi_commands $MODIFIED $EDIT_FAILED $ADDED $GIDRANGE ]
 
   if { ($ignore_error == 1) && ($result == -4) } {
      # ignore error -4 
   } else {
-    if { ($result != 0) && ($result != -3) } {
+    if { ($result != 0) && ($result != -3) && ($result != -5) }  {
       add_proc_error "set_config" -1 "could not add or modify configuration for host $host ($result)"
     }
   }
@@ -1513,6 +1987,7 @@ proc get_scheduling_info { job_id { check_pending 1 }} {
    # timeout 120
 
    set my_timeout [ expr ( [timestamp] + 30 ) ] 
+   puts $CHECK_OUTPUT "waiting for scheduling info information ..."
    while { 1 } {
       if { [get_qstat_j_info $job_id ] } {
          set help_var_name "scheduling info" 
@@ -1532,13 +2007,16 @@ proc get_scheduling_info { job_id { check_pending 1 }} {
          set INFO_NOMESSAGE [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SCHEDD_INFO_NOMESSAGE]]
 
          if { [string first "no messages available" $sched_info] < 0 && [string first $INFO_NOMESSAGE $sched_info] < 0 } {
+            puts $CHECK_OUTPUT ""
             puts $CHECK_OUTPUT $sched_info
             return $sched_info
          }
       }
-      puts $CHECK_OUTPUT "waiting for scheduling info information ..."
-      after 2000
+      puts -nonewline $CHECK_OUTPUT "."
+      flush $CHECK_OUTPUT
+      after 500
       if { [timestamp] > $my_timeout } {
+         puts $CHECK_OUTPUT ""
          return "timeout"
       }
    }   
@@ -3249,7 +3727,7 @@ proc wait_for_end_of_all_jobs { seconds } {
 
    while { 1 } {
       puts $CHECK_OUTPUT "waiting for end of all jobs ..."
-      after 2000
+      after 1000
       set result ""
       set catch_return [ catch {eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qstat -s pr" } result ]
       if { $catch_return == 0 } {
@@ -3792,11 +4270,13 @@ proc submit_job { args {do_error_check 1} {submit_timeout 60} {host ""} {user ""
      set JOB_SUBMITTED_DUMMY [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QSUB_YOURJOBHASBEENSUBMITTED_SS] "__JOB_ID__" "__JOB_NAME__"]
      set SUCCESSFULLY        [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QSUB_YOURIMMEDIATEJOBXHASBEENSUCCESSFULLYSCHEDULED_S] "*"]
      set UNKNOWN_RESOURCE2 [translate $CHECK_HOST 1 0 0 [sge_macro MSG_SCHEDD_JOBREQUESTSUNKOWNRESOURCE_S] ]
+     set WRONG_TYPE          [translate $CHECK_HOST 0 0 0 [sge_macro MSG_QSUB_COULDNOTRUNJOB_S] "*"]
   } else {
      set JOB_SUBMITTED       [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_SUBMITJOB_USS] "*" "*" "*"]
      set JOB_SUBMITTED_DUMMY [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_SUBMITJOB_USS] "__JOB_ID__" "__JOB_NAME__" "__JOB_ARG__"]
      set SUCCESSFULLY        [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QSUB_YOURIMMEDIATEJOBXHASBEENSUCCESSFULLYSCHEDULED_U] "*"]
      set UNKNOWN_RESOURCE2   [translate $CHECK_HOST 1 0 0 [sge_macro MSG_SCHEDD_JOBREQUESTSUNKOWNRESOURCE] ]
+     set WRONG_TYPE          [translate $CHECK_HOST 1 0 0 [sge_macro MSG_CPLX_WRONGTYPE_SSS] "*" "*" "*"]
   }
 
   set ERROR_OPENING       [translate $CHECK_HOST 1 0 0 [sge_macro MSG_FILE_ERROROPENINGXY_SS] "*" "*"]
@@ -4178,6 +4658,9 @@ proc submit_job { args {do_error_check 1} {submit_timeout 60} {host ""} {user ""
           -i $sp_id -- $NO_DEADLINE_USER {
              set return_value -22
           }
+          -i $sp_id -- $WRONG_TYPE {
+             set return_value -23
+          }
         }
      }
  
@@ -4213,6 +4696,7 @@ proc submit_job { args {do_error_check 1} {submit_timeout 60} {host ""} {user ""
           "-20" { add_proc_error "submit_job" -1 [get_submit_error $return_value]  }
           "-21" { add_proc_error "submit_job" -1 [get_submit_error $return_value]  }
           "-22" { add_proc_error "submit_job" -1 [get_submit_error $return_value]  }
+          "-23" { add_proc_error "submit_job" -1 [get_submit_error $return_value]  }
 
 
           default { add_proc_error "submit_job" 0 "job $return_value submitted - ok" }
@@ -4272,6 +4756,7 @@ proc get_submit_error { error_id } {
       "-20" { return "negative step in range is not allowed" }
       "-21" { return "-t step of range must be a decimal number" }
       "-22" { return "user is not in access list deadlineusers" }
+      "-23" { return "wrong type for submit -l option" }
 
       default { return "unknown error" }
    }
@@ -4334,19 +4819,6 @@ proc get_grppid_of_job { jobid {host ""}} {
 
    # trim trailing newlines etc.
    set real_pid [string trim $real_pid]
-#   after 5000
-#
-#   set back [ catch { open $pidfile "r" } fio ]
-#
-#   set real_pid ""
-#
-#   if { $back != 0  } {
-#      add_proc_error "get_grppid_of_job" -1 "can't open \"$pidfile\""
-#   } else {
-#      gets $fio real_pid
-#      close $fio
-#   }
-
    return $real_pid
 }
 
@@ -4771,17 +5243,19 @@ proc get_qstat_j_info {jobid {variable qstat_j_info}} {
 #      parser/parse_qconf_se()
 #*******************************************************************************
 proc get_qconf_se_info {hostname {variable qconf_se_info}} {
-  global ts_config
-   global CHECK_ARCH
-   global CHECK_OUTPUT
+   global ts_config CHECK_OUTPUT CHECK_USER
    upvar $variable jobinfo
 
-   set exit_code [catch { eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf -se $hostname" } result]
-   if { $exit_code == 0 } {
+   set arch [resolve_arch $ts_config(master_host)]
+   set qconf "$ts_config(product_root)/bin/$arch/qconf"
+   set result [start_remote_prog $ts_config(master_host) $CHECK_USER $qconf "-se $hostname"]
+   puts $CHECK_OUTPUT $result
+   if { $prg_exit_state == 0 } {
       set result "$result\n"
       parse_qconf_se result jobinfo $hostname 
       return 1
    }
+
    return 0
 }
 
@@ -4844,12 +5318,17 @@ proc get_qacct {jobid {variable qacct_info}} {
    global CHECK_ARCH CHECK_OUTPUT
    upvar $variable qacctinfo
    
+   if { [info exists qacctinfo] } {
+      unset qacctinfo
+   }
+
    set exit_code [catch { exec "$ts_config(product_root)/bin/$CHECK_ARCH/qacct" -j $jobid} result]
    if { $exit_code == 0 } {
+      puts $CHECK_OUTPUT "found job in accounting file, parsing qacct output ..."
       parse_qacct result qacctinfo $jobid
       return 1
    } else {
-      puts $CHECK_OUTPUT "result of qacct -j $jobid:\n$result"
+      debug_puts "result of qacct -j $jobid:\n$result"
    }
    return 0
 }
@@ -4886,10 +5365,17 @@ proc get_qacct {jobid {variable qacct_info}} {
 #     sge_procedures/is_pid_with_name_existing()
 #*******************************
 proc is_job_running { jobid jobname } {
-  global ts_config
-   global CHECK_ARCH CHECK_OUTPUT check_timestamp
+   global ts_config
+   global CHECK_USER CHECK_OUTPUT check_timestamp
 
-   set catch_state [ catch { exec "$ts_config(product_root)/bin/$CHECK_ARCH/qstat" "-f" } result ]
+   if { $jobname == ""  } {
+      set check_job_name 0
+   } else {
+      set check_job_name 1
+   }
+   set arch [resolve_arch $ts_config(master_host)]
+   set qstat "$ts_config(product_root)/bin/$arch/qstat"
+   set result [start_remote_prog $ts_config(master_host) $CHECK_USER $qstat "-f" catch_state]
 
    set mytime [timestamp]
    if { $mytime == $check_timestamp } {
@@ -4914,9 +5400,16 @@ proc is_job_running { jobid jobname } {
        set running_flag 0
      }
 
-     if { ([string first $jobname $line ] >= 0) && ([lindex $line 0] == $jobid)  } {
-       set found 1;
-       break;
+     if { $check_job_name != 0 } {
+        if { ([string first $jobname $line ] >= 0) && ([lindex $line 0] == $jobid)  } {
+          set found 1;
+          break;
+        }
+     } else {
+        if { [lindex $line 0] == $jobid } {
+          set found 1;
+          break;
+        }
      }
    } 
 
@@ -5494,7 +5987,7 @@ proc wait_for_jobend { jobid jobname seconds {runcheck 1} { wait_for_end 0 } } {
       incr my_timeout 90
       while { [get_qstat_j_info $jobid ] != 0 } {
           puts $CHECK_OUTPUT "waiting for jobend ..."
-          after 2000
+          after 1000
           if { [timestamp] > $my_timeout } {
              add_proc_error "wait_for_jobend" -1 "timeout while waiting for jobend"
              break;
@@ -5865,11 +6358,11 @@ proc shutdown_scheduler {hostname qmaster_spool_dir} {
    get_ps_info $scheduler_pid $hostname
    if { ($ps_info($scheduler_pid,error) == 0) } {
       if { [ is_pid_with_name_existing $hostname $scheduler_pid "sge_schedd" ] == 0 } { 
-         puts $CHECK_OUTPUT "killing schedd with pid $scheduler_pid on host $hostname"
+         puts $CHECK_OUTPUT "shutdown schedd with pid $scheduler_pid on host $hostname"
          puts $CHECK_OUTPUT "do a qconf -ks ..."
          catch {  eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-ks" } result
          puts $CHECK_OUTPUT $result
-         after 2000
+         after 1500
          shutdown_system_daemon $hostname sched
 
       } else {
@@ -6360,7 +6853,7 @@ proc shutdown_system_daemon { host typelist { do_term_signal_kill_first 1 } } {
       puts $CHECK_OUTPUT "looking for \"$process_name\" processes on host $host ..."
       foreach elem $found_p {
          if { [ string first $process_name $ps_info(string,$elem) ] >= 0 } {
-            puts $CHECK_OUTPUT "actuel ps info: $ps_info(string,$elem)"
+            puts $CHECK_OUTPUT "current ps info: $ps_info(string,$elem)"
             if { [ is_pid_with_name_existing $host $ps_info(pid,$elem) $process_name ] == 0 } {
                incr nr_of_found_qmaster_processes_or_threads 1
                puts $CHECK_OUTPUT "found running $process_name with pid $ps_info(pid,$elem) on host $host"
@@ -6376,12 +6869,19 @@ proc shutdown_system_daemon { host typelist { do_term_signal_kill_first 1 } } {
                if { $do_term_signal_kill_first == 1 } {
                   puts $CHECK_OUTPUT "killing (SIG_TERM) process $ps_info(pid,$elem) on host $host, kill user is $kill_user"
                   puts $CHECK_OUTPUT [ start_remote_prog $host $kill_user kill $ps_info(pid,$elem) ]
-                  after 10000
+                  set sig_term_wait_timeout 15
+                  while { [is_pid_with_name_existing $host $ps_info(pid,$elem) $process_name] == 0 } {
+                     after 1000
+                     incr sig_term_wait_timeout -1
+                     if { $sig_term_wait_timeout <= 0 } {
+                        break
+                     }
+                  }
                }
                if { [ is_pid_with_name_existing $host $ps_info(pid,$elem) $process_name ] == 0 } {
                    puts $CHECK_OUTPUT "killing (SIG_KILL) process $ps_info(pid,$elem) on host $host, kill user is $kill_user"
                    puts $CHECK_OUTPUT [ start_remote_prog $host $kill_user kill "-9 $ps_info(pid,$elem)" ]
-                   after 5000
+                   after 1000
                    if { [ is_pid_with_name_existing $host $ps_info(pid,$elem) $process_name ] == 0 } {
                        puts $CHECK_OUTPUT "pid:$ps_info(pid,$elem) kill failed (host: $host)"
                        add_proc_error "" -1 "could not shutdown \"$process_name\" on host $host"
@@ -6476,9 +6976,6 @@ proc shutdown_core_system {} {
    set do_ps_kill 0
    set result [ start_remote_prog "$CHECK_CORE_MASTER" "$CHECK_USER" "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-km" ]
 
-   # let qmaster time to go down before doing a ps to check whether he dies or not
-   after 3000
-
    puts $CHECK_OUTPUT "qconf -km returned $prg_exit_state"
    if { $prg_exit_state == 0 } {
       puts $CHECK_OUTPUT $result
@@ -6528,9 +7025,10 @@ proc shutdown_core_system {} {
       shutdown_system_daemon $CHECK_CORE_MASTER "sched execd qmaster"
    }
 
-   if { $do_ps_kill == 1 && $do_compile == 0} {
-      puts $CHECK_OUTPUT "perhaps master is not running, trying to shutdown cluster with ps information"
-
+   if { $do_compile == 0} {
+      if { $do_ps_kill == 1 } {
+         puts $CHECK_OUTPUT "perhaps master is not running, trying to shutdown cluster with ps information"
+      }
       set hosts_to_check $CHECK_CORE_MASTER
       foreach elem $ts_config(execd_nodes) {
          if { [ string first $elem $hosts_to_check ] < 0 } {
@@ -6930,11 +7428,8 @@ proc copy_certificates { host } {
                     
          # tar file will be on nfs - wait for it to be visible
          wait_for_remote_file $host "root" "$ts_config(results_dir)/port${ts_config(commd_port)}.tar"
-         after 5000
-         wait_for_remote_file $host "root" "$ts_config(results_dir)/port${ts_config(commd_port)}.tar"
                     
          puts $CHECK_OUTPUT "copy tar file \"$ts_config(results_dir)/port${ts_config(commd_port)}.tar\"\nto \"$TAR_FILE\" on host $host as root user ..."
-         after 1000
          set result [ start_remote_prog "$host" "root" "cp" "$ts_config(results_dir)/port${ts_config(commd_port)}.tar $TAR_FILE" prg_exit_state 300 ]
          puts $CHECK_OUTPUT $result
 
@@ -6977,7 +7472,7 @@ proc copy_certificates { host } {
          }
          puts $CHECK_OUTPUT "waiting for qstat -f to work ..."
          puts $CHECK_OUTPUT "please check hosts for synchron clock times"
-         sleep 10
+         after 10000
          if { [timestamp] > $my_timeout } {
             add_proc_error "copy_certificates" -2 "$host: timeout while waiting for qstat to work (please check hosts for synchron clock times)"
          }
@@ -6989,3 +7484,51 @@ proc copy_certificates { host } {
    }
 }
 
+
+#                                                             max. column:     |
+#****** sge_procedures/is_daemon_running() ******
+# 
+#  NAME
+#     is_daemon_running 
+#
+#  SYNOPSIS
+#     is_daemon_running { hostname daemon } 
+#
+#  FUNCTION
+#     Checks, if a daemon is running of the given host.
+#     This function does a ps_grep, which seeks for the given
+#     daemon name running within the actual SGE_ROOT directory.
+#     The daemon can be clearly identified. 
+#
+#  INPUTS
+#     hostname  - name of host which should be checked
+#     daemon    - name of daemon (sge_execd, sge_qmaster, ...) 
+#
+#  RESULT
+#     0 - the given daemon is not running on given host 
+#     Otherwise the number of running daemons is returned 
+#
+#  SEE ALSO
+#     sge_procedures/is_daemon_running
+#
+#*******************************
+#
+
+proc is_daemon_running { hostname daemon } {
+   global ts_config CHECK_OUTPUT
+
+   set found_p [ ps_grep $ts_config(product_root) $hostname ]
+   set execd_count 0
+
+   foreach elem $found_p {
+      if { [string match "*$daemon*" $ps_info(string,$elem)] } {
+         puts $CHECK_OUTPUT $ps_info(string,$elem)
+         incr execd_count 1
+      }
+   }
+   if { $execd_count > 1 } {
+      add_proc_error "is_daemon_running" -1 "Host: $hostname -> Found 2 running $daemon in one environment!" 
+
+   }
+   return $execd_count
+}

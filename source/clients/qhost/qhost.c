@@ -215,7 +215,8 @@ char **argv
 
          DPRINTF(("matching host %s with qhost -l\n", lGetHost(ep, EH_name)));
 
-         selected = sge_select_queue(resource_match_list, NULL, ep, ehl, cl, true, -1);
+         selected = sge_select_queue(resource_match_list, NULL, ep, ehl, cl, 
+                                     true, -1, NULL, NULL, NULL);
 
          if (selected) { 
             lSetUlong(ep, EH_tagged, 1);

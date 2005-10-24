@@ -539,68 +539,72 @@ reporting_create_acct_record(lList **answer_list,
    char category_buffer[MAX_STRING_SIZE];
    dstring category_dstring;
    dstring job_dstring = DSTRING_INIT;
-   const char *category_string = NULL, *job_string = NULL;
+   const char *category_string = NULL; 
+   const char *job_string = NULL;
+
+   bool do_reporting  = mconf_get_do_reporting();
+   bool do_accounting = mconf_get_do_accounting();
 
    DENTER(TOP_LAYER, "reporting_create_acct_record");
 
    /* anything to do at all? */
-   if (mconf_get_do_reporting() || mconf_get_do_accounting()) {
+   if (do_reporting || do_accounting) {
+   
       sge_dstring_init(&category_dstring, category_buffer, 
                        sizeof(category_buffer));
 
       sge_build_job_category_dstring(&category_dstring, job, 
                                      *(userset_list_get_master_list()));
       category_string = sge_dstring_get_string(&category_dstring);                                          
-   }
 
-   /* accounting records will only be written at job end, not for intermediate
-    * reports
-    */
-   if (mconf_get_do_accounting() && !intermediate) {
-      job_string = sge_write_rusage(&job_dstring, job_report, job, ja_task, 
-                                    category_string, REPORTING_DELIMITER, 
-                                    false);
-      if (job_string == NULL) {
-         ret = false;
-      } else {
-         /* write accounting file */
-         rep_buf_t *buf = &reporting_buffer[ACCOUNTING_BUFFER];
-         sge_mutex_lock(buf->mtx_name, SGE_FUNC, __LINE__, &(buf->mtx));
-         sge_dstring_append(&(buf->buffer), job_string);
-         sge_mutex_unlock(buf->mtx_name, SGE_FUNC, __LINE__, &(buf->mtx));
-      }
-   }
-
-   /* reporting records will be written both for intermediate and final
-    * job reports
-    */
-   if (ret && mconf_get_do_reporting()) {
-      /* job_dstring might have been filled with accounting record - this one
-       * contains total accounting values.
-       * If we have written intermediate accounting records earlier, or this
-       * call will write intermediate accounting, we have to create our own 
-       * accounting record.
-       * Otherwise (final accounting record, no intermediate acct done before),
-       * we can reuse the accounting record.
+      /* accounting records will only be written at job end, not for intermediate
+       * reports
        */
-      if (job_string == NULL ||
-         intermediate_usage_written(job_report, ja_task) || intermediate) {
-         sge_dstring_clear(&job_dstring);
+      if (do_accounting && !intermediate) {
          job_string = sge_write_rusage(&job_dstring, job_report, job, ja_task, 
-                                       category_string, REPORTING_DELIMITER,
-                                       intermediate);
+                                       category_string, REPORTING_DELIMITER, 
+                                       false);
+         if (job_string == NULL) {
+            ret = false;
+         } else {
+            /* write accounting file */
+            rep_buf_t *buf = &reporting_buffer[ACCOUNTING_BUFFER];
+            sge_mutex_lock(buf->mtx_name, SGE_FUNC, __LINE__, &(buf->mtx));
+            sge_dstring_append(&(buf->buffer), job_string);
+            sge_mutex_unlock(buf->mtx_name, SGE_FUNC, __LINE__, &(buf->mtx));
+         }
       }
-      if (job_string == NULL) {
-         ret = false;
-      } else {
-         ret = reporting_create_record(answer_list, "acct", job_string);
+
+      /* reporting records will be written both for intermediate and final
+       * job reports
+       */
+      if (ret && do_reporting) {
+         /* job_dstring might have been filled with accounting record - this one
+          * contains total accounting values.
+          * If we have written intermediate accounting records earlier, or this
+          * call will write intermediate accounting, we have to create our own 
+          * accounting record.
+          * Otherwise (final accounting record, no intermediate acct done before),
+          * we can reuse the accounting record.
+          */
+         if (job_string == NULL ||
+            intermediate_usage_written(job_report, ja_task) || intermediate) {
+            sge_dstring_clear(&job_dstring);
+            job_string = sge_write_rusage(&job_dstring, job_report, job, ja_task, 
+                                          category_string, REPORTING_DELIMITER,
+                                          intermediate);
+         }
+         if (job_string == NULL) {
+            ret = false;
+         } else {
+            ret = reporting_create_record(answer_list, "acct", job_string);
+         }
       }
    }
 
    sge_dstring_free(&job_dstring);
 
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** qmaster/reporting/reporting_write_consumables() ********************

@@ -663,7 +663,8 @@ centry_list_fill_request(lList *this_list, lList *master_centry_list,
                          bool allow_non_requestable, bool allow_empty_boolean,
                          bool allow_neg_consumable)
 {
-   lListElem *entry, *cep;
+   lListElem *entry = NULL;
+   lListElem *cep = NULL;
 
    DENTER(CENTRY_LAYER, "centry_list_fill_request");
 
@@ -1263,21 +1264,33 @@ centry_list_is_correct(lList *this_list, lList **answer_list)
 int 
 ensure_attrib_available(lList **alpp, lListElem *ep, int nm) 
 {
-   lListElem *attr;
+   int ret = 0;
+   lListElem *attr = NULL;
 
    DENTER(TOP_LAYER, "ensure_attrib_available");
-   for_each (attr, lGetList(ep, nm)) {
-      const char *name = lGetString(attr, CE_name);
-      lListElem *centry = centry_list_locate(Master_CEntry_List, name);
+   if (ep != NULL) {
+      for_each (attr, lGetList(ep, nm)) {
+         const char *name = lGetString(attr, CE_name);
+         lListElem *centry = centry_list_locate(Master_CEntry_List, name);
 
-      if (centry == NULL) {
-         ERROR((SGE_EVENT, MSG_GDI_NO_ATTRIBUTE_S, name));
-         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-         DEXIT;
-         return STATUS_EUNKNOWN;
+         if (centry == NULL) {
+            ERROR((SGE_EVENT, MSG_GDI_NO_ATTRIBUTE_S, name));
+            answer_list_add(alpp, SGE_EVENT, 
+                            STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+            ret = STATUS_EUNKNOWN;
+         } else {
+            const char *fullname = lGetString(centry, CE_name);
+
+            /*
+             * Replace shortcuts by the fullname silently 
+             */
+            if (strcmp(fullname, name) != 0) {
+               lSetString(attr, CE_name, fullname);
+            }
+         }
       }
    }
    DEXIT;
-   return 0;
+   return ret;
 }
 

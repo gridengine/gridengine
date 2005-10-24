@@ -48,7 +48,7 @@ global env
 set check_root_access_needs "yes"
 
 # define a level initialization procedure:
-set check_init_level_procedure "init_level"
+set check_init_level_procedure "qmod_auto_reschedule_init_level"
 
 # define test's name and run level descriptions
 set check_name            "qmod_auto_reschedule"
@@ -130,38 +130,8 @@ global auto_reschedule_host1 auto_reschedule_host2 queue1 queue2 global_resch
 global stored_configuration
 global stored_auto_reschedule_host1_config
 
-#
-#                                                             max. column:     |
-#
-#****** check/init_level() ******
-#  NAME
-#     init_level -- ??? 
-#
-#  SYNOPSIS
-#     init_level { } 
-#
-#  FUNCTION
-#     ??? 
-#
-#  INPUTS
-#
-#  RESULT
-#     ??? 
-#
-#  EXAMPLE
-#     ??? 
-#
-#  NOTES
-#     ??? 
-#
-#  BUGS
-#     ??? 
-#
-#  SEE ALSO
-#     ???/???
-#*******************************
-#
-proc init_level {} {
+
+proc qmod_auto_reschedule_init_level {} {
    global ts_config CHECK_OUTPUT CHECK_ACT_LEVEL CHECK_HOST
    global global_resch auto_reschedule_host1 auto_reschedule_host2
   

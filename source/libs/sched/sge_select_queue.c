@@ -58,6 +58,7 @@
 #include "sge_orderL.h"
 #include "sge_pe.h"
 #include "sge_ctL.h"
+#include "sge_strL.h"
 #ifdef SGE_PQS_API
 #include "sge_varL.h"
 #endif
@@ -1007,6 +1008,9 @@ parallel_maximize_slots_pe(sge_assignment_t *best, int *available_slots) {
 *     lList *centry_list        - system wide attribut config list
 *     bool allow_non_requestable - allow non requestable?
 *     int slots                 - number of requested slots
+*     lList *queue_user_list    - list of users or null
+*     lList *acl_list           - acl_list or null
+*     lListElem *job            - job or null
 *
 *  RESULT
 *     int - 1, if okay, QU_tag will be set if a queue is selected
@@ -1023,13 +1027,19 @@ parallel_maximize_slots_pe(sge_assignment_t *best, int *available_slots) {
 *******************************************************************************/
 bool 
 sge_select_queue(lList *requested_attr, lListElem *queue, lListElem *host, 
-                 lList *exechost_list, lList *centry_list, bool allow_non_requestable, int slots) 
+                 lList *exechost_list, lList *centry_list, bool allow_non_requestable, 
+                 int slots, lList *queue_user_list, lList *acl_list, lListElem *job) 
 {
    dispatch_t ret;
    lList *load_attr = NULL;
    lList *config_attr = NULL;
    lList *actual_attr = NULL; 
    lListElem *global = NULL;
+   lListElem *qu = NULL;
+   int q_access=1;
+   lList *projects;
+   const char *project;
+    
    sge_assignment_t a;
    double lc_factor = 0; /* scaling for load correction */ 
    u_long32 ulc_factor; 
@@ -1043,7 +1053,78 @@ sge_select_queue(lList *requested_attr, lListElem *queue, lListElem *host,
    assignment_init(&a, NULL, NULL, false);
    a.centry_list      = centry_list;
    a.host_list        = exechost_list;
-   
+
+   if (acl_list != NULL) {
+      /* check if job owner has access rights to the queue */
+      DPRINTF(("testing queue access lists\n"));
+      for_each(qu, queue_user_list) {
+         const char *name = lGetString(qu, ST_name);
+         DPRINTF(("-----> checking queue user: %s\n", name ));
+         q_access |= (name[0]=='@')?
+                     sge_has_access(NULL, &name[1], queue, acl_list): 
+                     sge_has_access(name, NULL, queue, acl_list); 
+      }
+      if (q_access == 0) {
+         DPRINTF(("no access\n"));
+         return false; 
+      } else {
+         DPRINTF(("ok\n"));
+      }
+   }
+
+   if (job != NULL) {
+      /* check if job can run in queue based on project */
+      DPRINTF(("testing job projects lists\n"));
+      if ( (project = lGetString(job, JB_project)) ) { 
+         if ((!(projects = lGetList(queue, QU_projects)))) {
+            DPRINTF(("no access because queue has no project\n"));
+            DEXIT;
+            return false;
+         }
+         if ((!userprj_list_locate(projects, project))) {
+            DPRINTF(("no access because project not contained in queues project list"));
+            DEXIT;
+            return false;
+         }
+         DPRINTF(("ok\n"));
+
+         /* check if job can run in queue based on excluded projects */
+         DPRINTF(("testing job xprojects lists\n"));
+         if ((projects = lGetList(queue, QU_xprojects))) {
+            if (((project = lGetString(job, JB_project)) &&
+                 userprj_list_locate(projects, project))) {
+               DPRINTF(("no access\n"));
+               DEXIT;
+               return false;
+            }
+         }
+         DPRINTF(("ok\n"));
+      }
+
+      /* 
+      *is queue contained in hard queue list ?
+      */
+      DPRINTF(("queue contained in jobs hard queue list?\n"));
+      if (lGetList(job, JB_hard_queue_list)) {
+         lList *qref_list = lGetList(job, JB_hard_queue_list);
+         const char *qname = NULL;
+         const char *qinstance_name = NULL;
+
+         qname = lGetString(queue, QU_qname);
+         qinstance_name = lGetString(queue, QU_full_name);
+         if ((lGetElemStr(qref_list, QR_name, qname) != NULL) || 
+             (lGetElemStr(qref_list, QR_name, qinstance_name) != NULL)) {
+            DPRINTF(("ok"));
+         } else {
+            DPRINTF(("denied because queue \"%s\" is not contained in the hard "
+                     "queue list (-q) that was requested by job %d\n",
+                     qname, lGetUlong(job, JB_job_number)));
+            DEXIT; 
+            return false;
+         }
+      }
+   }
+
 /* global */
    global = host_list_locate(exechost_list, SGE_GLOBAL_NAME);
    load_attr = lGetList(global, EH_load_list); 

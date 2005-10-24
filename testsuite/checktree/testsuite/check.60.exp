@@ -186,12 +186,12 @@ proc ts_performance_test_test {} {
 
    puts $CHECK_OUTPUT $check_description($CHECK_ACT_LEVEL)
    foreach host $ts_config(execd_hosts) {
-      puts $CHECK_OUTPUT "host: $host"
+      puts -nonewline $CHECK_OUTPUT "host: $host\t\t"
       set starttime [clock clicks -milliseconds]
       set runs 10
       set run $runs
       while { $run > 0 } {
-         puts $CHECK_OUTPUT "start remote prog ...\[$run\]"
+#         puts $CHECK_OUTPUT "start remote prog ...\[$run\]"
          set result [start_remote_prog $host $CHECK_USER "echo" "hallo"]
          incr run -1
       }

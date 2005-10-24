@@ -36,7 +36,7 @@ global check_name check_description check_needs check_functions check_errno chec
 global check_init_level_procedure check_category
 global check_root_access_needs
 
-set check_init_level_procedure "init_level"
+set check_init_level_procedure "issue_1126_init_level"
 
 set check_category            "COMPATIBILITY SYSTEM VERIFIED"
 set check_name                "issue_1126"
@@ -57,7 +57,7 @@ lappend check_functions       "issue_1126_shutdown_master"
 lappend check_functions       "issue_1126_run"
 set check_highest_level       0
 
-proc init_level {} {
+proc issue_1126_init_level {} {
    global CHECK_ACT_LEVEL ts_config
 
    if { $ts_config(gridengine_version) == 53 } {

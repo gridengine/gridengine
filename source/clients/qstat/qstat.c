@@ -93,6 +93,7 @@
 #include "sge_gdi_ctx.h"
 #include "sge_gdi2.h"
 #include "sge_profiling.h"
+#include "sge_uidgid.h"
 
 
 static void showError(sge_error_class_t *eh) {
@@ -141,7 +142,7 @@ static void
 get_all_lists(lList **queue_l, lList **job_l, lList **centry_l, 
               lList **exechost_l, lList **sc_l, lList **pe_l, 
               lList **ckpt_l, lList **acl_l, lList **zombie_l, 
-              lList **hgrp_l, lList *qrl, lList *perl, lList *ul, 
+              lList **hgrp_l, lList *qrl, lList *perl, lList *ul, lList **project_list, 
               u_long32 full_listing);
 
 static lList *
@@ -181,7 +182,7 @@ char **argv
    lListElem *tmp, *jep, *jatep, *qep, *up, *aep, *cqueue;
    lList *queue_list = NULL, *job_list = NULL, *resource_list = NULL;
    lList *qresource_list = NULL, *queueref_list = NULL, *user_list = NULL;
-   lList *acl_list = NULL, *zombie_list = NULL, *hgrp_list = NULL; 
+   lList *acl_list = NULL, *project_list = NULL, *zombie_list = NULL, *hgrp_list = NULL; 
    lList *jid_list = NULL, *queue_user_list = NULL, *peref_list = NULL;
    lList *pe_list = NULL, *ckpt_list = NULL, *ref_list = NULL; 
    lList *alp = NULL, *pcmdline = NULL;
@@ -210,9 +211,10 @@ char **argv
    {
       int ret;
       char url[BUFSIZ];
+      char  user[128] = "";
 /* sge_mt_init { */
-   sge_prof_setup();
-/*    uidgid_mt_init(); */
+/*    sge_prof_setup(); */
+   uidgid_mt_init();
 /*    path_mt_init(); */
 /*    bootstrap_mt_init();  */
 /*    feature_mt_init(); */
@@ -233,17 +235,22 @@ log_state_set_log_gui(1);
                getenv("SGE_QMASTER_PORT"));
       printf("using url: %s\n", url);
 
-      ctx = sge_gdi_ctx_class_create_from_bootstrap(QSTAT, url, "aa114085", "troet", eh); 
+      if (sge_uid2user(getuid(), user, sizeof(user), MAX_NIS_RETRIES)) {
+         printf("can't get user name\n");
+         DEXIT;
+         return -1;
+      }
+      ctx = sge_gdi_ctx_class_create_from_bootstrap(QSTAT, url, user, NULL, eh);
       if (!ctx) {
          showError(eh);
          sge_error_class_destroy(&eh);
          DEXIT;
          return -1;
       }
-      ret = ctx->connect(ctx, eh);
+      ret = ctx->connect(ctx);
       
       if (!ret) {
-         showError(eh);
+         showError(ctx->eh);
          sge_error_class_destroy(&eh);
          DEXIT;
          return -1;
@@ -361,6 +368,7 @@ log_state_set_log_gui(1);
          queueref_list,
          peref_list,
          user_list,
+         &project_list,
          full_listing); 
 
       if (!sconf_set_config(&schedd_config, &answer_list)){
@@ -423,7 +431,7 @@ log_state_set_log_gui(1);
   
    /* unseclect all queues not selected by a -U (if exist) */
    if (lGetNumberOfElem(queue_user_list)>0) {
-      if ((nqueues=select_by_queue_user_list(exechost_list, queue_list, queue_user_list, acl_list))<0) {
+      if ((nqueues=select_by_queue_user_list(exechost_list, queue_list, queue_user_list, acl_list, project_list))<0) {
          SGE_EXIT(1);
       }
 
@@ -546,7 +554,7 @@ log_state_set_log_gui(1);
                
                if (host != NULL) {
                   ret = sge_select_queue(lGetList(jep, JB_hard_resource_list), qep, 
-                                         host, exechost_list, centry_list, true, 1);
+                                         host, exechost_list, centry_list, true, 1, queue_user_list, acl_list, jep);
 
                   if (ret==1) {
                      show_job = 1;
@@ -973,18 +981,19 @@ lList **hgrp_l,
 lList *queueref_list,
 lList *peref_list,
 lList *user_list,
+lList **project_l,
 u_long32 show 
 ) {
    lCondition *where= NULL, *nw = NULL, *qw = NULL, *pw = NULL; 
    lCondition *zw = NULL, *gc_where = NULL;
-   lEnumeration *q_all, *pe_all, *ckpt_all, *acl_all, *ce_all;
+   lEnumeration *q_all, *pe_all, *ckpt_all, *acl_all, *ce_all, *up_all;
    lEnumeration *eh_all, *sc_what, *gc_what, *hgrp_what;
    lList *alp = NULL;
    lListElem *aep = NULL;
    lListElem *ep = NULL;
    lList *conf_l = NULL;
    lList *mal = NULL;
-   int q_id, j_id = 0, pe_id = 0, ckpt_id = 0, acl_id = 0, z_id = 0;
+   int q_id, j_id = 0, pe_id = 0, ckpt_id = 0, acl_id = 0, z_id = 0, up_id = 0;
    int ce_id, eh_id, sc_id, gc_id, hgrp_id = 0;
    int show_zombies = (show & QSTAT_DISPLAY_ZOMBIES) ? 1 : 0;
    state_gdi_multi state = STATE_GDI_MULTI_INIT;
@@ -1109,6 +1118,21 @@ u_long32 show
       acl_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_USERSET_LIST, SGE_GDI_GET, 
                            NULL, NULL, acl_all, NULL, &state, true);
       lFreeWhat(&acl_all);
+
+      if (alp) {
+         printf("%s\n", lGetString(lFirst(alp), AN_text));
+         SGE_EXIT(1);
+      }
+   }
+
+   /* 
+   ** project list 
+   */ 
+   if (project_l) {
+      up_all = lWhat("%T(ALL)", UP_Type);
+      up_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_PROJECT_LIST, SGE_GDI_GET, 
+                           NULL, NULL, up_all, NULL, &state, true);
+      lFreeWhat(&up_all);
 
       if (alp) {
          printf("%s\n", lGetString(lFirst(alp), AN_text));
@@ -1304,6 +1328,22 @@ u_long32 show
       }
       lFreeList(&alp);
    }
+
+   /* --- project */
+   if (project_l) {
+      alp = sge_gdi_extract_answer(SGE_GDI_GET, SGE_PROJECT_LIST, up_id, 
+                                    mal, project_l);
+      if (!alp) {
+         printf("%s\n", MSG_GDI_PROJECTSGEGDIFAILED);
+         SGE_EXIT(1);
+      }
+      if (lGetUlong(aep=lFirst(alp), AN_status) != STATUS_OK) {
+         printf("%s\n", lGetString(aep, AN_text));
+         SGE_EXIT(1);
+      }
+      lFreeList(&alp);
+   }
+
 
    /* --- scheduler configuration */
    alp = sge_gdi_extract_answer(SGE_GDI_GET, SGE_SC_LIST, sc_id, mal, sc_l);

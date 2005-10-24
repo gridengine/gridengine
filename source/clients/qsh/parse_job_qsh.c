@@ -85,6 +85,7 @@ lList *cull_parse_qsh_parameter(lList *cmdline, lListElem **pjob)
    const char* username = uti_state_get_user_name();
    const char* qualified_hostname = uti_state_get_qualified_hostname();
    const u_long32 prog_number = uti_state_get_mewho();
+   const u_long32 uid = uti_state_get_uid();
 
    DENTER(TOP_LAYER, "cull_parse_qsh_parameter"); 
 
@@ -99,9 +100,9 @@ lList *cull_parse_qsh_parameter(lList *cmdline, lListElem **pjob)
       lSetUlong(*pjob, JB_submission_time, sge_get_gmt());
    }
    if (!lGetString(*pjob, JB_owner)) {
-      lSetString(*pjob, JB_owner, uti_state_get_user_name());
+      lSetString(*pjob, JB_owner, username);
    }
-   lSetUlong(*pjob, JB_uid, uti_state_get_uid());
+   lSetUlong(*pjob, JB_uid, uid);
 
    /*
    ** path aliasing

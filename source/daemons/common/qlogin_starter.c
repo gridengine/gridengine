@@ -272,7 +272,6 @@ int get_exit_code_of_qrsh_starter(int* exit_code)
    *buffer = 0;
 
    /* rshd exited with OK: try to get returncode from qrsh_starter file */
-   SHEPHERD_TRACE((err_str, "get_exit_code_of_qrsh_starter()")); 
 
    /* we only have an error file in TMPDIR in case of rsh, 
     * otherwise pass exit_code */
@@ -285,8 +284,8 @@ int get_exit_code_of_qrsh_starter(int* exit_code)
       taskid = search_conf_val("pe_task_id");
       SHEPHERD_TRACE((err_str, "get_exit_code_of_qrsh_starter - TMPDIR = %s,"
          " pe_task_id = %s", tmpdir ? tmpdir : "0", taskid ? taskid : "0"));
-      if (tmpdir) {
-         if (taskid) {
+      if (tmpdir != NULL) {
+         if (taskid != NULL) {
             sprintf(buffer, "%s/qrsh_exit_code.%s", tmpdir, taskid);
          } else {
             sprintf(buffer, "%s/qrsh_exit_code", tmpdir);
@@ -306,6 +305,8 @@ int get_exit_code_of_qrsh_starter(int* exit_code)
          } else {
             SHEPHERD_TRACE((err_str, "can't open file %s", buffer ));
          }
+      } else {
+        SHEPHERD_TRACE((err_str, "unable to get qrsh_tmpdir"));
       }
    }
    return ret;        

@@ -48,7 +48,7 @@ set check_description(400)  "check qmaster/schedd for memory leaks - long test"
 set check_needs        "init_core_system"       ;# dependencies of this check (name of other check)
 
 # define a level initialization procedure:
-set check_init_level_procedure "init_level"
+set check_init_level_procedure "qmaster_size_init_level"
 
 # setup and cleanup functions
 set check_setup_level_function "qmaster_size_setup"
@@ -90,36 +90,7 @@ set next_report 0
 global check_idle_after
 set check_idle_after "startup"
 
-#                                                             max. column:     |
-#****** size/init_level() ******
-# 
-#  NAME
-#     init_level -- ??? 
-#
-#  SYNOPSIS
-#     init_level { } 
-#
-#  FUNCTION
-#     ??? 
-#
-#  INPUTS
-#
-#  RESULT
-#     ??? 
-#
-#  EXAMPLE
-#     ??? 
-#
-#  NOTES
-#     ??? 
-#
-#  BUGS
-#     ??? 
-#
-#  SEE ALSO
-#     ???/???
-#*******************************
-proc init_level {} {
+proc qmaster_size_init_level {} {
    global CHECK_ACT_LEVEL
    global MONITOR_SIZE_ERROR
 

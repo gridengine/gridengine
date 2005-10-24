@@ -51,7 +51,7 @@ global env
 set check_init_level_procedure "soft_requests_init_level"
 
 # define test's name and run level descriptions
-set check_name            "pe_ranges"
+set check_name            "soft_requests"
 set check_category        "COMPATIBILITY SYSTEM VERIFIED"
 set check_highest_level   1
 set check_description(0)  "test pe-ranges"

@@ -195,6 +195,7 @@ void force_job_rlimit()
    u_long32 jobid;
    int cpu_exceeded;
    char err_str[128];
+   const char *hostname = uti_state_get_qualified_hostname();
 
    DENTER(TOP_LAYER, "force_job_rlimit");
 
@@ -220,8 +221,7 @@ void force_job_rlimit()
          for_each (gdil_ep, lGetList(jatep, JAT_granted_destin_identifier_list)) {
             double lim;
 
-            if (sge_hostcmp(uti_state_get_qualified_hostname(), 
-                 lGetHost(gdil_ep, JG_qhostname)) 
+            if (sge_hostcmp(hostname, lGetHost(gdil_ep, JG_qhostname)) 
                 || !(q = lGetObject(gdil_ep, JG_queue)))
                continue;
 
@@ -302,10 +302,9 @@ execd_get_wallclock_limit(lList *gdil_list, int limit_nm, u_long32 now)
 {
    u_long32 ret = U_LONG32_MAX;
    const lListElem *gdil;
-   const char *hostname;
    const void *iterator;
-  
-   hostname = uti_state_get_qualified_hostname();
+   const char *hostname = uti_state_get_qualified_hostname();
+
    gdil = lGetElemHostFirst(gdil_list, JG_qhostname, hostname, &iterator);
    while (gdil != NULL) {
       const lListElem *queue;
@@ -754,6 +753,8 @@ lListElem *petep
    u_long32 now;
    u_long32 job_id, ja_task_id;
    const char *pe_task_id = NULL;
+   const char *qualified_hostname = uti_state_get_qualified_hostname();
+   const char *unqualified_hostname = uti_state_get_unqualified_hostname();
 
    DENTER(TOP_LAYER, "exec_job_or_task");
 
@@ -787,7 +788,7 @@ lListElem *petep
    /* JG: TODO: make a function simulate_start_job_or_task() */
    if(mconf_get_simulate_hosts()) {
       const char *host = lGetHost(lFirst(lGetList(jatep, JAT_granted_destin_identifier_list)), JG_qhostname);
-      if(sge_hostcmp(host, uti_state_get_qualified_hostname()) != 0) {
+      if(sge_hostcmp(host, qualified_hostname) != 0) {
          lList *job_args;
          u_long32 duration = 60;
 
@@ -873,7 +874,7 @@ lListElem *petep
 
    DPRINTF(("***EXECING "sge_u32"."sge_u32" on %s (tid = %s) (pid = %d)\n",
             job_id, ja_task_id, 
-            uti_state_get_unqualified_hostname(), pe_task_id != NULL ? pe_task_id : "null", pid));
+            unqualified_hostname, pe_task_id != NULL ? pe_task_id : "null", pid));
 
    /* when a ja_task or pe_task has been started, flush the job report */
    {
@@ -902,7 +903,7 @@ lListElem *pe_task
    FILE *fp;
    SGE_STRUCT_STAT sb;
 
-#if defined(SOLARIS) || defined(ALPHA) || defined(LINUX) 
+#if defined(SOLARIS) || defined(ALPHA) || defined(LINUX) || defined(HP1164) || defined(AIX)
    gid_t addgrpid;
    dstring addgrpid_path = DSTRING_INIT;
 #else   
@@ -917,9 +918,13 @@ lListElem *pe_task
       pe_task_id = lGetString(pe_task, PET_id);
    }
 
-#if defined(SOLARIS) || defined(ALPHA) || defined(LINUX)
+#if defined(SOLARIS) || defined(ALPHA) || defined(LINUX) || defined(HP1164) || defined(AIX)
    /**
     ** read additional group id and use it as osjobid 
+    **/
+
+   /**
+    ** we use the process group ID as osjobid on HP-UX and AIX
     **/
    
    /* open addgrpid file */

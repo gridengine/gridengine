@@ -122,13 +122,14 @@ Shutdown()
          if [ "$?" = 0 ]; then
             kill $pid
          else
-            return
+            return 0
          fi
          sleep `expr 2 + $i`
          i=`expr $i + 1`
 
       done
       kill -9 $pid
+      return $?
    fi
 }
 
@@ -426,7 +427,7 @@ if [ "$startup" = true ]; then
    if [ $qmaster = true -a $qmaster_host = true ]; then
       echo "   starting sge_qmaster"
       $bin_dir/sge_qmaster
-      [ $? -eq 0 -a -d /var/lock/subsys ] && touch /var/lock/subsys/sgemaster
+      [ $? -eq 0 -a -d /var/lock/subsys ] && touch /var/lock/subsys/sgemaster >/dev/null 2>&1
       CheckRunningQmaster
       echo "   starting sge_schedd"
       $bin_dir/sge_schedd
@@ -488,7 +489,16 @@ else
          # Send SIGTERM to qmaster
          echo "   Shutting down Grid Engine qmaster"
          Shutdown sge_qmaster $qmaster_spool_dir/qmaster.pid
-         [ -f /var/lock/subsys/sgemaster ] && rm /var/lock/subsys/sgemaster
+         ret=$?
+         if [ -f /var/lock/subsys/sgemaster ]; then
+            uid=`$utilbin_dir/uidgid -uid`
+            if [ "$uid" = "0" -a "$ret" = "0" ]; then            
+               rm -f /var/lock/subsys/sgemaster >/dev/null 2>&1
+            else
+               echo "Can't shut down qmaster!"
+               exit 1
+            fi
+         fi
       fi
    fi
 

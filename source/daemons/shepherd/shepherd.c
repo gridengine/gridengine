@@ -234,7 +234,7 @@ static int do_prolog(int timeout, int ckpt_type)
       replace_params(prolog, command, sizeof(command)-1, prolog_epilog_variables);
       exit_status = start_child("prolog", command, NULL, timeout, ckpt_type);
 
-      if (n_exit_status<(i=count_exit_status())) {
+      if (n_exit_status < (i=count_exit_status()) ) {
          shepherd_trace_sprintf("exit states increased from %d to %d", n_exit_status, i);
          /* in this case the child didnt get to the exec call or it failed */
          shepherd_trace("failed starting prolog");
@@ -824,7 +824,7 @@ int main(int argc, char **argv)
       fclose(fp);
    } else {
       /* ensure an exit status file exists */
-		shepherd_write_exit_status( "0" );
+	  shepherd_write_exit_status( "0" );
       return_code = 0;
    }
 
@@ -919,9 +919,11 @@ int ckpt_type
          son(childname, script_file, 0);
       }
    }
+
    if (pid == -1) {
       shepherd_error_sprintf("can't fork \"%s\"", childname);
    }
+
    shepherd_trace_sprintf("forked \"%s\" with pid %d", childname, pid);
 
    change_shepherd_signal_mask();
@@ -1097,7 +1099,9 @@ int ckpt_type
          sge_switch2admin_user();
 
          if (success != 0) {
-            shepherd_trace("can't get qrsh_exit_code");
+            /* This case should never happen */
+            /* See Issue 1679 */
+            shepherd_error_sprintf("can't get qrsh_exit_code\n");
          }
 
          /* normal exit */
@@ -2412,6 +2416,7 @@ shepherd_signal_job(pid_t pid, int sig)
    */
    {
       static int first_kill = 1;
+      static u_long32 first_kill_ts = 0;
    
       if(first_kill == 1 || sig != SIGKILL) {
          if(search_conf_val("qrsh_pid_file") != NULL) {
@@ -2434,17 +2439,29 @@ shepherd_signal_job(pid_t pid, int sig)
          }
       }
 
-      if(sig == SIGKILL) {
-         first_kill = 0;
+     /*
+      * It is possible that one signal requests from qmaster contains severeal
+      * kills for the same process. If this process is a tight integrated job
+      * the master task can be killed twice. For the slave tasks this means the
+      * qrsh -d is killed in the same time as the qrsh_starter child and so no
+      * qrsh_exit_code file is written (see Issue: 1679)
+      */
+      if ( (first_kill == 1) || (sge_get_gmt() - first_kill_ts > 10) || (sig != SIGKILL) ) {
+        shepherd_trace_sprintf("now sending signal %s to pid "pid_t_fmt, 
+                               sge_sys_sig2str(sig), pid);
+        sge_switch2start_user();
+        kill(pid, sig);
+        sge_switch2admin_user();
+      } else {
+        shepherd_trace_sprintf("ignored signal %s to pid "pid_t_fmt, 
+                             sge_sys_sig2str(sig), pid);
       }
 
-      shepherd_trace_sprintf("now sending signal %s to pid "pid_t_fmt, 
-                             sge_sys_sig2str(sig), pid);
+      if(sig == SIGKILL) {
+        first_kill = 0;
+        first_kill_ts = sge_get_gmt();
+      }
    }
-
-   sge_switch2start_user();
-   kill(pid, sig);
-   sge_switch2admin_user();
 }
 
 static int notify_tasker(u_long32 exit_status) 

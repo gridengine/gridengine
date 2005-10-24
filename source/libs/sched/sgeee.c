@@ -2718,7 +2718,7 @@ sge_calc_tickets( sge_Sdescr_t *lists,
    { 
       lList *halflife_decay_list = sconf_get_halflife_decay_list();
 
-      if (halflife_decay_list) {
+      if (halflife_decay_list != NULL) {
          lListElem *ep = NULL;
          lListElem *u = NULL;
          double decay_rate, decay_constant;
@@ -2756,11 +2756,14 @@ sge_calc_tickets( sge_Sdescr_t *lists,
          calculate_default_decay_constant(halflife);
       else
          calculate_default_decay_constant(oldhalflife);
-      for_each(userprj, lists->user_list)
+      for_each(userprj, lists->user_list) {
          decay_userprj_usage(userprj, decay_list, sge_scheduling_run, curr_time);
-      for_each(userprj, lists->project_list)
+      }
+      for_each(userprj, lists->project_list) {
          decay_userprj_usage(userprj, decay_list, sge_scheduling_run, curr_time);
-   } else {
+      }
+   } 
+   else {
       calculate_default_decay_constant(sconf_get_halftime());
    }
 

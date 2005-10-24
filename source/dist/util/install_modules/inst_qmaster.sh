@@ -184,7 +184,7 @@ GetQmasterSpoolDir()
       fi
 
       $INFOTEXT -n "If you will install shadow master hosts or if you want to be able to start\n" \
-                   "the qmaster daemon on other hosts (see the corresponding sectionin the\n" \
+                   "the qmaster daemon on other hosts (see the corresponding section in the\n" \
                    "Grid Engine Installation and Administration Manual for details) the account\n" \
                    "on the shadow master hosts also needs read/write access to this directory.\n\n" \
                    "The following directory\n\n [%s]\n\n will be used as qmaster spool directory by default!\n" \
@@ -416,7 +416,7 @@ SetSpoolingOptionsBerkeleyDB()
 
             CheckLocalFilesystem $SPOOLING_DIR
             ret=$?
-            if [ $ret -eq 0 ]; then
+            if [ $ret -eq 0 -a "$AUTO" = "false" ]; then
                $INFOTEXT "\nThe database directory\n\n" \
                             "   %s\n\n" \
                             "is not on a local filesystem. Please choose a local filesystem or\n" \

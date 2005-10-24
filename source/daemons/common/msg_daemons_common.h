@@ -123,9 +123,9 @@
  */
 #define MSG_MAIL_SUBJECT_SUU       SFN": Job-array task "sge_U32CFormat"."sge_U32CFormat" failed"
 #define MSG_MAIL_SUBJECT_SU        SFN": Job " sge_U32CFormat " failed"
-
-
 #define MSG_MAIL_BODY_USSSSSSSS    "Job " sge_U32CFormat " caused action: "SFN"\n User        = "SFN"\n Queue       = "SFN"\n Host        = "SFN"\n Start Time  = "SFN"\n End Time    = "SFN"\nfailed "SFN":"SFN
+
+#define MSG_GFSTATE_PEJOB_U        _MESSAGE(27054, _("PE Job "sge_U32CFormat" will be deleted"))
 #define MSG_GFSTATE_QUEUE_S        _MESSAGE(27055, _("Queue "SFQ" set to ERROR"))
 #define MSG_GFSTATE_HOST_S         _MESSAGE(27056, _("All Queues on host "SFQ" set to ERROR"))
 #define MSG_GFSTATE_JOB_UU         _MESSAGE(27057, _("Job-array task "sge_U32CFormat"."sge_U32CFormat" set to ERROR"))

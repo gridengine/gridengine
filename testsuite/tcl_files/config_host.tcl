@@ -33,7 +33,7 @@
 
 global ts_host_config               ;# new testsuite host configuration array
 global actual_ts_host_config_version      ;# actual host config version number
-set    actual_ts_host_config_version "1.4"
+set    actual_ts_host_config_version "1.5"
 
 if {![info exists ts_host_config]} {
    # ts_host_config defaults
@@ -51,7 +51,25 @@ if {![info exists ts_host_config]} {
    set ts_host_config($parameter,default)    ""
    set ts_host_config($parameter,setup_func) "host_config_$parameter"
    set ts_host_config($parameter,onchange)   "install"
+   set ts_host_config($parameter,pos)        4
+
+   set parameter "NFS-ROOT2NOBODY"
+   set ts_host_config($parameter)            ""
+   set ts_host_config($parameter,desc)       "NFS shared directory with root to nobody mapping"
+   set ts_host_config($parameter,default)    ""
+   set ts_host_config($parameter,setup_func) "host_config_$parameter"
+   set ts_host_config($parameter,onchange)   "install"
    set ts_host_config($parameter,pos)        2
+
+   set parameter "NFS-ROOT2ROOT"
+   set ts_host_config($parameter)            ""
+   set ts_host_config($parameter,desc)       "NFS shared directory with root read/write rights"
+   set ts_host_config($parameter,default)    ""
+   set ts_host_config($parameter,setup_func) "host_config_$parameter"
+   set ts_host_config($parameter,onchange)   "install"
+   set ts_host_config($parameter,pos)        3
+
+
 }
 
 #****** config/host/host_config_hostlist() *******************************************
@@ -165,6 +183,133 @@ proc host_config_hostlist { only_check name config_array } {
 
    return $config(hostlist)
 }
+
+
+
+#****** config_host/host_config_NFS-ROOT2NOBODY() ******************************
+#  NAME
+#     host_config_NFS-ROOT2NOBODY() -- nfs spooling dir setup
+#
+#  SYNOPSIS
+#     host_config_NFS-ROOT2NOBODY { only_check name config_array } 
+#
+#  FUNCTION
+#     NFS directory which is mounted with root to user nobody mapping setup
+#     - called from verify_host_config()
+#
+#  INPUTS
+#     only_check   - 0: expect user input
+#                    1: just verify user input
+#     name         - option name (in ts_host_config array)
+#     config_array - config array name (ts_config)
+#
+#  SEE ALSO
+#     check/setup_host_config()
+#     check/verify_host_config()
+#*******************************************************************************
+proc host_config_NFS-ROOT2NOBODY { only_check name config_array } {
+   global CHECK_OUTPUT CHECK_HOST CHECK_USER
+   global fast_setup
+
+   upvar $config_array config
+
+   set actual_value  $config($name)
+   set default_value $config($name,default)
+   set description   $config($name,desc)
+   set value $actual_value
+
+   if { $actual_value == "" } {
+      set value $default_value
+   }
+
+   if { $only_check == 0 } {
+       puts $CHECK_OUTPUT "" 
+       puts $CHECK_OUTPUT "Please specify a NFS shared directory where the root"
+       puts $CHECK_OUTPUT "user is mapped to user nobody or press >RETURN< to"
+       puts $CHECK_OUTPUT "use the default value."
+       puts $CHECK_OUTPUT "(default: $value)"
+       puts -nonewline $CHECK_OUTPUT "> "
+       set input [ wait_for_enter 1]
+      if { [ string length $input] > 0 } {
+         set value $input 
+      } else {
+         puts $CHECK_OUTPUT "using default value"
+      }
+   } 
+
+   if {!$fast_setup} {
+      if { ![file isdirectory $value] } {
+         puts $CHECK_OUTPUT " Directory \"$value\" not found"
+         return -1
+      }
+   }
+
+   return $value
+}
+
+
+#****** config_host/host_config_NFS-ROOT2ROOT() ********************************
+#  NAME
+#     host_config_NFS-ROOT2ROOT() -- nfs spooling dir setup
+#
+#  SYNOPSIS
+#     host_config_NFS-ROOT2ROOT { only_check name config_array } 
+#
+#  FUNCTION
+#     NFS directory which is mounted with root to user root mapping setup 
+#     - called from verify_host_config()
+#
+#  INPUTS
+#     only_check   - 0: expect user input
+#                    1: just verify user input
+#     name         - option name (in ts_host_config array)
+#     config_array - config array name (ts_config)
+#
+#  SEE ALSO
+#     check/setup_host_config()
+#     check/verify_host_config()
+#*******************************************************************************
+proc host_config_NFS-ROOT2ROOT { only_check name config_array } {
+   global CHECK_OUTPUT CHECK_HOST CHECK_USER
+   global fast_setup
+
+   upvar $config_array config
+
+   set actual_value  $config($name)
+   set default_value $config($name,default)
+   set description   $config($name,desc)
+   set value $actual_value
+
+   if { $actual_value == "" } {
+      set value $default_value
+   }
+
+   if { $only_check == 0 } {
+       puts $CHECK_OUTPUT "" 
+       puts $CHECK_OUTPUT "Please specify a NFS shared directory where the root"
+       puts $CHECK_OUTPUT "user is NOT mapped to user nobody and has r/w access"
+       puts $CHECK_OUTPUT "or press >RETURN< to use the default value."
+       puts $CHECK_OUTPUT "(default: $value)"
+       puts -nonewline $CHECK_OUTPUT "> "
+       set input [ wait_for_enter 1]
+      if { [ string length $input] > 0 } {
+         set value $input 
+      } else {
+         puts $CHECK_OUTPUT "using default value"
+      }
+   } 
+
+   if {!$fast_setup} {
+      if { ![file isdirectory $value] } {
+         puts $CHECK_OUTPUT " Directory \"$value\" not found"
+         return -1
+      }
+   }
+
+   return $value
+}
+
+
 
 
 #****** config/host/host_config_hostlist_show_hosts() ********************************
@@ -820,7 +965,7 @@ proc verify_host_config { config_array only_check parameter_error_list { force 0
    if { $config(version) != $actual_ts_host_config_version } {
       puts $CHECK_OUTPUT "Host configuration file version \"$config(version)\" not supported."
       puts $CHECK_OUTPUT "Expected version is \"$actual_ts_host_config_version\""
-      lappend error_list "unexpected version"
+      lappend error_list "unexpected host config file version $version"
       incr errors 1
       return -1
    } else {

@@ -167,7 +167,7 @@ proc job_start_cleanup  {} {
    delete_all_jobs
    wait_for_end_of_all_jobs 60
 
-   puts $CHECK_OUTPUT "restoring original configuration ..."
+   puts $CHECK_OUTPUT "resoring original configuration ..."
    reset_schedd_config
    set_config job_start_stored_configuration
    
@@ -187,8 +187,6 @@ proc job_start_test {} {
    global CHECK_OUTPUT ts_config CHECK_CORE_MASTER CHECK_ACT_LEVEL CHECK_SCRIPT_FILE_DIR
    global CHECK_DISPLAY_OUTPUT
    puts $CHECK_OUTPUT $check_description($CHECK_ACT_LEVEL)
-
-   set root_id 0
 
 
    # First select user system for the runlevel
@@ -286,7 +284,7 @@ proc job_start_test {} {
                append current_run_text "Also check if you have enabled the host to use your display (check with xhost command).\n"
                append current_run_text "You can set your display by modifying the testsuite user configuration file!\n\n"
             }
-            append current_run_text "$jobt Error:\n\n"
+            append current_run_text "Error:\n\n"
    
             if { $job_id <= 0 } {
                add_proc_error "job_start_test" -1 "$current_run_text Skipping further job result test! Continue with next job ..."
@@ -345,8 +343,6 @@ proc job_start_test {} {
             set trace_file        $jobs_dir/trace
             set exit_status_file  $jobs_dir/exit_status
             set error_file        $jobs_dir/error
-            set usage_file        $jobs_dir/usage
-
             puts $CHECK_OUTPUT "trace file:       $trace_file"
             puts $CHECK_OUTPUT "exit_status file: $exit_status_file"
             puts $CHECK_OUTPUT "error file:       $error_file"
@@ -355,38 +351,20 @@ proc job_start_test {} {
             wait_for_remote_file $host $ts_user_config(second_foreign_user) $trace_file 
             wait_for_remote_file $host $ts_user_config(second_foreign_user) $exit_status_file 
             wait_for_remote_file $host $ts_user_config(second_foreign_user) $error_file 
-            wait_for_remote_file $host $ts_user_config(second_foreign_user) $usage_file 
 
 
             puts $CHECK_OUTPUT "reading $trace_file ..."
             set trace_output [start_remote_prog $host $ts_user_config(second_foreign_user) cat $trace_file prg_exit_state 10]
 #            puts $CHECK_OUTPUT "---\n$trace_output\n---"
+            puts $CHECK_OUTPUT "reading $exit_status_file ..."
+            set exit_status_output [start_remote_prog $host $ts_user_config(second_foreign_user) cat $exit_status_file prg_exit_state 10]
+#            puts $CHECK_OUTPUT "---\n$exit_status_output\n---"
             puts $CHECK_OUTPUT "reading $error_file ..."
             set error_output [start_remote_prog $host $ts_user_config(second_foreign_user) cat $error_file prg_exit_state 10]
 #            puts $CHECK_OUTPUT "---\n$error_output\n---"
             puts $CHECK_OUTPUT "doing ls -n $jobs_dir ..."
             set file_perms_output [start_remote_prog $host $ts_user_config(second_foreign_user) ls "-n $jobs_dir" prg_exit_state 10] 
 #            puts $CHECK_OUTPUT "---\n$file_perms_output\n---"
-
-            if { $jobt == "qrsh" || $jobt == "qrlogin" } {
-               puts $CHECK_OUTPUT "reading $usage_file ..."
-               set usage_output [start_remote_prog $host $ts_user_config(second_foreign_user) cat $usage_file prg_exit_state 10]
-   #            puts $CHECK_OUTPUT "---\n$usage_output\n---"
-               set usage_output [split $usage_output "\r\n"]
-               foreach line_a $usage_output {
-                  set line [string trim $line_a]
-                  if { $line != "" } {
-                     if { [string match "*exit_status*" $line ] } {
-                        set exit_status_output [get_string_value_between "exit_status=" -1 $line ]
-                        puts $CHECK_OUTPUT "exit_status:  $exit_status_output"
-                     }
-                  }
-               }
-            } else {
-               puts $CHECK_OUTPUT "reading $exit_status_file ..."
-               set exit_status_output [start_remote_prog $host $ts_user_config(second_foreign_user) cat $exit_status_file prg_exit_state 10]
-   #           puts $CHECK_OUTPUT "---\n$exit_status_output\n---"
-            }
 
             puts $CHECK_OUTPUT "checking all information ..."
             if { [lindex $qacct_info(exit_status) 0] != $expected_qacct_exit_state } {
@@ -428,17 +406,17 @@ proc job_start_test {} {
 #               puts $CHECK_OUTPUT "---\n$tight_file_perms_output\n---"
 
                if { [lindex $qacct_info(exit_status) 0] != $expected_qacct_exit_state } {
-                  add_proc_error "job_start_test" -1 "$current_run_text qacct exit_status of master task doesn't match expected exit state $expected_qacct_exit_state: [lindex $qacct_info(exit_status) 0] != $expected_qacct_exit_state"
+                  add_proc_error "job_start_test" -1 "$current_run_text qacct exit_status of master task doesn't match expected exit state $expected_qacct_exit_state"
                }         
 
-               set slave_qacct_info [lindex $qacct_info(exit_status) 1];
-               if { $slave_qacct_info != $tight_exit_status_output && $expected_trace_WIFEXITED == 1 } {
-                  add_proc_error "job_start_test" -1 "$current_run_text exit_status_file doesn't match qacct slave task exit_status:  $slave_qacct_info != $tight_exit_status_output && $expected_trace_WIFEXITED == 1"
+               if { [lindex $qacct_info(exit_status) 1] != $exit_status_output && $expected_trace_WIFEXITED == 1 } {
+                  add_proc_error "job_start_test" -1 "$current_run_text exit_status_file doesn't match qacct slave task exit_status"
                }
 
                if { [string trim $tight_error_output] != "" } {
                   add_proc_error "job_start_test" -1 "$current_run_text error_file is not empty for slave task: \"$tight_error_output\""
                }
+
             }
 
 
@@ -456,7 +434,6 @@ proc job_start_test {} {
             lappend test_files $trace_file
             lappend test_files $exit_status_file
             lappend test_files $error_file
-
             if { $jobt == "tight_integrated" } {
                lappend test_files $tight_trace_file
                lappend test_files $tight_exit_status_file
@@ -466,29 +443,14 @@ proc job_start_test {} {
             foreach file $test_files {
                set file_uid [get_file_uid $ts_user_config(second_foreign_user) $host $file]
                set file_gid [get_file_gid $ts_user_config(second_foreign_user) $host $file]
-               set file_perm [get_file_perm $ts_user_config(second_foreign_user) $host $file]
 
                puts $CHECK_OUTPUT "uid of file $file: $file_uid"
                puts $CHECK_OUTPUT "gid of file $file: $file_gid"
-               #RD NFS-ROOT2NOBODY has other file permissions
-               if { $spool_type == "NFS-ROOT2NOBODY" } {
-                  if { $file_uid != $admin_uid } {
-                     add_proc_error "job_start_test" -1 "$current_run_text uid($file_uid) of file \"$file\" doesn't match job uid($admin_uid)"
-                  }
-                  if { $file_perm != "-rw-rw-rw-" } {
-                     add_proc_error "job_start_test" -1 "$current_run_text permission $file_uid of file \"$file\" doesn't match expected perm -rw-rw-rw-"
-                  }
-                  
-               } else {
-                  if { $file_uid != $uid } {
-                     add_proc_error "job_start_test" -1 "$current_run_text uid($file_uid) of file \"$file\" doesn't match job uid($uid)"
-                  }
-                  if { $file_gid != $gid } {
-                     add_proc_error "job_start_test" -1 "$current_run_text gid($file_gid) of file \"$file\" doesn't match job gid($gid)"
-                  }
-                  if { $file_perm != "-rw-r--r--" } {
-                     add_proc_error "job_start_test" -1 "$current_run_text permission $file_uid of file \"$file\" doesn't match expected perm -rw-r--r--"
-                  }
+               if { $file_uid != $uid } {
+                  add_proc_error "job_start_test" -1 "$current_run_text uid($file_uid) of file \"$file\" doesn't match job uid($uid)"
+               }
+               if { $file_gid != $gid } {
+                  add_proc_error "job_start_test" -1 "$current_run_text gid($file_gid) of file \"$file\" doesn't match job gid($gid)"
                }
             }
 
@@ -500,7 +462,7 @@ proc job_start_test {} {
             if { [info exists found_array] } {
                unset found_array
             }
-
+           
             set trace_output [split $trace_output "\r\n"]
             foreach line_a $trace_output {
                set line [string trim $line_a]
@@ -523,8 +485,8 @@ proc job_start_test {} {
                         add_proc_error "job_start_test" -1 "$current_run_text shepherd trace file euid(=$trace_euid) is not uid(=$admin_uid)"
                      }
                      # check uid of sheperd (root)
-                     if { $trace_uid != $root_id } {
-                        add_proc_error "job_start_test" -1 "$current_run_text shepherd trace file euid(=$trace_uid) is not uid(=$root_id)"
+                     if { $trace_uid != 0 } {
+                        add_proc_error "job_start_test" -1 "$current_run_text shepherd trace file euid(=$trace_uid) is not uid(=0)"
                      }
                   }
 
@@ -539,12 +501,22 @@ proc job_start_test {} {
                      }
                   }
 
-                  if { [string match "*switching to intermediate/target user*" $line ] } {
+                  if { [string match "*now doing chown*of trace and error files*" $line ] } {
                      set found_array(3) 1
+                     set trace_user_name   [get_string_value_between "chown(" ") of trace" $line ] 
+                     puts $CHECK_OUTPUT "trace_user_name:  \"$trace_user_name\""
+
+                     if { [string compare $trace_user_name $ts_user_config(second_foreign_user)] != 0 } {
+                        add_proc_error "job_start_test" -1 "$current_run_text shepherd trace file user name ($trace_user_name) doesn't match job user($ts_user_config(second_foreign_user))"
+                     }
+                  }
+
+                  if { [string match "*switching to intermediate/target user*" $line ] } {
+                     set found_array(4) 1
                   }
 
                   if { [string match "*now running with uid*euid**" $line ] } {
-                     set found_array(4) 1
+                     set found_array(5) 1
                      set trace_running_uid  [get_string_value_between "uid=" ", euid" $line ] 
                      set trace_running_euid [get_string_value_between "euid=" -1 $line ] 
                      puts $CHECK_OUTPUT "trace_running_uid: $trace_running_uid"
@@ -553,20 +525,13 @@ proc job_start_test {} {
                      if { $trace_running_uid != $trace_running_euid } {
                         add_proc_error "job_start_test" -1 "$current_run_text shepherd trace file of job uid($trace_running_uid) != euid($trace_running_euid)"
                      }
-                     if { $jobt == "qrsh" || $jobt == "qrlogin" || $jobt == "qlogin" } {
-                        # RD: qsh deamons must run as root because they open /dev/*
-                        if { $trace_running_uid != $root_id } {
-                           add_proc_error "job_start_test" -1 "$current_run_text shepherd trace file doesn't start $jobt job with uid$root_id trace_running_uid = $trace_running_uid"
-                        }
-                     } else {
-                        if { $trace_running_uid != $uid } {
-                           add_proc_error "job_start_test" -1 "$current_run_text shepherd trace file doesn't start $jobt job with uid($uid) trace_running_uid = $trace_running_uid"
-                        }
+                     if { $trace_running_uid != $uid } {
+                        add_proc_error "job_start_test" -1 "$current_run_text shepherd trace file doesn't start job with uid($uid) trace_running_uid = $trace_running_uid"
                      }
                   }
 
                   if { [string match "*execvp*" $line ] } {
-                     set found_array(5) 1
+                     set found_array(6) 1
                      set line_split [split $line " "]
                      foreach line_part $line_split {
                         puts $CHECK_OUTPUT $line_part
@@ -647,7 +612,7 @@ proc job_start_test {} {
                   }
 
                   if { [string match "*calling qlogin_starter*" $line ] } {
-                     set found_array(5) 1
+                     set found_array(6) 1
                      puts $CHECK_OUTPUT $line
 
                      set line [get_string_value_between "qlogin_starter(" ");" $line]
@@ -701,7 +666,7 @@ proc job_start_test {} {
 #08/25/2005 11:45:28 [115091:13995]: wait3 returned 13996 (status: 0; WIFSIGNALED: 0,  WIFEXITED: 1, WEXITSTATUS: 0)
 
                   if { [string match "*wait3 returned*(status*" $line ] } {
-                     set found_array(6) 1
+                     set found_array(7) 1
 
                      set trace_wait_return [get_string_value_between "wait3 returned" "(status" $line ]
                      set trace_status      [get_string_value_between "(status:" "; WIFSIGNALED:" $line ]
@@ -738,7 +703,7 @@ proc job_start_test {} {
                   }
 
                   if { [string match "*job exited with exit status*" $line ] } {
-                     set found_array(7) 1
+                     set found_array(8) 1
 
                      set trace_job_exit_status [get_string_value_between "exit status" -1 $line ]
                      puts $CHECK_OUTPUT "trace_job_exit_status: \"$trace_job_exit_status\""
@@ -760,7 +725,7 @@ proc job_start_test {} {
                }
             }
 
-            for { set index 1 } { $index <= 7 } { incr index 1 } {
+            for { set index 1 } { $index <= 8 } { incr index 1 } {
                if { [info exists found_array($index)] } {
                   puts $CHECK_OUTPUT "found index $index"
                } else {
@@ -800,8 +765,8 @@ proc job_start_test {} {
                            add_proc_error "job_start_test" -1 "$current_run_text shepherd trace file euid(=$trace_euid) is not uid(=$admin_uid)"
                         }
                         # check uid of sheperd (root)
-                        if { $trace_uid != $root_id } {
-                           add_proc_error "job_start_test" -1 "$current_run_text shepherd trace file euid(=$trace_uid) is not uid($root_id)"
+                        if { $trace_uid != 0 } {
+                           add_proc_error "job_start_test" -1 "$current_run_text shepherd trace file euid(=$trace_uid) is not uid(=0)"
                         }
                      }
 
@@ -816,12 +781,22 @@ proc job_start_test {} {
                         }
                      }
 
-                     if { [string match "*switching to intermediate/target user*" $line ] } {
+                     if { [string match "*now doing chown*of trace and error files*" $line ] } {
                         set found_array(3) 1
+                        set trace_user_name   [get_string_value_between "chown(" ") of trace" $line ] 
+                        puts $CHECK_OUTPUT "trace_user_name:  \"$trace_user_name\""
+
+                        if { [string compare $trace_user_name $ts_user_config(second_foreign_user)] != 0 } {
+                           add_proc_error "job_start_test" -1 "$current_run_text shepherd trace file user name ($trace_user_name) doesn't match job user($ts_user_config(second_foreign_user))"
+                        }
+                     }
+
+                     if { [string match "*switching to intermediate/target user*" $line ] } {
+                        set found_array(4) 1
                      }
 
                      if { [string match "*now running with uid*euid**" $line ] } {
-                        set found_array(4) 1
+                        set found_array(5) 1
                         set trace_running_uid  [get_string_value_between "uid=" ", euid" $line ] 
                         set trace_running_euid [get_string_value_between "euid=" -1 $line ] 
                         puts $CHECK_OUTPUT "trace_running_uid: $trace_running_uid"
@@ -830,14 +805,13 @@ proc job_start_test {} {
                         if { $trace_running_uid != $trace_running_euid } {
                            add_proc_error "job_start_test" -1 "$current_run_text shepherd trace file of job uid($trace_running_uid) != euid($trace_running_euid)"
                         }
-                        # RD: qsh deamons must run as root because they open /dev/*
-                        if { $trace_running_uid != $root_id } {
-                           add_proc_error "job_start_test" -1 "$current_run_text shepherd trace file doesn't start $jobt job with uid($root_id) trace_running_uid = $trace_running_uid"
+                        if { $trace_running_uid != $uid } {
+                           add_proc_error "job_start_test" -1 "$current_run_text shepherd trace file doesn't start job with uid($uid) trace_running_uid = $trace_running_uid"
                         }
                      }
 
                      if { [string match "*execvp*" $line ] } {
-                        set found_array(5) 1
+                        set found_array(6) 1
                         set line_split [split $line " "]
                         foreach line_part $line_split {
                            puts $CHECK_OUTPUT $line_part
@@ -869,7 +843,7 @@ proc job_start_test {} {
                      }
 
                      if { [string match "*calling qlogin_starter*" $line ] } {
-                        set found_array(5) 1
+                        set found_array(6) 1
                         puts $CHECK_OUTPUT $line
 
                         set line [get_string_value_between "qlogin_starter(" ");" $line]
@@ -906,7 +880,7 @@ proc job_start_test {} {
                      
 
                      if { [string match "*wait3 returned*(status*" $line ] } {
-                        set found_array(6) 1
+                        set found_array(7) 1
 
                         set trace_wait_return [get_string_value_between "wait3 returned" "(status" $line ]
                         set trace_status      [get_string_value_between "(status:" "; WIFSIGNALED:" $line ]
@@ -943,7 +917,7 @@ proc job_start_test {} {
                      }
 
                      if { [string match "*job exited with exit status*" $line ] } {
-                        set found_array(7) 1
+                        set found_array(8) 1
 
                         set trace_job_exit_status [get_string_value_between "exit status" -1 $line ]
                         puts $CHECK_OUTPUT "trace_job_exit_status: \"$trace_job_exit_status\""
@@ -965,7 +939,7 @@ proc job_start_test {} {
                   }
                }
 
-               for { set index 1 } { $index <= 7 } { incr index 1 } {
+               for { set index 1 } { $index <= 8 } { incr index 1 } {
                   if { [info exists found_array($index)] } {
                      puts $CHECK_OUTPUT "found index $index for slave job"
                   } else {

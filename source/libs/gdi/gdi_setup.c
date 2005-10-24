@@ -66,7 +66,7 @@
 #include "gdi/msg_gdilib.h"
 
 static void default_exit_func(int i);
-static void gdi_init_mt(void);
+/* static void gdi_init_mt(void); */
 
 static pthread_key_t   gdi_state_key;
 
@@ -93,7 +93,7 @@ static void gdi_state_destroy(void* state) {
    free(state);
 }
 
-static void gdi_init_mt(void) {
+void gdi_init_mt(void) {
    pthread_key_create(&gdi_state_key, &gdi_state_destroy);
 } 
  

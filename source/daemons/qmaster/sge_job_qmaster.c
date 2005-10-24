@@ -186,7 +186,7 @@ static u_long32 sge_get_job_number(monitoring_t *monitor);
 
 static void get_rid_of_schedd_job_messages(u_long32 job_number);
 
-static int changes_consumables(lList **alpp, lList* new, lList* old);
+static bool is_changes_consumables(lList **alpp, lList* new, lList* old);
 
 static int deny_soft_consumables(lList **alpp, lList *srl);
 
@@ -322,7 +322,7 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
    lSetUlong(jep, JB_submission_time, sge_get_gmt());
 
    lSetList(jep, JB_ja_tasks, NULL);
-   lSetList(jep, JB_jid_sucessor_list, NULL);
+   lSetList(jep, JB_jid_successor_list, NULL);
 
    if (lGetList(jep, JB_ja_template) == NULL) {
       lAddSubUlong(jep, JAT_task_number, 0, JB_ja_template, JAT_Type);
@@ -2043,10 +2043,10 @@ int sub_command
                if ((suc_jobep = job_list_locate(Master_Job_List, pre_ident))) {
                   lListElem *temp_job = NULL;
    
-                  temp_job = lGetElemUlong(lGetList(suc_jobep, JB_jid_sucessor_list), JRE_job_number, jobid);               
+                  temp_job = lGetElemUlong(lGetList(suc_jobep, JB_jid_successor_list), JRE_job_number, jobid);               
                   DPRINTF(("  JOB "sge_u32" removed from trigger "
                      "list of job "sge_u32"\n", jobid, pre_ident));
-                  lRemoveElem(lGetList(suc_jobep, JB_jid_sucessor_list), &temp_job);
+                  lRemoveElem(lGetList(suc_jobep, JB_jid_successor_list), &temp_job);
                } 
             }
          }
@@ -2163,12 +2163,12 @@ lListElem *jep
             }
          }
          if (!Exited) {
-            DPRINTF(("adding jid "sge_u32" into sucessor list of job "sge_u32"\n",
+            DPRINTF(("adding jid "sge_u32" into successor list of job "sge_u32"\n",
                lGetUlong(jep, JB_job_number), pre_ident));
 
-            /* add jid to sucessor_list of parent job */
+            /* add jid to successor_list of parent job */
             lAddSubUlong(parent_jep, JRE_job_number, lGetUlong(jep, JB_job_number), 
-               JB_jid_sucessor_list, JRE_Type);
+               JB_jid_successor_list, JRE_Type);
             
             prep = lNext(prep);
             
@@ -2349,61 +2349,47 @@ int is_task_enrolled
    return 0;
 }
 
-/****** sge_job/changes_consumables() ******************************************
+/****** sge_job/is_changes_consumables() ******************************************
 *  NAME
-*     changes_consumables() -- detect changes with consumable resource request
+*     is_changes_consumables() -- detect changes with consumable resource request
 *
 *  SYNOPSIS
-*     static int changes_consumables(lList* new, lList* old) 
+*     static bool is_changes_consumables(lList* new, lList* old) 
 *
 *  INPUTS
 *     lList** alpp - answer list pointer pointer
-*     lList* new - jobs new JB_hard_resource_list
-*     lList* old - jobs old JB_hard_resource_list
+*     lList*  new  - jobs new JB_hard_resource_list
+*     lList*  old  - jobs old JB_hard_resource_list
 *
 *  RESULT
-*     static int - 0     nothing changed 
-*                  other it changed 
+*     bool      - false, nothing changed
+*
+*  MT-NOTE:  is thread safe (works only on parsed in variables)
+*
 *******************************************************************************/
-static int changes_consumables(lList **alpp, lList* new, lList* old)
+static bool is_changes_consumables(lList **alpp, lList* new, lList* old)
 {
-   lListElem *dcep, *new_entry;
+   lListElem *new_entry = NULL;
    lListElem *old_entry = NULL;
-   const char *name;
-   int found_it;
+   const char *name = NULL;
 
-   DENTER(TOP_LAYER, "changes_consumables");
+   DENTER(TOP_LAYER, "is_changes_consumables");
 
    /* ensure all old resource requests implying consumables 
       debitation are still contained in new resource request list */
    for_each(old_entry, old) { 
-      name = lGetString(old_entry, CE_name);
-
-      if (!(dcep = centry_list_locate(Master_CEntry_List, name))) {
-         /* complex attribute definition has been removed though
-            job still requests resource */ 
-         ERROR((SGE_EVENT, MSG_ATTRIB_MISSINGATTRIBUTEXINCOMPLEXES_S , name));
-         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-         DEXIT;
-         return -1; 
-      }
 
       /* ignore non-consumables */
-      if (!lGetBool(dcep, CE_consumable))
+      if (!lGetBool(old_entry, CE_consumable)) {
          continue;
+      }   
+      name = lGetString(old_entry, CE_name);
 
       /* search it in new hard resource list */
-      found_it = 0;
-      if (lGetElemStr(new, CE_name, name)) {
-         found_it = 1;
-         break;
-      }
-
-      if (!found_it) {
+      if (lGetElemStr(new, CE_name, name) == NULL) {
          ERROR((SGE_EVENT, MSG_JOB_MOD_MISSINGRUNNINGJOBCONSUMABLE_S, name));
          answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-         DEXIT;
-         return -1;
+         DRETURN(true);
       }
    }
    
@@ -2411,49 +2397,34 @@ static int changes_consumables(lList **alpp, lList* new, lList* old)
       debitation were also contained in old resource request list
       AND have not changed the requested amount */ 
    for_each(new_entry, new) { 
-      name = lGetString(new_entry, CE_name);
-
-      if (!(dcep = centry_list_locate(Master_CEntry_List, name))) {
-         /* refers to a not existing complex attribute definition */ 
-         ERROR((SGE_EVENT, MSG_ATTRIB_MISSINGATTRIBUTEXINCOMPLEXES_S , name));
-         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-         DEXIT;
-         return -1; 
-      }
 
       /* ignore non-consumables */
-      if (!lGetBool(dcep, CE_consumable))
+      if (!lGetBool(new_entry, CE_consumable)) {
          continue;
+      }   
+      name = lGetString(new_entry, CE_name);
 
       /* search it in old hard resource list */
-      found_it = 0;
-      if ((old_entry=lGetElemStr(old, CE_name, name))) {
-         found_it = 1;
-         break;
-      }
-
-      if (!found_it) {
+      if ((old_entry = lGetElemStr(old, CE_name, name)) == NULL) {
          ERROR((SGE_EVENT, MSG_JOB_MOD_ADDEDRUNNINGJOBCONSUMABLE_S, name));
          answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-         DEXIT;
-         return -1;
+         DRETURN(true);
       }
 
       /* compare request in old_entry with new_entry */
       DPRINTF(("request: \"%s\" old: %f new: %f\n", name, 
          lGetDouble(old_entry, CE_doubleval), 
          lGetDouble(new_entry, CE_doubleval)));
+
       if (lGetDouble(old_entry, CE_doubleval) != 
          lGetDouble(new_entry, CE_doubleval)) {
          ERROR((SGE_EVENT, MSG_JOB_MOD_CHANGEDRUNNINGJOBCONSUMABLE_S, name));
          answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-         DEXIT;
-         return -1;
+         DRETURN(true);
       }
    }
 
-   DEXIT;
-   return 0;
+   DRETURN(false);
 }
 
 
@@ -2838,33 +2809,33 @@ int *trigger
 
    /* ---- JB_hard_resource_list */
    if ((pos=lGetPosViaElem(jep, JB_hard_resource_list))>=0) {
+      bool is_changed = false;
+
       DPRINTF(("got new JB_hard_resource_list\n")); 
-      if (centry_list_fill_request(lGetList(jep, JB_hard_resource_list), Master_CEntry_List, false, true, false)) {
+      if (centry_list_fill_request(lGetList(jep, JB_hard_resource_list), Master_CEntry_List, 
+                                   false, true, false)) {
          answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-         DEXIT;
-         return STATUS_EUNKNOWN;
+         DRETURN(STATUS_EUNKNOWN);
       }
       if (compress_ressources(alpp, lGetList(jep,JB_hard_resource_list))) {
-         DEXIT;
-         return STATUS_EUNKNOWN;
+         DRETURN(STATUS_EUNKNOWN);
       }
 
       /* to prevent inconsistent consumable mgmnt:
          - deny resource requests changes on consumables for running jobs (IZ #251)
          - a better solution is to store for each running job the amount of resources */
-      if (is_running && changes_consumables(alpp, lGetList(jep, JB_hard_resource_list), 
-            lGetList(new_job, JB_hard_resource_list))) {
-         DEXIT;
-         return STATUS_EUNKNOWN;   
+         
+      is_changed = is_changes_consumables(alpp, lGetList(jep, JB_hard_resource_list), 
+                                               lGetList(new_job, JB_hard_resource_list));
+      if (is_running && is_changed) {
+         DRETURN(STATUS_EUNKNOWN);   
       }
+
       if (!centry_list_is_correct(lGetList(jep, JB_hard_resource_list), alpp)) {
-         DEXIT;
-         return STATUS_EUNKNOWN;
+         DRETURN(STATUS_EUNKNOWN);
       }
 
-
-      lSetList(new_job, JB_hard_resource_list, 
-            lCopyList("", lGetList(jep, JB_hard_resource_list)));
+      lSetList(new_job, JB_hard_resource_list, lCopyList("", lGetList(jep, JB_hard_resource_list)));
       *trigger |= MOD_EVENT;
       sprintf(SGE_EVENT, MSG_SGETEXT_MOD_JOBS_SU, MSG_JOB_HARDRESOURCELIST, sge_u32c(jobid));
       answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
@@ -2873,7 +2844,8 @@ int *trigger
    /* ---- JB_soft_resource_list */
    if ((pos=lGetPosViaElem(jep, JB_soft_resource_list))>=0) {
       DPRINTF(("got new JB_soft_resource_list\n")); 
-      if (centry_list_fill_request(lGetList(jep, JB_soft_resource_list), Master_CEntry_List, false, true, false)) {
+      if (centry_list_fill_request(lGetList(jep, JB_soft_resource_list), Master_CEntry_List, 
+                                   false, true, false)) {
          answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          DEXIT;
          return STATUS_EUNKNOWN;
@@ -3459,7 +3431,7 @@ static u_long32 job_is_referenced_by_jobname(lListElem *jep)
 
    DENTER(TOP_LAYER, "job_is_referenced_by_jobname");
 
-   succ_lp = lGetList(jep, JB_jid_sucessor_list);
+   succ_lp = lGetList(jep, JB_jid_successor_list);
    if (succ_lp) {
       lListElem *succ_ep, *succ_jep;
       const char *job_name = lGetString(jep, JB_job_name);

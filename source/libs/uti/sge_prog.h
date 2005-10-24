@@ -94,7 +94,8 @@ enum {
  JAPI_EC         ,       /* 41 */
  DRMAA           ,       /* 42 */
  QPING           ,       /* 43 */
- SGE_PASSWD              /* 44 */
+ SGE_PASSWD      ,       /* 44 */
+ JGDI                    /* 45 */
 };
 
 typedef void (*sge_exit_func_t)(int);

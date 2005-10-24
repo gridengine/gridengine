@@ -380,7 +380,7 @@ char **argv
    }   
 
    sge_prof_cleanup();
-   sge_shutdown();
+   sge_shutdown(0);
    DEXIT;
    return 0;
 }

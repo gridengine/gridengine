@@ -484,6 +484,13 @@ int prepare_enroll(const char *name, int* last_commlib_error)
             break;
          case QMASTER:
             DPRINTF(("creating QMASTER handle\n"));
+            cl_com_append_known_endpoint_from_name((char*)sge_get_master(true), 
+                                                   (char*) prognames[QMASTER],
+                                                   1 ,
+                                                   sge_get_qmaster_port(),
+                                                   CL_CM_AC_DISABLED ,
+                                                   CL_TRUE);
+
             handle = cl_com_create_handle(&commlib_error, communication_framework, CL_CM_CT_MESSAGE,              /* message based tcp communication                */
                                           CL_TRUE, sge_get_qmaster_port(),                          /* create service on qmaster port,                */
                                           CL_TCP_DEFAULT,                                           /* use standard connect mode         */
@@ -499,9 +506,40 @@ int prepare_enroll(const char *name, int* last_commlib_error)
                                           sge_u32c(sge_get_qmaster_port()),
                                           cl_get_error_text(commlib_error)));
                }
-            }
-            else {
+            } else {
+               int alive_back = 0;
+               char act_resolved_qmaster_name[CL_MAXHOSTLEN]; 
                cl_com_set_synchron_receive_timeout(handle, 5);
+
+               if (sge_get_master(1) != NULL) {
+                  /* check a running qmaster on different host */
+                  if (getuniquehostname(sge_get_master(0), act_resolved_qmaster_name, 0) == CL_RETVAL_OK &&
+                      sge_hostcmp(act_resolved_qmaster_name, uti_state_get_qualified_hostname()) != 0) {
+                     DPRINTF(("act_qmaster file contains host "SFQ" which doesn't match local host name "SFQ"\n",
+                              sge_get_master(0), uti_state_get_qualified_hostname()  ));
+
+                     cl_com_set_error_func(NULL);
+
+                     alive_back = check_isalive(sge_get_master(0));
+
+                     ret_val = cl_com_set_error_func(general_communication_error);
+                     if (ret_val != CL_RETVAL_OK) {
+                        ERROR((SGE_EVENT, cl_get_error_text(ret_val)) );
+                     }
+
+                     if (alive_back == CL_RETVAL_OK && getenv("SGE_TEST_HEARTBEAT_TIMEOUT") == NULL ) {
+                        CRITICAL((SGE_EVENT, MSG_GDI_MASTER_ON_HOST_X_RUNINNG_TERMINATE_S, sge_get_master(0) ));
+                        SGE_EXIT(1);
+                     } else {
+                        DPRINTF(("qmaster on host "SFQ" is down\n", sge_get_master(0)));
+                     }
+                  } else {
+                     DPRINTF(("act_qmaster file contains local host name\n"));
+                  }
+               } else {
+                  DPRINTF(("skipping qmaster alive check because act_qmaster is not availabe\n"));
+               }
+
             }
             break;
          case QMON:
@@ -546,20 +584,25 @@ int prepare_enroll(const char *name, int* last_commlib_error)
    rmon_set_print_callback(gdi_rmon_print_callback_function);
 #endif
 
-   /* this is for testsuite socket bind test (issue 1096 ) */
-   if ( getenv("SGE_TEST_SOCKET_BIND") != NULL) {
-      struct timeval now;
-      gettimeofday(&now,NULL);
-  
-      /* if this environment variable is set, we wait 15 seconds after 
-         communication lib setup */
-      DPRINTF(("waiting for 15 seconds, because environment SGE_TEST_SOCKET_BIND is set\n"));
-      while ( handle != NULL && now.tv_sec - handle->start_time.tv_sec  <= 15 ) {
-         DPRINTF(("timeout: "sge_U32CFormat"\n",sge_u32c(now.tv_sec - handle->start_time.tv_sec)));
-         cl_commlib_trigger(handle, 1);
-         gettimeofday(&now,NULL);
+   switch(me_who) {
+      case QMASTER: {
+         /* this is for testsuite socket bind test (issue 1096 ) */
+         if ( getenv("SGE_TEST_SOCKET_BIND") != NULL) {
+            struct timeval now;
+            gettimeofday(&now,NULL);
+        
+            /* if this environment variable is set, we wait 15 seconds after 
+               communication lib setup */
+            DPRINTF(("waiting for 15 seconds, because environment SGE_TEST_SOCKET_BIND is set\n"));
+            while ( handle != NULL && now.tv_sec - handle->start_time.tv_sec  <= 15 ) {
+               DPRINTF(("timeout: "sge_U32CFormat"\n",sge_u32c(now.tv_sec - handle->start_time.tv_sec)));
+               cl_commlib_trigger(handle, 1);
+               gettimeofday(&now,NULL);
+            }
+            DPRINTF(("continue with setup\n"));
+         }
+         break;
       }
-      DPRINTF(("continue with setup\n"));
    }
 
    /* Store the actual commlib error in order to not log the same error twice */

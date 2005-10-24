@@ -79,6 +79,8 @@
 #include "sge_job_qmaster.h"
 #include "sge_profiling.h"
 #include "sgeobj/sge_conf.h"
+#include "qm_name.h"
+#include "setup_path.h"
 
 
 /*
@@ -107,6 +109,8 @@ static void      set_signal_thread(pthread_t);
 static pthread_t get_signal_thread(void);
 static void*     signal_thread(void*);
 static void*     message_thread(void*);
+
+static int       qmaster_exit_state = 0;
 
 /* misc functions */
 static void increment_heartbeat(te_event_t, monitoring_t *monitor);
@@ -164,7 +168,7 @@ void sge_gdi_kill_master(char *host, sge_gdi_request *request, sge_gdi_request *
       return;
    }
 
-   if (pthread_kill(get_signal_thread(), SIGINT) == 0) {
+   if (sge_shutdown_qmaster_via_signal_thread(0) == 0) {
       INFO((SGE_EVENT, MSG_SGETEXT_KILL_SSS, username, host, prognames[QMASTER]));
       answer_list_add(&(answer->alp), SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
    } else {
@@ -338,17 +342,25 @@ void sge_start_heartbeat(void)
 {
    enum { HEARTBEAT_INTERVAL = 30 };
 
-   te_event_t ev = NULL;
+   te_event_t ev     = NULL;
 
    DENTER(TOP_LAYER, "sge_start_heartbeat");
 
-   inc_qmaster_heartbeat(QMASTER_HEARTBEAT_FILE);
+   inc_qmaster_heartbeat(QMASTER_HEARTBEAT_FILE, HEARTBEAT_INTERVAL, NULL);
 
    te_register_event_handler(increment_heartbeat, TYPE_HEARTBEAT_EVENT);
 
    ev = te_new_event(HEARTBEAT_INTERVAL, TYPE_HEARTBEAT_EVENT, RECURRING_EVENT, 0, 0, "heartbeat-event");
    te_add_event(ev);
    te_free_event(&ev);
+
+   
+   /* this is for testsuite shadowd test */
+   if ( getenv("SGE_TEST_HEARTBEAT_TIMEOUT") != NULL) {
+      int test_timeout = atoi(getenv("SGE_TEST_HEARTBEAT_TIMEOUT"));
+      set_inc_qmaster_heartbeat_test_mode(test_timeout);
+      DPRINTF(("heartbeat timeout test enabled (timeout="sge_U32CFormat")\n", sge_u32c(test_timeout)));
+   }
 
    DEXIT;
    return;
@@ -514,10 +526,53 @@ static pthread_t get_signal_thread(void)
 *******************************************************************************/
 static void increment_heartbeat(te_event_t anEvent, monitoring_t *monitor)
 {
+   int retval = 0;
+   int heartbeat = 0;
+   int check_act_qmaster_file = 0;
+   char act_qmaster_name[CL_MAXHOSTLEN]; 
+   char act_resolved_qmaster_name[CL_MAXHOSTLEN]; 
+
+   char err_str[SGE_PATH_MAX+128];
+
    DENTER(TOP_LAYER, "increment_heartbeat");
 
-   if (inc_qmaster_heartbeat(QMASTER_HEARTBEAT_FILE)) {
-      ERROR((SGE_EVENT, MSG_HEARTBEAT_FAILEDTOINCREMENTHEARBEATFILEXINSPOOLDIR_S, QMASTER_HEARTBEAT_FILE));
+   retval = inc_qmaster_heartbeat(QMASTER_HEARTBEAT_FILE, 30, &heartbeat);
+
+   switch(retval) {
+      case 0: {
+         DPRINTF(("(heartbeat) - incremented (or created) heartbeat file: %s(beat=%d)\n", QMASTER_HEARTBEAT_FILE, heartbeat));
+         break;
+      }
+      default: {
+         DPRINTF(("(heartbeat) - inc_qmaster_heartbeat() returned %d !!! (beat=%d)\n", retval, heartbeat ));
+         check_act_qmaster_file = 1;
+         break;
+      }
+   }
+
+   if (heartbeat % 20 == 0) {
+      DPRINTF(("(heartbeat) - checking act_qmaster file this time\n"));
+      check_act_qmaster_file = 1;
+   }
+
+   if (check_act_qmaster_file == 1) {
+      strcpy(err_str,"");
+      if (get_qm_name(act_qmaster_name, path_state_get_act_qmaster_file(), err_str) == 0) {
+         /* got qmaster name */
+         if ( getuniquehostname(act_qmaster_name, act_resolved_qmaster_name, 0) == CL_RETVAL_OK && 
+              sge_hostcmp(act_resolved_qmaster_name, uti_state_get_qualified_hostname()) != 0      ) {
+            /* act_qmaster file has been changed */
+            WARNING((SGE_EVENT, MSG_HEART_ACT_QMASTER_FILE_CHANGED));
+            if ( sge_shutdown_qmaster_via_signal_thread(1) != 0) {
+               ERROR((SGE_EVENT, MSG_HEART_CANT_SIGNAL));
+               sge_shutdown(1);
+            }
+         } else {
+            DPRINTF(("(heartbeat) - act_qmaster file contains hostname "SFQ"\n", act_qmaster_name));
+         }
+      } else {
+         WARNING((SGE_EVENT, MSG_HEART_CANNOT_READ_FILE_S, err_str ));
+      }
    }
 
    DEXIT;
@@ -977,4 +1032,21 @@ void sge_qmaster_shutdown(void)
    DEXIT;
    return;
 } /* sge_qmaster_shutdown() */
+
+int sge_shutdown_qmaster_via_signal_thread(int i)
+{
+   int return_value = 0;
+   DENTER(TOP_LAYER, "sge_shutdown_qmaster_via_signal_thread");
+   if ( pthread_kill(get_signal_thread(), SIGINT) != 0) {
+      return_value = -1;         
+   }
+   qmaster_exit_state = i;
+   DEXIT;
+   return return_value;
+}
+
+int sge_get_qmaster_exit_state(void) {
+   return qmaster_exit_state;
+}
+
 

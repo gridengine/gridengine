@@ -737,8 +737,10 @@ static void qmaster_lock_and_shutdown(int anExitValue)
 {
    DENTER(TOP_LAYER, "qmaster_lock_and_shutdown");
    
-   if (qmaster_lock(QMASTER_LOCK_FILE) == -1) {
-      CRITICAL((SGE_EVENT, MSG_QMASTER_LOCKFILE_ALREADY_EXISTS));
+   if (anExitValue == 0) {
+      if (qmaster_lock(QMASTER_LOCK_FILE) == -1) {
+         CRITICAL((SGE_EVENT, MSG_QMASTER_LOCKFILE_ALREADY_EXISTS));
+      }
    }
    sge_gdi_shutdown();
 
@@ -917,8 +919,9 @@ static int setup_qmaster(void)
    {
       u_long32 saved_logginglevel = log_state_get_log_level();
       log_state_set_log_level(LOG_INFO);
-      INFO((SGE_EVENT, "read job database with %d entries in %ld seconds\n", 
-            lGetNumberOfElem(Master_Job_List), time_end - time_start));
+      INFO((SGE_EVENT, MSG_QMASTER_READ_JDB_WITH_X_ENTR_IN_Y_SECS_UU,
+            sge_u32c(lGetNumberOfElem(Master_Job_List)), 
+            sge_u32c(time_end - time_start)));
       log_state_set_log_level(saved_logginglevel);
    }
 

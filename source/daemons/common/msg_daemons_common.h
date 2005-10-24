@@ -90,10 +90,6 @@
 #define MSG_QMASTER_FOUNDRUNNINGQMASTERONHOSTXNOTSTARTING_S    _MESSAGE(27038, _("found running qmaster on host "SFQ"- not starting"))
 
 
-/* 
-** qmaster_heartbeat.c 
-*/
-#define MSG_HEART_CANNOTOPEN _MESSAGE(27041, _("can't open file "SFN": "SFN))
 
 /*
 ** mail.c
@@ -196,6 +192,20 @@
 /* #define MSG_MAIL_TYPE_ABORT                     _message(27089, _("job abortion")) __TS Removed automatically from testsuite!! TS__*/
 #define MSG_MAIL_UNKNOWN_NAME                   _MESSAGE(27090, _("<unknown>"))
 #define MSG_MAIL_ACTION_APPERROR                _MESSAGE(27091, _("Rescheduled due to application error"))
+
+/* 
+** qmaster_heartbeat.c 
+*/
+#define MSG_HEART_CANNOTOPEN_SS             _MESSAGE(27041, _("can't open heartbeat file "SFQ": "SFN))
+#define MSG_HEART_CANNOT_FSEEK_SS           _MESSAGE(27092, _("can't seek to the beginning of heartbeat file "SFQ": "SFN))
+#define MSG_HEART_NO_FILENAME               _MESSAGE(27093, _("no heartbeat file name specified"))
+#define MSG_HEART_WRITE_ERROR_SS            _MESSAGE(27094, _("can't write data to heartbeat file "SFQ": "SFN))
+#define MSG_HEART_CLOSE_ERROR_SS            _MESSAGE(27095, _("error closing heartbeat file "SFQ": "SFN))
+#define MSG_HEART_WRITE_TIMEOUT_S           _MESSAGE(27096, _("got timeout error while write data to heartbeat file "SFQ))
+#define MSG_HEART_CANNOT_READ_FILE_S        _MESSAGE(27097, _("can't read act_qmaster file: "SFN))
+#define MSG_HEART_ACT_QMASTER_FILE_CHANGED  _MESSAGE(27098, _("act_qmaster file has been changed by another qmaster"))
+#define MSG_HEART_READ_TIMEOUT_S            _MESSAGE(27099, _("got timeout error while read data from heartbeat file "SFQ))
+#define MSG_HEART_CANT_SIGNAL               _MESSAGE(27100, _("can't send signal to signal thread"))
 
 #endif /* MSG_DAEMONS_COMMON_H */
 

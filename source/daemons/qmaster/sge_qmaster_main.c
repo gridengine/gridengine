@@ -380,7 +380,8 @@ int main(int argc, char* argv[])
 
    sge_teardown_lock_service();
 
-   sge_shutdown();
+   sge_shutdown(sge_get_qmaster_exit_state());
+   /* the code above will never be executed, sge_shutdown does an exit() */
 
    sge_prof_cleanup();
    DEXIT;

@@ -165,5 +165,10 @@
 #define MSG_SEC_CERT_VERIFY_FUNC_NO_VAL  _MESSAGE(55011, _("certificate verify callback function called without value"))
 
 
+#define MSG_GDI_WAITING_FOR_MASTER_HOST_X_SHUTDOWN_S _MESSAGE(55012, _("waiting for shutdown of qmaster on host "SFQ))
+#define MSG_GDI_MASTER_ON_HOST_X_RUNINNG_TERMINATE_S _MESSAGE(55013, _("qmaster on host "SFQ" is still running - terminating"))
+
+
+
 #endif /* __MSG_GDILIB_H */
 

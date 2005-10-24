@@ -233,7 +233,7 @@ char *argv[]
       if (shut_me_down) {
          sge_mirror_shutdown();
          FREE(initial_qmaster_host);
-         sge_shutdown();
+         sge_shutdown(0);
       }   
 
 

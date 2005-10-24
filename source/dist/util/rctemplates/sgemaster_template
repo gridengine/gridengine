@@ -414,13 +414,48 @@ if [ "$startup" = true ]; then
           echo "   denied: host \"$HOST\" is no admin host."
           exit 1
        fi
-       $bin_dir/qconf -km 2>&1 > /dev/null
-       qmaster_sconf_info=`$bin_dir/qconf -sconf 2> /dev/null | grep "qmaster_spool_dir"`
-       if [ "$qmaster_sconf_info" != "" ]; then
+       $bin_dir/qconf -km > /dev/null 2>&1
+       
+       qping_count=0
+       qping_retries=10
+       qping_exit_state=0
+       while [ $qping_count -lt $qping_retries ]; do
+          $bin_dir/qping -info $actual_qmaster_host $SGE_QMASTER_PORT qmaster 1  > /dev/null 2>&1
+          qping_exit_state=$?
+          if [ $qping_exit_state -ne 0 ]; then
+             break
+          fi
+          sleep 3
+          qping_count=`expr $qping_count + 1`
+       done
+
+       if [ $qping_exit_state -eq 0 ]; then
        #  qmaster is still running
-          echo "   qmaster and scheduler still alive. Cannot migrate qmaster."
+          echo "   qmaster on host $actual_qmaster_host still alive. Cannot migrate qmaster."
           exit 1
        fi
+
+       lock_file_read_retries=10
+       lock_file_read_count=0
+       lock_file_found=0
+       while [ $lock_file_read_count -lt $lock_file_read_retries ]; do
+          if [ -f $qmaster_spool_dir/lock ]; then
+             lock_file_found=1
+             break
+          fi
+          sleep 3
+          lock_file_read_count=`expr $lock_file_read_count + 1`
+       done
+
+       if [ $lock_file_found -eq 0 ]; then
+       #  old qmaster did not write lock file 
+          echo "   old qmaster did not write lock file. Cannot migrate qmaster."
+          echo "   Please verify that qmaster on host $actual_qmaster_host is down"
+          echo "   and make sure that the lock file in qmaster spool directory is"
+          echo "   read-able."
+          exit 1
+       fi
+
        qmaster_host=true
    fi
 

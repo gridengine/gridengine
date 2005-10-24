@@ -1,3 +1,13 @@
+CR-2005-10-24-0: Bugfix:    - sgemaster -migrate may not delete qmaster lock file 
+                              and may break shadowd functionality
+                            - sge_qmaster daemon is running on both the master
+                              and shadow nodes after a long network failure
+                            - added test_heartbeat test binary
+                            - INFO text wasn't localized
+                 Bugtraq:   6333467, 6320869
+                 Issue:     1828, 1820
+                 Review:    AH (RD)       
+
 AA-2005-10-24-0: Bugfix:    - Changing the cwd flag in qmon - qalter has no effect
                  Issue:     1838
                  Bugtraq:   6336519
@@ -85,9 +95,9 @@ RD-2005-10-10-0: Bugfix:    gcc build on solaris
 
 RD-2005-10-06-0: Bugfix:    fstype does not recognize nfs4 share in all cases
                             - merge from maintrunc RD-2005-09-26-0
-                  Issue:     1814
-                  Bugtraq:   6328703
-                  Review:    JG
+                 Issue:     1814
+                 Bugtraq:   6328703
+                 Review:    JG
 
 RD-2005-10-05-0: Bugfix:    - qstat -s p doesn't show pending array tasks while 
                               there are tasks of this job running

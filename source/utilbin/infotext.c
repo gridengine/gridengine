@@ -34,6 +34,7 @@
 /* Interactive formatted localized text*/
 /* __          _          _        ____*/
 /* -> infotext binary */
+#include <unistd.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -1098,10 +1099,14 @@ int main( int argc, char* argv[] ) {
             sge_infotext_format_output(&sge_infotext_dash_buffer,&options,(char*)sge_dstring_get_string(&buffer));
          }
          if (do_auto == 0) {
-            fgets(input_buffer, 2047, stdin);
-            help = strstr(input_buffer, "\n");
-            if (help != NULL) {
-               *help = 0;
+            if ( fgets(input_buffer, 2047, stdin) == NULL) {
+               ret_val = 2;
+               break;
+            } else {
+               help = strstr(input_buffer, "\n");
+               if (help != NULL) {
+                  *help = 0;
+               }
             }
          } else {
             strcpy(input_buffer,_SGE_GETTEXT__(options.def));
@@ -1136,6 +1141,7 @@ int main( int argc, char* argv[] ) {
             if (do_auto != 0) {
                do_auto = 0;
             }
+            sleep(1);
          }
       }
       printf("\n");

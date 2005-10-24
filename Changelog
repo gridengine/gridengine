@@ -1,3 +1,6 @@
+JG-2005-10-24-0: Bugfix:    Fixed broken build on hp11.
+                 Review:    CR
+
 AA-2005-10-24-0: Bugfix:    - Changing the cwd flag in qmon - qalter has no effect
                  Issue:     1838
                  Bugtraq:   6336519

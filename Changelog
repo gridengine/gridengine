@@ -1,3 +1,5 @@
+RD-2005-10-25-1: Bugfix:    Fixed broken build on Solaris
+
 DT-2005-10-25-0: Testsuite: o Fixed init method for 1709
                  Changed:   Test for IZ1709
 

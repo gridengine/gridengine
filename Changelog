@@ -1,3 +1,7 @@
+CR-2005-10-25-1: Bugfix:    fixed broken aimk clean option for some test binaries
+                            (merge from maintrunk)
+                 Review:    RD
+
 CR-2005-10-24-0: Bugfix:    - sgemaster -migrate may not delete qmaster lock file 
                               and may break shadowd functionality
                             - sge_qmaster daemon is running on both the master

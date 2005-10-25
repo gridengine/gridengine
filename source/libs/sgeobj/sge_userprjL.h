@@ -67,6 +67,26 @@ enum {
    UP_version
 };
 
+enum {
+   UP_name_POS = 0,
+   UP_oticket_POS,
+   UP_fshare_POS,
+   UP_delete_time_POS,
+   UP_job_cnt_POS,
+   UP_pending_job_cnt_POS,
+   UP_usage_POS,
+   UP_usage_time_stamp_POS,
+   UP_usage_seqno_POS,
+   UP_long_term_usage_POS,
+   UP_project_POS,
+   UP_acl_POS,
+   UP_xacl_POS,
+   UP_debited_job_usage_POS,
+   UP_default_project_POS,
+   UP_version_POS
+};
+
+
 LISTDEF(UP_Type)
    SGE_STRING(UP_name, CULL_PRIMARY_KEY | CULL_HASH | CULL_UNIQUE | CULL_SPOOL | CULL_SUBLIST)       /* configured user/project name spooled */
    SGE_ULONG(UP_oticket, CULL_DEFAULT | CULL_SPOOL)      /* configured override tickets (set by Qmon,
@@ -170,6 +190,13 @@ enum {
    UPP_usage,
    UPP_long_term_usage
 };
+
+enum {
+   UPP_name_POS = 0,
+   UPP_usage_POS,
+   UPP_long_term_usage_POS
+};
+
 
 LISTDEF(UPP_Type)
    SGE_STRING(UPP_name, CULL_PRIMARY_KEY | CULL_HASH | CULL_UNIQUE | CULL_SUBLIST)    /* project name */

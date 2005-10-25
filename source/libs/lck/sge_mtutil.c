@@ -75,13 +75,15 @@
 *  SEE ALSO
 *     sge_mtutil/sge_mutex_unlock()
 *******************************************************************************/
+#ifdef SGE_LOCK_DEBUG
 void sge_mutex_lock(const char *mutex_name, const char *func, int line, pthread_mutex_t *mutex)
 {
    int res = -1;
 
    DENTER(BASIS_LAYER, "sge_mutex_lock");
 
-/*   DLOCKPRINTF(("%s() line %d: about to lock mutex \"%s\" : %u\n", func, line, mutex_name, sge_get_gmt())); */
+   DLOCKPRINTF(("%s() line %d: about to lock mutex \"%s\" : %u\n", func, line, mutex_name, sge_get_gmt()));
+
 #ifdef PRINT_LOCK
    {
       struct timeval now;
@@ -89,11 +91,14 @@ void sge_mutex_lock(const char *mutex_name, const char *func, int line, pthread_
       printf("%ld lock %lu:%lus %s\n", (long int) pthread_self(),now.tv_sec, now.tv_usec, mutex_name); 
    }   
 #endif  
-   if (( res = pthread_mutex_lock(mutex)) != 0)
-   {
+  
+   if (( res = pthread_mutex_lock(mutex)) != 0) {
       CRITICAL((SGE_EVENT, MSG_LCK_MUTEXLOCKFAILED_SSS, func, mutex_name, strerror(res)));
       abort();
    }
+ 
+   DLOCKPRINTF(("%s() line %d: locked mutex \"%s\" : %u\n", func, line, mutex_name, sge_get_gmt()));
+ 
 #ifdef PRINT_LOCK
    {
       struct timeval now;
@@ -101,11 +106,25 @@ void sge_mutex_lock(const char *mutex_name, const char *func, int line, pthread_
       printf("%ld got lock %lu:%lus %s\n", (long int) pthread_self(),now.tv_sec, now.tv_usec, mutex_name); 
    }   
 #endif  
-/*   DLOCKPRINTF(("%s() line %d: locked mutex \"%s\" : %u\n", func, line, mutex_name, sge_get_gmt())); */
 
-   DEXIT;
    return;
 } /* sge_mutex_lock() */
+#else
+void sge_mutex_lock(const char *mutex_name, const char *func, int line, pthread_mutex_t *mutex)
+{
+   int res = -1;
+
+   DENTER(BASIS_LAYER, "sge_mutex_lock");
+   
+   if (( res = pthread_mutex_lock(mutex)) != 0) {
+      CRITICAL((SGE_EVENT, MSG_LCK_MUTEXLOCKFAILED_SSS, func, mutex_name, strerror(res)));
+      abort();
+   }
+   
+   DRETURN_VOID;
+} /* sge_mutex_lock() */
+
+#endif
 
 /****** sge_mtutil/sge_mutex_unlock() ********************************************
 *  NAME
@@ -138,6 +157,7 @@ void sge_mutex_lock(const char *mutex_name, const char *func, int line, pthread_
 *  SEE ALSO
 *     sge_mtutil/sge_mutex_lock()
 *******************************************************************************/
+#ifdef SGE_LOCK_DEBUG
 void sge_mutex_unlock(const char *mutex_name, const char *func, int line, pthread_mutex_t *mutex)
 {
    int res = -1;
@@ -149,6 +169,7 @@ void sge_mutex_unlock(const char *mutex_name, const char *func, int line, pthrea
       CRITICAL((SGE_EVENT, MSG_LCK_MUTEXUNLOCKFAILED_SSS, func, mutex_name, strerror(res)));
       abort();
    }
+
 #ifdef PRINT_LOCK
    {
       struct timeval now;
@@ -156,188 +177,29 @@ void sge_mutex_unlock(const char *mutex_name, const char *func, int line, pthrea
       printf("%ld unlock %lu:%lus %s\n", (long int) pthread_self(),now.tv_sec, now.tv_usec, mutex_name); 
    }   
 #endif  
+   
    DLOCKPRINTF(("%s() line %d: unlocked mutex \"%s\"\n", func, line, mutex_name));
-
-   DEXIT;
+   
    return;
 } /* sge_mutex_unlock() */
-
-/****** lck/sge_mtutil/sge_rwlock_rdlock() *************************************
-*  NAME
-*     sge_rwlock_rdlock() -- lock read-write lock for reading. 
-*
-*  SYNOPSIS
-*     void sge_rwlock_rdlock(const char *rwlock_name, const char *func, int 
-*     line, pthread_rwlock_t *rwlock) 
-*
-*  FUNCTION
-*     Lock read-write lock for reading. 
-*
-*  INPUTS
-*     const char *rwlock_name  - read-write lock name 
-*     const char *func         - caller 
-*     int line                 - line number this function has been callled from 
-*     pthread_rwlock_t *rwlock - read-write lock itself 
-*
-*  RESULT
-*     void - none 
-*
-*  NOTES
-*     MT-NOTE: sge_rwlock_rdlock() is MT safe 
-*     MT-NOTE: 
-*     MT-NOTE: This function is considered being MT-safe, even though is does
-*     MT-NOTE: use 'strerror()'. The error message returned from 'strerror()'
-*     MT-NOTE: is not stored and used imediately.
-*
-*******************************************************************************/
-void sge_rwlock_rdlock(const char *rwlock_name, const char *func, int line, pthread_rwlock_t *rwlock)
+#else
+void sge_mutex_unlock(const char *mutex_name, const char *func, int line, pthread_mutex_t *mutex)
 {
    int res = -1;
 
-   DENTER(BASIS_LAYER, "sge_rwlock_rdlock");
+   DENTER(BASIS_LAYER, "sge_mutex_unlock");
 
-   DLOCKPRINTF(("%s() line %d: about to lock rwlock \"%s\" for reading\n", func, line, rwlock_name));
-#ifdef PRINT_LOCK
+   if (( res = pthread_mutex_unlock(mutex)) != 0)
    {
-      struct timeval now;
-      gettimeofday(&now, NULL);
-      printf("%ld lock %lu:%lus %s\n", (long int) pthread_self(),now.tv_sec, now.tv_usec, rwlock_name); 
-   }   
-#endif  
-   if (( res = pthread_rwlock_rdlock(rwlock)) != 0)
-   {
-      CRITICAL((SGE_EVENT, MSG_LCK_RWLOCKFORREADINGFAILED_SSS, func, rwlock_name, strerror(res)));
+      CRITICAL((SGE_EVENT, MSG_LCK_MUTEXUNLOCKFAILED_SSS, func, mutex_name, strerror(res)));
       abort();
    }
-#ifdef PRINT_LOCK
-   {
-      struct timeval now;
-      gettimeofday(&now, NULL);
-      printf("%ld got lock %lu:%lus %s\n", (long int) pthread_self(),now.tv_sec, now.tv_usec, rwlock_name); 
-   }   
-#endif  
-   DLOCKPRINTF(("%s() line %d: locked rwlock \"%s\" for reading\n", func, line, rwlock_name));
-
-   DEXIT;
-   return;
-} /* sge_rwlock_rdlock() */
-
-/****** lck/sge_mtutil/sge_rwlock_wrlock() *************************************
-*  NAME
-*     sge_rwlock_wrlock() -- lock read-write lock for writing. 
-*
-*  SYNOPSIS
-*     void sge_rwlock_wrlock(const char *rwlock_name, const char *func, int 
-*     line, pthread_rwlock_t *rwlock) 
-*
-*  FUNCTION
-*     Lock read-write lock for writing. 
-*
-*  INPUTS
-*     const char *rwlock_name  - read-write lock name 
-*     const char *func         - caller 
-*     int line                 - line number this function has been called from 
-*     pthread_rwlock_t *rwlock - read-write lock itself 
-*
-*  RESULT
-*     void - none
-*
-*  EXAMPLE
-*     ??? 
-*
-*  NOTES
-*     MT-NOTE: sge_rwlock_wrlock() is MT safe 
-*     MT-NOTE: 
-*     MT-NOTE: This function is considered being MT-safe, even though is does
-*     MT-NOTE: use 'strerror()'. The error message returned from 'strerror()'
-*     MT-NOTE: is not stored and used imediately.
-*
-*******************************************************************************/
-void sge_rwlock_wrlock(const char *rwlock_name, const char *func, int line, pthread_rwlock_t *rwlock)
-{
-   int res = -1;
-
-   DENTER(BASIS_LAYER, "sge_rwlock_wrlock");
-
-   DLOCKPRINTF(("%s() line %d: about to lock rwlock \"%s\" for writing\n", func, line, rwlock_name));
-
-#ifdef PRINT_LOCK
-   {
-      struct timeval now;
-      gettimeofday(&now, NULL);
-      printf("%ld lock %lu:%lus %s\n", (long int) pthread_self(),now.tv_sec, now.tv_usec, rwlock_name); 
-   }   
-#endif   
-   if (( res = pthread_rwlock_wrlock(rwlock)) != 0)
-   {
-      CRITICAL((SGE_EVENT, MSG_LCK_RWLOCKFORWRITINGFAILED_SSS, func, rwlock_name, strerror(res)));
-      abort();
-   }
-
-#ifdef PRINT_LOCK
-   {
-      struct timeval now;
-      gettimeofday(&now, NULL);
-      printf("%ld got lock %lu:%lus %s\n", (long int) pthread_self(),now.tv_sec, now.tv_usec, rwlock_name); 
-   }   
-#endif   
-   DLOCKPRINTF(("%s() line %d: locked rwlock \"%s\" for writing\n", func, line, rwlock_name));
-
-   DEXIT;
-   return;
-} /* sge_rwlock_wrlock() */
-
-/****** sge_mtutil/sge_rwlock_unlock() *****************************************
-*  NAME
-*     sge_rwlock_unlock() -- unlock read-write lock 
-*
-*  SYNOPSIS
-*     void sge_rwlock_unlock(const char *rwlock_name, const char *func, int 
-*     line, pthread_rwlock_t *rwlock) 
-*
-*  FUNCTION
-*     Unlock read-write lock 
-*
-*  INPUTS
-*     const char *rwlock_name  - read-write lock name 
-*     const char *func         - caller 
-*     int line                 - line number this function has been called from 
-*     pthread_rwlock_t *rwlock - read-write lock itself 
-*
-*  RESULT
-*     void - none
-*
-*  NOTES
-*     MT-NOTE: sge_rwlock_unlock() is MT safe 
-*     MT-NOTE: 
-*     MT-NOTE: This function is considered being MT-safe, even though is does
-*     MT-NOTE: use 'strerror()'. The error message returned from 'strerror()'
-*     MT-NOTE: is not stored and used imediately.
-*
-*******************************************************************************/
-void sge_rwlock_unlock(const char *rwlock_name, const char *func, int line, pthread_rwlock_t *rwlock)
-{
-   int res = -1;
-
-   DENTER(BASIS_LAYER, "sge_rwlock_unlock");
-
-   if (( res = pthread_rwlock_unlock(rwlock)) != 0)
-   {
-      CRITICAL((SGE_EVENT, MSG_LCK_RWLOCKUNLOCKFAILED_SSS, func, rwlock_name, strerror(res)));
-      abort();
-   }
-#ifdef PRINT_LOCK
-   {
-      struct timeval now;
-      gettimeofday(&now, NULL);
-      printf("%ld unlock %lu:%lus %s\n", (long int) pthread_self(),now.tv_sec, now.tv_usec, rwlock_name); 
-   }   
+  
+   DRETURN_VOID;
+} /* sge_mutex_unlock() */
 #endif
-   DLOCKPRINTF(("%s() line %d: unlocked rwlock \"%s\"\n", func, line, rwlock_name));
 
-   DEXIT;
-   return;
-} /* sge_rwlock_unlock() */
+
 
 /****** sge_mtutil/sge_relative_timespec() **************************************
 *  NAME

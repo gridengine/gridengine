@@ -573,10 +573,11 @@ void sge_write_pid(const char *pid_log_file)
 char *sge_get_confval(const char *conf_val, const char *fname)
 {
    static char valuev[1][1025];
-   const char *namev[1];
+   bootstrap_entry_t namev[1];
 
-   namev[0] = conf_val;
-   if (sge_get_confval_array(fname, 1, namev, valuev, NULL)) {
+   namev[0].name = conf_val;
+   namev[0].is_required = true;
+   if (sge_get_confval_array(fname, 1, 1, namev, valuev, NULL)) {
       return NULL;
    } else {
       return valuev[0];
@@ -605,12 +606,12 @@ char *sge_get_confval(const char *conf_val, const char *fname)
 *  NOTES
 *     MT-NOTE: sge_get_confval_array() is MT safe
 ******************************************************************************/
-int sge_get_confval_array(const char *fname, int n, const char *name[], 
+int sge_get_confval_array(const char *fname, int n, int nmissing, bootstrap_entry_t name[], 
                           char value[][1025], dstring *error_dstring) 
 {
    FILE *fp;
    char buf[1024], *cp;
-   int i, nmissing = n;
+   int i;
    bool *is_found = NULL;
    
    DENTER(TOP_LAYER, "sge_get_confval_array");
@@ -629,49 +630,48 @@ int sge_get_confval_array(const char *fname, int n, const char *name[],
    is_found = malloc(sizeof(bool) * n);
    memset(is_found, false, n * sizeof(bool));
    
-   while (fgets(buf, sizeof(buf), fp))
-   {
+   while (fgets(buf, sizeof(buf), fp)) {
       char *pos = NULL;
 
       /* set chrptr to the first non blank character
        * If line is empty continue with next line
        */
-      if(!(cp = strtok_r(buf, " \t\n", &pos)))
+      if(!(cp = strtok_r(buf, " \t\n", &pos))) {
           continue;
+      }    
 
       /* allow commentaries */
-      if (cp[0] == '#')
+      if (cp[0] == '#') {
           continue;
-   
+      }    
+  
       /* search for all requested configuration values */ 
       for (i=0; i<n; i++) {
-         if ((strcasecmp(name[i], cp) == 0) &&
+         if ((strcasecmp(name[i].name, cp) == 0) &&
              ((cp = strtok_r(NULL, " \t\n", &pos)) != NULL)) {
              strncpy(value[i], cp, 512);
              cp = value[i];
              is_found[i] = true;
-             if (--nmissing == 0) {
-                FREE(is_found);
-                fclose(fp);
-                DEXIT;
-                return 0;
+             if (name[i].is_required) {
+               --nmissing; 
              }
              break;
          }
       }
    }
-
-   for (i=0; i<n; i++) {
-      if (!is_found[i]) {
-         if (error_dstring == NULL){
-            CRITICAL((SGE_EVENT, MSG_UTI_CANNOTLOCATEATTRIBUTE_SS, name[i], fname));
+   if (nmissing != 0) {
+      for (i=0; i<n; i++) {
+         if (!is_found[i] && name[i].is_required) {
+            if (error_dstring == NULL){
+               CRITICAL((SGE_EVENT, MSG_UTI_CANNOTLOCATEATTRIBUTE_SS, name[i].name, fname));
+            }
+            else {
+               sge_dstring_sprintf(error_dstring, MSG_UTI_CANNOTLOCATEATTRIBUTE_SS, 
+                                   name[i], fname);
+            }
+            
+            break;
          }
-         else {
-            sge_dstring_sprintf(error_dstring, MSG_UTI_CANNOTLOCATEATTRIBUTE_SS, 
-                                name[i], fname);
-         }
-         
-         break;
       }
    }
    

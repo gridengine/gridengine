@@ -195,6 +195,11 @@ typedef enum {
    STATUS_DOTS
 } washing_machine_t; 
 
+typedef struct {
+   const char *name;
+   bool is_required;
+} bootstrap_entry_t;
+
 u_long32 sge_get_ja_tasks_per_directory(void);
 
 u_long32 sge_get_ja_tasks_per_file(void);
@@ -216,7 +221,8 @@ char *sge_get_confval(const char *conf_val, const char *file);
 
 int sge_get_confval_array(const char *fname, 
                           int n, 
-                          const char *name[], 
+                          int nmissing,
+                          bootstrap_entry_t name[], 
                           char value[][1025],
                           dstring *error_dstring
                           );

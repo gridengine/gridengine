@@ -101,6 +101,7 @@
 #include "sge_reporting_qmaster.h"
 #include "spool/sge_spooling.h"
 #include "uti/sge_profiling.h"
+#include "uti/sge_bootstrap.h"
 
 static void 
 sge_clear_granted_resources(lListElem *jep, lListElem *ja_task, int incslots, 
@@ -572,15 +573,14 @@ send_job(const char *rhost, const char *target, lListElem *jep, lListElem *jatep
    /*
    ** if exec_file is not set, then this is an interactive job
    */
-   if (master && lGetString(tmpjep, JB_exec_file)) {
+   if (master && bootstrap_get_job_spooling() && lGetString(tmpjep, JB_exec_file)) {
       PROF_START_MEASUREMENT(SGE_PROF_JOBSCRIPT);
       str = sge_file2string(lGetString(tmpjep, JB_exec_file), &len);
       PROF_STOP_MEASUREMENT(SGE_PROF_JOBSCRIPT);
-      lSetString(tmpjep, JB_script_ptr, str);
+      lXchgString(tmpjep, JB_script_ptr, &str);
       FREE(str);
       lSetUlong(tmpjep, JB_script_size, len);
    }
-
 
    /* insert ckpt object if required **now**. it is only
    ** needed in the execd and we have no need to keep it
@@ -1230,7 +1230,7 @@ void sge_commit_job(lListElem *jep, lListElem *jatep, lListElem *jr,
       
       if (!no_unlink) {
          release_successor_jobs(jep);
-         if (lGetString(jep, JB_exec_file) != NULL) {
+         if ((lGetString(jep, JB_exec_file) != NULL) && bootstrap_get_job_spooling()) {
             PROF_START_MEASUREMENT(SGE_PROF_JOBSCRIPT);
             unlink(lGetString(jep, JB_exec_file));
             lSetString(jep, JB_exec_file, NULL);
@@ -1571,7 +1571,7 @@ static int sge_bury_job(lListElem *job, u_long32 job_id, lListElem *ja_task,
       /* 
        * do not try to remove script file for interactive jobs 
        */
-      if (lGetString(job, JB_exec_file) != NULL) {
+      if ((lGetString(job, JB_exec_file) != NULL) && bootstrap_get_job_spooling()) {
          PROF_START_MEASUREMENT(SGE_PROF_JOBSCRIPT);
          unlink(lGetString(job, JB_exec_file));
          lSetString(job, JB_exec_file, NULL);

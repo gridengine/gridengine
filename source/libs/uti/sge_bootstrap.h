@@ -46,7 +46,11 @@ const char *bootstrap_get_spooling_params(void);
 const char *bootstrap_get_binary_path(void);
 const char *bootstrap_get_qmaster_spool_dir(void);
 const char *bootstrap_get_security_mode(void);
+bool       bootstrap_get_job_spooling(void);
+int        bootstrap_get_gdi_thread_count(void);
 
+void bootstrap_set_gdi_thread_count(const char *value);
+void bootstrap_set_job_spooling(const char *value);
 void bootstrap_set_admin_user(const char *value);
 void bootstrap_set_default_domain(const char *value);
 void bootstrap_set_ignore_fqdn(bool value);

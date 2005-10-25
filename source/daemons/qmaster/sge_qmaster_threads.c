@@ -395,11 +395,13 @@ void sge_create_and_join_threads(void)
    enum { NUM_THRDS = 5 };
    const char *thread_names[NUM_THRDS] = {"SIGT","MT(1)","MT(2)","MT(3)","MT(4)"}; 
    pthread_t tids[NUM_THRDS];
-   int threads = 2;
+   int threads = bootstrap_get_gdi_thread_count();
    int i;
 
    DENTER(TOP_LAYER, "sge_create_and_join_threads");
 
+   INFO((SGE_EVENT, "%d number of GDI threads are enabled", threads));
+   
    if (threads >= NUM_THRDS) {
       threads = NUM_THRDS -1;
    }
@@ -1019,6 +1021,8 @@ static void wait_for_thread_termination(void)
 void sge_qmaster_shutdown(void)
 {
    DENTER(TOP_LAYER, "sge_qmaster_shutdown");
+
+   sge_job_spool();
 
    sge_userprj_spool(); /* spool the latest usage */
 

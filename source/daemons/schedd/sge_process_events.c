@@ -275,7 +275,7 @@ int event_handler_default_scheduler()
          lGetNumberOfLeafs(NULL, copy.share_tree, STN_children)
         );
    } else {
-      SCHED_MON((log_string, "-------------START-SCHEDULER-RUN-------------"));
+      schedd_log("-------------START-SCHEDULER-RUN-------------");
    }
 
    PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM7);
@@ -301,7 +301,7 @@ int event_handler_default_scheduler()
 
    PROF_START_MEASUREMENT(SGE_PROF_CUSTOM7);
    
-   monitor_next_run = 0;
+   schedd_set_monitor_next_run(false);
 
    /* .. which gets deleted after using */
    lFreeList(&(copy.host_list));
@@ -335,7 +335,7 @@ int event_handler_default_scheduler()
    if (getenv("SGE_ND") != NULL) {
       printf("--------------STOP-SCHEDULER-RUN-------------\n");
    } else {
-      SCHED_MON((log_string, "--------------STOP-SCHEDULER-RUN-------------"));
+      schedd_log("--------------STOP-SCHEDULER-RUN-------------");
    }
    
    DEXIT;
@@ -1011,7 +1011,7 @@ bool sge_process_schedd_monitor_event(sge_object_type type,
 {
    DENTER(GDI_LAYER, "sge_process_schedd_monitor_event");
    DPRINTF(("monitoring next scheduler run\n"));
-   monitor_next_run = 1;
+   schedd_set_monitor_next_run(true);
    DEXIT;
    return true;
 }   

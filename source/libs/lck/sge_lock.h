@@ -39,9 +39,8 @@
 
 typedef enum {
    LOCK_GLOBAL  = 0,  /* global lock */
-   LOCK_SCHED_CONF = 1,
-   LOCK_MASTER_CONF = 2,
-   NUM_OF_LOCK_TYPES = 3
+   LOCK_MASTER_CONF = 1,
+   NUM_OF_LOCK_TYPES = 2
 } sge_locktype_t;
 
 #if defined(LINUX)
@@ -76,10 +75,7 @@ int sge_num_locktypes(void);
 
 #define SGE_LOCK(type, mode) \
 { \
-   const char *name = sge_type_name(type); \
-   DLOCKPRINTF(("%s() line %d: about to lock \"%s\"\n", __FILE__, __LINE__, name)); \
    sge_lock(type, mode, SGE_FUNC, sge_locker_id()); \
-   DLOCKPRINTF(("%s() line %d: locked \"%s\"\n", __FILE__, __LINE__, name)); \
 }
 
 #if defined(SGE_UNLOCK)
@@ -88,17 +84,12 @@ int sge_num_locktypes(void);
 
 #define SGE_UNLOCK(type, mode) \
 { \
-   const char *name = sge_type_name(type); \
-   DLOCKPRINTF(("%s() line %d: about to unlock \"%s\"\n", __FILE__, __LINE__, name)); \
    sge_unlock(type, mode, SGE_FUNC, sge_locker_id()); \
-   DLOCKPRINTF(("%s() line %d: unlocked \"%s\"\n", __FILE__, __LINE__, name)); \
 }
 
 /*
  * Lock service provider interface 
  */
-void sge_set_lock_callback(void (*aFunc)(sge_locktype_t, sge_lockmode_t, const char *func, sge_locker_t)); 
-void sge_set_unlock_callback(void (*aFunc)(sge_locktype_t, sge_lockmode_t, const char *func, sge_locker_t));
 void sge_set_id_callback(sge_locker_t (*aFunc)(void));
 
 #endif /* _SGE_LOCK_H_ */

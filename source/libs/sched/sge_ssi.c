@@ -58,24 +58,22 @@
 /* MT-NOTE: parse_job_identifier() is not MT safe */
 static bool parse_job_identifier(const char *id, u_long32 *job_id, u_long32 *ja_task_id)
 {
-   char *copy;
+   char *copy = NULL;
 
    DENTER(TOP_LAYER, "parse_job_identifier");
 
    copy = strdup(id);
    *job_id = atoi(strtok(copy, "."));
    *ja_task_id = atoi(strtok(NULL, "."));
-   free(copy);
+   FREE(copy);
 
    if(*job_id > 0 && *ja_task_id > 0) {
-      DEXIT;
-      return true;
+      DRETURN(true);
    }
 
    WARNING((SGE_EVENT, MSG_SSI_ERRORPARSINGJOBIDENTIFIER_S, id));
 
-   DEXIT;
-   return false;
+   DRETURN(false);
 }
 
 /****** schedlib/ssi/sge_ssi_job_cancel() **************************************

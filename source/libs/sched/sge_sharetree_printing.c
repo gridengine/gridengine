@@ -426,8 +426,7 @@ print_hdr(dstring *out, const format_t *format)
 *     const format_t *format - format description
 *
 *  NOTES
-*     MT-NOTE: sge_sharetree_print() is most probably MT-safe (depends on 
-*              functions which have no MT-safety note, but look MT-safe)
+*     MT-NOTE: sge_sharetree_print() is  MT-safe 
 *
 *  SEE ALSO
 *     sge_sharetree_printing/print_hdr()

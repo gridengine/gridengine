@@ -157,8 +157,5 @@ int sge_get_double_qattr(double *dvalp, char *attrname, lListElem *q,
 
 int sge_get_string_qattr(char *dst, int dst_len, char *attrname, lListElem *q, const lList *exechost_list, const lList *complex_list);
 
-char *trace_resource(lListElem *rep);
-
-void trace_resources(lList *resources);
 
 #endif

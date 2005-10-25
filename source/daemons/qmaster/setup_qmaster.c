@@ -936,6 +936,41 @@ static int setup_qmaster(void)
                   Master_CEntry_List, false, true, false);
    }
 
+   if (!bootstrap_get_job_spooling()) {
+      lList *answer_list = NULL;
+      dstring buffer = DSTRING_INIT;
+      char *str = NULL;
+      int len = 0;
+
+      INFO((SGE_EVENT, "job spooling is disabled - removing spooled jobs"));
+      
+      bootstrap_set_job_spooling("true");
+      
+      for_each(jep, Master_Job_List) {
+         u_long32 job_id = lGetUlong(jep, JB_job_number);
+         sge_dstring_clear(&buffer);
+
+         if (lGetString(jep, JB_exec_file) != NULL) {
+            if ((str = sge_file2string(lGetString(jep, JB_exec_file), &len))) {
+               lXchgString(jep, JB_script_ptr, &str);
+               FREE(str);
+               lSetUlong(jep, JB_script_size, len);
+
+               unlink(lGetString(jep, JB_exec_file));
+            }
+            else {
+               printf("could not read in script file\n");
+            }
+         }
+         spool_delete_object(&answer_list, spool_get_default_context(), 
+                             SGE_TYPE_JOB, 
+                             job_get_key(job_id, 0, NULL, &buffer));                     
+      }
+      answer_list_output(&answer_list);
+      sge_dstring_free(&buffer);
+      bootstrap_set_job_spooling("false");
+   }
+
    /* 
       if the job is in state running 
       we have to register each slot 

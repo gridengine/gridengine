@@ -147,12 +147,14 @@ char *rhost
       return ret;
    }
 
-   if (adding)
+   if (adding) {
       INFO((SGE_EVENT, MSG_STREE_ADDSTREE_SSII, 
          ruser, rhost, lGetNumberOfNodes(ep, NULL, STN_children), lGetNumberOfLeafs(ep, NULL, STN_children)));
-   else
+   }
+   else {
       INFO((SGE_EVENT, MSG_STREE_MODSTREE_SSII, 
          ruser, rhost, lGetNumberOfNodes(ep, NULL, STN_children), lGetNumberOfLeafs(ep, NULL, STN_children)));
+   }
 
    answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
 

@@ -306,61 +306,7 @@ find_best_result(dispatch_t r1, dispatch_t r2)
    return DISPATCH_NEVER_CAT;
 }
 
-char* trace_resource(lListElem *ep) 
-{
-   int jl, sl;
-   char slot_dom[4], job_dom[4];
-   u_long32 dom;
-   static char buffer[BUFSIZ];
 
-   strcpy(buffer, "");
-
-   jl = (dom=lGetUlong(ep, CE_pj_dominant)) 
-         && ((dom&DOMINANT_TYPE_MASK) != DOMINANT_TYPE_VALUE);
-   sl = (dom=lGetUlong(ep, CE_dominant)) 
-         && ((dom&DOMINANT_TYPE_MASK) != DOMINANT_TYPE_VALUE);
-   monitor_dominance(job_dom, lGetUlong(ep, CE_pj_dominant));
-   monitor_dominance(slot_dom, lGetUlong(ep, CE_dominant));
-   if (sl && jl) {
-      sprintf(buffer, "%-20.20s %10.10s:%-10.10s %10.10s:%-10.10s\n", 
-            lGetString(ep, CE_name), 
-            slot_dom,
-            lGetString(ep, CE_stringval), 
-            job_dom,
-            lGetString(ep, CE_pj_stringval));
-   } else if (sl && !jl) {
-      sprintf(buffer, "%-20.20s %10.10s:%-10.10s         NONE\n", 
-            lGetString(ep, CE_name), 
-            slot_dom,
-            lGetString(ep, CE_stringval));
-   } else if (!sl && jl) {
-      sprintf(buffer, "%-20.20s          NONE         %10.10s:%-10.10s\n", 
-            lGetString(ep, CE_name), 
-            job_dom,
-            lGetString(ep, CE_pj_stringval));
-   } else if (!sl && !jl) {
-      sprintf(buffer, "%-20.20s          NONE                 NONE\n", 
-            lGetString(ep, CE_name));
-   }
-
-   return buffer;
-}
-
-void trace_resources(lList *resources) 
-{
-   lListElem *ep;
-   char *ret;
-   
-   DENTER(TOP_LAYER, "trace_resources");
-
-   for_each (ep, resources) {
-      ret = trace_resource(ep);
-      DPRINTF((ret));
-   }
-
-   DEXIT;
-   return;
-}
 
 /****** scheduler/sge_select_parallel_environment() ****************************
 *  NAME
@@ -626,7 +572,7 @@ parallel_reservation_max_time_slots(sge_assignment_t *best)
    u_long32 pe_time, first_time;
    sge_assignment_t tmp_assignment;
    dispatch_t result = DISPATCH_NEVER_CAT; 
-   sge_qeti_t *qeti;
+   sge_qeti_t *qeti = NULL;
    bool is_first = true;
    int old_logging = 0;
    category_use_t use_category;
@@ -697,7 +643,7 @@ parallel_reservation_max_time_slots(sge_assignment_t *best)
    }
    schedd_mes_set_logging(old_logging); /* restore logging mode */
 
-   sge_qeti_release(qeti);
+   sge_qeti_release(&qeti);
 
    if (best->gdil) {
       result = DISPATCH_OK;
@@ -6024,12 +5970,14 @@ sge_dlib(const char *key, const char *lib_name, const char *fn_name,
          lib_cache_t **lib_cache_list)
 {
    static lib_cache_t *static_lib_cache_list = NULL;
-   lib_cache_t **cache_list;
-   lib_cache_t *cache, *prev=NULL, *new_cache;
-   int replace=0;
-   void *new_lib_handle=NULL;
-   void *new_fn_handle=NULL; 
-   const char *error=NULL;
+   lib_cache_t **cache_list = NULL;
+   lib_cache_t *cache = NULL;
+   lib_cache_t *prev = NULL;
+   lib_cache_t *new_cache = NULL;
+   int replace = 0;
+   void *new_lib_handle = NULL;
+   void *new_fn_handle = NULL; 
+   const char *error = NULL;
 
    DENTER(TOP_LAYER, "sge_dlib");
 
@@ -6077,14 +6025,16 @@ sge_dlib(const char *key, const char *lib_name, const char *fn_name,
    /* If we're replacing the old function, just delete it */
    if (replace) {
       dlclose(cache->lib_handle);
-      free(cache->key);
-      free(cache->lib_name);
-      free(cache->fn_name);
-      if (prev == NULL)
+      FREE(cache->key);
+      FREE(cache->lib_name);
+      FREE(cache->fn_name);
+      if (prev == NULL) {
          *cache_list = cache->next;
-      else
+      }   
+      else {
          prev->next = cache->next;
-      free(cache);
+      }   
+      FREE(cache);
    }
 
    /* cache the new function address */

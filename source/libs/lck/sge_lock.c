@@ -32,9 +32,11 @@
 
 #include <stdlib.h>
 #include <pthread.h>
+#include <string.h>
 
-#include "sge_lock.h"
-#include "sge_mtutil.h"
+#include "lck/sge_lock.h"
+#include "lck/sge_mtutil.h"
+#include "lck/msg_lcklib.h"
 
 #include "uti/sge_log.h"
 
@@ -80,26 +82,20 @@
 *******************************************************************************/
 
 static pthread_rwlock_t Global_Lock;
-static pthread_rwlock_t Schedd_Conf_Lock;
 static pthread_rwlock_t Master_Conf_Lock;
 
 /* watch out. The order in this array has to be the same as in the sge_locktype_t type */
-static pthread_rwlock_t *SGE_RW_Locks[NUM_OF_LOCK_TYPES] = {&Global_Lock, &Schedd_Conf_Lock, &Master_Conf_Lock};
+static pthread_rwlock_t *SGE_RW_Locks[NUM_OF_LOCK_TYPES] = {&Global_Lock, &Master_Conf_Lock};
 
 /* 'locktype_names' has to be in sync with the definition of 'sge_locktype_t' */
 static const char* locktype_names[NUM_OF_LOCK_TYPES] = {
-   "global",  /* LOCK_GLOBAL */
-   "schedd_config" /* LOCK_SCHED_CONF */ 
+   "global",       /* LOCK_GLOBAL */
    "master_config" /* LOCK_MASTER_CONF */ 
 };
 
-static void (*lock_callback) (sge_locktype_t, sge_lockmode_t, const char *func, sge_locker_t);
-static void (*unlock_callback) (sge_locktype_t, sge_lockmode_t, const char *func, sge_locker_t); 
 static sge_locker_t (*id_callback) (void);
 
 /* lock service provider */
-static void lock_callback_impl(sge_locktype_t, sge_lockmode_t, const char *func, sge_locker_t);
-static void unlock_callback_impl(sge_locktype_t, sge_lockmode_t, const char *func, sge_locker_t);
 static sge_locker_t id_callback_impl(void);
 
 
@@ -130,17 +126,77 @@ static sge_locker_t id_callback_impl(void);
 *  NOTES
 *     MT-NOTE: sge_lock() is MT safe 
 *******************************************************************************/
+#ifdef SGE_LOCK_DEBUG
 void sge_lock(sge_locktype_t aType, sge_lockmode_t aMode, const char *func, sge_locker_t anID)
 {
+   int res = -1;
+
    DENTER(BASIS_LAYER, "sge_lock");
 
-   if (NULL != lock_callback) {
-      lock_callback(aType, aMode, func, anID);
+#ifdef PRINT_LOCK
+   {
+      struct timeval now;
+      gettimeofday(&now, NULL);
+      printf("%ld lock %lu:%lus %s(%d)\n", (long int) pthread_self(),now.tv_sec, now.tv_usec, locktype_names[aType], aMode); 
+   }   
+#endif   
+
+   if (aMode == LOCK_READ) {
+      DLOCKPRINTF(("%s() about to lock rwlock \"%s\" for reading\n", func, locktype_names[aType]));
+      res = pthread_rwlock_rdlock(SGE_RW_Locks[aType]);
+      DLOCKPRINTF(("%s() locked rwlock \"%s\" for reading\n", func, locktype_names[aType]));
    }
+   else if (aMode == LOCK_WRITE) {
+       DLOCKPRINTF(("%s() about to lock rwlock \"%s\" for writing\n", func, locktype_names[aType]));
+       res = pthread_rwlock_wrlock(SGE_RW_Locks[aType]);
+       DLOCKPRINTF(("%s() locked rwlock \"%s\" for writing\n", func, locktype_names[aType]));
+   }
+   else {
+      ERROR((SGE_EVENT, "wrong lock type for global lock\n")); 
+   }   
+
+   if (res != 0) {
+      CRITICAL((SGE_EVENT, MSG_LCK_RWLOCKFORWRITINGFAILED_SSS, func, locktype_names[aType], strerror(res)));
+      abort();
+   }
+
+#ifdef PRINT_LOCK
+   {
+      struct timeval now;
+      gettimeofday(&now, NULL);
+      printf("%ld got lock %lu:%lus %s(%d)\n", (long int) pthread_self(),now.tv_sec, now.tv_usec, locktype_names[aType], aMode); 
+   }   
+#endif   
 
    DEXIT;
    return;
 } /* sge_lock */
+
+#else
+void sge_lock(sge_locktype_t aType, sge_lockmode_t aMode, const char *func, sge_locker_t anID)
+{
+   int res = -1;
+
+   DENTER(BASIS_LAYER, "sge_lock");
+   
+   if (aMode == LOCK_READ) {
+      res = pthread_rwlock_rdlock(SGE_RW_Locks[aType]);
+   }
+   else if (aMode == LOCK_WRITE) {
+       res = pthread_rwlock_wrlock(SGE_RW_Locks[aType]);
+   }
+   else {
+      ERROR((SGE_EVENT, "wrong lock type for global lock\n")); 
+   } 
+
+   if (res != 0) {
+      CRITICAL((SGE_EVENT, MSG_LCK_RWLOCKFORWRITINGFAILED_SSS, func, locktype_names[aType], strerror(res)));
+      abort();
+   }
+
+   DRETURN_VOID;
+} /* sge_lock */
+#endif
 
 /****** sge_lock/sge_unlock() **************************************************
 *  NAME
@@ -167,17 +223,46 @@ void sge_lock(sge_locktype_t aType, sge_lockmode_t aMode, const char *func, sge_
 *  NOTES
 *     MT-NOTE: sge_unlock() is MT safe 
 *******************************************************************************/
+#ifdef SGE_LOCK_DEBUG
 void sge_unlock(sge_locktype_t aType, sge_lockmode_t aMode, const char *func, sge_locker_t anID)
 {
+   int res = -1;
    DENTER(BASIS_LAYER, "sge_unlock");
 
-   if (NULL != unlock_callback) {
-      unlock_callback(aType, aMode, func, anID);
+   if ((res = pthread_rwlock_unlock(SGE_RW_Locks[aType])) != 0) {
+      CRITICAL((SGE_EVENT, MSG_LCK_RWLOCKUNLOCKFAILED_SSS, func, locktype_names[aType], strerror(res)));
+      abort();
    }
+   DLOCKPRINTF(("%s() unlocked rwlock \"%s\"\n", func, locktype_names[aType]));
+
+#ifdef PRINT_LOCK
+   {
+      struct timeval now;
+      gettimeofday(&now, NULL);
+      printf("%ld unlock %lu:%lus %s(%d)\n", (long int) pthread_self(),now.tv_sec, now.tv_usec, locktype_names[aType], aMode); 
+   }   
+#endif
 
    DEXIT;
    return;
 } /* sge_unlock */
+#else
+void sge_unlock(sge_locktype_t aType, sge_lockmode_t aMode, const char *func, sge_locker_t anID)
+{
+   int res = -1;
+   
+   DENTER(BASIS_LAYER, "sge_unlock");
+
+   if ((res = pthread_rwlock_unlock(SGE_RW_Locks[aType])) != 0) {
+      CRITICAL((SGE_EVENT, MSG_LCK_RWLOCKUNLOCKFAILED_SSS, func, locktype_names[aType], strerror(res)));
+      abort();
+   }
+
+   DRETURN_VOID;
+} /* sge_unlock */
+
+
+#endif
 
 /****** sge_lock/sge_locker_id() ***********************************************
 *  NAME
@@ -205,13 +290,10 @@ sge_locker_t sge_locker_id(void)
 {
    sge_locker_t id = 0;
 
-   DENTER(BASIS_LAYER, "sge_locker_id");
-
    if (NULL != id_callback) {
       id = (sge_locker_t)id_callback();
    }
 
-   DEXIT;
    return id;
 } /* sge_locker_id */
 
@@ -240,11 +322,8 @@ const char* sge_type_name(sge_locktype_t aType)
    const char *s = NULL;
    int i = (int)aType;
 
-   DENTER(BASIS_LAYER, "sge_type_name");
-
    s = (i < NUM_OF_LOCK_TYPES) ? locktype_names[i] : NULL;
 
-   DEXIT;
    return s;
 } /* sge_type_name */
 
@@ -274,83 +353,11 @@ int sge_num_locktypes(void)
 {
    int i = 0;
 
-   DENTER(BASIS_LAYER, "sge_num_locktypes");
-
    i = (int)NUM_OF_LOCK_TYPES;
 
-   DEXIT;
    return i;
 } /* sge_num_locktypes */
 
-/****** sge_lock/sge_set_lock_callback() ***************************************
-*  NAME
-*     sge_set_lock_callback() -- Set lock callback
-*
-*  SYNOPSIS
-*     void sge_set_lock_callback(void (*aFunc)(sge_locktype_t, sge_lockmode_t, sge_locker_t)) 
-*
-*  FUNCTION
-*     Set the callback which is used by 'sge_lock()' to actually acquire a lock
-*     from the lock service provider.
-*
-*     A lock service provider must call this function *before* a lock client 
-*     acquires a lock via 'sge_lock()' for the first time.
-*
-*  INPUTS
-*     aFunc - lock function pointer 
-*
-*  RESULT
-*     void - none
-*
-*  NOTES
-*     MT-NOTE; sge_set_lock_callback() is NOT MT safe 
-*******************************************************************************/
-void sge_set_lock_callback(void (*aFunc)(sge_locktype_t, sge_lockmode_t, const char *, sge_locker_t))
-{
-   DENTER(BASIS_LAYER, "sge_set_lock_callback");
-
-   if (NULL != aFunc) {
-      lock_callback = aFunc;
-   }
-
-   DEXIT;
-   return;
-} /* sge_set_lock_callback */
-
-/****** sge_lock/sge_set_unlock_callback() *************************************
-*  NAME
-*     sge_set_unlock_callback() -- Set unlock callback 
-*
-*  SYNOPSIS
-*     void sge_set_unlock_callback(void (*aFunc)(sge_locktype_t, sge_lockmode_t, sge_locker_t))
-*
-*  FUNCTION
-*     Set the callback which is used by 'sge_unlock()' to actually release a lock
-*     acquired from the lock service provider. 
-*
-*     A lock service provider must call this function *before* a lock client
-*     releases a lock via 'sge_unlock()' for the first time.
-*
-*  INPUTS
-*     aFunc - unlock function pointer 
-*
-*  RESULT
-*     void - none 
-*
-*  NOTES
-*     MT-NOTE: sge_set_unlock_callback() is NOT MT safe 
-*******************************************************************************/
-void sge_set_unlock_callback(void (*aFunc)(sge_locktype_t, sge_lockmode_t, const char *, sge_locker_t))
-{
-   DENTER(BASIS_LAYER, "sge_set_unlock_callback");
-
-   if (NULL != aFunc) {
-      unlock_callback = aFunc;
-   }
-
-   DEXIT;
-   return;
-} /* sge_set_unlock_callback */
 
 /****** sge_lock/sge_set_id_callback() *****************************************
 *  NAME
@@ -377,13 +384,10 @@ void sge_set_unlock_callback(void (*aFunc)(sge_locktype_t, sge_lockmode_t, const
 *******************************************************************************/
 void sge_set_id_callback(sge_locker_t (*aFunc)(void))
 {
-   DENTER(BASIS_LAYER, "sge_set_id_callback");
-
    if (NULL != aFunc) {
       id_callback = aFunc;
    }
 
-   DEXIT;
    return;
 } /* sge_set_id_callback */
 
@@ -419,11 +423,8 @@ void sge_setup_lock_service(void)
    DENTER(BASIS_LAYER, "sge_setup_lock_service");
    
    pthread_rwlock_init(&Global_Lock, NULL); 
-   pthread_rwlock_init(&Schedd_Conf_Lock, NULL);
    pthread_rwlock_init(&Master_Conf_Lock, NULL);
 
-   sge_set_lock_callback(lock_callback_impl);
-   sge_set_unlock_callback(unlock_callback_impl);
    sge_set_id_callback(id_callback_impl);
    
    DEXIT;
@@ -458,96 +459,6 @@ void sge_teardown_lock_service(void)
    return;
 } /* sge_teardown_lock_service() */
 
-/****** libs/lck/lock_callback_impl() *******************************
-*  NAME
-*     lock_callback_impl() -- lock callback 
-*
-*  SYNOPSIS
-*     static void lock_callback_impl(sge_locktype_t aType, sge_lockmode_t aMode, 
-*     sge_locker_t anID) 
-*
-*  FUNCTION
-*     Acquire global lock determined by 'aType' in mode 'aMode'. 
-*
-*  INPUTS
-*     sge_locktype_t aType - lock type 
-*     sge_lockmode_t aMode - lock mode 
-*     sge_locker_t anID    - locker id
-*
-*  RESULT
-*     void - none
-*
-*  NOTES
-*     MT-NOTE: lock_callback_impl() is MT safe. 
-*
-*     Currently a global lock is just a 'pthread_mutex_t'. This does imply
-*     that the lock mode has no effect.
-*
-*******************************************************************************/
-static void lock_callback_impl(sge_locktype_t aType, sge_lockmode_t aMode, const char *func,  sge_locker_t anID)
-{
-   DENTER(BASIS_LAYER, "lock_callback_impl");
-
-   if (aMode == LOCK_READ) {
-       sge_rwlock_rdlock("Global_Lock_read", func, __LINE__, SGE_RW_Locks[aType]);
-   }
-   else if (aMode == LOCK_WRITE) {
-       sge_rwlock_wrlock("Global_Lock_write", func, __LINE__, SGE_RW_Locks[aType]);
-   }
-   else {
-      ERROR((SGE_EVENT, "wrong lock type for global lock\n")); 
-   }
-
-   DEXIT;
-   return;
-} /* lock_callback_impl() */
-
-/****** libs/lck/unlock_callback_impl() *****************************
-*  NAME
-*     unlock_callback_impl() -- unlock callback 
-*
-*  SYNOPSIS
-*     static void unlock_callback_impl(sge_locktype_t aType, sge_lockmode_t aMode, 
-*     sge_locker_t anID) 
-*
-*  FUNCTION
-*     Release global lock 'aType' which has been acquired in mode 'aMode'
-*     previously. 
-*
-*  INPUTS
-*     sge_locktype_t aType - lock type 
-*     sge_lockmode_t aMode - lock mode 
-*     sge_locker_t anID    - locker id 
-*
-*  RESULT
-*     void - none
-*
-*  NOTES
-*     MT-NOTE: unlock_callback_impl() is MT safe. 
-*
-*     Currently a global lock is just a 'pthread_mutex_t'. This does imply
-*     that the lock mode has no effect.
-*
-*******************************************************************************/
-static void unlock_callback_impl(sge_locktype_t aType, sge_lockmode_t aMode, const char *func, sge_locker_t anID)
-{
-   DENTER(BASIS_LAYER, "unlock_callback_impl");
-
-   if (aMode == LOCK_READ) {
-       sge_rwlock_unlock("Global_Lock_read", func, __LINE__, SGE_RW_Locks[aType]);
-   }
-   else if (aMode == LOCK_WRITE) {
-       sge_rwlock_unlock("Global_Lock_write", func, __LINE__, SGE_RW_Locks[aType]);
-   }
-  else {
-      ERROR((SGE_EVENT, "wrong lock type for global lock\n"));
-   }
-   
-
-   DEXIT;
-   return;
-} /* unlock_callback_impl() */
-
 /****** libs/lck/id_callback_impl() *********************************
 *  NAME
 *     id_callback_impl() -- locker ID callback 
@@ -570,14 +481,7 @@ static void unlock_callback_impl(sge_locktype_t aType, sge_lockmode_t aMode, con
 *******************************************************************************/
 static sge_locker_t id_callback_impl(void)
 {
-   sge_locker_t id;
-
-   DENTER(BASIS_LAYER, "id_callback_impl");
-   
-   id = (sge_locker_t)pthread_self();
-
-   DEXIT;
-   return id;
+   return (sge_locker_t)pthread_self();
 } /* id_callback */
 
 

@@ -146,7 +146,7 @@ int sge_add_job_category( lListElem *job, lList *acl_list ) {
    lListElem *cat = NULL;
    const char *cstr = NULL;
    u_long32 rc = 0;
-   static char no_requests[] = "no-requests";
+   static const char no_requests[] = "no-requests";
    dstring category_str = DSTRING_INIT;
 
    DENTER(TOP_LAYER, "sge_add_job_category");

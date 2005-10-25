@@ -95,11 +95,14 @@
 #include "sge_utility.h"
 #include "sge_lock.h"
 #include "sge_mtutil.h"
+#include "sgeobj/sge_pe_taskL.h"
+#include "sgeobj/sge_pe_task.h"
 
 #include "sge_persistence_qmaster.h"
 #include "sge_reporting_qmaster.h"
 #include "spool/sge_spooling.h"
 #include "uti/sge_profiling.h"
+#include "uti/sge_bootstrap.h"
 
 #include "msg_common.h"
 #include "msg_qmaster.h"
@@ -760,8 +763,9 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
    }
 
    /* write script to file */
-   if (!JOB_TYPE_IS_BINARY(lGetUlong(jep, JB_type)) &&
-       lGetString(jep, JB_script_file)) {
+   if (lGetString(jep, JB_script_file) && bootstrap_get_job_spooling() && 
+       !JOB_TYPE_IS_BINARY(lGetUlong(jep, JB_type))) {
+
       PROF_START_MEASUREMENT(SGE_PROF_JOBSCRIPT);
       if (sge_string2file(lGetString(jep, JB_script_ptr), 
                        lGetUlong(jep, JB_script_size),
@@ -779,7 +783,6 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
    /* clean file out of memory */
    lSetString(jep, JB_script_ptr, NULL);
    lSetUlong(jep, JB_script_size, 0);
-
 
    /*
    ** security hook
@@ -803,7 +806,10 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
       ERROR((SGE_EVENT, MSG_JOB_NOWRITE_U, sge_u32c(job_number)));
       answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR);
       SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
-      unlink(lGetString(jep, JB_exec_file));
+      if ((lGetString(jep, JB_exec_file) != NULL) && (bootstrap_get_job_spooling())) {
+         unlink(lGetString(jep, JB_exec_file));
+         lSetString(jep, JB_exec_file, NULL);
+      }
       DEXIT;
       return STATUS_EDISK;
    }
@@ -3913,10 +3919,12 @@ int *trigger
              */
             for_each(cqueue, *(object_type_get_master_list(SGE_TYPE_CQUEUE))) {
                lList *qinstance_list = lCopyList(NULL, lGetList(cqueue, CQ_qinstances));
-               if (!a.queue_list)
+               if (!a.queue_list) {
                   a.queue_list = qinstance_list;
-               else
+               }   
+               else {
                   lAddList(a.queue_list, &qinstance_list);
+               }   
             }
 
             a.host_list        = Master_Exechost_List;
@@ -4041,12 +4049,12 @@ int sge_gdi_copy_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser, cha
    SGE_UNLOCK(LOCK_GLOBAL, LOCK_READ);
 
    /* read script from old job and reuse it */
-   if ( lGetString(new_jep, JB_exec_file)) {
+   if (lGetString(new_jep, JB_exec_file) && bootstrap_get_job_spooling()) {
       char *str;
       int len;
       PROF_START_MEASUREMENT(SGE_PROF_JOBSCRIPT);
       if ((str = sge_file2string(lGetString(new_jep, JB_exec_file), &len))) {
-         lSetString(new_jep, JB_script_ptr, str);
+         lXchgString(new_jep, JB_script_ptr, &str);
          FREE(str);
          lSetUlong(new_jep, JB_script_size, len);
       }
@@ -4068,5 +4076,125 @@ int sge_gdi_copy_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser, cha
 
    DEXIT;
    return ret;
+}
+
+/****** sge_job_qmaster/sge_job_spool() ******************************
+*  NAME
+*     sge_job_spool() -- stores the Master_Job_List into the database
+*
+*  SYNOPSIS
+*     void
+*     sge_job_spool(void)
+*
+*  FUNCTION
+*     This function stores the current Master_Job_List into the database.
+*     This includes also the job scripts, which are stored in the common 
+*     place. 
+*     
+*     MT-NOTE: sge_job_spool() is MT safe, it uses the global lock (read)
+*
+*******************************************************************************/
+void sge_job_spool(void) {
+   lListElem *jep = NULL;
+   lList *answer_list = NULL;
+
+   DENTER(TOP_LAYER, "sge_job_spool");
+
+   if (!bootstrap_get_job_spooling()) {
+
+      /* the job spooling is disabled, we have to forth the spooling */
+      bootstrap_set_job_spooling("true");
+
+      INFO((SGE_EVENT, "job spooling is disabled - spooling the jobs"));
+      
+      /* this function is used on qmaster shutdown, no need to monitor this lock */
+      SGE_LOCK(LOCK_GLOBAL, LOCK_READ);
+
+      /* store each job */
+      for_each(jep, Master_Job_List) {
+         u_long32 job_number = lGetUlong(jep, JB_job_number);
+         lListElem *ja_task = NULL;
+         lListElem *pe_task = NULL;
+         bool is_success = true; 
+         bool dbret = true;
+
+         /* store job script*/
+         if (lGetString(jep, JB_exec_file) != NULL) {
+            if (sge_string2file(lGetString(jep, JB_script_ptr), 
+                             lGetUlong(jep, JB_script_size),
+                             lGetString(jep, JB_exec_file))) {
+               ERROR((SGE_EVENT, MSG_JOB_NOWRITE_US, sge_u32c(job_number), strerror(errno)));
+               break;
+            }
+            else {
+               /* clean file out of memory */
+               lSetString(jep, JB_script_ptr, NULL);
+               lSetUlong(jep, JB_script_size, 0);
+            }
+         }
+
+         dbret = spool_transaction(NULL, spool_get_default_context(),
+                                   STC_begin);
+         if (!dbret) {
+            answer_list_add_sprintf(&answer_list, STATUS_EUNKNOWN, 
+                                    ANSWER_QUALITY_ERROR, 
+                                    MSG_PERSISTENCE_OPENTRANSACTION_FAILED);
+         }
+         else { 
+            /* store each ja task */
+            for_each(ja_task, lGetList(jep, JB_ja_tasks)) {
+               int jataskid = lGetUlong(ja_task, JAT_task_number);
+               dstring buffer = DSTRING_INIT;
+              
+               if (spool_write_object(&answer_list, spool_get_default_context(), ja_task, 
+                               job_get_key(job_number, jataskid, NULL, &buffer), 
+                               SGE_TYPE_JATASK)) {
+                  is_success = false;
+                  break;
+               }
+
+               sge_dstring_free(&buffer);
+
+               for_each(pe_task, lGetList(ja_task, JAT_task_list)) {
+                  const char *pe_task_id_str = lGetString(pe_task, PET_id);
+                  
+                  if (!sge_event_spool(&answer_list, 0, sgeE_PETASK_ADD, 
+                                  job_number, jataskid, pe_task_id_str, NULL,
+                                  NULL, jep, ja_task, pe_task, false, true)) {
+                     is_success = false;
+                     break;
+                  }
+               }
+               if (!is_success) {
+                  break;
+               }
+            }
+            
+            if (is_success && !sge_event_spool(&answer_list, 0, sgeE_JOB_ADD, 
+                              job_number, 0, NULL, NULL, NULL,
+                              jep, NULL, NULL, false, true)) {
+               is_success = false;
+               break;
+            }
+
+         }
+
+         /* commit or rollback database transaction */
+         spool_transaction(&answer_list, spool_get_default_context(),
+                           is_success ? STC_commit : STC_rollback);
+         if (!is_success) {
+            break;
+         }
+      }
+
+      SGE_UNLOCK(LOCK_GLOBAL, LOCK_READ);
+      
+      /* reset spooling */
+      bootstrap_set_job_spooling("false");
+      answer_list_output(&answer_list);
+   }
+
+   DEXIT;
+   return;
 }
 

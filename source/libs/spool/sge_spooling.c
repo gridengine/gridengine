@@ -33,13 +33,13 @@
 #include "sgermon.h"
 #include "sge_log.h"
 
-#include "sge_profiling.h"
-
 #include "sge_answer.h"
 
 #include "spool/msg_spoollib.h"
-
 #include "spool/sge_spooling.h"
+
+#include "uti/sge_profiling.h"
+#include "uti/sge_bootstrap.h"
 
 static lListElem *Default_Spool_Context;
 
@@ -1169,6 +1169,20 @@ spool_write_object(lList **answer_list, const lListElem *context,
 {
    bool ret = false;
    DENTER(TOP_LAYER, "spool_write_object");
+
+   switch (object_type) {
+
+      case SGE_TYPE_JOB:
+      case SGE_TYPE_JATASK:
+      case SGE_TYPE_PETASK:
+            if (!bootstrap_get_job_spooling()) {
+               DRETURN(true);
+            }
+         break;
+      default : 
+         break;
+   }
+
    PROF_START_MEASUREMENT(SGE_PROF_SPOOLING);
 
    if (context == NULL) {
@@ -1271,6 +1285,20 @@ spool_delete_object(lList **answer_list, const lListElem *context,
    bool ret = false;
    
    DENTER(TOP_LAYER, "spool_delete_object");
+
+   switch (object_type) {
+
+      case SGE_TYPE_JOB:
+      case SGE_TYPE_JATASK:
+      case SGE_TYPE_PETASK:
+            if (!bootstrap_get_job_spooling()) {
+               DRETURN(true);
+            }
+         break;
+      default : 
+         break;
+   }
+   
    PROF_START_MEASUREMENT(SGE_PROF_SPOOLING);
 
    if (context == NULL) {

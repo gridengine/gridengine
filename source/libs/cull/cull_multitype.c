@@ -2309,6 +2309,66 @@ int lSetPosList(lListElem *ep, int pos, lList *value)
    return 0;
 }
 
+/****** cull/multitype/lXchgString() ********************************************
+*  NAME
+*     lXchgList() -- Exchange field name value string pointer 
+*
+*  SYNOPSIS
+*     int lXchgString(lListElem *ep, int name, char **str) 
+*
+*  FUNCTION
+*     Exchange the string pointer, which has the given field name value. 
+*
+*  INPUTS
+*     lListElem *ep - element 
+*     int name      - field name value 
+*     char **str   - pointer to a string
+*
+*  RESULT
+*     int - error state
+*         0 - OK
+*        -1 - Error
+******************************************************************************/
+int lXchgString(lListElem *ep, int name, char **str) 
+{
+   int pos;
+   char *tmp;
+
+   DENTER(CULL_BASIS_LAYER, "lXchgList");
+
+   if (ep == NULL || str == NULL) {
+      LERROR(LEELEMNULL);
+      DEXIT;
+      return -1;
+   }
+   pos = lGetPosViaElem(ep, name);
+   if (pos < 0) {
+      LERROR(LENEGPOS);
+      DEXIT;
+      return -1;
+   }
+
+   if (mt_get_type(ep->descr[pos].mt) != lStringT) {
+      incompatibleType2(MSG_CULL_XCHGLIST_WRONGTYPEFORFIELDXY_SS, 
+                        lNm2Str(name), multitypes[mt_get_type(ep->descr[pos].mt)]);
+      DEXIT;
+      return -1;
+   }
+
+   if(*str != ep->cont[pos].str) {
+      tmp = ep->cont[pos].str;
+      ep->cont[pos].str = *str;
+      *str = tmp;
+
+      /* remember that field changed */
+      sge_bitfield_set(&(ep->changed), pos);
+   }
+
+   DEXIT;
+   return 0;
+
+}
+
 /****** cull/multitype/lXchgList() ********************************************
 *  NAME
 *     lXchgList() -- Exchange field name value list pointer 
@@ -2336,7 +2396,7 @@ int lXchgList(lListElem *ep, int name, lList **lpp)
 
    DENTER(CULL_BASIS_LAYER, "lXchgList");
 
-   if (!ep) {
+   if (ep == NULL || lpp == NULL) {
       LERROR(LEELEMNULL);
       DEXIT;
       return -1;

@@ -456,15 +456,17 @@ void schedd_mes_add(u_long32 job_number, u_long32 message_number, ...)
 
       if (log_schedd_info) {
          sprintf(msg_log, "Job "sge_u32" %s", job_number, msg);
-         SCHED_MON((log_string, msg_log));
+         schedd_log(msg_log);
       }
    } else {
       if (log_schedd_info) {
-         if (job_number)
+         if (job_number) {
             sprintf(msg_log, "Job "sge_u32" %s", job_number, msg);
-         else
+         }   
+         else {
              sprintf(msg_log, "Your job %s", msg);
-         SCHED_MON((log_string, msg_log));
+         }    
+         schedd_log(msg_log);
       }
    }
 
@@ -559,15 +561,18 @@ void schedd_mes_add_join(u_long32 job_number, u_long32 message_number, ...)
 
       if (log_schedd_info) {
          sprintf(msg_log, "Job "sge_u32" %s", job_number, msg);
-         SCHED_MON((log_string, msg_log));
+         schedd_log(msg_log);
       }
    } else {
       if (log_schedd_info) {
-         if (job_number)
+         if (job_number) {
             sprintf(msg_log, "Job "sge_u32" %s", job_number, msg);
-         else
+         }   
+         else {
              sprintf(msg_log, "Your job %s", msg);
-         SCHED_MON((log_string, msg_log));
+         }    
+         schedd_log(msg_log);
+
       }
    }
 
@@ -631,7 +636,7 @@ void schedd_mes_add_global(u_long32 message_number, ...)
       lAppendElem(lGetList(sme, SME_global_message_list), mes);
 
       /* Write entry into log file */
-      SCHED_MON((log_string, msg));
+      schedd_log(msg);
    }
 
    DEXIT;

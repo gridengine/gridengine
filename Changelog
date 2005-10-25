@@ -1,3 +1,11 @@
+SG-2005-10-25-0: Enhance.:  - lock cleanup
+                            - schedd_config lock cleanup
+                            - sge_log lock cleanup
+                            - job startup message cleanup
+                            - schedd_lib cleanup, first part
+                 Changed:   qmaster, scheduler, ...
+                 Review:    JG
+
 RD-2005-10-25-0: Bugfix:    - Binary jobs are problematic for starter and epilog
                               scripts
                             - wording with qconf -cq should be changed

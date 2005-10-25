@@ -50,6 +50,8 @@ const char *sge_ctimeXML(time_t i, dstring *buffer);
 const char *sge_ctime32(u_long32 *, dstring *buffer); 
 const char *sge_at_time(time_t, dstring *buffer);
 
+void append_time(time_t i, dstring *buffer);
+
 void sge_stopwatch_start(int);
 void sge_stopwatch_log(int, const char *);  
 

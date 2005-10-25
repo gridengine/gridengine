@@ -160,7 +160,6 @@ lList
    lList *ql = NULL;
    lListElem *gel, *ep, *ep2;
    u_long32 qslots;
-   static order_pos_t *order_pos = NULL;
   
    DENTER(TOP_LAYER, "sge_create_orders");
    
@@ -206,6 +205,9 @@ lList
    }
    
    if (type == ORT_tickets || type == ORT_ptickets) {
+      
+      static order_pos_t *order_pos = NULL;
+      
       const lDescr tixDesc[] = {
                             {JAT_task_number, lUlongT},
                             {JAT_tix, lDoubleT},

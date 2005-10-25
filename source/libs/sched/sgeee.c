@@ -199,11 +199,18 @@ static void calc_intern_pending_job_functional_tickets(
 static void task_ref_initialize_table(u_long32 number_of_tasks);
 static void task_ref_destroy_table(void);
 static sge_task_ref_t *task_ref_get_entry(u_long32 index);
+
+static sge_Sdescr_t *all_lists;
+static u_long32 sge_scheduling_run;
+
 static sge_task_ref_t *task_ref_table = NULL;
 static u_long32 task_ref_entries = 0;
 static u_long32 task_ref_job_pos = 0;
-static double Master_min_tix = 0.0;
-static double Master_max_tix = 0.0;
+static double Master_min_tix = 0.0;  /* thread local */
+static double Master_max_tix = 0.0;  /* thread local */
+static int halflife = 0; /* stores the last used halflife time to detect changes  global*/
+static int last_seqno = 0; /* stores the last used seqno for the orders  global */
+static u_long32 past = 0; /* stores the last re-order send time thread local */
 
 /****** sgeee/tix_range_set() **************************************************
 *  NAME
@@ -270,7 +277,7 @@ static void task_ref_initialize_table(u_long32 number_of_tasks)
 static void task_ref_destroy_table(void) 
 {
    if (task_ref_table != NULL) {
-      free(task_ref_table);
+      FREE(task_ref_table);
       task_ref_entries = 0;
    }
 }
@@ -519,10 +526,12 @@ void sgeee_resort_pending_jobs(lList **job_list)
       lListElem *tmp_task = lFirst(lGetList(next_job, JB_ja_tasks));
       lListElem *jep = NULL;
       lListElem *insert_jep = NULL;
-      double prio;
+      double prio = 0.0;
 
       if (tmp_task == NULL) {
-         double nurg = 0.5, npri = 0.5;
+         double nurg = 0.5;
+         double npri = 0.5;
+
          lList *range_list = lGetList(next_job, JB_ja_n_h_ids);
          u_long32 ja_task_id = range_list_get_first_id(range_list, NULL);
          sge_task_ref_t *tref = task_ref_get_first(job_id, ja_task_id);
@@ -920,11 +929,12 @@ adjust_m_shares( lListElem *root,
 {
    lListElem *node;
    char *name;
-   ancestors_t ancestors;
+   ancestors_t ancestors = {0, NULL};
    int depth;
 
-   if (!root)
+   if (root == NULL) {
       return;
+   }   
 
    /*-------------------------------------------------------------
     * Look up share tree node
@@ -933,10 +943,10 @@ adjust_m_shares( lListElem *root,
    name = lGetString(job, lGetUlong(root, STN_type) == STT_PROJECT ?
                           JB_project : JB_owner);
 
-   if (!name)
+   if (name == NULL) {
       return;
+   }   
 
-   memset(&ancestors, 0, sizeof(ancestors_t));
    node = search_ancestor_list(root, name, &ancestors);
    depth = ancestors.depth;
 
@@ -949,13 +959,17 @@ adjust_m_shares( lListElem *root,
       node = ancestors.nodes[depth-1];
    }
 
-   if (ancestors.nodes) free(ancestors.nodes);
+   if (ancestors.nodes) {
+      FREE(ancestors.nodes);
+   }
 
    /*-------------------------------------------------------------
     * Calculate m_shares for every descendant of the active node
     *-------------------------------------------------------------*/
 
-   if (node) calculate_m_shares(node);
+   if (node) {
+      calculate_m_shares(node);
+   }   
 
 }
 
@@ -983,7 +997,7 @@ adjust_job_ref_count( lListElem *root,
 {
    lListElem *node=NULL;
    char *name;
-   ancestors_t ancestors;
+   ancestors_t ancestors = {0, NULL};
    int depth;
 
    /*-------------------------------------------------------------
@@ -991,27 +1005,23 @@ adjust_job_ref_count( lListElem *root,
     *     ancestor nodes
     *-------------------------------------------------------------*/
 
-   memset(&ancestors, 0, sizeof(ancestors_t));
-
    name = lGetString(job, lGetUlong(root, STN_type) == STT_PROJECT ?
                           JB_project : JB_owner);
 
-   if (!name)
+   if (name == NULL) {
       return;
+   }   
 
-   memset(&ancestors, 0, sizeof(ancestors_t));
    node = search_ancestor_list(root, name, &ancestors);
    depth = ancestors.depth;
 
    while (depth--) {
       node = ancestors.nodes[depth];
       lSetUlong(node, STN_job_ref_count,
-         lGetUlong(node, STN_job_ref_count)+adjustment);
+                lGetUlong(node, STN_job_ref_count)+adjustment);
    }
 
-   if (ancestors.nodes) {
-      free(ancestors.nodes);
-   }   
+   FREE(ancestors.nodes);
 
    return;
 }
@@ -1102,64 +1112,27 @@ static int
 sge_init_share_tree_node_fields( lListElem *node,
                                  void *ptr )
 {
-   static int sn_m_share_pos = -1;
-   static int sn_adjusted_current_proportion_pos,
-              sn_last_actual_proportion_pos, sn_sum_priority_pos,
-              sn_job_ref_count_pos, sn_active_job_ref_count_pos,
-              sn_usage_list_pos, sn_stt_pos, sn_ostt_pos,
-              sn_ltt_pos, sn_oltt_pos, sn_shr_pos, sn_ref_pos,
-              sn_proportion_pos, sn_adjusted_proportion_pos, sn_target_proportion_pos,
-              sn_current_proportion_pos, sn_adjusted_usage_pos, sn_combined_usage_pos,
-              sn_actual_proportion_pos;
+   lSetPosDouble(node, STN_m_share_POS, 0);
+   lSetPosDouble(node, STN_last_actual_proportion_POS, 0);
+   lSetPosDouble(node, STN_adjusted_current_proportion_POS, 0);
+   lSetPosDouble(node, STN_proportion_POS, 0);
+   lSetPosDouble(node, STN_adjusted_proportion_POS, 0);
+   lSetPosDouble(node, STN_target_proportion_POS, 0);
+   lSetPosDouble(node, STN_current_proportion_POS, 0);
+   lSetPosDouble(node, STN_adjusted_usage_POS, 0);
+   lSetPosDouble(node, STN_combined_usage_POS, 0);
+   lSetPosDouble(node, STN_actual_proportion_POS, 0);
+   lSetPosUlong(node, STN_job_ref_count_POS, 0);
+   lSetPosUlong(node, STN_active_job_ref_count_POS, 0);
+   lSetPosList(node, STN_usage_list_POS, NULL);
+   lSetPosUlong(node, STN_sum_priority_POS, 0);
+   lSetPosDouble(node, STN_stt_POS, 0);
+   lSetPosDouble(node, STN_ostt_POS, 0);
+   lSetPosDouble(node, STN_ltt_POS, 0);
+   lSetPosDouble(node, STN_oltt_POS, 0);
+   lSetPosDouble(node, STN_shr_POS, 0);
+   lSetPosUlong(node, STN_ref_POS, 0);
 
-
-   if (sn_m_share_pos == -1) {
-      sn_m_share_pos = lGetPosViaElem(node, STN_m_share);
-      sn_adjusted_current_proportion_pos =
-            lGetPosViaElem(node, STN_adjusted_current_proportion);
-      sn_last_actual_proportion_pos =
-            lGetPosViaElem(node, STN_last_actual_proportion);
-      sn_job_ref_count_pos = lGetPosViaElem(node, STN_job_ref_count);
-      sn_active_job_ref_count_pos = lGetPosViaElem(node, STN_active_job_ref_count);
-      sn_usage_list_pos = lGetPosViaElem(node, STN_usage_list);
-      sn_sum_priority_pos = lGetPosViaElem(node, STN_sum_priority);
-      /* sn_temp_pos = lGetPosViaElem(node, STN_temp); */
-      sn_stt_pos = lGetPosViaElem(node, STN_stt);
-      sn_ostt_pos = lGetPosViaElem(node, STN_ostt);
-      sn_ltt_pos = lGetPosViaElem(node, STN_ltt);
-      sn_oltt_pos = lGetPosViaElem(node, STN_oltt);
-      sn_shr_pos = lGetPosViaElem(node, STN_shr);
-      sn_ref_pos = lGetPosViaElem(node, STN_ref);
-      sn_proportion_pos = lGetPosViaElem(node, STN_proportion);
-      sn_adjusted_proportion_pos = lGetPosViaElem(node, STN_adjusted_proportion);
-      sn_target_proportion_pos = lGetPosViaElem(node, STN_target_proportion);
-      sn_current_proportion_pos = lGetPosViaElem(node, STN_current_proportion);
-      sn_adjusted_usage_pos = lGetPosViaElem(node, STN_adjusted_usage);
-      sn_combined_usage_pos = lGetPosViaElem(node, STN_combined_usage);
-      sn_actual_proportion_pos = lGetPosViaElem(node, STN_actual_proportion);
-   }
-
-   lSetPosDouble(node, sn_m_share_pos, 0);
-   lSetPosDouble(node, sn_last_actual_proportion_pos, 0);
-   lSetPosDouble(node, sn_adjusted_current_proportion_pos, 0);
-   lSetPosDouble(node, sn_proportion_pos, 0);
-   lSetPosDouble(node, sn_adjusted_proportion_pos, 0);
-   lSetPosDouble(node, sn_target_proportion_pos, 0);
-   lSetPosDouble(node, sn_current_proportion_pos, 0);
-   lSetPosDouble(node, sn_adjusted_usage_pos, 0);
-   lSetPosDouble(node, sn_combined_usage_pos, 0);
-   lSetPosDouble(node, sn_actual_proportion_pos, 0);
-   lSetPosUlong(node, sn_job_ref_count_pos, 0);
-   lSetPosUlong(node, sn_active_job_ref_count_pos, 0);
-   lSetPosList(node, sn_usage_list_pos, NULL);
-   lSetPosUlong(node, sn_sum_priority_pos, 0);
-   /* lSetPosUlong(node, sn_temp_pos, 0); */
-   lSetPosDouble(node, sn_stt_pos, 0);
-   lSetPosDouble(node, sn_ostt_pos, 0);
-   lSetPosDouble(node, sn_ltt_pos, 0);
-   lSetPosDouble(node, sn_oltt_pos, 0);
-   lSetPosDouble(node, sn_shr_pos, 0);
-   lSetPosUlong(node, sn_ref_pos, 0);
    return 0;
 }
 
@@ -2700,7 +2673,6 @@ sge_calc_tickets( sge_Sdescr_t *lists,
    
    bool share_functional_shares = sconf_get_share_functional_shares();
    u_long32 max_pending_tasks_per_job = sconf_get_max_pending_tasks_per_job();
-   static int halflife = 0;
 
    lList *decay_list = NULL;
 
@@ -2752,10 +2724,12 @@ sge_calc_tickets( sge_Sdescr_t *lists,
       halflife = sconf_get_halftime(); 
       /* decay up till now based on old half life (unless it's zero),
          all future decay will be based on new halflife */
-      if (oldhalflife == 0)
+      if (oldhalflife == 0) {
          calculate_default_decay_constant(halflife);
-      else
+      }   
+      else {
          calculate_default_decay_constant(oldhalflife);
+      }   
       for_each(userprj, lists->user_list) {
          decay_userprj_usage(userprj, decay_list, sge_scheduling_run, curr_time);
       }
@@ -3974,7 +3948,6 @@ sge_build_sgeee_orders(sge_Sdescr_t *lists, lList *running_jobs, lList *queued_j
    lListElem *job = NULL;
    int norders = 0;
    u_long32 max_pending_tasks_per_job = sconf_get_max_pending_tasks_per_job();
-   static int last_seqno = 0;
 
    bool max_queued_ticket_orders = sconf_get_report_pjob_tickets();
    
@@ -4269,7 +4242,6 @@ int sgeee_scheduler( sge_Sdescr_t *lists,
                lList *pending_jobs,
                order_t *orders)
 {
-   static u_long32 past = 0;
    u_long32 now = sge_get_gmt();
    int seqno;
    lListElem *job;

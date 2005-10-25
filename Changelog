@@ -1,3 +1,11 @@
+RD-2005-10-25-0: Bugfix:    - Binary jobs are problematic for starter and epilog
+                              scripts
+                            - wording with qconf -cq should be changed
+                            - testsuite does no recognize successfull tests
+                 Bugtraq:   6255111, 6207868
+                 Issue:     1803, 1842
+                 Review:    HP, AH
+
 CR-2005-10-25-2: Cleanup:   removed unused message macros
 
 CR-2005-10-25-1: Bugfix:    fixed broken aimk clean option for some test binaries

@@ -5355,11 +5355,12 @@ proc print_menu_header {} {
             
            # test if the check was already successful
            set test_name [get_check_name $test]
+           set global_test_name $test_name
            foreach tests_runlevel $tests_runlevels {
               if { [ is_level_enabled $tests_runlevel ] == 0 } {
                  set state_text "done"
-                 if { ( [file isfile "$CHECK_RESULT_DIR/$test_name.res.$tests_runlevel"] != 1) } {
-                    if { ( [file isfile "$CHECK_CORE_RESULT_DIR/$test_name.res.$tests_runlevel"] != 1) } {
+                 if { ( [file isfile "$CHECK_RESULT_DIR/$global_test_name.res.$tests_runlevel"] != 1) } {
+                    if { ( [file isfile "$CHECK_CORE_RESULT_DIR/$global_test_name.res.$tests_runlevel"] != 1) } {
                        set run_test_ok 1
                        incr time_count [get_run_level_time $tests_runlevel] 
                        set state_text "on"

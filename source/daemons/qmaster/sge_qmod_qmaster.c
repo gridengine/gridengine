@@ -645,7 +645,7 @@ monitoring_t *monitor
          }
       }
    }
-   INFO((SGE_EVENT, MSG_QUEUE_CLEANQ_SSS, user, host, qname ));
+   INFO((SGE_EVENT, MSG_QUEUE_PURGEQ_SSS, user, host, qname ));
    answer_list_add(answer, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
 
    DEXIT;

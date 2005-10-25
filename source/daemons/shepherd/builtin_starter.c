@@ -700,7 +700,6 @@ int truncate_stderr_out
          }
       }
    }
-
    if (use_login_shell) {
       strcpy(argv0, "-");
       strcat(argv0, shell_basename);
@@ -1208,7 +1207,7 @@ int use_starter_method /* If this flag is set the shellpath contains the
    */
    if ((atoi(get_conf_val("handle_as_binary")) == 1) &&
        (atoi(get_conf_val("no_shell")) == 0) &&
-       !is_rsh && !is_qlogin) {
+       !is_rsh && !is_qlogin && !strcmp(childname, "job") && use_starter_method != 1 ) {
       int arg_id = 0;
       dstring arguments = DSTRING_INIT;
       int n_job_args;
@@ -1216,14 +1215,14 @@ int use_starter_method /* If this flag is set the shellpath contains the
       unsigned long i;
 
 #if 0
-      shepherd_trace("CASE 1: handle_as_binary, shell, no rsh, no qlogin");
+      shepherd_trace("Case 1: handle_as_binary, shell, no rsh, no qlogin, starter_method=none");
 #endif
 
       pre_args_ptr[arg_id++] = argv0;
       n_job_args = atoi(get_conf_val("njob_args"));
       pre_args_ptr[arg_id++] = "-c";
       sge_dstring_append(&arguments, script_file);
-      
+     
       sge_dstring_append(&arguments, " ");
       for (i = 0; i < n_job_args; i++) {
          char conf_val[256];
@@ -1260,11 +1259,11 @@ int use_starter_method /* If this flag is set the shellpath contains the
       pre_args_ptr[2] = NULL;
       args = read_job_args(pre_args, 0);
    /* Binary, noshell jobs have to make it to the else */
-   } else if (!strcasecmp("posix_compliant", shell_start_mode) &&
-              (atoi(get_conf_val("handle_as_binary")) == 0)) {
+   } else if ( (!strcasecmp("posix_compliant", shell_start_mode) &&
+              (atoi(get_conf_val("handle_as_binary")) == 0)) || (use_starter_method == 1)) {
                  
 #if 0
-      shepherd_trace("Case 3: posix_compliant, no binary" );
+      shepherd_trace("Case 3: posix_compliant, no binary or starter_method!=none" );
 #endif
 
       pre_args_ptr[0] = argv0;
@@ -1417,14 +1416,14 @@ int use_starter_method /* If this flag is set the shellpath contains the
        * Because this fix could break pre-existing installations, it was made
        * optional. */
 
-      if (!inherit_env ()) {
+      if (!inherit_env()) {
          /* The closest thing to execvp that takes an environment pointer is
           * execve.  The problem is that execve does not resolve the path.
           * As there is no reasonable way to resolve the path ourselves, we
           * have to resort to this ugly hack.  Don't try this at home. */
          char **tmp = environ;
 
-         environ = sge_get_environment ();
+         environ = sge_get_environment();
          execvp(filename, args);
          environ = tmp;
       }

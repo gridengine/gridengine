@@ -1,0 +1,284 @@
+#!/vol2/TCL_TK/glinux/bin/expect
+#___INFO__MARK_BEGIN__
+##########################################################################
+#
+#  The Contents of this file are made available subject to the terms of
+#  the Sun Industry Standards Source License Version 1.2
+#
+#  Sun Microsystems Inc., March, 2001
+#
+#
+#  Sun Industry Standards Source License Version 1.2
+#  =================================================
+#  The contents of this file are subject to the Sun Industry Standards
+#  Source License Version 1.2 (the "License"); You may not use this file
+#  except in compliance with the License. You may obtain a copy of the
+#  License at http://gridengine.sunsource.net/Gridengine_SISSL_license.html
+#
+#  Software provided under this License is provided on an "AS IS" basis,
+#  WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING,
+#  WITHOUT LIMITATION, WARRANTIES THAT THE SOFTWARE IS FREE OF DEFECTS,
+#  MERCHANTABLE, FIT FOR A PARTICULAR PURPOSE, OR NON-INFRINGING.
+#  See the License for the specific provisions governing your rights and
+#  obligations concerning the Software.
+#
+#  The Initial Developer of the Original Code is: Sun Microsystems, Inc.
+#
+#  Copyright: 2001 by Sun Microsystems, Inc.
+#
+#  All Rights Reserved.
+#
+##########################################################################
+#___INFO__MARK_END__
+
+
+
+#****** system_tests/shepherd/issue_1803 *************************************************
+#  NAME
+#     issue_1803
+#
+#  FUNCTION
+#     Run level short: 
+#     
+#*******************************************************************************
+
+
+# define global variable in this namespace
+global check_name 
+global check_category 
+global check_description 
+global check_needs
+global check_functions 
+global check_errno 
+global check_errstr 
+global check_highest_level
+global check_init_level_procedure
+global check_root_access_needs
+global env
+
+set check_root_access_needs "yes"
+
+# define a level initialization procedure:
+set check_init_level_procedure "issue_1803_init_level"
+
+# define test's name and run level descriptions
+set check_name            "issue_1803"
+set check_category        "COMPATIBILITY SYSTEM VERIFIED"
+set check_highest_level   102
+set check_description(0)   "batch job submission"
+set check_description(1)   "binary job submission"
+set check_description(2)   ""
+
+
+
+# define test's dependencies
+set check_needs           "init_core_system" 
+
+# setup and cleanup functions
+set check_setup_function issue_1803_setup
+set check_cleanup_function issue_1803_cleanup
+
+
+
+# define test's procedure order
+set check_functions ""
+lappend check_functions "issue_1803_test"
+
+global issue_1803_stored_configuration  
+
+proc issue_1803_init_level {} {
+   global CHECK_ACT_LEVEL
+
+   switch -- $CHECK_ACT_LEVEL {
+      "0" { 
+         return 0
+      } 
+   } 
+
+   return -1  ;# no other level 
+}
+
+
+# -------- local test procedures: initialization------------------------------
+
+
+proc issue_1803_setup {} {
+   global CHECK_OUTPUT ts_config  issue_1803_stored_configuration 
+   puts $CHECK_OUTPUT "\n--- Setup ---"
+
+   puts $CHECK_OUTPUT "saving actual configuration ..."   
+   get_config issue_1803_stored_configuration
+   set my_issue_1803_schedd_config(schedule_interval) "0:0:01"
+   set_schedd_config my_issue_1803_schedd_config 
+
+   set my_conf(prolog) "/bin/true prolog"
+   set my_conf(epilog) "/bin/true epilog" 
+   set_queue all.q  "" my_conf
+
+   get_config act_configuration
+   # Setting execd_params to KEEP_ACTIVE=true
+   set my_execd_params "KEEP_ACTIVE=true"
+   if { [string compare "none" $act_configuration(execd_params)] != 0 } {
+      append my_execd_params ",$act_configuration(execd_params)"
+   }
+   set myconfig(execd_params) "$my_execd_params"
+   set myconfig(load_report_time) "00:00:01"
+   puts $CHECK_OUTPUT "setting execd_param to \"$my_execd_params\" ..."
+   set_config myconfig
+
+   set_error 0 "ok"
+}
+
+proc issue_1803_cleanup {} {
+   global CHECK_OUTPUT ts_config issue_1803_stored_configuration
+
+   puts $CHECK_OUTPUT "--- Cleanup ---"
+   delete_all_jobs
+   wait_for_end_of_all_jobs 60
+
+   puts $CHECK_OUTPUT "restoring original configuration ..."
+   reset_schedd_config
+   set_config issue_1803_stored_configuration
+
+   set my_conf(prolog) "none"
+   set my_conf(epilog) "none"
+   set_queue all.q "" my_conf
+
+   switch_to_admin_user_system
+
+   set_error 0 "ok"
+}
+
+
+proc issue_1803_test {} {
+   global issue_1803_test_hosts check_description CHECK_ARCH CHECK_USER ts_user_config
+   global CHECK_OUTPUT ts_config CHECK_CORE_MASTER CHECK_ACT_LEVEL CHECK_SCRIPT_FILE_DIR
+   global CHECK_DISPLAY_OUTPUT
+   puts $CHECK_OUTPUT $check_description($CHECK_ACT_LEVEL)
+
+   set starter_method_list {}
+   lappend starter_method_list "none"
+   lappend starter_method_list "/bin/env"
+
+   foreach starter_method $starter_method_list {
+
+      set add_error "starter_method=$starter_method failed:"
+
+      # Setting execd_params to KEEP_ACTIVE=true
+      set myconfig(starter_method) "$starter_method"
+      puts $CHECK_OUTPUT "setting starter_method to \"$starter_method\" ..."
+      set_queue all.q "" myconfig
+      
+      # init_logfile_wait instead of sleep
+
+      set host $ts_config(master_host)
+
+      get_config config $host
+      set spool_dir $config(execd_spool_dir)
+
+      set qsub_arg_list {}
+      lappend qsub_arg_list "-l h=$host -o /dev/null -e /dev/null"
+      lappend qsub_arg_list "-b y -l h=$host -o /dev/null -e /dev/null"
+      lappend qsub_arg_list "-l h=$host"
+      lappend qsub_arg_list "-b y -l h=$host"
+
+      foreach job_args $qsub_arg_list {
+
+         set job_id [submit_job "$job_args $ts_config(product_root)/examples/jobs/sleeper.sh 1" ]
+         wait_for_jobend $job_id "Sleeper" 60 0 1
+
+         set starter_method_split [ split $starter_method "/" ]
+         set starter_bin [lindex $starter_method_split [ expr ([llength $starter_method_split] -1) ]]
+
+         set jobs_dir $spool_dir/$host/active_jobs/$job_id.1
+         set trace_file        $jobs_dir/trace
+         puts $CHECK_OUTPUT "trace file:       $trace_file"
+         wait_for_remote_file $host $ts_user_config(second_foreign_user) $trace_file
+
+         puts $CHECK_OUTPUT "reading $trace_file ..."
+         set trace_output [start_remote_prog $host $ts_user_config(second_foreign_user) cat $trace_file prg_exit_state 10]
+      #            puts $CHECK_OUTPUT "---\n$trace_output\n---"
+         set trace_output [split $trace_output "\r\n"]
+
+         set counter 0
+         foreach line_a $trace_output {
+            set line [string trim $line_a]
+            if { $line != "" } {
+               if { [string match "*execvp*" $line ] } {
+                  set line_split [split $line "\""]
+                  foreach line_part $line_split {
+                     puts $CHECK_OUTPUT $line_part
+                  }
+                  set binary    [get_string_value_between "execvp(" "," [lindex $line_split 0 ] ]
+                  set argument1 [lindex $line_split 1 ]
+                  set argument2 [lindex $line_split 3 ]
+                  set argument3 [lindex $line_split 5 ]
+
+                  if { $counter == 0 } {
+                     # prolog
+                     set expected_binary  "/bin/true"
+                     set expected_argument1        "/bin/true"
+                     set expected_argument2        "prolog"
+                     set expected_argument3        ""
+                  } elseif { $starter_method == "none" && $counter == 1 && [string first "-b y" $job_args] >= 0 } {
+                     # job
+                     set expected_binary  "/bin/csh"
+                     set expected_argument1        "-csh"
+                     set expected_argument2        "-c"
+                     set expected_argument3        "$ts_config(product_root)/examples/jobs/sleeper.sh 1 "
+                  } elseif { $starter_method == "none" && $counter == 1 } {
+                     # job
+                     set expected_binary  "/bin/csh"
+                     set expected_argument1        "-csh"
+                     set expected_argument2        "$spool_dir/$host/job_scripts/$job_id"
+                     set expected_argument3        "1"
+                  } elseif { $starter_method != "none" && $counter == 1 && [string first "-b y" $job_args] >= 0 } {
+                     # job
+                     set expected_binary  "$starter_method"
+                     set expected_argument1        "-$starter_bin"
+                     set expected_argument2        "$ts_config(product_root)/examples/jobs/sleeper.sh"
+                     set expected_argument3        "1"
+                  } elseif { $starter_method != "none" && $counter == 1 } {
+                     # job
+                     set expected_binary  "$starter_method"
+                     set expected_argument1        "-$starter_bin"
+                     set expected_argument2        "$spool_dir/$host/job_scripts/$job_id"
+                     set expected_argument3        "1"
+                  } elseif { $counter == 2} {
+                     # epilog
+                     set expected_binary  "/bin/true"
+                     set expected_argument1        "/bin/true"
+                     set expected_argument2        "epilog"
+                     set expected_argument3        ""
+                  } else {
+                     set_error -1 "shepherd forked more than 3 (epilog, job, prolog) times"
+                  }
+               
+                  puts $CHECK_OUTPUT "binary:    \"$binary\""
+                  puts $CHECK_OUTPUT "argument1: \"$argument1\""
+                  puts $CHECK_OUTPUT "argument2: \"$argument2\""
+                  puts $CHECK_OUTPUT "argument3: \"$argument3\""
+
+                  if { $binary != $expected_binary } {
+                     set_error -1 "$add_error expected $expected_binary, but shepherd executed $binary"
+                  }
+                  if { $argument1 != $expected_argument1 } {
+                     set_error -1 "$add_error expected arg1 = $expected_argument1, but arg1 = $argument1"
+                  }
+                  if { $argument2 != $expected_argument2 } {
+                     set_error -1 "$add_error expected arg2 = $expected_argument2, but arg2 = $argument2"
+                  }
+                  if { $argument3 != $expected_argument3 } {
+                     set_error -1 "$add_error expected arg3 = $expected_argument3, but arg3 = $argument3"
+                  }
+                  set counter [ expr ($counter + 1) ]
+               }   
+            }
+         }
+      }
+   }
+ 
+   set_error 0 "ok"
+}
+
+

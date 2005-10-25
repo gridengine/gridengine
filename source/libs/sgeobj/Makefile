@@ -99,14 +99,21 @@ SGEOBJLIB_TEST_PROGS = \
               test_sge_object \
               test_sge_range \
               test_sge_schedd_conf
-   
+
+SGEOBJLIB_TEST_PROGS_OBJS = \
+              test_sge_object.o \
+              test_sge_range.o \
+              test_sge_schedd_conf.o
+
 ###############################################################################
 # global rules: all, clean, depend, messages
 ###############################################################################
 sgeobjlib: $(SGEOBJLIB) $(SGEOBJDLIB) $(SGEOBJLIB_TEST_PROGS)
 
 sgeobjlib_clean:
-		$(RM) $(SGEOBJLIB_OBJS) $(SGEOBJDLIB_OBJS) libsgeobj.a libsgeobj$(SHAREDEXT) libsgeobjd.a libsgeobjd$(SHAREDEXT) sge_sub_object.o sge_sub_object_cpp.o sge_sub_object.c
+		$(RM) $(SGEOBJLIB_OBJS) $(SGEOBJDLIB_OBJS) libsgeobj.a libsgeobj$(SHAREDEXT) \
+              libsgeobjd.a libsgeobjd$(SHAREDEXT) sge_sub_object.o sge_sub_object_cpp.o \
+              sge_sub_object.c $(SGEOBJLIB_TEST_PROGS) $(SGEOBJLIB_TEST_PROGS_OBJS)
 
 sgeobjlib_depend:
 		$(DEPEND) -f$(SGEOBJLIB_DIR)/sgeobj_dependencies $(SGEOBJLIB_DIR)/*.c
@@ -314,7 +321,7 @@ test_sge_range: test_sge_range.o $(SGEOBJLIB) $(SGEOBJDLIB) $(CULLLIB) $(WINGRID
 test_sge_attr: test_sge_attr.o $(SGEOBJLIB) $(SGEOBJDLIB) $(CULLLIB) $(WINGRIDLIB_DEP) $(UTILIB) $(RMONLIB)
 	$(LD_WRAPPER) $(CC) $(CFLAGS) -o test_sge_attr $(LFLAGS) test_sge_attr.o sig_handlers.o $(SGEOBJLIB) $(SGEOBJDLIB) $(CULLLIB) $(WINGRIDLIB) $(UTILIB) $(RMONLIB) $(LIBS)
 
-test_sge_schedd_conf: test_sge_schedd_conf.o $(SGEOBJLIB) $(SGEOBJDLIB) $(CULLLIB)  $(UTILIB) $(WINGRIDLIB_DEP) $(RMONLIB) $(COMMLIB) $(COMMLISTSLIB) $(LCKLIB)
+test_sge_schedd_conf: test_sge_schedd_conf.o $(SGEOBJLIB) $(SGEOBJDLIB) $(CULLLIB) $(UTILIB) $(WINGRIDLIB_DEP) $(RMONLIB) $(COMMLIB) $(COMMLISTSLIB) $(LCKLIB)
 	$(LD_WRAPPER) $(CC) $(CFLAGS) -o test_sge_schedd_conf $(LFLAGS) test_sge_schedd_conf.o $(SGEOBJLIB) $(SGEOBJDLIB) $(CULLLIB) $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(WINGRIDLIB) $(RMONLIB) $(DLLIB) $(LCKLIB) $(SECLIB) $(LIBS)
 
    

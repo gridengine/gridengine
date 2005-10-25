@@ -1,3 +1,6 @@
+CR-2005-10-25-1: Bugfix:    fixed broken aimk clean option for some test binaries
+                 Review:    RD
+
 CR-2005-10-25-0: Bugfix:    added test_heartbeat.c which was missing by 
                             CR-2005-10-24-0
 

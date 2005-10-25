@@ -1,3 +1,6 @@
+DT-2005-10-25-0: Testsuite: o Fixed init method for 1709
+                 Changed:   Test for IZ1709
+
 SG-2005-10-25-0: Enhance.:  - lock cleanup
                             - schedd_config lock cleanup
                             - sge_log lock cleanup

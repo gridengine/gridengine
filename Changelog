@@ -1,3 +1,6 @@
+CR-2005-10-25-0: Bugfix:    added test_heartbeat.c which was missing by 
+                            CR-2005-10-24-0
+
 CR-2005-10-24-0: Bugfix:    - sgemaster -migrate may not delete qmaster lock file 
                               and may break shadowd functionality
                             - sge_qmaster daemon is running on both the master
@@ -5,6 +8,7 @@ CR-2005-10-24-0: Bugfix:    - sgemaster -migrate may not delete qmaster lock fil
                             - added test_heartbeat test binary
                             - INFO text wasn't localized
                             - testsuite test checktree/system_tests/shadowd/migrate
+                            - see also CR-2005-10-25-0
                  Bugtraq:   6333467, 6320869
                  Issue:     1828, 1820
                  Review:    AH       

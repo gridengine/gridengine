@@ -1,3 +1,6 @@
+DT-2005-10-25-2: Testsuite: o Improved test for qalter -[ads]c for IZ1762
+                 Changed:   qalter test
+
 DT-2005-10-25-1: Bugfix:    o Fixed quoted qtask arg handing
                  Issue:     1768, 1837
                  Bugtraq:   6317028, 6339756

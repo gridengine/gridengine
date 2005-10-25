@@ -659,6 +659,9 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
    /* general_failure */
    switch (failed) {
    case SSTATE_BEFORE_PROLOG:
+   /* for CR 6252457 this block should be removed, but for a real fix the
+      host or queue error detection must be improved
+   */
       general_failure = GFSTATE_HOST;
       lSetUlong(jr, JR_general_failure, general_failure);
       job_related_adminmail(jr, is_array);

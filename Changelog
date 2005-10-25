@@ -1,3 +1,10 @@
+RD-2005-10-25-0: Bugfix:    - Binary jobs are problematic for starter and epilog
+                              scripts
+                            - wording with qconf -cq should be changed
+                 Bugtraq:   6255111, 6207868
+                 Issue:     1803, 1842
+                 Review:    HP, AH
+
 CR-2005-10-25-1: Bugfix:    fixed broken aimk clean option for some test binaries
                             (merge from maintrunk)
                  Review:    RD

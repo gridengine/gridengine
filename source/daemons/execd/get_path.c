@@ -66,7 +66,7 @@ int sge_get_path(lList *lp, const char *cwd, const char *owner,
     * check if there's a path for this host
     */
    ep = lGetElemHost(lp, PN_host, uti_state_get_qualified_hostname());
-   if (ep) {
+   if (ep != NULL) {
       path = expand_path(lGetString(ep, PN_path), job_number, 
          ja_task_number, job_name, owner, uti_state_get_qualified_hostname());
       host = lGetHost(ep, PN_host);
@@ -79,8 +79,9 @@ int sge_get_path(lList *lp, const char *cwd, const char *owner,
                             ja_task_number, job_name, owner, 
                             uti_state_get_qualified_hostname());
          host = lGetHost(ep, PN_host);
-         if (!host) 
+         if (host == NULL) {
             break;
+         }
       }
    }
 

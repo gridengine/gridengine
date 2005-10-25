@@ -356,7 +356,7 @@ char *err_str
             sprintf(err_str, MSG_SYSTEM_CANTGETTMPDIR);
             DEXIT;
             return -2;
-         }         
+         }
 
          if (SGE_STAT(tmpdir, &statbuf)) {
             sprintf(err_str, "can't open tmpdir %s", tmpdir);
@@ -686,8 +686,9 @@ char *err_str
                    job_is_array(jep) ? ja_task_id : 0,
                    SGE_SHELL, shell_path);
 
-      if (shell_path[0] == 0)
+      if (shell_path[0] == 0) {
          strcpy(shell_path, lGetString(master_q, QU_shell));
+      }
       var_list_set_string(&environmentList, "SHELL", shell_path);
 
       /* forward name of pe to job */

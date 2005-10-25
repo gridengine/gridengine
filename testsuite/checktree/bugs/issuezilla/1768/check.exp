@@ -1,0 +1,112 @@
+#!/vol2/TCL_TK/glinux/bin/expect --
+#___INFO__MARK_BEGIN__
+##########################################################################
+#
+#  The Contents of this file are made available subject to the terms of
+#  the Sun Industry Standards Source License Version 1.2
+#
+#  Sun Microsystems Inc., March, 2001
+#
+#
+#  Sun Industry Standards Source License Version 1.2
+#  =================================================
+#  The contents of this file are subject to the Sun Industry Standards
+#  Source License Version 1.2 (the "License"); You may not use this file
+#  except in compliance with the License. You may obtain a copy of the
+#  License at http://gridengine.sunsource.net/Gridengine_SISSL_license.html
+#
+#  Software provided under this License is provided on an "AS IS" basis,
+#  WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING,
+#  WITHOUT LIMITATION, WARRANTIES THAT THE SOFTWARE IS FREE OF DEFECTS,
+#  MERCHANTABLE, FIT FOR A PARTICULAR PURPOSE, OR NON-INFRINGING.
+#  See the License for the specific provisions governing your rights and
+#  obligations concerning the Software.
+#
+#  The Initial Developer of the Original Code is: Sun Microsystems, Inc.
+#
+#  Copyright: 2001 by Sun Microsystems, Inc.
+#
+#  All Rights Reserved.
+#
+##########################################################################
+#___INFO__MARK_END__
+
+# Define the global veriables to give them back
+global check_name check_description check_needs check_functions check_errno check_errstr check_highest_level
+global check_init_level_procedure check_category
+global check_root_access_needs
+
+set check_init_level_procedure "issue_1768_init_level"
+
+set check_category            "COMPATIBILITY SYSTEM VERIFIED"
+set check_name                "issue_1768"
+set check_description(0)      "quotes in qtask file can cause DRMAA app to segfault"
+set check_needs               "init_core_system"      ;# dependencies of this check (name of other check)
+set check_root_access_needs   "no"
+
+# setup and cleanup functions
+
+# define test's procedure order
+set check_functions           ""
+lappend check_functions       "issue_1768_run"   ;# functions to call (in order)
+set check_highest_level       0
+
+proc issue_1768_init_level {} {
+   global CHECK_ACT_LEVEL ts_config
+
+   # setup levels 
+   switch -- $CHECK_ACT_LEVEL {
+      "0"  { 
+         return 0
+      }
+   }
+
+   return -1
+}
+
+proc issue_1768_run  {} {
+   global ts_config CHECK_USER CHECK_HOST CHECK_PRODUCT_ROOT
+
+   set pid [pid]
+   set cat "issue1768cat$pid"
+   set qtask "$CHECK_PRODUCT_ROOT/$ts_config(cell)/common/qtask"
+   set qtask_tmp "/tmp/qtask$pid"
+
+   set error [ catch {
+      exec "cp" $qtask $qtask_tmp
+      exec "/bin/echo" "$cat -N \"two words\" -N \"three . words\"" ">>$qtask"
+   } message ]
+
+   if {$error != 0} {
+      set_error -1 "failed setting up qtask file: $message"
+      return -1
+   }
+
+   # Run test binary
+   set failed 0
+
+   foreach host $ts_config(unique_arch_nodes) {
+      set up_arch [resolve_build_arch $host]
+      set client_binary "$ts_config(source_dir)/$up_arch/test_drmaa_issue1768"
+
+      catch {set output [start_remote_prog $host $CHECK_USER $client_binary "/bin/date $cat"]}
+
+      # If we segfault on any architecture, the bug still exists.
+      if {$prg_exit_state != 0} {
+         set failed 1
+      }
+   }
+
+   set error [ catch { exec "mv" "-f" $qtask_tmp $qtask } message ]
+
+   if {$error != 0} {
+      set_error -1 "failed restoring qtask file: $message"
+      return -1
+   } elseif {$failed == 1} {
+      set_error -1 "test binary failed; issue 1768 still exists"
+      return -1
+   }
+
+   set_error 0 "ok"
+   return 0
+}

@@ -1,3 +1,9 @@
+DT-2005-10-25-1: Bugfix:    o Fixed quoted qtask arg handing
+                 Issue:     1768, 1837
+                 Bugtraq:   6317028, 6339756
+                 Changed:   sge_qtcsh.c
+                 Review:    RD, OJ
+
 RD-2005-10-25-1: Bugfix:    Fixed broken build on Solaris
 
 DT-2005-10-25-0: Testsuite: o Fixed init method for 1709

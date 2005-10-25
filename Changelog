@@ -1,3 +1,5 @@
+CR-2005-10-25-2: Cleanup:   removed unused message macros
+
 CR-2005-10-25-1: Bugfix:    fixed broken aimk clean option for some test binaries
                  Review:    RD
 

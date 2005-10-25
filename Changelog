@@ -1,3 +1,8 @@
+RD-2005-10-25-1: Bugfix:    Double error message (merged from maintrunk)
+                 Issue:     1767
+                 Bugtraq:   6316995
+                 Review:    RH
+
 RD-2005-10-25-0: Bugfix:    - Binary jobs are problematic for starter and epilog
                               scripts
                             - wording with qconf -cq should be changed

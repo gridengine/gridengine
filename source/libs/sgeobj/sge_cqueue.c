@@ -1523,8 +1523,7 @@ cqueue_list_locate_qinstance(lList *cqueue_list, const char *full_name)
 
          ret = lGetElemHost(qinstance_list, QU_qhostname, hostname);
       } else {
-         ERROR((SGE_EVENT, "cqueue_list_locate_qinstance("SFQ"): cqueue == NULL"
-                "("SFQ", "SFQ", %d, %d)", full_name, 
+         ERROR((SGE_EVENT, MSG_CQUEUE_CQUEUEISNULL_SSSII, full_name, 
                 cqueue_name != NULL ? cqueue_name : "<null>", 
                 hostname != NULL ? hostname: "<null>", 
                 (int)has_hostname, (int)has_domain));
@@ -1532,7 +1531,7 @@ cqueue_list_locate_qinstance(lList *cqueue_list, const char *full_name)
       sge_dstring_free(&cqueue_name_buffer);
       sge_dstring_free(&host_domain_buffer);
    } else {
-      ERROR((SGE_EVENT, "cqueue_list_locate_qinstance(): full_name == NULL\n"));
+      ERROR((SGE_EVENT, MSG_CQUEUE_FULLNAMEISNULL));
    }
    DEXIT;
    return ret;

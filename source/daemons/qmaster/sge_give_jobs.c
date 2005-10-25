@@ -576,7 +576,7 @@ send_job(const char *rhost, const char *target, lListElem *jep, lListElem *jatep
       PROF_START_MEASUREMENT(SGE_PROF_JOBSCRIPT);
       str = sge_file2string(lGetString(tmpjep, JB_exec_file), &len);
       PROF_STOP_MEASUREMENT(SGE_PROF_JOBSCRIPT);
-      lSetString(tmpjep, JB_script_ptr, str);
+      lXchgString(tmpjep, JB_script_ptr, &str);
       FREE(str);
       lSetUlong(tmpjep, JB_script_size, len);
    }

@@ -40,10 +40,6 @@ extern "C" {
 extern void sge_mutex_lock(const char*, const char*, int, pthread_mutex_t*);
 extern void sge_mutex_unlock(const char*, const char*, int, pthread_mutex_t*);
 
-extern void sge_rwlock_rdlock(const char*, const char*, int, pthread_rwlock_t*);
-extern void sge_rwlock_wrlock(const char*, const char*, int, pthread_rwlock_t*);
-extern void sge_rwlock_unlock(const char*, const char*, int, pthread_rwlock_t*);
-
 extern void sge_relative_timespec(signed long, struct timespec*);
 
 #ifdef  __cplusplus

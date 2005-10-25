@@ -50,7 +50,7 @@
 
 
 typedef struct {
-   pthread_rwlock_t rwlock;  
+   pthread_mutex_t  mutex;
    char*            log_file;
    u_long32         log_level;
    int              log_as_admin_user;
@@ -63,7 +63,7 @@ typedef struct {
 } log_buffer_t;
 
 
-static log_state_t Log_State;
+static log_state_t Log_State = {PTHREAD_MUTEX_INITIALIZER, TMP_ERR_FILE_SNBU, LOG_WARNING, 0, 1, 1};
 
 static pthread_once_t log_once = PTHREAD_ONCE_INIT;
 static pthread_key_t  log_buffer_key;
@@ -119,13 +119,11 @@ u_long32 log_state_get_log_level(void)
 {
    u_long32 level = 0;
 
-   pthread_once(&log_once, log_once_init);
-
-   sge_rwlock_rdlock("Log_State_Lock", "log_state_get_log_level", __LINE__, &(Log_State.rwlock));
+   sge_mutex_lock("Log_State_Lock", "log_state_get_log_level", __LINE__, &Log_State.mutex);
 
    level = Log_State.log_level;
 
-   sge_rwlock_unlock("Log_State_Lock", "log_state_get_log_level", __LINE__, &(Log_State.rwlock));
+   sge_mutex_unlock("Log_State_Lock", "log_state_get_log_level", __LINE__, &Log_State.mutex);
 
    return level;
 }
@@ -162,13 +160,11 @@ const char *log_state_get_log_file(void)
 {
    char* file = NULL;
 
-   pthread_once(&log_once, log_once_init);
-
-   sge_rwlock_rdlock("Log_State_Lock", "log_state_get_log_file", __LINE__, &(Log_State.rwlock));
+   sge_mutex_lock("Log_State_Lock", "log_state_get_log_file", __LINE__, &Log_State.mutex);
 
    file = Log_State.log_file;
 
-   sge_rwlock_unlock("Log_State_Lock", "log_state_get_log_file", __LINE__, &(Log_State.rwlock));
+   sge_mutex_unlock("Log_State_Lock", "log_state_get_log_file", __LINE__, &Log_State.mutex);
 
    return file;
 }
@@ -195,13 +191,11 @@ int log_state_get_log_verbose(void)
 {
    int verbose = 0;
 
-   pthread_once(&log_once, log_once_init);
-
-   sge_rwlock_rdlock("Log_State_Lock", "log_state_get_log_verbose", __LINE__, &(Log_State.rwlock));
-
+   sge_mutex_lock("Log_State_Lock", "log_state_get_log_verbose", __LINE__, &Log_State.mutex);
+   
    verbose = Log_State.verbose;
-
-   sge_rwlock_unlock("Log_State_Lock", "log_state_get_log_verbose", __LINE__, &(Log_State.rwlock));
+   
+   sge_mutex_unlock("Log_State_Lock", "log_state_get_log_verbose", __LINE__, &Log_State.mutex);
 
    return verbose;
 }
@@ -227,13 +221,11 @@ int log_state_get_log_gui(void)
 {
    int gui_log = 0;
 
-   pthread_once(&log_once, log_once_init);
-
-   sge_rwlock_rdlock("Log_State_Lock", "log_state_get_log_gui", __LINE__, &(Log_State.rwlock));
-
+   sge_mutex_lock("Log_State_Lock", "log_state_get_log_gui", __LINE__, &Log_State.mutex);
+   
    gui_log = Log_State.gui_log;
 
-   sge_rwlock_unlock("Log_State_Lock", "log_state_get_log_gui", __LINE__, &(Log_State.rwlock));
+   sge_mutex_unlock("Log_State_Lock", "log_state_get_log_gui", __LINE__, &Log_State.mutex);
 
    return gui_log;
 }
@@ -258,13 +250,11 @@ int log_state_get_log_as_admin_user(void)
 {
    int log_as_admin_user = 0;
 
-   pthread_once(&log_once, log_once_init);
-
-   sge_rwlock_rdlock("Log_State_Lock", "log_state_get_log_as_admin_user", __LINE__, &(Log_State.rwlock));
-
+   sge_mutex_lock("Log_State_Lock", "log_state_get_log_as_admin_user", __LINE__, &Log_State.mutex);
+   
    log_as_admin_user = Log_State.log_as_admin_user;
-
-   sge_rwlock_unlock("Log_State_Lock", "log_state_get_log_as_admin_user", __LINE__, &(Log_State.rwlock));
+   
+   sge_mutex_unlock("Log_State_Lock", "log_state_get_log_as_admin_user", __LINE__, &Log_State.mutex);
 
    return log_as_admin_user;
 }
@@ -287,26 +277,23 @@ int log_state_get_log_as_admin_user(void)
 ******************************************************************************/
 void log_state_set_log_level(u_long32 theLevel)
 { 
-   pthread_once(&log_once, log_once_init);
 
-   sge_rwlock_wrlock("Log_State_Lock", "log_state_set_log_level", __LINE__, &(Log_State.rwlock));
-
+   sge_mutex_lock("Log_State_Lock", "log_state_set_log_level", __LINE__, &Log_State.mutex);
+   
    Log_State.log_level = theLevel;
 
-   sge_rwlock_unlock("Log_State_Lock", "log_state_set_log_level", __LINE__, &(Log_State.rwlock));
+   sge_mutex_unlock("Log_State_Lock", "log_state_set_log_level", __LINE__, &Log_State.mutex);
 
    return;
 }
 
 void log_state_set_log_file(char *theFile)
 {
-   pthread_once(&log_once, log_once_init);
-
-   sge_rwlock_wrlock("Log_State_Lock", "log_state_set_log_file", __LINE__, &(Log_State.rwlock));
-
+   sge_mutex_lock("Log_State_Lock", "log_state_set_log_file", __LINE__, &Log_State.mutex);
+   
    Log_State.log_file = theFile;
-
-   sge_rwlock_unlock("Log_State_Lock", "log_state_set_log_file", __LINE__, &(Log_State.rwlock));
+   
+   sge_mutex_unlock("Log_State_Lock", "log_state_set_log_file", __LINE__, &Log_State.mutex);
 
    return;
 }
@@ -329,13 +316,11 @@ void log_state_set_log_file(char *theFile)
 ******************************************************************************/
 void log_state_set_log_verbose(int i)
 {
-   pthread_once(&log_once, log_once_init);
-
-   sge_rwlock_wrlock("Log_State_Lock", "log_state_set_log_verbose", __LINE__, &(Log_State.rwlock));
-
+   sge_mutex_lock("Log_State_Lock", "log_state_set_log_verbose", __LINE__, &Log_State.mutex);
+   
    Log_State.verbose = i;
-
-   sge_rwlock_unlock("Log_State_Lock", "log_state_set_log_verbose", __LINE__, &(Log_State.rwlock));
+   
+   sge_mutex_unlock("Log_State_Lock", "log_state_set_log_verbose", __LINE__, &Log_State.mutex);
 
    return;
 }
@@ -356,14 +341,13 @@ void log_state_set_log_verbose(int i)
 ******************************************************************************/
 void log_state_set_log_gui(int i)
 {
-   pthread_once(&log_once, log_once_init);
 
-   sge_rwlock_wrlock("Log_State_Lock", "log_state_set_log_gui", __LINE__, &(Log_State.rwlock));
-
+   sge_mutex_lock("Log_State_Lock", "log_state_set_log_gui", __LINE__, &Log_State.mutex);
+   
    Log_State.gui_log = i;
 
-   sge_rwlock_unlock("Log_State_Lock", "log_state_set_log_gui", __LINE__, &(Log_State.rwlock));
-
+   sge_mutex_unlock("Log_State_Lock", "log_state_set_log_gui", __LINE__, &Log_State.mutex);
+   
    return;
 }   
 
@@ -389,13 +373,11 @@ void log_state_set_log_gui(int i)
 ******************************************************************************/
 void log_state_set_log_as_admin_user(int i)
 {
-   pthread_once(&log_once, log_once_init);
-
-   sge_rwlock_wrlock("Log_State_Lock", "log_state_set_log_as_admin_user", __LINE__, &(Log_State.rwlock));
-
+   sge_mutex_lock("Log_State_Lock", "log_state_set_log_as_admin_user", __LINE__, &Log_State.mutex);
+   
    Log_State.log_as_admin_user = i;
 
-   sge_rwlock_unlock("Log_State_Lock", "log_state_set_log_as_admin_user", __LINE__, &(Log_State.rwlock));
+   sge_mutex_unlock("Log_State_Lock", "log_state_set_log_as_admin_user", __LINE__, &Log_State.mutex);
 
    return;
 }
@@ -446,8 +428,6 @@ int sge_log(int log_level, const char *mesg, const char *file__, const char *fun
 
    DENTER(TOP_LAYER, "sge_log");
 
-   pthread_once(&log_once, log_once_init);
-
    /* Make sure to have at least a one byte logging string */
    if (!mesg || mesg[0] == '\0') {
       sprintf(buf, MSG_LOG_CALLEDLOGGINGSTRING_S, 
@@ -459,11 +439,11 @@ int sge_log(int log_level, const char *mesg, const char *file__, const char *fun
 
    /* quick exit if nothing to log */
    if (log_level > MAX(log_state_get_log_level(), LOG_WARNING)) {
-      return 0;
+      DRETURN(0);
    }
 
    if (!log_state_get_log_gui()) {
-      return 0;
+      DRETURN(0);
    }
 
    switch(log_level) {
@@ -505,14 +485,17 @@ int sge_log(int log_level, const char *mesg, const char *file__, const char *fun
    if (!uti_state_get_daemonized() && !rmon_condition(TOP_LAYER, INFOPRINT) && 
        (log_state_get_log_verbose() || log_level <= LOG_ERR)) {
       fprintf(stderr, "%s%s\n", levelstring, mesg);
-   } 
-   if (uti_state_get_mewho() == QMASTER || uti_state_get_mewho() == EXECD   || uti_state_get_mewho() == QSTD ||
-       uti_state_get_mewho() == SCHEDD ||  uti_state_get_mewho() == SHADOWD || uti_state_get_mewho() == COMMD) {
-      sge_do_log(levelchar, mesg);
    }
 
-   DEXIT;
-   return 0;
+   {
+      u_long32 me = uti_state_get_mewho();
+      if (me == QMASTER || me == EXECD    || me == QSTD ||
+          me == SCHEDD  ||  me == SHADOWD || me == COMMD) {
+         sge_do_log(levelchar, mesg);
+      }
+   }
+
+   DRETURN(0);
 } /* sge_log() */
 
 /****** uti/sge_log/sge_do_log() ***********************************************
@@ -542,19 +525,18 @@ static void sge_do_log(int aLevel, const char *aMessage)
 
    if ((fd = SGE_OPEN3(log_state_get_log_file(), O_WRONLY | O_APPEND | O_CREAT, 0666)) >= 0) {
       char msg2log[4*MAX_STRING_SIZE];
-      char date[256], tmp_date[256], time_buf[256];
-      dstring ds, msg;
-      sge_dstring_init(&ds, time_buf, sizeof(time_buf));
+      dstring msg;
+      
       sge_dstring_init(&msg, msg2log, sizeof(msg2log));
-      sprintf(tmp_date, "%s", sge_ctime(0, &ds));
-      sscanf(tmp_date, "%[^\n]", date);
 
-      sge_dstring_sprintf(&msg, "%s|%s|%s|%c|%s\n",
-              date,
+      append_time((time_t)sge_get_gmt(), &msg); 
+
+      sge_dstring_sprintf_append(&msg, "|%s|%s|%c|%s\n",
               uti_state_get_sge_formal_prog_name(),
               uti_state_get_unqualified_hostname(),
               aLevel,
               aMessage);
+
       write(fd, msg2log, strlen(msg2log));
       close(fd);
    }
@@ -587,14 +569,6 @@ static void sge_do_log(int aLevel, const char *aMessage)
 static void log_once_init(void)
 {
    pthread_key_create(&log_buffer_key, &log_buffer_destroy);
-
-   pthread_rwlock_init(&(Log_State.rwlock), NULL);
-
-   Log_State.log_file          = TMP_ERR_FILE_SNBU;
-   Log_State.log_level         = LOG_WARNING;
-   Log_State.log_as_admin_user = 0;
-   Log_State.verbose           = 1;
-   Log_State.gui_log           = 1;
 
    return;
 } /* log_once_init */

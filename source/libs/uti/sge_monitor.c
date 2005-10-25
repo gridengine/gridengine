@@ -82,9 +82,6 @@ static Output_t Output[MAX_OUTPUT_LINES] = {
 static pthread_mutex_t  Dstring_Mutex = PTHREAD_MUTEX_INITIALIZER; 
 static dstring Info_Line= DSTRING_INIT;
 
-static void append_time(time_t i, dstring *buffer); 
-
-
 /***********************************************
  * static functin def. for special extensions 
  ***********************************************/
@@ -557,46 +554,6 @@ void sge_monitor_reset(monitoring_t *monitor)
   
    DEXIT;         
 }
-
-
-/****** sge_monitor/append_time() **************************************************
-*  NAME
-*     append_time() -- Convert time value into string 
-*
-*  SYNOPSIS
-*     const char* append_time(time_t i, dstring *buffer) 
-*
-*  FUNCTION
-*     Convert time value into string 
-*
-*  INPUTS
-*     time_t i - 0 or time value 
-*
-*  RESULT
-*     const char* - time string (current time if 'i' was 0) 
-*     dstring *buffer - buffer provided by caller
-*
-*  NOTES
-*     MT-NOTE: append_time() is MT safe if localtime_r() can be used
-*
-******************************************************************************/
-static void append_time(time_t i, dstring *buffer) 
-{
-   struct tm *tm;
-
-#ifdef HAS_LOCALTIME_R
-   struct tm tm_buffer;
-   
-   tm = (struct tm *)localtime_r(&i, &tm_buffer);
-#else   
-   tm = localtime(&i);
-#endif
-
-   sge_dstring_sprintf_append(buffer, "%02d/%02d/%04d %02d:%02d:%02d",
-           tm->tm_mon + 1, tm->tm_mday, 1900 + tm->tm_year,
-           tm->tm_hour, tm->tm_min, tm->tm_sec);
-}
-
 
 /****************************************
  * implementation section for extensions

@@ -222,10 +222,9 @@ sge_follow_order(lListElem *ep, lList **alpp, char *ruser, char *rhost,
                (long) task_number));      
 
       if (lGetUlong(jep, JB_version) != lGetUlong(ep, OR_job_version)) {
-         ERROR((SGE_EVENT, MSG_ORD_OLDVERSION_UUU, 
-               sge_u32c(lGetUlong(ep, OR_job_version)), sge_u32c(job_number), 
-               sge_u32c(task_number)));
-         answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
+         WARNING((SGE_EVENT, MSG_ORD_OLDVERSION_UUU, sge_u32c(job_number), 
+               sge_u32c(task_number), sge_u32c(lGetUlong(ep, OR_job_version))));
+         answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_WARNING);
          DEXIT;
          return -1;
       }
@@ -346,9 +345,9 @@ sge_follow_order(lListElem *ep, lList **alpp, char *ruser, char *rhost,
 
          /* check queue version */
          if (q_version != lGetUlong(qep, QU_version)) {
-            ERROR((SGE_EVENT, MSG_ORD_QVERSION_UUS,
-                  sge_u32c(q_version), sge_u32c(lGetUlong(qep, QU_version)), q_name));
-            answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+            WARNING((SGE_EVENT, MSG_ORD_QVERSION_SUU, q_name,
+                  sge_u32c(q_version), sge_u32c(lGetUlong(qep, QU_version)) ));
+            answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_WARNING);
 
             /* try to repair schedd data */
             qinstance_add_event(qep, sgeE_QINSTANCE_MOD);
@@ -390,24 +389,24 @@ sge_follow_order(lListElem *ep, lList **alpp, char *ruser, char *rhost,
          }  
             
          if (qinstance_state_is_error(qep)) {
-            ERROR((SGE_EVENT, MSG_JOB_QMARKEDERROR_S, q_name));
-            answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+            WARNING((SGE_EVENT, MSG_JOB_QMARKEDERROR_S, q_name));
+            answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_WARNING);
             lFreeList(&gdil);
             lSetString(jatp, JAT_granted_pe, NULL);
             DEXIT;
             return -1;
          }  
          if (qinstance_state_is_cal_suspended(qep)) {
-            ERROR((SGE_EVENT, MSG_JOB_QSUSPCAL_S, q_name));
-            answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+            WARNING((SGE_EVENT, MSG_JOB_QSUSPCAL_S, q_name));
+            answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_WARNING);
             lFreeList(&gdil);
             lSetString(jatp, JAT_granted_pe, NULL);
             DEXIT;
             return -1;
          }  
          if (qinstance_state_is_cal_disabled(qep)) {
-            ERROR((SGE_EVENT, MSG_JOB_QDISABLECAL_S, q_name));
-            answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+            WARNING((SGE_EVENT, MSG_JOB_QDISABLECAL_S, q_name));
+            answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_WARNING);
             lFreeList(&gdil);
             lSetString(jatp, JAT_granted_pe, NULL);
             DEXIT;
@@ -575,7 +574,7 @@ sge_follow_order(lListElem *ep, lList **alpp, char *ruser, char *rhost,
          jep = job_list_locate(Master_Job_List, job_number);
          if(jep == NULL) {
             WARNING((SGE_EVENT, MSG_JOB_UNABLE2FINDJOBORD_U, sge_u32c(job_number)));
-            answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+            answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_WARNING);
             DEXIT;
             return 0; /* it's ok - job has exited - forget about him */
          }
@@ -686,7 +685,7 @@ sge_follow_order(lListElem *ep, lList **alpp, char *ruser, char *rhost,
          jep = job_list_locate(Master_Job_List, job_number);
          if(!jep) {
             WARNING((SGE_EVENT, MSG_JOB_UNABLE2FINDJOBORD_U, sge_u32c(job_number)));
-            answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+            answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_WARNING);
             DEXIT;
             return 0; /* it's ok - job has exited - forget about him */
          }
@@ -731,7 +730,7 @@ sge_follow_order(lListElem *ep, lList **alpp, char *ruser, char *rhost,
             WARNING((SGE_EVENT, MSG_JOB_CHANGEPTICKETS_UU, 
                      sge_u32c(lGetUlong(jep, JB_job_number)), 
                      sge_u32c(lGetUlong(jatp, JAT_task_number))));
-            answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
+            answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_WARNING);
             sge_mutex_unlock("follow_last_update_mutex", SGE_FUNC, __LINE__, &Follow_Control.last_update_mutex);
             DEXIT;
             return 0;
@@ -811,7 +810,7 @@ sge_follow_order(lListElem *ep, lList **alpp, char *ruser, char *rhost,
 
          jep = job_list_locate(Master_Job_List, job_number);
          if(!jep) {
-            WARNING((SGE_EVENT, MSG_JOB_UNABLE2FINDJOBORD_U, sge_u32c(job_number)));
+            ERROR((SGE_EVENT, MSG_JOB_UNABLE2FINDJOBORD_U, sge_u32c(job_number)));
             answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             DEXIT;
             return 0; /* it's ok - job has exited - forget about him */
@@ -842,7 +841,7 @@ sge_follow_order(lListElem *ep, lList **alpp, char *ruser, char *rhost,
                         sge_u32c(lGetUlong(jatp, JAT_task_number)),
                         sge_u32c(lGetUlong(jatp, JAT_status))
                         ));
-               answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
+               answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_WARNING);
                DEXIT;
                return 0;
             }
@@ -1146,11 +1145,11 @@ sge_follow_order(lListElem *ep, lList **alpp, char *ruser, char *rhost,
                continue;
             }   
 
-            if ((pos=lGetPosViaElem(up_order, UP_version))>=0 &&
+            if ((pos=lGetPosViaElem(up_order, UP_version)) >= 0 &&
                 (lGetPosUlong(up_order, pos) != lGetUlong(up, UP_version))) {
                /* order contains update for outdated user/project usage */
-               ERROR((SGE_EVENT, MSG_ORD_USRPRJVERSION_UUS, sge_u32c(lGetPosUlong(up_order, pos)),
-                      sge_u32c(lGetUlong(up, UP_version)), up_name));
+               WARNING((SGE_EVENT, MSG_ORD_USRPRJVERSION_SUU, up_name, sge_u32c(lGetPosUlong(up_order, pos)),
+                      sge_u32c(lGetUlong(up, UP_version)) ));
                /* Note: Should we apply the debited job usage in this case? */
                continue;
             }

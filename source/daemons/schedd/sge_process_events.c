@@ -275,7 +275,7 @@ int event_handler_default_scheduler()
          lGetNumberOfLeafs(NULL, copy.share_tree, STN_children)
         );
    } else {
-      SCHED_MON((log_string, "-------------START-SCHEDULER-RUN-------------"));
+      schedd_log("-------------START-SCHEDULER-RUN-------------");
    }
 
    PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM7);
@@ -335,7 +335,7 @@ int event_handler_default_scheduler()
    if (getenv("SGE_ND") != NULL) {
       printf("--------------STOP-SCHEDULER-RUN-------------\n");
    } else {
-      SCHED_MON((log_string, "--------------STOP-SCHEDULER-RUN-------------"));
+      schedd_log("--------------STOP-SCHEDULER-RUN-------------");
    }
    
    DEXIT;

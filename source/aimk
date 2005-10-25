@@ -625,7 +625,7 @@ while ($#argv >= 1 && $?found)
       set CFLAGS = " -DDCE -I/usr/include/dce $CFLAGS"
       breaksw
    case "-debug":
-      set DEBUG_FLAG = "$DEBUG_FLAG -g"
+      set DEBUG_FLAG = "$DEBUG_FLAG -g -DSGE_LOCK_DEBUG"
       set DEBUGGED   = 1
       set STRIP      = "echo"
       breaksw
@@ -1057,12 +1057,12 @@ case ALPHA5:
    # gprof option is superset of debug option
    # -g3 produces better debugging information than -g1
    if ( $DEBUGGED == 1) then
-      set DEBUG_FLAG = "-g2"
+      set DEBUG_FLAG = "-g2 -DSGE_LOCK_DEBUG"
       set OFLAG      = "-O"
    endif
 
    if ( $GPROFFED == 1) then
-      set DEBUG_FLAG = "-g1 -pg -gen_feedback -non_shared"
+      set DEBUG_FLAG = "-g1 -pg -gen_feedback -non_shared -DSGE_LOCK_DEBUG"
    endif
 
    set NOERR_CFLAG  = "-w"
@@ -1100,7 +1100,7 @@ case DARWIN:
    set DLLIB = "-ldl"
 
    if ( $DEBUGGED == 1) then
-      set DEBUG_FLAG = "-g"
+      set DEBUG_FLAG = "-g -DSGE_LOCK_DEBUG"
       set OFLAG = ""
    endif
 
@@ -1361,16 +1361,16 @@ case LINUXPPC:
    endif
 
    if ($DEBUGGED == 1) then
-      set DEBUG_FLAG = "-g $INSURE_FLAG"
+      set DEBUG_FLAG = "-g $INSURE_FLAG -DSGE_LOCK_DEBUG"
       set OFLAG = ""
    endif
 
    if ($GPROFFED == 1) then
-      set DEBUG_FLAG = "$DEBUG_FLAG -pg"
+      set DEBUG_FLAG = "$DEBUG_FLAG -pg -DSGE_LOCK_DEBUG"
    endif
 
    if ($GCOVED == 1) then
-      set DEBUG_FLAG = "$DEBUG_FLAG -fprofile-arcs -ftest-coverage"
+      set DEBUG_FLAG = "$DEBUG_FLAG -fprofile-arcs -ftest-coverage -DSGE_LOCK_DEBUG"
    endif
 
    if ( -f /lib/libc.so.6 ) then
@@ -1493,12 +1493,12 @@ case WIN32_X86:
    endif
 
    if ($DEBUGGED == 1) then
-      set DEBUG_FLAG = "-g $INSURE_FLAG"
+      set DEBUG_FLAG = "-g $INSURE_FLAG -DSGE_LOCK_DEBUG"
       set OFLAG = ""
    endif
 
    if ($GPROFFED == 1) then
-      set DEBUG_FLAG = "$DEBUG_FLAG -pg"
+      set DEBUG_FLAG = "$DEBUG_FLAG -pg -DSGE_LOCK_DEBUG"
    endif
 
    if ( -f /lib/libc.so.6 ) then
@@ -1595,11 +1595,11 @@ case SLINUX:
    set CXX = "g++"
 
    if ( $DEBUGGED == 1) then
-      set DEBUG_FLAG = "-g"
+      set DEBUG_FLAG = "-g -DSGE_LOCK_DEBUG"
       set OFLAG = ""
    endif
    if ( $GPROFFED == 1) then
-      set DEBUG_FLAG = "$DEBUG_FLAG -pg"
+      set DEBUG_FLAG = "$DEBUG_FLAG -pg -DSGE_LOCK_DEBUG"
    endif
 
    set CFLAGS   = "$OFLAG -Wall -Werror -Wstrict-prototypes -DLINUX -DSLINUX -DGETHOSTBYNAME_R6 -DGETHOSTBYADDR_R8 $DEBUG_FLAG $CFLAGS"
@@ -1659,17 +1659,17 @@ case SOLARISAMD64:
    endif
 
    if ( $DEBUGGED == 1 ) then
-      set DEBUG_FLAG = "-g $INSURE_FLAG"
+      set DEBUG_FLAG = "-g $INSURE_FLAG -DSGE_LOCK_DEBUG"
       set OFLAG = ""
    endif
 
    if ( $GPROFFED == 1 ) then
       set OFLAG = "-O"
       if ( $CC == gcc ) then
-         set DEBUG_FLAG = "-g -pg"
+         set DEBUG_FLAG = "-g -pg -DSGE_LOCK_DEBUG"
          set LIBS = "$LIBS -ldl"
       else
-         set DEBUG_FLAG = "-g -xpg"
+         set DEBUG_FLAG = "-g -xpg -DSGE_LOCK_DEBUG"
       endif
    endif
 

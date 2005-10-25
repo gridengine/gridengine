@@ -633,7 +633,7 @@ static int dispatch_jobs(sge_Sdescr_t *lists, order_t *orders,
 
    if (nr_pending_jobs == 0) {
       /* no jobs to schedule */
-      SCHED_MON((log_string, MSG_SCHEDD_MON_NOPENDJOBSTOPERFORMSCHEDULINGON ));
+      schedd_log(MSG_SCHEDD_MON_NOPENDJOBSTOPERFORMSCHEDULINGON);
       lFreeList(&user_list);
       lFreeList(&group_list);
       lFreeList(&job_load_adjustments);
@@ -1657,7 +1657,7 @@ static void prepare_resource_schedules(const lList *running_jobs, const lList *s
    add_job_list_to_schedule(suspended_jobs, true, pe_list, host_list, queue_list, centry_list);
    add_calendar_to_schedule(queue_list); 
 
-#ifdef DEBUG /* just for information purposes... */
+#ifdef SGE_LOCK_DEBUG /* just for information purposes... */
    utilization_print_all(pe_list, host_list, queue_list); 
 #endif   
 

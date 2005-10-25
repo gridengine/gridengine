@@ -805,6 +805,7 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
       answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR);
       SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
       unlink(lGetString(jep, JB_exec_file));
+      lSetString(jep, JB_exec_file, NULL);
       DEXIT;
       return STATUS_EDISK;
    }

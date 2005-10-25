@@ -1,3 +1,11 @@
+SG-2005-10-25-0: Enhance.:  - lock cleanup
+                            - schedd_config lock cleanup
+                            - sge_log lock cleanup
+                            - job startup message cleanup
+                            - schedd_lib cleanup, first part
+                 Changed:   qmaster, scheduler, ...
+                 Review:    JG
+
 RD-2005-10-25-1: Bugfix:    Double error message (merged from maintrunk)
                  Issue:     1767
                  Bugtraq:   6316995

@@ -51,15 +51,15 @@
 #define MSG_JOB_FINDJOB_U              _MESSAGE(33016, _("unable to find job "sge_U32CFormat" from the scheduler order package"))
 #define MSG_JOB_FINDJOBTASK_UU         _MESSAGE(33017, _("unable to find task "sge_U32CFormat" of job "sge_U32CFormat))
 
-#define MSG_ORD_OLDVERSION_UUU        _MESSAGE(33018, _("scheduler sent order for old version "sge_U32CFormat" of job "sge_U32CFormat"."sge_U32CFormat))
+#define MSG_ORD_OLDVERSION_UUU        _MESSAGE(33018, _("scheduler sent a order for a modified job "sge_U32CFormat"."sge_U32CFormat" (Version: "sge_U32CFormat))
 #define MSG_ORD_TWICE_UU              _MESSAGE(33019, _("scheduler tries to schedule job "sge_U32CFormat"."sge_U32CFormat" twice"))
 #define MSG_ORD_INITIALTICKETS_U      _MESSAGE(33020, _(" with "sge_U32CFormat" initial tickets"))
 
 #define MSG_OBJ_UNABLE2FINDPE_S       _MESSAGE(33021, _("unable to find pe "SFQ))
 #define MSG_OBJ_NOQNAME               _MESSAGE(33022, _("can't get q_name"))
 
-#define MSG_ORD_QVERSION_UUS          _MESSAGE(33023, _("orders queue version ("sge_U32CFormat") is not uptodate ("sge_U32CFormat") for queue "SFQ))
-#define MSG_ORD_USRPRJVERSION_UUS          _MESSAGE(33024, _("orders user/project version ("sge_U32CFormat") is not uptodate ("sge_U32CFormat") for user/project "SFQ))
+#define MSG_ORD_QVERSION_SUU          _MESSAGE(33023, _("scheduler send a order for a changed queue "SFQ" (version: old "sge_U32CFormat" new "sge_U32CFormat))
+#define MSG_ORD_USRPRJVERSION_SUU     _MESSAGE(33024, _("scheduler send a order for a changed user/project "SFQ" (version: old "sge_U32CFormat") new "sge_U32CFormat))
 
 
 #define MSG_JOB_JOBACCESSQ_US         _MESSAGE(33025, _("job "sge_U32CFormat" has no access to queue "SFQ))
@@ -71,7 +71,7 @@
 #define MSG_JOB_UNABLE2STARTJOB_US    _MESSAGE(33031, _("unable to start job "sge_U32CFormat" before cleanup on host "SFN" has finished"))
 #define MSG_JOB_HOSTNAMERESOLVE_US    _MESSAGE(33032, _("failed starting job "sge_U32CFormat" - probably hostname resolving problem with "SFQ) ) 
 #define MSG_JOB_JOBDELIVER_UU         _MESSAGE(33033, _("failed delivering job "sge_U32CFormat"."sge_U32CFormat))
-#define MSG_JOB_UNABLE2FINDJOBORD_U   _MESSAGE(33034, _("unable to find job \""sge_U32CFormat"\" in ticket order") )     
+#define MSG_JOB_UNABLE2FINDJOBORD_U   _MESSAGE(33034, _("unable to find job \""sge_U32CFormat"\" from the ticket order") )     
 #define MSG_JOB_CHANGETICKETS_UUU     _MESSAGE(33035, _("scheduler tries to change tickets of a non running job "sge_U32CFormat" task "sge_U32CFormat"(state "sge_U32CFormat")"))
 #define MSG_JOB_CHANGEPTICKETS_UU      _MESSAGE(33036, _("scheduler tries to change pending tickets of a non pending job "sge_U32CFormat" task "sge_U32CFormat))
 #define MSG_JOB_REMOVENOTFINISHED_U   _MESSAGE(33037, _("scheduler tried to remove job "sge_U32CFormat" which is not in state JFINISHED"))

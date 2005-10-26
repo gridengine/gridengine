@@ -823,19 +823,49 @@ proc check_deadline {} {
 #*******************************
 proc check_option_ac {} {
 
-   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT actual_host
+   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_ACTUAL_TEST_PATH
+   global CHECK_USER CHECK_HOST CHECK_ARCH actual_host
 
    # first clean up output directory:  
    setup_output_directory
 
-   set option "-ac myvar=test -ac myvar2=test2"
-   set jobargs "$option -l h=${actual_host} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
+   set option "-ac myvar1=\"test 1\" -ac myvar2='test 2'"
+   # We use a special job script which contains context variable settings
+   set jobargs "$option -l h=${actual_host} -o $job_output_dir -e $job_output_dir $CHECK_ACTUAL_TEST_PATH/sleeper.sh 15" 
   
    set result [submit_job $jobargs 0]  
    puts $CHECK_OUTPUT "\njob $result has args: \"$jobargs\""
 
    if { $result < 0 } {
       set_error -1 "could not submit job"
+      return
+   }
+
+   set qstatoutput [ start_remote_prog $CHECK_HOST $CHECK_USER "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qstat" "-j $result"]
+
+   if {$prg_exit_state != 0} {
+      set_error -1 "qsub $option - qstat error: $qstatoutput"
+      return
+   }
+
+   if {[regexp {context:([^\r\n]+\r?\n)} $qstatoutput match vars] != 1} {
+      set_error -1 "qsub $option - qsub error: context variables were not set"
+      return
+   }
+
+   puts $CHECK_OUTPUT "context variables: $vars"
+
+   if {[regexp {[ \t,]myvar1=test 1[,\r\n]} $vars match] != 1} {
+      set_error -1 "qsub $option - qsub error: command-line context variable was not set"
+      return
+   } elseif {[regexp {[ \t,]myvar2=test 2[,\r\n]} $vars match] != 1} {
+      set_error -1 "qsub $option - qsub error: command-line context variable was not set"
+      return
+   } elseif {[regexp {[ \t,]myvar3=test 3[,\r\n]} $vars match] != 1} {
+      set_error -1 "qsub $option - qsub error: inline context variable was not set"
+      return
+   } elseif {[regexp {[ \t,]myvar4=test 4[,\r\n]} $vars match] != 1} {
+      set_error -1 "qsub $option - qsub error: inline context variable was not set"
       return
    }
 

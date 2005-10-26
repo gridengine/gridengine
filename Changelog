@@ -1,3 +1,9 @@
+MD-2005-10-26-0: Bugfix:    - typo in install script text
+                            - added autoinstall debug output
+                            - added a CLEAR between install dialogs
+                 Changed:   inst_qmaster.sh, inst_berkeley.sh, 
+                            inst_execd_uninst.sh
+
 DT-2005-10-25-2: Testsuite: o Improved test for qalter -[ads]c for IZ1762
                  Changed:   qalter test
 

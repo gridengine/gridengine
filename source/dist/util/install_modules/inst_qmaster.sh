@@ -1690,6 +1690,7 @@ GetDefaultDomain()
 
 SetScheddConfig()
 {
+   $CLEAR
 
    $INFOTEXT -u "Scheduler Tuning"
    $INFOTEXT -n "\nThe details on the different options are described in the manual. \n"

@@ -87,6 +87,12 @@ SpoolingCheckParams()
       if [ $ret -eq 0 ]; then
       $INFOTEXT -e "\nThe database directory >%s<\n" \
                    "is not on a local filesystem.\nPlease choose a local filesystem or configure the RPC Client/Server mechanism" $SPOOLING_DIR
+      if [ "$AUTO" = "true" ]; then
+         $INFOTEXT -log "\nThe database directory >%s<\n" \
+                   "is not on a local filesystem.\nPlease choose a local filesystem or configure the RPC Client/Server mechanism" $SPOOLING_DIR
+         MoveLog
+         exit 1
+      fi
          return 0
       else
          return 1

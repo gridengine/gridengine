@@ -43,7 +43,7 @@ WelcomeUninstall()
       return
    fi
 
-   $INFOTEXT -u "Grid Engine unistallation"
+   $INFOTEXT -u "Grid Engine uninstallation"
    if [ "$ALL_EXECDS" = true ]; then
       $INFOTEXT "\nYour are going to uninstall all execution hosts!\n" \
                 "If you are not sure what you are doing, than please stop\n" \
@@ -54,7 +54,7 @@ WelcomeUninstall()
                 "this procedure with <CTRL-C>!\n"
    fi
    
-   $INFOTEXT -wait -n "\nHit <ENTER>, to continue! >>"
+   $INFOTEXT -wait -n "\nHit <RETURN> to continue >> "
 }
 
 FetchHostname()

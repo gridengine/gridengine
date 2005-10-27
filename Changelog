@@ -1,3 +1,8 @@
+JG-2005-10-27-0: Testsuite: Avoid defunct processes after closing rlogin
+                            sessions.
+                 Changed:   remote_procedures.tcl
+                 Review:    RD
+
 DT-2005-10-26-0: Testsuite: o Improved test for qsub -ac for IZ1850
                  Changed:   qsub test
 

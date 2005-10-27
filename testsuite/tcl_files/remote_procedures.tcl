@@ -50,40 +50,6 @@ puts "    *********************************************"
 
 # procedures
 #                                                             max. column:     |
-#****** remote_procedures/test() ******
-# 
-#  NAME
-#     test -- ??? 
-#
-#  SYNOPSIS
-#     test { m p } 
-#
-#  FUNCTION
-#     ??? 
-#
-#  INPUTS
-#     m - ??? 
-#     p - ??? 
-#
-#  RESULT
-#     ??? 
-#
-#  EXAMPLE
-#     ??? 
-#
-#  NOTES
-#     ??? 
-#
-#  BUGS
-#     ??? 
-#
-#  SEE ALSO
-#     ???/???
-#*******************************
-proc test {m p} {
-   puts "test $m $p"
-}
-
 #****** remote_procedures/setup_qping_dump() ***********************************
 #  NAME
 #     setup_qping_dump() -- start qping dump as remote process (as root)
@@ -623,8 +589,10 @@ proc start_remote_prog { hostname
            set do_stop 0
         }
       }
+
       flush $CHECK_OUTPUT
    }
+
    flush $CHECK_OUTPUT 
    close_spawn_process $id
 
@@ -906,7 +874,7 @@ proc show_proc_error { result new_error } {
 
          mail_report "testsuite $category - $check_name" $mail_body
       }
-    }
+   }
 }
 
 
@@ -1113,6 +1081,7 @@ proc open_remote_spawn_process { hostname
         add_proc_error "open_remote_spawn_process" -2 "${error_info}\ncould not spawn! (ret_pid = $pid)" 
         return "" 
       }
+
       match_max -i $sp_id $CHECK_EXPECT_MATCH_MAX_BUFFER
       debug_puts "open_remote_spawn_process -> buffer size is: [match_max -i $sp_id]"
       # wait for shell to start
@@ -1129,6 +1098,7 @@ proc open_remote_spawn_process { hostname
                    -i $spawn_id full_buffer {
                       add_proc_error "open_remote_spawn_process" -1 "${error_info}\nbuffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
                       catch { close -i $spawn_id }
+                      catch { wait -nowait -i $spawn_id }
                       return ""
                    }
                    -i $spawn_id "The authenticity of host*" {
@@ -1154,6 +1124,7 @@ proc open_remote_spawn_process { hostname
                        } else { 
                           add_proc_error "open_remote_spawn_process" -1 "${error_info}\nstartup timeout" 
                           catch { close -i $spawn_id }
+                          catch { wait -nowait -i $spawn_id }
                           return ""
                        }
                    }
@@ -1163,7 +1134,7 @@ proc open_remote_spawn_process { hostname
              set timeout 1
 #            On some architectures it makes problems when trying to send
 #            to a just openend shell, so this line is not active
-            send -i $spawn_id "\n$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/shell_start_output.sh\n"
+#            send -i $spawn_id "\n$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/shell_start_output.sh\n"
              set open_remote_spawn__tries 30
              while { $open_remote_spawn__tries > 0 } {
                 expect {
@@ -1192,16 +1163,18 @@ proc open_remote_spawn_process { hostname
                   -i $spawn_id eof {
                      add_proc_error "open_remote_spawn_process" -2 "${error_info}\nunexpected eof"
                      catch { close -i $spawn_id }
+                     catch { wait -nowait -i $spawn_id }
                      return ""
                   }
                }
             }
             if { $open_remote_spawn__tries <= 0 } {
-               add_proc_error "open_remote_spawn_process" -1 "${error_info}\ntimeout waiting for shell response prompt (b)"
+                add_proc_error "open_remote_spawn_process" -1 "${error_info}\ntimeout waiting for shell response prompt (b)"
                 catch { send -i $spawn_id "\003" } ;# send CTRL+C to stop poss. running processes
                 puts $CHECK_OUTPUT "closing spawn process ..."
                 flush $CHECK_OUTPUT
                 catch { close -i $spawn_id }
+                catch { wait -nowait -i $spawn_id }
                 return ""
             }
              
@@ -1217,19 +1190,20 @@ proc open_remote_spawn_process { hostname
                    -i $spawn_id full_buffer {
                       add_proc_error "open_remote_spawn_process" -1 "${error_info}\nbuffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
                       catch { close -i $spawn_id }
+                      catch { wait -nowait -i $spawn_id }
                       return ""
                    }
                    -i $spawn_id timeout {
                       puts -nonewline $CHECK_OUTPUT "   \r$mytries\r"
-                      
                       flush $CHECK_OUTPUT
+
                       send -i $spawn_id -- "$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/check_identity.sh\n"
                       set timeout $next_timeout
                       if { $next_timeout < 6 } {
                          incr next_timeout 1
                       }
                       incr mytries -1 ; 
-                      if  { $mytries < 0 } { 
+                      if { $mytries < 0 } { 
                           set ok 1
                           add_proc_error "open_remote_spawn_process" -2 "${error_info}\nshell doesn't start or runs not as user $open_remote_spawn__check_user on host $open_remote_spawn__hostname" 
                           puts $CHECK_OUTPUT "sending CTRL + C to spawn id $spawn_id ..."
@@ -1239,6 +1213,7 @@ proc open_remote_spawn_process { hostname
                           puts $CHECK_OUTPUT "closing spawn process ..."
                           flush $CHECK_OUTPUT
                           catch { close -i $spawn_id }
+                          catch { wait -nowait -i $spawn_id }
                           puts $CHECK_OUTPUT "closed buffer: $open_spawn_buffer"
                           return ""
                       }
@@ -1276,6 +1251,7 @@ proc open_remote_spawn_process { hostname
                       puts $CHECK_OUTPUT "closing spawn process ..."
                       flush $CHECK_OUTPUT
                       catch { close -i $spawn_id }
+                      catch { wait -nowait -i $spawn_id }
                       puts $CHECK_OUTPUT "closed buffer: $open_spawn_buffer"
                       return ""
                    }
@@ -1287,7 +1263,10 @@ proc open_remote_spawn_process { hostname
       } catch_error_message ]
       if { $catch_return != 0 } {
          add_proc_error "open_remote_spawn_process" -2 "${error_info}\nerror starting shell:\n$catch_error_message" 
-         catch { close -i $spawn_id }
+         uplevel 1 {
+            catch { close -i $spawn_id }
+            catch { wait -nowait -i $spawn_id }
+         }
          return ""
       }
       catch {
@@ -1304,19 +1283,22 @@ proc open_remote_spawn_process { hostname
                      set open_remote_spawn__stop -1
                      add_proc_error "open_remote_spawn_process" -1 "${error_info}\nbuffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
                      catch { close -i $spawn_id }
+                     catch { wait -nowait -i $spawn_id }
                      return ""
                   }
                   -i $spawn_id timeout {
                      set open_remote_spawn__stop -1
                      add_proc_error "open_remote_spawn_process" -2 "${error_info}\nrlogin timeout"
                      catch { close -i $spawn_id }
+                     catch { wait -nowait -i $spawn_id }
                      return ""
                   } 
                   -i $spawn_id -- "ermission denied" {
-                        set open_remote_spawn__stop -1
-                        add_proc_error "open_remote_spawn_process" -2 "${error_info}\npermission denied"
-                        catch { close -i $spawn_id }
-                        return ""
+                     set open_remote_spawn__stop -1
+                     add_proc_error "open_remote_spawn_process" -2 "${error_info}\npermission denied"
+                     catch { close -i $spawn_id }
+                     catch { wait -nowait -i $spawn_id }
+                     return ""
                   }
                   -i $spawn_id -- "\n" {
                         debug_puts "login sequence for user $CHECK_USER ..."
@@ -1349,6 +1331,7 @@ proc open_remote_spawn_process { hostname
                      set open_remote_spawn__stop -1
                      add_proc_error "open_remote_spawn_process" -2 "${error_info}\nunexpected eof on rlogin command"
                      catch { close -i $spawn_id }
+                     catch { wait -nowait -i $spawn_id }
                      return ""
                   }
                }
@@ -1369,16 +1352,19 @@ proc open_remote_spawn_process { hostname
                   -i $spawn_id full_buffer {
                      add_proc_error "open_remote_spawn_process" -1 "${error_info}\nbuffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
                      catch { close -i $spawn_id }
+                     catch { wait -nowait -i $spawn_id }
                      return ""
                   }
                   -i $spawn_id timeout {
                      add_proc_error "open_remote_spawn_process" -2 "${error_info}\ntimeout waiting for password question"
                      catch { close -i $spawn_id }
+                     catch { wait -nowait -i $spawn_id }
                      return ""
                   }  
                   -i $spawn_id -- "ermission denied" {
                      add_proc_error "open_remote_spawn_process" -2 "${error_info}\npermission denied error"
                      catch { close -i $spawn_id }
+                     catch { wait -nowait -i $spawn_id }
                      return ""
                   }
                   -i $spawn_id -- "assword:" {
@@ -1395,6 +1381,7 @@ proc open_remote_spawn_process { hostname
                   -i $spawn_id eof {
                      add_proc_error "open_remote_spawn_process" -2 "${error_info}\nunexpected eof on rlogin command"
                      catch { close -i $spawn_id }
+                     catch { wait -nowait -i $spawn_id }
                      return ""
                   }
                }
@@ -1447,6 +1434,7 @@ proc open_remote_spawn_process { hostname
             -i $open_remote_spawn__id full_buffer {
                add_proc_error "open_remote_spawn_process" -1 "${error_info}\nbuffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
                catch { close -i $open_remote_spawn__spawn_id }
+               catch { wait -nowait -i $open_remote_spawn__spawn_id }
                return ""
             }
             -i $open_remote_spawn__id timeout {
@@ -1458,12 +1446,14 @@ proc open_remote_spawn_process { hostname
                    puts $CHECK_OUTPUT "closing spawn process ..."
                    flush $CHECK_OUTPUT
                    catch { close -i $open_remote_spawn__id }
+                   catch { wait -nowait -i $open_remote_spawn__spawn_id }
                    return ""
                 }
             }  
             -i $open_remote_spawn__id eof {
                add_proc_error "open_remote_spawn_process" -2 "${error_info}\nunexpected eof"
                catch { close -i $open_remote_spawn__spawn_id }
+               catch { wait -nowait -i $open_remote_spawn__spawn_id }
                return ""
             }
          }
@@ -1882,16 +1872,20 @@ proc close_open_rlogin_sessions {} {
    global CHECK_OUTPUT rlogin_spawn_session_buffer
    global do_close_rlogin
 
-
+   # if we called testsuite with option close_rlogin, we have no open sessions
    if { $do_close_rlogin != 0 } {
       puts $CHECK_OUTPUT "close_open_rlogin_sessions - open rlogin session mode not activated!"
       return 0 
    }
+
+   # gather all session names
    set sessions [array names rlogin_spawn_session_buffer]
    set help_buf ""
    foreach session $sessions {
       lappend help_buf "$session;$rlogin_spawn_session_buffer($session)"
    }
+
+   # close all sessions
    foreach session $help_buf {
       set data_list [split $session ";"]
       set back(spawn_id)  [lindex $data_list 0]
@@ -1975,6 +1969,7 @@ proc check_rlogin_session { spawn_id pid hostname user nr_of_shells} {
                    puts $CHECK_OUTPUT "closing spawn process ..."
                    flush $CHECK_OUTPUT
                    catch { close -i $spawn_id }
+                   catch { wait -nowait -i $spawn_id }
                    return ""
                 }
             }  
@@ -2032,10 +2027,12 @@ proc check_rlogin_session { spawn_id pid hostname user nr_of_shells} {
 #*******************************************************************************
 proc is_spawn_process_in_use { id } {
    global rlogin_in_use_buffer
+
    set sp_id  [lindex $id 1]
    if { [info exists rlogin_in_use_buffer($sp_id)] } {
       return $rlogin_in_use_buffer($sp_id)
    }
+
    return 0
 }
 
@@ -2164,11 +2161,12 @@ proc close_spawn_process { id { check_exit_state 0 } {my_uplevel 1}} {
    set open_spawn_buffer $sp_id
    catch { 
       uplevel $my_uplevel { 
+         global open_spawn_buffer
          close -i $open_spawn_buffer
          debug_puts "closed buffer: $open_spawn_buffer"
-         flush $open_spawn_buffer
       }
    }
+
    log_user 1
    set wait_return "" 
    catch { set wait_return [ uplevel $my_uplevel { wait -i $open_spawn_buffer } ] }
@@ -2194,15 +2192,16 @@ proc close_spawn_process { id { check_exit_state 0 } {my_uplevel 1}} {
          add_proc_error "close_spawn_process" -1 "wait exit status: $wait_code"
       }
    } else {
-         puts $CHECK_OUTPUT "*** operating system error: $wait_code"
-         puts $CHECK_OUTPUT "spawn id: $wait_spawn_id"
-         puts $CHECK_OUTPUT "wait pid: $wait_pid"
-         if { ($check_exit_state == 0) } {
-            add_proc_error "close_spawn_process" -1 "operating system error: $wait_code"
-         }
+      puts $CHECK_OUTPUT "*** operating system error: $wait_code"
+      puts $CHECK_OUTPUT "spawn id: $wait_spawn_id"
+      puts $CHECK_OUTPUT "wait pid: $wait_pid"
+      if { ($check_exit_state == 0) } {
+         add_proc_error "close_spawn_process" -1 "operating system error: $wait_code"
+      }
    }
    flush $CHECK_OUTPUT
    set rlogin_in_use_buffer($sp_id) 0
+
    return $wait_code ;# return exit state
 }
 

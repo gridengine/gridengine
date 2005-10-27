@@ -630,7 +630,7 @@ static char* qevent_get_event_name(int event) {
 
 
 
-void qevent_testsuite_mode(void) 
+static void qevent_testsuite_mode(void) 
 {
 #if 0 /* EB: DEBUG */
 #define QEVENT_SHOW_ALL

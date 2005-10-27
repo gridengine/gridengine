@@ -470,6 +470,7 @@ proc start_remote_prog { hostname
    
    if { $hostname != $CHECK_HOST && $do_file_check == 1 } {
       set is_ok 0
+      # give NFS 60 seconds time to show the command ...
       set my_timeout [ expr ( [timestamp] + 60 ) ] 
       debug_puts "----> REMOTE connection, checking file availability ..."
 

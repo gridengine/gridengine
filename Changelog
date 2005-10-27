@@ -1,3 +1,9 @@
+DT-2005-10-27-0: Bugfix:    o Fixed handling of single-quotes
+                 Changed:   sge_string.c
+                 Issue:     1762
+                 Bugtraq:   6319233
+                 Review:    RD
+
 JG-2005-10-27-0: Testsuite: Avoid defunct processes after closing rlogin
                             sessions.
                  Changed:   remote_procedures.tcl

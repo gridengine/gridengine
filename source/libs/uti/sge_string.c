@@ -1211,7 +1211,7 @@ int sge_strlen(const char *str)
 char **string_list(char *str, char *delis, char **pstr) 
 {
    unsigned int i = 0, j = 0;
-   int is_space = 0;
+   bool is_space = false;
    int found_first_quote = 0;
    char **head = NULL;
    bool done;
@@ -1247,34 +1247,43 @@ char **string_list(char *str, char *delis, char **pstr)
 
    done = false;
    while (!done) {
-      while (str[i] && strchr(delis, str[i])) {
+      while ((str[i] != '\0') && (strchr(delis, str[i]) != NULL)) {
          i++;
       }
+
       if (str[i] == '\0') {
          done = true;
          break;
       }
+
       head[j] = &str[i];
       j++;
       /*
       ** parse one string
       */
-      is_space = 0;
-      while (str[i] && !is_space) {
-         if (str[i] == '"') {
+      is_space = false;
+      
+      while ((str[i] != '\0') && !is_space) {
+         if ((found_first_quote == 0) && (str[i] == '"')) {
+            found_first_quote = 2;
+         }
+         else if ((found_first_quote == 0) && (str[i] == '\'')) {
             found_first_quote = 1;
          }
+
          i++;
-         if (found_first_quote) {
-            is_space = 0;
+
+         /* If we're inside quotes, we don't count spaces. */
+         if (found_first_quote == 0) {
+            is_space = (bool)(strchr(delis, str[i]) != NULL);
          }
-         else {
-            is_space = (strchr(delis, str[i]) != NULL);
-         }
-         if (found_first_quote && (str[i] == '"')) {
+         
+         if (((found_first_quote == 2) && (str[i] == '"')) ||
+             ((found_first_quote == 1) && (str[i] == '\''))) {
             found_first_quote = 0;
          }
       }
+      
       if (str[i] == '\0') {
          done = true;
          break;
@@ -1283,6 +1292,7 @@ char **string_list(char *str, char *delis, char **pstr)
       str[i] = '\0';
       i++;
    }
+   
    head[j] = NULL;
 
    DEXIT;

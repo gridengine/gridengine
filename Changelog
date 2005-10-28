@@ -1,3 +1,10 @@
+DT-2005-10-28-0: Bugfix:    o Fixed handling of single-quotes
+                            - Merged from DT-2005-10-27-0 (maintrunk)
+                 Issue:     1762
+                 Bugtraq:   6319233
+                 Changed:   sge_string.c
+                 Review:    RD
+
 RD-2005-10-28-0: Bugfix:    fixed lock cleanup by SG-2005-10-25-0
                             lock was not initialized for non mt binaries
                  Review:    SG

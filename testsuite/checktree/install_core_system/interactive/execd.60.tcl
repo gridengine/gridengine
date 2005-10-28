@@ -94,7 +94,7 @@ proc install_execd {} {
          }
          foreach exec_host $my_csp_host_list {
             if { $exec_host == $CHECK_CORE_MASTER } {
-               continue;
+               continue
             }
             copy_certificates $exec_host
          }
@@ -170,8 +170,6 @@ proc install_execd {} {
       set ENTER_LOCAL_EXECD_SPOOL_DIR_ENTER [translate $exec_host 0 1 0 [sge_macro DISTINST_ENTER_LOCAL_EXECD_SPOOL_DIR_ENTER] ]
       set HOSTNAME_KNOWN_AT_MASTER [translate $exec_host 0 1 0 [sge_macro DISTINST_HOSTNAME_KNOWN_AT_MASTER] ]
       
-
-
       cd "$ts_config(product_root)"
 
       set prod_type_var "SGE_ROOT"
@@ -183,21 +181,17 @@ proc install_execd {} {
          set id [open_remote_spawn_process "$exec_host" "$CHECK_USER"  "cd $$prod_type_var;./install_execd" "$CHECK_EXECD_INSTALL_OPTIONS $feature_install_options" ]
       }
 
-
       log_user 1
       puts $CHECK_OUTPUT "cd $$prod_type_var;./install_execd $CHECK_EXECD_INSTALL_OPTIONS $feature_install_options"
 
       set sp_id [ lindex $id 1 ] 
 
-
       set timeout 300
      
-      #set CHECK_DEBUG_LEVEL 2
       set do_log_output 0 ;# 1 _LOG
       if { $CHECK_DEBUG_LEVEL == 2 } {
          set do_log_output 1
       }
-
 
       set do_stop 0
       while {$do_stop == 0} {
@@ -213,49 +207,48 @@ proc install_execd {} {
          expect {
             -i $sp_id full_buffer {
                set_error "-1" "install_execd - buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
-               close_spawn_process $id; 
-               return;
+               close_spawn_process $id
+               return
             }
 
             -i $sp_id eof {
-               set_error "-1" "install_execd - unexpeced eof";
-               close_spawn_process $id
+               set_error "-1" "install_execd - unexpeced eof"
                set do_stop 1
+               continue
             }
 
             -i $sp_id "coredump" {
-               set_error "-2" "install_execd - coredump on host $exec_host";
-               close_spawn_process $id
+               set_error "-2" "install_execd - coredump on host $exec_host"
                set do_stop 1
+               continue
             }
 
             -i $sp_id timeout { 
-               set_error "-1" "install_execd - timeout while waiting for output"; 
-               close_spawn_process $id;
+               set_error "-1" "install_execd - timeout while waiting for output"
                set do_stop 1
+               continue
             }
 
             -i $sp_id "orry" { 
                set_error "-1" "install_execd - wrong root password"
-               close_spawn_process $id; 
-               return;
+               close_spawn_process $id
+               return
             }
 
             -i $sp_id "The installation of the execution daemon will abort now" {
                set_error "-1" "install_execd - installation error"
-               close_spawn_process $id; 
-               return;
+               close_spawn_process $id
+               return
             }
 
             -i $sp_id $USE_CONFIGURATION_PARAMS { 
-     
                puts $CHECK_OUTPUT "\n -->testsuite: sending >$ANSWER_YES<(10)"
                if {$do_log_output == 1} {
                     puts "press RETURN"
                     set anykey [wait_for_enter 1]
                }
                send -i $sp_id "$ANSWER_YES\n"
-               continue;
+               continue
             }
 
             -i $sp_id $ENTER_LOCAL_EXECD_SPOOL_DIR_ASK {
@@ -291,7 +284,7 @@ proc install_execd {} {
                      send -i $sp_id "$ANSWER_YES\n"
                   }
                }
-               continue;
+               continue
             }   
 
             -i $sp_id $ENTER_LOCAL_EXECD_SPOOL_DIR_ENTER {
@@ -315,7 +308,7 @@ proc install_execd {} {
 
                send -i $sp_id "$spooldir\n"
                log_user 1
-               continue; 
+               continue
             }
 
             -i $sp_id $CELL_NAME_FOR_EXECD {
@@ -327,7 +320,7 @@ proc install_execd {} {
                   set anykey [wait_for_enter 1]
                }
                send -i $sp_id $input
-               continue;
+               continue
             } 
 
             -i $sp_id $MESSAGES_LOGGING {
@@ -337,7 +330,7 @@ proc install_execd {} {
                    set anykey [wait_for_enter 1]
                }
                send -i $sp_id "\n"
-               continue;
+               continue
             }
 
 
@@ -350,11 +343,11 @@ proc install_execd {} {
                        set anykey [wait_for_enter 1]
                   }
                   send -i $sp_id "\n"
-                  continue;
+                  continue
                } else {
                   set_error "-1" "install_execd - host $exec_host: tried to install not as root"
-                  close_spawn_process $id; 
-                  return;
+                  close_spawn_process $id
+                  return
                }
             }
 
@@ -366,7 +359,7 @@ proc install_execd {} {
                }
      
                send -i $sp_id "$ANSWER_NO\n"
-               continue;
+               continue
             }
 
             -i $sp_id $INSTALL_STARTUP_SCRIPT { 
@@ -377,7 +370,7 @@ proc install_execd {} {
                }
      
                send -i $sp_id "$ANSWER_NO\n"
-               continue;
+               continue
             }
 
             -i $sp_id $ADD_DEFAULT_QUEUE_INSTANCE { 
@@ -388,7 +381,7 @@ proc install_execd {} {
                }
      
                send -i $sp_id "$ANSWER_YES\n"
-               continue;
+               continue
             }
 
             -i $sp_id $CHECK_ADMINUSER_ACCOUNT_ANSWER { 
@@ -399,7 +392,7 @@ proc install_execd {} {
                }
      
                send -i $sp_id "$ANSWER_YES\n"
-               continue;
+               continue
             }
 
 
@@ -410,12 +403,13 @@ proc install_execd {} {
                puts $CHECK_OUTPUT "**********************************************************************"
                puts $CHECK_OUTPUT "installation will continue in 15 seconds ..."
                sleep 15
+               continue
             }
 
             -i $sp_id "There is still no service for" {
-               set_error "-1" "install_execd - no TCP/IP service available";
-               close_spawn_process $id
+               set_error "-1" "install_execd - no TCP/IP service available"
                set do_stop 1
+               continue
             }
 
             -i $sp_id "Check again" { 
@@ -426,7 +420,7 @@ proc install_execd {} {
                }
      
                send -i $sp_id "n\n"
-               continue;
+               continue
             }
 
             -i $sp_id $PREVIOUS_SCREEN { 
@@ -437,24 +431,24 @@ proc install_execd {} {
                }
      
                send -i $sp_id "$ANSWER_NO\n"
-               continue;
+               continue
             }
 
             -i $sp_id "Error:" {
                set_error "-1" "install_execd - $expect_out(0,string)"
-               close_spawn_process $id; 
-               return;
+               close_spawn_process $id
+               return
             }
             -i $sp_id "can't resolve hostname*\n" {
                set_error "-1" "install_execd - $expect_out(0,string)"
-               close_spawn_process $id; 
-               return;
+               close_spawn_process $id
+               return
             }            
   
             -i $sp_id "error:\n" {
                set_error "-1" "install_execd - $expect_out(0,string)"
-               close_spawn_process $id; 
-               return;
+               close_spawn_process $id
+               return
             }
 
             -i $sp_id $CURRENT_GRID_ROOT_DIRECTORY {
@@ -464,15 +458,15 @@ proc install_execd {} {
                     set anykey [wait_for_enter 1]
                }
                send -i $sp_id "\n"
-               continue;
+               continue
             }
 
             -i $sp_id $EXECD_INSTALL_COMPLETE {
-               close_spawn_process $id
                read_install_list
                lappend CORE_INSTALLED $exec_host
                write_install_list
                set do_stop 1
+               continue
             }
 
             -i $sp_id $HIT_RETURN_TO_CONTINUE { 
@@ -483,7 +477,7 @@ proc install_execd {} {
                }
      
                send -i $sp_id "\n"
-               continue;
+               continue
             }
             -i $sp_id $HOSTNAME_KNOWN_AT_MASTER { 
                puts $CHECK_OUTPUT "\n -->testsuite: sending >RETURN<"
@@ -493,16 +487,19 @@ proc install_execd {} {
                }
      
                send -i $sp_id "\n"
-               continue;
+               continue
             }
 
             -i $sp_id default {
                set_error "-1" "install_execd - undefined behaiviour: $expect_out(buffer)"
-               close_spawn_process $id; 
-               return;
+               close_spawn_process $id
+               return
             }
          }
       }  ;# while 1
+
+      # close the connection to inst_sge
+      close_spawn_process $id
    }
 }
 

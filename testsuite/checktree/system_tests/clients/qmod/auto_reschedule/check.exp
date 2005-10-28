@@ -191,8 +191,9 @@ proc auto_reschedule_setup {} {
    get_config stored_configuration
    get_config tmp_config $auto_reschedule_host2
    if {![info exists tmp_config(execd_spool_dir)]} {
-         get_config tmp_config
+      get_config tmp_config
    }
+
    set messages_name "$tmp_config(execd_spool_dir)/$auto_reschedule_host2/messages"
    set tail_id [open_remote_spawn_process $auto_reschedule_host2 $CHECK_USER "/usr/bin/tail" "-f $messages_name"]
    set sp_id [ lindex $tail_id 1 ] 
@@ -234,21 +235,17 @@ proc auto_reschedule_setup {} {
    puts $CHECK_OUTPUT "waiting for configuration change ..."
    expect {
      -i $sp_id full_buffer {
-       close_spawn_process $tail_id
        add_proc_error "auto_reschedule_setup" -1 "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
       }
      -i $sp_id default {
-         close_spawn_process $tail_id
          add_proc_error "auto_reschedule_setup" -1 "setup failed"
       }
       -i $sp_id "using*${global_reschedule_value}*reschedule_unknown" {
          puts $CHECK_OUTPUT "configuration changed"
-         close_spawn_process $tail_id
       }
    }
 
-    close_spawn_process $tail_id
-
+   close_spawn_process $tail_id
 
    wait_for_load_from_all_queues 200 
    puts $CHECK_OUTPUT "submitting job to queue $queue1 ..."
@@ -438,7 +435,6 @@ proc auto_reschedule_cleanup {} {
 
    set messages_name "$tmp_config(execd_spool_dir)/$auto_reschedule_host2/messages"
    set tail_id [open_remote_spawn_process $auto_reschedule_host2 $CHECK_USER "/usr/bin/tail" "-f $messages_name"]
-
    set sp_id [ lindex $tail_id 1 ] 
    
    set_config stored_configuration
@@ -458,16 +454,13 @@ proc auto_reschedule_cleanup {} {
    puts $CHECK_OUTPUT "waiting for configuration change ..."
    expect {
      -i $sp_id full_buffer {
-       close_spawn_process $tail_id
        add_proc_error "auto_reschedule_cleanup" -1 "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
       }
      -i $sp_id default {
-         close_spawn_process $tail_id
          add_proc_error "auto_reschedule_cleanup" -1 "setup failed"
       }
       -i $sp_id "using*00:00:00*reschedule_unknown" {
          puts $CHECK_OUTPUT "configuration changed"
-         close_spawn_process $tail_id
       }
    }
 

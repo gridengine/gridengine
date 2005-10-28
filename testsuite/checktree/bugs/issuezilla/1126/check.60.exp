@@ -108,6 +108,8 @@ proc issue_1126_run  {} {
       expect {
          -i $both_list full_buffer {
             add_proc_error "issue_1126_run" -1 "expect full_buffer error"
+            close_spawn_process $server_sid
+            close_spawn_process $client_sid
             return -1
          }
          -i $both_list timeout {
@@ -162,6 +164,8 @@ proc issue_1126_run  {} {
       expect {
          -i $both_list full_buffer {
             add_proc_error "issue_1126_run" -1 "expect full_buffer error"
+            close_spawn_process $server_sid
+            close_spawn_process $client_sid
             return -1
          }
          -i $both_list timeout {

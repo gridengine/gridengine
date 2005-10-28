@@ -222,16 +222,15 @@ proc qping_issue_1810 {} {
             }
             -i $sp_id -- "<sim version*</sim>" {
                puts $CHECK_OUTPUT $expect_out(0,string)
-               flush $CHECK_OUTPUT
                puts $CHECK_OUTPUT "found sim!"
- 
+               flush $CHECK_OUTPUT
             }
 
             -i $sp_id -- "<sirm version*</sirm>" {
                if { $sim_sent == 1 } {
                   puts $CHECK_OUTPUT $expect_out(0,string)
-                  flush $CHECK_OUTPUT
                   puts $CHECK_OUTPUT "found sirm - ok"
+                  flush $CHECK_OUTPUT
                   set sirm_received 1
                }
             }
@@ -252,15 +251,12 @@ proc qping_issue_1810 {} {
                   set sim_sent 1
                }
             }
-
-#            "*\n" {
-#               puts $CHECK_OUTPUT $expect_out(0,string)
-#               flush $CHECK_OUTPUT
-#            }
          }
       }
+
       close_spawn_process $id
    }
+
    set_error 0 "ok"
 }
 

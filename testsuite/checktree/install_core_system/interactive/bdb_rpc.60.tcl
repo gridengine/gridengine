@@ -129,10 +129,10 @@ proc install_bdb_rpc {} {
  
       if {[file isfile "$ts_config(product_root)/$ts_config(cell)/common/sgebdb"] == 1} {
          puts $CHECK_OUTPUT "--> shutting down BDB RPC Server <--"
-         set id [open_remote_spawn_process "$bdb_host" "root" "$ts_config(product_root)/$ts_config(cell)/common/sgebdb" "stop" ]
+         start_remote_prog "$bdb_host" "root" "$ts_config(product_root)/$ts_config(cell)/common/sgebdb" "stop"
       }
  
-      set id [open_remote_spawn_process "$bdb_host" "root" "rm" "-fR" "$ts_config(bdb_dir)" ]
+      start_remote_prog "$bdb_host" "root" "rm" "-fR $ts_config(bdb_dir)"
       if { $CHECK_ADMIN_USER_SYSTEM == 0 } { 
          set id [open_remote_spawn_process "$bdb_host" "root"  "cd $$prod_type_var;./inst_sge" "-db" ]
       } else {
@@ -175,20 +175,20 @@ proc install_bdb_rpc {} {
 
             -i $sp_id eof {
                set_error "-1" "inst_sge -db - unexpeced eof";
-               close_spawn_process $id
                set do_stop 1
+               continue
             }
 
             -i $sp_id "coredump" {
                set_error "-2" "inst_sge -db - coredump on host $bdb_host";
-               close_spawn_process $id
                set do_stop 1
+               continue
             }
 
             -i $sp_id timeout { 
                set_error "-1" "inst_sge -db - timeout while waiting for output"; 
-               close_spawn_process $id;
                set do_stop 1
+               continue
             }
 
             -i $sp_id $RPC_HIT_RETURN_TO_CONTINUE { 
@@ -199,7 +199,7 @@ proc install_bdb_rpc {} {
                }
      
                send -i $sp_id "\n"
-               continue;
+               continue
             }
 
             -i $sp_id $RPC_WELCOME { 
@@ -210,7 +210,7 @@ proc install_bdb_rpc {} {
                }
      
                send -i $sp_id "\n"
-               continue;
+               continue
             }
 
             -i $sp_id $RPC_INSTALL_AS_ADMIN { 
@@ -221,7 +221,7 @@ proc install_bdb_rpc {} {
                }
      
                send -i $sp_id "\n"
-               continue;
+               continue
             }
 
             -i $sp_id $RPC_SGE_ROOT {
@@ -233,7 +233,7 @@ proc install_bdb_rpc {} {
                   set anykey [wait_for_enter 1]
                }
                send -i $sp_id $input
-               continue;
+               continue
             }
 
             -i $sp_id $RPC_SGE_CELL {
@@ -245,7 +245,7 @@ proc install_bdb_rpc {} {
                   set anykey [wait_for_enter 1]
                }
                send -i $sp_id $input
-               continue;
+               continue
             }
 
             -i $sp_id $RPC_SERVER {
@@ -257,7 +257,7 @@ proc install_bdb_rpc {} {
                   set anykey [wait_for_enter 1]
                }
                send -i $sp_id $input
-               continue;
+               continue
             } 
 
             -i $sp_id $RPC_DIRECTORY {
@@ -269,7 +269,7 @@ proc install_bdb_rpc {} {
                   set anykey [wait_for_enter 1]
                }
                send -i $sp_id $input
-               continue;
+               continue
             }
 
             -i $sp_id $RPC_DIRECTORY_EXISTS { 
@@ -280,7 +280,7 @@ proc install_bdb_rpc {} {
                }
      
                send -i $sp_id "$ANSWER_YES\n"
-               continue;
+               continue
             }
 
 
@@ -292,7 +292,7 @@ proc install_bdb_rpc {} {
                }
      
                send -i $sp_id "\n"
-               continue;
+               continue
             }
 
             -i $sp_id $RPC_SERVER_STARTED { 
@@ -303,7 +303,7 @@ proc install_bdb_rpc {} {
                }
      
                send -i $sp_id "\n"
-               continue;
+               continue
             }
 
             -i $sp_id $RPC_INSTALL_RC_SCRIPT { 
@@ -314,7 +314,7 @@ proc install_bdb_rpc {} {
                }
      
                send -i $sp_id "$ANSWER_NO\n"
-               continue;
+               continue
             }
 
             -i $sp_id $INSTALL_SCRIPT { 
@@ -325,34 +325,32 @@ proc install_bdb_rpc {} {
                }
      
                send -i $sp_id "$ANSWER_NO\n"
-               continue;
+               continue
             }
-
-
 
             -i $sp_id "Error:" {
-               set_error "-1" "install_shadowd - $expect_out(0,string)"
+               set_error "-1" "install_bdb_rpc - $expect_out(0,string)"
                close_spawn_process $id; 
-               return;
+               return
             }
             -i $sp_id "can't resolve hostname*\n" {
-               set_error "-1" "install_shadowd - $expect_out(0,string)"
+               set_error "-1" "install_bdb_rpc - $expect_out(0,string)"
                close_spawn_process $id; 
-               return;
+               return
             }            
   
             -i $sp_id "error:\n" {
-               set_error "-1" "install_shadowd - $expect_out(0,string)"
+               set_error "-1" "install_bdb_rpc - $expect_out(0,string)"
                close_spawn_process $id; 
-               return;
+               return
             }
 
             -i $sp_id $RPC_SERVER_COMPLETE {
-               close_spawn_process $id
                read_install_list
                lappend CORE_INSTALLED $bdb_host
                write_install_list
                set do_stop 1
+               continue
             }
 
             -i $sp_id $HIT_RETURN_TO_CONTINUE { 
@@ -363,16 +361,19 @@ proc install_bdb_rpc {} {
                }
      
                send -i $sp_id "\n"
-               continue;
+               continue
             }
 
             -i $sp_id default {
                set_error "-1" "inst_sge -db - undefined behaiviour: $expect_out(buffer)"
                close_spawn_process $id; 
-               return;
+               return
             }
          }
       }
+
+      # close the connection to inst_sge
+      close_spawn_process $id
    }
 }
 

@@ -181,7 +181,6 @@ proc install_qmaster {} {
  set sp_id [ lindex $id 1 ] 
  
 
- log_user 1
  puts $CHECK_OUTPUT "cd $$prod_type_var;./install_qmaster $CHECK_QMASTER_INSTALL_OPTIONS $feature_install_options"
 
  set hostcount 0
@@ -191,28 +190,27 @@ proc install_qmaster {} {
    set do_log_output  1 ;# 1
  }
 
- while {1} {
- if {$do_log_output == 1} {
-   flush stdout
-   flush $CHECK_OUTPUT
-   puts "-->testsuite: press RETURN"
-   set anykey [wait_for_enter 1]
- }
-    log_user 1
+ log_user 1
+ set do_stop 0
+ while {! $do_stop} {
+    flush $CHECK_OUTPUT
+    if {$do_log_output == 1} {
+      puts "-->testsuite: press RETURN"
+      set anykey [wait_for_enter 1]
+    }
+
     set timeout 300
     expect {
-       flush stdout
-       flush $CHECK_OUTPUT 
        -i $sp_id full_buffer {
           set_error "-1" "install_qmaster - buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
           close_spawn_process $id; 
-          return;
+          return
        }   
 
        -i $sp_id eof { 
           set_error "-1" "install_qmaster - unexpected eof"; 
           close_spawn_process $id;
-          return;  
+          return
        }
 
        -i $sp_id "coredump" {
@@ -224,25 +222,25 @@ proc install_qmaster {} {
        -i $sp_id timeout { 
           set_error "-1" "install_qmaster - timeout while waiting for output"; 
           close_spawn_process $id;
-          return;  
+          return
        }
 
        -i $sp_id "orry" { 
           set_error "-1" "install_qmaster - wrong root password"
           close_spawn_process $id;
-          return;
+          return
        }
 
        -i $sp_id "issing" { 
           set_error "-1" "install_qmaster - missing binary error"
           close_spawn_process $id;
-          return;
+          return
        }
 
        -i $sp_id "xit." {
           set_error "-1" "install_qmaster - installation failed"
           close_spawn_process $id; 
-          return;
+          return
        }
 
        -i $sp_id $ADMIN_USER_ACCOUNT {
@@ -254,8 +252,10 @@ proc install_qmaster {} {
           if { [string compare $real_admin_user $CHECK_USER] != 0 } {
              set_error "-1" "install_qmaster - admin user \"$real_admin_user\" is different from CHECK_USER \"$CHECK_USER\"" 
              close_spawn_process $id;
-             return;
+             return
           }
+
+          continue
        }
 
        -i $sp_id "o you want to recreate your SGE CA infrastructure" { 
@@ -265,7 +265,7 @@ proc install_qmaster {} {
              set anykey [wait_for_enter 1]
           }
           send -i $sp_id "y\n"
-          continue;
+          continue
        }
 
        -i $sp_id "enter your two letter country code" { 
@@ -275,7 +275,7 @@ proc install_qmaster {} {
              set anykey [wait_for_enter 1]
           }
           send -i $sp_id "DE\n"
-          continue;
+          continue
        }
 
        -i $sp_id "lease enter your state" { 
@@ -285,7 +285,7 @@ proc install_qmaster {} {
              set anykey [wait_for_enter 1]
           }
           send -i $sp_id "Bavaria\n"
-          continue;
+          continue
        }
  
        -i $sp_id "lease enter your location" { 
@@ -295,7 +295,7 @@ proc install_qmaster {} {
              set anykey [wait_for_enter 1]
           }
           send -i $sp_id "Regensburg\n"
-          continue;
+          continue
        }
 
        -i $sp_id "lease enter the name of your organization" { 
@@ -305,7 +305,7 @@ proc install_qmaster {} {
              set anykey [wait_for_enter 1]
           }
           send -i $sp_id "Sun Microsystems\n"
-          continue;
+          continue
        }
 
        -i $sp_id "lease enter your organizational unit" { 
@@ -315,7 +315,7 @@ proc install_qmaster {} {
              set anykey [wait_for_enter 1]
           }
           send -i $sp_id "Testsystem at port $CHECK_COMMD_PORT\n"
-          continue;
+          continue
        }
 
        -i $sp_id "lease enter the email address of the CA administrator" { 
@@ -330,7 +330,7 @@ proc install_qmaster {} {
              set anykey [wait_for_enter 1]
           }
           send -i $sp_id "$CA_admin_mail\n"
-          continue;
+          continue
        }
 
        -i $sp_id "o you want to use these data" { 
@@ -340,7 +340,7 @@ proc install_qmaster {} {
              set anykey [wait_for_enter 1]
           }
           send -i $sp_id "y\n"
-          continue;
+          continue
        }
 
        -i $sp_id $DNS_DOMAIN_QUESTION { 
@@ -350,7 +350,7 @@ proc install_qmaster {} {
              set anykey [wait_for_enter 1]
           }
           send -i $sp_id "$ANSWER_YES\n"
-          continue;
+          continue
        }
 
        -i $sp_id $INSTALL_AS_ADMIN_USER { 
@@ -360,7 +360,7 @@ proc install_qmaster {} {
              set anykey [wait_for_enter 1]
           }
           send -i $sp_id "$ANSWER_YES\n"
-          continue;
+          continue
        }
 
        -i $sp_id $CELL_NAME_EXISTS { 
@@ -370,7 +370,7 @@ proc install_qmaster {} {
              set anykey [wait_for_enter 1]
           }
           send -i $sp_id "$ANSWER_NO\n"
-          continue;
+          continue
        }
 
        -i $sp_id $CELL_NAME_OVERWRITE { 
@@ -380,7 +380,7 @@ proc install_qmaster {} {
              set anykey [wait_for_enter 1]
           }
           send -i $sp_id "$ANSWER_YES\n"
-          continue;
+          continue
        }
 
        -i $sp_id $VERIFY_FILE_PERMISSIONS { 
@@ -395,7 +395,7 @@ proc install_qmaster {} {
              set anykey [wait_for_enter 1]
           }
           send -i $sp_id "$input\n"
-          continue;
+          continue
        }
 
       -i $sp_id $WILL_NOT_VERIFY_FILE_PERMISSIONS {
@@ -405,7 +405,7 @@ proc install_qmaster {} {
                set anykey [wait_for_enter 1]
           }
           send -i $sp_id "\n"
-          continue;
+          continue
       }
 
        -i $sp_id $USE_CONFIGURATION_PARAMS {
@@ -415,15 +415,15 @@ proc install_qmaster {} {
                set anykey [wait_for_enter 1]
           }
           send -i $sp_id "$ANSWER_NO\n"
-          continue;
+          continue
        }
 
        -i $sp_id "Verifying and setting file permissions and owner in" {
           if {$do_log_output == 1} {
-               puts "press RETURN"
-               set anykey [wait_for_enter 1]
+             puts "press RETURN"
+             set anykey [wait_for_enter 1]
           }
-          continue;
+          continue
        }
 
        -i $sp_id "Please hit <RETURN> to continue once you set your file permissions" {
@@ -433,7 +433,7 @@ proc install_qmaster {} {
                set anykey [wait_for_enter 1]
           }
           send -i $sp_id "\n"
-          continue;
+          continue
        }
 
        -i $sp_id $IF_NOT_OK_STOP_INSTALLATION {
@@ -444,11 +444,11 @@ proc install_qmaster {} {
                   set anykey [wait_for_enter 1]
              }
              send -i $sp_id "\n"
-             continue;
+             continue
           } else {
              set_error "-1" "install_qmaster - tried to install not as root"
              close_spawn_process $id; 
-             return;
+             return
           }
        }
 
@@ -459,7 +459,7 @@ proc install_qmaster {} {
                set anykey [wait_for_enter 1]
           }
           send -i $sp_id "$ANSWER_NO\n"
-          continue;
+          continue
        }
 
        -i $sp_id $WINDOWS_SUPPORT {
@@ -469,7 +469,7 @@ proc install_qmaster {} {
                set anykey [wait_for_enter 1]
           }
           send -i $sp_id "$ANSWER_NO\n"
-          continue;
+          continue
        }
        
        -i $sp_id $OTHER_USER_ID_THAN_ROOT {
@@ -479,7 +479,7 @@ proc install_qmaster {} {
                set anykey [wait_for_enter 1]
           }
           send -i $sp_id "$ANSWER_NO\n"
-          continue;
+          continue
        }
 
        -i $sp_id $OTHER_SPOOL_DIR {
@@ -495,7 +495,7 @@ proc install_qmaster {} {
                set anykey [wait_for_enter 1]
           }
           send -i $sp_id "$answer\n"
-          continue;
+          continue
        }
 
        -i $sp_id $MESSAGES_LOGGING {
@@ -506,7 +506,7 @@ proc install_qmaster {} {
           }
 
           send -i $sp_id "\n"
-          continue;
+          continue
        }
 
        -i $sp_id $PKGADD_QUESTION {
@@ -517,7 +517,7 @@ proc install_qmaster {} {
           }
 
           send -i $sp_id "$ANSWER_NO\n"
-          continue;
+          continue
        }
 
        -i $sp_id $ENTER_SPOOL_DIR {
@@ -541,7 +541,7 @@ proc install_qmaster {} {
             }
             send -i $sp_id "\n"
           }
-          continue;
+          continue
        }       
        
        -i $sp_id $EXECD_SPOOLING_DIR_NOROOT_NOADMINUSER {
@@ -565,7 +565,7 @@ proc install_qmaster {} {
             }
             send -i $sp_id "\n"
           }
-          continue;
+          continue
         }
 
        -i $sp_id $EXECD_SPOOLING_DIR_NOROOT {
@@ -589,8 +589,7 @@ proc install_qmaster {} {
             }
             send -i $sp_id "\n"
           }
-          continue;
-
+          continue
        }
 
        -i $sp_id $CONFIGURE_DEFAULT_DOMAIN {
@@ -600,7 +599,7 @@ proc install_qmaster {} {
                set anykey [wait_for_enter 1]
           }
           send -i $sp_id "$ANSWER_NO\n"
-          continue;
+          continue
        }
 
        -i $sp_id $ENTER_DEFAULT_DOMAIN {
@@ -610,7 +609,7 @@ proc install_qmaster {} {
                set anykey [wait_for_enter 1]
           }
           send -i $sp_id "$CHECK_DEFAULT_DOMAIN\n"
-          continue;
+          continue
        }
 
        -i $sp_id $INSTALL_SCRIPT {
@@ -620,7 +619,7 @@ proc install_qmaster {} {
                set anykey [wait_for_enter 1]
           }
           send -i $sp_id "$ANSWER_NO\n"
-          continue;
+          continue
        }
 
        -i $sp_id $CREATE_NEW_CONFIGURATION {
@@ -630,7 +629,7 @@ proc install_qmaster {} {
                set anykey [wait_for_enter 1]
           }
           send -i $sp_id "$ANSWER_YES\n"
-          continue;
+          continue
        }
 
        -i $sp_id $FILENAME_FOR_HOSTLIST {
@@ -640,7 +639,7 @@ proc install_qmaster {} {
                set anykey [wait_for_enter 1]
           }
           send -i $sp_id "${host_file_name}\n"
-          continue;
+          continue
        }
    
        -i $sp_id $FINISHED_ADDING_HOSTS {
@@ -650,7 +649,7 @@ proc install_qmaster {} {
                set anykey [wait_for_enter 1]
           }
           send -i $sp_id "\n"
-          continue;
+          continue
        }
    
        -i $sp_id $FILE_FOR_HOSTLIST {
@@ -661,11 +660,10 @@ proc install_qmaster {} {
           }
 
           send -i $sp_id "\n"
-          continue;
+          continue
        }
 
        -i $sp_id $PREVIOUS_SCREEN {
-          flush stdout
           flush $CHECK_OUTPUT
           puts $CHECK_OUTPUT "\n -->testsuite: sending >$ANSWER_NO<(10)"
           if {$do_log_output == 1} {
@@ -674,7 +672,7 @@ proc install_qmaster {} {
           }
 
           send -i $sp_id "$ANSWER_NO\n"
-          continue;
+          continue
        }
   
        -i $sp_id $ENTER_A_RANGE {
@@ -686,7 +684,7 @@ proc install_qmaster {} {
           }
 
           send -i $sp_id "${myrange}\n"
-          continue;
+          continue
        }
 
        -i $sp_id $MASTER_INSTALLATION_COMPLETE {
@@ -694,8 +692,8 @@ proc install_qmaster {} {
           lappend CORE_INSTALLED $CHECK_CORE_MASTER
           write_install_list
           set_error "0" "install_qmaster - no errors"
-          close_spawn_process $id;
-          return; 
+          set do_stop 1
+          continue
        }
 
        -i $sp_id $ENTER_HOSTS {
@@ -708,7 +706,7 @@ proc install_qmaster {} {
             puts $CHECK_OUTPUT "\n -->testsuite: sending >${exechost}<"
             send -i $sp_id "$exechost\n"
          }
-         continue;
+         continue
        }
 
        -i $sp_id $ENTER_ADMIN_MAIL { 
@@ -723,11 +721,10 @@ proc install_qmaster {} {
              set anykey [wait_for_enter 1]
           }
           send -i $sp_id "$admin_mail\n"
-          continue;
+          continue
        }
 
        -i $sp_id $ACCEPT_CONFIGURATION {
-          flush stdout
           flush $CHECK_OUTPUT
           puts $CHECK_OUTPUT "\n -->testsuite: sending >$ANSWER_NO<(10)"
           if {$do_log_output == 1} {
@@ -736,11 +733,10 @@ proc install_qmaster {} {
           }
 
           send -i $sp_id "$ANSWER_NO\n"
-          continue;
+          continue
        }
 
        -i $sp_id $INSTALL_STARTUP_SCRIPT {
-          flush stdout
           flush $CHECK_OUTPUT
           puts $CHECK_OUTPUT "\n -->testsuite: sending >$ANSWER_NO<(10)"
           if {$do_log_output == 1} {
@@ -749,7 +745,7 @@ proc install_qmaster {} {
           }
 
           send -i $sp_id "$ANSWER_NO\n"
-          continue;
+          continue
        }
 
       # 
@@ -764,7 +760,7 @@ proc install_qmaster {} {
             set anykey [wait_for_enter 1]
          }
          send -i $sp_id "$spooling_method\n"
-         continue;
+         continue
       }
 
       
@@ -785,7 +781,7 @@ proc install_qmaster {} {
                set anykey [wait_for_enter 1]
           }
           send -i $sp_id $input
-          continue;
+          continue
        }
 
       -i $sp_id $ENTER_DATABASE_SERVER {
@@ -796,7 +792,7 @@ proc install_qmaster {} {
          }
 
          send -i $sp_id "$ts_config(bdb_server)\n"
-         continue;
+         continue
       }
 
        -i $sp_id $DELETE_DB_SPOOL_DIR {
@@ -806,7 +802,7 @@ proc install_qmaster {} {
                set anykey [wait_for_enter 1]
           }
           send -i $sp_id "$ANSWER_YES\n"
-          continue;
+          continue
        }
 
       -i $sp_id $ENTER_SCHEDLUER_SETUP {
@@ -817,7 +813,7 @@ proc install_qmaster {} {
          }
 
          send -i $sp_id "\n"
-         continue;
+         continue
       }
 
 
@@ -836,7 +832,7 @@ proc install_qmaster {} {
             set anykey [wait_for_enter 1]
          }
          send -i $sp_id $input
-         continue;
+         continue
       }
    
       -i $sp_id $ENTER_DATABASE_DIRECTORY_LOCAL_SPOOLING {
@@ -861,24 +857,24 @@ proc install_qmaster {} {
             } 
             send -i $sp_id "$spooldir\n"
          }
-         continue;
+         continue
       }
 
       -i $sp_id $DATABASE_DIR_NOT_ON_LOCAL_FS {
           set_error "-2" "install_qmaster - configured database directory not on y local disk\nPlease run testsuite setup and configure Berkeley DB server and/or directory"; 
           close_spawn_process $id;
-          return;  
+          return; 
       }
 
       -i $sp_id $STARTUP_RPC_SERVER {
          send -i $sp_id "\n"
-         continue;
+         continue
       }
 
       -i $sp_id $DONT_KNOW_HOW_TO_TEST_FOR_LOCAL_FS {
           set_error "-2" "install_qmaster - not yet ported for this platform"; 
           close_spawn_process $id;
-          return;  
+          return
       }
 
       #
@@ -893,7 +889,7 @@ proc install_qmaster {} {
          }
 
          send -i $sp_id "\n"
-         continue;
+         continue
       }
 
 
@@ -905,7 +901,7 @@ proc install_qmaster {} {
          }
 
          send -i $sp_id "\n"
-         continue;
+         continue
       }
 
 
@@ -917,7 +913,7 @@ proc install_qmaster {} {
             set anykey [wait_for_enter 1]
          }
          send -i $sp_id "\n"
-         continue;
+         continue
       }
       
       #
@@ -953,36 +949,36 @@ proc install_qmaster {} {
           }
 
           send -i $sp_id " "
-          continue;
+          continue
        }
 
        -i $sp_id "Error:" {
           set_error "-1" "install_qmaster - $expect_out(0,string)"
-          close_spawn_process $id;
-          return;
+          close_spawn_process $id
+          return
        }
 
        -i $sp_id $NOT_COMPILED_IN_SECURE_MODE {
           set_error "-2" "install_qmaster - sge_qmaster binary is not compiled in secure mode"
-          close_spawn_process $id;
-          return;
+          close_spawn_process $id
+          return
        }
 
        -i $sp_id "ommand failed*\n" {
           set_error "-1" "install_qmaster - $expect_out(0,string)"
-          close_spawn_process $id;
-          return;
+          close_spawn_process $id
+          return
        }
 
        -i $sp_id "can't resolve hostname*\n" {
           set_error "-1" "install_qmaster - $expect_out(0,string)"
-          close_spawn_process $id; 
-          return;
-       }     
+          close_spawn_process $id
+          return
+       }
    
        -i $sp_id "error:\n" {
           set_error "-1" "install_qmaster - $expect_out(0,string)"
-          continue;
+          continue
        }
    
        -i $sp_id $USING_GID_RANGE_HIT_RETURN {
@@ -992,7 +988,7 @@ proc install_qmaster {} {
                set anykey [wait_for_enter 1]
           }
           send -i $sp_id "\n"
-          continue;
+          continue
        }
 
        -i $sp_id $HIT_RETURN_TO_CONTINUE {
@@ -1002,7 +998,7 @@ proc install_qmaster {} {
                set anykey [wait_for_enter 1]
           }
           send -i $sp_id "\n"
-          continue;
+          continue
        }
      
        -i $sp_id $CURRENT_GRID_ROOT_DIRECTORY {
@@ -1012,7 +1008,7 @@ proc install_qmaster {} {
                set anykey [wait_for_enter 1]
           }
           send -i $sp_id "\n"
-          continue;
+          continue
        }
 
        -i $sp_id $CELL_NAME_FOR_QMASTER {
@@ -1024,7 +1020,7 @@ proc install_qmaster {} {
                set anykey [wait_for_enter 1]
           }
           send -i $sp_id $input
-          continue;
+          continue
        }
 
        -i $sp_id $WE_CONFIGURE_WITH_X_SETTINGS {
@@ -1034,7 +1030,7 @@ proc install_qmaster {} {
                set anykey [wait_for_enter 1]
           }
           send -i $sp_id "\n"
-          continue;
+          continue
        }
 
        -i $sp_id $CSP_COPY_CERTS {
@@ -1044,15 +1040,19 @@ proc install_qmaster {} {
                set anykey [wait_for_enter 1]
           }
           send -i $sp_id "$ANSWER_NO\n"
-          continue;
+          continue
        }
 
        -i $sp_id default {
           set_error "-1" "install_qmaster - undefined behaviour: $expect_out(buffer)"
           close_spawn_process $id; 
-          return;
+          return
        }
     }
   }
+
+  # close the connection to inst_sge
+  log_user 0
+  close_spawn_process $id; 
 }
 

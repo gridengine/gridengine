@@ -237,18 +237,19 @@ proc qrsh_h {} {
 
    set timeout 15
    expect {
-         -i $sp_id full_buffer {
-            close_spawn_process $qrsh_id
-            set_error -1 "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
-            return
-         }
+      -i $sp_id full_buffer {
+         close_spawn_process $qrsh_id
+         set_error -1 "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
+         return
+      }
 
-         -i $sp_id default {
-            puts $CHECK_OUTPUT "qrsh -h timeout for hold state ok, now releasing job $job_id"
-         }
-         -i $sp_id "qrsh sucessfully started" {
-            add_proc_error "qrsh_h" -1 "qrsh -h failed" 
-         }
+      -i $sp_id default {
+         puts $CHECK_OUTPUT "qrsh -h timeout for hold state ok, now releasing job $job_id"
+      }
+
+      -i $sp_id "qrsh sucessfully started" {
+         add_proc_error "qrsh_h" -1 "qrsh -h failed" 
+      }
    }
 
    release_job $job_id
@@ -259,21 +260,22 @@ proc qrsh_h {} {
 
    set timeout 60
    expect {
-         -i $sp_id full_buffer {
-            close_spawn_process $qrsh_id
-            set_error -1 "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
-            return
-         }
+      -i $sp_id full_buffer {
+         close_spawn_process $qrsh_id
+         set_error -1 "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
+         return
+      }
 
-         -i $sp_id default {
-            add_proc_error "qrsh_h" -1 "qrsh -h failed for job $job_id"
-            close_spawn_process $qrsh_id
-         }
-         -i $sp_id "qrsh sucessfully started" {
-            puts $CHECK_OUTPUT "qrsh -h ok"
-            close_spawn_process $qrsh_id
-         }
+      -i $sp_id default {
+         add_proc_error "qrsh_h" -1 "qrsh -h failed for job $job_id"
+      }
+      -i $sp_id "qrsh sucessfully started" {
+         puts $CHECK_OUTPUT "qrsh -h ok"
+      }
    }
+
+   close_spawn_process $qrsh_id
+
    set_error 0 "ok"
 }
 
@@ -330,18 +332,18 @@ proc qrsh_hold_jid {} {
 
    set timeout 15
    expect {
-         -i $sp_id full_buffer {
-            close_spawn_process $qrsh_id
-            set_error -1 "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
-            return
-         }
+      -i $sp_id full_buffer {
+         close_spawn_process $qrsh_id
+         set_error -1 "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
+         return
+      }
 
-         -i $sp_id default {
-            puts $CHECK_OUTPUT "qrsh -hold_jid timeout for hold state ok, now deleting job $hold_job_id"
-         }
-         -i $sp_id "qrsh sucessfully started" {
-            add_proc_error "qrsh_h" -1 "qrsh -hold_jid failed" 
-         }
+      -i $sp_id default {
+         puts $CHECK_OUTPUT "qrsh -hold_jid timeout for hold state ok, now deleting job $hold_job_id"
+      }
+      -i $sp_id "qrsh sucessfully started" {
+         add_proc_error "qrsh_h" -1 "qrsh -hold_jid failed" 
+      }
    }
 
    delete_job $hold_job_id
@@ -352,21 +354,22 @@ proc qrsh_hold_jid {} {
 
    set timeout 60
    expect {
-         -i $sp_id full_buffer {
-            close_spawn_process $qrsh_id
-            set_error -1 "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
-            return
-         }
+      -i $sp_id full_buffer {
+         close_spawn_process $qrsh_id
+         set_error -1 "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
+         return
+      }
 
-         -i $sp_id default {
-            add_proc_error "qrsh_h" -1 "qrsh -hold_jid failed for job $job_id"
-            close_spawn_process $qrsh_id
-         }
-         -i $sp_id "qrsh sucessfully started" {
-            puts $CHECK_OUTPUT "qrsh -hold_jid ok"
-            close_spawn_process $qrsh_id
-         }
+      -i $sp_id default {
+         add_proc_error "qrsh_h" -1 "qrsh -hold_jid failed for job $job_id"
+      }
+      -i $sp_id "qrsh sucessfully started" {
+         puts $CHECK_OUTPUT "qrsh -hold_jid ok"
+      }
    }
+
+   close_spawn_process $qrsh_id
+
    set_error 0 "ok"
 }
 
@@ -425,20 +428,18 @@ proc qrsh_alltoall {} {
                set_error -1 "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
                return
             }
-            -i $sp_id default {
-               close_spawn_process $qrsh_id
-               set_error -1 "qrsh from host $source to host $dest failed"
-               continue
-            }
-            -i $sp_id "qrsh sucessfully started" {
-               close_spawn_process $qrsh_id
-               puts $CHECK_OUTPUT "qrsh from host $source to host $dest ok"
-            }   
             -i $sp_id eof {
-               close_spawn_process $qrsh_id
                add_proc_error "qrsh_alltoall"  -1 "open_remote_spawn_process closed connection (eof)"
             }
+            -i $sp_id "qrsh sucessfully started" {
+               puts $CHECK_OUTPUT "qrsh from host $source to host $dest ok"
+            }   
+            -i $sp_id default {
+               set_error -1 "qrsh from host $source to host $dest failed"
+            }
          }
+
+         close_spawn_process $qrsh_id
       }
    }
 
@@ -480,7 +481,6 @@ proc qrsh_starter_method {} {
 
             -i $sp_id "qrsh sucessfully started" {
                set done 1
-               close_spawn_process $qrsh_id
                if {$starter_method == 0} {
                   add_proc_error "qrsh_starter_method" -1 "qrsh job stared without starter method on host $host"
                } else {
@@ -490,11 +490,12 @@ proc qrsh_starter_method {} {
 
             -i $sp_id default {
                set done 1
-               close_spawn_process $qrsh_id
                set_error -1 "qrsh to host $host failed"
             }
          }
       }
+
+      close_spawn_process $qrsh_id
    }
 
    # unset starter method
@@ -562,19 +563,22 @@ proc qrsh_accounting {} {
       set state startup
       set job_id ""
       set sp_id [ lindex $qrsh_id 1 ] 
-      
 
-      while { [string compare $state exit] } {
+      while { [string compare $state exit] != 0 } {
          set timeout  80
          expect {
             -i $sp_id full_buffer {
                add_proc_error "qrsh_accounting" -1 "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
-               close_spawn_process $qrsh_id
                set state exit
             }
+
+            -i $sp_id eof {
+               add_proc_error "qrsh_accounting"  -1 "open_remote_spawn_process closed connection (eof)"
+               set state exit
+            }
+
             -i $sp_id timeout {
                if { [string compare $state running] } {
-                  close_spawn_process $qrsh_id
                   add_proc_error "qrsh_accounting"  -1 "qrsh to host $host failed"
                   set state exit
                } else {
@@ -596,6 +600,7 @@ proc qrsh_accounting {} {
                   }
                }
             }
+
             -i $sp_id $INTERACTIVE_JOB {
                puts "jobstart: \"$expect_out(0,string)\""
                set job_id [ string range $expect_out(0,string) $job_id_start end]
@@ -605,28 +610,27 @@ proc qrsh_accounting {} {
                puts $CHECK_OUTPUT "job id is: \"$job_id\""
                set state scheduled
             }
+
             -i $sp_id "Your interactive job *\n" {
                set job_id [lindex $expect_out(0,string) 3]
                puts $CHECK_OUTPUT "job id is: \"$job_id\""
                set state scheduled
             }
+
             -i $sp_id "Forking" { ;# "Forking" printout is from worker job (utilbin/work.c)
                set state running
             }
+
             -i $sp_id "_exit_status_" {   ;# _exit_status_ is from open_remote_spawn_process - generated script
                if { [string compare $state running] } {
                   add_proc_error "qrsh_accounting"  -1 "qrsh to host $host failed"
                }
-               close_spawn_process $qrsh_id
-               set state exit
-            }
-            -i $sp_id eof {
-               close_spawn_process $qrsh_id
-               add_proc_error "qrsh_accounting"  -1 "open_remote_spawn_process closed connection (eof)"
                set state exit
             }
          }
       }
+
+      close_spawn_process $qrsh_id
 
       # wait for accounting file to be flushed (esp. for 6.0) and NFS
       sleep 30
@@ -816,26 +820,27 @@ proc qrsh_suspend {} {
          set timeout 60
          expect {
             -i $sp_id full_buffer {
-               close_spawn_process $qrsh_id
                add_proc_error "qrsh_suspend" -1 "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
                set done 1
             }
+
             -i $sp_id timeout {
-               close_spawn_process $qrsh_id
                add_proc_error "qrsh_suspend" -1 "timeout waiting for qrsh to host $host to finish"
                set done 1
             }
-            -i $sp_id "_exit_status_" {
-               close_spawn_process $qrsh_id
+
+            -i $sp_id eof {
+               add_proc_error "qrsh_suspend" -1 "open_remote_spawn_process closed connection (eof)"
                set done 1
             }
-            -i $sp_id eof {
-               close_spawn_process $qrsh_id
-               add_proc_error "qrsh_suspend" -1 "open_remote_spawn_process closed connection (eof)"
+
+            -i $sp_id "_exit_status_" {
                set done 1
             }
          }
       }
+
+      close_spawn_process $qrsh_id
    }
 
    set_error 0 "ok"
@@ -921,20 +926,19 @@ proc qrsh_delete {} {
          }
       }
 
-      if { $error == 1 } {
-         continue
-      }
-
-      if { [info exists job_pid] && [info exists job_id] } {
-         # qdel 
-         delete_job $job_id
-         sleep 10
-         # check if shell script is still running
-         get_ps_info $job_pid $host
-         if { $ps_info($job_pid,error) == 0 } {
-            set_error -1 "process of deleted job $job_pid on host $host is still running"
+      if { $error == 0 } {
+         if { [info exists job_pid] && [info exists job_id] } {
+            # qdel 
+            delete_job $job_id
+            sleep 10
+            # check if shell script is still running
+            get_ps_info $job_pid $host
+            if { $ps_info($job_pid,error) == 0 } {
+               set_error -1 "process of deleted job $job_pid on host $host is still running"
+            }
          }
       }
+
       close_spawn_process $qrsh_id 1
    }
 
@@ -1003,33 +1007,33 @@ proc qrsh_terminate {} {
       while { $done == 0 } {
          expect {
             -i $sp_id full_buffer {
-               close_spawn_process $qrsh_id
                add_proc_error "qrsh_terminate" -1 "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
                set done 1
                set error 1
             }
+
+            -i $sp_id timeout {
+               add_proc_error "qrsh_terminate" -1 "qrsh to host $host failed - timeout"
+               set done 1
+               set error 1
+            }
+
+            -i $sp_id eof {
+               add_proc_error "qrsh_terminate" -1 "qrsh to host $host failed - eof"
+               set done 1
+               set error 1
+            }
+
             -i $sp_id "my pid is*" {
                set job_pid [lindex $expect_out(0,string) 3]
                set job_id [lindex $expect_out(0,string) 7]
                set done 1
             }
-            -i $sp_id timeout {
-               close_spawn_process $qrsh_id
-               add_proc_error "qrsh_terminate" -1 "qrsh to host $host failed - timeout"
-               set done 1
-               set error 1
-            }
-            -i $sp_id eof {
-               close_spawn_process $qrsh_id
-               add_proc_error "qrsh_terminate" -1 "qrsh to host $host failed - eof"
-               set done 1
-               set error 1
-            }
-            
          }
       }
 
       if { $error == 1 } {
+         close_spawn_process $qrsh_id
          continue
       }
 
@@ -1081,26 +1085,24 @@ proc qrsh_terminate {} {
          set timeout 60
          expect {
             -i $sp_id full_buffer {
-               close_spawn_process $qrsh_id
                add_proc_error "qrsh_terminate" -1 "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
                set done 1
             }
             -i $sp_id timeout {
-               close_spawn_process $qrsh_id
                add_proc_error "qrsh_terminate" -1 "timeout waiting for qrsh to host $host to finish"
                set done 1
             }
-            -i $sp_id "_exit_status_" {
-               close_spawn_process $qrsh_id
+            -i $sp_id eof {
+               add_proc_error "qrsh_terminate" -1 "open_remote_spawn_process closed connection (eof)"
                set done 1
             }
-            -i $sp_id eof {
-               close_spawn_process $qrsh_id
-               add_proc_error "qrsh_terminate" -1 "open_remote_spawn_process closed connection (eof)"
+            -i $sp_id "_exit_status_" {
                set done 1
             }
          }
       }
+
+      close_spawn_process $qrsh_id
 
       start_remote_prog $host $CHECK_USER ls $terminate_out_file exit_code
    }
@@ -1347,25 +1349,23 @@ proc qrsh_qsub_gid {} {
       set timeout 120
       expect {
          -i $sp_id full_buffer {
-            close_spawn_process $tail_id
             add_proc_error "qrsh_qsub_gid" -1 "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
             continue
          }
          -i $sp_id timeout {
             send -i $sp_id "\003"
-            close_spawn_process $tail_id
             add_proc_error "qrsh_qsub_gid" -1 "clearing execd_params from USE_QSUB_GID=true failed on host $host"
             continue
          }
          -i $sp_id $FINISHED_JOBS {
             send -i $sp_id "\003"
-            close_spawn_process $tail_id
          }
          -i $sp_id "using*finished_jobs*" {
             send -i $sp_id "\003"
-            close_spawn_process $tail_id
          }
       }
+
+      close_spawn_process $tail_id
    }
 
    set_error 0 "ok"
@@ -1601,18 +1601,12 @@ proc qrsh_limits {} {
       expect {
          -i $sp_id full_buffer {
             add_proc_error "qrsh_limits" -1 "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
-            close_spawn_process $qrsh_id
-            continue
          }
          -i $sp_id timeout {
             add_proc_error "qrsh_limits" -1 "qrsh to host $host failed"
-            close_spawn_process $qrsh_id
-            continue
          }
          -i $sp_id eof {
             add_proc_error "qrsh_limits" -1 "qrsh to host $host failed"
-            close_spawn_process $qrsh_id
-            continue
          }
          -i $sp_id "CPU limit is *\n" {
             set limit_out [lindex $expect_out(0,string) 3]

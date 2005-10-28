@@ -129,10 +129,10 @@ proc install_bdb_rpc {} {
  
       if {[file isfile "$ts_config(product_root)/$ts_config(cell)/common/sgebdb"] == 1} {
          puts $CHECK_OUTPUT "--> shutting down BDB RPC Server <--"
-         set id [open_remote_spawn_process "$bdb_host" "root" "$ts_config(product_root)/$ts_config(cell)/common/sgebdb" "stop" ]
+         start_remote_prog "$bdb_host" "root" "$ts_config(product_root)/$ts_config(cell)/common/sgebdb" "stop"
       }
  
-      set id [open_remote_spawn_process "$bdb_host" "root" "rm" "-fR" "$ts_config(bdb_dir)" ]
+      start_remote_prog "$bdb_host" "root" "rm" "-fR $ts_config(bdb_dir)"
       if { $CHECK_ADMIN_USER_SYSTEM == 0 } { 
          set id [open_remote_spawn_process "$bdb_host" "root"  "cd $$prod_type_var;./inst_sge" "-db" ]
       } else {
@@ -175,20 +175,20 @@ proc install_bdb_rpc {} {
 
             -i $sp_id eof {
                set_error "-1" "inst_sge -db - unexpeced eof";
-               close_spawn_process $id
                set do_stop 1
+               continue
             }
 
             -i $sp_id "coredump" {
                set_error "-2" "inst_sge -db - coredump on host $bdb_host";
-               close_spawn_process $id
                set do_stop 1
+               continue
             }
 
             -i $sp_id timeout { 
                set_error "-1" "inst_sge -db - timeout while waiting for output"; 
-               close_spawn_process $id;
                set do_stop 1
+               continue
             }
 
             -i $sp_id $RPC_HIT_RETURN_TO_CONTINUE { 
@@ -328,8 +328,6 @@ proc install_bdb_rpc {} {
                continue;
             }
 
-
-
             -i $sp_id "Error:" {
                set_error "-1" "install_shadowd - $expect_out(0,string)"
                close_spawn_process $id; 
@@ -348,11 +346,11 @@ proc install_bdb_rpc {} {
             }
 
             -i $sp_id $RPC_SERVER_COMPLETE {
-               close_spawn_process $id
                read_install_list
                lappend CORE_INSTALLED $bdb_host
                write_install_list
                set do_stop 1
+               continue
             }
 
             -i $sp_id $HIT_RETURN_TO_CONTINUE { 
@@ -367,12 +365,14 @@ proc install_bdb_rpc {} {
             }
 
             -i $sp_id default {
-               set_error "-1" "inst_sge -db - undefined behaiviour: $expect_out(buffer)"
+               set_error "-1" "inst_sge -db - undefined behaviour: $expect_out(buffer)"
                close_spawn_process $id; 
                return;
             }
          }
       }
+
+      close_spawn_process $id; 
    }
 }
 

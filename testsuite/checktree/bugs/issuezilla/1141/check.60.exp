@@ -96,6 +96,7 @@ proc issue_1141_run  {} {
       expect {
          -i $client_id full_buffer {
             add_proc_error "issue_1141_run" -1 "expect full_buffer error"
+            close_spawn_process $client_sid
             return -1
          }
          -i $client_id timeout {
@@ -158,6 +159,7 @@ proc issue_1141_run  {} {
          set in_loop 0
       }
    }
+
    close_spawn_process $client_sid
    set_error 0 "ok"
 }

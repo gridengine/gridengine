@@ -1,3 +1,9 @@
+JG-2005-10-28-0: Testsuite: Prevent recursive calls of add_proc_error (when 
+                            errors occur in error reporting)
+                            Fixed rlogin connection leaks.
+                            Cleanup.
+                 Review:    CR
+
 DT-2005-10-27-0: Bugfix:    o Fixed handling of single-quotes
                  Changed:   sge_string.c
                  Issue:     1762

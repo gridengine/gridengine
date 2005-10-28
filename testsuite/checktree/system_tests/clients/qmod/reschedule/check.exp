@@ -609,8 +609,7 @@ proc reschedule_qsh_qlogin_qrsh_qrlogin {} {
    global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_HOST CHECK_DEBUG_LEVEL CHECK_USER CHECK_USER
    global CHECK_FIRST_FOREIGN_SYSTEM_USER CHECK_SCRIPT_FILE_DIR CHECK_CORE_EXECD CHECK_HOST
 
-#-  open_remote_spawn_process
-
+   # JG: TODO: use open_remote_spawn_process - we could run out of filehandles here
    set qrsh_id    [ open_spawn_process "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qrsh -now no -q [get_queue_instance $rerun_queue $rerun_host]" ]
    set qrsh_id2   [ open_spawn_process "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qrsh -now no -q [get_queue_instance $rerun_queue $rerun_host] sleep 10000" ]
    set qsh_id     [ open_spawn_process "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qsh -now no -q [get_queue_instance $rerun_queue $rerun_host]" ]
@@ -733,6 +732,7 @@ proc reschedule_qsh_qlogin_qrsh_qrlogin {} {
       send -i $qlogin_id "\003"
       close_spawn_process $qlogin_id 1
    }
+
    set_error 0 "ok"
 }
 

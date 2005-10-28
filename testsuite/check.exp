@@ -151,8 +151,8 @@
 #
 #     If zones are configured on a host being part of a testsuite cluster,
 #     testsuite will use the zones as execution hosts instead of the
-#     real host (master zone).
-#     qmaster and shadowd will run in the master zone (real hostname).
+#     real host (global zone).
+#     qmaster and shadowd will run in the global zone (real hostname).
 #
 #     The testsuite configuration database (TCL array ts_config) contains
 #     the following entries, that are affected by zone configuration:
@@ -662,9 +662,26 @@ set CHECK_OUTPUT stdout
 #     check/set_error
 #*******************************
 proc add_proc_error { proc_name result text } {
-   global CHECK_CUR_PROC_ERRORS CHECK_CUR_PROC_RESULTS CHECK_CUR_PROC_NAME CHECK_OUTPUT check_name CHECK_TESTSUITE_ROOT
-   global CHECK_ARCH CHECK_HOST CHECK_PRODUCT_ROOT CHECK_ACT_LEVEL CHECK_CORE_MASTER CHECK_CORE_EXECD
-   global CHECK_USER CHECK_TESTSUITE_ROOT CHECK_SCRIPT_FILE_DIR check_name
+   global CHECK_CUR_PROC_ERRORS CHECK_CUR_PROC_RESULTS CHECK_CUR_PROC_NAME CHECK_OUTPUT check_name
+   global add_proc_error_avoid_recursive_call
+
+   # add_proc_error could be called recursively, for example, 
+   # if errors occur while sending the error message as mail.
+   # In this case, just output the error message - Otherwise we might 
+   # end up in endless recursion.
+   if {[info exists add_proc_error_avoid_recursive_call] && $add_proc_error_avoid_recursive_call == 1} {
+      puts $CHECK_OUTPUT "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+      puts $CHECK_OUTPUT "!!! recursive call of add_proc_error !!!"
+      puts $CHECK_OUTPUT "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+      puts $CHECK_OUTPUT "$proc_name|$text|$check_name|$CHECK_CUR_PROC_NAME"
+      puts $CHECK_OUTPUT "$result"
+      puts $CHECK_OUTPUT ""
+      puts $CHECK_OUTPUT ""
+      return
+   }
+
+   # avoid recursive call
+   set add_proc_error_avoid_recursive_call 1
 
    lappend CHECK_CUR_PROC_RESULTS $result
    set new_error ""
@@ -676,6 +693,9 @@ proc add_proc_error { proc_name result text } {
    } else {
       puts $CHECK_OUTPUT [ create_error_message $new_error ]
    }
+
+   # now we are through, allow further calls of add_proc_error
+   set add_proc_error_avoid_recursive_call 0
 }
 
 

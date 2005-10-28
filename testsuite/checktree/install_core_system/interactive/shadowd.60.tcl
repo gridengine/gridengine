@@ -81,7 +81,7 @@ proc install_shadowd {} {
          set my_csp_host_list $CHECK_CORE_SHADOWD
          foreach shadow_host $my_csp_host_list {
             if { $shadow_host == $CHECK_CORE_MASTER } {
-               continue;
+               continue
             }
             copy_certificates $shadow_host
          }
@@ -163,7 +163,6 @@ proc install_shadowd {} {
 
       set do_stop 0
       while {$do_stop == 0} {
-         flush stdout
          flush $CHECK_OUTPUT
          if {$do_log_output == 1} {
              puts "press RETURN"
@@ -175,26 +174,26 @@ proc install_shadowd {} {
          expect {
             -i $sp_id full_buffer {
                set_error "-1" "install_shadowd - buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
-               close_spawn_process $id; 
-               return;
+               close_spawn_process $id
+               return
             }
 
             -i $sp_id eof {
-               set_error "-1" "install_shadowd - unexpeced eof";
-               close_spawn_process $id
+               set_error "-1" "install_shadowd - unexpeced eof"
                set do_stop 1
+               continue
             }
 
             -i $sp_id "coredump" {
-               set_error "-2" "install_shadowd - coredump on host $shadow_host";
-               close_spawn_process $id
+               set_error "-2" "install_shadowd - coredump on host $shadow_host"
                set do_stop 1
+               continue
             }
 
             -i $sp_id timeout { 
-               set_error "-1" "install_shadowd - timeout while waiting for output"; 
-               close_spawn_process $id;
+               set_error "-1" "install_shadowd - timeout while waiting for output" 
                set do_stop 1
+               continue
             }
 
 
@@ -207,7 +206,7 @@ proc install_shadowd {} {
                   set anykey [wait_for_enter 1]
                }
                send -i $sp_id $input
-               continue;
+               continue
             } 
 
             -i $sp_id $HOSTNAME_KNOWN_AT_MASTER { 
@@ -218,7 +217,7 @@ proc install_shadowd {} {
                }
      
                send -i $sp_id "\n"
-               continue;
+               continue
             }
 
              -i $sp_id $INSTALL_AS_ADMIN_USER { 
@@ -229,7 +228,7 @@ proc install_shadowd {} {
                }
 
                send -i $sp_id "$ANSWER_YES\n"
-               continue;
+               continue
             }
 
 
@@ -240,7 +239,7 @@ proc install_shadowd {} {
                    set anykey [wait_for_enter 1]
                }
                send -i $sp_id "\n"
-               continue;
+               continue
             }
 
 
@@ -252,11 +251,11 @@ proc install_shadowd {} {
                        set anykey [wait_for_enter 1]
                   }
                   send -i $sp_id "\n"
-                  continue;
+                  continue
                } else {
                   set_error "-1" "install_shadowd - host $shadow_host: tried to install not as root"
-                  close_spawn_process $id; 
-                  return;
+                  close_spawn_process $id 
+                  return
                }
             }
 
@@ -268,25 +267,25 @@ proc install_shadowd {} {
                }
      
                send -i $sp_id "$ANSWER_NO\n"
-               continue;
+               continue
             }
 
 
             -i $sp_id "Error:" {
                set_error "-1" "install_shadowd - $expect_out(0,string)"
-               close_spawn_process $id; 
-               return;
+               close_spawn_process $id 
+               return
             }
             -i $sp_id "can't resolve hostname*\n" {
                set_error "-1" "install_shadowd - $expect_out(0,string)"
-               close_spawn_process $id; 
-               return;
+               close_spawn_process $id 
+               return
             }            
   
             -i $sp_id "error:\n" {
                set_error "-1" "install_shadowd - $expect_out(0,string)"
-               close_spawn_process $id; 
-               return;
+               close_spawn_process $id 
+               return
             }
 
             -i $sp_id $CURRENT_GRID_ROOT_DIRECTORY {
@@ -296,15 +295,15 @@ proc install_shadowd {} {
                     set anykey [wait_for_enter 1]
                }
                send -i $sp_id "\n"
-               continue;
+               continue
             }
 
             -i $sp_id $SHADOWD_INSTALL_COMPLETE {
-               close_spawn_process $id
                read_install_list
                lappend CORE_INSTALLED $shadow_host
                write_install_list
                set do_stop 1
+               continue
             }
 
             -i $sp_id $HIT_RETURN_TO_CONTINUE { 
@@ -315,7 +314,7 @@ proc install_shadowd {} {
                }
      
                send -i $sp_id "\n"
-               continue;
+               continue
             }
 
             -i $sp_id $SHADOW_ROOT { 
@@ -326,16 +325,19 @@ proc install_shadowd {} {
                }
      
                send -i $sp_id "\n"
-               continue;
+               continue
             }
 
             -i $sp_id default {
                set_error "-1" "install_shadowd - undefined behaiviour: $expect_out(buffer)"
-               close_spawn_process $id; 
-               return;
+               close_spawn_process $id 
+               return
             }
          }
       }
+
+      # close connection to inst_sge
+      close_spawn_process $id
    }
 }
 

@@ -828,25 +828,26 @@ proc run_throughput_test {} {
       expect {
          -i $event_client_id full_buffer {
             add_proc_error "run_throughput_test" -1 "expect full_buffer error (3)"
+            close_spawn_process $event_client_id
             return -1
          }
          -i $event_client_id timeout {
             puts $CHECK_OUTPUT "timeout starting event client"
-            break;
+            break
          }
          -i $event_client_id eof {
             puts $CHECK_OUTPUT "eof from event client"
-            break;
+            break
          }
          -i $event_client_id "ECL_STATE" {
             puts $CHECK_OUTPUT "old qevent version"
             set is_old_version 1
-            break;
+            break
          }
          -i $event_client_id -- "ts|*testsuite" {
             puts $CHECK_OUTPUT "new qevent version"
             set is_old_version 0
-            break;
+            break
          }
       }
    }
@@ -1092,6 +1093,8 @@ proc run_throughput_test {} {
           foreach elem $remote_spawn_list {
              close_spawn_process $elem
           }
+          close_spawn_process $event_client_sid
+          close_spawn_process $schedd_messages_sid
           set_error -1 "could not enable all host connections"
           return -1
        }

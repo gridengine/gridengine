@@ -225,8 +225,6 @@ char *argv[]
 
    cl_com_set_synchron_receive_timeout( cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0), (int) (sconf_get_schedule_interval() * 2) );
 
-   sge_setup_lock_service();
-
    in_main_loop = 1;
 
    while (!done) {

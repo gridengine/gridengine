@@ -1,3 +1,7 @@
+RD-2005-10-28-0: Bugfix:    fixed lock cleanup by SG-2005-10-25-0
+                            lock was not initialized for non mt binaries
+                 Review:    SG
+
 JG-2005-10-28-0: Testsuite: Prevent recursive calls of add_proc_error (when 
                             errors occur in error reporting)
                             Fixed rlogin connection leaks.

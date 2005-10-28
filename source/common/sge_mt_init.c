@@ -72,6 +72,8 @@
 *******************************************************************************/
 void sge_mt_init(void)
 {
+   sge_setup_lock_service();
+
    sge_prof_setup();
    uidgid_mt_init();
    path_mt_init();

@@ -601,6 +601,9 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
                break;
             }
          }
+         if (has_permissions == 1) {
+            break;
+         }
       }
       if (!has_permissions) {
          SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_JOB_NOTINANYQ_S, ruser));

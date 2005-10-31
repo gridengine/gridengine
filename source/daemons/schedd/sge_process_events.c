@@ -719,6 +719,8 @@ sge_process_schedd_conf_event_before(sge_object_type type, sge_event_action acti
    old = sconf_get_config(); 
    new = lFirst(lGetList(event, ET_new_version));
 
+   ec_set_busy(1);
+
    if (new == NULL) {
       ERROR((SGE_EVENT, "> > > > > no scheduler configuration available < < < < <\n"));
       DEXIT;

@@ -1230,7 +1230,6 @@ ec_deregister(void)
             lFreeElem(&ec);
             need_register = true;
             ec_reg_id = 0;
-            lSetBool(ec, EV_changed, false);
             next_event = 1;
 
             ret = true;

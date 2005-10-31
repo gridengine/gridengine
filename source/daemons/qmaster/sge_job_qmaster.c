@@ -603,6 +603,9 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
                break;
             }
          }
+         if (has_permissions == 1) {
+            break;
+         }
       }
       if (!has_permissions) {
          SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_JOB_NOTINANYQ_S, ruser));
@@ -763,27 +766,28 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
    }
 
    /* write script to file */
-   if (lGetString(jep, JB_script_file) && bootstrap_get_job_spooling() && 
-       !JOB_TYPE_IS_BINARY(lGetUlong(jep, JB_type))) {
+   if ( bootstrap_get_job_spooling())  {
+      if (lGetString(jep, JB_script_file) && 
+          !JOB_TYPE_IS_BINARY(lGetUlong(jep, JB_type))) {
 
-      PROF_START_MEASUREMENT(SGE_PROF_JOBSCRIPT);
-      if (sge_string2file(lGetString(jep, JB_script_ptr), 
-                       lGetUlong(jep, JB_script_size),
-                       lGetString(jep, JB_exec_file))) {
-         ERROR((SGE_EVENT, MSG_JOB_NOWRITE_US, sge_u32c(job_number), strerror(errno)));
-         answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR);
-         SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
+         PROF_START_MEASUREMENT(SGE_PROF_JOBSCRIPT);
+         if (sge_string2file(lGetString(jep, JB_script_ptr), 
+                          lGetUlong(jep, JB_script_size),
+                          lGetString(jep, JB_exec_file))) {
+            ERROR((SGE_EVENT, MSG_JOB_NOWRITE_US, sge_u32c(job_number), strerror(errno)));
+            answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR);
+            SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
+            PROF_STOP_MEASUREMENT(SGE_PROF_JOBSCRIPT);
+            DEXIT;
+            return STATUS_EDISK;
+         }
          PROF_STOP_MEASUREMENT(SGE_PROF_JOBSCRIPT);
-         DEXIT;
-         return STATUS_EDISK;
       }
-      PROF_STOP_MEASUREMENT(SGE_PROF_JOBSCRIPT);
+
+      /* clean file out of memory */
+      lSetString(jep, JB_script_ptr, NULL);
+      lSetUlong(jep, JB_script_size, 0);
    }
-
-   /* clean file out of memory */
-   lSetString(jep, JB_script_ptr, NULL);
-   lSetUlong(jep, JB_script_size, 0);
-
    /*
    ** security hook
    **

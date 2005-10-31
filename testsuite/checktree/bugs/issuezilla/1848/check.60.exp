@@ -1,0 +1,246 @@
+#!/vol2/TCL_TK/glinux/bin/expect --
+#___INFO__MARK_BEGIN__
+##########################################################################
+#
+#  The Contents of this file are made available subject to the terms of
+#  the Sun Industry Standards Source License Version 1.2
+#
+#  Sun Microsystems Inc., March, 2001
+#
+#
+#  Sun Industry Standards Source License Version 1.2
+#  =================================================
+#  The contents of this file are subject to the Sun Industry Standards
+#  Source License Version 1.2 (the "License"); You may not use this file
+#  except in compliance with the License. You may obtain a copy of the
+#  License at http://gridengine.sunsource.net/Gridengine_SISSL_license.html
+#
+#  Software provided under this License is provided on an "AS IS" basis,
+#  WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING,
+#  WITHOUT LIMITATION, WARRANTIES THAT THE SOFTWARE IS FREE OF DEFECTS,
+#  MERCHANTABLE, FIT FOR A PARTICULAR PURPOSE, OR NON-INFRINGING.
+#  See the License for the specific provisions governing your rights and
+#  obligations concerning the Software.
+#
+#  The Initial Developer of the Original Code is: Sun Microsystems, Inc.
+#
+#  Copyright: 2001 by Sun Microsystems, Inc.
+#
+#  All Rights Reserved.
+#
+##########################################################################
+#___INFO__MARK_END__
+
+# Define the global veriables to give them back
+global check_name check_description check_needs check_functions check_errno check_errstr check_highest_level
+global check_init_level_procedure check_category
+
+set check_init_level_procedure "issue_1848_init_level"
+
+set check_category            "COMPATIBILITY SYSTEM VERIFIED"
+set check_name                "issue_1848"
+set check_description(0)      "drmaa_syncronize() doesn't ignore new jobs"
+set check_needs               "init_core_system"      ;# dependencies of this check (name of other check)
+set check_root_access_needs   "false"
+
+# setup and cleanup functions
+set check_setup_function "issue_1848_setup"
+set check_cleanup_function "issue_1848_cleanup"
+
+# define test's procedure order
+set check_functions           ""
+lappend check_functions       "issue_1848_run"
+set check_highest_level       0
+
+
+
+proc issue_1848_init_level {} {
+   global CHECK_ACT_LEVEL ts_config
+
+   # setup levels 
+   switch -- $CHECK_ACT_LEVEL {
+      "0"  { 
+         return 0
+      }
+   }
+   return -1
+}
+
+proc issue_1848_setup  {} {
+   global ts_config
+   global CHECK_OUTPUT
+   global CHECK_PRODUCT_TYPE 
+   global CHECK_ARCH 
+   global CHECK_PRODUCT_ROOT
+   global prj1_id_list 
+
+   set DIV_NO "5"
+   set DEP_NO "2"
+   set SEC_NO "4"
+   set PRJ_NO "10"
+
+   set DIV_COUNT  "1"
+   set PRJ_COUNT "1"
+   set TICKET_VALUE "1000"
+
+   set prj1_id_list ""
+
+   while { $DIV_COUNT <= $DIV_NO } {
+   	set DIV_NAME "div$DIV_COUNT"
+	   set DIV_PATH "/$DIV_NAME=$TICKET_VALUE"
+
+      set DEP_COUNT "1"
+      while { $DEP_COUNT <= $DEP_NO } {
+         set DEP_NAME "dep$DEP_COUNT"
+         set DEP_PATH "/$DIV_NAME/$DEP_NAME=$TICKET_VALUE"
+
+         set SEC_COUNT "1"
+         while { $SEC_COUNT <= $SEC_NO } {
+            set SEC_NAME "sec$SEC_COUNT"
+            set SEC_PATH "/$DIV_NAME/$DEP_NAME/$SEC_NAME=$TICKET_VALUE"
+         
+            set PRJ_TMP_COUNT "1"
+            while { $PRJ_TMP_COUNT <= $PRJ_NO } {
+               set PRJ "PRJ$PRJ_COUNT"
+               set PRJ_PATH "/$DIV_NAME/$DEP_NAME/$SEC_NAME/$PRJ=$TICKET_VALUE"
+
+               lappend prj1_id_list $PRJ
+              
+               set prj_setup(name) "$PRJ"
+               add_prj prj_setup
+               
+               set catch_return [ catch {  
+                  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf -astnode $DIV_PATH,$DEP_PATH,$SEC_PATH,$PRJ_PATH" 
+               } result ]
+               puts "qconf -astnode result: $result"
+              
+               incr PRJ_TMP_COUNT
+               incr PRJ_COUNT
+            }
+            incr SEC_COUNT
+         }
+         incr DEP_COUNT
+      }
+      incr DIV_COUNT
+   }
+ 
+   set myconfig(loglevel)         "log_warning"
+   set_config myconfig
+   
+   set_error 0 "ok"
+}
+
+
+
+proc issue_1848_run {} {
+   global ts_config
+   global CHECK_OUTPUT
+   global CHECK_PRODUCT_TYPE 
+   global CHECK_ARCH 
+   global CHECK_PRODUCT_ROOT
+
+   # tail -f to qmaster messages file
+   puts $CHECK_OUTPUT "tail -f to qmaster messages file"
+   set spooldir [get_qmaster_spool_dir]
+   set id [init_logfile_wait $ts_config(master_host) "$spooldir/messages"]
+
+   get_schedd_config my_config 
+   set my_config(weight_tickets_share) "10000"
+   set my_config(job_load_adjustments) "np_load_avg=0.0"
+   set my_config(schedule_interval)    "2:0:0"
+   set my_config(usage_weight_list)    "cpu=1,mem=0,io=0"
+   set my_config(halftime)             "10"
+   set_schedd_config my_config
+
+   reset_schedd_config
+
+   get_schedd_config my_config 
+   set my_config(weight_tickets_share) "10000"
+   set my_config(job_load_adjustments) "np_load_avg=0.0"
+   set my_config(schedule_interval)    "2:0:0"
+   set my_config(usage_weight_list)    "cpu=1,mem=0,io=0"
+   set my_config(halftime)             "10"
+   set_schedd_config my_config
+
+   reset_schedd_config
+   
+   puts $CHECK_OUTPUT "waiting..."
+   
+   # the time period we wait for messages
+   set now [clock seconds]
+   set end [expr $now + 10]   
+
+   # this is the spawn id of our tail to qmaster messages file
+   set sp_id [lindex $id 1]
+
+   set count "0"
+
+   # wait until timeout
+   while {$now < $end} {
+      set timeout 1
+      expect_user {
+         -i $sp_id timeout {
+            # output how long we'll still wait
+            puts $CHECK_OUTPUT "[expr $end -$now]\r"
+         }
+         -i $sp_id full_buffer {
+            add_proc_error qmaster_monitoring_monitor -1 "buffer overflow, please increase CHECK_EXPECT_MATCH_MAX_BUFFER"
+         }
+         -i $sp_id eof {
+            add_proc_error qmaster_monitoring_monitor -1 "unexpected eof"
+         }
+         -i $sp_id "?*\n" {
+
+               foreach line [ string trim [split $expect_out(0,string) "\n"]] {
+                  set line [string trim $line]
+                  if {[string length $line] > 0} {
+                     puts $CHECK_OUTPUT "processing line: $line"
+                     incr count
+                  } ;# valid line
+               } ;# foreach line  
+          
+         } ;# data
+      } ;# switch
+
+      set now [clock seconds]
+   } ;# while
+
+   # stop the tail -f
+   close_spawn_process $id
+
+   puts $CHECK_OUTPUT "done waiting messages: $count"
+
+   if {count != 0} {
+      set_error -1 "errors were generated"
+   }
+   else {
+      set_error 0 "ok"
+   }
+}
+
+
+
+proc issue_1848_cleanup {} {
+   global prj1_id_list 
+   global ts_config
+   global CHECK_OUTPUT
+   global CHECK_PRODUCT_TYPE 
+   global CHECK_ARCH 
+   global CHECK_PRODUCT_ROOT
+
+   set catch_return [ catch {  
+      eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf -dstree" 
+   } result ]
+
+   puts "qconf -dstree result: $result"
+   puts "qconf -dstree exit value: $catch_return "
+   
+   foreach prj $prj1_id_list {
+      del_prj $prj
+   }
+
+   set myconfig(loglevel)         "log_info"
+   set_config myconfig
+
+   set_error 0 "ok"
+}

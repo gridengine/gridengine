@@ -38,6 +38,7 @@
 #include "sge_feature.h"
 #include "gdi_setup.h"
 #include "sge_profiling.h"
+#include "lck/sge_lock.h"
 
 #include "sgeobj/sge_schedd_conf.h"
 

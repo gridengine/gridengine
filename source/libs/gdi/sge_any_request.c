@@ -176,28 +176,28 @@ static int gdi_log_flush_func(cl_raw_list_t* list_p) {
       switch(elem->log_type) {
          case CL_LOG_ERROR: 
             if ( log_state_get_log_level() >= LOG_ERR) {
-               ERROR((SGE_EVENT,  "%s %-20s=> %s %s\n", elem->log_module_name, elem->log_thread_name, elem->log_message, param ));
+               ERROR((SGE_EVENT,  "%s %-20s=> %s %s", elem->log_module_name, elem->log_thread_name, elem->log_message, param ));
             } else {
                printf("%s %-20s=> %s %s\n", elem->log_module_name, elem->log_thread_name, elem->log_message, param);
             }
             break;
          case CL_LOG_WARNING:
             if ( log_state_get_log_level() >= LOG_WARNING) {
-               WARNING((SGE_EVENT,"%s %-20s=> %s %s\n", elem->log_module_name, elem->log_thread_name, elem->log_message, param ));
+               WARNING((SGE_EVENT,"%s %-20s=> %s %s", elem->log_module_name, elem->log_thread_name, elem->log_message, param ));
             } else {
                printf("%s %-20s=> %s %s\n", elem->log_module_name, elem->log_thread_name, elem->log_message, param);
             }
             break;
          case CL_LOG_INFO:
             if ( log_state_get_log_level() >= LOG_INFO) {
-               INFO((SGE_EVENT,   "%s %-20s=> %s %s\n", elem->log_module_name, elem->log_thread_name, elem->log_message, param ));
+               INFO((SGE_EVENT,   "%s %-20s=> %s %s", elem->log_module_name, elem->log_thread_name, elem->log_message, param ));
             } else {
                printf("%s %-20s=> %s %s\n", elem->log_module_name, elem->log_thread_name, elem->log_message, param);
             }
             break;
          case CL_LOG_DEBUG:
             if ( log_state_get_log_level() >= LOG_DEBUG) { 
-               DEBUG((SGE_EVENT,  "%s %-20s=> %s %s\n", elem->log_module_name, elem->log_thread_name, elem->log_message, param ));
+               DEBUG((SGE_EVENT,  "%s %-20s=> %s %s", elem->log_module_name, elem->log_thread_name, elem->log_message, param ));
             } else {
                printf("%s %-20s=> %s %s\n", elem->log_module_name, elem->log_thread_name, elem->log_message, param);
             }

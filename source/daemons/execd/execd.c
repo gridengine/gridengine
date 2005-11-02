@@ -208,7 +208,7 @@ char **argv
    log_state_set_log_file(tmp_err_file_name);
 
    /* exit func for SGE_EXIT() */
-   in_main_loop = 0;
+   sge_sig_handler_in_main_loop = 0;
    uti_state_set_exit_func(execd_exit_func);
    sge_setup_sig_handlers(EXECD);
 
@@ -318,7 +318,7 @@ char **argv
 
    dispatch_timeout = DISPATCH_TIMEOUT_SGE;
       
-   in_main_loop = 1;
+   sge_sig_handler_in_main_loop = 1;
 
    /***** MAIN LOOP *****/
    while (shut_me_down != 1) {
@@ -345,8 +345,8 @@ char **argv
                    sizeof(execd_dispatcher_table)/sizeof(dispatch_entry),
                    tagarray, dispatch_timeout, err_str, dispatcher_errfunc, 1);
 
-      if (sigpipe_received) {
-          sigpipe_received = 0;
+      if (sge_sig_handler_sigpipe_received) {
+          sge_sig_handler_sigpipe_received = 0;
           INFO((SGE_EVENT, "SIGPIPE received\n"));
       }
 

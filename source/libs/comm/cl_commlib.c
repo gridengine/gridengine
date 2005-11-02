@@ -2649,7 +2649,10 @@ static int cl_com_trigger(cl_com_handle_t* handle, int synchron) {
                CL_LOG(CL_LOG_WARNING, "will not read from this connection, because ccrm was received!");
             }
          }
-         
+      }
+
+      if (elem->connection->connection_state == CL_CONNECTED) {
+         int return_value = CL_RETVAL_OK;
          if (elem->connection->fd_ready_for_write == CL_COM_DATA_READY &&
              elem->connection->data_write_flag    == CL_COM_DATA_READY &&
              elem->connection->ccrm_sent == 0 ) {
@@ -2674,7 +2677,12 @@ static int cl_com_trigger(cl_com_handle_t* handle, int synchron) {
             /* check timeouts */
             if ( elem->connection->write_buffer_timeout_time != 0) {
                if ( now.tv_sec >= elem->connection->write_buffer_timeout_time ) {
-                  CL_LOG(CL_LOG_ERROR,"write timeout for connection completion");
+                  CL_LOG(CL_LOG_ERROR,"write timeout for connected endpoint");
+                  snprintf(tmp_string, 1024, MSG_CL_COMMLIB_CLOSING_SSU,
+                           elem->connection->remote->comp_host,
+                           elem->connection->remote->comp_name,
+                           sge_u32c(elem->connection->remote->comp_id));
+                  cl_commlib_push_application_error(CL_RETVAL_SEND_TIMEOUT, tmp_string);
                   elem->connection->connection_state = CL_CLOSING;
                   elem->connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
                }
@@ -7360,7 +7368,12 @@ static void *cl_com_handle_write_thread(void *t_conf) {
                            /* check timeouts */
                            if ( elem->connection->write_buffer_timeout_time != 0) {
                               if ( now.tv_sec >= elem->connection->write_buffer_timeout_time ) {
-                                 CL_LOG(CL_LOG_ERROR,"write timeout for connection completion");
+                                 CL_LOG(CL_LOG_ERROR,"write timeout for connected endpoint");
+                                 snprintf(tmp_string, 1024, MSG_CL_COMMLIB_CLOSING_SSU,
+                                          elem->connection->remote->comp_host,
+                                          elem->connection->remote->comp_name,
+                                          sge_u32c(elem->connection->remote->comp_id));
+                                 cl_commlib_push_application_error(CL_RETVAL_SEND_TIMEOUT, tmp_string);
                                  elem->connection->connection_state = CL_CLOSING;
                                  elem->connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
                               }

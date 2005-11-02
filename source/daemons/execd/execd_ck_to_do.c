@@ -71,6 +71,7 @@
 #include "sge_prog.h"
 #include "get_path.h"
 #include "sge_report.h"
+#include "sig_handlers.h"
 
 #ifdef COMPILE_DC
 #  include "ptf.h"
@@ -86,7 +87,6 @@
 static int reprioritization_enabled = 0;
 #endif
 
-extern volatile int dead_children;
 extern volatile int waiting4osjid;
 
 
@@ -100,7 +100,6 @@ static int exec_job_or_task(lListElem *jep, lListElem *jatep, lListElem *petep);
 
 static bool should_reprioritize(void);
 
-extern int shut_me_down;
 extern volatile int jobs_to_start;
 
 extern lList *jr_list;
@@ -370,6 +369,10 @@ execd_ck_to_do(struct dispatch_entry *de, sge_pack_buffer *pb, sge_pack_buffer *
 
    DENTER(TOP_LAYER, "execd_ck_to_do");
 
+   /*
+    *  get current time (now)
+    *  ( don't update the now time inside this function )
+    */
    now = sge_get_gmt();
 
 #ifdef KERBEROS
@@ -462,20 +465,24 @@ execd_ck_to_do(struct dispatch_entry *de, sge_pack_buffer *pb, sge_pack_buffer *
       
    /* start jobs if present */
    if (jobs_to_start) {
-      sge_start_jobs();
+      /* reset jobs_to_start before starting jobs. We may loose
+       * loose a job start if we reset jobs_to_start after sge_start_jobs()
+       */
       jobs_to_start = 0;
+      sge_start_jobs();
    }
 
-   if (dead_children != 0) {
-      /* reap all jobs, who generated a SIGCLD */
+   if (sge_sig_handler_dead_children != 0) {
+      /* reap max. 10 jobs which generated a SIGCLD */
 
-      /* set dead_children to 0 before reaping children
-         because SIGCLD's can be lost otherwise */
-      dead_children = 0;
-      sge_reap_children_execd();
+      /* SIGCHILD signal is blocked from dispatcher(), so
+       * we can be sure that sge_sig_handler_dead_children is untouched here
+       */
+
+      sge_sig_handler_dead_children = sge_reap_children_execd(10);
    }
 
-   now = sge_get_gmt();
+
    if (next_signal <= now) {
       next_signal = now + SIGNAL_RESEND_INTERVAL;
       /* resend signals to shepherds */
@@ -582,7 +589,7 @@ execd_ck_to_do(struct dispatch_entry *de, sge_pack_buffer *pb, sge_pack_buffer *
    }
 
    /* do timeout calculation */
-   now = sge_get_gmt();
+
    if ( sge_get_flush_jr_flag() == true || next_report <= now) {
       if (next_report <= now) {
          next_report = now + mconf_get_load_report_time();
@@ -715,6 +722,7 @@ static int sge_start_jobs()
 {
    lListElem *jep, *jatep, *petep;
    int state_changed;
+   int jobs_started = 0;
 
    DENTER(TOP_LAYER, "sge_start_jobs");
 
@@ -733,11 +741,14 @@ static int sge_start_jobs()
             state_changed |= exec_job_or_task(jep, jatep, petep);
 
          /* now save this job so we are up to date on restart */
-         if (state_changed)
+         if (state_changed) {
             job_write_spool_file(jep, lGetUlong(jatep, JAT_task_number), 
                                  NULL, SPOOL_WITHIN_EXECD);
+            jobs_started++;
+         }
       }
    }
+   DPRINTF(("execd_ck_to_do: started "sge_U32CFormat" jobs\n", sge_u32c(jobs_started)));
 
    DEXIT;
    return 0;

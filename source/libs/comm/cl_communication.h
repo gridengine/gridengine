@@ -35,8 +35,8 @@
 
 #include "cl_xml_parsing.h"
 
-#define CL_DEFINE_READ_TIMEOUT                       15 
-#define CL_DEFINE_WRITE_TIMEOUT                      15
+#define CL_DEFINE_READ_TIMEOUT                       30
+#define CL_DEFINE_WRITE_TIMEOUT                      30
 #define CL_DEFINE_ACK_TIMEOUT                        60
 #define CL_DEFINE_GET_CLIENT_CONNECTION_DATA_TIMEOUT 60   /* default timeout for accepting a connection */
 #define CL_DEFINE_DELETE_MESSAGES_TIMEOUT_AFTER_CCRM 60   /* default timeout for unread message deletion after connection shutdown */

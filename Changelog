@@ -1,3 +1,10 @@
+CR-2005-11-02-0: Bugfix:    occasional "failed to deliver job" errors due to
+                            SIGPIPE in sge_execd
+                 Issue:     1856
+                 Bugtraq:   6338314
+                 Changed:   commlib, execd
+                 Review:    AA
+
 SG-2005-10-31-0: Bugfix:    - a sched conf change with a sharetree can result 
                               in a usage leak
                             - sched conf changes master conf only when needed

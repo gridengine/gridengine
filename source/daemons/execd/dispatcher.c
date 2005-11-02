@@ -54,7 +54,7 @@
 
 /* number of messages to cache in server process
    the rest stays in commd */
-#define RECEIVE_CACHESIZE 1
+#define RECEIVE_CACHESIZE 10
 
 /* range for sleep if we cant contact commd */
 #define CONNECT_PROBLEM_SLEEP_MIN 10
@@ -94,11 +94,6 @@ static int receive_message(dispatch_entry *de, sge_pack_buffer **pb, int* tagarr
 
       DPRINTF(("receive_message_cach_n_ack() returns: %s (%s/%s/%d)\n", 
                cl_get_error_text(ret), de->host, de->commproc, de->id)); 
-
-      if (ret != CL_RETVAL_OK) {
-         cl_commlib_trigger(cl_com_get_handle( "execd" ,1), 1);
-      }
-
    
    DEXIT;
    return ret;
@@ -281,6 +276,8 @@ int dispatch( dispatch_entry*   table,
 
             sigprocmask(SIG_SETMASK, &old_sigset, NULL);
 
+            cl_commlib_trigger(cl_com_get_handle("execd",1) ,0);
+
             rcvtimeoutt = MIN(rcvtimeout, rcvtimeoutt);
             
             /* if apb is filled send it back to the requestor */
@@ -396,7 +393,7 @@ static int receive_message_cach_n_ack( dispatch_entry*    de,
       deliver to the caller. Else we get all we can get and then return
       what we already have. ++ TODO use this pointers later too */
    cacheptr = cache;
-   receive_blocking = 0;
+   receive_blocking = 1;
 
    while (cacheptr) {
       if (match_dpe(cacheptr->de, de)) { 
@@ -415,12 +412,14 @@ static int receive_message_cach_n_ack( dispatch_entry*    de,
    while (cached_pbs < cachesize && i == CL_RETVAL_OK) {
       copy_de(&deact, de);
 
+      cl_commlib_trigger(cl_com_get_handle( "execd" ,1), receive_blocking );
 
       i = gdi_receive_message(deact.commproc, &deact.id, deact.host, 
-                              &deact.tag, &buffer, &buflen, receive_blocking);
+                              &deact.tag, &buffer, &buflen, 0);
+      DPRINTF(("receiving message (cached="sge_U32CFormat") returned "SFQ"\n", sge_u32c(cached_pbs), cl_get_error_text(i)));
 
-/*
-      receive_blocking = 0;   */  /* second receive is always non blocking */
+
+      receive_blocking = 0;   /* second receive is always non blocking */
       if (i == CL_RETVAL_OK) {
          int pack_ret;
 

@@ -778,19 +778,20 @@ int cl_com_tcp_write(cl_com_connection_t* connection, cl_byte_t* message, unsign
          }
 
 #ifdef USE_POLL
-         if (ufds.revents & POLLOUT) {
+         if (ufds.revents & POLLOUT)
 #else
-         if (FD_ISSET(private->sockfd, &writefds)) {
+         if (FD_ISSET(private->sockfd, &writefds))
 #endif
+         {
             errno = 0;
             data_written = write(private->sockfd, &message[data_complete], size - data_complete );   
             my_errno = errno;
             if (data_written < 0) {
                if (my_errno == EPIPE) {
-                  CL_LOG(CL_LOG_ERROR,"pipe error");
+                  CL_LOG_INT(CL_LOG_ERROR,"pipe error (only_one_write == NULL) errno:", my_errno);
                   return CL_RETVAL_PIPE_ERROR;
                }
-               CL_LOG(CL_LOG_ERROR,"send error");
+               CL_LOG_INT(CL_LOG_ERROR,"send error (only_one_write == NULL) errno:", my_errno);
                return CL_RETVAL_SEND_ERROR;
             } else {
                data_complete = data_complete + data_written;
@@ -813,10 +814,10 @@ int cl_com_tcp_write(cl_com_connection_t* connection, cl_byte_t* message, unsign
          if (data_written < 0) {
             if (my_errno != EWOULDBLOCK && my_errno != EAGAIN && my_errno != EINTR) {
                if (my_errno == EPIPE) {
-                  CL_LOG(CL_LOG_ERROR,"pipe error");
+                  CL_LOG_INT(CL_LOG_ERROR,"pipe error (only_one_write != NULL) errno:", my_errno);
                   return CL_RETVAL_PIPE_ERROR;
                }
-               CL_LOG(CL_LOG_ERROR,"send error");
+               CL_LOG_INT(CL_LOG_ERROR,"send error (only_one_write != NULL) errno:", my_errno);
                return CL_RETVAL_SEND_ERROR;
             }
          } else {
@@ -931,10 +932,10 @@ int cl_com_tcp_read(cl_com_connection_t* connection, cl_byte_t* message, unsigne
                   return CL_RETVAL_READ_ERROR;
                }
                if (my_errno == EPIPE) {
-                  CL_LOG_INT(CL_LOG_ERROR,"pipe error errno:", my_errno );
+                  CL_LOG_INT(CL_LOG_ERROR,"pipe error (only_one_read == NULL) errno:", my_errno );
                   return CL_RETVAL_PIPE_ERROR;
                }
-               CL_LOG_INT(CL_LOG_ERROR,"receive error errno:", my_errno);
+               CL_LOG_INT(CL_LOG_ERROR,"receive error (only_one_read == NULL) errno:", my_errno);
                return CL_RETVAL_READ_ERROR;
             } else {
                data_complete = data_complete + data_read;
@@ -961,10 +962,10 @@ int cl_com_tcp_read(cl_com_connection_t* connection, cl_byte_t* message, unsigne
             }
             if (my_errno != EWOULDBLOCK && my_errno != EAGAIN && my_errno != EINTR) {
                if (my_errno == EPIPE) {
-                  CL_LOG_INT(CL_LOG_ERROR,"pipe error errno:", my_errno );
+                  CL_LOG_INT(CL_LOG_ERROR,"pipe error (only_one_read != NULL) errno:", my_errno );
                   return CL_RETVAL_PIPE_ERROR;
                }
-               CL_LOG_INT(CL_LOG_ERROR,"receive error errno:", my_errno);
+               CL_LOG_INT(CL_LOG_ERROR,"receive error (only_one_read != NULL) errno:", my_errno);
                return CL_RETVAL_READ_ERROR;
             }
          } else {

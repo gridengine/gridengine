@@ -566,7 +566,7 @@ CheckShepherdStillRunning:
                                    job_id, ja_task_id, pe_task_id, NULL);
 
       if (!SGE_STAT(sge_dstring_get_string(&path), &statbuf) && S_ISDIR(statbuf.st_mode)) {
-         dead_children = 1; /* may be we've lost a SIGCHLD */
+         sge_sig_handler_dead_children = 1; /* may be we've lost a SIGCHLD */
          sge_dstring_free(&path);
          DEXIT;
          return 0;

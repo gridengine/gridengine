@@ -55,10 +55,10 @@ sigset_t io_mask;
 struct sigaction sigterm_vec, sigterm_ovec;
 struct sigaction sigalrm_vec, sigalrm_ovec;
 struct sigaction sigcld_pipe_vec, sigcld_pipe_ovec;
-volatile int shut_me_down = 0;
-volatile int dead_children = 0;
-volatile int in_main_loop = 1;
-volatile int sigpipe_received = 0;
+volatile int shut_me_down                     = 0;
+volatile int sge_sig_handler_dead_children    = 0;
+volatile int sge_sig_handler_in_main_loop     = 1;
+volatile int sge_sig_handler_sigpipe_received = 0;
 
 /********************************************************/
 void sge_setup_sig_handlers(
@@ -203,7 +203,7 @@ static void sge_terminate(int dummy)
 
    /* This is not the best way to shut down a process. 
       TODO: remove the exit call, applications should check shut_me_down */
-   if (!in_main_loop) {
+   if (!sge_sig_handler_in_main_loop) {
       exit(1);
    }
 }
@@ -211,11 +211,11 @@ static void sge_terminate(int dummy)
 /***************************************************************************/
 void sge_reap(int dummy)
 {
-   dead_children = 1;
+   sge_sig_handler_dead_children = 1;
 }
 
 /***************************************************************************/
 static void sge_sigpipe_handler(int dummy)
 {
-   sigpipe_received = 1;
+   sge_sig_handler_sigpipe_received = 1;
 }

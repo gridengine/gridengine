@@ -118,7 +118,7 @@ static void examine_job_task_from_file(int startup, char *dir, lListElem *jep, l
 
  If everything is done we can remove the job directory.
  ****************************************************************************/
-void sge_reap_children_execd()
+int sge_reap_children_execd(int max_count)
 {
    int pid = 999;
    int exit_status, child_signal, core_dumped, failed;
@@ -126,13 +126,21 @@ void sge_reap_children_execd()
    lListElem *jep, *petep = NULL, *jatep = NULL;
 
    int status;
+   int reap_count = 0;
 
    DENTER(TOP_LAYER, "sge_reap_children_execd");
    DPRINTF(("========================REAPER======================\n"));
 
    pid = 999;
+   if (max_count < 1) {
+      max_count = 1;
+   }
 
    while (pid > 0) {
+      if (reap_count >= max_count) {
+         DPRINTF(("max. reap count is reached - returning. reaped "sge_U32CFormat" childs.\n", sge_u32c(reap_count)));
+         return 1;
+      }
 
       exit_status = child_signal = core_dumped = failed = 0;
 
@@ -140,14 +148,12 @@ void sge_reap_children_execd()
 
       if (pid == 0) {
          DPRINTF(("pid==0 - no stopped or exited children\n"));
-         DEXIT;                 /* no stopped or exited children */
-         continue;
+         break;
       }
 
       if (pid == -1) {
          DPRINTF(("pid==-1 - no children not previously waited for\n"));
-         DEXIT;
-         return;
+         break;
       }
 
       if (WIFSTOPPED(status)) {
@@ -179,7 +185,10 @@ void sge_reap_children_execd()
          WARNING((SGE_EVENT, MSG_WAITPIDNOSIGNOEXIT_UI, sge_u32c(pid), status));
          continue;
       }
-  
+
+      /* increase reaped job counter */ 
+      reap_count++;
+
       /* search whether it was a job or one of its tasks */
       for_each(jep, Master_Job_List) {
          int Break = 0;
@@ -283,9 +292,10 @@ void sge_reap_children_execd()
                   exit_status));
       }
    }
+   DPRINTF(("reaped "sge_U32CFormat" childs - no child remaining\n", sge_u32c(reap_count)));
 
    DEXIT;
-   return;
+   return 0;
 }
 
 #ifdef COMPILE_DC

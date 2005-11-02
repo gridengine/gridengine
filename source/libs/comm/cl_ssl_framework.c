@@ -3415,10 +3415,11 @@ int cl_com_ssl_open_connection_request_handler(cl_raw_list_t* connection_list, c
             if (do_read_select != 0) {
                if (con_private->sockfd >= 0 && con_private->sockfd <= max_fd) {
 #ifdef USE_POLL
-                  if (ufds[lookup_index[con_private->sockfd]].revents & (POLLIN|POLLPRI)) {
+                  if (ufds[lookup_index[con_private->sockfd]].revents & (POLLIN|POLLPRI))
 #else
-                  if (FD_ISSET(con_private->sockfd, &my_read_fds)) {
+                  if (FD_ISSET(con_private->sockfd, &my_read_fds))
 #endif
+                  {
                      connection->data_read_flag = CL_COM_DATA_READY;
                   }
                }
@@ -3426,10 +3427,11 @@ int cl_com_ssl_open_connection_request_handler(cl_raw_list_t* connection_list, c
             if (do_write_select != 0) {
                if (con_private->sockfd >= 0 && con_private->sockfd <= max_fd) {
 #ifdef USE_POLL
-                  if (ufds[lookup_index[con_private->sockfd]].revents & POLLOUT) {
+                  if (ufds[lookup_index[con_private->sockfd]].revents & POLLOUT)
 #else
-                  if (FD_ISSET(con_private->sockfd, &my_write_fds)) {
+                  if (FD_ISSET(con_private->sockfd, &my_write_fds))
 #endif
+                  {
                      connection->fd_ready_for_write = CL_COM_DATA_READY;
                   }
                }
@@ -3443,10 +3445,11 @@ int cl_com_ssl_open_connection_request_handler(cl_raw_list_t* connection_list, c
 #endif
          if (server_fd != -1) {
 #ifdef USE_POLL
-            if (ufds[0].revents & (POLLIN|POLLPRI) ) {
+            if (ufds[0].revents & (POLLIN|POLLPRI) )
 #else
-            if (FD_ISSET(server_fd, &my_read_fds)) {
+            if (FD_ISSET(server_fd, &my_read_fds))
 #endif
+            {
                CL_LOG(CL_LOG_INFO,"NEW CONNECTION");
                service_connection->data_read_flag = CL_COM_DATA_READY;
             }
@@ -3546,10 +3549,11 @@ int cl_com_ssl_write(cl_com_connection_t* connection, cl_byte_t* message, unsign
          }
 
 #ifdef USE_POLL
-         if (ufds.revents & POLLOUT) {
+         if (ufds.revents & POLLOUT)
 #else
-         if (FD_ISSET(private->sockfd, &writefds)) {
+         if (FD_ISSET(private->sockfd, &writefds))
 #endif
+         {
             data_written = cl_com_ssl_func__SSL_write(private->ssl_obj, &message[data_complete], (int) (size - data_complete) );   
             if (data_written <= 0) {
                /* Try to find out more about the connect error */
@@ -3701,10 +3705,11 @@ int cl_com_ssl_read(cl_com_connection_t* connection, cl_byte_t* message, unsigne
          }
 
 #ifdef USE_POLL
-         if (ufds.revents & (POLLIN|POLLPRI)) {
+         if (ufds.revents & (POLLIN|POLLPRI))
 #else         
-         if (FD_ISSET(private->sockfd, &readfds)) {
+         if (FD_ISSET(private->sockfd, &readfds))
 #endif
+         {
             data_read = cl_com_ssl_func__SSL_read(private->ssl_obj, &message[data_complete], (int) (size - data_complete) );
             if (data_read <= 0) {
 

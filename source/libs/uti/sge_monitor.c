@@ -646,8 +646,7 @@ static void ext_edt_output(dstring *message, void *monitoring_extension, double 
 *     generates a string from the extension and returns it.
 *
 *  INPUTS
-*     char *message              - initilized string buffer
-*     int size                   - buffer size
+*     dstring *message           - initilized string buffer
 *     void *monitoring_extension - the extension structure
 *     double time                - length of the mesurement interval
 *

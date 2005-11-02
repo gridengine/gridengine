@@ -164,7 +164,7 @@ char *argv[]
    log_state_set_log_file(TMP_ERR_FILE_SCHEDD);
 
    /* exit func for SGE_EXIT() */
-   in_main_loop = 0;
+   sge_sig_handler_in_main_loop = 0;
    uti_state_set_exit_func(schedd_exit_func);
    sge_setup_sig_handlers(SCHEDD);
 
@@ -191,7 +191,7 @@ char *argv[]
    parse_cmdline_schedd(argc, argv);
 
    /* setup communication (threads) and daemonize if qmaster is unreachable */
-   in_main_loop = 1;
+   sge_sig_handler_in_main_loop = 1;
    check_qmaster = (sge_setup_sge_schedd() != 0) ? true : false;
 
    /* prepare event client/mirror mechanism */
@@ -225,7 +225,7 @@ char *argv[]
 
    cl_com_set_synchron_receive_timeout( cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0), (int) (sconf_get_schedule_interval() * 2) );
 
-   in_main_loop = 1;
+   sge_sig_handler_in_main_loop = 1;
 
    while (!done) {
       if (shut_me_down) {
@@ -235,8 +235,8 @@ char *argv[]
       }   
 
 
-      if (sigpipe_received) {
-         sigpipe_received = 0;
+      if (sge_sig_handler_sigpipe_received) {
+         sge_sig_handler_sigpipe_received = 0;
          INFO((SGE_EVENT, "SIGPIPE received"));
       }
       

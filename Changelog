@@ -1,3 +1,6 @@
+HP-2005-11-02-0: Bugfix:    Fixed broken build
+                 Changed:   libs/lck/Makefile
+
 SG-2005-10-31-0: Bugfix:    - a sched conf change with a sharetree can result 
                               in a usage leak
                             - sched conf changes master conf only when needed

@@ -238,7 +238,7 @@ proc create_autoinst_config {} {
    puts $fdo "WINDOWS_SUPPORT=\"false\""
    puts $fdo "WIN_ADMIN_NAME=\"Administrator\""
    puts $fdo "CSP_RECREATE=\"true\""
-   puts $fdo "CSP_COPY_CERTS=\"false\""
+   puts $fdo "CSP_COPY_CERTS=\"true\""
    puts $fdo "CSP_COUNTRY_CODE=\"DE\""
    puts $fdo "CSP_STATE=\"Germany\""
    puts $fdo "CSP_LOCATION=\"Building\""

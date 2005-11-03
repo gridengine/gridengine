@@ -149,6 +149,11 @@ proc sge_macro { macro_name {raise_error 1} } {
       "DISTINST_RPC_INSTALL_RC_SCRIPT" { set value "We can install the startup script that\nGrid Engine is started at machine boot (y/n) \[y\] >> " }     
       "DISTINST_RPC_SERVER_COMPLETE" { set value "e.g. * * * * * <full path to scripts> <sge-root dir> <sge-cell> <bdb-dir>\n" }
       "DISTINST_CSP_COPY_CERTS" { set value "Should the script try to copy the cert files, for you, to each\nexecution host? (y/n) \[y\] >>" }     
+      "DISTINST_CSP_COPY_CMD" { set value "Do you want to use rsh/rcp instead of ssh/scp? (y/n) \[n\] >>" }     
+      "DISTINST_CSP_COPY_FAILED" { set value "The certificate copy failed!" }     
+      "DISTINST_CSP_COPY_RSH_FAILED" { set value "Certificates couldn't be copied!"}     
+      "DISTINST_EXECD_UNINST_NO_ADMIN" { set value "This host is not an admin host. Uninstallation is not allowed\nfrom this host!"}     
+      "DISTINST_EXECD_UNINST_ERROR_CASE" { set value "Disabling queues now!"}     
 
    }
 

@@ -162,6 +162,9 @@ proc install_qmaster {} {
  set STARTUP_RPC_SERVER [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_STARTUP_RPC_SERVER]]
  set DONT_KNOW_HOW_TO_TEST_FOR_LOCAL_FS [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_DONT_KNOW_HOW_TO_TEST_FOR_LOCAL_FS]]
  set CSP_COPY_CERTS [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_CSP_COPY_CERTS]]
+ set CSP_COPY_CMD [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_CSP_COPY_CMD]]
+ set CSP_COPY_FAILED [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_CSP_COPY_FAILED]]
+ set CSP_COPY_RSH_FAILED [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_CSP_COPY_RSH_FAILED]]
 
  cd "$ts_config(product_root)"
 
@@ -1034,15 +1037,43 @@ proc install_qmaster {} {
        }
 
        -i $sp_id $CSP_COPY_CERTS {
-          puts $CHECK_OUTPUT "\n -->testsuite: sending >$ANSWER_NO<(14)"
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >$ANSWER_YES<(14)"
           if {$do_log_output == 1} {
                puts "press RETURN"
                set anykey [wait_for_enter 1]
           }
-          send -i $sp_id "$ANSWER_NO\n"
+          send -i $sp_id "$ANSWER_YES\n"
           continue
        }
-
+       -i $sp_id $CSP_COPY_CMD {
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >$ANSWER_YES<(15)"
+          if {$do_log_output == 1} {
+               puts "press RETURN"
+               set anykey [wait_for_enter 1]
+          }
+          send -i $sp_id "$ANSWER_YES\n"
+          continue
+       }
+       -i $sp_id $CSP_COPY_FAILED {
+          puts $CHECK_OUTPUT "\n -->testsuite: received copy failure"
+          if {$do_log_output == 1} {
+               puts "press RETURN"
+               set anykey [wait_for_enter 1]
+          }
+          send -i $sp_id ""
+          add_proc_error "csp_copy_failure" "-3" "We received a failure during copy of certificates. This appears, when the\nrcp/scp command fails!"
+          continue
+       }
+       -i $sp_id $CSP_COPY_RSH_FAILED {
+          puts $CHECK_OUTPUT "\n -->testsuite: received rsh/ssh failure"
+          if {$do_log_output == 1} {
+               puts "press RETURN"
+               set anykey [wait_for_enter 1]
+          }
+          send -i $sp_id ""
+          add_proc_error "rsh_failure" "-3" "We received a rsh/ssh failure. This error happends, if the rsh/ssh connection\nto any executio host was not possible, due to the missing permissions for user\nroot to connect via rsh/ssh without entering a password. This warning shows,\nthat the tested error handling code is working. To prevent this warning make\nsure the you qmaster host allows rsh/ssh connction for root without asking for\na password." 
+          continue
+       }
        -i $sp_id default {
           set_error "-1" "install_qmaster - undefined behaviour: $expect_out(buffer)"
           close_spawn_process $id; 

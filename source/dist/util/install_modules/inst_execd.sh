@@ -479,6 +479,7 @@ AddQueue()
 
 GetLocalExecdSpoolDir()
 {
+
    $INFOTEXT -u "\nLocal execd spool directory configuration"
    $INFOTEXT "\nDuring the qmaster installation you've already entered " \
              "a global\nexecd spool directory. This is used, if no local " \
@@ -615,15 +616,17 @@ ExecdAlreadyInstalled()
    hostname=$1
    ret="undef"
 
-   ret=`qhost | grep $hostname | awk '{ print $4 }'`
-   ret2=`qconf -sconf $hostname | head -1 | cut -d":" -f1`
+   ret=`qconf -sconf $hostname | grep execd_spool_dir | awk '{ print $2 }'`
+   if [ ! -d $ret/$hostname ]; then
+      ret=`qconf -sconf | grep execd_spool_dir | awk '{ print $2 }'`
+   fi
 
-   if [ \( "$ret" = "-" -o "$ret" = "" \) -a "$ret2" != "$hostname" ]; then
-      return 0
+   if [ -d $ret/$hostname ]; then
+      $INFOTEXT -log "Found execd spool directory: $s!\nExecution host %s is already installed!" $ret/$hostname $hostname
+      return 1 
    else
-      return 1
-   fi 
-
+      return 0 
+   fi
 }
 
 

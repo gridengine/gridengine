@@ -1,0 +1,253 @@
+#!/vol2/TCL_TK/glinux/bin/expect
+#___INFO__MARK_BEGIN__
+##########################################################################
+#
+#  The Contents of this file are made available subject to the terms of
+#  the Sun Industry Standards Source License Version 1.2
+#
+#  Sun Microsystems Inc., March, 2001
+#
+#
+#  Sun Industry Standards Source License Version 1.2
+#  =================================================
+#  The contents of this file are subject to the Sun Industry Standards
+#  Source License Version 1.2 (the "License"); You may not use this file
+#  except in compliance with the License. You may obtain a copy of the
+#  License at http://gridengine.sunsource.net/Gridengine_SISSL_license.html
+#
+#  Software provided under this License is provided on an "AS IS" basis,
+#  WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING,
+#  WITHOUT LIMITATION, WARRANTIES THAT THE SOFTWARE IS FREE OF DEFECTS,
+#  MERCHANTABLE, FIT FOR A PARTICULAR PURPOSE, OR NON-INFRINGING.
+#  See the License for the specific provisions governing your rights and
+#  obligations concerning the Software.
+#
+#  The Initial Developer of the Original Code is: Sun Microsystems, Inc.
+#
+#  Copyright: 2001 by Sun Microsystems, Inc.
+#
+#  All Rights Reserved.
+#
+##########################################################################
+#___INFO__MARK_END__
+
+# define global variable in this namespace
+global check_name 
+global check_category 
+global check_description 
+global check_needs
+global check_functions 
+global check_errno 
+global check_errstr 
+global check_highest_level
+global check_init_level_procedure
+global check_root_access_needs
+global env
+global CHECK_ACTUAL_TEST_PATH
+global check_execd
+
+set check_root_access_needs "yes"
+
+# define a level initialization procedure:
+set check_init_level_procedure "execd_uninstall_init_level"
+
+# define test's name and run level descriptions
+set check_name            "execd_uninstall"
+set check_category        "COMPATIBILITY SYSTEM VERIFIED"
+set check_highest_level  0 
+set check_description(0)  "Remove the host from adminhostlist and try to uninstall a execd from this host.\nA error should happend, because a non administrative host may not uninstall a execd"
+
+
+
+# define test's dependencies
+set check_needs           "init_core_system" 
+
+# setup and cleanup functions
+set check_setup_function execd_uninstall_setup
+set check_cleanup_function execd_uninstall_cleanup
+
+
+
+# define test's procedure order
+set check_functions ""
+lappend check_functions "uninstall_execd"
+
+global execd_uninstall_test_hosts
+global execd_uninstall_saved_slot_count
+
+proc execd_uninstall_init_level {} {
+   global CHECK_ACT_LEVEL
+
+   switch -- $CHECK_ACT_LEVEL {
+      "0" { 
+         return 0
+      } 
+   } 
+
+   return -1  ;# no other level 
+}
+
+
+
+
+# -------- local test procedures: initialization------------------------------
+
+
+proc execd_uninstall_setup  {} {
+   global CHECK_OUTPUT ts_config check_execd
+
+   set check_execd [ lindex $ts_config(execd_nodes) 1 ]
+   puts $CHECK_OUTPUT "Removing host $check_execd from adminhost list!" 
+   set output [start_remote_prog $ts_config(master_host) "root" "qconf" "-dh $check_execd"]
+   set_error 0 "ok"
+}
+
+proc execd_uninstall_cleanup  {} {
+   global CHECK_OUTPUT ts_config check_execd
+
+   puts $CHECK_OUTPUT "Readding host $check_execd to adminhost list!" 
+   set output [start_remote_prog "$ts_config(master_host)" "root" "qconf" "-ah $check_execd"] 
+   set_error 0 "ok"
+}
+
+
+proc uninstall_execd {} {
+   global ts_config
+   global CHECK_OUTPUT CORE_INSTALLED
+   global check_use_installed_system CHECK_ARCH
+   global CHECK_COMMD_PORT CHECK_ADMIN_USER_SYSTEM CHECK_USER
+   global CHECK_DEBUG_LEVEL CHECK_EXECD_INSTALL_OPTIONS
+   global CHECK_COMMD_PORT CHECK_CORE_MASTER
+   global CHECK_MAIN_RESULTS_DIR CHECK_SUBMIT_ONLY_HOSTS check_execd
+
+   set CORE_INSTALLED ""
+   set LOCAL_ALREADY_CHECKED 0 
+ 
+   read_install_list
+
+   set_error "0" "uninstall_execd - no errors"
+
+ 
+   if {[file isfile "$ts_config(product_root)/inst_sge"] != 1} {
+      set_error "-1" "inst_sge - inst_sge file not found"
+      return
+   }
+
+   set HIT_RETURN_TO_CONTINUE       [translate $check_execd 0 1 0 [sge_macro DISTINST_HIT_RETURN_TO_CONTINUE] ]
+   set CELL_NAME_FOR_EXECD          [translate $check_execd 0 1 0 [sge_macro DISTINST_CELL_NAME_FOR_EXECD ] "*"]
+   set ANSWER_YES                   [translate $check_execd 0 1 0 [sge_macro DISTINST_ANSWER_YES] ]
+   set ANSWER_NO                    [translate $check_execd 0 1 0 [sge_macro DISTINST_ANSWER_NO] ]
+   set CURRENT_GRID_ROOT_DIRECTORY  [translate $check_execd 0 1 0 [sge_macro DISTINST_CURRENT_GRID_ROOT_DIRECTORY] "*" "*" ]
+   set EXECD_UNINST_NO_ADMIN        [translate $check_execd 0 1 0 [sge_macro DISTINST_EXECD_UNINST_NO_ADMIN] ]
+   set EXECD_UNINST_ERROR_CASE      [translate $check_execd 0 1 0 [sge_macro DISTINST_EXECD_UNINST_ERROR_CASE] ]
+
+   cd "$ts_config(product_root)"
+
+   set prod_type_var "SGE_ROOT"
+   
+   puts $CHECK_OUTPUT "Trying to uninstall execution host: $check_execd"
+   set id [open_remote_spawn_process "$check_execd" "root"  "cd $$prod_type_var;./inst_sge" "-ux -host \"$check_execd\"" ]
+
+   log_user 1
+   puts $CHECK_OUTPUT "cd $$prod_type_var;./inst_sge -ux -host $check_execd"
+
+   set sp_id [ lindex $id 1 ] 
+
+
+   set timeout 300
+  
+   #set CHECK_DEBUG_LEVEL 2
+   set do_log_output 0 ;# 1 _LOG
+   if { $CHECK_DEBUG_LEVEL == 2 } {
+      set do_log_output 1
+   }
+
+
+   set do_stop 0
+   while {$do_stop == 0} {
+      flush stdout
+      flush $CHECK_OUTPUT
+      if {$do_log_output == 1} {
+          puts "press RETURN"
+          set anykey [wait_for_enter 1]
+      }
+  
+      set timeout 300
+      log_user 1 
+      expect {
+         -i $sp_id timeout { 
+            set_error "-1" "uninstall_execd - timeout while waiting for output"; 
+            close_spawn_process $id;
+            set do_stop 1
+         }
+
+         -i $sp_id $CELL_NAME_FOR_EXECD {
+            puts $CHECK_OUTPUT "\n -->testsuite: sending $ts_config(cell)"
+            set input "$ts_config(cell)\n"
+
+            if {$do_log_output == 1} {
+               puts "-->testsuite: press RETURN"
+               set anykey [wait_for_enter 1]
+            }
+            send -i $sp_id $input
+            continue
+         } 
+
+         -i $sp_id $CURRENT_GRID_ROOT_DIRECTORY {
+            puts $CHECK_OUTPUT "\n -->testsuite: sending >RETURN<"
+            if {$do_log_output == 1} {
+                 puts "-->testsuite: press RETURN"
+                 set anykey [wait_for_enter 1]
+            }
+            send -i $sp_id "\n"
+            continue
+         }
+
+         -i $sp_id $HIT_RETURN_TO_CONTINUE { 
+            puts $CHECK_OUTPUT "\n -->testsuite: sending >RETURN<"
+            if {$do_log_output == 1} {
+                 puts "press RETURN"
+                 set anykey [wait_for_enter 1]
+            }
+  
+            send -i $sp_id "\n"
+            continue
+         }
+
+         -i $sp_id $EXECD_UNINST_NO_ADMIN { 
+            puts $CHECK_OUTPUT "\n -->testsuite: sending"
+            if {$do_log_output == 1} {
+                 puts "press RETURN"
+                 set anykey [wait_for_enter 1]
+            }
+  
+            send -i $sp_id ""
+            set output [start_remote_prog "$ts_config(master_host)" "root" "qconf" "-ah $check_execd"]
+            set_error "0" "uninstall_execd test completed!"
+            add_proc_error "uninstall_execd" "0" "uninstall_execd test ok!" 
+            break 
+         }
+
+         -i $sp_id $EXECD_UNINST_ERROR_CASE {
+            puts $CHECK_OUTPUT "\n -->testsuite: sending"
+            if {$do_log_output == 1} {
+                 puts "press RETURN"
+                 set anykey [wait_for_enter 1]
+            }
+
+            send -i $sp_id ""
+            set output [start_remote_prog "$ts_config(master_host)" "root" "qconf" "-ah $check_execd"]
+            add_proc_error "uninstall_execd" "-1" "uninstall_execd test failed!"
+            break
+         }
+
+         -i $sp_id default {
+            set_error "-1" "uninstall_execd - undefined behaiviour: $expect_out(buffer)"
+            break
+         }
+      }
+   }  ;# while 1
+   set_error "0" "uninstall_execd test completed!"
+   close_spawn_process $id;
+   return
+}

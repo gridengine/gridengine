@@ -1,3 +1,13 @@
+MD-2005-11-03-0: Bugfix:    - autoinstall does not support csp installation mode
+                            - inst_sge -ux -host <host> might be incomplete if 
+                              not run from an admin host
+                            - Shadow master uninstallation cannot manage 
+                              shadow_masters containing several lines
+                 Issue:     1861, 1451, 1578
+                 Bugtraq:   6310168, 6239658, 6287828
+                 Changed:   inst_sge, install_modules
+                 Review:    HP, CR
+
 CR-2005-11-02-0: Bugfix:    occasional "failed to deliver job" errors due to
                             SIGPIPE in sge_execd
                  Issue:     1856

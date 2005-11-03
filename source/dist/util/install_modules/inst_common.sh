@@ -316,7 +316,7 @@ fi
          "qdel            qmon            qstat           qhold\n" \
          "qresub          qsub            qhost           qrls\n" \
          "qtcsh           qping           sgepasswd       qloadsensor.exe\n\n" \
-         "The binaries in >%s< are:\n\n" \
+         "and the binaries in >%s< should be:\n\n" \
          "adminrun       gethostbyaddr  loadcheck      rlogin         uidgid\n" \
          "checkprog      gethostbyname  now            rsh            infotext\n" \
          "checkuser      gethostname    openssl        rshd\n" \
@@ -332,7 +332,7 @@ fi
          "qhold           qresub          qsub            sge_schedd\n" \
          "qhost           qrls            qtcsh           sge_shadowd\n" \
          "qping\n\n" \
-         "The binaries in >%s< are:\n\n" \
+         "and the binaries in >%s< should be:\n\n" \
          "adminrun       gethostbyaddr  loadcheck      rlogin         uidgid\n" \
          "checkprog      gethostbyname  now            rsh            infotext\n" \
          "checkuser      gethostname    openssl        rshd\n" \
@@ -349,7 +349,7 @@ fi
       "qhold           qresub          qsub            sge_schedd\n" \
       "qhost           qrls            qtcsh           sge_shadowd\n" \
       "qping\n\n" \
-      "The binaries in >%s< are:\n\n" \
+      "and the binaries in >%s< should be:\n\n" \
       "adminrun       gethostbyaddr  loadcheck      rlogin         uidgid\n" \
       "checkprog      gethostbyname  now            rsh            infotext\n" \
       "checkuser      gethostname    openssl        rshd\n" \
@@ -442,7 +442,7 @@ GetConfigFromFile()
   fi
   IFS="   
 "
-  #CheckConfigFile
+   CheckConfigFile
    if [ "$BACKUP" = "false" ]; then
       SGE_CELL=$CELL_NAME
       DB_SPOOLING_SERVER=`ResolveHosts $DB_SPOOLING_SERVER`
@@ -479,50 +479,60 @@ ResolveHosts()
 }
 
 #--------------------------------------------------------------------------
+# Checking the rsh/ssh connection, if working (autoinstall mode)
+#
+CheckRSHConnection()
+{
+   check_host=$1
+   $SHELL_NAME $check_host hostname
+
+   return $?
+}
+
+#--------------------------------------------------------------------------
 # Checking the configuration file, if valid (autoinstall mode)
 #
 CheckConfigFile()
 {
-   if [ -d $SGE_ROOT ]; then
-      chars=`echo $SGE_QMASTER_PORT | wc -c`
-      chars=`expr $chars - 1`
-      digits=`expr $SGE_QMASTER_PORT : "[0-9][0-9]*"`
-      if [ "$chars" != "$digits" ]; then
-         $INFOTEXT -log "Invalid input. SGE_QMASTER_PORT must be a number."
+   if [ "$CSP" = "true" ]; then
+      if [ "$CSP_COUNTRY_CODE" = "" -o `echo $CSP_COUNTRY_CODE | wc -c` != 3 ]; then
+         $INFOTEXT -log "The CSP_COUNTRY_CODE entry contains more or less than 2 characters!\n"
+         MoveLog
          exit 1
-      else
-         chars=`echo $SGE_EXECD_PORT | wc -c`
-         chars=`expr $chars - 1`
-         digits=`expr $SGE_EXECD_PORT : "[0-9][0-9]*"`
-         if [ "$chars" != "$digits" ]; then
-            $INFOTEXT -log "Invalid input. SGE_EXECD_PORT must be a number."
-            exit 1
-         else
-            if [ -d $SGE_ROOT/$SGE_CELL ]; then
-               $INFOTEXT -log "The SGE_CELL directory already exists.\nPlease delete it," \
-                              "if it's not in use, or choose any other SGE_CELL name!"
-               exit 1
-            else
-               if [ -z $QMASTER_SPOOL_DIR ]; then
-                  $INFOTEXT -log "Please enter a qmaster spool directory!"
-                  exit 1
-               else
-                  if [ -z $EXECD_SPOOL_DIR ]; then
-                     $INFOTEXT -log "Please enter a execd spoold directory!"
-                     exit 1
-                  else
-                     : 
-                  fi
-               fi
-            fi
-         fi
       fi
-   else
-      $INFOTEXT -log "The SGE_ROOT directory does not exist!"
-      exit 1
-   fi
 
+      if [ "$CSP_STATE" = "" ]; then
+         $INFOTEXT -log "The CSP_STATE entry is empty!\n"
+         MoveLog
+         exit 1
+      fi
+
+      if [ "$CSP_LOCATION" = "" ]; then
+         $INFOTEXT -log "The CSP_LOCATION entry is empty!\n"
+         MoveLog
+         exit 1
+      fi
+
+      if [ "$CSP_ORGA" = "" ]; then
+         $INFOTEXT -log "The CSP_ORGA entry is empty!\n"
+         MoveLog
+         exit 1
+      fi
+
+      if [ "$CSP_ORGA_UNIT" = "" ]; then
+         $INFOTEXT -log "The CSP_ORGA_UNIT entry is empty!\n"
+         MoveLog
+         exit 1
+      fi
+
+      if [ "$CSP_MAIL_ADRESS" = "" ]; then
+         $INFOTEXT -log "The CSP_MAIL_ADRESS entry is empty!\n"
+         MoveLog
+         exit 1
+      fi
+   fi
 }
+
 #--------------------------------------------------------------------------
 #
 WelcomeTheUser()
@@ -826,6 +836,7 @@ ProcessSGERoot()
 #
 GiveHints()
 {
+   $CLEAR
 
    if [ $AUTO = true ]; then
       return
@@ -1293,6 +1304,10 @@ AddDefaultOperator()
 
 MoveLog()
 {
+   if [ "$AUTO" = "false" ]; then
+      return
+   fi
+
    if [ "$BACKUP" = "true" -a "$AUTO" = "true" ]; then
       mv /tmp/$LOGSNAME $backup_dir/backup.log 
       return   
@@ -1329,6 +1344,7 @@ MoveLog()
          $INFOTEXT "Check %s to get the install log!" /tmp/$LOGSNAME 
    fi
 }
+
 
 CreateLog()
 {
@@ -2402,3 +2418,92 @@ CheckServiceAndPorts()
       esac
    fi
 }
+
+
+CopyCA()
+{
+   if [ "$AUTO" = "true" -a "$CSP_COPY_CERTS" = "false" ]; then
+      return
+   fi
+
+   if [ "$CSP" = "false" -a \( "$WINDOWS_SUPPORT" = "false" -o "$WIN_DOMAIN_ACCESS" = "false" \) ]; then
+      return
+   fi
+
+   $INFOTEXT -u "Installing SGE in CSP mode"
+   $INFOTEXT "\nInstalling SGE in CSP mode needs to move the cert\n" \
+             "files to each execution host. This can be done by script!\n"
+   $INFOTEXT "To use this functionality, it is recommended, that user root\n" \
+             "may do rsh/ssh to the executions host, without being asked for a password!\n"
+   $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n "Should the script try to copy the cert files, for you, to each\n" \
+   "execution host? (y/n) [y] >>"
+
+   if [ "$?" = 0 ]; then
+      $INFOTEXT "You can use a rsh or a ssh copy to transfer the cert files to each\n" \
+                "execution host (default: ssh)"
+      $INFOTEXT -auto $AUTO -ask "y" "n" -def "n" -n "Do you want to use rsh/rcp instead of ssh/scp? (y/n) [n] >>"
+      if [ "$?" = 0 ]; then
+         SHELL_NAME="rsh"
+         COPY_COMMAND="rcp"
+      fi
+      which $COPY_COMMAND > /dev/null
+      if [ "$?" != 0 ]; then
+         $INFOTEXT "The remote copy command <%s> could not be found!" $COPY_COMMAND
+         $INFOTEXT -log "The remote copy command <%s> could not be found!" $COPY_COMMAND
+         return
+      fi
+   else
+      return
+   fi
+
+   for RHOST in `$SGE_BIN/qconf -sh`; do
+      if [ "$RHOST" != "$HOST" ]; then
+         CheckRSHConnection $RHOST
+         if [ "$?" = 0 ]; then
+            $INFOTEXT "Copying certificates to host %s" $RHOST
+            $INFOTEXT -log "Copying certificates to host %s" $RHOST
+            echo "mkdir /var/sgeCA" | $SHELL_NAME $RHOST /bin/sh &
+            if [ "$SGE_QMASTER_PORT" = "" ]; then 
+               $COPY_COMMAND -pr $HOST:/var/sgeCA/sge_qmaster $RHOST:/var/sgeCA
+            else
+               $COPY_COMMAND -pr $HOST:/var/sgeCA/port$SGE_QMASTER_PORT $RHOST:/var/sgeCA
+            fi
+            if [ "$?" = 0 ]; then
+               $INFOTEXT "Setting ownership to adminuser %s" $ADMINUSER
+               $INFOTEXT -log "Setting ownership to adminuser %s" $ADMINUSER
+               if [ "$SGE_QMASTER_PORT" = "" ]; then
+                  echo "chown -R $ADMINUSER /var/sgeCA/sge_qmaster/$SGE_CELL/userkeys/$ADMINUSER" | $SHELL_NAME $RHOST /bin/sh &
+               else
+                  echo "chown -R $ADMINUSER /var/sgeCA/port$SGE_QMASTER_PORT/$SGE_CELL/userkeys/$ADMINUSER" | $SHELL_NAME $RHOST /bin/sh &
+               fi
+            else
+               $INFOTEXT "The certificate copy failed!"      
+               $INFOTEXT -log "The certificate copy failed!"      
+            fi
+         else
+            $INFOTEXT "rsh/ssh connection to host %s is not working!" $RHOST
+            $INFOTEXT "Certificates couldn't be copied!"
+            $INFOTEXT -log "rsh/ssh connection to host %s is not working!" $RHOST
+            $INFOTEXT -log "Certificates couldn't be copied!"
+         fi
+      fi
+   done
+}
+
+
+IsAdminHost()
+{
+   check_host=$1
+   $SGE_BIN/qconf -sh | grep $check_host > /dev/null 2>&1
+
+   return $?
+}
+
+
+IsExecHost()
+{
+   check_host=$1
+   $SGE_BIN/qconf -sel | grep $check_host > /dev/null 2>&1
+
+   return $?
+}   

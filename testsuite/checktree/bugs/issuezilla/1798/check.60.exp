@@ -102,7 +102,7 @@ proc issue_1798_cleanup  {} {
       eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf -dattr exechost complex_values slots=1 global"
    } result ]
    if { $catch_return != 0 } {
-      add_proc_error "issue_1798_test" -1 "qconf -mattr error"
+      add_proc_error "issue_1798_test" -1 "qconf -dattr error"
    }
 
 
@@ -131,7 +131,7 @@ proc issue_1798_test {} {
    set catch_return [ catch {
       eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf -mattr exechost complex_values = global"
    } result ]
-   if { $catch_return != 0 } {
+   if { $catch_return != 1 } {
       add_proc_error "issue_1798_test" -2 "error: qconf -mattr exechost compl
 ex_values = global caused core of master"
       set_error -2 "IZ 1798 is present"

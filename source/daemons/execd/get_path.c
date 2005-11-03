@@ -81,7 +81,7 @@ int sge_get_path(lList *lp, const char *cwd, const char *owner,
          host = lGetHost(ep, PN_host);
          if (host == NULL) {
             break;
-         } 
+         }
       }
    }
 

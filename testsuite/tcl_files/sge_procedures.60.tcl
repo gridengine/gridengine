@@ -417,7 +417,7 @@ proc switch_execd_spool_dir { host spool_type { force_restart 0 } } {
 
    if { [ remote_file_isdirectory $host $base_spool_dir ] != 1 } {
       puts $CHECK_OUTPUT "creating not existing base spool directory:\n\"$base_spool_dir\""
-      remote_file_mkdir $hostname $base_spool_dir
+      remote_file_mkdir $host $base_spool_dir
    }   
 
    puts $CHECK_OUTPUT "cleaning up spool dir $spool_dir ..."

@@ -177,10 +177,10 @@ proc issue_1803_test {} {
       set spool_dir $config(execd_spool_dir)
 
       set qsub_arg_list {}
-      lappend qsub_arg_list "-l h=$host -o /dev/null -e /dev/null"
-      lappend qsub_arg_list "-b y -l h=$host -o /dev/null -e /dev/null"
-      lappend qsub_arg_list "-l h=$host"
-      lappend qsub_arg_list "-b y -l h=$host"
+      lappend qsub_arg_list "-l h=$host -o /dev/null -e /dev/null -S /bin/csh"
+      lappend qsub_arg_list "-b y -l h=$host -o /dev/null -e /dev/null -S /bin/csh"
+      lappend qsub_arg_list "-l h=$host -S /bin/csh"
+      lappend qsub_arg_list "-b y -l h=$host -S /bin/csh"
 
       foreach job_args $qsub_arg_list {
 

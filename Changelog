@@ -1,3 +1,6 @@
+RD-2005-11-03-0: Testsuite: fixed test for IZ 1803, 1780 and jobstart test
+                 Review:    CR
+
 CR-2005-11-02-0: Bugfix:    occasional "failed to deliver job" errors due to
                             SIGPIPE in sge_execd
                  Issue:     1856

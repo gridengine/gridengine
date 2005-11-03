@@ -817,7 +817,7 @@ int sge_set_environment()
    char buf[10000], *name, *value, err_str[10000];
    int line=0;
 
-   setup_environment ();
+   setup_environment();
    
    if (!(fp = fopen("environment", "r"))) {
       sprintf(err_str, "can't open environment file: %s",

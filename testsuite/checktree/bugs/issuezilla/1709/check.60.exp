@@ -72,7 +72,6 @@ proc issue_1709_run  {} {
 
    if {$prg_exit_state != 0} {
       add_proc_error "issue_1709" -1 "synchronize on invalid id worked; issue 1709 still exists"
-      return
    }
 
    set_error 0 "ok"

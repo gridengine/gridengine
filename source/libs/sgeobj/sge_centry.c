@@ -1269,12 +1269,15 @@ ensure_attrib_available(lList **alpp, lListElem *ep, int nm)
 
    DENTER(TOP_LAYER, "ensure_attrib_available");
    if (ep != NULL) {
+      DTRACE;
       for_each (attr, lGetList(ep, nm)) {
          const char *name = lGetString(attr, CE_name);
          lListElem *centry = centry_list_locate(Master_CEntry_List, name);
 
+         DTRACE;
          if (centry == NULL) {
-            ERROR((SGE_EVENT, MSG_GDI_NO_ATTRIBUTE_S, name));
+            ERROR((SGE_EVENT, MSG_GDI_NO_ATTRIBUTE_S, 
+                   name != NULL ? name : "<noname>"));
             answer_list_add(alpp, SGE_EVENT, 
                             STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             ret = STATUS_EUNKNOWN;
@@ -1284,7 +1287,9 @@ ensure_attrib_available(lList **alpp, lListElem *ep, int nm)
             /*
              * Replace shortcuts by the fullname silently 
              */
-            if (strcmp(fullname, name) != 0) {
+            DTRACE;
+            if (fullname != NULL && name != NULL &&
+                strcmp(fullname, name) != 0) {
                lSetString(attr, CE_name, fullname);
             }
          }

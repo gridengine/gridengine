@@ -1274,7 +1274,8 @@ ensure_attrib_available(lList **alpp, lListElem *ep, int nm)
          lListElem *centry = centry_list_locate(Master_CEntry_List, name);
 
          if (centry == NULL) {
-            ERROR((SGE_EVENT, MSG_GDI_NO_ATTRIBUTE_S, name));
+            ERROR((SGE_EVENT, MSG_GDI_NO_ATTRIBUTE_S, 
+                   name != NULL ? name : "<noname>"));
             answer_list_add(alpp, SGE_EVENT, 
                             STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             ret = STATUS_EUNKNOWN;

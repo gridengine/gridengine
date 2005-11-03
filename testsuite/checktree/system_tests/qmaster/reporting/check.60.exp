@@ -1,0 +1,327 @@
+#!/vol2/TCL_TK/glinux/bin/expect
+#___INFO__MARK_BEGIN__
+##########################################################################
+#
+#  The Contents of this file are made available subject to the terms of
+#  the Sun Industry Standards Source License Version 1.2
+#
+#  Sun Microsystems Inc., March, 2001
+#
+#
+#  Sun Industry Standards Source License Version 1.2
+#  =================================================
+#  The contents of this file are subject to the Sun Industry Standards
+#  Source License Version 1.2 (the "License"); You may not use this file
+#  except in compliance with the License. You may obtain a copy of the
+#  License at http://gridengine.sunsource.net/Gridengine_SISSL_license.html
+#
+#  Software provided under this License is provided on an "AS IS" basis,
+#  WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING,
+#  WITHOUT LIMITATION, WARRANTIES THAT THE SOFTWARE IS FREE OF DEFECTS,
+#  MERCHANTABLE, FIT FOR A PARTICULAR PURPOSE, OR NON-INFRINGING.
+#  See the License for the specific provisions governing your rights and
+#  obligations concerning the Software.
+#
+#  The Initial Developer of the Original Code is: Sun Microsystems, Inc.
+#
+#  Copyright: 2001 by Sun Microsystems, Inc.
+#
+#  All Rights Reserved.
+#
+##########################################################################
+#___INFO__MARK_END__
+
+#****** checks/reporting *******************************************************
+#  NAME
+#     reporting -- check reporting functionality
+#
+#  FUNCTION
+#     The purpose of this testsuite check is to test the qmaster repoting file
+#     generation.
+#
+#     It tests the following features:
+#        - account_flush_time reporting param
+#
+#     It should test the following features:
+#        - all reporting params
+#        - accounting file contents
+#        - reporting file contents
+#        - reporting of events
+#        - reporting of sharelog data
+#*******************************************************************************
+#
+# define global variable in this namespace
+global check_name 
+global check_category
+global check_description 
+global check_needs
+global check_functions 
+global check_errno 
+global check_errstr 
+global check_highest_level
+global check_init_level_procedure
+global check_root_access_needs
+global env
+
+set check_root_access_needs "no"
+
+# define a level initialization procedure:
+set check_init_level_procedure "reporting_init_level"
+
+# define test's name and run level descriptions
+set check_name            "reporting"
+set check_category        "COMPATIBILITY SYSTEM L10N VERIFIED"
+set check_highest_level   0
+set check_description(0)  "Test reporting parameters and qmaster reporting"
+
+# define test's dependencies
+set check_needs           "init_core_system" 
+
+
+# setup and cleanup functions
+set check_setup_function reporting_setup
+set check_cleanup_function reporting_cleanup
+
+# define test's procedure order
+set check_functions ""
+lappend check_functions "reporting_periodic_accounting_test"
+lappend check_functions "reporting_immediate_accounting_test"
+lappend check_functions "reporting_reporting_accounting_test"
+
+global reporting_old_config reporting_acct_file
+
+proc reporting_init_level {} {
+   global CHECK_ACT_LEVEL
+
+   switch -- $CHECK_ACT_LEVEL {
+      "0" {
+         return 0
+      }
+   }
+
+   return -1  ;# no other level else
+}
+
+# -------- local test procedures -----------------------------------------------
+
+
+proc reporting_setup  {} {
+   global CHECK_ARCH CHECK_PRODUCT_ROOT CHECK_USER CHECK_HOST ts_config
+   global reporting_old_config reporting_acct_file
+
+   # Delete any jobs that might be in the system
+   set binary "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qdel"
+   set output [start_remote_prog $CHECK_HOST $CHECK_USER $binary "*" result]
+
+   if {$result != 0} {
+      set_error -1 "unable to delete jobs: $output"
+      return
+   }
+
+   # Archive old config
+   get_config reporting_old_config
+
+   # Find accounting file
+   set reporting_acct_file "$CHECK_PRODUCT_ROOT/$ts_config(cell)/common/accounting"
+
+   set_error 0 "ok"
+}
+
+proc reporting_cleanup {} {
+   global reporting_old_config
+
+   # Restore old config
+   set_config reporting_old_config
+
+   set_error 0 "ok"
+}
+
+proc reporting_periodic_accounting_test {} {
+   global ts_config CHECK_ARCH CHECK_PRODUCT_ROOT CHECK_USER CHECK_HOST
+   global CHECK_OUTPUT reporting_acct_file
+
+   # Set accounting_flush_time to 00:00:07
+   set new_config(reporting_params) "accounting=true reporting=false flush_time=00:00:15 joblog=false sharelog=00:00:00 accounting_flush_time=00:00:07"
+   set_config new_config
+
+   # Check accounting file size
+   set mtime [file mtime $reporting_acct_file]
+
+   # Submit job
+   set binary "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qsub"
+   set options "-t 1-100"
+   set script "$CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh"
+   set output [start_remote_prog $CHECK_HOST $CHECK_USER $binary "$options $script 2" result]
+
+   if {$result != 0} {
+       set_error -1 "unable to submit job: $output"
+       return
+   }
+
+   # Watch accounting file for updates.
+   # Wait for the first accounting file update
+   set done 0
+
+   while {$done != 1} {
+      set new_mtime [file mtime $reporting_acct_file]
+
+      if {$mtime != $new_mtime} {
+         set done 1
+      }
+   }
+
+   set failed 0
+
+   # Watch the accounting file for one flush interval
+   # The accounting file should not change between flush intervals
+   for {set j 0} {$j < 6} {incr j} {
+      after 1000
+
+      if {$new_mtime != [file mtime $reporting_acct_file]} {
+         set_error -1 "accounting file was flushed before flush interval"
+         set failed 1
+         break
+      }
+   }
+
+   if {$failed != 1} {
+      # The accounting file should change at flush intervals
+      after 1000
+
+      if {$new_mtime == [file mtime $reporting_acct_file]} {
+         set_error -1 "accounting file was not flushed at flush interval"
+      }
+   }
+
+   # Delete any jobs that might be in the system
+   set binary "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qdel"
+   set output [start_remote_prog $CHECK_HOST $CHECK_USER $binary "*" result]
+
+   if {$result != 0} {
+      set_error -1 "unable to delete jobs: $output"
+      return
+   }
+
+   if {$failed != 1} {
+      set_error 0 "ok"
+   }
+}
+
+proc reporting_immediate_accounting_test {} {
+   global ts_config CHECK_ARCH CHECK_PRODUCT_ROOT CHECK_USER CHECK_HOST
+   global CHECK_OUTPUT reporting_acct_file
+
+   # Set accounting_flush_time to 00:00:00
+   set new_config(reporting_params) "accounting=true reporting=false flush_time=00:00:15 joblog=false sharelog=00:00:00 accounting_flush_time=00:00:00"
+   set_config new_config
+
+   # Check accounting file size
+   set mtime [file mtime $reporting_acct_file]
+
+   # Submit job
+   set binary "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qsub"
+   set options "-sync yes"
+   set script "$CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh"
+   set output [start_remote_prog $CHECK_HOST $CHECK_USER $binary "$options $script 2" result]
+
+   if {$result != 0} {
+       set_error -1 "unable to submit job: $output"
+       return
+   }
+
+   # Check accounting file mtime
+   set new_mtime [file mtime $reporting_acct_file]
+
+   if {$mtime == $new_mtime} {
+       set_error -1 "accounting file was not flushed before job finish event"
+       return
+   }
+
+   # Do it again to be sure
+   # Submit job
+   set output [start_remote_prog $CHECK_HOST $CHECK_USER $binary "$options $script 2" result]
+
+   if {$result != 0} {
+       set_error -1 "unable to submit job: $output"
+       return
+   }
+
+   # Check accounting file mtime
+   if {$new_mtime == [file mtime $reporting_acct_file]} {
+       set_error -1 "accounting file was not flushed before job finish event"
+       return
+   }
+
+   set_error 0 "ok"
+}
+
+proc reporting_reporting_accounting_test {} {
+   global ts_config CHECK_ARCH CHECK_PRODUCT_ROOT CHECK_USER CHECK_HOST
+   global CHECK_OUTPUT reporting_acct_file
+
+   # Do not set accounting_flush_time.  Set flush_time to 00:00:07.
+   set new_config(reporting_params) "accounting=true reporting=false flush_time=00:00:07 joblog=false sharelog=00:00:00"
+   set_config new_config
+
+   # Check accounting file size
+   set mtime [file mtime $reporting_acct_file]
+
+   # Submit job
+   set binary "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qsub"
+   set options "-t 1-100"
+   set script "$CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh"
+   set output [start_remote_prog $CHECK_HOST $CHECK_USER $binary "$options $script 2" result]
+
+   if {$result != 0} {
+       set_error -1 "unable to submit job: $output"
+       return
+   }
+
+   # Watch accounting file for updates.
+   # Wait for the first accounting file update
+   set done 0
+
+   while {$done != 1} {
+      set new_mtime [file mtime $reporting_acct_file]
+
+      if {$mtime != $new_mtime} {
+         set done 1
+      }
+   }
+
+   set failed 0
+
+   # Watch the accounting file for one flush interval
+   # The accounting file should not change between flush intervals
+   for {set j 0} {$j < 6} {incr j} {
+      after 1000
+
+      if {$new_mtime != [file mtime $reporting_acct_file]} {
+         set_error -1 "accounting file was flushed before flush interval"
+         set failed 1
+         break
+      }
+   }
+
+   if {$failed != 1} {
+      # The accounting file should change at flush intervals
+      after 1000
+
+      if {$new_mtime == [file mtime $reporting_acct_file]} {
+         set_error -1 "accounting file was not flushed at flush interval"
+      }
+   }
+
+   # Delete any jobs that might be in the system
+   set binary "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qdel"
+   set output [start_remote_prog $CHECK_HOST $CHECK_USER $binary "*" result]
+
+   if {$result != 0} {
+      set_error -1 "unable to delete jobs: $output"
+      return
+   }
+
+   if {$failed != 1} {
+      set_error 0 "ok"
+   }
+}

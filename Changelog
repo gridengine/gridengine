@@ -1,3 +1,6 @@
+DT-2005-11-03-0: Testsuite: o Added test for reporting/IZ1750
+                 Changed:   system_tests/qmaster
+
 MD-2005-11-03-0: Bugfix:    - autoinstall does not support csp installation mode
                             - inst_sge -ux -host <host> might be incomplete if 
                               not run from an admin host

@@ -191,6 +191,7 @@
 #*******************************
 #
 
+fconfigure stdin -blocking TRUE
 global last_debug_msec
 set last_debug_msec [clock clicks -milliseconds]
 global daemon_debug 
@@ -428,6 +429,9 @@ set CHECK_INFORMATION_EXT  "exp"     ;# default extension for check files
 global CHECK_DEBUG_LEVEL
 set CHECK_DEBUG_LEVEL 0 
 
+#set CHECK_OUTPUT [open /dev/null "w"]
+set CHECK_OUTPUT stdout
+
 #
 #                                                             max. column:     |
 #****** check/debug_puts() ******
@@ -472,6 +476,9 @@ proc debug_puts { args } {
 
    if { [info exists CHECK_HOST ] == 0 } {
       set CHECK_HOST "unknown"
+   }
+   if { [info exists CHECK_CUR_PROC_NAME] == 0 } {
+      set CHECK_CUR_PROC_NAME "unknown"
    }
    set time [clock clicks -milliseconds]
    set time [expr $time - $last_debug_msec]
@@ -609,6 +616,7 @@ proc get_current_working_dir { } {
   return $work_dir 
 }
 
+
 set CHECK_CURRENT_WORKING_DIR [get_current_working_dir]
 set CHECK_DEFAULTS_FILE    "$CHECK_CURRENT_WORKING_DIR/defaults.sav"
 
@@ -616,9 +624,6 @@ set CHECK_TESTSUITE_ROOT "$CHECK_CURRENT_WORKING_DIR"
 set CHECK_CHECKTREE_ROOT "$CHECK_CURRENT_WORKING_DIR/checktree"
 set CHECK_MAIN_RESULTS_DIR "$CHECK_CURRENT_WORKING_DIR/results"
 set CHECK_TESTSUITE_LOCKFILE "$CHECK_CURRENT_WORKING_DIR/testsuite_lockfile"
-
-#set CHECK_OUTPUT [open /dev/null "w"]
-set CHECK_OUTPUT stdout 
 
 
 # some useful functions for test implementation
@@ -2514,7 +2519,7 @@ proc enhanced_setup {} {
 
 proc build_checktree {} {
    global ts_config ts_checktree
-   global CHECK_OUTPUT 
+   global CHECK_OUTPUT ACT_CHECKTREE
    
    if { [info exists ts_checktree] } {
       unset ts_checktree
@@ -2540,6 +2545,13 @@ proc build_checktree {} {
          set error [read_checktree_nodes $dir]
          if { $error != 0 } {
             return -1
+         }
+         if { [file isfile $dir/checktree.tcl] } {
+            puts $CHECK_OUTPUT "source additional file $dir/checktree.tcl"
+            set ACT_CHECKTREE $dir
+            ts_source $dir/checktree
+         } else {
+            puts $CHECK_OUTPUT "checktree file $dir/checktree.tcl not found"
          }
       }
    }
@@ -2584,6 +2596,82 @@ proc build_checktree {} {
 
       }
       
+   }
+   
+   # read configurations of the checktree
+
+   for {set i 0} { $i < $ts_checktree(act_nr)} {incr i 1 } {
+      for {set ii 0} {[info exists ts_checktree($i,setup_hooks_${ii}_name)]} {incr ii 1} {
+         
+         if { [info exists ts_checktree($i,setup_hooks_${ii}_filename)] == 0 } {
+            add_proc_error "build_checktree" -1 "field setup_hooks_${ii}_filename not defined for setup hook $ts_checktree($i,setup_hooks_${ii}_name)"
+            wait_for_enter
+            return -1
+         }
+         
+         set filename $ts_checktree($i,setup_hooks_${ii}_filename)
+         
+         set config_array $ts_checktree($i,setup_hooks_${ii}_config_array)
+         
+         global $config_array
+
+         if { [file exists $filename] == 0 } {
+            
+            puts $CHECK_OUTPUT "file $ts_checktree($i,setup_hooks_${ii}_name) not found, create new configuration"
+            wait_for_enter
+            
+            $ts_checktree($i,setup_hooks_${ii}_init_func) $config_array
+            
+            while { 1 } {
+               # initialize the config
+               set error_list {}
+               set res [$ts_checktree($i,setup_hooks_${ii}_verify_func) $config_array 0 error_list]
+               if { $res == 0 } {
+                  break
+               } 
+               if { $res < 0 } {
+                  add_proc_error "build_checktree" -1 "Can not verify config for setup hook $ts_checktree($i,setup_hooks_${ii}_name)"
+                  wait_for_enter
+                  return -1
+               }
+               puts $CHECK_OUTPUT "Errors in configuration => retry"
+               wait_for_enter
+            }
+            spool_array_to_file $filename $ts_checktree($i,setup_hooks_${ii}_name) $config_array
+         } else {
+           
+           # file exists => read it
+            if { [read_array_from_file $filename $ts_checktree($i,setup_hooks_${ii}_name) $config_array] == 0 } {
+               set res [$ts_checktree($i,setup_hooks_${ii}_verify_func) $config_array 1 error_list]
+               if { $res < 0 } {
+                  add_proc_error "build_checktree" -1 "Can not verify config for setup hook $ts_checktree($i,setup_hooks_${ii}_name)"
+                  wait_for_enter
+                  return -1
+               } 
+               if { $res > 0 } {
+                  puts $CHECK_OUTPUT "Configuration $ts_checktree($i,setup_hooks_${ii}_name) has errors => retry"
+                  wait_for_enter
+                  while { 1 } {
+                     set error_list {}
+                     set res [$ts_checktree($i,setup_hooks_${ii}_verify_func) $config_array 0 error_list]
+                     if { $res == 0 } {
+                        spool_array_to_file $filename $ts_checktree($i,setup_hooks_${ii}_name) $config_array
+                        break
+                     } 
+                     if { $res < 0 } {
+                        add_proc_error "build_checktree" -1 "Can not verify config for setup hook $ts_checktree($i,setup_hooks_${ii}_name)"
+                        wait_for_enter
+                        return -1
+                     }
+                  }
+               }
+            } else {
+               add_proc_error "build_checktree" -1 "Can't read config for setup hook $ts_checktree($i,setup_hooks_${ii}_name)"
+               wait_for_enter
+               return -1
+            }
+         }
+      }
    }
 #   puts $CHECK_OUTPUT "roots: $ts_checktree(0,sub_nrs)"
    return 0
@@ -2670,13 +2758,14 @@ proc get_tests_from_checktree { { path "root" } } {
    set all_nrs {}
    foreach nr $selected_dirs {
       lappend all_nrs $nr
+
       set ret_val {}
       lappend_sub_nrs_from_checktree $nr ret_val
       foreach sub_nr $ret_val {
          lappend all_nrs $sub_nr
       }
    }
-
+   
    # now we have all directory numbers, generate path list
    set path_list {}
    foreach nr $all_nrs {
@@ -2694,8 +2783,7 @@ proc lappend_sub_nrs_from_checktree { dir_nr result } {
    foreach nr $ts_checktree($dir_nr,sub_nrs) {
       lappend res $nr
       lappend_sub_nrs_from_checktree $nr res
-   }  
-
+   }
 }
 
 
@@ -3408,7 +3496,7 @@ proc delete_tests {path { only_if_not_there 0 } } {
 #
 #  INPUTS
 #     path         - ??? 
-#     runcompleted - ??? 
+#     runcompleted - ???
 #
 #  RESULT
 #     ??? 
@@ -3434,18 +3522,24 @@ proc run_tests { path runcompleted } {
     set CHECK_MAILS_SENT 0  ;# clear mail counter
  
     set check_directories [get_tests_from_checktree $path]
-   
+
+    
+    if { $runcompleted == 1 } {
+       delete_tests $path
+    }
     set checks_to_do ""
     foreach elem $check_directories {
        if { [is_category_enabled $elem ] == 0 } {
            set test_name [get_check_name $elem] 
            set tests_runlevels [get_checktree_levels $elem]
            foreach tests_runlevel $tests_runlevels {
-              if { ( [file isfile "$CHECK_RESULT_DIR/$test_name.res.$tests_runlevel"] == 1) } {
-                 continue
-              }
-              if { ( [file isfile "$CHECK_CORE_RESULT_DIR/$test_name.res.$tests_runlevel"] == 1) } {
-                 continue
+              if { $runcompleted == 0 } {
+                 if { ( [file isfile "$CHECK_RESULT_DIR/$test_name.res.$tests_runlevel"] == 1) } {
+                    continue
+                 }
+                 if { ( [file isfile "$CHECK_CORE_RESULT_DIR/$test_name.res.$tests_runlevel"] == 1) } {
+                    continue
+                 }
               }
               lappend checks_to_do $elem
               break
@@ -6192,27 +6286,24 @@ proc compile_source { { do_only_install 0 } } {
    # settings for mail
    set check_name "compile_source"
    set CHECK_CUR_PROC_NAME "compile_source"
-   set mail_subject "testsuite error - compile_source"
-   set mail_body    "date: [exec date]\n"
 
-   # settings for html output
-   set html_body [ create_html_text "date: [exec date]" 1 ]
-   append html_body [ create_html_text "compiling ..." 1 ]
-   update_compile_html_output $html_body
-   set html_body [ create_html_text "date: [exec date]" 1 ]
-
-   set was_error 0
+   set report_nr [report_create "Compiling source"]
+   
+   report_write_html $report_nr
+   
+   set error_count 0
    set cvs_change_log ""
 
    # if we configured to install precompiled packages - stop
    if { $ts_config(package_directory) != "none" && 
         ($ts_config(package_type) == "tar" || $ts_config(package_type) == "zip") } {
-      puts $CHECK_OUTPUT "will not compile but use precompiled packages"
-      puts $CHECK_OUTPUT "set package_directory to \"none\" or set package_type to \"create_tar\""
-      puts $CHECK_OUTPUT "if compilation (and package creation) should be done"
-      mail_report $mail_subject "$mail_body using precompiled packages" 
-      append html_body [ create_html_text "using precompiled packages" ]
-      update_compile_html_output $html_body
+           
+      report_add_message $report_nr "will not compile but use precompiled packages\n"
+      report_add_message $report_nr "set package_directory to \"none\" or set package_type to \"create_tar\"\n"
+      report_add_message $report_nr "if compilation (and package creation) should be done"
+      
+      report_finish $report_nr -1
+      
       return -1
    }
 
@@ -6231,28 +6322,22 @@ proc compile_source { { do_only_install 0 } } {
 
    # check source directory
    if { ( [ string compare $CHECK_SOURCE_DIR "unknown" ] == 0 ) || ( [ string compare $CHECK_SOURCE_DIR "" ] == 0 ) } {
-      puts $CHECK_OUTPUT "source directory unknown - check defaults file"
-      mail_report $mail_subject "$mail_body source directory unknown - check defaults file" 
-      append html_body [ create_html_text "source directory unknown - check defaults file" ]
-      update_compile_html_output $html_body
+      report_add_message $report_nr "source directory unknown - check defaults file"
+      report_finish $report_nr -1 
       return -1
    }
 
    # check compile host
-   if { ( [ string compare $CHECK_SOURCE_HOSTNAME "unknown" ] == 0 ) || ( [ string compare $CHECK_SOURCE_HOSTNAME "" ] == 0  ) } {
-      puts $CHECK_OUTPUT "host for cvs checkout unknown - check defaults file"
-      mail_report $mail_subject "$mail_body host for cvs checkout unknown - check defaults file"
-      append html_body [ create_html_text "host for cvs checkout unknown - check defaults file" ]
-      update_compile_html_output $html_body
+   if { ( [ string compare $CHECK_SOURCE_HOSTNAME "unknown" ] == 0 ) || ( [ string compare $CHECK_SOURCE_HOSTNAME "" ] == 0  ) } {          
+      report_add_message $report_nr "host for cvs checkout unknown - check defaults file"
+      report_finish $report_nr -1
       return -1
    }
 
    # check compile hosts
    if { ( [ string compare $compile_hosts "unknown" ] == 0 ) || ([ string compare $compile_hosts "" ] == 0) } {
-      puts $CHECK_OUTPUT "host list to compile for unknown - check defaults file"
-      mail_report $mail_subject "$mail_body host list to compile for unknown - check defaults file"
-      append html_body [ create_html_text "host list to compile for unknown - check defaults file" ]
-      update_compile_html_output $html_body
+      report_add_message $report_nr "host list to compile for unknown - check defaults file"
+      report_finish $report_nr -1
       return -1
    }
 
@@ -6263,9 +6348,8 @@ proc compile_source { { do_only_install 0 } } {
       set output [ start_remote_prog $chost $CHECK_USER "cd" "$CHECK_SOURCE_DIR ; ./aimk -no-mk" prg_exit_state 60 0 "" 1 0 ]
       puts $CHECK_OUTPUT "return state: $prg_exit_state"
       if { $prg_exit_state != 0 } {
-         puts $CHECK_OUTPUT "error starting \"aimk -no-mk\" on host $chost"
-         append html_body [ create_html_text "error starting \"aimk -no-mk\" on host $chost" ]
-         update_compile_html_output $html_body
+         report_add_message $report_nr "error starting \"aimk -no-mk\" on host $chost"
+         report_finish $report_nr -1
          return -1
       }
       puts $CHECK_OUTPUT "host $chost will build [string trim $output] binaries"
@@ -6283,9 +6367,8 @@ proc compile_source { { do_only_install 0 } } {
         }
      }
      if { $found != 1 } {
-        puts $CHECK_OUTPUT "two compile hosts have the same architecture -> error"
-        append html_body [ create_html_text "two compile hosts have the same architecture -> error" ]
-        update_compile_html_output $html_body
+        report_add_message $report_nr "two compile hosts have the same architecture -> error"
+        report_finish $report_nr -1
         return -1
      }
    }
@@ -6294,10 +6377,9 @@ proc compile_source { { do_only_install 0 } } {
    if {[file isdirectory "$CHECK_PROTOCOL_DIR"] != 1} {
       set catch_return [ catch {  file mkdir "$CHECK_PROTOCOL_DIR" } ]
       if { $catch_return != 0 } {
-           puts $CHECK_OUTPUT "could not create directory \"$CHECK_PROTOCOL_DIR\""
-           append html_body [ create_html_text "could not create directory \"$CHECK_PROTOCOL_DIR\"" ]
-           update_compile_html_output $html_body
-           return -1
+        report_add_message $report_nr "could not create directory \"$CHECK_PROTOCOL_DIR\""
+        report_finish $report_nr -1
+        return -1
       } 
    }
 
@@ -6306,76 +6388,18 @@ proc compile_source { { do_only_install 0 } } {
 
    # update sources
    if { $do_only_install != 1 } {
-      # update source 
-      if { $do_not_update == 0 } {
-         set tries 1
-
-         set output ""
-         set update_ok 0
-         while { $tries <= 3 && $update_ok == 0 } {
-            puts $CHECK_OUTPUT "------------------------------------------"
-            puts $CHECK_OUTPUT "$tries. cvs update try ..."
-            puts $CHECK_OUTPUT "updating gridengine directory $CHECK_SOURCE_DIR/.. on host $CHECK_SOURCE_HOSTNAME ..."
-            append output [ start_remote_prog $CHECK_SOURCE_HOSTNAME $CHECK_USER "cd" "$CHECK_SOURCE_DIR/.. ; cvs -z 9 update -dP" prg_exit_state 300 ]
-            append output "\n"
-            if { $prg_exit_state != 0 } {
-               set update_ok 0
-               sleep 60
-            } else {
-               set update_ok 1
-            }
-            incr tries 1
-         }
-         if { $update_ok != 1 } {
-            add_proc_error "compile_source" -2 "cvs update -dP error:\n$output" 
-            append html_body [ create_html_text "cvs update -dP error:\n$output" ]
-            update_compile_html_output $html_body
-            return -1
-         }
-
-         puts $CHECK_OUTPUT "------------------------------------------"
-         set cvs_output [ open "$CHECK_SOURCE_DIR/cvs_update.log.[timestamp]" "w" ]
-         puts $cvs_output $output
-         close $cvs_output
-         set update_output [split $output "\n"] 
-         set frame_work_script_update 0
-         set testsuite_update 0
-         foreach elem $update_output {
-            if { ([string range $elem 0 2 ] != "cvs") && ([string range $elem 0 0] != "?") } {
-               puts $CHECK_OUTPUT $elem
-               append cvs_change_log "$elem\n"
-               if { [ string first "testsuite/check.exp" $elem ] >= 0 && [string range $elem 0 0] != "M" } {
-                  set frame_work_script_update 1
-               }
-               if { [ string first "testsuite/tcl_files" $elem ] >= 0 && [string range $elem 0 0] != "M" } {
-                  set testsuite_update 1
-               }
-            } 
-         }
-
-         # if the testsuite itself has been update, require restart
-         if { $frame_work_script_update == 1 } {
-            puts $CHECK_OUTPUT "TESTSUITE FRAMEWORK SCRIPT was updated!!! Stop !!!"
-            flush $CHECK_OUTPUT
-            mail_report $mail_subject "$mail_body TESTSUITE FRAMEWORK SCRIPT was updated!!! Stop !!!" 
-            append html_body [ create_html_text "TESTSUITE FRAMEWORK SCRIPT was updated!!! Stop !!!" ]
-            exit 1 
-         }
-         if { $testsuite_update == 1 } {
-            puts $CHECK_OUTPUT "testsuite source procedures were updated!!! resourcing it !!!"
-         }
-         puts $CHECK_OUTPUT "------------------------------------------"
-
+      set res [update_source $report_nr]      
+      if { $res == 1 } {
          # after an update, do an aimk clean
-         foreach chost $compile_hosts {
-            puts $CHECK_OUTPUT "------------------------------------------"
-            puts $CHECK_OUTPUT "-> starting aimk $CHECK_AIMK_COMPILE_OPTIONS clean on host $chost ..."
-            set output [ start_remote_prog $chost $CHECK_USER "cd" "$CHECK_SOURCE_DIR ; ./aimk $CHECK_AIMK_COMPILE_OPTIONS clean" prg_exit_state 60 0 "" 1 0 ]
-            puts $CHECK_OUTPUT "------------------------------------------"
-            puts $CHECK_OUTPUT "return state: $prg_exit_state"
-            puts $CHECK_OUTPUT "------------------------------------------"
-            puts $CHECK_OUTPUT "output:\n$output"
-            puts $CHECK_OUTPUT "------------------------------------------"
+         compile_with_aimk $compile_hosts $report_nr "compile_clean" "clean"
+         # execute all registered compile_clean hooks of the checktree
+         set res [exec_compile_clean_hooks $compile_hosts $report_nr]
+         if { $res < 0 } {
+            report_add_message $report_nr "exec_compile_clean_hooks returned fatal error"
+         } elseif { $res > 0 } {
+            report_add_message $report_nr "$res compile_clean hooks are failed\n"
+         } else {
+            report_add_message $report_nr "All compile_clean hooks successfully executed\n"
          }
 
          # after an update, delete macro messages file to have it updated
@@ -6386,491 +6410,107 @@ proc compile_source { { do_only_install 0 } } {
             file delete $macro_messages_file
          }
          update_macro_messages_list
+      } elseif { $res < 0 } {
+         incr error_count
       }
    }
 
-   if { $check_do_clean_compile == 1 } {
-      foreach chost $compile_hosts {
-         puts $CHECK_OUTPUT "------------------------------------------"
-         puts $CHECK_OUTPUT "-> starting aimk $CHECK_AIMK_COMPILE_OPTIONS clean on host $chost ..."
-         set output [ start_remote_prog $chost $CHECK_USER "cd" "$CHECK_SOURCE_DIR ; ./aimk $CHECK_AIMK_COMPILE_OPTIONS clean" prg_exit_state 60 0 "" 1 0 ]
-         puts $CHECK_OUTPUT "------------------------------------------"
-         puts $CHECK_OUTPUT "return state: $prg_exit_state"
-         puts $CHECK_OUTPUT "------------------------------------------"
-         puts $CHECK_OUTPUT "output:\n$output"
-         puts $CHECK_OUTPUT "------------------------------------------"
-      }
-   }
-
-
-   # choose a host for aimk depend, we prefer to do it on solaris 64bit
-   if { $do_only_install != 1 } {
-      set depend_host_name [lindex $compile_hosts 0] 
-
-      foreach help_host $compile_hosts {
-         if { [ string compare $ts_host_config($help_host,arch) "solaris64"] == 0 || 
-              [ string compare $ts_host_config($help_host,arch) "sol-sparc64"] == 0 } {
-            puts $CHECK_OUTPUT "using host $help_host to create dependencies"
-            set depend_host_name $help_host
-         }
-      }
-
-      # clean dependency files (zerodepend)
-      puts $CHECK_OUTPUT "------------------------------------------"
-      puts $CHECK_OUTPUT "-> starting scripts/zerodepend on host $depend_host_name ..."
-      set output [ start_remote_prog $depend_host_name $CHECK_USER "cd" "$CHECK_SOURCE_DIR ; scripts/zerodepend" prg_exit_state 60 0 "" 1 0 ]
-      puts $CHECK_OUTPUT "------------------------------------------"
-      puts $CHECK_OUTPUT "return state: $prg_exit_state"
-      puts $CHECK_OUTPUT "------------------------------------------"
-      puts $CHECK_OUTPUT "output:\n$output"
-      puts $CHECK_OUTPUT "------------------------------------------"
-
-      puts $CHECK_OUTPUT "------------------------------------------"
-
-      # build the depencency building program
-      set my_compile_options $CHECK_AIMK_COMPILE_OPTIONS
-      puts $CHECK_OUTPUT "-> starting aimk -only-depend on host $depend_host_name ..."
-      set output [ start_remote_prog $depend_host_name $CHECK_USER "cd" "$CHECK_SOURCE_DIR ; ./aimk -only-depend" prg_exit_state 60 0 "" 1 0 ]
-      puts $CHECK_OUTPUT "------------------------------------------"
-      puts $CHECK_OUTPUT "return state: $prg_exit_state"
-      puts $CHECK_OUTPUT "------------------------------------------"
-      puts $CHECK_OUTPUT "output:\n$output"
-      puts $CHECK_OUTPUT "------------------------------------------"
-      if { $prg_exit_state != 0 } {
-         mail_report $mail_subject "$mail_body aimk -only-depend on host $depend_host_name returned:\n$output"
-         append html_body [ create_html_text "aimk -only-depend on host $depend_host_name returned:\n$output" ]
-         update_compile_html_output $html_body
-
-         return -1
-      }
-
-      # build the dependencies
-      puts $CHECK_OUTPUT "------------------------------------------"
-      puts $CHECK_OUTPUT "-> starting aimk $my_compile_options depend on host $depend_host_name ..."
-      set output [ start_remote_prog $depend_host_name $CHECK_USER "cd" "$CHECK_SOURCE_DIR ; ./aimk $my_compile_options depend" prg_exit_state 60 0 "" 1 0 ]
-      puts $CHECK_OUTPUT "------------------------------------------"
-      puts $CHECK_OUTPUT "return state: $prg_exit_state"
-      puts $CHECK_OUTPUT "------------------------------------------"
-      puts $CHECK_OUTPUT "output:\n$output"
-      puts $CHECK_OUTPUT "------------------------------------------"
-
-      if { $prg_exit_state != 0 } {
-         mail_report $mail_subject "$mail_body aimk $my_compile_options depend on host $depend_host_name returned:\n$output"
-         append html_body [ create_html_text "aimk $my_compile_options depend on host $depend_host_name returned:\n$output" ]
-         update_compile_html_output $html_body
-
-         return -1
-      }
-   }
-
-   # now start build on all compile hosts
-   set host_list $compile_hosts
-   if { $do_only_install != 1 } {
-   
-   set num 0
-   set spawn_list {} 
-   set remote_spawn_list {}
-   set file_list {}
-   set file_name_list {}
- 
-   set cvs_tag "maintrunk"
-   if { [ file isfile "${CHECK_SOURCE_DIR}/CVS/Tag" ] } {
-      set cvs_tag "no_tag_dir" 
-      set tag_state [ catch { eval exec "cat ${CHECK_SOURCE_DIR}/CVS/Tag" } cvs_tag ]
-   }
-
-   set table_row 2
-   foreach elem $host_list {
-      # compile the staff
-      puts $CHECK_OUTPUT "-> starting compiling on host $elem ..."
-
-      set html_table($table_row,BGCOLOR) "#009900"
-      set html_table($table_row,FNCOLOR) "#FFFFFF"
-      set html_table($table_row,1) $elem
-      set html_table($table_row,2) [resolve_arch $elem]
-
-      set html_table($table_row,3) "ok"    ;# error is set later
-      set html_table($table_row) "$elem"   ;# not neccessary for html table
-
-
-      set prog "$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/remotecompile.sh"
-      set par1 "$CHECK_SOURCE_DIR"
-      set par2 "$my_compile_options"
-      
-      puts $CHECK_OUTPUT "$prog $par1 '$par2'"
-      set open_spawn [ open_remote_spawn_process $elem $CHECK_USER $prog "$par1 '$par2'" 0 "" 0 ] 
-
-      lappend spawn_list [ lindex $open_spawn 1 ]
-      lappend remote_spawn_list $open_spawn
-      
-      if { $CHECK_HTML_DIRECTORY != "" } {
-         set myfilename "$CHECK_HTML_DIRECTORY/${elem}_compile_${cvs_tag}.out"
+   if { $error_count == 0 && $check_do_clean_compile == 1 } {
+      compile_with_aimk $compile_hosts $report_nr "compile_clean" "clean"
+      # execute all registered compile_hooks of the checktree
+      set res [exec_compile_clean_hooks $compile_hosts $report_nr]
+      if { $res < 0 } {
+         report_add_message $report_nr "exec_compile_clean_hooks returned fatal error"
+      } elseif { $res > 0 } {
+         report_add_message $report_nr "$res compile_clean hooks are failed\n"
       } else {
-         set myfilename "$CHECK_PROTOCOL_DIR/${elem}_compile_${cvs_tag}.out"
+         report_add_message $report_nr "All compile_clean hooks successfully executed\n"
       }
-
-      set html_table($table_row,4) [create_html_link "view" ${elem}_compile_${cvs_tag}.out]
-  
-      lappend file_name_list $myfilename
-      catch { file delete $myfilename }
-      lappend file_list [open $myfilename w]
-      incr table_row 1    
-      incr num 
-   }  
-   incr table_row -1
-  
-   append mail_body "\n\ncompile output saved in the files:"
-   foreach elem $file_name_list {
-      append mail_body "\n$elem"
-#      eval exec "/usr/openwin/bin/xterm -sl 5000 -sb -j -e tail -f $elem &"
-   }
-   append mail_body "\n"
-   
-   
    }
 
-   if { $do_only_install != 1 } {
-
-   puts $CHECK_OUTPUT "now waiting for end of compile ..." 
-   set timeout 300
-   set done_count 0
-   set compile_bad {}
-   log_user 0
-
-   set original_spawn_list $spawn_list  
-   set show_info 1
-   set output_buff ""
-   while { [llength $spawn_list] > 0   } {
-      if {[info exists spawn_id]} {
-            unset spawn_id
-      }
-      if { $show_info == 1 } {
-         clear_screen
-         puts $CHECK_OUTPUT "============================================"
-         puts $CHECK_OUTPUT "open compile connections: "
-         foreach id $spawn_list {
-            set host_nr 0
-            set host_index 0
-            foreach el $original_spawn_list {
-               if { [string compare $el $id] == 0 } {
-                    set host_index $host_nr
-               }
-               incr host_nr 1
+   if { $error_count > 0 } {
+      puts $CHECK_OUTPUT "Skip compile due to previous errors\n"
+   } elseif { $do_only_install != 1 } {
+      if { [compile_depend $compile_hosts $report_nr] != 0 } {
+        incr error_count
+      } else {
+         # depend successfully build start compile all
+         if { [compile_with_aimk $compile_hosts $report_nr "compile" ] != 0 } {
+            incr error_count
+         } else {
+            # new all registered compile_hooks of the checktree
+            set res [exec_compile_hooks $compile_hosts $report_nr]
+            if { $res < 0 } {
+               puts $CHECK_OUTPUT "exec_compile_hooks returned fatal error\n"
+               incr error_count
+            } elseif { $res > 0 } {
+               puts $CHECK_OUTPUT "$res compile hooks are failed\n"
+               incr error_count
+            } else {
+               puts $CHECK_OUTPUT "All compile hooks successfully executed\n"
             }
-            puts -nonewline $CHECK_OUTPUT "[lindex $host_list $host_index] "
-         }
-         puts $CHECK_OUTPUT "\n============================================"
-         puts $CHECK_OUTPUT $output_buff
-         set show_info 1
-      }
-
-      expect {
-         -i $spawn_list full_buffer {
-         }
-         -i $spawn_list timeout {
-              set spawn_id [lindex $spawn_list 0]   ;# declare first connection as fault
-              set host_index 0
-              set host_nr 0
-              foreach el $original_spawn_list {
-                 if { [string compare $el $spawn_id] == 0 } {
-                    set host_index $host_nr
-                 }
-                 incr host_nr 1
-              }
-              lappend compile_bad [lindex $host_list $host_index]
-              puts $CHECK_OUTPUT "got timeout for host \"[lindex $host_list $host_index]\""
-              foreach spawn_object $remote_spawn_list {
-                 if { [ lindex $spawn_object 1 ] == $spawn_id } {
-                    puts $CHECK_OUTPUT "found spawn object: $spawn_object"
-                    close_spawn_process $spawn_object
-                 }
-              }
-              set index [lsearch -exact $spawn_list $spawn_id]
-              set spawn_list [lreplace $spawn_list $index $index]
-              set show_info 1
-         }
-         -i $spawn_list eof {
-              set spawn_id $expect_out(spawn_id)
-              set host_index 0
-              set host_nr 0
-              foreach el $original_spawn_list {
-                 if { [string compare $el $spawn_id] == 0 } {
-                    set host_index $host_nr
-                 }
-                 incr host_nr 1
-              }
-              lappend compile_bad [lindex $host_list $host_index]
-              puts $CHECK_OUTPUT $expect_out(0,string)
-              foreach spawn_object $remote_spawn_list {
-                 if { [ lindex $spawn_object 1 ] == $spawn_id } {
-                    puts $CHECK_OUTPUT "found spawn object: $spawn_object"
-                    close_spawn_process $spawn_object
-                 }
-              }
-
-              set index [lsearch -exact $spawn_list $spawn_id]
-              set spawn_list [lreplace $spawn_list $index $index]
-              set show_info 1
-
-         }
-         -i $spawn_list "remotecompile * aimk compile error" {
-              set spawn_id $expect_out(spawn_id)
-              set host_index 0
-              set host_nr 0
-              foreach el $original_spawn_list {
-                 if { [string compare $el $spawn_id] == 0 } {
-                    set host_index $host_nr
-                 }
-                 incr host_nr 1
-              }
-              lappend compile_bad [lindex $host_list $host_index]
-              puts $CHECK_OUTPUT $expect_out(0,string)
-              foreach spawn_object $remote_spawn_list {
-                 if { [ lindex $spawn_object 1 ] == $spawn_id } {
-                    puts $CHECK_OUTPUT "found spawn object: $spawn_object"
-                    close_spawn_process $spawn_object
-                 }
-              }
-
-              set index [lsearch -exact $spawn_list $spawn_id]
-              set spawn_list [lreplace $spawn_list $index $index]
-              set show_info 1
-
-         }
-         -i $spawn_list "remotecompile * aimk no errors" {
-              set spawn_id $expect_out(spawn_id)
-              puts $CHECK_OUTPUT $expect_out(0,string)
-              foreach spawn_object $remote_spawn_list {
-                 if { [ lindex $spawn_object 1 ] == $spawn_id } {
-                    puts $CHECK_OUTPUT "found spawn object: $spawn_object"
-                    close_spawn_process $spawn_object
-                 }
-              }
-
-              set index [lsearch -exact $spawn_list $spawn_id]
-              set spawn_list [lreplace $spawn_list $index $index]
-              set show_info 1
-         }
-         -i $spawn_list "*\n" {
-              set spawn_id $expect_out(spawn_id)
-              set index 0
-              set nr 0
-              foreach elem $original_spawn_list {
-                 if { [string compare $elem $spawn_id] == 0 } {
-                    set index $nr
-                 }
-                 incr nr 1
-              }
-              puts [lindex $file_list $index] "$expect_out(0,string)"
-              flush [lindex $file_list $index]
-              set output_buff ""
-              append output_buff "\n[lindex $host_list $index]:\n"
-              append output_buff "$expect_out(0,string)"
          }
       }
-   }
-   log_user 1
-   foreach elem $file_list {
-      flush $elem
-      close $elem
-   } 
-
-   set compile_error 0
-   foreach elem $compile_bad {
-      set compile_error 1
-
-      for { set html_c 2 } { $html_c <= $table_row }  { incr html_c 1 } {
-          if { [ string compare $html_table($html_c) $elem ] == 0 } {
-             set html_table($html_c,BGCOLOR) "#CC0000"
-             set html_table($html_c,FNCOLOR) "#FFFFFF"
-             set html_table($html_c,3) "compile error"
-          }
-      }
-
-
-      puts $CHECK_OUTPUT "\n=============\ncompile error on host $elem:\n=============\n"
-      append mail_body "\n=============\ncompile error on host $elem:\n=============\n"
-      foreach file $file_name_list {
-         if { [string first $elem $file] >= 0 } {
-             catch { eval exec "touch $file"  }
-             set fp [open $file r]
-             while { [gets $fp line] >= 0 } {
-                append mail_body "\n$line"
-                puts $CHECK_OUTPUT $line
-             }
-             close $fp
-         } 
-      }
-   }
-
-   set html_table(1,BGCOLOR) "#3366FF"
-   set html_table(1,FNCOLOR) "#66FFFF"
-
-   set html_table(COLS) 4
-   set html_table(1,1) "Host"
-   set html_table(1,2) "Arch"
-   set html_table(1,3) "State"
-   set html_table(1,4) "Compile output"
-
-   set html_table(ROWS) $table_row
-
-   
-   if { $compile_error != 0 } {
-      mail_report $mail_subject $mail_body
-      append html_body [ create_html_table html_table ]
-      update_compile_html_output $html_body
-      return -1
-   } 
-
+   } else {
+      puts $CHECK_OUTPUT "Skip compile, I am on do_install mode\n"
    }
 
    # install to $CHECK_PRODUCT_ROOT
-   set var_name "SGE_ROOT"
-   if { $ts_config(gridengine_version) == 53 } {
-      if {[string compare $CHECK_PRODUCT_TYPE "sgeee"] == 0 } {
-         set link_name "myinst"
-         set sgeee_param "-sgeee"
-      } else {
-         set link_name "myinst"
-         set sgeee_param ""
+   if { $error_count == 0 } {
+      
+      report_add_message $report_nr "Compiling ...."
+      report_write_html $report_nr
+      
+      set arch_list {}
+      set compiled_mail_architectures ""
+      puts -nonewline $CHECK_OUTPUT "\narchitectures: "
+      foreach elem $compile_hosts {
+         set output [resolve_arch $elem]
+         lappend arch_list $output 
+         puts -nonewline $CHECK_OUTPUT "$output "
+         append compiled_mail_architectures "\n$elem ($output)"
       }
-   } 
-   puts $CHECK_OUTPUT "\nusing environment variable \"$var_name\""
-
-   # copy pos. host_aliases file to trash_
-   if { [ file isfile "$CHECK_PRODUCT_ROOT/$ts_config(cell)/common/host_aliases"] == 1 } {
-      puts $CHECK_OUTPUT "saving host_aliases file ..."
-      catch { exec "cp" "$CHECK_PRODUCT_ROOT/$ts_config(cell)/common/host_aliases" "$CHECK_JOB_OUTPUT_DIR/host_aliases"  } result
-      puts $result
-   } 
-
-   # now delete install directory
-   puts $CHECK_OUTPUT "moving directory \"$CHECK_PRODUCT_ROOT\" to testsuite_trash"
-   if { [delete_directory "$CHECK_PRODUCT_ROOT"] != 0 } {
-      add_proc_error "compile_source" -2 "could not delete $CHECK_PRODUCT_ROOT directory, critical error - stop"
-      return -1
-   }
- 
-   # wait for nfs updates
-   after 5000
-
-   catch { exec "mkdir" "$CHECK_PRODUCT_ROOT"  } result
-   puts $result
-   catch { exec "touch" "$CHECK_PRODUCT_ROOT"  } result
-   puts $result
-   catch { exec "chmod" "755" "$CHECK_PRODUCT_ROOT"  } result
-   puts $result
- 
-   if { $ts_config(gridengine_version) == 53 } {
-      puts $CHECK_OUTPUT "\ncreating link \"$link_name\""
-      set return_state [ catch { eval exec ln -s $CHECK_SOURCE_DIR/scripts/distinst $CHECK_SOURCE_DIR/$link_name } output ]
-   }
-
-   set arch_list {}
-   set compiled_mail_architectures ""
-   puts -nonewline $CHECK_OUTPUT "\narchitectures: "
-   foreach elem $host_list {
-      set output [resolve_arch $elem]
-      lappend arch_list $output 
-      puts -nonewline $CHECK_OUTPUT "$output "
-      append compiled_mail_architectures "\n$elem ($output)"
-   }
- 
-   puts $CHECK_OUTPUT "\ninstalling product binaries"
-   if { $ts_config(gridengine_version) == 53 } {
-      set open_spawn [ open_remote_spawn_process $CHECK_HOST $CHECK_USER "cd" "$CHECK_SOURCE_DIR ; $var_name=$CHECK_PRODUCT_ROOT ; export $var_name ; ./$link_name $sgeee_param $CHECK_DIST_INSTALL_OPTIONS $arch_list" ]
+      
+      if { [ install_binaries $do_only_install $arch_list $report_nr] != 0 } {
+         report_add_message $report_nr "install_binaries failed\n"
+         incr error_count
+      } else {
+         # new all registered compile_hooks of the checktree
+         set res [exec_install_binaries_hooks $arch_list $report_nr]
+         if { $res < 0 } {
+            report_add_message $report_nr "exec_install_binaries_hooks returned fatal error\n"
+            incr error_count
+         } elseif { $res > 0 } {
+            report_add_message $report_nr "$res install_binaries hooks are failed\n"
+            incr error_count
+         } else {
+            report_add_message $report_nr "All install_binaries hooks successfully executed\n"
+         }
+      }
    } else {
-      set open_spawn [ open_remote_spawn_process $CHECK_HOST $CHECK_USER "cd" "$CHECK_SOURCE_DIR ; $var_name=$CHECK_PRODUCT_ROOT ; export $var_name ; ./scripts/distinst -local -noexit $CHECK_DIST_INSTALL_OPTIONS $arch_list" ]
-   }
-   set sp_id [ lindex $open_spawn 1 ]
-   set timeout -1
-   set done 0
-   while { $done != 1 } {
-      expect_user {
-         -i $sp_id full_buffer {
-            puts $CHECK_OUTPUT "testsuite - compile_source buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
-         }
-         -i $sp_id "Base directory:" {
-             send -i $sp_id "y\n"
-         }
-         -i $sp_id "overriding mode" {
-             send -i $sp_id "y\n"
-         }
-         -i $sp_id "_exit_status_" {
-            set done 1
-         }
-         -i $sp_id eof {
-            set done 1
-         }
-         -i $sp_id "*\n" {
-            puts $CHECK_OUTPUT $expect_out(0,string)
-         }
-      }
-   }
-   close_spawn_process $open_spawn
-   puts $CHECK_OUTPUT ""
-
-   foreach elem $CHECK_CORE_EXECD {
-      set host_arch [ resolve_arch $elem ]
-      if { ([string compare $host_arch ""] != 0) && ([string compare $host_arch "unknown" ] != 0) } {
-         puts $CHECK_OUTPUT " arch on host $elem is $host_arch - successfully installed binaries"
-      } else {
-         puts $CHECK_OUTPUT " error installing binaries for host $elem"
-         set found 0
-         for { set html_c 2 } { $html_c <= $table_row }  { incr html_c 1 } {
-            if { [ string compare $html_table($html_c) $elem ] == 0 } {
-               set html_table($html_c,BGCOLOR) "#CC0000"
-               set html_table($html_c,FNCOLOR) "#FFFFFF"
-               set html_table($html_c,3) "error installing binaries"
-               set found 1
-               break
-            }
-         }
-         if {$found != 1} {
-            append html_body [ create_html_text "ERROR installing binaries for host $elem !!!" ]
-         }
-         set was_error 1
-      }
-   }
-   if { $do_only_install != 1 } {
-      append html_body [ create_html_table html_table ]
-   }
- 
-   catch { file mkdir "$CHECK_PRODUCT_ROOT/man" } 
-   catch { file mkdir "$CHECK_PRODUCT_ROOT/catman" } 
-   catch { file mkdir "$CHECK_PRODUCT_ROOT/$ts_config(cell)" } 
-   catch { file mkdir "$CHECK_PRODUCT_ROOT/$ts_config(cell)/common" } 
-
-  
-   # copy pos. host_aliases file to new product root /$SGE_CELL/common
-   if { [ file isfile "$CHECK_JOB_OUTPUT_DIR/host_aliases"] == 1 } {
-        puts $CHECK_OUTPUT "restoring host_aliases file ..."
-        catch { exec "cp" "$CHECK_JOB_OUTPUT_DIR/host_aliases" "$CHECK_PRODUCT_ROOT/$ts_config(cell)/common/host_aliases" } result
-        puts $result
+      report_add_message $report_nr "Skip installation due to previous error\n"
    }
 
-
-   if { $was_error != 0 } {
-      mail_report $mail_subject "$mail_body - compile error(s)"
-      update_compile_html_output $html_body
+   if { $error_count > 0 } {
+      report_add_message $report_nr "Error occured during compilation or pre-installation of binaries"
+      report_finish $report_nr -1 
       return -1
    }
    
-   append mail_body "\nSuccessfully compiled and pre-installed following architectures:"
-   append mail_body "\n${compiled_mail_architectures}\n"
+   report_add_message $report_nr "Successfully compiled and pre-installed following architectures:"
+   report_add_message $report_nr "${compiled_mail_architectures}\n"
    
-   append mail_body "\ninit_core_system check will install the $CHECK_PRODUCT_TYPE execd at:"
+   report_add_message $report_nr "init_core_system check will install the $CHECK_PRODUCT_TYPE execd at:"
    foreach elem $CHECK_CORE_EXECD {
       set host_arch [ resolve_arch $elem ]
-      append mail_body "\n$elem ($host_arch)"
+      report_add_message $report_nr "$elem ($host_arch)"
    }
    if { [string compare $cvs_change_log "" ] != 0 } {
-      set mail_body "$mail_body \n\n Update output:\n$cvs_change_log\n\n"
+      report_clear_messages $report_nr
+      report_add_message $report_nr "$mail_body \n\n Update output:\n$cvs_change_log\n\n"
    }
-   set mail_subject "testsuite success - compile"
-   mail_report $mail_subject $mail_body
-
-   update_compile_html_output $html_body
+   
+   report_finish $report_nr 0
 
    # try to resolve hostnames in settings file
    set catch_return [ catch { eval exec "cp ${CHECK_DEFAULTS_FILE} ${CHECK_DEFAULTS_FILE}.[timestamp]" } ]
@@ -6880,8 +6520,19 @@ proc compile_source { { do_only_install 0 } } {
    }
 
    # if required, build distribution
+   build_distribution $arch_list
+   
+   return 0
+}
+
+proc build_distribution { arch_list } {
+   global ts_config CHECK_OUTPUT CHECK_HOST CHECK_USER
+   global CHECK_SOURCE_DIR 
+   
    if { $ts_config(package_type) == "create_tar" &&
         $ts_config(package_directory) != "none" } {
+      
+      
       puts $CHECK_OUTPUT "creating tar packages"  
       # distribution will be created using mk_dist
       # figure out which commandline options to use
@@ -6926,10 +6577,577 @@ proc compile_source { { do_only_install 0 } } {
       close_spawn_process $open_spawn
       puts $CHECK_OUTPUT ""
    }
-   
-   return 0
 }
 
+proc install_binaries { do_only_install arch_list report_nr } {
+   global CHECK_OUTPUT CHECK_PRODUCT_TYPE CHECK_PRODUCT_ROOT
+   global ts_config CHECK_JOB_OUTPUT_DIR CHECK_SOURCE_DIR CHECK_DIST_INSTALL_OPTIONS
+   global CHECK_HOST CHECK_USER CHECK_CORE_EXECD
+   
+   set was_error 0
+
+   set task_nr [ report_create_task $report_nr "install_binaries" $CHECK_HOST ]
+   
+   # install to $CHECK_PRODUCT_ROOT
+   set var_name "SGE_ROOT"
+   if { $ts_config(gridengine_version) == 53 } {
+      if {[string compare $CHECK_PRODUCT_TYPE "sgeee"] == 0 } {
+         set link_name "myinst"
+         set sgeee_param "-sgeee"
+      } else {
+         set link_name "myinst"
+         set sgeee_param ""
+      }
+   }
+   report_task_add_message $report_nr $task_nr "\nusing environment variable \"$var_name\""
+
+   # copy pos. host_aliases file to trash_
+   if { [ file isfile "$CHECK_PRODUCT_ROOT/$ts_config(cell)/common/host_aliases"] == 1 } {
+      report_task_add_message $report_nr $task_nr "saving host_aliases file ..."
+      catch { exec "cp" "$CHECK_PRODUCT_ROOT/$ts_config(cell)/common/host_aliases" "$CHECK_JOB_OUTPUT_DIR/host_aliases"  } result
+      puts $result
+      report_task_add_message $report_nr $task_nr $result
+   } 
+
+   # now delete install directory
+   report_task_add_message $report_nr $task_nr "moving directory \"$CHECK_PRODUCT_ROOT\" to testsuite_trash"
+   if { [delete_directory "$CHECK_PRODUCT_ROOT"] != 0 } {
+      add_proc_error "compile_source" -2 "could not delete $CHECK_PRODUCT_ROOT directory, critical error - stop"
+      report_task_add_message $report_nr $task_nr "could not delete $CHECK_PRODUCT_ROOT directory, critical error - stop"
+      report_finish_task $report_nr $task_nr -1
+      return -1
+   }
+ 
+   # wait for nfs updates
+   after 5000
+
+   catch { exec "mkdir" "$CHECK_PRODUCT_ROOT"  } result
+   report_task_add_message $report_nr $task_nr $result
+   catch { exec "touch" "$CHECK_PRODUCT_ROOT"  } result
+   report_task_add_message $report_nr $task_nr $result
+   catch { exec "chmod" "755" "$CHECK_PRODUCT_ROOT"  } result
+   report_task_add_message $report_nr $task_nr $result
+ 
+   if { $ts_config(gridengine_version) == 53 } {
+      report_task_add_message $report_nr $task_nr "\ncreating link \"$link_name\""
+      set return_state [ catch { eval exec ln -s $CHECK_SOURCE_DIR/scripts/distinst $CHECK_SOURCE_DIR/$link_name } output ]
+   }
+
+ 
+   report_task_add_message $report_nr $task_nr "\ninstalling product binaries"
+   
+   if { $ts_config(gridengine_version) == 53 } {
+      set open_spawn [ open_remote_spawn_process $CHECK_HOST $CHECK_USER "cd" "$CHECK_SOURCE_DIR ; $var_name=$CHECK_PRODUCT_ROOT ; export $var_name ; ./$link_name $sgeee_param $CHECK_DIST_INSTALL_OPTIONS $arch_list" ]
+   } else {
+      set open_spawn [ open_remote_spawn_process $CHECK_HOST $CHECK_USER "cd" "$CHECK_SOURCE_DIR ; $var_name=$CHECK_PRODUCT_ROOT ; export $var_name ; ./scripts/distinst -local -noexit $CHECK_DIST_INSTALL_OPTIONS $arch_list" ]
+   }
+   set sp_id [ lindex $open_spawn 1 ]
+   set timeout -1
+   set done 0
+   while { $done != 1 } {
+      expect_user {
+         -i $sp_id full_buffer {
+            report_task_add_message $report_nr $task_nr "testsuite - compile_source buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
+         }
+         -i $sp_id "Base directory:" {
+             send -i $sp_id "y\n"
+         }
+         -i $sp_id "overriding mode" {
+             send -i $sp_id "y\n"
+         }
+         -i $sp_id "_exit_status_" {
+            set done 1
+         }
+         -i $sp_id eof {
+            set done 1
+         }
+         -i $sp_id "*\n" {
+            report_task_add_message $report_nr $task_nr $expect_out(0,string)
+         }
+      }
+   }
+   close_spawn_process $open_spawn
+   puts $CHECK_OUTPUT ""
+
+   foreach elem $CHECK_CORE_EXECD {
+      set host_arch [ resolve_arch $elem ]
+      if { ([string compare $host_arch ""] != 0) && ([string compare $host_arch "unknown" ] != 0) } {
+         report_task_add_message $report_nr $task_nr " arch on host $elem is $host_arch - successfully installed binaries"
+      } else {
+         report_task_add_message $report_nr $task_nr " error installing binaries for host $elem"
+         set was_error 1
+      }
+   }
+   
+
+   catch { file mkdir "$CHECK_PRODUCT_ROOT/man" } 
+   catch { file mkdir "$CHECK_PRODUCT_ROOT/catman" } 
+   catch { file mkdir "$CHECK_PRODUCT_ROOT/$ts_config(cell)" } 
+   catch { file mkdir "$CHECK_PRODUCT_ROOT/$ts_config(cell)/common" } 
+
+  
+   # copy pos. host_aliases file to new product root /$SGE_CELL/common
+   if { [ file isfile "$CHECK_JOB_OUTPUT_DIR/host_aliases"] == 1 } {
+        report_task_add_message $report_nr $task_nr "restoring host_aliases file ..."
+        catch { exec "cp" "$CHECK_JOB_OUTPUT_DIR/host_aliases" "$CHECK_PRODUCT_ROOT/$ts_config(cell)/common/host_aliases" } result
+        report_task_add_message $report_nr $task_nr $result
+   }
+   
+   if { $was_error } {
+      report_finish_task $report_nr $task_nr -1
+   } else {
+      report_finish_task $report_nr $task_nr 0
+   }
+   return $was_error
+}
+
+
+#****** check/compile_with_aimk() **************************************************
+#  NAME
+#    compile_with_aimk() -- compile with aimk
+#
+#  SYNOPSIS
+#    compile_with_aimk { host_list report_nr task_name { aimk_options "" } } 
+#
+#  FUNCTION
+#     Start the aimk parallel on some hosts
+#
+#  INPUTS
+#    host_list --  list of host where aimk should be started
+#    report_nr --  id of the report object
+#    task_name --  name of the task in the report object
+#    aimk_options -- aimk options
+#
+#  RESULT
+#     ??? 
+#
+#  EXAMPLE
+#     ??? 
+#
+#  NOTES
+#     ??? 
+#
+#  BUGS
+#     ??? 
+#
+#  SEE ALSO
+#     ???/???
+#*******************************************************************************
+proc compile_with_aimk { host_list report_nr task_name { aimk_options "" }  } {
+   global CHECK_OUTPUT CHECK_USER
+   global CHECK_TESTSUITE_ROOT CHECK_SCRIPT_FILE_DIR CHECK_SOURCE_DIR
+   global CHECK_HTML_DIRECTORY CHECK_PROTOCOL_DIR CHECK_AIMK_COMPILE_OPTIONS
+   global do_only_install
+   
+   set num 0
+   
+   set my_compile_options $CHECK_AIMK_COMPILE_OPTIONS
+   if { [string length $aimk_options] > 0 } {
+      append my_compile_options " $aimk_options"
+   }
+   
+   set num 0
+ 
+   array set host_array {}
+   
+   set cvs_tag "maintrunk"
+   if { [ file isfile "${CHECK_SOURCE_DIR}/CVS/Tag" ] } {
+      set cvs_tag "no_tag_dir" 
+      set tag_state [ catch { eval exec "cat ${CHECK_SOURCE_DIR}/CVS/Tag" } cvs_tag ]
+   }
+
+   set table_row 2
+   foreach elem $host_list {
+      # compile the staff
+      puts $CHECK_OUTPUT "-> starting $task_name on host $elem ..."
+
+      set prog "$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/remotecompile.sh"
+      set par1 "$CHECK_SOURCE_DIR"
+      set par2 "$my_compile_options"
+      
+      puts $CHECK_OUTPUT "$prog $par1 '$par2'"
+      set open_spawn [ open_remote_spawn_process $elem $CHECK_USER $prog "$par1 '$par2'" 0 "" 0 ]
+      set spawn_id [lindex $open_spawn 1]
+      
+      set host_array($spawn_id,host) $elem
+      set host_array($spawn_id,task_nr) [ report_create_task $report_nr $task_name $elem ]      
+      set host_array($spawn_id,open_spawn) $open_spawn 
+      lappend spawn_list $spawn_id
+      incr num 1
+   }  
+  
+   puts $CHECK_OUTPUT "now waiting for end of compile ..." 
+   set timeout 300
+   set done_count 0
+   log_user 0
+
+   set show_info 1
+   set output_buff ""
+   
+   set org_spawn_list $spawn_list
+   
+   while { [llength $spawn_list] > 0 } {
+      
+      if {[info exists spawn_id]} {
+            unset spawn_id
+      }
+      
+      if { $show_info == 1 } {
+         clear_screen
+         puts $CHECK_OUTPUT "============================================"
+         puts $CHECK_OUTPUT "open compile connections: "
+         foreach spawn_id $spawn_list {
+            puts -nonewline $CHECK_OUTPUT "$host_array($spawn_id,host) "
+         }
+         puts $CHECK_OUTPUT "\n============================================"
+         puts $CHECK_OUTPUT $output_buff
+         set show_info 1
+      }
+
+      expect {
+         -i $spawn_list full_buffer {
+         }
+         -i $spawn_list timeout {
+            set spawn_id $expect_out(spawn_id)
+            set host_array($spawn_id,bad_compile) 1
+            
+            report_task_add_message $report_nr $host_array($spawn_id,task_nr) "got timeout for host \"$host_array($spawn_id,host)\""
+            
+            close_spawn_process $host_array($spawn_id,open_spawn)
+            set host_array($spawn_id,open_spawn) "--"
+            set index [lsearch -exact $spawn_list $spawn_id]
+            set spawn_list [lreplace $spawn_list $index $index]
+         }
+         -i $spawn_list eof {
+            set spawn_id $expect_out(spawn_id)
+            set host_array($spawn_id,bad_compile) 1
+            
+            report_task_add_message $report_nr $host_array($spawn_id,task_nr) "got eof for host \"$host_array($spawn_id,host)\""
+            
+            close_spawn_process $host_array($spawn_id,open_spawn)
+            set host_array($spawn_id,open_spawn) "--"
+            set index [lsearch -exact $spawn_list $spawn_id]
+            set spawn_list [lreplace $spawn_list $index $index]
+         }
+         -i $spawn_list "remotecompile * aimk compile error" {
+            
+            set spawn_id $expect_out(spawn_id)
+            
+            set host_array($spawn_id,bad_compile) 1
+            
+            report_task_add_message $report_nr $host_array($spawn_id,task_nr) $expect_out(0,string)
+            
+            close_spawn_process $host_array($spawn_id,open_spawn)
+            set host_array($spawn_id,open_spawn) "--"
+            set index [lsearch -exact $spawn_list $spawn_id]
+            set spawn_list [lreplace $spawn_list $index $index]
+            
+         }
+         -i $spawn_list "remotecompile * aimk no errors" {
+            set spawn_id $expect_out(spawn_id)
+            report_task_add_message $report_nr $host_array($spawn_id,task_nr) $expect_out(0,string)
+            set host_array($spawn_id,bad_compile) 0
+            
+            close_spawn_process $host_array($spawn_id,open_spawn)
+            set host_array($spawn_id,open_spawn) "--"
+            set index [lsearch -exact $spawn_list $spawn_id]
+            set spawn_list [lreplace $spawn_list $index $index]
+            
+         }
+         -i $spawn_list "*\n" {
+            set spawn_id $expect_out(spawn_id)
+            report_task_add_message $report_nr $host_array($spawn_id,task_nr) $expect_out(0,string)
+            set show_info 1
+            set output_buff ""
+            append output_buff "\n$host_array($spawn_id,host):\n"
+            append output_buff "$expect_out(0,string)"
+         }
+      }
+   }
+   log_user 1
+   
+   set compile_error 0
+   foreach spawn_id $org_spawn_list {
+      if { $host_array($spawn_id,bad_compile) != 0 } {
+         puts $CHECK_OUTPUT "\n=============\ncompile error on host $host_array($spawn_id,host):\n=============\n"
+         report_finish_task $report_nr $host_array($spawn_id,task_nr) 1
+         set compile_error 1
+      } else {
+         report_finish_task $report_nr $host_array($spawn_id,task_nr) 0
+      }
+   }
+
+   return $compile_error
+}
+
+#****** check/update_source() ******************************************************
+#  NAME
+#    update_source()
+#
+#  SYNOPSIS
+#    update_source { a_html_body } 
+#
+#  FUNCTION
+#     Updates the sources at CHECK_SOURCE_DIR
+#     The cvs commands is executed at CHECK_SOURCE_HOSTNAME
+#     For the result a report is emailed
+#  INPUTS
+#    a_html_body   -- html body where error messages will be appended
+#    a_mail_body   -- mail body where error messages will be appended
+#  RESULT
+#     0  --  no update has been executed
+#     1  --  update has been executed 
+#     <0 --  failure 
+#  EXAMPLE
+#
+#
+#  NOTES
+#     calls exit if the sources of the testsuite are updated
+#
+#  BUGS
+#
+#  SEE ALSO
+#     check/compile_source
+#******
+proc update_source { report_nr } {
+   global do_not_update
+   if { $do_not_update == 0 } {
+      global CHECK_OUTPUT CHECK_SOURCE_HOSTNAME CHECK_USER
+      global CHECK_SOURCE_DIR CHECK_OUTPUT
+      
+      set tries 1
+
+      set output ""
+      set update_ok 0
+      set prg_exit_state 0
+      set conflict_files {}
+      
+      set task_nr [report_create_task $report_nr "cvs_update" $CHECK_SOURCE_HOSTNAME]
+      
+      while { $tries <= 3 && $update_ok == 0 } {
+         
+         report_task_add_message $report_nr $task_nr "------------------------------------------"
+         report_task_add_message $report_nr $task_nr "$tries. cvs update try ..."
+         report_task_add_message $report_nr $task_nr "updating gridengine directory $CHECK_SOURCE_DIR/.. on host $CHECK_SOURCE_HOSTNAME ..."
+         
+         set open_spawn [ open_remote_spawn_process $CHECK_SOURCE_HOSTNAME $CHECK_USER "cd" "$CHECK_SOURCE_DIR/.. ; cvs -q -z 9 update -dP"]
+         set spawn_list [lindex $open_spawn 1]
+         set timeout 300
+         
+         set frame_work_script_update 0
+         set testsuite_update 0
+         set cvs_change_log ""
+         
+         set cvs_output [ open "$CHECK_SOURCE_DIR/cvs_update.log.[timestamp]" "w" ]
+         
+         set use_output 0
+         
+         expect {
+            -i $spawn_list full_buffer {
+               report_task_add_message $report_nr $task_nr "full_buffer error on cvs update"
+            }
+            -i $spawn_list timeout {
+               report_task_add_message $report_nr $task_nr "got timeout on cvs update"
+            }
+            -i $spawn_list eof {
+               report_task_add_message $report_nr $task_nr "got eof on cvs update"
+            }
+            -i $spawn_list "_exit_status_:(*)" {  
+               set use_output 0
+               set prg_exit_state [get_string_value_between "_exit_status_:(" ")" $expect_out(0,string)]
+               report_task_add_message $report_nr $task_nr "cvs update exited with status $prg_exit_state"
+               if { $prg_exit_state != 0 } {
+                  set update_ok 0
+               } else {
+                  set update_ok 1
+               }
+            }
+            -i $spawn_list "_start_mark_:(0)" {
+               set use_output 1
+               report_task_add_message $report_nr $task_nr "cd $CHECK_SOURCE_DIR/.. ; cvs -q -z 9 update -dP"
+               exp_continue
+            }
+            -i $spawn_list -re {^C .*?\n} { ;# conflict files
+               if { $use_output == 1 } {
+                  set elem [string trimright $expect_out(buffer) "\n\r"]
+                  report_task_add_message $report_nr $task_nr "$elem"
+                  
+                  set len [string length $elem]
+                  set confict_file [string range $elem 2 $len]
+                  lappend conflict_files $confict_file
+               }
+               exp_continue
+            }
+            -i $spawn_list -re {^.*?\n} {
+               if { $use_output } {
+                  set elem [string trimright $expect_out(buffer) "\n\r"]
+                  report_task_add_message $report_nr $task_nr "$elem"
+                  puts $cvs_output "$elem"
+
+                  if { ([string range $elem 0 2 ] != "cvs") && ([string range $elem 0 0] != "?") } {
+                     report_task_add_message $report_nr $task_nr "$elem"
+                     append cvs_change_log "$elem\n"
+                     if { [ string first "testsuite/check.exp" $elem ] >= 0 && [string range $elem 0 0] != "M" } {
+                        set frame_work_script_update 1
+                     }
+                     if { [ string first "testsuite/tcl_files" $elem ] >= 0 && [string range $elem 0 0] != "M" } {
+                        set testsuite_update 1
+                     }
+                  } 
+               }
+               exp_continue
+            }
+         }
+
+         flush $cvs_output
+         close $cvs_output
+         close_spawn_process $open_spawn
+         incr tries 1
+         if { [ llength $conflict_files ] > 0 } {
+            # we have conflict do not continue
+            break
+         }
+         if { $update_ok == 0 } {
+            sleep 60
+         }
+      }
+
+      if { [llength $conflict_files] > 0 } {
+         report_add_message $report_nr "CVS Update Error: The following files contains conflicts:\n"
+         foreach elem $conflict_files {
+            report_add_message $report_nr "   $elem"
+         }
+         report_add_message $report_nr "\n Please resolve these conflicts!!!\n"
+         report_finish_task $report_nr $task_nr -1
+         return -1
+      }
+      
+      if { $update_ok != 1 } {
+         report_add_message $report_nr "CVS Update Error: cvs update failed three times!!!\n"
+         report_finish_task $report_nr $task_nr -1
+         return -1
+      }
+
+      # if the testsuite itself has been update, require restart
+      if { $frame_work_script_update == 1 } {
+         report_add_message $report_nr "CVS Update: TESTSUITE FRAMEWORK SCRIPT was updated!!! Stop !!!\n"
+         report_finish_task $report_nr $task_nr 0
+         report_finish $report_nr 0
+         exit 1 
+      }
+      if { $testsuite_update == 1 } {
+         report_add_message $report_nr "CVS Update Warning: testsuite source procedures were updated!!!"
+         report_add_message $report_nr "                    Resourcing it !!!\n"
+      }
+      report_finish_task $report_nr $task_nr 0
+      return 1
+   } else {
+      return 0
+   }
+}
+
+#****** check/compile_depend() **************************************************
+#  NAME
+#    compile_depend() -- ???
+#
+#  SYNOPSIS
+#    compile_depend { } 
+#
+#  FUNCTION
+#     Executes scripts/zero-depend, aimk --only-depend and aimk depend
+#     on a preferred compile host
+#
+#  INPUTS
+#    compile_hosts -- list of compile hosts
+#    a_html_body   -- html body buffer for reporting
+#
+#  RESULT
+#     0  -  on success
+#     -1 -  on failure
+#
+#  EXAMPLE
+#
+#  NOTES
+#
+#  BUGS
+#
+#  SEE ALSO
+#*******************************************************************************
+proc compile_depend { compile_hosts report_nr } {
+   
+   global ts_host_config CHECK_USER CHECK_SOURCE_DIR CHECK_AIMK_COMPILE_OPTIONS
+   global CHECK_OUTPUT
+   
+   set depend_host_name [lindex $compile_hosts 0] 
+
+   foreach help_host $compile_hosts {
+      if { [ string compare $ts_host_config($help_host,arch) "solaris64"] == 0 || 
+           [ string compare $ts_host_config($help_host,arch) "sol-sparc64"] == 0 } {
+         puts $CHECK_OUTPUT "using host $help_host to create dependencies"
+         set depend_host_name $help_host
+      }
+   }
+
+   set task_nr [report_create_task $report_nr "zerodepend" $depend_host_name]
+   
+   # clean dependency files (zerodepend)
+   
+   report_task_add_message $report_nr $task_nr "------------------------------------------"
+   report_task_add_message $report_nr $task_nr "-> starting scripts/zerodepend on host $depend_host_name ..."
+   set output [ start_remote_prog $depend_host_name $CHECK_USER "cd" "$CHECK_SOURCE_DIR ; scripts/zerodepend" prg_exit_state 60 0 "" 1 0 ]
+   report_task_add_message $report_nr $task_nr "------------------------------------------"
+   report_task_add_message $report_nr $task_nr "return state: $prg_exit_state"
+   report_task_add_message $report_nr $task_nr "------------------------------------------"
+   report_task_add_message $report_nr $task_nr "output:\n$output"
+   report_task_add_message $report_nr $task_nr "------------------------------------------"
+   
+   report_finish_task $report_nr $task_nr $prg_exit_state
+   if { $prg_exit_state != 0 } {
+      report_add_message $report_nr "------------------------------------------"
+      report_add_message $report_nr "Error: scripts/zerodepend (exit code $prg_exit_state)"
+      report_add_message $report_nr "------------------------------------------"
+      return -1
+   }
+   
+
+   set task_nr [report_create_task $report_nr "only_depend" $depend_host_name]
+   # build the depencency building program
+   set my_compile_options $CHECK_AIMK_COMPILE_OPTIONS
+   report_task_add_message $report_nr $task_nr "-> starting aimk -only-depend on host $depend_host_name ..."
+   set output [ start_remote_prog $depend_host_name $CHECK_USER "cd" "$CHECK_SOURCE_DIR ; ./aimk -only-depend" prg_exit_state 60 0 "" 1 0 ]
+   report_task_add_message $report_nr $task_nr "------------------------------------------"
+   report_task_add_message $report_nr $task_nr "return state: $prg_exit_state"
+   report_task_add_message $report_nr $task_nr "------------------------------------------"
+   report_task_add_message $report_nr $task_nr "output:\n$output"
+   report_task_add_message $report_nr $task_nr "------------------------------------------"
+   report_finish_task $report_nr $task_nr $prg_exit_state
+   if { $prg_exit_state != 0 } {
+      report_add_message $report_nr "------------------------------------------"
+      report_add_message $report_nr "Error: aimk -only-depend failed (exit code $prg_exit_state)"
+      report_add_message $report_nr "------------------------------------------"
+      return -1
+   }
+
+   # build the dependencies
+   set task_nr [report_create_task $report_nr "depend" $depend_host_name]
+   report_task_add_message $report_nr $task_nr "------------------------------------------"
+   report_task_add_message $report_nr $task_nr "-> starting aimk $my_compile_options depend on host $depend_host_name ..."
+   set output [ start_remote_prog $depend_host_name $CHECK_USER "cd" "$CHECK_SOURCE_DIR ; ./aimk $my_compile_options depend" prg_exit_state 60 0 "" 1 0 ]
+   report_task_add_message $report_nr $task_nr "------------------------------------------"
+   report_task_add_message $report_nr $task_nr "return state: $prg_exit_state"
+   report_task_add_message $report_nr $task_nr "------------------------------------------"
+   report_task_add_message $report_nr $task_nr "output:\n$output"
+   report_task_add_message $report_nr $task_nr "------------------------------------------"
+
+   report_finish_task $report_nr $task_nr $prg_exit_state
+   if { $prg_exit_state != 0 } {
+      report_add_message $report_nr "------------------------------------------"
+      report_add_message $report_nr "Error: aimk depend failed (exit code $prg_exit_state)"
+      report_add_message $report_nr "------------------------------------------"
+      return -1
+   }
+   return 0
+}
 #                                                             max. column:     |
 #****** check/run_all_at_starttime() ******
 # 
@@ -7209,7 +7427,7 @@ proc menu {} {
   global CHECK_ENABLED_RUNLEVELS CHECK_PRODUCT_VERSION_NUMBER CHECK_SETUP_NAMES
   global daemon_debug CHECK_DEBUG_LEVEL CHECK_DEFAULTS_FILE CHECK_DO_SETUP
   global CHECK_PACKAGE_DIRECTORY CHECK_SETUP_CHANGES CHECK_PACKAGE_TYPE
-  global check_reinit_on_tcl_error ts_checktree
+  global check_reinit_on_tcl_error ts_checktree CHECK_ENABLED_CATEGORIES
 
   delete_temp_script_files
 
@@ -7244,6 +7462,7 @@ proc menu {} {
     puts " (13) run local test continously"
   }
     puts "===============================================================================" 
+    puts " (19) install system"
     puts " (20) shutdown and restart master and scheduler"
     puts " (21) only start master and scheduler daemons"
     puts " (22) check messages files of execds and qmaster"
@@ -7271,6 +7490,14 @@ proc menu {} {
 #  clear_screen
 
   switch -- $input {
+     "19" {
+           set org_categories $CHECK_ENABLED_CATEGORIES
+           set CHECK_ENABLED_CATEGORIES "INSTALL"
+           set runcompleted 1
+           run_tests "root" $runcompleted
+           set CHECK_ENABLED_CATEGORIES $org_categories
+           wait_for_enter
+         }
     "20" { restart_debug_daemons } 
     "21" { restart_debug_daemons 1 }
     "22" { set output [check_messages_files]
@@ -7286,13 +7513,15 @@ proc menu {} {
             if { $ts_config(package_directory) == "none" ||
                  $ts_config(package_type) == "create_tar" } {
                # we compile the source and do a scripts/distinst
-                set back [compile_source]
+               set back [compile_source]
+                
                 if { $back != 0 } {
                    puts "--> error compiling and pre installing source code"
                 } else {
                    puts "--> source code compiled and pre installed"
                 }
                 wait_for_enter
+                
             } else {
                # we have product packages
                 set back [prepare_packages]
@@ -7303,6 +7532,7 @@ proc menu {} {
                 }
                 wait_for_enter
             }
+            
          }
     "24" {
           if { [have_root_passwd] == -1 } {
@@ -7524,7 +7754,10 @@ proc source_tcl_files {} {
    ts_source $libdir/sge_queue
    ts_source $libdir/sge_project
    ts_source $libdir/sge_sched_conf
-
+   
+   ts_source $libdir/checktree_helper
+   ts_source $libdir/report_procedures
+   
    # source a user private tcl file, e.g. to contain a 
    # inhouse_cluster_post_install function
    ts_source $libdir/private

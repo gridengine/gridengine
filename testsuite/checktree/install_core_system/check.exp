@@ -50,7 +50,7 @@ global check_use_installed_system
 # This file shows some check spezific things
 set check_root_access_needs  "yes"
 set check_name          "init_core_system"
-set check_category      "COMPATIBILITY SYSTEM L10N VERIFIED"
+set check_category      "COMPATIBILITY SYSTEM L10N VERIFIED INSTALL"
 set check_description(0)   "install a default system (bdb_rpc/master/execution/shadow daemon on local host and start them up)"
 set check_needs         ""                              ;# dependencies of this check (name of other check)
 set install_mode        "$CHECK_TESTSUITE_INSTALL_MODE" ;# sets the install mode. allowed are: automatic and manual
@@ -108,6 +108,7 @@ set local_execd_spool_set 0
 
 set CORE_INSTALLED ""
 set CORE_INSTALLED_TIME ""
+
 
 # this is to setup the cluster
 #                                                             max. column:     |

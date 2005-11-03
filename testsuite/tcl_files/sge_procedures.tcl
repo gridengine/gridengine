@@ -7054,7 +7054,8 @@ proc shutdown_core_system {} {
    global CHECK_USER
    global CHECK_ADMIN_USER_SYSTEM do_compile
 
-
+   exec_shutdown_hooks
+   
    foreach sh_host $ts_config(shadowd_hosts) {
       shutdown_all_shadowd $sh_host
    }
@@ -7220,6 +7221,9 @@ proc startup_core_system {} {
    foreach ex_host $ts_config(execd_nodes) {
       startup_execd $ex_host
    }
+   
+   # now execute all startup hooks
+   exec_startup_hooks
 
 }
 

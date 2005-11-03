@@ -54,7 +54,16 @@
 #     check/verify_user_config()
 #*******************************************************************************
 proc verify_config { config_array only_check parameter_error_list } {
-   global CHECK_OUTPUT actual_ts_config_version be_quiet
+   global actual_ts_config_version
+   upvar $config_array config
+   upvar $parameter_error_list error_list
+
+   return [verify_config2 config $only_check error_list $actual_ts_config_version]
+}
+
+proc verify_config2 { config_array only_check parameter_error_list expected_version } {
+
+   global CHECK_OUTPUT be_quiet
    upvar $config_array config
    upvar $parameter_error_list error_list
 
@@ -68,9 +77,9 @@ proc verify_config { config_array only_check parameter_error_list } {
       return -1
    }
 
-   if { $config(version) != $actual_ts_config_version } {
+   if { $config(version) != $expected_version } {
       puts $CHECK_OUTPUT "Configuration file version \"$config(version)\" not supported."
-      puts $CHECK_OUTPUT "Expected version is \"$actual_ts_config_version\""
+      puts $CHECK_OUTPUT "Expected version is \"$expected_version\""
       lappend error_list "unexpected version"
       incr errors 1
       return -1
@@ -232,9 +241,11 @@ proc edit_setup { array_name verify_func mod_string } {
    upvar $array_name org_config
    upvar $mod_string onchange_values
 
+
    set onchange_values ""
    set org_names [ array names org_config ]
    foreach name $org_names {
+#      puts $CHECK_OUTPUT "config $name = $org_config($name)"
       set config($name) $org_config($name)
    }
 
@@ -320,7 +331,7 @@ proc edit_setup { array_name verify_func mod_string } {
       return -1
    }
 
-   puts $CHECK_OUTPUT "Verify new settings ..."
+   puts $CHECK_OUTPUT "Verify new settings..."
    set verify_state "-1"
    lappend errors "edit_setup(): verify func not found"
    if { [info procs $verify_func ] == $verify_func } {
@@ -484,7 +495,7 @@ proc show_config { conf_array {short 1} { output "not_set" } } {
 #     check/setup2()
 #*******************************************************************************
 proc modify_setup2 {} {
-   global ts_config ts_host_config ts_user_config CHECK_ACT_LEVEL
+   global ts_checktree ts_config ts_host_config ts_user_config CHECK_ACT_LEVEL
    global CHECK_OUTPUT CHECK_PACKAGE_DIRECTORY check_name
 
    global CHECK_CORE_EXECD CHECK_CORE_MASTER CHECK_PRODUCT_ROOT CHECK_CHECKTREE_ROOT
@@ -500,16 +511,56 @@ proc modify_setup2 {} {
    
    set check_name "setup"
    set CHECK_ACT_LEVEL "0"
+   
+   
+   set setup_hook(1,name) "Testsuite configuration"
+   set setup_hook(1,config_array) "ts_config"
+   set setup_hook(1,verify_func)  "verify_config"
+   set setup_hook(1,save_func)    "save_configuration"
+   
+   
+   set setup_hook(2,name) "Host file configuration"
+   set setup_hook(2,config_array) "ts_host_config"
+   set setup_hook(2,verify_func)  "verify_host_config"
+   set setup_hook(2,save_func)    "save_host_configuration"
+   set setup_hook(2,filename)     "$ts_config(host_config_file)"
+   
+   set setup_hook(3,name) "User file configuration"
+   set setup_hook(3,config_array) "ts_user_config"
+   set setup_hook(3,verify_func)  "verify_user_config"
+   set setup_hook(3,save_func)    "save_user_configuration"
+   set setup_hook(3,filename)     "$ts_config(user_config_file)"
+   
+   set numSetups 3
+   
+   for {set i 0} { $i < $ts_checktree(act_nr)} {incr i 1 } {
+      for {set ii 0} {[info exists ts_checktree($i,setup_hooks_${ii}_name)]} {incr ii 1} {
+         incr numSetups 1
+         puts $CHECK_OUTPUT "found setup hook $ts_checktree($i,setup_hooks_${ii}_name)"
+         set setup_hook($numSetups,name)         $ts_checktree($i,setup_hooks_${ii}_name)
+         set setup_hook($numSetups,config_array) $ts_checktree($i,setup_hooks_${ii}_config_array)
+         global $setup_hook($numSetups,config_array)
+         set setup_hook($numSetups,init_func)   $ts_checktree($i,setup_hooks_${ii}_init_func)
+         set setup_hook($numSetups,verify_func)  $ts_checktree($i,setup_hooks_${ii}_verify_func)
+         set setup_hook($numSetups,save_func)    $ts_checktree($i,setup_hooks_${ii}_save_func)
+         set setup_hook($numSetups,init_func) $ts_checktree($i,setup_hooks_${ii}_init_func)
+
+         if {[info exists ts_checktree($i,setup_hooks_${ii}_filename)]} {
+            set setup_hook($numSetups,filename) $ts_checktree($i,setup_hooks_${ii}_filename)
+         }
+      }
+   }
+   
 
     while { 1 } {
       clear_screen
       puts $CHECK_OUTPUT "------------------------------------------------------------------"
       puts $CHECK_OUTPUT "Modify testsuite configuration"
       puts $CHECK_OUTPUT "------------------------------------------------------------------"
-      puts $CHECK_OUTPUT "   (1) Testsuite configuration   (1s) Show testsuite configuration"
-      puts $CHECK_OUTPUT "   (2) Host file configuration   (2s) Show host file configuration"
-      puts $CHECK_OUTPUT "   (3) User file configuration   (3s) Show user file configuration"
-      puts $CHECK_OUTPUT ""
+      
+      for { set i 1 } { $i <= $numSetups } { incr i 1 } {
+         puts $CHECK_OUTPUT [format "    (%d) %-26s (%ds) %s" $i $setup_hook($i,name) $i $setup_hook($i,name)]
+      }      
       puts -nonewline $CHECK_OUTPUT "Please enter a number or press return to exit: "
       set input [ wait_for_enter 1]
       if { [string compare $input ""] == 0 } {
@@ -521,56 +572,25 @@ proc modify_setup2 {} {
          incr pos -1
          set input [string range $input 0 $pos]
       }
-      if { $do_show == 0 } {
-         switch -- $input {
-            1 {
-               set do_save [edit_setup ts_config verify_config tmp_string]
-               if { $do_save == 0 } {
-                  save_configuration
-                  append change_level $tmp_string
+      if { $input > 0 && $input <= $numSetups } {
+         if { $do_show == 0 } {
+            set do_save [edit_setup $setup_hook($input,config_array) $setup_hook($input,verify_func) tmp_string]
+            if { $do_save == 0 } {
+               if { [info exists setup_hook($input,filename)] } {
+                  $setup_hook($input,save_func) $setup_hook($input,filename) 
+               } else {
+                  $setup_hook($input,save_func)
                }
+               append change_level $tmp_string
             }
-   
-            2 {
-               set do_save [edit_setup ts_host_config verify_host_config tmp_string]
-               if { $do_save == 0 } {
-                  save_host_configuration $ts_config(host_config_file)
-                  append change_level $tmp_string
-               }
-   
-            }
-            3 {
-               set do_save [edit_setup ts_user_config verify_user_config tmp_string]
-               if { $do_save == 0 } {
-                  save_user_configuration $ts_config(user_config_file)
-                  append change_level $tmp_string
-               }
-            }
-   
-            default { 
-               puts $CHECK_OUTPUT "no valid number"
-               wait_for_enter  
-            }
+         } else {
+            puts $CHECK_OUTPUT "show_config $setup_hook($input,config_array)"
+            show_config $setup_hook($input,config_array)
          }
       } else {
-         switch -- $input {
-            1 {
-               show_config ts_config
-            }
-            2 {
-               show_config ts_host_config
-
-            }
-            3 {
-               show_config ts_user_config
-            }
-   
-            default { 
-               puts $CHECK_OUTPUT "no valid number"
-            }
-         }
-         wait_for_enter
+         puts $CHECK_OUTPUT "no valid number ($input)"
       }
+      wait_for_enter
    }
 
    set new_exed $CHECK_CORE_EXECD

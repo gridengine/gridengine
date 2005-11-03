@@ -1335,3 +1335,51 @@ proc node_get_processors {nodename} {
 
    return $ts_host_config($host,processors)
 }
+
+#****** config_host/get_java_home_for_host() **************************************************
+#  NAME
+#    get_java_home_for_host() -- Get the java home directory for a host
+#
+#  SYNOPSIS
+#    get_java_home_for_host { host } 
+#
+#  FUNCTION
+#     Reads the java home directory for a host from the host configuration
+#
+#  INPUTS
+#    host -- name of the host
+#
+#  RESULT
+#     
+#     the java home directory of an empty string if the java is not set 
+#     in the host configuration
+#
+#  EXAMPLE
+#
+#     set java_home [get_java_home_for_host $CHECK_HOST]
+#
+#     if { $java_home == "" } {
+#         puts "java not configurated for host $CHECK_HOST"
+#     }
+#
+#  NOTES
+#
+#  BUGS
+#
+#  SEE ALSO
+#*******************************************************************************
+proc get_java_home_for_host { host } {
+   global ts_host_config CHECK_OUTPUT
+   
+    set input $ts_host_config($host,java)
+    
+    set input_len [ string length $input ]
+    set java_len  [ string length "/bin/java" ]
+    
+    set last [ expr ( $input_len - $java_len -1 ) ]
+    
+    set res [ string range $input 0 $last]
+    
+    return $res
+}
+

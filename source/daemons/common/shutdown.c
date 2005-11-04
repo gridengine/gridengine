@@ -92,8 +92,11 @@ void sge_shutdown(int i)
                           feature_get_featureset_name(
                                        feature_get_active_featureset_id())); 
    }
-   INFO((SGE_EVENT, MSG_SHADOWD_CONTROLLEDSHUTDOWN_S, 
-         sge_dstring_get_string(&ds2)));
+   if (i != 0) {
+      INFO((SGE_EVENT, MSG_SHADOWD_CONTROLLEDSHUTDOWN_SU, sge_dstring_get_string(&ds2), sge_u32c(i)));
+   } else {
+      INFO((SGE_EVENT, MSG_SHADOWD_CONTROLLEDSHUTDOWN_S, sge_dstring_get_string(&ds2)));
+   }
 
    sge_dstring_free(&ds2);
    log_state_set_log_level(old_ll);

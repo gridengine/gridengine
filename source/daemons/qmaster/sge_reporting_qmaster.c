@@ -229,13 +229,15 @@ reporting_initialize(lList **answer_list)
 *     reporting_shutdown() -- shutdown the reporting module
 *
 *  SYNOPSIS
-*     bool reporting_shutdown(lList **answer_list) 
+*     bool reporting_shutdown(lList **answer_list, bool do_spool) 
 *
 *  FUNCTION
 *     ??? 
 *
 *  INPUTS
 *     lList **answer_list - used to return error messages
+*     bool do_spool       - if set to true changes must be spooled
+*                           if set to false don't spool changes
 *
 *  RESULT
 *     bool - true on success, false on error.
@@ -247,7 +249,7 @@ reporting_initialize(lList **answer_list)
 *     qmaster/reporting/reporting_initialize()
 *******************************************************************************/
 bool
-reporting_shutdown(lList **answer_list)
+reporting_shutdown(lList **answer_list, bool do_spool)
 {
    bool ret = true;
    lList* alp = NULL;
@@ -256,9 +258,12 @@ reporting_shutdown(lList **answer_list)
 
    DENTER(TOP_LAYER, "reporting_shutdown");
 
-   /* flush the last reporting values, suppress adding new timer */
-   if (!reporting_flush(&alp, 0, &dummy)) {
-      answer_list_output(&alp);
+
+   if (do_spool == true) {
+      /* flush the last reporting values, suppress adding new timer */
+      if (!reporting_flush(&alp, 0, &dummy)) {
+         answer_list_output(&alp);
+      }
    }
 
    buf = &reporting_buffer[ACCOUNTING_BUFFER];

@@ -41,7 +41,6 @@
 #define MSG_LCK_MUTEXLOCKFAILED_SSS   _MESSAGE(71000, _(SFQ" failed to lock "SFQ" - error: "SFQ))
 #define MSG_LCK_MUTEXUNLOCKFAILED_SSS _MESSAGE(71001, _(SFQ" failed to unlock "SFQ" - error: "SFQ))
 
-#define MSG_LCK_RWLOCKFORREADINGFAILED_SSS _MESSAGE(71002, _(SFQ" failed to lock "SFQ" for reading - error: "SFQ))
 #define MSG_LCK_RWLOCKFORWRITINGFAILED_SSS _MESSAGE(71003, _(SFQ" failed to lock "SFQ" for writing - error: "SFQ))
 #define MSG_LCK_RWLOCKUNLOCKFAILED_SSS     _MESSAGE(71004, _(SFQ" failed to unlock "SFQ" - error: "SFQ))
 

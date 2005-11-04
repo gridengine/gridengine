@@ -563,7 +563,7 @@ static void increment_heartbeat(te_event_t anEvent, monitoring_t *monitor)
               sge_hostcmp(act_resolved_qmaster_name, uti_state_get_qualified_hostname()) != 0      ) {
             /* act_qmaster file has been changed */
             WARNING((SGE_EVENT, MSG_HEART_ACT_QMASTER_FILE_CHANGED));
-            if ( sge_shutdown_qmaster_via_signal_thread(1) != 0) {
+            if ( sge_shutdown_qmaster_via_signal_thread(100) != 0) {
                ERROR((SGE_EVENT, MSG_HEART_CANT_SIGNAL));
                sge_shutdown(1);
             }
@@ -992,7 +992,7 @@ static void wait_for_thread_termination(void)
 *     sge_qmaster_shutdown() -- shutdown qmaster 
 *
 *  SYNOPSIS
-*     static void sge_qmaster_shutdown(void) 
+*     static void sge_qmaster_shutdown(bool do_spool) 
 *
 *  FUNCTION
 *     Shutdown qmaster. Shutdown persistence and reporting service. Shutdown
@@ -1002,7 +1002,8 @@ static void wait_for_thread_termination(void)
 *     This function must be the VERY last function which qmaster does invoke.
 *
 *  INPUTS
-*     void - none 
+*     bool do_spool - spool changes if set to true
+*                     don't spool changes if set to false
 *
 *  RESULT
 *     void - none 
@@ -1013,15 +1014,17 @@ static void wait_for_thread_termination(void)
 *     Do NOT change the shutdown operation sequence!
 *
 *******************************************************************************/
-void sge_qmaster_shutdown(void)
+void sge_qmaster_shutdown(bool do_spool)
 {
    DENTER(TOP_LAYER, "sge_qmaster_shutdown");
 
-   sge_userprj_spool(); /* spool the latest usage */
+   if (do_spool == true) {
+      sge_userprj_spool(); /* spool the latest usage */
+   }
 
    sge_shutdown_persistence(NULL);
 
-   reporting_shutdown(NULL);
+   reporting_shutdown(NULL, do_spool);
 
    te_shutdown();
 

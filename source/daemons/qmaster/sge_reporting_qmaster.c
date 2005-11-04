@@ -328,7 +328,7 @@ reporting_trigger_handler(te_event_t anEvent, monitoring_t *monitor)
          flush_interval = mconf_get_sharelog_time();
          
          /* flush the reporting data */
-         if (!reporting_flush(&answer_list)) {
+         if (reporting_flush_reporting(&answer_list) == 0) {
             answer_list_output(&answer_list);
          }
          
@@ -366,7 +366,7 @@ reporting_trigger_handler(te_event_t anEvent, monitoring_t *monitor)
     */
    if (flush_interval > 0) {
       te_event_t ev = NULL;
-      time_t next_flush = (long)(time(NULL) + flush_interval);
+      time_t next_flush = (time_t)(time(NULL) + flush_interval);
 
       ev = te_new_event(next_flush, te_get_type(anEvent), ONE_TIME_EVENT, 1, 0,
                         NULL);

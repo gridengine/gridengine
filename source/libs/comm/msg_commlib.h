@@ -103,8 +103,13 @@
 
 #define MSG_CL_COMMLIB_NO_ADDITIONAL_INFO             _MESSAGE(85064, _("no additional information available"))
 #define MSG_CL_COMMLIB_CANT_SWITCH_THREAD_MODE_WITH_EXISTING_HANDLES _MESSAGE(85065, _("can't switch commlib thread mode while communication handles are defined"))
+#define MSG_CL_COMMLIB_SSL_ERROR_NR_AND_TEXT_USS      _MESSAGE(85066, _("[ID="sge_U32CFormat"] in module "SFQ": "SFQ))
 
 
+#define MSG_CL_COMMLIB_SSL_ERROR_151441508            _MESSAGE(85500, _("certificate file contains a bad certificate"))
+#define MSG_CL_COMMLIB_SSL_ERROR_33558541             _MESSAGE(85501, _("please check the permissions of the pem certificate file"))
+#define MSG_CL_COMMLIB_SSL_ERROR_336151573            _MESSAGE(85502, _("the used certificate is expired"))
+#define MSG_CL_COMMLIB_SSL_ERROR_336105650            _MESSAGE(85503, _("the daemon certificate is expired or invalid"))
 
 
 

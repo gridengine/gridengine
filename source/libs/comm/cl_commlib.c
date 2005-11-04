@@ -307,8 +307,8 @@ int cl_commlib_push_application_error(int cl_error, const char* cl_info_text) {
 
    pthread_mutex_lock(&cl_com_error_mutex);
    if (cl_com_error_status_func != NULL) {
-      CL_LOG_STR(CL_LOG_ERROR,"add application error id: ", cl_get_error_text(cl_error));
-      CL_LOG_STR(CL_LOG_ERROR,"add application error: ", cl_info );
+      CL_LOG_STR(CL_LOG_INFO,"add application error id: ", cl_get_error_text(cl_error));
+      CL_LOG_STR(CL_LOG_INFO,"add application error: ", cl_info );
       cl_application_error_list_push_error(cl_com_application_error_list, cl_error, cl_info, 1);
    } else {
       retval = CL_RETVAL_UNKNOWN;
@@ -360,7 +360,7 @@ static int cl_commlib_check_callback_functions(void) {
 
           /* now trigger application error func */
           if (cl_com_error_status_func != NULL) {
-             CL_LOG(CL_LOG_WARNING,"triggering application error function");
+             CL_LOG(CL_LOG_INFO,"triggering application error function");
              cl_com_error_status_func(elem->cl_error,elem->cl_info);
           } else {
              CL_LOG(CL_LOG_WARNING,"can't trigger application error function: no function set");
@@ -5836,9 +5836,7 @@ int cl_commlib_get_endpoint_status(cl_com_handle_t* handle,
       return CL_RETVAL_PARAMS;
    }
    
-   CL_LOG_STR(CL_LOG_WARNING,"to host           :",un_resolved_hostname );
-   CL_LOG_STR(CL_LOG_WARNING,"to component_name :",component_name );
-   CL_LOG_INT(CL_LOG_WARNING,"to component_id   :",(int)component_id );
+   CL_LOG_STR_STR_INT(CL_LOG_INFO, "ping",un_resolved_hostname, component_name, (int)component_id );
 
    /* resolve hostname */
    return_value = cl_com_cached_gethostbyname(un_resolved_hostname, &unique_hostname,NULL, NULL, NULL);

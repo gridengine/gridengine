@@ -44,7 +44,24 @@
 #define __CL_FUNCTION__ "cl_application_error_list_setup()"
 int cl_application_error_list_setup(cl_raw_list_t** list_p, char* list_name) {
    int ret_val = CL_RETVAL_OK;
+   int ret_val2 = CL_RETVAL_OK;
+   cl_raw_list_t* logged_error_list = NULL;
+
    ret_val = cl_raw_list_setup(list_p, list_name, 1 );
+   if (ret_val == CL_RETVAL_OK) {
+      cl_raw_list_lock(*list_p);
+      ret_val2 = cl_raw_list_setup(&logged_error_list, "already logged data", 1);
+      if (ret_val2 != CL_RETVAL_OK) {
+         CL_LOG_STR(CL_LOG_ERROR,"error creating already logged data list:", cl_get_error_text(ret_val2));
+         cl_application_error_list_cleanup(list_p);
+         ret_val = ret_val2;
+      } else {
+         (*list_p)->list_data = (void*) logged_error_list;
+         CL_LOG(CL_LOG_INFO,"created already logged data list");
+      }
+      cl_raw_list_unlock(*list_p);
+   }
+      
    if (list_name != NULL) {
       CL_LOG_STR(CL_LOG_INFO,"application error list setup ok for list:", list_name);
    }
@@ -70,6 +87,16 @@ int cl_application_error_list_cleanup(cl_raw_list_t** list_p) {
 
    /* delete all entries in list */
    cl_raw_list_lock(*list_p);
+ 
+   /* first delete list_data list */
+   if ((*list_p)->list_data != NULL) {
+      cl_raw_list_t* logged_error_list = NULL;
+      logged_error_list = (cl_raw_list_t*) (*list_p)->list_data;
+      CL_LOG(CL_LOG_INFO,"cleanup of already logged data list");
+      cl_application_error_list_cleanup(&logged_error_list);
+      (*list_p)->list_data = NULL;
+   }
+
    while ( (elem = cl_application_error_list_get_first_elem(*list_p)) != NULL) {
       cl_raw_list_remove_elem(*list_p, elem->raw_elem);
       free(elem->cl_info);
@@ -89,7 +116,9 @@ int cl_application_error_list_cleanup(cl_raw_list_t** list_p) {
 int cl_application_error_list_push_error(cl_raw_list_t* list_p, int cl_error, const char* cl_info, int lock_list) {
 
    cl_application_error_list_elem_t* new_elem = NULL;
+   cl_application_error_list_elem_t* al_list_elem = NULL;
    int ret_val;
+   cl_bool_t do_log = CL_TRUE;
 
    if (list_p == NULL || cl_info == NULL ) {
       return CL_RETVAL_PARAMS;
@@ -101,37 +130,96 @@ int cl_application_error_list_push_error(cl_raw_list_t* list_p, int cl_error, co
          return ret_val;
       }
    }
- 
-   /* add new element list */
-   new_elem = (cl_application_error_list_elem_t*) malloc(sizeof(cl_application_error_list_elem_t));
-   if (new_elem == NULL) {
+
+   /* check if we should log this error */
+   if (list_p->list_data != NULL) {
+      cl_raw_list_t* logged_error_list = NULL;
+      cl_application_error_list_elem_t* next_elem = NULL;
+      struct timeval now;
+
+      logged_error_list = (cl_raw_list_t*) list_p->list_data;
+
       if (lock_list == 1) {
-         cl_raw_list_unlock(list_p);
+         cl_raw_list_lock(logged_error_list);
       }
-      return CL_RETVAL_MALLOC;
+      gettimeofday(&now, NULL);
+
+      al_list_elem = cl_application_error_list_get_first_elem(logged_error_list);
+      while (al_list_elem != NULL) {
+         next_elem = cl_application_error_list_get_next_elem(al_list_elem);
+
+         if ( al_list_elem->cl_log_time.tv_sec + CL_DEFINE_MESSAGE_DUP_LOG_TIMEOUT <= now.tv_sec ) {
+            CL_LOG_INT(CL_LOG_INFO,"removing error log from already logged list. linger time =", (int) (now.tv_sec - al_list_elem->cl_log_time.tv_sec));
+            cl_raw_list_remove_elem(logged_error_list, al_list_elem->raw_elem);
+            free(al_list_elem->cl_info);
+            free(al_list_elem);
+            al_list_elem = NULL;
+         }
+
+         al_list_elem = next_elem;      
+      }
+
+      
+
+      al_list_elem = cl_application_error_list_get_first_elem(logged_error_list);
+      while (al_list_elem != NULL) {
+         if (al_list_elem->cl_error == cl_error) {
+            if (strcmp(al_list_elem->cl_info, cl_info) == 0) {
+               do_log = CL_FALSE;
+               break;
+            }
+         }
+         al_list_elem = cl_application_error_list_get_next_elem(al_list_elem);
+      }
+      if (lock_list == 1) {
+         cl_raw_list_unlock(logged_error_list);
+      }
    }
 
-   new_elem->cl_info  = strdup(cl_info);
-   new_elem->cl_error = cl_error;
-
-   if (new_elem->cl_info == NULL) {
-      free(new_elem);
-      if (lock_list == 1) { 
-         cl_raw_list_unlock(list_p);
+   if (do_log == CL_TRUE) {
+    
+      /* add new element list */
+      new_elem = (cl_application_error_list_elem_t*) malloc(sizeof(cl_application_error_list_elem_t));
+      if (new_elem == NULL) {
+         if (lock_list == 1) {
+            cl_raw_list_unlock(list_p);
+         }
+         return CL_RETVAL_MALLOC;
       }
-      return CL_RETVAL_MALLOC;
-   }
 
-   new_elem->raw_elem = cl_raw_list_append_elem(list_p, (void*) new_elem);
-   if ( new_elem->raw_elem == NULL) {
-      free(new_elem->cl_info);
-      free(new_elem);
-      if (lock_list == 1) { 
-         cl_raw_list_unlock(list_p);
+      new_elem->cl_info  = strdup(cl_info);
+      new_elem->cl_error = cl_error;
+      gettimeofday(&(new_elem->cl_log_time),NULL);
+
+      if (new_elem->cl_info == NULL) {
+         free(new_elem);
+         if (lock_list == 1) { 
+            cl_raw_list_unlock(list_p);
+         }
+         return CL_RETVAL_MALLOC;
       }
-      return CL_RETVAL_MALLOC;
-   }
 
+      new_elem->raw_elem = cl_raw_list_append_elem(list_p, (void*) new_elem);
+      if ( new_elem->raw_elem == NULL) {
+         free(new_elem->cl_info);
+         free(new_elem);
+         if (lock_list == 1) { 
+            cl_raw_list_unlock(list_p);
+         }
+         return CL_RETVAL_MALLOC;
+      }
+
+      /* store this error into already logged error list */
+      if (list_p->list_data != NULL) {
+         cl_raw_list_t* logged_error_list = NULL;
+         logged_error_list = (cl_raw_list_t*) list_p->list_data;
+         cl_application_error_list_push_error(logged_error_list, cl_error, cl_info, lock_list);
+      }
+   } else {
+      CL_LOG_STR(CL_LOG_WARNING,"ignore application error - found entry in already logged list:", cl_get_error_text(cl_error)); 
+      CL_LOG_STR(CL_LOG_WARNING,"ignore application error - found entry in already logged list:", cl_info); 
+   }
+      
   
    /* unlock the thread list */
    if (lock_list == 1) {

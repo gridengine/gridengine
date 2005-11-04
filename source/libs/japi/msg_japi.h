@@ -58,7 +58,7 @@ extern "C" {
 #define MSG_JAPI_JOB_ALREADY_EXISTS_S  _MESSAGE(45516, _("Job with given job id already exists: "SFQ))
 #define MSG_JAPI_TASK_REF_TWICE_UU  _MESSAGE(45517, _("Task "sge_U32CFormat" of jobid "sge_U32CFormat" referenced twice"))
 #define MSG_JAPI_BAD_JOB_ID_S  _MESSAGE(45518, _("Job id, "SFQ", is not a valid job id"))
-#define MSG_JAPI_BAD_BULK_JOB_ID_S  _MESSAGE(45518, _("Job id, "SFQ", is not a valid bulk job id"))
+#define MSG_JAPI_BAD_BULK_JOB_ID_S  _MESSAGE(45519, _("Job id, "SFQ", is not a valid bulk job id"))
 #ifdef	__cplusplus
 }
 #endif

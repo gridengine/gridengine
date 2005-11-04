@@ -299,7 +299,7 @@
 ** sge_schedd_conf.c
 */
 #define MSG_GDI_INVALIDPOLICYSTRING     _MESSAGE(23288, _("Invalid policy hierachy string. Disabling policy hierachy."))
-#define MSG_GDI_INVALIDHALFLIFE_DECAY _MESSAGE(23291, _("Invalid halflife_day_list. Ignoring the setting."))
+#define MSG_GDI_INVALIDHALFLIFE_DECAY _MESSAGE(23289, _("Invalid halflife_day_list. Ignoring the setting."))
 
 /*
  * usage.c
@@ -356,7 +356,6 @@
 #define MSG_GDI_ARGUMENTSYNTAX_OA_WC_QUEUE_LIST        "wc_queue_list           wc_queue[,wc_queue,...]"
 
 
-#define MSG_GDI_USAGE_USAGESTRING                     _MESSAGE(23289, _("usage:"))
 
 #define MSG_GDI_USAGE_a_OPT_DATE_TIME                    "[-a date_time]"
 #define MSG_GDI_UTEXT_a_OPT_DATE_TIME                    _MESSAGE(23290, _("request a job start time"))
@@ -981,6 +980,7 @@
 
 #define MSG_COMMAND_REQUIRED_FOR_BINARY_JOB              _MESSAGE(23506, _("command required for a binary job"))
 
+#define MSG_GDI_USAGE_USAGESTRING                     _MESSAGE(23507, _("usage:"))
 /* =================================================
  * global error messages 
  * messages that have general meaning in all modules

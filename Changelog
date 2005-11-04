@@ -1,3 +1,10 @@
+CR-2005-11-04-0: Bugfix:    additional cleanup/enhancement for CR-2005-11-04-0:
+                               - old qmaster will not spool spool data on
+                                 shutdown when a shadowd qmaster has taken over
+                 Bugtraq:   6320869
+                 Issue:     1820
+                 Review:    JG
+
 CR-2005-11-04-1: Bugfix:    CSP consolidate error output if cert CA on client and
                             server don't match
                  Issue:     1802

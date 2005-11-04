@@ -43,6 +43,7 @@
 #define MSG_MASTER                         _MESSAGE(27001, _("master"))
 #define MSG_STARTUP_STARTINGUP_S           _MESSAGE(27002, _("starting up "SFN))
 #define MSG_SHADOWD_CONTROLLEDSHUTDOWN_S   _MESSAGE(27003, _("controlled shutdown "SFN))
+#define MSG_SHADOWD_CONTROLLEDSHUTDOWN_SU  _MESSAGE(27000, _("controlled shutdown "SFN" (exit state = "sge_U32CFormat")"))
 #define MSG_ERROR_CANTSWITCHTOADMINUSER    _MESSAGE(27004, _("can't switch to admin_user"))
 
 /*
@@ -117,8 +118,9 @@
  */
 #define MSG_MAIL_SUBJECT_SUU       SFN": Job-array task "sge_U32CFormat"."sge_U32CFormat" failed"
 #define MSG_MAIL_SUBJECT_SU        SFN": Job " sge_U32CFormat " failed"
-#define MSG_MAIL_BODY_USSSSSSSS    "Job " sge_U32CFormat " caused action: "SFN"\n User        = "SFN"\n Queue       = "SFN"\n Host        = "SFN"\n Start Time  = "SFN"\n End Time    = "SFN"\nfailed "SFN":"SFN
 
+
+#define MSG_MAIL_BODY_USSSSSSSS    "Job " sge_U32CFormat " caused action: "SFN"\n User        = "SFN"\n Queue       = "SFN"\n Host        = "SFN"\n Start Time  = "SFN"\n End Time    = "SFN"\nfailed "SFN":"SFN
 #define MSG_GFSTATE_PEJOB_U        _MESSAGE(27054, _("PE Job "sge_U32CFormat" will be deleted"))
 #define MSG_GFSTATE_QUEUE_S        _MESSAGE(27055, _("Queue "SFQ" set to ERROR"))
 #define MSG_GFSTATE_HOST_S         _MESSAGE(27056, _("All Queues on host "SFQ" set to ERROR"))
@@ -133,6 +135,9 @@
 #define MSG_CONF_REFVAR_S             _MESSAGE(27061, _("referenced variable %20.20s... expands max. length"))
 #define MSG_CONF_UNKNOWNVAR_S         _MESSAGE(27062, _("unknown variable "SFQ))
 
+/* 
+ * sge_category.c
+ */ 
 
 /*
  * Additional messages

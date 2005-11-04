@@ -63,7 +63,7 @@ bool
 reporting_initialize(lList **answer_list);
 
 bool
-reporting_shutdown(lList **answer_list);
+reporting_shutdown(lList **answer_list, bool do_spool);
 
 void
 reporting_trigger_handler(te_event_t anEvent, monitoring_t *monitor);

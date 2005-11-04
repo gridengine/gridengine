@@ -275,6 +275,8 @@ int main(int argc, char* argv[])
    int ret_val;
    int file_descriptor_settings_result = 0;
    int last_prepare_enroll_error = CL_RETVAL_OK;
+   int qmaster_exit_state = 0;
+   bool do_final_spool = true;
    DENTER_MAIN(TOP_LAYER, "qmaster");
 
    sge_prof_setup();
@@ -369,17 +371,31 @@ int main(int argc, char* argv[])
 
    sge_create_and_join_threads();
 
-   {
+   qmaster_exit_state = sge_get_qmaster_exit_state();
+   if (qmaster_exit_state == 100) {
+      /*
+       * another qmaster has taken over !!!
+       * sge_shutdown_qmaster_via_signal_thread()
+       * was used to set qmaster exit state 
+       */
+      do_final_spool = false;
+   }
+
+   if (do_final_spool == true) {
       monitoring_t monitor;
       sge_store_job_number(NULL, &monitor);
    }
 
-   sge_qmaster_shutdown();
+   sge_qmaster_shutdown(do_final_spool);
 
+   /* TODO CR: do we need this function? (its empty) */ 
    sge_teardown_lock_service();
 
-   sge_shutdown(sge_get_qmaster_exit_state());
+   sge_shutdown(qmaster_exit_state);
+   /* the code above will never be executed, sge_shutdown does an exit() */
 
+   /* TODO CR: this function is not called, because sge_shutdown is doing an
+               SGE_EXIT() */
    sge_prof_cleanup();
    DEXIT;
    return 0;

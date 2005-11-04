@@ -227,6 +227,7 @@ static void* cl_com_ssl_crypto_handle = NULL;
 static cl_com_ssl_private_t* cl_com_ssl_get_private(cl_com_connection_t* connection);
 static int                   cl_com_ssl_free_com_private(cl_com_connection_t* connection);
 static int                   cl_com_ssl_setup_context(cl_com_connection_t* connection, cl_bool_t is_server);
+static int                   cl_com_ssl_transform_ssl_error(unsigned long ssl_error, char* buffer, unsigned long buflen, char** transformed_error);
 static int                   cl_com_ssl_log_ssl_errors(const char* function_name);
 static const char*           cl_com_ssl_get_error_text(int ssl_error);
 
@@ -1194,10 +1195,136 @@ static const char* cl_com_ssl_get_error_text(int ssl_error) {
 #ifdef __CL_FUNCTION__
 #undef __CL_FUNCTION__
 #endif
+#define __CL_FUNCTION__ "cl_com_ssl_transform_ssl_error()"
+static int cl_com_ssl_transform_ssl_error(unsigned long ssl_error, char* buffer, unsigned long buflen, char** transformed_error) {
+
+   char help_buf[1024];
+   unsigned long counter = 0;
+   char* help = NULL;
+   char* lasts = NULL;
+
+   char* buffer_copy = NULL;
+   char* module = NULL;
+   char* error_text = NULL;
+   cl_bool_t do_ignore = CL_FALSE;
+
+   if (buffer == NULL || transformed_error == NULL) {
+      return CL_RETVAL_PARAMS;
+   }
+
+   if (*transformed_error != NULL) {
+      return CL_RETVAL_PARAMS;
+   }
+
+   buffer_copy = (char*) malloc(sizeof(char)*buflen);
+   if (buffer_copy == NULL) {
+      return CL_RETVAL_MALLOC;
+   }
+   snprintf(buffer_copy, buflen, buffer);
+
+   help = strtok_r(buffer_copy, ":", &lasts);
+   if (help != NULL) {
+      while( (help = strtok_r(NULL, ":", &lasts)) != NULL ) {
+         counter++;
+         if (counter == 2) {
+            module = strdup(help);
+            if (module == NULL) {
+               return CL_RETVAL_MALLOC;
+            }
+         }
+         if (counter == 4) {
+            error_text = strdup(help);
+            if (error_text == NULL) {
+               free(module);
+               module = NULL;
+               return CL_RETVAL_MALLOC;
+            }
+         }
+      }
+   }
+
+   free(buffer_copy);
+   buffer_copy = NULL;
+
+   if (module == NULL) {
+      module = strdup("???");
+      if (module == NULL) {
+         if (error_text != NULL) {
+            free(error_text);
+            error_text = NULL;
+         }
+         return CL_RETVAL_MALLOC;
+      }
+   }  
+
+   if (error_text == NULL) {
+      error_text = (char*) malloc(sizeof(char)*buflen);
+      if (error_text == NULL) {
+         free(module);
+         module = NULL;
+         return CL_RETVAL_MALLOC;
+      }
+      snprintf(error_text, buflen, buffer);
+   }  
+
+
+   switch (ssl_error) {
+      case 336445449:
+      case 537346050:
+      case 336445442:
+      case 218595386:
+      case 151470093:
+      case 185090057: {
+         do_ignore = CL_TRUE;
+         break;
+      }
+      case 151441508: {
+         *transformed_error = strdup(MSG_CL_COMMLIB_SSL_ERROR_151441508);
+         break;
+      }
+      case 33558541: {
+         *transformed_error = strdup(MSG_CL_COMMLIB_SSL_ERROR_33558541);
+         break;
+      }
+      case 336151573: {
+         *transformed_error = strdup(MSG_CL_COMMLIB_SSL_ERROR_336151573);
+         break;
+      }
+      case 336105650: {
+         *transformed_error = strdup(MSG_CL_COMMLIB_SSL_ERROR_336105650);
+         break;
+      }
+      default: {
+         snprintf(help_buf, 1024, MSG_CL_COMMLIB_SSL_ERROR_NR_AND_TEXT_USS, sge_u32c(ssl_error), module, error_text);
+         *transformed_error = strdup(help_buf);
+      }
+   }
+
+   free(module);
+   free(error_text);
+   module = NULL;
+   error_text = NULL;
+
+   if (do_ignore == CL_TRUE) {
+      CL_LOG_STR_STR_INT(CL_LOG_WARNING, "will not report ssl error text to application:", buffer, "ssl id", ssl_error);
+      return CL_RETVAL_DO_IGNORE;
+   }
+
+   if (*transformed_error == NULL) {
+      return CL_RETVAL_MALLOC;
+   }
+   return CL_RETVAL_OK; /* we have a malloced error */
+}
+
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
 #define __CL_FUNCTION__ "cl_com_ssl_log_ssl_errors()"
 static int cl_com_ssl_log_ssl_errors(const char* function_name) {
    const char* func_name = "n.a.";
    unsigned long ssl_error;
+   unsigned long ret_val;
+   char* transformed_ssl_error = NULL;
    char buffer[512];
    char help_buf[1024];
    cl_bool_t had_errors = CL_FALSE;
@@ -1210,7 +1337,20 @@ static int cl_com_ssl_log_ssl_errors(const char* function_name) {
       cl_com_ssl_func__ERR_error_string_n(ssl_error,buffer,512);
       snprintf(help_buf, 1024, MSG_CL_COMMLIB_SSL_ERROR_USS, ssl_error, func_name, buffer);
       CL_LOG(CL_LOG_ERROR,help_buf);
-      cl_commlib_push_application_error(CL_RETVAL_SSL_GET_SSL_ERROR, help_buf );
+
+      ret_val = cl_com_ssl_transform_ssl_error(ssl_error,buffer,512, &transformed_ssl_error);
+
+      if (transformed_ssl_error != NULL) {
+         snprintf(help_buf, 1024, transformed_ssl_error);
+         free(transformed_ssl_error);
+         transformed_ssl_error = NULL;
+      } else {
+         snprintf(help_buf, 1024, buffer);
+      }
+
+      if (ret_val != CL_RETVAL_DO_IGNORE) {
+         cl_commlib_push_application_error(CL_RETVAL_SSL_GET_SSL_ERROR, help_buf );
+      }
       had_errors = CL_TRUE;
    }
 

@@ -416,6 +416,9 @@ const char* cl_get_error_text(int error_id) {
       case CL_RETVAL_COMMLIB_SETUP_ALREADY_CALLED: {
          return MSG_CL_RETVAL_COMMLIB_SETUP_ALREADY_CALLED;
       }
+      case CL_RETVAL_DO_IGNORE: {
+         return MSG_CL_RETVAL_DO_IGNORE;
+      }
    }
    return CL_RETVAL_UNDEFINED_STR;
 }

@@ -39,8 +39,9 @@
 
 typedef struct cl_application_error_list_elem_t {
    cl_raw_list_elem_t*   raw_elem;
-   int                   cl_error;  /* commlib error code (use cl_get_error_text() to resolve error string) */
-   char*                 cl_info;   /* additional error information */
+   int                   cl_error;      /* commlib error code (use cl_get_error_text() to resolve error string) */
+   char*                 cl_info;       /* additional error information */
+   struct timeval        cl_log_time;   /* time when the message was added */
 } cl_application_error_list_elem_t;
 
 

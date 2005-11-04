@@ -1,3 +1,9 @@
+CR-2005-11-04-1: Bugfix:    CSP consolidate error output if cert CA on client and
+                            server don't match
+                 Issue:     1802
+                 Bugtraq:   6294875
+                 Review:    AA           
+
 DT-2005-11-03-0: Testsuite: o Added test for reporting/IZ1750
                  Changed:   system_tests/qmaster
 

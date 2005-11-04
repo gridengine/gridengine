@@ -508,11 +508,15 @@ char **allowed
 bool parse_time_param(const char *input, const char *variable, u_long32 *value)
 {
    bool ret = false;
+   int var_len = 0;
 
    DENTER(BASIS_LAYER, "parse_time_param");
 
-   /* variable is set in input */
-   if (strncasecmp(input, variable, strlen(variable)) == 0) {
+   var_len = strlen(variable);
+   
+   /* Test that 'variable' is the left side of the = in 'input.' */
+   if ((strncasecmp(input, variable, var_len) == 0) &&
+       (strlen(input) > var_len) && (input[var_len] == '=')) {
       const char *s;
 
       /* yes, this variable is set */
@@ -545,11 +549,15 @@ bool parse_time_param(const char *input, const char *variable, u_long32 *value)
 bool parse_bool_param(const char *input, const char *variable, bool *value)
 {
    bool ret = false;
+   int var_len = 0;
 
    DENTER(BASIS_LAYER, "parse_bool_param");
 
-   /* variable is set in input */
-   if (strncasecmp(input, variable, strlen(variable)) == 0) {
+   var_len = strlen(variable);
+   
+   /* Test that 'variable' is the left side of the = in 'input.' */
+   if ((strncasecmp(input, variable, var_len) == 0) &&
+       (strlen(input) > var_len) && (input[var_len] == '=')) {
       const char *s;
 
       /* yes, this variable is set */

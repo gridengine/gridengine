@@ -1,3 +1,11 @@
+DT-2005-11-04-0: Bugfix:    o Added separate reporting parameter for accounting
+                              flush interval
+                            o Fixed broken build on IRIX
+                 Issue:     1750
+                 Bugtraq:   6250692
+                 Changed:   qmaster, config
+                 Review:    AA, OJ
+
 CR-2005-11-04-0: Bugfix:    additional cleanup/enhancement for CR-2005-11-04-0:
                                - old qmaster will not spool spool data on
                                  shutdown when a shadowd qmaster has taken over

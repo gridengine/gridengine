@@ -519,8 +519,11 @@ bool parse_time_param(const char *input, const char *variable, u_long32 *value)
    var_len = strlen(variable);
    
    /* Test that 'variable' is the left side of the = in 'input.' */
+   /* We don't have to guard against an overrun in input[var_len] because we
+    * know that input is at least as long as var_len when we pass the
+    * strncasecmp(), so the worst that input[var_len] could be is \0. */
    if ((strncasecmp(input, variable, var_len) == 0) &&
-       (strlen(input) > var_len) && (input[var_len] == '=')) {
+       (input[var_len] == '=')) {
       const char *s;
 
       /* yes, this variable is set */
@@ -560,8 +563,11 @@ bool parse_bool_param(const char *input, const char *variable, bool *value)
    var_len = strlen(variable);
    
    /* Test that 'variable' is the left side of the = in 'input.' */
+   /* We don't have to guard against an overrun in input[var_len] because we
+    * know that input is at least as long as var_len when we pass the
+    * strncasecmp(), so the worst that input[var_len] could be is \0. */
    if ((strncasecmp(input, variable, var_len) == 0) &&
-       (strlen(input) > var_len) && (input[var_len] == '=')) {
+       (input[var_len] == '=')) {
       const char *s;
 
       /* yes, this variable is set */

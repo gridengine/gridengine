@@ -1,6 +1,13 @@
+DT-2005-11-04-1: Bugfix:    o Fixed issues from review of DT-2005-11-04-0
+                            - Merged from DT-2005-11-04-1 (maintrunk)
+                 Issue:     1750
+                 Bugtraq:   6250692
+                 Changed:   qmaster, config
+                 Review:    OJ
+
 DT-2005-11-04-0: Bugfix:    o Added separate reporting parameter for accounting
                               flush interval
-                            - Merged from Dt-2005-11-04-0 (maintrunk)
+                            - Merged from DT-2005-11-04-0 (maintrunk)
                  Issue:     1750
                  Bugtraq:   6250692
                  Changed:   qmaster, config

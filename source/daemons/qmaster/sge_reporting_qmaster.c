@@ -118,7 +118,7 @@ reporting_flush_report_file(lList **answer_list,
                             const char *filename, rep_buf_t *buf);
 
 static bool 
-reporting_flush(lList **answer_list, u_long32 flush, u_long32 *next_flush);
+reporting_flush(lList **answer_list);
 
 static bool 
 reporting_create_record(lList **answer_list, 
@@ -208,6 +208,7 @@ reporting_initialize(lList **answer_list)
    DENTER(TOP_LAYER, "reporting_initialize");
 
    te_register_event_handler(reporting_trigger_handler, TYPE_REPORTING_TRIGGER);
+   te_register_event_handler(reporting_trigger_handler, TYPE_ACCOUNTING_TRIGGER);
    te_register_event_handler(reporting_trigger_handler, TYPE_SHARELOG_TRIGGER);
 
    /* we always have the reporting trigger for flushing reporting files and
@@ -216,6 +217,15 @@ reporting_initialize(lList **answer_list)
    ev = te_new_event(time(NULL), TYPE_REPORTING_TRIGGER, ONE_TIME_EVENT, 1, 0, NULL);
    te_add_event(ev);
    te_free_event(&ev);
+
+   /* we have the accounting trigger for flushing accounting files only when not
+    * doing immediate flushing.
+    */
+   if (mconf_get_accounting_flush_time() != 0) {
+      ev = te_new_event(time(NULL), TYPE_ACCOUNTING_TRIGGER, ONE_TIME_EVENT, 1, 0, NULL);
+      te_add_event(ev);
+      te_free_event(&ev);
+   }
 
    /* the sharelog timed events can be switched on or off */
    config_sharelog();
@@ -253,15 +263,13 @@ reporting_shutdown(lList **answer_list, bool do_spool)
 {
    bool ret = true;
    lList* alp = NULL;
-   u_long32 dummy = 0;
    rep_buf_t *buf;
 
    DENTER(TOP_LAYER, "reporting_shutdown");
 
-
    if (do_spool == true) {
       /* flush the last reporting values, suppress adding new timer */
-      if (!reporting_flush(&alp, 0, &dummy)) {
+      if (!reporting_flush(&alp)) {
          answer_list_output(&alp);
       }
    }
@@ -306,9 +314,7 @@ void
 reporting_trigger_handler(te_event_t anEvent, monitoring_t *monitor)
 {
    u_long32 flush_interval = 0;
-   u_long32 next_flush = 0;
    lList *answer_list = NULL;
-   
 
    DENTER(TOP_LAYER, "reporting_trigger_handler");
 
@@ -321,29 +327,50 @@ reporting_trigger_handler(te_event_t anEvent, monitoring_t *monitor)
             answer_list_output(&answer_list);
          }
          flush_interval = mconf_get_sharelog_time();
+         
+         /* flush the reporting data */
+         if (!reporting_flush(&answer_list)) {
+            answer_list_output(&answer_list);
+         }
+         
          break;
       case TYPE_REPORTING_TRIGGER:
          /* only flush reporting file */
          flush_interval = mconf_get_reporting_flush_time();
+         
+         /* flush the reporting data */
+         if (reporting_flush_reporting(&answer_list) == 0) {
+            answer_list_output(&answer_list);
+         }
+         
+         break;
+      case TYPE_ACCOUNTING_TRIGGER:
+         /* only flush accounting file */
+         flush_interval = mconf_get_accounting_flush_time();
+         
+         /* Flush the accounting data.  There's need to worry about
+          * multi-threading issues with immediate flushisg, because the
+          * reporting_flush_report_file() function uses a mutex and checks the
+          * buffer length before trying to flush. */
+         if (reporting_flush_accounting(&answer_list) == 0) {
+            answer_list_output(&answer_list);
+         }
+         
          break;
       default:
          return;
    }
 
-   /* flush the reporting data */
-   if (!reporting_flush(&answer_list, time(NULL), &next_flush)) {
-      answer_list_output(&answer_list);
-   }
-
    /* set next flushing interval and add timer.
-    * flush_interval can be 0, if sharelog is switched off, then don't
-    * add trigger 
+    * flush_interval can be 0, if sharelog is switched off or accounting or
+    * reporting flush time is immediate, then don't add trigger 
     */
    if (flush_interval > 0) {
-      u_long32 next = time(NULL) + flush_interval;
       te_event_t ev = NULL;
+      time_t next_flush = (long)(time(NULL) + flush_interval);
 
-      ev = te_new_event((time_t)next, te_get_type(anEvent), ONE_TIME_EVENT, 1, 0, NULL);
+      ev = te_new_event(next_flush, te_get_type(anEvent), ONE_TIME_EVENT, 1, 0,
+                        NULL);
       te_add_event(ev);
       te_free_event(&ev);
    }
@@ -578,6 +605,12 @@ reporting_create_acct_record(lList **answer_list,
             sge_mutex_lock(buf->mtx_name, SGE_FUNC, __LINE__, &(buf->mtx));
             sge_dstring_append(&(buf->buffer), job_string);
             sge_mutex_unlock(buf->mtx_name, SGE_FUNC, __LINE__, &(buf->mtx));
+         }
+   
+         /* If the flush internal is set to 0, flush the accounting buffer after
+          * every write. */
+         if (mconf_get_accounting_flush_time() == 0) {
+            ret = (reporting_flush_accounting(answer_list) != 0) ? true : false;
          }
       }
 
@@ -1229,12 +1262,27 @@ reporting_create_record(lList **answer_list,
    return ret;
 }
 
-/*
-* NOTES
+/****** qmaster/reporting_flush_accounting() ***********************************
+*  NAME
+*     reporting_flush_accounting() -- flush the accounting info
+*
+*  SYNOPSIS
+*     bool reporting_flush_accounting(lList **answer_list)
+*
+*  FUNCTION
+*     Flush the information in the accounting buffer into the accounting file.
+*
+*  INPUTS
+*     lList **answer_list  - answer list
+*
+*  RESULT
+*     int - true  success
+*           false failure
+*
+*  NOTES
 *     MT-NOTE: reporting_flush_accounting() is MT-safe
-*/
-static bool 
-reporting_flush_accounting(lList **answer_list)
+*******************************************************************************/
+static bool reporting_flush_accounting(lList **answer_list)
 {
    bool ret = true;
 
@@ -1247,17 +1295,31 @@ reporting_flush_accounting(lList **answer_list)
    return ret;
 }
 
-/*
-* NOTES
+/****** qmaster/reporting_flush_reporting() ***********************************
+*  NAME
+*     reporting_flush_reporting() -- flush the reporting info
+*
+*  SYNOPSIS
+*     bool reporting_flush_reporting(lList **answer_list)
+*
+*  FUNCTION
+*     Flush the information in the reporting buffer into the reporting file.
+*
+*  INPUTS
+*     lList **answer_list  - answer list
+*
+*  RESULT
+*     int - true  success
+*           false failure
+*
+*  NOTES
 *     MT-NOTE: reporting_flush_reporting() is MT-safe
-*/
-static bool 
-reporting_flush_reporting(lList **answer_list)
+*******************************************************************************/
+static bool reporting_flush_reporting(lList **answer_list)
 {
    bool ret = true;
 
    DENTER(TOP_LAYER, "sge_flush_reporting");
-
    /* write reporting data */
    ret = reporting_flush_report_file(answer_list,
                                      path_state_get_reporting_file(),
@@ -1266,14 +1328,31 @@ reporting_flush_reporting(lList **answer_list)
    return ret;
 }
 
-/*
-* NOTES
+/****** qmaster/reporting_flush_report_file() **********************************
+*  NAME
+*     reporting_flush_report_file() -- flush the buffer into the given file
+*
+*  SYNOPSIS
+*     bool reporting_flush_report_file(lList **answer_list,
+*                                      const char *filename, rep_buf_t *buf)
+*
+*  FUNCTION
+*     Flush the information in the given buffer into the specified file.
+*
+*  INPUTS
+*     lList **answer_list  - answer list
+*     const char *filename - name of the destination file
+*     rep_buf_t *buf       - target buffer
+*
+*  RESULT
+*     int - true  success
+*           false failure
+*
+*  NOTES
 *     MT-NOTE: reporting_flush_report_file() is MT-safe
-*/
-static bool 
-reporting_flush_report_file(lList **answer_list,
-                      const char *filename, 
-                      rep_buf_t *buf)
+*******************************************************************************/
+static bool reporting_flush_report_file(lList **answer_list,
+                                        const char *filename, rep_buf_t *buf)
 {
    bool ret = true;
    dstring error_dstring;
@@ -1390,12 +1469,29 @@ FCLOSE_ERROR:
    DEXIT;
    return false;
 }
-/*
-* NOTES
+
+/****** qmaster/reporting_flush() **********************************************
+*  NAME
+*     reporting_flush() -- flush the buffers into files
+*
+*  SYNOPSIS
+*     bool reporting_flush(lList **answer_list)
+*
+*  FUNCTION
+*     Flush the information in the accounting and reporting buffers into the
+*     into the appropriate files.
+*
+*  INPUTS
+*     lList **answer_list  - answer list
+*
+*  RESULT
+*     int - true  success
+*           false failure
+*
+*  NOTES
 *     MT-NOTE: reporting_flush() is MT-safe
-*/
-static bool 
-reporting_flush(lList **answer_list, u_long32 flush, u_long32 *next_flush)
+*******************************************************************************/
+static bool reporting_flush(lList **answer_list)
 {
    bool ret = true;
    bool reporting_ret;
@@ -1414,9 +1510,6 @@ reporting_flush(lList **answer_list, u_long32 flush, u_long32 *next_flush)
       ret = false;
    }
      
-   /* set time for next flush */  
-   *next_flush = flush + mconf_get_reporting_flush_time();
-
    DEXIT;
    return ret;
 }

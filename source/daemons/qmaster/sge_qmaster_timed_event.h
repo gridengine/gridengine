@@ -53,7 +53,8 @@ typedef enum {
    TYPE_AUTOMATIC_USER_CLEANUP_EVENT, /**/
    TYPE_REMOTE_EVENT_DELIVERY_EVENT, /* not used */
    TYPE_SECURITY_EVENT, /**/
-   TYPE_JOB_NUMBER_EVENT
+   TYPE_JOB_NUMBER_EVENT,/**/
+   TYPE_ACCOUNTING_TRIGGER
 } te_type_t;
 
 typedef enum {

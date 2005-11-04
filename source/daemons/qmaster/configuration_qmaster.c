@@ -211,12 +211,35 @@ int sge_del_configuration(lListElem *aConf, lList **anAnswer, char *aUser, char 
 }
 
 
-/*
- * Modify cluster configuration. 'confp' is a pointer to a 'CONF_Type' list element
- * and does contain the modified configuration entry. Adding a new configuration entry
- * is also viewed as a modification.
- */
-int sge_mod_configuration(lListElem *aConf, lList **anAnswer, char *aUser, char *aHost)
+/****** qmaster/sge_mod_configuration() ****************************************
+*  NAME
+*     sge_mod_configuration() -- modify cluster configuration
+*
+*  SYNOPSIS
+*     int sge_mod_configuration(lListElem *aConf, lList **anAnswer, char *aUser,
+*                               char *aHost)
+*
+*  FUNCTION
+*     Modify cluster configuration. 'confp' is a pointer to a 'CONF_Type' list
+*     element and does contain the modified configuration entry. Adding a new
+*     configuration entry is also viewed as a modification.
+*
+*  INPUTS
+*     lListElem *aConf  - CONF_Type element containing the modified conf
+*     lList **anAnswer  - answer list
+*     char *aUser       - target user
+*     char *aHost       - target host
+*
+*  RESULT
+*     int - 0 success
+*          -1 error
+*
+*  NOTES
+*     MT-NOTE: sge_mod_configuration() is MT safe 
+*
+*******************************************************************************/
+int sge_mod_configuration(lListElem *aConf, lList **anAnswer, char *aUser,
+                          char *aHost)
 {
    lListElem *old_conf;
    const char *tmp_name = NULL;
@@ -296,6 +319,7 @@ int sge_mod_configuration(lListElem *aConf, lList **anAnswer, char *aUser, char 
    {
       lListElem *local = NULL;
       lListElem *global = NULL;
+      int accounting_flush_time = mconf_get_accounting_flush_time();
 
       if ((local = sge_get_configuration_for_host(uti_state_get_qualified_hostname())) == NULL)
       {
@@ -310,6 +334,14 @@ int sge_mod_configuration(lListElem *aConf, lList **anAnswer, char *aUser, char 
       if (merge_configuration(global, local, NULL) != 0) 
       {
          ERROR((SGE_EVENT, MSG_CONF_CANTMERGECONFIGURATIONFORHOST_S, uti_state_get_qualified_hostname()));
+      }
+
+      /* Restart the accounting flush event if needed. */
+      if ((accounting_flush_time == 0) &&
+          (mconf_get_accounting_flush_time() != 0)) {
+         te_event_t ev = te_new_event(time(NULL), TYPE_ACCOUNTING_TRIGGER, ONE_TIME_EVENT, 1, 0, NULL);
+         te_add_event(ev);
+         te_free_event(&ev);
       }
       
       lFreeElem(&local);

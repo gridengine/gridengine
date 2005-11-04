@@ -153,6 +153,7 @@ static bool do_accounting         = true;
 static bool do_reporting          = false;
 static bool do_joblog             = false;
 static int reporting_flush_time   = 15;
+static int accounting_flush_time   = -1;
 static int sharelog_time          = 0;
 
 /* allow the simulation of (non existent) hosts */
@@ -312,8 +313,11 @@ void sge_set_defined_defaults(lList **lpCfg)
 
    pConf = getConfEntry("execd_spool_dir", conf_entries);
    if ( pConf->value == NULL ) {
-      pConf->value = malloc(strlen(path_state_get_cell_root()) + strlen(SPOOL_DIR) + 2);
-      sprintf(pConf->value, "%s/%s", path_state_get_cell_root(), SPOOL_DIR);
+      int size = strlen(path_state_get_cell_root()) + strlen(SPOOL_DIR) + 2;
+      
+      pConf->value = (char *)malloc(size * sizeof(char));
+      snprintf(pConf->value, size, "%s/%s", path_state_get_cell_root(),
+               SPOOL_DIR);
    }
 
    lFreeList(lpCfg);
@@ -682,6 +686,7 @@ int merge_configuration(lListElem *global, lListElem *local, lList **lpp) {
       prof_execd_thrd = false;
       inherit_env = true;
       set_lib_path = false;
+      accounting_flush_time = -1;
 
       for (s=sge_strtok_r(execd_params, ",; ", &conf_context); s; s=sge_strtok_r(NULL, ",; ", &conf_context)) {
          if (parse_bool_param(s, "USE_QIDLE", &use_qidle)) {
@@ -789,6 +794,14 @@ int merge_configuration(lListElem *global, lListElem *local, lList **lpp) {
                WARNING((SGE_EVENT, MSG_CONF_NOCONFIGFROMMASTER));
                reporting_flush_time = 15;
             }
+            continue;
+         }
+         if (parse_int_param(s, "accounting_flush_time", &accounting_flush_time, TYPE_TIM)) {
+            if (accounting_flush_time < 0) {
+               WARNING((SGE_EVENT, MSG_CONF_NOCONFIGFROMMASTER));
+               accounting_flush_time = -1;
+            }
+            
             continue;
          }
          if (parse_int_param(s, "sharelog", &sharelog_time, TYPE_TIM)) {
@@ -1974,6 +1987,27 @@ int mconf_get_reporting_flush_time(void) {
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
 
    ret = reporting_flush_time;
+
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN(ret);
+
+}
+
+int mconf_get_accounting_flush_time(void) {
+   int ret;
+
+   DENTER(TOP_LAYER, "mconf_get_accounting_flush_time");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+
+   if (accounting_flush_time >= 0) {
+      ret = accounting_flush_time;
+   }
+   /* If the accounting_flush_time is not set, use the reporting_flush_time
+    * instead. */
+   else {
+      DPRINTF(("accounting_flush_time unset; using flush_time\n"));
+      ret = reporting_flush_time;
+   }
 
    SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
    DRETURN(ret);

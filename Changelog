@@ -1,3 +1,7 @@
+CR-2005-11-07-2: Testsuite: fixed wrong compile option setting from check-in
+                            CR-2005-11-07-0 ( when compile options are set to
+                            "none" )
+
 CR-2005-11-07-1: Testsuite: fixed wrong compile option setting from check-in
                             CR-2005-11-07-0
 

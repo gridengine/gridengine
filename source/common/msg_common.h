@@ -63,7 +63,6 @@
 #define MSG_CONFIG_CONF_GIDRANGELESSTHANNOTALLOWED_I  _MESSAGE(23025, _("minimum group id in gid_range may not be less than %d in cluster configuration"))
 #define MSG_CONFIG_CONF_ONLYSINGLEVALUEFORCONFIGATTRIB_S       _MESSAGE(23026, _("only a single value is allowed for configuration attribute "SFQ))
 #define MSG_CONFIG_CONF_ERRORSTORINGCONFIGVALUE_S     _MESSAGE(23027, _("error storing configuration attribute "SFQ))
-#define MSG_SGETEXT_WARNCANTRESOLVEHOST_S             _MESSAGE(23028, _("Warning: can't resolve hostname "SFQ))
 
 /*
 ** parse_job_cull.c

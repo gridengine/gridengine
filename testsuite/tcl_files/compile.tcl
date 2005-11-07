@@ -156,16 +156,17 @@ proc get_compile_options_string { } {
 
    set options $ts_config(aimk_compile_options)
 
-   if { $ts_config(spooling_method) == "classic" } {
-      puts $CHECK_OUTPUT "classic spooling method is set ..."
-      if { [string match "*-spool-classic*" $options] == 0 } {
-         puts $CHECK_OUTPUT "spooling_method \"classic\" enforces aimk with option \"-spool-classic\"!"
-         puts $CHECK_OUTPUT "adding \"-spool-classic\" to compile option string!"
-         append options " -spool-classic" 
-      }
-   } else {
-      puts $CHECK_OUTPUT "classic spooling option is not set - OK"
-   }
+#
+#   if { $ts_config(spooling_method) == "classic" } {
+#      puts $CHECK_OUTPUT "classic spooling method is set ..."
+#      if { [string match "*-spool-classic*" $options] == 0 } {
+#         puts $CHECK_OUTPUT "spooling_method \"classic\" enforces aimk with option \"-spool-classic\"!"
+#         puts $CHECK_OUTPUT "adding \"-spool-classic\" to compile option string!"
+#         append options " -spool-classic" 
+#      }
+#   } else {
+#      puts $CHECK_OUTPUT "classic spooling option is not set - OK"
+#   }
    
    puts $CHECK_OUTPUT "compile options are: \"$options\""
 

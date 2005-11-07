@@ -1,3 +1,6 @@
+CR-2005-11-07-1: Testsuite: fixed wrong compile option setting from check-in
+                            CR-2005-11-07-0
+
 JG-2005-11-07-0: Bugfix:    Connection between sge_qmaster and a Berkeley DB
                             RPC server could timeout.
                  Issue:     1866

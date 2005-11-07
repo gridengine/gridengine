@@ -3,7 +3,7 @@
 ###############################################################################
 REMOTE_DIR = ..
 
-REMOTE_TARGETS = rlogin rsh rshd
+REMOTE_TARGETS = rlogin rsh rshd libsgeremote.a
 
 REMOTE_CFLAGS = -UKERBEROS
 
@@ -48,6 +48,9 @@ messages:
 ###############################################################################
 # rules to build object codes and binaries
 ###############################################################################
+libsgeremote$(LIBEXT): $(RSHD_OBJS) $(RSHD_ADD_OBJS) $(RSHD_LIB_DEPENDS) sgessh.o
+		$(AR) $(ARFLAGS) libsgeremote$(LIBEXT) $(RSHD_OBJ) $(RSHD_ADD_OBJS) sgessh.o
+
 rlogin:   $(RLOGIN_OBJS)
 		$(CC) -o $@ $(RLOGIN_OBJS) $(LFLAGS) $(LIBS)
 
@@ -66,5 +69,7 @@ rshd:   $(RSHD_OBJS) $(RSHD_ADD_OBJS) $(RSHD_LIB_DEPENDS)
 rshd.o: $(REMOTE_DIR)/rshd.c
 		$(CC) $(CFLAGS) $(REMOTE_CFLAGS) -I$(SGE_DIR)/daemons/common -I$(SGE_DIR)/common -I$(SGE_DIR)/libs/uti -I$(SGE_DIR)/daemons/shepherd -c $(REMOTE_DIR)/rshd.c
 
+sgessh.o: $(REMOTE_DIR)/sgessh.c
+		$(CC) $(CFLAGS) $(REMOTE_CFLAGS) -I$(SGE_DIR)/daemons/common -I$(SGE_DIR)/common -I$(SGE_DIR)/libs/uti -I$(SGE_DIR)/daemons/shepherd -c $(REMOTE_DIR)/sgessh.c
 
 

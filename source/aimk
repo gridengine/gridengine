@@ -376,6 +376,7 @@ usage:
    echo "-spool-classic    -> use classic flatfile spooling"
    echo "-spool-targets    -> only create qmaster, spooldefaults and spoolinit"
    echo "-sunman           -> create man pages for Sun branded man pages (with -man[kv])"
+   echo "-tight-ssh        -> compile SSH daemon with tight SGE integration"
    echo "-umap             -> compile with usermapping and hostgroup feature"
   exit
 }
@@ -413,6 +414,7 @@ set MAKEFNMATCH      = 0
 set MAKEWINGRIDLIB   = 0
 set MAKEWINGRIDAPP   = 0
 set WITH_USERMAPPING = 0 # Compile without usermapping feature
+set SGESSH           = 0
 
 # Default Flags and Libraries 
 set OPTIMIZATION     = 1
@@ -428,6 +430,7 @@ set DEBUG_FLAG       = ""
 set INSURE_FLAG      = ""
 set NOERR_CFLAG      = ""
 set NOERR_PROTO      = ""
+set NOERR_SSH        = ""
 set MEMCFLAG         = ""
 set JAVA_ARCH        = ""
 set JAVA             = 0
@@ -938,6 +941,9 @@ while ($#argv >= 1 && $?found)
       breaksw
    case  "-umap"
       set WITH_USERMAPPING = 1
+      breaksw
+   case "-tight-ssh":
+      set SGESSH = 1
       breaksw
    default:
       unset found
@@ -2408,6 +2414,43 @@ if ( "$QMAKE" == 1) then
    cd $SOURCE/3rdparty/qmake/$COMPILE_ARCH
 
    $MAKE $MAKEOPT -f Makefile "MAKE=$MAKE" "COMPILE_ARCH=$COMPILE_ARCH" "DLLIB=$DLLIB" $argv
+
+   if ( $status != 0 ) then
+      echo not done
+      exit 1
+   endif
+
+   cd $SOURCE
+endif
+
+if ( "$SGESSH" == 1) then
+   echo _________3_r_d_p_a_r_t_y__SSH_____________
+
+   cd $SOURCE/3rdparty/openssh
+
+   if ( ! -d $COMPILE_ARCH ) then
+      echo " INFO: Architecture dir $COMPILE_ARCH not existing for 3rdparty openssh. Making"
+      mkdir $COMPILE_ARCH
+   endif
+
+   cd $COMPILE_ARCH
+
+   if ( ! -d $SOURCE/3rdparty/openssh/$COMPILE_ARCH || \
+          ! -r $SOURCE/3rdparty/openssh/$COMPILE_ARCH/Makefile ) then
+      mkdir -p $SOURCE/3rdparty/openssh/$COMPILE_ARCH
+      cd $SOURCE/3rdparty/openssh/$COMPILE_ARCH
+
+      env REMOTE=sge SGE_ARCH=$buildarch LD_LIBRARY_PATH=${OPENSSL_HOME}/lib\
+      MAKE="${MAKE}" CFLAGS="${CFLAGS} ${NOERR_CFLAG}" CC="${CC}" AR="${AR}" \
+      ../configure --with-grd=${COMPILE_ARCH} --srcdir=.. \
+         --with-cflags="${MEMCFLAG} ${NOERR_SSH} ${NOERR_PROTO}" \
+         --with-ldflags="${LFLAGS}" \
+         --with-libs="-L../../../${COMPILE_ARCH} -L../../../3rdparty/remote/${COMPILE_ARCH}/ -lsgeremote -luti -llck -lrmon ${LIBS} ${SLIBS}" \
+         --with-ssl-dir=${OPENSSL_HOME}
+   endif
+
+   $MAKE $MAKEOPT -f Makefile "MAKE=$MAKE" "CC=$CC" \
+     "COMPILE_ARCH=$COMPILE_ARCH" $argv
 
    if ( $status != 0 ) then
       echo not done

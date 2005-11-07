@@ -1,3 +1,8 @@
+RC-2005-11-07-0: Enhance.:  Tight SGE-SSH integration
+                 Issue:     1788
+                 Changed:   aimk, 3rdparty/remote/Makefile, sgessh.c
+                 Review:    RD
+
 DT-2005-11-07-0: Testsuite: o Added test for issue 1760
                             o Added new operational locking routine
                             o Fixed bugs in add_exechost

@@ -665,7 +665,7 @@ u_long32 empty_qs
 
    DENTER(TOP_LAYER, "select_by_resource_list");
 
-   if (centry_list_fill_request(resource_list, centry_list, true, true, false)) {
+   if (centry_list_fill_request(resource_list, NULL, centry_list, true, true, false)) {
       /* 
       ** error message gets written by centry_list_fill_request into 
       ** SGE_EVENT 

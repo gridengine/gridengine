@@ -109,7 +109,7 @@ qinstance_modify_attribute(lListElem *this_elem, lList **answer_list,
 #endif
 
    if (this_elem != NULL && cqueue != NULL && 
-       attribute_name != NoName && cqueue_attibute_name != NoName) {
+      attribute_name != NoName && cqueue_attibute_name != NoName) {
       const char *hostname = lGetHost(this_elem, QU_qhostname);
       const lList *attr_list = lGetList(cqueue, cqueue_attibute_name);
       const lDescr *descr = lGetElemDescr(this_elem);
@@ -342,43 +342,46 @@ qinstance_modify_attribute(lListElem *this_elem, lList **answer_list,
                                            matching_host_or_group,
                                            matching_group, is_ambiguous);
 
-               centry_list_fill_request(new_value, Master_CEntry_List, 
-                                        true, true, false);
+               if( centry_list_fill_request(new_value, answer_list, Master_CEntry_List, 
+                                        true, true, false) == 0 ) {
 
-               /* We make a copy of new_value here because it will ultimately
-                * end up in the qinstance.  If we didn't copy it, we would end
-                * up with the list linked into both the cluster queue and
-                * queue instance. */
-               if (new_value != NULL) {
-                  new_value = lCopyList ("", new_value);
-               }
-               
-               lSetList(tmp_elem, attribute_name, new_value);
-               new_value = NULL;
-               
-               qinstance_reinit_consumable_actual_list(tmp_elem, answer_list);
-               
-               lXchgList(tmp_elem, attribute_name, &new_value);
-               lFreeElem(&tmp_elem);
-               
-               if (object_list_has_differences(old_value, answer_list,
-                                               new_value, false)) {
+                   /* We make a copy of new_value here because it will ultimately
+                    * end up in the qinstance.  If we didn't copy it, we would end
+                    * up with the list linked into both the cluster queue and
+                    * queue instance. */
+                   if (new_value != NULL) {
+                      new_value = lCopyList ("", new_value);
+                   }
+                   
+                   lSetList(tmp_elem, attribute_name, new_value);
+                   new_value = NULL;
+                   
+                   qinstance_reinit_consumable_actual_list(tmp_elem, answer_list);
+                   
+                   lXchgList(tmp_elem, attribute_name, &new_value);
+                   lFreeElem(&tmp_elem);
+                   
+                   if (object_list_has_differences(old_value, answer_list,
+                                                   new_value, false)) {
 #ifdef QINSTANCE_MODIFY_DEBUG
-                  DPRINTF(("Changed "SFQ"\n", lNm2Str(attribute_name)));
+                      DPRINTF(("Changed "SFQ"\n", lNm2Str(attribute_name)));
 #endif
-                  /* the following lSetList will free old_value */
-                  lSetList(this_elem, attribute_name, new_value);
-                  *has_changed_conf_attr = true;
-                  if (attribute_name == QU_consumable_config_list) {
-                     qinstance_reinit_consumable_actual_list(this_elem, 
-                                                             answer_list);
-                  }
+                      /* the following lSetList will free old_value */
+                      lSetList(this_elem, attribute_name, new_value);
+                      *has_changed_conf_attr = true;
+                      if (attribute_name == QU_consumable_config_list) {
+                         qinstance_reinit_consumable_actual_list(this_elem, 
+                                                                 answer_list);
+                      }
+                   } else {
+                      /* Either new_value is a copy we made, or it was created by
+                       * qinstance_reinit_consumable_actual_list().  Either way, it
+                       * has to be freed.
+                       */
+                      lFreeList(&new_value);
+                   }
                } else {
-                  /* Either new_value is a copy we made, or it was created by
-                   * qinstance_reinit_consumable_actual_list().  Either way, it
-                   * has to be freed.
-                   */
-                  lFreeList(&new_value);
+                   ret &= false;
                }
             }
             break;

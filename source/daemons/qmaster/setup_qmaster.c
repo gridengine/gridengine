@@ -933,7 +933,7 @@ static int setup_qmaster(void)
       job_suc_pre(jep);
 
       centry_list_fill_request(lGetList(jep, JB_hard_resource_list), 
-                  Master_CEntry_List, false, true, false);
+                  NULL, Master_CEntry_List, false, true, false);
    }
 
    if (!bootstrap_get_job_spooling()) {

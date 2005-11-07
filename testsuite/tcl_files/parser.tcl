@@ -427,7 +427,7 @@ proc parse_fixed_column_lines {input output position {start_line 0}
 #***************************************************************************
 #
 
-proc process_named_record {input output delimiter index {id ""}
+proc process_named_record {input output delimiter {index ""} {id ""}
                                                         {head_line 0}
                                                         {tail_line 0}
                                                         {replace variable_not_set}
@@ -466,7 +466,7 @@ proc process_named_record {input output delimiter index {id ""}
          for {set j 0} {$j < $idxlen && $parse_record == 1} {incr j} {
             set idxpart [lindex $index $j]
             set idpart  [lindex $id $j]
-            if { $idpart == "" } {
+            if { $index == "" || $idpart == "" } {
                append idx "$record($idxpart),"
             } else {
                if {[string compare $idpart $record($idxpart)] != 0} {
@@ -1382,7 +1382,7 @@ proc parse_qconf_se { input output hostname } {
    upvar $input  in
    upvar $output out
  
-    process_named_record in out "no_delemiter___" "hostname" $hostname
+    process_named_record in out "no_delemiter___" 
 }
 
 #                                                             max. column:     |

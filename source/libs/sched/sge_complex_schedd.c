@@ -1391,10 +1391,9 @@ char *object_name
       }
 
       ret = centry_list_fill_request(lGetList(tmp_elem, nm), 
-                                     Master_CEntry_List, true, false, false);
+                                     alpp, Master_CEntry_List, true,
+                                     false, false);
       if (ret) {
-         /* error message gets written by centry_list_fill_request into SGE_EVENT */
-         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          lFreeElem(&tmp_elem);
          DEXIT;
          return STATUS_EUNKNOWN;

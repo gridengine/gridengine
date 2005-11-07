@@ -613,7 +613,7 @@ proc check_execd_messages { hostname { show_mode 0 } } {
 #     sge_procedures/set_exechost()
 #*******************************
 proc get_exechost {change_array host} {
-   global ts_config
+  global ts_config
   global CHECK_ARCH
   upvar $change_array chgar
 
@@ -3871,7 +3871,7 @@ proc wait_for_end_of_all_jobs { seconds } {
 #     mqattr -- Modify queue attributes
 #
 #  SYNOPSIS
-#     mqattr { attribute entry queue_list } 
+#     mqattr { attribute entry queue_list { add_error 1  } 
 #
 #  FUNCTION
 #     This procedure enables the caller to modify particular queue attributes.
@@ -3881,6 +3881,7 @@ proc wait_for_end_of_all_jobs { seconds } {
 #     attribute  - name of attribute to modify
 #     entry      - new value for attribute
 #     queue_list - name of queues to change
+#     add_error  - execute add_proc_error
 #
 #  RESULT
 #     -1 - error
@@ -3900,7 +3901,7 @@ proc wait_for_end_of_all_jobs { seconds } {
 #     sge_procedures/disable_queue()
 #     sge_procedures/enable_queue()
 #*******************************
-proc mqattr { attribute entry queue_list } {
+proc mqattr { attribute entry queue_list { add_error 1 } } {
   global ts_config
 # returns
 # -1 on error
@@ -3915,7 +3916,9 @@ proc mqattr { attribute entry queue_list } {
     eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf -rattr queue $help $queue_list" 
   } result ]
   if { $catch_return != 0 } {
-     add_proc_error "mqattr" "-1" "qconf error or binary not found"
+     if { $add_error == 1} {
+         add_proc_error "mqattr" "-1" "qconf error or binary not found"
+     }
      return -1
   }
 
@@ -3937,12 +3940,83 @@ proc mqattr { attribute entry queue_list } {
    }                                       
 
    if { $return_value != 0 } {
-      add_proc_error "mqattr" -1 "could not modify queue \"$queue_name\""
+     if { $add_error == 1} {
+       add_proc_error "mqattr" -1 "could not modify queue \"$queue_name\""
+     }
    }
 
    return $return_value
 }
 
+#****** sge_procedures/mhattr() ************************************************
+#  NAME
+#     mhattr() -- Modify host qttributes 
+#
+#  SYNOPSIS
+#     mhattr { attribute entry host_name { add_error 1 } } 
+#
+#  FUNCTION
+#     This procedure enables the caller to moidify particular host attributes. 
+#     Look at set_exechost for host attributes.
+#
+#  INPUTS
+#     attribute       - name of attribute to modify 
+#     entry           - new value for attribute 
+#     host_name       - name of the host to change 
+#     { add_error 1 } - execute add_proc_error
+#
+#  RESULT
+#     -1 - error
+#     0  - ok
+#
+#  EXAMPLE
+#     set return_value [mhattr "complex" "bla=test" "$host_name" ]
+#
+#  SEE ALSO
+#     sge_procedures/mqattr()
+#     sge_procedures/set_exechost() 
+#*******************************************************************************
+proc mhattr { attribute entry host_name { add_error 1 } } {
+  global ts_config
+# returns
+# -1 on error
+# 0 on success
+  
+  global CHECK_ARCH CHECK_CORE_MASTER CHECK_OUTPUT CHECK_USER
+
+  puts "Trying to change attribute $attribute for host $host_name to $entry."
+
+  set help "$attribute \"$entry\""   ;# create e.g. slots "5" as string
+  set catch_return [ catch {  
+    eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf -rattr exechost $help $host_name" 
+  } result ]
+  if { $catch_return != 0 } {
+     if { $add_error == 1} {
+         add_proc_error "mhattr" "-1" "qconf error or binary not found"
+     }
+     return -1
+  }
+
+  # split each line as listelement
+  set return_value 0
+ 
+   
+  set MODIFIED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_MODIFIEDINLIST_SSSS] $CHECK_USER "*" "*" "*"]
+  if { [ string match "$MODIFIED" $result ] != 1 } {
+     puts $CHECK_OUTPUT "Could not modify host $host_name."
+     set return_value -1
+  } else {
+     puts "Modified host $host_name successfully."
+  }
+
+  if { $return_value != 0 } {
+     if { $add_error == 1} {
+       add_proc_error "mhattr" -1 "could not modify host \"$host_name\""
+     }
+  }
+
+  return $return_value
+}
 
 
 
@@ -5357,7 +5431,7 @@ proc get_qconf_se_info {hostname {variable qconf_se_info}} {
    puts $CHECK_OUTPUT $result
    if { $prg_exit_state == 0 } {
       set result "$result\n"
-      parse_qconf_se result jobinfo $hostname 
+      parse_qconf_se result jobinfo $hostname
       return 1
    }
 

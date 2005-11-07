@@ -484,6 +484,7 @@
 #define MSG_EVE_RESENTSIGNALTASK_UU   _MESSAGE(33436, _("got resend signal timer event for unknown array task "sge_U32CFormat"."sge_U32CFormat)) 
 #define MSG_EVE_RESENTSIGNALQ_S       _MESSAGE(33437, _("got resend signal timer event for unknown queue "SFN))
 #define MSG_COM_NOUPDATEQSTATE_IS     _MESSAGE(33438, _("can't update remote queue state (%d) on queue "SFQ))
+#define MSG_JOB_POSTPONESIG_II        _MESSAGE(33439, _("Postponed signal for job "sge_U32CFormat"."sge_U32CFormat))
 /*
 ** sge_queue_qmaster.c
 */

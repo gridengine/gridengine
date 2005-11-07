@@ -407,7 +407,7 @@ send_slave_jobs_wc(const char *target, lListElem *tmpjep, lListElem *jatep,
       u_long32 dummymid = 0;
       unsigned long last_heard_from;
       u_long32 now;
-      
+     
       if (!lGetUlong(gdil_ep, JG_tag_slave_job)) {
          continue;
       }

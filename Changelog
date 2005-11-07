@@ -1,3 +1,9 @@
+EB-2005-11-04-0: Bugfix:    qmod -sq can kill a pe job in t state
+                 Bugtraq:   6287935
+                 Issue:     1619
+                 Changed:   sge_qmaster, sge_execd
+                 Review:    AH 
+
 DT-2005-11-04-1: Bugfix:    o Fixed issues from review of DT-2005-11-04-0
                             - Merged from DT-2005-11-04-1 (maintrunk)
                  Issue:     1750

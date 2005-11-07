@@ -1,3 +1,9 @@
+AA-2005-11-07-0: Bugfix:    - qmon startup and queue add/modify warning messages
+                            - Makefile fix
+                 Issue:     1378
+                 Bugtraq:   6291016
+                 Review:    JG
+
 RD-2005-11-07-1: Bugfix:    qrsh -V doesn't always work.
                  Issue:     1845 
                  Bugtraq:   6346704

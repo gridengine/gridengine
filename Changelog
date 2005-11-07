@@ -1,3 +1,7 @@
+CR-2005-11-07-0: Testsuite: add -spool-classic compile option automatically 
+                            when spool method "classic" is selected
+                 Review:    RH
+
 RD-2005-11-07-0: Bugfix:    qconf and qmaster accept invalid settings for
                             queue complex_values
                  Issue:     1847

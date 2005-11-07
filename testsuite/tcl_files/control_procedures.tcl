@@ -1719,3 +1719,122 @@ proc parse_cpu_time {s_cpu} {
 
    return $cpu
 }
+
+#****** control_procedures/operational_lock() **********************************
+#  NAME
+#     operational_lock() -- sychronizes an operation using file-based locks
+#
+#  SYNOPSIS
+#     operational_lock { operation_name lock_location }
+#
+#  FUNCTION
+#     This function uses a file lock in the lock_location directory to prevent
+#     multiple instances of a test suite operation from occuring simultaneously.
+#     No two test suite instances maybe be within a proetcted section of code
+#     on the same machine with the same operation_name and the same
+#     lock_location.  If the lock_location is not specified, it defaults to
+#     /tmp.
+#     This algorithm is based on "ls -crt | head -1" returning the oldest lock
+#     file.  In this way, clients receive the lock on a first come, first served
+#     basis.
+#
+#  INPUTS
+#     operation_name - the name of the lock
+#     host           - the name of the host to lock. Defaults to $CHECK_HOST
+#     lock_location  - where to store the locks.  Defaults to /tmp.
+#
+#  RESULTS
+#     -1   - error
+#      0   - success
+#
+#  SEE ALSO
+#     control_procedures/operational_lock()
+#
+#*******************************************************************************
+proc operational_lock {operation_name {host ""} {lock_location "/tmp"}} {
+   global CHECK_USER CHECK_HOST CHECK_OUTPUT
+
+   if {$host == ""} {
+      set host $CHECK_HOST
+   }
+
+   set pid [pid]
+   set lock "$lock_location/lock.$operation_name.$pid"
+   set all_locks "$lock_location/lock.$operation_name.*"
+
+   set output [start_remote_prog $CHECK_HOST $CHECK_USER "touch" $lock result]
+
+   if {$result != 0} {
+      add_proc_error "operational_lock" -1 "Could not update lock: $output"
+      return -1
+   }
+
+   # ls -crt behaves approximately the same on all platforms.  On HP-UX and
+   # IRIX, symbolic links are not included in the sorting, but since we're not
+   # using symbolic links, it shouldn't be an issue.
+   set output [start_remote_prog $CHECK_HOST $CHECK_USER "ls" "-crt $all_locks | head -1" result]
+
+   if {$result != 0} {
+      add_proc_error "operational_lock" -1 "Could not read locks: $output"
+      return -1
+   }
+
+   while {[string trim $output] != $lock} {
+      puts $CHECK_OUTPUT "Waiting for lock"
+      after 1000
+
+      set output [start_remote_prog $CHECK_HOST $CHECK_USER "ls" "-crt $all_locks | head -1" result]
+
+      if {$result != 0} {
+         add_proc_error "operational_lock" -1 "Could not read locks: $output"
+         return -1
+      }
+   }
+
+   return 0
+}
+
+#****** control_procedures/operational_unlock() ********************************
+#  NAME
+#     operational_unlock() -- sychronizes an operation using file-based locks
+#
+#  SYNOPSIS
+#     operational_unlock { operation_name lock_location }
+#
+#  FUNCTION
+#     This function removes the file lock in the lock_location directory
+#     allowing other processes access to the specified operation.  If the
+#     lock_location is not specified, it defaults to /tmp.
+#
+#  INPUTS
+#     operation_name - the name of the lock
+#     host           - the name of the host to lock. Defaults to $CHECK_HOST
+#     lock_location  - where to store the locks.  Defaults to /tmp.
+#
+#  RESULTS
+#     -1   - error
+#      0   - success
+#
+#  SEE ALSO
+#     control_procedures/operational_lock()
+#
+#*******************************************************************************
+proc operational_unlock {operation_name {host ""} {lock_location "/tmp"}} {
+   global CHECK_USER CHECK_HOST
+
+   if {$host == ""} {
+      set host $CHECK_HOST
+   }
+
+   set pid [pid]
+   set lock "$lock_location/lock.$operation_name.$pid"
+
+   set output [start_remote_prog $CHECK_HOST $CHECK_USER "rm" $lock result]
+
+   if {$result != 0} {
+      add_proc_error "operational_lock" -1 "Could not release lock: $output"
+      return -1
+   }
+
+   return 0
+}

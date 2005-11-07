@@ -423,8 +423,8 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
     * JB_hard/soft_resource_list points to a CE_Type list
     */
    if (centry_list_fill_request(lGetList(jep, JB_hard_resource_list), 
-                                Master_CEntry_List, false, true, false)) {
-      answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+                                alpp, Master_CEntry_List, false, true, 
+                                false)) {
       SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
       DEXIT;
       return STATUS_EUNKNOWN;
@@ -436,8 +436,8 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
    }
    
    if (centry_list_fill_request(lGetList(jep, JB_soft_resource_list), 
-                                Master_CEntry_List, false, true, false)) {
-      answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+                                alpp, Master_CEntry_List, false, true, 
+                                false)) {
       SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
       DEXIT;
       return STATUS_EUNKNOWN;
@@ -2817,7 +2817,8 @@ int *trigger
       bool is_changed = false;
 
       DPRINTF(("got new JB_hard_resource_list\n")); 
-      if (centry_list_fill_request(lGetList(jep, JB_hard_resource_list), Master_CEntry_List, 
+      if (centry_list_fill_request(lGetList(jep, JB_hard_resource_list), 
+                                   alpp, Master_CEntry_List, 
                                    false, true, false)) {
          answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          DRETURN(STATUS_EUNKNOWN);
@@ -2849,9 +2850,8 @@ int *trigger
    /* ---- JB_soft_resource_list */
    if ((pos=lGetPosViaElem(jep, JB_soft_resource_list))>=0) {
       DPRINTF(("got new JB_soft_resource_list\n")); 
-      if (centry_list_fill_request(lGetList(jep, JB_soft_resource_list), Master_CEntry_List, 
-                                   false, true, false)) {
-         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+      if (centry_list_fill_request(lGetList(jep, JB_soft_resource_list), alpp, 
+                                   Master_CEntry_List, false, true, false)) {
          DEXIT;
          return STATUS_EUNKNOWN;
       }

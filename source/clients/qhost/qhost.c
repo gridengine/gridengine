@@ -194,7 +194,7 @@ char **argv
    if (lGetNumberOfElem(resource_match_list)) {
       int selected;
 
-      if (centry_list_fill_request(resource_match_list, cl, true, true, false)) {
+      if (centry_list_fill_request(resource_match_list, &alp, cl, true, true, false)) {
          /* error message gets written by centry_list_fill_request into SGE_EVENT */
          SGE_EXIT(1);
       }

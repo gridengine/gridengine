@@ -1033,9 +1033,12 @@ qinstance_validate(lListElem *this_elem, lList **answer_list)
    qinstance_debit_consumable(this_elem, NULL, centry_master_list, 0);
 
    /* init double values of consumable configuration */
-   centry_list_fill_request(lGetList(this_elem, QU_consumable_config_list), 
-                     centry_master_list, true, false, true);
+   if (centry_list_fill_request(lGetList(this_elem, QU_consumable_config_list), 
+                     answer_list, centry_master_list, true, false, true) != 0) {
+        ret = false; 
+   }
 
+   if (ret) {
       if (ensure_attrib_available(NULL, this_elem, 
                                   QU_load_thresholds) ||
           ensure_attrib_available(NULL, this_elem, 
@@ -1044,6 +1047,7 @@ qinstance_validate(lListElem *this_elem, lList **answer_list)
                                   QU_consumable_config_list)) {
          ret = false;
       }
+   } 
 
    /* qinstance state */
    if (ret) {

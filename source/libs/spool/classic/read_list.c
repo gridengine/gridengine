@@ -253,7 +253,7 @@ int sge_read_exechost_list_from_disk(lList **list, const char *directory)
 
             /* necessary to init double values of consumable configuration */
             centry_list_fill_request(lGetList(ep, EH_consumable_config_list), 
-                                     Master_CEntry_List, true, false, true);
+                                     NULL, Master_CEntry_List, true, false, true);
 
             if (ensure_attrib_available(NULL, ep, EH_consumable_config_list)) {
                lFreeElem(&ep);
@@ -665,7 +665,7 @@ int sge_read_cqueue_list_from_disk(lList **list, const char *directory)
                   qinstance_debit_consumable(qinstance, NULL, master_list, 0);
 
                   ccl = lGetList(qinstance, QU_consumable_config_list);
-                  centry_list_fill_request(ccl, master_list, 
+                  centry_list_fill_request(ccl, NULL, master_list, 
                                            true, false, true); 
                   if (ensure_attrib_available(NULL, qinstance, QU_load_thresholds) ||
                       ensure_attrib_available(NULL, qinstance, QU_suspend_thresholds) ||

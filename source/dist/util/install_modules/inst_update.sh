@@ -635,7 +635,7 @@ UpgradeDB()
 {
 
    if [ -f $SGE_ROOT/$SGE_CELL/common/bootstrap ]; then
-      ADMINUSER=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep "admin_user" | awk '{ print $2 }'`
+      GetAdminUser
    else
       echo "bootstrap file could not be found, check your installation!"
       exit 1

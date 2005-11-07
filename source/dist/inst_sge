@@ -379,9 +379,13 @@ if [ "$QMASTER" = "install" -a "$UPDATE" != "true" ]; then
  GiveHints
  CheckRunningDaemon sge_qmaster
 
- if [ $? = 0 -a "$AUTO" = "true" ]; then
+ if [ $? = 0 ]; then
+    $INFOTEXT "sge_qmaster successfully installed!\n"
     $INFOTEXT -log "sge_qmaster successfully installed!\n"
+    MoveLog
+    $CLEAR
  else
+    $INFOTEXT "sge_qmaster not successfully installed!\n" 
     $INFOTEXT -log "sge_qmaster not successfully installed!\n" 
     MoveLog
     exit 1 
@@ -392,6 +396,7 @@ fi
 
 if [ "$EXECD" = "install" -a "$UPDATE" != "true" ]; then
  if [ "$AUTO" = "true" ]; then
+    inst_counter=0
     Stdout2Log
     . $SGE_ROOT/$SGE_CELL/common/settings.sh
 
@@ -421,6 +426,11 @@ if [ "$EXECD" = "install" -a "$UPDATE" != "true" ]; then
             $INFOTEXT -log "Host %s already installed" $h
          fi
 
+         inst_counter=`expr $inst_counter + 1`
+         if [ "$inst_counter" = "25" ]; then
+            sleep 5
+            inst_counter=0
+         fi
       done
 
    else
@@ -444,10 +454,12 @@ if [ "$EXECD" = "install" -a "$UPDATE" != "true" ]; then
       CheckRunningDaemon sge_execd
          
       if [ $? = 0 ]; then
+         $INFOTEXT "Execd on host %s is running!\n" $h
          $INFOTEXT -log "Execd on host %s is running!\n" $h
          MoveLog
          exit 0
       else
+          $INFOTEXT "Execd on host %s is not started!\n" $h
           $INFOTEXT -log "Execd on host %s is not started!\n" $h
           MoveLog
           exit 1
@@ -719,7 +731,7 @@ fi
 
 if [ $SHADOW = "uninstall" ]; then
 
-   ADMINUSER=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep admin_user | awk ' { print $2 }'`
+   GetAdminUser
 
    if [ "$HOST" = "undef" -o "$HOST" = `$SGE_UTILBIN/gethostname -aname`  ]; then
       s_host=`$SGE_UTILBIN/gethostname -aname`
@@ -816,7 +828,7 @@ if [ $MAKE_RC = "true" ]; then
    export SGE_CELL_VAL
 
    if [ -f $SGE_ROOT/$SGE_CELL/common/bootstrap ]; then
-      ADMINUSER=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep admin_user | awk '{ print $2 }'`
+      GetAdminUser
    else
       $INFOTEXT "\nObviously there was no qmaster installation for this cell yet. The file\n\n" \
                 "   %s\n\n" \

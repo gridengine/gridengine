@@ -1,3 +1,10 @@
+MD-2005-11-07-0: Bugfix:    - permission problems with ADMINUSER and adminrun
+                            - cleanups
+                            - text output
+                            - moved function from inst_execd.sh to inst_common.sh
+                 Changed:   inst_sge, install_modules
+                 Review:    HP
+
 AA-2005-11-07-0: Bugfix:    - qmon startup and queue add/modify warning messages
                             - Makefile fix
                  Issue:     1378

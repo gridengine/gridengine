@@ -66,19 +66,6 @@ WelcomeTheUserExecHost()
 
 
 #-------------------------------------------------------------------------
-# GetAdminUser
-#
-GetAdminUser()
-{
-   ADMINUSER=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep "admin_user" | awk '{ print $2 }'`
-   euid=`$SGE_UTILBIN/uidgid -euid`
-
-      if [ `echo "$ADMINUSER" |tr "A-Z" "a-z"` = "none" -a $euid = 0 ]; then
-         ADMINUSER=default
-      fi
-   
-}
-#-------------------------------------------------------------------------
 # CheckQmasterInstallation
 #
 CheckQmasterInstallation()
@@ -125,7 +112,12 @@ CheckQmasterInstallation()
 
    GetAdminUser
 
-   user=`grep admin_user $COMMONDIR/bootstrap | awk '{ print $2 }'`
+   if [ "$SGE_ARCH" = "win32-x86" ]; then
+      user=`grep admin_user $COMMONDIR/bootstrap | awk '{ print $2 }'`
+      user=`hostname | tr "a-z" "A-Z"`"+$user"
+   else
+      user=`grep admin_user $COMMONDIR/bootstrap | awk '{ print $2 }'`
+   fi
 
    if [ "$user" != "" ]; then
       if [ `echo "$user" |tr "A-Z" "a-z"` = "none" -a $euid = 0 ]; then
@@ -479,6 +471,7 @@ AddQueue()
 
 GetLocalExecdSpoolDir()
 {
+
    $INFOTEXT -u "\nLocal execd spool directory configuration"
    $INFOTEXT "\nDuring the qmaster installation you've already entered " \
              "a global\nexecd spool directory. This is used, if no local " \
@@ -503,7 +496,8 @@ GetLocalExecdSpoolDir()
    done
 
    if [ "$ret" = 1 -a "$LOCAL_EXECD_SPOOL" = "undef" ]; then
-      MakeHostSpoolDir
+      #MakeHostSpoolDir
+      :
    fi
 
    if [ $AUTO = "true" ]; then
@@ -695,5 +689,4 @@ CheckWinAdminUser()
       PATH=$tmp_path
       export PATH 
    fi
-
 }

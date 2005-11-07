@@ -251,14 +251,12 @@ global CHECK_SOURCE_DIR            ;# path to source code directory (c4)
 global CHECK_SOURCE_CVS_RELEASE    ;# release name to check out e.g. V52_BRANCH
 set CHECK_SOURCE_CVS_RELEASE "maintrunk"    ;# default is "maintrunk"
 global CHECK_SOURCE_HOSTNAME       ;# name of host with cvs installed on (e.g. fangorn)
-global CHECK_AIMK_COMPILE_OPTIONS     ;# optional: aimk options
 global CHECK_DIST_INSTALL_OPTIONS     ;# optional: mydistinst options
 global CHECK_PACKAGE_DIRECTORY        ;# optional: no compile directory, use distribution (tar or sun packages)
 global CHECK_PACKAGE_TYPE             ;# zip or tar
 set CHECK_PACKAGE_TYPE "tar"
 global CHECK_QMASTER_INSTALL_OPTIONS  ;# optional: qmaster install parameter
 global CHECK_EXECD_INSTALL_OPTIONS    ;# optional: execd install parameter 
-set CHECK_AIMK_COMPILE_OPTIONS ""
 set CHECK_DIST_INSTALL_OPTIONS "-allall"
 set CHECK_PACKAGE_DIRECTORY "none"
 set CHECK_QMASTER_INSTALL_OPTIONS ""
@@ -894,7 +892,7 @@ proc get_setup_change_state {} {
    global CHECK_MAIN_RESULTS_DIR CHECK_PRODUCT_TYPE 
    global CHECK_PRODUCT_ROOT CHECK_DEFAULTS_FILE
    global CHECK_SOURCE_DIR CHECK_SOURCE_HOSTNAME
-   global CHECK_AIMK_COMPILE_OPTIONS CHECK_DIST_INSTALL_OPTIONS
+   global CHECK_DIST_INSTALL_OPTIONS
    global CHECK_PACKAGE_DIRECTORY CHECK_PACKAGE_TYPE
    global CHECK_QMASTER_INSTALL_OPTIONS CHECK_EXECD_INSTALL_OPTIONS
    global CHECK_DNS_DOMAINNAME CHECK_REMOTE_ENVIRONMENT
@@ -2283,7 +2281,6 @@ proc setup2 { } {
    global CHECK_SOURCE_DIR
    global CHECK_SOURCE_CVS_RELEASE
    global CHECK_SOURCE_HOSTNAME
-   global CHECK_AIMK_COMPILE_OPTIONS
    global CHECK_DIST_INSTALL_OPTIONS
    global CHECK_PACKAGE_DIRECTORY
    global CHECK_PACKAGE_TYPE
@@ -6280,7 +6277,7 @@ proc compile_source { { do_only_install 0 } } {
    global CHECK_TESTSUITE_ROOT CHECK_SCRIPT_FILE_DIR CHECK_PRODUCT_TYPE CHECK_PRODUCT_ROOT
    global CHECK_HTML_DIRECTORY
    global CHECK_DEFAULTS_FILE CHECK_SOURCE_CVS_RELEASE do_not_update check_name
-   global CHECK_AIMK_COMPILE_OPTIONS CHECK_DIST_INSTALL_OPTIONS CHECK_JOB_OUTPUT_DIR
+   global CHECK_DIST_INSTALL_OPTIONS CHECK_JOB_OUTPUT_DIR
    global CHECK_CORE_EXECD CHECK_PROTOCOL_DIR CHECK_USER CHECK_HOST check_do_clean_compile
 
    # settings for mail
@@ -6736,12 +6733,11 @@ proc install_binaries { do_only_install arch_list report_nr } {
 proc compile_with_aimk { host_list report_nr task_name { aimk_options "" }  } {
    global CHECK_OUTPUT CHECK_USER
    global CHECK_TESTSUITE_ROOT CHECK_SCRIPT_FILE_DIR CHECK_SOURCE_DIR
-   global CHECK_HTML_DIRECTORY CHECK_PROTOCOL_DIR CHECK_AIMK_COMPILE_OPTIONS
+   global CHECK_HTML_DIRECTORY CHECK_PROTOCOL_DIR
    global do_only_install
    
    set num 0
-   
-   set my_compile_options $CHECK_AIMK_COMPILE_OPTIONS
+   set my_compile_options [get_compile_options_string]
    if { [string length $aimk_options] > 0 } {
       append my_compile_options " $aimk_options"
    }
@@ -7075,7 +7071,7 @@ proc update_source { report_nr } {
 #*******************************************************************************
 proc compile_depend { compile_hosts report_nr } {
    
-   global ts_host_config CHECK_USER CHECK_SOURCE_DIR CHECK_AIMK_COMPILE_OPTIONS
+   global ts_host_config CHECK_USER CHECK_SOURCE_DIR
    global CHECK_OUTPUT
    
    set depend_host_name [lindex $compile_hosts 0] 
@@ -7112,7 +7108,7 @@ proc compile_depend { compile_hosts report_nr } {
 
    set task_nr [report_create_task $report_nr "only_depend" $depend_host_name]
    # build the depencency building program
-   set my_compile_options $CHECK_AIMK_COMPILE_OPTIONS
+   set my_compile_options [get_compile_options_string]
    report_task_add_message $report_nr $task_nr "-> starting aimk -only-depend on host $depend_host_name ..."
    set output [ start_remote_prog $depend_host_name $CHECK_USER "cd" "$CHECK_SOURCE_DIR ; ./aimk -only-depend" prg_exit_state 60 0 "" 1 0 ]
    report_task_add_message $report_nr $task_nr "------------------------------------------"

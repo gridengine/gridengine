@@ -2443,7 +2443,6 @@ proc config_product_feature { only_check name config_array } {
 #*******************************************************************************
 proc config_aimk_compile_options { only_check name config_array } {
    global CHECK_OUTPUT 
-   global CHECK_AIMK_COMPILE_OPTIONS
    global fast_setup
 
    upvar $config_array config
@@ -2468,12 +2467,6 @@ proc config_aimk_compile_options { only_check name config_array } {
          puts $CHECK_OUTPUT "using default value"
       }
    } 
-
-   # set global values
-   set CHECK_AIMK_COMPILE_OPTIONS  $value
-   if { [ string compare "none" $value ] == 0  } {
-      set  CHECK_AIMK_COMPILE_OPTIONS ""
-   }
 
    return $value
 }

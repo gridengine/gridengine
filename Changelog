@@ -1,3 +1,9 @@
+JG-2005-11-07-0: Bugfix:    Connection between sge_qmaster and a Berkeley DB
+                            RPC server could timeout.
+                 Issue:     1866
+                 Bugtraq:   6346696
+                 Review:    RD
+
 CR-2005-11-07-0: Testsuite: add -spool-classic compile option automatically 
                             when spool method "classic" is selected
                  Review:    RH

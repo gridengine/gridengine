@@ -73,6 +73,9 @@ static bool
 spool_berkeleydb_clear_log(lList **answer_list, bdb_info info);
 
 static bool
+spool_berkeleydb_trigger_rpc(lList **answer_list, bdb_info info);
+
+static bool
 spool_berkeleydb_checkpoint(lList **answer_list, bdb_info info);
 
 /****** spool/berkeleydb/spool_berkeleydb_check_version() **********************
@@ -727,7 +730,16 @@ spool_berkeleydb_trigger(lList **answer_list, bdb_info info,
    DENTER(TOP_LAYER, "spool_berkeleydb_trigger");
 
    if (bdb_get_next_clear(info) <= trigger) {
-      ret = spool_berkeleydb_clear_log(answer_list, info);
+      /* 
+       * in the clear interval, we 
+       * - clear unused transaction logs for local spooling
+       * - do a dummy request in case of RPC spooling to avoid timeouts
+       */
+      if (bdb_get_server(info) == NULL) {
+         ret = spool_berkeleydb_clear_log(answer_list, info);
+      } else {
+         ret = spool_berkeleydb_trigger_rpc(answer_list, info);
+      }
       bdb_set_next_clear(info, trigger + BERKELEYDB_CLEAR_INTERVAL);
    }
 
@@ -1513,13 +1525,24 @@ spool_berkeleydb_handle_bdb_error(lList **answer_list, bdb_info info,
                                   int bdb_errno)
 {
    /* we lost the connection to a RPC server */
-   if (bdb_errno == DB_NOSERVER) {
+   if (bdb_errno == DB_NOSERVER || bdb_errno == DB_NOSERVER_ID) {
       const char *server = bdb_get_server(info);
       const char *path   = bdb_get_path(info);
 
       answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                               ANSWER_QUALITY_ERROR, 
                               MSG_BERKELEY_CONNECTION_LOST_SS,
+                              server != NULL ? server : "no server defined",
+                              path != NULL ? path : "no database path defined");
+
+      spool_berkeleydb_error_close(info);
+   } else if (bdb_errno == DB_NOSERVER_HOME) {
+      const char *server = bdb_get_server(info);
+      const char *path   = bdb_get_path(info);
+
+      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                              ANSWER_QUALITY_ERROR, 
+                              MSG_BERKELEY_RPCSERVERLOSTHOME_SS,
                               server != NULL ? server : "no server defined",
                               path != NULL ? path : "no database path defined");
 
@@ -1741,65 +1764,98 @@ static bool
 spool_berkeleydb_clear_log(lList **answer_list, bdb_info info)
 {
    bool ret = true;
+   DB_ENV *env;
 
    DENTER(TOP_LAYER, "spool_berkeleydb_clear_log");
 
-   /* only necessary for local spooling */
-   if (bdb_get_server(info) == NULL) {
-      DB_ENV *env;
+   /* check connection */
+   env = bdb_get_env(info);
+   if (env == NULL) {
+      dstring dbname_dstring = DSTRING_INIT;
+      const char *dbname;
+   
+      dbname = bdb_get_dbname(info, &dbname_dstring);
+      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                              ANSWER_QUALITY_ERROR, 
+                              MSG_BERKELEY_NOCONNECTIONOPEN_S,
+                              dbname);
+      sge_dstring_free(&dbname_dstring);
+      ret = false;
+   }
 
-      /* check connection */
-      env = bdb_get_env(info);
-      if (env == NULL) {
-         dstring dbname_dstring = DSTRING_INIT;
-         const char *dbname;
-      
-         dbname = bdb_get_dbname(info, &dbname_dstring);
+   if (ret) {
+      int dbret;
+      char **list;
+
+      PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
+      dbret = env->log_archive(env, &list, DB_ARCH_ABS);
+      PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
+      if (dbret != 0) {
+         spool_berkeleydb_handle_bdb_error(answer_list, info, dbret);
          answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                                  ANSWER_QUALITY_ERROR, 
-                                 MSG_BERKELEY_NOCONNECTIONOPEN_S,
-                                 dbname);
-         sge_dstring_free(&dbname_dstring);
+                                 MSG_BERKELEY_CANNOTRETRIEVELOGARCHIVE_IS,
+                                 dbret, db_strerror(dbret));
          ret = false;
       }
 
-      if (ret) {
-         int dbret;
-         char **list;
+      if (ret && list != NULL) {
+         char **file;
 
-         PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
-         dbret = env->log_archive(env, &list, DB_ARCH_ABS);
-         PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
-         if (dbret != 0) {
-            spool_berkeleydb_handle_bdb_error(answer_list, info, dbret);
-            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                    ANSWER_QUALITY_ERROR, 
-                                    MSG_BERKELEY_CANNOTRETRIEVELOGARCHIVE_IS,
-                                    dbret, db_strerror(dbret));
-            ret = false;
-         }
+         for (file = list; *file != NULL; file++) {
+            if (remove(*file) != 0) {
+               dstring error_dstring = DSTRING_INIT;
 
-         if (ret && list != NULL) {
-            char **file;
-
-            for (file = list; *file != NULL; file++) {
-               if (remove(*file) != 0) {
-                  dstring error_dstring = DSTRING_INIT;
-
-                  answer_list_add_sprintf(answer_list, STATUS_EDISK, 
-                                          ANSWER_QUALITY_ERROR, 
-                                          MSG_ERRORDELETINGFILE_SS,
-                                          *file,
-                                          sge_strerror(errno, &error_dstring));
-                  sge_dstring_free(&error_dstring);
-                  ret = false;
-                  break;
-               }
+               answer_list_add_sprintf(answer_list, STATUS_EDISK, 
+                                       ANSWER_QUALITY_ERROR, 
+                                       MSG_ERRORDELETINGFILE_SS,
+                                       *file,
+                                       sge_strerror(errno, &error_dstring));
+               sge_dstring_free(&error_dstring);
+               ret = false;
+               break;
             }
-
-            free(list);
          }
+
+         free(list);
       }
+   }
+
+   DEXIT;
+   return ret;
+}
+
+static bool
+spool_berkeleydb_trigger_rpc(lList **answer_list, bdb_info info)
+{
+   bool ret = true;
+   DB_ENV *env;
+
+   DENTER(TOP_LAYER, "spool_berkeleydb_trigger_rpc");
+
+   /* check connection */
+   env = bdb_get_env(info);
+   if (env == NULL) {
+      dstring dbname_dstring = DSTRING_INIT;
+      const char *dbname;
+   
+      dbname = bdb_get_dbname(info, &dbname_dstring);
+      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                              ANSWER_QUALITY_ERROR, 
+                              MSG_BERKELEY_NOCONNECTIONOPEN_S,
+                              dbname);
+      sge_dstring_free(&dbname_dstring);
+      ret = false;
+   }
+
+   if (ret) {
+      lList *local_answer_list = NULL;
+      lListElem *ep;
+
+      ep = spool_berkeleydb_read_object(&local_answer_list, info, BDB_CONFIG_DB,
+                                        "..trigger_bdb_rpc_server..");
+      lFreeElem(&ep);
+      lFreeList(&local_answer_list);
    }
 
    DEXIT;
@@ -1811,7 +1867,7 @@ spool_berkeleydb_checkpoint(lList **answer_list, bdb_info info)
 {
    bool ret = true;
 
-   DENTER(TOP_LAYER, "spool_berkeleydb_clear_log");
+   DENTER(TOP_LAYER, "spool_berkeleydb_checkpoint");
 
    /* only necessary for local spooling */
    if (bdb_get_server(info) == NULL) {

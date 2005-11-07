@@ -79,6 +79,7 @@
 #define MSG_BERKELEY_CANNOTCREATECURSOR_IS _MESSAGE(70112, _("cannot create database cursor: (%d) "SFN))
 #define MSG_BERKELEY_CANTSETENVFLAGS_IS _MESSAGE(70113, _("cannot set environment flags: (%d) "SFN))
 #define MSG_BERKELEY_CANTSETENVCACHE_IS _MESSAGE(70114, _("cannot set environment cache size: (%d) "SFN))
+#define MSG_BERKELEY_RPCSERVERLOSTHOME_SS _MESSAGE(70115, _("rpc server "SFQ" reported lost databasedirectory "SFQ". Freeing all resources to prepare for a reconnect."))
 
 /*
  * sge_bdb_types.c

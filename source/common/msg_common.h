@@ -56,13 +56,14 @@
 #define MSG_ERROR_COULDNOTOPENSTDOUTASFILE                 _MESSAGE(23019, _("Could not open stdout as file"))
 #define MSG_ERROR_UNABLETODUMPJOBLIST                      _MESSAGE(23020, _("Unable to dump job list"))
 
-#define MSG_CONFIG_CONF_ERROROPENINGSPOOLFILE_SS    _MESSAGE(23021, _("error opening the configuration spool file "SFN": "SFN))
+#define MSG_CONFIG_CONF_ERROROPENINGSPOOLFILE_SS      _MESSAGE(23021, _("error opening the configuration spool file "SFN": "SFN))
 #define MSG_CONFIG_CONF_VERSIONNOTFOUNDONREADINGSPOOLFILE    _MESSAGE(23022, _("conf_version not found on reading spool file"))
-#define MSG_CONFIG_CONF_NOVALUEFORCONFIGATTRIB_S       _MESSAGE(23023, _("no value given for configuration attribute "SFQ))
+#define MSG_CONFIG_CONF_NOVALUEFORCONFIGATTRIB_S      _MESSAGE(23023, _("no value given for configuration attribute "SFQ))
 #define MSG_CONFIG_CONF_INCORRECTVALUEFORCONFIGATTRIB_SS       _MESSAGE(23024, _("incorrect value "SFQ" given for configuration attribute "SFQ))
 #define MSG_CONFIG_CONF_GIDRANGELESSTHANNOTALLOWED_I  _MESSAGE(23025, _("minimum group id in gid_range may not be less than %d in cluster configuration"))
 #define MSG_CONFIG_CONF_ONLYSINGLEVALUEFORCONFIGATTRIB_S       _MESSAGE(23026, _("only a single value is allowed for configuration attribute "SFQ))
-#define MSG_CONFIG_CONF_ERRORSTORINGCONFIGVALUE_S       _MESSAGE(23027, _("error storing configuration attribute "SFQ))
+#define MSG_CONFIG_CONF_ERRORSTORINGCONFIGVALUE_S     _MESSAGE(23027, _("error storing configuration attribute "SFQ))
+#define MSG_SGETEXT_WARNCANTRESOLVEHOST_S             _MESSAGE(23028, _("Warning: can't resolve hostname "SFQ))
 
 /*
 ** parse_job_cull.c

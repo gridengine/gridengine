@@ -100,7 +100,7 @@ hgroup_mod_hostlist(lListElem *hgroup, lList **answer_list,
          lList *rem_groups = NULL;
 
          if (ret) {
-            ret &= href_list_resolve_hostnames(list, answer_list);
+            ret &= href_list_resolve_hostnames(list, answer_list, true);
          }
          if (ret) {
             attr_mod_sub_list(answer_list, hgroup, HGRP_host_list, HR_name,
@@ -120,6 +120,9 @@ hgroup_mod_hostlist(lListElem *hgroup, lList **answer_list,
             ret &= href_list_find_effective_diff(answer_list, add_groups,
                                                  rem_groups, master_list,
                                                  add_hosts, rem_hosts);
+         }
+         if (ret) {
+            ret &= href_list_resolve_hostnames(*add_hosts, answer_list, false);
          }
 
 

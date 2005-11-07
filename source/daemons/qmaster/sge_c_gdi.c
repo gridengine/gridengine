@@ -507,7 +507,6 @@ sge_c_gdi_get(gdi_object_t *ao, char *host, sge_gdi_request *request,
          DEXIT;
          return;
       case SGE_CONFIG_LIST: {
-
       /* TODO EB: move this into the master configuration, 
                                     and pack the list right away */
 #if 0 /* EB: TODO PACKING */
@@ -920,9 +919,10 @@ sge_c_gdi_add(gdi_object_t *ao, char *host, sge_gdi_request *request,
 /*
  * MT-NOTE: sge_c_gdi-del() is MT safe
  */
-static void sge_c_gdi_del(char *host, sge_gdi_request *request, sge_gdi_request *answer, 
-                          int sub_command, uid_t uid, gid_t gid, char *user, char *group, 
-                          monitoring_t *monitor)
+static void 
+sge_c_gdi_del(char *host, sge_gdi_request *request, sge_gdi_request *answer, 
+              int sub_command, uid_t uid, gid_t gid, char *user, char *group, 
+              monitoring_t *monitor)
 {
    lListElem *ep;
    dstring ds;

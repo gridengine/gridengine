@@ -964,9 +964,6 @@ void update_reschedule_unknown_timout_values(const char *config_name)
    } else {
       if ( strcmp(SGE_TEMPLATE_NAME, config_name) != 0 ) {
          host = host_list_locate(Master_Exechost_List, config_name); 
-         if (!host) {
-            DPRINTF(("!!!!!!!update_reschedule_unknown_timout_values: got null for host\n"));
-         }
          update_reschedule_unknown_timeout(host);
       }       
    }
@@ -994,41 +991,35 @@ void update_reschedule_unknown_timout_values(const char *config_name)
 ******************************************************************************/
 void update_reschedule_unknown_timeout(lListElem *host) 
 {
-   lListElem *conf_entry = NULL; /* CF_Type */
-   const char *hostname = NULL;
-   u_long32 timeout = 0;
    
    DENTER(TOP_LAYER, "update_reschedule_unknown_timeout");
    
-   if (NULL == host)
-   {
-      DEXIT;
-      return;
-   }
+   if (host != NULL) {
+      lListElem *conf_entry = NULL; /* CF_Type */
+      const char *hostname = lGetHost(host, EH_name);
+      u_long32 timeout = lGetUlong(host, EH_reschedule_unknown);
    
-   hostname = lGetHost(host, EH_name);
-   timeout = lGetUlong(host, EH_reschedule_unknown);
-   
-   if ((conf_entry = sge_get_configuration_entry_by_name(hostname, "reschedule_unknown")) != NULL)
-   {
-      const char *value = lGetString(conf_entry, CF_value);
-      
-      if (parse_ulong_val(NULL, &timeout, TYPE_TIM, value, NULL, 0) == 0)
-      {
-         ERROR((SGE_EVENT, MSG_OBJ_RESCHEDULEUNKN_SS, hostname, value));
+      conf_entry = sge_get_configuration_entry_by_name(hostname, 
+                                                       "reschedule_unknown");
+      if (conf_entry != NULL) {
+         const char *value = lGetString(conf_entry, CF_value);
+         
+         if (parse_ulong_val(NULL, &timeout, TYPE_TIM, value, NULL, 0) == 0) {
+            ERROR((SGE_EVENT, MSG_OBJ_RESCHEDULEUNKN_SS, hostname, value));
+            timeout = 0;
+         }
+         
+         lFreeElem(&conf_entry);
+      } else {
          timeout = 0;
       }
       
-      lFreeElem(&conf_entry);
+      DPRINTF(("%s: reschedule_unknown timeout for host "SFN" is "sge_u32"\n", 
+               SGE_FUNC, hostname, timeout));  
+      lSetUlong(host, EH_reschedule_unknown, timeout); 
+   } else {
+      DPRINTF(("%s: host == NULL\n", SGE_FUNC));
    }
-   else
-   {
-      timeout = 0;
-   }
-   
-   DPRINTF(("%s: reschedule_unknown timeout for host "SFN" is "sge_u32"\n", SGE_FUNC, hostname, timeout));  
-      
-   lSetUlong(host, EH_reschedule_unknown, timeout); 
    
    DEXIT;
    return; 

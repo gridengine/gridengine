@@ -920,6 +920,7 @@ cqueue_sick(lListElem *cqueue, lList **answer_list,
                              MSG_CQUEUE_DEFOVERWRITTEN_SSSSS,
                              cqueue_attribute_array[index].name,
                              name, cqueue_name, name, cqueue_name);
+                     sge_dstring_append(ds, "\n");
                   }
 
                   lFreeList(&add_hosts);
@@ -940,6 +941,7 @@ cqueue_sick(lListElem *cqueue, lList **answer_list,
                              MSG_CQUEUE_UNUSEDATTRSETTING_SS,
                              cqueue_attribute_array[index].name,
                              name, cqueue_name);
+                  sge_dstring_append(ds, "\n");
                } else {
                   DTRACE;
                }

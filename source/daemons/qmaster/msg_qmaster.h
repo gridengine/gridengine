@@ -548,6 +548,7 @@
 ** configuration_qmaster.c
 */
 #define MSG_SGETEXT_CANT_DEL_CONFIG_S           _MESSAGE(33541, _("can't delete configuration "SFQ" from list"))
+#define MSG_SGETEXT_CANT_DEL_CONFIG2_S          _MESSAGE(33542, _("can't delete configuration "SFQ" from list: configuration does not exist"))
 #define MSG_CONF_CANTMERGECONFIGURATIONFORHOST_S _MESSAGE(33546, _("can't merge configuration for host "SFQ))
 #define MSG_CONF_NAMEISNULLINCONFIGURATIONLISTOFX_S _MESSAGE(33548, _("name == NULL in configuration list of "SFQ))
 #define MSG_CONF_VALUEISNULLFORATTRXINCONFIGURATIONLISTOFY_SS _MESSAGE(33549, _("value == NULL for attribute "SFQ" in configuration list of "SFQ))

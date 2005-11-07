@@ -1,3 +1,8 @@
+RD-2005-11-07-1: Bugfix:    qrsh -V doesn't always work.
+                 Issue:     1845 
+                 Bugtraq:   6346704
+                 Review:    AH
+
 CR-2005-11-07-2: Cleanup:   fixed broken build
 
 JG-2005-11-07-0: Bugfix:    Connection between sge_qmaster and a Berkeley DB

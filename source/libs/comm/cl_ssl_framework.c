@@ -1306,7 +1306,7 @@ static int cl_com_ssl_transform_ssl_error(unsigned long ssl_error, char* buffer,
    error_text = NULL;
 
    if (do_ignore == CL_TRUE) {
-      CL_LOG_STR_STR_INT(CL_LOG_WARNING, "will not report ssl error text to application:", buffer, "ssl id", ssl_error);
+      CL_LOG_STR_STR_INT(CL_LOG_WARNING, "will not report ssl error text to application:", buffer, "ssl id", (int) ssl_error);
       return CL_RETVAL_DO_IGNORE;
    }
 

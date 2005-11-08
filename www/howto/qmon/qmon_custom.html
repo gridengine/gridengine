@@ -63,9 +63,14 @@ Job Control fields</a></p>
 
   <li>
     <p style="margin-bottom: 0cm;"><a href="#Setting%20Administrator%20Defaults%7Coutline">Setting
-administrator defaults</a></p>
+administrator defaults<br>
+
+    </a></p>
 
   </li>
+
+  <li><a href="#Troubleshooting_qmon">Troubleshooting
+Hints</a></li>
 
 </ol>
 
@@ -221,7 +226,9 @@ wrapper script)</p>
 
 <p style="margin-bottom: 0cm;">In this way, the SGE admin
 user can
-re-enable the administrative functions in <b>qmon</b>.<span style="font-family: &quot;Sunsans Demi&quot;;"><span style="font-weight: bold;"></span></span></p>
+re-enable the administrative functions in <b>qmon</b>.</p>
+
+<p style="margin-bottom: 0cm;"><span style="font-family: &quot;Sunsans Demi&quot;;"><span style="font-weight: bold;"></span></span></p>
 
 <h2><a name="Troubleshooting_qmon"></a>Troubleshooting
 qmon</h2>
@@ -229,6 +236,7 @@ qmon</h2>
 <ol>
 
   <li>Problems to start qmon<br>
+    <br>
 
     <ol>
 
@@ -264,8 +272,12 @@ displays)<br>
 
 This bug has been fixed for 6.0u5 and 5.3p7. (See <a href="http://gridengine.sunsource.net/issues/show_bug.cgi?id=1541">Issue
 1541</a> )</li>
+
       <li>qmon crashes when used with (open)ssh<br>
-In newer openssh versions it is necessary to use the ssh -Y option for trusted X11 forwarding (see <a href="http://www.openssh.com/faq.html#3.13">openssh &amp; X11</a> )<br>
+
+In newer openssh versions it is necessary to use the ssh -Y option for
+trusted X11 forwarding (see <a href="http://www.openssh.com/faq.html#3.13">openssh
+&amp; X11</a> )<br>
 
         <br>
 
@@ -275,9 +287,15 @@ In newer openssh versions it is necessary to use the ssh -Y option for trusted X
 
   </li>
 
-  <li>Problems with qmon icons appearing in a different application<br>
+  <li>Problems with qmon icons appearing in a different
+application<br>
+    <br>
+
 See sunsolve patches: 114620, 114603, 114602<br>
+    <br>
+
   </li>
+
   <li>Problems to build qmon<br>
 
     <ol>
@@ -287,7 +305,6 @@ See sunsolve patches: 114620, 114603, 114602<br>
 search for libXmu* and check with nm if the missing symbol is
 contained, add the library to the aimk section of your architecture and
 rebuild</li>
-
 
       <li>The Linux courtesy binaries are build against
 libXm.so.2 (openmotif)<br>
@@ -307,6 +324,7 @@ coures, a symbolic link from libXm.so.3 to libXm.so.2 is not sufficient.<br>
   </li>
 
   <li>Problems with locale<br>
+    <br>
 
     <ol>
 
@@ -338,6 +356,7 @@ the localized version<br>
 SGE(EE) 5.3 (Solaris, Linux only) contains localization bundles for
 French, Simplified Chinese, Japanese and Taiwanese. Install the l10n
 packages then the warning disappears.<br>
+        <br>
 
       </li>
 
@@ -346,6 +365,7 @@ packages then the warning disappears.<br>
   </li>
 
   <li>Problems with fonts<br>
+    <br>
 
 The fonts that are used by qmon can be changed with the $HOME/Qmon
 customization file.<br>
@@ -382,28 +402,33 @@ tcp/foo:7100 for a host named foo and the default port 7100<br>
 
 you can check with:&nbsp; xset q &nbsp; &nbsp;and
 &nbsp; &nbsp;xlsfonts<br>
-        <br>
 
+        <br>
 
 Additional information can be found in the man pages X11, xfs, xlsfonts
 and xset.&nbsp;</li>
 
     </ul>
+
     <br>
+
     <br>
 
 To see which fonts are used or generate a warning, set the XMTDEBUGFONT
 environment variable. In the following example&nbsp;<br>
+
     <pre>Warning: Cannot convert string "-adobe-helvetica-medium-r-*--20-*-*-*-p-*-*-*" to type FontStruct</pre>
-  </li>
-  <li>gives the hint that this font cannot be found. You can replace
+
+    <br>
+ gives the hint that this font cannot be found. You can
+replace
 this font with a font that is available and has a similar look and size
 (xlsfonts, xfontsel) and put it into $HOME/Qmon.
- 
+    <br>
+
     <pre>% setenv XMTDEBUGFONT<br>% qmon<br>FontListCvt:<br>-&gt;-adobe-helvetica-medium-r-*--14-*-*-*-p-*-*-*=R,-adobe-helvetica-bold-r-*--14-*-*-*-p-*-*-*=B,-adobe-helvetica-medium-r-*--20-*-*-*-p-*-*-*=BIG,-adobe-helvetica-medium-r-*--12-*-*-*-p-*-*-*=SMALL,-adobe-helvetica-medium-r-*--24-*-*-*-p-*-*-*=HUGE,-adobe-courier-medium-r-*--14-*-*-*-m-*-*-*=LIST,-adobe-courier-bold-r-*--14-*-*-*-m-*-*-*=LISTBOLD,-adobe-courier-medium-r-*--12-*-*-*-m-*-*-*=LISTSMALL,-adobe-helvetica-medium-r-*--10-*-*-*-p-*-*-*=QUEUEICON&lt;-<br>------------------------<br>baselist[0]: '-adobe-helvetica-medium-r-*--14-*-*-*-p-*-*-*=R'<br>font_type: 'XmFONT_IS_FONT'<br>bs: '-adobe-helvetica-medium-r-*--14-*-*-*-p-*-*-* (R)'<br>baselist[0]: '-adobe-helvetica-bold-r-*--14-*-*-*-p-*-*-*=B'<br>font_type: 'XmFONT_IS_FONT'<br>bs: '-adobe-helvetica-bold-r-*--14-*-*-*-p-*-*-* (B)'<br>baselist[0]: '-adobe-helvetica-medium-r-*--20-*-*-*-p-*-*-*=BIG'<br>font_type: 'XmFONT_IS_FONT'<br>bs: '-adobe-helvetica-medium-r-*--20-*-*-*-p-*-*-* (BIG)'<br>Warning: Cannot convert string "-adobe-helvetica-medium-r-*--20-*-*-*-p-*-*-*" to type FontStruct<br>baselist[0]: '-adobe-helvetica-medium-r-*--12-*-*-*-p-*-*-*=SMALL'<br>font_type: 'XmFONT_IS_FONT'<br>bs: '-adobe-helvetica-medium-r-*--12-*-*-*-p-*-*-* (SMALL)'<br>baselist[0]: '-adobe-helvetica-medium-r-*--24-*-*-*-p-*-*-*=HUGE'<br>font_type: 'XmFONT_IS_FONT'<br>bs: '-adobe-helvetica-medium-r-*--24-*-*-*-p-*-*-* (HUGE)'<br>baselist[0]: '-adobe-courier-medium-r-*--14-*-*-*-m-*-*-*=LIST'<br>font_type: 'XmFONT_IS_FONT'<br>bs: '-adobe-courier-medium-r-*--14-*-*-*-m-*-*-* (LIST)'<br>baselist[0]: '-adobe-courier-bold-r-*--14-*-*-*-m-*-*-*=LISTBOLD'<br>font_type: 'XmFONT_IS_FONT'<br>bs: '-adobe-courier-bold-r-*--14-*-*-*-m-*-*-* (LISTBOLD)'<br>baselist[0]: '-adobe-courier-medium-r-*--12-*-*-*-m-*-*-*=LISTSMALL'<br>font_type: 'XmFONT_IS_FONT'<br>bs: '-adobe-courier-medium-r-*--12-*-*-*-m-*-*-* (LISTSMALL)'<br>baselist[0]: '-adobe-helvetica-medium-r-*--10-*-*-*-p-*-*-*=QUEUEICON'<br>font_type: 'XmFONT_IS_FONT'<br>bs: '-adobe-helvetica-medium-r-*--10-*-*-*-p-*-*-* (QUEUEICON)'<br>XmFONT_IS_FONT: R<br>XmFONT_IS_FONT: B<br>XmFONT_IS_FONT: BIG<br>XmFONT_IS_FONT: SMALL<br>XmFONT_IS_FONT: HUGE<br>XmFONT_IS_FONT: LIST<br>XmFONT_IS_FONT: LISTBOLD<br>XmFONT_IS_FONT: LISTSMALL<br>XmFONT_IS_FONT: QUEUEICON<br>XmFONT_IS_FONT: no tag<br><br></pre>
 
   </li>
-
 </ol>
 
 </body>

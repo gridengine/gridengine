@@ -110,13 +110,7 @@ proc reporting_setup  {} {
    global reporting_old_config reporting_acct_file
 
    # Delete any jobs that might be in the system
-   set binary "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qdel"
-   set output [start_remote_prog $CHECK_HOST $CHECK_USER $binary "*" result]
-
-   if {$result != 0} {
-      set_error -1 "unable to delete jobs: $output"
-      return
-   }
+   delete_all_jobs
 
    # Archive old config
    get_config reporting_old_config
@@ -194,13 +188,7 @@ proc reporting_periodic_accounting_test {} {
    }
 
    # Delete any jobs that might be in the system
-   set binary "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qdel"
-   set output [start_remote_prog $CHECK_HOST $CHECK_USER $binary "*" result]
-
-   if {$result != 0} {
-      set_error -1 "unable to delete jobs: $output"
-      return
-   }
+   delete_all_jobs
 
    if {$failed != 1} {
       set_error 0 "ok"
@@ -313,13 +301,7 @@ proc reporting_reporting_accounting_test {} {
    }
 
    # Delete any jobs that might be in the system
-   set binary "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qdel"
-   set output [start_remote_prog $CHECK_HOST $CHECK_USER $binary "*" result]
-
-   if {$result != 0} {
-      set_error -1 "unable to delete jobs: $output"
-      return
-   }
+   delete_all_jobs
 
    if {$failed != 1} {
       set_error 0 "ok"

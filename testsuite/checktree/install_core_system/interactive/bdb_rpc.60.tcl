@@ -78,7 +78,6 @@ proc install_bdb_rpc {} {
    }
 
    foreach bdb_host $ts_config(bdb_server) {
-
       puts $CHECK_OUTPUT "installing BDB RPC Server on host $bdb_host ($ts_config(product_type) system) ..."
       if {[lsearch $ts_config(bdb_server) $bdb_host] == -1 } {
          set_error "-1" "inst_sge -db - host $bdb_host is not in BDB Server list"
@@ -261,14 +260,19 @@ proc install_bdb_rpc {} {
             } 
 
             -i $sp_id $RPC_DIRECTORY {
-               puts $CHECK_OUTPUT "\n -->testsuite: sending $ts_config(bdb_dir)"
-               set input "$ts_config(bdb_dir)\n"
+               if {[string compare $ts_config(bdb_dir) "none"] != 0 } {
+                  set input "$ts_config(bdb_dir)"
+               } else {
+                  set input [get_local_spool_dir $CHECK_CORE_MASTER spooldb 0 ]
+               }
+               puts $CHECK_OUTPUT "\n -->testsuite: sending $input"
 
                if {$do_log_output == 1} {
                   puts "-->testsuite: press RETURN"
                   set anykey [wait_for_enter 1]
                }
-               send -i $sp_id $input
+
+               send -i $sp_id "$input\n"
                continue
             }
 

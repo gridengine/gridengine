@@ -32,6 +32,9 @@
 #___INFO__MARK_END__
 
 global check_functions  check_highest_level
+global qdel_help_lines
+
+set qdel_help_lines 11
 
 lappend check_functions "qdel_delete_by_job_name"                ;# Add another case 1
 lappend check_functions "qdel_delete_by_job_wildcard"            ;# Add another case 2

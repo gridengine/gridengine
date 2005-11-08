@@ -1,3 +1,9 @@
+JG-2005-11-08-0: Testsuite: - fixed installation with bdb rpc server and default
+                              location for database directory.
+                            - some fixes and cleanup for qdel test
+                            - fixed deletion of jobs in reporting test
+                 Review:    CR
+
 CR-2005-11-08-0: Testsuite: - added test for issue 1802
                             - increased cvs update timeout from 
                               300 to 600 seconds

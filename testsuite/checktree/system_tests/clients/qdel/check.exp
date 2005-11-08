@@ -68,7 +68,7 @@ set check_cleanup_function "qdel_cleanup"
 
 # define test's procedure order
 set check_functions ""
-#lappend check_functions "qdel_help"                   ;# print this help
+lappend check_functions "qdel_help"                   ;# print this help
 lappend check_functions "qdel_submit_delete_when_transfered"
 lappend check_functions "qdel_job_task_list"          ;# delete all jobs given in list
 lappend check_functions "qdel_delete_job_0"           ;# try to delete job id 0
@@ -78,11 +78,11 @@ lappend check_functions "qdel_all"                   ;# delete all jobs of curre
 lappend check_functions "qdel_uall"                  ;# delete all jobs of all users
 lappend check_functions "qdel_user_list"             ;# delete all jobs of users specified in list
 lappend check_functions "qdel_force"                 ;# force action
-lappend check_functions "qdel_iz_125_case_2"         ;# impliment Case 2) of iz 125 
-lappend check_functions "qdel_iz_125_case_3"         ;# impliment Case 3) of iz 125 
-lappend check_functions "qdel_iz_125_case_4"         ;# impliment Case 4) of iz 125 
-lappend check_functions "qdel_iz_125_case_5"         ;# impliment Case 5) of iz 125 
-lappend check_functions "qdel_delete_task_range"     ;# impliment task range deletion
+lappend check_functions "qdel_iz_125_case_2"         ;# implement Case 2) of iz 125 
+lappend check_functions "qdel_iz_125_case_3"         ;# implement Case 3) of iz 125 
+lappend check_functions "qdel_iz_125_case_4"         ;# implement Case 4) of iz 125 
+lappend check_functions "qdel_iz_125_case_5"         ;# implement Case 5) of iz 125 
+lappend check_functions "qdel_delete_task_range"     ;# implement task range deletion
 
 # check's globals
 global hold_state
@@ -361,7 +361,7 @@ proc are_jobs_deleted { job_list } {
 #  SEE ALSO
 #     ???/???
 #*******************************
-proc submit_testjobs { { user "" } { additional_job_args "" } {testjob_count "4" } {array_job ""} } {
+proc submit_testjobs { { user "" } { additional_job_args "" } {testjob_count "4" } {array_job ""} {check_job_state 1}} {
    global ts_config
   global CHECK_PRODUCT_ROOT queue hold_state pending_state CHECK_TESTSUITE_ROOT 
   global CHECK_OUTPUT CHECK_ARCH CHECK_HOST ts_config
@@ -426,22 +426,25 @@ proc submit_testjobs { { user "" } { additional_job_args "" } {testjob_count "4"
         }
      }
   }
-  if { $pending_state == 0 } {
-     # wait for all job to run
-     foreach elem $joblist {
-        wait_for_jobstart  $elem "qdel_check" 400  
-     }
 
-     if { ($hold_state == 1)  } {
-        # set hold flag for all jobs 
+  if {$check_job_state} {
+     if { $pending_state == 0 } {
+        # wait for all job to run
         foreach elem $joblist {
-           hold_job $elem 
-        } 
-     }
-  } else {
-     # wait for all job to get in pending state
-     foreach elem $joblist {
-        wait_for_jobpending $elem "qdel_check" 400  
+           wait_for_jobstart  $elem "qdel_check" 400  
+        }
+
+        if { ($hold_state == 1)  } {
+           # set hold flag for all jobs 
+           foreach elem $joblist {
+              hold_job $elem 
+           } 
+        }
+     } else {
+        # wait for all job to get in pending state
+        foreach elem $joblist {
+           wait_for_jobpending $elem "qdel_check" 400  
+        }
      }
   }
 
@@ -507,7 +510,6 @@ proc submit_testjobs { { user "" } { additional_job_args "" } {testjob_count "4"
 #     ???/???
 #*******************************
 proc qdel_iz_125_case_2 { { user "" } { additional_job_args "" }} {
-
    global CHECK_PRODUCT_ROOT queue hold_state pending_state CHECK_TESTSUITE_ROOT
    global CHECK_OUTPUT CHECK_ARCH CHECK_HOST ts_config
    global queue CHECK_HOST CHECK_USER
@@ -539,11 +541,10 @@ proc qdel_iz_125_case_2 { { user "" } { additional_job_args "" }} {
    (  [string first [concat "$string2 " \"[lindex $job_list 0]\" "$string3" ] $result0] >= 0 ) ||
    (  [string first [concat "$string4 " [lindex $job_list 0] "$string5" ] $result0] >= 0 ) } {
 
-  	set_error 0 "ok"
+  	   set_error 0 "ok"
    } else {
-	set_error -1 "First delete of case 2), IZ 125 failed"
-        puts $CHECK_OUTPUT "result is $result0" 
-
+	   set_error -1 "First delete of case 2), IZ 125 failed"
+      puts $CHECK_OUTPUT "result is $result0" 
    }
 
    # Delete it 2x
@@ -554,11 +555,17 @@ proc qdel_iz_125_case_2 { { user "" } { additional_job_args "" }} {
 
    # Check that we get a response
 
+   # qdel always has to return some text.
+   # if result00 is empty, we hit IZ 1860
+   if {[string trim $result00] == ""} {
+      add_proc_error "qdel_iz_125_case_2" "-1" "qdel didn't return any text - IZ 1860"
+   }
+
    if { ( [string first [concat "$string1" \"[lindex $job_list 0]]\" $result00] >= 0 ) ||
    ( [string first [concat "$string2" \"[lindex $job_list 0]\" "$string3" ] $result00] >= 0 ) ||
    ( [string first [concat "$string4" [lindex $job_list 0] "$string5" ] $result00] >= 0 ) } {
 
-  	set_error 0 "ok"
+  	   set_error 0 "ok"
    } else {
         set_error -1  "Second delete of case 2), IZ 125 failed"
         puts $CHECK_OUTPUT "My string is [concat "$string2 " \"[lindex $job_list 0]\" "$string3" ]"
@@ -630,8 +637,9 @@ proc qdel_iz_125_case_2 { { user "" } { additional_job_args "" }} {
         set_error -1 "Fifth delete of case 2), IZ 125 failed"
         puts $CHECK_OUTPUT "result is $result011"
    } 
-   delete_all_jobs
 
+   delete_all_jobs
+   set_error 0 "ok"
 }
 
 #*******************************
@@ -854,9 +862,8 @@ proc qdel_iz_125_case_5 { { user "" } { additional_job_args "" }} {
 
    set job_id_list_1000 ""
    for {set count 1} {$count <= 1} {incr count +1} {
-      set job_id_4 [submit_testjobs "" "" 100]
+      set job_id_4 [submit_testjobs "" "" 100 "" 0]
       set job_id_list_1000 [concat $job_id_list_1000 $job_id_4] 
-
    }
    # Sleep a little
 
@@ -929,7 +936,6 @@ proc qdel_iz_125_case_5 { { user "" } { additional_job_args "" }} {
 
    # Clean up the queues
    delete_all_jobs
-
 }
 
 #                                                             max. column:     |

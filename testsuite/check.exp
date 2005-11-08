@@ -6928,7 +6928,6 @@ proc update_source { report_nr } {
          
          set open_spawn [ open_remote_spawn_process $CHECK_SOURCE_HOSTNAME $CHECK_USER "cd" "$CHECK_SOURCE_DIR/.. ; cvs -q -z 9 update -dP"]
          set spawn_list [lindex $open_spawn 1]
-         set timeout 300
          
          set frame_work_script_update 0
          set testsuite_update 0
@@ -6937,7 +6936,8 @@ proc update_source { report_nr } {
          set cvs_output [ open "$CHECK_SOURCE_DIR/cvs_update.log.[timestamp]" "w" ]
          
          set use_output 0
-         
+         set timeout 600
+
          expect {
             -i $spawn_list full_buffer {
                report_task_add_message $report_nr $task_nr "full_buffer error on cvs update"

@@ -108,8 +108,8 @@ sge_mtutil.o:	$(LCKLIB_DIR)/sge_mtutil.c
 ###############################################################################
 # rules to build object codes
 ###############################################################################
-test_sge_lock_simple:	test_sge_lock_main.o test_sge_lock_simple.o $(LCKLIB) $(LCKLIB_TEST_LIB_DEPENDS)
-		$(LD_WRAPPER) $(CC) $(CFLAGS) -o test_sge_lock_simple $(LFLAGS) test_sge_lock_main.o test_sge_lock_simple.o $(LCKLIB_TEST_ADD_LIBS) $(LIBS)
+test_sge_lock_simple:	test_sge_lock_main.o test_sge_lock_simple.o $(LCKLIB) $(LCKLIB_TEST_LIB_DEPENDS) $(WINGRIDLIB_DEP)
+		$(LD_WRAPPER) $(CC) $(CFLAGS) -o test_sge_lock_simple $(LFLAGS) test_sge_lock_main.o test_sge_lock_simple.o $(LCKLIB_TEST_ADD_LIBS) $(LIBS) $(WINGRIDLIB)
 
 test_sge_lock_main.o:	$(LCKLIB_DIR)/test_sge_lock_main.c
 		$(CC) $(CFLAGS) -c $(LCKLIB_DIR)/test_sge_lock_main.c
@@ -117,8 +117,8 @@ test_sge_lock_main.o:	$(LCKLIB_DIR)/test_sge_lock_main.c
 test_sge_lock_simple.o:	$(LCKLIB_DIR)/test_sge_lock_simple.c
 		$(CC) $(CFLAGS) -c $(LCKLIB_DIR)/test_sge_lock_simple.c
 
-test_sge_lock_multiple:	test_sge_lock_main.o test_sge_lock_multiple.o $(UTILIB) $(LCKLIB) $(RMONLIB)
-		$(LD_WRAPPER) $(CC) $(CFLAGS) -o test_sge_lock_multiple $(LFLAGS) test_sge_lock_main.o test_sge_lock_multiple.o $(LCKLIB) $(RMONLIB) $(UTILIB)  $(LIBS)
+test_sge_lock_multiple:	test_sge_lock_main.o test_sge_lock_multiple.o $(UTILIB) $(LCKLIB) $(RMONLIB) $(WINGRIDLIB_DEP)
+		$(LD_WRAPPER) $(CC) $(CFLAGS) -o test_sge_lock_multiple $(LFLAGS) test_sge_lock_main.o test_sge_lock_multiple.o $(LCKLIB) $(RMONLIB) $(UTILIB) $(WINGRIDLIB) $(LIBS)
 
 test_sge_lock_multiple.o:	$(LCKLIB_DIR)/test_sge_lock_multiple.c
 		$(CC) $(CFLAGS) -c $(LCKLIB_DIR)/test_sge_lock_multiple.c

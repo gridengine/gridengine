@@ -1,3 +1,6 @@
+RD-2005-11-08-0: Bugfix:    fixed broken build on sol-*, lx24-*, darwin & 
+                            win32-x86
+
 MD-2005-11-07-0: Bugfix:    - permission problems with ADMINUSER and adminrun
                             - cleanups
                             - text output

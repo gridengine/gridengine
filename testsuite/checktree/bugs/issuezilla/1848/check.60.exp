@@ -190,15 +190,13 @@ proc issue_1848_run {} {
             add_proc_error qmaster_monitoring_monitor -1 "unexpected eof"
          }
          -i $sp_id "?*\n" {
-
-               foreach line [ string trim [split $expect_out(0,string) "\n"]] {
-                  set line [string trim $line]
-                  if {[string length $line] > 0} {
-                     puts $CHECK_OUTPUT "processing line: $line"
-                     incr count
-                  } ;# valid line
-               } ;# foreach line  
-          
+            foreach line [ string trim [split $expect_out(0,string) "\n"]] {
+               set line [string trim $line]
+               if {[string length $line] > 0} {
+                  puts $CHECK_OUTPUT "processing line: $line"
+                  incr count
+               } ;# valid line
+            } ;# foreach line  
          } ;# data
       } ;# switch
 
@@ -206,14 +204,13 @@ proc issue_1848_run {} {
    } ;# while
 
    # stop the tail -f
-   close_spawn_process $id
+   close_logfile_wait
 
    puts $CHECK_OUTPUT "done waiting messages: $count"
 
-   if {count != 0} {
+   if {$count != 0} {
       set_error -1 "errors were generated"
-   }
-   else {
+   } else {
       set_error 0 "ok"
    }
 }

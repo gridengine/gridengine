@@ -140,7 +140,7 @@ proc sge_macro { macro_name {raise_error 1} } {
       "DISTINST_RPC_INSTALL_AS_ADMIN" { set value "Do you want to install Grid Engine as admin user >%s< (y/n) \[y\] >> " }     
       "DISTINST_RPC_SGE_ROOT" { set value "If this directory is not correct (e.g. it may contain an automounter\nprefix) enter the correct path to this directory or hit <RETURN>\nto use default \[%s\] >> " }     
       "DISTINST_RPC_HIT_RETURN_TO_CONTINUE" { set value "Hit <RETURN> to continue >> " }     
-      "DISTINST_RPC_SGE_CELL" { set value "Enter cell name \[default\] >> " }     
+      "DISTINST_RPC_SGE_CELL" { set value "Enter cell name \[%s\] >> " }     
       "DISTINST_RPC_SERVER" { set value "\nEnter database server name or \nhit <RETURN> to use default \[%s\] >> " }     
       "DISTINST_RPC_DIRECTORY" { set value "\nEnter the database directory\nor hit <RETURN> to use default \[%s\] >> " }     
       "DISTINST_RPC_DIRECTORY_EXISTS" { set value "The spooling directory already exists! Do you want to delete it? (y/n) \[n\] >> " }     

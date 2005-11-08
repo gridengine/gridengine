@@ -111,7 +111,7 @@ proc install_bdb_rpc {} {
       set RPC_WELCOME                  [translate $bdb_host 0 1 0 [sge_macro DISTINST_RPC_WELCOME] ]
       set RPC_INSTALL_AS_ADMIN         [translate $bdb_host 0 1 0 [sge_macro DISTINST_RPC_INSTALL_AS_ADMIN] "*" ]
       set RPC_SGE_ROOT                 [translate $bdb_host 0 1 0 [sge_macro DISTINST_RPC_SGE_ROOT] "*" ]
-      set RPC_SGE_CELL                 [translate $bdb_host 0 1 0 [sge_macro DISTINST_RPC_SGE_CELL] ]
+      set RPC_SGE_CELL                 [translate $bdb_host 0 1 0 [sge_macro DISTINST_RPC_SGE_CELL] "*"]
       set RPC_SERVER                   [translate $bdb_host 0 1 0 [sge_macro DISTINST_RPC_SERVER] "*" ]
       set RPC_DIRECTORY                [translate $bdb_host 0 1 0 [sge_macro DISTINST_RPC_DIRECTORY] "*" ]
       set RPC_DIRECTORY_EXISTS         [translate $bdb_host 0 1 0 [sge_macro DISTINST_RPC_DIRECTORY_EXISTS] ]

@@ -1,3 +1,10 @@
+JG-2005-11-08-2: Testsuite: Fixed installation of Berkeley DB RPC server in
+                            non default cell.
+                            Fixed bugs/issuezilla/1803 and bugs/issuezilla/1848.
+
+JG-2005-11-08-1: Testsuite: Enhancements and cleanup in handle_vi_edit.
+                 Review:    CR
+
 CR-2005-11-08-1: Testsuite: - enhanced shadowd migrate test. Test will now
                               parse the qmaster messages file for qmaster
                               exit value 100 state message

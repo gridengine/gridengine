@@ -173,8 +173,7 @@ proc issue_1803_test {} {
 
       set host $ts_config(master_host)
 
-      get_config config $host
-      set spool_dir $config(execd_spool_dir)
+      set spool_dir [get_spool_dir $host execd]
 
       set qsub_arg_list {}
       lappend qsub_arg_list "-l h=$host -o /dev/null -e /dev/null -S /bin/csh"

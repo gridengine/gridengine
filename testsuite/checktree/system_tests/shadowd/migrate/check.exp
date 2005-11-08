@@ -143,13 +143,14 @@ proc shadowd_migrate_cleanup  {} {
 
 proc shadowd_migrate_test {} {
    global CHECK_OUTPUT ts_config  CHECK_ACT_LEVEL CHECK_SCRIPT_FILE_DIR check_description 
-   global CHECK_USER
+   global CHECK_USER file_procedure_logfile_wait_sp_id
 
    set nr_shadowds [llength $ts_config(shadowd_hosts)]
 
    if { $nr_shadowds >= 2 } {
       set heartbeat_file [get_qmaster_spool_dir]/heartbeat
       set qmaster_lock_file [get_qmaster_spool_dir]/lock
+      set qmaster_messages_file [get_qmaster_spool_dir]/messages
       set act_qmaster_file "$ts_config(product_root)/$ts_config(cell)/common/act_qmaster"
       set sgemaster_file $ts_config(product_root)/$ts_config(cell)/common/sgemaster
       set result [start_remote_prog $ts_config(master_host) $CHECK_USER "cat" $act_qmaster_file]
@@ -161,6 +162,7 @@ proc shadowd_migrate_test {} {
       set heartbeat1 [string trim $result]
       set heartbeat1 [string trimleft $heartbeat1 "0"]
       if { $prg_exit_state != 0 } {
+         add_proc_error "shadowd_migrate_test" -3 "cat failed with exit state $prg_exit_state! (1)"
          incr errors 1
       } 
 
@@ -170,10 +172,12 @@ proc shadowd_migrate_test {} {
       set heartbeat2 [string trim $heartbeat2 "0"]
 
       if { $prg_exit_state != 0 } {
+         add_proc_error "shadowd_migrate_test" -3 "cat failed with exit state $prg_exit_state! (2)"
          incr errors 1
       }
       set heart_diff [expr ( $heartbeat2 - $heartbeat1 ) ]
       if { $heart_diff > 1 || $heart_diff < -1 } {
+         add_proc_error "shadowd_migrate_test" -3 "heartbeat file diff error. heart_diff=$heart_diff"
          incr errors 1
       }
 
@@ -198,6 +202,7 @@ proc shadowd_migrate_test {} {
       puts $CHECK_OUTPUT "------------------------------------------------------------"
 
       if { $CHECK_ACT_LEVEL == 0 } {
+         set CONTROLED_SHUTDOWN [translate $ts_config(master_host) 1 0 0 [sge_macro MSG_SHADOWD_CONTROLLEDSHUTDOWN_SU] "*" "100" ]
 
          puts $CHECK_OUTPUT "restarting qmaster and shadowds with SGE_TEST_HEARTBEAT_TIMEOUT=600"
          shutdown_system_daemon $ts_config(master_host) "qmaster"
@@ -253,6 +258,8 @@ proc shadowd_migrate_test {} {
             puts $CHECK_OUTPUT "qmaster on host $new_act_qmaster took over!"
          }
 
+         init_logfile_wait $ts_config(master_host) $qmaster_messages_file 
+         set message_file_output ""
          set my_timeout [timestamp]
          incr my_timeout 300
 
@@ -283,7 +290,17 @@ proc shadowd_migrate_test {} {
                add_proc_error "shadowd_migrate_test" -1 "old qmaster doesn't stop!"
                break;
             }
-            after 1000
+            set output [logfile_wait $CONTROLED_SHUTDOWN 1 0 0]
+            if { $logfile_wait_error == 0 } {
+               set message_file_output $output
+            }
+
+         }
+         close_logfile_wait
+
+         puts $CHECK_OUTPUT "message file of qmaster contains:\n$message_file_output"
+         if { $message_file_output == "" } {
+            add_proc_error "shadowd_migrate_test" -1 "old qmaster doesn't stop with exit state 100"
          }
 
          wait_for_load_from_all_queues 120

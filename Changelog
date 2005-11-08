@@ -1,3 +1,8 @@
+CR-2005-11-08-1: Testsuite: - enhanced shadowd migrate test. Test will now
+                              parse the qmaster messages file for qmaster
+                              exit value 100 state message
+                 Review:    RD
+
 JG-2005-11-08-0: Testsuite: - fixed installation with bdb rpc server and default
                               location for database directory.
                             - some fixes and cleanup for qdel test

@@ -2865,7 +2865,7 @@ proc logfile_wait { { wait_string "" } { mytimeout 60 } { close_connection 1 } {
             puts -nonewline $CHECK_OUTPUT "\r$expect_out(buffer)"
             append my_tail_buffer $expect_out(buffer)
             if { $wait_string != "" } {
-               if { [ string first $wait_string $expect_out(buffer)] >= 0  } {
+               if { [ string match "*${wait_string}*" $expect_out(buffer)] == 1 } {
                   break;
                }
             }

@@ -201,7 +201,7 @@ proc build_vi_command { change_array {current_array no_current_array_has_been_pa
 #
 #  RESULT
 #     0 when the output of the application contents the expected_result 
-#    -1 on timeout
+#    -1 on timeout or other error
 #    -2 on additional_expected_result
 #    -3 on additional_expected_result2 
 #    -4 on additional_expected_result3
@@ -221,267 +221,235 @@ proc build_vi_command { change_array {current_array no_current_array_has_been_pa
 proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result {additional_expected_result "___ABCDEFG___"} {additional_expected_result2 "___ABCDEFG___"} {additional_expected_result3 "___ABCDEFG___"} {additional_expected_result4 "___ABCDEFG___"}} {
    global CHECK_OUTPUT env CHECK_HOST CHECK_DEBUG_LEVEL CHECK_USER
 
-
-   debug_puts "handle_vi_edit(1)"
-   # removing * at end of expected_result (expect has problems with it)
-   while { [set help2 [string length $expected_result]] > 0 } {
-      set help1 [string last "*" $expected_result]
-      incr help2 -1
-      if { $help1 == $help2 } {
-         incr help2 -1 
-         set expected_result [string range $expected_result 0 $help2 ]
-      } else {
-         break
-      }
-   }
-
-   debug_puts "handle_vi_edit(2)"
-
-
-   # removing * at end of expected_result (expect has problems with it)
-   while { [set help2 [string length $additional_expected_result]] > 0 } {
-      set help1 [string last "*" $additional_expected_result]
-      incr help2 -1
-      if { $help1 == $help2 } {
-         incr help2 -1 
-         set additional_expected_result [string range $additional_expected_result 0 $help2 ]
-      } else {
-         break
-      }
-   }
-
-   debug_puts "handle_vi_edit(3)"
-
-   # removing * at end of expected_result (expect has problems with it)
-   while { [set help2 [string length $additional_expected_result2]] > 0 } {
-      set help1 [string last "*" $additional_expected_result2]
-      incr help2 -1
-      if { $help1 == $help2 } {
-         incr help2 -1 
-         set additional_expected_result2 [string range $additional_expected_result2 0 $help2 ]
-      } else {
-         break
-      }
-   }
-
-   debug_puts "handle_vi_edit(4)"
-
-   # removing * at end of expected_result (expect has problems with it)
-   while { [set help2 [string length $additional_expected_result3]] > 0 } {
-      set help1 [string last "*" $additional_expected_result3]
-      incr help2 -1
-      if { $help1 == $help2 } {
-         incr help2 -1 
-         set additional_expected_result3 [string range $additional_expected_result3 0 $help2 ]
-      } else {
-         break
-      }
-   }
-
-   # removing * at end of expected_result (expect has problems with it)
-   while { [set help2 [string length $additional_expected_result4]] > 0 } {
-      set help1 [string last "*" $additional_expected_result4]
-      incr help2 -1
-      if { $help1 == $help2 } {
-         incr help2 -1 
-         set additional_expected_result4 [string range $additional_expected_result4 0 $help2 ]
-      } else {
-         break
-      }
-   }
-
+   set expected_result              [string trimright $expected_result "*"]
+   set additional_expected_result   [string trimright $additional_expected_result "*"]
+   set additional_expected_result2  [string trimright $additional_expected_result2 "*"]
+   set additional_expected_result3  [string trimright $additional_expected_result3 "*"]
+   set additional_expected_result4  [string trimright $additional_expected_result4 "*"]
 
    debug_puts "handle_vi_edit(5)"
-
-   set env(EDITOR) [get_binary_path "$CHECK_HOST" "vim"]
-   set env(SGE_SINGLE_LINE) 1
+   # we want to start a certain configured vi, and have no backslash continued lines
+   set vi_env(EDITOR) [get_binary_path "$CHECK_HOST" "vim"]
+   set vi_env(SGE_SINGLE_LINE) 1
    set result -100
-   set id [ open_remote_spawn_process $CHECK_HOST $CHECK_USER "$prog_binary" "$prog_args"]
-      set sp_id [ lindex $id 1 ] 
-#      debug_puts "starting -> $prog_binary $prog_args"
-      if {$CHECK_DEBUG_LEVEL != 0} {
-         log_user 1
-         set send_speed .05
-         set send_line_speed 1
+
+   # start program (e.g. qconf)
+   set id [ open_remote_spawn_process $CHECK_HOST $CHECK_USER "$prog_binary" "$prog_args" 0 vi_env]
+   set sp_id [ lindex $id 1 ] 
+   if {$CHECK_DEBUG_LEVEL != 0} {
+      log_user 1
+      set send_speed .05
+      set send_line_speed 1
+   } else {
+      log_user 0 ;# reisi
+      set send_speed .0001
+      set send_line_speed .0001
+   }
+
+   set stop_line_wait 0
+   set timeout 10
+
+   # wait for vi to startup and go to first line
+   send -i $sp_id "G"
+   set timeout_count 0
+   set start_time 0
+   set error 0
+   while { $stop_line_wait == 0 } {
+      expect {
+         -i $sp_id full_buffer {
+            add_proc_error "handle_vi_edit" -1 "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
+            set stop_line_wait 1
+            set error 1
+            continue
+         }
+
+         -i $sp_id eof {
+            add_proc_error "handle_vi_edit" -1 "unexpected end of file"
+            set stop_line_wait 1
+            set error 1
+            continue
+         }
+
+         -i $sp_id timeout {  
+            send -i $sp_id "G"
+            incr timeout_count 1
+            if { $timeout_count > 60 } {
+               add_proc_error "handle_vi_edit" -2 "timeout - vi doesn't respond"
+               set stop_line_wait 1
+               set error 1
+            }
+            continue
+         }
+
+         -i $sp_id "100%" {
+            set start_time [ timestamp ] 
+            send -i $sp_id "1G"      ;# go to first line
+            set stop_line_wait 1
+            continue
+         }
+         
+         -i $sp_id "o lines in buffer" {
+            set start_time [ timestamp ] 
+            set stop_line_wait 1
+            continue
+         }
+         
+         -i $sp_id "erminal too wide" {
+            add_proc_error "handle_vi_edit" -2 "got terminal to wide vi error"
+            set stop_line_wait 1
+            set error 1
+            continue
+         }
+      }
+   }
+
+   # we had an error during vi startup - close connection and return with error
+   if {$error} {
+      # maybe vi is up and we can exit
+      send -i $sp_id "[format "%c" 27]" ;# ESC
+      send -i $sp_id ":q!\n"            ;# exit without saving
+
+      # close the connection - hopefully vi and/or the called command will exit
+      close_spawn_process $id
+
+      return -1
+   }
+
+   # send the vi commands
+   set timeout 0
+   set send_slow "1 $send_speed" 
+
+   foreach elem $vi_command_sequence {
+      set com_length [ string length $elem ]
+      set com_sent 0
+      expect -i $sp_id {
+         "*Hit return*" {
+            send -i $sp_id -- "\n"
+         }
+      }
+      if { $CHECK_DEBUG_LEVEL != 0 } {
+         send -s -i $sp_id -- "$elem"
       } else {
-         log_user 0 ;# reisi
-         set send_speed .0001
-         set send_line_speed .0001
+         send -i $sp_id -- "$elem"
+      }
+      expect -i $sp_id {
+         "*Hit return*" {
+            send -i $sp_id -- "\n"
+         }
       }
 
-      set stop_line_wait 0
-      set timeout 10
+      after 25
+   }
 
-      send -i $sp_id "G"
-      set timeout_count 0
-      set start_time 0
-      while { $stop_line_wait == 0 } {
+   # wait for file time older one second
+   while { [ timestamp ] <= $start_time } { 
+      after 100
+   }
+
+   # save and exit
+   send -i $sp_id ":wq\n"
+   set timeout 30
+   set doStop 0
+
+   # we just execute and don't wait for a certain result:
+   # wait for exit status of command
+   if { [string compare "" $expected_result ] == 0 } {
+      set doStop 0
+      while { $doStop == 0 } {
          expect {
             -i $sp_id full_buffer {
+               set doStop 1
                add_proc_error "handle_vi_edit" -1 "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
-               set stop_line_wait 1
             }
-            -i $sp_id "100%" {
-               set start_time [ timestamp ] 
-#               debug_puts "handle_vi_edit(5.1)"
-#               debug_puts "start_time = $start_time"
-               send -i $sp_id "1G"      ;# go to first line
-               set stop_line_wait 1
-            }
-
-            -i $sp_id timeout {  
-#               set stream [open /tmp/cr.txt "a"]              ;# debug
-#               puts -nonewline $stream $expect_out(buffer)  ;# debug $expect_out(buffer) 0,string 
-#               close $stream                                  ;# debug
-               send -i $sp_id "G"
-               incr timeout_count 1
-               if { $timeout_count > 60 } {
-                  add_proc_error "handle_vi_edit" -2 "vi doesn't respond! perhaps this is a \"terminal to wide\" error?"
-                  set stop_line_wait 1
-               }
-            }
-            
-            -i $sp_id "o lines in buffer" {
-               set start_time [ timestamp ] 
-               set stop_line_wait 1
-            }
-            
-            -i $sp_id "erminal too wide" {
-               add_proc_error "handle_vi_edit" -2 "got terminal to wide vi error"
-               set stop_line_wait 1
+            -i $sp_id timeout {
+               set result -1
+               set doStop 0
             }
             -i $sp_id eof {
-               add_proc_error "handle_vi_edit" -1 "unexpected end of file"
-               set stop_line_wait 1
+               set doStop 1
+               set result 0
             }
-         }
-      }
-      set timeout 0
-      set send_slow "1 $send_speed" 
-
-      foreach elem $vi_command_sequence {
-         set com_length [ string length $elem ]
-         set com_sent 0
-         expect -i $sp_id {
-            "*Hit return*" {
-               send -i $sp_id -- "\n"
+            -i $sp_id "_exit_status_" {
+               set doStop 1
+               set result 0
             }
-         }
-         if { $CHECK_DEBUG_LEVEL != 0 } {
-            send -s -i $sp_id -- "$elem"
-         } else {
-            send -i $sp_id -- "$elem"
-         }
-         expect -i $sp_id {
-            "*Hit return*" {
-               send -i $sp_id -- "\n"
-            }
-         }
-
-         after 25
-      }
-
-      # wait for file time older one second
-      while { [ timestamp ] <= $start_time } { 
-         after 100
-      }
-      send -i $sp_id ":wq\n"
-      set timeout 30
-      set doStop 0
-#      debug_puts "handle_vi_edit(6)"
-
-      if { [string compare "" $expected_result ] == 0 } {
-         set doStop 0
-         while { $doStop == 0 } {
-            expect {
-               -i $sp_id full_buffer {
-                  set doStop 1
-                  add_proc_error "handle_vi_edit" -1 "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
-               }
-               -i $sp_id timeout {
-                  set result -1
-                  set doStop 0
-               }
-               -i $sp_id eof {
-                  set doStop 1
-                  set result 0
-               }
-               -i $sp_id "_exit_status_" {
-                  set doStop 1
-                  set result 0
-               }
-           }
-        }
-      } else {
-         while { $doStop == 0 } {
-            expect {
-               -i $sp_id full_buffer {
-                  set doStop 1
-                  add_proc_error "handle_vi_edit" -1 "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
-               }
-               -i $sp_id -- "$expected_result" {
-                  set result 0
-               }
-               -i $sp_id -- "$additional_expected_result" {
-                  set result -2
-               }
-               -i $sp_id -- "$additional_expected_result2" {
-                  set result -3
-               }
-               -i $sp_id -- "$additional_expected_result3" {
-                  set result -4
-               }
-               -i $sp_id -- "$additional_expected_result4" {
-                  set result -5
-               }
-
-               -i $sp_id timeout {
-                  set result -1
-                  set doStop 1
-                  add_proc_error "handle_vi_edit" -1 "timeout error:$expect_out(buffer)"
-               }
-               -i $sp_id eof {
-                  if { $result == -100 } {
-                  }
-                  set doStop 1
-               }
-               -i $sp_id "_exit_status_" {
-                  if { $result == -100 } {
-        
-                     set pos [string last "\n" $expect_out(buffer)]
-                     incr pos -2
-                     set buffer_message [string range $expect_out(buffer) 0 $pos ]
-                     set pos [string last "\n" $buffer_message]
-                     incr pos 1
-                     set buffer_message [string range $buffer_message $pos end] 
-
-                     set message_txt ""
-                     append message_txt "expect_out(buffer)=\"$expect_out(buffer)\""
-                     append message_txt "expect out buffer is:\n"
-                     append message_txt "   \"$buffer_message\"\n"
-                     append message_txt "this doesn't match any given expression:\n"
-                     append message_txt "   \"$expected_result\"\n"
-                     append message_txt "   \"$additional_expected_result\"\n"
-                     append message_txt "   \"$additional_expected_result2\"\n"
-                     append message_txt "   \"$additional_expected_result3\"\n"
-                     append message_txt "   \"$additional_expected_result4\"\n"
-                     add_proc_error "handle_vi_edit" -1 $message_txt
-                  }
-                  set doStop 1
-               }
-               -i $sp_id default {
-                  add_proc_error "handle_vi_edit" -1  "unexpected output $expect_out(buffer)"
-                  set doStop 1
-               }
-           }
         }
      }
-  close_spawn_process $id
+   } else {
+      # we do expect certain result(s)
+      # wait for result and/or exit status
+      while { $doStop == 0 } {
+         expect {
+            -i $sp_id full_buffer {
+               set doStop 1
+               add_proc_error "handle_vi_edit" -1 "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
+            }
 
-  # debug output start
+            -i $sp_id timeout {
+               set result -1
+               set doStop 1
+               add_proc_error "handle_vi_edit" -1 "timeout error:$expect_out(buffer)"
+            }
 
-  log_user 1
-  foreach elem $vi_command_sequence {
+            -i $sp_id eof {
+               if { $result == -100 } {
+               }
+               set doStop 1
+            }
+
+            -i $sp_id -- "$expected_result" {
+               set result 0
+            }
+            -i $sp_id -- "$additional_expected_result" {
+               set result -2
+            }
+            -i $sp_id -- "$additional_expected_result2" {
+               set result -3
+            }
+            -i $sp_id -- "$additional_expected_result3" {
+               set result -4
+            }
+            -i $sp_id -- "$additional_expected_result4" {
+               set result -5
+            }
+
+            -i $sp_id "_exit_status_" {
+               if { $result == -100 } {
+                  set pos [string last "\n" $expect_out(buffer)]
+                  incr pos -2
+                  set buffer_message [string range $expect_out(buffer) 0 $pos ]
+                  set pos [string last "\n" $buffer_message]
+                  incr pos 1
+                  set buffer_message [string range $buffer_message $pos end] 
+
+                  set message_txt ""
+                  append message_txt "expect_out(buffer)=\"$expect_out(buffer)\""
+                  append message_txt "expect out buffer is:\n"
+                  append message_txt "   \"$buffer_message\"\n"
+                  append message_txt "this doesn't match any given expression:\n"
+                  append message_txt "   \"$expected_result\"\n"
+                  append message_txt "   \"$additional_expected_result\"\n"
+                  append message_txt "   \"$additional_expected_result2\"\n"
+                  append message_txt "   \"$additional_expected_result3\"\n"
+                  append message_txt "   \"$additional_expected_result4\"\n"
+                  add_proc_error "handle_vi_edit" -1 $message_txt
+               }
+               set doStop 1
+            }
+
+            -i $sp_id default {
+               add_proc_error "handle_vi_edit" -1  "unexpected output $expect_out(buffer)"
+               set doStop 1
+            }
+         }
+      }
+   }
+
+   close_spawn_process $id
+
+   # output what we have just done
+   log_user 1
+   foreach elem $vi_command_sequence {
       debug_puts "sequence: $elem"
       if { [string first "A" $elem ] != 0 } {
          set index1 [ string first "." $elem ]
@@ -526,16 +494,17 @@ proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result 
          set add_output [ string range $elem 2 end ]
          puts $CHECK_OUTPUT "--> adding $add_output"
       }
-  }
-  flush stdout
-  # debug output end
-  if {$CHECK_DEBUG_LEVEL != 0} {
-    log_user 1
-  } else {
-    log_user 0 
-  }
+   }
+   flush $CHECK_OUTPUT
 
-  return $result
+   # debug output end
+   if {$CHECK_DEBUG_LEVEL != 0} {
+      log_user 1
+   } else {
+      log_user 0 
+   }
+
+   return $result
 }
 
 

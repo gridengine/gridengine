@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: qrls.1,v $     Last Update: $Date: 2004/04/19 10:52:01 $     Revision: $Revision: 1.8 $
+.\" $RCSfile: qrls.1,v $     Last Update: $Date: 2005/11/09 18:13:29 $     Revision: $Revision: 1.8.16.1 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QRLS 1 "$Date: 2004/04/19 10:52:01 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH QRLS 1 "$Date: 2005/11/09 18:13:29 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 qrls \- release xxQS_NAMExx jobs from previous hold states
 .SH SYNTAX
@@ -49,7 +49,7 @@ qrls \- release xxQS_NAMExx jobs from previous hold states
 ] [
 .B \-help
 ] 
-.B -u user_list | -uall
+.B -u user_list
 .\"
 .SH DESCRIPTION
 .I Qrls
@@ -92,13 +92,13 @@ from one or more jobs.
 .IP "\fB\-help\fP"
 Prints a listing of all options.
 .\"
-.IP "\fB\-u username,... | -uall\fP"
+.IP "\fB\-u username,...\fP"
 Modifies the hold state of those jobs which were submitted by
 users specified in the list of usernames.
-For managers it is possible to use the \fB\qrls -uall\fP command
+For managers it is possible to use the \fB\qrls -u "*"\fP command
 to modify the hold state for jobs of all users.
 .sp 1
-If you use the \fB\-u\fP or \fB\-uall\fP switch it is be permitted to
+If you use the \fB\-u\fP switch it is be permitted to
 specify an additional \fI\job/task_id_list\fP. 
 .\"
 .IP "\fBjob/task_id_list\fP"

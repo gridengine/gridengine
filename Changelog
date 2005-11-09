@@ -1,3 +1,10 @@
+DT-2005-11-09-0: Docs:      o Cleaned up man pages
+                            o Removed -uall from qhold and qrls
+                            o Added list of ignored options for DRMAA
+                            - Merged from DT-2005-11-09-0 (Maintrunk)
+                 Issue:     1870
+                 Changed:   man pages
+
 RD-2005-11-08-0: Bugfix:    fixed broken build on sol-*, lx24-*, darwin & 
                             win32-x86
 

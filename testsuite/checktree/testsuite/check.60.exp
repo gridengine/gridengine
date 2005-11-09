@@ -215,7 +215,7 @@ proc ts_performance_test_test {} {
          puts -nonewline $CHECK_OUTPUT [format "%-${max_user_len}s on %-${max_host_len}s: " $user $host]
  
          set starttime [clock clicks -milliseconds]
-         set runs 1
+         set runs 5 
          set run $runs
          while { $run > 0 } {
 #         puts $CHECK_OUTPUT "start remote prog ...\[$run\]"
@@ -237,6 +237,7 @@ proc ts_performance_test_test {} {
    puts $CHECK_OUTPUT [print_xy_array $user_list $ts_config(execd_hosts) result_array]
    puts $CHECK_OUTPUT ""
 
+   
    set_error 0 "ok"
 }
 

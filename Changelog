@@ -1,3 +1,6 @@
+CR-2005-11-09-0: Testsuite: Don't close connections which are ok after a
+                            failed test run.
+
 JG-2005-11-08-2: Testsuite: Fixed installation of Berkeley DB RPC server in
                             non default cell.
                             Fixed bugs/issuezilla/1803 and bugs/issuezilla/1848.

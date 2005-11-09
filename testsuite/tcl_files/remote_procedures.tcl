@@ -1868,7 +1868,7 @@ proc get_spawn_id_rlogin_session { id back_var {no_check 0}} {
 #     This procedure closes all open rlogin expect sessions.
 #
 #*******************************************************************************
-proc close_open_rlogin_sessions {} {
+proc close_open_rlogin_sessions { { if_not_working 0 } } {
    global CHECK_OUTPUT rlogin_spawn_session_buffer
    global do_close_rlogin
 
@@ -1887,6 +1887,7 @@ proc close_open_rlogin_sessions {} {
 
    # close all sessions
    foreach session $help_buf {
+
       set data_list [split $session ";"]
       set back(spawn_id)  [lindex $data_list 0]
       set back(pid)       [lindex $data_list 2]
@@ -1894,6 +1895,15 @@ proc close_open_rlogin_sessions {} {
       set back(user)      [lindex $data_list 3]
       set back(ltime)     [lindex $data_list 4]
       set back(nr_shells) [lindex $data_list 5]
+      
+      if { $if_not_working != 0 } {
+         if { [check_rlogin_session $back(spawn_id) $back(pid) $back(hostname) $back(user) $back(nr_shells) 1] == 1 } {
+            puts $CHECK_OUTPUT "will not close spawn id $back(spawn_id) - session is ok!"
+            continue
+         }
+      }
+
+
 
       unset rlogin_spawn_session_buffer($back(spawn_id))
       set id $back(pid)
@@ -1920,6 +1930,7 @@ proc close_open_rlogin_sessions {} {
 #     pid      - process id of rlogin session
 #     hostname - hostname of rlogin connection 
 #     user     - user who logged in 
+#     { only_check 0 } - if not 0: don't close spawn session on error
 #
 #  RESULT
 #     1 on success, 0 if no connection is available
@@ -1930,14 +1941,14 @@ proc close_open_rlogin_sessions {} {
 #     remote_procedures/get_spawn_id_rlogin_session
 #     remote_procedures/check_rlogin_session
 #*******************************************************************************
-proc check_rlogin_session { spawn_id pid hostname user nr_of_shells} {
+proc check_rlogin_session { spawn_id pid hostname user nr_of_shells { only_check 0 }} {
    global CHECK_OUTPUT rlogin_spawn_session_buffer CHECK_USER CHECK_TESTSUITE_ROOT CHECK_SCRIPT_FILE_DIR
 
    if { [info exists rlogin_spawn_session_buffer($spawn_id) ] != 0 } {
       set timeout 1
       set ok 0
       set mytries  5
-      set open_remote_spawn__tries 30
+      set open_remote_spawn__tries 15
 
       debug_puts "check_rlogin_session -> waiting for shell response ..."
       switch -- $user {
@@ -1953,6 +1964,7 @@ proc check_rlogin_session { spawn_id pid hostname user nr_of_shells} {
       }
 
       send -i $spawn_id -- "$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/check_identity.sh\n"
+      set have_flushed 0
       while { $open_remote_spawn__tries > 0 } {
          expect {
             -i $spawn_id full_buffer {
@@ -1964,6 +1976,9 @@ proc check_rlogin_session { spawn_id pid hostname user nr_of_shells} {
                 send -i $spawn_id -- "$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/check_identity.sh\n"
                 incr open_remote_spawn__tries -1
                 if { $open_remote_spawn__tries <= 0 } {
+                   if { $have_flushed != 0 } {
+                      puts $CHECK_OUTPUT ""
+                   }
                    add_proc_error "check_rlogin_session" -1 "timeout waiting for shell response prompt (a)"
                    catch { send -i $spawn_id "\003" } ;# send CTRL+C to stop evtl. running processes
                    puts $CHECK_OUTPUT "closing spawn process ..."
@@ -1972,6 +1987,9 @@ proc check_rlogin_session { spawn_id pid hostname user nr_of_shells} {
                    catch { wait -nowait -i $spawn_id }
                    return ""
                 }
+                puts -nonewline $CHECK_OUTPUT "." 
+                flush $CHECK_OUTPUT
+                set have_flushed 1
             }  
             -i $spawn_id -- "__ my id is ->*${user}*<-" { 
                debug_puts "check_rlogin_session: shell response! - fine" 
@@ -1987,18 +2005,23 @@ proc check_rlogin_session { spawn_id pid hostname user nr_of_shells} {
             }
          }
       }
+      if { $have_flushed != 0 } {
+         puts $CHECK_OUTPUT ""
+      }
       if { $ok == 1 } {
          return 1 ;# ok
       } else {
-         # restart connection
-         puts $CHECK_OUTPUT "timeout"
-         unset rlogin_spawn_session_buffer($spawn_id)
-         set id $pid
-         lappend id $spawn_id
-         lappend id $nr_of_shells
-         puts $CHECK_OUTPUT "closing spawn id $spawn_id with pid $pid to enable new rlogin session ..."
-         close_spawn_process $id 0 3
-         puts $CHECK_OUTPUT "closing done."
+         if { $only_check == 0 } {
+            # restart connection
+            puts $CHECK_OUTPUT "timeout"
+            unset rlogin_spawn_session_buffer($spawn_id)
+            set id $pid
+            lappend id $spawn_id
+            lappend id $nr_of_shells
+            puts $CHECK_OUTPUT "closing spawn id $spawn_id with pid $pid to enable new rlogin session ..."
+            close_spawn_process $id 0 3
+            puts $CHECK_OUTPUT "closing done."
+         }
       }       
    }
    return 0 ;# error
@@ -2115,7 +2138,7 @@ proc close_spawn_process { id { check_exit_state 0 } {my_uplevel 1}} {
        after 200
        for {set i 0} {$i < $nr_of_shells } {incr i 1} {
           send -s -i $sp_id "exit\n"
-          set timeout 15
+          set timeout 6
           expect { 
               -i $sp_id full_buffer {
                  add_proc_error "close_spawn_process" "-1" "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
@@ -2131,8 +2154,8 @@ proc close_spawn_process { id { check_exit_state 0 } {my_uplevel 1}} {
               }
           }
        }
-       set timeout 10
-       set my_tries 6
+       set timeout 2 
+       set my_tries 3
        while { $do_stop != 1 } {
           expect {
              -i $sp_id full_buffer {
@@ -2144,7 +2167,7 @@ proc close_spawn_process { id { check_exit_state 0 } {my_uplevel 1}} {
                 debug_puts "got end of file - ok"
              }
              -i $sp_id timeout {
-                puts $CHECK_OUTPUT "timeout"
+                puts $CHECK_OUTPUT "timeout (closing shell) counter: $my_tries ..."
                 if { $my_tries > 0 } {
                    send -s -i $sp_id "exit\n"
                 } else {

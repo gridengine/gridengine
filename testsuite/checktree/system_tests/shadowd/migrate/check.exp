@@ -33,32 +33,6 @@
 
 
 
-# Template for testsuite check
-# 
-# 1) replace the following symbols by your test specific names
-#    o shadowd_migrate   name of your test (e.g. consumable_test)
-#      (vi: 21s)
-#
-# 2) set check_root_access_needs to "yes" or "no" (if you need root access)
-#
-# 3) set check_category
-#
-# 4) set check_highest_level ( e.g.: runlevel "short" has reserved values from 0 to 99 ) 
-#
-# 5) set check_needs (e.g.: "init_core_system" this means that this test is not 
-#    started without succesfull run of "init_core_system" test
-# 6) implement the default functions (e.g.: shadowd_migrate_init_level)
-#
-# 7) you can add any function name to check_functions (all function (no paramters allowed) are started 
-#    within each runlevel number
-#    PLEASE finish each check_function with a set_error() function call
-#    PLEASE use add_proc_error() to submit errors
-#    add_proc_error() is used in many testsuite standard functions, so not every 
-#    function call must check the return state.
-# 
-
-
-
 # define global variable in this namespace
 global check_name 
 global check_category 
@@ -156,35 +130,33 @@ proc shadowd_migrate_test {} {
       set result [start_remote_prog $ts_config(master_host) $CHECK_USER "cat" $act_qmaster_file]
       set act_qmaster [string trim $result]
 
-      set errors 0
       set result [start_remote_prog [lindex $ts_config(shadowd_hosts) 0] $CHECK_USER "cat" $heartbeat_file]
+      if { $prg_exit_state != 0 } {
+         set_error -3 "no nfs shared qmaster spool directory? Cat failed - > Skipping this test (1)!\nresult: $result"
+         return;
+      } 
+
       puts $CHECK_OUTPUT $result
       set heartbeat1 [string trim $result]
       set heartbeat1 [string trimleft $heartbeat1 "0"]
-      if { $prg_exit_state != 0 } {
-         add_proc_error "shadowd_migrate_test" -3 "cat failed with exit state $prg_exit_state! (1)"
-         incr errors 1
-      } 
 
       set result [start_remote_prog [lindex $ts_config(shadowd_hosts) 1] $CHECK_USER "cat" $heartbeat_file]
+      if { $prg_exit_state != 0 } {
+         set_error -3 "no nfs shared qmaster spool directory? Cat failed - > Skipping this test (2)!\nresult: $result"
+         return;
+      }
+
       puts $CHECK_OUTPUT $result
       set heartbeat2 [string trim $result ]
       set heartbeat2 [string trim $heartbeat2 "0"]
 
-      if { $prg_exit_state != 0 } {
-         add_proc_error "shadowd_migrate_test" -3 "cat failed with exit state $prg_exit_state! (2)"
-         incr errors 1
-      }
       set heart_diff [expr ( $heartbeat2 - $heartbeat1 ) ]
       if { $heart_diff > 1 || $heart_diff < -1 } {
          add_proc_error "shadowd_migrate_test" -3 "heartbeat file diff error. heart_diff=$heart_diff"
-         incr errors 1
-      }
-
-      if { $errors != 0 } {
          set_error -3 "no nfs shared qmaster spool directory found. Skipping this test"
          return;
       }
+
 
       if { $ts_config(spooling_method) != "classic" } {
          if { $ts_config(bdb_server) == "none" } {

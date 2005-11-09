@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sched_conf.5,v $     Last Update: $Date: 2005/10/13 12:02:34 $     Revision: $Revision: 1.27 $
+.\" $RCSfile: sched_conf.5,v $     Last Update: $Date: 2005/11/09 17:44:41 $     Revision: $Revision: 1.28 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH SCHED_CONF 5 "$Date: 2005/10/13 12:02:34 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH SCHED_CONF 5 "$Date: 2005/11/09 17:44:41 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 sched_conf \- xxQS_NAMExx default scheduler configuration file
@@ -212,7 +212,7 @@ When executing under a share based policy, the scheduler "ages" (i.e. decreases)
 usage to implement a sliding window for achieving the share entitlements
 as defined by the share tree. The \fBhalftime\fP defines
 the time interval in which accumulated usage will have been decayed
-to half its original value. Valid values are specified in hours or accoring to 
+to half its original value. Valid values are specified in hours or according to 
 the time format as specified in
 .M queue_conf 5 .
 .br
@@ -377,18 +377,18 @@ If set equal to 1, the scheduler records information for each scheduling run all
 to reproduce job resources utilization in the file \fI<xxqs_name_sxx_root>/<cell>/common/schedule\fP.\"
 .\"
 .IP "\fISELECT_PE_RANGE_ALG\fP"
-This param sets the algorthim for the pe range computation. The default is automatic, which
-means that the sheduler will select the best one and it should not be necessary to 
+This parameter sets the algorithm for the pe range computation. The default is automatic, which
+means that the scheduler will select the best one, and it should not be necessary to 
 change it to a different setting in normal operation. If a custom setting is needed, the 
 following values are available:
 .br
 auto       : the scheduler selects the best algorithm
 .br
-least      : starts the resource-matching with the least slot amount first
+least      : starts the resource matching with the least slot amount first
 .br
-bin        : starts the resource-matching in the middle of the pe slot range
+bin        : starts the resource matching in the middle of the pe slot range
 .br
-highest    : starts the resource-matching with the highest slot amount first
+highest    : starts the resource matching with the highest slot amount first
 .\"
 .PP
 Changing \fBparams\fP will take immediate effect.
@@ -413,9 +413,9 @@ The halflife_decay_list allows to configure different decay rates for the
 "finished_jobs usage types, which is used in the pending job ticket calculation
 to account for jobs which have just ended. This allows the user the pending jobs
 algorithm to count finished jobs against a user or project for a configurable decayed 
-time period. This feature is turned off per default and the halftime is used in stead.
+time period. This feature is turned off by default, and the halftime is used instead.
 .br
-The halflife_decay_list also allows to configure different decay rates for each usage 
+The halflife_decay_list also allows one to configure different decay rates for each usage 
 type being tracked (cpu, io, and mem). The list is specified in the following format:
 .sp 1
 .nf
@@ -428,7 +428,7 @@ type being tracked (cpu, io, and mem). The list is specified in the following fo
 .br
 <Usage_TYPE> can be one of the following: cpu, io, or mem.
 .br
-<TIME> can be -1, 0 or a timespan specified in minutes. If <TIME> is -1 only the usage
+<TIME> can be -1, 0 or a timespan specified in minutes. If <TIME> is -1, only the usage
 of currently running jobs is used. 0 means that the usage is not decayed.
 .\"
 .SS "\fBpolicy_hierarchy\fP"

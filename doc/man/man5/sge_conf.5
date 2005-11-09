@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2005/11/04 19:05:45 $     Revision: $Revision: 1.49 $
+.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2005/11/09 17:44:41 $     Revision: $Revision: 1.50 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2005/11/04 19:05:45 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2005/11/09 17:44:41 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 xxqs_name_sxx_conf \- xxQS_NAMExx configuration files
@@ -967,19 +967,22 @@ event clients, and file handles that the qmaster needs.
 .PP
 .IP "\fIMONITOR_TIME\fP"
 Specifies the time interval when the monitoring information should be printed. The
-monitoring is disabled per default and can be enabled by specifying an interval.
+monitoring is disabled by default and can be enabled by specifying an interval.
 The monitoring is per thread and is written to the messages file or displayed by
-the "qping -f" command line tool. Example: MONITOR_TIME=0:0:10 generates the
-monitoring information most likely every 10 seconds and prints it. The specified
-time is a guideline and not a fixed interval. The used interval is printed and
-can be everything between 9 seconds and 20 in this example. 
+the "qping -f" command line tool. Example: MONITOR_TIME=0:0:10 generates and
+prints the monitoring information approximately every 10 seconds. The specified
+time is a guideline only and not a fixed interval. The interval that is actually
+used is printed.  In this example, the interval could be anything between 9
+seconds and 20 seconds.
 .PP
 .IP "\fILOG_MONITOR_MESSAGE\fP"
-The monitoring information is logged into the messages files per default. In addition
-it is provided for qping and can be requested by it. The messages files can become
-quite big, if the monitoring is enabled all the time, therefore this switch allows
-to disable the logging into the messages files and the monitoring data will only
-be available via "qping -f".
+Monitoring information is logged into the messages files by default. This
+information is can be accessed via by
+.M qping 1 .
+If monitoring is always enabled, the messages files can become quite large.
+This switch disables logging into the messages files, making
+.I qping -f
+the only source of monitoring data.
 .PP
 .IP "\fIPROF_SIGNAL\fP"
 Profiling provides the user with the possibility to get system measurements.
@@ -1356,8 +1359,8 @@ correctly. (See also FORBID_APPERROR).
 .\"
 .SH "\fBreprioritize\fP"
 This flag enables or disables the reprioritization of jobs based on their
-ticket amount. The \fBreprioritize_interval\fP takes
-only affect if \fBreprioritize\fP is set to true. In case one wants
+ticket amount. The \fBreprioritize_interval\fP only takes
+effect if \fBreprioritize\fP is set to true. In case one wants
 to turn off the reprioritization of jobs, one should set the \fBreprioritize\fP flag
 to false and the \fBreprioritize_interval\fP to 0 (the default).
 .sp 1

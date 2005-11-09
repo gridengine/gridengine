@@ -51,7 +51,7 @@ set check_init_level_procedure "issue_1760_init_level"
 
 # define test's name and run level descriptions
 set check_name            "issue_1760"
-set check_category        "COMPATIBILITY SYSTEM VERIFIED"
+set check_category        "COMPATIBILITY SYSTEM"
 set check_highest_level   0
 set check_description(210)  "unable to delete a configuration of a non existing host"
 

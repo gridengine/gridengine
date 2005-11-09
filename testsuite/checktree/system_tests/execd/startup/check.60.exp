@@ -160,16 +160,13 @@ proc startup_execd_test1 {} {
    set execd_port $ts_config(commd_port)
    incr execd_port 1
    
-   set hostname $CHECK_HOST
+   set hostname [lindex $ts_config(execd_nodes) 0]
 
 
    puts $CHECK_OUTPUT $check_description($CHECK_ACT_LEVEL)
 
    if { $CHECK_ACT_LEVEL == 0 } {
-
-      
       set CL_RETVAL_BIND_SOCKET [translate $CHECK_HOST 1 0 0 [sge_macro MSG_CL_RETVAL_BIND_SOCKET]]
-
       
       set start_time [timestamp]
       puts $CHECK_OUTPUT "Starting second execd on host $hostname (on the running SGE_EXECD_PORT=$execd_port) ..."
@@ -306,10 +303,6 @@ proc startup_execd_test1 {} {
       startup_qmaster 0
 
       wait_for_load_from_all_queues 60
-
-      
-
-
    }
 
    if { $CHECK_ACT_LEVEL == 3 } {
@@ -350,8 +343,8 @@ proc startup_execd_test1 {} {
 
       wait_for_load_from_all_queues 60
    }
-   
-   
+  
+
    # check for only one running execd on $hostname
    puts $CHECK_OUTPUT "test if there is only one execd running on host $hostname ..."
    set found_p [ ps_grep "$ts_config(product_root)" $hostname ]

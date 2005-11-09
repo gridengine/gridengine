@@ -139,6 +139,12 @@ proc reporting_periodic_accounting_test {} {
    set_config new_config
 
    # Check accounting file size
+   # we might be the first test after installation - in this case no accounting file exists
+   if {![file exists $reporting_acct_file]} {
+      set f [open $reporting_acct_file w]
+      puts $f "# new accounting file"
+      close $f
+   }
    set mtime [file mtime $reporting_acct_file]
 
    # Submit job

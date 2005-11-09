@@ -1,3 +1,9 @@
+JG-2005-11-09-0: Testsuite: Fixes and cleanup in system_tests/execd/startup,
+                            system_tests/qmaster/reporting, 
+                            system_tests/scheduler/soft_requests.
+                            Disabled test bugs/issuezilla/1760.
+                 Review:    CR
+
 RH-2005-11-09-0: Testsuite: - Enhancements in the report procedures
                             - Cleanup hooks for additional checktrees added
                  Review:    CR

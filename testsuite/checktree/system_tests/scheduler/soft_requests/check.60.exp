@@ -125,25 +125,29 @@ proc soft_requests_setup  {} {
 }
 
 proc soft_requests_cleanup  {} {
-   global CHECK_OUTPUT ts_config
+   global CHECK_OUTPUT CHECK_ARCH ts_config
    global soft_requests_test_hosts
    global soft_requests_saved_slot_count
    global consumable_complex_backup
 
+   # delete all jobs and trigger a scheduling run to make sure all jobs have really
+   # left qmaster
    delete_all_jobs
    wait_for_end_of_all_jobs 60
+   catch {  eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-tsm" } catch_result
+   sleep 5
 
+   # enable all.q
    set queue_list {}
    foreach host $ts_config(execd_nodes) {
       lappend queue_list [get_queue_instance "all.q" $host]
    }
    enable_queue $queue_list
-   puts $CHECK_OUTPUT "disabled $queue_list"
+   puts $CHECK_OUTPUT "enabled $queue_list"
 
-
+   # delete test queue and pe
    set qname "res.q"
    del_queue $qname $soft_requests_test_hosts  0 1
-
    del_pe        "round_robin"
 
    # restore complex

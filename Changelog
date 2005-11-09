@@ -1,3 +1,7 @@
+RH-2005-11-09-0: Testsuite: - Enhancements in the report procedures
+                            - Cleanup hooks for additional checktrees added
+                 Review:    CR
+
 CR-2005-11-09-1: Testsuite: Fixes and cleanup for bugs/issuezilla/1760/
                             and /system_tests/clients/qconf/check.60.exp
 

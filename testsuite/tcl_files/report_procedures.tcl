@@ -33,16 +33,6 @@
 ##########################################################################
 #___INFO__MARK_END__
 
-global report_count
-global report_array
-
-puts "    *********************************************"
-puts "    * REPORTING SETUP (report_procedures.tcl)"
-puts "    *********************************************"
-
-set report_count 0
-array set report_array {}
-
 
 #****** report/report_create() **************************************************
 #  NAME
@@ -55,16 +45,20 @@ array set report_array {}
 #     Creates a report object
 #
 #  INPUTS
-#    name -- name of the report object
+#    name           -- name of the report object
+#    a_report_array -- the report object
+#    send_email     -- should a email send at the end of the report
+#    write_html     -- should the html version of the report be written
 #
 #  RESULT
 #     the id of the report object
 #
 #  EXAMPLE
 #
-#   set report_nr [report_create "Test report"]
+#   array set report {}
+#   report_create "Test report" report
 #
-#   report_add_message $report_nr "a foo message"
+#   report_add_message report "a foo message"
 #
 #  NOTES
 #
@@ -73,15 +67,22 @@ array set report_array {}
 #  SEE ALSO
 #     report/report_finish
 #*******************************************************************************
-proc report_create { name } {   
-   global report_count report_array
-   set report_nr $report_count
-   incr report_count 1   
-   set report_array($report_nr,name) $name
-   set report_array($report_nr,start) [exec date]
-   set report_array($report_nr,task_count) 0
-   set report_array($report_nr,messages) {}
-   return $report_nr
+proc report_create { name a_report_array { send_email 1 } { write_html 1 } } {   
+   upvar $a_report_array report_array
+   set report_array(name) $name
+   set report_array(start) [exec date]
+   set report_array(task_count) 0
+   set report_array(messages) {}
+   
+   set report_array(handler) {}
+   
+   if { $send_email == 1 } {
+      lappend report_array(handler) report_send_mail
+   }
+   if { $write_html == 1 } {
+      lappend report_array(handler) report_write_html
+      lappend report_array(task_progress_handler) report_write_html
+   }
 }
 
 #****** report_procedures/report_add_message() **************************************************
@@ -89,22 +90,23 @@ proc report_create { name } {
 #    report_add_message() -- add a message to the report
 #
 #  SYNOPSIS
-#    report_add_message { report_nr message } 
+#    report_add_message { report message } 
 #
 #  FUNCTION
 #     adds a message to the report. 
 #
 #  INPUTS
-#    report_nr -- number of the report
+#    a_report  -- the report object
 #    message   -- the message
 #
 #  RESULT
 #
 #  EXAMPLE
 #
-#   set report_nr [report_create "Test report"]
+#   array set report {}
+#   report_create "Test report" report
 #
-#   report_add_message $report_nr "a foo message"
+#   report_add_message report "a foo message"
 #
 #  NOTES
 #     ??? 
@@ -115,9 +117,10 @@ proc report_create { name } {
 #  SEE ALSO
 #     ???/???
 #*******************************************************************************
-proc report_add_message { report_nr message } {
-   global report_array CHECK_OUTPUT
-   lappend report_array($report_nr,messages)  $message
+proc report_add_message { a_report message } {
+   global CHECK_OUTPUT
+   upvar $a_report report_array
+   lappend report_array(messages)  $message
    puts $CHECK_OUTPUT $message
 }
 
@@ -126,26 +129,27 @@ proc report_add_message { report_nr message } {
 #    report_clear_messages() -- clear all messages of a report
 #
 #  SYNOPSIS
-#    report_clear_messages { report_nr } 
+#    report_clear_messages { report } 
 #
 #  FUNCTION
 #
 #   The method removes all messages of a report
 #
 #  INPUTS
-#    report_nr -- the number of the report
+#    report -- the report object
 # 
 #  RESULT
 #
 #  EXAMPLE
 #
-#   set report_nr [report_create "Test report"]
+#   array set report {}
+#   report_create "Test report report
 #
-#   report_add_message $report_nr "a foo message"
+#   report_add_message report "a foo message"
 # 
-#   report_write_html $report_nr
+#   report_write_html report
 #
-#   report_clear_messages
+#   report_clear_messages report
 #
 #  NOTES
 #     ??? 
@@ -156,9 +160,9 @@ proc report_add_message { report_nr message } {
 #  SEE ALSO
 #     ???/???
 #*******************************************************************************
-proc report_clear_messages { report_nr } {
-   global report_array
-   set report_array($report_nr,messages) {}
+proc report_clear_messages { report } {
+   upvar $report report_array
+   set report_array(messages) {}
 }
 
 
@@ -167,28 +171,28 @@ proc report_clear_messages { report_nr } {
 #    report_create_task() -- create a task of a report
 #
 #  SYNOPSIS
-#    report_create_task { report_nr name host} 
+#    report_create_task { report name host} 
 #
 #  FUNCTION
 #    Creates a task for a report. All tasks of a report will be shown in
 #    a table. 
 #
 #  INPUTS
-#    report_nr --  the number of the report
+#    report    --  the report object
 #    name      --  Name of the tasks
 #    host      --  Host where the task is running
 #
 #  RESULT
-#    the number of the task
 #
 #  EXAMPLE
 #
-#  set report_nr [report_create "Test Report"]
+#  array set report {}
+#  report_create "Test Report" report
 #  ...
-#  set task_nr [report_create_task $report_nr "test_task" "foo.bar"
+#  set task_nr [report_create_task report "test_task" "foo.bar"]
 #  ...
 #  set result ....
-#  report_finish_task $report_nr $task_nr $result
+#  report_finish_task report $task_nr $result
 #
 #  NOTES
 #
@@ -197,17 +201,17 @@ proc report_clear_messages { report_nr } {
 #  SEE ALSO
 #     ???/???
 #*******************************************************************************
-proc report_create_task { report_nr name host } {
-   global report_array
+proc report_create_task { report name host } {
    global CHECK_HTML_DIRECTORY CHECK_PROTOCOL_DIR
+
+   upvar $report report_array
+   set task_nr $report_array(task_count)
+   incr report_array(task_count) 1
    
-   set task_nr $report_array($report_nr,task_count)
-   incr report_array($report_nr,task_count) 1
-   
-   set report_array($report_nr,task_$task_nr,name)   $name
-   set report_array($report_nr,task_$task_nr,host)   $host
-   set report_array($report_nr,task_$task_nr,status) started
-   set report_array($report_nr,task_$task_nr,date)   [exec date]
+   set report_array(task_$task_nr,name)   $name
+   set report_array(task_$task_nr,host)   $host
+   set report_array(task_$task_nr,status) started
+   set report_array(task_$task_nr,date)   [exec date]
    
    set relative_filename "${host}_${name}.txt"
    
@@ -217,11 +221,14 @@ proc report_create_task { report_nr name host } {
       set myfilename "$CHECK_PROTOCOL_DIR/$relative_filename"
    }
    catch { file delete $myfilename }
-   set report_array($report_nr,task_$task_nr,filename) $myfilename
-   set report_array($report_nr,task_$task_nr,relative_filename) $relative_filename
-   set report_array($report_nr,task_$task_nr,file) [open $myfilename w]
-   
-   report_write_html $report_nr
+   set report_array(task_$task_nr,filename) $myfilename
+   set report_array(task_$task_nr,relative_filename) $relative_filename
+   set report_array(task_$task_nr,file) [open $myfilename w]
+ 
+
+   foreach handler $report_array(task_progress_handler) { 
+      $handler report_array
+   }
    return $task_nr
 }
 
@@ -231,7 +238,7 @@ proc report_create_task { report_nr name host } {
 #    report_task_add_message() -- add a message to a task
 #
 #  SYNOPSIS
-#    report_task_add_message { report_nr task_nr message  } 
+#    report_task_add_message { report task_nr message  } 
 #
 #  FUNCTION
 #     
@@ -240,19 +247,19 @@ proc report_create_task { report_nr name host } {
 #     and to CHECK_OUTPUT
 #
 #  INPUTS
-#    report_nr --  the report number
+#    report    --  the report object
 #    task_nr   --  the number of the task
 #    message   --  the message
 #
 #  RESULT
 #
 #  EXAMPLE
-#  set task_nr [report_create_task $report_nr "test_task" "foo.bar"
+#  set task_nr [report_create_task report "test_task" "foo.bar"
 #  ...
 #  set result ....
-#  report_task_add_message $report_nr $task_nr "foo_bar returned $result"
+#  report_task_add_message report $task_nr "foo_bar returned $result"
 #
-#  report_finish_task $report_nr $task_nr $result
+#  report_finish_task report $task_nr $result
 #
 #  NOTES
 #
@@ -262,11 +269,13 @@ proc report_create_task { report_nr name host } {
 #  SEE ALSO
 #     ???/???
 #*******************************************************************************
-proc report_task_add_message { report_nr task_nr message } {
-   global report_array CHECK_OUTPUT
+proc report_task_add_message { report task_nr message } {
+   global CHECK_OUTPUT
    
-   puts $report_array($report_nr,task_$task_nr,file) $message
-   flush $report_array($report_nr,task_$task_nr,file)
+   upvar $report report_array
+   
+   puts $report_array(task_$task_nr,file) $message
+   flush $report_array(task_$task_nr,file)
    puts $CHECK_OUTPUT $message
 }
 
@@ -275,7 +284,7 @@ proc report_task_add_message { report_nr task_nr message } {
 #    report_finish_task() -- Mark a report task as finished
 #
 #  SYNOPSIS
-#    report_finish_task { report_nr task_nr result } 
+#    report_finish_task { report task_nr result } 
 #
 #  FUNCTION
 #     Mark a report task as finished.
@@ -283,7 +292,7 @@ proc report_task_add_message { report_nr task_nr message } {
 #     The result of the task is set
 
 #  INPUTS
-#    report_nr -- the report number 
+#    report    -- the report object 
 #    task_nr   -- the task_nr
 #    result    -- the result of the task
 #
@@ -291,12 +300,12 @@ proc report_task_add_message { report_nr task_nr message } {
 #
 #
 #  EXAMPLE
-#  set task_nr [report_create_task $report_nr "test_task" "foo.bar"
+#  set task_nr [report_create_task report "test_task" "foo.bar"
 #  ...
 #  set result ....
-#  report_task_add_message $report_nr $task_nr "foo_bar returned $result"
+#  report_task_add_message report $task_nr "foo_bar returned $result"
 #
-#  report_finish_task $report_nr $task_nr $result
+#  report_finish_task report $task_nr $result
 #
 #  NOTES
 #     ??? 
@@ -307,18 +316,23 @@ proc report_task_add_message { report_nr task_nr message } {
 #  SEE ALSO
 #     ???/???
 #*******************************************************************************
-proc report_finish_task { report_nr task_nr result } {
-   global report_array
+proc report_finish_task { report task_nr result } {
+   
+   upvar $report report_array
 
    if { $result == 0 } {
       set result "success"
    } else {
       set result "error"
    }
-   set report_array($report_nr,task_$task_nr,status) $result
-   flush $report_array($report_nr,task_$task_nr,file)
-   close $report_array($report_nr,task_$task_nr,file)
-   set report_array($report_nr,task_$task_nr,file) "--"
+   set report_array(task_$task_nr,status) $result
+   flush $report_array(task_$task_nr,file)
+   close $report_array(task_$task_nr,file)
+   set report_array(task_$task_nr,file) "--"
+
+   foreach handler $report_array(task_progress_handler) { 
+      $handler report_array
+   }
 }
 
 #****** report_procedures/report_finish() **************************************************
@@ -326,7 +340,7 @@ proc report_finish_task { report_nr task_nr result } {
 #    report_finish() -- Mark a report as finished
 #
 #  SYNOPSIS
-#    report_finish { report_nr result } 
+#    report_finish { report result } 
 #
 #  FUNCTION
 #     Mark a report as finished
@@ -334,16 +348,17 @@ proc report_finish_task { report_nr task_nr result } {
 #     A html file with the content of the report is written
 #
 #  INPUTS
-#    report_nr --  the report number
+#    report    --  the report object
 #    result    --  the result of the report (numeric error code)
 #
 #  RESULT
 #
 #  EXAMPLE
 #
-#   set report_nr [report_create "Test report"]
+#   array set report {}
+#   report_create "Test report" report
 #   ...
-#   report_finish $report_nr 0
+#   report_finish report 0
 #
 #  NOTES
 #     ??? 
@@ -354,8 +369,9 @@ proc report_finish_task { report_nr task_nr result } {
 #  SEE ALSO
 #     ???/???
 #*******************************************************************************
-proc report_finish { report_nr result } {
-   global report_array CHECK_HTML_DIRECTORY
+proc report_finish { report result } {
+   
+   upvar $report report_array
 
    if { $result == 0 } {
       set result "success"
@@ -363,50 +379,63 @@ proc report_finish { report_nr result } {
       set result "error"
    }
    
-   set report_array($report_nr,result) $result
-   set report_array($report_nr,end)    [exec date]
-   
-   if { $CHECK_HTML_DIRECTORY != "" } {
-      report_write_html $report_nr
+   set report_array(result) $result
+   set report_array(end)    [exec date]
+ 
+   foreach handler $report_array(handler) {
+      $handler report_array
    }
-   report_send_mail $report_nr
 }
 
-proc report_send_mail { report_nr } {
-   global report_array
+#****** report_procedures/report_send_mail() ***********************************
+#  NAME
+#     report_send_mail() -- writes a report email 
+#
+#  SYNOPSIS
+#     report_send_mail { report } 
+#
+#  FUNCTION
+#     writes an report email 
+#
+#  INPUTS
+#     report - the report object 
+#
+#*******************************************************************************
+proc report_send_mail { report } {
+   upvar $report report_array
    
-   set mail_subject "testsuite - $report_array($report_nr,name) -- "
-   set mail_body    "testsuite - $report_array($report_nr,name)\n"
+   set mail_subject "testsuite - $report_array(name) -- "
+   set mail_body    "testsuite - $report_array(name)\n"
    append mail_body "------------------------------------------\n\n"
-   append mail_body " started: $report_array($report_nr,start)\n"
-   if { [info exists report_array($report_nr,result)] } {
-      append mail_subject $report_array($report_nr,result)
-      append mail_body "finished: $report_array($report_nr,end)\n"
-      append mail_body "  result: $report_array($report_nr,result)\n"
+   append mail_body " started: $report_array(start)\n"
+   if { [info exists report_array(result)] } {
+      append mail_subject $report_array(result)
+      append mail_body "finished: $report_array(end)\n"
+      append mail_body "  result: $report_array(result)\n"
    } else {
       append mail_subject "yet not finished"
       
    }
    append mail_body "------------------------------------------\n"
    
-   if { [info exists report_array($report_nr,task_0,name)] } {
+   if { [info exists report_array(task_0,name)] } {
       append mail_body "\nTasks:\n"
       
       set line [format "  %26s %12s %8s %s" "Name" "Host" "Status" "Details"]
       append mail_body "$line\n\n"
       
-      for { set task_nr 0 } { [info exists report_array($report_nr,task_$task_nr,name)] } { incr task_nr 1 } {
+      for { set task_nr 0 } { [info exists report_array(task_$task_nr,name)] } { incr task_nr 1 } {
          
-         set line [format "  %26s %12s %8s %s" $report_array($report_nr,task_$task_nr,name) \
-                                                $report_array($report_nr,task_$task_nr,host) \
-                                                $report_array($report_nr,task_$task_nr,status) \
-                                                "file://$report_array($report_nr,task_$task_nr,filename)" ]
+         set line [format "  %26s %12s %8s %s" $report_array(task_$task_nr,name) \
+                                                $report_array(task_$task_nr,host) \
+                                                $report_array(task_$task_nr,status) \
+                                                "file://$report_array(task_$task_nr,filename)" ]
          append mail_body "$line\n"
       }
    }
    append mail_body "\n------------------------------------------\n"
    
-   foreach message $report_array($report_nr,messages) {
+   foreach message $report_array(messages) {
       append mail_body "$message\n"
    }
    append mail_body "------------------------------------------\n"
@@ -414,23 +443,40 @@ proc report_send_mail { report_nr } {
    mail_report $mail_subject $mail_body
 }
 
-proc report_write_html { report_nr } {
+#****** report_procedures/report_write_html() **********************************
+#  NAME
+#     report_write_html() -- report handler which write a html report
+#
+#  SYNOPSIS
+#     report_write_html { report } 
+#
+#  FUNCTION
+#     This report handler writes a html report into  CHECK_HTML_DIRECTORY
+#
+#  INPUTS
+#     report - the report object
+#
+#*******************************************************************************
+proc report_write_html { report } {
 
-   global report_array CHECK_HTML_DIRECTORY
+   global CHECK_HTML_DIRECTORY
+   
    
    if { $CHECK_HTML_DIRECTORY == "" } {
       return
    }
-   set html_body   [ create_html_text "started:   $report_array($report_nr,start)" 1 ]
+   upvar $report report_array
    
-   if { [info exists report_array($report_nr,result)] } {
-      append html_body [ create_html_text "finished: $report_array($report_nr,end)" 1 ]
-      append html_body [ create_html_text "result: $report_array($report_nr,result)" 1 ]
+   set html_body   [ create_html_text "started:   $report_array(start)" 1 ]
+   
+   if { [info exists report_array(result)] } {
+      append html_body [ create_html_text "finished: $report_array(end)" 1 ]
+      append html_body [ create_html_text "result: $report_array(result)" 1 ]
    } else {
       append html_body [ create_html_text "yet not finished" 1 ]
    }
    
-   if { [info exists report_array($report_nr,task_0,name)] } {
+   if { [info exists report_array(task_0,name)] } {
       append html_body [ create_html_text "<H1>Tasks:</H1>" 1 ]
       
       set html_table(1,BGCOLOR) "#3366FF"
@@ -444,21 +490,21 @@ proc report_write_html { report_nr } {
       set html_table(1,5) "Details"
       
       set row_count 1
-      for { set task_nr 0 } { [info exists report_array($report_nr,task_$task_nr,name)] } { incr task_nr 1 } {
+      for { set task_nr 0 } { [info exists report_array(task_$task_nr,name)] } { incr task_nr 1 } {
          incr row_count 1
          
-         if { $report_array($report_nr,task_$task_nr,status) == "error" } {
+         if { $report_array(task_$task_nr,status) == "error" } {
             set html_table($row_count,BGCOLOR) "#CC0000"
             set html_table($row_count,FNCOLOR) "#FFFFFF"
          } else {
             set html_table($row_count,BGCOLOR) "#009900"
             set html_table($row_count,FNCOLOR) "#FFFFFF"
          }
-         set html_table($row_count,1) $report_array($report_nr,task_$task_nr,name)
-         set html_table($row_count,2) $report_array($report_nr,task_$task_nr,host)
-         set html_table($row_count,3) [resolve_arch $report_array($report_nr,task_$task_nr,host)]
-         set html_table($row_count,4) $report_array($report_nr,task_$task_nr,status)
-         set html_table($row_count,5) [ create_html_link $report_array($report_nr,task_$task_nr,relative_filename) "./$report_array($report_nr,task_$task_nr,relative_filename)"]      
+         set html_table($row_count,1) $report_array(task_$task_nr,name)
+         set html_table($row_count,2) $report_array(task_$task_nr,host)
+         set html_table($row_count,3) [resolve_arch $report_array(task_$task_nr,host)]
+         set html_table($row_count,4) $report_array(task_$task_nr,status)
+         set html_table($row_count,5) [ create_html_link $report_array(task_$task_nr,relative_filename) "./$report_array(task_$task_nr,relative_filename)"]      
       }
       set html_table(ROWS) $row_count
 
@@ -467,7 +513,7 @@ proc report_write_html { report_nr } {
       append html_body [ create_html_text "No Tasks available" 1 ]
    }
    
-   foreach message $report_array($report_nr,messages) {
+   foreach message $report_array(messages) {
       append html_body [ create_html_text "$message" 0 ]
    }
    

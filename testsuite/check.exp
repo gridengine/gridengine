@@ -4932,7 +4932,7 @@ proc check_display {} {
 
 proc set_command_line_options {} {
      global CHECK_ENABLED_RUNLEVELS CHECK_ENABLED_CATEGORIES CHECK_CHECKTREE_ROOT 
-     global CHECK_SGE_DEBUG_LEVEL
+     global CHECK_SGE_DEBUG_LEVEL check_use_installed_system
      global master_debug schedd_debug do_not_update CHECK_DISPLAY_OUTPUT daemon_debug
      set data ""
      while { $data != 0 } {
@@ -4960,11 +4960,17 @@ proc set_command_line_options {} {
            set nu_flag "on"
         }
 
+        if { $check_use_installed_system == 0 } {
+           set re_init_flag "off"
+        } else {
+           set re_init_flag "on"
+        }
 
         puts "(1) master_debug    : $md_flag"
         puts "(2) schedd_debug    : $sd_flag"
         puts "(3) SGE_DEBUG_LEVEL : $CHECK_SGE_DEBUG_LEVEL"
         puts "(4) no_update       : $nu_flag"
+        puts "(5) re_init         : $re_init_flag"
 
         set data [wait_for_enter 1]
         if { $data <= 2 && $data > 0 } {
@@ -5018,6 +5024,13 @@ proc set_command_line_options {} {
                } else { 
                   set do_not_update 0
                }
+           }
+           "5" {
+              if { $check_use_installed_system == 0 } {
+                 set check_use_installed_system 1
+              } else {
+                 set check_use_installed_system 0
+              }
            }
         }
 
@@ -6284,9 +6297,10 @@ proc compile_source { { do_only_install 0 } } {
    set check_name "compile_source"
    set CHECK_CUR_PROC_NAME "compile_source"
 
-   set report_nr [report_create "Compiling source"]
+   array set report {}
+   report_create "Compiling source" report
    
-   report_write_html $report_nr
+   report_write_html report
    
    set error_count 0
    set cvs_change_log ""
@@ -6295,11 +6309,11 @@ proc compile_source { { do_only_install 0 } } {
    if { $ts_config(package_directory) != "none" && 
         ($ts_config(package_type) == "tar" || $ts_config(package_type) == "zip") } {
            
-      report_add_message $report_nr "will not compile but use precompiled packages\n"
-      report_add_message $report_nr "set package_directory to \"none\" or set package_type to \"create_tar\"\n"
-      report_add_message $report_nr "if compilation (and package creation) should be done"
+      report_add_message report "will not compile but use precompiled packages\n"
+      report_add_message report "set package_directory to \"none\" or set package_type to \"create_tar\"\n"
+      report_add_message report "if compilation (and package creation) should be done"
       
-      report_finish $report_nr -1
+      report_finish report -1
       
       return -1
    }
@@ -6319,22 +6333,22 @@ proc compile_source { { do_only_install 0 } } {
 
    # check source directory
    if { ( [ string compare $CHECK_SOURCE_DIR "unknown" ] == 0 ) || ( [ string compare $CHECK_SOURCE_DIR "" ] == 0 ) } {
-      report_add_message $report_nr "source directory unknown - check defaults file"
-      report_finish $report_nr -1 
+      report_add_message report "source directory unknown - check defaults file"
+      report_finish report -1 
       return -1
    }
 
    # check compile host
    if { ( [ string compare $CHECK_SOURCE_HOSTNAME "unknown" ] == 0 ) || ( [ string compare $CHECK_SOURCE_HOSTNAME "" ] == 0  ) } {          
-      report_add_message $report_nr "host for cvs checkout unknown - check defaults file"
-      report_finish $report_nr -1
+      report_add_message report "host for cvs checkout unknown - check defaults file"
+      report_finish report -1
       return -1
    }
 
    # check compile hosts
    if { ( [ string compare $compile_hosts "unknown" ] == 0 ) || ([ string compare $compile_hosts "" ] == 0) } {
-      report_add_message $report_nr "host list to compile for unknown - check defaults file"
-      report_finish $report_nr -1
+      report_add_message report "host list to compile for unknown - check defaults file"
+      report_finish report -1
       return -1
    }
 
@@ -6345,8 +6359,8 @@ proc compile_source { { do_only_install 0 } } {
       set output [ start_remote_prog $chost $CHECK_USER "cd" "$CHECK_SOURCE_DIR ; ./aimk -no-mk" prg_exit_state 60 0 "" 1 0 ]
       puts $CHECK_OUTPUT "return state: $prg_exit_state"
       if { $prg_exit_state != 0 } {
-         report_add_message $report_nr "error starting \"aimk -no-mk\" on host $chost"
-         report_finish $report_nr -1
+         report_add_message report "error starting \"aimk -no-mk\" on host $chost"
+         report_finish report -1
          return -1
       }
       puts $CHECK_OUTPUT "host $chost will build [string trim $output] binaries"
@@ -6364,8 +6378,8 @@ proc compile_source { { do_only_install 0 } } {
         }
      }
      if { $found != 1 } {
-        report_add_message $report_nr "two compile hosts have the same architecture -> error"
-        report_finish $report_nr -1
+        report_add_message report "two compile hosts have the same architecture -> error"
+        report_finish report -1
         return -1
      }
    }
@@ -6374,8 +6388,8 @@ proc compile_source { { do_only_install 0 } } {
    if {[file isdirectory "$CHECK_PROTOCOL_DIR"] != 1} {
       set catch_return [ catch {  file mkdir "$CHECK_PROTOCOL_DIR" } ]
       if { $catch_return != 0 } {
-        report_add_message $report_nr "could not create directory \"$CHECK_PROTOCOL_DIR\""
-        report_finish $report_nr -1
+        report_add_message report "could not create directory \"$CHECK_PROTOCOL_DIR\""
+        report_finish report -1
         return -1
       } 
    }
@@ -6385,18 +6399,18 @@ proc compile_source { { do_only_install 0 } } {
 
    # update sources
    if { $do_only_install != 1 } {
-      set res [update_source $report_nr]      
+      set res [update_source report]      
       if { $res == 1 } {
          # after an update, do an aimk clean
-         compile_with_aimk $compile_hosts $report_nr "compile_clean" "clean"
+         compile_with_aimk $compile_hosts report "compile_clean" "clean"
          # execute all registered compile_clean hooks of the checktree
-         set res [exec_compile_clean_hooks $compile_hosts $report_nr]
+         set res [exec_compile_clean_hooks $compile_hosts report]
          if { $res < 0 } {
-            report_add_message $report_nr "exec_compile_clean_hooks returned fatal error"
+            report_add_message report "exec_compile_clean_hooks returned fatal error"
          } elseif { $res > 0 } {
-            report_add_message $report_nr "$res compile_clean hooks are failed\n"
+            report_add_message report "$res compile_clean hooks are failed\n"
          } else {
-            report_add_message $report_nr "All compile_clean hooks successfully executed\n"
+            report_add_message report "All compile_clean hooks successfully executed\n"
          }
 
          # after an update, delete macro messages file to have it updated
@@ -6413,30 +6427,30 @@ proc compile_source { { do_only_install 0 } } {
    }
 
    if { $error_count == 0 && $check_do_clean_compile == 1 } {
-      compile_with_aimk $compile_hosts $report_nr "compile_clean" "clean"
+      compile_with_aimk $compile_hosts report "compile_clean" "clean"
       # execute all registered compile_hooks of the checktree
-      set res [exec_compile_clean_hooks $compile_hosts $report_nr]
+      set res [exec_compile_clean_hooks $compile_hosts report]
       if { $res < 0 } {
-         report_add_message $report_nr "exec_compile_clean_hooks returned fatal error"
+         report_add_message report "exec_compile_clean_hooks returned fatal error"
       } elseif { $res > 0 } {
-         report_add_message $report_nr "$res compile_clean hooks are failed\n"
+         report_add_message report "$res compile_clean hooks are failed\n"
       } else {
-         report_add_message $report_nr "All compile_clean hooks successfully executed\n"
+         report_add_message report "All compile_clean hooks successfully executed\n"
       }
    }
 
    if { $error_count > 0 } {
       puts $CHECK_OUTPUT "Skip compile due to previous errors\n"
    } elseif { $do_only_install != 1 } {
-      if { [compile_depend $compile_hosts $report_nr] != 0 } {
+      if { [compile_depend $compile_hosts report] != 0 } {
         incr error_count
       } else {
          # depend successfully build start compile all
-         if { [compile_with_aimk $compile_hosts $report_nr "compile" ] != 0 } {
+         if { [compile_with_aimk $compile_hosts report "compile" ] != 0 } {
             incr error_count
          } else {
             # new all registered compile_hooks of the checktree
-            set res [exec_compile_hooks $compile_hosts $report_nr]
+            set res [exec_compile_hooks $compile_hosts report]
             if { $res < 0 } {
                puts $CHECK_OUTPUT "exec_compile_hooks returned fatal error\n"
                incr error_count
@@ -6455,8 +6469,8 @@ proc compile_source { { do_only_install 0 } } {
    # install to $CHECK_PRODUCT_ROOT
    if { $error_count == 0 } {
       
-      report_add_message $report_nr "Compiling ...."
-      report_write_html $report_nr
+      report_add_message report "Compiling ...."
+      report_write_html report
       
       set arch_list {}
       set compiled_mail_architectures ""
@@ -6468,46 +6482,46 @@ proc compile_source { { do_only_install 0 } } {
          append compiled_mail_architectures "\n$elem ($output)"
       }
       
-      if { [ install_binaries $do_only_install $arch_list $report_nr] != 0 } {
-         report_add_message $report_nr "install_binaries failed\n"
+      if { [ install_binaries $do_only_install $arch_list report] != 0 } {
+         report_add_message report "install_binaries failed\n"
          incr error_count
       } else {
          # new all registered compile_hooks of the checktree
-         set res [exec_install_binaries_hooks $arch_list $report_nr]
+         set res [exec_install_binaries_hooks $arch_list report]
          if { $res < 0 } {
-            report_add_message $report_nr "exec_install_binaries_hooks returned fatal error\n"
+            report_add_message report "exec_install_binaries_hooks returned fatal error\n"
             incr error_count
          } elseif { $res > 0 } {
-            report_add_message $report_nr "$res install_binaries hooks are failed\n"
+            report_add_message report "$res install_binaries hooks are failed\n"
             incr error_count
          } else {
-            report_add_message $report_nr "All install_binaries hooks successfully executed\n"
+            report_add_message report "All install_binaries hooks successfully executed\n"
          }
       }
    } else {
-      report_add_message $report_nr "Skip installation due to previous error\n"
+      report_add_message report "Skip installation due to previous error\n"
    }
 
    if { $error_count > 0 } {
-      report_add_message $report_nr "Error occured during compilation or pre-installation of binaries"
-      report_finish $report_nr -1 
+      report_add_message report "Error occured during compilation or pre-installation of binaries"
+      report_finish report -1 
       return -1
    }
    
-   report_add_message $report_nr "Successfully compiled and pre-installed following architectures:"
-   report_add_message $report_nr "${compiled_mail_architectures}\n"
+   report_add_message report "Successfully compiled and pre-installed following architectures:"
+   report_add_message report "${compiled_mail_architectures}\n"
    
-   report_add_message $report_nr "init_core_system check will install the $CHECK_PRODUCT_TYPE execd at:"
+   report_add_message report "init_core_system check will install the $CHECK_PRODUCT_TYPE execd at:"
    foreach elem $CHECK_CORE_EXECD {
       set host_arch [ resolve_arch $elem ]
-      report_add_message $report_nr "$elem ($host_arch)"
+      report_add_message report "$elem ($host_arch)"
    }
    if { [string compare $cvs_change_log "" ] != 0 } {
-      report_clear_messages $report_nr
-      report_add_message $report_nr "$mail_body \n\n Update output:\n$cvs_change_log\n\n"
+      report_clear_messages report
+      report_add_message report "$mail_body \n\n Update output:\n$cvs_change_log\n\n"
    }
    
-   report_finish $report_nr 0
+   report_finish report 0
 
    # try to resolve hostnames in settings file
    set catch_return [ catch { eval exec "cp ${CHECK_DEFAULTS_FILE} ${CHECK_DEFAULTS_FILE}.[timestamp]" } ]
@@ -6576,14 +6590,15 @@ proc build_distribution { arch_list } {
    }
 }
 
-proc install_binaries { do_only_install arch_list report_nr } {
+proc install_binaries { do_only_install arch_list a_report } {
    global CHECK_OUTPUT CHECK_PRODUCT_TYPE CHECK_PRODUCT_ROOT
    global ts_config CHECK_JOB_OUTPUT_DIR CHECK_SOURCE_DIR CHECK_DIST_INSTALL_OPTIONS
    global CHECK_HOST CHECK_USER CHECK_CORE_EXECD
    
+   upvar $a_report report
    set was_error 0
 
-   set task_nr [ report_create_task $report_nr "install_binaries" $CHECK_HOST ]
+   set task_nr [ report_create_task report "install_binaries" $CHECK_HOST ]
    
    # install to $CHECK_PRODUCT_ROOT
    set var_name "SGE_ROOT"
@@ -6596,22 +6611,22 @@ proc install_binaries { do_only_install arch_list report_nr } {
          set sgeee_param ""
       }
    }
-   report_task_add_message $report_nr $task_nr "\nusing environment variable \"$var_name\""
+   report_task_add_message report $task_nr "\nusing environment variable \"$var_name\""
 
    # copy pos. host_aliases file to trash_
    if { [ file isfile "$CHECK_PRODUCT_ROOT/$ts_config(cell)/common/host_aliases"] == 1 } {
-      report_task_add_message $report_nr $task_nr "saving host_aliases file ..."
+      report_task_add_message report $task_nr "saving host_aliases file ..."
       catch { exec "cp" "$CHECK_PRODUCT_ROOT/$ts_config(cell)/common/host_aliases" "$CHECK_JOB_OUTPUT_DIR/host_aliases"  } result
       puts $result
-      report_task_add_message $report_nr $task_nr $result
+      report_task_add_message report $task_nr $result
    } 
 
    # now delete install directory
-   report_task_add_message $report_nr $task_nr "moving directory \"$CHECK_PRODUCT_ROOT\" to testsuite_trash"
+   report_task_add_message report $task_nr "moving directory \"$CHECK_PRODUCT_ROOT\" to testsuite_trash"
    if { [delete_directory "$CHECK_PRODUCT_ROOT"] != 0 } {
       add_proc_error "compile_source" -2 "could not delete $CHECK_PRODUCT_ROOT directory, critical error - stop"
-      report_task_add_message $report_nr $task_nr "could not delete $CHECK_PRODUCT_ROOT directory, critical error - stop"
-      report_finish_task $report_nr $task_nr -1
+      report_task_add_message report $task_nr "could not delete $CHECK_PRODUCT_ROOT directory, critical error - stop"
+      report_finish_task report $task_nr -1
       return -1
    }
  
@@ -6619,19 +6634,19 @@ proc install_binaries { do_only_install arch_list report_nr } {
    after 5000
 
    catch { exec "mkdir" "$CHECK_PRODUCT_ROOT"  } result
-   report_task_add_message $report_nr $task_nr $result
+   report_task_add_message report $task_nr $result
    catch { exec "touch" "$CHECK_PRODUCT_ROOT"  } result
-   report_task_add_message $report_nr $task_nr $result
+   report_task_add_message report $task_nr $result
    catch { exec "chmod" "755" "$CHECK_PRODUCT_ROOT"  } result
-   report_task_add_message $report_nr $task_nr $result
+   report_task_add_message report $task_nr $result
  
    if { $ts_config(gridengine_version) == 53 } {
-      report_task_add_message $report_nr $task_nr "\ncreating link \"$link_name\""
+      report_task_add_message report $task_nr "\ncreating link \"$link_name\""
       set return_state [ catch { eval exec ln -s $CHECK_SOURCE_DIR/scripts/distinst $CHECK_SOURCE_DIR/$link_name } output ]
    }
 
  
-   report_task_add_message $report_nr $task_nr "\ninstalling product binaries"
+   report_task_add_message report $task_nr "\ninstalling product binaries"
    
    if { $ts_config(gridengine_version) == 53 } {
       set open_spawn [ open_remote_spawn_process $CHECK_HOST $CHECK_USER "cd" "$CHECK_SOURCE_DIR ; $var_name=$CHECK_PRODUCT_ROOT ; export $var_name ; ./$link_name $sgeee_param $CHECK_DIST_INSTALL_OPTIONS $arch_list" ]
@@ -6644,7 +6659,7 @@ proc install_binaries { do_only_install arch_list report_nr } {
    while { $done != 1 } {
       expect_user {
          -i $sp_id full_buffer {
-            report_task_add_message $report_nr $task_nr "testsuite - compile_source buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
+            report_task_add_message report $task_nr "testsuite - compile_source buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
          }
          -i $sp_id "Base directory:" {
              send -i $sp_id "y\n"
@@ -6659,7 +6674,7 @@ proc install_binaries { do_only_install arch_list report_nr } {
             set done 1
          }
          -i $sp_id "*\n" {
-            report_task_add_message $report_nr $task_nr $expect_out(0,string)
+            report_task_add_message report $task_nr $expect_out(0,string)
          }
       }
    }
@@ -6669,9 +6684,9 @@ proc install_binaries { do_only_install arch_list report_nr } {
    foreach elem $CHECK_CORE_EXECD {
       set host_arch [ resolve_arch $elem ]
       if { ([string compare $host_arch ""] != 0) && ([string compare $host_arch "unknown" ] != 0) } {
-         report_task_add_message $report_nr $task_nr " arch on host $elem is $host_arch - successfully installed binaries"
+         report_task_add_message report $task_nr " arch on host $elem is $host_arch - successfully installed binaries"
       } else {
-         report_task_add_message $report_nr $task_nr " error installing binaries for host $elem"
+         report_task_add_message report $task_nr " error installing binaries for host $elem"
          set was_error 1
       }
    }
@@ -6685,15 +6700,15 @@ proc install_binaries { do_only_install arch_list report_nr } {
   
    # copy pos. host_aliases file to new product root /$SGE_CELL/common
    if { [ file isfile "$CHECK_JOB_OUTPUT_DIR/host_aliases"] == 1 } {
-        report_task_add_message $report_nr $task_nr "restoring host_aliases file ..."
+        report_task_add_message report $task_nr "restoring host_aliases file ..."
         catch { exec "cp" "$CHECK_JOB_OUTPUT_DIR/host_aliases" "$CHECK_PRODUCT_ROOT/$ts_config(cell)/common/host_aliases" } result
-        report_task_add_message $report_nr $task_nr $result
+        report_task_add_message report $task_nr $result
    }
    
    if { $was_error } {
-      report_finish_task $report_nr $task_nr -1
+      report_finish_task report $task_nr -1
    } else {
-      report_finish_task $report_nr $task_nr 0
+      report_finish_task report $task_nr 0
    }
    return $was_error
 }
@@ -6704,14 +6719,14 @@ proc install_binaries { do_only_install arch_list report_nr } {
 #    compile_with_aimk() -- compile with aimk
 #
 #  SYNOPSIS
-#    compile_with_aimk { host_list report_nr task_name { aimk_options "" } } 
+#    compile_with_aimk { host_list report task_name { aimk_options "" } } 
 #
 #  FUNCTION
 #     Start the aimk parallel on some hosts
 #
 #  INPUTS
 #    host_list --  list of host where aimk should be started
-#    report_nr --  id of the report object
+#    a_report    --  the report object
 #    task_name --  name of the task in the report object
 #    aimk_options -- aimk options
 #
@@ -6730,12 +6745,13 @@ proc install_binaries { do_only_install arch_list report_nr } {
 #  SEE ALSO
 #     ???/???
 #*******************************************************************************
-proc compile_with_aimk { host_list report_nr task_name { aimk_options "" }  } {
+proc compile_with_aimk { host_list a_report task_name { aimk_options "" }  } {
    global CHECK_OUTPUT CHECK_USER
    global CHECK_TESTSUITE_ROOT CHECK_SCRIPT_FILE_DIR CHECK_SOURCE_DIR
    global CHECK_HTML_DIRECTORY CHECK_PROTOCOL_DIR
    global do_only_install
    
+   upvar $a_report report
    set num 0
    set my_compile_options [get_compile_options_string]
    if { [string length $aimk_options] > 0 } {
@@ -6766,7 +6782,7 @@ proc compile_with_aimk { host_list report_nr task_name { aimk_options "" }  } {
       set spawn_id [lindex $open_spawn 1]
       
       set host_array($spawn_id,host) $elem
-      set host_array($spawn_id,task_nr) [ report_create_task $report_nr $task_name $elem ]      
+      set host_array($spawn_id,task_nr) [ report_create_task report $task_name $elem ]      
       set host_array($spawn_id,open_spawn) $open_spawn 
       lappend spawn_list $spawn_id
       incr num 1
@@ -6807,7 +6823,7 @@ proc compile_with_aimk { host_list report_nr task_name { aimk_options "" }  } {
             set spawn_id $expect_out(spawn_id)
             set host_array($spawn_id,bad_compile) 1
             
-            report_task_add_message $report_nr $host_array($spawn_id,task_nr) "got timeout for host \"$host_array($spawn_id,host)\""
+            report_task_add_message report $host_array($spawn_id,task_nr) "got timeout for host \"$host_array($spawn_id,host)\""
             
             close_spawn_process $host_array($spawn_id,open_spawn)
             set host_array($spawn_id,open_spawn) "--"
@@ -6818,7 +6834,7 @@ proc compile_with_aimk { host_list report_nr task_name { aimk_options "" }  } {
             set spawn_id $expect_out(spawn_id)
             set host_array($spawn_id,bad_compile) 1
             
-            report_task_add_message $report_nr $host_array($spawn_id,task_nr) "got eof for host \"$host_array($spawn_id,host)\""
+            report_task_add_message report $host_array($spawn_id,task_nr) "got eof for host \"$host_array($spawn_id,host)\""
             
             close_spawn_process $host_array($spawn_id,open_spawn)
             set host_array($spawn_id,open_spawn) "--"
@@ -6831,7 +6847,7 @@ proc compile_with_aimk { host_list report_nr task_name { aimk_options "" }  } {
             
             set host_array($spawn_id,bad_compile) 1
             
-            report_task_add_message $report_nr $host_array($spawn_id,task_nr) $expect_out(0,string)
+            report_task_add_message report $host_array($spawn_id,task_nr) $expect_out(0,string)
             
             close_spawn_process $host_array($spawn_id,open_spawn)
             set host_array($spawn_id,open_spawn) "--"
@@ -6841,7 +6857,7 @@ proc compile_with_aimk { host_list report_nr task_name { aimk_options "" }  } {
          }
          -i $spawn_list "remotecompile * aimk no errors" {
             set spawn_id $expect_out(spawn_id)
-            report_task_add_message $report_nr $host_array($spawn_id,task_nr) $expect_out(0,string)
+            report_task_add_message report $host_array($spawn_id,task_nr) $expect_out(0,string)
             set host_array($spawn_id,bad_compile) 0
             
             close_spawn_process $host_array($spawn_id,open_spawn)
@@ -6852,7 +6868,7 @@ proc compile_with_aimk { host_list report_nr task_name { aimk_options "" }  } {
          }
          -i $spawn_list "*\n" {
             set spawn_id $expect_out(spawn_id)
-            report_task_add_message $report_nr $host_array($spawn_id,task_nr) $expect_out(0,string)
+            report_task_add_message report $host_array($spawn_id,task_nr) $expect_out(0,string)
             set show_info 1
             set output_buff ""
             append output_buff "\n$host_array($spawn_id,host):\n"
@@ -6866,10 +6882,10 @@ proc compile_with_aimk { host_list report_nr task_name { aimk_options "" }  } {
    foreach spawn_id $org_spawn_list {
       if { $host_array($spawn_id,bad_compile) != 0 } {
          puts $CHECK_OUTPUT "\n=============\ncompile error on host $host_array($spawn_id,host):\n=============\n"
-         report_finish_task $report_nr $host_array($spawn_id,task_nr) 1
+         report_finish_task report $host_array($spawn_id,task_nr) 1
          set compile_error 1
       } else {
-         report_finish_task $report_nr $host_array($spawn_id,task_nr) 0
+         report_finish_task report $host_array($spawn_id,task_nr) 0
       }
    }
 
@@ -6905,8 +6921,10 @@ proc compile_with_aimk { host_list report_nr task_name { aimk_options "" }  } {
 #  SEE ALSO
 #     check/compile_source
 #******
-proc update_source { report_nr } {
+proc update_source { a_report } {
    global do_not_update
+   
+   upvar $a_report report
    if { $do_not_update == 0 } {
       global CHECK_OUTPUT CHECK_SOURCE_HOSTNAME CHECK_USER
       global CHECK_SOURCE_DIR CHECK_OUTPUT
@@ -6918,13 +6936,13 @@ proc update_source { report_nr } {
       set prg_exit_state 0
       set conflict_files {}
       
-      set task_nr [report_create_task $report_nr "cvs_update" $CHECK_SOURCE_HOSTNAME]
+      set task_nr [report_create_task report "cvs_update" $CHECK_SOURCE_HOSTNAME]
       
       while { $tries <= 3 && $update_ok == 0 } {
          
-         report_task_add_message $report_nr $task_nr "------------------------------------------"
-         report_task_add_message $report_nr $task_nr "$tries. cvs update try ..."
-         report_task_add_message $report_nr $task_nr "updating gridengine directory $CHECK_SOURCE_DIR/.. on host $CHECK_SOURCE_HOSTNAME ..."
+         report_task_add_message report $task_nr "------------------------------------------"
+         report_task_add_message report $task_nr "$tries. cvs update try ..."
+         report_task_add_message report $task_nr "updating gridengine directory $CHECK_SOURCE_DIR/.. on host $CHECK_SOURCE_HOSTNAME ..."
          
          set open_spawn [ open_remote_spawn_process $CHECK_SOURCE_HOSTNAME $CHECK_USER "cd" "$CHECK_SOURCE_DIR/.. ; cvs -q -z 9 update -dP"]
          set spawn_list [lindex $open_spawn 1]
@@ -6940,18 +6958,18 @@ proc update_source { report_nr } {
 
          expect {
             -i $spawn_list full_buffer {
-               report_task_add_message $report_nr $task_nr "full_buffer error on cvs update"
+               report_task_add_message report $task_nr "full_buffer error on cvs update"
             }
             -i $spawn_list timeout {
-               report_task_add_message $report_nr $task_nr "got timeout on cvs update"
+               report_task_add_message report $task_nr "got timeout on cvs update"
             }
             -i $spawn_list eof {
-               report_task_add_message $report_nr $task_nr "got eof on cvs update"
+               report_task_add_message report $task_nr "got eof on cvs update"
             }
             -i $spawn_list "_exit_status_:(*)" {  
                set use_output 0
                set prg_exit_state [get_string_value_between "_exit_status_:(" ")" $expect_out(0,string)]
-               report_task_add_message $report_nr $task_nr "cvs update exited with status $prg_exit_state"
+               report_task_add_message report $task_nr "cvs update exited with status $prg_exit_state"
                if { $prg_exit_state != 0 } {
                   set update_ok 0
                } else {
@@ -6960,13 +6978,13 @@ proc update_source { report_nr } {
             }
             -i $spawn_list "_start_mark_:(0)" {
                set use_output 1
-               report_task_add_message $report_nr $task_nr "cd $CHECK_SOURCE_DIR/.. ; cvs -q -z 9 update -dP"
+               report_task_add_message report $task_nr "cd $CHECK_SOURCE_DIR/.. ; cvs -q -z 9 update -dP"
                exp_continue
             }
             -i $spawn_list -re {^C .*?\n} { ;# conflict files
                if { $use_output == 1 } {
                   set elem [string trimright $expect_out(buffer) "\n\r"]
-                  report_task_add_message $report_nr $task_nr "$elem"
+                  report_task_add_message report $task_nr "$elem"
                   
                   set len [string length $elem]
                   set confict_file [string range $elem 2 $len]
@@ -6977,11 +6995,11 @@ proc update_source { report_nr } {
             -i $spawn_list -re {^.*?\n} {
                if { $use_output } {
                   set elem [string trimright $expect_out(buffer) "\n\r"]
-                  report_task_add_message $report_nr $task_nr "$elem"
+                  report_task_add_message report $task_nr "$elem"
                   puts $cvs_output "$elem"
 
                   if { ([string range $elem 0 2 ] != "cvs") && ([string range $elem 0 0] != "?") } {
-                     report_task_add_message $report_nr $task_nr "$elem"
+                     report_task_add_message report $task_nr "$elem"
                      append cvs_change_log "$elem\n"
                      if { [ string first "testsuite/check.exp" $elem ] >= 0 && [string range $elem 0 0] != "M" } {
                         set frame_work_script_update 1
@@ -7009,33 +7027,33 @@ proc update_source { report_nr } {
       }
 
       if { [llength $conflict_files] > 0 } {
-         report_add_message $report_nr "CVS Update Error: The following files contains conflicts:\n"
+         report_add_message report "CVS Update Error: The following files contains conflicts:\n"
          foreach elem $conflict_files {
-            report_add_message $report_nr "   $elem"
+            report_add_message report "   $elem"
          }
-         report_add_message $report_nr "\n Please resolve these conflicts!!!\n"
-         report_finish_task $report_nr $task_nr -1
+         report_add_message report "\n Please resolve these conflicts!!!\n"
+         report_finish_task report $task_nr -1
          return -1
       }
       
       if { $update_ok != 1 } {
-         report_add_message $report_nr "CVS Update Error: cvs update failed three times!!!\n"
-         report_finish_task $report_nr $task_nr -1
+         report_add_message report "CVS Update Error: cvs update failed three times!!!\n"
+         report_finish_task report $task_nr -1
          return -1
       }
 
       # if the testsuite itself has been update, require restart
       if { $frame_work_script_update == 1 } {
-         report_add_message $report_nr "CVS Update: TESTSUITE FRAMEWORK SCRIPT was updated!!! Stop !!!\n"
-         report_finish_task $report_nr $task_nr 0
-         report_finish $report_nr 0
+         report_add_message report "CVS Update: TESTSUITE FRAMEWORK SCRIPT was updated!!! Stop !!!\n"
+         report_finish_task report $task_nr 0
+         report_finish report 0
          exit 1 
       }
       if { $testsuite_update == 1 } {
-         report_add_message $report_nr "CVS Update Warning: testsuite source procedures were updated!!!"
-         report_add_message $report_nr "                    Resourcing it !!!\n"
+         report_add_message report "CVS Update Warning: testsuite source procedures were updated!!!"
+         report_add_message report "                    Resourcing it !!!\n"
       }
-      report_finish_task $report_nr $task_nr 0
+      report_finish_task report $task_nr 0
       return 1
    } else {
       return 0
@@ -7069,10 +7087,12 @@ proc update_source { report_nr } {
 #
 #  SEE ALSO
 #*******************************************************************************
-proc compile_depend { compile_hosts report_nr } {
+proc compile_depend { compile_hosts a_report } {
    
    global ts_host_config CHECK_USER CHECK_SOURCE_DIR
    global CHECK_OUTPUT
+   
+   upvar $a_report report
    
    set depend_host_name [lindex $compile_hosts 0] 
 
@@ -7084,62 +7104,63 @@ proc compile_depend { compile_hosts report_nr } {
       }
    }
 
-   set task_nr [report_create_task $report_nr "zerodepend" $depend_host_name]
+   set task_nr [report_create_task report "zerodepend" $depend_host_name]
    
    # clean dependency files (zerodepend)
    
-   report_task_add_message $report_nr $task_nr "------------------------------------------"
-   report_task_add_message $report_nr $task_nr "-> starting scripts/zerodepend on host $depend_host_name ..."
+   report_task_add_message report $task_nr "------------------------------------------"
+   report_task_add_message report $task_nr "-> starting scripts/zerodepend on host $depend_host_name ..."
    set output [ start_remote_prog $depend_host_name $CHECK_USER "cd" "$CHECK_SOURCE_DIR ; scripts/zerodepend" prg_exit_state 60 0 "" 1 0 ]
-   report_task_add_message $report_nr $task_nr "------------------------------------------"
-   report_task_add_message $report_nr $task_nr "return state: $prg_exit_state"
-   report_task_add_message $report_nr $task_nr "------------------------------------------"
-   report_task_add_message $report_nr $task_nr "output:\n$output"
-   report_task_add_message $report_nr $task_nr "------------------------------------------"
+   report_task_add_message report $task_nr "------------------------------------------"
+   report_task_add_message report $task_nr "return state: $prg_exit_state"
+   report_task_add_message report $task_nr "------------------------------------------"
+   report_task_add_message report $task_nr "output:\n$output"
+   report_task_add_message report $task_nr "------------------------------------------"
    
-   report_finish_task $report_nr $task_nr $prg_exit_state
+   report_finish_task report $task_nr $prg_exit_state
    if { $prg_exit_state != 0 } {
-      report_add_message $report_nr "------------------------------------------"
-      report_add_message $report_nr "Error: scripts/zerodepend (exit code $prg_exit_state)"
-      report_add_message $report_nr "------------------------------------------"
+      report_add_message report "------------------------------------------"
+      report_add_message report "Error: scripts/zerodepend (exit code $prg_exit_state)"
+      report_add_message report "------------------------------------------"
       return -1
    }
    
 
-   set task_nr [report_create_task $report_nr "only_depend" $depend_host_name]
+   set task_nr [report_create_task report "only_depend" $depend_host_name]
    # build the depencency building program
    set my_compile_options [get_compile_options_string]
-   report_task_add_message $report_nr $task_nr "-> starting aimk -only-depend on host $depend_host_name ..."
+   report_task_add_message report $task_nr "-> starting aimk -only-depend on host $depend_host_name ..."
+
    set output [ start_remote_prog $depend_host_name $CHECK_USER "cd" "$CHECK_SOURCE_DIR ; ./aimk -only-depend" prg_exit_state 60 0 "" 1 0 ]
-   report_task_add_message $report_nr $task_nr "------------------------------------------"
-   report_task_add_message $report_nr $task_nr "return state: $prg_exit_state"
-   report_task_add_message $report_nr $task_nr "------------------------------------------"
-   report_task_add_message $report_nr $task_nr "output:\n$output"
-   report_task_add_message $report_nr $task_nr "------------------------------------------"
-   report_finish_task $report_nr $task_nr $prg_exit_state
+   report_task_add_message report $task_nr "------------------------------------------"
+   report_task_add_message report $task_nr "return state: $prg_exit_state"
+   report_task_add_message report $task_nr "------------------------------------------"
+   report_task_add_message report $task_nr "output:\n$output"
+   report_task_add_message report $task_nr "------------------------------------------"
+   report_finish_task report $task_nr $prg_exit_state
    if { $prg_exit_state != 0 } {
-      report_add_message $report_nr "------------------------------------------"
-      report_add_message $report_nr "Error: aimk -only-depend failed (exit code $prg_exit_state)"
-      report_add_message $report_nr "------------------------------------------"
+      report_add_message report "------------------------------------------"
+      report_add_message report "Error: aimk -only-depend failed (exit code $prg_exit_state)"
+      report_add_message report "------------------------------------------"
       return -1
    }
 
    # build the dependencies
-   set task_nr [report_create_task $report_nr "depend" $depend_host_name]
-   report_task_add_message $report_nr $task_nr "------------------------------------------"
-   report_task_add_message $report_nr $task_nr "-> starting aimk $my_compile_options depend on host $depend_host_name ..."
+   set task_nr [report_create_task report "depend" $depend_host_name]
+   report_task_add_message report $task_nr "------------------------------------------"
+   report_task_add_message report $task_nr "-> starting aimk $my_compile_options depend on host $depend_host_name ..."
    set output [ start_remote_prog $depend_host_name $CHECK_USER "cd" "$CHECK_SOURCE_DIR ; ./aimk $my_compile_options depend" prg_exit_state 60 0 "" 1 0 ]
-   report_task_add_message $report_nr $task_nr "------------------------------------------"
-   report_task_add_message $report_nr $task_nr "return state: $prg_exit_state"
-   report_task_add_message $report_nr $task_nr "------------------------------------------"
-   report_task_add_message $report_nr $task_nr "output:\n$output"
-   report_task_add_message $report_nr $task_nr "------------------------------------------"
+   report_task_add_message report $task_nr "------------------------------------------"
+   report_task_add_message report $task_nr "return state: $prg_exit_state"
+   report_task_add_message report $task_nr "------------------------------------------"
+   report_task_add_message report $task_nr "output:\n$output"
+   report_task_add_message report $task_nr "------------------------------------------"
 
-   report_finish_task $report_nr $task_nr $prg_exit_state
+   report_finish_task report $task_nr $prg_exit_state
    if { $prg_exit_state != 0 } {
-      report_add_message $report_nr "------------------------------------------"
-      report_add_message $report_nr "Error: aimk depend failed (exit code $prg_exit_state)"
-      report_add_message $report_nr "------------------------------------------"
+      report_add_message report "------------------------------------------"
+      report_add_message report "Error: aimk depend failed (exit code $prg_exit_state)"
+      report_add_message report "------------------------------------------"
       return -1
    }
    return 0

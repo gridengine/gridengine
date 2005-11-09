@@ -39,14 +39,14 @@
 #    exec_compile_hooks() -- execute a compile hooks
 #
 #  SYNOPSIS
-#    exec_compile_hooks { compile_hosts report_nr } 
+#    exec_compile_hooks { compile_hosts report } 
 #
 #  FUNCTION
 #     ??? 
 #
 #  INPUTS
 #    compile_hosts --  list of all compile hosts
-#    report_nr     --  id of the report
+#    a_report      --  the report object
 #
 #  RESULT
 #     0   --  all compile hooks are executed
@@ -62,10 +62,12 @@
 #  SEE ALSO
 #
 #*******************************************************************************
-proc exec_compile_hooks { compile_hosts report_nr } {
+proc exec_compile_hooks { compile_hosts a_report } {
    
    global ts_checktree CHECK_OUTPUT
 
+   upvar $a_report report
+   
    set error_count 0
    for {set i 0} { $i < $ts_checktree(act_nr)} {incr i 1 } {
       for {set ii 0} {[info exists ts_checktree($i,compile_hooks_${ii})]} {incr ii 1} {
@@ -73,12 +75,12 @@ proc exec_compile_hooks { compile_hosts report_nr } {
          set compile_proc $ts_checktree($i,compile_hooks_${ii})
          
          if { [info procs $compile_proc ] != $compile_proc } {
-            report_add_message $report_nr "Can not execute compile hook ${ii} of checktree $ts_checktree($i,dir_name), compile proc not found"
+            report_add_message report "Can not execute compile hook ${ii} of checktree $ts_checktree($i,dir_name), compile proc not found"
             return -1
          } else {
-            set res [$compile_proc $compile_hosts $report_nr]
+            set res [$compile_proc $compile_hosts report]
             if { $res != 0 } {
-               report_add_message $report_nr "compile hook ${ii}  of checktree  $ts_checktree($i,dir_name) failed, $compile_proc returned $res\n"
+               report_add_message report "compile hook ${ii}  of checktree  $ts_checktree($i,dir_name) failed, $compile_proc returned $res\n"
                incr error_count
             }
          }
@@ -92,7 +94,7 @@ proc exec_compile_hooks { compile_hosts report_nr } {
 #    exec_compile_clean_hooks() -- execute a compile clean hook
 #
 #  SYNOPSIS
-#    exec_compile_clean_hooks { compile_hosts report_nr } 
+#    exec_compile_clean_hooks { compile_hosts report } 
 #
 #  FUNCTION
 #     This method executes all registered compile_clean hooks of the
@@ -100,7 +102,7 @@ proc exec_compile_hooks { compile_hosts report_nr } {
 #
 #  INPUTS
 #    compile_hosts -- list of compile hosts
-#    report_nr     -- id if the report
+#    a_report      -- the report object
 #
 #  RESULT
 #     0   -- all compile_clean hooks has been executed
@@ -115,10 +117,11 @@ proc exec_compile_hooks { compile_hosts report_nr } {
 #
 #  SEE ALSO
 #*******************************************************************************
-proc exec_compile_clean_hooks { compile_hosts report_nr } {
+proc exec_compile_clean_hooks { compile_hosts a_report } {
    
    global ts_checktree CHECK_OUTPUT
-
+   upvar $a_report report
+   
    set error_count 0
    for {set i 0} { $i < $ts_checktree(act_nr)} {incr i 1 } {
       for {set ii 0} {[info exists ts_checktree($i,compile_clean_hooks_${ii})]} {incr ii 1} {
@@ -126,12 +129,12 @@ proc exec_compile_clean_hooks { compile_hosts report_nr } {
          set compile_proc $ts_checktree($i,compile_clean_hooks_${ii})
          
          if { [info procs $compile_proc ] != $compile_proc } {
-            report_add_message $report_nr "Can not execute compile_clean hook ${ii} of checktree $ts_checktree($i,dir_name), compile proc not found"
+            report_add_message report "Can not execute compile_clean hook ${ii} of checktree $ts_checktree($i,dir_name), compile proc not found"
             return -1
          } else {
-            set res [$compile_proc $compile_hosts $report_nr]
+            set res [$compile_proc $compile_hosts report]
             if { $res != 0 } {
-               report_add_message $report_nr "compile_clean hook ${ii}  of checktree  $ts_checktree($i,dir_name) failed, $compile_proc returned $res\n"
+               report_add_message report "compile_clean hook ${ii}  of checktree  $ts_checktree($i,dir_name) failed, $compile_proc returned $res\n"
                incr error_count
             }
          }
@@ -140,6 +143,50 @@ proc exec_compile_clean_hooks { compile_hosts report_nr } {
    return $error_count
 }
 
+#****** checktree_helper/exec_checktree_clean_hooks() **************************
+#  NAME
+#     exec_checktree_clean_hooks() -- execute all cleanup hooks
+#
+#  SYNOPSIS
+#     exec_checktree_clean_hooks { } 
+#
+#  FUNCTION
+#
+#     execute all cleanup hooks for additional checktrees
+#     
+#
+#  INPUTS
+#
+#  RESULT
+#    0   -- all cleanup hooks are successfully executed
+#    >0  -- number of failed cleanup hooks
+#    <0  -- a cleanup hook was not found
+#
+#*******************************************************************************
+proc exec_checktree_clean_hooks { } {
+   
+   global ts_checktree
+
+   set error_count 0
+   for {set i 0} { $i < $ts_checktree(act_nr)} {incr i 1 } {
+      for {set ii 0} {[info exists ts_checktree($i,checktree_clean_hooks_${ii})]} {incr ii 1} {
+         
+         set clean_proc $ts_checktree($i,checktree_clean_hooks_${ii})
+         
+         if { [info procs $clean_proc ] != $clean_proc } {
+            add_proc_error "exec_checktree_clean_hooks" "2" "Can not execute clean_proc hook ${ii} of checktree $ts_checktree($i,dir_name), clean proc not found"
+            return -1
+         } else {
+            set res [$clean_proc]
+            if { $res != 0 } {
+               add_proc_error "exec_checktree_clean_hooks" "2" "checktree_clean hook ${ii}  of checktree  $ts_checktree($i,dir_name) failed, $clean_proc returned $res\n"
+               incr error_count
+            }
+         }
+      }
+   }
+   return $error_count
+}
 
 
 
@@ -155,7 +202,7 @@ proc exec_compile_clean_hooks { compile_hosts report_nr } {
 #
 #  INPUTS
 #    arch_list   -- list of architectures
-#    report_nr   -- id of the report
+#    a_report    -- the report object
 #
 #  RESULT
 #     0  - on success
@@ -170,10 +217,11 @@ proc exec_compile_clean_hooks { compile_hosts report_nr } {
 #
 #  SEE ALSO
 #*******************************************************************************
-proc exec_install_binaries_hooks { arch_list report_nr } {
+proc exec_install_binaries_hooks { arch_list a_report } {
    
    global ts_checktree CHECK_OUTPUT
 
+   upvar $a_report report
    set error_count 0
    for {set i 0} { $i < $ts_checktree(act_nr)} {incr i 1 } {
       for {set ii 0} {[info exists ts_checktree($i,install_binary_hooks_${ii})]} {incr ii 1} {
@@ -184,9 +232,9 @@ proc exec_install_binaries_hooks { arch_list report_nr } {
             add_proc_error "exec_install_binaries_hooks" -1 "Can not execute compile hook $ts_checktree($i,install_binary_hooks_${ii}), compile prog not found"
             return -1
          } else {
-            set res [$prog $arch_list $report_nr]
+            set res [$prog $arch_list report]
             if { $res != 0 } {
-               report_add_message $report_nr "install hook ${ii} of checktree  $ts_checktree($i,dir_name), $prog returned $res\n"
+               report_add_message report "install hook ${ii} of checktree  $ts_checktree($i,dir_name), $prog returned $res\n"
                incr error_count
             }
          }

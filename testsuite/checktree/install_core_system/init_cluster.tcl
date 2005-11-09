@@ -261,7 +261,16 @@ proc cleanup_system { } {
    # add new testsuite queues
   puts $CHECK_OUTPUT "\nadding testsuite queues ..."
   add_queue "all.q" "@allhosts" q_param 1
+  
+  
+  # execute the clean hooks of all checktrees
+  if { [ exec_checktree_clean_hooks ] != 0 } {
+     set_error 1 "exec_checktree_clean_hooks reported an error"
+  }
+  
+  
   set_error 0 "ok"
+  
 
 }
 

@@ -1,3 +1,6 @@
+DT-2005-11-09-1: Testsuite: o Hopefully fixed qsub -ac test
+                 Changed:   qsub testsuite test
+
 DT-2005-11-09-0: Docs:      o Cleaned up man pages
                             o Removed -uall from qhold and qrls
                             o Added list of ignored options for DRMAA

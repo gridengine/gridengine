@@ -831,7 +831,7 @@ proc check_option_ac {} {
 
    set option "-ac myvar1=\"test 1\" -ac myvar2='test 2'"
    # We use a special job script which contains context variable settings
-   set jobargs "$option -l h=${actual_host} -o $job_output_dir -e $job_output_dir $CHECK_ACTUAL_TEST_PATH/sleeper.sh 15" 
+   set jobargs "$option -l h=${actual_host} -o $job_output_dir -e $job_output_dir $CHECK_ACTUAL_TEST_PATH/sleeper.sh 60" 
   
    set result [submit_job $jobargs 0]  
    puts $CHECK_OUTPUT "\njob $result has args: \"$jobargs\""

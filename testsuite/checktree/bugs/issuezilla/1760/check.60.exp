@@ -166,7 +166,7 @@ proc issue_1760_setup {} {
 
 # here the actual test is done
 proc issue_1760_check {} {
-   global ts_config fake_host
+   global ts_config fake_host CHECK_OUTPUT
    global CHECK_HOST CHECK_ARCH CHECK_USER CHECK_CORE_MASTER
 
    set pid [pid]
@@ -223,7 +223,9 @@ proc issue_1760_check {} {
    set qparam(hostlist)  "$group"
 
    # localize messages -- handle_vi_edit is executed on $CHECK_HOST
-   set VALID [translate $ts_config(master_host) 1 0 0 [sge_macro MSG_SGETEXT_ADDEDTOLIST_SSSS] $CHECK_USER $CHECK_HOST $qname "cluster queue" ]
+   # add a "*" to $CHECK_HOST because the host may resolve it's name long
+   set VALID [translate $ts_config(master_host) 1 0 0 [sge_macro MSG_SGETEXT_ADDEDTOLIST_SSSS] $CHECK_USER "$CHECK_HOST*" $qname "cluster queue" ]
+   puts $CHECK_OUTPUT "valid answer is:\n\"$VALID\""
 
    # add by handling vi
    set vi_commands [build_vi_command qparam]

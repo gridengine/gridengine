@@ -482,7 +482,7 @@ proc qconf_backslash_space_output_check {} {
       puts $CHECK_OUTPUT "adding host group: $name"
       # localize messages
       set short_name [string range $name 0 99]
-      set ADDED [translate $ts_config(master_host) 1 0 0 [sge_macro MSG_SGETEXT_ADDEDTOLIST_SSSS] $CHECK_USER $CHECK_HOST $short_name "host group"]
+      set ADDED [translate $ts_config(master_host) 1 0 0 [sge_macro MSG_SGETEXT_ADDEDTOLIST_SSSS] $CHECK_USER "$CHECK_HOST*" $short_name "host group"]
       # add by handling vi
       handle_vi_edit "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-ahgrp $name" "" $ADDED
    }
@@ -516,7 +516,7 @@ proc qconf_backslash_space_output_check {} {
          lappend vi_commands [format "%c" 27]
          set groupname "@qconfbackslash$mindex$lindex"
          # localize messages
-         set ADDED [translate $ts_config(master_host) 1 0 0 [sge_macro MSG_SGETEXT_ADDEDTOLIST_SSSS] $CHECK_USER $CHECK_HOST $groupname "host group"]
+         set ADDED [translate $ts_config(master_host) 1 0 0 [sge_macro MSG_SGETEXT_ADDEDTOLIST_SSSS] $CHECK_USER "$CHECK_HOST*" $groupname "host group"]
          # add by handling vi
          handle_vi_edit "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-ahgrp $groupname" $vi_commands $ADDED
          
@@ -664,7 +664,7 @@ proc qconf_backslash_comma_output_check {} {
       set name "complexvar$count"
       puts $CHECK_OUTPUT "adding complex variable: $name"
       # localize messages
-      set ADDED [translate $ts_config(master_host) 1 0 0 [sge_macro MSG_SGETEXT_ADDEDTOLIST_SSSS] $CHECK_USER $CHECK_HOST $name "complex entry"]
+      set ADDED [translate $ts_config(master_host) 1 0 0 [sge_macro MSG_SGETEXT_ADDEDTOLIST_SSSS] $CHECK_USER "$CHECK_HOST*" $name "complex entry"]
       # add by handling vi
       set vi_commands ""
       lappend vi_commands "O$name cv$count RESTRING == YES NO NONE 0"
@@ -842,7 +842,7 @@ proc qconf_backslash_comma_output_check {} {
 
    # Remove all complex variables
    # localize messages
-   set REMOVED [translate $ts_config(master_host) 1 0 0 [sge_macro MSG_SGETEXT_REMOVEDFROMLIST_SSSS] $CHECK_USER $CHECK_HOST [lrange $names end end] "complex"]
+   set REMOVED [translate $ts_config(master_host) 1 0 0 [sge_macro MSG_SGETEXT_REMOVEDFROMLIST_SSSS] $CHECK_USER "$CHECK_HOST*" [lrange $names end end] "complex"]
    set vi_commands ""
    lappend vi_commands "/complexvar\n5dd"
    handle_vi_edit "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-mc" $vi_commands $REMOVED

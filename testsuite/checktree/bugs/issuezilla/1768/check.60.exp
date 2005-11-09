@@ -45,6 +45,8 @@ set check_needs               "init_core_system"      ;# dependencies of this ch
 set check_root_access_needs   "no"
 
 # setup and cleanup functions
+set check_setup_function   issue_1768_setup
+set check_cleanup_function issue_1768_cleanup
 
 # define test's procedure order
 set check_functions           ""
@@ -64,7 +66,29 @@ proc issue_1768_init_level {} {
    return -1
 }
 
-proc issue_1768_run  {} {
+proc issue_1768_setup {} {
+   global ts_config CHECK_USER CHECK_HOST
+
+   set pid [pid]
+   set cat "issue1768cat$pid"
+   set qtask "$ts_config(product_root)/$ts_config(cell)/common/qtask"
+   set qtask_tmp "/tmp/qtask$pid"
+
+   set error [ catch {
+      file copy $qtask $qtask_tmp
+      set f [open $qtask a]
+      puts $f "$cat -N \"two words\" -N \"three . words\""
+      close $f
+   } message ]
+
+   if {$error != 0} {
+      set_error -1 "failed setting up qtask file: $message"
+   } else {
+      set_error 0 "ok"
+   }
+}
+
+proc issue_1768_cleanup {} {
    global ts_config CHECK_USER CHECK_HOST CHECK_PRODUCT_ROOT
 
    set pid [pid]
@@ -73,14 +97,19 @@ proc issue_1768_run  {} {
    set qtask_tmp "/tmp/qtask$pid"
 
    set error [ catch {
-      exec "cp" $qtask $qtask_tmp
-      exec "/bin/echo" "$cat -N \"two words\" -N \"three . words\"" ">>$qtask"
+      file copy -force $qtask_tmp $qtask
+      file delete $qtask_tmp
    } message ]
 
    if {$error != 0} {
-      set_error -1 "failed setting up qtask file: $message"
-      return -1
+      set_error -1 "failed restoring qtask file: $message"
+   } else {
+      set_error 0 "ok"
    }
+}
+
+proc issue_1768_run  {} {
+   global ts_config CHECK_USER CHECK_HOST CHECK_PRODUCT_ROOT
 
    # Run test binary
    set failed 0
@@ -89,24 +118,17 @@ proc issue_1768_run  {} {
       set up_arch [resolve_build_arch $host]
       set client_binary "$ts_config(source_dir)/$up_arch/test_drmaa_issue1768"
 
-      catch {set output [start_remote_prog $host $CHECK_USER $client_binary "/bin/date $cat"]}
-
-      # If we segfault on any architecture, the bug still exists.
-      if {$prg_exit_state != 0} {
-         set failed 1
-      }
-   }
-
-   set error [ catch { exec "mv" "-f" $qtask_tmp $qtask } message ]
-
-   if {$error != 0} {
-      set_error -1 "failed restoring qtask file: $message"
-      return -1
-   } elseif {$failed == 1} {
-      set_error -1 "test binary failed; issue 1768 still exists"
-      return -1
+      if {[wait_for_remote_file $host $CHECK_USER $client_binary 1 0] != 0} {
+         add_proc_error "issue_1768_run" -3 "test binary $client_binary doesn't exist on host $host"
+         continue
+      } else {
+         set output [start_remote_prog $host $CHECK_USER $client_binary "/bin/date $cat"]
+         # If we segfault on any architecture, the bug still exists.
+         if {$prg_exit_state != 0} {
+            add_proc_error "issue_1768_run" -1 "test binary $client_binary failed on host $host:\n$output"
+         }
+      }   
    }
 
    set_error 0 "ok"
-   return 0
 }

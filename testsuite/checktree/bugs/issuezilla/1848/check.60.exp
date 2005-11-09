@@ -204,7 +204,7 @@ proc issue_1848_run {} {
    } ;# while
 
    # stop the tail -f
-   close_logfile_wait
+   close_spawn_process $id
 
    puts $CHECK_OUTPUT "done waiting messages: $count"
 
@@ -214,8 +214,6 @@ proc issue_1848_run {} {
       set_error 0 "ok"
    }
 }
-
-
 
 proc issue_1848_cleanup {} {
    global prj1_id_list 

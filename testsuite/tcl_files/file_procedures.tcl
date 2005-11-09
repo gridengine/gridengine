@@ -2500,12 +2500,17 @@ proc wait_for_file { path_to_file seconds { to_go_away 0 } { do_error_check 1 } 
 #     user             - user id who performs check
 #     path             - full path to file
 #     { mytimeout 60 } - timeout in seconds
+#     {raise_error 1}  - do report errors?
 #
+#  RESULT
+#     0 on success
+#     -1 on error
+#   
 #  SEE ALSO
 #     file_procedures/wait_for_file()
 #     file_procedures/wait_for_remote_file()
 #*******************************************************************************
-proc wait_for_remote_file { hostname user path { mytimeout 60 } } {
+proc wait_for_remote_file { hostname user path { mytimeout 60 } {raise_error 1}} {
    global CHECK_OUTPUT
 
    set is_ok 0
@@ -2529,7 +2534,9 @@ proc wait_for_remote_file { hostname user path { mytimeout 60 } } {
       return 0;
    } else {
       puts $CHECK_OUTPUT "timeout"
-      add_proc_error "wait_for_remote_file" -1 "timeout while waiting for remote file $path on host $hostname"
+      if {$raise_error} {
+         add_proc_error "wait_for_remote_file" -1 "timeout while waiting for remote file $path on host $hostname"
+      }
       return -1;
    }
 }

@@ -107,7 +107,12 @@ proc generic_module_tests_run {} {
          set command "$ts_config(source_dir)/$compile_arch/$module_test"
          puts -nonewline $CHECK_OUTPUT "$module_test ..."
          flush $CHECK_OUTPUT
-         set output [start_remote_prog $host $CHECK_USER $command "" ret 300]
+         if {[wait_for_remote_file $host $CHECK_USER $command 1 0] != 0} {
+            add_proc_error "generic_module_tests_run" -3 "module test binary $command doesn't exist on host $host"
+            continue
+         } else {
+            set output [start_remote_prog $host $CHECK_USER $command "" ret 300]
+         }
          if {$ret == 0} {
             puts "ok"
          } else {

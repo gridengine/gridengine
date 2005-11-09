@@ -33,7 +33,7 @@
 
 
 
-#****** system_tests/shepherd/issue_1803 *************************************************
+#****** system_tests/shepherd/issue_1803 ***************************************
 #  NAME
 #     issue_1803
 #
@@ -64,10 +64,8 @@ set check_init_level_procedure "issue_1803_init_level"
 # define test's name and run level descriptions
 set check_name            "issue_1803"
 set check_category        "COMPATIBILITY SYSTEM VERIFIED"
-set check_highest_level   102
-set check_description(0)   "batch job submission"
-set check_description(1)   "binary job submission"
-set check_description(2)   ""
+set check_highest_level   0
+set check_description(0)  "batch job submission"
 
 
 
@@ -108,17 +106,21 @@ proc issue_1803_setup {} {
 
    puts $CHECK_OUTPUT "saving actual configuration ..."   
    get_config issue_1803_stored_configuration
+
+   # set short scheduling interval
    set my_issue_1803_schedd_config(schedule_interval) "0:0:01"
    set_schedd_config my_issue_1803_schedd_config 
 
+   # set prolog and epilog in all.q
    set my_conf(prolog) "/bin/true prolog"
    set my_conf(epilog) "/bin/true epilog" 
    set_queue all.q  "" my_conf
 
+   # set KEEP_ACTIVE and short load_report_time in execd params
    get_config act_configuration
    # Setting execd_params to KEEP_ACTIVE=true
    set my_execd_params "KEEP_ACTIVE=true"
-   if { [string compare "none" $act_configuration(execd_params)] != 0 } {
+   if { [string compare -nocase "none" $act_configuration(execd_params)] != 0 } {
       append my_execd_params ",$act_configuration(execd_params)"
    }
    set myconfig(execd_params) "$my_execd_params"
@@ -151,7 +153,7 @@ proc issue_1803_cleanup {} {
 
 
 proc issue_1803_test {} {
-   global issue_1803_test_hosts check_description CHECK_ARCH CHECK_USER ts_user_config
+   global check_description CHECK_ARCH CHECK_USER ts_user_config
    global CHECK_OUTPUT ts_config CHECK_CORE_MASTER CHECK_ACT_LEVEL CHECK_SCRIPT_FILE_DIR
    global CHECK_DISPLAY_OUTPUT
    puts $CHECK_OUTPUT $check_description($CHECK_ACT_LEVEL)
@@ -171,7 +173,7 @@ proc issue_1803_test {} {
       
       # init_logfile_wait instead of sleep
 
-      set host $ts_config(master_host)
+      set host [lindex $ts_config(execd_nodes) 0]
 
       set spool_dir [get_spool_dir $host execd]
 

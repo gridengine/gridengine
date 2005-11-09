@@ -462,7 +462,7 @@ proc start_remote_prog { hostname
                add_proc_error "start_remote_prog" -1 "can't start which command as user $user on host $hostname\nPlease check user environment on that host!\noutput:\n$output\n"
                break
             }
-            set output [ start_remote_prog $hostname $user "ls" "$exec_command" prg_exit_state $mytimeout 0 "" 0 0 0]
+            set output [ start_remote_prog $hostname $user "test" "-f $exec_command" prg_exit_state $mytimeout 0 "" 0 0 0]
             if { $prg_exit_state == 0 } {
                set is_ok 1
                break

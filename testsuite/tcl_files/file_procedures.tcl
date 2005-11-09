@@ -2517,7 +2517,7 @@ proc wait_for_remote_file { hostname user path { mytimeout 60 } {raise_error 1}}
    set my_mytimeout [ expr ( [timestamp] + $mytimeout ) ] 
 
    while { $is_ok == 0 } {
-      set output [ start_remote_prog $hostname $user "ls" "$path" prg_exit_state 60 0 "" 0]
+      set output [ start_remote_prog $hostname $user "test" "-f $path" prg_exit_state 60 0 "" 0]
       if { $prg_exit_state == 0 } {
          set is_ok 1
          break
@@ -2530,7 +2530,6 @@ proc wait_for_remote_file { hostname user path { mytimeout 60 } {raise_error 1}}
    }
    if { $is_ok == 1 } {
       puts $CHECK_OUTPUT "ok"
-      puts $CHECK_OUTPUT "found file: $output"
       return 0;
    } else {
       puts $CHECK_OUTPUT "timeout"
@@ -2569,7 +2568,7 @@ proc wait_for_remote_file { hostname user path { mytimeout 60 } {raise_error 1}}
 proc is_remote_file { hostname user path } {
    global CHECK_OUTPUT
 
-   set output [ start_remote_prog $hostname $user "ls" "$path" prg_exit_state 60 0 "" 0]
+   set output [ start_remote_prog $hostname $user "test" "-f $path" prg_exit_state 60 0 "" 0]
    if { $prg_exit_state == 0 } {
       puts $CHECK_OUTPUT "found file: $hostname:$path"
       return 1;

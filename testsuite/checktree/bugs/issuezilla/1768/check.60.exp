@@ -92,7 +92,6 @@ proc issue_1768_cleanup {} {
    global ts_config CHECK_USER CHECK_HOST CHECK_PRODUCT_ROOT
 
    set pid [pid]
-   set cat "issue1768cat$pid"
    set qtask "$CHECK_PRODUCT_ROOT/$ts_config(cell)/common/qtask"
    set qtask_tmp "/tmp/qtask$pid"
 
@@ -113,6 +112,7 @@ proc issue_1768_run  {} {
 
    # Run test binary
    set failed 0
+   set cat "issue1768cat$pid"
 
    foreach host $ts_config(unique_arch_nodes) {
       set up_arch [resolve_build_arch $host]

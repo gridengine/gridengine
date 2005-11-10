@@ -54,14 +54,16 @@
 #  include <sys/statvfs.h>
 #endif
 
-#include "sge_dstring.h"
+#include "uti/sge_dstring.h"
+#include "uti/sge_stdio.h"
+#include "uti/sge_unistd.h"
+
 #include "basis_types.h"
 #include "err_trace.h"
 #include "sge_time.h"
 #include "sge_uidgid.h"
 #include "config_file.h"
 #include "qlogin_starter.h"
-#include "sge_unistd.h"
 
 #if defined(INTERIX)
 #  include "misc.h"
@@ -129,7 +131,7 @@ void shepherd_trace_init( void )
 	}
 }
 
-void shepherd_trace_exit( void )
+void shepherd_trace_exit(void)
 {
     int         old_euid = SGE_SUPERUSER_UID;
 
@@ -149,9 +151,10 @@ void shepherd_trace_exit( void )
         seteuid(SGE_SUPERUSER_UID);
      }
 
-	if( shepherd_trace_fp ) {
-		fclose( shepherd_trace_fp );
-        shepherd_trace_fp=NULL;
+	if (shepherd_trace_fp) {
+		FCLOSE(shepherd_trace_fp);
+FCLOSE_ERROR:
+      shepherd_trace_fp=NULL;
 	}
 
    /*
@@ -162,6 +165,7 @@ void shepherd_trace_exit( void )
 	}
 
 	shepherd_error_exit();
+   return;
 }
 
 /****** shepherd_trace_chown **************************************************
@@ -220,29 +224,29 @@ void shepherd_error_exit( void )
     * Work around for CR 6293411:
     * See shepherd_trace_exit() for details.
     */
-    if(getuid() == SGE_SUPERUSER_UID) {
-        old_euid = geteuid();
-        seteuid(SGE_SUPERUSER_UID);
-    }
+   if (getuid() == SGE_SUPERUSER_UID) {
+      old_euid = geteuid();
+      seteuid(SGE_SUPERUSER_UID);
+   }
 
    /*
     * Close file handles
     */
-	if( shepherd_error_fp ) {
-		fclose( shepherd_error_fp );
-        shepherd_error_fp=NULL;
+	if (shepherd_error_fp) {
+		FCLOSE_IGNORE_ERROR(shepherd_error_fp);
+      shepherd_error_fp = NULL;
 	}
-	if( shepherd_exit_status_fp ) {
-		fclose( shepherd_exit_status_fp );
-        shepherd_exit_status_fp=NULL;
+	if (shepherd_exit_status_fp) {
+		FCLOSE_IGNORE_ERROR(shepherd_exit_status_fp);
+      shepherd_exit_status_fp = NULL;
 	}	
 
    /*
     * Switch back to admin user?
     */
-    if(old_euid != SGE_SUPERUSER_UID) {
-	   seteuid(old_euid);
-	}
+   if (old_euid != SGE_SUPERUSER_UID) {
+      seteuid(old_euid);
+   }
 }
 
 /****** shepherd_error_chown **************************************************
@@ -488,37 +492,37 @@ void shepherd_error_impl(const char *str, int do_exit)
 void shepherd_write_exit_status(const char *exit_status)
 {
 	struct stat statbuf;
-    int         old_euid = SGE_SUPERUSER_UID;
+	int old_euid = SGE_SUPERUSER_UID;
 
-	if( exit_status ) {
+	if (exit_status) {
 		/* set euid=0. Local files: root can write to every file.
 		 * NFS files: everyone is allowed to write to exit_status file.
 		 */
-      if(getuid() == SGE_SUPERUSER_UID) {
+      if (getuid() == SGE_SUPERUSER_UID) {
          old_euid = geteuid();
          seteuid(SGE_SUPERUSER_UID);
       }
 		/* File was closed (e.g. by an exec()) but fp was not set to NULL */
-		if( shepherd_exit_status_fp 
-	    	 && fstat( fileno( shepherd_exit_status_fp ), &statbuf )==-1
-	    	 && errno==EBADF ) {
+		if (shepherd_exit_status_fp 
+	    	 && fstat(fileno(shepherd_exit_status_fp), &statbuf) == -1
+	    	 && errno == EBADF) {
 			shepherd_exit_status_fp = NULL;
 		}
-		if( !shepherd_exit_status_fp ) {
-			shepherd_exit_status_fp = shepherd_trace_init_intern( st_exit_status );
+		if (!shepherd_exit_status_fp) {
+			shepherd_exit_status_fp = shepherd_trace_init_intern(st_exit_status);
 		}
-		if( shepherd_exit_status_fp ) {
+		if (shepherd_exit_status_fp) {
    		sh_str2file(exit_status, NULL, shepherd_exit_status_fp);
 		} else {
          shepherd_trace("could not write exit_status file\n");
       }
-		if(old_euid != SGE_SUPERUSER_UID) {
-			seteuid( old_euid );
+		if (old_euid != SGE_SUPERUSER_UID) {
+			seteuid(old_euid);
 		}
       /* There are cases where we have to open and close the files 
        * for every write.
        */
-      if(!g_keep_files_open) {
+      if (!g_keep_files_open) {
          shepherd_error_exit();
       }
 	}
@@ -616,13 +620,17 @@ int count_exit_status(void)
       int dummy;
 
       if ((fp = fopen("exit_status", "r"))) {
-         while (fgets(buf, sizeof(buf), fp)) 
-            if (sscanf(buf, "%d\n", &dummy)==1)
+         while (fgets(buf, sizeof(buf), fp)) {
+            if (sscanf(buf, "%d\n", &dummy)==1) {
                n++;
-         fclose(fp);
+            }
+         }
+         FCLOSE(fp);
       } 
    }
 
+   return n;
+FCLOSE_ERROR:
    return n;
 }
 
@@ -884,8 +892,11 @@ static void shepherd_panic(const char *s)
       sge_dstring_init(&ds, buffer, sizeof(buffer));
       fprintf(panic_fp, "%s ["uid_t_fmt":"uid_t_fmt" "pid_t_fmt"]: PANIC: %s\n",
            sge_ctime(0, &ds), getuid(), geteuid(), getpid(), s);
-      fclose(panic_fp);
+      FCLOSE(panic_fp);
    }
+   return;
+FCLOSE_ERROR:
+   return;
 }
 
 /* In an admin user system, this function must be called as admin user! */

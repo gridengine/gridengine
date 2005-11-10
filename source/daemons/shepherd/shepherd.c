@@ -68,12 +68,15 @@ struct rusage {
 
 #include "basis_types.h"
 #include "config_file.h"
+#include "uti/sge_dstring.h"
+#include "uti/sge_stdlib.h"
+#include "uti/sge_stdio.h"
+#include "uti/sge_uidgid.h"
 #include "err_trace.h"
 #include "setrlimits.h"
 #include "signal_queue.h"
 #include "execution_states.h"
 #include "sge_signal.h"
-#include "sge_uidgid.h"
 #include "sge_time.h"
 #include "sge_parse_num_par.h"
 #include "sgedefs.h"
@@ -83,17 +86,14 @@ struct rusage {
 #include "builtin_starter.h"
 #include "sge_afsutil.h"
 #include "qlogin_starter.h"
-#include "sge_stdlib.h"
-#include "sge_uidgid.h"
 #include "sge_feature.h"
-#include "sge_unistd.h"
 #include "sge_os.h"
 #include "sge_pset.h"
-#include "sge_dstring.h"
 #include "sge_shepconf.h"
 #include "sge_mt_init.h"
 #include "msg_common.h"
 #include "version.h"
+#include "sge_fileio.h"
 
 #include "sge_reportL.h"
 
@@ -139,12 +139,11 @@ static void set_ckpt_restart_command(char *, int, char *, int);
 static void handle_job_pid(int, int, int *);
 static int start_async_command(const char *descr, char *cmd);
 static void start_clean_command(char *);
-static int checkpointed_file_exists(void);
-static void create_checkpointed_file(int ckpt_is_in_arena);
 static pid_t start_token_cmd(int, char *, char *, char *, char *);
 static int do_wait(pid_t);
 static void set_sig_handler(int);
 static void shepherd_signal_handler(int);
+
 
 static void shepconf_deliver_signal_or_method(int sig, int pid, pid_t *ctrl_pid);
 
@@ -188,7 +187,7 @@ static int map_signal(int sig)
 
       if (signal_file != NULL) {
          fscanf(signal_file, "%d", &ret);
-         fclose(signal_file);
+         FCLOSE(signal_file);
       } 
    } else if (sig == SIGTTOU) {
       /* checkpoint signal value */
@@ -215,6 +214,10 @@ static int map_signal(int sig)
       shepherd_trace_sprintf("mapped signal %s to signal %s", 
                              sge_sys_sig2str(sig), sge_sys_sig2str(ret));
    }
+   return ret;
+FCLOSE_ERROR:
+   shepherd_trace_sprintf(MSG_FILE_ERRORCLOSEINGXY_SS, 
+                          "signal", strerror(errno));
    return ret;
 }
 
@@ -530,7 +533,6 @@ int main(int argc, char **argv)
    int script_timeout;
    int exit_status = 0;
    int uid, i, ret;
-   FILE *fp;
    pid_t pid;
    SGE_STRUCT_STAT buf;
    int ckpt_type;
@@ -634,16 +636,7 @@ int main(int argc, char **argv)
    /* write our pid to file */
    pid = getpid();
 
-   if (!(fp = fopen("pid", "w"))) {
-      shepherd_error_sprintf("can't write my pid to \"pid\" file: %s", 
-                             strerror(errno));
-   }
-   fprintf(fp, pid_t_fmt"\n", pid);
-   fflush(fp);
-#if (IRIX)
-   fsync(fileno(fp));
-#endif
-   fclose(fp);
+   shepherd_write_pid_file(pid);
 
    uid = getuid();
 
@@ -816,23 +809,15 @@ int main(int argc, char **argv)
    }
 
    if (!SGE_STAT("exit_status", &buf) && buf.st_size) {
-      /* retrieve first exit status from exit status file */
-      if (!(fp = fopen("exit_status", "r")) || (fscanf(fp, "%d\n", &return_code)!=1)) {
-         shepherd_trace("could not read exit_status file\n");
-         return_code = ESSTATE_NO_EXITSTATUS;
-      }
-      fclose(fp);
+      shepherd_read_exit_status_file(&return_code);
    } else {
       /* ensure an exit status file exists */
-	  shepherd_write_exit_status( "0" );
+		shepherd_write_exit_status("0");
       return_code = 0;
    }
 
-   if(search_conf_val("qrsh_control_port") != NULL) {
-      FILE *fd = fopen("shepherd_about_to_exit", "w");
-      if(fd) {
-         fclose(fd);
-      }
+   if (search_conf_val("qrsh_control_port") != NULL) {
+      shepherd_write_shepherd_about_to_exit_file();
       write_exit_code_to_qrsh(exit_status_for_qrsh);
    }
 	
@@ -870,7 +855,6 @@ int ckpt_type
    struct rusage rusage;
    int  status, child_signal=0, exit_status;
    u_long32 wait_status = 0;
-   FILE *fp;
    int core_dumped, ckpt_interval, ckpt_pid;
    int wexit_flag_true = 1; /* to please IRIX compiler */
 
@@ -893,10 +877,7 @@ int ckpt_type
       shepherd_trace("restarting job from checkpoint arena");
 
       /* reuse old osjobid for the migrated job and forward this one to ptf */
-      if (!(fp = fopen("osjobid", "w")))
-         shepherd_error("can't open \"osjobid\" file");
-      fprintf(fp, "%s\n", get_conf_val("ckpt_osjobid"));
-      fclose(fp);
+      shepherd_write_osjobid_file(get_conf_val("ckpt_osjobid"));
 
 #if defined(IRIX)
       sscanf(get_conf_val("ckpt_osjobid"), "%lld", &ash);
@@ -1131,84 +1112,9 @@ int ckpt_type
       }
    
       /******* write usage to file "usage" ************/
-      fp = fopen("usage", "w");
-      if (!fp) {
-         shepherd_error_sprintf("error: can't open \"usage\" file: %s", 
-                                strerror(errno));
-      } 
-      
-      shepherd_trace("writing usage file to \"usage\"");
-
-      /* the wait status is returned by japi_wait()
-         see sge_reportL.h for bitmask and makro definition */
-      fprintf(fp, "wait_status="sge_u32"\n", wait_status);
-
-      fprintf(fp, "exit_status=%d\n", exit_status);
-      fprintf(fp, "signal=%d\n", child_signal);
-
-      fprintf(fp, "start_time=%d\n", (int) start_time);
-      fprintf(fp, "end_time=%d\n", (int) end_time);
-      fprintf(fp, "ru_wallclock="sge_u32"\n", (u_long32) end_time-start_time);
-
-#if defined(NEC_ACCOUNTING_ENTRIES)
-      /* Additional accounting information for NEC SX-4 SX-5 */
-#if defined(NECSX4) || defined(NECSX5)
-#if defined(NECSX4)
-      fprintf(fp, "necsx_necsx4="sge_u32"\n", 1);
-#elif defined(NECSX5)
-      fprintf(fp, "necsx_necsx5="sge_u32"\n", 1);
-#endif
-      fprintf(fp, "necsx_base_prty="sge_u32"\n", 0);
-      fprintf(fp, "necsx_time_slice="sge_u32"\n", 0);
-      fprintf(fp, "necsx_num_procs="sge_u32"\n", 0);
-      fprintf(fp, "necsx_kcore_min="sge_u32"\n", 0);
-      fprintf(fp, "necsx_mean_size="sge_u32"\n", 0);
-      fprintf(fp, "necsx_maxmem_size="sge_u32"\n", 0);
-      fprintf(fp, "necsx_chars_trnsfd="sge_u32"\n", 0);
-      fprintf(fp, "necsx_blocks_rw="sge_u32"\n", 0);
-      fprintf(fp, "necsx_inst="sge_u32"\n", 0);
-      fprintf(fp, "necsx_vector_inst="sge_u32"\n", 0);
-      fprintf(fp, "necsx_vector_elmt="sge_u32"\n", 0);
-      fprintf(fp, "necsx_vec_exe="sge_u32"\n", 0);
-      fprintf(fp, "necsx_flops="sge_u32"\n", 0);
-      fprintf(fp, "necsx_conc_flops="sge_u32"\n", 0);
-      fprintf(fp, "necsx_fpec="sge_u32"\n", 0);
-      fprintf(fp, "necsx_cmcc="sge_u32"\n", 0);
-      fprintf(fp, "necsx_bccc="sge_u32"\n", 0);
-      fprintf(fp, "necsx_mt_open="sge_u32"\n", 0);
-      fprintf(fp, "necsx_io_blocks="sge_u32"\n", 0);
-      fprintf(fp, "necsx_multi_single="sge_u32"\n", 0);
-      fprintf(fp, "necsx_max_nproc="sge_u32"\n", 0);
-#endif
-#endif       
-
-#if defined(SOLARIS) || defined(CRAY)
-      fprintf(fp, "ru_utime=%ld\n", rusage.ru_utime.tv_sec);
-      fprintf(fp, "ru_stime=%ld\n", rusage.ru_stime.tv_sec);
-#else
-
-      fprintf(fp, "ru_utime=%d\n", (int)rusage.ru_utime.tv_sec);
-      fprintf(fp, "ru_stime=%d\n", (int)rusage.ru_stime.tv_sec);
-      fprintf(fp, "ru_maxrss=%ld\n", rusage.ru_maxrss);
-      fprintf(fp, "ru_ixrss=%ld\n", rusage.ru_ixrss);
-#if defined(ultrix)
-      fprintf(fp, "ru_ismrss=%ld\n", rusage.ru_ismrss);
-#endif
-      fprintf(fp, "ru_idrss=%ld\n", rusage.ru_idrss);
-      fprintf(fp, "ru_isrss=%ld\n", rusage.ru_isrss);
-      fprintf(fp, "ru_minflt=%ld\n", rusage.ru_minflt);
-      fprintf(fp, "ru_majflt=%ld\n", rusage.ru_majflt);
-      fprintf(fp, "ru_nswap=%ld\n", rusage.ru_nswap);
-      fprintf(fp, "ru_inblock=%ld\n", rusage.ru_inblock);
-      fprintf(fp, "ru_oublock=%ld\n", rusage.ru_oublock);
-      fprintf(fp, "ru_msgsnd=%ld\n", rusage.ru_msgsnd);
-      fprintf(fp, "ru_msgrcv=%ld\n", rusage.ru_msgrcv);
-      fprintf(fp, "ru_nsignals=%ld\n", rusage.ru_nsignals);
-      fprintf(fp, "ru_nvcsw=%ld\n", rusage.ru_nvcsw);
-      fprintf(fp, "ru_nivcsw=%ld\n", rusage.ru_nivcsw);
-#endif
-
-      fclose(fp);
+      shepherd_write_usage_file(wait_status, exit_status,
+                                child_signal, start_time,
+                                end_time, &rusage);
 
       /* this is SEMPA stuff */
       notify_tasker(exit_status);
@@ -1328,23 +1234,14 @@ static void forward_signal_to_job(int pid, int timeout,
          replace_qrsh_pid = 0;
       } else {
          char *qrsh_pid_file;
-         FILE *fp;
-         char buffer[50];
          pid_t qrsh_pid;
 
          /* read pid from qrsh_starter */
          qrsh_pid_file = get_conf_val("qrsh_pid_file");
 
-         if((fp = fopen(qrsh_pid_file, "r")) != NULL) {
-            /* file contains a valid pid */
-            if(fscanf(fp, pid_t_fmt, &qrsh_pid) == 1) {            
-               /* set pid from qrsh_starter as job_pid */
-               sprintf(buffer, pid_t_fmt, qrsh_pid);
-               add_config_entry("job_pid", buffer); /* !!! should better be add_or_replace */
-               replace_qrsh_pid = 0;
-            }
-            fclose(fp);
-         }
+         shepherd_read_qrsh_pid_file(qrsh_pid_file, &qrsh_pid,
+                            &replace_qrsh_pid);
+
       }
    }
     
@@ -2132,7 +2029,7 @@ static void set_ckpt_restart_command(char *childname, int ckpt_type,
 static void handle_job_pid(int ckpt_type, int pid, int *ckpt_pid) 
 {
    char pidbuf[64];
-   FILE *fp;
+   const char *job_pid = NULL;
 
    /* Set job_pid to real pid or to saved pid for Hibernator restart 
     * for Hibernator restart a part of the job is already done
@@ -2149,11 +2046,9 @@ static void handle_job_pid(int ckpt_type, int pid, int *ckpt_pid)
       else
          *ckpt_pid = 0;   
    }
+   job_pid = get_conf_val("job_pid");
       
-   if ((fp = fopen("job_pid", "w"))) {
-      fprintf(fp, "%s\n", get_conf_val("job_pid"));
-      fclose(fp);
-   } else {
+   if (shepherd_write_job_pid_file(job_pid) == false) {
       /* No use to go on further */
       shepherd_signal_job(pid, SIGKILL);
       shepherd_error("can't write \"job_pid\" file");   
@@ -2234,27 +2129,6 @@ static int start_async_command(const char *descr, char *cmd)
    return pid;
 }
 
-static int checkpointed_file_exists(void)
-{
-   SGE_STRUCT_STAT buf;
-   return ! SGE_STAT("checkpointed", &buf);
-}
-
-static void create_checkpointed_file(int ckpt_is_in_arena)
-{
-   FILE *fp = NULL;
-
-   fp = fopen("checkpointed", "w");
-   if (fp != NULL) {
-      if (ckpt_is_in_arena) {
-         fprintf(fp, "1\n");
-      }
-      fclose(fp);
-   } else {
-      shepherd_error("can't write to file \"checkpointed\"");
-   }
-}
-
 /*-------------------------------------------------------------------------*/
 static void start_clean_command(char *cmd) 
 {
@@ -2322,20 +2196,10 @@ shepherd_signal_job(pid_t pid, int sig)
          break;
 
       if (first) {
-         fp = fopen("osjobid", "r");
-         if (fp) {
-#if defined(IRIX)
-            n = fscanf(fp, "%lld", &osjobid);
-#else
-            n = fscanf(fp, "%d", &osjobid);      
-#endif
-            fclose(fp);
-
-            if (!n) {
-               shepherd_trace("can't read \"osjobid\" file");
-               break;
-            }
-
+         if (!shepherd_read_osjobid_file(&osjobid)) {
+            shepherd_trace("can't read \"osjobid\" file");
+            break;
+         } else {
             first = 0;
          }
       }
@@ -2421,20 +2285,18 @@ shepherd_signal_job(pid_t pid, int sig)
       if(first_kill == 1 || sig != SIGKILL) {
          if(search_conf_val("qrsh_pid_file") != NULL) {
             char *pid_file_name = NULL;
-            FILE *pid_file = NULL;
+            pid_t qrsh_pid = 0;
 
             pid_file_name = get_conf_val("qrsh_pid_file");
 
             sge_switch2start_user();
-            if((pid_file = fopen(pid_file_name, "r")) != NULL) {
-               pid_t qrsh_pid = 0;
-               if(fscanf(pid_file, pid_t_fmt, &qrsh_pid) == 1) {
-                  pid = -qrsh_pid;
-                  shepherd_trace_sprintf("found pid of qrsh client command: " 
-                                         pid_t_fmt, pid);
-               }
-               fclose(pid_file);
+
+            if (shepherd_read_qrsh_file(&qrsh_pid)) {
+               pid = -qrsh_pid;
+               shepherd_trace_sprintf("found pid of qrsh client command: " 
+                                      pid_t_fmt, pid);
             }
+
             sge_switch2admin_user();
          }
       }
@@ -2466,6 +2328,7 @@ shepherd_signal_job(pid_t pid, int sig)
 
 static int notify_tasker(u_long32 exit_status) 
 {
+   const char *const filename = "environment";
    FILE *fp;
    char buf[10000], *name, *value;
    int line=0;
@@ -2474,7 +2337,7 @@ static int notify_tasker(u_long32 exit_status)
 
    pvm_tasker_pid[0] = sig_info_file[0] = pvm_task_id[0] = '\0';
 
-   if (!(fp = fopen("environment", "r"))) {
+   if (!(fp = fopen(filename, "r"))) {
       shepherd_error_sprintf("can't open environment file: %s", 
                              strerror(errno));
       return 1;
@@ -2488,9 +2351,9 @@ static int notify_tasker(u_long32 exit_status)
 
       name = strtok(buf, "=");
       if (!name) {
-         fclose(fp);
          shepherd_error_sprintf("error reading environment file: line=%d, "
                                 "contents:%s", line, buf);
+         FCLOSE(fp);
          return 1;
       }
       value = strtok(NULL, "\n");
@@ -2507,7 +2370,7 @@ static int notify_tasker(u_long32 exit_status)
       sge_set_env_value(name, value);
    }
 
-   fclose(fp);
+   FCLOSE(fp);
 
    if (!pvm_tasker_pid[0] || !sig_info_file[0] || !pvm_task_id[0] ) {
       shepherd_trace("no tasker to notify");
@@ -2520,17 +2383,11 @@ static int notify_tasker(u_long32 exit_status)
       return 1;
    }
 
-   if (!(fp = fopen(sig_info_file, "a"))) {
-      shepherd_error_sprintf("can't open signal info file \"%s\": %s",
-                             sig_info_file, strerror(errno));
-   } else {
+   if (shepherd_write_sig_info_file(sig_info_file, pvm_task_id, exit_status)) {
       char *job_owner;
       struct passwd *pw=NULL;
       struct passwd pw_struct;
       char buffer[2048];
-
-      fprintf(fp, "%s "sge_u32"\n", pvm_task_id, exit_status); 
-      fclose(fp);
 
       /* sig_info_file has to be removed by tasker 
          and tasker runs in user mode */
@@ -2540,7 +2397,6 @@ static int notify_tasker(u_long32 exit_status)
          shepherd_error_sprintf("can't get password entry for user "
                                 "\"%s\"", job_owner);
       }
-
       chown(sig_info_file, pw->pw_uid, -1);
    }
 
@@ -2554,6 +2410,10 @@ static int notify_tasker(u_long32 exit_status)
    sge_switch2admin_user(); 
 
    return 0;
+FCLOSE_ERROR:
+   shepherd_error_sprintf(MSG_FILE_ERRORCLOSEINGXY_SS, 
+                          filename, strerror(errno));
+   return 1;
 }
 
 /*------------------------------------------------------------------*/

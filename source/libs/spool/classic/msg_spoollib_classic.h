@@ -67,6 +67,7 @@
 /*
  * libs/spool/read_write_manop.c
  */
+#define MSG_FILE_ERRORCLOSEINGX_S   _MESSAGE(61031, _("error closeing "SFN))
 #define MSG_FILE_ERROROPENINGX_S    _MESSAGE(61032, _("error opening "SFN))
 
 /*

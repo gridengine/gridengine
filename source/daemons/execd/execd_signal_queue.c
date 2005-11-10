@@ -61,6 +61,8 @@
 #include "sge_qinstance_state.h"
 #include "sge_report_execd.h"
 #include "sge_report.h"
+#include "uti/sge_stdio.h"
+
 #if defined(DARWIN)
 #include "sge_uidgid.h"
 #endif
@@ -522,14 +524,15 @@ const char *pe_task_id
       sge_get_active_job_file_path(&fname,
                                    job_id, ja_task_id, pe_task_id, "signal");
       if (!(fp = fopen(sge_dstring_get_string(&fname), "w"))) {
-         ERROR((SGE_EVENT, MSG_EXECD_WRITESIGNALFILE_S, sge_dstring_get_string(&fname)));
+         ERROR((SGE_EVENT, MSG_EXECD_WRITESIGNALFILE_S, 
+                sge_dstring_get_string(&fname)));
          sge_dstring_free(&fname);
          goto CheckShepherdStillRunning;
       } 
 
       fprintf(fp, "%d\n", sig);
-      fclose(fp);
       sge_dstring_free(&fname);
+      FCLOSE(fp);
    }
 
    /*
@@ -557,6 +560,7 @@ const char *pe_task_id
    DEXIT;
    return 0;
 
+FCLOSE_ERROR:
 CheckShepherdStillRunning:
    {
       dstring path = DSTRING_INIT;

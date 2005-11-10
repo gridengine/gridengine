@@ -261,10 +261,7 @@ static int set_processor_range(char *crange, int proc_set_num, char *err_str)
 #endif
 
    /* dump to file for later use */
-   if ((fp = fopen("processor_set_number","w"))) {
-      fprintf(fp,"%d\n",proc_set_num);
-      fclose(fp);
-   } else {
+   if (!shepherd_write_processor_set_number_file(proc_set_num)) {
       shepherd_trace("MPPS_CREATE: failed creating file processor_set_number");
       return PROC_SET_ERROR;
    }
@@ -344,16 +341,14 @@ static int set_processor_range(char *crange, int proc_set_num, char *err_str)
 *        PROC_SET_WARNING - A non-critical error occurred (e.g. the
 *                           procedure is executed as unpriviliged user)
 ******************************************************************************/
-static int free_processor_set(char *err_str) 
+static int 
+shepherd_read_processor_set_number_file(char *err_str) 
 {
    FILE *fp;
    int proc_set_num;
 
    /* read unique processor set number from file */
-   if ((fp = fopen("processor_set_number","r"))) {
-      fscanf(fp, "%d", &proc_set_num);
-      fclose(fp);
-   } else {
+   if (!shepherd_read_processor_set_number_file(filename)) {
       shepherd_trace("MPPS_CREATE: failed reading from file processor_set_number");
       return PROC_SET_ERROR;
    }

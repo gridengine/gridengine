@@ -29,16 +29,23 @@
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
+
 #include <stdio.h>
+#include <errno.h>
 
 #include <Xm/Xm.h>
+
+#include "uti/sge_stdio.h"
+#include "uti/sge_unistd.h"
+
+#include "sgeobj/sge_answer.h"
 
 #include "qmon_rmon.h"
 #include "qmon_cull.h"
 #include "qmon_browser.h"
 #include "qmon_file.h"
-#include "sge_unistd.h"
-#include "sge_answer.h"
+
+#include "msg_common.h"
 
 lList* qmonReadFile(
 char *filename 
@@ -54,19 +61,18 @@ char *filename
    if (!filename) {
       answer_list_add(&answer, "No filename specified", 
                       STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
-      DEXIT;
-      return answer;
+      DRETURN(answer);
    }
 
    /* 
    ** make sure the file is a regular text file and open it 
    */
-   if (SGE_STAT(filename, &statb) == -1 || (statb.st_mode & S_IFMT) != S_IFREG ||
-            !(fp = fopen(filename, "r"))) {
+   if (SGE_STAT(filename, &statb) == -1 
+       || (statb.st_mode & S_IFMT) != S_IFREG 
+       || !(fp = fopen(filename, "r"))) {
       sprintf(buf, "Cant open file '%s' for reading !", filename);
       answer_list_add(&answer, buf, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
-      DEXIT;
-      return answer;
+      DRETURN(answer);
    }
 
    /* 
@@ -77,9 +83,8 @@ char *filename
    if (!(text = XtMalloc((unsigned)(statb.st_size + 1)))) {
       sprintf(buf, "Cant alloc enough space for %s", filename);
       answer_list_add(&answer, buf, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
-      fclose(fp);
-      DEXIT;
-      return answer;
+      FCLOSE(fp);
+      DRETURN(answer);
    }
 
    if (!fread(text, sizeof (char), statb.st_size + 1, fp)) {
@@ -94,8 +99,11 @@ char *filename
 
    /* free all allocated space and close */
    XtFree(text);
-   fclose(fp);
+   FCLOSE(fp);
 
-   DEXIT;
-   return answer;
+   DRETURN(answer);
+FCLOSE_ERROR:
+   sprintf(buf, MSG_FILE_NOCLOSE_SS, filename, strerror(errno));
+   answer_list_add(&answer, buf, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+   DRETURN(answer);
 }

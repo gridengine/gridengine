@@ -37,10 +37,10 @@
 #include <limits.h>
 #include <sys/stat.h>
 #include <sys/time.h>
+#include <errno.h>
 
 #include "sge_lock.h"
 #include "sge_bootstrap.h"
-#include "sge_unistd.h"
 #include "sge.h"
 #include "setup.h"
 #include "sge_all_listsL.h"
@@ -70,18 +70,25 @@
 #include "sge_string.h"
 #include "setup_path.h" 
 #include "sge_time.h" 
-#include "sge_uidgid.h"
-#include "sge_io.h"
 #include "sge_spool.h"
 #include "sge_hostname.h"
 #include "sge_os.h"
-#include "sge_answer.h"
 #include "sge_profiling.h"
 #include "sge_serf.h"
 #include "sge_mt_init.h"
 #include "sge_category.h"
 
-#include <sgeobj/sge_schedd_conf.h>
+#include "uti/sge_io.h"
+#include "uti/sge_stdio.h"
+#include "uti/sge_uidgid.h"
+#include "uti/sge_unistd.h"
+
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_schedd_conf.h"
+
+#include "msg_common.h"
+#include "msg_schedd.h"
+#include "msg_daemons_common.h"
 
 /* number of current scheduling alorithm in above array */
 int current_scheduler = 0; /* default scheduler */
@@ -692,16 +699,11 @@ static char schedule_log_path[SGE_PATH_MAX + 1] = "";
 const char *schedule_log_file = "schedule";
 
 /* MT-NOTE: schedd_serf_record_func() is not MT safe */
-static void schedd_serf_record_func(
-u_long32 job_id,
-u_long32 ja_taskid,
-const char *state,
-u_long32 start_time,
-u_long32 end_time,
-char level_char,
-const char *object_name,
-const char *name,
-double utilization)
+static void 
+schedd_serf_record_func(u_long32 job_id, u_long32 ja_taskid, const char *state,
+                        u_long32 start_time, u_long32 end_time, 
+                        char level_char, const char *object_name, 
+                        const char *name, double utilization)
 {
    FILE *fp;
 
@@ -718,13 +720,17 @@ double utilization)
    }
 
    /* a new record */
-   fprintf(fp, sge_U32CFormat":"sge_U32CFormat":%s:"sge_U32CFormat":"sge_U32CFormat":%c:%s:%s:%f\n",
-      sge_u32c(job_id), sge_u32c(ja_taskid), state, sge_u32c(start_time), sge_u32c(end_time - start_time), 
-         level_char, object_name, name, utilization);
-   fclose(fp);
+   fprintf(fp, sge_U32CFormat":"sge_U32CFormat":%s:"sge_U32CFormat":"
+           sge_U32CFormat":%c:%s:%s:%f\n", sge_u32c(job_id), 
+           sge_u32c(ja_taskid), state, sge_u32c(start_time), 
+           sge_u32c(end_time - start_time), 
+           level_char, object_name, name, utilization);
+   FCLOSE(fp);
 
-   DEXIT;
-   return;
+   DRETURN_VOID;
+FCLOSE_ERROR:
+   DPRINTF((MSG_FILE_ERRORCLOSEINGXY_SS, schedule_log_path, strerror(errno)));
+   DRETURN_VOID;
 }
 
 /* MT-NOTE: schedd_serf_newline() is not MT safe */
@@ -732,6 +738,7 @@ static void schedd_serf_newline(u_long32 time)
 {
    FILE *fp;
 
+   DENTER(TOP_LAYER, "schedd_serf_newline");
    if (!*schedule_log_path) {
       sprintf(schedule_log_path, "%s/%s/%s", path_state_get_cell_root(), "common", schedule_log_file);
    }
@@ -740,7 +747,11 @@ static void schedd_serf_newline(u_long32 time)
    if (fp) {
       /* well, some kind of new line indicating a new schedule run */
       fprintf(fp, "::::::::\n");
-      fclose(fp);
+      FCLOSE(fp);
    }
+   DRETURN_VOID;
+FCLOSE_ERROR:
+   DPRINTF((MSG_FILE_ERRORCLOSEINGXY_SS, schedule_log_path, strerror(errno)));
+   DRETURN_VOID;
 }
 

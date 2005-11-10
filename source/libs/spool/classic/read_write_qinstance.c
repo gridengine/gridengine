@@ -445,7 +445,7 @@ write_qinstance(int spool, int how, const lListElem *ep)
 #endif      
    }
    if (how != 0) {
-      fclose(fp);
+      FCLOSE(fp);
    } 
    if (how == 2) {
       if (rename(filename, real_filename) == -1) {
@@ -458,6 +458,7 @@ write_qinstance(int spool, int how, const lListElem *ep)
    DEXIT;
    return how==1?sge_strdup(NULL, filename):filename;
 FPRINTF_ERROR:
+FCLOSE_ERROR:
    DEXIT;
    return NULL;  
 }

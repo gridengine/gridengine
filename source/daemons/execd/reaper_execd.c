@@ -87,6 +87,7 @@
 #include "sge_var.h"
 #include "sge_report.h"
 #include "sge_ulong.h"
+#include "uti/sge_stdio.h"
 
 #ifdef COMPILE_DC
 #  include "ptf.h"
@@ -456,12 +457,11 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
        * failed = ESSTATE_SHEPHERD_EXIT or exit status of shepherd if we are
        * parent in case we can't open the exit_status file
        */
-   }
-   else {
+   } else {
       int fscanf_count, shepherd_exit_status_file;
          
       fscanf_count = fscanf(fp, "%d", &shepherd_exit_status_file);
-      fclose(fp);
+      FCLOSE_IGNORE_ERROR(fp);
       if (fscanf_count != 1) {
          sprintf(error, MSG_STATUS_ABNORMALTERMINATIONFOSHEPHERDFORJOBXYEXITSTATEFILEISEMPTY_S,
                  job_get_id_string(job_id, ja_task_id, pe_task_id));
@@ -474,8 +474,7 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
             failed = shepherd_exit_status;
          else
             failed = ESSTATE_NO_EXITSTATUS;
-      }   
-      else if (failed != ESSTATE_NO_PID)  /* only set during execd startup */
+      } else if (failed != ESSTATE_NO_PID)  /* only set during execd startup */
          failed = shepherd_exit_status_file;
          
       /* 
@@ -496,9 +495,9 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
       if (failed == ESSTATE_DIED_THRU_SIGNAL)
          sprintf(error, MSG_SHEPHERD_DIEDTHROUGHSIGNAL);
       else if (failed == ESSTATE_NO_PID)
-          sprintf(error, MSG_SHEPHERD_NOPIDFILE);
+         sprintf(error, MSG_SHEPHERD_NOPIDFILE);
       else
-          sprintf(error, MSG_SHEPHERD_EXITEDWISSTATUS_I, failed);
+         sprintf(error, MSG_SHEPHERD_EXITEDWISSTATUS_I, failed);
    }
 
    /* look for error file this overrules errors found yet */
@@ -523,7 +522,7 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
          ERROR((SGE_EVENT, MSG_JOB_CANTREADERRORFILEFORJOBXY_S, 
             job_get_id_string(job_id, ja_task_id, pe_task_id)));
       }      
-      fclose(fp);
+      FCLOSE_IGNORE_ERROR(fp);
    }
    else {
       ERROR((SGE_EVENT, MSG_FILE_NOOPEN_SS, sge_dstring_get_string(&fname), strerror(errno)));
@@ -620,7 +619,7 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
             DPRINTF(("need restart from ckpt arena\n"));
             ckpt_arena = 2;
          }
-         fclose(fp);
+         FCLOSE_IGNORE_ERROR(fp);
       }   
 
    sge_get_active_job_file_path(&fname, job_id, ja_task_id, pe_task_id, 
@@ -629,7 +628,7 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
          if ((fp = fopen(sge_dstring_get_string(&fname), "r"))) {
             if (!fscanf(fp, sge_u32 , &job_pid))
                job_pid = 0;
-            fclose(fp);
+            FCLOSE_IGNORE_ERROR(fp);
          }
          else {
             job_pid = 0;
@@ -1438,11 +1437,11 @@ examine_job_task_from_file(int startup, char *dir, lListElem *jep,
          execd (and thus the shepherds) do local spooling instead of via NFS */
       WARNING((SGE_EVENT, MSG_SHEPHERD_CANTREADPIDFROMPIDFILEXFORJOBY_SS,
                   fname, dir));
-      fclose(fp);
+      FCLOSE_IGNORE_ERROR(fp);
       DEXIT;
       return;
    }
-   fclose(fp);
+   FCLOSE_IGNORE_ERROR(fp);
 
    /* look whether shepherd is still alive */ 
    shepherd_alive = sge_contains_pid(pid, pids, npids);
@@ -1512,14 +1511,10 @@ examine_job_task_from_file(int startup, char *dir, lListElem *jep,
 /* - data retrieved from "usage" as shepherd has written it */
 /*   if we cant read "usage" exit_status = 0xffffffff       */ 
 /************************************************************/
-static int read_dusage(
-lListElem *jr,
-const char *jobdir,
-u_long32 jobid,
-u_long32 jataskid,
-int failed,
-int usage_mul_factor
-) {
+static int 
+read_dusage(lListElem *jr, const char *jobdir, u_long32 jobid, 
+            u_long32 jataskid, int failed, int usage_mul_factor) 
+{
    char pid_file[SGE_PATH_MAX];
    FILE *fp;
    u_long32 pid;
@@ -1534,11 +1529,11 @@ int usage_mul_factor
       fp = fopen(pid_file, "r");
       if (fp) {
          fscanf(fp, sge_u32 , &pid);
-         fclose(fp);
-      }
-      else
+         FCLOSE(fp);
+      } else {
          ERROR((SGE_EVENT, MSG_SHEPHERD_CANTOPENPIDFILEXFORJOBYZ_SUU,
                 pid_file, sge_u32c(jobid), sge_u32c(jataskid)));
+      }
    }
 
    if (failed != ESSTATE_NO_CONFIG) {
@@ -1593,7 +1588,7 @@ int usage_mul_factor
          u_long32 wait_status;
 
          read_config_list(fp, &cflp, NULL, CF_Type, CF_name, CF_value, 0, "=", 0, buf, sizeof(buf));
-         fclose(fp);
+         FCLOSE(fp);
 
          if (extract_ulong_attribute(&cflp, "wait_status", &wait_status)==0)
             lSetUlong(jr, JR_wait_status, wait_status);
@@ -1687,6 +1682,11 @@ int usage_mul_factor
 #endif
    DEXIT;
    return 0;
+FCLOSE_ERROR:
+   ERROR((SGE_EVENT, MSG_FILE_ERRORCLOSEINGXY_SS, "usage or pid", 
+          strerror(errno)));
+   DEXIT;
+   return -1;
 }
 
 

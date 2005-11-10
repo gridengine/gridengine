@@ -52,7 +52,11 @@
 #include "sgermon.h"
 
 #include "uti/sge_profiling.h"
+#include "uti/sge_stdio.h"
+
 #include "commlib.h"
+
+#include "msg_common.h"
 
 #define JOB_CHUNK 8
 #define NTHREADS 3
@@ -1884,7 +1888,7 @@ static int test(int *argc, char **argv[], int parse_args)
             return 1;
          }
          fprintf(fp, "%s\n", mirror_text);
-         fclose(fp);
+         FCLOSE(fp);
 
          if (drmaa_init(NULL, diagnosis, sizeof(diagnosis)-1) != DRMAA_ERRNO_SUCCESS) {
             fprintf(stderr, "drmaa_init() failed: %s\n", diagnosis);
@@ -2784,7 +2788,7 @@ static int test(int *argc, char **argv[], int parse_args)
             }
 
             fprintf(fp, "%s\n", mirror_text);
-            fclose(fp);
+            FCLOSE(fp);
             
             printf ("Clearing output file\n");
             strcpy (abs_path, "/tmp/");
@@ -4210,6 +4214,9 @@ static int test(int *argc, char **argv[], int parse_args)
    }
 
    return 0;
+FCLOSE_ERROR:
+   fprintf(stderr, MSG_FILE_ERRORCLOSEINGXY_SS, input_path, strerror(errno));
+   return 1;
 }
 
 

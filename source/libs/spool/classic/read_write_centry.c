@@ -217,7 +217,7 @@ char *write_centry(int spool, int how, const lListElem *ep)
    FPRINTF((fp, "urgency     %s\n", lGetString(ep, CE_urgency_weight)));
 
    if (how!=0) {
-      fclose(fp);
+      FCLOSE(fp);
    }
    if (how == 2) {
       if (rename(filename, real_filename) == -1) {
@@ -231,6 +231,7 @@ char *write_centry(int spool, int how, const lListElem *ep)
    DEXIT;
    return how==1?sge_strdup(NULL, filename):filename;
 FPRINTF_ERROR:
+FCLOSE_ERROR:
    DEXIT;
    return NULL;
 }

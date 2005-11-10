@@ -34,10 +34,11 @@
 #include <string.h>
 #include <ctype.h>
 
+#include "uti/sge_string.h"
+#include "uti/sge_stdio.h"
 #include "sgermon.h"
 #include "sge_log.h"
 #include "basis_types.h"
-#include "sge_string.h"
 #include "err_trace.h"
 #include "sge_parse_num_par.h"
 #include "config_file.h"
@@ -198,9 +199,11 @@ const char *fname
       }
       sge_free_saved_vars(context);
    }
-   fclose(fp);
+   FCLOSE(fp);
 
    return 0;
+FCLOSE_ERROR:
+   return 1;
 }
 
 /******************************************************/

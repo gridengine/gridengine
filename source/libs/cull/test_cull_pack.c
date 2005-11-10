@@ -1,11 +1,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 
 #define __SGE_GDI_LIBRARY_HOME_OBJECT_FILE__
 #include "cull/cull.h"
 
 #include "uti/sge_profiling.h"
+#include "uti/sge_stdio.h"
+
+#include "msg_common.h"
 
 enum {
    TEST_host = 1,
@@ -49,6 +53,7 @@ lNameSpace nmv[] = {
 
 int main(int argc, char *argv[])
 {
+   const char *const filename = "test_cull_pack.txt";
    lListElem *ep, *obj, *copy;
    sge_pack_buffer pb, copy_pb;
    int pack_ret;
@@ -137,22 +142,22 @@ int main(int argc, char *argv[])
    lFreeElem(&copy);
 
    /* test lDump functions */
-   if(lDumpElem("test_cull_pack.txt", ep, 1)) {
+   if(lDumpElem(filename, ep, 1)) {
       printf("error dumping element\n");
       return EXIT_FAILURE;
    }
 
-   if((fd = fopen("test_cull_pack.txt", "r")) == NULL) {
+   if((fd = fopen(filename, "r")) == NULL) {
       printf("error opening dump file test_cull_pack.txt\n");
       return EXIT_FAILURE;
    }
 
    if((copy = lUndumpElemFp(fd, TEST_Type)) == NULL) {
-      fclose(fd);
+      FCLOSE(fd);
       printf("error undumping element\n");
       return EXIT_FAILURE;
    }
-   fclose(fd);
+   FCLOSE(fd);
    printf("element after dumping and undumping\n");
    lWriteElemTo(copy, stdout);
    lFreeElem(&copy);
@@ -160,6 +165,9 @@ int main(int argc, char *argv[])
    /* cleanup and exit */
    lFreeElem(&ep);
    return EXIT_SUCCESS;
+FCLOSE_ERROR:
+   printf(MSG_FILE_ERRORCLOSEINGXY_SS, filename, strerror(errno));
+   return EXIT_FAILURE;
 }
 
 

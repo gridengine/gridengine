@@ -40,7 +40,9 @@
 #include <ctype.h>
 #include <fnmatch.h>
 
-#include "sge_unistd.h"
+#include "uti/sge_stdio.h"
+#include "uti/sge_unistd.h"
+
 #include "sge.h"
 #include "sge_gdi.h"
 #include "sge_options.h"
@@ -7045,11 +7047,13 @@ static const char *write_attr_tmp_file (const char *name, const char *value,
       return NULL;
    }
    
-   fprintf (fp, "%s", name);
-   fprintf (fp, "%c", delimiter);
-   fprintf (fp, "%s\n", value);
+   fprintf(fp, "%s", name);
+   fprintf(fp, "%c", delimiter);
+   fprintf(fp, "%s\n", value);
    
-   fclose (fp);
+   FCLOSE(fp);
    
    return (const char *)filename;
+FCLOSE_ERROR:
+   return NULL;
 }

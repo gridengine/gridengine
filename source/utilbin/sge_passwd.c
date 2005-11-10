@@ -324,29 +324,25 @@ static EVP_PKEY *
 read_public_key(const char *certfile)
 {
    FILE *fp = NULL;
-   X509 *x509;
-   EVP_PKEY *pkey;
+   EVP_PKEY *pkey = NULL;
 
    DENTER(TOP_LAYER, "read_public_key");
    fp = fopen(certfile, "r");
-   if (!fp) {
-      DEXIT;
-      return NULL;
+   if (fp) {
+      X509 *x509 = shared_ssl_func__PEM_read_X509(fp, NULL, 0, NULL);
+      if (x509 == NULL) {
+         shared_ssl_func__ERR_print_errors_fp(stderr);
+      } else {
+         FCLOSE(fp);
+         pkey = shared_ssl_func__X509_extract_key(x509);
+         shared_ssl_func__X509_free(x509);
+         if (pkey == NULL) {
+            shared_ssl_func__ERR_print_errors_fp(stderr);
+         }
+      }
    }
-   x509 = shared_ssl_func__PEM_read_X509(fp, NULL, 0, NULL);
-   if (x509 == NULL) {
-      shared_ssl_func__ERR_print_errors_fp(stderr);
-      DEXIT;
-      return NULL;
-   }
-   fclose (fp);
-   pkey = shared_ssl_func__X509_extract_key(x509);
-   shared_ssl_func__X509_free(x509);
-   if (pkey == NULL) {
-      shared_ssl_func__ERR_print_errors_fp(stderr);
-   }
-   DEXIT;
-   return pkey;
+FCLOSE_ERROR:
+   DRETURN(pkey);
 }
 
 static EVP_PKEY *
@@ -359,26 +355,25 @@ read_private_key(const char *keyfile)
    } pku;   
 
    DENTER(TOP_LAYER, "read_private_key");
-   fp = fopen(keyfile, "r");
-   if (!fp) {
-      DEXIT;
-      return NULL;
-   }
-   
    pku.pointer = NULL;
-   
+   fp = fopen(keyfile, "r");
+   if (fp != NULL) {
 #if 1
-   /* pointer to pkey must passed into function and will not be returned by function! */
-   shared_ssl_func__PEM_read_PrivateKey(fp, &pku.pointer, NULL, NULL);
+      /* 
+       * pointer to pkey must passed into function and will not 
+       * be returned by function! 
+       */
+      shared_ssl_func__PEM_read_PrivateKey(fp, &pku.pointer, NULL, NULL);
 #else
-   pku.pkey = PEM_read_PrivateKey(fp, NULL, 0, NULL);
+      pku.pkey = PEM_read_PrivateKey(fp, NULL, 0, NULL);
 #endif
-   fclose (fp);
-   if (pku.pkey == NULL) {
-      shared_ssl_func__ERR_print_errors_fp(stderr);
+      FCLOSE(fp);
+      if (pku.pkey == NULL) {
+         shared_ssl_func__ERR_print_errors_fp(stderr);
+      }
    }
-   DEXIT;
-   return pku.pkey;
+FCLOSE_ERROR:
+   DRETURN(pku.pkey);
 }
 
 static void

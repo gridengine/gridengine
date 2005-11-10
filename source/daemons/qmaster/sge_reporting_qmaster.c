@@ -40,14 +40,15 @@
 #include "rmon/sgermon.h"
 
 /* uti */
-#include "uti/sge_log.h"
-#include "uti/sge_string.h"
-#include "uti/sge_dstring.h"
 #include "uti/setup_path.h"
-#include "uti/sge_stdlib.h"
-#include "uti/sge_unistd.h"
+#include "uti/sge_dstring.h"
+#include "uti/sge_log.h"
 #include "uti/sge_spool.h"
+#include "uti/sge_stdio.h"
+#include "uti/sge_stdlib.h"
+#include "uti/sge_string.h"
 #include "uti/sge_time.h"
+#include "uti/sge_unistd.h"
 
 /* lck */
 #include "lck/sge_lock.h"
@@ -1354,22 +1355,21 @@ static bool reporting_flush_report_file(lList **answer_list,
                                         const char *filename, rep_buf_t *buf)
 {
    bool ret = true;
-   
    size_t size;
+   char error_buffer[MAX_STRING_SIZE];
+   dstring error_dstring;
 
    DENTER(TOP_LAYER, "reporting_flush_report_file");
 
    size = sge_dstring_strlen(&(buf->buffer));
+   sge_dstring_init(&error_dstring, error_buffer, sizeof(error_buffer));
 
    /* do we have anything to write? */ 
    if (size > 0) {
       FILE *fp;
       bool write_comment = false;
       SGE_STRUCT_STAT statbuf;
-      char error_buffer[MAX_STRING_SIZE];
-      dstring error_dstring;
 
-      sge_dstring_init(&error_dstring, error_buffer, sizeof(error_buffer));
 
       /* if file doesn't exist: write a comment after creating it */
       if (SGE_STAT(filename, &statbuf)) {
@@ -1442,18 +1442,7 @@ static bool reporting_flush_report_file(lList **answer_list,
 
       /* close file */
       if (fp != NULL) {
-         if (fclose(fp) != 0) {
-            if (answer_list == NULL) {
-               ERROR((SGE_EVENT, MSG_ERRORCLOSINGFILE_SS, filename, 
-                      sge_strerror(errno, &error_dstring)));
-            } else {
-               answer_list_add_sprintf(answer_list, STATUS_EDISK, 
-                                       ANSWER_QUALITY_ERROR, 
-                                       MSG_ERRORCLOSINGFILE_SS, filename, 
-                                       sge_strerror(errno, &error_dstring));
-            }
-            ret = false;
-         }
+         FCLOSE(fp);
       }
 
       /* clear the buffer. We do this regardless of the result of
@@ -1465,8 +1454,18 @@ static bool reporting_flush_report_file(lList **answer_list,
       sge_mutex_unlock(buf->mtx_name, SGE_FUNC, __LINE__, &(buf->mtx));
    }
 
-   DEXIT;
-   return ret;
+   DRETURN(ret);
+FCLOSE_ERROR:
+   if (answer_list == NULL) {
+      ERROR((SGE_EVENT, MSG_ERRORCLOSINGFILE_SS, filename, 
+             sge_strerror(errno, &error_dstring)));
+   } else {
+      answer_list_add_sprintf(answer_list, STATUS_EDISK, 
+                              ANSWER_QUALITY_ERROR, 
+                              MSG_ERRORCLOSINGFILE_SS, filename, 
+                              sge_strerror(errno, &error_dstring));
+   }
+   DRETURN(false);
 }
 
 /****** qmaster/reporting_flush() **********************************************

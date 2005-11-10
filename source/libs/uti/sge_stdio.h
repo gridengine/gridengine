@@ -129,6 +129,7 @@
       goto FCLOSE_ERROR; \
    }
 
+#define FCLOSE_IGNORE_ERROR(x) fclose(x) 
 
 pid_t sge_peopen(const char *shell, int login_shell, const char *command, 
                  const char *user, char **env, FILE **fp_in, FILE **fp_out, 

@@ -35,6 +35,7 @@
 #include <errno.h>
 #include <sys/types.h>
 
+#include "uti/sge_stdio.h"
 #include "sgermon.h"
 #include "sge_path_alias.h"
 #include "sge_log.h"
@@ -229,10 +230,15 @@ static int path_alias_read_from_file(lList **path_alias_list, lList **alpp,
 
    } /* while (fgets) */
 
-   fclose(fd);
+   FCLOSE(fd);
 
    DEXIT;
    return ret;
+FCLOSE_ERROR:
+   SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_FILE_ERRORCLOSEINGXY_SS, file_name,
+                  strerror(errno)));
+   answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+   return -1;
 }
 
 /****** sgeobj/path_alias/path_alias_list_initialize() ************************

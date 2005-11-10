@@ -992,11 +992,9 @@ cqueue_verify_attributes(lListElem *cqueue, lList **answer_list,
                                  cqueue_attribute_array[index].href_attr, 
                                  resolved_name);
                      } else {
-                        ERROR((SGE_EVENT, MSG_HGRP_UNKNOWNHOST, hostname));
-                        answer_list_add(answer_list, SGE_EVENT,
-                                      STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
-                        ret = false;
-                        break;
+                        /*
+                         * Due to CR 6319231, IZ 1760 this is allowed
+                         */
                      }
                   }
                }
@@ -1132,19 +1130,19 @@ cqueue_mod_sublist(lListElem *this_elem, lList **answer_list,
          if (name[0] != '@') {
             int back = getuniquehostname(name, resolved_name, 0);
 
-            if (back != CL_RETVAL_OK) {
-               ERROR((SGE_EVENT, MSG_HGRP_UNKNOWNHOST, name));
-               answer_list_add(answer_list, SGE_EVENT,
-                               STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
-               ret = false;
-               break;
+            if (back == CL_RETVAL_OK) {
+               /* 
+                * This assignment is ok because preious name contained a const
+                * string from the mod_elem that we didn't need to free.  
+                * Now it will contain a string that's on the stack, 
+                * so we still don't have to free it. 
+                */
+               name = resolved_name;
+            } else {
+               /*
+                * Due to CR 6319231, IZ 1760 this is allowed
+                */
             }
-            
-            /* This assignment is ok because preious name contained a const
-             * string from the mod_elem that we didn't need to free.  Now it
-             * will contain a string that's on the stack, so we still don't have
-             * to free it. */
-            name = resolved_name;
          }
          
          org_elem = lGetElemHost(org_list, sublist_host_name, name);

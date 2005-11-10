@@ -231,6 +231,7 @@ const lList* master_hGroup_List
    int nm = 0;
    char *name = NULL;
    int found_host;
+   int ret;
 
    DENTER(TOP_LAYER, "sge_del_host");
 
@@ -278,18 +279,23 @@ const lList* master_hGroup_List
       return STATUS_EUNKNOWN;
    }
 
+   ret = sge_resolve_hostname(host, unique, EH_name);
+   if (ret  != CL_RETVAL_OK) {
+      /* 
+       * Due to CR 6319231, IZ 1760 this is allowed 
+       */
+      ;
+   }
+
    /* check if host is in host list */
    found_host = 1;
-   if ((ep=host_list_locate(*host_list, host))==NULL) {
+   if ((ep=host_list_locate(*host_list, unique))==NULL) {
       ERROR((SGE_EVENT, MSG_SGETEXT_DOESNOTEXIST_SS, name, host));
       answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
       found_host = 0;
    }
 
-   if (found_host) {
-      strcpy(unique, host);     /* no need to make unique anymore */
-   }
-   else {
+   if (!found_host) {
       /* may be host was not the unique hostname.
          Get the unique hostname and try to find it again. */
       if (getuniquehostname(host, unique, 0)!=CL_RETVAL_OK)

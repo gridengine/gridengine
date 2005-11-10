@@ -34,6 +34,7 @@
 #include <string.h>
 #include <stdlib.h>
 
+#include "uti/sge_stdio.h"
 #include "sge_gdi_request.h"
 #include "config.h"
 #include "read_object.h"
@@ -101,7 +102,7 @@ int fields[]
       size = MAX(sb.st_size, 10000);
       if (((SGE_OFF_T)size != MAX(sb.st_size, 10000))
           || (buf = (char *) malloc(size)) == NULL) {
-         fclose(fp);
+         FCLOSE(fp);
          ERROR((SGE_EVENT, MSG_MEMORY_CANTMALLOCBUFFERFORXOFFILEY_SS, 
                args->objname, fullname));
          DEXIT;
@@ -111,7 +112,7 @@ int fields[]
    else {
       ERROR((SGE_EVENT, MSG_FILE_CANTDETERMINESIZEFORXOFFILEY_SS, 
              args->objname, fullname));
-      fclose(fp);
+      FCLOSE(fp);
       DEXIT;
       return NULL;
    }
@@ -119,7 +120,7 @@ int fields[]
 
    /* create List Element */
    if (!(ep = lCreateElem(args->objtype))) {
-      fclose(fp);
+      FCLOSE(fp);
       free(buf);
       ERROR((SGE_EVENT, MSG_SGETEXT_NOMEM));
       DEXIT;
@@ -131,14 +132,14 @@ int fields[]
                         CF_sublist, NULL, read_config_list_flag, buf, size)) {
       ERROR((SGE_EVENT, lGetString(lFirst(alp), AN_text)));
       lFreeList(&alp);
-      fclose(fp);
+      FCLOSE(fp);
       free(buf);
       DEXIT;
       return NULL;
    }
 
    free(buf);
-   fclose(fp);
+   FCLOSE(fp);
 
    /* well, let's do the work... */
    ret = args->work_func(&alp, &clp, fields, ep, spool, flag, tag, 0);
@@ -167,6 +168,9 @@ int fields[]
 
    DEXIT;
    return ep;
+FCLOSE_ERROR:
+   DEXIT;
+   return NULL;
 }
 
 

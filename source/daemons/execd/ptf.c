@@ -106,6 +106,7 @@ int setpriority(int which, id_t who, int prio);
 
 #include "ptf.h"
 
+#include "uti/sge_stdio.h"
 #include "sgermon.h"
 #include "sge_time.h"
 #include "sge_log.h"
@@ -2270,7 +2271,11 @@ void dump_list(lList *list)
       fprintf(stderr, MSG_ERROR_UNABLETODUMPJOBLIST);
    }
    fprintf(stderr, "\n");
-   fclose(f);
+   FCLOSE(f);
+   return;
+FCLOSE_ERROR:
+   fprintf(stderr, MSG_FILE_ERRORCLOSEINGXY_SS, "<stdout>", strerror(errno));
+   return;
 }
 
 #ifdef MODULE_TEST

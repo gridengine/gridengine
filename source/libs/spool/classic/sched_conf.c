@@ -203,7 +203,7 @@ char *write_sched_configuration(int spool, int how, const char *common_dir, cons
    FPRINTF((fp, "default_duration                 %s\n", lGetString(ep, SC_default_duration)));
 
    if (how != 0) {
-      fclose(fp);
+      FCLOSE(fp);
    }
 
    if (how == 2 || how == 3) {
@@ -219,6 +219,7 @@ char *write_sched_configuration(int spool, int how, const char *common_dir, cons
    /* JG: TODO: ERROR: fname is returned, but is a stack variable!! */
    return how==1?sge_strdup(NULL, fname):fname;
 FPRINTF_ERROR:
+FCLOSE_ERROR:
    DEXIT;
    return NULL;
 }

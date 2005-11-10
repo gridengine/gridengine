@@ -35,7 +35,8 @@
 #include <fnmatch.h>
 #include <ctype.h>
 
-#include "sge_stdlib.h"
+#include "uti/sge_stdlib.h"
+#include "uti/sge_stdio.h"
 
 #include "sgermon.h"
 #include "sge_time.h"
@@ -3717,21 +3718,22 @@ static u_long32 sge_get_job_number(monitoring_t *monitor)
    return job_nr;
 }
 
-void sge_init_job_number(void) {
-  FILE *fp = NULL;
-  u_long32 job_nr = 0;
-  u_long32 guess_job_nr;
+void sge_init_job_number(void) 
+{
+   FILE *fp = NULL;
+   u_long32 job_nr = 0;
+   u_long32 guess_job_nr;
   
-  DENTER(TOP_LAYER, "init_job_number");
+   DENTER(TOP_LAYER, "init_job_number");
    
-  if ((fp = fopen(SEQ_NUM_FILE, "r"))) {
+   if ((fp = fopen(SEQ_NUM_FILE, "r"))) {
       if (fscanf(fp, sge_u32, &job_nr) != 1) {
          ERROR((SGE_EVENT, MSG_JOB_NOSEQNRREAD_SS, SEQ_NUM_FILE, strerror(errno)));
       }
-      fclose(fp);
+      FCLOSE(fp);
+FCLOSE_ERROR:
       fp = NULL;
-   }
-   else {
+   } else {
       WARNING((SGE_EVENT, MSG_JOB_NOSEQFILEOPEN_SS, SEQ_NUM_FILE, strerror(errno)));
    }  
    
@@ -3750,9 +3752,9 @@ void sge_init_job_number(void) {
 }
 
 void sge_store_job_number(te_event_t anEvent, monitoring_t *monitor) {
-   FILE *fp = NULL;
    u_long32 job_nr = 0;
    bool changed = false;
+
    DENTER(TOP_LAYER, "store_job_number");
    
    sge_mutex_lock("job_number_mutex", "sge_init_job_number", __LINE__, 
@@ -3765,15 +3767,21 @@ void sge_store_job_number(te_event_t anEvent, monitoring_t *monitor) {
    sge_mutex_unlock("job_number_mutex", "sge_init_job_number", __LINE__, 
                   &job_number_control.job_number_mutex);     
   
-   if(changed) {
-      if (!(fp = fopen(SEQ_NUM_FILE, "w"))) {
+   if (changed) {
+      FILE *fp = fopen(SEQ_NUM_FILE, "w");
+
+      if (fp != NULL) {
          ERROR((SGE_EVENT, MSG_JOB_NOSEQFILECREATE_SS, SEQ_NUM_FILE, strerror(errno)));
-      }         
-      else {
-         fprintf(fp, sge_u32"\n", job_nr);
-         fclose(fp);
+      } else {
+         FPRINTF((fp, sge_u32"\n", job_nr));
+         FCLOSE(fp);
       }   
    }
+   DEXIT;
+   return;
+FPRINTF_ERROR:
+FCLOSE_ERROR:
+   ERROR((SGE_EVENT, MSG_JOB_NOSEQFILECLOSE_SS, SEQ_NUM_FILE, strerror(errno)));
    DEXIT;
    return;
 }

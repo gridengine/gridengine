@@ -529,7 +529,9 @@ read_pacct(lnk_link_t *job_list, time_t time_stamp)
       return 0;
    }
 
-   if (fp) fsetpos(fp, &offset);
+   if (fp) {
+      fsetpos(fp, &offset);
+   }
 
    while (more_records) {
 
@@ -697,7 +699,7 @@ read_pacct(lnk_link_t *job_list, time_t time_stamp)
 
          }
 
-	 fgetpos(fp, &offset);
+	      fgetpos(fp, &offset);
       }
 
       /*
@@ -708,12 +710,14 @@ read_pacct(lnk_link_t *job_list, time_t time_stamp)
 
       if (newfile && (fp==NULL || feof(fp) || corrupted)) {
 
-         if (fp) fclose(fp);
+         if (fp) {
+            FCLOSE(fp);
+         }
          if (SGE_STAT(PACCT, &pstat)==0 && (fp = fopen(PACCT, "r"))) {
             pacct_inode = pstat.st_ino;
             newfile = 0;
             corrupted = 0;
-	    fgetpos(fp, &offset);
+	         fgetpos(fp, &offset);
          } else {
             sprintf(ps_errstr, MSG_SGE_UNABLETOOPENNEWPACCTFILE );
             return -1;
@@ -728,6 +732,9 @@ read_pacct(lnk_link_t *job_list, time_t time_stamp)
            count, jobcount);
 
    return 0;
+FCLOSE_ERROR:
+   sprintf(ps_errstr, MSG_FILE_ERRORCLOSEINGXY_SS, PACCT, strerror(errno));
+   return -1;
 }
 
 #endif

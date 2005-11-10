@@ -22,6 +22,7 @@ void usage(FILE* fp) {
 
 int main(int argc, char *argv[])
 {
+   const char *const filename = "compile.conf";
    int ret = 0;
    char *s;
    char diagnosis[DRMAA_ERROR_STRING_BUFFER];
@@ -41,7 +42,7 @@ int main(int argc, char *argv[])
       goto Finish;
    }
 
-   if (!(fp = fopen("compile.conf", "r"))) {
+   if (!(fp = fopen(filename, "r"))) {
       fprintf(stderr, "fopen(\"compile.conf\") failed: %s\n", strerror(errno));
       ret = 2;
       goto Finish;
@@ -107,7 +108,7 @@ int main(int argc, char *argv[])
       job[njobs].ns = strdup(ns);
       njobs++;
    }
-   fclose(fp);
+   FCLOSE(fp);
 
    for (i=0; i<njobs; i++) {
       drmaa_errno = drmaa_wait(DRMAA_JOB_IDS_SESSION_ANY, jobid, sizeof(jobid)-1, 
@@ -174,4 +175,7 @@ Finish:
       return 1;
    }
    return ret;
+FCLOSE_ERROR:
+   fprintf(stderr, MSG_FILE_ERRORCLOSEINGXY_SS, filename, strerror(errno));
+   goto Finish;
 }

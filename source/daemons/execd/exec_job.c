@@ -90,6 +90,7 @@
 #include "sge_var.h"
 #include "sge_ckpt.h"
 #include "sge_centry.h"
+#include "uti/sge_stdio.h"
 
 #include "msg_common.h"
 #include "msg_execd.h"
@@ -425,7 +426,7 @@ char *err_str
             }
          }
 
-         fclose(fp);
+         FCLOSE(fp);
       }
       /*************************** finished writing sge hostfile  ********/
 
@@ -762,7 +763,7 @@ char *err_str
 
 
 
-      fclose(fp);  
+      FCLOSE(fp);  
       /*************************** finished writing environment *****************/
 
       /**************** write out config file ******************************/
@@ -776,9 +777,9 @@ char *err_str
          return -2;
       }
 
-   #ifdef COMPILE_DC
+#ifdef COMPILE_DC
 
-   #  if defined(SOLARIS) || defined(ALPHA) || defined(LINUX)
+#  if defined(SOLARIS) || defined(ALPHA) || defined(LINUX)
 
       {
          lList *rlp = NULL;
@@ -786,17 +787,17 @@ char *err_str
          gid_t temp_id;
          char str_id[256];
          char* gid_range = NULL;
-   #     if defined(LINUX)
+#     if defined(LINUX)
 
          if (!sup_groups_in_proc()) {
             lFreeList(&environmentList);
             sprintf(err_str, MSG_EXECD_NOSGID); 
-            fclose(fp);
+            FCLOSE(fp);
             DEXIT;
             return(-2);
          }
 
-   #     endif
+#     endif
        
          /* parse range add create list */
          gid_range = mconf_get_gid_range();
@@ -808,7 +809,7 @@ char *err_str
              lFreeList(&alp);
              sprintf(err_str, MSG_EXECD_NOPARSEGIDRANGE);
              lFreeList(&environmentList);
-             fclose(fp);
+             FCLOSE(fp);
              DEXIT;
              return (-2);
          } 
@@ -821,7 +822,7 @@ char *err_str
             if (temp_id == last_addgrpid) {
                sprintf(err_str, MSG_EXECD_NOADDGID);
                lFreeList(&environmentList);
-               fclose(fp);
+               FCLOSE(fp);
                DEXIT;
                return (-1);
             }
@@ -841,9 +842,9 @@ char *err_str
 
       }
 
-   #endif
+#endif
 
-   #endif
+#endif
 
       /* handle stdout/stderr */
       /* Setting stdin/stdout/stderr 
@@ -1155,7 +1156,7 @@ char *err_str
             DPRINTF(("exec_file=%s\n", xterm));
          } else {
             sprintf(err_str, MSG_EXECD_NOXTERM); 
-            fclose(fp);
+            FCLOSE(fp);
             lFreeList(&environmentList);
             DEXIT;
             return -2;
@@ -1229,7 +1230,7 @@ char *err_str
             }
             lFreeList(&answer_list);
             lFreeList(&environmentList);
-            fclose(fp);
+            FCLOSE(fp);
             DEXIT;
             return -1;
          }
@@ -1239,7 +1240,7 @@ char *err_str
    
    if (arch_dep_config(fp, cplx, err_str)) {
       lFreeList(&environmentList);
-      fclose(fp);
+      FCLOSE(fp);
       DEXIT;
       return -2;
    } 
@@ -1364,7 +1365,7 @@ char *err_str
    fprintf(fp, "enable_windomacc=%d", (int)mconf_get_enable_windomacc());
 
    lFreeList(&environmentList);
-   fclose(fp);
+   FCLOSE(fp);
    /********************** finished writing config ************************/
 
    /* test whether we can access scriptfile */
@@ -1660,15 +1661,16 @@ char *err_str
    fp = fopen("error", "w");
    if (fp) {
       fprintf(fp, "failed to exec shepherd for job" sge_u32"\n", job_id);
-      fclose(fp);
+      FCLOSE(fp);
    }
 
    fp = fopen("exit_status", "w");
    if (fp) {
       fprintf(fp, "1\n");
-      fclose(fp);
+      FCLOSE(fp);
    }
 
+FCLOSE_ERROR:
    CRITICAL((SGE_EVENT, MSG_EXECD_NOSTARTSHEPHERD));
 
    exit(1);

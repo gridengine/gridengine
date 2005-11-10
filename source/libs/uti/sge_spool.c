@@ -500,10 +500,13 @@ pid_t sge_readpid(const char *fname)
        break;
    }
  
-   fclose(fp);
+   FCLOSE(fp);
  
    DEXIT;
    return pid;
+FCLOSE_ERROR:
+   DEXIT;
+   return 0;
 } /* sge_readpid() */        
 
 /****** uti/spool/sge_write_pid() *********************************************
@@ -538,9 +541,14 @@ void sge_write_pid(const char *pid_log_file)
 #endif
    if ((fp = fopen(pid_log_file, "w")) != NULL) {
       pid = getpid();
-      fprintf(fp, "%d\n", pid);
-      fclose(fp);
+      FPRINTF((fp, "%d\n", pid));
+      FCLOSE(fp);
    }
+   DEXIT;
+   return;
+FPRINTF_ERROR:
+FCLOSE_ERROR:
+   /* EB: TODO: make it possible that calling function handles this error */
    DEXIT;
    return;
 }  
@@ -676,9 +684,12 @@ int sge_get_confval_array(const char *fname, int n, int nmissing, bootstrap_entr
    }
    
    FREE(is_found);
-   fclose(fp);
+   FCLOSE(fp);
    DEXIT;
    return nmissing;
+FCLOSE_ERROR:
+   DEXIT;
+   return 0;
 } /* sge_get_confval_array() */
 
 

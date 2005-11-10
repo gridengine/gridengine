@@ -48,12 +48,16 @@
 #include <string.h>
 #include <netdb.h>
 
+#include "uti/sge_stdio.h"
+#include "uti/sge_uidgid.h"
+
 #include "basis_types.h"
 #include "sge_prog.h"
 #include "config_file.h"
 #include "err_trace.h"
 #include "qlogin_starter.h"
-#include "sge_uidgid.h"
+
+#include "msg_common.h"
 
 #if defined(INTERIX)
 #  include "misc.h"
@@ -298,7 +302,7 @@ int get_exit_code_of_qrsh_starter(int* exit_code)
                SHEPHERD_TRACE((err_str, "error code from remote command "
                   "is %d", *exit_code));
             }
-            fclose(errorfile);
+            FCLOSE(errorfile);
             if (unlink(buffer) != 0) {
                SHEPHERD_TRACE((err_str, "can't delete %s", buffer));
             }
@@ -310,6 +314,9 @@ int get_exit_code_of_qrsh_starter(int* exit_code)
       }
    }
    return ret;        
+FCLOSE_ERROR:
+   SHEPHERD_TRACE((err_str, MSG_FILE_NOCLOSE_SS, buffer, strerror(errno)));
+   return ret;
 }
 
 /****** shepherd/qrsh/get_exit_code_of_qrsh_starter() *************************
@@ -369,15 +376,18 @@ const char *get_error_of_qrsh_starter(void)
                   "is %s", buffer));
                ret = strdup(buffer);
             }
-            fclose(errorfile);
+            FCLOSE(errorfile);
             if (unlink(buffer) != 0) {
                SHEPHERD_TRACE((err_str, "can't delete %s", buffer));
             }
          }
       }
    }
-
    return ret;  
+FCLOSE_ERROR:
+   SHEPHERD_TRACE((err_str, MSG_FILE_NOCLOSE_SS, buffer, strerror(errno)));
+   return ret;
+
 }
 
 /****** shepherd/qrsh/qlogin_starter() ****************************************

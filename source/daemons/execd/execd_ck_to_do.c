@@ -62,7 +62,8 @@
 #include "spool/classic/read_write_job.h"
 #include "execution_states.h"
 #include "msg_execd.h"
-#include "sge_string.h"
+#include "uti/sge_string.h"
+#include "uti/sge_stdio.h"
 #include "sge_feature.h"
 #include "sge_uidgid.h"
 #include "sge_security.h"
@@ -963,7 +964,7 @@ lListElem *pe_task
 
    /* read addgrpid */
    success = (fscanf(fp, gid_t_fmt, &addgrpid)==1);
-   fclose(fp);
+   FCLOSE(fp);
    if (!success) {
       /* can happen that shepherd has opend the file but not written */
       DEXIT;
@@ -1021,7 +1022,7 @@ lListElem *pe_task
    sge_dstring_free(&osjobid_path);      
 
    success = (fscanf(fp, OSJOBID_FMT, &osjobid)==1);
-   fclose(fp);
+   FCLOSE_ERROR(fp);
    if (!success) {
       /* can happen that shepherd has opend the file but not written */
       DEXIT;
@@ -1055,6 +1056,9 @@ lListElem *pe_task
 
    DEXIT;
    return 0;
+FCLOSE_ERROR:
+   DEXIT;
+   return 1;
 }
 #endif
 

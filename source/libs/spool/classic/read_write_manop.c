@@ -107,10 +107,14 @@ int target
       }
    }
 
-   fclose(fp);
+   FCLOSE(fp);
 
    DEXIT;
    return 0;
+FCLOSE_ERROR:
+   ERROR((SGE_EVENT, MSG_FILE_ERRORCLOSEINGX_S, filename));
+   DEXIT;
+   return 1;
 }
 
 
@@ -177,7 +181,7 @@ int target
       FPRINTF((fp, "%s\n", lGetString(ep, MO_name)));
    }
 
-   fclose(fp);
+   FCLOSE(fp);
 
    if (rename(filename, real_filename) == -1) {
       DEXIT;
@@ -190,6 +194,7 @@ int target
    return 0;
 
 FPRINTF_ERROR:
+FCLOSE_ERROR:
    DEXIT;
    return 1;  
 }

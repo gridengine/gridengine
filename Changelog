@@ -1,3 +1,20 @@
+EB-2005-11-07-0: Bugfix:    unable to delete a configuration of a non
+                            existing host
+                 Bugtraq:   6319231
+                 Issue:     1760
+                 Changed:   sge_qmaster, qconf
+                 Review:    AH
+
+EB-2005-11-04-0: Bugfix:    qmod -sq can kill a pe job in t state
+                 Bugtraq:   6287935
+                 Issue:     1619
+                 Changed:   sge_qmaster, sge_execd
+                 Review:    AH
+
+EB-2005-09-12-0: Cleanup:   replaced fclose by FCLOSE in qmaster
+                 Issue:     1179, 185
+                 Review:    JG
+
 RD-2005-11-10-0: Bugfix:    - sgeCA may be inconsistent after new installation
                              - install script sets rsh_daemon to 
                                /usr/sbin/in.rshd on win32-x86 

@@ -37,10 +37,11 @@
 #include <errno.h>
 #endif
 
+#include "uti/sge_stdio.h"
+#include "uti/sge_os.h"
 #include "sge_loadmem.h"
 #include "sgermon.h"
 #include "sge_log.h"
-#include "sge_os.h"
 #include "msg_utilib.h"
 
 #if !defined(LINUX) && !defined(CRAY) && !defined(DARWIN) && !defined(FREEBSD) && !defined(NETBSD)
@@ -682,6 +683,7 @@ int sge_loadmem(sge_mem_info_t *mem_info)
 
 int sge_loadmem(sge_mem_info_t *mem_info) 
 {
+   int ret = 0;
    char dummy[512], buffer[1024];
    double kbytes;
    FILE *fp;
@@ -704,13 +706,15 @@ int sge_loadmem(sge_mem_info_t *mem_info)
          READ_VALUE(KEY_CACHED,    cached);
 
       }
-      fclose(fp);
+      FCLOSE(fp);
+      mem_info->mem_free += buffers+cached;
    } else {
-      return 1;
+      ret = 1;
    }
-   mem_info->mem_free += buffers+cached;
 
-   return 0;
+   return ret;
+FCLOSE_ERROR:
+   return 1;
 }
 #endif /* LINUX */
 

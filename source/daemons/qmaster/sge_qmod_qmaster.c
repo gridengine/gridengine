@@ -1114,11 +1114,21 @@ monitoring_t *monitor
       if((i = init_packbuffer(&pb, 256, 0)) == PACK_SUCCESS) {
          /* identifier for acknowledgement */
          if (jep) {
-            /* TAG_SIGJOB */
-            packint(&pb, lGetUlong(jep, JB_job_number));    /* one for acknowledgement */
-            packint(&pb, lGetUlong(jatep, JAT_task_number)); 
-            packint(&pb, lGetUlong(jep, JB_job_number));    /* and one for processing */
-            packint(&pb, lGetUlong(jatep, JAT_task_number));
+            /*
+             * Due to IZ 1619: pack signal only if
+             *    job is a non-parallel job
+             *    or all slaves of the parallel job have been acknowledged
+             */
+            if (!lGetString(jatep, JAT_master_queue) ||
+                is_pe_master_task_send(jatep)) {
+               /* TAG_SIGJOB */
+               /* one for acknowledgement */
+               packint(&pb, lGetUlong(jep, JB_job_number));    
+               packint(&pb, lGetUlong(jatep, JAT_task_number)); 
+               /* and one for processing */
+               packint(&pb, lGetUlong(jep, JB_job_number));   
+               packint(&pb, lGetUlong(jatep, JAT_task_number));
+            }
          }
          else {
             /* TAG_SIGQUEUE */

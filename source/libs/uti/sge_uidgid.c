@@ -50,6 +50,7 @@
 #include "msg_common.h"
 #include "msg_utilib.h"
 #include "sge_string.h"
+#include "sge_stdio.h"
 
 #if defined( INTERIX )
 #   include "misc.h"
@@ -1355,8 +1356,9 @@ password_get_size(const char *filename)
             do_loop = false;
          }
       }
-      fclose(fp); 
+      FCLOSE(fp); 
    }
+FCLOSE_ERROR:
    DEXIT;
    return ret;
 }
@@ -1401,7 +1403,7 @@ password_read_file(char **users[], char**encryped_pwds[], const char *filename)
       (*users)[i] = NULL;
       (*encryped_pwds)[i] = NULL; i++;
 
-      fclose(fp); 
+      FCLOSE(fp); 
    } else {
       *users = malloc(2 * sizeof(char*));
       *encryped_pwds = malloc(2 * sizeof(char*));
@@ -1415,6 +1417,9 @@ password_read_file(char **users[], char**encryped_pwds[], const char *filename)
    }
    DEXIT;
    return ret;
+FCLOSE_ERROR:
+   DEXIT;
+   return 1;
 }
 
 /* Not MT-Safe */

@@ -31,8 +31,8 @@
 /*___INFO__MARK_END__*/
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 
-#include "sge_unistd.h"
 #include "sge.h"
 #include "sge_conf.h"
 #include "sge_usageL.h"
@@ -43,10 +43,14 @@
 #include "mail.h"
 #include "sgermon.h"
 #include "sge_log.h"
-#include "msg_common.h"
-#include "msg_daemons_common.h"
 #include "sge_feature.h"
 #include "sge_report.h"
+
+#include "uti/sge_unistd.h"
+#include "uti/sge_stdio.h"
+
+#include "msg_common.h"
+#include "msg_daemons_common.h"
 
 int admail_states[MAX_SSTATE + 1] = {
                                       0,
@@ -291,7 +295,7 @@ int is_array
 
                n=fread(sge_mail_body_total+start, 1, 
                         sge_mail_body_total_size - start, fp);
-               fclose(fp);
+               FCLOSE(fp);
                sge_mail_body_total[start + n] = '\0';
             }
          }
@@ -305,6 +309,10 @@ int is_array
    }
    lFreeList(&lp_mail);
    FREE(administrator_mail); 
+   DEXIT;
+   return;
+FCLOSE_ERROR:
+   DPRINTF((MSG_FILE_ERRORCLOSEINGXY_SS, shepherd_files[i].filepath, strerror(errno)));
    DEXIT;
    return;
 }

@@ -92,8 +92,9 @@ extern "C" {
 #define  LENULLSTRING   52      /* string NULL not allowed                */
 #define  LEPARSECOND    53      /* parsing condition failed               */
 #define  LEFORMAT       54      /* wrong packing format                   */
-#define  LEOPEN         55      /* wrong packing format                   */
-#define  LEBOUNDELEM    55      /* lListElem is already bound             */
+#define  LEOPEN         55      /* error opening file                     */
+#define  LECLOSE        56      /* error closeing file                    */
+#define  LEBOUNDELEM    57      /* lListElem is already bound             */
 /* prototypes */
 
 int lerror(void);

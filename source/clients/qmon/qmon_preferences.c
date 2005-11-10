@@ -37,12 +37,14 @@
 #include <Xmt/Xmt.h>
 #include <Xmt/Util.h>
 
+#include "uti/sge_string.h"
+#include "uti/sge_stdio.h"
+
 #include "sge.h"
 #include "qmon_prefL.h"
 #include "sge_qrefL.h"
 #include "sge_str.h"
 #include "qmon_preferences.h"
-#include "sge_string.h"
 #include "config.h"
 #include "spool/classic/read_object.h"
 #include "sgermon.h"
@@ -368,9 +370,14 @@ lListElem *ep
    /* --------- PREF_queue_filter_state */
    fprintf(fp, "queue_filter_state     %s\n", lGetString(ep, PREF_queue_filter_state)? lGetString(ep, PREF_queue_filter_state) : "NONE");
 
-   if (fp != stdout)
-      fclose(fp);
+   if (fp != stdout) {
+      FCLOSE(fp);
+   }
 
+   DEXIT;
+   return NULL;
+FCLOSE_ERROR:
+   /* TODO: error handling */
    DEXIT;
    return NULL;
 }

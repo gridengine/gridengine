@@ -32,8 +32,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include "uti/sge_bitop.h"
+#include "uti/sge_stdio.h"
 #include "basis_types.h"
-#include "sge_bitop.h"
 #include "msg_utilib.h"
 
 /****** uti/bitop/sge_area_cshift() *******************************************
@@ -163,10 +165,11 @@ int sge_area_print(const char *fname, const char *label,
    }
    fprintf(fp,"\n");
    if (fname) {
-      fclose(fp);
+      FCLOSE(fp);
    }
-
    return 0;
+FCLOSE_ERROR:
+   return 1;
 }
 
 /****** uti/bitop/sge_area_xor() **********************************************

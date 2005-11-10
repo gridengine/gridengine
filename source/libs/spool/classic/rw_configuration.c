@@ -110,13 +110,14 @@ u_long32 flags
    }
 
    if (fname) {
-      fclose(fp);
+      FCLOSE(fp);
    }
 
    DEXIT;
    return 0;
 
 FPRINTF_ERROR:
+FCLOSE_ERROR:
    DEXIT;
    return -1;
 }
@@ -172,7 +173,7 @@ u_long32 flags
          if (!strcmp(name, "conf_version")) {
             if (!(value = strtok_r(NULL, " \t\n", &lasts))) {
                WARNING((SGE_EVENT, MSG_CONFIG_CONF_NOVALUEFORCONFIGATTRIB_S, name));
-               fclose(fp);
+               FCLOSE(fp);
                DEXIT;
                return NULL;
             }
@@ -188,7 +189,7 @@ u_long32 flags
       if (!ep) {
          WARNING((SGE_EVENT, MSG_CONFIG_CONF_ERRORSTORINGCONFIGVALUE_S, name));
          lFreeList(&lp);
-         fclose(fp);
+         FCLOSE(fp);
          DEXIT;
          return NULL;
       }
@@ -207,7 +208,7 @@ u_long32 flags
                            name, value));
                   lFreeList(&alp);
                   lFreeList(&lp);
-                  fclose(fp);
+                  FCLOSE(fp);
                   DEXIT;
                   return NULL;
                } else {
@@ -221,7 +222,7 @@ u_long32 flags
                         WARNING((SGE_EVENT, MSG_CONFIG_CONF_GIDRANGELESSTHANNOTALLOWED_I, GID_RANGE_NOT_ALLOWED_ID));
                         lFreeList(&alp);
                         lFreeList(&lp);
-                        fclose(fp);
+                        FCLOSE(fp);
                         DEXIT;
                         return (NULL);
                      }                  
@@ -242,7 +243,7 @@ u_long32 flags
          } else {
             WARNING((SGE_EVENT, MSG_CONFIG_CONF_NOVALUEFORCONFIGATTRIB_S, name));
             lFreeList(&lp);
-            fclose(fp);
+            FCLOSE(fp);
             DEXIT;
             return NULL;
          }
@@ -270,7 +271,7 @@ u_long32 flags
             /* return line if value is empty */
             WARNING((SGE_EVENT, MSG_CONFIG_CONF_NOVALUEFORCONFIGATTRIB_S, name));
             lFreeList(&lp);
-            fclose(fp);
+            FCLOSE(fp);
             DEXIT;
             return NULL;
          }
@@ -283,7 +284,7 @@ u_long32 flags
          if (!(value = strtok_r(NULL, " \t\n", &lasts))) {
             WARNING((SGE_EVENT, MSG_CONFIG_CONF_NOVALUEFORCONFIGATTRIB_S, name));
             lFreeList(&lp);
-            fclose(fp);
+            FCLOSE(fp);
             DEXIT;
             return NULL;
          }
@@ -293,14 +294,14 @@ u_long32 flags
          if (strtok_r(NULL, " \t\n", &lasts)) {
             /* Allow only one value per line */
             WARNING((SGE_EVENT, MSG_CONFIG_CONF_ONLYSINGLEVALUEFORCONFIGATTRIB_S, name));
-            fclose(fp);
+            FCLOSE(fp);
             DEXIT;
             return NULL;
          }
       }
    }
 
-   fclose(fp);
+   FCLOSE(fp);
 
    epc = lCreateElem(CONF_Type);
    lSetHost(epc, CONF_hname, conf_name);
@@ -309,4 +310,8 @@ u_long32 flags
 
    DEXIT;
    return epc;
+FCLOSE_ERROR:
+   WARNING((SGE_EVENT, MSG_CONFIG_CONF_ERRORCLOSEINGSPOOLFILE_SS, fname, strerror(errno)));
+   DEXIT;
+   return NULL;
 }

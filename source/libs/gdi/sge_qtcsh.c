@@ -51,6 +51,7 @@
 #include "sge_prog.h"
 #include "sge_conf.h"
 #include "lck/sge_mtutil.h"
+#include "uti/sge_stdio.h"
 #include "sge_string.h"
 
 #include "msg_common.h"
@@ -122,10 +123,10 @@ print_func_t ostream
       /* read in config file */
       if (read_config_list(fp, &clp_cluster, alpp, CF_Type, CF_name, CF_value,
                         CF_sublist, NULL, RCL_NO_VALUE, buffer, sizeof(buffer)-1)) {
-         fclose(fp);
+         FCLOSE(fp);
          goto Error;
       }
-      fclose(fp);
+      FCLOSE(fp);
    }
 
    /* skip tasknames containing '/' */
@@ -168,10 +169,10 @@ print_func_t ostream
       /* read in config file */
       if (read_config_list(fp, &clp_user, alpp, CF_Type, CF_name, CF_value,
                            CF_sublist, NULL, RCL_NO_VALUE, buffer, sizeof(buffer)-1)) {
-         fclose(fp);
+         FCLOSE(fp);
          goto Error;
       }
-      fclose(fp);
+      FCLOSE(fp);
    }
 
    /* skip tasknames containing '/' */
@@ -250,6 +251,7 @@ print_func_t ostream
 
    return 0;
 
+FCLOSE_ERROR:
 Error:
    lFreeList(&clp_cluster);
    lFreeList(&clp_user);

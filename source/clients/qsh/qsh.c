@@ -76,6 +76,7 @@
 #include "sge_var.h"
 #include "sge_gdi.h"
 #include "sge_profiling.h"
+#include "sge_stdio.h"
 #include "sge_mt_init.h"
 
 #include "msg_clients_common.h"
@@ -974,12 +975,12 @@ get_client_name(int is_rsh, int is_rlogin, int inherit_job)
             char cached_command[SGE_PATH_MAX];
 
             if (fgets(cached_command, SGE_PATH_MAX, cache) != NULL) {
-               fclose(cache);
+               FCLOSE(cache);
                DPRINTF(("found cached client name: %s\n", cached_command));
                DEXIT;
                return strdup(cached_command);
             }
-            fclose(cache);
+            FCLOSE(cache);
          }
       }
    }
@@ -1054,6 +1055,10 @@ get_client_name(int is_rsh, int is_rlogin, int inherit_job)
    lFreeElem(&local);
 
    return client_name;
+FCLOSE_ERROR:
+   ERROR((SGE_EVENT, MSG_FILE_ERRORCLOSEINGXY_SS, cache_name, strerror(errno)));
+   DEXIT;
+   return NULL;
 }
 
 /****** Interactive/qsh/write_client_name_cache() ******************************
@@ -1096,9 +1101,13 @@ void write_client_name_cache(const char *cache_path, const char *client_name)
    
       if((cache = fopen(cache_path, "w")) != NULL) {
          fprintf(cache, client_name);
-         fclose(cache);
+         FCLOSE(cache);
       }
    }
+   return;
+FCLOSE_ERROR:
+   /* TODO: error handling */
+   return;
 }
 
 /****** Interactive/qsh/set_job_info() ****************************************

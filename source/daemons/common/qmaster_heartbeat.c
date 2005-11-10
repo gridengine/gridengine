@@ -33,10 +33,10 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <string.h>
+#include <sys/time.h>
 
+#include "uti/sge_unistd.h"
 #include "uti/sge_stdio.h"
-#include "sge_unistd.h"
-
 #include "sgermon.h"
 #include "sge_log.h"
 #include "qmaster_heartbeat.h"
@@ -208,8 +208,6 @@ int inc_qmaster_heartbeat(char *file, int write_timeout , int* beat_value) {
 
    DEXIT;
    return 0;
-
-   /* This is for the FCLOSE() macro */
 FCLOSE_ERROR:
    ERROR((SGE_EVENT, MSG_HEART_CLOSE_ERROR_SS, file, strerror(errno))); 
    DEXIT;

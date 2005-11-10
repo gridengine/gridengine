@@ -38,11 +38,14 @@
 #include <errno.h>
 #include <ctype.h>
 
-#include "sge_string.h"
-#include "sge_stdlib.h"
-#include "sge_signal.h"
-#include "sge_unistd.h"
+#include "uti/sge_string.h"
+#include "uti/sge_stdio.h"
+#include "uti/sge_stdlib.h"
+#include "uti/sge_signal.h"
+#include "uti/sge_unistd.h"
 #include "setosjobid.h"
+
+#include "msg_common.h"
 
 #if defined(CRAY)
 #   if !defined(SIGXCPU)
@@ -813,69 +816,35 @@ int truncate_stderr_out
 *******************************************************************************/
 int sge_set_environment()
 {
+   const char *const filename = "environment";
    FILE *fp;
    char buf[10000], *name, *value, err_str[10000];
    int line=0;
+   char s[100] = "";
 
    setup_environment();
    
-   if (!(fp = fopen("environment", "r"))) {
+   if (!(fp = fopen(filename, "r"))) {
       sprintf(err_str, "can't open environment file: %s",
               strerror(errno));
       shepherd_error(err_str);
       return 1;
    }
 
-#if defined(IRIX)
-   {
-      FILE *fp;
-      ash_t ash;
-
-      fp = fopen("osjobid", "r");
-      if (fp) {
-         fscanf(fp, "%lld", &ash);
-         fclose(fp);
-         if (ash) {
-            char s[100];
-            sprintf(s, "%lld", ash);
-            sge_set_env_value("OSJOBID", s);
-         }
-      }
-   }
-#elif defined(CRAY)
-   {
-      FILE *fp;
-      int jobid;
-      int i;
-
-      fp = fopen("osjobid", "r");
-      if (fp) {
-         fscanf(fp, "%d", &jobid);
-         fclose(fp);
-         if (jobid) {
-            char s[100];
-            sprintf(s, "%d", jobid);
-            sge_set_env_value("OSJOBID", s);
-         }
-      }
-   }
-#elif defined(NECSX4) || defined(NECSX5)
-   {
-      FILE *fp;
-      id_t jobid;
-
-      fp = fopen("osjobid", "r");
-      if (fp) {
-         fscanf(fp, "%d", &jobid);
-         fclose(fp);
-         if (jobid) {
-            char s[100];
-            sprintf(s, "%ld", jobid);
-            sge_set_env_value("OSJOBID", s);
-         }                            
-      }
+#if defined(IRIX) || defined(CRAY) || defined(NECSX4) || defined(NECSX5)
+   if (shepherd_read_osjobid_file(&jobid)) {
+#  if defined(IRIX)
+      sprintf(s, "%lld", ash);
+#  elif defined(CRAY)
+      sprintf(s, "%d", jobid);
+#  elif defined(NECSX4) || defined(NECSX5)
+      sprintf(s, "%ld", jobid);
+#  endif
    }
 #endif
+   if (s[0] != '\0') {
+      sge_set_env_value("OSJOBID", s);
+   }
 
    while (fgets(buf, sizeof(buf), fp)) {
 
@@ -886,7 +855,7 @@ int sge_set_environment()
 
       name = strtok(buf, "=");
       if (!name) {
-         fclose(fp);
+         FCLOSE(fp);
          sprintf(err_str, 
                  "error reading environment file: line=%d, contents:%s",
                  line, buf);
@@ -900,8 +869,11 @@ int sge_set_environment()
       sge_set_env_value(name, value);
    }
 
-   fclose(fp);
+   FCLOSE(fp);
    return 0;
+FCLOSE_ERROR:
+   sprintf(err_str, MSG_FILE_ERRORCLOSEINGXY_SS, filename, strerror(errno));
+   return 1;
 }
 
 /****** Shepherd/setup_environment() *******************************************

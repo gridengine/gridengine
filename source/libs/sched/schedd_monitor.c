@@ -33,7 +33,9 @@
 #include <string.h>
 #include <time.h>
 #include <limits.h>
+#include <errno.h>
 
+#include "uti/sge_stdio.h"
 #include "sge_all_listsL.h"
 #include "schedd_monitor.h"
 #include "sgermon.h"
@@ -41,6 +43,8 @@
 #include "sge_time.h"
 #include "setup_path.h"
 #include "sge_answer.h"
+
+#include "msg_common.h"
 
 static bool monitor_next_run = false;
 static char log_string[2048 + 1] = "invalid log_string";
@@ -117,11 +121,15 @@ int schedd_log(const char *logstr)
 
       fprintf(fp, "%s", time_str);
       fprintf(fp, "%s\n", logstr);
-      fclose(fp);
+      FCLOSE(fp);
    }
 
    DEXIT;
    return 0;
+FCLOSE_ERROR:
+   DPRINTF((MSG_FILE_ERRORCLOSEINGXY_SS, schedd_log_file, strerror(errno)));
+   DEXIT;
+   return -1;
 }
 
 

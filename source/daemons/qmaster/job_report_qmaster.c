@@ -505,7 +505,14 @@ monitoring_t *monitor
                if (lGetUlong(first_at_host, JG_tag_slave_job) != 0) {
 
                   DPRINTF(("slave job "sge_u32" arrived at %s\n", jobid, rhost));
+#if 0 /* EB: DEBUG: This code can be used to provoke IZ 1619 */
+                  srand(time(0));
+                  if (rand() > RAND_MAX / 2) {
+                     lSetUlong(first_at_host, JG_tag_slave_job, 0);
+                  }
+#else
                   lSetUlong(first_at_host, JG_tag_slave_job, 0);
+#endif
 
                   /* should trigger a fast delivery of the job to master execd 
                      script but only when all other slaves have also arrived */ 

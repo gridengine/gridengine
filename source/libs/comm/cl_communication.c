@@ -44,7 +44,9 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 
-#include "sge_hostname.h"
+#include "uti/sge_hostname.h"
+#include "uti/sge_stdio.h"
+
 #include "cl_commlib.h"
 #include "cl_util.h"
 #include "cl_data_types.h"
@@ -2692,11 +2694,12 @@ int cl_com_read_alias_file(cl_raw_list_t* hostlist) {
          main_name = NULL;
       }
    }
-   if ( fclose(fp) != 0) {
-      return CL_RETVAL_CLOSE_ALIAS_FILE_FAILED;
-   }
+   FCLOSE(fp);
 
    return CL_RETVAL_OK;
+FCLOSE_ERROR:
+   CL_LOG(CL_LOG_ERROR,"FCLOSE() error");
+   return CL_RETVAL_CLOSE_ALIAS_FILE_FAILED;
 }
 
 #ifdef __CL_FUNCTION__

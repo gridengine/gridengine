@@ -362,9 +362,6 @@ int sge_mkdir(const char *path, int fmode, int exit_on_error, int may_not_exist)
       if ((path[i] == '/') && (i != 0)) {
          path_[i] = (unsigned char) 0;
          res = sge_domkdir(path_, fmode, exit_on_error, 0);
-#if defined(INTERIX)
-         chown(path_, geteuid(), getegid());
-#endif 
          if (res) {
             DPRINTF(("retval = %d\n", res));
             DEXIT;

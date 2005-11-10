@@ -236,6 +236,14 @@ CheckCSP()
 #
 CheckHostNameResolving()
 {
+   if [ "$1" = "" -o "$1" -eq 0 ]; then
+      mode=installation 
+      MODE=Installation 
+   else
+      mode=uninstallation
+      MODE=Uninstallation
+   fi
+
    myrealname=`$SGE_UTILBIN/gethostname -name`
 
    loop_counter=0
@@ -265,15 +273,15 @@ CheckHostNameResolving()
                      "   %s\n\n" \
                      "$SGE_BIN/qconf -sh" "$errmsg"
 
-         $INFOTEXT "You can fix the problem now or abort the installation procedure.\n" \
+         $INFOTEXT "You can fix the problem now or abort the $mode procedure.\n" \
                    "The problem can be:\n\n" \
                    "   - the qmaster is not running\n" \
                    "   - the qmaster host is down\n" \
                    "   - an active firewall blocks your request\n"
          $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n "Contact qmaster again (y/n) ('n' will abort) [y] >> " 
          if [ $? != 0 ]; then
-            $INFOTEXT "Installation failed"
-            $INFOTEXT -log "Cannot contact qmaster! Installation failed"
+            $INFOTEXT "$MODE failed"
+            $INFOTEXT -log "Cannot contact qmaster! $MODE failed"
 
             if [ $AUTO = true ]; then
                MoveLog
@@ -342,7 +350,7 @@ CheckHostNameResolving()
                         $myrealname $myaname $default_domain $ignore_fqdn $myname
 
             if [ $AUTO = true ]; then
-               $INFOTEXT -log "Installation failed!\nThis hostname is not known at qmaster as an administrative host."
+               $INFOTEXT -log "$MODE failed!\nThis hostname is not known at qmaster as an administrative host."
                MoveLog
                exit 1
             fi
@@ -350,11 +358,11 @@ CheckHostNameResolving()
             $INFOTEXT "Please check and correct your >/etc/hosts< file and >/etc/nsswitch.conf<\n" \
                       "file on this host and on the qmaster machine.\n\n" \
                       "You can now add this host as an administrative host in a seperate\n" \
-                      "terminal window and then continue with the installation procedure.\n" 
+                      "terminal window and then continue with the $mode procedure.\n" 
                          
             $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n "Check again (y/n) ('n' will abort) [y] >> "
             if [ $? != 0 ]; then
-               $INFOTEXT "Installation failed"
+               $INFOTEXT "$MODE failed"
                exit 1
             fi
          else
@@ -367,7 +375,7 @@ CheckHostNameResolving()
 
       loop_counter=`expr $loop_counter + 1`
       if [ $loop_counter -ge $loop_max ]; then
-         $INFOTEXT -e "Installation failed after %s retries" $loop_max
+         $INFOTEXT -e "$MODE failed after %s retries" $loop_max
          exit
       fi
    done
@@ -495,10 +503,10 @@ GetLocalExecdSpoolDir()
       fi
    done
 
-   if [ "$ret" = 1 -a "$LOCAL_EXECD_SPOOL" = "undef" ]; then
-      #MakeHostSpoolDir
-      :
-   fi
+   #if [ "$ret" = 1 -a "$LOCAL_EXECD_SPOOL" = "undef" ]; then
+   #   MakeHostSpoolDir
+   #   :
+   #fi
 
    if [ $AUTO = "true" ]; then
       if [ "$EXECD_SPOOL_DIR_LOCAL" != "" ]; then
@@ -511,17 +519,17 @@ GetLocalExecdSpoolDir()
 
 MakeHostSpoolDir()
 {
+   MKDIR="mkdir -p"
    spool_dir=`qconf -sconf | grep "execd_spool_dir" | awk '{ print $2 }'`
    host_dir=`$SGE_UTILBIN/gethostname -aname | cut -d"." -f1`
 
-   mkdir -p $spool_dir/$host_dir
+   $MKDIR $spool_dir/$host_dir
    ret=$?
 
    if [ $ret = 0 ]; then
       group=`$SGE_UTILBIN/checkuser -gid $ADMINUSER`
       chown -R $ADMINUSER:$group $spool_dir/$host_dir 
    else
-      MKDIR="mkdir -p"
       ExecuteAsAdmin $MKDIR $spool_dir/$host_dir
    fi
 }

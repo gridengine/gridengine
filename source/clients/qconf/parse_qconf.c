@@ -3903,7 +3903,7 @@ char *argv[]
           (strcmp("-Aconf", *spp) == 0)) {
          int action = 0;
          char *host_list = NULL;
-         int first = 1;
+         int ret, first = 1;
          lListElem *hep;
          const char *host;
 
@@ -3946,6 +3946,15 @@ char *argv[]
                lSetHost(hep, EH_name, strrchr(cp, '/') + 1);
             } else {
                lSetHost(hep, EH_name, cp);
+            }
+            
+            switch ((ret=sge_resolve_host(hep, EH_name))) {
+            case CL_RETVAL_OK:
+               break;
+            default:
+               fprintf(stderr, MSG_SGETEXT_CANTRESOLVEHOST_SS, cp, cl_get_error_text(ret));
+               fprintf(stderr, "\n");
+               break;
             }
             host = lGetHost(hep, EH_name);
 
@@ -4044,6 +4053,15 @@ char *argv[]
                  (cp = sge_strtok(NULL, ","))) {
                
                lSetHost(hep, EH_name, cp);
+               
+               switch (sge_resolve_host(hep, EH_name)) {
+               case CL_RETVAL_OK:
+                  break;
+               default:
+                  fprintf(stderr, MSG_SGETEXT_CANTRESOLVEHOST_S, cp);
+                  fprintf(stderr, "\n");
+                  break;
+               }
                host = lGetHost(hep, EH_name);
                ret = delete_config(host);
                /*

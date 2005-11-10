@@ -53,6 +53,8 @@ set check_functions           ""
 lappend check_functions       "issue_1768_run"   ;# functions to call (in order)
 set check_highest_level       0
 
+global issue_1768_stored_qtask_file
+
 proc issue_1768_init_level {} {
    global CHECK_ACT_LEVEL ts_config
 
@@ -67,44 +69,40 @@ proc issue_1768_init_level {} {
 }
 
 proc issue_1768_setup {} {
-   global ts_config CHECK_USER CHECK_HOST
+   global ts_config CHECK_USER CHECK_HOST issue_1768_stored_qtask_file
 
    set pid [pid]
    set cat "issue1768cat$pid"
    set qtask "$ts_config(product_root)/$ts_config(cell)/common/qtask"
-   set qtask_tmp "/tmp/qtask$pid"
+   set issue_1768_stored_qtask_file [get_tmp_file_name]
 
    set error [ catch {
-      file copy $qtask $qtask_tmp
+      file copy $qtask $issue_1768_stored_qtask_file
       set f [open $qtask a]
       puts $f "$cat -N \"two words\" -N \"three . words\""
       close $f
    } message ]
 
    if {$error != 0} {
-      set_error -1 "failed setting up qtask file: $message"
-   } else {
-      set_error 0 "ok"
+      add_proc_error "issue_1768_setup" -1 "failed setting up qtask file: $message"
    }
+   set_error 0 "ok"
 }
 
 proc issue_1768_cleanup {} {
-   global ts_config CHECK_USER CHECK_HOST CHECK_PRODUCT_ROOT
+   global ts_config CHECK_USER CHECK_HOST CHECK_PRODUCT_ROOT issue_1768_stored_qtask_file
 
    set pid [pid]
    set qtask "$CHECK_PRODUCT_ROOT/$ts_config(cell)/common/qtask"
-   set qtask_tmp "/tmp/qtask$pid"
 
    set error [ catch {
-      file copy -force $qtask_tmp $qtask
-      file delete $qtask_tmp
+      file copy -force $issue_1768_stored_qtask_file $qtask
    } message ]
 
    if {$error != 0} {
-      set_error -1 "failed restoring qtask file: $message"
-   } else {
-      set_error 0 "ok"
+      add_proc_error "issue_1768_cleanup" -1 "failed restoring qtask file: $message"
    }
+   set_error 0 "ok"
 }
 
 proc issue_1768_run  {} {
@@ -112,6 +110,7 @@ proc issue_1768_run  {} {
 
    # Run test binary
    set failed 0
+   set pid [pid]
    set cat "issue1768cat$pid"
 
    foreach host $ts_config(unique_arch_nodes) {

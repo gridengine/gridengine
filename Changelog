@@ -1,3 +1,6 @@
+CR-2005-11-10-1: Testsuite: fixed bugs/issuezilla/1768 again
+                 Review:    RD
+
 CR-2005-11-10-0: Testsuite: wait for pidfile on remote hosts in function
                             get_grppid_of_job{}
                  Review:    JG

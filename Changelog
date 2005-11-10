@@ -1,3 +1,11 @@
+MD-2005-11-10-0: Bugfix:    - nonadmin user installation of qmaster fails
+                            - SHADOW host install not able to install shadowd 
+                              on more than one given shadowhost
+                 Bugtraq:   6347954
+                 Issue:     1873
+                 Changed:   install_modules
+                 Review:    RD 
+
 CR-2005-11-10-0: Enhancem.: - added possibility to influence host name resolving
                               by setting environment variables
                             - added new commlib error: 

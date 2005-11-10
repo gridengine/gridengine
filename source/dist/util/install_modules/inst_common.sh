@@ -159,7 +159,11 @@ Makedir()
        $INFOTEXT "creating directory: %s" "$dir"
        if [ "`$SGE_UTILBIN/filestat -owner $SGE_ROOT`" != "$ADMINUSER" ]; then
          Execute $MKDIR -p $dir
-         Execute $CHOWN $ADMINUSER $dir
+         if [ "$ADMINUSER" = "default" ]; then
+            Execute $CHOWN root $dir
+         else
+            Execute $CHOWN $ADMINUSER $dir
+         fi
        else
          ExecuteAsAdmin $MKDIR -p $dir
        fi

@@ -4989,6 +4989,8 @@ proc get_grppid_of_job { jobid {host ""}} {
    # build name of pid file
    set pidfile "$spool_dir/$host/active_jobs/$jobid.1/job_pid"
 
+   wait_for_remote_file $host $CHECK_USER $pidfile
+
    # read pid from pidfile on execution host
    set real_pid [start_remote_prog $host $CHECK_USER "cat" "$pidfile"]
    if {$prg_exit_state != 0} {

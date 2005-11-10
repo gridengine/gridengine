@@ -1,3 +1,7 @@
+CR-2005-11-10-0: Testsuite: wait for pidfile on remote hosts in function
+                            get_grppid_of_job{}
+                 Review:    JG
+
 OJ-2005-11-09-0: Testsuite: Created qtcsh test
                             to test both in-line options and
                             interactive options. Resides in checktree/system_tests/clients
@@ -18,6 +22,7 @@ CR-2005-11-09-2: Testsuite: - Fixed problem for darwin hosts: ls doesn't return
                               exit state != 0 when file is not existing, using
                               test -f now
                             - Fixed bugs/issuezilla/1768/
+                 Review:    AA, JG
 
 JG-2005-11-09-0: Testsuite: Fixes and cleanup in system_tests/execd/startup,
                             system_tests/qmaster/reporting, 

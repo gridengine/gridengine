@@ -45,7 +45,6 @@
 #include <netdb.h>
 
 #include "sge_hostname.h"
-#include "sge_stdio.h"
 #include "cl_commlib.h"
 #include "cl_util.h"
 #include "cl_data_types.h"
@@ -2391,6 +2390,20 @@ int cl_com_cached_gethostbyname( char *unresolved_host, char **unique_hostname, 
       return CL_RETVAL_PARAMS;    /* we expect an pointer address, set to NULL */
    }
 
+   if (cl_com_get_unresolvable_hosts() != NULL) {
+      if (strstr(cl_com_get_unresolvable_hosts(), unresolved_host) != NULL) {
+         CL_LOG_STR(CL_LOG_WARNING,"host is in not resolvable host list:", unresolved_host);
+         return CL_RETVAL_GETHOSTNAME_ERROR;
+      }
+   }
+
+   if (cl_com_get_resolvable_hosts() != NULL) {
+      if (strstr(cl_com_get_resolvable_hosts(), unresolved_host) == NULL) {
+         CL_LOG_STR(CL_LOG_WARNING,"host is not in resolvable host list:", unresolved_host);
+         return CL_RETVAL_GETHOSTNAME_ERROR;
+      }
+   }
+
 
    if (hostlist == NULL) {
       int retval;
@@ -2658,7 +2671,8 @@ int cl_com_read_alias_file(cl_raw_list_t* hostlist) {
             cl_com_free_hostent(&he);
             if (main_name == NULL) {
                CL_LOG(CL_LOG_ERROR,"malloc() error");
-               FCLOSE(fp);
+               /* Don't check close state, we already have a malloc() error */
+               fclose(fp);
                return CL_RETVAL_MALLOC;
             }
          } else {
@@ -2678,12 +2692,11 @@ int cl_com_read_alias_file(cl_raw_list_t* hostlist) {
          main_name = NULL;
       }
    }
-   FCLOSE(fp);
+   if ( fclose(fp) != 0) {
+      return CL_RETVAL_CLOSE_ALIAS_FILE_FAILED;
+   }
 
    return CL_RETVAL_OK;
-FCLOSE_ERROR:
-   CL_LOG(CL_LOG_ERROR,"can't close host alias file");
-   return CL_RETVAL_OPEN_ALIAS_FILE_FAILED;
 }
 
 #ifdef __CL_FUNCTION__

@@ -419,6 +419,9 @@ const char* cl_get_error_text(int error_id) {
       case CL_RETVAL_DO_IGNORE: {
          return MSG_CL_RETVAL_DO_IGNORE;
       }
+      case CL_RETVAL_CLOSE_ALIAS_FILE_FAILED: {
+         return MSG_CL_RETVAL_CLOSE_ALIAS_FILE_FAILED;
+      }
    }
    return CL_RETVAL_UNDEFINED_STR;
 }

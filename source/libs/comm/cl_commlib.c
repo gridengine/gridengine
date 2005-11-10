@@ -120,10 +120,14 @@ static cl_raw_list_t* cl_com_handle_list = NULL;
 /* cl_com_log_list
  * ===============
  *
- * Each entry in this list can be logged via cl_log_list_flush() */
+ * Each entry in this list can be logged via cl_log_list_flush() 
+ *
+ * also used for setting cl_commlib_debug_resolvable_hosts and cl_commlib_debug_unresolvable_hosts
+ */
 static pthread_mutex_t cl_com_log_list_mutex = PTHREAD_MUTEX_INITIALIZER;
 static cl_raw_list_t* cl_com_log_list = NULL;
-
+static char* cl_commlib_debug_resolvable_hosts = NULL;
+static char* cl_commlib_debug_unresolvable_hosts = NULL;
 
 /* cl_com_host_list
  * ================
@@ -415,6 +419,18 @@ cl_bool_t cl_com_setup_commlib_complete(void) {
    return setup_complete;
 }
 
+/* the cl_com_get_(un)resolveable_hosts functions don't need a mutex,
+ * because the memory is malloced in cl_com_setup_commlib()
+ * and freed in cl_com_cleanup_commlib()
+ */
+char* cl_com_get_resolvable_hosts(void) {
+   return cl_commlib_debug_resolvable_hosts;
+}
+
+char* cl_com_get_unresolvable_hosts(void) {
+   return cl_commlib_debug_unresolvable_hosts;
+}
+
 
 
 #ifdef __CL_FUNCTION__
@@ -426,9 +442,22 @@ int cl_com_setup_commlib( cl_thread_mode_t t_mode, cl_log_t debug_level , cl_log
    cl_thread_settings_t* thread_p = NULL;
    cl_bool_t duplicate_call = CL_FALSE;
    cl_bool_t different_thread_mode = CL_FALSE;
+   char* help = NULL;
    
    /* setup global log list */
    pthread_mutex_lock(&cl_com_log_list_mutex);
+   help = getenv("SGE_COMMLIB_DEBUG_RESOLVE");
+   if (help != NULL) {
+      if (cl_commlib_debug_resolvable_hosts == NULL) {
+         cl_commlib_debug_resolvable_hosts = strdup(help);
+      }
+   }
+   help = getenv("SGE_COMMLIB_DEBUG_NO_RESOLVE");
+   if (help != NULL) {
+      if (cl_commlib_debug_unresolvable_hosts == NULL) {
+         cl_commlib_debug_unresolvable_hosts = strdup(help);
+      }
+   }
 
    if (cl_com_log_list != NULL) {
       duplicate_call = CL_TRUE;
@@ -651,6 +680,14 @@ int cl_com_cleanup_commlib(void) {
    CL_LOG(CL_LOG_INFO,"cleanup log list ...");
    /* cleanup global cl_com_log_list */
    pthread_mutex_lock(&cl_com_log_list_mutex);
+   if (cl_commlib_debug_resolvable_hosts != NULL) {
+      free(cl_commlib_debug_resolvable_hosts);
+      cl_commlib_debug_resolvable_hosts = NULL;
+   }
+   if (cl_commlib_debug_unresolvable_hosts != NULL) {
+      free(cl_commlib_debug_unresolvable_hosts);
+      cl_commlib_debug_unresolvable_hosts = NULL;
+   }
    cl_log_list_cleanup(&cl_com_log_list);
    pthread_mutex_unlock(&cl_com_log_list_mutex);
 

@@ -87,7 +87,7 @@ ShutdownMaster()
    euid=`$SGE_UTILBIN/uidgid -euid`
    spool_dir_master=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep qmaster_spool_dir | awk '{ print $2 }'`
    master_pid=`cat $spool_dir_master/qmaster.pid`
-   ADMINUSER=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep admin_user | awk '{ print $2 }'`
+   GetAdminUser
 
    `qconf -ks`
    `qconf -km`

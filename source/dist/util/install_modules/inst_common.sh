@@ -159,7 +159,11 @@ Makedir()
        $INFOTEXT "creating directory: %s" "$dir"
        if [ "`$SGE_UTILBIN/filestat -owner $SGE_ROOT`" != "$ADMINUSER" ]; then
          Execute $MKDIR -p $dir
-         Execute $CHOWN $ADMINUSER $dir
+         if [ "$ADMINUSER" = "default" ]; then
+            Execute $CHOWN root $dir
+         else
+            Execute $CHOWN $ADMINUSER $dir
+         fi
        else
          ExecuteAsAdmin $MKDIR -p $dir
        fi
@@ -921,7 +925,7 @@ PrintLocalConf()
 
    arg=$1
    if [ $arg = 1 ]; then
-      $ECHO "# Version: 6.0u5"
+      $ECHO "# Version: 6.0u7"
       $ECHO "#"
       $ECHO "# DO NOT MODIFY THIS FILE MANUALLY!"
       $ECHO "#"
@@ -1304,8 +1308,18 @@ MoveLog()
       return
    fi
 
+   #due to problems with adminrun and ADMINUSER permissions, on windows systems
+   #the auto install log files couldn't be copied to qmaster_spool_dir
+   # leaving log file in /tmp dir. There is a need for a better solution
+   if [ "$SGE_ARCH" = "win32-x86" ]; then
+      RestoreStdout
+      $INFOTEXT "Check %s to get the install log!" /tmp/$LOGSNAME
+      return
+   fi
+
    if [ "$BACKUP" = "true" -a "$AUTO" = "true" ]; then
-      mv /tmp/$LOGSNAME $backup_dir/backup.log 
+      ExecuteAsAdmin cp /tmp/$LOGSNAME $backup_dir/backup.log 
+      rm -f /tmp/$LOGSNAME 
       return   
    fi
 
@@ -1315,19 +1329,19 @@ MoveLog()
       if [ -d $master_spool_dir ]; then
          if [ $EXECD = "uninstall" -o $QMASTER = "uninstall" ]; then
             if [ -f /tmp/$LOGSNAME ]; then
-               cp /tmp/$LOGSNAME $master_spool_dir/uninstall_`hostname`_$DATE.log 2>&1
+               ExecuteAsAdmin cp -f /tmp/$LOGSNAME $master_spool_dir/uninstall_`hostname`_$DATE.log 2>&1
             fi
             RestoreStdout
             $INFOTEXT "Install log can be found in: %s" $master_spool_dir/uninstall_`hostname`_$DATE.log
          else
             if [ -f /tmp/$LOGSNAME ]; then
-               cp /tmp/$LOGSNAME $master_spool_dir/install_`hostname`_$DATE.log 2>&1
+               ExecuteAsAdmin cp -f /tmp/$LOGSNAME $master_spool_dir/install_`hostname`_$DATE.log 2>&1
             fi
             RestoreStdout
             $INFOTEXT "Install log can be found in: %s" $master_spool_dir/install_`hostname`_$DATE.log
          fi
          if [ -f /tmp/$LOGSNAME ]; then
-            rm /tmp/$LOGSNAME 2>&1
+            rm -f /tmp/$LOGSNAME 2>&1
          fi
       else
          RestoreStdout
@@ -2021,7 +2035,7 @@ BackupCheckBootStrapFile()
       spooling_method=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep "spooling_method" | awk '{ print $2 }'`
       db_home=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep "spooling_params" | awk '{ print $2 }'`
       master_spool=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep "qmaster_spool_dir" | awk '{ print $2 }'`
-      ADMINUSER=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep "admin_user" | awk '{ print $2 }'`
+      GetAdminUser
 
       if [ `echo $db_home | cut -d":" -f2` = "$db_home" ]; then
          $INFOTEXT -n "\nSpooling Method: %s detected!\n" $spooling_method
@@ -2481,8 +2495,29 @@ CopyCA()
             $INFOTEXT "Certificates couldn't be copied!"
             $INFOTEXT -log "rsh/ssh connection to host %s is not working!" $RHOST
             $INFOTEXT -log "Certificates couldn't be copied!"
+            $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
          fi
       fi
    done
 }
 
+#-------------------------------------------------------------------------
+# GetAdminUser
+#
+GetAdminUser()
+{
+   ADMINUSER=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep "admin_user" | awk '{ print $2 }'`
+   euid=`$SGE_UTILBIN/uidgid -euid`
+
+   if [ `echo "$ADMINUSER" |tr "A-Z" "a-z"` = "none" -a $euid = 0 ]; then
+      ADMINUSER=default
+   fi
+
+   if [ "$SGE_ARCH" = "win32-x86" ]; then
+      HOSTNAME=`hostname | tr "a-z" "A-Z"`
+      ADMINUSER="$HOSTNAME+$ADMINUSER"
+   fi
+}
+
+
+   

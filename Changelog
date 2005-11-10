@@ -1,3 +1,12 @@
+MD-2005-11-10-0: Bugfix:    merged from S2_BRANCH
+                            - nonadmin user installation of qmaster fails
+                            - SHADOW host install not able to install shadowd 
+                              on more than one given shadowhost
+                 Bugtraq:   6347954
+                 Issue:     1873
+                 Changed:   install_modules
+                 Review:    RD 
+
 EB-2005-11-07-0: Bugfix:    unable to delete a configuration of a non
                             existing host
                  Bugtraq:   6319231

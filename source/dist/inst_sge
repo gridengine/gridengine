@@ -380,9 +380,13 @@ if [ "$QMASTER" = "install" -a "$UPDATE" != "true" ]; then
  GiveHints
  CheckRunningDaemon sge_qmaster
 
- if [ $? = 0 -a "$AUTO" = "true" ]; then
+ if [ $? = 0 ]; then
+    $INFOTEXT "sge_qmaster successfully installed!\n"
     $INFOTEXT -log "sge_qmaster successfully installed!\n"
+    MoveLog
+    $CLEAR
  else
+    $INFOTEXT "sge_qmaster not successfully installed!\n" 
     $INFOTEXT -log "sge_qmaster not successfully installed!\n" 
     MoveLog
     exit 1 
@@ -393,6 +397,7 @@ fi
 
 if [ "$EXECD" = "install" -a "$UPDATE" != "true" ]; then
  if [ "$AUTO" = "true" ]; then
+    inst_counter=0
     Stdout2Log
     . $SGE_ROOT/$SGE_CELL/common/settings.sh
 
@@ -422,6 +427,11 @@ if [ "$EXECD" = "install" -a "$UPDATE" != "true" ]; then
             $INFOTEXT -log "Host %s already installed" $h
          fi
 
+         inst_counter=`expr $inst_counter + 1`
+         if [ "$inst_counter" = "25" ]; then
+            sleep 5
+            inst_counter=0
+         fi
       done
 
    else
@@ -445,10 +455,12 @@ if [ "$EXECD" = "install" -a "$UPDATE" != "true" ]; then
       CheckRunningDaemon sge_execd
          
       if [ $? = 0 ]; then
+         $INFOTEXT "Execd on host %s is running!\n" $h
          $INFOTEXT -log "Execd on host %s is running!\n" $h
          MoveLog
          exit 0
       else
+          $INFOTEXT "Execd on host %s is not started!\n" $h
           $INFOTEXT -log "Execd on host %s is not started!\n" $h
           MoveLog
           exit 1
@@ -700,27 +712,36 @@ if [ $SHADOW = "install" ]; then
 
       $INFOTEXT "Shadowhost installation completed!"
    else
+      euid=`$SGE_UTILBIN/uidgid -euid`
       Stdout2Log
-      $INFOTEXT -log "Starting sge_shadowd on host %s" $SHADOW_HOST   
-      ExecuteAsAdmin touch $SGE_ROOT/$SGE_CELL/common/shadow_masters
-      ALREADY_SHADOWS=`cat $SGE_ROOT/$SGE_CELL/common/shadow_masters | grep -v $SHADOW_HOST`
-      mod_file="echo $SHADOW_HOST\n$ALREADY_SHADOWS"
-      ExecuteAsAdmin mv $SGE_ROOT/$SGE_CELL/common/shadow_masters $SGE_ROOT/$SGE_CELL/common/shadow_masters.1
-      ExecuteAsAdmin touch $SGE_ROOT/$SGE_CELL/common/shadow_masters
-      ExecuteAsAdmin chmod a+rw $SGE_ROOT/$SGE_CELL/common/shadow_masters
-      ExecuteAsAdmin $mod_file >> $SGE_ROOT/$SGE_CELL/common/shadow_masters
-      ExecuteAsAdmin chmod go-w $SGE_ROOT/$SGE_CELL/common/shadow_masters
-      ExecuteAsAdmin rm -f $SGE_ROOT/$SGE_CELL/common/shadow_masters.1
-      for shs in `cat $SGE_ROOT/$SGE_CELL/common/shadow_masters`; do
-         echo ". $SGE_ROOT/$SGE_CELL/common/settings.sh; SGE_ARCH=`$SGE_ROOT/util/arch`; $SGE_ROOT/bin/$SGE_ARCH/sge_shadowd &" | $SHELL_NAME $shs /bin/sh &
-         #TODO: install rc script
+      for SHADOW in $SHADOW_HOST; do
+         $INFOTEXT -log "Starting sge_shadowd on host %s" $SHADOW   
+         ExecuteAsAdmin touch $SGE_ROOT/$SGE_CELL/common/shadow_masters
+         ALREADY_SHADOWS=`cat $SGE_ROOT/$SGE_CELL/common/shadow_masters | grep -v "$SHADOW"`
+         mod_file="echo $SHADOW\n$ALREADY_SHADOWS"
+         ExecuteAsAdmin mv $SGE_ROOT/$SGE_CELL/common/shadow_masters $SGE_ROOT/$SGE_CELL/common/shadow_masters.1
+         ExecuteAsAdmin touch $SGE_ROOT/$SGE_CELL/common/shadow_masters
+         ExecuteAsAdmin chmod a+rw $SGE_ROOT/$SGE_CELL/common/shadow_masters
+         ExecuteAsAdmin $mod_file >> $SGE_ROOT/$SGE_CELL/common/shadow_masters
+         ExecuteAsAdmin chmod go-w $SGE_ROOT/$SGE_CELL/common/shadow_masters
+         ExecuteAsAdmin rm -f $SGE_ROOT/$SGE_CELL/common/shadow_masters.1
+         if [ $SHADOW = `$SGE_UTILBIN/gethostname -aname` ]; then
+            . $SGE_ROOT/$SGE_CELL/common/settings.sh
+            SGE_ARCH=`$SGE_ROOT/util/arch`
+            $SGE_ROOT/bin/$SGE_ARCH/sge_shadowd &
+            AddSGEStartUpScript $euid master 
+         else
+              echo ". $SGE_ROOT/$SGE_CELL/common/settings.sh; SGE_ARCH=`$SGE_ROOT/util/arch`; $SGE_ROOT/bin/$SGE_ARCH/sge_shadowd &" | $SHELL_NAME $SHADOW /bin/sh &
+              #TODO: install rc script
+         fi
       done
    fi
+   MoveLog
 fi
 
 if [ $SHADOW = "uninstall" ]; then
 
-   ADMINUSER=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep admin_user | awk ' { print $2 }'`
+   GetAdminUser
 
    if [ "$HOST" = "undef" -o "$HOST" = `$SGE_UTILBIN/gethostname -aname`  ]; then
       s_host=`$SGE_UTILBIN/gethostname -aname`
@@ -730,7 +751,7 @@ if [ $SHADOW = "uninstall" ]; then
       is_local="false"
    fi
 
-   if [ "$s_host" = `cat $SGE_ROOT/$SGE_CELL/common/shadow_masters | grep "$s_host"` ]; then
+   if [ "$s_host" = "`cat $SGE_ROOT/$SGE_CELL/common/shadow_masters | grep "$s_host"`" ]; then
       is_shadow="true"
       m_spool=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep qmaster_spool_dir | awk '{ print $2}'`
       s_pid=`cat $m_spool/shadowd_$s_host.pid`
@@ -817,7 +838,7 @@ if [ $MAKE_RC = "true" ]; then
    export SGE_CELL_VAL
 
    if [ -f $SGE_ROOT/$SGE_CELL/common/bootstrap ]; then
-      ADMINUSER=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep admin_user | awk '{ print $2 }'`
+      GetAdminUser
    else
       $INFOTEXT "\nObviously there was no qmaster installation for this cell yet. The file\n\n" \
                 "   %s\n\n" \

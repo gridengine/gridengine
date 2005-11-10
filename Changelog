@@ -1,3 +1,10 @@
+OJ-2005-11-09-0: Testsuite: Created qtcsh test
+                            to test both in-line options and
+                            interactive options. Resides in checktree/system_tests/clients
+                 Changed:   testsuite
+                 Issue:     419
+                 Review:    DT, JG
+
 DT-2005-11-09-1: Testsuite: o Hopefully fixed qsub -ac test
                  Changed:   qsub testsuite test
 

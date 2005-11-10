@@ -1,3 +1,6 @@
+CR-2005-11-10-1: Testsuite: fixed /system_tests/clients/qstat
+                 Review:    RD
+
 MD-2005-11-10-0: Bugfix:    merged from S2_BRANCH
                             - nonadmin user installation of qmaster fails
                             - SHADOW host install not able to install shadowd 

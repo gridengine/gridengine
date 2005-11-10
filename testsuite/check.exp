@@ -7805,19 +7805,21 @@ proc build_java_env_list {} {
    global CHECK_USER CHECK_ACTUAL_TEST_PATH CHECK_PRODUCT_ROOT CHECK_ARCH
    global CHECK_HOST CHECK_TESTSUITE_ROOT CHECK_CURRENT_WORKING_DIR
    global CHECK_SCRIPT_FILE_DIR CHECK_CHECKTREE_ROOT
-   global env
+   global CHECK_PRODUCT_VERSION_NUMBER
+   global env ts_config
 
-   set env_list "-Dgets.user=$CHECK_USER"
-   set env_list "$env_list -Dgets.test_path=$CHECK_ACTUAL_TEST_PATH"
-   set env_list "$env_list -Dgets.sge_root=$CHECK_PRODUCT_ROOT"
-   set env_list "$env_list -Dgets.arch=$CHECK_ARCH"
-   set env_list "$env_list -Dgets.hostname=$CHECK_HOST"
-   set env_list "$env_list -Dgets.gets_root=$CHECK_TESTSUITE_ROOT"
-   set env_list "$env_list -Dgets.cwd=$CHECK_CURRENT_WORKING_DIR"
-   set env_list "$env_list -Dgets.scripts_dir=$CHECK_SCRIPT_FILE_DIR"
-   set env_list "$env_list -Dgets.checktree_root=$CHECK_CHECKTREE_ROOT"
-   set env_list "$env_list -Dgets.pid=[getpid]"
-   set env_list "$env_list -Dgets.home_dir=$env(HOME)"
+   set env_list "-Dgets.user=\"$CHECK_USER\""
+   set env_list "$env_list -Dgets.test_path=\"$CHECK_ACTUAL_TEST_PATH\""
+   set env_list "$env_list -Dgets.sge_root=\"$CHECK_PRODUCT_ROOT\""
+   set env_list "$env_list -Dgets.arch=\"$CHECK_ARCH\""
+   set env_list "$env_list -Dgets.hostname=\"$CHECK_HOST\""
+   set env_list "$env_list -Dgets.gets_root=\"$CHECK_TESTSUITE_ROOT\""
+   set env_list "$env_list -Dgets.cwd=\"$CHECK_CURRENT_WORKING_DIR\""
+   set env_list "$env_list -Dgets.scripts_dir=\"$CHECK_SCRIPT_FILE_DIR\""
+   set env_list "$env_list -Dgets.checktree_root=\"$CHECK_CHECKTREE_ROOT\""
+   set env_list "$env_list -Dgets.pid=\"[getpid]\""
+   set env_list "$env_list -Dgets.home_dir=\"$env(HOME)\""
+   set env_list "$env_list -Dgets.version=\"$CHECK_PRODUCT_VERSION_NUMBER\""
 
    return $env_list
 }

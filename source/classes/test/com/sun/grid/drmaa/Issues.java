@@ -192,32 +192,6 @@ public class Issues extends TestCase {
       }
    }
 
-   public void testIssue1709 () throws DrmaaException {
-      System.out.println ("testIssue1709");
-      
-      Session s = SessionFactory.getFactory ().getSession ();
-      
-      s.init ("");
-      
-      JobTemplate jt = s.createJobTemplate ();
-
-      /* We have to submit a job so that we can find out what the last valid
-       * job id is.  We can then synchronize on the next id. */
-      jt.setRemoteCommand ("/bin/date");
-      String id = s.runJob (jt);
-      String nextId = Integer.toString (Integer.parseInt (id) + 1);
-      
-      try {
-         s.synchronize (Collections.singletonList (nextId), s.TIMEOUT_WAIT_FOREVER, false);
-         fail ("Synchronize on non-existant job id succeeded.  Issue 1709 still exists");
-      }
-      catch (InvalidJobException e) {
-         // Success!
-      }
-      
-      s.exit ();
-   }
-   
    private class Thread1770 extends Thread {
       private Session s = null;
       private String script = null;

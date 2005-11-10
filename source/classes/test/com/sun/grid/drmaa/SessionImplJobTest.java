@@ -1501,6 +1501,46 @@ public class SessionImplJobTest extends TestCase {
       }
    }
    
+   public void testSynchronizeNonexistant () {
+      System.out.println ("testSynchronizeNonexistant");
+      
+      try {
+         JobTemplate jt = session.createJobTemplate ();
+
+         jt.setRemoteCommand (SCRIPT);
+         jt.setArgs (new String[] {"5"});
+
+         /* Test timed wait (timeout), no dispose */
+         String jobId = session.runJob (jt);
+         /* Create a valid, unknown id. */
+         String nextId = Integer.toString (Integer.parseInt (jobId) + 1);
+         List jobIds = Collections.singletonList (nextId);
+         
+         try {
+            session.synchronize (jobIds, session.TIMEOUT_WAIT_FOREVER, false);
+            // Success!
+         }
+         catch (InvalidJobException e) {
+            fail ("Synchronize on non-existant job id failed");
+         }
+         
+         /* Wait for the real job to end. */
+         JobInfo info = session.wait (jobId, session.TIMEOUT_WAIT_FOREVER);
+
+         assertNotNull (info);
+         assertEquals (jobId, info.getJobId ());
+
+         /* There's no reason that this job should exit prematurely. */
+         assertTrue (info.hasExited ());
+         assertEquals (0, info.getExitStatus ());
+         
+         session.deleteJobTemplate (jt);
+      }
+      catch (DrmaaException e) {
+         fail ("Exception while trying to synchronize jobs: " + e.getMessage ());
+      }
+   }
+   
    /** Test of getJobProgramStatus method, of class com.sun.grid.drmaa.SessionImpl. */
    public void testBadGetJobProgramStatus () {
       System.out.println ("testBadGetJobProgramStatus");

@@ -26,6 +26,7 @@ public class Settings {
    public static final String CHECKTREE_ROOT = "checktree_root";
    public static final String PID = "pid";
    public static final String HOME_DIR = "home_dir";
+   public static final String VERSION = "version";
    
    /* The first time this class is used, it will initialize all of the values
     * automatically. */
@@ -41,6 +42,7 @@ public class Settings {
          settings.put (CHECKTREE_ROOT, System.getProperty ("gets.checktree_root", "/"));
          settings.put (PID, System.getProperty ("gets.pid", "-1"));
          settings.put (HOME_DIR, System.getProperty ("gets.home_dir", "/"));
+         settings.put (VERSION, System.getProperty ("gets.version", "maintrunk"));
       }
       catch (SecurityException e) {
          System.err.println ("Not allowed to access system properties");

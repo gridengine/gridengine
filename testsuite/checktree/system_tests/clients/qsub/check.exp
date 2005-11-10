@@ -865,6 +865,11 @@ proc check_option_ac {} {
       set_error -1 "qsub $option - qsub error: inline context variable was not set"
       return
    } elseif {[regexp {[ \t,]myvar4=test 4[,\r\n]} $vars match] != 1} {
+      if {[regexp {[ \t,]myvar4='test 4'[,\r\n]} $vars match] == 1} {
+         set_error -3 "qsub $option - qsub error: issue IZ1850 encountered"
+         return
+      }
+
       set_error -1 "qsub $option - qsub error: inline context variable was not set"
       return
    }

@@ -207,7 +207,7 @@ ExecuteAsAdmin()
       $INFOTEXT -log "Probably a permission problem. Please check file access permissions."
       $INFOTEXT -log "Check read/write permission. Check if SGE daemons are running."
 
-      if [ $AUTO = true ]; then
+      if [ "$AUTO" = "true" ]; then
          MoveLog
       fi
 
@@ -933,11 +933,7 @@ PrintLocalConf()
    else
       $ECHO "xterm                  $XTERM"
    fi
-   if [ "$SGE_ARCH" = "win32-x86" ]; then
-      $ECHO "qlogin_daemon          $QLOGIN_DAEMON -i"
-   else
-      $ECHO "qlogin_daemon          $QLOGIN_DAEMON"
-   fi
+   $ECHO "qlogin_daemon          $QLOGIN_DAEMON"
    $ECHO "rlogin_daemon          $RLOGIN_DAEMON"
    if [ "$LOCAL_EXECD_SPOOL" != "undef" ]; then
       $ECHO "execd_spool_dir        $LOCAL_EXECD_SPOOL"
@@ -2490,20 +2486,3 @@ CopyCA()
    done
 }
 
-
-IsAdminHost()
-{
-   check_host=$1
-   $SGE_BIN/qconf -sh | grep $check_host > /dev/null 2>&1
-
-   return $?
-}
-
-
-IsExecHost()
-{
-   check_host=$1
-   $SGE_BIN/qconf -sel | grep $check_host > /dev/null 2>&1
-
-   return $?
-}   

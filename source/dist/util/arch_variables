@@ -237,11 +237,11 @@ case $ARCH in
    XTERM=/usr/X11/bin/xterm
    MAILER=/bin/mail
    QLOGIN_COMMAND=telnet
-   QLOGIN_DAEMON=/usr/sbin/in.telnetd
+   QLOGIN_DAEMON="/usr/sbin/in.telnetd -i"
    RLOGIN_DAEMON=/usr/sbin/in.rlogind
+   RSH_DAEMON=undef
    GETTEXT=
    ROOTGROUP=wheel
-   RSH_DAEMON=/usr/sbin/in.rshd
    LOADSENSOR_COMMAND="/util/resources/loadsensors/interix-loadsensor.sh"
    ;;
  *)

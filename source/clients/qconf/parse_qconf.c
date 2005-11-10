@@ -3944,8 +3944,7 @@ char *argv[]
             */
             if ((action == 3) && cp && strrchr(cp, '/')) {
                lSetHost(hep, EH_name, strrchr(cp, '/') + 1);
-            }
-            else {
+            } else {
                lSetHost(hep, EH_name, cp);
             }
             

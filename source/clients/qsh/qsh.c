@@ -76,6 +76,7 @@
 #include "sge_var.h"
 #include "sge_gdi.h"
 #include "sge_profiling.h"
+#include "sge_mt_init.h"
 
 #include "msg_clients_common.h"
 #include "msg_qsh.h"
@@ -1268,7 +1269,7 @@ int main(int argc, char **argv)
 
    DENTER_MAIN(TOP_LAYER, "qsh");
 
-   sge_prof_setup();
+   sge_mt_init();
 
    /*
    ** get command name: qlogin, qrsh or qsh

@@ -1,3 +1,13 @@
+RD-2005-11-10-0: Bugfix:    - sgeCA may be inconsistent after new installation
+                             - install script sets rsh_daemon to 
+                               /usr/sbin/in.rshd on win32-x86 
+                             - qconf -mconf/-sconf does not resolve aliased host
+                             - lock initialisation for qsh
+                  Changed:   install scripts, qconf, qsh
+                  Bugtraq:   6347351, 6348478
+                  Issue:     1880 
+                  Review:    MD
+
 CR-2005-11-10-0: Enhancem.: - added possibility to influence host name resolving
                               by setting environment variables
                             - added new commlib error: 

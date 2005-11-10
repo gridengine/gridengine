@@ -87,7 +87,7 @@ InitCA()
    $CLEAR
    $INFOTEXT -u "\nInitializing Certificate Authority (CA) for OpenSSL security framework"
 
-   if [ -d $CATOP -o -d $CALOCALTOP ]; then
+   if [ -d $CATOP -a -d $CALOCALTOP ]; then
       $INFOTEXT -e "\nThere are already directories of the CA infrastructure in\n   %s\n   or\n   %s\n" "$CATOP" "$CALOCALTOP"
       $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n \
          "Do you want to recreate your SGE CA infrastructure (y/n) [y] >> "
@@ -733,7 +733,7 @@ MakeCADirs()
       exit 1
    fi
 
-   Execute $RM -rf $CALOCALTOP > /dev/null 2>&1 
+   Execute $RM -rf $CALOCALTOP > /dev/null 2>&1
    ExecuteAsAdmin $RM -rf $CATOP > /dev/null 2>&1
 
    if [ -f $CATOP -o -d $CATOP -o -f $CALOCALTOP -o -d $CALOCALTOP ]; then

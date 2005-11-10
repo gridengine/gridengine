@@ -1,3 +1,6 @@
+CR-2005-11-10-3: Testsuite: fixed tcl error in system_tests/shepherd/job_start
+                 Review:    pending
+
 CR-2005-11-10-2: Testsuite: fixed problem for start_remote_prog which and file
                             test
                  Review:    pending

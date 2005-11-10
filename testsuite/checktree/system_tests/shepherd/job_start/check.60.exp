@@ -534,6 +534,11 @@ proc job_start_test {} {
                      set trace_pid_2 [get_string_value_between ":" -1 $trace_pid_2 ] 
                      puts $CHECK_OUTPUT "pid 2: $trace_pid_2"
                      
+                     if { [info exists trace_pid_1] != 1 } {
+                        add_proc_error "job_start_test" -1 "$current_run_text sheperd trace file doesn't contain \"shepherd called with\" string"
+                        set trace_pid_1 "unknown"
+                     }
+
                      if { $trace_pid_2 == $trace_pid_1 } {
                         add_proc_error "job_start_test" -1 "$current_run_text shepherd trace file doesn't have different pids: pid 1($trace_pid_1), pid2($trace_pid_2)"
                      }

@@ -1,3 +1,4 @@
+CR-2005-11-11-1: Testsuite: o fixed uncorrect change from CR-2005-11-11-0
 
 CR-2005-11-11-0: Testsuite: o better remote file checking for start_remote_prog()
                  Review:    RD

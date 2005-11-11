@@ -1116,12 +1116,14 @@ proc open_remote_spawn_process { hostname
                        break;
                    }
                    -i $spawn_id default {
-                       if { $my_tries > 0 && $my_tries < 77 } {
+                       if { $my_tries > 0 } {
                            incr my_tries -1
-                           puts -nonewline $CHECK_OUTPUT "."
-                           flush $CHECK_OUTPUT
+                           if { $my_tries < 77 } {
+                              puts -nonewline $CHECK_OUTPUT "."
+                              flush $CHECK_OUTPUT
+                           }
                            continue
-                       } else { 
+                       } else {
                           add_proc_error "open_remote_spawn_process" -1 "${error_info}\nstartup timeout" 
                           catch { close -i $spawn_id }
                           catch { wait -nowait -i $spawn_id }

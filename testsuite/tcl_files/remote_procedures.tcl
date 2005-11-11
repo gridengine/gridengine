@@ -1116,7 +1116,7 @@ proc open_remote_spawn_process { hostname
                        break;
                    }
                    -i $spawn_id default {
-                       if { $my_tries > 0 } {
+                       if { $my_tries > 0 && $my_tries < 77 } {
                            incr my_tries -1
                            puts -nonewline $CHECK_OUTPUT "."
                            flush $CHECK_OUTPUT

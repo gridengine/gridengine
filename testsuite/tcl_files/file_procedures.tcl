@@ -1716,32 +1716,11 @@ proc create_shell_script { scriptfile
       puts $script "trap 0"
       if { $without_start_output == 0 } {
          puts $script "echo \"_exit_status_:(\$exit_val)\""
-         puts $script "echo \"script done.\""
+         puts $script "echo \"script done. (_END_OF_FILE_)\""
       }
    }
    flush $script
    close $script
-
-
-   catch { set file_size [file size "$scriptfile"]}
-   set timeout [clock seconds]
-   incr timeout 60
-   while { $file_size == 0 } {
-      catch { set file_size [file size "$scriptfile"]}
-      if { $file_size == 0 } { 
-         puts $CHECK_OUTPUT "===================================================================="
-         puts $CHECK_OUTPUT "--> file size of \"$scriptfile\": $file_size ; waiting for filesize > 0"
-         puts $CHECK_OUTPUT "===================================================================="
-         after 250
-      } else {
-         break
-      }
-
-      if { [clock seconds] > $timeout } {
-         add_proc_error "create_shell_script" "-2" "timeout waiting for file $scriptfile having filesize > 0"
-         return
-      }
-   }
 
    if { $CHECK_DEBUG_LEVEL != 0 } {
       set script  [ open "$scriptfile" "r" ]

@@ -1,3 +1,7 @@
+
+CR-2005-11-11-0: Testsuite: o better remote file checking for start_remote_prog()
+                 Review:    RD
+
 DT-2005-11-10-0: Testsuite: o Fixed test for qsub -ac
                             o Removed test for IZ1709
                             o Fixed version test in drmaaj
@@ -6,11 +10,11 @@ DT-2005-11-10-0: Testsuite: o Fixed test for qsub -ac
                  Review:    pending
 
 CR-2005-11-10-3: Testsuite: fixed tcl error in system_tests/shepherd/job_start
-                 Review:    pending
+                 Review:    RD
 
 CR-2005-11-10-2: Testsuite: fixed problem for start_remote_prog which and file
                             test
-                 Review:    pending
+                 Review:    RD
 
 CR-2005-11-10-1: Testsuite: fixed /system_tests/clients/qstat
                  Review:    RD

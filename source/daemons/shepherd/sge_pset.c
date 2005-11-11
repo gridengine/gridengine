@@ -53,6 +53,7 @@
 #include "config_file.h"
 #include "execution_states.h"
 #include "err_trace.h"
+#include "sge_stdio.h"
 
 #define PROC_SET_OK            0
 #define PROC_SET_WARNING       1
@@ -261,7 +262,10 @@ static int set_processor_range(char *crange, int proc_set_num, char *err_str)
 #endif
 
    /* dump to file for later use */
-   if (!shepherd_write_processor_set_number_file(proc_set_num)) {
+   if ((fp = fopen("processor_set_number","w"))) {
+      fprintf(fp,"%d\n",proc_set_num);
+      FCLOSE(fp);
+   } else {
       shepherd_trace("MPPS_CREATE: failed creating file processor_set_number");
       return PROC_SET_ERROR;
    }
@@ -311,6 +315,9 @@ static int set_processor_range(char *crange, int proc_set_num, char *err_str)
 #endif
 
    return PROC_SET_OK;
+FCLOSE_ERROR:
+   shepherd_trace("MPPS_CREATE: failed creating file processor_set_number");
+   return PROC_SET_ERROR;
 }
 
 /****** shepherd/pset/free_processor_set() ************************************
@@ -341,14 +348,16 @@ static int set_processor_range(char *crange, int proc_set_num, char *err_str)
 *        PROC_SET_WARNING - A non-critical error occurred (e.g. the
 *                           procedure is executed as unpriviliged user)
 ******************************************************************************/
-static int 
-shepherd_read_processor_set_number_file(char *err_str) 
+static int free_processor_set(char *err_str) 
 {
    FILE *fp;
    int proc_set_num;
 
    /* read unique processor set number from file */
-   if (!shepherd_read_processor_set_number_file(filename)) {
+   if ((fp = fopen("processor_set_number","r"))) {
+      fscanf(fp, "%d", &proc_set_num);
+      FCLOSE_IGNORE_ERROR(fp);
+   } else {
       shepherd_trace("MPPS_CREATE: failed reading from file processor_set_number");
       return PROC_SET_ERROR;
    }

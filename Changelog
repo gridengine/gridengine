@@ -1,3 +1,11 @@
+DT-2005-11-10-0: Testsuite: o Added test for IZ1768
+                            o Removed test for IZ1709
+                            o Fixed version test in drmaaj
+                            o Expanded drmaa & drmaaj tests
+                            - Merged from DT-2005-11-10-0 (Maintrunk)
+                 Changed:   jUnit tests, DRMAA unit tests
+                 Review:    pending
+
 MD-2005-11-10-0: Bugfix:    - nonadmin user installation of qmaster fails
                             - SHADOW host install not able to install shadowd 
                               on more than one given shadowhost

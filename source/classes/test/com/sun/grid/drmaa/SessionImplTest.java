@@ -41,6 +41,7 @@ package com.sun.grid.drmaa;
 import java.util.*;
 import junit.framework.*;
 import org.ggf.drmaa.*;
+import com.sun.grid.Settings;
 
 /**
  *
@@ -107,15 +108,15 @@ public class SessionImplTest extends TestCase {
    
    /** Test of getDRMSystem method, of class com.sun.grid.drmaa.SessionImpl. */
    public void testGetDrmSystem () {
-      System.out.println ("testGetDrmSystem");      
+      System.out.println ("testGetDrmSystem");
       
-      assertTrue (session.getDrmSystem ().equals ("SGE maintrunk") ||
-                  session.getDrmSystem ().equals ("N1GE maintrunk"));
+      String version = Settings.get (Settings.VERSION);
+
+      assertTrue (session.getDrmSystem ().equals (version));
 
       this.initSession ();
       
-      assertTrue (session.getDrmSystem ().equals ("SGE maintrunk") ||
-                  session.getDrmSystem ().equals ("N1GE maintrunk"));
+      assertTrue (session.getDrmSystem ().equals (version));
       
       this.exitSession ();
    }
@@ -124,13 +125,13 @@ public class SessionImplTest extends TestCase {
    public void testGetDrmaaImplementation () {
       System.out.println ("testGetDrmaaImplementation");
       
-      assertTrue (session.getDrmaaImplementation ().equals ("DRMAA 1.0 Java language binding 0.5 -- SGE maintrunk") ||
-                  session.getDrmaaImplementation ().equals ("DRMAA 1.0 Java language binding 0.5 -- N1GE maintrunk"));
+      String version = Settings.get (Settings.VERSION);
+
+      assertTrue (session.getDrmaaImplementation ().equals ("DRMAA 1.0 Java language binding 0.5 -- " + version));
 
       this.initSession ();
       
-      assertTrue (session.getDrmaaImplementation ().equals ("DRMAA 1.0 Java language binding 0.5 -- SGE maintrunk") ||
-                  session.getDrmaaImplementation ().equals ("DRMAA 1.0 Java language binding 0.5 -- N1GE maintrunk"));
+      assertTrue (session.getDrmaaImplementation ().equals ("DRMAA 1.0 Java language binding 0.5 -- " + version));
       
       this.exitSession ();
    }

@@ -402,10 +402,20 @@ enum {
          - drmaa_set_attribute() is called for an invalid attribute
          - then drmaa_exit() is called */
    
-   ST_UNSUPPORTED_VATTR
+   ST_UNSUPPORTED_VATTR,
       /* - drmaa_init() is called
          - drmaa_set_vector_attribute() is called for an invalid attribute
          - then drmaa_exit() is called */
+   
+   ST_SYNCHRONIZE_NONEXISTANT
+      /* - Init session.
+         - Create job template.
+         - Run job.
+         - Delete job template.
+         - Use job id to create unknown, valid job id.
+         - Synchronize against unknown id.
+         - Wait for real job to finish.
+         - Exit session. */
 };
 
 const struct test_name2number_map {
@@ -485,6 +495,7 @@ const struct test_name2number_map {
    { "ST_WILD_PARALLEL",                         ST_WILD_PARALLEL,                           4, "<sleeper_job> <native_spec0> <native_spec1> <native_spec2>" },
    { "ST_UNSUPPORTED_ATTR",                      ST_UNSUPPORTED_ATTR,                        0, "" },
    { "ST_UNSUPPORTED_VATTR",                     ST_UNSUPPORTED_VATTR,                       0, "" },
+   { "ST_SYNCHRONIZE_NONEXISTANT",               ST_SYNCHRONIZE_NONEXISTANT,                 1, "<sleeper_job>" },
 
    { NULL,                                       0 }
 };
@@ -4199,6 +4210,79 @@ static int test(int *argc, char **argv[], int parse_args)
          }             
 
          if (drmaa_exit(diagnosis, sizeof(diagnosis)-1) != DRMAA_ERRNO_SUCCESS) {
+            fprintf(stderr, "drmaa_exit() failed: %s\n", diagnosis);
+            return 1;
+         }
+      }
+      break;
+
+   case ST_SYNCHRONIZE_NONEXISTANT:
+      {
+         char jobid[1024];
+         const char *all_jobids[2];
+         int new_id = 0;
+         int drmaa_errno = DRMAA_ERRNO_SUCCESS;
+
+         if (parse_args) {
+            sleeper_job = NEXT_ARGV(argc, argv);
+         }
+         
+         drmaa_errno = drmaa_init(NULL, diagnosis, sizeof(diagnosis) - 1);
+         
+         if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
+            fprintf(stderr, "drmaa_init() failed: %s\n", diagnosis);
+            return 1;
+         }
+         
+         report_session_key();
+
+         jt = create_sleeper_job_template(5, 0, 0);
+         
+         if (jt == NULL) {
+            fprintf(stderr, "create_sleeper_job_template() failed\n");
+            return 1;
+         }
+
+         drmaa_errno = drmaa_run_job(jobid, sizeof(jobid) - 1, jt, diagnosis,
+                                     sizeof(diagnosis) - 1);
+
+         if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
+            fprintf(stderr, "drmaa_run_job() failed: %s\n", diagnosis);
+            return 1;
+         }
+
+         printf("submitted job \"%s\"\n", jobid);
+
+         drmaa_delete_job_template(jt, NULL, 0);
+
+         /* Convert job id into a number and add 1. */
+         new_id = strtol(jobid, NULL, 10) + 1;
+         printf ("Last job id is %s.  Using %d.\n", jobid, new_id);
+
+         /* Build job id list. */
+         sprintf(jobid, "%d", new_id);
+         all_jobids[0] = jobid;
+         all_jobids[1] = NULL;
+
+         /* Synchronize on the new job id. */
+         drmaa_errno = drmaa_synchronize(all_jobids, DRMAA_TIMEOUT_WAIT_FOREVER,
+                                         0, diagnosis,
+                                         DRMAA_ERROR_STRING_BUFFER);
+
+         if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
+            fprintf(stderr, "Synchronize on non-existant job id failed\n");
+            return 1;
+         }
+         
+         drmaa_errno = wait_all_jobs(1);
+         
+         if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
+            return 1;
+         }
+         
+         drmaa_errno = drmaa_exit(diagnosis, sizeof(diagnosis) - 1);
+         
+         if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
             fprintf(stderr, "drmaa_exit() failed: %s\n", diagnosis);
             return 1;
          }

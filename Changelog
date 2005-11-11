@@ -1,3 +1,10 @@
+JG-2005-11-11-0: Enhancem.: Fixed a number of compile errors in some module
+                            tests and made them part of a standard build.
+                            They are called by testsuite.
+                            Merge from maintrunk JG-2005-09-23-0.
+                 Review:    RD
+
+
 DT-2005-11-10-0: Testsuite: o Added test for IZ1768
                             o Removed test for IZ1709
                             o Fixed version test in drmaaj

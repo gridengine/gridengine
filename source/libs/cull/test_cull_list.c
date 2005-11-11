@@ -99,7 +99,7 @@ int main(int argc, char *argv[])
    lWriteElemTo(copy, stdout);
    lFreeElem(&copy);
 
-   /* test lCopyElemPartial */
+   /* test lCopyElemPartialPack */
    /* first copy the complete element */
    copy = lCreateElem(TEST_Type);
    enp = lWhat("%T(ALL)", TEST_Type);

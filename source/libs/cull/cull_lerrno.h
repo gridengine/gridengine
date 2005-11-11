@@ -78,7 +78,7 @@ extern "C" {
 #define  LESORTORDNULL  38      /* lSortOrder is NULL                     */
 #define  LESUM          39      /* sum in where.c failure                 */
 #define  LEOPUNKNOWN    40      /* operator of lCondition struct unknown  */
-#define  LECOPYELEMPART 41      /* lCopyElemPartial failure               */
+#define  LECOPYELEMPART 41      /* lCopyElemPartialPack failure           */
 #define  LENULLARGS     42      /* function argument is NULL              */
 #define  LEFALSEFIELD   43      /* field is not allowed here              */
 #define  LEJOINDESCR    44      /* lJoinDescr failure                     */

@@ -56,9 +56,14 @@ CULLLIB_SRC 	= cull_list.c \
                 cull_packL.c\
                 pack.c
 
+CULLTEST_SRC   = example1.c example2.c \
+                 test_cull_list.c test_cull_pack.c test_cull_hash.c test_enumeration.c
+
 CULLLIB_OBJS = $(CULLLIB_SRC:.c=.o)
 
-CULL_ALL 	= example1 example2 test_cull_list test_cull_pack test_cull_db_pack test_cull_hash test_enumeration
+CULLTEST_OBJS = $(CULLTEST_SRC:.c=.o)
+
+CULL_ALL 	= example1 example2 test_cull_list test_cull_pack test_cull_hash test_enumeration
 
 ###############################################################################
 # global rules: all, clean, depend, messages
@@ -68,7 +73,7 @@ culllib: $(CULLLIB)
 culllib_all: $(CULL_ALL)
 	
 culllib_clean: 
-	$(RM) $(CULL_ALL) $(CULLLIB_OBJS) libcull.a libcull$(SHAREDEXT) example?.o
+	$(RM) $(CULL_ALL) $(CULLLIB_OBJS) libcull.a libcull$(SHAREDEXT) $(CULLTEST_OBJS) $(CULL_ALL)
 
 culllib_depend:
 	$(DEPEND) -f$(CULLLIB_DIR)/cull_dependencies $(CULLLIB_DIR)/*.c
@@ -201,7 +206,7 @@ test_cull_db_pack.o: $(CULLLIB_DIR)/test_cull_db_pack.c
 
 #---
 test_cull_hash: test_cull_hash.o $(CULLLIB) $(WINGRIDLIB_DEP) $(UTILIB) $(RMONLIB) $(LCKLIB)
-	$(LD_WRAPPER) $(CC) $(CFLAGS) -o test_cull_hash test_cull_hash.o $(LFLAGS) $(CULLLIB) $(WINGRIDLIB) $(UTILIB) $(RMONLIB) $(LCKLIB) $(LIBS) $(LIBS)
+	$(LD_WRAPPER) $(CC) $(CFLAGS) -o test_cull_hash test_cull_hash.o $(LFLAGS) $(CULLLIB) $(UTILIB) $(RMONLIB) $(LCKLIB) $(LIBS) $(LIBS)
 
 test_cull_hash.o: $(CULLLIB_DIR)/test_cull_hash.c
 	$(CC) $(CFLAGS) -c $(CULLLIB_DIR)/test_cull_hash.c

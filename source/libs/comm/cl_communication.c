@@ -2392,18 +2392,25 @@ int cl_com_cached_gethostbyname( char *unresolved_host, char **unique_hostname, 
       return CL_RETVAL_PARAMS;    /* we expect an pointer address, set to NULL */
    }
 
-   if (cl_com_get_unresolvable_hosts() != NULL) {
-      if (strstr(cl_com_get_unresolvable_hosts(), unresolved_host) != NULL) {
-         CL_LOG_STR(CL_LOG_WARNING,"host is in not resolvable host list:", unresolved_host);
-         return CL_RETVAL_GETHOSTNAME_ERROR;
-      }
+   /* If the host name is set in SGE_COMMLIB_DEBUG_NO_RESOLVE, fail. */
+   if ((cl_com_get_unresolvable_hosts() != NULL) &&
+       (strstr(cl_com_get_unresolvable_hosts(), unresolved_host) != NULL)) {
+      CL_LOG_STR(CL_LOG_WARNING, "host is in not resolvable host list:",
+                 unresolved_host);
+      return CL_RETVAL_GETHOSTNAME_ERROR;
    }
 
-   if (cl_com_get_resolvable_hosts() != NULL) {
-      if (strstr(cl_com_get_resolvable_hosts(), unresolved_host) == NULL) {
-         CL_LOG_STR(CL_LOG_WARNING,"host is not in resolvable host list:", unresolved_host);
-         return CL_RETVAL_GETHOSTNAME_ERROR;
+   /* If the host name is set in SGE_COMMLIB_DEBUG_RESOLVE, use the hostname as
+    * the unique hostname and return success. */
+   if ((cl_com_get_resolvable_hosts() != NULL) &&
+       (strstr(cl_com_get_resolvable_hosts(), unresolved_host) != NULL)) {
+      CL_LOG_STR(CL_LOG_WARNING, "host is in resolvable host list:",
+                 unresolved_host);
+      *unique_hostname = strdup(unresolved_host);
+      if (he_copy != NULL) {
+         *he_copy = NULL;
       }
+      return CL_RETVAL_OK;
    }
 
 

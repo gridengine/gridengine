@@ -32,6 +32,7 @@ public class Settings {
     * automatically. */
    static {
       try {
+         settings.put (USER, System.getProperty ("gets.user", "/"));
          settings.put (TEST_PATH, System.getProperty ("gets.test_path", "/"));
          settings.put (SGE_ROOT, System.getProperty ("gets.sge_root", "/"));
          settings.put (ARCH, System.getProperty ("gets.arch", ""));

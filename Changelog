@@ -1,3 +1,8 @@
+DT-2005-11-11-0: Testsuite: o Added missing variable to Settings
+                 Bug:       o Fixed problem with CR-2005-11-10-0
+                 Changed:   jUnit, commlib
+                 Review:    pending
+
 CR-2005-11-11-1: Testsuite: o fixed uncorrect change from CR-2005-11-11-0
 
 CR-2005-11-11-0: Testsuite: o better remote file checking for start_remote_prog()

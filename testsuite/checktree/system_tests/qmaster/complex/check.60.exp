@@ -102,7 +102,7 @@ set check_init_level_procedure "complex_init_level"
 # define test's name and run level descriptions
 set check_name            "complex"
 set check_category        "COMPATIBILITY SYSTEM L10N VERIFIED"
-set check_highest_level   0
+set check_highest_level  0
 set check_description(0)  "Test complex attributes and loadsensor"
 
 # define test's dependencies
@@ -115,10 +115,10 @@ set check_cleanup_function complex_cleanup
 
 # define test's procedure order
 set check_functions ""
-#lappend check_functions "complex_loadsensor_test"
-#lappend check_functions "complex_global_host"
-#lappend check_functions "complex_host"
-#lappend check_functions "complex_queue"
+lappend check_functions "complex_loadsensor_test"
+lappend check_functions "complex_global_host"
+lappend check_functions "complex_host"
+lappend check_functions "complex_queue"
 lappend check_functions "issue_1847"
 
 global complex_host
@@ -133,7 +133,7 @@ proc complex_init_level {} {
    set complex_host [lindex $ts_config(execd_nodes) 0]
 
    switch -- $CHECK_ACT_LEVEL {
-      "0" {
+      "0" { 
          return 0
       }
    }
@@ -145,7 +145,7 @@ proc complex_init_level {} {
 
 
 proc complex_setup  {} {
-   global ts_config CHECK_OUTPUT CHECK_USER
+   global ts_config CHECK_OUTPUT CHECK_USER CHECK_ACT_LEVEL
    global complex_host
    global complex_old_config complex_global_host_backup complex_host_backup
 
@@ -158,7 +158,7 @@ proc complex_setup  {} {
    set complex(test_bool)     "tb     BOOL      ==    YES    NO    0        0"
    set complex(test_string)   "ts     STRING    ==    YES    NO    none     0"
    set complex(test_cstring)  "tc     CSTRING   ==    YES    NO    none     0"
-   set complex(test_restring) "tr     RESTRING  ==    YES    NO    none     0"
+   set complex(test_restring) "tr     RESTRING  ==   YES    NO    none     0"
    set complex(test_hostname) "th     HOST      ==    YES    NO    none     0"
    set_complex complex
 
@@ -259,7 +259,9 @@ proc complex_cleanup  {} {
 
 proc complex_loadsensor_test {} {
    global ts_config CHECK_OUTPUT
-   global complex_host
+   global complex_host check_highest_level
+
+   set check_highest_level 0
 
    get_qconf_se_info $complex_host
    if { [string first "test_string=TEST_ARCH" $qconf_se_info(load_values) ] < 0 } {
@@ -303,9 +305,16 @@ proc complex_loadsensor_test {} {
    set_error 0 "ok"
 }
 
-proc complex_run_job {scenario variable value submittable pending} {
-   global ts_config CHECK_OUTPUT
+proc complex_run_job {scenario variable value submittable pending { runnable "0" } } {
 
+   # Added variable "runnable" to allow to run cases which cause error, but which we
+   # will allow to run so we can complete the test run. These are bugs in qsub
+   # Once the qsub bug is resolved, these parts of the code will be removed.
+   # Namely, where we invoke add_proc_error with value -3.
+   
+   global ts_config CHECK_OUTPUT check_highest_level
+
+   set check_highest_level 0
    set job_script "$ts_config(product_root)/examples/jobs/sleeper.sh 20"
    set job_args   "-o /dev/null -j y -l $variable=$value"
    set job_id [submit_job "$job_args $job_script" $submittable]
@@ -313,7 +322,11 @@ proc complex_run_job {scenario variable value submittable pending} {
    # if job submission shall fail, jobid may not be > 0
    if {!$submittable} { 
       if {$job_id > 0} {
-         add_proc_error "complex_run_job" -1 "scenario $scenario, $job_args should have failed"
+         if { ( $runnable == 1 ) } { 
+            add_proc_error "complex_run_job" -3 "scenario $scenario, $job_args should have failed"
+         } else {
+            add_proc_error "complex_run_job" -1 "scenario $scenario, $job_args should have failed"
+        }
          delete_job $job_id
       } else {
          puts $CHECK_OUTPUT "ok, submission failed with status $job_id"
@@ -327,7 +340,11 @@ proc complex_run_job {scenario variable value submittable pending} {
          # test case: job should not be scheduled
          if {$pending} {
             if {$ret == 0} {
+               if { ( $runnable == 1 ) } { 
+               add_proc_error "complex_run_job" -3 "scenario $scenario, $job_args should not be running"
+               } else {
                add_proc_error "complex_run_job" -1 "scenario $scenario, $job_args should not be running"
+               }
             } else {
                puts $CHECK_OUTPUT "ok, job is not running"
             }
@@ -341,7 +358,11 @@ proc complex_run_job {scenario variable value submittable pending} {
             } else {
                get_qstat_j_info $job_id
                set schedd_info $qstat_j_info(scheduling info)
-               add_proc_error "complex_run_job" -1 "scenario $scenario, $job_args should be running\n$schedd_info"
+               if { ( $runnable == 1 ) } { 
+                  add_proc_error "complex_run_job" -3 "scenario $scenario, $job_args should be running\n$schedd_info"
+               } else {   
+                  add_proc_error "complex_run_job" -1 "scenario $scenario, $job_args should be running\n$schedd_info"
+               }
                delete_job $job_id
             }
          }
@@ -350,8 +371,9 @@ proc complex_run_job {scenario variable value submittable pending} {
 }
 
 proc complex_global_host {} {
-   global ts_config CHECK_OUTPUT
+   global ts_config CHECK_OUTPUT check_highest_level
 
+   set check_highest_level 0
    # set all test attributes in global host
    set config(complex_values)    "test_integer=1"
    append config(complex_values) ",td=10.0"
@@ -362,7 +384,8 @@ proc complex_global_host {} {
    append config(complex_values) ",tr=global"
    set_exechost config "global"
  
-   #               szenario variable       value     submittable pending
+
+   #               scenario variable       value     submittable pending  runnable
    complex_run_job "global" "ti"           1         1           0
    complex_run_job "global" "test_integer" 2         1           1
    complex_run_job "global" "ti"           "X"       0           0
@@ -387,18 +410,168 @@ proc complex_global_host {} {
   
    complex_run_job "global" "tc"           "global"  1           0
    complex_run_job "global" "tc"           "xxxbal"  1           1
-  
+ 
+   # For tr (test_restring), we will check all possible combinations genex
+   # for "global" for both "tr" and "test_restring" for the complex' name. We also vary
+   # whether the resource is pending (1) or not (0). For broken tests, we add the
+   # runnuble paramter with value 1.
+
    complex_run_job "global" "tr"           "global"  1           0
-   complex_run_job "global" "tr"           "g*"      1           0
    complex_run_job "global" "tr"           "*lobal"  1           0
-   complex_run_job "global" "tr"           "g*l"     1           0
-   complex_run_job "global" "tr"           "*global*" 1           0
+   complex_run_job "global" "tr"           "globa*"  1           0
    complex_run_job "global" "tr"           "*loba*"  1           0
-   complex_run_job "global" "tr"           "xxxbal"  1           1
-   complex_run_job "global" "tr"           "x*"      1           1
-   complex_run_job "global" "tr"           "*xxx"    1           1
-  
-  
+   complex_run_job "global" "tr"           "*global"  1           0
+   complex_run_job "global" "tr"           "global*"  1           0
+   complex_run_job "global" "tr"           "glo*al"  1           0
+   complex_run_job "global" "tr"           "*global*" 1          0
+   complex_run_job "global" "tr"           "*"      1           0
+   complex_run_job "global" "tr"           "**global*" 1          0
+   complex_run_job "global" "tr"           "**lobal*" 1          0
+   complex_run_job "global" "tr"           "**al" 1          0
+   complex_run_job "global" "tr"           "**" 1          0
+   complex_run_job "global" "tr"           "gl*b*l" 1          0
+#
+   complex_run_job "global" "tr"           "xlobal"  1           1
+#
+   complex_run_job "global" "tr"           ".lobal"  1           1
+   complex_run_job "global" "tr"           "g.obal"  1           1
+   complex_run_job "global" "tr"           "globa."  1           1
+
+   # Complex values with "?" seem to be broken. in some cases, so we add third "runnable"
+   # parameter
+
+   complex_run_job "global" "tr"           "?lobal"  1           0    1
+   complex_run_job "global" "tr"           "globa?"  1           0   1
+   complex_run_job "global" "tr"           "?loba?"  1           0 1
+   complex_run_job "global" "tr"           "?global"  0           0 1
+   complex_run_job "global" "tr"           "global?"  0           0 1
+   complex_run_job "global" "tr"           "glo?al"  1           0 1
+   complex_run_job "global" "tr"           "?global?" 0          0 1
+   complex_run_job "global" "tr"           "?"      0           0 1
+   complex_run_job "global" "tr"           "??global" 0           0 1
+   complex_run_job "global" "tr"           "??lobal" 0            0 1
+   complex_run_job "global" "tr"           "global??"  0           0 1
+   complex_run_job "global" "tr"           "??al"     0            0 1
+   complex_run_job "global" "tr"           "??"       0            0 1
+   complex_run_job "global" "tr"           "gl?b?l" 1          0 1
+   complex_run_job "global" "tr"           "*?"       1            0 1
+
+   # Need to escape the \[a-z\] so it is not interpreted by Tcl
+
+   complex_run_job "global" "tr"           "\[a-z\]lobal"  1           0
+   complex_run_job "global" "tr"           "\[z-a\]lobal"  1           1
+   complex_run_job "global" "tr"           "\[a-g\]lobal"  1           0
+   complex_run_job "global" "tr"           "\[g-z\]lobal"  1           0
+   complex_run_job "global" "tr"           "\[a-f\]lobal"  1           1
+   complex_run_job "global" "tr"           "\[h-z\]lobal"  1           1
+   complex_run_job "global" "tr"           "\[g\]lobal"  1           0
+#
+   complex_run_job "global" "tr"           "g\[a-z\]obal"  1           0
+   complex_run_job "global" "tr"           "g\[z-a\]obal"  1           1
+   complex_run_job "global" "tr"           "g\[a-l\]obal"  1           0
+   complex_run_job "global" "tr"           "g\[a-k\]obal"  1           1
+   complex_run_job "global" "tr"           "g\[m-z\]obal"  1           1
+   complex_run_job "global" "tr"           "g\[l\]obal"  1           0
+#
+   complex_run_job "global" "tr"           "globa\[a-z\]"  1           0
+   complex_run_job "global" "tr"           "globa\[a-l\]"  1           0
+   complex_run_job "global" "tr"           "globa\[a-k\]"  1           1
+   complex_run_job "global" "tr"           "globa\[m-z\]"  1           1
+   complex_run_job "global" "tr"           "globa\[l\]"  1           0
+#
+   complex_run_job "global" "tr"           "\"local\|global\""  1           0
+   complex_run_job "global" "tr"           "\"global\|local\""  1           0
+   complex_run_job "global" "tr"           "\"glo*al\|lo\[c\]al\""  1           0
+   complex_run_job "global" "tr"           "\"?glo*al?\|lo\[c\]al\""  1      1 1
+#
+   # Now we use the full name of the complex, "test_restring"
+
+   complex_run_job "global" "test_restring"           "global"  1           0
+   complex_run_job "global" "test_restring"           "*lobal"  1           0
+   complex_run_job "global" "test_restring"           "globa*"  1           0
+   complex_run_job "global" "test_restring"           "*loba*"  1           0
+   complex_run_job "global" "test_restring"           "*global"  1           0
+   complex_run_job "global" "test_restring"           "global*"  1           0
+   complex_run_job "global" "test_restring"           "glo*al"  1           0
+   complex_run_job "global" "test_restring"           "*global*" 1          0
+   complex_run_job "global" "test_restring"           "*"      1           0
+   complex_run_job "global" "test_restring"           "**global*" 1          0
+   complex_run_job "global" "test_restring"           "**lobal*" 1          0
+   complex_run_job "global" "test_restring"           "**al" 1          0
+   complex_run_job "global" "test_restring"           "**" 1          0
+   complex_run_job "global" "test_restring"           "gl*b*l" 1          0
+#
+   complex_run_job "global" "test_restring"           "xlobal"  1           1
+#
+   complex_run_job "global" "test_restring"           ".lobal"  1           1
+   complex_run_job "global" "test_restring"           "g.obal"  1           1
+   complex_run_job "global" "test_restring"           "globa."  1           1
+ #
+   complex_run_job "global" "test_restring"           "?lobal"  1           0 1
+   complex_run_job "global" "test_restring"           "globa?"  1          0 1
+   complex_run_job "global" "test_restring"           "?loba?"  1           0 1
+   complex_run_job "global" "test_restring"           "?global"  0           0 1
+   complex_run_job "global" "test_restring"           "global?"  0           0 1
+   complex_run_job "global" "test_restring"           "glo?al"  1           0 1
+   complex_run_job "global" "test_restring"           "?global?" 0          0 1
+   complex_run_job "global" "test_restring"           "?"      0           0 1
+   complex_run_job "global" "test_restring"           "??global" 0          0 1
+   complex_run_job "global" "test_restring"           "??lobal" 0            0 1
+   complex_run_job "global" "test_restring"           "global??"  0           0 1
+   complex_run_job "global" "test_restring"           "??al"     0            0 1
+   complex_run_job "global" "test_restring"           "??"       0            0 1
+   complex_run_job "global" "test_restring"           "gl?b?l" 1          0 1
+   complex_run_job "global" "test_restring"           "*?"       1            0 1
+#
+   complex_run_job "global" "test_restring"           "\[a-z\]lobal"  1           0
+   complex_run_job "global" "test_restring"           "\[z-a\]lobal"  1           1
+   complex_run_job "global" "test_restring"           "\[a-g\]lobal"  1           0
+   complex_run_job "global" "test_restring"           "\[g-z\]lobal"  1           0
+   complex_run_job "global" "test_restring"           "\[a-f\]lobal"  1           1
+   complex_run_job "global" "test_restring"           "\[h-z\]lobal"  1           1
+   complex_run_job "global" "test_restring"           "\[g\]lobal"  1           0
+#
+   complex_run_job "global" "test_restring"           "g\[a-z\]obal"  1           0
+   complex_run_job "global" "test_restring"           "g\[z-a\]obal"  1           1
+   complex_run_job "global" "test_restring"           "g\[a-l\]obal"  1           0
+   complex_run_job "global" "test_restring"           "g\[a-k\]obal"  1           1
+   complex_run_job "global" "test_restring"           "g\[m-z\]obal"  1           1
+   complex_run_job "global" "test_restring"           "g\[l\]obal"  1           0
+#
+   complex_run_job "global" "test_restring"           "globa\[a-z\]"  1           0
+   complex_run_job "global" "test_restring"           "globa\[z-a\]"  1           1
+   complex_run_job "global" "test_restring"           "globa\[a-l\]"  1           0
+   complex_run_job "global" "test_restring"           "globa\[a-k\]"  1           1
+   complex_run_job "global" "test_restring"           "globa\[m-z\]"  1           1
+   complex_run_job "global" "test_restring"           "globa\[l\]"  1           0
+#
+   complex_run_job "global" "test_restring"           "\"local\|global\""  1           0
+   complex_run_job "global" "test_restring"           "\"global\|local\""  1           0
+   complex_run_job "global" "test_restring"           "\"glo*al\|lo\[c\]al\""  1        0
+   complex_run_job "global" "test_restring"           "\"?glo*al\|lo\[c\]al\""  1   1 1
+#
+   set config(complex_values) "tr=global\*test"  
+   set_exechost config "global"
+#
+   complex_run_job "global" "tr"           "global*test"  1           0  
+   complex_run_job "global" "tr"           "global\?test"  1           0   
+   complex_run_job "global" "tr"           "globaltest"  1           1   1
+#
+   complex_run_job "global" "test_restring"           "global*test"  1           0  
+   complex_run_job "global" "test_restring"           "global\*test"  1           0 
+   complex_run_job "global" "test_restring"           "globaltest"  1           1  1
+#
+   set config(complex_values) "tr=global\?test"  
+   set_exechost config "global"
+#
+   complex_run_job "global" "tr"           "global*test"  1           0  
+   complex_run_job "global" "tr"           "global\?test"  1           0  
+   complex_run_job "global" "tr"           "globaltest"  1           1 
+#
+   complex_run_job "global" "test_restring"           "global*test"  1           0 
+   complex_run_job "global" "test_restring"           "global\?test"  1           0  
+   complex_run_job "global" "test_restring"           "globaltest"  1           1  1
+#
    # cleanup
    set config(complex_values) "NONE"
    set_exechost config "global"
@@ -408,8 +581,9 @@ proc complex_global_host {} {
 
 proc complex_host {} {
    global ts_config CHECK_OUTPUT
-   global complex_host
+   global complex_host check_highest_level
 
+   set check_highest_level 0
    # set a consumable in global host, to be overwritten by specific host
    set config(complex_values)    "test_integer=1"
    set_exechost config "global"
@@ -459,8 +633,9 @@ proc complex_host {} {
 
 proc complex_queue {} {
    global ts_config CHECK_OUTPUT
-   global complex_host
+   global complex_host check_highest_level
 
+   set check_highest_level 0
    # set a consumable in global host, to be overwritten by specific host
    set config(complex_values)    "test_integer=3"
    set_exechost config "global"

@@ -625,7 +625,7 @@ char *argv[]
             continue;
          }
          
-         if ( !arglp ) {
+         if ( !arglp || lGetNumberOfElem(arglp) == 0 ) {
             fprintf(stderr, MSG_EXEC_XISNOEXECHOST_S, host);   
             fprintf(stderr, "\n");
             spp++;
@@ -1465,13 +1465,13 @@ char *argv[]
          }
 
          /* update user usage */
-         if (lp) {
+         if (lp && lGetNumberOfElem(lp) > 0) {
             alp = sge_gdi(SGE_USER_LIST, SGE_GDI_MOD, &lp, NULL, NULL);
             answer_list_on_error_print_or_exit(&alp, stderr);
          }
 
          /* update project usage */
-         if (lp2) {
+         if (lp2 && lGetNumberOfElem(lp2) > 0) {
             alp = sge_gdi(SGE_PROJECT_LIST, SGE_GDI_MOD, &lp2, NULL, NULL);
             answer_list_on_error_print_or_exit(&alp, stderr);
          }
@@ -1969,7 +1969,7 @@ char *argv[]
             }
             lFreeList(&alp);
 
-            if (!lp) {
+            if (!lp || lGetNumberOfElem(arglp) == 0) {
                fprintf(stderr, MSG_CALENDAR_XISNOTACALENDAR_S, *spp);
                fprintf(stderr, "\n");
                SGE_EXIT(1);
@@ -2118,7 +2118,7 @@ char *argv[]
             }
             lFreeList(&alp);
 
-            if (!lp) {
+            if (!lp || lGetNumberOfElem(lp) == 0 ) {
                fprintf(stderr, MSG_CKPT_XISNOTCHKPINTERFACEDEF_S, *spp);
                fprintf(stderr, "\n");
                SGE_EXIT(1);
@@ -2334,7 +2334,7 @@ char *argv[]
                continue;
             }
 
-            if (!lp) {
+            if (!lp || lGetNumberOfElem(lp) == 0) {
                fprintf(stderr, MSG_EXEC_XISNOTANEXECUTIONHOST_S, host);
                fprintf(stderr, "\n");
                spp++;
@@ -2393,7 +2393,7 @@ char *argv[]
             }
             lFreeList(&alp);
 
-            if (!lp) {
+            if (!lp || lGetNumberOfElem(lp) == 0) {
                fprintf(stderr, MSG_PARALLEL_XNOTAPARALLELEVIRONMENT_S, *spp);
                fprintf(stderr, "\n");
                FREE (fields);
@@ -3395,7 +3395,7 @@ char *argv[]
             SGE_EXIT(1); 
          }
 
-         if (!lp) {
+         if (!lp || lGetNumberOfElem(lp) == 0) {
             fprintf(stderr, MSG_PROJECT_XISNOKNWOWNPROJECT_S, usersetname);
             fprintf(stderr, "\n");
             fflush(stdout);
@@ -3518,7 +3518,7 @@ char *argv[]
             continue;
          }
 
-         if (!lp) {
+         if (!lp || lGetNumberOfElem(lp) == 0) {
             fprintf(stderr, MSG_USER_XISNOKNOWNUSER_S, *spp);
             fprintf(stderr, "\n");
             spp++;
@@ -3587,7 +3587,7 @@ char *argv[]
             continue;
          }
 
-         if (!lp) {
+         if (!lp || lGetNumberOfElem(lp) == 0) {
             fprintf(stderr, MSG_PROJECT_XISNOKNWOWNPROJECT_S, *spp);
             fprintf(stderr, "\n");
             continue;
@@ -3694,7 +3694,7 @@ char *argv[]
             SGE_EXIT(1); 
          }
 
-         if (!lp) {
+         if (!lp || lGetNumberOfElem(lp) == 0) {
             fprintf(stderr, MSG_USER_XISNOKNOWNUSER_S, username);
             fprintf(stderr, "\n");
             fflush(stdout);
@@ -3800,7 +3800,7 @@ char *argv[]
             SGE_EXIT(1); 
          }
 
-         if (!lp) {
+         if (!lp || lGetNumberOfElem(lp) == 0) {
             fprintf(stderr, MSG_PROJECT_XISNOKNWOWNPROJECT_S, projectname);
             fprintf(stderr, "\n");
             fflush(stdout);
@@ -3866,7 +3866,7 @@ char *argv[]
          }
          lFreeList(&alp);
 
-         if (!lp) {
+         if (!lp || lGetNumberOfElem(lp) == 0) {
             fprintf(stderr, MSG_CALENDAR_XISNOTACALENDAR_S, *spp);
             fprintf(stderr, "\n");
             SGE_EXIT(1);
@@ -3997,7 +3997,7 @@ char *argv[]
          }
          lFreeList(&alp);
 
-         if (!lp) {
+         if (!lp || lGetNumberOfElem(lp) == 0) {
             fprintf(stderr, MSG_CKPT_XISNOTCHKPINTERFACEDEF_S, *spp);
             fprintf(stderr, "\n");
             SGE_EXIT(1);
@@ -4122,7 +4122,7 @@ char *argv[]
          }
          lFreeList(&alp);
 
-         if (!lp) {
+         if (!lp || lGetNumberOfElem(lp) == 0) {
             fprintf(stderr, MSG_EXEC_XISNOTANEXECUTIONHOST_S, host);
             fprintf(stderr, "\n");
             SGE_EXIT(1);
@@ -4205,7 +4205,7 @@ char *argv[]
          }
          lFreeList(&alp);
 
-         if (!lp) {
+         if (!lp || lGetNumberOfElem(lp) == 0) {
             fprintf(stderr,  MSG_PARALLEL_XNOTAPARALLELEVIRONMENT_S , *spp);
             fprintf(stderr, "\n");
             SGE_EXIT(1);
@@ -5284,7 +5284,7 @@ char *argv[]
                continue;
             }
 
-            if (!lp) {
+            if (!lp || lGetNumberOfElem(lp) == 0) {
                fprintf(stderr, MSG_USER_XISNOKNOWNUSER_S, user);
                fprintf(stderr, "\n");
                continue;
@@ -5328,7 +5328,7 @@ char *argv[]
             continue;
          }
 
-         if (!lp) {
+         if (!lp || lGetNumberOfElem(lp) == 0) {
             fprintf(stderr, MSG_PROJECT_XISNOKNWOWNPROJECT_S, *spp);
             fprintf(stderr, "\n");
             spp++;
@@ -5450,6 +5450,7 @@ char *s
       case lHostT:
          DPRINTF(("parse_name_list_to_cull: Adding lHostT type element\n"));
          lSetHost(ep, nm, cp2);
+         sge_resolve_host(ep, nm);
          break;
       default:
          DPRINTF(("parse_name_list_to_cull: unexpected data type\n"));
@@ -5467,6 +5468,7 @@ char *s
          case lHostT:
             DPRINTF(("parse_name_list_to_cull: Adding lHostT type element\n"));
             lSetHost(ep, nm, cp2);
+            sge_resolve_host(ep, EH_name);
             break;
          default:
             DPRINTF(("parse_name_list_to_cull: unexpected data type\n"));
@@ -6010,7 +6012,7 @@ char *name
       return 0;
    }
 
-   if (lp) {
+   if (lp && lGetNumberOfElem(lp) > 0) {
       for_each (ep, lp) {
          const char *line = NULL;
          pos = lGetPosInDescr(type, keynm);
@@ -6066,7 +6068,7 @@ static int show_eventclients()
       return -1;
    }
 
-   if (lp) {
+   if (lp && lGetNumberOfElem(lp) > 0) {
       lPSortList(lp, "%I+", EV_id);
    
       printf("%8s %-15s %-25s\n",MSG_TABLE_EV_ID, MSG_TABLE_EV_NAME, MSG_TABLE_HOST);
@@ -6117,7 +6119,7 @@ static int show_processors()
       return -1;
    }
 
-   if (lp) {
+   if (lp && lGetNumberOfElem(lp) > 0) {
       lPSortList(lp,"%I+", EH_name);
 
       printf("%-25.24s%10.9s%12.11s\n",MSG_TABLE_HOST,MSG_TABLE_PROCESSORS,
@@ -6288,7 +6290,7 @@ lList *arglp
       userset_name = lGetString(argep, US_name);
 
       ep=lGetElemStr(usersets, US_name, userset_name);
-      if (!ep) {
+      if (ep == NULL) {
          ep = lAddElemStr(&usersets, US_name, userset_name, US_Type);
          /* initialize type field in case of sge */
          lSetUlong(ep, US_type, US_ACL|US_DEPT);

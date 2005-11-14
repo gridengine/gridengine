@@ -211,7 +211,7 @@ ExecuteAsAdmin()
       $INFOTEXT -log "Probably a permission problem. Please check file access permissions."
       $INFOTEXT -log "Check read/write permission. Check if SGE daemons are running."
 
-      if [ $AUTO = "true" ]; then
+      if [ "$AUTO" = "true" ]; then
          MoveLog
       fi
 

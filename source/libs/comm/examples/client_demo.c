@@ -96,16 +96,14 @@ void usage(void) {
 /*
  *  commlib error callback function
  */
-void on_communication_error(int cl_error, const char* error_message) {
-
-   /* print any communication error to stderr: */
-   fprintf(stderr, 
-           "COMMLIB ERROR: %s (%s)\n", 
-           cl_get_error_text(cl_error),
-           error_message);
-
+void on_communication_error(const cl_application_error_list_elem_t* commlib_error) {
+   if (commlib_error != NULL) {
+      /* print any communication error to stderr: */
+      fprintf(stderr, "COMMLIB ERROR: %s (%s)\n", 
+              cl_get_error_text(commlib_error->cl_error),
+              commlib_error->cl_info);
+   }
 }
-
 
 
 /*

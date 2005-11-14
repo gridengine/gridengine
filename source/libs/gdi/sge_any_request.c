@@ -56,12 +56,25 @@ static pthread_mutex_t check_alive_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 static int gdi_log_flush_func(cl_raw_list_t* list_p);
 
-/* setup a communication error callback */
+/* setup a communication error callback and mutex for it */
 static pthread_mutex_t general_communication_error_mutex = PTHREAD_MUTEX_INITIALIZER;
-static void general_communication_error(int cl_err, const char* error_message);
-static int   last_general_communication_error = CL_RETVAL_OK;
-static char* last_general_communication_error_string = NULL;
-static int gdi_general_communication_error = CL_RETVAL_OK;
+static void general_communication_error(const cl_application_error_list_elem_t* commlib_error);
+/* local static struct to store communication errors. The boolean
+ * values com_access_denied and com_endpoint_not_unique will never be
+ * restored to false again 
+ */
+typedef struct sge_gdi_com_error_type {
+   int  com_error;               /* current commlib error */
+   int  com_last_error;          /* last logged commlib error */
+   bool com_access_denied;       /* set when commlib reports CL_RETVAL_ACCESS_DENIED */
+   bool com_endpoint_not_unique; /* set when commlib reports CL_RETVAL_ENDPOINT_NOT_UNIQUE */
+} sge_gdi_com_error_t;
+static sge_gdi_com_error_t sge_gdi_communication_error = {CL_RETVAL_OK,
+                                                          CL_RETVAL_OK,
+                                                          false,
+                                                          false};
+
+
 #ifdef DEBUG_CLIENT_SUPPORT
 static void gdi_rmon_print_callback_function(const char *message, unsigned long traceid, unsigned long pid, unsigned long thread_id);
 #endif
@@ -239,100 +252,155 @@ static int gdi_log_flush_func(cl_raw_list_t* list_p) {
 *     const char* error_message - additional error text message
 *
 *  NOTES
-*     MT-NOTE: general_communication_error() is not MT safe 
-*     (static variable "gdi_general_communication_error" is used)
-*     TODO: Implement an error pop/push stack.
+*     MT-NOTE: general_communication_error() is MT safe 
+*     (static struct variable "sge_gdi_communication_error" is used)
 *
 *
 *  SEE ALSO
-*     sge_any_request/sge_get_communication_error()
+*     sge_any_request/sge_get_com_error_flag()
 *******************************************************************************/
-static void general_communication_error(int cl_error, const char* error_message) {
-   bool do_log = false;
-
+static void general_communication_error(const cl_application_error_list_elem_t* commlib_error) {
    DENTER(TOP_LAYER, "general_communication_error");
+   if (commlib_error != NULL) {
 
-   sge_mutex_lock("general_communication_error_mutex", SGE_FUNC, __LINE__, &general_communication_error_mutex);  
+      sge_mutex_lock("general_communication_error_mutex",
+                     SGE_FUNC, __LINE__, &general_communication_error_mutex);  
 
-   do_log = false;
-   /* don't log the same error twice */
-   if ( cl_error != last_general_communication_error ) {
-      do_log = true;
-   } else {
-      /* check if there is a difference in error_message text */
-      if ( last_general_communication_error_string != NULL && error_message == NULL ) {
-         do_log = true;
-      }
-      if ( last_general_communication_error_string == NULL && error_message != NULL ) {
-         do_log = true;
-      }
-      if ( last_general_communication_error_string != NULL && error_message != NULL ) {
-         /* check the string itself */
-         if (strcmp(last_general_communication_error_string, error_message) != 0 ) {
-            do_log = true;
+      /* save the communication error to react later */
+      sge_gdi_communication_error.com_error = commlib_error->cl_error;
+
+      switch (commlib_error->cl_error) {
+         case CL_RETVAL_ACCESS_DENIED: {
+            sge_gdi_communication_error.com_access_denied = true;
+            break;
+         }
+         case CL_RETVAL_ENDPOINT_NOT_UNIQUE: {
+            sge_gdi_communication_error.com_endpoint_not_unique = true;
+            break;
+         }
+         default: {
+            break;
          }
       }
-   }
 
-   if ( do_log == true ) {
-      /* This will log the reported error */
-      if (error_message != NULL) {
-         ERROR((SGE_EVENT, MSG_GDI_GENERAL_COM_ERROR_SS ,cl_get_error_text(cl_error), error_message));
-      } else {
-         ERROR((SGE_EVENT, MSG_GDI_GENERAL_COM_ERROR_S ,cl_get_error_text(cl_error)));
+
+      /*
+       * now log the error if not already reported the 
+       * least CL_DEFINE_MESSAGE_DUP_LOG_TIMEOUT seconds
+       */
+      if (commlib_error->cl_already_logged == CL_FALSE && 
+         sge_gdi_communication_error.com_last_error != sge_gdi_communication_error.com_error) {
+
+         /*  never log the same messages again and again (commlib
+          *  will erase cl_already_logged flag every CL_DEFINE_MESSAGE_DUP_LOG_TIMEOUT
+          *  seconds (30 seconds), so we have to save the last one!
+          */
+         sge_gdi_communication_error.com_last_error = sge_gdi_communication_error.com_error;
+
+         switch (commlib_error->cl_err_type) {
+            case CL_LOG_ERROR: {
+               if (commlib_error->cl_info != NULL) {
+                  ERROR((SGE_EVENT, MSG_GDI_GENERAL_COM_ERROR_SS,
+                         cl_get_error_text(commlib_error->cl_error),
+                         commlib_error->cl_info));
+               } else {
+                  ERROR((SGE_EVENT, MSG_GDI_GENERAL_COM_ERROR_S,
+                         cl_get_error_text(commlib_error->cl_error)));
+               }
+               break;
+            }
+            case CL_LOG_WARNING: {
+               if (commlib_error->cl_info != NULL) {
+                  WARNING((SGE_EVENT, MSG_GDI_GENERAL_COM_ERROR_SS,
+                           cl_get_error_text(commlib_error->cl_error),
+                           commlib_error->cl_info));
+               } else {
+                  WARNING((SGE_EVENT, MSG_GDI_GENERAL_COM_ERROR_S,
+                           cl_get_error_text(commlib_error->cl_error)));
+               }
+               break;
+            }
+            case CL_LOG_INFO: {
+               if (commlib_error->cl_info != NULL) {
+                  INFO((SGE_EVENT, MSG_GDI_GENERAL_COM_ERROR_SS,
+                        cl_get_error_text(commlib_error->cl_error),
+                        commlib_error->cl_info));
+               } else {
+                  INFO((SGE_EVENT, MSG_GDI_GENERAL_COM_ERROR_S,
+                        cl_get_error_text(commlib_error->cl_error)));
+               }
+               break;
+            }
+            case CL_LOG_DEBUG: {
+               if (commlib_error->cl_info != NULL) {
+                  DEBUG((SGE_EVENT, MSG_GDI_GENERAL_COM_ERROR_SS,
+                         cl_get_error_text(commlib_error->cl_error),
+                         commlib_error->cl_info));
+               } else {
+                  DEBUG((SGE_EVENT, MSG_GDI_GENERAL_COM_ERROR_S,
+                         cl_get_error_text(commlib_error->cl_error)));
+               }
+               break;
+            }
+            case CL_LOG_OFF: {
+               break;
+            }
+         }
       }
-      last_general_communication_error_string = sge_strdup(last_general_communication_error_string, error_message);
-      last_general_communication_error = cl_error;
+      sge_mutex_unlock("general_communication_error_mutex", 
+                       SGE_FUNC, __LINE__, &general_communication_error_mutex);  
    }
-
-   gdi_general_communication_error = cl_error;
-
-   sge_mutex_unlock("general_communication_error_mutex", SGE_FUNC, __LINE__, &general_communication_error_mutex);  
-
    DEXIT;
 }
 
-/****** sge_any_request/sge_get_communication_error() **************************
+
+/****** sge_any_request/sge_get_com_error_flag() *******************************
 *  NAME
-*     sge_get_communication_error() -- get last communication error
+*     sge_get_com_error_flag() -- return gdi error flag state
 *
 *  SYNOPSIS
-*     int sge_get_communication_error(void) 
+*     bool sge_get_com_error_flag(sge_gdi_stored_com_error_t error_type) 
 *
 *  FUNCTION
-*     This function returns the last communication error. This procedure returns
-*     the last set communication error by communication lib callback.
+*     This function returns the error flag for the specified error type
+*
+*  INPUTS
+*     sge_gdi_stored_com_error_t error_type - error type value
 *
 *  RESULT
-*     int - last communication error
+*     bool - true: error has occured, false: error never occured
 *
 *  NOTES
-*     MT-NOTE: sge_get_communication_error() is not MT safe ( returns just 
-*     an static defined integer) but can be called by more threads without 
-*     problem. But it is possible to loose some errors when the commlib is
-*     calling general_communication_error(), because this would overwrite the
-*     last error.
-*
-*     TODO: Implement an error pop/push stack.
+*     MT-NOTE: sge_get_com_error_flag() is MT safe 
 *
 *  SEE ALSO
 *     sge_any_request/general_communication_error()
 *******************************************************************************/
-int sge_get_communication_error(void) {
-   int com_error = CL_RETVAL_OK;
+bool sge_get_com_error_flag(sge_gdi_stored_com_error_t error_type) {
+   bool ret_val = false;
+   DENTER(TOP_LAYER, "sge_get_com_error_flag");
+   sge_mutex_lock("general_communication_error_mutex", 
+                  SGE_FUNC, __LINE__, &general_communication_error_mutex);  
 
-   DENTER(TOP_LAYER, "sge_get_communication_error");
-   sge_mutex_lock("general_communication_error_mutex", SGE_FUNC, __LINE__, &general_communication_error_mutex);  
-
-   com_error = gdi_general_communication_error;
-   if ( gdi_general_communication_error != CL_RETVAL_OK) {
-      gdi_general_communication_error = CL_RETVAL_OK;
+   /* 
+    * never add a default case for that switch, because of compiler warnings
+    * for un-"cased" values 
+    */
+   switch (error_type) {
+      case SGE_COM_ACCESS_DENIED: {
+         ret_val = sge_gdi_communication_error.com_access_denied;
+         break;
+      }
+      case SGE_COM_ENDPOINT_NOT_UNIQUE: {
+         ret_val = sge_gdi_communication_error.com_endpoint_not_unique;
+         break;
+      }
    }
-
-   sge_mutex_unlock("general_communication_error_mutex", SGE_FUNC, __LINE__, &general_communication_error_mutex);  
+   sge_mutex_unlock("general_communication_error_mutex",
+                    SGE_FUNC, __LINE__, &general_communication_error_mutex);  
 
    DEXIT;
-   return com_error;
+   return ret_val;
 }
 
 /*-----------------------------------------------------------------------
@@ -350,6 +418,7 @@ int prepare_enroll(const char *name, int* last_commlib_error)
    cl_host_resolve_method_t resolve_method = CL_SHORT;
    cl_framework_t  communication_framework = CL_CT_TCP;
    const char* default_domain = NULL;
+   const char* help = NULL;
    int commlib_error = CL_RETVAL_OK;
 
 
@@ -399,9 +468,11 @@ int prepare_enroll(const char *name, int* last_commlib_error)
    /* set hostname resolve (compare) method */
    if (bootstrap_get_ignore_fqdn() == false) {
       resolve_method = CL_LONG;
-   } 
-   if ( bootstrap_get_default_domain() != NULL && SGE_STRCASECMP(bootstrap_get_default_domain(), NONE_STR) != 0) {
-      default_domain = bootstrap_get_default_domain();
+   }
+   if ( (help=bootstrap_get_default_domain()) != NULL) {
+      if (SGE_STRCASECMP(help, NONE_STR) != 0) {
+         default_domain = help;
+      }
    }
    ret_val = cl_com_set_resolve_method(resolve_method, (char*)default_domain);
 

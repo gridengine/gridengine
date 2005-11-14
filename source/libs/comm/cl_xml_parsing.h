@@ -282,11 +282,6 @@
 #define CL_CCRM_MESSAGE_VERSION                      "0.1"
 
 
-typedef enum cl_bool_def {
-   CL_FALSE = 0,
-   CL_TRUE
-} cl_bool_t;
-
 
 typedef struct cl_com_endpoint {
    /* internal identification tripple */

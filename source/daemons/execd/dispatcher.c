@@ -150,7 +150,6 @@ int dispatch( dispatch_entry*   table,
    dispatch_entry de,   /* filled with receive mask */
                   *te;
    int i, j, terminate, errorcode, ntab;
-   int last_comm_error;
    bool do_re_register = false;
    u_long rcvtimeoutt=rcvtimeout;
    u_long32 dummyid = 0;
@@ -202,8 +201,8 @@ int dispatch( dispatch_entry*   table,
       MONITOR_MESSAGES((&monitor));
       
       switch (i) {
-      case CL_RETVAL_CONNECTION_NOT_FOUND:  /* is renewed */
-      case CL_RETVAL_CONNECT_ERROR:
+      case CL_RETVAL_CONNECTION_NOT_FOUND:  /* we lost connection to qmaster */
+      case CL_RETVAL_CONNECT_ERROR:         /* or we can't connect */
         do_re_register = true;
         /* no break; */
       case CL_RETVAL_NO_MESSAGE:
@@ -212,12 +211,18 @@ int dispatch( dispatch_entry*   table,
          break;
       default:
          do_re_register = true; /* unexpected error, do reregister */
+         if (cl_com_get_handle("execd" ,1) == NULL) {
+            terminate = 1; /* if we don't have a handle, we must leave
+                            * because execd_register will create a new one.
+                            * This error would be realy strange, because
+                            * if this happens the local socket was destroyed.
+                            */
+         }
       }
 
-      if ((last_comm_error = sge_get_communication_error()) != CL_RETVAL_OK) {
-         DPRINTF(("dispatcher: last commlib error = %d\n",last_comm_error));
-         DPRINTF(("dispatcher: last commlib error = %s\n", cl_get_error_text(last_comm_error)));
-         do_re_register = true;
+      if (sge_get_com_error_flag(SGE_COM_ACCESS_DENIED) == true ||
+          sge_get_com_error_flag(SGE_COM_ENDPOINT_NOT_UNIQUE) == true) {
+         terminate = 1; /* leave dispatcher */
       }
 
       /* 

@@ -42,7 +42,7 @@
 #define CL_DEFINE_DELETE_MESSAGES_TIMEOUT_AFTER_CCRM 60   /* default timeout for unread message deletion after connection shutdown */
 #define CL_DEFINE_SYNCHRON_RECEIVE_TIMEOUT           60   /* default timeout for synchron send messages */
 #define CL_DEFINE_CLIENT_CONNECTION_LIFETIME         600  /* Cut off connection when client is not active for this time */
-#define CL_DEFINE_MESSAGE_DUP_LOG_TIMEOUT            60   /* timeout for logging duplicate application error messages */
+#define CL_DEFINE_MESSAGE_DUP_LOG_TIMEOUT            30   /* timeout for marking duplicate application error messages */
 
 
 #define CL_DEFINE_DATA_BUFFER_SIZE                   1024 * 4           /* 4 KB buffer for reading/writing messages */

@@ -127,6 +127,7 @@ char *argv[]
    char* local_host = NULL;
    time_t next_prof_output = 0;
    bool done = false;
+   int schedd_exit_state = 0;
 
    DENTER_MAIN(TOP_LAYER, "schedd");
 
@@ -227,117 +228,129 @@ char *argv[]
 
    sge_sig_handler_in_main_loop = 1;
 
-   while (!done) {
+   while (done == false) {
       if (shut_me_down) {
-         sge_mirror_shutdown();
-         FREE(initial_qmaster_host);
-         sge_shutdown(0);
+         done = true;
       }   
+
+      if (sge_get_com_error_flag(SGE_COM_ACCESS_DENIED) == true) {
+         schedd_exit_state = SGE_COM_ACCESS_DENIED;
+         done = true;
+      }
+
+      if (sge_get_com_error_flag(SGE_COM_ENDPOINT_NOT_UNIQUE) == true) {
+         schedd_exit_state = SGE_COM_ENDPOINT_NOT_UNIQUE;
+         done = true;
+      }
 
 
       if (sge_sig_handler_sigpipe_received) {
          sge_sig_handler_sigpipe_received = 0;
          INFO((SGE_EVENT, "SIGPIPE received"));
       }
-      
-      if (check_qmaster) {
-         if ((ret = sge_ck_qmaster(initial_qmaster_host)) < 0) {
-            FREE(initial_qmaster_host);
-            CRITICAL((SGE_EVENT, MSG_SCHEDD_CANTGOFURTHER ));
-            SGE_EXIT(1);
-         } 
-         
-         if (ret > 0) {
-            sleep(5);
-            continue;
-         }
 
-         if (ret == 0) {
-            check_qmaster = false;
-         }
-      }
-
-      if(sge_mirror_process_events() == SGE_EM_TIMEOUT) {
-         check_qmaster = true;
-         continue;
-      }
-
-      if (shut_me_down) {
-         continue;
-      }
-      
       /* event processing can trigger a re-registration, 
        * -> if qmaster goes down
+       * -> on shutdown
        * -> the scheduling algorithm was changed
        * in this case do not start a scheduling run
        */
-      if(ec_need_new_registration()) {
-         check_qmaster = true;
-         continue;
-      }
+      if (done == false) {
 
-      /* got new config? */
-      if (sconf_is_new_config()) {
+         if (check_qmaster) {
+            if ((ret = sge_ck_qmaster(initial_qmaster_host)) < 0) {
+               FREE(initial_qmaster_host);
+               CRITICAL((SGE_EVENT, MSG_SCHEDD_CANTGOFURTHER ));
+               SGE_EXIT(1);
+            } 
+            
+            if (ret > 0) {
+               sleep(5);
+               continue;
+            }
 
-         /* set actual syncron receive timeout */
-         cl_com_set_synchron_receive_timeout( cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0),
-                                              (int) (sconf_get_schedule_interval() * 2) );
-
-         /* check profiling settings, if necessary, switch profiling on/off */
-         if (sconf_get_profiling()) {
-            prof_start(SGE_PROF_OTHER, NULL);
-            prof_start(SGE_PROF_PACKING, NULL);
-            prof_start(SGE_PROF_EVENTCLIENT, NULL);
-            prof_start(SGE_PROF_MIRROR, NULL);
-            prof_start(SGE_PROF_GDI, NULL);
-            prof_start(SGE_PROF_HT_RESIZE, NULL);
-            prof_start(SGE_PROF_CUSTOM0, NULL);
-            prof_start(SGE_PROF_CUSTOM1, NULL);
-            prof_start(SGE_PROF_CUSTOM3, NULL);
-            prof_start(SGE_PROF_CUSTOM4, NULL);
-            prof_start(SGE_PROF_CUSTOM5, NULL);
-            prof_start(SGE_PROF_CUSTOM6, NULL);
-            prof_start(SGE_PROF_CUSTOM7, NULL);
-            prof_start(SGE_PROF_SCHEDLIB4, NULL);
-         } 
-         else {
-            prof_stop(SGE_PROF_OTHER, NULL);
-            prof_stop(SGE_PROF_PACKING, NULL);
-            prof_stop(SGE_PROF_EVENTCLIENT, NULL);
-            prof_stop(SGE_PROF_MIRROR, NULL);
-            prof_stop(SGE_PROF_GDI, NULL);
-            prof_stop(SGE_PROF_HT_RESIZE, NULL);
-            prof_stop(SGE_PROF_CUSTOM0, NULL);
-            prof_stop(SGE_PROF_CUSTOM1, NULL);
-            prof_stop(SGE_PROF_CUSTOM3, NULL);
-            prof_stop(SGE_PROF_CUSTOM4, NULL);
-            prof_stop(SGE_PROF_CUSTOM5, NULL);
-            prof_stop(SGE_PROF_CUSTOM6, NULL);
-            prof_stop(SGE_PROF_CUSTOM7, NULL);
-            prof_stop(SGE_PROF_SCHEDLIB4, NULL);
+            if (ret == 0) {
+               check_qmaster = false;
+            }
          }
-      }
-   
-      sched_funcs[current_scheduler].event_func();
 
-      sconf_reset_new_config();
+         if(sge_mirror_process_events() == SGE_EM_TIMEOUT) {
+            check_qmaster = true;
+            continue;
+         }
+
+         if(ec_need_new_registration()) {
+            check_qmaster = true;
+            continue;
+         }
+
+         /* got new config? */
+         if (sconf_is_new_config()) {
+
+            /* set actual syncron receive timeout */
+            cl_com_set_synchron_receive_timeout( cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0),
+                                                 (int) (sconf_get_schedule_interval() * 2) );
+
+            /* check profiling settings, if necessary, switch profiling on/off */
+            if (sconf_get_profiling()) {
+               prof_start(SGE_PROF_OTHER, NULL);
+               prof_start(SGE_PROF_PACKING, NULL);
+               prof_start(SGE_PROF_EVENTCLIENT, NULL);
+               prof_start(SGE_PROF_MIRROR, NULL);
+               prof_start(SGE_PROF_GDI, NULL);
+               prof_start(SGE_PROF_HT_RESIZE, NULL);
+               prof_start(SGE_PROF_CUSTOM0, NULL);
+               prof_start(SGE_PROF_CUSTOM1, NULL);
+               prof_start(SGE_PROF_CUSTOM3, NULL);
+               prof_start(SGE_PROF_CUSTOM4, NULL);
+               prof_start(SGE_PROF_CUSTOM5, NULL);
+               prof_start(SGE_PROF_CUSTOM6, NULL);
+               prof_start(SGE_PROF_CUSTOM7, NULL);
+               prof_start(SGE_PROF_SCHEDLIB4, NULL);
+            } 
+            else {
+               prof_stop(SGE_PROF_OTHER, NULL);
+               prof_stop(SGE_PROF_PACKING, NULL);
+               prof_stop(SGE_PROF_EVENTCLIENT, NULL);
+               prof_stop(SGE_PROF_MIRROR, NULL);
+               prof_stop(SGE_PROF_GDI, NULL);
+               prof_stop(SGE_PROF_HT_RESIZE, NULL);
+               prof_stop(SGE_PROF_CUSTOM0, NULL);
+               prof_stop(SGE_PROF_CUSTOM1, NULL);
+               prof_stop(SGE_PROF_CUSTOM3, NULL);
+               prof_stop(SGE_PROF_CUSTOM4, NULL);
+               prof_stop(SGE_PROF_CUSTOM5, NULL);
+               prof_stop(SGE_PROF_CUSTOM6, NULL);
+               prof_stop(SGE_PROF_CUSTOM7, NULL);
+               prof_stop(SGE_PROF_SCHEDLIB4, NULL);
+            }
+         }
+   
+         sched_funcs[current_scheduler].event_func();
+
+         sconf_reset_new_config();
+      }
       
       /* output profiling information */
       if (prof_is_active(SGE_PROF_CUSTOM0)) {
          time_t now = (time_t)sge_get_gmt();
 
-         if (now > next_prof_output || shut_me_down) {
+         if (now > next_prof_output || done == true) {
             prof_output_info(SGE_PROF_ALL, false, "profiling summary:\n");
             next_prof_output = now + 60;
          }
       }
    }
-   
+
+   sge_mirror_shutdown();
+
    sge_teardown_lock_service();
    
    sge_prof_cleanup();
 
    FREE(initial_qmaster_host);
+
+   sge_shutdown(schedd_exit_state);
 
    DEXIT;
    return EXIT_SUCCESS;
@@ -436,7 +449,7 @@ static int sge_ck_qmaster(const char *former_master_host)
    }
    lFreeList(&alp);
 
-   if (success && (lp == NULL || (lGetNumberOfElem(lp_poll) == 0))) {
+   if (success && (lp == NULL || (lGetNumberOfElem(lp) == 0))) {
       ERROR((SGE_EVENT, MSG_SCHEDD_USERXMUSTBEMANAGERFORSCHEDDULING_S ,
              uti_state_get_user_name()));
       lFreeList(&lp);
@@ -469,7 +482,7 @@ static int sge_ck_qmaster(const char *former_master_host)
 
    lFreeList(&alp);
 
-   if (success && (lp == NULL || (lGetNumberOfElem(lp_poll) == 0))) {
+   if (success && (lp == NULL || (lGetNumberOfElem(lp) == 0))) {
       ERROR((SGE_EVENT, MSG_SCHEDD_HOSTXMUSTBEADMINHOSTFORSCHEDDULING_S ,
              uti_state_get_qualified_hostname()));
       DEXIT;
@@ -568,6 +581,8 @@ static int sge_setup_sge_schedd()
     */
    prepare_enroll(prognames[SCHEDD], &last_prepare_enroll_error );
 
+   /* get_conf_and_daemonize() will come back for access denied or endpoint not unique
+    * erros */
    ret = get_conf_and_daemonize(daemonize_schedd, &schedd_config_list, &shut_me_down);
    switch(ret) {
       case 0:

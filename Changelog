@@ -1,3 +1,12 @@
+CR-2005-11-14-1: Bugfix:    a second started schedd/execd daemons may not stop
+                            if started when qmaster is down
+                 Bugtraq:   6349818
+                 Issue:     1891
+                 Review:    RD
+                 Changed:   commlib, gd, schedd, execd, qping 
+
+CR-2005-11-14-0: Cleanup:   fixed broken build (sge_schedd.c)
+
 MD-2005-11-14-0: Enhancem:  - creating user cert for windows administrator
                             - enhanced the autoinstall log file moving
                             - enhanced the stdout redirection for autoinstall
@@ -28,7 +37,7 @@ DT-2005-11-11-0: Testsuite: o Added missing variable to Settings
                  Bug:       o Fixed problem with CR-2005-11-10-0
                             - Merged from DT-2005-11-11-0 (Maintrunk)
                  Changed:   jUnit, commlib
-                 Review:    pending
+                 Review:    CR
 
 JG-2005-11-11-0: Enhancem.: Fixed a number of compile errors in some module
                             tests and made them part of a standard build.

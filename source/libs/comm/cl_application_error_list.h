@@ -37,12 +37,6 @@
 #include "cl_data_types.h"
 
 
-typedef struct cl_application_error_list_elem_t {
-   cl_raw_list_elem_t*   raw_elem;
-   int                   cl_error;      /* commlib error code (use cl_get_error_text() to resolve error string) */
-   char*                 cl_info;       /* additional error information */
-   struct timeval        cl_log_time;   /* time when the message was added */
-} cl_application_error_list_elem_t;
 
 
 /* basic functions */
@@ -50,7 +44,7 @@ int cl_application_error_list_setup(cl_raw_list_t** list_p, char* list_name);
 int cl_application_error_list_cleanup(cl_raw_list_t** list_p);
 
 /* thread list functions that will lock the list */
-int cl_application_error_list_push_error(cl_raw_list_t* list_p, int cl_error, const char* cl_info, int lock_list);
+int cl_application_error_list_push_error(cl_raw_list_t* list_p, cl_log_t cl_err_type, int cl_error, const char* cl_info, int lock_list);
 
 /* thread functions that will not lock the list */
 cl_application_error_list_elem_t* cl_application_error_list_get_first_elem(cl_raw_list_t* list_p);

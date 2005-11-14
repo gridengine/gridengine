@@ -117,7 +117,6 @@ lListElem **lepp
    if (!strcasecmp(config_name, "global")) {
       is_global_requested = 1;
    } else {
-      int commlib_error = CL_RETVAL_OK;
       hep = lCreateElem(EH_Type);
       lSetHost(hep, EH_name, config_name);
 
@@ -132,10 +131,8 @@ lListElem **lepp
       }
       DPRINTF(("get_configuration: unique for %s: %s\n", config_name, lGetHost(hep, EH_name)));
 
-      commlib_error = sge_get_communication_error();
-
-      if (commlib_error == CL_RETVAL_ACCESS_DENIED || 
-          commlib_error == CL_RETVAL_ENDPOINT_NOT_UNIQUE ) {
+      if (sge_get_com_error_flag(SGE_COM_ACCESS_DENIED)       == true ||
+          sge_get_com_error_flag(SGE_COM_ENDPOINT_NOT_UNIQUE) == true) {
          lFreeElem(&hep);
          DEXIT;
          return -6;

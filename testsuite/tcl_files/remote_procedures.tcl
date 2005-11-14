@@ -1514,7 +1514,7 @@ proc open_remote_spawn_process { hostname
                 send -i $open_remote_spawn__id "$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/file_check.sh $open_remote_spawn__script_name\n"
                 incr open_remote_spawn__tries -1
                 if { $open_remote_spawn__tries <= 0 } {
-                   add_proc_error "open_remote_spawn_process" -1 "${error_info}\ntimeout waiting for ls command"
+                   add_proc_error "open_remote_spawn_process" -1 "${error_info}\ntimeout waiting for file_check.sh script"
                    catch { send -i $open_remote_spawn__id "\003" } ;# send CTRL+C to stop evtl. running processes
                    puts $CHECK_OUTPUT "closing spawn process ..."
                    flush $CHECK_OUTPUT

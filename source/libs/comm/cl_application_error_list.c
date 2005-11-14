@@ -113,7 +113,7 @@ int cl_application_error_list_cleanup(cl_raw_list_t** list_p) {
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_application_error_list_push_error()"
-int cl_application_error_list_push_error(cl_raw_list_t* list_p, int cl_error, const char* cl_info, int lock_list) {
+int cl_application_error_list_push_error(cl_raw_list_t* list_p, cl_log_t cl_err_type, int cl_error, const char* cl_info, int lock_list) {
 
    cl_application_error_list_elem_t* new_elem = NULL;
    cl_application_error_list_elem_t* al_list_elem = NULL;
@@ -176,50 +176,55 @@ int cl_application_error_list_push_error(cl_raw_list_t* list_p, int cl_error, co
       }
    }
 
-   if (do_log == CL_TRUE) {
-    
-      /* add new element list */
-      new_elem = (cl_application_error_list_elem_t*) malloc(sizeof(cl_application_error_list_elem_t));
-      if (new_elem == NULL) {
-         if (lock_list == 1) {
-            cl_raw_list_unlock(list_p);
-         }
-         return CL_RETVAL_MALLOC;
+   /* add new element into application error push list */
+   new_elem = (cl_application_error_list_elem_t*) malloc(sizeof(cl_application_error_list_elem_t));
+   if (new_elem == NULL) {
+      if (lock_list == 1) {
+         cl_raw_list_unlock(list_p);
       }
+      return CL_RETVAL_MALLOC;
+   }
 
-      new_elem->cl_info  = strdup(cl_info);
-      new_elem->cl_error = cl_error;
-      gettimeofday(&(new_elem->cl_log_time),NULL);
+   new_elem->cl_info  = strdup(cl_info);
+   new_elem->cl_error = cl_error;
+   gettimeofday(&(new_elem->cl_log_time),NULL);
+   new_elem->cl_already_logged = CL_FALSE;
+   new_elem->cl_err_type = cl_err_type;
 
-      if (new_elem->cl_info == NULL) {
-         free(new_elem);
-         if (lock_list == 1) { 
-            cl_raw_list_unlock(list_p);
-         }
-         return CL_RETVAL_MALLOC;
-      }
-
-      new_elem->raw_elem = cl_raw_list_append_elem(list_p, (void*) new_elem);
-      if ( new_elem->raw_elem == NULL) {
-         free(new_elem->cl_info);
-         free(new_elem);
-         if (lock_list == 1) { 
-            cl_raw_list_unlock(list_p);
-         }
-         return CL_RETVAL_MALLOC;
-      }
-
+   if (do_log == CL_FALSE) {
+      /* This error was logged the least CL_DEFINE_MESSAGE_DUP_LOG_TIMEOUT seconds (= he is in
+       * already logged list, so we set the cl_already_logged flag */
+      
+      new_elem->cl_already_logged = CL_TRUE;
+      CL_LOG_STR(CL_LOG_WARNING, "ignore application error - found entry in already logged list:", cl_get_error_text(cl_error)); 
+      CL_LOG_STR(CL_LOG_WARNING, "ignore application error - found entry in already logged list:", cl_info); 
+   } else {
       /* store this error into already logged error list */
       if (list_p->list_data != NULL) {
          cl_raw_list_t* logged_error_list = NULL;
          logged_error_list = (cl_raw_list_t*) list_p->list_data;
-         cl_application_error_list_push_error(logged_error_list, cl_error, cl_info, lock_list);
+         cl_application_error_list_push_error(logged_error_list, cl_err_type, cl_error, cl_info, lock_list);
       }
-   } else {
-      CL_LOG_STR(CL_LOG_WARNING,"ignore application error - found entry in already logged list:", cl_get_error_text(cl_error)); 
-      CL_LOG_STR(CL_LOG_WARNING,"ignore application error - found entry in already logged list:", cl_info); 
    }
-      
+
+
+   if (new_elem->cl_info == NULL) {
+      free(new_elem);
+      if (lock_list == 1) { 
+         cl_raw_list_unlock(list_p);
+      }
+      return CL_RETVAL_MALLOC;
+   }
+
+   new_elem->raw_elem = cl_raw_list_append_elem(list_p, (void*) new_elem);
+   if ( new_elem->raw_elem == NULL) {
+      free(new_elem->cl_info);
+      free(new_elem);
+      if (lock_list == 1) { 
+         cl_raw_list_unlock(list_p);
+      }
+      return CL_RETVAL_MALLOC;
+   }
   
    /* unlock the thread list */
    if (lock_list == 1) {

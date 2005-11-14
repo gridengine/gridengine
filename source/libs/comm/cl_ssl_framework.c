@@ -424,7 +424,7 @@ static int cl_com_ssl_set_default_mode(SSL_CTX *ctx, SSL *ssl) {
       CL_LOG_STR(CL_LOG_INFO,"setting cipher list:", commlib_ciphers_string);
       if ( cl_com_ssl_func__SSL_CTX_set_cipher_list(ctx, commlib_ciphers_string) != 1) {
          CL_LOG_STR(CL_LOG_ERROR,"could not set ctx cipher list:", commlib_ciphers_string);
-         cl_commlib_push_application_error(CL_RETVAL_ERROR_SETTING_CIPHER_LIST, commlib_ciphers_string);
+         cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_ERROR_SETTING_CIPHER_LIST, commlib_ciphers_string);
          return CL_RETVAL_ERROR_SETTING_CIPHER_LIST;
       }
 
@@ -477,7 +477,7 @@ static int cl_com_ssl_set_default_mode(SSL_CTX *ctx, SSL *ssl) {
        */
       if ( cl_com_ssl_func__SSL_set_cipher_list(ssl, commlib_ciphers_string) != 1) {
          CL_LOG_STR(CL_LOG_ERROR,"could not set ssl cipher list:", commlib_ciphers_string);
-         cl_commlib_push_application_error(CL_RETVAL_ERROR_SETTING_CIPHER_LIST, commlib_ciphers_string);
+         cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_ERROR_SETTING_CIPHER_LIST, commlib_ciphers_string);
          return CL_RETVAL_ERROR_SETTING_CIPHER_LIST;
       }
 
@@ -750,7 +750,7 @@ static int cl_com_ssl_build_symbol_table(void) {
       
       if (cl_com_ssl_crypto_handle == NULL) {
          CL_LOG(CL_LOG_ERROR,"can't load ssl library");
-         cl_commlib_push_application_error(CL_RETVAL_SSL_DLOPEN_SSL_LIB_FAILED, MSG_CL_SSL_FW_OPEN_SSL_CRYPTO_FAILED);
+         cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SSL_DLOPEN_SSL_LIB_FAILED, MSG_CL_SSL_FW_OPEN_SSL_CRYPTO_FAILED);
          pthread_mutex_unlock(&cl_com_ssl_crypto_handle_mutex);
          return CL_RETVAL_SSL_DLOPEN_SSL_LIB_FAILED;
       }
@@ -1079,7 +1079,7 @@ static int cl_com_ssl_build_symbol_table(void) {
 
       if (had_errors != 0) {
          CL_LOG_INT(CL_LOG_ERROR,"nr of not loaded function addresses:",had_errors);
-         cl_commlib_push_application_error(CL_RETVAL_SSL_CANT_LOAD_ALL_FUNCTIONS, MSG_CL_SSL_FW_LOAD_CRYPTO_SYMBOL_FAILED);
+         cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SSL_CANT_LOAD_ALL_FUNCTIONS, MSG_CL_SSL_FW_LOAD_CRYPTO_SYMBOL_FAILED);
          return CL_RETVAL_SSL_CANT_LOAD_ALL_FUNCTIONS;
       }
 
@@ -1349,7 +1349,7 @@ static int cl_com_ssl_log_ssl_errors(const char* function_name) {
       }
 
       if (ret_val != CL_RETVAL_DO_IGNORE) {
-         cl_commlib_push_application_error(CL_RETVAL_SSL_GET_SSL_ERROR, help_buf );
+         cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SSL_GET_SSL_ERROR, help_buf );
       }
       had_errors = CL_TRUE;
    }
@@ -1481,7 +1481,7 @@ static int cl_com_ssl_setup_context(cl_com_connection_t* connection, cl_bool_t i
    /* load certificate chain file */
    if (cl_com_ssl_func__SSL_CTX_use_certificate_chain_file(private->ssl_ctx, private->ssl_setup->ssl_cert_pem_file) != 1) {
       CL_LOG_STR(CL_LOG_ERROR,"failed to set ssl_cert_pem_file:", private->ssl_setup->ssl_cert_pem_file);
-      cl_commlib_push_application_error(CL_RETVAL_SSL_COULD_NOT_SET_CA_CHAIN_FILE, private->ssl_setup->ssl_cert_pem_file);
+      cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SSL_COULD_NOT_SET_CA_CHAIN_FILE, private->ssl_setup->ssl_cert_pem_file);
       cl_com_ssl_log_ssl_errors(__CL_FUNCTION__);
       return CL_RETVAL_SSL_COULD_NOT_SET_CA_CHAIN_FILE;
    }
@@ -1492,7 +1492,7 @@ static int cl_com_ssl_setup_context(cl_com_connection_t* connection, cl_bool_t i
                                       NULL) != 1) {
 
       CL_LOG(CL_LOG_ERROR,"can't read trusted CA certificates file(s)");
-      cl_commlib_push_application_error(CL_RETVAL_SSL_CANT_READ_CA_LIST, private->ssl_setup->ssl_CA_cert_pem_file );
+      cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SSL_CANT_READ_CA_LIST, private->ssl_setup->ssl_CA_cert_pem_file );
       cl_com_ssl_log_ssl_errors(__CL_FUNCTION__);
       return CL_RETVAL_SSL_CANT_READ_CA_LIST;
    }
@@ -1501,7 +1501,7 @@ static int cl_com_ssl_setup_context(cl_com_connection_t* connection, cl_bool_t i
    /* load private key */
    if (cl_com_ssl_func__SSL_CTX_use_PrivateKey_file(private->ssl_ctx, private->ssl_setup->ssl_key_pem_file, SSL_FILETYPE_PEM) != 1) {
       CL_LOG_STR(CL_LOG_ERROR,"failed to set ssl_key_pem_file:", private->ssl_setup->ssl_key_pem_file);
-      cl_commlib_push_application_error(CL_RETVAL_SSL_CANT_SET_CA_KEY_PEM_FILE, private->ssl_setup->ssl_key_pem_file);
+      cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SSL_CANT_SET_CA_KEY_PEM_FILE, private->ssl_setup->ssl_key_pem_file);
       cl_com_ssl_log_ssl_errors(__CL_FUNCTION__);
       return CL_RETVAL_SSL_CANT_SET_CA_KEY_PEM_FILE;
    }
@@ -1902,7 +1902,7 @@ int cl_com_ssl_setup_connection(cl_com_connection_t**          connection,
             CL_LOG(CL_LOG_ERROR,"couldn't setup PRNG with enough data" );
             pthread_mutex_unlock(&cl_com_ssl_global_config_mutex);
             cl_com_close_connection(connection);
-            cl_commlib_push_application_error(CL_RETVAL_SSL_RAND_SEED_FAILURE, "error reading RAND data file" );
+            cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SSL_RAND_SEED_FAILURE, "error reading RAND data file" );
             return CL_RETVAL_SSL_RAND_SEED_FAILURE;
          }
          
@@ -2084,7 +2084,7 @@ int cl_com_ssl_connection_complete_accept(cl_com_connection_t*  connection,
       private->ssl_obj = cl_com_ssl_func__SSL_new(service_private->ssl_ctx);
       if (private->ssl_obj == NULL) {
          cl_com_ssl_log_ssl_errors(__CL_FUNCTION__);
-         cl_commlib_push_application_error(CL_RETVAL_SSL_CANT_CREATE_SSL_OBJECT, NULL);
+         cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SSL_CANT_CREATE_SSL_OBJECT, NULL);
          CL_LOG(CL_LOG_ERROR,"can't setup ssl object");
          return CL_RETVAL_SSL_CANT_CREATE_SSL_OBJECT;
       }
@@ -2092,7 +2092,7 @@ int cl_com_ssl_connection_complete_accept(cl_com_connection_t*  connection,
       /* set default modes */
       ret_val = cl_com_ssl_set_default_mode(NULL, private->ssl_obj);
       if (ret_val != CL_RETVAL_OK) {
-         cl_commlib_push_application_error(ret_val, NULL);
+         cl_commlib_push_application_error(CL_LOG_ERROR, ret_val, NULL);
          cl_com_ssl_log_ssl_errors(__CL_FUNCTION__);
          return ret_val;
       }
@@ -2101,7 +2101,7 @@ int cl_com_ssl_connection_complete_accept(cl_com_connection_t*  connection,
       private->ssl_bio_socket = cl_com_ssl_func__BIO_new_socket(private->sockfd, BIO_NOCLOSE);
       if (private->ssl_bio_socket == NULL) {
          cl_com_ssl_log_ssl_errors(__CL_FUNCTION__);
-         cl_commlib_push_application_error(CL_RETVAL_SSL_CANT_CREATE_BIO_SOCKET, NULL);
+         cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SSL_CANT_CREATE_BIO_SOCKET, NULL);
          CL_LOG(CL_LOG_ERROR,"can't setup bio socket");
          return CL_RETVAL_SSL_CANT_CREATE_BIO_SOCKET;
       }
@@ -2162,7 +2162,7 @@ int cl_com_ssl_connection_complete_accept(cl_com_connection_t*  connection,
                      snprintf(tmp_buffer,1024, MSG_CL_COMMLIB_SSL_ACCEPT_TIMEOUT_ERROR);
                   }
 
-                  cl_commlib_push_application_error(CL_RETVAL_SSL_ACCEPT_HANDSHAKE_TIMEOUT, tmp_buffer);
+                  cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SSL_ACCEPT_HANDSHAKE_TIMEOUT, tmp_buffer);
                   return CL_RETVAL_SSL_ACCEPT_HANDSHAKE_TIMEOUT;
                }
 
@@ -2179,7 +2179,7 @@ int cl_com_ssl_connection_complete_accept(cl_com_connection_t*  connection,
                   snprintf(tmp_buffer,1024, MSG_CL_COMMLIB_SSL_ACCEPT_ERROR);
                }
 
-               cl_commlib_push_application_error(CL_RETVAL_SSL_ACCEPT_ERROR, tmp_buffer);
+               cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SSL_ACCEPT_ERROR, tmp_buffer);
                cl_com_ssl_log_ssl_errors(__CL_FUNCTION__);
                break;
             }
@@ -2193,7 +2193,7 @@ int cl_com_ssl_connection_complete_accept(cl_com_connection_t*  connection,
       CL_LOG(CL_LOG_INFO,"Checking Client Authentication");
       if (cl_com_ssl_func__SSL_get_verify_result(private->ssl_obj) != X509_V_OK) {
          CL_LOG(CL_LOG_ERROR,"client certificate doesn't verify");
-         cl_commlib_push_application_error(CL_RETVAL_SSL_CERTIFICATE_ERROR, MSG_CL_COMMLIB_SSL_CLIENT_CERTIFICATE_ERROR);
+         cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SSL_CERTIFICATE_ERROR, MSG_CL_COMMLIB_SSL_CLIENT_CERTIFICATE_ERROR);
          cl_com_ssl_log_ssl_errors(__CL_FUNCTION__);
          return CL_RETVAL_SSL_CERTIFICATE_ERROR;
       }
@@ -2211,7 +2211,7 @@ int cl_com_ssl_connection_complete_accept(cl_com_connection_t*  connection,
             CL_LOG_STR(CL_LOG_INFO,"calling ssl verify callback with peer name:",peer_CN);
             if ( private->ssl_setup->ssl_verify_func(CL_SSL_PEER_NAME, CL_TRUE, peer_CN) != CL_TRUE) {
                CL_LOG(CL_LOG_ERROR, "commlib ssl verify callback function failed in peer name check");
-               cl_commlib_push_application_error(CL_RETVAL_SSL_PEER_CERTIFICATE_ERROR, MSG_CL_COMMLIB_SSL_PEER_NAME_MATCH_ERROR);
+               cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SSL_PEER_CERTIFICATE_ERROR, MSG_CL_COMMLIB_SSL_PEER_NAME_MATCH_ERROR);
                cl_com_ssl_log_ssl_errors(__CL_FUNCTION__);
                cl_com_ssl_func__X509_free(peer);
                peer = NULL;
@@ -2219,7 +2219,7 @@ int cl_com_ssl_connection_complete_accept(cl_com_connection_t*  connection,
             }
          } else {
             CL_LOG(CL_LOG_ERROR, "could not get peer_CN from peer certificate");
-            cl_commlib_push_application_error(CL_RETVAL_SSL_PEER_CERTIFICATE_ERROR, MSG_CL_COMMLIB_SSL_PEER_CERT_GET_ERROR);
+            cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SSL_PEER_CERTIFICATE_ERROR, MSG_CL_COMMLIB_SSL_PEER_CERT_GET_ERROR);
             cl_com_ssl_log_ssl_errors(__CL_FUNCTION__);
             cl_com_ssl_func__X509_free(peer);
             peer = NULL;
@@ -2235,7 +2235,7 @@ int cl_com_ssl_connection_complete_accept(cl_com_connection_t*  connection,
                CL_LOG_STR(CL_LOG_INFO,"calling ssl_verify_func with user name:",uniqueIdentifier);
                if ( private->ssl_setup->ssl_verify_func(CL_SSL_USER_NAME, CL_TRUE, uniqueIdentifier) != CL_TRUE) {
                   CL_LOG(CL_LOG_ERROR, "commlib ssl verify callback function failed in user name check");
-                  cl_commlib_push_application_error(CL_RETVAL_SSL_PEER_CERTIFICATE_ERROR, MSG_CL_COMMLIB_SSL_USER_ID_VERIFY_ERROR);
+                  cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SSL_PEER_CERTIFICATE_ERROR, MSG_CL_COMMLIB_SSL_USER_ID_VERIFY_ERROR);
                   cl_com_ssl_log_ssl_errors(__CL_FUNCTION__);
                   cl_com_ssl_func__X509_free(peer);
                   peer = NULL;
@@ -2253,7 +2253,7 @@ int cl_com_ssl_connection_complete_accept(cl_com_connection_t*  connection,
 
             } else {
                CL_LOG(CL_LOG_ERROR, "could not get uniqueIdentifier from peer certificate");
-               cl_commlib_push_application_error(CL_RETVAL_SSL_PEER_CERTIFICATE_ERROR, MSG_CL_COMMLIB_SSL_USER_ID_GET_ERROR);
+               cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SSL_PEER_CERTIFICATE_ERROR, MSG_CL_COMMLIB_SSL_USER_ID_GET_ERROR);
                cl_com_ssl_log_ssl_errors(__CL_FUNCTION__);
                cl_com_ssl_func__X509_free(peer);
                peer = NULL;
@@ -2261,7 +2261,7 @@ int cl_com_ssl_connection_complete_accept(cl_com_connection_t*  connection,
             }
          } else {
             CL_LOG(CL_LOG_ERROR,"client certificate error: could not get identifier");
-            cl_commlib_push_application_error(CL_RETVAL_SSL_PEER_CERTIFICATE_ERROR, MSG_CL_COMMLIB_SSL_USER_ID_GET_ERROR);
+            cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SSL_PEER_CERTIFICATE_ERROR, MSG_CL_COMMLIB_SSL_USER_ID_GET_ERROR);
             cl_com_ssl_log_ssl_errors(__CL_FUNCTION__);
             cl_com_ssl_func__X509_free(peer);
             peer = NULL;
@@ -2271,7 +2271,7 @@ int cl_com_ssl_connection_complete_accept(cl_com_connection_t*  connection,
          peer = NULL;
       } else {
          CL_LOG(CL_LOG_ERROR,"client did not send peer certificate");
-         cl_commlib_push_application_error(CL_RETVAL_SSL_PEER_CERTIFICATE_ERROR, MSG_CL_COMMLIB_SSL_CLIENT_CERT_NOT_SENT_ERROR);
+         cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SSL_PEER_CERTIFICATE_ERROR, MSG_CL_COMMLIB_SSL_CLIENT_CERT_NOT_SENT_ERROR);
          cl_com_ssl_log_ssl_errors(__CL_FUNCTION__);
          return CL_RETVAL_SSL_PEER_CERTIFICATE_ERROR;
       }
@@ -2337,7 +2337,7 @@ int cl_com_ssl_open_connection(cl_com_connection_t* connection, int timeout, uns
             if ((private->sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
                CL_LOG(CL_LOG_ERROR,"could not create socket");
                private->sockfd = -1;
-               cl_commlib_push_application_error(CL_RETVAL_CREATE_SOCKET, MSG_CL_TCP_FW_SOCKET_ERROR );
+               cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_CREATE_SOCKET, MSG_CL_TCP_FW_SOCKET_ERROR );
                return CL_RETVAL_CREATE_SOCKET;
             }
             break;
@@ -2347,7 +2347,7 @@ int cl_com_ssl_open_connection(cl_com_connection_t* connection, int timeout, uns
             if ((private->sockfd = rresvport(&res_port)) < 0) {
                CL_LOG(CL_LOG_ERROR,"could not create reserved port socket");
                private->sockfd = -1;
-               cl_commlib_push_application_error(CL_RETVAL_CREATE_SOCKET, MSG_CL_TCP_FW_RESERVED_SOCKET_ERROR );
+               cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_CREATE_SOCKET, MSG_CL_TCP_FW_RESERVED_SOCKET_ERROR );
                return CL_RETVAL_CREATE_RESERVED_PORT_SOCKET;
             }
             break;
@@ -2359,7 +2359,7 @@ int cl_com_ssl_open_connection(cl_com_connection_t* connection, int timeout, uns
           shutdown(private->sockfd, 2);
           close(private->sockfd);
           private->sockfd = -1;
-          cl_commlib_push_application_error(CL_RETVAL_REACHED_FILEDESCRIPTOR_LIMIT, MSG_CL_COMMLIB_COMPILE_SOURCE_WITH_LARGER_FD_SETSIZE);
+          cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_REACHED_FILEDESCRIPTOR_LIMIT, MSG_CL_COMMLIB_COMPILE_SOURCE_WITH_LARGER_FD_SETSIZE);
           return CL_RETVAL_REACHED_FILEDESCRIPTOR_LIMIT;
       } 
 
@@ -2367,7 +2367,7 @@ int cl_com_ssl_open_connection(cl_com_connection_t* connection, int timeout, uns
       if ( setsockopt(private->sockfd, SOL_SOCKET, SO_REUSEADDR, (char *) &on, sizeof(on)) != 0) {
          CL_LOG(CL_LOG_ERROR,"could not set SO_REUSEADDR");
          private->sockfd = -1;
-         cl_commlib_push_application_error(CL_RETVAL_SETSOCKOPT_ERROR, MSG_CL_TCP_FW_SETSOCKOPT_ERROR);
+         cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SETSOCKOPT_ERROR, MSG_CL_TCP_FW_SETSOCKOPT_ERROR);
          return CL_RETVAL_SETSOCKOPT_ERROR;
       }
    
@@ -2375,7 +2375,7 @@ int cl_com_ssl_open_connection(cl_com_connection_t* connection, int timeout, uns
       if ( fcntl(private->sockfd, F_SETFL, O_NONBLOCK) != 0) {
          CL_LOG(CL_LOG_ERROR,"could not set O_NONBLOCK");
          private->sockfd = -1;
-         cl_commlib_push_application_error(CL_RETVAL_FCNTL_ERROR, MSG_CL_TCP_FW_FCNTL_ERROR);
+         cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_FCNTL_ERROR, MSG_CL_TCP_FW_FCNTL_ERROR);
          return CL_RETVAL_FCNTL_ERROR;
       }
 
@@ -2397,7 +2397,7 @@ int cl_com_ssl_open_connection(cl_com_connection_t* connection, int timeout, uns
          } else {
             snprintf(tmp_buffer,256, "%s", cl_get_error_text(tmp_error));
          }
-         cl_commlib_push_application_error(tmp_error, tmp_buffer);
+         cl_commlib_push_application_error(CL_LOG_ERROR, tmp_error, tmp_buffer);
          return tmp_error; 
       } 
       free(unique_host);
@@ -2434,7 +2434,7 @@ int cl_com_ssl_open_connection(cl_com_connection_t* connection, int timeout, uns
                shutdown(private->sockfd, 2);
                close(private->sockfd);
                private->sockfd = -1;
-               cl_commlib_push_application_error(CL_RETVAL_CONNECT_ERROR, strerror(my_error));
+               cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_CONNECT_ERROR, strerror(my_error));
                return CL_RETVAL_CONNECT_ERROR;
             }
             case EADDRNOTAVAIL: {
@@ -2443,7 +2443,7 @@ int cl_com_ssl_open_connection(cl_com_connection_t* connection, int timeout, uns
                shutdown(private->sockfd, 2);
                close(private->sockfd);
                private->sockfd = -1;
-               cl_commlib_push_application_error(CL_RETVAL_CONNECT_ERROR, strerror(my_error));
+               cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_CONNECT_ERROR, strerror(my_error));
                return CL_RETVAL_CONNECT_ERROR;
             }
             case EINPROGRESS:
@@ -2460,7 +2460,7 @@ int cl_com_ssl_open_connection(cl_com_connection_t* connection, int timeout, uns
                shutdown(private->sockfd, 2);
                close(private->sockfd);
                private->sockfd = -1;
-               cl_commlib_push_application_error(CL_RETVAL_CONNECT_ERROR, strerror(my_error));
+               cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_CONNECT_ERROR, strerror(my_error));
                return CL_RETVAL_CONNECT_ERROR;
             }
          }
@@ -2508,7 +2508,7 @@ int cl_com_ssl_open_connection(cl_com_connection_t* connection, int timeout, uns
 
             if (select_back < 0) {
                CL_LOG(CL_LOG_ERROR,"select error");
-               cl_commlib_push_application_error(CL_RETVAL_SELECT_ERROR, MSG_CL_TCP_FW_SELECT_ERROR);
+               cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SELECT_ERROR, MSG_CL_TCP_FW_SELECT_ERROR);
                return CL_RETVAL_SELECT_ERROR;
             }
          }
@@ -2529,7 +2529,7 @@ int cl_com_ssl_open_connection(cl_com_connection_t* connection, int timeout, uns
                shutdown(private->sockfd, 2);
                close(private->sockfd);
                private->sockfd = -1;
-               cl_commlib_push_application_error(CL_RETVAL_CONNECT_ERROR, strerror(socket_error));
+               cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_CONNECT_ERROR, strerror(socket_error));
                return CL_RETVAL_CONNECT_ERROR;
             }
          }
@@ -2544,7 +2544,7 @@ int cl_com_ssl_open_connection(cl_com_connection_t* connection, int timeout, uns
             shutdown(private->sockfd, 2);
             close(private->sockfd);
             private->sockfd = -1;
-            cl_commlib_push_application_error(CL_RETVAL_CONNECT_TIMEOUT, MSG_CL_TCP_FW_CONNECT_TIMEOUT );
+            cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_CONNECT_TIMEOUT, MSG_CL_TCP_FW_CONNECT_TIMEOUT );
             return CL_RETVAL_CONNECT_TIMEOUT;
          }
 
@@ -2658,7 +2658,7 @@ int cl_com_ssl_open_connection(cl_com_connection_t* connection, int timeout, uns
                   /* we had an timeout */
                   CL_LOG(CL_LOG_ERROR,"ssl connect timeout error");
                   connection->write_buffer_timeout_time = 0;
-                  cl_commlib_push_application_error(CL_RETVAL_SSL_CONNECT_HANDSHAKE_TIMEOUT, MSG_CL_TCP_FW_SSL_CONNECT_TIMEOUT );
+                  cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SSL_CONNECT_HANDSHAKE_TIMEOUT, MSG_CL_TCP_FW_SSL_CONNECT_TIMEOUT );
                   return CL_RETVAL_SSL_CONNECT_HANDSHAKE_TIMEOUT;
                }
 
@@ -2669,7 +2669,7 @@ int cl_com_ssl_open_connection(cl_com_connection_t* connection, int timeout, uns
 
             default: {
                CL_LOG(CL_LOG_ERROR,"SSL handshake not successful and no clear cleanup");
-               cl_commlib_push_application_error(CL_RETVAL_SSL_CONNECT_ERROR, MSG_CL_COMMLIB_SSL_HANDSHAKE_ERROR);
+               cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SSL_CONNECT_ERROR, MSG_CL_COMMLIB_SSL_HANDSHAKE_ERROR);
                cl_com_ssl_log_ssl_errors(__CL_FUNCTION__);
                return CL_RETVAL_SSL_CONNECT_ERROR;
             }
@@ -2683,7 +2683,7 @@ int cl_com_ssl_open_connection(cl_com_connection_t* connection, int timeout, uns
       if (cl_com_ssl_func__SSL_get_verify_result(private->ssl_obj) != X509_V_OK) {
          CL_LOG(CL_LOG_ERROR,"Certificate doesn't verify");
          cl_com_ssl_log_ssl_errors(__CL_FUNCTION__);
-         cl_commlib_push_application_error(CL_RETVAL_SSL_CERTIFICATE_ERROR, MSG_CL_COMMLIB_CHECK_SSL_CERTIFICATE );
+         cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SSL_CERTIFICATE_ERROR, MSG_CL_COMMLIB_CHECK_SSL_CERTIFICATE );
          return CL_RETVAL_SSL_CERTIFICATE_ERROR;
       }
 
@@ -2699,7 +2699,7 @@ int cl_com_ssl_open_connection(cl_com_connection_t* connection, int timeout, uns
             CL_LOG_STR(CL_LOG_INFO,"calling ssl verify callback with peer name:",peer_CN);
             if ( private->ssl_setup->ssl_verify_func(CL_SSL_PEER_NAME, CL_FALSE, peer_CN) != CL_TRUE) {
                CL_LOG(CL_LOG_ERROR, "commlib ssl verify callback function failed in peer name check");
-               cl_commlib_push_application_error(CL_RETVAL_SSL_PEER_CERTIFICATE_ERROR, MSG_CL_COMMLIB_SSL_VERIFY_CALLBACK_FUNC_ERROR);
+               cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SSL_PEER_CERTIFICATE_ERROR, MSG_CL_COMMLIB_SSL_VERIFY_CALLBACK_FUNC_ERROR);
                cl_com_ssl_log_ssl_errors(__CL_FUNCTION__);
                cl_com_ssl_func__X509_free(peer);
                peer = NULL;
@@ -2707,7 +2707,7 @@ int cl_com_ssl_open_connection(cl_com_connection_t* connection, int timeout, uns
             }
          } else {
             CL_LOG(CL_LOG_ERROR, "could not get peer_CN from peer certificate");
-            cl_commlib_push_application_error(CL_RETVAL_SSL_PEER_CERTIFICATE_ERROR, MSG_CL_COMMLIB_SSL_PEER_NAME_GET_ERROR);
+            cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SSL_PEER_CERTIFICATE_ERROR, MSG_CL_COMMLIB_SSL_PEER_NAME_GET_ERROR);
             cl_com_ssl_log_ssl_errors(__CL_FUNCTION__);
             cl_com_ssl_func__X509_free(peer);
             peer = NULL;
@@ -2717,7 +2717,7 @@ int cl_com_ssl_open_connection(cl_com_connection_t* connection, int timeout, uns
          peer = NULL;
       } else {
          CL_LOG(CL_LOG_ERROR,"service did not send peer certificate");
-         cl_commlib_push_application_error(CL_RETVAL_SSL_PEER_CERTIFICATE_ERROR, MSG_CL_COMMLIB_SSL_SERVER_CERT_NOT_SENT_ERROR);
+         cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SSL_PEER_CERTIFICATE_ERROR, MSG_CL_COMMLIB_SSL_SERVER_CERT_NOT_SENT_ERROR);
          cl_com_ssl_log_ssl_errors(__CL_FUNCTION__);
          return CL_RETVAL_SSL_PEER_CERTIFICATE_ERROR;
       }
@@ -2805,7 +2805,7 @@ int cl_com_ssl_read_GMSH(cl_com_connection_t* connection, unsigned long *only_on
    }
    if ( connection->read_gmsh_header->dl > CL_DEFINE_MAX_MESSAGE_LENGTH ) {
       CL_LOG(CL_LOG_ERROR,"gmsh header dl entry is larger than CL_DEFINE_MAX_MESSAGE_LENGTH");
-      cl_commlib_push_application_error(CL_RETVAL_MAX_MESSAGE_LENGTH_ERROR, NULL);
+      cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_MAX_MESSAGE_LENGTH_ERROR, NULL);
       return CL_RETVAL_MAX_MESSAGE_LENGTH_ERROR;
    }
    return retval;
@@ -2856,7 +2856,7 @@ int cl_com_ssl_connection_request_handler_setup(cl_com_connection_t* connection)
        CL_LOG(CL_LOG_ERROR,"filedescriptors exeeds FD_SETSIZE of this system");
        shutdown(sockfd, 2);
        close(sockfd);
-       cl_commlib_push_application_error(CL_RETVAL_REACHED_FILEDESCRIPTOR_LIMIT, MSG_CL_COMMLIB_COMPILE_SOURCE_WITH_LARGER_FD_SETSIZE );
+       cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_REACHED_FILEDESCRIPTOR_LIMIT, MSG_CL_COMMLIB_COMPILE_SOURCE_WITH_LARGER_FD_SETSIZE );
        return CL_RETVAL_REACHED_FILEDESCRIPTOR_LIMIT;
    }
    
@@ -2975,7 +2975,7 @@ int cl_com_ssl_connection_request_handler(cl_com_connection_t* connection,cl_com
           CL_LOG(CL_LOG_ERROR,"filedescriptors exeeds FD_SETSIZE of this system");
           shutdown(new_sfd, 2);
           close(new_sfd);
-          cl_commlib_push_application_error(CL_RETVAL_REACHED_FILEDESCRIPTOR_LIMIT, MSG_CL_COMMLIB_COMPILE_SOURCE_WITH_LARGER_FD_SETSIZE );
+          cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_REACHED_FILEDESCRIPTOR_LIMIT, MSG_CL_COMMLIB_COMPILE_SOURCE_WITH_LARGER_FD_SETSIZE );
           return CL_RETVAL_REACHED_FILEDESCRIPTOR_LIMIT;
        }
 
@@ -3646,13 +3646,13 @@ int cl_com_ssl_write(cl_com_connection_t* connection, cl_byte_t* message, unsign
 
    if (size > CL_DEFINE_MAX_MESSAGE_LENGTH) {
       CL_LOG_INT(CL_LOG_ERROR,"data to write is > max message length =", CL_DEFINE_MAX_MESSAGE_LENGTH );
-      cl_commlib_push_application_error(CL_RETVAL_MAX_READ_SIZE, NULL);
+      cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_MAX_READ_SIZE, NULL);
       return CL_RETVAL_MAX_READ_SIZE;
    }
 
    if (int_size < CL_COM_SSL_FRAMEWORK_MIN_INT_SIZE && size > CL_COM_SSL_FRAMEWORK_MAX_INT ) {
       CL_LOG_INT(CL_LOG_ERROR,"can't send such a long message, because on this architecture the sizeof integer is", (int)int_size );
-      cl_commlib_push_application_error(CL_RETVAL_MAX_READ_SIZE, MSG_CL_COMMLIB_SSL_MESSAGE_SIZE_EXEED_ERROR);
+      cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_MAX_READ_SIZE, MSG_CL_COMMLIB_SSL_MESSAGE_SIZE_EXEED_ERROR);
       return CL_RETVAL_MAX_READ_SIZE;
    }
 
@@ -3803,13 +3803,13 @@ int cl_com_ssl_read(cl_com_connection_t* connection, cl_byte_t* message, unsigne
 
    if (size > CL_DEFINE_MAX_MESSAGE_LENGTH) {
       CL_LOG_INT(CL_LOG_ERROR,"data to read is > max message length =", CL_DEFINE_MAX_MESSAGE_LENGTH );
-      cl_commlib_push_application_error(CL_RETVAL_MAX_READ_SIZE, NULL);
+      cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_MAX_READ_SIZE, NULL);
       return CL_RETVAL_MAX_READ_SIZE;
    }
 
    if (int_size < CL_COM_SSL_FRAMEWORK_MIN_INT_SIZE && size > CL_COM_SSL_FRAMEWORK_MAX_INT ) {
       CL_LOG_INT(CL_LOG_ERROR,"can't read such a long message, because on this architecture the sizeof integer is", (int)int_size );
-      cl_commlib_push_application_error(CL_RETVAL_MAX_READ_SIZE, MSG_CL_COMMLIB_SSL_MESSAGE_SIZE_EXEED_ERROR);
+      cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_MAX_READ_SIZE, MSG_CL_COMMLIB_SSL_MESSAGE_SIZE_EXEED_ERROR);
       return CL_RETVAL_MAX_READ_SIZE;
    }
 
@@ -4029,14 +4029,14 @@ int cl_com_ssl_framework_cleanup(void) {
 
 /* debug functions */
 void cl_dump_ssl_private(cl_com_connection_t* connection) {
-   cl_commlib_push_application_error(CL_RETVAL_SSL_NOT_SUPPORTED, "");
+   cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SSL_NOT_SUPPORTED, "");
 }
 
 /* global security function */
 int cl_com_ssl_get_unique_id(cl_com_handle_t* handle, 
                              char* un_resolved_hostname, char* component_name, unsigned long component_id, 
                              char** uniqueIdentifier ) {
-   cl_commlib_push_application_error(CL_RETVAL_SSL_NOT_SUPPORTED, "");
+   cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SSL_NOT_SUPPORTED, "");
    return CL_RETVAL_SSL_NOT_SUPPORTED;
 }
 
@@ -4045,31 +4045,31 @@ int cl_com_ssl_get_unique_id(cl_com_handle_t* handle,
 /* get/set functions */
 int cl_com_ssl_get_connect_port(cl_com_connection_t* connection,
                                 int*                 port) {
-   cl_commlib_push_application_error(CL_RETVAL_SSL_NOT_SUPPORTED, "");
+   cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SSL_NOT_SUPPORTED, "");
    return CL_RETVAL_SSL_NOT_SUPPORTED;
 }
 
 int cl_com_ssl_set_connect_port(cl_com_connection_t* connection,
                                 int                  port) {
-   cl_commlib_push_application_error(CL_RETVAL_SSL_NOT_SUPPORTED, "");
+   cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SSL_NOT_SUPPORTED, "");
    return CL_RETVAL_SSL_NOT_SUPPORTED;
 }
 
 int cl_com_ssl_get_service_port(cl_com_connection_t* connection,
                                 int*                 port) {
-   cl_commlib_push_application_error(CL_RETVAL_SSL_NOT_SUPPORTED, "");
+   cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SSL_NOT_SUPPORTED, "");
    return CL_RETVAL_SSL_NOT_SUPPORTED;
 }
 
 int cl_com_ssl_get_fd(cl_com_connection_t* connection,
                       int*                 fd) {
-   cl_commlib_push_application_error(CL_RETVAL_SSL_NOT_SUPPORTED, "");
+   cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SSL_NOT_SUPPORTED, "");
    return CL_RETVAL_SSL_NOT_SUPPORTED;
 }
 
 int cl_com_ssl_get_client_socket_in_port(cl_com_connection_t* connection,
                                          int*                 port) {
-   cl_commlib_push_application_error(CL_RETVAL_SSL_NOT_SUPPORTED, "");
+   cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SSL_NOT_SUPPORTED, "");
    return CL_RETVAL_SSL_NOT_SUPPORTED;
 }
 
@@ -4083,7 +4083,7 @@ int cl_com_ssl_setup_connection(cl_com_connection_t**         connection,
                                 cl_xml_data_format_t          data_format_type,
                                 cl_tcp_connect_t              tcp_connect_mode,
                                 cl_ssl_setup_t*               ssl_setup) {
-   cl_commlib_push_application_error(CL_RETVAL_SSL_NOT_SUPPORTED, "");
+   cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SSL_NOT_SUPPORTED, "");
    return CL_RETVAL_SSL_NOT_SUPPORTED;
 }
 
@@ -4093,24 +4093,24 @@ int cl_com_ssl_setup_connection(cl_com_connection_t**         connection,
 int cl_com_ssl_open_connection(cl_com_connection_t*   connection,
                                int                    timeout,
                                unsigned long          only_once) {
-   cl_commlib_push_application_error(CL_RETVAL_SSL_NOT_SUPPORTED, "");
+   cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SSL_NOT_SUPPORTED, "");
    return CL_RETVAL_SSL_NOT_SUPPORTED;
 }
 
 int cl_com_ssl_close_connection(cl_com_connection_t** connection) {
-   cl_commlib_push_application_error(CL_RETVAL_SSL_NOT_SUPPORTED, "");
+   cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SSL_NOT_SUPPORTED, "");
    return CL_RETVAL_SSL_NOT_SUPPORTED;
 }
 
 int cl_com_ssl_connection_complete_shutdown(cl_com_connection_t*  connection) {
-   cl_commlib_push_application_error(CL_RETVAL_SSL_NOT_SUPPORTED, "");
+   cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SSL_NOT_SUPPORTED, "");
    return CL_RETVAL_SSL_NOT_SUPPORTED;
 }
 
 int cl_com_ssl_connection_complete_accept(cl_com_connection_t*  connection,
                                           long                  timeout,
                                           unsigned long         only_once) {
-   cl_commlib_push_application_error(CL_RETVAL_SSL_NOT_SUPPORTED, "");
+   cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SSL_NOT_SUPPORTED, "");
    return CL_RETVAL_SSL_NOT_SUPPORTED;
 }
 
@@ -4121,7 +4121,7 @@ int cl_com_ssl_write(cl_com_connection_t* connection,
                      cl_byte_t*       message,
                      unsigned long    size,
                      unsigned long*   only_one_write) {
-   cl_commlib_push_application_error(CL_RETVAL_SSL_NOT_SUPPORTED, "");
+   cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SSL_NOT_SUPPORTED, "");
    return CL_RETVAL_SSL_NOT_SUPPORTED;
 }
 
@@ -4129,13 +4129,13 @@ int cl_com_ssl_read(cl_com_connection_t* connection,
                     cl_byte_t*        message,
                     unsigned long     size,
                     unsigned long*    only_one_read) {
-   cl_commlib_push_application_error(CL_RETVAL_SSL_NOT_SUPPORTED, "");
+   cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SSL_NOT_SUPPORTED, "");
    return CL_RETVAL_SSL_NOT_SUPPORTED;
 }
 
 int cl_com_ssl_read_GMSH(cl_com_connection_t*        connection,
                          unsigned long*              only_one_read) {
-   cl_commlib_push_application_error(CL_RETVAL_SSL_NOT_SUPPORTED, "");
+   cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SSL_NOT_SUPPORTED, "");
    return CL_RETVAL_SSL_NOT_SUPPORTED;
 }
 
@@ -4143,18 +4143,18 @@ int cl_com_ssl_read_GMSH(cl_com_connection_t*        connection,
 
 /* create service, accept new connections */
 int cl_com_ssl_connection_request_handler_setup(cl_com_connection_t* connection) {
-   cl_commlib_push_application_error(CL_RETVAL_SSL_NOT_SUPPORTED, "");
+   cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SSL_NOT_SUPPORTED, "");
    return CL_RETVAL_SSL_NOT_SUPPORTED;
 }
 
 int cl_com_ssl_connection_request_handler(cl_com_connection_t*   connection,
                                           cl_com_connection_t**  new_connection) {
-   cl_commlib_push_application_error(CL_RETVAL_SSL_NOT_SUPPORTED, "");
+   cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SSL_NOT_SUPPORTED, "");
    return CL_RETVAL_SSL_NOT_SUPPORTED;
 }
 
 int cl_com_ssl_connection_request_handler_cleanup(cl_com_connection_t* connection) {
-   cl_commlib_push_application_error(CL_RETVAL_SSL_NOT_SUPPORTED, "");
+   cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SSL_NOT_SUPPORTED, "");
    return CL_RETVAL_SSL_NOT_SUPPORTED;
 }
 
@@ -4164,7 +4164,7 @@ int cl_com_ssl_open_connection_request_handler(cl_raw_list_t*        connection_
                                                int                   timeout_val_sec,
                                                int                   timeout_val_usec, 
                                                cl_select_method_t    select_mode) {
-   cl_commlib_push_application_error(CL_RETVAL_SSL_NOT_SUPPORTED, "");
+   cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SSL_NOT_SUPPORTED, "");
    return CL_RETVAL_SSL_NOT_SUPPORTED;
 }
 

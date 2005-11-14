@@ -33,6 +33,8 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+#include <sys/time.h>
+
 #define CL_THREAD_LIST 1
 #define CL_LOG_LIST    2
 typedef struct cl_thread_settings_type  cl_thread_settings_t;
@@ -89,6 +91,10 @@ typedef enum cl_log_type {
    CL_LOG_DEBUG
 } cl_log_t;
 
+typedef enum cl_bool_def {
+   CL_FALSE = 0,
+   CL_TRUE
+} cl_bool_t;
 
 /***********************************************************************/
 /* LOG_LIST */
@@ -105,6 +111,16 @@ struct cl_log_list_elem_type {                      /* list element specific dat
    cl_raw_list_elem_t*   raw_elem;
 };
 
+typedef struct cl_application_error_list_elem_t {
+   cl_raw_list_elem_t*   raw_elem;         /* commlib internal list pointer to raw list element */
+   int                   cl_error;         /* commlib error code 
+                                              (use cl_get_error_text() to resolve error string) */
+   char*                 cl_info;          /* additional error information */
+   struct timeval        cl_log_time;      /* time when the message was added */
+   cl_bool_t             cl_already_logged;/* CL_TRUE when this error was logged the last 
+                                              CL_DEFINE_MESSAGE_DUP_LOG_TIMEOUT seconds */
+   cl_log_t              cl_err_type;      /* commlib error message type */
+} cl_application_error_list_elem_t;
 
 typedef enum cl_log_list_flush_method_type {
    CL_LOG_FLUSHED,        /* flushing is done when ever user calls cl_log_list_flush() */
@@ -115,7 +131,7 @@ typedef enum cl_log_list_flush_method_type {
 /* function return value  function typedef              func parameter */
 typedef int               (*cl_log_func_t)              (cl_raw_list_t* log_list);
 typedef unsigned long     (*cl_app_status_func_t)       (char** info_message);
-typedef void              (*cl_error_func_t)            (int cl_error, const char* error_message);
+typedef void              (*cl_error_func_t)            (const cl_application_error_list_elem_t* commlib_error);
 typedef const char*       (*cl_tag_name_func_t)         (unsigned long tag);
 typedef void              (*cl_app_debug_client_func_t) (int cl_connected, int debug_level);
 

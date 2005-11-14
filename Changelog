@@ -1,3 +1,11 @@
+CR-2005-11-14-1: Bugfix:    a second started schedd/execd daemons may not stop
+                            if started when qmaster is down
+                 Bugtraq:   6349818
+                 Issue:     1891
+                 Review:    RD
+                 Changed:   commlib, gd, schedd, execd, qping 
+
+
 JG-2005-11-14-0: Bugfix:    Update from 5.3 to 6.0 failed if the 5.3 cluster 
                             contained an empty complex.
                  Bugtraq:   6349768
@@ -16,7 +24,7 @@ CR-2005-11-14-0: Testsuite: new procedure check_all_system_times():
 DT-2005-11-11-0: Testsuite: o Added missing variable to Settings
                  Bug:       o Fixed problem with CR-2005-11-10-0
                  Changed:   jUnit, commlib
-                 Review:    pending
+                 Review:    CR
 
 CR-2005-11-11-1: Testsuite: o fixed uncorrect change from CR-2005-11-11-0
 

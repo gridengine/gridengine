@@ -44,9 +44,7 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 
-#include "uti/sge_hostname.h"
-#include "uti/sge_stdio.h"
-
+#include "sge_hostname.h"
 #include "cl_commlib.h"
 #include "cl_util.h"
 #include "cl_data_types.h"
@@ -2374,6 +2372,7 @@ int cl_com_cached_gethostbyname( char *unresolved_host, char **unique_hostname, 
    int function_return = CL_RETVAL_GETHOSTNAME_ERROR;
    int ret_val = CL_RETVAL_OK;
    char* alias_name = NULL;
+   char* help = NULL;
 
  
    hostlist = cl_com_get_host_list();
@@ -2393,24 +2392,30 @@ int cl_com_cached_gethostbyname( char *unresolved_host, char **unique_hostname, 
    }
 
    /* If the host name is set in SGE_COMMLIB_DEBUG_NO_RESOLVE, fail. */
-   if ((cl_com_get_unresolvable_hosts() != NULL) &&
-       (strstr(cl_com_get_unresolvable_hosts(), unresolved_host) != NULL)) {
-      CL_LOG_STR(CL_LOG_WARNING, "host is in not resolvable host list:",
-                 unresolved_host);
-      return CL_RETVAL_GETHOSTNAME_ERROR;
+   if ((help=cl_com_get_unresolvable_hosts()) != NULL) {
+      if (strstr(help, unresolved_host) != NULL) {
+         CL_LOG_STR(CL_LOG_WARNING, "host is in not resolvable host list:", unresolved_host);
+         return CL_RETVAL_GETHOSTNAME_ERROR;
+      }
    }
 
    /* If the host name is set in SGE_COMMLIB_DEBUG_RESOLVE, use the hostname as
     * the unique hostname and return success. */
-   if ((cl_com_get_resolvable_hosts() != NULL) &&
-       (strstr(cl_com_get_resolvable_hosts(), unresolved_host) != NULL)) {
-      CL_LOG_STR(CL_LOG_WARNING, "host is in resolvable host list:",
-                 unresolved_host);
-      *unique_hostname = strdup(unresolved_host);
-      if (he_copy != NULL) {
-         *he_copy = NULL;
+   if ((help=cl_com_get_resolvable_hosts()) != NULL) {
+      if (strstr(help, unresolved_host) != NULL) {
+         CL_LOG_STR(CL_LOG_WARNING, "host is in only resolvable host list:", unresolved_host);
+
+         *unique_hostname = strdup(unresolved_host);
+
+         /* Problem: 
+          *
+          * copy_addr and he_copy will NOT contain any information 
+          * ======================================================
+          * 
+          * Reason: Can't assume any IP addr or alias names 
+          */
+         return CL_RETVAL_OK;
       }
-      return CL_RETVAL_OK;
    }
 
 
@@ -2701,12 +2706,11 @@ int cl_com_read_alias_file(cl_raw_list_t* hostlist) {
          main_name = NULL;
       }
    }
-   FCLOSE(fp);
+   if ( fclose(fp) != 0) {
+      return CL_RETVAL_CLOSE_ALIAS_FILE_FAILED;
+   }
 
    return CL_RETVAL_OK;
-FCLOSE_ERROR:
-   CL_LOG(CL_LOG_ERROR,"FCLOSE() error");
-   return CL_RETVAL_CLOSE_ALIAS_FILE_FAILED;
 }
 
 #ifdef __CL_FUNCTION__
@@ -3682,7 +3686,7 @@ int cl_com_connection_complete_request( cl_com_connection_t* connection, long ti
             } else {
                snprintf(tmp_buffer, 256, MSG_CL_TCP_FW_EMPTY_SOURCE_HOST );
             }
-            cl_commlib_push_application_error(retval , tmp_buffer );
+            cl_commlib_push_application_error(CL_LOG_ERROR, retval , tmp_buffer );
             unique_host = strdup("(HOST_NOT_RESOLVABLE)");
          }
    
@@ -3700,7 +3704,7 @@ int cl_com_connection_complete_request( cl_com_connection_t* connection, long ti
             } else {
                snprintf(tmp_buffer, 256, MSG_CL_TCP_FW_EMPTY_SOURCE_HOST );
             }
-            cl_commlib_push_application_error(CL_RETVAL_LOCAL_HOSTNAME_ERROR, tmp_buffer );
+            cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_LOCAL_HOSTNAME_ERROR, tmp_buffer );
 
 
             /* deny access to connected client */
@@ -3744,7 +3748,7 @@ int cl_com_connection_complete_request( cl_com_connection_t* connection, long ti
             } else {
                snprintf(tmp_buffer, 256, MSG_CL_TCP_FW_EMPTY_DESTINATION_HOST );
             }
-            cl_commlib_push_application_error(retval , tmp_buffer );
+            cl_commlib_push_application_error(CL_LOG_ERROR, retval , tmp_buffer );
             unique_host = strdup("(HOST_NOT_RESOLVABLE)");
          }
 
@@ -3761,7 +3765,7 @@ int cl_com_connection_complete_request( cl_com_connection_t* connection, long ti
             } else {
                snprintf(tmp_buffer, 256, MSG_CL_TCP_FW_EMPTY_DESTINATION_HOST );
             }
-            cl_commlib_push_application_error(CL_RETVAL_LOCAL_HOSTNAME_ERROR, tmp_buffer );
+            cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_LOCAL_HOSTNAME_ERROR, tmp_buffer );
 
 
             /* deny access to connected client */
@@ -3805,7 +3809,7 @@ int cl_com_connection_complete_request( cl_com_connection_t* connection, long ti
                } else {
                   snprintf(tmp_buffer, 256, MSG_CL_TCP_FW_EMPTY_RDATA_HOST );
                }
-               cl_commlib_push_application_error(retval , tmp_buffer );
+               cl_commlib_push_application_error(CL_LOG_ERROR, retval , tmp_buffer );
                unique_host = strdup("(HOST_NOT_RESOLVABLE)");
             }
             connection->remote   = cl_com_create_endpoint(unique_host ,cm_message->rdata->comp_name,cm_message->rdata->comp_id);
@@ -3823,7 +3827,7 @@ int cl_com_connection_complete_request( cl_com_connection_t* connection, long ti
                } else {
                   snprintf(tmp_buffer, 256, MSG_CL_TCP_FW_EMPTY_RDATA_HOST );
                }
-               cl_commlib_push_application_error(CL_RETVAL_LOCAL_HOSTNAME_ERROR, tmp_buffer );
+               cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_LOCAL_HOSTNAME_ERROR, tmp_buffer );
 
 
                /* deny access to connected client */
@@ -3954,7 +3958,7 @@ int cl_com_connection_complete_request( cl_com_connection_t* connection, long ti
                   snprintf(tmp_buffer,256, MSG_CL_TCP_FW_EMPTY_REMOTE_HOST );
                }
             }
-            cl_commlib_push_application_error(CL_RETVAL_LOCAL_HOSTNAME_ERROR, tmp_buffer );
+            cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_LOCAL_HOSTNAME_ERROR, tmp_buffer );
 
 
             /* deny access to connected client */
@@ -4094,7 +4098,7 @@ int cl_com_connection_complete_request( cl_com_connection_t* connection, long ti
                         connection->sender->comp_name,
                         sge_u32c(connection->sender->comp_id));
 
-               cl_commlib_push_application_error(CL_RETVAL_ACCESS_DENIED, tmp_buffer );
+               cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_ACCESS_DENIED, tmp_buffer );
 
                connection->crm_state = CL_CRM_CS_DENIED;
                connection_status = CL_CONNECT_RESPONSE_MESSAGE_CONNECTION_STATUS_DENIED;
@@ -4161,7 +4165,7 @@ int cl_com_connection_complete_request( cl_com_connection_t* connection, long ti
                            connection->receiver->comp_name,
                            sge_u32c(connection->receiver->comp_id));
 
-                  cl_commlib_push_application_error(CL_RETVAL_ENDPOINT_NOT_UNIQUE, tmp_buffer );
+                  cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_ENDPOINT_NOT_UNIQUE, tmp_buffer );
 
                   connection->crm_state = CL_CRM_CS_ENDPOINT_NOT_UNIQUE; /* CL_CRM_CS_DENIED; */
                   connection_status = CL_CONNECT_RESPONSE_MESSAGE_CONNECTION_STATUS_NOT_UNIQUE;
@@ -4212,7 +4216,7 @@ int cl_com_connection_complete_request( cl_com_connection_t* connection, long ti
                            connection->receiver->comp_name,
                            sge_u32c(connection->receiver->comp_id));
 
-                     cl_commlib_push_application_error(CL_RETVAL_NO_RESERVED_PORT_CONNECTION, tmp_buffer );
+                     cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_NO_RESERVED_PORT_CONNECTION, tmp_buffer );
 
                      connection->crm_state = CL_CRM_CS_DENIED;
                      connection_status = CL_CONNECT_RESPONSE_MESSAGE_CONNECTION_STATUS_DENIED;
@@ -4247,7 +4251,7 @@ int cl_com_connection_complete_request( cl_com_connection_t* connection, long ti
                            sge_u32c(connection->receiver->comp_id),
                            connection->local->comp_host);
 
-                     cl_commlib_push_application_error(CL_RETVAL_NO_LOCAL_HOST_CONNECTION, tmp_buffer );
+                     cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_NO_LOCAL_HOST_CONNECTION, tmp_buffer );
 
                      connection->crm_state = CL_CRM_CS_DENIED;
                      connection_status = CL_CONNECT_RESPONSE_MESSAGE_CONNECTION_STATUS_DENIED;
@@ -4306,7 +4310,7 @@ int cl_com_connection_complete_request( cl_com_connection_t* connection, long ti
                               connection->receiver->comp_host,
                               connection->receiver->comp_name,
                               sge_u32c(connection->receiver->comp_id));
-                     cl_commlib_push_application_error(CL_RETVAL_NO_RESERVED_PORT_CONNECTION, tmp_buffer );
+                     cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_NO_RESERVED_PORT_CONNECTION, tmp_buffer );
                      connection->crm_state = CL_CRM_CS_DENIED;
                      connection_status = CL_CONNECT_RESPONSE_MESSAGE_CONNECTION_STATUS_DENIED;
                      /* overwrite and free last error */            
@@ -4334,7 +4338,7 @@ int cl_com_connection_complete_request( cl_com_connection_t* connection, long ti
                int check_allowed_host_list = 0;
                if (connection->handler->allowed_host_list == NULL && check_allowed_host_list != 0) {
                   connection_status_text = MSG_CL_TCP_FW_CONNECTION_STATUS_TEXT_CLIENT_NOT_IN_ALLOWED_HOST_LIST;
-                  cl_commlib_push_application_error(CL_RETVAL_ACCESS_DENIED, MSG_CL_TCP_FW_ALLOWED_HOST_LIST_NOT_DEFINED );
+                  cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_ACCESS_DENIED, MSG_CL_TCP_FW_ALLOWED_HOST_LIST_NOT_DEFINED );
                   connection_status = CL_CONNECT_RESPONSE_MESSAGE_CONNECTION_STATUS_DENIED;
                   connection->crm_state = CL_CRM_CS_DENIED;
                   CL_LOG(CL_LOG_ERROR, connection_status_text );
@@ -4368,7 +4372,7 @@ int cl_com_connection_complete_request( cl_com_connection_t* connection, long ti
                      connection_status_text = MSG_CL_TCP_FW_CONNECTION_STATUS_TEXT_CLIENT_NOT_IN_ALLOWED_HOST_LIST;
 
                      snprintf(tmp_buffer, 256, MSG_CL_TCP_FW_HOST_X_NOT_IN_ALOWED_HOST_LIST_S, connection->client_host_name); 
-                     cl_commlib_push_application_error(CL_RETVAL_ACCESS_DENIED,tmp_buffer);
+                     cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_ACCESS_DENIED,tmp_buffer);
 
                      connection->crm_state = CL_CRM_CS_DENIED;
                      connection_status = CL_CONNECT_RESPONSE_MESSAGE_CONNECTION_STATUS_DENIED;
@@ -4723,13 +4727,13 @@ int cl_com_connection_complete_request( cl_com_connection_t* connection, long ti
 
             switch(crm_message->cs_condition) {
                case CL_CRM_CS_DENIED:
-                  cl_commlib_push_application_error(CL_RETVAL_ACCESS_DENIED, crm_message->cs_text);
+                  cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_ACCESS_DENIED, crm_message->cs_text);
                   break;
                case CL_CRM_CS_ENDPOINT_NOT_UNIQUE:
-                  cl_commlib_push_application_error(CL_RETVAL_ENDPOINT_NOT_UNIQUE, crm_message->cs_text);
+                  cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_ENDPOINT_NOT_UNIQUE, crm_message->cs_text);
                   break;
                default:
-                  cl_commlib_push_application_error(CL_RETVAL_UNKNOWN, crm_message->cs_text );
+                  cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_UNKNOWN, crm_message->cs_text );
                   break;
             }
          }

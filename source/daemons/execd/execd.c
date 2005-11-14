@@ -182,6 +182,7 @@ char **argv
    int last_execd_error = CL_RETVAL_OK;
    static char tmp_err_file_name[SGE_PATH_MAX];
    time_t next_prof_output = 0;
+   int execd_exit_state = 0;
 
    DENTER_MAIN(TOP_LAYER, "execd");
 
@@ -283,6 +284,7 @@ char **argv
       lList *report_list = sge_build_load_report();
       lFreeList(&report_list);
    }
+
    execd_register();
 
    sge_write_pid(EXECD_PID_FILE);
@@ -350,14 +352,20 @@ char **argv
           INFO((SGE_EVENT, "SIGPIPE received\n"));
       }
 
+      if (sge_get_com_error_flag(SGE_COM_ACCESS_DENIED) == true) {
+         execd_exit_state = SGE_COM_ACCESS_DENIED;
+         break; /* shut down, leave while */
+      }
+
+      if (sge_get_com_error_flag(SGE_COM_ENDPOINT_NOT_UNIQUE) == true) {
+         execd_exit_state = SGE_COM_ENDPOINT_NOT_UNIQUE;
+         break; /* shut down, leave while */
+      }
+
       if (i) {
          if (cl_is_commlib_error(i)) {
             if (i != CL_RETVAL_OK) {
-               WARNING((SGE_EVENT, MSG_COM_RECEIVEREQUEST_S, cl_get_error_text(i)));
-               if (i == CL_RETVAL_CONNECTION_NOT_FOUND ||
-                   i == CL_RETVAL_UNKNOWN) {
-                  execd_register(); /* reregister at qmaster */
-                }
+               execd_register(); /* reregister at qmaster */
             }
          } else {
             WARNING((SGE_EVENT, MSG_COM_RECEIVEREQUEST_S, err_str ));
@@ -380,7 +388,7 @@ char **argv
    }   
 
    sge_prof_cleanup();
-   sge_shutdown(0);
+   sge_shutdown(execd_exit_state);
    DEXIT;
    return 0;
 }
@@ -500,7 +508,6 @@ int sge_execd_register_at_qmaster(void) {
 static void execd_register(void)
 {
    int had_problems = 0;
-   int last_commlib_error = CL_RETVAL_OK;
    int last_enroll_error  = CL_RETVAL_OK; 
 
    DENTER(TOP_LAYER, "execd_register");
@@ -511,11 +518,6 @@ static void execd_register(void)
       if (had_problems != 0) {
          int ret_val;
          cl_com_handle_t* handle = NULL;
-         int commlib_error = CL_RETVAL_OK;
-         /*  trigger communication
-          *  =====================
-          *  cl_commlib_trigger() will block 1 second , when there are no messages to read/write 
-          */
          
          handle = cl_com_get_handle((char*)prognames[EXECD],1);
          if ( handle == NULL) {
@@ -524,33 +526,21 @@ static void execd_register(void)
             handle = cl_com_get_handle((char*)prognames[EXECD],1);
          }
 
-         ret_val = cl_commlib_trigger(handle, 1);
+         ret_val = cl_commlib_trigger(handle, 1); /* this will block on errors for 1 second */
          switch(ret_val) {
             case CL_RETVAL_SELECT_TIMEOUT:
             case CL_RETVAL_OK:
                break;
             default:
-               DPRINTF(("cl_commlib_trigger reported an error - sleeping 30 s"));
+               DPRINTF(("got communication problems - sleeping 30 s"));
                sleep(30); /* For other errors */
                break;
          }
-
-         commlib_error = sge_get_communication_error();
-         if ( commlib_error != CL_RETVAL_OK && commlib_error != last_commlib_error ) {
-            u_long32 handle_local_comp_id = 0;
-            u_long32 handle_service_port = 0;
-            last_commlib_error = commlib_error;
-            if (handle != NULL) {
-               handle_local_comp_id = handle->local->comp_id;
-               handle_service_port = handle->service_port;
-            }
-            ERROR((SGE_EVENT, MSG_GDI_CANT_GET_COM_HANDLE_SSUUS, 
-                              uti_state_get_qualified_hostname(),
-                              (char*) prognames[uti_state_get_mewho()],
-                              sge_u32c(handle_local_comp_id), 
-                              sge_u32c(handle_service_port),
-                              cl_get_error_text(commlib_error)));
+         if (sge_get_com_error_flag(SGE_COM_ACCESS_DENIED) == true ||
+             sge_get_com_error_flag(SGE_COM_ENDPOINT_NOT_UNIQUE) == true) {
+            break;
          }
+
       }
 
       if (sge_execd_register_at_qmaster() != 0) {

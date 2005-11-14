@@ -245,15 +245,19 @@ static void qping_convert_time(char* buffer, char* dest, cl_bool_t show_hour) {
    }
 }
 
-static void qping_general_communication_error(int cl_err,const char* error_message) {
-   if (error_message != NULL) {
-      fprintf(stderr,"%s: %s\n", cl_get_error_text(cl_err), error_message);
-   } else {
-      fprintf(stderr,"error: %s\n", cl_get_error_text(cl_err));
+static void qping_general_communication_error(const cl_application_error_list_elem_t* commlib_error) {
+   if (commlib_error != NULL) {
+      if (commlib_error->cl_already_logged == CL_FALSE) {
+         if (commlib_error->cl_info != NULL) {
+            fprintf(stderr,"%s: %s\n", cl_get_error_text(commlib_error->cl_error), commlib_error->cl_info);
+         } else {
+            fprintf(stderr,"error: %s\n", cl_get_error_text(commlib_error->cl_error));
+         }
+         if (commlib_error->cl_error == CL_RETVAL_ACCESS_DENIED) {
+            do_shutdown = 1;
+         } 
+      }
    }
-   if (cl_err == CL_RETVAL_ACCESS_DENIED) {
-      do_shutdown = 1;
-   } 
 }
 
 static void qping_parse_environment(void) {

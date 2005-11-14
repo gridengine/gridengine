@@ -75,7 +75,12 @@ int prepare_enroll(const char *name, int* commlib_error);
 int sge_send_any_request(int synchron, u_long32 *mid, const char *rhost, const char *commproc, int id, sge_pack_buffer *pb, int tag, u_long32 response_id, lList **alpp);
 int sge_get_any_request(char *rhost, char *commproc, u_short *id, sge_pack_buffer *pb, int *tag, int synchron,  u_long32 for_request_mid, u_long32* mid);
 int gdi_send_message_pb(int synchron, const char *tocomproc, int toid, const char *tohost, int tag, sge_pack_buffer *pb, u_long32 *mid);
-int sge_get_communication_error(void);
+
+typedef enum sge_gdi_stored_com_error_type {
+   SGE_COM_ACCESS_DENIED = 101,
+   SGE_COM_ENDPOINT_NOT_UNIQUE
+} sge_gdi_stored_com_error_t;
+bool sge_get_com_error_flag(sge_gdi_stored_com_error_t error_type);
 
 enum { COMMD_UNKNOWN = 0, COMMD_UP, COMMD_DOWN};
 

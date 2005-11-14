@@ -300,7 +300,7 @@ int cl_com_setup_callback_functions(cl_com_connection_t* connection) {
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_commlib_push_application_error()"
-int cl_commlib_push_application_error(int cl_error, const char* cl_info_text) {
+int cl_commlib_push_application_error(cl_log_t cl_err_type, int cl_error, const char* cl_info_text) {
    const char* cl_info = cl_info_text;
    int retval = CL_RETVAL_OK; 
 
@@ -313,7 +313,7 @@ int cl_commlib_push_application_error(int cl_error, const char* cl_info_text) {
    if (cl_com_error_status_func != NULL) {
       CL_LOG_STR(CL_LOG_INFO,"add application error id: ", cl_get_error_text(cl_error));
       CL_LOG_STR(CL_LOG_INFO,"add application error: ", cl_info );
-      cl_application_error_list_push_error(cl_com_application_error_list, cl_error, cl_info, 1);
+      cl_application_error_list_push_error(cl_com_application_error_list, cl_err_type, cl_error, cl_info, 1);
    } else {
       retval = CL_RETVAL_UNKNOWN;
       CL_LOG(CL_LOG_ERROR,"no application error function set" );
@@ -365,7 +365,7 @@ static int cl_commlib_check_callback_functions(void) {
           /* now trigger application error func */
           if (cl_com_error_status_func != NULL) {
              CL_LOG(CL_LOG_INFO,"triggering application error function");
-             cl_com_error_status_func(elem->cl_error,elem->cl_info);
+             cl_com_error_status_func(elem);
           } else {
              CL_LOG(CL_LOG_WARNING,"can't trigger application error function: no function set");
           }
@@ -491,7 +491,7 @@ int cl_com_setup_commlib( cl_thread_mode_t t_mode, cl_log_t debug_level , cl_log
  
    if (different_thread_mode == CL_TRUE) {
       CL_LOG(CL_LOG_ERROR,"duplicate call to cl_com_setup_commlib() with different thread mode");
-      cl_commlib_push_application_error(CL_RETVAL_COMMLIB_SETUP_ALREADY_CALLED, MSG_CL_COMMLIB_CANT_SWITCH_THREAD_MODE_WITH_EXISTING_HANDLES);
+      cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_COMMLIB_SETUP_ALREADY_CALLED, MSG_CL_COMMLIB_CANT_SWITCH_THREAD_MODE_WITH_EXISTING_HANDLES);
    } else {
       cl_com_create_threads = t_mode;
    }
@@ -782,7 +782,7 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
 
    if (cl_com_handle_list  == NULL) {
       CL_LOG(CL_LOG_ERROR,"cl_com_setup_commlib() not called");
-      cl_commlib_push_application_error(CL_RETVAL_NO_FRAMEWORK_INIT, NULL);
+      cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_NO_FRAMEWORK_INIT, NULL);
       if (commlib_error) {
          *commlib_error = CL_RETVAL_NO_FRAMEWORK_INIT;
       }
@@ -791,7 +791,7 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
 
    if (component_name == NULL ) {
       CL_LOG(CL_LOG_ERROR,"component name is NULL");
-      cl_commlib_push_application_error(CL_RETVAL_PARAMS, NULL);
+      cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_PARAMS, NULL);
       if (commlib_error) {
          *commlib_error = CL_RETVAL_PARAMS;
       }
@@ -800,7 +800,7 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
 
    if ( service_provider == CL_TRUE && component_id == 0) {
       CL_LOG(CL_LOG_ERROR,"service can't use component id 0");
-      cl_commlib_push_application_error(CL_RETVAL_PARAMS, NULL);
+      cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_PARAMS, NULL);
       if (commlib_error) {
          *commlib_error = CL_RETVAL_PARAMS;
       }
@@ -818,7 +818,7 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
          if (strcmp(local_endpoint->comp_name, component_name) == 0) {
             /* we have this handle already in list */
             CL_LOG(CL_LOG_ERROR,"component not unique");
-            cl_commlib_push_application_error(CL_RETVAL_LOCAL_ENDPOINT_NOT_UNIQUE, NULL);
+            cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_LOCAL_ENDPOINT_NOT_UNIQUE, NULL);
             cl_raw_list_unlock(cl_com_handle_list);
             if (commlib_error) {
                *commlib_error = CL_RETVAL_LOCAL_ENDPOINT_NOT_UNIQUE;
@@ -832,7 +832,7 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
    return_value = cl_com_gethostname(&local_hostname, NULL, NULL, NULL);
    if (return_value != CL_RETVAL_OK) {
       CL_LOG(CL_LOG_ERROR,cl_get_error_text(return_value));
-      cl_commlib_push_application_error(return_value, NULL);
+      cl_commlib_push_application_error(CL_LOG_ERROR, return_value, NULL);
       cl_raw_list_unlock(cl_com_handle_list);
       if (commlib_error) {
          *commlib_error = return_value;
@@ -846,7 +846,7 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
    if (new_handle == NULL) {
       free(local_hostname);
       CL_LOG(CL_LOG_ERROR,"malloc() error");
-      cl_commlib_push_application_error(CL_RETVAL_MALLOC, NULL);
+      cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_MALLOC, NULL);
       cl_raw_list_unlock(cl_com_handle_list);
       if (commlib_error) {
          *commlib_error = CL_RETVAL_MALLOC;
@@ -872,7 +872,7 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
                *commlib_error = CL_RETVAL_NO_FRAMEWORK_INIT;
             }
             pthread_mutex_unlock(&cl_com_ssl_setup_mutex);
-            cl_commlib_push_application_error(CL_RETVAL_NO_FRAMEWORK_INIT, NULL);
+            cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_NO_FRAMEWORK_INIT, NULL);
             return NULL;
          }
         
@@ -884,7 +884,7 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
                *commlib_error = return_value;
             }
             pthread_mutex_unlock(&cl_com_ssl_setup_mutex);
-            cl_commlib_push_application_error(return_value, NULL);
+            cl_commlib_push_application_error(CL_LOG_ERROR, return_value, NULL);
             return NULL;
          }
 
@@ -911,7 +911,7 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
       if (commlib_error) {
          *commlib_error = CL_RETVAL_NO_FRAMEWORK_INIT;
       }
-      cl_commlib_push_application_error(CL_RETVAL_NO_FRAMEWORK_INIT, NULL);
+      cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_NO_FRAMEWORK_INIT, NULL);
       return NULL;
    }  
 
@@ -978,7 +978,7 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
       if (commlib_error) {
          *commlib_error = CL_RETVAL_TO_LESS_FILEDESCRIPTORS;
       }
-      cl_commlib_push_application_error(CL_RETVAL_TO_LESS_FILEDESCRIPTORS, NULL);
+      cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_TO_LESS_FILEDESCRIPTORS, NULL);
       return NULL;
    }
    CL_LOG_INT(CL_LOG_INFO, "max file descriptors on this system    :", (int)new_handle->max_open_connections);
@@ -1004,7 +1004,7 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
       if (commlib_error) {
          *commlib_error = CL_RETVAL_MALLOC;
       }
-      cl_commlib_push_application_error(CL_RETVAL_MALLOC, NULL);
+      cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_MALLOC, NULL);
       return NULL;
    }
    memset(new_handle->statistic, 0, sizeof(cl_com_handle_statistic_t));
@@ -1022,7 +1022,7 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
       if (commlib_error) {
          *commlib_error = CL_RETVAL_MALLOC;
       }
-      cl_commlib_push_application_error(CL_RETVAL_MALLOC, NULL);
+      cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_MALLOC, NULL);
       return NULL;
    }
 
@@ -1036,7 +1036,7 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
       if (commlib_error) {
          *commlib_error = CL_RETVAL_MALLOC;
       }
-      cl_commlib_push_application_error(CL_RETVAL_MALLOC, NULL);
+      cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_MALLOC, NULL);
       return NULL;
    }
 
@@ -1054,7 +1054,7 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
       if (commlib_error) {
          *commlib_error = CL_RETVAL_MUTEX_ERROR;
       }
-      cl_commlib_push_application_error(CL_RETVAL_MUTEX_ERROR, NULL);
+      cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_MUTEX_ERROR, NULL);
       return NULL;
    } 
 
@@ -1075,7 +1075,7 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
       if (commlib_error) {
          *commlib_error = CL_RETVAL_MUTEX_ERROR;
       }
-      cl_commlib_push_application_error(CL_RETVAL_MUTEX_ERROR, NULL);
+      cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_MUTEX_ERROR, NULL);
       return NULL;
    }
 
@@ -1098,7 +1098,7 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
       if (commlib_error) {
          *commlib_error = CL_RETVAL_MALLOC;
       }
-      cl_commlib_push_application_error(CL_RETVAL_MALLOC, NULL);
+      cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_MALLOC, NULL);
       return NULL;
    }
 
@@ -1122,7 +1122,7 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
       if (commlib_error) {
          *commlib_error = return_value;
       }
-      cl_commlib_push_application_error(return_value, NULL);
+      cl_commlib_push_application_error(CL_LOG_ERROR, return_value, NULL);
       return NULL;
    } 
 
@@ -1145,7 +1145,7 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
       if (commlib_error) {
          *commlib_error = return_value;
       }
-      cl_commlib_push_application_error(return_value, NULL);
+      cl_commlib_push_application_error(CL_LOG_ERROR, return_value, NULL);
       return NULL;
    } 
 
@@ -1170,7 +1170,7 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
       if (commlib_error) {
          *commlib_error = return_value;
       }
-      cl_commlib_push_application_error(return_value, NULL);
+      cl_commlib_push_application_error(CL_LOG_ERROR, return_value, NULL);
       return NULL;
    } 
 
@@ -1197,7 +1197,7 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
       if (commlib_error) {
          *commlib_error = return_value;
       }
-      cl_commlib_push_application_error(return_value, NULL);
+      cl_commlib_push_application_error(CL_LOG_ERROR, return_value, NULL);
       return NULL;
    }
  
@@ -1238,7 +1238,7 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
          if (commlib_error) {
             *commlib_error = return_value;
          }
-         cl_commlib_push_application_error(return_value, NULL);
+         cl_commlib_push_application_error(CL_LOG_ERROR, return_value, NULL);
          return NULL;
       }
       
@@ -1271,7 +1271,7 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
          if (commlib_error) {
             *commlib_error = return_value;
          }
-         cl_commlib_push_application_error(return_value, NULL);
+         cl_commlib_push_application_error(CL_LOG_ERROR, return_value, NULL);
          return NULL;
       }
 
@@ -1387,7 +1387,7 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
       if (commlib_error) {
          *commlib_error = return_value;
       }
-      cl_commlib_push_application_error(return_value, NULL);
+      cl_commlib_push_application_error(CL_LOG_ERROR, return_value, NULL);
       return NULL;
    }
    cl_handle_list_append_handle(cl_com_handle_list, new_handle,0);
@@ -2667,7 +2667,7 @@ static int cl_com_trigger(cl_com_handle_t* handle, int synchron) {
                         elem->connection->remote->comp_host,
                         elem->connection->remote->comp_name,
                         sge_u32c(elem->connection->remote->comp_id));
-               cl_commlib_push_application_error(return_value,tmp_string);
+               cl_commlib_push_application_error(CL_LOG_ERROR, return_value,tmp_string);
             }
             if (return_value != CL_RETVAL_OK && cl_com_get_ignore_timeouts_flag() == CL_TRUE) {
                elem->connection->connection_state = CL_CLOSING;
@@ -2704,7 +2704,7 @@ static int cl_com_trigger(cl_com_handle_t* handle, int synchron) {
                         elem->connection->remote->comp_host,
                         elem->connection->remote->comp_name,
                         sge_u32c(elem->connection->remote->comp_id));
-               cl_commlib_push_application_error(return_value, tmp_string);
+               cl_commlib_push_application_error(CL_LOG_ERROR, return_value, tmp_string);
             }
             if (return_value != CL_RETVAL_OK && cl_com_get_ignore_timeouts_flag() == CL_TRUE) {
                elem->connection->connection_state = CL_CLOSING;
@@ -2719,7 +2719,7 @@ static int cl_com_trigger(cl_com_handle_t* handle, int synchron) {
                            elem->connection->remote->comp_host,
                            elem->connection->remote->comp_name,
                            sge_u32c(elem->connection->remote->comp_id));
-                  cl_commlib_push_application_error(CL_RETVAL_SEND_TIMEOUT, tmp_string);
+                  cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SEND_TIMEOUT, tmp_string);
                   elem->connection->connection_state = CL_CLOSING;
                   elem->connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
                }
@@ -7037,7 +7037,7 @@ static void *cl_com_handle_read_thread(void *t_conf) {
                                  elem->connection->remote->comp_host,
                                  elem->connection->remote->comp_name,
                                  sge_u32c(elem->connection->remote->comp_id));
-                        cl_commlib_push_application_error(return_value, tmp_string);
+                        cl_commlib_push_application_error(CL_LOG_ERROR, return_value, tmp_string);
                      }
                      if (return_value != CL_RETVAL_OK && cl_com_get_ignore_timeouts_flag() == CL_TRUE) {
                         elem->connection->connection_state = CL_CLOSING;
@@ -7393,7 +7393,7 @@ static void *cl_com_handle_write_thread(void *t_conf) {
                                        elem->connection->remote->comp_host,
                                        elem->connection->remote->comp_name,
                                        sge_u32c(elem->connection->remote->comp_id));
-                              cl_commlib_push_application_error(return_value, tmp_string);
+                              cl_commlib_push_application_error(CL_LOG_ERROR, return_value, tmp_string);
                            }
                            if (return_value != CL_RETVAL_OK && cl_com_get_ignore_timeouts_flag() == CL_TRUE) {
                               elem->connection->connection_state = CL_CLOSING;
@@ -7408,7 +7408,7 @@ static void *cl_com_handle_write_thread(void *t_conf) {
                                           elem->connection->remote->comp_host,
                                           elem->connection->remote->comp_name,
                                           sge_u32c(elem->connection->remote->comp_id));
-                                 cl_commlib_push_application_error(CL_RETVAL_SEND_TIMEOUT, tmp_string);
+                                 cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SEND_TIMEOUT, tmp_string);
                                  elem->connection->connection_state = CL_CLOSING;
                                  elem->connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
                               }
@@ -7509,7 +7509,7 @@ int getuniquehostname(const char *hostin, char *hostout, int refresh_aliases) {
          char tmp_buffer[1024];
          snprintf(tmp_buffer, 1024, MSG_CL_COMMLIB_HOSTNAME_EXEEDS_MAX_HOSTNAME_LENGTH_SU,
                   resolved_host, sge_u32c(CL_MAXHOSTLEN));
-         cl_commlib_push_application_error(CL_RETVAL_HOSTNAME_LENGTH_ERROR, tmp_buffer);
+         cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_HOSTNAME_LENGTH_ERROR, tmp_buffer);
          free(resolved_host);
          return CL_RETVAL_HOSTNAME_LENGTH_ERROR;
       }

@@ -1,4 +1,11 @@
-AA-2005-11-14-0: Bugfix:    sge_ca script fails when no /dev/random present due to permission problem
+JG-2005-11-14-0: Bugfix:    Update from 5.3 to 6.0 failed if the 5.3 cluster 
+                            contained an empty complex.
+                 Bugtraq:   6349768
+                 Issue:     1890
+                 Review:    MD 
+
+AA-2005-11-14-0: Bugfix:    sge_ca script fails when no /dev/random present due
+                            to permission problem
                             -addition of -user option
                  Bugtraq:   6347267
                  Issue:     1869

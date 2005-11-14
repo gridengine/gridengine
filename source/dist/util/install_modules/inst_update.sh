@@ -177,17 +177,24 @@ GetOldCkpt()
 
 GetOldComplexes()
 {
+   if [ -e /tmp/centry ]; then
+      rm -rf /tmp/centry
+   fi
+
    Makedir /tmp/centry
    loop=1
 
-   for c in `ls $OLD_QMASTER_SPOOL/complexes`; do
    OLD_IFS=$IFS
-  IFS="
+
+   for c in `ls $OLD_QMASTER_SPOOL/complexes`; do
+      complex_entries=`cat $OLD_QMASTER_SPOOL/complexes/$c | grep -v "#"`
+      IFS="
 "
-      for ce in `cat $OLD_QMASTER_SPOOL/complexes/$c | grep -v "#"`; do
+
+      for ce in $complex_entries; do
+         IFS="$OLD_IFS"
          ce_name=`echo $ce | awk '{ print $1 }'`
          echo $ce | tr " " "\n" | grep "[a-z A-Z 0-9 ==]" >>  /tmp/centry/$ce_name"_tmp"
-  IFS="$OLD_IFS"
 
          for e in `cat /tmp/centry/$ce_name"_tmp"`; do
             case $loop in
@@ -243,6 +250,7 @@ GetOldComplexes()
          TOUCH=touch
          UPDATE_LOG=/tmp/update.$pid
          ExecuteAsAdmin $TOUCH $UPDATE_LOG 
+
          if [ $CE_TYPE = "INT" -o $CE_TYPE = "DOUBLE" -o $CE_TYPE = "MEMORY" -o $CE_TYPE = "TIME" ]; then
             if [ $CE_CONSUMABLE = "YES" -a $CE_REQUESTABLE = "NO" ]; then
                if [ $CE_TYPE = "INT" -o $CE_TYPE = "MEMORY" -o $CE_TYPE = "DOUBLE" ]; then

@@ -57,7 +57,6 @@ ErrUsage()
    myname=`basename $0`
    $INFOTEXT -e \
    "\nUsage: %s <command>\n" \
-   "   -env             export SGE_CERTFILE and SGE_KEYFILE for daemon\n" \
    "   -init            initialize CA infrastructure\n" \
    "   -req             generate a certificate request and private key\n" \
    "   -sign            sign a certificate request\n" \
@@ -74,7 +73,10 @@ ErrUsage()
    "   -outdir <dir>    write to directory <dir>\n" \
    "   -cadir <dir>     overwrite CALOCALTOP and CATOP settings\n" \
    "   -pkcs12 <file>   generate pkcs12 format files for the users in <file>\n" \
-   "   -usercert <file> generate certificates and keys for the users in <file>\n" $myname
+   "   -usercert <file> generate certificates and keys for the users in <file>\n" \
+   "   -user <u:g:e>    generate certificates and keys for <u:g:e>\n" \
+   "                    with u=Unix User, g=Common Name, e=email\n" \
+   $myname
 
    exit 1
 }
@@ -379,8 +381,8 @@ MakeRandFile()
    if [ ! -r /dev/urandom ]; then
       if [ -r /dev/random ]; then 
          rfile=/dev/random
-      elif [ -r /kernel/genunix ]; then
-         rfile=/kernel/genunix
+      # elif [ -r /kernel/genunix ]; then
+      #   rfile=/kernel/genunix
       elif [ -r /bin/vi ]; then
          rfile=/bin/vi
       fi
@@ -396,6 +398,45 @@ MakeRandFile()
    # ls -l $rfile $1
    # echo "--------------"
 
+}
+
+
+#--------------------------------------------------------------------------
+# MakeUserCert create user certificates and keys for Windows Admin user
+#
+# $1 = <user:gecos:email>
+#
+MakeUserCert()
+{
+   line="$1"
+
+   unixuser=`echo $line|cut -d: -f1`
+   gecos=`echo $line|cut -d: -f2`
+   email=`echo $line|cut -d: -f3`
+
+   # echo $unixuser:$gecos:$email
+   if [ "$unixuser" = "" ]; then
+      $INFOTEXT "no Unix user specified. Exit."
+      exit 1
+   fi   
+
+   if [ "$gecos" = "" ]; then
+      gecos=$unixuser
+   fi   
+   if [ "$email" = "" ]; then
+      email=$unixuser
+   fi   
+
+   entries=`$V5UTILBIN/adminrun $ADMINUSER grep "CN=$gecos" $CATOP/index.txt|grep '^V'|wc -l`
+   if [ $entries = 0 ]; then
+      $INFOTEXT "Generating certificate and key for '%s' ('%s','%s')." \
+         "$unixuser" "$gecos" "$email"
+      MakeCert user "$unixuser" "$gecos" "$email"
+   else   
+      $INFOTEXT "Please renew certificate for '%s' ('%s','%s') instead." \
+         "$unixuser" "$gecos" "$email"
+      # RenewCert user $unixuser
+   fi
 }
 
 #--------------------------------------------------------------------------
@@ -416,20 +457,7 @@ MakeUserCerts()
    userfile=$1
 
    cat $userfile | while read line; do
-      unixuser=`echo $line|cut -d: -f1`
-      gecos=`echo $line|cut -d: -f2`
-      email=`echo $line|cut -d: -f3`
-      
-      entries=`$V5UTILBIN/adminrun $ADMINUSER grep "CN=$gecos" $CATOP/index.txt|grep '^V'|wc -l`
-      if [ $entries = 0 ]; then
-         $INFOTEXT "Generating certificate and key for '%s' ('%s','%s')." \
-            "$unixuser" "$gecos" "$email"
-         MakeCert user "$unixuser" "$gecos" "$email"
-      else   
-         $INFOTEXT "Please renew certificate for '%s' ('%s','%s') instead." \
-            "$unixuser" "$gecos" "$email"
-         # RenewCert user $unixuser
-      fi
+      MakeUserCert "$line"
    done   
 }
 
@@ -549,7 +577,11 @@ MakeCert()
       if [ $rootinstalls = true ]; then
          Execute $CHMOD 500 $KEYDIR
          Execute $CHMOD 400 $KEYDIR/*
-         Execute $CHOWN -R $2 $KEYDIR
+         # check if user exists and chown if yes
+         id $2  > /dev/null 2>&1
+         if [ $? = 0 ]; then
+            Execute $CHOWN -R $2 $KEYDIR
+         fi   
       fi
 
       $INFOTEXT "created and signed certificate for user '%s' in '%s'" $2 $KEYDIR
@@ -911,9 +943,6 @@ while [ $ARGC != 0 ]; do
       shift
       ARGC=`expr $ARGC - 1`
       ;;
-   -env)
-      WHICH="env"
-      ;;
    -init)
       WHICH="init"
       ;;
@@ -1010,14 +1039,16 @@ while [ $ARGC != 0 ]; do
       shift
       ARGC=`expr $ARGC - 1`
       ;;
-env) 
-    echo $CALOCALTOP
-#    SGE_CERTFILE=$CALOCALTOP/userkeys/$ADMINUSER/cert.pem
-#    SGE_KEYFILE=$CALOCALTOP/userkeys/$ADMINUSER/key.pem
-#    export SGE_KEYFILE SGE_CERTFILE
-#    echo $SGE_CERTFILE $SGE_KEYFILE
-    RET=$?
-    ;;
+   -user)
+      WHICH="oneuser"
+      if [ $ARGC -lt 2 ]; then
+         $INFOTEXT "Error: -user needs argument"
+         ErrUsage
+      fi
+      user=$2
+      shift
+      ARGC=`expr $ARGC - 1`
+      ;;
    -renew)
       if [ $ARGC -lt 2 ]; then
          $INFOTEXT "Error: -renew needs argument"
@@ -1093,6 +1124,9 @@ copy)
 usercert) 
     MakeUserCerts $userfile
     ;;
+oneuser)
+    MakeUserCert "$user"
+    ;;
 verify) 
     $VERIFY -CAfile $CATOP/$CACERT $newcert
     RET=$?
@@ -1123,7 +1157,7 @@ pkcs12)
     RET=$?
     ;;
 version)
-    echo "sge_ca 6.0s2"
+    echo "sge_ca 6.0u7"
     ;;
 dumpusers)
     DumpUsers

@@ -93,6 +93,7 @@ SHELL_NAME="ssh"
 COPY_COMMAND="scp"
 EXEC_HOST_LIST="undef"
 CONFIG_FILE="undef"
+STDOUT2LOG="0"
 
 SGE_NOMSG="undef"
 
@@ -532,6 +533,7 @@ if [ "$EXECD" = "install" -a "$UPDATE" != "true" ]; then
       fi
 
  fi
+ MoveLog
  exit 0 
 fi
 
@@ -562,9 +564,7 @@ if [ "$EXECD" = "uninstall" ]; then
    fi
    FetchHostname
    
-   if [ $AUTO = "true" ]; then
-      MoveLog
-   fi
+   MoveLog
    
    if [ $QMASTER != "uninstall" ]; then 
       exit 0
@@ -617,6 +617,7 @@ if [ $QMASTER = "uninstall" ]; then
 
    . $SGE_ROOT/$SGE_CELL/common/settings.sh
    RemoveQmaster
+   MoveLog
 fi
 
 
@@ -811,6 +812,7 @@ fi
 
 if [ $BACKUP = "true" ]; then
    BackupConfig
+   MoveLog
 fi
 
 if [ $RESTORE = "true" ]; then
@@ -898,9 +900,4 @@ if [ $UPDATEDB = "true" ]; then
    $CLEAR
    UpgradeDB
 fi
-
-if [ "$AUTO" = true ]; then
-   MoveLog
-fi
-
 exit 0

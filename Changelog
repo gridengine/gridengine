@@ -1,3 +1,9 @@
+MD-2005-11-14-0: Enhancem:  - creating user cert for windows administrator
+                            - enhanced the autoinstall log file moving
+                            - enhanced the stdout redirection for autoinstall
+                 Changed:   install_modules
+                 Review:    AA, HP
+
 RD-2005-11-14-0: Bugfix:    qconf -ae hostname segfaults
                  Changed:   qconf
                  Bugtraq:   6349608

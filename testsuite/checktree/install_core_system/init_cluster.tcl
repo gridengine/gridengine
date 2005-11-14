@@ -33,7 +33,14 @@ proc kill_running_system {} {
    global CHECK_OUTPUT CORE_INSTALLED
    global check_use_installed_system
  
-   
+   set result [check_all_system_times]
+   puts $CHECK_OUTPUT "check_all_system_times returned $result"
+   if { $result != 0 } {
+      add_proc_error "kill_running_system" -2 "skipping install_core_system"
+      set_error 0 "ok"
+      return
+   }
+
    set CORE_INSTALLED ""
    write_install_list
 

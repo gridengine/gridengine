@@ -125,6 +125,77 @@ proc setup_qping_dump { log_array  } {
    }
 }
 
+
+#****** remote_procedures/check_all_system_times() **********************************
+#  NAME
+#     check_all_system_times() -- check clock synchronity on each cluster deamon host
+#
+#  SYNOPSIS
+#     check_all_system_times {} 
+#
+#  FUNCTION
+#     If the sytem time difference is larger than +/-10 seconds from qmaster time
+#     the function will fail
+#  
+#  RESULT
+#     0 on success, 1 on error
+#************************************************************************************
+proc check_all_system_times {} {
+   global CHECK_USER CHECK_OUTPUT ts_config CHECK_SCRIPT_FILE_DIR
+   set host_list {}
+   set return_value 0
+   foreach host $ts_config(execd_hosts) {
+      lappend host_list $host
+   }
+   foreach host $ts_config(shadowd_hosts) {
+      if { [string compare $host "none"] != 0 } {
+         if { [lsearch $host_list $host] == -1 } {
+            lappend host_list $host
+         }
+      }
+   }
+   foreach host $ts_config(submit_only_hosts) {
+      if { [string compare $host "none"] != 0 } {
+         if { [lsearch $host_list $host] == -1 } {
+            lappend host_list $host
+         }
+      }
+   }
+   if { [lsearch $host_list $ts_config(master_host)] == -1 } {
+      lappend host_list $ts_config(master_host)
+   }
+
+   foreach host $host_list {
+      puts $CHECK_OUTPUT "test connection to $host ..."
+      set result [string trim [start_remote_prog $host $CHECK_USER "echo" "hallo"]]
+      puts $CHECK_OUTPUT $result
+   }
+
+   set test_start [timestamp]
+   foreach host $host_list {
+      set tcl_bin [ get_binary_path $host "expect"]
+      puts $CHECK_OUTPUT "test remote system time on host $host ..."
+      set result [string trim [start_remote_prog $host $CHECK_USER $tcl_bin "-c 'puts \"current time is \[timestamp\]\"'"]]
+      puts $CHECK_OUTPUT $result
+      set time($host) [get_string_value_between "current time is" -1 $result]
+      # fix remote execution time difference
+      set time($host) [expr ( $time($host) - [expr ( [timestamp] - $test_start ) ] )] 
+   }
+
+   set reverence_time $time($ts_config(master_host))
+   foreach host $host_list {
+      set diff [expr ( $reverence_time - $time($host) )]
+      puts $CHECK_OUTPUT "host $host has a time difference of $diff seconds compared to host $ts_config(master_host)"
+
+      if { $diff > 10 || $diff < -10 } {
+         add_proc_error "check_all_system_times" -2 "host $host has a time difference of $diff seconds compared to host $ts_config(master_host)"
+         set return_value 1
+      }
+
+   }
+   return $return_value
+}
+
 #****** remote_procedures/get_qping_dump_output() ******************************
 #  NAME
 #     get_qping_dump_output() -- get qping dump output

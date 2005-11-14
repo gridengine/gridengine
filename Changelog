@@ -1,3 +1,8 @@
+CR-2005-11-14-0: Testsuite: new procedure check_all_system_times():
+                               test sytem time on each cluster host before
+                               starting install_core_system.
+                 Review:    RH
+
 DT-2005-11-11-0: Testsuite: o Added missing variable to Settings
                  Bug:       o Fixed problem with CR-2005-11-10-0
                  Changed:   jUnit, commlib

@@ -85,7 +85,7 @@ set check_root_access_needs "yes"
 set check_init_level_procedure "Autoinstall_test_init_level"
 
 # define test's name and run level descriptions
-set check_name            "Autoinstall_test"
+set check_name            "Issue_1330"
 set check_category        "COMPATIBILITY SYSTEM VERIFIED"
 set check_highest_level  0 
 set check_description(0)  "This test installs sge using the automatic installation"

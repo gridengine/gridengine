@@ -651,7 +651,9 @@ proc setup_execd_conf {} {
            "rlogin_daemon" { continue }
            "xterm" { continue }
            "execd_spool_dir" { 
-              set spool_dir_found 1
+              if { [string compare $have_exec_spool_dir $tmp_config(execd_spool_dir)] == 0 } {
+                  set spool_dir_found 1
+              }
               if { $spool_dir == 0 } {
                  lappend removed $elem
               }

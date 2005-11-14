@@ -1,3 +1,7 @@
+RD-2005-11-14-0: Testsuite: - fixed autoinstallation spool dirs
+                            - fixed tests 1330, 1451, 1803 
+                 Review:    CR
+
 CR-2005-11-14-0: Testsuite: new procedure check_all_system_times():
                                test sytem time on each cluster host before
                                starting install_core_system.

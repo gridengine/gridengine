@@ -152,6 +152,72 @@ proc install_qmaster {} {
 
 }
 
+proc write_autoinst_config { filename host { do_cleanup 1 } } {
+
+   global ts_config CHECK_CORE_MASTER CHECK_USER
+
+   set execd_port [expr $ts_config(commd_port) + 1]
+   set gid_range [get_gid_range $CHECK_USER $ts_config(commd_port)]
+
+   if { $ts_config(bdb_dir) == "none" } {
+      set db_dir [get_local_spool_dir $CHECK_CORE_MASTER spooldb 0 ]
+   } else {
+      set db_dir $ts_config(bdb_dir)
+   }
+
+   set fdo [open $filename w]
+
+   puts $fdo "SGE_ROOT=\"$ts_config(product_root)\""
+   puts $fdo "SGE_QMASTER_PORT=\"$ts_config(commd_port)\""
+   puts $fdo "SGE_EXECD_PORT=\"$execd_port\""
+   puts $fdo "CELL_NAME=\"$ts_config(cell)\""
+   puts $fdo "ADMIN_USER=\"$CHECK_USER\""
+   set spooldir [get_local_spool_dir $host qmaster $do_cleanup ]
+   if { $spooldir != "" } {
+      puts $fdo "QMASTER_SPOOL_DIR=\"$spooldir\""
+   } else {
+      puts $fdo "QMASTER_SPOOL_DIR=\"$ts_config(product_root)/$ts_host_config(cell)/spool/qmaster\""
+   }
+   puts $fdo "EXECD_SPOOL_DIR=\"$ts_config(product_root)/$ts_config(cell)/spool/\""
+   puts $fdo "GID_RANGE=\"$gid_range\""
+   puts $fdo "SPOOLING_METHOD=\"$ts_config(spooling_method)\""
+   set bdb_server [$ts_config(bdb_server)]
+   puts $fdo "DB_SPOOLING_SERVER=\"$bdb_server\""
+   puts $fdo "DB_SPOOLING_DIR=\"$db_dir\""
+   puts $fdo "ADMIN_HOST_LIST=\"$ts_config(execd_hosts)\""
+   puts $fdo "SUBMIT_HOST_LIST=\"$ts_config(execd_hosts) $ts_config(submit_only_hosts)\""
+   puts $fdo "EXEC_HOST_LIST=\"$ts_config(execd_hosts)\""
+   set spooldir [get_local_spool_dir $host execd 0 ]
+   if { $spooldir != "" } {
+      puts $fdo "EXECD_SPOOL_DIR_LOCAL=\"$spooldir\""
+   } else {
+      puts $fdo "EXECD_SPOOL_DIR_LOCAL=\"$ts_config(product_root)/$ts_host_config(cell)/spool/execd/$host\""
+   }
+   puts $fdo "HOSTNAME_RESOLVING=\"true\""
+   puts $fdo "SHELL_NAME=\"rsh\""
+   puts $fdo "COPY_COMMAND=\"rcp\""
+   puts $fdo "DEFAULT_DOMAIN=\"none\""
+   puts $fdo "ADMIN_MAIL=\"$ts_config(report_mail_to)\""
+   puts $fdo "ADD_TO_RC=\"false\""
+   puts $fdo "SET_FILE_PERMS=\"true\""
+   puts $fdo "RESCHEDULE_JOBS=\"wait\""
+   puts $fdo "SCHEDD_CONF=\"1\""
+   puts $fdo "SHADOW_HOST=\"$ts_config(shadowd_hosts)\""
+   puts $fdo "EXEC_HOST_LIST_RM=\"$ts_config(execd_hosts)\""
+   puts $fdo "REMOVE_RC=\"false\""
+   puts $fdo "WINDOWS_SUPPORT=\"false\""
+   puts $fdo "WIN_ADMIN_NAME=\"Administrator\""
+   puts $fdo "CSP_RECREATE=\"true\""
+   puts $fdo "CSP_COPY_CERTS=\"true\""
+   puts $fdo "CSP_COUNTRY_CODE=\"DE\""
+   puts $fdo "CSP_STATE=\"Germany\""
+   puts $fdo "CSP_LOCATION=\"Building\""
+   puts $fdo "CSP_ORGA=\"Devel\""
+   puts $fdo "CSP_ORGA_UNIT=\"Software\""
+   puts $fdo "CSP_MAIL_ADRESS=\"$ts_config(report_mail_to)\""
+   close $fdo
+}
+
 #                                                             max. column:     |
 #****** install_core_system/create_autoinst_config() ******
 # 
@@ -190,15 +256,6 @@ proc create_autoinst_config {} {
    global CHECK_DEBUG_LEVEL CHECK_QMASTER_INSTALL_OPTIONS 
    global CHECK_PROTOCOL_DIR
 
-   set execd_port [expr $ts_config(commd_port) + 1]
-   set gid_range [get_gid_range $CHECK_USER $ts_config(commd_port)]
-
-   if { $ts_config(bdb_dir) == "none" } {
-      set db_dir [get_local_spool_dir $CHECK_CORE_MASTER spooldb 0 ]
-   } else {
-      set db_dir $ts_config(bdb_dir)
-   }
-
    set_error "0" "inst_sge - no errors"
 
    if { [file isfile "$ts_config(product_root)/autoinst_config.conf"] == 1} {
@@ -206,47 +263,7 @@ proc create_autoinst_config {} {
    }
 
    puts $CHECK_OUTPUT "creating automatic install config file ..."
-   set fdo [open $ts_config(product_root)/autoinst_config.conf w]
-
-   puts $fdo "SGE_ROOT=\"$ts_config(product_root)\""
-   puts $fdo "SGE_QMASTER_PORT=\"$ts_config(commd_port)\""
-   puts $fdo "SGE_EXECD_PORT=\"$execd_port\""
-   puts $fdo "CELL_NAME=\"$ts_config(cell)\""
-   puts $fdo "ADMIN_USER=\"$CHECK_USER\""
-   puts $fdo "QMASTER_SPOOL_DIR=\"$ts_config(product_root)/$ts_config(cell)/spool/qmaster\""
-   puts $fdo "EXECD_SPOOL_DIR=\"$ts_config(product_root)/$ts_config(cell)/spool/\""
-   puts $fdo "GID_RANGE=\"$gid_range\""
-   puts $fdo "SPOOLING_METHOD=\"$ts_config(spooling_method)\""
-   puts $fdo "DB_SPOOLING_SERVER=\"none\""
-   puts $fdo "DB_SPOOLING_DIR=\"$db_dir\""
-   puts $fdo "ADMIN_HOST_LIST=\"$ts_config(execd_hosts)\""
-   puts $fdo "SUBMIT_HOST_LIST=\"$ts_config(execd_hosts) $ts_config(submit_only_hosts)\""
-   puts $fdo "EXEC_HOST_LIST=\"$ts_config(execd_hosts)\""
-   puts $fdo "EXECD_SPOOL_DIR_LOCAL=\"/usr/local/testsuite/$ts_config(commd_port)/execd\""
-   puts $fdo "HOSTNAME_RESOLVING=\"true\""
-   puts $fdo "SHELL_NAME=\"rsh\""
-   puts $fdo "COPY_COMMAND=\"rcp\""
-   puts $fdo "DEFAULT_DOMAIN=\"none\""
-   puts $fdo "ADMIN_MAIL=\"$ts_config(report_mail_to)\""
-   puts $fdo "ADD_TO_RC=\"false\""
-   puts $fdo "SET_FILE_PERMS=\"true\""
-   puts $fdo "RESCHEDULE_JOBS=\"wait\""
-   puts $fdo "SCHEDD_CONF=\"1\""
-   puts $fdo "SHADOW_HOST=\"$ts_config(shadowd_hosts)\""
-   puts $fdo "EXEC_HOST_LIST_RM=\"$ts_config(execd_hosts)\""
-   puts $fdo "REMOVE_RC=\"false\""
-   puts $fdo "WINDOWS_SUPPORT=\"false\""
-   puts $fdo "WIN_ADMIN_NAME=\"Administrator\""
-   puts $fdo "CSP_RECREATE=\"true\""
-   puts $fdo "CSP_COPY_CERTS=\"true\""
-   puts $fdo "CSP_COUNTRY_CODE=\"DE\""
-   puts $fdo "CSP_STATE=\"Germany\""
-   puts $fdo "CSP_LOCATION=\"Building\""
-   puts $fdo "CSP_ORGA=\"Devel\""
-   puts $fdo "CSP_ORGA_UNIT=\"Software\""
-   puts $fdo "CSP_MAIL_ADRESS=\"$ts_config(report_mail_to)\""
-   close $fdo
-
+   write_autoinst_config  $ts_config(product_root)/autoinst_config.conf $ts_config(master_host) 1
    puts $CHECK_OUTPUT "automatic install config file successfully created ..."
 
 } 

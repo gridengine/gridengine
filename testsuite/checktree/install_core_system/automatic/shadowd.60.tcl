@@ -91,14 +91,9 @@ proc install_shadowd {} {
    foreach shadow_host $CHECK_CORE_SHADOWD {
 
       puts $CHECK_OUTPUT "installing shadowd on host $shadow_host ($ts_config(product_type) system) ..."
-      if {[lsearch $CHECK_CORE_SHADOWD $shadow_host] == -1 } {
-         set_error "-1" "inst_sge -sm - host $shadow_host is not in shadowd list"
-         return 
-      }
-#      wait_for_remote_file $shadow_host $CHECK_USER "$ts_config(product_root)/$ts_config(cell)/common/configuration"
       if { $check_use_installed_system != 0 } {
-         set_error "0" "install_shadowd - no need to install shadowd on hosts \"$CHECK_CORE_SHADOWD\" - noinst parameter is set"
-         puts "no need to install shadowd on hosts \"$CHECK_CORE_SHADOWD\", noinst parameter is set"
+         set_error "0" "install_shadowd - no need to install shadowd on host \"$shadow_host\" - noinst parameter is set"
+         puts "no need to install shadowd on host \"$shadow_host\", noinst parameter is set"
          if {[startup_shadowd $shadow_host] == 0 } {
             lappend CORE_INSTALLED $shadow_host
             write_install_list
@@ -115,7 +110,6 @@ proc install_shadowd {} {
       }
 
       set remote_arch [resolve_arch $shadow_host]    
- 
 
       cd "$ts_config(product_root)"
 
@@ -124,10 +118,10 @@ proc install_shadowd {} {
       set exit_val 0
   
       if { $CHECK_ADMIN_USER_SYSTEM == 0 } { 
-         set output [start_remote_prog "$CHECK_CORE_SHADOWD" "root"  "cd" "$$prod_type_var;./inst_sge -sm -auto $ts_config(product_root)/autoinst_config.conf" "exit_val" $my_timeout ]
+         set output [start_remote_prog "$shadow_host" "root"  "cd" "$$prod_type_var;./inst_sge -sm -auto $ts_config(product_root)/autoinst_config.conf" "exit_val" $my_timeout ]
       } else {
          puts $CHECK_OUTPUT "--> install as user $CHECK_USER <--" 
-         set output [start_remote_prog "$CHECK_CORE_SHADOWD" "$CHECK_USER"  "cd" "$$prod_type_var;./inst_sge -sm -auto $ts_config(product_root)/autoinst_config.conf" "exit_val" $my_timeout ]
+         set output [start_remote_prog "$shadow_host" "$CHECK_USER"  "cd" "$$prod_type_var;./inst_sge -sm -auto $ts_config(product_root)/autoinst_config.conf" "exit_val" $my_timeout ]
       }
 
 
@@ -141,7 +135,7 @@ proc install_shadowd {} {
 
       if { $exit_val == 0 } {
        set_error "0" "ok"
-       lappend CORE_INSTALLED $CHECK_CORE_SHADOWD
+       lappend CORE_INSTALLED $shadow_host
        write_install_list
        return
       } else { 

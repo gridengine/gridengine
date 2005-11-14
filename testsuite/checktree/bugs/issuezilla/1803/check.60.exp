@@ -160,7 +160,7 @@ proc issue_1803_test {} {
 
    set starter_method_list {}
    lappend starter_method_list "none"
-   lappend starter_method_list "/bin/env"
+   lappend starter_method_list "/usr/bin/env"
 
    foreach starter_method $starter_method_list {
 

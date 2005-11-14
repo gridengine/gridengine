@@ -155,13 +155,16 @@ proc install_execd {} {
       set prod_type_var "SGE_ROOT"
       set my_timeout 500
       set exit_val 0
+      set autoconfig_file $ts_config(product_root)/autoinst_config_$exec_host.conf
+     
+      write_autoinst_config $autoconfig_file $exec_host 0ß
   
       if { $CHECK_ADMIN_USER_SYSTEM == 0 } { 
-         set output [start_remote_prog "$exec_host" "root"  "cd" "$$prod_type_var;./install_execd $CHECK_EXECD_INSTALL_OPTIONS $feature_install_options -auto $ts_config(product_root)/autoinst_config.conf -noremote" "exit_val" ]
+         set output [start_remote_prog "$exec_host" "root"  "cd" "$$prod_type_var;./install_execd $CHECK_EXECD_INSTALL_OPTIONS $feature_install_options -auto $autoconfig_file -noremote" "exit_val" ]
 
       } else {
          puts $CHECK_OUTPUT "--> install as user $CHECK_USER <--" 
-         set output [start_remote_prog "$exec_host" "$CHECK_USER"  "cd" "$$prod_type_var;./install_execd $CHECK_EXECD_INSTALL_OPTIONS $feature_install_options -auto $ts_config(product_root)/autoinst_config.conf -noremote" "exit_val" ]
+         set output [start_remote_prog "$exec_host" "$CHECK_USER"  "cd" "$$prod_type_var;./install_execd $CHECK_EXECD_INSTALL_OPTIONS $feature_install_options -auto $autoconfig_file -noremote" "exit_val" ]
       }
 
       log_user 1

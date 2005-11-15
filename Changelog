@@ -1,3 +1,6 @@
+HP-2005-11-15-0: Bugfix:    Fixed broken build
+                 Changed:   libs/cull/Makefile
+
 CR-2005-11-15-0: Bugfix:    a second started schedd/execd daemons may not stop
                             if started when qmaster is down
                             (enhancement for CR-2005-11-14-1)

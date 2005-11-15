@@ -911,15 +911,24 @@ proc qconf_segfault {} {
    global ts_config CHECK_OUTPUT CHECK_ARCH CHECK_HOST CHECK_USER
 
    set output [start_remote_prog $CHECK_HOST $CHECK_USER "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-as \"\""]
-   if { [string match "*egmentation fault*" $output] == 1 } {
+   if { [string match "*egmentation ?ault*" $output] == 1 } {
       puts $CHECK_OUTPUT $output
       add_proc_error "qconf_segfault" -1 "qconf -as \"\" failed - see Issue: 1732"
    }
    set output [start_remote_prog $CHECK_HOST $CHECK_USER "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-ah \"\""]
-   if { [string match "*egmentation fault*" $output] == 1 } {
+   if { [string match "*egmentation ?ault*" $output] == 1 } {
       puts $CHECK_OUTPUT $output
       add_proc_error "qconf_segfault" -1 "qconf -ah \"\" failed - see Issue: 1732"
    }
+
+   set output [start_remote_prog $CHECK_HOST $CHECK_USER "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-ae localhost"]
+   if { [string match "*egmentation ?ault*" $output] == 1 } {
+      puts $CHECK_OUTPUT $output
+      add_proc_error "qconf_segfault" -1 "qconf -ah \"\" failed - see Issue: 1884"
+   } else {
+      set output [start_remote_prog $CHECK_HOST $CHECK_USER "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-de localhost"]
+   }
+
 
    set_error 0 "ok"
 }

@@ -456,7 +456,7 @@ static int sge_ck_qmaster(const char *former_master_host)
    }
    lFreeList(&alp);
 
-   if (success && !lp) {
+   if (success && (lp == NULL || (lGetNumberOfElem(lp) == 0))) {
       ERROR((SGE_EVENT, MSG_SCHEDD_USERXMUSTBEMANAGERFORSCHEDDULING_S ,
              uti_state_get_user_name()));
       lFreeList(&lp);
@@ -489,7 +489,7 @@ static int sge_ck_qmaster(const char *former_master_host)
 
    lFreeList(&alp);
 
-   if (success && !lp) {
+   if (success && (lp == NULL || (lGetNumberOfElem(lp) == 0))) {
       ERROR((SGE_EVENT, MSG_SCHEDD_HOSTXMUSTBEADMINHOSTFORSCHEDDULING_S ,
              uti_state_get_qualified_hostname()));
       DEXIT;

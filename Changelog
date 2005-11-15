@@ -1,13 +1,21 @@
+CR-2005-11-15-0: Bugfix:    a second started schedd/execd daemons may not stop
+                            if started when qmaster is down
+                            (enhancement for CR-2005-11-14-1)
+                 Bugtraq:   6349818
+                 Issue:     1891
+                 Review:    RD
+                 Changed:   commlib, gdi, schedd, execd, qping 
+
 CR-2005-11-14-1: Bugfix:    a second started schedd/execd daemons may not stop
                             if started when qmaster is down
                  Bugtraq:   6349818
                  Issue:     1891
                  Review:    RD
-                 Changed:   commlib, gd, schedd, execd, qping 
+                 Changed:   commlib, gdi, schedd, execd, qping 
 
 CR-2005-11-14-0: Cleanup:   fixed broken build (sge_schedd.c)
 
-MD-2005-11-14-0: Enhancem:  - creating user cert for windows administrator
+MD-2005-11-14-0: Enhancem:  - creating user cert for windows administrfor ator
                             - enhanced the autoinstall log file moving
                             - enhanced the stdout redirection for autoinstall
                  Changed:   install_modules

@@ -64,15 +64,19 @@ static void general_communication_error(const cl_application_error_list_elem_t* 
  * restored to false again 
  */
 typedef struct sge_gdi_com_error_type {
-   int  com_error;               /* current commlib error */
-   int  com_last_error;          /* last logged commlib error */
-   bool com_access_denied;       /* set when commlib reports CL_RETVAL_ACCESS_DENIED */
-   bool com_endpoint_not_unique; /* set when commlib reports CL_RETVAL_ENDPOINT_NOT_UNIQUE */
+   int  com_error;                        /* current commlib error */
+   int  com_last_error;                   /* last logged commlib error */
+   bool com_access_denied;                /* set when commlib reports CL_RETVAL_ACCESS_DENIED */
+   int  com_access_denied_counter;        /* counts access denied errors (TODO: workaround for BT: 6350264, IZ: 1893) */
+   unsigned long com_access_denied_time; /* timeout for counts access denied errors (TODO: workaround for BT: 6350264, IZ: 1893) */
+   bool com_endpoint_not_unique;          /* set when commlib reports CL_RETVAL_ENDPOINT_NOT_UNIQUE */
+   int  com_endpoint_not_unique_counter;  /* counts access denied errors (TODO: workaround for BT: 6350264, IZ: 1893) */
+   unsigned long com_endpoint_not_unique_time; /* timeout for counts access denied errors (TODO: workaround for BT: 6350264, IZ: 1893) */
 } sge_gdi_com_error_t;
 static sge_gdi_com_error_t sge_gdi_communication_error = {CL_RETVAL_OK,
                                                           CL_RETVAL_OK,
-                                                          false,
-                                                          false};
+                                                          false, 0, 0,
+                                                          false, 0, 0};
 
 
 #ifdef DEBUG_CLIENT_SUPPORT
@@ -262,6 +266,8 @@ static int gdi_log_flush_func(cl_raw_list_t* list_p) {
 static void general_communication_error(const cl_application_error_list_elem_t* commlib_error) {
    DENTER(TOP_LAYER, "general_communication_error");
    if (commlib_error != NULL) {
+      struct timeval now;
+      unsigned long time_diff = 0;
 
       sge_mutex_lock("general_communication_error_mutex",
                      SGE_FUNC, __LINE__, &general_communication_error_mutex);  
@@ -271,11 +277,44 @@ static void general_communication_error(const cl_application_error_list_elem_t* 
 
       switch (commlib_error->cl_error) {
          case CL_RETVAL_ACCESS_DENIED: {
-            sge_gdi_communication_error.com_access_denied = true;
+            if (sge_gdi_communication_error.com_access_denied == false) {
+               /* counts access denied errors (TODO: workaround for BT: 6350264, IZ: 1893) */
+               /* increment counter only once per second and allow max CL_DEFINE_READ_TIMEOUT + 2 access denied */
+               gettimeofday(&now,NULL);
+               if (sge_gdi_communication_error.com_access_denied_time < now.tv_sec) {
+                  if (sge_gdi_communication_error.com_access_denied_time == 0) {
+                     time_diff = 1;
+                  } else {
+                     time_diff = now.tv_sec - sge_gdi_communication_error.com_access_denied_time;
+                  }
+                  sge_gdi_communication_error.com_access_denied_counter += time_diff;
+                  if (sge_gdi_communication_error.com_access_denied_counter > CL_DEFINE_READ_TIMEOUT + 2) {
+                     sge_gdi_communication_error.com_access_denied = true;
+                  }
+                  sge_gdi_communication_error.com_access_denied_time = now.tv_sec;
+               }
+            }
             break;
          }
          case CL_RETVAL_ENDPOINT_NOT_UNIQUE: {
-            sge_gdi_communication_error.com_endpoint_not_unique = true;
+            if (sge_gdi_communication_error.com_endpoint_not_unique == false) {
+               /* counts endpoint not unique errors (TODO: workaround for BT: 6350264, IZ: 1893) */
+               /* increment counter only once per second and allow max CL_DEFINE_READ_TIMEOUT + 2 endpoint not unique */
+               DPRINTF(("got endpint not unique"));
+               gettimeofday(&now,NULL);
+               if (sge_gdi_communication_error.com_endpoint_not_unique_time < now.tv_sec) {
+                  if (sge_gdi_communication_error.com_endpoint_not_unique_time == 0) {
+                     time_diff = 1;
+                  } else {
+                     time_diff = now.tv_sec - sge_gdi_communication_error.com_endpoint_not_unique_time;
+                  }
+                  sge_gdi_communication_error.com_endpoint_not_unique_counter += time_diff;
+                  if (sge_gdi_communication_error.com_endpoint_not_unique_counter > CL_DEFINE_READ_TIMEOUT + 2) {
+                     sge_gdi_communication_error.com_endpoint_not_unique = true;
+                  }
+                  sge_gdi_communication_error.com_endpoint_not_unique_time = now.tv_sec;
+               }
+            }
             break;
          }
          default: {

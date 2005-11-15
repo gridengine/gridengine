@@ -490,7 +490,10 @@ proc start_remote_prog { hostname
    global CHECK_OUTPUT CHECK_MAIN_RESULTS_DIR CHECK_DEBUG_LEVEL 
    global open_spawn_buffer CHECK_HOST
    upvar $exit_var back_exit_state
-   upvar $envlist users_env
+
+   if {$envlist != ""} {
+      upvar $envlist users_env
+   }
    
    set back_exit_state -1
    set tmp_exit_status_string ""
@@ -1036,8 +1039,11 @@ proc open_remote_spawn_process { hostname
   global CHECK_MAIN_RESULTS_DIR CHECK_EXPECT_MATCH_MAX_BUFFER
   global rlogin_in_use_buffer
 
-  upvar $envlist users_env
   upvar 1 error_info error_info
+
+   if {$envlist != ""} {
+      upvar $envlist users_env
+   }
 
   uplevel 1 { set remote_spawn_nr_of_shells 0 }
 
@@ -2177,8 +2183,6 @@ proc close_spawn_process { id { check_exit_state 0 } {my_uplevel 1}} {
 
    global CHECK_OUTPUT open_spawn_buffer CHECK_DEBUG_LEVEL rlogin_in_use_buffer
   
-#   catch { upvar $my_uplevel remote_spawn_nr_of_shells nr_of_shells }
-
    set sp_id  [lindex $id 1]
    set sp_pid [lindex $id 0]
    get_spawn_id_rlogin_session $sp_id con_data 1

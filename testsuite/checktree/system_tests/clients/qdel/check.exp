@@ -525,118 +525,98 @@ proc qdel_iz_125_case_2 { { user "" } { additional_job_args "" }} {
    sleep 5
 
    set result0 [ start_remote_prog $hostname $CHECK_USER $qdel_program  $job_list ]
-   #puts $CHECK_OUTPUT "result0 is $result0"
-   #puts $CHECK_OUTPUT "deleted jobs list is  $job_list"
-
 
    # Check that we get a response
-
    set string1 [translate $hostname 0 1 0 "deleted job "]
    set string2 [translate $hostname 0 1 0 "job "]
    set string3 [translate $hostname 0 1 0 "does not exist "]
    set string4 [translate $hostname 0 1 0 "registered the job "]
    set string5 [translate $hostname 0 1 0 "for deletion "]
 
+   # in case of errors, break
+   set do_continue 1
+
    if { (  [string first [concat "$string1 " [lindex $job_list 0] ] $result0] >= 0 ) ||
    (  [string first [concat "$string2 " \"[lindex $job_list 0]\" "$string3" ] $result0] >= 0 ) ||
    (  [string first [concat "$string4 " [lindex $job_list 0] "$string5" ] $result0] >= 0 ) } {
 
-  	   set_error 0 "ok"
+  	   puts $CHECK_OUTPUT "first delete OK"
    } else {
-	   set_error -1 "First delete of case 2), IZ 125 failed"
-      puts $CHECK_OUTPUT "result is $result0" 
+	   add_proc_error "qdel_iz_125_case_2" -1 "First delete of case 2), IZ 125 failed:\n$result0"
+      set do_continue 0
    }
 
    # Delete it 2x
-
    set result00 [ start_remote_prog $hostname $CHECK_USER $qdel_program $job_list ]
-   #puts $CHECK_OUTPUT "result00 is $result00"
-   #puts $CHECK_OUTPUT "deleted jobs list is  $job_list"
 
    # Check that we get a response
-
    # qdel always has to return some text.
    # if result00 is empty, we hit IZ 1860
    if {[string trim $result00] == ""} {
-      add_proc_error "qdel_iz_125_case_2" "-1" "qdel didn't return any text - IZ 1860"
+      add_proc_error "qdel_iz_125_case_2" "-3" "qdel didn't return any text - this is IZ 1860"
+      set do_continue 0
    }
 
-   if { ( [string first [concat "$string1" \"[lindex $job_list 0]]\" $result00] >= 0 ) ||
-   ( [string first [concat "$string2" \"[lindex $job_list 0]\" "$string3" ] $result00] >= 0 ) ||
-   ( [string first [concat "$string4" [lindex $job_list 0] "$string5" ] $result00] >= 0 ) } {
+   if ($do_continue) {
+      if { ( [string first [concat "$string1" \"[lindex $job_list 0]]\" $result00] >= 0 ) ||
+      ( [string first [concat "$string2" \"[lindex $job_list 0]\" "$string3" ] $result00] >= 0 ) ||
+      ( [string first [concat "$string4" [lindex $job_list 0] "$string5" ] $result00] >= 0 ) } {
 
-  	   set_error 0 "ok"
-   } else {
-        set_error -1  "Second delete of case 2), IZ 125 failed"
-        puts $CHECK_OUTPUT "My string is [concat "$string2 " \"[lindex $job_list 0]\" "$string3" ]"
-        puts $CHECK_OUTPUT "result is $result00"
+         puts $CHECK_OUTPUT "second delete OK"
+      } else {
+         add_proc_error "qdel_iz_125_case_2" -1 "Second delete of case 2), IZ 125 failed:\n$result00"
+         set do_continue 0
+      }
    }
 
-   #puts $CHECK_OUTPUT "arg1 is [concat "deleted job" \"[lindex $job_list 0]]\" "
-   #puts $CHECK_OUTPUT "arg2 is [concat "job" \"[lindex $job_list 0]\" "does not exist" ]"
+   if ($do_continue) {
+      # Delete it again  (3x)
+      set result000 [ start_remote_prog $hostname $CHECK_USER $qdel_program $job_list ]
 
-
-   # Delete it again  (3x)
-
-   set result000 [ start_remote_prog $hostname $CHECK_USER $qdel_program $job_list ]
-   #puts $CHECK_OUTPUT "result000 is $result000"
-   #puts $CHECK_OUTPUT "deleted jobs list is  $job_list"
-
-   # Check that we get a response
-
-   if { ( [string first [concat "$string1"  \"[lindex $job_list 0]]\" $result000] >= 0 ) ||
-   ( [string first [concat "$string2" \"[lindex $job_list 0]\" "$string3" ] $result000] >= 0 ) ||
-   ( [string first [concat "$string4"  [lindex $job_list 0] "$string5" ] $result000] >= 0 ) } {
-
-	set_error 0 "ok"
-   } else {
-        set_error -1 "Third delete of case 2), IZ 125 failed"
-        puts $CHECK_OUTPUT "result is $result000"
+      # Check that we get a response
+      if { ( [string first [concat "$string1"  \"[lindex $job_list 0]]\" $result000] >= 0 ) ||
+      ( [string first [concat "$string2" \"[lindex $job_list 0]\" "$string3" ] $result000] >= 0 ) ||
+      ( [string first [concat "$string4"  [lindex $job_list 0] "$string5" ] $result000] >= 0 ) } {
+         puts $CHECK_OUTPUT "third delete OK"
+      } else {
+         add_proc_error "qdel_iz_125_case_2" -1 "Third delete of case 2), IZ 125 failed:\n$result000"
+         set do_continue 0
+      }
    }
 
+   if ($do_continue) {
+      # Sleep a little
+      sleep 10
+      
+      # Then delete it again! (4x)
+      set result01 [ start_remote_prog $hostname $CHECK_USER $qdel_program $job_list ]
 
-   # Sleep a little
-
-   sleep 10
-	
-   # Then delete it again! (4x)
-
-   set result01 [ start_remote_prog $hostname $CHECK_USER $qdel_program $job_list ]
-   #puts $CHECK_OUTPUT "result01 is $result01"
-   #puts $CHECK_OUTPUT "deleted jobs list is  $job_list"
-
-
-   # Check that we get a response
-
-   if { ( [string first [concat "$string1" \"[lindex $job_list 0]]\" $result01] >= 0 ) ||
-   ( [string first [concat "$string2" \"[lindex $job_list 0]\" "$string3" ] $result01] >= 0 ) ||
-   ( [string first [concat "$string4" [lindex $job_list 0] "$string5" ] $result01] >= 0 ) } {
-
-        set_error 0 "ok"
-   } else {
-        set_error -1 "Fourth delete of case 2), IZ 125 failed"
-        puts $CHECK_OUTPUT "result is $result01"
+      # Check that we get a response
+      if { ( [string first [concat "$string1" \"[lindex $job_list 0]]\" $result01] >= 0 ) ||
+      ( [string first [concat "$string2" \"[lindex $job_list 0]\" "$string3" ] $result01] >= 0 ) ||
+      ( [string first [concat "$string4" [lindex $job_list 0] "$string5" ] $result01] >= 0 ) } {
+         puts $CHECK_OUTPUT "fourth delete OK"
+      } else {
+         add_proc_error "qdel_iz_125_case_2" -1 "Fourth delete of case 2), IZ 125 failed:\n$result01"
+         set do_continue 0
+      }
    }
 
 
-   # And delete again! (5x)
+   if ($do_continue) {
+      # And delete again! (5x)
+      set result011 [ start_remote_prog $hostname $CHECK_USER $qdel_program $job_list ]
 
-   set result011 [ start_remote_prog $hostname $CHECK_USER $qdel_program $job_list ]
-   #puts $CHECK_OUTPUT "result011 is $result011"
-   #puts $CHECK_OUTPUT "deleted jobs list is  $job_list"
-
-
-   # Check that we get a response
-
-   if { ( [string first [concat "$string1" \"[lindex $job_list 0]]\" $result011] >= 0 ) ||
-   ( [string first [concat "$string2" \"[lindex $job_list 0]\" "$string3" ] $result011] >= 0 ) ||
-   ( [string first [concat "$string4"  [lindex $job_list 0] "$string5" ] $result011] >= 0 ) } {
-
-        set_error 0 "ok"
-   } else {
-        set_error -1 "Fifth delete of case 2), IZ 125 failed"
-        puts $CHECK_OUTPUT "result is $result011"
-   } 
+      # Check that we get a response
+      if { ( [string first [concat "$string1" \"[lindex $job_list 0]]\" $result011] >= 0 ) ||
+      ( [string first [concat "$string2" \"[lindex $job_list 0]\" "$string3" ] $result011] >= 0 ) ||
+      ( [string first [concat "$string4"  [lindex $job_list 0] "$string5" ] $result011] >= 0 ) } {
+         puts $CHECK_OUTPUT "fourth delete OK"
+      } else {
+         add_proc_error "qdel_iz_125_case_2" -1 "Fifth delete of case 2), IZ 125 failed:\n$result011"
+         set do_continue 0
+      }
+   }
 
    delete_all_jobs
    set_error 0 "ok"

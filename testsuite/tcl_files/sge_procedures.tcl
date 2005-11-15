@@ -6211,7 +6211,10 @@ proc startup_qmaster { {and_scheduler 1} {env_list ""} {on_host ""} } {
    global CHECK_CORE_MASTER CHECK_ADMIN_USER_SYSTEM CHECK_USER
    global CHECK_SCRIPT_FILE_DIR CHECK_TESTSUITE_ROOT CHECK_DEBUG_LEVEL
    global schedd_debug master_debug CHECK_DISPLAY_OUTPUT CHECK_SGE_DEBUG_LEVEL
-   upvar $env_list envlist
+
+   if {$env_list != ""} {
+      upvar $env_list envlist
+   }
 
    set start_host $CHECK_CORE_MASTER
 

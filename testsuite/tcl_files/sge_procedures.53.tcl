@@ -278,7 +278,10 @@ proc startup_shadowd { hostname {env_list ""} } {
   global ts_config
    global CHECK_OUTPUT
    global CHECK_CORE_MASTER CHECK_ADMIN_USER_SYSTEM CHECK_USER
-   upvar $env_list envlist
+
+   if {$env_list != ""} {
+      upvar $env_list envlist
+   }
 
 
    if { $CHECK_ADMIN_USER_SYSTEM == 0 } {  

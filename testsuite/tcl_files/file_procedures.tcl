@@ -1615,9 +1615,10 @@ proc create_shell_script { scriptfile
    global ts_config
    global CHECK_OUTPUT CHECK_PRODUCT_TYPE CHECK_PRODUCT_ROOT
    global CHECK_DEBUG_LEVEL 
- 
-   upvar $envlist users_env
 
+   if {$envlist != ""} {
+      upvar $envlist users_env
+   }
     
    set_users_environment $host users_env
 
@@ -1698,7 +1699,7 @@ proc create_shell_script { scriptfile
       if { [llength $user_env_names] > 0 } {
          puts $script "# setting users environment variables"
          foreach u_env $user_env_names {
-            set u_val [set users_env($u_env)] 
+            set u_val $users_env($u_env)
             debug_puts "setting $u_env to $u_val"
             puts $script "${u_env}=\"${u_val}\""
             puts $script "export ${u_env}"

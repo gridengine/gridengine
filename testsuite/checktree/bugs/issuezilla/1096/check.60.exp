@@ -108,14 +108,14 @@ proc issue_1096_run  {} {
       puts $CHECK_OUTPUT "host $act_host: qmaster binary: \"$qmaster_binary\""
       set envlist(SGE_QMASTER_PORT) $ts_config(reserved_port)
       set envlist(SGE_TEST_SOCKET_BIND) "1"
-      set output [start_remote_prog $act_host "root" $qmaster_binary "\nsleep 2" prg_exit_state 60 0 "envlist" 1 0 1]
+      set output [start_remote_prog $act_host "root" $qmaster_binary "\nsleep 2" prg_exit_state 60 0 envlist 1 0 1]
       puts $CHECK_OUTPUT $output
       puts $CHECK_OUTPUT "exit state: $prg_exit_state"
 
       puts $CHECK_OUTPUT "try to qping qmaster ..."
       set tries 0
       while { 1 } {
-         set output [start_remote_prog $act_host $CHECK_USER $qping_binary "-info $act_host $ts_config(reserved_port) qmaster 1" prg_exit_state 60 0 "envlist" 1 0 1]
+         set output [start_remote_prog $act_host $CHECK_USER $qping_binary "-info $act_host $ts_config(reserved_port) qmaster 1" prg_exit_state 60 0 envlist 1 0 1]
          puts $CHECK_OUTPUT $output
          puts $CHECK_OUTPUT "exit state: $prg_exit_state"
          incr tries 1

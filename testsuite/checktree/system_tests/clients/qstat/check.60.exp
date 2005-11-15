@@ -104,7 +104,7 @@ proc get_numb_proc {} {
   global CHECK_PRODUCT_ROOT ts_config CHECK_USER
   set result ""
   
-  set check_host [lindex $ts_config(execd_hosts) 0]
+  set check_host [lindex $ts_config(execd_nodes) 0]
   set check_arch [resolve_arch $check_host]
   set loadcheck_binary $ts_config(product_root)/utilbin/$check_arch/loadcheck
   set result [start_remote_prog $check_host $CHECK_USER $loadcheck_binary "" ]
@@ -205,7 +205,7 @@ proc check_core_queues {} {
   global check_errno check_errstr CHECK_PRODUCT_ROOT CHECK_CORE_EXECD CHECK_OUTPUT
   global ts_config CHECK_USER
 
-  set check_host [lindex $ts_config(execd_hosts) 0]
+  set check_host [lindex $ts_config(execd_nodes) 0]
 
   wait_for_load_from_all_queues 300
 

@@ -112,8 +112,6 @@ proc issue_540_check {} {
    }
 
    #third test should pass - We submit a logfile with a ":" inside. This shoud be accepted
-   
-   
    set qsub_arguments "-o :$job_output_file $job_script $job_sleep_time"
    set job_id [submit_job $qsub_arguments 0]
    wait_for_jobstart $job_id $job_name 300

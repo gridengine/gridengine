@@ -3239,18 +3239,21 @@ japi_sge_state_to_drmaa_state(lListElem *job, lList *cqueue_list,
          }
 
          japi_task = lGetSubUlong(japi_job, JJAT_task_id, taskid, JJ_finished_tasks);
-         wait_status = lGetUlong(japi_task, JJAT_stat);
-         DPRINTF(("wait_status("sge_u32"/"sge_u32") = "sge_u32"\n", jobid, taskid, wait_status));
          
-         if (SGE_GET_NEVERRAN(wait_status)) {
-            *remote_ps = DRMAA_PS_FAILED;
-         } else {
-            *remote_ps = DRMAA_PS_DONE;
+         if (japi_task != NULL) {
+            wait_status = lGetUlong(japi_task, JJAT_stat);
+            DPRINTF(("wait_status("sge_u32"/"sge_u32") = "sge_u32"\n", jobid, taskid, wait_status));
+
+            if (SGE_GET_NEVERRAN(wait_status)) {
+               *remote_ps = DRMAA_PS_FAILED;
+            } else {
+               *remote_ps = DRMAA_PS_DONE;
+            }
+
+            JAPI_UNLOCK_JOB_LIST();
+            DEXIT;
+            return DRMAA_ERRNO_SUCCESS;
          }
-         
-         JAPI_UNLOCK_JOB_LIST();
-         DEXIT;
-         return DRMAA_ERRNO_SUCCESS;
       }
       
       if ((japi_job == NULL) || (japi_task == NULL)) {

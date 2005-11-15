@@ -1,5 +1,9 @@
+JG-2005-11-15-1: Testsuite: Fixed start of binaries (start_remote_prog) with
+                            user defined environment.
+                 Review:    CR
+
 CR-2005-11-15-1: Testsuite: Fixed execd startup test
-                 Review:    RD 
+                 Review:    RD
 
 CR-2005-11-15-0: Bugfix:    a second started schedd/execd daemons may not stop
                             if started when qmaster is down
@@ -13,7 +17,7 @@ JG-2005-11-15-0: Testsuite: Fixed invalid use of upvar with empty var name.
                             Fixes and cleanup for checks
                             bugs/issuezilla/1096, system_tests/clients/qdel,
                             system_tests/clients/qstat, 
-                 Review:    CR 
+                 Review:    CR
 
 RD-2005-11-14-0: Bugfix:    qconf -ae hostname segfaults
                  Changed:   qconf

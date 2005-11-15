@@ -520,7 +520,7 @@ proc start_remote_prog { hostname
             set is_ok 1
             break;
          }
-         set output [ start_remote_prog $hostname $user "which" "$exec_command" prg_exit_state $mytimeout 0 $envlist 0 $source_settings_file $set_shared_lib_path]
+         set output [ start_remote_prog $hostname $user "which" "$exec_command" prg_exit_state $mytimeout 0 users_env 0 $source_settings_file $set_shared_lib_path]
          if { $prg_exit_state == 0 } {
             set is_ok 1
             break
@@ -536,7 +536,7 @@ proc start_remote_prog { hostname
                add_proc_error "start_remote_prog" -1 "can't start which command as user $user on host $hostname\nPlease check user environment on that host!\noutput:\n$output\n"
                break
             }
-            set output [ start_remote_prog $hostname $user "test" "-f $exec_command" prg_exit_state $mytimeout 0 $envlist 0 $source_settings_file $set_shared_lib_path]
+            set output [ start_remote_prog $hostname $user "test" "-f $exec_command" prg_exit_state $mytimeout 0 users_env 0 $source_settings_file $set_shared_lib_path]
             if { $prg_exit_state == 0 } {
                set is_ok 1
                break

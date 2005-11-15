@@ -1,3 +1,11 @@
+DT-2005-11-15-2: Bugfix:    o Clarified regex in complex man page
+                            o First pass at improving qconf -purge man entry
+                            o Uncommented -mhgrp in qconf man page
+                            o Fixed help output for qconf -purge
+                 Issue:     1782, 1783, 1872, 1895
+                 Bugtraq:   6350714, N/A, 6347840, 6349351
+                 Changed:   man1, man5, qconf
+
 DT-2005-11-15-1: Testsuite: o Fixed test for IZ1760
                  Changed:   Test for IZ1760
                  Review:    pending

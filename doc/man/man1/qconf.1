@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: qconf.1,v $     Last Update: $Date: 2005/03/30 14:31:36 $     Revision: $Revision: 1.22 $
+.\" $RCSfile: qconf.1,v $     Last Update: $Date: 2005/11/15 22:16:00 $     Revision: $Revision: 1.23 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QCONF 1 "$Date: 2005/03/30 14:31:36 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH QCONF 1 "$Date: 2005/11/15 22:16:00 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 qconf \- xxQS_NAMExx Queue Configuration
 .SH SYNTAX
@@ -772,20 +772,19 @@ upon exit from the editor.
 The format of the execution host configuration is described in
 .M host_conf 5 .
 Requires root or manager privilege.
-.\"
-.\" host group start
-.\" .IP "\fB\-mhgrp group\fP \fI<modify host group configuration>\fP"
-.\" The host group entries for the host group specified in
-.\" .B group
-.\" are retrieved and an editor (either 
-.\" .M vi 1
-.\" or the editor indicated by the EDITOR environment variable) is invoked
-.\" for modifying the host group configuration. By closing the editor,
-.\" the modified data is registered.
-.\" The format of the host group configuration is described in
-.\" .M hostgroup 5 . 
-.\" Requires root or manager privileges.
-.\" host group end
+
+.IP "\fB\-mhgrp group\fP \fI<modify host group configuration>\fP"
+The host group entries for the host group specified in
+.B group
+are retrieved and an editor (either 
+.M vi 1
+or the editor indicated by the EDITOR environment variable) is invoked
+for modifying the host group configuration. By closing the editor,
+the modified data is registered.
+The format of the host group configuration is described in
+.M hostgroup 5 . 
+Requires root or manager privileges.
+
 .IP "\fB\-mp pe_name\fP	\fI<modify PE configuration>\fP"
 Retrieves the current configuration for the specified
 .I parallel environment
@@ -918,10 +917,12 @@ modified data is registered. Requires root or manager privileges.
    \fI<purge attributes>\fP
 .ta 3i
 .br
-Purge the attributes defined in \fBattr_nm\fP from the queue 
-instance defined in \fBqueue_instance\fP. The name of the 
+Delete the values of the attributes defined in \fBattr_nm\fP from the queue 
+instance defined in \fBqueue_instance\fP. The names of the 
 attributes are described in 
 .M queue_conf 1 .
+This operation only works on a single queue instance.  It cannot be
+used on a cluster queue.
 .\"
 .IP "\fB\-sc\fP	\fI<show complexes>\fP"
 Display the complex configuration.

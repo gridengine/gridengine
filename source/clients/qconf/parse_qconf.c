@@ -1969,7 +1969,7 @@ char *argv[]
             }
             lFreeList(&alp);
 
-            if (!lp || lGetNumberOfElem(arglp) == 0) {
+            if (!lp || lGetNumberOfElem(lp) == 0) {
                fprintf(stderr, MSG_CALENDAR_XISNOTACALENDAR_S, *spp);
                fprintf(stderr, "\n");
                SGE_EXIT(1);

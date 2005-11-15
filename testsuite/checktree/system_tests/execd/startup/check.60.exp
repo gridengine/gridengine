@@ -162,8 +162,13 @@ proc startup_execd_test1 {} {
    
    set hostname [lindex $ts_config(execd_nodes) 0]
 
-
+   puts $CHECK_OUTPUT "==================================================="
    puts $CHECK_OUTPUT $check_description($CHECK_ACT_LEVEL)
+   puts $CHECK_OUTPUT "==================================================="
+
+   puts $CHECK_OUTPUT "login to host $hostname as user root ..."
+   set output [start_remote_prog "$hostname" "root" "echo" "hallo"]
+   puts $CHECK_OUTPUT $output
 
    if { $CHECK_ACT_LEVEL == 0 } {
       set CL_RETVAL_BIND_SOCKET [translate $CHECK_HOST 1 0 0 [sge_macro MSG_CL_RETVAL_BIND_SOCKET]]
@@ -335,25 +340,32 @@ proc startup_execd_test1 {} {
          add_proc_error "startup_execd_test1" -1 "Starting up execd took $run_time ( > 25 seconds)"
       }
 
-      if { $line_count == 0 } {
-         puts $CHECK_OUTPUT "==> Execd didn't print a line. OK."
+      if { $line_count <= 5 } {
+         puts $CHECK_OUTPUT "==> Execd did not print more that 5 lines. OK."
       } else {
-         add_proc_error "startup_execd_test1" -1 "Execd printed out $line_count lines ( > 0 ):\n$output"
+         add_proc_error "startup_execd_test1" -1 "Execd printed out $line_count lines ( > 5 ):\n$output"
       }
 
       wait_for_load_from_all_queues 60
    }
   
-
-   # check for only one running execd on $hostname
-   puts $CHECK_OUTPUT "test if there is only one execd running on host $hostname ..."
-   set found_p [ ps_grep "$ts_config(product_root)" $hostname ]
-   set execd_count 0
-   foreach elem $found_p {
-      if { [string match "*sge_execd*" $ps_info(string,$elem)] } {
-         puts $CHECK_OUTPUT $ps_info(string,$elem)
-         incr execd_count 1
+   set my_timeout [timestamp]
+   incr my_timeout 100
+   while { [timestamp] < $my_timeout } {
+      # check for only one running execd on $hostname
+      puts $CHECK_OUTPUT "test if there is only one execd running on host $hostname ..."
+      set found_p [ ps_grep "$ts_config(product_root)" $hostname ]
+      set execd_count 0
+      foreach elem $found_p {
+         if { [string match "*sge_execd*" $ps_info(string,$elem)] } {
+            puts $CHECK_OUTPUT $ps_info(string,$elem)
+            incr execd_count 1
+         }
       }
+      if { $execd_count == 1 } {
+         break
+      }
+      after 3000
    }
 
    if { $execd_count != 1 } {
@@ -361,7 +373,6 @@ proc startup_execd_test1 {} {
    } else {
       puts $CHECK_OUTPUT "Found $execd_count sge_execd process on host $hostname. OK."
    }
- 
 
    set_error 0 "ok"
 }

@@ -6,7 +6,6 @@ Date:
 
 1 Identification
 
-
 CR-2005-11-15-0: Bugfix:    a second started schedd/execd daemons may not stop
                             if started when qmaster is down
                             (enhancement for CR-2005-11-14-1)

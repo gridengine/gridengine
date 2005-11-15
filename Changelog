@@ -1,3 +1,14 @@
+CR-2005-11-15-1: Testsuite: Fixed execd startup test
+                 Review:    RD 
+
+CR-2005-11-15-0: Bugfix:    a second started schedd/execd daemons may not stop
+                            if started when qmaster is down
+                            (enhancement for CR-2005-11-14-1)
+                 Bugtraq:   6349818
+                 Issue:     1891
+                 Review:    RD
+                 Changed:   commlib, gdi, schedd, execd, qping 
+
 JG-2005-11-15-0: Testsuite: Fixed invalid use of upvar with empty var name.
                             Fixes and cleanup for checks
                             bugs/issuezilla/1096, system_tests/clients/qdel,

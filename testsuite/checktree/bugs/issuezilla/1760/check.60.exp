@@ -42,7 +42,10 @@ global check_errstr
 global check_highest_level
 global check_init_level_procedure
 global check_root_access_needs
-global fake_host
+global issue_1760_fake_host
+global issue_1760_qname
+global issue_1760_group
+global issue_1760_milestone
 
 set check_root_access_needs "yes"
 
@@ -59,14 +62,12 @@ set check_description(210)  "unable to delete a configuration of a non existing 
 set check_needs           "init_core_system" 
 
 # setup and cleanup functions
-set check_setup_function "issue_1760_setup"
+#set check_setup_function "issue_1760_setup"
 set check_cleanup_function "issue_1760_cleanup"
 
 # define test's procedure order
 set check_functions ""
 lappend check_functions "issue_1760_check"
-
-set fake_host "issue1760"
 
 # this function is called each time before
 # a new run level is started
@@ -83,120 +84,46 @@ proc issue_1760_init_level {} {
   return -1  ;# no other level else
 }
 
-proc issue_1760_setup {} {
-   global CHECK_ARCH CHECK_PRODUCT_ROOT CHECK_USER CHECK_HOST ts_config
-   global fake_host CHECK_CORE_MASTER
-
-   # Make sure qmaster is on Solaris or Linux
-   set binary_arch "[resolve_arch $CHECK_CORE_MASTER]"
-   switch -- $binary_arch {
-      "sol-sparc" -
-      "sol-sparc64" -
-      "sol-x86" -
-      "lx24-x86" -
-      "lx24-amd64" {
-         # Found a valid qmaster
-      }
-      default {
-         set_error -1 "This test requires that the qmaster be on a Solaris or Linux host"
-         return -1
-      }
-   }
-
-   # Lock that host
-   if {[operational_lock "host_mod" $CHECK_CORE_MASTER] != 0} {
-      set_error -1 "Failed to lock host"
-      return -1
-   }
-
-   # Store a copy of /etc/hosts in /tmp
-   set output [start_remote_prog $CHECK_CORE_MASTER "root" "cp" "/etc/hosts /tmp/issue_1760_hosts" result]
-
-   if {$result != 0} {
-      set_error -1 "Unable to store copy of /etc/hosts: $output"
-      return -1
-   }
-
-   # Add fake host to /etc/hosts
-   set output [start_remote_prog $CHECK_CORE_MASTER "root" "echo" "10.0.17.60 $fake_host >> /etc/hosts" result]
-
-   if {$result != 0} {
-      set_error -1 "Unable to add host to /etc/hosts: $output"
-      return -1
-   }
-
-   # Store /etc/nsswitch.conf in /tmp
-   set output [start_remote_prog $CHECK_CORE_MASTER "root" "mv" "/etc/nsswitch.conf /tmp/issue_1760_nsswitch.conf" result]
-
-   if {$result != 0} {
-      set_error -1 "Unable to store copy of /etc/nsswitch.conf: $output"
-      return -1
-   }
-
-   # Setup local hostname resolving in /etc/nsswitch.conf
-   set output [start_remote_prog $CHECK_CORE_MASTER "root" "grep" "-v 'hosts:' /tmp/issue_1760_nsswitch.conf > /etc/nsswitch.conf" result]
-
-   if {$result != 0} {
-      set_error -1 "Unable to process /etc/nsswitch.conf: $output"
-      return -1
-   }
-
-   set output [start_remote_prog $CHECK_CORE_MASTER "root" "grep" "'hosts:' /tmp/issue_1760_nsswitch.conf" result]
-
-   if {$result != 0} {
-      set_error -1 "Unable to process /etc/nsswitch.conf: $output"
-      return -1
-   }
-
-   if {[regexp {hosts:[ \t]+([^ \t].*$)} $output match hosts] == 1} {
-      set output [start_remote_prog $CHECK_CORE_MASTER "root" "echo" "\"hosts: files [string trim $hosts]\" >> /etc/nsswitch.conf" result]
-   } else {
-      set output [start_remote_prog $CHECK_CORE_MASTER "root" "echo" "\"hosts: files\" >> /etc/nsswitch.conf" result]
-   }
-
-   if {$result != 0} {
-      set_error -1 "Unable to process /etc/nsswitch.conf: $output"
-      return -1
-   }
-
-   set_error 0 "ok"
-}
-
 # -------- local test procedures -----------------------------------------------
 
 # here the actual test is done
 proc issue_1760_check {} {
-   global ts_config fake_host CHECK_OUTPUT
-   global CHECK_HOST CHECK_ARCH CHECK_USER CHECK_CORE_MASTER
+   global ts_config issue_1760_fake_host issue_1760_milestone issue_1760_group
+   global CHECK_HOST CHECK_ARCH CHECK_USER CHECK_CORE_MASTER issue_1760_qname
 
    set pid [pid]
    set qconf "$ts_config(product_root)/bin/$CHECK_ARCH/qconf"
+   set issue_1760_milestone 0
+
+   set issue_1760_fake_host "issue1760_$pid"
+   set envlist(SGE_COMMLIB_DEBUG_RESOLVE) "$issue_1760_fake_host"
+
+   # Shutdown qmaster
+   shutdown_qmaster $CHECK_CORE_MASTER [ get_qmaster_spool_dir ]
+
+   # Restart qmaster with envlist set
+   startup_qmaster 0 envlist
 
    # Add config for fake host
-   set output [start_remote_prog $CHECK_HOST $CHECK_USER $qconf "-sconf $CHECK_HOST | tail +2 > /tmp/issue1760" result]
+   set output [start_remote_prog $CHECK_HOST $CHECK_USER $qconf "-sconf $CHECK_HOST | tail +2 > /tmp/$issue_1760_fake_host" result]
 
    if {$result != 0} {
       set_error -1 "Unable to show configuration for $CHECK_HOST: $output"
       return -1
    }
 
-   set output [start_remote_prog $CHECK_HOST $CHECK_USER $qconf "-Aconf /tmp/issue1760" result]
+   set output [start_remote_prog $CHECK_HOST $CHECK_USER $qconf "-Aconf /tmp/$issue_1760_fake_host" result]
 
    if {$result != 0} {
       set_error -1 "Unable to add configuration for fake host: $output"
       return -1
    }
 
-   set output [start_remote_prog $CHECK_HOST $CHECK_USER "rm" "/tmp/issue1760" result]
-
-   if {$result != 0} {
-      set_error -1 "Unable to remove configuration file: $output"
-      return -1
-   }
+   set issue_1760_milestone 1
 
    # Add hostgroup with fake host and local host
-   set group "@hg_issue1760_$pid"
-   set output [start_remote_prog $CHECK_HOST $CHECK_USER "echo" "\"group_name $group\nhostlist $CHECK_HOST $fake_host\n\" > /tmp/hg_issue1760.$pid" result]
+   set issue_1760_group "@hg_issue1760_$pid"
+   set output [start_remote_prog $CHECK_HOST $CHECK_USER "echo" "\"group_name $issue_1760_group\nhostlist $CHECK_HOST $issue_1760_fake_host\n\" > /tmp/hg_issue1760.$pid" result]
 
    if {$result != 0} {
       set_error -1 "Unable to write hostgroup file: $output"
@@ -210,30 +137,26 @@ proc issue_1760_check {} {
       return -1
    }
 
-   set output [start_remote_prog $CHECK_HOST $CHECK_USER "rm" "/tmp/hg_issue1760.$pid" result]
-
-   if {$result != 0} {
-      set_error -1 "Unable to remove hostgroup file: $output"
-      return -1
-   }
+   set issue_1760_milestone 2
 
    # Add queue with fake host and local host
-   set qname "q_issue1760_$pid"
-   set qparam(qname)     "$qname"
-   set qparam(hostlist)  "$group"
+   set issue_1760_qname "q_issue1760_$pid"
+   set qparam(qname)     "$issue_1760_qname"
+   set qparam(hostlist)  "$issue_1760_group"
 
    # localize messages -- handle_vi_edit is executed on $CHECK_HOST
    # add a "*" to $CHECK_HOST because the host may resolve it's name long
-   set VALID [translate $ts_config(master_host) 1 0 0 [sge_macro MSG_SGETEXT_ADDEDTOLIST_SSSS] $CHECK_USER "$CHECK_HOST*" $qname "cluster queue" ]
-   puts $CHECK_OUTPUT "valid answer is:\n\"$VALID\""
+   set VALID [translate $ts_config(master_host) 1 0 0 [sge_macro MSG_SGETEXT_ADDEDTOLIST_SSSS] $CHECK_USER "$CHECK_HOST*" $issue_1760_qname "cluster queue" ]
 
    # add by handling vi
    set vi_commands [build_vi_command qparam]
 
    handle_vi_edit "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-aq" $vi_commands $VALID
 
+   set issue_1760_milestone 3
+
    # Add queue slots entry for fake host
-   set output [start_remote_prog $CHECK_HOST $CHECK_USER $qconf "-aattr queue slots \"\[$fake_host=1\]\" $qname" result]
+   set output [start_remote_prog $CHECK_HOST $CHECK_USER $qconf "-aattr queue slots \"\[$issue_1760_fake_host=1\]\" $issue_1760_qname" result]
 
    if {$result != 0} {
       set_error -1 "Unable to add 'slots' entry for fake host: $output"
@@ -242,59 +165,81 @@ proc issue_1760_check {} {
 
    # Shutdown qmaster
    shutdown_qmaster $CHECK_CORE_MASTER [ get_qmaster_spool_dir ]
-
-   # Copy original hosts file back into /etc.  We don't move it because we need
-   # to be able to do the move in the cleanup function in case of problems.
-   set output [start_remote_prog $CHECK_HOST "root" "cp" "/tmp/issue_1760_hosts /etc/hosts" result]
-
-   if {$result != 0} {
-      set_error -1 "Unable to restore /etc/hosts: $output"
-      return -1
-   }
-
-   # Restart qmaster
+   # Restart qmaster without envlist set
    startup_qmaster 0
 
    # Remove queue
-   set output [start_remote_prog $CHECK_HOST $CHECK_USER $qconf "-dq $qname" result]
+   set output [start_remote_prog $CHECK_HOST $CHECK_USER $qconf "-dq $issue_1760_qname" result]
 
    if {$result != 0} {
       set_error -1 "Unable to remove queue -- issue 1760 still exists: $output"
       return -1
    }
 
+   set issue_1760_milestone 4
+
    # Remove hostgroup
-   set output [start_remote_prog $CHECK_HOST $CHECK_USER $qconf "-dhgrp $group" result]
+   set output [start_remote_prog $CHECK_HOST $CHECK_USER $qconf "-dhgrp $issue_1760_group" result]
 
    if {$result != 0} {
       set_error -1 "Unable to remove hostgroup -- issue 1760 still exists: $output"
       return -1
    }
 
+   set issue_1760_milestone 5
+
    # Remove configuration
-   set output [start_remote_prog $CHECK_HOST $CHECK_USER $qconf "-dconf $fake_host" result]
+   set output [start_remote_prog $CHECK_HOST $CHECK_USER $qconf "-dconf $issue_1760_fake_host" result]
 
    if {$result != 0} {
       set_error -1 "Unable to remove host configuration -- issue 1760 still exists: $output"
       return -1
    }
 
+   set issue_1760_milestone 0
    set_error 0 "ok"
 }
 
 proc issue_1760_cleanup {} {
-   global CHECK_CORE_MASTER
+   global CHECK_HOST CHECK_ARCH CHECK_USER CHECK_CORE_MASTER
+   global ts_config issue_1760_fake_host issue_1760_qname issue_1760_group
+   global issue_1760_milestone
 
-   # Move original hosts file back into /etc
-   set output [start_remote_prog $CHECK_CORE_MASTER "root" "mv" "-f /tmp/issue_1760_hosts /etc/hosts" result]
+   set pid [pid]
+   set qconf "$ts_config(product_root)/bin/$CHECK_ARCH/qconf"
 
-   # Move original nsswitch.conf file back into /etc
-   set output [start_remote_prog $CHECK_CORE_MASTER "root" "mv" "-f /tmp/issue_1760_nsswitch.conf /etc/nsswitch.conf" result]
+   set envlist(SGE_COMMLIB_DEBUG_RESOLVE) "$issue_1760_fake_host"
 
-   # Unlock host
-   if {[operational_unlock "host_mod" $CHECK_CORE_MASTER] != 0} {
-      set_error -1 "Failed to unlock host"
-      return -1
+   # Remove config files
+   start_remote_prog $CHECK_HOST $CHECK_USER "rm" "/tmp/$issue_1760_fake_host" result
+   start_remote_prog $CHECK_HOST $CHECK_USER "rm" "/tmp/hg_issue1760.$pid" result
+
+   # Remove leftover objects
+   if {($issue_1760_milestone >= 1) && ($issue_1760_milestone < 6)} {
+      # Shutdown qmaster
+      shutdown_qmaster $CHECK_CORE_MASTER [ get_qmaster_spool_dir ]
+
+      # Restart qmaster with envlist set
+      startup_qmaster 0 envlist
+
+      # Remove queue
+      start_remote_prog $CHECK_HOST $CHECK_USER $qconf "-dq $issue_1760_qname" result
+
+      if {($issue_1760_milestone >= 2) && ($issue_1760_milestone < 5)} {
+         # Remove hostgroup
+         start_remote_prog $CHECK_HOST $CHECK_USER $qconf "-dhgrp $issue_1760_group" result
+
+         if {($issue_1760_milestone >= 3) && ($issue_1760_milestone < 4)} {
+            # Remove configuration
+            start_remote_prog $CHECK_HOST $CHECK_USER $qconf "-dconf $issue_1760_fake_host" result
+         }
+      }
+
+      # Shutdown qmaster
+      shutdown_qmaster $CHECK_CORE_MASTER [ get_qmaster_spool_dir ]
+
+      # Restart qmaster without envlist set
+      startup_qmaster 0
    }
 
    set_error 0 "ok"

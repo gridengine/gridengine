@@ -1,3 +1,7 @@
+DT-2005-11-15-1: Testsuite: o Fixed test for IZ1760
+                 Changed:   Test for IZ1760
+                 Review:    pending
+
 DT-2005-11-15-0: Bugfix:    o Fixed abort in drmaa_job_ps()
                  Issue:     1892
                  Bugtraq:   6349972

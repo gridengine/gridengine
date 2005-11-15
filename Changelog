@@ -1,3 +1,10 @@
+DT-2005-11-15-0: Bugfix:    o Fixed abort in drmaa_job_ps()
+                            - Merged from DT-2005-11-15-0 (Maintrunk)
+                 Issue:     1892
+                 Bugtraq:   6349972
+                 Changed:   JAPI
+                 Review:    AH
+
 HP-2005-11-15-0: Bugfix:    Fixed broken build
                  Changed:   libs/cull/Makefile
 

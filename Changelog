@@ -1,3 +1,12 @@
+DT-2005-11-15-1: Bugfix:    o Clarified regex in complex man page
+                            o First pass at improving qconf -purge man entry
+                            o Uncommented -mhgrp in qconf man page
+                            o Fixed help output for qconf -purge
+                            - Merged from DT-2005-11-15-2 (Maintrunk)
+                 Issue:     1782, 1783, 1872, 1895
+                 Bugtraq:   6350714, N/A, 6347840, 6349351
+                 Changed:   man1, man5, qconf
+
 DT-2005-11-15-0: Bugfix:    o Fixed abort in drmaa_job_ps()
                             - Merged from DT-2005-11-15-0 (Maintrunk)
                  Issue:     1892

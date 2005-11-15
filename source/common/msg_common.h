@@ -975,7 +975,7 @@
 #define MSG_GDI_USAGE_shell_OPT_YN                       "[-shell y[es]|n[o]]"
 #define MSG_GDI_UTEXT_shell_OPT_YN                       _MESSAGE(23504, _("start command with or without wrapping <loginshell> -c"))
 
-#define MSG_GDI_USAGE_purge_OPT                          "[-purge obj_nm3 wc_attr object_instance"
+#define MSG_GDI_USAGE_purge_OPT                          "[-purge obj_nm3 attr_nm objectname]"
 #define MSG_GDI_UTEXT_purge_OPT                          _MESSAGE(23505, _("removes attribute from object_instance"))
 
 #define MSG_COMMAND_REQUIRED_FOR_BINARY_JOB              _MESSAGE(23506, _("command required for a binary job"))

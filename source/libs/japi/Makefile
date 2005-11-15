@@ -76,7 +76,7 @@ drmaa_clean: japi_clean drmaa_extras_clean
 drmaa_extras_clean: drmaa_howto_clean
 	$(RM) test_drmaa test_drmaa.o example example.o test_drmaa_sync \
          test_drmaa_sync.o test_drmaa_no_bin test_drmaa_no_bin.o \
-         test_drmaa_issue1768 test_drmaa_issue1768.o test_drmaa_issue1892
+         test_drmaa_issue1768 test_drmaa_issue1768.o test_drmaa_issue1892 \
          test_drmaa_issue1892.o
 
 japilib: $(JAPILIB)

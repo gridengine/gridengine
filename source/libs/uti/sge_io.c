@@ -724,7 +724,7 @@ int sge_string2file(const char *str, int len, const char *fname)
    DEXIT;
    return 0;
 FCLOSE_ERROR:
-   ERROR((SGE_EVENT, MSG_FILE_FCLOSEFAILED_SS, fname));
+   ERROR((SGE_EVENT, MSG_FILE_FCLOSEFAILED_SS, fname, strerror(errno)));
    DEXIT;
    return -1;
 }          

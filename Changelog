@@ -1,3 +1,7 @@
+HP-2005-11-16-0: Bugfix:    Fixed broken build on non-Solaris-non-Linux archs
+                 Review:    EB
+                 Changed:   shepherd, cull Makefile, ...
+
 CR-2005-11-16-0: Bugfix:    o check file descriptor errors after select()
                               errors in commlib
                  Review:    RD

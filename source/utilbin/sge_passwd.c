@@ -69,6 +69,7 @@
 #define DENTER(x,y)
 #define DPRINTF(x)
 #define DEXIT
+#define DRETURN(ret) return ret;
 #endif
 
 static void (*shared_ssl_func__X509_free)(X509 *a);

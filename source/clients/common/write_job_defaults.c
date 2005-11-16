@@ -32,6 +32,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 
 #include "uti/sge_stdio.h"
 
@@ -235,7 +236,7 @@ int flags
    DEXIT;
    return answer;
 FCLOSE_ERROR:
-   sprintf(str, MSG_FILE_ERRORCLOSEINGXY_SS, filename);
+   sprintf(str, MSG_FILE_ERRORCLOSEINGXY_SS, filename, strerror(errno));
    answer_list_add(&answer, str, STATUS_EDISK, ANSWER_QUALITY_ERROR);
    DEXIT;
    return answer;

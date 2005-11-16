@@ -334,30 +334,30 @@ FCLOSE_ERROR:
 }
 
 bool 
-shepherd_read_qrsh_file(int *qrsh_pid)
+shepherd_read_qrsh_file(const char* pid_file_name, pid_t *qrsh_pid)
 {
    bool ret = true;
    FILE *fp = NULL;
-   const char *const filename = "qrsh_pid_file";
 
-   fp = fopen(filename, "r");
+   fp = fopen(pid_file_name, "r");
    if (fp != NULL) {
       int arguments = fscanf(fp, pid_t_fmt, qrsh_pid);
-      /* retrieve first exit status from exit status file */
 
+      /* retrieve first exit status from exit status file */
       if (arguments != 1) {
-         shepherd_trace("could not read qrsh_pid_file file\n");
+         shepherd_trace_sprintf("could not read qrsh_pid_file '%s'\n",
+                                 pid_file_name);
          *qrsh_pid = 0;
          ret = false;
       } 
    } else {
-      shepherd_error_sprintf(MSG_FILE_NOOPEN_SS, filename, strerror(errno));
+      shepherd_error_sprintf(MSG_FILE_NOOPEN_SS, pid_file_name, strerror(errno));
       ret = false;
    }
    FCLOSE(fp);
    return ret;
 FCLOSE_ERROR:
-   shepherd_error_sprintf(MSG_FILE_NOCLOSE_SS, filename, strerror(errno));
+   shepherd_error_sprintf(MSG_FILE_NOCLOSE_SS, pid_file_name, strerror(errno));
    return false;
 }
 
@@ -391,11 +391,11 @@ FCLOSE_ERROR:
 bool 
 shepherd_read_osjobid_file(
 #if (IRIX)
-   static ash_t *return_code
+   ash_t *return_code
 #elif defined(NECSX4) || defined(NECSX5)
-   static id_t *return_code
+   id_t *return_code
 #elif defined(CRAY)
-   static int *return_code
+   int *return_code
 #else
    void
 #endif

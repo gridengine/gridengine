@@ -206,7 +206,7 @@ test_cull_db_pack.o: $(CULLLIB_DIR)/test_cull_db_pack.c
 
 #---
 test_cull_hash: test_cull_hash.o $(CULLLIB) $(WINGRIDLIB_DEP) $(UTILIB) $(RMONLIB) $(LCKLIB)
-	$(LD_WRAPPER) $(CC) $(CFLAGS) -o test_cull_hash test_cull_hash.o $(LFLAGS) $(CULLLIB) $(WINGRIDLIB) $(UTILIB) $(RMONLIB) $(LCKLIB) $(LIBS) $(LIBS)
+	$(LD_WRAPPER) $(CC) $(CFLAGS) -o test_cull_hash test_cull_hash.o $(LFLAGS) $(CULLLIB) $(WINGRIDLIB) $(UTILIB) $(RMONLIB) $(LCKLIB) $(LIBS)
 
 test_cull_hash.o: $(CULLLIB_DIR)/test_cull_hash.c
 	$(CC) $(CFLAGS) -c $(CULLLIB_DIR)/test_cull_hash.c

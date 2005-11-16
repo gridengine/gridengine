@@ -2169,9 +2169,7 @@ shepherd_signal_job(pid_t pid, int sig)
 {
 #if defined(IRIX) || defined(CRAY) || defined(NECSX4) || defined(NECSX5)
    bool do_while_end = false;
-   FILE *fp;
    static int first = 1;
-   int n;
 #  if (IRIX)
    static ash_t osjobid = 0;
 #	elif defined(NECSX4) || defined(NECSX5)
@@ -2291,7 +2289,7 @@ shepherd_signal_job(pid_t pid, int sig)
 
             sge_switch2start_user();
 
-            if (shepherd_read_qrsh_file(&qrsh_pid)) {
+            if (shepherd_read_qrsh_file(pid_file_name, &qrsh_pid)) {
                pid = -qrsh_pid;
                shepherd_trace_sprintf("found pid of qrsh client command: " 
                                       pid_t_fmt, pid);

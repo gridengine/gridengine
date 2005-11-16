@@ -31,7 +31,6 @@
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
-
 bool 
 shepherd_write_pid_file(pid_t pid);
 
@@ -69,18 +68,18 @@ shepherd_write_sig_info_file(const char *filename, const char *task_id,
 bool
 shepherd_read_osjobid_file(
 #if (IRIX)
-   static ash_t *return_code
+   ash_t *return_code
 #elif defined(NECSX4) || defined(NECSX5)
-   static id_t *return_code
+   id_t *return_code
 #elif defined(CRAY)
-   static int *return_code
+   int *return_code
 #else
    void
 #endif
 );
 
 bool
-shepherd_read_qrsh_file(int *qrsh_pid);
+shepherd_read_qrsh_file(const char *filename, pid_t *qrsh_pid);
 
 bool
 shepherd_write_processor_set_number_file(int proc_set);

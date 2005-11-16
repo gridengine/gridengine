@@ -33,6 +33,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <sys/types.h>
+#include <sys/time.h>
+#include <sys/resource.h>
 #include <fcntl.h>
 #include <pwd.h>
 #include <errno.h>
@@ -44,6 +46,7 @@
 #include "uti/sge_signal.h"
 #include "uti/sge_unistd.h"
 #include "setosjobid.h"
+#include "sge_fileio.h"
 
 #include "msg_common.h"
 
@@ -821,6 +824,13 @@ int sge_set_environment()
    char buf[10000], *name, *value, err_str[10000];
    int line=0;
    char s[100] = "";
+#if (IRIX)
+   ash_t jobid;
+#elif defined(NECSX4) || defined(NECSX5)
+   id_t jobid;
+#elif defined(CRAY)
+   int jobid;
+#endif
 
    setup_environment();
    
@@ -834,7 +844,7 @@ int sge_set_environment()
 #if defined(IRIX) || defined(CRAY) || defined(NECSX4) || defined(NECSX5)
    if (shepherd_read_osjobid_file(&jobid)) {
 #  if defined(IRIX)
-      sprintf(s, "%lld", ash);
+      sprintf(s, "%lld", jobid);
 #  elif defined(CRAY)
       sprintf(s, "%d", jobid);
 #  elif defined(NECSX4) || defined(NECSX5)

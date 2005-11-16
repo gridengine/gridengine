@@ -1022,7 +1022,7 @@ lListElem *pe_task
    sge_dstring_free(&osjobid_path);      
 
    success = (fscanf(fp, OSJOBID_FMT, &osjobid)==1);
-   FCLOSE_ERROR(fp);
+   FCLOSE(fp);
    if (!success) {
       /* can happen that shepherd has opend the file but not written */
       DEXIT;

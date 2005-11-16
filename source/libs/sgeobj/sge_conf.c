@@ -960,7 +960,7 @@ static void clean_conf(void) {
    FREE(Master_Config.rsh_daemon);
    FREE(Master_Config.rsh_command);
    FREE(Master_Config.rlogin_daemon);
-   FREE(Master_Config.qlogin_command);
+   FREE(Master_Config.rlogin_command);
    FREE(Master_Config.auto_user_default_project);
    FREE(Master_Config.delegated_file_staging);
    

@@ -1,3 +1,7 @@
+JG-2005-11-16-0: Bugfix:    Fixed memory leaks in module test and qmaster
+                            (introduced during s2 development)
+                 Review:    CR
+
 DT-2005-11-15-1: Bugfix:    o Clarified regex in complex man page
                             o First pass at improving qconf -purge man entry
                             o Uncommented -mhgrp in qconf man page

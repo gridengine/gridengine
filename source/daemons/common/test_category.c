@@ -524,15 +524,12 @@ static int test(data_entry_t *test, char *result, int count)
 
        if (result != NULL && sge_dstring_get_string(&category_str) != NULL) {
          if (strcmp(result, sge_dstring_get_string(&category_str)) == 0) {
-         }
-         else {
+         } else {
             ret = 1;
             printf("expected: <%s>\n", result!=NULL? result:"<NULL>");
          }
-       }
-       else if (result == NULL &&  sge_dstring_get_string(&category_str) == NULL) {
-       }
-       else {
+       } else if (result == NULL &&  sge_dstring_get_string(&category_str) == NULL) {
+       } else {
          ret = 1;
          printf("expected: <%s>\n", result!=NULL? result:"<NULL>");
        }
@@ -545,13 +542,13 @@ static int test(data_entry_t *test, char *result, int count)
          for (i = 1; i <= 500; i*=6) {
             printf("test with %dx :", i);
             job_elem = test_create_job(test, i);
-            if (job_elem) {
+            if (job_elem != NULL) {
                double time = test_performance(job_elem, max, access_list); 
                if (time > 1) {
                   max /= 10;
                }
-            }
-            else {
+               lFreeElem(&job_elem);
+            } else {
                printf("failed to create job\n");
                ret = 1;
                break;
@@ -569,6 +566,7 @@ static int test(data_entry_t *test, char *result, int count)
       ret = 1;
    }
    lFreeElem(&job_elem);
+   lFreeList(&access_list);
    return ret;
 }
 

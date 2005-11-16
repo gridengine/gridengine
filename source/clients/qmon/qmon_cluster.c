@@ -112,6 +112,7 @@ typedef struct _tCClEntry {
    int enforce_project;
    int enforce_user;
    int dfs;
+   int reprioritize;
    String qmaster_params;
    String reporting_params;
    String execd_params;
@@ -220,6 +221,10 @@ XtResource ccl_resources[] = {
 
    { "dfs", "dfs", XtRInt, 
       sizeof(int), XtOffsetOf(tCClEntry, dfs), 
+      XtRImmediate, NULL },
+
+   { "reprioritize", "reprioritize", XtRInt, 
+      sizeof(int), XtOffsetOf(tCClEntry, reprioritize), 
       XtRImmediate, NULL },
 
    { "max_aj_instances", "max_aj_instances", XtRInt, 
@@ -365,6 +370,7 @@ static Widget cluster_reschedule_unknownPB = 0;
 static Widget cluster_shell_start_mode = 0;
 static Widget cluster_loglevel = 0;
 static Widget cluster_dfs = 0;
+static Widget cluster_reprioritize = 0;
 static Widget cluster_enforce_project = 0;
 static Widget cluster_enforce_user = 0;
 
@@ -568,7 +574,7 @@ lListElem *ep
       for(cep = lFirst(confl), i=0; cep; cep = lNext(cep), i++) {
          const char *name = lGetString(cep, CF_name);
          const char *value = lGetString(cep, CF_value);
-         sprintf(buf, "%-20.20s %s", name ? name : "", value ? value : "");
+         sprintf(buf, "%-25.25s %s", name ? name : "", value ? value : "");
          items[i] = XmStringCreateLtoR(buf, "LIST");
       }
       XtVaSetValues( cluster_conf_list, 
@@ -663,6 +669,7 @@ Widget parent
                            "cluster_ok", &cluster_ok,
                            "cluster_cancel", &cluster_cancel,
                            "cluster_dfs", &cluster_dfs,
+                           "cluster_reprioritize", &cluster_reprioritize,
                            "cluster_enforce_project", &cluster_enforce_project,
                            "cluster_enforce_user", &cluster_enforce_user,
                            "cluster_usersPB", &cluster_usersPB,
@@ -889,10 +896,20 @@ XtPointer cld, cad;
 
    XmtDialogGetDialogValues(layout, &cluster_entry);
 
-   if (host && !strcasecmp(host, "global"))
+   if (host && !strcasecmp(host, "global")) {
       local = 0;
-   else
+   } else {
+      lList *old = qmonMirrorList(SGE_CONFIG_LIST);
+      lListElem *ep = lGetElemHost(old, CONF_hname, host ? host :"");
+
+      if (ep) {
+         qmonMessageShow(w, True, "host '%s' already exists", host ? host : "");
+         DEXIT;
+         return;
+      }   
+   
       local = 1;
+   }   
 
    if (qmonCClEntryToCull(layout, &cluster_entry, &conf_entries, local)) {
       confl = lCreateElemList("Conf_list", CONF_Type, 1);
@@ -988,6 +1005,7 @@ static void qmonClusterLayoutSetSensitive(Boolean mode)
    XtSetSensitive(cluster_reporting_params_label, mode);
   
    XtSetSensitive(cluster_dfs, mode);
+   XtSetSensitive(cluster_reprioritize, mode);
    XtSetSensitive(cluster_enforce_project, mode);
    XtSetSensitive(cluster_enforce_user, mode);
    XtSetSensitive(cluster_projects, mode);
@@ -1084,6 +1102,7 @@ int local
    static String loglevel[] = { "log_info", "log_warning", "log_err" };
 /*    static String logmail[] = { "true", "false" }; */
    static String dfs[] = { "true", "false" };
+   static String reprioritize[] = { "true", "false" };
    static String enforce_project[] = { "true", "false" };
    static String enforce_user[] = { "true", "false", "auto" };
    String str = NULL;
@@ -1661,6 +1680,12 @@ int local
       ep = lGetElemStr(confl, CF_name, "delegated_file_staging");
       lSetString(ep, CF_value, str);
 
+      if (clen->reprioritize >= 0 && 
+            clen->reprioritize < sizeof(reprioritize))
+         str = reprioritize[clen->reprioritize];
+      ep = lGetElemStr(confl, CF_name, "reprioritize");
+      lSetString(ep, CF_value, str);
+
 
       if (clen->enforce_project >= 0 && 
             clen->enforce_project < sizeof(enforce_project))
@@ -2052,6 +2077,13 @@ tCClEntry *clen
    else
       clen->dfs = 1;
 
+   if ((ep = lGetElemStr(confl, CF_name, "reprioritize")))
+      str = (StringConst)lGetString(ep, CF_value);
+   if (str && (!strcasecmp(str, "true") || !strcmp(str, "1")))
+      clen->reprioritize = 0;
+   else
+      clen->reprioritize = 1;
+
 
    if ((ep = lGetElemStr(confl, CF_name, "enforce_project")))
       str = (StringConst)lGetString(ep, CF_value);
@@ -2241,6 +2273,7 @@ tCClEntry *clen
    lFreeList(&(clen->cluster_projects));
    lFreeList(&(clen->cluster_xprojects));
    clen->dfs = 1;    
+   clen->reprioritize = 1;    
    clen->enforce_project = 1;    
    clen->enforce_user = 1;    
 

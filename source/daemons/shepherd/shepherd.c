@@ -2015,7 +2015,8 @@ char *childname            /* "job", "pe_start", ...     */
       }   
          
       
-   } while ((job_pid > 0) || (migr_cmd_pid > 0) || (ckpt_cmd_pid > 0));
+   } while ((job_pid > 0) || (migr_cmd_pid > 0) || (ckpt_cmd_pid > 0) ||
+            (ctrl_pid[0] > 0) || (ctrl_pid[1] > 0) || (ctrl_pid[2] > 0));
 
 #if defined(CRAY) || defined(NECSX4) || defined(NECSX5)
 
@@ -2377,23 +2378,22 @@ shepherd_signal_job(pid_t pid, int sig)
    } while (do_while_end);
 
 #elif defined(SOLARIS) || defined(LINUX) || defined(ALPHA)
-#if 0
-   cp = search_conf_val("add_grp_id");
-   if (cp)
-      add_grp_id = atol(cp);
-   else
-      add_grp_id = 0;
+   if (atoi(get_conf_val("enable_addgrp_kill")) == 1) {
+      gid_t add_grp_id;
+      char *cp = search_conf_val("add_grp_id");
 
-   {
-   char err_str[256];
+      if (cp) {
+         add_grp_id = atol(cp);
+      } else {
+         add_grp_id = 0;
+      }
 
-   shepherd_trace_sprintf("pdc_kill_addgrpid: %d %d", (int) add_grp_id , sig);
-
-   sge_switch2start_user();
-   pdc_kill_addgrpid(add_grp_id, sig, shepherd_trace);
-   sge_switch2admin_user();
+      shepherd_trace_sprintf("pdc_kill_addgrpid: %d %d", 
+                             (int) add_grp_id , sig);
+      sge_switch2start_user();
+      pdc_kill_addgrpid(add_grp_id, sig, shepherd_trace);
+      sge_switch2admin_user();
    }
-#endif
 #endif
 
    /* 980708 SVD - I moved the normal kill code below the special job

@@ -217,8 +217,8 @@ testsuidroot.o: $(UTILBIN_DIR)/testsuidroot.c
 		$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/testsuidroot.c
 
 #---------------------------------------------------------------------
-work:	work.o version.o
-	$(CC) -o $@ work.o version.o $(LFLAGS) $(LIBS)
+work:	work.o version.o $(UTILIB) $(LCKLIB) $(RMONLIB)
+	$(CC) -o $@ work.o version.o $(LFLAGS) $(UTILIB) $(LCKLIB) $(RMONLIB) $(LIBS)
 
 work.o:	$(UTILBIN_DIR)/work.c
 	$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/work.c

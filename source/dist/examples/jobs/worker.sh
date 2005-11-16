@@ -34,9 +34,10 @@
 #___INFO__MARK_END__
 
 #
-# Usage: worker.sh [[time [nprocs] [ntimes]]]
+# Usage: worker.sh [[time [nprocs] [ntimes] [work_parameter]]]
 #        default for time is 120 seconds
 #        default for nprocs is 1
+#        default for work_parameter is ""
 
 # request "bin/sh" as shell for job
 #$ -S /bin/sh
@@ -46,6 +47,7 @@ trap "echo 'got sigxcpu'" 24
 time=120
 procs=1
 ntimes=1
+wparam=""
 if [ $# -ge 1 ]; then
    time=$1
 fi
@@ -55,6 +57,10 @@ fi
 if [ $# -ge 3 ]; then
    ntimes=$3
 fi
+if [ $# -ge 4 ]; then
+   wparam=$4
+fi
+
 echo "Doing this $ntimes times"
 
 if [ ! -x $SGE_ROOT/examples/jobsbin/$ARC/work ]; then
@@ -68,7 +74,7 @@ while [ $ntimes != '0' ]; do
   ntimes=`expr $ntimes - 1`
   echo "Running $time seconds"
   echo "Using $procs processes"
-  ./work -f $procs -w $time &
+  ./work -f $procs -w $time $wparam &
 done
 
 wait               

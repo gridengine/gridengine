@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2005/11/09 18:13:28 $     Revision: $Revision: 1.46.2.4 $
+.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2005/11/16 10:47:57 $     Revision: $Revision: 1.46.2.5 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2005/11/09 18:13:28 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2005/11/16 10:47:57 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 xxqs_name_sxx_conf \- xxQS_NAMExx configuration files
@@ -1030,6 +1030,11 @@ to the xxQS_NAMExx execution daemon. The following values are recognized:
 If this parameter is set to true, for reserved usage is used for the
 accounting entries \fBcpu\fP, \fBmem\fP and \fBio\fP instead of the
 measured usage.
+.PP
+.IP "\fIENABLE_ADDGRP_KILL\fP"
+If this parameter is set then xxQS_NAMExx uses the supplementary group ids
+(see \fIgid_range\fP) to identify all processes which are to be terminated 
+when a job should be deleted.
 .PP
 .IP "\fIENABLE_WINDOMACC\fP"
 If this parameter is set to true, on Windows hosts Windows Domain accounts (WinDomAcc)

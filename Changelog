@@ -1,3 +1,17 @@
+EB-2005-11-16-1: Bugfix:    job finish although terminate method is still 
+                            running 
+                 Bugtraq:   6348517
+                 Issue:     1877
+                 Changed:   sge_shepherd 
+                 Review:    JG
+
+EB-2005-11-16-0: Bugfix:    job finish does not terminate all processes
+                            of a job
+                 Bugtraq:   6348516
+                 Issue:     1876
+                 Changed:   sge_execd, sge_qmaster, sge_shepherd, worker
+                 Review:    JG
+
 JG-2005-11-16-0: Bugfix:    Fixed memory leaks in module test and qmaster
                             (introduced during s2 development)
                  Review:    CR

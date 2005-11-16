@@ -1361,7 +1361,10 @@ char *err_str
    fprintf(fp, "inherit_env=%d\n", (int)mconf_get_inherit_env());
 
    /* should a windows exec daemon use domain users */
-   fprintf(fp, "enable_windomacc=%d", (int)mconf_get_enable_windomacc());
+   fprintf(fp, "enable_windomacc=%d\n", (int)mconf_get_enable_windomacc());
+
+   /* should the addgrp-id be used to kill processes */
+   fprintf(fp, "enable_addgrp_kill=%d\n", (int)mconf_get_enable_addgrp_kill());
 
    lFreeList(&environmentList);
    fclose(fp);

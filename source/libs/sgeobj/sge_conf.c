@@ -147,6 +147,7 @@ static long ptf_min_priority = -999;
 static int max_dynamic_event_clients = 99;
 static bool keep_active = false;
 static bool enable_windomacc = false;
+static bool enable_addgrp_kill = false;
 
 /* reporting params */
 static bool do_accounting         = true;
@@ -596,7 +597,6 @@ int merge_configuration(lListElem *global, lListElem *local, lList **lpp) {
       prof_deliver_thrd = false;
       prof_tevent_thrd = false;
       monitor_time = 0;
-      enable_windomacc = false;
       scheduler_timeout = 0;
       max_dynamic_event_clients = 99;
 
@@ -682,6 +682,7 @@ int merge_configuration(lListElem *global, lListElem *local, lList **lpp) {
       ptf_min_priority = -999;
       keep_active = false;
       enable_windomacc = false;
+      enable_addgrp_kill = false;
       use_qsub_gid = false;
       prof_execd_thrd = false;
       inherit_env = true;
@@ -711,6 +712,9 @@ int merge_configuration(lListElem *global, lListElem *local, lList **lpp) {
             continue;
          }
          if (parse_bool_param(s, "ENABLE_WINDOMACC", &enable_windomacc)) {
+            continue;
+         } 
+         if (parse_bool_param(s, "ENABLE_ADDGRP_KILL", &enable_addgrp_kill)) {
             continue;
          } 
          if (parse_bool_param(s, "ACCT_RESERVED_USAGE", &acct_reserved_usage)) {
@@ -1740,6 +1744,18 @@ bool mconf_get_enable_windomacc(void) {
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
 
    ret = enable_windomacc;
+
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN(ret);
+}
+
+bool mconf_get_enable_addgrp_kill(void) {
+   bool ret;
+
+   DENTER(TOP_LAYER, "mconf_get_enable_addgrp_kill");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+
+   ret = enable_addgrp_kill;
 
    SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
    DRETURN(ret);

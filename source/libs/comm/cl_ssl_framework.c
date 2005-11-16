@@ -3076,6 +3076,14 @@ int cl_com_ssl_open_connection_request_handler(cl_raw_list_t* connection_list, c
    int my_errno = 0;
    int nr_of_descriptors = 0;
    cl_connection_list_data_t* ldata = NULL;
+   int socket_error = 0;
+   char tmp_string[1024];
+
+#if defined(AIX)
+   socklen_t socklen = sizeof(socket_error);
+#else
+   int socklen = sizeof(socket_error);
+#endif
 
 #ifdef USE_POLL
    struct pollfd *ufds;
@@ -3516,15 +3524,63 @@ int cl_com_ssl_open_connection_request_handler(cl_raw_list_t* connection_list, c
       return CL_RETVAL_NO_SELECT_DESCRIPTORS;
    }
    switch(select_back) {
-      case -1:
+      case -1: {
          if (my_errno == EINTR) {
-            CL_LOG(CL_LOG_WARNING,"select interrupted");
+            CL_LOG(CL_LOG_WARNING,"select interrupted (errno=EINTR)");
             retval = CL_RETVAL_SELECT_INTERRUPT;
-         } else {
-            CL_LOG(CL_LOG_ERROR,"select error");
-            retval = CL_RETVAL_SELECT_ERROR;
+            break;
+         }
+
+         CL_LOG_STR(CL_LOG_ERROR,"select error", strerror(my_errno));
+         retval = CL_RETVAL_SELECT_ERROR;
+         
+         /* check socket errors for EBADF  */
+         if (my_errno == EBADF) {
+            CL_LOG(CL_LOG_WARNING, "errno=EBADF, checking file descriptors");
+            /* now check all file descriptors and close those which errors */
+            cl_raw_list_lock(connection_list); 
+            con_elem = cl_connection_list_get_first_elem(connection_list);
+            while(con_elem) {
+               connection  = con_elem->connection;
+               con_private = cl_com_ssl_get_private(connection);
+               socket_error = 0;
+#if defined(SOLARIS) && !defined(SOLARIS64) 
+               getsockopt(con_private->sockfd,SOL_SOCKET, SO_ERROR, (void*)&socket_error, &socklen);
+#else
+               getsockopt(con_private->sockfd,SOL_SOCKET, SO_ERROR, &socket_error, &socklen);
+#endif
+               if (socket_error != 0) {
+                  connection->connection_state = CL_CLOSING;
+                  connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
+                  CL_LOG_STR(CL_LOG_ERROR, "select error:", strerror(socket_error));
+                  cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SELECT_ERROR, strerror(socket_error));
+
+                  if (connection->remote            != NULL && 
+                      connection->remote->comp_host != NULL &&
+                      connection->remote->comp_name != NULL ) {
+                     snprintf(tmp_string, 1024, MSG_CL_COMMLIB_CLOSING_SSU,
+                              connection->remote->comp_host,
+                              connection->remote->comp_name,
+                              sge_u32c(connection->remote->comp_id));
+                     CL_LOG_STR(CL_LOG_ERROR, "select error:", tmp_string);
+                     cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SELECT_ERROR, tmp_string);
+                  }
+               }
+               con_elem = cl_connection_list_get_next_elem(con_elem);
+            } /* while */
+            cl_raw_list_unlock(connection_list);
+            break;
+         }
+
+         CL_LOG_INT(CL_LOG_WARNING, "errno =", (int) my_errno);
+         if (my_errno == EINVAL) {
+            CL_LOG(CL_LOG_WARNING,"errno=EINVAL");
+         }
+         if (my_errno == ENOMEM) {
+            CL_LOG(CL_LOG_WARNING,"errno=ENOMEM");
          }
          break;
+      }
       case 0:
          CL_LOG_INT(CL_LOG_INFO,"----->>>>>>>>>>> select timeout <<<<<<<<<<<<<<<<<<<--- maxfd=",max_fd);
          retval = CL_RETVAL_SELECT_TIMEOUT;

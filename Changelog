@@ -1,3 +1,8 @@
+CR-2005-11-16-0: Bugfix:    o check file descriptor errors after select()
+                              errors in commlib
+                 Review:    RD
+                 Changed:   commlib
+
 EB-2005-11-16-1: Bugfix:    job finish although terminate method is still 
                             running 
                  Bugtraq:   6348517

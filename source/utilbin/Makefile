@@ -163,8 +163,8 @@ range.o:	$(UTILBIN_DIR)/range.c
 		$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/range.c
 
 #---------------------------------------------------------------------
-signals:	signals.o version.o 
-		$(CC) -o $@ signals.o version.o $(LFLAGS)
+signals:	signals.o version.o $(WINGRIDLIB_DEP)
+		$(CC) -o $@ signals.o version.o  $(WINGRIDLIB) $(LFLAGS)
 
 signals.o:	$(UTILBIN_DIR)/signals.c
 		$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/signals.c
@@ -217,8 +217,8 @@ testsuidroot.o: $(UTILBIN_DIR)/testsuidroot.c
 		$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/testsuidroot.c
 
 #---------------------------------------------------------------------
-work:	work.o version.o $(UTILIB) $(LCKLIB) $(RMONLIB)
-	$(CC) -o $@ work.o version.o $(LFLAGS) $(UTILIB) $(LCKLIB) $(RMONLIB) $(LIBS)
+work:	work.o version.o $(UTILIB) $(WINGRIDLIB_DEP) $(LCKLIB) $(RMONLIB)
+	$(CC) -o $@ work.o version.o $(LFLAGS) $(UTILIB) $(LCKLIB) $(WINGRIDLIB) $(RMONLIB) $(LIBS)
 
 work.o:	$(UTILBIN_DIR)/work.c
 	$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/work.c

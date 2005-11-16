@@ -1,3 +1,8 @@
+RD-2005-11-15-0: Bugfix:   - qtcsh on linux may not execute local command
+                           - fixed broken build on win32-x86
+                 Changed   qtcsh
+                 Review:   pending
+
 CR-2005-11-16-0: Bugfix:    o check file descriptor errors after select()
                               errors in commlib
                  Review:    RD

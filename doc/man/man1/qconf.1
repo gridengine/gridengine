@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: qconf.1,v $     Last Update: $Date: 2005/11/15 22:26:35 $     Revision: $Revision: 1.22.4.1 $
+.\" $RCSfile: qconf.1,v $     Last Update: $Date: 2005/11/16 19:34:22 $     Revision: $Revision: 1.22.4.2 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QCONF 1 "$Date: 2005/11/15 22:26:35 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH QCONF 1 "$Date: 2005/11/16 19:34:22 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 qconf \- xxQS_NAMExx Queue Configuration
 .SH SYNTAX
@@ -246,6 +246,12 @@ Refer to
 for details on the queue configuration format.
 Requires root or manager privilege.
 .\"
+.IP "\fB\-Mstree fname\fP	\fI<modify share tree>\fP"
+Modifies the definition of the share tree (see
+.M share_tree 5 ). 
+The modified sharetree is read from file fname.
+Requires root or manager privileges.
+.\"
 .IP "\fB\-Mu fname\fP	\fI<modify ACL>\fP"
 Takes the user access list (ACL) defined in
 .B fname
@@ -265,6 +271,13 @@ manager privilege.
 .\" to the format specified in 
 .\" .M usermapping 5 . Requires root or manager privilege.
 .\" usermapping end
+.\"
+.IP "\fB\-Muser fname\fP	\fI<modify user>\fP"
+Modify the user defined in \fBfname\fP
+in the xxQS_NAMExx cluster. The format of the user
+specification is described in
+.M user 5 .
+Requires root or manager privileges.
 .\"
 .IP "\fB\-Rattr obj_spec fname obj_instance,...\fP"
 .ta 2.3i
@@ -857,12 +870,6 @@ the modified data is registered with
 .M xxqs_name_sxx_qmaster 8 .
 Requires root or manager privileges.
 .\"
-.IP "\fB\-Mstree fname\fP	\fI<modify share tree>\fP"
-Modifies the definition of the share tree (see
-.M share_tree 5 ). 
-The modified sharetree is read from file fname.
-Requires root or manager privileges.
-.\"
 .IP "\fB\-mu acl_name\fP	\fI<modify user access lists>\fP"
 Retrieves the current configuration for the specified user access list, 
 executes an editor (either
@@ -882,6 +889,39 @@ Requires root or manager privilege.
 .\" the modified data is registered. Requires root or manager privileges.
 .\" usermapping end
 .\"
+.IP "\fB\-muser user\fP	\fI<modify user>\fP"
+Data for the specific user is retrieved (see
+.M user 5 )
+and an editor (either
+.M vi 1
+or the editor indicated by the EDITOR environment variable) is invoked
+for modifying the user definition. Upon exiting the editor, the
+modified data is registered. Requires root or manager privileges.
+.\"
+.IP "\fB\-purge queue attr_nm,... obj_spec\fP"
+.ta 2.3i
+   \fI<purge divergent attribute settings>\fP
+.ta 3i
+.br
+Delete the values of the attributes defined in \fBattr_nm\fP from the 
+object defined in \fBobj_spec\fP. Obj_spec can be "queue_instance"
+or "queue_domain".  The names of the attributes are described in 
+.M queue_conf 1 .
+.br
+This operation only works on a single queue instance or domain.  It cannot be
+used on a cluster queue.  In the case where the \fBobj_spec\fP is
+"queue@@hostgroup", the attribute values defined in \fBattr_nm\fP which are
+set for the indicated hostgroup are deleted, but not those which are set
+for the hosts contained by that hostgroup.  If the \fBattr_nm\fP
+is '*', all attribute values set for the given queue instance or domain
+are deleted.
+.br
+The main difference between -dattr and -purge is that -dattr removes a
+value from a single list attribute, whereas -purge removes one or more
+overriding attribute settings from a cluster queue configuration.  With
+-purge, the entire attribute is deleted for the given queue instance or
+queue domain.
+.\"
 .IP "\fB\-rattr obj_spec attr_name val obj_instance,...\fP"
 .ta 2.3i
 	\fI<replace object attributes>\fP
@@ -896,33 +936,13 @@ in the description of
 .br
 Requires root or manager privilege. 
 .\"
-.IP "\fB\-Muser fname\fP	\fI<modify user>\fP"
-Modify the user defined in \fBfname\fP
-in the xxQS_NAMExx cluster. The format of the user
-specification is described in
-.M user 5 .
-Requires root or manager privileges.
-.\"
-.IP "\fB\-muser user\fP	\fI<modify user>\fP"
-Data for the specific user is retrieved (see
-.M user 5 )
-and an editor (either
-.M vi 1
-or the editor indicated by the EDITOR environment variable) is invoked
-for modifying the user definition. Upon exiting the editor, the
-modified data is registered. Requires root or manager privileges.
-.\"
-.IP "\fB\-purge queue attr_nm,... queue_instance\fP"
-.ta 2.3i
-   \fI<purge attributes>\fP
-.ta 3i
-.br
-Delete the values of the attributes defined in \fBattr_nm\fP from the queue 
-instance defined in \fBqueue_instance\fP. The names of the 
-attributes are described in 
-.M queue_conf 1 .
-This operation only works on a single queue instance.  It cannot be
-used on a cluster queue.
+.IP "\fB\-rsstnode node_path,...\fP	\fI<show share tree node>\fP"
+Recursively shows the name and shares of the specified share tree node(s)
+and the names and shares of its child nodes. (see
+.M share_tree 5 ).
+The \fBnode_path\fP is a hierarchical path
+(\fB[/]node_name[[/.]node_name...]\fP)
+specifying the location of a node in the share tree.
 .\"
 .IP "\fB\-sc\fP	\fI<show complexes>\fP"
 Display the complex configuration.

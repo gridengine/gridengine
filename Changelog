@@ -1,3 +1,12 @@
+DT-2005-11-16-0: Bugfix:    o Clearly explained -purge in qconf man page
+                            o Added -rsstree to qconf man page
+                            o Sorted options in qconf man page in alphabetical
+                              order
+                            - Merged from DT-2005-11-16-0 (Maintrunk)
+                 Issue:     1783, 1897, 1898
+                 Bugtraq:   6351174, 6351240, 6351278
+                 Changed:   man/man1/qconf.1
+
 AA-2005-11-15-0: Bugfix:   - qmon cluster conf reprioritize field missing
                            - qmon cluster conf add can destroy existing cluster conf 
                  Review:   MD

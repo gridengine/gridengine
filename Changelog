@@ -1,3 +1,11 @@
+DT-2005-11-16-0: Bugfix:    o Clearly explained -purge in qconf man page
+                            o Added -rsstree to qconf man page
+                            o Sorted options in qconf man page in alphabetical
+                              order
+                 Issue:     1783, 1897, 1898
+                 Bugtraq:   6351174, 6351240, 6351278
+                 Changed:   man/man1/qconf.1
+
 HP-2005-11-16-0: Bugfix:    Fixed broken build on non-Solaris-non-Linux archs
                  Review:    EB
                  Changed:   shepherd, cull Makefile, ...

@@ -92,7 +92,7 @@ static int do_add_config(char *aConfName, lListElem *aConf, lList**anAnswer);
 static int remove_conf_by_name(char *aConfName);
 static lListElem *get_entry_from_conf(lListElem *aConf, const char *anEntryName);
 static u_long32 sge_get_config_version_for_host(const char* aName);
-static bool sge_get_conf_reprioritize(lListElem *aConf);
+static bool sge_get_conf_reprioritize(const lListElem *aConf);
 
 /* 
  * Read the cluster configuration from secondary storage using 'aSpoolContext'.
@@ -723,7 +723,7 @@ void sge_set_conf_reprioritize(lListElem *aConf, bool aFlag)
 } /* sge_set_conf_reprioritize */
 
 
-static bool sge_get_conf_reprioritize(lListElem *aConf)
+static bool sge_get_conf_reprioritize(const lListElem *aConf)
 {
    lList *entries = NULL;
    lListElem *ep = NULL;
@@ -739,12 +739,15 @@ static bool sge_get_conf_reprioritize(lListElem *aConf)
 
    if (NULL == ep) {
       res = false; /* no conf value */
-   }
-   else {
+   } else {
       const char *val;
 
       val = lGetString(ep, CF_value);
-      res = ((strncasecmp(val, "0", sizeof("0")) == 0) ? false :true);
+      if (val == NULL || *val == '0' || strcasecmp(val, "false") == 0) {
+         res = false;
+      } else {
+         res = true;
+      }
    }
 
    DEXIT;
@@ -761,7 +764,7 @@ bool sge_conf_is_reprioritize(void)
 
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
    
-   conf = lCopyElem(lGetElemHost(Cluster_Config.list, CONF_hname, SGE_GLOBAL_NAME));   
+   conf = lGetElemHost(Cluster_Config.list, CONF_hname, SGE_GLOBAL_NAME);
    res = sge_get_conf_reprioritize(conf);
 
    SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);

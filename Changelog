@@ -1,3 +1,8 @@
+JG-2005-11-17-0: Bugfix:    Fixed memory leaks in module test and qmaster
+                            (introduced during s2 development)
+                            Merge from V60s2_BRANCH, JG-2005-11-16-0
+                 Review:    CR
+
 DT-2005-11-16-0: Bugfix:    o Clearly explained -purge in qconf man page
                             o Added -rsstree to qconf man page
                             o Sorted options in qconf man page in alphabetical

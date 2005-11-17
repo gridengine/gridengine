@@ -1698,7 +1698,6 @@ spool_berkeleydb_read_object(lList **answer_list, bdb_info info,
                               ANSWER_QUALITY_ERROR, 
                               MSG_BERKELEY_NOCONNECTIONOPEN_S,
                               bdb_get_database_name(database));
-      ret = false;
    } else {
       DPRINTF(("querying object with key %s\n", key));
 
@@ -1732,7 +1731,7 @@ spool_berkeleydb_read_object(lList **answer_list, bdb_info info,
                                     MSG_BERKELEY_UNPACKINITERROR_SS,
                                     key_dbt.data,
                                     cull_pack_strerror(cull_ret));
-            ret = false;
+            ret = NULL;
          }
          DPRINTF(("init_packbuffer succeeded\n"));
 
@@ -1744,7 +1743,7 @@ spool_berkeleydb_read_object(lList **answer_list, bdb_info info,
                                     MSG_BERKELEY_UNPACKERROR_SS,
                                     key_dbt.data,
                                     cull_pack_strerror(cull_ret));
-            ret = false;
+            ret = NULL;
          }
 
          /* We specified DB_DBT_MALLOC - BDB will malloc memory for each

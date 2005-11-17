@@ -1,3 +1,10 @@
+MD-2005-11-17-0: Bugfix:    - installation of qmaster failed when using 
+                              /etc/services
+                 Issue:     1900
+                 Bugtraq:   6351728
+                 Changed:   util lib
+                 Review:    CR
+
 CR-2005-11-17-2: Testsuite: - fixed tcl in issue test 1330
                  Review:    RD
 

@@ -146,16 +146,20 @@ int sge_get_qmaster_port(void) {
    }
 
    /* get port from services file */
-   if (int_port < 0) {
+   if (int_port <= 0) {
       char buffer[2048];
       struct servent se_result;
-      if (sge_getservbyname_r(&se_result, "sge_qmaster", buffer, sizeof(buffer)))
-         int_port = ntohs(se_result.s_port);
+      struct servent* se_help = NULL;
+
+      se_help = sge_getservbyname_r(&se_result, "sge_qmaster", buffer, sizeof(buffer));
+      if (se_help != NULL) {
+         int_port = ntohs(se_help->s_port);
+      }
    }
 
-   if (int_port < 0 ) {
+   if (int_port <= 0 ) {
       ERROR((SGE_EVENT, MSG_UTI_CANT_GET_ENV_OR_PORT_SS, "SGE_QMASTER_PORT", "sge_qmaster"));
-      if ( cached_port >= 0 ) {
+      if ( cached_port > 0 ) {
          WARNING((SGE_EVENT, MSG_UTI_USING_CACHED_PORT_SU, "sge_qmaster", sge_u32c(cached_port) ));
          int_port = cached_port; 
       } else {
@@ -209,16 +213,20 @@ int sge_get_execd_port(void) {
    }
 
    /* get port from services file */
-   if (int_port < 0) {
+   if (int_port <= 0) {
       char buffer[2048];
       struct servent se_result;
-      if (sge_getservbyname_r(&se_result, "sge_execd", buffer, sizeof(buffer)))
-         int_port = ntohs(se_result.s_port);
+      struct servent* se_help = NULL;
+
+      se_help = sge_getservbyname_r(&se_result, "sge_execd", buffer, sizeof(buffer));
+      if (se_help != NULL) {
+         int_port = ntohs(se_help->s_port);
+      }
    }
 
-   if (int_port < 0 ) {
+   if (int_port <= 0 ) {
       ERROR((SGE_EVENT, MSG_UTI_CANT_GET_ENV_OR_PORT_SS, "SGE_EXECD_PORT" , "sge_execd"));
-      if ( cached_port >= 0 ) {
+      if ( cached_port > 0 ) {
          WARNING((SGE_EVENT, MSG_UTI_USING_CACHED_PORT_SU, "sge_execd", sge_u32c(cached_port) ));
          int_port = cached_port; 
       } else {

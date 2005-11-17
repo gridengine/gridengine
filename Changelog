@@ -1,3 +1,6 @@
+CR-2005-11-17-2: Testsuite: - fixed tcl in issue test 1330
+                 Review:    RD
+
 CR-2005-11-17-1: Testsuite: - disabled file check of start_remote_prog
                             - added file check to generated script
                  Review:    MD

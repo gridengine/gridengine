@@ -181,7 +181,7 @@ proc write_autoinst_config { filename host { do_cleanup 1 } } {
    puts $fdo "EXECD_SPOOL_DIR=\"$ts_config(product_root)/$ts_config(cell)/spool/\""
    puts $fdo "GID_RANGE=\"$gid_range\""
    puts $fdo "SPOOLING_METHOD=\"$ts_config(spooling_method)\""
-   set bdb_server [$ts_config(bdb_server)]
+   set bdb_server $ts_config(bdb_server)
    puts $fdo "DB_SPOOLING_SERVER=\"$bdb_server\""
    puts $fdo "DB_SPOOLING_DIR=\"$db_dir\""
    puts $fdo "ADMIN_HOST_LIST=\"$ts_config(execd_hosts)\""

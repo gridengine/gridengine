@@ -1710,7 +1710,13 @@ proc create_shell_script { scriptfile
       }
    }
 
-   puts $script "$exec_command $exec_arguments"
+   puts $script "which $exec_command > /dev/null"
+   puts $script "if \[ $? = 0 \]; then"
+   puts $script "   $exec_command $exec_arguments"
+   puts $script "else"
+   puts $script "   sleep 2"
+   puts $script "   $exec_command $exec_arguments"
+   puts $script "fi"
 
    if { $no_setup == 0 } { 
       puts $script "exit_val=\"\$?\""

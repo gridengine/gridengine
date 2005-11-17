@@ -1,3 +1,7 @@
+CR-2005-11-17-1: Testsuite: - disabled file check of start_remote_prog
+                            - added file check to generated script
+                 Review:    MD
+
 CR-2005-11-17-0: Testsuite: fixed unsupported warning message create for
                             test checktree/bugs/issuezilla/1096/ 
                  Review:    RD

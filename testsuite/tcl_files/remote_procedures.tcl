@@ -508,46 +508,49 @@ proc start_remote_prog { hostname
      }
    }
    
-   if { $hostname != $CHECK_HOST && $do_file_check == 1 } {
-      set is_ok 0
-      # give NFS 60 seconds time to show the command ...
-      set my_timeout [ expr ( [timestamp] + 60 ) ] 
-      debug_puts "----> REMOTE connection, checking file availability ..."
 
-      while { $is_ok == 0 } {
-         if { $exec_command == "cd" } {
-            set output "shell build-in command"
-            set is_ok 1
-            break;
-         }
-         set output [ start_remote_prog $hostname $user "which" "$exec_command" prg_exit_state $mytimeout 0 users_env 0 $source_settings_file $set_shared_lib_path]
-         if { $prg_exit_state == 0 } {
-            set is_ok 1
-            break
-         } else {
-            set actual_timestamp [timestamp]
-            if { $prg_exit_state == -255 } { 
-               # no connection
-               add_proc_error "start_remote_prog" -1 "no connection to host $hostname as user $user"
-               return ""
-            }
-
-            if { $actual_timestamp > $my_timeout } {
-               add_proc_error "start_remote_prog" -1 "can't start which command as user $user on host $hostname\nPlease check user environment on that host!\noutput:\n$output\n"
-               break
-            }
-            set output [ start_remote_prog $hostname $user "test" "-f $exec_command" prg_exit_state $mytimeout 0 users_env 0 $source_settings_file $set_shared_lib_path]
-            if { $prg_exit_state == 0 } {
-               set is_ok 1
-               break
-            }
-         }
-         after 125
-      }
-      if { $is_ok != 1 } {
-         add_proc_error "start_remote_prog" -1 "timeout while waiting for $exec_command on host $hostname as user $user\n$output"
-      }
-   }
+#   if { $hostname != $CHECK_HOST && $do_file_check == 1 } {
+#      set is_ok 0
+#      # give NFS 60 seconds time to show the command ...
+#      set my_timeout [ expr ( [timestamp] + 60 ) ] 
+#      debug_puts "----> REMOTE connection, checking file availability ..."
+#
+#      while { $is_ok == 0 } {
+#         if { $exec_command == "cd" } {
+#            set output "shell build-in command"
+#            set is_ok 1
+#            break;
+#         }
+#
+#         set output [ start_remote_prog $hostname $user "which" "$exec_command" prg_exit_state $mytimeout 0 users_env 0 $source_settings_file $set_shared_lib_path]
+#         set prg_exit_state 0
+#         if { $prg_exit_state == 0 } {
+#            set is_ok 1
+#            break
+#         } else {
+#            set actual_timestamp [timestamp]
+#            if { $prg_exit_state == -255 } { 
+#               # no connection
+#               add_proc_error "start_remote_prog" -1 "no connection to host $hostname as user $user"
+#               return ""
+#            }
+#
+#            if { $actual_timestamp > $my_timeout } {
+#               add_proc_error "start_remote_prog" -1 "can't start which command as user $user on host $hostname\nPlease check user environment on that host!\noutput:\n$output\n"
+#               break
+#            }
+#            set output [ start_remote_prog $hostname $user "test" "-f $exec_command" prg_exit_state $mytimeout 0 users_env 0 $source_settings_file $set_shared_lib_path]
+#            if { $prg_exit_state == 0 } {
+#               set is_ok 1
+#               break
+#            }
+#         }
+#         after 500
+#      }
+#      if { $is_ok != 1 } {
+#         add_proc_error "start_remote_prog" -1 "timeout while waiting for $exec_command on host $hostname as user $user\n$output"
+#      }
+#   }
 
    set id [open_remote_spawn_process "$hostname" "$user" "$exec_command" "$exec_arguments" $background users_env $source_settings_file 15 $set_shared_lib_path ]
    if { [string compare $id ""] == 0 } {

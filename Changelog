@@ -1,3 +1,7 @@
+CR-2005-11-17-0: Testsuite: fixed unsupported warning message create for
+                            test checktree/bugs/issuezilla/1096/ 
+                 Review:    RD
+
 JG-2005-11-17-0: Bugfix:    Fixed memory leaks in module test and qmaster
                             (introduced during s2 development)
                             Merge from V60s2_BRANCH, JG-2005-11-16-0

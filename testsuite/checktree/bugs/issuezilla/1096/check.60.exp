@@ -79,81 +79,71 @@ proc issue_1096_init_level {} {
 proc issue_1096_shutdown_master {} {
    global ts_config CHECK_OUTPUT
    if { $ts_config(product_feature) == "csp" } {
-      set_error -3 "Warning: this is a csp system skipping this test"
-      return
+      puts $CHECK_OUTPUT "this is csp system skipping shutdown of core system ..."
+   } else {
+      shutdown_core_system
    }
-   shutdown_core_system
    set_error 0 "ok"
 }
-proc issue_1096_run  {} {
+proc issue_1096_run {} {
    global ts_config  CHECK_OUTPUT CHECK_USER
+
    if { $ts_config(product_feature) == "csp" } {
-      set_error -3 "Warning: this is a csp system skipping this test"
-      return
-   }
-   puts $CHECK_OUTPUT "try to start qmaster on port $ts_config(reserved_port) ..."
+      add_proc_error "issue_1096_run" -3 "This test does not work on csp systems"
+   } else {
+      puts $CHECK_OUTPUT "try to start qmaster on port $ts_config(reserved_port) ..."
 
-   for { set i 0 } { $i < [llength $ts_config(unique_arch_nodes) ]  } { incr i 1 } {
-      set act_host [lindex  $ts_config(unique_arch_nodes) $i]
-      set arch [resolve_arch $act_host]
+      for { set i 0 } { $i < [llength $ts_config(unique_arch_nodes) ]  } { incr i 1 } {
+         set act_host [lindex  $ts_config(unique_arch_nodes) $i]
+         set arch [resolve_arch $act_host]
 
-      if { $arch == "win32-x86" } {
-         add_proc_error "issue_1096_run" -3 "Skipping win32-x86 architecture!" 
-         continue
-      }
+         if { $arch == "win32-x86" } {
+            add_proc_error "issue_1096_run" -3 "Skipping win32-x86 architecture!" 
+            continue
+         }
 
-      set qmaster_binary $ts_config(product_root)/bin/${arch}/sge_qmaster
-      set qping_binary $ts_config(product_root)/bin/${arch}/qping
+         set qmaster_binary $ts_config(product_root)/bin/${arch}/sge_qmaster
+         set qping_binary $ts_config(product_root)/bin/${arch}/qping
 
-      puts $CHECK_OUTPUT "host $act_host: qmaster binary: \"$qmaster_binary\""
-      set envlist(SGE_QMASTER_PORT) $ts_config(reserved_port)
-      set envlist(SGE_TEST_SOCKET_BIND) "1"
-      set output [start_remote_prog $act_host "root" $qmaster_binary "\nsleep 2" prg_exit_state 60 0 envlist 1 0 1]
-      puts $CHECK_OUTPUT $output
-      puts $CHECK_OUTPUT "exit state: $prg_exit_state"
-
-      puts $CHECK_OUTPUT "try to qping qmaster ..."
-      set tries 0
-      while { 1 } {
-         set output [start_remote_prog $act_host $CHECK_USER $qping_binary "-info $act_host $ts_config(reserved_port) qmaster 1" prg_exit_state 60 0 envlist 1 0 1]
+         puts $CHECK_OUTPUT "host $act_host: qmaster binary: \"$qmaster_binary\""
+         set envlist(SGE_QMASTER_PORT) $ts_config(reserved_port)
+         set envlist(SGE_TEST_SOCKET_BIND) "1"
+         set output [start_remote_prog $act_host "root" $qmaster_binary "\nsleep 2" prg_exit_state 60 0 envlist 1 0 1]
          puts $CHECK_OUTPUT $output
          puts $CHECK_OUTPUT "exit state: $prg_exit_state"
-         incr tries 1
-         if { $prg_exit_state == 0 || $tries > 10 } {
-            puts $CHECK_OUTPUT "ok"
-            break
-         } else {
-            sleep 1
+
+         puts $CHECK_OUTPUT "try to qping qmaster ..."
+         set tries 0
+         while { 1 } {
+            set output [start_remote_prog $act_host $CHECK_USER $qping_binary "-info $act_host $ts_config(reserved_port) qmaster 1" prg_exit_state 60 0 envlist 1 0 1]
+            puts $CHECK_OUTPUT $output
+            puts $CHECK_OUTPUT "exit state: $prg_exit_state"
+            incr tries 1
+            if { $prg_exit_state == 0 || $tries > 10 } {
+               puts $CHECK_OUTPUT "ok"
+               break
+            } else {
+               sleep 1
+            }
          }
-      }
 
-      if { $prg_exit_state != 0 } {
-         add_proc_error "issue_1096_run" -1 "error starting qmaster with port $ts_config(reserved_port) on host $act_host"
-      }
+         if { $prg_exit_state != 0 } {
+            add_proc_error "issue_1096_run" -1 "error starting qmaster with port $ts_config(reserved_port) on host $act_host"
+         }
 
-      shutdown_system_daemon $act_host qmaster
+         shutdown_system_daemon $act_host qmaster
+      }
    }
-
    set_error 0 "ok"
 }
 
 
 proc issue_1096_cleanup {} {
-
    global ts_config CHECK_OUTPUT
    if { $ts_config(product_feature) == "csp" } {
-      set_error -3 "Warning: this is a csp system skipping this test"
+      puts $CHECK_OUTPUT "nothing to cleanup"
    } else {
       startup_core_system
    }
    set_error 0 "ok"
 }
-
-
-
-
-
-
-
-
-

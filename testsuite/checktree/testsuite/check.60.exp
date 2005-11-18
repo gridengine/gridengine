@@ -81,8 +81,8 @@ set check_init_level_procedure "ts_performance_test_init_level"
 set check_name            "ts_performance_test"
 set check_category        "COMPATIBILITY SYSTEM VERIFIED"
 set check_highest_level   1
-set check_description(0)  "test testsuite average execution time on each cluster host"
-set check_description(1)  "test system time on each cluster daemon host"
+set check_description(1)  "test testsuite average execution time on each cluster host"
+set check_description(0)  "test system time on each cluster daemon host"
 
 
 
@@ -151,7 +151,7 @@ proc ts_performance_test_test {} {
 
    puts $CHECK_OUTPUT $check_description($CHECK_ACT_LEVEL)
 
-   if {$CHECK_ACT_LEVEL == 0} {
+   if {$CHECK_ACT_LEVEL == 1} {
       set max_user_len 0
       set max_host_len 0
 
@@ -187,7 +187,7 @@ proc ts_performance_test_test {} {
             puts -nonewline $CHECK_OUTPUT [format "%-${max_user_len}s on %-${max_host_len}s: " $user $host]
     
             set starttime [clock clicks -milliseconds]
-            set runs 5 
+            set runs 5
             set run $runs
             while { $run > 0 } {
    #         puts $CHECK_OUTPUT "start remote prog ...\[$run\]"
@@ -210,7 +210,7 @@ proc ts_performance_test_test {} {
       puts $CHECK_OUTPUT ""
    }
 
-   if {$CHECK_ACT_LEVEL == 1} {
+   if {$CHECK_ACT_LEVEL == 0} {
       check_all_system_times
    }
    set_error 0 "ok"

@@ -1,3 +1,6 @@
+CR-2005-11-18-0: Testsuite: fixed another problem with start_remote_prog
+                 Review:    JG
+
 MD-2005-11-17-0: Bugfix:    - installation of qmaster failed when using 
                               /etc/services
                  Issue:     1900

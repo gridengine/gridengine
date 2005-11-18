@@ -1641,7 +1641,7 @@ proc create_shell_script { scriptfile
    puts $script "# The script will execute a special command with arguments"
    puts $script "# and it should be deleted after use. So if this file exists, please delete it"
 
-   if { $no_setup == 0 } { 
+   if { $no_setup == 0 } {
       # script command
       puts $script "trap 'echo \"_exit_status_:(1)\"' 0"
       puts $script "umask 022"
@@ -1710,13 +1710,18 @@ proc create_shell_script { scriptfile
       }
    }
 
-   puts $script "which $exec_command > /dev/null"
-   puts $script "if \[ $? = 0 \]; then"
-   puts $script "   $exec_command $exec_arguments"
-   puts $script "else"
-   puts $script "   sleep 2"
-   puts $script "   $exec_command $exec_arguments"
-   puts $script "fi"
+   # don't try to find which,cd, test and other shell commands
+   # don't try to do anything if $no_setup is set
+   set ignored_commands "cd test which echo"
+   if { [lsearch $ignored_commands $exec_command] >= 0 || $no_setup != 0 } {
+      puts $script "$exec_command $exec_arguments"
+   } else {
+      puts $script "which $exec_command >/dev/null 2>&1"
+      puts $script "if \[ $? -ne 0 \]; then"
+      puts $script "   sleep 2"
+      puts $script "fi"
+      puts $script "$exec_command $exec_arguments"
+   }
 
    if { $no_setup == 0 } { 
       puts $script "exit_val=\"\$?\""

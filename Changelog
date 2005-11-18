@@ -1,3 +1,7 @@
+DT-2005-11-18-0: Bugfix:    o Checked in missing changes
+                            - Merged from DT-2005-09-09-0
+                 Changed:   classes/build.xml
+
 MD-2005-11-17-0: Bugfix:    - installation of qmaster failed when using 
                               /etc/services
                  Issue:     1900

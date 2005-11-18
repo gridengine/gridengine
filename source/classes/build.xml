@@ -29,6 +29,7 @@
       <javac debug="true" deprecation="true" destdir="${classes.dir.test}" classpath="${classes.dir}">
          <src path="${src.dir.test}"/>
          <include name="org/ggf/drmaa/*.java"/>
+         <include name="com/sun/grid/*.java"/>
          <include name="com/sun/grid/drmaa/*.java"/>
          <include name="TestDrmaa.java"/>
          <include name="DrmaaSuite.java"/>
@@ -55,6 +56,7 @@
          </fileset>
          <fileset dir="${classes.dir.test}">
             <include name="org/ggf/drmaa/*.class"/>
+            <include name="com/sun/grid/*.class"/>
             <include name="com/sun/grid/drmaa/*.class"/>
             <include name="TestDrmaa*.class"/>
             <include name="DrmaaSuite.class"/>
@@ -69,6 +71,7 @@
       <jar compress="true" jarfile="${test.jar}">
          <fileset dir="${classes.dir.test}">
             <include name="org/ggf/drmaa/*.class"/>
+            <include name="com/sun/grid/*.class"/>
             <include name="com/sun/grid/drmaa/*.class"/>
             <include name="TestDrmaa*.class"/>
             <include name="DrmaaSuite.class"/>

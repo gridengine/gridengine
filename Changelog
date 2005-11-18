@@ -1,3 +1,8 @@
+JG-2005-11-18-1: Testsuite: Cleanup/fixes for bugs/issuezilla/1768 and 
+                            bugs/issuezilla/1837.
+                            Added utility functions for handling of qtask file.
+                 Review:    RD
+
 JG-2005-11-18-0: Testsuite: Fixed checks api/drmaa and bugs/issuezilla/1780.
                  Review:    CR
 

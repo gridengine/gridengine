@@ -69,59 +69,35 @@ proc issue_1768_init_level {} {
 }
 
 proc issue_1768_setup {} {
-   global ts_config CHECK_USER CHECK_HOST issue_1768_stored_qtask_file
-
-   set pid [pid]
-   set cat "issue1768cat$pid"
-   set qtask "$ts_config(product_root)/$ts_config(cell)/common/qtask"
-   set issue_1768_stored_qtask_file [get_tmp_file_name]
-
-   set error [ catch {
-      file copy $qtask $issue_1768_stored_qtask_file
-      set f [open $qtask a]
-      puts $f "$cat -N \"two words\" -N \"three . words\""
-      close $f
-   } message ]
-
-   if {$error != 0} {
-      add_proc_error "issue_1768_setup" -1 "failed setting up qtask file: $message"
-   }
+   append_to_qtask_file "issue1768 -N \"two words\" -N \"three . words\""
    set_error 0 "ok"
 }
 
 proc issue_1768_cleanup {} {
-   global ts_config CHECK_USER CHECK_HOST CHECK_PRODUCT_ROOT issue_1768_stored_qtask_file
+   delete_all_jobs
+   wait_for_end_of_all_jobs 60
 
-   set pid [pid]
-   set qtask "$CHECK_PRODUCT_ROOT/$ts_config(cell)/common/qtask"
-
-   set error [ catch {
-      file copy -force $issue_1768_stored_qtask_file $qtask
-   } message ]
-
-   if {$error != 0} {
-      add_proc_error "issue_1768_cleanup" -1 "failed restoring qtask file: $message"
-   }
+   restore_qtask_file
    set_error 0 "ok"
 }
 
 proc issue_1768_run  {} {
-   global ts_config CHECK_USER CHECK_HOST CHECK_PRODUCT_ROOT
+   global ts_config CHECK_OUTPUT CHECK_USER
+   global qtask_command
 
-   # Run test binary
-   set failed 0
-   set pid [pid]
-   set cat "issue1768cat$pid"
-
+   # Run test binary on all architectures
+   puts $CHECK_OUTPUT "running drmaa test binary on all architectures"
    foreach host $ts_config(unique_arch_nodes) {
       set up_arch [resolve_build_arch $host]
+      puts $CHECK_OUTPUT "$up_arch ($host)"
+
       set client_binary "$ts_config(source_dir)/$up_arch/test_drmaa_issue1768"
 
       if {[wait_for_remote_file $host $CHECK_USER $client_binary 1 0] != 0} {
          add_proc_error "issue_1768_run" -3 "test binary $client_binary doesn't exist on host $host"
          continue
       } else {
-         set output [start_remote_prog $host $CHECK_USER $client_binary "/bin/date $cat"]
+         set output [start_remote_prog $host $CHECK_USER $client_binary "/bin/date issue1768"]
          # If we segfault on any architecture, the bug still exists.
          if {$prg_exit_state != 0} {
             add_proc_error "issue_1768_run" -1 "test binary $client_binary failed on host $host:\n$output"

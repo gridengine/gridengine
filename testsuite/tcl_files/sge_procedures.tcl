@@ -7721,3 +7721,87 @@ proc is_daemon_running { hostname daemon } {
    }
    return $execd_count
 }
+
+#****** sge_procedures/restore_qtask_file() ************************************
+#  NAME
+#     restore_qtask_file() -- restore qtask file from template
+#
+#  SYNOPSIS
+#     restore_qtask_file { } 
+#
+#  FUNCTION
+#     Copies $SGE_ROOT/util/qtask to $SGE_ROOT/$SGE_CELL/common/qtask
+#
+#  RESULT
+#     1 on success, else 0
+#
+#  SEE ALSO
+#     sge_procedures/append_to_qtask_file()
+#*******************************************************************************
+proc restore_qtask_file {} {
+   global ts_config CHECK_OUTPUT CHECK_USER
+
+   set ret 1
+
+   # restore the qtask file from util/qtask
+   puts $CHECK_OUTPUT "restoring qtask file from template util/qtask"
+   set qtask_file "$ts_config(product_root)/$ts_config(cell)/common/qtask"
+   set qtask_template "$ts_config(product_root)/util/qtask"
+   set output [start_remote_prog $ts_config(master_host) $CHECK_USER "cp" "$qtask_template $qtask_file"]
+   if {$prg_exit_state != 0} {
+      add_proc_error "restore_qtask_file" -1 "error restoring qtask file:\n$output"
+      set ret 0
+   }
+
+   return $ret
+}
+
+#****** sge_procedures/append_to_qtask_file() **********************************
+#  NAME
+#     append_to_qtask_file() -- append line(s) to qtask file
+#
+#  SYNOPSIS
+#     append_to_qtask_file { content } 
+#
+#  FUNCTION
+#     Appends lines given as argument to the global qtask file.
+#
+#  INPUTS
+#     content - lines to be appended
+#
+#  RESULT
+#     1 on success, else 0
+#
+#  EXAMPLE
+#     append_to_qtask_file "mozilla -l h=myhost"
+#
+#  SEE ALSO
+#     sge_procedures/restore_qtask_file()
+#*******************************************************************************
+proc append_to_qtask_file {content} {
+   global ts_config CHECK_OUTPUT
+
+   set ret 1
+
+   set qtask_file "$ts_config(product_root)/$ts_config(cell)/common/qtask"
+
+   # make sure we have a qtask file
+   if {[file isfile $qtask_file] == 0} {
+      set ret [restore_qtask_file]
+   }
+
+   if {$ret} {
+      set error [catch {
+         set f [open $qtask_file "a"]
+         puts $f $content
+         close $f
+      } output]   
+
+      if {$error != 0} {
+         add_proc_error "append_to_qtask_file" -1 "error appending to qtask file:\n$output"
+         set ret 0
+      }
+   }
+
+   return $ret
+}

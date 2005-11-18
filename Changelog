@@ -1,3 +1,6 @@
+JG-2005-11-18-0: Testsuite: Fixed checks api/drmaa and bugs/issuezilla/1780.
+                 Review:    CR
+
 CR-2005-11-18-0: Testsuite: fixed another problem with start_remote_prog
                  Review:    JG
 

@@ -69,13 +69,12 @@ proc issue_1780_run  {} {
    set tmp_file [get_tmp_file_name]
    set arch [ resolve_arch $ts_config(master_host) ]
 
-   set f [ open "$tmp_file" w ]
 
+   puts $CHECK_OUTPUT "retrieving hosts via ypcat"
    set output [start_remote_prog $CHECK_HOST $CHECK_USER "ypcat" "hosts" result]
-
    if {$result != 0} {
-      puts $CHECK_OUTPUT "Unable to call ypcat.  Skipping host."
-      set_error -3 "skipping host"
+      add_proc_error "issue_1780_run" -3 "couldn't call ypcat - skipping this test:\n$output"
+      set_error 0 "ok"
       return
    }
 
@@ -87,6 +86,10 @@ proc issue_1780_run  {} {
    foreach host $ts_config(execd_nodes) {
       set valid_hosts($host) 0
    }
+
+   # write queue config to temporary file
+   puts $CHECK_OUTPUT "creating queue config file"
+   set f [ open "$tmp_file" w ]
 
    puts $f "qname\t3000_hosts.q"
    puts $f "slots\t10,\\"
@@ -109,13 +112,12 @@ proc issue_1780_run  {} {
          }
       }
    }
+
    close $f
 
-   puts $CHECK_OUTPUT ""
-
    if {$count < $max_count} {
-      puts $CHECK_OUTPUT "Ran out of hostnames"
       add_proc_error "issue_1780" -3 "unable to add enough hosts to test issue 1780"
+      set_error 0 "ok"
       return
    }
 
@@ -124,19 +126,17 @@ proc issue_1780_run  {} {
    # whether the modification works.  We're just looking for seg faults in
    # qconf.
    set result [start_remote_prog $ts_config(master_host) $CHECK_USER "$ts_config(product_root)/bin/$arch/qconf" "-sq all.q | grep -v slots | grep -v qname >> $tmp_file" exit_code]
-   set result [start_remote_prog $ts_config(master_host) $CHECK_USER "$ts_config(product_root)/bin/$arch/qconf" "-Aq $tmp_file" exit_code]
+   set result [start_remote_prog $ts_config(master_host) $CHECK_USER "$ts_config(product_root)/bin/$arch/qconf" "-Aq $tmp_file" exit_code 610]
 
    if { $exit_code != 0 } {
-      add_proc_error "issue_1780_run" -1 "qconf -Mconf with huge amout of host entries broken"
+      add_proc_error "issue_1780_run" -1 "qconf -Mconf with huge amout of host entries broken:\n$result"
    }
 
    set_error 0 "ok"
 }
 
 proc issue_1780_cleanup {} {
-   global ts_config CHECK_USER
+   del_queue 3000_hosts.q "" 0 1
 
-   set arch [ resolve_arch $ts_config(master_host) ]
-   start_remote_prog $ts_config(master_host) $CHECK_USER "$ts_config(product_root)/bin/$arch/qconf" "-dq 3000_hosts.q"
    set_error 0 "ok"
 }

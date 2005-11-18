@@ -62,6 +62,7 @@ set check_description(202)  "tests to verify DRMAA library: additional interface
 set check_needs           "init_core_system" 
 
 # setup and cleanup functions
+set check_setup_function "drmaa_setup"
 set check_cleanup_function "drmaa_cleanup"
 
 # define test's procedure order
@@ -73,64 +74,67 @@ lappend check_functions "drmaa_check"
 proc drmaa_init_level {} {
   global CHECK_ACT_LEVEL
 
-
   # returning -1 causes disabling a certain runlevel
   # here per run level settings can be prepared
   switch -- $CHECK_ACT_LEVEL {
      "200" { 
-           return 0
+        return 0
      } 
      "201" { 
-           return 0
-     } 
+        return 0
+     }
      "202" { 
-           return 0
+        return 0
      } 
   } 
+
   return -1  ;# no other level else
 }
 
 # -------- local test procedures -----------------------------------------------
 
-# here the actual test is done
-proc drmaa_check {} {
-   global ts_config
-   global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_ACTUAL_TEST_PATH
-   global CHECK_HOST CHECK_SOURCE_DIR CHECK_USER CHECK_CORE_MASTER
-   global CHECK_ACT_LEVEL CHECK_SCRIPT_FILE_DIR CHECK_TESTSUITE_ROOT CHECK_DEBUG_LEVEL
-
-   puts $CHECK_OUTPUT "product root is $CHECK_PRODUCT_ROOT"
-   puts $CHECK_OUTPUT "arch is $CHECK_ARCH"
-   puts $CHECK_OUTPUT "host is $CHECK_HOST"
+proc drmaa_setup {} {
+   global backup_qmaster_params
 
    # must forbit reschedule on job exiting with 99 
    # must forbit job error upon job exiting with 100
    # otherwise drmaa_test ST_EXIT_STATUS never finishes
-   set new_config(qmaster_params) "FORBID_RESCHEDULE FORBID_APPERROR"
+
+   # backup old settings
+   get_config config
+   set backup_qmaster_params $config(qmaster_params)
+
+   # set new value
+   set new_config(qmaster_params) "FORBID_RESCHEDULE=TRUE,FORBID_APPERROR=TRUE"
    set_config new_config
 
+   set_error 0 "ok"
+}
+
+# undo what we've done in drmaa_setup
+proc drmaa_cleanup  {} {
+   global backup_qmaster_params
+
+   delete_all_jobs
+   wait_for_end_of_all_jobs 60
+
+   # undo configuration changes that were made for this test
+   set new_config(qmaster_params) $backup_qmaster_params
+   set_config new_config
+
+   set_error 0 "ok"
+}
+
+# here the actual test is done
+proc drmaa_check {} {
+   global ts_config
+   global CHECK_OUTPUT
+   global CHECK_USER
+   global CHECK_ACT_LEVEL CHECK_SCRIPT_FILE_DIR CHECK_TESTSUITE_ROOT
+
    foreach host $ts_config(unique_arch_nodes) {
-      set binary_arch "[resolve_arch $host]"
-
-      switch -- $binary_arch {
-         "sol-sparc" -
-         "sol-sparc64" -
-         "sol-x86" -
-         "lx24-x86" -
-         "lx26-x86" -
-         "lx24-amd64" -
-         "lx26-amd64" {
-            puts $CHECK_OUTPUT "architecture $binary_arch is supported"
-         }
-
-         default {
-            puts $CHECK_OUTPUT "DRMAA not supported for binary architecture $binary_arch"
-            continue
-         }
-      }   
-
-      set compile_arch_mt "[resolve_build_arch $host]"
-      set binary_path "$CHECK_SOURCE_DIR/$compile_arch_mt"
+      set compile_arch_mt [resolve_build_arch $host]
+      set binary_path "$ts_config(source_dir)/$compile_arch_mt"
       puts $CHECK_OUTPUT "host is $host has arch $compile_arch_mt mt bin path $binary_path"
 
       switch -- $CHECK_ACT_LEVEL {
@@ -140,10 +144,8 @@ proc drmaa_check {} {
 
             # unset SGE_ROOT and try test_drmaa -h
             puts "starting single threaded test test_drmaa -h without SGE_ROOT"
-            # set CHECK_DEBUG_LEVEL 2
             set test_output [ start_remote_prog $host $CHECK_USER "unset" "SGE_ROOT\n$binary_path/test_drmaa -h" \
                   prg_exit_state 500 0 "" 0 1]
-            # set CHECK_DEBUG_LEVEL 0
             if { $prg_exit_state == 0 } {
                add_proc_error drmaa_check -1 "test_drmaa -h without SGE_ROOT must exit with unequal 0 at host $host"
                break
@@ -177,7 +179,7 @@ proc drmaa_check {} {
                 ST_SUBMIT_POLLING_WAIT_TIMEOUT ST_SUBMIT_POLLING_WAIT_ZEROTIMEOUT \
                 ST_SUBMIT_POLLING_SYNCHRONIZE_TIMEOUT ST_SUBMIT_POLLING_SYNCHRONIZE_ZEROTIMEOUT" {
                puts "starting single threaded test $st_test"
-               drmaa_test $host $binary_path $st_test $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh
+               drmaa_test $host $binary_path $st_test $ts_config(product_root)/examples/jobs/sleeper.sh
             }
 
             # -- tests with a <sleeper_job> argument repeatedly 
@@ -185,7 +187,7 @@ proc drmaa_check {} {
                set n 100
                puts "starting single threaded test $st_test $n times each"
                for {set i 0} {$i < $n} {incr i} {
-                  drmaa_test $host $binary_path $st_test $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh
+                  drmaa_test $host $binary_path $st_test $ts_config(product_root)/examples/jobs/sleeper.sh
                }
             }
 
@@ -213,12 +215,12 @@ proc drmaa_check {} {
             foreach mt_test "MT_SUBMIT_WAIT MT_EXIT_DURING_SUBMIT \
                              MT_SUBMIT_MT_WAIT MT_EXIT_DURING_SUBMIT_OR_WAIT" {
                puts "starting multi threaded test $mt_test"
-               drmaa_test $host $binary_path $mt_test $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh
+               drmaa_test $host $binary_path $mt_test $ts_config(product_root)/examples/jobs/sleeper.sh
             }
          } 
          "202" { 
             # shutdown qmaster
-            shutdown_master_and_scheduler $CHECK_CORE_MASTER [get_qmaster_spool_dir] 
+            shutdown_master_and_scheduler $ts_config(master_host) [get_qmaster_spool_dir] 
 
             # this test must fail when qmaster is down
             set test_output [start_remote_prog $host $CHECK_USER $binary_path/test_drmaa ST_SUBMIT_WAIT prg_exit_state 500]
@@ -234,17 +236,6 @@ proc drmaa_check {} {
          } 
       } 
    }
-
-   # undo configuration changes that were made for this test
-   set new_config(qmaster_params) "none"
-   set_config new_config
-
-   set_error 0 "ok"
-}
-
-# undo what we've done in drmaa_setup
-proc drmaa_cleanup  {} {
-   delete_all_jobs
 
    set_error 0 "ok"
 }
@@ -368,15 +359,15 @@ proc drmaa_test_st_input_becomes_output { host binary_path } {
 #*******************************
 #
 proc drmaa_test_failing_control_operations { host binary_path } {
+   global ts_config
    global CHECK_OUTPUT CHECK_FIRST_FOREIGN_SYSTEM_USER CHECK_SECOND_FOREIGN_SYSTEM_USER 
-   global CHECK_HOST CHECK_PRODUCT_ROOT
 
    #
    # submit sequential job in hold state as user1 
    #
 
    puts "going to submit a job as user $CHECK_FIRST_FOREIGN_SYSTEM_USER"
-   set job_id [ submit_job "-o /dev/null -j y -h $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 15" 1 60 "" $CHECK_FIRST_FOREIGN_SYSTEM_USER ]
+   set job_id [ submit_job "-o /dev/null -j y -h $ts_config(product_root)/examples/jobs/sleeper.sh 15" 1 60 "" $CHECK_FIRST_FOREIGN_SYSTEM_USER ]
    puts "submitted job $job_id as user $CHECK_FIRST_FOREIGN_SYSTEM_USER"
 
    # ensure control operations forbidden for user2 result in a DRMAA_ERRNO_AUTH_FAILURE 
@@ -391,7 +382,7 @@ proc drmaa_test_failing_control_operations { host binary_path } {
    drmaa_test $host $binary_path ST_DRMAA_CONTROL "DRMAA_CONTROL_RESUME  DRMAA_ERRNO_RESUME_INCONSISTENT_STATE $job_id" $CHECK_FIRST_FOREIGN_SYSTEM_USER
 
    # delete job as user1
-   set result [ run_command_as_user "$CHECK_HOST" "$CHECK_FIRST_FOREIGN_SYSTEM_USER" "qdel" "$job_id" 1 ]
+   set result [ run_command_as_user "$ts_config(master_host)" "$CHECK_FIRST_FOREIGN_SYSTEM_USER" "qdel" "$job_id" 1 ]
    puts $CHECK_OUTPUT "qdel_output = \n$result"
     
    # ensure control operation isused as user1 on no longer existing job results in a DRMAA_ERRNO_INVALID_JOB 
@@ -406,7 +397,7 @@ proc drmaa_test_failing_control_operations { host binary_path } {
    #
 
    puts "going to submit a job as user $CHECK_FIRST_FOREIGN_SYSTEM_USER"
-   set job_id [ submit_job "-t 1-2 -o /dev/null -j y -h $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 15" 1 60 "" $CHECK_FIRST_FOREIGN_SYSTEM_USER ]
+   set job_id [ submit_job "-t 1-2 -o /dev/null -j y -h $ts_config(product_root)/examples/jobs/sleeper.sh 15" 1 60 "" $CHECK_FIRST_FOREIGN_SYSTEM_USER ]
    puts "submitted job $job_id as user $CHECK_FIRST_FOREIGN_SYSTEM_USER"
 
    # ensure control operations forbidden for user2 result in a DRMAA_ERRNO_AUTH_FAILURE 
@@ -425,7 +416,7 @@ proc drmaa_test_failing_control_operations { host binary_path } {
    drmaa_test $host $binary_path ST_DRMAA_CONTROL "DRMAA_CONTROL_RESUME  DRMAA_ERRNO_RESUME_INCONSISTENT_STATE $job_id.2" $CHECK_FIRST_FOREIGN_SYSTEM_USER
 
    # delete job as user1
-   set result [ run_command_as_user "$CHECK_HOST" "$CHECK_FIRST_FOREIGN_SYSTEM_USER" "qdel" "$job_id" 1 ]
+   set result [ run_command_as_user "$ts_config(master_host)" "$CHECK_FIRST_FOREIGN_SYSTEM_USER" "qdel" "$job_id" 1 ]
    puts $CHECK_OUTPUT "qdel_output = \n$result"
     
    # ensure control operation isused as user1 on no longer existing job results in a DRMAA_ERRNO_INVALID_JOB 

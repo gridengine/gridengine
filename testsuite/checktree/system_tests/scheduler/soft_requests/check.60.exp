@@ -159,7 +159,7 @@ proc soft_requests_cleanup  {} {
 proc soft_requests_submit_pejobs_and_wait { request host_list } {
    global ts_config CHECK_OUTPUT CHECK_ARCH
 
-   set job_id [submit_job "-pe round_robin 2 -soft -l $request $ts_config(product_root)/examples/jobs/sleeper.sh 100"]
+   set job_id [submit_job "-o /dev/null -e /dev/null -pe round_robin 2 -soft -l $request $ts_config(product_root)/examples/jobs/sleeper.sh 100"]
 
    while { 1 } {
       catch {  eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-tsm" } catch_result
@@ -172,6 +172,7 @@ proc soft_requests_submit_pejobs_and_wait { request host_list } {
          set job_std_state [get_standard_job_info  $job_id ]
          foreach line $job_std_state {
             foreach host $host_list {
+               set host [resolve_host $host 1]
                puts "host: $host queue: [lindex $line 7]"
                if { [string match "*$host*" [lindex $line 7] ] == 1 } {
                   incr match 1
@@ -181,7 +182,7 @@ proc soft_requests_submit_pejobs_and_wait { request host_list } {
          incr running_jobs 1
          if { $match == 0 } {
             set error 1
-            add_proc_error "soft_requests_submit_pejobs_and_wait" -2 "soft requests: job did not run on the specified host $host \n $job_std_state"
+            add_proc_error "soft_requests_submit_pejobs_and_wait" -2 "soft requests: job did not run in the specified host list: $host_list \n $job_std_state"
          }
       }
 
@@ -204,7 +205,7 @@ proc soft_requests_submit_pejobs_and_wait { request host_list } {
 proc soft_requests_submit_jobs_and_wait { request host_list } {
    global ts_config CHECK_OUTPUT CHECK_ARCH
 
-   set job_id [submit_job "-soft -l $request $ts_config(product_root)/examples/jobs/sleeper.sh 100"]
+   set job_id [submit_job "-o /dev/null -e /dev/null -soft -l $request $ts_config(product_root)/examples/jobs/sleeper.sh 100"]
 
    while { 1 } {
       catch {  eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-tsm" } catch_result
@@ -217,6 +218,7 @@ proc soft_requests_submit_jobs_and_wait { request host_list } {
          set job_std_state [get_standard_job_info  $job_id ]
          foreach line $job_std_state {
             foreach host $host_list {
+               set host [resolve_host $host 1]
                puts "host: $host queue: [lindex $line 7]"
                if { [string match "*$host*" [lindex $line 7] ] == 1 } {
                   incr match 1
@@ -226,7 +228,7 @@ proc soft_requests_submit_jobs_and_wait { request host_list } {
          incr running_jobs 1
          if { $match == 0 } {
             set error 1
-            add_proc_error "soft_requests_submit_pejobs_and_wait" -2 "soft requests: job did not run on the specified host $host \n $job_std_state"
+            add_proc_error "soft_requests_submit_pejobs_and_wait" -2 "soft requests: job did not run in the specified host list $host_list \n $job_std_state"
          }
       }
 
@@ -265,7 +267,7 @@ proc soft_requests_submit_pejobs_and_wait2 { } {
       set request "arch=$arch"
       incr submited_jobs 1
       lappend job_id_arch $arch
-      lappend job_id_list [submit_job "-pe round_robin 2 -soft -l $request $ts_config(product_root)/examples/jobs/sleeper.sh 100"]
+      lappend job_id_list [submit_job "-o /dev/null -e /dev/null -pe round_robin 2 -soft -l $request $ts_config(product_root)/examples/jobs/sleeper.sh 100"]
    }   
 
    while { 1 } {
@@ -285,6 +287,7 @@ proc soft_requests_submit_pejobs_and_wait2 { } {
             set job_std_state [get_standard_job_info  $job_id ]
             foreach line $job_std_state {
                foreach host $host_list {
+                  set host [resolve_host $host 1]
                   puts "host: $host queue: [lindex $line 7]"
                   if { [string match "*$host*" [lindex $line 7] ] == 1 } {
                      incr match 1
@@ -294,7 +297,7 @@ proc soft_requests_submit_pejobs_and_wait2 { } {
             incr running_jobs 1
             if { $match == 0 } {
                set error 1
-               add_proc_error "soft_requests_submit_pejobs_and_wait" -2 "soft requests: job did not run on the specified host $host \n $job_std_state"
+               add_proc_error "soft_requests_submit_pejobs_and_wait" -2 "soft requests: job did not run in the specified host list $host_list \n $job_std_state"
             }
          }
          incr counter 1
@@ -335,7 +338,7 @@ proc soft_requests_submit_jobs_and_wait2 { } {
       set request "arch=$arch"
       incr submited_jobs 1
       lappend job_id_arch $arch
-      lappend job_id_list [submit_job "-soft -l $request $ts_config(product_root)/examples/jobs/sleeper.sh 100"]
+      lappend job_id_list [submit_job "-o /dev/null -e /dev/null -soft -l $request $ts_config(product_root)/examples/jobs/sleeper.sh 100"]
    }   
 
    while { 1 } {
@@ -355,6 +358,7 @@ proc soft_requests_submit_jobs_and_wait2 { } {
             set job_std_state [get_standard_job_info  $job_id ]
             foreach line $job_std_state {
                foreach host $host_list {
+                  set host [resolve_host $host 1]
                   puts "host: $host queue: [lindex $line 7]"
                   if { [string match "*$host*" [lindex $line 7] ] == 1 } {
                      incr match 1
@@ -364,7 +368,7 @@ proc soft_requests_submit_jobs_and_wait2 { } {
             incr running_jobs 1
             if { $match == 0 } {
                set error 1
-               add_proc_error "soft_requests_submit_pejobs_and_wait" -2 "soft requests: job did not run on the specified host $host \n $job_std_state"
+               add_proc_error "soft_requests_submit_pejobs_and_wait" -2 "soft requests: job did not run in the specified host list $host_list \n $job_std_state"
             }
          }
          incr counter 1

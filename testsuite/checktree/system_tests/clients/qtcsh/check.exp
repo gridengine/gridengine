@@ -60,7 +60,7 @@ set check_description(5)   "checking qtcsh with global qtcsh and local .qtcsh, S
 
 # define test's dependencies
 set check_needs           "init_core_system" 
-set check_root_access_needs  "yes"
+# set check_root_access_needs  "yes"
 
 # setup and cleanup functions
 set check_cleanup_function "qtcsh_cleanup"
@@ -69,11 +69,7 @@ set check_cleanup_function "qtcsh_cleanup"
 set check_functions ""
 lappend check_functions "qtcsh_setup"                  ;# setup qtask files
 lappend check_functions "qtcsh_command_line_test"      ;# test -ABLR options	
-lappend check_functions "qtcsh_spawn_test"        ;# test -ABLR options via spawn task
-
-# test specific global variables
-global qtcsh_hostlist
-global CHECK_FIRST_FOREIGN_SYSTEM_USER CHECK_FIRST_FOREIGN_SYSTEM_GROUP CHECK_SECOND_FOREIGN_SYSTEM_GROUP
+lappend check_functions "qtcsh_spawn_test"             ;# test -ABLR options via spawn task
 
 # run level initialization
 #                                                             max. column:     |
@@ -118,67 +114,38 @@ global CHECK_FIRST_FOREIGN_SYSTEM_USER CHECK_FIRST_FOREIGN_SYSTEM_GROUP CHECK_SE
 #     ???/???
 #*******************************
 proc qtcsh_init_level {} {
-   global CHECK_ACT_LEVEL CHECK_PRODUCT_ROOT env qrshmode_command
-   global CHECK_USER ts_config qtcsh_command qtask_home CHECK_ARCH CHECK_HOST
+   global CHECK_ACT_LEVEL qtcsh_command_sh qtcsh_command_tcsh
 
-   set hostname [lindex $ts_config(execd_nodes) 0]
-   set qtcsh_program "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qtcsh" 
-   set sge_cell $ts_config(cell)
-   set check_user_home $env(HOME)
-
+   set qtcsh_command_sh ""
+   set qtcsh_command_tcsh ""
 
    switch -- $CHECK_ACT_LEVEL {
      0 { 
-       set qtask_home "$check_user_home/.qtask" ; 
-       set qtcsh_command "$qtcsh_program" ; 
-       set qrshmode_command "qrshmode" ; 
-       set mv_result [ start_remote_prog $CHECK_HOST $CHECK_USER /bin/mv "$CHECK_PRODUCT_ROOT/$sge_cell/common/qtask $CHECK_PRODUCT_ROOT/$sge_cell/common/qtask.sav"]
-       if { $prg_exit_state != 0 } {
-          #add_proc_error "qtcsh_init_level" -1 "error moving qtask"
-       }
-       #file rename $CHECK_PRODUCT_ROOT/$sge_cell/common/qtask $CHECK_PRODUCT_ROOT/$sge_cell/common/qtask.sav
-       file delete $check_user_home/.qtask
        return 0 
      }
      1 { 
-       set qtask_home "$CHECK_PRODUCT_ROOT/$sge_cell/common/qtask"; 
-       set  qtcsh_command "$qtcsh_program" ; 
-       set qrshmode_command "qrshmode" ; 
-       file delete $check_user_home/.qtask
        return 0 
      } 
      2 { 
-       set qtask_home "$check_user_home/.qtask" ; 
-       set qtcsh_command "unsetenv SGE_ROOT; $qtcsh_program" ; 
-       set qrshmode_command "unsetenv SGE_ROOT; qrshmode" ; 
-       file delete $CHECK_PRODUCT_ROOT/$sge_cell/common/qtask
-       return 0 
+       set qtcsh_command_sh "SGE_ROOT=\"\"; export SGE_ROOT" 
+       set qtcsh_command_tcsh "unsetenv SGE_ROOT"
+       return 0
      }
      3 { 
-       set qtask_home "$CHECK_PRODUCT_ROOT/$sge_cell/common/qtask"; 
-       set qtcsh_command "unsetenv SGE_ROOT; $qtcsh_program" ; 
-       set qrshmode_command "unsetenv SGE_ROOT; qrshmode" ; 
-       file delete $check_user_home/.qtask
-       return 0 
+       set qtcsh_command_sh "SGE_ROOT=\"\"; export SGE_ROOT"
+       set qtcsh_command_tcsh "unsetenv SGE_ROOT"
+       return 0
      }
      4 { 
-       set qtask_home "$CHECK_PRODUCT_ROOT/$sge_cell/common/qtask"; 
-       set qtcsh_command "$qtcsh_program" ; 
-       set qrshmode_command "qrshmode" ; 
-       file delete $check_user_home/.qtask
-       file delete $CHECK_PRODUCT_ROOT/$sge_cell/common/qtask
        return 0 
      }
      5 { 
-       set qtask_home "$CHECK_PRODUCT_ROOT/$sge_cell/common/qtask"; 
-       set qtcsh_command "unsetenv SGE_ROOT; $qtcsh_program" ; 
-       set qrshmode_command "unsetenv SGE_ROOT; qrshmode" ; 
-       file delete $check_user_home/.qtask
-       file delete $CHECK_PRODUCT_ROOT/$sge_cell/common/qtask
+       set qtcsh_command_sh "SGE_ROOT=\"\"; export SGE_ROOT" 
+       set qtcsh_command_tcsh "unsetenv SGE_ROOT"
        return 0 
      }
    }
-
+  
    return -1  ;# no other level else
 }
 
@@ -212,68 +179,30 @@ proc qtcsh_init_level {} {
 #     ???/???
 #*******************************
 proc qtcsh_setup {} {
-      global qtask_home  CHECK_OUTPUT ts_config env
-      global CHECK_HOST CHECK_USER CHECK_ACTUAL_TEST_PATH
-	
-
-
-      #set qtask_setup 0
-      set qtask_setup [qtask_local_global "$qtask_home"]
-
-      if { ( $qtask_setup == 0 ) } {
-         set_error 0 "ok"
-      } else { 
-         set_error -1 "qtcsh setup failed"
-         puts $CHECK_OUTPUT "qtask_setup was $qtask_setup"
-     }
+   set_error 0 "ok"
 }
 
 #****** qtcsh/qtcsh_cleanup() ******
 #
 #  NAME
-#     qtcsh_cleanup --  delete $env(HOME)/.qtask,  $CHECK_PRODUCT_ROOT/$sge_cell/common/qtask 
-#                       and touch  $CHECK_PRODUCT_ROOT/$sge_cell/common/qtask to leave
-#	                things as before.
+#     qtcsh_cleanup --  cleanup qtcsh test 
 #                          
 #  SYNOPSIS
 #     qtcsh_cleanup { }
 #
 #  FUNCTION
-#    clean up after ourselves, leave global qtask as we found it - empty. 
+#    clean up after ourselves, delete local qtask file and restore global
+#    qtask file from template
 #
-#  INPUTS
-#
-#  RESULT
-#     ???
-#
-#  EXAMPLE
-#     ???
-#
-#  NOTES
-#     ???
-#
-#  BUGS
-#     ???
-#
-#  SEE ALSO
-#     ???/???
 #*******************************
 proc qtcsh_cleanup {} {
-   global CHECK_PRODUCT_ROOT CHECK_USER ts_config env CHECK_HOST
+   global env
 
-   set hostname [lindex $ts_config(execd_nodes) 0]
-   set sge_cell $ts_config(cell)
    set check_user_home $env(HOME)
 
-   #set result_qtask_touch [start_remote_prog $CHECK_HOST $CHECK_USER /bin/touch  $CHECK_PRODUCT_ROOT/$sge_cell/common/qtask ]
-   file delete $CHECK_PRODUCT_ROOT/$sge_cell/common/qtask
-   set mv_result [ start_remote_prog $CHECK_HOST $CHECK_USER /bin/mv "$CHECK_PRODUCT_ROOT/$sge_cell/common/qtask.sav $CHECK_PRODUCT_ROOT/$sge_cell/common/qtask"]
-   if { $prg_exit_state != 0 } {
-     #add_proc_error "qtcsh_cleanup" -1 "error moving qtask"
-    }
-   #file rename $CHECK_PRODUCT_ROOT/$sge_cell/common/qtask.sav $CHECK_PRODUCT_ROOT/$sge_cell/common/qtask
    file delete $check_user_home/.qtask
-
+   restore_qtask_file
+   
    delete_all_jobs
    wait_for_end_of_all_jobs 60
 }
@@ -281,227 +210,153 @@ proc qtcsh_cleanup {} {
 #****** qtcsh/qtcsh_spawn_task_test() ******
 #
 #  NAME
-#     qtcsh_spawn_task_test -- Execute remote command of qtcsh, with spawning process.
-#                            We look at the options "{}, -A, -B, -L, -R, -X"
-#                            The last option is an illegal one. Check to see that
-#                            qtcsh gives usage.
-#                            We start qtcsh, then we either send {}, or 
-#                            "qrshmode -A", "qrshmode -B", "qrshmode -L", qrshmode -R",
-#                            "qrshmode -X". Then we send command "hostname" or 
-#                            "uname -n". We then pass the result to qtcsh_evaluate.
+#     qtcsh_spawn_task_test -- Spawn qtcsh shell, execute qrshmode.
 #
 #  SYNOPSIS
 #     qtcsh_spawn_task_test { { option "" } { command "env"} }
 #
 #  FUNCTION
 #    Spawn qtcsh shell, execute qrshmode.
+#    Execute remote command of qtcsh, with spawning process.
+#    We look at the options "{}, -A, -B, -L, -R, -X"
+#    The last option is an illegal one. Check to see that
+#    qtcsh gives usage.
+#    We start qtcsh, then we either send {}, or 
+#    "qrshmode -A", "qrshmode -B", "qrshmode -L", qrshmode -R",
+#    qrshmode -X". Then we send command "hostname" or 
+#    uname -n". We then pass the result to qtcsh_evaluate.
 #
-#  INPUTS
-#
-#  RESULT
-#     ???
-#
-#  EXAMPLE
-#     ???
-#
-#  NOTES
-#     ???
-#
-#  BUGS
-#     ???
-#
-#  SEE ALSO
-#     ???/???
 #*******************************
-proc qtcsh_spawn { { option "{}" } { command "hostname" } } {
+proc qtcsh_spawn { { option "" } { command "hostname" } } {
 
-   global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH
-   global CHECK_HOST CHECK_USER ts_config  
-   global CHECK_ACT_LEVEL qrshmode_command
+   global CHECK_OUTPUT CHECK_PRODUCT_ROOT
+   global CHECK_USER ts_config qtcsh_command_tcsh
 
    set hostname [lindex $ts_config(execd_nodes) 0]
-   set new_hostname [lindex $ts_config(execd_nodes) 1]
-   set qtcsh_program "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qtcsh"
- 
+   set hostname_arch [ resolve_arch $hostname ]
+   set hostname_remote [lindex $ts_config(execd_nodes) 1]
 
-   set qtcsh_id [open_remote_spawn_process $CHECK_HOST $CHECK_USER $qtcsh_program ""]
+   set qtcsh_program "$CHECK_PRODUCT_ROOT/bin/$hostname_arch/qtcsh"
+ 
+   puts $CHECK_OUTPUT "open remote process for command: $qtcsh_program on host $hostname"
+   set qtcsh_id [open_remote_spawn_process $hostname $CHECK_USER "true" "; $qtcsh_program"]
     
    set qtcsh_sp_id [lindex $qtcsh_id 1]
-   #puts $CHECK_OUTPUT "qtcsh_id is $qtcsh_id, qtcsh_sp_id is $qtcsh_sp_id\n"
 
-   set time "15"
-   if { ( $option == "-B" ) } {
-      set time "20"
-   }
-
-   # First we qrsh in
-
-   set first_output ""
-   set do_stop 0
-   while { $do_stop == 0 } {
-      set timeout $time
-      expect {
-         -i $qtcsh_sp_id full_buffer {
-            add_proc_error "qtcsh_remote_command" -1 "expect full_buffer error"
-            set_error -1 "error - buffer overflow"
-            set first_output "$first_output$expect_out(0,string)"
-            set do_stop 1
-         }
-         -i $qtcsh_sp_id timeout {
-            #add_proc_error "qtcsh_spawn_task_test" -1 "error - timeout"
-            send -i $qtcsh_sp_id "\003"
-            set_error -1 "error - timeout"
-            set first_output "$first_output$expect_out(0,string)"
-            set do_stop 1
-         }
-         -i $qtcsh_sp_id "*\n" {
-            send -i $qtcsh_sp_id "\n"
-            set first_output "$first_output$expect_out(0,string)"
-            set do_stop 1
-         }
-      }
-   }
-
-   #set first_output "$expect_out(0,string)"
-   #puts $CHECK_OUTPUT "first output is $first_output\n"
-   #puts $CHECK_OUTPUT "first output buffer is $expect_out(buffer)"
-
-   # Once we open the qtcsh shell, we will check the different options
-   # First, we pass nothing or "qrshmode $flag"
-
-   #set option_list "{} -A -B -L -R -X"
-   # Comment out the -L option until CR 6344960 is fixed
-
- 
-   set first_output ""
-   set last_output ""
-
-   # If we have not option, we do not send flags.
-   # Otherwise, we send "qrshmode $option"
-
-   if { ( $option == "") } {
-      set first_send ""
-   } else {
-   set first_send "$qrshmode_command $option" 
-   }
-
-   # The second send will be the actual command we want to test.
-   set second_send  "$command"
-
-   # After the first send, we check only in the case of "-X"
+   set timeout 30
    expect {
-      -i $qtcsh_sp_id "*\n" {
-         send -i $qtcsh_sp_id "$first_send\n"
-         set first_output "$first_output$expect_out(0,string)"
+      -i $qtcsh_sp_id full_buffer {
+         add_proc_error "qtcsh_spawn" -1 "expect full_buffer error"
+         close_spawn_process $qtcsh_id
+         return -1
       }
-      -i $qtcsh_sp_id default {
-         send -i $qtcsh_sp_id "\n"
-         set first_output "$first_output$expect_out(0,string)"
+      -i $qtcsh_sp_id timeout {
+         add_proc_error "qtcsh_spawn" -1 "timeout error"
+         close_spawn_process $qtcsh_id
+         return -1
       }
-      -i  $qtcsh_sp_id "critical" {
-          send -i $qtcsh_sp_id "\n"
-          set first_output "$first_output$expect_out(0,string)"
+      -i $qtcsh_sp_id "_start_mark_" {
       }
    }
 
-   set middle_output "$first_output"
-   #puts $CHECK_OUTPUT "middle output is $middle_output\n"
-   #puts $CHECK_OUTPUT "middle output buffer is $expect_out(buffer)"
+   set my_tries 60
+   set timeout 1
 
-   # If we send "qrshmode -X", we should get as a reply a "Usage"
-   # description
-
-   if { ( $option == "-X") &&  ( [string first "Usage" $first_output] >= 0)} {
-       set_error 0 "ok"
-   } elseif { ( $option != "-X") &&  ( [string first "Usage" $first_output] >= 0)} {
-       set_error -1 "qrshmode -X failed for qtcsh"
-       close_spawn_process $qtcsh_id
-       return -1
-   } else {
-   }
-        
-   # Next, we pass the command we want to test.
-
-   set second_output "$first_output"
-   set do_stop 0
-   while { $do_stop == 0 } {
-      set timeout $time
+   while {1} {
       expect {
-         -i $qtcsh_sp_id full_buffer {
-            add_proc_error "qtcsh_remote_command" -1 "expect full_buffer error"
-            set_error -1 "error - buffer overflow"
-            set second_output "$second_output$expect_out(0,string)"
-            set do_stop 1
-         }
-         -i $qtcsh_sp_id timeout {
-            #add_proc_error "qtcsh_spawn_task_test" -1 "error - timeout"
-            # Using "\003" for CTL+C
-            send -i $qtcsh_sp_id "\003"
-            set_error -1 "error - timeout"
-            set second_output "$second_output$expect_out(0,string)"
-            set do_stop 1
-         }
-         -i $qtcsh_sp_id "*\n" {
-            send -i $qtcsh_sp_id "$second_send\n"
-            set second_output "$second_output$expect_out(0,string)"
-            set do_stop 1
-         }
-         -i $qtcsh_sp_id "critical" {
-            send -i $qtcsh_sp_id "\n"
-            set second_output "$second_output$expect_out(0,string)"
+         -i $qtcsh_sp_id {*[A-Za-z]*} {
+            puts $CHECK_OUTPUT "startup ..."
+            break;
          }
          -i $qtcsh_sp_id default {
-            send -i $qtcsh_sp_id "\n"
-            set second_output "$second_output$expect_out(0,string)"
+            if { $my_tries > 0 } {
+                incr my_tries -1
+                puts -nonewline $CHECK_OUTPUT "."
+                flush $CHECK_OUTPUT
+                continue
+            } else { 
+               add_proc_error "submit_wait_type_job" -1 "startup timeout" 
+               break;
+            }
          }
       }
    }
 
-   #puts $CHECK_OUTPUT "second output is $second_output\n"
-   #puts $CHECK_OUTPUT "second output buffer is $expect_out(buffer)"
+   if { "$qtcsh_command_tcsh" != "" } {
+      puts $CHECK_OUTPUT "testsuite send -> $qtcsh_command_tcsh\\n" 
+      send -i $qtcsh_sp_id "$qtcsh_command_tcsh\n"
+   }
+   if { "$option" != "" } {
+      puts $CHECK_OUTPUT "testsuite send -> qrshmode $option\\n" 
+      send -i $qtcsh_sp_id -- "qrshmode $option\n"
+   }
+   puts $CHECK_OUTPUT "testsuite send -> $command; echo _command_finished_\\n" 
+   send -i $qtcsh_sp_id "$command; echo _command_finished_\n"
+
 
    # Now, depending on the result, we set our last output
-
    set do_stop 0
+   set last_output ""
+   set timeout 1
+   set counter 60
+   set found_finished 0
    while { $do_stop == 0 } {
-      set timeout $time
       expect {
-         -i $qtcsh_sp_id "$new_hostname" {
-            send -i $qtcsh_sp_id "\n"
-            set last_output "$last_output$expect_out(0,string)"
+         -i $qtcsh_sp_id full_buffer {
             set do_stop 1
+            add_proc_error "qtcsh_spawn" -1 "expect full_buffer error"
          }
-         -i $qtcsh_sp_id "$hostname" {
-            send -i $qtcsh_sp_id "\n"
-            set last_output "$last_output$expect_out(0,string)"
-            set do_stop 1
+         -i $qtcsh_sp_id timeout {
+            incr counter -1
+            if { $counter <= 0 } {
+               add_proc_error "qtcsh_spawn" -1 "timeout error"
+               set do_stop 1
+            } 
          }
-         -i $qtcsh_sp_id "critical" {
-            set last_output "critical"
-         }
-         -i $qtcsh_sp_id default {
-            send -i $qtcsh_sp_id "\n"
-            set do_stop 1
+         -i $qtcsh_sp_id "*\n" {
+            foreach line [split $expect_out(0,string) "\n"] {
+              if { $line == "" } {
+                 continue
+              }
+              if { [string match "*exited with exit code*" $line] } {
+                 puts $CHECK_OUTPUT "ignore: $line"
+                 continue
+              }
+              if { [string match "*reading exit code from shepherd*" $line] } {
+                 puts $CHECK_OUTPUT "ignore: $line"
+                 continue
+              } else {
+                 puts $CHECK_OUTPUT "got: $line"
+              }
+              if { [string match "*_exit_status_*" $line] } {
+                 set do_stop 1
+              } 
+              if { [string match "*_command_finished_*" $line] } {
+                 incr found_finished 1
+                 if { $found_finished > 1 } {
+                   send -i $qtcsh_sp_id "exit\n"
+                 }
+              } 
+
+              if { $found_finished == 1 } {
+                 set last_output $line 
+              }
+            }
          }
       }
    }
 
    close_spawn_process $qtcsh_id
 
-   #puts $CHECK_OUTPUT "last output is $last_output\n"
-   #puts $CHECK_OUTPUT "last output buffer is $expect_out(buffer)"
-      
-      
+   puts $CHECK_OUTPUT "qtcsh returned: $last_output"
+
    # We then evaluate this output using qtcsh_evaluate.
-      
    set qtcsh_evaluate_result [qtcsh_evaluate "$last_output" "$option" "$command" "spawn"] 
-      
 
    if { ( $qtcsh_evaluate_result == 0 ) } {
-      #puts $CHECK_OUTPUT "qtcsh_spawn_command succeeded for option $option and command $command"
+      puts $CHECK_OUTPUT "qtcsh_spawn_command succeeded for option $option and command $command"
       return 0 
    } else {
-      #set_error -1 "Error in qtcsh_spawn_command"
       return -1 
    }
 
@@ -510,62 +365,46 @@ proc qtcsh_spawn { { option "{}" } { command "hostname" } } {
 #****** qtcsh/qtcsh_local_command() ******
 #
 #  NAME
-#     qtcsh_local_command -- Execute local command of qtcsh, without spawning process.
-#                            We look at the options "{}, -A, -B, -L, -R, -X"
-#                            The last option is an illegal one. Check to see that
-#                            qtcsh gives usage.
+#     qtcsh_local_command -- Execute local qtcsh run
 #
 #  SYNOPSIS
 #     qtcsh_local_command { { option "" } { command "env"} }
 #
 #  FUNCTION
 #    Execute local qtcsh run
+#    Execute local command of qtcsh, without spawning process.
+#    We look at the options "{}, -A, -B, -L, -R, -X"
+#    The last option is an illegal one. Check to see that
+#    qtcsh gives usage.
 #
-#  INPUTS
-#
-#  RESULT
-#     ???
-#
-#  EXAMPLE
-#     ???
-#
-#  NOTES
-#     ???
-#
-#  BUGS
-#     ???
-#
-#  SEE ALSO
-#     ???/???
 #*******************************
-proc qtcsh_local_command { { option "" } { command "env"} } {
+proc qtcsh_local_command { { option "" } { command "hostname"} } {
 
-   global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH
-   global CHECK_HOST CHECK_USER ts_config  qtcsh_command
-   global CHECK_ACT_LEVEL
+   global CHECK_OUTPUT CHECK_PRODUCT_ROOT
+   global CHECK_USER ts_config qtcsh_command_sh
 
    set hostname [lindex $ts_config(execd_nodes) 0]
-   set new_hostname [lindex $ts_config(execd_nodes) 1]
-   set qtcsh_program "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qtcsh"
+   set hostname_arch [ resolve_arch $hostname ]
+   set hostname_remote [lindex $ts_config(execd_nodes) 1]
+   if { $qtcsh_command_sh == "" } {
+      set qtcsh_program "; $CHECK_PRODUCT_ROOT/bin/$hostname_arch/qtcsh"
+   } else {
+      set qtcsh_program "; $qtcsh_command_sh; $CHECK_PRODUCT_ROOT/bin/$hostname_arch/qtcsh"
+   }
 
    # We pass in the variable "option," which can be blank or -A, -B, -L, -R, -X
    # The last one is a negative test, to see that qtcsh gives Usage
    # if passed an invalid option
 
-   set command_string "$option -c \" $command \""
+   set command_string "$option -c \"$command\""
 
    # Now test qtcsh with command_string
-   set result1 [ start_remote_prog $CHECK_HOST $CHECK_USER $qtcsh_command   $command_string ]
+   set result [ start_remote_prog $hostname $CHECK_USER "true" "$qtcsh_program $command_string" ]
+   #puts $CHECK_OUTPUT $result
 
-   set qtcsh_evaluate_result [qtcsh_evaluate "$result1" "$option" "$command" "" ]
+   set qtcsh_evaluate_result [qtcsh_evaluate "$result" "$option" "$command" "" ]
 
-   if { ( $qtcsh_evaluate_result == 0 ) } {
-      set_error 0 "ok"
-      return 0
-    } else {
-      set_error -1 "Error in qtcsh_local_command"
-      return -1
-   }
+   return $qtcsh_evaluate_result
 
 }
  
@@ -573,10 +412,7 @@ proc qtcsh_local_command { { option "" } { command "env"} } {
 #****** qtcsh/qtcsh_evaluate() ******
 #
 #  NAME
-#     qtcsh_evaluate --  Evaluate what we get from running "qtcsh $option $command"
-#                        We look at the options "{}, -A, -B, -L, -R, -X" 
-#                        The last option is an illegal one. Check to see that 
-#                        qtcsh gives usage.
+#     qtcsh_evaluate --  Evaluate qtcsh run for result with option, command and mode. 
 #
 #  SYNOPSIS
 #     qtcsh_evaluate { { result "" } { option "" } { command "env"} { mode "command_line" } }
@@ -584,108 +420,75 @@ proc qtcsh_local_command { { option "" } { command "env"} } {
 #  FUNCTION
 #    Evaluate qtcsh run for result with option, command and mode. Mode is to handle
 #    some different cases for the spawn process cases.
+#    Evaluate what we get from running "qtcsh $option $command"
+#    We look at the options "{}, -A, -B, -L, -R, -X" 
+#    The last option is an illegal one. Check to see that 
 #
-#  INPUTS
-#
-#  RESULT
-#     ???
-#
-#  EXAMPLE
-#     ???
-#
-#  NOTES
-#     ???
-#
-#  BUGS
-#     ???
-#
-#  SEE ALSO
-#     ???/???
 #*******************************
-proc qtcsh_evaluate { { result "" } { option "" } { command "env"} { mode "command_line" } } {
+proc qtcsh_evaluate { { result "" } { option "" } { command "hostname"} { mode "command_line" } } {
 
-   global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH 
-   global CHECK_HOST CHECK_USER ts_config  qtcsh_command
+   global CHECK_OUTPUT CHECK_PRODUCT_ROOT 
+   global CHECK_HOST CHECK_USER ts_config
    global CHECK_ACT_LEVEL
 
+   set ret_value -1
+
    set hostname [lindex $ts_config(execd_nodes) 0]
-   set new_hostname [lindex $ts_config(execd_nodes) 1]
-   set qtcsh_program "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qtcsh"
+   set hostname_remote [lindex $ts_config(execd_nodes) 1]
 
-
-   # We pass in the variable "option," which can be blank or -A, -B, -L, -R, -X
-   # The last one is a negative test, to see that qtcsh gives Usage
-   # if passed an invalid option
-
-   set command_string "$option -c \" $command \""
- 
    # Now when we need to map out what to expect for the different combinations
    # of flag:"{} -A -B -L -B"; command:"hostname {uname -n}"; level: "0 1 2 3".
    # There are a total of 5x2x4 = 40 total number of possibilities: 
    # {}, hostname, 0; {} hostname, 1; ...; -R  uname -n 3. 
    # The expected results can be: dt218-130; dt218-123;... dt218-123.
 
-   if { ( $CHECK_ACT_LEVEL == 0 || $CHECK_ACT_LEVEL == 2 || $CHECK_ACT_LEVEL == 4 || $CHECK_ACT_LEVEL == 5 ) &&
-        ( [string first "hostname" $command_string ] >= 0) &&
-        ( [string first $new_hostname $result] >= 0 ) } {
-      set_error 0 "ok"
-      return 0
+   if { ( $CHECK_ACT_LEVEL == 0 || $CHECK_ACT_LEVEL == 4 ) &&
+        ( [string first "hostname" $command ] >= 0) &&
+        ( [string first $hostname_remote $result] >= 0 ) } {
+      set ret_value 0
    } elseif {
-        ( $CHECK_ACT_LEVEL == 1 || $CHECK_ACT_LEVEL == 3 ) &&
-        ( [string first "hostname" $command_string ] >= 0) &&
+        ( $CHECK_ACT_LEVEL == 1 || $CHECK_ACT_LEVEL == 2 || $CHECK_ACT_LEVEL == 3 || $CHECK_ACT_LEVEL == 5 ) &&
+        ( [string first "hostname" $command ] >= 0) &&
         ( [string first $hostname $result] >= 0 ) } {
-      set_error 0 "ok"
-      return 0
+      set ret_value 0 
    } elseif {
         ( $CHECK_ACT_LEVEL == 2 || $CHECK_ACT_LEVEL == 3  || $CHECK_ACT_LEVEL == 5 &&  $mode == "spawn" ) &&
-        ( [string first "hostname" $command_string ] >= 0) &&
+        ( [string first "hostname" $command ] >= 0) &&
         ( [string first "critical" $result] >= 0 ) } {
-      set_error 0 "ok"
-      return 0
+      set ret_value 0
    } elseif {
-        ( $CHECK_ACT_LEVEL == 0 || $CHECK_ACT_LEVEL == 2 ) &&
-        ( [string first "uname" $command_string ] >= 0) &&
-        ( [string first $new_hostname $result] >= 0 ) } {
-      set_error 0 "ok"
-      return 0
+        ( $CHECK_ACT_LEVEL == 0 ) &&
+        ( [string first "uname" $command ] >= 0) &&
+        ( [string first $hostname_remote $result] >= 0 ) } {
+      set ret_value 0
    } elseif {
-        ( $CHECK_ACT_LEVEL == 1 || $CHECK_ACT_LEVEL == 3 || $CHECK_ACT_LEVEL == 4 || $CHECK_ACT_LEVEL == 5 )  &&
-        ( [string first "uname" $command_string ] >= 0) &&
+        ( $CHECK_ACT_LEVEL == 1 || $CHECK_ACT_LEVEL == 2 || $CHECK_ACT_LEVEL == 3 || $CHECK_ACT_LEVEL == 4 || $CHECK_ACT_LEVEL == 5 )  &&
+        ( [string first "uname" $command ] >= 0) &&
         ( [string first $hostname $result] >= 0 ) } {
-      set_error 0 "ok"
-      return 0
+      set ret_value 0
    } elseif {
         ( $CHECK_ACT_LEVEL == 2 || $CHECK_ACT_LEVEL == 3 || $CHECK_ACT_LEVEL == 5 && $mode == "spawn" ) &&
-        ( [string first "uname" $command_string ] >= 0) &&
+        ( [string first "uname" $command ] >= 0) &&
         ( [string first "critical" $result] >= 0 ) } {
-      set_error 0 "ok"
-      return 0
+      set ret_value 0
    } elseif {
        ( [string first "Usage" $result] >= 0 ) &&
-       ( [string first "-X" $command_string ] >= 0) } {
-      set_error 0 "ok"
-      return 0
-   } else {
-      puts $CHECK_OUTPUT "Command string is $command_string and result is $result"
-      set_error -1  "qtcsh test for $command_string failed"
-      return -1
+       ( [string first "-X" $command ] >= 0) } {
+      set ret_value 0
+   } 
+
+   if { $ret_value != 0 } {
+      add_proc_error "qtcsh_evaluate" -1 "qtcsh test for $command failed got $result"
    }
+
+   return $ret_value 
 
 }
 
 #****** qtcsh/qtask_local_global() ******
 #
 #  NAME
-#     qtask_local_global -- Create the local or global qtask file by running
-#                           shell scripts qtask_local.sh or qtask_global.sh .
-#                        
-#                          We create the line for command "hostname" which will run on $new_hostname
-#                          and is not overridable, as is the line for command "ps"
-#                          The script does the following for the global qtask file:
-#
-#                          We create the line for command "hostname" which will run on $new_hostname
-#                          and is not overridable. Here,  command "ps" is overrideable, indicated by
-#		           the "!".
+#     qtask_local_global -- Create the local and global qtask files
 #
 #                     
 #
@@ -693,32 +496,24 @@ proc qtcsh_evaluate { { result "" } { option "" } { command "env"} { mode "comma
 #     qtask_local_global { }
 #
 #  FUNCTION
-#    Create the local and global qtask files
+#    Create the local or global qtask file by running
+#    shell scripts qtask_local.sh or qtask_global.sh .
+#    We create the line for command "hostname" which will run on $hostname_remote
+#    and is not overridable, as is the line for command "ps"
+#    The script does the following for the global qtask file:
+#    We create the line for command "hostname" which will run on $hostname_remote
+#    and is not overridable. Here,  command "ps" is overrideable, indicated by
+#	  the "!".
 #
-#  INPUTS
-#
-#  RESULT
-#     ???
-#
-#  EXAMPLE
-#     ???
-#
-#  NOTES
-#     ???
-#
-#  BUGS
-#     ???
-#
-#  SEE ALSO
-#     ???/???
 #*******************************
-proc qtask_local_global { { home "" } } {
+proc qtask_local_global { } {
 
    global CHECK_OUTPUT CHECK_USER CHECK_ACTUAL_TEST_PATH CHECK_HOST
-   global CHECK_PRODUCT_ROOT ts_config  env CHECK_ACT_LEVEL
+   global CHECK_PRODUCT_ROOT ts_config env CHECK_ACT_LEVEL
 
    set hostname [lindex $ts_config(execd_nodes) 0]
-   set new_hostname [lindex $ts_config(execd_nodes) 1]
+   set hostname_remote [lindex $ts_config(execd_nodes) 1]
+
    set sge_cell $ts_config(cell)
    set check_user_home $env(HOME)
 
@@ -728,102 +523,104 @@ proc qtask_local_global { { home "" } } {
    # For levels 0 - 3, we just use one qtask file; for levels 4 & 5, we use both qtask
    # files.
 
-   set list0_2 "$new_hostname $check_user_home/.qtask"
-   set list1_3 "$hostname $CHECK_PRODUCT_ROOT/$sge_cell/common/qtask"
+   set local_qtask_file "$check_user_home/.qtask"
+   set global_qtask_file "$CHECK_PRODUCT_ROOT/$sge_cell/common/qtask"
+
+   set list0_2 "$hostname_remote $local_qtask_file"
+   set list1_3 "$hostname $global_qtask_file"
+
+   puts $CHECK_OUTPUT "creating qtask file\n"
+
+   file delete $local_qtask_file 
+   file delete $global_qtask_file
+
+   wait_for_remote_file $hostname $CHECK_USER $local_qtask_file 60 1 1 
+   wait_for_remote_file $hostname $CHECK_USER $global_qtask_file 60 1 1 
 
    if { ( $CHECK_ACT_LEVEL == 0 || $CHECK_ACT_LEVEL == 2 ) } { 
-       set result_local_return [ start_remote_prog $CHECK_HOST $CHECK_USER $CHECK_ACTUAL_TEST_PATH/qtask_local.sh "$new_hostname $check_user_home/.qtask"]
+      set result_local_return [ start_remote_prog $CHECK_HOST $CHECK_USER "$CHECK_ACTUAL_TEST_PATH/qtask_local.sh" "$list0_2" ]
+      wait_for_remote_file $hostname $CHECK_USER $local_qtask_file 60 
       return 0
    } elseif { ( $CHECK_ACT_LEVEL == 1 || $CHECK_ACT_LEVEL == 3 ) } { 
-       set result_global_return [ start_remote_prog $CHECK_HOST $CHECK_USER $CHECK_ACTUAL_TEST_PATH/qtask_global.sh  $list1_3]
+      set result_global_return [ start_remote_prog $CHECK_HOST $CHECK_USER "$CHECK_ACTUAL_TEST_PATH/qtask_global.sh"  "$list1_3"]
+      wait_for_remote_file $hostname $CHECK_USER $global_qtask_file 60 
+      
       return 0
    } elseif { ( $CHECK_ACT_LEVEL == 4 || $CHECK_ACT_LEVEL == 5 ) } {
-       set result_local_return [ start_remote_prog $CHECK_HOST $CHECK_USER $CHECK_ACTUAL_TEST_PATH/qtask_local.sh $list0_2]
-       set result_global_return [ start_remote_prog $CHECK_HOST $CHECK_USER $CHECK_ACTUAL_TEST_PATH/qtask_global.sh  $list1_3]
+      set result_local_return [ start_remote_prog $CHECK_HOST $CHECK_USER "$CHECK_ACTUAL_TEST_PATH/qtask_local.sh" "$list0_2"]
+      set result_global_return [ start_remote_prog $CHECK_HOST $CHECK_USER "$CHECK_ACTUAL_TEST_PATH/qtask_global.sh"  "$list1_3"]
+
+      wait_for_remote_file $hostname $CHECK_USER $local_qtask_file 60 
+      wait_for_remote_file $hostname $CHECK_USER $global_qtask_file 60 
+
       return 0
    } else {
+      return -1
    }
 }
 #****** qtcsh/qtcsh_command_line_test() ******
 #
 #  NAME
-#     qtcsh_command_line_test --  Run the qtcsh test for various flags and commands
-#                    We first setup the qtask in the appropiate home, then
-#                    run the tests.
+#     qtcsh_command_line_test --  Test qtcsh
 #
 #  SYNOPSIS
 #     qtcsh_command_line_test { }
 #
 #  FUNCTION
 #    Test qtcsh
+#    Run the qtcsh test for various flags and commands
+#    We first setup the qtask in the appropiate home, then
+#    run the tests.
 #
-#  INPUTS
-#
-#   RESULT 
-#      Add here
 #*******************************
 proc qtcsh_command_line_test {} {
 
-   global CHECK_OUTPUT CHECK_USER qtask_home env CHECK_ACT_LEVEL
-   global CHECK_PRODUCT_ROOT ts_config  CHECK_ARCH
+   global CHECK_OUTPUT 
 
-   set hostname [lindex $ts_config(execd_nodes) 0]
-   set sge_cell $ts_config(cell)
-   set check_user_home $env(HOME)
+   set qtask_setup [qtask_local_global]
+   if { $qtask_setup != 0 } {
+      add_proc_error "qtcsh_init_level" -1 "qtcsh setup failed"
+   } else {
 
-   #set flags "{} -A -B -L -R -X"
-   # Comment out -L until CR6344960 is fixed
+      #set flags "{} -A -B -L -R -X"
+      # Comment out -L until CR6344960 is fixed
 
-   set flags "{} -A -B -R -X"
-   set commands "hostname \"uname -n\""
+      set flags "{} -A -B -R -X"
+      set commands "hostname \"uname -n\""
 
-   foreach var2 $flags {
-      foreach var3 $commands {
-         set qtcsh_evaluate_return [qtcsh_local_command "$var2" "$var3" ]
-         #puts $CHECK_OUTPUT "return from qtcsh_evaluate_return is $qtcsh_evaluate_return"
-         #puts $CHECK_OUTPUT "for flag $var2  and command $var3"
-         if { $qtcsh_evaluate_return == 0 } {
-            puts $CHECK_OUTPUT "qtcsh_command_line_test succeeded for option $var2 and command $var3 "
-            set_error 0 "ok"
-         } else {
-            set_error -1 "qtcsh_command_line_test failed for option $var2 and command $var3"
+      foreach var2 $flags {
+         foreach var3 $commands {
+            set qtcsh_evaluate_return [qtcsh_local_command "$var2" "$var3" ]
+            if { $qtcsh_evaluate_return == 0 } {
+               puts $CHECK_OUTPUT "qtcsh_command_line_test succeeded for option $var2 and command $var3 "
+            } 
          }
       }
    }
 
    set_error 0 "ok"
-
 }
 
 proc qtcsh_spawn_test {} {
 
-   global CHECK_OUTPUT CHECK_USER qtask_home env CHECK_ACT_LEVEL
-   global CHECK_PRODUCT_ROOT ts_config  CHECK_ARCH
+   global CHECK_OUTPUT
 
-   set hostname [lindex $ts_config(execd_nodes) 0]
-   set sge_cell $ts_config(cell)
-   set check_user_home $env(HOME)
+   set qtask_setup [qtask_local_global]
+   if { $qtask_setup != 0 } {
+      add_proc_error "qtcsh_init_level" -1 "qtcsh setup failed"
+   } else {
+      #set flags "{} -A -B -L -R -X"
+      # Comment out -L until CR6344960 is fixed
 
-   #set flags "{} -A -B -L -R -X"
-   # Comment out -L until CR6344960 is fixed
+      set option_list "{} -A -B -R -X"
+      set command_list "hostname \"uname -n\""
 
-   set option_list "{} -A -B -R -X"
-   set command_list "hostname \"uname -n\""
-
-   foreach option $option_list {
-      foreach command $command_list {
-         set qtcsh_evaluate_return [qtcsh_spawn $option $command ]
-         #puts $CHECK_OUTPUT "return from qtcsh_evaluate_return is $qtcsh_evaluate_return"
-         #puts $CHECK_OUTPUT "for option $option  and command $command"
-         if { $qtcsh_evaluate_return == 0 } {
-            puts $CHECK_OUTPUT "qtcsh_spawn_test succeeded for option $option and command $command "
-            set_error 0 "ok"
-         } else {
-            set_error -1 "qtcsh_spawn_test failed for option $option and command $command"
+      foreach option $option_list {
+         foreach command $command_list {
+            qtcsh_spawn $option $command
          }
       }
    }
 
    set_error 0 "ok"
-
 }

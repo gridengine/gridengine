@@ -266,7 +266,7 @@ int close_stdin /* use of qrsh's -nostdin option */
 ) {
    const char *value; 
    char *taskname = NULL;
-   lListElem *task;
+   lListElem *task = NULL;
    int i = 0;
    int narg_resreq = 0;
    int narg_argv = 0;
@@ -341,6 +341,8 @@ int close_stdin /* use of qrsh's -nostdin option */
    for (argv_iter=argv; argv_iter[0] != NULL; argv_iter++) {
       newargv[i++] = argv_iter[0];
    }
+
+   newargv[i] = NULL;
       
    sprintf(qrsh_path, "%s/bin/%s/qrsh", sge_get_root_dir(1, NULL, 0, 1), sge_get_arch());
 

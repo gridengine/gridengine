@@ -20,13 +20,15 @@ DT-2005-11-16-0: Bugfix:    o Clearly explained -purge in qconf man page
 
 AA-2005-11-15-0: Bugfix:   - qmon cluster conf reprioritize field missing
                            - qmon cluster conf add can destroy existing cluster conf 
+                 Issue:    1904
+                 Bugtraq:  6353526
                  Review:   MD
                  Changed:  qmon
                  
 RD-2005-11-15-0: Bugfix:   - qtcsh on linux may not execute local command
                            - fixed broken build on win32-x86
                  Changed   qtcsh
-                 Review:   pending
+                 Review:   AA
 
 CR-2005-11-16-0: Bugfix:    o check file descriptor errors after select()
                               errors in commlib

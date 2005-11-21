@@ -81,7 +81,7 @@ proc issue_540_init_level {} {
 # -------- local test procedures -----------------------------------------------
 
 proc issue_540_check {} {
-   global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH env
+   global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_HOST env
  
    #
    # Scenario:
@@ -98,21 +98,21 @@ proc issue_540_check {} {
    }
 
    # first test should fail - We submit two logfiles for the default host. 
-   set qsub_arguments "-o :$job_output_file,:$job_output_file $job_script $job_sleep_time"
+   set qsub_arguments "-l h=$CHECK_HOST -o :$job_output_file,:$job_output_file $job_script $job_sleep_time"
    set job_id [submit_job $qsub_arguments 0]
    if { $job_id > 0 } {
       add_proc_error "issue_540_check" "-1" "qsub accepted the invalid option -o :out:put.txt,:out:put1.txt"
    }
 
    #second test should fail - We submit a logfile for a not existing host
-   set qsub_arguments "-o qwdfvb:$job_output_file $job_script $job_sleep_time"
+   set qsub_arguments "-l h=$CHECK_HOST -o qwdfvb:$job_output_file $job_script $job_sleep_time"
    set job_id [submit_job $qsub_arguments 0]
    if { $job_id > 0 } {
       add_proc_error "issue_540_check" "-1" "qsub accepted an invalid host in the -o qwdfvb:out:put.txt option"   
    }
 
    #third test should pass - We submit a logfile with a ":" inside. This shoud be accepted
-   set qsub_arguments "-o :$job_output_file $job_script $job_sleep_time"
+   set qsub_arguments "-l h=$CHECK_HOST -o :$job_output_file $job_script $job_sleep_time"
    set job_id [submit_job $qsub_arguments 0]
    wait_for_jobstart $job_id $job_name 300
    wait_for_jobend $job_id $job_name 20

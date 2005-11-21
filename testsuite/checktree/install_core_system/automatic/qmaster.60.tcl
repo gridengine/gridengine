@@ -110,6 +110,9 @@ proc install_qmaster {} {
 
    if { $ts_config(bdb_dir) == "none" } {
       set db_dir [get_local_spool_dir $CHECK_CORE_MASTER spooldb 0 ]
+      if {$db_dir == ""} {
+         set db_dir "$ts_config(product_root)/$ts_config(cell)/spool/spooldb"
+      }
    } else {
       set db_dir $ts_config(bdb_dir)
    }
@@ -133,7 +136,8 @@ proc install_qmaster {} {
 
    set hostcount 0
 
-   set do_log_output 0 ;# _LOG
+
+   set do_log_output 0;# _LOG
    if { $CHECK_DEBUG_LEVEL == 2 } {
    set do_log_output  1 ;# 1
 
@@ -154,16 +158,25 @@ proc install_qmaster {} {
 
 proc write_autoinst_config { filename host { do_cleanup 1 } } {
 
-   global ts_config CHECK_CORE_MASTER CHECK_USER
+   global ts_config CHECK_CORE_MASTER CHECK_USER CHECK_OUTPUT local_execd_spool_set
 
    set execd_port [expr $ts_config(commd_port) + 1]
    set gid_range [get_gid_range $CHECK_USER $ts_config(commd_port)]
 
    if { $ts_config(bdb_dir) == "none" } {
       set db_dir [get_local_spool_dir $CHECK_CORE_MASTER spooldb 0 ]
+      if { $db_dir == ""} {
+         set db_dir "$ts_config(product_root)/$ts_config(cell)/spool/spooldb"
+      }
    } else {
       set db_dir $ts_config(bdb_dir)
    }
+   puts $CHECK_OUTPUT "db_dir is $db_dir"
+
+   puts $CHECK_OUTPUT "delete file $filename ..."
+   file delete $filename
+#   wait for remote file deletion ...
+   wait_for_remote_file $host $CHECK_USER $filename 60 1 1
 
    set fdo [open $filename w]
 
@@ -176,7 +189,7 @@ proc write_autoinst_config { filename host { do_cleanup 1 } } {
    if { $spooldir != "" } {
       puts $fdo "QMASTER_SPOOL_DIR=\"$spooldir\""
    } else {
-      puts $fdo "QMASTER_SPOOL_DIR=\"$ts_config(product_root)/$ts_host_config(cell)/spool/qmaster\""
+      puts $fdo "QMASTER_SPOOL_DIR=\"$ts_config(product_root)/$ts_config(cell)/spool/qmaster\""
    }
    puts $fdo "EXECD_SPOOL_DIR=\"$ts_config(product_root)/$ts_config(cell)/spool/\""
    puts $fdo "GID_RANGE=\"$gid_range\""
@@ -191,7 +204,7 @@ proc write_autoinst_config { filename host { do_cleanup 1 } } {
    if { $spooldir != "" } {
       puts $fdo "EXECD_SPOOL_DIR_LOCAL=\"$spooldir\""
    } else {
-      puts $fdo "EXECD_SPOOL_DIR_LOCAL=\"$ts_config(product_root)/$ts_host_config(cell)/spool/execd/$host\""
+      puts $fdo "EXECD_SPOOL_DIR_LOCAL=\"\""
    }
    puts $fdo "HOSTNAME_RESOLVING=\"true\""
    puts $fdo "SHELL_NAME=\"rsh\""
@@ -216,6 +229,7 @@ proc write_autoinst_config { filename host { do_cleanup 1 } } {
    puts $fdo "CSP_ORGA_UNIT=\"Software\""
    puts $fdo "CSP_MAIL_ADRESS=\"$ts_config(report_mail_to)\""
    close $fdo
+   wait_for_remote_file $host $CHECK_USER $filename
 }
 
 #                                                             max. column:     |
@@ -256,8 +270,6 @@ proc create_autoinst_config {} {
    global CHECK_DEBUG_LEVEL CHECK_QMASTER_INSTALL_OPTIONS 
    global CHECK_PROTOCOL_DIR
 
-   set_error "0" "inst_sge - no errors"
-
    if { [file isfile "$ts_config(product_root)/autoinst_config.conf"] == 1} {
       set catch_result [ catch { eval exec "rm -f $ts_config(product_root)/autoinst_config.conf" } ]
    }
@@ -265,5 +277,6 @@ proc create_autoinst_config {} {
    puts $CHECK_OUTPUT "creating automatic install config file ..."
    write_autoinst_config  $ts_config(product_root)/autoinst_config.conf $ts_config(master_host) 1
    puts $CHECK_OUTPUT "automatic install config file successfully created ..."
+   set_error "0" "inst_sge - no errors"
 
 } 

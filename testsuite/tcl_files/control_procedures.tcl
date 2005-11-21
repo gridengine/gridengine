@@ -227,7 +227,6 @@ proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result 
    set additional_expected_result3  [string trimright $additional_expected_result3 "*"]
    set additional_expected_result4  [string trimright $additional_expected_result4 "*"]
 
-   debug_puts "handle_vi_edit(5)"
    # we want to start a certain configured vi, and have no backslash continued lines
    set vi_env(EDITOR) [get_binary_path "$CHECK_HOST" "vim"]
    set vi_env(SGE_SINGLE_LINE) 1
@@ -242,32 +241,29 @@ proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result 
       set send_line_speed 1
    } else {
       log_user 0 ;# reisi
-      set send_speed .0001
-      set send_line_speed .0001
+      set send_speed .000001
+      set send_line_speed .000001
    }
 
-   set stop_line_wait 0
-   set timeout 10
+   set timeout 1
 
    # wait for vi to startup and go to first line
    send -i $sp_id "G"
    set timeout_count 0
-   set start_time 0
    set error 0
-   while { $stop_line_wait == 0 } {
+   while { 1 } {
+      flush $CHECK_OUTPUT
       expect {
          -i $sp_id full_buffer {
             add_proc_error "handle_vi_edit" -1 "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
-            set stop_line_wait 1
             set error 1
-            continue
+            break
          }
 
          -i $sp_id eof {
             add_proc_error "handle_vi_edit" -1 "unexpected end of file"
-            set stop_line_wait 1
             set error 1
-            continue
+            break
          }
 
          -i $sp_id timeout {  
@@ -275,30 +271,24 @@ proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result 
             incr timeout_count 1
             if { $timeout_count > 60 } {
                add_proc_error "handle_vi_edit" -2 "timeout - vi doesn't respond"
-               set stop_line_wait 1
                set error 1
             }
             continue
          }
 
          -i $sp_id "100%" {
-            set start_time [ timestamp ] 
             send -i $sp_id "1G"      ;# go to first line
-            set stop_line_wait 1
-            continue
+            break
          }
          
          -i $sp_id "o lines in buffer" {
-            set start_time [ timestamp ] 
-            set stop_line_wait 1
-            continue
+            break
          }
          
          -i $sp_id "erminal too wide" {
             add_proc_error "handle_vi_edit" -2 "got terminal to wide vi error"
-            set stop_line_wait 1
             set error 1
-            continue
+            break
          }
       }
    }
@@ -315,6 +305,10 @@ proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result 
       return -1
    }
 
+   # set start time (qconf must take at least one second, because he
+   # does a file stat to find out if the file was changed, so the
+   # file edit process must take at least 1 second
+   set start_time [ timestamp ] 
    # send the vi commands
    set timeout 0
    set send_slow "1 $send_speed" 
@@ -324,6 +318,8 @@ proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result 
       set com_sent 0
       expect -i $sp_id {
          "*Hit return*" {
+            puts $CHECK_OUTPUT "found Hit return"
+            flush $CHECK_OUTPUT
             send -i $sp_id -- "\n"
          }
       }
@@ -332,21 +328,30 @@ proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result 
       } else {
          send -i $sp_id -- "$elem"
       }
+      flush $CHECK_OUTPUT
       expect -i $sp_id {
          "*Hit return*" {
             send -i $sp_id -- "\n"
+            puts $CHECK_OUTPUT "found Hit return"
+            flush $CHECK_OUTPUT
          }
       }
-
-      after 25
    }
 
    # wait for file time older one second
    while { [ timestamp ] <= $start_time } { 
-      after 100
+      after 50
+      expect -i $sp_id {
+         "*Hit return*" {
+            send -i $sp_id -- "\n"
+            puts $CHECK_OUTPUT "found Hit return"
+         }
+      }
    }
-
    # save and exit
+   if { $CHECK_DEBUG_LEVEL != 0 } {
+      after 3000
+   }
    send -i $sp_id ":wq\n"
    set timeout 30
    set doStop 0

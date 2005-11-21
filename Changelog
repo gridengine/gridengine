@@ -1,3 +1,12 @@
+CR-2005-11-21-0: Testsuite: o enhanced issue 540 to support not NFS shared
+                              user home directory
+                            o fixed automatic install test to use default
+                              db and execd spool directory from manual 
+                              installation
+                            o performance improvements for start_remote_prog
+                              and handle_vi_edit
+                 Review:    pending ...
+
 RD-2005-11-16-0: Testsuite: Fixed qtcsh test
                  Review:    CR
 

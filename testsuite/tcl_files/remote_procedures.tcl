@@ -576,7 +576,7 @@ proc start_remote_prog { hostname
    set nr_of_lines 0
    
  
-#   debug_puts "real buffer size is: [match_max -i $myspawn_id]"
+   debug_puts "starting command ..."
  
 
    while { $do_stop == 0 } {
@@ -666,11 +666,10 @@ proc start_remote_prog { hostname
            set do_stop 0
         }
       }
-
-      flush $CHECK_OUTPUT
    }
+   flush $CHECK_OUTPUT
+   debug_puts "starting command done!"
 
-   flush $CHECK_OUTPUT 
    close_spawn_process $id
 
    # parse output: cut leading sequence 
@@ -1253,7 +1252,7 @@ proc open_remote_spawn_process { hostname
             if { $open_remote_spawn__tries <= 0 } {
                 add_proc_error "open_remote_spawn_process" -1 "${error_info}\ntimeout waiting for shell response prompt (b)"
                 catch { send -i $spawn_id "\003" } ;# send CTRL+C to stop poss. running processes
-                puts $CHECK_OUTPUT "closing spawn process ..."
+                puts $CHECK_OUTPUT "closing spawn process (1) ..."
                 flush $CHECK_OUTPUT
                 catch { close -i $spawn_id }
                 catch { wait -nowait -i $spawn_id }
@@ -1292,7 +1291,7 @@ proc open_remote_spawn_process { hostname
                           flush $CHECK_OUTPUT
                           
                           catch { send -i $spawn_id "\003" } ;# send CTRL+C to stop evtl. running processes
-                          puts $CHECK_OUTPUT "closing spawn process ..."
+                          puts $CHECK_OUTPUT "closing spawn process (2)..."
                           flush $CHECK_OUTPUT
                           catch { close -i $spawn_id }
                           catch { wait -nowait -i $spawn_id }
@@ -1330,7 +1329,7 @@ proc open_remote_spawn_process { hostname
                       flush $CHECK_OUTPUT
                           
                       catch { send -i $spawn_id "\003" } ;# send CTRL+C to stop evtl. running processes
-                      puts $CHECK_OUTPUT "closing spawn process ..."
+                      puts $CHECK_OUTPUT "closing spawn process (3)..."
                       flush $CHECK_OUTPUT
                       catch { close -i $spawn_id }
                       catch { wait -nowait -i $spawn_id }
@@ -1520,12 +1519,13 @@ proc open_remote_spawn_process { hostname
                return ""
             }
             -i $open_remote_spawn__id timeout {
+                debug_puts "checking remote file access ... got timeout"
                 send -i $open_remote_spawn__id "$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/file_check.sh $open_remote_spawn__script_name\n"
                 incr open_remote_spawn__tries -1
                 if { $open_remote_spawn__tries <= 0 } {
                    add_proc_error "open_remote_spawn_process" -1 "${error_info}\ntimeout waiting for file_check.sh script"
                    catch { send -i $open_remote_spawn__id "\003" } ;# send CTRL+C to stop evtl. running processes
-                   puts $CHECK_OUTPUT "closing spawn process ..."
+                   puts $CHECK_OUTPUT "closing spawn process (4)..."
                    flush $CHECK_OUTPUT
                    catch { close -i $open_remote_spawn__id }
                    catch { wait -nowait -i $open_remote_spawn__spawn_id }
@@ -1821,7 +1821,7 @@ proc get_open_spawn_rlogin_session { hostname user back_var } {
             set back(hostname)  $hostname
             set back(ltime)     [lindex $data_list 3]
             set back(nr_shells) [lindex $data_list 4]
-            debug_puts "spawn_id  : $back(spawn_id)"
+            debug_puts "spawn_id (a) : $back(spawn_id)"
 #            debug_puts "pid       : $back(pid)"
             debug_puts "hostname  : $back(hostname)"
             debug_puts "user:     : $back(user)"
@@ -2028,11 +2028,9 @@ proc check_rlogin_session { spawn_id pid hostname user nr_of_shells { only_check
 
    if { [info exists rlogin_spawn_session_buffer($spawn_id) ] != 0 } {
       set timeout 1
-      set ok 0
       set mytries  5
       set open_remote_spawn__tries 15
 
-      debug_puts "check_rlogin_session -> waiting for shell response ..."
       switch -- $user {
          "ts_def_con" {
             set user $CHECK_USER
@@ -2046,37 +2044,34 @@ proc check_rlogin_session { spawn_id pid hostname user nr_of_shells { only_check
       }
 
       send -i $spawn_id -- "$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/check_identity.sh\n"
-      set have_flushed 0
       while { $open_remote_spawn__tries > 0 } {
          expect {
             -i $spawn_id full_buffer {
                add_proc_error "check_rlogin_session" -1 "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
-               set ok 2
                break
             }
             -i $spawn_id timeout {
+                debug_puts "got timeout for check_identity"
                 send -i $spawn_id -- "$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/check_identity.sh\n"
                 incr open_remote_spawn__tries -1
                 if { $open_remote_spawn__tries <= 0 } {
-                   if { $have_flushed != 0 } {
-                      puts $CHECK_OUTPUT ""
-                   }
                    add_proc_error "check_rlogin_session" -1 "timeout waiting for shell response prompt (a)"
                    catch { send -i $spawn_id "\003" } ;# send CTRL+C to stop evtl. running processes
-                   puts $CHECK_OUTPUT "closing spawn process ..."
+                   puts $CHECK_OUTPUT "closing spawn process (5)..."
                    flush $CHECK_OUTPUT
                    catch { close -i $spawn_id }
                    catch { wait -nowait -i $spawn_id }
                    return ""
                 }
-                puts -nonewline $CHECK_OUTPUT "." 
-                flush $CHECK_OUTPUT
-                set have_flushed 1
+                if { $open_remote_spawn__tries < 12 } {
+                   puts -nonewline $CHECK_OUTPUT "." 
+                   flush $CHECK_OUTPUT
+                }
+                continue
             }  
             -i $spawn_id -- "__ my id is ->*${user}*<-" { 
-               debug_puts "check_rlogin_session: shell response! - fine" 
-               set ok 1
-               break
+               debug_puts "shell response! - fine" 
+               return 1
             }
             -i $spawn_id -- "Terminal type?" {
                send -i $spawn_id -- "vt100\n"
@@ -2087,24 +2082,17 @@ proc check_rlogin_session { spawn_id pid hostname user nr_of_shells { only_check
             }
          }
       }
-      if { $have_flushed != 0 } {
-         puts $CHECK_OUTPUT ""
+      if { $only_check == 0 } {
+         # restart connection
+         puts $CHECK_OUTPUT "check_rlogin_session: had error"
+         unset rlogin_spawn_session_buffer($spawn_id)
+         set id $pid
+         lappend id $spawn_id
+         lappend id $nr_of_shells
+         puts $CHECK_OUTPUT "closing spawn id $spawn_id with pid $pid to enable new rlogin session ..."
+         close_spawn_process $id 0 3
+         puts $CHECK_OUTPUT "closing done."
       }
-      if { $ok == 1 } {
-         return 1 ;# ok
-      } else {
-         if { $only_check == 0 } {
-            # restart connection
-            puts $CHECK_OUTPUT "timeout"
-            unset rlogin_spawn_session_buffer($spawn_id)
-            set id $pid
-            lappend id $spawn_id
-            lappend id $nr_of_shells
-            puts $CHECK_OUTPUT "closing spawn id $spawn_id with pid $pid to enable new rlogin session ..."
-            close_spawn_process $id 0 3
-            puts $CHECK_OUTPUT "closing done."
-         }
-      }       
    }
    return 0 ;# error
 }
@@ -2194,7 +2182,6 @@ proc close_spawn_process { id { check_exit_state 0 } {my_uplevel 1}} {
       debug_puts "sending CTRL + C to spawn id $sp_id ..."
       send -i $sp_id "\003" ;# send CTRL+C to stop evtl. running processes in that shell
       # wait for CTRL-C to have effect
-      after 200
       debug_puts "Will not close spawn id \"$sp_id\", this is rlogin connection to"
       debug_puts "host \"$con_data(hostname)\", user \"$con_data(user)\""
       set rlogin_in_use_buffer($sp_id) 0
@@ -2215,7 +2202,6 @@ proc close_spawn_process { id { check_exit_state 0 } {my_uplevel 1}} {
        send -s -i $sp_id "\003" ;# send CTRL+C to stop evtl. running processes in that shell
 
        # wait for CTRL-C to have effect
-       after 200
        for {set i 0} {$i < $nr_of_shells } {incr i 1} {
           send -s -i $sp_id "exit\n"
           set timeout 6

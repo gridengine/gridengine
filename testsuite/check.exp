@@ -7587,7 +7587,6 @@ proc menu {} {
     }
     "30" {
          source_tcl_files
-         wait_for_enter
          build_checktree
          wait_for_enter
     }

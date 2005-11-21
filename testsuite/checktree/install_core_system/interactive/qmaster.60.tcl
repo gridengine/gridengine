@@ -193,12 +193,12 @@ proc install_qmaster {} {
    set do_log_output  1 ;# 1
  }
 
- log_user 1
  set do_stop 0
  while {! $do_stop} {
+    log_user 1
     flush $CHECK_OUTPUT
     if {$do_log_output == 1} {
-      puts "-->testsuite: press RETURN"
+      puts "-->testsuite: press RETURN (main)"
       set anykey [wait_for_enter 1]
     }
 
@@ -418,14 +418,6 @@ proc install_qmaster {} {
                set anykey [wait_for_enter 1]
           }
           send -i $sp_id "$ANSWER_NO\n"
-          continue
-       }
-
-       -i $sp_id "Verifying and setting file permissions and owner in" {
-          if {$do_log_output == 1} {
-             puts "press RETURN"
-             set anykey [wait_for_enter 1]
-          }
           continue
        }
 
@@ -987,7 +979,7 @@ proc install_qmaster {} {
        -i $sp_id $USING_GID_RANGE_HIT_RETURN {
           puts $CHECK_OUTPUT "\n -->testsuite: sending >RETURN<(17)"
           if {$do_log_output == 1} {
-               puts "-->testsuite: press RETURN"
+               puts "-->testsuite: press RETURN (USING_GID_RANGE_HIT_RETURN)"
                set anykey [wait_for_enter 1]
           }
           send -i $sp_id "\n"
@@ -997,7 +989,7 @@ proc install_qmaster {} {
        -i $sp_id $HIT_RETURN_TO_CONTINUE {
           puts $CHECK_OUTPUT "\n -->testsuite: sending >RETURN<(18)"
           if {$do_log_output == 1} {
-               puts "-->testsuite: press RETURN"
+               puts "-->testsuite: press RETURN (HIT_RETURN_TO_CONTINUE)"
                set anykey [wait_for_enter 1]
           }
           send -i $sp_id "\n"
@@ -1007,7 +999,7 @@ proc install_qmaster {} {
        -i $sp_id $CURRENT_GRID_ROOT_DIRECTORY {
           puts $CHECK_OUTPUT "\n -->testsuite: sending >RETURN<(19)"
           if {$do_log_output == 1} {
-               puts "-->testsuite: press RETURN"
+               puts "-->testsuite: press RETURN (CURRENT_GRID_ROOT_DIRECTORY)"
                set anykey [wait_for_enter 1]
           }
           send -i $sp_id "\n"
@@ -1019,7 +1011,7 @@ proc install_qmaster {} {
           set input "$ts_config(cell)\n"
 
           if {$do_log_output == 1} {
-               puts "-->testsuite: press RETURN"
+               puts "-->testsuite: press RETURN (CELL_NAME_FOR_QMASTER)"
                set anykey [wait_for_enter 1]
           }
           send -i $sp_id $input
@@ -1029,7 +1021,7 @@ proc install_qmaster {} {
        -i $sp_id $WE_CONFIGURE_WITH_X_SETTINGS {
           puts $CHECK_OUTPUT "\n -->testsuite: sending >RETURN<(20)"
           if {$do_log_output == 1} {
-               puts "-->testsuite: press RETURN"
+               puts "-->testsuite: press RETURN (WE_CONFIGURE_WITH_X_SETTINGS)"
                set anykey [wait_for_enter 1]
           }
           send -i $sp_id "\n"

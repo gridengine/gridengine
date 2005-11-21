@@ -1,3 +1,9 @@
+EB-2005-11-18-0: Bugfix:    qconf -mstree aborts
+                 Issue:     1874
+                 Bugtraq:   6348299
+                 Changed:   qconf   
+                 Review:    JG 
+
 DT-2005-11-18-0: Bugfix:    o Checked in missing changes
                             - Merged from DT-2005-09-09-0
                  Changed:   classes/build.xml

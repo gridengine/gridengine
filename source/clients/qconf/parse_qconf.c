@@ -5883,10 +5883,14 @@ lListElem *ep
    spooling_field *fields = NULL;
    int fields_out[MAX_NUM_FIELDS];
    int missing_field = NoName;
+   bool is_missing = false;
 
    DENTER(TOP_LAYER, "edit_sharetree");
 
    if (ep == NULL) {
+      is_missing = true;
+   }
+   if (is_missing) {
       ep = getSNTemplate();
    }
 
@@ -5898,7 +5902,9 @@ lListElem *ep
                                           fields, &qconf_name_value_list_sfi,
                                           SP_DEST_TMP, SP_FORM_ASCII,
                                           NULL, false);
-   lFreeElem(&ep);
+   if (is_missing) {
+      lFreeElem(&ep);
+   }
 
    if (answer_list_output(&alp)) {
       FREE(fields);

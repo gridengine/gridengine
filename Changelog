@@ -1,3 +1,11 @@
+AH-2005-11-22-1: Bugfix:    Disable problematic schedd logging for jobs not
+                            finished as foreseen by reservation schedule
+                            Minor cleanup in spool lib error handling code
+                            that reads in sge_conf(5) and host_conf(5)
+                 Changed:   scheduler
+                 Review:    RD
+                 Bugtraq:   6353792
+
 SG-2005-11-22-0: Bugfix:    qstat incorrectly reports job scheduling failure
                  Issue:     1894
                  Changed:   scheduler

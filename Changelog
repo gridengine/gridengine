@@ -1,3 +1,8 @@
+SG-2005-11-22-0: Bugfix:    qstat incorrectly reports job scheduling failure
+                 Issue:     1894
+                 Changed:   scheduler
+                 Review:    JG
+
 CR-2005-11-21-0: Testsuite: o enhanced issue 540 to support not NFS shared
                               user home directory
                             o fixed automatic install test to use default

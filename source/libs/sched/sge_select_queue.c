@@ -4688,16 +4688,18 @@ sequential_global_time(u_long32 *start, const sge_assignment_t *a, int *violatio
    result = rc_time_by_slots(a, hard_request, load_attr, config_attr, actual_attr, NULL, false, &reason, 
                              1, DOMINANT_LAYER_GLOBAL, lc_factor, GLOBAL_TAG, &tmp_time, SGE_GLOBAL_NAME);
 
-   if (result == (DISPATCH_OK || result == DISPATCH_MISSING_ATTR)) {
+   if ((result == DISPATCH_OK) || (result == DISPATCH_MISSING_ATTR)) {
       if (violations != NULL) {
          *violations = compute_soft_violations(a, NULL, *violations, load_attr, config_attr, 
                                            actual_attr, DOMINANT_LAYER_GLOBAL, 0, GLOBAL_TAG);
       }      
-   } else {
+   } 
+   else {
       char buff[1024 + 1];
       centry_list_append_to_string(hard_request, buff, sizeof(buff) - 1);
-      if (*buff && (buff[strlen(buff) - 1] == '\n'))
+      if (*buff && (buff[strlen(buff) - 1] == '\n')) {
          buff[strlen(buff) - 1] = 0;
+      }   
       schedd_mes_add (lGetUlong(a->job, JB_job_number), SCHEDD_INFO_CANNOTRUNGLOBALLY_SS,
                       buff, reason_buf);
    }

@@ -201,24 +201,7 @@ proc resource_reservation_setup {} {
 
    set binary_arch "[resolve_arch $rr_host]"
 
-#   switch -- $binary_arch {
-#      "sol-sparc" -
-#      "sol-sparc64" -
-#      "sol-x86" -
-#      "lx24-x86" -
-#      "lx26-x86" -
-#      "lx24-amd64" -
-#      "lx26-amd64" {
-#         puts $CHECK_OUTPUT "architecture $binary_arch is supported"
-#      }
-#
-#      default {
-#         set_error -1 "DRMAA not supported for binary architecture $binary_arch"
-#         return -1
-#      }
-#   }   
-
-   set compile_arch_mt [resolve_build_arch $rr_host]
+   set compile_arch_mt [resolve_build_arch_installed_libs $rr_host]
    
    set binary_path "$CHECK_SOURCE_DIR/$compile_arch_mt"
   

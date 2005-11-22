@@ -1860,10 +1860,10 @@ proc qdel_force {} {
    # now test if his jobs still running or pending 
    set all_jobs "$job_list_user1 $job_list_user2"
    foreach job_id $all_jobs {
-          set result [ is_job_running $job_id "qdel_check" ]
-          if {$result == -1} {
-             set_error -1 "jobs $all_jobs should still be in the queueing system" 
-          }
+       set result [ is_job_running $job_id "qdel_check" ]
+       if {$result == -1} {
+          set_error -1 "jobs $all_jobs should still be in the queueing system" 
+       }
    }  
 
    # delete the jobs of user 1 as user 1 without -f switch

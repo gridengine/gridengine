@@ -88,7 +88,7 @@ proc issue_1768_run  {} {
    # Run test binary on all architectures
    puts $CHECK_OUTPUT "running drmaa test binary on all architectures"
    foreach host $ts_config(unique_arch_nodes) {
-      set up_arch [resolve_build_arch $host]
+      set up_arch [resolve_build_arch_installed_libs $host]
       puts $CHECK_OUTPUT "$up_arch ($host)"
 
       set client_binary "$ts_config(source_dir)/$up_arch/test_drmaa_issue1768"

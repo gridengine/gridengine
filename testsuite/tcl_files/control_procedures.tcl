@@ -1360,6 +1360,7 @@ proc gethostname {} {
 #     ???/???
 #*******************************
 proc resolve_arch { { node "none" } } {
+   global ts_config
   global CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_TESTSUITE_ROOT arch_cache
   global CHECK_SCRIPT_FILE_DIR CHECK_USER CHECK_SOURCE_DIR CHECK_HOST
 
@@ -1379,15 +1380,24 @@ proc resolve_arch { { node "none" } } {
      return "unknown"
   }
 
- 
+   if {$host == "none"} {
+      set host $CHECK_HOST
+   }
 
-  if { [ string compare $host "none" ] == 0 || 
-       [ string compare $host $CHECK_HOST ] == 0 } {
-      set prg_exit_state [ catch { eval exec "$CHECK_SOURCE_DIR/dist/util/arch" } result ]
-  } else {
-      debug_puts "resolve_arch: resolving architecture for host $host"
-      set result [ start_remote_prog $host $CHECK_USER "$CHECK_SOURCE_DIR/dist/util/arch" "" prg_exit_state 60 0 "" 1 0 0]
-  }
+   # if $SGE_ROOT/util/arch is available, use this one,
+   # otherwise use the one from the distribution
+   if {[file exists "$ts_config(product_root)/util/arch"]} {
+      set arch_script "$ts_config(product_root)/util/arch"
+   } else {
+      set arch_script "$CHECK_SOURCE_DIR/dist/util/arch"
+   }
+
+   # try to retrieve architecture
+   set result [start_remote_prog $host $CHECK_USER $arch_script "" prg_exit_state 60 0 "" 1 0 0]
+   if {$prg_exit_state != 0} {
+      return "unknown"
+   }
+
   set result [string trim $result]
   set result2 [split $result "\n"]
   if { [ llength $result2 ] > 1 } {
@@ -1479,6 +1489,22 @@ proc resolve_build_arch { host } {
   return $build_arch_cache($host)
 }
 
+proc resolve_build_arch_installed_libs {host} {
+   set build_arch [resolve_build_arch $host]
+
+   # we need special handling for some architectures, e.g. HP11 64bit
+   switch $build_arch {
+      "HP1164" {
+         set arch [resolve_arch $host]
+         if {$arch == "hp11"} {
+            add_proc_error "resolve_build_arch_installed_lib" -3 "We are on hp11 64bit platform (build platform HP1164) with 32bit binaries installed.\nUsing hp11 (build platform HP11) test binaries"
+            set build_arch "HP11"
+         }
+      }
+   }
+
+   return $build_arch
+}
 
 #                                                             max. column:     |
 #****** control_procedures/resolve_host() ******

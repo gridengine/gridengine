@@ -1,3 +1,13 @@
+JG-2005-11-22-1: Testsuite: Use HP11 test binaries on HP1164 platform, if 
+                            $SGE_ROOT/util/arch reports hp11 as binary platform.
+                            This is the case for our binary distribution.
+                 Review:    CR
+
+JG-2005-11-22-0: Bugfix:    libdrmaa.sl did not work on HP11 (link error)
+                 Issue:     1912
+                 Bugtraq:   6354164
+                 Review:    SG
+
 AH-2005-11-22-1: Bugfix:    Disable problematic schedd logging for jobs not
                             finished as foreseen by reservation schedule
                             Minor cleanup in spool lib error handling code
@@ -19,14 +29,6 @@ CR-2005-11-21-0: Testsuite: o enhanced issue 540 to support not NFS shared
                             o performance improvements for start_remote_prog
                               and handle_vi_edit
                  Review:    MD
-
-RD-2005-11-16-0: Testsuite: Fixed qtcsh test
-                 Review:    CR
-
-JG-2005-11-22-0: Bugfix:    libdrmaa.sl did not work on HP11 (link error)
-                 Issue:     1912
-                 Bugtraq:   6354164
-                 Review:    SG
 
 JG-2005-11-18-1: Testsuite: Cleanup/fixes for bugs/issuezilla/1768 and 
                             bugs/issuezilla/1837.
@@ -60,6 +62,9 @@ CR-2005-11-17-0: Testsuite: fixed unsupported warning message create for
 JG-2005-11-17-0: Bugfix:    Fixed memory leaks in module test and qmaster
                             (introduced during s2 development)
                             Merge from V60s2_BRANCH, JG-2005-11-16-0
+                 Review:    CR
+
+RD-2005-11-16-0: Testsuite: Fixed qtcsh test
                  Review:    CR
 
 DT-2005-11-16-0: Bugfix:    o Clearly explained -purge in qconf man page

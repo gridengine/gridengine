@@ -73,7 +73,8 @@ proc issue_1892_run  {} {
    set pid [pid]
 
    foreach host $ts_config(unique_arch_nodes) {
-      set up_arch [resolve_build_arch $host]
+      set up_arch [resolve_build_arch_installed_libs $host]
+
       set client_binary "$ts_config(source_dir)/$up_arch/test_drmaa_issue1892"
 
       if {[wait_for_remote_file $host $CHECK_USER $client_binary 1 0] != 0} {

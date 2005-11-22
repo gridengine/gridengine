@@ -133,7 +133,8 @@ proc drmaa_check {} {
    global CHECK_ACT_LEVEL CHECK_SCRIPT_FILE_DIR CHECK_TESTSUITE_ROOT
 
    foreach host $ts_config(unique_arch_nodes) {
-      set compile_arch_mt [resolve_build_arch $host]
+      set compile_arch_mt [resolve_build_arch_installed_libs $host]
+
       set binary_path "$ts_config(source_dir)/$compile_arch_mt"
       puts $CHECK_OUTPUT "host is $host has arch $compile_arch_mt mt bin path $binary_path"
 

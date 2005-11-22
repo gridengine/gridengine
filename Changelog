@@ -1,3 +1,10 @@
+JG-2005-11-22-0: Bugfix:    - parsing error in cluster config, qmaster_params 
+                              (introduced after s2 snapshot1)
+                            - libdrmaa.sl did not work on HP11 (link error)
+                 Issue:     1912
+                 Bugtraq:   6354164
+                 Review:    EB, SG
+
 SG-2005-11-22-0: Bugfix:    qstat incorrectly reports job scheduling failure
                  Issue:     1894
                  Changed:   scheduler
@@ -7,7 +14,7 @@ EB-2005-11-18-0: Bugfix:    qconf -mstree aborts
                  Issue:     1874
                  Bugtraq:   6348299
                  Changed:   qconf   
-                 Review:    JG 
+                 Review:    JG
 
 DT-2005-11-18-0: Bugfix:    o Checked in missing changes
                             - Merged from DT-2005-09-09-0

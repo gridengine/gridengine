@@ -152,7 +152,9 @@ int sge_read_configuration(lListElem *aSpoolContext, lList *anAnswer)
  * TODO: A fix for IZ issue #79 is needed. For this to be done it may be 
  * necessary to introduce something like 'protected' configuration entries.
  */
-int sge_del_configuration(lListElem *aConf, lList **anAnswer, char *aUser, char *aHost)
+int 
+sge_del_configuration(lListElem *aConf, lList **anAnswer, 
+                      char *aUser, char *aHost)
 {
    const char *tmp_name = NULL;
    char unique_name[CL_MAXHOSTLEN];
@@ -163,26 +165,48 @@ int sge_del_configuration(lListElem *aConf, lList **anAnswer, char *aUser, char 
    if (!aConf || !aUser || !aHost)
    {
       CRITICAL((SGE_EVENT, MSG_SGETEXT_NULLPTRPASSED_S, SGE_FUNC));
-      answer_list_add(anAnswer, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+      answer_list_add(anAnswer, SGE_EVENT, 
+                      STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       DEXIT;
       return STATUS_EUNKNOWN;
    }
    
    if ((tmp_name = lGetHost(aConf, CONF_hname)) == NULL)
    {
-      CRITICAL((SGE_EVENT, MSG_SGETEXT_MISSINGCULLFIELD_SS, lNm2Str(CONF_hname), SGE_FUNC));
-      answer_list_add(anAnswer, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+      CRITICAL((SGE_EVENT, MSG_SGETEXT_MISSINGCULLFIELD_SS, 
+                lNm2Str(CONF_hname), SGE_FUNC));
+      answer_list_add(anAnswer, SGE_EVENT, 
+                      STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       DEXIT;
       return STATUS_EUNKNOWN;
    }
 
-   if ((ret = sge_resolve_hostname(tmp_name, unique_name, EH_name)) != CL_RETVAL_OK)
+   /*
+    * Due to CR 6319231 IZ 1760:
+    *    try to resolve the hostname
+    *    if it is not resolveable then
+    *       ignore this and use the hostname stored in the configuration obj
+    *       or use the given name if no object can be found
+    */
+   ret = sge_resolve_hostname(tmp_name, unique_name, EH_name);
+   if (ret != CL_RETVAL_OK)
    {
-      DPRINTF(("%s: error %s resolving host %s\n", SGE_FUNC, cl_get_error_text(ret), tmp_name));
-      ERROR((SGE_EVENT, MSG_SGETEXT_CANTRESOLVEHOST_S, tmp_name));
-      answer_list_add(anAnswer, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-      DEXIT;
-      return STATUS_EUNKNOWN;
+      lListElem *conf_obj = NULL;
+ 
+      DPRINTF(("%s: error %s resolving host %s\n", SGE_FUNC,
+               cl_get_error_text(ret), tmp_name));
+ 
+      conf_obj = sge_get_configuration_for_host(tmp_name);
+      if (conf_obj != NULL) {
+         DPRINTF(("using hostname stored in configuration object\n"));
+         strcpy(unique_name, lGetHost(conf_obj, CONF_hname));
+      } else {
+         ERROR((SGE_EVENT, MSG_SGETEXT_CANT_DEL_CONFIG2_S, tmp_name));
+         answer_list_add(anAnswer, SGE_EVENT,
+                         STATUS_EEXIST, ANSWER_QUALITY_ERROR);
+         DEXIT;
+         return STATUS_EEXIST;
+      }
    }
 
    /* Do not allow to delete global configuration */
@@ -634,14 +658,17 @@ static u_long32 sge_get_config_version_for_host(const char* aName)
 
    DENTER(TOP_LAYER, "sge_get_configuration_for_host");
 
+   /*
+    * Due to CR 6319231 IZ 1760:
+    *    Try to resolve the hostname
+    *    if it is not resolveable then
+    *       ignore this and use the given hostname
+    */
    ret = sge_resolve_hostname(aName, unique_name, EH_name);
-   
-   if (CL_RETVAL_OK != ret)
-   {
-      DPRINTF(("%s: error %s resolving host %s\n", SGE_FUNC, cl_get_error_text(ret), aName));
-      ERROR((SGE_EVENT, MSG_SGETEXT_CANTRESOLVEHOST_S, aName));
-      DEXIT;
-      return 0;
+   if (CL_RETVAL_OK != ret) {
+      DPRINTF(("%s: error %s resolving host %s\n", SGE_FUNC,
+              cl_get_error_text(ret), aName));
+      strcpy(unique_name, aName);
    }
 
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
@@ -674,14 +701,17 @@ lListElem* sge_get_configuration_for_host(const char* aName)
 
    SGE_ASSERT((NULL != aName));
 
+   /*
+    * Due to CR 6319231 IZ 1760:
+    *    Try to resolve the hostname
+    *    if it is not resolveable then
+    *       ignore this and use the given hostname
+    */
    ret = sge_resolve_hostname(aName, unique_name, EH_name);
-   
-   if (CL_RETVAL_OK != ret)
-   {
-      DPRINTF(("%s: error %s resolving host %s\n", SGE_FUNC, cl_get_error_text(ret), aName));
-      ERROR((SGE_EVENT, MSG_SGETEXT_CANTRESOLVEHOST_S, aName));
-      DEXIT;
-      return NULL;
+   if (CL_RETVAL_OK != ret) {
+      DPRINTF(("%s: error %s resolving host %s\n", SGE_FUNC,
+              cl_get_error_text(ret), aName));
+      strcpy(unique_name, aName);
    }
 
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);

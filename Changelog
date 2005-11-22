@@ -1,3 +1,8 @@
+EB-2005-11-22-0: Testsuite: create a testsuite test for issue 1874
+                 Issue:     1911
+                 Changed:   testsuite
+                 Review:    TBD
+
 CR-2005-11-22-0: Bugfix:    o Fixed Insure memory leaks
                             o removed obsolete start_commd variable
                             o daemons now can be started daemonized
@@ -107,8 +112,8 @@ DT-2005-11-15-2: Bugfix:    o Clarified regex in complex man page
                  Bugtraq:   6350714, N/A, 6347840, 6349351
                  Changed:   man1, man5, qconf
 
-DT-2005-11-15-1: Testsuite: o Fixed test for IZ1760
-                 Changed:   Test for IZ1760
+DT-2005-11-15-1: Testsuite: o Fixed test for IZ 1760
+                 Changed:   Test for IZ 1760
                  Review:    pending
 
 DT-2005-11-15-0: Bugfix:    o Fixed abort in drmaa_job_ps()

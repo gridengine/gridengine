@@ -244,6 +244,8 @@ int sge_read_exechost_list_from_disk(lList **list, const char *directory)
 
            /* resolve hostname anew */
             if (reresolve_host(ep, EH_name, "exec host", directory)) {
+               lFreeElem(&ep);
+               lFreeList(&direntries);
                DEXIT;
                return -1; /* general problems */
             }
@@ -257,6 +259,7 @@ int sge_read_exechost_list_from_disk(lList **list, const char *directory)
 
             if (ensure_attrib_available(NULL, ep, EH_consumable_config_list)) {
                lFreeElem(&ep);
+               lFreeList(&direntries);
                DEXIT;
                return -1;
             }

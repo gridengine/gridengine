@@ -1,3 +1,11 @@
+AH-2005-11-22-0: Bugfix:    Disable problematic schedd logging for jobs not
+                            finished as foreseen by reservation schedule
+                            Minor cleanup in spool lib error handling code 
+                            that reads in sge_conf(5) and host_conf(5)
+                 Changed:   scheduler
+                 Review:    RD
+                 Bugtraq:   6353792
+
 JG-2005-11-22-0: Bugfix:    - parsing error in cluster config, qmaster_params 
                               (introduced after s2 snapshot1)
                             - libdrmaa.sl did not work on HP11 (link error)

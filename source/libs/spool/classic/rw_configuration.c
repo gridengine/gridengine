@@ -294,6 +294,7 @@ u_long32 flags
          if (strtok_r(NULL, " \t\n", &lasts)) {
             /* Allow only one value per line */
             WARNING((SGE_EVENT, MSG_CONFIG_CONF_ONLYSINGLEVALUEFORCONFIGATTRIB_S, name));
+            lFreeList(&lp);
             FCLOSE(fp);
             DEXIT;
             return NULL;

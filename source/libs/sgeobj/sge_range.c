@@ -1779,7 +1779,7 @@ range_list_parse_from_string(lList **this_list, lList **answer_list,
    bool undefined = false, first = true;
    struct saved_vars_s *context = NULL;
 
-   DENTER(TOP_LAYER, "parse_ranges");
+   DENTER(TOP_LAYER, "range_list_parse_from_string");
 
    if (!this_list) {
       this_list = &range_list;

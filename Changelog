@@ -1,3 +1,10 @@
+CR-2005-11-22-0: Bugfix:    o Fixed Insure memory leaks
+                            o removed obsolete start_commd variable
+                            o daemons now can be started daemonized
+                              with insure support
+                 Changed:   libgdi, commlib, execd
+                 Review:    AA
+
 RD-2005-11-22-0: Bugfix:    default process priority on windows freezes the
                             whole system until job is finished
                  Changed:   sge_shepherd

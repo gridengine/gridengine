@@ -1266,6 +1266,11 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
             free(new_handle->messages_ready_mutex); 
          }
          cl_com_free_handle_statistic(&(new_handle->statistic));
+
+         cl_com_free_debug_client_setup(&(new_handle->debug_client_setup));
+
+         cl_com_free_ssl_setup(&(new_handle->ssl_setup));
+
          free(new_handle);
          cl_raw_list_unlock(cl_com_handle_list);
          if (commlib_error) {

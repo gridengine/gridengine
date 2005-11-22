@@ -1,3 +1,9 @@
+RD-2005-11-22-0: Bugfix:    default process priority on windows freezes the
+                            whole system until job is finished
+                 Changed:   sge_shepherd
+                 Bugtraq:   6353638
+                 Review:    AH
+
 AH-2005-11-22-0: Bugfix:    Disable problematic schedd logging for jobs not
                             finished as foreseen by reservation schedule
                             Minor cleanup in spool lib error handling code 

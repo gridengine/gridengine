@@ -86,10 +86,6 @@
 #  include <sys/resource.h>
 #endif
 
-#if defined(SOLARIS)
-int setpriority(int which, id_t who, int prio);
-#endif
-
 #ifdef MODULE_TEST
 #   include <sys/stat.h>
 #   include <fcntl.h>

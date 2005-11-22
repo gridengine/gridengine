@@ -123,9 +123,7 @@ static int sge_parse_limit(sge_rlim_t *rlvalp, char *s, char *error_str,
    return 1;
 }
 
-void setrlimits(
-int trace_rlimit 
-) {
+void setrlimits(int trace_rlimit) {
    sge_rlim_t s_cpu, h_cpu, s_core, h_core, s_data, h_data, 
       s_fsize, h_fsize, s_stack, h_stack, s_vmem, h_vmem;
 #if defined(NECSX4) || defined(NECSX5)

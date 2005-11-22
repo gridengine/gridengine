@@ -522,6 +522,7 @@ int sge_daemonize_finalize(void) {
    close(fd_pipe[1]);
 
    /* close first three file descriptors */
+#ifndef __INSURE__
    close(0);
    close(1);
    close(2);
@@ -536,6 +537,7 @@ int sge_daemonize_finalize(void) {
    if (open("/dev/null",O_WRONLY,0)!=2) {
       SGE_EXIT(0);
    }
+#endif
 
    SETPGRP;
 
@@ -634,6 +636,7 @@ int sge_daemonize(fd_set *keep_open)
   yp_unbind(domname);
 #endif
  
+#ifndef __INSURE__
    /* close all file descriptors */
    sge_close_all_fds(keep_open);
  
@@ -644,6 +647,7 @@ int sge_daemonize(fd_set *keep_open)
       SGE_EXIT(0);
    if (open("/dev/null",O_WRONLY,0)!=2)
       SGE_EXIT(0);
+#endif
  
    SETPGRP;
  
@@ -677,10 +681,13 @@ int sge_daemonize(fd_set *keep_open)
 ******************************************************************************/
 int sge_occupy_first_three(void)
 {
+#ifndef __INSURE__
    SGE_STRUCT_STAT buf;
+#endif
  
    DENTER(TOP_LAYER, "occupy_first_three");
  
+#ifndef __INSURE__
    if (SGE_FSTAT(0, &buf)) {
       if ((open("/dev/null",O_RDONLY,0))!=0) {
          DEXIT;
@@ -701,6 +708,7 @@ int sge_occupy_first_three(void)
          return 2;
       }
    }
+#endif
  
    DEXIT;
    return -1;
@@ -746,6 +754,9 @@ void sge_close_all_fds(fd_set *keep_open)
             ignore = true;
          }
       }
+#ifdef __INSURE__
+      ignore = true;
+#endif
 
       if (ignore == false) {
 #ifndef WIN32NATIVE

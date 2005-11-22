@@ -702,7 +702,7 @@ int var_list_add_as_set(lList *lp0, lList *lp1)
    const lDescr *dp0, *dp1;
    const char *name, *value;
 
-   DENTER(CULL_LAYER, "lReplaceList");
+   DENTER(CULL_LAYER, "var_list_add_as_set");
 
    if (!lp1 || !lp0) {
       DEXIT;
@@ -733,7 +733,7 @@ int var_list_add_as_set(lList *lp0, lList *lp1)
        * value of the element from the second list. */
       if (ep0 != NULL) {
          value = lGetString (ep1, VA_value);         
-         lSetString (ep0, VA_value, strdup (value));
+         lSetString (ep0, VA_value, value);
       }
       /* If there is no matching element, add the element from the second list
        * to the first list. */

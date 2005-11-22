@@ -131,6 +131,7 @@ hgroup_add_del_mod_via_gdi(lListElem *this_elem, lList **answer_list,
       gdi_answer_list = sge_gdi(SGE_HGROUP_LIST, gdi_command,
                                 &hgroup_list, NULL, NULL);
       answer_list_replace(answer_list, &gdi_answer_list);
+      lFreeList(&hgroup_list);
    }
    DEXIT;
    return ret;

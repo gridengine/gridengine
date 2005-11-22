@@ -675,12 +675,6 @@ static lList *sge_parse_execd(lList **ppcmdline, lList **ppreflist,
          sge_usage(stdout);
          break;
       }
-
-      /* -nostart-commd */
-      if(parse_flag(ppcmdline, "-nostart-commd", &alp, &flag)) {
-         start_commd = false;
-         continue;
-      }
    }
    if(lGetNumberOfElem(*ppcmdline)) {
       sprintf(str, MSG_PARSE_TOOMANYARGS);

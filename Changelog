@@ -1,3 +1,11 @@
+RD-2005-11-22-0: Bugfix:    default process priority on windows freezes the
+                            whole system until job is finished
+                 Changed:   sge_shepherd
+                 Bugtraq:   6353638
+                 Review:    AH
+
+RD-2005-11-16-0: Testsuite: Fixed qtcsh test
+
 JG-2005-11-22-1: Testsuite: Use HP11 test binaries on HP1164 platform, if 
                             $SGE_ROOT/util/arch reports hp11 as binary platform.
                             This is the case for our binary distribution.

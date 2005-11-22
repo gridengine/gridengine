@@ -1,3 +1,6 @@
+DT-2005-11-22-0: Cleanup:   o Added missing SISSL header.
+                            o Created script to find env vars
+
 CR-2005-11-22-0: Bugfix:    o Fixed Insure memory leaks
                             o removed obsolete start_commd variable
                             o daemons now can be started daemonized

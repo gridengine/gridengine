@@ -1,3 +1,6 @@
+DT-2005-11-23-0: Testsuite: o Fixed output/error files for drmaaj test
+                            - Merged from DT-2005-11-23-0 (Maintrunk)
+
 MD-2005-11-23-0: Bugfix:    auto install ignores DB_SPOOLING_SERVER setting
                  Issue:     1913
                  Bugster:   6354236

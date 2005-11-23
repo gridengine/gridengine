@@ -188,33 +188,35 @@ debit_job_from_queues(lListElem *job, lList *granted, lList *global_queue_list,
          for_each (so, lGetList(qep, QU_subordinate_list)) {
             if (!tst_sos(qslots,        total, so)  &&  /* not suspended till now */
                  tst_sos(qslots+tagged, total, so)) {   /* but now                */
-               ret |= sos_schedd(lGetString(so, SO_name), global_queue_list);
+               lListElem *order = NULL;
+               dstring queue_name = DSTRING_INIT;
+
+               sge_dstring_sprintf(&queue_name, "%s@%s", lGetString(so, SO_name), lGetHost(qep, QU_qhostname));
+             
+               ret |= sos_schedd(sge_dstring_get_string(&queue_name), global_queue_list);
 
                /* warn on jobs that were dispatched into that queue in
                   the same scheduling interval based on the orders list */
-               {
-                  lListElem *order;
-                  for_each (order, orders->jobStartOrderList) {
-                     if (lGetUlong(order, OR_type) != ORT_start_job) {
-                        continue;
-                     }   
-                     if (lGetSubStr(order, OQ_dest_queue, lGetString(so, SO_name), OR_queuelist)) {
-                        WARNING((SGE_EVENT, MSG_SUBORDPOLICYCONFLICT_UUSS, sge_u32c(lGetUlong(job, JB_job_number)),
-                        sge_u32c(lGetUlong(order, OR_job_number)), qname, lGetString(so, SO_name)));
-                     }
+               for_each (order, orders->jobStartOrderList) {
+                  if (lGetUlong(order, OR_type) != ORT_start_job) {
+                     continue;
+                  }   
+                  if (lGetSubStr(order, OQ_dest_queue, sge_dstring_get_string(&queue_name), OR_queuelist)) {
+                     WARNING((SGE_EVENT, MSG_SUBORDPOLICYCONFLICT_UUSS, sge_u32c(lGetUlong(job, JB_job_number)),
+                     sge_u32c(lGetUlong(order, OR_job_number)), qname, sge_dstring_get_string(&queue_name)));
                   }
-                  
-                  for_each (order, orders->sentOrderList) {
-                     if (lGetUlong(order, OR_type) != ORT_start_job) {
-                        continue;
-                     }  
-                     if (lGetSubStr(order, OQ_dest_queue, lGetString(so, SO_name), OR_queuelist)) {
-                        WARNING((SGE_EVENT, MSG_SUBORDPOLICYCONFLICT_UUSS, sge_u32c(lGetUlong(job, JB_job_number)),
-                        sge_u32c(lGetUlong(order, OR_job_number)), qname, lGetString(so, SO_name)));
-                     }
-                  }
-
                }
+               
+               for_each (order, orders->sentOrderList) {
+                  if (lGetUlong(order, OR_type) != ORT_start_job) {
+                     continue;
+                  }  
+                  if (lGetSubStr(order, OQ_dest_queue, sge_dstring_get_string(&queue_name), OR_queuelist)) {
+                     WARNING((SGE_EVENT, MSG_SUBORDPOLICYCONFLICT_UUSS, sge_u32c(lGetUlong(job, JB_job_number)),
+                     sge_u32c(lGetUlong(order, OR_job_number)), qname, sge_dstring_get_string(&queue_name)));
+                  }
+               }
+               sge_dstring_free(&queue_name);
             }
          }
 

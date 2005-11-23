@@ -659,16 +659,13 @@ static lList *sge_parse_execd(lList **ppcmdline, lList **ppreflist,
    stringT str;
    lList *alp = NULL;
    int usageshowed = 0;
-   u_long32 flag;
 
    DENTER(TOP_LAYER, "sge_parse_execd");
 
    /* Loop over all options. Only valid options can be in the
       ppcmdline list.
    */
-   while(lGetNumberOfElem(*ppcmdline))
-   {
-      flag = 0;
+   while(lGetNumberOfElem(*ppcmdline)) {
       /* -help */
       if(parse_flag(ppcmdline, "-help", &alp, help)) {
          usageshowed = 1;
@@ -676,6 +673,7 @@ static lList *sge_parse_execd(lList **ppcmdline, lList **ppreflist,
          break;
       }
    }
+   
    if(lGetNumberOfElem(*ppcmdline)) {
       sprintf(str, MSG_PARSE_TOOMANYARGS);
       if(!usageshowed)
@@ -684,6 +682,7 @@ static lList *sge_parse_execd(lList **ppcmdline, lList **ppreflist,
       DEXIT;
       return alp;
    }
+
    DEXIT;
    return alp;
 }

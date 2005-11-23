@@ -1,7 +1,11 @@
+DT-2005-11-23-1: Bugfix:    o Fixed DRMAA Java language binding on HP
+                 Changed:   aimk.site
+
 DT-2005-11-23-0: Cleanup:   o Added missing SISSL header.
                             o Created script to find env vars
                             - Merged from DT-2005-11-22-0 (V60s2_BRANCH)
                  Testsuite: o Fixed output/error files for drmaaj test
+                 Changed:   testsuite, drmaaj
 
 CR-2005-11-23-0: Bugfix:    o Fixed Insure memory leaks
                             o Fixed wrong use of strncpy

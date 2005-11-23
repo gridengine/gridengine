@@ -37,8 +37,8 @@ switch($buildarch)
    case "win32-x86":
    case "lx22-alpha":
    case "aix43":
-   case "hp11":
-   case "hp11-64":
+#   case "hp11":
+#   case "hp11-64":
       set argv = ( -no-jni $* )
       breaksw
    deafult:

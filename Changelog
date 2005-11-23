@@ -1,3 +1,7 @@
+SG-2005-11-23-0: Testsuite: added test for issue 1894
+                 Review:    JG
+                 Changed:   checktree/functional/consumable_resources/check.60.exp
+
 RH-2005-11-23-0: Testsuite: Required host for additional checktrees added
                  Changed:   testsuite
                  Review:    CR
@@ -416,10 +420,10 @@ SG-2005-10-31-0: Bugfix:    - a sched conf change with a sharetree can result
                               in a usage leak
                             - sched conf changes master conf only when needed
                             - minor perf. improv on job submit
-                 Issue:
-                 Bugtraq:
-                 Changed:   qmaster, scheduler
-                 Review:
+                 Issue:     1848
+                 Bugtraq:   6342005
+                 Changed:   qmaster, scheduler, testsuite
+                 Review:    AA
 
 RD-2005-10-28-0: Bugfix:    fixed lock cleanup by SG-2005-10-25-0
                             lock was not initialized for non mt binaries

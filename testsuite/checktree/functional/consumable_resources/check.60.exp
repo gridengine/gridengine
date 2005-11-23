@@ -389,7 +389,7 @@ proc consumable_resources_submit_pejobs_and_wait { job_arguments job_count run_j
    wait_for_end_of_all_jobs 60
 }
 
-proc consumable_resources_submit_jobs_and_wait { job_arguments job_count run_job_count job_arguments2 case { schedd_info "" } { queue_state "" } } {
+proc consumable_resources_submit_jobs_and_wait { job_arguments job_count run_job_count job_arguments2 case { schedd_info "" } { queue_state "" } { schedd_info_err "" } } {
    global ts_config CHECK_OUTPUT CHECK_ARCH
 
    if { $job_arguments2 == "" } {
@@ -430,7 +430,6 @@ proc consumable_resources_submit_jobs_and_wait { job_arguments job_count run_job
       wait_for_queue_state [lindex $queue_state 0] [lindex $queue_state 1] 60
    }
 
-
    if { $job_count != $run_job_count } {
       if { $schedd_info == "" } {
          add_proc_error "case $case) consumable_resources_submit_jobs_and_wait" -2 "got not running job, but no schedule info to search for"
@@ -444,6 +443,13 @@ proc consumable_resources_submit_jobs_and_wait { job_arguments job_count run_job
                   puts $CHECK_OUTPUT "job $job_id($i) is not running, checking schedd job info message ..."
                   puts $CHECK_OUTPUT "looking for \"$schedd_info\" of job $job_id($i)"
                   get_qstat_j_info $job_id($i)
+                  if { $schedd_info_err != "" } {
+                     if { [string match "*$schedd_info_err*" $qstat_j_info(scheduling info)] } {
+                        add_proc_error "consumable_resources_submit_jobs_and_wait_error" -2 "found issue 1894 (scheduling info contains: $schedd_info_err) - stop"
+                        set error 1
+                        set ok 1
+                     }
+                  }
                   if { [string match "*$schedd_info*" $qstat_j_info(scheduling info)] } {
                      puts $CHECK_OUTPUT "found matching scheduling info"
                      set ok 1
@@ -464,12 +470,9 @@ proc consumable_resources_submit_jobs_and_wait { job_arguments job_count run_job
  
    delete_all_jobs  
    wait_for_end_of_all_jobs 60
-
-#   for { set i 0 } { $i < $job_count } { incr i 1 } { 
-#      delete_job $job_id($i)
-#   }
-
 }
+
+
 
 proc consumable_resources_test {} {
    global consumable_resources_test_hosts check_description CHECK_ARCH
@@ -657,7 +660,7 @@ proc consumable_resources_test {} {
 
    if { $CHECK_ACT_LEVEL == 2 } {
       set RUNINQUEUE [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SCHEDD_INFO_CANNOTRUNINQUEUE_SSS] "*" "*" "*test3=0*"]
-   
+  
       # case a)
       #           all jobs will run
       puts $CHECK_OUTPUT "\ncase a)"
@@ -679,11 +682,13 @@ proc consumable_resources_test {} {
       consumable_resources_submit_pejobs_and_wait $job_arguments $job_count $run_job_count "a"  
 
       # case b
+      set WRONGGLOBAL [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SCHEDD_INFO_CANNOTRUNGLOBALLY_SS] "*" "*"]
       puts $CHECK_OUTPUT "\ncase b)"
+      puts $CHECK_OUTPUT $WRONGGLOBAL
       set job_arguments "-l test3=1 -o /dev/null -e /dev/null"
       set job_count 11
       set run_job_count 10
-      consumable_resources_submit_jobs_and_wait $job_arguments $job_count $run_job_count "" "b" $RUNINQUEUE
+      consumable_resources_submit_jobs_and_wait $job_arguments $job_count $run_job_count "" "b" $RUNINQUEUE "" $WRONGGLOBAL
       consumable_resources_submit_pejobs_and_wait $job_arguments $job_count $run_job_count "b"  
 
       # case c

@@ -317,6 +317,11 @@ if [ "$UPDATE" = "true" -a "$EXECD" = "install" ]; then
 fi
 
 if [ "$BERKELEY" = "install" ]; then
+
+   if [ "$AUTO" = "true" ]; then
+      Stdout2Log
+      $INFOTEXT -log "Starting Berkeley DB installation!"
+   fi
    
    if [ "$DB_SPOOLING_SERVER" = "" -o "$HOST" = "$DB_SPOOLING_SERVER" -o "$NOREMOTE" = "true" ]; then
       CheckWhoInstallsSGE

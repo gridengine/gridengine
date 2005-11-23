@@ -1177,13 +1177,14 @@ char *sge_host_get_mainname(host *h)
 ******************************************************************************/
 void sge_hostcpy(char *dst, const char *raw)
 {
-   char *s;
- 
+   if (dst == NULL || raw == NULL) {
+      return;
+   }
    if (bootstrap_get_ignore_fqdn()) {
- 
+      char *s = NULL;
       /* standard: simply ignore FQDN */
  
-      strncpy(dst, raw, CL_MAXHOSTLEN);
+      sge_strlcpy(dst, raw, CL_MAXHOSTLEN);
       if ((s = strchr(dst, '.'))) {
          *s = '\0';
       }
@@ -1193,17 +1194,14 @@ void sge_hostcpy(char *dst, const char *raw)
       /* exotic: honor FQDN but use default_domain */
  
       if (!strchr(raw, '.')) {
-         strncpy(dst, raw, CL_MAXHOSTLEN);
-         strncat(dst, ".", CL_MAXHOSTLEN);
-         strncat(dst, bootstrap_get_default_domain(), CL_MAXHOSTLEN);
+         snprintf(dst, CL_MAXHOSTLEN, "%s.%s", raw, bootstrap_get_default_domain());
       } else {
-         strncpy(dst, raw, CL_MAXHOSTLEN);
+         sge_strlcpy(dst, raw, CL_MAXHOSTLEN);
       }
    } else {
- 
       /* hardcore: honor FQDN, don't use default_domain */
  
-      strncpy(dst, raw, CL_MAXHOSTLEN);
+      sge_strlcpy(dst, raw, CL_MAXHOSTLEN);
    }
    return;
 }  

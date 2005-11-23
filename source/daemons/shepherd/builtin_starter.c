@@ -762,8 +762,7 @@ int truncate_stderr_out
          char file[SGE_PATH_MAX + 1];
          char *pc;
    
-         strncpy(file, script_file, SGE_PATH_MAX);
-         file[sizeof(file) - 1] = 0;
+         sge_strlcpy(file, script_file, SGE_PATH_MAX);
          pc = strchr(file, ' ');
          if (pc) {
             *pc = 0;

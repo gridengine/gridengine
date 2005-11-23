@@ -269,7 +269,7 @@ lListElem* get_attribute(const char *attrname, lList *config_attr, lList *actual
 
                if (parse_ulong_val(&dval, NULL, type, load_value, NULL, 0)) {
 
-               strncpy(sval, load_value, 100);
+               sge_strlcpy(sval, load_value, 100);
                /* --------------------------------
                   look for 'name' in our load_adjustments list
                */
@@ -1189,11 +1189,11 @@ int force_existence
       else {
          match = m1 && m2;
          if (!m1) {
-            strncpy(availability_text, availability_text1, STR_LEN_AVAIL_TEXT);
+            sge_strlcpy(availability_text, availability_text1, STR_LEN_AVAIL_TEXT);
          } else if (!m2) {
-            strncpy(availability_text, availability_text2, STR_LEN_AVAIL_TEXT);
+            sge_strlcpy(availability_text, availability_text2, STR_LEN_AVAIL_TEXT);
          } else {
-            strncpy(availability_text, "", STR_LEN_AVAIL_TEXT);
+            sge_strlcpy(availability_text, "", STR_LEN_AVAIL_TEXT);
          }
       }
       DEXIT;

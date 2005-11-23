@@ -319,6 +319,52 @@ char *sge_strtok(const char *str, const char *delimitor)
    return NULL;
 }
 
+/****** uti/string/sge_strlcpy() ***********************************************
+*  NAME
+*     sge_strlcpy() -- sge strlcpy implementation
+*
+*  SYNOPSIS
+*     size_t sge_strlcpy(char *dst, const char *src, size_t dstsize) 
+*
+*  FUNCTION
+*     ??? 
+*
+*  INPUTS
+*     char *dst       - destination
+*     const char *src - source string (must be '\0' terminated)
+*     size_t dstsize  - size of source string 
+*
+*  RESULT
+*     size_t - strlen of src, not dst !!!
+*
+*  EXAMPLE
+*     ??? 
+*
+*  NOTES
+*     MT-NOTE: sge_strlcpy() is MT safe 
+*
+*  BUGS
+*     ??? 
+*******************************************************************************/
+size_t sge_strlcpy(char *dst, const char *src, size_t dstsize) {
+   size_t index = 0;
+   if (dst == NULL) {
+      return 0;
+   } 
+   if (src == NULL) {
+      dst[0] = '\0';
+      return 0;
+   }
+   for (index = 0; (src[index] != '\0') && (index < dstsize - 1); index++) {
+      dst[index] = src[index];
+   }
+   dst[index] = '\0';
+   while ( src[index] != '\0') {
+     index++;
+   }
+   return index;
+}
+
 /****** uti/string/sge_strtok_r() *********************************************
 *  NAME
 *     sge_strtok_r() -- Reentrant version of strtok()
@@ -848,8 +894,8 @@ void sge_strtoupper(char *buffer, int max_len)
 
    if (buffer != NULL) {
       int i;
-
-      for (i = 0; (i < max_len) && (i < strlen(buffer)); i++) {
+      int length = MIN(strlen(buffer), max_len);
+      for (i = 0; i < length; i++) {
          buffer[i] = toupper(buffer[i]); 
       }
    }

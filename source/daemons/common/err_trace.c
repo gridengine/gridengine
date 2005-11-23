@@ -62,6 +62,7 @@
 #include "config_file.h"
 #include "qlogin_starter.h"
 #include "sge_unistd.h"
+#include "sge_string.h"
 
 #if defined(INTERIX)
 #  include "misc.h"
@@ -770,8 +771,8 @@ static FILE* shepherd_trace_init_intern( st_shepherd_file_t shepherd_file )
 		called=true;
 	}
 
-  	sprintf(tmppath, "%s/%s",path, g_shepherd_file_name[shepherd_file]);
-    strncpy(g_shepherd_file_path[shepherd_file], tmppath, SGE_PATH_MAX);
+  	snprintf(tmppath, SGE_PATH_MAX,"%s/%s",path, g_shepherd_file_name[shepherd_file]);
+   sge_strlcpy(g_shepherd_file_path[shepherd_file], tmppath, SGE_PATH_MAX);
 
 	/* If the file does not exist, create it. Otherwise just open it. */
 	if( SGE_STAT( tmppath, &statbuf )) {

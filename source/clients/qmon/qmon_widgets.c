@@ -446,9 +446,10 @@ Cardinal size
          str2 = (StringConst)lGetHost(ep, MR_host);
          if (str1) {
             if (!str2)
-               strncpy(buf, str1, BUFSIZ);
+               sge_strlcpy(buf, str1, BUFSIZ);
+
             else
-               sprintf(buf, "%s@%s", str1, str2);
+               snprintf(buf, BUFSIZ, "%s@%s", str1, str2);
             str_table[i] = XtNewString(buf);
          }
          else

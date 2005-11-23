@@ -51,8 +51,7 @@ char err_msg[1000] = { '0' };
 void set_error(const char *err_str) 
 {
    if (err_str) {
-      strncpy(err_msg, err_str, sizeof(err_msg)-1);
-      err_msg[sizeof(err_msg)-1] = '\0';
+      sge_strlcpy(err_msg, err_str, sizeof(err_msg));
    }
 }
 

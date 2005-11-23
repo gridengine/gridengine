@@ -60,6 +60,7 @@
 #include "setup_path.h"
 #include "sge_feature.h"
 #include "sge_bootstrap.h"
+#include "sge_string.h"
 
 #include "uti/sge_profiling.h"
 
@@ -249,8 +250,8 @@ gdi_set_request(const char* rhost, const char* commproc, u_short id,
       return false;
    }
  
-   strncpy(async_gdi->rhost, rhost, CL_MAXHOSTLEN);
-   strncpy(async_gdi->commproc, commproc, CL_MAXHOSTLEN);
+   sge_strlcpy(async_gdi->rhost, rhost, CL_MAXHOSTLEN);
+   sge_strlcpy(async_gdi->commproc, commproc, CL_MAXHOSTLEN);
    async_gdi->id = id;
    async_gdi->gdi_request_mid = gdi_request_mid;
 

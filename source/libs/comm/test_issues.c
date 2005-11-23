@@ -480,7 +480,6 @@ extern int main(int argc, char** argv)
   cl_com_cleanup_commlib();
   
   printf("main done\n");
-  fflush(NULL);
   return main_return;
 }
 

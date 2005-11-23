@@ -58,7 +58,7 @@
 #include "sge_all_listsL.h"
 
 #define ARGUMENT_COUNT 15
-static char*  cl_values[ARGUMENT_COUNT+1];
+static char*  cl_values[ARGUMENT_COUNT+2];
 static int    cl_short_host_name_option = 0;                                       
 static int    cl_show[]         = {1,1 ,1,1 ,1,1,1 ,1,1,1,1,0 ,0,1,1};
 static int    cl_alignment[]    = {1,0 ,1,0 ,1,1,1 ,1,1,1,1,0 ,0,1,1};

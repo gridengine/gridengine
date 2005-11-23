@@ -1043,8 +1043,8 @@ Boolean *ctd
 
                   strcpy(hostname, "global");
                   if (qB && qB->qI && qB->qI->qp) {
-                     strncpy(hostname, lGetHost(qB->qI->qp, QU_qhostname),
-                                 SGE_PATH_MAX);                      
+                     sge_strlcpy(hostname, lGetHost(qB->qI->qp, QU_qhostname),
+                                 SGE_PATH_MAX);
                      strtok(hostname, ".");
                   }
                   qmonBrowserMessages(w, (XtPointer)hostname, NULL);

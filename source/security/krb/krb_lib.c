@@ -931,7 +931,7 @@ char *tohost
    int tag = TAG_AUTH_FAILURE;
    char buffer[BUFSIZ];
    int buflen;
-   strncpy(buffer, MSG_KRB_AUTHENTICATIONFAILURE, BUFSIZ);
+   sge_strlcpy(buffer, MSG_KRB_AUTHENTICATIONFAILURE, BUFSIZ);
    buflen = strlen(buffer);
    return send_message(0, tocommproc, toid, tohost, tag, buffer, buflen, NULL, 0);
 }

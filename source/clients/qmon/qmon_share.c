@@ -849,7 +849,7 @@ XtPointer cld, cad;
          DEXIT;
          return;
       }   
-      strncpy(search_for, name, 256);
+      sge_strlcpy(search_for, name, 256);
       matches = NULL;
       /*
       ** Highlight the new_node

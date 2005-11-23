@@ -541,7 +541,7 @@ char *err_str
                path_alias_list_get_path(lGetList(jep, JB_path_aliases), NULL, 
                                         sfile, uti_state_get_qualified_hostname(), 
                                         &script_file_out);
-               strncpy(script_file, sge_dstring_get_string(&script_file_out), 
+               sge_strlcpy(script_file, sge_dstring_get_string(&script_file_out), 
                        SGE_PATH_MAX);
                sge_dstring_free(&script_file_out);
             }

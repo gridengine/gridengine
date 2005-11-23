@@ -1,3 +1,8 @@
+CR-2005-11-23-0: Bugfix:    o Fixed Insure memory leaks
+                            o Fixed wrong use of strncpy
+                 Review:    AA, SG
+                            
+
 DT-2005-11-22-0: Cleanup:   o Added missing SISSL header.
                             o Created script to find env vars
 

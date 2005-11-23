@@ -2474,7 +2474,7 @@ XtPointer cld, cad;
    
    if (cbs->input && cbs->input[0] != '\0') {
       DPRINTF(("cbs->input = '%s'\n", cbs->input));
-      strncpy(buf, cbs->input, MAX_INPUT_LEN);
+      sge_strlcpy(buf, cbs->input, MAX_INPUT_LEN);
       for (start = buf; *start && isspace(*start); start++)
          ;
       for (i=strlen(buf)-1; isspace(buf[i]) && i>0; i--)
@@ -2502,7 +2502,7 @@ XtPointer cad
    DENTER(GUI_LAYER, "qmonClusterTime");
 
    current = XmtInputFieldGetString(input_field);
-   strncpy(stringval, current ? current : "", sizeof(stringval)-1);
+   sge_strlcpy(stringval, current, sizeof(stringval));
    status = XmtAskForTime(w, NULL, "@{Enter time}",
                stringval, sizeof(stringval), NULL, True);
    if (stringval[0] == '\0')

@@ -297,7 +297,7 @@ lList *centry_list
    host = lGetHost(hep, EH_name);
 
    /* cut away domain in case of ignore_fqdn */
-   strncpy(host_print, host, CL_MAXHOSTLEN);
+   sge_strlcpy(host_print, host, CL_MAXHOSTLEN);
    if (bootstrap_get_ignore_fqdn() && (s = strchr(host_print, '.')))
       *s = '\0';
 
@@ -306,8 +306,8 @@ lList *centry_list
    */
    lep=get_attribute_by_name(NULL, hep, NULL, LOAD_ATTR_ARCH, centry_list, DISPATCH_TIME_NOW, 0);
    if (lep) {
-      strncpy(arch_string, sge_get_dominant_stringval(lep, &dominant, &rs), 
-               sizeof(arch_string)-1); 
+      sge_strlcpy(arch_string, sge_get_dominant_stringval(lep, &dominant, &rs), 
+               sizeof(arch_string)); 
       sge_dstring_clear(&rs);
       lFreeElem(&lep);
    }            
@@ -319,8 +319,8 @@ lList *centry_list
    */
    lep=get_attribute_by_name(NULL, hep, NULL, "num_proc", centry_list, DISPATCH_TIME_NOW, 0);
    if (lep) {
-      strncpy(num_proc, sge_get_dominant_stringval(lep, &dominant, &rs),
-               sizeof(num_proc)-1); 
+      sge_strlcpy(num_proc, sge_get_dominant_stringval(lep, &dominant, &rs),
+               sizeof(num_proc)); 
       sge_dstring_clear(&rs);
       lFreeElem(&lep);
    }            

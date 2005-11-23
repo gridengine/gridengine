@@ -1747,7 +1747,7 @@ static void qmonQCMem(Widget w, XtPointer cld, XtPointer cad)
    DENTER(GUI_LAYER, "qmonQCLimitInputMem");
    
    value = XmtInputFieldGetString(target);
-   strncpy(stringval, value, BUFSIZ-1);
+   sge_strlcpy(stringval, value, BUFSIZ);
    status = XmtAskForMemory(w, NULL, "@{Enter a memory value}",
                   stringval, sizeof(stringval), NULL);
    if (stringval[0] == '\0')
@@ -1778,7 +1778,7 @@ XtPointer cld, cad;
       mode = False;
 
    current = XmtInputFieldGetString(input_field);
-   strncpy(stringval, current ? current : "", sizeof(stringval)-1);
+   sge_strlcpy(stringval, current, sizeof(stringval));
    status = XmtAskForTime(w, NULL, "@{Enter time}",
                stringval, sizeof(stringval), NULL, mode);
    if (stringval[0] == '\0')

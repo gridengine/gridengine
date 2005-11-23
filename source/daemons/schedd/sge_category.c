@@ -253,8 +253,17 @@ lListElem *job
          lSetUlong(cat, CT_refcount, --rc);
       }
       else {
+         lListElem *cache = NULL;
+         lList *cache_list = lGetList(cat, CT_cache);
+
          DPRINTF(("############## Removing %s from category list (refcount: " sge_u32 ")\n", 
                   lGetString(cat, CT_str), lGetUlong(cat, CT_refcount)));
+
+         for_each(cache, cache_list) {
+            int *range = lGetRef(cache, CCT_pe_job_slots);
+            FREE(range); 
+         }
+
          lRemoveElem(CATEGORY_LIST, &cat);
       }
    }

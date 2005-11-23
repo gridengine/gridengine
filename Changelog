@@ -1,3 +1,11 @@
+SG-2005-11-23-0: Bugfix:    - mutually subordinating queues suspend eachother 
+                              simultaneously
+                            - fixed the build for irix
+                 Issue:     1882
+                 Bugster:   6354143
+                 Review:    JG
+                 Changed:   scheduler
+
 JG-2005-11-23-0: Bugfix:    Fixed broken upgrade from 5.3 to 6.0.
                  Review:    MD
 

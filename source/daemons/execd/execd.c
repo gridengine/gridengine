@@ -659,7 +659,6 @@ static lList *sge_parse_execd(lList **ppcmdline, lList **ppreflist,
    stringT str;
    lList *alp = NULL;
    int usageshowed = 0;
-   u_long32 flag;
 
    DENTER(TOP_LAYER, "sge_parse_execd");
 
@@ -668,7 +667,6 @@ static lList *sge_parse_execd(lList **ppcmdline, lList **ppreflist,
    */
    while(lGetNumberOfElem(*ppcmdline))
    {
-      flag = 0;
       /* -help */
       if(parse_flag(ppcmdline, "-help", &alp, help)) {
          usageshowed = 1;

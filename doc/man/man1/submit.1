@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: submit.1,v $     Last Update: $Date: 2005/11/09 17:44:39 $     Revision: $Revision: 1.57 $
+.\" $RCSfile: submit.1,v $     Last Update: $Date: 2005/11/23 21:44:06 $     Revision: $Revision: 1.58 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH SUBMIT 1 "$Date: 2005/11/09 17:44:39 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH SUBMIT 1 "$Date: 2005/11/23 21:44:06 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 .IP "qsub   \-" 1i
 submit a batch job to xxQS_NAMExx.
@@ -136,7 +136,9 @@ for execution immediately or the user submitting the job is notified by
 that appropriate resources to execute the job are not available.
 \fBxterm_args\fP are passed to the
 .M xterm 1
-executable.
+executable.  Note, however, that the \fI\-e\fP and \fI\-ls\fP xterm options
+do not work with
+.I qsh .
 .PP
 .I Qlogin
 is similar to
@@ -239,25 +241,34 @@ commands instead of the users login shell or any shell specified in the
 command-line.
 .PP
 .I Qalter
-can be used to change the attributes of pending jobs. Once a job is 
-executing, changes are no longer possible. For array jobs, for which a part
-of the tasks can be pending and another part can be running (see the 
-\fB\-t\fP option below), modifications with
+can be used to change the attributes of pending jobs. For array jobs for
+which some of the tasks are be pending and others are running
+(see the \fB\-t\fP option below), modification with
 .I qalter
-only affect the pending tasks.
+only affects the pending tasks.
 .I Qalter
 can change most of the 
 characteristics of a job (see the corresponding statements in the OPTIONS 
 section below), including those which were defined as embedded flags in the 
-script file (see above).
+script file (see above).  Some submit options, such as the job script, cannot
+be changed with
+I. qalter.
 .PP
 .I Qresub
 allows the user to create jobs as copies of existing pending or running
 jobs. The copied jobs will have exactly the same attributes as the ones
-from which they were copied, except for a new job ID. The only modification to the
-copied jobs supported by qresub is assignment of a hold state with the \fB\-h\fP
-option. This can be used to first copy a job and then change its attributes
-via \fIqalter\fP.
+from which they were copied, except with a new job ID. The only modification to
+the copied jobs supported by
+.I qresub
+is assignment of a hold state with the
+\fB\-h\fP option. This option can be used to first copy a job and then change
+its attributes via \fIqalter\fP.
+.PP
+Only a manager can use
+.I qresub
+on jobs submitted by another user.  Regular users can only use
+.I qresub
+on their own jobs.
 .PP
 For \fIqsub\fP, \fIqsh\fP, \fIqrsh\fP, and \fIqlogin\fP
 the administrator and the user may define
@@ -682,13 +693,14 @@ reference by job name or regular expression is only accepted if the
 referenced job is owned by the same user as the referring job. The 
 submitted job is not eligible for execution unless all jobs 
 referenced in the comma-separated job id and/or job name list have 
-completed successfully.
+completed.  If any of the referenced jobs exits with exit code 100, the
+submitted job will remain ineligible for execution.
+.sp 1
 With the help of job names or regular expressions one can specify
 a job dependency on multiple jobs satisfying the regular expression
 or on all jobs with the requested name. The name dependencies are
 resolved at submit time and can only be changed via qalter. New
 jobs or name changes of other jobs will not be taken into account.
-
 .sp 1
 .I Qalter
 allows changing this option even while the job executes. The modified
@@ -1346,8 +1358,7 @@ If you use the \fB\-u\fP switch it is not permitted to
 specify an additional \fIwc_job_range_list\fP.
 .\"
 .IP "\fB\-v variable[=value],...\fP"
-Available for \fIqsub\fP, \fIqsh\fP, \fIqrsh\fP, \fIqalter\fP
-and \fIqresub\fP.
+Available for \fIqsub\fP, \fIqsh\fP, \fIqrsh\fP and \fIqalter\fP.
 .sp 1
 Defines or redefines the environment variables to
 be exported to the execution context of the job.
@@ -1381,8 +1392,7 @@ or
 session.
 .\"
 .IP "\fB\-verify\fP"
-Available for \fIqsub\fP, \fIqsh\fP, \fIqrsh\fP, \fIqlogin\fP, \fIqalter\fP
-and \fIqresub\fP.
+Available for \fIqsub\fP, \fIqsh\fP, \fIqrsh\fP, \fIqlogin\fP and \fIqalter\fP.
 .sp 1
 Instead of submitting a job, prints detailed information about the would-be job
 as though
@@ -1391,16 +1401,14 @@ as though
 environment.
 .\"
 .IP "\fB\-V\fP"
-Available for \fIqsub\fP, \fIqsh\fP, \fIqrsh\fP, \fIqalter\fP
-and \fIqresub\fP.
+Available for \fIqsub\fP, \fIqsh\fP, \fIqrsh\fP and \fIqalter\fP.
 .sp 1
 Specifies that all environment variables active within the
 .I qsub
 utility be exported to the context of the job.
 .\"
 .IP "\fB\-w e\fP|\fBw\fP|\fBn\fP|\fBv\fP"
-Available for \fIqsub\fP, \fIqsh\fP, \fIqrsh\fP, \fIqlogin\fP, \fIqalter\fP
-and \fIqresub\fP.
+Available for \fIqsub\fP, \fIqsh\fP, \fIqrsh\fP, \fIqlogin\fP and \fIqalter\fP.
 .sp 1
 Specifies a validation level applied to the job to be submitted
 (\fIqsub\fP, \fIqlogin\fP,

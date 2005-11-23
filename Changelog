@@ -1,3 +1,9 @@
+DT-2005-11-23-2: Docs:      o Fixed several man page issues.
+                 Issue:     1265, 1631, 1527, ?, ?, ?, ?
+                 Bugtraq:   6287860, 6287940, 6287910, 6353555, 4919544,
+                            6314301, 4780562
+                 Changed:   Man pages
+
 DT-2005-11-23-1: Bugfix:    o Fixed DRMAA Java language binding on HP
                  Changed:   aimk.site
 

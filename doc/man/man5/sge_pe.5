@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_pe.5,v $     Last Update: $Date: 2004/11/12 15:40:07 $     Revision: $Revision: 1.11 $
+.\" $RCSfile: sge_pe.5,v $     Last Update: $Date: 2005/11/23 21:44:07 $     Revision: $Revision: 1.12 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_PE 5 "$Date: 2004/11/12 15:40:07 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH xxQS_NAME_Sxx_PE 5 "$Date: 2005/11/23 21:44:07 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 xxqs_name_sxx_pe \- xxQS_NAMExx parallel environment configuration file format
@@ -126,8 +126,9 @@ a detailed description of the layout of the parallel environment to be
 setup by the start-up procedure. Each line of the file refers to a host
 on which parallel processes are to be run. The first entry of each line
 denotes the hostname, the second entry the number of parallel processes
-to be run on the host and the third entry a processor range to be used in
-case of a multiprocessor machines.
+to be run on the host, the third entry the name of the queue, and the
+fourth entry a processor range to be used in case of a multiprocessor
+machines.
 .IP "\fI$host\fP"
 The name of the host on which the start-up or stop procedures are
 started.

@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_priority.5,v $     Last Update: $Date: 2005/05/17 09:32:54 $     Revision: $Revision: 1.8 $
+.\" $RCSfile: sge_priority.5,v $     Last Update: $Date: 2005/11/23 21:44:08 $     Revision: $Revision: 1.9 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,41 +29,52 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH SGE_PRIORITY 5 "$Date: 2005/05/17 09:32:54 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH SGE_PRIORITY 5 "$Date: 2005/11/23 21:44:08 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 sge_priority \- xxQS_NAMExx job priorities
 .\"
 .\"
 .SH DESCRIPTION
-The SGE_PRIORITY man page describes means in xxQS_NAMExx for controlling 
-job priorities. 
-.PP
 xxQS_NAMExx provide means for controlling 
-job dispatch and run-time priorities. The dispatch priority is about
+job dispatch and run-time priorities. The dispatch priority indicates
 the importance of pending jobs compared with each other and 
 determines the order in which xxQS_NAMExx dispatches jobs to 
-queues instances. The run-time priority is about the operating system
-priorities of running jobs that influences the CPU allocation which the
-operating system assigns to jobs.
+queue instances. The run-time priority determines the CPU allocation
+that the operating system assigns to jobs.
 .\"
 .\"
 .SS "\fBJOBS DISPATCH PRIORITY\fP"
 .\"
 .\"
-A job's dispatch priority is affected by the job's 
-.M submit 1 
--p priority (often also called POSIX priority "ppri"), the job's submit time, the 
-job's deadline initiation time and the overall policy set-up. 
+A job's dispatch priority is affected by a number of factors:
+.IP "\(bu" 3n
+the identity of the submitting user
+.IP "\(bu" 3n
+the project under which the job is submitted (or alternatively,
+the default project of the submitting user)
+.IP "\(bu" 3n
+any resources requested by the job
+.IP "\(bu" 3n
+the job's submit time
+.IP "\(bu" 3n
+the job's initiation deadline time (if specified)
+.IP "\(bu" 3n
+the -p priority specified for the job (also known as the POSIX
+priority "pprio")
 .\"
 .PP
-The overall policy set-up can be set through
+The effect of each of these is governed by the overall policy setup,
+which is split into three top-level contributions.  Each of these is
+configured through the
 .M sched_conf 5 
 parameters \fBweight_priority\fP, \fBweight_ticket\fP and \fBweight_urgency\fP.
 These three parameters control to what degree POSIX priority, ticket policy, 
-and urgency policy are in effect. To facilitate easier control, the base 
-priorities ("tckts"/"urg"/"pprio") are normalized ("ntckts"/"nurg"/"npprior") 
-before they are used to calculate job priorities ("prio"): 
+and urgency policy are in effect. To facilitate interpretation, the raw 
+priorities ("tckts"/"urg"/"ppri") are normalized ("ntckts"/"nurg"/"npprior") 
+before they are used to calculate job priorities ("prio"). 
+Normalization maps each raw urgency/ticket/priority  value into a range
+between 0 and 1.
 
    npprior = normalized(ppri)
    nurg    = normalized(urg)
@@ -73,9 +84,7 @@ before they are used to calculate job priorities ("prio"):
              weight_urgency  * nurg + 
              weight_ticket   * ntckts
 
-Normalizing maps each base urgency/ticket/priority value into a range 
-between 0 and 1. The higher a jobs priority value the earlier it gets 
-an assignment.
+The higher a job's priority value the earlier it gets dispatched.
 .\"
 .\"
 .PP
@@ -97,7 +106,7 @@ with an "hrr" for each hard resource request.
 Depending on the resource type two different methods are used to 
 determine the value to be used for "hrr" here. For numeric type resource
 requests the "hrr" represents how much of a resource a job requests (on a
-per-slot basis and on how many slots) and how "important" this resource is
+per-slot basis for pe jobs) and how "important" this resource is
 considered in comparison to other resources. This is expressed by the
 formula:
 
@@ -106,8 +115,8 @@ formula:
 with the resources urgency value ("rurg") as specified 
 under \fBurgency\fP in 
 .M complex 5 , 
-the job's assumed_slot_allocation representing the number of slots a job
-supposedly gets and the per slot request as 
+the job's assumed_slot_allocation representing the number of slots
+supposedly assigned to the job and the per slot request as 
 specified using the -l 
 .M qsub 1
 option. For string type requests the formula is simply
@@ -136,16 +145,18 @@ value from
 and the (steadily decreasing) free time in seconds until deadline
 initiation time
 
-   dlcontr = wheight_deadline / free_time
+   dlcontr = weight_deadline / free_time
 
-or is set to 0 for non-deadline jobs.
+or is set to 0 for non-deadline jobs.  After the deadline passes,
+the value is static and equal to weight_deadline.
 .\"
 .\"
 .PP
 .\" ticket policy
 The ticket policy unites functional, override and share tree 
-policies in the ticket value ("tckts") being defined as the sum of the
-specific ticket values ("ftckt"/"otckt"/"stckt") for each sub-policy 
+policies in the ticket value ("tckts"), as is defined as the sum of the
+specific ticket values ("ftckt"/"otckt"/"stckt") for each sub-policy
+(functional, override, share):
 
     tckts = ftckt + otckt + stckt
 
@@ -165,6 +176,9 @@ If no dynamic run-time priority adjustment is done
 at a host level, the \fBpriority\fP specification in 
 .M queue_conf 5
 is in effect.
+.PP
+Note that urgency and POSIX priorities do \fBNOT\fP affect runtime
+priority.
 .PP
 .SH "SEE ALSO"
 .M xxqs_name_sxx_intro 1 ,

@@ -391,7 +391,7 @@ XtPointer cld, cad;
    DENTER(GUI_LAYER, "qmonSchedTime");
 
    current = XmtInputFieldGetString(input_field);
-   strncpy(stringval, current ? current : "", sizeof(stringval));
+   sge_strlcpy(stringval, current ? current : "", sizeof(stringval));
    status = XmtAskForTime(w, NULL, "@{Enter time}",
                stringval, sizeof(stringval), NULL, False);
    if (stringval[0] == '\0')
@@ -489,7 +489,7 @@ printf("->data.load_formula: '%s'\n", data.load_formula ? data.load_formula : "-
    ** "Job Range"
    */
    if (lGetString(sep, SC_schedd_job_info))
-      strncpy(schedd_job_info, lGetString(sep, SC_schedd_job_info), BUFSIZ - 1);
+      sge_strlcpy(schedd_job_info, lGetString(sep, SC_schedd_job_info), BUFSIZ);
    else
       strcpy(schedd_job_info, "false");
 

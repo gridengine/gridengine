@@ -39,9 +39,11 @@
 #include "sgermon.h"
 #include "sge_log.h"
 #include "basis_types.h"
+#include "sge_string.h"
 #include "err_trace.h"
 #include "sge_parse_num_par.h"
 #include "config_file.h"
+
 #include "msg_daemons_common.h"
 
 
@@ -50,8 +52,7 @@ char err_msg[1000] = { '0' };
 void set_error(const char *err_str) 
 {
    if (err_str) {
-      strncpy(err_msg, err_str, sizeof(err_msg)-1);
-      err_msg[sizeof(err_msg)-1] = '\0';
+      sge_strlcpy(err_msg, err_str, sizeof(err_msg));
    }
 }
 

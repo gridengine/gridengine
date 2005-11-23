@@ -1,3 +1,7 @@
+CR-2005-11-23-0: Bugfix:    o Fixed Insure memory leaks
+                            o Fixed wrong use of strncpy
+                 Review:    AA, SG
+
 SG-2005-11-23-0: Bugfix:    - mutually subordinating queues suspend eachother 
                               simultaneously
                             - fixed the build for irix
@@ -8,7 +12,8 @@ SG-2005-11-23-0: Bugfix:    - mutually subordinating queues suspend eachother
 
 SG-2005-11-23-0: Testsuite: added test for issue 1894
                  Review:    JG
-                 Changed:   checktree/functional/consumable_resources/check.60.exp
+                 Changed:   checktree/functional/consumable_resources/
+                            check.60.exp
 
 RH-2005-11-23-0: Testsuite: Required host for additional checktrees added
                  Changed:   testsuite

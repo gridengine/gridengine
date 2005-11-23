@@ -765,11 +765,10 @@ int truncate_stderr_out
    if (!is_qlogin && !atoi(get_conf_val("handle_as_binary"))) {
       if (strcasecmp(shell_start_mode, "raw_exec")) {
          SGE_STRUCT_STAT sbuf;
-         char file[SGE_PATH_MAX + 1];
+         char file[SGE_PATH_MAX];
          char *pc;
    
-         strncpy(file, script_file, SGE_PATH_MAX);
-         file[sizeof(file) - 1] = 0;
+         sge_strlcpy(file, script_file, SGE_PATH_MAX);
          pc = strchr(file, ' ');
          if (pc) {
             *pc = 0;

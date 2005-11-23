@@ -77,8 +77,6 @@ static double get_multiplier(sge_rlim_t *rlimp, char **dptr,
 
 static sge_rlim_t add_infinity(sge_rlim_t rlim, sge_rlim_t offset);
 
-/* this string is used for generating error msgs */  
-static stringT tmp;
 
 /* -----------------------------------------
 
@@ -135,8 +133,7 @@ int extended_parse_ulong_val(double *dvalp, u_long32 *uvalp, u_long32 type,
    if ( (strcasecmp(s,"infinity") == 0) && 
         (enable_infinity == 0 ) ) {
       if (error_str) {
-         strncpy(error_str, MSG_GDI_VALUETHATCANBESETTOINF, error_len); 
-         error_str[error_len-1] = '\0';
+         sge_strlcpy(error_str, MSG_GDI_VALUETHATCANBESETTOINF, error_len); 
          return 0;
       } 
    }
@@ -155,8 +152,7 @@ int extended_parse_ulong_val(double *dvalp, u_long32 *uvalp, u_long32 type,
       retval = sge_parse_loglevel_val(uvalp, s);
       if (retval != 1) {
          if (error_str) {
-            strncpy(error_str, "loglevel value", error_len); 
-            error_str[error_len-1] = '\0';
+            sge_strlcpy(error_str, "loglevel value", error_len); 
          }
       } 
       break;
@@ -173,14 +169,13 @@ int extended_parse_ulong_val(double *dvalp, u_long32 *uvalp, u_long32 type,
             retval = 1; /* no error */
          else {
             if (type==TYPE_TIM)
-               strncpy(error_str, "time value", error_len); 
+               sge_strlcpy(error_str, "time value", error_len); 
             else if (type==TYPE_BOO )
-               strncpy(error_str, "boolean value", error_len); 
+               sge_strlcpy(error_str, "boolean value", error_len); 
             else if (type==TYPE_DOUBLE )
-               strncpy(error_str, "double value", error_len); 
+               sge_strlcpy(error_str, "double value", error_len); 
             else
-               strncpy(error_str, "memory value", error_len); 
-            error_str[error_len-1] = '\0';
+               sge_strlcpy(error_str, "memory value", error_len); 
          }
       } else {
          dummy[0] = '\0';
@@ -333,16 +328,12 @@ static double get_multiplier(sge_rlim_t *rlimp, char **dptr,
    case ' ':                    /* no multiplier */
       break;
    default:
-      sprintf(tmp, MSG_GDI_UNRECOGNIZEDVALUETRAILER_SS , *dptr, where);
-      strncpy(err_str, tmp, err_len-1);
-      err_str[err_len-1] = '\0';
+      snprintf(err_str, err_len, MSG_GDI_UNRECOGNIZEDVALUETRAILER_SS , *dptr, where);
       return 0;
    }
 
    if ((**dptr != ',') && (**dptr != '\0') && (**dptr != '/')) {
-      sprintf(tmp, MSG_GDI_UNEXPECTEDENDOFNUMERICALVALUE_SC , where, **dptr);
-      strncpy(err_str, tmp, err_len-1);
-      err_str[err_len-1] = '\0';
+      snprintf(err_str, err_len, MSG_GDI_UNEXPECTEDENDOFNUMERICALVALUE_SC , where, **dptr);
       return 0;
    }
 
@@ -417,9 +408,7 @@ sge_parse_num_val(sge_rlim_t *rlimp, double *dvalp,
       /* find the hours first */
       double t = strtod(str, &dptr);
       if (t > 0x7fffffff) {
-         sprintf(tmp, MSG_GDI_NUMERICALVALUEFORHOUREXCEEDED_SS , where, str);
-         strncpy(err_str, tmp, err_len-1);
-         err_str[err_len-1] = '\0';
+         snprintf(err_str, err_len, MSG_GDI_NUMERICALVALUEFORHOUREXCEEDED_SS , where, str);
          return 0;
       }
       ldummy = (u_long32)(3600 * t);
@@ -427,18 +416,14 @@ sge_parse_num_val(sge_rlim_t *rlimp, double *dvalp,
       *dvalp = 3600 * t;
 
       if ((*dptr) != ':') {  
-         sprintf(tmp, MSG_GDI_NUMERICALVALUEINVALID_SS , where, str);
-         strncpy(err_str, tmp, err_len-1);
-         err_str[err_len-1] = '\0';
+         snprintf(err_str, err_len, MSG_GDI_NUMERICALVALUEINVALID_SS , where, str);
          return 0;
       }
       /* now go for the minutes */
       dptr++;
       t = strtod(dptr, &dptr);
       if (t > 0x7fffffff) {
-         sprintf(tmp, MSG_GDI_NUMERICALVALUEFORMINUTEEXCEEDED_SS , where, str);
-         strncpy(err_str, tmp, err_len-1);
-         err_str[err_len-1] = '\0';
+         snprintf(err_str, err_len, MSG_GDI_NUMERICALVALUEFORMINUTEEXCEEDED_SS , where, str);
          return 0;
       }
       ldummy += (u_long32)(60 * t);
@@ -446,9 +431,7 @@ sge_parse_num_val(sge_rlim_t *rlimp, double *dvalp,
       *dvalp += 60 * t;
 
       if ((*dptr) != ':') {
-         sprintf(tmp, MSG_GDI_NUMERICALVALUEINVALID_SS , where, str);
-         strncpy(err_str, tmp, err_len-1);
-         err_str[err_len-1] = '\0';
+         snprintf(err_str, err_len, MSG_GDI_NUMERICALVALUEINVALID_SS , where, str);
          return 0;
       }
       /* the seconds finally */
@@ -461,9 +444,7 @@ sge_parse_num_val(sge_rlim_t *rlimp, double *dvalp,
 
       while(*dptr) {
          if (!isspace((int) *dptr)) {
-            sprintf(tmp, MSG_GDI_NUMERICALVALUEINVALID_SS , where, str);
-            strncpy(err_str, tmp, err_len-1);
-            err_str[err_len-1] = '\0';
+            snprintf(err_str, err_len, MSG_GDI_NUMERICALVALUEINVALID_SS , where, str);
             return 0;
          }
          dptr++;
@@ -491,9 +472,7 @@ sge_parse_num_val(sge_rlim_t *rlimp, double *dvalp,
       *dvalp = t;
 
       if ((dummy == 0.0) && (dptr == str)) {    /* no valid number ==> bail */
-         sprintf(tmp, MSG_GDI_NUMERICALVALUEINVALIDNONUMBER_SS , where, str);
-         strncpy(err_str, tmp, err_len-1);
-         err_str[err_len-1] = '\0';
+         snprintf(err_str, err_len, MSG_GDI_NUMERICALVALUEINVALIDNONUMBER_SS , where, str);
          return 0;
       }
 
@@ -517,9 +496,7 @@ sge_parse_num_val(sge_rlim_t *rlimp, double *dvalp,
       *dvalp = t;
 
       if (dptr == str) {        /* no valid number ==> bail */
-         sprintf(tmp, MSG_GDI_NUMERICALVALUEINVALIDNOHEXOCTNUMBER_SS , where, str);
-         strncpy(err_str, tmp, err_len-1);
-         err_str[err_len-1] = '\0';
+         snprintf(err_str, err_len, MSG_GDI_NUMERICALVALUEINVALIDNOHEXOCTNUMBER_SS , where, str);
          return 0;
       }
       /* OK, we got it */

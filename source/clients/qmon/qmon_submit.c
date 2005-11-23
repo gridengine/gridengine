@@ -1307,7 +1307,7 @@ XtPointer cld, cad;
          char *pe_range = NULL;
          lList *alp = NULL;
    
-         strncpy(theInput, SMData.pe, 1023);
+         sge_strlcpy(theInput, SMData.pe, 1023);
          pe = strtok(theInput, " ");
          pe_range = strtok(NULL, "\n");
          if (!(pe_range && pe_range[0] != '\0')) {
@@ -1627,10 +1627,7 @@ int read_defaults
 
    dir_pre = XmtInputFieldGetString(submit_prefix);
    dir_pre = qmon_trim(dir_pre);
-   if (dir_pre && dir_pre[0] != '\0')
-      strncpy(prefix, dir_pre, sizeof(prefix)-1);
-   else
-      prefix[0] = '\0';
+   sge_strlcpy(prefix, dir_pre, sizeof(prefix));
 
    if (read_defaults) {
       opt_list_append_opts_from_default_files(&cmdline, &alp, environ);

@@ -1433,7 +1433,7 @@ int main(int argc, char **argv)
            
             new_name = sge_jobname(lGetString(ep, SPA_argval_lStringT));
             if(new_name != NULL) {
-               strncpy(name, new_name, MAX_JOB_NAME); 
+               sge_strlcpy(name, new_name, MAX_JOB_NAME); 
             }
 
             while((ep = lGetElemStr(opts_cmdline, SPA_switch, "jobarg"))) {

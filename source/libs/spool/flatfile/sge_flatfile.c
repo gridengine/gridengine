@@ -141,11 +141,7 @@ static char *get_end_token(char *buffer, int size, const char *end_token,
 {
    char new_buffer[2] = { '\0', '\0' };
 
-   if(end_token != NULL) {
-      strncpy(buffer, end_token, size);
-   } else {
-      *buffer = '\0';
-   }
+   sge_strlcpy(buffer, end_token, size);
 
    if (new_end_token != '\0') {
       new_buffer[0] = new_end_token;

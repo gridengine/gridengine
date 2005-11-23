@@ -1945,10 +1945,7 @@ XtPointer cld, cad;
 
    type = lGetUlong(fill_in_request, CE_valtype);
    strval = lGetString(fill_in_request, CE_stringval);
-   if (strval)
-      strncpy(stringval, strval, CL_MAXHOSTLEN-1);
-   else
-      strcpy(stringval, "");
+   sge_strlcpy(stringval, strval, CL_MAXHOSTLEN);
 
    status = qmonRequestInput(w, type, cbs->element->string[0], 
                               stringval, sizeof(stringval));

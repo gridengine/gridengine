@@ -259,6 +259,14 @@ void assignment_init(sge_assignment_t *a, lListElem *job, lListElem *ja_task, bo
 
 void assignment_copy(sge_assignment_t *dst, sge_assignment_t *src, bool move_gdil)
 {
+   if (dst == NULL || src == NULL) {
+      return;
+   }
+
+   if (dst->load_adjustments != NULL) {
+      lFreeList(&dst->load_adjustments);
+   }
+
    if (move_gdil) {
       lFreeList(&(dst->gdil));
    }
@@ -895,6 +903,8 @@ parallel_maximize_slots_pe(sge_assignment_t *best, int *available_slots) {
    if (!use_category.is_pe_slots_rev) {
       FREE(use_category.posible_pe_slots);
    }
+
+   assignment_release(&tmp);   
 
    schedd_mes_set_logging(old_logging); /* restore logging mode */
 
@@ -2002,7 +2012,7 @@ static int load_check_alarm(char *reason, const char *name, const char *load_val
             return 1;
          }
          if (load_is_value) { /* we got no load - this is just the complex value */
-            strncpy(lc_diagnosis2, MSG_SCHEDD_LCDIAGNOLOAD, STR_LC_DIAGNOSIS);
+            sge_strlcpy(lc_diagnosis2, MSG_SCHEDD_LCDIAGNOLOAD, STR_LC_DIAGNOSIS);
          } else if (((hlep && lc_host) || lc_global) &&
             (job_load = lGetElemStr(load_adjustments, CE_name, name))) { /* load correction */
             const char *load_correction_str;
@@ -2055,7 +2065,7 @@ static int load_check_alarm(char *reason, const char *name, const char *load_val
                break;
             }
          } else  {
-            strncpy(lc_diagnosis2, MSG_SCHEDD_LCDIAGNONE, STR_LC_DIAGNOSIS);
+            sge_strlcpy(lc_diagnosis2, MSG_SCHEDD_LCDIAGNONE, STR_LC_DIAGNOSIS);
          }   
 
          /* is threshold exceeded ? */
@@ -4693,8 +4703,7 @@ sequential_global_time(u_long32 *start, const sge_assignment_t *a, int *violatio
          *violations = compute_soft_violations(a, NULL, *violations, load_attr, config_attr, 
                                            actual_attr, DOMINANT_LAYER_GLOBAL, 0, GLOBAL_TAG);
       }      
-   } 
-   else {
+   } else {
       char buff[1024 + 1];
       centry_list_append_to_string(hard_request, buff, sizeof(buff) - 1);
       if (*buff && (buff[strlen(buff) - 1] == '\n')) {
@@ -4955,7 +4964,7 @@ const lList *centry_list
 
    /* first copy ... */
    if (ep && dst)
-      strncpy(dst, lGetString(ep, CE_stringval), dst_len);
+      sge_strlcpy(dst, lGetString(ep, CE_stringval), dst_len);
 
    if(ep){
       lFreeElem(&ep);

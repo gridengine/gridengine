@@ -710,13 +710,11 @@ bool
 sge_process_schedd_conf_event_before(sge_object_type type, sge_event_action action, 
                                      lListElem *event, void *clientdata)
 {
-   const lListElem *old;
    lListElem *new;
 
    DENTER(GDI_LAYER, "sge_process_schedd_conf_event_before");
    DPRINTF(("callback processing schedd config event\n"));
 
-   old = sconf_get_config(); 
    new = lFirst(lGetList(event, ET_new_version));
 
    ec_set_busy(1);
@@ -726,9 +724,9 @@ sge_process_schedd_conf_event_before(sge_object_type type, sge_event_action acti
       DEXIT;
       return false;
    }
-
    /* check for valid load formula */ 
    {
+      lListElem *old = sconf_get_config(); 
       const char *new_load_formula = lGetString(new, SC_load_formula);
       lList *alpp = NULL;
 
@@ -759,6 +757,7 @@ sge_process_schedd_conf_event_before(sge_object_type type, sge_event_action acti
             FREE(copy);
          }
       }
+      lFreeElem(&old);
    }
 
    /* check event client settings */

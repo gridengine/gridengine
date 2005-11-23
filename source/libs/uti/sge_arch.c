@@ -43,6 +43,7 @@
 #include "msg_common.h"
 #include "sge_unistd.h"
 #include "sge_arch.h"
+#include "sge_string.h"
 
 /****** uti/prog/sge_get_arch() ************************************************
 *  NAME
@@ -238,7 +239,7 @@ const char *sge_get_root_dir(int do_exit, char *buffer, size_t size, int do_erro
 error:
    if (do_error_log) {
       if (buffer != NULL) {
-         strncpy(buffer, MSG_SGEROOTNOTSET, size);
+         sge_strlcpy(buffer, MSG_SGEROOTNOTSET, size);
       } else {
          CRITICAL((SGE_EVENT, MSG_SGEROOTNOTSET));
       }

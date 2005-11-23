@@ -612,7 +612,7 @@ int sge_uid2user(uid_t uid, char *dst, size_t sz, int retries)
       uidgid_state_set_last_uid(uid);
    }
    if (dst) {
-      strncpy(dst, uidgid_state_get_last_username(), sz);
+      sge_strlcpy(dst, uidgid_state_get_last_username(), sz);
    }
 
    DEXIT; 
@@ -695,7 +695,7 @@ int sge_gid2group(gid_t gid, char *dst, size_t sz, int retries)
    }
    
    if (dst != NULL) {
-      strncpy(dst, uidgid_state_get_last_groupname(), sz);
+      sge_strlcpy(dst, uidgid_state_get_last_groupname(), sz);
    }
 
    DEXIT; 
@@ -1123,7 +1123,7 @@ static void uidgid_state_set_last_uid(uid_t uid)
 static void uidgid_state_set_last_username(const char *user)
 { 
    GET_SPECIFIC(struct uidgid_state_t, uidgid_state, uidgid_state_init, uidgid_state_key, "uidgid_state_set_last_username");
-   strncpy(uidgid_state->last_username, user, SGE_MAX_USERGROUP_BUF-1);
+   sge_strlcpy(uidgid_state->last_username, user, SGE_MAX_USERGROUP_BUF);
 }
 
 static void uidgid_state_set_last_gid(gid_t gid)
@@ -1135,7 +1135,7 @@ static void uidgid_state_set_last_gid(gid_t gid)
 static void uidgid_state_set_last_groupname(const char *group)
 { 
    GET_SPECIFIC(struct uidgid_state_t, uidgid_state, uidgid_state_init, uidgid_state_key, "uidgid_state_set_last_groupname");
-   strncpy(uidgid_state->last_groupname, group, SGE_MAX_USERGROUP_BUF-1);
+   sge_strlcpy(uidgid_state->last_groupname, group, SGE_MAX_USERGROUP_BUF);
 }
 
 /****** uti/uidgid/set_admin_user() ********************************************

@@ -348,3 +348,48 @@ proc exec_startup_hooks {} {
    return $error_count
 }
 
+#****** checktree_helper/checktree_get_required_hosts() **************************************************
+#  NAME
+#    checktree_get_required_hosts() -- get a list of required hosts of all checktrees
+#
+#  SYNOPSIS
+#    checktree_get_required_hosts { } 
+#
+#  FUNCTION
+#     get a list of required hosts of all checktrees
+#
+#  INPUTS
+#
+#  RESULT
+#     list with the required hosts
+#
+#  EXAMPLE
+#     set required_hosts [checktree_get_required_hosts]
+#
+#*******************************************************************************
+proc checktree_get_required_hosts {} {
+   global ts_checktree
+
+   set required_hosts {}
+   for {set i 0} {$i < $ts_checktree(act_nr)} {incr i 1 } {
+      if { [info exists ts_checktree($i,required_hosts_hook) ] } {
+         set required_hosts_hook $ts_checktree($i,required_hosts_hook)
+         if { [info procs $required_hosts_hook ] != $required_hosts_hook } {
+            add_proc_error "checktree_get_required_hosts" -1 "Can not execute required_hosts_hook of checktree $ts_checktree($i,dir_name), proc not found"
+         } else {
+            set required_host_list [$required_hosts_hook]
+            if { $required_host_list == -1 } {
+               add_proc_error "checktree_get_required_hosts" -1 "required_hosts_hook of checktree  $ts_checktree($i,dir_name) failed"
+            } else {
+               foreach host $required_host_list {
+                  if { [lsearch $required_hosts $host] < 0 } {
+                     lappend required_hosts $host
+                  }
+               }
+            }
+         }
+      }
+   }
+   return $required_hosts
+}
+

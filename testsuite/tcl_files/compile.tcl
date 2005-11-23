@@ -112,11 +112,17 @@ proc compile_host_list {} {
    
    set host_list [concat $ts_config(master_host) $ts_config(execd_hosts) \
                          $ts_config(shadowd_hosts) $ts_config(submit_only_hosts) \
-                         $ts_config(bdb_server)]
+                         $ts_config(bdb_server) \
+                         [checktree_get_required_hosts]]
+   
 
    set host_list [compile_unify_host_list $host_list]
 
    foreach host $host_list {
+      if { ! [info exists ts_host_config($host,arch)] } {
+         add_proc_error "compile_host_list" -1 "Can't not determine the architecture of host $host"
+         return ""
+      }
       set arch $ts_host_config($host,arch)
       if { ! [info exists compile_host($arch)] } {
          set c_host [compile_search_compile_host $arch]

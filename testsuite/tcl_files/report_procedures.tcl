@@ -75,6 +75,7 @@ proc report_create { name a_report_array { send_email 1 } { write_html 1 } } {
    set report_array(messages) {}
    
    set report_array(handler) {}
+   set report_array(task_progress_handler) {}
    
    if { $send_email == 1 } {
       lappend report_array(handler) report_send_mail
@@ -224,7 +225,7 @@ proc report_create_task { report name host } {
    set report_array(task_$task_nr,filename) $myfilename
    set report_array(task_$task_nr,relative_filename) $relative_filename
    set report_array(task_$task_nr,file) [open $myfilename w]
- 
+
 
    foreach handler $report_array(task_progress_handler) { 
       $handler report_array

@@ -57,6 +57,7 @@
 #include "msg_qmon.h"
 
 #include "sge_unistd.h"
+#include "sge_string.h"
 #include "sge_prog.h"
 #include "sge_all_listsL.h"
 #include "sge_userset.h"

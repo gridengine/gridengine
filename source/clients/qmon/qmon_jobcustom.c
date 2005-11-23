@@ -82,6 +82,7 @@
 #include "sge_qinstance_state.h"
 #include "qstat_printing.h"
 #include "sge_cqueue_qstat.h"
+#include "sge_string.h"
 
 /*-------------------------------------------------------------------------*/
 /* Prototypes */

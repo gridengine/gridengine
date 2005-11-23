@@ -55,6 +55,7 @@
 #include "sge_range.h"
 #include "sge_qinstance.h"
 #include "sge_str.h"
+#include "sge_string.h"
 #include "qmon_quarks.h"
 #include "qmon_widgets.h"
 #include "qmon_rmon.h"

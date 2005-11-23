@@ -57,6 +57,7 @@
 #include "commlib.h"
 #include "sge_answer.h"
 #include "sge_range.h"
+#include "sge_string.h"
 #include "qmon_proto.h"
 #include "qmon_rmon.h"
 #include "qmon_cull.h"

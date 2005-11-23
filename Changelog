@@ -1,3 +1,5 @@
+RD-2005-11-23-0: Bugfix:    Fixed broken build on irix
+
 SG-2005-11-23-0: Bugfix:    - mutually subordinating queues suspend eachother 
                               simultaneously
                             - fixed the build for irix

@@ -51,6 +51,7 @@
 #include "sge_gdi.h"
 #include "sge_host.h"
 #include "sge_all_listsL.h"
+#include "sge_string.h"
 #include "qmon_cull.h"
 #include "qmon_request.h"
 #include "qmon_submit.h"

@@ -1,5 +1,10 @@
+DT-2005-11-23-1: Bugfix:    o Fixed DRMAA Java language binding on HP
+                            - Merged from DT-2005-11-23-1 (Maintrunk)
+                 Changed:   aimk.site
+
 DT-2005-11-23-0: Testsuite: o Fixed output/error files for drmaaj test
                             - Merged from DT-2005-11-23-0 (Maintrunk)
+                 Changed:   testsuite
 
 MD-2005-11-23-0: Bugfix:    auto install ignores DB_SPOOLING_SERVER setting
                  Issue:     1913

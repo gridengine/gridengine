@@ -221,6 +221,11 @@ CR-2005-11-11-1: Testsuite: o fixed incorrect change from CR-2005-11-11-0
 CR-2005-11-11-0: Testsuite: o better remote file checking for start_remote_prog()
                  Review:    RD
 
+OJ-2005-11-11-0: Testsuite: Extended complex_global_host{} to test for regular expressions in 
+                            complex values for test_restring; modified complex_run_job to account 
+                            for issues found with qsub.
+                 Issue number: 461 
+
 DT-2005-11-10-0: Testsuite: o Fixed test for qsub -ac
                             o Removed test for IZ1709
                             o Fixed version test in drmaaj
@@ -292,7 +297,7 @@ OJ-2005-11-09-0: Testsuite: Created qtcsh test
                             interactive options. Resides in checktree/system_tests/clients
                  Changed:   testsuite
                  Issue:     419
-                 Review:    DT, JG
+                 Reviewed by:   DT, JG
 
 DT-2005-11-09-1: Testsuite: o Hopefully fixed qsub -ac test
                  Changed:   qsub testsuite test
@@ -462,6 +467,10 @@ JG-2005-10-28-0: Testsuite: Prevent recursive calls of add_proc_error (when
                             Fixed rlogin connection leaks.
                             Cleanup.
                  Review:    CR
+
+OJ-2005-10-28-0: Testsuite: Extended qdel test to cover test cases described in IZ 125
+                 Issue number:  125
+                 Reviewed by:   JG
 
 DT-2005-10-27-0: Bugfix:    o Fixed handling of single-quotes
                  Changed:   sge_string.c

@@ -177,7 +177,7 @@ GetOldCkpt()
 
 GetOldComplexes()
 {
-   if [ -e /tmp/centry ]; then
+   if [ -d /tmp/centry -o -f /tmp/centry ]; then
       rm -rf /tmp/centry
    fi
 

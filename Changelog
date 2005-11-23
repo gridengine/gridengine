@@ -1,3 +1,6 @@
+JG-2005-11-23-0: Bugfix:    Fixed broken upgrade from 5.3 to 6.0.
+                 Review:    MD
+
 CR-2005-11-23-0: Bugfix:    o Fixed Insure memory leaks
                             o Fixed wrong use of strncpy
                  Review:    AA, SG

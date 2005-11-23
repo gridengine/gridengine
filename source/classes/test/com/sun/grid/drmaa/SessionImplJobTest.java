@@ -48,8 +48,12 @@ import com.sun.grid.Settings;
  * @author dan.templeton@sun.com
  */
 public class SessionImplJobTest extends TestCase {
-   private static final String SCRIPT = Settings.get (Settings.TEST_PATH) + "/sleeper.sh";
+   private static final String SLEEPER;
    private Session session = null;
+
+   static {
+      SLEEPER = Settings.get (Settings.TEST_PATH) + "/sleeper.sh";
+   }
    
    public SessionImplJobTest (java.lang.String testName) {
       super (testName);
@@ -126,10 +130,7 @@ public class SessionImplJobTest extends TestCase {
       System.out.println ("testRunJob");
 
       try {
-         JobTemplate jt = session.createJobTemplate ();
-
-         jt.setRemoteCommand (SCRIPT);
-         jt.setArgs (new String[] {"5"});
+         JobTemplate jt = this.createSleeperTemplate (5);
 
          String jobId = session.runJob (jt);
 
@@ -147,10 +148,7 @@ public class SessionImplJobTest extends TestCase {
       System.out.println ("testBadRunBulkJobs");
       
       try {
-         JobTemplate jt = session.createJobTemplate ();
-
-         jt.setRemoteCommand (SCRIPT);
-         jt.setArgs (new String[] {"5"});
+         JobTemplate jt = this.createSleeperTemplate (5);
 
          try {
             session.runBulkJobs (null, 1, 2, 1);
@@ -203,10 +201,7 @@ public class SessionImplJobTest extends TestCase {
       System.out.println ("testRunMonoBulkJobs");
       
       try {
-         JobTemplate jt = session.createJobTemplate ();
-
-         jt.setRemoteCommand (SCRIPT);
-         jt.setArgs (new String[] {"5"});
+         JobTemplate jt = this.createSleeperTemplate (5);
          
          List jobIds = session.runBulkJobs (jt, 1, 1, 1);
 
@@ -224,10 +219,7 @@ public class SessionImplJobTest extends TestCase {
       System.out.println ("testRunDualBulkJobs");
       
       try {
-         JobTemplate jt = session.createJobTemplate ();
-
-         jt.setRemoteCommand (SCRIPT);
-         jt.setArgs (new String[] {"5"});
+         JobTemplate jt = this.createSleeperTemplate (5);
          
          List jobIds = session.runBulkJobs (jt, 1, 2, 1);
 
@@ -245,10 +237,7 @@ public class SessionImplJobTest extends TestCase {
       System.out.println ("testRunBulkJobs");
       
       try {
-         JobTemplate jt = session.createJobTemplate ();
-
-         jt.setRemoteCommand (SCRIPT);
-         jt.setArgs (new String[] {"5"});
+         JobTemplate jt = this.createSleeperTemplate (5);
          
          List jobIds = session.runBulkJobs (jt, 2, 6, 2);
 
@@ -267,10 +256,7 @@ public class SessionImplJobTest extends TestCase {
       System.out.println ("testBadWait");
       
       try {
-         JobTemplate jt = session.createJobTemplate ();
-
-         jt.setRemoteCommand (SCRIPT);
-         jt.setArgs (new String[] {"5"});
+         JobTemplate jt = this.createSleeperTemplate (5);
 
          String jobId = session.runJob (jt);
 
@@ -310,10 +296,7 @@ public class SessionImplJobTest extends TestCase {
       System.out.println ("testWaitForever");
       
       try {
-         JobTemplate jt = session.createJobTemplate ();
-
-         jt.setRemoteCommand (SCRIPT);
-         jt.setArgs (new String[] {"5"});
+         JobTemplate jt = this.createSleeperTemplate (5);
 
          String jobId = session.runJob (jt);
 
@@ -351,10 +334,7 @@ public class SessionImplJobTest extends TestCase {
       System.out.println ("testNoWait");
       
       try {
-         JobTemplate jt = session.createJobTemplate ();
-
-         jt.setRemoteCommand (SCRIPT);
-         jt.setArgs (new String[] {"5"});
+         JobTemplate jt = this.createSleeperTemplate (5);
 
          /* Test no wait */
          String jobId = session.runJob (jt);
@@ -405,10 +385,7 @@ public class SessionImplJobTest extends TestCase {
       System.out.println ("testWaitTimeout");
       
       try {
-         JobTemplate jt = session.createJobTemplate ();
-
-         jt.setRemoteCommand (SCRIPT);
-         jt.setArgs (new String[] {"5"});
+         JobTemplate jt = this.createSleeperTemplate (5);
 
          /* Test timed wait */
          String jobId = session.runJob (jt);
@@ -461,10 +438,7 @@ public class SessionImplJobTest extends TestCase {
       System.out.println ("testWait");
       
       try {
-         JobTemplate jt = session.createJobTemplate ();
-
-         jt.setRemoteCommand (SCRIPT);
-         jt.setArgs (new String[] {"5"});
+         JobTemplate jt = this.createSleeperTemplate (5);
 
          /* Test timed wait */
          String jobId = session.runJob (jt);
@@ -497,10 +471,7 @@ public class SessionImplJobTest extends TestCase {
       System.out.println ("testWaitForeverAny");
       
       try {
-         JobTemplate jt = session.createJobTemplate ();
-
-         jt.setRemoteCommand (SCRIPT);
-         jt.setArgs (new String[] {"5"});
+         JobTemplate jt = this.createSleeperTemplate (5);
 
          String jobId = session.runJob (jt);
 
@@ -538,10 +509,7 @@ public class SessionImplJobTest extends TestCase {
       System.out.println ("testNoWaitAny");
       
       try {
-         JobTemplate jt = session.createJobTemplate ();
-
-         jt.setRemoteCommand (SCRIPT);
-         jt.setArgs (new String[] {"5"});
+         JobTemplate jt = this.createSleeperTemplate (5);
 
          /* Test no wait */
          String jobId = session.runJob (jt);
@@ -592,10 +560,7 @@ public class SessionImplJobTest extends TestCase {
       System.out.println ("testWaitTimeoutAny");
       
       try {
-         JobTemplate jt = session.createJobTemplate ();
-
-         jt.setRemoteCommand (SCRIPT);
-         jt.setArgs (new String[] {"5"});
+         JobTemplate jt = this.createSleeperTemplate (5);
 
          /* Test timed wait */
          String jobId = session.runJob (jt);
@@ -648,10 +613,7 @@ public class SessionImplJobTest extends TestCase {
       System.out.println ("testWaitAny");
       
       try {
-         JobTemplate jt = session.createJobTemplate ();
-
-         jt.setRemoteCommand (SCRIPT);
-         jt.setArgs (new String[] {"5"});
+         JobTemplate jt = this.createSleeperTemplate (5);
 
          /* Test timed wait */
          String jobId = session.runJob (jt);
@@ -685,10 +647,7 @@ public class SessionImplJobTest extends TestCase {
       System.out.println ("testBadSynchronize");
       
       try {
-         JobTemplate jt = session.createJobTemplate ();
-
-         jt.setRemoteCommand (SCRIPT);
-         jt.setArgs (new String[] {"5"});
+         JobTemplate jt = this.createSleeperTemplate (5);
 
          List jobIds = session.runBulkJobs (jt, 1, 3, 1);
 
@@ -730,10 +689,7 @@ public class SessionImplJobTest extends TestCase {
       System.out.println ("testSynchronizeForeverDispose");
       
       try {
-         JobTemplate jt = session.createJobTemplate ();
-
-         jt.setRemoteCommand (SCRIPT);
-         jt.setArgs (new String[] {"5"});
+         JobTemplate jt = this.createSleeperTemplate (5);
 
          List jobIds = new LinkedList (session.runBulkJobs (jt, 1, 3, 1));
          
@@ -766,10 +722,7 @@ public class SessionImplJobTest extends TestCase {
       System.out.println ("testSynchronizeNoWaitDispose");
       
       try {
-         JobTemplate jt = session.createJobTemplate ();
-
-         jt.setRemoteCommand (SCRIPT);
-         jt.setArgs (new String[] {"5"});
+         JobTemplate jt = this.createSleeperTemplate (5);
 
          /* Test no wait, dispose */
          List jobIds = new LinkedList (session.runBulkJobs (jt, 1, 3, 1));
@@ -819,10 +772,7 @@ public class SessionImplJobTest extends TestCase {
       System.out.println ("testSynchronizeTimeoutDispose");
       
       try {
-         JobTemplate jt = session.createJobTemplate ();
-
-         jt.setRemoteCommand (SCRIPT);
-         jt.setArgs (new String[] {"15"});
+         JobTemplate jt = this.createSleeperTemplate (15);
 
          /* Test timed wait (timeout), dispose */
          List jobIds = new LinkedList (session.runBulkJobs (jt, 1, 3, 1));
@@ -874,10 +824,7 @@ public class SessionImplJobTest extends TestCase {
       System.out.println ("testSynchronizeDispose");
       
       try {
-         JobTemplate jt = session.createJobTemplate ();
-
-         jt.setRemoteCommand (SCRIPT);
-         jt.setArgs (new String[] {"5"});
+         JobTemplate jt = this.createSleeperTemplate (5);
 
          /* Test timed wait, dispose */
          List jobIds = new LinkedList (session.runBulkJobs (jt, 1, 3, 1));
@@ -911,10 +858,7 @@ public class SessionImplJobTest extends TestCase {
       System.out.println ("testSynchronizeForever");
       
       try {
-         JobTemplate jt = session.createJobTemplate ();
-
-         jt.setRemoteCommand (SCRIPT);
-         jt.setArgs (new String[] {"5"});
+         JobTemplate jt = this.createSleeperTemplate (5);
 
          /* Test wait forever, no dispose */
          List jobIds = new LinkedList (session.runBulkJobs (jt, 1, 3, 1));
@@ -950,10 +894,7 @@ public class SessionImplJobTest extends TestCase {
       System.out.println ("testSynchronizeNoWait");
       
       try {
-         JobTemplate jt = session.createJobTemplate ();
-
-         jt.setRemoteCommand (SCRIPT);
-         jt.setArgs (new String[] {"5"});
+         JobTemplate jt = this.createSleeperTemplate (5);
 
          /* Test no wait, no dispose */
          List jobIds = new LinkedList (session.runBulkJobs (jt, 1, 3, 1));
@@ -1003,10 +944,7 @@ public class SessionImplJobTest extends TestCase {
       System.out.println ("testSynchronizeTimeout");
       
       try {
-         JobTemplate jt = session.createJobTemplate ();
-
-         jt.setRemoteCommand (SCRIPT);
-         jt.setArgs (new String[] {"15"});
+         JobTemplate jt = this.createSleeperTemplate (15);
 
          /* Test timed wait (timeout), no dispose */
          List jobIds = new LinkedList (session.runBulkJobs (jt, 1, 3, 1));
@@ -1058,10 +996,7 @@ public class SessionImplJobTest extends TestCase {
       System.out.println ("testSynchronize");
       
       try {
-         JobTemplate jt = session.createJobTemplate ();
-
-         jt.setRemoteCommand (SCRIPT);
-         jt.setArgs (new String[] {"5"});
+         JobTemplate jt = this.createSleeperTemplate (5);
 
          /* Test timed wait (timeout), no dispose */
          List jobIds = new LinkedList (session.runBulkJobs (jt, 1, 3, 1));
@@ -1097,10 +1032,7 @@ public class SessionImplJobTest extends TestCase {
       System.out.println ("testSynchronizeForeverDisposeAll");
       
       try {
-         JobTemplate jt = session.createJobTemplate ();
-
-         jt.setRemoteCommand (SCRIPT);
-         jt.setArgs (new String[] {"5"});
+         JobTemplate jt = this.createSleeperTemplate (5);
 
          List jobIds = new LinkedList (session.runBulkJobs (jt, 1, 3, 1));
          
@@ -1133,10 +1065,7 @@ public class SessionImplJobTest extends TestCase {
       System.out.println ("testSynchronizeNoWaitDisposeAll");
       
       try {
-         JobTemplate jt = session.createJobTemplate ();
-
-         jt.setRemoteCommand (SCRIPT);
-         jt.setArgs (new String[] {"5"});
+         JobTemplate jt = this.createSleeperTemplate (5);
 
          /* Test no wait, dispose */
          List jobIds = new LinkedList (session.runBulkJobs (jt, 1, 3, 1));
@@ -1186,10 +1115,7 @@ public class SessionImplJobTest extends TestCase {
       System.out.println ("testSynchronizeTimeoutDisposeAll");
       
       try {
-         JobTemplate jt = session.createJobTemplate ();
-
-         jt.setRemoteCommand (SCRIPT);
-         jt.setArgs (new String[] {"15"});
+         JobTemplate jt = this.createSleeperTemplate (15);
 
          /* Test timed wait (timeout), dispose */
          List jobIds = new LinkedList (session.runBulkJobs (jt, 1, 3, 1));
@@ -1241,10 +1167,7 @@ public class SessionImplJobTest extends TestCase {
       System.out.println ("testSynchronizeDisposeAll");
       
       try {
-         JobTemplate jt = session.createJobTemplate ();
-
-         jt.setRemoteCommand (SCRIPT);
-         jt.setArgs (new String[] {"5"});
+         JobTemplate jt = this.createSleeperTemplate (5);
 
          /* Test timed wait, dispose */
          List jobIds = new LinkedList (session.runBulkJobs (jt, 1, 3, 1));
@@ -1278,10 +1201,7 @@ public class SessionImplJobTest extends TestCase {
       System.out.println ("testSynchronizeForeverAll");
       
       try {
-         JobTemplate jt = session.createJobTemplate ();
-
-         jt.setRemoteCommand (SCRIPT);
-         jt.setArgs (new String[] {"5"});
+         JobTemplate jt = this.createSleeperTemplate (5);
 
          /* Test wait forever, no dispose */
          List jobIds = new LinkedList (session.runBulkJobs (jt, 1, 3, 1));
@@ -1317,10 +1237,7 @@ public class SessionImplJobTest extends TestCase {
       System.out.println ("testSynchronizeNoWaitAll");
       
       try {
-         JobTemplate jt = session.createJobTemplate ();
-
-         jt.setRemoteCommand (SCRIPT);
-         jt.setArgs (new String[] {"5"});
+         JobTemplate jt = this.createSleeperTemplate (5);
 
          /* Test no wait, no dispose */
          List jobIds = new LinkedList (session.runBulkJobs (jt, 1, 3, 1));
@@ -1370,10 +1287,7 @@ public class SessionImplJobTest extends TestCase {
       System.out.println ("testSynchronizeTimeoutAll");
       
       try {
-         JobTemplate jt = session.createJobTemplate ();
-
-         jt.setRemoteCommand (SCRIPT);
-         jt.setArgs (new String[] {"15"});
+         JobTemplate jt = this.createSleeperTemplate (15);
 
          /* Test timed wait (timeout), no dispose */
          List jobIds = new LinkedList (session.runBulkJobs (jt, 1, 3, 1));
@@ -1425,10 +1339,7 @@ public class SessionImplJobTest extends TestCase {
       System.out.println ("testSynchronizeAll");
       
       try {
-         JobTemplate jt = session.createJobTemplate ();
-
-         jt.setRemoteCommand (SCRIPT);
-         jt.setArgs (new String[] {"5"});
+         JobTemplate jt = this.createSleeperTemplate (5);
 
          /* Test timed wait (timeout), no dispose */
          List jobIds = new LinkedList (session.runBulkJobs (jt, 1, 3, 1));
@@ -1464,10 +1375,7 @@ public class SessionImplJobTest extends TestCase {
       System.out.println ("testSynchronizeDisposeMoreThanAll");
       
       try {
-         JobTemplate jt = session.createJobTemplate ();
-
-         jt.setRemoteCommand (SCRIPT);
-         jt.setArgs (new String[] {"5"});
+         JobTemplate jt = this.createSleeperTemplate (5);
 
          /* Test timed wait, dispose */
          List jobIds = new LinkedList (session.runBulkJobs (jt, 1, 3, 1));
@@ -1505,10 +1413,7 @@ public class SessionImplJobTest extends TestCase {
       System.out.println ("testSynchronizeNonexistant");
       
       try {
-         JobTemplate jt = session.createJobTemplate ();
-
-         jt.setRemoteCommand (SCRIPT);
-         jt.setArgs (new String[] {"5"});
+         JobTemplate jt = this.createSleeperTemplate (5);
 
          /* Test timed wait (timeout), no dispose */
          String jobId = session.runJob (jt);
@@ -1571,10 +1476,7 @@ public class SessionImplJobTest extends TestCase {
       System.out.println ("testGetJobProgramStatus");
       
       try {
-         JobTemplate jt = session.createJobTemplate ();
-
-         jt.setRemoteCommand (SCRIPT);
-         jt.setArgs (new String[] {"5"});
+         JobTemplate jt = this.createSleeperTemplate (5);
 
          String jobId = session.runJob (jt);
          /* Make sure it doesn't throw an exception.  We can't really be sure
@@ -1602,10 +1504,7 @@ public class SessionImplJobTest extends TestCase {
       System.out.println ("testBadControl");
       
       try {
-         JobTemplate jt = session.createJobTemplate ();
-
-         jt.setRemoteCommand (SCRIPT);
-         jt.setArgs (new String[] {"5"});
+         JobTemplate jt = this.createSleeperTemplate (5);
 
          String jobId = session.runJob (jt);
          
@@ -1644,10 +1543,7 @@ public class SessionImplJobTest extends TestCase {
       System.out.println ("testControl");
       
       try {
-         JobTemplate jt = session.createJobTemplate ();
-
-         jt.setRemoteCommand (SCRIPT);
-         jt.setArgs (new String[] {"60000"});
+         JobTemplate jt = this.createSleeperTemplate (60000);
 
          String jobId = session.runJob (jt);
          
@@ -1740,10 +1636,7 @@ public class SessionImplJobTest extends TestCase {
       System.out.println ("testControlAll");
       
       try {
-         JobTemplate jt = session.createJobTemplate ();
-
-         jt.setRemoteCommand (SCRIPT);
-         jt.setArgs (new String[] {"60000"});
+         JobTemplate jt = this.createSleeperTemplate (60000);
 
          String jobId1 = session.runJob (jt);
          String jobId2 = session.runJob (jt);
@@ -1837,6 +1730,17 @@ public class SessionImplJobTest extends TestCase {
       catch (DrmaaException e) {
          fail ("Exception while trying to get job status: " + e.getMessage ());
       }
+   }
+   
+   private JobTemplate createSleeperTemplate (int sleep) throws DrmaaException {
+      JobTemplate jt = session.createJobTemplate ();
+
+      jt.setRemoteCommand (SLEEPER);
+      jt.setArgs (new String[] {Integer.toString (sleep)});
+      jt.setOutputPath (":/dev/null");
+      jt.setJoinFiles (true);
+      
+      return jt;
    }
    
    private class BadJobTemplate extends JobTemplate {

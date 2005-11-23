@@ -1,3 +1,6 @@
+JG-2005-11-23-0: Bugfix:    Fixed broken upgrade from 5.3 to 6.0.
+                 Review:    MD
+
 EB-2005-11-22-0: Testsuite: create a testsuite test for issue 1874
                  Issue:     1911
                  Changed:   testsuite

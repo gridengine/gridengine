@@ -12,6 +12,8 @@
 # $3 = 0 or 1 - flag if man pages in ASCII format should be created
 # $4 = 0 or 1 - flag if man pages in HTML format  should be created
 # $5 = 0 or 1 - checkout man pages with "-kv" flag
+# $6 = name of the cvs module which will be checked out (default gridengine/doc/man)
+# $7 = directory where the man pages will be built (default  <source dir>/MANSBUILD_<product name>)
 #
 #___INFO__MARK_BEGIN__
 ##########################################################################
@@ -53,6 +55,16 @@ set MANASC  = $3
 set MANHTML = $4
 set KVMAN   = $5
 
+if ( $#argv > 5 ) then
+  set CVS_MODULE = $6
+else
+  set CVS_MODULE = gridengine/doc/man
+endif
+
+if ( $#argv > 6 ) then
+  set MANBUILDDIR = $7
+endif
+
 echo "Removing old manpages in $MANBUILDDIR"
 \rm -rf $MANBUILDDIR
 mkdir -p $MANBUILDDIR
@@ -75,7 +87,7 @@ cd $MANBUILDDIR
 if ( $KVMAN == 1 ) then
    set MANSRCDIR = $MANBUILDDIR/MANSRC
    echo "Checking out manpage sources"
-   cvs -q co $CVSBRANCH -P -kv -d MANSRC gridengine/doc/man
+   cvs -q co $CVSBRANCH -P -kv -d MANSRC $CVS_MODULE
 else
    set MANSRCDIR = $1/../doc/man
 endif
@@ -102,14 +114,20 @@ else
    exit 1
 endif
 
-echo "Building SEDMAN pages"
-foreach n ( 1 3 5 8 )
-   echo xxxx $MANSRCDIR/man${n}
-   if ( ! -d $MANSRCDIR/man${n} ) then
-      echo "Error: No man${n} subdirectory."
-      exit 1
+# Build the list of the available sections
+set SECTION_LIST = ""
+foreach n ( 1 2 3 4 5 6 7 8 )
+   if ( -d $MANSRCDIR/man${n} ) then
+     if ( "$SECTION_LIST" == "" ) then
+        set SECTION_LIST = $n
+     else
+        set SECTION_LIST = "$SECTION_LIST $n"
+     endif
    endif
+end
 
+echo "Building SEDMAN pages"
+foreach n ( $SECTION_LIST )
    mkdir -p $MANBUILDDIR/SEDMAN/man/man${n} >& /dev/null
 
    if ( ! -d $MANBUILDDIR/SEDMAN/man/man${n} ) then
@@ -132,12 +150,7 @@ end
 #
 if ( "$MANASC" == 1 ) then
    echo "Building ASCMAN from sedman pages"
-   foreach n ( 1 3 5 8 )
-      if ( ! -d $MANBUILDDIR/SEDMAN/man/man${n} ) then
-         echo "Error: No SEDMAN/man/man${n} subdirectory."
-         exit 1
-      endif
-
+   foreach n ( $SECTION_LIST )
       mkdir -p $MANBUILDDIR/ASCMAN/man/man${n} >& /dev/null
 
       if ( ! -d $MANBUILDDIR/ASCMAN/man/man${n} ) then
@@ -158,7 +171,7 @@ endif
 #
 if ( "$MANHTML" == 1 ) then
    echo "Building HTML from sedman pages"
-   foreach n ( 1 3 5 8 )
+   foreach n ( $SECTION_LIST )
       mkdir -p $MANBUILDDIR/HTMLMAN/htmlman${n}
       foreach i ($MANBUILDDIR/SEDMAN/man/man${n}/*)
          echo Processing $i
@@ -171,7 +184,7 @@ if ( "$MANHTML" == 1 ) then
    # generate an index file 
    #
    cp $1/scripts/template.html $MANBUILDDIR/HTMLMAN/index.html 
-   foreach n ( 1 3 5 8 )
+   foreach n ( $SECTION_LIST )
       echo "<H3>Section $n</H3>" >> $MANBUILDDIR/HTMLMAN/index.html
       echo '<P><UL>' >> $MANBUILDDIR/HTMLMAN/index.html
       foreach f ($MANBUILDDIR/HTMLMAN/htmlman${n}/*)

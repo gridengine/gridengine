@@ -1,3 +1,7 @@
+RH-2005-11-24-0: Enhancm.:  No arguments for scripts mk_catman and mk_ascman
+                 Changed:   mk_catman and mk_ascman
+                 Review:    AS
+
 SG-2005-11-24-0: Bugfix:    fixed scheduler crash
                  Changed:   scheduler
                  Review:    RD

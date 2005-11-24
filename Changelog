@@ -1,3 +1,9 @@
+RD-2005-11-24-0: Bugfix:    merge from s2_branch (RD-2005-11-07-1)
+                            qrsh -V doesn't always work.
+                 Issue:     1845
+                 Bugtraq:   6346704
+                 Review:    AH 
+
 RH-2005-11-24-0: Enhancm.:  New arguments for scripts mk_catman and mk_ascman
                  Changed:   mk_catman and mk_ascman
                  Review:    AS

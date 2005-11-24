@@ -696,11 +696,13 @@ if [ $SHADOW = "install" ]; then
       $INFOTEXT "Starting sge_shadowd on host %s\n" $SHADOW_HOST
       ExecuteAsAdmin touch $SGE_ROOT/$SGE_CELL/common/shadow_masters
       ALREADY_SHADOWS=`cat $SGE_ROOT/$SGE_CELL/common/shadow_masters | grep -v $SHADOW_HOST`
-      mod_file="echo $SHADOW_HOST\n$ALREADY_SHADOWS"
       ExecuteAsAdmin mv $SGE_ROOT/$SGE_CELL/common/shadow_masters $SGE_ROOT/$SGE_CELL/common/shadow_masters.1
       ExecuteAsAdmin touch $SGE_ROOT/$SGE_CELL/common/shadow_masters
       ExecuteAsAdmin chmod a+rw $SGE_ROOT/$SGE_CELL/common/shadow_masters
-      ExecuteAsAdmin $mod_file >> $SGE_ROOT/$SGE_CELL/common/shadow_masters
+      ExecuteAsAdmin echo $SHADOW_HOST >> $SGE_ROOT/$SGE_CELL/common/shadow_masters
+      for s in `echo $ALREADY_SHADOWS`; do
+         ExecuteAsAdmin echo $s >> $SGE_ROOT/$SGE_CELL/common/shadow_masters
+      done
       ExecuteAsAdmin chmod go-w $SGE_ROOT/$SGE_CELL/common/shadow_masters
       ExecuteAsAdmin rm -f $SGE_ROOT/$SGE_CELL/common/shadow_masters.1
  
@@ -724,11 +726,13 @@ if [ $SHADOW = "install" ]; then
          $INFOTEXT -log "Starting sge_shadowd on host %s" $SHADOW   
          ExecuteAsAdmin touch $SGE_ROOT/$SGE_CELL/common/shadow_masters
          ALREADY_SHADOWS=`cat $SGE_ROOT/$SGE_CELL/common/shadow_masters | grep -v "$SHADOW"`
-         mod_file="echo $SHADOW\n$ALREADY_SHADOWS"
          ExecuteAsAdmin mv $SGE_ROOT/$SGE_CELL/common/shadow_masters $SGE_ROOT/$SGE_CELL/common/shadow_masters.1
          ExecuteAsAdmin touch $SGE_ROOT/$SGE_CELL/common/shadow_masters
          ExecuteAsAdmin chmod a+rw $SGE_ROOT/$SGE_CELL/common/shadow_masters
-         ExecuteAsAdmin $mod_file >> $SGE_ROOT/$SGE_CELL/common/shadow_masters
+         ExecuteAsAdmin echo $SHADOW >> $SGE_ROOT/$SGE_CELL/common/shadow_masters
+         for s in `echo $ALREADY_SHADOWS`; do
+            ExecuteAsAdmin echo $s >> $SGE_ROOT/$SGE_CELL/common/shadow_masters
+         done
          ExecuteAsAdmin chmod go-w $SGE_ROOT/$SGE_CELL/common/shadow_masters
          ExecuteAsAdmin rm -f $SGE_ROOT/$SGE_CELL/common/shadow_masters.1
          if [ $SHADOW = `$SGE_UTILBIN/gethostname -aname` ]; then

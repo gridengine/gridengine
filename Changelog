@@ -1,3 +1,8 @@
+MD-2005-11-24-0: Bugfix:    On Linux archs the shadow_masters file became 
+                            corrupt by shadowhost installation
+                 Changed:   inst_sge
+                 Review:    CR
+
 RH-2005-11-24-0: Enhancm.:  New arguments for scripts mk_catman and mk_ascman
                  Changed:   mk_catman and mk_ascman
                  Review:    AS

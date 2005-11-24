@@ -79,7 +79,7 @@ int gdi_send_message_pb(int synchron, const char *tocomproc, int toid, const cha
 typedef enum sge_gdi_stored_com_error_type {
    SGE_COM_ACCESS_DENIED = 101,
    SGE_COM_ENDPOINT_NOT_UNIQUE,
-   SGE_COM_WAS_COMMUNICATION_ERROR,
+   SGE_COM_WAS_COMMUNICATION_ERROR
 } sge_gdi_stored_com_error_t;
 bool sge_get_com_error_flag(sge_gdi_stored_com_error_t error_type);
 

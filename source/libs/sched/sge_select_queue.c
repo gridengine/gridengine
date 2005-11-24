@@ -820,7 +820,9 @@ parallel_maximize_slots_pe(sge_assignment_t *best, int *available_slots) {
       DEXIT; 
       return DISPATCH_NEVER_CAT;
    }
-  
+ 
+   memset(&tmp, 0, sizeof(sge_assignment_t));
+   
    /* assemble job category information */
    fill_category_use_t(best, &use_category, pe_name);      
  
@@ -4755,9 +4757,10 @@ sequential_global_time(u_long32 *start, const sge_assignment_t *a, int *violatio
    if ((result == DISPATCH_OK) || (result == DISPATCH_MISSING_ATTR)) {
       if (violations != NULL) {
          *violations = compute_soft_violations(a, NULL, *violations, load_attr, config_attr, 
-                                           actual_attr, DOMINANT_LAYER_GLOBAL, 0, GLOBAL_TAG);
+                                               actual_attr, DOMINANT_LAYER_GLOBAL, 0, GLOBAL_TAG);
       }      
-   } else {
+   } 
+   else {
       char buff[1024 + 1];
       centry_list_append_to_string(hard_request, buff, sizeof(buff) - 1);
       if (*buff && (buff[strlen(buff) - 1] == '\n')) {

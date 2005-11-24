@@ -1,3 +1,7 @@
+SG-2005-11-24-0: Bugfix:    fixed scheduler crash
+                 Changed:   scheduler
+                 Review:     RD
+
 DT-2005-11-23-2: Docs:      o Fixed several man page issues.
                  Issue:     1265, 1631, 1527, ?, ?, ?, ?
                  Bugtraq:   6287860, 6287940, 6287910, 6353555, 4919544,

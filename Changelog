@@ -1,3 +1,9 @@
+SG-2005-11-24-1: Bugfix:    Reschedule of a parallel job crashes the qmaster
+                 Issue:     1916
+                 Bugster:   6355263
+                 Changed:   qmaster
+                 Review:    RD, JG
+
 CR-2005-11-24-1: Bugfix:    a second started schedd/execd daemons may not stop
                             if started when qmaster is down
                             (enhancement for CR-2005-11-15-0)

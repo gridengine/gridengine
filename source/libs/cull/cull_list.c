@@ -1698,7 +1698,8 @@ int lRemoveElem(lList *lp, lListElem **ep1)
    ep = *ep1;
    
    if (lp->descr != ep->descr) {
-      CRITICAL((SGE_EVENT, "Dechaining element from other list !!!\n"));
+      CRITICAL((SGE_EVENT, "Removing element from other list !!!\n"));
+      DEXIT;
       abort();
    }
 
@@ -1861,7 +1862,8 @@ lListElem *lDechainElem(lList *lp, lListElem *ep)
       return NULL;
    }
    if (lp->descr != ep->descr) {
-      DPRINTF(("Dechaining element from other list !!!\n"));
+      CRITICAL((SGE_EVENT,"Dechaining element from other list !!!"));
+      DEXIT;
       abort();
    }
 

@@ -446,7 +446,8 @@ sge_select_parallel_environment( sge_assignment_t *best, lList *pe_list)
          } 
          else { /* test with all other pes */
             sge_assignment_t tmp;
-
+            memset(&tmp, 0, sizeof(sge_assignment_t));
+            
             assignment_copy(&tmp, best, false);
             tmp.pe = pe;
 
@@ -495,6 +496,7 @@ sge_select_parallel_environment( sge_assignment_t *best, lList *pe_list)
          else {
             int available_slots = 0;
             sge_assignment_t tmp;
+            memset(&tmp, 0, sizeof(sge_assignment_t));
             assignment_copy(&tmp, best, false);
             tmp.pe = pe;
 
@@ -644,6 +646,7 @@ parallel_reservation_max_time_slots(sge_assignment_t *best)
    /* assemble job category information */
    fill_category_use_t(best, &use_category, lGetString(best->pe, PE_name));  
 
+   memset(&tmp_assignment, 0, sizeof(sge_assignment_t));
    assignment_copy(&tmp_assignment, best, false);
    if (best->slots == 0) {
       tmp_assignment.slots = range_list_get_first_id(lGetList(best->job, JB_pe_range), NULL);

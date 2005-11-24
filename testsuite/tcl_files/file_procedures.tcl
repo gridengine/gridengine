@@ -1713,23 +1713,7 @@ proc create_shell_script { scriptfile
    # don't try to find which,cd, test and other shell commands
    # don't try to do anything if $no_setup is set
    # don't try to do a which if exec_command contains a space or ;
-   set do_which 1
-   set ignored_commands "cd test which echo"
-   if { [lsearch $ignored_commands $exec_command] >= 0 || $no_setup != 0 } {
-      set do_which 0
-   }
-   if { [string first " " $exec_command] >= 0 || [string first ";" $exec_command] >= 0 } {
-      set do_which 0
-   }
-   if { $do_which == 0 } {
-      puts $script "$exec_command $exec_arguments"
-   } else {
-      puts $script "which $exec_command 2>1 >/dev/null"
-      puts $script "if \[ $? -ne 0 \]; then"
-      puts $script "   sleep 2"
-      puts $script "fi"
-      puts $script "$exec_command $exec_arguments"
-   }
+   puts $script "$exec_command $exec_arguments"
 
    if { $no_setup == 0 } { 
       puts $script "exit_val=\"\$?\""

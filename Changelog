@@ -1,3 +1,7 @@
+CR-2005-11-24-0: Testsuite: o fixed shadowd migrate test
+                            o removed which call at create_shell_script()
+                 Review:    AA
+
 RD-2005-11-24-0: Bugfix:    merge from s2_branch (RD-2005-11-07-1)
                             qrsh -V doesn't always work.
                  Issue:     1845

@@ -148,11 +148,11 @@ proc shadowd_migrate_test {} {
 
       puts $CHECK_OUTPUT $result
       set heartbeat2 [string trim $result ]
-      set heartbeat2 [string trim $heartbeat2 "0"]
+      set heartbeat2 [string trimleft $heartbeat2 "0"]
 
       set heart_diff [expr ( $heartbeat2 - $heartbeat1 ) ]
       if { $heart_diff > 1 || $heart_diff < -1 } {
-         add_proc_error "shadowd_migrate_test" -3 "heartbeat file diff error. heart_diff=$heart_diff"
+         add_proc_error "shadowd_migrate_test" -3 "heartbeat file diff error ($heartbeat1,$heartbeat2). heart_diff=$heart_diff"
          set_error -3 "no nfs shared qmaster spool directory found. Skipping this test"
          return;
       }

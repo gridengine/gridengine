@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: qstat.1,v $     Last Update: $Date: 2005/11/23 21:49:50 $     Revision: $Revision: 1.28.2.1 $
+.\" $RCSfile: qstat.1,v $     Last Update: $Date: 2005/11/24 14:50:35 $     Revision: $Revision: 1.28.2.2 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QSTAT 1 "$Date: 2005/11/23 21:49:50 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH QSTAT 1 "$Date: 2005/11/24 14:50:35 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 qstat \- show the status of xxQS_NAMExx jobs and queues
 .\"
@@ -374,9 +374,8 @@ or
 .sp 1
 The state E(rror) appears for pending jobs that couldn't be started due to 
 job properties. The reason for the job error is shown by the 
-.M qstat 1 
-\fB\-j job_list\f
-option.
+.M qstat 1
+\fB\-j job_list\fP option.
 .IP "\(bu" 3n
 the submission or start time and date of the job.
 .IP "\(bu" 3n

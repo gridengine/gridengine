@@ -65,6 +65,7 @@ static void general_communication_error(const cl_application_error_list_elem_t* 
  */
 typedef struct sge_gdi_com_error_type {
    int  com_error;                        /* current commlib error */
+   bool com_was_error;                    /* set if there was an communication error (but not CL_RETVAL_ACCESS_DENIED or CL_RETVAL_ENDPOINT_NOT_UNIQUE)*/
    int  com_last_error;                   /* last logged commlib error */
    bool com_access_denied;                /* set when commlib reports CL_RETVAL_ACCESS_DENIED */
    int  com_access_denied_counter;        /* counts access denied errors (TODO: workaround for BT: 6350264, IZ: 1893) */
@@ -74,6 +75,7 @@ typedef struct sge_gdi_com_error_type {
    unsigned long com_endpoint_not_unique_time; /* timeout for counts access denied errors (TODO: workaround for BT: 6350264, IZ: 1893) */
 } sge_gdi_com_error_t;
 static sge_gdi_com_error_t sge_gdi_communication_error = {CL_RETVAL_OK,
+                                                          false,
                                                           CL_RETVAL_OK,
                                                           false, 0, 0,
                                                           false, 0, 0};
@@ -276,6 +278,9 @@ static void general_communication_error(const cl_application_error_list_elem_t* 
       sge_gdi_communication_error.com_error = commlib_error->cl_error;
 
       switch (commlib_error->cl_error) {
+         case CL_RETVAL_OK: {
+            break;
+         }
          case CL_RETVAL_ACCESS_DENIED: {
             if (sge_gdi_communication_error.com_access_denied == false) {
                /* counts access denied errors (TODO: workaround for BT: 6350264, IZ: 1893) */
@@ -318,6 +323,7 @@ static void general_communication_error(const cl_application_error_list_elem_t* 
             break;
          }
          default: {
+            sge_gdi_communication_error.com_was_error = true;
             break;
          }
       }
@@ -433,6 +439,10 @@ bool sge_get_com_error_flag(sge_gdi_stored_com_error_t error_type) {
       case SGE_COM_ENDPOINT_NOT_UNIQUE: {
          ret_val = sge_gdi_communication_error.com_endpoint_not_unique;
          break;
+      }
+      case SGE_COM_WAS_COMMUNICATION_ERROR: {
+         ret_val = sge_gdi_communication_error.com_was_error;
+         sge_gdi_communication_error.com_was_error = false;  /* reset error flag */
       }
    }
    sge_mutex_unlock("general_communication_error_mutex",

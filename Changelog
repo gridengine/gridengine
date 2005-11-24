@@ -1,3 +1,9 @@
+SG-2005-11-24-1: Bugfix:    Reschedule of a parallel job crashes the qmaster
+                 Issue:     1916
+                 Bugster:   to come
+                 Changed:   qmaster
+                 Review:    RD, JG
+
 MD-2005-11-24-0: Bugfix:    On Linux archs the shadow_masters file became 
                             corrupt by shadowhost installation
                  Changed:   inst_sge

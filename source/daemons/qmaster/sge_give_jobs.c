@@ -1117,7 +1117,10 @@ void sge_commit_job(lListElem *jep, lListElem *jatep, lListElem *jr,
          lList *pe_task_list = lGetList(jatep, JAT_task_list);
 
          if(pe_task_list != NULL) {
-            lListElem *pe_task, *container, *existing_container;
+            lListElem *pe_task = NULL;
+            lListElem *container = NULL;
+            lListElem *existing_container = NULL;
+            lListElem *next = NULL;
 
             existing_container = lGetElemStr(pe_task_list, PET_id, PE_TASK_PAST_USAGE_CONTAINER); 
             container = pe_task_sum_past_usage_all(pe_task_list);
@@ -1136,8 +1139,10 @@ void sge_commit_job(lListElem *jep, lListElem *jatep, lListElem *jr,
                lList_clear_changed_info(lGetList(container, PET_scaled_usage));
             }
 
-            for_each(pe_task, pe_task_list) {
-               if(pe_task != container) {
+            next = lFirst(pe_task_list);
+            while ((pe_task = next) != NULL) {
+               next = lNext(next);
+               if (pe_task != container) {
                   lRemoveElem(pe_task_list, &pe_task);
                }
             }

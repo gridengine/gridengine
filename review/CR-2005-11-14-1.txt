@@ -5,6 +5,13 @@ Source Code Review Form
 Date:
 
 1 Identification
+CR-2005-11-24-1: Bugfix:    a second started schedd/execd daemons may not stop
+                            if started when qmaster is down
+                            (enhancement for CR-2005-11-15-0)
+                 Bugtraq:   6349818
+                 Issue:     1891
+                 Changed:   libgdi, execd
+                 Review:    AA
 
 
 CR-2005-11-15-0: Bugfix:    a second started schedd/execd daemons may not stop

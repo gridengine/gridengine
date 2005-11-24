@@ -225,6 +225,10 @@ int dispatch( dispatch_entry*   table,
          terminate = 1; /* leave dispatcher */
       }
 
+      if (sge_get_com_error_flag(SGE_COM_WAS_COMMUNICATION_ERROR) == true) {
+         do_re_register = true;
+      }
+
       /* 
        * trigger re-read of act_qmaster_file in case of
        * do_re_register == true

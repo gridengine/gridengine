@@ -241,11 +241,12 @@ proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result 
       set send_line_speed 1
    } else {
       log_user 0 ;# reisi
-      set send_speed .000001
-      set send_line_speed .000001
+      set send_speed .0001       ;# TODO fix this timing problem
+      set send_line_speed .001    ;# TODO fix this timing problem
    }
 
    set timeout 1
+   after 250  ;# TODO fix this timing problem
 
    # wait for vi to startup and go to first line
    send -i $sp_id "G"
@@ -336,6 +337,7 @@ proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result 
             flush $CHECK_OUTPUT
          }
       }
+      after 100  ;# TODO fix this timing problem
    }
 
    # wait for file time older one second

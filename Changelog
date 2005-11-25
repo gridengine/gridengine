@@ -1,3 +1,5 @@
+CR-2005-11-25-2: Testsuite: qacct test depends on qsub test
+
 SG-2005-11-25-0: Testsuite: added test for issue 1916
                  Review:    JG
                  Changed:   functional/tight_integration/check.exp

@@ -64,7 +64,7 @@ set check_description(7)  ""
 set check_description(8)  ""
 
 # define test's dependencies
-set check_needs           "init_core_system" 
+set check_needs           "init_core_system qsub" 
 
 # setup and cleanup functions
 set check_setup_function qacct_setup

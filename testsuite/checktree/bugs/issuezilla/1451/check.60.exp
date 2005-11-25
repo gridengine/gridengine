@@ -70,7 +70,7 @@ set check_cleanup_function execd_uninstall_cleanup
 
 # define test's procedure order
 set check_functions ""
-lappend check_functions "uninstall_execd"
+lappend check_functions "issue_1451_uninstall_execd"
 
 global execd_uninstall_test_hosts
 global execd_uninstall_saved_slot_count
@@ -94,40 +94,45 @@ proc execd_uninstall_init_level {} {
 
 
 proc execd_uninstall_setup  {} {
-   global CHECK_OUTPUT CHECK_HOST ts_config check_execd
+   global CHECK_OUTPUT CHECK_HOST ts_config check_execd CHECK_USER
 
    set exit_state 1
 
-   foreach check_execd $ts_config(execd_nodes) {
+   set check_execd "unknown"
+
+   foreach tmp_check_execd $ts_config(execd_nodes) {
       set DENIED [translate $CHECK_HOST 1 0 0 [sge_macro MSG_SGETEXT_CANTDELADMINQMASTER_S] "*" ]
-      puts $CHECK_OUTPUT "Try to remove host $check_execd from adminhost list!" 
-      set output [start_remote_prog $ts_config(master_host) "root" "qconf" "-dh $check_execd" exit_state 60 ]
+      puts $CHECK_OUTPUT "Try to remove host $tmp_check_execd from adminhost list!" 
+      set output [start_remote_prog $ts_config(master_host) $CHECK_USER "qconf" "-dh $tmp_check_execd" exit_state 60 ]
       puts $CHECK_OUTPUT $output
-      if { $exit_state != 0 || [string compare $DENIED $output] == 0  } {
+      if { $exit_state != 0 || [string match "*$DENIED*" $output] } {
          puts $CHECK_OUTPUT "failed, trying next!"
       } else {
          puts $CHECK_OUTPUT "OK, taking this one!"
+         set check_execd $tmp_check_execd
          break;
       }
    }
-
-   if { $exit_state != 0 } {
-      add_proc_error "execd_uninstall_setup" -1 "unable to find execd for this test"
-   }
-
    set_error 0 "ok"
 }
 
 proc execd_uninstall_cleanup  {} {
-   global CHECK_OUTPUT ts_config check_execd
+   global CHECK_OUTPUT ts_config check_execd CHECK_USER
 
-   puts $CHECK_OUTPUT "Readding host $check_execd to adminhost list!" 
-   set output [start_remote_prog "$ts_config(master_host)" "root" "qconf" "-ah $check_execd"] 
+   if { $check_execd != "unknown" } {
+      puts $CHECK_OUTPUT "Readding host $check_execd to adminhost list!" 
+      set output [start_remote_prog "$ts_config(master_host)" $CHECK_USER "qconf" "-ah $check_execd"] 
+      puts $CHECK_OUTPUT $output
+      set output [start_remote_prog "$ts_config(master_host)" $CHECK_USER "qmod" "-e all.q"] 
+      puts $CHECK_OUTPUT $output
+      set output [start_remote_prog "$ts_config(master_host)" $CHECK_USER "qmod" "-us all.q"] 
+      puts $CHECK_OUTPUT $output
+   }
    set_error 0 "ok"
 }
 
 
-proc uninstall_execd {} {
+proc issue_1451_uninstall_execd {} {
    global ts_config
    global CHECK_OUTPUT CORE_INSTALLED
    global check_use_installed_system CHECK_ARCH
@@ -139,6 +144,12 @@ proc uninstall_execd {} {
    set CORE_INSTALLED ""
    set LOCAL_ALREADY_CHECKED 0 
  
+   if { $check_execd == "unknown" } {
+      add_proc_error "uninstall_execd" -2 "not host for uninstallation found"
+      set_error "0" ok
+      return
+   }
+
    read_install_list
 
  

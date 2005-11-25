@@ -252,7 +252,6 @@ proc subordiante_submit_jobs_and_wait { job_arguments job_count run_job_count jo
          }
       }
    }
-   wait_for_enter 
    delete_all_jobs  
    wait_for_end_of_all_jobs 60
 }

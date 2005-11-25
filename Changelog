@@ -1,3 +1,6 @@
+CR-2005-11-25-0: Testsuite: removed wait_for_enter call in 
+                            checktree/functional/subordinate
+
 SG-2005-11-24-1: Bugfix:    Reschedule of a parallel job crashes the qmaster
                  Issue:     1916
                  Bugster:   6355263

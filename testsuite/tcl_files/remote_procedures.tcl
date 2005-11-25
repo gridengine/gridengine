@@ -77,7 +77,7 @@ proc setup_qping_dump { log_array  } {
    set master_host_arch [resolve_arch $master_host]
    set qping_binary    "$ts_config(product_root)/bin/$master_host_arch/qping"
    set qping_arguments "-dump $master_host $ts_config(commd_port) qmaster 1"
-   set qping_env(SGE_QPING_OUTPUT_FORMAT) "\"s:1 s:2 s:3 s:4 s:5 s:6 s:7 s:8 s:9 s:10 s:11 s:12 s:13 s:14 s:15\""
+   set qping_env(SGE_QPING_OUTPUT_FORMAT) "s:1 s:2 s:3 s:4 s:5 s:6 s:7 s:8 s:9 s:10 s:11 s:12 s:13 s:14 s:15"
 
    if { $ts_config(gridengine_version) >= 60 } {
       set sid [open_remote_spawn_process $master_host "root" $qping_binary $qping_arguments 0 qping_env]
@@ -187,7 +187,7 @@ proc check_all_system_times {} {
       set diff [expr ( $reverence_time - $time($host) )]
       puts $CHECK_OUTPUT "host $host has a time difference of $diff seconds compared to host $ts_config(master_host)"
 
-      if { $diff > 10 || $diff < -10 } {
+      if { $diff > 15 || $diff < -15 } {
          add_proc_error "check_all_system_times" -2 "host $host has a time difference of $diff seconds compared to host $ts_config(master_host)"
          set return_value 1
       }
@@ -1503,7 +1503,7 @@ proc open_remote_spawn_process { hostname
       set timeout 1
 
       debug_puts "checking remote file access ..."
-
+      after 100 ;#   TODO this is for fast hosts which have timing problems
       send -i $open_remote_spawn__id "$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/file_check.sh $open_remote_spawn__script_name\n"
       set open_remote_spawn__tries 30
       while { $open_remote_spawn__tries > 0 } {
@@ -1542,7 +1542,7 @@ proc open_remote_spawn_process { hostname
       }
       log_user 1
    }
-
+   after 300 ;# TODO this is for fast hosts which have timing problems
    debug_puts "\"$hostname\"($user): starting command: $exec_command $exec_arguments"
 
    if { $background != 0 } {

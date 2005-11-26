@@ -342,7 +342,7 @@ proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result 
 
    # wait for file time older one second
    while { [ timestamp ] <= $start_time } { 
-      after 50
+      after 100
       expect -i $sp_id {
          "*Hit return*" {
             send -i $sp_id -- "\n"
@@ -350,6 +350,7 @@ proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result 
          }
       }
    }
+   after 200 ;# TODO fix this timing problem
    # save and exit
    if { $CHECK_DEBUG_LEVEL != 0 } {
       after 3000

@@ -1,3 +1,6 @@
+CR-2005-11-26-0: Testsuite: fixed bug in issue test bugs/issuezilla/1802
+                 Review:    TBD
+
 CR-2005-11-25-3: Testsuite: fixed bug in issue test bugs/issuezilla/1451
                  Review:    RD
 

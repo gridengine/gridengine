@@ -50,7 +50,7 @@ set check_init_level_procedure "qconf_init_level"
 
 # define test's name and run level descriptions
 set check_name            "qconf"
-set check_category        "COMPATIBILITY SYSTEM L10N VERIFIED"
+set check_category        "COMPATIBILITY SYSTEM VERIFIED"
 set check_highest_level    0
 set check_description(0)  "test all qconf options (test not complete)"
 

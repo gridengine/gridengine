@@ -1,3 +1,7 @@
+CR-2005-11-27-2: Testsuite: modified system_tests/clients/qtcsh test
+                            to be more error tolerant
+                 Review:    TBD
+
 CR-2005-11-27-1: Testsuite: fixed shutdown_system_daemon() procedure for
                             linux kernel 2.4 systems
                  Review:    TBD

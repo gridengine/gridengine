@@ -124,7 +124,7 @@ proc qtcsh_init_level {} {
        return 0 
      }
      1 { 
-       return 0 
+       return 0
      } 
      2 { 
        set qtcsh_command_sh "SGE_ROOT=\"\"; export SGE_ROOT" 
@@ -202,7 +202,7 @@ proc qtcsh_cleanup {} {
 
    file delete $check_user_home/.qtask
    restore_qtask_file
-   
+   after 5000
    delete_all_jobs
    wait_for_end_of_all_jobs 60
 }
@@ -259,12 +259,14 @@ proc qtcsh_spawn { { option "" } { command "hostname" } } {
       }
    }
 
+   puts $CHECK_OUTPUT "found start mark ..."
+
    set my_tries 60
    set timeout 1
 
    while {1} {
       expect {
-         -i $qtcsh_sp_id {*[A-Za-z]*} {
+         -i $qtcsh_sp_id {*[A-Za-z>]*} {
             puts $CHECK_OUTPUT "startup ..."
             break;
          }
@@ -281,6 +283,8 @@ proc qtcsh_spawn { { option "" } { command "hostname" } } {
          }
       }
    }
+
+   puts $CHECK_OUTPUT "found shell startup ..."
 
    if { "$qtcsh_command_tcsh" != "" } {
       puts $CHECK_OUTPUT "testsuite send -> $qtcsh_command_tcsh\\n" 
@@ -345,7 +349,7 @@ proc qtcsh_spawn { { option "" } { command "hostname" } } {
          }
       }
    }
-
+   puts $CHECK_OUTPUT "closing spawn process ..."
    close_spawn_process $qtcsh_id
 
    puts $CHECK_OUTPUT "qtcsh returned: $last_output"

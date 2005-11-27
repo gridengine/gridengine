@@ -1,3 +1,7 @@
+CR-2005-11-27-1: Testsuite: fixed shutdown_system_daemon() procedure for
+                            linux kernel 2.4 systems
+                 Review:    TBD
+
 CR-2005-11-27-0: Testsuite: fixed checktree/system_tests/clients/qconf:
                                o removed L10N check category
                                  (test expects english qconf output)

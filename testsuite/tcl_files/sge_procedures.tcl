@@ -6943,10 +6943,14 @@ proc is_pid_with_name_existing { host pid proc_name } {
    global ts_config
   global CHECK_OUTPUT CHECK_ARCH CHECK_USER
 
-  puts $CHECK_OUTPUT "$host: checkprog $pid $proc_name ..."
+  puts -nonewline $CHECK_OUTPUT "$host: checkprog $pid $proc_name ... "
   set my_arch [ resolve_arch $host ]
-  puts $CHECK_OUTPUT [start_remote_prog $host $CHECK_USER $ts_config(product_root)/utilbin/$my_arch/checkprog "$pid $proc_name"]
-  puts $CHECK_OUTPUT "return: $prg_exit_state"
+  set output [start_remote_prog $host $CHECK_USER $ts_config(product_root)/utilbin/$my_arch/checkprog "$pid $proc_name"]
+  if { $prg_exit_state == 0} {
+     puts $CHECK_OUTPUT "running"
+  } else {
+     puts $CHECK_OUTPUT "not running"
+  }
   return $prg_exit_state
 }
 
@@ -7038,7 +7042,7 @@ proc shutdown_system_daemon { host typelist { do_term_signal_kill_first 1 } } {
       puts $CHECK_OUTPUT "looking for \"$process_name\" processes on host $host ..."
       foreach elem $found_p {
          if { [ string first $process_name $ps_info(string,$elem) ] >= 0 } {
-            puts $CHECK_OUTPUT "current ps info: $ps_info(string,$elem)"
+            debug_puts "current ps info: $ps_info(string,$elem)"
             if { [ is_pid_with_name_existing $host $ps_info(pid,$elem) $process_name ] == 0 } {
                incr nr_of_found_qmaster_processes_or_threads 1
                puts $CHECK_OUTPUT "found running $process_name with pid $ps_info(pid,$elem) on host $host"
@@ -7052,10 +7056,18 @@ proc shutdown_system_daemon { host typelist { do_term_signal_kill_first 1 } } {
                    set kill_user $CHECK_USER
                }
                if { $do_term_signal_kill_first == 1 } {
-                  puts $CHECK_OUTPUT "killing (SIG_TERM) process $ps_info(pid,$elem) on host $host, kill user is $kill_user"
-                  puts $CHECK_OUTPUT [ start_remote_prog $host $kill_user kill $ps_info(pid,$elem) ]
-                  set sig_term_wait_timeout 15
+                  set kill_pid_ids ""
+                  foreach tmp_elem $found_p {
+                     if { [ string first $process_name $ps_info(string,$tmp_elem) ] >= 0 } {
+                        append kill_pid_ids " $ps_info(pid,$tmp_elem)"
+                     }
+                  }
+                  puts $CHECK_OUTPUT "killing (SIG_TERM) process(es) $kill_pid_ids on host $host, kill user is $kill_user"
+                  puts $CHECK_OUTPUT [ start_remote_prog $host $kill_user kill $kill_pid_ids ]
+
+                  set sig_term_wait_timeout 30
                   while { [is_pid_with_name_existing $host $ps_info(pid,$elem) $process_name] == 0 } {
+                     puts $CHECK_OUTPUT "waiting for process termination ..." 
                      after 1000
                      incr sig_term_wait_timeout -1
                      if { $sig_term_wait_timeout <= 0 } {
@@ -7073,8 +7085,6 @@ proc shutdown_system_daemon { host typelist { do_term_signal_kill_first 1 } } {
                    } else {
                        puts $CHECK_OUTPUT "pid:$ps_info(pid,$elem) process killed (host: $host)"
                    }
-               } else {
-                   puts $CHECK_OUTPUT "pid:$ps_info(pid,$elem) process killed (host: $host)"
                }
             } else {
                if { $nr_of_found_qmaster_processes_or_threads == 0 } {

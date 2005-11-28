@@ -65,6 +65,7 @@
 #include "qmon_message.h"
 #include "sge_bitfield.h"
 #include "sge_qinstance_state.h"
+#include "uti/sge_string.h"
 
 /*-------------------------------------------------------------------------*/
 /* Prototypes */

@@ -61,6 +61,7 @@
 #include "qmon_message.h"
 #include "AskForTime.h"
 #include "IconList.h"
+#include "uti/sge_string.h"
 
 
 

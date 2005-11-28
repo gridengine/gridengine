@@ -74,6 +74,7 @@
 #include "spool/classic/rw_configuration.h"
 #include "AskForItems.h"
 #include "AskForTime.h"
+#include "uti/sge_string.h"
 
 /*-------------------------------------------------------------------------*/
 typedef struct _tCClEntry {

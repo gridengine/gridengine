@@ -96,6 +96,8 @@
 #include "sge_answer.h"
 #include "sge_ulong.h"
 
+#include "uti/sge_string.h"
+
 extern char **environ;
 
 /*-------------------------------------------------------------------------*/

@@ -1,3 +1,7 @@
+JG-2005-11-28-0: Testsuite: Fixed installation on lx26-* and hp11-64.
+                            Cleanup and fixes for bdb server installation.
+                 Review:    CR
+
 CR-2005-11-27-2: Testsuite: modified system_tests/clients/qtcsh test
                             to be more error tolerant
                  Review:    TBD

@@ -673,7 +673,6 @@ proc setup_execd_conf {} {
         }
         set tmp_config(execd_spool_dir) $have_exec_spool_dir
         puts $CHECK_OUTPUT "spooldir (new): $tmp_config(execd_spool_dir)"
-        wait_for_enter
      }
      puts $CHECK_OUTPUT $output
      if { $counter != $expected_entries } {

@@ -813,29 +813,22 @@ proc install_qmaster {} {
 
 
       -i $sp_id $ENTER_DATABASE_SERVER_DIRECTORY {
-         # if we set a specific bdb_dir, send this one, else accept
-         # the default suggested by inst_sge(ee)
-         if {[string compare $ts_config(bdb_dir) "none"] != 0 } {
-            set input "$ts_config(bdb_dir)\n"
-            puts $CHECK_OUTPUT "\n -->testsuite: sending $ts_config(bdb_dir)"
-         } else {
-            set input "\n"
+         set spooldir [get_bdb_spooldir $ts_config(bdb_server) 1]
+         if { $spooldir == "" } {
             puts $CHECK_OUTPUT "\n -->testsuite: sending >RETURN<(11)"
+         } else {
+            puts $CHECK_OUTPUT "\n -->testsuite: sending $spooldir"
          }
          if {$do_log_output == 1} {
             puts "press RETURN"
             set anykey [wait_for_enter 1]
          }
-         send -i $sp_id $input
+         send -i $sp_id "$spooldir\n"
          continue
       }
    
       -i $sp_id $ENTER_DATABASE_DIRECTORY_LOCAL_SPOOLING {
-         if {[string compare $ts_config(bdb_dir) "none"] != 0 } {
-            set spooldir $ts_config(bdb_dir)
-         } else {
-            set spooldir [get_local_spool_dir $CHECK_CORE_MASTER spooldb 0 ]
-         }
+         set spooldir [get_bdb_spooldir $ts_config(master_host) 1]
   
          if { $spooldir == "" } {
             puts $CHECK_OUTPUT "\n -->testsuite: sending >RETURN<(12)"

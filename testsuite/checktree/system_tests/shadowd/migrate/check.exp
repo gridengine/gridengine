@@ -158,15 +158,45 @@ proc shadowd_migrate_test {} {
       }
 
 
-      if { $ts_config(spooling_method) != "classic" } {
-         if { $ts_config(bdb_server) == "none" } {
-            set_error -3 "Berkeley Database RPC server is set to none. Skipping this test"
-            return;
-         } else {
-            puts $CHECK_OUTPUT "Berkeley Database RPC server is set to $ts_config(bdb_server). Fine!"
-         }
+      # We need access to spooling data from shadow hosts, by
+      # - classic spooling to a shared filesystem (to qmaster spooldir - if it was not shared,
+      #   we would have failed earlier.
+      # - bdb spooling with rpc server
+      # - bdb spooling to nfsv4
+      set spooling_ok 0
+      if { $ts_config(spooling_method) == "classic" } {
+         puts $CHECK_OUTPUT "We have \"classic\" spooling to a shared qmaster spool dir."
+         set spooling_ok 1
       } else {
-         puts $CHECK_OUTPUT "classic spooling is enabled. Fine!"
+         if {$ts_config(spooling_method) == "berkeleydb"} {
+            if { $ts_config(bdb_server) != "none" } {
+               puts $CHECK_OUTPUT "We have \"berkeleydb\" spooling with RPC server." 
+               set spooling_ok 1
+            } else {
+               set bdb_spooldir [get_bdb_spooldir]
+               set fstype [get_fstype $bdb_spooldir $ts_config(master_host)]
+               if {$fstype == "nfs4"} {
+                  puts $CHECK_OUTPUT "We have \"berkeleydb\" spooling on NFS v4" 
+                  set spooling_ok 1
+
+                  # check that the spooldir is NFS v4 on all shadow hosts
+                  foreach host $ts_config(shadow_hosts) {
+                     set fstype [get_fstype $bdb_spooldir $host]
+                     if {$fstype != "nfsv4"} {
+                        puts $CHECK_OUTPUT "berkeley spool directory $bdb_spooldir is not nfsv4 mounted on shadow host $host"
+                        set spooling_ok 0
+                        break
+                     }
+                  }
+               }
+            }
+         }
+      }
+
+      if {! $spooling_ok} {
+         add_proc_error "shadowd_migrate_test" -3 "Spooling database is not shared between master and shadow hosts"
+         set_error 0 ok
+         return
       }
 
       puts $CHECK_OUTPUT "------------------------------------------------------------"

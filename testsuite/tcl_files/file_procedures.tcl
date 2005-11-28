@@ -3351,3 +3351,99 @@ proc get_spool_dir {host subdir} {
    return $spooldir
 }
 
+#****** file_procedures/get_bdb_spooldir() *************************************
+#  NAME
+#     get_bdb_spooldir() -- get configured berkeley db spool directory
+#
+#  SYNOPSIS
+#     get_bdb_spooldir {{host ""}} 
+#
+#  FUNCTION
+#     Returns the directory configured for berkeley db spooling.
+#     If bdb_dir is configured in testsuite setup, this directory will be returned.
+#     Otherwise, a local spool directory for the host will be returned.
+#     If no local spooldirectory is configured, we'll return 
+#     $SGE_ROOT/$SGE_CELL/default/spool/spooldb.
+#
+#  INPUTS
+#     host        - host for lookup of local spool directory. 
+#                   Default is the master host.
+#     only_local  - do only return local spool directory, no global one.
+#
+#  RESULT
+#     The spool directory.
+#*******************************************************************************
+proc get_bdb_spooldir {{host ""} {only_local 0}} {
+   global ts_config
+
+   # default host is master host
+   if {$host == ""} {
+      set host $ts_config(master_host)
+   }
+
+   # if no special bdb spool directory is given, use qmaster spooldir
+   if {$ts_config(bdb_dir) == "none"} {
+      set spooldir [get_local_spool_dir $host spooldb 0 ]
+   } else {
+      set spooldir $ts_config(bdb_dir)
+   }
+
+   # we have no local spooldir? Return global one.
+   if {$spooldir == ""} {
+      if {!$only_local} {
+         set spooldir "$ts_config(product_root)/$ts_config(cell)/spool/spooldb"
+      }
+   }
+
+   return $spooldir
+}
+
+#****** file_procedures/get_fstype() *******************************************
+#  NAME
+#     get_fstype() -- get filesystem type for a certain path
+#
+#  SYNOPSIS
+#     get_fstype { path {host ""} } 
+#
+#  FUNCTION
+#     Returns the type of the filesystem on which a certain <path> resides.
+#     This is done by calling the utilbin fstype binary.
+#
+#     If fstype does not exist (it was introduced in 6.0u?), "unknown" will be
+#     returned and a "unsupported" warning will be raised.
+#
+#     If fstype fails, an error will be raised and "unknown" will be returned.
+#
+#  INPUTS
+#     path      - path to file or directory
+#     {host ""} - host on which to do the check. Default is the master host.
+#
+#  RESULT
+#     The filesystem type (e.g. "nfs, nfs4, tmpfs, ufs), or
+#     "unknown" in case of errors.
+#*******************************************************************************
+proc get_fstype {path {host ""}} {
+   global ts_config CHECK_OUTPUT CHECK_USER
+
+   # if host doesn't matter for query, use master host
+   if {$host == ""} {
+      set host $ts_config(master_host)
+   }
+
+   # if it is available, call utilbin/<arch>/fstype
+   set ret "unknown"
+   set arch [resolve_arch $host]
+   set binary "$ts_config(product_root)/utilbin/$arch/fstype"
+   if {![file exists $binary]} {
+      add_proc_error "" -3 "can't retrieve filesystem type of $path:\n$binary does not exist"
+   } else {
+      set output [start_remote_prog $host $CHECK_USER $binary $path]
+      if {$prg_exit_state != 0} {
+         add_proc_error "" -1 "$binary $path failed on host $host:\n$output"
+      } else {
+         set ret $output
+      }
+   }
+
+   return $ret
+}

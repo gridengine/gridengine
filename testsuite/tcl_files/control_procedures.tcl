@@ -1336,33 +1336,36 @@ proc gethostname {} {
 #****** control_procedures/resolve_arch() ******
 # 
 #  NAME
-#     resolve_arch -- ??? 
+#     resolve_arch -- resolve architecture of host
 #
 #  SYNOPSIS
-#     resolve_arch { { host "none" } } 
+#     resolve_arch { {node "none"} {use_source_arch 0}} 
 #
 #  FUNCTION
-#     ??? 
+#     Resolves the architecture of a given host.
+#     Tries to call $SGE_ROOT/util/arch - if this script doesn't exist yet,
+#     calls <source_dir>/dist/util/arch.
+#
+#     If the parameter use_source_arch is set, the function will always
+#     call <source_dir>/dist/util/arch.
+#     This is for example required when building new binaries:
+#     The installed arch script might return a different architecture than
+#     the source arch script, for example when a cluster was installed from
+#     our Grid Engine packages, where we deliver lx-24-* packages also for
+#     Linux kernel 2.6 machines (lx26-*), or hp11 packages for hp11-64.
 #
 #  INPUTS
-#     { host "none" } - ??? 
+#     {node "none"}     - return architecture of this host.
+#                         If "none", resolve architecture of CHECK_HOST.
+#     {use_source_arch} - use <source_dir>/dist/util/arch script.
 #
 #  RESULT
-#     ??? 
-#
-#  EXAMPLE
-#     ??? 
-#
-#  NOTES
-#     ??? 
-#
-#  BUGS
-#     ??? 
+#     Architecture string (e.g. "sol-amd64"), "unknown" in case of errors.
 #
 #  SEE ALSO
-#     ???/???
+#     control_procedures/resolve_arch_clear_cache()
 #*******************************
-proc resolve_arch { { node "none" } } {
+proc resolve_arch {{node "none"} {use_source_arch 0}} {
    global ts_config
   global CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_TESTSUITE_ROOT arch_cache
   global CHECK_SCRIPT_FILE_DIR CHECK_USER CHECK_SOURCE_DIR CHECK_HOST
@@ -1389,7 +1392,7 @@ proc resolve_arch { { node "none" } } {
 
    # if $SGE_ROOT/util/arch is available, use this one,
    # otherwise use the one from the distribution
-   if {[file exists "$ts_config(product_root)/util/arch"]} {
+   if {[file exists "$ts_config(product_root)/util/arch"] && ! $use_source_arch} {
       set arch_script "$ts_config(product_root)/util/arch"
    } else {
       set arch_script "$CHECK_SOURCE_DIR/dist/util/arch"
@@ -1436,6 +1439,34 @@ proc resolve_arch { { node "none" } } {
   }
 
   return $arch_cache($host)
+}
+
+#****** control_procedures/resolve_arch_clear_cache() **************************
+#  NAME
+#     resolve_arch_clear_cache() -- clear cache of resolve_arch()
+#
+#  SYNOPSIS
+#     resolve_arch_clear_cache { } 
+#
+#  FUNCTION
+#     The function resolve_arch caches its results.
+#     resolve_arch_clear_cache will clear this cache to force reresolving
+#     the architecture strings.
+#
+#     This is for example done after compiling and installing binaries.
+#     In this case the newly installed arch script might return other 
+#     architecture names than the previously installed one.
+#
+#  SEE ALSO
+#     control_procedures/resolve_arch()
+#*******************************************************************************
+proc resolve_arch_clear_cache {} {
+   global CHECK_OUTPUT arch_cache
+
+   puts $CHECK_OUTPUT "clearing architecture cache used by resolve_arch"
+   if {[info exists arch_cache]} {
+      unset arch_cache
+   }
 }
 
 #                                                             max. column:     |

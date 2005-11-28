@@ -6468,15 +6468,19 @@ proc compile_source { { do_only_install 0 } } {
 
    # install to $CHECK_PRODUCT_ROOT
    if { $error_count == 0 } {
-      
-      report_add_message report "Compiling ...."
+      report_add_message report "Installing binaries ...."
       report_write_html report
-      
+     
+      # We need to evaluate the architectures to install.
+      # We might have cached architecture strings from an old
+      # $SGE_ROOT/util/arch. Clear the cache and resolve 
+      # architecture names using dist/util/arch script.
+      resolve_arch_clear_cache
       set arch_list {}
       set compiled_mail_architectures ""
       puts -nonewline $CHECK_OUTPUT "\narchitectures: "
       foreach elem $compile_hosts {
-         set output [resolve_arch $elem]
+         set output [resolve_arch $elem 1]
          lappend arch_list $output 
          puts -nonewline $CHECK_OUTPUT "$output "
          append compiled_mail_architectures "\n$elem ($output)"
@@ -6682,7 +6686,7 @@ proc install_binaries { do_only_install arch_list a_report } {
    puts $CHECK_OUTPUT ""
 
    foreach elem $CHECK_CORE_EXECD {
-      set host_arch [ resolve_arch $elem ]
+      set host_arch [ resolve_arch $elem 1]
       if { ([string compare $host_arch ""] != 0) && ([string compare $host_arch "unknown" ] != 0) } {
          report_task_add_message report $task_nr " arch on host $elem is $host_arch - successfully installed binaries"
       } else {
@@ -6704,7 +6708,16 @@ proc install_binaries { do_only_install arch_list a_report } {
         catch { exec "cp" "$CHECK_JOB_OUTPUT_DIR/host_aliases" "$CHECK_PRODUCT_ROOT/$ts_config(cell)/common/host_aliases" } result
         report_task_add_message report $task_nr $result
    }
-   
+  
+   # copy source/dist/util/arch to $SGE_ROOT/util.
+   # When we compiled our own binaries (including non distributed architectures like 
+   # lx26-x86 or hp11-64, source/dist/util/arch will give us the correct arch strings.
+   set arch_script_src "$CHECK_SOURCE_DIR/dist/util/arch"
+   set arch_script_dst "$CHECK_PRODUCT_ROOT/util/arch"
+   report_task_add_message report $task_nr "installing $arch_script_src ..."
+   catch { exec cp $arch_script_src $arch_script_dst} result
+ 
+   # done - final error handling
    if { $was_error } {
       report_finish_task report $task_nr -1
    } else {

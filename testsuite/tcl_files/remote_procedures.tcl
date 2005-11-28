@@ -187,7 +187,7 @@ proc check_all_system_times {} {
       set diff [expr ( $reverence_time - $time($host) )]
       puts $CHECK_OUTPUT "host $host has a time difference of $diff seconds compared to host $ts_config(master_host)"
 
-      if { $diff > 15 || $diff < -15 } {
+      if { $diff > 30 || $diff < -30 } {
          add_proc_error "check_all_system_times" -2 "host $host has a time difference of $diff seconds compared to host $ts_config(master_host)"
          set return_value 1
       }

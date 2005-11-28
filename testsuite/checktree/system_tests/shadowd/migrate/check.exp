@@ -169,7 +169,7 @@ proc shadowd_migrate_test {} {
          set spooling_ok 1
       } else {
          if {$ts_config(spooling_method) == "berkeleydb"} {
-            if { $ts_config(bdb_server) != "none" } {
+            if {$ts_config(bdb_server) != "none"} {
                puts $CHECK_OUTPUT "We have \"berkeleydb\" spooling with RPC server." 
                set spooling_ok 1
             } else {
@@ -180,9 +180,9 @@ proc shadowd_migrate_test {} {
                   set spooling_ok 1
 
                   # check that the spooldir is NFS v4 on all shadow hosts
-                  foreach host $ts_config(shadow_hosts) {
+                  foreach host $ts_config(shadowd_hosts) {
                      set fstype [get_fstype $bdb_spooldir $host]
-                     if {$fstype != "nfsv4"} {
+                     if {$fstype != "nfs4"} {
                         puts $CHECK_OUTPUT "berkeley spool directory $bdb_spooldir is not nfsv4 mounted on shadow host $host"
                         set spooling_ok 0
                         break
@@ -591,7 +591,7 @@ proc shadowd_migrate_test {} {
       }
    }
    if { $CHECK_ACT_LEVEL == 9 } {
-      foreach host $ts_config(execd_hosts) {
+      foreach host $ts_config(execd_nodes) {
          puts $CHECK_OUTPUT "\ntesting heartbeat incrementation on host $host ..."
       
          set heartbeat_file [get_tmp_file_name]

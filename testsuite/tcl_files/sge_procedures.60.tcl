@@ -479,7 +479,6 @@ proc validate_checkpointobj { change_array } {
 #     sge_procedures/shutdown_system_daemon()
 #     sge_procedures/startup_qmaster()
 #     sge_procedures/startup_execd()
-#     sge_procedures/startup_shadowd()
 #*******************************
 proc startup_shadowd { hostname {env_list ""} } {
    global ts_config

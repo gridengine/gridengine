@@ -3441,7 +3441,7 @@ proc get_fstype {path {host ""}} {
       if {$prg_exit_state != 0} {
          add_proc_error "" -1 "$binary $path failed on host $host:\n$output"
       } else {
-         set ret $output
+         set ret [string trim $output]
       }
    }
 

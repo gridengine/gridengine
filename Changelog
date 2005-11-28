@@ -1,3 +1,6 @@
+JG-2005-11-28-1: Testsuite: Fixed check system_tests/shadowd/migrate.
+                 Review:    CR
+
 HP-2005-11-28-0: Bugfix:    removed spool* binaries and libraries from distinst
                  Changed:   scripts/distins
                  Review:    AS

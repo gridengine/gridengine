@@ -1,3 +1,7 @@
+HP-2005-11-28-0: Bugfix:    removed spool* binaries and libraries from distinst
+                 Changed:   scripts/distins
+                 Review:    AS
+
 JG-2005-11-28-0: Testsuite: Fixed installation on lx26-* and hp11-64.
                             Cleanup and fixes for bdb server installation.
                  Review:    CR

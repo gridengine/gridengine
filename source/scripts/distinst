@@ -1177,7 +1177,7 @@ for i in $ARCH; do
                   fi
                fi
                ;;
-            sge_schedd|sge_shadowd|qmon)
+            sge_schedd|sge_shadowd|qmon|spooledit)
                if [ "$DSTARCH" != "win32-x86" ]; then
                   InstallProg $prog
                fi
@@ -1234,26 +1234,33 @@ for i in $ARCH; do
                fi
             elif [ $prog = testsuidroot ]; then
                InstallProgSUID $prog
-            elif [ $prog = berkeley_db_svc -o $prog = db_archive -o $prog = db_checkpoint -o $prog = db_deadlock -o $prog = db_dump -o $prog = db_load -o $prog = db_printlog -o $prog = db_recover -o $prog = db_stat -o $prog = db_upgrade -o $prog = db_verify ]; then
+            elif [ $prog = berkeley_db_svc -o $prog = db_archive \
+                   -o $prog = db_checkpoint -o $prog = db_deadlock \
+                   -o $prog = db_dump -o $prog = db_load \
+                   -o $prog = db_printlog -o $prog = db_recover \
+                   -o $prog = db_stat -o $prog = db_upgrade \
+                   -o $prog = db_verify ]; then
                if [ "$DSTARCH" != "win32-x86" ]; then
                   InstallProg $BERKELEYDBBASE/$DSTARCH/bin/$prog
                fi
             elif [ $prog = spoolinit -o $prog = spooldefaults ]; then
-               if [ $instclassictargets = false ]; then
-                  InstallProg $prog
-               elif [ -f ../${ARCHBIN}_classic/$prog ]; then
-                  InstallProgAs ../${ARCHBIN}_classic/$prog ${prog}.spool_classic
-                  InstallProgAs $prog ${prog}.spool_bdb
-                  ( echo changing to $DEST_SGE_ROOT/utilbin/$DSTARCH ; \
-                    cd $DEST_SGE_ROOT/utilbin/$DSTARCH ; \
-                    echo ln -s ${prog}.spool_bdb $prog ; \
-                    ln -s ${prog}.spool_bdb $prog
-                   )
-               else
-                  InstallProg $prog
+               if [ "$DSTARCH" != "win32-x86" ]; then
+                  if [ $instclassictargets = false ]; then
+                     InstallProg $prog
+                  elif [ -f ../${ARCHBIN}_classic/$prog ]; then
+                     InstallProgAs ../${ARCHBIN}_classic/$prog ${prog}.spool_classic
+                     InstallProgAs $prog ${prog}.spool_bdb
+                     ( echo changing to $DEST_SGE_ROOT/utilbin/$DSTARCH ; \
+                       cd $DEST_SGE_ROOT/utilbin/$DSTARCH ; \
+                       echo ln -s ${prog}.spool_bdb $prog ; \
+                       ln -s ${prog}.spool_bdb $prog
+                     )
+                  else
+                     InstallProg $prog
+                  fi
                fi
-            else
-               InstallProg $prog
+            elif [ "$DSTARCH" != "win32-x86" -o "$prog" != "spooledit" ]; then
+                  InstallProg $prog
             fi
          done
          for prog in $REMOTEBINARIES; do
@@ -1306,15 +1313,22 @@ for i in $ARCH; do
 
          Execute rm -f $DEST_SGE_ROOT/$UTILPREFIX/$i/*
          for lib in $SHARED_LIBRARIES; do
-            if [ -f $lib.$shlibext ]; then
-               InstallProg $lib.$shlibext
+            if [ "$DSTARCH" != "win32-x86" \
+                 -o \( "$lib" != "libspool" -a "$lib" != "libspoolb" \
+                    -a "$lib" != "libspoold" -a "$lib" != "libspoolc" \
+                    -a "$lib" != "libspoolf" \) ]; then
+               if [ -f $lib.$shlibext ]; then
+                  InstallProg $lib.$shlibext
+               fi
             fi
          done
 
          for lib in $QMON_SHARED_LIBRARIES; do
-            libname="../3rdparty/qmon/$ARCHBIN/$lib.$shlibext"
-            if [ -f $libname ]; then
-               InstallProg $libname
+            if [ "$DSTARCH" != "win32-x86" ]; then
+               libname="../3rdparty/qmon/$ARCHBIN/$lib.$shlibext"
+               if [ -f $libname ]; then
+                  InstallProg $libname
+               fi
             fi
          done
 

@@ -1,5 +1,9 @@
+DT-2005-11-29-0: Bugfix:    o Fixed broken build on Irix 6.5
+                 Changed:   shepherd
+                 Review:    pending (RD)
+
 RD-2005-11-29-0: Bugfix:    broken build for fbsd-i386
-	         Review:    TBD
+	              Review:    DT
 
 CR-2005-11-29-1: Testsuite: added queue error check for 
                             checktree/system_tests/clients/qrsh/check.exp

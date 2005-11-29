@@ -1,3 +1,9 @@
+CR-2005-11-29-0: Bugfix:    o check file descriptor errors after select()
+                              errors in commlib AND after get_sock_opt() errors
+                            o additional enhancment fix to CR-2005-11-16-0
+                 Review:    RD
+                 Changed:   commlib
+
 JG-2005-11-28-1: Testsuite: Fixed check system_tests/shadowd/migrate.
                  Review:    CR
 
@@ -11,21 +17,21 @@ JG-2005-11-28-0: Testsuite: Fixed installation on lx26-* and hp11-64.
 
 CR-2005-11-27-2: Testsuite: modified system_tests/clients/qtcsh test
                             to be more error tolerant
-                 Review:    TBD
+                 Review:    RD
 
 CR-2005-11-27-1: Testsuite: fixed shutdown_system_daemon() procedure for
                             linux kernel 2.4 systems
-                 Review:    TBD
+                 Review:    RD
 
 CR-2005-11-27-0: Testsuite: fixed checktree/system_tests/clients/qconf:
                                o removed L10N check category
                                  (test expects english qconf output)
                                o output parsing did not work for long
                                  hostnames
-                 Review:    TBD 
+                 Review:    RD 
 
 CR-2005-11-26-0: Testsuite: fixed bug in issue test bugs/issuezilla/1802
-                 Review:    TBD
+                 Review:    RD
 
 CR-2005-11-25-3: Testsuite: fixed bug in issue test bugs/issuezilla/1451
                  Review:    RD

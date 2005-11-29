@@ -5,19 +5,17 @@ Source Code Review Form
 Date:
 
 1 Identification
-
 CR-2005-11-29-0: Bugfix:    o check file descriptor errors after select()
                               errors in commlib AND after get_sock_opt() errors
                             o additional enhancment fix to CR-2005-11-16-0
                  Review:    RD
                  Changed:   commlib
 
-
 CR-2005-11-16-0: Bugfix:    o check file descriptor errors after select()
                               errors in commlib
+                            o see also CR-2005-11-29-0
                  Review:    RD
                  Changed:   commlib
-
 
 
 2 Conforms to specification
@@ -50,11 +48,11 @@ CR-2005-11-16-0: Bugfix:    o check file descriptor errors after select()
 
 3.6 Bugster CR complete and correct?
 3.6 [ ] yes
-3.6 [x] no - comment: n.a.
+3.6 [x] no - comment: n.a. (not in 60u6)
 
 3.7 Issuezilla entry (if exists) complete and correct?
 3.7 [ ] yes
-3.7 [x] no - comment: n.a.
+3.7 [x] no - comment: n.a. (not in 60u6)
 
 
 4 Source review
@@ -85,7 +83,7 @@ Successfull execution
 5.2 [ ] no - comment:
 
 5.3 Testsuite covers issue
-5.3 [x] yes
+5.3 [x] yes (throughput test on hp11)
 5.3 [ ] no - comment:
 
 5.4 If 5.3 = no: New testsuite test or module test created?

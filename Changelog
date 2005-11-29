@@ -1,3 +1,9 @@
+CR-2005-11-29-0: Bugfix:    o check file descriptor errors after select()
+                              errors in commlib AND after get_sock_opt() errors
+                            o additional enhancment fix to CR-2005-11-16-0
+                 Review:    RD
+                 Changed:   commlib
+
 RD-2005-11-29-0: Bugfix:    deleting a qrsh job kills the rshd first 
                  Changed:   shepherd
                  Review:    CR 
@@ -150,6 +156,7 @@ RD-2005-11-15-0: Bugfix:   - qtcsh on linux may not execute local command
 
 CR-2005-11-16-0: Bugfix:    o check file descriptor errors after select()
                               errors in commlib
+                            o see also CR-2005-11-29-0
                  Review:    RD
                  Changed:   commlib
 

@@ -3077,6 +3077,7 @@ int cl_com_ssl_open_connection_request_handler(cl_raw_list_t* connection_list, c
    int nr_of_descriptors = 0;
    cl_connection_list_data_t* ldata = NULL;
    int socket_error = 0;
+   int get_sock_opt_error = 0;
    char tmp_string[1024];
 
 #if defined(AIX)
@@ -3545,11 +3546,11 @@ int cl_com_ssl_open_connection_request_handler(cl_raw_list_t* connection_list, c
                con_private = cl_com_ssl_get_private(connection);
                socket_error = 0;
 #if defined(SOLARIS) && !defined(SOLARIS64) 
-               getsockopt(con_private->sockfd,SOL_SOCKET, SO_ERROR, (void*)&socket_error, &socklen);
+               get_sock_opt_error = getsockopt(con_private->sockfd,SOL_SOCKET, SO_ERROR, (void*)&socket_error, &socklen);
 #else
-               getsockopt(con_private->sockfd,SOL_SOCKET, SO_ERROR, &socket_error, &socklen);
+               get_sock_opt_error = getsockopt(con_private->sockfd,SOL_SOCKET, SO_ERROR, &socket_error, &socklen);
 #endif
-               if (socket_error != 0) {
+               if (socket_error != 0 || get_sock_opt_error != 0) {
                   connection->connection_state = CL_CLOSING;
                   connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
                   CL_LOG_STR(CL_LOG_ERROR, "select error:", strerror(socket_error));

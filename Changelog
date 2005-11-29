@@ -1,3 +1,7 @@
+CR-2005-11-29-1: Testsuite: added queue error check for 
+                            checktree/system_tests/clients/qrsh/check.exp
+                 Review:    RD
+
 RD-2005-11-29-0: Bugfix:    deleting a qrsh job kills the rshd first
                             fixed testsuite test qconf, file_parsing & complex 
                  Changed:   shepherd

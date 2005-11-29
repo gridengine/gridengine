@@ -906,6 +906,7 @@ proc qrsh_delete {} {
                set error 1
             }
             -i $sp_id "my pid is*" {
+               puts $CHECK_OUTPUT "got pid of job!"
                set job_pid [lindex $expect_out(0,string) 3]
                set job_id [lindex $expect_out(0,string) 7]
                set done 1
@@ -929,19 +930,30 @@ proc qrsh_delete {} {
       if { $error == 0 } {
          if { [info exists job_pid] && [info exists job_id] } {
             # qdel 
+            puts $CHECK_OUTPUT "now deleting job $job_id ..."
             delete_job $job_id
+            puts $CHECK_OUTPUT "now waiting 10 sec for job cleanup ..."
             sleep 10
+            puts $CHECK_OUTPUT "continue now ..."
             # check if shell script is still running
             get_ps_info $job_pid $host
             if { $ps_info($job_pid,error) == 0 } {
-               set_error -1 "process of deleted job $job_pid on host $host is still running"
+               add_proc_error "qrsh_delete" -1 "process of deleted job $job_pid on host $host is still running"
+            } else {
+               puts $CHECK_OUTPUT "job is gone - ok !"
             }
          }
       }
 
       close_spawn_process $qrsh_id 1
-   }
 
+      set q_state [get_queue_state "all.q@${host}"]
+      if { [string first "E" $q_state] >= 0 } {
+         add_proc_error "qrsh_delete" -1 "queue all.q@${host} goes to state \"$q_state\" after job deletion"
+         delete_all_jobs ;# this will remove the E state
+      }
+   }
+ 
    set_error 0 "ok"
 }
 
@@ -987,11 +999,14 @@ proc qrsh_terminate {} {
 
    puts $CHECK_OUTPUT "check if terminate method for a qrsh job gets right job_pid"
 
+
    set terminate_out_file [get_tmp_file_name "" "qrsh" $CHECK_COMMD_PORT]
 
    # set terminate method
    set change_array(terminate_method) "$CHECK_ACTUAL_TEST_PATH/terminate.sh \$job_id \$job_pid $terminate_out_file"
    set_queue "all.q" "" change_array
+
+
 
    foreach host $qrsh_hostlist {
       # start qrsh job (shell script that outputs its pid)

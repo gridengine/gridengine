@@ -527,8 +527,8 @@ CheckConfigFile()
          exit 1
       fi
 
-      if [ "$CSP_MAIL_ADRESS" = "" ]; then
-         $INFOTEXT -log "The CSP_MAIL_ADRESS entry is empty!\n"
+      if [ "$CSP_MAIL_ADDRESS" = "" ]; then
+         $INFOTEXT -log "The CSP_MAIL_ADDRESS entry is empty!\n"
          MoveLog
          exit 1
       fi

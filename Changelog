@@ -1,3 +1,8 @@
+MD-2005-11-29-0: Bugfix:    fixed a typo in inst_template.conf file
+                            which is used for autoinstallation
+                 Review:    AS
+                 Changed:   inst_common.sh, sge_ca, inst_template.conf
+
 DT-2005-11-29-0: Docs:      o Checked in missing changes to sge_conf
                             - Merged from DT-2005-11-04-0 (Maintrunk)
                  Changed:   man5/sge_conf

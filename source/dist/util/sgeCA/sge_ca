@@ -233,7 +233,7 @@ MakeCAcert()
             CA_L="$CSP_LOCATION"
             CA_O="$CSP_ORGA"
             CA_OU="$CSP_ORGA_UNIT"
-            CA_EMAIL="$CSP_MAIL_ADRESS"
+            CA_EMAIL="$CSP_MAIL_ADDRESS"
       else
          dndone=false
          while [ $dndone = false ]; do

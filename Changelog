@@ -1,3 +1,8 @@
+RD-2005-11-29-0: Bugfix:    deleting a qrsh job kills the rshd first
+                            fixed testsuite test qconf, file_parsing & complex 
+                 Changed:   shepherd
+                 Review:    CR
+
 CR-2005-11-29-0: Bugfix:    o check file descriptor errors after select()
                               errors in commlib AND after get_sock_opt() errors
                             o additional enhancment fix to CR-2005-11-16-0

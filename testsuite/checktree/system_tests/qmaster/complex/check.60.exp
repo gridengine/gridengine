@@ -420,16 +420,16 @@ proc complex_global_host {} {
    complex_run_job "global" "tr"           "*lobal"  1           0
    complex_run_job "global" "tr"           "globa*"  1           0
    complex_run_job "global" "tr"           "*loba*"  1           0
-   complex_run_job "global" "tr"           "*global"  1           0
-   complex_run_job "global" "tr"           "global*"  1           0
+   complex_run_job "global" "tr"           "*global" 1           0
+   complex_run_job "global" "tr"           "global*" 1           0
    complex_run_job "global" "tr"           "glo*al"  1           0
    complex_run_job "global" "tr"           "*global*" 1          0
-   complex_run_job "global" "tr"           "*"      1           0
-   complex_run_job "global" "tr"           "**global*" 1          0
+   complex_run_job "global" "tr"           "*"       1           0
+   complex_run_job "global" "tr"           "**global*" 1         0
    complex_run_job "global" "tr"           "**lobal*" 1          0
-   complex_run_job "global" "tr"           "**al" 1          0
-   complex_run_job "global" "tr"           "**" 1          0
-   complex_run_job "global" "tr"           "gl*b*l" 1          0
+   complex_run_job "global" "tr"           "**al"    1           0
+   complex_run_job "global" "tr"           "**"      1           0
+   complex_run_job "global" "tr"           "gl*b*l"  1           0
 #
    complex_run_job "global" "tr"           "xlobal"  1           1
 #
@@ -440,21 +440,21 @@ proc complex_global_host {} {
    # Complex values with "?" seem to be broken. in some cases, so we add third "runnable"
    # parameter
 
-   complex_run_job "global" "tr"           "?lobal"  1           0    1
-   complex_run_job "global" "tr"           "globa?"  1           0   1
-   complex_run_job "global" "tr"           "?loba?"  1           0 1
-   complex_run_job "global" "tr"           "?global"  0           0 1
-   complex_run_job "global" "tr"           "global?"  0           0 1
-   complex_run_job "global" "tr"           "glo?al"  1           0 1
-   complex_run_job "global" "tr"           "?global?" 0          0 1
-   complex_run_job "global" "tr"           "?"      0           0 1
-   complex_run_job "global" "tr"           "??global" 0           0 1
-   complex_run_job "global" "tr"           "??lobal" 0            0 1
-   complex_run_job "global" "tr"           "global??"  0           0 1
-   complex_run_job "global" "tr"           "??al"     0            0 1
-   complex_run_job "global" "tr"           "??"       0            0 1
-   complex_run_job "global" "tr"           "gl?b?l" 1          0 1
-   complex_run_job "global" "tr"           "*?"       1            0 1
+   complex_run_job "global" "tr"           "?lobal"  1           0
+   complex_run_job "global" "tr"           "globa?"  1           0
+   complex_run_job "global" "tr"           "?loba?"  1           0
+   complex_run_job "global" "tr"           "?global" 1           1
+   complex_run_job "global" "tr"           "global?" 1           1
+   complex_run_job "global" "tr"           "glo?al"  1           0
+   complex_run_job "global" "tr"           "?global?" 1          1
+   complex_run_job "global" "tr"           "?"       1           1
+   complex_run_job "global" "tr"           "??global" 1          1
+   complex_run_job "global" "tr"           "??lobal" 1           1
+   complex_run_job "global" "tr"           "global??" 1          1
+   complex_run_job "global" "tr"           "??al"    1           1
+   complex_run_job "global" "tr"           "??"      1           1
+   complex_run_job "global" "tr"           "gl?b?l"  1           0
+   complex_run_job "global" "tr"           "*?"      1           0
 
    # Need to escape the \[a-z\] so it is not interpreted by Tcl
 

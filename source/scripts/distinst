@@ -1028,7 +1028,8 @@ if [ $instcommon = true ]; then
       Execute cp -r MANSBUILD_$MANSRCDIR/SEDMAN/man $DEST_SGE_ROOT
 
       if [ -d MANSBUILD_$MANSRCDIR/ASCMAN/catman ]; then
-         Execute cp -r MANSBUILD_$MANSRCDIR/ASCMAN/catman $DEST_SGE_ROOT
+         Execute mkdir -p $DEST_SGE_ROOT/catman
+         Execute cp -r MANSBUILD_$MANSRCDIR/ASCMAN/catman/?_man $DEST_SGE_ROOT/catman
       fi
 
       if [ -d MANSBUILD_$MANSRCDIR/ASCMAN/man ]; then

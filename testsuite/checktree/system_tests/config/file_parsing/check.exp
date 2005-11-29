@@ -125,7 +125,7 @@ proc prepare_file_and_start_job { request_file_name option_parameter job_script 
    set fp [ open $request_file_name "w"]
 
    puts $CHECK_OUTPUT "option paramter is\n$option_parameter"
-   puts $fp "$option_parameter -e /dev/null -o /dev/null"
+   puts $fp "$option_parameter -e /dev/null -o /dev/null -S /bin/sh"
    flush $fp
    close $fp
 
@@ -327,7 +327,7 @@ proc file_parsing_long_option {} {
     }   
     incr i 12  ;# parameter length is 2035 char/byte
     append option_parameter "$i "
-    set opt_parameter "-N GLOBAL${option_parameter}"
+    set opt_parameter "-N GLOBAL$option_parameter"
     puts $CHECK_OUTPUT "global sge_request file"
     set back [ prepare_file_and_start_job $file_parsing_cluster_request_file $opt_parameter $file_parsing_job_script]
     file_parsing_long_option_verify $back 0 "global sge_request file"
@@ -335,21 +335,21 @@ proc file_parsing_long_option {} {
     lappend accouting_jobs $back
 
     puts $CHECK_OUTPUT "home directory .sge_request file"
-    set opt_parameter "-N HOME__${option_parameter}"
+    set opt_parameter "-N HOME__$option_parameter"
     set back [ prepare_file_and_start_job $file_parsing_home_request_file $opt_parameter $file_parsing_job_script]
     file_parsing_long_option_verify $back 0 "home directory .sge_request file"
     wait_for_jobstart $back "HOME______" 30 1 1
     lappend accouting_jobs $back
 
     puts $CHECK_OUTPUT "local directory .sge_request file"
-    set opt_parameter "-N LOCAL_${option_parameter}"
+    set opt_parameter "-N LOCAL_$option_parameter"
     set back [ prepare_file_and_start_job $file_parsing_local_request_file $opt_parameter $file_parsing_job_script [file dirname $file_parsing_local_request_file]]
     file_parsing_long_option_verify $back 0 "local directory .sge_request file"
     wait_for_jobstart $back "LOCAL_____" 30 1 1
     lappend accouting_jobs $back
 
     puts $CHECK_OUTPUT "script options"
-    set opt_parameter "-N SCRIPT${option_parameter}"
+    set opt_parameter "-N SCRIPT$option_parameter"
     create_job_script "$opt_parameter"
     set back [ submit_job $file_parsing_job_script ]
     file_parsing_long_option_verify $back 0 "script options"
@@ -357,7 +357,7 @@ proc file_parsing_long_option {} {
     lappend accouting_jobs $back
 
     puts $CHECK_OUTPUT "command_line"
-    set opt_parameter "-N COMLIN${option_parameter}"
+    set opt_parameter "-N COMLIN$option_parameter"
     create_job_script ""
     set back [ submit_job "$opt_parameter $file_parsing_job_script" ]
     file_parsing_long_option_verify $back 0 "command_line"

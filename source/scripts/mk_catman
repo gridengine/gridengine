@@ -87,9 +87,11 @@ end
 
 foreach n ( $SECTION_LIST )
    if ( $n == 1 ) then
-      set category_dir "u_man"
+      set category_dir = "u_man"
+   else if ($n == 3 ) then
+      set category_dir = "p_man"
    else
-      set category_dir "a_man"
+      set category_dir = "a_man"
    endif
    
    mkdir -p $MANBUILDDIR/ASCMAN/catman/${category_dir}/cat${n} >& /dev/null

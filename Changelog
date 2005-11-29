@@ -1,3 +1,6 @@
+RD-2005-11-29-0: Bugfix:    broken build for fbsd-i386
+	         Review:    TBD
+
 CR-2005-11-29-1: Testsuite: added queue error check for 
                             checktree/system_tests/clients/qrsh/check.exp
                  Review:    RD

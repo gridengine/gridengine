@@ -1,3 +1,7 @@
+RD-2005-11-29-0: Bugfix:    deleting a qrsh job kills the rshd first 
+                 Changed:   shepherd
+                 Review:    CR 
+
 HP-2005-11-28-0: Bugfix:    removed spool* binaries and libraries from distinst
                  Changed:   scripts/distins
                  Review:    AS
@@ -14,7 +18,7 @@ CR-2005-11-24-1: Bugfix:    a second started schedd/execd daemons may not stop
 
 SG-2005-11-24-1: Bugfix:    Reschedule of a parallel job crashes the qmaster
                  Issue:     1916
-                 Bugster:   to come
+                 Bugtraq:   to come
                  Changed:   qmaster
                  Review:    RD, JG
 

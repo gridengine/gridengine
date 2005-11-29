@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2005/11/16 10:47:57 $     Revision: $Revision: 1.46.2.5 $
+.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2005/11/29 15:38:20 $     Revision: $Revision: 1.46.2.6 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2005/11/16 10:47:57 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2005/11/29 15:38:20 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 xxqs_name_sxx_conf \- xxQS_NAMExx configuration files
@@ -1174,11 +1174,25 @@ See
 for further information about format and contents of the reporting file.
 .PP
 .IP "\fIflush_time\fP"
-Contents of the accounting and the reporting file are buffered in the
-xxQS_NAMExx qmaster and flushed in a fixed interval.
+Contents of the reporting file are buffered in the
+xxQS_NAMExx qmaster and flushed at a fixed interval.
 This interval can be configured with the \fIflush_time\fP parameter.
-It is specified as time value in the format HH:MM:SS.
-Sensible values range from some seconds to one minute. Setting it too low may slow down qmaster, setting it too high will make qmaster consume high amounts of memory for buffering data.
+It is specified as a time value in the format HH:MM:SS.
+Sensible values range from a few seconds to one minute. Setting it too low may
+slow down the qmaster. Setting it too high will make the qmaster consume large
+amounts of memory for buffering data.
+.PP
+.IP "\fIaccounting_flush_time\fP"
+Contents of the accounting file are buffered in the
+xxQS_NAMExx qmaster and flushed at a fixed interval.
+This interval can be configured with the \fIaccounting_flush_time\fP parameter.
+It is specified as a time value in the format HH:MM:SS.
+Sensible values range from a few seconds to one minute. Setting it too low may
+slow down the qmaster. Setting it too high will make the qmaster consume large
+amounts of memory for buffering data.  Setting it to 00:00:00 will disable
+accounting data buffering; as soon as data is generated, it will be written to
+the accounting file.  If this parameter is not set, the accounting data flush
+interval will default to the value of the \fIflush_time\fP parameter.
 .PP
 .IP "\fIjoblog\fP"
 If this parameter is set to true, the reporting file will contain job logging 

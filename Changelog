@@ -1,3 +1,15 @@
+EB-2005-11-29-0: Bugfix:    Merged following from V60s2_BRANCH:
+                            - job finish although terminate method is still
+                              running (EB-2005-11-16-1)
+                            - job finish does not terminate all processes
+                              of a job (EB-2005-11-16-0)
+                            - qconf -mstree aborts (EB-2005-11-18-0)
+                 Issue:     1874, 1876, 1877
+                 Bugtraq:   6348299, 6348516, 6348517
+                 Changed:   qconf, sge_shepherd, sge_execd, sge_qmaster,
+                            worker
+                 Review:    JG 
+
 DT-2005-11-29-0: Bugfix:    o Fixed broken build on Irix 6.5
                  Changed:   shepherd
                  Review:    pending (RD)

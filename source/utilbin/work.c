@@ -42,7 +42,8 @@
 #include <sys/time.h>
 #include <sys/resource.h>
 
-#include "sge_unistd.h"
+#include "uti/sge_os.h"
+#include "uti/sge_unistd.h"
 
 volatile int should_stop = 0;
 
@@ -64,6 +65,7 @@ int out = -1;
 int block_sigxcpu = 0;
 int block_sigxfsz = 0;
 int change_pgrp = 0;
+int do_daemonize = 0;
 
 /* options */
 
@@ -104,6 +106,7 @@ static void usage(int exit_code)
    fprintf(fp, "   [-block_sigxcpu]  ignore SIGXCPU\n");
    fprintf(fp, "   [-block_sigxfsz]  ignore SIGXFSZ\n");
    fprintf(fp, "   [-change_pgrp]    change process group\n");  
+   fprintf(fp, "   [-daemonize]      daeminize\n");
 
    exit(exit_code);
 }
@@ -152,6 +155,12 @@ int main(int argc, char *argv[])
       }
       if (!strcmp(argv[1], "-change_pgrp")) {
          change_pgrp = 1;
+         argc--;
+         argv++;
+         continue;
+      }
+      if (!strcmp(argv[1], "-daemonize")) {
+         do_daemonize = 1;
          argc--;
          argv++;
          continue;
@@ -263,6 +272,23 @@ int main(int argc, char *argv[])
       printf("changed pgrp from %d to %d\n", 
          (int)old_pgrp, (int)new_pgrp);
       fflush(stdout);
+   }
+
+   if (do_daemonize) {
+      fd_set keep_open;
+
+      FD_ZERO(&keep_open);
+      dup2(0, 3);
+      dup2(1, 4);
+      dup2(2, 5);
+      FD_SET(3, &keep_open);
+      FD_SET(4, &keep_open);
+      FD_SET(5, &keep_open);
+
+      sge_daemonize(&keep_open);
+      dup2(3, 0);
+      dup2(4, 1);
+      dup2(5, 2);
    }
 
    if (malloc_kb) {

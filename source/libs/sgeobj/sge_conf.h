@@ -132,5 +132,6 @@ int mconf_get_reporting_flush_time(void);
 int mconf_get_accounting_flush_time(void);
 int mconf_get_sharelog_time(void);
 bool mconf_get_enable_forced_qdel(void);
+bool mconf_get_enable_addgrp_kill(void);
 
 #endif /* __SGE_CONF_H */

@@ -1,10 +1,8 @@
-CR-2005-11-30-0: Bugfix:    a second started schedd/execd daemons may not stop
-                            if started when qmaster is down
-                            (enhancement for CR-2005-11-24-1)
-                 Bugtraq:   6349818
-                 Issue:     1891
-                 Changed:   libgdi
-                 Review:    AA
+CR-2005-11-30-0: Testsuite: modified system_test/execd/startup test to produce
+                            warning message and skipp second startup execd
+                            test on diffent port. Test has do be re-activated
+                            when BT: 6350264 (IZ: 1893) is fixed
+                 Review:    JG
 
 EB-2005-11-29-0: Bugfix:    Merged following from V60s2_BRANCH:
                             - job finish although terminate method is still

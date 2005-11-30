@@ -286,6 +286,11 @@ static void general_communication_error(const cl_application_error_list_elem_t* 
                /* counts access denied errors (TODO: workaround for BT: 6350264, IZ: 1893) */
                /* increment counter only once per second and allow max CL_DEFINE_READ_TIMEOUT + 2 access denied */
                gettimeofday(&now,NULL);
+               if ( (now.tv_sec - sge_gdi_communication_error.com_access_denied_time) > (3*CL_DEFINE_READ_TIMEOUT) ) {
+                  sge_gdi_communication_error.com_access_denied_time = 0;
+                  sge_gdi_communication_error.com_access_denied_counter = 0;
+               }
+
                if (sge_gdi_communication_error.com_access_denied_time < now.tv_sec) {
                   if (sge_gdi_communication_error.com_access_denied_time == 0) {
                      time_diff = 1;
@@ -293,7 +298,7 @@ static void general_communication_error(const cl_application_error_list_elem_t* 
                      time_diff = now.tv_sec - sge_gdi_communication_error.com_access_denied_time;
                   }
                   sge_gdi_communication_error.com_access_denied_counter += time_diff;
-                  if (sge_gdi_communication_error.com_access_denied_counter > CL_DEFINE_READ_TIMEOUT + 2) {
+                  if (sge_gdi_communication_error.com_access_denied_counter > (2*CL_DEFINE_READ_TIMEOUT) ) {
                      sge_gdi_communication_error.com_access_denied = true;
                   }
                   sge_gdi_communication_error.com_access_denied_time = now.tv_sec;
@@ -307,6 +312,11 @@ static void general_communication_error(const cl_application_error_list_elem_t* 
                /* increment counter only once per second and allow max CL_DEFINE_READ_TIMEOUT + 2 endpoint not unique */
                DPRINTF(("got endpint not unique"));
                gettimeofday(&now,NULL);
+               if ( (now.tv_sec - sge_gdi_communication_error.com_endpoint_not_unique_time) > (3*CL_DEFINE_READ_TIMEOUT) ) {
+                  sge_gdi_communication_error.com_endpoint_not_unique_time = 0;
+                  sge_gdi_communication_error.com_endpoint_not_unique_counter = 0;
+               }
+
                if (sge_gdi_communication_error.com_endpoint_not_unique_time < now.tv_sec) {
                   if (sge_gdi_communication_error.com_endpoint_not_unique_time == 0) {
                      time_diff = 1;
@@ -314,7 +324,7 @@ static void general_communication_error(const cl_application_error_list_elem_t* 
                      time_diff = now.tv_sec - sge_gdi_communication_error.com_endpoint_not_unique_time;
                   }
                   sge_gdi_communication_error.com_endpoint_not_unique_counter += time_diff;
-                  if (sge_gdi_communication_error.com_endpoint_not_unique_counter > CL_DEFINE_READ_TIMEOUT + 2) {
+                  if (sge_gdi_communication_error.com_endpoint_not_unique_counter > (2*CL_DEFINE_READ_TIMEOUT) ) {
                      sge_gdi_communication_error.com_endpoint_not_unique = true;
                   }
                   sge_gdi_communication_error.com_endpoint_not_unique_time = now.tv_sec;
@@ -431,13 +441,21 @@ bool sge_get_com_error_flag(sge_gdi_stored_com_error_t error_type) {
     * never add a default case for that switch, because of compiler warnings
     * for un-"cased" values 
     */
+
+   /* TODO: remove uti_state_get_mewho() cases for QMASTER and EXECD after
+            BT: 6350264, IZ: 1893 is fixed */
    switch (error_type) {
       case SGE_COM_ACCESS_DENIED: {
          ret_val = sge_gdi_communication_error.com_access_denied;
          break;
       }
       case SGE_COM_ENDPOINT_NOT_UNIQUE: {
-         ret_val = sge_gdi_communication_error.com_endpoint_not_unique;
+         if ( uti_state_get_mewho() == QMASTER ||
+              uti_state_get_mewho() == EXECD ) {
+            ret_val = false;
+         } else { 
+            ret_val = sge_gdi_communication_error.com_endpoint_not_unique;
+         }
          break;
       }
       case SGE_COM_WAS_COMMUNICATION_ERROR: {
@@ -713,8 +731,8 @@ int prepare_enroll(const char *name, int* last_commlib_error)
         
             /* if this environment variable is set, we wait 15 seconds after 
                communication lib setup */
-            DPRINTF(("waiting for 15 seconds, because environment SGE_TEST_SOCKET_BIND is set\n"));
-            while ( handle != NULL && now.tv_sec - handle->start_time.tv_sec  <= 15 ) {
+            DPRINTF(("waiting for 60 seconds, because environment SGE_TEST_SOCKET_BIND is set\n"));
+            while ( handle != NULL && now.tv_sec - handle->start_time.tv_sec  <= 60 ) {
                DPRINTF(("timeout: "sge_U32CFormat"\n",sge_u32c(now.tv_sec - handle->start_time.tv_sec)));
                cl_commlib_trigger(handle, 1);
                gettimeofday(&now,NULL);

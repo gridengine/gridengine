@@ -1,3 +1,11 @@
+CR-2005-11-30-0: Bugfix:    a second started schedd/execd daemons may not stop
+                            if started when qmaster is down
+                            (enhancement for CR-2005-11-24-1)
+                 Bugtraq:   6349818
+                 Issue:     1891
+                 Changed:   libgdi
+                 Review:    AA
+
 MD-2005-11-29-0: Bugfix:    fixed a typo in inst_sge file
                  Changed:   inst_sge
 

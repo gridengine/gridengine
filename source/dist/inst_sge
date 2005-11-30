@@ -108,7 +108,7 @@ CSP_STATE="undef"
 CSP_LOCATION="undef"
 CSP_ORGA="undef"
 CSP_ORGA_UNIT="undef"
-CSP_MAIL_ADRESS="undef"
+CSP_MAIL_ADDRESS="undef"
 
 BasicSettings
 SetUpInfoText

@@ -1,3 +1,6 @@
+MD-2005-11-29-0: Bugfix:    fixed a typo in inst_sge file
+                 Changed:   inst_sge
+
 DT-2005-11-29-0: Bugfix:    o Fixed broken build on Irix 6.5
                             - Merged from DT-2005-11-29-0 (Maintrunk)
                  Changed:   shepherd

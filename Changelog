@@ -1,3 +1,11 @@
+CR-2005-11-30-0: Bugfix:    a second started schedd/execd daemons may not stop
+                            if started when qmaster is down
+                            (enhancement for CR-2005-11-24-1)
+                 Bugtraq:   6349818
+                 Issue:     1891
+                 Changed:   libgdi
+                 Review:    AA
+
 EB-2005-11-29-0: Bugfix:    Merged following from V60s2_BRANCH:
                             - job finish although terminate method is still
                               running (EB-2005-11-16-1)

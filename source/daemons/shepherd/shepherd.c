@@ -2433,7 +2433,7 @@ shepherd_signal_job(pid_t pid, int sig) {
 #   elif defined(IRIX)
             if (first == 1) {
                 int n;
-                FILE *fp = fopen("osjobid", "r");
+                fp = fopen("osjobid", "r");
                 if (fp) {
                    n = fscanf(fp, "%lld", &osjobid);
                    fclose(fp);

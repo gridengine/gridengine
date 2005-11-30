@@ -1,3 +1,8 @@
+DT-2005-11-30-0: Bugfix:    o Fixed broken INHERIT_ENV
+                            - Merged from DT-2005-11-30-0 (Maintrunk)
+                 Changed:   sge_conf.c
+                 Review:    pending
+
 RD-2005-11-30-0: Bugfix:    fixed broken build on Irix 6.5
                             changed version string to 6.0u7
 

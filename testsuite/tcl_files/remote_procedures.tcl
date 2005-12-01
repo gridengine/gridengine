@@ -1190,7 +1190,7 @@ proc open_remote_spawn_process { hostname
                    -i $spawn_id "Please type 'yes' or 'no'*" {
                       send -i $spawn_id "yes\n"
                    }
-                   -i $spawn_id {*[A-Za-z]*} {
+                   -i $spawn_id {*[A-Za-z>]*} {
                        debug_puts "startup ..."
                        break;
                    }

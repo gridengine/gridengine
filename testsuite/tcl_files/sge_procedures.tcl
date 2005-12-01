@@ -745,7 +745,7 @@ proc submit_wait_type_job { job_type host user {variable qacct_info} } {
          set my_tries 60
          while {1} {
             expect {
-               -i $sp_id {*[A-Za-z]*} {
+               -i $sp_id {*[A-Za-z>]*} {
                        puts $CHECK_OUTPUT "startup ..."
                        break;
                    }
@@ -983,7 +983,7 @@ proc submit_wait_type_job { job_type host user {variable qacct_info} } {
          puts $CHECK_OUTPUT "setting DISPLAY=$CHECK_DISPLAY_OUTPUT"
          
          set my_qsh_env(DISPLAY) $CHECK_DISPLAY_OUTPUT
-         
+         set abort_count 60
          set sid [open_remote_spawn_process $CHECK_HOST $user qsh "$remote_host_arg -now yes" 0 my_qsh_env]
          set sp_id [lindex $sid 1]
          set timeout 1
@@ -1010,6 +1010,11 @@ proc submit_wait_type_job { job_type host user {variable qacct_info} } {
                         delete_job $job_id
                         set done 1
                   }
+                  incr abort_count -1
+                  if { $abort_count <= 0 } {
+                     add_proc_error "submit_wait_type_job" -1 "timeout waiting for start of $job_type job of user $user"
+                     set done 1
+                  }
                }
                -i $sp_id eof {
                   add_proc_error "submit_with_method" -1 "got eof"
@@ -1034,8 +1039,6 @@ proc submit_wait_type_job { job_type host user {variable qacct_info} } {
                      }
                      puts $CHECK_OUTPUT $line
                   }
-               }
-               -i $sp_id default {
                }
             }
          }

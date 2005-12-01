@@ -227,7 +227,7 @@ proc write_autoinst_config { filename host { do_cleanup 1 } } {
    puts $fdo "CSP_LOCATION=\"Building\""
    puts $fdo "CSP_ORGA=\"Devel\""
    puts $fdo "CSP_ORGA_UNIT=\"Software\""
-   puts $fdo "CSP_MAIL_ADRESS=\"$ts_config(report_mail_to)\""
+   puts $fdo "CSP_MAIL_ADDRESS=\"$ts_config(report_mail_to)\""
    close $fdo
    wait_for_remote_file $host $CHECK_USER $filename
 }

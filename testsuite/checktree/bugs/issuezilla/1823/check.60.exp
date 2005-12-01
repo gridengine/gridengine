@@ -148,6 +148,8 @@ proc LSB_lockfile_test_test1 {} {
    foreach exec_host $ts_config(execd_nodes) {
       set test_arch [ resolve_arch $exec_host ]
 
+      puts $CHECK_OUTPUT "testing host $exec_host ..."
+
       switch -glob -- $test_arch {
          lx2* {
                 set output [start_remote_prog "$exec_host" "$CHECK_USER" "ls" "-la /var/lock | grep subsys" "exit_val" $my_timeout ]
@@ -163,13 +165,15 @@ proc LSB_lockfile_test_test1 {} {
                       set_error -1 "failed - rc-script tries to shutdown daemons, without having permissions"
                       return
                    }
+                   puts $CHECK_OUTPUT $output
                    puts $CHECK_OUTPUT "ok"
-                   puts $CHECK_OUTPUT "checking /var/lock/subsys/sageexecd file ..."
+                   puts $CHECK_OUTPUT "checking /var/lock/subsys/sgeexecd file ..."
                    set output [start_remote_prog "$exec_host" "$CHECK_USER" "ls" "-la /var/lock/subsys | grep sgeexecd" "exit_val" $my_timeout ]
                    if { "$exit_val" != 0 } {
                       set_error -1 "failed - /var/lock/subsys/sgeexecd has been deleted by $CHECK_USER, not allowed!"
                       return
                    }
+                   puts $CHECK_OUTPUT $output
                    puts $CHECK_OUTPUT "ok"
                    puts $CHECK_OUTPUT "try to stop sge_execd as user root ..."
                    set output [start_remote_prog "$exec_host" "root" "$ts_config(product_root)/$ts_config(cell)/common/sgeexecd" "stop" "exit_val" $my_timeout ]
@@ -177,13 +181,17 @@ proc LSB_lockfile_test_test1 {} {
                       set_error -1 "failed - rc-script runs into any other error, tried to stop as user root"
                       return
                    }
+                   puts $CHECK_OUTPUT $output
+
                    puts $CHECK_OUTPUT "ok"
-                   puts $CHECK_OUTPUT "checking /var/lock/subsys/sageexecd file ..."
+                   puts $CHECK_OUTPUT "checking /var/lock/subsys/sgeexecd file ..."
                    set output [start_remote_prog "$exec_host" "$CHECK_USER" "ls" "-la /var/lock/subsys | grep sgeexecd" "exit_val" $my_timeout ]
                    if { "$exit_val" == 0 } {
                       set_error -1 "failed - /var/lock/subsys/sgeexecd has not been deleted!"
                       return
                    }                 
+                   puts $CHECK_OUTPUT $output
+
                    puts $CHECK_OUTPUT "ok"
                    puts $CHECK_OUTPUT "try to start sge_execd as user $CHECK_USER ..."
                    set output [start_remote_prog "$exec_host" "$CHECK_USER" "$ts_config(product_root)/$ts_config(cell)/common/sgeexecd" "start" "exit_val" $my_timeout ]
@@ -193,12 +201,14 @@ proc LSB_lockfile_test_test1 {} {
                       return
                    }
                    puts $CHECK_OUTPUT "ok"
-                   puts $CHECK_OUTPUT "checking /var/lock/subsys/sageexecd file ..."
+                   puts $CHECK_OUTPUT "checking /var/lock/subsys/sgeexecd file ..."
                    set output [start_remote_prog "$exec_host" "$CHECK_USER" "ls" "-la /var/lock/subsys | grep sgeexecd" "exit_val" $my_timeout ]
                    if { "$exit_val" == 0 } {
-                      set_error -1 "failed - /var/lock/subsys/sgeexecd may not be created by user $CHECK_USER!"
+                      set_error -1 "failed - /var/lock/subsys/sgeexecd may not be created by user $CHECK_USER on host $exec_host!"
                       return
                    }
+                   puts $CHECK_OUTPUT $output
+
                    puts $CHECK_OUTPUT "ok"
                    puts $CHECK_OUTPUT "try to stop sge_execd as user $CHECK_USER ..."
                    set output [start_remote_prog "$exec_host" "$CHECK_USER" "$ts_config(product_root)/$ts_config(cell)/common/sgeexecd" "stop" "exit_val" $my_timeout ]
@@ -206,6 +216,8 @@ proc LSB_lockfile_test_test1 {} {
                       set_error -1 "failed - rc-script runs into any error, tried to stop as $CHECK_USER"
                       return
                    }
+                   puts $CHECK_OUTPUT $output
+
                    puts $CHECK_OUTPUT "ok"
                    puts $CHECK_OUTPUT "try to start sge_execd as user root ..."
                    set output [start_remote_prog "$exec_host" "root" "$ts_config(product_root)/$ts_config(cell)/common/sgeexecd" "start" "exit_val" $my_timeout ]
@@ -214,13 +226,17 @@ proc LSB_lockfile_test_test1 {} {
                       set_error -1 "failed - rc-script runs into any error, tried to start as user root"
                       return
                    }
+                   puts $CHECK_OUTPUT $output
+
                    puts $CHECK_OUTPUT "ok"
-                   puts $CHECK_OUTPUT "checking /var/lock/subsys/sageexecd file ..."
+                   puts $CHECK_OUTPUT "checking /var/lock/subsys/sgeexecd file ..."
                    set output [start_remote_prog "$exec_host" "$CHECK_USER" "ls" "-la /var/lock/subsys | grep sgeexecd" "exit_val" $my_timeout ]
                    if { "$exit_val" != 0 } {
                       set_error -1 "failed - /var/lock/subsys/sgeexecd has not be created by rc-script!"
                       return
                    }
+                   puts $CHECK_OUTPUT $output
+
                    puts $CHECK_OUTPUT "ok"
                 }
               

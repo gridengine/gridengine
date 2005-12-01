@@ -1914,7 +1914,8 @@ char *childname            /* "job", "pe_start", ...     */
       }   
          
       
-   } while ((job_pid > 0) || (migr_cmd_pid > 0) || (ckpt_cmd_pid > 0));
+   } while ((job_pid > 0) || (migr_cmd_pid > 0) || (ckpt_cmd_pid > 0) ||
+            (ctrl_pid[0] > 0) || (ctrl_pid[1] > 0) || (ctrl_pid[2] > 0));
 
 #if defined(CRAY) || defined(NECSX4) || defined(NECSX5)
 

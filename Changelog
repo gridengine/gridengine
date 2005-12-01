@@ -7,7 +7,7 @@ DT-2005-11-30-0: Bugfix:    o Fixed broken INHERIT_ENV
 
 EB-2005-11-30-0: Testsuite: create a test for issue 1877
                  Issue:     1879
-                 Review:    TBD
+                 Review:    CR 
 
 CR-2005-11-30-0: Testsuite: modified system_test/execd/startup test to produce
                             warning message and skipp second startup execd

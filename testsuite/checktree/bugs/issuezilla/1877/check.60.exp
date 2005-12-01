@@ -129,8 +129,7 @@ proc issue_1877_run  {} {
 
    #job has to run at least 30 seconds (terminate method run time)
    if { $nowtime < $mytime } {
-      set run 0
-      add_proc_error "1877" -1 "issue 1877 is present"
+      add_proc_error "issue_1877_run" -1 "issue 1877 is present"
    }
 
    set_error 0 "ok"

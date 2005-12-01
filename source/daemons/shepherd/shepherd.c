@@ -1099,7 +1099,7 @@ int ckpt_type
          if (success != 0) {
             /* This case should never happen */
             /* See Issue 1679 */
-            shepherd_error_sprintf("can't get qrsh_exit_code\n");
+            shepherd_trace_sprintf("can't get qrsh_exit_code\n");
          }
 
          /* normal exit */

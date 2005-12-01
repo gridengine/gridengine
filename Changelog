@@ -1,3 +1,6 @@
+RD-2005-12-01-0: Bugfix:    disabled job error in case qrsh_exit code can't be
+                            read
+
 DT-2005-11-30-0: Bugfix:    o Fixed broken INHERIT_ENV
                             - Merged from DT-2005-11-30-0 (Maintrunk)
                  Changed:   sge_conf.c

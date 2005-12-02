@@ -745,7 +745,7 @@ proc submit_wait_type_job { job_type host user {variable qacct_info} } {
          set my_tries 60
          while {1} {
             expect {
-               -i $sp_id {*[A-Za-z>]*} {
+               -i $sp_id {*[A-Za-z]*} {
                        puts $CHECK_OUTPUT "startup ..."
                        break;
                    }

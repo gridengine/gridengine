@@ -187,7 +187,7 @@ proc check_all_system_times {} {
       set diff [expr ( $reverence_time - $time($host) )]
       puts $CHECK_OUTPUT "host $host has a time difference of $diff seconds compared to host $ts_config(master_host)"
 
-      if { $diff > 30 || $diff < -30 } {
+      if { $diff > 45 || $diff < -45 } {
          add_proc_error "check_all_system_times" -2 "host $host has a time difference of $diff seconds compared to host $ts_config(master_host)"
          set return_value 1
       }
@@ -1190,7 +1190,7 @@ proc open_remote_spawn_process { hostname
                    -i $spawn_id "Please type 'yes' or 'no'*" {
                       send -i $spawn_id "yes\n"
                    }
-                   -i $spawn_id {*[A-Za-z>]*} {
+                   -i $spawn_id {*[A-Za-z]*} {
                        debug_puts "startup ..."
                        break;
                    }

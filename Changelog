@@ -1,3 +1,7 @@
+CR-2005-12-02-0: Testsuite: enhanced executable file check procedure 
+                            at testsuite startup
+                 Review:    AA
+
 JG-2005-12-02-0: Testsuite: Minor fixes for bugs/issuezilla/540, 
                             system_tests/scheduler/sharetree, 
                             system_tests/shadowd/migrate, auto install with bdb

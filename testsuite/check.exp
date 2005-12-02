@@ -1462,20 +1462,39 @@ proc check_executable_files {  } {
    global CHECK_TESTSUITE_ROOT CHECK_OUTPUT CHECK_SOURCE_DIR
 
    set filelist ""
-   lappend filelist "$CHECK_TESTSUITE_ROOT/scripts/lock.sh"
-   lappend filelist "$CHECK_TESTSUITE_ROOT/scripts/remote_submit_log.sh"
-   lappend filelist "$CHECK_TESTSUITE_ROOT/scripts/remote_tcl_command.sh"
-   lappend filelist "$CHECK_TESTSUITE_ROOT/scripts/remotecompile.sh"
-   lappend filelist "$CHECK_TESTSUITE_ROOT/scripts/sleeper.sh"
-   lappend filelist "$CHECK_TESTSUITE_ROOT/scripts/ssh_progstarter.csh"
+   set shell_filelist [get_file_names "$CHECK_TESTSUITE_ROOT/scripts" "*.sh"]
+   set cshell_filelist [get_file_names "$CHECK_TESTSUITE_ROOT/scripts" "*.csh"]
+   set tcl_filelist [get_file_names "$CHECK_TESTSUITE_ROOT/scripts" "*.tcl"]
+   
+   foreach file $shell_filelist {
+      lappend filelist "$CHECK_TESTSUITE_ROOT/scripts/$file"
+   }
+   foreach file $cshell_filelist {
+      lappend filelist "$CHECK_TESTSUITE_ROOT/scripts/$file"
+   }
+   foreach file $tcl_filelist {
+      lappend filelist "$CHECK_TESTSUITE_ROOT/scripts/$file"
+   }
+   lappend filelist "$CHECK_TESTSUITE_ROOT/checktree/api/drmaaj/sleeper.sh"
+   lappend filelist "$CHECK_TESTSUITE_ROOT/checktree/bugs/issuezilla/126/sleep.sh"
+   lappend filelist "$CHECK_TESTSUITE_ROOT/checktree/bugs/issuezilla/1334/jobstarter.sh"
+   lappend filelist "$CHECK_TESTSUITE_ROOT/checktree/bugs/issuezilla/1489/infinity.sh"
+   lappend filelist "$CHECK_TESTSUITE_ROOT/checktree/bugs/issuezilla/1489/termtest.sh"
+   lappend filelist "$CHECK_TESTSUITE_ROOT/checktree/bugs/issuezilla/1556/1556.sh"
    lappend filelist "$CHECK_TESTSUITE_ROOT/checktree/functional/migration/checkpt_job.sh"
    lappend filelist "$CHECK_TESTSUITE_ROOT/checktree/functional/migration/migrate.sh"
+   lappend filelist "$CHECK_TESTSUITE_ROOT/checktree/system_tests/clients/qmake/echo_variable.sh"
    lappend filelist "$CHECK_TESTSUITE_ROOT/checktree/system_tests/clients/qmod/general/qmod_job.sh"
    lappend filelist "$CHECK_TESTSUITE_ROOT/checktree/system_tests/clients/qrsh/qsub_gid.sh"
    lappend filelist "$CHECK_TESTSUITE_ROOT/checktree/system_tests/clients/qrsh/sleep_pid.sh"
+   lappend filelist "$CHECK_TESTSUITE_ROOT/checktree/system_tests/clients/qrsh/starter.sh"
    lappend filelist "$CHECK_TESTSUITE_ROOT/checktree/system_tests/clients/qrsh/terminate.sh"
-   lappend filelist "$CHECK_TESTSUITE_ROOT/checktree/system_tests/clients/qrsh/trap.sh" 
+   lappend filelist "$CHECK_TESTSUITE_ROOT/checktree/system_tests/clients/qrsh/trap.sh"
    lappend filelist "$CHECK_TESTSUITE_ROOT/checktree/system_tests/clients/qrsh/ulimit.sh"
+   lappend filelist "$CHECK_TESTSUITE_ROOT/checktree/system_tests/clients/qsub/starter.sh"
+   lappend filelist "$CHECK_TESTSUITE_ROOT/checktree/system_tests/clients/qsub/sleeper.sh"
+   lappend filelist "$CHECK_TESTSUITE_ROOT/checktree/system_tests/clients/qtcsh/qtask_global.sh"
+   lappend filelist "$CHECK_TESTSUITE_ROOT/checktree/system_tests/clients/qtcsh/qtask_local.sh"
    lappend filelist "$CHECK_TESTSUITE_ROOT/checktree/system_tests/qmaster/size/pminiworm.sh"
    lappend filelist "$CHECK_TESTSUITE_ROOT/checktree/system_tests/qmaster/size/flood_sleeper.sh"
    lappend filelist "$CHECK_TESTSUITE_ROOT/checktree/system_tests/qmaster/size/qstat.sh"
@@ -1492,7 +1511,6 @@ proc check_executable_files {  } {
    lappend filelist "$CHECK_SOURCE_DIR/dist/examples/jobs/step_B_array_submitter.sh"
    lappend filelist "$CHECK_SOURCE_DIR/dist/examples/jobs/worker.sh"
    
-
    set change_files ""
 
 

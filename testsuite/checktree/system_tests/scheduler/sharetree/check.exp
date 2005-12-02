@@ -113,8 +113,10 @@ proc wait_for_job_tickes { job_id } {
    set last_job_tickets 0
    while { $last_job_tickets == 0 && [timestamp] < $my_timeout } {
       get_extended_job_info $job_id job_info_var
-      set last_job_tickets $job_info_var(tckts)
-      puts $CHECK_OUTPUT "waiting for job $job_id to get his tickets ..."
+      if {[info exists job_info_var(tckts)]} {
+         set last_job_tickets $job_info_var(tckts)
+      }
+      puts $CHECK_OUTPUT "waiting for job $job_id to get its tickets ..."
       sleep 1
    }
    if { [timestamp] >= $my_timeout } {

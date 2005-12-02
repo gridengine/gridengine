@@ -1944,7 +1944,7 @@ proc compare_complex {a b} {
 #     add_exechost -- Add a new exechost configuration object
 #
 #  SYNOPSIS
-#     add_exechost { change_array {fast_add 0} } 
+#     add_exechost { change_array {fast_add 1} } 
 #
 #  FUNCTION
 #     Add a new execution host configuration object corresponding to the content of 
@@ -1952,7 +1952,7 @@ proc compare_complex {a b} {
 #
 #  INPUTS
 #     change_array - name of an array variable can contain special settings
-#     {fast_add 0} - if not 0 the add_exechost procedure will use a file for
+#     {fast_add 1} - if not 0 the add_exechost procedure will use a file for
 #                    queue configuration. (faster) (qconf -Ae, not qconf -ae)
 #
 #  RESULT
@@ -1986,7 +1986,7 @@ proc compare_complex {a b} {
 #     change_array(usage_scaling)               "NONE"
 #     change_array(resource_capability_factor)  "0.000000"
 #*******************************
-proc add_exechost { change_array {fast_add 0} } {
+proc add_exechost { change_array {fast_add 1} } {
   global ts_config
   global env CHECK_ARCH open_spawn_buffer
   global CHECK_OUTPUT CHECK_TESTSUITE_ROOT 
@@ -4438,7 +4438,7 @@ proc submit_job { args {do_error_check 1} {submit_timeout 60} {host ""} {user ""
   set return_value " "
 
   if {$host == ""} {
-    set host $CHECK_HOST
+    set host $ts_config(master_host)
   }
 
   if {$user == ""} {
@@ -5331,6 +5331,10 @@ proc get_extended_job_info {jobid {variable job_info} { do_replace_NA 1 } } {
   global ts_config
    global CHECK_ARCH
    upvar $variable jobinfo
+
+   if {[info exists jobinfo]} {
+      unset jobinfo
+   }
 
    if {$ts_config(product_type) == "sgeee" } {
       set exit_code [catch { exec "$ts_config(product_root)/bin/$CHECK_ARCH/qstat" -ext} result]

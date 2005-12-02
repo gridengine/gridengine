@@ -88,7 +88,7 @@ proc validate_queue_type { change_array } {
 #     add_queue() -- add a SGE 5.3 queue
 #
 #  SYNOPSIS
-#     add_queue { qname hostlist change_array {fast_add 0} } 
+#     add_queue { qname hostlist change_array {fast_add 1} } 
 #
 #  FUNCTION
 #     Adds one or multiple queues to a SGE 5.3 system.
@@ -98,13 +98,13 @@ proc validate_queue_type { change_array } {
 #     qname        - name for the (cluster) queue
 #     hostlist     - list of hostnames, or "@allhosts" to create a queue on each host.
 #     change_array - array containing attributes that differ from defaults
-#     {fast_add 0} - 0: add the queue using qconf -aq,
+#     {fast_add 1} - 0: add the queue using qconf -aq,
 #                    1: add the queue using qconf -Aq, much faster!
 #
 #  RESULT
 #
 #*******************************************************************************
-proc add_queue { qname hostlist change_array {fast_add 0} } {
+proc add_queue { qname hostlist change_array {fast_add 1} } {
    global ts_config
    global CHECK_ARCH CHECK_OUTPUT CHECK_USER
    global open_spawn_buffer

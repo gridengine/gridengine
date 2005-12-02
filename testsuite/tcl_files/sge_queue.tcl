@@ -136,7 +136,7 @@
 #     add_queue -- Add a new queue configuration object
 #
 #  SYNOPSIS
-#     add_queue { change_array {fast_add 0} } 
+#     add_queue { change_array {fast_add 1} } 
 #
 #  FUNCTION
 #     Add a new queue configuration object corresponding to the content of 
@@ -144,7 +144,7 @@
 #
 #  INPUTS
 #     change_array - name of an array variable that will be set by get_config
-#     {fast_add 0} - if not 0 the add_queue procedure will use a file for
+#     {fast_add 1} - if not 0 the add_queue procedure will use a file for
 #                    queue configuration. (faster) (qconf -Aq, not qconf -aq)
 #
 #  RESULT

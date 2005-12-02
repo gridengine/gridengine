@@ -1,3 +1,11 @@
+JG-2005-12-02-0: Testsuite: Minor fixes for bugs/issuezilla/540, 
+                            system_tests/scheduler/sharetree, 
+                            system_tests/shadowd/migrate, auto install with bdb
+                            server, auto_install with Solaris zones.
+                            Use fast option (e.g. -Aq instead of -aq) where 
+                            possible.
+                 Review:    CR
+
 CR-2005-12-02-0: Testsuite: o redo of some changes by CR-2005-12-01-0
 
 CR-2005-12-01-0: Testsuite: o Fixed some testsuite errors

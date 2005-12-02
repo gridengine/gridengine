@@ -3100,7 +3100,8 @@ proc get_local_spool_dir {host subdir {do_cleanup 1}} {
    set spooldir ""
 
    # special case: suppress local spooldirectories
-   if {$check_do_not_use_spool_config_entries == 1 } {
+   # but we need a local spooldir for the berkeley db
+   if {$check_do_not_use_spool_config_entries == 1 && $subdir != "spooldb"} {
       puts $CHECK_OUTPUT "\"no_local_spool\" option is set - returning empty spool dir" 
       return $spooldir
    }

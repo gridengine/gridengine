@@ -105,20 +105,7 @@ proc install_qmaster {} {
 
    set feature_install_options ""
    if { $ts_config(product_feature) == "csp" } {
-    append feature_install_options "-csp"
-   }
-
-   if { $ts_config(bdb_dir) == "none" } {
-      set db_dir [get_local_spool_dir $CHECK_CORE_MASTER spooldb 0 ]
-      if {$db_dir == ""} {
-         set db_dir "$ts_config(product_root)/$ts_config(cell)/spool/spooldb"
-      }
-   } else {
-      set db_dir $ts_config(bdb_dir)
-   }
-
-   if {[file isdirectory "$db_dir"] == 1} {
-    delete_directory $db_dir 
+      append feature_install_options "-csp"
    }
 
    set my_timeout 500
@@ -163,13 +150,11 @@ proc write_autoinst_config { filename host { do_cleanup 1 } } {
    set execd_port [expr $ts_config(commd_port) + 1]
    set gid_range [get_gid_range $CHECK_USER $ts_config(commd_port)]
 
-   if { $ts_config(bdb_dir) == "none" } {
-      set db_dir [get_local_spool_dir $CHECK_CORE_MASTER spooldb 0 ]
-      if { $db_dir == ""} {
-         set db_dir "$ts_config(product_root)/$ts_config(cell)/spool/spooldb"
-      }
+   set bdb_server $ts_config(bdb_server)
+   if {$bdb_server == "none"} {
+      set db_dir [get_bdb_spooldir $ts_config(master_host) 1]
    } else {
-      set db_dir $ts_config(bdb_dir)
+      set db_dir [get_bdb_spooldir $bdb_server 1]
    }
    puts $CHECK_OUTPUT "db_dir is $db_dir"
 
@@ -194,12 +179,11 @@ proc write_autoinst_config { filename host { do_cleanup 1 } } {
    puts $fdo "EXECD_SPOOL_DIR=\"$ts_config(product_root)/$ts_config(cell)/spool/\""
    puts $fdo "GID_RANGE=\"$gid_range\""
    puts $fdo "SPOOLING_METHOD=\"$ts_config(spooling_method)\""
-   set bdb_server $ts_config(bdb_server)
    puts $fdo "DB_SPOOLING_SERVER=\"$bdb_server\""
    puts $fdo "DB_SPOOLING_DIR=\"$db_dir\""
-   puts $fdo "ADMIN_HOST_LIST=\"$ts_config(execd_hosts)\""
-   puts $fdo "SUBMIT_HOST_LIST=\"$ts_config(execd_hosts) $ts_config(submit_only_hosts)\""
-   puts $fdo "EXEC_HOST_LIST=\"$ts_config(execd_hosts)\""
+   puts $fdo "ADMIN_HOST_LIST=\"$ts_config(all_nodes)\""
+   puts $fdo "SUBMIT_HOST_LIST=\"$ts_config(all_nodes) $ts_config(submit_only_hosts)\""
+   puts $fdo "EXEC_HOST_LIST=\"$ts_config(execd_nodes)\""
    set spooldir [get_local_spool_dir $host execd 0 ]
    if { $spooldir != "" } {
       puts $fdo "EXECD_SPOOL_DIR_LOCAL=\"$spooldir\""
@@ -216,7 +200,7 @@ proc write_autoinst_config { filename host { do_cleanup 1 } } {
    puts $fdo "RESCHEDULE_JOBS=\"wait\""
    puts $fdo "SCHEDD_CONF=\"1\""
    puts $fdo "SHADOW_HOST=\"$ts_config(shadowd_hosts)\""
-   puts $fdo "EXEC_HOST_LIST_RM=\"$ts_config(execd_hosts)\""
+   puts $fdo "EXEC_HOST_LIST_RM=\"$ts_config(execd_nodes)\""
    puts $fdo "REMOVE_RC=\"false\""
    puts $fdo "WINDOWS_SUPPORT=\"false\""
    puts $fdo "WIN_ADMIN_NAME=\"Administrator\""

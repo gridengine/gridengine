@@ -363,7 +363,7 @@ proc shadowd_migrate_test {} {
          if { [is_remote_file $new_act_qmaster $CHECK_USER $qmaster_lock_file] } {
             add_proc_error "shadowd_migrate_test" -1 "found lock file after startup of new qmaster on host $new_act_qmaster"
          }
-         wait_for_load_from_all_queues 60
+         wait_for_load_from_all_queues 120
 
 
          puts $CHECK_OUTPUT "shutting down qmaster on host $new_act_qmaster ..."
@@ -375,7 +375,7 @@ proc shadowd_migrate_test {} {
          if { [is_remote_file $new_act_qmaster $CHECK_USER $qmaster_lock_file] } {
             add_proc_error "shadowd_migrate_test" -1 "found lock file after shutdown and restart of original qmaster on host $act_qmaster"
          }
-         wait_for_load_from_all_queues 60
+         wait_for_load_from_all_queues 120
       }
 
       if { $CHECK_ACT_LEVEL == 2 } {
@@ -400,7 +400,7 @@ proc shadowd_migrate_test {} {
             add_proc_error "shadowd_migrate_test" -1 "$migrate_host: $sgemaster_file -migrate returned with exit_state = $prg_exit_state:\n$output"
          }
 
-         wait_for_load_from_all_queues 60
+         wait_for_load_from_all_queues 120
 
 
          if { [is_remote_file $migrate_host $CHECK_USER $qmaster_lock_file] } {
@@ -415,7 +415,7 @@ proc shadowd_migrate_test {} {
             add_proc_error "shadowd_migrate_test" -1 "$act_qmaster: $sgemaster_file -migrate returned with exit_state = $prg_exit_state:\n$output"
          }
 
-         wait_for_load_from_all_queues 60
+         wait_for_load_from_all_queues 120
 
  
          if { [is_remote_file $act_qmaster $CHECK_USER $qmaster_lock_file] } {

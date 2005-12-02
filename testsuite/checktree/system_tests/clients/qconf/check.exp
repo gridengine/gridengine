@@ -284,11 +284,11 @@ proc qconf_addqueues {} {
    foreach queue $queue_names {
       if { $count > 50 } {
          puts $CHECK_OUTPUT "adding queue \"$queue\" with vi"
-         add_queue $queue $test_host q_param
+         add_queue $queue $test_host q_param 0
          set count 0
       } else {
          puts $CHECK_OUTPUT "adding queue \"$queue\" with file"
-         add_queue $queue $test_host q_param 1
+         add_queue $queue $test_host q_param
       }
       incr count 1
    }

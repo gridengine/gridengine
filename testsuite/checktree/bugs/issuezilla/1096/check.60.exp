@@ -131,7 +131,7 @@ proc issue_1096_run {} {
             add_proc_error "issue_1096_run" -1 "error starting qmaster with port $ts_config(reserved_port) on host $act_host"
          }
 
-         shutdown_system_daemon $act_host qmaster
+         shutdown_system_daemon $act_host qmaster 0
       }
    }
    set_error 0 "ok"

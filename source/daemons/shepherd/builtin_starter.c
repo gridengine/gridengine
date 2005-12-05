@@ -100,7 +100,7 @@ static char **read_job_args(char **args, int extra_args);
 static char *build_path(int type);
 static char *parse_script_params(char **script_file);
 static void setup_environment (void);
-static bool inherit_env (void);
+static bool inherit_env(void);
 #if 0 /* Not currently used, but looks kinda useful... */
 static void set_inherit_env (bool inherit);
 #endif
@@ -374,7 +374,7 @@ int truncate_stderr_out
 
       for (i = 0; i < fdmax; i++) {
          if( !is_shepherd_trace_fd( i )) {
-         	close(i);
+         	SGE_CLOSE(i);
          }
       }
    }
@@ -904,7 +904,7 @@ static void setup_environment()
    /* Bugfix: Issuezilla 1300
     * Because this fix could break pre-existing installations, it was made
     * optional. */
-   if (!inherit_env ()) {
+   if (!inherit_env()) {
       if (shepherd_env_index < 0) {
          shepherd_env[0] = NULL;
       }
@@ -944,7 +944,7 @@ char** sge_get_environment()
    /* Bugfix: Issuezilla 1300
     * Because this fix could break pre-existing installations, it was made
     * optional. */
-   if (!inherit_env ()) {
+   if (!inherit_env()) {
       return shepherd_env;
    }
    else {
@@ -980,7 +980,7 @@ int sge_set_env_value(const char *name, const char* value)
    /* Bugfix: Issuezilla 1300
     * Because this fix could break pre-existing installations, it was made
     * optional. */
-   if (!inherit_env ()) {
+   if (!inherit_env()) {
       char *entry = NULL;
       int entry_size = 0;
 
@@ -1033,7 +1033,7 @@ const char *sge_get_env_value(const char *name)
    /* Bugfix: Issuezilla 1300
     * Because this fix could break pre-existing installations, it was made
     * optional. */
-   if (!inherit_env ()) {
+   if (!inherit_env()) {
       if (shepherd_env_index >= 0) {
          int index = 0;
 
@@ -1559,11 +1559,11 @@ parse_script_params(char **script_file)
 
 /****** Shepherd/inherit_env() *************************************************
 *  NAME
-*     inherit_env () -- Test whether the evironment should be inherited from the
+*     inherit_env() -- Test whether the evironment should be inherited from the
 *                       parent process or not
 *
 *  SYNOPSIS
-*     static bool inherit_env ()
+*     static bool inherit_env()
 *
 *  FUNCTION
 *     Tests the INHERIT_ENV execd param to see if the job should inherit the
@@ -1575,17 +1575,17 @@ parse_script_params(char **script_file)
 *  NOTES
 *      MT-NOTE: inherit_env() is not MT safe
 *******************************************************************************/
-static bool inherit_env ()
+static bool inherit_env()
 {
    if (inherit_environ == -1) {
       /* We have to use search_conf_val() instead of get_conf_val() because this
        * change is happening in a patch, and we can't break backward
        * compatibility.  In a later release, this should probably be changed to
        * use get_conf_val() instead. */
-      char *inherit = search_conf_val ("inherit_env");
+      char *inherit = search_conf_val("inherit_env");
       
       if (inherit != NULL) {
-         inherit_environ = (strcmp (inherit, "1") == 0);
+         inherit_environ = (strcmp(inherit, "1") == 0);
       }
       else {
          /* This should match the default set in sgeobj/sge_conf.c. */
@@ -1599,7 +1599,7 @@ static bool inherit_env ()
 #if 0 /* Not currently used, but looks kinda useful... */
 /****** Shepherd/set_inherit_env() *********************************************
 *  NAME
-*     set_inherit_env () -- Set whether the evironment should be inherited from
+*     set_inherit_env() -- Set whether the evironment should be inherited from
 *                           the parent process or not
 *
 *  SYNOPSIS

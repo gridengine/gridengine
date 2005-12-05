@@ -794,8 +794,7 @@ static int writeExitCode(int myExitCode, int programExitCode)
  
    snprintf(exitCode_str, 20, "%d", exitCode);
    write(file, exitCode_str, strlen(exitCode_str));
-
-   close(file);
+   SGE_CLOSE(file);
    
    return EXIT_SUCCESS;
 }

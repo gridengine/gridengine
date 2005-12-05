@@ -124,10 +124,18 @@
 *  NOTES
 *     Don't forget to define the 'FCLOSE_ERROR'-label
 ******************************************************************************/
+#if defined(IRIX)
+#define FCLOSE(x) \
+   fsync(fileno(x)); \
+   if(fclose(x) != 0) { \
+      goto FCLOSE_ERROR; \
+   }
+#else
 #define FCLOSE(x) \
    if(fclose(x) != 0) { \
       goto FCLOSE_ERROR; \
    }
+#endif
 
 #define FCLOSE_IGNORE_ERROR(x) fclose(x) 
 

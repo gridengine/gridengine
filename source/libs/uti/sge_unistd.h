@@ -50,7 +50,13 @@
 #else
 #  define SGE_OPEN2(filename, oflag)       open(filename, oflag)
 #  define SGE_OPEN3(filename, oflag, mode) open(filename, oflag, mode)
-#endif                
+#endif
+
+#if defined (IRIX)
+#  define SGE_CLOSE(fp) fsync(fp); close(fp)
+#else
+#  define SGE_CLOSE(fp) close(fp);
+#endif
 
 
 #ifdef IRIX

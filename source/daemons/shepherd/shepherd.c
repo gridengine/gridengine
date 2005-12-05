@@ -2305,7 +2305,7 @@ shepherd_signal_job(pid_t pid, int sig) {
                 FILE *fp = fopen("osjobid", "r");
                 if (fp) {
                    n = fscanf(fp, "%lld", &osjobid);
-                   fclose(fp);
+                   FCLOSE(fp);
                    if (n == 0) {
                        shepherd_trace("can't read \"osjobid\" file");
                    } 

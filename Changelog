@@ -1,3 +1,8 @@
+RD-2005-12-05-0: Enhancem:  returns errno message if qrsh_exit_code can't be
+                            opened
+                            added SGE_CLOSE macro
+                 Review:    AA
+
 CR-2005-12-02-0: Testsuite: enhanced executable file check procedure 
                             at testsuite startup
                  Review:    AA

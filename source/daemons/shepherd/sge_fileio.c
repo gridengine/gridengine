@@ -56,9 +56,6 @@ bool shepherd_write_pid_file(pid_t pid)
    if (fp != NULL) {
       fprintf(fp, pid_t_fmt"\n", pid);
       fflush(fp);
-#if (IRIX)
-      fsync(fileno(fp));
-#endif
       FCLOSE(fp);
    } else {
       shepherd_error_sprintf(MSG_FILE_NOOPEN_SS, "pid", strerror(errno));

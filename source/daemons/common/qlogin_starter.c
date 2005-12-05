@@ -296,7 +296,7 @@ int get_exit_code_of_qrsh_starter(int* exit_code)
          }
 
          errorfile = fopen(buffer, "r");
-         if (errorfile) {
+         if (errorfile != NULL) {
             ret = 0;
             if (fscanf(errorfile, "%d", exit_code) == 1) {
                SHEPHERD_TRACE((err_str, "error code from remote command "
@@ -307,7 +307,7 @@ int get_exit_code_of_qrsh_starter(int* exit_code)
                SHEPHERD_TRACE((err_str, "can't delete %s", buffer));
             }
          } else {
-            SHEPHERD_TRACE((err_str, "can't open file %s", buffer ));
+            SHEPHERD_TRACE((err_str, "can't open file %s: %s", buffer, strerror(errno)));
          }
       } else {
         SHEPHERD_TRACE((err_str, "unable to get qrsh_tmpdir"));

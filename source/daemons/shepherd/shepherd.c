@@ -94,6 +94,7 @@ struct rusage {
 #include "msg_common.h"
 #include "version.h"
 #include "sge_fileio.h"
+#include "sge_stdio.h"
 
 #include "sge_reportL.h"
 
@@ -2305,7 +2306,7 @@ shepherd_signal_job(pid_t pid, int sig) {
                 FILE *fp = fopen("osjobid", "r");
                 if (fp) {
                    n = fscanf(fp, "%lld", &osjobid);
-                   FCLOSE(fp);
+                   SGE_CLOSE(fileno(fp));
                    if (n == 0) {
                        shepherd_trace("can't read \"osjobid\" file");
                    } 

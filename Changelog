@@ -1,3 +1,6 @@
+JG-2005-12-06-0: Bugfix:    parsing error in cluster config, qmaster_params 
+                 Review:    SG
+
 DT-2005-12-06-0: Bugfix:    o Fixed DRMAA C binding version number
                             o Fixed DRMAA memory leak
                  Changed:   DRMAA, test_drmaa

@@ -610,10 +610,7 @@ int main(int argc, char *argv[])
       usage();
    
    /* Print out an adivsory */
-   printf ("The DRMAA test suite is now starting.  Once it has begun execution,\n");
-   printf ("please do not interrupt (CTRL-C) it.  If the program is interrupted\n");
-   printf ("before drmaa_exit() is called, session state information will be\n");
-   printf ("left behind in the JAPI session directory, ~/.sge/session.\n");
+   printf ("The DRMAA test suite is now starting.\n");
 
    /* figure out which DRM system we are using */
    {
@@ -1808,12 +1805,19 @@ static int test(int *argc, char **argv[], int parse_args)
          - version information is printed */
       {
          unsigned int major, minor;
+
          if (drmaa_version(&major, &minor, diagnosis, sizeof(diagnosis)-1)
                !=DRMAA_ERRNO_SUCCESS) {
             fprintf(stderr, "drmaa_version() failed: %s\n", diagnosis);
             return 1;
          }
+
          printf("version %d.%d\n", major, minor);
+
+         if ((major != 1) || (minor != 0)) {
+            fprintf(stderr, "drmaa_version() failed -- incorrect version number : %d.%d\n", major, minor);
+            return 1;
+         }
       }
       break;
 

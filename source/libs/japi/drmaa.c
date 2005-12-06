@@ -2130,11 +2130,11 @@ int drmaa_version(unsigned int *major, unsigned int *minor,
    }
 
    if (major != NULL) {
-      *major = 0;
+      *major = 1;
    }
    
    if (minor != NULL) {
-      *minor = 95;
+      *minor = 0;
    }
 
    return DRMAA_ERRNO_SUCCESS;
@@ -2471,7 +2471,8 @@ static int drmaa_path2sge_path(const lList *attrs, int is_bulk,
 *     static int - DRMAA error codes
 *
 *  NOTES
-*     MT-NOTE: drmaa_job2sge_job() is MT safe except on AIX4.2 and FreeBSD
+*     MT-NOTE: drmaa_job2sge_job() is MT safe except on AIX4.2 and FreeBSD, with
+*              restrictions imposed by sge_get_qtask_args().
 *
 *******************************************************************************/
 static int drmaa_job2sge_job(lListElem **jtp, const drmaa_job_template_t *drmaa_jt, 
@@ -2746,12 +2747,14 @@ static int drmaa_job2sge_job(lListElem **jtp, const drmaa_job_template_t *drmaa_
          return DRMAA_ERRNO_DENIED_BY_DRM;
       }
 
-      FREE (job_cat);
+      FREE(job_cat);
       
       if (args != NULL) {
          opt_list_append_opts_from_qsub_cmdline (&opts_job_cat, &alp,
                                                  args, environ);
          
+         FREE(args);
+
          if (answer_list_has_error (&alp)) {
             answer_list_to_dstring (alp, diag);
             lFreeList(&opts_defaults);

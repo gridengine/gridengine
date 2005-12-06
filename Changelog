@@ -1,3 +1,8 @@
+RD-2005-12-06-0: Bugfix:    Fixed broken bins on irix65
+                            removed 3rdparty/snprintf from irix65 build
+                 Changed:   all
+                 Review:    RH
+
 HP-2005-12-06-1: Bugfix:    Fixed broken build on win32-x86
                  Changed    utilbin/Makefile
 
@@ -57,7 +62,7 @@ EB-2005-11-29-0: Bugfix:    Merged following from V60s2_BRANCH:
 
 DT-2005-11-29-0: Bugfix:    o Fixed broken build on Irix 6.5
                  Changed:   shepherd
-                 Review:    pending (RD)
+                 Review:    RD
 
 RD-2005-11-29-0: Bugfix:    broken build for fbsd-i386
 	              Review:    DT

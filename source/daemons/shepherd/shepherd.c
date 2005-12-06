@@ -2191,7 +2191,6 @@ shepherd_signal_job(pid_t pid, int sig) {
       if (first == 1) {
          if (!shepherd_read_osjobid_file(&osjobid)) {
             shepherd_trace("can't read \"osjobid\" file");
-            break;
          } else {
             first = 0;
          }
@@ -2302,15 +2301,9 @@ shepherd_signal_job(pid_t pid, int sig) {
             }
 #   elif defined(IRIX)
             if (first == 1) {
-                int n;
-                FILE *fp = fopen("osjobid", "r");
-                if (fp) {
-                   n = fscanf(fp, "%lld", &osjobid);
-                   SGE_CLOSE(fileno(fp));
-                   if (n == 0) {
-                       shepherd_trace("can't read \"osjobid\" file");
-                   } 
-                }
+                if (shepherd_read_osjobid_file(&osjobid) != true) {
+                    shepherd_trace("can't read \"osjobid\" file");
+                } 
                 first = 0;
             }
             if (osjobid == 0) {

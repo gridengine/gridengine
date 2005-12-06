@@ -53,9 +53,9 @@
 #endif
 
 #if defined (IRIX)
-#  define SGE_CLOSE(fp) fsync(fp); close(fp)
+#  define SGE_CLOSE(fd) fsync(fd); close(fd)
 #else
-#  define SGE_CLOSE(fp) close(fp);
+#  define SGE_CLOSE(fd) close(fd);
 #endif
 
 

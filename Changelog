@@ -1,4 +1,7 @@
-HP-2005-12-06-0: Bugfux:    Removed weird line of code
+HP-2005-12-06-1: Bugfix:    Fixed broken build on win32-x86
+                 Changed    utilbin/Makefile
+
+HP-2005-12-06-0: Bugfix:    Removed weird line of code
                  Changed:   daemons/execd/exec_job.c
                  Bugtraq:   6291049
                  Issue:     1032

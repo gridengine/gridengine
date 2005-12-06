@@ -1543,7 +1543,7 @@ char *err_str
    }
 
    /* now fork and exec the shepherd */
-   if (getenv("SGE_FAILURE_BEFORE_FORK") || getenv("SGE_FAILURE_BEFORE_FORK")) {
+   if (getenv("SGE_FAILURE_BEFORE_FORK")) {
       i = -1;
    }
    else
@@ -1563,7 +1563,7 @@ char *err_str
          /* if this happens (dont know how) we have a real problem */
          ERROR((SGE_EVENT, MSG_FILE_CHDIR_SS, execd_spool_dir, strerror(errno))); 
       if (i == -1) {
-         if (getenv("SGE_FAILURE_BEFORE_FORK") || getenv("SGE_FAILURE_BEFORE_FORK"))
+         if (getenv("SGE_FAILURE_BEFORE_FORK"))
             strcpy(err_str, "FAILURE_BEFORE_FORK");
          else
             sprintf(err_str, MSG_EXECD_NOFORK_S, strerror(errno));

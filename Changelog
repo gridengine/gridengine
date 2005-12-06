@@ -1,3 +1,9 @@
+HP-2005-12-06-0: Bugfux:    Removed weird line of code
+                 Changed:   daemons/execd/exec_job.c
+                 Bugtraq:   6291049
+                 Issue:     1032
+                 Review:    Not needed
+
 RD-2005-12-05-0: Enhancem:  returns errno message if qrsh_exit_code can't be
                             opened
                             added SGE_CLOSE macro

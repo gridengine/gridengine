@@ -133,7 +133,7 @@ lList *cull_parse_qsh_parameter(lList *cmdline, lListElem **pjob)
    while (JOB_TYPE_IS_QRSH(job_now)
           && (ep = lGetElemStr(cmdline, SPA_switch, "-notify"))) {
       lSetBool(*pjob, JB_notify, true);
-      lRemoveElem(cmdline, ep);
+      lRemoveElem(cmdline, &ep);
    }  
 
    /* 
@@ -161,7 +161,7 @@ lList *cull_parse_qsh_parameter(lList *cmdline, lListElem **pjob)
          ** remove -clear itsself
          */
          if (ep_run == ep) {
-            lRemoveElem(cmdline, ep_run);
+            lRemoveElem(cmdline, &ep_run);
             break;
          }
          /*
@@ -176,7 +176,8 @@ lList *cull_parse_qsh_parameter(lList *cmdline, lListElem **pjob)
          */
          cp_switch = lGetString(lPrev(ep_run), SPA_switch);
          if (cp_switch && (*cp_switch == '-')) {
-            lRemoveElem(cmdline, lPrev(ep_run));
+            lListElem *prev = lPrev(ep_run);
+            lRemoveElem(cmdline, &prev);
          }
       }
 
@@ -193,7 +194,7 @@ lList *cull_parse_qsh_parameter(lList *cmdline, lListElem **pjob)
    while ((ep = lGetElemStr(cmdline, SPA_switch, "-A"))) {
       /* the old account string is overwritten */
       lSetString(*pjob, JB_account, lGetString(ep, SPA_argval_lStringT));
-      lRemoveElem(cmdline, ep);
+      lRemoveElem(cmdline, &ep);
    }
 
    while ((ep = lGetElemStr(cmdline, SPA_switch, "-cwd"))) {
@@ -223,11 +224,11 @@ lList *cull_parse_qsh_parameter(lList *cmdline, lListElem **pjob)
          }
       }
       lSetString(*pjob, JB_cwd, tmp_str);
-      lRemoveElem(cmdline, ep);
+      lRemoveElem(cmdline, &ep);
 
       lSetList(*pjob, JB_path_aliases, lCopyList("PathAliases", path_alias));
    }
-   path_alias = lFreeList(path_alias);
+   lFreeList(&path_alias);
 
 
    /*
@@ -259,11 +260,11 @@ lList *cull_parse_qsh_parameter(lList *cmdline, lListElem **pjob)
 
    while ((ep = lGetElemStr(cmdline, SPA_switch, "-h"))) {
       if (lGetInt(ep, SPA_argval_lIntT) & MINUS_H_TGT_USER) {
-         lSetList(*pjob, JB_ja_u_h_ids, lCopyList("user hold ids",
+         lSetList(*pjob, JB_ja_u_h_ids, lCopyList("task_id_range",
             lGetList(*pjob, JB_ja_n_h_ids)));
       }
       lSetList(*pjob, JB_ja_n_h_ids, NULL);
-      lRemoveElem(cmdline, ep);
+      lRemoveElem(cmdline, &ep);
    }
 
    /* -hold_jid */
@@ -275,20 +276,20 @@ lList *cull_parse_qsh_parameter(lList *cmdline, lListElem **pjob)
             DPRINTF(("-hold_jid %s\n", lGetString(sep, ST_name)));
             lAddElemStr(&jref_list, JRE_job_name, lGetString(sep, ST_name), JRE_Type);
          }
-         lRemoveElem(cmdline, ep);
+         lRemoveElem(cmdline, &ep);
       }
       lSetList(*pjob, JB_jid_request_list, jref_list);
    }
 
    /* not needed in job struct */
    while ((ep = lGetElemStr(cmdline, SPA_switch, "-hard"))) {
-      lRemoveElem(cmdline, ep);
+      lRemoveElem(cmdline, &ep);
    }
 
    if ((ep = lGetElemStr(cmdline, SPA_switch, "-help"))) {
       char str[1024];
 
-      lRemoveElem(cmdline, ep);
+      lRemoveElem(cmdline, &ep);
       sprintf(str, MSG_ANSWER_HELPNOTALLOWEDINCONTEXT);
       answer_list_add(&answer, str, STATUS_ENOIMP, ANSWER_QUALITY_ERROR);
       DEXIT;
@@ -312,7 +313,7 @@ lList *cull_parse_qsh_parameter(lList *cmdline, lListElem **pjob)
          old_mail_opts = lGetUlong(*pjob, JB_mail_options);
          lSetUlong(*pjob, JB_mail_options, ul | old_mail_opts);
       }
-      lRemoveElem(cmdline, ep);
+      lRemoveElem(cmdline, &ep);
    }
 
    parse_list_simple(cmdline, "-M", *pjob, JB_mail_list, MR_host, MR_user, FLG_LIST_MERGE);
@@ -324,7 +325,7 @@ lList *cull_parse_qsh_parameter(lList *cmdline, lListElem **pjob)
 
    while ((ep = lGetElemStr(cmdline, SPA_switch, "-N"))) {
       lSetString(*pjob, JB_job_name, lGetString(ep, SPA_argval_lStringT));
-      lRemoveElem(cmdline, ep);
+      lRemoveElem(cmdline, &ep);
    }
    
    while ((ep = lGetElemStr(cmdline, SPA_switch, "-now"))) {
@@ -337,24 +338,24 @@ lList *cull_parse_qsh_parameter(lList *cmdline, lListElem **pjob)
 
       lSetUlong(*pjob, JB_type, jb_now);
 
-      lRemoveElem(cmdline, ep);
+      lRemoveElem(cmdline, &ep);
    }
 
    while ((ep = lGetElemStr(cmdline, SPA_switch, "-P"))) {
       /* the old project string is overwritten */
       lSetString(*pjob, JB_project, lGetString(ep, SPA_argval_lStringT));
-      lRemoveElem(cmdline, ep);
+      lRemoveElem(cmdline, &ep);
    }
 
    while ((ep = lGetElemStr(cmdline, SPA_switch, "-p"))) {
       lSetUlong(*pjob, JB_priority, 
          BASE_PRIORITY + lGetInt(ep, SPA_argval_lIntT));
-      lRemoveElem(cmdline, ep);
+      lRemoveElem(cmdline, &ep);
    }
 
    while ((ep = lGetElemStr(cmdline, SPA_switch, "-js"))) {
       lSetUlong(*pjob, JB_jobshare, lGetUlong(ep, SPA_argval_lUlongT));
-      lRemoveElem(cmdline, ep);
+      lRemoveElem(cmdline, &ep);
    }
 
    while ((ep = lGetElemStr(cmdline, SPA_switch, "-pe"))) {
@@ -363,7 +364,7 @@ lList *cull_parse_qsh_parameter(lList *cmdline, lListElem **pjob)
 
       /* put sublist from parsing into job */
       lSwapList(*pjob, JB_pe_range, ep, SPA_argval_lListT);
-      lRemoveElem(cmdline, ep);
+      lRemoveElem(cmdline, &ep);
    }
 
    parse_list_hardsoft(cmdline, "-q", *pjob, 
@@ -371,6 +372,11 @@ lList *cull_parse_qsh_parameter(lList *cmdline, lListElem **pjob)
 
    parse_list_hardsoft(cmdline, "-masterq", *pjob, 
                         JB_master_hard_queue_list, 0);
+
+   while ((ep = lGetElemStr(cmdline, SPA_switch, "-R"))) {
+      lSetBool(*pjob, JB_reserve, lGetInt(ep, SPA_argval_lIntT));
+      lRemoveElem(cmdline, &ep);
+   }
 
    parse_list_simple(cmdline, "-S", *pjob, JB_shell_list, PN_host, PN_path, FLG_LIST_MERGE);
 
@@ -381,12 +387,15 @@ lList *cull_parse_qsh_parameter(lList *cmdline, lListElem **pjob)
          !strcmp(lGetString(ep, SPA_switch), "-dc") ||
          !strcmp(lGetString(ep, SPA_switch), "-sc")) {
          lListElem* temp;
-         if(!lGetList(*pjob, JB_context))
+         if(!lGetList(*pjob, JB_context)) {
             lSetList(*pjob, JB_context, lCopyList("context", lGetList(ep, SPA_argval_lListT)));
-         else
-            lAddList(lGetList(*pjob, JB_context), lCopyList("context", lGetList(ep, SPA_argval_lListT)));
+         }
+         else {
+            lList *copy = lCopyList("context", lGetList(ep, SPA_argval_lListT));
+            lAddList(lGetList(*pjob, JB_context), &copy);
+         }
          temp = lNext(ep);
-         lRemoveElem(cmdline, ep);
+         lRemoveElem(cmdline, &ep);
          ep = temp;
       }
       else
@@ -394,7 +403,7 @@ lList *cull_parse_qsh_parameter(lList *cmdline, lListElem **pjob)
 
    /* not needed in job struct */
    while ((ep = lGetElemStr(cmdline, SPA_switch, "-soft"))) {
-      lRemoveElem(cmdline, ep);
+      lRemoveElem(cmdline, &ep);
    }
 
    /*
@@ -411,7 +420,7 @@ lList *cull_parse_qsh_parameter(lList *cmdline, lListElem **pjob)
 
    while ((ep = lGetElemStr(cmdline, SPA_switch, "-w"))) {
       lSetUlong(*pjob, JB_verify_suitable_queues, lGetInt(ep, SPA_argval_lIntT));
-      lRemoveElem(cmdline, ep);
+      lRemoveElem(cmdline, &ep);
    }
 
    /*
@@ -441,7 +450,7 @@ lList *cull_parse_qsh_parameter(lList *cmdline, lListElem **pjob)
       }
       lAppendElem(lp, vep);
       
-      lRemoveElem(cmdline, ep);
+      lRemoveElem(cmdline, &ep);
    }
    cull_compress_definition_list(lGetList(*pjob, JB_env_list), 
                                  VA_variable, VA_value, 0);
@@ -449,7 +458,7 @@ lList *cull_parse_qsh_parameter(lList *cmdline, lListElem **pjob)
 
    while ((ep = lGetElemStr(cmdline, SPA_switch, "-verify"))) {
       lSetUlong(*pjob, JB_verify, true);
-      lRemoveElem(cmdline, ep);
+      lRemoveElem(cmdline, &ep);
    }
 
    {
@@ -460,7 +469,7 @@ lList *cull_parse_qsh_parameter(lList *cmdline, lListElem **pjob)
       while ((ep = lGetElemStr(cmdline, SPA_switch, STR_PSEUDO_JOBARG))) {
          lAddElemStr(&lp, ST_name, lGetString(ep, SPA_argval_lStringT), ST_Type);
          
-         lRemoveElem(cmdline, ep);
+         lRemoveElem(cmdline, &ep);
       }
       lSetList(*pjob, JB_job_args, lp);
    }
@@ -476,7 +485,6 @@ lList *cull_parse_qsh_parameter(lList *cmdline, lListElem **pjob)
          strcat(str, " ");
          strcat(str, cp);
       }
-      strcat(str, "\n");
       answer_list_add(&answer, str, STATUS_ENOIMP, ANSWER_QUALITY_ERROR);
    } 
 

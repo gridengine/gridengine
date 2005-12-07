@@ -37,8 +37,7 @@ umask  022
 TAR=tar
 BASEDIR=/tmp/sge6_dist
 
-MKISOFS=mkisofs
-ISOFSOPTIONS="-l -J -L -N -r -v"
+RPMSPECFILE=sge.spec
 
 #---------------------------------------------------------------------------
 #
@@ -56,6 +55,7 @@ ErrUsage()
    echo "                       utilbin/ and examples/jobsbin"
    echo "    -common            create tar.gz file of \"common\" files"
    echo "    -doc               create tar.gz file of \"doc\" files"  
+   echo "    -rpm               create RPM packages instead of tar files"
    echo ""
    exit 1
 }
@@ -76,6 +76,42 @@ Execute()
    fi
 }
 
+ReplaceRpmPlaceholder()
+{
+   echo "s%$1%$2%g" > sed.tmp 
+   Execute sed -f sed.tmp $RPMSPECFILE > $RPMSPECFILE.$$
+   rm sed.tmp
+   Execute mv $RPMSPECFILE.$$ $RPMSPECFILE
+}
+
+CreateRpm() # Arguments: package arch files
+{
+   PACKAGE=$1; shift
+   ARCH=$1; shift
+
+   cp scripts/rpm-template.spec "$RPMSPECFILE"
+   ReplaceRpmPlaceholder "#product#" "$PRODUCT"
+   ReplaceRpmPlaceholder "#version#" "$VERSION"
+   ReplaceRpmPlaceholder "#vdir#" "$VDIR"
+   ReplaceRpmPlaceholder "#arch#" "$ARCH"
+   ReplaceRpmPlaceholder "#basedir#" "$BASEDIR"
+   ReplaceRpmPlaceholder "#copyright#" "$COPYRIGHT"
+   ReplaceRpmPlaceholder "#vendor#" "$VENDOR"
+   ReplaceRpmPlaceholder "#packager#" "$PACKAGER"
+   ReplaceRpmPlaceholder "#provides#" "$PROVIDES"
+   ReplaceRpmPlaceholder "#summary#" "$SUMMARY"
+   ReplaceRpmPlaceholder "#description#" "$DESCRIPTION"
+
+   echo "%files $PACKAGE" >> $RPMSPECFILE
+   echo "%defattr(-,root,root)" >> $RPMSPECFILE
+   for i in $*; do
+       echo "$VDIR/$i" >> $RPMSPECFILE
+   done
+   
+   rpmbuild -bb $RPMSPECFILE
+
+}
+
 #------------------------------------------------------------------------
 #-------------------------------------------------------------------------
 # MAIN section
@@ -85,11 +121,18 @@ makebin=false
 makecommon=false
 makedoc=false
 makesgeee=false
+makerpm=false
 target=file
 VDIR=""
 VERSION=""
 PRODUCT=sge
 SELECTED_ARCHS=""
+VENDOR="unknown"
+PACKAGER="unknown"
+COPYRIGHT="SISSL"
+PROVIDES="gridengine"
+SUMMARY="Grid Engine"
+DESCRIPTION="Grid Engine distributes computational workload"
 
 ARGC=$#
 while [ $ARGC -gt 0 ]; do
@@ -171,6 +214,12 @@ while [ $ARGC -gt 0 ]; do
       shift
       ARGC=`expr $ARGC - 1`
       ;;
+   -rpm)
+      echo "Creating RPM packages instead of tar files"
+      makerpm=true
+      shift 
+      ARGC=`expr $ARGC - 1`
+      ;;
    -*)
       echo ""
       echo "Error: Unknown option: $1"
@@ -194,6 +243,8 @@ if [ "$VERSION" = "" -o "$VDIR" = "" ]; then
    ErrUsage
 fi
 
+RPMSPECFILE=$VDIR/$RPMSPECFILE
+
 Execute mkdir -p $BASEDIR
 
 SELECTED_ARCHS=$*
@@ -205,11 +256,15 @@ if [ $makecommon = true ]; then
       . ./localext/$VDIR/mk_dist.private.common
    fi
 
-   cd $VDIR
-   filename=$BASEDIR/${PRODUCT}-${VERSION}-common.tar.gz
-   echo Command: $TAR cvzf $filename $COMMON_PACKAGE
+   if [ $makerpm = true ]; then
+      CreateRpm common noarch $COMMON_PACKAGE
+   else
+     cd $VDIR
+     filename=$BASEDIR/${PRODUCT}-${VERSION}-common.tar.gz
+     echo Command: $TAR cvzf $filename $COMMON_PACKAGE
                   $TAR cvzf $filename $COMMON_PACKAGE
-   cd ..
+     cd ..
+   fi
 fi
 
 if [ $makedoc = true ]; then
@@ -219,33 +274,54 @@ if [ $makedoc = true ]; then
       . ./localext/$VDIR/mk_dist.private.doc
    fi
 
-   cd $VDIR
-   filename=$BASEDIR/${PRODUCT}-${VERSION}-doc.tar.gz
-   echo Command: $TAR cvzf $filename $DOC_PACKAGE
-                  $TAR cvzf $filename $DOC_PACKAGE
-   cd ..
+   if [ $makerpm = true ]; then
+      CreateRpm doc noarch $DOC_PACKAGE
+   else
+      cd $VDIR
+      filename=$BASEDIR/${PRODUCT}-${VERSION}-doc.tar.gz
+      echo Command: $TAR cvzf $filename $DOC_PACKAGE
+                    $TAR cvzf $filename $DOC_PACKAGE
+      cd ..
+   fi
 fi
 
 if [ $makebin = true ]; then
-   if [ "$SELECTED_ARCHS" = "" ]; then
-      ErrUsage
-   fi
 
-   # do any necessary postprocessing of the "bin" package here
-   if [ -f localext/$VDIR/mk_dist.private.bin ]; then
-      echo executing commands from mk_dist.private.bin
-      . ./localext/$VDIR/mk_dist.private.bin
-   fi
+   if [ $makerpm = true ]; then
+      ARCH=`$VDIR/util/arch`
+      if [ "`echo "$SELECTED_ARCHS" | grep $ARCH`" != "" ]; then
+         ADIR="bin/$ARCH utilbin/$ARCH examples/jobsbin/$ARCH lib/$ARCH"
+         if [ $ARCH = lx24-x86 ]; then
+            CreateRpm bin i586 $ADIR
+         elif [ $ARCH = lx24-amd64 ]; then
+            CreateRpm bin x86_64 $ADIR
+         else
+            echo "RPM packages are not supported for your architecture $ARCH!"
+         fi
+      else
+         echo "RPM packages can only be build on the selected architecture"
+      fi
+   else
+      if [ "$SELECTED_ARCHS" = "" ]; then
+         ErrUsage
+      fi
 
-   cd $VDIR
-   echo creating tar.gz files for $SELECTED_ARCHS
-   for i in $SELECTED_ARCHS; do
+      # do any necessary postprocessing of the "bin" package here
+      if [ -f localext/$VDIR/mk_dist.private.bin ]; then
+         echo executing commands from mk_dist.private.bin
+         . ./localext/$VDIR/mk_dist.private.bin
+      fi
+
+      cd $VDIR
+      echo creating tar.gz files for $SELECTED_ARCHS
+      for i in $SELECTED_ARCHS; do
          ADIR="bin/$i utilbin/$i examples/jobsbin/$i lib/$i"
          filename=$BASEDIR/${PRODUCT}-${VERSION}-bin-${i}.tar.gz         
          echo Command: $TAR cvzf $filename $ADIR
                        $TAR cvzf $filename $ADIR
-   done
-   cd ..
+      done
+      cd ..
+   fi
 fi
 
 exit 0

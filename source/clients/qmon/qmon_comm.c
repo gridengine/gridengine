@@ -273,22 +273,22 @@ lList **answerp
                goto error;
             }   
          }      
-         alp = lFreeList(alp);
+         lFreeList(&alp);
       }
    }
-   mal = lFreeList(mal);
+   lFreeList(&mal);
    sge_stopwatch_log(0, "qmonMirrorMulti:");
 
    DEXIT;
    return 0;
 
    error:
-      mal = lFreeList(mal);
+      lFreeList(&mal);
       if (answerp) {
          *answerp = alp;
       }
       else {
-         alp = lFreeList(alp);
+         lFreeList(&alp);
       }   
       DEXIT;
       return -1;
@@ -357,13 +357,13 @@ lEnumeration *what
             if (lGetUlong(aep = lFirst(alp), AN_status) != STATUS_OK) {
                fprintf(stderr, "%s", lGetString(aep, AN_text));
             }
-            lFreeList(alp);
+            lFreeList(&alp);
             alp = NULL;
          }
          goto error_exit;
       }  
       if (alp != NULL) {
-         lFreeList(alp);
+         lFreeList(&alp);
          alp = NULL;
       }
    }
@@ -629,7 +629,7 @@ lEnumeration *enp
 
    ans = sge_gdi(target, SGE_GDI_MOD, lp ? &lp : lpp, cp, enp);
 
-   lp = lFreeList(lp);
+   lFreeList(&lp);
 
    return ans;
 }
@@ -704,7 +704,7 @@ lEnumeration *what
             }
             if (rem) {
                prev = lPrev(prev);
-               lRemoveElem(*local, rem); 
+               lRemoveElem(*local, &rem);
             }
             lInsertElem(*local, prev, lCopyElem(ep)); 
          }
@@ -749,7 +749,7 @@ int action
   
    if (id_list_build_from_str_list(&id_list, &alp, lp, action, force)) {
       alp = sge_gdi(SGE_CQUEUE_LIST, SGE_GDI_TRIGGER, &id_list, NULL, NULL);
-      id_list = lFreeList(id_list);
+      lFreeList(&id_list);
    }
 
    qmonMirrorMultiAnswer(l2s(type), &alp);

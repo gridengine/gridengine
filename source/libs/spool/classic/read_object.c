@@ -41,6 +41,7 @@
 #include "sge_log.h"
 #include "sge_unistd.h"
 #include "sge_answer.h"
+#include "sge_stdio.h"
 #include "sge_conf.h"
 
 #include "msg_common.h"
@@ -101,7 +102,7 @@ int fields[]
       size = MAX(sb.st_size, 10000);
       if (((SGE_OFF_T)size != MAX(sb.st_size, 10000))
           || (buf = (char *) malloc(size)) == NULL) {
-         fclose(fp);
+         FCLOSE(fp);
          ERROR((SGE_EVENT, MSG_MEMORY_CANTMALLOCBUFFERFORXOFFILEY_SS, 
                args->objname, fullname));
          DEXIT;
@@ -111,7 +112,7 @@ int fields[]
    else {
       ERROR((SGE_EVENT, MSG_FILE_CANTDETERMINESIZEFORXOFFILEY_SS, 
              args->objname, fullname));
-      fclose(fp);
+      FCLOSE(fp);
       DEXIT;
       return NULL;
    }
@@ -119,7 +120,7 @@ int fields[]
 
    /* create List Element */
    if (!(ep = lCreateElem(args->objtype))) {
-      fclose(fp);
+      FCLOSE(fp);
       free(buf);
       ERROR((SGE_EVENT, MSG_SGETEXT_NOMEM));
       DEXIT;
@@ -130,24 +131,24 @@ int fields[]
    if (read_config_list(fp, &clp, &alp, CF_Type, CF_name, CF_value,
                         CF_sublist, NULL, read_config_list_flag, buf, size)) {
       ERROR((SGE_EVENT, lGetString(lFirst(alp), AN_text)));
-      alp = lFreeList(alp);
-      fclose(fp);
+      lFreeList(&alp);
+      FCLOSE(fp);
       free(buf);
       DEXIT;
       return NULL;
    }
 
    free(buf);
-   fclose(fp);
+   FCLOSE(fp);
 
    /* well, let's do the work... */
    ret = args->work_func(&alp, &clp, fields, ep, spool, flag, tag, 0);
    if (ret) {
       if (alp) 
          ERROR((SGE_EVENT, lGetString(lFirst(alp), AN_text)));
-      alp = lFreeList(alp);
-      clp = lFreeList(clp);
-      ep = lFreeElem(ep);
+      lFreeList(&alp);
+      lFreeList(&clp);
+      lFreeElem(&ep);
       DEXIT;
       return NULL;
    }
@@ -156,17 +157,20 @@ int fields[]
    if ((unused = lFirst(clp))) {
       ERROR((SGE_EVENT, MSG_SGETEXT_UNKNOWN_CONFIG_VALUE_SSS,
          lGetString(unused, CF_name), args->objname, fullname));
-      lFreeList(clp);
-      lFreeElem(ep);
+      lFreeList(&clp);
+      lFreeElem(&ep);
       DEXIT;
       return NULL;
    }
 
    /* remove warnings in alp */
-   alp = lFreeList(alp);
+   lFreeList(&alp);
 
    DEXIT;
    return ep;
+FCLOSE_ERROR:
+   DEXIT;
+   return NULL;
 }
 
 

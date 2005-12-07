@@ -70,6 +70,10 @@ SpoolingQueryChange()
                   SPOOLING_DIR=`dirname $QMDIR`"/spooldb" 
                   SPOOLING_DIR=`Enter $SPOOLING_DIR`        
      fi
+
+     if [ "$AUTO" = "true" ]; then
+        SPOOLING_DIR=$DB_SPOOLING_DIR
+     fi
  
    fi
 }
@@ -83,41 +87,56 @@ SpoolingCheckParams()
       if [ $ret -eq 0 ]; then
       $INFOTEXT -e "\nThe database directory >%s<\n" \
                    "is not on a local filesystem.\nPlease choose a local filesystem or configure the RPC Client/Server mechanism" $SPOOLING_DIR
+      if [ "$AUTO" = "true" ]; then
+         $INFOTEXT -log "\nThe database directory >%s<\n" \
+                   "is not on a local filesystem.\nPlease choose a local filesystem or configure the RPC Client/Server mechanism" $SPOOLING_DIR
+         MoveLog
+         exit 1
+      fi
          return 0
       else
          return 1
       fi
-   else 
-      # TODO: we should check if the hostname can be resolved
-      # create a script to start the rpc server
-      Makedir $SPOOLING_DIR
+   else
+      if [ "$BERKELEY" = "install" ]; then
+         if [ "$SPOOLING_SERVER" = "$HOST" ]; then
+            # TODO: we should check if the hostname can be resolved
+            # create a script to start the rpc server
+            Makedir $SPOOLING_DIR
 
-      # Deactivated the copy of DB_CONFIG file. The DB_CONFIG file is still distributed 
-      #DB_CONFIG_COPY="cp ./util/install_modules/DB_CONFIG $SPOOLING_DIR/DB_CONFIG"
-      #ExecuteAsAdmin $DB_CONFIG_COPY
-      CreateRPCServerScript
-      $INFOTEXT "\nNow we have to startup the rc script\n >%s< \non the RPC server machine\n" $SGE_ROOT/$COMMONDIR/sgebdb
-      $INFOTEXT -n "If you already have a configured Berkeley DB Spooling Server,\n you have to restart "
-      $INFOTEXT "the Database with the rc script now and continue with >NO<\n"
-      $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n "Shall the installation script try to start the RPC server? (y/n) [y] >>"
+            # Deactivated the copy of DB_CONFIG file. The DB_CONFIG file is still distributed 
+            #DB_CONFIG_COPY="cp ./util/install_modules/DB_CONFIG $SPOOLING_DIR/DB_CONFIG"
+            #ExecuteAsAdmin $DB_CONFIG_COPY
+            CreateRPCServerScript
+            $INFOTEXT "\nNow we have to startup the rc script\n >%s< \non the RPC server machine\n" $SGE_ROOT/$COMMONDIR/sgebdb
+            $INFOTEXT -n "If you already have a configured Berkeley DB Spooling Server,\n you have to restart "
+            $INFOTEXT "the Database with the rc script now and continue with >NO<\n"
+            $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n "Shall the installation script try to start the RPC server? (y/n) [y] >>"
 
-      if [ $? = 0 ]; then
-         $INFOTEXT -log "Starting rpc server on host %s!" $SPOOLING_SERVER
-         $INFOTEXT "Starting rpc server on host %s!" $SPOOLING_SERVER
-         ExecuteRPCServerScript start
-         sleep 5
-         $INFOTEXT "The Berkeley DB has been started with these parameters:\n\n"
-         $INFOTEXT "Spooling Server Name: %s" $SPOOLING_SERVER
-         $INFOTEXT "DB Spooling Directory: %s\n" $SPOOLING_DIR
-         $INFOTEXT -wait -auto $AUTO -n "Please remember these values, during Qmaster installation\n you will be asked for! Hit <RETURN> to continue!"
-      else
-         $INFOTEXT "Please start the rc script \n>%s< on the RPC server machine\n" $SGE_ROOT/$COMMONDIR/sgebdb
-         $INFOTEXT "If your database is already running, then continue with <RETURN>\n"
-         $INFOTEXT -auto $AUTO -wait -n "Hit <RETURN> to continue >>"
-      fi
+            if [ $? = 0 ]; then
+               $INFOTEXT -log "Starting rpc server on host %s!" $SPOOLING_SERVER
+               $INFOTEXT "Starting rpc server on host %s!" $SPOOLING_SERVER
+               ExecuteRPCServerScript start
+               sleep 5
+               $INFOTEXT "The Berkeley DB has been started with these parameters:\n\n"
+               $INFOTEXT "Spooling Server Name: %s" $SPOOLING_SERVER
+               $INFOTEXT "DB Spooling Directory: %s\n" $SPOOLING_DIR
+               $INFOTEXT -wait -auto $AUTO -n "Please remember these values, during Qmaster installation\n you will be asked for! Hit <RETURN> to continue!"
+            else
+               $INFOTEXT "Please start the rc script \n>%s< on the RPC server machine\n" $SGE_ROOT/$COMMONDIR/sgebdb
+               $INFOTEXT "If your database is already running, then continue with <RETURN>\n"
+               $INFOTEXT -auto $AUTO -wait -n "Hit <RETURN> to continue >>"
+            fi
 
-      $INFOTEXT "The Berkeley DB installation is completed now!"
-
+            $INFOTEXT "The Berkeley DB installation is completed now!"
+            $INFOTEXT -log "The Berkeley DB installation is completed now!"
+         else
+            $INFOTEXT "Please start the Berkeley DB RPC Server installation locally on host %s!" $SPOOLING_SERVER
+            $INFOTEXT -log "Please start the Berkeley DB RPC Server installation locally on host %s!" $SPOOLING_SERVER
+            MoveLog
+            exit 1 
+         fi
+      fi 
    return 1
    fi
 }
@@ -165,18 +184,10 @@ CheckLocalFilesystem()
 
 # Executes the RPC Startup Script
 # $1 is start or stop
-# The Script is either executed on the local host or on a remote host
+# The Script is either executed on the local host and not on a remote host
 ExecuteRPCServerScript()
 {
    ExecuteAsAdmin $SGE_ROOT/$SGE_CELL/common/sgebdb $1
-}
-
-DeleteServerScript()
-{
-   ExecuteRPCServerScript stop
-   rm $SGE_ROOT/$SGE_CELL/common/sgebdb   
-
-   # TODO: Delete startup script in /etc/init.d
 }
 
 DeleteSpoolingDir()
@@ -186,116 +197,6 @@ DeleteSpoolingDir()
 
    ExecuteAsAdmin rm -fr $SPOOLING_DIR
    
-}
-
-
-InstallServerScript()
-{
-   euid=$1
-
-   $CLEAR
-   STARTUP_FILE_NAME=sgebdb
-   S95NAME=S95sgebdb
-
-   SGE_STARTUP_FILE=$SGE_ROOT_VAL/$COMMONDIR/$STARTUP_FILE_NAME
-
-
-   if [ $euid != 0 ]; then
-      return 0
-   fi
-
-   $INFOTEXT -u "\nBerkeley DB startup script"
-
-   # --- from here only if root installs ---
-   $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n \
-             "\nWe can install the startup script that\n" \
-             "Grid Engine is started at machine boot (y/n) [y] >> "
-   ret=$?
-
-   if [ $ret = 1 -o $AUTO = "true" -a $ADD_TO_RC = "false" ]; then
-      $CLEAR
-      return
-   fi
-
-   # If we have System V we need to put the startup script to $RC_PREFIX/init.d
-   # and make a link in $RC_PREFIX/rc2.d to $RC_PREFIX/init.d
-   if [ "$RC_FILE" = "sysv_rc" ]; then
-      $INFOTEXT "Installing startup script %s" "$RC_PREFIX/$RC_DIR/$S95NAME"
-      Execute rm -f $RC_PREFIX/$RC_DIR/$S95NAME
-      Execute cp $SGE_STARTUP_FILE $RC_PREFIX/init.d/$STARTUP_FILE_NAME
-      Execute chmod a+x $RC_PREFIX/init.d/$STARTUP_FILE_NAME
-      Execute ln -s $RC_PREFIX/init.d/$STARTUP_FILE_NAME $RC_PREFIX/$RC_DIR/$S95NAME
-
-      # runlevel management in Linux is different -
-      # each runlevel contains full set of links
-      # RedHat uses runlevel 5 and SUSE runlevel 3 for xdm
-      # RedHat uses runlevel 3 for full networked mode
-      # Suse uses runlevel 2 for full networked mode
-      # we already installed the script in level 3
-      if [ $SGE_ARCH = linux -o $SGE_ARCH = glinux -o $SGE_ARCH = alinux -o $SGE_ARCH = slinux ]; then
-         runlevel=`grep "^id:.:initdefault:"  /etc/inittab | cut -f2 -d:`
-         if [ "$runlevel" = 2 -o  "$runlevel" = 5 ]; then
-            $INFOTEXT "Installing startup script also in %s" "$RC_PREFIX/rc${runlevel}.d/$S95NAME"
-            Execute rm -f $RC_PREFIX/rc${runlevel}.d/$S95NAME
-            Execute ln -s $RC_PREFIX/init.d/$STARTUP_FILE_NAME $RC_PREFIX/rc${runlevel}.d/$S95NAME
-         fi
-      fi
-   elif [ "$RC_FILE" = "insserv-linux" ]; then
-      echo  cp $SGE_STARTUP_FILE $RC_PREFIX/$STARTUP_FILE_NAME
-      echo /sbin/insserv $RC_PREFIX/$STARTUP_FILE_NAME
-      Execute cp $SGE_STARTUP_FILE $RC_PREFIX/$STARTUP_FILE_NAME
-      /sbin/insserv $RC_PREFIX/$STARTUP_FILE_NAME
-   elif [ "$RC_FILE" = "freebsd" ]; then
-      echo  cp $SGE_STARTUP_FILE $RC_PREFIX/sge${RC_SUFFIX}
-      Execute cp $SGE_STARTUP_FILE $RC_PREFIX/sge${RC_SUFFIX}
-   else
-      # if this is not System V we simple add the call to the
-      # startup script to RC_FILE
-
-      # Start-up script already installed?
-      #------------------------------------
-      grep $STARTUP_FILE_NAME $RC_FILE > /dev/null 2>&1
-      status=$?
-      if [ $status != 0 ]; then
-         $INFOTEXT "Adding application startup to %s" $RC_FILE
-         # Add the procedure
-         #------------------
-         $ECHO "" >> $RC_FILE
-         $ECHO "" >> $RC_FILE
-         $ECHO "# Berkeley DB start up" >> $RC_FILE
-         $ECHO "#-$LINE---------" >> $RC_FILE
-         $ECHO $SGE_STARTUP_FILE >> $RC_FILE
-      else
-         $INFOTEXT "Found a call of %s in %s. Replacing with new call.\n" \
-                   "Your old file %s is saved as %s" $STARTUP_FILE_NAME $RC_FILE $RC_FILE $RC_FILE.org.1
-
-         mv $RC_FILE.org.3 $RC_FILE.org.4    2>/dev/null
-         mv $RC_FILE.org.2 $RC_FILE.org.3    2>/dev/null
-         mv $RC_FILE.org.1 $RC_FILE.org.2    2>/dev/null
-
-         # save original file modes of RC_FILE
-         uid=`$SGE_UTILBIN/filestat -uid $RC_FILE`
-         gid=`$SGE_UTILBIN/filestat -gid $RC_FILE`
-         perm=`$SGE_UTILBIN/filestat -mode $RC_FILE`
-
-         Execute cp $RC_FILE $RC_FILE.org.1
-
-         savedfile=`basename $RC_FILE`
-
-         sed -e "s%.*$STARTUP_FILE_NAME.*%$SGE_STARTUP_FILE%" \
-                 $RC_FILE > /tmp/$savedfile.1
-
-         Execute cp /tmp/$savedfile.1 $RC_FILE
-         Execute chown $uid $RC_FILE
-         Execute chgrp $gid $RC_FILE
-         Execute chmod $perm $RC_FILE
-         Execute rm -f /tmp/$savedfile.1
-      fi
-   fi
-
-   $INFOTEXT -wait -auto $AUTO -n "\nHit <RETURN> to continue >> "
-   $CLEAR
-
 }
 
 EditStartupScript()

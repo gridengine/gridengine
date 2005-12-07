@@ -168,14 +168,17 @@ int root_node
       }
    }
 
-   if (fname)
-      fclose(fp);
+   if (fname) {
+      FCLOSE(fp);
+   }
 
    DEXIT;
    return 0;
 FPRINTF_ERROR:
-   if (fname)
-      fclose(fp); 
+   if (fname) {
+      FCLOSE(fp); 
+   }
+FCLOSE_ERROR:
    answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
    DEXIT;
    return -1;
@@ -217,13 +220,14 @@ lListElem *rootelem     /* in case of a recursive call this is the root elem
    }
 
    while (!complete && fgets(buf, sizeof(buf), fp)) {
+      char *lasts = NULL;
       line++;
 
       if (buf[0] == '\0' || buf[0] == '#' || buf[0] == '\n')
          continue;
 
-      name = strtok(buf, "=\n");
-      val = strtok(NULL, "\n");
+      name = strtok_r(buf, "=\n", &lasts);
+      val = strtok_r(NULL, "\n", &lasts);
 
       if (!strcmp(name, "name")) {
          if (!ep && recurse) {
@@ -317,7 +321,7 @@ lListElem *rootelem     /* in case of a recursive call this is the root elem
          i = cull_parse_simple_list(val, &child_list, "childnode list",
                                     STN_Type, print_elements);
          if (i) {
-            lFreeElem(ep);
+            lFreeElem(&ep);
             strcpy(errstr, MSG_STREE_NOPARSECHILDNODES);
             DEXIT;
             return NULL;
@@ -329,7 +333,7 @@ lListElem *rootelem     /* in case of a recursive call this is the root elem
                                 rootelem?rootelem:ep) &&
                 errstr[0]) {
                if (!rootelem) { /* we are at the root level */
-                  lFreeElem(ep);
+                  lFreeElem(&ep);
                }
                DEXIT;
                return NULL;
@@ -350,7 +354,7 @@ lListElem *rootelem     /* in case of a recursive call this is the root elem
    if (!rootelem && (unspecified = sge_search_unspecified_node(ep))) {
       sprintf(errstr, MSG_STREE_NOVALIDNODEREF_U, sge_u32c(lGetUlong(unspecified, STN_id)));
 
-      lFreeElem(ep);
+      lFreeElem(&ep);
       DEXIT;
       return NULL;
    }

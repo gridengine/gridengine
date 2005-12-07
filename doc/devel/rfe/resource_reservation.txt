@@ -18,7 +18,7 @@
    Resource Reservation 
       A job-specific reservation created by the scheduler for pending 
       jobs. During the reservation the resources are blocked for lower 
-      prior jobs.
+      priority jobs.
 
    Backfilling
       The process of starting jobs of the job priority list despite of 
@@ -59,8 +59,8 @@
    to jobs in jobs priority order. A good example which helps to comprehend 
    the problem solved with resource reservaiton/backfilling is the so-called 
    "large parallel job starvation problem". In this scenario there is one 
-   high prior pending job (possibly parallel) A that requires a larger quota 
-   of a particular resource and a stream of smaller and lower prior jobs B(i) 
+   high priority pending job (possibly parallel) A that requires a larger quota 
+   of a particular resource and a stream of smaller and lower priority jobs B(i) 
    requiring a smaller quota of the same resource.
  
    Without resource reservation an assignment for A can not be guaranteed
@@ -77,7 +77,7 @@
         
     
    With resource reservation job A gets a reservation that blocks lower 
-   prior B(i) jobs and thus guarantees resources will be available for
+   priority B(i) jobs and thus guarantees resources will be available for
    A as soon as possible:
 
         A
@@ -94,8 +94,8 @@
    a reservation by jobs of lower priority. Backfilling can take place only 
    if there is a runnable job with a prospective runtime small enough to allow 
    the blocked resource be used without endangering the reservation of a job
-   with high priority. In the example above a low prior job C of very short 
-   duration could be started prior A due to backfilling.
+   with high priority. In the example above a low priority job C of very short 
+   duration could be started prior to job A due to backfilling.
 
         A
         |                     
@@ -215,7 +215,7 @@
      <jobid>:         The jobs id.
      <taskid>:        The array task id or 1 in case of non-array jobs.
      <state>:         One of RUNNING/SUSPENDED/MIGRATING/STARTING/RESERVING.
-     <start_time>:    Start time in seconds after 1.1.1070.
+     <start_time>:    Start time in seconds after 1.1.1970.
      <duration>:      Assumed job duration in seconds.
      <level_char>:    One of {P,G,H;Q} standing for {PE,Global,Host,Queue}.
      <object_name>:   The name of the PE/global/host/queue.
@@ -293,7 +293,7 @@
    >          irrespective of the reservation request job reservation
    >          might   be   disabled    using    max_reservation    in
    >          sched_conf(5)  and  might  be limited only to a certain
-   >          number of high prior jobs.
+   >          number of high priority jobs.
    >
    >          By default jobs are submitted with -R n option.
    >
@@ -352,6 +352,33 @@
    >           utilization           in            the            file
    >           $SGE_ROOT/<cell>/common/schedule.
    > 
+
+   yet another parameter was added to scheduler configuration 
+   sched_conf(5) to allow for modeling difference between net and gross
+   job runtimes:
+
+   >      DURATION_OFFSET
+   >           If set overrides the default  of  60  seconds  that  is
+   >           assumed  as  offset by N1GE scheduler when plan-
+   >           ning resource utilization  as  delta  between  net  job
+   >           runtimes  and  gross time until resources are available
+   >           again. Jobs net runtime as specified with  -l  h_rt=...
+   >           or  -l  s_rt=... or default_duration always differ from
+   >           jobs gross runtime  due  to  delays  before  and  after
+   >           actual job start. Amongst these delays before job start
+   >           is the time until the end of a  schedule_interval,  the
+   >           time  it takes to deliver a job to sge_execd(8) and the
+   >           delays prolog in  queue_conf(5)  ,  start_proc_args  in
+   >           sge_pe(5)   and  starter_method  in  queue_conf(5)  may
+   >           effectuate.  The  delays  after  a  jobs   actual   run
+   >           comprises  delays  due  to  a  forced  job  termination
+   >           (notify, terminate_method or checkpointing),  procedure
+   >           runs  after  acutal job finished such as stop_proc_args
+   >           in sge_pe(5) or epilog in queue_conf(5) and  the  delay
+   >           until a new schedule_interval.
+   >           If the offset is too  low  resource  reservations  (see
+   >           max_reservation) can be delayed repeatedly due to a too
+   >           optistic job circulation time.
 
 4. Implementation
 

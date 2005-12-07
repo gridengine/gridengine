@@ -1,15 +1,49 @@
 <?xml version="1.0" encoding="UTF-8"?>
+
+<!--___INFO__MARK_BEGIN__
+/*************************************************************************
+ * 
+ *  The Contents of this file are made available subject to the terms of
+ *  the Sun Industry Standards Source License Version 1.2
+ * 
+ *  Sun Microsystems Inc., March, 2001
+ * 
+ * 
+ *  Sun Industry Standards Source License Version 1.2
+ *  =================================================
+ *  The contents of this file are subject to the Sun Industry Standards
+ *  Source License Version 1.2 (the "License"); You may not use this file
+ *  except in compliance with the License. You may obtain a copy of the
+ *  License at http://gridengine.sunsource.net/Gridengine_SISSL_license.html
+ * 
+ *  Software provided under this License is provided on an "AS IS" basis,
+ *  WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING,
+ *  WITHOUT LIMITATION, WARRANTIES THAT THE SOFTWARE IS FREE OF DEFECTS,
+ *  MERCHANTABLE, FIT FOR A PARTICULAR PURPOSE, OR NON-INFRINGING.
+ *  See the License for the specific provisions governing your rights and
+ *  obligations concerning the Software.
+ * 
+ *   The Initial Developer of the Original Code is: Sun Microsystems, Inc.
+ * 
+ *   Copyright: 2001 by Sun Microsystems, Inc.
+ * 
+ *   All Rights Reserved.
+ * 
+ ************************************************************************/
+___INFO__MARK_END__-->
+
 <project basedir="." default="common_all" name="drmaa">
    <target name="init">
       <property location="../CLASSES" name="classes.dir"/>
       <property location="../CLASSES/test" name="classes.dir.test"/>
       <property location="." name="src.dir"/>
       <property location="${src.dir}/test" name="src.dir.test"/>
-      <property location="../../doc/javadocs" name="javadoc.dir"/>
+      <property location="../JAVADOCS" name="javadoc.dir"/>
       <property name="project.name" value="${ant.project.name}"/>
       <property location="${classes.dir}/${project.name}.jar" name="jar"/>
       <property location="${classes.dir}/${project.name}-test.jar" name="test.jar"/>
       <property location="${classes.dir}/${project.name}-api.jar" name="api.jar"/>
+      <property location="../scripts/removeGeneratedTags.pl" name="script"/>
    </target>
 
    <target depends="init" description="Compile core classes." name="compile">
@@ -28,6 +62,7 @@
       <javac debug="true" deprecation="true" destdir="${classes.dir.test}" classpath="${classes.dir}">
          <src path="${src.dir.test}"/>
          <include name="org/ggf/drmaa/*.java"/>
+         <include name="com/sun/grid/*.java"/>
          <include name="com/sun/grid/drmaa/*.java"/>
          <include name="TestDrmaa.java"/>
          <include name="DrmaaSuite.java"/>
@@ -54,6 +89,7 @@
          </fileset>
          <fileset dir="${classes.dir.test}">
             <include name="org/ggf/drmaa/*.class"/>
+            <include name="com/sun/grid/*.class"/>
             <include name="com/sun/grid/drmaa/*.class"/>
             <include name="TestDrmaa*.class"/>
             <include name="DrmaaSuite.class"/>
@@ -68,6 +104,7 @@
       <jar compress="true" jarfile="${test.jar}">
          <fileset dir="${classes.dir.test}">
             <include name="org/ggf/drmaa/*.class"/>
+            <include name="com/sun/grid/*.class"/>
             <include name="com/sun/grid/drmaa/*.class"/>
             <include name="TestDrmaa*.class"/>
             <include name="DrmaaSuite.class"/>
@@ -89,7 +126,7 @@
 
    <target depends="" description="Placeholder" name="messages"/>
 
-   <target depends="init,javadoc.clean" description="Javadoc tool docs for DRMAA" name="javadoc">
+   <target depends="init" description="Javadoc tool docs for DRMAA" name="javadoc">
       <mkdir dir="${javadoc.dir}"/>
       <javadoc destdir="${javadoc.dir}" packagenames="*" Overview="${src.dir}/overview.html" access="public">
          <fileset dir="${src.dir}">
@@ -97,9 +134,12 @@
             <include name="com/sun/grid/drmaa/*.java"/>
          </fileset>
       </javadoc>
+      <exec executable="${script}">
+         <arg line="${javadoc.dir}"/>
+      </exec>
    </target>
 
-   <target depends="init,javadoc.clean" description="Javadoc tool docs for DRMAA" name="javadoc.all">
+   <target depends="init" description="Javadoc tool docs for DRMAA" name="javadoc.all">
       <mkdir dir="${javadoc.dir}"/>
       <javadoc destdir="${javadoc.dir}" packagenames="*" Overview="${src.dir}/overview.html" access="protected">
          <fileset dir="${src.dir}">
@@ -107,11 +147,14 @@
             <include name="com/sun/grid/drmaa/*.java"/>
          </fileset>
       </javadoc>
+      <exec executable="${script}">
+         <arg line="${javadoc.dir}"/>
+      </exec>
    </target>
 
    <target depends="init" description="Clean Javadoc tool docs." name="javadoc.clean">
       <delete>
-         <fileset dir="${javadoc.dir}" excludes="**/CVS"/>
+         <fileset dir="${javadoc.dir}"/>
       </delete>
    </target>
    

@@ -50,9 +50,9 @@ extern struct sigaction sigalrm_vec, sigalrm_ovec;
 extern struct sigaction sigcld_vec, sigcld_ovec;
 
 extern volatile int shut_me_down;
-extern volatile int dead_children;
-extern volatile int in_main_loop;
-extern volatile int sigpipe_received;
+extern volatile int sge_sig_handler_dead_children;
+extern volatile int sge_sig_handler_in_main_loop;
+extern volatile int sge_sig_handler_sigpipe_received;
 
 #ifdef  __cplusplus
 }

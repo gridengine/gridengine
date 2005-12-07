@@ -93,19 +93,19 @@ SGEExecHost::SGEExecHost(JNIEnv *_env,
 SGEExecHost::~SGEExecHost()
 {
   if(exech)
-    lFreeList(exech);
+    lFreeList(&exech);
   if(exech_elem)
-    lFreeElem(exech_elem);
+    lFreeElem(&exech_elem);
   if(loads)
-    lFreeList(loads);
+    lFreeList(&loads);
   if(load_elem)
-    lFreeElem(load_elem);
+    lFreeElem(&load_elem);
   if(answer)
     lFreeList(answer);
   if(what)
     lFreeWhat(what);
   if(where)
-    lFreeWhere(where);
+    lFreeWhere(&where);
 }
 
 //=================== getters ========================
@@ -201,15 +201,15 @@ void SGEExecHost::freeSGEVars()
   if(exech)
     lFreeList(exech);
   if(exech_elem)
-    lFreeElem(exech_elem);
+    lFreeElem(&exech_elem);
   if(loads)
     lFreeList(loads);
   if(load_elem)
-    lFreeElem(load_elem);
+    lFreeElem(&load_elem);
   if(answer)
     lFreeList(answer);
   if(what)
     lFreeWhat(what);
   if(where)
-    lFreeWhere(where);  
+    lFreeWhere(&where);
 }

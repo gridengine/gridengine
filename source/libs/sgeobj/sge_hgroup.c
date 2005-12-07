@@ -336,7 +336,7 @@ hgroup_find_all_references(const lListElem *this_elem, lList **answer_list,
                                               master_list, used_hosts, 
                                               used_groups);
       }
-      href_list = lFreeList(href_list);
+      lFreeList(&href_list);
    }
    DEXIT;
    return ret;
@@ -390,7 +390,7 @@ hgroup_find_references(const lListElem *this_elem, lList **answer_list,
          ret &= href_list_find_references(href_list, answer_list, master_list, 
                                           used_hosts, used_groups);
       }
-      href_list = lFreeList(href_list);
+      lFreeList(&href_list);
    }
    DEXIT;
    return ret;
@@ -445,7 +445,7 @@ hgroup_find_all_referencees(const lListElem *this_elem,
          ret &= href_list_find_all_referencees(href_list, answer_list,
                                              master_list, occupants_groups);
       }
-      href_list = lFreeList(href_list);
+      lFreeList(&href_list);
    }
    DEXIT;
    return ret;
@@ -504,7 +504,7 @@ hgroup_find_referencees(const lListElem *this_elem,
                                               master_hgroup_list, 
                                               occupants_groups);
          }
-         href_list = lFreeList(href_list);
+         lFreeList(&href_list);
       }
       if (ret && occupants_queues != NULL) {
          ret &= cqueue_list_find_hgroup_references(master_cqueue_list, 
@@ -626,7 +626,7 @@ hgroup_list_find_matching_and_resolve(const lList *this_list,
                   lAddElemHost(used_hosts, HR_name, hostname, HR_Type);
                }
             }
-            tmp_used_hosts = lFreeList(tmp_used_hosts);
+            lFreeList(&tmp_used_hosts);
          }
       }
    }

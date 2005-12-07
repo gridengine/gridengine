@@ -35,9 +35,9 @@
 #include "basis_types.h"
 
 /* sge_mirror.c */
-#define MSG_MIRROR_INVALID_OBJECT_TYPE_SI          _MESSAGE(67000, _("%s: invalid object type %d\n"))
-#define MSG_MIRROR_QMASTERALIVETIMEOUTEXPIRED      _MESSAGE(67001, _("qmaster alive timeout expired\n"))
-#define MSG_MIRROR_CALLBACKFAILED_S                _MESSAGE(67002, _("callback function for event "SFQ" failed\n"))
+#define MSG_MIRROR_INVALID_OBJECT_TYPE_SI          _MESSAGE(67000, _("%s: invalid object type %d"))
+#define MSG_MIRROR_QMASTERALIVETIMEOUTEXPIRED      _MESSAGE(67001, _("qmaster alive timeout expired"))
+#define MSG_MIRROR_CALLBACKFAILED_S                _MESSAGE(67002, _("callback function for event "SFQ" failed"))
 
 #define MSG_MIRROR_NOTINITIALIZED                  _MESSAGE(67003, _("event client not yet initialized"))
 #define MSG_MIRROR_BADARG                          _MESSAGE(67004, _("bad argument"))
@@ -48,11 +48,11 @@
 #define MSG_MIRROR_PROCESSERRORS                   _MESSAGE(67009, _("errors processing events"))
 #define MSG_MIRROR_OK                              _MESSAGE(67010, _("ok"))
 
-#define MSG_JOB_RECEIVEDINVALIDUSAGEEVENTFORJOB_S  _MESSAGE(67012, _("received invalid job usage event for job "SFN"\n"))
-#define MSG_JOB_CANTFINDJOBFORUPDATEIN_SS          _MESSAGE(67014, _("can't find job "SFN" for update in function "SFN"\n"))
-#define MSG_JOB_CANTFINDJATASKFORUPDATEIN_SS       _MESSAGE(67015, _("can't find array task "SFN" for update in function "SFN"\n"))
-#define MSG_JOB_CANTFINDPETASKFORUPDATEIN_SS       _MESSAGE(67016, _("can't find parallel task "SFN" for update in function "SFN"\n"))
-#define MSG_CQUEUE_CANTFINDFORUPDATEIN_SS          _MESSAGE(67017, _("can't find cluster queue "SFN" for update in function "SFN"\n"))
-#define MSG_QINSTANCE_CANTFINDFORUPDATEIN_SS       _MESSAGE(67018, _("can't find queue instance "SFN" for update in function "SFN"\n"))
+#define MSG_JOB_RECEIVEDINVALIDUSAGEEVENTFORJOB_S  _MESSAGE(67012, _("received invalid job usage event for job "SFN))
+#define MSG_JOB_CANTFINDJOBFORUPDATEIN_SS          _MESSAGE(67014, _("can't find job "SFN" for update in function "SFN))
+#define MSG_JOB_CANTFINDJATASKFORUPDATEIN_SS       _MESSAGE(67015, _("can't find array task "SFN" for update in function "SFN))
+#define MSG_JOB_CANTFINDPETASKFORUPDATEIN_SS       _MESSAGE(67016, _("can't find parallel task "SFN" for update in function "SFN))
+#define MSG_CQUEUE_CANTFINDFORUPDATEIN_SS          _MESSAGE(67017, _("can't find cluster queue "SFN" for update in function "SFN))
+#define MSG_QINSTANCE_CANTFINDFORUPDATEIN_SS       _MESSAGE(67018, _("can't find queue instance "SFN" for update in function "SFN))
 
 #endif /* __MSG_MIRLIB_H */

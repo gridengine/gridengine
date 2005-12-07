@@ -36,10 +36,6 @@
 
 void sge_gdi_kill_master(char *host, sge_gdi_request *request, sge_gdi_request *answer);
 
-/* lock_service_provider */
-void sge_setup_lock_service(void);
-void sge_teardown_lock_service(void);
-
 /* thread management */
 void sge_create_and_join_threads(void);
 
@@ -49,7 +45,10 @@ void sge_become_admin_user(void);
 void sge_exit_func(int);
 void sge_start_heartbeat(void);
 void sge_start_periodic_tasks(void);
-void sge_qmaster_shutdown(void);
+void sge_qmaster_shutdown(bool do_spool);
+void sge_register_event_handler(void); 
+int sge_shutdown_qmaster_via_signal_thread(int i);
+int sge_get_qmaster_exit_state(void);
 
 #endif /* _SGE_QMASTER_THREADS_H_ */
 

@@ -126,7 +126,7 @@ extern int main(int argc, char** argv)
      CL_LOG(CL_LOG_INFO,"main()");
 
      gettimeofday(&now,NULL);
-     cl_commlib_trigger(handle);
+     cl_commlib_trigger(handle, 1);
      ret_val = cl_commlib_receive_message(handle,NULL, NULL, 0, CL_FALSE, 0, &message, &sender);
      if (message != NULL ) {
         ret_val = cl_commlib_send_message(handle, 
@@ -150,7 +150,7 @@ extern int main(int argc, char** argv)
 
         for(nr=0;nr<connected_clients;nr++) {
            if (cl_com_compare_endpoints( clients[nr], sender ) != 0 ) {
-              printf("client %s/%s/%ld allready known\n", sender->comp_host, sender->comp_name, sender->comp_id);
+              printf("client %s/%s/%ld already known\n", sender->comp_host, sender->comp_name, sender->comp_id);
               is_new = 0;
            }
         }
@@ -235,7 +235,6 @@ extern int main(int argc, char** argv)
 
   printf("commlib cleanup ...\n");
   cl_com_cleanup_commlib();
-  fflush(NULL);
   
   printf("main done\n");
   return 0;

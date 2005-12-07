@@ -51,7 +51,7 @@ UTILITYBINARIES="uidgid gethostname gethostbyname gethostbyaddr \
                  sge_share_mon infotext spooldefaults spooledit spoolinit \
                  fstype"
 
-BDBUTILITYBINARIES="berkeley_db_svc db_dump db_load db_archive db_checkpoint"
+BDBUTILITYBINARIES="berkeley_db_svc db_archive db_checkpoint db_deadlock db_dump db_load db_printlog db_recover db_stat db_upgrade db_verify"
 
 SSLUTILITYBINARIES="openssl"
 
@@ -349,9 +349,8 @@ MakeDir()
 {
    if [ ! -d $DEST_SGE_ROOT/$1 ]; then
       Execute mkdir $DEST_SGE_ROOT/$1
-   else
-      Execute chmod 755 $DEST_SGE_ROOT/$1
    fi
+   Execute chmod 755 $DEST_SGE_ROOT/$1
 }
 
 #-------------------------------------------------------------------------
@@ -381,9 +380,10 @@ Install()
       Execute chown $target_uid $4
       Execute chgrp $target_gid $4
    fi
-   Execute chmod $2 $4
-   if [ $verbose = true ]; then
-      echo
+   if [ -d $4 ]; then
+      Execute chmod $2 $4/`basename $3`
+   else
+      Execute chmod $2 $4
    fi
 }
 
@@ -973,7 +973,7 @@ if [ $instcommon = true ]; then
              echo Installing `basename $filename`
              Execute rm -f $DEST_SGE_ROOT/lib/`basename $filename`
              MakeDir lib
-             Install 0.0 755 $filename $DEST_SGE_ROOT/lib
+             Install 0.0 644 $filename $DEST_SGE_ROOT/lib
          fi
       done
       Cleanup include
@@ -1026,8 +1026,10 @@ if [ $instcommon = true ]; then
       echo Installing \"man/\" and \"catman/\"
       Execute rm -rf $DEST_SGE_ROOT/man $DEST_SGE_ROOT/catman
       Execute cp -r MANSBUILD_$MANSRCDIR/SEDMAN/man $DEST_SGE_ROOT
+
       if [ -d MANSBUILD_$MANSRCDIR/ASCMAN/catman ]; then
-         Execute cp -r MANSBUILD_$MANSRCDIR/ASCMAN/catman $DEST_SGE_ROOT
+         Execute mkdir -p $DEST_SGE_ROOT/catman
+         Execute cp -r MANSBUILD_$MANSRCDIR/ASCMAN/catman/?_man $DEST_SGE_ROOT/catman
       fi
 
       if [ -d MANSBUILD_$MANSRCDIR/ASCMAN/man ]; then
@@ -1037,13 +1039,19 @@ if [ $instcommon = true ]; then
             dir_num=`basename $dir | cut -d"n" -f2`
             for file in `ls $SOURCEDIR/$dir`; do
                if [ ! -d "$DESTDIR/cat$dir_num" ]; then
-                  mkdir -p $DESTDIR/cat$dir_num
+                  Execute mkdir -p $DESTDIR/cat$dir_num
                fi
                Execute cp $SOURCEDIR/$dir/$file $DESTDIR/cat$dir_num/$file.$dir_num
             done
          done
       fi
 
+      Execute find $DEST_SGE_ROOT/man -type d | xargs chmod 755
+      Execute find $DEST_SGE_ROOT/man -type f | xargs chmod 644
+
+      Execute find $DEST_SGE_ROOT/catman -type d | xargs chmod 755
+      Execute find $DEST_SGE_ROOT/catman -type f | xargs chmod 644
+      
       Cleanup man catman
    fi
 
@@ -1067,12 +1075,16 @@ if [ $instcommon = true ]; then
    fi
 
    if [ $instjavadoc = true ]; then
-      if [ -d ../doc/javadocs ]; then
+      if [ -d JAVADOCS ]; then
          echo "Installing doc/javadocs"
          Execute rm -rf $DEST_SGE_ROOT/doc/javadocs
          MakeDir doc/javadocs
-         Execute cp -R ../doc/javadocs $DEST_SGE_ROOT/doc
-         Execute chmod -R a+r $DEST_SGE_ROOT/doc/javadocs
+
+         Execute cp -R JAVADOCS/* $DEST_SGE_ROOT/doc/javadocs
+
+         Execute find $DEST_SGE_ROOT/doc/javadocs -type d | xargs chmod 755
+         Execute find $DEST_SGE_ROOT/doc/javadocs -type f | xargs chmod 644
+
          Cleanup doc/javadocs
       fi
    fi
@@ -1166,7 +1178,7 @@ for i in $ARCH; do
                   fi
                fi
                ;;
-            sge_schedd|sge_shadowd|qmon)
+            sge_schedd|sge_shadowd|qmon|spooledit)
                if [ "$DSTARCH" != "win32-x86" ]; then
                   InstallProg $prog
                fi
@@ -1223,26 +1235,33 @@ for i in $ARCH; do
                fi
             elif [ $prog = testsuidroot ]; then
                InstallProgSUID $prog
-            elif [ $prog = berkeley_db_svc -o $prog = db_dump -o $prog = db_load -o $prog = db_archive -o $prog = db_checkpoint ]; then
+            elif [ $prog = berkeley_db_svc -o $prog = db_archive \
+                   -o $prog = db_checkpoint -o $prog = db_deadlock \
+                   -o $prog = db_dump -o $prog = db_load \
+                   -o $prog = db_printlog -o $prog = db_recover \
+                   -o $prog = db_stat -o $prog = db_upgrade \
+                   -o $prog = db_verify ]; then
                if [ "$DSTARCH" != "win32-x86" ]; then
                   InstallProg $BERKELEYDBBASE/$DSTARCH/bin/$prog
                fi
             elif [ $prog = spoolinit -o $prog = spooldefaults ]; then
-               if [ $instclassictargets = false ]; then
-                  InstallProg $prog
-               elif [ -f ../${ARCHBIN}_classic/$prog ]; then
-                  InstallProgAs ../${ARCHBIN}_classic/$prog ${prog}.spool_classic
-                  InstallProgAs $prog ${prog}.spool_bdb
-                  ( echo changing to $DEST_SGE_ROOT/utilbin/$DSTARCH ; \
-                    cd $DEST_SGE_ROOT/utilbin/$DSTARCH ; \
-                    echo ln -s ${prog}.spool_bdb $prog ; \
-                    ln -s ${prog}.spool_bdb $prog
-                   )
-               else
-                  InstallProg $prog
+               if [ "$DSTARCH" != "win32-x86" ]; then
+                  if [ $instclassictargets = false ]; then
+                     InstallProg $prog
+                  elif [ -f ../${ARCHBIN}_classic/$prog ]; then
+                     InstallProgAs ../${ARCHBIN}_classic/$prog ${prog}.spool_classic
+                     InstallProgAs $prog ${prog}.spool_bdb
+                     ( echo changing to $DEST_SGE_ROOT/utilbin/$DSTARCH ; \
+                       cd $DEST_SGE_ROOT/utilbin/$DSTARCH ; \
+                       echo ln -s ${prog}.spool_bdb $prog ; \
+                       ln -s ${prog}.spool_bdb $prog
+                     )
+                  else
+                     InstallProg $prog
+                  fi
                fi
-            else
-               InstallProg $prog
+            elif [ "$DSTARCH" != "win32-x86" -o "$prog" != "spooledit" ]; then
+                  InstallProg $prog
             fi
          done
          for prog in $REMOTEBINARIES; do
@@ -1295,25 +1314,34 @@ for i in $ARCH; do
 
          Execute rm -f $DEST_SGE_ROOT/$UTILPREFIX/$i/*
          for lib in $SHARED_LIBRARIES; do
-            if [ -f $lib.$shlibext ]; then
-               InstallProg $lib.$shlibext
+            if [ "$DSTARCH" != "win32-x86" \
+                 -o \( "$lib" != "libspool" -a "$lib" != "libspoolb" \
+                    -a "$lib" != "libspoold" -a "$lib" != "libspoolc" \
+                    -a "$lib" != "libspoolf" \) ]; then
+               if [ -f $lib.$shlibext ]; then
+                  InstallProg $lib.$shlibext
+               fi
             fi
          done
 
          for lib in $QMON_SHARED_LIBRARIES; do
-            libname="../3rdparty/qmon/$ARCHBIN/$lib.$shlibext"
-            if [ -f $libname ]; then
-               InstallProg $libname
+            if [ "$DSTARCH" != "win32-x86" ]; then
+               libname="../3rdparty/qmon/$ARCHBIN/$lib.$shlibext"
+               if [ -f $libname ]; then
+                  InstallProg $libname
+               fi
             fi
          done
 
          for lib in $QMON_NEED_SHARED_LIBRARIES; do
-            libname="../3rdparty/qmon/$ARCHBIN/$lib.$shlibext"
-            if [ -f $libname ]; then
-               InstallProg $libname
-            elif [ $exit_on_error = true ]; then
-               echo "\"$libname\" not found. Installation failed."
-               exit 1
+            if [ "$DSTARCH" != "win32-x86" ]; then
+               libname="../3rdparty/qmon/$ARCHBIN/$lib.$shlibext"
+               if [ -f $libname ]; then
+                  InstallProg $libname
+               elif [ $exit_on_error = true ]; then
+                  echo "\"$libname\" not found. Installation failed."
+                  exit 1
+               fi
             fi
          done
 
@@ -1372,13 +1400,13 @@ for i in $ARCH; do
 
 # On MacOS X, the JVM expects a special JNI extension for shared libraries
             if [ $shlibext != $jnilibext ]; then
-               echo Linking $lib.$jnilibext to $lib.$shlibext
-
-               if [ -f $DEST_SGE_ROOT/lib/$DSTARCH/4lib.$jnilibext ]; then
-                  rm $DEST_SGE_ROOT/lib/$DSTARCH/$lib.$jnilibext
+               ( echo Linking $lib.$jnilibext to $lib.$shlibext
+               cd $DEST_SGE_ROOT/lib/$DSTARCH
+               if [ -f lib.$jnilibext ]; then
+                  rm $lib.$jnilibext
                fi
 
-               ln -s $DEST_SGE_ROOT/lib/$DSTARCH/$lib.$shlibext $DEST_SGE_ROOT/lib/$DSTARCH/$lib.$jnilibext
+               ln -s $lib.$shlibext $lib.$jnilibext )
             fi
          fi
       fi

@@ -132,7 +132,7 @@ int answer_error;
             (long) lGetUlong(ja_task, JAT_task_number)));
          ret = handle_job(job, ja_task, de, pb, 0);
          if(ret != 0) {
-            lFreeElem(job);
+            lFreeElem(&job);
          }
       }
    } else {
@@ -149,7 +149,7 @@ int answer_error;
 
       ret = handle_task(petrep, de, pb, apb, synchron);
 
-      lFreeElem(petrep);
+      lFreeElem(&petrep);
    }
    
    if(ret == 0) {
@@ -197,7 +197,7 @@ int answer_error;
    }
 
    if (ret)  {
-      lFreeElem(jelem);
+      lFreeElem(&jelem);
    } 
 
    DEXIT;
@@ -294,7 +294,7 @@ int slave
       DPRINTF(("Q: %s %d\n", qnm, slots));
    }
    /* trash envelope */
-   qlp = lFreeList(qlp);
+   lFreeList(&qlp);
 
    /* ------- optionally pe */
    if (lGetString(jatep, JAT_granted_pe)) {
@@ -360,7 +360,7 @@ int slave
          if (!found_script) {
             /* We are root. Make the scriptfile readable for the jobs submitter,
                so shepherd can open (execute) it after changing to the user. */
-            fd = open(lGetString(jelem, JB_exec_file), O_CREAT | O_WRONLY, 0755);
+            fd = SGE_OPEN3(lGetString(jelem, JB_exec_file), O_CREAT | O_WRONLY, 0755);
             if (fd < 0) {
                sge_dstring_sprintf(&err_str, MSG_ERRORWRITINGFILE_SS, 
                                    lGetString(jelem, JB_exec_file), 
@@ -393,8 +393,8 @@ int slave
    ** Execute command to store the client's DCE or Kerberos credentials.
    ** This also creates a forwardable credential for the user.
    */
-   if (do_credentials) {
-      if (store_sec_cred2(jelem, do_authentication, &general, SGE_EVENT) != 0) {
+   if (mconf_get_do_credentials()) {
+      if (store_sec_cred2(jelem, mconf_get_do_authentication(), &general, SGE_EVENT) != 0) {
          sge_dstring_copy_string(&err_str, SGE_EVENT);
          goto Error;
       }   
@@ -441,7 +441,7 @@ Error:
    }
 
 Ignore:   
-   lFreeList(qlp);
+   lFreeList(&qlp);
    return -1;  
 }
 

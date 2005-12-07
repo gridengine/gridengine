@@ -101,6 +101,10 @@ struct rusage {
 #include "sge_processes_irix.h"
 #endif
 
+#if defined(INTERIX)
+#include "../../../utilbin/sge_passwd.h"
+#endif
+
 #if defined(SOLARIS) || defined(ALPHA)
 /* ALPHA4 only has wait3() prototype if _XOPEN_SOURCE_EXTENDED is defined */
 pid_t wait3(int *, int, struct rusage *);
@@ -231,7 +235,7 @@ static int do_prolog(int timeout, int ckpt_type)
       exit_status = start_child("prolog", command, NULL, timeout, ckpt_type);
 
       if (n_exit_status<(i=count_exit_status())) {
-         shepherd_trace_sprintf("exit states increased from %d to %d\n", n_exit_status, i);
+         shepherd_trace_sprintf("exit states increased from %d to %d", n_exit_status, i);
          /* in this case the child didnt get to the exec call or it failed */
          shepherd_trace("failed starting prolog");
          return SSTATE_BEFORE_PROLOG;
@@ -283,7 +287,7 @@ static int do_epilog(int timeout, int ckpt_type)
                      prolog_epilog_variables);
       exit_status = start_child("epilog", command, NULL, timeout, ckpt_type);
       if (n_exit_status<(i=count_exit_status())) {
-         shepherd_trace_sprintf("exit states increased from %d to %d\n", 
+         shepherd_trace_sprintf("exit states increased from %d to %d", 
                                 n_exit_status, i);
          /*
          ** in this case the child didnt get to the exec call or it failed
@@ -340,7 +344,7 @@ static int do_pe_start(int timeout, int ckpt_type, pid_t *pe_pid)
       */
       exit_status = start_child("pe_start", command, pe_pid, timeout, ckpt_type);
       if (n_exit_status<(i=count_exit_status())) {
-         shepherd_trace_sprintf("exit states increased from %d to %d\n", 
+         shepherd_trace_sprintf("exit states increased from %d to %d", 
                                 n_exit_status, i);
          /*
          ** in this case the child didnt get to the exec call or it failed
@@ -406,7 +410,7 @@ static int do_pe_stop(int timeout, int ckpt_type, pid_t *pe_pid)
        */
 
       if (n_exit_status<(i=count_exit_status())) {
-         shepherd_trace_sprintf("exit states increased from %d to %d\n", 
+         shepherd_trace_sprintf("exit states increased from %d to %d", 
                                 n_exit_status, i);
          /*
          ** in this case the child didnt get to the exec call or it failed
@@ -542,7 +546,10 @@ int main(int argc, char **argv)
       }
    }
    sge_mt_init();
-	shepherd_trace_init( );
+#if defined( INTERIX )
+   sge_init_shared_ssl_lib();
+#endif
+   shepherd_trace_init( );
 
    sge_dstring_init(&ds, buffer, sizeof(buffer));
 
@@ -578,8 +585,8 @@ int main(int argc, char **argv)
        * this is done in case where our getuid() is root and our
        * geteuid() is a normal user id
        */
-
-      if (getuid() == 0 && geteuid() != 0) {
+       if(getuid() == SGE_SUPERUSER_UID &&
+          geteuid() != SGE_SUPERUSER_UID) { 
           char name[128];
           if (!sge_uid2user(geteuid(), name, sizeof(name), MAX_NIS_RETRIES)) {
              sge_set_admin_username(name, NULL);
@@ -593,6 +600,9 @@ int main(int argc, char **argv)
          shepherd_error("can't read configuration file: malloc() failure");
       }
    }
+#if defined( INTERIX )
+   wl_set_use_sgepasswd((bool)get_conf_val("enable_windomacc"));
+#endif
 
    /* init admin user stuff */
    admin_user = get_conf_val("admin_user");
@@ -601,14 +611,14 @@ int main(int argc, char **argv)
    }
 
    if (sge_switch2admin_user()) {
-      shepherd_error(err_str);
+      shepherd_error("can't switch to admin user: sge_switch2admin_user() failed");
    }
 
 	/* finalize initialization of shepherd_trace - give the trace file
 	 * to the job owner so not only root/admin user but also he can use
 	 * the trace file later.
 	 */
-	shepherd_trace_chown( get_conf_val("job_owner"));
+   shepherd_trace_chown( get_conf_val("job_owner"));
 	
    sprintf(err_str, "starting up %s", feature_get_product_name(FS_VERSION, &ds));
    if (shepherd_trace(err_str)) {
@@ -814,7 +824,7 @@ int main(int argc, char **argv)
       fclose(fp);
    } else {
       /* ensure an exit status file exists */
-		shepherd_write_exit_status( "0" );
+	  shepherd_write_exit_status( "0" );
       return_code = 0;
    }
 
@@ -826,7 +836,7 @@ int main(int argc, char **argv)
       write_exit_code_to_qrsh(exit_status_for_qrsh);
    }
 	
-	shepherd_trace_exit( );
+   shepherd_trace_exit( );
    return return_code;
 }
 
@@ -862,6 +872,7 @@ int ckpt_type
    u_long32 wait_status = 0;
    FILE *fp;
    int core_dumped, ckpt_interval, ckpt_pid;
+   int wexit_flag_true = 1; /* to please IRIX compiler */
 
 #if defined(IRIX)
    ash_t ash = 0;
@@ -1014,7 +1025,7 @@ int ckpt_type
 
       exit_status = 128 + child_signal;
 
-      wait_status = SGE_SET_WSIGNALED(wait_status, 1);
+      wait_status = SGE_SET_WSIGNALED(wait_status, wexit_flag_true);
       wait_status = SGE_SET_WCOREDUMP(wait_status, core_dumped);
       wait_status = SGE_SET_WSIGNAL(wait_status, sge_map_signal(child_signal));
    } else {
@@ -1036,7 +1047,7 @@ int ckpt_type
             (exit_status==RESCHEDULE_EXIT_STATUS || exit_status==APPERROR_EXIT_STATUS)?
             " -> rescheduling":"");
 
-         wait_status = SGE_SET_WEXITED(wait_status, 1);
+         wait_status = SGE_SET_WEXITED(wait_status, wexit_flag_true);
          wait_status = SGE_SET_WEXITSTATUS(wait_status, exit_status);
 
       } else {
@@ -1077,7 +1088,19 @@ int ckpt_type
 
    if (!strcmp("job", childname)) {
       if (search_conf_val("rsh_daemon") != NULL) {
-         int qrsh_exit_code = get_exit_code_of_qrsh_starter();
+         int qrsh_exit_code = -1;
+         int success = 1; 
+
+         sge_switch2start_user();
+         success = get_exit_code_of_qrsh_starter(&qrsh_exit_code);
+         delete_qrsh_pid_file();
+         sge_switch2admin_user();
+
+         if (success != 0) {
+            /* This case should never happen */
+            /* See Issue 1679 */
+            shepherd_trace_sprintf("can't get qrsh_exit_code\n");
+         }
 
          /* normal exit */
          if (WIFEXITED(qrsh_exit_code)) {
@@ -1087,11 +1110,11 @@ int ckpt_type
 
             qrsh_error = get_error_of_qrsh_starter();
             if (qrsh_error != NULL) {
-               shepherd_error_sprintf("startup of qrsh job failed: "SFN"\n",
+               shepherd_error_sprintf("startup of qrsh job failed: "SFN"",
                                       qrsh_error);
                FREE(qrsh_error);
             } else {
-               shepherd_trace_sprintf("job exited normally, exit code is %d\n", 
+               shepherd_trace_sprintf("job exited normally, exit code is %d", 
                                       exit_status);
             }
          }
@@ -1101,14 +1124,14 @@ int ckpt_type
             child_signal = WTERMSIG(qrsh_exit_code);
             exit_status = 128 + child_signal;
             shepherd_trace_sprintf("job exited on signal %d, exit code is "
-                                   "%d\n", child_signal, exit_status);
+                                   "%d", child_signal, exit_status);
          }
       }
    
       /******* write usage to file "usage" ************/
       fp = fopen("usage", "w");
       if (!fp) {
-         shepherd_trace_sprintf("error: can't open \"usage\" file: %s", 
+         shepherd_error_sprintf("error: can't open \"usage\" file: %s", 
                                 strerror(errno));
       } 
       
@@ -1992,7 +2015,8 @@ char *childname            /* "job", "pe_start", ...     */
       }   
          
       
-   } while ((job_pid > 0) || (migr_cmd_pid > 0) || (ckpt_cmd_pid > 0));
+   } while ((job_pid > 0) || (migr_cmd_pid > 0) || (ckpt_cmd_pid > 0) ||
+            (ctrl_pid[0] > 0) || (ctrl_pid[1] > 0) || (ctrl_pid[2] > 0));
 
 #if defined(CRAY) || defined(NECSX4) || defined(NECSX5)
 
@@ -2142,8 +2166,10 @@ static int start_async_command(const char *descr, char *cmd)
    char err_str[512];
    char *cwd;
    struct passwd *pw=NULL;
+   struct passwd pw_struct;
+   char buffer[2048];
       
-   pw = sge_getpwnam(get_conf_val("job_owner"));
+   pw = sge_getpwnam_r(get_conf_val("job_owner"), &pw_struct, buffer, sizeof(buffer));
 
    if (!pw) {
       shepherd_error_sprintf("can't get password entry for user \"%s\"",
@@ -2263,118 +2289,75 @@ static void start_clean_command(char *cmd)
  and uses it instead of the pid. If reading or killing fails, the normal
  mechanism is used.
  ****************************************************************/
-static void shepherd_signal_job(
-pid_t pid,
-int sig 
-) {
+static void 
+shepherd_signal_job(pid_t pid, int sig) {
 #if defined(IRIX) || defined(CRAY) || defined(NECSX4) || defined(NECSX5)
    FILE *fp;
    static int first = 1;
-   int n;
-#  if (IRIX)
+#  if defined(IRIX)
    static ash_t osjobid = 0;
-#	elif defined(NECSX4) || defined(NECSX5)
+#elif defined(NECSX4) || defined(NECSX5)
    char err_str[512];
 	static id_t osjobid = 0;
 #  elif defined(CRAY)
    static int osjobid = 0;
 #  endif
-#elif defined(SOLARIS) || defined(LINUX) || defined(ALPHA)
-#if 0
-   char *cp;
-   gid_t add_grp_id;
-#endif   
-#endif
+# endif
 
-#if defined(IRIX) || defined(CRAY) || defined(NECSX4) || defined(NECSX5)
-
-   do {
-
-      /* Only root can setup job */
-      if (getuid())
-         break;
-
-      if (first) {
-         fp = fopen("osjobid", "r");
-         if (fp) {
-#if defined(IRIX)
-            n = fscanf(fp, "%lld", &osjobid);
-#else
-            n = fscanf(fp, "%d", &osjobid);      
-#endif
-            fclose(fp);
-
-            if (!n) {
-               shepherd_trace("can't read \"osjobid\" file");
-               break;
-            }
-
-            first = 0;
-         }
-      }
-
-      if (!osjobid) {
-         shepherd_trace("value in \"osjobid\" file = 0, not using kill_ash/killm");
-         break;
-      }
-
-      sge_switch2start_user();
-#     if defined(IRIX)
-      kill_ash(osjobid, sig, sig == 9);
-#     elif defined(CRAY)
-      killm(C_JOB, osjobid, sig);
-#		elif defined(NECSX4) || defined(NECSX5)
-      if (sig == SIGSTOP) {
-         if (suspendj(osjobid) == -1) {
-            shepherd_trace_sprintf("ERROR(%d): suspendj(%d): %s", errno,
-                                   osjobid, strerror(errno));
-         } else {
-            shepherd_trace_sprintf("suspendj(%d)", osjobid);
-         }
-      } else if (sig == SIGCONT) {
-         if (resumej(osjobid) == -1) {
-            shepherd_trace_sprintf("ERROR(%d): resumej(%d): %s", errno,
-                                   osjobid, strerror(errno));
-         } else {
-            shepherd_trace_sprintf("resumej(%d)", osjobid);
-         }
-      } else {
-         if (killj(osjobid, sig) == -1) {
-            shepherd_trace_sprintf("ERROR(%d): killj(%d, %d): %s", errno,
-                                   osjobid, sig, strerror(errno));
-         } else {
-            shepherd_trace_sprintf("killj(%d, %d)", osjobid, sig);
-         }
-      }                   
-#     endif
-      sge_switch2admin_user();
-
-   } while (0);
-
-#elif defined(SOLARIS) || defined(LINUX) || defined(ALPHA)
-#if 0
-   cp = search_conf_val("add_grp_id");
-   if (cp)
-      add_grp_id = atol(cp);
-   else
-      add_grp_id = 0;
-
-   {
-   char err_str[256];
-
-   shepherd_trace_sprintf("pdc_kill_addgrpid: %d %d", (int) add_grp_id , sig);
-
-   sge_switch2start_user();
-   pdc_kill_addgrpid(add_grp_id, sig, shepherd_trace);
-   sge_switch2admin_user();
-   }
-#endif
-#endif
-
+#if defined(CRAY) || defined(NECSX4) || defined(NECSX5)
    /* 980708 SVD - I moved the normal kill code below the special job
-      killing code for the Cray and SGI because killing the process first
+      killing code for the Cray and NEC because killing the process first
       may cause the job to be removed which can cause the job kill code
       to fail */
+
+   /* Only root can setup job */
+   if (getuid() == 0) {
+      if (first == 1) {
+         int n;
+         fp = fopen("osjobid", "r");
+         if (fp) {
+            n = fscanf(fp, "%d", &osjobid);      
+            fclose(fp);
+            if (!n) {
+               shepherd_trace("can't read \"osjobid\" file");
+            }
+         }
+         first = 0;
+      } 
+      if (osjobid == 0) {
+        shepherd_trace("value in \"osjobid\" file = 0, not using kill_ash/killm");
+      } else {
+        sge_switch2start_user();
+#     if defined(CRAY)
+        killm(C_JOB, osjobid, sig);
+#	  elif defined(NECSX4) || defined(NECSX5)
+        if (sig == SIGSTOP) {
+            if (suspendj(osjobid) == -1) {
+                shepherd_trace_sprintf("ERROR(%d): suspendj(%d): %s", errno,
+                                       osjobid, strerror(errno));
+             } else {
+                shepherd_trace_sprintf("suspendj(%d)", osjobid);
+             }
+         } else if (sig == SIGCONT) {
+             if (resumej(osjobid) == -1) {
+                shepherd_trace_sprintf("ERROR(%d): resumej(%d): %s", errno,
+                                       osjobid, strerror(errno));
+             } else {
+                shepherd_trace_sprintf("resumej(%d)", osjobid);
+             }
+         } else {
+             if (killj(osjobid, sig) == -1) {
+                shepherd_trace_sprintf("ERROR(%d): killj(%d, %d): %s", errno,
+                                       osjobid, sig, strerror(errno));
+             } else {
+                shepherd_trace_sprintf("killj(%d, %d)", osjobid, sig);
+             }
+         }                   
+#     endif
+         sge_switch2admin_user();
+      }
+    }
+# endif
 
    /* 
     * Normal signaling for OSes without reliable grouping mechanisms and if
@@ -2382,13 +2365,15 @@ int sig
     */
 
    /*
-   ** if child is a qrsh job (config rsh_daemon exists), get pid of started command
-   ** and pass signal to that one
-   ** if the signal is the kill signal, we first kill the pid of the started command.
-   ** subsequent kills are passed to the shepherds child.
-   */
+    * if child is a qrsh job (config rsh_daemon exists), get pid of started command
+    * and pass signal to that one
+    * if the signal is the kill signal, we first kill the pid of the started command.
+    * subsequent kills are passed to the shepherds child.
+    */
    {
       static int first_kill = 1;
+      static u_long32 first_kill_ts = 0;
+      static bool is_qrsh = false;
    
       if(first_kill == 1 || sig != SIGKILL) {
          if(search_conf_val("qrsh_pid_file") != NULL) {
@@ -2401,6 +2386,7 @@ int sig
             if((pid_file = fopen(pid_file_name, "r")) != NULL) {
                pid_t qrsh_pid = 0;
                if(fscanf(pid_file, pid_t_fmt, &qrsh_pid) == 1) {
+                  is_qrsh = true;
                   pid = -qrsh_pid;
                   shepherd_trace_sprintf("found pid of qrsh client command: " 
                                          pid_t_fmt, pid);
@@ -2411,17 +2397,72 @@ int sig
          }
       }
 
-      if(sig == SIGKILL) {
-         first_kill = 0;
+     /*
+      * It is possible that one signal requests from qmaster contains severeal
+      * kills for the same process. If this process is a tight integrated job
+      * the master task can be killed twice. For the slave tasks this means the
+      * qrsh -d is killed in the same time as the qrsh_starter child and so no
+      * qrsh_exit_code file is written (see Issue: 1679)
+      */
+      if ( (first_kill == 1) || (sge_get_gmt() - first_kill_ts > 10) || (sig != SIGKILL) ) {
+        shepherd_trace_sprintf("now sending signal %s to pid "pid_t_fmt, 
+                               sge_sys_sig2str(sig), pid);
+        sge_switch2start_user();
+        kill(pid, sig);
+        sge_switch2admin_user();
+
+#if defined(SOLARIS) || defined(LINUX) || defined(ALPHA) || defined(IRIX)
+        if (first_kill == 0 || sig != SIGKILL || is_qrsh == false) {                        
+#   if defined(SOLARIS) || defined(LINUX) || defined(ALPHA)
+            if (atoi(get_conf_val("enable_addgrp_kill")) == 1) {
+                gid_t add_grp_id;
+                char *cp = search_conf_val("add_grp_id");
+                
+                if (cp) {
+                    add_grp_id = atol(cp);
+                } else {
+                    add_grp_id = 0;
+                }
+                
+                shepherd_trace_sprintf("pdc_kill_addgrpid: %d %d", 
+                                       (int) add_grp_id , sig);
+                sge_switch2start_user();
+                pdc_kill_addgrpid(add_grp_id, sig, shepherd_trace);
+                sge_switch2admin_user();
+            }
+#   elif defined(IRIX)
+            if (first == 1) {
+                int n;
+                fp = fopen("osjobid", "r");
+                if (fp) {
+                   n = fscanf(fp, "%lld", &osjobid);
+                   fclose(fp);
+                   if (n == 0) {
+                       shepherd_trace("can't read \"osjobid\" file");
+                   } 
+                }
+                first = 0;
+            }
+            if (osjobid == 0) {
+                shepherd_trace("value in \"osjobid\" file = 0, not using kill_ash/killm");
+            } else {
+                sge_switch2start_user();
+                kill_ash(osjobid, sig, sig == 9);
+                sge_switch2admin_user();
+            }
+#   endif
+        }
+# endif
+      } else {
+        shepherd_trace_sprintf("ignored signal %s to pid "pid_t_fmt, 
+                             sge_sys_sig2str(sig), pid);
       }
 
-      shepherd_trace_sprintf("now sending signal %s to pid "pid_t_fmt, 
-                             sge_sys_sig2str(sig), pid);
+      if(sig == SIGKILL && first_kill == 1) {
+        first_kill = 0;
+        first_kill_ts = sge_get_gmt();
+      }
    }
-
-   sge_switch2start_user();
-   kill(pid, sig);
-   sge_switch2admin_user();
 }
 
 static int notify_tasker(u_long32 exit_status) 
@@ -2486,6 +2527,8 @@ static int notify_tasker(u_long32 exit_status)
    } else {
       char *job_owner;
       struct passwd *pw=NULL;
+      struct passwd pw_struct;
+      char buffer[2048];
 
       fprintf(fp, "%s "sge_u32"\n", pvm_task_id, exit_status); 
       fclose(fp);
@@ -2493,7 +2536,7 @@ static int notify_tasker(u_long32 exit_status)
       /* sig_info_file has to be removed by tasker 
          and tasker runs in user mode */
       job_owner = get_conf_val("job_owner");
-      pw = sge_getpwnam(job_owner);
+      pw = sge_getpwnam_r(job_owner, &pw_struct, buffer, sizeof(buffer));
       if (!pw) {
          shepherd_error_sprintf("can't get password entry for user "
                                 "\"%s\"", job_owner);
@@ -2542,8 +2585,7 @@ static pid_t start_token_cmd(int wait_for_finish, char *cmd, char *arg1,
 }
 
 /*------------------------------------------------------------------*/
-static int do_wait(pid_t pid) 
-{
+static int do_wait(pid_t pid) {
    pid_t npid;
    int status, exit_status;
 
@@ -2571,8 +2613,7 @@ static int do_wait(pid_t pid)
  * define a signal handler for SIGPIPE
  * to avoid that unblocked signal will kill us
  *-------------------------------------------------------------------*/
-static void set_sig_handler(int sig_num) 
-{
+static void set_sig_handler(int sig_num) {
    struct sigaction sa;
       
    memset(&sa, 0, sizeof(sa));
@@ -2587,8 +2628,7 @@ static void set_sig_handler(int sig_num)
 }
 
 /*-------------------------------------------------------------------*/
-static void shepherd_signal_handler(int dummy) 
-{
+static void shepherd_signal_handler(int dummy) {
    /* may not log in signal handler 
       as long as Async-Signal-Safe functions such as fopen() are used in 
       shepherd logging code */

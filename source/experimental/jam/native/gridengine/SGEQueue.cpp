@@ -140,11 +140,11 @@ SGEQueue::~SGEQueue()
     delete execHost;
   
   if(queues)
-    lFreeList(queues);
+    lFreeList(&queues);
   if(queue_elem)
-    lFreeElem(queue_elem);
+    lFreeElem(&queue_elem);
   if(answer)
-    lFreeList(answer);
+    lFreeList(&answer);
 }
 
 //=============== getters ==========================
@@ -309,7 +309,7 @@ void SGEQueue::freeSGEVars()
   if(queues)
     lFreeList(queues);
   if(queue_elem)
-    lFreeElem(queue_elem);
+    lFreeElem(&queue_elem);
   if(answer)
     lFreeList(answer);
 }

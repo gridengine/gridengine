@@ -100,8 +100,9 @@ static void qrsh_error(const char *fmt, ...)
    vsnprintf(message, MAX_STRING_SIZE, fmt, ap);
 
    if ((tmpdir = search_conf_val("qrsh_tmpdir")) == NULL) {
-      fprintf(stderr, message);
+      fprintf(stderr, "%s\n", message);
       fprintf(stderr, MSG_CONF_NOCONFVALUE_S, "qrsh_tmpdir");
+      fprintf(stderr, "\n");
       return;
    }
 
@@ -113,9 +114,10 @@ static void qrsh_error(const char *fmt, ...)
       snprintf(fileName, SGE_PATH_MAX, "%s/qrsh_error", tmpdir);
    }
 
-   if ((file = open(fileName, O_WRONLY | O_APPEND | O_CREAT, 00744)) == -1) {
-      fprintf(stderr, message);
+   if ((file = SGE_OPEN3(fileName, O_WRONLY | O_APPEND | O_CREAT, 00744)) == -1) {
+      fprintf(stderr, "%s\n", message);
       fprintf(stderr, MSG_QRSH_STARTER_CANNOTOPENFILE_SS, fileName, strerror(errno));
+      fprintf(stderr, "\n");
       return;
    }
 
@@ -231,6 +233,7 @@ static char *setEnvironment(const char *jobdir, char **wrapper)
       } else if (strncmp(line, "QRSH_WRAPPER=", 13) == 0) {
          if (*(line + 13) == 0) {
             fprintf(stderr, MSG_QRSH_STARTER_EMPTY_WRAPPER);
+            fprintf(stderr, "\n");
          } else {
             if ((*wrapper = (char *)malloc(strlen(line) - 13 + 1)) == NULL) {
                qrsh_error(MSG_QRSH_STARTER_MALLOCFAILED_S, strerror(errno));
@@ -339,6 +342,7 @@ static int changeDirectory(void)
    /* change to dir cwd */
    if(chdir(cwd) == -1) {
       fprintf(stderr, MSG_QRSH_STARTER_CANNOTCHANGEDIR_SS, cwd, strerror(errno));
+      fprintf(stderr, "\n");
       return 0;
    }
 
@@ -380,7 +384,7 @@ static int write_pid_file(pid_t pid)
       return 0;
    }
 
-   if((pid_file = open(pid_file_name, O_WRONLY | O_APPEND | O_CREAT, 00744)) == -1) {
+   if((pid_file = SGE_OPEN3(pid_file_name, O_WRONLY | O_APPEND | O_CREAT, 00744)) == -1) {
       qrsh_error(MSG_QRSH_STARTER_CANNOTWRITEPID_SS, pid_file_name, strerror(errno));
       return 0;
    }
@@ -629,7 +633,6 @@ static int startJob(char *command, char *wrapper, int noshell)
       char *userName = NULL;
       int    argc = 0;
       const char **args = NULL;
-      struct passwd *pw = NULL;
       char *cmd = NULL;
       int cmdargc;
       char **cmdargs = NULL;
@@ -647,12 +650,16 @@ static int startJob(char *command, char *wrapper, int noshell)
       }
 
       if(!noshell) {
+         struct passwd *pw = NULL;
+         struct passwd pw_struct;
+         char buffer[2048];
+
          if((userName = search_conf_val("job_owner")) == NULL) {
             qrsh_error(MSG_QRSH_STARTER_CANNOTGETLOGIN_S, strerror(errno));
             exit(EXIT_FAILURE);
          }
 
-         if((pw = sge_getpwnam(userName)) == NULL) {
+         if ((pw = sge_getpwnam_r(userName, &pw_struct, buffer, sizeof(buffer))) == NULL) {
             qrsh_error(MSG_QRSH_STARTER_CANNOTGETUSERINFO_S, strerror(errno));
             exit(EXIT_FAILURE);
          }
@@ -711,6 +718,7 @@ static int startJob(char *command, char *wrapper, int noshell)
       execvp(cmd, (char *const *)args);
       /* exec failed */
       fprintf(stderr, MSG_QRSH_STARTER_EXECCHILDFAILED_S, args[0], strerror(errno));
+      fprintf(stderr, "\n");
       exit(EXIT_FAILURE);
    }
 
@@ -773,7 +781,7 @@ static int writeExitCode(int myExitCode, int programExitCode)
       snprintf(fileName, SGE_PATH_MAX, "%s/qrsh_exit_code", tmpdir);
    }
 
-   if((file = open(fileName, O_WRONLY | O_APPEND | O_CREAT, 00744)) == -1) {
+   if((file = SGE_OPEN3(fileName, O_WRONLY | O_APPEND | O_CREAT, 00744)) == -1) {
       qrsh_error(MSG_QRSH_STARTER_CANNOTOPENFILE_SS, fileName, strerror(errno));
       return EXIT_FAILURE;
    }

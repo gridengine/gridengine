@@ -34,11 +34,11 @@
 
 #include "basis_types.h"
 
-#define MSG_SPOOL_ERROROPENINGSHAREDLIB_SS   _MESSAGE(68000, _("error opening shared lib "SFQ": "SFN"\n"))
-#define MSG_SPOOL_SHLIBDOESNOTCONTAINSPOOLING_SS   _MESSAGE(68001, _(SFQ" does not contain a valid Grid Engine spooling method: "SFN"\n"))
-#define MSG_SPOOL_LOADINGSPOOLINGMETHOD_SS   _MESSAGE(68002, _("loading spooling method "SFQ" from shared library "SFQ"\n"))
-#define MSG_SPOOL_SHLIBGETMETHODRETURNSNULL_S   _MESSAGE(68003, _("spooling shared library "SFQ" returns NULL as spooling method\n"))
-#define MSG_SPOOL_SHLIBCONTAINSXWENEEDY_SSS   _MESSAGE(68004, _("spooling shared library "SFQ" contains spooling method "SFQ", requested spooling method is "SFQ"\n"))
+#define MSG_SPOOL_ERROROPENINGSHAREDLIB_SS   _MESSAGE(68000, _("error opening shared lib "SFQ": "SFN))
+#define MSG_SPOOL_SHLIBDOESNOTCONTAINSPOOLING_SS   _MESSAGE(68001, _(SFQ" does not contain a valid Grid Engine spooling method: "SFN))
+#define MSG_SPOOL_LOADINGSPOOLINGMETHOD_SS   _MESSAGE(68002, _("loading spooling method "SFQ" from shared library "SFQ))
+#define MSG_SPOOL_SHLIBGETMETHODRETURNSNULL_S   _MESSAGE(68003, _("spooling shared library "SFQ" returns NULL as spooling method"))
+#define MSG_SPOOL_SHLIBCONTAINSXWENEEDY_SSS   _MESSAGE(68004, _("spooling shared library "SFQ" contains spooling method "SFQ", requested spooling method is "SFQ))
 
 #endif /* __MSG_SPOOLLIB_DYNAMIC_H */
 

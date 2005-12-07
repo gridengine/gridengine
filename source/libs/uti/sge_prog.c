@@ -97,7 +97,7 @@ const char *prognames[] =
    "japi_ec"   ,       /* 41  */
    "drmaa"     ,       /* 42  */
    "qping"     ,       /* 43  */ 
-   "sge_passwd"        /* 44  */
+   "sgepasswd"         /* 44  */
 };
  
 typedef struct {
@@ -453,12 +453,20 @@ void sge_getme(u_long32 program_number)
 {
    char *s = NULL;
    stringT tmp_str;
-   struct passwd *paswd = NULL;
    struct hostent *hent = NULL;
  
    DENTER(TOP_LAYER, "sge_getme");
  
    pthread_once(&prog_once, prog_once_init);
+
+   /* we need to detect cases when sge_getme() is called multiple times
+      for a thread. Due to sge_getme() doing an abort(2) upon user name
+      resolution we can utilize the user name as an indication sge_getme()
+      was already called and safe the effort of doing it again */
+   if (uti_state_get_user_name()!=NULL) {
+      DEXIT;
+      return;
+   }
 
    /* get program info */
    uti_state_set_mewho(program_number);
@@ -499,8 +507,15 @@ void sge_getme(u_long32 program_number)
    /* SETPGRP; */
    uti_state_set_uid(getuid());
    uti_state_set_gid(getgid());
-   SGE_ASSERT(((paswd = (struct passwd *) getpwuid((uid_t)uti_state_get_uid())) != NULL));
-   uti_state_set_user_name(paswd->pw_name);
+
+   {
+      struct passwd *paswd = NULL;
+      char buffer[2048];
+      struct passwd pwentry;
+      SGE_ASSERT(getpwuid_r((uid_t)uti_state_get_uid(), &pwentry, buffer, sizeof(buffer), &paswd)==0)
+      uti_state_set_user_name(paswd->pw_name);
+   }
+
    uti_state_set_default_cell(sge_get_default_cell());
  
    sge_show_me();

@@ -57,6 +57,7 @@
 #include "commlib.h"
 #include "sge_answer.h"
 #include "sge_range.h"
+#include "sge_string.h"
 #include "qmon_proto.h"
 #include "qmon_rmon.h"
 #include "qmon_cull.h"
@@ -112,6 +113,7 @@ typedef struct _tCClEntry {
    int enforce_project;
    int enforce_user;
    int dfs;
+   int reprioritize;
    String qmaster_params;
    String reporting_params;
    String execd_params;
@@ -220,6 +222,10 @@ XtResource ccl_resources[] = {
 
    { "dfs", "dfs", XtRInt, 
       sizeof(int), XtOffsetOf(tCClEntry, dfs), 
+      XtRImmediate, NULL },
+
+   { "reprioritize", "reprioritize", XtRInt, 
+      sizeof(int), XtOffsetOf(tCClEntry, reprioritize), 
       XtRImmediate, NULL },
 
    { "max_aj_instances", "max_aj_instances", XtRInt, 
@@ -365,6 +371,7 @@ static Widget cluster_reschedule_unknownPB = 0;
 static Widget cluster_shell_start_mode = 0;
 static Widget cluster_loglevel = 0;
 static Widget cluster_dfs = 0;
+static Widget cluster_reprioritize = 0;
 static Widget cluster_enforce_project = 0;
 static Widget cluster_enforce_user = 0;
 
@@ -449,7 +456,7 @@ XtPointer cld, cad;
    qmonMirrorMultiAnswer(CONFIG_T | EXECHOST_T, &alp);
    if (alp) {
       qmonMessageBox(w, alp, 0);
-      alp = lFreeList(alp);
+      lFreeList(&alp);
       /* set default cursor */
       XmtDisplayDefaultCursor(w);
       DEXIT;
@@ -568,7 +575,7 @@ lListElem *ep
       for(cep = lFirst(confl), i=0; cep; cep = lNext(cep), i++) {
          const char *name = lGetString(cep, CF_name);
          const char *value = lGetString(cep, CF_value);
-         sprintf(buf, "%-20.20s %s", name ? name : "", value ? value : "");
+         sprintf(buf, "%-25.25s %s", name ? name : "", value ? value : "");
          items[i] = XmStringCreateLtoR(buf, "LIST");
       }
       XtVaSetValues( cluster_conf_list, 
@@ -663,6 +670,7 @@ Widget parent
                            "cluster_ok", &cluster_ok,
                            "cluster_cancel", &cluster_cancel,
                            "cluster_dfs", &cluster_dfs,
+                           "cluster_reprioritize", &cluster_reprioritize,
                            "cluster_enforce_project", &cluster_enforce_project,
                            "cluster_enforce_user", &cluster_enforce_user,
                            "cluster_usersPB", &cluster_usersPB,
@@ -889,10 +897,20 @@ XtPointer cld, cad;
 
    XmtDialogGetDialogValues(layout, &cluster_entry);
 
-   if (host && !strcasecmp(host, "global"))
+   if (host && !strcasecmp(host, "global")) {
       local = 0;
-   else
+   } else {
+      lList *old = qmonMirrorList(SGE_CONFIG_LIST);
+      lListElem *ep = lGetElemHost(old, CONF_hname, host ? host :"");
+
+      if (ep) {
+         qmonMessageShow(w, True, "host '%s' already exists", host ? host : "");
+         DEXIT;
+         return;
+      }   
+   
       local = 1;
+   }   
 
    if (qmonCClEntryToCull(layout, &cluster_entry, &conf_entries, local)) {
       confl = lCreateElemList("Conf_list", CONF_Type, 1);
@@ -924,9 +942,9 @@ XtPointer cld, cad;
       XmStringFree(xhost);
    
     
-      lFreeWhat(what);
-      confl = lFreeList(confl);
-      alp = lFreeList(alp);
+      lFreeWhat(&what);
+      lFreeList(&confl);
+      lFreeList(&alp);
    }
    
    if (status)
@@ -988,6 +1006,7 @@ static void qmonClusterLayoutSetSensitive(Boolean mode)
    XtSetSensitive(cluster_reporting_params_label, mode);
   
    XtSetSensitive(cluster_dfs, mode);
+   XtSetSensitive(cluster_reprioritize, mode);
    XtSetSensitive(cluster_enforce_project, mode);
    XtSetSensitive(cluster_enforce_user, mode);
    XtSetSensitive(cluster_projects, mode);
@@ -1045,8 +1064,8 @@ XtPointer cld, cad;
 
          qmonMessageBox(w, alp, 0);
 
-         lFreeWhat(what);
-         alp = lFreeList(alp);
+         lFreeWhat(&what);
+         lFreeList(&alp);
 
          updateClusterList();
          XtVaGetValues( cluster_host_list,
@@ -1062,7 +1081,7 @@ XtPointer cld, cad;
             
          
       }
-      lp = lFreeList(lp);
+      lFreeList(&lp);
    }
    DEXIT;
 
@@ -1084,6 +1103,7 @@ int local
    static String loglevel[] = { "log_info", "log_warning", "log_err" };
 /*    static String logmail[] = { "true", "false" }; */
    static String dfs[] = { "true", "false" };
+   static String reprioritize[] = { "true", "false" };
    static String enforce_project[] = { "true", "false" };
    static String enforce_user[] = { "true", "false", "auto" };
    String str = NULL;
@@ -1398,13 +1418,13 @@ int local
             incorrect_gid_range = 1;
          } else if (range_list_containes_id_less_than(range_list,
                                                     GID_RANGE_NOT_ALLOWED_ID)) {
-            range_list = lFreeList(range_list);
+            lFreeList(&range_list);
             incorrect_gid_range = 1;
          }
 
          if (incorrect_gid_range) {
             strcpy(errstr, "Cannot parse GID Range !");
-            alp = lFreeList(alp);
+            lFreeList(&alp);
             goto error;
          } else {
             ep = lGetElemStr(confl, CF_name, "gid_range");
@@ -1637,13 +1657,13 @@ int local
             incorrect_gid_range = 1;
          } else if (range_list_containes_id_less_than(range_list,
                                                    GID_RANGE_NOT_ALLOWED_ID)) {
-            range_list = lFreeList(range_list);
+            lFreeList(&range_list);
             incorrect_gid_range = 1;
          }
 
          if (incorrect_gid_range) {
             strcpy(errstr, "Cannot parse GID Range !");
-            alp = lFreeList(alp);
+            lFreeList(&alp);
             goto error;
          } else {
             ep = lGetElemStr(confl, CF_name, "gid_range");
@@ -1659,6 +1679,12 @@ int local
             clen->dfs < sizeof(dfs))
          str = dfs[clen->dfs];
       ep = lGetElemStr(confl, CF_name, "delegated_file_staging");
+      lSetString(ep, CF_value, str);
+
+      if (clen->reprioritize >= 0 && 
+            clen->reprioritize < sizeof(reprioritize))
+         str = reprioritize[clen->reprioritize];
+      ep = lGetElemStr(confl, CF_name, "reprioritize");
       lSetString(ep, CF_value, str);
 
 
@@ -1880,7 +1906,7 @@ int local
    }
 
    if (lGetNumberOfElem(lp) == 0) {
-      lp = lFreeList(lp);
+      lFreeList(&lp);
       *lpp  = NULL;
       DEXIT;
       return True;
@@ -1893,7 +1919,7 @@ int local
 
    error:
       qmonMessageShow(w, True, errstr);
-      lp = lFreeList(lp);
+      lFreeList(&lp);
       *lpp = NULL;
       DEXIT;
       return False;
@@ -2031,13 +2057,13 @@ tCClEntry *clen
 /*       clen->logmail = 1; */
 
    if ((ep = lGetElemStr(confl, CF_name, "user_lists"))) {
-      clen->cluster_users = lFreeList(clen->cluster_users);
+      lFreeList(&(clen->cluster_users));
       lString2ListNone(lGetString(ep, CF_value), &clen->cluster_users, 
                            US_Type, US_name, NULL);
    }
 
    if ((ep = lGetElemStr(confl, CF_name, "xuser_lists"))) {
-      clen->cluster_xusers = lFreeList(clen->cluster_xusers);
+      lFreeList(&clen->cluster_xusers);
       lString2ListNone(lGetString(ep, CF_value), &clen->cluster_xusers, 
                            US_Type, US_name, NULL);
    }
@@ -2051,6 +2077,13 @@ tCClEntry *clen
       clen->dfs = 0;
    else
       clen->dfs = 1;
+
+   if ((ep = lGetElemStr(confl, CF_name, "reprioritize")))
+      str = (StringConst)lGetString(ep, CF_value);
+   if (str && (!strcasecmp(str, "true") || !strcmp(str, "1")))
+      clen->reprioritize = 0;
+   else
+      clen->reprioritize = 1;
 
 
    if ((ep = lGetElemStr(confl, CF_name, "enforce_project")))
@@ -2070,13 +2103,13 @@ tCClEntry *clen
       clen->enforce_user = 1;
 
    if ((ep = lGetElemStr(confl, CF_name, "projects"))) {
-      clen->cluster_projects = lFreeList(clen->cluster_projects);
+      lFreeList(&clen->cluster_projects);
       lString2ListNone(lGetString(ep, CF_value), &clen->cluster_projects, 
                            UP_Type, UP_name, NULL);
    }
 
    if ((ep = lGetElemStr(confl, CF_name, "xprojects"))) {
-      clen->cluster_xprojects = lFreeList(clen->cluster_xprojects);
+      lFreeList(&(clen->cluster_xprojects));
       lString2ListNone(lGetString(ep, CF_value), &clen->cluster_xprojects, 
                            UP_Type, UP_name, NULL);
    }
@@ -2236,11 +2269,12 @@ tCClEntry *clen
    }
    clen->loglevel = 0; 
    clen->logmail = 0;    
-   clen->cluster_users = lFreeList(clen->cluster_users);
-   clen->cluster_xusers = lFreeList(clen->cluster_xusers);
-   clen->cluster_projects = lFreeList(clen->cluster_projects);
-   clen->cluster_xprojects = lFreeList(clen->cluster_xprojects);
+   lFreeList(&(clen->cluster_users));
+   lFreeList(&(clen->cluster_xusers));
+   lFreeList(&(clen->cluster_projects));
+   lFreeList(&(clen->cluster_xprojects));
    clen->dfs = 1;    
+   clen->reprioritize = 1;    
    clen->enforce_project = 1;    
    clen->enforce_user = 1;    
 
@@ -2334,7 +2368,7 @@ XtPointer cld, cad;
    qmonMirrorMultiAnswer(USERSET_T, &alp);
    if (alp) {
       qmonMessageBox(w, alp, 0);
-      alp = lFreeList(alp);
+      lFreeList(&alp);
       DEXIT;
       return;
    }
@@ -2349,8 +2383,7 @@ XtPointer cld, cad;
       UpdateXmListFromCull(list, XmFONTLIST_DEFAULT_TAG, ql_out,
                               US_name);
    }
-   ql_out = lFreeList(ql_out);
-
+   lFreeList(&ql_out);
    DEXIT;
 }
 
@@ -2370,7 +2403,7 @@ XtPointer cld, cad;
    qmonMirrorMultiAnswer(PROJECT_T, &alp);
    if (alp) {
       qmonMessageBox(w, alp, 0);
-      alp = lFreeList(alp);
+      lFreeList(&alp);
       DEXIT;
       return;
    }
@@ -2385,7 +2418,7 @@ XtPointer cld, cad;
       UpdateXmListFromCull(list, XmFONTLIST_DEFAULT_TAG, ql_out,
                               UP_name);
    }
-   ql_out = lFreeList(ql_out);
+   lFreeList(&ql_out);
 
    DEXIT;
 }
@@ -2442,7 +2475,7 @@ XtPointer cld, cad;
    
    if (cbs->input && cbs->input[0] != '\0') {
       DPRINTF(("cbs->input = '%s'\n", cbs->input));
-      strncpy(buf, cbs->input, MAX_INPUT_LEN);
+      sge_strlcpy(buf, cbs->input, MAX_INPUT_LEN);
       for (start = buf; *start && isspace(*start); start++)
          ;
       for (i=strlen(buf)-1; isspace(buf[i]) && i>0; i--)
@@ -2470,7 +2503,7 @@ XtPointer cad
    DENTER(GUI_LAYER, "qmonClusterTime");
 
    current = XmtInputFieldGetString(input_field);
-   strncpy(stringval, current ? current : "", sizeof(stringval)-1);
+   sge_strlcpy(stringval, current, sizeof(stringval));
    status = XmtAskForTime(w, NULL, "@{Enter time}",
                stringval, sizeof(stringval), NULL, True);
    if (stringval[0] == '\0')

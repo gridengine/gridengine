@@ -166,6 +166,7 @@ bool host_is_referenced(const lListElem *host,
                   ret = true;
                   break;
                }
+               lFreeList(&host_list);
             }
          }
       }
@@ -393,7 +394,7 @@ host_trash_load_values(lListElem *host)
             DPRINTF(("host "SFN": trashing load value "SFQ"\n",
                      host_name,
                      load_name));
-            lRemoveElem(load_list, ep);
+            lRemoveElem(load_list, &ep);
          }
 
          /* assign next element */

@@ -55,10 +55,10 @@ sigset_t io_mask;
 struct sigaction sigterm_vec, sigterm_ovec;
 struct sigaction sigalrm_vec, sigalrm_ovec;
 struct sigaction sigcld_pipe_vec, sigcld_pipe_ovec;
-volatile int shut_me_down = 0;
-volatile int dead_children = 0;
-volatile int in_main_loop = 1;
-volatile int sigpipe_received = 0;
+volatile int shut_me_down                     = 0;
+volatile int sge_sig_handler_dead_children    = 0;
+volatile int sge_sig_handler_in_main_loop     = 1;
+volatile int sge_sig_handler_sigpipe_received = 0;
 
 /********************************************************/
 void sge_setup_sig_handlers(
@@ -83,6 +83,8 @@ int me_who
    sigdelset(&default_mask, SIGTTIN);
    sigdelset(&default_mask, SIGTTOU);
    sigdelset(&default_mask, SIGFPE);
+/* Allow SIGTRAP for debuggin purpose */
+   sigdelset(&default_mask, SIGTRAP); 
 #if !(defined(CRAY) || defined(NECSX4) || defined(NECSX5))
    sigdelset(&default_mask, SIGVTALRM);
    sigdelset(&default_mask, SIGPROF);
@@ -118,6 +120,8 @@ int me_who
    sigdelset(&io_mask, SIGTTIN);
    sigdelset(&io_mask, SIGTTOU);
    sigdelset(&io_mask, SIGFPE);
+/* Allow SIGTRAP for debuggin purpose */
+   sigdelset(&io_mask, SIGTRAP);
 #if !( defined(CRAY) || defined(NECSX4) || defined(NECSX5) )
    sigdelset(&io_mask, SIGVTALRM);
    sigdelset(&io_mask, SIGPROF);
@@ -191,26 +195,27 @@ static void sge_alarmclock(int dummy)
 /***************************************************************************/
 static void sge_terminate(int dummy)
 {
-   if (!in_main_loop) {
-      cl_com_ignore_timeouts(CL_TRUE);
-      cl_com_cleanup_commlib();
-      /* leave_commd() */
+   /* set shut-me-down variable */
+   shut_me_down = 1;
+
+   /* inform commlib to ignore all timeouts */
+   cl_com_ignore_timeouts(CL_TRUE);
+
+   /* This is not the best way to shut down a process. 
+      TODO: remove the exit call, applications should check shut_me_down */
+   if (!sge_sig_handler_in_main_loop) {
       exit(1);
-   }
-   else {
-      cl_com_ignore_timeouts(CL_TRUE);
-      shut_me_down = 1;
    }
 }
 
 /***************************************************************************/
 void sge_reap(int dummy)
 {
-   dead_children = 1;
+   sge_sig_handler_dead_children = 1;
 }
 
 /***************************************************************************/
 static void sge_sigpipe_handler(int dummy)
 {
-   sigpipe_received = 1;
+   sge_sig_handler_sigpipe_received = 1;
 }

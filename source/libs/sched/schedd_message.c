@@ -201,8 +201,8 @@ void schedd_mes_initialize(void)
 void schedd_mes_release(void)
 {
    DENTER(TOP_LAYER, "schedd_release_messages");
-   sme = lFreeElem(sme);
-   tmp_sme = lFreeElem(tmp_sme);
+   lFreeElem(&sme);
+   lFreeElem(&tmp_sme);
    DEXIT;
 }
 
@@ -259,7 +259,7 @@ void schedd_mes_commit(lList *job_list, int ignore_category, lRef jid_category) 
        */
       sme_mes_list = lGetList(sme, SME_message_list);
       lXchgList(tmp_sme, SME_message_list, &tmp_sme_list);
-      lAddList(sme_mes_list, tmp_sme_list);
+      lAddList(sme_mes_list, &tmp_sme_list);
       tmp_sme_list = lCreateList("job info messages", MES_Type);
       lSetList(tmp_sme, SME_message_list, tmp_sme_list);
    }
@@ -338,7 +338,7 @@ lListElem *schedd_mes_obtain_package(int *global_mes_count, int *job_mes_count)
 
    ret = sme; /* calling function is responsible to free messages! */
    sme = NULL; 
-   tmp_sme = lFreeElem(tmp_sme);
+   lFreeElem(&tmp_sme);
 
    DEXIT;
    return ret; 
@@ -408,6 +408,7 @@ void schedd_mes_add(u_long32 job_number, u_long32 message_number, ...)
    char msg_log[MAXMSGLEN];
    lList *jobs_ulng = NULL;
    lListElem *jid_ulng;
+   u_long32 schedd_job_info;
 #if defined(LINUX)
    int nchars;
 #endif
@@ -416,6 +417,7 @@ void schedd_mes_add(u_long32 job_number, u_long32 message_number, ...)
 
    fmt = sge_schedd_text(message_number);
    va_start(args,message_number);
+   schedd_job_info = sconf_get_schedd_job_info();
 
 #if defined(LINUX)
    nchars = vsnprintf(msg, MAXMSGLEN, fmt, args);
@@ -429,8 +431,8 @@ void schedd_mes_add(u_long32 job_number, u_long32 message_number, ...)
    vsprintf(msg, fmt, args);
 #endif
 
-   if (job_number && (sconf_get_schedd_job_info() != SCHEDD_JOB_INFO_FALSE)) {
-      if (sconf_get_schedd_job_info() == SCHEDD_JOB_INFO_JOB_LIST) {
+   if (job_number && (schedd_job_info != SCHEDD_JOB_INFO_FALSE)) {
+      if (schedd_job_info == SCHEDD_JOB_INFO_JOB_LIST) {
          if (!range_list_is_id_within(sconf_get_schedd_job_info_range(),
                                       job_number)) {
             DPRINTF(("Job "sge_u32" not in scheddconf.schedd_job_info_list\n", job_number));
@@ -503,6 +505,7 @@ void schedd_mes_add_join(u_long32 job_number, u_long32 message_number, ...)
    char msg_log[MAXMSGLEN];
    lList *jobs_ulng = NULL;
    lListElem *jid_ulng;
+   u_long32 schedd_job_info;
 #if defined(LINUX)
    int nchars;
 #endif
@@ -511,6 +514,7 @@ void schedd_mes_add_join(u_long32 job_number, u_long32 message_number, ...)
 
    fmt = sge_schedd_text(message_number);
    va_start(args,message_number);
+   schedd_job_info = sconf_get_schedd_job_info();
 
 #if defined(LINUX)
    nchars = vsnprintf(msg, MAXMSGLEN, fmt, args);
@@ -524,10 +528,9 @@ void schedd_mes_add_join(u_long32 job_number, u_long32 message_number, ...)
    vsprintf(msg, fmt, args);
 #endif
 
-   if (job_number && (sconf_get_schedd_job_info() != SCHEDD_JOB_INFO_FALSE)) {
-      if (sconf_get_schedd_job_info() == SCHEDD_JOB_INFO_JOB_LIST) {
-         if (!range_list_is_id_within(sconf_get_schedd_job_info_range(),
-                                      job_number)) {
+   if (job_number && (schedd_job_info != SCHEDD_JOB_INFO_FALSE)) {
+      if (schedd_job_info == SCHEDD_JOB_INFO_JOB_LIST) {
+         if (!sconf_is_id_in_schedd_job_info_range(job_number)) {
             DPRINTF(("Job "sge_u32" not in scheddconf.schedd_job_info_list\n", job_number));
             return;
          }

@@ -664,9 +664,9 @@ _sge_mirror_subscribe(sge_object_type type,
    mirror_base[type].clientdata      = clientdata;
 
    if (where_el)
-      where_el = lFreeElem(where_el);
+      lFreeElem(&where_el);
    if (what_el)
-      what_el = lFreeElem(what_el);
+      lFreeElem(&what_el);
 
    return SGE_EM_OK;
 }   
@@ -938,7 +938,7 @@ sge_mirror_error sge_mirror_process_events(void)
    if(ec_get(&event_list, false)) {
       if(event_list != NULL) {
          ret = sge_mirror_process_event_list(event_list);
-         lFreeList(event_list);
+         lFreeList(&event_list);
       }
    } else {
       WARNING((SGE_EVENT, MSG_MIRROR_QMASTERALIVETIMEOUTEXPIRED));
@@ -957,13 +957,11 @@ sge_mirror_error sge_mirror_process_events(void)
    }
 
    if (prof_is_active(SGE_PROF_MIRROR)) {
-      u_long32 saved_logginglevel = log_state_get_log_level();
       prof_stop_measurement(SGE_PROF_MIRROR, NULL);
       
-      log_state_set_log_level(LOG_INFO); 
-      INFO((SGE_EVENT, "PROF: sge_mirror processed %d events in %.3f s\n", 
-            num_events, prof_get_measurement_wallclock(SGE_PROF_MIRROR, false, NULL)));
-      log_state_set_log_level(saved_logginglevel);          
+      PROFILING((SGE_EVENT, "PROF: sge_mirror processed %d events in %.3f s\n", 
+                 num_events, prof_get_measurement_wallclock(SGE_PROF_MIRROR, 
+                 false, NULL)));
    }
 
    
@@ -1656,7 +1654,7 @@ sge_mirror_update_master_list(lList **list, const lDescr *list_descr,
          }
          
          /* remove element */
-         lRemoveElem(*list, ep);
+         lRemoveElem(*list, &ep);
          break;
 
       case SGE_EMA_MOD:
@@ -1666,7 +1664,7 @@ sge_mirror_update_master_list(lList **list, const lDescr *list_descr,
             DEXIT;
             return SGE_EM_KEY_NOT_FOUND;
          }
-         lRemoveElem(*list, ep);
+         lRemoveElem(*list, &ep);
          data_list = lGetList(event, ET_new_version);
          lAppendElem(*list, lDechainElem(data_list, lFirst(data_list)));
          break;

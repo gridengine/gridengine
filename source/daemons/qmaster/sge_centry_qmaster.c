@@ -79,7 +79,7 @@ sge_change_queue_version_centry(void);
 int 
 centry_mod(lList **answer_list, lListElem *centry, lListElem *reduced_elem, 
            int add, const char *remote_user, const char *remote_host, 
-           gdi_object_t *object, int sub_command) 
+           gdi_object_t *object, int sub_command, monitoring_t *monitor) 
 {
    bool ret = true;
    bool is_slots_attr = false;
@@ -310,7 +310,7 @@ centry_spool(lList **alpp, lListElem *cep, gdi_object_t *object)
 *
 *******************************************************************************/
 int 
-centry_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object, lList **ppList) 
+centry_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object, lList **ppList, monitoring_t *monitor) 
 {
    bool rebuild_consumables = false;
 
@@ -389,13 +389,12 @@ int sge_del_centry(lListElem *centry, lList **answer_list,
             if (tmp_centry != NULL) {
                if (!centry_is_referenced(tmp_centry, &local_answer_list, 
                         *(object_type_get_master_list(SGE_TYPE_CQUEUE)),
-                        Master_Exechost_List, 
-                        *(object_type_get_master_list(SGE_TYPE_SCHEDD_CONF)))) {
+                        Master_Exechost_List )) {
                   if (sge_event_spool(answer_list, 0, sgeE_CENTRY_DEL, 
                                       0, 0, name, NULL, NULL,
                                       NULL, NULL, NULL, true, true)) {
 
-                     lRemoveElem(master_centry_list, tmp_centry);
+                     lRemoveElem(master_centry_list, &tmp_centry);
                      INFO((SGE_EVENT, MSG_SGETEXT_REMOVEDFROMLIST_SSSS, 
                            remote_user, remote_host, name, MSG_OBJ_CPLX));
                      answer_list_add(answer_list, SGE_EVENT, 
@@ -413,7 +412,7 @@ int sge_del_centry(lListElem *centry, lList **answer_list,
                   ERROR((SGE_EVENT, "denied: %s", lGetString(answer, AN_text)));
                   answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN,
                                  ANSWER_QUALITY_ERROR);
-                  local_answer_list = lFreeList(local_answer_list);
+                  lFreeList(&local_answer_list);
                   ret = false;
                }
             } else {

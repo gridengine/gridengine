@@ -76,6 +76,8 @@ void qstat_filter_add_core_attributes(void)
       JB_ja_z_ids,
       JB_ja_template,
       JB_execution_time,
+      JB_hard_queue_list,
+      JB_project,
       NoName
    };
    const int nm_JAT_Type_template[] = {
@@ -116,7 +118,6 @@ void qstat_filter_add_ext_attributes(void)
 {
    lEnumeration *tmp_what = NULL;
    const int nm_JB_Type[] = {
-      JB_project,
       JB_department,
       JB_override_tickets,
       NoName
@@ -296,11 +297,15 @@ void qstat_filter_add_t_attributes(void)
    
    const int nm_JAT_Type_list[] = {
       JAT_task_list,
+      JAT_usage_list,
+      JAT_scaled_usage_list,
       NoName
    };
 
    const int nm_JAT_Type_template[] = {
       JAT_task_list,
+      JAT_usage_list,
+      JAT_scaled_usage_list,
       NoName
    };
    
@@ -368,6 +373,37 @@ lCondition *qstat_get_JB_Type_selection(lList *user_list, u_long32 show)
              */
             tmp_nw = lWhere("%T(!(%I -> %T((%I m= %u))))", JB_Type, JB_ja_tasks, 
                         JAT_Type, JAT_status, JRUNNING);
+            if (nw == NULL) {
+               nw = tmp_nw;
+            } else {
+               nw = lOrWhere(nw, tmp_nw);
+            } 
+            /*
+             * Array Jobs with one or more tasks pending
+             */
+            tmp_nw = lWhere("%T(%I -> %T((%I > %u)))", JB_Type, JB_ja_n_h_ids, 
+                        RN_Type, RN_min, 0);
+            if (nw == NULL) {
+               nw = tmp_nw;
+            } else {
+               nw = lOrWhere(nw, tmp_nw);
+            } 
+            tmp_nw = lWhere("%T(%I -> %T((%I > %u)))", JB_Type, JB_ja_u_h_ids, 
+                        RN_Type, RN_min, 0);
+            if (nw == NULL) {
+               nw = tmp_nw;
+            } else {
+               nw = lOrWhere(nw, tmp_nw);
+            } 
+            tmp_nw = lWhere("%T(%I -> %T((%I > %u)))", JB_Type, JB_ja_s_h_ids, 
+                        RN_Type, RN_min, 0);
+            if (nw == NULL) {
+               nw = tmp_nw;
+            } else {
+               nw = lOrWhere(nw, tmp_nw);
+            } 
+            tmp_nw = lWhere("%T(%I -> %T((%I > %u)))", JB_Type, JB_ja_o_h_ids, 
+                        RN_Type, RN_min, 0);
             if (nw == NULL) {
                nw = tmp_nw;
             } else {

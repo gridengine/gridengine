@@ -43,6 +43,7 @@
 
 #include "basis_types.h"
 #include "sge_dstring.h"
+#include "sge_string.h"
 #include "sgermon.h"
 #include "sge_unistd.h"
 
@@ -126,7 +127,7 @@ char *sge_tmpnam(char *aBuffer)
       return NULL;
    }
 
-   strncpy(aBuffer, sge_dstring_get_string(&s), SGE_PATH_MAX);
+   sge_strlcpy(aBuffer, sge_dstring_get_string(&s), SGE_PATH_MAX);
    sge_dstring_free(&s);
 
    DPRINTF(("sge_tmpnam: returning %s\n", aBuffer));
@@ -192,7 +193,7 @@ static int spawn_file(dstring *aBuffer)
       }
 
       sge_dstring_append_dstring(aBuffer, &s);
-      fd = open(sge_dstring_get_string(aBuffer), O_RDWR | O_CREAT | O_EXCL, S_IRUSR | S_IWUSR);
+      fd = SGE_OPEN3(sge_dstring_get_string(aBuffer), O_RDWR | O_CREAT | O_EXCL, S_IRUSR | S_IWUSR);
       if (fd >= 0) {
          close(fd);
          break;

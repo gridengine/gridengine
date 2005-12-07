@@ -153,7 +153,9 @@
 #define MSG_CL_RETVAL_ERROR_SETTING_CIPHER_LIST        _MESSAGE(80115, _("error setting cipher list"))
 #define MSG_CL_RETVAL_REACHED_FILEDESCRIPTOR_LIMIT     _MESSAGE(80116, _("file descriptor exeeds FD_SETSIZE of this system"))
 #define MSG_CL_RETVAL_HOSTNAME_LENGTH_ERROR            _MESSAGE(80117, _("hostname exeeds hostname length(MAXHOSTNAMELEN) on this system"))
-
-
+#define MSG_CL_RETVAL_HANDLE_SHUTDOWN_IN_PROGRESS      _MESSAGE(80118, _("handle shutdown in progress"))
+#define MSG_CL_RETVAL_COMMLIB_SETUP_ALREADY_CALLED     _MESSAGE(80119, _("cl_com_setup_commlib() processed twice"))
+#define MSG_CL_RETVAL_DO_IGNORE                        _MESSAGE(80120, _("value is ignored"))
+#define MSG_CL_RETVAL_CLOSE_ALIAS_FILE_FAILED          _MESSAGE(80121, _("could not close alias file"))
 
 #endif /* __MSG_COMMLISTSLIB_H */

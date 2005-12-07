@@ -35,6 +35,7 @@
 #include "sge_htable.h"
 #include "sge_dstring.h"
 #include "sge_jobL.h"
+#include "sge_job_refL.h"
 #include "sge_messageL.h"
 
 /****** sgeobj/job/jb_now *****************************************************
@@ -277,4 +278,21 @@ job_get_contribution(const lListElem *this_elem, lList **answer_list,
 
 void queue_or_job_get_states(int nm, char *str, u_long32 op);
 
+
+/* unparse functions */
+bool sge_unparse_string_option_dstring(dstring *category_str, const lListElem *job_elem, 
+                               int nm, char *option);
+                               
+bool sge_unparse_pe_dstring(dstring *category_str, const lListElem *job_elem, int pe_pos, int range_pos,
+                            const char *option); 
+
+bool sge_unparse_resource_list_dstring(dstring *category_str, lListElem *job_elem, 
+                                       int nm, const char *option);
+
+bool sge_unparse_queue_list_dstring(dstring *category_str, lListElem *job_elem, 
+                                    int nm, const char *option);   
+
+bool sge_unparse_acl_dstring(dstring *category_str, const char *owner, const char *group, 
+                             const lList *acl_list, const char *option);
+                             
 #endif /* __SGE_JOB_H */    

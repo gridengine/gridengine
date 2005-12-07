@@ -45,7 +45,6 @@
 #include "sge_feature.h"
 #include "sgermon.h"
 #include "sge_log.h"
-#include "sge_profiling.h"
 #include "sge_string.h"
 #include "sge_userset_qmaster.h"
 #include "sge_prog.h"
@@ -58,51 +57,108 @@
 #include "sge_answer.h"
 #include "sge_userprj.h"
 #include "sge_userset.h"
-#include "sge_profiling.h"
+#include "lck/sge_lock.h"
 
-#include "config_file.h"
+#include "uti/sge_profiling.h"
+#include "uti/config_file.h"
 
-#include "msg_sgeobjlib.h"
+#include "sgeobj/msg_sgeobjlib.h"
 
 #define SGE_BIN "bin"
 #define STREESPOOLTIMEDEF 240
 
-extern u_long32 loggingfacility;
-
 /* This list is *ONLY* used by the execd and should be moved eventually */
 lList *Execd_Config_List = NULL; 
 
-sge_conf_type conf = { NULL };
+struct confel {                       /* cluster configuration parameters */
+    char        *execd_spool_dir;     /* sge_spool directory base path */
+    char        *mailer;              /* path to e-mail delivery agent */
+    char        *xterm;               /* xterm path for interactive jobs */
+    char        *load_sensor;         /* path to a load sensor executable */    
+    char        *prolog;              /* start before jobscript may be none */
+    char        *epilog;              /* start after jobscript may be none */
+    char        *shell_start_mode;    /* script_from_stdin/posix_compliant/unix_behavior */
+    char        *login_shells;        /* list of shells to call as login shell */
+    u_long32    min_uid;              /* lower bound on UIDs that can qsub */
+    u_long32    min_gid;              /* lower bound on GIDs that can qsub */
+    u_long32    load_report_time;     /* how often to send in load */
+    u_long32    max_unheard;          /* how long before sge_execd considered dead */
+    u_long32    loglevel;             /* qmaster event logging level */
+    char        *enforce_project;     /* SGEEE attribute: "true" or "false" */
+    char        *enforce_user;        /* SGEEE attribute: "true" or "false" */
+    char        *administrator_mail;  /* list of mail addresses */
+    lList       *user_lists;          /* allowed user lists */
+    lList       *xuser_lists;         /* forbidden users lists */
+    lList       *projects;            /* allowed project list */
+    lList       *xprojects;           /* forbiddent project list */
+    char        *set_token_cmd;
+    char        *pag_cmd;
+    u_long32    token_extend_time;
+    char        *shepherd_cmd;
+    char        *qmaster_params;
+    char        *execd_params;
+    char        *reporting_params;
+    char        *gid_range;           /* Range of additional group ids */
+    u_long32    zombie_jobs;          /* jobs to save after execution */
+    char        *qlogin_daemon;       /* eg /usr/sbin/in.telnetd */
+    char        *qlogin_command;      /* eg telnet $HOST $PORT */
+    char        *rsh_daemon;          /* eg /usr/sbin/in.rshd */
+    char        *rsh_command;         /* eg rsh -p $PORT $HOST command */
+    char        *rlogin_daemon;       /* eg /usr/sbin/in.rlogind */
+    char        *rlogin_command;      /* eg rlogin -p $PORT $HOST */
+    u_long32    reschedule_unknown;   /* timout value used for auto. resch. */ 
+    u_long32    max_aj_instances;     /* max. number of ja instances of a job */
+    u_long32    max_aj_tasks;         /* max. size of an array job */
+    u_long32    max_u_jobs;           /* max. number of jobs per user */
+    u_long32    max_jobs;             /* max. number of jobs in the system */
+    u_long32    reprioritize;         /* reprioritize jobs based on the tickets or not */
+    u_long32    auto_user_fshare;     /* SGEEE automatic user fshare */
+    u_long32    auto_user_oticket;    /* SGEEE automatic user oticket */
+    char        *auto_user_default_project; /* SGEEE automatic user default project */
+    u_long32    auto_user_delete_time; /* SGEEE automatic user delete time */
+    char        *delegated_file_staging; /*drmaa attribute: "true" or "false" */
+};
 
-bool forbid_reschedule = false;
-bool forbid_apperror = false;
-bool enable_forced_qdel = false;
-bool do_credentials = true;
-bool do_authentication = true;
-bool use_qidle = false;
-bool disable_reschedule = false;
-bool prof_message_thrd = false;
-bool prof_signal_thrd = false;
-bool prof_deliver_thrd = false;
-bool prof_tevent_thrd = false;
-bool prof_execd_thrd = false;
+typedef struct confel sge_conf_type;
 
+static sge_conf_type Master_Config = { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+                                       0, 0, 0, 0, 0, NULL, NULL, NULL, 0, 0, 0, 0, NULL,
+                                       NULL, 0, NULL, NULL, NULL, NULL, NULL, 0, NULL,
+                                       NULL, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0, 0, 0,
+                                       0, NULL, 0, NULL };
+static bool is_new_config = false;
+static bool forbid_reschedule = false;
+static bool forbid_apperror = false;
+static bool enable_forced_qdel = false;
+static bool do_credentials = true;
+static bool do_authentication = true;
+static bool is_monitor_message = true;
+static bool use_qidle = false;
+static bool disable_reschedule = false;
+static bool prof_message_thrd = false;
+static bool prof_signal_thrd = false;
+static bool prof_deliver_thrd = false;
+static bool prof_tevent_thrd = false;
+static bool prof_execd_thrd = false;
+static u_long32 monitor_time = 0;
 
-long ptf_max_priority = -999;
-long ptf_min_priority = -999;
-int execd_priority = 0;
-int max_dynamic_event_clients = 99;
-bool keep_active = false;
+static long ptf_max_priority = -999;
+static long ptf_min_priority = -999;
+static int max_dynamic_event_clients = 99;
+static bool keep_active = false;
+static bool enable_windomacc = false;
+static bool enable_addgrp_kill = false;
 
 /* reporting params */
-bool do_accounting         = true;
-bool do_reporting          = false;
-bool do_joblog             = false;
-int reporting_flush_time   = 15;
-int sharelog_time          = 0;
+static bool do_accounting         = true;
+static bool do_reporting          = false;
+static bool do_joblog             = false;
+static int reporting_flush_time   = 15;
+static int accounting_flush_time   = -1;
+static int sharelog_time          = 0;
 
 /* allow the simulation of (non existent) hosts */
-bool simulate_hosts = false;
+static bool simulate_hosts = false;
 
 /*
  * This value overrides the default scheduler timeout (10 minutes)
@@ -110,14 +166,14 @@ bool simulate_hosts = false;
  * tens of thousands or hundreds of thousands of pending jobs.
  */
 
-int scheduler_timeout = 0;
+static int scheduler_timeout = 0;
 
 /**
  * This value specifies the minimum time for spooling the sharetree usage.
  * It is used and evaluated in the sge_follow module. The users and
  * projects are spooled, when the qmaster goes down.
  */
-int spool_time = STREESPOOLTIMEDEF;
+static int spool_time = STREESPOOLTIMEDEF;
 
 /* 
  * Reserved usage flags
@@ -130,21 +186,21 @@ int spool_time = STREESPOOLTIMEDEF;
  * does not support the sharetree flag so it doesn't matter.
  */
 
-bool acct_reserved_usage = false;
-bool sharetree_reserved_usage = false;
+static bool acct_reserved_usage = false;
+static bool sharetree_reserved_usage = false;
 
 /* 
  * Use primary group of qsub-host also for the job execution
  */
-bool use_qsub_gid = false;
+static bool use_qsub_gid = false;
 
 /*
  * Job environment inheritance
  */
-bool set_lib_path = false;
+static bool set_lib_path = false;
 /* This should match the default set in
  * shepherd/builtin_starter.c:inherit_env(). */
-bool inherit_env = true;
+static bool inherit_env = true;
 
 /*
  * notify_kill_default and notify_susp_default
@@ -155,13 +211,10 @@ bool inherit_env = true;
  * notify_kill and notify_susp:
  *       !NULL -> Name of the signale (later used in sys_string2signal)
  */
-int   notify_susp_type = 1;
-char* notify_susp = NULL;
-int   notify_kill_type = 1;
-char* notify_kill = NULL; 
-
-extern long compression_level;
-extern long compression_threshold;
+static int   notify_susp_type = 1;
+static char* notify_susp = NULL;
+static int   notify_kill_type = 1;
+static char* notify_kill = NULL; 
 
 typedef struct {
   char *name;              /* name of parameter */                              
@@ -171,9 +224,9 @@ typedef struct {
   char *envp;              /* pointer to environment variable */
 } tConfEntry;
 
-static void setConfFromCull(sge_conf_type *mconf, lList *lpCfg);
+static void setConfFromCull(lList *lpCfg);
 static tConfEntry *getConfEntry(char *name, tConfEntry conf_entries[]);
-static void clean_conf(sge_conf_type *conf);
+static void clean_conf(void);
 
 #define MAILER                    "/bin/mail"
 #define PROLOG                    "none"
@@ -251,31 +304,28 @@ static tConfEntry conf_entries[] = {
  * Initialize config list with compiled in values
  * set spool directorys from cell 
  *-------------------------------------------------------*/
-lList *sge_set_defined_defaults(lList *lpCfg)
+void sge_set_defined_defaults(lList **lpCfg)
 {
-   static bool first = true;
-   int i; 
-   lListElem *ep;
+   int i = 0; 
+   lListElem *ep = NULL;
+   tConfEntry *pConf = NULL;
 
    DENTER(TOP_LAYER, "sge_set_defined_defaults");
 
-   if (first) {
-      tConfEntry *pConf;
-
-      first = false;
-
-      pConf = getConfEntry("execd_spool_dir", conf_entries);
-      pConf->value = malloc(strlen(path_state_get_cell_root()) + strlen(SPOOL_DIR) + 2);
-      sprintf(pConf->value, "%s/%s", path_state_get_cell_root(), SPOOL_DIR);
-   }
-   else if (lpCfg)
-      lFreeList(lpCfg);
+   pConf = getConfEntry("execd_spool_dir", conf_entries);
+   if ( pConf->value == NULL ) {
+      int size = strlen(path_state_get_cell_root()) + strlen(SPOOL_DIR) + 2;
       
-   lpCfg = NULL;
-   i = 0;       
+      pConf->value = (char *)malloc(size * sizeof(char));
+      snprintf(pConf->value, size, "%s/%s", path_state_get_cell_root(),
+               SPOOL_DIR);
+   }
+
+   lFreeList(lpCfg);
+      
    while (conf_entries[i].name) {
       
-      ep = lAddElemStr(&lpCfg, CF_name, conf_entries[i].name, CF_Type);
+      ep = lAddElemStr(lpCfg, CF_name, conf_entries[i].name, CF_Type);
       lSetString(ep, CF_value, conf_entries[i].value);
       lSetUlong(ep, CF_local, conf_entries[i].local);
       
@@ -283,7 +333,6 @@ lList *sge_set_defined_defaults(lList *lpCfg)
    }      
 
    DEXIT;
-   return lpCfg;
 }
 
 /*----------------------------------------------------*
@@ -326,9 +375,24 @@ int type
 }
 
 
-/*---------------------------------------------------------------------*/
+/****** sge_conf/setConfFromCull() *********************************************
+*  NAME
+*     setConfFromCull() -- set the master configuration from cull
+*
+*  SYNOPSIS
+*     static void setConfFromCull(lList *lpCfg) 
+*
+*  FUNCTION
+*     set the master configuration from cull 
+*
+*  INPUTS
+*     lList *lpCfg         - configuration list
+*
+*  NOTES
+*     MT-NOTE: setConfFromCull() is not MT safe, caller needs LOCK_MASTER_CONF as write lock
+*
+*******************************************************************************/
 static void setConfFromCull(
-sge_conf_type *mconf,
 lList *lpCfg 
 ) {
    lListElem *ep;
@@ -336,86 +400,86 @@ lList *lpCfg
    DENTER(TOP_LAYER, "setConfFromCull");
 
    /* get following logging entries logged if log_info is selected */
-   chg_conf_val(lpCfg, "loglevel", NULL, &mconf->loglevel, TYPE_LOG);
-   log_state_set_log_level(mconf->loglevel);
+   chg_conf_val(lpCfg, "loglevel", NULL, &Master_Config.loglevel, TYPE_LOG);
+   log_state_set_log_level(Master_Config.loglevel);
    
-   chg_conf_val(lpCfg, "execd_spool_dir", &mconf->execd_spool_dir, NULL, 0);
-   chg_conf_val(lpCfg, "mailer", &mconf->mailer, NULL, 0);
-   chg_conf_val(lpCfg, "xterm", &mconf->xterm, NULL, 0);
-   chg_conf_val(lpCfg, "load_sensor", &mconf->load_sensor, NULL, 0);
-   chg_conf_val(lpCfg, "prolog", &mconf->prolog, NULL, 0);
-   chg_conf_val(lpCfg, "epilog", &mconf->epilog, NULL, 0);
-   chg_conf_val(lpCfg, "shell_start_mode", &mconf->shell_start_mode, NULL, 0);
-   chg_conf_val(lpCfg, "login_shells", &mconf->login_shells, NULL, 0);
-   chg_conf_val(lpCfg, "min_uid", NULL, &mconf->min_uid, TYPE_INT);
-   chg_conf_val(lpCfg, "min_gid", NULL, &mconf->min_gid, TYPE_INT);
-   chg_conf_val(lpCfg, "gid_range", &mconf->gid_range, NULL, 0);
+   chg_conf_val(lpCfg, "execd_spool_dir", &Master_Config.execd_spool_dir, NULL, 0);
+   chg_conf_val(lpCfg, "mailer", &Master_Config.mailer, NULL, 0);
+   chg_conf_val(lpCfg, "xterm", &Master_Config.xterm, NULL, 0);
+   chg_conf_val(lpCfg, "load_sensor", &Master_Config.load_sensor, NULL, 0);
+   chg_conf_val(lpCfg, "prolog", &Master_Config.prolog, NULL, 0);
+   chg_conf_val(lpCfg, "epilog", &Master_Config.epilog, NULL, 0);
+   chg_conf_val(lpCfg, "shell_start_mode", &Master_Config.shell_start_mode, NULL, 0);
+   chg_conf_val(lpCfg, "login_shells", &Master_Config.login_shells, NULL, 0);
+   chg_conf_val(lpCfg, "min_uid", NULL, &Master_Config.min_uid, TYPE_INT);
+   chg_conf_val(lpCfg, "min_gid", NULL, &Master_Config.min_gid, TYPE_INT);
+   chg_conf_val(lpCfg, "gid_range", &Master_Config.gid_range, NULL, 0);
 
    if ((ep = lGetElemStr(lpCfg, CF_name, "user_lists"))) {
       lList *lp = NULL;
       if (!lString2ListNone(lGetString(ep, CF_value), &lp, US_Type, US_name, " \t,")) {
-         lFreeList(mconf->user_lists);
-         mconf->user_lists = lp;
+         lFreeList(&(Master_Config.user_lists));
+         Master_Config.user_lists = lp;
       }   
    }
 
    if ((ep = lGetElemStr(lpCfg, CF_name, "xuser_lists"))) {
       lList *lp = NULL;
       if (!lString2ListNone(lGetString(ep, CF_value), &lp, US_Type, US_name, " \t,")) {
-         lFreeList(mconf->xuser_lists);
-         mconf->xuser_lists = lp;
+         lFreeList(&(Master_Config.xuser_lists));
+         Master_Config.xuser_lists = lp;
       }   
    }
    
    if ((ep = lGetElemStr(lpCfg, CF_name, "projects"))) {
       lList *lp = NULL;
       if (!lString2ListNone(lGetString(ep, CF_value), &lp, UP_Type, UP_name, " \t,")) {
-         lFreeList(mconf->projects);
-         mconf->projects = lp;
+         lFreeList(&(Master_Config.projects));
+         Master_Config.projects = lp;
       }   
    }
 
    if ((ep = lGetElemStr(lpCfg, CF_name, "xprojects"))) {
       lList *lp = NULL;
       if (!lString2ListNone(lGetString(ep, CF_value), &lp, UP_Type, UP_name, " \t,")) {
-         lFreeList(mconf->xprojects);
-         mconf->xprojects = lp;
+         lFreeList(&(Master_Config.xprojects));
+         Master_Config.xprojects = lp;
       }   
    }
    
-   chg_conf_val(lpCfg, "load_report_time", NULL, &mconf->load_report_time, TYPE_INT);
-   chg_conf_val(lpCfg, "enforce_project", &mconf->enforce_project, NULL, 0);
-   chg_conf_val(lpCfg, "enforce_user", &mconf->enforce_user, NULL, 0);
-   chg_conf_val(lpCfg, "max_unheard", NULL, &mconf->max_unheard, TYPE_TIM);
-   chg_conf_val(lpCfg, "loglevel", NULL, &mconf->loglevel, TYPE_LOG);
-   chg_conf_val(lpCfg, "administrator_mail", &mconf->administrator_mail, NULL, 0);
-   chg_conf_val(lpCfg, "set_token_cmd", &mconf->set_token_cmd, NULL, 0);
-   chg_conf_val(lpCfg, "pag_cmd", &mconf->pag_cmd, NULL, 0);
-   chg_conf_val(lpCfg, "token_extend_time", NULL, &mconf->token_extend_time, TYPE_TIM);
-   chg_conf_val(lpCfg, "shepherd_cmd", &mconf->shepherd_cmd, NULL, 0);
-   chg_conf_val(lpCfg, "qmaster_params", &mconf->qmaster_params, NULL, 0);
-   chg_conf_val(lpCfg, "execd_params",  &mconf->execd_params, NULL, 0);
-   chg_conf_val(lpCfg, "reporting_params",  &mconf->reporting_params, NULL, 0);
-   chg_conf_val(lpCfg, "finished_jobs", NULL, &mconf->zombie_jobs, TYPE_INT);
-   chg_conf_val(lpCfg, "qlogin_daemon", &mconf->qlogin_daemon, NULL, 0);
-   chg_conf_val(lpCfg, "qlogin_command", &mconf->qlogin_command, NULL, 0);
-   chg_conf_val(lpCfg, "rsh_daemon", &mconf->rsh_daemon, NULL, 0);
-   chg_conf_val(lpCfg, "rsh_command", &mconf->rsh_command, NULL, 0);
-   chg_conf_val(lpCfg, "rlogin_daemon", &mconf->rlogin_daemon, NULL, 0);
-   chg_conf_val(lpCfg, "rlogin_command", &mconf->rlogin_command, NULL, 0);
+   chg_conf_val(lpCfg, "load_report_time", NULL, &Master_Config.load_report_time, TYPE_TIM);
+   chg_conf_val(lpCfg, "enforce_project", &Master_Config.enforce_project, NULL, 0);
+   chg_conf_val(lpCfg, "enforce_user", &Master_Config.enforce_user, NULL, 0);
+   chg_conf_val(lpCfg, "max_unheard", NULL, &Master_Config.max_unheard, TYPE_TIM);
+   chg_conf_val(lpCfg, "loglevel", NULL, &Master_Config.loglevel, TYPE_LOG);
+   chg_conf_val(lpCfg, "administrator_mail", &Master_Config.administrator_mail, NULL, 0);
+   chg_conf_val(lpCfg, "set_token_cmd", &Master_Config.set_token_cmd, NULL, 0);
+   chg_conf_val(lpCfg, "pag_cmd", &Master_Config.pag_cmd, NULL, 0);
+   chg_conf_val(lpCfg, "token_extend_time", NULL, &Master_Config.token_extend_time, TYPE_TIM);
+   chg_conf_val(lpCfg, "shepherd_cmd", &Master_Config.shepherd_cmd, NULL, 0);
+   chg_conf_val(lpCfg, "qmaster_params", &Master_Config.qmaster_params, NULL, 0);
+   chg_conf_val(lpCfg, "execd_params",  &Master_Config.execd_params, NULL, 0);
+   chg_conf_val(lpCfg, "reporting_params",  &Master_Config.reporting_params, NULL, 0);
+   chg_conf_val(lpCfg, "finished_jobs", NULL, &Master_Config.zombie_jobs, TYPE_INT);
+   chg_conf_val(lpCfg, "qlogin_daemon", &Master_Config.qlogin_daemon, NULL, 0);
+   chg_conf_val(lpCfg, "qlogin_command", &Master_Config.qlogin_command, NULL, 0);
+   chg_conf_val(lpCfg, "rsh_daemon", &Master_Config.rsh_daemon, NULL, 0);
+   chg_conf_val(lpCfg, "rsh_command", &Master_Config.rsh_command, NULL, 0);
+   chg_conf_val(lpCfg, "rlogin_daemon", &Master_Config.rlogin_daemon, NULL, 0);
+   chg_conf_val(lpCfg, "rlogin_command", &Master_Config.rlogin_command, NULL, 0);
 
-   chg_conf_val(lpCfg, "reschedule_unknown", NULL, &mconf->reschedule_unknown, TYPE_TIM);
+   chg_conf_val(lpCfg, "reschedule_unknown", NULL, &Master_Config.reschedule_unknown, TYPE_TIM);
 
-   chg_conf_val(lpCfg, "max_aj_instances", NULL, &mconf->max_aj_instances, TYPE_INT);
-   chg_conf_val(lpCfg, "max_aj_tasks", NULL, &mconf->max_aj_tasks, TYPE_INT);
-   chg_conf_val(lpCfg, "max_u_jobs", NULL, &mconf->max_u_jobs, TYPE_INT);
-   chg_conf_val(lpCfg, "max_jobs", NULL, &mconf->max_jobs, TYPE_INT);
-   chg_conf_val(lpCfg, REPRIORITIZE, NULL, &mconf->reprioritize, TYPE_BOO );
-   chg_conf_val(lpCfg, "auto_user_oticket", NULL, &mconf->auto_user_oticket, TYPE_INT);
-   chg_conf_val(lpCfg, "auto_user_fshare", NULL, &mconf->auto_user_fshare, TYPE_INT);
-   chg_conf_val(lpCfg, "auto_user_default_project", &mconf->auto_user_default_project, NULL, 0);
-   chg_conf_val(lpCfg, "auto_user_delete_time", NULL, &mconf->auto_user_delete_time, TYPE_TIM);
-   chg_conf_val(lpCfg, "delegated_file_staging", &mconf->delegated_file_staging, NULL, 0);
+   chg_conf_val(lpCfg, "max_aj_instances", NULL, &Master_Config.max_aj_instances, TYPE_INT);
+   chg_conf_val(lpCfg, "max_aj_tasks", NULL, &Master_Config.max_aj_tasks, TYPE_INT);
+   chg_conf_val(lpCfg, "max_u_jobs", NULL, &Master_Config.max_u_jobs, TYPE_INT);
+   chg_conf_val(lpCfg, "max_jobs", NULL, &Master_Config.max_jobs, TYPE_INT);
+   chg_conf_val(lpCfg, REPRIORITIZE, NULL, &Master_Config.reprioritize, TYPE_BOO );
+   chg_conf_val(lpCfg, "auto_user_oticket", NULL, &Master_Config.auto_user_oticket, TYPE_INT);
+   chg_conf_val(lpCfg, "auto_user_fshare", NULL, &Master_Config.auto_user_fshare, TYPE_INT);
+   chg_conf_val(lpCfg, "auto_user_default_project", &Master_Config.auto_user_default_project, NULL, 0);
+   chg_conf_val(lpCfg, "auto_user_delete_time", NULL, &Master_Config.auto_user_delete_time, TYPE_TIM);
+   chg_conf_val(lpCfg, "delegated_file_staging", &Master_Config.delegated_file_staging, NULL, 0);
    DEXIT;
 }
 
@@ -442,30 +506,39 @@ tConfEntry conf[]
  return NULL;
 }
 
-/*----------------------------------------------------------
- * merge_configuration
- * Merge global and local configuration and set lpConfig list
- * set conf struct from lpConfig
- *----------------------------------------------------------*/
-int merge_configuration(lListElem *global, lListElem *local,
-                        sge_conf_type *pconf, lList **lpp) {
+/****** sge_conf/merge_configuration() *****************************************
+*  NAME
+*     merge_configuration() -- merge global and local configuration
+*
+*  SYNOPSIS
+*     int merge_configuration(lListElem *global, lListElem *local, lList **lpp) 
+*
+*  FUNCTION
+*     Merge global and local configuration and set lpp list and
+*     set conf struct from lpp
+*
+*  INPUTS
+*     lListElem *global - global configuration
+*     lListElem *local  - local configuration
+*     lList **lpp       - target configuration
+*
+*  RESULT
+*     int - 0 success
+*          -2 no global configuration
+*
+*  NOTES
+*     MT-NOTE: merge_configuration() is MT safe 
+*
+*******************************************************************************/
+int merge_configuration(lListElem *global, lListElem *local, lList **lpp) {
    lList *cl;
    lListElem *elem, *ep2;
    lList *mlist = NULL;
-   static int first_time = 1;
- 
    DENTER(TOP_LAYER, "merge_configuration");
-
-    
-   if (!pconf) {
-      DEXIT;
-      return -1;
-   }
-
-   if (!lpp) {
+   if (lpp == NULL) {
       lpp = &mlist;
    }
-   *lpp = sge_set_defined_defaults(*lpp);
+   sge_set_defined_defaults(lpp);
 
    /* Merge global configuration */
    /*
@@ -493,30 +566,28 @@ int merge_configuration(lListElem *global, lListElem *local,
          }
       }
    }
-  
-   
-  
-   if (first_time) {
-      first_time = 0;
-      memset(pconf, 0, sizeof(sge_conf_type));
-   }
-   else 
-      clean_conf(&conf);
-    
-   /* Set conf struct to reflect changes */
-   setConfFromCull(pconf, *lpp);
+
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_WRITE);
+   clean_conf();
+   setConfFromCull(*lpp);
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_WRITE);
 
    /* put contents of qmaster_params and execd_params  
       into some convenient global variables */
    {
+      struct saved_vars_s *conf_context = NULL;
       const char *s;
+      char* qmaster_params = mconf_get_qmaster_params();
+      char* execd_params = mconf_get_execd_params();
+      char* reporting_params = mconf_get_reporting_params();
+
+      SGE_LOCK(LOCK_MASTER_CONF, LOCK_WRITE);
       forbid_reschedule = false;
       forbid_apperror = false;
       enable_forced_qdel = false;
       do_credentials = true;
       do_authentication = true;
-      compression_level = 0;
-      compression_threshold = 10 * 1024;
+      is_monitor_message = true;
       spool_time = STREESPOOLTIMEDEF;
       use_qidle = false;
       disable_reschedule = false;   
@@ -525,11 +596,11 @@ int merge_configuration(lListElem *global, lListElem *local,
       prof_signal_thrd = false;
       prof_deliver_thrd = false;
       prof_tevent_thrd = false;
+      monitor_time = 0;
       scheduler_timeout = 0;
       max_dynamic_event_clients = 99;
-      /*u_long32 output_interval;*/
 
-      for (s=sge_strtok(pconf->qmaster_params, ",; "); s; s=sge_strtok(NULL, ",; ")) {
+      for (s=sge_strtok_r(qmaster_params, ",; ", &conf_context); s; s=sge_strtok_r(NULL, ",; ", &conf_context)) {
          if (parse_bool_param(s, "FORBID_RESCHEDULE", &forbid_reschedule)) {
             continue;
          }
@@ -546,7 +617,7 @@ int merge_configuration(lListElem *global, lListElem *local,
             continue;
          }
          if (parse_int_param(s, "STREE_SPOOL_INTERVAL", &spool_time, TYPE_TIM)) {
-            if (spool_time<= 0) {
+            if (spool_time <= 0) {
                WARNING((SGE_EVENT, MSG_CONF_NOCONFIGFROMMASTER));
                spool_time = STREESPOOLTIMEDEF;
             }
@@ -558,6 +629,9 @@ int merge_configuration(lListElem *global, lListElem *local,
          if (parse_bool_param(s, "ENABLE_FORCED_QDEL", &enable_forced_qdel)) {
             continue;
          } 
+         if (parse_time_param(s, "MONITOR_TIME", &monitor_time)) {
+            continue;
+         }
          if (!strncasecmp(s, "MAX_DYN_EC", sizeof("MAX_DYN_EC")-1)) {
             max_dynamic_event_clients = atoi(&s[sizeof("MAX_DYN_EC=")-1]);
             continue;
@@ -575,43 +649,26 @@ int merge_configuration(lListElem *global, lListElem *local,
          if (parse_bool_param(s, "DISABLE_AUTO_RESCHEDULING", &disable_reschedule)) {
             continue;
          }
+         if (parse_bool_param(s, "LOG_MONITOR_MESSAGE", &is_monitor_message)) {
+            continue;
+         }
          if (parse_bool_param(s, "SIMULATE_HOSTS", &simulate_hosts)) {
             continue;
          }
-         if (!strncasecmp(s, "COMPRESSION_LEVEL", sizeof("COMPRESSION_LEVEL"))) {
-            char *cp;
-            cp = strchr(s, '=');
-            if (cp && *(cp+1)) {
-               compression_level=atoi(cp+1);
-               if (compression_level < 0)
-                  compression_level = 0;
-               else if (compression_level > 9)
-                  compression_level = 9;  
-            }  
-            DPRINTF(("COMPRESSION_LEVEL=%d\n", compression_level));
-            continue;
-         } 
-         if (!strncasecmp(s, "COMPRESSION_THRESHOLD", sizeof("COMPRESSION_THRESHOLD"))) {
-            char *cp;
-            cp = strchr(s, '=');
-            if (cp && *(cp+1)) {
-               compression_threshold=atoi(cp+1);
-               if (compression_threshold < 0)
-                  compression_threshold = 0;
-            }  
-            DPRINTF(("COMPRESSION_THRESHOLD=%d\n", compression_threshold));
-            continue;
-         } 
          if (!strncasecmp(s, "SCHEDULER_TIMEOUT",
                     sizeof("SCHEDULER_TIMEOUT")-1)) {
             scheduler_timeout=atoi(&s[sizeof("SCHEDULER_TIMEOUT=")-1]);
             continue;
          }
       }
-
+      SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_WRITE);
+      sge_free_saved_vars(conf_context);
+      conf_context = NULL;
+      
       conf_update_thread_profiling(NULL);
 
       /* always initialize to defaults before we check execd_params */
+      SGE_LOCK(LOCK_MASTER_CONF, LOCK_WRITE);
 #ifdef COMPILE_DC
       acct_reserved_usage = false;
       sharetree_reserved_usage = false;
@@ -623,12 +680,16 @@ int merge_configuration(lListElem *global, lListElem *local,
       notify_susp_type = 1;
       ptf_max_priority = -999;
       ptf_min_priority = -999;
-      execd_priority = -999;
       keep_active = false;
+      enable_windomacc = false;
+      enable_addgrp_kill = false;
       use_qsub_gid = false;
       prof_execd_thrd = false;
+      inherit_env = true;
+      set_lib_path = false;
+      accounting_flush_time = -1;
 
-      for (s=sge_strtok(pconf->execd_params, ",; "); s; s=sge_strtok(NULL, ",; ")) {
+      for (s=sge_strtok_r(execd_params, ",; ", &conf_context); s; s=sge_strtok_r(NULL, ",; ", &conf_context)) {
          if (parse_bool_param(s, "USE_QIDLE", &use_qidle)) {
             continue;
          }
@@ -650,6 +711,12 @@ int merge_configuration(lListElem *global, lListElem *local,
          if (parse_bool_param(s, "KEEP_ACTIVE", &keep_active)) {
             continue;
          }
+         if (parse_bool_param(s, "ENABLE_WINDOMACC", &enable_windomacc)) {
+            continue;
+         } 
+         if (parse_bool_param(s, "ENABLE_ADDGRP_KILL", &enable_addgrp_kill)) {
+            continue;
+         } 
          if (parse_bool_param(s, "ACCT_RESERVED_USAGE", &acct_reserved_usage)) {
             continue;
          } 
@@ -698,10 +765,6 @@ int merge_configuration(lListElem *global, lListElem *local,
             ptf_min_priority=atoi(&s[sizeof("PTF_MIN_PRIORITY=")-1]);
             continue;
          }
-         if (!strncasecmp(s, "EXECD_PRIORITY", sizeof("EXECD_PRIORITY")-1)) {
-            execd_priority=atoi(&s[sizeof("EXECD_PRIORITY=")-1]);
-            continue;
-         }
          if (parse_bool_param(s, "SET_LIB_PATH", &set_lib_path)) {
             continue;
          }
@@ -709,15 +772,18 @@ int merge_configuration(lListElem *global, lListElem *local,
             continue;
          }
       }
+      SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_WRITE);
+      sge_free_saved_vars(conf_context);
+      conf_context = NULL;
 
       /* If profiling configuration has changed, 
          set_thread_prof_status_by_name has to be called for each thread
       */
       set_thread_prof_status_by_name("Execd Thread", prof_execd_thrd);
 
-
+      SGE_LOCK(LOCK_MASTER_CONF, LOCK_WRITE);
       /* parse reporting parameters */
-      for (s=sge_strtok(pconf->reporting_params, ",; "); s; s=sge_strtok(NULL, ",; ")) {
+      for (s=sge_strtok_r(reporting_params, ",; ", &conf_context); s; s=sge_strtok_r(NULL, ",; ", &conf_context)) {
          if (parse_bool_param(s, "accounting", &do_accounting)) {
             continue;
          }
@@ -734,16 +800,30 @@ int merge_configuration(lListElem *global, lListElem *local,
             }
             continue;
          }
+         if (parse_int_param(s, "accounting_flush_time", &accounting_flush_time, TYPE_TIM)) {
+            if (accounting_flush_time < 0) {
+               WARNING((SGE_EVENT, MSG_CONF_NOCONFIGFROMMASTER));
+               accounting_flush_time = -1;
+            }
+            
+            continue;
+         }
          if (parse_int_param(s, "sharelog", &sharelog_time, TYPE_TIM)) {
             continue;
          }
       }
+      SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_WRITE);
+      sge_free_saved_vars(conf_context);
+      conf_context=NULL;
+
+      FREE(qmaster_params);
+      FREE(execd_params);
+      FREE(reporting_params);
+
    }
 
-   if (mlist) {
-      lFreeList(mlist);
-   }
- 
+   lFreeList(&mlist);
+
    if (!global) {
       WARNING((SGE_EVENT, MSG_CONF_NOCONFIGFROMMASTER));
       DEXIT;
@@ -754,118 +834,143 @@ int merge_configuration(lListElem *global, lListElem *local,
    return 0;
 }
 
-/*******************************************************************/
+/****** sge_conf/sge_show_conf() ***********************************************
+*  NAME
+*     sge_show_conf() -- in debug mode prints out the master configuration
+*
+*  SYNOPSIS
+*     void sge_show_conf() 
+*
+*  NOTES
+*     MT-NOTE: sge_show_conf() is MT safe 
+*
+*******************************************************************************/
 void sge_show_conf()
 {
    lListElem *ep;
 
    DENTER(TOP_LAYER, "sge_show_conf");
+ 
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DPRINTF(("conf.execd_spool_dir        >%s<\n", Master_Config.execd_spool_dir));
+   DPRINTF(("conf.mailer                 >%s<\n", Master_Config.mailer));
+   DPRINTF(("conf.prolog                 >%s<\n", Master_Config.prolog));
+   DPRINTF(("conf.epilog                 >%s<\n", Master_Config.epilog));
+   DPRINTF(("conf.shell_start_mode       >%s<\n", Master_Config.shell_start_mode));
+   DPRINTF(("conf.login_shells           >%s<\n", Master_Config.login_shells));
+   DPRINTF(("conf.administrator_mail     >%s<\n", Master_Config.administrator_mail?Master_Config.administrator_mail:"none"));
+   DPRINTF(("conf.min_gid                >%u<\n", (unsigned) Master_Config.min_gid));
+   DPRINTF(("conf.min_uid                >%u<\n", (unsigned) Master_Config.min_uid));
+   DPRINTF(("conf.load_report_time       >%u<\n", (unsigned) Master_Config.load_report_time));
+   DPRINTF(("conf.max_unheard            >%u<\n", (unsigned) Master_Config.max_unheard));
+   DPRINTF(("conf.loglevel               >%u<\n", (unsigned) Master_Config.loglevel));     
+   DPRINTF(("conf.xterm                  >%s<\n", Master_Config.xterm?Master_Config.xterm:"none"));
+   DPRINTF(("conf.load_sensor            >%s<\n", Master_Config.load_sensor?Master_Config.load_sensor:"none"));
+   DPRINTF(("conf.enforce_project        >%s<\n", Master_Config.enforce_project?Master_Config.enforce_project:"none"));
+   DPRINTF(("conf.enforce_user           >%s<\n", Master_Config.enforce_user?Master_Config.enforce_user:"none"));
+   DPRINTF(("conf.set_token_cmd          >%s<\n", Master_Config.set_token_cmd?Master_Config.set_token_cmd:"none"));
+   DPRINTF(("conf.pag_cmd                >%s<\n", Master_Config.pag_cmd?Master_Config.pag_cmd:"none"));
+   DPRINTF(("conf.token_extend_time      >%u<\n", (unsigned) Master_Config.token_extend_time));
+   DPRINTF(("conf.shepherd_cmd           >%s<\n", Master_Config.shepherd_cmd?Master_Config.pag_cmd:"none"));
+   DPRINTF(("conf.qmaster_params         >%s<\n", Master_Config.qmaster_params?Master_Config.qmaster_params:"none"));
+   DPRINTF(("conf.execd_params           >%s<\n", Master_Config.execd_params?Master_Config.execd_params:"none"));
+   DPRINTF(("conf.gid_range              >%s<\n", Master_Config.gid_range?Master_Config.gid_range:"none")); 
+   DPRINTF(("conf.zombie_jobs            >%u<\n", (unsigned) Master_Config.zombie_jobs));
+   DPRINTF(("conf.qlogin_daemon          >%s<\n", Master_Config.qlogin_daemon?Master_Config.qlogin_daemon:"none"));
+   DPRINTF(("conf.qlogin_command         >%s<\n", Master_Config.qlogin_command?Master_Config.qlogin_command:"none"));
+   DPRINTF(("conf.rsh_daemon             >%s<\n", Master_Config.rsh_daemon?Master_Config.rsh_daemon:"none"));
+   DPRINTF(("conf.rsh_command            >%s<\n", Master_Config.rsh_command?Master_Config.rsh_command:"none"));
+   DPRINTF(("conf.rlogin_daemon          >%s<\n", Master_Config.rlogin_daemon?Master_Config.rlogin_daemon:"none"));
+   DPRINTF(("conf.rlogin_command         >%s<\n", Master_Config.rlogin_command?Master_Config.rlogin_command:"none"));
+   DPRINTF(("conf.reschedule_unknown     >%u<\n", (unsigned) Master_Config.reschedule_unknown));
+   DPRINTF(("conf.max_aj_instances       >%u<\n", (unsigned) Master_Config.max_aj_instances));
+   DPRINTF(("conf.max_aj_tasks           >%u<\n", (unsigned) Master_Config.max_aj_tasks));
+   DPRINTF(("conf.max_u_jobs             >%u<\n", (unsigned) Master_Config.max_u_jobs));
+   DPRINTF(("conf.max_jobs               >%u<\n", (unsigned) Master_Config.max_jobs));
+   DPRINTF(("conf.reprioritize           >%u<\n", Master_Config.reprioritize));
+   DPRINTF(("conf.auto_user_oticket      >%u<\n", Master_Config.auto_user_oticket));
+   DPRINTF(("conf.auto_user_fshare       >%u<\n", Master_Config.auto_user_fshare));
+   DPRINTF(("conf.auto_user_default_project >%s<\n", Master_Config.auto_user_default_project));
+   DPRINTF(("conf.auto_user_delete_time  >%u<\n", Master_Config.auto_user_delete_time));
+   DPRINTF(("conf.delegated_file_staging >%s<\n", Master_Config.delegated_file_staging));
 
-   DPRINTF(("conf.execd_spool_dir        >%s<\n", conf.execd_spool_dir));
-   DPRINTF(("conf.mailer                 >%s<\n", conf.mailer));
-   DPRINTF(("conf.prolog                 >%s<\n", conf.prolog));
-   DPRINTF(("conf.epilog                 >%s<\n", conf.epilog));
-   DPRINTF(("conf.shell_start_mode       >%s<\n", conf.shell_start_mode));
-   DPRINTF(("conf.login_shells           >%s<\n", conf.login_shells));
-   DPRINTF(("conf.administrator_mail     >%s<\n", conf.administrator_mail?conf.administrator_mail:"none"));
-   DPRINTF(("conf.min_gid                >%u<\n", (unsigned) conf.min_gid));
-   DPRINTF(("conf.min_uid                >%u<\n", (unsigned) conf.min_uid));
-   DPRINTF(("conf.load_report_time       >%u<\n", (unsigned) conf.load_report_time));
-   DPRINTF(("conf.max_unheard            >%u<\n", (unsigned) conf.max_unheard));
-   DPRINTF(("conf.loglevel               >%u<\n", (unsigned) conf.loglevel));     
-   DPRINTF(("conf.xterm                  >%s<\n", conf.xterm?conf.xterm:"none"));
-   DPRINTF(("conf.load_sensor            >%s<\n", conf.load_sensor?conf.load_sensor:"none"));
-   DPRINTF(("conf.enforce_project        >%s<\n", conf.enforce_project?conf.enforce_project:"none"));
-   DPRINTF(("conf.enforce_user           >%s<\n", conf.enforce_user?conf.enforce_user:"none"));
-   DPRINTF(("conf.set_token_cmd          >%s<\n", conf.set_token_cmd?conf.set_token_cmd:"none"));
-   DPRINTF(("conf.pag_cmd                >%s<\n", conf.pag_cmd?conf.pag_cmd:"none"));
-   DPRINTF(("conf.token_extend_time      >%u<\n", (unsigned) conf.token_extend_time));
-   DPRINTF(("conf.shepherd_cmd           >%s<\n", conf.shepherd_cmd?conf.pag_cmd:"none"));
-   DPRINTF(("conf.qmaster_params         >%s<\n", conf.qmaster_params?conf.qmaster_params:"none"));
-   DPRINTF(("conf.execd_params           >%s<\n", conf.execd_params?conf.execd_params:"none"));
-   DPRINTF(("conf.gid_range              >%s<\n", conf.gid_range?conf.gid_range:"none")); 
-   DPRINTF(("conf.zombie_jobs            >%u<\n", (unsigned) conf.zombie_jobs));
-   DPRINTF(("conf.qlogin_daemon          >%s<\n", conf.qlogin_daemon?conf.qlogin_daemon:"none"));
-   DPRINTF(("conf.qlogin_command         >%s<\n", conf.qlogin_command?conf.qlogin_command:"none"));
-   DPRINTF(("conf.rsh_daemon             >%s<\n", conf.rsh_daemon?conf.rsh_daemon:"none"));
-   DPRINTF(("conf.rsh_command            >%s<\n", conf.rsh_command?conf.rsh_command:"none"));
-   DPRINTF(("conf.rlogin_daemon          >%s<\n", conf.rlogin_daemon?conf.rlogin_daemon:"none"));
-   DPRINTF(("conf.rlogin_command         >%s<\n", conf.rlogin_command?conf.rlogin_command:"none"));
-   DPRINTF(("conf.reschedule_unknown     >%u<\n", (unsigned) conf.reschedule_unknown));
-   DPRINTF(("conf.max_aj_instances       >%u<\n", (unsigned) conf.max_aj_instances));
-   DPRINTF(("conf.max_aj_tasks           >%u<\n", (unsigned) conf.max_aj_tasks));
-   DPRINTF(("conf.max_u_jobs             >%u<\n", (unsigned) conf.max_u_jobs));
-   DPRINTF(("conf.max_jobs               >%u<\n", (unsigned) conf.max_jobs));
-   DPRINTF(("conf.reprioritize           >%u<\n", conf.reprioritize));
-   DPRINTF(("conf.auto_user_oticket      >%u<\n", conf.auto_user_oticket));
-   DPRINTF(("conf.auto_user_fshare       >%u<\n", conf.auto_user_fshare));
-   DPRINTF(("conf.auto_user_default_project >%s<\n", conf.auto_user_default_project));
-   DPRINTF(("conf.auto_user_delete_time  >%u<\n", conf.auto_user_delete_time));
-   DPRINTF(("conf.delegated_file_staging >%s<\n", conf.delegated_file_staging));
-
-   for_each (ep, conf.user_lists) {
+   for_each (ep, Master_Config.user_lists) {
       DPRINTF(("%s             >%s<\n", 
               lPrev(ep)?"             ":"conf.user_lists", 
               lGetString(ep, US_name)));
    }
-   for_each (ep, conf.xuser_lists) {
+   for_each (ep, Master_Config.xuser_lists) {
       DPRINTF(("%s            >%s<\n", 
               lPrev(ep)?"              ":"conf.xuser_lists", 
               lGetString(ep, US_name)));
    }
 
-   for_each (ep, conf.projects) {
+   for_each (ep, Master_Config.projects) {
       DPRINTF(("%s             >%s<\n", 
               lPrev(ep)?"             ":"conf.projects", 
               lGetString(ep, UP_name)));
    }
-   for_each (ep, conf.xprojects) {
+   for_each (ep, Master_Config.xprojects) {
       DPRINTF(("%s            >%s<\n", 
               lPrev(ep)?"              ":"conf.xprojects", 
               lGetString(ep, UP_name)));
    }
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
 
    DEXIT;
    return;
 }
 
 
-static void clean_conf(
-sge_conf_type *conf 
-) {
-   FREE(conf->execd_spool_dir);
-   FREE(conf->mailer);
-   FREE(conf->xterm);
-   FREE(conf->load_sensor);
-   FREE(conf->prolog);
-   FREE(conf->epilog);
-   FREE(conf->shell_start_mode);
-   FREE(conf->login_shells);
-   FREE(conf->enforce_project);
-   FREE(conf->enforce_user);
-   FREE(conf->administrator_mail);
-   lFreeList(conf->user_lists);
-   lFreeList(conf->xuser_lists);
-   lFreeList(conf->projects);
-   lFreeList(conf->xprojects);
-   FREE(conf->set_token_cmd);
-   FREE(conf->pag_cmd);
-   FREE(conf->shepherd_cmd);
-   FREE(conf->qmaster_params);
-   FREE(conf->execd_params);
-   FREE(conf->reporting_params);
-   FREE(conf->gid_range);
-   FREE(conf->qlogin_daemon);
-   FREE(conf->qlogin_command);
-   FREE(conf->rsh_daemon);
-   FREE(conf->rsh_command);
-   FREE(conf->rlogin_daemon);
-   FREE(conf->rlogin_command);
-   FREE(conf->auto_user_default_project);
-   FREE(conf->delegated_file_staging);
-   
-   memset(conf, 0, sizeof(sge_conf_type));
+/****** sge_conf/clean_conf() **************************************************
+*  NAME
+*     clean_conf() -- frees the whole master configuration
+*
+*  SYNOPSIS
+*     static void clean_conf(void) 
+*
+*  NOTES
+*     MT-NOTE: clean_conf() is not MT safe, caller needs LOCK_MASTER_CONF as write lock 
+*
+*******************************************************************************/
+static void clean_conf(void) {
 
+   DENTER(TOP_LAYER, "clean_conf");
+
+   FREE(Master_Config.execd_spool_dir);
+   FREE(Master_Config.mailer);
+   FREE(Master_Config.xterm);
+   FREE(Master_Config.load_sensor);
+   FREE(Master_Config.prolog);
+   FREE(Master_Config.epilog);
+   FREE(Master_Config.shell_start_mode);
+   FREE(Master_Config.login_shells);
+   FREE(Master_Config.enforce_project);
+   FREE(Master_Config.enforce_user);
+   FREE(Master_Config.administrator_mail);
+   lFreeList(&Master_Config.user_lists);
+   lFreeList(&Master_Config.xuser_lists);
+   lFreeList(&Master_Config.projects);
+   lFreeList(&Master_Config.xprojects);
+   FREE(Master_Config.set_token_cmd);
+   FREE(Master_Config.pag_cmd);
+   FREE(Master_Config.shepherd_cmd);
+   FREE(Master_Config.qmaster_params);
+   FREE(Master_Config.execd_params);
+   FREE(Master_Config.reporting_params);
+   FREE(Master_Config.gid_range);
+   FREE(Master_Config.qlogin_daemon);
+   FREE(Master_Config.qlogin_command);
+   FREE(Master_Config.rsh_daemon);
+   FREE(Master_Config.rsh_command);
+   FREE(Master_Config.rlogin_daemon);
+   FREE(Master_Config.rlogin_command);
+   FREE(Master_Config.auto_user_default_project);
+   FREE(Master_Config.delegated_file_staging);
+   
+   memset(&Master_Config, 0, sizeof(sge_conf_type));
+
+   DEXIT;
    return;
 }
 
@@ -888,10 +993,12 @@ sge_conf_type *conf
 *     const char *thread_name - thread name, NULL for all threads
 *
 *  NOTES
-*     MT-NOTE: conf_update_thread_profiling() is not MT safe 
+*     MT-NOTE: conf_update_thread_profiling() is MT safe 
 *******************************************************************************/
 void conf_update_thread_profiling(const char *thread_name) 
 {
+   DENTER(TOP_LAYER, "conf_update_thread_profiling");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
    if (thread_name == NULL) {
       set_thread_prof_status_by_name("Signal Thread", prof_signal_thrd);
       set_thread_prof_status_by_name("Message Thread", prof_message_thrd);
@@ -908,4 +1015,1043 @@ void conf_update_thread_profiling(const char *thread_name)
          set_thread_prof_status_by_name("TEvent Thread", prof_tevent_thrd);
       }
    }
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DEXIT;
+}
+
+/* returned pointer needs to be freed */
+char* mconf_get_execd_spool_dir(void) {
+   char* execd_spool_dir = NULL;
+
+   DENTER(TOP_LAYER, "mconf_get_execd_spool_dir");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+
+   execd_spool_dir = sge_strdup(execd_spool_dir, Master_Config.execd_spool_dir);
+
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN(execd_spool_dir);
+}
+
+/* returned pointer needs to be freed */
+char* mconf_get_mailer(void) {
+   char* mailer = NULL;
+
+   DENTER(TOP_LAYER, "mconf_get_mailer");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+
+   mailer = sge_strdup(mailer, Master_Config.mailer);
+
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN(mailer);
+}
+
+/* returned pointer needs to be freed */
+char* mconf_get_xterm(void) {
+   char* xterm = NULL;
+
+   DENTER(TOP_LAYER, "mconf_get_xterm");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+
+   xterm = sge_strdup(xterm, Master_Config.xterm);
+
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN(xterm);
+
+}
+
+/* returned pointer needs to be freed */
+char* mconf_get_load_sensor(void) {
+   char* load_sensor = NULL;
+
+   DENTER(TOP_LAYER, "mconf_get_load_sensor");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+
+   load_sensor = sge_strdup(load_sensor, Master_Config.load_sensor);
+
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN(load_sensor);
+}
+
+/* returned pointer needs to be freed */
+char* mconf_get_prolog(void) {
+   char* prolog = NULL;
+
+   DENTER(TOP_LAYER, "mconf_get_prolog");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+
+   prolog = sge_strdup(prolog, Master_Config.prolog);
+
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN(prolog);
+}
+
+/* returned pointer needs to be freed */
+char* mconf_get_epilog(void) {
+   char* epilog = NULL;
+
+   DENTER(TOP_LAYER, "mconf_get_epilog");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+
+   epilog = sge_strdup(epilog, Master_Config.epilog);
+
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN(epilog);
+}
+
+/* returned pointer needs to be freed */
+char* mconf_get_shell_start_mode(void) {
+   char* shell_start_mode = NULL;
+
+   DENTER(TOP_LAYER, "mconf_get_shell_start_mode");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+
+   shell_start_mode = sge_strdup(shell_start_mode, Master_Config.shell_start_mode);
+
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN(shell_start_mode);
+}
+
+/* returned pointer needs to be freed */
+char* mconf_get_login_shells(void) {
+   char* login_shells = NULL;
+
+   DENTER(TOP_LAYER, "mconf_get_login_shells");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+
+   login_shells = sge_strdup(login_shells, Master_Config.login_shells);
+
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN(login_shells);
+}
+
+u_long32 mconf_get_min_uid(void) {
+   u_long32 min_uid;
+
+   DENTER(TOP_LAYER, "mconf_get_min_uid");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+
+   min_uid = Master_Config.min_uid;
+
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN(min_uid);
+}
+
+u_long32 mconf_get_min_gid(void) {
+   u_long32 min_gid;
+
+   DENTER(TOP_LAYER, "mconf_get_min_gid");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+
+   min_gid = Master_Config.min_gid;
+
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN(min_gid);
+}
+
+u_long32 mconf_get_load_report_time(void) {
+   u_long32 load_report_time;
+
+   DENTER(TOP_LAYER, "mconf_get_load_report_time");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+
+   load_report_time = Master_Config.load_report_time;
+
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN(load_report_time);
+}
+
+u_long32 mconf_get_max_unheard(void) {
+   u_long32 max_unheard;
+
+   DENTER(TOP_LAYER, "mconf_get_max_unheard");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+
+   max_unheard = Master_Config.max_unheard;
+
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN(max_unheard);
+}
+
+u_long32 mconf_get_loglevel(void) {
+   u_long32 loglevel;
+
+   DENTER(TOP_LAYER, "mconf_get_loglevel");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+
+   loglevel = Master_Config.loglevel;
+
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN(loglevel);
+}
+
+/* returned pointer needs to be freed */
+char* mconf_get_enforce_project(void) {
+   char* enforce_project = NULL;
+
+   DENTER(TOP_LAYER, "mconf_get_enforce_project");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+
+   enforce_project = sge_strdup(enforce_project, Master_Config.enforce_project);
+
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN(enforce_project);
+}
+
+/* returned pointer needs to be freed */
+char* mconf_get_enforce_user(void) {
+   char* enforce_user = NULL;
+
+   DENTER(TOP_LAYER, "mconf_get_enforce_user");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+
+   enforce_user = sge_strdup(enforce_user, Master_Config.enforce_user);
+
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN(enforce_user);
+}
+
+
+/* returned pointer needs to be freed */
+char* mconf_get_administrator_mail(void) {
+   char* administrator_mail = NULL;
+
+   DENTER(TOP_LAYER, "mconf_get_administrator_mail");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+
+   administrator_mail = sge_strdup(administrator_mail, Master_Config.administrator_mail);
+
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN(administrator_mail);
+}
+
+/* returned pointer needs to be freed */
+lList* mconf_get_user_lists(void) {
+   lList* user_lists = NULL;
+
+   DENTER(TOP_LAYER, "mconf_get_user_lists");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+
+   user_lists = lCopyList("user_lists", Master_Config.user_lists);
+
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN(user_lists);
+}
+
+/* returned pointer needs to be freed */
+lList* mconf_get_xuser_lists(void) {
+   lList* xuser_lists = NULL;
+
+   DENTER(TOP_LAYER, "mconf_get_xuser_lists");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+
+   xuser_lists = lCopyList("xuser_lists", Master_Config.xuser_lists);
+
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN(xuser_lists);
+}
+
+/* returned pointer needs to be freed */
+lList* mconf_get_projects(void) {
+   lList* projects = NULL;
+
+   DENTER(TOP_LAYER, "mconf_get_projects");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+
+   projects = lCopyList("projects", Master_Config.projects);
+
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN(projects);
+}
+
+/* returned pointer needs to be freed */
+lList* mconf_get_xprojects(void) {
+   lList* xprojects = NULL;
+
+   DENTER(TOP_LAYER, "mconf_get_xprojects");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+
+   xprojects = lCopyList("xprojects", Master_Config.xprojects);
+
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN(xprojects);
+}
+
+/* returned pointer needs to be freed */
+char* mconf_get_set_token_cmd(void) {
+   char* set_token_cmd = NULL;
+
+   DENTER(TOP_LAYER, "mconf_get_set_token_cmd");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+
+   set_token_cmd = sge_strdup(set_token_cmd, Master_Config.set_token_cmd);
+
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN(set_token_cmd);
+}
+
+/* returned pointer needs to be freed */
+char* mconf_get_pag_cmd(void) {
+   char* pag_cmd = NULL;
+
+   DENTER(TOP_LAYER, "mconf_get_pag_cmd");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+
+   pag_cmd = sge_strdup(pag_cmd, Master_Config.pag_cmd);
+
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN(pag_cmd);
+}
+
+u_long32 mconf_get_token_extend_time(void) {
+   u_long32 token_extend_time;
+
+   DENTER(TOP_LAYER, "mconf_get_token_extend_time");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+
+   token_extend_time = Master_Config.token_extend_time;
+
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN(token_extend_time);
+}
+
+/* returned pointer needs to be freed */
+char* mconf_get_shepherd_cmd(void) {
+   char* shepherd_cmd = NULL;
+
+   DENTER(TOP_LAYER, "mconf_get_shepherd_cmd");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+
+   shepherd_cmd = sge_strdup(shepherd_cmd, Master_Config.shepherd_cmd);
+
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN(shepherd_cmd);
+}
+
+/* returned pointer needs to be freed */
+char* mconf_get_qmaster_params(void) {
+   char* qmaster_params = NULL;
+
+   DENTER(TOP_LAYER, "mconf_get_qmaster_params");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+
+   qmaster_params = sge_strdup(qmaster_params, Master_Config.qmaster_params);
+
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN(qmaster_params);
+}
+
+/* returned pointer needs to be freed */
+char* mconf_get_execd_params(void) {
+   char* execd_params = NULL;
+
+   DENTER(TOP_LAYER, "mconf_get_execd_params");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+
+   execd_params = sge_strdup(execd_params, Master_Config.execd_params);
+
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN(execd_params);
+}
+
+/* returned pointer needs to be freed */
+char* mconf_get_reporting_params(void) {
+   char* reporting_params = NULL;
+
+   DENTER(TOP_LAYER, "mconf_get_reporting_params");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+
+   reporting_params = sge_strdup(reporting_params, Master_Config.reporting_params);
+
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN(reporting_params);
+}
+
+/* returned pointer needs to be freed */
+char* mconf_get_gid_range(void) {
+   char* gid_range = NULL;
+
+   DENTER(TOP_LAYER, "mconf_get_gid_range");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+
+   gid_range = sge_strdup(gid_range, Master_Config.gid_range);
+
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN(gid_range);
+}
+
+u_long32 mconf_get_zombie_jobs(void) {
+   u_long32 zombie_jobs;
+
+   DENTER(TOP_LAYER, "mconf_get_zombie_jobs");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+
+   zombie_jobs = Master_Config.zombie_jobs;
+
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN(zombie_jobs);
+}
+
+/* returned pointer needs to be freed */
+char* mconf_get_qlogin_daemon(void) {
+   char* qlogin_daemon = NULL;
+
+   DENTER(TOP_LAYER, "mconf_get_qlogin_daemon");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+
+   qlogin_daemon = sge_strdup(qlogin_daemon, Master_Config.qlogin_daemon);
+
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN(qlogin_daemon);
+}
+
+/* returned pointer needs to be freed */
+char* mconf_get_qlogin_command(void) {
+   char* qlogin_command = NULL;
+
+   DENTER(TOP_LAYER, "mconf_get_qlogin_command");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+
+   qlogin_command = sge_strdup(qlogin_command, Master_Config.qlogin_command);
+
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN(qlogin_command);
+}
+
+/* returned pointer needs to be freed */
+char* mconf_get_rsh_daemon(void) {
+   char* rsh_daemon = NULL;
+
+   DENTER(TOP_LAYER, "mconf_get_rsh_daemon");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+
+   rsh_daemon = sge_strdup(rsh_daemon, Master_Config.rsh_daemon);
+
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN(rsh_daemon);
+}
+
+void mconf_set_new_config(bool new_config)
+{
+   DENTER(TOP_LAYER, "mconf_set_new_config");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_WRITE);
+   
+   is_new_config = new_config;
+   
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_WRITE);
+   DEXIT;
+}
+
+/* make chached values from configuration invalid. */
+bool mconf_is_new_config(void) {
+   bool is;
+
+   DENTER(TOP_LAYER, "mconf_is_new_config");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+
+   is = is_new_config;
+
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN(is);
+}
+
+/* returned pointer needs to be freed */
+char* mconf_get_rsh_command(void) {
+   char* rsh_command = NULL;
+
+   DENTER(TOP_LAYER, "mconf_get_rsh_command");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+
+   rsh_command = sge_strdup(rsh_command, Master_Config.rsh_command);
+
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN(rsh_command);
+}
+
+/* returned pointer needs to be freed */
+char* mconf_get_rlogin_daemon(void) {
+   char* rlogin_daemon = NULL;
+
+   DENTER(TOP_LAYER, "mconf_get_rlogin_daemon");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+
+   rlogin_daemon = sge_strdup(rlogin_daemon, Master_Config.rlogin_daemon);
+
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN(rlogin_daemon);
+}
+
+/* returned pointer needs to be freed */
+char* mconf_get_rlogin_command(void) {
+   char* rlogin_command = NULL;
+
+   DENTER(TOP_LAYER, "mconf_get_rlogin_command");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+
+   rlogin_command = sge_strdup(rlogin_command, Master_Config.rlogin_command);
+
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN(rlogin_command);
+}
+
+u_long32 mconf_get_reschedule_unknown(void) {
+   u_long32 reschedule_unknown;
+
+   DENTER(TOP_LAYER, "mconf_get_reschedule_unknown");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+
+   reschedule_unknown = Master_Config.reschedule_unknown;
+
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN(reschedule_unknown);
+}
+
+u_long32 mconf_get_max_aj_instances(void) {
+   u_long32 max_aj_instances;
+
+   DENTER(TOP_LAYER, "mconf_get_max_aj_instances");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+
+   max_aj_instances = Master_Config.max_aj_instances;
+
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN(max_aj_instances);
+}
+
+u_long32 mconf_get_max_aj_tasks(void) {
+   u_long32 max_aj_tasks;
+
+   DENTER(TOP_LAYER, "mconf_get_max_aj_tasks");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+
+   max_aj_tasks = Master_Config.max_aj_tasks;
+
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN(max_aj_tasks);
+}
+
+u_long32 mconf_get_max_u_jobs(void) {
+   u_long32 max_u_jobs;
+
+   DENTER(TOP_LAYER, "mconf_get_max_u_jobs");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+
+   max_u_jobs = Master_Config.max_u_jobs;
+
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN(max_u_jobs);
+}
+
+u_long32 mconf_get_max_jobs(void) {
+   u_long32 max_jobs;
+
+   DENTER(TOP_LAYER, "mconf_get_max_jobs");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+
+   max_jobs = Master_Config.max_jobs;
+
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN(max_jobs);
+}
+
+u_long32 mconf_get_reprioritize(void) {
+   u_long32 reprioritize;
+
+   DENTER(TOP_LAYER, "mconf_get_reprioritize");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+
+   reprioritize = Master_Config.reprioritize;
+
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN(reprioritize);
+}
+
+u_long32 mconf_get_auto_user_fshare(void) {
+   u_long32 auto_user_fshare;
+
+   DENTER(TOP_LAYER, "mconf_get_auto_user_fshare");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+
+   auto_user_fshare = Master_Config.auto_user_fshare;
+
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN(auto_user_fshare);
+}
+
+u_long32 mconf_get_auto_user_oticket(void) {
+   u_long32 auto_user_oticket;
+
+   DENTER(TOP_LAYER, "mconf_get_auto_user_oticket");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+
+   auto_user_oticket = Master_Config.auto_user_oticket;
+
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN(auto_user_oticket);
+}
+
+/* returned pointer needs to be freed */
+char* mconf_get_auto_user_default_project(void) {
+   char* auto_user_default_project = NULL;
+
+   DENTER(TOP_LAYER, "mconf_get_auto_user_default_project");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+
+   auto_user_default_project = sge_strdup(auto_user_default_project, Master_Config.auto_user_default_project);
+
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN(auto_user_default_project);
+}
+
+u_long32 mconf_get_auto_user_delete_time(void) {
+   u_long32 auto_user_delete_time;
+
+   DENTER(TOP_LAYER, "mconf_get_auto_user_delete_time");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+
+   auto_user_delete_time = Master_Config.auto_user_delete_time;
+
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN(auto_user_delete_time);
+}
+
+/* returned pointer needs to be freed */
+char* mconf_get_delegated_file_staging(void) {
+   char* delegated_file_staging = NULL;
+
+   DENTER(TOP_LAYER, "mconf_get_delegated_file_staging");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+
+   delegated_file_staging = sge_strdup(delegated_file_staging, Master_Config.delegated_file_staging);
+
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN(delegated_file_staging);
+}
+
+
+/* params */
+bool mconf_is_monitor_message(void) {
+  bool is;
+
+   DENTER(TOP_LAYER, "mconf_is_monitor_message");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+
+   is = is_monitor_message;
+
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN(is);
+}
+
+bool mconf_get_use_qidle(void) {
+   bool idle;
+
+   DENTER(TOP_LAYER, "mconf_get_use_qidle");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+
+   idle = use_qidle;
+
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN(idle);
+}
+
+bool mconf_get_forbid_reschedule(void) {
+   bool ret;
+
+   DENTER(TOP_LAYER, "mconf_get_forbid_reschedule");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+
+   ret = forbid_reschedule;
+
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN(ret);
+}
+
+bool mconf_get_forbid_apperror(void) {
+   bool ret;
+
+   DENTER(TOP_LAYER, "mconf_get_forbid_apperror");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+
+   ret = forbid_apperror;
+
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN(ret);
+}
+
+bool mconf_get_do_credentials(void) {
+   bool ret;
+
+   DENTER(TOP_LAYER, "mconf_get_do_credentials");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+
+   ret = do_credentials;
+
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN(ret);
+}
+
+bool mconf_get_do_authentication(void) {
+   bool ret;
+
+   DENTER(TOP_LAYER, "mconf_get_do_authentication");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+
+   ret = do_authentication;
+
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN(ret);
+}
+
+bool mconf_get_acct_reserved_usage(void) {
+   bool ret;
+
+   DENTER(TOP_LAYER, "mconf_get_acct_reserved_usage");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+
+   ret = acct_reserved_usage;
+
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN(ret);
+}
+
+bool mconf_get_sharetree_reserved_usage(void) {
+   bool ret;
+
+   DENTER(TOP_LAYER, "mconf_get_sharetree_reserved_usage");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+
+   ret = sharetree_reserved_usage;
+
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN(ret);
+}
+
+bool mconf_get_keep_active(void) {
+   bool ret;
+
+   DENTER(TOP_LAYER, "mconf_get_keep_active");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+
+   ret = keep_active;
+
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN(ret);
+}
+
+bool mconf_get_enable_windomacc(void) {
+   bool ret;
+
+   DENTER(TOP_LAYER, "mconf_get_enable_windomacc");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+
+   ret = enable_windomacc;
+
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN(ret);
+}
+
+bool mconf_get_enable_addgrp_kill(void) {
+   bool ret;
+
+   DENTER(TOP_LAYER, "mconf_get_enable_addgrp_kill");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+
+   ret = enable_addgrp_kill;
+
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN(ret);
+}
+
+bool mconf_get_simulate_hosts(void) {
+   bool ret;
+
+   DENTER(TOP_LAYER, "mconf_get_simulate_hosts");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+
+   ret = simulate_hosts;
+
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN(ret);
+}
+
+long mconf_get_ptf_max_priority(void) {
+   long ret;
+
+   DENTER(TOP_LAYER, "mconf_get_max_priority");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+
+   ret = ptf_max_priority;
+
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN(ret);
+}
+
+long mconf_get_ptf_min_priority(void) {
+   long ret;
+
+   DENTER(TOP_LAYER, "mconf_get_ptf_min_priority");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+
+   ret = ptf_min_priority;
+
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN(ret);
+}
+
+bool mconf_get_use_qsub_gid(void) {
+   bool ret;
+
+   DENTER(TOP_LAYER, "mconf_get_use_qsub_gid");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+
+   ret = use_qsub_gid;
+
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN(ret);
+}
+
+int mconf_get_notify_susp_type(void) {
+   int ret;
+
+   DENTER(TOP_LAYER, "mconf_get_notify_susp_type");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+
+   ret = notify_susp_type;
+
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN(ret);
+}
+
+/* returned pointer needs to be freed */
+char* mconf_get_notify_susp(void) {
+   char* ret = NULL;
+
+   DENTER(TOP_LAYER, "mconf_get_notify_susp");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+
+   ret = sge_strdup(ret, notify_susp);
+
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN(ret);
+}
+
+int mconf_get_notify_kill_type(void) {
+   int ret;
+
+   DENTER(TOP_LAYER, "mconf_get_notify_kill_type");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+
+   ret = notify_kill_type;
+
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN(ret);
+}
+
+/* returned pointer needs to be freed */
+char* mconf_get_notify_kill(void) {
+   char* ret = NULL;
+
+   DENTER(TOP_LAYER, "mconf_get_notify_kill");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+
+   ret = sge_strdup(ret, notify_kill);
+
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN(ret);
+}
+
+bool mconf_get_disable_reschedule(void) {
+   bool ret;
+
+   DENTER(TOP_LAYER, "mconf_get_disable_reschedule");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+
+   ret = disable_reschedule;
+
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN(ret);
+}
+
+
+int mconf_get_scheduler_timeout(void) {
+   int timeout;
+
+   DENTER(TOP_LAYER, "mconf_get_scheduler_timeout");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+
+   timeout = scheduler_timeout;
+
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN(timeout);
+}
+
+void mconf_set_max_dynamic_event_clients(int value) {
+
+   DENTER(TOP_LAYER, "mconf_set_max_dynamic_event_clients");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_WRITE);
+
+   max_dynamic_event_clients = value;
+
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_WRITE);
+   DEXIT;
+}
+
+int mconf_get_max_dynamic_event_clients(void) {
+   int ret;
+
+   DENTER(TOP_LAYER, "mconf_get_max_dynamic_event_clients");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+
+   ret = max_dynamic_event_clients;
+
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN(ret);
+}
+
+
+bool mconf_get_set_lib_path(void) {
+   bool ret;
+
+   DENTER(TOP_LAYER, "mconf_get_set_lib_path");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+
+   ret = set_lib_path;
+
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN(ret);
+}
+
+bool mconf_get_inherit_env(void) {
+   bool ret;
+
+   DENTER(TOP_LAYER, "mconf_get_set_lib_path");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+
+   ret = inherit_env;
+
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN(ret);
+}
+
+int mconf_get_spool_time(void) {
+   int ret;
+
+   DENTER(TOP_LAYER, "mconf_get_spool_time");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+
+   ret = spool_time;
+
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN(ret);
+}
+
+u_long32 mconf_get_monitor_time(void) {
+   u_long32 monitor;
+
+   DENTER(TOP_LAYER, "mconf_get_monitor_time");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+
+   monitor = monitor_time;
+
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN(monitor);
+
+}
+
+bool mconf_get_do_accounting(void) {
+   bool ret;
+
+   DENTER(TOP_LAYER, "mconf_get_do_accounting");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+
+   ret = do_accounting;
+
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN(ret);
+
+}
+
+bool mconf_get_do_reporting(void) {
+   bool ret;
+
+   DENTER(TOP_LAYER, "mconf_get_do_reporting");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+
+   ret = do_reporting;
+
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN(ret);
+
+}
+
+bool mconf_get_do_joblog(void) {
+   bool ret;
+
+   DENTER(TOP_LAYER, "mconf_get_do_joblog");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+
+   ret = do_joblog;
+
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN(ret);
+
+}
+
+int mconf_get_reporting_flush_time(void) {
+   int ret;
+
+   DENTER(TOP_LAYER, "mconf_get_reporting_flush_time");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+
+   ret = reporting_flush_time;
+
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN(ret);
+
+}
+
+int mconf_get_accounting_flush_time(void) {
+   int ret;
+
+   DENTER(TOP_LAYER, "mconf_get_accounting_flush_time");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+
+   if (accounting_flush_time >= 0) {
+      ret = accounting_flush_time;
+   }
+   /* If the accounting_flush_time is not set, use the reporting_flush_time
+    * instead. */
+   else {
+      DPRINTF(("accounting_flush_time unset; using flush_time\n"));
+      ret = reporting_flush_time;
+   }
+
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN(ret);
+
+}
+
+int mconf_get_sharelog_time(void) {
+   int ret;
+
+   DENTER(TOP_LAYER, "mconf_get_sharelog_time");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+
+   ret = sharelog_time;
+
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN(ret);
+
+}
+
+bool mconf_get_enable_forced_qdel(void) {
+   bool ret;
+
+   DENTER(TOP_LAYER, "mconf_get_enable_forced_qdel");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+
+   ret = enable_forced_qdel;
+
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN(ret);
+
 }

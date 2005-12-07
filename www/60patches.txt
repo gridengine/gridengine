@@ -1,3 +1,227 @@
+Bugs fixed in SGE 6.0u6 since release 6.0u5
+-------------------------------------------
+
+Issue    Sun BugId Description
+-------- --------  ------------------------------------------------------------------------------------------
+1692     6294118   no newline for "qstat -f -explain A" 
+1718     6298056   INHERIT_ENV and SET_LIB_PATH are not reset by setting execd_params to NONE 
+-        6298233   no user notification or command hanging if an immediate job cannot be scheduled 
+-        6299345   No error messages in case SSL initialization failes 
+-        6299351   qrsh fails when execd_param INHERIT_ENV=false and no ARC set in sge_execd environment 
+-        6299939   distribution should contain all Berkeley DB utilities 
+-        6299943   distribution should contain documentation for the Berkeley DB utilities 
+
+
+Bugs fixed in SGE 6.0u5 since release 6.0u4
+-------------------------------------------
+
+Issue    Sun BugId Description
+-------- --------  ------------------------------------------------------------------------------------------
+403      4769608   qalter shows wrong priority number when using negative priorities with -p option 
+1084     5063313   no links for SGE startup scripts for shutdown created 
+1420     6218877   qstat -t is broken 
+1108     6245812   qmon failed to find SGE shared library due to user-defined LD_LIBRARY_PATH_64 
+1541     6250603   qmon crash (segmentation fault) on Solaris64 
+1547     6252469   missleading qstat -j messages in case of resource reservation 
+1625     6252525   qmon: complex attributes not removeable 
+1583     6260656   incomplete resource reservation with array jobs 
+1591     6262009   backup script does not backup sgeCA directory for CSP systems 
+1596     6263509   autoinstall fails, trying to install a execd on masterhost 
+1595     6264592   drmaa_control(DRMAA_JOB_IDS_SESSION_ALL, DRMAA_CONTROL_SUSPEND|RESUME) returns INVALID_JOB error 
+1597     6265154   Wildcards in PE Name Cause Unusual Behavior 
+1623     6266392   Performance problem with qconf -mattr exechost XX XX global 
+1624     6266450   performace bottleneck with subordinate list 
+1632     6267238   Multithreaded DRMAA may crash due to use of sge_strtok() 
+1598     6267245   Repeated logging of the same message produces giant logging files 
+1612     6267932   high CPU load of qmaster even on empty cluster 
+1620     6268707   job_load_adjustements is not correctly working when parallel jobs are submitted. 
+1621     6269305   qrsh/qsh/qlogin reject -js option 
+1654     6269411   Close integration cause jobscripts with multiple mprun commands to be killed. 
+1627     6272451   execd auto_install performance bottleneck 
+1610     6273006   qstat -j "" results in a segmentation fault 
+1657     6273217   race condition with qsub -sync and drmaa_wait() if job exits directly after being submitted 
+1446     6274467   qmon kills a system 
+1669     6277874   N1GE6U4 installation on Red Hat creates wrong rc*.d script names, such as /etc/rc3.d/S-1sgeexecd 
+1642     6277909   qconf -mq coredumps 
+1646     6278140   inst_sge -sm don't install a startup script 
+1647     6278146   inst_sge -db error on MacOS 
+1648     6278147   drmaa_job_ps() returns DRMAA_PS_QUEUED_ACTIVE for finished array job rather than DRMAA_PS_DONE 
+1656     6278727   qstat -xml -urg output contains badly formatted numbers 
+1659     6279402   drmaa_exit() causes qmaster error logging if host is no admin host 
+1616     6279409   qconf -tsm command generates too much data (very large schedd_runlog file) 
+1531     6280698   Resource filtering with qhost broken 
+1658     6281440   resource allocation shown by qstat/qhost not consistent with resource utilization 
+1601     6281462   qmaster profiling can only be turned on by restarting qmaster 
+1662     6283308   overhead with job execution could lead to overoptimistic backfilling and break resource reservation 
+1667     6285898   qconf -Xattr does not resolve fqdn hostnames 
+1665     6286510   delivery of queue based signals to execd repeated endlessly 
+1666     6286533   job wallclock monitoring and enforcement considers prolog/epilog runtime part of net job runtime 
+1481     6287824   Asking to have RC scripts removed INSTALLS on SUSE 
+1617     6287831   Bad check for jobs when removing execution hosts 
+1410     6287867   tight integration: temporary files are not deleted at task exit 
+1670     6287917   "dl.sh 0" doesn't unset SGE_ND 
+1652     6287953   getting many E messages "failed building category string for job N" 
+1671     6287958   suspend not working under Mac OS X 
+1673     6288156   sge_shepherd SEGV's when it tries to fopen the usage file 
+1674     6288588   jobs submitted with -v PATH do not retain $TMPDIR prefixed by N1GE as required for tight integration 
+1694     6294397   wrong drmaa jnilib link on MacOS 
+-        6294915   Document installation if domain users intend to use N1GE 
+-        6294979   update format specifier and command line options in qping(1) man page 
+-        6294980   add man page for sgepasswd command 
+-        6294982   document DURATION_OFFSET parameter 
+-        6294987   document ENABLE_WINDOMACC parameter if Windows domain user accounts should be used 
+1705     6295165   finished array job tasks can be rescheduled if master/scheduler daemons are stopped/started 
+1569     -         SGE install of libdb-4.2so conflicts with Fedora Core 3 version
+
+
+Bugs fixed in SGE 6.0u4 since release 6.0u3
+-------------------------------------------
+
+Issue    Sun BugId Description
+-------- --------  ------------------------------------------------------------------------------------------
+-        4760393   SGE installation on a host with IP Multipathing has to be documented. 
+-        4760401   SGE should install properly on hosts with IPMP activated 
+-        4768907   Insufficent instruction for GridEngine install as a normal user 
+497      4820420   sge_shadowd(8) man page should be improved 
+-        4876872   Doc section on the shadow/failover configuration is incomplete 
+-        4975432   Installation Guide: Missing step in secure install 
+-        5048312   Incorrect trademarks on N1 Grid Engine 6 Installation Guide 
+1119     5071527   Error messages with autoinstallation 
+-        5079032   Figure 3-5 and its descriptive text do not match and docfeedback@sun.com mentioning 
+1220     5085004   qstat -f -q all.q@HOSTNAME does not resolve hostname 
+1535     5086193   load.sh fails on a machine when uptime displays time for less than an hour 
+-        5097424   ARCO install documentation should be improved 
+-        5104922   ARCO install instructions has minor errors 
+1506     6178843   qconf changes to complex doesn't display all the changes made upon exit 
+-        6186597   qconf error diagnosis broken 
+-        6193945   qstat options -urg/-pri/-explain not covered in admin/users guide 
+1334     6194719   starter_method is ignored with binary jobs that are started without a shell 
+-        6196556   Need samples in Admin guide to illustrate N1GE6 policy capabilities 
+1493     6197109   install_execd does not pick up $SGE_CELL 
+1347     6197730   Problems with shadowd install 
+1359     6199256   qconf -[a|A|m|M]stree kills qmaster 
+1384     6203977   execd installation fails, if local spool dir is not entered by user! 
+1385     6203984   Port free/used check returns a wrong result in some cases! 
+1256     6205060   SGE tools segfault when gid can't be looked up 
+-        6205729   Wrong constraint about spooling directory location in Install Guide 
+-        6208982   database model of reporting database missing in admin guide 
+1332     6209487   install guide: qmon under JDS needs correct Motif runtime libraries be installed 
+1519     6215730   qdel failed to delete qrsh (login) job on a Solaris box when Secure Shell is used 
+1418     6218379   Problems with BDB RPC server are hard to diagnose 
+1403     6218430   Problems with load values if execution daemons run in a solaris zone at x86 
+1420     6218877   qstat -t is broken 
+1422     6219517   qsub -sync y doesn't remove session directories 
+103      6219999   changing of local execd_spool_dir is fault prone 
+-        6220019   Administrator guide lacks documentation about certificate renewal 
+1427     6220060   wrong calendar settings kills the qmaster 
+1416     6221167   sge_schedd segfaults in case of a restart and a running pe job. 
+1433     6221231   qsub -sync y return code behaviour broken 
+1434     6221244   releasing user hold state through qrls may not require manager priviledges 
+1424     6221850   Request for start-up script additions 
+1473     6222237   huge CPU and memory overhead when modifiying complex attributes 
+1438     6222811   scheduler can get out of sync 
+1431     6222861   error message "no execd known on host" 
+1533     6222930   After shadowd takes over there is a long delay before execd connects to new qmaster 
+1449     6225570   sharetree has a usage leak 
+1436     6226085   suspend_interval is ignored when enabling jobs due to suspend_thresholds change 
+-        6228350   Execd messages file contains incorrectly-formatted lines 
+1461     6228786   Long delay when starting up large pe jobs 
+1441     6229253   a parallel array job can kill the qmaster 
+1505     6229277   qselect uses sge_qstat file 
+1463     6229373   An array pe job can set queues into error state 
+1501     6229603   reprioritize parameter is NOT documented 
+1465     6230846   execd logs error mesage, when a tight pe job in "t" state is deleted 
+1458     6231366   deadlock in the qmaster due to qconf -k[s|e] 
+-        6231376   N1GE Users Guide does not mention possibilities due to -b {y|n} option 
+1208     6231589   execd uninstall doesn't remove all objects 
+1454     6232074   load formula is not working for pe jobs 
+1468     6233162   global scheduler messages are reported multiple times 
+-        6233173   qloadsensor dies sporadically 
+1494     6233300   Upgrade procedure should be more verbose wrts manual steps required to transfer 5.3 configuration 
+1504     6234371   error message from execd about endpoint is not unique 
+1453     6234836   Need a means to purge host or hostgroup specific cluster queue 
+1492     6235845   install script should create execd spooldir 
+1244     6236136   backup/restore for classic and rpc server spooling not supported! 
+1242     6236139   restore procedure does not really ensure qmaster is down 
+-        6236261   BDB install on NFSv4 share 
+1076     6236469   JAPI: Can be made to start two event client threads 
+1422     6236472   qsub -sync y doesn't remove session directories 
+1470     6236475   DRMAA segfaults with > 255 threads 
+1472     6236476   NoClassDefFoundError: org/ggf/drmaa/NoResourceUsageDataException 
+1425     6239394   Spooledit fails during database upgrade 
+-        6239461   load values adjustment on Windows execution host 
+-        6239465   man can't display man pages 
+-        6239470   Avoid that sge_execd has to be started by the Domain Administrator 
+-        6239479   Improve installation documentation of Windows execution host 
+-        6239492   Installation must stop when system is not set up right 
+1243     6239504   adminuser is not considered in autoinstall! 
+1502     6239569   qmaster does not accept new connections if number of execd's exceed FD_SETSIZE 
+1478     6239640   ./inst_sge -x fails with fqdn and no default domain 
+1356     6239655   inst_sge only deletes <cell> common, but not <cell> 
+1486     6239660   qmaster profiling doesn't start at qmaster startup 
+1439     6240739   qstat -s hu shows pending jobs only 
+1469     6241376   qstat -U aborts 
+1484     6241378   Reservation of wrong hosts 
+1462     6241401   Conflicting requirements should have the same meaning with qstat and qsub 
+1431     6241430   error message "no execd known on host" 
+1489     6241487   termination script may not be ignored, when job submited with -notify 
+1508     6241544   qstat -F dies in case of a infinit integer setting 
+1379     6242055   Consumable request may not be 0 if PE requested 
+1447     6242057   jobs which request consumable resources which are set to infinity are not scheduled 
+1471     6242165   Profiling library never frees thread slots 
+1512     6242172   Multi-threaded args parsing problems 
+1479     6242181   Failed drmaa_control (DRMAA_CONTROL_TERMINATE) causes deadlock 
+1362     6242779   qsub -now yes not working on CSP system 
+1365     6244215   qsub -b y must fail if no command is specified 
+1435     6244229   misleading qstat -j message when the scheduler is not running 
+1518     6244808   scheduler does not get all objects on a qmaster or scheduler startup 
+1520     6244865   a series of matching soft queue requests gets not counted separately 
+1395     6245486   sge_ca needs to export SGE_CELL 
+1524     6245487   qhost -h <hostname> does not show selected host 
+-        6246180   An ARCO installation example leads to a failure on a certain operating systems 
+1525     6247211   qstat -explain E does not print queue errors correctly 
+1529     6247238   qsub fails to work correctly with -b n -cwd 
+1450     6247239   sequence nr of execd load reports corrupted 
+1433     6247889   qsub -sync y return code behaviour broken 
+-        6249252   Error in User Guide Table on qacct -j failed codes on p.122 
+-        6250186   ARCo decumentation should explain where is the file config.xml 
+1543     6251172   reserved jobs prevent other jobs from starting 
+1545     6251175   berkeleydb server shutdown script failes 
+1540     6251178   install_qmaster picks up commented out service sge_qmaster 
+-        6251943   japi does not work with host aliasing 
+1551     6252465   qsub option parameter string only supports 2048 character strings 
+1548     6252522   qconf -purge queue hostlist all.q@host segfaults 
+1549     6252524   Missing success message with qconf -Aprj 
+1552     6253093   qstat -f -pe make breaks 
+1565     6253138   auto_inst uses ADMIN_HOST_LIST variable onl at qmaster installation time 
+1575     6253192   bdb rpc auto install does not work 
+1560     6253219   BDB RPC server with NFS spooling dir and master auto_install does not work 
+1554     6253266   failed array tasks are rescheduled only one by one 
+1573     6253278   auto_inst should ne be case sensitive for hostnames 
+1574     6253291   auto_inst uninstallation with fqnd does not work 
+1559     6253313   auto_inst -um does not uses configurationfile 
+-        6254840   Install failure for execution hosts on multiple domains 
+1562     6255329   qmaster does not store sharetree usage on shutdown 
+1563     6255336   execd does sends empty job report for a pe slave task 
+1566     6255804   job in error state breaks qstat -f -xml 
+1567     6255850   the usage in projects is never spooled while the qmaster 
+1568     6255902   qmake in dynamic allocation mode core dump 
+1430     6256457   pe jobs disappear in t state (execd doesn't know this job) 
+1572     6256530   cqueues/all.q trashed after qmaster shutdown with 1362 hosts 
+1576     6257389   inst_sge -bup with rpc server destroy database 
+1579     6259380   potential qmaster sec. fault. 
+1585     6259993   inst_sge -bup does not backup shadow_masters file 
+1582     6260024   qmon cluster queue modify cancel not wor/1405 king correct 
+-        6260704   qsub -sync is not interruptable once the job has been scheduled 
+1586     6260729   Can't select 'slots' in select box when adding consumables for execution host 
+1354     -         install CSP problems on AIX43
+1450     -         sequence nr of execd load reports corrupted
+1442     -         Arguments to binaries sent to qsub are given to invoking shell too
+538      -         PATH size limit of 2048 characters
+1405     -         DRMAA Java language binding does not work in binaries
+1404     -         Clonable classes should implement Cloneable
+
+
 Bugs fixed in SGE 6.0u3 since release 6.0u2
 -------------------------------------------
 

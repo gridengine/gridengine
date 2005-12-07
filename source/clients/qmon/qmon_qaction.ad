@@ -785,7 +785,8 @@ Qmon*load_threshold_config.xmtChildren: \
    Matrix_2xN     suspend_thresholds = suspend_thresholds; \
    Spinbox        suspend_nsuspend = nsuspend; \
    InputField     suspend_interval = suspend_interval; \
-   XmPushButton   suspend_intervalPB; \
+   XmPushButton   suspend_intervalPB, load_thresholds_remove, \
+						suspend_thresholds_remove; \
    XmLabel        load_thresholds_label, suspend_thresholds_label, \
                   suspend_nsuspend_label, suspend_interval_label; \
    XmToggleButton load_thresholds_tw = load_thresholds_tw, \
@@ -797,13 +798,23 @@ Qmon*load_threshold_config.layout: \
    Row { \
       Etched Through Col { \
          Row { load_thresholds_tw load_thresholds_label <> } \
-         Margin 10 Centered load_thresholds \
+         Row { \
+            Margin 10 Centered load_thresholds \
+		    ## \
+      	    Fixed Centered load_thresholds_remove \
+		    <> \
+	     } \
       } \
       ## \
       Etched Through Col { \
          Col { \
             Row { suspend_thresholds_tw suspend_thresholds_label <> } \
-            Margin 10 Centered suspend_thresholds \
+				Row { \
+					Margin 10 Centered suspend_thresholds \
+				 ## \
+					 Fixed Centered suspend_thresholds_remove \
+				 <> \
+			  } \
          } \
          # \
          Col { \
@@ -829,6 +840,14 @@ Qmon*load_threshold_config*load_thresholds_tw.valueChangedCallback:  ToggleSensi
 Qmon*load_threshold_config*suspend_thresholds_tw.valueChangedCallback:  ToggleSensitive(self);
 Qmon*load_threshold_config*suspend_interval_tw.valueChangedCallback:  ToggleSensitive(self);
 Qmon*load_threshold_config*suspend_nsuspend_tw.valueChangedCallback:  ToggleSensitive(self);
+
+Qmon*cq_dialog*load_threshold_config*load_thresholds_remove.labelType: PIXMAP
+Qmon*cq_dialog*load_threshold_config*load_thresholds_remove.labelPixmap: trashcan
+Qmon*cq_dialog*load_threshold_config*load_thresholds_remove.activateCallback: DeleteLines(*load_thresholds);
+
+Qmon*cq_dialog*load_threshold_config*suspend_thresholds_remove.labelType: PIXMAP
+Qmon*cq_dialog*load_threshold_config*suspend_thresholds_remove.labelPixmap: trashcan
+Qmon*cq_dialog*load_threshold_config*suspend_thresholds_remove.activateCallback: DeleteLines(*suspend_thresholds);
 
 Qmon*load_threshold_config*load_thresholds_tw.indicatorOn:         False
 Qmon*load_threshold_config*load_thresholds_tw.shadowThickness:     0
@@ -1247,13 +1266,23 @@ Qmon*complexes_config.tabLabel: @{@fBComplexes}
 Qmon*complexes_config.xmtChildren: \
    Matrix_2xN     complexes_ccl = consumable_config_list; \
    XmLabel        consumable_config_list_label; \
-   XmToggleButton consumable_config_list_tw = consumable_config_list_tw;
+   XmToggleButton consumable_config_list_tw = consumable_config_list_tw; \
+   XmPushButton   complexes_ccl_remove;
 
 Qmon*complexes_config.layout: \
    Etched Through Col { \
       Row { consumable_config_list_tw consumable_config_list_label <> }\
-      complexes_ccl \
+      Row { \
+		complexes_ccl \
+		## \
+      	Fixed Centered complexes_ccl_remove \
+		<> \
+	  } \
    }
+
+Qmon*cq_dialog*complexes_config*complexes_ccl_remove.labelType: PIXMAP
+Qmon*cq_dialog*complexes_config*complexes_ccl_remove.labelPixmap: trashcan
+Qmon*cq_dialog*complexes_config*complexes_ccl_remove.activateCallback: DeleteLines(*complexes_ccl);
 
 
 Qmon*cq_dialog*consumable_config_list_label.labelString: @{@fBConsumables/Fixed Attributes}
@@ -1287,19 +1316,21 @@ Qmon*cq_dialog.cq_folder.subordinates_config.tabLabel: @{@fBSubordinates}
 Qmon*cq_dialog.cq_folder.subordinates_config.xmtChildren: \
    Matrix_2xN      subordinates_attached = subordinate_list; \
    XmLabel         subordinate_list_label; \
-   XmToggleButton  subordinate_list_tw = subordinate_list_tw;
+   XmToggleButton  subordinate_list_tw = subordinate_list_tw; \
+   XmPushButton    subordinates_attached_remove;
 
 Qmon*cq_dialog.cq_folder.subordinates_config.layout: \
    Row { subordinate_list_tw subordinate_list_label <> }\
    Row { \
       subordinates_attached \
+      ## \
+      Fixed Centered subordinates_attached_remove \
       ##### \
       "@{qaction.max_slots.If 'Max Slots' are filled in the current queue,\nthe queues in column one are suspended.}" \
       <> \
    }
 
 Qmon*cq_dialog*subordinate_list_label.labelString: @{@fBSubordinate Queues}
-
 Qmon*cq_dialog*subordinate_list_tw.valueChangedCallback: ToggleSensitive(self);
 
 Qmon*cq_dialog*subordinate_list_tw.indicatorOn:         False
@@ -1347,6 +1378,10 @@ Qmon*cq_dialog*subordinates_attached*cq_menu.items: \
    Title "@{@fBOperations}"; \
    ------;\
    "@{_Delete}" [Ctrl-D] DeleteLines(*subordinates_attached);
+
+Qmon*cq_dialog*subordinates_config*subordinates_attached_remove.labelType: PIXMAP
+Qmon*cq_dialog*subordinates_config*subordinates_attached_remove.labelPixmap: trashcan
+Qmon*cq_dialog*subordinates_config*subordinates_attached_remove.activateCallback: DeleteLines(*subordinates_attached);
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!! (x)access list 

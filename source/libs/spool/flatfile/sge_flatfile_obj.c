@@ -638,8 +638,13 @@ spooling_field *sge_build_STN_field_list (bool spool, bool recurse)
 
 spooling_field *sge_build_PE_field_list (bool spool, bool to_stdout)
 {
+#ifdef SGE_PQS_API
+   /* There are 15 possible PE_Type fields. */
+   spooling_field *fields = (spooling_field *)malloc(sizeof(spooling_field)*15);
+#else
    /* There are 13 possible PE_Type fields. */
    spooling_field *fields = (spooling_field *)malloc(sizeof(spooling_field)*13);
+#endif
    int count = 0;
    
    create_spooling_field (&fields[count++], PE_name, 17, "pe_name",
@@ -664,6 +669,11 @@ spooling_field *sge_build_PE_field_list (bool spool, bool to_stdout)
    create_spooling_field (&fields[count++], PE_urgency_slots, 17, "urgency_slots",
                           NULL, NULL, NULL, NULL);
    
+#ifdef SGE_PQS_API
+   create_spooling_field (&fields[count++], PE_qsort_args, 17, "qsort_args",
+                          NULL, NULL, NULL, NULL);
+#endif
+
    if (!spool && to_stdout && getenv("MORE_INFO")) {
       create_spooling_field (&fields[count++], PE_free_slots, 17, "free_slots",
                              NULL, NULL, NULL, write_PE_free_slots);
@@ -818,12 +828,13 @@ static int read_CF_value(lListElem *ep, int nm, const char *buf,
                   if (min < GID_RANGE_NOT_ALLOWED_ID) {
                      WARNING((SGE_EVENT, MSG_CONFIG_CONF_GIDRANGELESSTHANNOTALLOWED_I, GID_RANGE_NOT_ALLOWED_ID));
    
-                     FREE (buffer);
+                     FREE(buffer);
+                     lFreeList(&rlp);
                      DEXIT;
                      return 0;
                   }                  
                }
-               rlp = lFreeList(rlp);
+               lFreeList(&rlp);
                lSetString(ep, CF_value, value);
             }
          }
@@ -1427,7 +1438,7 @@ static int read_CQ_hostlist (lListElem *ep, int nm, const char *buffer,
       if (strcasecmp("NONE", lGetHost(lFirst(lp), HR_name)) != 0) {
          lSetList(ep, CQ_hostlist, lp);
       } else {
-         lp = lFreeList(lp);
+         lFreeList(&lp);
       }
    }
 

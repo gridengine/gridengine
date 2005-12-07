@@ -84,6 +84,8 @@
 #include "msg_execd.h"
 #include "msg_gdilib.h"
 
+#include "uti/sge_monitor.h"
+
 #ifdef COMPILE_DC
 #   include "ptf.h"
 #   include "sgedefs.h"
@@ -161,69 +163,9 @@ int main(int argc, char *argv[]);
 *  NOTES
 *     This function is MT save
 *******************************************************************************/
-unsigned long sge_execd_application_status(char** info_message) {
-   char buffer[1024];
-   unsigned long status = 0;
-   const char* status_message = NULL;
-   double last_execd_main_time          = 0.0;
-   sge_thread_alive_times_t* thread_times       = NULL;
-
-   struct timeval now;
-
-   status_message = MSG_EXECD_APPL_STATE_OK;
-   sge_lock_alive_time_mutex();
-   gettimeofday(&now,NULL);
-   
-   thread_times = sge_get_thread_alive_times();
-   if ( thread_times != NULL ) {
-      int warning_count = 0;
-      int error_count = 0;
-      double time1;
-      double time2;
-      time1 = now.tv_sec + (now.tv_usec / 1000000.0);
-
-      time2 = thread_times->execd_main.timestamp.tv_sec + (thread_times->execd_main.timestamp.tv_usec / 1000000.0);
-      last_execd_main_time          = time1 - time2;
-
-      /* always set running state */
-      thread_times->execd_main.state   = 'R';
-
-      /* check for warning */
-      if ( thread_times->execd_main.warning_timeout > 0 ) {
-         if ( last_execd_main_time > thread_times->execd_main.warning_timeout ) {
-            thread_times->execd_main.state = 'W';
-            warning_count++;
-         }
-      }
-
-      /* check for error */
-      if ( thread_times->execd_main.error_timeout > 0 ) {
-         if ( last_execd_main_time > thread_times->execd_main.error_timeout ) {
-            thread_times->execd_main.state = 'E';
-            error_count++;
-         }
-      }
-
-      if ( error_count > 0 ) {
-         status = 2;
-         status_message = MSG_EXECD_APPL_STATE_TIMEOUT_ERROR;
-      } else if ( warning_count > 0 ) {
-         status = 1; 
-         status_message = MSG_EXECD_APPL_STATE_TIMEOUT_WARNING;
-      }
-
-      snprintf(buffer, 1024, MSG_EXECD_APPL_STATE_CFS,
-                    thread_times->execd_main.state,
-                    last_execd_main_time,
-                    status_message);
-      if (info_message != NULL && *info_message == NULL) {
-         *info_message = strdup(buffer);
-      }
-   } else {
-      status = 3;
-   }
-   sge_unlock_alive_time_mutex();
-   return status;
+unsigned long sge_execd_application_status(char** info_message) 
+{
+   return sge_monitor_status(info_message, 0);
 }
 
 /*-------------------------------------------------------------------------*/
@@ -236,8 +178,11 @@ char **argv
    int max_enroll_tries;
    int my_pid;
    int ret_val;
+   int printed_points = 0;
+   int last_execd_error = CL_RETVAL_OK;
    static char tmp_err_file_name[SGE_PATH_MAX];
    time_t next_prof_output = 0;
+   int execd_exit_state = 0;
 
    DENTER_MAIN(TOP_LAYER, "execd");
 
@@ -264,7 +209,7 @@ char **argv
    log_state_set_log_file(tmp_err_file_name);
 
    /* exit func for SGE_EXIT() */
-   in_main_loop = 0;
+   sge_sig_handler_in_main_loop = 0;
    uti_state_set_exit_func(execd_exit_func);
    sge_setup_sig_handlers(EXECD);
 
@@ -286,17 +231,29 @@ char **argv
    /* exit if we can't get communication handle (bind port) */
    max_enroll_tries = 30;
    while ( cl_com_get_handle((char*)prognames[EXECD],1) == NULL) {
-      prepare_enroll(prognames[EXECD]);
+      prepare_enroll(prognames[EXECD], &last_execd_error);
       max_enroll_tries--;
       if ( max_enroll_tries <= 0 || shut_me_down ) {
          /* exit after 30 seconds */
+         if (printed_points != 0) {
+            printf("\n");
+         }
          CRITICAL((SGE_EVENT, MSG_COM_ERROR));
          SGE_EXIT(1);
       }
       if (  cl_com_get_handle((char*)prognames[EXECD],1) == NULL) {
         /* sleep when prepare_enroll() failed */
         sleep(1);
+        if (max_enroll_tries < 27) {
+           printf(".");
+           printed_points++;
+           fflush(stdout);
+        }
       }
+   }
+
+   if (printed_points != 0) {
+      printf("\n");
    }
 
    /*
@@ -317,13 +274,16 @@ char **argv
 
 
    /* are we using qidle or not */
-   sge_ls_qidle(use_qidle);
+   sge_ls_qidle(mconf_get_use_qidle());
    sge_ls_gnu_ls(1);
    
-   DPRINTF(("use_qidle: %d\n", use_qidle));
+   DPRINTF(("use_qidle: %d\n", mconf_get_use_qidle()));
 
    /* test load sensor (internal or external) */
-   lFreeList(sge_build_load_report());
+   {
+      lList *report_list = sge_build_load_report();
+      lFreeList(&report_list);
+   }
 
    execd_register();
 
@@ -360,7 +320,7 @@ char **argv
 
    dispatch_timeout = DISPATCH_TIMEOUT_SGE;
       
-   in_main_loop = 1;
+   sge_sig_handler_in_main_loop = 1;
 
    /***** MAIN LOOP *****/
    while (shut_me_down != 1) {
@@ -387,19 +347,25 @@ char **argv
                    sizeof(execd_dispatcher_table)/sizeof(dispatch_entry),
                    tagarray, dispatch_timeout, err_str, dispatcher_errfunc, 1);
 
-      if (sigpipe_received) {
-          sigpipe_received = 0;
+      if (sge_sig_handler_sigpipe_received) {
+          sge_sig_handler_sigpipe_received = 0;
           INFO((SGE_EVENT, "SIGPIPE received\n"));
+      }
+
+      if (sge_get_com_error_flag(SGE_COM_ACCESS_DENIED) == true) {
+         execd_exit_state = SGE_COM_ACCESS_DENIED;
+         break; /* shut down, leave while */
+      }
+
+      if (sge_get_com_error_flag(SGE_COM_ENDPOINT_NOT_UNIQUE) == true) {
+         execd_exit_state = SGE_COM_ENDPOINT_NOT_UNIQUE;
+         break; /* shut down, leave while */
       }
 
       if (i) {
          if (cl_is_commlib_error(i)) {
             if (i != CL_RETVAL_OK) {
-               WARNING((SGE_EVENT, MSG_COM_RECEIVEREQUEST_S, cl_get_error_text(i)));
-               if (i == CL_RETVAL_CONNECTION_NOT_FOUND ||
-                   i == CL_RETVAL_UNKNOWN) {
-                  execd_register(); /* reregister at qmaster */
-                }
+               execd_register(); /* reregister at qmaster */
             }
          } else {
             WARNING((SGE_EVENT, MSG_COM_RECEIVEREQUEST_S, err_str ));
@@ -407,7 +373,7 @@ char **argv
       }
    }
 
-   Master_Job_List = lFreeList(Master_Job_List); 
+   lFreeList(&Master_Job_List); 
   
    PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM1);
 
@@ -422,7 +388,7 @@ char **argv
    }   
 
    sge_prof_cleanup();
-   sge_shutdown();
+   sge_shutdown(execd_exit_state);
    DEXIT;
    return 0;
 }
@@ -499,6 +465,7 @@ int sge_execd_register_at_qmaster(void) {
    lAppendElem(hlp, hep);
 
    /* register at qmaster */
+   DPRINTF(("*****  Register at qmaster   *****\n"));
    alp = sge_gdi(SGE_EXECHOST_LIST, SGE_GDI_ADD, &hlp, NULL, NULL);
    aep = lFirst(alp);
    if (!alp || (lGetUlong(aep, AN_status) != STATUS_OK)) {
@@ -511,8 +478,8 @@ int sge_execd_register_at_qmaster(void) {
       sge_last_register_error_flag = 0;
       INFO((SGE_EVENT, MSG_EXECD_REGISTERED_AT_QMASTER_S, sge_get_master(false)));
    }
-   alp = lFreeList(alp);
-   hlp = lFreeList(hlp);
+   lFreeList(&alp);
+   lFreeList(&hlp);
    DEXIT;
    return return_value;
 }
@@ -541,7 +508,7 @@ int sge_execd_register_at_qmaster(void) {
 static void execd_register(void)
 {
    int had_problems = 0;
-   int last_commlib_error = CL_RETVAL_OK;
+   int last_enroll_error  = CL_RETVAL_OK; 
 
    DENTER(TOP_LAYER, "execd_register");
 
@@ -549,51 +516,31 @@ static void execd_register(void)
       DPRINTF(("*****Checking In With qmaster*****\n"));
 
       if (had_problems != 0) {
-         int i;
+         int ret_val;
          cl_com_handle_t* handle = NULL;
-         int commlib_error = CL_RETVAL_OK;
-         /*  trigger communication
-          *  =====================
-          *  cl_commlib_trigger() will block 1 second , when there are no messages to read/write 
-          */
-         for (i = 0; i< 10 ; i++) {
-            int ret_val;
-            
+         
+         handle = cl_com_get_handle((char*)prognames[EXECD],1);
+         if ( handle == NULL) {
+            DPRINTF(("preparing reenroll"));
+            prepare_enroll(prognames[EXECD], &last_enroll_error);
             handle = cl_com_get_handle((char*)prognames[EXECD],1);
-            if ( handle == NULL) {
-               DPRINTF(("preparing reenroll"));
-               prepare_enroll(prognames[EXECD]);
-               handle = cl_com_get_handle((char*)prognames[EXECD],1);
-            }
-
-            ret_val = cl_commlib_trigger(handle);
-            switch(ret_val) {
-               case CL_RETVAL_SELECT_TIMEOUT:
-               case CL_RETVAL_OK:
-                  break;
-               default:
-                  DPRINTF(("cl_commlib_trigger reported an error - sleeping 1 s"));
-                  sleep(1);
-                  break;
-            }
-
-            commlib_error = sge_get_communication_error();
-            if ( commlib_error != CL_RETVAL_OK && commlib_error != last_commlib_error ) {
-               u_long32 handle_local_comp_id = 0;
-               u_long32 handle_service_port = 0;
-               last_commlib_error = commlib_error;
-               if (handle != NULL) {
-                  handle_local_comp_id = handle->local->comp_id;
-                  handle_service_port = handle->service_port;
-               }
-               ERROR((SGE_EVENT, MSG_GDI_CANT_GET_COM_HANDLE_SSUUS, 
-                                 uti_state_get_qualified_hostname(),
-                                 (char*) prognames[uti_state_get_mewho()],
-                                 sge_u32c(handle_local_comp_id), 
-                                 sge_u32c(handle_service_port),
-                                 cl_get_error_text(commlib_error)));
-            }
          }
+
+         ret_val = cl_commlib_trigger(handle, 1); /* this will block on errors for 1 second */
+         switch(ret_val) {
+            case CL_RETVAL_SELECT_TIMEOUT:
+            case CL_RETVAL_OK:
+               break;
+            default:
+               DPRINTF(("got communication problems - sleeping 30 s"));
+               sleep(30); /* For other errors */
+               break;
+         }
+         if (sge_get_com_error_flag(SGE_COM_ACCESS_DENIED) == true ||
+             sge_get_com_error_flag(SGE_COM_ENDPOINT_NOT_UNIQUE) == true) {
+            break;
+         }
+
       }
 
       if (sge_execd_register_at_qmaster() != 0) {
@@ -630,14 +577,14 @@ char **argv
       for_each(aep, alp) {
          fprintf(stderr, "%s", lGetString(aep, AN_text));
       }
-      lFreeList(alp);
-      lFreeList(pcmdline);
+      lFreeList(&alp);
+      lFreeList(&pcmdline);
       SGE_EXIT(1);
    }
 
    alp = sge_parse_execd(&pcmdline, &ref_list, &help);
-   lFreeList(pcmdline);
-   lFreeList(ref_list);
+   lFreeList(&pcmdline);
+   lFreeList(&ref_list);
 
    if(alp) {
       /*
@@ -646,10 +593,10 @@ char **argv
       for_each(aep, alp) {
          fprintf(stderr, "%s", lGetString(aep, AN_text));
       }
-      lFreeList(alp);
+      lFreeList(&alp);
       SGE_EXIT(1);
    }
-   lFreeList(alp);
+   lFreeList(&alp);
 
    if(help) {
       /*
@@ -712,7 +659,6 @@ static lList *sge_parse_execd(lList **ppcmdline, lList **ppreflist,
    stringT str;
    lList *alp = NULL;
    int usageshowed = 0;
-   u_long32 flag;
 
    DENTER(TOP_LAYER, "sge_parse_execd");
 
@@ -721,18 +667,11 @@ static lList *sge_parse_execd(lList **ppcmdline, lList **ppreflist,
    */
    while(lGetNumberOfElem(*ppcmdline))
    {
-      flag = 0;
       /* -help */
       if(parse_flag(ppcmdline, "-help", &alp, help)) {
          usageshowed = 1;
          sge_usage(stdout);
          break;
-      }
-
-      /* -nostart-commd */
-      if(parse_flag(ppcmdline, "-nostart-commd", &alp, &flag)) {
-         start_commd = false;
-         continue;
       }
    }
    if(lGetNumberOfElem(*ppcmdline)) {

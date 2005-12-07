@@ -133,7 +133,7 @@ void sge_print_categories(void) {
    DEXIT;
 }
 /*-------------------------------------------------------------------------*/
-/*    add jobs' category to the´global category list, if it doesn´t        */
+/*    add jobs' category to theï¿½global category list, if it doesnï¿½t        */
 /*    already exist, and reference the category in the job element         */
 /*    The category_list is recreated for every scheduler run               */
 /*                                                                         */
@@ -146,7 +146,7 @@ int sge_add_job_category( lListElem *job, lList *acl_list ) {
    lListElem *cat = NULL;
    const char *cstr = NULL;
    u_long32 rc = 0;
-   static char no_requests[] = "no-requests";
+   static const char no_requests[] = "no-requests";
    dstring category_str = DSTRING_INIT;
 
    DENTER(TOP_LAYER, "sge_add_job_category");
@@ -155,11 +155,14 @@ int sge_add_job_category( lListElem *job, lList *acl_list ) {
       Builds the category for the resource matching
    */   
    
-   cstr = sge_build_job_category(&category_str, job, acl_list);
+   sge_build_job_category_dstring(&category_str, job, acl_list);
 
-   if (cstr == NULL)  {
+   if (sge_dstring_strlen(&category_str) == 0) {
       cstr = sge_dstring_copy_string(&category_str, no_requests);
    }   
+   else {
+      cstr = sge_dstring_get_string(&category_str);
+   }
 
    if (CATEGORY_LIST == NULL) {
       CATEGORY_LIST = lCreateList("new category list", CT_Type);
@@ -180,7 +183,7 @@ int sge_add_job_category( lListElem *job, lList *acl_list ) {
    /* 
    ** free category_str
    */
-   sge_dstring_free(&category_str);
+   sge_dstring_clear(&category_str);
 
    /* Second part:
       Builds the category for the category scheduler. We need the
@@ -231,7 +234,7 @@ int sge_add_job_category( lListElem *job, lList *acl_list ) {
 }
 
 /*-------------------------------------------------------------------------*/
-/*    delete job´s category if CT_refcount gets 0                          */
+/*    delete jobï¿½s category if CT_refcount gets 0                          */
 /*-------------------------------------------------------------------------*/
 int sge_delete_job_category(
 lListElem *job 
@@ -250,9 +253,18 @@ lListElem *job
          lSetUlong(cat, CT_refcount, --rc);
       }
       else {
+         lListElem *cache = NULL;
+         lList *cache_list = lGetList(cat, CT_cache);
+
          DPRINTF(("############## Removing %s from category list (refcount: " sge_u32 ")\n", 
                   lGetString(cat, CT_str), lGetUlong(cat, CT_refcount)));
-         lRemoveElem(CATEGORY_LIST, cat);
+
+         for_each(cache, cache_list) {
+            int *range = lGetRef(cache, CCT_pe_job_slots);
+            FREE(range); 
+         }
+
+         lRemoveElem(CATEGORY_LIST, &cat);
       }
    }
    lSetRef(job, JB_category, NULL);
@@ -280,7 +292,7 @@ lListElem *job
          for(i=0; (i < max && !found); i++) {
             for_each(ref, refs[i]) {
                if (lGetRef(ref, REF_ref) == job) {
-                  lRemoveElem(refs[i], ref);
+                  lRemoveElem(refs[i], &ref);
                   found = true;
                   break;
                }
@@ -289,7 +301,7 @@ lListElem *job
             if (found) { /* is category empty? */
                if ((lGetNumberOfElem(lGetList(cat, SCT_job_pending_ref)) == 0) &&
                    (lGetNumberOfElem(lGetList(cat, SCT_job_ref)) == 0)) {
-                  lRemoveElem(CS_CATEGORY_LIST, cat);
+                  lRemoveElem(CS_CATEGORY_LIST, &cat);
                }
                break;
             }
@@ -367,8 +379,8 @@ int sge_rebuild_job_category( lList *job_list, lList *acl_list) {
 
    DENTER(TOP_LAYER, "sge_rebuild_job_category");
 
-   CATEGORY_LIST = lFreeList(CATEGORY_LIST);
-   CS_CATEGORY_LIST = lFreeList(CS_CATEGORY_LIST);
+   lFreeList(&CATEGORY_LIST);
+   lFreeList(&CS_CATEGORY_LIST);
 
    for_each (job, job_list) {
       sge_add_job_category(job, acl_list);
@@ -418,6 +430,14 @@ int sge_reset_job_category()
    DENTER(TOP_LAYER, "sge_reset_job_category");
 
    for_each (cat, CATEGORY_LIST) {
+      lListElem *cache = NULL;
+      lList *cache_list = lGetList(cat, CT_cache);
+
+      for_each(cache, cache_list) {
+         int *range = lGetRef(cache, CCT_pe_job_slots);
+         FREE(range); 
+      }
+      
       lSetUlong(cat, CT_rejected, 0);
       lSetInt(cat, CT_count, -1);
       lSetList(cat, CT_cache, NULL);
@@ -552,5 +572,5 @@ lList *sge_category_job_copy(lList *queue_list, lList **orders) {
 /*-------------------------------------------------------------------------*/
 void sge_free_job_category(void)
 {
-   CATEGORY_LIST = lFreeList(CATEGORY_LIST);
+   lFreeList(&CATEGORY_LIST);
 }

@@ -49,9 +49,9 @@ QHOST_OBJS = $(QHOST_SRC:.c=.o)
 
 QHOST_ADD_OBJS = $(QHOST_ADD_SRC:.c=.o)
 
-QHOST_ADD_LIBS = -lsched -levc -lgdi -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lcull -lcomm -lcommlists -luti -llck -lrmon $(DLLIB)
+QHOST_ADD_LIBS = sge_mt_init.o -lsched -lgdi -lsgeobjd -lsgeobj $(SECLIB) $(KRBLIB) -lcull -lcomm -lcommlists -luti $(WINGRIDLIB) -llck -lrmon $(DLLIB)
 
-QHOST_LIB_DEPENDS = $(GDILIB) $(SCHEDLIB) $(EVCLIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(SECLIBS) $(KRBLIBS) $(CULLLIB) $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB) $(TPLIB)
+QHOST_LIB_DEPENDS = sge_mt_init.o $(GDILIB) $(SCHEDLIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(SECLIBS) $(KRBLIBS) $(CULLLIB) $(COMMLIB) $(COMMLISTSLIB) $(WINGRIDLIB_DEP) $(UTILIB) $(LCKLIB) $(RMONLIB) $(TPLIB)
 
 ###############################################################################
 # global rules: all, clean, depend, messages

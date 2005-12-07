@@ -86,10 +86,6 @@
 #  include <sys/resource.h>
 #endif
 
-#if defined(SOLARIS)
-int setpriority(int which, id_t who, int prio);
-#endif
-
 #ifdef MODULE_TEST
 #   include <sys/stat.h>
 #   include <fcntl.h>
@@ -803,7 +799,7 @@ static lListElem *ptf_get_job(u_long job_id)
 
    where = lWhere("%T(%I == %u)", JL_Type, JL_job_ID, job_id);
    job = lFindFirst(ptf_jobs, where);
-   lFreeWhere(where);
+   lFreeWhere(&where);
    return job;
 }
 
@@ -870,7 +866,7 @@ static lListElem *ptf_get_job_os(lList *job_list, osjobid_t os_job_id,
       }
    }
 
-   lFreeWhere(where);
+   lFreeWhere(&where);
    DEXIT;
    return osjob;
 }
@@ -1399,26 +1395,27 @@ static void ptf_set_OS_scheduling_parameters(lList *job_list, double min_share,
    
    DENTER(TOP_LAYER, "ptf_set_OS_scheduling_parameters");
 
-   if (ptf_min_priority != -999)
-      pri_min_tmp = ptf_min_priority;
-   else
+   
+   pri_min_tmp = mconf_get_ptf_min_priority();
+   if (pri_min_tmp == -999) {
       pri_min_tmp = PTF_MIN_PRIORITY;   
+   }
 
-   if (ptf_max_priority != -999)
-      pri_max_tmp = ptf_max_priority;
-   else
+   pri_max_tmp = mconf_get_ptf_max_priority();
+   if (pri_max_tmp == -999) {
       pri_max_tmp = PTF_MAX_PRIORITY;   
+   }
 
    /* 
     * For OS'es where we enforce the values of max and min priority verify
     * the the values are in the boundaries of PTF_OS_MAX_PRIORITY and
     * PTF_OS_MIN_PRIORITY.
     */
-   if (ENFORCE_PRI_RANGE) {
+#if ENFORCE_PRI_RANGE
       pri_max_tmp = MAX(pri_max_tmp, PTF_OS_MAX_PRIORITY);
       pri_min_tmp = MIN(pri_min_tmp, PTF_OS_MIN_PRIORITY);
-   }
-   
+#endif 
+
    /*
     * Ensure that the max priority can't get a bigger value than
     * the min priority (otherwise the "range" gets wrongly calculated
@@ -1622,12 +1619,12 @@ int ptf_job_complete(u_long32 job_id, u_long32 ja_task_id, const char *pe_task_i
 
    DPRINTF(("PTF: Removing job " sge_u32 "." sge_u32 ", petask %s\n", 
             job_id, ja_task_id, pe_task_id == NULL ? "none" : pe_task_id));
-   lRemoveElem(osjobs, osjob);
+   lRemoveElem(osjobs, &osjob);
 
    if (lGetNumberOfElem(osjobs) == 0) {
       DPRINTF(("PTF: Removing job\n"));
       lDechainElem(ptf_jobs, ptf_job);
-      lFreeElem(ptf_job);
+      lFreeElem(&ptf_job);
    }
 
    DEXIT;
@@ -1934,8 +1931,8 @@ int ptf_get_usage(lList **job_usage_list)
 
    *job_usage_list = lSelect("PtfJobUsageList", temp_usage_list, NULL, what);
 
-   lFreeList(temp_usage_list);
-   lFreeWhat(what);
+   lFreeList(&temp_usage_list);
+   lFreeWhat(&what);
 
    DEXIT;
    return 0;
@@ -2015,8 +2012,7 @@ void ptf_stop(void)
       is_ptf_running = 0;
    }
 
-   ptf_jobs = lFreeList(ptf_jobs);
-
+   lFreeList(&ptf_jobs);
    DEXIT;
 }
 
@@ -2085,7 +2081,7 @@ void ptf_unregister_registered_job(u_long32 job_id, u_long32 ja_task_id ) {
                DPRINTF(("PTF: Notify PDC to remove data for osjobid " sge_u32 "\n",
                         lGetUlong(os_job, JO_OS_job_ID)));
                lDechainElem(os_job_list, os_job);
-               lFreeElem(os_job);
+               lFreeElem(&os_job);
             }
          }
 
@@ -2093,7 +2089,7 @@ void ptf_unregister_registered_job(u_long32 job_id, u_long32 ja_task_id ) {
             DPRINTF(("PTF: No more os_job_list entries, removing job\n"));
             DPRINTF(("PTF: Removing job " sge_u32 "\n", lGetUlong(job, JL_job_ID)));
             lDechainElem(ptf_jobs, job);
-            lFreeElem(job);
+            lFreeElem(&job);
          }
       }
    }
@@ -2124,13 +2120,13 @@ void ptf_unregister_registered_jobs(void)
          DPRINTF(("PTF: Notify PDC to remove data for osjobid " sge_u32 "\n",
                   lGetUlong(os_job, JO_OS_job_ID)));
          lDechainElem(os_job_list, os_job);
-         lFreeElem(os_job);
+         lFreeElem(&os_job);
       }
       DPRINTF(("PTF: Removing job " sge_u32 "\n", lGetUlong(job, JL_job_ID)));
       lDechainElem(ptf_jobs, job);
-      lFreeElem(job);
+      lFreeElem(&job);
    }
-   ptf_jobs = lFreeList(ptf_jobs);
+   lFreeList(&ptf_jobs);
    DPRINTF(("PTF: All jobs unregistered from PTF\n"));
    DEXIT;
 }
@@ -2269,6 +2265,7 @@ void dump_list(lList *list)
    if (lDumpList(f, list, 0) == EOF) {
       fprintf(stderr, MSG_ERROR_UNABLETODUMPJOBLIST);
    }
+   fprintf(stderr, "\n");
    fclose(f);
 }
 
@@ -2480,7 +2477,7 @@ int main(int argc, char **argv)
       /* dump job usage list */
 
       if (lDumpList(f, job_usage_list, 0) == EOF) {
-         fprintf(stderr, MSG_ERROR_UNABLETODUMPJOBUSAGELIST);
+         fprintf(stderr, "%s\n", MSG_ERROR_UNABLETODUMPJOBUSAGELIST);
          exit(2);
       }
 #endif

@@ -299,55 +299,55 @@ qstat_usage(int qselect_mode, FILE *fp, char *what)
       /* display full usage */
       fprintf(fp, "%s %s [options]\n", MSG_SRC_USAGE ,qselect_mode?"qselect":"qstat");
       if (!qselect_mode) {
-         fprintf(fp, "        [-ext]                            %s",MSG_QSTAT_USAGE_VIEWALSOSCHEDULINGATTRIBUTES);
+         fprintf(fp, "        [-ext]                            %s\n",MSG_QSTAT_USAGE_VIEWALSOSCHEDULINGATTRIBUTES);
       }
       if (!qselect_mode) {
-         fprintf(fp, "        [-explain a|c|A|E]                %s",MSG_QSTAT_USAGE_EXPLAINOPT);
+         fprintf(fp, "        [-explain a|c|A|E]                %s\n",MSG_QSTAT_USAGE_EXPLAINOPT);
       }
       if (!qselect_mode) 
-         fprintf(fp, "        [-f]                              %s",MSG_QSTAT_USAGE_FULLOUTPUT);
+         fprintf(fp, "        [-f]                              %s\n",MSG_QSTAT_USAGE_FULLOUTPUT);
       if (!qselect_mode) 
-         fprintf(fp, "        [-F [resource_attributes]]        %s",MSG_QSTAT_USAGE_FULLOUTPUTANDSHOWRESOURCESOFQUEUES);
+         fprintf(fp, "        [-F [resource_attributes]]        %s\n",MSG_QSTAT_USAGE_FULLOUTPUTANDSHOWRESOURCESOFQUEUES);
       if (!qselect_mode) {
-         fprintf(fp, "        [-g {c}]                          %s",MSG_QSTAT_USAGE_DISPLAYCQUEUESUMMARY);
-         fprintf(fp, "        [-g {d}]                          %s",MSG_QSTAT_USAGE_DISPLAYALLJOBARRAYTASKS);
-         fprintf(fp, "        [-g {t}]                          %s",MSG_QSTAT_USAGE_DISPLAYALLPARALLELJOBTASKS);
+         fprintf(fp, "        [-g {c}]                          %s\n",MSG_QSTAT_USAGE_DISPLAYCQUEUESUMMARY);
+         fprintf(fp, "        [-g {d}]                          %s\n",MSG_QSTAT_USAGE_DISPLAYALLJOBARRAYTASKS);
+         fprintf(fp, "        [-g {t}]                          %s\n",MSG_QSTAT_USAGE_DISPLAYALLPARALLELJOBTASKS);
       }
-      fprintf(fp, "        [-help]                           %s",MSG_QSTAT_USAGE_PRINTTHISHELP);
+      fprintf(fp, "        [-help]                           %s\n",MSG_QSTAT_USAGE_PRINTTHISHELP);
       if (!qselect_mode)
-         fprintf(fp, "        [-j job_identifier_list ]         %s",MSG_QSTAT_USAGE_SHOWSCHEDULERJOBINFO);
-      fprintf(fp, "        [-l resource_list]                %s",MSG_QSTAT_USAGE_REQUESTTHEGIVENRESOURCES);
+         fprintf(fp, "        [-j job_identifier_list ]         %s\n",MSG_QSTAT_USAGE_SHOWSCHEDULERJOBINFO);
+      fprintf(fp, "        [-l resource_list]                %s\n",MSG_QSTAT_USAGE_REQUESTTHEGIVENRESOURCES);
       if (!qselect_mode) 
-         fprintf(fp, "        [-ne]                             %s",MSG_QSTAT_USAGE_HIDEEMPTYQUEUES);
-      fprintf(fp, "        [-pe pe_list]                     %s",MSG_QSTAT_USAGE_SELECTONLYQUEESWITHONOFTHESEPE);
-      fprintf(fp, "        [-q wc_queue_list]                %s",MSG_QSTAT_USAGE_PRINTINFOONGIVENQUEUE);
-      fprintf(fp, "        [-qs {a|c|d|o|s|u|A|C|D|E|S}]     %s",MSG_QSTAT_USAGE_PRINTINFOCQUEUESTATESEL);
+         fprintf(fp, "        [-ne]                             %s\n",MSG_QSTAT_USAGE_HIDEEMPTYQUEUES);
+      fprintf(fp, "        [-pe pe_list]                     %s\n",MSG_QSTAT_USAGE_SELECTONLYQUEESWITHONOFTHESEPE);
+      fprintf(fp, "        [-q wc_queue_list]                %s\n",MSG_QSTAT_USAGE_PRINTINFOONGIVENQUEUE);
+      fprintf(fp, "        [-qs {a|c|d|o|s|u|A|C|D|E|S}]     %s\n",MSG_QSTAT_USAGE_PRINTINFOCQUEUESTATESEL);
       if (!qselect_mode) 
-         fprintf(fp, "        [-r]                              %s",MSG_QSTAT_USAGE_SHOWREQUESTEDRESOURCESOFJOB);
+         fprintf(fp, "        [-r]                              %s\n",MSG_QSTAT_USAGE_SHOWREQUESTEDRESOURCESOFJOB);
       if (!qselect_mode) {
-         fprintf(fp, "        [-s {p|r|s|z|hu|ho|hs|hj|ha|h|a}] %s",MSG_QSTAT_USAGE_SHOWPENDINGRUNNINGSUSPENDESZOMBIEJOBS);
-         fprintf(fp, "                                          %s",MSG_QSTAT_USAGE_JOBSWITHAUSEROPERATORSYSTEMHOLD);
-         fprintf(fp, "                                          %s",MSG_QSTAT_USAGE_JOBSWITHSTARTTIMEINFUTORE);
-         fprintf(fp, "                                          %s",MSG_QSTAT_USAGE_HISABBREVIATIONFORHUHOHSHJHA);
-         fprintf(fp, "                                          %s",MSG_QSTAT_USAGE_AISABBREVIATIONFOR);
+         fprintf(fp, "        [-s {p|r|s|z|hu|ho|hs|hj|ha|h|a}] %s\n",MSG_QSTAT_USAGE_SHOWPENDINGRUNNINGSUSPENDESZOMBIEJOBS);
+         fprintf(fp, "                                          %s\n",MSG_QSTAT_USAGE_JOBSWITHAUSEROPERATORSYSTEMHOLD);
+         fprintf(fp, "                                          %s\n",MSG_QSTAT_USAGE_JOBSWITHSTARTTIMEINFUTORE);
+         fprintf(fp, "                                          %s\n",MSG_QSTAT_USAGE_HISABBREVIATIONFORHUHOHSHJHA);
+         fprintf(fp, "                                          %s\n",MSG_QSTAT_USAGE_AISABBREVIATIONFOR);
       }
       if (!qselect_mode) 
-         fprintf(fp, "        [-t]                              %s",MSG_QSTAT_USAGE_SHOWTASKINFO);
+         fprintf(fp, "        [-t]                              %s\n",MSG_QSTAT_USAGE_SHOWTASKINFO);
       if (!qselect_mode){  
-         fprintf(fp, "        [-u user_list]                    %s",MSG_QSTAT_USAGE_VIEWONLYJOBSOFTHISUSER);
+         fprintf(fp, "        [-u user_list]                    %s\n",MSG_QSTAT_USAGE_VIEWONLYJOBSOFTHISUSER);
       }   
-      fprintf(fp, "        [-U user_list]                    %s",MSG_QSTAT_USAGE_SELECTQUEUESWHEREUSERXHAVEACCESS);
+      fprintf(fp, "        [-U user_list]                    %s\n",MSG_QSTAT_USAGE_SELECTQUEUESWHEREUSERXHAVEACCESS);
 
       if (!qselect_mode) {
-         fprintf(fp, "        [-urg]                            %s",MSG_QSTAT_URGENCYINFO );
-         fprintf(fp, "        [-pri]                            %s",MSG_QSTAT_PRIORITYINFO );
-         fprintf(fp, "        [-xml]                            %s", MSG_QSTAT_XML_OUTPUT );
+         fprintf(fp, "        [-urg]                            %s\n",MSG_QSTAT_URGENCYINFO );
+         fprintf(fp, "        [-pri]                            %s\n",MSG_QSTAT_PRIORITYINFO );
+         fprintf(fp, "        [-xml]                            %s\n", MSG_QSTAT_XML_OUTPUT );
       }   
       
       if (getenv("MORE_INFO")) {
          fprintf(fp, MSG_QSTAT_USAGE_ADDITIONALDEBUGGINGOPTIONS);
-         fprintf(fp, "        [-dj]                             %s",MSG_QSTAT_USAGE_DUMPCOMPLETEJOBLISTTOSTDOUT);
-         fprintf(fp, "        [-dq]                             %s",MSG_QSTAT_USAGE_DUMPCOMPLETEQUEUELISTTOSTDOUT);
+         fprintf(fp, "        [-dj]                             %s\n",MSG_QSTAT_USAGE_DUMPCOMPLETEJOBLISTTOSTDOUT);
+         fprintf(fp, "        [-dq]                             %s\n",MSG_QSTAT_USAGE_DUMPCOMPLETEQUEUELISTTOSTDOUT);
       }
       fprintf(fp, "\n");
       fprintf(fp, "pe_list                  pe[,pe,...]\n");
@@ -365,6 +365,7 @@ qstat_usage(int qselect_mode, FILE *fp, char *what)
    } else {
       /* display option usage */
       fprintf(fp, MSG_QDEL_not_available_OPT_USAGE_S,what);
+      fprintf(fp, "\n");
    }
    return 1;
 }

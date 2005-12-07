@@ -102,7 +102,6 @@ extern int  shepherd_state;
 extern char shepherd_job_dir[];
 extern char **environ;
 
-
 /************************************************************************
  This is the shepherds buitin starter.
 
@@ -154,7 +153,13 @@ int truncate_stderr_out
    gid_t add_grp_id = 0;
    gid_t gid;
    struct passwd *pw=NULL;
+   struct passwd pw_struct;
+   char buffer[2048];
 
+#if defined(INTERIX)
+#  define TARGET_USER_BUFFER_SIZE 1024
+   char target_user_buffer[TARGET_USER_BUFFER_SIZE];
+#endif
 
    foreground = 0; /* VX sends SIGTTOU if trace messages go to foreground */
 
@@ -183,28 +188,23 @@ int truncate_stderr_out
    if( !strcasecmp(script_file, "QLOGIN") 
     || !strcasecmp(script_file, "QRSH")
     || !strcasecmp(script_file, "QRLOGIN")) {
+      shepherd_trace("processing qlogin job");
+      qlogin_starter = 1;
       is_qlogin = 1;
 
       if(!strcasecmp(script_file, "QRSH")) {
          is_rsh = 1;
-      }   
-
-      if(!strcasecmp(script_file, "QRLOGIN")) {
+      } else if(!strcasecmp(script_file, "QRLOGIN")) {
          is_rlogin = 1;
-      }   
-
-      shepherd_trace("processing qlogin job");
-      qlogin_starter = 1;
-   } 
-
-   if(qlogin_starter) {
+      }
       /* must force to run the qlogin starter as root, since it needs
          access to /dev/something */
-#ifndef INTERIX
-      target_user = "root";
+#if defined(INTERIX)
+      if(wl_get_superuser_name(target_user_buffer, TARGET_USER_BUFFER_SIZE)==0) {
+         target_user = target_user_buffer;
+      }
 #else
-/* HP: TODO: Handling for Interix */
-      target_user = wl_get_superuser_name();
+      target_user = "root";
 #endif
    }
 
@@ -249,8 +249,13 @@ int truncate_stderr_out
        *  Additionally it prevents that a root procedures write to
        *  files which may not be accessable by the job owner 
        *  (e.g. /etc/passwd)
+       *
+       *  This workaround doesn't work for Interix - we have to find
+       *  another solution here!
        */
+#if !defined(INTERIX)
       intermediate_user = get_conf_val("job_owner");
+#endif
    }
 
 #if defined(ALPHA)
@@ -272,7 +277,9 @@ int truncate_stderr_out
                     (cp = getlogin()) ? cp : "<no login set>");
    shepherd_trace(err_str);
 
-   pw = sge_getpwnam(target_user);
+   shepherd_trace_sprintf("reading passwd information for user '%s'",
+         target_user ? target_user : "<NULL>");
+   pw = sge_getpwnam_r(target_user, &pw_struct, buffer, sizeof(buffer));
    if (!pw) {
       sprintf(err_str, "can't get password entry for user \"%s\"", target_user);
       shepherd_error(err_str);
@@ -287,8 +294,10 @@ int truncate_stderr_out
       }   
    }
    
+   shepherd_trace("setting limits");
    setrlimits(!strcmp(childname, "job"));
 
+   shepherd_trace("setting environment");
    sge_set_environment();
 
 	/* Create the "error" and the "exit" status file here.
@@ -298,11 +307,9 @@ int truncate_stderr_out
 	 * file ownership to the job owner immediately after opening the file, 
 	 * so the job owner can reopen the file if the exec() fails.
 	 */
-	shepherd_error_init( );
+   shepherd_trace("Initializing error file");
+   shepherd_error_init( );
 
-   shepherd_trace_chown( target_user );
-   shepherd_error_chown( target_user );
-	
    min_gid = atoi(get_conf_val("min_gid"));
    min_uid = atoi(get_conf_val("min_uid"));
 
@@ -319,7 +326,9 @@ int truncate_stderr_out
        use_qsub_gid = 0;
        gid = 0;
     }
-/* --- switch to intermediate user */                                                                      
+
+/* --- switch to intermediate user */
+   shepherd_trace("switching to intermediate/target user");
    if(qlogin_starter) { 
       ret = sge_set_uid_gid_addgrp(target_user, intermediate_user, 0, 0, 
                                    0, err_str, use_qsub_gid, gid);
@@ -328,6 +337,7 @@ int truncate_stderr_out
                                    min_uid, add_grp_id, err_str, use_qsub_gid, 
                                    gid);
    }   
+
    if (ret < 0) {
       shepherd_trace(err_str);
       sprintf(err_str, "try running further with uid=%d", (int)getuid());
@@ -339,6 +349,7 @@ int truncate_stderr_out
       */
       shepherd_error(err_str);
    }
+
    shell_start_mode = get_conf_val("shell_start_mode");
 
    shepherd_trace("closing all filedescriptors");
@@ -572,7 +583,7 @@ int truncate_stderr_out
 
    in = 0;
    if (!strcasecmp(shell_start_mode, "script_from_stdin")) {
-      in = open(script_file, O_RDONLY);
+      in = SGE_OPEN2(script_file, O_RDONLY);
       if (in == -1) {
          sprintf(err_str,  "error: can't open %s script file \"%s\": %s", 
                childname, script_file, strerror(errno));
@@ -580,7 +591,7 @@ int truncate_stderr_out
       }
    } else {
       /* need to open a file as fd0 */
-      in = open(stdin_path, O_RDONLY); 
+      in = SGE_OPEN2(stdin_path, O_RDONLY); 
 
       if (in == -1) {
          shepherd_state = SSTATE_OPEN_OUTPUT;
@@ -604,9 +615,9 @@ int truncate_stderr_out
    /* open stdout - not for interactive jobs */
    if (!is_interactive && !is_qlogin) {
       if (truncate_stderr_out) {
-         out = open(stdout_path, O_WRONLY | O_CREAT | O_APPEND | O_TRUNC, 0644);
+         out = SGE_OPEN3(stdout_path, O_WRONLY | O_CREAT | O_APPEND | O_TRUNC, 0644);
       } else {
-         out = open(stdout_path, O_WRONLY | O_CREAT | O_APPEND, 0644);
+         out = SGE_OPEN3(stdout_path, O_WRONLY | O_CREAT | O_APPEND, 0644);
       }
       
       if (out==-1) {
@@ -626,9 +637,9 @@ int truncate_stderr_out
          dup2(1, 2);
       } else {
          if (truncate_stderr_out) {
-            err = open(stderr_path, O_WRONLY | O_CREAT | O_TRUNC | O_APPEND, 0644);
+            err = SGE_OPEN3(stderr_path, O_WRONLY | O_CREAT | O_TRUNC | O_APPEND, 0644);
          } else {
-            err = open(stderr_path, O_WRONLY | O_CREAT | O_APPEND, 0644);
+            err = SGE_OPEN3(stderr_path, O_WRONLY | O_CREAT | O_APPEND, 0644);
          }
 
          if (err == -1) {
@@ -689,7 +700,6 @@ int truncate_stderr_out
          }
       }
    }
-
    if (use_login_shell) {
       strcpy(argv0, "-");
       strcat(argv0, shell_basename);
@@ -738,6 +748,8 @@ int truncate_stderr_out
          shepherd_error(err_str);
       }
    }
+   shepherd_trace_sprintf("now running with uid="uid_t_fmt", euid="uid_t_fmt, 
+      (int)getuid(), (int)geteuid());
 
    /*
    ** if we dont check if the script_file exists, then in case of
@@ -750,8 +762,7 @@ int truncate_stderr_out
          char file[SGE_PATH_MAX + 1];
          char *pc;
    
-         strncpy(file, script_file, SGE_PATH_MAX);
-         file[sizeof(file) - 1] = 0;
+         sge_strlcpy(file, script_file, SGE_PATH_MAX);
          pc = strchr(file, ' ');
          if (pc) {
             *pc = 0;
@@ -1195,7 +1206,7 @@ int use_starter_method /* If this flag is set the shellpath contains the
    */
    if ((atoi(get_conf_val("handle_as_binary")) == 1) &&
        (atoi(get_conf_val("no_shell")) == 0) &&
-       !is_rsh && !is_qlogin) {
+       !is_rsh && !is_qlogin && !strcmp(childname, "job") && use_starter_method != 1 ) {
       int arg_id = 0;
       dstring arguments = DSTRING_INIT;
       int n_job_args;
@@ -1203,14 +1214,14 @@ int use_starter_method /* If this flag is set the shellpath contains the
       unsigned long i;
 
 #if 0
-      shepherd_trace("CASE 1: handle_as_binary, shell, no rsh, no qlogin");
+      shepherd_trace("Case 1: handle_as_binary, shell, no rsh, no qlogin, starter_method=none");
 #endif
 
       pre_args_ptr[arg_id++] = argv0;
       n_job_args = atoi(get_conf_val("njob_args"));
       pre_args_ptr[arg_id++] = "-c";
       sge_dstring_append(&arguments, script_file);
-      
+     
       sge_dstring_append(&arguments, " ");
       for (i = 0; i < n_job_args; i++) {
          char conf_val[256];
@@ -1247,11 +1258,11 @@ int use_starter_method /* If this flag is set the shellpath contains the
       pre_args_ptr[2] = NULL;
       args = read_job_args(pre_args, 0);
    /* Binary, noshell jobs have to make it to the else */
-   } else if (!strcasecmp("posix_compliant", shell_start_mode) &&
-              (atoi(get_conf_val("handle_as_binary")) == 0)) {
+   } else if ( (!strcasecmp("posix_compliant", shell_start_mode) &&
+              (atoi(get_conf_val("handle_as_binary")) == 0)) || (use_starter_method == 1)) {
                  
 #if 0
-      shepherd_trace("Case 3: posix_compliant, no binary" );
+      shepherd_trace("Case 3: posix_compliant, no binary or starter_method!=none" );
 #endif
 
       pre_args_ptr[0] = argv0;
@@ -1404,14 +1415,14 @@ int use_starter_method /* If this flag is set the shellpath contains the
        * Because this fix could break pre-existing installations, it was made
        * optional. */
 
-      if (!inherit_env ()) {
+      if (!inherit_env()) {
          /* The closest thing to execvp that takes an environment pointer is
           * execve.  The problem is that execve does not resolve the path.
           * As there is no reasonable way to resolve the path ourselves, we
           * have to resort to this ugly hack.  Don't try this at home. */
          char **tmp = environ;
 
-         environ = sge_get_environment ();
+         environ = sge_get_environment();
          execvp(filename, args);
          environ = tmp;
       }

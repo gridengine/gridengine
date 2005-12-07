@@ -64,6 +64,7 @@ int main(int argc, char *argv[])
    char *tokenbuf;
    int i;
    char err_str[1024+128];
+   bool done;
 
    DENTER_MAIN(TOP_LAYER, "coshepherd");
 
@@ -105,8 +106,8 @@ int main(int argc, char *argv[])
 
 #define SLEEP 30
 
-   while(1) {
-
+   done = false;
+   while (!done) {
       now = (time_t)sge_get_gmt();      
 
       if (now < last)
@@ -121,8 +122,10 @@ int main(int argc, char *argv[])
       last = now;
 
       /* stop renewing tokens in case of job finish */
-      if (SGE_STAT(TOKEN_FILE, &sb))
+      if (SGE_STAT(TOKEN_FILE, &sb)) {
+         done = true;
          break;
+      }
 
       if (last_token_set + token_extend_time - renew_before < now) {
          DPRINTF(("renewing AFS token : %s %s %d\n", command, user, token_extend_time));

@@ -87,7 +87,7 @@ sge_initialize_persistence(lList **answer_list)
          te_register_event_handler(spooling_trigger_handler, TYPE_SPOOLING_TRIGGER);
          ev = te_new_event(now, TYPE_SPOOLING_TRIGGER, ONE_TIME_EVENT, 0, 0, NULL);
          te_add_event(ev);
-         te_free_event(ev);
+         te_free_event(&ev);
       }
    }
 
@@ -124,7 +124,7 @@ sge_shutdown_persistence(lList **answer_list)
          answer_list_output(&local_answer);
       }
 
-      context = lFreeElem(context);
+      lFreeElem(&context);
       spool_set_default_context(context);
    }
 
@@ -133,7 +133,7 @@ sge_shutdown_persistence(lList **answer_list)
 }
 
 void
-spooling_trigger_handler(te_event_t anEvent)
+spooling_trigger_handler(te_event_t anEvent, monitoring_t *monitor)
 {
    time_t next_trigger = 0;
    time_t now;
@@ -157,7 +157,7 @@ spooling_trigger_handler(te_event_t anEvent)
    /* set timerevent for next trigger */
    ev = te_new_event(next_trigger, te_get_type(anEvent), ONE_TIME_EVENT, 0, 0, NULL);
    te_add_event(ev);
-   te_free_event(ev);
+   te_free_event(&ev);
 
    DEXIT;
    return;

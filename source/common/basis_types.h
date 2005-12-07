@@ -208,6 +208,12 @@ typedef char stringT[MAX_STRING_SIZE];
 #  define seteuid(euid) setresuid(-1, euid, -1)
 #  define setegid(egid) setresgid(-1, egid, -1)
 #endif
+
+#if defined(INTERIX)
+#  define seteuid(euid) setreuid(-1, euid)
+#  define setegid(egid) setregid(-1, egid)
+#  define getgrgid_r getgrgid_nomembers_r
+#endif
     
 
 #ifdef  __cplusplus
@@ -220,8 +226,8 @@ typedef char stringT[MAX_STRING_SIZE];
 #endif
 
 #define GET_SPECIFIC(type, variable, init_func, key, func_name) \
-   type * variable; \
-   if(!pthread_getspecific(key)) { \
+   type *variable = pthread_getspecific(key); \
+   if(variable == NULL) { \
       int ret; \
       variable = (type *)malloc(sizeof(type)); \
       init_func(variable); \
@@ -231,8 +237,6 @@ typedef char stringT[MAX_STRING_SIZE];
          abort(); \
       } \
    } \
-   else \
-      variable = pthread_getspecific(key)
 
 #define COMMLIB_GET_SPECIFIC(type, variable, init_func, key, func_name) \
    type * variable; \

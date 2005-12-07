@@ -77,4 +77,10 @@ pe_set_slots_used(lListElem *pe, int slots);
 void 
 pe_debit_slots(lListElem *pep, int slots, u_long32 job_id);
 
+#ifdef SGE_PQS_API
+int
+pe_validate_qsort_args(lList **alpp, const char *qsort_args,
+                       lListElem *pe, void **lib, void **fn);
+#endif
+
 #endif /* __SGE_PE_H */

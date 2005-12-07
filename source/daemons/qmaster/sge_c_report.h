@@ -34,8 +34,9 @@
 /*___INFO__MARK_END__*/
 
 #include "cull.h"
+#include "uti/sge_monitor.h"
 
 
-void sge_c_report(char *aHost, char *aCommproc, int anId, lList *aReport);
+void sge_c_report(char *aHost, char *aCommproc, int anId, lList *aReport, monitoring_t *monitor);
 
 #endif /* _SGE_C_REPORT_H_ */

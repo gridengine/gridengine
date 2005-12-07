@@ -30,6 +30,16 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+const char GDI_VERSION[] = "6.0u7";
+
+#ifdef ADD_SUN_COPYRIGHT
+const char GE_LONGNAME[] = "N1 Grid Engine";
+const char GE_SHORTNAME[] = "N1GE";
+#else
+const char GE_LONGNAME[] = "Grid Engine";
+const char GE_SHORTNAME[] = "GE";
+#endif
+
 #ifdef ADD_COPYRIGHT
 #  include "copyright.h"
 #endif

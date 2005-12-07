@@ -66,7 +66,7 @@ int sge_get_path(lList *lp, const char *cwd, const char *owner,
     * check if there's a path for this host
     */
    ep = lGetElemHost(lp, PN_host, uti_state_get_qualified_hostname());
-   if (ep) {
+   if (ep != NULL) {
       path = expand_path(lGetString(ep, PN_path), job_number, 
          ja_task_number, job_name, owner, uti_state_get_qualified_hostname());
       host = lGetHost(ep, PN_host);
@@ -79,8 +79,9 @@ int sge_get_path(lList *lp, const char *cwd, const char *owner,
                             ja_task_number, job_name, owner, 
                             uti_state_get_qualified_hostname());
          host = lGetHost(ep, PN_host);
-         if (!host) 
+         if (host == NULL) {
             break;
+         }
       }
    }
 
@@ -245,10 +246,12 @@ char *exp_path,
 const char *user 
 ) {
    struct passwd *pwd;
+   struct passwd pw_struct;
+   char buffer[2048];
 
    DENTER(TOP_LAYER, "getHomeDir");
 
-   pwd = sge_getpwnam(user);
+   pwd = sge_getpwnam_r(user, &pw_struct, buffer, sizeof(buffer));
    if (!pwd) {
       ERROR((SGE_EVENT, MSG_EXECD_INVALIDUSERNAME_S, user));
       DEXIT;
@@ -392,7 +395,7 @@ const char *sge_make_ja_task_active_dir(const lListElem *job, const lListElem *j
    result = mkdir(path, 0755);
    if(result == -1) {
       /* if it already exists and keep_active: try to rename it */
-      if(errno == EEXIST && keep_active && lGetUlong(ja_task, JAT_job_restarted) > 0) {
+      if(errno == EEXIST && mconf_get_keep_active() && lGetUlong(ja_task, JAT_job_restarted) > 0) {
          dstring new_path = DSTRING_INIT;
          int i, success = 0;
 

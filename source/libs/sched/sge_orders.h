@@ -43,9 +43,12 @@ typedef struct {
                                 amount for the profiling. It is also needed for a warring
                                 message, which informs about policy conflict:
                                 MSG_SUBORDPOLICYCONFLICT_UUSS */
+   u_long32 numberSendOrders; /* number of send orders */
+   u_long32 numberSendPackages; /* number sends inbetween */
 }order_t;
 
-#define ORDER_INIT {NULL,NULL,NULL, NULL}
+#define ORDER_INIT {NULL,NULL,NULL, NULL, 0, 0}
+
 
 lList *sge_add_schedd_info(lList *or_list, int *global_mes_count, int *job_mes_count);
 

@@ -104,12 +104,10 @@ int sort_host_list(
 lList *hl,           /* EH_Type */ 
 lList *centry_list   /* CE_Type */
 ) {
-   lListElem *hlp;
-   lListElem *global;
-   const char *host;
+   lListElem *hlp = NULL;
+   lListElem *global = NULL;
+   const char *host = NULL;
    double load;
-/*   lList *tcl = NULL;*/
-
    
    DENTER(TOP_LAYER, "sort_host_list");
 
@@ -159,15 +157,24 @@ lList *centry_list   /* CE_Type */
 *************************************************************************/
 static double scaled_mixed_load( lListElem *global, lListElem *host, const lList *centry_list)
 {
-   char *cp, *tf, *ptr, *ptr2, *par_name, *op_ptr=NULL;
+   char *cp = NULL;
+   char *tf = NULL; 
+   char *ptr = NULL;
+   char *ptr2 = NULL;
+   char *par_name = NULL;
+   char *op_ptr=NULL;
+
    double val=0, val2=0;
    double load=0;
    int op_pos, next_op=LOAD_OP_NONE;
-   const char *load_formula = sconf_get_load_formula();
+   char *load_formula = sconf_get_load_formula();
+   char *lasts = NULL;
+
    DENTER(TOP_LAYER, "scaled_mixed_load");
 
    /* we'll use strtok ==> we need a safety copy */
-   if (!(tf = strdup(load_formula))) {
+   if ((tf = sconf_get_load_formula()) == NULL) {
+      FREE(load_formula);
       DEXIT;
       return ERROR_LOAD_VAL;
    }
@@ -182,24 +189,23 @@ static double scaled_mixed_load( lListElem *global, lListElem *host, const lList
       next_op = LOAD_OP_MINUS;
    }
 
-   for (cp=strtok(tf, "+-"); cp; cp = strtok(NULL, "+-")) {
+   for (cp=strtok_r(tf, "+-", &lasts); cp; cp = strtok_r(NULL, "+-", &lasts)) {
 
       /* ---------------------------------------- */
       /* get scaled load value                    */
       /* determine 1st components value           */
       if (!(val = strtol(cp, &ptr, 0)) && ptr == cp) {
          /* it is not an integer ==> it's got to be a load value */
-         if (!(par_name = sge_delim_str(cp,&ptr,load_ops)) ||
-/*               get_load_value(&val, tcl, par_name, source_name)) {*/
+         if (!(par_name = sge_delim_str(cp, &ptr, load_ops)) ||
                get_load_value(&val, global, host, centry_list, par_name)) {
-            if (par_name)
-               free(par_name);
-            free(tf);
+            FREE(par_name);
+            FREE(tf);
+            FREE(load_formula);
+
             DEXIT;
             return ERROR_LOAD_VAL;
          }
-         free(par_name);
-         par_name=NULL;
+         FREE(par_name);
       }
 
       /* ---------------------------------------- */
@@ -208,7 +214,8 @@ static double scaled_mixed_load( lListElem *global, lListElem *host, const lList
       if (*ptr) {
          /* if the delimiter is not \0 it's got to be a operator -> find it */
          if (!(op_ptr=strchr(load_ops,(int) *ptr))) {
-            free(tf);
+            FREE(tf);
+            FREE(load_formula);
             DEXIT;
             return ERROR_LOAD_VAL;
          }
@@ -222,14 +229,13 @@ static double scaled_mixed_load( lListElem *global, lListElem *host, const lList
             /* it is not an integer ==> it's got to be a load value */
             if (!(par_name = sge_delim_str(ptr,NULL,load_ops)) ||
                get_load_value(&val2, global, host, centry_list, par_name)) {
-               if (par_name)
-                  free(par_name);
-               free(tf);
+               FREE(par_name);
+               FREE(tf);
+               FREE(load_formula);
                DEXIT;
                return ERROR_LOAD_VAL;
             }
-            free(par_name);
-            par_name=NULL;
+            FREE(par_name);
          }
 
          /* ------------------------------- */
@@ -261,7 +267,7 @@ static double scaled_mixed_load( lListElem *global, lListElem *host, const lList
             }
          }     /* switch (op_pos) */
       }     /* if (*ptr) */
-   
+
       /* now we have the intermediate result from the subexpression in
        * between a + or - operator in val. next we've to add or
        * subtract from the current result value.
@@ -282,15 +288,19 @@ static double scaled_mixed_load( lListElem *global, lListElem *host, const lList
             load -= val;
             break;
       }
-      
+
       /* determine next_op from the safety copy of the stripped formula */
-      if (load_formula[cp-tf+strlen(cp)] == '+')
+      if (load_formula[cp-tf+strlen(cp)] == '+') {
          next_op = LOAD_OP_PLUS;
-      else
+      }   
+      else {
          next_op = LOAD_OP_MINUS;
+      }   
    }
 
-   free(tf);
+   FREE(load_formula);
+   FREE(tf);
+
    DEXIT;
    return load;
 }
@@ -307,7 +317,7 @@ static int get_load_value(double *dvalp, lListElem *global, lListElem *host, con
    lListElem *cep;
 
    DENTER(TOP_LAYER, "get_load_value");
-
+   
    /* search complex */
 
    if(!(cep = get_attribute_by_name(global, host, NULL, attrname, centry_list, DISPATCH_TIME_NOW, 0))){
@@ -322,7 +332,7 @@ static int get_load_value(double *dvalp, lListElem *global, lListElem *host, con
       *dvalp = lGetDouble(cep, CE_pj_doubleval);
    }
 
-   cep = lFreeElem(cep);
+   lFreeElem(&cep);
 
    /*
     * No value available.
@@ -344,6 +354,7 @@ int *sort_hostlist
    lListElem *gel, *hep;
    lListElem *global;
    const char *hnm;
+   lList *job_load_adjustments = sconf_get_job_load_adjustments();
 
    double old_sort_value, new_sort_value;
 
@@ -361,7 +372,7 @@ int *sort_hostlist
       hnm = lGetHost(gel, JG_qhostname);
       hep = host_list_locate(host_list, hnm); 
 
-      if (sconf_get_load_adjustment_decay_time() && lGetNumberOfElem(sconf_get_job_load_adjustments())) {
+      if (sconf_get_load_adjustment_decay_time() && lGetNumberOfElem(job_load_adjustments)) {
          /* increase host load for each scheduled job slot */
          ulc_factor = lGetUlong(hep, EH_load_correction_factor);
          ulc_factor += 100*slots;
@@ -387,9 +398,8 @@ int *sort_hostlist
       lResortElem(so, hep, host_list);
    }
 
-   if(so) {
-      lFreeSortOrder(so);
-   }   
+   lFreeSortOrder(&so);
+   lFreeList(&job_load_adjustments);
 
    DEXIT; 
    return 0;

@@ -56,7 +56,8 @@
 #include "spool/sge_spooling.h"
 
 
-static void sge_c_job_ack(char *, char *, u_long32, u_long32, u_long32);
+static void sge_c_job_ack(char *, char *, u_long32, u_long32, u_long32, 
+                          monitoring_t *monitor);
 
 /****************************************************
  Master code.
@@ -71,11 +72,9 @@ static void sge_c_job_ack(char *, char *, u_long32, u_long32, u_long32);
  if the counterpart uses the dispatcher ack_tag is the
  TAG we sent to the counterpart.
  ****************************************************/
-void sge_c_ack(
-char *host,
-char *commproc,
-sge_pack_buffer *pb 
-) {
+void sge_c_ack(char *host, char *commproc, sge_pack_buffer *pb, 
+               monitoring_t *monitor) 
+{
 
    u_long32 ack_tag, ack_ulong, ack_ulong2;
 
@@ -98,11 +97,13 @@ sge_pack_buffer *pb
       switch (ack_tag) {
       case TAG_SIGJOB:
       case TAG_SIGQUEUE:
+         MONITOR_EACK(monitor);
          /* an execd sends a job specific acknowledge ack_ulong == jobid of received job */
-         sge_c_job_ack(host, commproc, ack_tag, ack_ulong, ack_ulong2);
+         sge_c_job_ack(host, commproc, ack_tag, ack_ulong, ack_ulong2, monitor);
          break;
 
       case ACK_EVENT_DELIVERY:
+         MONITOR_ACK(monitor); 
          sge_handle_event_ack(ack_ulong2, (ev_event)ack_ulong);
          break;
 
@@ -117,22 +118,18 @@ sge_pack_buffer *pb
 }
 
 /***************************************************************/
-static void sge_c_job_ack(
-char *host, 
-char *commproc, 
-u_long32 ack_tag, 
-u_long32 ack_ulong,
-u_long32 ack_ulong2 
-) {
+static void sge_c_job_ack(char *host, char *commproc, u_long32 ack_tag, 
+                          u_long32 ack_ulong, u_long32 ack_ulong2, 
+                          monitoring_t *monitor) 
+{
    lListElem *qinstance = NULL;
    lListElem *jep = NULL;
    lListElem *jatep = NULL;
    lList *answer_list = NULL;
-/*   const char *qinstance_name = NULL; */
 
    DENTER(TOP_LAYER, "sge_c_job_ack");
 
-   SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE);
+   MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE), monitor); 
 
    if (strcmp(prognames[EXECD], commproc) &&
       strcmp(prognames[QSTD], commproc)) {
@@ -196,19 +193,17 @@ u_long32 ack_ulong2
          }
       }
       
-      DPRINTF(("QUEUE %s: SIGNAL ACK\n", lGetString(qinstance, QU_qname)));
-               lSetUlong(qinstance, QU_pending_signal, 0);
-      te_delete_one_time_event(TYPE_SIGNAL_RESEND_EVENT, 0, 0, lGetString(qinstance, QU_qname));
+      DPRINTF(("QUEUE %s: SIGNAL ACK\n", lGetString(qinstance, QU_full_name)));
+
+      lSetUlong(qinstance, QU_pending_signal, 0);
+      te_delete_one_time_event(TYPE_SIGNAL_RESEND_EVENT, 0, 0, lGetString(qinstance, QU_full_name));
       spool_write_object(&answer_list, spool_get_default_context(), qinstance, 
-                         lGetString(qinstance, QU_qname), SGE_TYPE_QINSTANCE);
+                         lGetString(qinstance, QU_full_name), SGE_TYPE_QINSTANCE);
       answer_list_output(&answer_list);
       break;
 
    default:
       ERROR((SGE_EVENT, MSG_COM_ACK_UNKNOWN));
-      SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
-      DEXIT;
-      return;
    }
 
    SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);

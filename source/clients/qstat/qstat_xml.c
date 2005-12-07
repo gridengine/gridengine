@@ -136,16 +136,16 @@ void xml_qstat_show_job_info(lList **list, lList **answer_list){
    if (error) {
       xml_elem = xml_getHead("comunication_error", *answer_list, NULL);
       lWriteElemXMLTo(xml_elem, stdout);
-      lFreeElem(xml_elem);
+      lFreeElem(&xml_elem);
    }
    else {
       xml_elem = xml_getHead("message", *list, NULL);
       lWriteElemXMLTo(xml_elem, stdout);
-      lFreeElem(xml_elem);
+      lFreeElem(&xml_elem);
       *list = NULL;
    }
 
-   *answer_list = lFreeList(*answer_list);
+   lFreeList(answer_list);
  
    DEXIT;
    return;
@@ -168,13 +168,13 @@ void xml_qstat_show_job(lList **job_list, lList **msg_list, lList **answer_list,
    if (error) {
       xml_elem = xml_getHead("comunication_error", *answer_list, NULL);
       lWriteElemXMLTo(xml_elem, stdout);
-      lFreeElem(xml_elem);
+      lFreeElem(&xml_elem);
    }
    else {
       if (lGetNumberOfElem(*job_list) == 0) {
          xml_elem = xml_getHead("unknown_jobs", *id_list, NULL);
          lWriteElemXMLTo(xml_elem, stdout);
-         lFreeElem(xml_elem);
+         lFreeElem(&xml_elem);
          *id_list = NULL;
       }
       else {
@@ -205,14 +205,14 @@ void xml_qstat_show_job(lList **job_list, lList **msg_list, lList **answer_list,
          
          lWriteElemXMLTo(xml_elem, stdout);
 
-         xml_elem = lFreeElem(xml_elem);
+         lFreeElem(&xml_elem);
          *job_list = NULL;
          *msg_list = NULL;
          
       }
    }
 
-   *answer_list = lFreeList(*answer_list);
+   lFreeList(answer_list);
 
    DEXIT;
    return;
@@ -270,7 +270,7 @@ void xml_qstat_jobs(lList *job_list, lList *zombie_list, const lList *pe_list,
          
    lWriteElemXMLTo(xml_elem, stdout);
   
-   xml_elem = lFreeElem(xml_elem);
+   lFreeElem(&xml_elem);
   */ 
    DEXIT;
 }
@@ -379,7 +379,7 @@ static void xml_print_jobs_pending(lList *job_list, const lList *pe_list, const 
             ja_task_list_print_to_string(task_group, &dyn_task_str);
             elem = sge_job_to_XML(jep, lFirst(task_group), NULL, 1, NULL, 
                           &dyn_task_str, full_listing, 0, 0, exechost_list, centry_list, pe_list, group_opt, 0);
-            task_group = lFreeList(task_group);
+            lFreeList(&task_group);
             sge_dstring_free(&dyn_task_str);
             if (elem) {
                lList *attributes = NULL;
@@ -397,7 +397,7 @@ static void xml_print_jobs_pending(lList *job_list, const lList *pe_list, const 
                lAppendElem(*target_list, elem); 
             }
          }
-         ja_task_list = lFreeList(ja_task_list);
+         lFreeList(&ja_task_list);
       }
   
       if (jep != nxt && full_listing & QSTAT_DISPLAY_PENDING) {
@@ -657,19 +657,10 @@ int slots_per_line  /* number of slots to be printed in slots column
       if (print_jobid) {
          /* start/submit time */
          if (!lGetUlong(jatep, JAT_start_time) ) {
-            xml_append_Attr_S(attributeList, "JB_submission_time", sge_ctime((time_t)lGetUlong(job, JB_submission_time), &ds));
+            xml_append_Attr_S(attributeList, "JB_submission_time", sge_ctimeXML((time_t)lGetUlong(job, JB_submission_time), &ds));
          }   
          else {
-#if 0
-            /* AH: intermediate change to monitor JAT_stop_initiate_time 
-             * must be removed before 6.0 if really needed a better possiblity 
-             * for monitoring must be found (TODO)
-             */
-            if (getenv("JAT_stop_initiate_time") && (lGetUlong(jatep, JAT_state) & JDELETED))
-               printf("%s!", sge_ctime(lGetUlong(jatep, JAT_stop_initiate_time), &ds));
-            else
-#endif
-               xml_append_Attr_S(attributeList, "JAT_start_time", sge_ctime((time_t)lGetUlong(jatep, JAT_start_time), &ds));
+            xml_append_Attr_S(attributeList, "JAT_start_time", sge_ctimeXML((time_t)lGetUlong(jatep, JAT_start_time), &ds));
          }
       }
    }
@@ -678,7 +669,7 @@ int slots_per_line  /* number of slots to be printed in slots column
    if (sge_urg) {
       if (print_jobid) { 
          if (lGetUlong(job, JB_deadline) )
-            xml_append_Attr_S(attributeList, "JB_deadline", sge_ctime((time_t)lGetUlong(job, JB_deadline), &ds));
+            xml_append_Attr_S(attributeList, "JB_deadline", sge_ctimeXML((time_t)lGetUlong(job, JB_deadline), &ds));
       }
    }
 
@@ -721,22 +712,7 @@ int slots_per_line  /* number of slots to be printed in slots column
 
       /* scaled cpu usage */
       if ((up = lGetElemStr(job_usage_list, UA_name, USAGE_ATTR_CPU))) {
-         int secs, minutes, hours, days;
-         char xmlBuffer[128];
-
-         secs = lGetDouble(up, UA_value);
-
-         days    = secs/(60*60*24);
-         secs   -= days*(60*60*24);
-
-         hours   = secs/(60*60);
-         secs   -= hours*(60*60);
-
-         minutes = secs/60;
-         secs   -= minutes*60;
-      
-         sprintf(xmlBuffer, "%d:%2.2d:%2.2d:%2.2d ", days, hours, minutes, secs); 
-         xml_append_Attr_S(attributeList, "cpu_usage", xmlBuffer);
+         xml_append_Attr_D(attributeList, "cpu_usage", lGetDouble(up, UA_value));
       } 
       /* scaled mem usage */
       if ((up = lGetElemStr(job_usage_list, UA_name, USAGE_ATTR_MEM))) 
@@ -746,7 +722,7 @@ int slots_per_line  /* number of slots to be printed in slots column
       if ((up = lGetElemStr(job_usage_list, UA_name, USAGE_ATTR_IO))) 
          xml_append_Attr_D(attributeList, "io_usage", lGetDouble(up, UA_value));  
 
-      lFreeList(job_usage_list);
+      lFreeList(&job_usage_list);
 
       /* get tickets for job/slot */
       /* braces needed to suppress compiler warnings */
@@ -804,12 +780,13 @@ int slots_per_line  /* number of slots to be printed in slots column
    if ((group_opt & GROUP_NO_PETASK_GROUPS)) {
       /* MASTER/SLAVE information needed only to show parallel job distribution */
       xml_append_Attr_S(attributeList, "master", master);
-   } else {
-      /* job slots requested/granted */
-      if (!slots_per_line)
-         slots_per_line = sge_job_slot_request(job, pe_list);
-      xml_append_Attr_I(attributeList, "slots", slots_per_line);
    }
+
+   /* job slots requested/granted */
+   if (!slots_per_line) {
+      slots_per_line = sge_job_slot_request(job, pe_list);
+   }   
+   xml_append_Attr_I(attributeList, "slots", slots_per_line);
 
    if (sge_dstring_get_string(dyn_task_str) && job_is_array(job))
       xml_append_Attr_S(attributeList, "tasks", sge_dstring_get_string(dyn_task_str));
@@ -900,12 +877,14 @@ int slots_per_line  /* number of slots to be printed in slots column
 
                name = lGetString(ce, CE_name);
                if (!lGetBool(ce, CE_consumable) || !strcmp(name, "slots") || 
-                   job_get_request(job, name))
+                   job_get_request(job, name)) {
                   continue;
+               }   
 
                parse_ulong_val(&dval, NULL, lGetUlong(ce, CE_valtype), lGetString(ce, CE_default), NULL, 0); 
-               if (dval == 0.0)
+               if (dval == 0.0) {
                   continue;
+               }   
 
                /* For pending jobs (no queue/no exec host) we may print default request only
                   if the consumable is specified in the global host. For running we print it
@@ -919,7 +898,7 @@ int slots_per_line  /* number of slots to be printed in slots column
                   xml_addAttribute(xmlElem, "name", name);
                }
             }
-            lFreeList(attributes);
+            lFreeList(&attributes);
          }
 
          ql = lGetList(job, JB_soft_resource_list);
@@ -1453,6 +1432,7 @@ lListElem *xml_print_queue(lListElem *q, const lList *exechost_list, const lList
       load_avg_str = LOAD_ATTR_LOAD_AVG;
 
    if (!(full_listing & QSTAT_DISPLAY_FULL)) {
+      sge_dstring_free(&queue_name_buffer);
       DEXIT;
       return jobElem;
    }
@@ -1658,10 +1638,12 @@ lListElem *xml_print_queue(lListElem *q, const lList *exechost_list, const lList
          
       }
 
-      lFreeList(rlp);
+      lFreeList(&rlp);
       sge_dstring_free(&resource_string);
 
    }
+
+   sge_dstring_free(&queue_name_buffer);
 
    DEXIT;
    return jobElem;

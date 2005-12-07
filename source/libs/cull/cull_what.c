@@ -300,7 +300,7 @@ lEnumeration *_lWhat(const char *fmt, const lDescr *dp,
       ep2[size].nm = NoName;
       ep2[size].mt = lEndT;
       ep2[size].ep = NULL;
-      lFreeWhat(ep);
+      lFreeWhat(&ep);
       ep = ep2;
    }
 
@@ -310,16 +310,13 @@ lEnumeration *_lWhat(const char *fmt, const lDescr *dp,
    }
    eat_token(&state);                 /* eat ) */
 
-   DEXIT;
-   return ep;
+   DRETURN(ep);
 
  error:
    LERROR(error_status);
-   if (ep)
-      lFreeWhat(ep);
+   lFreeWhat(&ep);
    DPRINTF(("error_status = %d\n", error_status));
-   DEXIT;
-   return NULL;
+   DRETURN(NULL);
 }
 
 /****** cull/what/lWhat() *****************************************************
@@ -565,36 +562,31 @@ lEnumeration *lWhatAll()
 *     lFreeWhat() -- Frees a enumeration array 
 *
 *  SYNOPSIS
-*     lEnumeration* lFreeWhat(lEnumeration *ep) 
+*     void lFreeWhat(lEnumeration **ep) 
 *
 *  FUNCTION
 *     Frees a enumeration array 
 *
 *  INPUTS
-*     lEnumeration *ep - enumeration 
+*     lEnumeration **ep - enumeration, will be set to NULL 
 *
-*  RESULT
-*     lEnumeration* - NULL 
 ******************************************************************************/
-lEnumeration *lFreeWhat(lEnumeration *ep) 
+void lFreeWhat(lEnumeration **ep) 
 {
    int i;
 
    DENTER(CULL_LAYER, "lFreeWhat");
 
-   if (!ep) {
-      DEXIT;
-      return NULL;
+   if (ep == NULL || *ep == NULL) {
+      DRETURN_VOID;
    }
-   for (i = 0; ep[i].mt != lEndT; i++) {
-      if (ep[i].ep != NULL) {
-         ep[i].ep = lFreeWhat(ep[i].ep);
+   for (i = 0; (*ep)[i].mt != lEndT; i++) {
+      if ((*ep)[i].ep != NULL) {
+         lFreeWhat(&((*ep)[i].ep));
       }
    }
-   free(ep);
-
-   DEXIT;
-   return NULL;
+   FREE(*ep);
+   DRETURN_VOID;
 }
 
 /****** cull/what/lCountWhat() ************************************************
@@ -752,14 +744,14 @@ int lMergeWhat(lEnumeration **what1, lEnumeration **what2)
       /*
        * what1 is empty or what2 containes all attributes
        */
-      *what1 = lFreeWhat(*what1);
+      lFreeWhat(what1);
       *what1 = *what2;
       *what2 = NULL;
    } else if ((*what1)[0].pos == WHAT_ALL) {
       /*
        * what1 contailes already all elements
        */
-      *what2 = lFreeWhat(*what2);
+      lFreeWhat(what2);
    } else {
       lEnumeration tmp_result[1000];
       int next_id = 0;
@@ -781,7 +773,7 @@ int lMergeWhat(lEnumeration **what1, lEnumeration **what2)
       tmp_result[next_id].mt = lEndT;
       tmp_result[next_id].ep = NULL;
 
-      *what1 = lFreeWhat(*what1);
+      lFreeWhat(what1);
 
       /*
        * Add only those of what2 which are not already contained in what1
@@ -831,7 +823,7 @@ int lMergeWhat(lEnumeration **what1, lEnumeration **what2)
       tmp_result[next_id].mt = lEndT;
       tmp_result[next_id].ep = NULL;
       next_id++;
-      *what2 = lFreeWhat(*what2);
+      lFreeWhat(what2);
 
       /*
        * create result what 
@@ -864,7 +856,7 @@ int lWhatSetSubWhat(lEnumeration *what1, int nm, lEnumeration **what2)
       for (i = 0; what1[i].mt != lEndT; i++) {
          if (what1[i].nm == nm) {
             if (what1[i].ep != NULL) {
-               what1[i].ep = lFreeWhat(what1[i].ep);
+               lFreeWhat(&(what1[i].ep));
             }
             what1[i].ep = *what2;
             *what2 = NULL; 
@@ -872,12 +864,9 @@ int lWhatSetSubWhat(lEnumeration *what1, int nm, lEnumeration **what2)
             break;
          } 
       }
-      if (*what2 != NULL) {
-         *what2 = lFreeWhat(*what2);
-      }
+      lFreeWhat(what2);
    }
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 

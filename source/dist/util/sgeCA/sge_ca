@@ -57,7 +57,6 @@ ErrUsage()
    myname=`basename $0`
    $INFOTEXT -e \
    "\nUsage: %s <command>\n" \
-   "   -env             export SGE_CERTFILE and SGE_KEYFILE for daemon\n" \
    "   -init            initialize CA infrastructure\n" \
    "   -req             generate a certificate request and private key\n" \
    "   -sign            sign a certificate request\n" \
@@ -74,7 +73,10 @@ ErrUsage()
    "   -outdir <dir>    write to directory <dir>\n" \
    "   -cadir <dir>     overwrite CALOCALTOP and CATOP settings\n" \
    "   -pkcs12 <file>   generate pkcs12 format files for the users in <file>\n" \
-   "   -usercert <file> generate certificates and keys for the users in <file>\n" $myname
+   "   -usercert <file> generate certificates and keys for the users in <file>\n" \
+   "   -user <u:g:e>    generate certificates and keys for <u:g:e>\n" \
+   "                    with u=Unix User, g=Common Name, e=email\n" \
+   $myname
 
    exit 1
 }
@@ -87,9 +89,9 @@ InitCA()
    $CLEAR
    $INFOTEXT -u "\nInitializing Certificate Authority (CA) for OpenSSL security framework"
 
-   if [ -d $CATOP -o -d $CALOCALTOP ]; then
+   if [ -d $CATOP -a -d $CALOCALTOP ]; then
       $INFOTEXT -e "\nThere are already directories of the CA infrastructure in\n   %s\n   or\n   %s\n" "$CATOP" "$CALOCALTOP"
-      $INFOTEXT -auto $autoinst -ask "y" "n" -def "y" -n \
+      $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n \
          "Do you want to recreate your SGE CA infrastructure (y/n) [y] >> "
       if [ $? != 0 ]; then
          $INFOTEXT "We will not reinitialize your SGE CA infrastructure."
@@ -219,75 +221,83 @@ MakeCAcert()
    "   - the organizational unit, e.g. your department\n" \
    "   - the email address of the CA administrator (you!)\n"
 
-   $INFOTEXT -wait -auto $autoinst -n "\nHit <RETURN> to continue >> "
+   $INFOTEXT -wait -auto $AUTO -n "\nHit <RETURN> to continue >> "
    # $CLEAR
 
    done=false
    while [ $done = false ]; do
 
-      dndone=false
-      while [ $dndone = false ]; do
-         $INFOTEXT -n "Please enter your two letter country code, e.g. 'US' >> "
-         INP=`Enter ""`
-         if [ "$INP != " -a `echo $INP | wc -c` = 3 ]; then
-            CA_C=`echo $INP | env LC_ALL=C tr "[a-z]" "[A-Z]"`
-            dndone=true
-         fi
-      done
+      if [ "$AUTO" = "true" ]; then
+            CA_C=`echo $CSP_COUNTRY_CODE | env LC_ALL=C tr "[a-z]" "[A-Z]"`
+            CA_ST="$CSP_STATE"
+            CA_L="$CSP_LOCATION"
+            CA_O="$CSP_ORGA"
+            CA_OU="$CSP_ORGA_UNIT"
+            CA_EMAIL="$CSP_MAIL_ADDRESS"
+      else
+         dndone=false
+         while [ $dndone = false ]; do
+            $INFOTEXT -n "Please enter your two letter country code, e.g. 'US' >> "
+            INP=`Enter ""`
+            if [ "$INP != " -a `echo $INP | wc -c` = 3 ]; then
+               CA_C=`echo $INP | env LC_ALL=C tr "[a-z]" "[A-Z]"`
+               dndone=true
+            fi
+         done
 
-      dndone=false
-      while [ $dndone = false ]; do
-         $INFOTEXT -n "Please enter your state >> "
-         INP=`Enter ""`
-         CA_ST="$INP"
-         if [ "$INP" != "" ]; then
+         dndone=false
+         while [ $dndone = false ]; do
+            $INFOTEXT -n "Please enter your state >> "
+            INP=`Enter ""`
             CA_ST="$INP"
-            dndone=true
-         fi
-      done
+            if [ "$INP" != "" ]; then
+               CA_ST="$INP"
+               dndone=true
+            fi
+         done
 
-
-      dndone=false
-      while [ $dndone = false ]; do
-         $INFOTEXT -n "Please enter your location, e.g city or buildingcode >> "
-         INP=`Enter ""`
-         CA_L="$INP"
-         if [ "$INP" != "" ]; then
+         dndone=false
+         while [ $dndone = false ]; do
+            $INFOTEXT -n "Please enter your location, e.g city or buildingcode >> "
+            INP=`Enter ""`
             CA_L="$INP"
-            dndone=true
-         fi
-      done
+            if [ "$INP" != "" ]; then
+               CA_L="$INP"
+               dndone=true
+            fi
+         done
 
-      dndone=false
-      while [ $dndone = false ]; do
-         $INFOTEXT -n "Please enter the name of your organization >> "
-         INP=`Enter ""`   
-         if [ "$INP" != "" ]; then
-            CA_O="$INP"
-            dndone=true
-         fi
-      done
+         dndone=false
+         while [ $dndone = false ]; do
+            $INFOTEXT -n "Please enter the name of your organization >> "
+            INP=`Enter ""`   
+            if [ "$INP" != "" ]; then
+               CA_O="$INP"
+               dndone=true
+            fi
+         done
 
-      dndone=false
-      while [ $dndone = false ]; do
-         $INFOTEXT -n "Please enter your organizational unit, e.g. your department >> "
-         INP=`Enter ""`    
-         CA_OU="$INP"
-         if [ "$INP" != "" ]; then
+         dndone=false
+         while [ $dndone = false ]; do
+            $INFOTEXT -n "Please enter your organizational unit, e.g. your department >> "
+            INP=`Enter ""`    
             CA_OU="$INP"
-            dndone=true
-         fi
-      done
+            if [ "$INP" != "" ]; then
+               CA_OU="$INP"
+               dndone=true
+            fi
+         done
 
-      dndone=false
-      while [ $dndone = false ]; do
-         $INFOTEXT -n "Please enter the email address of the CA administrator >> "
-         INP=`Enter ""`   
-         if [ "$INP" != "" ]; then
-            CA_EMAIL="$INP"
-            dndone=true
-         fi
-      done
+         dndone=false
+         while [ $dndone = false ]; do
+            $INFOTEXT -n "Please enter the email address of the CA administrator >> "
+            INP=`Enter ""`   
+            if [ "$INP" != "" ]; then
+               CA_EMAIL="$INP"
+               dndone=true
+            fi
+         done
+      fi
 
 
       $CLEAR
@@ -300,7 +310,7 @@ MakeCAcert()
       "Organizational unit:  %s=%s\n" \
       "CA email address:     %s=%s\n" \
       C "$CA_C" ST "$CA_ST" L "$CA_L" O "$CA_O" OU "$CA_OU" emailAddress "$CA_EMAIL"
-      $INFOTEXT -auto $autoinst -ask "y" "n" -def "y" -n \
+      $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n \
          "Do you want to use these data (y/n) [y] >> "
       if [ $? = 0 ]; then
          done=true
@@ -352,7 +362,7 @@ MakeCAcert()
       fi
    done
 
-   $INFOTEXT -wait -auto $autoinst -n "\nHit <RETURN> to continue >> "
+   $INFOTEXT -wait -auto $AUTO -n "\nHit <RETURN> to continue >> "
    $CLEAR
 }
 
@@ -371,27 +381,62 @@ MakeRandFile()
    if [ ! -r /dev/urandom ]; then
       if [ -r /dev/random ]; then 
          rfile=/dev/random
-      elif [ -r /kernel/genunix ]; then
-         rfile=/kernel/genunix
+      # elif [ -r /kernel/genunix ]; then
+      #   rfile=/kernel/genunix
       elif [ -r /bin/vi ]; then
          rfile=/bin/vi
       fi
    fi
    $INFOTEXT "Creating RANDFILE from '%s' in '%s'" $rfile $1
 
-   RANDFILE=$rfile; export RANDFILE;
-
-   if [ $ADMINUSER != default -a $rootinstalls = true ]; then
-   	$OPENSSL rand -rand $rfile -out $1 2048
-   	$CHOWN $ADMINUSER $1
-   else 
-        $V5UTILBIN/adminrun $2 $OPENSSL rand -rand $rfile -out $1 2048
-   fi
+   $V5UTILBIN/adminrun $2 dd if=$rfile of=/tmp/.rand count=2048
+   RANDFILE=/tmp/.rand; export RANDFILE;
+   $V5UTILBIN/adminrun $2 $OPENSSL rand -rand /tmp/.rand -out $1 2048
+   $V5UTILBIN/adminrun $2 $RM /tmp/.rand
    $V5UTILBIN/adminrun $2 $CHMOD 644 $1
    # echo "--------------"
    # ls -l $rfile $1
    # echo "--------------"
 
+}
+
+
+#--------------------------------------------------------------------------
+# MakeUserCert create user certificates and keys for Windows Admin user
+#
+# $1 = <user:gecos:email>
+#
+MakeUserCert()
+{
+   line="$1"
+
+   unixuser=`echo $line|cut -d: -f1`
+   gecos=`echo $line|cut -d: -f2`
+   email=`echo $line|cut -d: -f3`
+
+   # echo $unixuser:$gecos:$email
+   if [ "$unixuser" = "" ]; then
+      $INFOTEXT "no Unix user specified. Exit."
+      exit 1
+   fi   
+
+   if [ "$gecos" = "" ]; then
+      gecos=$unixuser
+   fi   
+   if [ "$email" = "" ]; then
+      email=$unixuser
+   fi   
+
+   entries=`$V5UTILBIN/adminrun $ADMINUSER grep "CN=$gecos" $CATOP/index.txt|grep '^V'|wc -l`
+   if [ $entries = 0 ]; then
+      $INFOTEXT "Generating certificate and key for '%s' ('%s','%s')." \
+         "$unixuser" "$gecos" "$email"
+      MakeCert user "$unixuser" "$gecos" "$email"
+   else   
+      $INFOTEXT "Please renew certificate for '%s' ('%s','%s') instead." \
+         "$unixuser" "$gecos" "$email"
+      # RenewCert user $unixuser
+   fi
 }
 
 #--------------------------------------------------------------------------
@@ -409,13 +454,10 @@ MakeUserCerts()
       exit 1
    fi
 
-   cat $1 | while read line; do
-      unixuser=`echo $line|cut -d: -f1`
-      gecos=`echo $line|cut -d: -f2`
-      email=`echo $line|cut -d: -f3`
-      $INFOTEXT "Generating certificate and key for '%s' ('%s','%s')." \
-         "$unixuser" "$gecos" "$email"
-      MakeCert user "$unixuser" "$gecos" "$email"
+   userfile=$1
+
+   cat $userfile | while read line; do
+      MakeUserCert "$line"
    done   
 }
 
@@ -451,9 +493,14 @@ DumpUsers()
    RSFILE=/tmp/rand
 
    # create rand.seed file
-   MakeRandFile $RSFILE $2
+   MakeRandFile $RSFILE $USER
 
    RANDFILE=$RSFILE; export RANDFILE
+
+   $INFOTEXT "Dumping users to $outdir/dumped_users.txt"
+   for i in `ls $CERTDIR`; do
+      $X509 -in $CERTDIR/$i/cert.pem -subject -noout|$AWK -F '/' '{print $8 ":" $7 ":" $9}' | sed -e 's/UID=//' -e 's/CN=//' -e 's/emailAddress=//' >> $outdir/dumped_users.txt
+   done
 }
 
 #--------------------------------------------------------------------------
@@ -495,7 +542,7 @@ MakeCert()
    fi
 
    # create rand.seed file
-   MakeRandFile $RSFILE $2
+   MakeRandFile $RSFILE $ADMINUSER
 
    RANDFILE=$RSFILE; export RANDFILE
 
@@ -530,7 +577,11 @@ MakeCert()
       if [ $rootinstalls = true ]; then
          Execute $CHMOD 500 $KEYDIR
          Execute $CHMOD 400 $KEYDIR/*
-         Execute $CHOWN -R $2 $KEYDIR
+         # check if user exists and chown if yes
+         id $2  > /dev/null 2>&1
+         if [ $? = 0 ]; then
+            Execute $CHOWN -R $2 $KEYDIR
+         fi   
       fi
 
       $INFOTEXT "created and signed certificate for user '%s' in '%s'" $2 $KEYDIR
@@ -609,7 +660,7 @@ RenewCert()
    fi
 
    # create rand.seed file
-   MakeRandFile $RSFILE $2
+   # rand.seed already exists, therefore no MakeRandFile $RSFILE $2
    RANDFILE=$RSFILE; export RANDFILE
 
    if [ $rootinstalls = true ]; then
@@ -620,10 +671,10 @@ RenewCert()
    Execute $CHMOD 511 $KEYDIR
    if [ $1 = daemon ]; then
       ExecuteAsAdmin $CHMOD 644 $CERTFILE
-      ExecuteAsAdmin $CHMOD 644 $RSFILE
+      ExecuteAsAdmin $CHMOD 666 $RSFILE
    else
       Execute $CHMOD 644 $CERTFILE
-      Execute $CHMOD 644 $RSFILE
+      Execute $CHMOD 666 $RSFILE
    fi
    ExecuteAsAdmin $CA -config $TMPFILE1 -policy policy_anything \
                       -batch $DAYS \
@@ -714,8 +765,8 @@ MakeCADirs()
       exit 1
    fi
 
-   Execute $RM -rf $CALOCALTOP >/dev/null 2>/dev/null
-   ExecuteAsAdmin $RM -rf $CATOP >/dev/null 2>/dev/null
+   Execute $RM -rf $CALOCALTOP > /dev/null 2>&1
+   ExecuteAsAdmin $RM -rf $CATOP > /dev/null 2>&1
 
    if [ -f $CATOP -o -d $CATOP -o -f $CALOCALTOP -o -d $CALOCALTOP ]; then
       $INFOTEXT "Can't delete the CA directories\n   %s or %s" \
@@ -738,28 +789,34 @@ MakeCADirs()
    ExecuteAsAdmin $MKDIR ${CATOP}/certs
 
    $INFOTEXT "Creating %s" ${CATOP}/crl
+   $INFOTEXT -log "Creating %s" ${CATOP}/crl
    ExecuteAsAdmin $MKDIR ${CATOP}/crl
 
    $INFOTEXT "Creating %s" ${CATOP}/newcerts
+   $INFOTEXT -log "Creating %s" ${CATOP}/newcerts
    ExecuteAsAdmin $MKDIR ${CATOP}/newcerts
 
    $INFOTEXT "Creating %s" ${CATOP}/serial
+   $INFOTEXT -log "Creating %s" ${CATOP}/serial
    TruncCreateAndMakeWriteable ${CATOP}/serial
    echo "01" > ${CATOP}/serial
    ExecuteAsAdmin $CHMOD 644 ${CATOP}/serial
 
    $INFOTEXT "Creating %s" ${CATOP}/index.txt
+   $INFOTEXT -log "Creating %s" ${CATOP}/index.txt
    ExecuteAsAdmin $TOUCH ${CATOP}/index.txt   
 
    $INFOTEXT "Creating %s" ${CALOCALTOP}/userkeys
+   $INFOTEXT -log "Creating %s" ${CALOCALTOP}/userkeys
    ExecuteAsAdmin $MKDIR ${CALOCALTOP}/userkeys   
 
    umask 077
    $INFOTEXT "Creating %s" ${CALOCALTOP}/private
+   $INFOTEXT -log "Creating %s" ${CALOCALTOP}/private
    ExecuteAsAdmin $MKDIR ${CALOCALTOP}/private
    umask 022
 
-   $INFOTEXT -wait -auto $autoinst -n "\nHit <RETURN> to continue >> "
+   $INFOTEXT -wait -auto $AUTO -n "\nHit <RETURN> to continue >> "
    $CLEAR
 
 }
@@ -852,6 +909,8 @@ fi
 ME=`whoami`
 if [ "$ME" = "" ]; then
    $INFOTEXT "Can't determine your username with \"%s\" command. Exit" whoami
+   $INFOTEXT -log "Can't determine your username with \"%s\" command. Exit" whoami
+   MoveLog
    exit 1
 fi
 
@@ -861,6 +920,7 @@ CACERT=cacert.pem
 CONFIG_DIR=$SGE_ROOT/util/sgeCA
 OPENSSL=$V5UTILBIN/openssl
 
+AUTO="false"
 #-----------------------------
 # CommandLine Argument Parsing
 #
@@ -877,8 +937,11 @@ nodes="-nodes"
 ARGC=$#
 while [ $ARGC != 0 ]; do
    case $1 in
-   -env)
-      WHICH="env"
+   -auto)
+      AUTO="true"
+      . $2
+      shift
+      ARGC=`expr $ARGC - 1`
       ;;
    -init)
       WHICH="init"
@@ -976,14 +1039,16 @@ while [ $ARGC != 0 ]; do
       shift
       ARGC=`expr $ARGC - 1`
       ;;
-env) 
-    echo $CALOCALTOP
-#    SGE_CERTFILE=$CALOCALTOP/userkeys/$ADMINUSER/cert.pem
-#    SGE_KEYFILE=$CALOCALTOP/userkeys/$ADMINUSER/key.pem
-#    export SGE_KEYFILE SGE_CERTFILE
-#    echo $SGE_CERTFILE $SGE_KEYFILE
-    RET=$?
-    ;;
+   -user)
+      WHICH="oneuser"
+      if [ $ARGC -lt 2 ]; then
+         $INFOTEXT "Error: -user needs argument"
+         ErrUsage
+      fi
+      user=$2
+      shift
+      ARGC=`expr $ARGC - 1`
+      ;;
    -renew)
       if [ $ARGC -lt 2 ]; then
          $INFOTEXT "Error: -renew needs argument"
@@ -1059,6 +1124,9 @@ copy)
 usercert) 
     MakeUserCerts $userfile
     ;;
+oneuser)
+    MakeUserCert "$user"
+    ;;
 verify) 
     $VERIFY -CAfile $CATOP/$CACERT $newcert
     RET=$?
@@ -1089,7 +1157,7 @@ pkcs12)
     RET=$?
     ;;
 version)
-    echo "sge_ca 6.0u4"
+    echo "sge_ca 6.0u7"
     ;;
 dumpusers)
     DumpUsers

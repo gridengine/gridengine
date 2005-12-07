@@ -1388,8 +1388,9 @@ lChar lGetChar(const lListElem *ep, int name)
 lRef lGetPosRef(const lListElem *ep, int pos) 
 {
    DENTER(CULL_BASIS_LAYER, "lGetPosRef");
-   if (mt_get_type(ep->descr[pos].mt) != lRefT)
+   if (mt_get_type(ep->descr[pos].mt) != lRefT) {
       incompatibleType("lGetPosRef");
+   }
    DEXIT;
    return ep->cont[pos].ref;
 }
@@ -2232,7 +2233,7 @@ int lSetPosObject(lListElem *ep, int pos, lListElem *value)
    if(value != ep->cont[pos].obj) {
       /* free old element */
       if (ep->cont[pos].obj != NULL) {
-         lFreeElem(ep->cont[pos].obj);
+         lFreeElem(&(ep->cont[pos].obj));
       }
 
       /* set new list */
@@ -2294,7 +2295,7 @@ int lSetPosList(lListElem *ep, int pos, lList *value)
    if(value != ep->cont[pos].glp) {
       /* free old list */
       if (ep->cont[pos].glp) {
-         lFreeList(ep->cont[pos].glp);
+         lFreeList(&(ep->cont[pos].glp));
       }
 
       /* set new list */
@@ -2306,6 +2307,66 @@ int lSetPosList(lListElem *ep, int pos, lList *value)
 
    DEXIT;
    return 0;
+}
+
+/****** cull/multitype/lXchgString() ********************************************
+*  NAME
+*     lXchgList() -- Exchange field name value string pointer 
+*
+*  SYNOPSIS
+*     int lXchgString(lListElem *ep, int name, char **str) 
+*
+*  FUNCTION
+*     Exchange the string pointer, which has the given field name value. 
+*
+*  INPUTS
+*     lListElem *ep - element 
+*     int name      - field name value 
+*     char **str   - pointer to a string
+*
+*  RESULT
+*     int - error state
+*         0 - OK
+*        -1 - Error
+******************************************************************************/
+int lXchgString(lListElem *ep, int name, char **str) 
+{
+   int pos;
+   char *tmp;
+
+   DENTER(CULL_BASIS_LAYER, "lXchgList");
+
+   if (!ep) {
+      LERROR(LEELEMNULL);
+      DEXIT;
+      return -1;
+   }
+   pos = lGetPosViaElem(ep, name);
+   if (pos < 0) {
+      LERROR(LENEGPOS);
+      DEXIT;
+      return -1;
+   }
+
+   if (mt_get_type(ep->descr[pos].mt) != lStringT) {
+      incompatibleType2(MSG_CULL_XCHGLIST_WRONGTYPEFORFIELDXY_SS, 
+                        lNm2Str(name), multitypes[mt_get_type(ep->descr[pos].mt)]);
+      DEXIT;
+      return -1;
+   }
+
+   if(*str != ep->cont[pos].str) {
+      tmp = ep->cont[pos].str;
+      ep->cont[pos].str = *str;
+      *str = tmp;
+
+      /* remember that field changed */
+      sge_bitfield_set(&(ep->changed), pos);
+   }
+
+   DEXIT;
+   return 0;
+
 }
 
 /****** cull/multitype/lXchgList() ********************************************
@@ -2467,7 +2528,7 @@ int lSetObject(lListElem *ep, int name, lListElem *value)
    if(value != ep->cont[pos].obj) {
       /* free old element */
       if (ep->cont[pos].obj) {
-         lFreeElem(ep->cont[pos].obj);
+         lFreeElem(&(ep->cont[pos].obj));
       }
 
       /* set new list */
@@ -2534,9 +2595,7 @@ int lSetList(lListElem *ep, int name, lList *value)
 
    if(value != ep->cont[pos].glp) {
       /* free old list */
-      if (ep->cont[pos].glp) {
-         lFreeList(ep->cont[pos].glp);
-      }
+      lFreeList(&(ep->cont[pos].glp));
 
       /* set new list */
       ep->cont[pos].glp = value;
@@ -3506,7 +3565,7 @@ lListElem *lAddElemStr(lList **lpp, int nm, const char *str, const lDescr *dp)
 
    if (!*lpp) {
       /* ensure existence of a str list in ep */
-      *lpp = lCreateList("string_sublist", dp);
+      *lpp = lCreateList("", dp);
    }
 
    /* add new host str element to sublist */
@@ -3694,10 +3753,9 @@ int lDelElemStr(lList **lpp, int nm, const char *str)
    /* seek element */
    ep = lGetElemStr(*lpp, nm, str);
    if (ep) {
-      lFreeElem(lDechainElem(*lpp, ep));
+      lRemoveElem(*lpp, &ep);
       if (lGetNumberOfElem(*lpp) == 0) {
-         lFreeList(*lpp);
-         *lpp = NULL;
+         lFreeList(lpp);
       }
 
       DEXIT;
@@ -3734,21 +3792,23 @@ int lDelElemStr(lList **lpp, int nm, const char *str)
 lListElem *lGetSubStr(const lListElem *ep, int nm, const char *str, int snm) 
 {
    int sublist_pos;
-   lListElem *ret;
+   lListElem *ret = NULL;
 
    DENTER(CULL_LAYER, "lGetSubStr");
 
-   /* get position of sublist in ep */
-   sublist_pos = lGetPosViaElem(ep, snm);
+   if (ep != NULL) {
+      /* get position of sublist in ep */
+      sublist_pos = lGetPosViaElem(ep, snm);
 
-   /* run time type checking */
-   if (sublist_pos < 0) {
-      CRITICAL((SGE_EVENT, MSG_CULL_GETSUBSTRERRORXRUNTIMETYPE_S , lNm2Str(snm)));
-      DEXIT;
-      abort();
+      /* run time type checking */
+      if (sublist_pos < 0) {
+         CRITICAL((SGE_EVENT, MSG_CULL_GETSUBSTRERRORXRUNTIMETYPE_S , lNm2Str(snm)));
+         DEXIT;
+         abort();
+      }
+
+      ret = lGetElemStr(ep->cont[sublist_pos].glp, nm, str);
    }
-
-   ret = lGetElemStr(ep->cont[sublist_pos].glp, nm, str);
 
    DEXIT;
    return ret;
@@ -4270,10 +4330,9 @@ int lDelElemUlong(lList **lpp, int nm, lUlong val)
    /* seek element */
    ep = lGetElemUlong(*lpp, nm, val);
    if (ep) {
-      lFreeElem(lDechainElem(*lpp, ep));
+      lRemoveElem(*lpp, &ep);
       if (lGetNumberOfElem(*lpp) == 0) {
-         lFreeList(*lpp);
-         *lpp = NULL;
+         lFreeList(lpp);
       }
    }
 
@@ -4350,7 +4409,7 @@ lListElem *lGetSubUlong(const lListElem *ep, int nm, lUlong val, int snm)
 ******************************************************************************/
 lListElem *lGetElemUlong(const lList *lp, int nm, lUlong val) 
 {
-   const void *iterator;
+   const void *iterator = NULL;
    return lGetElemUlongFirst(lp, nm, val, &iterator);
 }
 
@@ -4609,10 +4668,9 @@ int lDelElemCaseStr(lList **lpp, int nm, const char *str)
    /* seek elemtent */
    ep = lGetElemCaseStr(*lpp, nm, str);
    if (ep) {
-      lFreeElem(lDechainElem(*lpp, ep));
+      lRemoveElem(*lpp, &ep);
       if (lGetNumberOfElem(*lpp) == 0) {
-         lFreeList(*lpp);
-         *lpp = NULL;
+         lFreeList(lpp);
       }
    }
 
@@ -5057,10 +5115,9 @@ int lDelElemHost(lList **lpp, int nm, const char *str)
    /* seek elemtent */
    ep = lGetElemHost(*lpp, nm, str);
    if (ep) {
-      lFreeElem(lDechainElem(*lpp, ep));
+      lRemoveElem(*lpp, &ep);
       if (lGetNumberOfElem(*lpp) == 0) {
-         lFreeList(*lpp);
-         *lpp = NULL;
+         lFreeList(lpp);
       }
       DEXIT;
       return 1;

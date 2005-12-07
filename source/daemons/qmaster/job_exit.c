@@ -95,7 +95,8 @@
 void sge_job_exit(
 lListElem *jr,
 lListElem *jep,
-lListElem *jatep 
+lListElem *jatep,
+monitoring_t *monitor
 ) {
    lListElem *queueep;
    const char *err_str;
@@ -177,7 +178,7 @@ lListElem *jatep
       /* JG: TODO: we need more information in the log message */
       reporting_create_job_log(NULL, timestamp, JL_DELETED, MSG_EXECD, hostname, jr, jep, jatep, NULL, MSG_LOG_JREMOVED);
 
-      sge_commit_job(jep, jatep, jr, COMMIT_ST_FINISHED_FAILED_EE, COMMIT_DEFAULT | COMMIT_NEVER_RAN);
+      sge_commit_job(jep, jatep, jr, COMMIT_ST_FINISHED_FAILED_EE, COMMIT_DEFAULT | COMMIT_NEVER_RAN, monitor);
    } 
      /*
       * case 2: set job in error state
@@ -195,7 +196,7 @@ lListElem *jatep
                                jr, jep, jatep, NULL, MSG_LOG_JERRORSET);
       lSetUlong(jatep, JAT_start_time, 0);
       ja_task_message_add(jatep, 1, err_str);
-      sge_commit_job(jep, jatep, jr, COMMIT_ST_FAILED_AND_ERROR, COMMIT_DEFAULT);
+      sge_commit_job(jep, jatep, jr, COMMIT_ST_FAILED_AND_ERROR, COMMIT_DEFAULT, monitor);
    }
       /*
        * case 3: job being rescheduled because it wasnt even started
@@ -208,7 +209,7 @@ lListElem *jatep
                                hostname, jr, jep, jatep, NULL, 
                                MSG_LOG_JNOSTARTRESCHEDULE);
       ja_task_message_add(jatep, 1, err_str);
-      sge_commit_job(jep, jatep, jr, COMMIT_ST_RESCHEDULED, COMMIT_DEFAULT);
+      sge_commit_job(jep, jatep, jr, COMMIT_ST_RESCHEDULED, COMMIT_DEFAULT, monitor);
       reporting_create_acct_record(NULL, jr, jep, jatep, false);
       lSetUlong(jatep, JAT_start_time, 0);
    }
@@ -229,7 +230,7 @@ lListElem *jatep
       /* JG: TODO: we need more information in the log message */
       reporting_create_job_log(NULL, timestamp, JL_RESTART, MSG_EXECD, hostname, jr, jep, jatep, NULL, MSG_LOG_JRERUNRESCHEDULE);
       lSetUlong(jatep, JAT_start_time, 0);
-      sge_commit_job(jep, jatep, jr, COMMIT_ST_RESCHEDULED, COMMIT_DEFAULT);
+      sge_commit_job(jep, jatep, jr, COMMIT_ST_RESCHEDULED, COMMIT_DEFAULT, monitor);
    }
       /*
        * case 5: job being rescheduled because it was interrupted and a checkpoint exists
@@ -244,7 +245,7 @@ lListElem *jatep
       reporting_create_acct_record(NULL, jr, jep, jatep, false);
       reporting_create_job_log(NULL, timestamp, JL_MIGRATE, MSG_EXECD, hostname, jr, jep, jatep, NULL, MSG_LOG_JCKPTRESCHEDULE);
       lSetUlong(jatep, JAT_start_time, 0);
-      sge_commit_job(jep, jatep, jr, COMMIT_ST_RESCHEDULED, COMMIT_DEFAULT);
+      sge_commit_job(jep, jatep, jr, COMMIT_ST_RESCHEDULED, COMMIT_DEFAULT, monitor);
    }
       /*
        * case 6: job being rescheduled because of exit 99 
@@ -258,7 +259,7 @@ lListElem *jatep
       reporting_create_acct_record(NULL, jr, jep, jatep, false);
       reporting_create_job_log(NULL, timestamp, JL_RESTART, MSG_EXECD, hostname, jr, jep, jatep, NULL, MSG_LOG_JNORESRESCHEDULE);
       lSetUlong(jatep, JAT_start_time, 0);
-      sge_commit_job(jep, jatep, jr, COMMIT_ST_RESCHEDULED, COMMIT_DEFAULT);
+      sge_commit_job(jep, jatep, jr, COMMIT_ST_RESCHEDULED, COMMIT_DEFAULT, monitor);
    }
       /*
        * case 7: job finished 
@@ -266,7 +267,7 @@ lListElem *jatep
    else {
       reporting_create_acct_record(NULL, jr, jep, jatep, false);
       reporting_create_job_log(NULL, timestamp, JL_FINISHED, MSG_EXECD, hostname, jr, jep, jatep, NULL, MSG_LOG_EXITED);
-      sge_commit_job(jep, jatep, jr, COMMIT_ST_FINISHED_FAILED_EE, COMMIT_DEFAULT);
+      sge_commit_job(jep, jatep, jr, COMMIT_ST_FINISHED_FAILED_EE, COMMIT_DEFAULT, monitor);
    }
 
    if (queueep != NULL) {

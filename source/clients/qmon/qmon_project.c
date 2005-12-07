@@ -367,7 +367,7 @@ XtPointer cld, cad;
       UpdateXmListFromCull(list, XmFONTLIST_DEFAULT_TAG, ql_out,
                               US_name);
    }
-   ql_out = lFreeList(ql_out);
+   lFreeList(&ql_out);
 
    DEXIT;
 }
@@ -483,7 +483,7 @@ XtPointer cld, cad;
             qmonMirrorMultiAnswer(PROJECT_T, &alp);
             if (alp) {
                qmonMessageBox(w, alp, 0);
-               alp = lFreeList(alp);
+               lFreeList(&alp);
                DEXIT;
                return;
             }
@@ -515,10 +515,10 @@ XtPointer cld, cad;
                XmStringFree(xprjname);
             }
          }
-         lFreeWhat(what);
-         prjl = lFreeList(prjl);
-         prep = lFreeElem(prep);
-         alp = lFreeList(alp);
+         lFreeWhat(&what);
+         lFreeList(&prjl);
+         lFreeElem(&prep);
+         lFreeList(&alp);
       }
    }
 
@@ -567,8 +567,8 @@ XtPointer cld, cad;
                            UP_name, &lp, NULL, what);
 
          qmonMessageBox(w, alp, 0);
-         lFreeWhat(what);
-         alp = lFreeList(alp);
+         lFreeWhat(&what);
+         lFreeList(&alp);
 
          updateProjectList();
          XtVaGetValues( project_names,
@@ -580,7 +580,7 @@ XtPointer cld, cad;
             qmonProjectFillConf(project_names, NULL);
 
       }
-      lp = lFreeList(lp);
+      lFreeList(&lp);
    }
    DEXIT;
 }

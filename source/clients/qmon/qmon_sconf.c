@@ -199,7 +199,7 @@ XtPointer cld, cad;
    qmonMirrorMultiAnswer(SC_T, &alp);
    if (alp) {
       qmonMessageBox(w, alp, 0);
-      alp = lFreeList(alp);
+      lFreeList(&alp);
       /* set default cursor */
       XmtDisplayDefaultCursor(w);
       DEXIT;
@@ -324,7 +324,7 @@ XtPointer cld, cad;
    qmonMirrorMultiAnswer(SC_T, &alp);
    if (alp) {
       qmonMessageBox(w, alp, 0);
-      alp = lFreeList(alp);
+      lFreeList(&alp);
       DEXIT;
       return;
    }
@@ -355,8 +355,8 @@ XtPointer cld, cad;
 
       qmonMessageBox(qmon_sconf, alp, 0);
 
-      lFreeWhat(what);
-      alp = lFreeList(alp);
+      lFreeWhat(&what);
+      lFreeList(&alp);
    }
 
    if (status)
@@ -391,7 +391,7 @@ XtPointer cld, cad;
    DENTER(GUI_LAYER, "qmonSchedTime");
 
    current = XmtInputFieldGetString(input_field);
-   strncpy(stringval, current ? current : "", sizeof(stringval));
+   sge_strlcpy(stringval, current ? current : "", sizeof(stringval));
    status = XmtAskForTime(w, NULL, "@{Enter time}",
                stringval, sizeof(stringval), NULL, False);
    if (stringval[0] == '\0')
@@ -446,7 +446,7 @@ lListElem *sep
    /*
    ** load adjustments need special treatment
    */
-   data.job_load_adjustments = lFreeList(data.job_load_adjustments);
+   lFreeList(&(data.job_load_adjustments));
    data.job_load_adjustments =  lCopyList("copy", lGetList(sep, SC_job_load_adjustments));
    
    data.load_adjustment_decay_time = sge_strdup(data.load_adjustment_decay_time, 
@@ -489,7 +489,7 @@ printf("->data.load_formula: '%s'\n", data.load_formula ? data.load_formula : "-
    ** "Job Range"
    */
    if (lGetString(sep, SC_schedd_job_info))
-      strncpy(schedd_job_info, lGetString(sep, SC_schedd_job_info), BUFSIZ - 1);
+      sge_strlcpy(schedd_job_info, lGetString(sep, SC_schedd_job_info), BUFSIZ);
    else
       strcpy(schedd_job_info, "false");
 
@@ -631,11 +631,11 @@ printf("<-data.load_formula: '%s'\n", data.load_formula ? data.load_formula : "-
 
             range_list_parse_from_string(&range_list, &alp, str,
                                          1, 0, INF_NOT_ALLOWED);
-            range_list = lFreeList(range_list);
+            lFreeList(&range_list);
          }
          if (alp) {
             qmonMessageShow(sconf_job_range, True, (StringConst)lGetString(lFirst(alp), AN_text));
-            alp =lFreeList(alp);
+            lFreeList(&alp);
             DEXIT;
             return False;
          }
@@ -677,7 +677,7 @@ XtPointer cad
    qmonMirrorMultiAnswer(CENTRY_T | EXECHOST_T, &alp);
    if (alp) {
       qmonMessageBox(w, alp, 0);
-      alp = lFreeList(alp);
+      lFreeList(&alp);
       DEXIT;
       return;
    }
@@ -691,8 +691,7 @@ XtPointer cad
          entries = temp_entries;
       }
       else {
-         lAddList(entries, temp_entries);
-         temp_entries = NULL;
+         lAddList(entries, &temp_entries);
       }
    }
   
@@ -709,7 +708,7 @@ XtPointer cad
    /*
    ** free the copied list
    */
-   entries = lFreeList(entries);
+   lFreeList(&entries);
 }
 
 /*-------------------------------------------------------------------------*/

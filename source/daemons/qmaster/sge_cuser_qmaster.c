@@ -62,7 +62,7 @@
 
 int cuser_mod(lList **answer_list, lListElem *cuser, lListElem *reduced_elem,
               int add, const char *remote_user, const char *remote_host,
-              gdi_object_t *object, int sub_command) 
+              gdi_object_t *object, int sub_command, monitoring_t *monitor) 
 {
    bool ret = true;
    int pos;
@@ -171,7 +171,7 @@ int cuser_mod(lList **answer_list, lListElem *cuser, lListElem *reduced_elem,
 }
 
 int cuser_success(lListElem *cuser, lListElem *old_cuser, 
-                    gdi_object_t *object, lList **ppList) 
+                    gdi_object_t *object, lList **ppList, monitoring_t *monitor) 
 {
    DENTER(TOP_LAYER, "usermap_success");
    sge_add_event( 0, old_cuser?sgeE_CUSER_MOD:sgeE_CUSER_ADD, 0, 0, 
@@ -220,7 +220,7 @@ int cuser_del(lListElem *this_elem, lList **answer_list,
             if (sge_event_spool(answer_list, 0, sgeE_CUSER_DEL,
                                 0, 0, name, NULL, NULL,
                                 NULL, NULL, NULL, true, true)) {
-               lRemoveElem(master_cuser_list, cuser);
+               lRemoveElem(master_cuser_list, &cuser);
 
                INFO((SGE_EVENT, MSG_SGETEXT_REMOVEDFROMLIST_SSSS, 
                      remote_user, remote_host, name, 

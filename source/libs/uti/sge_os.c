@@ -65,8 +65,12 @@
 #include "sge_os.h"
 #include "sge_prog.h"  
 #include "sge_log.h"
+#include "sig_handlers.h"
 
 #include "msg_utilib.h"
+
+/* pipe for sge_daemonize_prepare() and sge_daemonize_finalize() */
+static int fd_pipe[2];
 
 /****** uti/os/sge_get_pids() *************************************************
 *  NAME
@@ -279,6 +283,274 @@ int sge_checkprog(pid_t pid, const char *name, const char *pscommand)
    return notfound;
 }
 
+/****** sge_os/sge_daemonize_prepare() *****************************************
+*  NAME
+*     sge_daemonize_prepare() -- prepare daemonize of process
+*
+*  SYNOPSIS
+*     int sge_daemonize_prepare(void) 
+*
+*  FUNCTION
+*     The parent process will wait for the child's successful daemonizing.
+*     The client process will report successful daemonizing by a call to
+*     sge_daemonize_finalize().
+*     The parent process will exit with one of the following exit states:
+*
+*     typedef enum uti_deamonize_state_type {
+*        SGE_DEAMONIZE_OK           = 0,  ok 
+*        SGE_DAEMONIZE_DEAD_CHILD   = 1,  child exited before sending state 
+*        SGE_DAEMONIZE_TIMEOUT      = 2   timeout whild waiting for state 
+*     } uti_deamonize_state_t;
+*
+*     Daemonize the current application. Throws ourself into the
+*     background and dissassociates from any controlling ttys.
+*     Don't close filedescriptors mentioned in 'keep_open'.
+*      
+*     sge_daemonize_prepare() and sge_daemonize_finalize() will replace
+*     sge_daemonize() for multithreaded applications.
+*     
+*     sge_daemonize_prepare() must be called before starting any thread. 
+*
+*
+*  INPUTS
+*     void - none
+*
+*  RESULT
+*     int - true on success, false on error
+*
+*  SEE ALSO
+*     sge_os/sge_daemonize_finalize()
+*******************************************************************************/
+int sge_daemonize_prepare(void) {
+   pid_t pid;
+   fd_set keep_open;
+#if !(defined(__hpux) || defined(CRAY) || defined(WIN32) || defined(SINIX) || defined(INTERIX))
+   int fd;
+#endif
+
+#if defined(__sgi) || defined(ALPHA) || defined(HP1164)
+#  if defined(ALPHA)
+   extern int getdomainname(char *, int);
+#  endif
+   char domname[256];
+#endif
+
+   DENTER(TOP_LAYER, "sge_daemonize_prepare");
+
+#ifndef NO_SGE_COMPILE_DEBUG
+   if (TRACEON) {
+      DEXIT;
+      return false;
+   }
+#endif
+
+   if (uti_state_get_daemonized()) {
+      DEXIT;
+      return true;
+   }
+
+   /* create pipe */
+   if ( pipe(fd_pipe) < 0) {
+      CRITICAL((SGE_EVENT, MSG_UTI_DAEMONIZE_CANT_PIPE));
+      DRETURN(false);
+   }
+
+   if ( fcntl(fd_pipe[0], F_SETFL, O_NONBLOCK) != 0) {
+      CRITICAL((SGE_EVENT, MSG_UTI_DAEMONIZE_CANT_FCNTL_PIPE));
+      DRETURN(false);
+   }
+
+   /* close all fd's expect pipe and first 3 */
+   FD_ZERO(&keep_open);
+   FD_SET(0,&keep_open);
+   FD_SET(1,&keep_open);
+   FD_SET(2,&keep_open);
+   FD_SET(fd_pipe[0],&keep_open);
+   FD_SET(fd_pipe[1],&keep_open);
+   sge_close_all_fds(&keep_open);
+
+   /* first fork */
+   pid=fork();
+   if (pid <0) {
+      CRITICAL((SGE_EVENT, MSG_PROC_FIRSTFORKFAILED_S , strerror(errno)));
+      DEXIT;
+      exit(1);
+   }
+
+   if ( pid > 0) {
+      char line[256];
+      int line_p = 0;
+      int retries = 60;
+      int exit_status = SGE_DAEMONIZE_TIMEOUT;
+      int back;
+      int errno_value = 0;
+
+      /* close send pipe */
+      close(fd_pipe[1]);
+
+      /* check pipe for message from child */
+      while (line_p < 4 && retries-- > 0) {
+         errno = 0;
+         back = read(fd_pipe[0], &line[line_p], 1);
+         errno_value = errno;
+         if (back > 0) {
+            line_p++;
+         } else {
+            if (back != -1) {
+               if (errno_value != EAGAIN ) {
+                  retries=0;
+                  exit_status = SGE_DAEMONIZE_DEAD_CHILD;
+               }
+            }
+            DPRINTF(("back=%d errno=%d\n",back,errno_value));
+            sleep(1);
+         }
+      }
+         
+      if (line_p >= 4) {
+         line[3] = 0;
+         exit_status = atoi(line);
+         DPRINTF(("received: \"%d\"\n", exit_status));
+      }
+
+      switch(exit_status) {
+         case SGE_DEAMONIZE_OK:
+            INFO((SGE_EVENT, MSG_UTI_DAEMONIZE_OK));
+            break;
+         case SGE_DAEMONIZE_DEAD_CHILD:
+            WARNING((SGE_EVENT, MSG_UTI_DAEMONIZE_DEAD_CHILD));
+            break;
+         case SGE_DAEMONIZE_TIMEOUT:
+            WARNING((SGE_EVENT, MSG_UTI_DAEMONIZE_TIMEOUT));
+            break;
+      }
+      /* close read pipe */
+      close(fd_pipe[0]);
+      DEXIT;
+      exit(exit_status); /* parent exit */
+   }
+
+   /* child */
+   SETPGRP;
+
+#if !(defined(__hpux) || defined(CRAY) || defined(WIN32) || defined(SINIX) || defined(INTERIX))
+   if ((fd = open("/dev/tty", O_RDWR)) >= 0) {
+      /* disassociate contolling tty */
+      ioctl(fd, TIOCNOTTY, (char *) NULL);
+      close(fd);
+   }
+#endif
+   
+
+   /* second fork */
+   pid=fork();
+   if (pid < 0) {
+      CRITICAL((SGE_EVENT, MSG_PROC_SECONDFORKFAILED_S , strerror(errno)));
+      DEXIT;
+      exit(1);
+   }
+   if ( pid > 0) {
+      /* close read and write pipe for second child and exit */
+      close(fd_pipe[0]);
+      close(fd_pipe[1]);
+      exit(0);
+   }
+
+   /* child of child */
+
+   /* close read pipe */
+   close(fd_pipe[0]);
+
+#if defined(__sgi) || defined(ALPHA) || defined(HP1164)
+   /* The yp library may have open sockets
+      when closing all fds also the socket fd of the yp library gets closed
+      when called again yp library functions are confused since they
+      assume fds are already open. Thus we shutdown the yp library regularly
+      before closing all sockets */
+   getdomainname(domname, sizeof(domname));
+   yp_unbind(domname);
+#endif
+
+   
+   DRETURN(true);
+}
+
+/****** sge_os/sge_daemonize_finalize() ****************************************
+*  NAME
+*     sge_daemonize_finalize() -- finalize daemonize process
+*
+*  SYNOPSIS
+*     int sge_daemonize_finalize(fd_set *keep_open) 
+*
+*  FUNCTION
+*     report successful daemonizing to the parent process and close
+*     all file descriptors. Set file descirptors 0, 1 and 2 to /dev/null 
+*
+*     sge_daemonize_prepare() and sge_daemonize_finalize() will replace
+*     sge_daemonize() for multithreades applications.
+*
+*     sge_daemonize_finalize() must be called by the thread who have called
+*     sge_daemonize_prepare().
+*
+*  INPUTS
+*     fd_set *keep_open - file descriptor set to keep open
+*
+*  RESULT
+*     int - true on success
+*
+*  SEE ALSO
+*     sge_os/sge_daemonize_prepare()
+*******************************************************************************/
+int sge_daemonize_finalize(void) {
+   char tmp_buffer[4];
+
+   DENTER(TOP_LAYER, "sge_daemonize_finalize");
+
+   /* don't call this function twice */
+   if (uti_state_get_daemonized()) {
+      DEXIT;
+      return true;
+   }
+
+   /* The response id has 4 byte, send it to father process */
+   snprintf(tmp_buffer, 4, "%3d", SGE_DEAMONIZE_OK );
+   write(fd_pipe[1], tmp_buffer, 4);
+
+   sleep(2); /* give father time to read the status */
+
+   /* close write pipe */
+   close(fd_pipe[1]);
+
+   /* close first three file descriptors */
+#ifndef __INSURE__
+   close(0);
+   close(1);
+   close(2);
+   
+   /* new descriptors acquired for stdin, stdout, stderr should be 0,1,2 */
+   if (open("/dev/null",O_RDONLY,0)!=0) {
+      SGE_EXIT(0);
+   }
+   if (open("/dev/null",O_WRONLY,0)!=1) {
+      SGE_EXIT(0);
+   }
+   if (open("/dev/null",O_WRONLY,0)!=2) {
+      SGE_EXIT(0);
+   }
+#endif
+
+   SETPGRP;
+
+   /* now have finished daemonizing */
+   uti_state_set_daemonized(1);
+
+   DRETURN(true);
+}
+
+
+
+
+
 /****** uti/os/sge_daemonize() ************************************************
 *  NAME
 *     sge_daemonize() -- Daemonize the current application
@@ -364,6 +636,7 @@ int sge_daemonize(fd_set *keep_open)
   yp_unbind(domname);
 #endif
  
+#ifndef __INSURE__
    /* close all file descriptors */
    sge_close_all_fds(keep_open);
  
@@ -374,6 +647,7 @@ int sge_daemonize(fd_set *keep_open)
       SGE_EXIT(0);
    if (open("/dev/null",O_WRONLY,0)!=2)
       SGE_EXIT(0);
+#endif
  
    SETPGRP;
  
@@ -407,10 +681,13 @@ int sge_daemonize(fd_set *keep_open)
 ******************************************************************************/
 int sge_occupy_first_three(void)
 {
+#ifndef __INSURE__
    SGE_STRUCT_STAT buf;
+#endif
  
    DENTER(TOP_LAYER, "occupy_first_three");
  
+#ifndef __INSURE__
    if (SGE_FSTAT(0, &buf)) {
       if ((open("/dev/null",O_RDONLY,0))!=0) {
          DEXIT;
@@ -431,6 +708,7 @@ int sge_occupy_first_three(void)
          return 2;
       }
    }
+#endif
  
    DEXIT;
    return -1;
@@ -458,6 +736,7 @@ void sge_close_all_fds(fd_set *keep_open)
 /* JG: trying to close insights (insure) internal fd will be rejected */
    int fd;
    int maxfd;
+   bool ignore = false;
  
 #ifndef WIN32NATIVE
    maxfd = sysconf(_SC_OPEN_MAX) > FD_SETSIZE ? \
@@ -467,13 +746,26 @@ void sge_close_all_fds(fd_set *keep_open)
    /* detect maximal number of fds under NT/W2000 (env: Files)*/
 #endif /* WIN32NATIVE */
  
-   for (fd = 0; fd < maxfd; fd++)
-      if (!(keep_open && FD_ISSET(fd, keep_open)))
+   for (fd = 0; fd < maxfd; fd++) {
+      ignore = false;
+
+      if (keep_open != NULL) {
+         if (FD_ISSET(fd, keep_open)) {
+            ignore = true;
+         }
+      }
+#ifdef __INSURE__
+      ignore = true;
+#endif
+
+      if (ignore == false) {
 #ifndef WIN32NATIVE
          close(fd);
 #else /* WIN32NATIVE */
          closesocket(fd);
 #endif /* WIN32NATIVE */
+      }
+   }
    return;
 }  
 

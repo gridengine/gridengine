@@ -38,6 +38,7 @@
 #endif
 
 #include "sge_loadmem.h"
+#include "sge_stdio.h"
 #include "sgermon.h"
 #include "sge_log.h"
 #include "sge_os.h"
@@ -704,13 +705,15 @@ int sge_loadmem(sge_mem_info_t *mem_info)
          READ_VALUE(KEY_CACHED,    cached);
 
       }
-      fclose(fp);
+      FCLOSE(fp);
    } else {
       return 1;
    }
    mem_info->mem_free += buffers+cached;
 
    return 0;
+FCLOSE_ERROR:
+   return 1;
 }
 #endif /* LINUX */
 
@@ -798,23 +801,20 @@ int sge_loadmem(sge_mem_info_t *mem_info)
 #include <mach/mach_init.h>
 #include <mach/mach_host.h>
 #include <mach/host_info.h>
+#include <sys/sysctl.h>
 #include <sys/stat.h>
 
 int sge_loadmem(sge_mem_info_t *mem_info)
 {
+    uint64_t mem_total;
+    size_t len = sizeof(mem_total);
 
     vm_statistics_data_t vm_info;
-    mach_msg_type_number_t info_count;
-    struct host_basic_info cpu_load_data;
-    int host_count = sizeof(cpu_load_data)/sizeof(integer_t);
-    mach_port_t host_priv_port = mach_host_self();
+    mach_msg_type_number_t info_count = HOST_VM_INFO_COUNT;
 
-    host_info(host_priv_port, HOST_BASIC_INFO , (host_info_t)&cpu_load_data, &host_count);
+    sysctlbyname("hw.memsize", &mem_total, &len, NULL, 0);
+    mem_info->mem_total = mem_total / (1024*1024);
 
-    mem_info->mem_total = cpu_load_data.memory_size / (1024*1024);
-
-
-    info_count = HOST_VM_INFO_COUNT;
     host_statistics(mach_host_self (), HOST_VM_INFO, (host_info_t)&vm_info, &info_count);
     mem_info->mem_free = vm_info.free_count*vm_page_size / (1024*1024);
 

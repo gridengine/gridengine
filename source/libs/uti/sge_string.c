@@ -79,9 +79,11 @@ const char *sge_basename(const char *name, int delim)
    DENTER(BASIS_LAYER, "sge_basename");
 
    if (!name) {
+      DEXIT;
       return NULL;
    }
    if (name[0] == '\0') {
+      DEXIT;
       return NULL;
    }
 
@@ -100,6 +102,60 @@ const char *sge_basename(const char *name, int delim)
          return cp;
       }
    }
+}
+
+/****** sge_string/sge_jobname() ***********************************************
+*  NAME
+*     sge_jobname() -- get jobname of command line string 
+*
+*  SYNOPSIS
+*     const char* sge_jobname(const char *name) 
+*
+*  FUNCTION
+*     Determine the jobname of a command line. The following definition is used
+*     for the jobname:
+*     - take everything up to the first semicolon
+*     - take everything up to the first whitespace
+*     - take the basename
+*
+*  INPUTS
+*     const char *name - contains the input string (command line)
+*
+*  RESULT
+*     const char* - pointer to the jobname
+*                   NULL if name is NULL or only '\0'
+*
+*  EXAMPLE
+*  Command line                       jobname
+*  ----------------------------------------------
+*  "cd /home/me/5five; hostname" --> cd
+*  "/home/me/4Ujob"              --> 4Ujob (invalid, will be denied)
+*  "cat /tmp/5five"              --> cat
+*  "bla;blub"                    --> bla
+*  "a b"                         --> a
+*      
+*
+*  NOTES
+*     MT-NOTE: sge_jobname() is not MT safe 
+*
+*  SEE ALSO
+*     sge_basename()
+*******************************************************************************/
+const char *sge_jobname(const char *name) {
+
+   const char *cp = NULL;
+   
+   DENTER(BASIS_LAYER, "sge_jobname");
+   if (name && name[0] != '\0' ) {
+
+      cp = sge_strtok(name, ";");
+      cp = sge_strtok(cp, " ");
+      cp = sge_basename(cp, '/');
+
+   }
+
+   DEXIT;
+   return cp;
 }
 
 /****** uti/string/sge_dirname() **********************************************
@@ -194,6 +250,7 @@ char *sge_strtok(const char *str, const char *delimitor)
    static char *static_str = NULL;
    static unsigned int alloc_len = 0;
    unsigned int n;
+   bool done;
 
    DENTER(BASIS_LAYER, "sge_strtok");
 
@@ -217,16 +274,18 @@ char *sge_strtok(const char *str, const char *delimitor)
    }
 
    /* seek first character which is no '\0' and no delimitor */
-   while (1) {
+   done = false;
+   while (!done) {
 
       /* found end of string */
-      if (*saved_cp == '\0') {
+      if (saved_cp == NULL || *saved_cp == '\0') {
          DEXIT;
          return NULL;
       }
 
       /* eat white spaces */
       if (!IS_DELIMITOR((int) saved_cp[0], delimitor)) {
+         done = true;
          break;
       }
 
@@ -235,7 +294,8 @@ char *sge_strtok(const char *str, const char *delimitor)
 
    /* seek end of string given by '\0' or delimitor */
    cp = saved_cp;
-   while (1) {
+   done = false;
+   while (!done) {
       if (!cp[0]) {
          static_cp = cp;
 
@@ -254,6 +314,55 @@ char *sge_strtok(const char *str, const char *delimitor)
       }
       cp++;
    }
+
+   DEXIT;
+   return NULL;
+}
+
+/****** uti/string/sge_strlcpy() ***********************************************
+*  NAME
+*     sge_strlcpy() -- sge strlcpy implementation
+*
+*  SYNOPSIS
+*     size_t sge_strlcpy(char *dst, const char *src, size_t dstsize) 
+*
+*  FUNCTION
+*     ??? 
+*
+*  INPUTS
+*     char *dst       - destination
+*     const char *src - source string (must be '\0' terminated)
+*     size_t dstsize  - size of source string 
+*
+*  RESULT
+*     size_t - strlen of src, not dst !!!
+*
+*  EXAMPLE
+*     ??? 
+*
+*  NOTES
+*     MT-NOTE: sge_strlcpy() is MT safe 
+*
+*  BUGS
+*     ??? 
+*******************************************************************************/
+size_t sge_strlcpy(char *dst, const char *src, size_t dstsize) {
+   size_t index = 0;
+   if (dst == NULL) {
+      return 0;
+   } 
+   if (src == NULL) {
+      dst[0] = '\0';
+      return 0;
+   }
+   for (index = 0; (src[index] != '\0') && (index < dstsize - 1); index++) {
+      dst[index] = src[index];
+   }
+   dst[index] = '\0';
+   while ( src[index] != '\0') {
+     index++;
+   }
+   return index;
 }
 
 /****** uti/string/sge_strtok_r() *********************************************
@@ -292,14 +401,13 @@ char *sge_strtok_r(const char *str, const char *delimitor,
    char *cp;
    char *saved_cp;
    struct saved_vars_s *saved;
+   bool done;
 
    DENTER(BASIS_LAYER, "sge_strtok_r");
 
-   if (str) {
-      if (*context) {
-         ERROR((SGE_EVENT, MSG_POINTER_INVALIDSTRTOKCALL ));
-         DEXIT;
-         abort();
+   if (str != NULL) {
+      if (*context != NULL) {
+         ERROR((SGE_EVENT, MSG_POINTER_INVALIDSTRTOKCALL));
       }
       *context = (struct saved_vars_s *)malloc(sizeof(struct saved_vars_s));
       memset(*context, 0, sizeof(struct saved_vars_s));
@@ -311,25 +419,25 @@ char *sge_strtok_r(const char *str, const char *delimitor,
       saved_cp = saved->static_str;
    } else {
       if (*context == NULL) {
-         ERROR((SGE_EVENT, MSG_POINTER_INVALIDSTRTOKCALL));
-         DEXIT;
-         abort();
+         ERROR((SGE_EVENT, MSG_POINTER_INVALIDSTRTOKCALL1));
+         DRETURN(NULL);
       }
       saved = *context;
       saved_cp = saved->static_cp;
    }
 
    /* seek first character which is no '\0' and no delimitor */
-   while (1) {
+   done = false;
+   while (!done) {
 
       /* found end of string */
-      if (*saved_cp == '\0') {
-         DEXIT;
-         return NULL;
+      if (saved_cp == NULL || *saved_cp == '\0') {
+         DRETURN(NULL);
       }
 
       /* eat white spaces */
       if (!IS_DELIMITOR((int) saved_cp[0], delimitor)) {
+         done = true;
          break;
       }
 
@@ -338,12 +446,12 @@ char *sge_strtok_r(const char *str, const char *delimitor,
 
    /* seek end of string given by '\0' or delimitor */
    cp = saved_cp;
-   while (1) {
+   done = false;
+   while (!done) {
       if (!cp[0]) {
          saved->static_cp = cp;
 
-         DEXIT;
-         return saved_cp;
+         DRETURN(saved_cp);
       }
 
       /* test if we found a delimitor */
@@ -352,11 +460,12 @@ char *sge_strtok_r(const char *str, const char *delimitor,
          cp++;
          saved->static_cp = cp;
 
-         DEXIT;
-         return saved_cp;
+         DRETURN(saved_cp);
       }
       cp++;
    }
+
+   DRETURN(NULL);
 }
 
 /****** uti/string/sge_free_saved_vars() **************************************
@@ -380,10 +489,12 @@ char *sge_strtok_r(const char *str, const char *delimitor,
 ******************************************************************************/
 void sge_free_saved_vars(struct saved_vars_s *context) 
 {
-   if (context->static_str) {
-      free(context->static_str);
+   if (context) {
+      if (context->static_str) {
+         free(context->static_str);
+      }
+      free(context);
    }
-   free(context);
 }
 
 /****** uti/string/sge_strdup() ***********************************************
@@ -543,12 +654,13 @@ void sge_strip_white_space_at_eol(char *str)
 ******************************************************************************/
 char *sge_delim_str(char *str, char **delim_pos, const char *delim) 
 {
-   char *cp, *tstr;
+   char *cp = NULL; 
+   char *tstr = NULL;
 
    DENTER(BASIS_LAYER, "sge_delim_str");
 
    /* we want it non-destructive --> we need a copy of str */
-   if (!(tstr = strdup(str))) {
+   if ((tstr = strdup(str)) == NULL) {
       DEXIT;
       return NULL;
    }
@@ -565,10 +677,12 @@ char *sge_delim_str(char *str, char **delim_pos, const char *delim)
    }
 
    /* cp now either points to a closing \0 or to a delim character */
-   if (*cp)                     /* if it points to a delim character */
-      *cp = '\0';               /* terminate str with a \0 */
-   if (delim_pos)               /* give back delimiting position for name */
+   if (*cp) {                    /* if it points to a delim character */
+      *cp = '\0';                /* terminate str with a \0 */
+   }
+   if (delim_pos) {              /* give back delimiting position for name */
       *delim_pos = str + strlen(tstr);
+   }
    /* delim_pos either points to the delimiter or the closing \0 in str */
 
    DEXIT;
@@ -780,8 +894,8 @@ void sge_strtoupper(char *buffer, int max_len)
 
    if (buffer != NULL) {
       int i;
-
-      for (i = 0; (i < max_len) && (i < strlen(buffer)); i++) {
+      int length = MIN(strlen(buffer), max_len);
+      for (i = 0; i < length; i++) {
          buffer[i] = toupper(buffer[i]); 
       }
    }
@@ -1060,20 +1174,26 @@ void sge_compress_slashes(char *str)
 ******************************************************************************/
 void sge_strip_quotes(char **pstr) 
 {
-   char *cp, *cp2;
+   char *cp = NULL;
+   char *cp2 = NULL;
 
    DENTER(TOP_LAYER, "sge_strip_quotes");
+   
    if (!pstr) {
       DEXIT;
       return;
    }
+   
    for (; *pstr; pstr++) {
       for (cp2 = cp = *pstr; *cp; cp++) {
-         if (*cp == '"') {
+         if (*cp != '"') {
             *cp2++ = *cp;
          }
       }
+      
+      *cp2 = '\0';
    }
+   
    DEXIT;
    return;
 }
@@ -1137,9 +1257,10 @@ int sge_strlen(const char *str)
 char **string_list(char *str, char *delis, char **pstr) 
 {
    unsigned int i = 0, j = 0;
-   int is_space = 0;
+   bool is_space = false;
    int found_first_quote = 0;
    char **head = NULL;
+   bool done;
 
    DENTER(BASIS_LAYER, "string_list");
 
@@ -1170,41 +1291,54 @@ char **string_list(char *str, char *delis, char **pstr)
       head = pstr;
    }
 
-   while (1) {
-      while (str[i] && strchr(delis, str[i])) {
+   done = false;
+   while (!done) {
+      while ((str[i] != '\0') && (strchr(delis, str[i]) != NULL)) {
          i++;
       }
+
       if (str[i] == '\0') {
+         done = true;
          break;
       }
+
       head[j] = &str[i];
       j++;
       /*
       ** parse one string
       */
-      is_space = 0;
-      while (str[i] && !is_space) {
-         if (str[i] == '"') {
+      is_space = false;
+      
+      while ((str[i] != '\0') && !is_space) {
+         if ((found_first_quote == 0) && (str[i] == '"')) {
+            found_first_quote = 2;
+         }
+         else if ((found_first_quote == 0) && (str[i] == '\'')) {
             found_first_quote = 1;
          }
+
          i++;
-         if (found_first_quote) {
-            is_space = 0;
+
+         /* If we're inside quotes, we don't count spaces. */
+         if (found_first_quote == 0) {
+            is_space = (bool)(strchr(delis, str[i]) != NULL);
          }
-         else {
-            is_space = (strchr(delis, str[i]) != NULL);
-         }
-         if (found_first_quote && (str[i] == '"')) {
+         
+         if (((found_first_quote == 2) && (str[i] == '"')) ||
+             ((found_first_quote == 1) && (str[i] == '\''))) {
             found_first_quote = 0;
          }
       }
+      
       if (str[i] == '\0') {
+         done = true;
          break;
       }
 
       str[i] = '\0';
       i++;
    }
+   
    head[j] = NULL;
 
    DEXIT;

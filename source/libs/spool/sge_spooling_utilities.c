@@ -431,7 +431,7 @@ bool spool_default_validate_func(lList **answer_list,
                   debit_host_consumable(NULL, object, Master_CEntry_List, 0);
                   /* necessary to init double values of consumable configuration */
                   centry_list_fill_request(lGetList(object, EH_consumable_config_list), 
-                        Master_CEntry_List, true, false, true);
+                        NULL, Master_CEntry_List, true, false, true);
 
                   if (ensure_attrib_available(NULL, object, 
                                               EH_consumable_config_list)) {

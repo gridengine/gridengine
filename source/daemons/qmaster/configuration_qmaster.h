@@ -45,7 +45,6 @@ int sge_mod_configuration(lListElem *aConf, lList **anAnswer, char *aUser, char 
 int sge_compare_configuration(lListElem *aHost, lList *aConf);
 
 void sge_set_conf_reprioritize(lListElem *aConf, bool aFlag);
-bool sge_get_conf_reprioritize(lListElem *aConf);
 bool sge_conf_is_reprioritize(void);
 
 #endif /* __CONFIGURATION_QMASTER_H */

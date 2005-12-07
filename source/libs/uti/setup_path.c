@@ -296,6 +296,7 @@ bool sge_setup_paths(const char *sge_cell, dstring *error_dstring)
       } else {
          sge_dstring_sprintf(error_dstring, MSG_SGETEXT_SGEROOTNOTFOUND_S, 
                              sge_root);
+         sge_dstring_append(error_dstring, "\n");
          DEXIT;
          return false;
       }   
@@ -308,6 +309,7 @@ bool sge_setup_paths(const char *sge_cell, dstring *error_dstring)
       } else {   
          sge_dstring_sprintf(error_dstring, MSG_UTI_SGEROOTNOTADIRECTORY_S , 
                              sge_root);
+         sge_dstring_append(error_dstring, "\n");
          DEXIT;
          return false;
       }

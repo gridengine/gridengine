@@ -47,19 +47,25 @@ enum {
 /* *INDENT-OFF* */
 enum {
    PACK_id = PACK_LOWERBOUND,
+#if 1 /* TODO EB: should be removed */
    PACK_compressed,
+#endif
    PACK_string
 };
 
 LISTDEF( PACK_Type )
-   SGE_ULONG(PACK_id, CULL_DEFAULT)       /* id = what or where date structure */
+   SGE_ULONG(PACK_id, CULL_DEFAULT) /* id = what or where date structure */
+#if 1 /* TODO EB: should be removed, not used anymore */
    SGE_BOOL(PACK_compressed, CULL_DEFAULT)   /* is the date compressed */
+#endif
    SGE_STRING(PACK_string, CULL_DEFAULT)  /* the raw data in ascii */
 LISTEND
 
 NAMEDEF( PACKN )
    NAME   ( "PACK_id") 
+#if 1 /* TODO EB: should be removed */
    NAME   ( "PACK_compressed")
+#endif
    NAME   ( "PACK_string")
 NAMEEND
 

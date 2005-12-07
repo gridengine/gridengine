@@ -32,6 +32,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include "sge_stdio.h"
 #include "basis_types.h"
 #include "sge_bitop.h"
 #include "msg_utilib.h"
@@ -94,6 +96,7 @@ int sge_area_cshift(char *area, int area_len, int n, int direction)
    /* we ne a copy of source byte array to prevent overwritting */
    if (!(cp = (char *) malloc(area_len))) {
       fprintf(stderr, MSG_MEMORY_NOMEMORYFORBYTEARRAY_S , "cshift");
+      fprintf(stderr, "\n");
       return 1;
    }
    memcpy(cp, area, area_len);
@@ -152,6 +155,7 @@ int sge_area_print(const char *fname, const char *label,
       fp = fopen(fname,"w");
       if (!fp) {
          fprintf(stderr, MSG_FILE_NOOPENFORWRITEING_SS, "print_area", fname);
+         fprintf(stderr, "\n");
          return 1;
       }
    }
@@ -161,10 +165,12 @@ int sge_area_print(const char *fname, const char *label,
    }
    fprintf(fp,"\n");
    if (fname) {
-      fclose(fp);
+      FCLOSE(fp);
    }
 
    return 0;
+FCLOSE_ERROR:
+   return 1;
 }
 
 /****** uti/bitop/sge_area_xor() **********************************************

@@ -116,6 +116,12 @@ static int sge_domkdir(const char *path_, int fmode, int exit_on_error, int may_
          return -1;
       }
    }
+#if defined( INTERIX )
+   /*
+    * mkdir is buggy, chown dir manually
+    */
+   chown(path_, geteuid(), getegid());
+#endif
  
    DEXIT;
    return 0;
@@ -297,10 +303,13 @@ int sge_chdir(const char *dir)
 ******************************************************************************/
 void sge_exit(int i) 
 {
-   sge_exit_func_t exit_func = uti_state_get_exit_func();
-   if (exit_func) 
+   sge_exit_func_t exit_func = NULL;
+   DENTER(TOP_LAYER, "sge_exit");
+   exit_func = uti_state_get_exit_func();
+   if (exit_func) {
       exit_func(i);
- 
+   }
+   DEXIT;
    exit(i);
 }
  
@@ -344,7 +353,9 @@ int sge_mkdir(const char *path, int fmode, int exit_on_error, int may_not_exist)
          return -1;
       }
    }
- 
+
+   DPRINTF(("Making dir \"%s\"\n", path));
+
    memset(path_, 0, sizeof(path_));
    while ((unsigned char) path[i]) {
       path_[i] = path[i];
@@ -352,6 +363,7 @@ int sge_mkdir(const char *path, int fmode, int exit_on_error, int may_not_exist)
          path_[i] = (unsigned char) 0;
          res = sge_domkdir(path_, fmode, exit_on_error, 0);
          if (res) {
+            DPRINTF(("retval = %d\n", res));
             DEXIT;
             return res;
          }
@@ -362,6 +374,7 @@ int sge_mkdir(const char *path, int fmode, int exit_on_error, int may_not_exist)
  
    i = sge_domkdir(path_, fmode, exit_on_error, may_not_exist);
  
+   DPRINTF(("retval = %d\n", i));
    DEXIT;
    return i;
 }   
@@ -420,6 +433,7 @@ int sge_rmdir(const char *cp, dstring *error)
    SGE_STRUCT_STAT statbuf;
    SGE_STRUCT_DIRENT *dent;
    DIR *dir;
+   char dirent[SGE_PATH_MAX*2];
    char fname[SGE_PATH_MAX];
 
    DENTER(TOP_LAYER, "sge_rmdir");
@@ -438,7 +452,7 @@ int sge_rmdir(const char *cp, dstring *error)
       return -1;
    }
  
-   while ((dent = SGE_READDIR(dir))) {
+   while (SGE_READDIR_R(dir, (SGE_STRUCT_DIRENT *)dirent, &dent)==0 && dent!=NULL) {
       if (strcmp(dent->d_name, ".") && strcmp(dent->d_name, "..")) {
  
          sprintf(fname, "%s/%s", cp, dent->d_name);

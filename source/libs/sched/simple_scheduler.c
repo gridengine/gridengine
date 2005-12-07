@@ -325,7 +325,7 @@ static void get_policy_info()
 
       /* free allocated memory */
       sge_dstring_free(&hosts);
-      host_list = lFreeList(host_list);
+      lFreeList(&host_list);
    }
 }
 
@@ -473,7 +473,7 @@ static void simple_scheduler()
    /* if all requested slots could be granted, procs should be 0 */
    if(procs > 0) {
       DPRINTF(("job could not be scheduled\n"));
-      lFreeList(allocated_queues);
+      lFreeList(&allocated_queues);
       return;
    }
 

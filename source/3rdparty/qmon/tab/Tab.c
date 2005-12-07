@@ -393,10 +393,10 @@ static XtGeometryResult QueryGeometry(Widget w, XtWidgetGeometry *request,
       ret_val = XtGeometryAlmost;
    }
 
-/* ANDRE 
+#if 0
    if (ret_val == XtGeometryAlmost) 
         printf("==============> XtGeometryAlmost\n");
-*/
+#endif
    return ret_val;
 }
 
@@ -701,6 +701,17 @@ static void get_children_space(XmTabWidget wid, Dimension *width,
 
       geo_result = XtQueryGeometry(child, NULL, &reply);
 
+#if 0
+   if (geo_result == XtGeometryAlmost) 
+        printf("==============> XtGeometryAlmost\n");
+   else if (geo_result == XtGeometryYes)     
+        printf("==============> XtGeometryYes\n");
+   else if (geo_result == XtGeometryNo)    
+        printf("==============> XtGeometryNo\n");
+   else     
+        printf("==============> XtGeometry undefined\n");
+#endif        
+      
       if ((reply.request_mode & CWWidth) && (reply.width > *width))
          *width = reply.width;
       if ((reply.request_mode & CWHeight) && (reply.height > *height))
@@ -726,201 +737,203 @@ static void compute_tab_rects(XmTabWidget wid)
    XmString temp_str;
    Widget child;
    XtGeometryResult geo_result;
-/*    static Boolean recompute_geometry = True; */
+   static Boolean recompute_geometry = True;
 
 
-/*    if (recompute_geometry) { */
-   font_list = (wid->tab.tab_font_list) ? wid->tab.tab_font_list : 
-                     DEFAULT_FONT_LIST(wid);
+   if (recompute_geometry) {
+      recompute_geometry = False;
 
-   temp_str = XmStringCreateLocalized("0");        
-   str_width = XmStringWidth(font_list, temp_str);
-   str_height = XmStringHeight(font_list, temp_str);
-   XmStringFree(temp_str);
+      font_list = (wid->tab.tab_font_list) ? wid->tab.tab_font_list : 
+                        DEFAULT_FONT_LIST(wid);
 
-   x_space = 2*str_width;
-   y_space = str_height/2;
+      temp_str = XmStringCreateLocalized("0");        
+      str_width = XmStringWidth(font_list, temp_str);
+      str_height = XmStringHeight(font_list, temp_str);
+      XmStringFree(temp_str);
 
-   greater_height = 0;
-   max_width = 0;
+      x_space = 2*str_width;
+      y_space = str_height/2;
 
-   /*
-   ** calculate the number of rows
-   */
-   if (wid->tab.tabs_per_row) {
-      rows = wid->composite.num_children / wid->tab.tabs_per_row;
-      if (wid->composite.num_children % wid->tab.tabs_per_row)
-         rows++;
-   }
-   else {
-      rows = 1;
-      wid->tab.tabs_per_row = wid->composite.num_children;
-   }
+      greater_height = 0;
+      max_width = 0;
 
-   sum_width = (Dimension*)XtMalloc(sizeof(Dimension) * rows); 
-   for (i=0; i<rows; i++)
-      sum_width[i] = 0;
-      
-
-   for (i=0, r=0; i<wid->composite.num_children; i++) {
-      child = wid->composite.children[i];
-
-      tab_constraint = (XmTabConstraintRec *) child->core.constraints;
-
-      if (tab_constraint->tab.tab_label) {
-         str_width = XmStringWidth(font_list, tab_constraint->tab.tab_label);
-         str_height = XmStringHeight(font_list, tab_constraint->tab.tab_label);
+      /*
+      ** calculate the number of rows
+      */
+      if (wid->tab.tabs_per_row) {
+         rows = wid->composite.num_children / wid->tab.tabs_per_row;
+         if (wid->composite.num_children % wid->tab.tabs_per_row)
+            rows++;
       }
       else {
-         name = XtName(child);
-         xm_name = XmStringCreateLocalized(name);
-         str_width = XmStringWidth(font_list, xm_name);
-         str_height = XmStringHeight(font_list, xm_name);
-         XmStringFree(xm_name);
+         rows = 1;
+         wid->tab.tabs_per_row = wid->composite.num_children;
       }
 
-      width = str_width + x_space + 2 * wid->manager.shadow_thickness;
+      sum_width = (Dimension*)XtMalloc(sizeof(Dimension) * rows); 
+      for (i=0; i<rows; i++)
+         sum_width[i] = 0;
+         
 
-      height = str_height + y_space + 2 * wid->manager.shadow_thickness;
-      if (height > greater_height) 
-         greater_height = height;
-
-      tab_constraint->tab.tab_rect.width = width;
-
-      sum_width[r] += width;
-
-      if (((i+1) % wid->tab.tabs_per_row) == 0) {
-         if (sum_width[r] > max_width)
-            max_width = sum_width[r];
-         r++;  /* sum_width for next row */
-      }
-   }
-   
-   wid->tab.tab_height = greater_height;
-   wid->tab.tab_rows = rows;
-
-
-   /*
-   ** configure children
-   */
-   x = (Position)(wid->tab.margin_width + wid->manager.shadow_thickness);
-   y = (Position)(wid->tab.margin_height + 
-                  wid->tab.tab_rows * wid->tab.tab_height + 
-                  2 * wid->manager.shadow_thickness);
-
-   for (i=0; i< wid->composite.num_children; i++) {
-      child = wid->composite.children[i];
-      XtMoveWidget(child, x, y);
-   }
-
-   /* get the max size of the children */
-   get_children_space(wid, &width, &height);
-
-   if (width > (max_width - 2 * wid->manager.shadow_thickness)) 
-      max_width = width + 2 * wid->manager.shadow_thickness;
-
-   width = max_width + 2 * wid->tab.margin_width;
-   height = height + wid->tab.tab_rows * wid->tab.tab_height +
-                  2 * wid->tab.margin_height + 
-                  2 * wid->manager.shadow_thickness;
-
-   extra_width = 2 * (wid->tab.margin_width + wid->manager.shadow_thickness);
-   extra_height = wid->tab.tab_rows * wid->tab.tab_height + 
-                  2 * (wid->tab.margin_height + wid->manager.shadow_thickness);
-   geo_result = XtMakeResizeRequest((Widget)wid, width, height,
-                                        &width_ret, &height_ret);
-
-   if (geo_result == XtGeometryYes) {
-      width = width_ret ? (width_ret - extra_width) : 1;
-      height = height_ret ? (height_ret - extra_height) : 1;
-   }
-   else {
-      if (wid->core.width > extra_width)
-         width = wid->core.width - extra_width;
-      else
-         width = 1;
-      if (wid->core.height > extra_height)
-         height = wid->core.height - extra_height;
-      else
-         height = 1;
-   }
-
-   if (wid->tab.resize_children) {
-      for (i=0; i< wid->composite.num_children; i++) {
+      for (i=0, r=0; i<wid->composite.num_children; i++) {
          child = wid->composite.children[i];
-         XtResizeWidget(child, width, height, 0);
-      }
-   }
-   else {
-      for (i=0; i< wid->composite.num_children; i++) {
-         child = wid->composite.children[i];
-         if (child->core.width > width)
-            XtResizeWidget(child, width, child->core.height, 0);
-         if (child->core.height > height)
-            XtResizeWidget(child, child->core.width, height, 0);
-      }
-   }
 
-   /*
-   ** adjust the tabs
-   */
-   for (r=0; r < wid->tab.tab_rows; r++) {
-      int row_width = 0;
-      left_x = wid->tab.margin_width;
-      left_y = wid->tab.margin_height + r * greater_height;
-      for (j=0; j < wid->tab.tabs_per_row &&
-          (r * wid->tab.tabs_per_row + j) < wid->composite.num_children; j++) {
-          child = wid->composite.children[r * wid->tab.tabs_per_row + j];
-          tab_constraint = (XmTabConstraintRec *) child->core.constraints;
-          row_width += tab_constraint->tab.tab_rect.width;
-      }    
-                  
-      for (j=0; j < wid->tab.tabs_per_row && 
-          (r * wid->tab.tabs_per_row + j) < wid->composite.num_children; j++) {
-         child = wid->composite.children[r * wid->tab.tabs_per_row + j];
          tab_constraint = (XmTabConstraintRec *) child->core.constraints;
 
-         tab_constraint->tab.tab_rect.height = greater_height;
-         tab_constraint->tab.tab_rect.y = r * greater_height;
-         tab_constraint->tab.tab_rect.x = left_x;
-
-         if (sum_width[r] < max_width && row_width < max_width) {
-            if (r != (wid->tab.tab_rows-1)) {
-               delta = (max_width - sum_width[r]) / wid->tab.tabs_per_row;
-               rest = (max_width - sum_width[r]) % wid->tab.tabs_per_row;
-            } 
-            else {
-               delta = (max_width - sum_width[r]) / 
-                       (wid->composite.num_children - r*wid->tab.tabs_per_row);
-               rest = (max_width - sum_width[r]) %
-                      (wid->composite.num_children - r*wid->tab.tabs_per_row);
-            }
-
-            tab_constraint->tab.tab_rect.width += delta;
-            if (j == (wid->tab.tabs_per_row - 1) ||
-                  (r * wid->tab.tabs_per_row + j + 1) == 
-                     wid->composite.num_children) {
-               tab_constraint->tab.tab_rect.width += rest;
-            }
-
+         if (tab_constraint->tab.tab_label) {
+            str_width = XmStringWidth(font_list, tab_constraint->tab.tab_label);
+            str_height = XmStringHeight(font_list, tab_constraint->tab.tab_label);
          }
-         left_x += tab_constraint->tab.tab_rect.width;
+         else {
+            name = XtName(child);
+            xm_name = XmStringCreateLocalized(name);
+            str_width = XmStringWidth(font_list, xm_name);
+            str_height = XmStringHeight(font_list, xm_name);
+            XmStringFree(xm_name);
+         }
+
+         width = str_width + x_space + 2 * wid->manager.shadow_thickness;
+
+         height = str_height + y_space + 2 * wid->manager.shadow_thickness;
+         if (height > greater_height) 
+            greater_height = height;
+
+         tab_constraint->tab.tab_rect.width = width;
+
+         sum_width[r] += width;
+
+         if (((i+1) % wid->tab.tabs_per_row) == 0) {
+            if (sum_width[r] > max_width)
+               max_width = sum_width[r];
+            r++;  /* sum_width for next row */
+         }
       }
+      
+      wid->tab.tab_height = greater_height;
+      wid->tab.tab_rows = rows;
+
+
+      /*
+      ** configure children
+      */
+      x = (Position)(wid->tab.margin_width + wid->manager.shadow_thickness);
+      y = (Position)(wid->tab.margin_height + 
+                     wid->tab.tab_rows * wid->tab.tab_height + 
+                     2 * wid->manager.shadow_thickness);
+
+      for (i=0; i< wid->composite.num_children; i++) {
+         child = wid->composite.children[i];
+         XtMoveWidget(child, x, y);
+      }
+
+      /* get the max size of the children */
+      get_children_space(wid, &width, &height);
+
+      if (width > (max_width - 2 * wid->manager.shadow_thickness)) 
+         max_width = width + 2 * wid->manager.shadow_thickness;
+
+      width = max_width + 2 * wid->tab.margin_width;
+      height = height + wid->tab.tab_rows * wid->tab.tab_height +
+                     2 * wid->tab.margin_height + 
+                     2 * wid->manager.shadow_thickness;
+
+      extra_width = 2 * (wid->tab.margin_width + wid->manager.shadow_thickness);
+      extra_height = wid->tab.tab_rows * wid->tab.tab_height + 
+                     2 * (wid->tab.margin_height + wid->manager.shadow_thickness);
+      geo_result = XtMakeResizeRequest((Widget)wid, width, height,
+                                           &width_ret, &height_ret);
+
+      if (geo_result == XtGeometryYes) {
+         width = width_ret ? (width_ret - extra_width) : 1;
+         height = height_ret ? (height_ret - extra_height) : 1;
+      }
+      else {
+         if (wid->core.width > extra_width)
+            width = wid->core.width - extra_width;
+         else
+            width = 1;
+         if (wid->core.height > extra_height)
+            height = wid->core.height - extra_height;
+         else
+            height = 1;
+      }
+
+      if (wid->tab.resize_children) {
+         for (i=0; i< wid->composite.num_children; i++) {
+            child = wid->composite.children[i];
+            XtResizeWidget(child, width, height, 0);
+         }
+      }
+      else {
+         for (i=0; i< wid->composite.num_children; i++) {
+            child = wid->composite.children[i];
+            if (child->core.width > width)
+               XtResizeWidget(child, width, child->core.height, 0);
+            if (child->core.height > height)
+               XtResizeWidget(child, child->core.width, height, 0);
+         }
+      }
+
+      /*
+      ** adjust the tabs
+      */
+      for (r=0; r < wid->tab.tab_rows; r++) {
+         int row_width = 0;
+         left_x = wid->tab.margin_width;
+         left_y = wid->tab.margin_height + r * greater_height;
+         for (j=0; j < wid->tab.tabs_per_row &&
+             (r * wid->tab.tabs_per_row + j) < wid->composite.num_children; j++) {
+             child = wid->composite.children[r * wid->tab.tabs_per_row + j];
+             tab_constraint = (XmTabConstraintRec *) child->core.constraints;
+             row_width += tab_constraint->tab.tab_rect.width;
+         }    
+                     
+         for (j=0; j < wid->tab.tabs_per_row && 
+             (r * wid->tab.tabs_per_row + j) < wid->composite.num_children; j++) {
+            child = wid->composite.children[r * wid->tab.tabs_per_row + j];
+            tab_constraint = (XmTabConstraintRec *) child->core.constraints;
+
+            tab_constraint->tab.tab_rect.height = greater_height;
+            tab_constraint->tab.tab_rect.y = r * greater_height;
+            tab_constraint->tab.tab_rect.x = left_x;
+
+            if (sum_width[r] < max_width && row_width < max_width) {
+               if (r != (wid->tab.tab_rows-1)) {
+                  delta = (max_width - sum_width[r]) / wid->tab.tabs_per_row;
+                  rest = (max_width - sum_width[r]) % wid->tab.tabs_per_row;
+               } 
+               else {
+                  delta = (max_width - sum_width[r]) / 
+                          (wid->composite.num_children - r*wid->tab.tabs_per_row);
+                  rest = (max_width - sum_width[r]) %
+                         (wid->composite.num_children - r*wid->tab.tabs_per_row);
+               }
+
+               tab_constraint->tab.tab_rect.width += delta;
+               if (j == (wid->tab.tabs_per_row - 1) ||
+                     (r * wid->tab.tabs_per_row + j + 1) == 
+                        wid->composite.num_children) {
+                  tab_constraint->tab.tab_rect.width += rest;
+               }
+
+            }
+            left_x += tab_constraint->tab.tab_rect.width;
+         }
+      }
+
+      wid->tab.cut_size = greater_height/8;
+
+   /*    wid->tab.raise = greater_height/10; */
+   /*    if (wid->tab.raise > wid->tab.margin_height) */
+   /*       wid->tab.raise = wid->tab.margin_height; */
+
+      XtFree((char*)sum_width);
+
+      wid->tab.tab_total_width = max_width + 2 * wid->tab.margin_width;
+      wid->tab.tab_total_height = height + extra_height;
+
+      recompute_geometry = True;
    }
-
-   wid->tab.cut_size = greater_height/8;
-
-/*    wid->tab.raise = greater_height/10; */
-/*    if (wid->tab.raise > wid->tab.margin_height) */
-/*       wid->tab.raise = wid->tab.margin_height; */
-
-   XtFree((char*)sum_width);
-
-   wid->tab.tab_total_width = max_width + 2 * wid->tab.margin_width;
-   wid->tab.tab_total_height = height + extra_height;
-
-/*    recompute_geometry = False; */
-/*    } */
 
 }
 

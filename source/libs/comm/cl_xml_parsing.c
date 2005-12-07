@@ -49,10 +49,229 @@
 #define CL_DO_XML_DEBUG 0
 
 
+typedef struct cl_xml_sequence_type {
+   char  character;
+   char* sequence;
+   int   sequence_length;
+} cl_xml_sequence_t;
+
+/* 
+ * sequence array for XML escape sequences (used by cl_com_transformXML2String()
+ * and cl_com_transformString2XML(). The first character has to be an "&" for sequence.
+ * This is because cl_com_transformXML2String() is only checking for "&" characters when
+ * parsing XML string in order to find sequences.
+ */
+#define CL_XML_SEQUENCE_ARRAY_SIZE 8 
+static const cl_xml_sequence_t cl_com_sequence_array[CL_XML_SEQUENCE_ARRAY_SIZE] = {
+                                                   {'\n', "&#x0D;" , 6}, /* carriage return */
+                                                   {'\r', "&#x0A;" , 6}, /* linefeed */
+                                                   {'\t', "&#x09;" , 6}, /* tab */
+                                                   {'&',  "&amp;"  , 5}, /* amp */
+                                                   {'<',  "&lt;"   , 4}, /* lower than */
+                                                   {'>',  "&gt;"   , 4}, /* greater than */
+                                                   {'"',  "&quot;" , 6}, /* quote */
+                                                   {'\'', "&apos;" , 6}  /* apostrophe */
+};
+
+
+
+
 static cl_bool_t cl_xml_parse_is_version(char* buffer, unsigned long start, unsigned long buffer_length );
 
+/****** commlib/cl_xml_parsing/cl_com_transformXML2String() ****************************
+*  NAME
+*     cl_com_transformXML2String() -- convert xml escape sequences to string
+*
+*  SYNOPSIS
+*     int cl_com_transformXML2String(const char* input, char** output) 
+*
+*  FUNCTION
+*     Converts a xml string into standard string witout XML escape sequences.
+*
+*
+*     Character      XML escape sequence        name
+*
+*       '\n'         "&#x0D;"                   carriage return
+*       '\r'         "&#x0A;"                   linefeed
+*       '\t'         "&#x09;"                   tab
+*       '&'          "&amp;"                    amp
+*       '<'          "&lt;"                     lower than
+*       '>'          "&gt;"                     greater than
+*       '"'          "&quot;"                   quote
+*       '\''         "&apos;"                   apostrophe
+*
+*  INPUTS
+*     const char* input - xml sequence string
+*     char** output     - pointer to empty string pointer. The function will
+*                         malloc() memory for the output string and return
+*                         the input string with xml escape sequences converted to
+*                         standard string characters.
+*
+*  RESULT
+*     int - CL_RETVAL_OK     - no errors
+*           CL_RETVAL_PARAMS - input or output are not correctly initialized
+*           CL_RETVAL_MALLOC - can't malloc() memory for output string
+*
+*  NOTES
+*     MT-NOTE: cl_com_transformXML2String() is MT safe 
+*
+*  SEE ALSO
+*     commlib/cl_xml_parsing/cl_com_transformString2XML()
+*******************************************************************************/
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "cl_com_transformXML2String()"
+int cl_com_transformXML2String(const char* input, char** output) {
+   int i,pos,s;
+   int input_length = 0;
+   int output_length = 0;
+   int seq_count;
+   int matched;
+
+   if (input == NULL || output == NULL) {
+      return CL_RETVAL_PARAMS;
+   }
+
+   if (*output != NULL) {
+      return CL_RETVAL_PARAMS;
+   }
+
+   input_length = strlen(input);
+   
+   /* since output is shorter than input we don't calculate the output length */
+   output_length = input_length;
+   *output = (char*)malloc((sizeof(char) * (1 + output_length)));
+   if (*output == NULL) {
+      return CL_RETVAL_MALLOC;
+   }
+   
+   pos = 0;
+   seq_count = 0;
+   for (i=0;i<input_length;i++) {
+      if ( input[i] == '&' ) {
+         /* found possible escape sequence */
+         for (s=0;s<CL_XML_SEQUENCE_ARRAY_SIZE;s++) {
+            matched = 0;
+            for (seq_count=0; i + seq_count < input_length && seq_count < cl_com_sequence_array[s].sequence_length ; seq_count++) {
+               if ( input[i+seq_count] != cl_com_sequence_array[s].sequence[seq_count] ) {
+                  break;
+               }
+               if ( seq_count + 1 == cl_com_sequence_array[s].sequence_length ) {
+                  /* match */
+                  (*output)[pos++] = cl_com_sequence_array[s].character;
+                  i += cl_com_sequence_array[s].sequence_length - 1;
+                  matched = 1;
+                  break;;
+               }
+            }
+            if (matched == 1) {
+               break;
+            }
+         }
+         continue;
+      }
+      (*output)[pos++] = input[i];
+   }
+   (*output)[pos] = 0;
+   return CL_RETVAL_OK;
+}
+
+/****** commlib/cl_xml_parsing/cl_com_transformString2XML() ****************************
+*  NAME
+*     cl_com_transformString2XML() -- convert special chars to escape sequences
+*
+*  SYNOPSIS
+*     int cl_com_transformString2XML(const char* input, char** output) 
+*
+*  FUNCTION
+*     This function will parse the input char string and replace the character
+*     by escape sequences in the output string. The user has to free() the 
+*     output string.
+*
+*  INPUTS
+*     const char* input - input string without xml escape sequences
+*     char** output     - pointer to empty string pointer. The function will
+*                         malloc() memory for the output string and return
+*                         the input string with xml escape squences.
+*
+*     Character      XML escape sequence        name
+*
+*       '\n'         "&#x0D;"                   carriage return
+*       '\r'         "&#x0A;"                   linefeed
+*       '\t'         "&#x09;"                   tab
+*       '&'          "&amp;"                    amp
+*       '<'          "&lt;"                     lower than
+*       '>'          "&gt;"                     greater than
+*       '"'          "&quot;"                   quote
+*       '\''         "&apos;"                   apostrophe
+*
+*  RESULT
+*     int - CL_RETVAL_OK     - no errors
+*           CL_RETVAL_PARAMS - input or output are not correctly initialized
+*           CL_RETVAL_MALLOC - can't malloc() memory for output string
+*
+*  NOTES
+*     MT-NOTE: cl_com_transformString2XML() is MT safe 
+*
+*  SEE ALSO
+*     commlib/cl_xml_parsing/cl_com_transformXML2String()
+*******************************************************************************/
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "cl_com_transformString2XML()"
+int cl_com_transformString2XML(const char* input, char** output) {
+
+   int i,s,add_length,pos,x;
+   int input_length = 0;
+   int output_length = 0;
+
+   if (input == NULL || output == NULL) {
+      return CL_RETVAL_PARAMS;
+   }
+   if (*output != NULL) {
+      return CL_RETVAL_PARAMS;
+   }
+
+   input_length = strlen(input);
+   for (i=0;i<input_length;i++) {
+      add_length = 1;
+      for (s=0;s<CL_XML_SEQUENCE_ARRAY_SIZE;s++) {
+         if ( input[i] == cl_com_sequence_array[s].character ) {
+            add_length = cl_com_sequence_array[s].sequence_length;
+            break;
+         }
+      }
+      output_length += add_length;
+   }
+
+   *output = (char*)malloc((sizeof(char) * (1 + output_length)));
+   if (*output == NULL) {
+      return CL_RETVAL_MALLOC;
+   }
+
+   pos = 0;
+   for (i=0;i<input_length;i++) {
+      add_length = 1;
+      for (s=0;s<CL_XML_SEQUENCE_ARRAY_SIZE;s++) {
+         if ( input[i] == cl_com_sequence_array[s].character ) {
+            add_length = cl_com_sequence_array[s].sequence_length;
+            for(x=0;x<add_length;x++) {
+               (*output)[pos++] = (cl_com_sequence_array[s].sequence)[x];
+            }
+            break;
+         }
+      }
+      if (add_length == 1) {
+         (*output)[pos++] = input[i];
+      }
+   }
+   (*output)[pos] = 0;
 
 
+   return CL_RETVAL_OK;
+}
 
 #ifdef __CL_FUNCTION__
 #undef __CL_FUNCTION__
@@ -1240,6 +1459,7 @@ int cl_xml_parse_MIH(unsigned char* buffer, unsigned long buffer_length, cl_com_
    unsigned long mtag_end = 0;  
    unsigned long rid_begin = 0;
    unsigned long rid_end = 0;
+   int while_helper = 1;
 
 
 
@@ -1415,28 +1635,40 @@ int cl_xml_parse_MIH(unsigned char* buffer, unsigned long buffer_length, cl_com_
          help_buf[help_buf_pointer++] = buffer[i];
       }
       help_buf[help_buf_pointer] = 0;
-      if (strcmp(CL_MIH_MESSAGE_DATA_FORMAT_BIN,help_buf) == 0) {
-         (*message)->df = CL_MIH_DF_BIN;
-      }
-      if (strcmp(CL_MIH_MESSAGE_DATA_FORMAT_XML,help_buf) == 0) {
-         (*message)->df = CL_MIH_DF_XML;
-      }
-      if (strcmp(CL_MIH_MESSAGE_DATA_FORMAT_AM,help_buf) == 0) {
-         (*message)->df = CL_MIH_DF_AM;
-      }
-      if (strcmp(CL_MIH_MESSAGE_DATA_FORMAT_SIM,help_buf) == 0) {
-         (*message)->df = CL_MIH_DF_SIM;
-      }
-      if (strcmp(CL_MIH_MESSAGE_DATA_FORMAT_SIRM,help_buf) == 0) {
-         (*message)->df = CL_MIH_DF_SIRM;
-      }
-      if (strcmp(CL_MIH_MESSAGE_DATA_FORMAT_CCM,help_buf) == 0) {
-         (*message)->df = CL_MIH_DF_CCM;
-      }
-      if (strcmp(CL_MIH_MESSAGE_DATA_FORMAT_CCRM,help_buf) == 0) {
-         (*message)->df = CL_MIH_DF_CCRM;
-      }
+      
+      while(while_helper) {
+         if (strcmp(CL_MIH_MESSAGE_DATA_FORMAT_BIN,help_buf) == 0) {
+            (*message)->df = CL_MIH_DF_BIN;
+            break;
+         }
+         if (strcmp(CL_MIH_MESSAGE_DATA_FORMAT_AM,help_buf) == 0) {
+            (*message)->df = CL_MIH_DF_AM;
+            break;
+         }
+         if (strcmp(CL_MIH_MESSAGE_DATA_FORMAT_CCM,help_buf) == 0) {
+            (*message)->df = CL_MIH_DF_CCM;
+            break;
+         }
+         if (strcmp(CL_MIH_MESSAGE_DATA_FORMAT_CCRM,help_buf) == 0) {
+            (*message)->df = CL_MIH_DF_CCRM;
+            break;
+         }
+         if (strcmp(CL_MIH_MESSAGE_DATA_FORMAT_XML,help_buf) == 0) {
+            (*message)->df = CL_MIH_DF_XML;
+            break;
+         }
+         if (strcmp(CL_MIH_MESSAGE_DATA_FORMAT_SIM,help_buf) == 0) {
+            (*message)->df = CL_MIH_DF_SIM;
+            break;
+         }
+         if (strcmp(CL_MIH_MESSAGE_DATA_FORMAT_SIRM,help_buf) == 0) {
+            (*message)->df = CL_MIH_DF_SIRM;
+            break;
+         }
 
+
+         break;
+      }
    }
    /* get mat */
    if (mat_begin > 0 && mat_end > 0 && mat_end >= mat_begin) {
@@ -1445,14 +1677,21 @@ int cl_xml_parse_MIH(unsigned char* buffer, unsigned long buffer_length, cl_com_
          help_buf[help_buf_pointer++] = buffer[i];
       }
       help_buf[help_buf_pointer] = 0;
-      if (strcmp(CL_MIH_MESSAGE_ACK_TYPE_NAK,help_buf) == 0) {
-         (*message)->mat = CL_MIH_MAT_NAK;
-      }
-      if (strcmp(CL_MIH_MESSAGE_ACK_TYPE_ACK,help_buf) == 0) {
-         (*message)->mat = CL_MIH_MAT_ACK;
-      }
-      if (strcmp(CL_MIH_MESSAGE_ACK_TYPE_SYNC,help_buf) == 0) {
-         (*message)->mat = CL_MIH_MAT_SYNC;
+
+      while(while_helper) {
+         if (strcmp(CL_MIH_MESSAGE_ACK_TYPE_NAK,help_buf) == 0) {
+            (*message)->mat = CL_MIH_MAT_NAK;
+            break;
+         }
+         if (strcmp(CL_MIH_MESSAGE_ACK_TYPE_ACK,help_buf) == 0) {
+            (*message)->mat = CL_MIH_MAT_ACK;
+            break;
+         }
+         if (strcmp(CL_MIH_MESSAGE_ACK_TYPE_SYNC,help_buf) == 0) {
+            (*message)->mat = CL_MIH_MAT_SYNC;
+            break;
+         }
+         break;
       }
    }
 
@@ -1479,6 +1718,8 @@ int cl_xml_parse_MIH(unsigned char* buffer, unsigned long buffer_length, cl_com_
 int cl_xml_parse_SIRM(unsigned char* buffer, unsigned long buffer_length, cl_com_SIRM_t** message ) {
    unsigned long i;
    char help_buf[256];
+   char character;
+
    unsigned long help_buf_pointer = 0;
    unsigned long buf_pointer = 0;
    int in_tag = 0;
@@ -1507,11 +1748,8 @@ int cl_xml_parse_SIRM(unsigned char* buffer, unsigned long buffer_length, cl_com
    unsigned long application_status_begin = 0;
    unsigned long application_status_end = 0;
 
-
    unsigned long info_begin = 0;
    unsigned long info_end = 0;
-
-
 
    if (message == NULL || buffer == NULL ) {
       return CL_RETVAL_PARAMS;
@@ -1526,7 +1764,7 @@ int cl_xml_parse_SIRM(unsigned char* buffer, unsigned long buffer_length, cl_com
       return CL_RETVAL_MALLOC;
    }
    memset((char *) (*message), 0, sizeof(cl_com_SIRM_t));
-   
+  
    while(buf_pointer < buffer_length) {
       switch( buffer[buf_pointer] ) {
          case '=':
@@ -1544,112 +1782,77 @@ int cl_xml_parse_SIRM(unsigned char* buffer, unsigned long buffer_length, cl_com
             in_tag = 0;
             tag_end = buf_pointer - 1;
             if (tag_begin < tag_end && tag_begin > 0 && tag_end > 0) {
+              
+               buffer[buf_pointer] = '\0';
                
-               help_buf_pointer = 0;
-               for (i=tag_begin;i<=tag_end && help_buf_pointer < 254 ;i++) {
-                  help_buf[help_buf_pointer++] = buffer[i];
+               if (strcmp((char*)&(buffer[tag_begin]),"/sirm") == 0) {
+                  /* do nothing */
                }
-               help_buf[help_buf_pointer] = 0;
-
-
-
-               if (strcmp(help_buf,"/sirm") == 0) {
-                  buf_pointer++;
-                  continue;
-               }
-               if (strcmp(help_buf,"mid") == 0 ) {
+               else if (strcmp((char*)&(buffer[tag_begin]),"mid") == 0 ) {
                   mid_begin = tag_end + 2;
-                  buf_pointer++;
-                  continue;
                }
-               if (strcmp(help_buf,"/mid") == 0) {
-                  mid_end = tag_begin - 2;
-                  buf_pointer++;
-                  continue;
+               else if (strcmp((char*)&(buffer[tag_begin]),"/mid") == 0) {
+                  mid_end = tag_begin - 1;
                }
-
-               if (strcmp(help_buf,"starttime") == 0 ) {
+               else if (strcmp((char*)&(buffer[tag_begin]),"starttime") == 0 ) {
                   starttime_begin = tag_end + 2;
-                  buf_pointer++;
-                  continue;
                }
-               if (strcmp(help_buf,"/starttime") == 0) {
-                  starttime_end = tag_begin - 2;
-                  buf_pointer++;
-                  continue;
+               else if (strcmp((char*)&(buffer[tag_begin]),"/starttime") == 0) {
+                  starttime_end = tag_begin - 1;
                }
-
-               if (strcmp(help_buf,"runtime") == 0 ) {
+               else if (strcmp((char*)&(buffer[tag_begin]),"runtime") == 0 ) {
                   runtime_begin = tag_end + 2;
-                  buf_pointer++;
-                  continue;
                }
-               if (strcmp(help_buf,"/runtime") == 0) {
-                  runtime_end = tag_begin - 2;
-                  buf_pointer++;
-                  continue;
+               else if (strcmp((char*)&(buffer[tag_begin]),"/runtime") == 0) {
+                  runtime_end = tag_begin - 1;
                }
-               if (strcmp(help_buf,"brm") == 0 ) {
+               else if (strcmp((char*)&(buffer[tag_begin]),"brm") == 0 ) {
                   application_messages_brm_begin = tag_end + 2;
-                  buf_pointer++;
-                  continue;
                }
-               if (strcmp(help_buf,"/brm") == 0) {
-                  application_messages_brm_end = tag_begin - 2;
-                  buf_pointer++;
-                  continue;
+               else if (strcmp((char*)&(buffer[tag_begin]),"/brm") == 0) {
+                  application_messages_brm_end = tag_begin - 1;
                }
-               if (strcmp(help_buf,"bwm") == 0 ) {
+               else if (strcmp((char*)&(buffer[tag_begin]),"bwm") == 0 ) {
                   application_messages_bwm_begin = tag_end + 2;
-                  buf_pointer++;
-                  continue;
                }
-               if (strcmp(help_buf,"/bwm") == 0) {
-                  application_messages_bwm_end = tag_begin - 2;
-                  buf_pointer++;
-                  continue;
+               else if (strcmp((char*)&(buffer[tag_begin]),"/bwm") == 0) {
+                  application_messages_bwm_end = tag_begin - 1;
                }
-               if (strcmp(help_buf,"noc") == 0 ) {
+               else if (strcmp((char*)&(buffer[tag_begin]),"noc") == 0 ) {
                   application_connections_noc_begin = tag_end + 2;
-                  buf_pointer++;
-                  continue;
                }
-               if (strcmp(help_buf,"/noc") == 0) {
-                  application_connections_noc_end = tag_begin - 2;
-                  buf_pointer++;
-                  continue;
+               else if (strcmp((char*)&(buffer[tag_begin]),"/noc") == 0) {
+                  application_connections_noc_end = tag_begin - 1;
                }
-               if (strcmp(help_buf,"status") == 0 ) {
+               else if (strcmp((char*)&(buffer[tag_begin]),"status") == 0 ) {
                   application_status_begin = tag_end + 2;
-                  buf_pointer++;
-                  continue;
                }
-               if (strcmp(help_buf,"/status") == 0) {
-                  application_status_end = tag_begin - 2;
-                  buf_pointer++;
-                  continue;
+               else if (strcmp((char*)&(buffer[tag_begin]),"/status") == 0) {
+                  application_status_end = tag_begin - 1;
                }
-               if (strcmp(help_buf,"info") == 0 ) {
+               else if (strcmp((char*)&(buffer[tag_begin]),"info") == 0 ) {
                   info_begin = tag_end + 2;
-                  buf_pointer++;
-                  continue;
                }
-               if (strcmp(help_buf,"/info") == 0) {
-                  info_end = tag_begin - 2;
-                  buf_pointer++;
-                  continue;
+               else if (strcmp((char*)&(buffer[tag_begin]),"/info") == 0) {
+                  info_end = tag_begin - 1;
                }
+               else {
+                  buffer[buf_pointer] = '>';
+                  break;
+               }
+               buffer[buf_pointer] = '>';
             }
-         break;
+            else {
+               break;
+            }
       }
       buf_pointer++;
    }
 
-
    /* get version */
    if (version_begin > 0) {
       help_buf_pointer = 0;
-      for (i=version_begin ; i<= buffer_length && buffer[i] != '\"' && help_buf_pointer < 254 ; i++) {
+      for (i=version_begin ; i< buffer_length && buffer[i] != '\"' && help_buf_pointer < 254 ; i++) {
          help_buf[help_buf_pointer++] = buffer[i];
       }
       help_buf[help_buf_pointer] = 0;
@@ -1658,49 +1861,52 @@ int cl_xml_parse_SIRM(unsigned char* buffer, unsigned long buffer_length, cl_com
 
    /* get info */
    if (info_begin > 0 && info_end > 0 && info_end >= info_begin) {
-      help_buf_pointer = 0;
-      for (i=info_begin;i<=info_end && help_buf_pointer < 254 ;i++) {
-         help_buf[help_buf_pointer++] = buffer[i];
-      }
-      help_buf[help_buf_pointer] = 0;
-      (*message)->info = strdup(help_buf);
-   }
+      character = buffer[info_end];
+      buffer[info_end] = '\0';
 
+      cl_com_transformXML2String( (char*)&(buffer[info_begin]), &((*message)->info) );
+
+
+      buffer[info_end] = character;
+   }
 
    /* get mid */
    if (mid_begin > 0 && mid_end > 0 && mid_end >= mid_begin) {
-      help_buf_pointer = 0;
-      for (i=mid_begin;i<=mid_end && help_buf_pointer < 254 ;i++) {
-         help_buf[help_buf_pointer++] = buffer[i];
-      }
-      help_buf[help_buf_pointer] = 0;
-      (*message)->mid = cl_util_get_ulong_value(help_buf);
+
+      character = buffer[mid_end];
+      buffer[mid_end] = '\0';
+      
+      (*message)->mid = cl_util_get_ulong_value((char*)&(buffer[mid_begin]));
+      
+      buffer[mid_end] = character;
    }
 
    /* get starttime */
    if (starttime_begin > 0 && starttime_end > 0 && starttime_end >= starttime_begin) {
-      help_buf_pointer = 0;
-      for (i=starttime_begin;i<=starttime_end && help_buf_pointer < 254 ;i++) {
-         help_buf[help_buf_pointer++] = buffer[i];
-      }
-      help_buf[help_buf_pointer] = 0;
-      (*message)->starttime = cl_util_get_ulong_value(help_buf);
+      
+      character = buffer[starttime_end];
+      buffer[starttime_end] = '\0';
+     
+      (*message)->starttime = cl_util_get_ulong_value((char*)&(buffer[starttime_begin]));
+      
+      buffer[starttime_end] = character;     
    }
 
    /* get runtime */
    if (runtime_begin > 0 && runtime_end > 0 && runtime_end >= runtime_begin) {
-      help_buf_pointer = 0;
-      for (i=runtime_begin;i<=runtime_end && help_buf_pointer < 254 ;i++) {
-         help_buf[help_buf_pointer++] = buffer[i];
-      }
-      help_buf[help_buf_pointer] = 0;
-      (*message)->runtime = cl_util_get_ulong_value(help_buf);
+      
+      character = buffer[runtime_end];
+      buffer[runtime_end] = '\0';
+      
+      (*message)->runtime = cl_util_get_ulong_value((char*)&(buffer[runtime_begin]));
+      
+      buffer[runtime_end] = character;         
    }
 
    /* get application_messages_brm */
    if (application_messages_brm_begin > 0 && application_messages_brm_end > 0 && application_messages_brm_end >= application_messages_brm_begin) {
       help_buf_pointer = 0;
-      for (i=application_messages_brm_begin;i<=application_messages_brm_end && help_buf_pointer < 254 ;i++) {
+      for (i=application_messages_brm_begin;i<application_messages_brm_end && help_buf_pointer < 254 ;i++) {
          help_buf[help_buf_pointer++] = buffer[i];
       }
       help_buf[help_buf_pointer] = 0;
@@ -1710,7 +1916,7 @@ int cl_xml_parse_SIRM(unsigned char* buffer, unsigned long buffer_length, cl_com
    /* get application_messages_bwm */
    if (application_messages_bwm_begin > 0 && application_messages_bwm_end > 0 && application_messages_bwm_end >= application_messages_bwm_begin) {
       help_buf_pointer = 0;
-      for (i=application_messages_bwm_begin;i<=application_messages_bwm_end && help_buf_pointer < 254 ;i++) {
+      for (i=application_messages_bwm_begin;i<application_messages_bwm_end && help_buf_pointer < 254 ;i++) {
          help_buf[help_buf_pointer++] = buffer[i];
       }
       help_buf[help_buf_pointer] = 0;
@@ -1720,7 +1926,7 @@ int cl_xml_parse_SIRM(unsigned char* buffer, unsigned long buffer_length, cl_com
    /* get application_connections_noc */
    if (application_connections_noc_begin > 0 && application_connections_noc_end > 0 && application_connections_noc_end >= application_connections_noc_begin) {
       help_buf_pointer = 0;
-      for (i=application_connections_noc_begin;i<=application_connections_noc_end && help_buf_pointer < 254 ;i++) {
+      for (i=application_connections_noc_begin;i<application_connections_noc_end && help_buf_pointer < 254 ;i++) {
          help_buf[help_buf_pointer++] = buffer[i];
       }
       help_buf[help_buf_pointer] = 0;
@@ -1730,7 +1936,7 @@ int cl_xml_parse_SIRM(unsigned char* buffer, unsigned long buffer_length, cl_com
    /* get application_connections_noc */
    if (application_status_begin > 0 && application_status_end > 0 && application_status_end >= application_status_begin) {
       help_buf_pointer = 0;
-      for (i=application_status_begin;i<=application_status_end && help_buf_pointer < 254 ;i++) {
+      for (i=application_status_begin;i<application_status_end && help_buf_pointer < 254 ;i++) {
          help_buf[help_buf_pointer++] = buffer[i];
       }
       help_buf[help_buf_pointer] = 0;

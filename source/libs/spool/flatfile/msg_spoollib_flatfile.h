@@ -35,16 +35,16 @@
 /* 
  * libs/spool/sge_spooling_flatfile.c
  */
-#define MSG_FLATFILE_NODATATOSPOOL  _MESSAGE(62000, _("no data available for spooling\n"))
-#define MSG_UNKNOWNATTRIBUTENAME_S _MESSAGE(62003, _("unknown attribute name "SFQ"\n"))
-#define MSG_DONTKNOWHOWTOHANDLELIST_S  _MESSAGE(62006, _("don't know how to handle sublist "SFQ"\n"))
-#define MSG_FLATFILE_ATTRIBISMISSING_S  _MESSAGE(62008, _("required attribute "SFQ" is missing\n"))
-#define MSG_FLATFILE_DUPLICATEATTRIB_S  _MESSAGE(62009, _("attribute "SFQ" appears more than once\n"))
-#define MSG_PARSINGOBJECTNOATTRIBUTE_D  _MESSAGE(62010, _("line %d should begin with an attribute name\n"))
-#define MSG_PARSINGOBJECTNAMEVALUESEP_SD  _MESSAGE(62011, _(SFQ" is the only character allowed between the attribute name and the value in line %d\n"))
-#define MSG_PARSINGOBJECTUNKNOWNTRAILER_DS  _MESSAGE(62012, _("unrecognized characters after the attribute values in line %d: "SFQ"\n"))
-#define MSG_PARSINGLISTBADRECORDSTART_DS  _MESSAGE(62013, _("each value in the attribute value list in line %d should begin with "SFQ"\n"))
-#define MSG_PARSINGLISTBADRECORDEND_DS  _MESSAGE(62014, _("each value in the attribute value list in line %d should end with "SFQ"\n"))
-#define MSG_PARSINGLISTBADRECORDSEP_DS  _MESSAGE(62015, _("values in the attribute value list in line %d should be separated by "SFQ"\n"))
+#define MSG_FLATFILE_NODATATOSPOOL  _MESSAGE(62000, _("no data available for spooling"))
+#define MSG_UNKNOWNATTRIBUTENAME_S _MESSAGE(62003, _("unknown attribute name "SFQ))
+#define MSG_DONTKNOWHOWTOHANDLELIST_S  _MESSAGE(62006, _("don't know how to handle sublist "SFQ))
+#define MSG_FLATFILE_ATTRIBISMISSING_S  _MESSAGE(62008, _("required attribute "SFQ" is missing"))
+#define MSG_FLATFILE_DUPLICATEATTRIB_S  _MESSAGE(62009, _("attribute "SFQ" appears more than once"))
+#define MSG_PARSINGOBJECTNOATTRIBUTE_D  _MESSAGE(62010, _("line %d should begin with an attribute name"))
+#define MSG_PARSINGOBJECTNAMEVALUESEP_SD  _MESSAGE(62011, _(SFQ" is the only character allowed between the attribute name and the value in line %d"))
+#define MSG_PARSINGOBJECTUNKNOWNTRAILER_DS  _MESSAGE(62012, _("unrecognized characters after the attribute values in line %d: "SFQ))
+#define MSG_PARSINGLISTBADRECORDSTART_DS  _MESSAGE(62013, _("each value in the attribute value list in line %d should begin with "SFQ))
+#define MSG_PARSINGLISTBADRECORDEND_DS  _MESSAGE(62014, _("each value in the attribute value list in line %d should end with "SFQ))
+#define MSG_PARSINGLISTBADRECORDSEP_DS  _MESSAGE(62015, _("values in the attribute value list in line %d should be separated by "SFQ))
 
 #endif /* __MSG_SPOOLLIB_FLATFILE_H */

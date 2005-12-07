@@ -93,6 +93,15 @@ extern "C" {
 *        The actual problem is that when determining the urgency number 
 *        the number of slots finally assigned is not yet known. The following
 *        settings are supported: min/max/avg/<fixed integer> 
+*  
+*     SGE_STRING(PE_qsort_args)
+*        Specifies the dynamic library, function name, and string arguments
+*        that should be called instead of the queue sort function once
+*        the candidate queues for a job have been located.  The format is:
+*        library_name function_name [strings_arguments ...]. The entire
+*        string is passed to the function as the second argument.
+*        NOTE: This is only available when compiled with -DSGE_PQS_API
+*
 ******************************************************************************/
 enum {
    PE_name = PE_LOWERBOUND,  
@@ -106,7 +115,12 @@ enum {
    PE_job_is_first_task,
    PE_free_slots,
    PE_resource_utilization,
-   PE_urgency_slots            
+#ifdef SGE_PQS_API
+   PE_urgency_slots,
+   PE_qsort_args
+#else
+   PE_urgency_slots
+#endif
 };
 
 
@@ -123,6 +137,9 @@ ILISTDEF(PE_Type, ParallelEnvironment, SGE_PE_LIST)
    SGE_ULONG(PE_free_slots, CULL_DEFAULT)
    SGE_LIST(PE_resource_utilization, RUE_Type, CULL_DEFAULT)
    SGE_STRING(PE_urgency_slots, CULL_DEFAULT | CULL_SPOOL)
+#ifdef SGE_PQS_API
+   SGE_STRING(PE_qsort_args, CULL_DEFAULT | CULL_SPOOL)
+#endif
 LISTEND 
 
 NAMEDEF(PEN)
@@ -138,6 +155,9 @@ NAMEDEF(PEN)
    NAME("PE_free_slots")
    NAME("PE_resource_utilization")
    NAME("PE_urgency_slots")
+#ifdef SGE_PQS_API
+   NAME("PE_qsort_args")
+#endif
 NAMEEND
 
 /* *INDENT-ON* */ 

@@ -103,7 +103,7 @@ schedd_conf_update_master_list(sge_object_type type,
    }
 
    if (sconf_set_config(&list, &answer_list)){
-      list = lFreeList(list);
+      lFreeList(&list);
       answer_list_output(&answer_list);
    }
 

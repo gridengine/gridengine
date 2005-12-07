@@ -50,16 +50,16 @@
 #include "sge_time.h"
 #include "qm_name.h"
 #include "execd.h"
+#include "uti/sge_monitor.h"
 
 /* number of messages to cache in server process
    the rest stays in commd */
-#define RECEIVE_CACHESIZE 1
+#define RECEIVE_CACHESIZE 10
 
 /* range for sleep if we cant contact commd */
 #define CONNECT_PROBLEM_SLEEP_MIN 10
 #define CONNECT_PROBLEM_SLEEP_MAX 120
 #define CONNECT_PROBLEM_SLEEP_INC 10
-
 
 /* Cache we need for buffering inbound messages */
 typedef struct pbcache {
@@ -80,6 +80,24 @@ static int deleteCacheTags(pbcache **lastBeforeThisCall, int *tagarray);
 static int alloc_de(dispatch_entry *de);
 static void free_de(dispatch_entry *de);
 static int copy_de(dispatch_entry *dedst, dispatch_entry *desrc);
+static int receive_message(dispatch_entry *de, sge_pack_buffer **pb, int* tagarray,
+                           void              (*errfunc)(const char *));
+
+
+static int receive_message(dispatch_entry *de, sge_pack_buffer **pb, int* tagarray, 
+                           void              (*errfunc)(const char *)) 
+{
+   int ret;
+   DENTER(TOP_LAYER, "receive_message");
+
+      ret = receive_message_cach_n_ack(de, pb, tagarray, RECEIVE_CACHESIZE, errfunc); 
+
+      DPRINTF(("receive_message_cach_n_ack() returns: %s (%s/%s/%d)\n", 
+               cl_get_error_text(ret), de->host, de->commproc, de->id)); 
+   
+   DEXIT;
+   return ret;
+}
 
 
 /*********************************************************
@@ -138,6 +156,8 @@ int dispatch( dispatch_entry*   table,
    sge_pack_buffer *pb = NULL, apb;
    int synchron = 0;
    time_t next_prof_output = 0;
+   monitoring_t monitor;
+   u_long32 monitor_time = 0; /* will never change in case of an execd, disables the monitoring */
 
    DENTER(TOP_LAYER, "dispatch");
 
@@ -147,13 +167,16 @@ int dispatch( dispatch_entry*   table,
       return -1;
    }
 
+   sge_monitor_init(&monitor, "dispatcher", NONE_EXT, EXECD_WARNING, EXECD_ERROR);
+
    alloc_de(&de);       /* malloc fields in de */
 
    terminate = 0;
    errorcode = CL_RETVAL_OK;
 
    while (!terminate) {
-
+      sge_monitor_output(&monitor);
+      
       PROF_START_MEASUREMENT(SGE_PROF_CUSTOM2);
       /* Scan table to see what we are waiting for 
          We have to build a receive pattern which matches all entries in the
@@ -174,117 +197,124 @@ int dispatch( dispatch_entry*   table,
             de.id = 0;
       }
 
-
-      /*  trigger communication
-       *  =====================
-       *  -> this will block 1 second , when there are no messages to read/write 
-       */
-
-      i = receive_message_cach_n_ack(&de, &pb, tagarray, RECEIVE_CACHESIZE, errfunc); 
-
-      DPRINTF(("receive_message_cach_n_ack() returns: %s (%s/%s/%d)\n", 
-               cl_get_error_text(i), de.host, de.commproc, de.id)); 
-
-      if (i != CL_RETVAL_OK) {
-         cl_commlib_trigger(cl_com_get_handle( "execd" ,1));
-      }
-      sge_update_thread_alive_time(SGE_EXECD_MAIN);
-
+      MONITOR_IDLE_TIME((i = receive_message(&de, &pb, tagarray, errfunc)), (&monitor), monitor_time, false);
+      MONITOR_MESSAGES((&monitor));
+      
       switch (i) {
-      case CL_RETVAL_CONNECTION_NOT_FOUND:  /* is renewed */
-        de.tag = -1;  
+      case CL_RETVAL_CONNECTION_NOT_FOUND:  /* we lost connection to qmaster */
+      case CL_RETVAL_CONNECT_ERROR:         /* or we can't connect */
         do_re_register = true;
         /* no break; */
       case CL_RETVAL_NO_MESSAGE:
       case CL_RETVAL_SYNC_RECEIVE_TIMEOUT:
       case CL_RETVAL_OK:
-
-         /* 
-          * trigger re-read of act_qmaster_file in case of
-          * do_re_register == true
-          */
-         if (do_re_register == true) {
-            u_long32 now = sge_get_gmt();
-            static u_long32 last_qmaster_file_read = 0;
-            if ( now - last_qmaster_file_read >= 5 ) {
-               /* re-read act qmaster file (max. every 5 seconds) */
-               DPRINTF(("re-read actual qmaster file\n"));
-               sge_get_master(true);
-               last_qmaster_file_read = now;
-            }
-         }
-
-         if (do_re_register == true && i != CL_RETVAL_CONNECTION_NOT_FOUND) {
-            /* re-register at qmaster when connection is up again */
-            if ( sge_execd_register_at_qmaster() == 0) {
-               do_re_register = false;
-            }
-         }
-         /* look for dispatch entries matching the inbound message or
-            entries activated at idle times */
-         for (ntab=0; ntab<tabsize; ntab++) {
-            if (match_dpe(&de, &table[ntab])) {
-               sigset_t old_sigset, sigset;
-
-               if(init_packbuffer(&apb, 1024, 0) != PACK_SUCCESS) {
-                  free_de(&de);
-                  PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM2);
-                  DEXIT;
-                  return CL_RETVAL_MALLOC;
-               }
-
-               /* block these signals in application code */ 
-               sigemptyset(&sigset);
-               sigaddset(&sigset, SIGINT);
-               sigaddset(&sigset, SIGTERM);
-               sigaddset(&sigset, SIGCHLD);
-#ifdef SIGCLD
-               sigaddset(&sigset, SIGCLD);
-#endif
-               sigprocmask(SIG_BLOCK, &sigset, &old_sigset);
-
-               j = table[ntab].func(&de, pb, &apb, &rcvtimeoutt, &synchron, 
-                                    err_str, 0);
-
-               sigprocmask(SIG_SETMASK, &old_sigset, NULL);
-
-               rcvtimeoutt = MIN(rcvtimeout, rcvtimeoutt);
-               
-               /* if apb is filled send it back to the requestor */
-               if (pb_filled(&apb)) {              
-                  i = gdi_send_message_pb(synchron, de.commproc, de.id, de.host, 
-                                   de.tag, &apb, &dummyid);
-                  if (i != CL_RETVAL_OK) {
-                     DPRINTF(("gdi_send_message_pb() returns: %s (%s/%s/%d)\n", 
-                               cl_get_error_text(i), de.host, de.commproc, de.id));
-                  }
-               }
-               clear_packbuffer(&apb);
-
-               switch (j) {
-               case -1:
-                  terminate = 1;
-                  errorcode = CL_RETVAL_UNKNOWN;
-                  break;
-               case 1:
-                  terminate = 1;
-                  errorcode = CL_RETVAL_OK;
-                  break;
-               }
-            }
-         }
-         clear_packbuffer(pb);
-         if (pb) 
-            free(pb); /* allocated in receive_message_cach_n_ack() */
-
          break;
       default:
-         sprintf(err_str, MSG_COM_NORCVMSG_S, cl_get_error_text(i));
-         free_de(&de);
-         PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM2);
-         DEXIT;
-         return i;
+         do_re_register = true; /* unexpected error, do reregister */
+         if (cl_com_get_handle("execd" ,1) == NULL) {
+            terminate = 1; /* if we don't have a handle, we must leave
+                            * because execd_register will create a new one.
+                            * This error would be realy strange, because
+                            * if this happens the local socket was destroyed.
+                            */
+         }
       }
+
+      if (sge_get_com_error_flag(SGE_COM_ACCESS_DENIED) == true ||
+          sge_get_com_error_flag(SGE_COM_ENDPOINT_NOT_UNIQUE) == true) {
+         terminate = 1; /* leave dispatcher */
+      }
+
+      if (sge_get_com_error_flag(SGE_COM_WAS_COMMUNICATION_ERROR) == true) {
+         do_re_register = true;
+      }
+
+      /* 
+       * trigger re-read of act_qmaster_file in case of
+       * do_re_register == true
+       */
+      if (do_re_register == true) {
+         u_long32 now = sge_get_gmt();
+         static u_long32 last_qmaster_file_read = 0;
+         
+         de.tag = -1;
+
+         if ( now - last_qmaster_file_read >= 30 ) {
+            /* re-read act qmaster file (max. every 30 seconds) */
+            DPRINTF(("re-read actual qmaster file\n"));
+            sge_get_master(true);
+            last_qmaster_file_read = now;
+            if (i != CL_RETVAL_CONNECTION_NOT_FOUND &&
+                i != CL_RETVAL_CONNECT_ERROR) {
+               /* re-register at qmaster when connection is up again */
+               if ( sge_execd_register_at_qmaster() == 0) {
+                  do_re_register = false;
+               }
+            }
+         }
+      }
+
+
+
+      /* look for dispatch entries matching the inbound message or
+         entries activated at idle times */
+      for (ntab=0; ntab<tabsize; ntab++) {
+         if (match_dpe(&de, &table[ntab])) {
+            sigset_t old_sigset, sigset;
+
+            if(init_packbuffer(&apb, 1024, 0) != PACK_SUCCESS) {
+               free_de(&de);
+               sge_monitor_free(&monitor);
+               PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM2);
+               DEXIT;
+               return CL_RETVAL_MALLOC;
+            }
+
+            /* block these signals in application code */ 
+            sigemptyset(&sigset);
+            sigaddset(&sigset, SIGINT);
+            sigaddset(&sigset, SIGTERM);
+            sigaddset(&sigset, SIGCHLD);
+#ifdef SIGCLD
+            sigaddset(&sigset, SIGCLD);
+#endif
+            sigprocmask(SIG_BLOCK, &sigset, &old_sigset);
+
+            j = table[ntab].func(&de, pb, &apb, &rcvtimeoutt, &synchron, 
+                                 err_str, 0);
+
+            sigprocmask(SIG_SETMASK, &old_sigset, NULL);
+
+            cl_commlib_trigger(cl_com_get_handle("execd",1) ,0);
+
+            rcvtimeoutt = MIN(rcvtimeout, rcvtimeoutt);
+            
+            /* if apb is filled send it back to the requestor */
+            if (pb_filled(&apb)) {              
+               i = gdi_send_message_pb(synchron, de.commproc, de.id, de.host, 
+                                de.tag, &apb, &dummyid);
+               MONITOR_MESSAGES_OUT((&monitor));
+               if (i != CL_RETVAL_OK) {
+                  DPRINTF(("gdi_send_message_pb() returns: %s (%s/%s/%d)\n", 
+                            cl_get_error_text(i), de.host, de.commproc, de.id));
+               }
+            }
+            clear_packbuffer(&apb);
+
+            switch (j) {
+            case -1:
+               do_re_register = true;
+               break;
+            case 1:
+               DPRINTF(("TERMINATE dispatcher because j == 1\n"));
+               terminate = 1;
+               errorcode = CL_RETVAL_OK;
+               break;
+            }
+         }
+      }
+      clear_packbuffer(pb);
+      FREE(pb); /* allocated in receive_message_cach_n_ack() */
 
       DPRINTF(("====================[ DISPATCH EPOCH ]===========================\n"));
 
@@ -301,6 +331,7 @@ int dispatch( dispatch_entry*   table,
       }
    }
 
+   sge_monitor_free(&monitor);
    free_de(&de);
    DEXIT;
    return errorcode;
@@ -358,7 +389,6 @@ static int receive_message_cach_n_ack( dispatch_entry*    de,
    dispatch_entry deact, lastde;
    int i, receive_blocking;
    u_long32 tmpul, tmpul2;
-   u_short compressed;
 
    DENTER(TOP_LAYER, "receive_message_cach_n_ack");
 
@@ -372,7 +402,7 @@ static int receive_message_cach_n_ack( dispatch_entry*    de,
       deliver to the caller. Else we get all we can get and then return
       what we already have. ++ TODO use this pointers later too */
    cacheptr = cache;
-   receive_blocking = 0;
+   receive_blocking = 1;
 
    while (cacheptr) {
       if (match_dpe(cacheptr->de, de)) { 
@@ -391,14 +421,14 @@ static int receive_message_cach_n_ack( dispatch_entry*    de,
    while (cached_pbs < cachesize && i == CL_RETVAL_OK) {
       copy_de(&deact, de);
 
+      cl_commlib_trigger(cl_com_get_handle( "execd" ,1), receive_blocking );
 
-      i = gdi_receive_message(deact.commproc, &deact.id, deact.host, &deact.tag, 
-                          &buffer, &buflen, receive_blocking, &compressed);
+      i = gdi_receive_message(deact.commproc, &deact.id, deact.host, 
+                              &deact.tag, &buffer, &buflen, 0);
+      DPRINTF(("receiving message (cached="sge_U32CFormat") returned "SFQ"\n", sge_u32c(cached_pbs), cl_get_error_text(i)));
 
 
-
-/*
-      receive_blocking = 0;   */  /* second receive is always non blocking */
+      receive_blocking = 0;   /* second receive is always non blocking */
       if (i == CL_RETVAL_OK) {
          int pack_ret;
 
@@ -411,7 +441,7 @@ static int receive_message_cach_n_ack( dispatch_entry*    de,
          alloc_de(new->de);
          copy_de(new->de, &deact);
          new->next = 0;
-         pack_ret = init_packbuffer_from_buffer(new->pb, buffer, buflen, compressed);
+         pack_ret = init_packbuffer_from_buffer(new->pb, buffer, buflen);
          if(pack_ret != PACK_SUCCESS) {
             ERROR((SGE_EVENT, MSG_EXECD_INITPACKBUFFERFAILED_S, cull_pack_strerror(pack_ret)));
             continue;
@@ -428,7 +458,7 @@ static int receive_message_cach_n_ack( dispatch_entry*    de,
             acknowledge to apb. Else we have to send the acknowledge and
             reinitialize apb */
 
-         if (apb.head_ptr) {  /* only if there is allready an acknowlege */
+         if (apb.head_ptr) {  /* only if there is already an acknowlege */
             if (lastde.id != deact.id || sge_hostcmp(lastde.host, deact.host) ||
                 strcmp(lastde.commproc, deact.commproc)) {
                /* this is another sender -> send ack to last sender */

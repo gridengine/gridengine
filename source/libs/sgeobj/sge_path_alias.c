@@ -229,10 +229,13 @@ static int path_alias_read_from_file(lList **path_alias_list, lList **alpp,
 
    } /* while (fgets) */
 
-   fclose(fd);
+   FCLOSE(fd);
 
    DEXIT;
    return ret;
+FCLOSE_ERROR:
+   DEXIT;
+   return -1;
 }
 
 /****** sgeobj/path_alias/path_alias_list_initialize() ************************
@@ -335,7 +338,7 @@ int path_alias_list_initialize(lList **path_alias_list,
       where = lWhere("%T(%I == %s || %I == %s)", PA_Type, 
                      PA_submit_host, "*", PA_submit_host, host);
       *path_alias_list = lSelectDestroy(*path_alias_list, where);
-      where = lFreeWhere(where);
+      lFreeWhere(&where);
    }
 
    DEXIT;

@@ -5,8 +5,10 @@
 
 #include <string.h>
 
-#include "cull.h"
-#include "cull_whatP.h"
+#include "cull/cull.h"
+#include "cull/cull_whatP.h"
+
+#include "uti/sge_profiling.h"
 
 enum {
    TEST_int = 1,
@@ -122,7 +124,7 @@ bool test_lWhat_ALL(void)
               what[i].mt == result[j + 1] &&
               what[i].pos == result[j + 2]);
    }
-   what = lFreeWhat(what);
+   lFreeWhat(&what);
    return ret;
 }
 
@@ -141,7 +143,7 @@ bool test_lWhat_NONE(void)
               what[i].mt == result[j + 1] &&
               what[i].pos == result[j + 2]);
    }
-   what = lFreeWhat(what);
+   lFreeWhat(&what);
    return ret;
 }
 
@@ -169,8 +171,8 @@ bool test_lWhat_enumeration(lEnumeration *what, int *result,
       *pos_result = *pos_result + 4;
 
       if (what[*pos_what].ep != NULL) {
-         ret != test_lWhat_enumeration(what[*pos_what].ep, result, 
-                                       &tmp_pos_what, pos_result, tmp_max);
+         ret &= test_lWhat_enumeration(what[*pos_what].ep, result, 
+                                      &tmp_pos_what, pos_result, tmp_max);
       } 
 
       *pos_what = *pos_what + 1;
@@ -193,7 +195,7 @@ bool test_lWhat_simple(void)
    int pos_result = 0;
 
    ret &= test_lWhat_enumeration(what, result, &pos_what, &pos_result, max);
-   what = lFreeWhat(what);
+   lFreeWhat(&what);
    return ret;
 }
 
@@ -230,7 +232,7 @@ bool test_lWhat_complex(void)
    int pos_result = 0;
 
    ret &= test_lWhat_enumeration(what, result, &pos_what, &pos_result, max);
-   what = lFreeWhat(what);
+   lFreeWhat(&what);
    return ret;
 }
 
@@ -264,8 +266,8 @@ bool test_lCountWhat(void)
    ret &= (elements == 5);
    ret &= (elements == lCountWhat(what2, TEST_Type));
 
-   what1 = lFreeWhat(what1);
-   what2 = lFreeWhat(what2);
+   lFreeWhat(&what1);
+   lFreeWhat(&what2);
 
    return ret;
 }
@@ -310,9 +312,13 @@ bool test_lReduceDescr(void)
    ret &= (lCountDescr(dst_descriptor3) == 5);
    ret &= (5 == lCountWhat(what3, TEST_Type));
    
-   what1 = lFreeWhat(what1);
-   what2 = lFreeWhat(what2);
-   what3 = lFreeWhat(what3);
+   lFreeWhat(&what1);
+   lFreeWhat(&what2);
+   lFreeWhat(&what3);
+
+   FREE(dst_descriptor1);
+   FREE(dst_descriptor2);
+   FREE(dst_descriptor3);
 
    return ret;
 }
@@ -372,13 +378,13 @@ bool test_lCopyWhat(void)
    fprintf(stderr, "\n");
 #endif
    
-   what1 = lFreeWhat(what1);
-   what2 = lFreeWhat(what2);
-   what3 = lFreeWhat(what3);
+   lFreeWhat(&what1);
+   lFreeWhat(&what2);
+   lFreeWhat(&what3);
 
-   dst_what1 = lFreeWhat(dst_what1);
-   dst_what2 = lFreeWhat(dst_what2);
-   dst_what3 = lFreeWhat(dst_what3);
+   lFreeWhat(&dst_what1);
+   lFreeWhat(&dst_what2);
+   lFreeWhat(&dst_what3);
 
    return ret;
 }
@@ -395,9 +401,9 @@ bool test_lIntVector2What(void)
   
    ret &= (enumeration_compare(what1, dst_what1) == 0);   
 
-   what1 = lFreeWhat(what1);
+   lFreeWhat(&what1);
 
-   dst_what1 = lFreeWhat(dst_what1);
+   lFreeWhat(&dst_what1);
 
    return ret;
 }
@@ -422,9 +428,9 @@ bool test_lWhatXElem(void)
 
    ret &= (enumeration_compare(what1, what2) == 0);
 
-   elem1 = lFreeElem(elem1);
-   what1 = lFreeWhat(what1);
-   what2 = lFreeWhat(what1);
+   lFreeElem(&elem1);
+   lFreeWhat(&what1);
+   lFreeWhat(&what2);
 
    return ret;
 }
@@ -447,8 +453,8 @@ bool test_lWhat_lSelect(void)
                                  TEST_object, TEST1_Type, 
                                     TEST1_string,
                                  TEST_string);
-   lListElem *elem  = lCreateElem(TEST_Type);
-   lListElem *elem1 = lCreateElem(TEST_Type);
+   lListElem *elem;
+   lListElem *elem1;
    lList *list = lCreateList("", TEST_Type);
    lList *list1 = NULL;
    int i;
@@ -508,15 +514,19 @@ bool test_lWhat_lSelect(void)
    lWriteListTo(list1, stderr);
 #endif
 
-   what = lFreeWhat(what);
-   elem = lFreeElem(elem);
-   elem1 = lFreeElem(elem1);
+   lFreeWhat(&what);
+   lFreeElem(&elem);
+   lFreeElem(&elem1);
+   lFreeList(&list);
+   lFreeList(&list1);
+
    return ret;
 }
 
 int main(int argc, char *argv[])
 {
    lInit(nmv);
+   sge_prof_setup();
 
    printf("lWhat() ... %s\n", 
           test_lWhat() ? "Ok" : "Failed");

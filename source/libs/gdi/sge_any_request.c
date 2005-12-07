@@ -56,12 +56,31 @@ static pthread_mutex_t check_alive_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 static int gdi_log_flush_func(cl_raw_list_t* list_p);
 
-/* setup a communication error callback */
+/* setup a communication error callback and mutex for it */
 static pthread_mutex_t general_communication_error_mutex = PTHREAD_MUTEX_INITIALIZER;
-static void general_communication_error(int cl_err, const char* error_message);
-static int   last_general_communication_error = CL_RETVAL_OK;
-static char* last_general_communication_error_string = NULL;
-static int gdi_general_communication_error = CL_RETVAL_OK;
+static void general_communication_error(const cl_application_error_list_elem_t* commlib_error);
+/* local static struct to store communication errors. The boolean
+ * values com_access_denied and com_endpoint_not_unique will never be
+ * restored to false again 
+ */
+typedef struct sge_gdi_com_error_type {
+   int  com_error;                        /* current commlib error */
+   bool com_was_error;                    /* set if there was an communication error (but not CL_RETVAL_ACCESS_DENIED or CL_RETVAL_ENDPOINT_NOT_UNIQUE)*/
+   int  com_last_error;                   /* last logged commlib error */
+   bool com_access_denied;                /* set when commlib reports CL_RETVAL_ACCESS_DENIED */
+   int  com_access_denied_counter;        /* counts access denied errors (TODO: workaround for BT: 6350264, IZ: 1893) */
+   unsigned long com_access_denied_time; /* timeout for counts access denied errors (TODO: workaround for BT: 6350264, IZ: 1893) */
+   bool com_endpoint_not_unique;          /* set when commlib reports CL_RETVAL_ENDPOINT_NOT_UNIQUE */
+   int  com_endpoint_not_unique_counter;  /* counts access denied errors (TODO: workaround for BT: 6350264, IZ: 1893) */
+   unsigned long com_endpoint_not_unique_time; /* timeout for counts access denied errors (TODO: workaround for BT: 6350264, IZ: 1893) */
+} sge_gdi_com_error_t;
+static sge_gdi_com_error_t sge_gdi_communication_error = {CL_RETVAL_OK,
+                                                          false,
+                                                          CL_RETVAL_OK,
+                                                          false, 0, 0,
+                                                          false, 0, 0};
+
+
 #ifdef DEBUG_CLIENT_SUPPORT
 static void gdi_rmon_print_callback_function(const char *message, unsigned long traceid, unsigned long pid, unsigned long thread_id);
 #endif
@@ -176,28 +195,28 @@ static int gdi_log_flush_func(cl_raw_list_t* list_p) {
       switch(elem->log_type) {
          case CL_LOG_ERROR: 
             if ( log_state_get_log_level() >= LOG_ERR) {
-               ERROR((SGE_EVENT,  "%s %-20s=> %s %s\n", elem->log_module_name, elem->log_thread_name, elem->log_message, param ));
+               ERROR((SGE_EVENT,  "%s %-20s=> %s %s", elem->log_module_name, elem->log_thread_name, elem->log_message, param ));
             } else {
                printf("%s %-20s=> %s %s\n", elem->log_module_name, elem->log_thread_name, elem->log_message, param);
             }
             break;
          case CL_LOG_WARNING:
             if ( log_state_get_log_level() >= LOG_WARNING) {
-               WARNING((SGE_EVENT,"%s %-20s=> %s %s\n", elem->log_module_name, elem->log_thread_name, elem->log_message, param ));
+               WARNING((SGE_EVENT,"%s %-20s=> %s %s", elem->log_module_name, elem->log_thread_name, elem->log_message, param ));
             } else {
                printf("%s %-20s=> %s %s\n", elem->log_module_name, elem->log_thread_name, elem->log_message, param);
             }
             break;
          case CL_LOG_INFO:
             if ( log_state_get_log_level() >= LOG_INFO) {
-               INFO((SGE_EVENT,   "%s %-20s=> %s %s\n", elem->log_module_name, elem->log_thread_name, elem->log_message, param ));
+               INFO((SGE_EVENT,   "%s %-20s=> %s %s", elem->log_module_name, elem->log_thread_name, elem->log_message, param ));
             } else {
                printf("%s %-20s=> %s %s\n", elem->log_module_name, elem->log_thread_name, elem->log_message, param);
             }
             break;
          case CL_LOG_DEBUG:
             if ( log_state_get_log_level() >= LOG_DEBUG) { 
-               DEBUG((SGE_EVENT,  "%s %-20s=> %s %s\n", elem->log_module_name, elem->log_thread_name, elem->log_message, param ));
+               DEBUG((SGE_EVENT,  "%s %-20s=> %s %s", elem->log_module_name, elem->log_thread_name, elem->log_message, param ));
             } else {
                printf("%s %-20s=> %s %s\n", elem->log_module_name, elem->log_thread_name, elem->log_message, param);
             }
@@ -239,100 +258,216 @@ static int gdi_log_flush_func(cl_raw_list_t* list_p) {
 *     const char* error_message - additional error text message
 *
 *  NOTES
-*     MT-NOTE: general_communication_error() is not MT safe 
-*     (static variable "gdi_general_communication_error" is used)
-*     TODO: Implement an error pop/push stack.
+*     MT-NOTE: general_communication_error() is MT safe 
+*     (static struct variable "sge_gdi_communication_error" is used)
 *
 *
 *  SEE ALSO
-*     sge_any_request/sge_get_communication_error()
+*     sge_any_request/sge_get_com_error_flag()
 *******************************************************************************/
-static void general_communication_error(int cl_error, const char* error_message) {
-   bool do_log = false;
-
+static void general_communication_error(const cl_application_error_list_elem_t* commlib_error) {
    DENTER(TOP_LAYER, "general_communication_error");
+   if (commlib_error != NULL) {
+      struct timeval now;
+      unsigned long time_diff = 0;
 
-   sge_mutex_lock("general_communication_error_mutex", SGE_FUNC, __LINE__, &general_communication_error_mutex);  
+      sge_mutex_lock("general_communication_error_mutex",
+                     SGE_FUNC, __LINE__, &general_communication_error_mutex);  
 
-   do_log = false;
-   /* don't log the same error twice */
-   if ( cl_error != last_general_communication_error ) {
-      do_log = true;
-   } else {
-      /* check if there is a difference in error_message text */
-      if ( last_general_communication_error_string != NULL && error_message == NULL ) {
-         do_log = true;
-      }
-      if ( last_general_communication_error_string == NULL && error_message != NULL ) {
-         do_log = true;
-      }
-      if ( last_general_communication_error_string != NULL && error_message != NULL ) {
-         /* check the string itself */
-         if (strcmp(last_general_communication_error_string, error_message) != 0 ) {
-            do_log = true;
+      /* save the communication error to react later */
+      sge_gdi_communication_error.com_error = commlib_error->cl_error;
+
+      switch (commlib_error->cl_error) {
+         case CL_RETVAL_OK: {
+            break;
+         }
+         case CL_RETVAL_ACCESS_DENIED: {
+            if (sge_gdi_communication_error.com_access_denied == false) {
+               /* counts access denied errors (TODO: workaround for BT: 6350264, IZ: 1893) */
+               /* increment counter only once per second and allow max CL_DEFINE_READ_TIMEOUT + 2 access denied */
+               gettimeofday(&now,NULL);
+               if ( (now.tv_sec - sge_gdi_communication_error.com_access_denied_time) > (3*CL_DEFINE_READ_TIMEOUT) ) {
+                  sge_gdi_communication_error.com_access_denied_time = 0;
+                  sge_gdi_communication_error.com_access_denied_counter = 0;
+               }
+
+               if (sge_gdi_communication_error.com_access_denied_time < now.tv_sec) {
+                  if (sge_gdi_communication_error.com_access_denied_time == 0) {
+                     time_diff = 1;
+                  } else {
+                     time_diff = now.tv_sec - sge_gdi_communication_error.com_access_denied_time;
+                  }
+                  sge_gdi_communication_error.com_access_denied_counter += time_diff;
+                  if (sge_gdi_communication_error.com_access_denied_counter > (2*CL_DEFINE_READ_TIMEOUT) ) {
+                     sge_gdi_communication_error.com_access_denied = true;
+                  }
+                  sge_gdi_communication_error.com_access_denied_time = now.tv_sec;
+               }
+            }
+            break;
+         }
+         case CL_RETVAL_ENDPOINT_NOT_UNIQUE: {
+            if (sge_gdi_communication_error.com_endpoint_not_unique == false) {
+               /* counts endpoint not unique errors (TODO: workaround for BT: 6350264, IZ: 1893) */
+               /* increment counter only once per second and allow max CL_DEFINE_READ_TIMEOUT + 2 endpoint not unique */
+               DPRINTF(("got endpint not unique"));
+               gettimeofday(&now,NULL);
+               if ( (now.tv_sec - sge_gdi_communication_error.com_endpoint_not_unique_time) > (3*CL_DEFINE_READ_TIMEOUT) ) {
+                  sge_gdi_communication_error.com_endpoint_not_unique_time = 0;
+                  sge_gdi_communication_error.com_endpoint_not_unique_counter = 0;
+               }
+
+               if (sge_gdi_communication_error.com_endpoint_not_unique_time < now.tv_sec) {
+                  if (sge_gdi_communication_error.com_endpoint_not_unique_time == 0) {
+                     time_diff = 1;
+                  } else {
+                     time_diff = now.tv_sec - sge_gdi_communication_error.com_endpoint_not_unique_time;
+                  }
+                  sge_gdi_communication_error.com_endpoint_not_unique_counter += time_diff;
+                  if (sge_gdi_communication_error.com_endpoint_not_unique_counter > (2*CL_DEFINE_READ_TIMEOUT) ) {
+                     sge_gdi_communication_error.com_endpoint_not_unique = true;
+                  }
+                  sge_gdi_communication_error.com_endpoint_not_unique_time = now.tv_sec;
+               }
+            }
+            break;
+         }
+         default: {
+            sge_gdi_communication_error.com_was_error = true;
+            break;
          }
       }
-   }
 
-   if ( do_log == true ) {
-      /* This will log the reported error */
-      if (error_message != NULL) {
-         ERROR((SGE_EVENT, MSG_GDI_GENERAL_COM_ERROR_SS ,cl_get_error_text(cl_error), error_message));
-      } else {
-         ERROR((SGE_EVENT, MSG_GDI_GENERAL_COM_ERROR_S ,cl_get_error_text(cl_error)));
+
+      /*
+       * now log the error if not already reported the 
+       * least CL_DEFINE_MESSAGE_DUP_LOG_TIMEOUT seconds
+       */
+      if (commlib_error->cl_already_logged == CL_FALSE && 
+         sge_gdi_communication_error.com_last_error != sge_gdi_communication_error.com_error) {
+
+         /*  never log the same messages again and again (commlib
+          *  will erase cl_already_logged flag every CL_DEFINE_MESSAGE_DUP_LOG_TIMEOUT
+          *  seconds (30 seconds), so we have to save the last one!
+          */
+         sge_gdi_communication_error.com_last_error = sge_gdi_communication_error.com_error;
+
+         switch (commlib_error->cl_err_type) {
+            case CL_LOG_ERROR: {
+               if (commlib_error->cl_info != NULL) {
+                  ERROR((SGE_EVENT, MSG_GDI_GENERAL_COM_ERROR_SS,
+                         cl_get_error_text(commlib_error->cl_error),
+                         commlib_error->cl_info));
+               } else {
+                  ERROR((SGE_EVENT, MSG_GDI_GENERAL_COM_ERROR_S,
+                         cl_get_error_text(commlib_error->cl_error)));
+               }
+               break;
+            }
+            case CL_LOG_WARNING: {
+               if (commlib_error->cl_info != NULL) {
+                  WARNING((SGE_EVENT, MSG_GDI_GENERAL_COM_ERROR_SS,
+                           cl_get_error_text(commlib_error->cl_error),
+                           commlib_error->cl_info));
+               } else {
+                  WARNING((SGE_EVENT, MSG_GDI_GENERAL_COM_ERROR_S,
+                           cl_get_error_text(commlib_error->cl_error)));
+               }
+               break;
+            }
+            case CL_LOG_INFO: {
+               if (commlib_error->cl_info != NULL) {
+                  INFO((SGE_EVENT, MSG_GDI_GENERAL_COM_ERROR_SS,
+                        cl_get_error_text(commlib_error->cl_error),
+                        commlib_error->cl_info));
+               } else {
+                  INFO((SGE_EVENT, MSG_GDI_GENERAL_COM_ERROR_S,
+                        cl_get_error_text(commlib_error->cl_error)));
+               }
+               break;
+            }
+            case CL_LOG_DEBUG: {
+               if (commlib_error->cl_info != NULL) {
+                  DEBUG((SGE_EVENT, MSG_GDI_GENERAL_COM_ERROR_SS,
+                         cl_get_error_text(commlib_error->cl_error),
+                         commlib_error->cl_info));
+               } else {
+                  DEBUG((SGE_EVENT, MSG_GDI_GENERAL_COM_ERROR_S,
+                         cl_get_error_text(commlib_error->cl_error)));
+               }
+               break;
+            }
+            case CL_LOG_OFF: {
+               break;
+            }
+         }
       }
-      last_general_communication_error_string = sge_strdup(last_general_communication_error_string, error_message);
-      last_general_communication_error = cl_error;
+      sge_mutex_unlock("general_communication_error_mutex", 
+                       SGE_FUNC, __LINE__, &general_communication_error_mutex);  
    }
-
-   gdi_general_communication_error = cl_error;
-
-   sge_mutex_unlock("general_communication_error_mutex", SGE_FUNC, __LINE__, &general_communication_error_mutex);  
-
    DEXIT;
 }
 
-/****** sge_any_request/sge_get_communication_error() **************************
+
+/****** sge_any_request/sge_get_com_error_flag() *******************************
 *  NAME
-*     sge_get_communication_error() -- get last communication error
+*     sge_get_com_error_flag() -- return gdi error flag state
 *
 *  SYNOPSIS
-*     int sge_get_communication_error(void) 
+*     bool sge_get_com_error_flag(sge_gdi_stored_com_error_t error_type) 
 *
 *  FUNCTION
-*     This function returns the last communication error. This procedure returns
-*     the last set communication error by communication lib callback.
+*     This function returns the error flag for the specified error type
+*
+*  INPUTS
+*     sge_gdi_stored_com_error_t error_type - error type value
 *
 *  RESULT
-*     int - last communication error
+*     bool - true: error has occured, false: error never occured
 *
 *  NOTES
-*     MT-NOTE: sge_get_communication_error() is not MT safe ( returns just 
-*     an static defined integer) but can be called by more threads without 
-*     problem. But it is possible to loose some errors when the commlib is
-*     calling general_communication_error(), because this would overwrite the
-*     last error.
-*
-*     TODO: Implement an error pop/push stack.
+*     MT-NOTE: sge_get_com_error_flag() is MT safe 
 *
 *  SEE ALSO
 *     sge_any_request/general_communication_error()
 *******************************************************************************/
-int sge_get_communication_error(void) {
-   int com_error = CL_RETVAL_OK;
+bool sge_get_com_error_flag(sge_gdi_stored_com_error_t error_type) {
+   bool ret_val = false;
+   DENTER(TOP_LAYER, "sge_get_com_error_flag");
+   sge_mutex_lock("general_communication_error_mutex", 
+                  SGE_FUNC, __LINE__, &general_communication_error_mutex);  
 
-   DENTER(TOP_LAYER, "sge_get_communication_error");
-   sge_mutex_lock("general_communication_error_mutex", SGE_FUNC, __LINE__, &general_communication_error_mutex);  
+   /* 
+    * never add a default case for that switch, because of compiler warnings
+    * for un-"cased" values 
+    */
 
-   com_error = gdi_general_communication_error;
-   if ( gdi_general_communication_error != CL_RETVAL_OK) {
-      gdi_general_communication_error = CL_RETVAL_OK;
+   /* TODO: remove uti_state_get_mewho() cases for QMASTER and EXECD after
+            BT: 6350264, IZ: 1893 is fixed */
+   switch (error_type) {
+      case SGE_COM_ACCESS_DENIED: {
+         ret_val = sge_gdi_communication_error.com_access_denied;
+         break;
+      }
+      case SGE_COM_ENDPOINT_NOT_UNIQUE: {
+         if ( uti_state_get_mewho() == QMASTER ||
+              uti_state_get_mewho() == EXECD ) {
+            ret_val = false;
+         } else { 
+            ret_val = sge_gdi_communication_error.com_endpoint_not_unique;
+         }
+         break;
+      }
+      case SGE_COM_WAS_COMMUNICATION_ERROR: {
+         ret_val = sge_gdi_communication_error.com_was_error;
+         sge_gdi_communication_error.com_was_error = false;  /* reset error flag */
+      }
    }
-
-   sge_mutex_unlock("general_communication_error_mutex", SGE_FUNC, __LINE__, &general_communication_error_mutex);  
+   sge_mutex_unlock("general_communication_error_mutex",
+                    SGE_FUNC, __LINE__, &general_communication_error_mutex);  
 
    DEXIT;
-   return com_error;
+   return ret_val;
 }
 
 /*-----------------------------------------------------------------------
@@ -342,7 +477,7 @@ int sge_get_communication_error(void) {
  * NOTES
  *    MT-NOTE: prepare_enroll() is MT safe
  *-----------------------------------------------------------------------*/
-void prepare_enroll(const char *name)
+int prepare_enroll(const char *name, int* last_commlib_error)
 {
    int ret_val;
    u_long32 me_who;
@@ -350,6 +485,8 @@ void prepare_enroll(const char *name)
    cl_host_resolve_method_t resolve_method = CL_SHORT;
    cl_framework_t  communication_framework = CL_CT_TCP;
    const char* default_domain = NULL;
+   const char* help = NULL;
+   int commlib_error = CL_RETVAL_OK;
 
 
    DENTER(TOP_LAYER, "prepare_enroll");
@@ -358,30 +495,38 @@ void prepare_enroll(const char *name)
       CRITICAL((SGE_EVENT, MSG_GDI_NO_VALID_PROGRAMM_NAME));
       SGE_EXIT(1);
    }
-   
-   /* TODO: activate mutlithreaded communication for SCHEDD and EXECD !!!
-            This can only by done when the daemonize functions of SCHEDD and EXECD
-            are thread save and reresolve qualified hostname for each thread */
 
-   if ( uti_state_get_mewho() == QMASTER || uti_state_get_mewho() == QMON 
-        /* || uti_state_get_mewho() == EXECD || uti_state_get_mewho() == SCHEDD */ ) {
-      INFO((SGE_EVENT,MSG_GDI_MULTI_THREADED_STARTUP));
-      ret_val = cl_com_setup_commlib(CL_RW_THREAD,CL_LOG_OFF,gdi_log_flush_func);
-   } else {
-      INFO((SGE_EVENT,MSG_GDI_SINGLE_THREADED_STARTUP));
-      ret_val = cl_com_setup_commlib(CL_NO_THREAD,CL_LOG_OFF,gdi_log_flush_func);
-   }
-   if (ret_val != CL_RETVAL_OK) {
-      ERROR((SGE_EVENT, cl_get_error_text(ret_val)) );
+   if (last_commlib_error == NULL) {
       CRITICAL((SGE_EVENT, MSG_GDI_INITCOMMLIBFAILED));
-      SGE_EXIT(1);
+      SGE_EXIT(2);
+   }
+ 
+   /* here the we start up some daemons and clients with multithreaded
+      communication library */  
+
+   if (cl_com_setup_commlib_complete() == CL_FALSE) {
+      if ( uti_state_get_mewho() == QMASTER ||
+           uti_state_get_mewho() == QMON    ||
+           uti_state_get_mewho() == DRMAA   ||
+           uti_state_get_mewho() == SCHEDD      ) {
+         INFO((SGE_EVENT,MSG_GDI_MULTI_THREADED_STARTUP));
+         ret_val = cl_com_setup_commlib(CL_RW_THREAD,CL_LOG_OFF,gdi_log_flush_func);
+      } else {
+         INFO((SGE_EVENT,MSG_GDI_SINGLE_THREADED_STARTUP));
+         ret_val = cl_com_setup_commlib(CL_NO_THREAD,CL_LOG_OFF,gdi_log_flush_func);
+      }
+      if (ret_val != CL_RETVAL_OK) {
+         ERROR((SGE_EVENT, cl_get_error_text(ret_val)) );
+         CRITICAL((SGE_EVENT, MSG_GDI_INITCOMMLIBFAILED));
+         SGE_EXIT(1);
+      }
    }
  
    /* set alias file */
    {
       char *alias_path = sge_get_alias_path();
       ret_val = cl_com_set_alias_file(alias_path);
-      if (ret_val != CL_RETVAL_OK) {
+      if (ret_val != CL_RETVAL_OK && ret_val != *last_commlib_error) {
          ERROR((SGE_EVENT, cl_get_error_text(ret_val)) );
       }
       FREE(alias_path);
@@ -390,13 +535,15 @@ void prepare_enroll(const char *name)
    /* set hostname resolve (compare) method */
    if (bootstrap_get_ignore_fqdn() == false) {
       resolve_method = CL_LONG;
-   } 
-   if ( bootstrap_get_default_domain() != NULL && SGE_STRCASECMP(bootstrap_get_default_domain(), NONE_STR) != 0) {
-      default_domain = bootstrap_get_default_domain();
+   }
+   if ( (help=bootstrap_get_default_domain()) != NULL) {
+      if (SGE_STRCASECMP(help, NONE_STR) != 0) {
+         default_domain = help;
+      }
    }
    ret_val = cl_com_set_resolve_method(resolve_method, (char*)default_domain);
 
-   if (ret_val != CL_RETVAL_OK) {
+   if (ret_val != CL_RETVAL_OK && ret_val != *last_commlib_error) {
       ERROR((SGE_EVENT, cl_get_error_text(ret_val)) );
    }
 
@@ -405,19 +552,19 @@ void prepare_enroll(const char *name)
 
    /* set error function */
    ret_val = cl_com_set_error_func(general_communication_error);
-   if (ret_val != CL_RETVAL_OK) {
+   if (ret_val != CL_RETVAL_OK && ret_val != *last_commlib_error) {
       ERROR((SGE_EVENT, cl_get_error_text(ret_val)) );
    }
 
    /* set tag name function */
    ret_val = cl_com_set_tag_name_func(sge_dump_message_tag);
-   if (ret_val != CL_RETVAL_OK) {
+   if (ret_val != CL_RETVAL_OK && ret_val != *last_commlib_error) {
       ERROR((SGE_EVENT, cl_get_error_text(ret_val)) );
    }
 #ifdef DEBUG_CLIENT_SUPPORT
    /* set debug client callback function to rmon's debug client callback */
    ret_val = cl_com_set_application_debug_client_callback_func(rmon_debug_client_callback);
-   if (ret_val != CL_RETVAL_OK) {
+   if (ret_val != CL_RETVAL_OK && ret_val != *last_commlib_error) {
       ERROR((SGE_EVENT, cl_get_error_text(ret_val)) );
    }
 #endif
@@ -441,7 +588,6 @@ void prepare_enroll(const char *name)
    if (handle == NULL) {
       int my_component_id = 0; /* 1 for daemons, 0=automatical for clients */
       int execd_port = 0;
-      int commlib_error = CL_RETVAL_OK;
       if ( me_who == QMASTER ||
            me_who == EXECD   ||
            me_who == SCHEDD  || 
@@ -452,6 +598,7 @@ void prepare_enroll(const char *name)
       switch(me_who) {
          case EXECD:
             /* add qmaster as known endpoint */
+            DPRINTF(("re-read actual qmaster file (prepare_enroll)\n"));
             cl_com_append_known_endpoint_from_name((char*)sge_get_master(true), 
                                                    (char*) prognames[QMASTER],
                                                    1 ,
@@ -463,19 +610,25 @@ void prepare_enroll(const char *name)
                                           (char*)prognames[uti_state_get_mewho()], my_component_id , 1 , 0 );
             cl_com_set_auto_close_mode(handle, CL_CM_AC_ENABLED );
             if (handle == NULL) {
-               switch (commlib_error) {
-                  default:
-                     ERROR((SGE_EVENT, MSG_GDI_CANT_GET_COM_HANDLE_SSUUS, 
-                                          uti_state_get_qualified_hostname(),
-                                          (char*) prognames[uti_state_get_mewho()],
-                                          sge_u32c(my_component_id), 
-                                          sge_u32c(execd_port),
-                                          cl_get_error_text(commlib_error)));
+               if (commlib_error != *last_commlib_error) {
+                  ERROR((SGE_EVENT, MSG_GDI_CANT_GET_COM_HANDLE_SSUUS, 
+                                    uti_state_get_qualified_hostname(),
+                                    (char*) prognames[uti_state_get_mewho()],
+                                    sge_u32c(my_component_id), 
+                                    sge_u32c(execd_port),
+                                    cl_get_error_text(commlib_error)));
                }
             }
             break;
          case QMASTER:
             DPRINTF(("creating QMASTER handle\n"));
+            cl_com_append_known_endpoint_from_name((char*)sge_get_master(true), 
+                                                   (char*) prognames[QMASTER],
+                                                   1 ,
+                                                   sge_get_qmaster_port(),
+                                                   CL_CM_AC_DISABLED ,
+                                                   CL_TRUE);
+
             handle = cl_com_create_handle(&commlib_error, communication_framework, CL_CM_CT_MESSAGE,              /* message based tcp communication                */
                                           CL_TRUE, sge_get_qmaster_port(),                          /* create service on qmaster port,                */
                                           CL_TCP_DEFAULT,                                           /* use standard connect mode         */
@@ -483,8 +636,7 @@ void prepare_enroll(const char *name)
                                           1 , 0 );           
                                        /* select timeout is set to 1 second 0 usec       */
             if (handle == NULL) {
-               switch (commlib_error) {
-                  default:
+               if (commlib_error != *last_commlib_error) {   
                      ERROR((SGE_EVENT, MSG_GDI_CANT_GET_COM_HANDLE_SSUUS, 
                                           uti_state_get_qualified_hostname(),
                                           (char*) prognames[uti_state_get_mewho()],
@@ -492,6 +644,40 @@ void prepare_enroll(const char *name)
                                           sge_u32c(sge_get_qmaster_port()),
                                           cl_get_error_text(commlib_error)));
                }
+            } else {
+               int alive_back = 0;
+               char act_resolved_qmaster_name[CL_MAXHOSTLEN]; 
+               cl_com_set_synchron_receive_timeout(handle, 5);
+
+               if (sge_get_master(1) != NULL) {
+                  /* check a running qmaster on different host */
+                  if (getuniquehostname(sge_get_master(0), act_resolved_qmaster_name, 0) == CL_RETVAL_OK &&
+                      sge_hostcmp(act_resolved_qmaster_name, uti_state_get_qualified_hostname()) != 0) {
+                     DPRINTF(("act_qmaster file contains host "SFQ" which doesn't match local host name "SFQ"\n",
+                              sge_get_master(0), uti_state_get_qualified_hostname()  ));
+
+                     cl_com_set_error_func(NULL);
+
+                     alive_back = check_isalive(sge_get_master(0));
+
+                     ret_val = cl_com_set_error_func(general_communication_error);
+                     if (ret_val != CL_RETVAL_OK) {
+                        ERROR((SGE_EVENT, cl_get_error_text(ret_val)) );
+                     }
+
+                     if (alive_back == CL_RETVAL_OK && getenv("SGE_TEST_HEARTBEAT_TIMEOUT") == NULL ) {
+                        CRITICAL((SGE_EVENT, MSG_GDI_MASTER_ON_HOST_X_RUNINNG_TERMINATE_S, sge_get_master(0) ));
+                        SGE_EXIT(1);
+                     } else {
+                        DPRINTF(("qmaster on host "SFQ" is down\n", sge_get_master(0)));
+                     }
+                  } else {
+                     DPRINTF(("act_qmaster file contains local host name\n"));
+                  }
+               } else {
+                  DPRINTF(("skipping qmaster alive check because act_qmaster is not availabe\n"));
+               }
+
             }
             break;
          case QMON:
@@ -500,8 +686,7 @@ void prepare_enroll(const char *name)
                                          (char*)prognames[uti_state_get_mewho()], my_component_id , 1 , 0 );
             cl_com_set_auto_close_mode(handle, CL_CM_AC_ENABLED );
             if (handle == NULL) {
-               switch (commlib_error) {
-                  default:
+               if (commlib_error != *last_commlib_error) {
                      ERROR((SGE_EVENT, MSG_GDI_CANT_CONNECT_HANDLE_SSUUS, 
                                           uti_state_get_qualified_hostname(),
                                           (char*) prognames[uti_state_get_mewho()],
@@ -518,8 +703,7 @@ void prepare_enroll(const char *name)
             handle = cl_com_create_handle(&commlib_error, communication_framework, CL_CM_CT_MESSAGE, CL_FALSE, sge_get_qmaster_port(), CL_TCP_DEFAULT,
                                          (char*)prognames[uti_state_get_mewho()], my_component_id , 1 , 0 );
             if (handle == NULL) {
-               switch (commlib_error) {
-                  default:
+               if (commlib_error != *last_commlib_error) {
                      ERROR((SGE_EVENT, MSG_GDI_CANT_CONNECT_HANDLE_SSUUS, 
                                           uti_state_get_qualified_hostname(),
                                           (char*) prognames[uti_state_get_mewho()],
@@ -531,9 +715,6 @@ void prepare_enroll(const char *name)
             break;
       }
 
-      if (handle != NULL) {
-         INFO((SGE_EVENT, MSG_GDI_HANDLE_CREATED_FOR_S, uti_state_get_sge_formal_prog_name() ));
-      }
    } 
 
 #ifdef DEBUG_CLIENT_SUPPORT
@@ -541,23 +722,31 @@ void prepare_enroll(const char *name)
    rmon_set_print_callback(gdi_rmon_print_callback_function);
 #endif
 
-   /* this is for testsuite socket bind test (issue 1096 ) */
-   if ( getenv("SGE_TEST_SOCKET_BIND") != NULL) {
-      struct timeval now;
-      gettimeofday(&now,NULL);
-  
-      /* if this environment variable is set, we wait 15 seconds after 
-         communication lib setup */
-      DPRINTF(("waiting for 15 seconds, because environment SGE_TEST_SOCKET_BIND is set\n"));
-      while ( handle != NULL && now.tv_sec - handle->start_time.tv_sec  <= 15 ) {
-         DPRINTF(("timeout: "sge_U32CFormat"\n",sge_u32c(now.tv_sec - handle->start_time.tv_sec)));
-         cl_commlib_trigger(handle);
-         gettimeofday(&now,NULL);
+   switch(me_who) {
+      case QMASTER: {
+         /* this is for testsuite socket bind test (issue 1096 ) */
+         if ( getenv("SGE_TEST_SOCKET_BIND") != NULL) {
+            struct timeval now;
+            gettimeofday(&now,NULL);
+        
+            /* if this environment variable is set, we wait 15 seconds after 
+               communication lib setup */
+            DPRINTF(("waiting for 60 seconds, because environment SGE_TEST_SOCKET_BIND is set\n"));
+            while ( handle != NULL && now.tv_sec - handle->start_time.tv_sec  <= 60 ) {
+               DPRINTF(("timeout: "sge_U32CFormat"\n",sge_u32c(now.tv_sec - handle->start_time.tv_sec)));
+               cl_commlib_trigger(handle, 1);
+               gettimeofday(&now,NULL);
+            }
+            DPRINTF(("continue with setup\n"));
+         }
+         break;
       }
-      DPRINTF(("continue with setup\n"));
    }
 
+   /* Store the actual commlib error in order to not log the same error twice */
+   *last_commlib_error = commlib_error;
    DEXIT;
+   return commlib_error;
 }
 
 
@@ -569,7 +758,7 @@ void prepare_enroll(const char *name)
  *          return value of gdi_send_message() for other errors
  *
  *  NOTES
- *     MT-NOTE: sge_send_gdi_request() is MT safe (assumptions)
+ *     MT-NOTE: sge_send_any_request() is MT safe (assumptions)
  *---------------------------------------------------------*/
 int sge_send_any_request(int synchron, u_long32 *mid, const char *rhost, 
                          const char *commproc, int id, sge_pack_buffer *pb, 
@@ -579,6 +768,7 @@ int sge_send_any_request(int synchron, u_long32 *mid, const char *rhost,
    cl_xml_ack_type_t ack_type;
    cl_com_handle_t* handle = NULL;
    unsigned long dummy_mid = 0;
+   unsigned long* mid_pointer = NULL;
 
    DENTER(GDI_LAYER, "sge_send_any_request");
 
@@ -593,13 +783,17 @@ int sge_send_any_request(int synchron, u_long32 *mid, const char *rhost,
    
    handle = cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0);
    if (handle == NULL) {
-      answer_list_add(alpp, MSG_GDI_NOCOMMHANDLE, STATUS_NOCOMMD, ANSWER_QUALITY_ERROR);
+      answer_list_add(alpp, MSG_GDI_NOCOMMHANDLE, 
+                      STATUS_NOCOMMD, ANSWER_QUALITY_ERROR);
       DEXIT;
       return CL_RETVAL_HANDLE_NOT_FOUND;
    }
 
    if (strcmp(commproc, (char*)prognames[QMASTER]) == 0 && id == 1) {
-      cl_com_append_known_endpoint_from_name((char*)rhost, (char*)prognames[QMASTER], 1 , sge_get_qmaster_port(), CL_CM_AC_DISABLED ,CL_TRUE);
+      cl_com_append_known_endpoint_from_name((char*)rhost, 
+                                             (char*)prognames[QMASTER], 1 , 
+                                             sge_get_qmaster_port(), 
+                                             CL_CM_AC_DISABLED, CL_TRUE);
    }
    
    if (synchron) {
@@ -611,18 +805,23 @@ int sge_send_any_request(int synchron, u_long32 *mid, const char *rhost,
                           (unsigned long) pb->bytes_used));
    answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
 #endif
-   i = gdi_send_sec_message( handle,
-                                (char*) rhost,(char*) commproc , id, 
-                                ack_type , 
-                                (cl_byte_t*)pb->head_ptr ,(unsigned long) pb->bytes_used , 
-                                &dummy_mid , response_id, tag, 1, synchron);
+
+   if (mid) {
+      mid_pointer = &dummy_mid;
+   }
+
+   i = gdi_send_sec_message(handle,
+                            (char*) rhost,(char*) commproc, id, 
+                            ack_type, (cl_byte_t*)pb->head_ptr,
+                            (unsigned long) pb->bytes_used, 
+                            mid_pointer, response_id, tag, 1, synchron);
    if (i != CL_RETVAL_OK) {
       /* try again ( if connection timed out ) */
-      i = gdi_send_sec_message( handle,
-                                   (char*)rhost, (char*)commproc , id, 
-                                   ack_type ,
-                                   (cl_byte_t*)pb->head_ptr ,(unsigned long) pb->bytes_used , 
-                                   &dummy_mid ,response_id,tag,1 , synchron);
+      i = gdi_send_sec_message(handle,
+                               (char*)rhost, (char*)commproc, id, 
+                               ack_type, (cl_byte_t*)pb->head_ptr,
+                               (unsigned long) pb->bytes_used, mid_pointer, 
+                               response_id, tag, 1, synchron);
    }
    
    if (mid) {
@@ -687,7 +886,7 @@ sge_get_any_request(char *rhost, char *commproc, u_short *id, sge_pack_buffer *p
    handle = cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0);
 
    /* trigger communication or wait for a new message (select timeout) */
-   cl_commlib_trigger(handle);
+   cl_commlib_trigger(handle, synchron);
 
    i = gdi_receive_sec_message( handle, rhost, commproc, usid, synchron, for_request_mid, &message, &sender);
 
@@ -736,7 +935,7 @@ sge_get_any_request(char *rhost, char *commproc, u_short *id, sge_pack_buffer *p
 
 
       /* fill it in the packing buffer */
-      i = init_packbuffer_from_buffer(pb, (char*)message->message, message->message_length , 0);
+      i = init_packbuffer_from_buffer(pb, (char*)message->message, message->message_length);
 
       /* TODO: the packbuffer must be hold, not deleted !!! */
       message->message = NULL;
@@ -789,21 +988,12 @@ int gdi_send_message_pb(int synchron, const char *tocomproc, int toid,
 
    if ( !pb ) {
        DPRINTF(("no pointer for sge_pack_buffer\n"));
-       ret = gdi_send_message(synchron, tocomproc, toid, tohost, tag, NULL, 0, mid, 0);
+       ret = gdi_send_message(synchron, tocomproc, toid, tohost, tag, NULL, 0, mid);
        DEXIT;
        return ret;
    }
 
-#ifdef COMMCOMPRESS
-   if(pb->mode == 0) {
-      if(flush_packbuffer(pb) == PACK_SUCCESS)
-         ret = gdi_send_message(synchron, tocomproc, toid, tohost, tag, (char*)pb->head_ptr, pb->cpr.total_out, mid, 1);
-      else
-         ret = CL_MALLOC;
-   }
-   else
-#endif
-      ret = gdi_send_message(synchron, tocomproc, toid, tohost, tag, pb->head_ptr, pb->bytes_used, mid, 0);
+   ret = gdi_send_message(synchron, tocomproc, toid, tohost, tag, pb->head_ptr, pb->bytes_used, mid);
 
    DEXIT;
    return ret;

@@ -275,7 +275,7 @@ int event_handler_default_scheduler()
          lGetNumberOfLeafs(NULL, copy.share_tree, STN_children)
         );
    } else {
-      SCHED_MON((log_string, "-------------START-SCHEDULER-RUN-------------"));
+      schedd_log("-------------START-SCHEDULER-RUN-------------");
    }
 
    PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM7);
@@ -304,21 +304,21 @@ int event_handler_default_scheduler()
    monitor_next_run = 0;
 
    /* .. which gets deleted after using */
-   copy.host_list = lFreeList(copy.host_list);
-   copy.queue_list = lFreeList(copy.queue_list);
-   copy.dis_queue_list = lFreeList(copy.dis_queue_list);
-   copy.all_queue_list = lFreeList(copy.all_queue_list);
-   copy.job_list = lFreeList(copy.job_list);
-   copy.centry_list = lFreeList(copy.centry_list);
-   copy.acl_list = lFreeList(copy.acl_list);
+   lFreeList(&(copy.host_list));
+   lFreeList(&(copy.queue_list));
+   lFreeList(&(copy.dis_queue_list));
+   lFreeList(&(copy.all_queue_list));
+   lFreeList(&(copy.job_list));
+   lFreeList(&(copy.centry_list));
+   lFreeList(&(copy.acl_list));
 
-   copy.dept_list = lFreeList(copy.dept_list);
+   lFreeList(&(copy.dept_list));
 
-   copy.pe_list = lFreeList(copy.pe_list);
-   copy.share_tree = lFreeList(copy.share_tree);
-   copy.user_list = lFreeList(copy.user_list);
-   copy.project_list = lFreeList(copy.project_list);
-   copy.ckpt_list = lFreeList(copy.ckpt_list);
+   lFreeList(&(copy.pe_list));
+   lFreeList(&(copy.share_tree));
+   lFreeList(&(copy.user_list));
+   lFreeList(&(copy.project_list));
+   lFreeList(&(copy.ckpt_list));
 
    PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM7);
    prof_free = prof_get_measurement_wallclock(SGE_PROF_CUSTOM7,true, NULL);
@@ -327,19 +327,15 @@ int event_handler_default_scheduler()
    prof_event = prof_get_measurement_wallclock(SGE_PROF_CUSTOM6,true, NULL);
  
    if(prof_is_active(SGE_PROF_CUSTOM6)){
-      u_long32 saved_logginglevel = log_state_get_log_level();
-      log_state_set_log_level(LOG_INFO); 
-
-      INFO((SGE_EVENT, "PROF: schedd run took: %.3f s (init: %.3f s, copy: %.3f s, run:%.3f, free: %.3f s, jobs: %d, categories: %d/%d)\n",
+      PROFILING((SGE_EVENT, "PROF: schedd run took: %.3f s (init: %.3f s, copy: %.3f s, run:%.3f, free: %.3f s, jobs: %d, categories: %d/%d)",
             prof_event, prof_init, prof_copy, prof_run, prof_free, lGetNumberOfElem(Master_Job_List), sge_category_count(), sge_cs_category_count() ));
 
-      log_state_set_log_level(saved_logginglevel);
    }
 
    if (getenv("SGE_ND") != NULL) {
       printf("--------------STOP-SCHEDULER-RUN-------------\n");
    } else {
-      SCHED_MON((log_string, "--------------STOP-SCHEDULER-RUN-------------"));
+      schedd_log("--------------STOP-SCHEDULER-RUN-------------");
    }
    
    DEXIT;
@@ -501,12 +497,10 @@ DTRACE;
             " !(%I m= %u) &&"
             " !(%I m= %u) &&"
             " !(%I m= %u) &&"
-            " !(%I m= %u) &&"
             " !(%I m= %u))",
             queue_des,    
             QU_state, QI_SUSPENDED,        /* only not suspended queues      */
             QU_state, QI_SUSPENDED_ON_SUBORDINATE, 
-            QU_state, QI_CAL_DISABLED,
             QU_state, QI_CAL_SUSPENDED, 
             QU_state, QI_ERROR,            /* no queues in error state       */
             QU_state, QI_UNKNOWN,
@@ -515,7 +509,8 @@ DTRACE;
             );         /* only known queues              */
            
          where_queue2 = lWhere("%T("
-            " ((%I m= %u) || (%I m= %u)) &&" 
+            "  (%I m= %u) &&" 
+            " !(%I m= %u) &&" 
             " !(%I m= %u) &&" 
             " !(%I m= %u) &&"
             " !(%I m= %u) &&"
@@ -715,23 +710,23 @@ bool
 sge_process_schedd_conf_event_before(sge_object_type type, sge_event_action action, 
                                      lListElem *event, void *clientdata)
 {
-   const lListElem *old;
    lListElem *new;
 
    DENTER(GDI_LAYER, "sge_process_schedd_conf_event_before");
    DPRINTF(("callback processing schedd config event\n"));
 
-   old = sconf_get_config(); 
    new = lFirst(lGetList(event, ET_new_version));
+
+   ec_set_busy(1);
 
    if (new == NULL) {
       ERROR((SGE_EVENT, "> > > > > no scheduler configuration available < < < < <\n"));
       DEXIT;
       return false;
    }
-
    /* check for valid load formula */ 
    {
+      lListElem *old = sconf_get_config(); 
       const char *new_load_formula = lGetString(new, SC_load_formula);
       lList *alpp = NULL;
 
@@ -745,28 +740,31 @@ sge_process_schedd_conf_event_before(sge_object_type type, sge_event_action acti
                lSetString(new, SC_load_formula, "none");
 
       }
-      else{
-         char *copy;  
+      else {
 
          int n = strlen(new_load_formula);
-         if (n) {
+         if (n > 0) {
+            char *copy = NULL;  
+
+         
             copy = malloc(n + 1);
-            if (copy) {
+            if (copy != NULL) {
                strcpy(copy, new_load_formula);
+
+               sge_strip_blanks(copy);
+               lSetString(new, SC_load_formula, copy);
             }
-
-            sge_strip_blanks(copy);
-            lSetString(new, SC_load_formula, copy);
-
-            free(copy);
+            FREE(copy);
          }
       }
+      lFreeElem(&old);
    }
 
    /* check event client settings */
    {
       const char *time = lGetString(new, SC_schedule_interval); 
       u_long32 schedule_interval;  
+      
       if (extended_parse_ulong_val(NULL, &schedule_interval, TYPE_TIM, time, NULL, 0, 0) ) {
          if (ec_get_edtime() != schedule_interval) {
            ec_set_edtime(schedule_interval);

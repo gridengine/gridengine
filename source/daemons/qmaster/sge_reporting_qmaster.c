@@ -42,6 +42,7 @@
 /* uti */
 #include "uti/sge_log.h"
 #include "uti/sge_string.h"
+#include "uti/sge_stdio.h"
 #include "uti/sge_dstring.h"
 #include "uti/setup_path.h"
 #include "uti/sge_stdlib.h"
@@ -117,12 +118,15 @@ reporting_flush_report_file(lList **answer_list,
                             const char *filename, rep_buf_t *buf);
 
 static bool 
-reporting_flush(lList **answer_list, u_long32 flush, u_long32 *next_flush);
+reporting_flush(lList **answer_list);
 
 static bool 
 reporting_create_record(lList **answer_list, 
                         const char *type,
                         const char *data);
+
+static bool
+reporting_create_sharelog_record(lList **answer_list, monitoring_t *monitor);
 
 static bool
 reporting_write_load_values(lList **answer_list, dstring *buffer, 
@@ -204,6 +208,7 @@ reporting_initialize(lList **answer_list)
    DENTER(TOP_LAYER, "reporting_initialize");
 
    te_register_event_handler(reporting_trigger_handler, TYPE_REPORTING_TRIGGER);
+   te_register_event_handler(reporting_trigger_handler, TYPE_ACCOUNTING_TRIGGER);
    te_register_event_handler(reporting_trigger_handler, TYPE_SHARELOG_TRIGGER);
 
    /* we always have the reporting trigger for flushing reporting files and
@@ -211,7 +216,16 @@ reporting_initialize(lList **answer_list)
     */
    ev = te_new_event(time(NULL), TYPE_REPORTING_TRIGGER, ONE_TIME_EVENT, 1, 0, NULL);
    te_add_event(ev);
-   te_free_event(ev);
+   te_free_event(&ev);
+
+   /* we have the accounting trigger for flushing accounting files only when not
+    * doing immediate flushing.
+    */
+   if (mconf_get_accounting_flush_time() != 0) {
+      ev = te_new_event(time(NULL), TYPE_ACCOUNTING_TRIGGER, ONE_TIME_EVENT, 1, 0, NULL);
+      te_add_event(ev);
+      te_free_event(&ev);
+   }
 
    /* the sharelog timed events can be switched on or off */
    config_sharelog();
@@ -225,13 +239,15 @@ reporting_initialize(lList **answer_list)
 *     reporting_shutdown() -- shutdown the reporting module
 *
 *  SYNOPSIS
-*     bool reporting_shutdown(lList **answer_list) 
+*     bool reporting_shutdown(lList **answer_list, bool do_spool) 
 *
 *  FUNCTION
 *     ??? 
 *
 *  INPUTS
 *     lList **answer_list - used to return error messages
+*     bool do_spool       - if set to true changes must be spooled
+*                           if set to false don't spool changes
 *
 *  RESULT
 *     bool - true on success, false on error.
@@ -243,18 +259,19 @@ reporting_initialize(lList **answer_list)
 *     qmaster/reporting/reporting_initialize()
 *******************************************************************************/
 bool
-reporting_shutdown(lList **answer_list)
+reporting_shutdown(lList **answer_list, bool do_spool)
 {
    bool ret = true;
    lList* alp = NULL;
-   u_long32 dummy = 0;
    rep_buf_t *buf;
 
    DENTER(TOP_LAYER, "reporting_shutdown");
 
-   /* flush the last reporting values, suppress adding new timer */
-   if (!reporting_flush(&alp, 0, &dummy)) {
-      answer_list_output(&alp);
+   if (do_spool == true) {
+      /* flush the last reporting values, suppress adding new timer */
+      if (!reporting_flush(&alp)) {
+         answer_list_output(&alp);
+      }
    }
 
    buf = &reporting_buffer[ACCOUNTING_BUFFER];
@@ -294,12 +311,10 @@ reporting_shutdown(lList **answer_list)
 *     Timeeventmanager/te_add()
 *******************************************************************************/
 void
-reporting_trigger_handler(te_event_t anEvent)
+reporting_trigger_handler(te_event_t anEvent, monitoring_t *monitor)
 {
    u_long32 flush_interval = 0;
-   u_long32 next_flush = 0;
    lList *answer_list = NULL;
-   
 
    DENTER(TOP_LAYER, "reporting_trigger_handler");
 
@@ -308,35 +323,56 @@ reporting_trigger_handler(te_event_t anEvent)
    switch (te_get_type(anEvent)) {
       case TYPE_SHARELOG_TRIGGER:
          /* dump sharetree usage and flush reporting file */
-         if (!reporting_create_sharelog_record(&answer_list)) {
+         if (!reporting_create_sharelog_record(&answer_list, monitor)) {
             answer_list_output(&answer_list);
          }
-         flush_interval = sharelog_time;
+         flush_interval = mconf_get_sharelog_time();
+         
+         /* flush the reporting data */
+         if (reporting_flush_reporting(&answer_list) == 0) {
+            answer_list_output(&answer_list);
+         }
+         
          break;
       case TYPE_REPORTING_TRIGGER:
          /* only flush reporting file */
-         flush_interval = reporting_flush_time;
+         flush_interval = mconf_get_reporting_flush_time();
+         
+         /* flush the reporting data */
+         if (reporting_flush_reporting(&answer_list) == 0) {
+            answer_list_output(&answer_list);
+         }
+         
+         break;
+      case TYPE_ACCOUNTING_TRIGGER:
+         /* only flush accounting file */
+         flush_interval = mconf_get_accounting_flush_time();
+         
+         /* Flush the accounting data.  There's need to worry about
+          * multi-threading issues with immediate flushisg, because the
+          * reporting_flush_report_file() function uses a mutex and checks the
+          * buffer length before trying to flush. */
+         if (reporting_flush_accounting(&answer_list) == 0) {
+            answer_list_output(&answer_list);
+         }
+         
          break;
       default:
          return;
    }
 
-   /* flush the reporting data */
-   if (!reporting_flush(&answer_list, time(NULL), &next_flush)) {
-      answer_list_output(&answer_list);
-   }
-
    /* set next flushing interval and add timer.
-    * flush_interval can be 0, if sharelog is switched off, then don't
-    * add trigger 
+    * flush_interval can be 0, if sharelog is switched off or accounting or
+    * reporting flush time is immediate, then don't add trigger 
     */
    if (flush_interval > 0) {
-      u_long32 next = time(NULL) + flush_interval;
       te_event_t ev = NULL;
+      time_t next_flush = (time_t)(time(NULL) + flush_interval);
 
-      ev = te_new_event((time_t)next, te_get_type(anEvent), ONE_TIME_EVENT, 1, 0, NULL);
+      ev = te_new_event(next_flush, te_get_type(anEvent), ONE_TIME_EVENT, 1, 0,
+                        NULL);
       te_add_event(ev);
-      te_free_event(ev);
+      te_free_event(&ev);
    }
 
    DEXIT;
@@ -350,7 +386,7 @@ reporting_create_new_job_record(lList **answer_list, const lListElem *job)
 
    DENTER(TOP_LAYER, "reporting_create_new_job_record");
 
-   if (do_reporting && do_joblog && job != NULL) {
+   if (mconf_get_do_reporting() && mconf_get_do_joblog() && job != NULL) {
       dstring job_dstring = DSTRING_INIT;
 
       u_long32 job_number, priority, submission_time;
@@ -404,7 +440,7 @@ reporting_create_job_log(lList **answer_list,
 
    DENTER(TOP_LAYER, "reporting_create_job_log");
 
-   if (do_reporting && do_joblog && job != NULL) {
+   if (mconf_get_do_reporting() && mconf_get_do_joblog() && job != NULL) {
       dstring job_dstring = DSTRING_INIT;
 
       u_long32 job_id = 0;
@@ -536,66 +572,78 @@ reporting_create_acct_record(lList **answer_list,
    char category_buffer[MAX_STRING_SIZE];
    dstring category_dstring;
    dstring job_dstring = DSTRING_INIT;
-   const char *category_string = NULL, *job_string = NULL;
+   const char *category_string = NULL; 
+   const char *job_string = NULL;
+
+   bool do_reporting  = mconf_get_do_reporting();
+   bool do_accounting = mconf_get_do_accounting();
 
    DENTER(TOP_LAYER, "reporting_create_acct_record");
 
    /* anything to do at all? */
    if (do_reporting || do_accounting) {
+   
       sge_dstring_init(&category_dstring, category_buffer, 
                        sizeof(category_buffer));
-      category_string = sge_build_job_category(&category_dstring, job, 
-                                          *(userset_list_get_master_list()));
-   }
 
-   /* accounting records will only be written at job end, not for intermediate
-    * reports
-    */
-   if (do_accounting && !intermediate) {
-      job_string = sge_write_rusage(&job_dstring, job_report, job, ja_task, 
-                                    category_string, REPORTING_DELIMITER, 
-                                    false);
-      if (job_string == NULL) {
-         ret = false;
-      } else {
-         /* write accounting file */
-         rep_buf_t *buf = &reporting_buffer[ACCOUNTING_BUFFER];
-         sge_mutex_lock(buf->mtx_name, SGE_FUNC, __LINE__, &(buf->mtx));
-         sge_dstring_append(&(buf->buffer), job_string);
-         sge_mutex_unlock(buf->mtx_name, SGE_FUNC, __LINE__, &(buf->mtx));
-      }
-   }
+      sge_build_job_category_dstring(&category_dstring, job, 
+                                     *(userset_list_get_master_list()));
+      category_string = sge_dstring_get_string(&category_dstring);                                          
 
-   /* reporting records will be written both for intermediate and final
-    * job reports
-    */
-   if (ret && do_reporting) {
-      /* job_dstring might have been filled with accounting record - this one
-       * contains total accounting values.
-       * If we have written intermediate accounting records earlier, or this
-       * call will write intermediate accounting, we have to create our own 
-       * accounting record.
-       * Otherwise (final accounting record, no intermediate acct done before),
-       * we can reuse the accounting record.
+      /* accounting records will only be written at job end, not for intermediate
+       * reports
        */
-      if (job_string == NULL ||
-         intermediate_usage_written(job_report, ja_task) || intermediate) {
-         sge_dstring_clear(&job_dstring);
+      if (do_accounting && !intermediate) {
          job_string = sge_write_rusage(&job_dstring, job_report, job, ja_task, 
-                                       category_string, REPORTING_DELIMITER,
-                                       intermediate);
+                                       category_string, REPORTING_DELIMITER, 
+                                       false);
+         if (job_string == NULL) {
+            ret = false;
+         } else {
+            /* write accounting file */
+            rep_buf_t *buf = &reporting_buffer[ACCOUNTING_BUFFER];
+            sge_mutex_lock(buf->mtx_name, SGE_FUNC, __LINE__, &(buf->mtx));
+            sge_dstring_append(&(buf->buffer), job_string);
+            sge_mutex_unlock(buf->mtx_name, SGE_FUNC, __LINE__, &(buf->mtx));
+         }
+   
+         /* If the flush internal is set to 0, flush the accounting buffer after
+          * every write. */
+         if (mconf_get_accounting_flush_time() == 0) {
+            ret = (reporting_flush_accounting(answer_list) != 0) ? true : false;
+         }
       }
-      if (job_string == NULL) {
-         ret = false;
-      } else {
-         ret = reporting_create_record(answer_list, "acct", job_string);
+
+      /* reporting records will be written both for intermediate and final
+       * job reports
+       */
+      if (ret && do_reporting) {
+         /* job_dstring might have been filled with accounting record - this one
+          * contains total accounting values.
+          * If we have written intermediate accounting records earlier, or this
+          * call will write intermediate accounting, we have to create our own 
+          * accounting record.
+          * Otherwise (final accounting record, no intermediate acct done before),
+          * we can reuse the accounting record.
+          */
+         if (job_string == NULL ||
+            intermediate_usage_written(job_report, ja_task) || intermediate) {
+            sge_dstring_clear(&job_dstring);
+            job_string = sge_write_rusage(&job_dstring, job_report, job, ja_task, 
+                                          category_string, REPORTING_DELIMITER,
+                                          intermediate);
+         }
+         if (job_string == NULL) {
+            ret = false;
+         } else {
+            ret = reporting_create_record(answer_list, "acct", job_string);
+         }
       }
    }
 
    sge_dstring_free(&job_dstring);
 
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** qmaster/reporting/reporting_write_consumables() ********************
@@ -630,7 +678,7 @@ reporting_write_consumables(lList **answer_list, dstring *buffer,
    
    DENTER(TOP_LAYER, "reporting_write_consumables");
 
-   if (do_reporting) {
+   if (mconf_get_do_reporting()) {
       for_each (cep, actual) {
          const char *name = lGetString(cep, RUE_name);
          lListElem *tep = lGetElemStr(total, CE_name, name);
@@ -685,7 +733,7 @@ reporting_create_queue_record(lList **answer_list,
 
    DENTER(TOP_LAYER, "reporting_create_queue_record");
 
-   if (do_reporting && queue != NULL) {
+   if (mconf_get_do_reporting() && queue != NULL) {
       dstring queue_dstring = DSTRING_INIT;
       char state_buffer[20];
       *state_buffer = '\0';
@@ -745,7 +793,7 @@ reporting_create_queue_consumable_record(lList **answer_list,
 
    DENTER(TOP_LAYER, "reporting_create_queue_consumable_record");
 
-   if (do_reporting && queue != NULL) {
+   if (mconf_get_do_reporting() && queue != NULL) {
       dstring consumable_dstring = DSTRING_INIT;
 
       /* dump consumables */
@@ -819,7 +867,7 @@ reporting_create_host_record(lList **answer_list,
 
    DENTER(TOP_LAYER, "reporting_create_host_record");
 
-   if (do_reporting && host != NULL) {
+   if (mconf_get_do_reporting() && host != NULL) {
       dstring load_dstring = DSTRING_INIT;
 
       reporting_write_load_values(answer_list, &load_dstring, 
@@ -886,7 +934,7 @@ reporting_create_host_consumable_record(lList **answer_list,
 
    DENTER(TOP_LAYER, "reporting_create_host_consumable_record");
 
-   if (do_reporting && host != NULL) {
+   if (mconf_get_do_reporting() && host != NULL) {
       dstring consumable_dstring = DSTRING_INIT;
 
       /* dump consumables */
@@ -933,7 +981,8 @@ reporting_create_host_consumable_record(lList **answer_list,
 *     ??? 
 *
 *  INPUTS
-*     lList **answer_list - used to return error messages
+*     lList **answer_list   - used to return error messages
+*     monitoring_t *monitor - monitors the use of the global lock
 *
 *  RESULT
 *     bool -  true on success, false on error
@@ -942,14 +991,14 @@ reporting_create_host_consumable_record(lList **answer_list,
 *     MT-NOTE: reporting_create_sharelog_record() is most probably MT safe
 *              (depends on sge_sharetree_print with uncertain MT safety)
 *******************************************************************************/
-bool
-reporting_create_sharelog_record(lList **answer_list)
+static bool
+reporting_create_sharelog_record(lList **answer_list, monitoring_t *monitor)
 {
    bool ret = true;
 
    DENTER(TOP_LAYER, "reporting_create_sharelog_record");
 
-   if (do_reporting && sharelog_time > 0) {
+   if (mconf_get_do_reporting() && mconf_get_sharelog_time() > 0) {
       /* only create sharelog entries if we have a sharetree */
       if (lGetNumberOfElem(Master_Sharetree_List) > 0) {
          rep_buf_t *buf;
@@ -976,7 +1025,7 @@ reporting_create_sharelog_record(lList **answer_list)
          format.line_prefix  = sge_dstring_get_string(&prefix_dstring);
 
          /* dump the sharetree data */
-         SGE_LOCK(LOCK_GLOBAL, LOCK_READ);
+         MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_READ), monitor);
 
          sge_sharetree_print(&data_dstring, Master_Sharetree_List, 
                              Master_User_List,
@@ -1062,7 +1111,7 @@ reporting_is_intermediate_acct_required(const lListElem *job,
    DENTER(TOP_LAYER, "reporting_is_intermediate_acct_required");
 
    /* if reporting isn't active, we needn't write intermediate usage */
-   if (!do_reporting) {
+   if (!mconf_get_do_reporting()) {
       return false;
    }
 
@@ -1213,12 +1262,27 @@ reporting_create_record(lList **answer_list,
    return ret;
 }
 
-/*
-* NOTES
+/****** qmaster/reporting_flush_accounting() ***********************************
+*  NAME
+*     reporting_flush_accounting() -- flush the accounting info
+*
+*  SYNOPSIS
+*     bool reporting_flush_accounting(lList **answer_list)
+*
+*  FUNCTION
+*     Flush the information in the accounting buffer into the accounting file.
+*
+*  INPUTS
+*     lList **answer_list  - answer list
+*
+*  RESULT
+*     int - true  success
+*           false failure
+*
+*  NOTES
 *     MT-NOTE: reporting_flush_accounting() is MT-safe
-*/
-static bool 
-reporting_flush_accounting(lList **answer_list)
+*******************************************************************************/
+static bool reporting_flush_accounting(lList **answer_list)
 {
    bool ret = true;
 
@@ -1231,17 +1295,31 @@ reporting_flush_accounting(lList **answer_list)
    return ret;
 }
 
-/*
-* NOTES
+/****** qmaster/reporting_flush_reporting() ***********************************
+*  NAME
+*     reporting_flush_reporting() -- flush the reporting info
+*
+*  SYNOPSIS
+*     bool reporting_flush_reporting(lList **answer_list)
+*
+*  FUNCTION
+*     Flush the information in the reporting buffer into the reporting file.
+*
+*  INPUTS
+*     lList **answer_list  - answer list
+*
+*  RESULT
+*     int - true  success
+*           false failure
+*
+*  NOTES
 *     MT-NOTE: reporting_flush_reporting() is MT-safe
-*/
-static bool 
-reporting_flush_reporting(lList **answer_list)
+*******************************************************************************/
+static bool reporting_flush_reporting(lList **answer_list)
 {
    bool ret = true;
 
    DENTER(TOP_LAYER, "sge_flush_reporting");
-
    /* write reporting data */
    ret = reporting_flush_report_file(answer_list,
                                      path_state_get_reporting_file(),
@@ -1250,20 +1328,40 @@ reporting_flush_reporting(lList **answer_list)
    return ret;
 }
 
-/*
-* NOTES
+/****** qmaster/reporting_flush_report_file() **********************************
+*  NAME
+*     reporting_flush_report_file() -- flush the buffer into the given file
+*
+*  SYNOPSIS
+*     bool reporting_flush_report_file(lList **answer_list,
+*                                      const char *filename, rep_buf_t *buf)
+*
+*  FUNCTION
+*     Flush the information in the given buffer into the specified file.
+*
+*  INPUTS
+*     lList **answer_list  - answer list
+*     const char *filename - name of the destination file
+*     rep_buf_t *buf       - target buffer
+*
+*  RESULT
+*     int - true  success
+*           false failure
+*
+*  NOTES
 *     MT-NOTE: reporting_flush_report_file() is MT-safe
-*/
-static bool 
-reporting_flush_report_file(lList **answer_list,
-                      const char *filename, 
-                      rep_buf_t *buf)
+*******************************************************************************/
+static bool reporting_flush_report_file(lList **answer_list,
+                                        const char *filename, rep_buf_t *buf)
 {
    bool ret = true;
-   
+   dstring error_dstring;
+   char error_buffer[MAX_STRING_SIZE];
    size_t size;
 
    DENTER(TOP_LAYER, "reporting_flush_report_file");
+
+   sge_dstring_init(&error_dstring, error_buffer, sizeof(error_buffer));
 
    size = sge_dstring_strlen(&(buf->buffer));
 
@@ -1272,10 +1370,6 @@ reporting_flush_report_file(lList **answer_list,
       FILE *fp;
       bool write_comment = false;
       SGE_STRUCT_STAT statbuf;
-      char error_buffer[MAX_STRING_SIZE];
-      dstring error_dstring;
-
-      sge_dstring_init(&error_dstring, error_buffer, sizeof(error_buffer));
 
       /* if file doesn't exist: write a comment after creating it */
       if (SGE_STAT(filename, &statbuf)) {
@@ -1348,18 +1442,7 @@ reporting_flush_report_file(lList **answer_list,
 
       /* close file */
       if (fp != NULL) {
-         if (fclose(fp) != 0) {
-            if (answer_list == NULL) {
-               ERROR((SGE_EVENT, MSG_ERRORCLOSINGFILE_SS, filename, 
-                      sge_strerror(errno, &error_dstring)));
-            } else {
-               answer_list_add_sprintf(answer_list, STATUS_EDISK, 
-                                       ANSWER_QUALITY_ERROR, 
-                                       MSG_ERRORCLOSINGFILE_SS, filename, 
-                                       sge_strerror(errno, &error_dstring));
-            }
-            ret = false;
-         }
+         FCLOSE(fp);
       }
 
       /* clear the buffer. We do this regardless of the result of
@@ -1373,13 +1456,42 @@ reporting_flush_report_file(lList **answer_list,
 
    DEXIT;
    return ret;
+FCLOSE_ERROR:
+   if (answer_list == NULL) {
+      ERROR((SGE_EVENT, MSG_ERRORCLOSINGFILE_SS, filename, 
+             sge_strerror(errno, &error_dstring)));
+   } else {
+      answer_list_add_sprintf(answer_list, STATUS_EDISK, 
+                              ANSWER_QUALITY_ERROR, 
+                              MSG_ERRORCLOSINGFILE_SS, filename, 
+                              sge_strerror(errno, &error_dstring));
+   }
+   DEXIT;
+   return false;
 }
-/*
-* NOTES
+
+/****** qmaster/reporting_flush() **********************************************
+*  NAME
+*     reporting_flush() -- flush the buffers into files
+*
+*  SYNOPSIS
+*     bool reporting_flush(lList **answer_list)
+*
+*  FUNCTION
+*     Flush the information in the accounting and reporting buffers into the
+*     into the appropriate files.
+*
+*  INPUTS
+*     lList **answer_list  - answer list
+*
+*  RESULT
+*     int - true  success
+*           false failure
+*
+*  NOTES
 *     MT-NOTE: reporting_flush() is MT-safe
-*/
-static bool 
-reporting_flush(lList **answer_list, u_long32 flush, u_long32 *next_flush)
+*******************************************************************************/
+static bool reporting_flush(lList **answer_list)
 {
    bool ret = true;
    bool reporting_ret;
@@ -1398,9 +1510,6 @@ reporting_flush(lList **answer_list, u_long32 flush, u_long32 *next_flush)
       ret = false;
    }
      
-   /* set time for next flush */  
-   *next_flush = flush + reporting_flush_time;
-
    DEXIT;
    return ret;
 }
@@ -1494,14 +1603,14 @@ config_sharelog(void) {
    static bool sharelog_running = false;
 
    /* sharelog shall be written according to global config */
-   if (sharelog_time > 0) {
+   if (mconf_get_sharelog_time() > 0) {
       /* if sharelog is not running: switch it on */
       if (!sharelog_running) {
          te_event_t ev = NULL;
          ev = te_new_event(time(NULL), TYPE_SHARELOG_TRIGGER , ONE_TIME_EVENT, 
                            1, 0, NULL);
          te_add_event(ev);
-         te_free_event(ev);
+         te_free_event(&ev);
          sharelog_running = true;
       }
    } else {

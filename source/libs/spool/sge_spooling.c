@@ -140,7 +140,7 @@ spool_free_context(lList **answer_list, lListElem *context)
                               SGE_FUNC);
    } else {
       spool_shutdown_context(answer_list, context);
-      context = lFreeElem(context);
+      lFreeElem(&context);
    }
 
    PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLING);

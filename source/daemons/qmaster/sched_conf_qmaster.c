@@ -80,7 +80,7 @@ int sge_read_sched_configuration(lListElem *aSpoolContext, lList **anAnswer)
    
    if (!sconf_set_config(&sched_conf, anAnswer))
    {
-      lFreeList(sched_conf);
+      lFreeList(&sched_conf);
       DEXIT;
       return -1;
    } 
@@ -105,7 +105,6 @@ char *ruser,
 char *rhost 
 ) {
    lList *temp_conf_list = NULL;
-   const lListElem *config = NULL;
    
    DENTER(TOP_LAYER, "sge_mod_sched_configuration");
 
@@ -115,20 +114,17 @@ char *rhost
       DEXIT;
       return STATUS_EUNKNOWN;
    }
-   config = sconf_get_config();
    temp_conf_list = lCreateList("sched config", SC_Type);
 
-   if (config) {
-      lSetUlong(confp, SC_weight_tickets_override, 
-      lGetUlong(config, SC_weight_tickets_override));
-   }
+   lSetUlong(confp, SC_weight_tickets_override, 
+             sconf_get_weight_tickets_override());
 
    confp = lCopyElem(confp);
    lAppendElem(temp_conf_list, confp);
 
    /* just check and log */
    if (!sconf_set_config(&temp_conf_list, alpp)) {
-      lFreeList(temp_conf_list);
+      lFreeList(&temp_conf_list);
       DEXIT;
       return STATUS_EUNKNOWN;
    }
@@ -153,20 +149,18 @@ char *rhost
 
 static void check_reprioritize_interval(lList **alpp, char *ruser, char *rhost)
 {
-   bool flag;
-   lListElem *conf;
-
    DENTER(TOP_LAYER, "check_reprioritize_interval");
 
-   flag = (sconf_get_reprioritize_interval() != 0) ? true : false;
+   if (sconf_get_reprioritize_interval() != mconf_get_reprioritize()) {
+      bool flag       = (sconf_get_reprioritize_interval() != 0) ? true : false;
+      lListElem *conf = sge_get_configuration_for_host(SGE_GLOBAL_NAME);
 
-   conf = sge_get_configuration_for_host(SGE_GLOBAL_NAME);
+      sge_set_conf_reprioritize(conf, flag);
 
-   sge_set_conf_reprioritize(conf, flag);
+      sge_mod_configuration(conf, alpp, ruser, rhost);
 
-   sge_mod_configuration(conf, alpp, ruser, rhost);
-
-   conf = lFreeElem(conf);
+      lFreeElem(&conf);
+   }
 
    DEXIT;
    return;

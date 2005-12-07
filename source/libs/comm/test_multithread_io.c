@@ -102,14 +102,14 @@ extern int main(void)
   cl_thread_list_setup(&thread_list,"thread list");
 
   /* setup first thread */
-  cl_thread_list_create_thread(thread_list, &dummy_thread_p,cl_com_get_log_list(), "1st thread", 1, my_multi_thread);
+  cl_thread_list_create_thread(thread_list, &dummy_thread_p,cl_com_get_log_list(), "1st thread", 1, my_multi_thread, NULL, NULL);
 
 #if 1
   /* setup second thread */
-  cl_thread_list_create_thread(thread_list, &dummy_thread_p,cl_com_get_log_list(), "2nd thread", 2, my_multi_thread);  
+  cl_thread_list_create_thread(thread_list, &dummy_thread_p,cl_com_get_log_list(), "2nd thread", 2, my_multi_thread, NULL, NULL);  
 
   /* setup third thread */
-  cl_thread_list_create_thread(thread_list, &dummy_thread_p,cl_com_get_log_list(), "3nd thread", 3, my_multi_read_thread); 
+  cl_thread_list_create_thread(thread_list, &dummy_thread_p,cl_com_get_log_list(), "3nd thread", 3, my_multi_read_thread, NULL, NULL); 
 #endif
 
   while(do_shutdown == 0) {

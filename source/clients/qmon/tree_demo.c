@@ -849,7 +849,7 @@ char **argv
    share_tree = buildShac(NULL, 10000, 1);
 /*    lWriteListTo(share_tree, stdout); */
    CullToTree(tree, &root_node, share_tree);
-   share_tree = lFreeList(share_tree);
+   lFreeList(&share_tree);
 #endif
 
    

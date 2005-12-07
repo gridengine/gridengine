@@ -81,7 +81,7 @@ decay_usage( lList *usage_list,
       lListElem *ua_elem = lCreateElem(UA_Type);
       ua_value_pos = lGetPosViaElem(ua_elem, UA_value);
       ua_name_pos = lGetPosViaElem(ua_elem, UA_name);
-      lFreeElem(ua_elem);
+      lFreeElem(&ua_elem);
    }
 
    if (usage_list) {
@@ -136,8 +136,8 @@ decay_userprj_usage( lListElem *userprj,
       up_usage_pos = lGetPosViaElem(up_elem, UP_usage);
       up_project_pos = lGetPosViaElem(up_elem, UP_project);
       upp_usage_pos = lGetPosViaElem(upp_elem, UPP_usage);
-      lFreeElem(up_elem);
-      lFreeElem(upp_elem);
+      lFreeElem(&up_elem);
+      lFreeElem(&upp_elem);
    }
 
    if (userprj && seqno != lGetPosUlong(userprj, up_usage_seqno_pos)) {
@@ -306,7 +306,6 @@ sge_calc_node_usage( lListElem *node,
    lListElem *child_node;
    lList *children;
    lListElem *userprj = NULL;
-   const lList *usage_weight_list = NULL;
    lList *usage_list=NULL;
    lListElem *usage_weight, *usage_elem;
    double sum_of_usage_weights = 0;
@@ -330,9 +329,9 @@ sge_calc_node_usage( lListElem *node,
       sn_name_pos = lGetPosViaElem(node, STN_name);
       ua_name_pos = lGetPosViaElem(ua_elem, UA_name);
       ua_value_pos = lGetPosViaElem(ua_elem, UA_value);
-      lFreeElem(ua_elem);
-      lFreeElem(sc_elem);
-      lFreeElem(up_elem);
+      lFreeElem(&ua_elem);
+      lFreeElem(&sc_elem);
+      lFreeElem(&up_elem);
    }
 
    children = lGetPosList(node, sn_children_pos);
@@ -395,6 +394,7 @@ sge_calc_node_usage( lListElem *node,
    }
 
    if (usage_list) {
+      lList *usage_weight_list = NULL;
 
       /*-------------------------------------------------------------
        * Decay usage
@@ -432,6 +432,8 @@ sge_calc_node_usage( lListElem *node,
             }
          }
       }
+
+      lFreeList(&usage_weight_list);
 
       /*-------------------------------------------------------------
        * Store other usage values in node usage list
@@ -1010,7 +1012,7 @@ void sgeee_sort_jobs( lList **job_list )              /* JB_Type */
    /*-----------------------------------------------------------------
     * Release tmp list
     *-----------------------------------------------------------------*/
-   lFreeList(tmp_list);
+   lFreeList(&tmp_list);
 
    DEXIT;
    return;

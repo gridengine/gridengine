@@ -91,19 +91,22 @@ QMASTER_OBJS  = $(QMASTER_SRC:.c=.o)
 
 QMASTER_ADD_OBJS = $(QMASTER_ADD_SRC:.c=.o) 
 
-QMASTER_ADD_LIBS = $(SPOOLING_LIBS) -lsched $(EVMLIB) -levc -lgdi -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lcull -lcomm -lcommlists -luti -llck -lrmon $(DLLIB)
+QMASTER_ADD_LIBS = $(SPOOLING_LIBS) -lsched $(EVMLIB) -lgdi -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lcull -lcomm -lcommlists -luti $(WINGRIDLIB) -llck -lrmon $(DLLIB)
 
-QMASTER_LIB_DEPENDS = $(SCHEDLIB) $(EVMLIB) $(EVCLIB) $(GDILIB) $(SGEOBJLIB) \
+QMASTER_LIB_DEPENDS = $(SCHEDLIB) $(EVMLIB) $(GDILIB) $(SGEOBJLIB) \
                       $(SPOOLING_DEPS) $(SGEOBJDLIB) \
                       $(SECLIBS) $(KRBLIBS) \
-                      $(CULLLIB) $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB) \
+                      $(CULLLIB) $(COMMLIB) $(COMMLISTSLIB) $(WINGRIDLIB_DEP) \
+                      $(UTILIB) $(LCKLIB) $(RMONLIB) \
                       $(TPLIB)
 
 QMASTER_TEST_OBJS = \
-              test_sge_qmaster_timed_event.o
+              test_sge_qmaster_timed_event.o \
+              test_sge_calendar.o 
 
 QMASTER_TEST_PROGS = \
-              test_sge_qmaster_timed_event
+              test_sge_qmaster_timed_event \
+              test_sge_calendar
 
 QMASTER_TEST_ADD_LIBS = $(QMASTER_ADD_LIBS)
 
@@ -113,7 +116,7 @@ QMASTER_TEST_LIB_DEPENDS = $(SGEOBJLIB) $(SGEOBJDLIB) $(CULLLIB) $(COMMLIB) $(CO
 ###############################################################################
 # global rules: all, clean, depend, messages
 ###############################################################################
-qmaster: $(QMASTER_TARGETS)
+qmaster: $(QMASTER_TARGETS) $(QMASTER_TEST_PROGS)
 	
 qmaster_clean:
 	$(RM) $(QMASTER_TARGETS) sge_qmaster_main.o $(QMASTER_OBJS) $(QMASTER_TEST_OBJS) $(QMASTER_TEST_PROGS)
@@ -131,7 +134,8 @@ qmaster_messages:
 # rules to build binaries
 ###############################################################################
 sge_qmaster:	sge_qmaster_main.o $(QMASTER_OBJS) $(QMASTER_ADD_OBJS) $(QMASTER_LIB_DEPENDS)
-		$(LD_WRAPPER) $(CC) -o $@ $(LFLAGS) sge_qmaster_main.o $(QMASTER_OBJS) $(QMASTER_ADD_OBJS) $(QMASTER_ADD_LIBS) $(SLIBS) $(LIBS) 
+		$(LD_WRAPPER) $(CC) -o $@ $(LFLAGS) sge_qmaster_main.o $(QMASTER_OBJS) $(QMASTER_ADD_OBJS) $(QMASTER_ADD_LIBS) $(SLIBS) $(LIBS) \
+    && ../scripts/nonreentrant.sh -a `../dist/util/arch` -w $@
 
 test_sge_qmaster_timed_event:	test_sge_qmaster_timed_event.o $(QMASTER_OBJS) $(QMASTER_ADD_OBJS) $(QMASTER_LIB_DEPENDS)
 		$(LD_WRAPPER) $(CC) -o $@ $(LFLAGS) test_sge_qmaster_timed_event.o $(QMASTER_OBJS) $(QMASTER_ADD_OBJS) $(QMASTER_ADD_LIBS) $(SLIBS) $(LIBS) 

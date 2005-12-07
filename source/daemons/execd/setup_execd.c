@@ -75,16 +75,17 @@ static char execd_messages_file[SGE_PATH_MAX];
 void sge_setup_sge_execd(const char* tmp_err_file_name)
 {
    char err_str[1024];
-   int allowed_get_conf_errors     = 3;
+   int allowed_get_conf_errors     = 5;
+   char* spool_dir = NULL;
 
    DENTER(TOP_LAYER, "sge_setup_sge_execd");
 
-   while (get_conf_and_daemonize(daemonize_execd, &Execd_Config_List)) {
+   while (get_conf_and_daemonize(daemonize_execd, &Execd_Config_List, NULL)) {
       if (allowed_get_conf_errors-- <= 0) {
          CRITICAL((SGE_EVENT, MSG_EXECD_CANT_GET_CONFIGURATION_EXIT));
          SGE_EXIT(1);
       }
-      sleep(5);
+      sleep(1);
    }
    sge_show_conf();         
 
@@ -103,13 +104,14 @@ void sge_setup_sge_execd(const char* tmp_err_file_name)
 
    /* get aliased hostname from commd */
    reresolve_me_qualified_hostname();
+   spool_dir = mconf_get_execd_spool_dir();
 
    DPRINTF(("chdir(\"/\")----------------------------\n"));
    sge_chdir_exit("/",1);
    DPRINTF(("Making directories----------------------------\n"));
-   sge_mkdir(conf.execd_spool_dir, 0755, 1, 0);
-   DPRINTF(("chdir(\"%s\")----------------------------\n", conf.execd_spool_dir));
-   sge_chdir_exit(conf.execd_spool_dir,1);
+   sge_mkdir(spool_dir, 0755, 1, 0);
+   DPRINTF(("chdir(\"%s\")----------------------------\n", spool_dir));
+   sge_chdir_exit(spool_dir,1);
    sge_mkdir(uti_state_get_unqualified_hostname(), 0755, 1, 0);
    DPRINTF(("chdir(\"%s\",me.unqualified_hostname)--------------------------\n",
             uti_state_get_unqualified_hostname()));
@@ -125,11 +127,11 @@ void sge_setup_sge_execd(const char* tmp_err_file_name)
    }
    sge_switch2admin_user();
    log_state_set_log_as_admin_user(1);
-   sprintf(execd_messages_file, "%s/%s/%s", conf.execd_spool_dir, 
+   sprintf(execd_messages_file, "%s/%s/%s", spool_dir, 
            uti_state_get_unqualified_hostname(), ERR_FILE);
    log_state_set_log_file(execd_messages_file);
 
-   sprintf(execd_spool_dir, "%s/%s", conf.execd_spool_dir, 
+   sprintf(execd_spool_dir, "%s/%s", spool_dir, 
            uti_state_get_unqualified_hostname());
    
    DPRINTF(("Making directories----------------------------\n"));
@@ -137,6 +139,7 @@ void sge_setup_sge_execd(const char* tmp_err_file_name)
    sge_mkdir(JOB_DIR, 0775, 1, 0);
    sge_mkdir(ACTIVE_DIR,  0775, 1, 0);
 
+   FREE(spool_dir);
    DEXIT;
    return;
 }

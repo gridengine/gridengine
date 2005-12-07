@@ -58,17 +58,17 @@ DESCRIPTION
      tion.
 
      Configurations without default setting are rejected.   Ambi-
-     gous configurations with more than one attribute setting for
-     a particular host are rejected.   Configurations  containing
-     override  values for hosts not enlisted under 'hostname' are
-     accepted but are indicated by -sick of <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B> The  cluster
-     queue  should  contain a non-ambigous specification for each
-     configuration attribute of  each  queue  instance  specified
-     under  hostname  in <I>queue</I>_<I>conf</I>. Ambigous configurations with
-     more than one attribute setting resulting  from  overlapping
-     host  groups  are  indicated  by  -explain c of <B><A HREF="../htmlman1/qstat.html">qstat(1)</A></B> and
-     cause the queue instance  with  ambigous  configurations  to
-     enter the c(onfiguration ambibous) state.
+     guous  configurations  with  more than one attribute setting
+     for a particular host are rejected.  Configurations contain-
+     ing  override values for hosts not enlisted under 'hostname'
+     are accepted but are indicated  by  -sick  of  <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>  The
+     cluster  queue  should contain a non-ambiguous specification
+     for each configuration  attribute  of  each  queue  instance
+     specified under hostname in <I>queue</I>_<I>conf</I>. Ambiguous configura-
+     tions with more than one attribute  setting  resulting  from
+     overlapping  host  groups  are  indicated  by  -explain c of
+     <B><A HREF="../htmlman1/qstat.html">qstat(1)</A></B> and cause the queue instance with ambiguous  confi-
+     gurations to enter the c(onfiguration ambiguous) state.
 
 FORMAT
      The following list of <I>queue</I>_<I>conf</I>  parameters  specifies  the
@@ -195,14 +195,14 @@ FORMAT
      nation in a comma separated list or <I>NONE</I>.
 
      The formerly supported types parallel and checkpointing  are
-     not  allowed anymore. A queue instance is impicitely of type
+     not  allowed anymore. A queue instance is implicitly of type
      parallel/checkpointing if there is a parallel environment or
      a  checkpointing interface specified for this queue instance
      in pe_list/ckpt_list. Formerly possible settings e.g.
 
      qtype   PARALLEL
 
-     could be transfered into
+     could be transferred into
 
      qtype   NONE
      pe_list pe_name
@@ -210,11 +210,11 @@ FORMAT
      (type string; default: batch interactive).
 
   pe_list
-     The list of administartor defined parallel  environments  to
+     The list of administrator defined parallel  environments  to
      be associated with the queue. The default is <I>NONE</I>.
 
   ckpt_list
-     The list of administartor defined  checkpointing  interfaces
+     The list of administrator defined  checkpointing  interfaces
      to be associated with the queue. The default is <I>NONE</I>.
 
   rerun
@@ -445,13 +445,13 @@ FORMAT
 
   owner_list
      The owner_list names the login names (in a  comma  separated
-     list)  of  those  users  who  are authorized to suspend this
-     queue (Grid Engine operators and managers can suspend queues
-     by default). It is customary to set this field for queues on
-     interactive workstations where the computing  resources  are
-     shared  between  interactive  sessions and Grid Engine jobs,
-     allowing the workstation owner to have priority access (type
-     string; default: NONE).
+     list)  of  those  users  who  are  authorized to disable and
+     suspend this queue through <B><A HREF="../htmlman1/qmod.html">qmod(1)</A></B>  (Grid  Engine  operators
+     and managers can do this by default). It is customary to set
+     this field for queues on interactive workstations where  the
+     computing  resources are shared between interactive sessions
+     and Grid Engine jobs, allowing the workstation owner to have
+     priority access (type string; default: NONE).
 
   user_lists
      The user_lists parameter contains a comma separated list  of
@@ -493,7 +493,7 @@ FORMAT
      queue.
 
   subordinate_list
-     A list of Grid Engine cluster queues. Relashionship  however
+     A list of Grid Engine cluster queues.  Relationship  however
      are  in  effect only between queue instances residing at the
      same host. If there is a queue instance (be in the  sub-  or
      superordinated  one)  on only one particular host this rela-

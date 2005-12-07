@@ -61,6 +61,9 @@ userset_set_type_string(lListElem *userset, lList **answer_list,
 const char *
 userset_list_append_to_dstring(const lList *this_list, dstring *string);
 
+int sge_contained_in_access_list(const char *user, const char *group, 
+                                 const lListElem *acl, lList **alpp);
+
 #endif /* _SGE_USERSET_H */
 
 

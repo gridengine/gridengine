@@ -311,7 +311,7 @@ void japi_version(unsigned int *major, unsigned int *minor);
  * Output (string) is implementation dependent and could contain the DRM system and the
  * implementation vendor as its parts.
  */
-int japi_get_drm_system(dstring *drm, dstring *diag);
+int japi_get_drm_system(dstring *drm, dstring *diag, int me);
 
 /* get next string attribute from iterator 
 DRMAA_ERRNO_SUCCESS or DRMAA_ERRNO_INVALID_ATTRIBUTE_VALUE if no such exists */

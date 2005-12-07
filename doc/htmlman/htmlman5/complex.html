@@ -18,7 +18,7 @@ DESCRIPTION
      The system has a set  of  pre  defined  entries,  which  are
      assigned  to a host or queue per default.  In a addition can
      the user define new entries and assign them to one or multi-
-     ple  objects.  Each load value has to have its corresbonding
+     ple  objects.  Each load value has to have its corresponding
      complex entry object, which defines the type and  the  rela-
      tional operator for it.
 
@@ -39,7 +39,7 @@ DESCRIPTION
      removing  an  entry by deleting its definition. An attribute
      can only be removed, when it is not referenced in a host  or
      queue  object  anymore.  Also  does the system have a set of
-     default resource attributes which are always attrached to  a
+     default resource attributes which are always attached  to  a
      host  or  queue.  They cannot be deleted nor can the type of
      such an attribute be changed.
 
@@ -143,7 +143,7 @@ DESCRIPTION
 
      In the case of a consumable on host level, which has also  a
      load sensor, the system checks for the current usage, and if
-     the internal accouting is more  restrictive  than  the  load
+     the internal accounting is more restrictive  than  the  load
      sensor  report, the internal value is kept; if the load sen-
      sour report is more restrictive, that one is kept.
 
@@ -211,12 +211,12 @@ FORMAT
                    level and cannot be escaped.
 
         Examples:
-         -l arch="*linux|solaris*"  :
-              results in "arch=linux" OR "arch=glinux"
-                 OR "arch=alinus" OR "arch=solaris" OR
-                 "arch=solaris64" OR "arch=solaris86" OR ...
-         -l arch="[linux|solaris]"  :
-              results in "arch=[linux" OR "arch=solaris]"
+         -l arch="*x24*|sol*"  :
+              results in "arch=lx24-x86" OR "arch=lx24-amd64"
+                 OR "arch=sol-sparc" OR "arch=sol-sparc64"
+                 OR "arch=sol-x86" OR ...
+         -l arch="[lx24-x86|sol-sparc]"  :
+              results in "arch=[lx24-x86" OR "arch=sol-sparc]"
 
 
      <B>o</B>  HOST is like CSTRING but the string must be a valid host-
@@ -239,7 +239,7 @@ FORMAT
      'f' the attribute has to be requested by  a  job  or  it  is
      rejected.
 
-     To enable resource request enforcement the existance of  the
+     To enable resource request enforcement the existence of  the
      resource  has  to  be defined. This can be done on a cluster
      global, per host and per  queue  basis.  The  definition  of
      resource  availability  is performed with the complex_values

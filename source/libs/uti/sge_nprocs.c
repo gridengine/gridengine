@@ -300,6 +300,7 @@ int argc,
 char **argv 
 ) {
    printf(MSG_INFO_NUMBOFPROCESSORS_I, sge_nprocs());
+   printf("\n");
    exit(0);
 }
 #endif

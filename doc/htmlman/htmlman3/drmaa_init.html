@@ -47,12 +47,12 @@ DESCRIPTION
      drmaa_exit()    function    completes    will    return    a
      DRMAA_ERRNO_NO_ACTIVE_SESSION error.
 
-     The drmaa_exit() function does neccessary clean  up  of  the
+     The drmaa_exit() function does necessary  clean  up  of  the
      DRMAA  session state, including unregistering from the <I>qmas-</I>
      <B><A HREF="../htmlman8/ter.html">ter(8)</A></B>.  If the drmaa_exit() function  is  not  called,  the
      qmaster  will  store  events  for the DRMAA client until the
      connection times out, causing extra work for the qmaster and
-     comsuming system resources.
+     consuming system resources.
 
      Submitted jobs are not affected by  the  drmaa_exit()  func-
      tion.

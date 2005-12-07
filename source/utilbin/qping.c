@@ -58,7 +58,7 @@
 #include "sge_all_listsL.h"
 
 #define ARGUMENT_COUNT 15
-static char*  cl_values[ARGUMENT_COUNT+1];
+static char*  cl_values[ARGUMENT_COUNT+2];
 static int    cl_short_host_name_option = 0;                                       
 static int    cl_show[]         = {1,1 ,1,1 ,1,1,1 ,1,1,1,1,0 ,0,1,1};
 static int    cl_alignment[]    = {1,0 ,1,0 ,1,1,1 ,1,1,1,1,0 ,0,1,1};
@@ -245,15 +245,19 @@ static void qping_convert_time(char* buffer, char* dest, cl_bool_t show_hour) {
    }
 }
 
-static void qping_general_communication_error(int cl_err,const char* error_message) {
-   if (error_message != NULL) {
-      fprintf(stderr,"%s: %s\n", cl_get_error_text(cl_err), error_message);
-   } else {
-      fprintf(stderr,"error: %s\n", cl_get_error_text(cl_err));
+static void qping_general_communication_error(const cl_application_error_list_elem_t* commlib_error) {
+   if (commlib_error != NULL) {
+      if (commlib_error->cl_already_logged == CL_FALSE) {
+         if (commlib_error->cl_info != NULL) {
+            fprintf(stderr,"%s: %s\n", cl_get_error_text(commlib_error->cl_error), commlib_error->cl_info);
+         } else {
+            fprintf(stderr,"error: %s\n", cl_get_error_text(commlib_error->cl_error));
+         }
+         if (commlib_error->cl_error == CL_RETVAL_ACCESS_DENIED) {
+            do_shutdown = 1;
+         } 
+      }
    }
-   if (cl_err == CL_RETVAL_ACCESS_DENIED) {
-      do_shutdown = 1;
-   } 
 }
 
 static void qping_parse_environment(void) {
@@ -498,7 +502,7 @@ static void qping_print_line(char* buffer, int nonewline, int dump_tag) {
                   sge_gdi_request *req = NULL;
    
    
-                  if ( init_packbuffer_from_buffer(&buf, (char*)binary_buffer, buffer_length , 0) == PACK_SUCCESS) {
+                  if (init_packbuffer_from_buffer(&buf, (char*)binary_buffer, buffer_length) == PACK_SUCCESS) {
                      if ( sge_unpack_gdi_request(&buf, &req_head ) == 0) {
                         int req_no = 0;
                         printf("      unpacked gdi request (binary buffer length %lu):\n", buffer_length );
@@ -587,7 +591,7 @@ static void qping_print_line(char* buffer, int nonewline, int dump_tag) {
                if (  cl_util_get_binary_buffer(message_debug_data, &binary_buffer , &buffer_length) == CL_RETVAL_OK) {
                   sge_pack_buffer buf;
    
-                  if ( init_packbuffer_from_buffer(&buf, (char*)binary_buffer, buffer_length , 0) == PACK_SUCCESS) {
+                  if (init_packbuffer_from_buffer(&buf, (char*)binary_buffer, buffer_length) == PACK_SUCCESS) {
                      lList *rep = NULL;
    
                      if (cull_unpack_list(&buf, &rep) == 0) {
@@ -598,7 +602,7 @@ static void qping_print_line(char* buffer, int nonewline, int dump_tag) {
                            printf("rep: NULL\n");
                         }
                      }
-                     lFreeList(rep);
+                     lFreeList(&rep);
                      rep = NULL;
                      clear_packbuffer(&buf);
                   }
@@ -610,7 +614,7 @@ static void qping_print_line(char* buffer, int nonewline, int dump_tag) {
                if (  cl_util_get_binary_buffer(message_debug_data, &binary_buffer , &buffer_length) == CL_RETVAL_OK) {
                   sge_pack_buffer buf;
    
-                  if ( init_packbuffer_from_buffer(&buf, (char*)binary_buffer, buffer_length , 0) == PACK_SUCCESS) {
+                  if (init_packbuffer_from_buffer(&buf, (char*)binary_buffer, buffer_length) == PACK_SUCCESS) {
                      u_long32 client_id = 0;
                      if (unpackint(&buf, &client_id) == PACK_SUCCESS) {
                         printf("      unpacked event client exit (binary buffer length %lu):\n", buffer_length );
@@ -626,7 +630,7 @@ static void qping_print_line(char* buffer, int nonewline, int dump_tag) {
                if (  cl_util_get_binary_buffer(message_debug_data, &binary_buffer , &buffer_length) == CL_RETVAL_OK) {
                   sge_pack_buffer buf;
    
-                  if ( init_packbuffer_from_buffer(&buf, (char*)binary_buffer, buffer_length , 0) == PACK_SUCCESS) {
+                  if (init_packbuffer_from_buffer(&buf, (char*)binary_buffer, buffer_length) == PACK_SUCCESS) {
                      u_long32 ack_tag, ack_ulong, ack_ulong2;
    
                      while(unpackint(&buf,  &ack_tag ) == PACK_SUCCESS) {
@@ -747,7 +751,7 @@ static void qping_print_line(char* buffer, int nonewline, int dump_tag) {
                if (  cl_util_get_binary_buffer(message_debug_data, &binary_buffer , &buffer_length) == CL_RETVAL_OK) {
                   sge_pack_buffer buf;
    
-                  if ( init_packbuffer_from_buffer(&buf, (char*)binary_buffer, buffer_length , 0) == PACK_SUCCESS) {
+                  if (init_packbuffer_from_buffer(&buf, (char*)binary_buffer, buffer_length) == PACK_SUCCESS) {
                      u_long32 feature_set;
                      lListElem* list_elem = NULL;
                      if (unpackint(&buf, &feature_set) == PACK_SUCCESS) {
@@ -759,9 +763,7 @@ static void qping_print_line(char* buffer, int nonewline, int dump_tag) {
                      } else {
                         printf("could not unpack list elem\n");
                      }
-                     if(list_elem) {
-                        lFreeElem(list_elem);
-                     }
+                     lFreeElem(&list_elem);
                      clear_packbuffer(&buf);
                   }
                }
@@ -772,7 +774,7 @@ static void qping_print_line(char* buffer, int nonewline, int dump_tag) {
                if (  cl_util_get_binary_buffer(message_debug_data, &binary_buffer , &buffer_length) == CL_RETVAL_OK) {
                   sge_pack_buffer buf;
    
-                  if ( init_packbuffer_from_buffer(&buf, (char*)binary_buffer, buffer_length , 0) == PACK_SUCCESS) {
+                  if (init_packbuffer_from_buffer(&buf, (char*)binary_buffer, buffer_length) == PACK_SUCCESS) {
                      u_long32 jobid_pre = 0;
                      u_long32 jataskid_pre = 0;
                      u_long32 jobid    = 0;
@@ -823,7 +825,7 @@ static void qping_print_line(char* buffer, int nonewline, int dump_tag) {
    
                   printf("binary buffer length is %lu\n",buffer_length);  
    
-                  if ( init_packbuffer_from_buffer(&buf, (char*)binary_buffer, buffer_length , 0) == PACK_SUCCESS) {
+                  if (init_packbuffer_from_buffer(&buf, (char*)binary_buffer, buffer_length) == PACK_SUCCESS) {
                      u_long32 jobid_pre = 0;
                      u_long32 jataskid_pre = 0;
                      u_long32 jobid    = 0;
@@ -1435,7 +1437,7 @@ int main(int argc, char *argv[]) {
          }
 #endif
 
-         cl_commlib_trigger(handle);
+         cl_commlib_trigger(handle, 1);
          retval = cl_commlib_receive_message(handle, NULL, NULL, 0,      /* handle, comp_host, comp_name , comp_id, */
                                              CL_FALSE, 0,                 /* syncron, response_mid */
                                              &message, &sender );

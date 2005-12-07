@@ -38,15 +38,15 @@
 ** utilbin/adminrun.c
 */
 #define MSG_UTILBIN_USAGE                    _MESSAGE(57000, _("usage:") ) 
-#define MSG_COMMAND_RUNCOMMANDASUSERNAME_S     _MESSAGE(57001, _("run commandline under "SFN" of given user\n"))
-#define MSG_COMMAND_EXECUTEFAILED_S          _MESSAGE(57002, _("can't execute command "SFQ"\n"))
-#define MSG_SYSTEM_RESOLVEUSERFAILED_S       _MESSAGE(57003, _("can't resolve username "SFQ"\n"))
+#define MSG_COMMAND_RUNCOMMANDASUSERNAME_S     _MESSAGE(57001, _("run commandline under "SFN" of given user"))
+#define MSG_COMMAND_EXECUTEFAILED_S          _MESSAGE(57002, _("can't execute command "SFQ))
+#define MSG_SYSTEM_RESOLVEUSERFAILED_S       _MESSAGE(57003, _("can't resolve username "SFQ))
 
 /* 
 ** utilbin/gdi_request.c
 */ 
-/* #define MSG_SYSTEM_QMASTERNOTALIVE           _message(57004, _("qmaster not alive\n")) __TS Removed automatically from testsuite!! TS__*/
-/* #define MSG_SYSTEM_GDISETUPERROR             _message(57005, _("sge_gdi_setup error\n")) __TS Removed automatically from testsuite!! TS__*/
+/* #define MSG_SYSTEM_QMASTERNOTALIVE           _message(57004, _("qmaster not alive")) __TS Removed automatically from testsuite!! TS__*/
+/* #define MSG_SYSTEM_GDISETUPERROR             _message(57005, _("sge_gdi_setup error")) __TS Removed automatically from testsuite!! TS__*/
 /* #define MSG_SYSTEM_MULTIREQUEST_I            _message(57006, _("%d. ----- Multirequest")) __TS Removed automatically from testsuite!! TS__*/
 /* #define MSG_SYSTEM_6SINGLEREQUEST_I          _message(57007, _("%d. ----- 6 single requests")) __TS Removed automatically from testsuite!! TS__*/
 
@@ -54,15 +54,15 @@
 /* 
 ** utilbin/checkprog.c
 */ 
-#define MSG_COMMAND_USAGECHECKPROG           _MESSAGE(57008, _("\ncheckprog { -ppid | pid processname }\n\n if only the option -ppid is given the parent process id (ppid)\n of checkprog is printed to stdout. \n else check the first 8 letters of process basename\n\nexit status: 0 if process was found or ppid was printed\n             1 if process was not found\n             2 if ps program couldn't be spawned\n"))
-#define MSG_COMMAND_USAGEGETPROGS            _MESSAGE(57009, _("\ngetprogs processname\ncheck and list pids of \"processname\"\n\nexit status: 0 if process(es) were found\n             1 if process(es) was not found\n             2 if ps program couldn't be spawned\n"))
-#define MSG_COMMAND_CALLCHECKPROGORGETPROGS  _MESSAGE(57010, _("program must be called as \"checkprog\" or \"getprogs\"\n"))
-#define MSG_PROC_PIDNOTRUNNINGORWRONGNAME_IS _MESSAGE(57011, _("pid \"%d\" is not running or has another program name than "SFQ"\n"))
-#define MSG_PROC_PIDISRUNNINGWITHNAME_IS     _MESSAGE(57012, _("pid \"%d\" with process name "SFQ" is running\n"))
-#define MSG_COMMAND_SPANPSFAILED             _MESSAGE(57013, _("could not spawn ps command\n"))
-#define MSG_COMMAND_RUNPSCMDFAILED_S         _MESSAGE(57014, _("could not run "SFQ" to get pids of processes\n"))
-#define MSG_PROC_FOUNDNOPROCESS_S            _MESSAGE(57015, _("found no running processes with name "SFQ"\n"))
-#define MSG_PROC_FOUNDPIDSWITHNAME_S         _MESSAGE(57016, _("found the following pids which have process name "SFQ"\n"))
+#define MSG_COMMAND_USAGECHECKPROG           _MESSAGE(57008, _("checkprog { -ppid | pid processname }\n\n if only the option -ppid is given the parent process id (ppid)\n of checkprog is printed to stdout. \n else check the first 8 letters of process basename\n\nexit status: 0 if process was found or ppid was printed\n             1 if process was not found\n             2 if ps program couldn't be spawned"))
+#define MSG_COMMAND_USAGEGETPROGS            _MESSAGE(57009, _("getprogs processname\ncheck and list pids of \"processname\"\n\nexit status: 0 if process(es) were found\n             1 if process(es) was not found\n             2 if ps program couldn't be spawned"))
+#define MSG_COMMAND_CALLCHECKPROGORGETPROGS  _MESSAGE(57010, _("program must be called as \"checkprog\" or \"getprogs\""))
+#define MSG_PROC_PIDNOTRUNNINGORWRONGNAME_IS _MESSAGE(57011, _("pid \"%d\" is not running or has another program name than "SFQ))
+#define MSG_PROC_PIDISRUNNINGWITHNAME_IS     _MESSAGE(57012, _("pid \"%d\" with process name "SFQ" is running"))
+#define MSG_COMMAND_SPANPSFAILED             _MESSAGE(57013, _("could not spawn ps command"))
+#define MSG_COMMAND_RUNPSCMDFAILED_S         _MESSAGE(57014, _("could not run "SFQ" to get pids of processes"))
+#define MSG_PROC_FOUNDNOPROCESS_S            _MESSAGE(57015, _("found no running processes with name "SFQ))
+#define MSG_PROC_FOUNDPIDSWITHNAME_S         _MESSAGE(57016, _("found the following pids which have process name "SFQ))
 
 
 
@@ -77,7 +77,7 @@
 /* 
 ** utilbin/gethostbyaddr.c
 */ 
-#define MSG_SYSTEM_HOSTNAMEIS_S              _MESSAGE(57020, _("Hostname: "SFN"\n"))
+#define MSG_SYSTEM_HOSTNAMEIS_S              _MESSAGE(57020, _("Hostname: "SFN))
 #define MSG_SYSTEM_ALIASES                   _MESSAGE(57021, _("Aliases:  "))
 #define MSG_SYSTEM_ADDRESSES                 _MESSAGE(57022, _("Host Address(es): "))
 
@@ -86,120 +86,125 @@
 /* 
 ** utilbin/gethostname.c
 */ 
-#define MSG_COMMAND_USAGE_GETHOSTNAME        _MESSAGE(57023, _("get resolved hostname of this host\n"))
+#define MSG_COMMAND_USAGE_GETHOSTNAME        _MESSAGE(57023, _("get resolved hostname of this host"))
 
 
 /* 
 ** utilbin/getservbyname.c
 */ 
-#define MSG_COMMAND_USAGE_GETSERVBYNAME      _MESSAGE(57026, _("get number of a tcp service\n"))
-#define MSG_SYSTEM_SERVICENOTFOUND_S         _MESSAGE(57027, _("service "SFN" not found\n"))
-#define MSG_SYSTEM_PORTNOTINUSE_S            _MESSAGE(57038, _("port "SFN" not in use\n"))
+#define MSG_COMMAND_USAGE_GETSERVBYNAME      _MESSAGE(57026, _("get number of a tcp service"))
+#define MSG_SYSTEM_SERVICENOTFOUND_S         _MESSAGE(57027, _("service "SFN" not found"))
+#define MSG_SYSTEM_PORTNOTINUSE_S            _MESSAGE(57038, _("port "SFN" not in use"))
 
 
 /* 
 ** utilbin/loadcheck.c
 */ 
-#define MSG_SYSTEM_RETMEMORYINDICESFAILED    _MESSAGE(57028, _("failed retrieving memory indices\n"))
+#define MSG_SYSTEM_RETMEMORYINDICESFAILED    _MESSAGE(57028, _("failed retrieving memory indices"))
 
 
 /* 
 ** utilbin/permutation.c
 */ 
-#define MSG_UTILBIN_PERMUSAGE1   _MESSAGE(57029, _("options are:\n"))
-#define MSG_UTILBIN_PERMUSAGE2   _MESSAGE(57030, _("silent mode\n"))
-#define MSG_UTILBIN_PERMUSAGE3   _MESSAGE(57031, _("sleep 'n' seconds after 1 second work\n"))
-#define MSG_UTILBIN_PERMUSAGE4   _MESSAGE(57032, _("do work 'n' times using 'n' processes\n"))
-#define MSG_UTILBIN_PERMUSAGE5   _MESSAGE(57033, _("with range s.th. like a-k\n"))
+#define MSG_UTILBIN_PERMUSAGE1   _MESSAGE(57029, _("options are:"))
+#define MSG_UTILBIN_PERMUSAGE2   _MESSAGE(57030, _("silent mode"))
+#define MSG_UTILBIN_PERMUSAGE3   _MESSAGE(57031, _("sleep 'n' seconds after 1 second work"))
+#define MSG_UTILBIN_PERMUSAGE4   _MESSAGE(57032, _("do work 'n' times using 'n' processes"))
+#define MSG_UTILBIN_PERMUSAGE5   _MESSAGE(57033, _("with range s.th. like a-k"))
 
 
 /*
 **  utilbin/infotext.c
 */
-#define SGE_INFOTEXT_TESTSTRING_S "Welcome, "SFN"\nhave a nice day!\n"
+#define SGE_INFOTEXT_TESTSTRING_S "Welcome, "SFN"\nhave a nice day!"
 #define SGE_INFOTEXT_UNDERLINE  "-"
 /* #define SGE_INFOTEXT_TESTSTRING_S_L10N _message(57034, _(SGE_INFOTEXT_TESTSTRING_S)) __TS Removed automatically from testsuite!! TS__*/
 /* #define SGE_INFOTEXT_UNDERLINE_L10N    _message(57035, _(SGE_INFOTEXT_UNDERLINE)) __TS Removed automatically from testsuite!! TS__*/
-#define SGE_INFOTEXT_ONLY_ALLOWED_SS _MESSAGE(57036, _("\nThere are only two answers allowed: "SFQ" or "SFQ"!\n\n"))
+#define SGE_INFOTEXT_ONLY_ALLOWED_SS _MESSAGE(57036, _("There are only two answers allowed: "SFQ" or "SFQ"!"))
 
 /* 
 ** utilbin/range.c
 */ 
-/* #define MSG_COMMAND_USAGE_RANGE              _message(57037, _("usage: range lower upper\n") )  __TS Removed automatically from testsuite!! TS__*/
+/* #define MSG_COMMAND_USAGE_RANGE              _message(57037, _("usage: range lower upper") )  __TS Removed automatically from testsuite!! TS__*/
 
 /*
  * utilbin/spooldefaults.c
  */
 
-#define MSG_SPOOLDEFAULTS_COMMANDINTRO1   _MESSAGE(57100,         _("create default entries during installation process\n"))
-#define MSG_SPOOLDEFAULTS_COMMANDINTRO2   _MESSAGE(57101,         _("following are the valid commands:\n"))
-#define MSG_SPOOLDEFAULTS_TEST            _MESSAGE(57102,         _("test                          test the spooling framework\n"))
-#define MSG_SPOOLDEFAULTS_MANAGERS        _MESSAGE(57103,         _("managers <mgr1> [<mgr2> ...]  create managers\n"))
-#define MSG_SPOOLDEFAULTS_OPERATORS       _MESSAGE(57104,         _("operators <op1> [<op2> ...]   create operators\n"))
-#define MSG_SPOOLDEFAULTS_PES             _MESSAGE(57105,         _("pes <template_dir>            create parallel environments\n"))
-#define MSG_SPOOLDEFAULTS_CONFIGURATION          _MESSAGE(57106,  _("configuration <template>      create the global configuration\n"))
-#define MSG_SPOOLDEFAULTS_LOCAL_CONF          _MESSAGE(57107,     _("local_conf <template> <name>  create a local configuration\n"))
-#define MSG_SPOOLDEFAULTS_USERSETS            _MESSAGE(57108,     _("usersets <template_dir>       create usersets\n"))
-#define MSG_SPOOLDEFAULTS_CANNOTCREATECONTEXT   _MESSAGE(57109, _("cannot create spooling context\n"))
-#define MSG_SPOOLDEFAULTS_CANNOTSTARTUPCONTEXT  _MESSAGE(57110, _("cannot startup spooling context\n"))
-#define MSG_SPOOLDEFAULTS_COMPLEXES             _MESSAGE(57111,         _("complexes <template_dir>      create complexes\n"))
-#define MSG_SPOOLDEFAULTS_ADMINHOSTS            _MESSAGE(57112,         _("adminhosts <template_dir>     create admin hosts\n"))
-#define MSG_SPOOLDEFAULTS_SUBMITHOSTS           _MESSAGE(57113,         _("submithosts <template_dir>    create submit hosts\n"))
-#define MSG_SPOOLDEFAULTS_CALENDARS             _MESSAGE(57114,         _("calendars <template_dir>      create calendars\n"))
-#define MSG_SPOOLDEFAULTS_CKPTS                 _MESSAGE(57115,         _("ckpts <template_dir>          create checkpoint environments\n"))
-#define MSG_SPOOLDEFAULTS_EXECHOSTS             _MESSAGE(57116,         _("exechosts <template_dir>      create execution hosts\n"))
-#define MSG_SPOOLDEFAULTS_PROJECTS              _MESSAGE(57117,         _("projects <template_dir>       create projects\n"))
-#define MSG_SPOOLDEFAULTS_CQUEUES               _MESSAGE(57118,         _("cqueues <template_dir>        create cluster queues\n"))
-#define MSG_SPOOLDEFAULTS_USERS                 _MESSAGE(57119,         _("users <template_dir>          create users\n"))
-#define MSG_SPOOLDEFAULTS_SHARETREE             _MESSAGE(57120,         _("sharetree <template>          create sharetree\n"))
-#define MSG_SPOOLDEFAULTS_CANTREADGLOBALCONF_S  _MESSAGE(57125,         _("couldn't read global config file "SFN"\n"))
-#define MSG_SPOOLDEFAULTS_CANTREADLOCALCONF_S   _MESSAGE(57126,         _("couldn't read local config file "SFN"\n"))
-#define MSG_SPOOLDEFAULTS_CANTREADSHARETREE_SS  _MESSAGE(57127,         _("couldn't read sharetree from file "SFN": "SFN"\n"))
-#define MSG_SPOOLDEFAULTS_CANTREADKEYOFOBJ      _MESSAGE(57128,         _("can't read key of object - unknown type\n"))
-#define MSG_SPOOLDEFAULTS_CANTHANDLECLASSICSPOOLING    _MESSAGE(57129,         _("can't handle classic spooling\n"))
+#define MSG_SPOOLDEFAULTS_COMMANDINTRO1   _MESSAGE(57100,         _("create default entries during installation process"))
+#define MSG_SPOOLDEFAULTS_COMMANDINTRO2   _MESSAGE(57101,         _("following are the valid commands:"))
+#define MSG_SPOOLDEFAULTS_TEST            _MESSAGE(57102,         _("test                          test the spooling framework"))
+#define MSG_SPOOLDEFAULTS_MANAGERS        _MESSAGE(57103,         _("managers <mgr1> [<mgr2> ...]  create managers"))
+#define MSG_SPOOLDEFAULTS_OPERATORS       _MESSAGE(57104,         _("operators <op1> [<op2> ...]   create operators"))
+#define MSG_SPOOLDEFAULTS_PES             _MESSAGE(57105,         _("pes <template_dir>            create parallel environments"))
+#define MSG_SPOOLDEFAULTS_CONFIGURATION          _MESSAGE(57106,  _("configuration <template>      create the global configuration"))
+#define MSG_SPOOLDEFAULTS_LOCAL_CONF          _MESSAGE(57107,     _("local_conf <template> <name>  create a local configuration"))
+#define MSG_SPOOLDEFAULTS_USERSETS            _MESSAGE(57108,     _("usersets <template_dir>       create usersets"))
+#define MSG_SPOOLDEFAULTS_CANNOTCREATECONTEXT   _MESSAGE(57109, _("cannot create spooling context"))
+#define MSG_SPOOLDEFAULTS_CANNOTSTARTUPCONTEXT  _MESSAGE(57110, _("cannot startup spooling context"))
+#define MSG_SPOOLDEFAULTS_COMPLEXES             _MESSAGE(57111,         _("complexes <template_dir>      create complexes"))
+#define MSG_SPOOLDEFAULTS_ADMINHOSTS            _MESSAGE(57112,         _("adminhosts <template_dir>     create admin hosts"))
+#define MSG_SPOOLDEFAULTS_SUBMITHOSTS           _MESSAGE(57113,         _("submithosts <template_dir>    create submit hosts"))
+#define MSG_SPOOLDEFAULTS_CALENDARS             _MESSAGE(57114,         _("calendars <template_dir>      create calendars"))
+#define MSG_SPOOLDEFAULTS_CKPTS                 _MESSAGE(57115,         _("ckpts <template_dir>          create checkpoint environments"))
+#define MSG_SPOOLDEFAULTS_EXECHOSTS             _MESSAGE(57116,         _("exechosts <template_dir>      create execution hosts"))
+#define MSG_SPOOLDEFAULTS_PROJECTS              _MESSAGE(57117,         _("projects <template_dir>       create projects"))
+#define MSG_SPOOLDEFAULTS_CQUEUES               _MESSAGE(57118,         _("cqueues <template_dir>        create cluster queues"))
+#define MSG_SPOOLDEFAULTS_USERS                 _MESSAGE(57119,         _("users <template_dir>          create users"))
+#define MSG_SPOOLDEFAULTS_SHARETREE             _MESSAGE(57120,         _("sharetree <template>          create sharetree"))
+#define MSG_SPOOLDEFAULTS_CANTREADGLOBALCONF_S  _MESSAGE(57125,         _("couldn't read global config file "SFN))
+#define MSG_SPOOLDEFAULTS_CANTREADLOCALCONF_S   _MESSAGE(57126,         _("couldn't read local config file "SFN))
+#define MSG_SPOOLDEFAULTS_CANTREADSHARETREE_SS  _MESSAGE(57127,         _("couldn't read sharetree from file "SFN": "SFN))
+#define MSG_SPOOLDEFAULTS_CANTREADKEYOFOBJ      _MESSAGE(57128,         _("can't read key of object - unknown type"))
+#define MSG_SPOOLDEFAULTS_CANTHANDLECLASSICSPOOLING    _MESSAGE(57129,         _("can't handle classic spooling"))
 
 /*
  * utilbin/spoolinit.c
  */
 
 #define MSG_SPOOLINIT_COMMANDINTRO0   _MESSAGE(57200, _("method shlib libargs command [args]"))
-#define MSG_SPOOLINIT_COMMANDINTRO1   _MESSAGE(57201, _("database maintenance\n"))
-#define MSG_SPOOLINIT_COMMANDINTRO2   _MESSAGE(57202, _("following are the valid commands\n"))
-#define MSG_SPOOLINIT_COMMANDINTRO3   _MESSAGE(57203, _("init [history]    initialize the database [with history enabled]\n"))
-#define MSG_SPOOLINIT_COMMANDINTRO4   _MESSAGE(57204, _("history on|off    switch spooling with history on or off\n"))
-#define MSG_SPOOLINIT_COMMANDINTRO5   _MESSAGE(57205, _("backup path       backup the database to path\n"))
-#define MSG_SPOOLINIT_COMMANDINTRO6   _MESSAGE(57206, _("purge days        remove historical data older than days\n"))
-#define MSG_SPOOLINIT_COMMANDINTRO7   _MESSAGE(57207, _("vacuum            compress database, update statistics\n"))
-#define MSG_SPOOLINIT_COMMANDINTRO8   _MESSAGE(57208, _("info              output information about the database\n"))
-#define MSG_SPOOLINIT_COMMANDINTRO9   _MESSAGE(57209, _("method            output the compiled in spooling method\n"))
+#define MSG_SPOOLINIT_COMMANDINTRO1   _MESSAGE(57201, _("database maintenance"))
+#define MSG_SPOOLINIT_COMMANDINTRO2   _MESSAGE(57202, _("following are the valid commands"))
+#define MSG_SPOOLINIT_COMMANDINTRO3   _MESSAGE(57203, _("init [history]    initialize the database [with history enabled]"))
+#define MSG_SPOOLINIT_COMMANDINTRO4   _MESSAGE(57204, _("history on|off    switch spooling with history on or off"))
+#define MSG_SPOOLINIT_COMMANDINTRO5   _MESSAGE(57205, _("backup path       backup the database to path"))
+#define MSG_SPOOLINIT_COMMANDINTRO6   _MESSAGE(57206, _("purge days        remove historical data older than days"))
+#define MSG_SPOOLINIT_COMMANDINTRO7   _MESSAGE(57207, _("vacuum            compress database, update statistics"))
+#define MSG_SPOOLINIT_COMMANDINTRO8   _MESSAGE(57208, _("info              output information about the database"))
+#define MSG_SPOOLINIT_COMMANDINTRO9   _MESSAGE(57209, _("method            output the compiled in spooling method"))
 
 /*
- * utilbin/dbstat
+ * utilbin/spooledit
  */
-#define MSG_DBSTAT_COMMANDINTRO1   _MESSAGE(57300,         _("database query and maintenance\n"))
-#define MSG_DBSTAT_COMMANDINTRO2   _MESSAGE(57301,         _("following are the valid commands:\n"))
-#define MSG_DBSTAT_LIST            _MESSAGE(57302,         _("list [object type]  list all objects [matching object type]\n"))
-#define MSG_DBSTAT_DUMP            _MESSAGE(57303,         _("dump key            dump the object matching key\n"))
-#define MSG_DBSTAT_LOAD            _MESSAGE(57304,         _("load key file       load an object from file and store it using key\n"))
-#define MSG_DBSTAT_DELETE          _MESSAGE(57305,         _("delete key          delete the object matching key\n"))
-#define MSG_DBSTAT_ERRORUNDUMPING_S _MESSAGE(57306,         _("error reading object from file "SFN"\n"))
-#define MSG_DBSTAT_INVALIDKEY_S     _MESSAGE(57307,         _("invalid key "SFQ"\n"))
+#define MSG_DBSTAT_COMMANDINTRO1   _MESSAGE(57300,         _("database query and maintenance"))
+#define MSG_DBSTAT_COMMANDINTRO2   _MESSAGE(57301,         _("following are the valid commands:"))
+#define MSG_DBSTAT_LIST            _MESSAGE(57302,         _("list [object type]  list all objects [matching object type]"))
+#define MSG_DBSTAT_DUMP            _MESSAGE(57303,         _("dump key            dump the object matching key"))
+#define MSG_DBSTAT_LOAD            _MESSAGE(57304,         _("load key file       load an object from file and store it using key"))
+#define MSG_DBSTAT_DELETE          _MESSAGE(57305,         _("delete key          delete the object matching key"))
+#define MSG_DBSTAT_ERRORUNDUMPING_S _MESSAGE(57306,         _("error reading object from file "SFN))
+#define MSG_DBSTAT_INVALIDKEY_S     _MESSAGE(57307,         _("invalid key "SFQ))
 
-#define MSG_PWD_ONLY_USER           _MESSAGE(57310,         _(SFN": only the user "SFQ" or \"root\" can change this password\n"))
-#define MSG_PWD_ONLY_ROOT           _MESSAGE(57311,         _(SFN": only \"root\" has the permission to delete entrys\n"))
-#define MSG_PWD_SWITCH_ADMIN        _MESSAGE(57312,         _(SFN": can't switch to admin_user\n"))
-#define MSG_PWD_CHANGED             _MESSAGE(57313,         _("Password changed\n"))
-#define MSG_PWD_INVALID             _MESSAGE(57314,         _(SFN": Invalid password\n"))
-#define MSG_PWD_NO_MATCH            _MESSAGE(57315,         _(SFN": Passwords do not match.\n"))
-#define MSG_PWD_CHANGE_ABORT        _MESSAGE(57316,         _(SFN": password change aborted\n"))
-#define MSG_PWD_AUTH_FAILURE        _MESSAGE(57317,         _(SFN": Authentication failure\n"))
-#define MSG_PWD_CHANGE_FOR          _MESSAGE(57318,         _("Changing password for "SFN"\n"))
-#define MSG_PWD_NO_USERNAME         _MESSAGE(57319,         _(SFN": unable to get name for user with id %d\n"))
-#define MSG_PWD_LOAD_PRIV           _MESSAGE(57320,         _(SFN": can't load private key "SFQ" to decrypt password\n"))
-#define MSG_PWD_DECR                _MESSAGE(57321,         _(SFN": error decrypting password - keylength mismatch\n"))
-#define MSG_PWD_MALLOC              _MESSAGE(57322,         _(SFN": malloc failed\n"))
-#define MSG_PWD_LOAD_PUB            _MESSAGE(57323,         _(SFN": can't load public key "SFQ" to ecrypt password\n"))
-
+/*
+ * utilbin/sge_passwd
+ */
+#define MSG_PWD_ONLY_USER_SS        _MESSAGE(57310,         _(SFN": only the user "SFQ" or \"root\" can change this password"))
+#define MSG_PWD_ONLY_ROOT_S         _MESSAGE(57311,         _(SFN": only \"root\" has the permission to delete entrys"))
+#define MSG_PWD_SWITCH_ADMIN_S      _MESSAGE(57312,         _(SFN": can't switch to admin_user"))
+#define MSG_PWD_CHANGED             _MESSAGE(57313,         _("Password changed"))
+#define MSG_PWD_INVALID_S           _MESSAGE(57314,         _(SFN": Invalid password"))
+#define MSG_PWD_NO_MATCH_S          _MESSAGE(57315,         _(SFN": Passwords do not match."))
+#define MSG_PWD_CHANGE_ABORT_S      _MESSAGE(57316,         _(SFN": password change aborted"))
+#define MSG_PWD_AUTH_FAILURE_S      _MESSAGE(57317,         _(SFN": Authentication failure"))
+#define MSG_PWD_CHANGE_FOR_S        _MESSAGE(57318,         _("Changing password for "SFN""))
+#define MSG_PWD_NO_USERNAME_SI      _MESSAGE(57319,         _(SFN": unable to get name for user with id %d"))
+#define MSG_PWD_LOAD_PRIV_SS        _MESSAGE(57320,         _(SFN": can't load private key "SFQ" to decrypt password"))
+#define MSG_PWD_DECR_S              _MESSAGE(57321,         _(SFN": error decrypting password - keylength mismatch"))
+#define MSG_PWD_MALLOC_S            _MESSAGE(57322,         _(SFN": malloc failed"))
+#define MSG_PWD_LOAD_PUB_SS         _MESSAGE(57323,         _(SFN": can't load public key "SFQ" to ecrypt password"))
+#define MSG_PWD_OPEN_SGEPASSWD_SSI  _MESSAGE(57325,         _(SFN": can't open sgepasswd file: %s (%d)"))
+#define MSG_PWD_WRITE_SGEPASSWD_SSI _MESSAGE(57326,         _(SFN": can't write to sgepasswd file: %s (%d)"))
+#define MSG_PWD_CLOSE_SGEPASSWD_SSI _MESSAGE(57327,         _(SFN": error closing sgepasswd file: %s (%d)"))
 
 
 #endif /* __MSG_UTILBIN_H */

@@ -876,7 +876,7 @@ proc ticket_set_slot_count { slot_count } {
       }
       set result [ start_remote_prog $CHECK_HOST $CHECK_USER "$qconf_cmd" "$qconf_args" exit_state ]
       if { $exit_state != 0 } {
-        add_proc_error "ticket_set_slot_count" -1 "qconf -mattr failed ($exit_state) ----\n $result \n -----"
+        add_proc_error "ticket_set_slot_count" -1 "qconf -mattr failed ($exit_state) ----\n$result\n -----"
         return -1
       }
    }

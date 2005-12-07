@@ -107,7 +107,9 @@ proc commlib_issues_run  {} {
    set found_malloc_error 0
    set in_loop 1
    while { $in_loop } {
-      set timeout 240
+# using this very high timeout, because some machines start swapping and they need more
+# time to malloc() enought data for the client binary to send to the server
+      set timeout 600
       expect {
          -i $both_list full_buffer {
             add_proc_error "commlib_issues_run" -1 "expect full_buffer error"
@@ -152,7 +154,7 @@ proc commlib_issues_run  {} {
                   if { $exit_state != 0 } {
                      set known_exit_state 0
                      if { $exit_state == 1 && $found_malloc_error == 0 } {
-                        add_proc_error "commlib_issues_run" -1 "issue #1389 is present"
+                        add_proc_error "commlib_issues_run" -1 "issue #1389 is present\nNotice this test may fail on hosts which have to less memory or are not fast enough!\n$expect_out(0,string)"
                         set known_exit_state 1
                      } 
                      if { $exit_state == 1 && $found_malloc_error != 0 } {

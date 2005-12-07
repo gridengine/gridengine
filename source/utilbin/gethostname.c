@@ -49,7 +49,7 @@
 int usage(void)
 {
   fprintf(stderr, "Version: %s\n", GDI_VERSION);
-  fprintf(stderr, "%s\n gethostname [-help|-name|-aname|-all]\n\n%s", MSG_UTILBIN_USAGE, MSG_COMMAND_USAGE_GETHOSTNAME );
+  fprintf(stderr, "%s\n gethostname [-help|-name|-aname|-all]\n\n%s\n", MSG_UTILBIN_USAGE, MSG_COMMAND_USAGE_GETHOSTNAME );
   exit(1);
   return 0;
 }
@@ -142,6 +142,7 @@ int main(int argc,char *argv[]) {
   } else {
      if (he != NULL) {
         printf(MSG_SYSTEM_HOSTNAMEIS_S , he->h_name);
+        printf("\n");
         
         if (resolved_name != NULL && all_option) {
            printf("SGE name: %s\n",resolved_name);

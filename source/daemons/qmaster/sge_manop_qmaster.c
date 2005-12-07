@@ -130,7 +130,7 @@ DTRACE;
       answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR);
    
       /* remove element from list */
-      lFreeElem(lDechainElem(*lpp, added));
+      lRemoveElem(*lpp, &added);
 
       DEXIT;
       return STATUS_EDISK;
@@ -234,7 +234,7 @@ u_long32 target  /* may be SGE_MANAGER_LIST or SGE_OPERATOR_LIST */
       DEXIT;
       return STATUS_EDISK;
    }
-   lFreeElem(found);
+   lFreeElem(&found);
 
    INFO((SGE_EVENT, MSG_SGETEXT_REMOVEDFROMLIST_SSSS,
             ruser, rhost, manop_name, object_name));

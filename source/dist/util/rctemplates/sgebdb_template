@@ -109,7 +109,9 @@ Shutdown()
   if [ -f SPOOLING_DIR/bdb_messages ]; then
      db_pid=`cat SPOOLING_DIR/bdb_messages | cut -d" " -f2`
   fi
-  kill -TERM $db_pid 
+  if [ "$db_pid" != "" ]; then
+     kill -TERM $db_pid 
+  fi
 }
 
 #---------------------------------------------------------------------------

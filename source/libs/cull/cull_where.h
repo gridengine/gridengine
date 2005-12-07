@@ -39,7 +39,7 @@ extern "C" {
 int lCompare(const lListElem *ep, const lCondition *cp);
 void lWriteWhereTo(const lCondition *cp, FILE *fp);
 lCondition *lWhere(const char *fmt, ...);
-lCondition *lFreeWhere(lCondition *cp);
+void lFreeWhere(lCondition **cp);
 lCondition *lCopyWhere(const lCondition *cp);
 
 lCondition *lOrWhere(const lCondition *cp0, const lCondition *cp1);

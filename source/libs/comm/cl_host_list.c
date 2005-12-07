@@ -136,13 +136,13 @@ int cl_host_list_setup(cl_raw_list_t** list_p,
    if (ldata->entry_life_time <= ldata->entry_update_time || ldata->entry_life_time <= ldata->entry_reresolve_time) {
       free(ldata); 
       CL_LOG(CL_LOG_ERROR,"entry_life_time must be >= entry_update_time and >= entry_reresolve_time");
-      cl_commlib_push_application_error(CL_RETVAL_PARAMS, "SGE_COMMLIB_HOST_LIST_LIFE_TIME must be >= SGE_COMMLIB_HOST_LIST_UPDATE_TIME and >= SGE_COMMLIB_HOST_LIST_RERESOLVE_TIME");
+      cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_PARAMS, "SGE_COMMLIB_HOST_LIST_LIFE_TIME must be >= SGE_COMMLIB_HOST_LIST_UPDATE_TIME and >= SGE_COMMLIB_HOST_LIST_RERESOLVE_TIME");
       return CL_RETVAL_PARAMS;
    }
    if (ldata->entry_update_time <= ldata->entry_reresolve_time) {
       free(ldata); 
       CL_LOG(CL_LOG_ERROR,"entry_update_time must be >= entry_reresolve_time");
-      cl_commlib_push_application_error(CL_RETVAL_PARAMS, "SGE_COMMLIB_HOST_LIST_UPDATE_TIME must be >= SGE_COMMLIB_HOST_LIST_RERESOLVE_TIME");
+      cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_PARAMS, "SGE_COMMLIB_HOST_LIST_UPDATE_TIME must be >= SGE_COMMLIB_HOST_LIST_RERESOLVE_TIME");
       return CL_RETVAL_PARAMS;
    }
 

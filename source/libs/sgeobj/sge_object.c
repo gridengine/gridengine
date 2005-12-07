@@ -112,7 +112,7 @@ static object_description object_base[SGE_TYPE_ALL] = {
    { &Master_Project_List,         NULL,           NULL,                 "PROJECT",           UP_Type,   UP_name           },
    { &Master_CQueue_List,          NULL,           NULL,                 "CQUEUE",            CQ_Type,   CQ_name           },
    { NULL,                         NULL,           NULL,                 "QINSTANCE",         QU_Type,   QU_qname          },
-   { NULL,                 sconf_get_config_list, sconf_validate_config_, "SCHEDD_CONF",      SC_Type,   NoName            },
+   { NULL,                         NULL,         sconf_validate_config_, "SCHEDD_CONF",       SC_Type,   NoName            },
    { NULL,                         NULL,           NULL,                 "SCHEDD_MONITOR",    NULL,      NoName            },
    { NULL,                         NULL,           NULL,                 "SHUTDOWN",          NULL,      NoName            },
    { NULL,                         NULL,           NULL,                 "QMASTER_GOES_DOWN", NULL,      NoName            },
@@ -938,8 +938,8 @@ object_set_range_id(lListElem *object, int rnm, u_long32 start, u_long32 end,
       range_elem = lCreateElem(RN_Type);
       range_list = lCreateList("task_id_range", RN_Type);
       if (range_elem == NULL || range_list == NULL) {
-         range_elem = lFreeElem(range_elem);
-         range_list = lFreeList(range_list);
+         lFreeElem(&range_elem);
+         lFreeList(&range_list);
 
          /* No memory */
          ret = 1;
@@ -1008,7 +1008,8 @@ lList **object_type_get_master_list(const sge_object_type type)
    return ret;
 }
 
-bool object_type_commit_master_list(const sge_object_type type, lList **answer_list) {
+bool object_type_commit_master_list(const sge_object_type type, lList **answer_list) 
+{
    bool ret = true;
    
    DENTER(OBJECT_LAYER, "object_type_set_master_list");
@@ -1056,11 +1057,11 @@ bool object_type_free_master_list(const sge_object_type type)
       ERROR((SGE_EVENT, MSG_OBJECT_INVALID_OBJECT_TYPE_SI, SGE_FUNC, type));
       ret = false;
    } else if (object_base[type].list){
-       *object_base[type].list = lFreeList(*object_base[type].list);
+       lFreeList(object_base[type].list);
        ret = true;
    } else if (object_base[type].getMasterList){
-      lList ** list = object_base[type].getMasterList();
-      *list = lFreeList(*list);
+      lList **list = object_base[type].getMasterList();
+      lFreeList(list);
       ret = object_base[type].commitMasterList(NULL);
    }
 
@@ -1339,7 +1340,7 @@ object_parse_list_from_string(lListElem *this_elem, lList **answer_list,
          if (strcasecmp(NONE_STR, first_string)) {
             lSetPosList(this_elem, pos, tmp_list);
          } else {
-            tmp_list = lFreeList(tmp_list);
+            lFreeList(&tmp_list);
          }
       } else {
          answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
@@ -1373,7 +1374,7 @@ object_parse_celist_from_string(lListElem *this_elem, lList **answer_list,
       if (!cull_parse_definition_list((char *)string, &tmp_list, "", CE_Type, rule)) {
          lSetPosList(this_elem, pos, tmp_list);
       } else {
-         tmp_list = lFreeList(tmp_list);
+         lFreeList(&tmp_list);
          answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
                                  ANSWER_QUALITY_ERROR,
                                  MSG_ERRORPARSINGVALUEFORNM_S, string);
@@ -1404,7 +1405,7 @@ object_parse_solist_from_string(lListElem *this_elem, lList **answer_list,
       lString2List(string, &tmp_list, SO_Type, SO_name, ", \t");
       if (tmp_list != NULL) {
          if (!strcasecmp("NONE", lGetString(lFirst(tmp_list), SO_name))) {
-            tmp_list = lFreeList(tmp_list);
+            lFreeList(&tmp_list);
          } else {
             for_each(tmp_elem, tmp_list) {
                const char *queue_value = lGetString(tmp_elem, SO_name);
@@ -1893,7 +1894,16 @@ attr_mod_sub_list(lList **alpp, lListElem *this_elem, int this_elem_name,
                   fstring = lGetHost(full_element, this_elem_primary_key);
                }
 
-               if (!strcmp(rstring, fstring)) {
+               if (rstring == NULL || fstring == NULL) {
+                  ERROR((SGE_EVENT, MSG_OBJECT_VALUEMISSING));
+                  answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC,
+                                  ANSWER_QUALITY_ERROR);
+                  ret = false;
+               }
+
+               if (ret && 
+                   (((type == lStringT) && strcmp(rstring, fstring) == 0) ||
+                   ((type == lHostT) && sge_hostcmp(rstring, fstring) == 0))) {
                   lListElem *new_sub_elem;
                   lListElem *old_sub_elem;
 
@@ -1913,15 +1923,15 @@ attr_mod_sub_list(lList **alpp, lListElem *this_elem, int this_elem_name,
                         /* break; No "break" here. It will follow below! */
                      }
 
-                     lFreeElem(old_sub_elem);
+                     lFreeElem(&old_sub_elem);
                      lAppendElem(full_sublist, new_sub_elem);
 
                      restart_loop = 1;
                      break;
                   } else if (sub_command == SGE_GDI_REMOVE) {
 
-                     lFreeElem(old_sub_elem);
-                     lFreeElem(new_sub_elem);
+                     lFreeElem(&old_sub_elem);
+                     lFreeElem(&new_sub_elem);
 
                      restart_loop = 1;
                      break;
@@ -1939,6 +1949,7 @@ attr_mod_sub_list(lList **alpp, lListElem *this_elem, int this_elem_name,
              sub_command == SGE_GDI_APPEND ||
              sub_command == SGE_GDI_REMOVE)) {
             next_reduced_element = lFirst(reduced_sublist);
+
             while ((reduced_element = next_reduced_element)) {
                int pos, type;
                const char *rstring = NULL;
@@ -1954,34 +1965,43 @@ attr_mod_sub_list(lList **alpp, lListElem *this_elem, int this_elem_name,
                   rstring = lGetHost(reduced_element, this_elem_primary_key);
                }
 
-               if (!no_info && sub_command == SGE_GDI_REMOVE) {
-                  INFO((SGE_EVENT, SFQ" does not exist in "SFQ" of "SFQ"\n",
-                        rstring, sub_list_name, object_name));
-                  answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
-               } else {
-                  if (!full_sublist) {
-                     if (!no_info && sub_command == SGE_GDI_CHANGE) {
-                        INFO((SGE_EVENT, SFQ" of "SFQ" is empty - "
-                           "Adding new element(s).\n",
-                           sub_list_name, object_name));
-                        answer_list_add(alpp, SGE_EVENT, STATUS_OK, 
-                                        ANSWER_QUALITY_INFO);
-                     }
-                     lSetList(this_elem, this_elem_name, lCopyList("",
-                        lGetList(delta_elem, this_elem_name)));
-                     full_sublist = lGetList(this_elem, this_elem_name);
-                     break;
+               if (rstring == NULL) {
+                  ERROR((SGE_EVENT, MSG_OBJECT_VALUEMISSING));
+                  answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC,
+                                  ANSWER_QUALITY_ERROR);
+                  ret = false;
+               }
+
+               if (ret) {
+                  if (!no_info && sub_command == SGE_GDI_REMOVE) {
+                     INFO((SGE_EVENT, SFQ" does not exist in "SFQ" of "SFQ"\n",
+                           rstring, sub_list_name, object_name));
+                     answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
                   } else {
-                     if (!no_info && sub_command == SGE_GDI_CHANGE) {
-                        INFO((SGE_EVENT, "Unable to find "SFQ" in "SFQ" of "SFQ
-                           " - Adding new element.\n", rstring,
-                           sub_list_name, object_name));
-                        answer_list_add(alpp, SGE_EVENT, STATUS_OK, 
-                                        ANSWER_QUALITY_INFO);
+                     if (!full_sublist) {
+                        if (!no_info && sub_command == SGE_GDI_CHANGE) {
+                           INFO((SGE_EVENT, SFQ" of "SFQ" is empty - "
+                              "Adding new element(s).\n",
+                              sub_list_name, object_name));
+                           answer_list_add(alpp, SGE_EVENT, STATUS_OK, 
+                                           ANSWER_QUALITY_INFO);
+                        }
+                        lSetList(this_elem, this_elem_name, lCopyList("",
+                           lGetList(delta_elem, this_elem_name)));
+                        full_sublist = lGetList(this_elem, this_elem_name);
+                        break;
+                     } else {
+                        if (!no_info && sub_command == SGE_GDI_CHANGE) {
+                           INFO((SGE_EVENT, "Unable to find "SFQ" in "SFQ" of "SFQ
+                              " - Adding new element.\n", rstring,
+                              sub_list_name, object_name));
+                           answer_list_add(alpp, SGE_EVENT, STATUS_OK, 
+                                           ANSWER_QUALITY_INFO);
+                        }
+                        new_sub_elem =
+                           lDechainElem(reduced_sublist, reduced_element);
+                        lAppendElem(full_sublist, new_sub_elem);
                      }
-                     new_sub_elem =
-                        lDechainElem(reduced_sublist, reduced_element);
-                     lAppendElem(full_sublist, new_sub_elem);
                   }
                }
             }
@@ -2014,12 +2034,13 @@ attr_mod_sub_list(lList **alpp, lListElem *this_elem, int this_elem_name,
 }
 
 bool 
-object_has_differences(lListElem *this_elem, lList **answer_list,
-                       lListElem *old_elem, bool modify_changed_flag)
+object_has_differences(const lListElem *this_elem, lList **answer_list,
+                       const lListElem *old_elem, bool modify_changed_flag)
 {
    bool ret = false;
 
    DENTER(TOP_LAYER, "object_has_differences");
+
    if (this_elem != NULL && old_elem != NULL) {
       lDescr *this_elem_descr = this_elem->descr;
       lDescr *old_elem_descr = old_elem->descr;
@@ -2028,7 +2049,7 @@ object_has_differences(lListElem *this_elem, lList **answer_list,
 
       /*
        * Compare each attribute of the given elements
-       */ 
+       */
       for (tmp_decr1 = this_elem_descr, tmp_decr2 = old_elem_descr; 
            tmp_decr1->nm != NoName && tmp_decr2->nm != NoName; 
            tmp_decr1++, tmp_decr2++) {
@@ -2082,7 +2103,6 @@ object_has_differences(lListElem *this_elem, lList **answer_list,
 
                   if ((new_str == NULL && old_str != NULL) || 
                       (new_str != NULL && old_str == NULL)) {
-                     DTRACE;
                      equiv = false;
                   } else if (new_str == old_str) {
                      equiv = true;
@@ -2098,7 +2118,6 @@ object_has_differences(lListElem *this_elem, lList **answer_list,
 
                   if ((new_str == NULL && old_str != NULL) || 
                       (new_str != NULL && old_str == NULL)) {
-                     DTRACE;
                      equiv = false;
                   } else if (new_str == old_str) {
                      equiv = true;
@@ -2112,11 +2131,11 @@ object_has_differences(lListElem *this_elem, lList **answer_list,
                break;
             case lObjectT:
                {
-                  lListElem *new_obj = lGetPosRef(this_elem, pos);
-                  lListElem *old_obj = lGetPosRef(old_elem, pos);
+                  lListElem *new_obj = lGetPosObject(this_elem, pos);
+                  lListElem *old_obj = lGetPosObject(old_elem, pos);
 
-                  equiv = object_has_differences(new_obj, answer_list, 
-                                                 old_obj, modify_changed_flag);
+                  equiv = (object_has_differences(new_obj, answer_list, 
+                                                  old_obj, modify_changed_flag) ? false : true);
                }
                break;
             case lListT:
@@ -2160,15 +2179,14 @@ object_has_differences(lListElem *this_elem, lList **answer_list,
 }
                    
 bool 
-object_list_has_differences(lList *this_list, lList **answer_list,
-                            lList *old_list, bool modify_changed_flag)
+object_list_has_differences(const lList *this_list, lList **answer_list,
+                            const lList *old_list, bool modify_changed_flag)
 {
    bool ret = false;
 
    DENTER(BASIS_LAYER, "object_list_has_differences");
 
    if (this_list == NULL && old_list == NULL) {
-      DTRACE;
       ret = false;
    } else if (lGetNumberOfElem(this_list) == lGetNumberOfElem(old_list)) {
       lListElem *new_elem;

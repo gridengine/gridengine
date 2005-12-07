@@ -95,7 +95,7 @@ execd_ticket(struct dispatch_entry *de, sge_pack_buffer *pb, sge_pack_buffer *ap
    }
 #endif
 
-   ticket_modifier = lFreeList(ticket_modifier);
+   lFreeList(&ticket_modifier);
 
    DEXIT;
    return 0;

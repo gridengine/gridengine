@@ -791,6 +791,48 @@ proc replace_string { input_str what with {only_count 0}} {
    }
 }
 
+#****** gettext_procedures/translate_macro() ***********************************
+#  NAME
+#     translate_macro() -- translate content of a certain sge messages macro
+#
+#  SYNOPSIS
+#     translate_macro { macro {par1 ""} {par2 ""} {par3 ""} {par4 ""} {par5 ""} 
+#     {par6 ""} } 
+#
+#  FUNCTION
+#     Looks up the contents of a certain sge messages macro (call to sge_macro),
+#     translate the message and fill in any parameters.
+#
+#  INPUTS
+#     macro     - messages macro name
+#     {par1 ""} - parameter 1
+#     {par2 ""} - parameter 2
+#     {par3 ""} - parameter 3
+#     {par4 ""} - parameter 4
+#     {par5 ""} - parameter 5
+#     {par6 ""} - parameter 6
+#
+#  RESULT
+#     Translated and formatted message.
+#
+#  EXAMPLE
+#     translate_macro MSG_SGETEXT_CANTRESOLVEHOST_S "myhostname"
+#     will return
+#     can't resolve hostname "myhostname"
+#
+#  SEE ALSO
+#     gettext_procedures/translate()
+#     gettext_procedures/sge_macro()
+#*******************************************************************************
+proc translate_macro {macro {par1 ""} {par2 ""} {par3 ""} {par4 ""} {par5 ""} {par6 ""}} {
+   global ts_config
+
+   set msg [sge_macro $macro]
+   set ret [translate $ts_config(master_host) 1 0 0 $msg $par1 $par2 $par3 $par4 $par5 $par6]
+
+   return $ret
+}
+
 #****** gettext_procedures/translate() *****************************************
 #  NAME
 #     translate() -- get l10ned string

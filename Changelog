@@ -1,3 +1,9 @@
+JG-2005-12-07-0: Testsuite: New module tcl_files/sge_host.tcl.
+                            Cleanup of get_exechost.
+                            New functions for calling SGE commands and 
+                            error handling.
+                 Review:    CR
+
 JG-2005-12-06-0: Bugfix:    parsing error in cluster config, qmaster_params 
                  Review:    SG
 

@@ -482,7 +482,7 @@ proc start_remote_prog { hostname
                          {exit_var prg_exit_state} 
                          {mytimeout 60} 
                          {background 0} 
-                         {envlist ""} 
+                         {envlist ""}
                          { do_file_check 1 } 
                          { source_settings_file 1 } 
                          { set_shared_lib_path 1 } 
@@ -890,7 +890,7 @@ proc create_error_message { error_array} {
      append output "called from : $err_calledby\n"
   }
   append output "----------------------------------------------------------------\n"
-  append output "\"$err_text\"\n"
+  append output "$err_text\n"
   append output "----------------------------------------------------------------\n"
 
   return $output

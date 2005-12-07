@@ -565,73 +565,187 @@ proc check_execd_messages { hostname { show_mode 0 } } {
    return $return_value
 } 
 
-
-#                                                             max. column:     |
-#****** sge_procedures/get_exechost() ******
-# 
+#****** sge_procedures/start_sge_bin() *****************************************
 #  NAME
-#     get_exechost -- get exec host configuration
+#     start_sge_bin() -- start a sge binary
 #
 #  SYNOPSIS
-#     get_exechost { change_array host } 
+#     start_sge_bin { bin args {host ""} {user ""} {exit_var prg_exit_state} 
+#     {timeout 60} {sub_path "bin"} } 
 #
 #  FUNCTION
-#     Get the exec host specific configuration settings. The given variable
-#     is used to save the configuration settings.
+#     Starts a binary in $SGE_ROOT/bin/<arch>
 #
 #  INPUTS
-#     change_array - name of an array variable that will get set by get_exechost
-#     host         - name of an execution host
+#     bin                       - binary to start, e.g. qconf
+#     args                      - arguments, e.g. "-sel"
+#     {host ""}                 - host on which to execute command
+#     {user ""}                 - user who shall call command
+#     {exit_var prg_exit_state} - variable for returning command exit code
+#     {timeout 60}              - timeout for command execution
+#     {sub_path "bin"}          - component of binary path, e.g. "bin" or "utilbin"
 #
 #  RESULT
-#     The array is build like follows:
-#
-#     set change_array(user_list)   "deadlineusers"
-#     set change_array(load_scaling) "NONE"
-#     ....
-#
-#
-#     Here the possible change_array values with some typical settings:
-#
-#     hostname                   myhost.mydomain
-#     load_scaling               NONE
-#     complex_list               test
-#     complex_values             NONE
-#     user_lists                 deadlineusers
-#     xuser_lists                NONE
-#     projects                   NONE
-#     xprojects                  NONE
-#     usage_scaling              NONE
-#     resource_capability_factor 0.000000       
-# 
-#  EXAMPLE
-#     get_exechost change_array expo1
-#     puts $change_array(user_list)
-#
+#     Output of called command.
+#     The exit code will be placed in exit_var.
 #
 #  SEE ALSO
-#     sge_procedures/set_exechost()
-#*******************************
-proc get_exechost {change_array host} {
-  global ts_config
-  global CHECK_ARCH
-  upvar $change_array chgar
+#     sge_procedures/start_sge_utilbin()
+#     remote_procedures/start_remote_prog()
+#*******************************************************************************
+proc start_sge_bin {bin args {host ""} {user ""} {exit_var prg_exit_state} {timeout 60} {sub_path "bin"}} {
+   global ts_config CHECK_OUTPUT CHECK_USER
 
-  set catch_result [ catch {  eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-se" "$host" } result ]
-  if { $catch_result == 0 } {
-     # split each line as listelement
-     set help [split $result "\n"]
+   upvar $exit_var exit_state
 
-     foreach elem $help {
-        set id [lindex $elem 0]
-        set value [lrange $elem 1 end]
-        set chgar($id) $value
-     }
-  } else {
-    add_proc_error "get_exechost" "-1" "qconf binary not found"
-  }
+   if {$host == ""} {
+      set host $ts_config(master_host)
+   }
+
+   if {$user == ""} {
+      set user $CHECK_USER
+   }
+
+   set arch [resolve_arch $host]
+   set ret 0
+   set binary "$ts_config(product_root)/$sub_path/$arch/$bin"
+
+   debug_puts "executing $binary $args\nas user $user on host $host"
+   set result [start_remote_prog $host $user $binary $args exit_state $timeout]
+
+   return $result
 }
 
+#****** sge_procedures/start_sge_utilbin() *************************************
+#  NAME
+#     start_sge_utilbin() -- start a sge utilbin binary
+#
+#  SYNOPSIS
+#     start_sge_utilbin { bin args {host ""} {user ""} 
+#     {exit_var prg_exit_state} } 
+#
+#  FUNCTION
+#     Starts a binary in $SGE_ROOT/utilbin/<arch>
+#
+#  INPUTS
+#     bin                       - command to start
+#     args                      - arguments for command
+#     {host ""}                 - host on which to start command
+#     {user ""}                 - user who shall start command
+#     {exit_var prg_exit_state} - variable for returning command exit code
+#
+#  RESULT
+#     Output of called command.
+#     The exit code will be placed in exit_var.
+#
+#  SEE ALSO
+#     sge_procedures/start_sge_bin()
+#*******************************************************************************
+proc start_sge_utilbin {bin args {host ""} {user ""} {exit_var prg_exit_state}} {
+   upvar $exit_var exit_state
+
+   return [start_sge_bin $bin $args $host $user exit_state 60 "utilbin"]
+}
+
+#****** sge_procedures/handle_sge_errors() *************************************
+#  NAME
+#     handle_sge_errors() -- parse error messages from sge commands
+#
+#  SYNOPSIS
+#     handle_sge_errors { procedure command result messages_var {raise_error 1} 
+#     } 
+#
+#  FUNCTION
+#     Parse error messages and raise an error condition (add_proc_error), if 
+#     this is required.
+#
+#     Which messages can be recognized, a highlevel description and error
+#     code are passed in the variable referenced by messages_var.
+#     This variable is a TCL array containing the following fields:
+#     - "index", containing all possible error codes
+#     - <error_code>, containing the message for a certain error code
+#     - <error_code,description>, a highlevel description for the error
+#     - <error_code,level>, the error level for add_proc_error
+#
+#  INPUTS
+#     procedure       - name of the procedure calling the function 
+#                       (for error output)
+#     command         - sge command that had been called (for error output)
+#     result          - output of the command
+#     messages_var    - array with possible messages and info how to handle them
+#     {raise_error 1} - whether to raise an error condition (add_proc_error) 
+#                       or not
+#
+#  RESULT
+#     error code, for recognized messages the corresponding error code from 
+#                 messages array, or -99 if the error message is not contained 
+#                 in messages array
+#
+#  EXAMPLE
+#     set messages(index) "-1 -2"
+#     set messages(-1) [translate_macro MSG_SGETEXT_CANTRESOLVEHOST_S $host]
+#     set messages(-2) [translate_macro MSG_EXEC_XISNOTANEXECUTIONHOST_S $host]
+#     set messages(-2,description) "$host is not configured as exec host"
+#     set messages(-2,level) -3    ;# we only raise an "unsupported" warning
+#     set ret [handle_sge_errors "get_exechost" "qconf -se $host" $result 
+#              messages $raise_error]
+#
+#  SEE ALSO
+#     check/add_proc_error()
+#*******************************************************************************
+proc handle_sge_errors {procedure command result messages_var {raise_error 1}} {
+   upvar $messages_var messages
+
+   set ret -99
+
+   # remove trailing garbage
+   set result [string trim $result]
+
+   # try to find error message
+   foreach errno $messages(index) {
+      if {[string match $messages($errno) $result]} {
+         set ret $errno
+         break
+      }
+   }
+
+   # in case of errors, do error reporting
+   if {$ret < 0} {
+      set error_level -1
+   } else {
+      set error_level 0
+   }
+
+   set error_message "$command failed ($ret):\n"
+
+   if {$ret == -99} {
+      append error_message "$result"
+   } else {
+      # we might have a high level error description
+      if {[info exists messages($ret,description)]} {
+         append error_message "$messages($ret,description)\n"
+         append error_message "command output was:\n"
+      }
+
+      append error_message "$result"
+
+      # we might have a special error level (error, warning, unsupported)
+      if {[info exists messages($ret,level)]} {
+         set error_level $messages($ret,level)
+      }
+   }
+
+   # in case of success (errno >= 0), we just want to see the output, not
+   # raise an error
+   if {$ret >= 0} {
+      set raise_error 0
+   }
+
+   # generate error message or just informational/error output
+   add_proc_error $procedure $error_level $error_message $raise_error
+
+   return $ret
+}
 
 #****** sge_procedures/submit_error_job() **************************************
 #  NAME

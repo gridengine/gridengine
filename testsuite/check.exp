@@ -654,9 +654,11 @@ set CHECK_TESTSUITE_LOCKFILE "$CHECK_CURRENT_WORKING_DIR/testsuite_lockfile"
 #     reporting. (e.g. forced timeout test)
 #
 #  INPUTS
-#     proc_name - name of the calling procedure
-#     result    - error state (e.g. -1)
-#     text      - error text (e.g. "open file xxx failed)
+#     proc_name   - name of the calling procedure
+#     result      - error state (e.g. -1)
+#     text        - error text (e.g. "open file xxx failed)
+#     raise_error - raise an error condition (including sending mail)
+#                   or just output the error message
 #
 #  RESULT
 #     no result
@@ -664,9 +666,20 @@ set CHECK_TESTSUITE_LOCKFILE "$CHECK_CURRENT_WORKING_DIR/testsuite_lockfile"
 #  SEE ALSO
 #     check/set_error
 #*******************************
-proc add_proc_error { proc_name result text } {
+proc add_proc_error { proc_name result text {raise_error 1}} {
    global CHECK_CUR_PROC_ERRORS CHECK_CUR_PROC_RESULTS CHECK_CUR_PROC_NAME CHECK_OUTPUT check_name
    global add_proc_error_avoid_recursive_call
+
+   # There are cases where we intentionally make a command fail,
+   # e.g. calling get_exechost for a non execution host.
+   # We don't want the test to go into error state in this case,
+   # but just see the error output.
+   if {!$raise_error} {
+      puts $CHECK_OUTPUT "----------------------------------------------------------------"
+      puts $CHECK_OUTPUT $text  
+      puts $CHECK_OUTPUT "----------------------------------------------------------------"
+      return
+   }
 
    # add_proc_error could be called recursively, for example, 
    # if errors occur while sending the error message as mail.
@@ -7797,6 +7810,7 @@ proc source_tcl_files {} {
    ts_source $libdir/parser
    ts_source $libdir/sge_config
    ts_source $libdir/sge_procedures
+   ts_source $libdir/sge_host
    ts_source $libdir/sge_job
    ts_source $libdir/sge_queue
    ts_source $libdir/sge_project

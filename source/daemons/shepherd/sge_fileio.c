@@ -239,6 +239,7 @@ FCLOSE_ERROR:
    return false;
 }
 
+
 bool shepherd_write_osjobid_file(const char *osjobid)
 {
    bool ret = true;
@@ -385,17 +386,17 @@ FCLOSE_ERROR:
    return false;
 }
 
+#if defined(IRIX) || defined(CRAY) || defined(NECSX4) || defined(NECSX5)
 bool 
 shepherd_read_osjobid_file(
 #if (IRIX)
-   ash_t *return_code
+   ash_t *return_code,
 #elif defined(NECSX4) || defined(NECSX5)
-   id_t *return_code
+   id_t *return_code,
 #elif defined(CRAY)
-   int *return_code
-#else
-   void
+   int *return_code,
 #endif
+   bool is_error
 )
 {
    bool ret = true;
@@ -419,16 +420,21 @@ shepherd_read_osjobid_file(
 #endif
          ret = false;
       }
+      FCLOSE(fp);
    } else {
-      shepherd_error_sprintf(MSG_FILE_NOOPEN_SS, filename, strerror(errno));
+      if (is_error == true) {
+         shepherd_error_sprintf(MSG_FILE_NOOPEN_SS, filename, strerror(errno));
+      } else {
+         shepherd_trace_sprintf(MSG_FILE_NOOPEN_SS, filename, strerror(errno));
+      }
       ret = false;
    }
-   FCLOSE(fp);
    return ret;
 FCLOSE_ERROR:
    shepherd_error_sprintf(MSG_FILE_NOCLOSE_SS, filename, strerror(errno));
    return false;
 }
+#endif
 
 void 
 create_checkpointed_file(int ckpt_is_in_arena)

@@ -877,6 +877,7 @@ int ckpt_type
                                rest_command, sizeof(rest_command) -1);
       shepherd_trace("restarting job from checkpoint arena");
 
+#if defined(IRIX) || defined(CRAY) || defined(NECSX4) || defined(NECSX5)
       /* reuse old osjobid for the migrated job and forward this one to ptf */
       shepherd_write_osjobid_file(get_conf_val("ckpt_osjobid"));
 
@@ -889,6 +890,7 @@ int ckpt_type
 #elif defined(CRAY)
       sscanf(get_conf_val("ckpt_osjobid"),  "%d", &jobid);
       shepherd_trace_sprintf("reusing old unicos jobid %d", jobid);
+#endif
 #endif
 
       shepherd_trace("restarting job from checkpoint arena");
@@ -2189,11 +2191,8 @@ shepherd_signal_job(pid_t pid, int sig) {
    /* Only root can setup job */
    if (getuid() == 0) {
       if (first == 1) {
-         if (!shepherd_read_osjobid_file(&osjobid)) {
-            shepherd_trace("can't read \"osjobid\" file");
-         } else {
-            first = 0;
-         }
+         shepherd_read_osjobid_file(&osjobid, false)
+         first = 0;
       }
 
       if (osjobid == 0) {
@@ -2301,9 +2300,7 @@ shepherd_signal_job(pid_t pid, int sig) {
             }
 #   elif defined(IRIX)
             if (first == 1) {
-                if (shepherd_read_osjobid_file(&osjobid) != true) {
-                    shepherd_trace("can't read \"osjobid\" file");
-                } 
+                shepherd_read_osjobid_file(&osjobid, false);
                 first = 0;
             }
             if (osjobid == 0) {

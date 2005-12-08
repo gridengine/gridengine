@@ -398,7 +398,7 @@ static int write_pid_file(pid_t pid)
    snprintf(pid_str, 20, pid_t_fmt, pid);
 
    write(pid_file, pid_str, strlen(pid_str));
-   close(pid_file);
+   SGE_CLOSE(pid_file);
    return 1;
 }
 

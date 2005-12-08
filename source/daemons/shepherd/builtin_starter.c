@@ -822,13 +822,15 @@ int sge_set_environment()
    FILE *fp;
    char buf[10000], *name, *value, err_str[10000];
    int line=0;
-   char s[100] = "";
+#if defined(IRIX) || defined(CRAY) || defined(NECSX4) || defined(NECSX5)
+   char help_str[100] = "";
 #if (IRIX)
    ash_t jobid;
 #elif defined(NECSX4) || defined(NECSX5)
    id_t jobid;
 #elif defined(CRAY)
    int jobid;
+#endif
 #endif
 
    setup_environment();
@@ -841,19 +843,17 @@ int sge_set_environment()
    }
 
 #if defined(IRIX) || defined(CRAY) || defined(NECSX4) || defined(NECSX5)
-   if (shepherd_read_osjobid_file(&jobid)) {
+   if (shepherd_read_osjobid_file(&jobid, false)) {
 #  if defined(IRIX)
-      sprintf(s, "%lld", jobid);
+      snprintf(help_str, 100, "%lld", jobid);
 #  elif defined(CRAY)
-      sprintf(s, "%d", jobid);
+      snprintf(help_str, 100, "%d", jobid);
 #  elif defined(NECSX4) || defined(NECSX5)
-      sprintf(s, "%ld", jobid);
+      snprintf(help_str, 100, "%ld", jobid);
 #  endif
+      sge_set_env_value("OSJOBID", help_str);
    }
 #endif
-   if (s[0] != '\0') {
-      sge_set_env_value("OSJOBID", s);
-   }
 
    while (fgets(buf, sizeof(buf), fp)) {
 

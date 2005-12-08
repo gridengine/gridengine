@@ -1,3 +1,8 @@
+RD-2005-12-08-0: Bugfix:    fixed broken shepherd on irix
+                            introduced due to FCLOSE cleanup 
+                 Changed:   qrsh_starter, shepherd, execd
+                 Review:    CR
+
 JG-2005-12-07-0: Testsuite: New module tcl_files/sge_host.tcl.
                             Cleanup of get_exechost.
                             New functions for calling SGE commands and 

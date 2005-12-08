@@ -208,7 +208,7 @@ monitoring_t *monitor
          continue;
       }
 
-      jep = job_list_locate(Master_Job_List, jobid);
+      jep = job_list_locate(*(object_type_get_master_list(SGE_TYPE_JOB)), jobid);
       if(jep != NULL) {
          jatep = lGetElemUlong(lGetList(jep, JB_ja_tasks), JAT_task_number, jataskid);
       }

@@ -295,7 +295,7 @@ int sge_del_pe(lListElem *pep, lList **alpp, char *ruser, char *rhost)
    {
       lList *local_answer_list = NULL;
 
-      if (pe_is_referenced(ep, &local_answer_list, Master_Job_List,
+      if (pe_is_referenced(ep, &local_answer_list, *(object_type_get_master_list(SGE_TYPE_JOB)),
                            *(object_type_get_master_list(SGE_TYPE_CQUEUE)))) {
          lListElem *answer = lFirst(local_answer_list);
 
@@ -342,7 +342,7 @@ lList *pe_list
       pe_name = lGetString(pep, PE_name);
       DPRINTF(("debiting from pe %s:\n", pe_name));
 
-      for_each(jep, Master_Job_List) {
+      for_each(jep, *(object_type_get_master_list(SGE_TYPE_JOB))) {
          lListElem *jatep;
 
          slots = 0;

@@ -1,3 +1,11 @@
+SG-2005-12-08-0: Enhancem.: - first part of making the libs thread safe
+                              and removing the master lists
+                            - fixed a memory leak in c_gdi, related to
+                              qconf -ks
+                            - fixed a bug in job number spooling
+                 Review:    DT
+                 Changed:   all
+
 JG-2005-12-08-0: Testsuite: Added test cases for qconf -se and -sel.
                             Additional utility functions and cleanup.
                  Review:    CR

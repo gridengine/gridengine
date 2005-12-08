@@ -153,6 +153,10 @@ int event_handler_default_scheduler()
    char buffer[128];
    lList *orders = NULL;
    double prof_copy=0, prof_event=0, prof_init=0, prof_free=0, prof_run=0;
+   lList *master_job_list = *object_type_get_master_list(SGE_TYPE_JOB);
+   lList *master_userset_list = *object_type_get_master_list(SGE_TYPE_USERSET);
+   lList *master_exechost_list= *object_type_get_master_list(SGE_TYPE_EXECHOST);
+   
    DENTER(GDI_LAYER, "event_handler_default_scheduler");
    
    sge_dstring_init(&ds, buffer, sizeof(buffer));
@@ -169,7 +173,7 @@ int event_handler_default_scheduler()
 
    if (rebuild_categories) {
       DPRINTF(("### ### ### ###   REBUILDING CATEGORIES   ### ### ### ###\n"));
-      sge_rebuild_job_category(Master_Job_List, Master_Userset_List);
+      sge_rebuild_job_category(master_job_list, master_userset_list);
       /* category references are used in the access tree
          so rebuilding categories makes necessary to rebuild
          the access tree */
@@ -187,8 +191,7 @@ int event_handler_default_scheduler()
    ensure_valid_what_and_where();
 
    /* the scheduler functions have to work with a reduced copy .. */
-   copy.host_list = lSelect("", Master_Exechost_List,
-                            where_host, what_host);
+   copy.host_list = lSelect("", master_exechost_list, where_host, what_host);
    /* 
     * Within the scheduler we do only need QIs
     */
@@ -219,19 +222,19 @@ int event_handler_default_scheduler()
       copy.job_list = sge_category_job_copy(copy.queue_list, &orders); 
    }
    else {
-      copy.job_list = lCopyList("test", Master_Job_List);                         
+      copy.job_list = lCopyList("test", master_job_list);                         
    }   
 
-   copy.dept_list = lSelect("", Master_Userset_List, where_dept, what_dept);
-   copy.acl_list = lSelect("", Master_Userset_List, where_acl, what_acl);
+   copy.dept_list = lSelect("", master_userset_list, where_dept, what_dept);
+   copy.acl_list = lSelect("", master_userset_list, where_acl, what_acl);
 
    /* .. but not in all cases */
-   copy.centry_list = lCopyList("", Master_CEntry_List);
-   copy.pe_list = lCopyList("", Master_Pe_List);
-   copy.share_tree = lCopyList("", Master_Sharetree_List);
-   copy.user_list = lCopyList("", Master_User_List);
-   copy.project_list = lCopyList("", Master_Project_List);
-   copy.ckpt_list = lCopyList("", Master_Ckpt_List);
+   copy.centry_list = lCopyList("", *object_type_get_master_list(SGE_TYPE_CENTRY));
+   copy.pe_list = lCopyList("", *object_type_get_master_list(SGE_TYPE_PE));
+   copy.share_tree = lCopyList("", *object_type_get_master_list(SGE_TYPE_SHARETREE));
+   copy.user_list = lCopyList("", *object_type_get_master_list(SGE_TYPE_USER));
+   copy.project_list = lCopyList("", *object_type_get_master_list(SGE_TYPE_PROJECT));
+   copy.ckpt_list = lCopyList("", *object_type_get_master_list(SGE_TYPE_CKPT));
 
    /* report number of reduced and raw (in brackets) lists */
    DPRINTF(("Q:%d, AQ:%d J:%d(%d), H:%d(%d), C:%d, A:%d, D:%d, "
@@ -239,9 +242,9 @@ int event_handler_default_scheduler()
             lGetNumberOfElem(copy.queue_list),
             lGetNumberOfElem(copy.all_queue_list),
             lGetNumberOfElem(copy.job_list),
-            lGetNumberOfElem(Master_Job_List),
+            lGetNumberOfElem(master_job_list),
             lGetNumberOfElem(copy.host_list),
-            lGetNumberOfElem(Master_Exechost_List),
+            lGetNumberOfElem(master_exechost_list),
 
             lGetNumberOfElem(copy.centry_list),
             lGetNumberOfElem(copy.acl_list),
@@ -260,9 +263,9 @@ int event_handler_default_scheduler()
          lGetNumberOfElem(copy.queue_list),
          lGetNumberOfElem(copy.all_queue_list),
          lGetNumberOfElem(copy.job_list),
-         lGetNumberOfElem(Master_Job_List),
+         lGetNumberOfElem(master_job_list),
          lGetNumberOfElem(copy.host_list),
-         lGetNumberOfElem(Master_Exechost_List),
+         lGetNumberOfElem(master_exechost_list),
 
          lGetNumberOfElem(copy.centry_list),
          lGetNumberOfElem(copy.acl_list),
@@ -328,7 +331,7 @@ int event_handler_default_scheduler()
  
    if(prof_is_active(SGE_PROF_CUSTOM6)){
       PROFILING((SGE_EVENT, "PROF: schedd run took: %.3f s (init: %.3f s, copy: %.3f s, run:%.3f, free: %.3f s, jobs: %d, categories: %d/%d)",
-            prof_event, prof_init, prof_copy, prof_run, prof_free, lGetNumberOfElem(Master_Job_List), sge_category_count(), sge_cs_category_count() ));
+            prof_event, prof_init, prof_copy, prof_run, prof_free, lGetNumberOfElem(master_job_list), sge_category_count(), sge_cs_category_count() ));
 
    }
 
@@ -706,11 +709,10 @@ bool sge_process_schedd_conf_event_after(sge_object_type type, sge_event_action 
    return true;
 }
 
-bool 
-sge_process_schedd_conf_event_before(sge_object_type type, sge_event_action action, 
-                                     lListElem *event, void *clientdata)
+bool sge_process_schedd_conf_event_before(sge_object_type type, sge_event_action action, 
+                                          lListElem *event, void *clientdata)
 {
-   lListElem *new;
+   lListElem *new = NULL;
 
    DENTER(GDI_LAYER, "sge_process_schedd_conf_event_before");
    DPRINTF(("callback processing schedd config event\n"));
@@ -729,24 +731,26 @@ sge_process_schedd_conf_event_before(sge_object_type type, sge_event_action acti
       lListElem *old = sconf_get_config(); 
       const char *new_load_formula = lGetString(new, SC_load_formula);
       lList *alpp = NULL;
+      lList *master_centry_list = *object_type_get_master_list(SGE_TYPE_CENTRY);
 
-      if (Master_CEntry_List != NULL &&
-          !sconf_is_valid_load_formula(new, &alpp, Master_CEntry_List)) {
-            ERROR((SGE_EVENT,MSG_INVALID_LOAD_FORMULA, new_load_formula ));
-            answer_list_output(&alpp);
-            if (old)
-               lSetString(new, SC_load_formula, lGetString(old, SC_load_formula) );
-            else
-               lSetString(new, SC_load_formula, "none");
-
+      if (master_centry_list != NULL &&
+          !sconf_is_valid_load_formula(new, &alpp, master_centry_list)) {
+            
+         ERROR((SGE_EVENT,MSG_INVALID_LOAD_FORMULA, new_load_formula ));
+         answer_list_output(&alpp);
+         if (old) {
+            lSetString(new, SC_load_formula, lGetString(old, SC_load_formula) );
+         }   
+         else {
+            lSetString(new, SC_load_formula, "none");
+         }   
       }
       else {
-
          int n = strlen(new_load_formula);
+
          if (n > 0) {
             char *copy = NULL;  
 
-         
             copy = malloc(n + 1);
             if (copy != NULL) {
                strcpy(copy, new_load_formula);
@@ -754,6 +758,7 @@ sge_process_schedd_conf_event_before(sge_object_type type, sge_event_action acti
                sge_strip_blanks(copy);
                lSetString(new, SC_load_formula, copy);
             }
+            
             FREE(copy);
          }
       }
@@ -764,7 +769,7 @@ sge_process_schedd_conf_event_before(sge_object_type type, sge_event_action acti
    {
       const char *time = lGetString(new, SC_schedule_interval); 
       u_long32 schedule_interval;  
-      
+
       if (extended_parse_ulong_val(NULL, &schedule_interval, TYPE_TIM, time, NULL, 0, 0) ) {
          if (ec_get_edtime() != schedule_interval) {
            ec_set_edtime(schedule_interval);
@@ -798,7 +803,7 @@ sge_process_job_event_before(sge_object_type type, sge_event_action action,
 
    if (action == SGE_EMA_DEL || action == SGE_EMA_MOD) {
       job_id = lGetUlong(event, ET_intkey);
-      job = job_list_locate(Master_Job_List, job_id);
+      job = job_list_locate(*object_type_get_master_list(SGE_TYPE_JOB), job_id);
       if (job == NULL) {
          ERROR((SGE_EVENT, MSG_CANTFINDJOBINMASTERLIST_S, 
                 job_get_id_string(job_id, 0, NULL)));
@@ -851,7 +856,7 @@ bool sge_process_job_event_after(sge_object_type type, sge_event_action action,
 
    if (action == SGE_EMA_ADD || action == SGE_EMA_MOD) {
       job_id = lGetUlong(event, ET_intkey);
-      job = job_list_locate(Master_Job_List, job_id);
+      job = job_list_locate(*object_type_get_master_list(SGE_TYPE_JOB), job_id);
       if (job == NULL) {
          ERROR((SGE_EVENT, MSG_CANTFINDJOBINMASTERLIST_S, 
                 job_get_id_string(job_id, 0, NULL)));
@@ -864,7 +869,7 @@ bool sge_process_job_event_after(sge_object_type type, sge_event_action action,
    switch (action) {
       case SGE_EMA_LIST:
          rebuild_categories = true;
-         sge_do_priority(Master_Job_List, NULL); /* recompute the priorities */
+         sge_do_priority(*object_type_get_master_list(SGE_TYPE_JOB), NULL); /* recompute the priorities */
          break;
 
       case SGE_EMA_ADD:
@@ -872,7 +877,7 @@ bool sge_process_job_event_after(sge_object_type type, sge_event_action action,
             u_long32 start, end, step;
 
             /* add job category */
-            sge_add_job_category(job, Master_Userset_List);
+            sge_add_job_category(job, *object_type_get_master_list(SGE_TYPE_USERSET));
 
             job_get_submit_task_ids(job, &start, &end, &step);
 
@@ -893,7 +898,7 @@ bool sge_process_job_event_after(sge_object_type type, sge_event_action action,
                ** for changed job
                */
 
-               sge_add_job_category(job, Master_Userset_List);
+               sge_add_job_category(job, *object_type_get_master_list(SGE_TYPE_USERSET));
                break;
 
             case sgeE_JOB_FINAL_USAGE:
@@ -980,7 +985,7 @@ bool sge_process_ja_task_event_after(sge_object_type type,
       DPRINTF(("callback processing ja_task event after default rule SGE_EMA_DEL\n"));
 
       job_id = lGetUlong(event, ET_intkey);
-      job = job_list_locate(Master_Job_List, job_id);
+      job = job_list_locate(*object_type_get_master_list(SGE_TYPE_JOB), job_id);
       if (job == NULL) {
          ERROR((SGE_EVENT, MSG_CANTFINDJOBINMASTERLIST_S, 
                 job_get_id_string(job_id, 0, NULL)));

@@ -90,6 +90,7 @@
 #include "sge_var.h"
 #include "sge_ckpt.h"
 #include "sge_centry.h"
+#include "sgeobj/sge_object.h"
 #include "uti/sge_stdio.h"
 
 #include "msg_common.h"
@@ -185,9 +186,11 @@ long last_addgrpid
 
 static int addgrpid_already_in_use(long add_grp_id) 
 {
-   lListElem *job, *ja_task, *pe_task;
+   lListElem *job = NULL;
+   lListElem *ja_task = NULL;
+   lListElem *pe_task = NULL;
    
-   for_each(job, Master_Job_List) {
+   for_each(job, *(object_type_get_master_list(SGE_TYPE_JOB))) {
       for_each (ja_task, lGetList(job, JB_ja_tasks)) {
          const char *id = lGetString(ja_task, JAT_osjobid);
          if (id != NULL && atol(id) == add_grp_id) {

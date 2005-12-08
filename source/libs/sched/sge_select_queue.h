@@ -112,6 +112,8 @@ typedef struct {
    int        soft_violations;    /* number of soft request violations              */
 } sge_assignment_t;
 
+#define SGE_ASSIGNMENT_INIT {0, 0, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, 0, 0, 0}
+
 void assignment_init(sge_assignment_t *a, lListElem *job, lListElem *ja_task, bool is_load_adj);
 void assignment_copy(sge_assignment_t *dst, sge_assignment_t *src, bool move_gdil);
 void assignment_release(sge_assignment_t *a);

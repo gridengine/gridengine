@@ -250,7 +250,7 @@ sge_gdi_qmod(char *host, sge_gdi_request *request, sge_gdi_request *answer, moni
                alltasks = 1;
             }
 
-            job = job_list_locate(Master_Job_List, jobid);
+            job = job_list_locate(*(object_type_get_master_list(SGE_TYPE_JOB)), jobid);
             if (job) {
                jatask = lFirst(lGetList(job, JB_ja_tasks));
 
@@ -366,7 +366,7 @@ sge_gdi_qmod(char *host, sge_gdi_request *request, sge_gdi_request *answer, moni
             const char *job_name = lGetString(dep, ID_str);
             const lListElem *job;
             lListElem *mod = NULL;
-            for_each(job, Master_Job_List) {
+            for_each(job, *(object_type_get_master_list(SGE_TYPE_JOB))) {
                if (!fnmatch(job_name, lGetString(job, JB_job_name), 0)) {
                   char job_id[40];
                   mod = lCopyElem(dep);
@@ -627,7 +627,7 @@ monitoring_t *monitor
 
    /* using sge_commit_job(j, COMMIT_ST_FINISHED_FAILED) q->job_list
       could get modified so we have to be careful when iterating through the job list */
-   nextjep = lFirst(Master_Job_List);
+   nextjep = lFirst(*(object_type_get_master_list(SGE_TYPE_JOB)));
    while ((jep=nextjep)) {
       lListElem* jatep;
       nextjep = lNext(jep);
@@ -968,7 +968,7 @@ void rebuild_signal_events()
    DENTER(TOP_LAYER, "rebuild_signal_events");
 
    /* J O B */
-   for_each(jep, Master_Job_List)
+   for_each(jep, *(object_type_get_master_list(SGE_TYPE_JOB)))
    {
       for_each (jatep, lGetList(jep, JB_ja_tasks))
       { 
@@ -1026,7 +1026,7 @@ void resend_signal_event(te_event_t anEvent, monitoring_t *monitor)
    MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE), monitor);
 
    if (queue == NULL) {
-      if (!(jep = job_list_locate(Master_Job_List, jobid)) || !(jatep=job_search_task(jep, NULL, jataskid)))
+      if (!(jep = job_list_locate(*(object_type_get_master_list(SGE_TYPE_JOB)), jobid)) || !(jatep=job_search_task(jep, NULL, jataskid)))
       {
          ERROR((SGE_EVENT, MSG_EVE_RESENTSIGNALTASK_UU, sge_u32c(jobid), sge_u32c(jataskid)));
          SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
@@ -1229,7 +1229,7 @@ monitoring_t *monitor
    /* test whether there are parallel jobs 
       with a slave slot in this queue 
       if so then signal this job */
-   for_each (jep, Master_Job_List) {
+   for_each (jep, *(object_type_get_master_list(SGE_TYPE_JOB))) {
       for_each (jatep, lGetList(jep, JB_ja_tasks)) {
 
          /* skip sequential and not running jobs */

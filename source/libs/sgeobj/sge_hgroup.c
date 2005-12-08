@@ -151,7 +151,10 @@ bool hgroup_check_name(lList **answer_list, const char* name)
 lList **
 hgroup_list_get_master_list(void) 
 {
-   return &Master_HGroup_List;
+    /* depending on the setting, we want to return the local thread setting and
+       not the global master list. The object_type_get_master_list knows, which
+       one to get */
+    return object_type_get_master_list(SGE_TYPE_HGROUP);
 }
 
 /****** sgeobj/hgroup/hgroup_list_locate() ************************************

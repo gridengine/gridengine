@@ -270,7 +270,7 @@ void sge_setup_job_resend(void)
 
    DENTER(TOP_LAYER, "sge_setup_job_resend");
 
-   job = lFirst(Master_Job_List);
+   job = lFirst(*(object_type_get_master_list(SGE_TYPE_JOB)));
 
    while (NULL != job)
    {
@@ -782,10 +782,10 @@ static int setup_qmaster(void)
   * with only a view owners is solved.
   */
 #if 0
-   if (Master_Job_List == NULL) {
-      Master_Job_List = lCreateList("Master_Job_List", JB_Type);
+   if (*(object_type_get_master_list(SGE_TYPE_JOB)) == NULL) {
+      *(object_type_get_master_list(SGE_TYPE_JOB)) = lCreateList("Master_Job_List", JB_Type);
    }
-   cull_hash_new(Master_Job_List, JB_owner, 0);
+   cull_hash_new(*(object_type_get_master_list(SGE_TYPE_JOB)), JB_owner, 0);
 #endif
 
    if (!sge_initialize_persistence(&answer_list)) {
@@ -912,7 +912,7 @@ static int setup_qmaster(void)
    DPRINTF(("job_list-----------------------------------\n"));
    /* measure time needed to read job database */
    time_start = time(0);
-   spool_read_list(&answer_list, spooling_context, &Master_Job_List, SGE_TYPE_JOB);
+   spool_read_list(&answer_list, spooling_context, object_type_get_master_list(SGE_TYPE_JOB), SGE_TYPE_JOB);
    time_end = time(0);
    answer_list_output(&answer_list);
 
@@ -920,12 +920,12 @@ static int setup_qmaster(void)
       u_long32 saved_logginglevel = log_state_get_log_level();
       log_state_set_log_level(LOG_INFO);
       INFO((SGE_EVENT, MSG_QMASTER_READ_JDB_WITH_X_ENTR_IN_Y_SECS_UU,
-            sge_u32c(lGetNumberOfElem(Master_Job_List)), 
+            sge_u32c(lGetNumberOfElem(*(object_type_get_master_list(SGE_TYPE_JOB)))), 
             sge_u32c(time_end - time_start)));
       log_state_set_log_level(saved_logginglevel);
    }
 
-   for_each(jep, Master_Job_List) {
+   for_each(jep, *(object_type_get_master_list(SGE_TYPE_JOB))) {
       DPRINTF(("JOB "sge_u32" PRIORITY %d\n", lGetUlong(jep, JB_job_number), 
             (int)lGetUlong(jep, JB_priority) - BASE_PRIORITY));
 
@@ -946,7 +946,7 @@ static int setup_qmaster(void)
       
       bootstrap_set_job_spooling("true");
       
-      for_each(jep, Master_Job_List) {
+      for_each(jep, *(object_type_get_master_list(SGE_TYPE_JOB))) {
          u_long32 job_id = lGetUlong(jep, JB_job_number);
          sge_dstring_clear(&buffer);
 
@@ -1119,7 +1119,7 @@ int user
          next = lNext(upu);
 
          jobid = lGetUlong(upu, UPU_job_number);
-         if (!job_list_locate(Master_Job_List, jobid)) {
+         if (!job_list_locate(*(object_type_get_master_list(SGE_TYPE_JOB)), jobid)) {
             lRemoveElem(lGetList(up, UP_debited_job_usage), &upu);
             WARNING((SGE_EVENT, "removing reference to no longer existing job "sge_u32" of %s "SFQ"\n",
                            jobid, user?"user":"project", lGetString(up, UP_name)));
@@ -1150,7 +1150,7 @@ static int debit_all_jobs_from_qs()
 
    DENTER(TOP_LAYER, "debit_all_jobs_from_qs");
 
-   next_jep = lFirst(Master_Job_List);
+   next_jep = lFirst(*(object_type_get_master_list(SGE_TYPE_JOB)));
    while ((jep=next_jep)) {
    
       /* may be we have to delete this job */   

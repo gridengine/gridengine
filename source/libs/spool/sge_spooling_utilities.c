@@ -442,10 +442,10 @@ bool spool_default_validate_func(lList **answer_list,
          }
          break;
       case SGE_TYPE_QINSTANCE:
-         ret = qinstance_validate(object, answer_list);
+         ret = qinstance_validate(object, answer_list, Master_Exechost_List);
          break;
       case SGE_TYPE_CQUEUE:
-         ret = qinstance_list_validate(lGetList(object, CQ_qinstances), answer_list);
+         ret = qinstance_list_validate(lGetList(object, CQ_qinstances), answer_list, Master_Exechost_List);
          break;
       case SGE_TYPE_CONFIG:
          {

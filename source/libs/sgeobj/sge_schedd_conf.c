@@ -2542,7 +2542,8 @@ static bool is_config_set(void)
 *  MT-NOTE:   is MT save, uses LOCK_SCHED_CONF(read)
 *
 *******************************************************************************/
-bool sconf_is(void) {
+bool sconf_is(void) 
+{
    bool is = false;
   
    sge_mutex_lock("Sched_Conf_Lock", "", __LINE__, &pos.mutex);

@@ -49,6 +49,7 @@
 #include "sge_qinstance.h"
 #include "sge_ulong.h"
 #include "sge_centry.h"
+#include "sge_object.h"
 
 #include "msg_common.h"
 #include "msg_schedd.h"
@@ -385,7 +386,6 @@ centry_create(lList **answer_list, const char *name)
 *     lList **answer_list               - AN_Type 
 *     const lList *master_cqueue_list   - CQ_Type 
 *     const lList *master_exechost_list - EH_Type 
-*     const lList *master_sconf_list    - SC_Type 
 *
 *  RESULT
 *     bool - true or false
@@ -519,7 +519,7 @@ centry_print_resource_to_dstring(const lListElem *this_elem, dstring *string)
 lList **
 centry_list_get_master_list(void)
 {
-   return &Master_CEntry_List;
+   return object_type_get_master_list(SGE_TYPE_CENTRY);
 }
 
 /****** sgeobj/centry/centry_list_locate() ************************************
@@ -1282,7 +1282,7 @@ ensure_attrib_available(lList **alpp, lListElem *ep, int nm)
    if (ep != NULL) {
       for_each (attr, lGetList(ep, nm)) {
          const char *name = lGetString(attr, CE_name);
-         lListElem *centry = centry_list_locate(Master_CEntry_List, name);
+         lListElem *centry = centry_list_locate(*object_type_get_master_list(SGE_TYPE_CENTRY), name);
 
          if (centry == NULL) {
             ERROR((SGE_EVENT, MSG_GDI_NO_ATTRIBUTE_S, 

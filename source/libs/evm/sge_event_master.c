@@ -3424,7 +3424,7 @@ static void total_update_event(lListElem *event_client, ev_event type)
             lp = Master_Exechost_List;
             break;
          case sgeE_JOB_LIST:
-            lp = Master_Job_List;
+            lp = *(object_type_get_master_list(SGE_TYPE_JOB));
             break;
          case sgeE_JOB_SCHEDD_INFO_LIST:
             lp = Master_Job_Schedd_Info_List;

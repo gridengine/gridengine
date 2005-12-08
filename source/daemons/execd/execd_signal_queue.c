@@ -69,6 +69,7 @@
 
 #include "msg_execd.h"
 #include "msg_daemons_common.h"
+#include "sgeobj/sge_object.h"
 
 #if defined(CRAY) && !defined(SIGXCPU)
 #   define SIGXCPU SIGCPULIM
@@ -109,7 +110,7 @@ execd_signal_queue(struct dispatch_entry *de, sge_pack_buffer *pb, sge_pack_buff
       found = (signal_job(jobid, jataskid, signal)==0);
    } 
    else {            /* signal a queue */
-      for_each(jep, Master_Job_List) {
+      for_each(jep, *(object_type_get_master_list(SGE_TYPE_JOB))) {
          lListElem *gdil_ep, *master_q, *jatep;
          const char *qnm;
 
@@ -620,14 +621,14 @@ u_long32 signal
    DENTER(TOP_LAYER, "signal_job");
 
    /* search appropriate array task and job */
-   jep = lGetElemUlongFirst(Master_Job_List, JB_job_number, jobid, &iterator);
+   jep = lGetElemUlongFirst(*(object_type_get_master_list(SGE_TYPE_JOB)), JB_job_number, jobid, &iterator);
    while(jep != NULL) {
       jatep = job_search_task(jep, NULL, jataskid);
 
       if(jatep != NULL) {
          break;
       }
-      jep = lGetElemUlongNext(Master_Job_List, JB_job_number, jobid, &iterator);
+      jep = lGetElemUlongNext(*(object_type_get_master_list(SGE_TYPE_JOB)), JB_job_number, jobid, &iterator);
    }
 
    if (!jatep) {

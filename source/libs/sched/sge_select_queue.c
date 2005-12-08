@@ -391,9 +391,8 @@ sge_select_parallel_environment( sge_assignment_t *best, lList *pe_list)
             }
          } 
          else { /* test with all other pes */
-            sge_assignment_t tmp;
+            sge_assignment_t tmp = SGE_ASSIGNMENT_INIT;
 
-            memset(&tmp, 0, sizeof(sge_assignment_t));
             assignment_copy(&tmp, best, false);
             tmp.pe = pe;
 
@@ -441,8 +440,8 @@ sge_select_parallel_environment( sge_assignment_t *best, lList *pe_list)
          } 
          else {
             int available_slots = 0;
-            sge_assignment_t tmp;
-            memset(&tmp, 0, sizeof(sge_assignment_t));
+            sge_assignment_t tmp = SGE_ASSIGNMENT_INIT;
+
             assignment_copy(&tmp, best, false);
             tmp.pe = pe;
 
@@ -580,7 +579,7 @@ static dispatch_t
 parallel_reservation_max_time_slots(sge_assignment_t *best) 
 {
    u_long32 pe_time, first_time;
-   sge_assignment_t tmp_assignment;
+   sge_assignment_t tmp_assignment = SGE_ASSIGNMENT_INIT;
    dispatch_t result = DISPATCH_NEVER_CAT; 
    sge_qeti_t *qeti = NULL;
    bool is_first = true;
@@ -592,7 +591,6 @@ parallel_reservation_max_time_slots(sge_assignment_t *best)
    /* assemble job category information */
    fill_category_use_t(best, &use_category, lGetString(best->pe, PE_name));  
 
-   memset(&tmp_assignment, 0, sizeof(sge_assignment_t));
    assignment_copy(&tmp_assignment, best, false);
    if (best->slots == 0) {
       tmp_assignment.slots = range_list_get_first_id(lGetList(best->job, JB_pe_range), NULL);
@@ -749,7 +747,7 @@ parallel_maximize_slots_pe(sge_assignment_t *best, int *available_slots) {
    int first, last;
    lList *pe_range;
    lListElem *pe;
-   sge_assignment_t tmp;
+   sge_assignment_t tmp = SGE_ASSIGNMENT_INIT;
    dispatch_t result = DISPATCH_NEVER_CAT; 
    const char *pe_name = lGetString(best->pe, PE_name);
    bool is_first = true;
@@ -770,8 +768,6 @@ parallel_maximize_slots_pe(sge_assignment_t *best, int *available_slots) {
       return DISPATCH_NEVER_CAT;
    }
  
-   memset(&tmp, 0, sizeof(sge_assignment_t));
-
    /* assemble job category information */
    fill_category_use_t(best, &use_category, pe_name);      
  

@@ -1390,9 +1390,8 @@ char *object_name
          return STATUS_EUNKNOWN;
       }
 
-      ret = centry_list_fill_request(lGetList(tmp_elem, nm), 
-                                     alpp, Master_CEntry_List, true,
-                                     false, false);
+      ret = centry_list_fill_request(lGetList(tmp_elem, nm), alpp,
+                                     *centry_list_get_master_list(), true, false, false);
       if (ret) {
          lFreeElem(&tmp_elem);
          DEXIT;

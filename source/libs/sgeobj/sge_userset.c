@@ -34,6 +34,9 @@
 #include <stdlib.h>
 #include <errno.h>
 
+#include "sgeobj/sge_userset.h"
+#include "sgeobj/sge_object.h"
+
 #include "sgermon.h"
 #include "sge_log.h"
 #include "sge_answer.h"
@@ -42,8 +45,6 @@
 
 #include "msg_common.h"
 #include "msg_sgeobjlib.h"
-
-#include "sge_userset.h"
 
 lList *Master_Userset_List = NULL;
 
@@ -55,7 +56,7 @@ static const char* userset_types[] = {
 
 lList **userset_list_get_master_list(void)
 {
-   return &Master_Userset_List;
+   return object_type_get_master_list(SGE_TYPE_USERSET);
 }
 
 /****** sgeobj/userset/userset_is_deadline_user() ******************************
@@ -153,7 +154,7 @@ userset_list_validate_acl_list(lList *acl_list, lList **alpp)
    DENTER(TOP_LAYER, "userset_list_validate_acl_list");
 
    for_each (usp, acl_list) {
-      if (!lGetElemStr(Master_Userset_List, US_name, lGetString(usp, US_name))) {
+      if (!lGetElemStr(*object_type_get_master_list(SGE_TYPE_USERSET), US_name, lGetString(usp, US_name))) {
          ERROR((SGE_EVENT, MSG_CQUEUE_UNKNOWNUSERSET_S, 
                 lGetString(usp, US_name)));
          answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);

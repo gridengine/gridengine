@@ -69,7 +69,6 @@
 
 #include "sge_job.h"
   
-lList *Master_Job_List = NULL;
 lList *Master_Zombie_List = NULL;
 lList *Master_Job_Schedd_Info_List = NULL;
 
@@ -2179,15 +2178,16 @@ int job_check_qsh_display(const lListElem *job, lList **answer_list,
 *     user given by user_name.
 *
 *  INPUTS
-*     const char *user_name - the user name 
-*     u_long32 job_id       - the job number
+*     const char *user_name      - the user name 
+*     u_long32   job_id          - the job number
+*     lList      master_job_list - a ref to the master job list
 *
 *  RESULT
 *     int - -1, if the job cannot be found
 *            0, if the user is the job owner
 *            1, if the user is not the job owner
 ******************************************************************************/
-int job_check_owner(const char *user_name, u_long32 job_id) 
+int job_check_owner(const char *user_name, u_long32 job_id, lList *master_job_list) 
 {
    lListElem *job;
 
@@ -2203,7 +2203,7 @@ int job_check_owner(const char *user_name, u_long32 job_id)
       return 0;
    }
 
-   job = job_list_locate(Master_Job_List, job_id);
+   job = job_list_locate(master_job_list, job_id);
    if (job == NULL) {
       DEXIT;
       return -1;

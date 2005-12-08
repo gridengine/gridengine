@@ -238,7 +238,7 @@ int reschedule_jobs(lListElem *ep, u_long32 force, lList **answer, monitoring_t 
        * Find all jobs currently running on the host/queue
        * append the jobids/taskids into a sublist of the exechost object
        */
-      for_each(jep, Master_Job_List) {
+      for_each(jep, *(object_type_get_master_list(SGE_TYPE_JOB))) {
          reschedule_job(jep, NULL, ep, force, answer, monitor);
       }      
       ret = 0;

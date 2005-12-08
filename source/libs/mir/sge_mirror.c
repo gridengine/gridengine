@@ -156,6 +156,7 @@ static mirror_description mirror_base[SGE_TYPE_ALL] = {
    { NULL, generic_update_master_list,             NULL, NULL },
    { NULL, host_update_master_list,                NULL, NULL }, /*hgroup*/
    { NULL, generic_update_master_list,             NULL, NULL },
+   { NULL, generic_update_master_list,             NULL, NULL },
 #ifndef __SGE_NO_USERMAPPING__
    { NULL, NULL,                                   NULL, NULL },
 #endif
@@ -651,10 +652,10 @@ _sge_mirror_subscribe(sge_object_type type,
          }
          break;
 #endif
+      case SGE_TYPE_ZOMBIE:
+            return SGE_EM_NOT_INITIALIZED;
 
       default:
-         /* development fault: forgot to handle a valid event group */
-         abort();
          return SGE_EM_BAD_ARG;
    }
 
@@ -663,10 +664,8 @@ _sge_mirror_subscribe(sge_object_type type,
    mirror_base[type].callback_after  = callback_after;
    mirror_base[type].clientdata      = clientdata;
 
-   if (where_el)
-      lFreeElem(&where_el);
-   if (what_el)
-      lFreeElem(&what_el);
+   lFreeElem(&where_el);
+   lFreeElem(&what_el);
 
    return SGE_EM_OK;
 }   
@@ -879,10 +878,11 @@ static sge_mirror_error _sge_mirror_unsubscribe(sge_object_type type)
          ec_unsubscribe(sgeE_CUSER_MOD);
          break;
 #endif
-
+      case SGE_TYPE_ZOMBIE:
+            DEXIT;
+            return SGE_EM_NOT_INITIALIZED;
       default:
-         /* development fault: forgot to handle a valid event group */
-         abort();
+         ERROR((SGE_EVENT, "recieved invalid event group %d", type));
          DEXIT;
          return SGE_EM_BAD_ARG;
    }

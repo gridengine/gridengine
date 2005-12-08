@@ -80,7 +80,7 @@ pe_task_update_master_list_usage(lListElem *event)
    ja_task_id = lGetUlong(event, ET_intkey2);
    pe_task_id = lGetString(event, ET_strkey);
    
-   job = job_list_locate(Master_Job_List, job_id);
+   job = job_list_locate(*(object_type_get_master_list(SGE_TYPE_JOB)), job_id);
    if (job == NULL) {
       ERROR((SGE_EVENT, MSG_JOB_CANTFINDJOBFORUPDATEIN_SS, 
              job_get_id_string(job_id, 0, NULL), SGE_FUNC));
@@ -166,7 +166,7 @@ pe_task_update_master_list(sge_object_type type, sge_event_action action,
    ja_task_id = lGetUlong(event, ET_intkey2);
    pe_task_id = lGetString(event, ET_strkey);
    
-   job = job_list_locate(Master_Job_List, job_id);
+   job = job_list_locate(*(object_type_get_master_list(SGE_TYPE_JOB)), job_id);
    if (job == NULL) {
       ERROR((SGE_EVENT, MSG_JOB_CANTFINDJOBFORUPDATEIN_SS, 
              job_get_id_string(job_id, 0, NULL), SGE_FUNC));

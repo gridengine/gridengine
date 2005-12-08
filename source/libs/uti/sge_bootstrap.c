@@ -251,9 +251,7 @@ int bootstrap_get_gdi_thread_count(void)
    if (bootstrap->gdi_count == 0) {
       bootstrap->gdi_count = 2;
    }
-   else if (bootstrap->gdi_count > 4) {
-      bootstrap->gdi_count = 4;
-   }
+
    return bootstrap->gdi_count;
 }
 

@@ -79,6 +79,7 @@
 #include "sge_profiling.h"
 #include "execd.h"
 #include "qm_name.h"
+#include "sgeobj/sge_object.h"
 
 #include "msg_common.h"
 #include "msg_execd.h"
@@ -183,6 +184,7 @@ char **argv
    static char tmp_err_file_name[SGE_PATH_MAX];
    time_t next_prof_output = 0;
    int execd_exit_state = 0;
+   lList **master_job_list = NULL;
 
    DENTER_MAIN(TOP_LAYER, "execd");
 
@@ -309,8 +311,9 @@ char **argv
    INFO((SGE_EVENT, MSG_EXECD_STARTPDCANDPTF));
 #endif
 
-   Master_Job_List = lCreateList("Master_Job_List", JB_Type);
-   job_list_read_from_disk(&Master_Job_List, "Master_Job_List",
+   master_job_list = object_type_get_master_list(SGE_TYPE_JOB);
+   *master_job_list = lCreateList("Master_Job_List", JB_Type);
+   job_list_read_from_disk(master_job_list, "Master_Job_List",
                            0, SPOOL_WITHIN_EXECD, 
                           job_initialize_job);
    
@@ -373,7 +376,7 @@ char **argv
       }
    }
 
-   lFreeList(&Master_Job_List); 
+   lFreeList(master_job_list);
   
    PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM1);
 

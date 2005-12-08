@@ -728,7 +728,7 @@ void sge_job_resend_event_handler(te_event_t anEvent, monitoring_t *monitor)
    
    MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE), monitor);
 
-   jep = job_list_locate(Master_Job_List, jobid);
+   jep = job_list_locate(*(object_type_get_master_list(SGE_TYPE_JOB)), jobid);
    jatep = job_search_task(jep, NULL, jataskid);
    now = (time_t)sge_get_gmt();
 
@@ -750,7 +750,7 @@ void sge_job_resend_event_handler(te_event_t anEvent, monitoring_t *monitor)
       if (!ep || !(qnm=lGetString(ep, JG_qname)) || !(hnm=lGetHost(ep, JG_qhostname)))
       {
          ERROR((SGE_EVENT, MSG_JOB_UNKNOWNGDIL4TJ_UU, sge_u32c(jobid), sge_u32c(jataskid)));
-         lDelElemUlong(&Master_Job_List, JB_job_number, jobid);
+         lDelElemUlong(object_type_get_master_list(SGE_TYPE_JOB), JB_job_number, jobid);
          SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
          DEXIT;
          return;
@@ -789,7 +789,7 @@ void sge_job_resend_event_handler(te_event_t anEvent, monitoring_t *monitor)
          if (!(pe = pe_list_locate(Master_Pe_List, lGetString(jatep, JAT_granted_pe))))
          {
             ERROR((SGE_EVENT, MSG_JOB_NOPE4TJ_SUU, lGetString(jep, JB_pe), sge_u32c(jobid), sge_u32c(jataskid)));
-            lDelElemUlong(&Master_Job_List, JB_job_number, jobid);
+            lDelElemUlong(object_type_get_master_list(SGE_TYPE_JOB), JB_job_number, jobid);
             SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
             DEXIT;
             return;
@@ -1363,7 +1363,7 @@ lListElem *jep
    DENTER(TOP_LAYER, "release_successor_jobs");
 
    for_each(jid, lGetList(jep, JB_jid_successor_list)) {
-      suc_jep = job_list_locate(Master_Job_List, lGetUlong(jid, JRE_job_number));
+      suc_jep = job_list_locate(*(object_type_get_master_list(SGE_TYPE_JOB)), lGetUlong(jid, JRE_job_number));
       if (suc_jep) {
          /* if we don't find it by job id we try it with the name */
          job_ident = lGetUlong(jep, JB_job_number);
@@ -1554,7 +1554,7 @@ static int sge_bury_job(lListElem *job, u_long32 job_id, lListElem *ja_task,
    DENTER(TOP_LAYER, "sge_bury_job");
 
    if (job == NULL) {
-      job = job_list_locate(Master_Job_List, job_id);
+      job = job_list_locate(*(object_type_get_master_list(SGE_TYPE_JOB)), job_id);
    }
    te_delete_one_time_event(TYPE_SIGNAL_RESEND_EVENT, job_id, ja_task_id, NULL);
 
@@ -1599,7 +1599,7 @@ static int sge_bury_job(lListElem *job, u_long32 job_id, lListElem *ja_task,
          sge_add_event( 0, sgeE_JOB_DEL, job_id, ja_task_id, 
                        NULL, NULL, lGetString(job, JB_session), NULL);
       }
-      lRemoveElem(Master_Job_List, &job);
+      lRemoveElem(*(object_type_get_master_list(SGE_TYPE_JOB)), &job);
    } else {
       int is_enrolled = job_is_enrolled(job, ja_task_id);
 

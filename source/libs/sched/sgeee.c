@@ -125,10 +125,6 @@ typedef struct sge_ref_list_t{
    struct sge_ref_list_t *prev;        /* previous list itme */
 } sge_ref_list_t;
 
-static sge_Sdescr_t *all_lists;
-static u_long32 sge_scheduling_run;
-
-
 static void tix_range_set(double min_tix, double max_tix);
 static void tix_range_get(double *min_tix, double *max_tix);
 
@@ -200,17 +196,20 @@ static void task_ref_initialize_table(u_long32 number_of_tasks);
 static void task_ref_destroy_table(void);
 static sge_task_ref_t *task_ref_get_entry(u_long32 index);
 
-static sge_Sdescr_t *all_lists;
-static u_long32 sge_scheduling_run;
+static sge_Sdescr_t *all_lists; /* thread local */
+static u_long32 sge_scheduling_run = 0; /* thread local */
 
-static sge_task_ref_t *task_ref_table = NULL;
-static u_long32 task_ref_entries = 0;
-static u_long32 task_ref_job_pos = 0;
-static double Master_min_tix = 0.0;  /* thread local */
-static double Master_max_tix = 0.0;  /* thread local */
-static int halflife = 0; /* stores the last used halflife time to detect changes  global*/
-static int last_seqno = 0; /* stores the last used seqno for the orders  global */
-static u_long32 past = 0; /* stores the last re-order send time thread local */
+static sge_task_ref_t *task_ref_table = NULL; /* thread local */
+static u_long32 task_ref_entries = 0;   /* thread local */
+static u_long32 task_ref_job_pos = 0;   /* thread local */
+static double Master_min_tix = 0.0;     /* thread local */
+static double Master_max_tix = 0.0;     /* thread local */
+static int halflife = 0;                /* stores the last used halflife time to detect changes  thread_local*/
+static int last_seqno = 0;              /* stores the last used seqno for the orders  thread_local*/
+static u_long32 past = 0;               /* stores the last re-order send time thread local */
+static lEnumeration *usage_what = NULL; /* thread local */
+static lEnumeration *share_tree_what = NULL; /* thread local */
+
 
 /****** sgeee/tix_range_set() **************************************************
 *  NAME
@@ -3938,8 +3937,6 @@ sge_build_sgeee_orders(sge_Sdescr_t *lists, lList *running_jobs, lList *queued_j
                        lList *finished_jobs, order_t *orders, 
                        bool update_usage_and_configuration, int seqno, bool update_execd)
 {
-   static lEnumeration *usage_what = NULL;
-   static lEnumeration *share_tree_what = NULL;
    lCondition *where=NULL;
    lList *up_list = NULL;
    lList *order_list = NULL;
@@ -3983,36 +3980,39 @@ sge_build_sgeee_orders(sge_Sdescr_t *lists, lList *running_jobs, lList *queued_j
       DPRINTF(("   got %d running jobs\n", lGetNumberOfElem(running_jobs)));
 
       for_each(job, running_jobs) {
-         const char *pe_str;
-         lList *granted;
-         lListElem *pe;
-         lListElem *ja_task;
+         const char *pe_str = NULL;
+         lList *granted = NULL;
+         lListElem *pe = NULL;
+         lListElem *ja_task = NULL;
 
          for_each(ja_task, lGetList(job, JB_ja_tasks)) {
             if ((pe_str=lGetString(ja_task, JAT_granted_pe))
                   && (pe=pe_list_locate(all_lists->pe_list, pe_str))
-                  && lGetBool(pe, PE_control_slaves))
+                  && lGetBool(pe, PE_control_slaves)) {
 
                granted=lGetList(ja_task, JAT_granted_destin_identifier_list);
-            else
+            }  
+            else {
                granted=NULL;
+            }   
 
             order_list = sge_create_orders(order_list, ORT_tickets, job, ja_task, granted, update_execd);
          }
       }
       DPRINTF(("   added %d ticket orders for running jobs\n", 
-         lGetNumberOfElem(order_list) - norders));
+               lGetNumberOfElem(order_list) - norders));
    }
 
 
 /*
  * check for the amount of pending ticket orders should be checked.
- * If the report_pjob_ticktes has changed to false, we need to send ORT_clear_pri_info to the qmaster
- * to remove the pticket values. This prevents qstat from reporting wrong pticket values. Its only done
+ * If the report_pjob_ticktes has changed to false, we need to send 
+ * ORT_clear_pri_info to the qmaster to remove the pticket values. 
+ * This prevents qstat from reporting wrong pticket values. Its only done
  * once after the config change.
  */
    if ((queued_jobs != NULL) && (max_queued_ticket_orders || sconf_is_new_config())) {
-      lListElem *qep;
+      lListElem *qep = NULL;
       u_long32 free_qslots = 0;
       norders = lGetNumberOfElem(order_list);
       for_each(qep, lists->queue_list) {
@@ -4020,8 +4020,8 @@ sge_build_sgeee_orders(sge_Sdescr_t *lists, lList *running_jobs, lList *queued_j
       }
       
       for_each(job, queued_jobs) {
-         lListElem *ja_task;
-         int tasks=0;
+         lListElem *ja_task = NULL;
+         int tasks = 0;
   
          if (max_queued_ticket_orders) {
          
@@ -4049,7 +4049,7 @@ sge_build_sgeee_orders(sge_Sdescr_t *lists, lList *running_jobs, lList *queued_j
          }
       }
       DPRINTF(("   added %d ticket orders for queued jobs\n", 
-         lGetNumberOfElem(order_list) - norders));
+               lGetNumberOfElem(order_list) - norders));
 
    }
 

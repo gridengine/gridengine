@@ -31,6 +31,11 @@
 /*___INFO__MARK_END__*/                                   
 
 #include <stdlib.h>
+#include <sys/types.h>
+#include <pthread.h>
+#include <stdio.h>
+#include <errno.h>
+#include <signal.h>
 #include <string.h>
 
 #include "sgermon.h"
@@ -76,55 +81,245 @@
 
 #define OBJECT_LAYER BASIS_LAYER
 
-/* allows to retrieve a master list */
-typedef lList ** (*getMasterList)(void);
-
 /* allows to change the mater list */
 typedef bool (*commitMasterList)(lList **answer_list);
 
 /* Datastructure for internal storage of object/message related information */
 typedef struct {
    lList **list;                          /* master list                    */
-   getMasterList getMasterList;           /* master list retrieve method    */
    commitMasterList commitMasterList;     /* commit master list set changes */
-   const char *type_name;                 /* type name, e.g. "JOB"          */
+   /*const*/ char *type_name;                 /* type name, e.g. "JOB"          */
    lDescr *descr;                         /* descriptor, e.g. JB_Type       */
-   const int key_nm;                      /* nm of key attribute            */
+   /*const*/ int key_nm;                      /* nm of key attribute            */
 } object_description;
+
+static lList *Master_Job_List = NULL;
 
 /* One entry per event type */
 static object_description object_base[SGE_TYPE_ALL] = {
-   /* master list                  get function    set function      name                 descr      key               */
-   { &Master_Adminhost_List,       NULL,           NULL,                 "ADMINHOST",         AH_Type,   AH_name           },
-   { &Master_Calendar_List,        NULL,           NULL,                 "CALENDAR",          CAL_Type,  CAL_name          },
-   { &Master_Ckpt_List,            NULL,           NULL,                 "CKPT",              CK_Type,   CK_name           },
-   { NULL,                         NULL,           NULL,                 "CONFIG",            CONF_Type, CONF_hname        },
-   { NULL,                         NULL,           NULL,                 "GLOBAL_CONFIG",     NULL,      NoName            },
-   { &Master_Exechost_List,        NULL,           NULL,                 "EXECHOST",          EH_Type,   EH_name           },
-   { NULL,                         NULL,           NULL,                 "JATASK",            JAT_Type,  JAT_task_number   },
-   { NULL,                         NULL,           NULL,                 "PETASK",            PET_Type,  PET_id            },
-   { &Master_Job_List,             NULL,           NULL,                 "JOB",               JB_Type,   JB_job_number     },
-   { &Master_Job_Schedd_Info_List, NULL,           NULL,                 "JOB_SCHEDD_INFO",   SME_Type,  NoName            },
-   { &Master_Manager_List,         NULL,           NULL,                 "MANAGER",           MO_Type,   MO_name           },
-   { &Master_Operator_List,        NULL,           NULL,                 "OPERATOR",          MO_Type,   MO_name           },
-   { &Master_Sharetree_List,       NULL,           NULL,                 "SHARETREE",         STN_Type,  STN_name          },
-   { &Master_Pe_List,              NULL,           NULL,                 "PE",                PE_Type,   PE_name           },
-   { &Master_Project_List,         NULL,           NULL,                 "PROJECT",           UP_Type,   UP_name           },
-   { &Master_CQueue_List,          NULL,           NULL,                 "CQUEUE",            CQ_Type,   CQ_name           },
-   { NULL,                         NULL,           NULL,                 "QINSTANCE",         QU_Type,   QU_qname          },
-   { NULL,                         NULL,         sconf_validate_config_, "SCHEDD_CONF",       SC_Type,   NoName            },
-   { NULL,                         NULL,           NULL,                 "SCHEDD_MONITOR",    NULL,      NoName            },
-   { NULL,                         NULL,           NULL,                 "SHUTDOWN",          NULL,      NoName            },
-   { NULL,                         NULL,           NULL,                 "QMASTER_GOES_DOWN", NULL,      NoName            },
-   { &Master_Submithost_List,      NULL,           NULL,                 "SUBMITHOST",        SH_Type,   SH_name           },
-   { &Master_User_List,            NULL,           NULL,                 "USER",              UP_Type,   UP_name           },
-   { &Master_Userset_List,         NULL,           NULL,                 "USERSET",           US_Type,   US_name           },
-   { &Master_HGroup_List,          NULL,           NULL,                 "HOSTGROUP",         HGRP_Type,  HGRP_name        },
-   { &Master_CEntry_List,          NULL,           NULL,                 "COMPLEX_ENTRY",     CE_Type,    CE_name          },
+   /* master list                  set function              name                 descr      key               */
+   { &Master_Adminhost_List,       NULL,                   "ADMINHOST",         AH_Type,   AH_name           },
+   { &Master_Calendar_List,        NULL,                   "CALENDAR",          CAL_Type,  CAL_name          },
+   { &Master_Ckpt_List,            NULL,                   "CKPT",              CK_Type,   CK_name           },
+   { NULL,                         NULL,                   "CONFIG",            CONF_Type, CONF_hname        },
+   { NULL,                         NULL,                   "GLOBAL_CONFIG",     NULL,      NoName            },
+   { &Master_Exechost_List,        NULL,                   "EXECHOST",          EH_Type,   EH_name           },
+   { NULL,                         NULL,                   "JATASK",            JAT_Type,  JAT_task_number   },
+   { NULL,                         NULL,                   "PETASK",            PET_Type,  PET_id            },
+   { &Master_Job_List,             NULL,                   "JOB",               JB_Type,   JB_job_number     },
+   { &Master_Job_Schedd_Info_List, NULL,                   "JOB_SCHEDD_INFO",   SME_Type,  NoName            },
+   { &Master_Manager_List,         NULL,                   "MANAGER",           MO_Type,   MO_name           },
+   { &Master_Operator_List,        NULL,                   "OPERATOR",          MO_Type,   MO_name           },
+   { &Master_Sharetree_List,       NULL,                   "SHARETREE",         STN_Type,  STN_name          },
+   { &Master_Pe_List,              NULL,                   "PE",                PE_Type,   PE_name           },
+   { &Master_Project_List,         NULL,                   "PROJECT",           UP_Type,   UP_name           },
+   { &Master_CQueue_List,          NULL,                   "CQUEUE",            CQ_Type,   CQ_name           },
+   { NULL,                         NULL,                   "QINSTANCE",         QU_Type,   QU_qname          },
+   { NULL,                         sconf_validate_config_, "SCHEDD_CONF",       SC_Type,   NoName            },
+   { NULL,                         NULL,                   "SCHEDD_MONITOR",    NULL,      NoName            },
+   { NULL,                         NULL,                   "SHUTDOWN",          NULL,      NoName            },
+   { NULL,                         NULL,                   "QMASTER_GOES_DOWN", NULL,      NoName            },
+   { &Master_Submithost_List,      NULL,                   "SUBMITHOST",        SH_Type,   SH_name           },
+   { &Master_User_List,            NULL,                   "USER",              UP_Type,   UP_name           },
+   { &Master_Userset_List,         NULL,                   "USERSET",           US_Type,   US_name           },
+   { &Master_HGroup_List,          NULL,                   "HOSTGROUP",         HGRP_Type, HGRP_name         },
+   { &Master_CEntry_List,          NULL,                   "COMPLEX_ENTRY",     CE_Type,   CE_name           },
+   { &Master_Zombie_List,          NULL,                   "ZOMBIE_JOBS",       JB_Type,   JB_job_number     },
 #ifndef __SGE_NO_USERMAPPING__
-   { &Master_Cuser_List,           NULL,           NULL,                 "USERMAPPING",       CU_Type,  CU_name  }
+   { &Master_Cuser_List,           NULL,                   "USERMAPPING",       CU_Type,  CU_name  }
 #endif
 };
+
+/*-------------------------*/
+/* multithreading support  */
+/*-------------------------*/
+
+/* contains the information for the thread local structure. */
+typedef struct {
+   bool global;                                  /* thrue means, that the global structure is referenced */
+   lList *lists[SGE_TYPE_ALL];                   /* stores the list information */
+   object_description object_base[SGE_TYPE_ALL]; /* subscription handlers */ 
+} obj_state_t;
+
+/* the key for the thread local memeory */
+static pthread_key_t   obj_state_key;
+
+
+/****** sge_object/obj_state_init() ********************************************
+*  NAME
+*     obj_state_init() --  Inits the thread local memory none global
+*
+*  SYNOPSIS
+*     static void obj_state_init(obj_state_t *state) 
+*
+*  FUNCTION
+*     Inits the thread local memory, by coping the static information and 
+*     setting the list pointers to NULL
+*
+*  INPUTS
+*     obj_state_t *state - the thread local memory
+*
+*  NOTES
+*     MT-NOTE: obj_state_init() is MT safe 
+*
+*  SEE ALSO
+*     sge_object/obj_state_global_init
+*     sge_object/obj_state_destroy
+*     sge_object/obj_init_mt
+*******************************************************************************/
+static void obj_state_init(obj_state_t *state) 
+{
+   int i;
+
+   state->global = false;
+#if 0  
+   memcpy(state->object_base, object_base, sizeof(object_description * SGE_TYPE_ALL));
+#endif   
+  
+   /* initialize mirroring data structures - only changeable fields */
+   for (i = 0; i < SGE_TYPE_ALL; i++) {
+      state->lists[i] = NULL;
+      state->object_base[i].list = &(state->lists[i]);                          /* master list                    */
+#if 1      
+      state->object_base[i].commitMasterList = object_base[i].commitMasterList; /* commit master list set changes */
+      state->object_base[i].type_name = object_base[i].type_name;               /* type name, e.g. "JOB"          */
+      state->object_base[i].descr = object_base[i].descr;                       /* descriptor, e.g. JB_Type       */
+      state->object_base[i].key_nm = object_base[i].key_nm;                     /* nm of key attribute            */
+#endif      
+   }
+}
+
+/****** sge_object/obj_state_global_init() ************************************
+*  NAME
+*     obj_state_global_init() --  Inits the thread local memory global
+*
+*  SYNOPSIS
+*     static void obj_state_global_init(obj_state_t *state) 
+*
+*  FUNCTION
+*     Inits the thread local memory, by coping the static information and 
+*     setting the list pointers to NULL
+*
+*  INPUTS
+*     obj_state_t *state - the thread local memory
+*
+*  NOTES
+*     MT-NOTE: obj_state_global_init() is MT safe 
+*
+*  SEE ALSO
+*     sge_object/obj_state_init
+*     sge_object/obj_state_destroy
+*     sge_object/obj_init_mt
+*******************************************************************************/
+static void obj_state_global_init(obj_state_t* state) 
+{
+   int i;
+
+   state->global=true;
+#if 0   
+   memcpy(state->object_base, object_base, sizeof(object_description * SGE_TYPE_ALL));
+#endif   
+   /* initialize mirroring data structures - only changeable fields */
+   for (i = 0; i < SGE_TYPE_ALL; i++) {
+      state->lists[i] = NULL;
+      state->object_base[i].list = object_base[i].list;
+#if 1      
+      state->object_base[i].commitMasterList = object_base[i].commitMasterList; /* commit master list set changes */
+      state->object_base[i].type_name = object_base[i].type_name;               /* type name, e.g. "JOB"          */
+      state->object_base[i].descr = object_base[i].descr;                       /* descriptor, e.g. JB_Type       */
+      state->object_base[i].key_nm = object_base[i].key_nm;                     /* nm of key attribute            */
+#endif      
+   }
+}
+
+
+/****** sge_object/obj_state_destroy() *****************************************
+*  NAME
+*     obj_state_destroy() -- frees the thread local memory
+*
+*  SYNOPSIS
+*     static void obj_state_destroy(void* st) 
+*
+*  INPUTS
+*     void* st - thread local memory
+*
+*  NOTES
+*     MT-NOTE: obj_state_destroy() is MT safe 
+*
+*  SEE ALSO
+*     sge_object/obj_state_global_init
+*     sge_object/obj_state_init
+*     sge_object/obj_init_mt
+*******************************************************************************/
+static void obj_state_destroy(void* st) 
+{
+   int i;
+   obj_state_t *state = (obj_state_t*) st;
+
+   for (i = 0; i < SGE_TYPE_ALL; i++) {
+      lFreeList(&(state->lists[i])); 
+   }
+      
+   free(state);
+}
+
+/****** sge_object/obj_init_mt() ***********************************************
+*  NAME
+*     obj_init_mt() -- creats the pthread key
+*
+*  SYNOPSIS
+*     void obj_init_mt(void) 
+*
+*  FUNCTION
+*     creats teh pthread key. Needs to be called when the daemon, clients
+*     starts up
+*
+*  NOTES
+*     MT-NOTE: obj_init_mt() is not MT safe 
+*
+*
+*  SEE ALSO
+*     sge_object/obj_state_global_init
+*     sge_object/obj_state_init
+*     sge_object/obj_state_destroy
+*******************************************************************************/
+void obj_init_mt(void) 
+{
+   pthread_key_create(&obj_state_key, &obj_state_destroy);
+}
+
+void obj_init(bool is_global) 
+{
+   obj_state_t *state = NULL;
+   int ret = 0;
+   bool init = false;
+
+   if((state = pthread_getspecific(obj_state_key)) == NULL) { 
+      state = (obj_state_t*) malloc(sizeof(obj_state_t));
+      memset(state, 0 , sizeof(obj_state_t));
+      init = true;
+
+      ret = pthread_setspecific(obj_state_key, (void*)state);
+      if (ret != 0) { 
+         abort();  /* find a better way for this, use a return code */
+      }  
+   }    
+
+   if (init || (state->global != is_global)) {
+      if (is_global) {
+         if (!init) {
+            int i;
+            for (i = 0; i < SGE_TYPE_ALL; i++) {
+               lFreeList(&(state->lists[i])); 
+            }
+         }
+         obj_state_global_init(state);
+      }
+      else {
+         obj_state_init(state);
+      }
+   }
+} 
 
 /****** sgeobj/object/object_has_type() ***************************************
 *  NAME
@@ -465,7 +660,7 @@ object_append_field_to_dstring(const lListElem *object, lList **answer_list,
                                                nm, string_quotes);
    }
 
-   return ret;
+   DRETURN(ret);
 }
 
 /****** sgeobj/object/object_append_raw_field_to_dstring() *********************
@@ -595,8 +790,7 @@ object_append_raw_field_to_dstring(const lListElem *object, lList **answer_list,
       }
    }
 
-   DEXIT;
-   return result;
+   DRETURN(result);
 }
 
 /****** sgeobj/object/object_parse_field_from_string() ************************
@@ -762,8 +956,7 @@ object_parse_field_from_string(lListElem *object, lList **answer_list,
          break;
    }
 
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** sgeobj/object/object_parse_raw_field_from_string() ************************
@@ -862,8 +1055,7 @@ object_parse_raw_field_from_string(lListElem *object, lList **answer_list,
       }
    }
 
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** sgeobj/object/object_delete_range_id() ********************************
@@ -995,34 +1187,39 @@ lList **object_type_get_master_list(const sge_object_type type)
    lList **ret = NULL;
 
    DENTER(OBJECT_LAYER, "object_type_get_master_list");
-   if(type < 0 || type >= SGE_TYPE_ALL) {
-      ERROR((SGE_EVENT, MSG_OBJECT_INVALID_OBJECT_TYPE_SI, SGE_FUNC, type));
-   } else if (object_base[type].list){
-      ret = object_base[type].list;
-   } else if (object_base[type].getMasterList){
-      ret = object_base[type].getMasterList();
+
+   if (type >= 0 || type < SGE_TYPE_ALL) {
+      GET_SPECIFIC(obj_state_t, obj_state, obj_state_global_init, obj_state_key, "object_type_get_master_list");
+      
+      if (obj_state->object_base[type].list != NULL) {
+         ret = obj_state->object_base[type].list;
+      } else {
+         ERROR((SGE_EVENT, MSG_OBJECT_NO_LIST_TO_MOD_TYPE_SI, SGE_FUNC, type));
+      }
    } else {
-      ERROR((SGE_EVENT, MSG_OBJECT_NO_LIST_TO_MOD_TYPE_SI, SGE_FUNC, type));
-   } 
-   DEXIT;
-   return ret;
+      ERROR((SGE_EVENT, MSG_OBJECT_INVALID_OBJECT_TYPE_SI, SGE_FUNC, type));
+   }
+   
+   DRETURN(ret);
 }
 
 bool object_type_commit_master_list(const sge_object_type type, lList **answer_list) 
 {
-   bool ret = true;
+   bool ret = false;
    
    DENTER(OBJECT_LAYER, "object_type_set_master_list");
-   if(type < 0 || type >= SGE_TYPE_ALL) {
-      ERROR((SGE_EVENT, MSG_OBJECT_INVALID_OBJECT_TYPE_SI, SGE_FUNC, type));
-      ret = false;
-   } 
-   else if (object_base[type].commitMasterList){
-      ret = object_base[type].commitMasterList(answer_list);
+   
+   if (type >= 0 || type < SGE_TYPE_ALL) {
+      GET_SPECIFIC(obj_state_t, obj_state, obj_state_global_init, obj_state_key, SGE_FUNC);
+      
+      if (obj_state->object_base[type].commitMasterList) {
+         ret = obj_state->object_base[type].commitMasterList(answer_list);
+      }
+   } else {
+         ERROR((SGE_EVENT, MSG_OBJECT_INVALID_OBJECT_TYPE_SI, SGE_FUNC, type));
    }
-   DEXIT;
-   return ret;
-  
+
+   DRETURN(ret);
 }
 
 
@@ -1053,20 +1250,19 @@ bool object_type_free_master_list(const sge_object_type type)
    bool ret = false;
 
    DENTER(OBJECT_LAYER, "object_type_free_master_list");
-   if(type < 0 || type >= SGE_TYPE_ALL) {
-      ERROR((SGE_EVENT, MSG_OBJECT_INVALID_OBJECT_TYPE_SI, SGE_FUNC, type));
-      ret = false;
-   } else if (object_base[type].list){
-       lFreeList(object_base[type].list);
-       ret = true;
-   } else if (object_base[type].getMasterList){
-      lList **list = object_base[type].getMasterList();
-      lFreeList(list);
-      ret = object_base[type].commitMasterList(NULL);
+
+   if (type >= 0 || type < SGE_TYPE_ALL) {
+      GET_SPECIFIC(obj_state_t, obj_state, obj_state_global_init, obj_state_key, SGE_FUNC);
+      
+      if (obj_state->object_base[type].list) {
+          lFreeList(obj_state->object_base[type].list);
+          ret = true;
+      }
+   } else {
+         ERROR((SGE_EVENT, MSG_OBJECT_INVALID_OBJECT_TYPE_SI, SGE_FUNC, type));
    }
 
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** sgeobj/object/object_type_get_name() *********************************
@@ -1098,15 +1294,16 @@ const char *object_type_get_name(const sge_object_type type)
    const char *ret = "unknown";
 
    DENTER(OBJECT_LAYER, "object_type_get_name");
-   if(type < 0 || type > SGE_TYPE_ALL) {
-      ERROR((SGE_EVENT, MSG_OBJECT_INVALID_OBJECT_TYPE_SI, SGE_FUNC, type));
-   } else if(type == SGE_TYPE_ALL) {
+
+   if (type >= 0 || type < SGE_TYPE_ALL) {
+      ret = object_base[type].type_name;
+   } else if (type == SGE_TYPE_ALL) {
       ret = "default";
    } else {
-      ret = object_base[type].type_name;
+      ERROR((SGE_EVENT, MSG_OBJECT_INVALID_OBJECT_TYPE_SI, SGE_FUNC, type));
    }
-   DEXIT;
-   return ret;
+  
+   DRETURN(ret);
 }
 
 /****** sgeobj/object/object_name_get_type() **********************************
@@ -1133,6 +1330,8 @@ sge_object_type object_name_get_type(const char *name)
    sge_object_type ret = SGE_TYPE_ALL;
    sge_object_type i;
 
+   DENTER(OBJECT_LAYER, "object_name_get_type");
+
    for (i = SGE_TYPE_ADMINHOST; i < SGE_TYPE_ALL; i++) {
       int length = strlen(object_base[i].type_name);
 
@@ -1142,7 +1341,7 @@ sge_object_type object_name_get_type(const char *name)
       }
    }
 
-   return ret;
+   DRETURN(ret);
 }
 
 /****** sgeobj/object/object_type_get_descr() ********************************
@@ -1177,16 +1376,15 @@ const lDescr *object_type_get_descr(const sge_object_type type)
 {
    const lDescr *ret = NULL;
 
-   DENTER(TOP_LAYER, "object_type_get_descr");
+   DENTER(OBJECT_LAYER, "object_type_get_descr");
 
-   if(type < 0 || type >= SGE_TYPE_ALL) {
+   if (type < 0 || type >= SGE_TYPE_ALL) {
       ERROR((SGE_EVENT, MSG_OBJECT_INVALID_OBJECT_TYPE_SI, SGE_FUNC, type));
    } else {
       ret = object_base[type].descr;
    }
 
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** sgeobj/object/object_type_get_key_nm() *******************************
@@ -1221,13 +1419,14 @@ int object_type_get_key_nm(const sge_object_type type)
    int ret = NoName;
 
    DENTER(OBJECT_LAYER, "object_type_get_key_nm");
-   if(type < 0 || type >= SGE_TYPE_ALL) {
+
+   if (type < 0 || type >= SGE_TYPE_ALL) {
       ERROR((SGE_EVENT, MSG_OBJECT_INVALID_OBJECT_TYPE_SI, SGE_FUNC, type));
    } else {
       ret = object_base[type].key_nm;
    }
-   DEXIT;
-   return ret;
+   
+   DRETURN(ret);
 }
 
 bool
@@ -1260,8 +1459,7 @@ object_parse_bool_from_string(lListElem *this_elem, lList **answer_list,
                               MSG_ERRORPARSINGVALUEFORNM_S, "<null>");
       ret = false;
    }
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 bool
@@ -1288,8 +1486,7 @@ object_parse_time_from_string(lListElem *this_elem, lList **answer_list,
                               MSG_ERRORPARSINGVALUEFORNM_S, "<null>");
       ret = false;
    }
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 bool
@@ -1316,8 +1513,7 @@ object_parse_inter_from_string(lListElem *this_elem, lList **answer_list,
                               MSG_ERRORPARSINGVALUEFORNM_S, "<null>");
       ret = false;
    }
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 bool
@@ -1354,8 +1550,7 @@ object_parse_list_from_string(lListElem *this_elem, lList **answer_list,
                               MSG_ERRORPARSINGVALUEFORNM_S, "<null>");
       ret = false;
    }
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 bool
@@ -1386,8 +1581,7 @@ object_parse_celist_from_string(lListElem *this_elem, lList **answer_list,
                               MSG_ERRORPARSINGVALUEFORNM_S, "<null>");
       ret = false;
    }
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 bool
@@ -1443,8 +1637,7 @@ object_parse_solist_from_string(lListElem *this_elem, lList **answer_list,
                               MSG_ERRORPARSINGVALUEFORNM_S, "<null>");
       ret = false;
    }
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 bool
@@ -1473,8 +1666,7 @@ object_parse_qtlist_from_string(lListElem *this_elem, lList **answer_list,
                               MSG_ERRORPARSINGVALUEFORNM_S, "<null>");
       ret = false;
    }
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 
@@ -1502,8 +1694,7 @@ object_parse_mem_from_string(lListElem *this_elem, lList **answer_list,
                               MSG_ERRORPARSINGVALUEFORNM_S, "<null>");
       ret = false;
    }
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 bool
@@ -1556,8 +1747,7 @@ object_parse_ulong32_from_string(lListElem *this_elem, lList **answer_list,
                               MSG_ERRORPARSINGVALUEFORNM_S, "<null>");
       ret = false;
    }
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 bool
@@ -1585,8 +1775,7 @@ object_parse_int_from_string(lListElem *this_elem, lList **answer_list,
                               MSG_ERRORPARSINGVALUEFORNM_S, "<null>");
       ret = false;
    }
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 bool
@@ -1614,8 +1803,7 @@ object_parse_char_from_string(lListElem *this_elem, lList **answer_list,
                               MSG_ERRORPARSINGVALUEFORNM_S, "<null>");
       ret = false;
    }
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 bool
@@ -1643,8 +1831,7 @@ object_parse_long_from_string(lListElem *this_elem, lList **answer_list,
                               MSG_ERRORPARSINGVALUEFORNM_S, "<null>");
       ret = false;
    }
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 bool
@@ -1672,8 +1859,7 @@ object_parse_double_from_string(lListElem *this_elem, lList **answer_list,
                               MSG_ERRORPARSINGVALUEFORNM_S, "<null>");
       ret = false;
    }
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 bool
@@ -1701,8 +1887,7 @@ object_parse_float_from_string(lListElem *this_elem, lList **answer_list,
                               MSG_ERRORPARSINGVALUEFORNM_S, "<null>");
       ret = false;
    }
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 bool
@@ -1713,6 +1898,7 @@ object_set_any_type(lListElem *this_elem, int name, void *value)
    int type = lGetPosType(lGetElemDescr(this_elem), pos);
 
    DENTER(OBJECT_LAYER, "object_set_any_type");
+
    if (type == lStringT) {
       cull_ret = lSetPosString(this_elem, pos, *((const char **)value));
    } else if (type == lHostT) {
@@ -1741,8 +1927,7 @@ object_set_any_type(lListElem *this_elem, int name, void *value)
       /* not possible */
       cull_ret = -1;
    }
-   DEXIT;
-   return cull_ret == 0 ? true : false;
+   DRETURN(cull_ret == 0 ? true : false);
 }
 
 bool
@@ -1802,8 +1987,7 @@ object_replace_any_type(lListElem *this_elem, int name, lListElem *org_elem)
       /* not possible */
       cull_ret = -1;
    }
-   DEXIT;
-   return cull_ret == 0 ? true : false;
+   DRETURN(cull_ret == 0 ? true : false);
 }
 
 void 
@@ -1843,7 +2027,7 @@ object_get_any_type(lListElem *this_elem, int name, void *value)
          /* not possible */
       }
    }
-   DEXIT;
+   DRETURN_VOID;
 }
 
 bool 
@@ -1893,8 +2077,6 @@ attr_mod_sub_list(lList **alpp, lListElem *this_elem, int this_elem_name,
                   rstring = lGetHost(reduced_element, this_elem_primary_key);
                   fstring = lGetHost(full_element, this_elem_primary_key);
                }
-   
-               DTRACE;
 
                if (rstring == NULL || fstring == NULL) {
                   ERROR((SGE_EVENT, MSG_OBJECT_VALUEMISSING));
@@ -1903,15 +2085,11 @@ attr_mod_sub_list(lList **alpp, lListElem *this_elem, int this_elem_name,
                   ret = false;
                }
       
-               DTRACE;
-
                if (ret && 
                    (((type == lStringT) && strcmp(rstring, fstring) == 0) ||
                    ((type == lHostT) && sge_hostcmp(rstring, fstring) == 0))) {
                   lListElem *new_sub_elem;
                   lListElem *old_sub_elem;
-
-                  DTRACE;
 
                   next_reduced_element = lNext(reduced_element);
                   new_sub_elem =
@@ -1943,8 +2121,6 @@ attr_mod_sub_list(lList **alpp, lListElem *this_elem, int this_elem_name,
                      break;
                   }
                }
-
-               DTRACE;
             }
             if (!ret) {
                break;
@@ -2036,8 +2212,7 @@ attr_mod_sub_list(lList **alpp, lListElem *this_elem, int this_elem_name,
    } else {
       ret = false;
    }
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 bool 
@@ -2181,8 +2356,7 @@ object_has_differences(const lListElem *this_elem, lList **answer_list,
          ret = true;
       } 
    }    
-   DEXIT;
-   return ret;   
+   DRETURN(ret);   
 }
                    
 bool 
@@ -2214,6 +2388,5 @@ object_list_has_differences(const lList *this_list, lList **answer_list,
       ret = true;
    }
 
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }

@@ -209,7 +209,7 @@ sge_follow_order(lListElem *ep, lList **alpp, char *ruser, char *rhost,
          DEXIT;
          return -2;
       }
-      jep = job_list_locate(Master_Job_List, job_number);
+      jep = job_list_locate(*(object_type_get_master_list(SGE_TYPE_JOB)), job_number);
       if(!jep) {
          WARNING((SGE_EVENT, MSG_JOB_FINDJOB_U, sge_u32c(job_number)));
          answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
@@ -571,7 +571,7 @@ sge_follow_order(lListElem *ep, lList **alpp, char *ruser, char *rhost,
 
          DPRINTF(("ORDER : job("sge_u32")->pri/tickets reset"));
 
-         jep = job_list_locate(Master_Job_List, job_number);
+         jep = job_list_locate(*(object_type_get_master_list(SGE_TYPE_JOB)), job_number);
          if(jep == NULL) {
             WARNING((SGE_EVENT, MSG_JOB_UNABLE2FINDJOBORD_U, sge_u32c(job_number)));
             answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_WARNING);
@@ -682,7 +682,7 @@ sge_follow_order(lListElem *ep, lList **alpp, char *ruser, char *rhost,
          DPRINTF(("ORDER : job("sge_u32")->ticket = "sge_u32"\n", 
             job_number, (u_long32)lGetDouble(ep, OR_ticket)));
 
-         jep = job_list_locate(Master_Job_List, job_number);
+         jep = job_list_locate(*(object_type_get_master_list(SGE_TYPE_JOB)), job_number);
          if(!jep) {
             WARNING((SGE_EVENT, MSG_JOB_UNABLE2FINDJOBORD_U, sge_u32c(job_number)));
             answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_WARNING);
@@ -808,7 +808,7 @@ sge_follow_order(lListElem *ep, lList **alpp, char *ruser, char *rhost,
          DPRINTF(("ORDER: job("sge_u32")->ticket = "sge_u32"\n", 
             job_number, (u_long32)lGetDouble(ep, OR_ticket)));
 
-         jep = job_list_locate(Master_Job_List, job_number);
+         jep = job_list_locate(*(object_type_get_master_list(SGE_TYPE_JOB)), job_number);
          if(!jep) {
             ERROR((SGE_EVENT, MSG_JOB_UNABLE2FINDJOBORD_U, sge_u32c(job_number)));
             answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
@@ -1002,7 +1002,7 @@ sge_follow_order(lListElem *ep, lList **alpp, char *ruser, char *rhost,
       DPRINTF(("ORDER: remove %sjob "sge_u32"."sge_u32"\n", 
          or_type==ORT_remove_immediate_job?"immediate ":"" ,
          job_number, task_number));
-      jep = job_list_locate(Master_Job_List, job_number);
+      jep = job_list_locate(*(object_type_get_master_list(SGE_TYPE_JOB)), job_number);
       if(!jep) {
          ERROR((SGE_EVENT, MSG_JOB_FINDJOB_U, sge_u32c(job_number)));
          answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
@@ -1277,7 +1277,7 @@ sge_follow_order(lListElem *ep, lList **alpp, char *ruser, char *rhost,
          jobid = lGetUlong(ep, OR_job_number);
          task_number = lGetUlong(ep, OR_ja_task_number);
 
-         if (!(jep = job_list_locate(Master_Job_List, jobid))
+         if (!(jep = job_list_locate(*(object_type_get_master_list(SGE_TYPE_JOB)), jobid))
             || !(jatp = job_search_task(jep, NULL, task_number))
             || !lGetList(jatp, JAT_granted_destin_identifier_list)) {
             /* don't panic - it is probably an exiting job */
@@ -1331,7 +1331,7 @@ sge_follow_order(lListElem *ep, lList **alpp, char *ruser, char *rhost,
          jobid = lGetUlong(ep, OR_job_number);
          task_number = lGetUlong(ep, OR_ja_task_number);
 
-         if (!(jep = job_list_locate(Master_Job_List, jobid))
+         if (!(jep = job_list_locate(*(object_type_get_master_list(SGE_TYPE_JOB)), jobid))
             || !(jatp = job_search_task(jep, NULL,task_number))
             || !lGetList(jatp, JAT_granted_destin_identifier_list)) {
             /* don't panic - it is probably an exiting job */  
@@ -1440,7 +1440,7 @@ int distribute_ticket_orders( lList *ticket_orders, monitoring_t *monitor)
       DPRINTF(("Job: %ld, Task: %ld", jobid, jataskid));
 
       /* seek job element */
-      if (!(jep = job_list_locate(Master_Job_List, jobid)) || 
+      if (!(jep = job_list_locate(*(object_type_get_master_list(SGE_TYPE_JOB)), jobid)) || 
           !(jatask = job_search_task(jep, NULL, jataskid))) { 
          ERROR((SGE_EVENT, MSG_JOB_MISSINGJOBTASK_UU, sge_u32c(jobid), sge_u32c(jataskid)));
          lRemoveElem(ticket_orders, &ep);
@@ -1470,7 +1470,7 @@ int distribute_ticket_orders( lList *ticket_orders, monitoring_t *monitor)
       while ((other=next)) {      /* CR SPEEDUP CANDIDATE */
          next = lNext(other);
 
-         other_jep = job_list_locate(Master_Job_List, lGetUlong(other, OR_job_number)); 
+         other_jep = job_list_locate(*(object_type_get_master_list(SGE_TYPE_JOB)), lGetUlong(other, OR_job_number)); 
          other_jatask = job_search_task(other_jep, NULL, lGetUlong(other, OR_ja_task_number));
          if (!other_jep || !other_jatask) {
             ERROR((SGE_EVENT, MSG_JOB_MISSINGJOBTASK_UU, sge_u32c(jobid), sge_u32c(jataskid)));

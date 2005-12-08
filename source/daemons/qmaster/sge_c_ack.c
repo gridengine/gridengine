@@ -143,7 +143,7 @@ static void sge_c_job_ack(char *host, char *commproc, u_long32 ack_tag,
    case TAG_SIGJOB:
       DPRINTF(("TAG_SIGJOB\n"));
       /* ack_ulong is the jobid */
-      if (!(jep = job_list_locate(Master_Job_List, ack_ulong))) {
+      if (!(jep = job_list_locate(*(object_type_get_master_list(SGE_TYPE_JOB)), ack_ulong))) {
          ERROR((SGE_EVENT, MSG_COM_ACKEVENTFORUNKOWNJOB_U, sge_u32c(ack_ulong) ));
          SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
          DEXIT;

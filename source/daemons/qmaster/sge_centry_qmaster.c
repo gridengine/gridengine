@@ -526,7 +526,7 @@ void centry_redebit_consumables(const lList *centries)
     * all queues and execution hosts
     * change versions of corresponding queues 
     */ 
-   for_each (jep, Master_Job_List) {
+   for_each (jep, *(object_type_get_master_list(SGE_TYPE_JOB))) {
       lListElem* jatep;
 
       for_each (jatep, lGetList(jep, JB_ja_tasks)) {

@@ -144,7 +144,7 @@ bool job_update_master_list(sge_object_type type, sge_event_action action,
 
    DENTER(TOP_LAYER, "job_update_master_list");
 
-   list = &Master_Job_List;
+   list = object_type_get_master_list(SGE_TYPE_JOB);
    list_descr = lGetListDescr(lGetList(event, ET_new_version)); 
    job_id = lGetUlong(event, ET_intkey);
    job = job_list_locate(*list, job_id);

@@ -2578,7 +2578,7 @@ u_long32 calendar_get_current_state_and_end(const lListElem *cep, time_t *then, 
    
    DENTER(TOP_LAYER, "calendar_get_current_state_and_end");
 
-   DPRINTF(("\ncal: %s\n", lGetString(cep, CAL_name)));
+   DPRINTF(("cal: %s\n", lGetString(cep, CAL_name)));
 
    if (cep != NULL) {
       year_list = lGetList(cep, CAL_parsed_year_calendar);

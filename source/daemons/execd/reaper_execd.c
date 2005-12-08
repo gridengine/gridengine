@@ -87,6 +87,7 @@
 #include "sge_var.h"
 #include "sge_report.h"
 #include "sge_ulong.h"
+#include "sgeobj/sge_object.h"
 #include "uti/sge_stdio.h"
 
 #ifdef COMPILE_DC
@@ -191,7 +192,7 @@ int sge_reap_children_execd(int max_count)
       reap_count++;
 
       /* search whether it was a job or one of its tasks */
-      for_each(jep, Master_Job_List) {
+      for_each(jep, *(object_type_get_master_list(SGE_TYPE_JOB))) {
          int Break = 0;
    
          petep = NULL;
@@ -699,13 +700,13 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
           * structure in the list.  Instead, we have to iterate through the
           * list by hand to make sure we find every instance. */
 
-         job = lGetElemUlongFirst(Master_Job_List, JB_job_number, job_id, &iterator);
+         job = lGetElemUlongFirst(*(object_type_get_master_list(SGE_TYPE_JOB)), JB_job_number, job_id, &iterator);
          while(job != NULL) {
             ja_task = job_search_task(job, NULL, ja_task_id);
             if(ja_task != NULL) {
                break;
             }
-            job = lGetElemUlongNext(Master_Job_List, JB_job_number, job_id, 
+            job = lGetElemUlongNext(*(object_type_get_master_list(SGE_TYPE_JOB)), JB_job_number, job_id, 
                                     &iterator);
          }
 
@@ -808,13 +809,13 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
       lListElem *jep = NULL, *jatep = NULL;
       const void *iterator;
 
-      jep = lGetElemUlongFirst(Master_Job_List, JB_job_number, job_id, &iterator);
+      jep = lGetElemUlongFirst(*(object_type_get_master_list(SGE_TYPE_JOB)), JB_job_number, job_id, &iterator);
       while(jep != NULL) {
          jatep = job_search_task(jep, NULL, ja_task_id);
          if(jatep != NULL) {
             break;
          }
-         jep = lGetElemUlongNext(Master_Job_List, JB_job_number, job_id, &iterator);
+         jep = lGetElemUlongNext(*(object_type_get_master_list(SGE_TYPE_JOB)), JB_job_number, job_id, &iterator);
       }
 
       /* CR: TODO: This code is not active because there is no one who calls 
@@ -894,13 +895,13 @@ lListElem *jr
 
    /* try to find this job in our job list */ 
 
-   jep = lGetElemUlongFirst(Master_Job_List, JB_job_number, job_id, &iterator);
+   jep = lGetElemUlongFirst(*(object_type_get_master_list(SGE_TYPE_JOB)), JB_job_number, job_id, &iterator);
    while(jep != NULL) {
       jatep = job_search_task(jep, NULL, ja_task_id);
       if(jatep != NULL) {
          break;
       }
-      jep = lGetElemUlongNext(Master_Job_List, JB_job_number, job_id, &iterator);
+      jep = lGetElemUlongNext(*(object_type_get_master_list(SGE_TYPE_JOB)), JB_job_number, job_id, &iterator);
    }
 
    if (jep && jatep) {
@@ -984,10 +985,10 @@ lListElem *jr
 
             /* it is possible to remove the exec_file if
                less than one task of a job is running */
-            tmp_job = lGetElemUlongFirst(Master_Job_List, JB_job_number, job_id, &iterator);
+            tmp_job = lGetElemUlongFirst(*(object_type_get_master_list(SGE_TYPE_JOB)), JB_job_number, job_id, &iterator);
             while(tmp_job != NULL) {
                task_number++;
-               tmp_job = lGetElemUlongNext(Master_Job_List, JB_job_number, job_id, &iterator);
+               tmp_job = lGetElemUlongNext(*(object_type_get_master_list(SGE_TYPE_JOB)), JB_job_number, job_id, &iterator);
             }
             
             if (task_number <= 1) {
@@ -1006,7 +1007,7 @@ lListElem *jr
          /* unchain pe task element from task list */
          lRemoveElem(lGetList(jatep, JAT_task_list), &petep);
       } else {
-         lRemoveElem(Master_Job_List, &jep);
+         lRemoveElem(*(object_type_get_master_list(SGE_TYPE_JOB)), &jep);
       }
       del_job_report(jr);   
 
@@ -1251,7 +1252,7 @@ int startup
       exited and there is no need for ps-commands.
 
    */
-   if (!Master_Job_List || !lGetNumberOfElem(Master_Job_List) || !lost_children) {
+   if (lGetNumberOfElem(*(object_type_get_master_list(SGE_TYPE_JOB))) == 0 || !lost_children) {
       if (lost_children) {
          INFO((SGE_EVENT, MSG_SHEPHERD_NOOLDJOBSATSTARTUP));
          lost_children = 0;
@@ -1315,13 +1316,13 @@ int startup
       }
 
       /* seek job to this jobdir */
-      jep = lGetElemUlongFirst(Master_Job_List, JB_job_number, jobid, &iterator);
+      jep = lGetElemUlongFirst(*(object_type_get_master_list(SGE_TYPE_JOB)), JB_job_number, jobid, &iterator);
       while(jep != NULL) {
          jatep = job_search_task(jep, NULL, jataskid);
          if(jatep != NULL) {
             break;
          }
-         jep = lGetElemUlongNext(Master_Job_List, JB_job_number, jobid, &iterator);
+         jep = lGetElemUlongNext(*(object_type_get_master_list(SGE_TYPE_JOB)), JB_job_number, jobid, &iterator);
       }
  
       if (!jep || !jatep) {

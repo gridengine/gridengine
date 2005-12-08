@@ -32,7 +32,7 @@
 
 #include "cull.h"
 #include "sge_manop.h"
-
+#include "sge_object.h"
 #include "sgermon.h"
 
 lList *Master_Manager_List = NULL;
@@ -68,7 +68,8 @@ bool manop_is_manager(const char *user_name)
    DENTER(TOP_LAYER, "manop_is_manager");
    if (user_name == NULL) {
       ret = false;
-   } else if (lGetElemStr(Master_Manager_List, MO_name, user_name) != NULL) {
+   } else if (lGetElemStr(*object_type_get_master_list(SGE_TYPE_MANAGER), 
+                          MO_name, user_name) != NULL) {
       ret = true;
    }
    DEXIT;
@@ -107,9 +108,11 @@ bool manop_is_operator(const char *user_name)
    DENTER(TOP_LAYER, "manop_is_operator");
    if (user_name == NULL) {
       ret = false;
-   } else if(lGetElemStr(Master_Operator_List, MO_name, user_name) != NULL) {
+   } else if(lGetElemStr(*object_type_get_master_list(SGE_TYPE_OPERATOR), 
+                         MO_name, user_name) != NULL) {
       ret = true;
-   } else if (lGetElemStr(Master_Manager_List, MO_name, user_name) != NULL) {
+   } else if (lGetElemStr(*object_type_get_master_list(SGE_TYPE_MANAGER), 
+                          MO_name, user_name) != NULL) {
       ret = true;
    }
    DEXIT;

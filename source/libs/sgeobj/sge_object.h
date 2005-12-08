@@ -115,31 +115,32 @@
 *****************************************************************************/
 typedef enum {
    SGE_TYPE_ADMINHOST = 0,
-   SGE_TYPE_CALENDAR,
-   SGE_TYPE_CKPT,
-   SGE_TYPE_CONFIG,
-   SGE_TYPE_GLOBAL_CONFIG,
-   SGE_TYPE_EXECHOST,
-   SGE_TYPE_JATASK,
-   SGE_TYPE_PETASK,
-   SGE_TYPE_JOB,
-   SGE_TYPE_JOB_SCHEDD_INFO,
-   SGE_TYPE_MANAGER,
-   SGE_TYPE_OPERATOR,
-   SGE_TYPE_SHARETREE,
-   SGE_TYPE_PE,
-   SGE_TYPE_PROJECT,
-   SGE_TYPE_CQUEUE,
-   SGE_TYPE_QINSTANCE,
-   SGE_TYPE_SCHEDD_CONF,
-   SGE_TYPE_SCHEDD_MONITOR,
-   SGE_TYPE_SHUTDOWN,
-   SGE_TYPE_QMASTER_GOES_DOWN,
-   SGE_TYPE_SUBMITHOST,
-   SGE_TYPE_USER,
-   SGE_TYPE_USERSET,
-   SGE_TYPE_HGROUP,
-   SGE_TYPE_CENTRY,
+   SGE_TYPE_CALENDAR,         /*1*/
+   SGE_TYPE_CKPT,             /*2*/
+   SGE_TYPE_CONFIG,           /*3*/
+   SGE_TYPE_GLOBAL_CONFIG,    /*4*/
+   SGE_TYPE_EXECHOST,         /*5*/
+   SGE_TYPE_JATASK,           /*6*/
+   SGE_TYPE_PETASK,           /*7*/
+   SGE_TYPE_JOB,              /*8*/
+   SGE_TYPE_JOB_SCHEDD_INFO,  /*9*/
+   SGE_TYPE_MANAGER,          /*10*/
+   SGE_TYPE_OPERATOR,         /*11*/
+   SGE_TYPE_SHARETREE,        /*12*/
+   SGE_TYPE_PE,               /*13*/
+   SGE_TYPE_PROJECT,          /*14*/
+   SGE_TYPE_CQUEUE,           /*15*/
+   SGE_TYPE_QINSTANCE,        /*16*/
+   SGE_TYPE_SCHEDD_CONF,       /*17*/
+   SGE_TYPE_SCHEDD_MONITOR,    /*18*/
+   SGE_TYPE_SHUTDOWN,          /*19*/
+   SGE_TYPE_QMASTER_GOES_DOWN, /*20*/
+   SGE_TYPE_SUBMITHOST,       /*21*/
+   SGE_TYPE_USER,             /*22*/
+   SGE_TYPE_USERSET,          /*23*/
+   SGE_TYPE_HGROUP,           /*24*/
+   SGE_TYPE_CENTRY,           /*25*/   
+   SGE_TYPE_ZOMBIE,           /*26*/
 
    /*
     * Don't forget to edit
@@ -148,14 +149,20 @@ typedef enum {
     *    'object_base' in libs/sgeobj/sge_object.c
     *    'table_base' in libs/spool/sge_spooling_database.c
     *
+    *    '_sge_mirror_unsubscribe' libs/mir/sge_mirror.c
+    *    '_sge_mirror_subscribe' libs/mir/sge_mirror.c
     * if something is changed here!
     */
 #ifndef __SGE_NO_USERMAPPING__
    SGE_TYPE_CUSER,
 #endif
 
-   SGE_TYPE_ALL            /* must be last entry */
+   SGE_TYPE_ALL,            /* must be the second to the last entry */
+   SGE_TYPE_NONE            /* this must the last entry */
 } sge_object_type;
+
+void obj_init_mt(void);
+void obj_init(bool is_global);
 
 lList **
 object_type_get_master_list(const sge_object_type type);

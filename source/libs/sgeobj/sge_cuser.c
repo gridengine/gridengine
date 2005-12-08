@@ -168,7 +168,10 @@ cuser_list_find_hgroup_references(const lList *this_list,
 lList **
 cuser_list_get_master_list(void) 
 {
-   return &Master_Cuser_List;
+    /* depending on the setting, we want to return the local thread setting and
+       not the global master list. The object_type_get_master_list_mt knows, which
+       one to get */
+    return object_type_get_master_list_mt(SGE_TYPE_CUSER);
 }
 
 lListElem *

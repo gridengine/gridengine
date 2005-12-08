@@ -617,7 +617,7 @@ spool_flatfile_default_list_func(lList **answer_list,
             filename = SCHED_CONF_FILE;
             break;
          case SGE_TYPE_JOB:
-            job_list_read_from_disk(&Master_Job_List, "Master_Job_List", 0,
+            job_list_read_from_disk(object_type_get_master_list(SGE_TYPE_JOB), "Master_Job_List", 0,
                                     SPOOL_DEFAULT, NULL);
             job_list_read_from_disk(&Master_Zombie_List, "Master_Zombie_List", 0,
                                     SPOOL_HANDLE_AS_ZOMBIE, NULL);

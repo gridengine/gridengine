@@ -113,7 +113,7 @@ static void sge_c_gdi_trigger(char *host, sge_gdi_request *request, sge_gdi_requ
                               monitoring_t *monitor);
 
 static void sge_gdi_shutdown_event_client(const char*, sge_gdi_request*, sge_gdi_request*, 
-                                          lList **alpp, monitoring_t *monitor);
+                                          monitoring_t *monitor);
 
 static int  get_client_id(lListElem*, int*);
 
@@ -138,44 +138,46 @@ static int do_gdi_get_sc_config_list(sge_gdi_request *aReq, sge_gdi_request *aRe
 /* ------------------------------ generic gdi objects --------------------- */
 /* *INDENT-OFF* */
 static gdi_object_t gdi_object[] = {
-   { SGE_CALENDAR_LIST,     CAL_name,  CAL_Type,  "calendar",                &Master_Calendar_List,        calendar_mod, calendar_spool, calendar_update_queue_states },
-   { SGE_EVENT_LIST,        0,         NULL,      "event",                   NULL,                         NULL,         NULL,           NULL },
-   { SGE_ADMINHOST_LIST,    AH_name,   AH_Type,   "adminhost",               &Master_Adminhost_List,       host_mod,     host_spool,     host_success },
-   { SGE_SUBMITHOST_LIST,   SH_name,   SH_Type,   "submithost",              &Master_Submithost_List,      host_mod,     host_spool,     host_success },
-   { SGE_EXECHOST_LIST,     EH_name,   EH_Type,   "exechost",                &Master_Exechost_List,        host_mod,     host_spool,     host_success },
-   { SGE_CQUEUE_LIST,       CQ_name,   CQ_Type,   "cluster queue",           &Master_CQueue_List,          cqueue_mod,   cqueue_spool,   cqueue_success },
-   { SGE_JOB_LIST,          0,         NULL,      "job",                     &Master_Job_List,             NULL,         NULL,           NULL },
-   { SGE_CENTRY_LIST,       CE_name,   CE_Type,   "complex entry",           &Master_CEntry_List,          centry_mod,   centry_spool,   centry_success },
-   { SGE_ORDER_LIST,        0,         NULL,      "order",                   NULL,                         NULL,         NULL,           NULL },
-   { SGE_MASTER_EVENT,      0,         NULL,      "master event",            NULL,                         NULL,         NULL,           NULL },
-   { SGE_MANAGER_LIST,      0,         NULL,      "manager",                 &Master_Manager_List,         NULL,         NULL,           NULL },
-   { SGE_OPERATOR_LIST,     0,         NULL,      "operator",                &Master_Operator_List,        NULL,         NULL,           NULL },
-   { SGE_PE_LIST,           PE_name,   PE_Type,   "parallel environment",    &Master_Pe_List,              pe_mod,       pe_spool,       pe_success },
-   { SGE_CONFIG_LIST,       0,         NULL,      "configuration",           NULL,                         NULL,         NULL,           NULL },
-   { SGE_SC_LIST,           0,         NULL,      "scheduler configuration", NULL,                         schedd_mod,   NULL,           NULL },
-   { SGE_USER_LIST,         UP_name,   UP_Type,   "user",                    &Master_User_List,            userprj_mod,  userprj_spool,  userprj_success },
-   { SGE_USERSET_LIST,      0,         NULL,      "userset",                 &Master_Userset_List,         NULL,         NULL,           NULL },
-   { SGE_PROJECT_LIST,      UP_name,   UP_Type,   "project",                 &Master_Project_List,         userprj_mod,  userprj_spool,  userprj_success },
-   { SGE_SHARETREE_LIST,    0,         NULL,      "sharetree",               &Master_Sharetree_List,       NULL,         NULL,           NULL },
-   { SGE_CKPT_LIST,         CK_name,   CK_Type,   "checkpoint interface",    &Master_Ckpt_List,            ckpt_mod,     ckpt_spool,     ckpt_success },
-   { SGE_JOB_SCHEDD_INFO,   0,         NULL,      "schedd info",             &Master_Job_Schedd_Info_List, NULL,         NULL,           NULL },
-   { SGE_ZOMBIE_LIST,       0,         NULL,      "job zombie list",         &Master_Zombie_List,          NULL,         NULL,           NULL },
+   { SGE_CALENDAR_LIST,     CAL_name,  CAL_Type,  "calendar",                SGE_TYPE_CALENDAR,        calendar_mod, calendar_spool, calendar_update_queue_states },
+   { SGE_EVENT_LIST,        0,         NULL,      "event",                   SGE_TYPE_NONE,            NULL,         NULL,           NULL },
+   { SGE_ADMINHOST_LIST,    AH_name,   AH_Type,   "adminhost",               SGE_TYPE_ADMINHOST,       host_mod,     host_spool,     host_success },
+   { SGE_SUBMITHOST_LIST,   SH_name,   SH_Type,   "submithost",              SGE_TYPE_SUBMITHOST,      host_mod,     host_spool,     host_success },
+   { SGE_EXECHOST_LIST,     EH_name,   EH_Type,   "exechost",                SGE_TYPE_EXECHOST,        host_mod,     host_spool,     host_success },
+   { SGE_CQUEUE_LIST,       CQ_name,   CQ_Type,   "cluster queue",           SGE_TYPE_CQUEUE,          cqueue_mod,   cqueue_spool,   cqueue_success },
+   { SGE_JOB_LIST,          0,         NULL,      "job",                     SGE_TYPE_JOB,             NULL,         NULL,           NULL },
+   { SGE_CENTRY_LIST,       CE_name,   CE_Type,   "complex entry",           SGE_TYPE_CENTRY,          centry_mod,   centry_spool,   centry_success },
+   { SGE_ORDER_LIST,        0,         NULL,      "order",                   SGE_TYPE_NONE,            NULL,         NULL,           NULL },
+   { SGE_MASTER_EVENT,      0,         NULL,      "master event",            SGE_TYPE_NONE,            NULL,         NULL,           NULL },
+   { SGE_MANAGER_LIST,      0,         NULL,      "manager",                 SGE_TYPE_MANAGER,         NULL,         NULL,           NULL },
+   { SGE_OPERATOR_LIST,     0,         NULL,      "operator",                SGE_TYPE_OPERATOR,        NULL,         NULL,           NULL },
+   { SGE_PE_LIST,           PE_name,   PE_Type,   "parallel environment",    SGE_TYPE_PE,              pe_mod,       pe_spool,       pe_success },
+   { SGE_CONFIG_LIST,       0,         NULL,      "configuration",           SGE_TYPE_NONE,            NULL,         NULL,           NULL },
+   { SGE_SC_LIST,           0,         NULL,      "scheduler configuration", SGE_TYPE_NONE,            schedd_mod,   NULL,           NULL },
+   { SGE_USER_LIST,         UP_name,   UP_Type,   "user",                    SGE_TYPE_USER,            userprj_mod,  userprj_spool,  userprj_success },
+   { SGE_USERSET_LIST,      0,         NULL,      "userset",                 SGE_TYPE_USERSET,         NULL,         NULL,           NULL },
+   { SGE_PROJECT_LIST,      UP_name,   UP_Type,   "project",                 SGE_TYPE_PROJECT,         userprj_mod,  userprj_spool,  userprj_success },
+   { SGE_SHARETREE_LIST,    0,         NULL,      "sharetree",               SGE_TYPE_SHARETREE,       NULL,         NULL,           NULL },
+   { SGE_CKPT_LIST,         CK_name,   CK_Type,   "checkpoint interface",    SGE_TYPE_CKPT,            ckpt_mod,     ckpt_spool,     ckpt_success },
+   { SGE_JOB_SCHEDD_INFO,   0,         NULL,      "schedd info",             SGE_TYPE_JOB_SCHEDD_INFO, NULL,         NULL,           NULL },
+   { SGE_ZOMBIE_LIST,       0,         NULL,      "job zombie list",         SGE_TYPE_ZOMBIE,          NULL,         NULL,           NULL },
 #ifndef __SGE_NO_USERMAPPING__
-   { SGE_USER_MAPPING_LIST, CU_name,   CU_Type,   "user mapping entry",      &Master_Cuser_List,           cuser_mod,    cuser_spool,    cuser_success },
+   { SGE_USER_MAPPING_LIST, CU_name,   CU_Type,   "user mapping entry",      SGE_TYPE_CUSER,           cuser_mod,    cuser_spool,    cuser_success },
 #endif
-   { SGE_HGROUP_LIST,       HGRP_name, HGRP_Type, "host group",              &Master_HGroup_List,          hgroup_mod,   hgroup_spool,   hgroup_success },
-   { SGE_DUMMY_LIST,        0,         NULL,      "general request",         NULL,                         NULL,         NULL,           NULL },
-   { 0,                     0,         NULL,      NULL,                      NULL,                         NULL,         NULL,           NULL }
+   { SGE_HGROUP_LIST,       HGRP_name, HGRP_Type, "host group",              SGE_TYPE_HGROUP,          hgroup_mod,   hgroup_spool,   hgroup_success },
+   { SGE_DUMMY_LIST,        0,         NULL,      "general request",         SGE_TYPE_NONE,            NULL,         NULL,           NULL },
+   { 0,                     0,         NULL,      NULL,                      SGE_TYPE_NONE,            NULL,         NULL,           NULL }
 };
 /* *INDENT-ON* */
 
-void sge_clean_lists(void) {
+void sge_clean_lists(void) 
+{
    int i = 0;
 
    for(;gdi_object[i].target != 0 ; i++) {
-      if (gdi_object[i].master_list != NULL) {
-/*          fprintf(stderr, "---> freeing list %s, it has %d elems\n", gdi_object[i].object_name, lGetNumberOfElem(*gdi_object[i].master_list)); */
-         lFreeList(gdi_object[i].master_list);
+      if (gdi_object[i].list_type != SGE_TYPE_NONE) {
+         lList **master_list = object_type_get_master_list(gdi_object[i].list_type); 
+   /*          fprintf(stderr, "---> freeing list %s, it has %d elems\n", gdi_object[i].object_name, lGetNumberOfElem(*master_list)); */
+         lFreeList(master_list);
       }   
    }
    
@@ -558,13 +560,12 @@ sge_c_gdi_get(gdi_object_t *ao, char *host, sge_gdi_request *request,
              !sge_has_event_client(EV_ID_SCHEDD) ) {
             answer_list_add(&(answer->alp),MSG_SGETEXT_JOBINFOMESSAGESOUTDATED,
                             STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
-         } else if (ao == NULL || (ao->master_list == NULL )) {
+         } else if (ao == NULL || ao->list_type == SGE_TYPE_NONE) {
             SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_SGETEXT_OPNOIMPFORTARGET));
             answer_list_add(&(answer->alp), SGE_EVENT, 
                             STATUS_ENOIMP, ANSWER_QUALITY_ERROR);
          } else {
-            lp = *(ao->master_list);
-
+            lp = *object_type_get_master_list(ao->list_type);
 #if !USE_OLD_IMPL
             /*
              * start with first part of packing
@@ -1231,9 +1232,7 @@ static void sge_c_gdi_permcheck(char *host, sge_gdi_request *request, sge_gdi_re
 static void sge_c_gdi_trigger(char *host, sge_gdi_request *request, sge_gdi_request *answer, 
                               monitoring_t *monitor)
 {
-   lList *alp = NULL;
    u_long32 target = request->target;
-   
    
    DENTER(GDI_LAYER, "sge_c_gdi_trigger");
 
@@ -1278,9 +1277,8 @@ static void sge_c_gdi_trigger(char *host, sge_gdi_request *request, sge_gdi_requ
 
        case SGE_EVENT_LIST:
             /* kill scheduler or event client */
-            /* JG: TODO: why does sge_gdi_shutdown_event_client use two different answer lists? */
-            sge_gdi_shutdown_event_client(host, request, answer, &alp, monitor);
-            answer_list_output(&alp);
+            sge_gdi_shutdown_event_client(host, request, answer, monitor);
+            answer_list_log(&answer->alp, false);
          break;
             
        default:
@@ -1311,7 +1309,6 @@ static void sge_c_gdi_trigger(char *host, sge_gdi_request *request, sge_gdi_requ
 *     const char *aHost         - sender 
 *     sge_gdi_request *aRequest - request 
 *     sge_gdi_request *anAnswer - answer
-*     lList **alpp              - answer list for info & errors
 *
 *  RESULT
 *     void - none 
@@ -1323,14 +1320,13 @@ static void sge_c_gdi_trigger(char *host, sge_gdi_request *request, sge_gdi_requ
 static void sge_gdi_shutdown_event_client(const char *aHost,
                                           sge_gdi_request *aRequest,
                                           sge_gdi_request *anAnswer,
-                                          lList **alpp, monitoring_t *monitor)
+                                          monitoring_t *monitor)
 {
    uid_t uid = 0;
    gid_t gid = 0;
    char user[128]  = { '\0' };
    char group[128] = { '\0' };
    lListElem *elem = NULL; /* ID_Type */
-   lListElem *answer = NULL;
 
    DENTER(TOP_LAYER, "sge_gdi_shutdown_event_client");
 
@@ -1342,8 +1338,7 @@ static void sge_gdi_shutdown_event_client(const char *aHost,
       return;
    }
 
-   for_each (elem, aRequest->lp)
-   {
+   for_each (elem, aRequest->lp) {
       int client_id = EV_ID_ANY;
       int res = -1;
 
@@ -1365,28 +1360,14 @@ static void sge_gdi_shutdown_event_client(const char *aHost,
       }
 
       if (client_id == EV_ID_ANY) {
-         res = sge_shutdown_dynamic_event_clients(user, alpp, monitor);
+         res = sge_shutdown_dynamic_event_clients(user, &(anAnswer->alp), monitor);
       } else {
-         res = sge_shutdown_event_client(client_id, user, uid, alpp, monitor);
+         res = sge_shutdown_event_client(client_id, user, uid, &(anAnswer->alp), monitor);
       }
 
       if ((res == EINVAL) && (client_id == EV_ID_SCHEDD)) {
-         WARNING((SGE_EVENT, MSG_COM_NOSCHEDDREGMASTER));
-         answer_list_add(&(anAnswer->alp), SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_WARNING);
-         for_each (answer, *alpp) { /* we do not want to see the error messages twice */
-            answer = lDechainElem (*alpp, answer);
-         }
-      }
-      
-      /* Process answer */
-      else if (anAnswer->alp == NULL) {
-         anAnswer->alp = lCopyList ("Answer", *alpp);
-      }
-      else {
-         for_each (answer, *alpp) {
-            answer = lDechainElem (*alpp, answer);
-            lAppendElem (anAnswer->alp, answer);
-         }
+         lFreeList(&(anAnswer->alp)); 
+         answer_list_add(&(anAnswer->alp), MSG_COM_NOSCHEDDREGMASTER, STATUS_EEXIST, ANSWER_QUALITY_WARNING);
       }
    }
 
@@ -2002,11 +1983,11 @@ monitoring_t *monitor
    dataType = lGetPosType(lGetElemDescr(instructions),pos);
    if (dataType == lHostT) {
       name = lGetHost(instructions, object->key_nm); 
-      old_obj = lGetElemHost(*(object->master_list), object->key_nm, name);
+      old_obj = lGetElemHost(*object_type_get_master_list(object->list_type), object->key_nm, name);
       
    } else {
       name = lGetString(instructions, object->key_nm); 
-      old_obj = lGetElemStr(*(object->master_list), object->key_nm, name);
+      old_obj = lGetElemStr(*object_type_get_master_list(object->list_type), object->key_nm, name);
    }
 
    if ((old_obj && add) ||
@@ -2080,7 +2061,7 @@ monitoring_t *monitor
    {
       lList **master_list = NULL;
 
-      master_list = object->master_list;
+      master_list = object_type_get_master_list(object->list_type);
          
    /* chain out the old object */
       if (old_obj) {
@@ -2088,12 +2069,12 @@ monitoring_t *monitor
       }
 
       /* ensure our global list exists */ 
-      if (!*(master_list)) {
-         *(master_list) = lCreateList(object->object_name, object->type);
+      if (*master_list == NULL ) {
+         *master_list = lCreateList(object->object_name, object->type);
       }
 
       /* chain in new object */
-      lAppendElem(*(master_list), new_obj);
+      lAppendElem(*master_list, new_obj);
    }
    if (object->on_success) {
       object->on_success(new_obj, old_obj, object, ppList, monitor);

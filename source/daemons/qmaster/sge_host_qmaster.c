@@ -574,7 +574,7 @@ int host_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object, lList *
 
          lSetList(ep, EH_resource_utilization, NULL);
          debit_host_consumable(NULL, ep, Master_CEntry_List, 0);
-         for_each (jep, Master_Job_List) {
+         for_each (jep, *(object_type_get_master_list(SGE_TYPE_JOB))) {
             slots = 0;
             for_each (jatep, lGetList(jep, JB_ja_tasks)) {
                slots += nslots_granted(lGetList(jatep, JAT_granted_destin_identifier_list), 
@@ -1187,7 +1187,7 @@ int force
 
    if(kill_jobs) {
       /* mark killed jobs as deleted */
-      for_each(jep, Master_Job_List) {   
+      for_each(jep, *(object_type_get_master_list(SGE_TYPE_JOB))) {   
          lListElem *jatep;
          mail_users = NULL;
          mail_options = 0;

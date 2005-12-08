@@ -994,7 +994,7 @@ spool_classic_default_write_func(lList **answer_list,
                /* job_write_spool_file takes a job, even if we only want
                 * to spool a ja_task or pe_task
                 */
-               job = job_list_locate(Master_Job_List, job_id);
+               job = job_list_locate(*(object_type_get_master_list(SGE_TYPE_JOB)), job_id);
             }
 
             if (job_write_spool_file((lListElem *)job, ja_task_id, 

@@ -1,3 +1,6 @@
+CR-2005-12-08-0: Bugfix:    Fixed minor memory leaks from insure test
+                 Review:    AA
+
 RD-2005-12-07-0: CVS        Created V60u7_TAG
 
 RD-2005-12-01-0: Bugfix:    disabled job error in case qrsh_exit code can't be

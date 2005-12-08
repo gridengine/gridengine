@@ -52,7 +52,7 @@ int verify_str_key(lList **alpp, const char *str, const char *name)
    static char begin_chars[3] = { '.', '#', 0 };
    static const char *begin_strings[3];
 
-   static char mid_characters[18] = { '\n', '\t', '\r', ' ', '/', ':', '\'',
+   static const char mid_characters[18] = { '\n', '\t', '\r', ' ', '/', ':', '\'',
       '\"', '\\', '[', ']', '{', '}', '|', '(', ')', '@', 0 };
    static const char *mid_strings[18];
 

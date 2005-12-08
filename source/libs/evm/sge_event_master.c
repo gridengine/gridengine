@@ -1291,7 +1291,7 @@ int sge_shutdown_event_client(u_long32 aClientID, const char* anUser,
       else {
          SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_COM_SHUTDOWNNOTIFICATION_SUS,
                         lGetString(client, EV_name),
-                        (unsigned long)lGetUlong(client, EV_id),
+                        sge_u32c(lGetUlong(client, EV_id)),
                         lGetHost(client, EV_host)));
       }
 
@@ -1473,7 +1473,7 @@ bool sge_add_event(u_long32 timestamp, ev_event type, u_long32 intkey,
       }
    }
    
-   return add_list_event_for_client (EV_ID_ANY, timestamp, type, intkey, intkey2,
+   return add_list_event_for_client(EV_ID_ANY, timestamp, type, intkey, intkey2,
                                      strkey, strkey2, session, lp, false);
 }
 
@@ -1721,12 +1721,12 @@ static bool add_list_event_for_client(u_long32 aClientID, u_long32 timestamp,
    if (Master_Control.is_transaction) {
       is_add_direct = false; 
       if (Master_Control.transaction_events == NULL) {
-         Master_Control.transaction_events = lCreateListHash ("Event_Queue", EV_Type, false);
+         Master_Control.transaction_events = lCreateListHash("Event_Queue", EV_Type, false);
       }
 
       /* If the setspecific worked, add the event. */
       if (Master_Control.transaction_events != NULL) {
-         lAppendElem (Master_Control.transaction_events , evp);
+         lAppendElem(Master_Control.transaction_events, evp);
          res = true;
       }
    } 
@@ -1735,7 +1735,7 @@ static bool add_list_event_for_client(u_long32 aClientID, u_long32 timestamp,
    if (is_add_direct) {
       sge_mutex_lock("event_master_send_mutex", SGE_FUNC, __LINE__, &Master_Control.send_mutex);
 
-      lAppendElem (Master_Control.send_events, evp);
+      lAppendElem(Master_Control.send_events, evp);
 
       sge_mutex_unlock("event_master_send_mutex", SGE_FUNC, __LINE__, &Master_Control.send_mutex);
 
@@ -1743,7 +1743,7 @@ static bool add_list_event_for_client(u_long32 aClientID, u_long32 timestamp,
          /* If we don't already hold the lock, grab it. */
          if (!has_lock) {
             /* If grabbing the lock fails, it's because this id is bad. */
-            if (!lock_client (aClientID, true)) {
+            if (!lock_client(aClientID, true)) {
                res = false;
             }
          }
@@ -1751,7 +1751,7 @@ static bool add_list_event_for_client(u_long32 aClientID, u_long32 timestamp,
          /* If we got the lock OK or already had the lock, see if we need to
           * flush. */
          if (res) {
-            client = get_event_client (aClientID);
+            client = get_event_client(aClientID);
 
             /* If the client doesn't exist, return false. */
             if (client == NULL) {
@@ -1760,7 +1760,7 @@ static bool add_list_event_for_client(u_long32 aClientID, u_long32 timestamp,
 
             /* If we had to aquire the lock, release it now. */
             if (!has_lock) {
-               unlock_client (aClientID);
+               unlock_client(aClientID);
             }
          }
       }
@@ -1792,8 +1792,8 @@ static void process_sends(monitoring_t *monitor)
       new_send_events = NULL;
    sge_mutex_unlock("event_master_send_mutex", SGE_FUNC, __LINE__, &Master_Control.send_mutex);
 
-   while ((send = lFirst (temp_send_events)) != NULL) {
-      send = lDechainElem (temp_send_events, send);
+   while ((send = lFirst(temp_send_events)) != NULL) {
+      send = lDechainElem(temp_send_events, send);
       
       ec_id = lGetUlong (send, EV_id);
       session = lGetString (send, EV_session);
@@ -1802,7 +1802,7 @@ static void process_sends(monitoring_t *monitor)
       MONITOR_EDT_NEW(monitor);
       
       if (ec_id == EV_ID_ANY) {
-         DPRINTF (("Processing event for all clients\n"));
+         DPRINTF(("Processing event for all clients\n"));
 
          event = lFirst (event_list);
 
@@ -1815,11 +1815,11 @@ static void process_sends(monitoring_t *monitor)
             while (Master_Control.clients_indices[count] != 0) {
                ec_id = (u_long32)Master_Control.clients_indices[count++];
 
-               DPRINTF (("Preparing event for client %ld\n", ec_id));
+               DPRINTF(("Preparing event for client %ld\n", ec_id));
 
                lock_client(ec_id, true);
                
-               event_client = get_event_client (ec_id);
+               event_client = get_event_client(ec_id);
                
                /* Keep going until we get a non-NULL client. */
                /*This shouldn't ever be NULL. The indices prevent it. */
@@ -1830,7 +1830,7 @@ static void process_sends(monitoring_t *monitor)
 
                if (eventclient_subscribed(event_client, type, session)) {
                   added = true;
-                  add_list_event_direct (event_client, event, true);
+                  add_list_event_direct(event_client, event, true);
                   MONITOR_EDT_ADDED(monitor);
                }
                
@@ -1869,7 +1869,7 @@ static void process_sends(monitoring_t *monitor)
                   MONITOR_EDT_SKIP(monitor);
                   lFreeElem(&event);
                }
-               event = lFirst (event_list);
+               event = lFirst(event_list);
             } /* while */
          } /* if */
             
@@ -3220,7 +3220,7 @@ static void add_list_event_direct(lListElem *event_client, lListElem *event,
    
    DENTER(TOP_LAYER, "add_list_event_direct"); 
 
-   SGE_ASSERT (event_client != NULL);
+   SGE_ASSERT(event_client != NULL);
   
    if (lGetUlong(event_client, EV_state) != EV_connected) {
       /* the event client is not connected anymore, so we are not
@@ -3290,7 +3290,7 @@ static void add_list_event_direct(lListElem *event_client, lListElem *event,
       } /* if */
       /* If there's no what clause, and we want a copy, we copy the list */
       else if (copy_event) {
-         DPRINTF (("Copying event data\n"));
+         DPRINTF(("Copying event data\n"));
          clp = lCopyListHash(lGetListName (lp), lp, false);
       }
       /* If there's no what clause, and we don't want to copy, we just reuse
@@ -3305,7 +3305,7 @@ static void add_list_event_direct(lListElem *event_client, lListElem *event,
    /* If we're making a copy, copy the event and swap the orignial list
     * back into the original event */
    if (copy_event) {
-      DPRINTF (("Copying event\n"));
+      DPRINTF(("Copying event\n"));
       ep = lCopyElemHash(event, false);
       
       lXchgList (event, ET_new_version, &lp);
@@ -4144,7 +4144,7 @@ DPRINTF (("value: 0\n"));
 *  NOTE
 *     MT-NOTE: sge_commit is thread safe.
 *******************************************************************************/
-bool sge_commit (void)
+bool sge_commit(void)
 {
    bool ret = false;
 
@@ -4156,8 +4156,8 @@ bool sge_commit (void)
    
    if (Master_Control.is_transaction) {
    
-   /* we do not need to evaluate the flushing, we just trigger, when ever there is one event. */
-#if 0   
+      /* we do not need to evaluate the flushing, we just trigger, when ever there is one event. */
+#if    0   
       bool flush = false; 
 #endif     
       Master_Control.is_transaction = false;
@@ -4186,7 +4186,7 @@ bool sge_commit (void)
          }
 #endif
          sge_mutex_lock("event_master_send_mutex", SGE_FUNC, __LINE__, &Master_Control.send_mutex);
-         lAppendList (Master_Control.send_events, Master_Control.transaction_events);
+         lAppendList(Master_Control.send_events, Master_Control.transaction_events);
          sge_mutex_unlock("event_master_send_mutex", SGE_FUNC, __LINE__, &Master_Control.send_mutex);
 
          set_flush();

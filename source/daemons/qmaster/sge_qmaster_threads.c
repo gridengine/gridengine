@@ -258,12 +258,14 @@ void sge_daemonize_qmaster(void)
       exit(0); /* child 1 terminates */
    }
 
+#ifndef __INSURE__
+   /* This must be disabled for insure tests */
    for (i = 0; i < sysconf(_SC_OPEN_MAX); i++) { close(i); }
 
    if (open("/dev/null", O_RDONLY, 0) != 0) { SGE_EXIT(0); }
    if (open("/dev/null", O_RDWR,   0) != 1) { SGE_EXIT(0); }
    if (open("/dev/null", O_RDWR,   0) != 2) { SGE_EXIT(0); }
-
+#endif
    uti_state_set_daemonized(true);
 
    DEXIT;

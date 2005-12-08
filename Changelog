@@ -1,3 +1,6 @@
+CR-2005-12-08-0: Bugfix:    Fixed minor memory leaks from insure test
+                 Review:    AA
+
 RD-2005-12-08-0: Bugfix:    fixed broken shepherd on irix
                             introduced due to FCLOSE cleanup 
                  Changed:   qrsh_starter, shepherd, execd

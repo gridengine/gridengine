@@ -1291,7 +1291,7 @@ int sge_shutdown_event_client(u_long32 aClientID, const char* anUser,
       else {
          SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_COM_SHUTDOWNNOTIFICATION_SUS,
                         lGetString(client, EV_name),
-                        (unsigned long)lGetUlong(client, EV_id),
+                        sge_u32c(lGetUlong(client, EV_id)),
                         lGetHost(client, EV_host)));
       }
 

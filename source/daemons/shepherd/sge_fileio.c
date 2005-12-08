@@ -409,15 +409,13 @@ shepherd_read_osjobid_file(
 
 #if defined(IRIX)
       arguments = fscanf(fp, "%lld\n", return_code);
-#elif defined(CRAY) || defined(NECSX4) || defined(NECSX5)
+#else
       arguments = fscanf(fp, "%d\n", return_code);
 #endif
 
       if (arguments != 1) {
          shepherd_trace("could not read osjobid file\n");
-#if defined(IRIX) || defined(CRAY) || defined(NECSX4) || defined(NECSX5)
          *return_code = 0;
-#endif
          ret = false;
       }
       FCLOSE(fp);

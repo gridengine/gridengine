@@ -699,3 +699,11 @@ proc get_urgency_job_info {jobid {variable job_info} { do_replace_NA 1 } } {
    return 0
 }
 
+# ADOC see sge_procedures/get_sge_error_generic()
+proc get_sge_error_generic_vdep {messages_var} {
+   upvar $messages_var messages
+
+   lappend messages(index) "-100"
+   set messages(-100) "*[translate_macro MSG_GDI_UNABLE_TO_CONNECT_SUS "qmaster" "*" "*"]"
+   set messages(-100,description) "probably sge_qmaster is down"
+}

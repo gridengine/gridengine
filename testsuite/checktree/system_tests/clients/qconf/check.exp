@@ -72,6 +72,8 @@ lappend check_functions "qconf_muser"
 lappend check_functions "qconf_Muser"
 lappend check_functions "qconf_de_check"
 lappend check_functions "qconf_segfault"
+lappend check_functions "qconf_se"
+lappend check_functions "qconf_sel"
 
 # TODO: check all options
 #lappend check_functions "qconf_aattr_check"
@@ -929,6 +931,75 @@ proc qconf_segfault {} {
       set output [start_remote_prog $CHECK_HOST $CHECK_USER "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-de localhost"]
    }
 
+
+   set_error 0 "ok"
+}
+
+proc qconf_se {} {
+   global ts_config
+  
+   # test hosts
+   set cluster_host [lindex $ts_config(execd_nodes) 0]
+   set non_cluster_host [host_conf_get_unused_host]
+
+   # fields delivered by qconf -se
+   if {$ts_config(gridengine_version) == 53} {
+      set qconf_se_fields "hostname load_scaling complex_list complex_values load_values processors user_lists xuser_lists projects xprojects usage_scaling resource_capability_factor"
+   } else {
+      set qconf_se_fields "hostname load_scaling complex_values load_values processors user_lists xuser_lists projects xprojects usage_scaling report_variables"
+   }
+
+   # positive check
+   # check qconf -se <an exec host>, check completeness of result
+   if {[get_exechost exec_host $cluster_host] == 0} {
+      foreach elem $qconf_se_fields {
+         if {![info exists exec_host($elem)]} {
+            add_proc_error "qconf_se" -1 "$elem is missing in result of qconf -se"
+         }
+      }
+   }
+
+   # negative checks
+   # check qconf -se <a non exec host>
+   if {$non_cluster_host != ""} {
+      if {[get_exechost exec_host $non_cluster_host "" "" 0] == 0} {
+         add_proc_error "qconf_se" -1 "qconf -se $non_cluster_host (non cluster host) should have failed"
+      }
+   }
+
+   # check qconf -se from a non admin/submit host
+   if {$non_cluster_host != ""} {
+      if {[get_exechost exec_host $cluster_host $non_cluster_host "" 0] == 0} {
+         add_proc_error "qconf_se" -3 "qconf -se called on $non_cluster_host (non submit/admin host) should have failed\nknown issue 1889"
+      }
+   }
+
+   set_error 0 "ok"
+}
+
+proc qconf_sel {} {
+   global ts_config
+  
+   # test hosts
+   set non_cluster_host [host_conf_get_unused_host]
+
+   # positive check
+   # qconf -sel, has to match testsuite's execd_nodes list
+   if {[get_exechost_list exechost_list] == 0} {
+      set qconf_list [lsort $exechost_list]
+      set testsuite_list [lsort $ts_config(execd_nodes)]
+      if {[string compare $qconf_list $testsuite_list] != 0} {
+         add_proc_error "qconf_sel" -1 "exec host list delivered by qconf does not match testsuite exec host list:\n$qconf_list\n$testsuite_list"
+      }
+   }
+
+   # negative check
+   # call qconf -sel on a non admin/submit host
+   if {$non_cluster_host != ""} {
+      if {[get_exechost_list exechost_list $non_cluster_host "" 0] == 0} {
+         add_proc_error "qconf_sel" -3 "qconf -sel called on $non_cluster_host (non submit/admin host) should have failed\nknown issue 1889"
+      }
+   }
 
    set_error 0 "ok"
 }

@@ -68,12 +68,13 @@ proc get_exechost_error {result host raise_error} {
 
    # recognize certain error messages and return special return code
    set messages(index) "-1 -2"
-   set messages(-1) [translate_macro MSG_SGETEXT_CANTRESOLVEHOST_S $host]
-   set messages(-2) [translate_macro MSG_EXEC_XISNOTANEXECUTIONHOST_S $host]
+   set messages(-1) [translate_macro MSG_EXEC_XISNOTANEXECUTIONHOST_S $host]
+   set messages(-2) [translate_macro MSG_SGETEXT_CANTRESOLVEHOST_S $host]
 
-   # we might have version dependent error messages
+
+   # we might have version dependent, exechost specific error messages
    get_exechost_error_vdep messages $host
-  
+ 
    # now evaluate return code and raise errors
    set ret [handle_sge_errors "get_exechost" "qconf -se $host" $result messages $raise_error]
 
@@ -107,7 +108,7 @@ proc get_exechost_error {result host raise_error} {
 #     sge_host/get_exechost_error()
 #*******************************************************************************
 proc get_exechost {output_var {host global} {on_host ""} {as_user ""} {raise_error 1}} {
-   global ts_config CHECK_OUTPUT
+   global ts_config
    upvar $output_var out
 
    # clear output variable
@@ -128,20 +129,99 @@ proc get_exechost {output_var {host global} {on_host ""} {as_user ""} {raise_err
    return $ret
 }
 
-proc test_get_exechost {} {
-   global CHECK_OUTPUT
+#****** sge_host/get_exechost_list() *******************************************
+#  NAME
+#     get_exechost_list() -- get a list of exec hosts
+#
+#  SYNOPSIS
+#     get_exechost_list { output_var {on_host ""} {as_user ""} {raise_error 1} 
+#     } 
+#
+#  FUNCTION
+#     Calls qconf -sel to retrieve a list of execution hosts.
+#
+#  INPUTS
+#     output_var      - result will be placed here
+#     {on_host ""}    - execute qconf on this host, default is master host
+#     {as_user ""}    - execute qconf as this user, default is $CHECK_USER
+#     {raise_error 1} - raise an error condition on error (default), or just
+#                       output the error message to stdout
+#
+#  RESULT
+#     0 on success, an error code on error. 
+#     For a list of error codes, see sge_procedures/get_sge_error().
+#
+#  SEE ALSO
+#     sge_procedures/get_sge_error()
+#     sge_procedures/get_qconf_list()
+#*******************************************************************************
+proc get_exechost_list {output_var {on_host ""} {as_user ""} {raise_error 1}} {
+   upvar $output_var out
 
-   set ret [get_exechost output bilbur "" "" 0]
-   puts $CHECK_OUTPUT "get_exechost bilbur: $ret"
-
-   set ret [get_exechost output "dontknowthishost" "" "" 0]
-   puts $CHECK_OUTPUT "get_exechost bilbur: $ret"
-
-   set ret [get_exechost output sowa "" "" 0]
-   puts $CHECK_OUTPUT "get_exechost sowa: $ret"
-
-   set ret [get_exechost output bilbur sowa "" 0]
-   puts $CHECK_OUTPUT "get_exechost bilbur on host sowa: $ret"
+   return [get_qconf_list "get_exechost_list" "-sel" out $on_host $as_user $raise_error]
 }
 
+#****** sge_host/get_adminhost_list() *******************************************
+#  NAME
+#     get_adminhost_list() -- get a list of admin hosts
+#
+#  SYNOPSIS
+#     get_adminhost_list { output_var {on_host ""} {as_user ""} {raise_error 1} 
+#     } 
+#
+#  FUNCTION
+#     Calls qconf -sel to retrieve a list of admin hosts.
+#
+#  INPUTS
+#     output_var      - result will be placed here
+#     {on_host ""}    - execute qconf on this host, default is master host
+#     {as_user ""}    - execute qconf as this user, default is $CHECK_USER
+#     {raise_error 1} - raise an error condition on error (default), or just
+#                       output the error message to stdout
+#
+#  RESULT
+#     0 on success, an error code on error. 
+#     For a list of error codes, see sge_procedures/get_sge_error().
+#
+#  SEE ALSO
+#     sge_procedures/get_sge_error()
+#     sge_procedures/get_qconf_list()
+#*******************************************************************************
+proc get_adminhost_list {output_var {on_host ""} {as_user ""} {raise_error 1}} {
+   upvar $output_var out
+
+   return [get_qconf_list "get_adminhost_list" "-sh" out $on_host $as_user $raise_error]
+}
+
+#****** sge_host/get_submithost_list() *******************************************
+#  NAME
+#     get_submithost_list() -- get a list of submit hosts
+#
+#  SYNOPSIS
+#     get_submithost_list { output_var {on_host ""} {as_user ""} {raise_error 1} 
+#     } 
+#
+#  FUNCTION
+#     Calls qconf -sel to retrieve a list of submit hosts.
+#
+#  INPUTS
+#     output_var      - result will be placed here
+#     {on_host ""}    - execute qconf on this host, default is master host
+#     {as_user ""}    - execute qconf as this user, default is $CHECK_USER
+#     {raise_error 1} - raise an error condition on error (default), or just
+#                       output the error message to stdout
+#
+#  RESULT
+#     0 on success, an error code on error. 
+#     For a list of error codes, see sge_procedures/get_sge_error().
+#
+#  SEE ALSO
+#     sge_procedures/get_sge_error()
+#     sge_procedures/get_qconf_list()
+#*******************************************************************************
+proc get_submithost_list {output_var {on_host ""} {as_user ""} {raise_error 1}} {
+   upvar $output_var out
+
+   return [get_qconf_list "get_submithost_list" "-ss" out $on_host $as_user $raise_error]
+}
 

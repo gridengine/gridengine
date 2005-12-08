@@ -647,6 +647,96 @@ proc start_sge_utilbin {bin args {host ""} {user ""} {exit_var prg_exit_state}} 
    return [start_sge_bin $bin $args $host $user exit_state 60 "utilbin"]
 }
 
+#****** sge_procedures/get_sge_error_generic() *********************************
+#  NAME
+#     get_sge_error_generic() -- provide a list of generic error messages
+#
+#  SYNOPSIS
+#     get_sge_error_generic { messages_var } 
+#
+#  FUNCTION
+#     The function builds a list of SGE generic error messages, i.e. messages
+#     that might be returned by any SGE command, for example, if the qmaster 
+#     cannot be contacted.
+#
+#     Messages that are common to multiple SGE versions are added directly in
+#     this function.
+#     For version specific messages, a function get_sge_error_generic_vdep
+#     is called.
+#     get_sge_error_generic_vdep is implemented in the version specific 
+#     sge_procedures files (sge_procedures.53.tcl, sge_procedures.60.tcl, ...).
+#
+#  INPUTS
+#     messages_var - TCL array containing error message description, see
+#                    sge_procedures/handle_sge_errors().
+#
+#  NOTES
+#     A list of all generic error messages is maintained in the ADOC header
+#     for sge_procedures/get_sge_error().
+#     If you add messages here or in the version specific functions, please
+#     document them in the sge_procedures/get_sge_error() ADOC header.
+#
+#  SEE ALSO
+#     sge_procedures/get_sge_error()
+#*******************************************************************************
+proc get_sge_error_generic {messages_var} {
+   upvar $messages_var messages
+
+   lappend messages(index) "-200"
+   set messages(-200) [translate_macro MSG_SGETEXT_NOSUBMITORADMINHOST_S "*"]
+
+   get_sge_error_generic_vdep messages
+}
+
+#****** sge_procedures/get_sge_error() *****************************************
+#  NAME
+#     get_sge_error() -- return error code for sge command
+#
+#  SYNOPSIS
+#     get_sge_error { procedure command result {raise_error 1} } 
+#
+#  FUNCTION
+#     Parses the result of a sge command and tries to find certain known
+#     error messages.
+#     If an error message is recognized in result, a specific error message
+#     will be returned.
+#     If result doesn't contain a known error message, -999 will be returned.
+#
+#     If requested (raise_error), an error situation will be raised 
+#     (add_proc_error).
+#
+#     Error codes are grouped by error situation:
+#        - 100-199: communication errors
+#        - 200-299: permission specific error messages
+#
+#     List of error codes:
+#        -100: sge_qmaster cannot be contacted
+#
+#        -200: host executing command is no admin or submit host
+#
+#  INPUTS
+#     procedure       - name of the calling procedure (for error message)
+#     command         - executed command (for error message)
+#     result          - output of a SGE command
+#     {raise_error 1} - raise an error condition on error (default), or just
+#                       output the error message to stdout
+#
+#  RESULT
+#     -999, or specific error code, see above
+#
+#  SEE ALSO
+#     sge_procedures/handle_sge_errors()
+#*******************************************************************************
+proc get_sge_error {procedure command result {raise_error 1}} {
+   # initialize array.
+   # handle_sge_errors will add the sge generic messages
+   set messages(index) {}
+
+   # parse error messages and map to return code
+   set ret [handle_sge_errors $procedure $command $result messages $raise_error]
+   return $ret
+}
+
 #****** sge_procedures/handle_sge_errors() *************************************
 #  NAME
 #     handle_sge_errors() -- parse error messages from sge commands
@@ -667,6 +757,12 @@ proc start_sge_utilbin {bin args {host ""} {user ""} {exit_var prg_exit_state}} 
 #     - <error_code,description>, a highlevel description for the error
 #     - <error_code,level>, the error level for add_proc_error
 #
+#     handle_sge_errors will add generic sge error messages to the list of 
+#     application specific error messages provided by the caller.
+#
+#     For application specific error messages, a range from -1 to -99 is reserved.
+#     For a list of the generic error messages, see sge_procedures/get_sge_error().
+#     
 #  INPUTS
 #     procedure       - name of the procedure calling the function 
 #                       (for error output)
@@ -678,7 +774,7 @@ proc start_sge_utilbin {bin args {host ""} {user ""} {exit_var prg_exit_state}} 
 #
 #  RESULT
 #     error code, for recognized messages the corresponding error code from 
-#                 messages array, or -99 if the error message is not contained 
+#                 messages array, or -999, if the error message is not contained 
 #                 in messages array
 #
 #  EXAMPLE
@@ -692,11 +788,15 @@ proc start_sge_utilbin {bin args {host ""} {user ""} {exit_var prg_exit_state}} 
 #
 #  SEE ALSO
 #     check/add_proc_error()
+#     sge_procedures/get_sge_error()
 #*******************************************************************************
 proc handle_sge_errors {procedure command result messages_var {raise_error 1}} {
    upvar $messages_var messages
 
-   set ret -99
+   set ret -999
+
+   # add sge generic error messages to the array of specific error messages
+   get_sge_error_generic messages
 
    # remove trailing garbage
    set result [string trim $result]
@@ -718,7 +818,7 @@ proc handle_sge_errors {procedure command result messages_var {raise_error 1}} {
 
    set error_message "$command failed ($ret):\n"
 
-   if {$ret == -99} {
+   if {$ret == -999} {
       append error_message "$result"
    } else {
       # we might have a high level error description
@@ -1711,57 +1811,6 @@ proc move_qmaster_spool_dir { new_spool_dir } {
   if { [string compare $changed_spool_dir $new_spool_dir] != 0 } {
      add_proc_error "shadowd_kill_master_and_scheduler" -1 "error changing qmaster spool dir"
   }
-
-}
-
-#                                                             max. column:     |
-#****** sge_procedures/get_hosts() ******
-# 
-#  NAME
-#     get_hosts -- ??? 
-#
-#  SYNOPSIS
-#     get_hosts { } 
-#
-#  FUNCTION
-#     ??? 
-#
-#  INPUTS
-#
-#  RESULT
-#     ??? 
-#
-#  EXAMPLE
-#     ??? 
-#
-#  NOTES
-#     ??? 
-#
-#  BUGS
-#     ??? 
-#
-#  SEE ALSO
-#     ???/???
-#*******************************
-proc get_hosts { } {
-  global ts_config
-  global CHECK_ARCH CHECK_OUTPUT
-
-  set host_list ""
-  set catch_result [ catch {  eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-sh" } result ]
-  if { $catch_result != 0 } {
-     add_proc_error "get_hosts" "-1" "qconf error or binary not found ($ts_config(product_root)/bin/$CHECK_ARCH/qconf)\n$result"
-     return ""
-  } 
-
-  foreach elem $result {
-     lappend host_list $elem
-  }  
-
-  foreach elem $host_list {
-     puts $CHECK_OUTPUT "\"$elem\""
-  }
-  return $host_list
 
 }
 
@@ -7936,3 +7985,62 @@ proc append_to_qtask_file {content} {
 
    return $ret
 }
+
+
+#****** sge_procedures/get_qconf_list() ****************************************
+#  NAME
+#     get_qconf_list() -- return a list from qconf -s* command
+#
+#  SYNOPSIS
+#     get_qconf_list { procedure option output_var {on_host ""} {as_user ""} 
+#     {raise_error 1} } 
+#
+#  FUNCTION
+#     Calls qconf with the give option and returns the results as a list by
+#     splitting multiple lines into list elements.
+#
+#     The function can be used to call the qconf show list options, e.g.
+#     -sh, -ss -sel, -sm, -so, -suserl, ...
+#
+#     It will usually be called by a wrapper function, e.g. get_adminhost_list().
+#
+#  INPUTS
+#     procedure       - calling procedure
+#     option          - qconf option to call
+#     output_var      - output list will be placed here (call by reference)
+#     {on_host ""}    - execute qconf on this host, default is master host
+#     {as_user ""}    - execute qconf as this user, default is $CHECK_USER
+#     {raise_error 1} - raise an error condition on error (default), or just
+#                       output the error message to stdout
+#
+#  RESULT
+#     0 on success, an error code on error. 
+#     For a list of error codes, see sge_procedures/get_sge_error().
+#     
+#  SEE ALSO
+#     sge_procedures/get_sge_error()
+#     sge_procedures/get_qconf_list()
+#     sge_host/get_adminhost_list()
+#*******************************************************************************
+proc get_qconf_list {procedure option output_var {on_host ""} {as_user ""} {raise_error 1}} {
+   global ts_config CHECK_OUTPUT
+   upvar $output_var out
+
+   # clear output variable
+   if {[info exists out]} {
+      unset out
+   }
+
+   set ret 0
+   set result [start_sge_bin "qconf" $option $on_host $as_user]
+
+   # parse output or raise error
+   if {$prg_exit_state == 0} {
+      parse_multiline_list result out
+   } else {
+      set ret [get_sge_error $procedure "qconf $option" $result $raise_error]
+   }
+
+   return $ret
+}
+

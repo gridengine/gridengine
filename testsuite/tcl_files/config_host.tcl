@@ -1336,6 +1336,116 @@ proc node_get_processors {nodename} {
    return $ts_host_config($host,processors)
 }
 
+#****** config_host/host_conf_get_archs() **************************************
+#  NAME
+#     host_conf_get_archs() -- get all archs covered by a list of hosts
+#
+#  SYNOPSIS
+#     host_conf_get_archs { nodelist } 
+#
+#  FUNCTION
+#     Takes a list of hosts and returns a unique list of the architectures
+#     of the hosts.
+#
+#  INPUTS
+#     nodelist - list of nodes
+#
+#  RESULT
+#     list of architectures
+#*******************************************************************************
+proc host_conf_get_archs {nodelist} {
+   global ts_host_config
+
+   set archs {}
+   foreach node $nodelist {
+      set host [node_get_host $node]
+      lappend archs $ts_host_config($host,arch)
+   }
+
+   return [lsort -unique $archs]
+}
+
+#****** config_host/host_conf_get_arch_hosts() *********************************
+#  NAME
+#     host_conf_get_arch_hosts() -- find hosts of certain architectures
+#
+#  SYNOPSIS
+#     host_conf_get_arch_hosts { archs } 
+#
+#  FUNCTION
+#     Returns all hosts configured in the testuite host configuration,
+#     that have one of the given architectures.
+#
+#  INPUTS
+#     archs - list of architecture names
+#
+#  RESULT
+#     list of hosts
+#*******************************************************************************
+proc host_conf_get_arch_hosts {archs} {
+   global ts_host_config
+
+   set hostlist {}
+
+   foreach host $ts_host_config(hostlist) {
+      if {[lsearch -exact $archs $ts_host_config($host,arch)] >= 0} {
+         lappend hostlist $host
+      }
+   }
+
+   return $hostlist
+}
+
+#****** config_host/host_conf_get_unused_host() ********************************
+#  NAME
+#     host_conf_get_unused_host() -- find a host not being referenced in our cluster
+#
+#  SYNOPSIS
+#     host_conf_get_unused_host { {raise_error 1} } 
+#
+#  FUNCTION
+#     Tries to find a host in the testsuite host configuration that
+#     - is not referenced in the installed cluster (master/exec/submit/bdb_server)
+#     - has an installed architecture
+#
+#  INPUTS
+#     {raise_error 1} - raise an error (unsupported warning) if no such host is found
+#
+#  RESULT
+#     The name of a host matching the above description.
+#*******************************************************************************
+proc host_conf_get_unused_host {{raise_error 1}} {
+   global ts_config ts_host_config
+
+   # return an empty string if we don't find a suited host
+   set ret ""
+
+   # get a list of all hosts referenced in the cluster
+   set hosts "$ts_config(master_host) $ts_config(execd_hosts) $ts_config(execd_nodes) $ts_config(submit_only_hosts) $ts_config(bdb_server)"
+   set cluster_hosts [lsort -unique $hosts]
+   set none_elem [lsearch $cluster_hosts "none"]
+   if {$none_elem >= 0} {
+      set cluster_hosts [lreplace $cluster_hosts $none_elem $none_elem]
+   }
+
+   # get a list of all configured hosts having one of the installed architectures
+   set archs [host_conf_get_archs $cluster_hosts]
+   set installed_hosts [host_conf_get_arch_hosts $archs]
+
+   foreach host $installed_hosts {
+      if {[lsearch -exact $cluster_hosts $host] == -1} {
+         set ret $host
+         break
+      }
+   }
+
+   if {$ret == "" && $raise_error} {
+      add_proc_error "host_conf_get_unused_host" -3 "cannot find an unused host having an installed architecture" 
+   }
+
+   return $ret
+}
+
 #****** config_host/get_java_home_for_host() **************************************************
 #  NAME
 #    get_java_home_for_host() -- Get the java home directory for a host

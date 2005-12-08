@@ -157,6 +157,24 @@ proc parse_simple_record {input_var output_var} {
    }
 }
 
+proc parse_multiline_list {input_var output_var} {
+   upvar $input_var  in
+   upvar $output_var out
+   
+   # split each line as listelement
+   set help [split $in "\n"]
+
+   # generate new list with trimmed elements,
+   # filter empty lines
+   set out {}
+   foreach line $help {
+      set elem [string trim $line]
+      if {$elem != ""} {
+         lappend out $elem
+      }
+   }
+}
+
 #                                                             max. column:     |
 #****** parser/parse_fixed_column_lines() ***************************************
 #

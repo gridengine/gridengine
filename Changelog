@@ -1,3 +1,7 @@
+JG-2005-12-08-0: Testsuite: Added test cases for qconf -se and -sel.
+                            Additional utility functions and cleanup.
+                 Review:    CR
+
 CR-2005-12-08-0: Bugfix:    Fixed minor memory leaks from insure test
                  Review:    AA
 

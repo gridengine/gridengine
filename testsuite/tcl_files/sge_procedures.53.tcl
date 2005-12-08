@@ -372,3 +372,11 @@ proc startup_execd { hostname } {
    return 0
 }
 
+# ADOC see sge_procedures/get_sge_error_generic()
+proc get_sge_error_generic_vdep {messages_var} {
+   upvar $messages_var messages
+
+   lappend messages(index) "-100"
+   set messages(-100) [translate_macro MSG_SGETEXT_NOQMASTER_PORT_ENV_SI "*" "*"]
+   set messages(-100,description) "probably sge_commd and/or sge_qmaster are down"
+}

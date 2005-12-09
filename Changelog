@@ -1,3 +1,7 @@
+CR-2005-12-09-0: Testsuite: Using longer timeouts for spool directory
+                            removal
+                 Review:    Pending
+
 SG-2005-12-08-0: Enhancem.: - first part of making the libs thread safe
                               and removing the master lists
                             - fixed a memory leak in c_gdi, related to

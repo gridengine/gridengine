@@ -402,7 +402,7 @@ void sge_create_and_join_threads(void)
 
    DENTER(TOP_LAYER, "sge_create_and_join_threads");
 
-   INFO((SGE_EVENT, MSG_QMASTER_THREADCOUNT_U, threads));
+   INFO((SGE_EVENT, MSG_QMASTER_THREADCOUNT_U, sge_u32c(threads)));
    
    if (threads >= NUM_THRDS) {
       threads = NUM_THRDS -1;

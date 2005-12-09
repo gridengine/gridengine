@@ -1,3 +1,7 @@
+HP-2005-12-09-0: Bugfix:    fixed broken build on alinux
+                 Changed:   daemons/qmaster/sge_qmaster_threads.c
+                 Review:    Not needed
+
 CR-2005-12-09-0: Testsuite: Using longer timeouts for spool directory
                             removal
                  Review:    Pending

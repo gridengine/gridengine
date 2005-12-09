@@ -1,3 +1,7 @@
+SG-2005-12-09-0: Bugfix:    fixed a memory leak in the qmaster
+                 Review:    JG
+                 Changed:   qmaster
+
 CR-2005-12-08-0: Bugfix:    Fixed minor memory leaks from insure test
                  Review:    AA
 

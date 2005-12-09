@@ -1,50 +1,118 @@
-Bugs fixed in SGE 6.0s2snapshot1 since release 6.0u6
+Bugs fixed in SGE 6.0u7 since release 6.0u6
 -------------------------------------------
 
 Issue    Sun BugId Description
 -------- --------  ------------------------------------------------------------------------------------------
+1922     4780562   xterm flags -e and -ls do not work with qsh and this should be documented 
+1921     4919544   outdated/incomplete documentation on qalter and qmod 
 1149     5056331   autoinstall hangs if root owns the files on $SGE_ROOT 
 1248     5090187   Install scripts fails in adding >sge_request< options file with $ADMINUSER 
+1842     6207868   wording with qconf -cq should be changed 
 1330     6239653   auto installation doesn't provide sufficient diagnosis output 
 1451     6239658   inst_sge -ux -host <host> might be incomplete if not run from an admin host 
 1490     6242169   Multi-threaded, multi-CPU username problems 
+1750     6250692   accounting(5) record can't be made available immediately after job finish 
+1823     6252471   sge qmaster startup and shutdown (non critical) error message as non root 
 1556     6253860   First character is lost in quoting 
+1803     6255111   Binary jobs are problematic for starter and epilog scripts 
 1780     6256590   qconf -mq disallows 2057 hostspecific profiles in slots configuration 
-1626     6275789   Soft requirements on load values ignored 
-1628     6277104   Problem with large job output files on 32-bit Linux nodes 
-1661     6282996   Using of IP addresses as host names breaks unique host name resolving 
+1801     6268799   confusing execd startup messages and delays in case of problems 
+1626     6275789   soft requirements on load values are ignored 
+-        6279523   qlogin on windows does not work! 
+1661     6282996   use of IP address as host name disables unique hostname resolving 
 1665     6286510   delivery of queue based signals to execd repeated endlessly 
-1200     R6287501   rctemplates lack of requirement 
+1578     6287828   shadow master uninstallation cannot manage shadow_masters containing several lines 
 814      6287847   qstat -j shows wrong message for parallel jobs which can't be dispatched 
 1028     6287850   Allow SIGTRAP to enable debugging 
-1306     6287862   qhost -l for complexes broken 
-1363     6287865   qrsh default job names must be consistent with limitations generally imposed on job names 
+1265     6287860   effect of -p priority and weight_priority not described in sge_priority(5) 
+1306     6287862   qhost -l for complexes is broken 
+1363     6287865   qrsh default job names are not consistent with documented job name limitations 
+1527     6287910   $pe_hostfile has 4 entries, man page says 3 
+1619     6287935   qmod -sq can kill a pe job in t state 
+1631     6287940   Job error state is not documented in the qstat man page 
+1640     6287946   qconf -[dm]attr gets confused by shortcuts 
+1652     6287953   repeated logging of the error message: "failed building category string for job N" 
 1655     6287955   strange reservation 
-185      6287967   certain error situations when writing spool files are not handled 
+1695     6288626   default PATH variable set for job insufficient for non-login shell jobs 
 1249     6289240   Install will fail if non-root ADMINUSER selected and they don't own $SGE_ROOT 
-1731     6289455   bug in qstat -XML output (does not match the schema) 
+1731     6289455   qstat -XML output does not match the schema 
+1378     6291016   qmon startup and queue add/modify warning messages 
 1475     6291023   qstat -j <name> doesn't print delimiter between jobs 
-1691     6294052   Suspend on threshold not working for calendar disabled queues 
+1679     6292742   tight integration - qrsh_exit_code file not written 
+1680     6292751   admin mail information is incorrect 
+1798     6292926   qconf -mattr can crash qmaster 
+1752     6293411   NFS write error on host <NFS server>: Permission denied. 
+1691     6294052   suspend threshold is not working for calendar disabled queues 
+1802     6294875   CSP: consolidate error output if cert CA on client and server don't match 
 1650     6295231   Java language binding email property doesn't work 
 1651     6295233   JobTemplate property getters throw InvalidAttributeException 
-1720     6295791   qacct -h shall not resolve hostnames 
+1720     6295791   qacct -h should not resolve hostnames 
 1724     6299982   Slow submission rate with drmaa_run_job() 
+1800     6301047   qstat -s p doesn't show pending array tasks while there are tasks of this job running 
 1727     6303671   DRMAA can abort in the middle of a session if NIS becomes unavailable 
 1715     6304466   qmaster crashes with large number of qconf -aattr calls 
 1687     6304471   qlogin -R does not work like documented 
-1732     6304490   qconf -as/-ah "" segfault 
+1732     6304490   qconf -as/-ah leads to segmentation fault 
 1733     6305095   qstat schema files are incomplete 
-1738     6306229   wrong soft requests decission 
+1738     6306229   wrong soft requests decision 
 1742     6306834   consumables as thresholds are not working correctly with pe jobs 
 1739     6307557   qhost returns wrong total_memory value on MacOSX 10.3 
+1861     6310168   autoinstall does not support csp installation mode 
 1758     6313445   Qrsh tries to free invalid pointer 
+-        6314019   qloadsensor.exe uses up more and more handles 
+1924     6314301   -hold_jid option in the man page does not correctly reflect reality. 
+1819     6314306   using "-bup" with "-auto" breaks with later update release 
+1761     6315111   doing a qalter -l rsc=val on running jobs breaks consumable debit 
+1767     6316995   qconf -mp prints error messages two times 
+1768     6317028   Quotes in job category can result in memory corruption 
 1763     6317048   Memory leaks in drmaa library, japi_wait and drmaa_job2sge_job 
+1772     6318018   shepherd doesn't handle qrlogin/qrsh jobs correctly 
 1778     6318659   sge_ca -usercert fails when executed more than once 
 1773     6318660   the system hold on an array task can vanish 
 1749     6319228   Backslash line continuation is broken for host groups 
+1760     6319231   unable to delete a configuration of a non existing host 
+1762     6319233   Parsing of context variable options fails for values containing commas in single quotes 
 1770     6320683   Binary switch reversed in job category and can cause application to hang 
+1820     6320869   sge_qmaster daemon is running on both the master and shadow nodes after a long network failure 
 1787     6322498   calendar syntax "week  mon=0-21" corrupts SGE and may crash qmaster 
-1775     6323047   qstat output for alarm state reasons broken 
+1923     6325359   comments in sge_request file refer to cod_request(5) manpage but should say sge_request(5) 
+1810     6327427   qping core dump with enabled message content dump 
+1814     6328703   fstype does not recognize nfs4 share in all cases 
+1847     6329832   qconf and qmaster accept invalid settings for queue complex_values 
+-        6331433   gemm install hangs on Fedore Core 1 
+1821     6332876   qstat -U does not consider queue access for job and project access for queues 
+1822     6332877   qstat -pe filter does not work 
+1826     6333407   configuring the halflife_decay_list crashes the qmaster 
+1828     6333467   sgemaster -migrate may not delete qmaster lock file and may break shadowd functionality 
+1838     6336519   changing the cwd flag in qmon - qalter has no effect 
+1856     6338314   occasional "failed to deliver job" errors due to SIGPIPE in sge_execd 
+1837     6339756   Quotes in qtask file can result in memory corruption 
+1848     6342005   a scheduler configuration change with a sharetree can result in a usage leak 
+1866     6346696   connection to Berkeley DB RPC server can timeout 
+1845     6346704   qrsh -V doesn't always work. 
+1869     6347267   sge_ca script fails when no /dev/random present due to permission problem 
+-        6347351   sgeCA may not be consistent after new installation 
+1872     6347840   -mhgrp switch is missing in qconf man page 
+1874     6348299   qconf -mstree aborts 
+1876     6348516   job finish does not terminate all processes of a job 
+1877     6348517   job finish although terminate method is still running 
+1895     6349351   complex man page describes regex incorrectly 
+1890     6349768   Upgrade from 5.3 to 6.0 fails with an empty complex in the 5.3 cluster 
+1891     6349818   an additional started schedd/execd daemons may not stop if started when qmaster is down 
+1892     6349972   DRMAA crashes during some operations on bulk jobs 
+1782     6350714   qconf -purge option not fully explained in help output 
+1783     6351174   qconf -purge queue slots all.q" doesn't behave as expected 
+1897     6351240   -rsstree is missing from qconf man page 
+1897     6351278   qconf man page options are out of order 
+1900     6351728   installation of qmaster failed when using /etc/services 
+1904     6353526   reprioritize field in qmon cluster config missing 
+1925     6353555   qresub manpage inprecise and partly incorrect 
+1882     6354143   mutually subordinating queues suspend each other simultaneously 
+1912     6354164   drmaa does not work on hp11 platform 
+1913     6354236   auto install ignores DB_SPOOLING_SERVER setting 
+1916     6355263   reschedule of a parallel job crashes the qmaster
+1783           -   "qconf -purge queue slots all.q" doesn't behave as expected
+1870           -   Manpages qhold/qrls refer to old -uall option
 
 
 Bugs fixed in SGE 6.0u6 since release 6.0u5

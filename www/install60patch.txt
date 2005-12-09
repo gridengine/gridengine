@@ -22,11 +22,11 @@
    9.6.  Support for Solaris 10 on AMD64 (Opteron) (6.0u4)
    9.7.  Installation Improvements (6.0u4)
    9.8.  Berkeley DB database tools are included in the distribution (6.0u6)
-   9.10. Reworked "qstat -xml" output (6.0u7)
-   9.11. Reworked PE range matching algorithm in the scheduler (6.0u7)
-   9.12. New monitoring feature in qmaster (6.0u7)
-   9.13. New parameter for specialized job deletion (6.0u7)
-   9.14. New reporting parameter to control accounting file flush time (6.0u7)
+   9.9. Reworked "qstat -xml" output (6.0u7)
+   9.10. Reworked PE range matching algorithm in the scheduler (6.0u7)
+   9.11. New monitoring feature in qmaster (6.0u7)
+   9.12. New parameter for specialized job deletion (6.0u7)
+   9.13. New reporting parameter to control accounting file flush time (6.0u7)
 
 1) Who needs to read this document
 ----------------------------------
@@ -354,8 +354,8 @@
      <sge_root>/doc/bdbdocs
 
 
-   9.10. Reworked "qstat -xml" output (6.0u7)
-   ------------------------------------------------------------------------
+   9.9. Reworked "qstat -xml" output (6.0u7)
+   -----------------------------------------
 
    The schema for "qstat -xml" and the "qstat -xml" output have been
    reworked to ensure consistency between them and easy parsing of them via
@@ -363,8 +363,8 @@
    XML datetime format.
 
 
-   9.11. Reworked PE range matching algorithm in the scheduler (6.0u7)
-   ------------------------------------------------------------------------
+   9.10. Reworked PE range matching algorithm in the scheduler (6.0u7)
+   -------------------------------------------------------------------
 
    The PE range matching algorithm is now adaptable and learns from the past
    decisions. This will lead to a much faster scheduling decision in case of
@@ -374,8 +374,8 @@
    See sge_conf(5) for more information.
 
 
-   9.12. New monitoring feature in qmaster (6.0u7)
-   ------------------------------------------------------------------------
+   9.11. New monitoring feature in qmaster (6.0u7)
+   -----------------------------------------------
 
    The monitoring allows to get detailed statistics what the qmaster
    threads are doing and how busy they are.  The statistics can be accessed
@@ -389,8 +389,8 @@
    See sge_conf(5) for more information.
 
 
-   9.13. New parameter for specialized job deletion (6.0u7)
-   ------------------------------------------------------------------------
+   9.12. New parameter for specialized job deletion (6.0u7)
+   --------------------------------------------------------
 
    A new "execd_param" (configured in the global cluster configuration):
 
@@ -409,8 +409,8 @@
    See sge_conf(5) under "gid_range" for more information.
 
 
-   9.14. New reporting parameter to control accounting file flush time (6.0u7)
-   ------------------------------------------------------------------------
+   9.13. New reporting parameter to control accounting file flush time (6.0u7)
+   ---------------------------------------------------------------------------
 
    A new reporting parameter, "accounting_flush_time", controls the flush
    period for the accounting file. Previously, both the accounting and

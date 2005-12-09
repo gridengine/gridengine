@@ -113,7 +113,7 @@ static void sge_c_gdi_trigger(char *host, sge_gdi_request *request, sge_gdi_requ
                               monitoring_t *monitor);
 
 static void sge_gdi_shutdown_event_client(const char*, sge_gdi_request*, sge_gdi_request*, 
-                                          lList **alpp, monitoring_t *monitor);
+                                          monitoring_t *monitor);
 
 static int  get_client_id(lListElem*, int*);
 
@@ -1231,9 +1231,7 @@ static void sge_c_gdi_permcheck(char *host, sge_gdi_request *request, sge_gdi_re
 static void sge_c_gdi_trigger(char *host, sge_gdi_request *request, sge_gdi_request *answer, 
                               monitoring_t *monitor)
 {
-   lList *alp = NULL;
    u_long32 target = request->target;
-   
    
    DENTER(GDI_LAYER, "sge_c_gdi_trigger");
 
@@ -1278,9 +1276,8 @@ static void sge_c_gdi_trigger(char *host, sge_gdi_request *request, sge_gdi_requ
 
        case SGE_EVENT_LIST:
             /* kill scheduler or event client */
-            /* JG: TODO: why does sge_gdi_shutdown_event_client use two different answer lists? */
-            sge_gdi_shutdown_event_client(host, request, answer, &alp, monitor);
-            answer_list_output(&alp);
+            sge_gdi_shutdown_event_client(host, request, answer, monitor);
+            answer_list_log(&answer->alp, false);
          break;
             
        default:
@@ -1311,7 +1308,7 @@ static void sge_c_gdi_trigger(char *host, sge_gdi_request *request, sge_gdi_requ
 *     const char *aHost         - sender 
 *     sge_gdi_request *aRequest - request 
 *     sge_gdi_request *anAnswer - answer
-*     lList **alpp              - answer list for info & errors
+*     monitoring_t    *monitor  - the monitoring structure 
 *
 *  RESULT
 *     void - none 
@@ -1323,14 +1320,13 @@ static void sge_c_gdi_trigger(char *host, sge_gdi_request *request, sge_gdi_requ
 static void sge_gdi_shutdown_event_client(const char *aHost,
                                           sge_gdi_request *aRequest,
                                           sge_gdi_request *anAnswer,
-                                          lList **alpp, monitoring_t *monitor)
+                                          monitoring_t *monitor)
 {
    uid_t uid = 0;
    gid_t gid = 0;
    char user[128]  = { '\0' };
    char group[128] = { '\0' };
    lListElem *elem = NULL; /* ID_Type */
-   lListElem *answer = NULL;
 
    DENTER(TOP_LAYER, "sge_gdi_shutdown_event_client");
 
@@ -1342,8 +1338,8 @@ static void sge_gdi_shutdown_event_client(const char *aHost,
       return;
    }
 
-   for_each (elem, aRequest->lp)
-   {
+   for_each (elem, aRequest->lp) {
+      lList *local_alp = NULL;
       int client_id = EV_ID_ANY;
       int res = -1;
 
@@ -1365,34 +1361,28 @@ static void sge_gdi_shutdown_event_client(const char *aHost,
       }
 
       if (client_id == EV_ID_ANY) {
-         res = sge_shutdown_dynamic_event_clients(user, alpp, monitor);
+         res = sge_shutdown_dynamic_event_clients(user, &(local_alp), monitor);
       } else {
-         res = sge_shutdown_event_client(client_id, user, uid, alpp, monitor);
+         res = sge_shutdown_event_client(client_id, user, uid, &(local_alp), monitor);
       }
 
       if ((res == EINVAL) && (client_id == EV_ID_SCHEDD)) {
-         WARNING((SGE_EVENT, MSG_COM_NOSCHEDDREGMASTER));
-         answer_list_add(&(anAnswer->alp), SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_WARNING);
-         for_each (answer, *alpp) { /* we do not want to see the error messages twice */
-            answer = lDechainElem (*alpp, answer);
-         }
+         lFreeList(&local_alp); 
+         answer_list_add(&(anAnswer->alp), MSG_COM_NOSCHEDDREGMASTER, STATUS_EEXIST, ANSWER_QUALITY_WARNING);
       }
-      
-      /* Process answer */
       else if (anAnswer->alp == NULL) {
-         anAnswer->alp = lCopyList ("Answer", *alpp);
+         anAnswer->alp = local_alp;
+         local_alp = NULL;
       }
       else {
-         for_each (answer, *alpp) {
-            answer = lDechainElem (*alpp, answer);
-            lAppendElem (anAnswer->alp, answer);
-         }
+         lAddList(anAnswer->alp, &local_alp);
       }
    }
 
    DEXIT;
    return;
 } /* sge_gdi_shutdown_event_client() */
+
 
 /****** qmaster/sge_c_gdi/get_client_id() **************************************
 *  NAME

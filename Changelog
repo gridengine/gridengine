@@ -1,3 +1,9 @@
+MD-2005-12-12-0: Bugfix:    INSTALL: screen not cleared
+                 Bugtraq:   5063318
+                 Issue:     1064
+                 Changed:   sge_ca
+                 Review:    AA
+
 MD-2005-12-12-0: Bugfix:    fixed typo in Changelog
 
 SG-2005-12-09-0: Bugfix:    fixed a memory leak in the qmaster

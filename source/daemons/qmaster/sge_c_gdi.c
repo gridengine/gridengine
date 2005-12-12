@@ -1372,7 +1372,7 @@ static void sge_gdi_shutdown_event_client(const char *aHost,
          answer_list_add(&(anAnswer->alp), MSG_COM_NOSCHEDDREGMASTER, STATUS_EEXIST, ANSWER_QUALITY_WARNING);
       }
       else {
-         answer_list_append_list(anAnswer->alp, &local_alp)
+         answer_list_append_list(&(anAnswer->alp), &local_alp);
       }
    }
 

@@ -4,7 +4,7 @@ HP-2005-12-09-0: Bugfix:    fixed broken build on alinux
 
 CR-2005-12-09-0: Testsuite: Using longer timeouts for spool directory
                             removal
-                 Review:    Pending
+                 Review:    RH
 
 SG-2005-12-08-0: Enhancem.: - first part of making the libs thread safe
                               and removing the master lists

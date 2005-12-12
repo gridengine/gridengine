@@ -93,6 +93,7 @@ SHELL_NAME="ssh"
 COPY_COMMAND="scp"
 EXEC_HOST_LIST="undef"
 CONFIG_FILE="undef"
+STDOUT2LOG="0"
 
 SGE_NOMSG="undef"
 
@@ -107,7 +108,7 @@ CSP_STATE="undef"
 CSP_LOCATION="undef"
 CSP_ORGA="undef"
 CSP_ORGA_UNIT="undef"
-CSP_MAIL_ADRESS="undef"
+CSP_MAIL_ADDRESS="undef"
 
 BasicSettings
 SetUpInfoText
@@ -316,6 +317,11 @@ if [ "$UPDATE" = "true" -a "$EXECD" = "install" ]; then
 fi
 
 if [ "$BERKELEY" = "install" ]; then
+
+   if [ "$AUTO" = "true" ]; then
+      Stdout2Log
+      $INFOTEXT -log "Starting Berkeley DB installation!"
+   fi
    
    if [ "$DB_SPOOLING_SERVER" = "" -o "$HOST" = "$DB_SPOOLING_SERVER" -o "$NOREMOTE" = "true" ]; then
       CheckWhoInstallsSGE
@@ -532,6 +538,7 @@ if [ "$EXECD" = "install" -a "$UPDATE" != "true" ]; then
       fi
 
  fi
+ MoveLog
  exit 0 
 fi
 
@@ -562,9 +569,7 @@ if [ "$EXECD" = "uninstall" ]; then
    fi
    FetchHostname
    
-   if [ $AUTO = "true" ]; then
-      MoveLog
-   fi
+   MoveLog
    
    if [ $QMASTER != "uninstall" ]; then 
       exit 0
@@ -617,6 +622,7 @@ if [ $QMASTER = "uninstall" ]; then
 
    . $SGE_ROOT/$SGE_CELL/common/settings.sh
    RemoveQmaster
+   MoveLog
 fi
 
 
@@ -690,11 +696,13 @@ if [ $SHADOW = "install" ]; then
       $INFOTEXT "Starting sge_shadowd on host %s\n" $SHADOW_HOST
       ExecuteAsAdmin touch $SGE_ROOT/$SGE_CELL/common/shadow_masters
       ALREADY_SHADOWS=`cat $SGE_ROOT/$SGE_CELL/common/shadow_masters | grep -v $SHADOW_HOST`
-      mod_file="echo $SHADOW_HOST\n$ALREADY_SHADOWS"
       ExecuteAsAdmin mv $SGE_ROOT/$SGE_CELL/common/shadow_masters $SGE_ROOT/$SGE_CELL/common/shadow_masters.1
       ExecuteAsAdmin touch $SGE_ROOT/$SGE_CELL/common/shadow_masters
       ExecuteAsAdmin chmod a+rw $SGE_ROOT/$SGE_CELL/common/shadow_masters
-      ExecuteAsAdmin $mod_file >> $SGE_ROOT/$SGE_CELL/common/shadow_masters
+      ExecuteAsAdmin echo $SHADOW_HOST >> $SGE_ROOT/$SGE_CELL/common/shadow_masters
+      for s in `echo $ALREADY_SHADOWS`; do
+         ExecuteAsAdmin echo $s >> $SGE_ROOT/$SGE_CELL/common/shadow_masters
+      done
       ExecuteAsAdmin chmod go-w $SGE_ROOT/$SGE_CELL/common/shadow_masters
       ExecuteAsAdmin rm -f $SGE_ROOT/$SGE_CELL/common/shadow_masters.1
  
@@ -718,11 +726,13 @@ if [ $SHADOW = "install" ]; then
          $INFOTEXT -log "Starting sge_shadowd on host %s" $SHADOW   
          ExecuteAsAdmin touch $SGE_ROOT/$SGE_CELL/common/shadow_masters
          ALREADY_SHADOWS=`cat $SGE_ROOT/$SGE_CELL/common/shadow_masters | grep -v "$SHADOW"`
-         mod_file="echo $SHADOW\n$ALREADY_SHADOWS"
          ExecuteAsAdmin mv $SGE_ROOT/$SGE_CELL/common/shadow_masters $SGE_ROOT/$SGE_CELL/common/shadow_masters.1
          ExecuteAsAdmin touch $SGE_ROOT/$SGE_CELL/common/shadow_masters
          ExecuteAsAdmin chmod a+rw $SGE_ROOT/$SGE_CELL/common/shadow_masters
-         ExecuteAsAdmin $mod_file >> $SGE_ROOT/$SGE_CELL/common/shadow_masters
+         ExecuteAsAdmin echo $SHADOW >> $SGE_ROOT/$SGE_CELL/common/shadow_masters
+         for s in `echo $ALREADY_SHADOWS`; do
+            ExecuteAsAdmin echo $s >> $SGE_ROOT/$SGE_CELL/common/shadow_masters
+         done
          ExecuteAsAdmin chmod go-w $SGE_ROOT/$SGE_CELL/common/shadow_masters
          ExecuteAsAdmin rm -f $SGE_ROOT/$SGE_CELL/common/shadow_masters.1
          if [ $SHADOW = `$SGE_UTILBIN/gethostname -aname` ]; then
@@ -811,6 +821,7 @@ fi
 
 if [ $BACKUP = "true" ]; then
    BackupConfig
+   MoveLog
 fi
 
 if [ $RESTORE = "true" ]; then
@@ -898,9 +909,4 @@ if [ $UPDATEDB = "true" ]; then
    $CLEAR
    UpgradeDB
 fi
-
-if [ "$AUTO" = true ]; then
-   MoveLog
-fi
-
 exit 0

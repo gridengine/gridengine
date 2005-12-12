@@ -211,9 +211,7 @@ ExecuteAsAdmin()
       $INFOTEXT -log "Probably a permission problem. Please check file access permissions."
       $INFOTEXT -log "Check read/write permission. Check if SGE daemons are running."
 
-      if [ "$AUTO" = "true" ]; then
-         MoveLog
-      fi
+      MoveLog
 
       exit 1
    fi
@@ -529,8 +527,8 @@ CheckConfigFile()
          exit 1
       fi
 
-      if [ "$CSP_MAIL_ADRESS" = "" ]; then
-         $INFOTEXT -log "The CSP_MAIL_ADRESS entry is empty!\n"
+      if [ "$CSP_MAIL_ADDRESS" = "" ]; then
+         $INFOTEXT -log "The CSP_MAIL_ADDRESS entry is empty!\n"
          MoveLog
          exit 1
       fi
@@ -1372,26 +1370,32 @@ fi
 
 Stdout2Log()
 {
-   CLEAR=:
-   SGE_NOMSG=1
-   export SGE_NOMSG
-   CreateLog
-   # make Filedescriptor(FD) 4 a copy of stdout (FD 1)
-   exec 4>&1
-   # open logfile for writing
-   exec 1> /tmp/$LOGSNAME 2>&1
+   if [ "$STDOUT2LOG" = "0" ]; then
+      CLEAR=:
+      SGE_NOMSG=1
+      export SGE_NOMSG
+      CreateLog
+      # make Filedescriptor(FD) 4 a copy of stdout (FD 1)
+      exec 4>&1
+      # open logfile for writing
+      exec 1> /tmp/$LOGSNAME 2>&1
+      STDOUT2LOG=1
+   fi
 }
 
 
 RestoreStdout()
 {
-   unset SGE_NOMSG
-   # close file logfile 
-   exec 1>&-
-   # make stdout a copy of FD 4 (reset stdout)
-   exec 1>&4
-   # close FD4
-   exec 4>&-
+   if [ "$STDOUT2LOG" = "1" ]; then
+      unset SGE_NOMSG
+      # close file logfile 
+      exec 1>&-
+      # make stdout a copy of FD 4 (reset stdout)
+      exec 1>&4
+      # close FD4
+      exec 4>&-
+      STDOUT2LOG=0
+   fi
 }
 #-------------------------------------------------------------------------
 # CheckRunningDaemon

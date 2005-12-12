@@ -1,3 +1,11 @@
+SG-2005-12-12-0: Bugfix:    fixed a bug added in SG-2005-12-08-0
+                            In case of a qconf -ke all -ks with a not
+                            existing scheduler, one would only see the
+                            scheduler error message, but not the execd
+                            messages.
+                 Changed:   qmaster
+                 Review:    EB
+
 HP-2005-12-09-0: Bugfix:    fixed broken build on alinux
                  Changed:   daemons/qmaster/sge_qmaster_threads.c
                  Review:    Not needed

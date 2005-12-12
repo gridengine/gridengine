@@ -1309,6 +1309,7 @@ static void sge_c_gdi_trigger(char *host, sge_gdi_request *request, sge_gdi_requ
 *     const char *aHost         - sender 
 *     sge_gdi_request *aRequest - request 
 *     sge_gdi_request *anAnswer - answer
+*     monitoring_t    *monitor  - the monitoring structure 
 *
 *  RESULT
 *     void - none 
@@ -1339,6 +1340,7 @@ static void sge_gdi_shutdown_event_client(const char *aHost,
    }
 
    for_each (elem, aRequest->lp) {
+      lList *local_alp = NULL;
       int client_id = EV_ID_ANY;
       int res = -1;
 
@@ -1360,14 +1362,17 @@ static void sge_gdi_shutdown_event_client(const char *aHost,
       }
 
       if (client_id == EV_ID_ANY) {
-         res = sge_shutdown_dynamic_event_clients(user, &(anAnswer->alp), monitor);
+         res = sge_shutdown_dynamic_event_clients(user, &(local_alp), monitor);
       } else {
-         res = sge_shutdown_event_client(client_id, user, uid, &(anAnswer->alp), monitor);
+         res = sge_shutdown_event_client(client_id, user, uid, &(local_alp), monitor);
       }
 
       if ((res == EINVAL) && (client_id == EV_ID_SCHEDD)) {
-         lFreeList(&(anAnswer->alp)); 
+         lFreeList(&local_alp); 
          answer_list_add(&(anAnswer->alp), MSG_COM_NOSCHEDDREGMASTER, STATUS_EEXIST, ANSWER_QUALITY_WARNING);
+      }
+      else {
+         answer_list_append_list(anAnswer->alp, &local_alp)
       }
    }
 

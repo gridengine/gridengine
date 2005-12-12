@@ -1,3 +1,11 @@
+MD-2005-12-12-1: Bugfix:    Edits to settings.csh and settings.sh
+                            user-unfriendly error messages when attempting 
+                            to install on incorrect platform
+                 Bugtraq:   5109725, 4828799
+                 Issue:     1934, 1935  
+                 Changed:   create_settings.sh, inst_common.sh
+                 Review:    HP      
+
 MD-2005-12-12-0: Bugfix:    INSTALL: screen not cleared
                  Bugtraq:   5063318
                  Issue:     1064

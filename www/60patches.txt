@@ -103,7 +103,7 @@ Issue    Sun BugId Description
 1782     6350714   qconf -purge option not fully explained in help output 
 1783     6351174   qconf -purge queue slots all.q" doesn't behave as expected 
 1897     6351240   -rsstree is missing from qconf man page 
-1897     6351278   qconf man page options are out of order 
+1898     6351278   qconf man page options are out of order 
 1900     6351728   installation of qmaster failed when using /etc/services 
 1904     6353526   reprioritize field in qmon cluster config missing 
 1925     6353555   qresub manpage inprecise and partly incorrect 

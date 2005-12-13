@@ -4318,32 +4318,14 @@ char *argv[]
 
          for_each(argep, arglp) {
 
-            lListElem *node = NULL;
-            const char *nodepath = NULL;
-            ancestors_t ancestors;
+            const char *nodepath = lGetString(argep, STN_name);
 
-            nodepath = lGetString(argep, STN_name);
             if (nodepath) {
-
-               memset(&ancestors, 0, sizeof(ancestors));
-               node = search_named_node_path(ep, nodepath, &ancestors);
-               if (node) {
-                  int i, shares;
-                  found++;
-                  for(i=0; i<ancestors.depth; i++)
-                     printf("/%s", lGetString(ancestors.nodes[i], STN_name));
-                  shares = (int)lGetUlong(node, STN_shares);
-                  printf("=%d\n", shares);
-               } else {
-                  fprintf(stderr, MSG_TREE_UNABLETOLACATEXINSHARETREE_S,
-                          nodepath);
-                  fprintf(stderr, "\n");
-               }
-               free_ancestors(&ancestors);
+               found = show_sharetree_path(ep, nodepath);
             }
          }
 
-         if (!found && *(spp+1) == NULL) {
+         if ( found != 0 ) {
             SGE_EXIT(1);
          }
 

@@ -311,6 +311,8 @@ char **argv
    /* unseclect all queues not selected by a -q (if exist) */
    if (lGetNumberOfElem(queueref_list)>0) {
       if ((nqueues=select_by_qref_list(queue_list, hgrp_list, queueref_list))<0) {
+         fprintf(stderr, MSG_QSTAT_NOQUEUESREMAININGAFTERXQUEUESELECTION_S,"-q");
+         fprintf(stderr, "\n");
          SGE_EXIT(1);
       }
       if (nqueues==0) {

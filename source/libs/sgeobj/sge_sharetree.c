@@ -133,24 +133,23 @@ const char *path
    }
  
    memset(&ancestors, 0, sizeof(ancestors));
-   if (!strcmp(path, "/")) {
+   if ( !strcmp(path, "/") || !strcasecmp(path, "Root") ) {
       node = root;
-   }
-   else {
+   } else {
       node = search_named_node_path(root, path, &ancestors);
    }
  
    if (node) {
       for(i=0; i<ancestors.depth; i++)
          fprintf(fp, "/%s", lGetString(ancestors.nodes[i], STN_name));
-      if (!strcmp(path, "/"))
+      if (!strcmp(path, "/") || !strcasecmp(path, "Root") )
          fprintf(fp, "/="sge_u32"\n", lGetUlong(node, STN_shares));
       else
          fprintf(fp, "="sge_u32"\n", lGetUlong(node, STN_shares));
       free_ancestors(&ancestors);
       for_each(cep, lGetList(node, STN_children)) {
 
-         if (!strcmp(path, "/"))
+         if (!strcmp(path, "/") || !strcasecmp(path, "Root") )
             sge_dstring_sprintf(&sb, "/%s", lGetString(cep, STN_name));
          else
             sge_dstring_sprintf(&sb, "%s/%s", path,
@@ -160,6 +159,8 @@ const char *path
    }
    else {
       fprintf(stderr, MSG_TREE_UNABLETOLACATEXINSHARETREE_S, path);
+      fprintf(stderr, "\n");
+      return 1;
    }
  
    sge_dstring_free(&sb);

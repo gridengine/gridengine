@@ -1,3 +1,15 @@
+RD-2005-12-13-0: Bugfix:    - incorrect qsub error message, if an invalid
+                              integer value is passed to the -l option
+                            - qconf -sstnode cannot find root
+                            - qstat -qs doesn't work
+                            - "qstat -explain E" displays explanation of the
+                              same error two times.
+                            - qstat -q filter does compare hosts in queue
+                              instances
+                 Bugtraq:   6329378, 6291047, 5086007, 6349037, 6362523
+                 Issue:     1930, 751, 1941, 1933, 1940
+                 Review:    MD
+
 CR-2005-12-13-0: Testsuite: o fixed check some descriptions and added check
                               description check at testsuite startup
                             o fixed drmaaj test (export LD_LIBRARYN32_PATH)

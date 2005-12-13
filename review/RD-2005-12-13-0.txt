@@ -1,0 +1,130 @@
+Source Code Review Form 
+=======================
+(version 1.3)
+
+Date: 2005-12-13
+
+1 Identification
+
+RD-2005-12-13-0: Bugfix:    - incorrect qsub error message, if an invalid
+                              integer value is passed to the -l option
+                            - qconf -sstnode cannot find root
+                            - qstat -qs doesn't work
+                            - "qstat -explain E" displays explanation of the
+                              same error two times.
+                            - qstat -q filter does compare hosts in queue
+                              instances
+                 Bugtraq:   6329378, 6291047, 5086007, 6349037, 6362523
+                 Issue:     1930, 751, 1941, 1933, 1940
+                 Review:    MD
+
+
+2 Conforms to specification
+
+2 [x] yes
+2 [ ] no - comment:
+
+
+3 Documentation
+
+3.1 user/admin guide OK, or doc CR filed?
+3.1 [X] yes
+3.1 [ ] no - comment:
+
+3.2 man pages (user view) correct?
+3.2 [x] yes
+3.2 [ ] no - comment:
+
+3.3 -help output correct and complete?
+3.3 [X] yes
+3.3 [ ] no - comment:
+
+3.4 documented interfaces (at least GDI, EVI, libs, ADOC format) correct, updated?
+3.4 [X] yes
+3.4 [ ] no - comment:
+
+3.5 messages, output formats and defines OK?
+3.5 [X] yes
+3.5 [ ] no - comment:
+
+3.6 Bugster CR complete and correct?
+3.6 [X] yes
+3.6 [ ] no - comment:
+
+3.7 Issuezilla entry (if exists) complete and correct?
+3.7 [X] yes
+3.7 [ ] no - comment:
+
+
+4 Source review
+
+4.1 Style guide conformance
+4.1 [X] yes
+4.1 [ ] no - comment:
+
+4.2 Memory leaks
+4.2 [X] yes
+4.2 [ ] no - comment:
+
+4.3 Thread safe
+4.3 [X] yes
+4.3 [ ] no
+
+
+5 Tests
+
+5.1 Used memory leak debugger
+5.1 [ ] yes
+5.1 [X] no - comment:
+no new allocations
+
+5.2 Manual tests
+Description:
+Successfull execution
+5.2 [X] yes
+5.2 [ ] no - comment:
+
+5.3 Testsuite covers issue
+5.3 [X] yes
+5.3 [ ] no - comment:
+
+5.4 If 5.3 = no: New testsuite test or module test created?
+5.4 [X] yes, path: 1933, sharetree
+5.4 [ ] no - justification:
+
+5.5 If 5.4 = no: Testsuite issue created?
+5.5 [ ] yes, id: 
+5.5 [ ] no - justification:
+
+5.6 Testsuite run successfull
+5.6 [X] yes
+5.6 [ ] no - comment:
+
+
+6 Comments
+
+6329378 - incorrect qsub error message, if an invalid
+          integer value is passed to the -l option
+minor output issue, not testsuite test required.
+
+6291047 - qconf -sstnode cannot find root
+updated testsuite test: system_tests/scheduler/sharetree
+
+5086007 - qstat -qs doesn't work
+man page issue, no testsuite test required.
+
+6349037 - "qstat -explain E" displays explanation of the
+          same error two times.
+new testsuite test: bugs/issuezilla/1933
+
+6362523 - qstat -q filter does compare hosts in queue
+          instances
+hard to test need special testsuite setup (qmaster must resolve hosts fqdn)
+
+
+
+7 Accepted
+7 [X] yes
+7 [ ] no - comment:
+
+

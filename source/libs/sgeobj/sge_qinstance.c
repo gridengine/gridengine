@@ -694,7 +694,7 @@ qinstance_list_find_matching(const lList *this_list, lList **answer_list,
 
       for_each(qinstance, this_list) {
          const char *hostname = lGetHost(qinstance, QU_qhostname);
-         if (!fnmatch(hostname_pattern, hostname, 0)) {
+         if ( !sge_hostcmp(hostname_pattern, hostname) || !fnmatch(hostname_pattern, hostname, 0)) {
             if (qref_list != NULL) {
                dstring buffer = DSTRING_INIT;
                const char *qi_name = qinstance_get_name(qinstance, &buffer);

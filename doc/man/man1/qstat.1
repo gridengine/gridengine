@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: qstat.1,v $     Last Update: $Date: 2005/11/23 21:44:06 $     Revision: $Revision: 1.29 $
+.\" $RCSfile: qstat.1,v $     Last Update: $Date: 2005/12/13 14:15:13 $     Revision: $Revision: 1.30 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QSTAT 1 "$Date: 2005/11/23 21:44:06 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH QSTAT 1 "$Date: 2005/12/13 14:15:13 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 qstat \- show the status of xxQS_NAMExx jobs and queues
 .\"
@@ -205,8 +205,7 @@ in
 .M sge_types 1 .
 .\"
 .IP "\fB\-qs {a|c|d|o|s|u|A|C|D|E|S}\fP"
-Similar to \fB\-f\fP. It generates the same output, but allows
-to filter for queue instances in certain states.
+Allows to filter for queue instances in certain states.
 .\"
 .IP "\fB\-r\fP"
 Prints extended information about the resource requirements

@@ -70,7 +70,7 @@ set check_cleanup_function "share_tree_cleanup"
 # define test's procedure order
 set check_functions ""
 lappend check_functions "share_tree_test"
-
+lappend check_functions "issue_751"
 
 global share_tree_job_counter 
 global share_tree_percentage_variation
@@ -642,4 +642,27 @@ proc share_tree_cleanup  {} {
 }
 
 
+proc issue_751 {} {
+  global ts_config CHECK_USER CHECK_OUTPUT  
+  global prj1_id_list prj2_id_list prj3_id_list
 
+  set prj1_id_list ""
+  set prj2_id_list ""
+  set prj3_id_list ""
+
+  set host $ts_config(master_host) 
+
+  set output [start_remote_prog $host $CHECK_USER "qconf" "-sstnode /" exit_state 30]
+  puts $CHECK_OUTPUT $output
+  if { $exit_state != 0 } {
+      add_proc_error "issue_751" -1 "Issue 751: qstat -sstree / broken"
+  }
+
+  set output [start_remote_prog $host $CHECK_USER "qconf" "-sstnode Root" exit_state 30]
+  puts $CHECK_OUTPUT $output
+  if { $exit_state != 0 } {
+      add_proc_error "issue_751" -1 "Issue 751: qstat -sstree Root broken"
+  }
+
+  set_error 0 "ok"
+}

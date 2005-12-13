@@ -271,31 +271,13 @@ monitoring_t *monitor
    }
 
    if (queueep != NULL) {
+      bool found_host = false;
       bool spool_queueep = false;
       lList *answer_list = NULL;
       /*
-      ** to be sure this queue is halted even if the host 
-      ** is not found in the next statement
-      */
-      if (general_failure && general_failure != GFSTATE_JOB) {  
-         dstring error = DSTRING_INIT; 
-
-         sge_dstring_sprintf(&error, MSG_LOG_QERRORBYJOBHOST_SUS,
-                             lGetString(queueep, QU_qname), sge_u32c(jobid),
-                             hostname);
-         
-         /* general error -> this queue cant run any job */
-         qinstance_state_set_error(queueep, true);
-         reporting_create_queue_record(NULL, queueep, timestamp);
-         qinstance_message_add(queueep, QI_ERROR, sge_dstring_get_string(&error));
-         spool_queueep = true;
-         ERROR((SGE_EVENT, sge_dstring_get_string(&error)));      
-         sge_dstring_free(&error);
-      }
-      /*
       ** in this case we have to halt all queues on this host
       */
-      if (general_failure == GFSTATE_HOST) {
+      if (general_failure && general_failure == GFSTATE_HOST) {
          spool_queueep = true;
          hep = host_list_locate(Master_Exechost_List, 
                                 lGetHost(queueep, QU_qhostname));
@@ -304,6 +286,8 @@ monitoring_t *monitor
             const char *host = lGetHost(hep, EH_name);
             dstring error = DSTRING_INIT;
          
+            found_host = true;
+
             for_each(cqueue, *(object_type_get_master_list(SGE_TYPE_CQUEUE))) {
                lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
                lListElem *qinstance = NULL;
@@ -334,6 +318,25 @@ monitoring_t *monitor
             }
             sge_dstring_free(&error);
          }
+      }
+      /*
+      ** to be sure this queue is halted even if the host 
+      ** is not found in the next statement
+      */
+      if (general_failure && general_failure != GFSTATE_JOB && found_host == false) {  
+         dstring error = DSTRING_INIT; 
+
+         sge_dstring_sprintf(&error, MSG_LOG_QERRORBYJOBHOST_SUS,
+                             lGetString(queueep, QU_qname), sge_u32c(jobid),
+                             hostname);
+         
+         /* general error -> this queue cant run any job */
+         qinstance_state_set_error(queueep, true);
+         reporting_create_queue_record(NULL, queueep, timestamp);
+         qinstance_message_add(queueep, QI_ERROR, sge_dstring_get_string(&error));
+         spool_queueep = true;
+         ERROR((SGE_EVENT, sge_dstring_get_string(&error)));      
+         sge_dstring_free(&error);
       }
 
       sge_event_spool(&answer_list, 0, sgeE_QINSTANCE_MOD, 

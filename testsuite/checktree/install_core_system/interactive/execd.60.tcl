@@ -198,11 +198,14 @@ proc install_execd {} {
          flush stdout
          flush $CHECK_OUTPUT
          if {$do_log_output == 1} {
-             puts "press RETURN"
+             puts "-->testsuite: press RETURN (main) or enter \"break\" to stop"
              set anykey [wait_for_enter 1]
+             if { [string match "*break*" $anykey] } {
+                break  
+             }
          }
      
-         set timeout 300
+         set timeout 600
          log_user 1 
          expect {
             -i $sp_id full_buffer {

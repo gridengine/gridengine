@@ -2737,6 +2737,20 @@ proc read_checktree_nodes { path } {
       set check_init_level_procedure "--"
       set check_category ""
       ts_source $path/$CHECK_INFORMATION_FILE $CHECK_INFORMATION_EXT
+
+      for { set lt 0 } { $lt <= $check_highest_level } { incr lt 1 } {
+         if { [info exists check_description($lt)] } {
+            if { [string match "*\n*" $check_description($lt)] } {
+               puts $CHECK_OUTPUT "--------------------------------------------------------------"
+               puts $CHECK_OUTPUT "check directory: $path"
+               puts $CHECK_OUTPUT "description($lt): \"$check_description($lt)\""
+               puts $CHECK_OUTPUT "PANIC: check \"$check_name\" contains unexpected new line characters in check description!"
+               puts $CHECK_OUTPUT "--------------------------------------------------------------"
+               exit 1
+            }
+         }
+      }
+
       set ts_checktree($nr,check_name) $check_name
       set ts_checktree($nr,check_init_level_procedure) $check_init_level_procedure
       set ts_checktree($nr,check_highest_level) $check_highest_level
@@ -3330,12 +3344,13 @@ proc format_output { prefix size text} {
 #     ???/???
 #*******************************
 proc print_results {ckpath where} {
-
+   global CHECK_OUTPUT
    set numb_of_check_functions 0 
    set filenames [get_file_names $ckpath]
    set catch_return [ catch {
       foreach elem $filenames {
          clear_screen
+         puts $CHECK_OUTPUT "file: $elem"
          set data [get_test_result "$ckpath/$elem"]
    
          set path [lindex $data 0]

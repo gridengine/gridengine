@@ -140,7 +140,7 @@ proc drmaaj_check {} {
       set options "-cp $classpath $options"
 
       puts $CHECK_OUTPUT "Starting VM: $JAVA $options junit.textui.TestRunner DrmaaSuite"
-      set test_output [ start_remote_prog $host $CHECK_USER $JAVA "$options junit.textui.TestRunner com.sun.grid.drmaa.SessionImplJobTest" prg_exit_state 500 ]
+      set test_output [ start_remote_prog $host $CHECK_USER "cd" ".\nLD_LIBRARYN32_PATH=\$LD_LIBRARY_PATH \nexport LD_LIBRARYN32_PATH\n$JAVA $options junit.textui.TestRunner com.sun.grid.drmaa.SessionImplJobTest" prg_exit_state 500 ]
 
       if { $prg_exit_state != 0 } {
          add_proc_error drmaa_check -1 "DRMAA-J jUnit test suite failed at host $host:\n$test_output"

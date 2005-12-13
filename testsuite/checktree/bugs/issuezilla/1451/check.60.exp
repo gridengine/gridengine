@@ -55,7 +55,9 @@ set check_init_level_procedure "execd_uninstall_init_level"
 set check_name            "Issue_1451"
 set check_category        "COMPATIBILITY SYSTEM VERIFIED"
 set check_highest_level  0 
-set check_description(0)  "Remove the host from adminhostlist and try to uninstall a execd from this host.\nA error should happend, because a non administrative host may not uninstall a execd"
+set check_description(0)    "Remove the host from adminhostlist and try to uninstall a execd "
+append check_description(0) "from this host. A error should happend, because a non administrative "
+append check_descritpion(0) "host may not uninstall a execd"
 
 
 

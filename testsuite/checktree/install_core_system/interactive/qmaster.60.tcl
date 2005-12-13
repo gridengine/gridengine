@@ -198,11 +198,14 @@ proc install_qmaster {} {
     log_user 1
     flush $CHECK_OUTPUT
     if {$do_log_output == 1} {
-      puts "-->testsuite: press RETURN (main)"
+      puts "-->testsuite: press RETURN (main) or type \"break\""
       set anykey [wait_for_enter 1]
+      if { [string match "*break*" $anykey] } {
+         break  
+      }
     }
 
-    set timeout 300
+    set timeout 600
     expect {
        -i $sp_id full_buffer {
           set_error "-1" "install_qmaster - buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"

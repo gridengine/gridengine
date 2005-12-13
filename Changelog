@@ -1,3 +1,13 @@
+CR-2005-12-13-0: Testsuite: o fixed check some descriptions and added check
+                              description check at testsuite startup
+                            o fixed drmaaj test (export LD_LIBRARYN32_PATH)
+                            o install_core_system (interactive) can be aborted
+                              when running in testsuite debug mode
+                            o fixed qrsh test which sometimes killed qrsh
+                              job while qrsh_exit_status file is not written
+                              (with CTRL-C)
+                 Review:    MD           
+
 MD-2005-12-12-0: Bugfix:    INSTALL: screen not cleared
                  Bugtraq:   5063318
                  Issue:     1064

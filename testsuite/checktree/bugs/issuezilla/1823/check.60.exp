@@ -54,7 +54,8 @@ set check_init_level_procedure "LSB_lockfile_test_init_level"
 set check_name            "LSB_lockfile_test"
 set check_category        "COMPATIBILITY SYSTEM VERIFIED"
 set check_highest_level  0 
-set check_description(0)  "This test checks the sens of error message which is printed out, if rc-scripts\nare started by the wrong user"
+set check_description(0)    "This test checks the sens of error message which is printed out, "
+append check_description(0) "if rc-scripts are started by the wrong user"
 
 
 # define test's dependencies

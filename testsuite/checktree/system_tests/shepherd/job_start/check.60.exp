@@ -233,9 +233,9 @@ proc job_start_test {} {
    lappend type_list "local"   ;# this has to be the last one (original testsuite spool directory) 
 
 
-   set execd_hosts {}
+   set hosts_to_check {}
    foreach host $ts_config(unique_arch_nodes) {
-      lappend execd_hosts $host
+      lappend hosts_to_check $host
       if { $CHECK_ACT_LEVEL < 100 } {
          break   ;# only one host for this runlevel(s)
       }
@@ -245,7 +245,7 @@ proc job_start_test {} {
 
       # set correct spool type for all execd hosts
       puts $CHECK_OUTPUT "using \"$spool_type\" spool directory for:"
-      foreach host $execd_hosts {
+      foreach host $hosts_to_check {
          set spool_dir [get_execd_spooldir $host $spool_type]
          if { $spool_dir == "" } {
             add_proc_error "job_start_test" -1 "can't get spool dir type \"$spool_type\" for host $host"
@@ -269,7 +269,7 @@ proc job_start_test {} {
       lappend job_type "qlogin"
       lappend job_type "tight_integrated"
       
-      foreach host $execd_hosts {
+      foreach host $hosts_to_check {
          get_config execd_host_config $host
          get_queue all.q all_queue_config
 

@@ -959,7 +959,7 @@ proc submit_wait_type_job { job_type host user {variable qacct_info} } {
          set my_tries 60
          while {1} {
             expect {
-               -i $sp_id {*[A-Za-z]*} {
+               -i $sp_id {[A-Za-z>$%]*} {
                        puts $CHECK_OUTPUT "startup ..."
                        break;
                    }
@@ -1007,7 +1007,7 @@ proc submit_wait_type_job { job_type host user {variable qacct_info} } {
                      set done 1 
                   }
                }
-               -i $sp_id "testsuite shell response" {
+               -i $sp_id "ts_shell_response*\n" {
                   puts $CHECK_OUTPUT "found matching shell response text! Sending exit ..."
                   send -i $sp_id "exit\n"
                }
@@ -1613,8 +1613,7 @@ proc set_exechost { change_array host } {
         }
      } else {
         # if the config entry didn't exist in old config: append a new line
-        lappend vi_commands "A\n$elem  $newVal"
-        lappend vi_commands [format "%c" 27]
+        lappend vi_commands "A\n$elem  $newVal[format "%c" 27]"
      }
   } 
   set CHANGED  [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_EXEC_HOSTENTRYOFXCHANGEDINEXECLIST_S] "*" ]
@@ -7931,6 +7930,9 @@ proc restore_qtask_file {} {
    if {$prg_exit_state != 0} {
       add_proc_error "restore_qtask_file" -1 "error restoring qtask file:\n$output"
       set ret 0
+   }
+   foreach node $ts_config(execd_nodes) {
+      wait_for_remote_file $node $CHECK_USER $qtask_file
    }
 
    return $ret

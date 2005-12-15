@@ -82,7 +82,7 @@ proc issue_540_init_level {} {
 
 proc issue_540_check {} {
    global ts_config
-   global CHECK_OUTPUT env
+   global CHECK_OUTPUT env CHECK_USER
  
    #
    # Scenario:
@@ -96,9 +96,7 @@ proc issue_540_check {} {
 
    set host [lindex $ts_config(execd_nodes) 0]
 
-   if {[file exists "$user_home/$job_output_file"]} {
-      file delete "$user_home/$job_output_file"
-   }
+   delete_remote_file $host $CHECK_USER $user_home/$job_output_file
 
    # first test should fail - We submit two logfiles for the default host. 
    set qsub_arguments "-l h=$host -o :$job_output_file,:$job_output_file $job_script $job_sleep_time"
@@ -121,12 +119,13 @@ proc issue_540_check {} {
    wait_for_jobend $job_id $job_name 20
 
    # on slow NFS, it may take some time for outputfile to be visible
-   wait_for_file "$user_home/$job_output_file" 120 0 0
-   if {![file exists "$user_home/$job_output_file"]} {
-      add_proc_error "issue_540_check" "-1" "qsub did not create the specified output file $job_output_file"
+   set result [wait_for_remote_file $host $CHECK_USER $user_home/$job_output_file 120]
+
+   if { $result != 0 } {
+      add_proc_error "issue_540_check" "-1" "qsub did not create the specified output file $job_output_file on host $host"
    } else {
-      file delete "$user_home/$job_output_file"
-   }    
+      delete_remote_file $host $CHECK_USER $user_home/$job_output_file
+   }
 
    set_error 0 "ok"
 }

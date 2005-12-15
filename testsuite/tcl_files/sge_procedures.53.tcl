@@ -98,8 +98,7 @@ proc set_complex { change_array complex_list { create 0 } } {
         }
      } else {
         # if the config entry didn't exist in old config: append a new line
-        lappend vi_commands "A\n$elem  $newVal"
-        lappend vi_commands [format "%c" 27]
+        lappend vi_commands "A\n$elem  $newVal[format "%c" 27]"
      }
   } 
   set EDIT_FAILED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_PARSE_EDITFAILED]]

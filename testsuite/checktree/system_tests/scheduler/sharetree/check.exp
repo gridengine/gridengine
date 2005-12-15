@@ -334,14 +334,14 @@ proc share_tree_setup  {} {
    set prj_setup(name) "project3"
    add_prj prj_setup
 
-   set vi_commands "i" 
    set s_tree [set_share_tree]
+
+   set vi_commands ""
    foreach elem $s_tree {
-      lappend vi_commands "${elem}\n"
-   } 
-   lappend vi_commands [format "%c" 27]
-   lappend  vi_commands "dddddddddddd"
-   
+      lappend vi_commands "GA${elem}[format "%c" 27]"
+   }
+   lappend vi_commands "1Gdddddddddd"
+
    set catch_return [ catch {  
       eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf -dstree" 
    } result ] 

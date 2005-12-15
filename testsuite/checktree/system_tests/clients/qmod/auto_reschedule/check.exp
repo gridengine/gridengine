@@ -135,7 +135,7 @@ proc qmod_auto_reschedule_init_level {} {
    global ts_config CHECK_OUTPUT CHECK_ACT_LEVEL CHECK_HOST
    global global_resch auto_reschedule_host1 auto_reschedule_host2
   
-   if { [ llength $ts_config(execd_hosts) ] < 2 } {
+   if { [ llength $ts_config(execd_nodes) ] < 2 } {
       return -1
    }
 

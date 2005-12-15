@@ -245,7 +245,7 @@ proc issue_126_check {} {
       # 6 wait until prolog of j1 has finished (prolog sleeps 10s)
       #
       append error_output "[exec date] waiting for 15 seconds ...\n"
-      sleep 15
+      sleep 20
       
       append error_output "[exec date] try to get suspend state of job $job1_id ...\n"
 

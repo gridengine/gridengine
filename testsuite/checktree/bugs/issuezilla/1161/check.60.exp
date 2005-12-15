@@ -68,8 +68,7 @@ proc issue_1161_run  {} {
    global ts_config CHECK_ARCH
 
    set vi_commands ""
-   lappend vi_commands "A\ncomplex1161"
-   lappend vi_commands [format "%c" 27]
+   lappend vi_commands "A\ncomplex1161[format "%c" 27]"
 
    # localize messages
    set INVALID [translate $ts_config(master_host) 1 0 0 [sge_macro MSG_SGETEXT_UNKNOWN_ATTR_TYPE_U] 0 ]

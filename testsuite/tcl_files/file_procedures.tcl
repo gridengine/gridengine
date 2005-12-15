@@ -1691,6 +1691,8 @@ proc create_shell_script { scriptfile
       puts $script "# don't break long lines with qstat"
       puts $script "SGE_SINGLE_LINE=1"
       puts $script "export SGE_SINGLE_LINE"
+#      TODO (CR): check out if LS_COLORS settings may disable qtcsh or qrsh on linux
+#      puts $script "unset LS_COLORS" 
 #      do not enable this without rework of qstat parsing routines
 #      puts $script "SGE_LONG_QNAMES=40"
 #      puts $script "export SGE_LONG_QNAMES"
@@ -2010,7 +2012,7 @@ proc check_local_spool_directories { { do_delete 0 } } {
       set_root_passwd
    }
 
-   foreach host $ts_config(execd_hosts) {
+   foreach host $ts_config(execd_nodes) {
        
       puts $CHECK_OUTPUT "host ${host}:"
       set my_spool_dir $ts_host_config($host,spooldir)
@@ -2032,7 +2034,7 @@ proc check_local_spool_directories { { do_delete 0 } } {
       }
    }
 
-   foreach host $ts_config(execd_hosts) {
+   foreach host $ts_config(execd_nodes) {
       puts $CHECK_OUTPUT "$host: testsuite uses $testsuite($host,spooldir_size) bytes in $my_spool_dir"
       if { $testsuite($host,spooldir_size) > 1000000 && $testsuite($host,spooldir_size,state) == 0 } {
          add_proc_error "check_local_spool_directories" -3 "$host: testsuite uses $testsuite($host,spooldir_size) bytes in $my_spool_dir"
@@ -2573,6 +2575,43 @@ proc is_remote_file { hostname user path } {
 }
 
 
+#****** file_procedures/delete_remote_file() ***********************************
+#  NAME
+#     delete_remote_file() -- delete a remote file if existing
+#
+#  SYNOPSIS
+#     delete_remote_file { hostname user path } 
+#
+#  FUNCTION
+#     This function will check if the file (full path name) $path is existing
+#     on the remote host $host and delete the file if existing.
+#     The remote actions are executed as user $user.
+#
+#  INPUTS
+#     hostname - remote host name
+#     user     - name of user which will delete the file
+#     path     - full path name 
+#
+#  RESULT
+#     ??? 
+#
+#  SEE ALSO
+#     file_procedures/remote_file_mkdir()
+#     file_procedures/remote_delete_directory()
+#     file_procedures/wait_for_remote_file()
+#     file_procedures/is_remote_file()
+#     file_procedures/delete_remote_file()
+#*******************************************************************************
+proc delete_remote_file { hostname user path } {
+   global CHECK_OUTPUT
+
+   if { [is_remote_file $hostname $user $path ] } {
+      puts $CHECK_OUTPUT "deleting file $path on host $hostname ..."
+      set output [ start_remote_prog $hostname $user "rm" "$path" prg_exit_state 60 0 "" 0 0 0]
+      puts $CHECK_OUTPUT $output
+      wait_for_remote_file $hostname $user $path 60 1 1
+   }
+}
 
 #                                                             max. column:     |
 #****** file_procedures/delete_directory() ******

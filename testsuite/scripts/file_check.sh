@@ -5,6 +5,9 @@
 # we want to be sure that the script file is completely transfered to the remote host
 #
 FILE=$1
+
+echo "__ my id is ->`id`<-"
+
 if [ -x $FILE ]; then
   if [ -s $FILE ]; then
      tail -1 $FILE|grep _END_OF_FILE_ > /dev/null

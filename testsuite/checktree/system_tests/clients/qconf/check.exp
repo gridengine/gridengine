@@ -58,7 +58,10 @@ set check_description(0)  "test all qconf options (test not complete)"
 #set check_needs        "init_core_system qstat qsub"       ;# dependencies of this check (name of other check)
 set check_needs        "init_core_system"       ;# dependencies of this check (name of other check)
 
+
+global qconf_original_host_groups qconf_original_usersets
 # setup and cleanup functions
+set check_setup_function "qconf_setup"
 set check_cleanup_function "qconf_cleanup"
 
 # define test's procedure order
@@ -113,9 +116,60 @@ proc qconf_init_level {} {
   return -1  ;# no other level else
 }
 
+proc qconf_setup {} {
+   global CHECK_OUTPUT qconf_original_host_groups qconf_original_usersets
+   puts $CHECK_OUTPUT "setup ..."
+   set output [start_sge_bin qconf -shgrpl]
+   set output [string trim $output]
+   set qconf_original_host_groups {}
+   foreach hg $output {
+      lappend qconf_original_host_groups $hg
+      puts $CHECK_OUTPUT "saving known hostgroup \"$output\" for cleanup procedure"
+   }
+
+   set output [start_sge_bin qconf -sul]
+   set output [string trim $output]
+   set qconf_original_usersets {}
+   foreach user $output {
+      lappend qconf_original_usersets $user
+      puts $CHECK_OUTPUT "saving known userset \"$output\" for cleanup procedure"
+   }
+
+
+   set_error 0 ""
+}
+
+
 proc qconf_cleanup {} {
+   global CHECK_OUTPUT qconf_original_host_groups qconf_original_usersets
+
+   puts $CHECK_OUTPUT "cleanup ..."
+   set output [start_sge_bin qconf -shgrpl]
+   set output [string trim $output]
+   foreach hg $output {
+      puts $CHECK_OUTPUT "testing hostgroup \"$hg\" ..."
+      if { [lsearch -exact $qconf_original_host_groups $hg] < 0 } {
+         puts $CHECK_OUTPUT "deleting unexpected hostgroup \"$hg\" ..."
+         set res [start_sge_bin qconf "-dhgrp $hg"]
+         puts $CHECK_OUTPUT $res
+      }
+   }
+
+   set output [start_sge_bin qconf -sul]
+   set output [string trim $output]
+   foreach userg $output {
+      puts $CHECK_OUTPUT "testing usergroup \"$userg\" ..."
+      if { [lsearch -exact $qconf_original_usersets $userg] < 0 } {
+         puts $CHECK_OUTPUT "deleting unexpected usergroup \"$userg\" ..."
+         set res [start_sge_bin qconf "-dusergrp $userg"]
+         puts $CHECK_OUTPUT $res
+      }
+   }
+
+
    delete_all_jobs
    wait_for_end_of_all_jobs 60
+   set_error 0 ""
 }
 
 proc qconf_auser {} {

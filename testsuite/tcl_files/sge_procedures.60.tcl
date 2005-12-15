@@ -184,8 +184,7 @@ proc set_complex { change_array } {
         }
      } else {
         # if the config entry didn't exist in old config: append a new line
-        lappend vi_commands "A\n$elem  $newVal"
-        lappend vi_commands [format "%c" 27]
+        lappend vi_commands "A\n$elem  $newVal[format "%c" 27]"
      }
   }
 

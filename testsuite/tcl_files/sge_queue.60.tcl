@@ -133,6 +133,7 @@ proc qinstance_to_cqueue { change_array } {
 #                    1: add the queue using qconf -Aq, much faster!
 #
 #  RESULT
+#     integer value  0 on success, -2 on error
 #
 #*******************************************************************************
 proc add_queue { qname hostlist change_array {fast_add 1} } {
@@ -150,10 +151,6 @@ proc add_queue { qname hostlist change_array {fast_add 1} } {
    set chgar(qname)     "$qname"
    set chgar(hostlist)  "$hostlist"
 
-# just resolve the queue name 
-#   foreach test_hname $hostlist {
-#      resolve_queue "$qname@$test_hname"
-#   }
 
    # localize messages
    # JG: TODO: object name is taken from c_gdi object structure - not I18Ned!!
@@ -168,13 +165,15 @@ proc add_queue { qname hostlist change_array {fast_add 1} } {
 
       set tmpfile [dump_array_to_tmpfile default_array]
 
-      set result ""
-      set catch_return [ catch {  eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf -Aq ${tmpfile}" } result ]
+      set result [start_sge_bin "qconf" "-Aq ${tmpfile}"]
       puts $CHECK_OUTPUT $result
 
-      if { [string match "*$ADDED" $result ] == 0 } {
+      if { [string match "*$ADDED*" $result ] } {
+         set result 0
+      } else {
          add_proc_error "add_queue" "-1" "qconf error or binary not found"
-      } 
+         set result -2
+      }
    } else {
       # add by handling vi
       set vi_commands [build_vi_command chgar]

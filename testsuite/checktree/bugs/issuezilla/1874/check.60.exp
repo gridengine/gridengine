@@ -176,10 +176,12 @@ proc issue_1874_run  {} {
    create_stree2_1874
 
    # build vi commands for the qconf -mstree
-   set vi_commands "dddddddddd"
-   lappend vi_commands "i$stree"
-   lappend vi_commands "$stree"
-   lappend vi_commands [format "%c" 27]
+   set vi_commands ""
+
+   foreach line $stree {
+      lappend vi_commands "GA${line}[format "%c" 27]"
+   }
+   lappend vi_commands "1Gdddddddddd"
    set CHANGED_SHARETREE [translate $CHECK_HOST 1 0 0 [sge_macro MSG_TREE_CHANGEDSHARETREE]]
    set CAN_T_READ [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QCONF_CANTREADSHARETREEX_S] "*"]
 

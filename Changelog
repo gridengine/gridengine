@@ -1,3 +1,11 @@
+CR-2005-12-15-0: Testsuite: - fixed some problems with handle_vi_edit()     
+                            - improved shell spawn procedures
+                            - new procedure: delete_remote_file()
+                            - fixed file_parsing test
+                            - fixed qtcsh test
+                            - fixed qconf test
+                 Review:    RD
+
 RD-2005-12-13-0: Bugfix:    - incorrect qsub error message, if an invalid
                               integer value is passed to the -l option
                             - qconf -sstnode cannot find root

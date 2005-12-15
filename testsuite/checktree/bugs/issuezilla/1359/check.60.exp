@@ -83,8 +83,7 @@ proc issue_1359_run  {} {
 
    # add by handling vi
    set vi_commands ""
-   lappend vi_commands "/NONE\ncw1"
-   lappend vi_commands [format "%c" 27]
+   lappend vi_commands "/NONE\ncw1[format "%c" 27]"
 
    catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf -dstree" }
 

@@ -78,17 +78,19 @@ proc qconf_backslash_default_space_check {} {
    set setup_groups ""
    catch { set setup_groups [glob "$CHECK_ACTUAL_TEST_PATH/backslash_setup_hostgroup*"] }
    set required_groups ""
+   set ADDED    [translate $ts_config(master_host) 1 0 0 [sge_macro MSG_SGETEXT_ADDEDTOLIST_SSSS] $CHECK_USER [resolve_host $ts_config(master_host) 1] "(\[@a-zA-Z0-9_-\]+)" "host group"]
 
    foreach group $setup_groups {
       set output [start_remote_prog $master_host $CHECK_USER "qconf" "-Ahgrp $group"]
-
-      if { [regexp {[a-zA-Z0-9_]+@[a-zA-Z0-9_.]+ added \"(@[a-zA-Z0-9_]+)\" to host group list} $output match groupname] == 0 } {
-         add_proc_error "qconf_backslash_default_space_check" -1 "error parsing file \"$group\" in qconf_backslash_default_space_check"
+      set output [string trim $output]
+      puts $CHECK_OUTPUT $output
+      if { [regexp $ADDED $output match groupname] == 0 } {
+         add_proc_error "qconf_backslash_default_space_check" -1 "error parsing file \"$group\" in qconf_backslash_default_space_check ($output)"
+         set_error 0 "ok" ;# is ok add_proc_error already has reported the error
          return
       }
-
       lappend required_groups $groupname
-      puts $CHECK_OUTPUT "added host group $groupname"
+      puts $CHECK_OUTPUT "added host group \"$groupname\""
    }
 
    set required_groups [lsort $required_groups]
@@ -102,7 +104,7 @@ proc qconf_backslash_default_space_check {} {
       puts $CHECK_OUTPUT "parsing host group file: $group"
       set output [start_remote_prog $master_host $CHECK_USER "qconf" "-Ahgrp $group" ]
 
-      if { [regexp {[a-zA-Z0-9_]+@[a-zA-Z0-9_.]+ added "(@[a-zA-Z0-9_]+)" to host group list} $output match groupname] == 0 } {
+      if { [regexp $ADDED $output match groupname] == 0 } {
          add_proc_error "qconf_backslash_default_space_check" -1 "error parsing file \"$group\" in qconf_backslash_default_space_check"
          continue
       }
@@ -181,30 +183,31 @@ proc qconf_backslash_default_comma_check {} {
    catch { set comma_userlists [glob "$CHECK_ACTUAL_TEST_PATH/backslash_comma_userlist*"] }
    set required_userlists [lsort "root bin sys"]
 
+   set ADDED    [translate $ts_config(master_host) 1 0 0 [sge_macro MSG_SGETEXT_ADDEDTOLIST_SSSS] $CHECK_USER [resolve_host $ts_config(master_host) 1] "(\[@a-zA-Z0-9_-\]+)" "userset"]
+   puts $CHECK_OUTPUT "added is \"$ADDED\""
    foreach userlist $comma_userlists {
       puts $CHECK_OUTPUT "parsing userlist file: $userlist"
       set output [start_remote_prog $master_host $CHECK_USER "qconf" "-Au $userlist" ]
-
-      if { [regexp {[a-zA-Z0-9_]+@[a-zA-Z0-9_.]+ added "([a-zA-Z0-9_]+)" to userset list} $output match userlistname] == 0 } {
-         add_proc_error "qconf_backslash_default_space_check" -1 "error parsing file \"$userlist\" in qconf_backslash_comma_check"
-         continue
+      puts $CHECK_OUTPUT "output is \"$output\""
+      if { [regexp $ADDED $output match userlistname] == 0 } {
+         add_proc_error "qconf_backslash_default_comma_check" -1 "error parsing file \"$userlist\" in qconf_backslash_comma_check\n(output: $output)"
+         set_error 0 "ok" ;# is ok add_proc_error already has reported the error
+         return
       }
-
       puts $CHECK_OUTPUT "added userlist $userlistname"
-
       # Check that the userlist was added correctly
       set output [start_remote_prog $master_host $CHECK_USER "qconf" "-su $userlistname" ]
       start_remote_prog $master_host $CHECK_USER "qconf" "-dul $userlistname"
 
       if { [regexp {entries[ \t]+([^\n]+)} $output match users] == 0 } {
-         add_proc_error "qconf_backslash_default_space_check" -1 "error parsing file \"$userlist\" in qconf_backslash_comma_check"
+         add_proc_error "qconf_backslash_default_comma_check" -1 "error parsing file \"$userlist\" in qconf_backslash_comma_check"
          continue
       }
 
       set users [lsort [join [split $users ", "]]]
 
       if { $required_userlists != $users } {
-         add_proc_error "qconf_backslash_default_space_check" -1 "error parsing file \"$userlist\" in qconf_backslash_comma_check -- unknown users: $user1, $user2"
+         add_proc_error "qconf_backslash_default_comma_check" -1 "error parsing file \"$userlist\" in qconf_backslash_comma_check -- unknown users: $user1, $user2"
       }
    }
 
@@ -217,7 +220,7 @@ proc qconf_backslash_default_comma_check {} {
       catch { start_remote_prog $master_host $CHECK_USER "qconf" "-Au $userlist" }
 
       if { $prg_exit_state == 0 } {
-         add_proc_error "qconf_backslash_default_space_check" -1 "error parsing file \"$userlist\" in qconf_backslash_comma_check"
+         add_proc_error "qconf_backslash_default_comma_check" -1 "error parsing file \"$userlist\" in qconf_backslash_comma_check"
          continue
       }
    }
@@ -260,11 +263,15 @@ proc qconf_backslash_custom_space_check {} {
    catch { set setup_users [glob "$CHECK_ACTUAL_TEST_PATH/backslash_setup_userlist*"] }
    set required_users ""
 
+   set ADDED    [translate $ts_config(master_host) 1 0 0 [sge_macro MSG_SGETEXT_ADDEDTOLIST_SSSS] $CHECK_USER [resolve_host $ts_config(master_host) 1] "(\[@a-zA-Z0-9_-\]+)" "userset"]
+
+
    foreach user $setup_users {
       set output [start_remote_prog $master_host $CHECK_USER "qconf" "-Au $user"]
 
-      if { [regexp {[a-zA-Z0-9_]+@[a-zA-Z0-9_.]+ added \"([a-zA-Z0-9_]+)\" to userset list} $output match username] == 0 } {
+      if { [regexp $ADDED $output match username] == 0 } {
          add_proc_error "qconf_backslash_custom_space_check" -1 "error parsing file \"$user\" in qconf_backslash_custom_space_check"
+         set_error 0 "ok" ;# is ok add_proc_error already has reported the error
          return
       }
 
@@ -277,12 +284,15 @@ proc qconf_backslash_custom_space_check {} {
    # Check backslash parsing with spaces
    set space_queues ""
    catch { set space_queues [glob "$CHECK_ACTUAL_TEST_PATH/backslash_space_queue*"] }
+  
+   set ADDED    [translate $ts_config(master_host) 1 0 0 [sge_macro MSG_SGETEXT_ADDEDTOLIST_SSSS] $CHECK_USER [resolve_host $ts_config(master_host) 1] "(\[@a-zA-Z0-9_-\]+)" "cluster queue"]
+ 
 
    foreach queue $space_queues {
       puts $CHECK_OUTPUT "parsing queue file: $queue"
       set output [start_remote_prog $master_host $CHECK_USER "qconf" "-Aq $queue" ]
 
-      if { [regexp {[a-zA-Z0-9_]+@[a-zA-Z0-9_.]+ added "([a-zA-Z0-9_]+)" to cluster queue list} $output match queuename] == 0 } {
+      if { [regexp $ADDED $output match queuename] == 0 } {
          add_proc_error "qconf_backslash_custom_space_check" -1 "error parsing file \"$queue\" in qconf_backslash_custom_space_check"
          continue
       }
@@ -362,11 +372,14 @@ proc qconf_backslash_custom_comma_check {} {
    catch { set setup_users [glob "$CHECK_ACTUAL_TEST_PATH/backslash_setup_userlist*"] }
    set required_users ""
 
+   set ADDED    [translate $ts_config(master_host) 1 0 0 [sge_macro MSG_SGETEXT_ADDEDTOLIST_SSSS] $CHECK_USER [resolve_host $ts_config(master_host) 1] "(\[@a-zA-Z0-9_-\]+)" "userset"]
+
    foreach user $setup_users {
       set output [start_remote_prog $master_host $CHECK_USER "qconf" "-Au $user"]
 
-      if { [regexp {[a-zA-Z0-9_]+@[a-zA-Z0-9_.]+ added \"([a-zA-Z0-9_]+)\" to userset list} $output match username] == 0 } {
+      if { [regexp $ADDED $output match username] == 0 } {
          add_proc_error "qconf_backslash_custom_comma_check" -1 "error parsing file \"$user\" in qconf_backslash_custom_space_check"
+         set_error 0 "ok" ;# is ok add_proc_error already has reported the error
          return
       }
 
@@ -380,12 +393,14 @@ proc qconf_backslash_custom_comma_check {} {
    set comma_queues ""
    catch { set comma_queues [glob "$CHECK_ACTUAL_TEST_PATH/backslash_comma_queue*"] }
    set added_queues ""
+   
+   set ADDED    [translate $ts_config(master_host) 1 0 0 [sge_macro MSG_SGETEXT_ADDEDTOLIST_SSSS] $CHECK_USER [resolve_host $ts_config(master_host) 1] "(\[@a-zA-Z0-9_-\]+)" "cluster queue"]
 
    foreach queue $comma_queues {
       puts $CHECK_OUTPUT "parsing queue file: $queue"
       set output [start_remote_prog $master_host $CHECK_USER "qconf" "-Aq $queue" ]
 
-      if { [regexp {[a-zA-Z0-9_]+@[a-zA-Z0-9_.]+ added "([a-zA-Z0-9_]+)" to cluster queue list} $output match queuename] == 0 } {
+      if { [regexp $ADDED $output match queuename] == 0 } {
          add_proc_error "qconf_backslash_custom_comma_check" -1 "error parsing file \"$queue\" in qconf_backslash_custom_comma_check"
          continue
       }
@@ -517,8 +532,7 @@ proc qconf_backslash_space_output_check {} {
          set permutation [linsert $permutation $lindex $lname]
          # Create a host group with the names list as the host list
          set vi_commands ""
-         lappend vi_commands "/hostlist\nwC$permutation"
-         lappend vi_commands [format "%c" 27]
+         lappend vi_commands "/hostlist\nwC$permutation[format "%c" 27]"
          set groupname "@qconfbackslash$mindex$lindex"
          # localize messages
          set ADDED [translate $master_host 1 0 0 [sge_macro MSG_SGETEXT_ADDEDTOLIST_SSSS] $CHECK_USER "$master_host*" $groupname "host group"]
@@ -623,7 +637,6 @@ proc qconf_backslash_space_output_check {} {
 
    if {$failed} {
       add_proc_error "qconf_backslash_space_output_check" "-1" "error printing hostgroup in qconf_backslash_space_output_check -- failed for $failures"
-      return
    }
 
    set_error 0 "ok"
@@ -674,8 +687,7 @@ proc qconf_backslash_comma_output_check {} {
       set ADDED [translate $master_host 1 0 0 [sge_macro MSG_SGETEXT_ADDEDTOLIST_SSSS] $CHECK_USER "$master_host*" $name "complex entry"]
       # add by handling vi
       set vi_commands ""
-      lappend vi_commands "O$name cv$count RESTRING == YES NO NONE 0"
-      lappend vi_commands [format "%c" 27]
+      lappend vi_commands "O$name cv$count RESTRING == YES NO NONE 0[format "%c" 27]"
       handle_vi_edit "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-mc" $vi_commands $ADDED
       lappend names $name
    }
@@ -856,7 +868,6 @@ proc qconf_backslash_comma_output_check {} {
 
    if {$failed} {
       add_proc_error "qconf_backslash_comma_output_check" "-1" "error printing hostgroup in qconf_backslash_comma_output_check -- failed for $failures"
-      return
    }
 
    set_error 0 "ok"

@@ -118,7 +118,7 @@ proc setup_qping_dump { log_array  } {
                break
             }
             -i $used_log_array(spawn_id) -- "*\n" {
-               puts $CHECK_OUTPUT $expect_out(buffer)
+               debug_puts $expect_out(buffer)
             }
          }     
       }

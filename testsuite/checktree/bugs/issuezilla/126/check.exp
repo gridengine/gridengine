@@ -153,7 +153,6 @@ proc issue_126_check {} {
    global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_ACTUAL_TEST_PATH
    global check_126_host check_126_loops ts_config CHECK_USER CHECK_HOST CHECK_ARCH
 
-   setup_qping_dump dump_handle
 
    # 
    # Scenario
@@ -183,6 +182,7 @@ proc issue_126_check {} {
    # 1
    #
 
+   setup_qping_dump dump_handle
    set error_output ""
    set q1 [get_requestable_queue "q1" $check_126_host]
    set q2 [get_requestable_queue "q2" $check_126_host]
@@ -244,25 +244,30 @@ proc issue_126_check {} {
       # 
       # 6 wait until prolog of j1 has finished (prolog sleeps 10s)
       #
-      append error_output "[exec date] waiting for 15 seconds ...\n"
-      sleep 20
-      
-      append error_output "[exec date] try to get suspend state of job $job1_id ...\n"
+      set my_timeout [timestamp]
+      incr my_timeout 40
+      while { 1 } {
+         append error_output "[exec date] try to get suspend state of job $job1_id ...\n"
 
-      set state1 [ get_suspend_state_of_job $job1_id $check_126_host "pid_list" 0]
-      append error_output "[exec date] job $job1_id has state \"$state1\"\n"
+         set state1 [ get_suspend_state_of_job $job1_id $check_126_host "pid_list" 0]
+         append error_output "[exec date] job $job1_id has suspend state \"$state1\"\n"
+         puts $CHECK_OUTPUT "suspend state is \"$state1\""
 
-      puts $CHECK_OUTPUT "suspend state is \"$state1\""
+         append error_output "[exec date] process group info from ps output:\n$process_group_info"
 
-      append error_output "[exec date] process group info from ps output:\n$process_group_info"
-
-      if { [string compare $state1 "T" ] != 0 } {
-         append error_output "[exec date] job $job1_id has state \"$state1\", but should have state \"T\" - bug #126 is present\n"
-         #
-         # Bug #126 is present
-         #   
-         incr runs_failed
-      } 
+         if { [string compare $state1 "T" ] == 0 } {
+            break
+         } 
+         if { $my_timeout < [timestamp] } {
+            append error_output "[exec date] job $job1_id has state \"$state1\", but should have state \"T\" - bug #126 is present\n"
+            #
+            # Bug #126 is present
+            #   
+            incr runs_failed
+            break
+         }
+         after 2000
+      }
 
       #
       # 7

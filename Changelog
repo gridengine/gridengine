@@ -1,3 +1,7 @@
+CR-2005-12-15-1: Testsuite: modified issue 126 test to allow a time range 
+                            for job to get into suspend state
+                 Review:    RH
+
 RD-2005-12-15-0: Bugfix:    qtcsh behaves differently in direct mode from qrshmode
                  Bugtraq:   6344960
                  Issue:     1858

@@ -1,3 +1,6 @@
+CR-2005-12-15-2: Testsuite: some additional code cleanup for remote procedures
+                 Review:    RD
+
 CR-2005-12-15-1: Testsuite: modified issue 126 test to allow a time range 
                             for job to get into suspend state
                  Review:    RH

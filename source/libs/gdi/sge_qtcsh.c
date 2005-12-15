@@ -81,7 +81,8 @@ static int init_qtask_config(lList **alpp, print_func_t ostream);
 *     print_func_t ostream - ??? 
 *
 *  RESULT
-*     static int - 
+*     static int - 0 - success
+*                 -1 - failed
 *
 *  EXAMPLE
 *     ??? 
@@ -513,8 +514,8 @@ print_func_t ostream
    lList *alp = NULL;
 
    sge_gdi_param(SET_EXIT_ON_ERROR, 0, NULL);
-   if (sge_gdi_setup("qtcsh", NULL)==AE_OK) {
-      if (init_qtask_config(&alp, ostream)) {
+   if (sge_gdi_setup("qtcsh", NULL) == AE_OK) {
+      if ( init_qtask_config(&alp, ostream) != 0 ) {
          mode_remote = 0;          
       } else {
          /* Remote execution is default.
@@ -528,7 +529,9 @@ print_func_t ostream
             submission via SGE/SGE in case qtcsh
             is the login shell at the execution server.
           */
-         mode_remote = force_remote?mode_remote:!getenv("JOB_ID");          
+         if ( mode_remote != 0 ) {
+            mode_remote = force_remote?mode_remote:!getenv("JOB_ID");          
+         }
 /*          (*ostream) ("mode_remote = %d\n", mode_remote); */
       }
       lFreeList(&alp);

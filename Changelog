@@ -1,3 +1,8 @@
+RD-2005-12-15-0: Bugfix:    qtcsh behaves differently in direct mode from qrshmode
+                 Bugtraq:   6344960
+                 Issue:     1858
+                 Review:    CR
+
 CR-2005-12-15-0: Testsuite: - fixed some problems with handle_vi_edit()     
                             - improved shell spawn procedures
                             - new procedure: delete_remote_file()

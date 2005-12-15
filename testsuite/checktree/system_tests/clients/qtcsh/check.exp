@@ -454,7 +454,11 @@ proc qtcsh_evaluate { { result "" } { option "" } { command "hostname"} { mode "
    set ret_value -1
 
    set hostname [lindex $ts_config(execd_nodes) 0]
-   set hostname_remote [lindex $ts_config(execd_nodes) 1]
+   if { [ string compare $option "-L" ] == 0 } {
+      set hostname_remote $hostname
+   } else {
+      set hostname_remote [lindex $ts_config(execd_nodes) 1]
+   }
 
    puts $CHECK_OUTPUT "try to find out what I expect for \nresult $result, option $option, command $command and mode $mode ..."
    # Now when we need to map out what to expect for the different combinations
@@ -615,10 +619,8 @@ proc qtcsh_command_line_test {} {
       add_proc_error "qtcsh_init_level" -1 "qtcsh setup failed"
    } else {
 
-      #set flags "{} -A -B -L -R -X"
-      # Comment out -L until CR6344960 is fixed
+      set flags "{} -A -B -L -R -X"
 
-      set flags "{} -A -B -R -X"
       set commands "hostname \"uname -n\""
       set do_stop 0
       foreach var2 $flags {
@@ -649,10 +651,8 @@ proc qtcsh_spawn_test {} {
    if { $qtask_setup != 0 } {
       add_proc_error "qtcsh_init_level" -1 "qtcsh setup failed"
    } else {
-      #set flags "{} -A -B -L -R -X"
-      # Comment out -L until CR6344960 is fixed
+      set option_list "{} -A -B -L -R -X"
 
-      set option_list "{} -A -B -R -X"
       set command_list "hostname \"uname -n\""
       set do_stop 0
       foreach option $option_list {

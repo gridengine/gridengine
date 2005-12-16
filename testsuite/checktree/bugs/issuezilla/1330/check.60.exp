@@ -33,32 +33,6 @@
 
 
 
-# Template for testsuite check
-# 
-# 1) replace the following symbols by your test specific names
-#    o Autoinstall_test   name of your test (e.g. consumable_test)
-#    o 
-#
-# 2) set check_root_access_needs to "yes" or "no" (if you need root access)
-#
-# 3) set check_category
-#
-# 4) set check_highest_level ( e.g.: runlevel "short" has reserved values from 0 to 99 ) 
-#
-# 5) set check_needs (e.g.: "init_core_system" this means that this test is not 
-#    started without succesfull run of "init_core_system" test
-# 6) implement the default functions (e.g.: Autoinstall_test_init_level)
-#
-# 7) you can add any function name to check_functions (all function (no paramters allowed) are started 
-#    within each runlevel number
-#    PLEASE finish each check_function with a set_error() function call
-#    PLEASE use add_proc_error() to submit errors
-#    add_proc_error() is used in many testsuite standard functions, so not every 
-#    function call must check the return state.
-# 
-
-
-
 # define global variable in this namespace
 global check_name 
 global check_category 

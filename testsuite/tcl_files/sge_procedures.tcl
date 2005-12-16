@@ -6987,9 +6987,9 @@ proc shutdown_all_shadowd { hostname } {
    set num_proc [llength $new_index]
    puts $CHECK_OUTPUT "Number of matching processes: $num_proc"
    foreach elem $new_index {
-      puts $CHECK_OUTPUT $ps_info(string,$elem)
+      debug_puts $ps_info(string,$elem)
       if { [ is_pid_with_name_existing $hostname $ps_info(pid,$elem) "sge_shadowd" ] == 0 } {
-         puts $CHECK_OUTPUT "Killing process [ set ps_info(pid,$elem) ] ..."
+         puts $CHECK_OUTPUT "killing process [ set ps_info(pid,$elem) ] ..."
          if { [ have_root_passwd ] == -1 } {
             set_root_passwd 
          }
@@ -7002,7 +7002,7 @@ proc shutdown_all_shadowd { hostname } {
    }
 
    foreach elem $new_index {
-      puts $CHECK_OUTPUT $ps_info(string,$elem)
+      debug_puts $ps_info(string,$elem)
       if { [ is_pid_with_name_existing $hostname $ps_info(pid,$elem) "sge_shadowd" ] == 0 } {
          add_proc_error "shutdown_all_shadowd" "-3" "could not shutdown shadowd at host $elem with term signal"
          puts $CHECK_OUTPUT "Killing process with kill signal [ set ps_info(pid,$elem) ] ..."
@@ -7018,7 +7018,7 @@ proc shutdown_all_shadowd { hostname } {
    }
 
    foreach elem $new_index {
-      puts $CHECK_OUTPUT $ps_info(string,$elem)
+      debug_puts $ps_info(string,$elem)
       if { [ is_pid_with_name_existing $hostname $ps_info(pid,$elem) "sge_shadowd" ] == 0 } {
          add_proc_error "shutdown_all_shadowd" "-1" "could not shutdown shadowd at host $elem with kill signal"
       }
@@ -7085,9 +7085,9 @@ proc shutdown_bdb_rpc { hostname } {
    set num_proc [llength $new_index]
    puts $CHECK_OUTPUT "Number of matching processes: $num_proc"
    foreach elem $new_index {
-      puts $CHECK_OUTPUT $ps_info(string,$elem)
+      debug_puts $ps_info(string,$elem)
       if { [ is_pid_with_name_existing $hostname $ps_info(pid,$elem) "berkeley_db_svc" ] == 0 } {
-         puts $CHECK_OUTPUT "Killing process [ set ps_info(pid,$elem) ] ..."
+         puts $CHECK_OUTPUT "killing process [ set ps_info(pid,$elem) ] ..."
          if { [ have_root_passwd ] == -1 } {
             set_root_passwd 
          }
@@ -7100,7 +7100,7 @@ proc shutdown_bdb_rpc { hostname } {
    }
 
    foreach elem $new_index {
-      puts $CHECK_OUTPUT $ps_info(string,$elem)
+      debug_puts $ps_info(string,$elem)
       if { [ is_pid_with_name_existing $hostname $ps_info(pid,$elem) "berkeley_db_svc" ] == 0 } {
          add_proc_error "shutdown_bdb_rpc" "-3" "could not shutdown berkeley_db_svc at host $elem with term signal"
          puts $CHECK_OUTPUT "Killing process with kill signal [ set ps_info(pid,$elem) ] ..."
@@ -7116,7 +7116,7 @@ proc shutdown_bdb_rpc { hostname } {
    }
 
    foreach elem $new_index {
-      puts $CHECK_OUTPUT $ps_info(string,$elem)
+      debug_puts $ps_info(string,$elem)
       if { [ is_pid_with_name_existing $hostname $ps_info(pid,$elem) "berkeley_db_svc" ] == 0 } {
          add_proc_error "shutdown_bdb_rpc" "-1" "could not shutdown berkeley_db_svc at host $elem with kill signal"
       }
@@ -7260,7 +7260,7 @@ proc shutdown_system_daemon { host typelist { do_term_signal_kill_first 1 } } {
             if { [ is_pid_with_name_existing $host $ps_info(pid,$elem) $process_name ] == 0 } {
                incr nr_of_found_qmaster_processes_or_threads 1
                puts $CHECK_OUTPUT "found running $process_name with pid $ps_info(pid,$elem) on host $host"
-               puts $CHECK_OUTPUT $ps_info(string,$elem)
+               debug_puts $ps_info(string,$elem)
                if { [ have_root_passwd ] == -1 } {
                    set_root_passwd 
                }
@@ -7394,7 +7394,9 @@ proc shutdown_core_system {} {
       puts $CHECK_OUTPUT "shutdown_core_system - qconf error or binary not found\n$result"
    }
 
-   wait_till_qmaster_is_down $CHECK_CORE_MASTER
+   if { [wait_till_qmaster_is_down $CHECK_CORE_MASTER] != 0 } {
+      shutdown_system_daemon $CHECK_CORE_MASTER "qmaster"
+   }
 
    if { $ts_config(gridengine_version) == 53 } {
       puts $CHECK_OUTPUT "killing all commds in the cluster ..." 
@@ -7593,11 +7595,11 @@ proc wait_till_qmaster_is_down { host } {
          puts $CHECK_OUTPUT "looking for \"$process_name\" processes on host $host ..."
          foreach elem $found_p {
             if { [ string first $process_name $ps_info(string,$elem) ] >= 0 } {
-               puts $CHECK_OUTPUT "actual ps info: $ps_info(string,$elem)"
+               debug_puts "current ps info: $ps_info(string,$elem)"
                if { [ is_pid_with_name_existing $host $ps_info(pid,$elem) $process_name ] == 0 } {
                   incr nr_of_found_qmaster_processes_or_threads 1
                   puts $CHECK_OUTPUT "found running $process_name with pid $ps_info(pid,$elem) on host $host"
-                  puts $CHECK_OUTPUT $ps_info(string,$elem)
+                  debug_puts $ps_info(string,$elem)
                }
             }
          }
@@ -7612,6 +7614,7 @@ proc wait_till_qmaster_is_down { host } {
       } else {
          puts $CHECK_OUTPUT "still qmaster processes running ..."
       }
+      after 1000
    }
 }
 
@@ -7935,7 +7938,8 @@ proc is_daemon_running { hostname daemon } {
 
    foreach elem $found_p {
       if { [string match "*$daemon*" $ps_info(string,$elem)] } {
-         puts $CHECK_OUTPUT $ps_info(string,$elem)
+         debug_puts $ps_info(string,$elem)
+         puts $CHECK_OUTPUT "$daemon is running on host $hostname"
          incr execd_count 1
       }
    }

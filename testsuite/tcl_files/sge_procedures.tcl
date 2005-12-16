@@ -6470,13 +6470,11 @@ proc startup_qmaster { {and_scheduler 1} {env_list ""} {on_host ""} } {
          start_remote_prog "$start_host" "$startup_user" "/usr/bin/X11/xterm" "-bg darkolivegreen -fg navajowhite -sl 5000 -sb -j -display $CHECK_DISPLAY_OUTPUT -e $CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/debug_starter.sh /tmp/out.$CHECK_USER.schedd.$start_host \"$CHECK_SGE_DEBUG_LEVEL\" $ts_config(product_root)/bin/${arch}/sge_schedd &" prg_exit_state 60 2 ""
       } else {
          puts $CHECK_OUTPUT "starting schedd as $startup_user" 
-         set result [start_remote_prog "$start_host" "$startup_user" "$ts_config(product_root)/bin/${arch}/sge_schedd" ";sleep 5" prg_exit_state 60 0 envlist]
+         set result [start_remote_prog "$start_host" "$startup_user" "$ts_config(product_root)/bin/${arch}/sge_schedd" "" prg_exit_state 60 0 envlist]
          puts $CHECK_OUTPUT $result
       }
    }
  
-   after 5000
-     
    return 0
 }
 

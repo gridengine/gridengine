@@ -515,16 +515,16 @@ proc process_named_record {input output delimiter {index ""} {id ""}
    upvar $transform  tra
    upvar $rules      rul
 
+   # cleanup previous runs
+   if {[info exists record]} {
+      unset record
+   }
+
    # split output lines into TCL-List
    set tmp [split $in "\n"]
 
    set num_lines [expr [llength $tmp] - $tail_line]
    set last_line [expr $num_lines - 1]
-
-   # cleanup previous runs
-   if {[info exists record]} {
-      unset record
-   }
 
    set out(index) ""
 
@@ -579,7 +579,6 @@ proc process_named_record {input output delimiter {index ""} {id ""}
             set idx   [string trim [lindex $helplist 0]]
             set value [string trim [join $helplist2 $field_delimiter]]
          }
-
          # replace or set contents
          if {[info exists rep($idx,$value)]} {
             set record($idx) $rep($idx,$value)
@@ -1363,6 +1362,10 @@ proc parse_qacct {input output {jobid 0}} {
    upvar $input  in
    upvar $output out
 
+   # append a newline, otherwise the last line will not be parsed
+   append in "\n"
+
+   # rules for parsing an accounting record
    set rules(qname)           rule_list
    set rules(hostname)        rule_list
    set rules(qsub_time)       rule_min
@@ -1388,14 +1391,17 @@ proc parse_qacct {input output {jobid 0}} {
    set rules(mem)             rule_sum
    set rules(io)              rule_sum
    set rules(iow)             rule_sum
+   set rules(maxvmem)         rule_sum
    set rules(taskid)          rule_list
-   
-   set replace(taskid,undefined) 1
+  
+   # for non array jobs, taskid is "undefined", replace it by a number
+   set replace(taskid,undefined) 0
 
    set transform(qsub_time)   transform_date_time
    set transform(start_time)  transform_date_time
    set transform(end_time)    transform_date_time
 
+   # delimiter if we have multiple records per qacct call
    set delimiter "=============================================================="
    
    process_named_record in out $delimiter "jobnumber" $jobid 1 0 replace transform rules

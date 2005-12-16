@@ -184,6 +184,10 @@ proc error_states_epilog {} {
    wait_for_jobpending $job_id "leeper" 60 1
    wait_for_jobstart $job_id "leeper" 60
    wait_for_jobend $job_id "leeper" 60
+   # JG: TODO: this get_qacct will fail in 6.0 due to delayed writing of accounting information
+   # set reporting_params, accounting_flush_time to 00:00:00, or poll one minute until
+   # accounting info is available. Consider writing a function get_qacct_poll in sge_procedures
+   # There are multiple calls to qacct in this check!
    get_qacct $job_id
    puts $CHECK_OUTPUT "qacct output for job $job_id:"
    puts $CHECK_OUTPUT "failed: $qacct_info(failed)"

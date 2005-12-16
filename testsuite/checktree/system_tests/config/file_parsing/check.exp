@@ -226,9 +226,9 @@ proc file_parsing_N_option {} {
       while { 1 } {
          sleep 1
          puts $CHECK_OUTPUT "try to get accounting info for job $elem ..."
-         set result [get_qacct $elem]
+         set result [get_qacct $elem "" "" 0]
          puts $CHECK_OUTPUT "result: $result"
-         if { $result != 1 } {
+         if { $result != 0 } {
             if { [timestamp] < $timeout_time } {
                continue
             } else {
@@ -238,7 +238,7 @@ proc file_parsing_N_option {} {
             break
          }
       } 
-      if { $result != 1 } {
+      if { $result != 0 } {
          add_proc_error "file_parsing_N_option" "-1" "No accounting information for job $elem available" 
       } else {
          set names [array names qacct_info]
@@ -379,9 +379,9 @@ proc file_parsing_long_option {} {
       while { 1 } {
          sleep 1
          puts $CHECK_OUTPUT "try to get accounting info for job $elem ..."
-         set result [get_qacct $elem]
+         set result [get_qacct $elem "" "" 0]
          puts $CHECK_OUTPUT "result: $result"
-         if { $result != 1 } {
+         if { $result != 0 } {
             if { [timestamp] < $timeout_time } {
                continue
             } else {
@@ -391,7 +391,7 @@ proc file_parsing_long_option {} {
             break
          }
       } 
-      if { $result != 1 } {
+      if { $result != 0 } {
          add_proc_error "file_parsing_long_option" "-1" "No accounting information for job $elem available" 
       } ;# else {
          # set names [array names qacct_info]
@@ -416,6 +416,4 @@ proc file_parsing_cleanup {} {
 
    set_error 0 "ok"
 }
-
-
 

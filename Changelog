@@ -1,3 +1,7 @@
+JG-2005-12-15-0: Testsuite: Extended system_tests/clients/qacct,
+                            cleanup of get_qacct function.
+                 Review:    RD
+
 CR-2005-12-15-2: Testsuite: some additional code cleanup for remote procedures
                  Review:    RD
 

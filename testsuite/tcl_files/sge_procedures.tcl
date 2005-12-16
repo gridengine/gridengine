@@ -1366,7 +1366,7 @@ proc submit_wait_type_job { job_type host user {variable qacct_info} } {
    set my_timeout [timestamp]
    incr my_timeout 60
    puts $CHECK_OUTPUT "waiting for accounting file to have information about job $job_id"
-   while { [ get_qacct $job_id qacctinfo ] != 1 } {
+   while {[get_qacct $job_id qacctinfo "" "" 0] != 0 } {
       after 500
       puts -nonewline $CHECK_OUTPUT "."
       flush $CHECK_OUTPUT
@@ -1395,10 +1395,10 @@ proc submit_wait_type_job { job_type host user {variable qacct_info} } {
 
    puts $CHECK_OUTPUT ""
 
-   if { [ get_qacct $job_id qacctinfo ] != 1 } {
-         add_proc_error "submit_wait_type_job" -1 "could not get qacct information"
-         return -1
+   if {[get_qacct $job_id qacctinfo] != 0} {
+      return -1
    }
+
    return $job_id
 }
 
@@ -5610,7 +5610,48 @@ proc get_qconf_se_info {hostname {variable qconf_se_info}} {
 }
 
 
+#****** sge_procedures/get_qacct_error() ***************************************
+#  NAME
+#     get_qacct_error() -- error handling for get_qacct
+#
+#  SYNOPSIS
+#     get_qacct_error { result job_id raise_error } 
+#
+#  FUNCTION
+#     Does the error handling for get_qacct.
+#     Translates possible error messages of qacct -j <job_id>
+#
+#  INPUTS
+#     result      - qacct output
+#     job_id      - job_id for which qacct -j has been called
+#     raise_error - do add_proc_error in case of errors
+#
+#  RESULT
+#     Returncode for get_qacct function:
+#       -1: if accounting file cannot be found (no job ran since cluster startup)
+#       -2: if job id is not found in accounting file
+#     -999: other error
+#
+#  NOTES
+#     There are most certainly much more error codes that could be handled.
+#*******************************************************************************
+proc get_qacct_error {result job_id raise_error} {
+   global ts_config CHECK_OUTPUT
 
+   # recognize certain error messages and return special return code
+   set messages(index) "-1 -2"
+   set messages(-1) "*[translate_macro MSG_HISTORY_NOJOBSRUNNINGSINCESTARTUP]"
+   set messages(-2) "*[translate_macro MSG_HISTORY_JOBIDXNOTFOUND_D $job_id]"
+
+   # should we have version dependent error messages, create following 
+   # procedure in sge_procedures.<version>.tcl
+   # get_qacct_error_vdep messages
+
+   # now evaluate return code and raise errors
+   set ret [handle_sge_errors "get_qacct" "qacct -j $job_id" $result messages $raise_error]
+
+   return $ret
+}
 
 #                                                             max. column:     |
 #****** sge_procedures/get_qacct() ******
@@ -5619,30 +5660,30 @@ proc get_qconf_se_info {hostname {variable qconf_se_info}} {
 #     get_qacct -- get job accounting information
 #
 #  SYNOPSIS
-#     get_qacct { jobid {variable qacct_info} } 
+#     get_qacct {job_id {variable qacct_info} {on_host ""} {as_user ""} {raise_error 1}} 
 #
 #  FUNCTION
 #     This procedure will parse the qacct output for the given job id and fill 
 #     up the given variable name with information.
 #
 #  INPUTS
-#     jobid                 - job identification number
-#     {variable qacct_info} - name of variable to save the results
+#     job_id                  - job identification number
+#     {variable qacct_info}   - name of variable to save the results
+#     {on_host ""}            - execute qacct on this host
+#     {as_user ""}            - execute qacct as this user
+#     {raise_error 1}         - do add_proc error, or only output error messages
 #
 #  RESULT
-#     0, if job was not found
-#     1, if job was found
-
+#     0, if job was found
+#     < 0, on error - see get_qacct_error for a description of possible error codes
 #
 #  EXAMPLE
 #     
 #     if { [get_qacct $job_id] == 0 } {
-#        set_error -1 "qacct for job $job_id on host $host failed"
-#     } else {
 #        set cpu [expr $qacct_info(ru_utime) + $qacct_info(ru_stime)]
 #        if { $cpu < 30 } {
-#           set_error -1 "cpu entry in accounting ($qacct_info(cpu)) seems 
-#                         to be wrong for job $job_id on host $host"
+#           add_proc_error "example" -1 "cpu entry in accounting ($qacct_info(cpu)) seems 
+#                                     to be wrong for job $job_id on host $host"
 #        }
 #
 #        if { $ts_config(product_type) == "sgeee" } {
@@ -5650,7 +5691,7 @@ proc get_qconf_se_info {hostname {variable qconf_se_info}} {
 #           set difference [expr $cpu - $qacct_info(cpu)]
 #           set difference [expr $difference * $difference]
 #           if { $difference > 1 } {
-#              set_error -1 "accounting: cpu($qacct_info(cpu)) is not the 
+#              add_proc_error "example" -1 "accounting: cpu($qacct_info(cpu)) is not the 
 #                            sum of ru_utime and ru_stime ($cpu) for 
 #                            job $job_id on host $host"
 #           }
@@ -5658,29 +5699,33 @@ proc get_qconf_se_info {hostname {variable qconf_se_info}} {
 #     }
 #
 #  NOTES
-#     look at parser/parse_qacct for more information
+#     look at parser/parse_qacct() for more information
 #
 #  SEE ALSO
 #     parser/parse_qacct()
+#     sge_procedures/get_qacct_error()
 #*******************************
-proc get_qacct {jobid {variable qacct_info}} {
-  global ts_config
-   global CHECK_ARCH CHECK_OUTPUT
+proc get_qacct {job_id {variable qacct_info} {on_host ""} {as_user ""} {raise_error 1}} {
+   global ts_config CHECK_OUTPUT
+
    upvar $variable qacctinfo
-   
+  
+   # clear output variable
    if { [info exists qacctinfo] } {
       unset qacctinfo
    }
 
-   set exit_code [catch { exec "$ts_config(product_root)/bin/$CHECK_ARCH/qacct" -j $jobid} result]
-   if { $exit_code == 0 } {
-      puts $CHECK_OUTPUT "found job in accounting file, parsing qacct output ..."
-      parse_qacct result qacctinfo $jobid
-      return 1
+   set ret 0
+   set result [start_sge_bin "qacct" "-j $job_id" $on_host $as_user]
+
+   # parse output or raise error
+   if {$prg_exit_state == 0} {
+      parse_qacct result qacctinfo $job_id
    } else {
-      debug_puts "result of qacct -j $jobid:\n$result"
+      set ret [get_qacct_error $result $job_id $raise_error]
    }
-   return 0
+
+   return $ret
 }
 
 

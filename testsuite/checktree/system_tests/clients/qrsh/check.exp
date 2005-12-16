@@ -695,9 +695,7 @@ proc qrsh_accounting {} {
             unset qacct_info
          }
 
-         if { [get_qacct $job_id] == 0 } {
-            add_proc_error "qrsh_accounting"  -1 "qacct for job $job_id on host $host failed"
-         } else {
+         if {[get_qacct $job_id] == 0} {
             set cpu [expr $qacct_info(ru_utime) + $qacct_info(ru_stime)]
             if { $cpu < 30 } {
                add_proc_error "qrsh_accounting"  -1 "cpu entry \"$cpu\" in accounting seems to be wrong for job $job_id on host $host"

@@ -1,0 +1,184 @@
+#!/vol2/TCL_TK/glinux/bin/expect
+#___INFO__MARK_BEGIN__
+##########################################################################
+#
+#  The Contents of this file are made available subject to the terms of
+#  the Sun Industry Standards Source License Version 1.2
+#
+#  Sun Microsystems Inc., March, 2001
+#
+#
+#  Sun Industry Standards Source License Version 1.2
+#  =================================================
+#  The contents of this file are subject to the Sun Industry Standards
+#  Source License Version 1.2 (the "License"); You may not use this file
+#  except in compliance with the License. You may obtain a copy of the
+#  License at http://gridengine.sunsource.net/Gridengine_SISSL_license.html
+#
+#  Software provided under this License is provided on an "AS IS" basis,
+#  WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING,
+#  WITHOUT LIMITATION, WARRANTIES THAT THE SOFTWARE IS FREE OF DEFECTS,
+#  MERCHANTABLE, FIT FOR A PARTICULAR PURPOSE, OR NON-INFRINGING.
+#  See the License for the specific provisions governing your rights and
+#  obligations concerning the Software.
+#
+#  The Initial Developer of the Original Code is: Sun Microsystems, Inc.
+#
+#  Copyright: 2001 by Sun Microsystems, Inc.
+#
+#  All Rights Reserved.
+#
+##########################################################################
+#___INFO__MARK_END__
+
+
+# define global variable in this namespace
+global check_name
+global check_category 
+global check_description 
+global check_needs
+global check_functions 
+global check_errno 
+global check_errstr 
+global check_highest_level
+global check_init_level_procedure
+global check_root_access_needs
+global env
+
+set check_root_access_needs "no"
+
+# define a level initialization procedure:
+set check_init_level_procedure "qacct_init_level"
+
+# define test's name and run level descriptions
+set check_name            "qacct"
+set check_category        "COMPATIBILITY SYSTEM VERIFIED"
+set check_highest_level   0
+set check_description(0)  "test qacct functionality"
+
+# define test's dependencies
+set check_needs           "init_core_system qsub" 
+
+# setup and cleanup functions
+set check_setup_function qacct_setup
+set check_cleanup_function qacct_cleanup
+
+
+# define test's procedure order
+set check_functions ""
+lappend check_functions "qacct_basic"
+lappend check_functions "qacct_unknown_job_id"
+
+proc qacct_init_level {} {
+   global CHECK_ACT_LEVEL
+
+   switch -- $CHECK_ACT_LEVEL {
+      "0" { 
+         return 0
+      }
+   }
+
+   return -1  ;# no other level 
+}
+
+
+
+
+# -------- local test procedures: initialization------------------------------
+proc qacct_setup  {} {
+   global ts_config CHECK_OUTPUT
+   global qacct_reporting_backup
+
+   # set the accounting_flush_time to 0 to speedup writing of accounting info
+   if {$ts_config(gridengine_version) != 53} {
+      get_config old_config
+      set qacct_reporting_backup $old_config(reporting_params)
+      set new_config(reporting_params) "accounting_flush_time=00:00:00"
+      set_config new_config
+   }
+
+   set_error 0 "ok"
+}
+
+proc qacct_cleanup  {} {
+   global ts_config CHECK_OUTPUT
+   global qacct_reporting_backup
+
+   delete_all_jobs
+   wait_for_end_of_all_jobs 60
+
+   if {$ts_config(gridengine_version) != 53} {
+      set new_config(reporting_params) $qacct_reporting_backup
+      set_config new_config
+   }
+
+   set_error 0 "ok"
+}
+
+# --------------- test procedures for both 5.3 and 6.x
+proc qacct_basic {} {
+   global ts_config CHECK_OUTPUT
+   global CHECK_USER
+
+   set qacct_fields "qname hostname group owner project department jobname jobnumber taskid account priority qsub_time start_time end_time granted_pe slots failed exit_status ru_wallclock ru_utime ru_stime ru_maxrss ru_ixrss ru_ismrss ru_idrss ru_isrss ru_minflt ru_majflt ru_nswap ru_inblock ru_oublock ru_msgsnd ru_msgrcv ru_nsignals ru_nvcsw ru_nivcsw cpu mem io iow maxvmem"
+
+   # submit job
+   set job_id [submit_job "-N qacct_test $ts_config(product_root)/examples/jobs/sleeper.sh 10"]
+   if {$job_id < 0} {
+      set_error 0 "ok"
+      return
+   }
+
+   # wait for job end - now accounting should be written
+   if {[wait_for_jobstart $job_id "" 60 1 1] != 0} {
+      set_error 0 "ok"
+      return
+   }
+   if {[wait_for_jobend $job_id "" 60 1] != 0} {
+      set_error 0 "ok"
+      return
+   }
+
+   # get accounting
+   if {[get_qacct $job_id] == 0} {
+      # make sure all fields are available in accounting record
+      set missing ""
+      foreach field $qacct_fields {
+         if {![info exists qacct_info($field)]} {
+            lappend missing $field
+         }
+      }
+
+      # if fields are missing: error.
+      # otherwise check some of the content
+      if {[llength $missing] > 0} {
+         add_proc_error "qacct_basic" -1 "the following fields were missing in qacct output:\n$missing"
+      } else {
+         if {$qacct_info(owner) != $CHECK_USER} {
+            add_proc_error "qacct_basic" -1 "incorrect owner in qacct info, expected $CHECK_USER, but got $qacct_info(owner)"
+         }
+         if {$qacct_info(jobname) != "qacct_test"} {
+            add_proc_error "qacct_basic" -1 "incorrect jobname in qacct info, expected qacct_test, but got $qacct_info(jobname)"
+         }
+         if {$qacct_info(ru_wallclock) < 10 || $qacct_info(ru_wallclock) > 15} {
+            add_proc_error "qacct_basic" -1 "incorrect ru_wallclock in qacct info, expected 10, but got $qacct_info(ru_wallclock)"
+         }
+      }
+   }
+
+   set_error 0 "ok"
+}
+
+proc qacct_unknown_job_id {} {
+   global ts_config CHECK_OUTPUT
+
+   # we can't get that high job id's due to job id wrapping
+   set job_id 4000000000
+
+   # qacct has to fail
+   if {[get_qacct $job_id qacct_info "" "" 0] == 0} {
+      add_proc_error "qacct_unknown_job_id" -1 "qacct didn't fail on unknown job id"
+   }
+
+   set_error 0 "ok"
+}

@@ -31,142 +31,29 @@
 ##########################################################################
 #___INFO__MARK_END__
 
-# define global variable in this namespace
-global check_name
-global check_category 
-global check_description 
-global check_needs
-global check_functions 
-global check_errno 
-global check_errstr 
-global check_highest_level
-global check_init_level_procedure
-global check_root_access_needs
-global env
+global check_functions
 
-set check_root_access_needs "no"
-
-# define a level initialization procedure:
-set check_init_level_procedure "qacct_init_level"
-
-# define test's name and run level descriptions
-set check_name            "qacct"
-set check_category        "COMPATIBILITY SYSTEM VERIFIED"
-set check_highest_level   8
-set check_description(0)  "test qacct functionality"
-set check_description(1)  ""
-set check_description(2)  ""
-set check_description(3)  ""
-set check_description(4)  ""
-set check_description(5)  ""
-set check_description(6)  ""
-set check_description(7)  ""
-set check_description(8)  ""
-
-# define test's dependencies
-set check_needs           "init_core_system qsub" 
-
-# setup and cleanup functions
-set check_setup_function qacct_setup
-set check_cleanup_function qacct_cleanup
-
-
-
-# define test's procedure order
-set check_functions ""
 lappend check_functions "qacct_issue1720"
 lappend check_functions "qacct_issue1686"
 
+proc qacct_issue1686 {} {
+   global ts_config
 
-global qacct_test_hosts
-global qacct_saved_slot_count
+   set acct_file "$ts_config(checktree_root_dir)/system_tests/clients/qacct/accounting_issue1686"
 
-proc qacct_init_level {} {
-   global CHECK_ACT_LEVEL
-
-   switch -- $CHECK_ACT_LEVEL {
-      "0" { 
-         return 0
-      } 
-      "1" {
-         return -1 
-      }
-      "2" {
-         return -1
-      }
-      "3" {
-         return -1
-      }
-      "4" {
-         return -1
-      }
-      "5" {
-         return -1
-      }
-      "6" {
-         return -1
-      }
-      "7" {
-         return -1
-      }
-      "8" {
-         return -1
-      }
+   set result [start_sge_bin "qacct" "-o -D -f $acct_file"]
+   if {[string first "testuser1defaultdepartment" $result] > 0} {
+      add_proc_error "qacct_issue1686" -1 "detected issue 1686:\n$output" 
    } 
 
-   return -1  ;# no other level 
-}
-
-
-
-
-# -------- local test procedures: initialization------------------------------
-
-
-proc qacct_setup  {} {
-   global CHECK_OUTPUT ts_config
-
    set_error 0 "ok"
 }
-
-proc qacct_cleanup  {} {
-   global CHECK_OUTPUT ts_config
-
-   set_error 0 "ok"
-}
-
 
 proc qacct_issue1720 {} {
-   global qacct_test_hosts check_description CHECK_ARCH
-   global CHECK_OUTPUT ts_config CHECK_CORE_MASTER CHECK_ACT_LEVEL CHECK_SCRIPT_FILE_DIR
-
-
-   puts $CHECK_OUTPUT $check_description($CHECK_ACT_LEVEL)
-
-   if { $CHECK_ACT_LEVEL == 0 } {
-         set exit_code [catch { exec "$ts_config(product_root)/bin/$CHECK_ARCH/qacct" -h xyz} result]
-         if { $exit_code != 0 } {
-            set_error "-1" "qacct tried to resolve unknown hostname"
-            return;
-         }
+   set output [start_sge_bin qacct "-h unresolvable_host_xyz"]
+   if {$prg_exit_state != 0} {
+      add_proc_error "qacct_issue1720" -1 "qacct tried to resolve unknown hostname:\n$output"
    }
 
-   set_error 0 "ok"
-}
-
-proc qacct_issue1686 {} {
-   global CHECK_TESTSUITE_ROOT CHECK_ARCH CHECK_OUTPUT CHECK_ACT_LEVEL ts_config
-
-   set acct_file "$CHECK_TESTSUITE_ROOT/checktree/system_tests/clients/qacct/accounting_issue1686"
-
-   if { $CHECK_ACT_LEVEL == 0 } {
-         set exit_code [catch { exec "$ts_config(product_root)/bin/$CHECK_ARCH/qacct" -o -D -f $acct_file } result ]
-         puts $CHECK_OUTPUT $result
-         if { [ string first "No such file or directory" $result ] > 0 } {
-            set_error "-1" "$acct_file No such file or directory"
-         } elseif { [ string first "testuser1defaultdepartment" $result ] > 0 } {
-            set_error "-1" "detected issue 1686" 
-         } 
-   }
    set_error 0 "ok"
 }

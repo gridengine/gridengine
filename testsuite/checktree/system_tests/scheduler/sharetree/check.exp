@@ -308,7 +308,7 @@ proc share_tree_setup  {} {
     
    get_config sharetree_stored_configuration
    set my_execd_params "SHARETREE_RESERVED_USAGE=true"
-   if { [string compare "none" $sharetree_stored_configuration(execd_params)] != 0 } {
+   if { [string compare -nocase "none" $sharetree_stored_configuration(execd_params)] != 0 } {
       append my_execd_params ",$sharetree_stored_configuration(execd_params)"
    }
    set myconfig(execd_params) "$my_execd_params"
@@ -344,7 +344,7 @@ proc share_tree_setup  {} {
 
    set catch_return [ catch {  
       eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf -dstree" 
-   } result ] 
+   } result]
  
    set CHANGED_SHARETREE [translate $CHECK_HOST 1 0 0 [sge_macro MSG_TREE_CHANGEDSHARETREE]]
    set CAN_T_READ [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QCONF_CANTREADSHARETREEX_S] "*"]

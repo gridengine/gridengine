@@ -55,9 +55,9 @@
 #
 #  RESULT
 #     Returncode for get_exechost function:
-#      -1: host is not resolvable
-#      -2: host is not an execution host
-#     -99: other error
+#       -1: host is not resolvable
+#       -2: host is not an execution host
+#     -999: other error
 #
 #  SEE ALSO
 #     sge_host/get_exechost
@@ -87,8 +87,7 @@ proc get_exechost_error {result host raise_error} {
 #     get_exechost() -- get exechost properties (qconf -se)
 #
 #  SYNOPSIS
-#     get_exechost { output_var host {on_host ""} {as_user ""} {raise_error 1} 
-#     } 
+#     get_exechost {output_var host {on_host ""} {as_user ""} {raise_error 1}}
 #
 #  FUNCTION
 #     Calls qconf -se $host to retrieve exec host properties.

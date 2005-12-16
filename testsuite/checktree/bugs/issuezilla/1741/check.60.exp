@@ -1,0 +1,149 @@
+#!/vol2/TCL_TK/glinux/bin/expect --
+#___INFO__MARK_BEGIN__
+##########################################################################
+#
+#  The Contents of this file are made available subject to the terms of
+#  the Sun Industry Standards Source License Version 1.2
+#
+#  Sun Microsystems Inc., March, 2001
+#
+#
+#  Sun Industry Standards Source License Version 1.2
+#  =================================================
+#  The contents of this file are subject to the Sun Industry Standards
+#  Source License Version 1.2 (the "License"); You may not use this file
+#  except in compliance with the License. You may obtain a copy of the
+#  License at http://gridengine.sunsource.net/Gridengine_SISSL_license.html
+#
+#  Software provided under this License is provided on an "AS IS" basis,
+#  WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING,
+#  WITHOUT LIMITATION, WARRANTIES THAT THE SOFTWARE IS FREE OF DEFECTS,
+#  MERCHANTABLE, FIT FOR A PARTICULAR PURPOSE, OR NON-INFRINGING.
+#  See the License for the specific provisions governing your rights and
+#  obligations concerning the Software.
+#
+#  The Initial Developer of the Original Code is: Sun Microsystems, Inc.
+#
+#  Copyright: 2001 by Sun Microsystems, Inc.
+#
+#  All Rights Reserved.
+#
+##########################################################################
+#___INFO__MARK_END__
+
+# Define the global veriables to give them back
+global check_name check_description check_needs check_functions check_errno check_errstr check_highest_level
+global check_init_level_procedure check_category
+global check_root_access_needs
+global stree tmp_name
+
+# setup and cleanup functions
+set check_cleanup_function issue_1741_cleanup
+
+set check_init_level_procedure "issue_1741_init_level"
+
+set check_category            "COMPATIBILITY SYSTEM VERIFIED"
+set check_name                "issue_1741"
+set check_description(0)      "subordinate properties lost on qmaster restart"
+set check_needs               "init_core_system"      ;# dependencies of this check (name of other check)
+set check_root_access_needs   "no"
+
+# setup and cleanup functions
+set check_setup_function "issue_1741_setup"
+set check_cleanup_function "issue_1741_cleanup"
+
+# define test's procedure order
+set check_functions           ""
+lappend check_functions       "issue_1741_run"   ;# functions to call (in order)
+
+set check_highest_level       0
+
+#
+# Scenario:
+#     setup:
+#        create a queue b.q
+#        create a queue a.q which has b.q in its subordinate list
+#
+#     run:
+#        submit a job in b.q
+#        wait for jobstart
+#        submit a job in a.q
+#        wait for jobstart
+#        wait for the "S" state of b.q
+#        restart qmaster
+#        wait for the "S" state of b.q
+#        => if queue does not switch in "S" state => bug is present
+#
+#     cleanup:
+#        delete all jobs
+#        delete a.q
+#        delete b.q
+#
+
+proc issue_1741_init_level {} {
+   global CHECK_ACT_LEVEL ts_config
+
+   # setup levels 
+   switch -- $CHECK_ACT_LEVEL {
+      "0" {
+         return 0
+      }
+   }
+   return -1  ;# no other level else
+}
+
+proc issue_1741_setup  {} {
+   global ts_config 
+   global CHECK_OUTPUT CHECK_HOST CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_USER
+
+   set queue_settings(slots) 1
+   set queue_settings(hostlist) $CHECK_HOST
+   set queue_settings(load_thresholds) "np_load_avg=11.75"
+   set qname "b.q"
+   add_queue $qname $CHECK_HOST queue_settings
+
+   set queue_settings(slots) 1
+   set queue_settings(hostlist) $CHECK_HOST
+   set queue_settings(load_thresholds) "np_load_avg=11.75"
+   set queue_settings(subordinate_list) "b.q=1"
+   set qname "a.q"
+   add_queue $qname $CHECK_HOST queue_settings
+
+   set_error 0 "ok"
+}
+
+proc issue_1741_cleanup  {} {
+   global ts_config 
+   global CHECK_OUTPUT CHECK_HOST CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_USER
+
+   delete_all_jobs
+
+   wait_for_end_of_all_jobs 60
+
+   set qname "a.q"
+   del_queue $qname $CHECK_HOST  0 1
+
+   set qname "b.q"
+   del_queue $qname $CHECK_HOST  0 1
+
+   set_error 0 "ok"
+}
+
+proc issue_1741_run  {} {
+   global ts_config 
+   global CHECK_OUTPUT CHECK_HOST CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_USER
+
+   set job_id1 [submit_job "-q b.q@${CHECK_HOST} ${CHECK_PRODUCT_ROOT}/examples/jobs/sleeper.sh 100"]
+   wait_for_jobstart $job_id1 "Sleeper" 20 1 1
+   set job_id2 [submit_job "-q a.q@${CHECK_HOST} ${CHECK_PRODUCT_ROOT}/examples/jobs/sleeper.sh 100"]
+   wait_for_jobstart $job_id2 "Sleeper" 20 1 1
+
+
+   wait_for_queue_state "b.q@${CHECK_HOST}" "S" 60
+
+   shutdown_and_restart_qmaster
+
+   wait_for_queue_state "b.q@${CHECK_HOST}" "S" 60
+
+   set_error 0 "ok"
+}

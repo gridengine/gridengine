@@ -1922,7 +1922,7 @@ bool mconf_get_set_lib_path(void) {
 bool mconf_get_inherit_env(void) {
    bool ret;
 
-   DENTER(TOP_LAYER, "mconf_get_set_lib_path");
+   DENTER(TOP_LAYER, "mconf_get_inherit_env");
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
 
    ret = inherit_env;

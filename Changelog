@@ -1,3 +1,6 @@
+DT-2005-12-17-2: Bugfix:    o Fixed DENTER in sge_conf for INHERIT_ENV
+                 Changed:   sge_conf.c
+
 DT-2005-12-17-1: Bugfix:    o Added missing DRMAA error code
                  Enhancem.: o Added versioning to DRMAA libs
                  Review:    pending (AH)

@@ -546,10 +546,12 @@ proc startup_shadowd { hostname {env_list ""} } {
 #     sge_procedures/startup_execd()
 #     sge_procedures/startup_shadowd()
 #*******************************
-proc startup_execd { hostname } {
+proc startup_execd { hostname {envlist ""}} {
    global ts_config
    global CHECK_OUTPUT
    global CHECK_CORE_MASTER CHECK_ADMIN_USER_SYSTEM CHECK_USER
+
+   upvar $envlist my_envlist
 
    if { $CHECK_ADMIN_USER_SYSTEM == 0 } { 
  
@@ -563,7 +565,7 @@ proc startup_execd { hostname } {
    }
 
    puts $CHECK_OUTPUT "starting up execd on host \"$hostname\" as user \"$startup_user\""
-   set output [start_remote_prog "$hostname" "$startup_user" "$ts_config(product_root)/$ts_config(cell)/common/sgeexecd" "start"]
+   set output [start_remote_prog "$hostname" "$startup_user" "$ts_config(product_root)/$ts_config(cell)/common/sgeexecd" "start" prg_exit_state 60 0 my_envlist 1 1 1]
 
    return 0
 }

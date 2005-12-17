@@ -494,7 +494,7 @@ proc start_remote_prog { hostname
    if {$envlist != ""} {
       upvar $envlist users_env
    }
-   
+
    set back_exit_state -1
    set tmp_exit_status_string ""
    if { [ llength $exec_command ] != 1 } {

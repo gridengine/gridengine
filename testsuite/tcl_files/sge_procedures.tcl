@@ -2073,6 +2073,77 @@ proc set_config { change_array {host global} {do_add 0} {ignore_error 0}} {
   return $result
 }
 
+#****** set_config_and_propogate() *********************************************
+#  NAME
+#     set_config_and_propogate() -- set the config for the given host
+#
+#  SYNOPSIS
+#     set_config_and_propogate { my_config {host global} } 
+#
+#  FUNCTION
+#     Set the given config for the given host, and wait until the change has
+#     propogated.  It knows that the change has progated when the last config
+#     entry change appears in an execd's messages file.  If the host is global,
+#     an execd is selected from the list of execution daemons.  This method
+#     opens a remote process as $ts_user_config(first_foreign_user).
+#
+#  INPUTS
+#     config    the configuration to set
+#     host      the host for which the configuration should be set.  Defaults
+#               to global
+#*******************************************************************************
+proc set_config_and_propogate { config {host global} } {
+   global CHECK_OUTPUT CHECK_USER CHECK_HOST ts_config ts_user_config
+   global job_environment_config 
+
+   upvar $config my_config
+
+   if {[array size my_config] > 0} {
+      set conf_host $host
+
+      if {$conf_host == "global"} {
+         set conf_host [lindex $ts_config(execd_hosts) 0]
+         set spool_dir $job_environment_config(execd_spool_dir)
+      } elseif {[info exists job_environment_config(execd_spool_dir)] == 1} {
+         set spool_dir $job_environment_config(execd_spool_dir)
+      } else {
+         get_config global_config
+         set spool_dir $global_config(execd_spool_dir)
+      }
+
+      # Begin watching messages file for changes
+      set messages_name "$spool_dir/$conf_host/messages"
+      set tail_id [open_remote_spawn_process $conf_host $ts_user_config(first_foreign_user) "/usr/bin/tail" "-f $messages_name"]
+      set sp_id [ lindex $tail_id 1 ]
+
+      # Make configuration change
+      set_config my_config $host
+
+      # Wait for change to propogate
+      puts $CHECK_OUTPUT "Waiting for configuration change to propogate to execd"
+
+      set last_name [lindex [array names my_config] end]
+
+      set timeout 90
+
+      expect {
+         -i $sp_id full_buffer {
+          add_proc_error "job_environment_set_config" -1 "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
+         }
+         -i $sp_id timeout {
+            add_proc_error "job_environment_set_config" -1 "setup failed (timeout waiting for config to change)"
+         }
+         -i $sp_id "\|execd\|$conf_host\|I\|using \"$my_config($last_name)\" for $last_name" {
+            puts $CHECK_OUTPUT "Configuration changed: $last_name = \"$my_config($last_name)\""
+         }
+      }
+
+      # Stop watching
+      close_spawn_process $tail_id
+      wait_for_load_from_all_queues 200 
+   }
+}
+
 proc compare_complex {a b} {
    set len [llength $a]
 
@@ -6554,7 +6625,7 @@ proc startup_scheduler {} {
 #  SEE ALSO
 #     sge_procedures/startup_execd()
 #*******************************************************************************
-proc startup_execd_raw { hostname } {
+proc startup_execd_raw { hostname {envlist ""}} {
   global ts_config
    global CHECK_OUTPUT
    global CHECK_CORE_MASTER CHECK_ADMIN_USER_SYSTEM CHECK_USER
@@ -6572,9 +6643,21 @@ proc startup_execd_raw { hostname } {
 
    puts $CHECK_OUTPUT "starting up execd on host \"$hostname\" as user \"$startup_user\""
    set remote_arch [ resolve_arch $hostname ]
-   set my_environment(COMMD_HOST) $CHECK_CORE_MASTER
-   set output [start_remote_prog "$hostname" "$startup_user" "$ts_config(product_root)/bin/$remote_arch/sge_execd" "-nostart-commd" prg_exit_state 60 0 my_environment 1 1 1]
 
+   # Setup environment
+   if {$envlist != ""} {
+      upvar $envlist my_envlist
+
+      set names [array names my_envlist]
+
+      foreach var $names {
+         set my_environment($var) $my_envlist($var)
+      }
+   }
+
+   set my_environment(COMMD_HOST) $CHECK_CORE_MASTER
+
+   set output [start_remote_prog "$hostname" "$startup_user" "$ts_config(product_root)/bin/$remote_arch/sge_execd" "-nostart-commd" prg_exit_state 60 0 my_environment 1 1 1]
 
    set ALREADY_RUNNING [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_COMMPROC_ALREADY_STARTED_S] "*"]
 
@@ -8035,6 +8118,42 @@ proc append_to_qtask_file {content} {
    return $ret
 }
 
+#****** sge_procedures/get_shared_lib_var() ************************************
+#  NAME
+#     get_shared_lib_var() -- get the env var used for the shared lib path
+#
+#  SYNOPSIS
+#     get_shared_lib_var {hostname}
+#
+#  FUNCTION
+#     Returns the name of the variable that holds the shared library path on
+#     the given host.
+#
+#  INPUTS
+#     hostname  The name of the host whose shared lib var will be fetched.
+#               Defaults to $CHECK_HOST.  Returns "" on failure.
+#
+#  RESULT
+#     The name of the shared library path variable
+#
+#  EXAMPLE
+#     set shlib [get_shared_lib_path foo]
+#*******************************************************************************
+proc get_shared_lib_var {{hostname ""}} {
+   global ts_config CHECK_HOST CHECK_USER
+
+   set shlib_var ""
+   set host $hostname
+
+   if {$host == ""} {
+      set host $ts_config(master_host)
+   }
+
+   set shlib_var [string trim [start_remote_prog $host $CHECK_USER "$ts_config(product_root)/util/arch" "-lib"]]
+
+   return $shlib_var
+}
+
 
 #****** sge_procedures/get_qconf_list() ****************************************
 #  NAME
@@ -8092,4 +8211,3 @@ proc get_qconf_list {procedure option output_var {on_host ""} {as_user ""} {rais
 
    return $ret
 }
-

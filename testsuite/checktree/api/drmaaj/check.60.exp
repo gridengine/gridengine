@@ -86,7 +86,7 @@ proc drmaaj_init_level {} {
 proc drmaaj_check {} {
    global ts_config env
    global CHECK_OUTPUT CHECK_TESTSUITE_ROOT CHECK_ACTUAL_TEST_PATH
-   global CHECK_HOST CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_USER
+   global CHECK_HOST CHECK_ARCH CHECK_USER CHECK_SCRIPT_FILE_DIR
 
    puts $CHECK_OUTPUT "arch is $CHECK_ARCH"
    puts $CHECK_OUTPUT "host is $CHECK_HOST"
@@ -97,6 +97,25 @@ proc drmaaj_check {} {
    set new_config(delegated_file_staging) "true"
    set new_config(qmaster_params) "FORBID_RESCHEDULE FORBID_APPERROR"
    set_config new_config
+
+   # make sure that we have a drmaa.jar, drmaa-test.jar and
+   # suspendable_sleeper.sh
+   set needed_files ""
+   lappend needed_files $ts_config(product_root)/lib/drmaa.jar
+   lappend needed_files $ts_config(source_dir)/CLASSES/drmaa-test.jar
+   lappend needed_files $CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/suspendable_sleeper.sh
+   set missing_files ""
+
+   foreach file $needed_files {
+      if {[file exists $file] == 0} {
+         append missing_files " $file"
+      }
+   }
+
+   if {$missing_files != ""} {
+      add_proc_error "drmaaj_check" -3 "The following necessary files are missing: [string trim $missing_files]"
+      return -3
+   }
 
    foreach host $ts_config(unique_arch_nodes) {
       set binary_arch "[resolve_arch $host]"
@@ -127,7 +146,7 @@ proc drmaaj_check {} {
       }
 
       set compile_arch_mt "[resolve_build_arch $host]"
-      set classpath "$CHECK_PRODUCT_ROOT/lib/drmaa.jar:$ts_config(source_dir)/CLASSES/drmaa-test.jar:$CHECK_TESTSUITE_ROOT/lib/junit.jar"
+      set classpath "$ts_config(product_root)/lib/drmaa.jar:$ts_config(source_dir)/CLASSES/drmaa-test.jar:$CHECK_TESTSUITE_ROOT/lib/junit.jar"
       puts $CHECK_OUTPUT "host is $host has arch $compile_arch_mt with classpath $classpath"
 
       set options [build_java_env_list]
@@ -140,7 +159,7 @@ proc drmaaj_check {} {
       set options "-cp $classpath $options"
 
       puts $CHECK_OUTPUT "Starting VM: $JAVA $options junit.textui.TestRunner DrmaaSuite"
-      set test_output [ start_remote_prog $host $CHECK_USER "cd" ".\nLD_LIBRARYN32_PATH=\$LD_LIBRARY_PATH \nexport LD_LIBRARYN32_PATH\n$JAVA $options junit.textui.TestRunner com.sun.grid.drmaa.SessionImplJobTest" prg_exit_state 500 ]
+      set test_output [ start_remote_prog $host $CHECK_USER "cd" ".\nLD_LIBRARYN32_PATH=\$LD_LIBRARY_PATH \nexport LD_LIBRARYN32_PATH\n$JAVA $options junit.textui.TestRunner DrmaaSuite" prg_exit_state 500 ]
 
       if { $prg_exit_state != 0 } {
          add_proc_error drmaa_check -1 "DRMAA-J jUnit test suite failed at host $host:\n$test_output"

@@ -94,33 +94,33 @@ proc drmaa_init_level {} {
 # -------- local test procedures -----------------------------------------------
 
 proc drmaa_setup {} {
-   global backup_qmaster_params
+   global drmaa_config
 
    # must forbit reschedule on job exiting with 99 
    # must forbit job error upon job exiting with 100
    # otherwise drmaa_test ST_EXIT_STATUS never finishes
 
    # backup old settings
-   get_config config
-   set backup_qmaster_params $config(qmaster_params)
+   get_config drmaa_config
 
    # set new value
    set new_config(qmaster_params) "FORBID_RESCHEDULE=TRUE,FORBID_APPERROR=TRUE"
    set_config new_config
+
+   # setup file staging scripts
 
    set_error 0 "ok"
 }
 
 # undo what we've done in drmaa_setup
 proc drmaa_cleanup  {} {
-   global backup_qmaster_params
+   global backup_qmaster_params drmaa_config
 
    delete_all_jobs
    wait_for_end_of_all_jobs 60
 
    # undo configuration changes that were made for this test
-   set new_config(qmaster_params) $backup_qmaster_params
-   set_config new_config
+   set_config drmaa_config
 
    set_error 0 "ok"
 }
@@ -156,31 +156,45 @@ proc drmaa_check {} {
             drmaa_test_st_input_becomes_output $host $binary_path
 
             # -- tests without an argument
-            foreach st_test "ST_MULT_INIT ST_MULT_EXIT ST_SUPPORTED_ATTR ST_SUPPORTED_VATTR ST_VERSION \
-               ST_DRM_SYSTEM ST_CONTACT ST_EMPTY_SESSION_WAIT ST_EMPTY_SESSION_SYNCHRONIZE_DISPOSE \
-               ST_EMPTY_SESSION_SYNCHRONIZE_NODISPOSE ST_DRMAA_IMPL" {
+            foreach st_test "ST_MULT_INIT ST_MULT_EXIT ST_SUPPORTED_ATTR \
+               ST_SUPPORTED_VATTR ST_VERSION ST_DRM_SYSTEM ST_CONTACT \
+               ST_EMPTY_SESSION_WAIT ST_EMPTY_SESSION_SYNCHRONIZE_DISPOSE \
+               ST_EMPTY_SESSION_SYNCHRONIZE_NODISPOSE ST_DRMAA_IMPL \
+               ST_UNSUPPORTED_ATTR ST_UNSUPPORTED_VATTR" {
                
                puts "starting single threaded test $st_test"
                drmaa_test $host $binary_path $st_test ""
             }
            
             # -- tests to ensure control operations on session without jobs result in DRMAA_ERRNO_SUCCESS 
-            foreach control_op "DRMAA_CONTROL_SUSPEND DRMAA_CONTROL_RESUME DRMAA_CONTROL_HOLD \
-                  DRMAA_CONTROL_RELEASE DRMAA_CONTROL_TERMINATE" {
+            foreach control_op "DRMAA_CONTROL_SUSPEND DRMAA_CONTROL_RESUME \
+                  DRMAA_CONTROL_HOLD DRMAA_CONTROL_RELEASE \
+                  DRMAA_CONTROL_TERMINATE" {
                puts "starting single threaded test ST_EMPTY_SESSION_CONTROL $control_op"
                drmaa_test $host $binary_path ST_EMPTY_SESSION_CONTROL "$control_op"
             }
 
             # -- tests with a <sleeper_job> argument
-            foreach st_test "ST_SUBMIT_WAIT ST_BULK_SUBMIT_WAIT ST_BULK_SINGLESUBMIT_WAIT_INDIVIDUAL \
-                ST_SUBMITMIXTURE_SYNC_ALL_DISPOSE ST_SUBMITMIXTURE_SYNC_ALL_NODISPOSE \
-                ST_SUBMITMIXTURE_SYNC_ALLIDS_DISPOSE ST_SUBMITMIXTURE_SYNC_ALLIDS_NODISPOSE \
-                ST_SUBMIT_PAUSE_SUBMIT_SYNC ST_INPUT_FILE_FAILURE ST_OUTPUT_FILE_FAILURE \
-                ST_ERROR_FILE_FAILURE ST_SUBMIT_SUSPEND_RESUME_WAIT \
-                ST_SUBMIT_POLLING_WAIT_TIMEOUT ST_SUBMIT_POLLING_WAIT_ZEROTIMEOUT \
-                ST_SUBMIT_POLLING_SYNCHRONIZE_TIMEOUT ST_SUBMIT_POLLING_SYNCHRONIZE_ZEROTIMEOUT" {
+            foreach st_test "ST_SUBMIT_WAIT ST_BULK_SUBMIT_WAIT \
+                  ST_BULK_SINGLESUBMIT_WAIT_INDIVIDUAL \
+                  ST_SUBMITMIXTURE_SYNC_ALL_DISPOSE \
+                  ST_SUBMITMIXTURE_SYNC_ALL_NODISPOSE \
+                  ST_SUBMITMIXTURE_SYNC_ALLIDS_DISPOSE \
+                  ST_SUBMITMIXTURE_SYNC_ALLIDS_NODISPOSE \
+                  ST_SUBMIT_PAUSE_SUBMIT_SYNC ST_INPUT_FILE_FAILURE \
+                  ST_OUTPUT_FILE_FAILURE ST_ERROR_FILE_FAILURE \
+                  ST_SUBMIT_SUSPEND_RESUME_WAIT ST_SUBMIT_POLLING_WAIT_TIMEOUT \
+                  ST_SUBMIT_POLLING_WAIT_ZEROTIMEOUT \
+                  ST_SUBMIT_POLLING_SYNCHRONIZE_TIMEOUT \
+                  ST_SUBMIT_POLLING_SYNCHRONIZE_ZEROTIMEOUT \
+                  ST_BULK_SUBMIT_IN_HOLD_SESSION_RELEASE \
+                  ST_BULK_SUBMIT_IN_HOLD_SINGLE_RELEASE \
+                  ST_BULK_SUBMIT_IN_HOLD_SESSION_DELETE \
+                  ST_BULK_SUBMIT_IN_HOLD_SINGLE_DELETE \
+                  ST_SUBMIT_IN_HOLD_RELEASE ST_SUBMIT_IN_HOLD_DELETE \
+                  ST_SYNCHRONIZE_NONEXISTANT" {
                puts "starting single threaded test $st_test"
-               drmaa_test $host $binary_path $st_test $ts_config(product_root)/examples/jobs/sleeper.sh
+               drmaa_test $host $binary_path $st_test $CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/suspendable_sleeper.sh
             }
 
             # -- tests with a <sleeper_job> argument repeatedly 
@@ -188,7 +202,7 @@ proc drmaa_check {} {
                set n 100
                puts "starting single threaded test $st_test $n times each"
                for {set i 0} {$i < $n} {incr i} {
-                  drmaa_test $host $binary_path $st_test $ts_config(product_root)/examples/jobs/sleeper.sh
+                  drmaa_test $host $binary_path $st_test $CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/suspendable_sleeper.sh
                }
             }
 
@@ -211,10 +225,9 @@ proc drmaa_check {} {
          } 
          "201" { 
             # all MT tests need a sleeper job as argument
-            # 
-            # test broken for MT_SUBMIT_BEFORE_INIT_WAIT due to #988
             foreach mt_test "MT_SUBMIT_WAIT MT_EXIT_DURING_SUBMIT \
-                             MT_SUBMIT_MT_WAIT MT_EXIT_DURING_SUBMIT_OR_WAIT" {
+                     MT_SUBMIT_MT_WAIT MT_EXIT_DURING_SUBMIT_OR_WAIT \
+                     MT_SUBMIT_BEFORE_INIT_WAIT" {
                puts "starting multi threaded test $mt_test"
                drmaa_test $host $binary_path $mt_test $ts_config(product_root)/examples/jobs/sleeper.sh
             }

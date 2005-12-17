@@ -1488,7 +1488,6 @@ proc check_executable_files {  } {
    foreach file $tcl_filelist {
       lappend filelist "$CHECK_TESTSUITE_ROOT/scripts/$file"
    }
-   lappend filelist "$CHECK_TESTSUITE_ROOT/checktree/api/drmaaj/sleeper.sh"
    lappend filelist "$CHECK_TESTSUITE_ROOT/checktree/bugs/issuezilla/126/sleep.sh"
    lappend filelist "$CHECK_TESTSUITE_ROOT/checktree/bugs/issuezilla/1334/jobstarter.sh"
    lappend filelist "$CHECK_TESTSUITE_ROOT/checktree/bugs/issuezilla/1489/infinity.sh"
@@ -7874,7 +7873,7 @@ proc build_java_env_list {} {
    set env_list "$env_list -Dgets.hostname=\"$CHECK_HOST\""
    set env_list "$env_list -Dgets.gets_root=\"$CHECK_TESTSUITE_ROOT\""
    set env_list "$env_list -Dgets.cwd=\"$CHECK_CURRENT_WORKING_DIR\""
-   set env_list "$env_list -Dgets.scripts_dir=\"$CHECK_SCRIPT_FILE_DIR\""
+   set env_list "$env_list -Dgets.scripts_dir=\"$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR\""
    set env_list "$env_list -Dgets.checktree_root=\"$CHECK_CHECKTREE_ROOT\""
    set env_list "$env_list -Dgets.pid=\"[getpid]\""
    set env_list "$env_list -Dgets.home_dir=\"$env(HOME)\""

@@ -52,7 +52,7 @@ public class SessionImplJobTest extends TestCase {
    private Session session = null;
 
    static {
-      SLEEPER = Settings.get (Settings.TEST_PATH) + "/sleeper.sh";
+      SLEEPER = Settings.get (Settings.SCRIPTS_DIR) + "/suspendable_sleeper.sh";
    }
    
    public SessionImplJobTest (java.lang.String testName) {

@@ -1,3 +1,16 @@
+DT-2005-12-17-0: Testsuite: o Added missing test_drmaa tests
+                            o Added preflight check for drmaaj test
+                            o Added back excluded jUnit tests
+                            o Added suspendable sleeper script
+                            o Added env param to startup_execd{}
+                            o Added function to get shared lib var name
+                            o Added function to wait for a config change to
+                              propogate
+                            o Fixed job_environment test
+                 Issue:     1388, 1795
+                 Review:    CR
+                 Changed:   testsuite
+
 CR-2005-12-16-1: Testsuite: removed waiting times in startup_qmaster()
                  Review:    TBD
 

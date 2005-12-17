@@ -30,225 +30,356 @@
 #
 ##########################################################################
 #___INFO__MARK_END__
+global job_environment_60
+global job_environment_exec_host
+global job_environment_libpath
+global job_environment_libvar
+
+set check_root_access_needs "yes"
 
 # additional checks for N1GE 6
-lappend check_functions "job_environment_amount_uninherited"
-lappend check_functions "job_environment_JOB_NAME_uninherited"
+#lappend check_functions "job_environment_amount_uninherited"
+#lappend check_functions "job_environment_JOB_NAME_uninherited"
 lappend check_functions "job_environment_INHERIT_ENV"
-lappend check_functions "job_environment_SET_LIB_PATH"
+#lappend check_functions "job_environment_SET_LIB_PATH"
 
+####### job_environment_setup_60() #############################################
+#  NAME
+#     job_environment_setup_60() -- setup the job env test
+#
+#  SYNOPSIS
+#     job_environment_setup_60 { } 
+#
+#  FUNCTION
+#     Do required setup for the job environment test for 6.0.
+#
+#  RESULT
+#     0 -> ok   1 -> error
+#
+#  SEE ALSO
+#     job_environment_setup()
+################################################################################
+proc job_environment_setup_60 {} {
+   global CHECK_CORE_EXECD CHECK_OUTPUT
+   global job_environment_exec_host job_environment_libpath
+   global job_environment_libvar ts_config
 
+   # Stop first execd
+   shutdown_system_daemon $job_environment_exec_host "execd"
+
+   # Set marker var
+   set job_environment_libvar [get_shared_lib_var $job_environment_exec_host]
+
+   set my_environment(THISIS) "atest"
+   set my_environment($job_environment_libvar) "."
+
+   # Restart execd
+   startup_execd $job_environment_exec_host my_environment
+
+   # The test suite will add the SGE path to the lib path
+   set arch [resolve_arch $job_environment_exec_host]
+   set sge_path "$ts_config(product_root)/lib/$arch"
+   set job_environment_libpath "$my_environment($job_environment_libvar):$sge_path"
+   puts $CHECK_OUTPUT "************************************************************"
+   puts $CHECK_OUTPUT "$job_environment_libvar is set to $job_environment_libpath"
+   puts $CHECK_OUTPUT "************************************************************"
+}
+
+#****** job_environment_amount_uninherited() ***********************************
+#  NAME
+#     job_environment_amount_uninherited() -- test job environment
+#
+#  SYNOPSIS
+#     job_environment_amount_uninherited { } 
+#
+#  FUNCTION
+#     Check that all required environment variables are set by the shepherd when
+#     the execd_param, INHERIT_ENV, is set to false.
+#
+#  RESULT
+#     0 -> ok   1 -> error
+#
+#  SEE ALSO
+#     job_environment_amount()
+#*******************************************************************************
 proc job_environment_amount_uninherited {} {
-   get_config old_config
+   global CHECK_OUTPUT
+
+   puts $CHECK_OUTPUT "Testing list of environment variables with INHERIT_ENV=false"
+
    set new_config(execd_params) "INHERIT_ENV=false"
-   set_config new_config
+   set_config_and_propogate new_config
 
-   # Sleep for 20 seconds to give the coniguration time to propogate to the
-   # Execds
-   job_environment_sleep
+   set errors ""
 
-   job_environment_var_test 1
+   job_environment_var_test missing extra
 
-   # undo configuration changes that were made for this test
-   set_config old_config
+   if {[llength $missing] != 0} {
+      set missing_vars ""
+
+      foreach missing_var $missing {
+         append missing_vars " $missing_var"
+      }
+
+      append errors "\nThe following environment variables should have been set but were not: [string trim $missing]"
+   } elseif {[llength $extra] != 0} {
+      set extra_vars ""
+
+      foreach extra_var $extra {
+         append extra_vars " $extra_var"
+      }
+
+      append errors "\nThe following unrecognized environment variables were set: [string trim $extra_vars]"
+   }
+
+   if {$errors != ""} {
+      add_proc_error "job_environment_amount_uninherited" -1 [string trim $errors]
+   }
+
+   set_error 0 "ok"
 }
 
 
-################################################################################
-# The point of this test is to check that all the job submission methods       #
-# continue to function when INHERIT_ENV=false.  Whether or not the job name    #
-# env vars are properly set is actually irrelevant.  The                       #
-# job_environment_JOB_NAME test checks that.                                   #
-################################################################################
+#****** job_environment_JOB_NAME_uninherited() *********************************
+#  NAME
+#     job_environment_JOB_NAME_uninherited() -- test the job name env vars
+#
+#  SYNOPSIS
+#     job_environment_JOB_NAME_uninherited { } 
+#
+#  FUNCTION
+#     Tests whether the shepherd correctly sets the job name environment
+#     variables when the execd_param, INHERIT_ENV, is set to false.
+#
+#  RESULT
+#     0 -> ok   1 -> error
+#
+#  SEE ALSO
+#     job_environment_JOB_NAME()
+#*******************************************************************************
 proc job_environment_JOB_NAME_uninherited {} {
+   global CHECK_OUTPUT
+
+   puts $CHECK_OUTPUT "Testing presence of job env vars with INHERIT_ENV=false"
+
    # Set INHERIT_ENV=false
-   get_config old_config
    set new_config(execd_params) "INHERIT_ENV=false"
-   set_config new_config
-   job_environment_sleep
+   set_config_and_propogate new_config
 
    # Run JOB_NAME test
-   job_environment_JOB_NAME
+   job_environment_JOB_NAME 0
 }
 
+
+#****** job_environment_INHERIT_ENV() ******************************************
+#  NAME
+#     job_environment_INHERIT_ENV() -- test that env vars are inherited
+#                                      correctly
+#
+#  SYNOPSIS
+#     job_environment_INHERIT_ENV { } 
+#
+#  FUNCTION
+#     Tests whether the shepherd correctly sets the environment
+#     variables based on the execd_param, INHERIT_ENV.
+#
+#  RESULT
+#     0 -> ok   1 -> error
+#*******************************************************************************
 proc job_environment_INHERIT_ENV {} {
+   global env CHECK_OUTPUT job_environment_exec_host
+
+   set args "-l h=$job_environment_exec_host -o /dev/null -j yes"
+
+   set errors ""
+
+   puts $CHECK_OUTPUT "Testing effects of INHERIT_ENV=false"
+
    # Set INHERIT_ENV=false
-   get_config old_config
    set new_config(execd_params) "INHERIT_ENV=false"
-   set_config new_config
-   job_environment_sleep
+   set_config_and_propogate new_config
 
    # Submit job
-   if {[job_environment_qsub_job "jobenv.sh" job_env "-o /dev/null -e /dev/null"]} {
-      # Check for presence of TERM env var
-      if {[info exists job_env(TERM)]} {
-         add_proc_error "job_environment_INHERIT_ENV" -1 "Failed for INHERIT_ENV=false"
+   if {[job_environment_qsub_job "jobenv.sh" job_env $args]} {
+      # Check for presence of THISIS env var
+      if {[info exists job_env(THISIS)]} {
+         append errors "\nEnvironment variable was inherited when it shouldn't have been, with INHERIT_ENV=false"
       }
    } else {
-      add_proc_error "job_environment_INHERIT_ENV" -1 "Failed submitting job"
+      append errors "\nFailed submitting job, with INHERIT_ENV=false"
    }
+
+   puts $CHECK_OUTPUT "Testing effects of execd_params=none, after INHERIT_ENV=false"
 
    # Set exced_params=none
    set new_config(execd_params) "none"
-   set_config new_config
-   job_environment_sleep
+   set_config_and_propogate new_config
 
    # Submit job
-   if {[job_environment_qsub_job "jobenv.sh" job_env "-o /dev/null -e /dev/null"]} {
-      # Check for presence of TERM env var
-      if {![info exists job_env(TERM)]} {
-         add_proc_error "job_environment_INHERIT_ENV" -1 "Failed for none after execd_params=none (case 1)"
+   if {[job_environment_qsub_job "jobenv.sh" job_env $args]} {
+      # Check for presence of THISIS env var
+      if {![info exists job_env(THISIS)]} {
+         append errors "\nEnvironment variable was not inherited, with execd_params=none after INHERIT_ENV=false"
       }
    } else {
-      add_proc_error "job_environment_INHERIT_ENV" -1 "Failed submitting job"
+      append errors "\nFailed submitting job, with execd_params=none after INHERIT_ENV=false"
    }
+
+   puts $CHECK_OUTPUT "Testing effects of INHERIT_ENV=true"
 
    # Set INHERIT_ENV=true
    set new_config(execd_params) "INHERIT_ENV=true"
-   set_config new_config
-   job_environment_sleep
+   set_config_and_propogate new_config
 
    # Submit job
-   if {[job_environment_qsub_job "jobenv.sh" job_env "-o /dev/null -e /dev/null"]} {
-      # Check for presence of TERM env var
-      if {![info exists job_env(TERM)]} {
-         add_proc_error "job_environment_INHERIT_ENV" -1 "Failed for INHERIT_ENV=true"
+   if {[job_environment_qsub_job "jobenv.sh" job_env $args]} {
+      # Check for presence of THISIS env var
+      if {![info exists job_env(THISIS)]} {
+         append errors "\nEnvironment variable was not inherited, with INHERIT_ENV=true"
       }
    } else {
-      add_proc_error "job_environment_INHERIT_ENV" -1 "Failed submitting job"
+      append errors "\nFailed submitting job, with INHERIT_ENV=true"
    }
+
+   puts $CHECK_OUTPUT "Testing effects of execd_params=none, after INHERIT_ENV=true"
 
    # Set exced_params=none
    set new_config(execd_params) "none"
-   set_config new_config
-   job_environment_sleep
+   set_config_and_propogate new_config
 
    # Submit job
-   if {[job_environment_qsub_job "jobenv.sh" job_env "-o /dev/null -e /dev/null"]} {
-      # Check for presence of TERM env var
-      if {![info exists job_env(TERM)]} {
-         add_proc_error "job_environment_INHERIT_ENV" -1 "Failed for none after execd_params=none (case 2)"
+   if {[job_environment_qsub_job "jobenv.sh" job_env $args]} {
+      # Check for presence of THISIS env var
+      if {![info exists job_env(THISIS)]} {
+         append errors "\nEnvironment variable was inherited when it shouldn't have been, with execd_params=none after INHERIT_ENV=true"
       }
    } else {
-      add_proc_error "job_environment_INHERIT_ENV" -1 "Failed submitting job"
+      append errors "\nFailed submitting job, with execd_params=none after INHERIT_ENV=true"
    }
 
-   # Undo configuration changes that were made for this test
-   set_config old_config
+   if {$errors != ""} {
+      add_proc_error "job_environment_INHERIT_ENV" -1 [string trim $errors]
+   }
 
    set_error 0 "ok"
 }
 
-proc job_environment_get_shlib_path_var { array } {
-   global ts_config CHECK_OUTPUT
-
-   upvar $array job_env
-
-   puts $CHECK_OUTPUT "Finding shared library path..."
-
-   if { [info exists job_env(LD_LIBRARY_PATH)] == 1 } {
-      puts $CHECK_OUTPUT "LD_LIBRARY_PATH is set."
-      return "LD_LIBRARY_PATH"
-   } elseif { [info exists job_env(SHLIB_PATH)] == 1} {
-      puts $CHECK_OUTPUT "SHLIB_PATH is set."
-      return "SHLIB_PATH"
-   } elseif { [info exists job_env(DYLD_LIBRARY_PATH)] == 1} {
-      puts $CHECK_OUTPUT "DYLD_LIBRARY_PATH is set."
-      return "DYLD_LIBRARY_PATH"
-   } else {
-      puts $CHECK_OUTPUT "No shared library path is set."
-      return ""
-   }
-}
-
+#****** job_environment_SET_LIB_PATH() *****************************************
+#  NAME
+#     job_environment_SET_LIB_PATH() -- test that the lib path gets set
+#                                       correctly
+#
+#  SYNOPSIS
+#     job_environment_SET_LIB_PATH { } 
+#
+#  FUNCTION
+#     Tests whether the shepherd correctly sets the shared library path
+#     environment variable based on the execd_params, INHERIT_ENV and
+#     SET_LIB_PATH.
+#
+#  RESULT
+#     0 -> ok   1 -> error
+#*******************************************************************************
 proc job_environment_SET_LIB_PATH {} {
    global ts_config CHECK_OUTPUT
-   global test_host
+   global job_environment_exec_host job_environment_libvar
+   global job_environment_libpath
 
-   set arch [resolve_arch $test_host]
+   set args "-l h=$job_environment_exec_host -o /dev/null -j yes"
+   set arch [resolve_arch $job_environment_exec_host]
    set sge_path "$ts_config(product_root)/lib/$arch"
    puts $CHECK_OUTPUT "expected SGE lib path is $sge_path"
 
+   puts $CHECK_OUTPUT "Testing effects of INHERIT_ENV=true, SET_LIB_PATH=true"
+
    # Set INHERIT_ENV=true, SET_LIB_PATH=true
-   get_config old_config
    set new_config(execd_params) "INHERIT_ENV=true,SET_LIB_PATH=true"
-   set_config new_config
-   job_environment_sleep
+   set_config_and_propogate new_config
 
-   # Submit job
-   if {[job_environment_qsub_job "jobenv.sh" job_env "-o /dev/null -e /dev/null"]} {
-      # Find lib path env var
-      set lib_path [job_environment_get_shlib_path_var job_env]
-      puts $CHECK_OUTPUT "lib path var is $lib_path"
+   set errors ""
 
-      # Test that lib path starts with SGE lib path
-      puts $CHECK_OUTPUT "lib path is $job_env($lib_path)"
-      if {[string first $sge_path $job_env($lib_path)] != 0} {
-         add_proc_error "job_environment_SET_LIB_PATH" -1 "Failed for INHERIT_ENV=true,SET_LIB_PATH=true"
-      }
-   } else {
-      add_proc_error "job_environment_SET_LIB_PATH" -1 "Failed submitting job"
+   # Test that lib path is "SGE lib path":"execd path"
+   if {[job_environment_qsub_job "jobenv.sh" job_env $args] == 0} {
+      append errors "\nFailed submitting job, with INHERIT_ENV=true,SET_LIB_PATH=true"
+   } elseif {[info exists job_env($job_environment_libvar)] == 0} {
+      append errors "\nShared library path is unset, with INHERIT_ENV=true,SET_LIB_PATH=true"
+   } elseif {$job_env($job_environment_libvar) != "$sge_path:$job_environment_libpath"} {
+      append errors "\nShared library path is incorrectly set to \"$job_env($job_environment_libvar)\", with INHERIT_ENV=true,SET_LIB_PATH=true"
    }
 
-# This can only be tested if we know whether the execd has a shared lib path set
-#   # Set INHERIT_ENV=true, SET_LIB_PATH=false
-#   set new_config(execd_params) "INHERIT_ENV=true,SET_LIB_PATH=false"
-#   set_config new_config
-#   job_environment_sleep
-#
-#   # Submit job
-#   if {[job_environment_qsub_job "jobenv.sh" job_env "-o /dev/null -e /dev/null"]} {
-#      # Test that lib path exists
-#      if {![info exists job_env($lib_path)]} {
-#         add_proc_error "job_environment_SET_LIB_PATH" -1 "Failed for INHERIT_ENV=true,SET_LIB_PATH=false"
-#      }
-#   } else {
-#      add_proc_error "job_environment_SET_LIB_PATH" -1 "Failed submitting job"
-#   }
+   puts $CHECK_OUTPUT "Testing effects of INHERIT_ENV=true, SET_LIB_PATH=false"
+
+   # Set INHERIT_ENV=true, SET_LIB_PATH=false
+   set new_config(execd_params) "INHERIT_ENV=true,SET_LIB_PATH=false"
+   set_config_and_propogate new_config
+
+   # Test that lib path contains only the execd's lib path
+   if {[job_environment_qsub_job "jobenv.sh" job_env $args] == 0} {
+      append errors "\nFailed submitting job, with INHERIT_ENV=true,SET_LIB_PATH=false"
+   } elseif {[info exists job_env($job_environment_libvar)] == 0} {
+      append errors "\nShared library path is unset, with INHERIT_ENV=true,SET_LIB_PATH=false"
+   } elseif {$job_env($job_environment_libvar) != $job_environment_libpath} {
+      append errors "\nShared library path is incorrectly set to \"$job_env($job_environment_libvar)\", with INHERIT_ENV=true,SET_LIB_PATH=false"
+   }
+
+   puts $CHECK_OUTPUT "Testing effects of INHERIT_ENV=false, SET_LIB_PATH=true"
 
    # Set INHERIT_ENV=false, SET_LIB_PATH=true
    set new_config(execd_params) "INHERIT_ENV=false,SET_LIB_PATH=true"
-   set_config new_config
-   job_environment_sleep
+   set_config_and_propogate new_config
 
-   # Submit job
-   if {[job_environment_qsub_job "jobenv.sh" job_env "-o /dev/null -e /dev/null"]} {
-      # Test that lib path contains only SGE lib path
-      puts $CHECK_OUTPUT "lib path is $job_env($lib_path)"
-      if {[string compare $job_env($lib_path) $sge_path] != 0} {
-         add_proc_error "job_environment_SET_LIB_PATH" -1 "Failed for INHERIT_ENV=false,SET_LIB_PATH=true"
-      }
-   } else {
-      add_proc_error "job_environment_SET_LIB_PATH" -1 "Failed submitting job"
+   # Test that lib path contains only SGE lib path
+   if {[job_environment_qsub_job "jobenv.sh" job_env $args] == 0} {
+      append errors "\nFailed submitting job, with INHERIT_ENV=false,SET_LIB_PATH=true"
+   } elseif {[info exists job_env($job_environment_libvar)] == 0} {
+      append errors "\nShared library path is unset, with INHERIT_ENV=false,SET_LIB_PATH=true"
+   } elseif {$job_env($job_environment_libvar) != $sge_path} {
+      append errors "\nShared library path is incorrectly set to \"$job_env($job_environment_libvar)\", with INHERIT_ENV=false,SET_LIB_PATH=true"
    }
+
+   puts $CHECK_OUTPUT "Testing effects of INHERIT_ENV=false, SET_LIB_PATH=false"
 
    # Set INHERIT_ENV=false, SET_LIB_PATH=false
    set new_config(execd_params) "INHERIT_ENV=false,SET_LIB_PATH=false"
-   set_config new_config
-   job_environment_sleep
+   set_config_and_propogate new_config
 
-   # Submit job
-   if {[job_environment_qsub_job "jobenv.sh" job_env "-o /dev/null -e /dev/null"]} {
-      # Test that lib path doesn't exist
-      if {[info exists job_env($lib_path)]} {
-         puts $CHECK_OUTPUT "lib path is $job_env($lib_path)"
-         add_proc_error "job_environment_SET_LIB_PATH" -1 "Failed for INHERIT_ENV=false,SET_LIB_PATH=false"
-      }
-   } else {
-      add_proc_error "job_environment_SET_LIB_PATH" -1 "Failed submitting job"
+   # Test that lib path doesn't exist
+   if {[job_environment_qsub_job "jobenv.sh" job_env $args] == 0} {
+      append errors "\nFailed submitting job, with INHERIT_ENV=false,SET_LIB_PATH=false"
+   } elseif {[info exists job_env($job_environment_libvar)] == 1} {
+      append errors "\nShared library path is incorrectly set to \"$job_env($job_environment_libvar)\", with INHERIT_ENV=false,SET_LIB_PATH=false"
    }
 
-   # Undo configuration changes that were made for this test
-   set_config old_config
+   if {$errors != ""} {
+      append errors "\nThe expected execd lib path is \"$job_environment_libpath\""
+      add_proc_error "job_environment_SET_LIB_PATH" -1 [string trim $errors]
+   }
 
    set_error 0 "ok"
 }
 
-proc job_environment_sleep {} {
-   global CHECK_OUTPUT
+####### job_environment_cleanup_60() ###########################################
+#  NAME
+#     job_environment_cleanup_60() -- clean up after the job env test
+#
+#  SYNOPSIS
+#     job_environment_cleanup_60 { } 
+#
+#  FUNCTION
+#     Clean up changes made during the job environment 6.0 test.
+#
+#  RESULT
+#     0 -> ok   1 -> error
+#
+#  SEE ALSO
+#     job_environment_cleanup()
+################################################################################
+proc job_environment_cleanup_60 {} {
+   global job_environment_exec_host
 
-   puts $CHECK_OUTPUT "Waiting for environment change to propogate to execds"
-   after 20000
+   # Stop execd
+   shutdown_system_daemon $job_environment_exec_host "execd"
+
+   # Restart execd without marker variable
+   startup_execd $job_environment_exec_host
 }
-
-

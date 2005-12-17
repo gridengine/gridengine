@@ -468,6 +468,9 @@ const struct test_name2number_map {
    { "ST_SUBMIT_POLLING_WAIT_ZEROTIMEOUT",        ST_SUBMIT_POLLING_WAIT_ZEROTIMEOUT,        1, "<sleeper_job>" },
    { "ST_SUBMIT_POLLING_SYNCHRONIZE_TIMEOUT",     ST_SUBMIT_POLLING_SYNCHRONIZE_TIMEOUT,     1, "<sleeper_job>" },
    { "ST_SUBMIT_POLLING_SYNCHRONIZE_ZEROTIMEOUT", ST_SUBMIT_POLLING_SYNCHRONIZE_ZEROTIMEOUT, 1, "<sleeper_job>" },
+   { "ST_UNSUPPORTED_ATTR",                      ST_UNSUPPORTED_ATTR,                        0, "" },
+   { "ST_UNSUPPORTED_VATTR",                     ST_UNSUPPORTED_VATTR,                       0, "" },
+   { "ST_SYNCHRONIZE_NONEXISTANT",               ST_SYNCHRONIZE_NONEXISTANT,                 1, "<sleeper_job>" },
 
    /* multiple application threads - automated tests only */
    { "MT_SUBMIT_WAIT",                           MT_SUBMIT_WAIT,                             1, "<sleeper_job>" },
@@ -494,12 +497,10 @@ const struct test_name2number_map {
    { "ST_TRANSFER_FILES_BULK_JOB",               ST_TRANSFER_FILES_BULK_JOB,                 6, "<sleeper_job> <file_staging_flags "
          "{\"i\"|\"o\"|\"e\" }> <<merge_stderr {\"y\"|\"n\"}> [inputhost]:/inputpath> <[outputhost]:/outputpath> <[errorhost]:/errorpath>" },
 
+   /* tests that have nothing to do with drmaa */
    { "ST_RESERVATION_FINISH_ORDER",              ST_RESERVATION_FINISH_ORDER,                4, "<sleeper_job> <native_spec0> <native_spec1> <native_spec2>" },
    { "ST_BACKFILL_FINISH_ORDER",                 ST_BACKFILL_FINISH_ORDER,                   4, "<sleeper_job> <native_spec0> <native_spec1> <native_spec2>" },
    { "ST_WILD_PARALLEL",                         ST_WILD_PARALLEL,                           4, "<sleeper_job> <native_spec0> <native_spec1> <native_spec2>" },
-   { "ST_UNSUPPORTED_ATTR",                      ST_UNSUPPORTED_ATTR,                        0, "" },
-   { "ST_UNSUPPORTED_VATTR",                     ST_UNSUPPORTED_VATTR,                       0, "" },
-   { "ST_SYNCHRONIZE_NONEXISTANT",               ST_SYNCHRONIZE_NONEXISTANT,                 1, "<sleeper_job>" },
 
    { NULL,                                       0 }
 };

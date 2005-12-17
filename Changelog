@@ -1,3 +1,8 @@
+DT-2005-12-17-1: Bugfix:    o Added missing DRMAA error code
+                 Enhancem.: o Added versioning to DRMAA libs
+                 Review:    pending (AH)
+                 Changed:   DRMAA, distinst
+
 DT-2005-12-17-0: Testsuite: o Added missing test_drmaa tests
                             o Added preflight check for drmaaj test
                             o Added back excluded jUnit tests

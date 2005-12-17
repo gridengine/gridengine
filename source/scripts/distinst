@@ -71,6 +71,8 @@ OPENSSL_SHARED_LIBRARIES="libcrypto libssl"
 BERKELEYDB_SHARED_LIBRARIES="libdb-4.2"
 
 DRMAA_SHARED_LIBRARIES="libdrmaa"
+# The last number listed here will be the verson linked from libdrmaa.so
+DRMAA_SHARED_LIB_VERSIONS="1.0 0.95"
 DRMAA_HEADER_FILES="libs/japi/drmaa.h"
 DRMAAJ_FILES="CLASSES/drmaa.jar"
 
@@ -1390,13 +1392,20 @@ for i in $ARCH; do
             fi
 
             for lib in $DRMAA_SHARED_LIBRARIES; do
-               libname=$lib.$shlibext
-               if [ -f $libname ]; then
-                  InstallProg $libname
-               elif [ $exit_on_error = true ]; then
-                  echo "\"$libname\" not found. Installation failed."
-               fi
+               for version in $DRMAA_SHARED_LIB_VERSIONS; do
+                  libname=$lib.$shlibext.$version
+                  if [ -f $libname ]; then
+                     InstallProg $libname
+                  elif [ $exit_on_error = true ]; then
+                     echo "\"$libname\" not found. Installation failed."
+                  fi
+               done
             done
+
+            oldpwd=$PWD
+            cd $DEST_SGE_ROOT/lib/$DSTARCH
+            ln -s $libname $lib.$shlibext
+            cd $oldpwd
 
 # On MacOS X, the JVM expects a special JNI extension for shared libraries
             if [ $shlibext != $jnilibext ]; then

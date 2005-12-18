@@ -226,7 +226,6 @@ cqueue_list_x_on_subordinate_so(lList *this_list, lList **answer_list,
     */
    for_each(so, resolved_so_list) {
       const char *full_name = lGetString(so, SO_name);
-
       lListElem *qinstance = cqueue_list_locate_qinstance(this_list, full_name);
 
       if (qinstance != NULL) {
@@ -258,7 +257,7 @@ qinstance_find_suspended_subordinates(const lListElem *this_elem,
       const char *qinstance_name = lGetString(this_elem, QU_qname);
       const char *hostname = lGetHost(this_elem, QU_qhostname);
       /* Slots calculations */
-      u_long32 slots = lGetUlong (this_elem, QU_job_slots);
+      u_long32 slots = lGetUlong(this_elem, QU_job_slots);
       u_long32 slots_used = qinstance_slots_used(this_elem);
       bool all_full = (slots_used == slots) ? true : false;
 
@@ -268,16 +267,20 @@ qinstance_find_suspended_subordinates(const lListElem *this_elem,
       so_list_resolve(so_list, answer_list, resolved_so_list, qinstance_name,
                       hostname);
 
-      /* If the number of used slots on this qinstance is greater than a
+      /* 
+       * If the number of used slots on this qinstance is greater than a
        * subordinate's threshold (if it has one), or if this qinstance has all
        * of it's slots full, this subordinate should be suspended.  Otherwise,
-       * remove it from the list. */
+       * remove it from the list. 
+       */
       if (!all_full) {
          lListElem *next_so = NULL;
+
          /*
           * Remove all subordinated queues from "resolved_so_list" which
           * are not actually suspended by "this_elem" 
           */
+         DTRACE;
          next_so = lFirst(*resolved_so_list);
          while ((so = next_so) != NULL) {
             next_so = lNext(so);
@@ -287,8 +290,11 @@ qinstance_find_suspended_subordinates(const lListElem *this_elem,
                lRemoveElem(*resolved_so_list, &so);
             }
          }
+      } else {
+         DTRACE;
       }
    }
+
    DEXIT;
    return ret;
 }

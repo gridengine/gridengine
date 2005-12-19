@@ -2,7 +2,7 @@ EB-2005-12-15-0: Bugfix:    subordinate properties lost on qmaster restart
                  Issue:     1741
                  Bugtraq:   6319223
                  Changed:   sge_qmaster
-                 Review:    TBD
+                 Review:    SG 
 
 MD-2005-12-12-1: Bugfix:    Edits to settings.csh and settings.sh
                             user-unfriendly error messages when attempting 

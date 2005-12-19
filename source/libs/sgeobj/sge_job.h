@@ -131,9 +131,6 @@
 #define JOB_TYPE_IS_NO_SHELL(jb_now)       (jb_now & JOB_TYPE_NO_SHELL)
 
 
-extern lList *Master_Zombie_List;
-extern lList *Master_Job_Schedd_Info_List;
-
 bool job_is_enrolled(const lListElem *job, 
                      u_long32 ja_task_number);
 

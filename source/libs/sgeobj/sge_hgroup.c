@@ -62,8 +62,6 @@
 
 #define HGROUP_LAYER TOP_LAYER
 
-lList *Master_HGroup_List = NULL;
-
 /****** sgeobj/hgroup/is_hgroup_name() ****************************************
 *  NAME
 *     is_hgroup_name() -- Is the given name a hostgroup name 

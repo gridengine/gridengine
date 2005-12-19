@@ -128,6 +128,7 @@ int
 sge_del_calendar(lListElem *cep, lList **alpp, char *ruser, char *rhost) 
 {
    const char *cal_name;
+   lList **master_calendar_list = object_type_get_master_list(SGE_TYPE_CALENDAR);
 
    DENTER(TOP_LAYER, "sge_del_calendar");
 
@@ -148,7 +149,7 @@ sge_del_calendar(lListElem *cep, lList **alpp, char *ruser, char *rhost)
    }
    cal_name = lGetString(cep, CAL_name);
 
-   if (!calendar_list_locate(Master_Calendar_List, cal_name)) {
+   if (!calendar_list_locate(*master_calendar_list, cal_name)) {
       ERROR((SGE_EVENT, MSG_SGETEXT_DOESNOTEXIST_SS, 
              MSG_OBJ_CALENDAR, cal_name));
       answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
@@ -179,7 +180,7 @@ sge_del_calendar(lListElem *cep, lList **alpp, char *ruser, char *rhost)
    sge_event_spool(alpp, 0, sgeE_CALENDAR_DEL, 
                    0, 0, cal_name, NULL, NULL,
                    NULL, NULL, NULL, true, true);
-   lDelElemStr(&Master_Calendar_List, CAL_name, cal_name);
+   lDelElemStr(master_calendar_list, CAL_name, cal_name);
 
    INFO((SGE_EVENT, MSG_SGETEXT_REMOVEDFROMLIST_SSSS,
          ruser, rhost, cal_name, MSG_OBJ_CALENDAR));
@@ -218,7 +219,7 @@ void sge_calendar_event_handler(te_event_t anEvent, monitoring_t *monitor)
 
    MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE), monitor);
 
-   if (!(cep = calendar_list_locate(Master_Calendar_List, cal_name)))
+   if (!(cep = calendar_list_locate(*object_type_get_master_list(SGE_TYPE_CALENDAR), cal_name)))
    {
       ERROR((SGE_EVENT, MSG_EVE_TE4CAL_S, cal_name));   
       SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);      

@@ -83,8 +83,6 @@ static token_set_t statev[] = {
    { -1, NULL },
 };
 
-lList *Master_Calendar_List = NULL;
-
 typedef int (*cmp_func_t)(const lListElem *t1, const lListElem *t2); 
 
 static char old_error[1000];

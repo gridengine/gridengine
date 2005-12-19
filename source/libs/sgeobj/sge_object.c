@@ -75,25 +75,37 @@
 #include "sge_utility.h"
 #include "cull_parse_util.h"
 #include "parse.h"
+#include "sgeobj/sge_suser.h"
 
 #include "msg_common.h"
 #include "msg_sgeobjlib.h"
 
 #define OBJECT_LAYER BASIS_LAYER
 
-/* allows to change the mater list */
-typedef bool (*commitMasterList)(lList **answer_list);
-
-/* Datastructure for internal storage of object/message related information */
-typedef struct {
-   lList **list;                          /* master list                    */
-   commitMasterList commitMasterList;     /* commit master list set changes */
-   /*const*/ char *type_name;                 /* type name, e.g. "JOB"          */
-   lDescr *descr;                         /* descriptor, e.g. JB_Type       */
-   /*const*/ int key_nm;                      /* nm of key attribute            */
-} object_description;
-
 static lList *Master_Job_List = NULL;
+static lList *Master_Zombie_List = NULL;
+static lList *Master_Job_Schedd_Info_List = NULL;
+static lList *Master_CEntry_List = NULL;
+static lList *Master_HGroup_List = NULL;
+static lList *Master_Userset_List = NULL;
+static lList *Master_Project_List = NULL;
+static lList *Master_User_List = NULL;
+static lList *Master_CQueue_List = NULL;
+static lList *Master_Exechost_List = NULL;
+static lList *Master_Adminhost_List = NULL;
+static lList *Master_Submithost_List = NULL;
+static lList *Master_Calendar_List = NULL;
+static lList *Master_Ckpt_List = NULL;
+static lList *Master_Manager_List = NULL;
+static lList *Master_Operator_List = NULL;
+static lList *Master_Sharetree_List = NULL;
+static lList *Master_Pe_List = NULL;
+static lList *Master_SUser_List = NULL;
+
+#ifndef __SGE_NO_USERMAPPING__
+static lList *Master_Cuser_List = NULL;
+#endif
+
 
 /* One entry per event type */
 static object_description object_base[SGE_TYPE_ALL] = {
@@ -125,8 +137,9 @@ static object_description object_base[SGE_TYPE_ALL] = {
    { &Master_HGroup_List,          NULL,                   "HOSTGROUP",         HGRP_Type, HGRP_name         },
    { &Master_CEntry_List,          NULL,                   "COMPLEX_ENTRY",     CE_Type,   CE_name           },
    { &Master_Zombie_List,          NULL,                   "ZOMBIE_JOBS",       JB_Type,   JB_job_number     },
+   { &Master_SUser_List,           NULL,                   "SUBMIT_USER",       JB_Type,   SU_name           },
 #ifndef __SGE_NO_USERMAPPING__
-   { &Master_Cuser_List,           NULL,                   "USERMAPPING",       CU_Type,  CU_name  }
+   { &Master_Cuser_List,           NULL,                   "USERMAPPING",       CU_Type,  CU_name            }
 #endif
 };
 
@@ -172,20 +185,14 @@ static void obj_state_init(obj_state_t *state)
    int i;
 
    state->global = false;
-#if 0  
-   memcpy(state->object_base, object_base, sizeof(object_description * SGE_TYPE_ALL));
-#endif   
+
+   memcpy(state->object_base, object_base, sizeof(object_description) * SGE_TYPE_ALL);
   
    /* initialize mirroring data structures - only changeable fields */
    for (i = 0; i < SGE_TYPE_ALL; i++) {
       state->lists[i] = NULL;
       state->object_base[i].list = &(state->lists[i]);                          /* master list                    */
-#if 1      
-      state->object_base[i].commitMasterList = object_base[i].commitMasterList; /* commit master list set changes */
-      state->object_base[i].type_name = object_base[i].type_name;               /* type name, e.g. "JOB"          */
-      state->object_base[i].descr = object_base[i].descr;                       /* descriptor, e.g. JB_Type       */
-      state->object_base[i].key_nm = object_base[i].key_nm;                     /* nm of key attribute            */
-#endif      
+ 
    }
 }
 
@@ -216,19 +223,19 @@ static void obj_state_global_init(obj_state_t* state)
    int i;
 
    state->global=true;
-#if 0   
-   memcpy(state->object_base, object_base, sizeof(object_description * SGE_TYPE_ALL));
-#endif   
-   /* initialize mirroring data structures - only changeable fields */
-   for (i = 0; i < SGE_TYPE_ALL; i++) {
-      state->lists[i] = NULL;
-      state->object_base[i].list = object_base[i].list;
-#if 1      
-      state->object_base[i].commitMasterList = object_base[i].commitMasterList; /* commit master list set changes */
-      state->object_base[i].type_name = object_base[i].type_name;               /* type name, e.g. "JOB"          */
-      state->object_base[i].descr = object_base[i].descr;                       /* descriptor, e.g. JB_Type       */
-      state->object_base[i].key_nm = object_base[i].key_nm;                     /* nm of key attribute            */
-#endif      
+
+   if (state != NULL) {
+      memcpy(state->object_base, object_base, sizeof(object_description) * SGE_TYPE_ALL);
+
+      /* initialize mirroring data structures - only changeable fields */
+      for (i = 0; i < SGE_TYPE_ALL; i++) {
+         state->lists[i] = NULL;
+         state->object_base[i].list = object_base[i].list;
+      }
+   }
+   else {
+      /* SG: we need a error message */
+      abort();
    }
 }
 
@@ -1203,20 +1210,111 @@ lList **object_type_get_master_list(const sge_object_type type)
    DRETURN(ret);
 }
 
+/****** sgeobj/object/sge_master_list() **************************
+*  NAME
+*     sge_master_list() -- get master list for object type
+*
+*  SYNOPSIS
+*     lList** sge_master_list(const object_description *object_base,
+*                             const sge_object_type type) 
+*
+*  FUNCTION
+*     Returns a pointer to the master list holding objects of the 
+*     given type.
+*
+*  INPUTS
+*     const sge_object_type type - the object type 
+*
+*  RESULT
+*     lList** - the corresponding master list, or NULL, if the object 
+*               type has no associated master list
+*
+*  EXAMPLE
+*     object_type_get_master_list(SGE_TYPE_JOB) will return a pointer 
+*     to the Master_Job_List.
+*
+*     object_type_get_master_list(SGE_TYPE_SHUTDOWN) will return NULL,
+*     as this object type has no associated master list.
+*
+*  NOTES
+*
+*  SEE ALSO
+*     sgeobj/object/object_type_get_master_list()
+*     sgeobj/object/object_type_get_name()
+*     sgeobj/object/object_type_get_descr()
+*     sgeobj/object/object_type_get_key_nm()
+*******************************************************************************/
+lList **sge_master_list(const object_description *object_base, const sge_object_type type)
+{
+   lList **ret = NULL;
+
+   DENTER(OBJECT_LAYER, "sge_master_list");
+
+   if (type >= 0 || type < SGE_TYPE_ALL) {
+      
+      if (object_base[type].list != NULL) {
+         ret = object_base[type].list;
+      } else {
+         ERROR((SGE_EVENT, MSG_OBJECT_NO_LIST_TO_MOD_TYPE_SI, SGE_FUNC, type));
+      }
+   } else {
+      ERROR((SGE_EVENT, MSG_OBJECT_INVALID_OBJECT_TYPE_SI, SGE_FUNC, type));
+   }
+   
+   DRETURN(ret);
+}
+
+
+/****** sge_object/object_type_get_object_description() ************************
+*  NAME
+*     object_type_get_object_description() -- gets the master list table
+*
+*  SYNOPSIS
+*     object_description* object_type_get_object_description() 
+*
+*  FUNCTION
+*     ??? 
+*
+*  RESULT
+*     object_description* - the table with all master lists and its information
+*
+*  NOTES
+*     MT-NOTE: object_type_get_object_description() is MT safe 
+*
+*  SEE ALSO
+*     sgeobj/object/object_type_get_master_list()
+*     sgeobj/object/object_type_get_name()
+*     sgeobj/object/object_type_get_descr()
+*     sgeobj/object/object_type_get_key_nm()
+*******************************************************************************/
+object_description *object_type_get_object_description(void)
+{
+   object_description *ret = NULL;
+
+   DENTER(OBJECT_LAYER, "object_type_get_object_description");
+   {
+      GET_SPECIFIC(obj_state_t, obj_state, obj_state_global_init, obj_state_key, "object_type_get_object_description");
+    
+      ret = obj_state->object_base;
+   } 
+   DRETURN(ret);
+}
+
+
 bool object_type_commit_master_list(const sge_object_type type, lList **answer_list) 
 {
-   bool ret = false;
+   bool ret = true;
    
    DENTER(OBJECT_LAYER, "object_type_set_master_list");
    
    if (type >= 0 || type < SGE_TYPE_ALL) {
-      GET_SPECIFIC(obj_state_t, obj_state, obj_state_global_init, obj_state_key, SGE_FUNC);
       
-      if (obj_state->object_base[type].commitMasterList) {
-         ret = obj_state->object_base[type].commitMasterList(answer_list);
+      if (object_base[type].commitMasterList) {
+         ret = object_base[type].commitMasterList(answer_list);
       }
    } else {
          ERROR((SGE_EVENT, MSG_OBJECT_INVALID_OBJECT_TYPE_SI, SGE_FUNC, type));
+         ret = false;
    }
 
    DRETURN(ret);

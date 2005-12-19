@@ -57,8 +57,6 @@
 
 #define CENTRY_LAYER BASIS_LAYER
 
-lList *Master_CEntry_List = NULL;
-
 /* EB: ADOC: add commets */
 
 static int

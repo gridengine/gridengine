@@ -132,6 +132,8 @@ sge_gdi_qmod(char *host, sge_gdi_request *request, sge_gdi_request *answer, moni
    gid_t gid;
    char user[128];
    char group[128];
+   lList *master_hgroup_list = *(object_type_get_master_list(SGE_TYPE_HGROUP));
+   lList *cqueue_list = *(object_type_get_master_list(SGE_TYPE_CQUEUE));
    
    DENTER(TOP_LAYER, "sge_gdi_qmod");
 
@@ -156,7 +158,6 @@ sge_gdi_qmod(char *host, sge_gdi_request *request, sge_gdi_request *answer, moni
    ** if necessary
    */
    for_each(dep, request->lp) {
-      lList *cqueue_list = *(object_type_get_master_list(SGE_TYPE_CQUEUE));
       lList *tmp_list = NULL;
       lList *qref_list = NULL;
       bool found_something = true;
@@ -169,7 +170,7 @@ sge_gdi_qmod(char *host, sge_gdi_request *request, sge_gdi_request *answer, moni
          qref_list_resolve_hostname(qref_list);
          qref_list_resolve(qref_list, NULL, &tmp_list, 
                            &found_something, cqueue_list,
-                           *(object_type_get_master_list(SGE_TYPE_HGROUP)), 
+                           master_hgroup_list,
                            true, true);
          if (found_something) { 
             lListElem *qref = NULL;
@@ -1098,7 +1099,7 @@ monitoring_t *monitor
          lListElem *hep = NULL;
          const lListElem *simhost = NULL;
 
-         hep = host_list_locate(Master_Exechost_List, hnm);
+         hep = host_list_locate(*object_type_get_master_list(SGE_TYPE_EXECHOST), hnm);
          if(hep != NULL) {
             simhost = lGetSubStr(hep, CE_name, "simhost", EH_consumable_config_list);
             if(simhost != NULL) {
@@ -1241,7 +1242,7 @@ monitoring_t *monitor
             since they are not known to the apropriate execd - we should
             omit signalling in this case to prevent waste of communication bandwith */ 
          if (!(pe_name=lGetString(jatep, JAT_granted_pe)) ||
-             !pe_list_locate(Master_Pe_List, pe_name))
+             !pe_list_locate(*object_type_get_master_list(SGE_TYPE_PE), pe_name))
             continue;
 
          for (gdil_ep=lNext(lFirst(gdil_lp)); gdil_ep; gdil_ep=lNext(gdil_ep))
@@ -1285,7 +1286,7 @@ static void signal_slave_tasks_of_job(int how, lListElem *jep, lListElem *jatep,
       in case of slave controlled jobs */
    if ( !((lGetNumberOfElem(gdil_lp=lGetList(jatep, JAT_granted_destin_identifier_list)))<=1 || 
          !(pe_name=lGetString(jatep, JAT_granted_pe)) ||
-         !(pe=pe_list_locate(Master_Pe_List, pe_name)) ||
+         !(pe=pe_list_locate(*object_type_get_master_list(SGE_TYPE_PE), pe_name)) ||
          !lGetBool(pe, PE_control_slaves)))
       for (gdil_ep=lNext(lFirst(gdil_lp)); gdil_ep; gdil_ep=lNext(gdil_ep))
          if ((mq = cqueue_list_locate_qinstance(*(object_type_get_master_list(SGE_TYPE_CQUEUE)), qname = lGetString(gdil_ep, JG_qname)))) {

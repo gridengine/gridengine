@@ -256,6 +256,7 @@ int sge_del_pe(lListElem *pep, lList **alpp, char *ruser, char *rhost)
    int pos;
    lListElem *ep = NULL;
    const char *pe = NULL;
+   lList *master_pe_list = *object_type_get_master_list(SGE_TYPE_PE);
 
    DENTER(TOP_LAYER, "sge_del_pe");
 
@@ -282,7 +283,7 @@ int sge_del_pe(lListElem *pep, lList **alpp, char *ruser, char *rhost)
       return STATUS_EUNKNOWN;
    }
 
-   if ((ep=pe_list_locate(Master_Pe_List, pe))==NULL) {
+   if ((ep=pe_list_locate(master_pe_list, pe))==NULL) {
       ERROR((SGE_EVENT, MSG_SGETEXT_DOESNOTEXIST_SS, object_name, pe));
       answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
       DEXIT;
@@ -318,7 +319,7 @@ int sge_del_pe(lListElem *pep, lList **alpp, char *ruser, char *rhost)
    }
 
    /* delete found pe element */
-   lRemoveElem(Master_Pe_List, &ep);
+   lRemoveElem(master_pe_list, &ep);
 
    INFO((SGE_EVENT, MSG_SGETEXT_REMOVEDFROMLIST_SSSS, 
          ruser, rhost, pe, object_name ));

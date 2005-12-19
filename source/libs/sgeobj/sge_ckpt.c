@@ -53,8 +53,6 @@
 #include "msg_common.h"
 #include "msg_sgeobjlib.h"
 
-lList *Master_Ckpt_List = NULL;
-
 /****** sgeobj/ckpt/ckpt_is_referenced() **************************************
 *  NAME
 *     ckpt_is_referenced() -- Is a given CKPT referenced in other objects? 

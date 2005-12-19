@@ -82,6 +82,7 @@ host_update_master_list(sge_object_type type, sge_event_action action,
    int     key_nm;
 
    const char *key;
+   object_description *object_base = object_type_get_object_description();
 
 
    DENTER(TOP_LAYER, "host_update_master_list");
@@ -90,22 +91,19 @@ host_update_master_list(sge_object_type type, sge_event_action action,
    
    switch (type) {
       case SGE_TYPE_ADMINHOST:
-         list = &Master_Adminhost_List;
-/*         list_descr = AH_Type;*/
+         list = object_base[SGE_TYPE_ADMINHOST].list;
          key_nm = AH_name;
          break;
       case SGE_TYPE_EXECHOST:
-         list = &Master_Exechost_List;
-/*         list_descr = EH_Type; */
+         list = object_base[SGE_TYPE_EXECHOST].list;
          key_nm = EH_name;
          break;
       case SGE_TYPE_SUBMITHOST:
-         list = &Master_Submithost_List;
-/*         list_descr = SH_Type; */
+         list = object_base[SGE_TYPE_SUBMITHOST].list;
          key_nm = SH_name;
          break;
       case SGE_TYPE_HGROUP:
-         list = &Master_HGroup_List;
+         list = object_base[SGE_TYPE_HGROUP].list;
          key_nm = HGRP_name;
          break;
       default:

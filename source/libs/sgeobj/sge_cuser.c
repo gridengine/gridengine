@@ -52,8 +52,6 @@
 
 #ifndef __SGE_NO_USERMAPPING__
 
-lList *Master_Cuser_List = NULL;
-
 /* EB: ADOC: add comments */
 
 lListElem *

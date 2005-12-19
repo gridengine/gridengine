@@ -456,7 +456,6 @@ lListElem *conf
          }
       }
 
-
       if (!strcmp(name, "admin_user")) {
          struct passwd pw_struct;
          char buffer[2048];
@@ -503,7 +502,7 @@ lListElem *conf
          }
 
          /* .. checking project names */
-         ok = (verify_userprj_list(alpp, tmp, Master_Project_List,
+         ok = (verify_userprj_list(alpp, tmp, *object_type_get_master_list(SGE_TYPE_PROJECT),
                     name, "configuration", conf_name)==STATUS_OK);
          lFreeList(&tmp);
          if (!ok) {

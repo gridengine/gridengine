@@ -116,12 +116,12 @@ static bool read_spooled_data(void)
       DPRINTF(("read %d entries to Master_Sched_Config_List\n", lGetNumberOfElem(sconf_get_config_list())));
    }
    /* complexes */
-   spool_read_list(&answer_list, context, &Master_CEntry_List, SGE_TYPE_CENTRY);
+   spool_read_list(&answer_list, context, object_type_get_master_list(SGE_TYPE_CENTRY), SGE_TYPE_CENTRY);
    answer_list_output(&answer_list);
-   DPRINTF(("read %d entries to Master_CEntry_List\n", lGetNumberOfElem(Master_CEntry_List)));
+   DPRINTF(("read %d entries to Master_CEntry_List\n", lGetNumberOfElem(*object_type_get_master_list(SGE_TYPE_CENTRY))));
 
    /* hosts */
-   spool_read_list(&answer_list, context, &Master_Exechost_List, SGE_TYPE_EXECHOST);
+   spool_read_list(&answer_list, context, object_type_get_master_list(SGE_TYPE_EXECHOST), SGE_TYPE_EXECHOST);
    answer_list_output(&answer_list);
    DPRINTF(("read %d entries to Master_Exechost_List\n", lGetNumberOfElem(Master_Exechost_List)));
    spool_read_list(&answer_list, context, &Master_Adminhost_List, SGE_TYPE_ADMINHOST);
@@ -137,9 +137,10 @@ static bool read_spooled_data(void)
    DPRINTF(("read %d entries to Master_Manager_List\n", lGetNumberOfElem(Master_Manager_List)));
 
    /* host groups */
-   spool_read_list(&answer_list, context, &Master_HGroup_List, SGE_TYPE_HGROUP);
+   spool_read_list(&answer_list, context, object_type_get_master_list(SGE_TYPE_HGROUP), SGE_TYPE_HGROUP);
    answer_list_output(&answer_list);
-   DPRINTF(("read %d entries to Master_Hostgroup_List\n", lGetNumberOfElem(Master_HGroup_List)));
+   DPRINTF(("read %d entries to Master_Hostgroup_List\n", 
+            lGetNumberOfElem(*object_type_get_master_list(SGE_TYPE_HGROUP))));
 
    /* operators */
    spool_read_list(&answer_list, context, &Master_Operator_List, SGE_TYPE_OPERATOR);
@@ -158,9 +159,9 @@ static bool read_spooled_data(void)
 
 #ifndef __SGE_NO_USERMAPPING__
    /* user mapping */
-   spool_read_list(&answer_list, context, &Master_Cuser_List, SGE_TYPE_CUSER);
+   spool_read_list(&answer_list, context, object_type_get_master_list(SGE_TYPE_CUSER), SGE_TYPE_CUSER);
    answer_list_output(&answer_list);
-   DPRINTF(("read %d entries to Master_Cuser_List\n", lGetNumberOfElem(Master_Cuser_List)));
+   DPRINTF(("read %d entries to Master_Cuser_List\n", lGetNumberOfElem(*object_type_get_master_list(SGE_TYPE_CUSER))));
 #endif
 
    /* queues */

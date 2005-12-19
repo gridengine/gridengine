@@ -156,7 +156,8 @@ static mirror_description mirror_base[SGE_TYPE_ALL] = {
    { NULL, generic_update_master_list,             NULL, NULL },
    { NULL, host_update_master_list,                NULL, NULL }, /*hgroup*/
    { NULL, generic_update_master_list,             NULL, NULL },
-   { NULL, generic_update_master_list,             NULL, NULL },
+   { NULL, generic_update_master_list,             NULL, NULL }, /*zombie*/
+   { NULL, generic_update_master_list,             NULL, NULL }, /*suser*/
 #ifndef __SGE_NO_USERMAPPING__
    { NULL, NULL,                                   NULL, NULL },
 #endif
@@ -655,6 +656,9 @@ _sge_mirror_subscribe(sge_object_type type,
       case SGE_TYPE_ZOMBIE:
             return SGE_EM_NOT_INITIALIZED;
 
+      case SGE_TYPE_SUSER:
+            return SGE_EM_NOT_INITIALIZED;
+            
       default:
          return SGE_EM_BAD_ARG;
    }
@@ -879,6 +883,9 @@ static sge_mirror_error _sge_mirror_unsubscribe(sge_object_type type)
          break;
 #endif
       case SGE_TYPE_ZOMBIE:
+            DEXIT;
+            return SGE_EM_NOT_INITIALIZED;
+      case SGE_TYPE_SUSER:
             DEXIT;
             return SGE_EM_NOT_INITIALIZED;
       default:
@@ -1464,12 +1471,12 @@ generic_update_master_list(sge_object_type type, sge_event_action action,
    DENTER(TOP_LAYER, "generic_update_master_list");
 
    list       = object_type_get_master_list(type);
-   list_descr = lGetListDescr(lGetList(event, ET_new_version)); /*   object_type_get_descr(type); */
+   list_descr = lGetListDescr(lGetList(event, ET_new_version));
    key_nm     = object_type_get_key_nm(type);
 
    key = lGetString(event, ET_strkey);
 
-   if(sge_mirror_update_master_list_str_key(list, list_descr, key_nm, key, action, event) != SGE_EM_OK) {
+   if (sge_mirror_update_master_list_str_key(list, list_descr, key_nm, key, action, event) != SGE_EM_OK) {
       DEXIT;
       return false;
    }
@@ -1621,6 +1628,7 @@ sge_mirror_update_master_list(lList **list, const lDescr *list_descr,
    lList *data_list = NULL;
 
    DENTER(TOP_LAYER, "sge_mirror_update_master_list");
+
    switch(action) {
       case SGE_EMA_LIST:
          /* switch to new list */

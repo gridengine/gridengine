@@ -33,6 +33,7 @@
 /*___INFO__MARK_END__*/       
 
 #include "cull.h"
+#include "cull_list.h"
 
 #include "sge_dstring.h"
 
@@ -106,7 +107,9 @@
 *        SGE_TYPE_USER
 *        SGE_TYPE_USERSET
 *        SGE_TYPE_CUSER
-*        SGE_TYPE_CENTRY
+*        SGE_TYPE_CENTRY   
+*        SGE_TYPE_ZOMBIE
+*        SGE_TYPE_SUSER
 *
 *     If usermapping is enabled, an additional object type is defined:
 *        SGE_TYPE_HGROUP
@@ -141,6 +144,8 @@ typedef enum {
    SGE_TYPE_HGROUP,           /*24*/
    SGE_TYPE_CENTRY,           /*25*/   
    SGE_TYPE_ZOMBIE,           /*26*/
+   SGE_TYPE_SUSER,            /*27*/
+
 
    /*
     * Don't forget to edit
@@ -161,14 +166,32 @@ typedef enum {
    SGE_TYPE_NONE            /* this must the last entry */
 } sge_object_type;
 
+typedef bool (*commitMasterList)(lList **answer_list);
+
+/* Datastructure for internal storage of object/message related information */
+typedef struct {
+   lList **list;                          /* master list                    */
+   commitMasterList commitMasterList;     /* commit master list set changes */
+   const char *type_name;                 /* type name, e.g. "JOB"      */
+   lDescr *descr;                         /* descriptor, e.g. JB_Type       */
+   const int key_nm;                      /* nm of key attribute        */
+} object_description;
+
+
 void obj_init_mt(void);
 void obj_init(bool is_global);
 
 lList **
 object_type_get_master_list(const sge_object_type type);
 
+lList **
+sge_master_list(const object_description *object_base, const sge_object_type type);
+
 bool 
 object_type_commit_master_list(const sge_object_type type, lList **answer_list); 
+
+
+object_description *object_type_get_object_description(void);
 
 bool
 object_type_free_master_list(const sge_object_type type);

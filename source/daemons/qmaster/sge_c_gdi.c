@@ -110,10 +110,10 @@ static void sge_c_gdi_permcheck(char *host, sge_gdi_request *request, sge_gdi_re
 static void sge_gdi_do_permcheck(char *host, sge_gdi_request *request, sge_gdi_request *answer);
 
 static void sge_c_gdi_trigger(char *host, sge_gdi_request *request, sge_gdi_request *answer, 
-                              monitoring_t *monitor);
+                              monitoring_t *monitor, object_description *object_base);
 
 static void sge_gdi_shutdown_event_client(const char*, sge_gdi_request*, sge_gdi_request*, 
-                                          monitoring_t *monitor);
+                                          monitoring_t *monitor, object_description *object_base);
 
 static int  get_client_id(lListElem*, int*);
 
@@ -122,8 +122,10 @@ static void trigger_scheduler_monitoring(char*, sge_gdi_request*, sge_gdi_reques
 static int sge_chck_mod_perm_user(lList **alpp, u_long32 target, char *user, monitoring_t *monitor);
 static int sge_chck_mod_perm_host(lList **alpp, u_long32 target, char *host, 
                                   char *commproc, int mod, lListElem *ep, 
-                                  bool is_locked, monitoring_t *monitor);
-static int sge_chck_get_perm_host(lList **alpp, sge_gdi_request *request, monitoring_t *monitor);
+                                  bool is_locked, monitoring_t *monitor,
+                                  object_description *object_base);
+static int sge_chck_get_perm_host(lList **alpp, sge_gdi_request *request, monitoring_t *monitor,
+                                  object_description *object_base);
 
 
 static int schedd_mod(lList **alpp, lListElem *modp, lListElem *ep, int add, 
@@ -263,6 +265,7 @@ sge_c_gdi(char *host, sge_gdi_request *request, sge_gdi_request *response,
    char user[128];
    char group[128];
    lList *local_answer_list = NULL;
+   object_description *object_base = object_type_get_object_description();
 
    DENTER(TOP_LAYER, "sge_c_gdi");
 
@@ -408,7 +411,7 @@ sge_c_gdi(char *host, sge_gdi_request *request, sge_gdi_request *response,
       break;
 
    case SGE_GDI_TRIGGER:
-      sge_c_gdi_trigger(host, request, response, monitor);
+      sge_c_gdi_trigger(host, request, response, monitor, object_base);
       break;
 
    case SGE_GDI_PERMCHECK:
@@ -469,12 +472,13 @@ sge_c_gdi_get(gdi_object_t *ao, char *host, sge_gdi_request *request,
    char group[128];
    dstring ds;
    char buffer[256];
+   object_description *object_base = object_type_get_object_description();
 
    DENTER(TOP_LAYER, "sge_c_gdi_get");
 
    sge_dstring_init(&ds, buffer, sizeof(buffer));
 
-   if (sge_chck_get_perm_host(&(answer->alp), request, monitor)) {
+   if (sge_chck_get_perm_host(&(answer->alp), request, monitor, object_base)) {
       gdi_request_pack_result(answer, &local_answer_list, pb);
       DEXIT;
       return;
@@ -748,6 +752,7 @@ sge_c_gdi_add(gdi_object_t *ao, char *host, sge_gdi_request *request,
    lList *ticket_orders = NULL;
    dstring ds;
    char buffer[256];
+   object_description *object_base = object_type_get_object_description();
 
    DENTER(TOP_LAYER, "sge_c_gdi_add");
 
@@ -763,7 +768,7 @@ sge_c_gdi_add(gdi_object_t *ao, char *host, sge_gdi_request *request,
    /* check permissions of host and user */
    if ((!sge_chck_mod_perm_user(&(answer->alp), request->target, user, monitor)) &&
        (!sge_chck_mod_perm_host(&(answer->alp), request->target, request->host, 
-                                request->commproc, 0, NULL, false, monitor))) {
+                                request->commproc, 0, NULL, false, monitor, object_base))) {
 
       if (request->target == SGE_EVENT_LIST) {
          for_each (ep, request->lp) {/* is thread save. the global lock is used, when needed */
@@ -834,7 +839,7 @@ sge_c_gdi_add(gdi_object_t *ao, char *host, sge_gdi_request *request,
             switch (request->target) {
 
                case SGE_ORDER_LIST:
-                 switch (sge_follow_order(ep, &(answer->alp), user, host, &ticket_orders, monitor)) {
+                 switch (sge_follow_order(ep, &(answer->alp), user, host, &ticket_orders, monitor, object_base)) {
                     case STATUS_OK :
                     case  0 : /* everything went fine */
                        break;
@@ -858,11 +863,11 @@ sge_c_gdi_add(gdi_object_t *ao, char *host, sge_gdi_request *request,
                   break;
 
                case SGE_USERSET_LIST:
-                  sge_add_userset(ep, &(answer->alp), &Master_Userset_List, user, host);
+                  sge_add_userset(ep, &(answer->alp), object_base[SGE_TYPE_USERSET].list, user, host);
                   break;
 
                case SGE_SHARETREE_LIST:
-                  sge_add_sharetree(ep, &Master_Sharetree_List, &(answer->alp), user, host);
+                  sge_add_sharetree(ep, object_base[SGE_TYPE_SHARETREE].list, &(answer->alp), user, host);
                   break;
 
                default:
@@ -902,7 +907,7 @@ sge_c_gdi_add(gdi_object_t *ao, char *host, sge_gdi_request *request,
       if (sge_conf_is_reprioritize()) {
 
          MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE), monitor);
-         distribute_ticket_orders(ticket_orders, monitor);
+         distribute_ticket_orders(ticket_orders, monitor, object_base);
          SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
 
       }
@@ -928,6 +933,7 @@ static void sge_c_gdi_del(char *host, sge_gdi_request *request, sge_gdi_request 
    lListElem *ep;
    dstring ds;
    char buffer[256];
+   object_description *object_base = object_type_get_object_description();
 
    DENTER(GDI_LAYER, "sge_c_gdi_del");
 
@@ -941,7 +947,7 @@ static void sge_c_gdi_del(char *host, sge_gdi_request *request, sge_gdi_request 
       }
       
       if (sge_chck_mod_perm_host(&(answer->alp), request->target, request->host, 
-                                 request->commproc, 0, NULL, false, monitor)) {
+                                 request->commproc, 0, NULL, false, monitor, object_base)) {
          DEXIT;
          return;
       }
@@ -950,7 +956,7 @@ static void sge_c_gdi_del(char *host, sge_gdi_request *request, sge_gdi_request 
       {
          case SGE_SHARETREE_LIST:
             MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE), monitor);
-            sge_del_sharetree(&Master_Sharetree_List, &(answer->alp), user,host);
+            sge_del_sharetree(object_base[SGE_TYPE_SHARETREE].list, &(answer->alp), user,host);
             SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
             break;
             
@@ -968,7 +974,7 @@ static void sge_c_gdi_del(char *host, sge_gdi_request *request, sge_gdi_request 
       }  
 
       if (sge_chck_mod_perm_host(&(answer->alp), request->target, request->host, 
-                                 request->commproc, 0, NULL, false, monitor)) {
+                                 request->commproc, 0, NULL, false, monitor, object_base)) {
          DEXIT;
          return;
       }
@@ -983,7 +989,7 @@ static void sge_c_gdi_del(char *host, sge_gdi_request *request, sge_gdi_request 
             case SGE_ADMINHOST_LIST:
             case SGE_SUBMITHOST_LIST:
             case SGE_EXECHOST_LIST:
-               sge_del_host(ep, &(answer->alp), user, host, request->target, Master_HGroup_List);
+               sge_del_host(ep, &(answer->alp), user, host, request->target, *object_base[SGE_TYPE_HGROUP].list);
                break;
 
             case SGE_CQUEUE_LIST:
@@ -1014,15 +1020,15 @@ static void sge_c_gdi_del(char *host, sge_gdi_request *request, sge_gdi_request 
                break;
 
             case SGE_USER_LIST:
-               sge_del_userprj(ep, &(answer->alp), &Master_User_List, user, host, 1);
+               sge_del_userprj(ep, &(answer->alp), object_base[SGE_TYPE_USER].list, user, host, 1);
                break;
 
             case SGE_USERSET_LIST:
-               sge_del_userset(ep, &(answer->alp), &Master_Userset_List, user, host);
+               sge_del_userset(ep, &(answer->alp), object_base[SGE_TYPE_USERSET].list, user, host);
                break;
 
             case SGE_PROJECT_LIST:
-               sge_del_userprj(ep, &(answer->alp), &Master_Project_List, user, host, 0);
+               sge_del_userprj(ep, &(answer->alp), object_base[SGE_TYPE_PROJECT].list, user, host, 0);
                break;
 
             case SGE_CKPT_LIST:
@@ -1061,7 +1067,8 @@ static void sge_c_gdi_copy(gdi_object_t *ao, char *host, sge_gdi_request *reques
                            sge_gdi_request *answer, int sub_command, uid_t uid, 
                            gid_t gid, char *user, char *group, monitoring_t *monitor)
 {
-   lListElem *ep;
+   lListElem *ep = NULL;
+   object_description *object_base = object_type_get_object_description();
 
    DENTER(TOP_LAYER, "sge_c_gdi_copy");
 
@@ -1079,7 +1086,7 @@ static void sge_c_gdi_copy(gdi_object_t *ao, char *host, sge_gdi_request *reques
    }
 
    if (sge_chck_mod_perm_host(&(answer->alp), request->target, request->host, 
-                              request->commproc, 0, NULL, false, monitor)) {
+                              request->commproc, 0, NULL, false, monitor, object_base)) {
       DEXIT;
       return;
    }
@@ -1230,7 +1237,7 @@ static void sge_c_gdi_permcheck(char *host, sge_gdi_request *request, sge_gdi_re
  * MT-NOTE: sge_c_gdi_trigger() is MT safe
  */
 static void sge_c_gdi_trigger(char *host, sge_gdi_request *request, sge_gdi_request *answer, 
-                              monitoring_t *monitor)
+                              monitoring_t *monitor, object_description *object_base)
 {
    u_long32 target = request->target;
    
@@ -1244,7 +1251,7 @@ static void sge_c_gdi_trigger(char *host, sge_gdi_request *request, sge_gdi_requ
 
             MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE), monitor);
             
-            if (!host_list_locate(Master_Adminhost_List, host)) {
+            if (!host_list_locate(*object_base[SGE_TYPE_ADMINHOST].list, host)) {
                ERROR((SGE_EVENT, MSG_SGETEXT_NOADMINHOST_S, host));
                answer_list_add(&(answer->alp), SGE_EVENT, STATUS_EDENIED2HOST, ANSWER_QUALITY_ERROR);
                SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
@@ -1277,7 +1284,7 @@ static void sge_c_gdi_trigger(char *host, sge_gdi_request *request, sge_gdi_requ
 
        case SGE_EVENT_LIST:
             /* kill scheduler or event client */
-            sge_gdi_shutdown_event_client(host, request, answer, monitor);
+            sge_gdi_shutdown_event_client(host, request, answer, monitor, object_base);
             answer_list_log(&answer->alp, false);
          break;
             
@@ -1321,7 +1328,8 @@ static void sge_c_gdi_trigger(char *host, sge_gdi_request *request, sge_gdi_requ
 static void sge_gdi_shutdown_event_client(const char *aHost,
                                           sge_gdi_request *aRequest,
                                           sge_gdi_request *anAnswer,
-                                          monitoring_t *monitor)
+                                          monitoring_t *monitor,
+                                          object_description *object_base)
 {
    uid_t uid = 0;
    gid_t gid = 0;
@@ -1350,12 +1358,12 @@ static void sge_gdi_shutdown_event_client(const char *aHost,
          continue;
       }
 
-      if (client_id == EV_ID_SCHEDD && !host_list_locate(Master_Adminhost_List, aHost)) {
+      if (client_id == EV_ID_SCHEDD && !host_list_locate(*object_base[SGE_TYPE_ADMINHOST].list, aHost)) {
          ERROR((SGE_EVENT, MSG_SGETEXT_NOADMINHOST_S, aHost));
          answer_list_add(&(anAnswer->alp), SGE_EVENT, STATUS_EDENIED2HOST, ANSWER_QUALITY_ERROR);
          continue;
-      } else if (!host_list_locate(Master_Submithost_List, aHost) 
-              && !host_list_locate(Master_Adminhost_List, aHost)) {
+      } else if (!host_list_locate(*object_base[SGE_TYPE_SUBMITHOST].list, aHost) 
+              && !host_list_locate(*object_base[SGE_TYPE_ADMINHOST].list, aHost)) {
          ERROR((SGE_EVENT, MSG_SGETEXT_NOSUBMITORADMINHOST_S, aHost));
          answer_list_add(&(anAnswer->alp), SGE_EVENT, STATUS_EDENIED2HOST, ANSWER_QUALITY_ERROR);
          continue;
@@ -1516,6 +1524,7 @@ static void sge_c_gdi_mod(gdi_object_t *ao, char *host, sge_gdi_request *request
    char buffer[256];
    lList *ppList = NULL; /* for postprocessing, after the lists of requests has been processed */
    bool is_locked = false;
+   object_description *object_base = object_type_get_object_description();
       
    DENTER(TOP_LAYER, "sge_c_gdi_mod");
 
@@ -1537,7 +1546,7 @@ static void sge_c_gdi_mod(gdi_object_t *ao, char *host, sge_gdi_request *request
    for_each (ep, request->lp)
    {
       if (sge_chck_mod_perm_host(&(answer->alp), request->target, request->host, 
-                                 request->commproc, 1, ep, is_locked, monitor)) {
+                                 request->commproc, 1, ep, is_locked, monitor, object_base)) {
          continue;
       }
 
@@ -1572,15 +1581,16 @@ static void sge_c_gdi_mod(gdi_object_t *ao, char *host, sge_gdi_request *request
                break;
 
             case SGE_USERSET_LIST:
-               sge_mod_userset(ep, &(answer->alp), &Master_Userset_List, user, host);
+               sge_mod_userset(ep, &(answer->alp), object_base[SGE_TYPE_USERSET].list,
+                               user, host);
                break;
 
             case SGE_SHARETREE_LIST:
-               sge_mod_sharetree(ep, &Master_Sharetree_List, &(answer->alp), user, host);
+               sge_mod_sharetree(ep, object_base[SGE_TYPE_SHARETREE].list,
+                                 &(answer->alp), user, host);
                break;
             default:
-               if (!ao)
-               {
+               if (ao == NULL) {
                   SGE_ADD_MSG_ID( sprintf(SGE_EVENT, MSG_SGETEXT_OPNOIMPFORTARGET));
                   answer_list_add(&(answer->alp), SGE_EVENT, STATUS_ENOIMP, ANSWER_QUALITY_ERROR);
                   break;
@@ -1704,7 +1714,8 @@ static int sge_chck_mod_perm_user(lList **alpp, u_long32 target, char *user, mon
  */
 static int sge_chck_mod_perm_host(lList **alpp, u_long32 target, char *host, 
                                   char *commproc, int mod, lListElem *ep, 
-                                  bool is_locked, monitoring_t *monitor)
+                                  bool is_locked, monitoring_t *monitor,
+                                  object_description *object_base)
 {
    DENTER(TOP_LAYER, "sge_chck_mod_perm_host");
 
@@ -1735,7 +1746,7 @@ static int sge_chck_mod_perm_host(lList **alpp, u_long32 target, char *host,
    case SGE_HGROUP_LIST:
       
       /* host must be SGE_ADMINHOST_LIST */
-      if (!host_list_locate(Master_Adminhost_List, host)) {
+      if (!host_list_locate(*object_base[SGE_TYPE_ADMINHOST].list, host)) {
          ERROR((SGE_EVENT, MSG_SGETEXT_NOADMINHOST_S, host));
          answer_list_add(alpp, SGE_EVENT, STATUS_EDENIED2HOST, ANSWER_QUALITY_ERROR);
          SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
@@ -1748,8 +1759,8 @@ static int sge_chck_mod_perm_host(lList **alpp, u_long32 target, char *host,
       
       /* host must be either admin host or exec host and execd */
 
-      if (!(host_list_locate(Master_Adminhost_List, host) ||
-         (host_list_locate(Master_Exechost_List, host) && !strcmp(commproc, prognames[EXECD])))) {
+      if (!(host_list_locate(*object_base[SGE_TYPE_ADMINHOST].list, host) ||
+         (host_list_locate(*object_base[SGE_TYPE_EXECHOST].list, host) && !strcmp(commproc, prognames[EXECD])))) {
          ERROR((SGE_EVENT, MSG_SGETEXT_NOADMINHOST_S, host));
          answer_list_add(alpp, SGE_EVENT, STATUS_EDENIED2HOST, ANSWER_QUALITY_ERROR);
          SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
@@ -1766,7 +1777,7 @@ static int sge_chck_mod_perm_host(lList **alpp, u_long32 target, char *host,
       */
       if ( mod && (lGetPosViaElem(ep, JB_override_tickets) >= 0)) {
          /* host must be SGE_ADMINHOST_LIST */
-         if (!host_list_locate(Master_Adminhost_List, host)) {
+         if (!host_list_locate(*object_base[SGE_TYPE_ADMINHOST].list, host)) {
             ERROR((SGE_EVENT, MSG_SGETEXT_NOADMINHOST_S, host));
             answer_list_add(alpp, SGE_EVENT, STATUS_EDENIED2HOST, ANSWER_QUALITY_ERROR);
             SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
@@ -1777,7 +1788,7 @@ static int sge_chck_mod_perm_host(lList **alpp, u_long32 target, char *host,
       }    
 #endif      
       /* host must be SGE_SUBMITHOST_LIST */
-      if (!host_list_locate(Master_Submithost_List, host)) {
+      if (!host_list_locate(*object_base[SGE_TYPE_SUBMITHOST].list, host)) {
          ERROR((SGE_EVENT, MSG_SGETEXT_NOSUBMITHOST_S, host));
          answer_list_add(alpp, SGE_EVENT, STATUS_EDENIED2HOST, ANSWER_QUALITY_ERROR);
          SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
@@ -1791,8 +1802,8 @@ static int sge_chck_mod_perm_host(lList **alpp, u_long32 target, char *host,
          performs modify requests on itself
          it must be on a submit or an admin host 
        */
-      if ( (!host_list_locate(Master_Submithost_List, host)) 
-        && (!host_list_locate(Master_Adminhost_List, host))) {
+      if ( (!host_list_locate(*object_base[SGE_TYPE_SUBMITHOST].list, host)) 
+        && (!host_list_locate(*object_base[SGE_TYPE_ADMINHOST].list, host))) {
         ERROR((SGE_EVENT, MSG_SGETEXT_NOSUBMITORADMINHOST_S, host));
         answer_list_add(alpp, SGE_EVENT, STATUS_EDENIED2HOST, ANSWER_QUALITY_ERROR);
         SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
@@ -1820,7 +1831,8 @@ static int sge_chck_mod_perm_host(lList **alpp, u_long32 target, char *host,
  * MT-NOTE: sge_chck_get_perm_host() is MT safe
  */
 static int 
-sge_chck_get_perm_host(lList **alpp, sge_gdi_request *request, monitoring_t *monitor)
+sge_chck_get_perm_host(lList **alpp, sge_gdi_request *request, monitoring_t *monitor,
+                       object_description *object_base)
 {
    u_long32 target;
    char *host     = NULL;
@@ -1866,8 +1878,8 @@ sge_chck_get_perm_host(lList **alpp, sge_gdi_request *request, monitoring_t *mon
    case SGE_JOB_SCHEDD_INFO:
       
       /* host must be admin or submit host */
-      if ( !host_list_locate(Master_Adminhost_List, host) &&
-           !host_list_locate(Master_Submithost_List, host)) {
+      if ( !host_list_locate(*object_base[SGE_TYPE_ADMINHOST].list, host) &&
+           !host_list_locate(*object_base[SGE_TYPE_SUBMITHOST].list, host)) {
 
          if (last_id != request->id) {     /* only log the first error
                                               in an api multi request */
@@ -1885,9 +1897,9 @@ sge_chck_get_perm_host(lList **alpp, sge_gdi_request *request, monitoring_t *mon
 
    case SGE_CONFIG_LIST:
       /* host must be admin or submit host or exec host */
-      if ( !host_list_locate(Master_Adminhost_List, host) &&
-           !host_list_locate(Master_Submithost_List, host) &&
-           !host_list_locate(Master_Exechost_List, host)) {
+      if ( !host_list_locate(*object_base[SGE_TYPE_ADMINHOST].list, host) &&
+           !host_list_locate(*object_base[SGE_TYPE_SUBMITHOST].list, host) &&
+           !host_list_locate(*object_base[SGE_TYPE_EXECHOST].list, host)) {
          if (last_id != request->id) {  /* only log the first error
                                               in an api multi request */
             ERROR((SGE_EVENT, MSG_SGETEXT_NOSUBMITORADMINHOST_S, host));

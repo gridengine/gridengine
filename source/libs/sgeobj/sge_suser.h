@@ -36,8 +36,6 @@
 #   include "sge_gdiP.h"
 #endif             
 
-extern lList *Master_SUser_List;
-
 lListElem *suser_list_add(lList **suser_list, lList **answer_list,
                           const char *suser_name);
 

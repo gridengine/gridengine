@@ -152,6 +152,7 @@ monitoring_t *monitor
    lListElem *jep, *jr, *ep, *jatep = NULL; 
    u_long32 jobid, rstate = 0, jataskid = 0;
    const char *s;
+   object_description *object_base = object_type_get_object_description();
 
    DENTER(TOP_LAYER, "process_job_report");
 
@@ -208,7 +209,7 @@ monitoring_t *monitor
          continue;
       }
 
-      jep = job_list_locate(*(object_type_get_master_list(SGE_TYPE_JOB)), jobid);
+      jep = job_list_locate(*object_base[SGE_TYPE_JOB].list, jobid);
       if(jep != NULL) {
          jatep = lGetElemUlong(lGetList(jep, JB_ja_tasks), JAT_task_number, jataskid);
       }
@@ -345,7 +346,7 @@ monitoring_t *monitor
 
                   /* do we expect a pe task report from this host? */
                   if (lGetString(jatep, JAT_granted_pe)
-                        && (pe=pe_list_locate(Master_Pe_List, lGetString(jatep, JAT_granted_pe)))
+                        && (pe=pe_list_locate(*object_base[SGE_TYPE_PE].list, lGetString(jatep, JAT_granted_pe)))
                         && lGetBool(pe, PE_control_slaves)
                         && lGetElemHost(lGetList(jatep, JAT_granted_destin_identifier_list), JG_qhostname, rhost)) {
 
@@ -531,7 +532,7 @@ monitoring_t *monitor
                   /* clear state with regards to slave controlled container */
                   lListElem *host;
 
-                  host = host_list_locate(Master_Exechost_List, rhost);
+                  host = host_list_locate(*object_base[SGE_TYPE_EXECHOST].list, rhost);
                   update_reschedule_unknown_list_for_job(host, jobid, jataskid);
 
                   DPRINTF(("RU: CLEANUP FOR SLAVE JOB "sge_u32"."sge_u32" on host "SFN"\n", 
@@ -676,7 +677,7 @@ monitoring_t *monitor
             } else {
                lListElem *pe;
                if ( lGetString(jatep, JAT_granted_pe)
-                  && (pe=pe_list_locate(Master_Pe_List, lGetString(jatep, JAT_granted_pe)))
+                  && (pe=pe_list_locate(*object_base[SGE_TYPE_PE].list, lGetString(jatep, JAT_granted_pe)))
                   && lGetBool(pe, PE_control_slaves)
                   && lGetElemHost(lGetList(jatep, JAT_granted_destin_identifier_list), JG_qhostname, rhost)) {
                   /* 

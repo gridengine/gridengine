@@ -225,7 +225,7 @@ qinstance_create(const lListElem *cqueue, lList **answer_list,
     *    - qversion
     */
    qinstance_state_set_unknown(ret, true);
-   qinstance_check_unknown_state(ret, Master_Exechost_List);
+   qinstance_check_unknown_state(ret, *object_type_get_master_list(SGE_TYPE_EXECHOST));
    qinstance_set_initial_state(ret);
    qinstance_increase_qversion(ret);
 

@@ -40,9 +40,6 @@
 
 #include "msg_sgeobjlib.h"
 
-lList *Master_Project_List = NULL;
-lList *Master_User_List = NULL;
-
 /****** sgeobj/userprj/userprj_list_locate() **********************************
 *  NAME
 *     userprj_list_locate() -- Find a user/project in a list 

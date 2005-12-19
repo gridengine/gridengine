@@ -230,7 +230,7 @@ job_schedd_info_update_master_list(sge_object_type type,
    
    DENTER(TOP_LAYER, "job_schedd_info_update_master_list");
 
-   list = &Master_Job_Schedd_Info_List;
+   list = object_type_get_master_list(SGE_TYPE_JOB_SCHEDD_INFO);
    list_descr = SME_Type;
 
    /* We always update the whole list (consisting of one list element) */

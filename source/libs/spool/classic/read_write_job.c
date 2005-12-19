@@ -361,7 +361,8 @@ int job_write_spool_file(lListElem *job, u_long32 ja_taskid,
    if (report_long_delays)
       start = sge_get_gmt();
 
-   one_file = job_has_to_spool_one_file(job, Master_Pe_List, flags);
+   one_file = job_has_to_spool_one_file(job, *object_type_get_master_list(SGE_TYPE_PE), 
+                                        flags);
    if (one_file) {
       ret = job_write_as_single_file(job, ja_taskid, flags); 
    } else {
@@ -479,7 +480,7 @@ static int job_write_ja_task_part(lListElem *job, u_long32 ja_task_id,
 
       if ((flags & SPOOL_WITHIN_EXECD) ||
           job_is_enrolled(job, lGetUlong(ja_task, JAT_task_number))) {
-         if (job_might_be_tight_parallel(job, Master_Pe_List)) {
+         if (job_might_be_tight_parallel(job, *object_type_get_master_list(SGE_TYPE_PE))) {
             flags |= SPOOL_HANDLE_PARALLEL_TASKS;
          }
 
@@ -652,7 +653,9 @@ int job_remove_spool_file(u_long32 jobid, u_long32 ja_taskid,
    int within_execd = flags & SPOOL_WITHIN_EXECD;
    int handle_as_zombie = flags & SPOOL_HANDLE_AS_ZOMBIE;
    int one_file;
-   lList *master_list = handle_as_zombie ? Master_Zombie_List : *(object_type_get_master_list(SGE_TYPE_JOB));
+   lList *master_list = handle_as_zombie ? 
+                        *(object_type_get_master_list(SGE_TYPE_ZOMBIE)) : 
+                        *(object_type_get_master_list(SGE_TYPE_JOB));
    lListElem *job = job_list_locate(master_list, jobid);
    int try_to_remove_sub_dirs = 0;
 
@@ -660,7 +663,8 @@ int job_remove_spool_file(u_long32 jobid, u_long32 ja_taskid,
 
    sge_dstring_init(&error_string, error_string_buffer, sizeof(error_string_buffer));
 
-   one_file = job_has_to_spool_one_file(job, Master_Pe_List, flags);
+   one_file = job_has_to_spool_one_file(job, *object_type_get_master_list(SGE_TYPE_PE), 
+                                         flags);
    if (ja_taskid != 0 && pe_task_id != NULL && !one_file) {
        char pe_task_spool_file[SGE_PATH_MAX];
 

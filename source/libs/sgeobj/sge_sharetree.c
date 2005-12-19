@@ -42,9 +42,6 @@
 
 #include "sge_sharetree.h"
 
-lList *Master_Sharetree_List = NULL;
-
-
 /************************************************************************
    id_sharetree - set the sharetree node id
 ************************************************************************/

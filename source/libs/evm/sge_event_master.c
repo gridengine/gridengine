@@ -433,13 +433,15 @@ static void       flush_events(lListElem*, int);
 static void       total_update(lListElem*, monitoring_t *monitor);
 static void       build_subscription(lListElem*);
 static void       remove_event_client(lListElem *client, int aClientID, bool lock_event_master);
-static void       check_send_new_subscribed_list(const subscription_t*, const subscription_t*, lListElem*, ev_event);
+static void       check_send_new_subscribed_list(const subscription_t*, 
+                                                 const subscription_t*, lListElem*,
+                                                 ev_event event, object_description *master_table);
 static int        eventclient_subscribed(const lListElem *, ev_event, const char*);
 static int        purge_event_list(lList* aList, ev_event anEvent); 
 static bool       add_list_event_for_client(u_long32, u_long32, ev_event, u_long32, u_long32, const char*, const char*, const char*, lList*, bool);
 static void       add_list_event_direct(lListElem *event_client,
                                         lListElem *event, bool copy_event);
-static void       total_update_event(lListElem*, ev_event);
+static void       total_update_event(lListElem*, ev_event, object_description *master_table);
 static bool       list_select(subscription_t*, int, lList**, lList*, const lCondition*, const lEnumeration*, const lDescr*);
 static lListElem* elem_select(subscription_t*, lListElem*, const int[], const lCondition*, const lEnumeration*, const lDescr*, int);    
 static lListElem* eventclient_list_locate_by_adress(const char*, const char*, u_long32);
@@ -835,34 +837,34 @@ process_mod_event_client(monitoring_t *monitor)
       if (lGetBool(clio, EV_changed)) {
          subscription_t *new_sub = NULL; 
          subscription_t *old_sub = NULL; 
-
+         object_description *master_table = object_type_get_object_description();
          build_subscription(clio);
          new_sub = lGetRef(clio, EV_sub_array);
          old_sub = lGetRef(event_client, EV_sub_array);
    
          MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_READ), monitor);
    
-         check_send_new_subscribed_list(old_sub, new_sub, event_client, sgeE_ADMINHOST_LIST);
-         check_send_new_subscribed_list(old_sub, new_sub, event_client, sgeE_CALENDAR_LIST);
-         check_send_new_subscribed_list(old_sub, new_sub, event_client, sgeE_CKPT_LIST);
-         check_send_new_subscribed_list(old_sub, new_sub, event_client, sgeE_CENTRY_LIST);
-         check_send_new_subscribed_list(old_sub, new_sub, event_client, sgeE_CONFIG_LIST);
-         check_send_new_subscribed_list(old_sub, new_sub, event_client, sgeE_EXECHOST_LIST);
-         check_send_new_subscribed_list(old_sub, new_sub, event_client, sgeE_JOB_LIST);
-         check_send_new_subscribed_list(old_sub, new_sub, event_client, sgeE_JOB_SCHEDD_INFO_LIST);
-         check_send_new_subscribed_list(old_sub, new_sub, event_client, sgeE_MANAGER_LIST);
-         check_send_new_subscribed_list(old_sub, new_sub, event_client, sgeE_OPERATOR_LIST);
-         check_send_new_subscribed_list(old_sub, new_sub, event_client, sgeE_NEW_SHARETREE);
-         check_send_new_subscribed_list(old_sub, new_sub, event_client, sgeE_PE_LIST);
-         check_send_new_subscribed_list(old_sub, new_sub, event_client, sgeE_PROJECT_LIST);
-         check_send_new_subscribed_list(old_sub, new_sub, event_client, sgeE_CQUEUE_LIST);
-         check_send_new_subscribed_list(old_sub, new_sub, event_client, sgeE_SUBMITHOST_LIST);
-         check_send_new_subscribed_list(old_sub, new_sub, event_client, sgeE_USER_LIST);
-         check_send_new_subscribed_list(old_sub, new_sub, event_client, sgeE_USERSET_LIST);
-         check_send_new_subscribed_list(old_sub, new_sub, event_client, sgeE_HGROUP_LIST);
+         check_send_new_subscribed_list(old_sub, new_sub, event_client, sgeE_ADMINHOST_LIST, master_table);
+         check_send_new_subscribed_list(old_sub, new_sub, event_client, sgeE_CALENDAR_LIST, master_table);
+         check_send_new_subscribed_list(old_sub, new_sub, event_client, sgeE_CKPT_LIST, master_table);
+         check_send_new_subscribed_list(old_sub, new_sub, event_client, sgeE_CENTRY_LIST, master_table);
+         check_send_new_subscribed_list(old_sub, new_sub, event_client, sgeE_CONFIG_LIST, master_table);
+         check_send_new_subscribed_list(old_sub, new_sub, event_client, sgeE_EXECHOST_LIST, master_table);
+         check_send_new_subscribed_list(old_sub, new_sub, event_client, sgeE_JOB_LIST, master_table);
+         check_send_new_subscribed_list(old_sub, new_sub, event_client, sgeE_JOB_SCHEDD_INFO_LIST, master_table);
+         check_send_new_subscribed_list(old_sub, new_sub, event_client, sgeE_MANAGER_LIST, master_table);
+         check_send_new_subscribed_list(old_sub, new_sub, event_client, sgeE_OPERATOR_LIST, master_table);
+         check_send_new_subscribed_list(old_sub, new_sub, event_client, sgeE_NEW_SHARETREE, master_table);
+         check_send_new_subscribed_list(old_sub, new_sub, event_client, sgeE_PE_LIST, master_table);
+         check_send_new_subscribed_list(old_sub, new_sub, event_client, sgeE_PROJECT_LIST, master_table);
+         check_send_new_subscribed_list(old_sub, new_sub, event_client, sgeE_CQUEUE_LIST, master_table);
+         check_send_new_subscribed_list(old_sub, new_sub, event_client, sgeE_SUBMITHOST_LIST, master_table);
+         check_send_new_subscribed_list(old_sub, new_sub, event_client, sgeE_USER_LIST, master_table);
+         check_send_new_subscribed_list(old_sub, new_sub, event_client, sgeE_USERSET_LIST, master_table);
+         check_send_new_subscribed_list(old_sub, new_sub, event_client, sgeE_HGROUP_LIST, master_table);
 
    #ifndef __SGE_NO_USERMAPPING__
-         check_send_new_subscribed_list(old_sub, new_sub, event_client, sgeE_CUSER_LIST);
+         check_send_new_subscribed_list(old_sub, new_sub, event_client, sgeE_CUSER_LIST, master_table);
    #endif      
          
          SGE_UNLOCK(LOCK_GLOBAL, LOCK_READ);
@@ -2880,6 +2882,8 @@ static void flush_events(lListElem *event_client, int interval)
 *******************************************************************************/
 static void total_update(lListElem *event_client, monitoring_t *monitor)
 {
+   object_description *master_table = object_type_get_object_description();
+
    DENTER(TOP_LAYER, "total_update");
 
    SGE_ASSERT (event_client != NULL);
@@ -2890,30 +2894,30 @@ static void total_update(lListElem *event_client, monitoring_t *monitor)
    
    sge_set_commit_required();
   
-   total_update_event(event_client, sgeE_ADMINHOST_LIST);
-   total_update_event(event_client, sgeE_CALENDAR_LIST);
-   total_update_event(event_client, sgeE_CKPT_LIST);
-   total_update_event(event_client, sgeE_CENTRY_LIST);
-   total_update_event(event_client, sgeE_CONFIG_LIST);
-   total_update_event(event_client, sgeE_EXECHOST_LIST);
-   total_update_event(event_client, sgeE_JOB_LIST);
-   total_update_event(event_client, sgeE_JOB_SCHEDD_INFO_LIST);
-   total_update_event(event_client, sgeE_MANAGER_LIST);
-   total_update_event(event_client, sgeE_OPERATOR_LIST);
-   total_update_event(event_client, sgeE_PE_LIST);
-   total_update_event(event_client, sgeE_CQUEUE_LIST);
-   total_update_event(event_client, sgeE_SCHED_CONF);
-   total_update_event(event_client, sgeE_SUBMITHOST_LIST);
-   total_update_event(event_client, sgeE_USERSET_LIST);
+   total_update_event(event_client, sgeE_ADMINHOST_LIST, master_table);
+   total_update_event(event_client, sgeE_CALENDAR_LIST, master_table);
+   total_update_event(event_client, sgeE_CKPT_LIST, master_table);
+   total_update_event(event_client, sgeE_CENTRY_LIST, master_table);
+   total_update_event(event_client, sgeE_CONFIG_LIST, master_table);
+   total_update_event(event_client, sgeE_EXECHOST_LIST, master_table);
+   total_update_event(event_client, sgeE_JOB_LIST, master_table);
+   total_update_event(event_client, sgeE_JOB_SCHEDD_INFO_LIST, master_table);
+   total_update_event(event_client, sgeE_MANAGER_LIST, master_table);
+   total_update_event(event_client, sgeE_OPERATOR_LIST, master_table);
+   total_update_event(event_client, sgeE_PE_LIST, master_table);
+   total_update_event(event_client, sgeE_CQUEUE_LIST, master_table);
+   total_update_event(event_client, sgeE_SCHED_CONF, master_table);
+   total_update_event(event_client, sgeE_SUBMITHOST_LIST, master_table);
+   total_update_event(event_client, sgeE_USERSET_LIST, master_table);
 
-   total_update_event(event_client, sgeE_NEW_SHARETREE);
-   total_update_event(event_client, sgeE_PROJECT_LIST);
-   total_update_event(event_client, sgeE_USER_LIST);
+   total_update_event(event_client, sgeE_NEW_SHARETREE, master_table);
+   total_update_event(event_client, sgeE_PROJECT_LIST, master_table);
+   total_update_event(event_client, sgeE_USER_LIST, master_table);
 
-   total_update_event(event_client, sgeE_HGROUP_LIST);
+   total_update_event(event_client, sgeE_HGROUP_LIST, master_table);
 
 #ifndef __SGE_NO_USERMAPPING__
-   total_update_event(event_client, sgeE_CUSER_LIST);
+   total_update_event(event_client, sgeE_CUSER_LIST, master_table);
 #endif
 
    sge_commit();
@@ -3041,8 +3045,9 @@ static void build_subscription(lListElem *event_el)
 *  INPUTS
 *     const subscription_t *old_subscription - former subscription
 *     const subscription_t *new_subscription - new subscription
-*     lListElem *event_client      - the event client object
-*     ev_event event               - the event to check
+*     lListElem *event_client                - the event client object
+*     ev_event event                         - the event to check
+*     object_description *master_table       - master list table
 *
 *  SEE ALSO
 *     Eventclient/Server/total_update_event()
@@ -3051,11 +3056,12 @@ static void build_subscription(lListElem *event_el)
 static void 
 check_send_new_subscribed_list(const subscription_t *old_subscription, 
                                const subscription_t *new_subscription, 
-                               lListElem *event_client, ev_event event)
+                               lListElem *event_client, ev_event event, 
+                               object_description *master_table)
 {
    if ((new_subscription[event].subscription & EV_SUBSCRIBED) && 
        (old_subscription[event].subscription == EV_NOT_SUBSCRIBED)) {
-      total_update_event(event_client, event);
+      total_update_event(event_client, event, master_table);
    }   
 }
 
@@ -3375,11 +3381,12 @@ static void add_list_event_direct(lListElem *event_client, lListElem *event,
 *     here.
 *
 *  INPUTS
-*     lListElem *event_client - event client to receive the list
-*     ev_event type           - event describing the list to update
+*     lListElem *event_client          - event client to receive the list
+*     ev_event type                    - event describing the list to update
+*     object_description *object_base  - master list table
 *
 *******************************************************************************/
-static void total_update_event(lListElem *event_client, ev_event type) 
+static void total_update_event(lListElem *event_client, ev_event type, object_description *object_base) 
 {
    lList *lp = NULL; /* lp should be set, if we have to make a copy */
    lList *copy_lp = NULL; /* copy_lp should be used for a copy of the org. list */
@@ -3404,16 +3411,16 @@ static void total_update_event(lListElem *event_client, ev_event type)
    
       switch (type) {
          case sgeE_ADMINHOST_LIST:
-            lp = Master_Adminhost_List;
+            lp = *object_base[SGE_TYPE_ADMINHOST].list;
             break;
          case sgeE_CALENDAR_LIST:
-            lp = Master_Calendar_List;
+            lp = *object_base[SGE_TYPE_CALENDAR].list;
             break;
          case sgeE_CKPT_LIST:
-            lp = Master_Ckpt_List;
+            lp = *object_base[SGE_TYPE_CKPT].list;
             break;
          case sgeE_CENTRY_LIST:
-            lp = Master_CEntry_List;
+            lp = *object_base[SGE_TYPE_CENTRY].list;
             break;
          case sgeE_CONFIG_LIST: 
             /* sge_get_configuration() returns a copy already, we do not need to make 
@@ -3421,50 +3428,50 @@ static void total_update_event(lListElem *event_client, ev_event type)
             copy_lp = sge_get_configuration();
             break;
          case sgeE_EXECHOST_LIST:
-            lp = Master_Exechost_List;
+            lp = *object_base[SGE_TYPE_EXECHOST].list;
             break;
          case sgeE_JOB_LIST:
-            lp = *(object_type_get_master_list(SGE_TYPE_JOB));
+            lp = *object_base[SGE_TYPE_JOB].list;
             break;
          case sgeE_JOB_SCHEDD_INFO_LIST:
-            lp = Master_Job_Schedd_Info_List;
+            lp = *object_base[SGE_TYPE_JOB_SCHEDD_INFO].list;
             break;
          case sgeE_MANAGER_LIST:
-            lp = Master_Manager_List;
+            lp = *object_base[SGE_TYPE_MANAGER].list;
             break;
          case sgeE_NEW_SHARETREE:
-            lp = Master_Sharetree_List;
+            lp = *object_base[SGE_TYPE_SHARETREE].list;
             break;
          case sgeE_OPERATOR_LIST:
-            lp = Master_Operator_List;
+            lp = *object_base[SGE_TYPE_OPERATOR].list;
             break;
          case sgeE_PE_LIST:
-            lp = Master_Pe_List;
+            lp = *object_base[SGE_TYPE_PE].list;
             break;
          case sgeE_PROJECT_LIST:
-            lp = Master_Project_List;
+            lp = *object_base[SGE_TYPE_PROJECT].list;
             break;
          case sgeE_CQUEUE_LIST:
-            lp = *(object_type_get_master_list(SGE_TYPE_CQUEUE));
+            lp = *object_base[SGE_TYPE_CQUEUE].list;
             break;
          case sgeE_SCHED_CONF:
             copy_lp = sconf_get_config_list();
             break;
          case sgeE_SUBMITHOST_LIST:
-            lp = Master_Submithost_List;
+            lp = *object_base[SGE_TYPE_SUBMITHOST].list;
             break;
          case sgeE_USER_LIST:
-            lp = Master_User_List;
+            lp = *object_base[SGE_TYPE_USER].list;
             break;
          case sgeE_USERSET_LIST:
-            lp = Master_Userset_List;
+            lp = *object_base[SGE_TYPE_USERSET].list;
             break;
          case sgeE_HGROUP_LIST:
-            lp = Master_HGroup_List;
+            lp = *object_base[SGE_TYPE_HGROUP].list;
             break;
 #ifndef __SGE_NO_USERMAPPING__
          case sgeE_CUSER_LIST:
-            lp = Master_Cuser_List;
+            lp = *object_base[SGE_TYPE_CUSER].list;
             break;
 #endif
          default:

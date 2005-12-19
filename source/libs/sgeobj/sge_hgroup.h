@@ -34,9 +34,6 @@
 
 #include "sge_hgroupL.h"
 
-extern lList *Master_HGroup_List;
-
-
 bool is_hgroup_name(const char *name);
 
 bool hgroup_check_name(lList **answer_list, const char* name);

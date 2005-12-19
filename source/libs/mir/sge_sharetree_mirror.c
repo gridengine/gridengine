@@ -76,18 +76,19 @@ bool
 sharetree_update_master_list(sge_object_type type, sge_event_action action,
                              lListElem *event, void *clientdata)
 {
-   lList *src;
+   lList *src = NULL;
+   lList **master_sharetree_list = object_type_get_master_list(SGE_TYPE_SHARETREE);
 
    DENTER(TOP_LAYER, "sharetree_update_master_list");
 
    /* remove old share tree */
-   lFreeList(&Master_Sharetree_List);
+   lFreeList(master_sharetree_list);
 
    if ((src = lGetList(event, ET_new_version))) {
       /* install new one */
-      Master_Sharetree_List = lCreateList("share tree",
-        lGetElemDescr(lFirst(lGetList(event, ET_new_version))));
-      lAppendElem(Master_Sharetree_List, lDechainElem(src, lFirst(src)));
+      *master_sharetree_list = lCreateList("share tree",
+                                          lGetElemDescr(lFirst(lGetList(event, ET_new_version))));
+      lAppendElem(*master_sharetree_list, lDechainElem(src, lFirst(src)));
    }
 
    DEXIT;

@@ -35,9 +35,6 @@
 #include "sge_object.h"
 #include "sgermon.h"
 
-lList *Master_Manager_List = NULL;
-lList *Master_Operator_List = NULL;
-
 /****** sgeobj/manop/manop_is_manager() ***************************************
 *  NAME
 *     manop_is_manager() -- is a certain user manager?

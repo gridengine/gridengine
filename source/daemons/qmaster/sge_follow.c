@@ -165,7 +165,7 @@ lList **topp,   ticket orders ptr ptr
  **********************************************************************/ 
 int 
 sge_follow_order(lListElem *ep, lList **alpp, char *ruser, char *rhost,
-                 lList **topp, monitoring_t *monitor) 
+                 lList **topp, monitoring_t *monitor, object_description *object_base) 
 {
    int allowed;
    u_long32 job_number, task_number;
@@ -209,7 +209,7 @@ sge_follow_order(lListElem *ep, lList **alpp, char *ruser, char *rhost,
          DEXIT;
          return -2;
       }
-      jep = job_list_locate(*(object_type_get_master_list(SGE_TYPE_JOB)), job_number);
+      jep = job_list_locate(*object_base[SGE_TYPE_JOB].list, job_number);
       if(!jep) {
          WARNING((SGE_EVENT, MSG_JOB_FINDJOB_U, sge_u32c(job_number)));
          answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
@@ -276,11 +276,10 @@ sge_follow_order(lListElem *ep, lList **alpp, char *ruser, char *rhost,
          return -1;
       }
 
-      cqueue_list_set_tag(*(object_type_get_master_list(SGE_TYPE_CQUEUE)), 
-                          0, true);
+      cqueue_list_set_tag(*object_base[SGE_TYPE_CQUEUE].list, 0, true);
 
       if (lGetString(jep, JB_pe)) {
-         pe = pe_list_locate(Master_Pe_List, or_pe);
+         pe = pe_list_locate(*object_base[SGE_TYPE_PE].list, or_pe);
          if (!pe) {
             ERROR((SGE_EVENT, MSG_OBJ_UNABLE2FINDPE_S, or_pe));
             answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
@@ -328,7 +327,7 @@ sge_follow_order(lListElem *ep, lList **alpp, char *ruser, char *rhost,
                   " queue \"%s\" v%d%s\n", 
                q_slots, job_number, q_name, (int)q_version, (opt_sge ) ));
 
-         qep = cqueue_list_locate_qinstance(*(object_type_get_master_list(SGE_TYPE_CQUEUE)), q_name);
+         qep = cqueue_list_locate_qinstance(*object_base[SGE_TYPE_CQUEUE].list, q_name);
          if (!qep) {
             ERROR((SGE_EVENT, MSG_QUEUE_UNABLE2FINDQ_S, q_name));
             answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
@@ -365,7 +364,7 @@ sge_follow_order(lListElem *ep, lList **alpp, char *ruser, char *rhost,
          acl = lCopyList("acl", lGetList(qep, QU_acl));
          xacl = lCopyList("xacl", lGetList(qep, QU_xacl));
          allowed = sge_has_access_(lGetString(jep, JB_owner), lGetString(jep, JB_group), 
-                                    acl, xacl, Master_Userset_List);
+                                    acl, xacl, *object_base[SGE_TYPE_USERSET].list);
          lFreeList(&acl); 
          lFreeList(&xacl); 
          if (!allowed) {
@@ -420,7 +419,7 @@ sge_follow_order(lListElem *ep, lList **alpp, char *ruser, char *rhost,
          /* ---------------------- 
           *  find and check host 
           */
-         if (!(hep=host_list_locate(Master_Exechost_List, 
+         if (!(hep=host_list_locate(*object_base[SGE_TYPE_EXECHOST].list, 
                      lGetHost(qep, QU_qhostname)))) {
             ERROR((SGE_EVENT, MSG_JOB_UNABLE2FINDHOST_S, lGetHost(qep, QU_qhostname)));
             answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
@@ -538,7 +537,7 @@ sge_follow_order(lListElem *ep, lList **alpp, char *ruser, char *rhost,
       /* now after successfully (we hope) sent the job to execd 
          suspend all subordinated queues that need suspension */
       {
-         lList *master_list = *(object_type_get_master_list(SGE_TYPE_CQUEUE));
+         lList *master_list = *object_base[SGE_TYPE_CQUEUE].list;
          lList *gdil = lGetList(jatp, JAT_granted_destin_identifier_list);
 
          cqueue_list_x_on_subordinate_gdil(master_list, true, gdil, monitor);
@@ -571,7 +570,7 @@ sge_follow_order(lListElem *ep, lList **alpp, char *ruser, char *rhost,
 
          DPRINTF(("ORDER : job("sge_u32")->pri/tickets reset"));
 
-         jep = job_list_locate(*(object_type_get_master_list(SGE_TYPE_JOB)), job_number);
+         jep = job_list_locate(*object_base[SGE_TYPE_JOB].list, job_number);
          if(jep == NULL) {
             WARNING((SGE_EVENT, MSG_JOB_UNABLE2FINDJOBORD_U, sge_u32c(job_number)));
             answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_WARNING);
@@ -682,7 +681,7 @@ sge_follow_order(lListElem *ep, lList **alpp, char *ruser, char *rhost,
          DPRINTF(("ORDER : job("sge_u32")->ticket = "sge_u32"\n", 
             job_number, (u_long32)lGetDouble(ep, OR_ticket)));
 
-         jep = job_list_locate(*(object_type_get_master_list(SGE_TYPE_JOB)), job_number);
+         jep = job_list_locate(*object_base[SGE_TYPE_JOB].list, job_number);
          if(!jep) {
             WARNING((SGE_EVENT, MSG_JOB_UNABLE2FINDJOBORD_U, sge_u32c(job_number)));
             answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_WARNING);
@@ -808,7 +807,7 @@ sge_follow_order(lListElem *ep, lList **alpp, char *ruser, char *rhost,
          DPRINTF(("ORDER: job("sge_u32")->ticket = "sge_u32"\n", 
             job_number, (u_long32)lGetDouble(ep, OR_ticket)));
 
-         jep = job_list_locate(*(object_type_get_master_list(SGE_TYPE_JOB)), job_number);
+         jep = job_list_locate(*object_base[SGE_TYPE_JOB].list, job_number);
          if(!jep) {
             ERROR((SGE_EVENT, MSG_JOB_UNABLE2FINDJOBORD_U, sge_u32c(job_number)));
             answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
@@ -929,7 +928,7 @@ sge_follow_order(lListElem *ep, lList **alpp, char *ruser, char *rhost,
 
                   while((oep=lFirst(oeql))) {          
                      if (((oep_qname=lGetString(oep, OQ_dest_queue))) &&
-                         ((oep_qep = cqueue_list_locate_qinstance(*(object_type_get_master_list(SGE_TYPE_CQUEUE)),
+                         ((oep_qep = cqueue_list_locate_qinstance(*object_base[SGE_TYPE_CQUEUE].list,
                                                        oep_qname))) &&
                          ((oep_hname=lGetHost(oep_qep, QU_qhostname)))) {
 
@@ -941,7 +940,8 @@ sge_follow_order(lListElem *ep, lList **alpp, char *ruser, char *rhost,
                         for(curr_oep=lNext(oep); curr_oep; curr_oep=next_oep) {
                            next_oep = lNext(curr_oep);
                            if (((curr_oep_qname=lGetString(curr_oep, OQ_dest_queue))) &&
-                               ((curr_oep_qep = cqueue_list_locate_qinstance(*(object_type_get_master_list(SGE_TYPE_CQUEUE)), curr_oep_qname))) &&
+                               ((curr_oep_qep = cqueue_list_locate_qinstance(*object_base[SGE_TYPE_CQUEUE].list, 
+                                                                             curr_oep_qname))) &&
                                ((curr_oep_hname=lGetHost(curr_oep_qep, QU_qhostname))) &&
                                !sge_hostcmp(oep_hname, curr_oep_hname)) {     /* CR SPEEDUP CANDIDATE */
                               job_tickets_on_host += lGetDouble(curr_oep, OQ_ticket);
@@ -1002,7 +1002,7 @@ sge_follow_order(lListElem *ep, lList **alpp, char *ruser, char *rhost,
       DPRINTF(("ORDER: remove %sjob "sge_u32"."sge_u32"\n", 
          or_type==ORT_remove_immediate_job?"immediate ":"" ,
          job_number, task_number));
-      jep = job_list_locate(*(object_type_get_master_list(SGE_TYPE_JOB)), job_number);
+      jep = job_list_locate(*object_base[SGE_TYPE_JOB].list, job_number);
       if(!jep) {
          ERROR((SGE_EVENT, MSG_JOB_FINDJOB_U, sge_u32c(job_number)));
          answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
@@ -1140,7 +1140,7 @@ sge_follow_order(lListElem *ep, lList **alpp, char *ruser, char *rhost,
                UP_debited_job_usage))));
 
             if (!(up=userprj_list_locate( 
-                  or_type==ORT_update_project_usage ? Master_Project_List : Master_User_List, up_name ))) {
+                  or_type==ORT_update_project_usage ? *object_base[SGE_TYPE_PROJECT].list : *object_base[SGE_TYPE_USER].list, up_name ))) {
                /* order contains reference to unknown user/prj object */
                continue;
             }   
@@ -1236,8 +1236,8 @@ sge_follow_order(lListElem *ep, lList **alpp, char *ruser, char *rhost,
     * ----------------------------------------------------------------------- */
    case ORT_share_tree:
       DPRINTF(("ORDER: ORT_share_tree\n"));
-      if ( !sge_init_node_fields(lFirst(Master_Sharetree_List)) &&
-	        update_sharetree(alpp, Master_Sharetree_List, lGetList(ep, OR_joker))) {
+      if ( !sge_init_node_fields(lFirst(*object_base[SGE_TYPE_SHARETREE].list)) &&
+	        update_sharetree(alpp, *object_base[SGE_TYPE_SHARETREE].list, lGetList(ep, OR_joker))) {
          /* alpp gets filled by update_sharetree */
          DPRINTF(("ORDER: ORT_share_tree failed\n" ));
          DEXIT;
@@ -1277,14 +1277,14 @@ sge_follow_order(lListElem *ep, lList **alpp, char *ruser, char *rhost,
          jobid = lGetUlong(ep, OR_job_number);
          task_number = lGetUlong(ep, OR_ja_task_number);
 
-         if (!(jep = job_list_locate(*(object_type_get_master_list(SGE_TYPE_JOB)), jobid))
+         if (!(jep = job_list_locate(*object_base[SGE_TYPE_JOB].list, jobid))
             || !(jatp = job_search_task(jep, NULL, task_number))
             || !lGetList(jatp, JAT_granted_destin_identifier_list)) {
             /* don't panic - it is probably an exiting job */
             WARNING((SGE_EVENT, MSG_JOB_SUSPOTNOTRUN_UU, sge_u32c(jobid), sge_u32c(task_number)));
          } else {
             const char *qnm = lGetString(lFirst(lGetList(jatp, JAT_granted_destin_identifier_list)), JG_qname);
-            queueep = cqueue_list_locate_qinstance(*(object_type_get_master_list(SGE_TYPE_CQUEUE)), qnm);
+            queueep = cqueue_list_locate_qinstance(*object_base[SGE_TYPE_CQUEUE].list, qnm);
             if (!queueep) {
                ERROR((SGE_EVENT, MSG_JOB_UNABLE2FINDMQ_SU,
                      qnm, sge_u32c(jobid)));
@@ -1331,7 +1331,7 @@ sge_follow_order(lListElem *ep, lList **alpp, char *ruser, char *rhost,
          jobid = lGetUlong(ep, OR_job_number);
          task_number = lGetUlong(ep, OR_ja_task_number);
 
-         if (!(jep = job_list_locate(*(object_type_get_master_list(SGE_TYPE_JOB)), jobid))
+         if (!(jep = job_list_locate(*object_base[SGE_TYPE_JOB].list, jobid))
             || !(jatp = job_search_task(jep, NULL,task_number))
             || !lGetList(jatp, JAT_granted_destin_identifier_list)) {
             /* don't panic - it is probably an exiting job */  
@@ -1339,7 +1339,7 @@ sge_follow_order(lListElem *ep, lList **alpp, char *ruser, char *rhost,
          } 
          else {
             const char *qnm = lGetString(lFirst(lGetList(jatp, JAT_granted_destin_identifier_list)), JG_qname);
-            queueep = cqueue_list_locate_qinstance(*(object_type_get_master_list(SGE_TYPE_CQUEUE)), qnm);
+            queueep = cqueue_list_locate_qinstance(*object_base[SGE_TYPE_CQUEUE].list, qnm);
             if (!queueep) {
                ERROR((SGE_EVENT, MSG_JOB_UNABLE2FINDMQ_SU, qnm, sge_u32c(jobid)));
                answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
@@ -1387,16 +1387,19 @@ sge_follow_order(lListElem *ep, lList **alpp, char *ruser, char *rhost,
          }
 
          if (sme != NULL) {
-            if (Master_Job_Schedd_Info_List != NULL) {
-               lFreeList(&Master_Job_Schedd_Info_List);
-            }
+            lList **master_job_schedd_info_list = object_base[SGE_TYPE_JOB_SCHEDD_INFO].list;
 
-            Master_Job_Schedd_Info_List = lCreateList("schedd info", SME_Type);
-            lAppendElem(Master_Job_Schedd_Info_List, sme);
+            while (lGetNumberOfElem(*master_job_schedd_info_list) > 0) {
+               lListElem *first = lFirst(*master_job_schedd_info_list);
+               lRemoveElem(*master_job_schedd_info_list,&first);
+            }
+            if (*master_job_schedd_info_list == NULL) {
+               *master_job_schedd_info_list = lCreateList("schedd info", SME_Type);
+            }
+            lAppendElem(*master_job_schedd_info_list, sme);
 
             /* this information is not spooled (but might be usefull in a db) */
-            sge_add_event( 0, sgeE_JOB_SCHEDD_INFO_MOD, 0, 0, 
-                       NULL, NULL, NULL, sme);
+            sge_add_event( 0, sgeE_JOB_SCHEDD_INFO_MOD, 0, 0, NULL, NULL, NULL, sme);
          }              
       }
       break;
@@ -1412,7 +1415,7 @@ sge_follow_order(lListElem *ep, lList **alpp, char *ruser, char *rhost,
 /*
  * MT-NOTE: distribute_ticket_orders() is NOT MT safe
  */
-int distribute_ticket_orders( lList *ticket_orders, monitoring_t *monitor) 
+int distribute_ticket_orders( lList *ticket_orders, monitoring_t *monitor, object_description *object_base) 
 {
    u_long32 jobid, jataskid; 
    lList *to_send;
@@ -1440,7 +1443,7 @@ int distribute_ticket_orders( lList *ticket_orders, monitoring_t *monitor)
       DPRINTF(("Job: %ld, Task: %ld", jobid, jataskid));
 
       /* seek job element */
-      if (!(jep = job_list_locate(*(object_type_get_master_list(SGE_TYPE_JOB)), jobid)) || 
+      if (!(jep = job_list_locate(*object_base[SGE_TYPE_JOB].list, jobid)) || 
           !(jatask = job_search_task(jep, NULL, jataskid))) { 
          ERROR((SGE_EVENT, MSG_JOB_MISSINGJOBTASK_UU, sge_u32c(jobid), sge_u32c(jataskid)));
          lRemoveElem(ticket_orders, &ep);
@@ -1470,7 +1473,7 @@ int distribute_ticket_orders( lList *ticket_orders, monitoring_t *monitor)
       while ((other=next)) {      /* CR SPEEDUP CANDIDATE */
          next = lNext(other);
 
-         other_jep = job_list_locate(*(object_type_get_master_list(SGE_TYPE_JOB)), lGetUlong(other, OR_job_number)); 
+         other_jep = job_list_locate(*object_base[SGE_TYPE_JOB].list, lGetUlong(other, OR_job_number)); 
          other_jatask = job_search_task(other_jep, NULL, lGetUlong(other, OR_ja_task_number));
          if (!other_jep || !other_jatask) {
             ERROR((SGE_EVENT, MSG_JOB_MISSINGJOBTASK_UU, sge_u32c(jobid), sge_u32c(jataskid)));
@@ -1494,7 +1497,7 @@ int distribute_ticket_orders( lList *ticket_orders, monitoring_t *monitor)
          }
       }
  
-      hep = host_list_locate(Master_Exechost_List, master_host_name);
+      hep = host_list_locate(*object_base[SGE_TYPE_EXECHOST].list, master_host_name);
       n = lGetNumberOfElem(to_send);
 
       if (hep) {

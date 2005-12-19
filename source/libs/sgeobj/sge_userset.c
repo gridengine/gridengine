@@ -46,8 +46,6 @@
 #include "msg_common.h"
 #include "msg_sgeobjlib.h"
 
-lList *Master_Userset_List = NULL;
-
 static const char* userset_types[] = {
    "ACL",   /* US_ACL   */
    "DEPT",  /* US_DEPT  */

@@ -34,8 +34,6 @@
 
 #include "sge_centryL.h"
 
-extern lList *Master_CEntry_List;
-
 /* Mapping list for generating a complex out of a queue */
 struct queue2cmplx {
    char *name;    /* name of the centry element, not the shortcut */

@@ -34,11 +34,6 @@
 
 #include "sge_hostL.h"
 
-extern lList *Master_Exechost_List;
-extern lList *Master_Adminhost_List;
-extern lList *Master_Submithost_List;
-
-
 bool host_is_referenced(const lListElem *host, lList **answer_list,
                         const lList *queue_list, const lList *hgrp_list);
 

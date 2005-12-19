@@ -69,9 +69,6 @@
 
 #include "sge_job.h"
   
-lList *Master_Zombie_List = NULL;
-lList *Master_Job_Schedd_Info_List = NULL;
-
 /****** sgeobj/job/job_get_ja_task_template_pending() *************************
 *  NAME
 *     job_get_ja_task_template_pending() -- create a ja task template 

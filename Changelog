@@ -1,3 +1,11 @@
+SG-2005-12-19-0: Enhancem.: - second part of making the libs thread safe
+                              and removing the master lists. All master
+                              lists have been removed.
+                            - fixed a bug in the event mirror. Introduced
+                              with SG-2005-12-08-0
+                 Changed:   all
+                 Review:    RD
+
 DT-2005-12-17-2: Bugfix:    o Fixed DENTER in sge_conf for INHERIT_ENV
                  Changed:   sge_conf.c
 

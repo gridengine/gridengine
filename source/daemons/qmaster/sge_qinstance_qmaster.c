@@ -336,13 +336,14 @@ qinstance_modify_attribute(lListElem *this_elem, lList **answer_list,
                lList *old_value = lGetList(this_elem, attribute_name);
                lList *new_value = NULL;
                lListElem *tmp_elem = lCopyElem(this_elem);
+               lList *master_centry_list = *object_type_get_master_list(SGE_TYPE_CENTRY);
 
                celist_attr_list_find_value(attr_list, answer_list,
                                            hostname, &new_value, 
                                            matching_host_or_group,
                                            matching_group, is_ambiguous);
 
-               if( centry_list_fill_request(new_value, answer_list, Master_CEntry_List, 
+               if( centry_list_fill_request(new_value, answer_list, master_centry_list, 
                                         true, true, false) == 0 ) {
 
                    /* We make a copy of new_value here because it will ultimately

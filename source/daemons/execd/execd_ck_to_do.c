@@ -852,7 +852,7 @@ lListElem *petep
       pid = -1; 
       strcpy(err_str, "FAILURE_BEFORE_EXEC");
    } else {
-      pid = sge_exec_job(jep, jatep, petep, err_str);
+      pid = sge_exec_job(jep, jatep, petep, err_str, 256);
    }   
 
    if (pid < 0) {

@@ -1,3 +1,10 @@
+CR-2005-12-20-1: Cleanup:   fixed potential buffer overflows in sge_exec_job()
+                            (merged from maintrunk)
+                 Issue:     1950
+                 Bugtraq:   6365380
+                 Changed:   execd
+                 Review:    RD
+
 EB-2005-12-15-0: Bugfix:    subordinate properties lost on qmaster restart
                  Issue:     1741
                  Bugtraq:   6319223

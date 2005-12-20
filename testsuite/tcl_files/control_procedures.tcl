@@ -345,7 +345,7 @@ proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result 
             add_proc_error "handle_vi_edit" -1 "unexpected end of file"
          }
          -i $sp_id "_exit_status*\n" {
-            puts $CHECK_OUTPUT "vi terminated !"
+            puts $CHECK_OUTPUT "vi terminated! (1)"
          }
       }
 
@@ -356,19 +356,22 @@ proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result 
       return -1
    }
 
-
+   # second waiting: Part I:
+   # =======================
    # set start time (qconf must take at least one second, because he
    # does a file stat to find out if the file was changed, so the
    # file edit process must take at least 1 second
-   set start_time [ timestamp ] 
+
+   set start_time [clock clicks -milliseconds]
    # send the vi commands
    set timeout 1
    set timeout_count 0
-
+   set sent_vi_commands 0
    send -s -i $sp_id -- "1G"      ;# go to first line
 
 
    foreach elem $vi_command_sequence {
+      incr sent_vi_commands 1
       set com_length [ string length $elem ]
       set com_sent 0
       send -s -i $sp_id -- "$elem"
@@ -410,10 +413,17 @@ proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result 
    }
 
    if { $error == 0 } {
+      
+      # second waiting: Part II:
+      # =======================
       # wait for file time older one second
-      while { [ timestamp ] <= $start_time } { 
+      # we give an extra waiting time of 100 ms to be sure that
+      # the vi takes at least 1 second
+      set end_time [expr [clock clicks -milliseconds] + 1100 ]
+      while { [clock clicks -milliseconds] < $end_time } { 
          after 100
       }
+      set run_time [expr [clock clicks -milliseconds] - $start_time]
 
       # save and exit
       if { $CHECK_DEBUG_LEVEL != 0 } {
@@ -439,7 +449,7 @@ proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result 
                set result -1
             }
             -i $sp_id "_exit_status_" {
-               puts $CHECK_OUTPUT "vi terminated!"
+               puts $CHECK_OUTPUT "vi terminated! (2) (rt=$run_time)"
                set result 0
             }
         }
@@ -481,7 +491,7 @@ proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result 
             }
 
             -i $sp_id "_exit_status_" {
-               puts $CHECK_OUTPUT "vi terminated!"
+               puts $CHECK_OUTPUT "vi terminated! (3)  (rt=$run_time)"
                if { $result == -100 } {
                   set pos [string last "\n" $expect_out(buffer)]
                   incr pos -2
@@ -505,6 +515,10 @@ proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result 
             }
          }
       }
+      debug_puts "sent_vi_commands = $sent_vi_commands"
+      if { $sent_vi_commands == 0 } {
+         puts $CHECK_OUTPUT "INFO: there was NO vi command sent!"
+      }
    } else {
       if { $error == 2 } {
          send -s -i $sp_id -- "[format "%c" 27]" ;# ESC
@@ -512,7 +526,7 @@ proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result 
          send -s -i $sp_id -- ":q!\n"            ;# exit without saving
          set timeout 10
          expect -i $sp_id "_exit_status_"
-         puts $CHECK_OUTPUT "vi terminated!"
+         puts $CHECK_OUTPUT "vi terminated! (4)"
          close_spawn_process $id
          set error_text ""
          append error_text "got timeout while sending vi commands\n"

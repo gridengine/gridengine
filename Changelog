@@ -1,3 +1,6 @@
+CR-2005-12-20-0: Testsuite: - changed handle_vi_edit() time measurement
+                 Review:    RH
+
 SG-2005-12-19-0: Enhancem.: - second part of making the libs thread safe
                               and removing the master lists. All master
                               lists have been removed.

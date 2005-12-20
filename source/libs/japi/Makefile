@@ -116,7 +116,7 @@ libdrmaa$(SHAREDEXT).1.0: $(DRMAALIB_OBJS) $(DRMAA_OBJS) $(LIBWINGRID_DEP)
    && ../scripts/nonreentrant.sh -a `../dist/util/arch` -w libdrmaa$(SHAREDEXT).1.0
 
 # Needed to compile howtos, examples, and unit tests
-libdrmaa$(SHAREDEXT): libdrmaa$(SHAREDEXT).0.95
+libdrmaa$(SHAREDEXT):
 	ln -s libdrmaa$(SHAREDEXT).0.95 libdrmaa$(SHAREDEXT)
 
 ###############################################################################

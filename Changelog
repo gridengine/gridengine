@@ -1,3 +1,6 @@
+DT-2005-12-20-0: Bugfix:    o Fixed broken build
+                 Changed:   japi/Makefile
+
 RD-2005-12-20-0: Bugfix:    qsub -w w changes -sync behavior
                  Issue:     1945
                  Bugtraq:   6363823

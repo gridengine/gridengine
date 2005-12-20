@@ -33,6 +33,7 @@
 
 lappend check_functions "check_option_sync"
 lappend check_functions "check_option_sync_t"
+lappend check_functions "check_option_sync_ww"
 
 proc check_qhold_jobname {} {
  global check_errno CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_OUTPUT job_output_dir actual_host
@@ -383,5 +384,65 @@ proc check_option_sync_t {} {
    } else {
       set_error -1 "qsub terminated abnormally"
    }
+}
+
+proc check_option_sync_ww {} {
+   global CHECK_OUTPUT CHECK_HOST
+   global ts_config CHECK_PRODUCT_ROOT
+
+   set found_warning 0
+   set found_job_submitted 0
+   set found_timeout 0
+
+   set JOB_SUBMITTED       [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_SUBMITJOB_USS] "*" "*" "*"]
+   set WARNING             [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_VERIFYWARN] ]
+   set NOSUITABLEQ_S       [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_NOSUITABLEQ_S] $WARNING ]
+
+   set option "-sync y -w w -l arch=no_arch"
+   set jobargs "$option -o /dev/null -e /dev/null $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 100" 
+
+   set qsub_id [open_remote_spawn_process $CHECK_HOST "ts_def_con" "qsub" "$jobargs"]
+   set sp_id [ lindex $qsub_id 1 ] 
+  
+   set timeout 20
+   expect {
+      -i $sp_id full_buffer {
+         add_proc_error "check_option_sync_ww" -1 "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
+      }
+       -i $sp_id -- "$NOSUITABLEQ_S" {
+         set found_warning 1
+         exp_continue
+      }
+      -i $sp_id -- "$JOB_SUBMITTED" {
+         set found_job_submitted 1
+         start_sge_bin qconf "-tsm"
+         exp_continue
+      }
+      -i $sp_id -- "*our job*has been submitted" {
+         # till 60u7 the qmaster reported "your" but it should be "Your"
+         set found_job_submitted 1
+         start_sge_bin qconf "-tsm"
+         exp_continue
+      }
+      -i $sp_id "_exit_status_:(*)*\n" {
+            puts $CHECK_OUTPUT "got exit status from script:\n$expect_out(buffer)"
+      }
+      -i $sp_id timeout {
+         set found_timeout 1
+      }
+   }
+   close_spawn_process $qsub_id
+
+   if { $found_warning == 0 } {
+      add_proc_error "check_option_sync_ww" -1 "IZ 1945: qsub -sync -w w broken - got no warning message"
+   } elseif { $found_job_submitted == 0 } {
+      add_proc_error "check_option_sync_ww" -1 "IZ 1945: qsub -sync -w w broken - got no submitted message"
+   } elseif { $found_timeout == 0 } {
+      add_proc_error "check_option_sync_ww" -1 "IZ 1945: qsub -sync -w w broken - sync does not wait until jobend"
+   }
+
+   delete_all_jobs
+
+   set_error 0 "ok"
 }
 

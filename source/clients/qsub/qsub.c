@@ -322,14 +322,21 @@ char **argv
   
    /* only success message is printed to stdout */
    if (!just_verify) {
-      printf(MSG_QSUB_YOURJOBHASBEENSUBMITTED_SS, jobid_string, lGetString(job, JB_job_name));
+      const char *output = sge_dstring_get_string(&diag); 
+
+      if (output != NULL) {
+        printf(output);
+      } else {
+        printf(MSG_QSUB_YOURJOBHASBEENSUBMITTED_SS, jobid_string, lGetString(job, JB_job_name));
+      }
       printf("\n");
    }   
    else {
       printf(MSG_JOB_VERIFYFOUNDQ);
+      printf("\n");
    }   
 
-   if (wait_for_job || is_immediate) {
+   if ( (wait_for_job || is_immediate) && !just_verify) {
       int event;
 
       if (is_immediate) {

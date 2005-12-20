@@ -1,3 +1,8 @@
+RD-2005-12-20-0: Bugfix:    qsub -w w changes -sync behavior
+                 Issue:     1945
+                 Bugtraq:   6363823
+                 Review:    SG
+
 CR-2005-12-20-1: Cleanup:   fixed potential buffer overflows in sge_exec_job()
                  Issue:     1950
                  Bugtraq:   6365380

@@ -1700,24 +1700,24 @@ int main(int argc, char **argv)
 
       /* reinitialize 'job' with pointer to new version from qmaster */
       job = lFirst(lp_jobs);
- 
+      if (job) {
+        job_id = lGetUlong(job, JB_job_number );
+      } else {
+        job_id = 0;
+      }
+      DPRINTF(("job id is: %ld\n", job_id));
+
       for_each(aep, alp) {
          status = lGetUlong(aep, AN_status);
          quality = lGetUlong(aep, AN_quality);
          if (quality == ANSWER_QUALITY_ERROR) {
-            ERROR((SGE_EVENT, "%s", lGetString(aep, AN_text)));
+            fprintf(stderr, "%s\n", lGetString(aep, AN_text));
             do_exit = 1;
          }
          else if (quality == ANSWER_QUALITY_WARNING) {
-            WARNING((SGE_EVENT, "%s", lGetString(aep, AN_text)));
+            fprintf(stderr, "%s\n", lGetString(aep, AN_text));
          } else {
-            INFO((SGE_EVENT, "%s", lGetString(aep, AN_text)));
-            if (job) {
-               job_id = lGetUlong(job, JB_job_number );
-            } else {
-               job_id = 0;
-            }
-            DPRINTF(("job id is: %ld\n", job_id));
+            fprintf(stdout, "%s\n", lGetString(aep, AN_text));
          }
       }
 

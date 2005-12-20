@@ -1,3 +1,8 @@
+CR-2005-12-20-1: Cleanup:   fixed potential buffer overflows in sge_exec_job()
+                 Issue:     1950
+                 Bugtraq:   6365380
+                 Review:    RD
+
 CR-2005-12-20-0: Testsuite: - changed handle_vi_edit() time measurement
                  Review:    RH
 

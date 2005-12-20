@@ -79,7 +79,7 @@ int schedd_log(const char *logstr) {
    if (monitor_alpp) {
       char logloglog[2048];
 /*       DPRINTF(("schedd_log: %s\n", logstr)); */
-      sprintf(logloglog, "%s\n", logstr);
+      sprintf(logloglog, "%s", logstr);
       answer_list_add(monitor_alpp, logloglog, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
    } else {
       if (!*schedd_log_file) {

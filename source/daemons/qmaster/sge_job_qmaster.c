@@ -3978,7 +3978,8 @@ int *trigger
             SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_JOB_NOSUITABLEQ_S,
                (verify_mode==JUST_VERIFY ? MSG_JOB_VERIFYVERIFY: 
                   (verify_mode==ERROR_VERIFY)?MSG_JOB_VERIFYERROR:MSG_JOB_VERIFYWARN)));
-            answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
+            answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC, (verify_mode==JUST_VERIFY ? ANSWER_QUALITY_INFO: 
+                  (verify_mode==ERROR_VERIFY)?ANSWER_QUALITY_ERROR:ANSWER_QUALITY_WARNING));
 
             if (verify_mode != WARNING_VERIFY) {
                DEXIT;

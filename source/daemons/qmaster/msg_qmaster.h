@@ -306,8 +306,8 @@
 #define MSG_JOB_NOWRITE_US            _MESSAGE(33227, _("job "sge_U32CFormat" was rejected cause it can't be written: "SFN))
 #define MSG_JOB_NOWRITE_U             _MESSAGE(33228, _("job "sge_U32CFormat" was rejected cause it couldn't be written"))
 #define MSG_JOB_DEPENDENCY_CYCLE_UU   _MESSAGE(33229, _("job "sge_U32CFormat" dependency change would generate a dependency cycle with job "sge_U32CFormat))
-#define MSG_JOB_SUBMITJOB_USS         _MESSAGE(33234, _("your job "sge_U32CFormat" (\""SFN SFN"\") has been submitted"))
-#define MSG_JOB_SUBMITJOBARRAY_UUUUSS _MESSAGE(33235, _("your job-array "sge_U32CFormat"."sge_U32CFormat"-"sge_U32CFormat":"sge_U32CFormat" (\""SFN SFN"\") has been submitted"))
+#define MSG_JOB_SUBMITJOB_USS         _MESSAGE(33234, _("Your job "sge_U32CFormat" (\""SFN SFN"\") has been submitted"))
+#define MSG_JOB_SUBMITJOBARRAY_UUUUSS _MESSAGE(33235, _("Your job-array "sge_U32CFormat"."sge_U32CFormat"-"sge_U32CFormat":"sge_U32CFormat" (\""SFN SFN"\") has been submitted"))
 #define MSG_LOG_NEWJOB                _MESSAGE(33236, _("new job"))
 /* #define MSG_JOB_MODIFYALL             _message(33237, _("modify all jobs")) __TS Removed automatically from testsuite!! TS__*/
 #define MSG_JOB_DELETEJOB             _MESSAGE(33238, _("delete job"))

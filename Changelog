@@ -1,3 +1,9 @@
+JG-2005-12-21-0: Bugfix:    - fixed broken build
+                            - fixed broken distinst for multiple architectures
+                 Enhancem.: - compilation with code coverage (tcov) on Solaris
+                 Testsuite: - don't create error/output files in qacct test
+                 Review:    SG
+
 DT-2005-12-20-0: Bugfix:    o Fixed broken build
                  Changed:   japi/Makefile
 

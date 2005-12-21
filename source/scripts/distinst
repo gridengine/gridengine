@@ -1402,10 +1402,8 @@ for i in $ARCH; do
                done
             done
 
-            oldpwd=$PWD
-            cd $DEST_SGE_ROOT/lib/$DSTARCH
-            ln -s $libname $lib.$shlibext
-            cd $oldpwd
+            ( cd $DEST_SGE_ROOT/lib/$DSTARCH
+            ln -s $libname $lib.$shlibext )
 
 # On MacOS X, the JVM expects a special JNI extension for shared libraries
             if [ $shlibext != $jnilibext ]; then
@@ -1420,5 +1418,5 @@ for i in $ARCH; do
          fi
       fi
       cd ..
-   fi     
+   fi
 done

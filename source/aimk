@@ -325,6 +325,7 @@ usage:
    echo "-adoc             -> create source code documentation in adoc format"
    echo "-catman           -> generate man pages in catman format"
    echo "-cc               -> use cc/CC to compile c/c++ code"
+   echo "-cov              -> complile for code coverage analysis"
    echo "-dce              -> enable dce security"
    echo "-debug            -> compile with debug information"
    echo "-efence           -> compile in debug mode and detect memory leaks"
@@ -332,7 +333,6 @@ usage:
    echo "-gcc              -> use gcc instead of system compiler (where supported)"
    echo "-gettext          -> build the gettext libraries"
    echo "-gprof            -> enable gprof profiling"
-   echo "-gcov             -> enable gcov code coverage testing"
    echo "-gss              -> enable gss security"
    echo "-help             -> show this help"
    echo "-htmlman          -> generate man and html pages"
@@ -419,7 +419,7 @@ set SGESSH           = 0
 # Default Flags and Libraries 
 set OPTIMIZATION     = 1
 set GPROFFED         = 0
-set GCOVED           = 0
+set COVED            = 0
 set DEBUGGED         = 0
 set COMPILE_DC       = 0
 set CC               = cc
@@ -609,6 +609,10 @@ while ($#argv >= 1 && $?found)
       set CC       = cc
       set CXX      = CC
       breaksw
+   case "-cov":
+      set COVED      = 1
+      set STRIP      = "echo"
+      breaksw
    case "-crypto":
       set CFLAGS  = "-DCRYPTO -I$OPENSSL_HOME/include $CFLAGS"
       set LFLAGS  = "-L$OPENSSL_HOME/lib $LFLAGS"
@@ -659,10 +663,6 @@ while ($#argv >= 1 && $?found)
    case "-gprof":
       set DEBUG_FLAG = "$DEBUG_FLAG -pg"
       set GPROFFED   = 1
-      set STRIP      = "echo"
-      breaksw
-   case "-gcov":
-      set GCOVED     = 1
       set STRIP      = "echo"
       breaksw
    case "-gss":
@@ -1075,7 +1075,7 @@ case ALPHA5:
    endif
 
    if ( $GPROFFED == 1) then
-      set DEBUG_FLAG = "-g1 -pg -gen_feedback -non_shared -DSGE_LOCK_DEBUG"
+      set DEBUG_FLAG = "-g1 -pg -gen_feedback -non_shared"
    endif
 
    set NOERR_CFLAG  = "-w"
@@ -1121,7 +1121,7 @@ case DARWIN:
       set DEBUG_FLAG = "$DEBUG_FLAG -pg"
    endif
 
-   if ($GCOVED == 1) then
+   if ($COVED == 1) then
       set DEBUG_FLAG = "$DEBUG_FLAG -fprofile-arcs -ftest-coverage"
    endif
 
@@ -1380,11 +1380,11 @@ case LINUXPPC:
    endif
 
    if ($GPROFFED == 1) then
-      set DEBUG_FLAG = "$DEBUG_FLAG -pg -DSGE_LOCK_DEBUG"
+      set DEBUG_FLAG = "$DEBUG_FLAG -pg"
    endif
 
-   if ($GCOVED == 1) then
-      set DEBUG_FLAG = "$DEBUG_FLAG -fprofile-arcs -ftest-coverage -DSGE_LOCK_DEBUG"
+   if ($COVED == 1) then
+      set DEBUG_FLAG = "$DEBUG_FLAG -fprofile-arcs -ftest-coverage"
    endif
 
    if ( -f /lib/libc.so.6 ) then
@@ -1512,7 +1512,7 @@ case WIN32_X86:
    endif
 
    if ($GPROFFED == 1) then
-      set DEBUG_FLAG = "$DEBUG_FLAG -pg -DSGE_LOCK_DEBUG"
+      set DEBUG_FLAG = "$DEBUG_FLAG -pg"
    endif
 
    if ( -f /lib/libc.so.6 ) then
@@ -1613,7 +1613,7 @@ case SLINUX:
       set OFLAG = ""
    endif
    if ( $GPROFFED == 1) then
-      set DEBUG_FLAG = "$DEBUG_FLAG -pg -DSGE_LOCK_DEBUG"
+      set DEBUG_FLAG = "$DEBUG_FLAG -pg"
    endif
 
    set CFLAGS   = "$OFLAG -Wall -Werror -Wstrict-prototypes -DLINUX -DSLINUX -DGETHOSTBYNAME_R6 -DGETHOSTBYADDR_R8 $DEBUG_FLAG $CFLAGS"
@@ -1680,10 +1680,19 @@ case SOLARISAMD64:
    if ( $GPROFFED == 1 ) then
       set OFLAG = "-O"
       if ( $CC == gcc ) then
-         set DEBUG_FLAG = "-g -pg -DSGE_LOCK_DEBUG"
+         set DEBUG_FLAG = "-g -pg"
          set LIBS = "$LIBS -ldl"
       else
-         set DEBUG_FLAG = "-g -xpg -DSGE_LOCK_DEBUG"
+         set DEBUG_FLAG = "-g -xpg"
+      endif
+   endif
+
+   if ($COVED == 1) then
+      if ( $CC == gcc ) then
+         set DEBUG_FLAG = "$DEBUG_FLAG -fprofile-arcs -ftest-coverage"
+      else
+         set DEBUG_FLAG = "$DEBUG_FLAG -xprofile=tcov"
+         set SHARED_LFLAGS = "$SHARED_LFLAGS -xprofile=tcov"
       endif
    endif
 

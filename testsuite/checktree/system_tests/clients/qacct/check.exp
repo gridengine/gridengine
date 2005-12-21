@@ -123,7 +123,7 @@ proc qacct_basic {} {
    set qacct_fields "qname hostname group owner project department jobname jobnumber taskid account priority qsub_time start_time end_time granted_pe slots failed exit_status ru_wallclock ru_utime ru_stime ru_maxrss ru_ixrss ru_ismrss ru_idrss ru_isrss ru_minflt ru_majflt ru_nswap ru_inblock ru_oublock ru_msgsnd ru_msgrcv ru_nsignals ru_nvcsw ru_nivcsw cpu mem io iow maxvmem"
 
    # submit job
-   set job_id [submit_job "-N qacct_test $ts_config(product_root)/examples/jobs/sleeper.sh 10"]
+   set job_id [submit_job "-o /dev/null -j y -N qacct_test $ts_config(product_root)/examples/jobs/sleeper.sh 10"]
    if {$job_id < 0} {
       set_error 0 "ok"
       return

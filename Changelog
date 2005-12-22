@@ -1,3 +1,15 @@
+OJ-2005-12-22-0: Testsuite: moved procedues in sge_pe, sge_host, sge_calendar,
+                 sge_qconf_config, sge_users, sge_userset
+OJ-2005-12-22-1: Testsuite: added files sge_calendar.*, sge_users.* 
+                 sge_userset.*
+                 which contain procedures to be used by new qconf tests.
+OJ-2005-12-22-2: Testsuite: new procedures to test qconf -pe
+OJ-2005-12-22-3: Testsuite: new files from sge_procedures.* containing 
+                 procedures for checkpointing.
+OJ-2005-12-22-4: Testsuite: new procedure for qconf -sconfl
+OJ-2005-12-22-4: Testsuite: new  procedures for qconf
+OJ-2005-12-22-5: Testsuite: new qconf tests in clients/qconf
+OJ-2005-12-22-6: Testsuite: new procedure for qconf -sprjl
 JG-2005-12-21-0: Bugfix:    - fixed broken build
                             - fixed broken distinst for multiple architectures
                  Enhancem.: - compilation with code coverage (tcov) on Solaris

@@ -1,3 +1,4 @@
+#!/usr/local/bin/tclsh
 #___INFO__MARK_BEGIN__
 ##########################################################################
 #
@@ -127,7 +128,7 @@ proc get_prj { prj_name change_array } {
 }
 
 #                                                             max. column:     |
-#****** sge_procedures/del_prj() ******
+#****** sge_project/del_prj() ******
 # 
 #  NAME
 #     del_prj -- ??? 
@@ -197,5 +198,37 @@ proc del_prj { myprj_name } {
      add_proc_error "del_prj" -1 "could not delete project \"$myprj_name\""
   }
   return $result
+}
+
+#****** sge_project/get_project_list() *****************************************
+#  NAME
+#    get_project_list () -- get the list of projects
+#
+#  SYNOPSIS
+#     get_project_list { {output_var result} {on_host ""} {as_user ""} {raise_error 1}  }
+#
+#  FUNCTION
+#     Calls qconf -sprjl to retrieve the project list
+#
+#  INPUTS
+#     output_var      - result will be placed here
+#     {on_host ""}    - execute qconf on this host, default is master host
+#     {as_user ""}    - execute qconf as this user, default is $CHECK_USER
+#     {raise_error 1} - raise an error condition on error (default), or just
+#                       output the error message to stdout
+#
+#  RESULT
+#     0 on success, an error code on error.
+#     For a list of error codes, see sge_procedures/get_sge_error().
+#
+#  SEE ALSO
+#     sge_procedures/get_sge_error()
+#     sge_procedures/get_qconf_list()
+#*******************************************************************************
+proc get_project_list {{output_var result} {on_host ""} {as_user ""} {raise_error 1}} {
+   upvar $output_var out
+
+   return [get_qconf_list "get_project_list" "-sprjl" out $on_host $as_user $raise_error]
+
 }
 

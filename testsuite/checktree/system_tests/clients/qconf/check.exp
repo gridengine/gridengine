@@ -66,27 +66,52 @@ set check_cleanup_function "qconf_cleanup"
 
 # define test's procedure order
 set check_functions     ""
-lappend check_functions "qconf_addqueues"             ;# functions to call (in order)
-lappend check_functions "qconf_removequeues"
-lappend check_functions "qconf_auser"
-lappend check_functions "qconf_duser"
-lappend check_functions "qconf_Auser"
-lappend check_functions "qconf_muser"
-lappend check_functions "qconf_Muser"
-lappend check_functions "qconf_de_check"
-lappend check_functions "qconf_segfault"
-lappend check_functions "qconf_se"
-lappend check_functions "qconf_sel"
+#lappend check_functions "qconf_addqueues"             ;# functions to call (in order)
+#lappend check_functions "qconf_removequeues"
+#lappend check_functions "qconf_auser"
+#lappend check_functions "qconf_duser"
+#lappend check_functions "qconf_Auser"
+#lappend check_functions "qconf_muser"
+#lappend check_functions "qconf_Muser"
+#lappend check_functions "qconf_de_check"
+#lappend check_functions "qconf_segfault"
+#lappend check_functions "qconf_se"
+#lappend check_functions "qconf_sel"
 
 # TODO: check all options
-#lappend check_functions "qconf_aattr_check"
-#lappend check_functions "qconf_rattr_check"
-#lappend check_functions "qconf_Aattr_check"
-#lappend check_functions "qconf_Rattr_check"
-#lappend check_functions "qconf_dattr_check"
-#lappend check_functions "qconf_Dattr_check"
-#lappend check_functions "qconf_mattr_check"
-#lappend check_functions "qconf_Mattr_check"
+##lappend check_functions "qconf_aattr_check"
+##lappend check_functions "qconf_rattr_check"
+##lappend check_functions "qconf_Aattr_check"
+##lappend check_functions "qconf_Rattr_check"
+##lappend check_functions "qconf_dattr_check"
+##lappend check_functions "qconf_Dattr_check"
+##lappend check_functions "qconf_mattr_check"
+##lappend check_functions "qconf_Mattr_check"
+
+# Show options
+lappend check_functions "qconf_scal_check"   	;# List calendars
+lappend check_functions "qconf_scall_check"	;# List all calalendars
+lappend check_functions "qconf_sconfl_check"	;# List all hosts with configurations
+lappend check_functions "qconf_sds_check"	;# List detached settings in the cluster  config
+lappend check_functions "qconf_secl_check"	;# List event client list
+lappend check_functions "qconf_sep_check"	;# List processors
+lappend check_functions "qconf_shgrp_tree_check"	;# List tree like structure of hosts
+lappend check_functions "qconf_shgrp_resolved_check"	;# List  hosts in a group
+lappend check_functions "qconf_sm_check"	;# List  managers
+lappend check_functions "qconf_so_check"	;# List operators 
+lappend check_functions "qconf_ss_check"	;# List submit hosts
+lappend check_functions "qconf_sss_check"	;# Show scheduler status
+lappend check_functions "qconf_sul_check"	;# Show user list
+lappend check_functions "qconf_sprjl_check"	;# Show project list
+
+# New options, non-show
+
+lappend check_functions "qconf_add_delete_manager"	;# Add and delete manager users
+#lappend check_functions "qconf_add_show_delete_queue"	;# Add, show and delete queue "qconf_queue.q"
+#lappend check_functions "qconf_add_show_delete_host"	;# Add, show and delete host exec_host [1], the first execd host
+#lappend check_functions "qconf_add_show_delete_stnode"	;# Add, show and delete share tree nodes
+#lappend check_functions "qconf_event_client"	;# Create, show and delete event clients
+
 
 
 global queue_names
@@ -1057,3 +1082,1008 @@ proc qconf_sel {} {
 
    set_error 0 "ok"
 }
+
+
+#                                                             max. column:     |
+#****** qconf/qconf_scal_check() ******
+#
+#  NAME
+#     qconf_scal_check - Check known calendar "always_suspend"
+#
+#  SYNOPSIS
+#     qconf_scal_check { } - Call get_calendar with calendar "always_suspend"
+#                            Then call get_calendar with a wrong calendar name,
+#                            like "wrong_calendar". 
+#
+#  FUNCTION
+#     Check basic functionality of qconf
+#
+#  SEE ALSO
+# sge_calendar/get_calendar()
+# sge_calendar/get_calender_error()
+#
+#*******************************
+proc qconf_scal_check {} {
+   global ts_config env
+   global CHECK_OUTPUT CHECK_USER CHECK_HOST CHECK_ARCH
+
+
+   # First do a positive test, give a valid calendar name, "always_suspend"
+   puts $CHECK_OUTPUT "Positive test for qconf -scal always_suspend...\n"
+   set result0 [get_calendar "always_suspend" ]
+
+   if { ( $result0 == 0 ) } {
+      puts $CHECK_OUTPUT "qconf -scal always_suspend succeded"
+   } else {
+      puts $CHECK_OUTPUT "result is $result0"
+   }
+
+   # Next do a negative test, give a invalid calendar name, "wrong_calendar"
+   puts $CHECK_OUTPUT "Negative test for qconf -scal wrong_calendar...\n"
+   set result1 [get_calendar "wrong_calendar" result $CHECK_HOST $CHECK_USER 0 ]
+
+   if { ( $result1 == -1 ) } {
+      puts $CHECK_OUTPUT "qconf -scal wrong_calendar succeded"
+   } else {
+      puts $CHECK_OUTPUT "result is $result1"
+
+   }
+
+   set_error 0 "ok"
+}
+
+#                                                             max. column:     |
+#****** qconf/qconf_scall_check() ******
+#
+#  NAME
+#     qconf_scall_check - Check all known calendars 
+#
+#  SYNOPSIS
+#     qconf_scall_check { } - Call get_calender_list
+#
+#  FUNCTION
+#     Check basic functionality of qconf
+#
+#  SEE ALSO
+# sge_calendar/get_calender_list()
+#*******************************
+proc qconf_scall_check {} {
+
+   global ts_config env
+   global CHECK_OUTPUT CHECK_USER CHECK_HOST CHECK_ARCH
+
+   # Do a positive test
+   puts $CHECK_OUTPUT "Positive test for qconf -scall ...\n"
+   set result0 [get_calender_list ]
+
+   if { ( $result0 == 0 ) } {
+      puts $CHECK_OUTPUT "qconf -scall succeded"
+   } else {
+      puts $CHECK_OUTPUT "result is $result0"
+
+   }
+
+   set_error 0 "ok"
+}
+
+#                                                             max. column:     |
+#****** qconf/qconf_sconfl_check() ******
+#
+#  NAME
+#     qconf_sconfl_check - Display a list of hosts  for  which  configurations
+#                          are  available.  
+#
+#  SYNOPSIS
+#     qconf_sconfl_check { } - Call get_config_list
+#
+#  FUNCTION
+#     Check basic functionality of qconf
+#
+#  SEE ALSO
+# sge_host/get_config_list()
+#*******************************
+
+proc qconf_sconfl_check {} {
+
+   global ts_config env
+   global CHECK_OUTPUT CHECK_USER CHECK_HOST CHECK_ARCH
+
+   # Do a positive test
+    puts $CHECK_OUTPUT "Positive test for qconf -sconfl ...\n"
+
+   set result0 [get_queue_config_list ]
+
+   if { ( $result0 == 0 ) } {
+      puts $CHECK_OUTPUT "qconf -sconfl succeded"
+   } else {
+      puts $CHECK_OUTPUT "result is $result0"
+   }
+
+   set_error 0 "ok"
+}
+
+#                                                             max. column:     |
+#****** qconf/qconf_sds_check() ******
+#
+#  NAME
+#     qconf_sds_check - Display detached settings in the cluster  config
+#
+#  SYNOPSIS
+#     qconf_sds_check { } - Call get_detached_settings
+#
+#  FUNCTION
+#     Check basic functionality of qconf
+#
+#  SEE ALSO
+# sge_procedures/get_detached_settings()
+#*******************************
+
+proc qconf_sds_check {} {
+
+   global ts_config env
+   global CHECK_OUTPUT CHECK_USER CHECK_HOST CHECK_ARCH
+  
+   # First do a positive test
+   set result0 [get_detached_settings]
+
+
+   if { ( $result0 == 0 ) } {
+      puts $CHECK_OUTPUT "qconf -sds succeded"
+   } else {
+      puts $CHECK_OUTPUT "result is $result0"
+   }
+
+   set_error 0 "ok"
+}
+
+#                                                      max. column:     |
+#****** qconf/qconf_secl_check() ******
+#
+#  NAME
+#     qconf_secl_check - Display the event client list
+#
+#  SYNOPSIS
+#     qconf_secl_check { } - Call get_event_client_list
+#
+#  FUNCTION
+#     Check basic functionality of qconf
+#
+#  SEE ALSO
+# sge_procedures/get_event_client_list()
+#*******************************
+
+proc qconf_secl_check {} {
+   global ts_config env
+   global CHECK_OUTPUT CHECK_USER CHECK_HOST CHECK_ARCH
+
+   # DO A Positive test
+   puts $CHECK_OUTPUT "Positive test for qconf -secl ...\n"
+
+   set result0 [get_event_client_list]
+
+   if { ( $result0 == 0 ) } {
+      puts $CHECK_OUTPUT "qconf -secl succeded"
+   } else {
+      puts $CHECK_OUTPUT "result is $result0"
+   }
+
+   set_error 0 "ok"
+}
+
+#                                               max. column:     | #
+#****** qconf/qconf_sep_check() ******  
+#  NAME
+#     qconf_sep_check - Display the processor list
+#
+#  SYNOPSIS
+#     qconf_sep_check { } - Call get_processor_list
+#
+#  FUNCTION
+#     Check basic functionality of qconf
+#
+#  SEE ALSO
+# sge_host/get_processor_list()
+#*******************************
+proc qconf_sep_check {} {
+   global ts_config env
+   global CHECK_OUTPUT CHECK_USER CHECK_HOST CHECK_ARCH
+
+   # DO A Positive test
+   puts $CHECK_OUTPUT "Positive test for qconf -sep ...\n"
+   set result0 [get_processor_list]
+
+  if { ( $result0 == 0 ) } {
+      puts $CHECK_OUTPUT "qconf -sep succeded\n"
+   } else {
+      puts $CHECK_OUTPUT "result is $result0"
+   }
+
+   set_error 0 "ok"
+}
+#                                                             max. column:     |
+#****** qconf/qconf_shgrp_tree_check() ******
+#
+#  NAME
+#     qconf_shgrp_tree_check - Display tree like structure of host group 
+#
+#  SYNOPSIS
+#     qconf_shgrp_tree_check { } - Call get_shgrp_tree_error for group "@allhosts"
+#
+#  FUNCTION
+#     Check basic functionality of qconf
+#
+#  SEE ALSO
+# sge_host.60/get_hostgroup_tree()
+# sge_host.60/get_hostgroup_tree_error()
+#*******************************
+proc qconf_shgrp_tree_check {} {
+   global ts_config env
+   global CHECK_OUTPUT CHECK_USER CHECK_HOST CHECK_ARCH
+
+   # First do a positive test
+   puts $CHECK_OUTPUT "Positive test for qconf -shgrp_tree ...\n"
+   set result0 [get_hostgroup_tree "@allhosts" ]
+
+   if { ( $result0 == 0 ) } {
+      puts $CHECK_OUTPUT "qconf -shgrp_tree @allhosts succeded"
+   } else {
+      puts $CHECK_OUTPUT "result is $result0"
+   }
+
+   # next do a negative test
+   puts $CHECK_OUTPUT "Negative test for qconf -shgrp_tree ...\n"
+   set result1 [get_hostgroup_tree "wrong_hostgroup" result $CHECK_HOST $CHECK_USER 0]
+
+   if { ( $result1 == -1 ) } {
+      puts $CHECK_OUTPUT "qconf -shgrp_tree wrong_hostgroup succeded"
+   } else {
+      puts $CHECK_OUTPUT "result is $result1"
+   }
+
+   set_error 0 "ok"
+}
+#                                                             max. column:     |
+#****** qconf/qconf_shgrp_resolved_check() ******
+#
+#  NAME
+#     qconf_shgrp_resolved_check - Display list of host group 
+#
+#  SYNOPSIS
+#     qconf_shgrp_resolved_check { } - Call "qconf -shgrp_resolved @allhosts"
+#                            Check that the output contains   "$CHECK_HOST"
+#
+#  FUNCTION
+#     Check basic functionality of qconf
+#
+#  SEE ALSO
+# sge_host.60/get_hostgroup_resolved()
+# sge_host.60/get_hostgroup_resolved_error()
+#*******************************
+proc qconf_shgrp_resolved_check {} {
+   global ts_config env
+   global CHECK_OUTPUT CHECK_USER CHECK_HOST CHECK_ARCH
+
+   # First do a positive test
+   puts $CHECK_OUTPUT "Positive test for qconf -shgrp_resolved ...\n"
+   set result0 [get_hostgroup_resolved "@allhosts" ]
+   if { ( $result0 == 0 ) } {
+      puts $CHECK_OUTPUT "qconf -shgrp_resolved @allhosts  succeded"
+   } else {
+      puts $CHECK_OUTPUT "result is $result0"
+   }
+
+   # next do a negative test
+   puts $CHECK_OUTPUT "Negative test for qconf -shgrp_resolved ...\n"
+   set result1 [get_hostgroup_resolved "wrong_hostgroup" result $CHECK_HOST $CHECK_USER 0]
+
+   if { ( $result1 == -1 ) } {
+      puts $CHECK_OUTPUT "qconf -shgrp_resolved wrong_hostgroup succeded"
+   } else {
+      puts $CHECK_OUTPUT "result is $result1"
+   }
+
+   set_error 0 "ok"
+}
+#                                                             max. column:     |
+#****** qconf/qconf_sm_check() ******
+#
+#  NAME
+#     qconf_sm_check - Display list of managers
+#
+#  SYNOPSIS
+#     qconf_sm_check { } - Call get_manager_list
+#
+#  FUNCTION
+#     Check basic functionality of qconf
+#
+#  SEE ALSO
+# sge_host/get_manager_list()
+#*******************************
+proc qconf_sm_check {} {
+   global ts_config env
+   global CHECK_OUTPUT CHECK_USER CHECK_HOST CHECK_ARCH
+
+   # First do a positive test
+   puts $CHECK_OUTPUT "Positive test for qconf -sm ...\n"
+
+   set result0 [get_manager_list]
+
+  if { ( $result0 == 0 ) } {
+      puts $CHECK_OUTPUT "qconf -sm succeded"
+   } else {
+      puts $CHECK_OUTPUT "result is $result0"
+   }
+
+   set_error 0 "ok"
+}
+#                                                             max. column:     |
+#****** qconf/qconf_so_check() ******
+#
+#  NAME
+#     qconf_so_check - Display list of operators
+#
+#  SYNOPSIS
+#     qconf_so_check { } - Call get_operator_list
+#
+#  FUNCTION
+#     Check basic functionality of qconf
+#
+#  SEE ALSO
+# sge_host/get_operator_list()
+#*******************************
+proc qconf_so_check {} {
+   global ts_config env
+   global CHECK_OUTPUT CHECK_USER CHECK_HOST CHECK_ARCH
+
+   # Do a positive test
+   puts $CHECK_OUTPUT "Positive test for qconf -so ...\n"
+   set result0 [get_operator_list]
+
+   if { ( $result0 == 0 ) } {
+      puts $CHECK_OUTPUT "qconf -so succeded"
+   } else {
+      puts $CHECK_OUTPUT "result is $result0"
+   }
+
+   set_error 0 "ok"
+}
+
+#                                                             max. column:     |
+#****** qconf/qconf_ss_check() ******
+#
+#  NAME
+#     qconf_ss_check - Display list of submit hosts
+#
+#  SYNOPSIS
+#     qconf_ss_check { } - Call get_submithost_list
+#
+#  FUNCTION
+#     Check basic functionality of qconf
+#
+#  SEE ALSO
+# sge_host/get_submithost_list()
+#*******************************
+proc qconf_ss_check {} {
+   global ts_config env
+   global CHECK_OUTPUT CHECK_USER CHECK_HOST CHECK_ARCH
+
+   # Do a positive test
+   puts $CHECK_OUTPUT "Positive test for qconf -ss ...\n"
+   set result0 [get_submithost_list ]
+
+   if { ( $result0 == 0 ) } {
+      puts $CHECK_OUTPUT "qconf -ss succeded"
+   } else {
+      puts $CHECK_OUTPUT "result is $result0"
+   }
+
+   set_error 0 "ok"
+}
+#                                                             max. column:     |
+#****** qconf/qconf_sss_check() ******
+#
+#  NAME
+#     qconf_sss_check - Display scheduler status
+#
+#  SYNOPSIS
+#     qconf_sss_check { } - Call "qconf -sss "
+#                            Check that the output contains   "$CHECK_HOST"
+#
+#  FUNCTION
+#     Check basic functionality of qconf
+#
+#  SEE ALSO
+# sge_procedures/get_scheduler_status()
+#*******************************
+proc qconf_sss_check {} {
+   global ts_config env
+   global CHECK_OUTPUT CHECK_USER CHECK_HOST CHECK_ARCH
+
+   # Do a positive tests
+   puts $CHECK_OUTPUT "Positive test for qconf -sss ...\n"
+   set result0 [get_scheduler_status]
+
+   if { ( $result0 == 0 ) } {
+      puts $CHECK_OUTPUT "qconf -sss succeded"
+   } else {
+      puts $CHECK_OUTPUT "result is $result0"
+   }
+
+   set_error 0 "ok"
+}
+#                                                             max. column:     |
+#****** qconf/qconf_sul_check() ******
+#
+#  NAME
+#     qconf_sul_check - Display user list
+#
+#  SYNOPSIS
+#     qconf_sul_check { } - Call get_user_list
+#
+#  FUNCTION
+#     Check basic functionality of qconf
+#
+#  SEE ALSO
+# sge_users/get_user_list()
+#*******************************
+proc qconf_sul_check {} {
+   global ts_config env
+   global CHECK_OUTPUT CHECK_USER CHECK_HOST CHECK_ARCH
+
+   # Do q positive test
+   puts $CHECK_OUTPUT "Positive test for qconf -sul ...\n"
+   set result0 [get_user_list ]
+
+   if { ( $result0 == 0 ) } {
+      puts $CHECK_OUTPUT "qconf -sul succeded"
+   } else {
+      add_proc_error "qconf_sul_check" -1 "qconf -sul failed"
+      puts $CHECK_OUTPUT "result is $result0"
+   }
+
+   set_error 0 "ok"
+}
+#                                                             max. column:     |
+#****** qconf/qconf_sprjl_check() ******
+#
+#  NAME
+#     qconf_sprjl_check - Display project list
+#
+#  SYNOPSIS
+#     qconf_sprjl_check { } - Call "qconf -sprjl "
+#                            Check that the output contains   "mytestproject"
+#
+#  FUNCTION
+#     Check basic functionality of qconf
+#
+#  SEE ALSO
+# sge_project/get_project_list()
+#*******************************
+proc qconf_sprjl_check {} {
+   global ts_config env
+   global CHECK_OUTPUT CHECK_USER CHECK_HOST CHECK_ARCH
+
+    # Do a positive test
+    puts $CHECK_OUTPUT "Positive test for qconf -sprjl ...\n"
+    set result0 [get_project_list]
+
+   if { ( $result0 == 0 ) } {
+      puts $CHECK_OUTPUT "qconf -sprjl succeded"
+   } else {
+      puts $CHECK_OUTPUT "result is $result0"
+   }
+
+   set_error 0 "ok"
+}
+#                                                             max. column:     |
+#****** qconf/qconf_add_delete_manager() ******
+#
+#  NAME
+#     qconf_add_delete_manager - Add and delete manager user
+#
+#  SYNOPSIS
+#     qconf_add_delete_manager { } - Call add_manager, get_manager_list,
+#	                             del_manager
+#
+#  FUNCTION
+#     Check basic functionality of qconf
+#
+#  SEE ALSO
+# sge_users/add_manager()
+# sge_users/get_manager_list()
+# sge_users/del_manager()
+#*******************************
+proc qconf_add_delete_manager {} {
+   global ts_config env
+   global CHECK_OUTPUT CHECK_USER CHECK_HOST CHECK_ARCH
+
+   # First add manager "qconf_user"
+   puts $CHECK_OUTPUT "Positive test for qconf -am ...\n"
+   set result0 [add_manager "qconf_user"]
+
+   if { ( $result0 == 0 ) } {
+      puts $CHECK_OUTPUT "qconf -am qconf_user succeded"
+   } else {
+      puts $CHECK_OUTPUT "result is $result0"
+   }
+
+   # Now show manager list, check that  "qconf_user" is there
+   puts $CHECK_OUTPUT "Positive test for qconf -sm ...\n"
+   set result22 [get_manager_list ]
+
+   if { ( $result22 == 0 ) } {
+      puts $CHECK_OUTPUT "qconf -sm succeded"
+   } else {
+      puts $CHECK_OUTPUT "result is $result22"
+   }
+
+   # Now delete manager "qconf_user"
+   puts $CHECK_OUTPUT "Positive test for qconf -dm ...\n"
+   set result2 [del_manager "qconf_user"]
+
+   if { ( $result2 == 0 ) } {
+      puts $CHECK_OUTPUT "qconf -dm qconf_user succeded"
+   } else {
+      puts $CHECK_OUTPUT "result is $result2"
+   }
+
+   # Now delete manager "qconf_user" again
+   puts $CHECK_OUTPUT "Negative test for qconf -dm ...\n"
+   set result3 [del_manager "qconf_user"] 
+
+   if { ( $result3 == 0 ) } {
+      puts $CHECK_OUTPUT "qconf -dm qconf_user again succeded"
+   } else {
+      puts $CHECK_OUTPUT "result is $result3"
+   }
+
+   set_error 0 "ok"
+}
+
+
+#                                                             max. column:     |
+#****** qconf/qconf_add_show_delete_queue() ******
+#
+#  NAME
+#     qconf_add_show_delete_queue - Add, show and delete queue "qconf_queue.q"
+#
+#  SYNOPSIS
+#     qconf_add_show_delete_queue { } - Call add_queue qconf_queue.q $CHECK_HOST new_queue
+#                                then   "qconf -sq qconf_queue.q" to show new queue
+#                                Also use "qconf -purge queue qname qconf_queue.q"
+#                                Then clean up with "qconf -dq qconf_queue.q"
+#
+#  FUNCTION
+#     Check basic functionality of qconf
+#
+#  SEE ALSO
+#
+# sge_queue/add_queue()
+# sge_procedures/get_qconf_show_list()
+# sge_procedures/get_qconf_show_list_error()
+#*******************************
+proc qconf_add_show_delete_queue {} {
+   global ts_config env CHECK_ACTUAL_TEST_PATH CHECK_PRODUCT_ROOT
+   global CHECK_OUTPUT CHECK_USER CHECK_HOST CHECK_ARCH
+
+   # First add queue "qconf_queue.q". Set the new name to "qconf_queue.q, 
+   # host to $CHECK_HOST
+
+   puts $CHECK_OUTPUT "Adding queue qconf_queue.q ...\n"
+   add_queue qconf_queue.q $CHECK_HOST new_queue 
+
+   # Now show queue list, check that  "qconf_queue.q" is there
+   puts $CHECK_OUTPUT "Getting information for qconf_queue.q ...\n"
+   set result1 [get_queue "qconf_queue.q" ]
+
+   if { ( $result1 == 0 ) } {
+      puts $CHECK_OUTPUT "qconf -sq succeded"
+   } else {
+      puts $CHECK_OUTPUT "result is $result1"
+   }
+
+   # Now do positive test on qconf -sql
+   puts $CHECK_OUTPUT "Positive test of qconf -sql ...\n"
+   set result2 [get_queue_list ]
+
+   if { ( $result2 == 0 ) } {
+      puts $CHECK_OUTPUT "qconf -sql succeded"
+   } else {
+      puts $CHECK_OUTPUT "result is $result2"
+   }
+
+
+   # Now clear queue "qconf_queue.q"
+   puts $CHECK_OUTPUT "Clearing queue qconf_queue.q ...\n"
+   set result3 [ clear_queue "qconf_queue.q"]
+
+   if { ( $result3 == 0 ) }{
+      puts $CHECK_OUTPUT "qconf -cq qconf_queue.q succeded"
+   } else {
+      puts $CHECK_OUTPUT "result is $result3"
+   }
+   
+   # Now try to clear it again!
+   set result4 [ clear_queue "qconf_queue.q"]
+
+   if { ( $result4 == 0 ) }{
+      puts $CHECK_OUTPUT "qconf -cq qconf_queue.q succeded"
+   } else {
+      puts $CHECK_OUTPUT "result is $result4"
+   }
+   
+   # Now purge queue "qconf_queue.q"
+   get_qconf_show_list result33 $CHECK_HOST $CHECK_USER "-purge queue hostlist qconf_queue.q@$CHECK_HOST"
+
+   if { ( [string first "qconf_queue.q"   $result33] >= 0 ) &&
+        ( [string first "$string1"   $result33] >= 0 ) &&
+        ( [string first "$string6"   $result33] >= 0 ) } {
+      puts $CHECK_OUTPUT "qconf -purge queue hostlist qconf_queue.q succeded"
+   } else {
+      add_proc_error "qconf_add_show_delete_queue" -1 "qconf -purge queue hostlist qconf_queue.q failed"
+      puts $CHECK_OUTPUT "result is $result33"
+   }
+ 
+   # Now try load_thresholds for purge
+   get_qconf_show_list result34 $CHECK_HOST $CHECK_USER "-purge queue load_thresholds qconf_queue.q@$CHECK_HOST"
+
+   if { ( [string first "load_thresholds"   $result34] >= 0 ) &&
+        ( [string first "$string7"   $result34] >= 0 ) &&
+        ( [string first "$string8"   $result34] >= 0 ) } {
+      puts $CHECK_OUTPUT "qconf -purge queue load_thresholds qconf_queue.q succeded"
+   } else {
+      add_proc_error "qconf_add_show_delete_queue" -1 "qconf -purge queue load_thresholds qconf_queue.q failed"
+      puts $CHECK_OUTPUT "result is $result34"
+   }
+
+   # Now delete queue "qconf_queue.q"
+   get_qconf_show_list result4 $CHECK_HOST $CHECK_USER "-dq qconf_queue.q"
+
+   if { ( [string first "qconf_queue.q"   $result4] >= 0 ) &&
+        ( [string first "$string1"   $result4] >= 0 ) &&
+        ( [string first "$string3"   $result4] >= 0 ) } {
+      puts $CHECK_OUTPUT "qconf -dq qconf_queue.q succeded"
+   } else {
+      add_proc_error "qconf_add_show_delete_queue" -1 "qconf -dq qconf_queue.q failed"
+      puts $CHECK_OUTPUT "result is $result4"
+   }
+
+   # Now delete queue "qconf_queue.q" again
+   set result44 [get_qconf_list_error result $CHECK_HOST $CHECK_USER "-dq" "qconf_queue.q" ]
+
+   if { ( $result44 == 0 ) } {
+      puts $CHECK_OUTPUT "qconf -dq qconf_queue.q again succeded"
+   } else {
+      add_proc_error "qconf_add_show_delete_queue" -1 "qconf -dq qconf_queue.q again failed"
+      puts $CHECK_OUTPUT "result is $result44"
+   }
+
+   # Now try to clear a non-existant queue
+   get_qconf_show_list result5 $CHECK_HOST $CHECK_USER "-cq qconf_queue.q"
+
+   if { ( [string first "qconf_queue.q"   $result5] >= 0 ) &&
+        ( [string first "$string5"   $result5] >= 0 ) } {
+      puts $CHECK_OUTPUT "qconf -cq qconf_queue.q succeded"
+   } else {
+      add_proc_error "qconf_add_show_delete_queue" -1 "qconf -cq qconf_queue.q f
+ailed"
+      puts $CHECK_OUTPUT "result is $result5"
+   }
+
+   set_error 0 "ok"
+
+}
+#                                                             max. column:     |
+#****** qconf/qconf_add_show_delete_host() ******
+#
+#  NAME
+#     qconf_add_show_delete_host - Add, show and delete host execd_nodes 1
+#
+#  SYNOPSIS
+#     qconf_add_show_delete_host { } - Call "qconf -dh execd_host "
+#	                         Show it with "qconf -sh"
+#                                Then add it ack with "qconf -ah execd_host"
+#                                Try to add it again
+#                                Show it with "qconf -sh"
+#
+#  FUNCTION
+#     Check basic functionality of qconf
+#
+#  SEE ALSO
+#
+# sge_procedures/get_qconf_show_list()
+# sge_procedures/get_qconf_show_list_error()
+#*******************************
+proc qconf_add_show_delete_host {} {
+   global ts_config env CHECK_ACTUAL_TEST_PATH CHECK_PRODUCT_ROOT
+   global CHECK_OUTPUT CHECK_USER CHECK_HOST CHECK_ARCH
+
+   set other_host [lindex $ts_config(execd_nodes) 1]
+
+   set string1 [translate $CHECK_HOST 0 1 0 "added"]
+   set string2 [translate $CHECK_HOST 0 1 0 "removed"]
+   set string3 [translate $CHECK_HOST 0 1 0 "administrative host list"]
+   set string4 [translate $CHECK_HOST 0 1 0 "already exists"]
+
+   # First delete host $other_host. 
+   get_qconf_show_list result1 $CHECK_HOST $CHECK_USER "-dh $other_host"
+
+   if { ( [string first "$other_host"   $result1] >= 0 ) &&
+        ( [string first "$string2"   $result1] >= 0 ) &&
+        ( [string first "$string3"   $result1] >= 0 ) } {
+      puts $CHECK_OUTPUT "qconf -dh $other_host succeded"
+   } else {
+      add_proc_error "qconf_add_show_delete_host" -1 "qconf -dh $other_host failed"
+      puts $CHECK_OUTPUT "result is $result1"
+   }
+
+   # Now show hosts list, check that  "$other_host" is NOT there
+   get_qconf_show_list result2 $CHECK_HOST $CHECK_USER "-sh "
+
+   if { ( [string first "$other_host"   $result2] < 0 ) } {
+      puts $CHECK_OUTPUT "qconf -sh succeded"
+   } else {
+      add_proc_error "qconf_add_show_delete_host" -1 "qconf -sh failed"
+      puts $CHECK_OUTPUT "result is $result2"
+   }
+
+   # Try deleting it again
+   set result3 [get_qconf_list_error result $CHECK_HOST $CHECK_USER "-dh" "$other_host" ]
+
+   if { ( $result3 == 0 ) } {
+      puts $CHECK_OUTPUT "qconf -dh $other_host again succeded"
+   } else {
+      add_proc_error "qconf_add_show_delete_host" -1 "qconf -dh $other_host  again failed"
+      puts $CHECK_OUTPUT "result is $result3"
+   }
+
+  
+ # Now add back $other_host
+   get_qconf_show_list result4 $CHECK_HOST $CHECK_USER "-ah $other_host"
+
+   if { ( [string first "$other_host"   $result4] >= 0 ) &&
+        ( [string first "$string1"   $result4] >= 0 ) &&
+        ( [string first "$string3"   $result4] >= 0 ) } {
+      puts $CHECK_OUTPUT "qconf -ah $other_host succeded"
+   } else {
+      add_proc_error "qconf_add_show_delete_host" -1 "qconf -ah $other_host failed"
+      puts $CHECK_OUTPUT "result is $result4"
+   }
+
+   # Now try adding it again
+   get_qconf_show_list result5 $CHECK_HOST $CHECK_USER "-ah $other_host"
+
+   if { ( [string first "$other_host"   $result5] >= 0 ) &&
+        ( [string first "$string4"   $result5] >= 0 ) } {
+      puts $CHECK_OUTPUT "qconf -ah $other_host again succeded"
+   } else {
+      add_proc_error "qconf_add_show_delete_host" -1 "qconf -ah $other_host again failed"
+      puts $CHECK_OUTPUT "result is $result5"
+   }
+
+   set_error 0 "ok"
+
+}
+
+#                                                             max. column:     |
+#****** qconf/qconf_add_show_delete_stnode() ******
+#
+#  NAME
+#     qconf_add_show_delete_stnode - Add, show and delete sharetree
+#
+#  SYNOPSIS
+#     qconf_add_show_delete_stnode { } - Call "qconf -astnode ..."
+#                                Show it with "qconf -sstnode qconf_proj"
+#                                Then delete it with "qconf -dstnode qconf_proj"
+#
+#  FUNCTION
+#     Check basic functionality of qconf
+#
+#  SEE ALSO
+#
+# performance/large_cluster/check.exp/large_cluster_setup_sharetree()
+# sge_procedures/get_qconf_show_list()
+# sge_procedures/get_qconf_show_list_error()
+#*******************************
+proc qconf_add_show_delete_stnode {} {
+   global ts_config env 
+   global CHECK_OUTPUT CHECK_USER CHECK_HOST CHECK_FIRST_FOREIGN_SYSTEM_USER
+
+   set other_host [lindex $ts_config(execd_nodes) 1]
+
+   set string1 [translate $CHECK_HOST 0 1 0 "added"]
+   set string2 [translate $CHECK_HOST 0 1 0 "removing"]
+   set string3 [translate $CHECK_HOST 0 1 0 "removed"]
+   set string4 [translate $CHECK_HOST 0 1 0 "sharetree list"]
+
+   set project "qconf_project"
+
+   # Add project "qconf_project"
+   set new_project(name) $project
+   add_prj new_project
+
+   # Add users
+   set new_user(name) $CHECK_USER
+   set new_user(default_project) $project
+   add_user new_user
+
+   set new_user(name) $CHECK_FIRST_FOREIGN_SYSTEM_USER
+   add_user new_user
+
+   # Check that the new project has been added
+
+   # Now add policies to the project $project
+   get_qconf_show_list result1 $CHECK_HOST $CHECK_USER "-astnode /$project=100,/$project/$CHECK_USER=30,/$project/$CHECK_FIRST_FOREIGN_SYSTEM_USER=70"
+
+   # Now show the sharetree list
+   get_qconf_show_list result2 $CHECK_HOST $CHECK_USER "-sstnode /$project"
+
+   if { ( [string first "$project"   $result2] >= 0 ) } {
+      puts $CHECK_OUTPUT "qconf -sstnode /$project succeded"
+   } else {
+      add_proc_error "qconf_add_show_delete_stnode" -1 "qconf -sstnode /$project failed"
+      puts $CHECK_OUTPUT "result is $result2"
+   }
+
+   # Modify shares in project $project
+
+   get_qconf_show_list result22 $CHECK_HOST $CHECK_USER "-mstnode /$project=100,/$project/$CHECK_USER=50,/$project/$CHECK_FIRST_FOREIGN_SYSTEM_USER=50"
+
+   # Now show the sharetree list again
+   get_qconf_show_list result23 $CHECK_HOST $CHECK_USER "-sstnode /$project"
+
+   if { ( [string first "$project"   $result23] >= 0 ) } {
+      puts $CHECK_OUTPUT "qconf -sstnode /$project again succeded"
+   } else {
+      add_proc_error "qconf_add_show_delete_stnode" -1 "qconf -sstnode /$project  again failed"
+      puts $CHECK_OUTPUT "result is $result23"
+   }
+
+   
+   # Delete $project/$CHECK_USER
+   get_qconf_show_list result3 $CHECK_HOST $CHECK_USER "-dstnode /$project/$CHECK_USER"
+  
+   if { ( [string first "$project/$CHECK_USER"   $result3] >= 0 ) &&
+        ( [string first "$string2"   $result3] >= 0 ) } {
+      puts $CHECK_OUTPUT "qconf -dstnode /$project/$CHECK_USER succeded"
+   } else {
+      add_proc_error "qconf_add_show_delete_stnode" -1 "qconf -dstnode /$project/$CHECK_USER failed"
+      puts $CHECK_OUTPUT "result is $result3"
+   }
+
+   # Delete $project/$CHECK_FIRST_FOREIGN_SYSTEM_USER
+
+   get_qconf_show_list result4 $CHECK_HOST $CHECK_USER "-dstnode /$project/$CHECK_FIRST_FOREIGN_SYSTEM_USER"
+
+   if { ( [string first "$project/$CHECK_FIRST_FOREIGN_SYSTEM_USER"   $result4] >= 0 ) &&
+        ( [string first "$string2"   $result4] >= 0 ) } {
+      puts $CHECK_OUTPUT "qconf -dstnode /$project/$CHECK_FIRST_FOREIGN_SYSTEM_USER succeded"
+   } else {
+      add_proc_error "qconf_add_show_delete_stnode" -1 "qconf -dstnode /$project/$CHECK_FIRST_FOREIGN_SYSTEM_USER failed"
+      puts $CHECK_OUTPUT "result is $result4"
+   }
+   
+   # Now delete all sharetree
+   get_qconf_show_list result5 $CHECK_HOST $CHECK_USER "-dstree " 
+
+   if { ( [string first "$string3"   $result5] >= 0 ) &&
+        ( [string first "$string4"   $result5] >= 0 ) } {
+      puts $CHECK_OUTPUT "qconf -dstree succeded"
+   } else {
+      add_proc_error "qconf_add_show_delete_stnode" -1 "qconf -dstree failed"
+      puts $CHECK_OUTPUT "result is $result5"
+   }
+
+   # Delete users CHECK_USER, CHECK_FIRST_FOREIGN_SYSTEM_USER from userlist
+   del_user $CHECK_USER
+   del_user $CHECK_FIRST_FOREIGN_SYSTEM_USER
+
+   # Delete $project
+   del_prj $project
+
+   set_error 0 "ok"
+
+}
+
+
+#                                                             max. column:     |
+#****** qconf/qconf_event_client() ******
+#
+#  NAME
+#     qconf_event_client - Create and then destroy an event client
+#
+#  SYNOPSIS
+#     qconf_event_client { } - First create an INTERACTIVE only queue
+#                             Then start qevent -ts as special user 
+#                            ts_def_con2
+#                            Check event client list with qconf -secl
+#			     Then kill event client with qconf -kec
+#
+#  FUNCTION
+#     Check basic functionality of qconf
+#
+#  SEE ALSO
+# performance/throughput/run_throughput_test()
+# sge_procedures/get_qconf_show_list()
+# sge_procedures/get_qconf_show_list_error()
+#*******************************
+proc qconf_event_client {} {
+   global ts_config env CHECK_SOURCE_DIR
+   global CHECK_OUTPUT CHECK_USER CHECK_HOST CHECK_ARCH
+
+   set string1 [translate $CHECK_HOST 0 1 0 "shutdown notification to event client qevent"]
+   set up_arch [resolve_build_arch $ts_config(master_host)]
+   set event_client_bin $CHECK_SOURCE_DIR/$up_arch/qevent
+
+   if { [file isfile $event_client_bin] != 1 } {
+      set_error -3 "could not open event client binary: $event_client_bin"
+      return -3
+   }
+   puts $CHECK_OUTPUT "using event client: $event_client_bin"
+
+   # start event client on master host, using special user ts_def_con2
+   puts $CHECK_OUTPUT "starting event client with -ts option ..."
+   set event_client_sid [ open_remote_spawn_process $ts_config(master_host) "ts_def_con2" $event_client_bin "-ts"]
+   set event_client_id [lindex $event_client_sid 1]
+
+   set event_client_id [lindex $event_client_sid 1]
+
+   # First do a list of event clients
+   get_qconf_show_list result0 $CHECK_HOST $CHECK_USER "-secl"
+
+   if { ( [string first "scheduler"   $result0] >= 0 ) } {
+      puts $CHECK_OUTPUT "qconf -secl succeded"
+   } else {
+      add_proc_error "qconf_event_client" -1 "qconf -secl failed"
+      puts $CHECK_OUTPUT "result is $result0"
+   }
+
+   # Do now a negative test
+   set result1 [get_qconf_list_error result $CHECK_HOST $CHECK_USER "-secl always_depend"]
+
+   if { ( $result1 == 0 ) } {
+      puts $CHECK_OUTPUT "qconf -secl always_depend succeded"
+   } else {
+      add_proc_error "qconf_event_client" -1 "qconf -secl always_depend failed"
+      puts $CHECK_OUTPUT "result is $result1"
+   }
+
+   # Kill now event clients
+
+   #get_qconf_show_list result2 $CHECK_HOST $CHECK_USER "-kec all"
+   get_qconf_show_list result2 $CHECK_HOST $CHECK_USER "-kec $event_client_id"
+
+   if { ( [string first "$string1"   $result2] >= 0 ) &&
+        ( [string first "$CHECK_HOST"   $result2] >= 0 ) } {
+      #puts $CHECK_OUTPUT "qconf -kec all succeded"
+      puts $CHECK_OUTPUT "qconf -kec $event_client_id succeded"
+   } else {
+      #add_proc_error "qconf_event_client" -1 "qconf -kec all failed"
+      add_proc_error "qconf_event_client" -1 "qconf -kec $event_client_id failed"
+      puts $CHECK_OUTPUT "result is $result2"
+   }
+
+   close_spawn_process $event_client_sid
+   
+   # Restart event client to do a -kec all
+
+   # start event client on master host, using special user ts_def_con2
+   puts $CHECK_OUTPUT "Re-starting event client with -ts option ..."
+   set event_client_sid1 [ open_remote_spawn_process $ts_config(master_host) "ts_def_con2" $event_client_bin "-ts"]
+   set event_client_id1 [lindex $event_client_sid1 1]
+
+   get_qconf_show_list result2 $CHECK_HOST $CHECK_USER "-kec all"
+
+   if { ( [string first "$string1"   $result2] >= 0 ) &&
+        ( [string first "$CHECK_HOST"   $result2] >= 0 ) } {
+      puts $CHECK_OUTPUT "qconf -kec all succeded"
+   } else {
+      add_proc_error "qconf_event_client" -1 "qconf -kec all failed"
+      puts $CHECK_OUTPUT "result is $result2"
+   }
+
+   close_spawn_process $event_client_sid1
+   
+   set_error 0 "ok"
+}
+

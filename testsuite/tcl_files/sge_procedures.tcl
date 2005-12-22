@@ -1,4 +1,4 @@
-#!/vol2/TCL_TK/glinux/bin/tclsh
+#!/usr/local/bin/tclsh
 # expect script 
 #___INFO__MARK_BEGIN__
 ##########################################################################
@@ -71,40 +71,6 @@ proc test {m p} {
    puts "test $m $p"
 }
 
-#****** sge_procedures/assign_queues_with_pe_object() **************************
-#  NAME
-#     assign_queues_with_pe_object() -- setup queue <-> pe connection
-#
-#  SYNOPSIS
-#     assign_queues_with_pe_object { queue_list pe_obj } 
-#
-#  FUNCTION
-#     This procedure will setup the queue - pe connections.
-#
-#  INPUTS
-#     queue_list - queue list for the pe object
-#     pe_obj     - name of pe object
-#
-#  SEE ALSO
-#     sge_procedures/assign_queues_with_ckpt_object()
-#*******************************************************************************
-#****** sge_procedures/assign_queues_with_ckpt_object() ************************
-#  NAME
-#     assign_queues_with_ckpt_object() -- setup queue <-> ckpt connection
-#
-#  SYNOPSIS
-#     assign_queues_with_ckpt_object { queue_list ckpt_obj } 
-#
-#  FUNCTION
-#     This procedure will setup the queue - ckpt connections.
-#
-#  INPUTS
-#     queue_list - queue list for the ckpt object
-#     ckpt_obj   - name of ckpt object
-#
-#  SEE ALSO
-#     sge_procedures/assign_queues_with_pe_object()
-#*******************************************************************************
 #****** sge_procedures/get_complex_version() ***********************************
 #  NAME
 #     get_complex_version() -- get information about used qconf version
@@ -611,7 +577,8 @@ proc start_sge_bin {bin args {host ""} {user ""} {exit_var prg_exit_state} {time
    set binary "$ts_config(product_root)/$sub_path/$arch/$bin"
 
    debug_puts "executing $binary $args\nas user $user on host $host"
-   set result [start_remote_prog $host $user $binary $args exit_state $timeout]
+   # Add " around $args if there are more the 1 args....
+   set result [start_remote_prog $host $user $binary "$args" exit_state $timeout]
 
    return $result
 }
@@ -790,6 +757,9 @@ proc get_sge_error {procedure command result {raise_error 1}} {
 #     check/add_proc_error()
 #     sge_procedures/get_sge_error()
 #*******************************************************************************
+# if {[string match $messages($errno) $result]} {
+# if { ( [string first "$messages($errno)" $result] >= 0 ) } {
+
 proc handle_sge_errors {procedure command result messages_var {raise_error 1}} {
    upvar $messages_var messages
 
@@ -800,7 +770,6 @@ proc handle_sge_errors {procedure command result messages_var {raise_error 1}} {
 
    # remove trailing garbage
    set result [string trim $result]
-
    # try to find error message
    foreach errno $messages(index) {
       if {[string match $messages($errno) $result]} {
@@ -2601,411 +2570,6 @@ proc del_access_list { list_name } {
   }
   return 0
 }
-
-
-
-#                                                             max. column:     |
-#****** sge_procedures/add_checkpointobj() ******
-# 
-#  NAME
-#     add_checkpointobj -- add a new checkpoint definiton object
-#
-#  SYNOPSIS
-#     add_checkpointobj { change_array } 
-#
-#  FUNCTION
-#     This procedure will add a new checkpoint definition object 
-#
-#  INPUTS
-#     change_array - name of an array variable that will be set by 
-#                    add_checkpointobj
-#
-#  NOTES
-#     The array should look like follows:
-#     
-#     set myarray(ckpt_name) "myname"
-#     set myarray(queue_list) "big.q"
-#     ...
-#
-#     Here the possbile change_array values with some typical settings:
-# 
-#     ckpt_name          test
-#     interface          userdefined
-#     ckpt_command       none
-#     migr_command       none
-#     restart_command    none
-#     clean_command      none
-#     ckpt_dir           /tmp
-#     queue_list         NONE
-#     signal             none
-#     when               sx
-#
-#  RESULT
-#      0  - ok
-#     -1  - timeout error
-#     -2  - object already exists
-#     -3  - queue reference does not exist
-# 
-#  SEE ALSO
-#     sge_procedures/del_checkpointobj()
-#*******************************
-proc add_checkpointobj { change_array } {
-   global ts_config
-   global CHECK_ARCH open_spawn_buffer
-   global CHECK_USER CHECK_OUTPUT
-
-   upvar $change_array chgar
-
-   validate_checkpointobj chgar
-
-   set vi_commands [build_vi_command chgar]
-
-   set ckpt_name $chgar(ckpt_name)
-   set args "-ackpt $ckpt_name"
- 
-   set ALREADY_EXISTS [ translate $ts_config(master_host) 1 0 0 [sge_macro MSG_SGETEXT_ALREADYEXISTS_SS] "*" $ckpt_name]
-   set ADDED [translate $ts_config(master_host) 1 0 0 [sge_macro MSG_SGETEXT_ADDEDTOLIST_SSSS] $CHECK_USER "*" $ckpt_name "checkpoint interface" ]
-
-   if { $ts_config(gridengine_version) == 53 } {
-      set REFERENCED_IN_QUEUE_LIST_OF_CHECKPOINT [translate $ts_config(master_host) 1 0 0 [sge_macro MSG_SGETEXT_UNKNOWNQUEUE_SSSS] "*" "*" "*" "*"] 
-
-      set result [ handle_vi_edit "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" $args $vi_commands $ADDED $ALREADY_EXISTS $REFERENCED_IN_QUEUE_LIST_OF_CHECKPOINT ] 
-   } else {
-      set result [ handle_vi_edit "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" $args $vi_commands $ADDED $ALREADY_EXISTS ] 
-
-   }
-
-   # check result
-   if { $result == -1 } { add_proc_error "add_checkpointobj" -1 "timeout error" }
-   if { $result == -2 } { add_proc_error "add_checkpointobj" -1 "already exists" }
-   if { $result == -3 } { add_proc_error "add_checkpointobj" -1 "queue reference does not exist" }
-   if { $result != 0  } { add_proc_error "add_checkpointobj" -1 "could nod add checkpoint object" }
-
-   return $result
-}
-
-
-#****** sge_procedures/set_checkpointobj() *************************************
-#  NAME
-#     set_checkpointobj() -- set or change checkpoint object configuration
-#
-#  SYNOPSIS
-#     set_checkpointobj { ckpt_obj change_array } 
-#
-#  FUNCTION
-#     Set a checkpoint configuration corresponding to the content of the 
-#     change_array.
-#
-#  INPUTS
-#     ckpt_obj     - name of the checkpoint object to configure
-#     change_array - name of array variable that will be set by 
-#                    set_checkpointobj()
-#
-#  RESULT
-#     0  : ok
-#     -1 : timeout
-#
-#  SEE ALSO
-#     sge_procedures/get_checkpointobj()
-#*******************************************************************************
-proc set_checkpointobj { ckpt_obj change_array } {
-   global ts_config
-   global CHECK_ARCH open_spawn_buffer
-   global CHECK_USER CHECK_OUTPUT
-
-   upvar $change_array chgar
-
-   validate_checkpointobj chgar
-
-   set vi_commands [build_vi_command chgar]
-
-   set args "-mckpt $ckpt_obj"
- 
-   set ALREADY_EXISTS [ translate $ts_config(master_host) 1 0 0 [sge_macro MSG_SGETEXT_ALREADYEXISTS_SS] "*" $ckpt_obj]
-   set MODIFIED [translate $ts_config(master_host) 1 0 0 [sge_macro MSG_SGETEXT_MODIFIEDINLIST_SSSS] $CHECK_USER "*" $ckpt_obj "checkpoint interface" ]
-
-   if { $ts_config(gridengine_version) == 53 } {
-      set REFERENCED_IN_QUEUE_LIST_OF_CHECKPOINT [translate $ts_config(master_host) 1 0 0 [sge_macro MSG_SGETEXT_UNKNOWNQUEUE_SSSS] "*" "*" "*" "*"] 
-
-      set result [ handle_vi_edit "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" $args $vi_commands $MODIFIED $ALREADY_EXISTS $REFERENCED_IN_QUEUE_LIST_OF_CHECKPOINT ] 
-  } else {
-      set result [ handle_vi_edit "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" $args $vi_commands $MODIFIED $ALREADY_EXISTS ] 
-  }
-
-   if { $result == -1 } { add_proc_error "add_checkpointobj" -1 "timeout error" }
-   if { $result == -2 } { add_proc_error "add_checkpointobj" -1 "already exists" }
-   if { $result == -3 } { add_proc_error "add_checkpointobj" -1 "queue reference does not exist" }
-   if { $result != 0  } { add_proc_error "add_checkpointobj" -1 "could nod modify checkpoint object" }
-
-   return $result
-}
-
-
-#                                                             max. column:     |
-#****** sge_procedures/del_checkpointobj() ******
-# 
-#  NAME
-#     del_checkpointobj -- delete checkpoint object definition
-#
-#  SYNOPSIS
-#     del_checkpointobj { checkpoint_name } 
-#
-#  FUNCTION
-#     This procedure will delete a checkpoint object definition by its name.
-#
-#  INPUTS
-#     checkpoint_name - name of the checkpoint object
-#
-#  RESULT
-#      0  - ok
-#     -1  - timeout error
-#
-#  SEE ALSO
-#     sge_procedures/add_checkpointobj()
-#*******************************
-proc del_checkpointobj { checkpoint_name } {
-   global ts_config
-  global CHECK_ARCH open_spawn_buffer CHECK_CORE_MASTER CHECK_USER CHECK_HOST
-  global CHECK_OUTPUT
-
-   unassign_queues_with_ckpt_object $checkpoint_name
-
-  set REMOVED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_REMOVEDFROMLIST_SSSS] $CHECK_USER "*" $checkpoint_name "*" ]
-
-  log_user 0 
-  set id [ open_remote_spawn_process $CHECK_HOST $CHECK_USER "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-dckpt $checkpoint_name"  ]
-  set sp_id [ lindex $id 1 ]
-  set timeout 30
-  set result -1 
-  	
-  log_user 0 
-
-  expect {
-    -i $sp_id full_buffer {
-      set result -1
-      add_proc_error "del_checkpointobj" "-1" "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
-    }
-    -i $sp_id $REMOVED {
-      set result 0
-    }
-    -i $sp_id "removed" {
-      set result 0
-    }
-
-    -i $sp_id default {
-      set result -1
-    }
-    
-  }
-  close_spawn_process $id
-  log_user 1
-
-  if { $result != 0 } {
-     add_proc_error "del_checkpointobj" -1 "could not delete checkpoint object $checkpoint_name"
-  } 
-
-  return $result
-}
-
-
-
-#                                                             max. column:     |
-#****** sge_procedures/add_pe() ******
-# 
-#  NAME
-#     add_pe -- add new parallel environment definition object
-#
-#  SYNOPSIS
-#     add_pe { change_array { version_check 1 } } 
-#
-#  FUNCTION
-#     This procedure will create a new pe (parallel environemnt) definition 
-#     object.
-#
-#  INPUTS
-#     change_array - name of an array variable that will be set by add_pe
-#     { version_check 1 } - (default 1): check pe/ckpt version
-#                           (0): don't check pe/ckpt version
-#
-#  RESULT
-#      0 - ok
-#     -1 - timeout error
-#     -2 - pe already exists
-#     -3 - could not add pe
-#
-#  EXAMPLE
-#     set mype(pe_name) "mype"
-#     set mype(user_list) "user1"
-#     add_pe pe_name
-#
-#  NOTES
-#     The array should look like this:
-#
-#     set change_array(pe_name) 	"mype"
-#     set change_array(user_list) 	"crei"
-#     ....
-#     (every value that is set will be changed)
-#
-#     Here the possible change_array values with some typical settings:
-#
-#     pe_name           testpe
-#     queue_list        NONE
-#     slots             0
-#     user_lists        NONE
-#     xuser_lists       NONE
-#     start_proc_args   /bin/true
-#     stop_proc_args    /bin/true
-#     allocation_rule   $pe_slots
-#     control_slaves    FALSE
-#     job_is_first_task TRUE
-#
-#
-#  SEE ALSO
-#     sge_procedures/del_pe()
-#*******************************
-proc add_pe { change_array { version_check 1 } } {
-# pe_name           testpe
-# queue_list        NONE
-# slots             0
-# user_lists        NONE
-# xuser_lists       NONE
-# start_proc_args   /bin/true
-# stop_proc_args    /bin/true
-# allocation_rule   $pe_slots
-# control_slaves    FALSE
-# job_is_first_task TRUE
-
-   global ts_config
-  global env CHECK_ARCH open_spawn_buffer
-  global CHECK_CORE_MASTER CHECK_USER CHECK_OUTPUT
-
-  upvar $change_array chgar
-
-  if { $version_check == 1 } {
-     if { $ts_config(gridengine_version) == 60 && [info exists chgar(queue_list)]} {
-        if { [ info exists chgar(queue_list) ] } { 
-           puts $CHECK_OUTPUT "this qconf version doesn't support queue_list for pe objects"
-           add_proc_error "add_pe" -3 "this qconf version doesn't support queue_list for pe objects,\nuse assign_queues_with_pe_object() after adding pe\nobjects and don't use queue_list parameter.\nyou can call get_pe_ckpt_version() to test pe version"
-           unset chgar(queue_list)
-        }
-     }
-  }
-
-  set vi_commands [build_vi_command chgar]
-
-  set ADDED  [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_ADDEDTOLIST_SSSS] $CHECK_USER "*" "*" "*"]
-  set ALREADY_EXISTS [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_ALREADYEXISTS_SS] "*" "*" ]
-# JG: TODO: have to create separate add_pe in sge_procedures.60.tcl as this message no 
-#           longer exists
-#  set NOT_EXISTS [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_UNKNOWNUSERSET_SSSS] "*" "*" "*" "*" ]
-
-
-#  set result [ handle_vi_edit "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-ap [set chgar(pe_name)]" $vi_commands $ADDED $ALREADY_EXISTS $NOT_EXISTS ]
-  set result [ handle_vi_edit "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-ap [set chgar(pe_name)]" $vi_commands $ADDED $ALREADY_EXISTS ]
-  
-  if {$result == -1 } { add_proc_error "add_pe" -1 "timeout error" }
-  if {$result == -2 } { add_proc_error "add_pe" -1 "parallel environment \"[set chgar(pe_name)]\" already exists" }
-  if {$result == -3 } { add_proc_error "add_pe" -1 "something (perhaps a queue) does not exist" }
-  if {$result != 0  } { add_proc_error "add_pe" -1 "could not add parallel environment \"[set chgar(pe_name)]\"" }
-
-  return $result
-}
-
-proc get_pe {pe_name change_array} {
-  global ts_config
-  global CHECK_ARCH CHECK_OUTPUT
-  upvar $change_array chgar
-
-  set catch_result [ catch {  eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-sp" "$pe_name"} result ]
-  if { $catch_result != 0 } {
-     add_proc_error "get_config" "-1" "qconf error or binary not found ($ts_config(product_root)/bin/$CHECK_ARCH/qconf)\n$result"
-     return
-  } 
-
-  # split each line as listelement
-  set help [split $result "\n"]
-  foreach elem $help {
-     set id [lindex $elem 0]
-     set value [lrange $elem 1 end]
-     if { [string compare $value ""] != 0 } {
-       set chgar($id) $value
-     }
-  }
-}
-
-
-#****** sge_procedures/set_pe() ************************************************
-#  NAME
-#     set_pe() -- set or change pe configuration
-#
-#  SYNOPSIS
-#     set_pe { pe_obj change_array } 
-#
-#  FUNCTION
-#     Set a pe configuration corresponding to the content of the change_array.
-#
-#  INPUTS
-#     pe_obj       - name of pe object to configure
-#     change_array - name of an array variable that will be set by set_pe()
-#
-#  RESULT
-#     0  : ok
-#     -1 : timeout
-#
-#  SEE ALSO
-#     sge_procedures/add_pe()
-#*******************************************************************************
-proc set_pe { pe_obj change_array } {
-# pe_name           testpe
-# queue_list        NONE
-# slots             0
-# user_lists        NONE
-# xuser_lists       NONE
-# start_proc_args   /bin/true
-# stop_proc_args    /bin/true
-# allocation_rule   $pe_slots
-# control_slaves    FALSE
-# job_is_first_task TRUE
-
-   global ts_config
-  global env CHECK_ARCH open_spawn_buffer
-  global CHECK_CORE_MASTER CHECK_USER CHECK_OUTPUT
-
-  upvar $change_array chgar
-
-
-
-  if { $ts_config(gridengine_version) == 60 && [info exists chgar(queue_list)]} {
-     if { [ info exists chgar(queue_list) ] } { 
-        puts $CHECK_OUTPUT "this qconf version doesn't support queue_list for pe objects"
-        add_proc_error "set_pe" -3 "this qconf version doesn't support queue_list for pe objects,\nuse assign_queues_with_pe_object() after adding pe\nobjects and don't use queue_list parameter.\nyou can call get_pe_ckpt_version() to test pe version"
-        unset chgar(queue_list)
-     }
-  }
-
-  set vi_commands [build_vi_command chgar]
-
-  set MODIFIED  [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_MODIFIEDINLIST_SSSS] $CHECK_USER "*" "*" "*"]
-  set ALREADY_EXISTS [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_ALREADYEXISTS_SS] "*" "*" ]
-
-   if { $ts_config(gridengine_version) == 53 } {
-      set NOT_EXISTS [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_UNKNOWNUSERSET_SSSS] "*" "*" "*" "*" ]
-   } else {
-      # JG: TODO: is it the right message? It's the only one mentioning non 
-      #           existing userset, but only for CQUEUE?
-      set NOT_EXISTS [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_CQUEUE_UNKNOWNUSERSET_S] "*" ]
-   }
-
-  set result [ handle_vi_edit "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-mp $pe_obj" $vi_commands $MODIFIED $ALREADY_EXISTS $NOT_EXISTS ]
-  
-  if {$result == -1 } { add_proc_error "set_pe" -1 "timeout error" }
-  if {$result == -2 } { add_proc_error "set_pe" -1 "parallel environment \"$pe_obj\" already exists" }
-  if {$result == -3 } { add_proc_error "set_pe" -1 "something (perhaps a queue) does not exist" }
-  if {$result != 0  } { add_proc_error "set_pe" -1 "could not change parallel environment \"$pe_obj\"" }
-
-  return $result
-}
-
 
 #                                                             max. column:     |
 #****** sge_procedures/add_user() ******
@@ -7862,7 +7426,7 @@ if { [info exists argc ] != 0 } {
       puts "testsuite params     -  any testsuite command option (from file check.exp)"
       puts "                        testsuite params: file <path>/defaults.sav is needed"
    } else {
-      source "$TS_ROOT/check.exp"
+      #source "$TS_ROOT/check.exp"
       puts $CHECK_OUTPUT "master host is $CHECK_CORE_MASTER"
       puts $CHECK_OUTPUT "calling \"$procedure\" ..."
       set result [ eval $procedure ]
@@ -8211,3 +7775,100 @@ proc get_qconf_list {procedure option output_var {on_host ""} {as_user ""} {rais
 
    return $ret
 }
+
+#****** sge_procedures/get_scheduler_status() *****************************************
+#  NAME
+#    get_scheduler_status () -- get the scheduler status 
+#
+#  SYNOPSIS
+#     get_scheduler_status { {output_var result} {on_host ""} {as_user ""} {raise_error 1}  }
+#
+#  FUNCTION
+#     Calls qconf -sss to retrieve the scheduler status 
+#
+#  INPUTS
+#     output_var      - result will be placed here
+#     {on_host ""}    - execute qconf on this host, default is master host
+#     {as_user ""}    - execute qconf as this user, default is $CHECK_USER
+#     {raise_error 1} - raise an error condition on error (default), or just
+#                       output the error message to stdout
+#
+#  RESULT
+#     0 on success, an error code on error.
+#     For a list of error codes, see sge_procedures/get_sge_error().
+#
+#  SEE ALSO
+#     sge_procedures/get_sge_error()
+#     sge_procedures/get_qconf_list()
+#*******************************************************************************
+proc get_scheduler_status {{output_var result} {on_host ""} {as_user ""} {raise_error 1}} {
+   upvar $output_var out
+
+   return [get_qconf_list "get_scheduler_status" "-sss" out $on_host $as_user $raise_error]
+
+}
+
+#****** sge_procedures/get_detached_settings() *****************************************
+#  NAME
+#    get_detached_settings () -- get the detached settings in the cluster  config 
+#
+#  SYNOPSIS
+#     get_detached_settings { {output_var result} {on_host ""} {as_user ""} {raise_error 1}  }
+#
+#  FUNCTION
+#     Calls qconf -sds to retrieve the detached settings in the cluster  config
+#
+#  INPUTS
+#     output_var      - result will be placed here
+#     {on_host ""}    - execute qconf on this host, default is master host
+#     {as_user ""}    - execute qconf as this user, default is $CHECK_USER
+#     {raise_error 1} - raise an error condition on error (default), or just
+#                       output the error message to stdout
+#
+#  RESULT
+#     0 on success, an error code on error.
+#     For a list of error codes, see sge_procedures/get_sge_error().
+#
+#  SEE ALSO
+#     sge_procedures/get_sge_error()
+#     sge_procedures/get_qconf_list()
+#*******************************************************************************
+proc get_detached_settings {{output_var result} {on_host ""} {as_user ""} {raise_error 1}} {
+   upvar $output_var out
+
+   return [get_qconf_list "get_detached_settings" "-sds" out $on_host $as_user $raise_error]
+
+}
+
+#****** sge_procedures/get_event_client_list() *****************************************
+#  NAME
+#     get_event_client_list() -- get the event client list
+#
+#  SYNOPSIS
+#     get_event_client_list { {output_var result} {on_host ""} {as_user ""} {raise_error 1}  }
+#
+#  FUNCTION
+#     Calls qconf -secl to retrieve the event client list
+#
+#  INPUTS
+#     output_var      - result will be placed here
+#     {on_host ""}    - execute qconf on this host, default is master host
+#     {as_user ""}    - execute qconf as this user, default is $CHECK_USER
+#     {raise_error 1} - raise an error condition on error (default), or just
+#                       output the error message to stdout
+#
+#  RESULT
+#     0 on success, an error code on error.
+#     For a list of error codes, see sge_procedures/get_sge_error().
+#
+#  SEE ALSO
+#     sge_procedures/get_sge_error()
+#     sge_procedures/get_qconf_list()
+#*******************************************************************************
+proc get_event_client_list {{output_var result} {on_host ""} {as_user ""} {raise_error 1}} {
+   upvar $output_var out
+
+   return [get_qconf_list "get_event_client_list" "-secl" out $on_host $as_user $raise_error]
+
+}
+

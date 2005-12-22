@@ -1,3 +1,4 @@
+#!/usr/local/bin/tclsh
 #___INFO__MARK_BEGIN__
 ##########################################################################
 #
@@ -33,55 +34,6 @@
 # JG: TODO: Change the assign/unassign procedures.
 # The current implemtation using aattr/dattr is destroying the default 
 # settings in all.q
-
-proc unassign_queues_with_pe_object { pe_obj } {
-   global ts_config
-   global CHECK_OUTPUT CHECK_ARCH
-
-   puts $CHECK_OUTPUT "searching for references in cluster queues ..."
-   set queue_list [get_queue_list]
-   foreach elem $queue_list {
-      puts $CHECK_OUTPUT "queue: $elem"
-      if { [catch { exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-dattr" "queue" "pe_list" "$pe_obj" "$elem" } result] != 0 } {
-         # if command fails: output error
-         add_proc_error "unassign_queues_with_pe_object" -1 "error reading queue list: $result"
-      }
-   }
-   puts $CHECK_OUTPUT "searching for references in queue instances ..."
-   set queue_list [get_qinstance_list "-pe $pe_obj"]
-   foreach elem $queue_list {
-      puts $CHECK_OUTPUT "queue: $elem"
-      if { [catch { exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-dattr" "queue" "pe_list" "$pe_obj" "$elem" } result] != 0 } {
-         # if command fails: output error
-         add_proc_error "unassign_queues_with_pe_object" -1 "error changing pe_list: $result"
-      }
-   }
-}
-
-proc unassign_queues_with_ckpt_object { ckpt_obj } {
-   global ts_config
-   global CHECK_OUTPUT CHECK_ARCH
-
-   puts $CHECK_OUTPUT "searching for references in cluster queues ..."
-   set queue_list [get_queue_list]
-   foreach elem $queue_list {
-      puts $CHECK_OUTPUT "queue: $elem"
-      if { [catch { exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-dattr" "queue" "ckpt_list" "$ckpt_obj" "$elem" } result] != 0 } {
-         # if command fails: output error
-         add_proc_error "unassign_queues_with_ckpt_object" -1 "error reading queue list: $result"
-      }
-   }
-   puts $CHECK_OUTPUT "searching for references in queue instances ..."
-   set queue_list [get_qinstance_list]
-   foreach elem $queue_list {
-      puts $CHECK_OUTPUT "queue: $elem"
-      if { [catch { exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-dattr" "queue" "ckpt_list" "$ckpt_obj" "$elem" } result] != 0 } {
-         # if command fails: output error
-         add_proc_error "unassign_queues_with_ckpt_object" -1 "error changing ckpt_list: $result"
-      }
-   }
-}
-
 
 proc get_complex { change_array } {
   global ts_config
@@ -204,52 +156,6 @@ proc set_complex { change_array } {
   return $result
 }
 
-
-proc assign_queues_with_ckpt_object { qname hostlist ckpt_obj } {
-   global ts_config
-   global CHECK_OUTPUT CHECK_ARCH
-
-   set queue_list {}
-   # if we have no hostlist: change cluster queue
-   if {[llength $hostlist] == 0} {
-      set queue_list $qname
-   } else {
-      foreach host $hostlist {
-         lappend queue_list "${qname}@${host}"
-      }
-   }
-
-   foreach queue $queue_list {
-      puts $CHECK_OUTPUT "queue: $queue"
-      if { [catch { exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-aattr" "queue" "ckpt_list" "$ckpt_obj" "$queue" } result] != 0 } {
-         # if command fails: output error
-         add_proc_error "assign_queues_with_ckpt_object" -1 "error changing ckpt_list: $result"
-      }
-   }
-}
-
-proc assign_queues_with_pe_object { qname hostlist pe_obj } {
-   global ts_config
-   global CHECK_OUTPUT CHECK_ARCH
-
-   set queue_list {}
-   # if we have no hostlist: change cluster queue
-   if {[llength $hostlist] == 0} {
-      set queue_list $qname
-   } else {
-      foreach host $hostlist {
-         lappend queue_list "${qname}@${host}"
-      }
-   }
-
-   foreach queue $queue_list {
-      puts $CHECK_OUTPUT "queue: $queue"
-      if { [catch { exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-aattr" "queue" "pe_list" "$pe_obj" "$queue" } result] != 0 } {
-         # if command fails: output error
-         add_proc_error "assign_queues_with_pe_object" -1 "error changing pe_list: $result"
-      }
-   }
-}
 
 
 #****** sge_procedures.60/switch_to_admin_user_system() ************************
@@ -428,19 +334,6 @@ proc switch_execd_spool_dir { host spool_type { force_restart 0 } } {
    wait_for_load_from_all_queues 100
 
    return 0
-}
-
-
-proc validate_checkpointobj { change_array } {
-   global CHECK_OUTPUT
-
-   upvar $change_array chgar
-
-  if { [info exists chgar(queue_list)] } { 
-     puts $CHECK_OUTPUT "this qconf version doesn't support queue_list for ckpt objects"
-     add_proc_error "validate_checkpointobj" -3 "this Grid Engine version doesn't support a queue_list for ckpt objects,\nuse assign_queues_with_ckpt_object() after adding checkpoint\nobjects and don't use queue_list parameter."
-     unset chgar(queue_list)
-  }
 }
 
 

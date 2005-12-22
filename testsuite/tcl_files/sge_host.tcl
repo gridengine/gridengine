@@ -64,7 +64,6 @@
 #     sge_procedures/handle_sge_errors
 #*******************************************************************************
 proc get_exechost_error {result host raise_error} {
-   global ts_config CHECK_OUTPUT
 
    # recognize certain error messages and return special return code
    set messages(index) "-1 -2"
@@ -165,7 +164,7 @@ proc get_exechost_list {output_var {on_host ""} {as_user ""} {raise_error 1}} {
 #     get_adminhost_list() -- get a list of admin hosts
 #
 #  SYNOPSIS
-#     get_adminhost_list { output_var {on_host ""} {as_user ""} {raise_error 1} 
+#     get_adminhost_list { output_var  {on_host ""} {as_user ""} {raise_error 1} 
 #     } 
 #
 #  FUNCTION
@@ -197,11 +196,11 @@ proc get_adminhost_list {output_var {on_host ""} {as_user ""} {raise_error 1}} {
 #     get_submithost_list() -- get a list of submit hosts
 #
 #  SYNOPSIS
-#     get_submithost_list { output_var {on_host ""} {as_user ""} {raise_error 1} 
+#     get_submithost_list { {output_var result} {on_host ""} {as_user ""} {raise_error 1} 
 #     } 
 #
 #  FUNCTION
-#     Calls qconf -sel to retrieve a list of submit hosts.
+#     Calls qconf -ss to retrieve a list of submit hosts.
 #
 #  INPUTS
 #     output_var      - result will be placed here
@@ -218,9 +217,75 @@ proc get_adminhost_list {output_var {on_host ""} {as_user ""} {raise_error 1}} {
 #     sge_procedures/get_sge_error()
 #     sge_procedures/get_qconf_list()
 #*******************************************************************************
-proc get_submithost_list {output_var {on_host ""} {as_user ""} {raise_error 1}} {
+proc get_submithost_list {{output_var result} {on_host ""} {as_user ""} {raise_error 1}} {
    upvar $output_var out
 
    return [get_qconf_list "get_submithost_list" "-ss" out $on_host $as_user $raise_error]
+}
+
+#****** sge_host/get_queue_config_list() *****************************************
+#  NAME
+#     get_queue_config_list() -- get a list of hosts  for  which  configurations
+#                          are  available.
+#
+#  SYNOPSIS
+#     get_queue_config_list { {output_var result} {on_host ""} {as_user ""} {arg ""} {raise_error 1}  }
+#
+#  FUNCTION
+#     Calls qconf -sconfl to list of hosts 
+#
+#  INPUTS
+#     output_var      - result will be placed here
+#     {on_host ""}    - execute qconf on this host, default is master host
+#     {as_user ""}    - execute qconf as this user, default is $CHECK_USER
+#     {arg ""}    - value of calendar we wish to see; default is ""
+#     {raise_error 1} - raise an error condition on error (default), or just
+#                       output the error message to stdout
+#
+#  RESULT
+#     0 on success, an error code on error.
+#     For a list of error codes, see sge_procedures/get_sge_error().
+#
+#  SEE ALSO
+#     sge_procedures/get_sge_error()
+#     sge_procedures/get_qconf_list()
+#*******************************************************************************
+proc get_queue_config_list {{output_var result} {on_host ""} {as_user ""} {arg ""} {raise_error 1}} {
+
+   upvar $output_var out
+
+   return [get_qconf_list "get_queue_list" "-sconfl" out $on_host $as_user $raise_error]
+
+}
+#****** sge_host/get_processor_list() *****************************************
+#  NAME
+#     get_processor_list() -- get a list of all processors
+#
+#  SYNOPSIS
+#     get_processor_list { {output_var result} {on_host ""} {as_user ""} {raise_error 1}  }
+#
+#  FUNCTION
+#     Calls qconf -sep to retrieve all processors
+#
+#  INPUTS
+#     output_var      - result will be placed here
+#     {on_host ""}    - execute qconf on this host, default is master host
+#     {as_user ""}    - execute qconf as this user, default is $CHECK_USER
+#     {raise_error 1} - raise an error condition on error (default), or just
+#                       output the error message to stdout
+#
+#  RESULT
+#     0 on success, an error code on error.
+#     For a list of error codes, see sge_procedures/get_sge_error().
+#
+#  SEE ALSO
+#     sge_procedures/get_sge_error()
+#     sge_procedures/get_qconf_list()
+#*******************************************************************************
+proc get_processor_list {{output_var result} {on_host ""} {as_user ""} {raise_error 1}} {
+   upvar $output_var out
+
+   return [get_qconf_list "get_processor_list" "-sep" out $on_host $as_user $raise_error]
+
 }
 

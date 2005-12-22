@@ -1,3 +1,4 @@
+#!/usr/local/bin/tclsh
 #___INFO__MARK_BEGIN__
 ##########################################################################
 #
@@ -67,7 +68,8 @@
 #     here is a list of all valid array names (template queue):
 #
 #     change_array(qname)                "template"
-#     change_array(hostname)             "unknown"
+#     change_array(hostname)             "unknown" - This is wrong. It should say
+#     change_array(hostlist)             "unknown"
 #     change_array(seq_no)               "0"
 #     change_array(load_thresholds)      "np_load_avg=1.75"
 #     change_array(suspend_thresholds)   "NONE"
@@ -130,7 +132,7 @@
 #*******************************
 
 #                                                             max. column:     |
-#****** sge_procedures/add_queue() ******
+#****** sge_queue/add_queue() ******
 # 
 #  NAME
 #     add_queue -- Add a new queue configuration object
@@ -287,7 +289,7 @@ proc set_queue_defaults { change_array } {
 }
 
 #                                                             max. column:     |
-#****** sge_procedures/del_queue() ******
+#****** sge_queue/del_queue() ******
 # 
 #  NAME
 #     del_queue -- delete a queue
@@ -444,7 +446,7 @@ proc get_queue { q_name change_array } {
 }
 
 #                                                             max. column:     |
-#****** sge_procedures/suspend_queue() ******
+#****** sge_queue/suspend_queue() ******
 # 
 #  NAME
 #     suspend_queue -- set a queue in suspend mode
@@ -521,7 +523,7 @@ proc suspend_queue { qname } {
 }
 
 #                                                             max. column:     |
-#****** sge_procedures/unsuspend_queue() ******
+#****** sge_queue/unsuspend_queue() ******
 # 
 #  NAME
 #     unsuspend_queue -- set a queue in suspend mode
@@ -598,7 +600,7 @@ proc unsuspend_queue { queue } {
 }
 
 #                                                             max. column:     |
-#****** sge_procedures/disable_queue() ******
+#****** sge_queue/disable_queue() ******
 # 
 #  NAME
 #     disable_queue -- disable queues
@@ -692,7 +694,7 @@ proc disable_queue { queuelist } {
 
 
 #                                                             max. column:     |
-#****** sge_procedures/enable_queue() ******
+#****** sge_queue/enable_queue() ******
 # 
 #  NAME
 #     enable_queue -- enable queuelist
@@ -782,7 +784,7 @@ proc enable_queue { queuelist } {
 
 
 #                                                             max. column:     |
-#****** sge_procedures/get_queue_state() ******
+#****** sge_queue/get_queue_state() ******
 # 
 #  NAME
 #     get_queue_state -- get the state of a queue
@@ -839,5 +841,134 @@ proc get_queue_state { queue_name } {
 
   add_proc_error "get_queue_state" -1 "queue \"$queue\" not found" 
   return ""
+}
+
+#****** sge_queue/clear_queue() *****************************************
+#  NAME
+#     clear_queue() -- clear queue $queue
+#
+#  SYNOPSIS
+#     clear_queue { queue {output_var result} {on_host ""} {as_user ""} {raise_error 1}  }
+#
+#  FUNCTION
+#     Calls qconf -cq $queue to clear queue $queue
+#
+#  INPUTS
+#     output_var      - result will be placed here
+#     queue           - queue to be cleared
+#     {on_host ""}    - execute qconf on this host, default is master host
+#     {as_user ""}    - execute qconf as this user, default is $CHECK_USER
+#     {raise_error 1} - raise an error condition on error (default), or just
+#                       output the error message to stdout
+#
+#  RESULT
+#     0 on success, an error code on error.
+#     For a list of error codes, see sge_procedures/get_sge_error().
+#
+#  SEE ALSO
+#     sge_calendar/get_calendar()
+#     sge_calendar/get_calendar_error()
+#*******************************************************************************
+proc clear_queue {queue {output_var result}  {on_host ""} {as_user ""} {raise_error 1}} {
+
+   upvar $output_var out
+
+   # clear output variable
+   if {[info exists out]} {
+      unset out
+   }
+
+   set ret 0
+   set result [start_sge_bin "qconf" "-cq $queue" $on_host $as_user]
+
+   # parse output or raise error
+   if {$prg_exit_state == 0} {
+      parse_simple_record result out
+   } else {
+      set ret [clear_queue_error $result $queue $raise_error]
+   }
+
+   return $ret
+
+}
+#****** sge_queue/clear_queue_error() ***************************************
+#  NAME
+#     clear_queue_error() -- error handling for clear_queue
+#
+#  SYNOPSIS
+#     clear_queue_error { result queue raise_error }
+#
+#  FUNCTION
+#     Does the error handling for clear_queue.
+#     Translates possible error messages of qconf -cq,
+#     builds the datastructure required for the handle_sge_errors
+#     function call.
+#
+#     The error handling function has been intentionally separated from
+#     clear_queue. While the qconf call and parsing the result is
+#     version independent, the error messages (macros) usually are version
+#     dependent.
+#
+#  INPUTS
+#     result      - qconf output
+#     queue       - queue for which qconf -cq has been called
+#     raise_error - do add_proc_error in case of errors
+#
+#  RESULT
+#     Returncode for clear_queue function:
+#      -1:  cluster queue "queue" does not exist
+#     -99: other error
+#
+#  SEE ALSO
+#     sge_calendar/get_calendar
+#     sge_procedures/handle_sge_errors
+#*******************************************************************************
+proc clear_queue_error {result calendar raise_error} {
+
+   # recognize certain error messages and return special return code
+   set messages(index) "-1"
+   set messages(-1) [translate_macro MSG_CALENDAR_XISNOTACALENDAR_S $calendar]
+
+   # we might have version dependent, calendar specific error messages
+   get_calendar_error_vdep messages $calendar
+
+   set ret 0
+   # now evaluate return code and raise errors
+   set ret [handle_sge_errors "get_calendar" "qconf -cq $calendar" $result messages
+$raise_error]
+
+   return $ret
+}
+
+#****** sge_queue/get_queue_list() ***************************************
+#  NAME
+#     get_queue_list() -- get a list of all queues
+#
+#  SYNOPSIS
+#     get_queue_list { {output_var result} {on_host ""} {as_user ""} {raise_error 1}
+#
+#  FUNCTION
+#     Calls qconf -scall to retrieve all calendars
+#
+#  INPUTS
+#     output_var      - result will be placed here
+#     {on_host ""}    - execute qconf on this host, default is master host
+#     {as_user ""}    - execute qconf as this user, default is $CHECK_USER
+#     {raise_error 1} - raise an error condition on error (default), or just
+#                       output the error message to stdout
+#
+#  RESULT
+#     0 on success, an error code on error.
+#     For a list of error codes, see sge_procedures/get_sge_error().
+#
+#  SEE ALSO
+#     sge_procedures/get_sge_error()
+#     sge_procedures/get_qconf_list()
+#*******************************************************************************
+proc get_queue_list {{output_var result} {on_host ""} {as_user ""} {raise_error 1}} {
+   upvar $output_var out
+
+   return [get_qconf_list "get_queue_list" "-sql" out $on_host $as_user $raise_error]
+
 }
 

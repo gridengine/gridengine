@@ -7824,11 +7824,17 @@ proc source_tcl_files {} {
    ts_source $libdir/parser
    ts_source $libdir/sge_config
    ts_source $libdir/sge_procedures
-   ts_source $libdir/sge_host
    ts_source $libdir/sge_job
    ts_source $libdir/sge_queue
    ts_source $libdir/sge_project
    ts_source $libdir/sge_sched_conf
+   ts_source $libdir/sge_checkpoint
+   ts_source $libdir/sge_pe	
+   ts_source $libdir/sge_host
+   ts_source $libdir/sge_calendar
+   ts_source $libdir/sge_qconf_config
+   ts_source $libdir/sge_users	
+   ts_source $libdir/sge_userset	
    
    ts_source $libdir/checktree_helper
    ts_source $libdir/report_procedures

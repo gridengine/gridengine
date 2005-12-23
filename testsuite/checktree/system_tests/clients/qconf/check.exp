@@ -66,27 +66,27 @@ set check_cleanup_function "qconf_cleanup"
 
 # define test's procedure order
 set check_functions     ""
-#lappend check_functions "qconf_addqueues"             ;# functions to call (in order)
-#lappend check_functions "qconf_removequeues"
-#lappend check_functions "qconf_auser"
-#lappend check_functions "qconf_duser"
-#lappend check_functions "qconf_Auser"
-#lappend check_functions "qconf_muser"
-#lappend check_functions "qconf_Muser"
-#lappend check_functions "qconf_de_check"
-#lappend check_functions "qconf_segfault"
-#lappend check_functions "qconf_se"
-#lappend check_functions "qconf_sel"
+lappend check_functions "qconf_addqueues"             ;# functions to call (in order)
+lappend check_functions "qconf_removequeues"
+lappend check_functions "qconf_auser"
+lappend check_functions "qconf_duser"
+lappend check_functions "qconf_Auser"
+lappend check_functions "qconf_muser"
+lappend check_functions "qconf_Muser"
+lappend check_functions "qconf_de_check"
+lappend check_functions "qconf_segfault"
+lappend check_functions "qconf_se"
+lappend check_functions "qconf_sel"
 
 # TODO: check all options
-##lappend check_functions "qconf_aattr_check"
-##lappend check_functions "qconf_rattr_check"
-##lappend check_functions "qconf_Aattr_check"
-##lappend check_functions "qconf_Rattr_check"
-##lappend check_functions "qconf_dattr_check"
-##lappend check_functions "qconf_Dattr_check"
-##lappend check_functions "qconf_mattr_check"
-##lappend check_functions "qconf_Mattr_check"
+#lappend check_functions "qconf_aattr_check"
+#lappend check_functions "qconf_rattr_check"
+#lappend check_functions "qconf_Aattr_check"
+#lappend check_functions "qconf_Rattr_check"
+#lappend check_functions "qconf_dattr_check"
+#lappend check_functions "qconf_Dattr_check"
+#lappend check_functions "qconf_mattr_check"
+#lappend check_functions "qconf_Mattr_check"
 
 # Show options
 lappend check_functions "qconf_scal_check"   	;# List calendars

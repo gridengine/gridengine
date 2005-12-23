@@ -1880,49 +1880,6 @@ proc get_config { change_array {host global}} {
   return 0
 }
 
-#****** sge_procedures/get_checkpointobj() *************************************
-#  NAME
-#     get_checkpointobj() -- get checkpoint configuration information
-#
-#  SYNOPSIS
-#     get_checkpointobj { ckpt_obj change_array } 
-#
-#  FUNCTION
-#     Get the actual configuration settings for the named checkpoint object
-#
-#  INPUTS
-#     ckpt_obj     - name of the checkpoint object
-#     change_array - name of an array variable that will get set by 
-#                    get_checkpointobj
-#
-#  SEE ALSO
-#     sge_procedures/set_checkpointobj()
-#     sge_procedures/get_queue() 
-#     sge_procedures/set_queue()
-#*******************************************************************************
-proc get_checkpointobj { ckpt_obj change_array } {
-  global ts_config
-  global CHECK_ARCH CHECK_OUTPUT
-  upvar $change_array chgar
-
-  set catch_result [ catch {  eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-sckpt" "$ckpt_obj"} result ]
-  if { $catch_result != 0 } {
-     add_proc_error "get_checkpointobj" "-1" "qconf error or binary not found ($ts_config(product_root)/bin/$CHECK_ARCH/qconf)\n$result"
-     return
-  } 
-
-  # split each line as listelement
-  set help [split $result "\n"]
-  foreach elem $help {
-     set id [lindex $elem 0]
-     set value [lrange $elem 1 end]
-     if { [string compare $value ""] != 0 } {
-       set chgar($id) $value
-     }
-  }
-}
-
-
 #                                                             max. column:     |
 #****** sge_procedures/set_config() ******
 # 

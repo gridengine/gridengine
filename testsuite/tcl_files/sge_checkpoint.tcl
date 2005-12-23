@@ -51,6 +51,7 @@
 #  SEE ALSO
 #     sge_procedures/assign_queues_with_pe_object()
 #*******************************************************************************
+
 #****** sge_ckpt/get_checkpointobj() *************************************
 #  NAME
 #     get_checkpointobj() -- get checkpoint configuration information
@@ -140,10 +141,10 @@ proc set_checkpointobj { ckpt_obj change_array } {
       set result [ handle_vi_edit "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" $args $vi_commands $MODIFIED $ALREADY_EXISTS ]
   }
 
-   if { $result == -1 } { add_proc_error "add_checkpointobj" -1 "timeout error" }
-   if { $result == -2 } { add_proc_error "add_checkpointobj" -1 "already exists" }
-   if { $result == -3 } { add_proc_error "add_checkpointobj" -1 "queue reference does not exist" }
-   if { $result != 0  } { add_proc_error "add_checkpointobj" -1 "could nod modify checkpoint object" }
+   if { $result == -1 } { add_proc_error "set_checkpointobj" -1 "timeout error" }
+   if { $result == -2 } { add_proc_error "set_checkpointobj" -1 "already exists" }
+   if { $result == -3 } { add_proc_error "set_checkpointobj" -1 "queue reference does not exist" }
+   if { $result != 0  } { add_proc_error "set_checkpointobj" -1 "could nod modify checkpoint object" }
 
    return $result
 }
@@ -213,4 +214,85 @@ proc del_checkpointobj { checkpoint_name } {
 
   return $result
 }
+
+#                                                             max. column:     |
+#****** sge_procedures/add_checkpointobj() ******
+# 
+#  NAME
+#     add_checkpointobj -- add a new checkpoint definiton object
+#
+#  SYNOPSIS
+#     add_checkpointobj { change_array } 
+#
+#  FUNCTION
+#     This procedure will add a new checkpoint definition object 
+#
+#  INPUTS
+#     change_array - name of an array variable that will be set by 
+#                    add_checkpointobj
+#
+#  NOTES
+#     The array should look like follows:
+#     
+#     set myarray(ckpt_name) "myname"
+#     set myarray(queue_list) "big.q"
+#     ...
+#
+#     Here the possbile change_array values with some typical settings:
+# 
+#     ckpt_name          test
+#     interface          userdefined
+#     ckpt_command       none
+#     migr_command       none
+#     restart_command    none
+#     clean_command      none
+#     ckpt_dir           /tmp
+#     queue_list         NONE
+#     signal             none
+#     when               sx
+#
+#  RESULT
+#      0  - ok
+#     -1  - timeout error
+#     -2  - object already exists
+#     -3  - queue reference does not exist
+# 
+#  SEE ALSO
+#     sge_procedures/del_checkpointobj()
+#*******************************
+proc add_checkpointobj { change_array } {
+   global ts_config
+   global CHECK_ARCH open_spawn_buffer
+   global CHECK_USER CHECK_OUTPUT
+
+   upvar $change_array chgar
+
+   validate_checkpointobj chgar
+
+   set vi_commands [build_vi_command chgar]
+
+   set ckpt_name $chgar(ckpt_name)
+   set args "-ackpt $ckpt_name"
+ 
+   set ALREADY_EXISTS [ translate $ts_config(master_host) 1 0 0 [sge_macro MSG_SGETEXT_ALREADYEXISTS_SS] "*" $ckpt_name]
+   set ADDED [translate $ts_config(master_host) 1 0 0 [sge_macro MSG_SGETEXT_ADDEDTOLIST_SSSS] $CHECK_USER "*" $ckpt_name "checkpoint interface" ]
+
+   if { $ts_config(gridengine_version) == 53 } {
+      set REFERENCED_IN_QUEUE_LIST_OF_CHECKPOINT [translate $ts_config(master_host) 1 0 0 [sge_macro MSG_SGETEXT_UNKNOWNQUEUE_SSSS] "*" "*" "*" "*"] 
+
+      set result [ handle_vi_edit "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" $args $vi_commands $ADDED $ALREADY_EXISTS $REFERENCED_IN_QUEUE_LIST_OF_CHECKPOINT ] 
+   } else {
+      set result [ handle_vi_edit "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" $args $vi_commands $ADDED $ALREADY_EXISTS ] 
+
+   }
+
+   # check result
+   if { $result == -1 } { add_proc_error "add_checkpointobj" -1 "timeout error" }
+   if { $result == -2 } { add_proc_error "add_checkpointobj" -1 "already exists" }
+   if { $result == -3 } { add_proc_error "add_checkpointobj" -1 "queue reference does not exist" }
+   if { $result != 0  } { add_proc_error "add_checkpointobj" -1 "could nod add checkpoint object" }
+
+   return $result
+}
+
 

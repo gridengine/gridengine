@@ -59,3 +59,28 @@ proc unassign_queues_with_pe_object { pe_obj } {
    }
 }
 
+
+proc assign_queues_with_pe_object { qname hostlist pe_obj } {
+   global ts_config
+   global CHECK_OUTPUT CHECK_ARCH
+
+   set queue_list {}
+   # if we have no hostlist: change cluster queue
+   if {[llength $hostlist] == 0} {
+      set queue_list $qname
+   } else {
+      foreach host $hostlist {
+         lappend queue_list "${qname}@${host}"
+      }
+   }
+
+   foreach queue $queue_list {
+      puts $CHECK_OUTPUT "queue: $queue"
+      if { [catch { exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-aattr" "queue" "pe_list" "$pe_obj" "$queue" } result] != 0 } {
+         # if command fails: output error
+         add_proc_error "assign_queues_with_pe_object" -1 "error changing pe_list: $result"
+      }
+   }
+}
+
+

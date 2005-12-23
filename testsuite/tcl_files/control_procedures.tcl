@@ -1013,6 +1013,8 @@ proc get_ps_info { { pid 0 } { host "local"} { variable ps_info } {additional_ru
       "glinux" -
       "lx24-x86" -
       "lx26-x86" - 
+      "lx24-ia64" -
+      "lx26-ia64" - 
       "lx24-amd64" - 
       "lx26-amd64" { 
          set myenvironment(COLUMNS) "500"

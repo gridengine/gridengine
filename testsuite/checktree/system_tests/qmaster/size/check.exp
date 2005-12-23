@@ -351,6 +351,8 @@ proc init_ps {} {
       }
       "lx24-x86" -
       "lx26-x86" -
+      "lx24-ia64" -
+      "lx26-ia64" -
       "lx24-amd64" -
       "lx26-amd64" {
          set cmd_ps(master) "ps -p $qmaster_pid --no-heading -o vsz"

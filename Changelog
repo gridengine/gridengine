@@ -1,15 +1,38 @@
+JG-2005-12-23-0: Bugfix:    - fixed arch script for ia64 architecture
+                            - fixed a minor memory access problem in japi
+                            - fixed a bug in rsh client
+                 Bugtraq:   6366691
+                 Testsuite: make testsuite run on lx24_ia64 and lx26_ia64.
+                 Review:    RD
+
 OJ-2005-12-22-0: Testsuite: moved procedues in sge_pe, sge_host, sge_calendar,
                  sge_qconf_config, sge_users, sge_userset
+                 Review:    DT
+
 OJ-2005-12-22-1: Testsuite: added files sge_calendar.*, sge_users.* 
                  sge_userset.*
                  which contain procedures to be used by new qconf tests.
+                 Review:    DT
+
 OJ-2005-12-22-2: Testsuite: new procedures to test qconf -pe
+                 Review:    DT
+
 OJ-2005-12-22-3: Testsuite: new files from sge_procedures.* containing 
                  procedures for checkpointing.
+                 Review:    DT
+
 OJ-2005-12-22-4: Testsuite: new procedure for qconf -sconfl
+                 Review:    DT
+
 OJ-2005-12-22-4: Testsuite: new  procedures for qconf
+                 Review:    DT
+
 OJ-2005-12-22-5: Testsuite: new qconf tests in clients/qconf
+                 Review:    DT
+
 OJ-2005-12-22-6: Testsuite: new procedure for qconf -sprjl
+                 Review:    DT
+
 JG-2005-12-21-0: Bugfix:    - fixed broken build
                             - fixed broken distinst for multiple architectures
                  Enhancem.: - compilation with code coverage (tcov) on Solaris

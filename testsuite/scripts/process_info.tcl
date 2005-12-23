@@ -84,6 +84,8 @@ proc get_ps_cmd {pid} {
       }
       "lx24-x86" -
       "lx26-x86" -
+      "lx24-ia64" -
+      "lx26-ia64" -
       "lx24-amd64" -
       "lx26-amd64" {
          set cmd "/bin/ps -p $pid --no-heading -o vsz,time"

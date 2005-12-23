@@ -1688,6 +1688,7 @@ case SOLARISAMD64:
    endif
 
    if ($COVED == 1) then
+      set OFLAG = "-O"
       if ( $CC == gcc ) then
          set DEBUG_FLAG = "$DEBUG_FLAG -fprofile-arcs -ftest-coverage"
       else

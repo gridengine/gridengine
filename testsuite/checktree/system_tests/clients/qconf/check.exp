@@ -88,7 +88,7 @@ lappend check_functions "qconf_sel"
 #lappend check_functions "qconf_mattr_check"
 #lappend check_functions "qconf_Mattr_check"
 
-# Show options
+# Show options DONE
 lappend check_functions "qconf_scal_check"   	;# List calendars
 lappend check_functions "qconf_scall_check"	;# List all calalendars
 lappend check_functions "qconf_sconfl_check"	;# List all hosts with configurations
@@ -107,7 +107,7 @@ lappend check_functions "qconf_sprjl_check"	;# Show project list
 # New options, non-show
 
 lappend check_functions "qconf_add_delete_manager"	;# Add and delete manager users
-#lappend check_functions "qconf_add_show_delete_queue"	;# Add, show and delete queue "qconf_queue.q"
+lappend check_functions "qconf_add_show_delete_queue"	;# Add, show and delete queue "qconf_queue.q"
 #lappend check_functions "qconf_add_show_delete_host"	;# Add, show and delete host exec_host [1], the first execd host
 #lappend check_functions "qconf_add_show_delete_stnode"	;# Add, show and delete share tree nodes
 #lappend check_functions "qconf_event_client"	;# Create, show and delete event clients
@@ -1674,7 +1674,7 @@ proc qconf_add_show_delete_queue {} {
 
    # Now show queue list, check that  "qconf_queue.q" is there
    puts $CHECK_OUTPUT "Getting information for qconf_queue.q ...\n"
-   set result1 [get_queue "qconf_queue.q" ]
+   set result1 [get_queue "qconf_queue.q" change_array ]
 
    if { ( $result1 == 0 ) } {
       puts $CHECK_OUTPUT "qconf -sq succeded"
@@ -1692,81 +1692,106 @@ proc qconf_add_show_delete_queue {} {
       puts $CHECK_OUTPUT "result is $result2"
    }
 
-
    # Now clear queue "qconf_queue.q"
    puts $CHECK_OUTPUT "Clearing queue qconf_queue.q ...\n"
-   set result3 [ clear_queue "qconf_queue.q"]
+   set result3 [clear_queue "qconf_queue.q"]
 
-   if { ( $result3 == 0 ) }{
+   if { ( $result3 == 0 ) } {
       puts $CHECK_OUTPUT "qconf -cq qconf_queue.q succeded"
    } else {
       puts $CHECK_OUTPUT "result is $result3"
    }
    
    # Now try to clear it again!
-   set result4 [ clear_queue "qconf_queue.q"]
+   puts $CHECK_OUTPUT "Clearing queue qconf_queue.q again...\n"
+   set result4 [clear_queue "qconf_queue.q"]
 
-   if { ( $result4 == 0 ) }{
-      puts $CHECK_OUTPUT "qconf -cq qconf_queue.q succeded"
+   if { ( $result4 == 0 ) } {
+      puts $CHECK_OUTPUT "qconf -cq qconf_queue.q again succeded"
    } else {
       puts $CHECK_OUTPUT "result is $result4"
    }
-   
-   # Now purge queue "qconf_queue.q"
-   get_qconf_show_list result33 $CHECK_HOST $CHECK_USER "-purge queue hostlist qconf_queue.q@$CHECK_HOST"
 
-   if { ( [string first "qconf_queue.q"   $result33] >= 0 ) &&
-        ( [string first "$string1"   $result33] >= 0 ) &&
-        ( [string first "$string6"   $result33] >= 0 ) } {
+   #  Now try to clear a non-existing queue, "wrong_queue.q"
+   puts $CHECK_OUTPUT "Negative test of qconf -cq wrong_queue.q ...\n"
+   set result5 [clear_queue "wrong_queue.q" result $CHECK_HOST $CHECK_USER 0]
+
+   if { ( $result5 == -1 ) } {
+      puts $CHECK_OUTPUT "qconf -cq wrong_queue.q succeded"
+   } else {
+      puts $CHECK_OUTPUT "result is $result5"
+   }
+
+   # Now purge queue "qconf_queue.q"
+   puts $CHECK_OUTPUT "Positive test of qconf -purge hostlist ...\n"
+   set result33 [purge_queue "qconf_queue.q" $CHECK_HOST "hostlist"]
+
+   if { ( $result33 == 0 ) } {
       puts $CHECK_OUTPUT "qconf -purge queue hostlist qconf_queue.q succeded"
    } else {
-      add_proc_error "qconf_add_show_delete_queue" -1 "qconf -purge queue hostlist qconf_queue.q failed"
       puts $CHECK_OUTPUT "result is $result33"
    }
  
-   # Now try load_thresholds for purge
-   get_qconf_show_list result34 $CHECK_HOST $CHECK_USER "-purge queue load_thresholds qconf_queue.q@$CHECK_HOST"
+   # Now purge queue "wrong_queue.q"
+   puts $CHECK_OUTPUT "Negative test of qconf -purge hostlist...\n"
+   set result34 [purge_queue "wrong_queue.q" $CHECK_HOST "hostlist" result $CHECK_HOST $CHECK_USER 0]
 
-   if { ( [string first "load_thresholds"   $result34] >= 0 ) &&
-        ( [string first "$string7"   $result34] >= 0 ) &&
-        ( [string first "$string8"   $result34] >= 0 ) } {
-      puts $CHECK_OUTPUT "qconf -purge queue load_thresholds qconf_queue.q succeded"
+   if { ( $result34 == -1 ) } {
+      puts $CHECK_OUTPUT "qconf -purge queue hostlist wrong_queue.q succeded
+"
    } else {
-      add_proc_error "qconf_add_show_delete_queue" -1 "qconf -purge queue load_thresholds qconf_queue.q failed"
       puts $CHECK_OUTPUT "result is $result34"
    }
 
-   # Now delete queue "qconf_queue.q"
-   get_qconf_show_list result4 $CHECK_HOST $CHECK_USER "-dq qconf_queue.q"
+ 
+   # Now try load_thresholds for purge
+   puts $CHECK_OUTPUT "Positive test of qconf -purge load_thresholds ...\n"
+   set result35 [purge_queue "qconf_queue.q" $CHECK_HOST "load_thresholds"]
 
-   if { ( [string first "qconf_queue.q"   $result4] >= 0 ) &&
-        ( [string first "$string1"   $result4] >= 0 ) &&
-        ( [string first "$string3"   $result4] >= 0 ) } {
+   if { ( $result35 == 0 ) } {
+      puts $CHECK_OUTPUT "qconf -purge queue load_thresholds qconf_queue.q succeded"
+   } else {
+      puts $CHECK_OUTPUT "result is $result35"
+   }
+
+   # Now purge queue "wrong_queue.q"
+   puts $CHECK_OUTPUT "Negative test of qconf -purge load_thresholds...\n"
+   set result36 [purge_queue "wrong_queue.q" $CHECK_HOST "load_thresholds" result $CHECK_HOST $CHECK_USER 0]
+
+   if { ( $result36 == -1 ) } {
+      puts $CHECK_OUTPUT "qconf -purge queue load_thresholds wrong_queue.q succeded "
+   } else {
+      puts $CHECK_OUTPUT "result is $result36"
+   }
+
+
+   # Now delete queue "qconf_queue.q"
+   puts $CHECK_OUTPUT "Positive test of qconf -dq qconf_queue.q...\n"
+   set result4 [del_queue  "qconf_queue.q" $CHECK_HOST 1]
+
+   if { ( $result4  == 0 )} {
       puts $CHECK_OUTPUT "qconf -dq qconf_queue.q succeded"
    } else {
-      add_proc_error "qconf_add_show_delete_queue" -1 "qconf -dq qconf_queue.q failed"
       puts $CHECK_OUTPUT "result is $result4"
    }
 
    # Now delete queue "qconf_queue.q" again
-   set result44 [get_qconf_list_error result $CHECK_HOST $CHECK_USER "-dq" "qconf_queue.q" ]
+   #puts $CHECK_OUTPUT "Negative test of qconf -dq qconf_queue.q...\n"
+   #set result44 [del_queue  "qconf_queue.q" $CHECK_HOST 1]
 
-   if { ( $result44 == 0 ) } {
-      puts $CHECK_OUTPUT "qconf -dq qconf_queue.q again succeded"
-   } else {
-      add_proc_error "qconf_add_show_delete_queue" -1 "qconf -dq qconf_queue.q again failed"
-      puts $CHECK_OUTPUT "result is $result44"
-   }
+   #if { ( $result44 == 0 ) } {
+   #   puts $CHECK_OUTPUT "qconf -dq qconf_queue.q again succeded"
+   #} else {
+   #   puts $CHECK_OUTPUT "result is $result44"
+   #}
 
    # Now try to clear a non-existant queue
-   get_qconf_show_list result5 $CHECK_HOST $CHECK_USER "-cq qconf_queue.q"
+   puts $CHECK_OUTPUT "Negative test of qconf -cq qconf_queue.q...\n"
+   set result5 [clear_queue "qconf_queue.q"]
 
-   if { ( [string first "qconf_queue.q"   $result5] >= 0 ) &&
-        ( [string first "$string5"   $result5] >= 0 ) } {
-      puts $CHECK_OUTPUT "qconf -cq qconf_queue.q succeded"
+   if { ( $result5 == 0 ) } {
+      puts $CHECK_OUTPUT "qconf -cq qconf_queue.q again succeded"
    } else {
-      add_proc_error "qconf_add_show_delete_queue" -1 "qconf -cq qconf_queue.q f
-ailed"
       puts $CHECK_OUTPUT "result is $result5"
    }
 

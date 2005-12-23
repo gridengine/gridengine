@@ -1,3 +1,9 @@
+RD-2005-12-23-0: Bugfix:    modification of hgrp results in glibc error message
+                            printed by qconf and abort
+                 Bugtraq:   6364440
+                 Issue:     1947
+                 Review:    JG
+
 JG-2005-12-23-0: Bugfix:    - fixed arch script for ia64 architecture
                             - fixed a minor memory access problem in japi
                             - fixed a bug in rsh client

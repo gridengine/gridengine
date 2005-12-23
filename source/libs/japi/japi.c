@@ -3991,6 +3991,9 @@ const char *japi_strerror(int drmaa_errno)
       /* -------------- init and exit specific --------------- */
       { DRMAA_ERRNO_INVALID_CONTACT_STRING, "Initialization failed due to invalid contact string." },
       { DRMAA_ERRNO_DEFAULT_CONTACT_STRING_ERROR, "DRMAA could not use the default contact string to connect to DRM system." },
+#ifdef DRMAA_10
+      { DRMAA_ERRNO_NO_DEFAULT_CONTACT_STRING_SELECTED, "No default contact string was provided or selected." },
+#endif
       { DRMAA_ERRNO_DRMS_INIT_FAILED, "Initialization failed due to failure to init DRM system." },
       { DRMAA_ERRNO_ALREADY_ACTIVE_SESSION, "Initialization failed due to existing DRMAA session." },
       { DRMAA_ERRNO_DRMS_EXIT_ERROR, "DRM system disengagement failed." },

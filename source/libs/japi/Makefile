@@ -36,20 +36,25 @@
 JAPILIB_DIR   = $(SDIR)/libs/japi
 CLASSES_DIR   = $(SDIR)/classes/src
 
-JAPILIB       = libjapi$(LIBEXT)
-JAPILIB_SRC   = japi.c
-JAPILIB_OBJS  = $(JAPILIB_SRC:.c=.o)
+JAPILIB       = libjapi.0.95$(LIBEXT) libjapi.1.0$(LIBEXT)
+JAPILIB_10    = japi.1.0.o
+JAPILIB_95    = japi.0.95.o
+JAPILIB_OBJS  = $(JAPILIB_10) $(JAPILIB_95)
 
 DRMAALIB         = libdrmaa$(SHAREDEXT)
 DRMAALIB_V       = libdrmaa$(SHAREDEXT).0.95 libdrmaa$(SHAREDEXT).1.0
-DRMAALIB_SRC_NJ  = drmaa.1.0.c drmaa.0.95.c
-DRMAALIB_SRC_ALL = $(DRMAALIB_SRC_NJ) com_sun_grid_drmaa_SessionImpl.c com_sun_grid_util_SGEUtil.c
+DRMAALIB_10_NJ  = drmaa.1.0.o
+DRMAALIB_10_ALL = $(DRMAALIB_10_NJ) com_sun_grid_drmaa_SessionImpl.1.0.o
+DRMAALIB_95_NJ  = drmaa.0.95.o
+DRMAALIB_95_ALL = $(DRMAALIB_95_NJ) com_sun_grid_drmaa_SessionImpl.0.95.o
+
 # This computed macro is here to allow libdrmaa to be built with or without
 # JNI files
-DRMAALIB_SRC     = $(DRMAALIB_SRC_$(DRMAA_TARGET))
-DRMAALIB_OBJS    = $(DRMAALIB_SRC:.c=.o)
-DRMAA_OBJS       = $(JAPILIB_OBJS) $(JAPI_ADD_OBJS) $(EVCLIB_OBJS) \
-                   $(GDILIB_OBJS) $(SGEOBJLIB_OBJS) $(SGEOBJDLIB_OBJS) $(SECLIB_OBJS) \
+DRMAALIB_10_OBJS = $(DRMAALIB_10_$(JNI_TARGET))
+DRMAALIB_95_OBJS = $(DRMAALIB_95_$(JNI_TARGET))
+DRMAALIB_OBJS    = $(DRMAALIB_10_OBJS) $(DRMAALIB_95_OBJS)
+DRMAA_OBJS       = $(EVCLIB_OBJS) $(GDILIB_OBJS) \
+                   $(SGEOBJLIB_OBJS) $(SGEOBJDLIB_OBJS) $(SECLIB_OBJS) \
                    $(CULLLIB_OBJS) $(RMONLIB_OBJS) $(COMMLIB_OBJS) \
                    $(COMMLISTSLIB_OBJS) $(UTILIB_DRMAA_OBJS) $(LCKLIB_OBJS)
 
@@ -72,7 +77,7 @@ JAPI_DEPEND_LIBS = $(EVCLIB) $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) \
 drmaa_all: drmaalib japilib drmaa_extras
 
 drmaa_clean: japi_clean drmaa_extras_clean
-	$(RM) $(DRMAALIB_OBJS) libdrmaa.a libdrmaa$(SHAREDEXT) libdrmaa$(SHAREDEXT).0.95 libdrmaa$(SHAREDEXT).1.0
+	$(RM) $(DRMAALIB_OBJS) libdrmaa.a $(DRMAALIB) $(DRMAALIB_V)
 
 drmaa_extras_clean: drmaa_howto_clean
 	$(RM) test_drmaa test_drmaa.o example example.o test_drmaa_sync \
@@ -87,7 +92,7 @@ drmaa_extras: drmaa_howto_all test_drmaa example test_drmaa_sync \
               test_drmaa_no_bin test_drmaa_issue1768 test_drmaa_issue1892
 	
 japi_clean:
-	$(RM) $(JAPILIB_OBJS) libjapi.a libjapi$(SHAREDEXT)
+	$(RM) $(JAPILIB_OBJS) libjapi.0.95$(LIBEXT) libjapi.1.0$(LIBEXT)
 
 drmaa_depend:
 	$(DEPEND) -f$(JAPILIB_DIR)/japi_dependencies $(JAPILIB_DIR)/*.c
@@ -101,19 +106,20 @@ drmaa_messages:
 ###############################################################################
 # rules to build library
 ###############################################################################
-libjapi.a:  $(JAPILIB_OBJS) $(JAPI_DEPEND_OBJS)
-	$(AR) $(ARFLAGS) libjapi.a $(JAPILIB_OBJS) $(JAPI_DEPEND_OBJS)
-	$(RANLIB) libjapi.a 
+libjapi.0.95$(LIBEXT):  $(JAPILIB_95) $(JAPI_DEPEND_OBJS)
+	$(AR) $(ARFLAGS) libjapi.0.95$(LIBEXT) $(JAPILIB_95) $(JAPI_ADD_OBJS)
+	$(RANLIB) libjapi.0.95$(LIBEXT)
 
-libjapi$(SHAREDEXT): $(JAPILIB_OBJS) $(JAPI_DEPEND_OBJS) $(JAPI_DEPEND_LIBS)
-	$(SHAREDLD) $(SHARED_LFLAGS) -o libjapi$(SHAREDEXT) $(JAPILIB_OBJS) $(JAPI_DEPEND_OBJS) $(JAPI_ADD_LIBS)
+libjapi.1.0$(LIBEXT):  $(JAPILIB_10) $(JAPI_DEPEND_OBJS)
+	$(AR) $(ARFLAGS) libjapi.1.0$(LIBEXT) $(JAPILIB_10) $(JAPI_ADD_OBJS)
+	$(RANLIB) libjapi.1.0$(LIBEXT)
 
-libdrmaa$(SHAREDEXT).0.95: $(DRMAALIB_OBJS) $(DRMAA_OBJS) $(LIBWINGRID_DEP)
-	$(SHAREDLD) $(SHARED_LFLAGS) -o libdrmaa$(SHAREDEXT).0.95 drmaa.0.95.o $(DRMAA_OBJS) $(SECLIB) $(LIBWINGRID) $(SLIBS) $(LIBS) -lc \
+libdrmaa$(SHAREDEXT).0.95: libjapi.0.95$(LIBEXT) $(DRMAALIB_OBJS) $(DRMAA_OBJS) $(LIBWINGRID_DEP)
+	$(SHAREDLD) $(SHARED_LFLAGS) -o libdrmaa$(SHAREDEXT).0.95 $(DRMAALIB_95_OBJS) $(DRMAA_OBJS) $(SECLIB) $(LIBWINGRID) $(SLIBS) $(LIBS) -lc -ljapi.0.95 \
    && ../scripts/nonreentrant.sh -a `../dist/util/arch` -w libdrmaa$(SHAREDEXT).0.95
 
-libdrmaa$(SHAREDEXT).1.0: $(DRMAALIB_OBJS) $(DRMAA_OBJS) $(LIBWINGRID_DEP)
-	$(SHAREDLD) $(SHARED_LFLAGS) -o libdrmaa$(SHAREDEXT).1.0 drmaa.1.0.o $(DRMAA_OBJS) $(SECLIB) $(LIBWINGRID) $(SLIBS) $(LIBS) -lc \
+libdrmaa$(SHAREDEXT).1.0: libjapi.1.0$(LIBEXT) $(DRMAALIB_OBJS) $(DRMAA_OBJS) $(LIBWINGRID_DEP)
+	$(SHAREDLD) $(SHARED_LFLAGS) -o libdrmaa$(SHAREDEXT).1.0 $(DRMAALIB_10_OBJS) $(DRMAA_OBJS) $(SECLIB) $(LIBWINGRID) $(SLIBS) $(LIBS) -lc -ljapi.1.0 \
    && ../scripts/nonreentrant.sh -a `../dist/util/arch` -w libdrmaa$(SHAREDEXT).1.0
 
 # Needed to compile howtos, examples, and unit tests
@@ -139,14 +145,17 @@ drmaa.1.0.o: $(JAPILIB_DIR)/drmaa.c
 drmaa.0.95.o: $(JAPILIB_DIR)/drmaa.c
 	$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(JAPILIB_DIR)/drmaa.c -o drmaa.0.95.o
 
-japi.o: $(JAPILIB_DIR)/japi.c
-	$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(JAPILIB_DIR)/japi.c
+japi.1.0.o: $(JAPILIB_DIR)/japi.c
+	$(CC) $(CFLAGS) $(SHARED_CFLAGS) -DDRMAA_10 -c $(JAPILIB_DIR)/japi.c -o japi.1.0.o
 
-com_sun_grid_drmaa_SessionImpl.o: $(CLASSES_DIR)/com_sun_grid_drmaa_SessionImpl.c
-	$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(CLASSES_DIR)/com_sun_grid_drmaa_SessionImpl.c
+japi.0.95.o: $(JAPILIB_DIR)/japi.c
+	$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(JAPILIB_DIR)/japi.c -o japi.0.95.o
 
-com_sun_grid_util_SGEUtil.o: $(CLASSES_DIR)/com_sun_grid_util_SGEUtil.c
-	$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(CLASSES_DIR)/com_sun_grid_util_SGEUtil.c
+com_sun_grid_drmaa_SessionImpl.1.0.o: $(CLASSES_DIR)/com_sun_grid_drmaa_SessionImpl.c
+	$(CC) $(CFLAGS) $(SHARED_CFLAGS) -DDRMAA_10 -c $(CLASSES_DIR)/com_sun_grid_drmaa_SessionImpl.c -o com_sun_grid_drmaa_SessionImpl.1.0.o
+
+com_sun_grid_drmaa_SessionImpl.0.95.o: $(CLASSES_DIR)/com_sun_grid_drmaa_SessionImpl.c
+	$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(CLASSES_DIR)/com_sun_grid_drmaa_SessionImpl.c -o com_sun_grid_drmaa_SessionImpl.0.95.o
 
 #---------------------------------------------------------------------
 

@@ -180,7 +180,7 @@ enum {
                                                 contact string to connect to DRM
                                                       system. */
 #ifdef DRMAA_10
-   DRMAA_ERRNO_NO_DEFAULT_CONTACT_STRING_SELECTED, /* No defaults contact string
+   DRMAA_ERRNO_NO_DEFAULT_CONTACT_STRING_SELECTED, /* No default contact string
                                                       was provided or selected.
                                                       DRMAA requires that the
                                                       default contact string is

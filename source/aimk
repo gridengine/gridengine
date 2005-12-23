@@ -438,7 +438,7 @@ set JAVA_BINDIR      = "bin"
 set JAVA_INCL        = "include"
 set JAVA_SHAREDEXT   = ""
 set JNI              = 1
-set DRMAA_TARGET     = "ALL"
+set JNI_TARGET       = "ALL"
 set PROTECTED        = 0
 
 set LFLAGS           = "-L."
@@ -1824,7 +1824,7 @@ if ($JNI == 1) then
       set CORE_INCLUDE = "$CORE_INCLUDE -I${JAVA_HOME}/${JAVA_INCL}/${JAVA_ARCH}"
    endif
 else
-   set DRMAA_TARGET = "NJ"
+   set JNI_TARGET = "NJ"
 endif
 
 if ($JAVA_SHAREDEXT == "") then
@@ -2278,7 +2278,7 @@ if ( "$CORE" == 1 && "$JAVA" != 2 ) then
          "CORE_INCLUDE=$CORE_INCLUDE" \
          "PERLGUI=$PERLGUI" "PERL=$PERL" "SWIG=$SWIG" \
          "JAVA_BINDIR=$JAVA_BINDIR" "JAVA_SHAREDEXT=$JAVA_SHAREDEXT" \
-         "DRMAA_TARGET=$DRMAA_TARGET" \
+         "JNI_TARGET=$JNI_TARGET" \
          $argv
    if ( $status != 0 ) then
       echo not done

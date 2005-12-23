@@ -47,40 +47,82 @@
 enum {
    /* -------------- these are relevant to all sections ---------------- */
    DRMAAJ_ERRNO_SUCCESS = 0, /* Routine returned normally with success. */
-   DRMAAJ_ERRNO_INTERNAL_ERROR, /* Unexpected or internal DRMAA error like memory allocation, system call failure, etc. */
-   DRMAAJ_ERRNO_DRM_COMMUNICATION_FAILURE, /* Could not contact DRM system for this request. */
-   DRMAAJ_ERRNO_AUTH_FAILURE, /* The specified request is not processed successfully due to authorization failure. */
-   DRMAAJ_ERRNO_INVALID_ARGUMENT, /* The input value for an argument is invalid. */
-   DRMAAJ_ERRNO_NO_ACTIVE_SESSION, /* Exit routine failed because there is no active session */
+   DRMAAJ_ERRNO_INTERNAL_ERROR, /* Unexpected or internal DRMAA error like memory
+                                   allocation, system call failure, etc. */
+   DRMAAJ_ERRNO_DRM_COMMUNICATION_FAILURE, /* Could not contact DRM system for
+                                              this request. */
+   DRMAAJ_ERRNO_AUTH_FAILURE, /* The specified request is not processed
+                                 successfully due to authorization failure. */
+   DRMAAJ_ERRNO_INVALID_ARGUMENT, /* The input value for an argument is
+                                     invalid. */
+   DRMAAJ_ERRNO_NO_ACTIVE_SESSION, /* Exit routine failed because there is no
+                                      active session */
    DRMAAJ_ERRNO_NO_MEMORY, /* failed allocating memory */
 
    /* -------------- init and exit specific --------------- */
-   DRMAAJ_ERRNO_INVALID_CONTACT_STRING, /* Initialization failed due to invalid contact string. */
-   DRMAAJ_ERRNO_DEFAULT_CONTACT_STRING_ERROR, /* DRMAA could not use the default contact string to connect to DRM system. */
-   DRMAAJ_ERRNO_DRMS_INIT_FAILED, /* Initialization failed due to failure to init DRM system. */
-   DRMAAJ_ERRNO_ALREADY_ACTIVE_SESSION, /* Initialization failed due to existing DRMAA session. */
+   DRMAAJ_ERRNO_INVALID_CONTACT_STRING, /* Initialization failed due to invalid
+                                           contact string. */
+   DRMAAJ_ERRNO_DEFAULT_CONTACT_STRING_ERROR, /* DRMAA could not use the default
+                                                 contact string to connect to
+                                                 DRM system. */
+#ifdef DRMAA_10
+   DRMAAJ_ERRNO_NO_DEFAULT_CONTACT_STRING_SELECTED, /* No defaults contact
+                                                       string was provided or
+                                                       selected. DRMAA requires
+                                                       that the default contact
+                                                       string is selected when
+                                                       there is more than one
+                                                       default contact string
+                                                       due to multiple DRMAA
+                                                       implementation contained
+                                                       in the binary module. */
+#endif
+   DRMAAJ_ERRNO_DRMS_INIT_FAILED, /* Initialization failed due to failure to
+                                     init DRM system. */
+   DRMAAJ_ERRNO_ALREADY_ACTIVE_SESSION, /* Initialization failed due to existing
+                                           DRMAA session. */
    DRMAAJ_ERRNO_DRMS_EXIT_ERROR, /* DRM system disengagement failed. */
 
    /* ---------------- job attributes specific -------------- */
-   DRMAAJ_ERRNO_INVALID_ATTRIBUTE_FORMAT, /* The format for the job attribute value is invalid. */
-   DRMAAJ_ERRNO_INVALID_ATTRIBUTE_VALUE, /* The value for the job attribute is invalid. */
-   DRMAAJ_ERRNO_CONFLICTING_ATTRIBUTE_VALUES, /* The value of this attribute is conflicting with a previously set attributes. */
+   DRMAAJ_ERRNO_INVALID_ATTRIBUTE_FORMAT, /* The format for the job attribute
+                                             value is invalid. */
+   DRMAAJ_ERRNO_INVALID_ATTRIBUTE_VALUE, /* The value for the job attribute is
+                                            invalid. */
+   DRMAAJ_ERRNO_CONFLICTING_ATTRIBUTE_VALUES, /* The value of this attribute is
+                                                 conflicting with a previously
+                                                 set attributes. */
 
    /* --------------------- job submission specific -------------- */
-   DRMAAJ_ERRNO_TRY_LATER, /* Could not pass job now to DRM system. A retry may succeed however (saturation). */
-   DRMAAJ_ERRNO_DENIED_BY_DRM, /* The DRM system rejected the job. The job will never be accepted due to DRM configuration or job template settings. */
+   DRMAAJ_ERRNO_TRY_LATER, /* Could not pass job now to DRM system. A retry may
+                              succeed however (saturation). */
+   DRMAAJ_ERRNO_DENIED_BY_DRM, /* The DRM system rejected the job. The job will
+                                  never be accepted due to DRM configuration or
+                                  job template settings. */
 
    /* ------------------------------- job control specific ---------------- */
-   DRMAAJ_ERRNO_INVALID_JOB, /* The job specified by the 'jobid' does not exist. */
-   DRMAAJ_ERRNO_RESUME_INCONSISTENT_STATE, /* The job has not been suspended. The RESUME request will not be processed. */
-   DRMAAJ_ERRNO_SUSPEND_INCONSISTENT_STATE, /* The job has not been running, and it cannot be suspended. */
-   DRMAAJ_ERRNO_HOLD_INCONSISTENT_STATE, /* The job cannot be moved to a HOLD state. */
-   DRMAAJ_ERRNO_RELEASE_INCONSISTENT_STATE, /* The job is not in a HOLD state. */
-   DRMAAJ_ERRNO_EXIT_TIMEOUT, /* We have encountered a time-out condition for drmaa_synchronize or drmaa_wait. */
-   DRMAAJ_ERRNO_NO_RUSAGE, /* This error code is returned by drmaa_wait() when a job has finished but no rusage and stat data could be provided. */
-   DRMAAJ_ERRNO_INVALID_JOB_TEMPLATE, /* This error code is returned when an invalid job template is passed to a function. */
-   DRMAAJ_ERRNO_NULL_POINTER, /* This error code is used for NullPointerExceptions */
-   DRMAAJ_ERRNO_BUFFER_OVERFLOW, /* This error code is used for ArrayIndexOutOfBoundsExceptions */
+   DRMAAJ_ERRNO_INVALID_JOB, /* The job specified by the 'jobid' does not
+                                exist. */
+   DRMAAJ_ERRNO_RESUME_INCONSISTENT_STATE, /* The job has not been suspended.
+                                              The RESUME request will not be
+                                              processed. */
+   DRMAAJ_ERRNO_SUSPEND_INCONSISTENT_STATE, /* The job has not been running, and
+                                               it cannot be suspended. */
+   DRMAAJ_ERRNO_HOLD_INCONSISTENT_STATE, /* The job cannot be moved to a HOLD
+                                           state. */
+   DRMAAJ_ERRNO_RELEASE_INCONSISTENT_STATE, /* The job is not in a HOLD
+                                               state. */
+   DRMAAJ_ERRNO_EXIT_TIMEOUT, /* We have encountered a time-out condition for
+                                 drmaa_synchronize or drmaa_wait. */
+   DRMAAJ_ERRNO_NO_RUSAGE, /* This error code is returned by drmaa_wait() when a
+                              job has finished but no rusage and stat data could
+                              be provided. */
+   DRMAAJ_ERRNO_INVALID_JOB_TEMPLATE, /* This error code is returned when an
+                                         invalid job template is passed to a
+                                         function. */
+   DRMAAJ_ERRNO_NULL_POINTER, /* This error code is used for
+                                 NullPointerExceptions */
+   DRMAAJ_ERRNO_BUFFER_OVERFLOW, /* This error code is used for
+                                    ArrayIndexOutOfBoundsExceptions */
    
    DRMAAJ_NO_ERRNO
 };
@@ -915,6 +957,10 @@ static char *get_exception_class_name (int errnum)
          return "org/ggf/drmaa/InvalidContactStringException";
       case DRMAAJ_ERRNO_DEFAULT_CONTACT_STRING_ERROR:
          return "org/ggf/drmaa/DefaultContactStringException";
+#ifdef DRMAA_10
+      case DRMAAJ_ERRNO_NO_DEFAULT_CONTACT_STRING_SELECTED:
+         return "org/ggf/drmaa/NoDefaultContactStringException";
+#endif
       case DRMAAJ_ERRNO_DRMS_INIT_FAILED:
          return "org/ggf/drmaa/DrmsInitException";
       case DRMAAJ_ERRNO_ALREADY_ACTIVE_SESSION:

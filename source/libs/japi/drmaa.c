@@ -2129,6 +2129,7 @@ int drmaa_version(unsigned int *major, unsigned int *minor,
       sge_dstring_init(&diag, error_diagnosis, error_diag_len+1);
    }
 
+#ifdef DRMAA_10
    if (major != NULL) {
       *major = 1;
    }
@@ -2136,6 +2137,15 @@ int drmaa_version(unsigned int *major, unsigned int *minor,
    if (minor != NULL) {
       *minor = 0;
    }
+#else
+   if (major != NULL) {
+      *major = 0;
+   }
+   
+   if (minor != NULL) {
+      *minor = 95;
+   }
+#endif
 
    return DRMAA_ERRNO_SUCCESS;
 }

@@ -714,18 +714,18 @@ if [ "$INSTOPT" = "noinst" ]; then
       echo
       exit 0
    else
+      ARCH=`dist/util/arch`
       echo
-      echo no architecture specified.   
+      echo no architecture specified.  Assuming architecture is $ARCH
       echo
-      exit 1
    fi
 fi
 
-if [ -z "$ARCH" -a -z "$PROG" ]; then
+if [ -z "$ARCH" ]; then
+   ARCH=`dist/util/arch`
    echo
-   echo No architecture and no programs specified. Installation failed.
+   echo No architecture specified.  Assuming architecture is $ARCH
    echo
-   exit 1
 fi
 
 echo

@@ -47,7 +47,7 @@ QSUB_OBJS = $(QSUB_SRC:.c=.o)
 
 QSUB_ADD_OBJS = $(QSUB_ADD_SRC:.c=.o) 
 
-QSUB_ADD_LIBS = -ljapi -levc -lgdi -lsgeobj -lsgeobjd  \
+QSUB_ADD_LIBS = -ljapi.1.0 -levc -lgdi -lsgeobj -lsgeobjd  \
                 -lcull -lcomm -lcommlists -luti $(WINGRIDLIB) -llck -lrmon \
                 $(SECLIB) $(KRBLIB) $(DLLIB) 
 

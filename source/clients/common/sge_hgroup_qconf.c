@@ -123,11 +123,13 @@ hgroup_add_del_mod_via_gdi(lListElem *this_elem, lList **answer_list,
 
    DENTER(TOP_LAYER, "hgroup_add_del_mod_via_gdi");
    if (this_elem != NULL) {
+      lListElem *element = NULL;
       lList *hgroup_list = NULL;
       lList *gdi_answer_list = NULL;
 
+      element = lCopyElem(this_elem);
       hgroup_list = lCreateList("", HGRP_Type);
-      lAppendElem(hgroup_list, this_elem);
+      lAppendElem(hgroup_list, element);
       gdi_answer_list = sge_gdi(SGE_HGROUP_LIST, gdi_command,
                                 &hgroup_list, NULL, NULL);
       answer_list_replace(answer_list, &gdi_answer_list);
@@ -175,7 +177,7 @@ bool hgroup_provide_modify_context(lListElem **this_elem, lList **answer_list,
    int missing_field = NoName;
    
    DENTER(TOP_LAYER, "hgroup_provide_modify_context");
-   if (this_elem != NULL && *this_elem) {
+   if (this_elem != NULL && *this_elem != NULL) {
       char *filename = NULL;
       filename = (char *)spool_flatfile_write_object(answer_list, *this_elem,
                                                      false, HGRP_fields,
@@ -190,7 +192,7 @@ bool hgroup_provide_modify_context(lListElem **this_elem, lList **answer_list,
       status = sge_edit(filename);
       
       if (status >= 0) {
-         lListElem *hgroup;
+         lListElem *hgroup = NULL;
 
          fields_out[0] = NoName;
          hgroup = spool_flatfile_read_object(answer_list, HGRP_Type, NULL,
@@ -336,15 +338,13 @@ bool hgroup_modify(lList **answer_list, const char *name)
                          STATUS_ERROR1, ANSWER_QUALITY_ERROR);
          ret = false;
       }
-      if (ret) {
+      if (ret == true) {
          ret = hgroup_provide_modify_context(&hgroup, answer_list, false);
       }
-      if (ret) {
+      if (ret == true) {
          ret = hgroup_add_del_mod_via_gdi(hgroup, answer_list, SGE_GDI_MOD);
       }
-      if (hgroup) {
-         lFreeElem(&hgroup);
-      }
+      lFreeElem(&hgroup);
    }
 
    DEXIT;

@@ -1633,7 +1633,6 @@ int lAppendElem(lList *lp, lListElem *ep)
    /* is the element ep still chained in an other list, this is not allowed ? */
    if (ep->status == BOUND_ELEM || ep->status == OBJECT_ELEM) {
       DPRINTF(("WARNING: tried to append chained element\n"));
-      lWriteElem(ep);
       DEXIT;
       abort();
    }

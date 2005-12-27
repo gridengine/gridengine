@@ -340,7 +340,7 @@ static void japi_use_library_signals(void)
 static void japi_once_init(void)
 {
    /* enable rmon monitoring */
-   rmon_mopen(NULL, 0, "japilib");
+   rmon_mopen(0, NULL, "japilib");
    feature_mt_init();
 }
 

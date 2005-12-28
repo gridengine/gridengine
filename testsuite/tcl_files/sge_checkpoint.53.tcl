@@ -38,3 +38,37 @@ proc validate_checkpointobj { change_array } {
    # nothing to be done for SGE 5.3
 }
 
+proc assign_queues_with_ckpt_object { qname hostlist ckpt_obj } {
+   global ts_config
+   global CHECK_OUTPUT
+
+   if { $hostlist == "" } {
+      set hostlist $ts_config(execd_nodes)
+   }
+
+   # set queue_list in checkpoint object
+   set q_list ""
+   foreach host $hostlist {
+      set queue [get_queue_instance $qname $host]
+      if { [string length $q_list] > 0} {
+         set q_list "$q_list,$queue"
+      } else {
+         set q_list "$queue"
+      }
+   }
+
+   # workaround for very long queue lists: use all parameter
+   if {[string length $q_list] > 256} {
+      set q_list "all"
+   }
+
+   get_checkpointobj $ckpt_obj curr_ckpt
+   if { $q_list == "all" || $curr_ckpt(queue_list) == "all" || $curr_ckpt(queue_list) == "NONE" } {
+      set my_change(queue_list) $q_list
+   } else {
+      set my_change(queue_list) "$curr_ckpt(queue_list) $q_list"
+   }
+   set_checkpointobj $ckpt_obj my_change
+}
+
+

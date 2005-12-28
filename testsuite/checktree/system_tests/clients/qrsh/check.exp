@@ -1486,11 +1486,10 @@ proc qrsh_batch {} {
    puts $CHECK_OUTPUT "check qrsh in immediate and batch mode (-now yes / no)"
    set COULD_NOT_BE_STARED [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QSH_REQUESTCANTBESCHEDULEDTRYLATER_S] "*" ]
    if { $ts_config(gridengine_version) == 60 } {
-      set HAS_BEEN_SUBMITTED  [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QSUB_YOURJOBHASBEENSUBMITTED_SS] "*" "*"]
+      set HAS_BEEN_SUBMITTED  [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_SUBMITJOB_USS] "*" "*" "*"]
    } else {
       set HAS_BEEN_SUBMITTED  [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_SUBMITJOB_USS] "*" "*" "*" ]
    }
-
 
    foreach host $qrsh_hostlist {
       set queue [get_queue_instance "all.q" $host]
@@ -1498,12 +1497,13 @@ proc qrsh_batch {} {
       disable_queue $queue
       puts $CHECK_OUTPUT "queue should be disabled now ..."
       # start qrsh - must be rejected
-      set qrsh_id [open_remote_spawn_process $qrsh_submithost "ts_def_con" $CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qrsh "-q $queue echo blahblah"]
+      set qrsh_id [open_remote_spawn_process $qrsh_submithost "ts_def_con" $CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qrsh "-q $queue -N immediate echo blahblah"]
       set sp_id [ lindex $qrsh_id 1 ] 
 
       # evaluate pid and JOB_ID
       set timeout 60
       set error 1
+      log_user 1
       expect {
          -i $sp_id full_buffer {
             add_proc_error "qrsh_batch" -1 "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
@@ -1535,11 +1535,12 @@ proc qrsh_batch {} {
       }
  
       # start qrsh -now no
-      set qrsh_id [open_remote_spawn_process $qrsh_submithost "ts_def_con" $CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qrsh "-verbose -q $queue -now no echo blahblah"]
+      set qrsh_id [open_remote_spawn_process $qrsh_submithost "ts_def_con" $CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qrsh "-verbose -q $queue -now no -N batch echo blahblah"]
       # must be in pending jobs
       set sp_id [ lindex $qrsh_id 1 ] 
 
       set timeout 60
+      log_user 1
       expect {
          -i $sp_id full_buffer {
             add_proc_error "qrsh_batch" -1 "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
@@ -1547,6 +1548,10 @@ proc qrsh_batch {} {
          }
          -i $sp_id timeout {
             add_proc_error "qrsh_batch" -1 "timeout waiting for qrsh -now no to be submitted to host $host"
+            set error 1
+         }
+         -i $sp_id eof {
+            add_proc_error "qrsh_batch" -1 "eof waiting for qrsh -now no to be submitted to host $host"
             set error 1
          }
          -i $sp_id $HAS_BEEN_SUBMITTED {
@@ -1558,10 +1563,6 @@ proc qrsh_batch {} {
             set job_id [lindex $expect_out(0,string) 2]
             puts $CHECK_OUTPUT "qrsh job $job_id correctly submitted (2)"
             set error 0
-         }
-         -i $sp_id eof {
-            add_proc_error "qrsh_batch" -1 "eof waiting for qrsh -now no to be submitted to host $host"
-            set error 1
          }
       }
       if { $error } {

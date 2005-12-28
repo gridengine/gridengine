@@ -2004,49 +2004,54 @@ proc check_rlogin_session { spawn_id pid hostname user nr_of_shells { only_check
    global CHECK_OUTPUT rlogin_spawn_session_buffer CHECK_USER CHECK_TESTSUITE_ROOT CHECK_SCRIPT_FILE_DIR
 
    if { [info exists rlogin_spawn_session_buffer($spawn_id) ] != 0 } {
-      send -i $spawn_id -- "$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/check_identity.sh\n"
+      if {[catch {send -i $spawn_id -- "$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/check_identity.sh\n"} output] != 0} {
+         puts $CHECK_OUTPUT "sending to connection $spawn_id failed - assuming connection is broken"
+      } else {   
+         switch -- $user {
+            "ts_def_con" {
+               set user $CHECK_USER
+            }
+            "ts_def_con2" {
+               set user $CHECK_USER
+            }
+            "ts_def_con_translate" {
+               set user $CHECK_USER
+            }
+         }
 
-      switch -- $user {
-         "ts_def_con" {
-            set user $CHECK_USER
-         }
-         "ts_def_con2" {
-            set user $CHECK_USER
-         }
-         "ts_def_con_translate" {
-            set user $CHECK_USER
-         }
-      }
-
-      set timeout 1
-      set mytries  5
-      set open_remote_spawn__tries 15
-      expect {
-         -i $spawn_id -- "__ my id is ->*${user}*\n" { 
-            return 1
-         }
-         -i $spawn_id full_buffer {
-            add_proc_error "check_rlogin_session" -1 "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
-         }
-         -i $spawn_id timeout {
-             debug_puts "got timeout for check_identity"
-             incr open_remote_spawn__tries -1
-             if { $open_remote_spawn__tries <= 0 } {
-                add_proc_error "check_rlogin_session" -1 "timeout waiting for shell response prompt (a)"
-             } else {
-                if { $open_remote_spawn__tries < 12 } {
-                   puts -nonewline $CHECK_OUTPUT "." 
-                   flush $CHECK_OUTPUT
+         set timeout 1
+         set mytries  5
+         set open_remote_spawn__tries 15
+         expect {
+            -i $spawn_id -- "__ my id is ->*${user}*\n" { 
+               return 1
+            }
+            -i $spawn_id full_buffer {
+               add_proc_error "check_rlogin_session" -1 "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
+            }
+            -i $spawn_id timeout {
+                debug_puts "got timeout for check_identity"
+                incr open_remote_spawn__tries -1
+                if { $open_remote_spawn__tries <= 0 } {
+                   add_proc_error "check_rlogin_session" -1 "timeout waiting for shell response prompt (a)"
+                } else {
+                   if { $open_remote_spawn__tries < 12 } {
+                      puts -nonewline $CHECK_OUTPUT "." 
+                      flush $CHECK_OUTPUT
+                   }
+                   catch {send -i $spawn_id -- "$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/check_identity.sh\n"} output
+                   debug_puts $output
+                   exp_continue
                 }
-                send -i $spawn_id -- "$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/check_identity.sh\n"
-                exp_continue
-             }
-         }
-         -i $spawn_id -- "Terminal type?" {
-            send -i $spawn_id -- "vt100\n"
-            exp_continue
+            }
+            -i $spawn_id -- "Terminal type?" {
+               catch {send -i $spawn_id -- "vt100\n"} output
+               debug_puts $output
+               exp_continue
+            }
          }
       }
+
       if { $only_check == 0 } {
          # restart connection
          puts $CHECK_OUTPUT "check_rlogin_session: had error"
@@ -2059,6 +2064,7 @@ proc check_rlogin_session { spawn_id pid hostname user nr_of_shells { only_check
          puts $CHECK_OUTPUT "closing done."
       }
    }
+
    return 0 ;# error
 }
 
@@ -2145,7 +2151,8 @@ proc close_spawn_process { id { check_exit_state 0 } {my_uplevel 1}} {
    set con_data(in_use) 0
    if { $con_data(pid) != 0 } {
       debug_puts "sending CTRL + C to spawn id $sp_id ..."
-      send -i $sp_id "\003" ;# send CTRL+C to stop evtl. running processes in that shell
+      catch {send -i $sp_id "\003"} output ;# send CTRL+C to stop evtl. running processes in that shell
+      debug_puts $output
       # wait for CTRL-C to have effect
       debug_puts "Will not close spawn id \"$sp_id\", this is rlogin connection to"
       debug_puts "host \"$con_data(hostname)\", user \"$con_data(user)\""
@@ -2157,60 +2164,74 @@ proc close_spawn_process { id { check_exit_state 0 } {my_uplevel 1}} {
    if { $CHECK_DEBUG_LEVEL != 0 } {
       log_user 1
    }
-   if { [llength $id ] > 2  } { 
+   if {[llength $id ] > 2} {
        set nr_of_shells [lindex $id 2]
        set timeout 0
        set do_stop 0
        set send_slow "1 .05"
        debug_puts "nr of open shells: $nr_of_shells"
        debug_puts "-->sending $nr_of_shells exit(s) to shell on id $sp_id"
-       send -s -i $sp_id "\003" ;# send CTRL+C to stop evtl. running processes in that shell
+       # send CTRL+C to stop evtl. running processes in that shell
+       # if sending to connction fail, do not try to shutdown shells,
+       # but simply close the connection
+       set skip_send_exit 0
+       if {[catch {send -s -i $sp_id "\003"} output] != 0} {
+          debug_puts $output
+          set skip_send_exit 1
+       }
 
-       # wait for CTRL-C to have effect
-       for {set i 0} {$i < $nr_of_shells } {incr i 1} {
-          send -s -i $sp_id "exit\n"
-          set timeout 6
-          expect { 
-              -i $sp_id full_buffer {
-                 add_proc_error "close_spawn_process" "-1" "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
-              }
-              -i $sp_id "*" {
-                 debug_puts "shell exit"
-              }
-              -i $sp_id eof {
-                 debug_puts "eof while waiting for shell exit"
-              }
-              -i $sp_id timeout {
-                 debug_puts "timeout while waiting for shell exit"
-              }
-          }
-       }
-       set timeout 2 
-       set my_tries 3
-       while { $do_stop != 1 } {
-          expect {
-             -i $sp_id full_buffer {
-                add_proc_error "close_spawn_process" "-1" "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
-                set do_stop 1 
-             }
-             -i $sp_id eof { 
-                set do_stop 1 
-                debug_puts "got end of file - ok"
-             }
-             -i $sp_id timeout {
-                puts $CHECK_OUTPUT "timeout (closing shell) counter: $my_tries ..."
-                if { $my_tries > 0 } {
-                   send -s -i $sp_id "exit\n"
-                } else {
-                   add_proc_error "close_spawn_process" "-1" "error closing shell"
-                   set do_stop 1
+       if {!$skip_send_exit} {
+          # wait for CTRL-C to have effect
+          for {set i 0} {$i < $nr_of_shells } {incr i 1} {
+             if {[catch {send -s -i $sp_id "exit\n"} output] == 0} {
+                debug_puts $output
+                set timeout 6
+                expect { 
+                    -i $sp_id full_buffer {
+                       add_proc_error "close_spawn_process" "-1" "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
+                    }
+                    -i $sp_id "*" {
+                       debug_puts "shell exit"
+                    }
+                    -i $sp_id eof {
+                       debug_puts "eof while waiting for shell exit"
+                    }
+                    -i $sp_id timeout {
+                       debug_puts "timeout while waiting for shell exit"
+                    }
                 }
-                incr my_tries -1
              }
           }
-          debug_puts "waiting for end of file"
-       }
-   } 
+          set timeout 2 
+          set my_tries 3
+          catch {
+             while { $do_stop != 1 } {
+                expect {
+                   -i $sp_id full_buffer {
+                      add_proc_error "close_spawn_process" "-1" "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
+                      set do_stop 1 
+                   }
+                   -i $sp_id eof { 
+                      set do_stop 1 
+                      debug_puts "got end of file - ok"
+                   }
+                   -i $sp_id timeout {
+                      puts $CHECK_OUTPUT "timeout (closing shell) counter: $my_tries ..."
+                      if { $my_tries > 0 } {
+                         catch {send -s -i $sp_id "exit\n"} output
+                         debug_puts $output
+                      } else {
+                         add_proc_error "close_spawn_process" "-1" "error closing shell"
+                         set do_stop 1
+                      }
+                      incr my_tries -1
+                   }
+                }
+                debug_puts "waiting for end of file"
+             }
+          }
+      } 
+   }
 
    set open_spawn_buffer $sp_id
    catch { 
@@ -2219,7 +2240,8 @@ proc close_spawn_process { id { check_exit_state 0 } {my_uplevel 1}} {
          close -i $open_spawn_buffer
          debug_puts "closed buffer: $open_spawn_buffer"
       }
-   }
+   } output
+   debug_puts $output
 
    log_user 1
    set wait_return "" 

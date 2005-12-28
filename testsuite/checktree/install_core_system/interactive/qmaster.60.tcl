@@ -94,10 +94,13 @@ proc install_qmaster {} {
  }
 
  #dump hostlist to file
+ set admin_hosts "$ts_config(all_nodes) $ts_config(shadowd_hosts)"
+ set admin_hosts [lsort -unique $admin_hosts]
+
  set host_file_name "$CHECK_PROTOCOL_DIR/hostlist"
  set f [open $host_file_name w]
- foreach exechost $ts_config(execd_nodes) {
-    puts $f "${exechost}"
+ foreach host $admin_hosts {
+    puts $f $host
  }
  close $f
 
@@ -187,7 +190,6 @@ proc install_qmaster {} {
  puts $CHECK_OUTPUT "cd $$prod_type_var;./install_qmaster $CHECK_QMASTER_INSTALL_OPTIONS $feature_install_options"
 
  set hostcount 0
-
  set do_log_output 0 ;# _LOG
  if { $CHECK_DEBUG_LEVEL == 2 } {
    set do_log_output  1 ;# 1
@@ -695,14 +697,14 @@ proc install_qmaster {} {
        }
 
        -i $sp_id $ENTER_HOSTS {
-         if {$hostcount >= [llength $ts_config(all_nodes)]} {
+         if {$hostcount >= [llength $admin_hosts]} {
              puts $CHECK_OUTPUT "\n -->testsuite: sending >RETURN<(8)"
              send -i $sp_id "\n"
          } else {
-            set exechost [lindex $ts_config(all_nodes) $hostcount]
+            set admin_host [lindex $admin_hosts $hostcount]
             incr hostcount
-            puts $CHECK_OUTPUT "\n -->testsuite: sending >${exechost}<"
-            send -i $sp_id "$exechost\n"
+            puts $CHECK_OUTPUT "\n -->testsuite: sending >${admin_host}<"
+            send -i $sp_id "$admin_host\n"
          }
          continue
        }

@@ -91,13 +91,15 @@ proc install_qmaster {} {
    }
 
    #dump hostlist to file
+   set admin_hosts "$ts_config(all_nodes) $ts_config(shadowd_hosts)"
+   set admin_hosts [lsort -unique $admin_hosts]
+
    set host_file_name "$CHECK_PROTOCOL_DIR/hostlist"
    set f [open $host_file_name w]
-   foreach exechost $ts_config(execd_nodes) {
-    puts $f "${exechost}"
+   foreach host $admin_hosts {
+      puts $f $host
    }
    close $f
-
 
    cd "$ts_config(product_root)"
 

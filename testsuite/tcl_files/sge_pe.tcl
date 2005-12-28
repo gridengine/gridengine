@@ -214,10 +214,7 @@ proc set_pe { pe_obj change_array } {
 
   upvar $change_array chgar
 
-
-
-  if { $ts_config(gridengine_version) == 60 && [info exists chgar(queue_list)]}
-{
+  if { $ts_config(gridengine_version) == 60 && [info exists chgar(queue_list)]} {
      if { [ info exists chgar(queue_list) ] } {
         puts $CHECK_OUTPUT "this qconf version doesn't support queue_list for pe objects"
         add_proc_error "set_pe" -3 "this qconf version doesn't support queue_list for pe objects,\nuse assign_queues_with_pe_object() after adding pe\nobjects and don't use queue_list parameter.\nyou can call get_pe_ckpt_version() to test pe version"

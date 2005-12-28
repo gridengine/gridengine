@@ -1,3 +1,10 @@
+JG-2005-12-28-0: Bugfix:    - qrsh always did verbose output
+                 Testsuite: - fixed broken testsuite for 5.3
+                            - shadow only hosts were not added to admin host 
+                              list
+                            - enhancements to remote connection handling
+                 Review:    CR
+
 DT-2005-12-23-0: Enhancem.: o Completed up DRMAA 0.95/1.0 transition
                             o Moved ARCo utils into libutil
                             o distinst defaults to current architecture

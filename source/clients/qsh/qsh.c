@@ -1717,7 +1717,9 @@ int main(int argc, char **argv)
          else if (quality == ANSWER_QUALITY_WARNING) {
             fprintf(stderr, "%s\n", lGetString(aep, AN_text));
          } else {
-            fprintf(stdout, "%s\n", lGetString(aep, AN_text));
+            if (log_state_get_log_verbose()) {
+               fprintf(stdout, "%s\n", lGetString(aep, AN_text));
+            }
          }
       }
 

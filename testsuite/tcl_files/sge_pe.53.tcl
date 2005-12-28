@@ -65,6 +65,7 @@ proc assign_queues_with_pe_object { qname hostlist pe_obj } {
    } else {
       set my_change(queue_list) "$curr_pe(queue_list) $q_list"
    }
+
    set_pe $pe_obj my_change
 }
 

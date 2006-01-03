@@ -289,3 +289,196 @@ proc get_processor_list {{output_var result} {on_host ""} {as_user ""} {raise_er
 
 }
 
+#****** sge_host/del_adminhost_error() ******************************************
+#  NAME
+#     del_adminhost_error() -- error handling for del_adminhost
+#
+#  SYNOPSIS
+#     del_adminhost_error { result host raise_error }
+#
+#  FUNCTION
+#     Does the error handling for del_adminhost.
+#     Translates possible error messages of qconf -dh,
+#     builds the datastructure required for the handle_sge_errors
+#     function call.
+#
+#     The error handling function has been intentionally separated from
+#     del_adminhost. While the qconf call and parsing the result is
+#     version independent, the error messages (macros) usually are version
+#     dependent.
+#
+#  INPUTS
+#     result      - qconf output
+#     host        - host for which qconf -dh has been called
+#     raise_error - do add_proc_error in case of errors
+#
+#  RESULT
+#     Returncode for del_adminhost function:
+#       -1: administrative host "host" does not exist
+#     -999: other error
+#
+#  SEE ALSO
+#     sge_host/get_exechost
+#     sge_procedures/handle_sge_errors
+#*******************************************************************************
+proc del_adminhost_error {result host on_host raise_error} {
+
+   # recognize certain error messages and return special return code
+   set messages(index) "-1 "
+   set messages(-1) [translate_macro MSG_SGETEXT_DOESNOTEXIST_SS "administrative host" $host]
+
+   # we might have version dependent, exechost specific error messages
+   get_exechost_error_vdep messages $on_host
+
+   # now evaluate return code and raise errors
+   set ret [handle_sge_errors "del_adminhost" "qconf -dh $host" $result messages $raise_error]
+
+   return $ret
+}
+
+#****** sge_host/del_adminhost() *****************************************
+#  NAME
+#     del_adminhost() -- delete administrative host
+#
+#  SYNOPSIS
+#     del_adminhost { host {output_var result} {on_host ""} {as_user ""} {raise_error 1}  }
+#
+#  FUNCTION
+#     Calls qconf -dh host to delete administrative host
+#
+#  INPUTS
+#     host            - administrative host which will be deleted
+#     output_var      - result will be placed here
+#     {on_host ""}    - execute qconf on this host, default is master host
+#     {as_user ""}    - execute qconf as this user, default is $CHECK_USER
+#     {raise_error 1} - raise an error condition on error (default), or just
+#                       output the error message to stdout
+#
+#  RESULT
+#     0 on success, an error code on error.
+#     For a list of error codes, see sge_procedures/get_sge_error().
+#
+#  SEE ALSO
+#     sge_procedures/get_sge_error()
+#     sge_procedures/get_qconf_list()
+#*******************************************************************************
+proc del_adminhost {host {output_var result} {on_host ""} {as_user ""} {raise_error 1}} {
+
+   global ts_config
+   upvar $output_var out
+
+   # clear output variable
+   if {[info exists out]} {
+      unset out
+   }
+
+   set ret 0
+   set result [start_sge_bin "qconf" "-dh $host" $on_host $as_user]
+
+   # parse output or raise error
+   if {$prg_exit_state == 0} {
+      parse_simple_record result out
+   } else {
+      set ret [del_adminhost_error $result $host $on_host $raise_error]
+   }
+
+   return $ret
+}
+
+#****** sge_host/add_adminhost() *****************************************
+#  NAME
+#     add_adminhost() -- add administrative host
+#
+#  SYNOPSIS
+#     add_adminhost { host {output_var result} {on_host ""} {as_user ""} {raise_error 1}  }
+#
+#  FUNCTION
+#     Calls qconf -ah host to add administrative host
+#
+#  INPUTS
+#     host            - administrative host which will be added
+#     output_var      - result will be placed here
+#     {on_host ""}    - execute qconf on this host, default is master host
+#     {as_user ""}    - execute qconf as this user, default is $CHECK_USER
+#     {raise_error 1} - raise an error condition on error (default), or just
+#                       output the error message to stdout
+#
+#  RESULT
+#     0 on success, an error code on error.
+#     For a list of error codes, see sge_procedures/get_sge_error().
+#
+#  SEE ALSO
+#     sge_procedures/get_sge_error()
+#     sge_procedures/get_qconf_list()
+#*******************************************************************************
+proc add_adminhost {host {output_var result} {on_host ""} {as_user ""} {raise_error 1}} {
+
+   global ts_config
+   upvar $output_var out
+
+   # clear output variable
+   if {[info exists out]} {
+      unset out
+   }
+
+   set ret 0
+   set result [start_sge_bin "qconf" "-ah $host" $on_host $as_user]
+
+   # parse output or raise error
+   if {$prg_exit_state == 0} {
+      parse_simple_record result out
+   } else {
+      set ret [add_adminhost_error $result $host $on_host $raise_error]
+   }
+
+   return $ret
+}
+
+#****** sge_host/add_adminhost_error() ******************************************
+#  NAME
+#     add_adminhost_error() -- error handling for add_adminhost
+#
+#  SYNOPSIS
+#     add_adminhost_error { result host raise_error }
+#
+#  FUNCTION
+#     Does the error handling for del_adminhost.
+#     Translates possible error messages of qconf -dh,
+#     builds the datastructure required for the handle_sge_errors
+#     function call.
+#
+#     The error handling function has been intentionally separated from
+#     del_adminhost. While the qconf call and parsing the result is
+#     version independent, the error messages (macros) usually are version
+#     dependent.
+#
+#  INPUTS
+#     result      - qconf output
+#     host        - host for which qconf -dh has been called
+#     on_host     - valid host on which qconf -dh has been called
+#     raise_error - do add_proc_error in case of errors
+#
+#  RESULT
+#     Returncode for add_adminhost function:
+#       -1: can't resolve hostname "host" 
+#     -999: other error
+#
+#  SEE ALSO
+#     sge_host/get_exechost
+#     sge_procedures/handle_sge_errors
+#*******************************************************************************
+proc add_adminhost_error {result host on_host raise_error} {
+
+   # recognize certain error messages and return special return code
+   set messages(index) "-1 "
+   set messages(-1) [translate_macro MSG_SGETEXT_ALREADYEXISTS_SS "adminhost" $host]
+
+   # we might have version dependent, exechost specific error messages
+   get_exechost_error_vdep messages $on_host
+
+   # now evaluate return code and raise errors
+   set ret [handle_sge_errors "add_adminhost" "qconf -ah $host" $result messages $raise_error]
+
+   return $ret
+}
+

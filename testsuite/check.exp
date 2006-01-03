@@ -7835,6 +7835,8 @@ proc source_tcl_files {} {
    ts_source $libdir/sge_qconf_config
    ts_source $libdir/sge_users	
    ts_source $libdir/sge_userset	
+   ts_source $libdir/sge_sharetree	
+   ts_source $libdir/sge_event_client	
    
    ts_source $libdir/checktree_helper
    ts_source $libdir/report_procedures

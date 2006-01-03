@@ -108,9 +108,9 @@ lappend check_functions "qconf_sprjl_check"	;# Show project list
 
 lappend check_functions "qconf_add_delete_manager"	;# Add and delete manager users
 lappend check_functions "qconf_add_show_delete_queue"	;# Add, show and delete queue "qconf_queue.q"
-#lappend check_functions "qconf_add_show_delete_host"	;# Add, show and delete host exec_host [1], the first execd host
-#lappend check_functions "qconf_add_show_delete_stnode"	;# Add, show and delete share tree nodes
-#lappend check_functions "qconf_event_client"	;# Create, show and delete event clients
+lappend check_functions "qconf_add_show_delete_host"	;# Add, show and delete host exec_host [1], the first execd host
+lappend check_functions "qconf_add_show_delete_stnode"	;# Add, show and delete share tree nodes
+lappend check_functions "qconf_event_client"	;# Create, show and delete event clients
 
 
 
@@ -1249,14 +1249,14 @@ proc qconf_sds_check {} {
 #     Check basic functionality of qconf
 #
 #  SEE ALSO
-# sge_procedures/get_event_client_list()
+# sge_event_client/get_event_client_list()
 #*******************************
 
 proc qconf_secl_check {} {
    global ts_config env
    global CHECK_OUTPUT CHECK_USER CHECK_HOST CHECK_ARCH
 
-   # DO A Positive test
+   # Do a positive test
    puts $CHECK_OUTPUT "Positive test for qconf -secl ...\n"
 
    set result0 [get_event_client_list]
@@ -1825,65 +1825,56 @@ proc qconf_add_show_delete_host {} {
 
    set other_host [lindex $ts_config(execd_nodes) 1]
 
-   set string1 [translate $CHECK_HOST 0 1 0 "added"]
-   set string2 [translate $CHECK_HOST 0 1 0 "removed"]
-   set string3 [translate $CHECK_HOST 0 1 0 "administrative host list"]
-   set string4 [translate $CHECK_HOST 0 1 0 "already exists"]
-
    # First delete host $other_host. 
-   get_qconf_show_list result1 $CHECK_HOST $CHECK_USER "-dh $other_host"
+   puts $CHECK_OUTPUT "Positive test of qconf -dh $other_host...\n"
+   set result1 [del_adminhost $other_host]
 
-   if { ( [string first "$other_host"   $result1] >= 0 ) &&
-        ( [string first "$string2"   $result1] >= 0 ) &&
-        ( [string first "$string3"   $result1] >= 0 ) } {
+   if { ( $result1 == 0 ) } {
       puts $CHECK_OUTPUT "qconf -dh $other_host succeded"
    } else {
-      add_proc_error "qconf_add_show_delete_host" -1 "qconf -dh $other_host failed"
       puts $CHECK_OUTPUT "result is $result1"
    }
 
-   # Now show hosts list, check that  "$other_host" is NOT there
-   get_qconf_show_list result2 $CHECK_HOST $CHECK_USER "-sh "
+   # Try deleting $other_host again
+   puts $CHECK_OUTPUT "Negative test of qconf -dh  $other_host...\n"
+   set result4 [del_adminhost $other_host result $CHECK_HOST $CHECK_USER 0]
 
-   if { ( [string first "$other_host"   $result2] < 0 ) } {
-      puts $CHECK_OUTPUT "qconf -sh succeded"
-   } else {
-      add_proc_error "qconf_add_show_delete_host" -1 "qconf -sh failed"
-      puts $CHECK_OUTPUT "result is $result2"
-   }
-
-   # Try deleting it again
-   set result3 [get_qconf_list_error result $CHECK_HOST $CHECK_USER "-dh" "$other_host" ]
-
-   if { ( $result3 == 0 ) } {
+   if { ( $result4 == -1 ) } {
       puts $CHECK_OUTPUT "qconf -dh $other_host again succeded"
    } else {
-      add_proc_error "qconf_add_show_delete_host" -1 "qconf -dh $other_host  again failed"
+      puts $CHECK_OUTPUT "result is $result4"
+   }
+
+   # Now show admin hosts 
+   puts $CHECK_OUTPUT "Positive test of qconf -sh  $other_host...\n"
+   set result3 [get_adminhost_list result]
+
+   if { ( $result3 == 0 ) } {
+      puts $CHECK_OUTPUT "qconf -sh succeded"
+   } else {
       puts $CHECK_OUTPUT "result is $result3"
    }
 
   
  # Now add back $other_host
-   get_qconf_show_list result4 $CHECK_HOST $CHECK_USER "-ah $other_host"
+   puts $CHECK_OUTPUT "Positive test of qconf -ah  $other_host...\n"
+   set result5 [add_adminhost $other_host]
 
-   if { ( [string first "$other_host"   $result4] >= 0 ) &&
-        ( [string first "$string1"   $result4] >= 0 ) &&
-        ( [string first "$string3"   $result4] >= 0 ) } {
+   if { ( $result5 == 0 ) } {
       puts $CHECK_OUTPUT "qconf -ah $other_host succeded"
    } else {
-      add_proc_error "qconf_add_show_delete_host" -1 "qconf -ah $other_host failed"
-      puts $CHECK_OUTPUT "result is $result4"
+      puts $CHECK_OUTPUT "result is $result5"
    }
 
    # Now try adding it again
-   get_qconf_show_list result5 $CHECK_HOST $CHECK_USER "-ah $other_host"
+   puts $CHECK_OUTPUT "Negative test of qconf -ah $other_host ...\n"
 
-   if { ( [string first "$other_host"   $result5] >= 0 ) &&
-        ( [string first "$string4"   $result5] >= 0 ) } {
+   set result6 [add_adminhost $other_host]
+
+   if { ( $result6 == 0 ) } {
       puts $CHECK_OUTPUT "qconf -ah $other_host again succeded"
    } else {
-      add_proc_error "qconf_add_show_delete_host" -1 "qconf -ah $other_host again failed"
-      puts $CHECK_OUTPUT "result is $result5"
+      puts $CHECK_OUTPUT "result is $result6"
    }
 
    set_error 0 "ok"
@@ -1916,95 +1907,96 @@ proc qconf_add_show_delete_stnode {} {
 
    set other_host [lindex $ts_config(execd_nodes) 1]
 
-   set string1 [translate $CHECK_HOST 0 1 0 "added"]
-   set string2 [translate $CHECK_HOST 0 1 0 "removing"]
-   set string3 [translate $CHECK_HOST 0 1 0 "removed"]
-   set string4 [translate $CHECK_HOST 0 1 0 "sharetree list"]
-
-   set project "qconf_project"
-
-   # Add project "qconf_project"
-   set new_project(name) $project
-   add_prj new_project
+   set project "mytestproject"
 
    # Add users
+   puts $CHECK_OUTPUT "Adding  user $CHECK_USER to project $project ...\n"
+
    set new_user(name) $CHECK_USER
    set new_user(default_project) $project
    add_user new_user
 
+   puts $CHECK_OUTPUT "Adding  user $CHECK_FIRST_FOREIGN_SYSTEM_USER to project $project ...\n"
    set new_user(name) $CHECK_FIRST_FOREIGN_SYSTEM_USER
    add_user new_user
 
    # Check that the new project has been added
 
    # Now add policies to the project $project
-   get_qconf_show_list result1 $CHECK_HOST $CHECK_USER "-astnode /$project=100,/$project/$CHECK_USER=30,/$project/$CHECK_FIRST_FOREIGN_SYSTEM_USER=70"
+   puts $CHECK_OUTPUT "Adding  30 shares to $CHECK_USER to project $project and 70 shares to $CHECK_FIRST_FOREIGN_SYSTEM_USER...\n"
+   set result1 [add_sharetree_node $project $CHECK_USER 30 $CHECK_FIRST_FOREIGN_SYSTEM_USER 70]
 
-   # Now show the sharetree list
-   get_qconf_show_list result2 $CHECK_HOST $CHECK_USER "-sstnode /$project"
-
-   if { ( [string first "$project"   $result2] >= 0 ) } {
-      puts $CHECK_OUTPUT "qconf -sstnode /$project succeded"
+   if { ( $result1 == 0 ) } {
+      puts $CHECK_OUTPUT "qconf -astnode /$project succeded"
    } else {
-      add_proc_error "qconf_add_show_delete_stnode" -1 "qconf -sstnode /$project failed"
+      puts $CHECK_OUTPUT "result is $result1"
+   }
+  
+   # Now do a negative test on -astnode, add users again
+   puts $CHECK_OUTPUT "Adding  30 shares to $CHECK_USER to project $project and 70 shares to $CHECK_FIRST_FOREIGN_SYSTEM_USER again....n"
+   set result2 [add_sharetree_node $project $CHECK_USER 30 $CHECK_FIRST_FOREIGN_SYSTEM_USER 70 result $CHECK_HOST $CHECK_USER 0]
+
+   if { ( $result2 == 0 ) } {
+      puts $CHECK_OUTPUT "qconf -astnode /$project again succeded"
+   } else {
       puts $CHECK_OUTPUT "result is $result2"
    }
 
-   # Modify shares in project $project
+   # Now show the sharetree list
+   puts $CHECK_OUTPUT "Now show sharetree list for $project... \n"
+   set result3 [get_sharetree_list $project]
 
-   get_qconf_show_list result22 $CHECK_HOST $CHECK_USER "-mstnode /$project=100,/$project/$CHECK_USER=50,/$project/$CHECK_FIRST_FOREIGN_SYSTEM_USER=50"
+   if { ( $result3 == 0 ) } {
+      puts $CHECK_OUTPUT "qconf -sstnode /$project succeded"
+   } else {
+      puts $CHECK_OUTPUT "result is $result3"
+   }
+
+   # Modify shares in project $project
+   puts $CHECK_OUTPUT "Now modify shares for user $CHECK_USER, $CHECK_FIRST_FOREIGN_SYSTEM_USER for  $project... \n"
+   set result4 [mod_sharetree_node $project $CHECK_USER 50 $CHECK_FIRST_FOREIGN_SYSTEM_USER 50]
+
+   if { ( $result4 == 0 ) } {
+      puts $CHECK_OUTPUT "qconf -mstnode /$project succeded"
+   } else {
+      puts $CHECK_OUTPUT "result is $result4"
+   }
 
    # Now show the sharetree list again
-   get_qconf_show_list result23 $CHECK_HOST $CHECK_USER "-sstnode /$project"
-
-   if { ( [string first "$project"   $result23] >= 0 ) } {
+   puts $CHECK_OUTPUT "Now show sharetree list for $project again... \n"
+   set result5 [get_sharetree_list $project]
+   if  { ( $result5 == 0 ) } {
       puts $CHECK_OUTPUT "qconf -sstnode /$project again succeded"
    } else {
-      add_proc_error "qconf_add_show_delete_stnode" -1 "qconf -sstnode /$project  again failed"
-      puts $CHECK_OUTPUT "result is $result23"
+      puts $CHECK_OUTPUT "result is $result5"
    }
 
    
    # Delete $project/$CHECK_USER
-   get_qconf_show_list result3 $CHECK_HOST $CHECK_USER "-dstnode /$project/$CHECK_USER"
+   puts $CHECK_OUTPUT "Now  delete user $CHECK_USER from  $project ... \n"
+   set result6 [del_sharetree_node $project  $CHECK_USER]
   
-   if { ( [string first "$project/$CHECK_USER"   $result3] >= 0 ) &&
-        ( [string first "$string2"   $result3] >= 0 ) } {
+   if { ( $result6 == 0 ) } {
       puts $CHECK_OUTPUT "qconf -dstnode /$project/$CHECK_USER succeded"
    } else {
-      add_proc_error "qconf_add_show_delete_stnode" -1 "qconf -dstnode /$project/$CHECK_USER failed"
-      puts $CHECK_OUTPUT "result is $result3"
+      puts $CHECK_OUTPUT "result is $result6"
    }
 
    # Delete $project/$CHECK_FIRST_FOREIGN_SYSTEM_USER
+   puts $CHECK_OUTPUT "Now  delete user $CHECK_FIRST_FOREIGN_SYSTEM_USER from  $project ... \n"
+   set result6 [del_sharetree_node $project  $CHECK_FIRST_FOREIGN_SYSTEM_USER]
 
-   get_qconf_show_list result4 $CHECK_HOST $CHECK_USER "-dstnode /$project/$CHECK_FIRST_FOREIGN_SYSTEM_USER"
-
-   if { ( [string first "$project/$CHECK_FIRST_FOREIGN_SYSTEM_USER"   $result4] >= 0 ) &&
-        ( [string first "$string2"   $result4] >= 0 ) } {
+   if { ( $result6 == 0 ) } {
       puts $CHECK_OUTPUT "qconf -dstnode /$project/$CHECK_FIRST_FOREIGN_SYSTEM_USER succeded"
    } else {
-      add_proc_error "qconf_add_show_delete_stnode" -1 "qconf -dstnode /$project/$CHECK_FIRST_FOREIGN_SYSTEM_USER failed"
-      puts $CHECK_OUTPUT "result is $result4"
+      puts $CHECK_OUTPUT "result is $result6"
    }
    
-   # Now delete all sharetree
-   get_qconf_show_list result5 $CHECK_HOST $CHECK_USER "-dstree " 
-
-   if { ( [string first "$string3"   $result5] >= 0 ) &&
-        ( [string first "$string4"   $result5] >= 0 ) } {
-      puts $CHECK_OUTPUT "qconf -dstree succeded"
-   } else {
-      add_proc_error "qconf_add_show_delete_stnode" -1 "qconf -dstree failed"
-      puts $CHECK_OUTPUT "result is $result5"
-   }
-
    # Delete users CHECK_USER, CHECK_FIRST_FOREIGN_SYSTEM_USER from userlist
+   puts $CHECK_OUTPUT "Now  delete user $CHECK_USER from  userlist ... \n"
    del_user $CHECK_USER
+   puts $CHECK_OUTPUT "Now  delete user $CHECK_FIRST_FOREIGN_SYSTEM_USER from  userlist ... \n"
    del_user $CHECK_FIRST_FOREIGN_SYSTEM_USER
-
-   # Delete $project
-   del_prj $project
 
    set_error 0 "ok"
 
@@ -2036,7 +2028,6 @@ proc qconf_event_client {} {
    global ts_config env CHECK_SOURCE_DIR
    global CHECK_OUTPUT CHECK_USER CHECK_HOST CHECK_ARCH
 
-   set string1 [translate $CHECK_HOST 0 1 0 "shutdown notification to event client qevent"]
    set up_arch [resolve_build_arch $ts_config(master_host)]
    set event_client_bin $CHECK_SOURCE_DIR/$up_arch/qevent
 
@@ -2051,41 +2042,24 @@ proc qconf_event_client {} {
    set event_client_sid [ open_remote_spawn_process $ts_config(master_host) "ts_def_con2" $event_client_bin "-ts"]
    set event_client_id [lindex $event_client_sid 1]
 
-   set event_client_id [lindex $event_client_sid 1]
-
    # First do a list of event clients
-   get_qconf_show_list result0 $CHECK_HOST $CHECK_USER "-secl"
+   puts $CHECK_OUTPUT "Show event client with -secl option ..."
+   set result0 [get_event_client_list ]
 
-   if { ( [string first "scheduler"   $result0] >= 0 ) } {
+   if { ( $result0 == 0 ) } {
       puts $CHECK_OUTPUT "qconf -secl succeded"
    } else {
-      add_proc_error "qconf_event_client" -1 "qconf -secl failed"
       puts $CHECK_OUTPUT "result is $result0"
-   }
-
-   # Do now a negative test
-   set result1 [get_qconf_list_error result $CHECK_HOST $CHECK_USER "-secl always_depend"]
-
-   if { ( $result1 == 0 ) } {
-      puts $CHECK_OUTPUT "qconf -secl always_depend succeded"
-   } else {
-      add_proc_error "qconf_event_client" -1 "qconf -secl always_depend failed"
-      puts $CHECK_OUTPUT "result is $result1"
    }
 
    # Kill now event clients
 
-   #get_qconf_show_list result2 $CHECK_HOST $CHECK_USER "-kec all"
-   get_qconf_show_list result2 $CHECK_HOST $CHECK_USER "-kec $event_client_id"
+   set result1 [del_event_client_list "" $event_client_id]
 
-   if { ( [string first "$string1"   $result2] >= 0 ) &&
-        ( [string first "$CHECK_HOST"   $result2] >= 0 ) } {
-      #puts $CHECK_OUTPUT "qconf -kec all succeded"
+   if { ( $result1 == 0 ) } {
       puts $CHECK_OUTPUT "qconf -kec $event_client_id succeded"
    } else {
-      #add_proc_error "qconf_event_client" -1 "qconf -kec all failed"
-      add_proc_error "qconf_event_client" -1 "qconf -kec $event_client_id failed"
-      puts $CHECK_OUTPUT "result is $result2"
+      puts $CHECK_OUTPUT "result is $result1"
    }
 
    close_spawn_process $event_client_sid
@@ -2097,13 +2071,11 @@ proc qconf_event_client {} {
    set event_client_sid1 [ open_remote_spawn_process $ts_config(master_host) "ts_def_con2" $event_client_bin "-ts"]
    set event_client_id1 [lindex $event_client_sid1 1]
 
-   get_qconf_show_list result2 $CHECK_HOST $CHECK_USER "-kec all"
+   set result2 [del_event_client_list "all" ""]
 
-   if { ( [string first "$string1"   $result2] >= 0 ) &&
-        ( [string first "$CHECK_HOST"   $result2] >= 0 ) } {
+   if { ( $result2 == 0 ) } {
       puts $CHECK_OUTPUT "qconf -kec all succeded"
    } else {
-      add_proc_error "qconf_event_client" -1 "qconf -kec all failed"
       puts $CHECK_OUTPUT "result is $result2"
    }
 

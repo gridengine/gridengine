@@ -1,3 +1,6 @@
+OJ-2006-1-03-0: Testsuite: added stnode, event client functionality to 
+			   qconf test; added sge_sharetree*, sge_event_client in tcl_files
+
 JG-2005-12-28-0: Bugfix:    - qrsh always did verbose output
                  Testsuite: - fixed broken testsuite for 5.3
                             - shadow only hosts were not added to admin host 

@@ -4601,9 +4601,10 @@ static int wait_all_jobs(int n)
    char jobid[100];
    int drmaa_errno = DRMAA_ERRNO_SUCCESS;
    int stat;
+   drmaa_attr_values_t *rusage = NULL;
 
    do {
-      drmaa_errno = drmaa_wait(DRMAA_JOB_IDS_SESSION_ANY, jobid, sizeof(jobid)-1, &stat, DRMAA_TIMEOUT_WAIT_FOREVER, NULL, NULL, 0);
+      drmaa_errno = drmaa_wait(DRMAA_JOB_IDS_SESSION_ANY, jobid, sizeof(jobid)-1, &stat, DRMAA_TIMEOUT_WAIT_FOREVER, &rusage, NULL, 0);
       
       if (drmaa_errno == DRMAA_ERRNO_SUCCESS) {
          printf("waited job \"%s\"\n", jobid);
@@ -4623,8 +4624,10 @@ static int wait_all_jobs(int n)
       printf("no more jobs to wait\n");
       drmaa_errno = DRMAA_ERRNO_SUCCESS;
    }
-   else if ((drmaa_errno == DRMAA_ERRNO_DRM_COMMUNICATION_FAILURE) &&
-            (test_case == MT_EXIT_DURING_SUBMIT_OR_WAIT)) {
+   else if (((drmaa_errno == DRMAA_ERRNO_DRM_COMMUNICATION_FAILURE) &&
+             (test_case == MT_EXIT_DURING_SUBMIT_OR_WAIT)) ||
+            ((drmaa_errno == DRMAA_ERRNO_NO_RUSAGE) &&
+             (test_case == ST_SUBMIT_NO_RUN_WAIT))) {
       /* It's supposed to do that. */
       drmaa_errno = DRMAA_ERRNO_SUCCESS;
    }

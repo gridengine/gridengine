@@ -1,7 +1,13 @@
-SG-2006-1-04-0: fixed the build
+DT-2006-01-04-0: Testsuite: o Enhanced drmaa_wait() tests
+                 Changed:   test_drmaa
 
-OJ-2006-1-03-0: Testsuite: added stnode, event client functionality to 
-			   qconf test; added sge_sharetree*, sge_event_client in tcl_files
+SG-2006-01-04-0: Bugfix:    fixed the build
+
+OJ-2006-01-03-0: Testsuite: added stnode, event client functionality to 
+			                   qconf test
+                            added sge_sharetree*, sge_event_client in tcl_files
+                 Changed:   testsuite
+                 Review:    pending
 
 JG-2005-12-28-0: Bugfix:    - qrsh always did verbose output
                  Testsuite: - fixed broken testsuite for 5.3
@@ -10,7 +16,7 @@ JG-2005-12-28-0: Bugfix:    - qrsh always did verbose output
                             - enhancements to remote connection handling
                  Review:    CR
 
-DT-2005-12-23-0: Enhancem.: o Completed up DRMAA 0.95/1.0 transition
+DT-2005-12-23-0: Enhancem.: o Cleaned up DRMAA 0.95/1.0 transition
                             o Moved ARCo utils into libutil
                             o distinst defaults to current architecture
                  Review:    pending (AH)
@@ -30,19 +36,19 @@ JG-2005-12-23-0: Bugfix:    - fixed arch script for ia64 architecture
                  Review:    RD
 
 OJ-2005-12-22-0: Testsuite: moved procedues in sge_pe, sge_host, sge_calendar,
-                 sge_qconf_config, sge_users, sge_userset
+                            sge_qconf_config, sge_users, sge_userset
                  Review:    DT
 
 OJ-2005-12-22-1: Testsuite: added files sge_calendar.*, sge_users.* 
-                 sge_userset.*
-                 which contain procedures to be used by new qconf tests.
+								    sge_userset.* which contain procedures
+									 to be used by new qconf tests.
                  Review:    DT
 
 OJ-2005-12-22-2: Testsuite: new procedures to test qconf -pe
                  Review:    DT
 
 OJ-2005-12-22-3: Testsuite: new files from sge_procedures.* containing 
-                 procedures for checkpointing.
+								    procedures for checkpointing.
                  Review:    DT
 
 OJ-2005-12-22-4: Testsuite: new procedure for qconf -sconfl

@@ -1,3 +1,5 @@
+SG-2006-1-04-0: fixed the build
+
 OJ-2006-1-03-0: Testsuite: added stnode, event client functionality to 
 			   qconf test; added sge_sharetree*, sge_event_client in tcl_files
 

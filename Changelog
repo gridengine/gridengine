@@ -1,3 +1,8 @@
+DT-2006-01-04-0: Docs:      o Updated qselect man page
+                 Issue:     1955
+                 Bugtraq:   6368942
+                 Changed:   qselect(1)
+
 DT-2006-01-04-0: Testsuite: o Enhanced drmaa_wait() tests
                  Changed:   test_drmaa
 

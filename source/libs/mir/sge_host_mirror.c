@@ -73,53 +73,31 @@
 *     Eventmirror/sge_mirror_update_master_list()
 *     Eventmirror/sge_mirror_update_master_list_host_key()
 *******************************************************************************/
-bool 
-host_update_master_list(sge_object_type type, sge_event_action action,
-                        lListElem *event, void *clientdata)
+sge_callback_result
+host_update_master_list(object_description *object_base, sge_object_type type, 
+                        sge_event_action action, lListElem *event, void *clientdata)
 {
    lList **list;
    const lDescr *list_descr;
    int     key_nm;
 
    const char *key;
-   object_description *object_base = object_type_get_object_description();
-
 
    DENTER(TOP_LAYER, "host_update_master_list");
-   
+   list = sge_master_list(object_base, type);
    list_descr = lGetListDescr(lGetList(event, ET_new_version));
-   
-   switch (type) {
-      case SGE_TYPE_ADMINHOST:
-         list = object_base[SGE_TYPE_ADMINHOST].list;
-         key_nm = AH_name;
-         break;
-      case SGE_TYPE_EXECHOST:
-         list = object_base[SGE_TYPE_EXECHOST].list;
-         key_nm = EH_name;
-         break;
-      case SGE_TYPE_SUBMITHOST:
-         list = object_base[SGE_TYPE_SUBMITHOST].list;
-         key_nm = SH_name;
-         break;
-      case SGE_TYPE_HGROUP:
-         list = object_base[SGE_TYPE_HGROUP].list;
-         key_nm = HGRP_name;
-         break;
-      default:
-         return false;
-   }
- 
+   key_nm = object_type_get_key_nm(type); 
+
    key = lGetString(event, ET_strkey);
 
    if (sge_mirror_update_master_list_host_key(list, list_descr, key_nm, key, 
                                               action, event) != SGE_EM_OK) {
 
       DEXIT;
-      return false;
+      return SGE_EMA_FAILURE;
    }
 
    DEXIT;
-   return true;
+   return SGE_EMA_OK;
 }
 

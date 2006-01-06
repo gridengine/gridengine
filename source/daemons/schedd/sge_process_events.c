@@ -702,29 +702,32 @@ void cleanup_default_scheduler(void)
    sge_free_job_category();
 }
 
-bool sge_process_schedd_conf_event_after(sge_object_type type, sge_event_action action, 
-                                         lListElem *event, void *clientdata){
+sge_callback_result
+sge_process_schedd_conf_event_after(object_description *object_base, sge_object_type type, 
+                                    sge_event_action action, lListElem *event, void *clientdata){
    sconf_print_config();
 
-   return true;
+   return SGE_EMA_OK;
 }
 
-bool sge_process_schedd_conf_event_before(sge_object_type type, sge_event_action action, 
-                                          lListElem *event, void *clientdata)
+sge_callback_result
+sge_process_schedd_conf_event_before(object_description *object_base, sge_object_type type, 
+                                     sge_event_action action, lListElem *event, void *clientdata)
 {
    lListElem *new = NULL;
+   lListElem *event_client = ec_get_event_client();
 
    DENTER(GDI_LAYER, "sge_process_schedd_conf_event_before");
    DPRINTF(("callback processing schedd config event\n"));
 
    new = lFirst(lGetList(event, ET_new_version));
 
-   ec_set_busy(1);
+   ec_set_busy(event_client, 1);
 
    if (new == NULL) {
       ERROR((SGE_EVENT, "> > > > > no scheduler configuration available < < < < <\n"));
       DEXIT;
-      return false;
+      return SGE_EMA_FAILURE;
    }
    /* check for valid load formula */ 
    {
@@ -771,8 +774,8 @@ bool sge_process_schedd_conf_event_before(sge_object_type type, sge_event_action
       u_long32 schedule_interval;  
 
       if (extended_parse_ulong_val(NULL, &schedule_interval, TYPE_TIM, time, NULL, 0, 0) ) {
-         if (ec_get_edtime() != schedule_interval) {
-           ec_set_edtime(schedule_interval);
+         if (ec_get_edtime(event_client) != schedule_interval) {
+           ec_set_edtime(event_client, schedule_interval);
          }
       }
    }
@@ -781,19 +784,19 @@ bool sge_process_schedd_conf_event_before(sge_object_type type, sge_event_action
       /* changings on event handler or schedule interval can take effect 
        * only after a new registration of schedd at qmaster 
        */
-      sge_mirror_shutdown();
+      sge_mirror_shutdown(&event_client);
       sge_schedd_mirror_register();
       DEXIT;
-      return true;
+      return SGE_EMA_OK;
    }
 
    DEXIT;
-   return true;
+   return SGE_EMA_OK;
 }
 
-bool 
-sge_process_job_event_before(sge_object_type type, sge_event_action action, 
-                             lListElem *event, void *clientdata)
+sge_callback_result
+sge_process_job_event_before(object_description *object_base, sge_object_type type, 
+                             sge_event_action action, lListElem *event, void *clientdata)
 {
    u_long32 job_id = 0;
    lListElem *job = NULL;
@@ -808,11 +811,11 @@ sge_process_job_event_before(sge_object_type type, sge_event_action action,
          ERROR((SGE_EVENT, MSG_CANTFINDJOBINMASTERLIST_S, 
                 job_get_id_string(job_id, 0, NULL)));
          DEXIT;
-         return false;
+         return SGE_EMA_FAILURE;
       }   
    } else {
       DEXIT;
-      return true;
+      return SGE_EMA_OK;
    }
    
    switch (action) {
@@ -842,11 +845,12 @@ sge_process_job_event_before(sge_object_type type, sge_event_action action,
    }
 
    DEXIT;
-   return true;
+   return SGE_EMA_OK;
 }
 
-bool sge_process_job_event_after(sge_object_type type, sge_event_action action, 
-                                lListElem *event, void *clientdata)
+sge_callback_result
+sge_process_job_event_after(object_description *object_base, sge_object_type type, 
+                            sge_event_action action, lListElem *event, void *clientdata)
 {
    u_long32 job_id = 0;
    lListElem *job  = NULL;
@@ -861,7 +865,7 @@ bool sge_process_job_event_after(sge_object_type type, sge_event_action action,
          ERROR((SGE_EVENT, MSG_CANTFINDJOBINMASTERLIST_S, 
                 job_get_id_string(job_id, 0, NULL)));
          DEXIT;
-         return false;
+         return SGE_EMA_FAILURE;
       }   
       sge_do_priority_job(job); /* job got added or modified, recompute the priorities */
    }
@@ -919,7 +923,7 @@ bool sge_process_job_event_after(sge_object_type type, sge_event_action action,
                         ERROR((SGE_EVENT, MSG_CANTFINDTASKINJOB_UU, 
                                sge_u32c(ja_task_id), sge_u32c(job_id)));
                         DEXIT;
-                        return false;
+                        return SGE_EMA_FAILURE;
                      }
 
                      lSetUlong(ja_task, JAT_status, JFINISHED);
@@ -940,32 +944,31 @@ bool sge_process_job_event_after(sge_object_type type, sge_event_action action,
    }
 
    DEXIT;
-   return true;
+   return SGE_EMA_OK;
 }
 
 
-bool 
-sge_process_ja_task_event_before(sge_object_type type, 
-                                 sge_event_action action, 
-                                 lListElem *event, void *clientdata)
+sge_callback_result
+sge_process_ja_task_event_before(object_description *object_base, sge_object_type type, 
+                                 sge_event_action action, lListElem *event, void *clientdata)
 {
    DENTER(GDI_LAYER, "sge_process_ja_task_event_before");
    
    DPRINTF(("callback processing ja_task event before default rule\n"));
 
    DEXIT;
-   return true;
+   return SGE_EMA_OK;
 }  
 
-bool sge_process_global_config_event(sge_object_type type, 
-                                    sge_event_action action, 
-                                    lListElem *event, void *clientdata)
+sge_callback_result
+sge_process_global_config_event(object_description *object_base, sge_object_type type, 
+                                sge_event_action action, lListElem *event, void *clientdata)
 {
    DENTER(TOP_LAYER, "sge_process_global_config_event");
    DPRINTF(("notification about new global configuration\n"));
    new_global_config = 1;
    DEXIT;
-   return true;
+   return SGE_EMA_OK;
 }   
 
 /* If the last ja task of a job is deleted, 
@@ -973,9 +976,9 @@ bool sge_process_global_config_event(sge_object_type type,
  * Do we really need it?
  * Isn't a job delete event sent after the last array task exited?
  */
-bool sge_process_ja_task_event_after(sge_object_type type, 
-                                    sge_event_action action, 
-                                    lListElem *event, void *clientdata)
+sge_callback_result
+sge_process_ja_task_event_after(object_description *object_base, sge_object_type type, 
+                                sge_event_action action, lListElem *event, void *clientdata)
 {
    DENTER(GDI_LAYER, "sge_process_ja_task_event_after");
 
@@ -990,114 +993,115 @@ bool sge_process_ja_task_event_after(sge_object_type type,
          ERROR((SGE_EVENT, MSG_CANTFINDJOBINMASTERLIST_S, 
                 job_get_id_string(job_id, 0, NULL)));
          DEXIT;
-         return false;
+         return SGE_EMA_FAILURE;
       }   
    }
    else
       DPRINTF(("callback processing ja_task event after default rule\n"));
 
    DEXIT;
-   return true;
+   return SGE_EMA_OK;
 }
 
-bool sge_process_userset_event_after(sge_object_type type, 
-                                     sge_event_action action, 
-                                     lListElem *event, void *clientdata)
+sge_callback_result
+sge_process_userset_event_after(object_description *object_base, sge_object_type type, 
+                                     sge_event_action action, lListElem *event, void *clientdata)
 {
    DENTER(GDI_LAYER, "sge_process_userset_event");
    DPRINTF(("callback processing userset event after default rule\n"));
    rebuild_categories = true;
    DEXIT;
-   return true;
+   return SGE_EMA_OK;
 }
 
-bool sge_process_schedd_monitor_event(sge_object_type type, 
-                                     sge_event_action action, 
-                                     lListElem *event, void *clientdata)
+sge_callback_result
+sge_process_schedd_monitor_event(object_description *object_base, sge_object_type type, 
+                                     sge_event_action action, lListElem *event, void *clientdata)
 {
    DENTER(GDI_LAYER, "sge_process_schedd_monitor_event");
    DPRINTF(("monitoring next scheduler run\n"));
    schedd_set_monitor_next_run(true);
    DEXIT;
-   return true;
+   return SGE_EMA_OK;
 }   
 
 int subscribe_default_scheduler(void)
 {
+   lListElem *event_client = ec_get_event_client();
    ensure_valid_what_and_where();
    
    /* subscribe event types for the mirroring interface */
-   sge_mirror_subscribe(SGE_TYPE_CKPT,           NULL, NULL, NULL, NULL, NULL);
-   sge_mirror_subscribe(SGE_TYPE_CENTRY,         NULL, NULL, NULL, NULL, NULL);
-   sge_mirror_subscribe(SGE_TYPE_EXECHOST,       NULL, NULL, NULL, NULL, NULL);
-   sge_mirror_subscribe(SGE_TYPE_SHARETREE,      NULL, NULL, NULL, NULL, NULL);
-   sge_mirror_subscribe(SGE_TYPE_PROJECT,        NULL, NULL, NULL, NULL, NULL);
-   sge_mirror_subscribe(SGE_TYPE_PE,             NULL, NULL, NULL, NULL, NULL);
-   sge_mirror_subscribe(SGE_TYPE_CQUEUE,         NULL, NULL, NULL, where_cqueue, what_cqueue);
-   sge_mirror_subscribe(SGE_TYPE_QINSTANCE,      NULL, NULL, NULL, where_all_queue, what_queue);
-   sge_mirror_subscribe(SGE_TYPE_USER,           NULL, NULL, NULL, NULL, NULL);
-   sge_mirror_subscribe(SGE_TYPE_HGROUP,         NULL, NULL, NULL, NULL, NULL);
+   sge_mirror_subscribe(event_client, SGE_TYPE_CKPT,           NULL, NULL, NULL, NULL, NULL);
+   sge_mirror_subscribe(event_client, SGE_TYPE_CENTRY,         NULL, NULL, NULL, NULL, NULL);
+   sge_mirror_subscribe(event_client, SGE_TYPE_EXECHOST,       NULL, NULL, NULL, NULL, NULL);
+   sge_mirror_subscribe(event_client, SGE_TYPE_SHARETREE,      NULL, NULL, NULL, NULL, NULL);
+   sge_mirror_subscribe(event_client, SGE_TYPE_PROJECT,        NULL, NULL, NULL, NULL, NULL);
+   sge_mirror_subscribe(event_client, SGE_TYPE_PE,             NULL, NULL, NULL, NULL, NULL);
+   sge_mirror_subscribe(event_client, SGE_TYPE_CQUEUE,         NULL, NULL, NULL, where_cqueue, what_cqueue);
+   sge_mirror_subscribe(event_client, SGE_TYPE_QINSTANCE,      NULL, NULL, NULL, where_all_queue, what_queue);
+   sge_mirror_subscribe(event_client, SGE_TYPE_USER,           NULL, NULL, NULL, NULL, NULL);
+   sge_mirror_subscribe(event_client, SGE_TYPE_HGROUP,         NULL, NULL, NULL, NULL, NULL);
 
    /* SG: this is not suported in the event master right now, for a total update 
       we have to fix it for goood some time. Issue: 1416*/
-/*   sge_mirror_subscribe(SGE_TYPE_PETASK,         NULL, NULL, NULL, NULL, what_pet); */
-   sge_mirror_subscribe(SGE_TYPE_PETASK,         NULL, NULL, NULL, NULL, NULL);
+/*   sge_mirror_subscribe(event_client,SGE_TYPE_PETASK,         NULL, NULL, NULL, NULL, what_pet); */
+   sge_mirror_subscribe(event_client, SGE_TYPE_PETASK,         NULL, NULL, NULL, NULL, NULL);
   
    /* event types with callbacks */
 
-   sge_mirror_subscribe(SGE_TYPE_SCHEDD_CONF, sge_process_schedd_conf_event_before , 
+   sge_mirror_subscribe(event_client, SGE_TYPE_SCHEDD_CONF, sge_process_schedd_conf_event_before , 
                         sge_process_schedd_conf_event_after,      NULL, NULL, NULL);
                                                 
-   sge_mirror_subscribe(SGE_TYPE_SCHEDD_MONITOR, NULL, 
+   sge_mirror_subscribe(event_client, SGE_TYPE_SCHEDD_MONITOR, NULL, 
                         sge_process_schedd_monitor_event,   NULL, NULL, NULL);
    
-   sge_mirror_subscribe(SGE_TYPE_GLOBAL_CONFIG,  NULL, 
+   sge_mirror_subscribe(event_client, SGE_TYPE_GLOBAL_CONFIG,  NULL, 
                         sge_process_global_config_event,    NULL, NULL, NULL);
    
-   sge_mirror_subscribe(SGE_TYPE_JOB,            sge_process_job_event_before, 
+   sge_mirror_subscribe(event_client, SGE_TYPE_JOB,            sge_process_job_event_before, 
                         sge_process_job_event_after,        NULL, where_job, what_job);
                         
-   sge_mirror_subscribe(SGE_TYPE_JATASK,         sge_process_ja_task_event_before, 
+   sge_mirror_subscribe(event_client, SGE_TYPE_JATASK,         sge_process_ja_task_event_before, 
                         sge_process_ja_task_event_after,    NULL, where_jat, what_jat);
                                                 
-   sge_mirror_subscribe(SGE_TYPE_USERSET,        NULL, 
+   sge_mirror_subscribe(event_client, SGE_TYPE_USERSET,        NULL, 
                         sge_process_userset_event_after,    NULL, NULL, NULL);
 
    /* set flush parameters for job */
    {
       int temp = sconf_get_flush_submit_sec();
       if (temp <= 0) {
-         ec_set_flush(sgeE_JOB_ADD, false, -1);        
+         ec_set_flush(event_client, sgeE_JOB_ADD, false, -1);        
          /* SG: we might want to have sgeE_JOB_MOD in here to be notified, when
          a job is removed from its hold state */
       }   
       else {
          temp--;
-         ec_set_flush(sgeE_JOB_ADD, true, temp);
+         ec_set_flush(event_client, sgeE_JOB_ADD, true, temp);
          /* SG: we might want to have sgeE_JOB_MOD in here to be notified, when
          a job is removed from its hold state */
       }   
          
       temp = sconf_get_flush_finish_sec();
       if (temp <= 0){
-         ec_set_flush(sgeE_JOB_DEL, false,         -1);
-         ec_set_flush(sgeE_JOB_FINAL_USAGE, false, -1);
-         ec_set_flush(sgeE_JATASK_DEL, false,      -1);
+         ec_set_flush(event_client, sgeE_JOB_DEL, false,         -1);
+         ec_set_flush(event_client, sgeE_JOB_FINAL_USAGE, false, -1);
+         ec_set_flush(event_client, sgeE_JATASK_DEL, false,      -1);
       }
       else {
          temp--;
-         ec_set_flush(sgeE_JOB_DEL, true,         temp);
-         ec_set_flush(sgeE_JOB_FINAL_USAGE, true, temp);
-         ec_set_flush(sgeE_JATASK_DEL, true,      temp);
+         ec_set_flush(event_client, sgeE_JOB_DEL, true,         temp);
+         ec_set_flush(event_client, sgeE_JOB_FINAL_USAGE, true, temp);
+         ec_set_flush(event_client, sgeE_JATASK_DEL, true,      temp);
       }
    }
    /* for some reason we flush sharetree changes */
-   ec_set_flush(sgeE_NEW_SHARETREE, true,  0);
+   ec_set_flush(event_client, sgeE_NEW_SHARETREE, true,  0);
 
    /* configuration changes and trigger should have immediate effect */
-   ec_set_flush(sgeE_SCHED_CONF, true,     0);
-   ec_set_flush(sgeE_SCHEDDMONITOR, true,  0);
-   ec_set_flush(sgeE_GLOBAL_CONFIG,true,   0);
+   ec_set_flush(event_client, sgeE_SCHED_CONF, true,     0);
+   ec_set_flush(event_client, sgeE_SCHEDDMONITOR, true,  0);
+   ec_set_flush(event_client, sgeE_GLOBAL_CONFIG,true,   0);
 
    return true;
 }

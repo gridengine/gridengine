@@ -4164,6 +4164,7 @@ static void *japi_implementation_thread(void *p)
                                   qmaster. */
    bool disconnected = false; /* Whether we are currently connected to the
                                  qmaster. */
+   lListElem *event_client = NULL;
 
    DENTER(TOP_LAYER, "japi_implementation_thread");
 
@@ -4217,11 +4218,13 @@ static void *japi_implementation_thread(void *p)
    /* register at qmaster as event client */
    DPRINTF(("registering as event client ...\n"));
    ec_prepare_registration(EV_ID_ANY, uti_state_get_sge_formal_prog_name());
-   ec_set_edtime(ed_time); 
-   ec_set_busy_handling(EV_THROTTLE_FLUSH); 
-   ec_set_flush_delay(flush_delay_rate); 
-   ec_set_session(japi_session_key);
-   ec_subscribe(sgeE_JOB_LIST);
+   event_client = ec_get_event_client();
+
+   ec_set_edtime(event_client, ed_time); 
+   ec_set_busy_handling(event_client, EV_THROTTLE_FLUSH); 
+   ec_set_flush_delay(event_client, flush_delay_rate); 
+   ec_set_session(event_client, japi_session_key);
+   ec_subscribe(event_client, sgeE_JOB_LIST);
    
    where = lWhere("%T(%I==%s)", JB_Type, JB_session, japi_session_key);
    what = lIntVector2What(JB_Type, job_nm); 
@@ -4229,7 +4232,7 @@ static void *japi_implementation_thread(void *p)
    where_el = lWhereToElem(where);
    what_el = lWhatToElem(what);
    
-   ec_mod_subscription_where(sgeE_JOB_LIST, what_el, where_el);
+   ec_mod_subscription_where(event_client, sgeE_JOB_LIST, what_el, where_el);
 
    lFreeWhere(&where);
    lFreeWhat(&what);
@@ -4241,14 +4244,14 @@ static void *japi_implementation_thread(void *p)
       lFreeElem(&what_el);
    }
 
-   ec_subscribe(sgeE_JOB_FINISH);
-   ec_set_flush(sgeE_JOB_FINISH, true, 0);
+   ec_subscribe(event_client, sgeE_JOB_FINISH);
+   ec_set_flush(event_client, sgeE_JOB_FINISH, true, 0);
 
-   ec_subscribe(sgeE_JATASK_MOD);
-   ec_set_flush(sgeE_JATASK_MOD, true, 0);
+   ec_subscribe(event_client, sgeE_JATASK_MOD);
+   ec_set_flush(event_client, sgeE_JATASK_MOD, true, 0);
 
-   ec_subscribe(sgeE_SHUTDOWN);
-   ec_set_flush(sgeE_SHUTDOWN, true, 0);
+   ec_subscribe(event_client, sgeE_SHUTDOWN);
+   ec_set_flush(event_client, sgeE_SHUTDOWN, true, 0);
 
 /*    sgeE_QMASTER_GOES_DOWN  ??? */
 
@@ -4260,21 +4263,22 @@ static void *japi_implementation_thread(void *p)
       goto SetupFailed;
    }
    
-   if (!ec_register(false, &alp)) {      
+   if (!ec_register(event_client, false, &alp)) {      
       DPRINTF(("error: ec_register() failed\n"));
       
       if (p) {
          lListElem *aep = lFirst(alp);
          if (aep) {
             answer_list_add((lList **)p, lGetString(aep, AN_text), 
-                  lGetUlong(aep, AN_status), (answer_quality_t)lGetUlong(aep, AN_quality));
+                            lGetUlong(aep, AN_status), 
+                            (answer_quality_t)lGetUlong(aep, AN_quality));
          }
       }
       JAPI_UNLOCK_EC_STATE();
       lFreeList(&alp);
       goto SetupFailed;
    }
-   japi_ec_id = ec_get_id();
+   japi_ec_id = ec_get_id(event_client);
    JAPI_UNLOCK_EC_STATE();
 
    DPRINTF(("my formal prog name is \"%s\"\n",(char*)uti_state_get_sge_formal_prog_name()));
@@ -4284,8 +4288,8 @@ static void *japi_implementation_thread(void *p)
       int ec_get_ret = 0;
 
       /* read events and add relevant information into library session data */
-      if ((ec_get_ret = ec_get(&event_list, false)) == false) {
-         ec_mark4registration();
+      if ((ec_get_ret = ec_get(event_client,&event_list, false)) == false) {
+         ec_mark4registration(event_client);
          
          DPRINTF (("Sleeping 10 seconds before trying to register again.\n"));
          sleep(10);
@@ -4593,7 +4597,7 @@ static void *japi_implementation_thread(void *p)
 
    /* Unregister event client */
    DPRINTF(("unregistering from qmaster ...\n"));
-   if (ec_deregister()==FALSE) {
+   if (ec_deregister(&event_client) == FALSE) {
       DPRINTF(("failed unregistering event client from qmaster.\n"));
    } else {
       DPRINTF(("... unregistered.\n"));

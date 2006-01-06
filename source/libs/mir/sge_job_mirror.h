@@ -34,13 +34,14 @@
 
 #include "sge_object.h"
 
-bool job_update_master_list(sge_object_type type,
+sge_callback_result
+job_update_master_list(object_description *object_base, sge_object_type type,
                             sge_event_action action,
                             lListElem *event,
                             void *clientdata);
 
-bool
-job_schedd_info_update_master_list(sge_object_type type,
+sge_callback_result
+job_schedd_info_update_master_list(object_description *object_base, sge_object_type type,
                                    sge_event_action action,
                                    lListElem *event, void *clientdata);
 

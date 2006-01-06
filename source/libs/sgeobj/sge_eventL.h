@@ -35,6 +35,7 @@
 
 #include "sge_boundaries.h"
 #include "cull.h"
+#include "uti/sge_monitor.h"
 
 #ifdef  __cplusplus
 extern "C" {
@@ -50,6 +51,55 @@ typedef enum {
    EV_ID_FIRST_DYNAMIC = 11  /* first id given by qmaster for EV_ID_ANY registration */ 
 }ev_registration_id;
 
+/*-------------------------------------------*/
+/* data structurs for the local event client */
+/*-------------------------------------------*/
+
+/** 
+ *   this is the definition for the update function that is used by process
+ *   internal event clients / mirrors. 
+ **/
+typedef void (*event_client_update_func_t)(
+   lList **alpp,               /* answer list */
+   lList *event_list           /* list of new events stored in the report list */                         
+);
+
+/**
+ * The event client modification function. Part of the sge_event_master
+ *
+ * SEE ALSO
+ *   EventMaster/sge_mod_event_client
+ */
+typedef int (*evm_mod_func_t)(
+   lListElem *clio,  /* the new event client structure with a set update_func */ 
+   lList** alpp,     /* a answer list */ 
+   char* ruser,      /* calling user */ 
+   char* rhost       /* calling host */
+);
+
+
+/**
+ * The event client add function in the sge_event_master
+ *
+ * SEE ALSO
+ *  EventMaster/sge_add_event_client_local
+ **/
+typedef int (*evm_add_func_t)(
+   lListElem *clio,                        /* the new event client */
+   lList **alpp,                           /* the answer list */
+   event_client_update_func_t update_func, /* the event client update_func */     
+   monitoring_t *monitor                   /* the monitoring structure */
+);
+
+/**
+ * The event client remove function in the sge_event_master
+ *
+ * SEE ALSO
+ *  EventMaster/sge_removce_event_client
+ **/
+typedef void (*evm_remove_func_t)(
+   u_long32 aClientID               /* the event client id to remove */
+);
 
 /* documentation see libs/evc/sge_event_client.c */
 /* #define EV_NO_FLUSH -1*/
@@ -112,7 +162,8 @@ enum {
                              /* are not acknowledged */
    EV_sub_array,             /* contains an array of subscribed events, only used in qmaster */      
    
-   EV_state                   /* identifies the state the event client is in. Sofar we have: connected, closing, terminated */
+   EV_state,                 /* identifies the state the event client is in. Sofar we have: connected, closing, terminated */
+   EV_update_function        /* stores an update function for process internal event clients (threads)*/
 };
 
 LISTDEF(EV_Type)
@@ -141,6 +192,7 @@ LISTDEF(EV_Type)
    SGE_REF(EV_sub_array, CULL_ANY_SUBTYPE, CULL_DEFAULT)
 
    SGE_ULONG(EV_state, CULL_DEFAULT)
+   SGE_REF(EV_update_function, CULL_ANY_SUBTYPE, CULL_DEFAULT)
 LISTEND 
 
 NAMEDEF(EVN)
@@ -169,6 +221,7 @@ NAMEDEF(EVN)
    NAME("EV_sub_array")
 
    NAME("EV_state")
+   NAME("EV_update_function")
 NAMEEND
 
 #define EVS sizeof(EVN)/sizeof(char*)
@@ -315,6 +368,17 @@ typedef enum {
 
    sgeE_EVENTSIZE 
 } ev_event;
+
+/**
+ * The event client event ack function. Part of the sge_event_master
+ *
+ * SEE ALSO
+ *   EventMaster/sge_handle_event_ack
+ */
+typedef void (*evm_ack_func_t)(
+   u_long32,         /* the event client id */
+   ev_event         /* the last event to ack */
+);
 
 #define IS_TOTAL_UPDATE_EVENT(x) \
   (((x)==sgeE_ADMINHOST_LIST) || \

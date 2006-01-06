@@ -34,8 +34,8 @@
 
 #include "sge_object.h"
 
-bool schedd_conf_update_master_list(sge_object_type type, 
-                                    sge_event_action action,
-                                    lListElem *event, void *clientdata);
+sge_callback_result
+schedd_conf_update_master_list(object_description *object_base, sge_object_type type, 
+                               sge_event_action action, lListElem *event, void *clientdata);
 
 #endif /* __SGE_SCHED_CONF_MIRROR_H */

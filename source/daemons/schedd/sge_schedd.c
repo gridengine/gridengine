@@ -135,6 +135,7 @@ char *argv[]
    time_t next_prof_output = 0;
    bool done = false;
    int schedd_exit_state = 0;
+   lListElem *event_client = NULL;
 
    DENTER_MAIN(TOP_LAYER, "schedd");
 
@@ -204,6 +205,7 @@ char *argv[]
 
    /* prepare event client/mirror mechanism */
    sge_schedd_mirror_register();
+   event_client = ec_get_event_client();
 
    master_host = sge_get_master(0);
    if ( (ret=cl_com_cached_gethostbyname((char*)master_host, &initial_qmaster_host, NULL,NULL,NULL)) != CL_RETVAL_OK) {
@@ -231,7 +233,8 @@ char *argv[]
    starting_up();
    sge_write_pid(SCHEDD_PID_FILE);
 
-   cl_com_set_synchron_receive_timeout( cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0), (int) (sconf_get_schedule_interval() * 2) );
+   cl_com_set_synchron_receive_timeout( cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0), 
+                                       (int) (sconf_get_schedule_interval() * 2) );
 
    sge_sig_handler_in_main_loop = 1;
 
@@ -281,7 +284,7 @@ char *argv[]
             }
          }
 
-         if(sge_mirror_process_events() == SGE_EM_TIMEOUT) {
+         if(sge_mirror_process_events(event_client) == SGE_EM_TIMEOUT) {
             check_qmaster = true;
             continue;
          }
@@ -349,7 +352,7 @@ char *argv[]
       }
    }
 
-   sge_mirror_shutdown();
+   sge_mirror_shutdown(&event_client);
 
    sge_teardown_lock_service();
    
@@ -667,23 +670,24 @@ int sge_before_dispatch(void)
    }
    
    if (sconf_is_new_config()) {
+      lListElem *event_client = ec_get_event_client();
       int interval = sconf_get_flush_finish_sec();
       bool flush = (interval > 0) ? true : false;
       interval--;
-      if (ec_get_flush(sgeE_JOB_DEL) != interval) {
-         ec_set_flush(sgeE_JOB_DEL,flush, interval);
-         ec_set_flush(sgeE_JOB_FINAL_USAGE,flush, interval);
-         ec_set_flush(sgeE_JATASK_MOD, flush, interval);
-         ec_set_flush(sgeE_JATASK_DEL, flush, interval);
+      if (ec_get_flush(event_client, sgeE_JOB_DEL) != interval) {
+         ec_set_flush(event_client, sgeE_JOB_DEL,flush, interval);
+         ec_set_flush(event_client, sgeE_JOB_FINAL_USAGE,flush, interval);
+         ec_set_flush(event_client, sgeE_JATASK_MOD, flush, interval);
+         ec_set_flush(event_client, sgeE_JATASK_DEL, flush, interval);
       }
 
       interval= sconf_get_flush_submit_sec();
       flush = (interval > 0) ? true : false;
       interval--;      
-      if(ec_get_flush(sgeE_JOB_ADD) != interval) {
-         ec_set_flush(sgeE_JOB_ADD, flush, interval);
+      if(ec_get_flush(event_client, sgeE_JOB_ADD) != interval) {
+         ec_set_flush(event_client, sgeE_JOB_ADD, flush, interval);
       }
-      ec_commit();
+      ec_commit(event_client);
    }
 
    /*
@@ -700,9 +704,11 @@ int sge_before_dispatch(void)
 
 void sge_schedd_mirror_register()
 {
+   lListElem *event_client = NULL;
    /* register as event mirror */
-   sge_mirror_initialize(EV_ID_SCHEDD, "scheduler");
-   ec_set_busy_handling(EV_BUSY_UNTIL_RELEASED);
+   sge_mirror_initialize(EV_ID_SCHEDD, "scheduler", true);
+   event_client = ec_get_event_client();
+   ec_set_busy_handling(event_client, EV_BUSY_UNTIL_RELEASED);
 
    /* subscribe events */
    sched_funcs[current_scheduler].subscribe_func();

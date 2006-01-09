@@ -1,3 +1,6 @@
+RD-2006-01-09-0: CVS        Created V53p7_TAG
+---------------------------------------------
+
 JG-2006-01-09-0: Bugfix:    Long lines in accounting file break qacct.
                  Bugtraq:   6370003
                  Issue:     1958

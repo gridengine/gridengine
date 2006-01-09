@@ -268,7 +268,7 @@ int sge_read_rusage(
 FILE *f,
 sge_rusage_type *d 
 ) {
-   static char szLine[4092] = "";
+   static char szLine[2 * MAX_STRING_SIZE] = "";
    char  *pc;
    int len;
 

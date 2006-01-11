@@ -18,6 +18,8 @@ OJ-2006-01-03-0: Testsuite: added stnode, event client functionality to
                             added sge_sharetree*, sge_event_client in tcl_files
                  Changed:   testsuite
                  Review:    pending
+                 Issue:     477
+
 
 JG-2005-12-28-0: Bugfix:    - qrsh always did verbose output
                  Testsuite: - fixed broken testsuite for 5.3
@@ -48,30 +50,38 @@ JG-2005-12-23-0: Bugfix:    - fixed arch script for ia64 architecture
 OJ-2005-12-22-0: Testsuite: moved procedues in sge_pe, sge_host, sge_calendar,
                             sge_qconf_config, sge_users, sge_userset
                  Review:    DT
+		 Issue:     477
 
 OJ-2005-12-22-1: Testsuite: added files sge_calendar.*, sge_users.* 
-								    sge_userset.* which contain procedures
-									 to be used by new qconf tests.
+			    sge_userset.* which contain procedures
+  			    to be used by new qconf tests.
                  Review:    DT
+                 Issue:     477
 
 OJ-2005-12-22-2: Testsuite: new procedures to test qconf -pe
                  Review:    DT
+                 Issue:     477
 
 OJ-2005-12-22-3: Testsuite: new files from sge_procedures.* containing 
-								    procedures for checkpointing.
+			    procedures for checkpointing.
                  Review:    DT
+                 Issue:     477
 
 OJ-2005-12-22-4: Testsuite: new procedure for qconf -sconfl
                  Review:    DT
+                 Issue:     477
 
 OJ-2005-12-22-4: Testsuite: new  procedures for qconf
                  Review:    DT
+                 Issue:     477
 
 OJ-2005-12-22-5: Testsuite: new qconf tests in clients/qconf
                  Review:    DT
+                 Issue:     477
 
 OJ-2005-12-22-6: Testsuite: new procedure for qconf -sprjl
                  Review:    DT
+                 Issue:     477
 
 JG-2005-12-21-0: Bugfix:    - fixed broken build
                             - fixed broken distinst for multiple architectures
@@ -625,8 +635,9 @@ CR-2005-11-11-1: Testsuite: o fixed incorrect change from CR-2005-11-11-0
 CR-2005-11-11-0: Testsuite: o better remote file checking for start_remote_prog()
                  Review:    RD
 
-OJ-2005-11-11-0: Testsuite: Extended complex_global_host{} to test for regular expressions in 
-                            complex values for test_restring; modified complex_run_job to account 
+OJ-2005-11-11-0: Testsuite: Extended complex_global_host{} to test for regular 
+                            expressions in complex values for test_restring; 
+                            modified complex_run_job to account 
                             for issues found with qsub.
                  Issue number: 461 
 

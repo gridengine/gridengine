@@ -83,10 +83,6 @@ lappend check_functions "qconf_sel"
 #lappend check_functions "qconf_rattr_check"
 #lappend check_functions "qconf_Aattr_check"
 #lappend check_functions "qconf_Rattr_check"
-#lappend check_functions "qconf_dattr_check"
-#lappend check_functions "qconf_Dattr_check"
-#lappend check_functions "qconf_mattr_check"
-#lappend check_functions "qconf_Mattr_check"
 
 # Show options DONE
 lappend check_functions "qconf_scal_check"   	;# List calendars
@@ -104,15 +100,17 @@ lappend check_functions "qconf_sss_check"	;# Show scheduler status
 lappend check_functions "qconf_sul_check"	;# Show user list
 lappend check_functions "qconf_sprjl_check"	;# Show project list
 
-# New options, non-show
+# New options, non-show DONE
 
-lappend check_functions "qconf_add_delete_manager"	;# Add and delete manager users
+lappend check_functions "qconf_add_delete_manager"	;# Add and delete manager users 
 lappend check_functions "qconf_add_show_delete_queue"	;# Add, show and delete queue "qconf_queue.q"
 lappend check_functions "qconf_add_show_delete_host"	;# Add, show and delete host exec_host [1], the first execd host
 lappend check_functions "qconf_add_show_delete_stnode"	;# Add, show and delete share tree nodes
 lappend check_functions "qconf_event_client"	;# Create, show and delete event clients
-
-
+lappend check_functions "qconf_add_delete_modify_calendar"	;# Add, delete and modify calendar
+lappend check_functions "qconf_add_delete_modify_replace_attr"	;# Add, delete and modify attributes
+#lappend check_functions "qconf_modify_checkpoint"	;# Create, modify and delete checkpoint 
+#lappend check_functions "qconf_modify_exechost"	;# Modify exec host
 
 global queue_names
 
@@ -668,134 +666,6 @@ proc qconf_Aattr_check {} {
    check_queue_conf $queue_names load_thresholds "np_load_avg=7.00,mem_free=1M"
 
    set_error 0 "ok"
-}
-
-#                                                             max. column:     |
-#****** qconf/qconf_dattr_check() ******
-# 
-#  NAME
-#     qconf_dattr_check -- ??? 
-#
-#  SYNOPSIS
-#     qconf_dattr_check { } 
-#
-#  FUNCTION
-#     ??? 
-#
-#  INPUTS
-#
-#  RESULT
-#     ??? 
-#
-#  EXAMPLE
-#     ??? 
-#
-#  NOTES
-#     ??? 
-#
-#  BUGS
-#     ??? 
-#
-#  SEE ALSO
-#     ???/???
-#*******************************
-proc qconf_dattr_check {} {
-}
-
-#                                                             max. column:     |
-#****** qconf/qconf_Dattr_check() ******
-# 
-#  NAME
-#     qconf_Dattr_check -- ??? 
-#
-#  SYNOPSIS
-#     qconf_Dattr_check { } 
-#
-#  FUNCTION
-#     ??? 
-#
-#  INPUTS
-#
-#  RESULT
-#     ??? 
-#
-#  EXAMPLE
-#     ??? 
-#
-#  NOTES
-#     ??? 
-#
-#  BUGS
-#     ??? 
-#
-#  SEE ALSO
-#     ???/???
-#*******************************
-proc qconf_Dattr_check {} {
-}
-
-#                                                             max. column:     |
-#****** qconf/qconf_mattr_check() ******
-# 
-#  NAME
-#     qconf_mattr_check -- ??? 
-#
-#  SYNOPSIS
-#     qconf_mattr_check { } 
-#
-#  FUNCTION
-#     ??? 
-#
-#  INPUTS
-#
-#  RESULT
-#     ??? 
-#
-#  EXAMPLE
-#     ??? 
-#
-#  NOTES
-#     ??? 
-#
-#  BUGS
-#     ??? 
-#
-#  SEE ALSO
-#     ???/???
-#*******************************
-proc qconf_mattr_check {} {
-}
-
-#                                                             max. column:     |
-#****** qconf/qconf_Mattr_check() ******
-# 
-#  NAME
-#     qconf_Mattr_check -- ??? 
-#
-#  SYNOPSIS
-#     qconf_Mattr_check { } 
-#
-#  FUNCTION
-#     ??? 
-#
-#  INPUTS
-#
-#  RESULT
-#     ??? 
-#
-#  EXAMPLE
-#     ??? 
-#
-#  NOTES
-#     ??? 
-#
-#  BUGS
-#     ??? 
-#
-#  SEE ALSO
-#     ???/???
-#*******************************
-proc qconf_Mattr_check {} {
 }
 
 #                                                             max. column:     |
@@ -1837,7 +1707,7 @@ proc qconf_add_show_delete_host {} {
 
    # Try deleting $other_host again
    puts $CHECK_OUTPUT "Negative test of qconf -dh  $other_host...\n"
-   set result4 [del_adminhost $other_host result $CHECK_HOST $CHECK_USER 0]
+   set result4 [del_adminhost $other_host $CHECK_HOST $CHECK_USER 0]
 
    if { ( $result4 == -1 ) } {
       puts $CHECK_OUTPUT "qconf -dh $other_host again succeded"
@@ -1847,7 +1717,7 @@ proc qconf_add_show_delete_host {} {
 
    # Now show admin hosts 
    puts $CHECK_OUTPUT "Positive test of qconf -sh  $other_host...\n"
-   set result3 [get_adminhost_list result]
+   set result3 [get_adminhost_list]
 
    if { ( $result3 == 0 ) } {
       puts $CHECK_OUTPUT "qconf -sh succeded"
@@ -1934,7 +1804,7 @@ proc qconf_add_show_delete_stnode {} {
   
    # Now do a negative test on -astnode, add users again
    puts $CHECK_OUTPUT "Adding  30 shares to $CHECK_USER to project $project and 70 shares to $CHECK_FIRST_FOREIGN_SYSTEM_USER again....n"
-   set result2 [add_sharetree_node $project $CHECK_USER 30 $CHECK_FIRST_FOREIGN_SYSTEM_USER 70 result $CHECK_HOST $CHECK_USER 0]
+   set result2 [add_sharetree_node $project $CHECK_USER 30 $CHECK_FIRST_FOREIGN_SYSTEM_USER 70 $CHECK_HOST $CHECK_USER 0]
 
    if { ( $result2 == 0 ) } {
       puts $CHECK_OUTPUT "qconf -astnode /$project again succeded"
@@ -2081,6 +1951,407 @@ proc qconf_event_client {} {
 
    close_spawn_process $event_client_sid1
    
+   set_error 0 "ok"
+}
+
+#****** qconf/qconf_add_delete_modify_calendar() ******
+#
+#  NAME
+#     qconf_add_delete_modify_calendar - Create modify then destroy a calendar
+#
+#  SYNOPSIS
+#     qconf_add_delete_modify_calendar { } - First create a calendar, interactively
+#                                            Then modify it and delete it.
+#                                            Then create it in fast add mode, 
+#                                            Then delete it again
+#
+#  FUNCTION
+#     Check basic functionality of qconf
+#
+#  SEE ALSO
+# performance/throughput/run_throughput_test()
+# sge_procedures/get_qconf_show_list()
+# sge_procedures/get_qconf_show_list_error()
+#*******************************
+proc qconf_add_delete_modify_calendar {} {
+   global ts_config env CHECK_SOURCE_DIR
+   global CHECK_OUTPUT CHECK_USER CHECK_HOST CHECK_ARCH
+
+   set cal_name "qconf_calendar"
+
+   set new_cal(calendar_name)  "$cal_name"
+   set new_cal(week)           "mon-sun=0-24=suspended"
+
+   # First do a list of event clients
+   puts $CHECK_OUTPUT "Add calendar $cal_name ..."
+   set result0 [add_calendar new_cal]
+
+   if { ( $result0 == 0 ) } {
+      puts $CHECK_OUTPUT "qconf -Acal succeded"
+   } else {
+      puts $CHECK_OUTPUT "result is $result0"
+   }
+  
+   set mod_cal(calendar_name)  "$cal_name"
+   set mod_cal(week)           "mon-fri=0-23=suspended"
+
+   # Now modify it 
+   puts $CHECK_OUTPUT "Modify calendar $cal_name ..."
+   set result01 [mod_calendar mod_cal]
+
+   if { ( $result01 == 0 ) } {
+      puts $CHECK_OUTPUT "qconf -Mcal succeded"
+   } else {
+      puts $CHECK_OUTPUT "result is $result01"
+   }
+
+   # Now delete it 
+   puts $CHECK_OUTPUT "Delete calendar $cal_name ..."
+   set result1 [del_calendar $cal_name]
+
+   if { ( $result1 == 0 ) } {
+      puts $CHECK_OUTPUT "qconf -dcal succeded"
+   } else {
+      puts $CHECK_OUTPUT "result is $result1"
+   }
+  
+   # Now do a slow add
+   puts $CHECK_OUTPUT "Add calendar $cal_name slow..."
+   set result2 [add_calendar new_cal 0]
+
+   if { ( $result2 == 0 ) } {
+      puts $CHECK_OUTPUT "qconf -acal slow succeded"
+   } else {
+      puts $CHECK_OUTPUT "result is $result2"
+   }
+
+   # Now modify it slow
+   puts $CHECK_OUTPUT "Modify calendar $cal_name slow..."
+   set result21 [mod_calendar mod_cal 0]
+
+   if { ( $result21 == 0 ) } {
+      puts $CHECK_OUTPUT "qconf -mcal slow  succeded"
+   } else {
+      puts $CHECK_OUTPUT "result is $result21"
+   }
+
+   # Now delete it  again
+   puts $CHECK_OUTPUT "Delete calendar $cal_name again..."
+   set result3 [del_calendar $cal_name]
+
+   if { ( $result3 == 0 ) } {
+      puts $CHECK_OUTPUT "qconf -dcal again succeded"
+   } else {
+      puts $CHECK_OUTPUT "result is $result3"
+   }
+
+   set_error 0 "ok"
+
+}
+
+#****** qconf/qconf_add_delete_modify_replace_attr() ******
+#
+#  NAME
+#     qconf_add_delete_modify_replace_attr - Create modify then destroy attributes of object queue qocnf_queue.q . Can also be object exechost....
+#
+#  SYNOPSIS
+#     qconf_add_delete_modify_replace_attr { } - First create a temporary queue, qocnf_queue.q
+#                                            Then modify it and delete it.
+#                                            Then create it in slow add mode
+#                                            Then modify it slow and delete it 
+#
+#  FUNCTION
+#     Check basic functionality of qconf
+#
+#  SEE ALSO
+# sge_attributes/get_attr()
+# sge_attributes/mod_attr()
+#*******************************
+proc qconf_add_delete_modify_replace_attr {} {
+   global ts_config env CHECK_SOURCE_DIR
+   global CHECK_OUTPUT CHECK_USER CHECK_HOST CHECK_ARCH
+
+   set queue_name "qconf_queue.q"
+
+   # First create the queue
+   puts $CHECK_OUTPUT "Create  queue $queue_name ...\n"
+   set new_queue(qname) "$queue_name"
+   set new_queue(hostlist) "$CHECK_HOST"
+   set result0 [add_queue $queue_name $CHECK_HOST new_queue]
+
+   if { ( $result0 == 0 ) } {
+      puts $CHECK_OUTPUT "qconf -aq  $queue_name succeded"
+   } else {
+      puts $CHECK_OUTPUT "result is $result0"
+   }
+
+   # Now modify attribute slots for obj_spec queue: -mattr queue slots 0 
+   set obj_spec "queue"
+   set attr_name "slots"
+   set val "0"
+   set target "$queue_name\@$CHECK_HOST"
+
+   puts $CHECK_OUTPUT "Modify $obj_spec  $attr_name  ..."
+   set result01 [mod_attr  $obj_spec $attr_name $val $target]
+
+   if { ( $result01 == 0 ) } {
+      puts $CHECK_OUTPUT "qconf -Mattr succeded"
+   } else {
+      puts $CHECK_OUTPUT "result is $result01"
+   }
+  
+   # Now modify its attribute pe from CLI
+
+   puts $CHECK_OUTPUT "Modify $obj_spec $attr_name from CLI ...\n"
+   set result02 [mod_attr  $obj_spec $attr_name $val $target 0]
+
+   if { ( $result02 == 0 ) } {
+      puts $CHECK_OUTPUT "qconf -mattr succeded"
+   } else {
+      puts $CHECK_OUTPUT "result is $result02"
+   }
+
+   # Now show these attributes
+   puts $CHECK_OUTPUT "Show $obj_spec  $attr_name  ..."
+   set result03 [get_attr $obj_spec $attr_name $target]
+
+   if { ( $result03 == 0 ) } {
+      puts $CHECK_OUTPUT "qconf -sobjl succeded"
+   } else {
+      puts $CHECK_OUTPUT "result is $result03"
+   }
+
+   # Now replace attribute slots for obj_spec queue: -Rattr queue slots 0
+   puts $CHECK_OUTPUT "Replace $obj_spec  $attr_name  ..."
+   set result04 [replace_attr  $obj_spec $attr_name $val $target]
+
+   if { ( $result04 == 0 ) } {
+      puts $CHECK_OUTPUT "qconf -Rattr succeded"
+   } else {
+      puts $CHECK_OUTPUT "result is $result04"
+   }
+
+   # Now delete attributes pe on $queue_name
+   puts $CHECK_OUTPUT "Delete attr $attr_name on  $queue_name ...\n"
+   set result1 [del_attr $obj_spec $attr_name $val $target]
+
+   if { ( $result1 == 0 ) } {
+      puts $CHECK_OUTPUT "qconf -Dattr succeded"
+   } else {
+      puts $CHECK_OUTPUT "result is $result1"
+   }
+
+   # Now add attr 
+
+   puts $CHECK_OUTPUT "Add attr $obj_spec on $queue_name... \n"
+   set result2 [add_attr $obj_spec $attr_name $val $target]
+
+   if { ( $result2 == 0 ) } {
+      puts $CHECK_OUTPUT "qconf -aattr slow succeded"
+   } else {
+      puts $CHECK_OUTPUT "result is $result2"
+   }
+
+   # Now replace attribute slots for obj_spec queue: -rattr queue slots 0
+   puts $CHECK_OUTPUT "Replace $obj_spec  $attr_name  slow..."
+   set result3 [replace_attr  $obj_spec $attr_name $val $target 0]
+
+   if { ( $result3 == 0 ) } {
+      puts $CHECK_OUTPUT "qconf -rattr succeded"
+   } else {
+      puts $CHECK_OUTPUT "result is $result3"
+   }
+
+   # Now delete it via -Dattr
+   puts $CHECK_OUTPUT "Delete attr $attr_name on $queue_name slow ...\n"
+   set result22 [del_attr $obj_spec $attr_name $val $target 0]
+
+   if { ( $result22 == 0 ) } {
+      puts $CHECK_OUTPUT "qconf -Dattr slow succeded"
+   } else {
+      puts $CHECK_OUTPUT "result is $result22"
+   }
+
+   # Now delete queue
+
+   puts $CHECK_OUTPUT "Delete queue $queue_name ..."
+   set result4 [del_queue  $queue_name $CHECK_HOST 1]
+
+   if { ( $result4  == 0 )} {
+      puts $CHECK_OUTPUT "qconf -dq $queue_name succeded"
+   } else {
+      puts $CHECK_OUTPUT "result is $result4"
+   }
+
+   
+   set_error 0 "ok"
+
+}
+
+#****** qconf/qconf_modify_checkpoint() ******
+#
+#  NAME
+#     qconf_modify_checkpoint - MOdify chekcpoint
+#
+#  SYNOPSIS
+#     qconf_modify_checkpoint { } - Call "qconf -Mckpt "
+#
+#  FUNCTION
+#     Check basic functionality of qconf
+#
+#  SEE ALSO
+# sge_procedures/get_scheduler_status()
+#*******************************
+
+#****** qconf/qconf_modify_checkpoint() ******
+#
+#  NAME
+#     qconf_modify_checkpoint - MOdify chekcpoint
+#
+#  SYNOPSIS
+#     qconf_modify_checkpoint { } - Call "qconf -Mckpt "
+#
+#  FUNCTION
+#     Check basic functionality of qconf
+#
+#  SEE ALSO
+# sge_procedures/get_scheduler_status()
+#*******************************
+proc qconf_modify_checkpoint {} {
+   global ts_config env
+   global CHECK_OUTPUT CHECK_USER CHECK_HOST CHECK_ARCH
+
+   # First let's create queue qconf_queue.q
+   set queue_name "qconf_queue.q"
+   puts $CHECK_OUTPUT "Create  queue $queue_name ...\n"
+
+   set new_queue(qname) "$queue_name"
+   set result0 [add_queue $queue_name $CHECK_HOST new_queue]
+
+   if { ( $result0 == 0 ) } {
+      puts $CHECK_OUTPUT "qconf -aq  $queue_name succeded"
+   } else {
+      puts $CHECK_OUTPUT "result is $result0"
+   }
+
+   # Next, let's create a checkpoint
+   set myarray(ckpt_name) "qconf_ckpt_name"
+   puts $CHECK_OUTPUT "Create  checkpoint  $myarray(ckpt_name) ...\n"
+
+   set result1 [add_checkpointobj myarray]
+
+   if { ( $result1 == 0 ) } {
+      puts $CHECK_OUTPUT "qconf -ackpt  succeded"
+   } else {
+      puts $CHECK_OUTPUT "result is $result1"
+   }
+
+   # Now modify it using set_checkpointobj
+   puts $CHECK_OUTPUT "Modify  checkpoint  $myarray(ckpt_name) ...\n"
+   set result2 [mod_checkpointobj $myarray(ckpt_name) myarray]
+
+   if { ( $result2 == 0 ) } {
+      puts $CHECK_OUTPUT "qconf -mckpt  succeded"
+   } else {
+      puts $CHECK_OUTPUT "result is $result2"
+   }
+
+   # Now delete checkpoint
+   puts $CHECK_OUTPUT "Delete checkpoint $myarray(ckpt_name) ..."
+   set result4 [del_checkpointobj  $myarray(ckpt_name)]
+
+   if { ( $result4  == 0 )} {
+      puts $CHECK_OUTPUT "qconf -dckpt $myarray(ckpt_name) succeded"
+   } else {
+      puts $CHECK_OUTPUT "result is $result4"
+   }
+
+   # Now create it again
+   puts $CHECK_OUTPUT "Create  checkpoint  $myarray(ckpt_name) again...\n"
+
+   set result5 [add_checkpointobj myarray]
+
+   if { ( $result5 == 0 ) } {
+      puts $CHECK_OUTPUT "qconf -ackpt again  succeded"
+   } else {
+      puts $CHECK_OUTPUT "result is $result5"
+   }
+
+# Now modify it using set_checkpointobj slow...
+   puts $CHECK_OUTPUT "Modify  checkpoint  $myarray(ckpt_name) slow...\n"
+   set result6 [mod_checkpointobj $myarray(ckpt_name) myarray 0]
+
+   if { ( $result6 == 0 ) } {
+      puts $CHECK_OUTPUT "qconf -Mckpt slow succeded"
+   } else {
+      puts $CHECK_OUTPUT "result is $result6"
+   }
+
+   # Now delete checkpoint again
+   puts $CHECK_OUTPUT "Delete checkpoint $myarray(ckpt_name) ..."
+   set result7 [del_checkpointobj  $myarray(ckpt_name)]
+
+   if { ( $result7  == 0 )} {
+      puts $CHECK_OUTPUT "qconf -dckpt $myarray(ckpt_name) again succeded"
+   } else {
+      puts $CHECK_OUTPUT "result is $result7"
+   }
+
+   # Now delete queue
+   puts $CHECK_OUTPUT "Delete queue $queue_name ..."
+   set result8 [del_queue  $queue_name $CHECK_HOST 1]
+
+   if { ( $result8  == 0 )} {
+      puts $CHECK_OUTPUT "qconf -dq $queue_name succeded"
+   } else {
+      puts $CHECK_OUTPUT "result is $result8"
+   }
+
+
+   set_error 0 "ok"
+}
+
+#                                               max. column:     | #
+#****** qconf/qconf_modify_exechost() ******
+#  NAME
+#     qconf_modify_exechost - Modify exec host
+#
+#  SYNOPSIS
+#     qconf_sep_check { } - Call set_exechost to modify exechost
+#                         from CLI or file
+#
+#  FUNCTION
+#     Check basic functionality of qconf
+#
+#  SEE ALSO
+# sge_host/get_processor_list()
+#*******************************
+proc qconf_modify_exechost {} {
+   global ts_config env
+   global CHECK_OUTPUT CHECK_HOST 
+
+   # Do A Positive test
+   puts $CHECK_OUTPUT "Modify exec host  $CHECK_HOST  from file ...\n"
+   set new_exechost_charray(processors) "12"
+   set new_exechost_charray(projects) "NONE"
+   set result0 [mod_exechost new_exechost_charray $CHECK_HOST]
+
+  if { ( $result0 == 0 ) } {
+      puts $CHECK_OUTPUT "qconf -Me succeded\n"
+   } else {
+      puts $CHECK_OUTPUT "result is $result0"
+   }
+
+   # Now do it from file
+   puts $CHECK_OUTPUT "Modify exec host  $CHECK_HOST  from CLI...\n"
+   set result1 [mod_exechost new_exechost_charray $CHECK_HOST 0]
+
+  if { ( $result1 == 0 ) } {
+      puts $CHECK_OUTPUT "qconf -me succeded\n"
+   } else {
+      puts $CHECK_OUTPUT "result is $result1"
+   }
+
    set_error 0 "ok"
 }
 

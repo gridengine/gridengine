@@ -35,14 +35,12 @@
 #     add_sharetree_node() -- add sharetree node project user1 shares1 user2 shares2
 #
 #  SYNOPSIS
-#     add_sharetree_node { project user1 shares1 user2 shares2 {output_var result} {on_host ""} {as_user ""}  {raise_error 1}
-#     }
+#     add_sharetree_node { project user1 shares1 user2 shares2  {on_host ""} {as_user ""}  {raise_error 1}  }
 #
 #  FUNCTION
 #     Calls qconf -astnode project to add user1, user2 to project with shares1,  shares2
 #
 #  INPUTS
-#     output_var      - result will be placed here
 #     project         - project for which  we wish to see sharetree; 
 #     user1           - user1   for which  we wish to chage shares; 
 #     shares1         - shares   for user1;
@@ -61,23 +59,16 @@
 #     sge_procedures/get_sge_error()
 #     sge_procedures/get_qconf_list()
 #*******************************************************************************
-proc add_sharetree_node {project user1 shares1 user2 shares2 {output_var result} {on_host ""} {as_user ""} {raise_error 1}} {
-
-   upvar $output_var out
-
-   # clear output variable
-   if {[info exists out]} {
-      unset out
-   }
+proc add_sharetree_node {project user1 shares1 user2 shares2 {on_host ""} {as_user ""} {raise_error 1}} {
 
    set ret 0
    set result [start_sge_bin "qconf" "-astnode /$project=100,/$project/$user1=$shares1,/$project/$user2=$shares2" $on_host $as_user]
 
    # parse output or raise error
    if {$prg_exit_state == 0} {
-      parse_simple_record result out
+      set ret  $result 
    } else {
-      set ret [add_sharetree_node_error $result $project $user1 $shares1 $user2 $shares2 $raise_error]
+      set ret [add_sharetree_node_error $prg_exit_state $project $user1 $shares1 $user2 $shares2 $raise_error]
    }
 
    return $ret
@@ -142,14 +133,13 @@ proc add_sharetree_node_error {result project user1 shares1 user2 shares2 raise_
 #     get_sharetree_list() -- get a list of all sharetrees
 #
 #  SYNOPSIS
-#     get_sharetree_list { project {output_var result} {on_host ""} {as_user ""} {raise_error 1}  }
+#     get_sharetree_list { project {on_host ""} {as_user ""} {raise_error 1}  }
 #
 #  FUNCTION
 #     Calls qconf -sstnode /$project to retrieve all sharetrees for project
 #
 #  INPUTS
 #     project         - project for which we do  qconf -sstnode
-#     output_var      - result will be placed here
 #     {on_host ""}    - execute qconf on this host, default is master host
 #     {as_user ""}    - execute qconf as this user, default is $CHECK_USER
 #     {raise_error 1} - raise an error condition on error (default), or just
@@ -163,8 +153,7 @@ proc add_sharetree_node_error {result project user1 shares1 user2 shares2 raise_
 #     sge_procedures/get_sge_error()
 #     sge_procedures/get_qconf_list()
 #*******************************************************************************
-proc get_sharetree_list { project {output_var result} {on_host ""} {as_user ""} {raise_error 1}} {
-   upvar $output_var out
+proc get_sharetree_list { project {on_host ""} {as_user ""} {raise_error 1}} {
 
    return [get_qconf_list "get_sharetree_list" "-sstnode /$project" out $on_host $as_user $raise_error]
 
@@ -175,14 +164,13 @@ proc get_sharetree_list { project {output_var result} {on_host ""} {as_user ""} 
 #     mod_sharetree_node() -- modify sharetree node project user1 shares1 user2 shares2
 #
 #  SYNOPSIS
-#     mod_sharetree_node { project user1 shares1 user2 shares2 {output_var result} {on_host ""} {as_user ""}  {raise_error 1}
+#     mod_sharetree_node { project user1 shares1 user2 shares2 {on_host ""} {as_user ""}  {raise_error 1}
 #     }
 #
 #  FUNCTION
 #     Calls qconf -mstnode project to modify shares of user1, user2 in  project
 #
 #  INPUTS
-#     output_var      - result will be placed here
 #     project         - project for which  we wish to see sharetree;
 #     user1           - user1   for which  we wish to chage shares;
 #     shares1         - shares   for user1;
@@ -201,23 +189,16 @@ proc get_sharetree_list { project {output_var result} {on_host ""} {as_user ""} 
 #     sge_procedures/get_sge_error()
 #     sge_procedures/get_qconf_list()
 #*******************************************************************************
-proc mod_sharetree_node {project user1 shares1 user2 shares2 {output_var result} {on_host ""} {as_user ""} {raise_error 1}} {
-
-   upvar $output_var out
-
-   # clear output variable
-   if {[info exists out]} {
-      unset out
-   }
+proc mod_sharetree_node {project user1 shares1 user2 shares2 {on_host ""} {as_user ""} {raise_error 1}} {
 
    set ret 0
    set result [start_sge_bin "qconf" "-mstnode /$project=100,/$project/$user1=$shares1,/$project/$user2=$shares2" $on_host $as_user]
 
    # parse output or raise error
    if {$prg_exit_state == 0} {
-      parse_simple_record result out
+      set ret $result 
    } else {
-      set ret [mod_sharetree_node_error $result $project $user1 $shares1 $user2 $shares2 $raise_error]
+      set ret [mod_sharetree_node_error $prg_exit_state $project $user1 $shares1 $user2 $shares2 $raise_error]
    }
 
    return $ret
@@ -280,14 +261,13 @@ proc mod_sharetree_node_error {result project user1 shares1 user2 shares2 raise_
 #     del_sharetree_node() -- delete sharetree node project user
 #
 #  SYNOPSIS
-#     del_sharetree_node { project user {output_var result} {on_host ""} {as_user ""}  {raise_error 1}
+#     del_sharetree_node { project user {on_host ""} {as_user ""}  {raise_error 1}
 #     }
 #
 #  FUNCTION
 #     Calls qconf -dstnode project to delete user in  project
 #
 #  INPUTS
-#     output_var      - result will be placed here
 #     project         - project for which  we wish to see sharetree;
 #     user            - user   which  we wish to delete
 #     {on_host ""}    - execute qconf on this host, default is master host
@@ -303,23 +283,16 @@ proc mod_sharetree_node_error {result project user1 shares1 user2 shares2 raise_
 #     sge_procedures/get_sge_error()
 #     sge_procedures/get_qconf_list()
 #*******************************************************************************
-proc del_sharetree_node {project user {output_var result} {on_host ""} {as_user ""} {raise_error 1}} {
-
-   upvar $output_var out
-
-   # clear output variable
-   if {[info exists out]} {
-      unset out
-   }
+proc del_sharetree_node {project user {on_host ""} {as_user ""} {raise_error 1}} {
 
    set ret 0
    set result [start_sge_bin "qconf" "-dstnode /$project/$user" $on_host $as_user]
 
    # parse output or raise error
    if {$prg_exit_state == 0} {
-      parse_simple_record result out
+      set ret  $result 
    } else {
-      set ret [del_sharetree_node_error $result $project $user $raise_error]
+      set ret [del_sharetree_node_error $prg_exit_state $project $user $raise_error]
    }
 
    return $ret

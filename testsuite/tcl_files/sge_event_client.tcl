@@ -35,13 +35,12 @@
 #     get_event_client_list() -- get the event client list
 #
 #  SYNOPSIS
-#     get_event_client_list { {output_var result} {on_host ""} {as_user ""} {raise_error 1}  }
+#     get_event_client_list { {on_host ""} {as_user ""} {raise_error 1}  }
 #
 #  FUNCTION
 #     Calls qconf -secl to retrieve the event client list
 #
 #  INPUTS
-#     output_var      - result will be placed here
 #     {on_host ""}    - execute qconf on this host, default is master host
 #     {as_user ""}    - execute qconf as this user, default is $CHECK_USER
 #     {raise_error 1} - raise an error condition on error (default), or just
@@ -55,8 +54,7 @@
 #     sge_procedures/get_sge_error()
 #     sge_procedures/get_qconf_list()
 #*******************************************************************************
-proc get_event_client_list {{output_var result} {on_host ""} {as_user ""} {raise_error 1}} {
-   upvar $output_var out
+proc get_event_client_list { {on_host ""} {as_user ""} {raise_error 1}} {
 
    return [get_qconf_list "get_event_client_list" "-secl" out $on_host $as_user $raise_error]
 
@@ -67,7 +65,7 @@ proc get_event_client_list {{output_var result} {on_host ""} {as_user ""} {raise
 #     del_event_client_list() -- delete event client list events
 #
 #  SYNOPSIS
-#     del_event_client_list { event event_client_id {output_var result} {on_host ""} {as_user ""} {raise_error 1}  }
+#     del_event_client_list { event event_client_id {on_host ""} {as_user ""} {raise_error 1}  }
 #
 #  FUNCTION
 #     Calls qconf -kec event(id|all) event_id to delete the event id or all 
@@ -76,7 +74,6 @@ proc get_event_client_list {{output_var result} {on_host ""} {as_user ""} {raise
 #  INPUTS
 #     event           - event is either id or all events
 #     event_id        - event id to be deleted
-#     output_var      - result will be placed here
 #     {on_host ""}    - execute qconf on this host, default is master host
 #     {as_user ""}    - execute qconf as this user, default is $CHECK_USER
 #     {raise_error 1} - raise an error condition on error (default), or just
@@ -90,8 +87,7 @@ proc get_event_client_list {{output_var result} {on_host ""} {as_user ""} {raise
 #     sge_procedures/get_sge_error()
 #     sge_procedures/get_qconf_list()
 #*******************************************************************************
-proc del_event_client_list { event event_id {output_var result} {on_host ""} {as_user ""} {raise_error 1}} {
-   upvar $output_var out
+proc del_event_client_list { event event_id  {on_host ""} {as_user ""} {raise_error 1}} {
 
    return [get_qconf_list "get_event_client_list" "-kec $event $event_id" out $on_host $as_user $raise_error]
 

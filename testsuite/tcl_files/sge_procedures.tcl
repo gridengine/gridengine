@@ -757,8 +757,6 @@ proc get_sge_error {procedure command result {raise_error 1}} {
 #     check/add_proc_error()
 #     sge_procedures/get_sge_error()
 #*******************************************************************************
-# if {[string match $messages($errno) $result]} {
-# if { ( [string first "$messages($errno)" $result] >= 0 ) } {
 
 proc handle_sge_errors {procedure command result messages_var {raise_error 1}} {
    upvar $messages_var messages
@@ -1458,146 +1456,6 @@ proc submit_time_job { jobargs } {
 proc submit_waitjob_job { jobargs wait_job_id} {
    return [submit_job "-hold_jid $wait_job_id $jobargs"]
 }
-
-
-
-#                                                             max. column:     |
-#****** sge_procedures/set_exechost() ******
-# 
-#  NAME
-#     set_exechost -- set/change exec host configuration
-#
-#  SYNOPSIS
-#     set_exechost { change_array host } 
-#
-#  FUNCTION
-#     Set the exec host configuration corresponding to the content of the 
-#     change_array.
-#
-#  INPUTS
-#     change_array - name of an array variable that will be set by set_exechost
-#     host         - name of an execution host
-#
-#  RESULT
-#     The array should look like follows:
-#
-#     set change_array(user_list)   "deadlineusers"
-#     set change_array(load_scaling) "NONE"
-#     ....
-#     (every value that is set will be changed)
-#
-#
-#     Here the possible change_array values with some typical settings:
-#
-#     hostname                   myhost.mydomain
-#     load_scaling               NONE
-#     complex_list               test
-#     complex_values             NONE
-#     user_lists                 deadlineusers
-#     xuser_lists                NONE
-#     projects                   NONE
-#     xprojects                  NONE
-#     usage_scaling              NONE
-#     resource_capability_factor 0.000000       
-# 
-#     return value:
-#     -100 :	unknown error
-#     -1   :	on timeout
-#        0 :	ok
-#
-#  EXAMPLE
-#     get_exechost myconfig expo1
-#     set myconfig(user_lists) NONE
-#     set_exechost myconfig expo1
-#
-#  NOTES
-#     ??? 
-#
-#  BUGS
-#     ??? 
-#
-#  SEE ALSO
-#     sge_procedures/get_exechost()
-#*******************************
-proc set_exechost { change_array host } {
-   global ts_config
-# the array should look like this:
-#
-# set change_array(load_scaling) NONE
-# ....
-# (every value that is set will be changed)
-# hostname                   myhostname
-# load_scaling               NONE
-# complex_list               test
-# complex_values             NONE
-# user_lists                 deadlineusers
-# xuser_lists                NONE
-# projects                   NONE
-# xprojects                  NONE
-# usage_scaling              NONE
-# resource_capability_factor 0.000000       
-#
-# returns 
-# -1   on timeout
-# 0    if ok
-
-  global env CHECK_ARCH open_spawn_buffer
-  global CHECK_CORE_MASTER
-
-  upvar $change_array chgar
-
-  set values [array names chgar]
-
-  get_exechost old_values $host
-
-  set vi_commands ""
-  foreach elem $values {
-     # continue on unchangeable values
-     if { [string compare $elem "load_values"] == 0 } {
-        continue;
-     } 
-     if { [string compare $elem "processors"] == 0 } {
-        continue;
-     } 
-     if { [string compare $elem "reschedule_unknown_list"] == 0 } {
-        continue;
-     } 
-
-     # this will quote any / to \/  (for vi - search and replace)
-     set newVal $chgar($elem)
-   
-     if {[info exists old_values($elem)]} {
-        # if old and new config have the same value, create no vi command,
-        # if they differ, add vi command to ...
-        if { [string compare $old_values($elem) $newVal] != 0 } {
-           if { $newVal == "" } {
-              # ... delete config entry (replace by comment)
-              lappend vi_commands ":%s/^$elem .*$//\n"
-           } else {
-              # ... change config entry
-              set newVal1 [split $newVal {/}]
-              set newVal [join $newVal1 {\/}]
-              lappend vi_commands ":%s/^$elem .*$/$elem  $newVal/\n"
-           }
-        }
-     } else {
-        # if the config entry didn't exist in old config: append a new line
-        lappend vi_commands "A\n$elem  $newVal[format "%c" 27]"
-     }
-  } 
-  set CHANGED  [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_EXEC_HOSTENTRYOFXCHANGEDINEXECLIST_S] "*" ]
-  set result [handle_vi_edit "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-me $host" $vi_commands "modified" $CHANGED]
-  if { $result == -2 } {
-     set result 0
-  }
-  if { $result != 0 } {
-     add_proc_error "set_exechost" -1 "could not modifiy exechost $host"
-     set result -1
-  }
-  return $result
-}
-
-
 
 
 #****** sge_procedures/get_loadsensor_path() ***********************************
@@ -2947,74 +2805,6 @@ proc del_calendar { mycal_name } {
   return $result
 }
 
-
-
-
-#                                                             max. column:     |
-#****** sge_procedures/add_calendar() ******
-# 
-#  NAME
-#     add_calendar -- add new calendar definition object
-#
-#  SYNOPSIS
-#     add_calendar { change_array } 
-#
-#  FUNCTION
-#     This procedure will add/define a new calendar definition object
-#
-#  INPUTS
-#     change_array - name of an array variable that will be set by add_calendar
-#
-#  RESULT
-#     -1   timeout error
-#     -2   calendar allready exists
-#      0   ok
-#
-#  EXAMPLE
-#     set new_cal(calendar_name)  "always_suspend"
-#     set new_cal(year)           "NONE"
-#     set new_cal(week)           "mon-sun=0-24=suspended" 
-#
-#  NOTES
-#     The array should look like this:
-#
-#     set change_array(calendar_name) "mycalendar"
-#     set change_array(year) 	        "NONE"
-#     set change-array(week)          "mon-sun=0-24=suspended"
-#     ....
-#     (every value that is set will be changed)
-#
-#     Here the possible change_array values with some typical settings:
-#
-#     attribute(calendar_name) "test"
-#     attribute(year)          "NONE"
-#     attribute(week)          "NONE"
-#
-#  SEE ALSO
-#     ???/???
-#*******************************
-proc add_calendar { change_array } {
-  global ts_config
-  global env CHECK_ARCH open_spawn_buffer
-  global CHECK_CORE_MASTER CHECK_USER CHECK_OUTPUT
-
-  upvar $change_array chgar
-
-  puts $CHECK_OUTPUT "adding calendar $chgar(calendar_name)"
-
-  set vi_commands [build_vi_command chgar]
-
-  # xyz is neccessary, as there is no template for calendards existing!!!
-  set ADDED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_ADDEDTOLIST_SSSS] $CHECK_USER "*" "*" "*"]
-  set ALREADY_EXISTS [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_ALREADYEXISTS_SS] "*" "*"]
-  set result [ handle_vi_edit "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-acal xyz" $vi_commands $ADDED $ALREADY_EXISTS]
-  if { $result == -1 } { add_proc_error "add_calendar" -1 "timeout error" }
-  if { $result == -2 } { add_proc_error "add_calendar" -1 "\"[set chgar(calendar_name)]\" already exists" }
-  if { $result != 0  } { add_proc_error "add_calendar" -1 "could not add calendar \"[set chgar(calendar_name)]\"" }
-  return $result
-}
-
-
 #                                                             max. column:     |
 #****** sge_procedures/was_job_running() ******
 # 
@@ -3775,6 +3565,216 @@ proc mhattr { attribute entry host_name { add_error 1 } } {
   return $return_value
 }
 
+
+#****** sge_procedures/mod_attr() ******************************************
+#  NAME
+#     mod_attr() -- modify an attribute 
+#
+#  SYNOPSIS
+#     mod_attr { object attribute value target {fast_add 1} {on_host ""} {as_user ""} }
+#
+#  FUNCTION
+#     Modifies attribute of object with value for object_instance
+#
+#  INPUTS
+#     object       - object we are modifying 
+#     attribute    - attribute of object we are modifying 
+#     value        - value of attribute of object we are modifying 
+#     target       - target object
+#     {fast_add 1} - 0: modify the attribute using qconf -mattr, 
+#                  - 1: modify the attribute using qconf -Mattr, faster
+#
+#  RESULT
+#     integer value  0 on success, -2 on error
+#
+#*******************************************************************************
+proc mod_attr { object attribute value target {fast_add 1} {on_host ""} {as_user ""} } {
+   global ts_config
+   global CHECK_ARCH CHECK_OUTPUT CHECK_USER CHECK_HOST
+
+   puts $CHECK_OUTPUT "Modifying object \"$object\" attribute  \"$attribute\" value \"$value\" for target \"$target\" "
+
+   # add queue from file?
+    if { $fast_add } {
+      set default_array($attribute) "$value"
+      set tmpfile [dump_array_to_tmpfile default_array]
+      set result [start_sge_bin "qconf" "-Mattr $object ${tmpfile} $target"  $on_host $as_user]
+
+   } else {
+      # add by -mattr
+
+      set result [start_sge_bin "qconf" "-mattr  $object $attribute $value $target" $on_host $as_user ] 
+   }
+
+   return $result
+}
+
+#****** sge_procedures/get_attr() ******************************************
+#  NAME
+#     get_attr() -- get an attribute
+#
+#  SYNOPSIS
+#     get_attr {object attribute  target {on_host ""} {as_user ""} {raise_error 1}}
+#
+#  FUNCTION
+#     Get attribute of object 
+#
+#  INPUTS
+#     object       - object we are getting 
+#     attribute    - attribute of object we are modifying
+#     target       - target object
+#     {on_host ""}    - execute qconf on this host, default is master host
+#     {as_user ""}    - execute qconf as this user, default is $CHECK_USER
+#     {raise_error 1} - raise an error condition on error (default), or just
+#                       output the error message to stdout
+#
+#  RESULT
+#     integer value  0 on success, -2 on error
+#
+#*******************************************************************************
+proc get_attr { object attribute target {on_host ""} {as_user ""} {raise_error 1} } {
+
+   return [get_qconf_list "get_attr" "-sobjl $object $attribute $target " out $on_host $as_user $raise_error]
+
+}
+#****** sge_procedures/del_attr() ******************************************
+#  NAME
+#     del_attr() -- Delete an attribute
+#
+#  SYNOPSIS
+#     del_attr { object attribute value target {fast_add 1} {on_host ""} {as_user ""}}
+#
+#  FUNCTION
+#     Delete attribute of object
+#
+#  INPUTS
+#     object       - object we are deleting 
+#     attribute    - attribute of queue we are deleting 
+#     value        - value of attribute we are deleting 
+#     target       - target object
+#     {on_host ""}    - execute qconf on this host, default is master host
+#     {as_user ""}    - execute qconf as this user, default is $CHECK_USER
+#     {fast_add 1} - 0: modify the attribute using qconf -dattr,
+#                  - 1: modify the attribute using qconf -Dattr, faster
+#
+#  RESULT
+#     integer value  0 on success, -2 on error
+#
+#*******************************************************************************
+proc del_attr { object attribute value target {fast_add 1} {on_host ""} {as_user ""} } {
+   global ts_config
+   global CHECK_ARCH CHECK_OUTPUT CHECK_USER CHECK_HOST
+
+   puts $CHECK_OUTPUT "Deleting attribute \"$attribute\" for object \"$object\""
+
+   # add queue from file?
+    if { $fast_add } {
+      set default_array($attribute) "$value"
+      set tmpfile [dump_array_to_tmpfile default_array]
+      set result [start_sge_bin "qconf" "-Dattr $object ${tmpfile}$ target" $on_host $as_user]
+
+   } else {
+   # add by -dattr
+
+   set result [start_sge_bin "qconf" "-dattr $object $attribute $value $target" $on_host $as_user]
+
+   }
+ 
+   return $result
+}
+
+#****** sge_procedures/add_attr() ******************************************
+#  NAME
+#    add_attr () -- add an attribute
+#
+#  SYNOPSIS
+#     add_attr { object attribute value target {fast_add 1} {on_host ""} {as_user ""}}
+#
+#  FUNCTION
+#     Modifies attribute of object with value for object_instance
+#
+#  INPUTS
+#     object       - object we are modifying 
+#     attribute    - attribute of queue we are modifying 
+#     value        - value of attribute of object we are modifying 
+#     target       - target object
+#     {on_host ""}    - execute qconf on this host, default is master host
+#     {as_user ""}    - execute qconf as this user, default is $CHECK_USER
+#     {fast_add 1} - 0: modify the attribute using qconf -aattr,
+#                  - 1: modify the attribute using qconf -Aattr, faster
+#
+#  RESULT
+#     integer value  0 on success, -2 on error
+#
+#*******************************************************************************
+proc add_attr { object attribute value target {fast_add 1} {on_host ""} {as_user ""}} {
+   global ts_config
+   global CHECK_ARCH CHECK_OUTPUT CHECK_USER CHECK_HOST
+
+   puts $CHECK_OUTPUT "Adding attribute \"$attribute\" for object \"$object\""
+
+   # add queue from file?
+    if { $fast_add } {
+      set default_array($attribute) "$value"
+      set tmpfile [dump_array_to_tmpfile default_array]
+      set result [start_sge_bin "qconf" "-Aattr $object ${tmpfile} $target" $on_host $as_user]
+
+   } else {
+      # add by -aattr
+
+      set result [start_sge_bin "qconf" "-aattr  $object $attribute $value $target" $on_host $as_user]
+
+   }
+
+   return $result
+}
+
+#****** sge_procedures/replace_attr() ******************************************
+#  NAME
+#     replace_attr() -- Replace an attribute
+#
+#  SYNOPSIS
+#     replace_attr {object attribute value target {fast_add 1} {on_host ""} {as_user ""} }
+#
+#  FUNCTION
+#     Replace attribute of object
+#
+#  INPUTS
+#     object       - object we are deleting 
+#     attribute    - attribute of object we are deleting 
+#     value        - value of attribute we are deleting
+#     target       - target object
+#     {fast_add 1} - 0: modify the attribute using qconf -rattr,
+#                  - 1: modify the attribute using qconf -Rattr, faster
+#     {on_host ""}    - execute qconf on this host, default is master host
+#     {as_user ""}    - execute qconf as this user, default is $CHECK_USER
+#
+#  RESULT
+#     integer value  0 on success, -2 on error
+#
+#*******************************************************************************
+proc replace_attr { object attribute value target {fast_add 1} {on_host ""} {as_user ""} {raise_error 1} } {
+   global ts_config
+   global CHECK_ARCH CHECK_OUTPUT CHECK_USER CHECK_HOST
+
+   puts $CHECK_OUTPUT "Replacing attribute \"$attribute\" of object \"$object\""
+
+   # add queue from file?
+    if { $fast_add } {
+      set default_array($attribute) "$value"
+      set tmpfile [dump_array_to_tmpfile default_array]
+      set result [start_sge_bin "qconf" "-Rattr $object ${tmpfile} $target" $on_host $as_user]
+
+   } else {
+   # add by -rattr
+
+   set result [start_sge_bin "qconf" "-rattr $object $attribute $value $target" $on_host $as_user ]
+
+   }
+
+   return $result
+
+}
 
 
 

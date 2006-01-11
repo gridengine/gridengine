@@ -127,6 +127,180 @@ proc get_exechost {output_var {host global} {on_host ""} {as_user ""} {raise_err
    return $ret
 }
 
+#                                                             max. column:     |
+#****** sge_host/set_exechost() ******
+#
+#  NAME
+#     set_exechost -- set/change exec host configuration
+#
+#  SYNOPSIS
+#     set_exechost { change_array host {fast_add 1} {on_host ""} {as_user ""} {raise_error 1} }
+#
+#  FUNCTION
+#     Set the exec host configuration corresponding to the content of the
+#     change_array.
+#
+#  INPUTS
+#     change_array - name of an array variable that will be set by set_exechost
+#     host         - name of an execution host
+#     {fast_add 1} - 0: modify the attribute using qconf -me,
+#                  - 1: modify the attribute using qconf -Me, faster
+#     {on_host ""}    - execute qconf on this host, default is master host
+#     {as_user ""}    - execute qconf as this user, default is $CHECK_USER
+#     {raise_error 1} - raise an error condition on error (default), or just
+#                       output the error message to stdout
+#
+#  RESULT
+#     The array should look like follows:
+#
+#     set change_array(user_list)   "deadlineusers"
+#     set change_array(load_scaling) "NONE"
+#     ....
+#     (every value that is set will be changed)
+#
+#
+#     Here the possible change_array values with some typical settings:
+#
+#     hostname                   myhost.mydomain
+#     load_scaling               NONE
+#     complex_list               test
+#     complex_values             NONE
+#     user_lists                 deadlineusers
+#     xuser_lists                NONE
+#     projects                   NONE
+#     xprojects                  NONE
+#     usage_scaling              NONE
+#     resource_capability_factor 0.000000
+#
+#     return value:
+#     -100 :    unknown error
+#     -1   :    on timeout
+#        0 :    ok
+#
+#  EXAMPLE
+#     get_exechost myconfig expo1
+#     set myconfig(user_lists) NONE
+#     set_exechost myconfig expo1
+#
+#
+#  NOTES
+#     ???
+#
+#  BUGS
+#     ???
+#
+#  SEE ALSO
+#     sge_host/get_exechost()
+#*******************************
+proc set_exechost { change_array host {fast_add 1} {on_host ""} {as_user ""} {raise_error 1}} {
+# the array should look like this:
+#
+# set change_array(load_scaling) NONE
+# ....
+# (every value that is set will be changed)
+# hostname                   myhostname
+# load_scaling               NONE
+# complex_list               test
+# complex_values             NONE
+# user_lists                 deadlineusers
+# xuser_lists                NONE
+# projects                   NONE
+# xprojects                  NONE
+# usage_scaling              NONE
+# resource_capability_factor 0.000000
+#
+# returns
+# -1   on timeout
+# 0    if ok
+
+   global ts_config CHECK_OUTPUT
+   global env CHECK_ARCH 
+   global CHECK_CORE_MASTER
+
+   upvar $change_array chgar
+ 
+   set values [array names chgar]
+   get_exechost old_values $host
+ 
+   set vi_commands ""
+   foreach elem $values {
+      # this will quote any / to \/  (for vi - search and replace)
+      set newVal $chgar($elem)
+
+      if {[info exists old_values($elem)]} {
+         # if old and new config have the same value, create no vi command,
+         # if they differ, add vi command to ...
+         if { [string compare $old_values($elem) $newVal] != 0 } {
+            if { $newVal == "" } {
+               # ... delete config entry (replace by comment)
+               lappend vi_commands ":%s/^$elem .*$//\n"
+               puts $CHECK_OUTPUT "vi is $vi_commands \n"
+            } else {
+               # ... change config entry
+               set newVal1 [split $newVal {/}]
+               set newVal [join $newVal1 {\/}]
+               lappend vi_commands ":%s/^$elem .*$/$elem  $newVal/\n"
+               puts $CHECK_OUTPUT "New vi is $vi_commands \n"
+            }
+        }
+      } else {
+        # if the config entry didn't exist in old config: append a new line
+        lappend vi_commands "A\n$elem  $newVal[format "%c" 27]"
+
+      }
+   }
+   # Modify exechost from file?
+   if { $fast_add } {
+     set tmpfile [dump_array_to_tmpfile old_values]
+     set result [start_sge_bin "qconf" "-Me ${tmpfile}"]
+
+   } else {
+   # User vi
+
+      set CHANGED  [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_EXEC_HOSTENTRYOFXCHANGEDINEXECLIST_S] "*" ]
+      set result [handle_vi_edit "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-me $host" $vi_commands "modified" $CHANGED]
+      if { $result == -2 } {
+         set result 0
+      }
+      if { $result != 0 } {
+         add_proc_error "set_exechost" -1 "could not modifiy exechost $host"
+         set result -1
+      }
+   }
+  return $result
+}
+#****** sge_host/mod_exechost() ******
+#
+#  NAME
+#     mod_exechost -- Wrapper around set_exechost
+#
+#  SYNOPSIS
+#     mod_exechost { change_array host {fast_add 1} {on_host ""} {as_user ""} {raise_error 1} }
+#
+#  FUNCTION
+#     See set_exechost
+#
+#  INPUTS
+#     change_array - name of an array variable that will be set by set_exechost
+#     host         - name of an execution host
+#     {fast_add 1} - 0: modify the attribute using qconf -me,
+#                  - 1: modify the attribute using qconf -Me, faster
+#     {on_host ""}    - execute qconf on this host, default is master host
+#     {as_user ""}    - execute qconf as this user, default is $CHECK_USER
+#     {raise_error 1} - raise an error condition on error (default), or just
+#                       output the error message to stdout
+#
+#  SEE ALSO
+#     sge_host/get_exechost()
+#*******************************
+proc mod_exechost { change_array host {fast_add 1} {on_host ""} {as_user ""} {raise_error 1}} {
+   global CHECK_OUTPUT
+
+   puts $CHECK_OUTPUT "Using mod_exechost as wrapper for set_exechost \n"
+
+   return [set_exechost change_array $host $fast_add $on_host $as_user $raise_error]
+
+}
 #****** sge_host/get_exechost_list() *******************************************
 #  NAME
 #     get_exechost_list() -- get a list of exec hosts
@@ -164,14 +338,13 @@ proc get_exechost_list {output_var {on_host ""} {as_user ""} {raise_error 1}} {
 #     get_adminhost_list() -- get a list of admin hosts
 #
 #  SYNOPSIS
-#     get_adminhost_list { output_var  {on_host ""} {as_user ""} {raise_error 1} 
+#     get_adminhost_list {{on_host ""} {as_user ""} {raise_error 1} 
 #     } 
 #
 #  FUNCTION
 #     Calls qconf -sel to retrieve a list of admin hosts.
 #
 #  INPUTS
-#     output_var      - result will be placed here
 #     {on_host ""}    - execute qconf on this host, default is master host
 #     {as_user ""}    - execute qconf as this user, default is $CHECK_USER
 #     {raise_error 1} - raise an error condition on error (default), or just
@@ -185,8 +358,7 @@ proc get_exechost_list {output_var {on_host ""} {as_user ""} {raise_error 1}} {
 #     sge_procedures/get_sge_error()
 #     sge_procedures/get_qconf_list()
 #*******************************************************************************
-proc get_adminhost_list {output_var {on_host ""} {as_user ""} {raise_error 1}} {
-   upvar $output_var out
+proc get_adminhost_list {{on_host ""} {as_user ""} {raise_error 1}} {
 
    return [get_qconf_list "get_adminhost_list" "-sh" out $on_host $as_user $raise_error]
 }
@@ -283,6 +455,7 @@ proc get_queue_config_list {{output_var result} {on_host ""} {as_user ""} {arg "
 #     sge_procedures/get_qconf_list()
 #*******************************************************************************
 proc get_processor_list {{output_var result} {on_host ""} {as_user ""} {raise_error 1}} {
+  
    upvar $output_var out
 
    return [get_qconf_list "get_processor_list" "-sep" out $on_host $as_user $raise_error]
@@ -341,14 +514,13 @@ proc del_adminhost_error {result host on_host raise_error} {
 #     del_adminhost() -- delete administrative host
 #
 #  SYNOPSIS
-#     del_adminhost { host {output_var result} {on_host ""} {as_user ""} {raise_error 1}  }
+#     del_adminhost { host {on_host ""} {as_user ""} {raise_error 1}  }
 #
 #  FUNCTION
 #     Calls qconf -dh host to delete administrative host
 #
 #  INPUTS
 #     host            - administrative host which will be deleted
-#     output_var      - result will be placed here
 #     {on_host ""}    - execute qconf on this host, default is master host
 #     {as_user ""}    - execute qconf as this user, default is $CHECK_USER
 #     {raise_error 1} - raise an error condition on error (default), or just
@@ -362,24 +534,18 @@ proc del_adminhost_error {result host on_host raise_error} {
 #     sge_procedures/get_sge_error()
 #     sge_procedures/get_qconf_list()
 #*******************************************************************************
-proc del_adminhost {host {output_var result} {on_host ""} {as_user ""} {raise_error 1}} {
+proc del_adminhost {host  {on_host ""} {as_user ""} {raise_error 1}} {
 
    global ts_config
-   upvar $output_var out
-
-   # clear output variable
-   if {[info exists out]} {
-      unset out
-   }
 
    set ret 0
    set result [start_sge_bin "qconf" "-dh $host" $on_host $as_user]
 
    # parse output or raise error
    if {$prg_exit_state == 0} {
-      parse_simple_record result out
+      set ret  $result 
    } else {
-      set ret [del_adminhost_error $result $host $on_host $raise_error]
+      set ret [del_adminhost_error $prg_exit_state $host $on_host $raise_error]
    }
 
    return $ret
@@ -390,14 +556,13 @@ proc del_adminhost {host {output_var result} {on_host ""} {as_user ""} {raise_er
 #     add_adminhost() -- add administrative host
 #
 #  SYNOPSIS
-#     add_adminhost { host {output_var result} {on_host ""} {as_user ""} {raise_error 1}  }
+#     add_adminhost { host  {on_host ""} {as_user ""} {raise_error 1}  }
 #
 #  FUNCTION
 #     Calls qconf -ah host to add administrative host
 #
 #  INPUTS
 #     host            - administrative host which will be added
-#     output_var      - result will be placed here
 #     {on_host ""}    - execute qconf on this host, default is master host
 #     {as_user ""}    - execute qconf as this user, default is $CHECK_USER
 #     {raise_error 1} - raise an error condition on error (default), or just
@@ -411,24 +576,18 @@ proc del_adminhost {host {output_var result} {on_host ""} {as_user ""} {raise_er
 #     sge_procedures/get_sge_error()
 #     sge_procedures/get_qconf_list()
 #*******************************************************************************
-proc add_adminhost {host {output_var result} {on_host ""} {as_user ""} {raise_error 1}} {
+proc add_adminhost {host  {on_host ""} {as_user ""} {raise_error 1}} {
 
    global ts_config
-   upvar $output_var out
-
-   # clear output variable
-   if {[info exists out]} {
-      unset out
-   }
 
    set ret 0
    set result [start_sge_bin "qconf" "-ah $host" $on_host $as_user]
 
    # parse output or raise error
    if {$prg_exit_state == 0} {
-      parse_simple_record result out
+      set ret $result 
    } else {
-      set ret [add_adminhost_error $result $host $on_host $raise_error]
+      set ret [add_adminhost_error $prg_exit_state $host $on_host $raise_error]
    }
 
    return $ret

@@ -1,3 +1,6 @@
+JG-2006-01-11-0: Testsuite: Cleanup of remote_procedures.
+                 Review:    CR
+
 SG-2006-01-06-0: Enhancem.: enables process loal event clients
                             enables 1 event client per thread
                  Changed:   all
@@ -33,6 +36,8 @@ DT-2005-12-23-0: Enhancem.: o Cleaned up DRMAA 0.95/1.0 transition
                             o distinst defaults to current architecture
                  Review:    pending (AH)
                  Changed:   JAPI, classes, distinst, aimk
+
+JG-2005-12-23-1: Testsuite: Fixed broken testsuite.
 
 RD-2005-12-23-0: Bugfix:    modification of hgrp results in glibc error message
                             printed by qconf and abort

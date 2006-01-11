@@ -118,7 +118,7 @@ proc add_pe { change_array { version_check 1 } } {
 # job_is_first_task TRUE
 
    global ts_config
-  global env CHECK_ARCH open_spawn_buffer
+  global env CHECK_ARCH
   global CHECK_CORE_MASTER CHECK_USER CHECK_OUTPUT
 
   upvar $change_array chgar
@@ -209,7 +209,7 @@ proc set_pe { pe_obj change_array } {
 # job_is_first_task TRUE
 
    global ts_config
-  global env CHECK_ARCH open_spawn_buffer
+  global env CHECK_ARCH
   global CHECK_CORE_MASTER CHECK_USER CHECK_OUTPUT
 
   upvar $change_array chgar
@@ -270,7 +270,7 @@ proc set_pe { pe_obj change_array } {
 #*******************************
 proc del_pe { mype_name } {
    global ts_config
-  global CHECK_ARCH open_spawn_buffer CHECK_CORE_MASTER CHECK_USER CHECK_HOST
+  global CHECK_ARCH CHECK_CORE_MASTER CHECK_USER CHECK_HOST
   global CHECK_OUTPUT
 
    unassign_queues_with_pe_object $mype_name

@@ -104,7 +104,7 @@ proc get_complex { change_array } {
 #*******************************************************************************
 proc set_complex { change_array } {
   global ts_config CHECK_USER
-  global env CHECK_ARCH CHECK_OUTPUT open_spawn_buffer
+  global env CHECK_ARCH CHECK_OUTPUT
   global CHECK_CORE_MASTER
   upvar $change_array chgar
   set values [array names chgar]

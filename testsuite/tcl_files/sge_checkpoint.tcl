@@ -1,4 +1,3 @@
-
 #!/usr/local/bin/tclsh
 # expect script 
 #___INFO__MARK_BEGIN__
@@ -119,7 +118,7 @@ proc get_checkpointobj { ckpt_obj change_array } {
 #*******************************************************************************
 proc set_checkpointobj { ckpt_obj change_array } {
  global ts_config
-   global CHECK_ARCH open_spawn_buffer
+   global CHECK_ARCH
    global CHECK_USER CHECK_OUTPUT
 
    upvar $change_array chgar
@@ -173,7 +172,7 @@ proc set_checkpointobj { ckpt_obj change_array } {
 #*******************************
 proc del_checkpointobj { checkpoint_name } {
    global ts_config
-   global CHECK_ARCH open_spawn_buffer CHECK_CORE_MASTER CHECK_USER CHECK_HOST
+   global CHECK_ARCH CHECK_CORE_MASTER CHECK_USER CHECK_HOST
    global CHECK_OUTPUT
 
    unassign_queues_with_ckpt_object $checkpoint_name
@@ -262,7 +261,7 @@ proc del_checkpointobj { checkpoint_name } {
 #*******************************
 proc add_checkpointobj { change_array } {
    global ts_config
-   global CHECK_ARCH open_spawn_buffer
+   global CHECK_ARCH
    global CHECK_USER CHECK_OUTPUT
 
    upvar $change_array chgar

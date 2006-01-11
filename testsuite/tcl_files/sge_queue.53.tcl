@@ -108,7 +108,6 @@ proc validate_queue_type { change_array } {
 proc add_queue { qname hostlist change_array {fast_add 1} } {
    global ts_config
    global CHECK_ARCH CHECK_OUTPUT CHECK_USER
-   global open_spawn_buffer
 
    upvar $change_array chgar
 
@@ -213,7 +212,6 @@ proc set_queue_work { qname change_array } {
 proc set_queue { qname hostlist change_array } {
    global ts_config
    global CHECK_ARCH CHECK_OUTPUT CHECK_USER
-   global open_spawn_buffer
 
    upvar $change_array chgar
 
@@ -235,7 +233,7 @@ proc set_queue { qname hostlist change_array } {
 
 proc del_queue { q_name hostlist {ignore_hostlist 0} {del_cqueue 0}} {
   global ts_config
-  global CHECK_ARCH open_spawn_buffer CHECK_CORE_MASTER CHECK_USER CHECK_OUTPUT
+  global CHECK_ARCH CHECK_CORE_MASTER CHECK_USER CHECK_OUTPUT
 
    # we just get one queue name (queue instance)
    set queue_list {}

@@ -1381,9 +1381,9 @@ proc get_ps_info { { pid 0 } { host "local"} { variable ps_info } {additional_ru
 #     ???/???
 #*******************************
 proc gethostname {} {
-  global CHECK_PRODUCT_ROOT CHECK_ARCH  CHECK_OUTPUT env
+  global ts_config CHECK_ARCH CHECK_OUTPUT env
 
-  set catch_return [ catch { exec "$CHECK_PRODUCT_ROOT/utilbin/$CHECK_ARCH/gethostname" "-name"} result ]
+  set catch_return [ catch { exec "$ts_config(product_root)/utilbin/$CHECK_ARCH/gethostname" "-name"} result ]
   if { $catch_return == 0 } {
      set result [split $result "."]
      set newname [lindex $result 0]

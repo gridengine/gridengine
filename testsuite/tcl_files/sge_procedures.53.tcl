@@ -62,7 +62,7 @@
 #*******************************************************************************
 proc set_complex { change_array complex_list { create 0 } } {
   global ts_config
-  global env CHECK_ARCH CHECK_OUTPUT open_spawn_buffer
+  global env CHECK_ARCH CHECK_OUTPUT
   global CHECK_CORE_MASTER
   upvar $change_array chgar
   set values [array names chgar]

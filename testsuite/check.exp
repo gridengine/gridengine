@@ -396,7 +396,6 @@ global build_arch_cache            ;# cache for architecture names (upper case) 
 global l10n_raw_cache              ;# chche for l10n translation strings
 global l10n_install_cache          ;# cache for l10n installation script strings
 global set_error_proc_called       ;# flag
-global open_spawn_buffer           ;# buffer for open_spawn_process arguments
 global have_ssh_access_state       ;# global variable for have_ssh_access procedure (remember state)
 global check_timestamp             ;# for use in is_job_running
 global CHECK_SGE_DEBUG_LEVEL       ;# SGE_DEBUG_LEVEL for starting qmaster and scheduler in debug mode
@@ -464,9 +463,11 @@ set CHECK_OUTPUT stdout
 proc debug_puts { args } {
    global CHECK_OUTPUT CHECK_DEBUG_LEVEL
    global CHECK_CUR_PROC_NAME CHECK_HOST last_debug_msec
+
    if { $CHECK_DEBUG_LEVEL == 0 } {
       return
    }
+
    set output ""
    foreach elem $args {
       set output "$output $elem"
@@ -484,7 +485,6 @@ proc debug_puts { args } {
    set last_debug_msec [clock clicks -milliseconds]
 
    puts $CHECK_OUTPUT "\[$time $CHECK_HOST:$CHECK_CUR_PROC_NAME\] $output" 
-
 }
 
 #
@@ -739,8 +739,7 @@ proc add_proc_error { proc_name result text {raise_error 1}} {
 #     ???/???
 #*******************************
 proc have_ssh_access {} {
-  global CHECK_CORE_EXECD open_spawn_buffer CHECK_OUTPUT have_ssh_access_state CHECK_USE_SSH CHECK_HOST
-
+  global CHECK_CORE_EXECD CHECK_OUTPUT have_ssh_access_state CHECK_USE_SSH CHECK_HOST
 
   if { $have_ssh_access_state != -1 } {
      return $have_ssh_access_state

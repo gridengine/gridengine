@@ -159,7 +159,7 @@ proc get_prj { prj_name change_array } {
 #*******************************
 proc del_prj { myprj_name } {
   global ts_config
-  global CHECK_ARCH open_spawn_buffer CHECK_USER CHECK_CORE_MASTER
+  global CHECK_ARCH CHECK_USER CHECK_CORE_MASTER
   global CHECK_HOST
 
   if { [ string compare $ts_config(product_type) "sge" ] == 0 } {

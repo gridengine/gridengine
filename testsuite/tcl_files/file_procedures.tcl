@@ -2919,7 +2919,7 @@ proc logfile_wait { { wait_string "" } { mytimeout 60 } { close_connection 1 } {
    }
    puts $CHECK_OUTPUT ""
    if { $close_connection == 1 } {
-      uplevel 1 { close_spawn_process $file_procedure_logfile_wait_sp_id }
+      close_spawn_process $file_procedure_logfile_wait_sp_id
    }
    log_user 1
    return $my_tail_buffer
@@ -2945,7 +2945,7 @@ proc close_logfile_wait { } {
    global file_procedure_logfile_wait_sp_id
    global CHECK_OUTPUT
 
-   uplevel 1 { close_spawn_process $file_procedure_logfile_wait_sp_id }
+   close_spawn_process $file_procedure_logfile_wait_sp_id
 }
 
 #****** file_procedures/washing_machine() **************************************

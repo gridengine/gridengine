@@ -144,7 +144,7 @@ proc qrsh_init_level {} {
 proc qrsh_function {} {
    global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH 
    global CHECK_USER
-   global qrsh_hostlist qrsh_submithost open_spawn_buffer
+   global qrsh_hostlist qrsh_submithost
 
 
    if { [have_root_passwd] == -1 } {
@@ -197,7 +197,7 @@ proc qrsh_function {} {
 proc qrsh_h {} {
    global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH 
    global CHECK_USER
-   global qrsh_submithost open_spawn_buffer
+   global qrsh_submithost
 
 
    if { [have_root_passwd] == -1 } {
@@ -305,7 +305,7 @@ proc qrsh_h {} {
 proc qrsh_hold_jid {} {
    global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH 
    global CHECK_USER
-   global qrsh_submithost open_spawn_buffer
+   global qrsh_submithost
 
 
    if { [have_root_passwd] == -1 } {
@@ -437,7 +437,7 @@ proc qrsh_hold_jid {} {
 #*******************************
 proc qrsh_alltoall {} {
    global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_USER CHECK_ACTUAL_TEST_PATH
-   global qrsh_hostlist open_spawn_buffer
+   global qrsh_hostlist
 
 
    if { [have_root_passwd] == -1 } {
@@ -498,7 +498,7 @@ proc qrsh_alltoall {} {
 proc qrsh_starter_method {} {
    global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH 
    global CHECK_USER CHECK_ACTUAL_TEST_PATH
-   global qrsh_hostlist qrsh_submithost open_spawn_buffer
+   global qrsh_hostlist qrsh_submithost
 
    puts $CHECK_OUTPUT "qrsh testing starter_method"
 
@@ -593,7 +593,7 @@ proc qrsh_accounting {} {
    global ts_config
    global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_PRODUCT_TYPE
    global CHECK_HOST CHECK_USER
-   global qrsh_hostlist qrsh_submithost open_spawn_buffer
+   global qrsh_hostlist qrsh_submithost
 
 
    if { [have_root_passwd] == -1 } {
@@ -929,7 +929,7 @@ proc qrsh_suspend {} {
 proc qrsh_delete {} {
    global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_ACTUAL_TEST_PATH
    global CHECK_USER CHECK_FIRST_FOREIGN_SYSTEM_USER
-   global qrsh_hostlist qrsh_submithost open_spawn_buffer
+   global qrsh_hostlist qrsh_submithost
 
    if { [have_root_passwd] == -1 } {
       set_error -3 "root access required"
@@ -1041,7 +1041,7 @@ proc qrsh_delete {} {
 proc qrsh_terminate {} {
    global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_ACTUAL_TEST_PATH
    global CHECK_USER CHECK_FIRST_FOREIGN_SYSTEM_USER CHECK_COMMD_PORT
-   global qrsh_hostlist qrsh_submithost open_spawn_buffer
+   global qrsh_hostlist qrsh_submithost
 
    if { [have_root_passwd] == -1 } {
       set_error -3 "root access required"
@@ -1269,7 +1269,7 @@ proc qrsh_qsub_gid {} {
    global CHECK_OUTPUT CHECK_ACTUAL_TEST_PATH CHECK_PROTOCOL_DIR
    global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_HOST
    global QSUB_GID_USER QSUB_GID_GROUPS CHECK_SECOND_FOREIGN_SYSTEM_USER
-   global qrsh_hostlist qrsh_submithost open_spawn_buffer
+   global qrsh_hostlist qrsh_submithost
 
    if { [have_root_passwd] == -1 } {
       set_error -3 "root access required"
@@ -1475,7 +1475,7 @@ proc qrsh_batch {} {
    global ts_config
    global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH
    global CHECK_HOST CHECK_USER
-   global qrsh_hostlist qrsh_submithost open_spawn_buffer
+   global qrsh_hostlist qrsh_submithost
 
    if { [have_root_passwd] == -1 } {
       set_error -3 "root access required"
@@ -1678,7 +1678,7 @@ proc qrsh_batch {} {
 proc qrsh_limits {} {
    global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_ACTUAL_TEST_PATH
    global CHECK_USER
-   global qrsh_hostlist qrsh_submithost open_spawn_buffer
+   global qrsh_hostlist qrsh_submithost
 
    if { [have_root_passwd] == -1 } {
       set_error -3 "root access required"

@@ -722,7 +722,6 @@ proc setup_execd_conf {} {
 proc setup_mytestproject {} {
    global ts_config
   global CHECK_ARCH env check_errno
-  global open_spawn_buffer
  
 
   if { [ string compare $ts_config(product_type) "sge" ] == 0 } {

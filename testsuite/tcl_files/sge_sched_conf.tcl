@@ -182,7 +182,7 @@ proc reset_schedd_config {} {
 #*******************************
 proc set_schedd_config { change_array } {
   global ts_config
-  global env CHECK_ARCH open_spawn_buffer
+  global env CHECK_ARCH
   global CHECK_OUTPUT CHECK_CORE_MASTER
   upvar $change_array chgar
 

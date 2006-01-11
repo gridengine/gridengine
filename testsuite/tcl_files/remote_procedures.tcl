@@ -37,7 +37,13 @@ global rlogin_spawn_session_buffer
 set module_name "remote_procedures.tcl"
 global rlogin_max_open_connections
 set rlogin_max_open_connections 20
-global rlogin_in_use_buffer last_shell_script_file last_spawn_command_arguments
+global last_shell_script_file last_spawn_command_arguments
+
+global CHECK_SHELL_PROMPT
+# initialize prompt handling, see expect manpage
+#set CHECK_SHELL_PROMPT "(%|#|\\$|>) $"
+#set CHECK_SHELL_PROMPT "\[A-Za-z>$%\]*"
+set CHECK_SHELL_PROMPT "\[A-Za-z\]*\[#>$%\]*"
 
 set descriptors [exec "/bin/sh" "-c" "ulimit -n"]
 puts "    *********************************************"
@@ -488,7 +494,7 @@ proc start_remote_prog { hostname
                          { set_shared_lib_path 1 } 
                        } {
    global CHECK_OUTPUT CHECK_MAIN_RESULTS_DIR CHECK_DEBUG_LEVEL 
-   global open_spawn_buffer CHECK_HOST
+   global CHECK_HOST
    upvar $exit_var back_exit_state
 
    if {$envlist != ""} {
@@ -497,41 +503,40 @@ proc start_remote_prog { hostname
 
    set back_exit_state -1
    set tmp_exit_status_string ""
-   if { [ llength $exec_command ] != 1 } {
+   if {[llength $exec_command] != 1} {
       puts "= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = ="
       puts "  WARNING     WARNING   WARNING  WARNING"
       puts "  procedure start_remote_prog: \"$exec_command\""
       puts "  is not a command name; it has additional arguments" 
       puts "= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = ="
-     if { $CHECK_DEBUG_LEVEL == 2 } {
+      if {$CHECK_DEBUG_LEVEL == 2} {
          wait_for_enter 
-     }
+      }
    }
-   
 
-   set id [open_remote_spawn_process "$hostname" "$user" "$exec_command" "$exec_arguments" $background users_env $source_settings_file 15 $set_shared_lib_path ]
-   if { [string compare $id ""] == 0 } {
+   # open connection
+   set id [open_remote_spawn_process "$hostname" "$user" "$exec_command" "$exec_arguments" $background users_env $source_settings_file 15 $set_shared_lib_path]
+   if {$id == ""} {
       add_proc_error "start_remote_prog" -1 "got no spawn id"
       set back_exit_state -255
       return ""
    }
+
    set myspawn_id [ lindex $id 1 ]
-
-
-
    set output ""
    set do_stop 0
 
+
+   # in debug mode, we want to see all shell I/O
+   log_user 0
    if { $CHECK_DEBUG_LEVEL != 0 } {
       log_user 1
-   } else {
-      log_user 0
    }
+
    set timeout $mytimeout
    set real_end_found 0
    set real_start_found 0
    set nr_of_lines 0
-   
  
    debug_puts "starting command ..."
    expect {
@@ -636,7 +641,6 @@ proc start_remote_prog { hostname
    set back_exit_state $exit_status
    return $output
 }
-
 
 #****** remote_procedures/sendmail() *******************************************
 #  NAME
@@ -802,7 +806,7 @@ proc create_error_message { error_array} {
   set err_string [lindex $error_array 0]
   #set err_string $error_array
   } ]
-  if { $catch_return != 0 } {
+  if { $catch_return == 1 } {
      set err_string "catch error: error reading error_array"
   }
   
@@ -883,9 +887,52 @@ proc show_proc_error { result new_error } {
 
 
 
+#****** remote_procedures/close_spawn_id() *************************************
+#  NAME
+#     close_spawn_id() -- close spawn_id and wait child process
+#
+#  SYNOPSIS
+#     close_spawn_id { spawn_id } 
+#
+#  FUNCTION
+#     Closes a certain spawn id and calls wait to have the child process
+#     cleaned up.
+#
+#  INPUTS
+#     spawn_id - the spawn_id to close
+#
+#  NOTES
+#     The function should be called within a catch block.
+#     Both close and wait called here might raise an exception.
+#*******************************************************************************
+proc close_spawn_id {spawn_id} {
+   close -i $spawn_id
+   wait -nowait -i $spawn_id
+}
 
+#****** remote_procedures/increase_timeout() ***********************************
+#  NAME
+#     increase_timeout() -- stepwise increase expect timeout
+#
+#  SYNOPSIS
+#     increase_timeout { {max 5} {step 1} } 
+#
+#  FUNCTION
+#     Stepwise increases the timeout variable in the callers context.
+#     timeout is increased by $step per call of this function 
+#     up to $max.
+#
+#  INPUTS
+#     {max 5}  - maximum timeout value
+#     {step 1} - step
+#*******************************************************************************
+proc increase_timeout {{max 5} {step 1}} {
+   upvar timeout timeout
 
-
+   if {$timeout < $max} {
+      incr timeout $step
+   }
+}
 
 
 #****** remote_procedures/open_remote_spawn_process() **************************
@@ -952,7 +999,8 @@ proc show_proc_error { result new_error } {
 #     ??? 
 #
 #  SEE ALSO
-#     ???/???
+#     remote_procedures/increase_timeout()
+#     remote_procedures/close_spawn_id()
 #*******************************************************************************
 proc open_remote_spawn_process { hostname 
                                  user 
@@ -965,578 +1013,541 @@ proc open_remote_spawn_process { hostname
                                  { set_shared_lib_path 1 }
                                } {
 
-  global open_spawn_buffer CHECK_OUTPUT CHECK_HOST CHECK_USER CHECK_TESTSUITE_ROOT CHECK_SCRIPT_FILE_DIR
-  global CHECK_MAIN_RESULTS_DIR CHECK_EXPECT_MATCH_MAX_BUFFER
-  global rlogin_in_use_buffer last_shell_script_file last_spawn_command_arguments
+   global CHECK_OUTPUT CHECK_HOST CHECK_USER CHECK_TESTSUITE_ROOT CHECK_SCRIPT_FILE_DIR
+   global CHECK_EXPECT_MATCH_MAX_BUFFER CHECK_DEBUG_LEVEL
+   global CHECK_SHELL_PROMPT
+   global last_shell_script_file last_spawn_command_arguments
 
-  upvar 1 error_info error_info
+   debug_puts "open_remote_spawn_process on host \"$hostname\""
+   debug_puts "user:           $user"
+   debug_puts "exec_command:   $exec_command"
+   debug_puts "exec_arguments: $exec_arguments"
 
-  if {$envlist != ""} {
-      upvar $envlist users_env
-  }
+   # check parameters
+   if {$nr_of_tries < 5} {
+      add_proc_error "open_remote_spawn_process" -3 "unreasonably low nr_of_tries: $nr_of_tries, setting to 5"
+   }
 
-  set this_last_spawn_command_arguments "$hostname$user$exec_command$exec_arguments$background$envlist$source_settings_file$nr_of_tries$set_shared_lib_path"
-  set re_use_script 0
-  if { [info exists last_spawn_command_arguments]} {
-     if { [string compare $this_last_spawn_command_arguments $last_spawn_command_arguments] == 0 } {
-        set re_use_script 1
-     } 
-#     puts $CHECK_OUTPUT "last commands: $last_spawn_command_arguments"
-  }
-#  puts $CHECK_OUTPUT "new  commands: $this_last_spawn_command_arguments"
-  
+   # handle special user ids
+   if {[string match "ts_def_con*" $user] == 1} {
+      set real_user $CHECK_USER
+   } else {
+      set real_user $user
+   }
 
-  set last_spawn_command_arguments $this_last_spawn_command_arguments
+   # common part of all error messages
+   set error_info "connection to host \"$hostname\" as user \"$user\""
 
-  uplevel 1 { set remote_spawn_nr_of_shells 0 }
-
-  uplevel 1 { global open_spawn_buffer }
-  uplevel 1 { global CHECK_USER }
-  uplevel 1 { global CHECK_TESTSUITE_ROOT }
-  uplevel 1 { global CHECK_SCRIPT_FILE_DIR }
-  uplevel 1 { global CHECK_MAIN_RESULTS_DIR }
-  uplevel 1 { global CHECK_DEBUG_LEVEL }
-  uplevel 1 { global CHECK_EXPECT_MATCH_MAX_BUFFER }
-  uplevel 1 { global CHECK_OUTPUT }
-
-
-  debug_puts "open_remote_spawn_process on host \"$hostname\""
-  debug_puts "user:           $user"
-  debug_puts "exec_command:   $exec_command"
-  debug_puts "exec_arguments: $exec_arguments"
-
-  set error_info "connection to host \"$hostname\" as user \"$user\""
-
-  if { [string compare $user $CHECK_USER] != 0 } {
-     if { [string match "ts_def_con*" $user] != 1 } {
-        if {[have_root_passwd] == -1} {
-            add_proc_error "open_remote_spawn_process" -2 "${error_info}\nroot access required"
-            return "" 
-         }
-     }
-  }
-
-  set type [ file tail $exec_command ]
-
-  if { $re_use_script != 0 } {
-     if { [file isfile $last_shell_script_file] == 0 } {
-        set re_use_script 0
-     }
-  }
-
-  if { $re_use_script == 0 } {
-     set script_name [get_tmp_file_name $hostname $type "sh" ]
-     create_shell_script "$script_name" $hostname "$exec_command" "$exec_arguments" users_env "/bin/sh" 0 $source_settings_file $set_shared_lib_path
-     debug_puts "created $script_name"
-  } else {
-     set script_name $last_shell_script_file
-     debug_puts "re-using script $script_name"
-  }
-
-  set last_shell_script_file $script_name
-  set open_spawn_buffer $script_name
-  uplevel 1 { set open_remote_spawn__script_name $open_spawn_buffer }
-  set open_spawn_buffer $hostname
-  uplevel 1 { set open_remote_spawn__hostname $open_spawn_buffer }
-  set open_spawn_buffer $user
-  uplevel 1 { set open_remote_spawn__user $open_spawn_buffer }
-  set open_spawn_buffer $CHECK_USER
-  uplevel 1 { set open_remote_spawn__check_user $open_spawn_buffer }
-  set open_spawn_buffer $exec_command
-  uplevel 1 { set open_remote_spawn__prog "$open_spawn_buffer" }
-  set open_spawn_buffer $exec_arguments
-  uplevel 1 { set open_remote_spawn__args "$open_spawn_buffer" }
-  set open_spawn_buffer $nr_of_tries
-  uplevel 1 {
-     set open_remote_spawn__tries "$open_spawn_buffer" 
-     log_user 0
-     if { $CHECK_DEBUG_LEVEL != 0 } {
-        log_user 1
-     }
-     set timeout 120
-  }
-
-  if { $re_use_script == 0 } {
-     get_open_spawn_rlogin_session $hostname $user con_data
-  } else {
-     get_open_spawn_rlogin_session $hostname $user con_data 1
-  }
-  set using_ts_def_con 0
-
-
-  switch -- $user {
-     "ts_def_con" {
-        set user $CHECK_USER
-        set using_ts_def_con 1
-        set open_spawn_buffer $user
-        uplevel 1 { set open_remote_spawn__user $open_spawn_buffer }
-     }
-     "ts_def_con2" {
-        set user $CHECK_USER
-        set using_ts_def_con 2
-        set open_spawn_buffer $user
-        uplevel 1 { set open_remote_spawn__user $open_spawn_buffer }
-     }
-     "ts_def_con_translate" {
-        set user $CHECK_USER
-        set using_ts_def_con 3
-        set open_spawn_buffer $user
-        uplevel 1 { set open_remote_spawn__user $open_spawn_buffer }
-     }
-  }
-
-  if { $con_data(pid) != 0 } {
-     debug_puts "Using open rlogin connection to host \"$hostname\",user \"$user\""
-
-     set nr_of_shells $con_data(nr_shells)
-     set back  $con_data(pid) 
-     lappend back $con_data(spawn_id)
-     set open_spawn_buffer $con_data(spawn_id)
-     if { [is_spawn_process_in_use $back ] == 1 } {
-        puts $CHECK_OUTPUT "open_remote_spawn_process($hostname $user $exec_command $exec_arguments):"
-        puts $CHECK_OUTPUT "connection already in use or an old process wasn't closed."
-        puts $CHECK_OUTPUT "Please use an other username or call close_spawn_process first."
-     }
-     uplevel 1 { 
-        set open_remote_spawn__id "$open_spawn_buffer" 
-     }
-  } else {
-     uplevel 1 { debug_puts "opening connection to host $open_remote_spawn__hostname" }
-     if { [have_ssh_access] == 0 } {
-        set pid [ uplevel 1 { spawn "rlogin" "$open_remote_spawn__hostname" } ] 
-        uplevel 1 { incr remote_spawn_nr_of_shells 1 }
-      } else {
-         set ssh_binary [get_binary_path $CHECK_HOST ssh]
-         uplevel 1 "set ssh_binary $ssh_binary"
-         set pid [ uplevel 1 { spawn "$ssh_binary" "-l" "root" "$open_remote_spawn__hostname" } ]
-         uplevel 1 { incr remote_spawn_nr_of_shells 1 }
+   # if command shall be started as other user than CHECK_USER
+   # we need root access
+   if {[string compare $real_user $CHECK_USER] != 0} {
+      if {[have_root_passwd] == -1} {
+         add_proc_error "open_remote_spawn_process" -2 "${error_info}\nroot access required"
+         return "" 
       }
-      set sp_id [uplevel 1 { set spawn_id }]
-      set back $pid      ;# return value (pid and spawn_id)
-      lappend back $sp_id
-      set open_spawn_buffer $sp_id
-      uplevel 1 { set open_remote_spawn__id "$open_spawn_buffer" }
+   }
+
+   # we might want to pass a special environment
+   if {$envlist != ""} {
+      upvar $envlist users_env
+   }
+
+   # if the same script is executed multiple times, don't recreate it
+   set re_use_script 0
+   # we check for a combination of all parameters
+   set spawn_command_arguments "$hostname$user$exec_command$exec_arguments$background$envlist$source_settings_file$set_shared_lib_path"
+   if {[info exists last_spawn_command_arguments]} {
+      # compare last command with this command
+      if {[string compare $spawn_command_arguments $last_spawn_command_arguments] == 0} {
+         # check if the script is still available
+         if {[file isfile $last_shell_script_file]} {
+            set re_use_script 1
+         }
+      }
+   }
+
+   # now remember this argument string for use in the next call to open_remote_spawn_process
+   set last_spawn_command_arguments $spawn_command_arguments
+
+   # either use the previous script, or create a new one
+   if {$re_use_script} {
+      set script_name $last_shell_script_file
+      debug_puts "re-using script $script_name"
+   } else {
+      set command_name [file tail $exec_command]
+      set script_name [get_tmp_file_name $hostname $command_name "sh"]
+      create_shell_script "$script_name" $hostname "$exec_command" "$exec_arguments" users_env "/bin/sh" 0 $source_settings_file $set_shared_lib_path
+      debug_puts "created $script_name"
+
+      # remember name of script file for use in the next call to open_remote_spawn_process
+      set last_shell_script_file $script_name
+   }
+
+   # get info about an already open rlogin connection
+   get_open_spawn_rlogin_session $hostname $user con_data
+
+   # we might have the required connection open
+   set open_new_connection 1
+   if {$con_data(pid) != 0} {
+      set pid          $con_data(pid)
+      set spawn_id     $con_data(spawn_id)
+      set nr_of_shells $con_data(nr_shells)
+
+      # check, if the connection is still in use - error!
+      if {[is_spawn_process_in_use $spawn_id]} {
+         add_proc_error "open_remote_spawn_process" -2 "$error_info\nconnection is still in use"
+         return ""
+      }
+
+      # check if the connection is OK - if not, we'll try to reopen it
+      # JG: TODO: We had an optimization before:
+      #           in case of not re_use_script, we do not test the connection here,
+      #           but assume the connection is OK.  
+      #           In the file check section, the called script file_check.sh outputs
+      #           the id string (same as in check_identity.sh), and we check
+      #           for correct id and file available in the same expect section.
+      #           Advantage: It is faster (up to 100 ms per call)
+      #           Disadvantage: We detect a dead connection too late. If the rlogin
+      #           connection is dead, open_remote_spawn_process will fail.
+      #           With the current implementation, we are slower, but a dead connection
+      #           will be detected early enough to close and reopen it.
+      if {[check_rlogin_session $spawn_id $pid $hostname $user $nr_of_shells]} {
+         debug_puts "Using open rlogin connection to host \"$hostname\",user \"$user\""
+         set open_new_connection 0
+      }
+   }
+
+   if {$open_new_connection} {
+      # no open connection - open a new one
+      debug_puts "opening connection to host $hostname"
+
+      # we either open an ssh connection (as CHECK_USER or root) 
+      # or rlogin as CHECK_USER
+      if {[have_ssh_access]} {
+         set ssh_binary [get_binary_path $CHECK_HOST ssh]
+         # if we have ssh access, we either
+         # connect via ssh as CHECK_USER
+         # connect via ssh as root (and if necessary switch user later)
+         if {$real_user == $CHECK_USER} {
+            set pid [spawn $ssh_binary $hostname]
+         } else {
+            set pid [spawn $ssh_binary "-l" "root" $hostname]
+         }
+      } else {
+         set pid [spawn "rlogin" $hostname] 
+      }
 
       if {$pid == 0 } {
-        add_proc_error "open_remote_spawn_process" -2 "${error_info}\ncould not spawn! (ret_pid = $pid)" 
+        add_proc_error "open_remote_spawn_process" -2 "${error_info}\ncould not spawn! (pid = $pid)" 
         return "" 
       }
 
-      match_max -i $sp_id $CHECK_EXPECT_MATCH_MAX_BUFFER
-      debug_puts "open_remote_spawn_process -> buffer size is: [match_max -i $sp_id]"
+      # in debug mode we want to see all the shell output
+      log_user 0
+      if {$CHECK_DEBUG_LEVEL != 0} {
+         log_user 1
+      }
+
+      # we now have one open shell
+      set nr_of_shells 1
+
+      # set buffer size for new connection
+      match_max -i $spawn_id $CHECK_EXPECT_MATCH_MAX_BUFFER
+      debug_puts "open_remote_spawn_process -> buffer size is: [match_max -i $spawn_id]"
+
       # wait for shell to start
-      set catch_return [ catch {
-          uplevel 1 {
-             log_user 0
-             if { $CHECK_DEBUG_LEVEL != 0 } {
-                log_user 1
-             }
-             set my_tries 80
-             while { 1 } {
-                set timeout 1
-                expect {
-                   -i $spawn_id full_buffer {
-                      add_proc_error "open_remote_spawn_process" -1 "${error_info}\nbuffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
-                      catch { close -i $spawn_id }
-                      catch { wait -nowait -i $spawn_id }
-                      return ""
-                   }
-                   -i $spawn_id -- "The authenticity of host*" {
-                      after 100
-                      send -i $spawn_id "yes\n"
-                   }
-                   -i $spawn_id -- "Are you sure you want to continue connecting (yes/no)?*" {
-                      send -i $spawn_id "yes\n"
-                   }
-                   -i $spawn_id -- "Please type 'yes' or 'no'*" {
-                      send -i $spawn_id "yes\n"
-                   }
-                   -i $spawn_id -- {[A-Za-z>$%]*} {
-                       debug_puts "startup ..."
-                       break
-                   }
-                   -i $spawn_id default {
-                       if { $my_tries > 0 } {
-                           incr my_tries -1
-                           if { $my_tries < 77 } {
-                              puts -nonewline $CHECK_OUTPUT "."
-                              flush $CHECK_OUTPUT
-                           }
-                           continue
-                       } else {
-                          add_proc_error "open_remote_spawn_process" -1 "${error_info}\nstartup timeout" 
-                          catch { close -i $spawn_id }
-                          catch { wait -nowait -i $spawn_id }
-                          return ""
-                       }
-                   }
-                }
-             }
-             
-             set timeout 1
-
-             send -i $spawn_id -- "$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/shell_start_output.sh\n"
-             set open_remote_spawn__tries 30
-             while { $open_remote_spawn__tries > 0 } {
-                expect {
-                  -i $spawn_id full_buffer {
-                     add_proc_error "open_remote_spawn_process" -1 "${error_info}\nbuffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
-                     catch { close -i $spawn_id }
-                     return ""
+      set connect_errors 0
+      set catch_return [catch {
+         set num_tries $nr_of_tries
+         set timeout 2
+         expect {
+            -i $spawn_id eof {
+               add_proc_error "open_remote_spawn_process (startup)" -2 "${error_info}\nunexpected eof"
+               close_spawn_id $spawn_id
+               set connect_errors 1
+            }
+            -i $spawn_id full_buffer {
+               add_proc_error "open_remote_spawn_process (startup)" -2 "${error_info}\nbuffer overflow"
+               close_spawn_id $spawn_id
+               set connect_errors 1
+            }
+            -i $spawn_id timeout {
+               incr num_tries -1
+               if {$num_tries > 0} {
+                  if {$num_tries < 77} {
+                     puts -nonewline $CHECK_OUTPUT "."
+                     flush $CHECK_OUTPUT
+                     send -i $spawn_id -- "\n"
                   }
-                  -i $spawn_id timeout {
-                      send -i $spawn_id "$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/shell_start_output.sh\n"
-                      incr open_remote_spawn__tries -1
-                  }  
-                   -i $spawn_id -- "The authenticity of host*" {
-                      after 100
-                      send -i $spawn_id "yes\n"
-                   }
-                   -i $spawn_id -- "Are you sure you want to continue connecting (yes/no)?*" {
-                      send -i $spawn_id "yes\n"
-                   }
-                   -i $spawn_id -- "Please type 'yes' or 'no'*" {
-                      send -i $spawn_id "yes\n"
-                   }
-                   -i $spawn_id -- "ts_shell_response*\n" {
-                      break
-                   }
-                   -i $spawn_id eof {
-                      add_proc_error "open_remote_spawn_process" -2 "${error_info}\nunexpected eof"
-                      catch { close -i $spawn_id }
-                      catch { wait -nowait -i $spawn_id }
-                      return ""
-                   }
-                }
+                  increase_timeout
+                  exp_continue
+               } else {
+                  add_proc_error "open_remote_spawn_process (startup)" -2 "${error_info}\nstartup timeout" 
+                  close_spawn_id $spawn_id
+                  set connect_errors 1
+               }
             }
-            if { $open_remote_spawn__tries <= 0 } {
-                add_proc_error "open_remote_spawn_process" -1 "${error_info}\ntimeout waiting for shell response prompt (b)"
-                catch { send -i $spawn_id "\003" } ;# send CTRL+C to stop poss. running processes
-                puts $CHECK_OUTPUT "closing spawn process (1) ..."
-                flush $CHECK_OUTPUT
-                catch { close -i $spawn_id }
-                catch { wait -nowait -i $spawn_id }
-                return ""
+            -i $spawn_id "assword:" {
+               add_proc_error "open_remote_spawn_process (startup)" -2 "${error_info}\ngot unexpected password question"
+               close_spawn_id $spawn_id
+               set connect_errors 1
             }
-             
-
-             set mytries $open_remote_spawn__tries
-             debug_puts "waiting for shell response ..."
-             set timeout 1
-             set next_timeout 1
-             set ok 0
-             send -i $spawn_id -- "$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/check_identity.sh\n"
-             while { $ok != 1 } {
-                expect {
-                   -i $spawn_id full_buffer {
-                      add_proc_error "open_remote_spawn_process" -1 "${error_info}\nbuffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
-                      catch { close -i $spawn_id }
-                      catch { wait -nowait -i $spawn_id }
-                      return ""
-                   }
-                   -i $spawn_id timeout {
-                      puts -nonewline $CHECK_OUTPUT "   \r$mytries\r"
-                      flush $CHECK_OUTPUT
-
-                      send -i $spawn_id -- "$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/check_identity.sh\n"
-                      set timeout $next_timeout
-                      if { $next_timeout < 6 } {
-                         incr next_timeout 1
-                      }
-                      incr mytries -1 ; 
-                      if { $mytries < 0 } { 
-                          set ok 1
-                          add_proc_error "open_remote_spawn_process" -2 "${error_info}\nshell doesn't start or runs not as user $open_remote_spawn__check_user on host $open_remote_spawn__hostname" 
-                          puts $CHECK_OUTPUT "sending CTRL + C to spawn id $spawn_id ..."
-                          flush $CHECK_OUTPUT
-                          
-                          catch { send -i $spawn_id "\003" } ;# send CTRL+C to stop evtl. running processes
-                          puts $CHECK_OUTPUT "closing spawn process (2)..."
-                          flush $CHECK_OUTPUT
-                          catch { close -i $spawn_id }
-                          catch { wait -nowait -i $spawn_id }
-                          puts $CHECK_OUTPUT "closed buffer: $open_spawn_buffer"
-                          return ""
-                      }
-                   }
-                   -i $spawn_id -- "The authenticity of host*" {
-                      after 100
-                      send -i $spawn_id "yes\n"
-                   }
-                   -i $spawn_id -- "Are you sure you want to continue connecting (yes/no)?*" {
-                      send -i $spawn_id "yes\n"
-                   }
-                   -i $spawn_id -- "Please type 'yes' or 'no'*" {
-                      send -i $spawn_id "yes\n"
-                   }
-                   -i $spawn_id -- "Terminal type?" {
-                      send -i $spawn_id -- "vt100\n"
-                   }
-                   -i $spawn_id -- "__ my id is ->*${open_remote_spawn__check_user}*\n" { 
-                       debug_puts "shell response! - fine" 
-                       send -i $spawn_id "\n"
-                       set ok 1
-                   }
-                   -i $spawn_id -- "__ my id is ->*root*\n" { 
-                       debug_puts "shell response! - fine" 
-                       send -i $spawn_id "\n"
-                       set ok 1
-                   }
-                   -i $spawn_id -- "assword" {
-                      puts $CHECK_OUTPUT "--> ERROR <--"
-                      puts $CHECK_OUTPUT "unexpected password question for user $open_remote_spawn__check_user on host $open_remote_spawn__hostname"
-                      puts $CHECK_OUTPUT "please check .rhosts file"
-                      puts $CHECK_OUTPUT "sending CTRL + C to spawn id $spawn_id ..."
-                      flush $CHECK_OUTPUT
-                          
-                      catch { send -i $spawn_id "\003" } ;# send CTRL+C to stop evtl. running processes
-                      puts $CHECK_OUTPUT "closing spawn process (3)..."
-                      flush $CHECK_OUTPUT
-                      catch { close -i $spawn_id }
-                      catch { wait -nowait -i $spawn_id }
-                      puts $CHECK_OUTPUT "closed buffer: $open_spawn_buffer"
-                      return ""
-                   }
-                }
-             }
-             set timeout 60
-             log_user 1
+            -i $spawn_id "The authenticity of host*" {
+               send -i $spawn_id -- "yes\n"
+               exp_continue
+            }
+            -i $spawn_id "Are you sure you want to continue connecting (yes/no)?*" {
+               send -i $spawn_id -- "yes\n"
+               exp_continue
+            }
+            -i $spawn_id "Please type 'yes' or 'no'*" {
+               send -i $spawn_id -- "yes\n"
+               exp_continue
+            }
+            -i $spawn_id -re $CHECK_SHELL_PROMPT {
+               # recognized shell prompt - now we can continue / leave this expect loop
+               debug_puts "recognized shell prompt"
+            }
          }
-      } catch_error_message ]
-      if { $catch_return != 0 } {
-         add_proc_error "open_remote_spawn_process" -2 "${error_info}\nerror starting shell:\n$catch_error_message" 
-         uplevel 1 {
-            catch { close -i $spawn_id }
-            catch { wait -nowait -i $spawn_id }
-         }
+      } catch_error_message]
+      if { $catch_return == 1 } {
+         add_proc_error "open_remote_spawn_process (startup)" -2 "${error_info}\n$catch_error_message" 
+         catch {close_spawn_id $spawn_id}
+         set connect_errors 1
+      }
+
+      # did we have errors?
+      if {$connect_errors} {
          return ""
       }
-      catch {
-         uplevel 1 {
-            set open_remote_spawn__stop 0
-            log_user 0
-            if { $CHECK_DEBUG_LEVEL != 0 } {
-              log_user 1
+
+      # now we should have a running shell
+      # try to start a shell script doing some output we'll wait for
+      set catch_return [catch {
+         set num_tries $nr_of_tries
+         # try to start the shell_start_output.sh script
+         send -i $spawn_id -- "$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/shell_start_output.sh\n"
+         set timeout 2
+         expect {
+            -i $spawn_id eof {
+               add_proc_error "open_remote_spawn_process (shell_response)" -2 "${error_info}\nunexpected eof"
+               close_spawn_id $spawn_id
+               set connect_errors 1
             }
-            set timeout 60 
-            while { $open_remote_spawn__stop == 0 } {
-               expect {
-                  -i $spawn_id full_buffer {
-                     set open_remote_spawn__stop -1
-                     add_proc_error "open_remote_spawn_process" -1 "${error_info}\nbuffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
-                     catch { close -i $spawn_id }
-                     catch { wait -nowait -i $spawn_id }
-                     return ""
-                  }
-                  -i $spawn_id timeout {
-                     set open_remote_spawn__stop -1
-                     add_proc_error "open_remote_spawn_process" -2 "${error_info}\nrlogin timeout"
-                     catch { close -i $spawn_id }
-                     catch { wait -nowait -i $spawn_id }
-                     return ""
-                  } 
-                  -i $spawn_id -- "ermission denied" {
-                     set open_remote_spawn__stop -1
-                     add_proc_error "open_remote_spawn_process" -2 "${error_info}\npermission denied"
-                     catch { close -i $spawn_id }
-                     catch { wait -nowait -i $spawn_id }
-                     return ""
-                  }
-                  -i $spawn_id -- "\n" {
-                        debug_puts "login sequence for user $CHECK_USER ..."
-                        if { ([string compare $open_remote_spawn__user $CHECK_USER ] != 0) && 
-                             ([have_ssh_access] == 0) } {
-                              if { [string compare $open_remote_spawn__user "root" ] != 0 } {
-                                 debug_puts "switch to root become $open_remote_spawn__user"
-                                 send -i $spawn_id "su root -c 'su - $open_remote_spawn__user'\n" 
-                                 incr remote_spawn_nr_of_shells 1   ;# this shell ist closed with 1 exit call!!!
-                              } else {
-                                 debug_puts "switch to root"
-                                 send -i $spawn_id "su root\n"
-                                 incr remote_spawn_nr_of_shells 1 
-                              }
-                        }
-                        if { ([string compare $open_remote_spawn__user $CHECK_USER ] == 0) && 
-                             ([have_ssh_access] == 0) } {
-                             send -i $spawn_id "\n"
-                             debug_puts "sending new line"
-                        }
-                        
-                        if { [have_ssh_access] != 0 } {
-                             send -i $spawn_id "su - $open_remote_spawn__user\n"
-                             incr remote_spawn_nr_of_shells 1 
-                             debug_puts "switching to user $open_remote_spawn__user (with env)"
-                        } 
-                        set open_remote_spawn__stop 1
-                  }
-                  -i $spawn_id eof {
-                     set open_remote_spawn__stop -1
-                     add_proc_error "open_remote_spawn_process" -2 "${error_info}\nunexpected eof on rlogin command"
-                     catch { close -i $spawn_id }
-                     catch { wait -nowait -i $spawn_id }
-                     return ""
-                  }
+            -i $spawn_id full_buffer {
+               add_proc_error "open_remote_spawn_process (shell_response)" -2 "${error_info}\nbuffer overflow"
+               close_spawn_id $spawn_id
+               set connect_errors 1
+            }
+            -i $spawn_id timeout {
+               incr num_tries -1
+               if {$num_tries > 0} {
+                  # try to restart the shell_start_output.sh script
+                  send -i $spawn_id -- "$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/shell_start_output.sh\n"
+                  increase_timeout
+                  exp_continue
+               } else {
+                  # final timeout
+                  add_proc_error "open_remote_spawn_process (shell_response)" -2 "${error_info}\ntimeout"
+                  send -i $spawn_id -- "\003" ;# send CTRL+C to stop poss. running processes
+                  close_spawn_id $spawn_id
+                  set connect_errors 1
                }
+               
             }
-            log_user 1
+            -i $spawn_id "assword:" {
+               add_proc_error "open_remote_spawn_process (shell_response)" -2 "${error_info}\ngot unexpected password question"
+               close_spawn_id $spawn_id
+               set connect_errors 1
+            }
+            -i $spawn_id "The authenticity of host*" {
+               send -i $spawn_id -- "yes\n"
+               exp_continue
+            }
+            -i $spawn_id "Are you sure you want to continue connecting (yes/no)?*" {
+               send -i $spawn_id -- "yes\n"
+               exp_continue
+            }
+            -i $spawn_id "Please type 'yes' or 'no'*" {
+               send -i $spawn_id -- "yes\n"
+               exp_continue
+            }
+            -i $spawn_id "ts_shell_response*\n" {
+               # got output from shell_start_output.sh - leaving expect
+               debug_puts "shell started"
+            }
+         }
+      } catch_error_message ]
+      if { $catch_return == 1 } {
+         add_proc_error "open_remote_spawn_process (shell response)" -2 "${error_info}\n$catch_error_message" 
+         catch {close_spawn_id $spawn_id}
+         set connect_errors 1
+      }
+          
+      # did we have errors?
+      if {$connect_errors} {
+         return ""
+      }
+
+      # now we know that we have a connection and can start a shell script
+      # try to check login id
+      set catch_return [ catch {
+         send -i $spawn_id -- "$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/check_identity.sh\n"
+         set num_tries $nr_of_tries
+         set timeout 2
+         expect {
+            -i $spawn_id full_buffer {
+               add_proc_error "open_remote_spawn_process (identity)" -2 "${error_info}\nbuffer overflow"
+               close_spawn_id $spawn_id
+               set connect_errors 1
+            }
+            -i $spawn_id timeout {
+               incr num_tries -1
+               if {$num_tries > 0} {
+                  send -i $spawn_id -- "$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/check_identity.sh\n"
+                  increase_timeout
+                  exp_continue
+               } else {
+                  # final timeout
+                  add_proc_error "open_remote_spawn_process (identity)" -2 "${error_info}\nshell doesn't start or runs not as user $CHECK_USER on host $hostname" 
+                  send -i $spawn_id -- "\003" ;# send CTRL+C to stop evtl. running processes
+                  close_spawn_id $spawn_id
+                  set connect_errors 1
+               }
+             }
+             -i $spawn_id "__ my id is ->*${CHECK_USER}*\n" { 
+                 debug_puts "logged in as $CHECK_USER - fine" 
+             }
+             -i $spawn_id "__ my id is ->*root*\n" { 
+                 debug_puts "logged in as root - fine" 
+             }
+          }
+      } catch_error_message]
+      if {$catch_return == 1} {
+         add_proc_error "open_remote_spawn_process (identity)" -2 "${error_info}\n$catch_error_message" 
+         catch {close_spawn_id $spawn_id}
+         set connect_errors 1
+      }
+
+      # did we have errors?
+      if {$connect_errors} {
+         return ""
+      }
+
+      # here we switch to the target user.
+      # if target user is CHECK_USER, do nothing.
+      # if we have ssh access, and target_user is root, do nothing
+      # else switch user
+      set switch_user 1
+      if {$real_user == $CHECK_USER} {
+         set switch_user 0
+      } else {
+         if {[have_ssh_access] && $real_user == "root"} {
+            set switch_user 0
          }
       }
-   
-
-      catch {
-         if { ([string compare $user $CHECK_USER ] != 0) && ([have_ssh_access] == 0) } {
-            uplevel 1 { 
-               log_user 0
-               if { $CHECK_DEBUG_LEVEL != 0 } {
-                 log_user 1
+      if {$switch_user} {
+         debug_puts "we have to switch user"
+         set catch_return [ catch {
+            if {[have_ssh_access]} {
+               debug_puts "have ssh root access - switching to $real_user"
+               send -i $spawn_id -- "su - $real_user\n"
+            } else {
+               # we had rlogin access and are CHECK_USER
+               if {$real_user == "root"} {
+                  debug_puts "switching to root user"
+                  send -i $spawn_id -- "su - root\n"
+               } else {
+                  debug_puts "switching to $real_user user"
+                  send -i $spawn_id -- "su - root -c 'su - $real_user'\n" 
                }
+            }
+            incr nr_of_shells 1
+
+            # without ssh access, we'll get the passwd question here
+            if {![have_ssh_access]} {
+               set timeout 60
                expect {
                   -i $spawn_id full_buffer {
-                     add_proc_error "open_remote_spawn_process" -1 "${error_info}\nbuffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
-                     catch { close -i $spawn_id }
-                     catch { wait -nowait -i $spawn_id }
-                     return ""
+                     add_proc_error "open_remote_spawn_process (switch user)" -2 "${error_info}\nbuffer overflow"
+                     close_spawn_id $spawn_id
+                     set connect_errors 1
+                  }
+                  -i $spawn_id eof {
+                     add_proc_error "open_remote_spawn_process (switch user)" -2 "${error_info}\nunexpected eof"
+                     close_spawn_id $spawn_id
+                     set connect_errors 1
                   }
                   -i $spawn_id timeout {
-                     add_proc_error "open_remote_spawn_process" -2 "${error_info}\ntimeout waiting for password question"
-                     catch { close -i $spawn_id }
-                     catch { wait -nowait -i $spawn_id }
-                     return ""
-                  }  
-                  -i $spawn_id -- "ermission denied" {
-                     add_proc_error "open_remote_spawn_process" -2 "${error_info}\npermission denied error"
-                     catch { close -i $spawn_id }
-                     catch { wait -nowait -i $spawn_id }
-                     return ""
+                     add_proc_error "open_remote_spawn_process (switch user)" -2 "${error_info}\ntimeout waiting for passwd question"
+                     close_spawn_id $spawn_id
+                     set connect_errors 1
                   }
-                  -i $spawn_id -- "assword:" {
-                     debug_puts "got root password question"
-                     after 1000
+                  -i $spawn_id "assword:" {
+                     after 500
                      log_user 0
                      set send_slow "1 .1"
-                     send -i $spawn_id -s "[get_root_passwd]\n"
+                     send -i $spawn_id -s -- "[get_root_passwd]\n"
                      debug_puts "root password sent" 
-                     if { $CHECK_DEBUG_LEVEL != 0 } {
+                     if {$CHECK_DEBUG_LEVEL != 0} {
                         log_user 1
                      }
                   }
-                  -i $spawn_id eof {
-                     add_proc_error "open_remote_spawn_process" -2 "${error_info}\nunexpected eof on rlogin command"
-                     catch { close -i $spawn_id }
-                     catch { wait -nowait -i $spawn_id }
-                     return ""
+               }
+            }
+         } catch_error_message]
+         if {$catch_return == 1} {
+            add_proc_error "open_remote_spawn_process (switch user)" -2 "${error_info}\n$catch_error_message" 
+            catch {close_spawn_id $spawn_id}
+            set connect_errors 1
+         }
+
+         # did we have errors?
+         if {$connect_errors} {
+            return ""
+         }
+
+         # now we should have the id of the target user
+         # check login id
+         set catch_return [catch {
+            send -i $spawn_id -- "$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/check_identity.sh\n"
+            set num_tries $nr_of_tries
+            set timeout 2
+            expect {
+               -i $spawn_id full_buffer {
+                  add_proc_error "open_remote_spawn_process (new identity)" -2 "${error_info}\nbuffer overflow"
+                  close_spawn_id $spawn_id
+                  set connect_errors 1
+               }
+               -i $spawn_id timeout {
+                  incr num_tries -1
+                  if {$num_tries > 0} {
+                     send -i $spawn_id -- "$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/check_identity.sh\n"
+                     increase_timeout
+                     exp_continue
+                  } else {
+                     # final timeout
+                     add_proc_error "open_remote_spawn_process (new identity)" -2 "${error_info}\nshell doesn't start or runs not as user $real_user on host $hostname" 
+                     send -i $spawn_id -- "\003" ;# send CTRL+C to stop poss. still running processes
+                     close_spawn_id $spawn_id
+                     set connect_errors 1
                   }
-               }
-               log_user 1
-            }
-         }
-      }
-      set nr_of_shells [ uplevel 1 { set remote_spawn_nr_of_shells  } ]
-      if { $using_ts_def_con != 0 } {
-         if { $using_ts_def_con == 1 } {
-            add_open_spawn_rlogin_session $hostname "ts_def_con" $sp_id $pid $nr_of_shells
-         }
-         if { $using_ts_def_con == 2 } {
-            add_open_spawn_rlogin_session $hostname "ts_def_con2" $sp_id $pid $nr_of_shells
-         }
-         if { $using_ts_def_con == 3 } {
-            add_open_spawn_rlogin_session $hostname "ts_def_con_translate" $sp_id $pid $nr_of_shells
-         }
-      } else {
-         add_open_spawn_rlogin_session $hostname $user $sp_id $pid $nr_of_shells
-      }
-      
-
-      debug_puts "unsetting correct ..."
-      uplevel 1 {
-         send -i $open_remote_spawn__id "unset correct\n"
-      }
-   }
-
-   if { $re_use_script == 0 } {
-      debug_puts "checking shell ..."
-      set open_spawn_buffer 0
-      uplevel 1 {
-         log_user 0
-         if { $CHECK_DEBUG_LEVEL != 0 } {
-           log_user 1
-         }
-         set timeout 1
-
-         debug_puts "checking remote file access ..."
-
-
-         send -i $open_remote_spawn__id -- "$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/file_check.sh $open_remote_spawn__script_name\n"
-         set open_remote_spawn__tries 30
-         set open_remote_spawn__is_correct_user_id 0
-
-         expect {
-            -i $open_remote_spawn__id -- "__ my id is ->*${open_remote_spawn__user}*<-" { 
-               set open_remote_spawn__is_correct_user_id 1
-               exp_continue
-            }
-
-            -i $open_remote_spawn__id -- "file exists" {
-               if { $open_remote_spawn__is_correct_user_id != 1 } {
-                  add_proc_error "open_remote_spawn_process" -1 "got wrong user id or no user id"
-                  set open_spawn_buffer 1
-               }
-            }
-            -i $open_remote_spawn__id full_buffer {
-               add_proc_error "open_remote_spawn_process" -1 "${error_info}\nbuffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
-               set open_spawn_buffer 1
-            }
-            -i $open_remote_spawn__id timeout {
-                debug_puts "checking remote file access ... got timeout"
-                send -i $open_remote_spawn__id "$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/file_check.sh $open_remote_spawn__script_name\n"
-                incr open_remote_spawn__tries -1
-                if { $open_remote_spawn__tries <= 0 } {
-                   add_proc_error "open_remote_spawn_process" -1 "${error_info}\ntimeout waiting for file_check.sh script"
-                   set open_spawn_buffer 1
-                } else {
-                   exp_continue
                 }
-            }  
+                -i $spawn_id "__ my id is ->*${real_user}*\n" { 
+                    debug_puts "correctly switched to user $real_user - fine" 
+                }
+                -i $spawn_id "ermission denied" {
+                   add_proc_error "open_remote_spawn_process (new identity)" -2 "${error_info}\npermission denied"
+                   close_spawn_id $spawn_id
+                   set connect_errors 1
+                }
+             }
+         } catch_error_message]
+         if {$catch_return == 1} {
+            add_proc_error "open_remote_spawn_process (new identity)" -2 "${error_info}\n$catch_error_message" 
+            catch {close_spawn_id $spawn_id}
+            set connect_errors 1
          }
 
-         log_user 1
+         # did we have errors?
+         if {$connect_errors} {
+            return ""
+         }
+      } ;# switch user
+
+      # autocorrection and autologout might make problems
+      set catch_return [catch {
+         send -i $spawn_id -- "unset autologout\n"
+         send -i $spawn_id -- "unset correct\n"
+         # JG: TODO: what if the target user has a sh/ksh/bash?
+      } catch_error_message]
+      if {$catch_return == 1} {
+         add_proc_error "open_remote_spawn_process (unset autologout)" -2 "${error_info}\n$catch_error_message" 
+         catch {close_spawn_id $spawn_id}
+         return ""
       }
-      # now check the rlogin connection because there was an error
-      # with file_check.sh
-      if { $open_spawn_buffer == 1 } {
-         uplevel 1 {
-            log_user 0
-            if { $CHECK_DEBUG_LEVEL != 0 } {
-              log_user 1
+      # store the connection
+      add_open_spawn_rlogin_session $hostname $user $spawn_id $pid $nr_of_shells
+   } ;# opening new connection
+
+   # If we call the command for the first time, make sure it is available on the remote machine
+   # we wait for some time, as the it might take some time until the command is visible (NFS)
+   if {$re_use_script == 0} {
+      set catch_return [catch {
+         debug_puts "checking remote file access ..."
+         send -i $spawn_id -- "$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/file_check.sh $script_name\n"
+         set connect_errors 0
+         set num_tries $nr_of_tries
+         set timeout 2
+         expect {
+            -i $spawn_id full_buffer {
+               add_proc_error "open_remote_spawn_process (file check)" -2 "${error_info}\nbuffer overflow"
+               set connect_errors 1
+            }
+            -i $spawn_id eof {
+               add_proc_error "open_remote_spawn_process (file check)" -2 "${error_info}\nunexpected eof"
+               set connect_errors 1
+            }
+            -i $spawn_id timeout {
+               incr num_tries -1
+               if {$num_tries > 0} {
+                  send -i $spawn_id -- "$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/file_check.sh $script_name\n"
+                  increase_timeout
+                  exp_continue
+               } else {
+                  add_proc_error "open_remote_spawn_process (file check)" -2 "${error_info}\ntimeout waiting for file_check.sh script"
+                  set connect_errors 1
+               }
+            }  
+            -i $spawn_id "file exists" {
+               # fine, we are ready to go - leave expect loop
+               debug_puts "script file exists on $hostname"
             }
          }
-         get_open_spawn_rlogin_session $hostname $user con_data 1
+      } catch_error_message]
+      if {$catch_return == 1} {
+         add_proc_error "open_remote_spawn_process (file check)" -2 "${error_info}\n$catch_error_message" 
+         set connect_errors 1
+      }
+
+      # If the connection was OK before, but the file check failed, 
+      # we might have NFS problems.
+      # Nothing we can do about it. We'll close the connection and
+      # return error.
+      if {$connect_errors} {
+         del_open_spawn_rlogin_session $spawn_id
+         close_spawn_process "$pid $spawn_id $nr_of_shells"
          return ""
       }
    } else {
-      debug_puts "skip checking shell, using already used script ..."
-      uplevel 1 {
-         log_user 1
-      }
+      debug_puts "skip checking remote script, using already used script ..."
    }
- 
+
+   # prepare for background start
+   if {$background} {
+      append script_name " &"
+   }
+
+   # now start the commmand and set the connection to busy
    debug_puts "\"$hostname\"($user): starting command: $exec_command $exec_arguments"
-
-   if { $background != 0 } {
-      uplevel 1 { append open_remote_spawn__script_name " &" }
+   set catch_return [catch {
+      send -i $spawn_id -- "$script_name\n"
+      set_spawn_process_in_use $spawn_id
+   } catch_error_message]
+   if {$catch_return == 1} {
+      # The connection was OK before, but send failed?
+      # Should be a rare situation.
+      # We'll close the connection and return error
+      add_proc_error "open_remote_spawn_process (starting command)" -2 "${error_info}\n$catch_error_message" 
+      del_open_spawn_rlogin_session $spawn_id
+      close_spawn_process "$pid $spawn_id $nr_of_shells"
+      return ""
    }
-   
-   uplevel 1 { 
-      log_user 0
-      if { $CHECK_DEBUG_LEVEL != 0 } {
-         log_user 1
-      }
-      send -i $open_remote_spawn__id "$open_remote_spawn__script_name\n"
-   }
 
-   if { $background == 2 } {
+   # for background processes, wait some time
+   if {$background == 2} {
       set back_time 15 ;# let background process time to do his initialization
-      while { $back_time > 0 } {
+      while {$back_time > 0} {
          puts -nonewline $CHECK_OUTPUT "."
          flush $CHECK_OUTPUT
          sleep 1
@@ -1545,14 +1556,9 @@ proc open_remote_spawn_process { hostname
       puts $CHECK_OUTPUT "hope background process is initalized now!"
    }
 
-
-   # delete_file_at_startup $script_name
-
    debug_puts "number of open shells: $nr_of_shells"
-   lappend back $nr_of_shells
 
-   set rlogin_in_use_buffer([lindex $back 1]) 1
-  
+   set back "$pid $spawn_id $nr_of_shells"
    return $back
 }
 
@@ -1602,14 +1608,11 @@ proc open_remote_spawn_process { hostname
 #     remote_procedures/run_command_as_user
 #     remote_procedures/start_remote_tcl_prog
 #     remote_procedures/start_remote_prog
-#     
 #*******************************
 proc open_spawn_process {args} {
 
-   global CHECK_OUTPUT open_spawn_buffer env 
-   uplevel 1 { global open_spawn_buffer }
-   uplevel 1 { global CHECK_EXPECT_MATCH_MAX_BUFFER }
-   uplevel 1 { global CHECK_OUTPUT }
+   global CHECK_OUTPUT
+   global CHECK_EXPECT_MATCH_MAX_BUFFER
 
    set arguments ""
    set my_arg_no 0
@@ -1623,21 +1626,18 @@ proc open_spawn_process {args} {
       }
    }
    debug_puts $arguments
-   set open_spawn_buffer $arguments
-   uplevel 1 { set open_spawn_arguments $open_spawn_buffer } 
+   set open_spawn_arguments $arguments
 
    debug_puts "starting spawn process ..."
    flush $CHECK_OUTPUT
 
-   set pid   [ uplevel 1 { eval spawn $open_spawn_arguments } ]
-   set sp_id [ uplevel 1 { set spawn_id } ]
+   set pid   [ eval spawn $open_spawn_arguments ]
+   set sp_id [ set spawn_id ]
    set back $pid
    lappend back $sp_id
    debug_puts "open_spawn_process:  arguments: $args"
-   uplevel 1 {
       match_max -i $spawn_id $CHECK_EXPECT_MATCH_MAX_BUFFER
       debug_puts "open_spawn_process -> buffer size is: [match_max]"
-   }
 
    flush $CHECK_OUTPUT
 
@@ -1656,9 +1656,41 @@ proc open_spawn_process {args} {
 #     add_open_spawn_rlogin_session { hostname user spawn_id pid } 
 #
 #  FUNCTION
-#     This procedure will add the given spawn id to the rlogin spawn open 
-#     connection buffer. This buffer contains all open rlogin spawn process
-#     ids. 
+#     This procedure will add the given spawn id to the internal bookkeeping
+#     of connections.
+#  
+#     If the number of open connections exceeds a maximum (determined from
+#     file descriptor limit), the connection that has been idle for the 
+#     longest time will be closed.
+#
+#     The following data structures are used for keeping track of sessions:
+#        rlogin_spawn_session_buffer: TCL Array containing all parameters of
+#           all sessions. It has one index element containing the names of all
+#           open sessions (spawn ids).
+#           Per spawn_id, the following data is stored:
+#              - pid        pid of the expect child process from spawn command
+#              - hostname   name of host to which we connected
+#              - user       user for which the connection has been established.
+#                           This can be a special name like ts_def_con.
+#              - ltime      timestamp of last use of the connection
+#              - nr_shells  number of shells started in the connection
+#              - in_use     is the connection in use or idle
+#           The following names are used in the TCL array:
+#              - index            {exp4 exp6}
+#              - exp4,pid         12345
+#              - exp4,hostname    myhostname
+#              - ...
+#              - exp6,pid         23455
+#              - ...
+#
+#        rlogin_spawn_session_idx: TCL Array acting as an index for quick lookup
+#           of connections by hostname and user.
+#           It contains one entry per session. The array names are
+#           <hostname>,<user>, e.g.
+#           gimli,sgetest        exp4
+#           balrog,sgetest       exp6
+#           balrog,sgetest1      exp8
+#         
 #
 #  INPUTS
 #     hostname - hostname of rlogin connection
@@ -1666,64 +1698,98 @@ proc open_spawn_process {args} {
 #     spawn_id - spawn process id
 #     pid      - process id of rlogin session
 #
-#  RESULT
-#     no return value
-#
 #  SEE ALSO
-#     remote_procedures/add_open_spawn_rlogin_session
 #     remote_procedures/get_open_spawn_rlogin_session
 #     remote_procedures/get_spawn_id_rlogin_session
-#     remote_procedures/check_rlogin_session
+#     remote_procedures/del_open_spawn_rlogin_session
+#     remote_procedures/remove_oldest_spawn_rlogin_session()
 #*******************************************************************************
-proc add_open_spawn_rlogin_session { hostname user spawn_id spawn_pid nr_of_shells} {
-   global CHECK_OUTPUT rlogin_spawn_session_buffer
+proc add_open_spawn_rlogin_session {hostname user spawn_id pid nr_of_shells} {
+   global CHECK_OUTPUT rlogin_spawn_session_buffer rlogin_spawn_session_idx
    global do_close_rlogin rlogin_max_open_connections 
-   
 
-   if { $do_close_rlogin != 0 } {
+   if {$do_close_rlogin != 0} {
       debug_puts "close_rlogin argument set, closing rlogin connections after use"
       return  
    }
 
-   set entries [array names rlogin_spawn_session_buffer]
+   # if the number of connections exceed a certain maximum,
+   # we have to close one connection - the one idle for the longest time
+   set num_connections 0
+   if {[info exists rlogin_spawn_session_buffer(index)]} {
+      set num_connections [llength $rlogin_spawn_session_buffer(index)]
+   }
+   if {$num_connections >= $rlogin_max_open_connections} {
+      debug_puts "number of open connections($num_connections) > rlogin_max_open_connections($rlogin_max_open_connections)"
+      remove_oldest_spawn_rlogin_session
+   }
 
-   if { [llength $entries] >= $rlogin_max_open_connections } {
-      debug_puts "number of open connections > rlogin_max_open_connections = $rlogin_max_open_connections"
-      puts $CHECK_OUTPUT "removing oldest not used rlogin session (rlogin_max_open_connections overflow)"
-      set now [timestamp]
-      set remove_sp_id ""
-      set remove_pid   "" 
-      set closes       ""
-      foreach sp_id $entries {
-         set data [split $rlogin_spawn_session_buffer($sp_id) ";"]
-         set time [ lindex $data 3 ]  
-         set pid  [ lindex $data 1 ]
-         if { $now > $time } {
-            set now $time
-            set remove_pid $pid
-            set remove_sp_id $sp_id
-            set closes [ lindex $data 4 ]
+   debug_puts "adding spawn_id $spawn_id, pid=$pid to host $hostname, user $user"
 
-         } 
-         debug_puts $time,$sp_id,$pid,$closes
-      }
-      debug_puts "longest not used element: $remove_sp_id, $remove_pid" 
+   # add session data
+   set rlogin_spawn_session_buffer($spawn_id,pid)       $pid
+   set rlogin_spawn_session_buffer($spawn_id,hostname)  $hostname
+   set rlogin_spawn_session_buffer($spawn_id,user)      $user
+   set rlogin_spawn_session_buffer($spawn_id,ltime)     [timestamp]
+   set rlogin_spawn_session_buffer($spawn_id,nr_shells) $nr_of_shells
+   set rlogin_spawn_session_buffer($spawn_id,in_use)    0
 
-      set cl_id $remove_pid
-      lappend cl_id $remove_sp_id
-      lappend cl_id $closes       ;# nr of open shells
-      unset rlogin_spawn_session_buffer($remove_sp_id)
+   # add session to index
+   lappend rlogin_spawn_session_buffer(index) $spawn_id
+
+   # add session to search index
+   set rlogin_spawn_session_idx($hostname,$user) $spawn_id
+}
+
+#****** remote_procedures/remove_oldest_spawn_rlogin_session() *****************
+#  NAME
+#     remove_oldest_spawn_rlogin_session() -- remove oldest idle rlogin session
+#
+#  SYNOPSIS
+#     remove_oldest_spawn_rlogin_session { } 
+#
+#  FUNCTION
+#     Scans through all open rlogin session, and will close the session
+#     that has been idle for the longest time.
+#
+#     If no session is idle, raise an error.
+#
+#     See remote_procedures/add_open_spawn_rlogin_session() for a description
+#     of the data structures.
+#
+#  SEE ALSO
+#     remote_procedures/add_open_spawn_rlogin_session()
+#*******************************************************************************
+proc remove_oldest_spawn_rlogin_session {} {
+   global CHECK_OUTPUT rlogin_spawn_session_buffer
+
+   puts $CHECK_OUTPUT "removing oldest not used rlogin session (rlogin_max_open_connections overflow)"
+   set last [timestamp]
+   set remove_spawn_id ""
+   foreach spawn_id $rlogin_spawn_session_buffer(index) {
+      set time $rlogin_spawn_session_buffer($spawn_id,ltime)
+      debug_puts "$time $spawn_id $rlogin_spawn_session_buffer($spawn_id,in_use)"
+      # only consider idle connections for closing
+      if {$rlogin_spawn_session_buffer($spawn_id,in_use) == 0 && $last > $time} {
+         set last $time
+         set remove_spawn_id $spawn_id
+      } 
+   }
+
+   # if we found no idle connection - error.
+   if {$remove_spawn_id == ""} {
+      add_proc_error "remove_oldest_spawn_rlogin_session" -2 "all [llength $rlogin_spawn_session_buffer(index)] sessions are in use - no oldest one to close.\nPlease check your file descriptor limit vs. cluster size.\nThis problem may also be caused by missing close_spawn_process calls."
+   } else {
+      debug_puts "longest not used element: $remove_spawn_id"
+
       # close the connection. We are not intested in the exit code of the 
       # previously executed command, so don't make close_spawn_process check
       # the exit code
-      close_spawn_process $cl_id 1 2
+      set pid $rlogin_spawn_session_buffer($remove_spawn_id,pid)
+      set nr_shells $rlogin_spawn_session_buffer($remove_spawn_id,nr_shells)
+      del_open_spawn_rlogin_session $remove_spawn_id
+      close_spawn_process "$pid $remove_spawn_id $nr_shells" 1
    }
-
-   debug_puts "Adding spawn_id=$spawn_id, rlogin pid=$spawn_pid to"
-   debug_puts "host=$hostname, user=$user into open rlogin session buffer"
-
-   set con_data "$hostname;$spawn_pid;$user;[timestamp];$nr_of_shells"
-   set rlogin_spawn_session_buffer($spawn_id) $con_data 
 }
 
 #****** remote_procedures/get_open_spawn_rlogin_session() **********************
@@ -1731,11 +1797,14 @@ proc add_open_spawn_rlogin_session { hostname user spawn_id spawn_pid nr_of_shel
 #     get_open_spawn_rlogin_session() -- get rlogin connection data
 #
 #  SYNOPSIS
-#     get_open_spawn_rlogin_session { hostname user back_var } 
+#     get_open_spawn_rlogin_session {hostname user back_var} 
 #
 #  FUNCTION
 #     This procedure returns the corresponding spawn_id for hostname and user
 #     name.
+#
+#     See remote_procedures/add_open_spawn_rlogin_session() for a description
+#     of the data structures.
 #
 #  INPUTS
 #     hostname - hostname of rlogin connection 
@@ -1764,67 +1833,143 @@ proc add_open_spawn_rlogin_session { hostname user spawn_id spawn_pid nr_of_shel
 #     remote_procedures/get_spawn_id_rlogin_session
 #     remote_procedures/check_rlogin_session
 #*******************************************************************************
-proc get_open_spawn_rlogin_session { hostname user back_var {do_check 0} } {
-   global CHECK_OUTPUT rlogin_spawn_session_buffer
+proc get_open_spawn_rlogin_session {hostname user back_var} {
+   global CHECK_OUTPUT rlogin_spawn_session_buffer rlogin_spawn_session_idx
    global do_close_rlogin
 
    upvar $back_var back 
 
-   set back(spawn_id)  0
-   set back(pid)       0
-   set back(hostname)  0
-   set back(user)      0
-   set back(ltime)     0
-   set back(nr_shells) 0
-   
-
-   if { $do_close_rlogin != 0 } {
+   # we shall not reuse connections, or
+   # connection to this host/user does not exist yet
+   if {$do_close_rlogin != 0 || ![info exists rlogin_spawn_session_idx($hostname,$user)]} {
+      clear_open_spawn_rlogin_session back
       return 0 
    }
 
+   set spawn_id $rlogin_spawn_session_idx($hostname,$user)
+   set back(spawn_id)  $spawn_id
+   set back(pid)       $rlogin_spawn_session_buffer($spawn_id,pid)
+   set back(hostname)  $rlogin_spawn_session_buffer($spawn_id,hostname)
+   set back(user)      $rlogin_spawn_session_buffer($spawn_id,user)
+   set back(ltime)     $rlogin_spawn_session_buffer($spawn_id,ltime)
+   set back(nr_shells) $rlogin_spawn_session_buffer($spawn_id,nr_shells)
+   
+   debug_puts "spawn_id  : $back(spawn_id)"
+   debug_puts "pid       : $back(pid)"
+   debug_puts "hostname  : $back(hostname)"
+   debug_puts "user:     : $back(user)"
+   debug_puts "ltime:    : $back(ltime)"
+   debug_puts "nr_shells : $back(nr_shells)"
 
-   set entries [array names rlogin_spawn_session_buffer]
-   debug_puts "open rlogin connections: [llength $entries]"
+   return 1
+}
 
-   foreach elem $entries {
-      set con_data $rlogin_spawn_session_buffer($elem)
-      set con_data_list [split $con_data ";"] 
-      if { [string compare $hostname [lindex $con_data_list 0]] == 0 } {
-         if { [string compare $user [lindex $con_data_list 2]] == 0 } {
-            set data_list [split $con_data ";"]
-            set back(spawn_id)  $elem
-            set back(pid)       [lindex $data_list 1]
-            set back(user)      [lindex $data_list 2]
-            set back(hostname)  $hostname
-            set back(ltime)     [lindex $data_list 3]
-            set back(nr_shells) [lindex $data_list 4]
-            debug_puts "spawn_id (a) : $back(spawn_id)"
-#            debug_puts "pid       : $back(pid)"
-            debug_puts "hostname  : $back(hostname)"
-            debug_puts "user:     : $back(user)"
-#            debug_puts "ltime:    : $back(ltime)"
-#            debug_puts "nr_shells : $back(nr_shells)"
-            if { $do_check == 1 && [check_rlogin_session $back(spawn_id) $back(pid) $back(hostname) $back(user) $back(nr_shells) ] != 1 } {
-               set back(spawn_id) "0"
-               set back(pid)      "0"
-               set back(hostname) "0"
-               set back(user)     "0"
-               set back(ltime)     0
-               set back(nr_shells) 0
-               return 0 
-            } else {
-               unset rlogin_spawn_session_buffer($elem)
-#               debug_puts "old rlogin connection data: $con_data" 
-               set con_data "$back(hostname);$back(pid);$back(user);[timestamp];$back(nr_shells)"
-               debug_puts "new rlogin connection data: $con_data"
-               set rlogin_spawn_session_buffer($elem) $con_data 
-               return 1
-            }
-         }
-      }
+#****** remote_procedures/del_open_spawn_rlogin_session() **********************
+#  NAME
+#     del_open_spawn_rlogin_session() -- remove rlogin session
+#
+#  SYNOPSIS
+#     del_open_spawn_rlogin_session { spawn_id } 
+#
+#  FUNCTION
+#     Removes a certain session from the internal bookkeeping.
+#
+#     See remote_procedures/add_open_spawn_rlogin_session() for a description
+#     of the data structures.
+#
+#  INPUTS
+#     spawn_id - spawn id to remove
+#
+#  SEE ALSO
+#     remote_procedures/add_open_spawn_rlogin_session()
+#*******************************************************************************
+proc del_open_spawn_rlogin_session {spawn_id} {
+   global rlogin_spawn_session_buffer rlogin_spawn_session_idx
+
+   if {[info exists rlogin_spawn_session_buffer($spawn_id,pid)]} {
+      # remove session from search index
+      set hostname $rlogin_spawn_session_buffer($spawn_id,hostname)
+      set user     $rlogin_spawn_session_buffer($spawn_id,user)
+      unset rlogin_spawn_session_idx($hostname,$user)
+
+      # remove session from array index
+      set pos [lsearch -exact $rlogin_spawn_session_buffer(index) $spawn_id]
+      set rlogin_spawn_session_buffer(index) [lreplace $rlogin_spawn_session_buffer(index) $pos $pos]
+
+      # remove session data
+      unset rlogin_spawn_session_buffer($spawn_id,pid)
+      unset rlogin_spawn_session_buffer($spawn_id,hostname)
+      unset rlogin_spawn_session_buffer($spawn_id,user)
+      unset rlogin_spawn_session_buffer($spawn_id,ltime)
+      unset rlogin_spawn_session_buffer($spawn_id,nr_shells)
+      unset rlogin_spawn_session_buffer($spawn_id,in_use)
    }
-   debug_puts "get_open_spawn_rlogin_session - session $user,$hostname not found"
+}
+
+#****** remote_procedures/is_spawn_id_rlogin_session() *************************
+#  NAME
+#     is_spawn_id_rlogin_session() -- does a certain session exist?
+#
+#  SYNOPSIS
+#     is_spawn_id_rlogin_session { spawn_id } 
+#
+#  FUNCTION
+#     Returns if the given expect spawn id exists in the connection bookkeeping.
+#
+#  INPUTS
+#     spawn_id - spawn id to check
+#
+#  RESULT
+#     1, if the connection exists, else 0
+#
+#  SEE ALSO
+#     remote_procedures/add_open_spawn_rlogin_session()
+#*******************************************************************************
+proc is_spawn_id_rlogin_session {spawn_id} {
+   global rlogin_spawn_session_buffer
+
+   if {[info exists rlogin_spawn_session_buffer($spawn_id,pid)]} {
+      return 1
+   }
+
    return 0
+}
+
+#****** remote_procedures/get_open_rlogin_sessions() ***************************
+#  NAME
+#     get_open_rlogin_sessions() -- return list of all spawn ids
+#
+#  SYNOPSIS
+#     get_open_rlogin_sessions { } 
+#
+#  FUNCTION
+#     Returns a list of all spawn ids in the internal bookkeeping.
+#
+#  RESULT
+#     list of spawn ids
+#
+#  SEE ALSO
+#     remote_procedures/add_open_spawn_rlogin_session()
+#*******************************************************************************
+proc get_open_rlogin_sessions {} {
+   global rlogin_spawn_session_buffer
+
+   return [lsort -dictionary $rlogin_spawn_session_buffer(index)]
+}
+
+#
+# internal utility function used by get_spawn_*
+# clears the return buffer in case of errors / connection not found
+#
+proc clear_open_spawn_rlogin_session {back_var} {
+   upvar $back_var back
+
+   set back(spawn_id) "0"
+   set back(pid)      "0"
+   set back(hostname) "0"
+   set back(user)     "0"
+   set back(ltime)     0
+   set back(nr_shells) 0
 }
 
 #****** remote_procedures/get_spawn_id_rlogin_session() ************************
@@ -1836,6 +1981,9 @@ proc get_open_spawn_rlogin_session { hostname user back_var {do_check 0} } {
 #
 #  FUNCTION
 #     This procedure returns the corresponding data for a rlogin spawn id
+#
+#     See remote_procedures/add_open_spawn_rlogin_session() for a description
+#     of the data structures.
 #
 #  INPUTS
 #     id       - spawn id of connection
@@ -1863,57 +2011,32 @@ proc get_open_spawn_rlogin_session { hostname user back_var {do_check 0} } {
 #     remote_procedures/get_spawn_id_rlogin_session
 #     remote_procedures/check_rlogin_session
 #*******************************************************************************
-proc get_spawn_id_rlogin_session { id back_var {no_check 0}} {
+proc get_spawn_id_rlogin_session {spawn_id back_var} {
    global CHECK_OUTPUT rlogin_spawn_session_buffer
    global do_close_rlogin
 
    upvar $back_var back 
 
-   set back(spawn_id) "0"
-   set back(pid)      "0"
-   set back(hostname) "0"
-   set back(user)     "0"
-   set back(ltime)     0
-   set back(nr_shells) 0
-
-   if { $do_close_rlogin != 0 } {
+   if {$do_close_rlogin || ![info exists rlogin_spawn_session_buffer($spawn_id,pid)]} {
+      clear_open_spawn_rlogin_session back
       return 0 
    }
 
+   set back(spawn_id)  $spawn_id
+   set back(pid)       $rlogin_spawn_session_buffer($spawn_id,pid)
+   set back(hostname)  $rlogin_spawn_session_buffer($spawn_id,hostname)
+   set back(user)      $rlogin_spawn_session_buffer($spawn_id,user)
+   set back(ltime)     $rlogin_spawn_session_buffer($spawn_id,ltime)
+   set back(nr_shells) $rlogin_spawn_session_buffer($spawn_id,nr_shells)
+   
+   debug_puts "spawn_id  : $back(spawn_id)"
+   debug_puts "pid       : $back(pid)"
+   debug_puts "hostname  : $back(hostname)"
+   debug_puts "user:     : $back(user)"
+   debug_puts "ltime:    : $back(ltime)"
+   debug_puts "nr_shells : $back(nr_shells)"
 
-   if { [info exists rlogin_spawn_session_buffer($id) ] != 0 } {
-      set con_data $rlogin_spawn_session_buffer($id)
-      set data_list [split $con_data ";"]
-      set back(spawn_id) $id
-      set back(pid)      [lindex $data_list 1]
-      set back(hostname) [lindex $data_list 0]
-      set back(user)     [lindex $data_list 2]
-      set back(ltime)     [lindex $data_list 3]
-      set back(nr_shells) [lindex $data_list 4]
-      
-      debug_puts "spawn_id  : $back(spawn_id)"
-      debug_puts "pid       : $back(pid)"
-      debug_puts "hostname  : $back(hostname)"
-      debug_puts "user:     : $back(user)"
-      debug_puts "ltime:    : $back(ltime)"
-      debug_puts "nr_shells : $back(nr_shells)"
-
-      if { $no_check == 1 } {
-         return 1 
-      }
-      if { [check_rlogin_session $back(spawn_id) $back(pid) $back(hostname) $back(user) $back(nr_shells)] != 1 } {
-         set back(spawn_id) "0"
-         set back(pid)      "0"
-         set back(hostname) "0"
-         set back(user)     "0"
-         set back(ltime)     0
-         set back(nr_shells) 0
-         return 0 
-      } else {
-         return 1
-      }
-   }
-   return 0
+   return 1 
 }
 
 #****** remote_procedures/close_open_rlogin_sessions() *************************
@@ -1928,7 +2051,7 @@ proc get_spawn_id_rlogin_session { id back_var {no_check 0}} {
 #
 #*******************************************************************************
 proc close_open_rlogin_sessions { { if_not_working 0 } } {
-   global CHECK_OUTPUT rlogin_spawn_session_buffer
+   global CHECK_OUTPUT
    global do_close_rlogin
 
    # if we called testsuite with option close_rlogin, we have no open sessions
@@ -1938,38 +2061,22 @@ proc close_open_rlogin_sessions { { if_not_working 0 } } {
    }
 
    # gather all session names
-   set sessions [array names rlogin_spawn_session_buffer]
-   set help_buf ""
-   foreach session $sessions {
-      lappend help_buf "$session;$rlogin_spawn_session_buffer($session)"
-   }
+   set sessions [get_open_rlogin_sessions]
 
    # close all sessions
-   foreach session $help_buf {
-
-      set data_list [split $session ";"]
-      set back(spawn_id)  [lindex $data_list 0]
-      set back(pid)       [lindex $data_list 2]
-      set back(hostname)  [lindex $data_list 1]
-      set back(user)      [lindex $data_list 3]
-      set back(ltime)     [lindex $data_list 4]
-      set back(nr_shells) [lindex $data_list 5]
+   foreach spawn_id $sessions {
+      get_spawn_id_rlogin_session $spawn_id back
       
-      if { $if_not_working != 0 } {
-         if { [check_rlogin_session $back(spawn_id) $back(pid) $back(hostname) $back(user) $back(nr_shells) 1] == 1 } {
-            puts $CHECK_OUTPUT "will not close spawn id $back(spawn_id) - session is ok!"
+      if {$if_not_working} {
+         if {[check_rlogin_session $spawn_id $back(pid) $back(hostname) $back(user) $back(nr_shells) 1]} {
+            puts $CHECK_OUTPUT "will not close spawn id $spawn_id - session is ok!"
             continue
          }
       }
 
-
-
-      unset rlogin_spawn_session_buffer($back(spawn_id))
-      set id $back(pid)
-      lappend id $back(spawn_id)
-      lappend id $back(nr_shells)
-      puts $CHECK_OUTPUT "close_open_rlogin_sessions - closing $id"
-      close_spawn_process $id 1 2  ;# don't check exit state
+      del_open_spawn_rlogin_session $spawn_id
+      puts $CHECK_OUTPUT "close_open_rlogin_sessions - closing $spawn_id"
+      close_spawn_process "$back(pid) $spawn_id $back(nr_shells)" 1 ;# don't check exit state
    }
 }
 
@@ -2000,101 +2107,147 @@ proc close_open_rlogin_sessions { { if_not_working 0 } } {
 #     remote_procedures/get_spawn_id_rlogin_session
 #     remote_procedures/check_rlogin_session
 #*******************************************************************************
-proc check_rlogin_session { spawn_id pid hostname user nr_of_shells { only_check 0 }} {
-   global CHECK_OUTPUT rlogin_spawn_session_buffer CHECK_USER CHECK_TESTSUITE_ROOT CHECK_SCRIPT_FILE_DIR
+proc check_rlogin_session { spawn_id pid hostname user nr_of_shells {only_check 0} {raise_error 1}} {
+   global CHECK_OUTPUT CHECK_USER CHECK_TESTSUITE_ROOT CHECK_SCRIPT_FILE_DIR
 
-   if { [info exists rlogin_spawn_session_buffer($spawn_id) ] != 0 } {
-      if {[catch {send -i $spawn_id -- "$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/check_identity.sh\n"} output] != 0} {
-         puts $CHECK_OUTPUT "sending to connection $spawn_id failed - assuming connection is broken"
-      } else {   
-         switch -- $user {
-            "ts_def_con" {
-               set user $CHECK_USER
-            }
-            "ts_def_con2" {
-               set user $CHECK_USER
-            }
-            "ts_def_con_translate" {
-               set user $CHECK_USER
-            }
+   debug_puts "check_rlogin_session: $spawn_id $pid $hostname $user $nr_of_shells $only_check"
+   if {![is_spawn_id_rlogin_session $spawn_id]} {
+      # connection is not open
+      debug_puts "check_rlogin_session: connection is not open"
+      return 0
+   }
+
+   # handle special user ids
+   if {[string match "ts_def_con*" $user] == 1} {
+      set real_user $CHECK_USER
+   } else {
+      set real_user $user
+   }
+
+   # perform the following test:
+   # - start the check_identity.sh script
+   # - wait for correct output
+   set connection_ok 0
+   set catch_return [catch {
+      send -i $spawn_id -- "$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/check_identity.sh\n"
+      set num_tries 15
+      set timeout 2
+      expect {
+         -i $spawn_id full_buffer {
+            add_proc_error "check_rlogin_session" -2 "buffer overflow" $raise_error
          }
-
-         set timeout 1
-         set mytries  5
-         set open_remote_spawn__tries 15
-         expect {
-            -i $spawn_id -- "__ my id is ->*${user}*\n" { 
-               return 1
-            }
-            -i $spawn_id full_buffer {
-               add_proc_error "check_rlogin_session" -1 "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
-            }
-            -i $spawn_id timeout {
-                debug_puts "got timeout for check_identity"
-                incr open_remote_spawn__tries -1
-                if { $open_remote_spawn__tries <= 0 } {
-                   add_proc_error "check_rlogin_session" -1 "timeout waiting for shell response prompt (a)"
-                } else {
-                   if { $open_remote_spawn__tries < 12 } {
-                      puts -nonewline $CHECK_OUTPUT "." 
-                      flush $CHECK_OUTPUT
-                   }
-                   catch {send -i $spawn_id -- "$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/check_identity.sh\n"} output
-                   debug_puts $output
-                   exp_continue
-                }
-            }
-            -i $spawn_id -- "Terminal type?" {
-               catch {send -i $spawn_id -- "vt100\n"} output
-               debug_puts $output
+         -i $spawn_id eof {
+            add_proc_error "check_rlogin_session" -2 "unexpected eof" $raise_error
+         }
+         -i $spawn_id timeout {
+            incr num_tries -1
+            if {$num_tries > 0} {
+               if {$num_tries < 12} {
+                  puts -nonewline $CHECK_OUTPUT "." 
+                  flush $CHECK_OUTPUT
+               }
+               send -i $spawn_id -- "$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/check_identity.sh\n"
+               increase_timeout
                exp_continue
+            } else {
+               add_proc_error "check_rlogin_session" -2 "timeout waiting for shell response" $raise_error
             }
          }
+         -i $spawn_id "__ my id is ->*${real_user}*\n" {
+            debug_puts "connection is ok"
+            set connection_ok 1
+         }
       }
+   } catch_error_message]
+   if { $catch_return == 1 } {
+      add_proc_error "check_rlogin_session" -2 "$catch_error_message" $raise_error
+   }
 
-      if { $only_check == 0 } {
-         # restart connection
-         puts $CHECK_OUTPUT "check_rlogin_session: had error"
-         unset rlogin_spawn_session_buffer($spawn_id)
-         set id $pid
-         lappend id $spawn_id
-         lappend id $nr_of_shells
-         puts $CHECK_OUTPUT "closing spawn id $spawn_id with pid $pid to enable new rlogin session ..."
-         close_spawn_process $id 0 3
-         puts $CHECK_OUTPUT "closing done."
-      }
+   # are we done?
+   if {$connection_ok} {
+      return 1
+   }
+
+   # if we got here, there was an error
+   # in case we shall not only check, but also react on errors,
+   # we'll close the connection now
+   if {$only_check == 0} {
+      puts $CHECK_OUTPUT "check_rlogin_session: closing $spawn_id $pid to enable new rlogin session ..."
+
+      # unregister connection
+      del_open_spawn_rlogin_session $spawn_id
+      close_spawn_process "$pid $spawn_id $nr_of_shells"
    }
 
    return 0 ;# error
 }
 
+#****** remote_procedures/set_spawn_process_in_use() ***************************
+#  NAME
+#     set_spawn_process_in_use() -- set info if a session is in use
+#
+#  SYNOPSIS
+#     set_spawn_process_in_use { spawn_id {in_use 1} } 
+#
+#  FUNCTION
+#     Stores the information, if a certain session is in use or not, in the 
+#     internal bookkeeping.
+#
+#  INPUTS
+#     spawn_id   - ??? 
+#     {in_use 1} - ??? 
+#
+#  RESULT
+#     ??? 
+#
+#  EXAMPLE
+#     ??? 
+#
+#  NOTES
+#     ??? 
+#
+#  BUGS
+#     ??? 
+#
+#  SEE ALSO
+#     ???/???
+#*******************************************************************************
+proc set_spawn_process_in_use {spawn_id {in_use 1}} {
+   global rlogin_spawn_session_buffer
+
+   set rlogin_spawn_session_buffer($spawn_id,in_use) $in_use
+   set rlogin_spawn_session_buffer($spawn_id,ltime) [timestamp]
+}
 
 #****** remote_procedures/is_spawn_process_in_use() ****************************
 #  NAME
 #     is_spawn_process_in_use() -- check if spawn id is in use
 #
 #  SYNOPSIS
-#     is_spawn_process_in_use { id } 
+#     is_spawn_process_in_use { spawn_id } 
 #
 #  FUNCTION
 #     Test if given spawn id is already in use
 #
+#     See remote_procedures/add_open_spawn_rlogin_session() for a description
+#     of the data structures.
+#
 #  INPUTS
-#     id - internal spawn id number from open_remote_spawn_process()
+#     spawn_id - internal spawn id number from open_remote_spawn_process()
 #
 #  RESULT
 #     0    : not in use
-#     not 0: this spawn id is not in use
+#     not 0: this spawn id is in use
 #
 #  SEE ALSO
 #     remote_procedures/open_remote_spawn_process()
+#     remote_procedures/add_open_spawn_rlogin_session()
 #*******************************************************************************
-proc is_spawn_process_in_use { id } {
-   global rlogin_in_use_buffer
+proc is_spawn_process_in_use {spawn_id} {
+   global rlogin_spawn_session_buffer
 
-   set sp_id  [lindex $id 1]
-   if { [info exists rlogin_in_use_buffer($sp_id)] } {
-      return $rlogin_in_use_buffer($sp_id)
+   if {[info exists rlogin_spawn_session_buffer($spawn_id,pid)]} {
+      return $rlogin_spawn_session_buffer($spawn_id,in_use)
    }
 
    return 0
@@ -2113,6 +2266,9 @@ proc is_spawn_process_in_use { id } {
 #  FUNCTION
 #     This procedure will close the process associated with the spawn id
 #     returned from the procedures open_spawn_process or open_root_spawn_process.
+#
+#     Sends a CTRL-C to the session to terminate possibly still running
+#     processes.
 #
 #  INPUTS
 #     id - spawn process id (returned from open_spawn_process or 
@@ -2141,142 +2297,202 @@ proc is_spawn_process_in_use { id } {
 #     remote_procedures/start_remote_tcl_prog
 #     remote_procedures/start_remote_prog
 #*******************************
-proc close_spawn_process { id { check_exit_state 0 } {my_uplevel 1}} {
-
-   global CHECK_OUTPUT open_spawn_buffer CHECK_DEBUG_LEVEL rlogin_in_use_buffer
-  
-   set sp_id  [lindex $id 1]
-   set sp_pid [lindex $id 0]
-   get_spawn_id_rlogin_session $sp_id con_data 1
-   set con_data(in_use) 0
-   if { $con_data(pid) != 0 } {
-      debug_puts "sending CTRL + C to spawn id $sp_id ..."
-      catch {send -i $sp_id "\003"} output ;# send CTRL+C to stop evtl. running processes in that shell
-      debug_puts $output
-      # wait for CTRL-C to have effect
-      debug_puts "Will not close spawn id \"$sp_id\", this is rlogin connection to"
-      debug_puts "host \"$con_data(hostname)\", user \"$con_data(user)\""
-      set rlogin_in_use_buffer($sp_id) 0
-      return -1   
+proc close_spawn_process {id {check_exit_state 0}} {
+   global CHECK_OUTPUT CHECK_DEBUG_LEVEL
+   global CHECK_SHELL_PROMPT
+ 
+   set pid      [lindex $id 0]
+   set spawn_id [lindex $id 1]
+   if {[llength $id] > 2} {
+      set nr_of_shells [lindex $id 2]
+   } else {
+      set nr_of_shells 0
    }
 
-   log_user 0  
-   if { $CHECK_DEBUG_LEVEL != 0 } {
+   debug_puts "close_spawn_process: closing $spawn_id $pid"
+
+   # in debug mode we want to see all the shell output
+   log_user 0
+   if {$CHECK_DEBUG_LEVEL != 0} {
       log_user 1
    }
-   if {[llength $id ] > 2} {
-       set nr_of_shells [lindex $id 2]
-       set timeout 0
-       set do_stop 0
-       set send_slow "1 .05"
-       debug_puts "nr of open shells: $nr_of_shells"
-       debug_puts "-->sending $nr_of_shells exit(s) to shell on id $sp_id"
-       # send CTRL+C to stop evtl. running processes in that shell
-       # if sending to connction fail, do not try to shutdown shells,
-       # but simply close the connection
-       set skip_send_exit 0
-       if {[catch {send -s -i $sp_id "\003"} output] != 0} {
-          debug_puts $output
-          set skip_send_exit 1
-       }
 
-       if {!$skip_send_exit} {
-          # wait for CTRL-C to have effect
-          for {set i 0} {$i < $nr_of_shells } {incr i 1} {
-             if {[catch {send -s -i $sp_id "exit\n"} output] == 0} {
-                debug_puts $output
-                set timeout 6
-                expect { 
-                    -i $sp_id full_buffer {
-                       add_proc_error "close_spawn_process" "-1" "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
-                    }
-                    -i $sp_id "*" {
-                       debug_puts "shell exit"
-                    }
-                    -i $sp_id eof {
-                       debug_puts "eof while waiting for shell exit"
-                    }
-                    -i $sp_id timeout {
-                       debug_puts "timeout while waiting for shell exit"
-                    }
-                }
-             }
-          }
-          set timeout 2 
-          set my_tries 3
-          catch {
-             while { $do_stop != 1 } {
-                expect {
-                   -i $sp_id full_buffer {
-                      add_proc_error "close_spawn_process" "-1" "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
-                      set do_stop 1 
-                   }
-                   -i $sp_id eof { 
-                      set do_stop 1 
-                      debug_puts "got end of file - ok"
-                   }
-                   -i $sp_id timeout {
-                      puts $CHECK_OUTPUT "timeout (closing shell) counter: $my_tries ..."
-                      if { $my_tries > 0 } {
-                         catch {send -s -i $sp_id "exit\n"} output
-                         debug_puts $output
-                      } else {
-                         add_proc_error "close_spawn_process" "-1" "error closing shell"
-                         set do_stop 1
-                      }
-                      incr my_tries -1
-                   }
-                }
-                debug_puts "waiting for end of file"
-             }
-          }
-      } 
+   # get connection info
+   get_spawn_id_rlogin_session $spawn_id con_data
+
+   # regular call from a check.
+   # in case we shall close the connection after an error, con_data(pid) will be 0
+   # there might still be a program running
+   # stop it by sending CTRL C and mark the connection as idle
+   set do_return ""
+   if {$con_data(pid) != 0} {
+      # mark the connection idle
+      set_spawn_process_in_use $spawn_id 0
+
+      # stop still remaining running processes and wait for shell prompt
+      set catch_return [catch {
+         debug_puts "close_spawn_process: sending CTRL-C"
+         send -i $spawn_id -- "\003" ;# CTRL-C
+         set timeout 2
+         set num_tries 10
+         expect {
+            -i $spawn_id eof {
+               add_proc_error "close_spawn_process (regular close)" -2 "unexpected eof"
+               close_spawn_id $spawn_id
+            }
+            -i $spawn_id full_buffer {
+               add_proc_error "close_spawn_process (regular close)" -2 "buffer overflow"
+               close_spawn_id $spawn_id
+            }
+            -i $spawn_id timeout {
+               incr num_tries -1
+               if {$num_tries > 0} {
+                  debug_puts "close_spawn_process: sending CTRL-C"
+                  send -i $spawn_id -- "\003" ;# CTRL-C
+                  increase_timeout
+                  exp_continue
+               } else {
+                  add_proc_error "close_spawn_process (regular close)" -2 "timeout waiting for shell prompt"
+               }
+            }
+            -i $spawn_id -re $CHECK_SHELL_PROMPT {
+               debug_puts "got shell prompt"
+               set do_return -1
+            }
+         }
+      } catch_error_message]
+      if {$catch_return == 1} {
+         add_proc_error "close_spawn_process (regular close)" -2 "$catch_error_message" 
+      }
+      
+      # are we done?
+      if {$do_return != ""} {
+         return $do_return
+      }
+      
+      # if we get here, we ran into an error
+      # we will not return, but continue, really closing the connection
    }
 
-   set open_spawn_buffer $sp_id
-   catch { 
-      uplevel $my_uplevel { 
-         global open_spawn_buffer
-         close -i $open_spawn_buffer
-         debug_puts "closed buffer: $open_spawn_buffer"
+   # we have shells to close (by sending exit)
+   if {$nr_of_shells > 0} {
+      debug_puts "nr of open shells: $nr_of_shells"
+      debug_puts "-->sending $nr_of_shells exit(s) to shell on id $spawn_id"
+
+      set catch_return [catch {
+         # send CTRL-C to stop poss. still running processes
+         #set send_slow "1 .05"
+         #send -s -i $spawn_id "\003"
+         send -i $spawn_id -- "\003"
+         
+         # wait for CTRL-C to take effect
+         set timeout 5
+         expect {
+            -i $spawn_id full_buffer {
+               add_proc_error "close_spawn_process (exit)" "-2" "buffer overflow"
+            }
+            -i $spawn_id eof {
+               # do not raise an error here - we use this code to close broken connections
+               debug_puts "eof while waiting for shell prompt after CTRL-C"
+            }
+            -i $spawn_id timeout {
+               # do not raise an error here - we use this code to close broken connections
+               debug_puts "timeout while waiting for shell prompt after CTRL-C"
+            }
+            -i $spawn_id -re $CHECK_SHELL_PROMPT {
+               debug_puts "got shell prompt after CTRL-C"
+            }
+         }
+
+         # now we try to close the shells with "exit"
+         send -i $spawn_id -- "exit\n"
+         expect {
+            -i $spawn_id full_buffer {
+               add_proc_error "close_spawn_process (exit)" "-2" "buffer overflow"
+            }
+            -i $spawn_id eof {
+               # do not raise an error here - we use this code to close broken connections
+               debug_puts "eof after exit - ok"
+            }
+            -i $spawn_id timeout {
+               # do not raise an error here - we use this code to close broken connections
+               debug_puts "timeout while waiting for shell prompt after exit"
+            }
+            -i $spawn_id -re $CHECK_SHELL_PROMPT {
+               debug_puts "got shell prompt after exit"
+               # if we get a shell prompt, the exit succeeded, one shell exited
+               incr nr_of_shells -1
+
+               # if we still have open shells, send "exit"
+               if {$nr_of_shells > 0} {
+                  send -i $spawn_id -- "exit\n"
+                  exp_continue
+               } else {
+                  debug_puts "all shells exited - ok"
+               }
+            }
+         }
+      } catch_error_message]
+      if {$catch_return == 1} {
+         add_proc_error "close_spawn_process (exit)" -2 "$catch_error_message" 
       }
-   } output
-   debug_puts $output
-
-   log_user 1
-   set wait_return "" 
-   catch { set wait_return [ uplevel $my_uplevel { wait -i $open_spawn_buffer } ] }
-   set wait_pid      [lindex $wait_return 0]
-   set wait_spawn_id [lindex $wait_return 1]
-   set wait_error    [lindex $wait_return 2]
-   set wait_code     [lindex $wait_return 3]
-
-   debug_puts "closed buffer: $open_spawn_buffer"
-   debug_puts "wait pid        : $wait_pid"
-   debug_puts "wait spawn id   : $wait_spawn_id"
-   debug_puts "wait error      : $wait_error (-1 = operating system error, 0 = exit)"
-   debug_puts "wait code       : $wait_code  (os error code or exit status)"
-
-   # did we close the correct spawn id?
-   if { ([ string compare $open_spawn_buffer $wait_spawn_id ] != 0) && ($check_exit_state == 0)} {
-      add_proc_error "close_spawn_process" "-1" "wrong spawn id closed: expected $open_spawn_buffer, got $wait_spawn_id"
    }
 
-   # on regular exit: check exit code, shall be 0
-   if { $wait_error == 0 } {
-      if { ($wait_code != 0) && ($check_exit_state == 0) } {
-         add_proc_error "close_spawn_process" -1 "wait exit status: $wait_code"
-      }
-   } else {
-      puts $CHECK_OUTPUT "*** operating system error: $wait_code"
-      puts $CHECK_OUTPUT "spawn id: $wait_spawn_id"
-      puts $CHECK_OUTPUT "wait pid: $wait_pid"
-      if { ($check_exit_state == 0) } {
-         add_proc_error "close_spawn_process" -1 "operating system error: $wait_code"
-      }
+   # unregister connection
+   del_open_spawn_rlogin_session $spawn_id
+
+   # now shutdown the spawned process
+   set catch_return [catch {
+      debug_puts "closing $spawn_id"
+      close -i $spawn_id
+   } catch_error_message]
+   if {$catch_return == 1} {
+      add_proc_error "close_spawn_process (close)" -2 "$catch_error_message" 
    }
-   flush $CHECK_OUTPUT
-   set rlogin_in_use_buffer($sp_id) 0
+
+   # wait for spawned process to exit
+   set wait_code 0
+   set catch_return [catch {
+      set wait_return   [wait -i $spawn_id]
+      set wait_pid      [lindex $wait_return 0]
+      set wait_spawn_id [lindex $wait_return 1]
+      set wait_error    [lindex $wait_return 2]
+      set wait_code     [lindex $wait_return 3]
+
+      debug_puts "closed buffer   : $spawn_id"
+      debug_puts "wait pid        : $wait_pid"
+      debug_puts "wait spawn id   : $wait_spawn_id"
+      debug_puts "wait error      : $wait_error (-1 = operating system error, 0 = exit)"
+      debug_puts "wait code       : $wait_code  (os error code or exit status)"
+
+      # if requested by caller, do certain error checks:
+      if {$check_exit_state == 0} {
+         # did we close the correct spawn id?
+         if {$spawn_id != $wait_spawn_id} {
+            add_proc_error "close_spawn_process (wait)" "-2" "closed wrong spawn id: expected $spawn_id, but got $wait_spawn_id"
+         }
+
+         # did we close the correct pid?
+         if {$pid != $wait_pid} {
+            add_proc_error "close_spawn_process (wait)" "-2" "closed wrong pid: expected $pid, but got $wait_pid"
+         }
+
+         # on regular exit: check exit code, shall be 0
+         if {$wait_error == 0} {
+            if {$wait_code != 0} {
+               add_proc_error "close_spawn_process (wait)" -2 "wait exit status: $wait_code"
+            }
+         } else {
+            debug_puts "*** operating system error: $wait_code"
+            debug_puts "spawn id: $wait_spawn_id"
+            debug_puts "wait pid: $wait_pid"
+            add_proc_error "close_spawn_process (wait)" -1 "operating system error: $wait_code"
+         }
+      }
+   } catch_error_message]
+   if {$catch_return == 1} {
+      add_proc_error "close_spawn_process (wait)" -2 "$catch_error_message" 
+   }
 
    return $wait_code ;# return exit state
 }
@@ -2333,7 +2549,7 @@ proc close_spawn_process { id { check_exit_state 0 } {my_uplevel 1}} {
 #*******************************
 proc run_command_as_user { hostname user command args counter } {
    global ts_config
-   global CHECK_TESTSUITE_ROOT CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_OUTPUT open_spawn_buffer 
+   global CHECK_TESTSUITE_ROOT CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_OUTPUT
    global CHECK_COMMD_PORT CHECK_SCRIPT_FILE_DIR
  
    # perform su to user and submit jobs as user $user
@@ -2354,30 +2570,4 @@ proc run_command_as_user { hostname user command args counter } {
 
 
 
-
-# main
-# if { [info exists argc ] != 0 } {
-#    set TS_ROOT ""
-#    set procedure ""
-#    for { set i 0 } { $i < $argc } { incr i } {
-#       if {$i == 0} { set TS_ROOT [lindex $argv $i] }
-#       if {$i == 1} { set procedure [lindex $argv $i] }
-#    }
-#    if { $argc == 0 } {
-#       puts "usage:\n$module_name <CHECK_TESTSUITE_ROOT> <proc> no_main <testsuite params>"
-#       puts "options:"
-#       puts "CHECK_TESTSUITE_ROOT -  path to TESTSUITE directory"
-#       puts "proc                 -  procedure from this file with parameters"
-#       puts "no_main              -  used to source testsuite file (check.exp)"
-#       puts "testsuite params     -  any testsuite command option (from file check.exp)"
-#       puts "                        testsuite params: file <path>/defaults.sav is needed"
-#    } else {
-#       source "$TS_ROOT/check.exp"
-#       puts $CHECK_OUTPUT "master host is $CHECK_CORE_MASTER"
-#       puts $CHECK_OUTPUT "calling \"$procedure\" ..."
-#       set result [ eval $procedure ]
-#       puts $result 
-#       flush $CHECK_OUTPUT
-#    }
-# }
 

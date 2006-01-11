@@ -1814,7 +1814,7 @@ proc get_config { change_array {host global}} {
 #*******************************
 proc set_config { change_array {host global} {do_add 0} {ignore_error 0}} {
   global ts_config
-  global env CHECK_ARCH CHECK_OUTPUT open_spawn_buffer
+  global env CHECK_ARCH CHECK_OUTPUT
   global CHECK_CORE_MASTER CHECK_USER
 
    upvar $change_array chgar
@@ -2005,7 +2005,7 @@ proc compare_complex {a b} {
 #*******************************
 proc add_exechost { change_array {fast_add 1} } {
   global ts_config
-  global env CHECK_ARCH open_spawn_buffer
+  global env CHECK_ARCH
   global CHECK_OUTPUT CHECK_TESTSUITE_ROOT 
   global CHECK_CORE_MASTER
 
@@ -2617,7 +2617,7 @@ proc mod_user { change_array { from_file 0 } } {
 #*******************************
 proc del_pe { mype_name } {
    global ts_config 
-  global CHECK_ARCH open_spawn_buffer CHECK_CORE_MASTER CHECK_USER CHECK_HOST
+  global CHECK_ARCH CHECK_CORE_MASTER CHECK_USER CHECK_HOST
   global CHECK_OUTPUT
 
    unassign_queues_with_pe_object $mype_name
@@ -2691,7 +2691,7 @@ proc del_pe { mype_name } {
 #*******************************
 proc del_user { myuser_name } {
   global ts_config
-  global CHECK_ARCH open_spawn_buffer CHECK_HOST CHECK_USER CHECK_OUTPUT
+  global CHECK_ARCH CHECK_HOST CHECK_USER CHECK_OUTPUT
 
   if { [ string compare $ts_config(product_type) "sge" ] == 0 } {
      set_error -1 "del_user - not possible for sge systems"
@@ -2766,7 +2766,7 @@ proc del_user { myuser_name } {
 #*******************************
 proc del_calendar { mycal_name } {
   global ts_config
-  global CHECK_ARCH open_spawn_buffer CHECK_CORE_MASTER CHECK_USER CHECK_HOST
+  global CHECK_ARCH CHECK_CORE_MASTER CHECK_USER CHECK_HOST
   
   set REMOVED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_REMOVEDFROMLIST_SSSS] $CHECK_USER "*" $mycal_name "*" ]
 
@@ -2833,7 +2833,7 @@ proc del_calendar { mycal_name } {
 #*******************************
 proc was_job_running {jobid {do_errorcheck 1} } {
   global ts_config
-  global CHECK_ARCH open_spawn_buffer check_timestamp CHECK_OUTPUT
+  global CHECK_ARCH check_timestamp CHECK_OUTPUT
 # returns
 # -1 on error
 # qacct in listform else
@@ -3804,7 +3804,7 @@ proc replace_attr { object attribute value target {fast_add 1} {on_host ""} {as_
 #*******************************
 proc suspend_job { id {force 0} {error_check 1}} {
    global ts_config
-   global CHECK_OUTPUT CHECK_ARCH open_spawn_buffer CHECK_USER CHECK_HOST
+   global CHECK_OUTPUT CHECK_ARCH CHECK_USER CHECK_HOST
 
    set SUSPEND1 [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_SUSPENDTASK_SUU] $CHECK_USER $id "*" ]
    set SUSPEND2 [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_SUSPENDJOB_SU] $CHECK_USER $id ]
@@ -3900,7 +3900,7 @@ proc suspend_job { id {force 0} {error_check 1}} {
 #*******************************
 proc unsuspend_job { job } {
   global ts_config
-  global CHECK_ARCH open_spawn_buffer CHECK_HOST CHECK_USER
+  global CHECK_ARCH CHECK_HOST CHECK_USER
 
 
   set UNSUSPEND1 [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_UNSUSPENDTASK_SUU] "*" "*" "*" ]
@@ -4017,7 +4017,7 @@ proc is_job_id { job_id } {
 #*******************************
 proc delete_job { jobid {wait_for_end 0} {all_users 0}} {
    global ts_config
-   global CHECK_ARCH CHECK_OUTPUT open_spawn_buffer CHECK_HOST
+   global CHECK_ARCH CHECK_OUTPUT CHECK_HOST
    global CHECK_USER
 
 
@@ -4187,7 +4187,7 @@ proc delete_job { jobid {wait_for_end 0} {all_users 0}} {
 proc submit_job { args {do_error_check 1} {submit_timeout 60} {host ""} {user ""} { cd_dir ""} { show_args 1 } } {
   global ts_config
   global CHECK_HOST CHECK_ARCH CHECK_OUTPUT CHECK_USER
-  global open_spawn_buffer CHECK_DEBUG_LEVEL
+  global CHECK_DEBUG_LEVEL
 
   set return_value " "
 
@@ -5776,7 +5776,7 @@ proc wait_for_jobpending { jobid jobname seconds { or_running 0 } } {
 proc hold_job { jobid } {
   global ts_config
 
-   global CHECK_ARCH  open_spawn_buffer CHECK_HOST CHECK_USER
+   global CHECK_ARCH  CHECK_HOST CHECK_USER
 
    set MODIFIED_HOLD [translate $CHECK_HOST 1 0 0 [sge_macro MSG_SGETEXT_MOD_JOBS_SU] "*" "*"]
 
@@ -5844,7 +5844,7 @@ proc hold_job { jobid } {
 proc release_job { jobid } {
   global ts_config
 
-   global CHECK_ARCH  open_spawn_buffer CHECK_HOST CHECK_USER
+   global CHECK_ARCH  CHECK_HOST CHECK_USER
  
    # spawn process
    log_user 0

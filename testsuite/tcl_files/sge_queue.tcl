@@ -477,7 +477,7 @@ proc get_queue { q_name change_array } {
 #*******************************
 proc suspend_queue { qname } {
   global ts_config
- global CHECK_ARCH open_spawn_buffer CHECK_HOST CHECK_USER
+ global CHECK_ARCH CHECK_HOST CHECK_USER
  global CHECK_OUTPUT
   log_user 0 
    if { $ts_config(gridengine_version) == 53 } {
@@ -554,7 +554,7 @@ proc suspend_queue { qname } {
 #*******************************
 proc unsuspend_queue { queue } {
   global ts_config
-   global CHECK_ARCH open_spawn_buffer CHECK_HOST CHECK_USER
+   global CHECK_ARCH CHECK_HOST CHECK_USER
    global CHECK_OUTPUT
 
   set timeout 30
@@ -631,7 +631,7 @@ proc unsuspend_queue { queue } {
 #*******************************
 proc disable_queue { queuelist } {
   global ts_config
- global CHECK_ARCH open_spawn_buffer 
+ global CHECK_ARCH
   global CHECK_OUTPUT CHECK_HOST CHECK_USER
   global CHECK_CORE_MASTER CHECK_USER
   
@@ -725,7 +725,7 @@ proc disable_queue { queuelist } {
 #*******************************
 proc enable_queue { queuelist } {
   global ts_config
-  global CHECK_ARCH open_spawn_buffer 
+  global CHECK_ARCH
   global CHECK_OUTPUT CHECK_HOST CHECK_USER CHECK_CORE_MASTER 
   
   set return_value ""

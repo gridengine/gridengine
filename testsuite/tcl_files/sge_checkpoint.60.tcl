@@ -88,12 +88,69 @@ proc validate_checkpointobj { change_array } {
    upvar $change_array chgar
 
   if { [info exists chgar(queue_list)] } {
-     puts $CHECK_OUTPUT "this qconf version doesn't support queue_list for ckpt
-objects"
-     add_proc_error "validate_checkpointobj" -3 "this Grid Engine version doesn'
-t support a queue_list for ckpt objects,\nuse assign_queues_with_ckpt_object() a
-fter adding checkpoint\nobjects and don't use queue_list parameter."
+     puts $CHECK_OUTPUT "this qconf version doesn't support queue_list for ckpt objects"
+     add_proc_error "validate_checkpointobj" -3 "this Grid Engine version doesn' t support a queue_list for ckpt objects,\nuse assign_queues_with_ckpt_object() after adding checkpoint\nobjects and don't use queue_list parameter."
      unset chgar(queue_list)
   }
+}
+
+
+#****** sge_checkpoint.60/mod_checkpointobj() *************************************
+#  NAME
+#     mod_checkpointobj() -- Modify checkpoint object configuration
+#
+#  SYNOPSIS
+#     mod_checkpointobj { ckpt_obj change_array {fast_add 1}}
+#
+#  FUNCTION
+#     Modify a checkpoint configuration corresponding to the content of the
+#     change_array.
+#
+#  INPUTS
+#     ckpt_obj     - name of the checkpoint object to configure
+#     change_array - name of array variable that will be set by
+#                    mod_checkpointobj()
+#     {fast_add 1} - 0: modify the attribute using qconf -mckpt,
+#                  - 1: modify the attribute using qconf -Mckpt, faster
+#
+#  RESULT
+#     0  : ok
+#     -1 : timeout
+#
+#  SEE ALSO
+#     sge_checkpoint/get_checkpointobj()
+#*******************************************************************************
+proc mod_checkpointobj { ckpt_obj change_array {fast_add 1}} {
+ global ts_config
+   global CHECK_ARCH open_spawn_buffer
+   global CHECK_USER CHECK_OUTPUT CHECK_HOST
+
+   upvar $change_array chgar
+
+   validate_checkpointobj chgar
+
+   # add queue from file?
+   if { $fast_add } {
+      set tmpfile [dump_array_to_tmpfile default_array]
+      set result [start_sge_bin "qconf" "-Mckpt ${tmpfile}"]
+
+   } else {
+
+      set vi_commands [build_vi_command chgar]
+      set args "-mckpt $ckpt_obj"
+
+      set ALREADY_EXISTS [ translate $ts_config(master_host) 1 0 0 [sge_macro MSG_SGETEXT_ALREADYEXISTS_SS] "*" $ckpt_obj]
+      set MODIFIED [translate $ts_config(master_host) 1 0 0 [sge_macro MSG_SGETEXT_MODIFIEDINLIST_SSSS] $CHECK_USER "*" $ckpt_obj "checkpoint interface" ]
+
+       set result [ handle_vi_edit "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" $args $vi_commands $MODIFIED $ALREADY_EXISTS ]
+    
+
+      if { $result == -1 } { add_proc_error "mod_checkpointobj" -1 "timeout error" }
+      if { $result == -2 } { add_proc_error "mod_checkpointobj" -1 "already exists" }
+      if { $result == -3 } { add_proc_error "mod_checkpointobj" -1 "queue reference does not exist" }
+      if { $result != 0  } { add_proc_error "mod_checkpointobj" -1 "could not modify checkpoint object" }
+   }
+
+   return $result
 }
 

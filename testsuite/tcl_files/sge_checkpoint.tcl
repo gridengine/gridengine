@@ -33,7 +33,7 @@
 #___INFO__MARK_END__
 
 
-#****** sge_ckpt/assign_queues_with_ckpt_object() ************************
+#****** sge_checkpoint/assign_queues_with_ckpt_object() ************************
 #  NAME
 #     assign_queues_with_ckpt_object() -- setup queue <-> ckpt connection
 #
@@ -51,7 +51,7 @@
 #     sge_procedures/assign_queues_with_pe_object()
 #*******************************************************************************
 
-#****** sge_ckpt/get_checkpointobj() *************************************
+#****** sge_checkpoint/get_checkpointobj() *************************************
 #  NAME
 #     get_checkpointobj() -- get checkpoint configuration information
 #
@@ -67,7 +67,7 @@
 #                    get_checkpointobj
 #
 #  SEE ALSO
-#     sge_ckpt/set_checkpointobj()
+#     sge_checkpoint/mod_checkpointobj()
 #     sge_procedures/get_queue() 
 #     sge_procedures/set_queue()
 #*******************************************************************************
@@ -93,63 +93,32 @@ proc get_checkpointobj { ckpt_obj change_array } {
   }
 }
 
-#****** sge_ckpt/set_checkpointobj() *************************************
+#****** sge_checkpoint/mod_checkpointobj() *************************************
 #  NAME
-#     set_checkpointobj() -- set or change checkpoint object configuration
+#     mod_checkpointobj() -- Modify checkpoint object configuration
 #
 #  SYNOPSIS
-#     set_checkpointobj { ckpt_obj change_array }
+#     mod_checkpointobj { ckpt_obj change_array }
 #
 #  FUNCTION
-#     Set a checkpoint configuration corresponding to the content of the
+#     Modify a checkpoint configuration corresponding to the content of the
 #     change_array.
 #
 #  INPUTS
 #     ckpt_obj     - name of the checkpoint object to configure
 #     change_array - name of array variable that will be set by
-#                    set_checkpointobj()
+#                    mod_checkpointobj()
 #
 #  RESULT
 #     0  : ok
 #     -1 : timeout
 #
 #  SEE ALSO
-#     sge_ckpt/get_checkpointobj()
+#     sge_checkpoint.53/mod_checkpointobj()
+#     sge_checkpoint.60/mod_checkpointobj()
 #*******************************************************************************
-proc set_checkpointobj { ckpt_obj change_array } {
- global ts_config
-   global CHECK_ARCH
-   global CHECK_USER CHECK_OUTPUT
-
-   upvar $change_array chgar
-
-   validate_checkpointobj chgar
-
-   set vi_commands [build_vi_command chgar]
-
-   set args "-mckpt $ckpt_obj"
-
-   set ALREADY_EXISTS [ translate $ts_config(master_host) 1 0 0 [sge_macro MSG_SGETEXT_ALREADYEXISTS_SS] "*" $ckpt_obj]
-   set MODIFIED [translate $ts_config(master_host) 1 0 0 [sge_macro MSG_SGETEXT_MODIFIEDINLIST_SSSS] $CHECK_USER "*" $ckpt_obj "checkpoint interface" ]
-
-   if { $ts_config(gridengine_version) == 53 } {
-      set REFERENCED_IN_QUEUE_LIST_OF_CHECKPOINT [translate $ts_config(master_host) 1 0 0 [sge_macro MSG_SGETEXT_UNKNOWNQUEUE_SSSS] "*" "*" "*" "*"]
-
-      set result [ handle_vi_edit "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" $args $vi_commands $MODIFIED $ALREADY_EXISTS $REFERENCED_IN_QUEUE_LIST_OF_CHECKPOINT ]
-  } else {
-      set result [ handle_vi_edit "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" $args $vi_commands $MODIFIED $ALREADY_EXISTS ]
-  }
-
-   if { $result == -1 } { add_proc_error "set_checkpointobj" -1 "timeout error" }
-   if { $result == -2 } { add_proc_error "set_checkpointobj" -1 "already exists" }
-   if { $result == -3 } { add_proc_error "set_checkpointobj" -1 "queue reference does not exist" }
-   if { $result != 0  } { add_proc_error "set_checkpointobj" -1 "could nod modify checkpoint object" }
-
-   return $result
-}
-
 #                                                             max. column:     |
-#****** sge_procedures/del_checkpointobj() ******
+#****** sge_checkpoint/del_checkpointobj() ******
 #
 #  NAME
 #     del_checkpointobj -- delete checkpoint object definition
@@ -168,7 +137,7 @@ proc set_checkpointobj { ckpt_obj change_array } {
 #     -1  - timeout error
 #
 #  SEE ALSO
-#     sge_procedures/add_checkpointobj()
+#     sge_checkpoint/add_checkpointobj()
 #*******************************
 proc del_checkpointobj { checkpoint_name } {
    global ts_config
@@ -257,7 +226,7 @@ proc del_checkpointobj { checkpoint_name } {
 #     -3  - queue reference does not exist
 # 
 #  SEE ALSO
-#     sge_procedures/del_checkpointobj()
+#     sge_checkpoint/del_checkpointobj()
 #*******************************
 proc add_checkpointobj { change_array } {
    global ts_config

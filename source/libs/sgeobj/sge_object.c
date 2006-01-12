@@ -1293,10 +1293,40 @@ object_description *object_type_get_object_description(void)
 
    DENTER(OBJECT_LAYER, "object_type_get_object_description");
    {
-      GET_SPECIFIC(obj_state_t, obj_state, obj_state_global_init, obj_state_key, "object_type_get_object_description");
-    
+      GET_SPECIFIC(obj_state_t, obj_state, obj_state_global_init, obj_state_key, 
+                   "object_type_get_object_description");
+
       ret = obj_state->object_base;
    } 
+   DRETURN(ret);
+}
+
+/****** sge_object/object_type_get_global_object_description() *****************
+*  NAME
+*     object_type_get_global_object_description() -- grands access to the global 
+*                                                    master lists
+*
+*  SYNOPSIS
+*     object_description* object_type_get_global_object_description(void) 
+*
+*  RESULT
+*     object_description* - the global object description / master lists
+*
+*  NOTES
+*     MT-NOTE: object_type_get_global_object_description() is MT safe 
+*
+*  SEE ALSO
+*     sge_object/object_type_get_global_object_description()
+*
+*******************************************************************************/
+object_description *object_type_get_global_object_description(void)
+{
+   object_description *ret = NULL;
+
+   DENTER(OBJECT_LAYER, "object_type_get_object_description");
+  
+   ret = object_base;
+ 
    DRETURN(ret);
 }
 

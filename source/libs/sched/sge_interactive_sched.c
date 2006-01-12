@@ -34,7 +34,7 @@
 #include "sge_ja_task.h"
 #include "sge_orderL.h"
 #include "sge_orders.h"
-#include "interactive_sched.h"
+#include "sge_interactive_sched.h"
 #include "sgermon.h"
 #include "sge_range.h"
 #include "sge_job.h"

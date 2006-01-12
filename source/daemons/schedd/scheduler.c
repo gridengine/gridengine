@@ -66,7 +66,7 @@
 #include "sgeee.h"
 #include "sgeobj/sge_range.h"
 #include "sge_support.h"
-#include "interactive_sched.h"
+#include "sge_interactive_sched.h"
 #include "shutdown.h"
 #include "schedd_message.h"
 #include "sge_process_events.h"

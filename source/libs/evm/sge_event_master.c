@@ -3067,12 +3067,12 @@ static void flush_events(lListElem *event_client, int interval)
 *******************************************************************************/
 static void total_update(lListElem *event_client, monitoring_t *monitor)
 {
-   object_description *master_table = object_type_get_object_description();
+   object_description *master_table = NULL;
 
    DENTER(TOP_LAYER, "total_update");
 
-   SGE_ASSERT (event_client != NULL);
-  
+   master_table = object_type_get_global_object_description();
+
    blockEvents(event_client, sgeE_ALL_EVENTS, true);
    
    MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_READ), monitor);
@@ -3668,9 +3668,10 @@ static void total_update_event(lListElem *event_client, ev_event type, object_de
       if (lp != NULL) {
          copy_lp = lCopyListHash(lGetListName(lp), lp, false);
       }
+
       /* 'send_events()' will free the copy of 'lp' */
-      add_list_event_for_client (id, 0, type, 0, 0, NULL, NULL, NULL, 
-                                 copy_lp, false);
+      add_list_event_for_client(id, 0, type, 0, 0, NULL, NULL, NULL, 
+                                copy_lp, false);
 
       lock_client (id, true);
    } /* if */

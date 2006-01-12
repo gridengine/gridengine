@@ -1,3 +1,8 @@
+SG-2006-01-12-0: Bugfix:    fixed SG-2006-01-06-0, local
+                            event clients did not work
+                 Changed:   qmaster
+                 Review:    JG
+
 JG-2006-01-11-0: Testsuite: Cleanup of remote_procedures.
                  Review:    CR
 

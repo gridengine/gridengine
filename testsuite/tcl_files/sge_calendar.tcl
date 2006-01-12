@@ -244,9 +244,9 @@ proc add_calendar {change_array {fast_add 1} {on_host ""} {as_user ""} {raise_er
 
       # parse output or raise error
       if {$prg_exit_state == 0} {
-         set ret $result 
+         set ret 0
       } else {
-      set ret [add_calender_error $prg_exit_state $tmpfile $calendar $raise_error]
+         set ret [add_calender_error $prg_exit_state $tmpfile $calendar $raise_error]
       }
    } else {
 
@@ -504,7 +504,7 @@ proc del_calendar {calendar {on_host ""} {as_user ""} {raise_error 1}} {
 
    # parse output or raise error
    if {$prg_exit_state == 0} {
-      set ret $result 
+      set ret 0
    } else {
       set ret [del_calendar_error $prg_exit_state $calendar $raise_error]
    }

@@ -3598,16 +3598,29 @@ proc mod_attr { object attribute value target {fast_add 1} {on_host ""} {as_user
     if { $fast_add } {
       set default_array($attribute) "$value"
       set tmpfile [dump_array_to_tmpfile default_array]
-      set result [start_sge_bin "qconf" "-Mattr $object ${tmpfile} $target"  $on_host $as_user]
+      set result [start_sge_bin "qconf" "-Mattr $object $tmpfile $target"  $on_host $as_user]
+  
+      if {$prg_exit_state == 0} {
+         set ret 0
+      } else {
+         set ret -2
+      }
 
    } else {
       # add by -mattr
 
       set result [start_sge_bin "qconf" "-mattr  $object $attribute $value $target" $on_host $as_user ] 
+      if {$prg_exit_state == 0} {
+         set ret 0
+      } else {
+         set ret -2
+      }
+
    }
 
-   return $result
+   return $ret
 }
+
 
 #****** sge_procedures/get_attr() ******************************************
 #  NAME
@@ -3629,7 +3642,7 @@ proc mod_attr { object attribute value target {fast_add 1} {on_host ""} {as_user
 #                       output the error message to stdout
 #
 #  RESULT
-#     integer value  0 on success, -2 on error
+#     array of attribute information
 #
 #*******************************************************************************
 proc get_attr { object attribute target {on_host ""} {as_user ""} {raise_error 1} } {
@@ -3671,12 +3684,25 @@ proc del_attr { object attribute value target {fast_add 1} {on_host ""} {as_user
     if { $fast_add } {
       set default_array($attribute) "$value"
       set tmpfile [dump_array_to_tmpfile default_array]
-      set result [start_sge_bin "qconf" "-Dattr $object ${tmpfile}$ target" $on_host $as_user]
+      set result [start_sge_bin "qconf" "-Dattr $object $tmpfile $target" $on_host $as_user]
+
+      if {$prg_exit_state == 0} {
+         set ret 0
+      } else {
+         set ret -2
+      }
+
 
    } else {
    # add by -dattr
 
-   set result [start_sge_bin "qconf" "-dattr $object $attribute $value $target" $on_host $as_user]
+      set result [start_sge_bin "qconf" "-dattr $object $attribute $value $target" $on_host $as_user]
+
+      if {$prg_exit_state == 0} {
+         set ret 0
+      } else {
+         set ret -2
+      }
 
    }
  
@@ -3717,12 +3743,24 @@ proc add_attr { object attribute value target {fast_add 1} {on_host ""} {as_user
     if { $fast_add } {
       set default_array($attribute) "$value"
       set tmpfile [dump_array_to_tmpfile default_array]
-      set result [start_sge_bin "qconf" "-Aattr $object ${tmpfile} $target" $on_host $as_user]
+      set result [start_sge_bin "qconf" "-Aattr $object $tmpfile $target" $on_host $as_user]
+
+      if {$prg_exit_state == 0} {
+         set ret 0
+      } else {
+         set ret -2
+      }
+
 
    } else {
       # add by -aattr
 
       set result [start_sge_bin "qconf" "-aattr  $object $attribute $value $target" $on_host $as_user]
+      if {$prg_exit_state == 0} {
+         set ret 0
+      } else {
+         set ret -2
+      }
 
    }
 
@@ -3763,20 +3801,31 @@ proc replace_attr { object attribute value target {fast_add 1} {on_host ""} {as_
     if { $fast_add } {
       set default_array($attribute) "$value"
       set tmpfile [dump_array_to_tmpfile default_array]
-      set result [start_sge_bin "qconf" "-Rattr $object ${tmpfile} $target" $on_host $as_user]
+      set result [start_sge_bin "qconf" "-Rattr $object $tmpfile $target" $on_host $as_user]
+
+      if {$prg_exit_state == 0} {
+         set ret 0
+      } else {
+         set ret -2
+      }
+
 
    } else {
    # add by -rattr
 
    set result [start_sge_bin "qconf" "-rattr $object $attribute $value $target" $on_host $as_user ]
 
+      if {$prg_exit_state == 0} {
+         set ret 0
+      } else {
+         set ret -2
+      }
+
    }
 
    return $result
 
 }
-
-
 
 #                                                             max. column:     |
 #****** sge_procedures/suspend_job() ******

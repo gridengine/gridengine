@@ -66,7 +66,7 @@ set check_cleanup_function "qconf_cleanup"
 
 # define test's procedure order
 set check_functions     ""
-lappend check_functions "qconf_addqueues"             ;# functions to call (in order)
+#lappend check_functions "qconf_addqueues"             ;# functions to call (in order)
 lappend check_functions "qconf_removequeues"
 lappend check_functions "qconf_auser"
 lappend check_functions "qconf_duser"
@@ -111,6 +111,9 @@ lappend check_functions "qconf_add_delete_modify_calendar"	;# Add, delete and mo
 lappend check_functions "qconf_add_delete_modify_replace_attr"	;# Add, delete and modify attributes
 #lappend check_functions "qconf_modify_checkpoint"	;# Create, modify and delete checkpoint 
 #lappend check_functions "qconf_modify_exechost"	;# Modify exec host
+#lappend check_functions "qconf_modify_hostgroup";# Modify host group
+
+
 
 global queue_names
 
@@ -2248,7 +2251,7 @@ proc qconf_modify_checkpoint {} {
 
    # Now modify it using set_checkpointobj
    puts $CHECK_OUTPUT "Modify  checkpoint  $myarray(ckpt_name) ...\n"
-   set result2 [mod_checkpointobj $myarray(ckpt_name) myarray]
+   set result2 [mod_checkpointobj  myarray]
 
    if { ( $result2 == 0 ) } {
       puts $CHECK_OUTPUT "qconf -mckpt  succeded"
@@ -2279,7 +2282,7 @@ proc qconf_modify_checkpoint {} {
 
 # Now modify it using set_checkpointobj slow...
    puts $CHECK_OUTPUT "Modify  checkpoint  $myarray(ckpt_name) slow...\n"
-   set result6 [mod_checkpointobj $myarray(ckpt_name) myarray 0]
+   set result6 [mod_checkpointobj  myarray 0]
 
    if { ( $result6 == 0 ) } {
       puts $CHECK_OUTPUT "qconf -Mckpt slow succeded"
@@ -2354,4 +2357,76 @@ proc qconf_modify_exechost {} {
 
    set_error 0 "ok"
 }
+
+#****** qconf/qconf_modify_hostgroup() ******
+#  NAME
+#     qconf_modify_hostgroup - Modify host group
+#
+#  SYNOPSIS
+#     qconf_modify_hostgroup { } - Call mod_hostgroup to modify hsot group
+#                         from CLI or file
+#
+#  FUNCTION
+#     Check basic functionality of qconf
+#
+#  SEE ALSO
+# sge_host/get_processor_list()
+#*******************************
+proc qconf_modify_hostgroup {} {
+   global ts_config env
+   global CHECK_OUTPUT CHECK_HOST
+
+   # First save initial setup
+   puts $CHECK_OUTPUT "First save the original host group  @allhosts  ...\n"
+   set result0 [get_hostgroup "@allhosts" original_hostgroup_array]
+
+   if { ( $result0 == 0 ) } {
+      puts $CHECK_OUTPUT "qconf -shgrp @allhosts succedded\n"
+   } else {
+      puts $CHECK_OUTPUT "result is $result0"
+   }
+
+
+   # Now modify the host list
+   puts $CHECK_OUTPUT "Modify host group  @allhosts  from file ...\n"
+   set new_hostgroup_charray(hostlist) "$CHECK_HOST"
+   set attribute "hostlist" 
+   set value "$CHECK_HOST"
+   set result1 [mod_hostgroup "@allhosts" $attribute $value ]
+
+  if { ( $result1 == 0 ) } {
+      puts $CHECK_OUTPUT "qconf -Mhgrp succeded\n"
+   } else {
+      puts $CHECK_OUTPUT "result is $result1"
+   }
+
+   # Now do it from file
+   puts $CHECK_OUTPUT "Modify host group  @allhosts  from CLI...\n"
+   set result2 [mod_hostgroup "@allhosts" $attribute $value 0]
+
+  if { ( $result2 == 0 ) } {
+      puts $CHECK_OUTPUT "qconf -mhgrp succeded\n"
+   } else {
+      puts $CHECK_OUTPUT "result is $result2"
+   }
+
+  # Now restore original setup
+  puts $CHECK_OUTPUT "Restore original host group  @allhosts  ...\n"
+  puts $CHECK_OUTPUT "group is $original_hostgroup_array(group_name) ...\n"
+  puts $CHECK_OUTPUT "hostlist is $original_hostgroup_array(hostlist) ...\n"
+
+  set value "$original_hostgroup_array(hostlist)"
+ 
+  set result3 [mod_hostgroup "@allhosts" $attribute $value ]
+
+  if { ( $result3 == 0 ) } {
+      puts $CHECK_OUTPUT "qconf -Mhgrp succeded for original config\n"
+   } else {
+      puts $CHECK_OUTPUT "result is $result3"
+   }
+
+
+   set_error 0 "ok"
+}
+
 

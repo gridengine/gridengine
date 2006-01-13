@@ -1,3 +1,9 @@
+OJ-2006-01-13-0: Testsuite: Fixed return codes for *attr procedures
+		            in sge_procedures.tcl
+		 Changed:   testsuite
+                 Review:    pending
+                 Issue:     477
+
 JG-2006-01-12-0: Testsuite: Fixed broken testsuite (install).
 
 SG-2006-01-12-0: Bugfix:    fixed SG-2006-01-06-0, local

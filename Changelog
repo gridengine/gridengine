@@ -1,6 +1,11 @@
+JG-2006-01-16-0: Testsuite: Enhanced testsuite framework by "busy connection" 
+                            detection (missing close_spawn_process calls).
+                            Additional menu item dumping open connections.
+                            Cleanup in remote_procedures.
+                 Review:    CR
+
 OJ-2006-01-13-0: Testsuite: Fixed return codes for *attr procedures
-		            in sge_procedures.tcl
-		 Changed:   testsuite
+		                      in sge_procedures.tcl
                  Review:    pending
                  Issue:     477
 

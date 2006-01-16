@@ -1421,12 +1421,7 @@ proc host_conf_get_unused_host {{raise_error 1}} {
    set ret ""
 
    # get a list of all hosts referenced in the cluster
-   set hosts "$ts_config(master_host) $ts_config(execd_hosts) $ts_config(execd_nodes) $ts_config(submit_only_hosts) $ts_config(bdb_server)"
-   set cluster_hosts [lsort -unique $hosts]
-   set none_elem [lsearch $cluster_hosts "none"]
-   if {$none_elem >= 0} {
-      set cluster_hosts [lreplace $cluster_hosts $none_elem $none_elem]
-   }
+   set cluster_hosts [host_conf_get_cluster_hosts]
 
    # get a list of all configured hosts having one of the installed architectures
    set archs [host_conf_get_archs $cluster_hosts]
@@ -1493,3 +1488,36 @@ proc get_java_home_for_host { host } {
     return $res
 }
 
+#****** config_host/host_conf_get_cluster_hosts() ******************************
+#  NAME
+#     host_conf_get_cluster_hosts() -- get a list of cluster hosts
+#
+#  SYNOPSIS
+#     host_conf_get_cluster_hosts { } 
+#
+#  FUNCTION
+#     Returns a list of all hosts that are part of the given cluster.
+#     The list contains
+#     - the master host
+#     - the execd hosts
+#     - the execd nodes (execd hosts with Solaris zones resolved)
+#     - submit only hosts
+#     - a berkeleydb RPC server host
+#
+#     The list is sorted by hostname, hostnames are unique.
+#
+#  RESULT
+#     hostlist
+#*******************************************************************************
+proc host_conf_get_cluster_hosts {} {
+   global ts_config
+
+   set hosts "$ts_config(master_host) $ts_config(execd_hosts) $ts_config(execd_nodes) $ts_config(submit_only_hosts) $ts_config(bdb_server)"
+   set cluster_hosts [lsort -unique $hosts]
+   set none_elem [lsearch $cluster_hosts "none"]
+   if {$none_elem >= 0} {
+      set cluster_hosts [lreplace $cluster_hosts $none_elem $none_elem]
+   }
+
+   return $cluster_hosts
+}

@@ -283,7 +283,7 @@ proc get_tmp_file_name { { hostname "" } { type "default" } { file_ext "tmp" } {
 #  SEE ALSO
 #     ???/???
 #*******************************************************************************
-proc print_xy_array { x_values y_values xy_data_array } {
+proc print_xy_array { x_values y_values xy_data_array {empty_cell ""}} {
    upvar $xy_data_array result_array
 
    # calculate max. x/y string length
@@ -329,7 +329,12 @@ proc print_xy_array { x_values y_values xy_data_array } {
    foreach y $y_values {
       append output_text [format "%-${max_y_values_len}s | " $y]
       foreach x $x_values {
-         append output_text [format "%${max_x_values_len}s | " $result_array($x,$y) ]
+         if {[info exists result_array($x,$y)]} {
+            set data $result_array($x,$y)
+         } else {
+            set data $empty_cell
+         }
+         append output_text [format "%${max_x_values_len}s | " $data]
       }
       append output_text "\n"
    }

@@ -689,8 +689,8 @@ proc add_proc_error { proc_name result text {raise_error 1}} {
       puts $CHECK_OUTPUT "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
       puts $CHECK_OUTPUT "!!! recursive call of add_proc_error !!!"
       puts $CHECK_OUTPUT "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-      puts $CHECK_OUTPUT "$proc_name|$text|$check_name|$CHECK_CUR_PROC_NAME"
-      puts $CHECK_OUTPUT "$result"
+      puts $CHECK_OUTPUT "$proc_name|$result|$check_name|$CHECK_CUR_PROC_NAME"
+      puts $CHECK_OUTPUT "$text"
       puts $CHECK_OUTPUT ""
       puts $CHECK_OUTPUT ""
       return
@@ -701,7 +701,7 @@ proc add_proc_error { proc_name result text {raise_error 1}} {
 
    lappend CHECK_CUR_PROC_RESULTS $result
    set new_error ""
-   lappend new_error "$proc_name|$text|$check_name|$CHECK_CUR_PROC_NAME"
+   lappend new_error "$proc_name|$check_name|$CHECK_CUR_PROC_NAME|$text"
    lappend CHECK_CUR_PROC_ERRORS $new_error
 
    if { $check_name != "setup" } {
@@ -3564,7 +3564,6 @@ proc run_tests { path runcompleted } {
  
     set check_directories [get_tests_from_checktree $path]
 
-    
     if { $runcompleted == 1 } {
        delete_tests $path
     }
@@ -3587,7 +3586,7 @@ proc run_tests { path runcompleted } {
            }
        }
     }
-    set checks_to_do [lsort $checks_to_do]
+    set checks_to_do [lsort -dictionary $checks_to_do]
     if {[llength $checks_to_do] == 0} {
        return
     }
@@ -4593,6 +4592,14 @@ proc run_test {path runcompleted {run_single_test "all"} { send_mail_report 1 } 
       return 2 
    }
 
+   # check the number of busy rlogin sessions
+   # it should be 0
+   set num_busy_sessions_before_check [get_busy_spawn_rlogin_sessions]
+   if {$num_busy_sessions_before_check > 0} {
+      set session_info [dump_spawn_rlogin_sessions 0]
+      add_proc_error "run_test" -3 "We have $num_busy_sessions_before_check busy rlogin sessions before starting test $check_name ($path).\nThis may indicate a problem (missing close_spawn_session call in previous check).\n\n$session_info"
+   }
+
    set setup_ret [execute_setup_cleanup_function $check_setup_function "setup"]
    if {!$setup_ret} {
       set immediate_return -1
@@ -4661,6 +4668,16 @@ proc run_test {path runcompleted {run_single_test "all"} { send_mail_report 1 } 
    set cleanup_ret [execute_setup_cleanup_function $check_cleanup_function "cleanup"]
    if {!$cleanup_ret} {
       set immediate_return -1
+   }
+
+   # check the number of busy rlogin sessions
+   # it should be 0, or at least not higher than before starting test
+   set num_busy_sessions_after_check [get_busy_spawn_rlogin_sessions]
+   if {$num_busy_sessions_before_check < $num_busy_sessions_after_check} {
+      set session_info [dump_spawn_rlogin_sessions 0]
+      close_open_rlogin_sessions
+      add_proc_error "run_test" -1 "Session leak in check $check_name ($path)!\nWe have $num_busy_sessions_after_check busy rlogin sessions after starting the test.\nBefore the test, we had $num_busy_sessions_before_check busy sessions.\nMake sure the test closes all opened sessions again!\n\n$session_info\nClosing all sessions now to prepare clean reconnect."
+      incr nr_errors
    }
 
    if { $immediate_return != 0 } {
@@ -7553,6 +7570,7 @@ proc menu {} {
     puts " (29) check spool directory content"
     puts " (30) re-read checktree and re-source tcl-files"
     puts " (31) search for old sge_processes on configured hosts"
+    puts " (32) dump status of all rlogin connections"
 
    puts "\nYou can select a menu number,"
    puts "enter a relative/absolute path or \"..\" to switch the directory."
@@ -7649,6 +7667,10 @@ proc menu {} {
     }
     "31" {
          seek_and_desroy_sge_processes
+    }
+    "32" {
+         dump_spawn_rlogin_sessions
+         wait_for_enter
     }
 
     "0" { select_runlevel }

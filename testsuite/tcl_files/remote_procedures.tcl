@@ -148,28 +148,9 @@ proc setup_qping_dump { log_array  } {
 #************************************************************************************
 proc check_all_system_times {} {
    global CHECK_USER CHECK_OUTPUT ts_config CHECK_SCRIPT_FILE_DIR
-   set host_list {}
+
    set return_value 0
-   foreach host $ts_config(execd_nodes) {
-      lappend host_list $host
-   }
-   foreach host $ts_config(shadowd_hosts) {
-      if { [string compare $host "none"] != 0 } {
-         if { [lsearch $host_list $host] == -1 } {
-            lappend host_list $host
-         }
-      }
-   }
-   foreach host $ts_config(submit_only_hosts) {
-      if { [string compare $host "none"] != 0 } {
-         if { [lsearch $host_list $host] == -1 } {
-            lappend host_list $host
-         }
-      }
-   }
-   if { [lsearch $host_list $ts_config(master_host)] == -1 } {
-      lappend host_list $ts_config(master_host)
-   }
+   set host_list [host_conf_get_cluster_hosts]
 
    foreach host $host_list {
       puts $CHECK_OUTPUT "test connection to $host ..."
@@ -811,10 +792,17 @@ proc create_error_message { error_array} {
   }
   
   set err_complete  [split $err_string "|"]
-  set err_procedure [ lindex $err_complete 0 ]
-  set err_text      [ lindex $err_complete 1 ]
-  set err_checkname [ lindex $err_complete 2 ]
-  set err_calledby  [ lindex $err_complete 3 ]
+  set err_procedure [lindex $err_complete 0]
+  set err_checkname [lindex $err_complete 1]
+  set err_calledby  [lindex $err_complete 2]
+  set err_list      [lrange $err_complete 3 end]
+   set err_text ""
+   foreach elem $err_list {
+      if {$err_text != ""} {
+         append err_text "|"
+      }
+      append err_text $elem
+   }
   
   append output "check       : $err_checkname\n"
   append output "procedure   : $err_procedure\n"
@@ -1129,11 +1117,14 @@ proc open_remote_spawn_process { hostname
          # connect via ssh as CHECK_USER
          # connect via ssh as root (and if necessary switch user later)
          if {$real_user == $CHECK_USER} {
+            set connect_user $CHECK_USER
             set pid [spawn $ssh_binary $hostname]
          } else {
+            set connect_user "root"
             set pid [spawn $ssh_binary "-l" "root" $hostname]
          }
       } else {
+         set connect_user $CHECK_USER
          set pid [spawn "rlogin" $hostname] 
       }
 
@@ -1163,12 +1154,10 @@ proc open_remote_spawn_process { hostname
          expect {
             -i $spawn_id eof {
                add_proc_error "open_remote_spawn_process (startup)" -2 "${error_info}\nunexpected eof"
-               close_spawn_id $spawn_id
                set connect_errors 1
             }
             -i $spawn_id full_buffer {
                add_proc_error "open_remote_spawn_process (startup)" -2 "${error_info}\nbuffer overflow"
-               close_spawn_id $spawn_id
                set connect_errors 1
             }
             -i $spawn_id timeout {
@@ -1183,13 +1172,11 @@ proc open_remote_spawn_process { hostname
                   exp_continue
                } else {
                   add_proc_error "open_remote_spawn_process (startup)" -2 "${error_info}\nstartup timeout" 
-                  close_spawn_id $spawn_id
                   set connect_errors 1
                }
             }
             -i $spawn_id "assword:" {
                add_proc_error "open_remote_spawn_process (startup)" -2 "${error_info}\ngot unexpected password question"
-               close_spawn_id $spawn_id
                set connect_errors 1
             }
             -i $spawn_id "The authenticity of host*" {
@@ -1212,12 +1199,12 @@ proc open_remote_spawn_process { hostname
       } catch_error_message]
       if { $catch_return == 1 } {
          add_proc_error "open_remote_spawn_process (startup)" -2 "${error_info}\n$catch_error_message" 
-         catch {close_spawn_id $spawn_id}
          set connect_errors 1
       }
 
       # did we have errors?
       if {$connect_errors} {
+         catch {close_spawn_id $spawn_id}
          return ""
       }
 
@@ -1231,12 +1218,10 @@ proc open_remote_spawn_process { hostname
          expect {
             -i $spawn_id eof {
                add_proc_error "open_remote_spawn_process (shell_response)" -2 "${error_info}\nunexpected eof"
-               close_spawn_id $spawn_id
                set connect_errors 1
             }
             -i $spawn_id full_buffer {
                add_proc_error "open_remote_spawn_process (shell_response)" -2 "${error_info}\nbuffer overflow"
-               close_spawn_id $spawn_id
                set connect_errors 1
             }
             -i $spawn_id timeout {
@@ -1250,14 +1235,12 @@ proc open_remote_spawn_process { hostname
                   # final timeout
                   add_proc_error "open_remote_spawn_process (shell_response)" -2 "${error_info}\ntimeout"
                   send -i $spawn_id -- "\003" ;# send CTRL+C to stop poss. running processes
-                  close_spawn_id $spawn_id
                   set connect_errors 1
                }
                
             }
             -i $spawn_id "assword:" {
                add_proc_error "open_remote_spawn_process (shell_response)" -2 "${error_info}\ngot unexpected password question"
-               close_spawn_id $spawn_id
                set connect_errors 1
             }
             -i $spawn_id "The authenticity of host*" {
@@ -1280,12 +1263,12 @@ proc open_remote_spawn_process { hostname
       } catch_error_message ]
       if { $catch_return == 1 } {
          add_proc_error "open_remote_spawn_process (shell response)" -2 "${error_info}\n$catch_error_message" 
-         catch {close_spawn_id $spawn_id}
          set connect_errors 1
       }
           
       # did we have errors?
       if {$connect_errors} {
+         catch {close_spawn_id $spawn_id}
          return ""
       }
 
@@ -1296,9 +1279,12 @@ proc open_remote_spawn_process { hostname
          set num_tries $nr_of_tries
          set timeout 2
          expect {
+            -i $spawn_id eof {
+               add_proc_error "open_remote_spawn_process (identity)" -2 "${error_info}\nunexpected eof"
+               set connect_errors 1
+            }
             -i $spawn_id full_buffer {
                add_proc_error "open_remote_spawn_process (identity)" -2 "${error_info}\nbuffer overflow"
-               close_spawn_id $spawn_id
                set connect_errors 1
             }
             -i $spawn_id timeout {
@@ -1311,26 +1297,22 @@ proc open_remote_spawn_process { hostname
                   # final timeout
                   add_proc_error "open_remote_spawn_process (identity)" -2 "${error_info}\nshell doesn't start or runs not as user $CHECK_USER on host $hostname" 
                   send -i $spawn_id -- "\003" ;# send CTRL+C to stop evtl. running processes
-                  close_spawn_id $spawn_id
                   set connect_errors 1
                }
              }
-             -i $spawn_id "__ my id is ->*${CHECK_USER}*\n" { 
-                 debug_puts "logged in as $CHECK_USER - fine" 
-             }
-             -i $spawn_id "__ my id is ->*root*\n" { 
-                 debug_puts "logged in as root - fine" 
+             -i $spawn_id "__ my id is ->*${connect_user}*\n" { 
+                 debug_puts "logged in as ${connect_user} - fine" 
              }
           }
       } catch_error_message]
       if {$catch_return == 1} {
          add_proc_error "open_remote_spawn_process (identity)" -2 "${error_info}\n$catch_error_message" 
-         catch {close_spawn_id $spawn_id}
          set connect_errors 1
       }
 
       # did we have errors?
       if {$connect_errors} {
+         catch {close_spawn_id $spawn_id}
          return ""
       }
 
@@ -1370,17 +1352,14 @@ proc open_remote_spawn_process { hostname
                expect {
                   -i $spawn_id full_buffer {
                      add_proc_error "open_remote_spawn_process (switch user)" -2 "${error_info}\nbuffer overflow"
-                     close_spawn_id $spawn_id
                      set connect_errors 1
                   }
                   -i $spawn_id eof {
                      add_proc_error "open_remote_spawn_process (switch user)" -2 "${error_info}\nunexpected eof"
-                     close_spawn_id $spawn_id
                      set connect_errors 1
                   }
                   -i $spawn_id timeout {
                      add_proc_error "open_remote_spawn_process (switch user)" -2 "${error_info}\ntimeout waiting for passwd question"
-                     close_spawn_id $spawn_id
                      set connect_errors 1
                   }
                   -i $spawn_id "assword:" {
@@ -1398,12 +1377,12 @@ proc open_remote_spawn_process { hostname
          } catch_error_message]
          if {$catch_return == 1} {
             add_proc_error "open_remote_spawn_process (switch user)" -2 "${error_info}\n$catch_error_message" 
-            catch {close_spawn_id $spawn_id}
             set connect_errors 1
          }
 
          # did we have errors?
          if {$connect_errors} {
+            catch {close_spawn_id $spawn_id}
             return ""
          }
 
@@ -1414,9 +1393,12 @@ proc open_remote_spawn_process { hostname
             set num_tries $nr_of_tries
             set timeout 2
             expect {
+               -i $spawn_id eof {
+                  add_proc_error "open_remote_spawn_process (new identity)" -2 "${error_info}\nunexpected eof"
+                  set connect_errors 1
+               }
                -i $spawn_id full_buffer {
                   add_proc_error "open_remote_spawn_process (new identity)" -2 "${error_info}\nbuffer overflow"
-                  close_spawn_id $spawn_id
                   set connect_errors 1
                }
                -i $spawn_id timeout {
@@ -1429,28 +1411,38 @@ proc open_remote_spawn_process { hostname
                      # final timeout
                      add_proc_error "open_remote_spawn_process (new identity)" -2 "${error_info}\nshell doesn't start or runs not as user $real_user on host $hostname" 
                      send -i $spawn_id -- "\003" ;# send CTRL+C to stop poss. still running processes
-                     close_spawn_id $spawn_id
                      set connect_errors 1
                   }
-                }
-                -i $spawn_id "__ my id is ->*${real_user}*\n" { 
-                    debug_puts "correctly switched to user $real_user - fine" 
-                }
-                -i $spawn_id "ermission denied" {
-                   add_proc_error "open_remote_spawn_process (new identity)" -2 "${error_info}\npermission denied"
-                   close_spawn_id $spawn_id
-                   set connect_errors 1
-                }
-             }
+               }
+               -i $spawn_id "__ my id is ->*${real_user}*\n" { 
+                  debug_puts "correctly switched to user $real_user - fine" 
+               }
+               -i $spawn_id "__ my id is ->*${connect_user}*\n" { 
+                  add_proc_error "open_remote_spawn_process (new identity)" -2 "${error_info}\nswitch to user $real_user didn't succeed, we are still ${connect_user}"
+                  set connect_errors 1
+               }
+               -i $spawn_id "ermission denied" {
+                  add_proc_error "open_remote_spawn_process (new identity)" -2 "${error_info}\npermission denied"
+                  set connect_errors 1
+               }
+               -i $spawn_id "does not exist" {
+                  add_proc_error "open_remote_spawn_process (new identity)" -2 "${error_info}\nuser $real_user doesn not exist on host $hostname"
+                  set connect_errors 1
+               }
+               -i $spawn_id "nknown*id" {
+                  add_proc_error "open_remote_spawn_process (new identity)" -2 "${error_info}\nuser $real_user doesn not exist on host $hostname"
+                  set connect_errors 1
+               }
+            }
          } catch_error_message]
          if {$catch_return == 1} {
             add_proc_error "open_remote_spawn_process (new identity)" -2 "${error_info}\n$catch_error_message" 
-            catch {close_spawn_id $spawn_id}
             set connect_errors 1
          }
 
          # did we have errors?
          if {$connect_errors} {
+            catch {close_spawn_id $spawn_id}
             return ""
          }
       } ;# switch user
@@ -1647,6 +1639,107 @@ proc open_spawn_process {args} {
    return $back
 }
 
+#****** remote_procedures/get_busy_spawn_rlogin_sessions() *********************
+#  NAME
+#     get_busy_spawn_rlogin_sessions() -- get number of busy rlogin sessions
+#
+#  SYNOPSIS
+#     get_busy_spawn_rlogin_sessions { } 
+#
+#  FUNCTION
+#     Returns the number of busy rlogin / ssh sessions.
+#     Busy means, that a command is running in the session.
+#     After a close_spawn_process, a session may stay open, but it will
+#     be marked "idle".
+#
+#  RESULT
+#     Number of busy sessions (a number 0 ... n)
+#*******************************************************************************
+proc get_busy_spawn_rlogin_sessions {} {
+   set busy 0
+
+   set sessions [get_open_rlogin_sessions]
+   foreach session $sessions {
+      if {[is_spawn_process_in_use $session]} {
+         incr busy
+      }
+   }
+
+   return $busy
+}
+
+#****** remote_procedures/dump_spawn_rlogin_sessions() *************************
+#  NAME
+#     dump_spawn_rlogin_sessions() -- dump connection information
+#
+#  SYNOPSIS
+#     dump_spawn_rlogin_sessions { {do_output 1} } 
+#
+#  FUNCTION
+#     Dumps information about open connections to a string buffer.
+#     If do_output is 1, the string buffer will be written to 
+#     CHECK_OUTPUT.
+#
+#  INPUTS
+#     {do_output 1} - do output to CHECK_OUTPUT
+#
+#  RESULT
+#     string containing info output
+#
+#  EXAMPLE
+#     set output [dump_spawn_rlogin_sessions 0]
+#     puts $CHECK_OUTPUT $output
+#                         | myname   |     root | sgetest1 | sgetest2 | 
+#     --------------------|----------|----------|----------|----------|
+#     host1               |     idle |      --  |      --  |      --  | 
+#     host2               |      --  |      --  |      --  |      --  | 
+#     host3               |      --  |      --  |      --  |      --  | 
+#     host4               |     idle |      --  |      --  |      --  | 
+#     host5               |      --  |      --  |      --  |      --  | 
+#     host6               |     idle |      --  |      --  |      --  | 
+#     host3.domain.com    |     idle |      --  |      --  |      --  | 
+#
+#*******************************************************************************
+proc dump_spawn_rlogin_sessions {{do_output 1}} {
+   global CHECK_OUTPUT
+
+   set host_list [host_conf_get_cluster_hosts]
+   set user_list [user_conf_get_cluster_users]
+   set sessions  [get_open_rlogin_sessions]
+
+   # examine all open sessions
+   foreach session $sessions {
+      # get detailed session information
+      get_spawn_id_rlogin_session $session connection
+      set user $connection(user)
+      set host $connection(hostname)
+
+      # extend host and user list if necessary
+      if {[lsearch $host_list $host] < 0} {
+         lappend host_list $host
+      }
+      if {[lsearch $user_list $user] < 0} {
+         lappend user_list $user
+      }
+
+      # output idle or busy
+      if {[is_spawn_process_in_use $connection(spawn_id)]} {
+         set result_array($user,$host) "busy"
+      } else {
+         set result_array($user,$host) "idle"
+      }
+   }
+
+   set ret [print_xy_array $user_list $host_list result_array " -- "]
+   
+   if {$do_output} {
+      puts $CHECK_OUTPUT ""
+      puts $CHECK_OUTPUT $ret
+      puts $CHECK_OUTPUT ""
+   }
+
+   return $ret
+}
 
 #****** remote_procedures/add_open_spawn_rlogin_session() **********************
 #  NAME
@@ -2252,7 +2345,6 @@ proc is_spawn_process_in_use {spawn_id} {
 
    return 0
 }
-
 
 #                                                             max. column:     |
 #****** remote_procedures/close_spawn_process() ******

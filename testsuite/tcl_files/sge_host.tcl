@@ -222,52 +222,34 @@ proc set_exechost { change_array host {fast_add 1} {on_host ""} {as_user ""} {ra
    set values [array names chgar]
    get_exechost old_values $host
  
-   set vi_commands ""
    foreach elem $values {
-      # this will quote any / to \/  (for vi - search and replace)
-      set newVal $chgar($elem)
-
-      if {[info exists old_values($elem)]} {
-         # if old and new config have the same value, create no vi command,
-         # if they differ, add vi command to ...
-         if { [string compare $old_values($elem) $newVal] != 0 } {
-            if { $newVal == "" } {
-               # ... delete config entry (replace by comment)
-               lappend vi_commands ":%s/^$elem .*$//\n"
-               puts $CHECK_OUTPUT "vi is $vi_commands \n"
-            } else {
-               # ... change config entry
-               set newVal1 [split $newVal {/}]
-               set newVal [join $newVal1 {\/}]
-               lappend vi_commands ":%s/^$elem .*$/$elem  $newVal/\n"
-               puts $CHECK_OUTPUT "New vi is $vi_commands \n"
-            }
-        }
-      } else {
-        # if the config entry didn't exist in old config: append a new line
-        lappend vi_commands "A\n$elem  $newVal[format "%c" 27]"
-
-      }
+      set old_values($elem) "$chgar($elem)"
    }
+
    # Modify exechost from file?
    if { $fast_add } {
      set tmpfile [dump_array_to_tmpfile old_values]
-     set result [start_sge_bin "qconf" "-Me ${tmpfile}"]
+     set result [start_sge_bin "qconf" "-Me $tmpfile" $on_host $as_user]
+
+     set ret $prg_exit_state 
 
    } else {
    # User vi
 
+      set vi_commands [build_vi_command old_values]
+      set ret 0
       set CHANGED  [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_EXEC_HOSTENTRYOFXCHANGEDINEXECLIST_S] "*" ]
       set result [handle_vi_edit "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-me $host" $vi_commands "modified" $CHANGED]
-      if { $result == -2 } {
+      if { $result == -2 || $result == -1 } { ;# Added -1 as well
          set result 0
+         set ret 0
       }
       if { $result != 0 } {
          add_proc_error "set_exechost" -1 "could not modifiy exechost $host"
-         set result -1
+         set ret -1
       }
    }
-  return $result
+  return $ret
 }
 #****** sge_host/mod_exechost() ******
 #
@@ -296,9 +278,10 @@ proc set_exechost { change_array host {fast_add 1} {on_host ""} {as_user ""} {ra
 proc mod_exechost { change_array host {fast_add 1} {on_host ""} {as_user ""} {raise_error 1}} {
    global CHECK_OUTPUT
 
+   upvar $change_array out
    puts $CHECK_OUTPUT "Using mod_exechost as wrapper for set_exechost \n"
 
-   return [set_exechost change_array $host $fast_add $on_host $as_user $raise_error]
+   return [set_exechost out $host $fast_add $on_host $as_user $raise_error]
 
 }
 #****** sge_host/get_exechost_list() *******************************************
@@ -543,7 +526,7 @@ proc del_adminhost {host  {on_host ""} {as_user ""} {raise_error 1}} {
 
    # parse output or raise error
    if {$prg_exit_state == 0} {
-      set ret  $result 
+      set ret  0
    } else {
       set ret [del_adminhost_error $prg_exit_state $host $on_host $raise_error]
    }
@@ -585,7 +568,7 @@ proc add_adminhost {host  {on_host ""} {as_user ""} {raise_error 1}} {
 
    # parse output or raise error
    if {$prg_exit_state == 0} {
-      set ret $result 
+      set ret 0
    } else {
       set ret [add_adminhost_error $prg_exit_state $host $on_host $raise_error]
    }

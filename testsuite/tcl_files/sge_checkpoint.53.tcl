@@ -76,18 +76,19 @@ proc assign_queues_with_ckpt_object { qname hostlist ckpt_obj } {
 #     mod_checkpointobj() -- Modify checkpoint object configuration
 #
 #  SYNOPSIS
-#     mod_checkpointobj { ckpt_obj change_array {fast_add 1}}
+#     mod_checkpointobj { change_array {fast_add 1}  {on_host ""} {as_user ""}}
 #
 #  FUNCTION
 #     Modify a checkpoint configuration corresponding to the content of the
 #     change_array.
 #
 #  INPUTS
-#     ckpt_obj     - name of the checkpoint object to configure
 #     change_array - name of array variable that will be set by
 #                    mod_checkpointobj()
 #     {fast_add 1} - 0: modify the attribute using qconf -mckpt,
 #                  - 1: modify the attribute using qconf -Mckpt, faster
+#     {on_host ""}    - execute qconf on this host, default is master host
+#     {as_user ""}    - execute qconf as this user, default is $CHECK_USER
 #
 #  RESULT
 #     0  : ok
@@ -97,7 +98,7 @@ proc assign_queues_with_ckpt_object { qname hostlist ckpt_obj } {
 #     sge_checkpoint/get_checkpointobj()
 #*******************************************************************************
 
-proc mod_checkpointobj { ckpt_obj change_array {fast_add 1}} {
+proc mod_checkpointobj { change_array {fast_add 1} {on_host ""} {as_user ""}} {
  global ts_config
    global CHECK_ARCH open_spawn_buffer
    global CHECK_USER CHECK_OUTPUT
@@ -106,10 +107,14 @@ proc mod_checkpointobj { ckpt_obj change_array {fast_add 1}} {
 
    validate_checkpointobj chgar
 
+   set ckpt_obj $chgar(ckpt_name)
+
    # add queue from file?
    if { $fast_add } {
-      set tmpfile [dump_array_to_tmpfile default_array]
-      set result [start_sge_bin "qconf" "-Mckpt ${tmpfile}"]
+      set tmpfile [dump_array_to_tmpfile chgar]
+      set result [start_sge_bin "qconf" "-Mckpt $tmpfile" $on_host $as_user]
+
+      set ret $prg_exit_state 
 
    } else {
       set vi_commands [build_vi_command chgar]
@@ -127,8 +132,10 @@ proc mod_checkpointobj { ckpt_obj change_array {fast_add 1}} {
       if { $result == -3 } { add_proc_error "mod_checkpointobj" -1 "queue reference does not exist"
  }
       if { $result != 0  } { add_proc_error "mod_checkpointobj" -1 "could not modify checkpoint object" }
+
+      set ret $result
    }
-   return $result
+   return $ret
 }
 
 

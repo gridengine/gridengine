@@ -55,7 +55,6 @@ set check_highest_level    0
 set check_description(0)  "test all qconf options (test not complete)"
 
 # define test's dependencies
-#set check_needs        "init_core_system qstat qsub"       ;# dependencies of this check (name of other check)
 set check_needs        "init_core_system"       ;# dependencies of this check (name of other check)
 
 
@@ -66,7 +65,7 @@ set check_cleanup_function "qconf_cleanup"
 
 # define test's procedure order
 set check_functions     ""
-#lappend check_functions "qconf_addqueues"             ;# functions to call (in order)
+lappend check_functions "qconf_addqueues"             ;# functions to call (in order)
 lappend check_functions "qconf_removequeues"
 lappend check_functions "qconf_auser"
 lappend check_functions "qconf_duser"
@@ -103,15 +102,18 @@ lappend check_functions "qconf_sprjl_check"	;# Show project list
 # New options, non-show DONE
 
 lappend check_functions "qconf_add_delete_manager"	;# Add and delete manager users 
-lappend check_functions "qconf_add_show_delete_queue"	;# Add, show and delete queue "qconf_queue.q"
+lappend check_functions "qconf_add_show_mod_del_queue"	;# Add, show and delete queue "qconf_queue.q"
 lappend check_functions "qconf_add_show_delete_host"	;# Add, show and delete host exec_host [1], the first execd host
 lappend check_functions "qconf_add_show_delete_stnode"	;# Add, show and delete share tree nodes
 lappend check_functions "qconf_event_client"	;# Create, show and delete event clients
 lappend check_functions "qconf_add_delete_modify_calendar"	;# Add, delete and modify calendar
-lappend check_functions "qconf_add_delete_modify_replace_attr"	;# Add, delete and modify attributes
-#lappend check_functions "qconf_modify_checkpoint"	;# Create, modify and delete checkpoint 
-#lappend check_functions "qconf_modify_exechost"	;# Modify exec host
+#lappend check_functions "qconf_add_delete_modify_replace_attr"	;# Add, delete and modify attributes
+lappend check_functions "qconf_modify_checkpoint"	;# Create, modify and delete checkpoint 
+lappend check_functions "qconf_modify_exechost"	;# Modify exec host
 #lappend check_functions "qconf_modify_hostgroup";# Modify host group
+#lappend check_functions "qconf_modify_project";# Modify project
+#lappend check_functions "qconf_modify_userlist";# Modify user list
+#lappend check_functions "qconf_modify_sched_conf";# Modify scheduler config
 
 
 
@@ -192,6 +194,8 @@ proc qconf_cleanup {} {
       }
    }
 
+   # Delete stuff I created
+   del_manager "qconf_user"
 
    delete_all_jobs
    wait_for_end_of_all_jobs 60
@@ -1515,14 +1519,15 @@ proc qconf_add_delete_manager {} {
 
 
 #                                                             max. column:     |
-#****** qconf/qconf_add_show_delete_queue() ******
+#****** qconf/qconf_add_show_mod_del_queue() ******
 #
 #  NAME
-#     qconf_add_show_delete_queue - Add, show and delete queue "qconf_queue.q"
+#     qconf_add_show_mod_del_queue - Add, show modify and delete queue "qconf_queue.q"
 #
 #  SYNOPSIS
-#     qconf_add_show_delete_queue { } - Call add_queue qconf_queue.q $CHECK_HOST new_queue
+#     qconf_add_show_mod_del_queue { } - Call add_queue qconf_queue.q $CHECK_HOST new_queue
 #                                then   "qconf -sq qconf_queue.q" to show new queue
+#                                Use "qconf -M(m)q queue qname qconf_queue.q"
 #                                Also use "qconf -purge queue qname qconf_queue.q"
 #                                Then clean up with "qconf -dq qconf_queue.q"
 #
@@ -1535,7 +1540,7 @@ proc qconf_add_delete_manager {} {
 # sge_procedures/get_qconf_show_list()
 # sge_procedures/get_qconf_show_list_error()
 #*******************************
-proc qconf_add_show_delete_queue {} {
+proc qconf_add_show_mod_del_queue {} {
    global ts_config env CHECK_ACTUAL_TEST_PATH CHECK_PRODUCT_ROOT
    global CHECK_OUTPUT CHECK_USER CHECK_HOST CHECK_ARCH
 
@@ -1563,6 +1568,27 @@ proc qconf_add_show_delete_queue {} {
       puts $CHECK_OUTPUT "qconf -sql succeded"
    } else {
       puts $CHECK_OUTPUT "result is $result2"
+   }
+
+   # Now modify queue qconf_queue.q
+   set new_queue(seq_no)  "0"
+   puts $CHECK_OUTPUT "Modifying information for qconf_queue.q ...\n"
+   set result21 [mod_queue "qconf_queue.q" $CHECK_HOST new_queue ]
+
+   if { ( $result21 == 0 ) } {
+      puts $CHECK_OUTPUT "qconf -Mq succeded"
+   } else {
+      puts $CHECK_OUTPUT "result is $result21"
+   }
+
+   # Now modify queue qconf_queue.q slow
+   puts $CHECK_OUTPUT "Modifying information for qconf_queue.q slow...\n"
+   set result22 [mod_queue "qconf_queue.q" $CHECK_HOST new_queue 0]
+
+   if { ( $result22 == 0 ) } {
+      puts $CHECK_OUTPUT "qconf -mq succeded"
+   } else {
+      puts $CHECK_OUTPUT "result is $result22"
    }
 
    # Now clear queue "qconf_queue.q"
@@ -1694,9 +1720,11 @@ proc qconf_add_show_delete_queue {} {
 #*******************************
 proc qconf_add_show_delete_host {} {
    global ts_config env CHECK_ACTUAL_TEST_PATH CHECK_PRODUCT_ROOT
-   global CHECK_OUTPUT CHECK_USER CHECK_HOST CHECK_ARCH
+   global CHECK_OUTPUT CHECK_USER 
 
+   set host [lindex $ts_config(execd_nodes) 0]
    set other_host [lindex $ts_config(execd_nodes) 1]
+
 
    # First delete host $other_host. 
    puts $CHECK_OUTPUT "Positive test of qconf -dh $other_host...\n"
@@ -1710,7 +1738,7 @@ proc qconf_add_show_delete_host {} {
 
    # Try deleting $other_host again
    puts $CHECK_OUTPUT "Negative test of qconf -dh  $other_host...\n"
-   set result4 [del_adminhost $other_host $CHECK_HOST $CHECK_USER 0]
+   set result4 [del_adminhost $other_host $host $CHECK_USER 0]
 
    if { ( $result4 == -1 ) } {
       puts $CHECK_OUTPUT "qconf -dh $other_host again succeded"
@@ -1776,8 +1804,9 @@ proc qconf_add_show_delete_host {} {
 #*******************************
 proc qconf_add_show_delete_stnode {} {
    global ts_config env 
-   global CHECK_OUTPUT CHECK_USER CHECK_HOST CHECK_FIRST_FOREIGN_SYSTEM_USER
+   global CHECK_OUTPUT CHECK_USER CHECK_FIRST_FOREIGN_SYSTEM_USER
 
+   set host [lindex $ts_config(execd_nodes) 0]
    set other_host [lindex $ts_config(execd_nodes) 1]
 
    set project "mytestproject"
@@ -1807,7 +1836,7 @@ proc qconf_add_show_delete_stnode {} {
   
    # Now do a negative test on -astnode, add users again
    puts $CHECK_OUTPUT "Adding  30 shares to $CHECK_USER to project $project and 70 shares to $CHECK_FIRST_FOREIGN_SYSTEM_USER again....n"
-   set result2 [add_sharetree_node $project $CHECK_USER 30 $CHECK_FIRST_FOREIGN_SYSTEM_USER 70 $CHECK_HOST $CHECK_USER 0]
+   set result2 [add_sharetree_node $project $CHECK_USER 30 $CHECK_FIRST_FOREIGN_SYSTEM_USER 70 $host $CHECK_USER 0]
 
    if { ( $result2 == 0 ) } {
       puts $CHECK_OUTPUT "qconf -astnode /$project again succeded"
@@ -1899,7 +1928,7 @@ proc qconf_add_show_delete_stnode {} {
 #*******************************
 proc qconf_event_client {} {
    global ts_config env CHECK_SOURCE_DIR
-   global CHECK_OUTPUT CHECK_USER CHECK_HOST CHECK_ARCH
+   global CHECK_OUTPUT CHECK_USER 
 
    set up_arch [resolve_build_arch $ts_config(master_host)]
    set event_client_bin $CHECK_SOURCE_DIR/$up_arch/qevent
@@ -1978,7 +2007,7 @@ proc qconf_event_client {} {
 #*******************************
 proc qconf_add_delete_modify_calendar {} {
    global ts_config env CHECK_SOURCE_DIR
-   global CHECK_OUTPUT CHECK_USER CHECK_HOST CHECK_ARCH
+   global CHECK_OUTPUT CHECK_USER 
 
    set cal_name "qconf_calendar"
 
@@ -2072,15 +2101,16 @@ proc qconf_add_delete_modify_calendar {} {
 #*******************************
 proc qconf_add_delete_modify_replace_attr {} {
    global ts_config env CHECK_SOURCE_DIR
-   global CHECK_OUTPUT CHECK_USER CHECK_HOST CHECK_ARCH
+   global CHECK_OUTPUT CHECK_USER 
 
    set queue_name "qconf_queue.q"
+   set host [lindex $ts_config(execd_nodes) 0]
 
    # First create the queue
    puts $CHECK_OUTPUT "Create  queue $queue_name ...\n"
    set new_queue(qname) "$queue_name"
-   set new_queue(hostlist) "$CHECK_HOST"
-   set result0 [add_queue $queue_name $CHECK_HOST new_queue]
+   set new_queue(hostlist) "$host"
+   set result0 [add_queue $queue_name $host new_queue]
 
    if { ( $result0 == 0 ) } {
       puts $CHECK_OUTPUT "qconf -aq  $queue_name succeded"
@@ -2092,7 +2122,7 @@ proc qconf_add_delete_modify_replace_attr {} {
    set obj_spec "queue"
    set attr_name "slots"
    set val "0"
-   set target "$queue_name\@$CHECK_HOST"
+   set target "$queue_name\@$host"
 
    puts $CHECK_OUTPUT "Modify $obj_spec  $attr_name  ..."
    set result01 [mod_attr  $obj_spec $attr_name $val $target]
@@ -2178,7 +2208,7 @@ proc qconf_add_delete_modify_replace_attr {} {
    # Now delete queue
 
    puts $CHECK_OUTPUT "Delete queue $queue_name ..."
-   set result4 [del_queue  $queue_name $CHECK_HOST 1]
+   set result4 [del_queue  $queue_name $host 1]
 
    if { ( $result4  == 0 )} {
       puts $CHECK_OUTPUT "qconf -dq $queue_name succeded"
@@ -2222,14 +2252,15 @@ proc qconf_add_delete_modify_replace_attr {} {
 #*******************************
 proc qconf_modify_checkpoint {} {
    global ts_config env
-   global CHECK_OUTPUT CHECK_USER CHECK_HOST CHECK_ARCH
+   global CHECK_OUTPUT CHECK_USER 
 
    # First let's create queue qconf_queue.q
    set queue_name "qconf_queue.q"
    puts $CHECK_OUTPUT "Create  queue $queue_name ...\n"
 
    set new_queue(qname) "$queue_name"
-   set result0 [add_queue $queue_name $CHECK_HOST new_queue]
+   set host [lindex $ts_config(execd_nodes) 0]
+   set result0 [add_queue $queue_name $host new_queue]
 
    if { ( $result0 == 0 ) } {
       puts $CHECK_OUTPUT "qconf -aq  $queue_name succeded"
@@ -2302,7 +2333,7 @@ proc qconf_modify_checkpoint {} {
 
    # Now delete queue
    puts $CHECK_OUTPUT "Delete queue $queue_name ..."
-   set result8 [del_queue  $queue_name $CHECK_HOST 1]
+   set result8 [del_queue  $queue_name $host 1]
 
    if { ( $result8  == 0 )} {
       puts $CHECK_OUTPUT "qconf -dq $queue_name succeded"
@@ -2331,13 +2362,17 @@ proc qconf_modify_checkpoint {} {
 #*******************************
 proc qconf_modify_exechost {} {
    global ts_config env
-   global CHECK_OUTPUT CHECK_HOST 
+   global CHECK_OUTPUT 
 
-   # Do A Positive test
-   puts $CHECK_OUTPUT "Modify exec host  $CHECK_HOST  from file ...\n"
-   set new_exechost_charray(processors) "12"
-   set new_exechost_charray(projects) "NONE"
-   set result0 [mod_exechost new_exechost_charray $CHECK_HOST]
+   set host [lindex $ts_config(execd_nodes) 0]
+
+   # Save the initial values
+   get_exechost old_values $host
+
+   # Modify something
+   puts $CHECK_OUTPUT "Modify exec host  $host  from file ...\n"
+   set new_exechost_charray(load_values) "load_avg=1.00"
+   set result0 [mod_exechost new_exechost_charray $host]
 
   if { ( $result0 == 0 ) } {
       puts $CHECK_OUTPUT "qconf -Me succeded\n"
@@ -2346,13 +2381,23 @@ proc qconf_modify_exechost {} {
    }
 
    # Now do it from file
-   puts $CHECK_OUTPUT "Modify exec host  $CHECK_HOST  from CLI...\n"
-   set result1 [mod_exechost new_exechost_charray $CHECK_HOST 0]
+   puts $CHECK_OUTPUT "Modify exec host  $host  from CLI...\n"
+   set result1 [mod_exechost new_exechost_charray $host 0]
 
   if { ( $result1 == 0 ) } {
       puts $CHECK_OUTPUT "qconf -me succeded\n"
    } else {
       puts $CHECK_OUTPUT "result is $result1"
+   }
+
+   # Now restore the old values
+   puts $CHECK_OUTPUT "Restoring old values for  $host  ...\n"
+   set result2 [mod_exechost old_values $host ]
+
+  if { ( $result2 == 0 ) } {
+      puts $CHECK_OUTPUT "qconf -me succeded\n"
+   } else {
+      puts $CHECK_OUTPUT "result is $result2"
    }
 
    set_error 0 "ok"
@@ -2374,8 +2419,9 @@ proc qconf_modify_exechost {} {
 #*******************************
 proc qconf_modify_hostgroup {} {
    global ts_config env
-   global CHECK_OUTPUT CHECK_HOST
+   global CHECK_OUTPUT 
 
+   set host [lindex $ts_config(execd_nodes) 0]
    # First save initial setup
    puts $CHECK_OUTPUT "First save the original host group  @allhosts  ...\n"
    set result0 [get_hostgroup "@allhosts" original_hostgroup_array]
@@ -2389,9 +2435,9 @@ proc qconf_modify_hostgroup {} {
 
    # Now modify the host list
    puts $CHECK_OUTPUT "Modify host group  @allhosts  from file ...\n"
-   set new_hostgroup_charray(hostlist) "$CHECK_HOST"
+   set new_hostgroup_charray(hostlist) "$host"
    set attribute "hostlist" 
-   set value "$CHECK_HOST"
+   set value "$host"
    set result1 [mod_hostgroup "@allhosts" $attribute $value ]
 
   if { ( $result1 == 0 ) } {
@@ -2429,4 +2475,146 @@ proc qconf_modify_hostgroup {} {
    set_error 0 "ok"
 }
 
+
+#****** qconf/qconf_modify_project() ******
+#
+#  NAME
+#     qconf_modify_project - Modify project's fshare
+#
+#  SYNOPSIS
+#     qconf_modify_project { } - Call mod_project
+#
+#  FUNCTION
+#     Check basic functionality of qconf
+#
+#  SEE ALSO
+# sge_project/get_project_list()
+#*******************************
+proc qconf_modify_project {} {
+   global ts_config env
+   global CHECK_OUTPUT 
+
+
+   # Create new project
+   set prj_setup(name) "qconf_project"
+   set my_project "$prj_setup(name)"
+
+   puts $CHECK_OUTPUT "Create project $my_project ...\n"
+   set result [add_project prj_setup]
+
+   # Next modify fast
+   puts $CHECK_OUTPUT "Modify project $my_project fast ...\n"
+   set attribute "fshare"
+   set value "0"
+   set result1 [mod_project $my_project $attribute $value]
+
+   if { ( $result1 == 0 ) } {
+      puts $CHECK_OUTPUT "qconf -Mprj $my_project succeded"
+   } else {
+      puts $CHECK_OUTPUT "result is $result1"
+   }
+
+   # Next modify slow
+   puts $CHECK_OUTPUT "Modify project $my_project slow ...\n"
+   set result2 [mod_project $my_project $attribute $value 0]
+
+   if { ( $result2 == 0 ) } {
+      puts $CHECK_OUTPUT "qconf -mprj $my_project succeded"
+   } else {
+      puts $CHECK_OUTPUT "result is $result2"
+   }
+
+   puts $CHECK_OUTPUT "Delete project $my_project ...\n"
+   set result [del_project $my_project]
+
+   set_error 0 "ok"
+}
+
+#****** qconf/qconf_modify_userlist() ******
+#
+#  NAME
+#     qconf_modify_userlist - Modify userlist's fshare
+#
+#  SYNOPSIS
+#     qconf_modify_userlist { } - Call mod_user
+#
+#  FUNCTION
+#     Check basic functionality of qconf
+#
+#  SEE ALSO
+# sge_project/get_project_list()
+#*******************************
+proc qconf_modify_userlist {} {
+   global ts_config env
+   global CHECK_OUTPUT 
+
+ # Next modify fast
+   set username "userlist1"
+   set attribute "fshare"
+   set value "0"
+   puts $CHECK_OUTPUT "Modify userlist $username fast ...\n"
+   set result1 [mod_user $username $attribute $value]
+
+   if { ( $result1 == 0 ) } {
+      puts $CHECK_OUTPUT "qconf -Mu $username succeded"
+   } else {
+      puts $CHECK_OUTPUT "result is $result1"
+   }
+
+   # Next modify slow
+   puts $CHECK_OUTPUT "Modify userlist $username slow ...\n"
+   set result2 [mod_user $username $attribute $value 0]
+
+   if { ( $result2 == 0 ) } {
+      puts $CHECK_OUTPUT "qconf -mu $username succeded"
+   } else {
+      puts $CHECK_OUTPUT "result is $result2"
+   }
+
+   set_error 0 "ok"
+}
+
+#****** qconf/qconf_modify_sched_conf() ******
+#
+#  NAME
+#     qconf_modify_sched_conf - Modify scheduler config
+#
+#  SYNOPSIS
+#     qconf_modify_sched_conf { } - Call mod_schedd_config
+#
+#  FUNCTION
+#     Check basic functionality of qconf
+#
+#  SEE ALSO
+# sge_project/get_project_list()
+#*******************************
+proc qconf_modify_sched_conf {} {
+   global ts_config env
+   global CHECK_OUTPUT 
+
+ # Next modify fast
+   get_schedd_config myconfig
+   set myconfig(algorithm) "default"  
+
+   puts $CHECK_OUTPUT "Modify schedd fast ...\n"
+   set result1 [mod_schedd_config myconfig ]
+
+   if { ( $result1 == 0 ) } {
+      puts $CHECK_OUTPUT "qconf -Msconf succeded"
+   } else {
+      puts $CHECK_OUTPUT "result is $result1"
+   }
+
+   # Next modify slow
+   puts $CHECK_OUTPUT "Modify schedd slow ...\n"
+   set result2 [mod_schedd_config myconfig 0]
+
+   if { ( $result2 == 0 ) } {
+      puts $CHECK_OUTPUT "qconf -msconf succeded"
+   } else {
+      puts $CHECK_OUTPUT "result is $result2"
+   }
+
+   set_error 0 "ok"
+}
 

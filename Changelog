@@ -1,3 +1,9 @@
+OJ-2006-01-18-0: Testsuite: Added -M(m)ckpt functionality to
+                            in sge_checkpoint.tcl, modified set_exechost.tcl
+		            to support fast add
+                 Review:    DT, JG
+                 Issue:     477
+
 JG-2006-01-16-0: Testsuite: Enhanced testsuite framework by "busy connection" 
                             detection (missing close_spawn_process calls).
                             Additional menu item dumping open connections.
@@ -5,7 +11,7 @@ JG-2006-01-16-0: Testsuite: Enhanced testsuite framework by "busy connection"
                  Review:    CR
 
 OJ-2006-01-13-0: Testsuite: Fixed return codes for *attr procedures
-		                      in sge_procedures.tcl
+	                    in sge_procedures.tcl
                  Review:    pending
                  Issue:     477
 

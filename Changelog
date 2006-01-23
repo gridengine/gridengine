@@ -1,3 +1,11 @@
+RD-2005-12-07-0: CVS        Created V60u7_1_TAG
+---------------------------------------------------------
+
+RD-2006-01-23-0: Bugfix:    fixed a bug in rsh client
+                 Changed:   rsh
+                 Bugtraq:   6366691
+                 Review:    JG
+
 RD-2005-12-07-0: CVS        Created V60u7_BRANCH
 ---------------------------------------------------------
 

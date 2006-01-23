@@ -1,3 +1,11 @@
+Bugs fixed in SGE 6.0u7_1 since release 6.0u7
+-------------------------------------------
+
+Issue    Sun BugId Description
+-------- --------  ------------------------------------------------------------------------------------------
+-        6366691   utilbin/<arch>/rsh can be used to gain root access
+
+
 Bugs fixed in SGE 6.0u7 since release 6.0u6
 -------------------------------------------
 

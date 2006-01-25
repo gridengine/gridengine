@@ -779,37 +779,28 @@ proc handle_sge_errors {procedure command result messages_var {raise_error 1}} {
    # in case of errors, do error reporting
    if {$ret < 0} {
       set error_level -1
-   } else {
-      set error_level 0
-   }
+      set error_message "$command failed ($ret):\n"
 
-   set error_message "$command failed ($ret):\n"
+      if {$ret == -999} {
+         append error_message "$result"
+      } else {
+         # we might have a high level error description
+         if {[info exists messages($ret,description)]} {
+            append error_message "$messages($ret,description)\n"
+            append error_message "command output was:\n"
+         }
 
-   if {$ret == -999} {
-      append error_message "$result"
-   } else {
-      # we might have a high level error description
-      if {[info exists messages($ret,description)]} {
-         append error_message "$messages($ret,description)\n"
-         append error_message "command output was:\n"
+         append error_message "$result"
+
+         # we might have a special error level (error, warning, unsupported)
+         if {[info exists messages($ret,level)]} {
+            set error_level $messages($ret,level)
+         }
       }
 
-      append error_message "$result"
-
-      # we might have a special error level (error, warning, unsupported)
-      if {[info exists messages($ret,level)]} {
-         set error_level $messages($ret,level)
-      }
+      # generate error message or just informational/error output
+      add_proc_error $procedure $error_level $error_message $raise_error
    }
-
-   # in case of success (errno >= 0), we just want to see the output, not
-   # raise an error
-   if {$ret >= 0} {
-      set raise_error 0
-   }
-
-   # generate error message or just informational/error output
-   add_proc_error $procedure $error_level $error_message $raise_error
 
    return $ret
 }

@@ -141,46 +141,17 @@ proc get_checkpointobj { ckpt_obj change_array } {
 #*******************************
 proc del_checkpointobj { checkpoint_name } {
    global ts_config
-   global CHECK_ARCH CHECK_CORE_MASTER CHECK_USER CHECK_HOST
-   global CHECK_OUTPUT
+   global CHECK_USER
 
    unassign_queues_with_ckpt_object $checkpoint_name
 
-  set REMOVED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_REMOVEDFROMLIST_SSSS] $CHECK_USER "*" $checkpoint_name "*" ]
+   set messages(index) "0"
+   set messages(0) [translate_macro MSG_SGETEXT_REMOVEDFROMLIST_SSSS $CHECK_USER "*" $checkpoint_name "*"]
+   
+   set output [start_sge_bin "qconf" "-dckpt $checkpoint_name"]
 
-  log_user 0
-  set id [ open_remote_spawn_process $CHECK_HOST $CHECK_USER "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-dckpt $checkpoint_name"  ]
-  set sp_id [ lindex $id 1 ]
-  set timeout 30
-  set result -1
-
-  log_user 0
-
-  expect {
-    -i $sp_id full_buffer {
-      set result -1
-      add_proc_error "del_checkpointobj" "-1" "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
-    }
-    -i $sp_id $REMOVED {
-      set result 0
-    }
-    -i $sp_id "removed" {
-      set result 0
-    }
-
-    -i $sp_id default {
-      set result -1
-    }
-
-  }
-  close_spawn_process $id
-  log_user 1
-
-  if { $result != 0 } {
-     add_proc_error "del_checkpointobj" -1 "could not delete checkpoint object $checkpoint_name"
-  }
-
-  return $result
+   set ret [handle_sge_errors "del_checkpointobj" "qconf -dckpt $checkpoint_name" $output messages]
+   return $ret
 }
 
 #                                                             max. column:     |

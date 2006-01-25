@@ -1482,9 +1482,8 @@ proc qrsh_batch {} {
       return
    } 
 
-
    puts $CHECK_OUTPUT "check qrsh in immediate and batch mode (-now yes / no)"
-   set COULD_NOT_BE_STARED [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QSH_REQUESTCANTBESCHEDULEDTRYLATER_S] "*" ]
+   set COULD_NOT_BE_SCHEDULED [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QSH_REQUESTCANTBESCHEDULEDTRYLATER_S] "*" ]
    if { $ts_config(gridengine_version) == 60 } {
       set HAS_BEEN_SUBMITTED  [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_SUBMITJOB_USS] "*" "*" "*"]
    } else {
@@ -1511,7 +1510,7 @@ proc qrsh_batch {} {
          -i $sp_id "blahblah" {
             add_proc_error "qrsh_batch" -1 "qrsh -now yes ran dispite no resources free on host $host"
          }
-         -i $sp_id $COULD_NOT_BE_STARED {
+         -i $sp_id $COULD_NOT_BE_SCHEDULED {
             puts $CHECK_OUTPUT "qrsh aborted correctly (1)"
             set error 0
          } 
@@ -1609,7 +1608,7 @@ proc qrsh_batch {} {
          -i $sp_id "blahblah" {
             puts $CHECK_OUTPUT "got qrsh job output as expected (blahblah)!"
          }
-         -i $sp_id $COULD_NOT_BE_STARED { 
+         -i $sp_id $COULD_NOT_BE_SCHEDULED { 
             add_proc_error "qrsh_batch" -1 "message \"could not be scheduled\" should not occur with batch jobs"
          }
          -i $sp_id "*could not be scheduled*" {

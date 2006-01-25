@@ -1,6 +1,9 @@
+JG-2006-01-25-0: Testsuite: Fixes and cleanup in testsuite framework.
+                 Review:    RD
+
 OJ-2006-01-18-0: Testsuite: Added -M(m)ckpt functionality to
                             in sge_checkpoint.tcl, modified set_exechost.tcl
-		            to support fast add
+		                      to support fast add
                  Review:    DT, JG
                  Issue:     477
 

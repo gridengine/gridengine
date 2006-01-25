@@ -252,7 +252,7 @@ proc set_pe { pe_obj change_array } {
 #     del_pe -- delete parallel environment object definition
 #
 #  SYNOPSIS
-#     del_pe { mype_name }
+#     del_pe { pe_name }
 #
 #  FUNCTION
 #     This procedure will delete a existing parallel environment, defined with
@@ -263,52 +263,23 @@ proc set_pe { pe_obj change_array } {
 #
 #  RESULT
 #     0  - ok
-#     -1 - timeout error
+#     <0 - error
 #
 #  SEE ALSO
 #     sge_procedures/add_pe()
 #*******************************
-proc del_pe { mype_name } {
+proc del_pe {pe_name} {
    global ts_config
-  global CHECK_ARCH CHECK_CORE_MASTER CHECK_USER CHECK_HOST
-  global CHECK_OUTPUT
+   global CHECK_USER
 
-   unassign_queues_with_pe_object $mype_name
+   unassign_queues_with_pe_object $pe_name
 
-  set REMOVED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_REMOVEDFROMLIST_SSSS] $CHECK_USER "*" $mype_name "*" ]
+   set messages(index) "0"
+   set messages(0) [translate_macro MSG_SGETEXT_REMOVEDFROMLIST_SSSS $CHECK_USER "*" $pe_name "*"]
 
-  log_user 0
-  set id [ open_remote_spawn_process $CHECK_HOST $CHECK_USER "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-dp $mype_name"]
-  set sp_id [ lindex $id 1 ]
+   set output [start_sge_bin "qconf" "-dp $pe_name"]
 
-  set result -1
-  set timeout 30
-  log_user 0
-
-  expect {
-    -i $sp_id full_buffer {
-      set result -1
-      add_proc_error "del_pe" -1 "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
-    }
-    -i $sp_id $REMOVED {
-      set result 0
-    }
-    -i $sp_id "removed" {
-      set result 0
-    }
-
-    -i $sp_id default {
-      set result -1
-    }
-
-  }
-  close_spawn_process $id
-
-  log_user 1
-  if { $result != 0 } {
-     add_proc_error "del_pe" -1 "could not delete pe \"$mype_name\""
-  }
-  return $result
-
+   set ret [handle_sge_errors "del_pe" "qconf -dp $pe_name" $output messages]
+   return $ret
 }
 

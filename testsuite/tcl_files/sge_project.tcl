@@ -157,47 +157,22 @@ proc get_prj { prj_name change_array } {
 #  SEE ALSO
 #     ???/???
 #*******************************
-proc del_prj { myprj_name } {
-  global ts_config
-  global CHECK_ARCH CHECK_USER CHECK_CORE_MASTER
-  global CHECK_HOST
+proc del_prj { prj_name } {
+   global ts_config
+   global CHECK_USER
 
-  if { [ string compare $ts_config(product_type) "sge" ] == 0 } {
-     set_error -1 "del_prj - not possible for sge systems"
-     return
-  }
+   if {$ts_config(product_type) == "sge"} {
+      set_error -1 "del_prj - not possible for sge systems"
+      return -1
+   }
 
-  set REMOVED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_REMOVEDFROMLIST_SSSS] $CHECK_USER "*" $myprj_name "*" ]
+   set messages(index) "0"
+   set messages(0) [translate_macro MSG_SGETEXT_REMOVEDFROMLIST_SSSS $CHECK_USER "*" $myprj_name "*"]
 
-  log_user 0
-  set id [ open_remote_spawn_process $CHECK_HOST $CHECK_USER "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-dprj $myprj_name"]
-  set sp_id [ lindex $id 1 ]
-  set result -1
-  set timeout 30 	
-  log_user 0 
+   set output [start_sge_bin "qconf" "-dprj $prj_name"]
 
-  expect {
-    -i $sp_id full_buffer {
-      set result -1
-      add_proc_error "del_prj" "-1" "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
-    }
-    -i $sp_id "removed" {
-      set result 0
-    }
-    -i $sp_id $REMOVED {
-      set result 0
-    }
-
-    -i $sp_id default {
-      set result -1
-    }
-  }
-  close_spawn_process $id
-  log_user 1
-  if { $result != 0 } {
-     add_proc_error "del_prj" -1 "could not delete project \"$myprj_name\""
-  }
-  return $result
+   set ret [handle_sge_errors "del_prj" "qconf -dprj $prj_name" $output messages]
+   return $ret
 }
 
 #****** sge_project/get_project_list() *****************************************

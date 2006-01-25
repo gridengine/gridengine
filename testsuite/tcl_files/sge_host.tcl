@@ -228,6 +228,9 @@ proc set_exechost { change_array host {fast_add 1} {on_host ""} {as_user ""} {ra
 
    # Modify exechost from file?
    if { $fast_add } {
+     unset old_values(processors)
+     unset old_values(load_values)
+
      set tmpfile [dump_array_to_tmpfile old_values]
      set result [start_sge_bin "qconf" "-Me $tmpfile" $on_host $as_user]
 

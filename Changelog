@@ -1,3 +1,8 @@
+AH-2006-01-26-0: Enhancem.: Added more relevant information to starting up
+                            info message in daemon messages files
+                 Changed:   sge_qmaster, sge_execd, sge_schedd
+                 Review:    JG
+
 JG-2006-01-25-0: Testsuite: Fixes and cleanup in testsuite framework.
                  Review:    RD
 

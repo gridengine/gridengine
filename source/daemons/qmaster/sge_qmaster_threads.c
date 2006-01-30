@@ -82,6 +82,7 @@
 #include "qm_name.h"
 #include "setup_path.h"
 
+#include "uti/sge_os.h"
 
 /*
  * This is NOT officially approved by POSIX. In fact, POSIX does not specify a
@@ -227,10 +228,8 @@ void sge_gdi_kill_master(char *host, sge_gdi_request *request, sge_gdi_request *
 *******************************************************************************/
 void sge_daemonize_qmaster(void)
 {
-   enum { true = 1 };
-
    pid_t pid = -1;
-   int i;
+   int failed_fd;
 
    DENTER(TOP_LAYER, "sge_daemonize_qmaster");
 
@@ -258,14 +257,14 @@ void sge_daemonize_qmaster(void)
       exit(0); /* child 1 terminates */
    }
 
-#ifndef __INSURE__
-   /* This must be disabled for insure tests */
-   for (i = 0; i < sysconf(_SC_OPEN_MAX); i++) { close(i); }
+   sge_close_all_fds(NULL);
 
-   if (open("/dev/null", O_RDONLY, 0) != 0) { SGE_EXIT(0); }
-   if (open("/dev/null", O_RDWR,   0) != 1) { SGE_EXIT(0); }
-   if (open("/dev/null", O_RDWR,   0) != 2) { SGE_EXIT(0); }
-#endif
+   failed_fd = sge_occupy_first_three();
+   if (failed_fd  != -1) {
+      CRITICAL((SGE_EVENT, MSG_CANNOT_REDIRECT_STDINOUTERR_I, failed_fd));
+      SGE_EXIT(0);
+   }
+
    uti_state_set_daemonized(true);
 
    DEXIT;
@@ -1042,7 +1041,7 @@ int sge_shutdown_qmaster_via_signal_thread(int i)
 {
    int return_value = 0;
    DENTER(TOP_LAYER, "sge_shutdown_qmaster_via_signal_thread");
-   if ( pthread_kill(get_signal_thread(), SIGINT) != 0) {
+   if (pthread_kill(get_signal_thread(), SIGINT) != 0) {
       return_value = -1;         
    }
    qmaster_exit_state = i;

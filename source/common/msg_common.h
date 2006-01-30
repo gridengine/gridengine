@@ -64,6 +64,8 @@
 #define MSG_CONFIG_CONF_ONLYSINGLEVALUEFORCONFIGATTRIB_S       _MESSAGE(23026, _("only a single value is allowed for configuration attribute "SFQ))
 #define MSG_CONFIG_CONF_ERRORSTORINGCONFIGVALUE_S     _MESSAGE(23027, _("error storing configuration attribute "SFQ))
 
+#define MSG_CANNOT_REDIRECT_STDINOUTERR_I     _MESSAGE(23028, _("cannot redirect stdin/stdout/stderr (%d) to /dev/null"))
+
 /*
 ** parse_job_cull.c
 */

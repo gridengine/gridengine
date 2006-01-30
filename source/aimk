@@ -325,6 +325,7 @@ usage:
    echo "-adoc             -> create source code documentation in adoc format"
    echo "-catman           -> generate man pages in catman format"
    echo "-cc               -> use cc/CC to compile c/c++ code"
+   echo "-cov              -> complile for code coverage analysis"
    echo "-dce              -> enable dce security"
    echo "-debug            -> compile with debug information"
    echo "-efence           -> compile in debug mode and detect memory leaks"
@@ -332,12 +333,11 @@ usage:
    echo "-gcc              -> use gcc instead of system compiler (where supported)"
    echo "-gettext          -> build the gettext libraries"
    echo "-gprof            -> enable gprof profiling"
-   echo "-gcov             -> enable gcov code coverage testing"
    echo "-gss              -> enable gss security"
    echo "-help             -> show this help"
    echo "-htmlman          -> generate man and html pages"
    echo "-htmlmankv        -> generate man and html pages checked out with '-kv' flag"
-   echo "-insure           -> compile in debug mode and detect memory leaks)"
+   echo "-insure           -> compile in debug mode and detect memory leaks"
    echo "-intl             -> compile with internationalization library (libintl)"
    echo "-java             -> compile Java[TM] class files"
    echo "-javadoc          -> create source code documentation in Javadoc[TM] tool format"
@@ -416,7 +416,7 @@ set WITH_USERMAPPING = 0 # Compile without usermapping feature
 # Default Flags and Libraries 
 set OPTIMIZATION     = 1
 set GPROFFED         = 0
-set GCOVED           = 0
+set COVED            = 0
 set DEBUGGED         = 0
 set COMPILE_DC       = 0
 set CC               = cc
@@ -605,6 +605,10 @@ while ($#argv >= 1 && $?found)
       set CC       = cc
       set CXX      = CC
       breaksw
+   case "-cov":
+      set COVED      = 1
+      set STRIP      = "echo"
+      breaksw
    case "-crypto":
       set CFLAGS  = "-DCRYPTO -I$OPENSSL_HOME/include $CFLAGS"
       set LFLAGS  = "-L$OPENSSL_HOME/lib $LFLAGS"
@@ -657,10 +661,6 @@ while ($#argv >= 1 && $?found)
       set GPROFFED   = 1
       set STRIP      = "echo"
       breaksw
-   case "-gcov":
-      set GCOVED     = 1
-      set STRIP      = "echo"
-      breaksw
    case "-gss":
       set GSSDEPEND = "gss_depend"
       set GSSCLEAN = "gss_clean"
@@ -680,10 +680,7 @@ while ($#argv >= 1 && $?found)
    case "-insure"
       set CC         = insure
       set CXX        = insure
-      #set DEBUG_FLAG = "$DEBUG_FLAG -g -Zsl -Zvm -Zvm -Zkt"
-      #set DEBUG_FLAG = "$DEBUG_FLAG -g -Zsl"
-      #set DEBUG_FLAG = "$DEBUG_FLAG -Zsl"
-      set INSURE_FLAG = "-Zsl -Zvm"
+      set INSURE_FLAG = "-Zsl"
       set LFLAGS     = "-Zsl $LFLAGS"
       set DEBUGGED   = 1
       breaksw
@@ -1062,7 +1059,7 @@ case ALPHA5:
    endif
 
    if ( $GPROFFED == 1) then
-      set DEBUG_FLAG = "-g1 -pg -gen_feedback -non_shared -DSGE_LOCK_DEBUG"
+      set DEBUG_FLAG = "-g1 -pg -gen_feedback -non_shared"
    endif
 
    set NOERR_CFLAG  = "-w"
@@ -1108,7 +1105,7 @@ case DARWIN:
       set DEBUG_FLAG = "$DEBUG_FLAG -pg"
    endif
 
-   if ($GCOVED == 1) then
+   if ($COVED == 1) then
       set DEBUG_FLAG = "$DEBUG_FLAG -fprofile-arcs -ftest-coverage"
    endif
 
@@ -1354,10 +1351,6 @@ case LINUXPPC:
    else
       set CFLAGS = "-Wno-error $CFLAGS"
       set OFLAG = "-O2"
-      if ( $SEC ==  1 ) then
-         set KLIBS = "-lssl -lcrypto"
-      endif
-      set LIBS = "$LIBS"
    endif
 
    if ($DEBUGGED == 1) then
@@ -1366,11 +1359,11 @@ case LINUXPPC:
    endif
 
    if ($GPROFFED == 1) then
-      set DEBUG_FLAG = "$DEBUG_FLAG -pg -DSGE_LOCK_DEBUG"
+      set DEBUG_FLAG = "$DEBUG_FLAG -pg"
    endif
 
-   if ($GCOVED == 1) then
-      set DEBUG_FLAG = "$DEBUG_FLAG -fprofile-arcs -ftest-coverage -DSGE_LOCK_DEBUG"
+   if ($COVED == 1) then
+      set DEBUG_FLAG = "$DEBUG_FLAG -fprofile-arcs -ftest-coverage"
    endif
 
    if ( -f /lib/libc.so.6 ) then
@@ -1498,7 +1491,7 @@ case WIN32_X86:
    endif
 
    if ($GPROFFED == 1) then
-      set DEBUG_FLAG = "$DEBUG_FLAG -pg -DSGE_LOCK_DEBUG"
+      set DEBUG_FLAG = "$DEBUG_FLAG -pg"
    endif
 
    if ( -f /lib/libc.so.6 ) then
@@ -1599,7 +1592,7 @@ case SLINUX:
       set OFLAG = ""
    endif
    if ( $GPROFFED == 1) then
-      set DEBUG_FLAG = "$DEBUG_FLAG -pg -DSGE_LOCK_DEBUG"
+      set DEBUG_FLAG = "$DEBUG_FLAG -pg"
    endif
 
    set CFLAGS   = "$OFLAG -Wall -Werror -Wstrict-prototypes -DLINUX -DSLINUX -DGETHOSTBYNAME_R6 -DGETHOSTBYADDR_R8 $DEBUG_FLAG $CFLAGS"
@@ -1666,10 +1659,20 @@ case SOLARISAMD64:
    if ( $GPROFFED == 1 ) then
       set OFLAG = "-O"
       if ( $CC == gcc ) then
-         set DEBUG_FLAG = "-g -pg -DSGE_LOCK_DEBUG"
+         set DEBUG_FLAG = "-g -pg"
          set LIBS = "$LIBS -ldl"
       else
-         set DEBUG_FLAG = "-g -xpg -DSGE_LOCK_DEBUG"
+         set DEBUG_FLAG = "-g -xpg"
+      endif
+   endif
+
+   if ($COVED == 1) then
+      set OFLAG = ""
+      if ( $CC == gcc ) then
+         set DEBUG_FLAG = "$DEBUG_FLAG -fprofile-arcs -ftest-coverage"
+      else
+         set DEBUG_FLAG = "$DEBUG_FLAG -xprofile=tcov"
+         set SHARED_LFLAGS = "$SHARED_LFLAGS -xprofile=tcov"
       endif
    endif
 
@@ -2385,8 +2388,8 @@ if ( "$QTCSH" == 1) then
 
    # with shared libs: qtcsh requires finding libsge.so during build
    # for AIX, we have to pass special options to make
-   set SGE_COPTS = "$DEBUG_FLAG"
-   set SGE_LOPTS = ""
+   set SGE_COPTS = "$DEBUG_FLAG $INSURE_FLAG"
+   set SGE_LOPTS = "$INSURE_FLAG"
 
 
    if ( $SHAREDLIBS == 1 ) then
@@ -2419,11 +2422,7 @@ if ( "$QTCSH" == 1) then
 
    cd $SOURCE/3rdparty/qtcsh/$COMPILE_ARCH
 
-   if ( $CC == "insure" ) then
-      setenv CC insure
-   endif
-
-   $MAKE $MAKEOPT -f Makefile "MAKE=$MAKE" "COMPILE_ARCH=$COMPILE_ARCH" \
+   $MAKE $MAKEOPT -f Makefile "MAKE=$MAKE" "CC=$CC" "COMPILE_ARCH=$COMPILE_ARCH" \
          "SGE_LIBS=$LFLAGS $KLFLAGS $SGE_LIBS $SECLIB $KRBLIB $KLIBS $DLLIB" \
          "SGE_COPTS=$SGE_COPTS" "SGE_LOPTS=$SGE_LOPTS" "DLLIB=$DLLIB" $argv
 

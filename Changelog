@@ -1,3 +1,8 @@
+JG-2006-01-30-0: Enhancem.: cleanup aimk code coverage options
+                            cleanup of daemonizing including insure related
+                            actions.
+                 Review:    RD
+
 JG-2005-12-28-0: Bugfix:    qrsh always did verbose output
                  Review:    CR
 

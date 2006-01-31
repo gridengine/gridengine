@@ -337,7 +337,7 @@ usage:
    echo "-help             -> show this help"
    echo "-htmlman          -> generate man and html pages"
    echo "-htmlmankv        -> generate man and html pages checked out with '-kv' flag"
-   echo "-insure           -> compile in debug mode and detect memory leaks)"
+   echo "-insure           -> compile in debug mode and detect memory leaks"
    echo "-intl             -> compile with internationalization library (libintl)"
    echo "-java             -> compile Java[TM] class files"
    echo "-javadoc          -> create source code documentation in Javadoc[TM] tool format"
@@ -684,10 +684,7 @@ while ($#argv >= 1 && $?found)
    case "-insure"
       set CC         = insure
       set CXX        = insure
-      #set DEBUG_FLAG = "$DEBUG_FLAG -g -Zsl -Zvm -Zvm -Zkt"
-      #set DEBUG_FLAG = "$DEBUG_FLAG -g -Zsl"
-      #set DEBUG_FLAG = "$DEBUG_FLAG -Zsl"
-      set INSURE_FLAG = "-Zsl -Zvm"
+      set INSURE_FLAG = "-Zsl"
       set LFLAGS     = "-Zsl $LFLAGS"
       set DEBUGGED   = 1
       breaksw
@@ -1265,7 +1262,7 @@ case IRIX65:
    set COMPILE_DC = 1
    set MAKE = gmake
 
-   set CFLAGS   = "$OFLAG -Werror -woff 3201,3496 -n32 -mips3 -mp -DFD_SETSIZE=8192 -DIRIX -D$BUILDARCH -DGETHOSTBYNAME_M -DGETHOSTBYADDR_M $DEBUG_FLAG $CFLAGS"
+   set CFLAGS   = "$OFLAG -Werror -woff 1035,3201,3496 -n32 -mips3 -mp -DFD_SETSIZE=8192 -DIRIX -D$BUILDARCH -DGETHOSTBYNAME_M -DGETHOSTBYADDR_M $DEBUG_FLAG $CFLAGS"
    set NOERR_CFLAG = "-woff 1110,1174,1209"
    set DEPEND_FLAGS = "$CFLAGS $XMTINCD"
    set LFLAGS   = "-n32 -mips3 $DEBUG_FLAG $LFLAGS"
@@ -1368,10 +1365,6 @@ case LINUXPPC:
    else
       set CFLAGS = "-Wno-error $CFLAGS"
       set OFLAG = "-O2"
-      if ( $SEC ==  1 ) then
-         set KLIBS = "-lssl -lcrypto"
-      endif
-      set LIBS = "$LIBS"
    endif
 
    if ($DEBUGGED == 1) then
@@ -1688,7 +1681,7 @@ case SOLARISAMD64:
    endif
 
    if ($COVED == 1) then
-      set OFLAG = "-O"
+      set OFLAG = ""
       if ( $CC == gcc ) then
          set DEBUG_FLAG = "$DEBUG_FLAG -fprofile-arcs -ftest-coverage"
       else
@@ -2473,8 +2466,8 @@ if ( "$QTCSH" == 1) then
 
    # with shared libs: qtcsh requires finding libsge.so during build
    # for AIX, we have to pass special options to make
-   set SGE_COPTS = "$DEBUG_FLAG"
-   set SGE_LOPTS = ""
+   set SGE_COPTS = "$DEBUG_FLAG $INSURE_FLAG"
+   set SGE_LOPTS = "$INSURE_FLAG"
 
 
    if ( $SHAREDLIBS == 1 ) then
@@ -2507,11 +2500,7 @@ if ( "$QTCSH" == 1) then
 
    cd $SOURCE/3rdparty/qtcsh/$COMPILE_ARCH
 
-   if ( $CC == "insure" ) then
-      setenv CC insure
-   endif
-
-   $MAKE $MAKEOPT -f Makefile "MAKE=$MAKE" "COMPILE_ARCH=$COMPILE_ARCH" \
+   $MAKE $MAKEOPT -f Makefile "MAKE=$MAKE" "CC=$CC" "COMPILE_ARCH=$COMPILE_ARCH" \
          "SGE_LIBS=$LFLAGS $KLFLAGS $SGE_LIBS $SECLIB $KRBLIB $KLIBS $DLLIB" \
          "SGE_COPTS=$SGE_COPTS" "SGE_LOPTS=$SGE_LOPTS" "DLLIB=$DLLIB" $argv
 

@@ -1,3 +1,9 @@
+JG-2006-01-31-0: Enhancem.: Merged JG-2006-01-30-0 from V60s2_BRANCH:
+                            cleanup aimk code coverage options
+                            cleanup of daemonizing including insure related
+                            actions.
+                 Review:    RD
+
 AH-2006-01-26-0: Enhancem.: Added more relevant information to starting up
                             info message in daemon messages files
                  Changed:   sge_qmaster, sge_execd, sge_schedd

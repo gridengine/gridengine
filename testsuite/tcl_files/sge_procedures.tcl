@@ -2470,15 +2470,12 @@ proc add_user { change_array { from_file 0 } } {
   return $result
 }
 
-
-
-
 #****** sge_procedures/mod_user() **********************************************
 #  NAME
-#     mod_user() -- ??? 
+#     mod_user() -- ???
 #
 #  SYNOPSIS
-#     mod_user { change_array { from_file 0 } } 
+#     mod_user { change_array { from_file 0 } }
 #
 #  FUNCTION
 #     modify user with qconf -muser or -Muser
@@ -2498,7 +2495,7 @@ proc add_user { change_array { from_file 0 } } {
 #*******************************************************************************
 proc mod_user { change_array { from_file 0 } } {
   global ts_config
-  global CHECK_ARCH 
+  global CHECK_ARCH
   global CHECK_CORE_MASTER CHECK_USER CHECK_HOST CHECK_USER CHECK_OUTPUT
   upvar $change_array chgar
   set values [array names chgar]
@@ -2550,7 +2547,7 @@ proc mod_user { change_array { from_file 0 } } {
         puts $CHECK_OUTPUT "$elem $org_struct($elem)"
         puts $fd "$elem $org_struct($elem)"
      }
-     close $fd 
+     close $fd
      puts $CHECK_OUTPUT "using file $f_name"
      set result [start_remote_prog $CHECK_HOST $CHECK_USER "qconf" "-Muser $f_name"]
      if { $prg_exit_state != 0 } {
@@ -2558,7 +2555,7 @@ proc mod_user { change_array { from_file 0 } } {
      }
      set result [string trim $result]
      puts $CHECK_OUTPUT "\"$result\""
-     puts $CHECK_OUTPUT "\"$MODIFIED\"" 
+     puts $CHECK_OUTPUT "\"$MODIFIED\""
      if { [ string match "*$MODIFIED" $result] } {
         return 0
      }
@@ -2572,15 +2569,14 @@ proc mod_user { change_array { from_file 0 } } {
 
   set vi_commands [build_vi_command chgar]
 
-  set result [ handle_vi_edit "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-muser $chgar(name)" $vi_commands $MODIFIED $ALREADY_EXISTS ]
-  
+  set result [ handle_vi_edit "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" " -muser $chgar(name)" $vi_commands $MODIFIED $ALREADY_EXISTS ]
+
   if {$result == -1 } { add_proc_error "mod_user" -1 "timeout error" }
   if {$result == -2 } { add_proc_error "mod_user" -1 "\"[set chgar(name)]\" already exists" }
   if {$result != 0  } { add_proc_error "mod_user" -1 "could not mod user \"[set chgar(name)]\"" }
 
   return $result
 }
-
 
 
 #                                                             max. column:     |
@@ -3562,7 +3558,7 @@ proc mhattr { attribute entry host_name { add_error 1 } } {
 #     mod_attr() -- modify an attribute 
 #
 #  SYNOPSIS
-#     mod_attr { object attribute value target {fast_add 1} {on_host ""} {as_user ""} }
+#     mod_attr { object attribute value target {fast_add 1} {on_host ""} {as_user ""} {raise_error 1}}
 #
 #  FUNCTION
 #     Modifies attribute of object with value for object_instance
@@ -3574,12 +3570,13 @@ proc mhattr { attribute entry host_name { add_error 1 } } {
 #     target       - target object
 #     {fast_add 1} - 0: modify the attribute using qconf -mattr, 
 #                  - 1: modify the attribute using qconf -Mattr, faster
+#     raise_error - do add_proc_error in case of errors
 #
 #  RESULT
 #     integer value  0 on success, -2 on error
 #
 #*******************************************************************************
-proc mod_attr { object attribute value target {fast_add 1} {on_host ""} {as_user ""} } {
+proc mod_attr { object attribute value target {fast_add 1} {on_host ""} {as_user ""} {raise_error 1} } {
    global ts_config
    global CHECK_ARCH CHECK_OUTPUT CHECK_USER CHECK_HOST
 
@@ -3594,7 +3591,7 @@ proc mod_attr { object attribute value target {fast_add 1} {on_host ""} {as_user
       if {$prg_exit_state == 0} {
          set ret 0
       } else {
-         set ret -2
+         set ret [mod_attr_file_error $result $object $attribute $tmpfile $target $raise_error]   
       }
 
    } else {
@@ -3604,13 +3601,76 @@ proc mod_attr { object attribute value target {fast_add 1} {on_host ""} {as_user
       if {$prg_exit_state == 0} {
          set ret 0
       } else {
-         set ret -2
+         set ret [mod_attr_error $result $object $attribute $value $target $raise_error]
       }
 
    }
 
    return $ret
 }
+
+#****** sge_procedures/mod_attr_error() ***************************************
+#  NAME
+#     mod_attr_error() -- error handling for mod_attr
+#
+#  SYNOPSIS
+#     mod_attr_error {result object attribute value target raise_error }
+#
+#  FUNCTION
+#     Does the error handling for mod_attr.
+#     Translates possible error messages of qconf -mattr,
+#     builds the datastructure required for the handle_sge_errors
+#     function call.
+#
+#     The error handling function has been intentionally separated from
+#     mod_attr. While the qconf call and parsing the result is
+#     version independent, the error messages (macros) usually are version
+#     dependent.
+#
+#  INPUTS
+#     result      - qconf output
+#     object      - object qconf is modifying
+#     tmpfile     - temp file for qconf -Mattr
+#     attribute    - attribute of object we are modifying
+#     value        - value of attribute of object we are modifying
+#     target      - target object
+#     raise_error - do add_proc_error in case of errors
+#
+#  RESULT
+#     Returncode for mod_attr function:
+#      -1: "wrong_attr" is not an attribute
+#     -99: other error
+#
+#  SEE ALSO
+#     sge_calendar/get_calendar
+#     sge_procedures/handle_sge_errors
+#*******************************************************************************
+proc mod_attr_file_error {result object attribute tmpfile target raise_error} {
+
+   # recognize certain error messages and return special return code
+   set messages(index) "-1"
+   set messages(-1) "error: [translate_macro MSG_UNKNOWNATTRIBUTENAME_S $attribute ]"
+
+   set ret 0
+   # now evaluate return code and raise errors
+   set ret [handle_sge_errors "mod_attr" "qconf -Mattr $object $tmpfile $target" $result messages $raise_error]
+
+   return $ret
+}
+
+proc mod_attr_error {result object attribute value target raise_error} {
+
+   # recognize certain error messages and return special return code
+   set messages(index) "-1"
+   set messages(-1) [translate_macro MSG_PARSE_BAD_ATTR_ARGS_SS $attribute $value]
+
+   set ret 0
+   # now evaluate return code and raise errors
+   set ret [handle_sge_errors "mod_attr" "qconf -mattr $object $attribute $value $target" $result messages $raise_error]
+
+   return $ret
+}
+
 
 
 #****** sge_procedures/get_attr() ******************************************
@@ -3646,7 +3706,7 @@ proc get_attr { object attribute target {on_host ""} {as_user ""} {raise_error 1
 #     del_attr() -- Delete an attribute
 #
 #  SYNOPSIS
-#     del_attr { object attribute value target {fast_add 1} {on_host ""} {as_user ""}}
+#     del_attr { object attribute value target {fast_add 1} {on_host ""} {as_user ""} {raise_error 1}}
 #
 #  FUNCTION
 #     Delete attribute of object
@@ -3660,12 +3720,13 @@ proc get_attr { object attribute target {on_host ""} {as_user ""} {raise_error 1
 #     {as_user ""}    - execute qconf as this user, default is $CHECK_USER
 #     {fast_add 1} - 0: modify the attribute using qconf -dattr,
 #                  - 1: modify the attribute using qconf -Dattr, faster
+#     raise_error - do add_proc_error in case of errors
 #
 #  RESULT
 #     integer value  0 on success, -2 on error
 #
 #*******************************************************************************
-proc del_attr { object attribute value target {fast_add 1} {on_host ""} {as_user ""} } {
+proc del_attr { object attribute value target {fast_add 1} {on_host ""} {as_user ""} {raise_error 1}} {
    global ts_config
    global CHECK_ARCH CHECK_OUTPUT CHECK_USER CHECK_HOST
 
@@ -3680,7 +3741,7 @@ proc del_attr { object attribute value target {fast_add 1} {on_host ""} {as_user
       if {$prg_exit_state == 0} {
          set ret 0
       } else {
-         set ret -2
+         set ret [del_attr_file_error $result $object $tmpfile  $attribute $target $raise_error]
       }
 
 
@@ -3692,20 +3753,82 @@ proc del_attr { object attribute value target {fast_add 1} {on_host ""} {as_user
       if {$prg_exit_state == 0} {
          set ret 0
       } else {
-         set ret -2
+         set ret [del_attr_error $result $object $attribute $value $target $raise_error]
       }
 
    }
  
-   return $result
+   return $ret
 }
+
+#****** sge_procedures/del_attr_error() ***************************************
+#  NAME
+#     del_attr_error() -- error handling for del_attr_
+#
+#  SYNOPSIS
+#     del_attr_error {result object attribute value target raise_error }
+#
+#  FUNCTION
+#     Does the error handling for mod_attr.
+#     Translates possible error messages of qconf -dattr,
+#     builds the datastructure required for the handle_sge_errors
+#     function call.
+#
+#     The error handling function has been intentionally separated from
+#     mod_attr. While the qconf call and parsing the result is
+#     version independent, the error messages (macros) usually are version
+#     dependent.
+#
+#  INPUTS
+#     result      - qconf output
+#     object      - object qconf is modifying
+#     attribute    - attribute of object we are modifying
+#     value        - value of attribute of object we are modifying
+#     target      - target object
+#     raise_error - do add_proc_error in case of errors
+#
+#  RESULT
+#     Returncode for del_attr function:
+#      -1: "wrong_attr" is not an attribute
+#     -99: other error
+#
+#  SEE ALSO
+#     sge_calendar/get_calendar
+#     sge_procedures/handle_sge_errors
+#*******************************************************************************
+proc del_attr_error {result object attribute value target raise_error} {
+
+   # recognize certain error messages and return special return code
+   set messages(index) "-1"
+   set messages(-1) [translate_macro MSG_PARSE_BAD_ATTR_ARGS_SS $attribute $value]
+
+   set ret 0
+   # now evaluate return code and raise errors
+   set ret [handle_sge_errors "del_attr" "qconf -dattr $object $attribute $value $target" $result messages $raise_error]
+
+   return $ret
+}
+
+proc del_attr_file_error {result object tmpfile attribute target raise_error} {
+
+   # recognize certain error messages and return special return code
+   set messages(index) "-1"
+   set messages(-1) [translate_macro MSG_UNKNOWNATTRIBUTENAME_S $attribute ]
+
+   set ret 0
+   # now evaluate return code and raise errors
+   set ret [handle_sge_errors "del_attr" "qconf -Dattr $object $tmpfile $target " $result messages $raise_error]
+
+   return $ret
+}
+
 
 #****** sge_procedures/add_attr() ******************************************
 #  NAME
 #    add_attr () -- add an attribute
 #
 #  SYNOPSIS
-#     add_attr { object attribute value target {fast_add 1} {on_host ""} {as_user ""}}
+#     add_attr { object attribute value target {fast_add 1} {on_host ""} {as_user ""} {raise_error 1}}
 #
 #  FUNCTION
 #     Modifies attribute of object with value for object_instance
@@ -3719,12 +3842,13 @@ proc del_attr { object attribute value target {fast_add 1} {on_host ""} {as_user
 #     {as_user ""}    - execute qconf as this user, default is $CHECK_USER
 #     {fast_add 1} - 0: modify the attribute using qconf -aattr,
 #                  - 1: modify the attribute using qconf -Aattr, faster
+#     raise_error - do add_proc_error in case of errors
 #
 #  RESULT
 #     integer value  0 on success, -2 on error
 #
 #*******************************************************************************
-proc add_attr { object attribute value target {fast_add 1} {on_host ""} {as_user ""}} {
+proc add_attr { object attribute value target {fast_add 1} {on_host ""} {as_user ""} {raise_error 1}} {
    global ts_config
    global CHECK_ARCH CHECK_OUTPUT CHECK_USER CHECK_HOST
 
@@ -3739,7 +3863,7 @@ proc add_attr { object attribute value target {fast_add 1} {on_host ""} {as_user
       if {$prg_exit_state == 0} {
          set ret 0
       } else {
-         set ret -2
+         set ret [add_attr_file_error $result $object $tmpfile  $attribute $target $raise_error]
       }
 
 
@@ -3750,20 +3874,82 @@ proc add_attr { object attribute value target {fast_add 1} {on_host ""} {as_user
       if {$prg_exit_state == 0} {
          set ret 0
       } else {
-         set ret -2
+         set ret [add_attr_error $result $object $attribute $value $target $raise_error]
       }
 
    }
 
-   return $result
+   return $ret
 }
+
+#****** sge_procedures/add_attr_error() ***************************************
+#  NAME
+#     add_attr_error() -- error handling for add_attr
+#
+#  SYNOPSIS
+#     add_attr_error {result object attribute value target raise_error }
+#
+#  FUNCTION
+#     Does the error handling for add_attr.
+#     Translates possible error messages of qconf -aattr,
+#     builds the datastructure required for the handle_sge_errors
+#     function call.
+#
+#     The error handling function has been intentionally separated from
+#     add_attr. While the qconf call and parsing the result is
+#     version independent, the error messages (macros) usually are version
+#     dependent.
+#
+#  INPUTS
+#     result      - qconf output
+#     object      - object qconf is modifying
+#     attribute    - attribute of object we are modifying
+#     value        - value of attribute of object we are modifying
+#     target      - target object
+#     raise_error - do add_proc_error in case of errors
+#
+#  RESULT
+#     Returncode for add_attr function:
+#      -1: "wrong_attr" is not an attribute
+#     -99: other error
+#
+#  SEE ALSO
+#     sge_calendar/get_calendar
+#     sge_procedures/handle_sge_errors
+#*******************************************************************************
+proc add_attr_error {result object attribute value target raise_error} {
+
+   # recognize certain error messages and return special return code
+   set messages(index) "-1"
+   set messages(-1) [translate_macro MSG_PARSE_BAD_ATTR_ARGS_SS $attribute $value]
+
+   set ret 0
+   # now evaluate return code and raise errors
+   set ret [handle_sge_errors "add_attr" "qconf -aattr $object $attribute $value $target" $result messages $raise_error]
+
+   return $ret
+}
+
+proc add_attr_file_error {result object tmpfile attribute target raise_error} {
+
+   # recognize certain error messages and return special return code
+   set messages(index) "-1"
+   set messages(-1) [translate_macro MSG_UNKNOWNATTRIBUTENAME_S $attribute ]
+
+   set ret 0
+   # now evaluate return code and raise errors
+   set ret [handle_sge_errors "add_attr" "qconf -Aattr $object $tmpfile $target " $result messages $raise_error]
+
+   return $ret
+}
+
 
 #****** sge_procedures/replace_attr() ******************************************
 #  NAME
 #     replace_attr() -- Replace an attribute
 #
 #  SYNOPSIS
-#     replace_attr {object attribute value target {fast_add 1} {on_host ""} {as_user ""} }
+#     replace_attr {object attribute value target {fast_add 1} {on_host ""} {as_user ""} {raise_error 1} }
 #
 #  FUNCTION
 #     Replace attribute of object
@@ -3777,6 +3963,7 @@ proc add_attr { object attribute value target {fast_add 1} {on_host ""} {as_user
 #                  - 1: modify the attribute using qconf -Rattr, faster
 #     {on_host ""}    - execute qconf on this host, default is master host
 #     {as_user ""}    - execute qconf as this user, default is $CHECK_USER
+#     raise_error - do add_proc_error in case of errors
 #
 #  RESULT
 #     integer value  0 on success, -2 on error
@@ -3797,9 +3984,7 @@ proc replace_attr { object attribute value target {fast_add 1} {on_host ""} {as_
       if {$prg_exit_state == 0} {
          set ret 0
       } else {
-         set ret -2
-      }
-
+         set ret [replace_attr_file_error $result $object $attribute $tmpfile $target $raise_error] }
 
    } else {
    # add by -rattr
@@ -3809,13 +3994,75 @@ proc replace_attr { object attribute value target {fast_add 1} {on_host ""} {as_
       if {$prg_exit_state == 0} {
          set ret 0
       } else {
-         set ret -2
+         set ret [replace_attr_error $result $object $attribute $value $target $raise_error]
       }
 
    }
 
-   return $result
+   return $ret
 
+}
+
+#****** sge_procedures/replace_attr_error() ***************************************
+#  NAME
+#     replace_attr_error() -- error handling for replace_attr
+#
+#  SYNOPSIS
+#     replace_attr_error {result object attribute value target raise_error }
+#
+#  FUNCTION
+#     Does the error handling for mod_attr.
+#     Translates possible error messages of qconf -rattr,
+#     builds the datastructure required for the handle_sge_errors
+#     function call.
+#
+#     The error handling function has been intentionally separated from
+#     replace_attr. While the qconf call and parsing the result is
+#     version independent, the error messages (macros) usually are version
+#     dependent.
+#
+#  INPUTS
+#     result      - qconf output
+#     object      - object qconf is modifying
+#     attribute    - attribute of object we are modifying
+#     value        - value of attribute of object we are modifying
+#     target      - target object
+#     raise_error - do add_proc_error in case of errors
+#
+#  RESULT
+#     Returncode for replace_attr function:
+#      -1: "wrong_attr" is not an attribute
+#     -99: other error
+#
+#  SEE ALSO
+#     sge_calendar/get_calendar
+#     sge_procedures/handle_sge_errors
+#*******************************************************************************
+proc replace_attr_error {result object attribute value target raise_error} {
+
+   # recognize certain error messages and return special return code
+   set messages(index) "-1"
+   set messages(-1) [translate_macro MSG_PARSE_BAD_ATTR_ARGS_SS $attribute $value]
+
+   set ret 0
+   # now evaluate return code and raise errors
+   set ret [handle_sge_errors "replace_attr" "qconf -rattr $object $attribute $value $target" $result messages $raise_error]
+
+   return $ret
+}
+
+
+proc replace_attr_file_error {result object attribute tmpfile target raise_error} {
+
+   # recognize certain error messages and return special return code
+   set messages(index) "-1"
+   set messages(-1) "error: [translate_macro MSG_UNKNOWNATTRIBUTENAME_S $attribute ]"
+
+   set ret 0
+   # now evaluate return code and raise errors
+   set ret [handle_sge_errors "replace_attr" "qconf -Rattr $object $tmpfile $target" $result messages $raise_error]
+
+   return $ret
 }
 
 #                                                             max. column:     |

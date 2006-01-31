@@ -102,14 +102,14 @@ lappend check_functions "qconf_sprjl_check"	;# Show project list
 # New options, non-show DONE
 
 lappend check_functions "qconf_add_delete_manager"	;# Add and delete manager users 
-lappend check_functions "qconf_add_show_mod_del_queue"	;# Add, show and delete queue "qconf_queue.q"
+#lappend check_functions "qconf_add_show_mod_del_queue"	;# Add, show, modify and delete queue "qconf_queue.q"
 lappend check_functions "qconf_add_show_delete_host"	;# Add, show and delete host exec_host [1], the first execd host
 lappend check_functions "qconf_add_show_delete_stnode"	;# Add, show and delete share tree nodes
 lappend check_functions "qconf_event_client"	;# Create, show and delete event clients
 lappend check_functions "qconf_add_delete_modify_calendar"	;# Add, delete and modify calendar
-#lappend check_functions "qconf_add_delete_modify_replace_attr"	;# Add, delete and modify attributes
-lappend check_functions "qconf_modify_checkpoint"	;# Create, modify and delete checkpoint 
-lappend check_functions "qconf_modify_exechost"	;# Modify exec host
+lappend check_functions "qconf_add_delete_modify_replace_attr"	;# Add, delete and modify attributes
+#lappend check_functions "qconf_modify_checkpoint"	;# Create, modify and delete checkpoint 
+#lappend check_functions "qconf_modify_exechost"	;# Modify exec host
 #lappend check_functions "qconf_modify_hostgroup";# Modify host group
 #lappend check_functions "qconf_modify_project";# Modify project
 #lappend check_functions "qconf_modify_userlist";# Modify user list
@@ -145,7 +145,7 @@ proc qconf_init_level {} {
 }
 
 proc qconf_setup {} {
-   global CHECK_OUTPUT qconf_original_host_groups qconf_original_usersets
+   global CHECK_OUTPUT qconf_original_host_groups qconf_original_usersets qconf_orig_queues
    puts $CHECK_OUTPUT "setup ..."
    set output [start_sge_bin qconf -shgrpl]
    set output [string trim $output]
@@ -163,14 +163,17 @@ proc qconf_setup {} {
       puts $CHECK_OUTPUT "saving known userset \"$output\" for cleanup procedure"
    }
 
+   # Save initial queue list; make it a global var, to be used in cleanup
+   set qconf_orig_queues [get_queue_list]
 
    set_error 0 ""
 }
 
 
 proc qconf_cleanup {} {
-   global CHECK_OUTPUT qconf_original_host_groups qconf_original_usersets
-
+   global CHECK_OUTPUT qconf_original_host_groups qconf_original_usersets qconf_orig_queues
+   global CHECK_USER CHECK_FIRST_FOREIGN_SYSTEM_USER
+  
    puts $CHECK_OUTPUT "cleanup ..."
    set output [start_sge_bin qconf -shgrpl]
    set output [string trim $output]
@@ -194,11 +197,31 @@ proc qconf_cleanup {} {
       }
    }
 
-   # Delete stuff I created
-   del_manager "qconf_user"
-
+   # The original stuff is here
    delete_all_jobs
    wait_for_end_of_all_jobs 60
+
+   # Delete stuff I created
+   del_manager "qconf_user"
+   
+   # Get list of new queues. Those created during the
+   # tests will be deleted here.
+
+   set qconf_new_queues [get_queue_list]
+
+   puts $CHECK_OUTPUT "Deleting queues created during qconf... \n"
+   foreach elem  $qconf_orig_queues {
+      foreach new_elem $qconf_new_queues {
+         if { $elem == $new_elem } {
+	    continue
+         } else {
+#	    del_queue $new_elem
+         }
+
+      }
+
+   }
+
    set_error 0 ""
 }
 
@@ -1541,24 +1564,15 @@ proc qconf_add_delete_manager {} {
 # sge_procedures/get_qconf_show_list_error()
 #*******************************
 proc qconf_add_show_mod_del_queue {} {
-   global ts_config env CHECK_ACTUAL_TEST_PATH CHECK_PRODUCT_ROOT
-   global CHECK_OUTPUT CHECK_USER CHECK_HOST CHECK_ARCH
+   global ts_config env 
+   global CHECK_OUTPUT CHECK_USER 
 
    # First add queue "qconf_queue.q". Set the new name to "qconf_queue.q, 
-   # host to $CHECK_HOST
+   # host to $host
 
+   set host [lindex $ts_config(execd_nodes) 0]
    puts $CHECK_OUTPUT "Adding queue qconf_queue.q ...\n"
-   add_queue qconf_queue.q $CHECK_HOST new_queue 
-
-   # Now show queue list, check that  "qconf_queue.q" is there
-   puts $CHECK_OUTPUT "Getting information for qconf_queue.q ...\n"
-   set result1 [get_queue "qconf_queue.q" change_array ]
-
-   if { ( $result1 == 0 ) } {
-      puts $CHECK_OUTPUT "qconf -sq succeded"
-   } else {
-      puts $CHECK_OUTPUT "result is $result1"
-   }
+   add_queue qconf_queue.q $host new_queue 
 
    # Now do positive test on qconf -sql
    puts $CHECK_OUTPUT "Positive test of qconf -sql ...\n"
@@ -1571,9 +1585,9 @@ proc qconf_add_show_mod_del_queue {} {
    }
 
    # Now modify queue qconf_queue.q
-   set new_queue(seq_no)  "0"
+   set new_queue(seq_no)  "2"
    puts $CHECK_OUTPUT "Modifying information for qconf_queue.q ...\n"
-   set result21 [mod_queue "qconf_queue.q" $CHECK_HOST new_queue ]
+   set result21 [mod_queue "qconf_queue.q" $host new_queue ]
 
    if { ( $result21 == 0 ) } {
       puts $CHECK_OUTPUT "qconf -Mq succeded"
@@ -1583,15 +1597,27 @@ proc qconf_add_show_mod_del_queue {} {
 
    # Now modify queue qconf_queue.q slow
    puts $CHECK_OUTPUT "Modifying information for qconf_queue.q slow...\n"
-   set result22 [mod_queue "qconf_queue.q" $CHECK_HOST new_queue 0]
+   set result22 [mod_queue "qconf_queue.q" $host new_queue 0]
 
    if { ( $result22 == 0 ) } {
       puts $CHECK_OUTPUT "qconf -mq succeded"
    } else {
       puts $CHECK_OUTPUT "result is $result22"
    }
+ 
+   #  Now try to modify a non-existing project, "wrong_project"
+   set new_queue(projects) "wrong_project"
+   puts $CHECK_OUTPUT "Negative test of qconf -Mq qconf_queue.q ...\n"
+   set result23 [mod_queue "qconf_queue.q" $host new_queue 1 $host $CHECK_USER 0]
 
+   if { ( $result23 == -2 ) } {
+      puts $CHECK_OUTPUT "qconf -Mq wrong_project failed successfully"
+   } else {
+      puts $CHECK_OUTPUT "result is $result23"
+   }
+ 
    # Now clear queue "qconf_queue.q"
+   set new_queue(projects) "none"
    puts $CHECK_OUTPUT "Clearing queue qconf_queue.q ...\n"
    set result3 [clear_queue "qconf_queue.q"]
 
@@ -1612,18 +1638,18 @@ proc qconf_add_show_mod_del_queue {} {
    }
 
    #  Now try to clear a non-existing queue, "wrong_queue.q"
-   puts $CHECK_OUTPUT "Negative test of qconf -cq wrong_queue.q ...\n"
-   set result5 [clear_queue "wrong_queue.q" result $CHECK_HOST $CHECK_USER 0]
+   puts $CHECK_OUTPUT "Negative test of qconf -cq project none ...\n"
+   set result5 [clear_queue "wrong_queue.q" result $host $CHECK_USER 0]
 
    if { ( $result5 == -1 ) } {
-      puts $CHECK_OUTPUT "qconf -cq wrong_queue.q succeded"
+      puts $CHECK_OUTPUT "qconf -cq qconf_queue.q succeded"
    } else {
       puts $CHECK_OUTPUT "result is $result5"
    }
 
    # Now purge queue "qconf_queue.q"
    puts $CHECK_OUTPUT "Positive test of qconf -purge hostlist ...\n"
-   set result33 [purge_queue "qconf_queue.q" $CHECK_HOST "hostlist"]
+   set result33 [purge_queue "qconf_queue.q" $host "hostlist"]
 
    if { ( $result33 == 0 ) } {
       puts $CHECK_OUTPUT "qconf -purge queue hostlist qconf_queue.q succeded"
@@ -1633,7 +1659,7 @@ proc qconf_add_show_mod_del_queue {} {
  
    # Now purge queue "wrong_queue.q"
    puts $CHECK_OUTPUT "Negative test of qconf -purge hostlist...\n"
-   set result34 [purge_queue "wrong_queue.q" $CHECK_HOST "hostlist" result $CHECK_HOST $CHECK_USER 0]
+   set result34 [purge_queue "wrong_queue.q" $host "hostlist" result $host $CHECK_USER 0]
 
    if { ( $result34 == -1 ) } {
       puts $CHECK_OUTPUT "qconf -purge queue hostlist wrong_queue.q succeded
@@ -1645,7 +1671,7 @@ proc qconf_add_show_mod_del_queue {} {
  
    # Now try load_thresholds for purge
    puts $CHECK_OUTPUT "Positive test of qconf -purge load_thresholds ...\n"
-   set result35 [purge_queue "qconf_queue.q" $CHECK_HOST "load_thresholds"]
+   set result35 [purge_queue "qconf_queue.q" $host "load_thresholds"]
 
    if { ( $result35 == 0 ) } {
       puts $CHECK_OUTPUT "qconf -purge queue load_thresholds qconf_queue.q succeded"
@@ -1655,7 +1681,7 @@ proc qconf_add_show_mod_del_queue {} {
 
    # Now purge queue "wrong_queue.q"
    puts $CHECK_OUTPUT "Negative test of qconf -purge load_thresholds...\n"
-   set result36 [purge_queue "wrong_queue.q" $CHECK_HOST "load_thresholds" result $CHECK_HOST $CHECK_USER 0]
+   set result36 [purge_queue "wrong_queue.q" $host "load_thresholds" result $host $CHECK_USER 0]
 
    if { ( $result36 == -1 ) } {
       puts $CHECK_OUTPUT "qconf -purge queue load_thresholds wrong_queue.q succeded "
@@ -1663,26 +1689,15 @@ proc qconf_add_show_mod_del_queue {} {
       puts $CHECK_OUTPUT "result is $result36"
    }
 
-
    # Now delete queue "qconf_queue.q"
    puts $CHECK_OUTPUT "Positive test of qconf -dq qconf_queue.q...\n"
-   set result4 [del_queue  "qconf_queue.q" $CHECK_HOST 1]
+   set result4 [del_queue  "qconf_queue.q" $host 1]
 
    if { ( $result4  == 0 )} {
       puts $CHECK_OUTPUT "qconf -dq qconf_queue.q succeded"
    } else {
       puts $CHECK_OUTPUT "result is $result4"
    }
-
-   # Now delete queue "qconf_queue.q" again
-   #puts $CHECK_OUTPUT "Negative test of qconf -dq qconf_queue.q...\n"
-   #set result44 [del_queue  "qconf_queue.q" $CHECK_HOST 1]
-
-   #if { ( $result44 == 0 ) } {
-   #   puts $CHECK_OUTPUT "qconf -dq qconf_queue.q again succeded"
-   #} else {
-   #   puts $CHECK_OUTPUT "result is $result44"
-   #}
 
    # Now try to clear a non-existant queue
    puts $CHECK_OUTPUT "Negative test of qconf -cq qconf_queue.q...\n"
@@ -2121,7 +2136,7 @@ proc qconf_add_delete_modify_replace_attr {} {
    # Now modify attribute slots for obj_spec queue: -mattr queue slots 0 
    set obj_spec "queue"
    set attr_name "slots"
-   set val "0"
+   set val "1"
    set target "$queue_name\@$host"
 
    puts $CHECK_OUTPUT "Modify $obj_spec  $attr_name  ..."
@@ -2132,9 +2147,25 @@ proc qconf_add_delete_modify_replace_attr {} {
    } else {
       puts $CHECK_OUTPUT "result is $result01"
    }
-  
-   # Now modify its attribute pe from CLI
 
+   # Now modify non-existent attribute stuff 
+   set attr_name "stuff"
+   set val "100"
+
+   puts $CHECK_OUTPUT "Modify $obj_spec  $attr_name  ..."
+   set result02 [mod_attr  $obj_spec $attr_name $val $target 1 $host $CHECK_USER 0]
+
+   if { ( $result02 == -1 ) } {
+      puts $CHECK_OUTPUT "qconf -Mattr with wrong attribute succeded"
+   } else {
+      # handle_sge_errors will retun -999 due to multiple line
+      # response from qconf. See IZ 1966
+      puts $CHECK_OUTPUT "result is $result02"
+   }
+  
+   # Now modify its attribute from CLI
+   set attr_name "slots"
+   set val "1"
    puts $CHECK_OUTPUT "Modify $obj_spec $attr_name from CLI ...\n"
    set result02 [mod_attr  $obj_spec $attr_name $val $target 0]
 
@@ -2144,7 +2175,21 @@ proc qconf_add_delete_modify_replace_attr {} {
       puts $CHECK_OUTPUT "result is $result02"
    }
 
+  # Now modify its attribute from CLI wrongly
+   set attr_name "stuff"
+   set val "200"
+   puts $CHECK_OUTPUT "Modify $obj_spec $attr_name from CLI wrongly ...\n"
+   set result03 [mod_attr  $obj_spec $attr_name $val $target 0 $host $CHECK_USER 0]
+
+   if { ( $result03 == -1 ) } {
+      puts $CHECK_OUTPUT "qconf -mattr wrongly succeded"
+   } else {
+      puts $CHECK_OUTPUT "result is $result03"
+   }
+
    # Now show these attributes
+   set attr_name "slots"
+   set val "0"
    puts $CHECK_OUTPUT "Show $obj_spec  $attr_name  ..."
    set result03 [get_attr $obj_spec $attr_name $target]
 
@@ -2164,43 +2209,86 @@ proc qconf_add_delete_modify_replace_attr {} {
       puts $CHECK_OUTPUT "result is $result04"
    }
 
-   # Now delete attributes pe on $queue_name
-   puts $CHECK_OUTPUT "Delete attr $attr_name on  $queue_name ...\n"
-   set result1 [del_attr $obj_spec $attr_name $val $target]
+   # Now try to add wrong stuff
+   set attr_name "stuff"
+   set val "100"
+   puts $CHECK_OUTPUT "Add $obj_spec  $attr_name  slow..."
+   set result21 [add_attr  $obj_spec $attr_name $val $target 0 $host $CHECK_USER 0]
 
-   if { ( $result1 == 0 ) } {
-      puts $CHECK_OUTPUT "qconf -Dattr succeded"
+   if { ( $result21 == -1 ) } {
+      puts $CHECK_OUTPUT "qconf -aattr wrongly succeded"
    } else {
-      puts $CHECK_OUTPUT "result is $result1"
+      puts $CHECK_OUTPUT "result is $result21"
    }
 
-   # Now add attr 
+   # Now try to add wrong stuff fast
+   puts $CHECK_OUTPUT "Add $obj_spec  $attr_name  fast..."
+   set result22 [add_attr  $obj_spec $attr_name $val $target 1 $host $CHECK_USER 0]
 
-   puts $CHECK_OUTPUT "Add attr $obj_spec on $queue_name... \n"
-   set result2 [add_attr $obj_spec $attr_name $val $target]
-
-   if { ( $result2 == 0 ) } {
-      puts $CHECK_OUTPUT "qconf -aattr slow succeded"
+   if { ( $result22 == -1 ) } {
+      puts $CHECK_OUTPUT "qconf -Aattr wrongly succeded"
    } else {
-      puts $CHECK_OUTPUT "result is $result2"
+      # handle_sge_errors will retun -999 due to multiple line
+      # response from qconf. See IZ 1966
+      puts $CHECK_OUTPUT "result is $result22"
    }
 
-   # Now replace attribute slots for obj_spec queue: -rattr queue slots 0
+   # Now replace non-existent attribute stuff
+   set attr_name "stuff"
+   set val "100"
+
    puts $CHECK_OUTPUT "Replace $obj_spec  $attr_name  slow..."
-   set result3 [replace_attr  $obj_spec $attr_name $val $target 0]
+   set result31 [replace_attr  $obj_spec $attr_name $val $target 0 $host $CHECK_USER 0]
 
-   if { ( $result3 == 0 ) } {
-      puts $CHECK_OUTPUT "qconf -rattr succeded"
+   if { ( $result31 == -1 ) } {
+      puts $CHECK_OUTPUT "qconf -rattr wrongly succeded"
    } else {
-      puts $CHECK_OUTPUT "result is $result3"
+      puts $CHECK_OUTPUT "result is $result31"
    }
 
-   # Now delete it via -Dattr
+   # Now replace non-existent attribute stuff from file
+
+   puts $CHECK_OUTPUT "Replace $obj_spec  $attr_name from file  ..."
+   set result32 [replace_attr  $obj_spec $attr_name $val $target 1 $host $CHECK_USER 0]
+
+   if { ( $result32 == -1 ) } {
+      puts $CHECK_OUTPUT "qconf -Rattr wrongly succeded"
+   } else {
+      # handle_sge_errors will retun -999 due to multiple line
+      # response from qconf. See IZ 1966
+      puts $CHECK_OUTPUT "result is $result32"
+   }
+
+   # Now try to delete non-existant stuff
+   puts $CHECK_OUTPUT "Delete  attr  $attr_name  slow..."
+   set result31 [del_attr  $obj_spec $attr_name $val $target 0 $host $CHECK_USER 0]
+
+   if { ( $result31 == -1 ) } {
+      puts $CHECK_OUTPUT "qconf -dattr wrongly succeded"
+   } else {
+      puts $CHECK_OUTPUT "result is $result31"
+   }
+
+   # Now try to delete non-existant stuff fast
+   puts $CHECK_OUTPUT "Delete  attr  $attr_name  fast..."
+   set result32 [del_attr  $obj_spec $attr_name $val $target 1 $host $CHECK_USER 0]
+
+   if { ( $result32 == -1 ) } {
+      puts $CHECK_OUTPUT "qconf -Dattr wrongly succeded"
+   } else {
+      # handle_sge_errors will retun -999 due to multiple line
+      # response from qconf. See IZ 1966
+      puts $CHECK_OUTPUT "result is $result32"
+   }
+
+   # Now delete it via -dattr using good values
+   set attr_name "slots"
+   set val "1"
    puts $CHECK_OUTPUT "Delete attr $attr_name on $queue_name slow ...\n"
    set result22 [del_attr $obj_spec $attr_name $val $target 0]
 
    if { ( $result22 == 0 ) } {
-      puts $CHECK_OUTPUT "qconf -Dattr slow succeded"
+      puts $CHECK_OUTPUT "qconf -dattr slow succeded"
    } else {
       puts $CHECK_OUTPUT "result is $result22"
    }
@@ -2216,7 +2304,6 @@ proc qconf_add_delete_modify_replace_attr {} {
       puts $CHECK_OUTPUT "result is $result4"
    }
 
-   
    set_error 0 "ok"
 
 }
@@ -2224,22 +2311,7 @@ proc qconf_add_delete_modify_replace_attr {} {
 #****** qconf/qconf_modify_checkpoint() ******
 #
 #  NAME
-#     qconf_modify_checkpoint - MOdify chekcpoint
-#
-#  SYNOPSIS
-#     qconf_modify_checkpoint { } - Call "qconf -Mckpt "
-#
-#  FUNCTION
-#     Check basic functionality of qconf
-#
-#  SEE ALSO
-# sge_procedures/get_scheduler_status()
-#*******************************
-
-#****** qconf/qconf_modify_checkpoint() ******
-#
-#  NAME
-#     qconf_modify_checkpoint - MOdify chekcpoint
+#     qconf_modify_checkpoint - Modify chekcpoint
 #
 #  SYNOPSIS
 #     qconf_modify_checkpoint { } - Call "qconf -Mckpt "
@@ -2260,10 +2332,10 @@ proc qconf_modify_checkpoint {} {
 
    set new_queue(qname) "$queue_name"
    set host [lindex $ts_config(execd_nodes) 0]
-   set result0 [add_queue $queue_name $host new_queue]
+   set result0 [add_queue $queue_name $host new_queue ]
 
    if { ( $result0 == 0 ) } {
-      puts $CHECK_OUTPUT "qconf -aq  $queue_name succeded"
+      puts $CHECK_OUTPUT "qconf -Aq  $queue_name succeded"
    } else {
       puts $CHECK_OUTPUT "result is $result0"
    }
@@ -2281,16 +2353,50 @@ proc qconf_modify_checkpoint {} {
    }
 
    # Now modify it using set_checkpointobj
+   set myarray(clean_command) "ls"
    puts $CHECK_OUTPUT "Modify  checkpoint  $myarray(ckpt_name) ...\n"
    set result2 [mod_checkpointobj  myarray]
 
    if { ( $result2 == 0 ) } {
-      puts $CHECK_OUTPUT "qconf -mckpt  succeded"
+      puts $CHECK_OUTPUT "qconf -Mckpt  succeded"
    } else {
       puts $CHECK_OUTPUT "result is $result2"
    }
 
+   # Now modify it using CLI
+   set myarray(clean_command) "none"
+   puts $CHECK_OUTPUT "Modify  checkpoint  $myarray(ckpt_name) using CLI...\n"
+   set result21 [mod_checkpointobj  myarray 0]
+
+   if { ( $result21 == 0 ) } {
+      puts $CHECK_OUTPUT "qconf -mckpt  succeded"
+   } else {
+      puts $CHECK_OUTPUT "result is $result21"
+   }
+
+   # Now try to modify using a non-existent checkpoint
+   set myarray(ckpt_name) "qconf_ckpt_wrong"
+   puts $CHECK_OUTPUT "Modify  wrong checkpoint  $myarray(ckpt_name) ...\n"
+   set result21 [mod_checkpointobj  myarray 1 $host $CHECK_USER 0]
+
+   if { ( $result21 == -1 ) } {
+      puts $CHECK_OUTPUT "qconf -Mckpt failed correctly"
+   } else {
+      puts $CHECK_OUTPUT "result is $result21"
+   }
+
+   # Now try to modify using a non-existent checkpoint slow
+   puts $CHECK_OUTPUT "Modify  wrong checkpoint  $myarray(ckpt_name) slow ...\n"
+   set result22 [mod_checkpointobj  myarray 0 $host $CHECK_USER 0]
+
+   if { ( $result22 == -9 ) } {
+      puts $CHECK_OUTPUT "qconf -mckpt failed correctly"
+   } else {
+      puts $CHECK_OUTPUT "result is $result22"
+   }
+
    # Now delete checkpoint
+   set myarray(ckpt_name) "qconf_ckpt_name"
    puts $CHECK_OUTPUT "Delete checkpoint $myarray(ckpt_name) ..."
    set result4 [del_checkpointobj  $myarray(ckpt_name)]
 
@@ -2298,37 +2404,6 @@ proc qconf_modify_checkpoint {} {
       puts $CHECK_OUTPUT "qconf -dckpt $myarray(ckpt_name) succeded"
    } else {
       puts $CHECK_OUTPUT "result is $result4"
-   }
-
-   # Now create it again
-   puts $CHECK_OUTPUT "Create  checkpoint  $myarray(ckpt_name) again...\n"
-
-   set result5 [add_checkpointobj myarray]
-
-   if { ( $result5 == 0 ) } {
-      puts $CHECK_OUTPUT "qconf -ackpt again  succeded"
-   } else {
-      puts $CHECK_OUTPUT "result is $result5"
-   }
-
-# Now modify it using set_checkpointobj slow...
-   puts $CHECK_OUTPUT "Modify  checkpoint  $myarray(ckpt_name) slow...\n"
-   set result6 [mod_checkpointobj  myarray 0]
-
-   if { ( $result6 == 0 ) } {
-      puts $CHECK_OUTPUT "qconf -Mckpt slow succeded"
-   } else {
-      puts $CHECK_OUTPUT "result is $result6"
-   }
-
-   # Now delete checkpoint again
-   puts $CHECK_OUTPUT "Delete checkpoint $myarray(ckpt_name) ..."
-   set result7 [del_checkpointobj  $myarray(ckpt_name)]
-
-   if { ( $result7  == 0 )} {
-      puts $CHECK_OUTPUT "qconf -dckpt $myarray(ckpt_name) again succeded"
-   } else {
-      puts $CHECK_OUTPUT "result is $result7"
    }
 
    # Now delete queue
@@ -2340,7 +2415,6 @@ proc qconf_modify_checkpoint {} {
    } else {
       puts $CHECK_OUTPUT "result is $result8"
    }
-
 
    set_error 0 "ok"
 }
@@ -2362,16 +2436,22 @@ proc qconf_modify_checkpoint {} {
 #*******************************
 proc qconf_modify_exechost {} {
    global ts_config env
-   global CHECK_OUTPUT 
+   global CHECK_OUTPUT CHECK_USER
 
    set host [lindex $ts_config(execd_nodes) 0]
 
    # Save the initial values
    get_exechost old_values $host
 
-   # Modify something
+   # First create project qconf_test_prj
+   set prj_setup(name) "qconf_test_prj"
+   set my_project "qconf_test_prj"
+   puts $CHECK_OUTPUT "Create project $my_project ...\n"
+   set result [add_project prj_setup]
+
+   # Modify exechost fast
    puts $CHECK_OUTPUT "Modify exec host  $host  from file ...\n"
-   set new_exechost_charray(load_values) "load_avg=1.00"
+   set new_exechost_charray(projects) "qconf_test_prj"
    set result0 [mod_exechost new_exechost_charray $host]
 
   if { ( $result0 == 0 ) } {
@@ -2380,8 +2460,8 @@ proc qconf_modify_exechost {} {
       puts $CHECK_OUTPUT "result is $result0"
    }
 
-   # Now do it from file
-   puts $CHECK_OUTPUT "Modify exec host  $host  from CLI...\n"
+   # Now modify from CLI
+   puts $CHECK_OUTPUT "Modify exec host $host from CLI ...\n"
    set result1 [mod_exechost new_exechost_charray $host 0]
 
   if { ( $result1 == 0 ) } {
@@ -2390,15 +2470,42 @@ proc qconf_modify_exechost {} {
       puts $CHECK_OUTPUT "result is $result1"
    }
 
+   # Modify exechost fast wrongly
+   puts $CHECK_OUTPUT "Modify exec host  $host  from file wrongly...\n"
+   set new_exechost_charray(projects) "qconf_wrong_prj"
+   set result1 [mod_exechost new_exechost_charray $host 1 $host $CHECK_USER 0]
+
+  if { ( $result1 == -1 ) } {
+      puts $CHECK_OUTPUT "qconf -Me failed  successfully \n"
+   } else {
+     # See IZ 1967 for why this returns wrongly 0
+      puts $CHECK_OUTPUT "result is $result1"
+   }
+
+   
+   # Now modify from CLI wrongly
+   puts $CHECK_OUTPUT "Modify exec host $host from CLI wrongly...\n"
+   set result12 [mod_exechost new_exechost_charray $host 0 $host $CHECK_USER 0]
+
+  if { ( $result12 == -11 ) } {
+      puts $CHECK_OUTPUT "qconf -me failed  successfully\n"
+   } else {
+      puts $CHECK_OUTPUT "result is $result12"
+   }
+
    # Now restore the old values
    puts $CHECK_OUTPUT "Restoring old values for  $host  ...\n"
-   set result2 [mod_exechost old_values $host ]
+   set result2 [mod_exechost old_values $host 0]
 
   if { ( $result2 == 0 ) } {
       puts $CHECK_OUTPUT "qconf -me succeded\n"
    } else {
       puts $CHECK_OUTPUT "result is $result2"
    }
+  
+  # Now delete project qconf_test_prj
+   puts $CHECK_OUTPUT "Delete project $my_project ...\n"
+   set result [del_project $my_project]
 
    set_error 0 "ok"
 }
@@ -2419,7 +2526,7 @@ proc qconf_modify_exechost {} {
 #*******************************
 proc qconf_modify_hostgroup {} {
    global ts_config env
-   global CHECK_OUTPUT 
+   global CHECK_OUTPUT CHECK_USER
 
    set host [lindex $ts_config(execd_nodes) 0]
    # First save initial setup
@@ -2431,7 +2538,6 @@ proc qconf_modify_hostgroup {} {
    } else {
       puts $CHECK_OUTPUT "result is $result0"
    }
-
 
    # Now modify the host list
    puts $CHECK_OUTPUT "Modify host group  @allhosts  from file ...\n"
@@ -2445,13 +2551,36 @@ proc qconf_modify_hostgroup {} {
    } else {
       puts $CHECK_OUTPUT "result is $result1"
    }
+ 
+   # Now modify the host list from CLI
+   puts $CHECK_OUTPUT "Modify host group  @allhosts  from CLI... \n"
+   set result10 [mod_hostgroup "@allhosts" $attribute $value 0]
 
-   # Now do it from file
-   puts $CHECK_OUTPUT "Modify host group  @allhosts  from CLI...\n"
-   set result2 [mod_hostgroup "@allhosts" $attribute $value 0]
+  if { ( $result10 == 0 ) } {
+      puts $CHECK_OUTPUT "qconf -mhgrp succeded\n"
+   } else {
+      puts $CHECK_OUTPUT "result is $result10"
+   }
+
+   # Now do it with a wrong parameter
+   puts $CHECK_OUTPUT "Modify host group  @allhosts wrongly from file ...\n"
+   set attribute "stuff"
+   set value "$host"
+   set result11 [mod_hostgroup "@allhosts" $attribute $value 1 $host $CHECK_USER 0]
+
+  if { ( $result11 == -1 ) } {
+      puts $CHECK_OUTPUT "qconf -Mhgrp failed  correctly\n"
+   } else {
+      # See IZ 1968 on why this does not fail as expected
+      puts $CHECK_OUTPUT "result is $result11"
+   }
+
+   # Now do it from CLI
+   puts $CHECK_OUTPUT "Modify host group  @allhosts  wrongly from CLI...\n"
+   set result2 [mod_hostgroup "@allhosts" $attribute $value 0 $host $CHECK_USER 0]
 
   if { ( $result2 == 0 ) } {
-      puts $CHECK_OUTPUT "qconf -mhgrp succeded\n"
+      puts $CHECK_OUTPUT "qconf -mhgrp failed  correctly\n"
    } else {
       puts $CHECK_OUTPUT "result is $result2"
    }
@@ -2461,7 +2590,8 @@ proc qconf_modify_hostgroup {} {
   puts $CHECK_OUTPUT "group is $original_hostgroup_array(group_name) ...\n"
   puts $CHECK_OUTPUT "hostlist is $original_hostgroup_array(hostlist) ...\n"
 
-  set value "$original_hostgroup_array(hostlist)"
+  set attribute "hostlist"
+  set value "$original_hostgroup_array($attribute)"
  
   set result3 [mod_hostgroup "@allhosts" $attribute $value ]
 
@@ -2492,8 +2622,9 @@ proc qconf_modify_hostgroup {} {
 #*******************************
 proc qconf_modify_project {} {
    global ts_config env
-   global CHECK_OUTPUT 
+   global CHECK_OUTPUT CHECK_USER
 
+   set host [lindex $ts_config(execd_nodes) 0]
 
    # Create new project
    set prj_setup(name) "qconf_project"
@@ -2524,6 +2655,33 @@ proc qconf_modify_project {} {
       puts $CHECK_OUTPUT "result is $result2"
    }
 
+   # Next modify fast
+   puts $CHECK_OUTPUT "Modify project $my_project wrong fast ...\n"
+   set attribute "stuff"
+   set value "5"
+
+   set result3 [mod_project $my_project $attribute $value 1 $host $CHECK_USER 0]
+
+   if { ( $result3 == -1 ) } {
+      puts $CHECK_OUTPUT "qconf -Mprj $my_project failed  correctly"
+   } else {
+      puts $CHECK_OUTPUT "result is $result3"
+   }
+
+   # Next modify slow
+   puts $CHECK_OUTPUT "Modify project $my_project  wrong slow ...\n"
+   set result4 [mod_project $my_project $attribute $value 0 $host $CHECK_USER 0]
+
+   if { ( $result4 == -1 ) } {
+      puts $CHECK_OUTPUT "qconf -mprj $my_project failed  correctly"
+   } else {
+      puts $CHECK_OUTPUT "result is $result4"
+   }
+
+   # Re-set it back 
+   set attribute "fshare"
+   set value "0"
+
    puts $CHECK_OUTPUT "Delete project $my_project ...\n"
    set result [del_project $my_project]
 
@@ -2536,7 +2694,7 @@ proc qconf_modify_project {} {
 #     qconf_modify_userlist - Modify userlist's fshare
 #
 #  SYNOPSIS
-#     qconf_modify_userlist { } - Call mod_user
+#     qconf_modify_userlist { } - Call mod_userlist
 #
 #  FUNCTION
 #     Check basic functionality of qconf
@@ -2546,30 +2704,44 @@ proc qconf_modify_project {} {
 #*******************************
 proc qconf_modify_userlist {} {
    global ts_config env
-   global CHECK_OUTPUT 
+   global CHECK_OUTPUT CHECK_USER
 
- # Next modify fast
-   set username "userlist1"
+   set host [lindex $ts_config(execd_nodes) 0]
+
+   # Now modify fast
+   set userlist "userlist1"
    set attribute "fshare"
-   set value "0"
-   puts $CHECK_OUTPUT "Modify userlist $username fast ...\n"
-   set result1 [mod_user $username $attribute $value]
+   set value "4"
+   puts $CHECK_OUTPUT "Modify userlist $userlist fast ...\n"
+   set result1 [mod_userlist $userlist $attribute $value ]
 
    if { ( $result1 == 0 ) } {
-      puts $CHECK_OUTPUT "qconf -Mu $username succeded"
+      puts $CHECK_OUTPUT "qconf -Mu fast succeded"
    } else {
       puts $CHECK_OUTPUT "result is $result1"
    }
 
    # Next modify slow
    puts $CHECK_OUTPUT "Modify userlist $username slow ...\n"
-   set result2 [mod_user $username $attribute $value 0]
 
+   set result2 [mod_userlist $userlist $attribute $value 0]
    if { ( $result2 == 0 ) } {
-      puts $CHECK_OUTPUT "qconf -mu $username succeded"
+      puts $CHECK_OUTPUT "qconf -mu slow succeded"
    } else {
       puts $CHECK_OUTPUT "result is $result2"
    }
+
+   # Now modify fast with wrong userlist
+   set userlist "userlist21"
+   puts $CHECK_OUTPUT "Modify userlist $userlist fast ...\n"
+   set result3 [mod_userlist $userlist $attribute $value ]
+
+   if { ( $result3 == -2 ) } {
+      puts $CHECK_OUTPUT "qconf -Mu failed successfully"
+   } else {
+      puts $CHECK_OUTPUT "result is $result3"
+   }
+
 
    set_error 0 "ok"
 }

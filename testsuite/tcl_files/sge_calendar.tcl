@@ -221,7 +221,7 @@ proc add_calendar {change_array {fast_add 1} {on_host ""} {as_user ""} {raise_er
 
   foreach elem $values {
      puts $CHECK_OUTPUT "--> setting \"$elem\" to \"$chgar($elem)\""
-     set default_array($elem) $chgar($elem)
+     set default_array($elem) "$chgar($elem)"
   }
 
   # Set calendar to chgar(calendar_name)
@@ -253,9 +253,11 @@ proc add_calendar {change_array {fast_add 1} {on_host ""} {as_user ""} {raise_er
       puts $CHECK_OUTPUT "adding calendar $calendar"
 
       set vi_commands [build_vi_command chgar]
+      set ADDED [translate_macro MSG_SGETEXT_ADDEDTOLIST_SSSS "*" "*" "*" "*"]
+      set ALREADY_EXISTS [translate_macro MSG_SGETEXT_ALREADYEXISTS_SS "*" "*"]
 
      # Now add using vi
-     set ret [ handle_vi_edit "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-acal $calendar" $vi_commands ""]
+     set ret [ handle_vi_edit "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-acal $calendar" $vi_commands  $ADDED $ALREADY_EXISTS  ]
      if { $ret == -1 } { add_proc_error "add_calendar" -1 "timeout error" }
      if { $ret == -2 } { add_proc_error "add_calendar" -1 "\"[set $calendar]\" already exists" }
      if { $ret != 0  } { add_proc_error "add_calendar" -1 "could not add calendar \"[set $calendar]\"" }
@@ -400,7 +402,7 @@ proc mod_calendar {change_array {fast_add 1} {on_host ""} {as_user ""} {raise_er
 
      # parse output or raise error
      if {$prg_exit_state == 0} {
-        set $ret result 
+        set ret 0 
      } else {
      set ret [mod_calender_error $prg_exit_state $tmpfile $calendar $raise_error]
      }
@@ -411,8 +413,11 @@ proc mod_calendar {change_array {fast_add 1} {on_host ""} {as_user ""} {raise_er
 
       set vi_commands [build_vi_command chgar]
 
+      set MODIFIED [translate_macro MSG_SGETEXT_MODIFIEDINLIST_SSSS "*" "*" "*" "*"]
+      set ALREADY_EXISTS [translate_macro  MSG_SGETEXT_ALREADYEXISTS_SS "*" "*" ]
+
      # Now add using vi
-     set ret [ handle_vi_edit "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-mcal $calendar" $vi_commands ""]
+     set ret [ handle_vi_edit "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-mcal $calendar" $vi_commands $MODIFIED $ALREADY_EXISTS ]
      if { $ret == -1 } { add_proc_error "add_calendar" -1 "timeout error" }
      if { $ret == -2 } { add_proc_error "add_calendar" -1 "\"[set $calendar]\" already exists" }
      if { $ret != 0  } { add_proc_error "add_calendar" -1 "could not add calendar \"[set $calendar]\"" }

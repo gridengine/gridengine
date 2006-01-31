@@ -1,3 +1,9 @@
+OJ-2006-01-31-0: Testsuite: Added error handling in *attr routines
+                            in sge_procedures.tcl; modified *cal routines
+			    in sge_calendar.tcl
+                 Review:    DT
+                 Issue:     477
+
 JG-2006-01-31-0: Enhancem.: Merged JG-2006-01-30-0 from V60s2_BRANCH:
                             cleanup aimk code coverage options
                             cleanup of daemonizing including insure related

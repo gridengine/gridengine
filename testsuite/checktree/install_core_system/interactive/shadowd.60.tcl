@@ -67,6 +67,7 @@ proc install_shadowd {} {
    global CHECK_DEBUG_LEVEL CHECK_EXECD_INSTALL_OPTIONS
    global CHECK_COMMD_PORT CHECK_CORE_MASTER
    global CHECK_MAIN_RESULTS_DIR CHECK_SUBMIT_ONLY_HOSTS
+   global CHECK_COVERAGE
 
    set CORE_INSTALLED "" 
    read_install_list
@@ -303,6 +304,13 @@ proc install_shadowd {} {
                lappend CORE_INSTALLED $shadow_host
                write_install_list
                set do_stop 1
+               # If we compiled with code coverage, we have to 
+               # wait a little bit before closing the connection.
+               # Otherwise the last command executed (infotext)
+               # will leave a lockfile lying around.
+               if {$CHECK_COVERAGE != ""} {
+                  sleep 2
+               }
                continue
             }
 

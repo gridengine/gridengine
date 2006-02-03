@@ -277,8 +277,6 @@ proc cleanup_system { } {
   
   
   set_error 0 "ok"
-  
-
 }
 
 

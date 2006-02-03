@@ -1259,4 +1259,6 @@ proc user_conf_get_cluster_users {} {
    lappend user_list "root"
    lappend user_list $ts_user_config(first_foreign_user)
    lappend user_list $ts_user_config(second_foreign_user)
+
+   return $user_list
 }

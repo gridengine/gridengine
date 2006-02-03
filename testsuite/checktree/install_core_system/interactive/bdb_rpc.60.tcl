@@ -65,6 +65,7 @@ proc install_bdb_rpc {} {
    global CHECK_COMMD_PORT CHECK_ADMIN_USER_SYSTEM CHECK_USER
    global CHECK_DEBUG_LEVEL CHECK_CORE_MASTER
    global CHECK_MAIN_RESULTS_DIR CHECK_SUBMIT_ONLY_HOSTS
+   global CHECK_COVERAGE
 
    set CORE_INSTALLED "" 
 
@@ -347,6 +348,13 @@ proc install_bdb_rpc {} {
             lappend CORE_INSTALLED $bdb_host
             write_install_list
             set do_stop 1
+            # If we compiled with code coverage, we have to 
+            # wait a little bit before closing the connection.
+            # Otherwise the last command executed (infotext)
+            # will leave a lockfile lying around.
+            if {$CHECK_COVERAGE != ""} {
+               sleep 2
+            }
             continue
          }
 

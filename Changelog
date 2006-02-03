@@ -1,6 +1,12 @@
+JG-2006-02-03-0: Testsuite: Improved error handling for sge functions called 
+                            from testsuite.
+                            Code coverage analysis using Solaris cc/tcov.
+                            Fixed testsuite option execute_func and qping test.
+                 Review:    RD
+
 OJ-2006-01-31-0: Testsuite: Added error handling in *attr routines
                             in sge_procedures.tcl; modified *cal routines
-			    in sge_calendar.tcl
+			                   in sge_calendar.tcl
                  Review:    DT
                  Issue:     477
 

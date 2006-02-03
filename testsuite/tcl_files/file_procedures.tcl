@@ -2018,7 +2018,6 @@ proc check_local_spool_directories { { do_delete 0 } } {
    }
 
    foreach host $ts_config(execd_nodes) {
-       
       puts $CHECK_OUTPUT "host ${host}:"
       set my_spool_dir $ts_host_config($host,spooldir)
       if { $my_spool_dir == "" } {
@@ -3492,3 +3491,4 @@ proc get_fstype {path {host ""}} {
 
    return $ret
 }
+

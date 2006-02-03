@@ -70,6 +70,7 @@ proc install_qmaster {} {
  global CHECK_REPORT_EMAIL_TO CHECK_MAIN_RESULTS_DIR CHECK_FIRST_FOREIGN_SYSTEM_USER
  global CHECK_SECOND_FOREIGN_SYSTEM_USER CHECK_REPORT_EMAIL_TO CHECK_DNS_DOMAINNAME
  global CHECK_PROTOCOL_DIR
+   global CHECK_COVERAGE
 
  puts $CHECK_OUTPUT "install qmaster ($ts_config(product_type) system) on host $CHECK_CORE_MASTER ..."
 
@@ -693,6 +694,16 @@ proc install_qmaster {} {
           write_install_list
           set_error "0" "install_qmaster - no errors"
           set do_stop 1
+          # If we compiled with code coverage, we have to 
+          # wait a little bit before closing the connection.
+          # Otherwise the last command executed (infotext)
+          # will leave a lockfile lying around.
+          if {$CHECK_COVERAGE != ""} {
+             sleep 1
+             # inst_sge expects a RETURN
+             send -i $sp_id "\n"
+             sleep 5
+          }
           continue
        }
 

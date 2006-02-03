@@ -1003,7 +1003,7 @@ proc open_remote_spawn_process { hostname
 
    global CHECK_OUTPUT CHECK_HOST CHECK_USER CHECK_TESTSUITE_ROOT CHECK_SCRIPT_FILE_DIR
    global CHECK_EXPECT_MATCH_MAX_BUFFER CHECK_DEBUG_LEVEL
-   global CHECK_SHELL_PROMPT
+   global CHECK_SHELL_PROMPT CHECK_COVERAGE
    global last_shell_script_file last_spawn_command_arguments
 
    debug_puts "open_remote_spawn_process on host \"$hostname\""
@@ -1038,6 +1038,10 @@ proc open_remote_spawn_process { hostname
    # we might want to pass a special environment
    if {$envlist != ""} {
       upvar $envlist users_env
+   }
+
+   if {$CHECK_COVERAGE != "none"} {
+      coverage_per_process_setup $hostname $real_user users_env
    }
 
    # if the same script is executed multiple times, don't recreate it
@@ -1854,9 +1858,9 @@ proc add_open_spawn_rlogin_session {hostname user spawn_id pid nr_of_shells} {
 #     remote_procedures/add_open_spawn_rlogin_session()
 #*******************************************************************************
 proc remove_oldest_spawn_rlogin_session {} {
-   global CHECK_OUTPUT rlogin_spawn_session_buffer
+   global rlogin_spawn_session_buffer
 
-   puts $CHECK_OUTPUT "removing oldest not used rlogin session (rlogin_max_open_connections overflow)"
+   debug_puts "removing oldest not used rlogin session (rlogin_max_open_connections overflow)"
    set last [timestamp]
    set remove_spawn_id ""
    foreach spawn_id $rlogin_spawn_session_buffer(index) {
@@ -2391,7 +2395,7 @@ proc is_spawn_process_in_use {spawn_id} {
 #*******************************
 proc close_spawn_process {id {check_exit_state 0}} {
    global CHECK_OUTPUT CHECK_DEBUG_LEVEL
-   global CHECK_SHELL_PROMPT
+   global CHECK_SHELL_PROMPT CHECK_COVERAGE
  
    set pid      [lindex $id 0]
    set spawn_id [lindex $id 1]
@@ -2420,6 +2424,13 @@ proc close_spawn_process {id {check_exit_state 0}} {
    if {$con_data(pid) != 0} {
       # mark the connection idle
       set_spawn_process_in_use $spawn_id 0
+
+      # if we have code coverage analysis enabled, give the process
+      # some time to finish writing coverage data
+      # hopefully one second is enough
+      if {$CHECK_COVERAGE != "none"} {
+         sleep 2
+      }
 
       # stop still remaining running processes and wait for shell prompt
       set catch_return [catch {
@@ -2473,8 +2484,6 @@ proc close_spawn_process {id {check_exit_state 0}} {
 
       set catch_return [catch {
          # send CTRL-C to stop poss. still running processes
-         #set send_slow "1 .05"
-         #send -s -i $spawn_id "\003"
          send -i $spawn_id -- "\003"
          
          # wait for CTRL-C to take effect

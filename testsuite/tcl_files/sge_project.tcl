@@ -134,13 +134,13 @@ proc get_prj { prj_name change_array } {
 #     del_prj -- ??? 
 #
 #  SYNOPSIS
-#     del_prj { myprj_name } 
+#     del_prj { prj_name } 
 #
 #  FUNCTION
 #     ??? 
 #
 #  INPUTS
-#     myprj_name - ??? 
+#     prj_name - ??? 
 #
 #  RESULT
 #     ??? 
@@ -157,7 +157,7 @@ proc get_prj { prj_name change_array } {
 #  SEE ALSO
 #     ???/???
 #*******************************
-proc del_prj { prj_name } {
+proc del_prj {prj_name {raise_error 1}} {
    global ts_config
    global CHECK_USER
 
@@ -167,11 +167,11 @@ proc del_prj { prj_name } {
    }
 
    set messages(index) "0"
-   set messages(0) [translate_macro MSG_SGETEXT_REMOVEDFROMLIST_SSSS $CHECK_USER "*" $myprj_name "*"]
+   set messages(0) [translate_macro MSG_SGETEXT_REMOVEDFROMLIST_SSSS $CHECK_USER "*" $prj_name "*"]
 
    set output [start_sge_bin "qconf" "-dprj $prj_name"]
 
-   set ret [handle_sge_errors "del_prj" "qconf -dprj $prj_name" $output messages]
+   set ret [handle_sge_errors "del_prj" "qconf -dprj $prj_name" $output messages $raise_error $prg_exit_state]
    return $ret
 }
 

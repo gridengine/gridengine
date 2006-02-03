@@ -738,6 +738,7 @@ proc get_sge_error {procedure command result {raise_error 1}} {
 #     messages_var    - array with possible messages and info how to handle them
 #     {raise_error 1} - whether to raise an error condition (add_proc_error) 
 #                       or not
+#     {prg_exit_state ""} - exit state of sge command
 #
 #  RESULT
 #     error code, for recognized messages the corresponding error code from 
@@ -758,7 +759,7 @@ proc get_sge_error {procedure command result {raise_error 1}} {
 #     sge_procedures/get_sge_error()
 #*******************************************************************************
 
-proc handle_sge_errors {procedure command result messages_var {raise_error 1}} {
+proc handle_sge_errors {procedure command result messages_var {raise_error 1} {prg_exit_state ""}} {
    upvar $messages_var messages
 
    set ret -999
@@ -800,6 +801,15 @@ proc handle_sge_errors {procedure command result messages_var {raise_error 1}} {
 
       # generate error message or just informational/error output
       add_proc_error $procedure $error_level $error_message $raise_error
+
+      if {$prg_exit_state != ""} {
+         if {$prg_exit_state == 0 && $ret < 0} {
+            add_proc_error $procedure -3 "qconf returned 0 while reporting the error message:\n$result"
+         }
+         if {$prg_exit_state != 0 && $ret >= 0} {
+            add_proc_error $procedure -3 "qconf returned error state while its output reports success:\n$result"
+         }
+      }
    }
 
    return $ret
@@ -7474,7 +7484,7 @@ proc wait_till_qmaster_is_down { host } {
 
    set process_names "sge_qmaster" 
    
-   set my_timeout [ expr ( [timestamp] + 180 ) ] 
+   set my_timeout [ expr ( [timestamp] + 60 ) ] 
 
    while { 1 } {
       set found_p [ ps_grep "$ts_config(product_root)/" $host ]

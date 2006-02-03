@@ -185,7 +185,7 @@ proc qping_cleanup  {} {
 
 
 proc qping_issue_1810 {} {
-   global qping_test_hosts check_description CHECK_ARCH
+   global qping_test_hosts check_description CHECK_ARCH CHECK_USER
    global CHECK_OUTPUT ts_config CHECK_CORE_MASTER CHECK_ACT_LEVEL CHECK_SCRIPT_FILE_DIR
 
 

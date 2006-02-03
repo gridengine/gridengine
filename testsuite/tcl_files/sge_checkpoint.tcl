@@ -131,26 +131,28 @@ proc get_checkpointobj { ckpt_obj change_array } {
 #
 #  INPUTS
 #     checkpoint_name - name of the checkpoint object
+#     raise_error     - do add_proc_error in case of errors
 #
 #  RESULT
 #      0  - ok
-#     -1  - timeout error
+#     <0  - error
 #
 #  SEE ALSO
 #     sge_checkpoint/add_checkpointobj()
 #*******************************
-proc del_checkpointobj { checkpoint_name } {
+proc del_checkpointobj {checkpoint_name {raise_error 1}} {
    global ts_config
    global CHECK_USER
 
    unassign_queues_with_ckpt_object $checkpoint_name
 
-   set messages(index) "0"
+   set messages(index) "0 -1"
    set messages(0) [translate_macro MSG_SGETEXT_REMOVEDFROMLIST_SSSS $CHECK_USER "*" $checkpoint_name "*"]
+   set messages(-1) [translate_macro MSG_SGETEXT_DOESNOTEXIST_SS "*" $checkpoint_name]
    
    set output [start_sge_bin "qconf" "-dckpt $checkpoint_name"]
 
-   set ret [handle_sge_errors "del_checkpointobj" "qconf -dckpt $checkpoint_name" $output messages]
+   set ret [handle_sge_errors "del_checkpointobj" "qconf -dckpt $checkpoint_name" $output messages $raise_error $prg_exit_state]
    return $ret
 }
 

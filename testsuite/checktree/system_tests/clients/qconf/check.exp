@@ -102,14 +102,14 @@ lappend check_functions "qconf_sprjl_check"	;# Show project list
 # New options, non-show DONE
 
 lappend check_functions "qconf_add_delete_manager"	;# Add and delete manager users 
-#lappend check_functions "qconf_add_show_mod_del_queue"	;# Add, show, modify and delete queue "qconf_queue.q"
+lappend check_functions "qconf_add_show_mod_del_queue"	;# Add, show, modify and delete queue "qconf_queue.q"
 lappend check_functions "qconf_add_show_delete_host"	;# Add, show and delete host exec_host [1], the first execd host
 lappend check_functions "qconf_add_show_delete_stnode"	;# Add, show and delete share tree nodes
 lappend check_functions "qconf_event_client"	;# Create, show and delete event clients
 lappend check_functions "qconf_add_delete_modify_calendar"	;# Add, delete and modify calendar
 lappend check_functions "qconf_add_delete_modify_replace_attr"	;# Add, delete and modify attributes
-#lappend check_functions "qconf_modify_checkpoint"	;# Create, modify and delete checkpoint 
-#lappend check_functions "qconf_modify_exechost"	;# Modify exec host
+lappend check_functions "qconf_modify_checkpoint"	;# Create, modify and delete checkpoint 
+lappend check_functions "qconf_modify_exechost"	;# Modify exec host
 #lappend check_functions "qconf_modify_hostgroup";# Modify host group
 #lappend check_functions "qconf_modify_project";# Modify project
 #lappend check_functions "qconf_modify_userlist";# Modify user list
@@ -215,7 +215,7 @@ proc qconf_cleanup {} {
          if { $elem == $new_elem } {
 	    continue
          } else {
-#	    del_queue $new_elem
+	    del_queue $new_elem
          }
 
       }
@@ -1594,8 +1594,9 @@ proc qconf_add_show_mod_del_queue {} {
    } else {
       puts $CHECK_OUTPUT "result is $result21"
    }
-
+ 
    # Now modify queue qconf_queue.q slow
+   #set new_queue(seq_no)  "1"
    puts $CHECK_OUTPUT "Modifying information for qconf_queue.q slow...\n"
    set result22 [mod_queue "qconf_queue.q" $host new_queue 0]
 
@@ -1604,7 +1605,7 @@ proc qconf_add_show_mod_del_queue {} {
    } else {
       puts $CHECK_OUTPUT "result is $result22"
    }
- 
+
    #  Now try to modify a non-existing project, "wrong_project"
    set new_queue(projects) "wrong_project"
    puts $CHECK_OUTPUT "Negative test of qconf -Mq qconf_queue.q ...\n"
@@ -1616,7 +1617,19 @@ proc qconf_add_show_mod_del_queue {} {
       puts $CHECK_OUTPUT "result is $result23"
    }
  
+   #  Now try to modify a non-existing queue, "stuff.q"
+   set new_queue(qname) "stuff.q"
+   puts $CHECK_OUTPUT "Negative test of qconf -mq stuff.q ...\n"
+   set result23 [mod_queue "qconf_queue.q" $host new_queue 0 $host $CHECK_USER 0]
+
+   if { ( $result23 == -3 ) } {
+      puts $CHECK_OUTPUT "qconf -mq stuff.q failed successfully"
+   } else {
+      puts $CHECK_OUTPUT "result is $result23"
+   }
+
    # Now clear queue "qconf_queue.q"
+   set new_queue(qname) "qconf_queue.q"
    set new_queue(projects) "none"
    puts $CHECK_OUTPUT "Clearing queue qconf_queue.q ...\n"
    set result3 [clear_queue "qconf_queue.q"]
@@ -2481,13 +2494,12 @@ proc qconf_modify_exechost {} {
      # See IZ 1967 for why this returns wrongly 0
       puts $CHECK_OUTPUT "result is $result1"
    }
-
    
    # Now modify from CLI wrongly
    puts $CHECK_OUTPUT "Modify exec host $host from CLI wrongly...\n"
    set result12 [mod_exechost new_exechost_charray $host 0 $host $CHECK_USER 0]
 
-  if { ( $result12 == -11 ) } {
+  if { ( $result12 == -3 ) } {
       puts $CHECK_OUTPUT "qconf -me failed  successfully\n"
    } else {
       puts $CHECK_OUTPUT "result is $result12"
@@ -2529,6 +2541,7 @@ proc qconf_modify_hostgroup {} {
    global CHECK_OUTPUT CHECK_USER
 
    set host [lindex $ts_config(execd_nodes) 0]
+   set another_host [lindex $ts_config(execd_nodes) 1]
    # First save initial setup
    puts $CHECK_OUTPUT "First save the original host group  @allhosts  ...\n"
    set result0 [get_hostgroup "@allhosts" original_hostgroup_array]
@@ -2541,7 +2554,6 @@ proc qconf_modify_hostgroup {} {
 
    # Now modify the host list
    puts $CHECK_OUTPUT "Modify host group  @allhosts  from file ...\n"
-   set new_hostgroup_charray(hostlist) "$host"
    set attribute "hostlist" 
    set value "$host"
    set result1 [mod_hostgroup "@allhosts" $attribute $value ]
@@ -2553,6 +2565,8 @@ proc qconf_modify_hostgroup {} {
    }
  
    # Now modify the host list from CLI
+   set attribute "hostlist" 
+   set value "$another_host"
    puts $CHECK_OUTPUT "Modify host group  @allhosts  from CLI... \n"
    set result10 [mod_hostgroup "@allhosts" $attribute $value 0]
 
@@ -2568,27 +2582,28 @@ proc qconf_modify_hostgroup {} {
    set value "$host"
    set result11 [mod_hostgroup "@allhosts" $attribute $value 1 $host $CHECK_USER 0]
 
-  if { ( $result11 == -1 ) } {
+  if { ( $result11 == 0 ) } {
       puts $CHECK_OUTPUT "qconf -Mhgrp failed  correctly\n"
    } else {
       # See IZ 1968 on why this does not fail as expected
       puts $CHECK_OUTPUT "result is $result11"
    }
 
-   # Now do it from CLI
+   # Now do it from CLI with wrong param
+   set attribute "cli_stuff"
+   set value "$another_host $host"
    puts $CHECK_OUTPUT "Modify host group  @allhosts  wrongly from CLI...\n"
    set result2 [mod_hostgroup "@allhosts" $attribute $value 0 $host $CHECK_USER 0]
 
-  if { ( $result2 == 0 ) } {
+  if { ( $result2 == -3 ) } {
       puts $CHECK_OUTPUT "qconf -mhgrp failed  correctly\n"
    } else {
+      # See IZ 1970 on why this does not fail as expected
       puts $CHECK_OUTPUT "result is $result2"
    }
 
   # Now restore original setup
   puts $CHECK_OUTPUT "Restore original host group  @allhosts  ...\n"
-  puts $CHECK_OUTPUT "group is $original_hostgroup_array(group_name) ...\n"
-  puts $CHECK_OUTPUT "hostlist is $original_hostgroup_array(hostlist) ...\n"
 
   set attribute "hostlist"
   set value "$original_hostgroup_array($attribute)"
@@ -2672,9 +2687,10 @@ proc qconf_modify_project {} {
    puts $CHECK_OUTPUT "Modify project $my_project  wrong slow ...\n"
    set result4 [mod_project $my_project $attribute $value 0 $host $CHECK_USER 0]
 
-   if { ( $result4 == -1 ) } {
+   if { ( $result4 == -3 ) } {
       puts $CHECK_OUTPUT "qconf -mprj $my_project failed  correctly"
    } else {
+      # See IZ 1971 on why this does not fail as expected
       puts $CHECK_OUTPUT "result is $result4"
    }
 
@@ -2710,8 +2726,8 @@ proc qconf_modify_userlist {} {
 
    # Now modify fast
    set userlist "userlist1"
-   set attribute "fshare"
-   set value "4"
+   set attribute "entries"
+   set value "$CHECK_USER"
    puts $CHECK_OUTPUT "Modify userlist $userlist fast ...\n"
    set result1 [mod_userlist $userlist $attribute $value ]
 
@@ -2722,7 +2738,9 @@ proc qconf_modify_userlist {} {
    }
 
    # Next modify slow
-   puts $CHECK_OUTPUT "Modify userlist $username slow ...\n"
+   set attribute "entries"
+   set value "NONE"
+   puts $CHECK_OUTPUT "Modify userlist $userlist slow ...\n"
 
    set result2 [mod_userlist $userlist $attribute $value 0]
    if { ( $result2 == 0 ) } {
@@ -2733,15 +2751,27 @@ proc qconf_modify_userlist {} {
 
    # Now modify fast with wrong userlist
    set userlist "userlist21"
-   puts $CHECK_OUTPUT "Modify userlist $userlist fast ...\n"
-   set result3 [mod_userlist $userlist $attribute $value ]
+   puts $CHECK_OUTPUT "Modify userlist $userlist wrong fast ...\n"
+   set result3 [mod_userlist $userlist $attribute $value 1 $host $CHECK_USER 0]
 
-   if { ( $result3 == -2 ) } {
+   if { ( $result3 == -1 ) } {
       puts $CHECK_OUTPUT "qconf -Mu failed successfully"
    } else {
       puts $CHECK_OUTPUT "result is $result3"
    }
 
+   # Now modify sloq with wrong attribute
+   set userlist "userlist1"
+   set attribute "oticket"
+   set value "-1"
+   puts $CHECK_OUTPUT "Modify attribute $attribute wrong slow ...\n"
+   set result4 [mod_userlist $userlist $attribute $value 0 $host $CHECK_USER 0]
+
+   if { ( $result4 == -3 ) } {
+      puts $CHECK_OUTPUT "qconf -mu failed successfully"
+   } else {
+      puts $CHECK_OUTPUT "result is $result4"
+   }
 
    set_error 0 "ok"
 }

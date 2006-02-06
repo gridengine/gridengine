@@ -1,3 +1,7 @@
+OJ-2006-02-06-0: Testsuite: Added error handling in *ckpt, *e routines
+                            in  sge_checkpoint.60.tcl, sge_host.tcl
+			    and control_procedures.tcl
+                 Review:    DT
 JG-2006-02-03-0: Testsuite: Improved error handling for sge functions called 
                             from testsuite.
                             Code coverage analysis using Solaris cc/tcov.

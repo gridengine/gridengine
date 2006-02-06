@@ -180,6 +180,9 @@ proc build_vi_command { change_array {current_array no_current_array_has_been_pa
 #     expected_result {additional_expected_result "___ABCDEFG___"} 
 #     {additional_expected_result2 "___ABCDEFG___"} 
 #     {additional_expected_result3 "___ABCDEFG___"}} 
+#     {qconf_error_msg "___ABCDEFG___"}
+#     {raise_error  1} }
+#
 #
 #  FUNCTION
 #     Start an application which and send special command strings to it. Wait
@@ -198,6 +201,9 @@ proc build_vi_command { change_array {current_array no_current_array_has_been_pa
 #     {additional_expected_result "___ABCDEFG___"}  - additional expected_result 
 #     {additional_expected_result2 "___ABCDEFG___"} - additional expected_result 
 #     {additional_expected_result3 "___ABCDEFG___"} - additional expected_result
+#     {qconf_error_msg "___ABCDEFG___"}            - qconf error message 
+#     {raise_error  1}                                - do add_proc_error in case of errors
+#
 #
 #  RESULT
 #     0 when the output of the application contents the expected_result 
@@ -205,6 +211,7 @@ proc build_vi_command { change_array {current_array no_current_array_has_been_pa
 #    -2 on additional_expected_result
 #    -3 on additional_expected_result2 
 #    -4 on additional_expected_result3
+#    -9 on chekcpointing qconf_error_msg
 #
 #  EXAMPLE
 #     ??? 
@@ -218,7 +225,7 @@ proc build_vi_command { change_array {current_array no_current_array_has_been_pa
 #  SEE ALSO
 #     ???/???
 #*******************************
-proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result {additional_expected_result "___ABCDEFG___"} {additional_expected_result2 "___ABCDEFG___"} {additional_expected_result3 "___ABCDEFG___"} {additional_expected_result4 "___ABCDEFG___"}} {
+proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result {additional_expected_result "___ABCDEFG___"} {additional_expected_result2 "___ABCDEFG___"} {additional_expected_result3 "___ABCDEFG___"} {additional_expected_result4 "___ABCDEFG___"} {qconf_error_msg "___ABCDEFG___"} {raise_error 1}} {
    global CHECK_OUTPUT env CHECK_HOST CHECK_DEBUG_LEVEL CHECK_USER
 
    set expected_result              [string trimright $expected_result "*"]
@@ -226,6 +233,7 @@ proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result 
    set additional_expected_result2  [string trimright $additional_expected_result2 "*"]
    set additional_expected_result3  [string trimright $additional_expected_result3 "*"]
    set additional_expected_result4  [string trimright $additional_expected_result4 "*"]
+   set qconf_error_msg  [string trimright $qconf_error_msg "*"]
 
    # we want to start a certain configured vi, and have no backslash continued lines
    set vi_env(EDITOR) [get_binary_path "$CHECK_HOST" "vim"]
@@ -263,7 +271,7 @@ proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result 
          set error 1
          add_proc_error "handle_vi_edit" -2 "timeout - can't start vi"
       }
-      -i $sp_id -- "_start_mark_*\n" {
+      -i $sp_id  "_start_mark_*\n" {
          puts $CHECK_OUTPUT "starting now!"
       }
    }
@@ -280,11 +288,20 @@ proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result 
          add_proc_error "handle_vi_edit" -1 "unexpected end of file"
       }
 
+
+      -i $sp_id "$qconf_error_msg" {
+         set error $raise_error
+         add_proc_error "handle_vi_edit"  -1 "$qconf_error_msg" $raise_error
+         set result -9
+         close_spawn_process $id
+         return -9
+      }
+
       -i $sp_id timeout {  
          set error 1
          add_proc_error "handle_vi_edit" -2 "timeout - can't start vi"
       }
-      -i $sp_id -- {[A-Za-z]*} {
+      -i $sp_id  {[A-Za-z]*} {
          puts $CHECK_OUTPUT "vi should run now ..."
       }
    }
@@ -318,13 +335,13 @@ proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result 
          }
       }
 
-      -i $sp_id -- "100%" {
+      -i $sp_id  "100%" {
       }
       
-      -i $sp_id -- "o lines in buffer" {
+      -i $sp_id  "o lines in buffer" {
       }
       
-      -i $sp_id -- "erminal too wide" {
+      -i $sp_id  "erminal too wide" {
          add_proc_error "handle_vi_edit" -2 "got terminal to wide vi error"
          set error 1
       }
@@ -344,9 +361,12 @@ proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result 
          -i $sp_id eof {
             add_proc_error "handle_vi_edit" -1 "unexpected end of file"
          }
+
          -i $sp_id "_exit_status*\n" {
             puts $CHECK_OUTPUT "vi terminated! (1)"
+            exp_continue
          }
+
       }
 
 
@@ -392,7 +412,6 @@ proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result 
             puts $CHECK_OUTPUT "found Hit return"
             exp_continue
          }
-
          -i $sp_id timeout {
             incr timeout_count 1
             if { $timeout_count > 15 } {
@@ -451,11 +470,14 @@ proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result 
             -i $sp_id "_exit_status_" {
                puts $CHECK_OUTPUT "vi terminated! (2) (rt=$run_time)"
                set result 0
+               exp_continue
             }
+
         }
       } else {
          # we do expect certain result(s)
          # wait for result and/or exit status
+
          expect {
             -i $sp_id full_buffer {
                add_proc_error "handle_vi_edit" -1 "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
@@ -469,27 +491,27 @@ proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result 
                add_proc_error "handle_vi_edit" -1 "eof error:$expect_out(buffer)"
                set result -1
             }
-            -i $sp_id -- "$expected_result" {
+            -i $sp_id  "$expected_result" {
                set result 0
                exp_continue
             }
-            -i $sp_id -- "$additional_expected_result" {
+            -i $sp_id  "$additional_expected_result" {
                set result -2
                exp_continue
             }
-            -i $sp_id -- "$additional_expected_result2" {
+            -i $sp_id  "$additional_expected_result2" {
                set result -3
                exp_continue
             }
-            -i $sp_id -- "$additional_expected_result3" {
+            -i $sp_id  "$additional_expected_result3" {
                set result -4
                exp_continue
             }
-            -i $sp_id -- "$additional_expected_result4" {
+            -i $sp_id  "$additional_expected_result4" {
                set result -5
                exp_continue
             }
-
+            
             -i $sp_id "_exit_status_" {
                puts $CHECK_OUTPUT "vi terminated! (3)  (rt=$run_time)"
                if { $result == -100 } {

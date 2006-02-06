@@ -184,7 +184,13 @@ proc get_exechost {output_var {host global} {on_host ""} {as_user ""} {raise_err
 #
 #
 #  NOTES
-#     ???
+# Need to unset these values since qconf -M(m)e does not
+# allow the modifications of "load_values" or "processors"
+# but get_exechost gets ALL the parameters for exechost
+#
+#unset old_values(load_values)
+#unset old_values(processors)
+#
 #
 #  BUGS
 #     ???
@@ -200,14 +206,13 @@ proc set_exechost { change_array host {fast_add 1} {on_host ""} {as_user ""} {ra
 # (every value that is set will be changed)
 # hostname                   myhostname
 # load_scaling               NONE
-# complex_list               test
 # complex_values             NONE
 # user_lists                 deadlineusers
 # xuser_lists                NONE
 # projects                   NONE
 # xprojects                  NONE
 # usage_scaling              NONE
-# resource_capability_factor 0.000000
+# report_variables	     0.00000
 #
 # returns
 # -1   on timeout
@@ -220,40 +225,125 @@ proc set_exechost { change_array host {fast_add 1} {on_host ""} {as_user ""} {ra
    upvar $change_array chgar
  
    set values [array names chgar]
+
    get_exechost old_values $host
- 
+
+   # Need to unset these values since qconf -M(m)e does not
+   # allow the modifications of "load_values" or "processors"
+   # but get_exechost gets ALL the parameters for exechost
+
+
    foreach elem $values {
+#      if { ( $elem == "load_values" ) || ( $elem == "processors" ) } {
+#         continue
+#      }
       set old_values($elem) "$chgar($elem)"
    }
 
+   unset old_values(load_values)
+   unset old_values(processors)
+
    # Modify exechost from file?
    if { $fast_add } {
-     unset old_values(processors)
-     unset old_values(load_values)
+#     unset old_values(processors)
+#     unset old_values(load_values)
 
      set tmpfile [dump_array_to_tmpfile old_values]
      set result [start_sge_bin "qconf" "-Me $tmpfile" $on_host $as_user]
 
-     set ret $prg_exit_state 
+      # parse output or raise error
+     if {$prg_exit_state == 0} {
+         parse_simple_record result out
+         set ret 0
+      } else {
+         set ret [set_exechost_error $result old_values $tmpfile $raise_error]
+      }
 
    } else {
    # User vi
 
       set vi_commands [build_vi_command old_values]
       set ret 0
-      set CHANGED  [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_EXEC_HOSTENTRYOFXCHANGEDINEXECLIST_S] "*" ]
-      set result [handle_vi_edit "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-me $host" $vi_commands "modified" $CHANGED]
-      if { $result == -2 || $result == -1 } { ;# Added -1 as well
+
+      set project "$old_values(projects)"
+      set attributes "projects"
+      set elem "exechost"
+      set host "$old_values(hostname)"
+
+      set CHANGED  [translate_macro MSG_EXEC_HOSTENTRYOFXCHANGEDINEXECLIST_S "*" ]
+      set PROJ_DS_NT_EXST [translate_macro MSG_SGETEXT_UNKNOWNPROJECT_SSSS $project $attributes $elem $host ]
+      set MODIFIED [translate_macro MSG_SGETEXT_MODIFIEDINLIST_SSSS "*" "*" "*" "*" ]
+
+       # User raise_error to report errors or not
+         set result [handle_vi_edit "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-me $host" $vi_commands $MODIFIED $CHANGED $PROJ_DS_NT_EXST]
+
+      # $CHANGED is really success
+      if { $result == -2 } {
          set result 0
          set ret 0
-      }
-      if { $result != 0 } {
-         add_proc_error "set_exechost" -1 "could not modifiy exechost $host"
+      } elseif {  $result == -3 } {
+         add_proc_error "set_exechost" -1 "$PROJ_DS_NT_EXST " $raise_error
+         set ret -3 
+      } elseif { $result != 0 } {
+         add_proc_error "set_exechost" -1 "could not modifiy exechost $host" $raise_error
          set ret -1
-      }
+      } 
+
    }
   return $ret
 }
+
+#****** sge_host/set_exechost_error() ***************************************
+#  NAME
+#     set_exechost_error() -- error handling for set_exechost
+#
+#  SYNOPSIS
+#     set_exechost_error { result host tmpfile raise_error }
+#
+#  FUNCTION
+#     Does the error handling for set_exechost.
+#     Translates possible error messages of qconf -Me,
+#     builds the datastructure required for the handle_sge_errors
+#     function call.
+#
+#     The error handling function has been intentionally separated from
+#     set_exechost. While the qconf call and parsing the result is
+#     version independent, the error messages (macros) usually are version
+#     dependent.
+#
+#  INPUTS
+#     result      - qconf output
+#     tmpfile     - temp file for qconf -Me 
+#     old_values  - array with values for which qconf -Me has been called
+#     raise_error - do add_proc_error in case of errors
+#
+#  RESULT
+#     Returncode for set_exechost function:
+#      -1: "something" does not exist
+#     -99: other error
+#
+#  SEE ALSO
+#     sge_calendar/get_calendar
+#     sge_procedures/handle_sge_errors
+#*******************************************************************************
+proc set_exechost_error {result old_values tmpfile  raise_error} {
+
+   # build up needed vars
+   set project "$old_values(projects)"
+   set attributes "projects"
+   set elem "exechost"
+   set host "$old_values(hostname)"
+
+   set messages(index) "-1"
+   set messages(-1) [translate_macro MSG_SGETEXT_UNKNOWNPROJECT_SSSS $attributes $project $elem $host ]
+
+   set ret 0
+   # now evaluate return code and raise errors
+   set ret [handle_sge_errors "set_exechost" "qconf -Me $tmpfile" $result messages $raise_error]
+
+   return $ret
+}
+
 #****** sge_host/mod_exechost() ******
 #
 #  NAME

@@ -1,3 +1,12 @@
+HP-2006-02-09-0: Bugfix:    qrsh now adds a '\n' to error output recieved from
+                            shepherd.
+                            While fixing this, I replaced some
+                            strcpy()/strcat() with snprintf().
+                 Bugtraq:   6383256
+                 Issue:     1978
+                 Changed:   qsh.c, err_trace.c, qlogin_starter.c
+                 Review:    RD
+
 OJ-2006-02-06-0: Testsuite: Added error handling in *ckpt, *e routines
                             in  sge_checkpoint.60.tcl, sge_host.tcl
 			    and control_procedures.tcl

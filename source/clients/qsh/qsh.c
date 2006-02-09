@@ -480,6 +480,7 @@ static int get_remote_exit_code(int sock)
          char *message = strchr(s_ret, ':');
          if(message != NULL && strlen(message) > 0) {
             fprintf(stderr, message + 1);
+            fprintf(stderr, "\n");
             *message = 0;
          }
          VERBOSE_LOG((stderr, "%s\n", s_ret));

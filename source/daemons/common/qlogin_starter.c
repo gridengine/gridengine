@@ -110,7 +110,7 @@ int delete_qrsh_pid_file()
 *     write_to_qrsh -- short description
 *
 *  SYNOPSIS
-*     void write_to_qrsh(char *data);
+*    int write_to_qrsh(const char *data);
 *
 *  FUNCTION
 *     Writes the contents of <data> to an other (remote) process over
@@ -524,7 +524,9 @@ int qlogin_starter(const char *cwd, char *daemon, char** env)
       return 9;
    }
   
-   sprintf(buffer, "0:%d:%s/utilbin/%s:%s:%s", port, sge_root, arch, cwd, get_conf_val("host"));
+   snprintf(buffer, 2048, "0:%d:%s/utilbin/%s:%s:%s", 
+                    port, sge_root, arch, cwd, get_conf_val("host"));
+
    if (write_to_qrsh(buffer) != 0) {
       SHEPHERD_TRACE((err_str, "communication with qrsh failed"));
       shutdown(sockfd, 2);

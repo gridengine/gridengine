@@ -456,8 +456,7 @@ void shepherd_error_impl(const char *str, int do_exit)
      
    if(search_conf_val("qrsh_control_port") != NULL) {
       char buffer[1024];
-      strcpy(buffer, "1:");
-      strncat(buffer, str, 1021);
+      snprintf(buffer, 1024, "1:%s", str);
       write_to_qrsh(buffer);  
    }
    if (do_exit) {

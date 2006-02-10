@@ -170,13 +170,13 @@ proc add_project { change_array } {
 #     del_prj -- ??? 
 #
 #  SYNOPSIS
-#     del_prj { prj_name } 
+#     del_prj { myprj_name } 
 #
 #  FUNCTION
 #     ??? 
 #
 #  INPUTS
-#     prj_name - ??? 
+#     myprj_name - ??? 
 #
 #  RESULT
 #     ??? 
@@ -193,7 +193,7 @@ proc add_project { change_array } {
 #  SEE ALSO
 #     ???/???
 #*******************************
-proc del_prj {prj_name {raise_error 1}} {
+proc del_prj { prj_name } {
    global ts_config
    global CHECK_USER
 
@@ -207,7 +207,7 @@ proc del_prj {prj_name {raise_error 1}} {
 
    set output [start_sge_bin "qconf" "-dprj $prj_name"]
 
-   set ret [handle_sge_errors "del_prj" "qconf -dprj $prj_name" $output messages $raise_error $prg_exit_state]
+   set ret [handle_sge_errors "del_prj" "qconf -dprj $prj_name" $output messages]
    return $ret
 }
 #                                                             max. column:     |
@@ -336,7 +336,7 @@ proc mod_project {project attribute value {fast_add 1} {on_host ""} {as_user ""}
       if {$prg_exit_state == 0} {
          set ret 0
       } else {
-         set ret [mod_project_error $result $project $tmpfile $raise_error]
+         set ret [mod_project_error $result $attribute $value $tmpfile $raise_error]
       }
 
    } else {
@@ -344,25 +344,23 @@ proc mod_project {project attribute value {fast_add 1} {on_host ""} {as_user ""}
       set vi_commands [build_vi_command old_values]
 
       set MODIFIED [translate_macro MSG_SGETEXT_MODIFIEDINLIST_SSSS "*" "*" "*" "*" ]
-      set UNKNOWN_ATTRIBUTE [ translate_macro MSG_UNKNOWNATTRIBUTENAME_S "$attribute" ]
       set ALREADY_EXISTS [ translate_macro MSG_SGETEXT_ALREADYEXISTS_SS "*" "*"]
       set NOT_MODIFIED [translate_macro MSG_FILE_NOTCHANGED ]
+      set NOTULONG [ translate_macro MSG_OBJECT_VALUENOTULONG_S "$value" ]
+      set UNKNOWN_ATTRIBUTE [ translate_macro MSG_UNKNOWNATTRIBUTENAME_S "$attribute" ]
 
-      #set result [ handle_vi_edit "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-mprj $project" $vi_commands ""]
-      if { $raise_error } {
-         set result [ handle_vi_edit "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-mprj $project" $vi_commands $MODIFIED $ALREADY_EXISTS ]
+      set result [ handle_vi_edit "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-mprj $project" $vi_commands $MODIFIED $ALREADY_EXISTS $NOTULONG $UNKNOWN_ATTRIBUTE $NOT_MODIFIED]
 
-         if {$result == -1 } { add_proc_error "mod_project" -1 "timeout error" }
-         if {$result == -2 } { add_proc_error "mod_project" -1 "\"[set old_values(name)]\" already exists" }
-         if {$result != 0  } { add_proc_error "mod_project" -1 "could not add project \"[set old_values(name)]\""  }
-      } else {
-
-          set result [ handle_vi_edit "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-mprj $project" $vi_commands $MODIFIED $ALREADY_EXISTS $UNKNOWN_ATTRIBUTE $NOT_MODIFIED]
-
-         if {$result == -3 } { 
-            puts $CHECK_OUTPUT "mod_project  - result is $result for $UNKNOWN_ATTRIBUTE \n"
-         }
-
+      if {$result == -1 } { 
+         add_proc_error "mod_project" -1 "timeout error" $raise_error
+      } elseif {$result == -2 } { 
+         add_proc_error "mod_project" -1 "\"[set old_values(name)]\" already exists"  $raise_error
+      } elseif {$result == -3 } { 
+         add_proc_error "mod_project" -1 "$value not  u_long32 value"  $raise_error
+      } elseif {$result == -4 } { 
+         add_proc_error "mod_project" -1 "unknown attribute $attribute"  $raise_error
+      } elseif {$result != 0  } { 
+        add_proc_error "mod_project" -1 "could not add project \"[set old_values(name)]\""  
       }
 
       set ret $result
@@ -375,7 +373,7 @@ proc mod_project {project attribute value {fast_add 1} {on_host ""} {as_user ""}
 #     mod_project_error() -- error handling for mod_project
 #
 #  SYNOPSIS
-#     mod_project_error {result project tmpfile raise_error }
+#     mod_project_error {result attribute value tmpfile raise_error }
 #
 #  FUNCTION
 #     Does the error handling for mod_project.
@@ -390,7 +388,8 @@ proc mod_project {project attribute value {fast_add 1} {on_host ""} {as_user ""}
 #
 #  INPUTS
 #     result      - qconf output
-#     project     - project qconf is modifying
+#     attribute   - attribute  qconf is modifying
+#     value       - value qconf is modifying
 #     tmpfile     - temp file used by qconf
 #     raise_error - do add_proc_error in case of errors
 #
@@ -403,11 +402,12 @@ proc mod_project {project attribute value {fast_add 1} {on_host ""} {as_user ""}
 #     sge_calendar/get_calendar
 #     sge_procedures/handle_sge_errors
 #*******************************************************************************
-proc mod_project_error {result project tmpfile raise_error} {
+proc mod_project_error {result attribute value tmpfile raise_error} {
 
    # recognize certain error messages and return special return code
-   set messages(index) "-1"
-   set messages(-1) [translate_macro MSG_PROJECT_XISNOKNWOWNPROJECT_S $project ]
+   set messages(index) "-1 -2"
+   set messages(-1) "error: [translate_macro MSG_UNKNOWNATTRIBUTENAME_S $attribute]"
+   set messages(-2) [translate_macro MSG_OBJECT_VALUENOTULONG_S $value]
 
    set ret 0
    # now evaluate return code and raise errors

@@ -43,6 +43,7 @@ lappend check_functions "qconf_backslash_custom_comma_check"
 lappend check_functions "qconf_backslash_space_output_check"
 lappend check_functions "qconf_backslash_comma_output_check"
 lappend check_functions "qconf_issue1767"
+lappend check_functions "qconf_modify_hostgroup"
 
 #                                                             max. column:     |
 #****** qconf/qconf_backslash_default_space_check() ******
@@ -959,6 +960,79 @@ proc qconf_issue1767 {} {
    puts $CHECK_OUTPUT $result
    set exit_code [catch { exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" -Mp $tmp_file1  } result ]
    check_double_output $REJECTED $result
+
+   set_error 0 "ok"
+}
+
+#****** qconf/check.60.exp/qconf_modify_hostgroup() ******
+#  NAME
+#     qconf_modify_hostgroup - Modify host group
+#
+#  SYNOPSIS
+#     qconf_modify_hostgroup { } - Call mod_hostgroup to modify hsot group
+#                         from CLI or file
+#
+#  FUNCTION
+#     Check basic functionality of qconf
+#
+#  SEE ALSO
+# sge_host/get_processor_list()
+#*******************************
+proc qconf_modify_hostgroup {} {
+   global ts_config env
+   global CHECK_OUTPUT CHECK_USER
+
+   set host [lindex $ts_config(execd_nodes) 0]
+
+   # Now modify the host list
+   puts $CHECK_OUTPUT "Modify host group  @allhosts  from file ...\n"
+   set attribute "hostlist"
+   set value "$host"
+   set result1 [mod_hostgroup "@allhosts" $attribute $value ]
+
+  if { ( $result1 == 0 ) } {
+      puts $CHECK_OUTPUT "qconf -Mhgrp succeded\n"
+   } else {
+      puts $CHECK_OUTPUT "result is $result1"
+   }
+
+   # Now do it with a wrong parameter
+   puts $CHECK_OUTPUT "Modify host group  @allhosts wrongly from file ...\n"
+   set attribute "stuff"
+   set value "$host"
+   set result11 [mod_hostgroup "@allhosts" $attribute $value 1 $host $CHECK_USER 0]
+
+  if { ( $result11 == -1 ) } {
+      puts $CHECK_OUTPUT "qconf -Mhgrp failed  correctly\n"
+   } else {
+      # See IZ 1968 on why this does not fail as expected
+      puts $CHECK_OUTPUT "result is $result11"
+   }
+
+    # Now do it with a wrong parameter again
+   puts $CHECK_OUTPUT "Modify host group  @allhosts wrongly from file  again...\n"
+   set attribute "hostlist"
+   set value "whatever"
+   set result11 [mod_hostgroup "@allhosts" $attribute $value 1 $host $CHECK_USER 0]
+
+  if { ( $result11 == -3 ) } {
+      puts $CHECK_OUTPUT "qconf -Mhgrp failed  correctly again \n"
+   } else {
+      # See IZ 1968 on why this does not fail as expected
+      puts $CHECK_OUTPUT "result is $result11"
+   }
+
+   # Now do it from CLI with wrong param again
+   set attribute "hostlist"
+   set value "stuff"
+   puts $CHECK_OUTPUT "Modify host group  @allhosts  wrongly from CLI again...\n"
+   set result21 [mod_hostgroup "@allhosts" $attribute $value 0 $host $CHECK_USER 0]
+
+   if { ( $result21 == -3 ) } {
+      puts $CHECK_OUTPUT "qconf -mhgrp failed  correctly\n"
+   } else {
+      puts $CHECK_OUTPUT "result is $result21"
+   }
 
    set_error 0 "ok"
 }

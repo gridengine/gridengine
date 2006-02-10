@@ -44,10 +44,10 @@ global check_init_level_procedure
 global env
 
 # define a level initialization procedure:
-set check_init_level_procedure "1933_init_level"
+set check_init_level_procedure "issue_1933_init_level"
 
 # define test's name and run level descriptions
-set check_name            "1933"
+set check_name            "issue_1933"
 set check_category        "COMPATIBILITY SYSTEM VERIFIED"
 set check_highest_level   0
 set check_description(0)  "check for double qstat queue error messages"
@@ -56,16 +56,16 @@ set check_description(0)  "check for double qstat queue error messages"
 set check_needs           "init_core_system" 
 
 # setup and cleanup functions
-set check_setup_function 1933_setup
-set check_cleanup_function 1933_cleanup
+set check_setup_function issue_1933_setup
+set check_cleanup_function issue_1933_cleanup
 
 # define test's procedure order
 set check_functions ""
-lappend check_functions "1933_test"
+lappend check_functions "issue_1933_test"
 
 global queue_name
 
-proc 1933_init_level {} {
+proc issue_1933_init_level {} {
    global CHECK_ACT_LEVEL queue_name
    set queue_name "1933.q"
 
@@ -78,7 +78,7 @@ proc 1933_init_level {} {
    return -1  ;# no other level else
 }
 
-proc 1933_setup  {} {
+proc issue_1933_setup  {} {
    global CHECK_OUTPUT ts_config queue_name
 
    puts $CHECK_OUTPUT "add $queue_name"
@@ -88,7 +88,7 @@ proc 1933_setup  {} {
    set_error 0 "ok"
 }
 
-proc 1933_cleanup  {} {
+proc issue_1933_cleanup  {} {
    global CHECK_OUTPUT CHECK_USER ts_config queue_name
 
    set host [lindex $ts_config(execd_nodes) 0]
@@ -101,7 +101,7 @@ proc 1933_cleanup  {} {
 }
 
 
-proc 1933_test {} {
+proc issue_1933_test {} {
    global 1933_test_hosts check_description queue_name
    global CHECK_OUTPUT ts_config CHECK_PRODUCT_ROOT CHECK_ACT_LEVEL
    global CHECK_HOST CHECK_USER
@@ -123,7 +123,7 @@ proc 1933_test {} {
 
       set runtime [expr ( [timestamp] - $time) ]
       if { $runtime >= 60 } {
-         add_proc_error "1933_test" -1 "timeout waiting for queue ${queue_name}@$host to get in error state"
+         add_proc_error "issue_1933_test" -1 "timeout waiting for queue ${queue_name}@$host to get in error state"
          break;
       }
       sleep 1
@@ -135,9 +135,9 @@ proc 1933_test {} {
    puts $CHECK_OUTPUT $output
 
    if { [ string first "QERROR" $output ] <= 0  } {
-      add_proc_error "1933_test" -1 "qstat printed QERROR never"
+      add_proc_error "issue_1933_test" -1 "qstat printed QERROR never"
    } elseif { [ string first "QERROR" $output ] != [ string last "QERROR" $output ] } {
-      add_proc_error "1933_test" -1 "Issue 1933 present: qstat printed QERROR for one queue instance multiple times"
+      add_proc_error "issue_1933_test" -1 "Issue 1933 present: qstat printed QERROR for one queue instance multiple times"
    }
 
    set_error 0 "ok"

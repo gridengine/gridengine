@@ -652,16 +652,25 @@ proc issue_751 {} {
 
   set host $ts_config(master_host) 
 
+   # the bug has only be fixed in maintrunk for 6.1
+   # do only raise a warning for ealier versions
+   set error_level -1
+   set additional_message ""
+   if {$ts_config(gridengine_version) < 61} {
+      set error_level -3
+      set additional_message "\nhas been fixed only for 6.1"
+   }
+
   set output [start_remote_prog $host $CHECK_USER "qconf" "-sstnode /" exit_state 30]
   puts $CHECK_OUTPUT $output
   if { $exit_state != 0 } {
-      add_proc_error "issue_751" -1 "Issue 751: qstat -sstree / broken"
+      add_proc_error "issue_751" $error_level "Issue 751: qconf -sstnode / broken$additional_message"
   }
 
   set output [start_remote_prog $host $CHECK_USER "qconf" "-sstnode Root" exit_state 30]
   puts $CHECK_OUTPUT $output
   if { $exit_state != 0 } {
-      add_proc_error "issue_751" -1 "Issue 751: qstat -sstree Root broken"
+      add_proc_error "issue_751" $error_level "Issue 751: qconf -sstnode Root broken$additional_message"
   }
 
   set_error 0 "ok"

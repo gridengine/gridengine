@@ -1,3 +1,6 @@
+JG-2006-02-10-0: Testsuite: Minor fixes and cleanup.
+                 Review:    RD
+
 HP-2006-02-09-0: Bugfix:    qrsh now adds a '\n' to error output recieved from
                             shepherd.
                             While fixing this, I replaced some

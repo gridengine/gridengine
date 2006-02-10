@@ -15,7 +15,11 @@ fi
 
 # if the directory already existed, there might be lock files 
 # from previous runs. Delete them!
-find $BASEDIR -name "tcovd.lock" -exec rm {} \;
+find $BASEDIR -name "tcovd.*" -exec rm {} \;
+
+# we sometimes have lots of temporary tcov files lying in /tmp
+# delete them
+find /tmp -name "tcov.temp.d.*" -exec rm {} \;
 
 # create logfiles for all users
 for user in $*; do

@@ -610,7 +610,6 @@ proc qrsh_accounting {} {
       set INTERACTIVE_JOB_DUMMY [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QSH_INTERACTIVEJOBHASBEENSCHEDULED_D] "__JOBID__"]
    }
    set job_id_start [ string first "__JOBID__" $INTERACTIVE_JOB_DUMMY ]
-   puts $CHECK_OUTPUT "parsing for \"$INTERACTIVE_JOB\""
 
    foreach host $qrsh_hostlist {
       set qrsh_id [open_remote_spawn_process $qrsh_submithost "ts_def_con" $CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qrsh "-verbose -nostdin -l hostname=$host $CHECK_PRODUCT_ROOT/examples/jobs/worker.sh 120"]

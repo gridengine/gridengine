@@ -1981,3 +1981,84 @@ proc operational_unlock {operation_name {host ""} {lock_location "/tmp"}} {
 
    return 0
 }
+
+
+#****** control_procedures/scale_timeout() *************************************
+#  NAME
+#     scale_timeout() -- scale timeout values
+#
+#  SYNOPSIS
+#     scale_timeout { timeout {does_computation 1} {does_spooling 1} 
+#     {process_invocations 1} } 
+#
+#  FUNCTION
+#     Scales a given timeout value depending on setup.
+#     The given timeout is increased, when
+#        o we use classic spooling
+#        o we spool on a NFS filesystem
+#        o we run with code coverage
+#
+#  INPUTS
+#     timeout                 - base timeout
+#     {does_computation 1}    - is the tested
+#     {does_spooling 1}       - ??? 
+#     {process_invocations 1} - ??? 
+#
+#  RESULT
+#     ??? 
+#
+#  EXAMPLE
+#     ??? 
+#
+#  NOTES
+#     ??? 
+#
+#  BUGS
+#     ??? 
+#
+#  SEE ALSO
+#     ???/???
+#*******************************************************************************
+proc scale_timeout {timeout {does_computation 1} {does_spooling 1} {process_invocations 1}} {
+   global ts_config
+   global CHECK_COVERAGE
+
+   set ret $timeout
+
+   # respect spooling influence
+   if {$does_spooling} {
+      # if we use a RPC server, assume 20% slower spooling
+      if {$ts_config(bdb_server) != "none"} {
+         set ret [expr $ret * 1.2]
+      } else {
+         # classic spooling is slower than BDB, assume 20% slower spooling
+         if {$ts_config(spooling_method) == "classic"} {
+            set ret [expr $ret * 1.2]
+            set spool_dir [get_qmaster_spool_dir]
+         } else {
+            set spool_dir [get_bdb_spooldir]
+         }
+
+         # spooling on NFS mounted filesystem, assume 20% slower spooling
+         set fstype [get_fstype $spool_dir]
+         if {[string match "nfs*" $spool_dir]} {
+            set ret [expr $ret * 1.2]
+         }
+      }
+   }
+
+   # respect code coverage influence
+   # we assume that the process will run slightly slower
+   if {$CHECK_COVERAGE != "none"} {
+      # computation will be slower - add 10% overhead
+      if {$does_computation} {
+         set ret [expr $ret * 1.10]
+      }
+
+      # coverage profiles are written per process invocation
+      # add 1 second overhead per process invocation
+      set ret [expr $ret + $process_invocations * 1]
+   }
+
+   return [format "%.0f" [expr ceil($ret)]]
+}

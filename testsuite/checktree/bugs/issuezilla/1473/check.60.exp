@@ -186,7 +186,9 @@ proc issue_1473_do_qconf {message filename} {
    modify_complex_from_file $filename time
    puts "time required: $time s"
 
-   if {$time > 2.0} {
+   set max_time [scale_timeout 2.0]
+
+   if {$time > $max_time} {
       add_proc_error "issue_1473_do_qconf" -1 "$message may not take that long ($time s)"
    }
 }

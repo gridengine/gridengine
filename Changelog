@@ -1,3 +1,8 @@
+RD-2006-02-13-0: Bugfix:    resource filtering in qselect broken
+                 Bugtraq:   6383513
+                 Issue:     1977
+                 Review:    JG
+
 OJ-2006-02-10-0: Testsuite: Added test cases for *hgrp, *prj for qconf 
                             in  sge_host.60.tcl, sge_project.tcl as well
                             as error handling for these tests.

@@ -294,24 +294,35 @@ void assignment_release(sge_assignment_t *a)
 static dispatch_t 
 find_best_result(dispatch_t r1, dispatch_t r2)
 {
-   if (r1 == DISPATCH_OK || 
+   DENTER(BASIS_LAYER, "find_best_result");
+
+   if (r1 == DISPATCH_NEVER || 
+            r2 == DISPATCH_NEVER) {
+      DRETURN(DISPATCH_NEVER);
+   }
+   else if (r1 == DISPATCH_OK || 
        r2 == DISPATCH_OK) {
-      return DISPATCH_OK;
+      DRETURN(DISPATCH_OK);
    }   
    else if (r1 == DISPATCH_NOT_AT_TIME || 
             r2 == DISPATCH_NOT_AT_TIME) {
-      return DISPATCH_NOT_AT_TIME;
+      DRETURN(DISPATCH_NOT_AT_TIME);
    }   
    else if (r1 == DISPATCH_NEVER_JOB || 
             r2 == DISPATCH_NEVER_JOB) {
-      return DISPATCH_NEVER_JOB;
+      DRETURN(DISPATCH_NEVER_JOB);
    }
-   else if (r1 == DISPATCH_MISSING_ATTR ||
-            r2 == DISPATCH_MISSING_ATTR) {
-      return DISPATCH_MISSING_ATTR;
+   else if (r1 ==  DISPATCH_NEVER_CAT ||
+            r2 == DISPATCH_NEVER_CAT) {
+      DRETURN(DISPATCH_NEVER_CAT);
    }
-   
-   return DISPATCH_NEVER_CAT;
+   else if (r1 == DISPATCH_MISSING_ATTR  ||
+            r2 == DISPATCH_MISSING_ATTR ) {
+      DRETURN(DISPATCH_MISSING_ATTR);
+   }
+
+   CRITICAL((SGE_EVENT, MSG_JOBMATCHINGUNEXPECTEDRESULT));
+   DRETURN(DISPATCH_NEVER);
 }
 
 

@@ -1,3 +1,8 @@
+RD-2006-02-13-0: Bugfix:    resource filtering in qselect broken
+                 Bugtraq:   6383513
+                 Issue:     1977
+                 Review:    JG
+
 JG-2006-01-30-0: Enhancem.: cleanup aimk code coverage options
                             cleanup of daemonizing including insure related
                             actions.
@@ -62,6 +67,7 @@ CR-2005-12-08-0: Bugfix:    Fixed minor memory leaks from insure test
                  Review:    AA
 
 RD-2005-12-07-0: CVS        Created V60u7_TAG
+---------------------------------------------
 
 RD-2005-12-01-0: Bugfix:    disabled job error in case qrsh_exit code can't be
                             read
@@ -710,6 +716,7 @@ RD-2005-09-20-0: Bugfix:    qacct -o -D output hard to parse
                  Review:    SG 
 
 RD-2005-09-19-0: CVS        Created V60s2snapshot1_TAG
+------------------------------------------------------
 
 CR-2005-09-15-1: Testsuite: fixed commlib module test binaries 
                             test_virtual_event_client and 

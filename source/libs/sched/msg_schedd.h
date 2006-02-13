@@ -212,6 +212,7 @@
 #define MSG_SCHEDD_DUETORR                                  _MESSAGE(47220, _(" due to a reservation"))
 #define MSG_SCHEDD_NOMASTERHOST_U                           _MESSAGE(47226, _("no master host for job "sge_u32))
 #define MSG_SUBORDPOLICYCONFLICT_UUSS                       _MESSAGE(47288, _("Jobs "sge_U32CFormat" & "sge_U32CFormat" dispatched to master/subordinated queues "SFQ"/"SFQ". Suspend on subordinate to occur in same scheduling interval. Policy conflict!"))
+#define MSG_JOBMATCHINGUNEXPECTEDRESULT                     _MESSAGE(47290, _("job matching returned an unexpected result!"))
 
 
 /* 

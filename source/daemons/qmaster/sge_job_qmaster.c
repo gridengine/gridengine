@@ -3528,7 +3528,7 @@ static int job_verify_predecessors(lListElem *job, lList **alpp)
    DENTER(TOP_LAYER, "job_verify_predecessors");
 
    predecessors_req = lGetList(job, JB_jid_request_list);
-   predecessors_id = lCreateList("job predecessors", JRE_Type);
+   predecessors_id = lCreateList("job_predecessors", JRE_Type);
    if (!predecessors_id) {
          ERROR((SGE_EVENT, MSG_JOB_MOD_JOBDEPENDENCY_MEMORY ));
          answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);

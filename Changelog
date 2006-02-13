@@ -1,3 +1,8 @@
+RD-2006-02-13-1: Bugfix:    qstat produces non-well-formed XML output
+                 Bugtraq:   6384812
+                 Issue:     1957
+                 Review:    JG
+
 RD-2006-02-13-0: Bugfix:    resource filtering in qselect broken
                  Bugtraq:   6383513
                  Issue:     1977

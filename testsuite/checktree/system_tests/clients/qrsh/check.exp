@@ -77,6 +77,8 @@ lappend check_functions "qrsh_batch"                 ;# run qrsh in batch mode
 lappend check_functions "qrsh_limits"                ;# limits (e.g. cpu) passed correctly
 lappend check_functions "qrsh_env"                   ;# test the -v VAR=val and -v VAR options
 lappend check_functions "qrsh_reservation"           ;# test the -R y option
+lappend check_functions "qrsh_sigterm_running_job"   ;# test CTRL-C for running job
+lappend check_functions "qrsh_sigterm_pending_job"   ;# test CTRL-C for pending job
 
 # test specific global variables
 global qrsh_hostlist
@@ -1775,6 +1777,126 @@ proc qrsh_env {} {
    wait_for_end_of_all_jobs 30 
    set_error 0 "ok"
 }
+
+#****** qrsh/qrsh_limits() ******
+# 
+#  NAME
+#     qrsh_limits -- send CTRL-C to running job 
+#
+#  SYNOPSIS
+#     qrsh_limits { } 
+#
+#  FUNCTION
+#     Test if Issue 1639 exists
+#
+#  SEE ALSO
+#     qrsh_sigterm_pending_job  
+#*******************************
+
+proc qrsh_sigterm_running_job {} {
+
+   global ts_config CHECK_OUTPUT CHECK_ARCH CHECK_HOST
+
+   # start qrsh 
+   set qrsh_id [open_remote_spawn_process $CHECK_HOST "ts_def_con" $ts_config(product_root)/bin/$CHECK_ARCH/qrsh "\"echo started; sleep 3600\""]
+   set sp_id [ lindex $qrsh_id 1 ]
+
+     
+   # job must be scheduled
+   set timeout 20
+   expect {
+      -i $sp_id full_buffer {
+         add_proc_error "qrsh_qrsh_sigterm_running_job" -1 "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
+      }
+      -i $sp_id -- "*started*" {
+         puts $CHECK_OUTPUT "qrsh job started as expected!"
+      }
+     -i $sp_id timeout {
+         add_proc_error "qrsh_sigterm_running_job" -1 "timeout waiting for qrsh to be scheduled"
+      }
+   }
+
+   # now terminate the connection
+   send -i $sp_id "\003"
+   send -i $sp_id "\003"
+   close_spawn_process $qrsh_id
+
+   wait_for_end_of_all_jobs 15
+
+   set result [start_sge_bin qstat "-s pr" "" "" catch_return ]
+   if { $catch_return == 0 } {
+      if { [ string compare $result "" ] == 0 } {
+         puts $CHECK_OUTPUT "no further jobs in system"
+      } else {
+         add_proc_error "qrsh_sigterm_running_job" -1 "CTRL-C for running qrsh job does not delete job - issue 1639"
+      }
+   } else {
+      add_proc_error "qrsh_sigterm_running_job" -1 "error executing qstat -s pr"
+   }
+
+   delete_all_jobs
+   wait_for_end_of_all_jobs 60
+
+   set_error 0 "ok"
+}
+
+#****** qrsh/qrsh_limits() ******
+# 
+#  NAME
+#     qrsh_limits -- send CTRL-C to pending job 
+#
+#  SYNOPSIS
+#     qrsh_limits { } 
+#
+#  FUNCTION
+#     Test if Issue 1639 exists
+#
+#  SEE ALSO
+#     qrsh_sigterm_running_job  
+#*******************************
+proc qrsh_sigterm_pending_job {} {
+
+   global ts_config CHECK_OUTPUT CHECK_ARCH CHECK_HOST
+
+   # start qrsh 
+   set qrsh_id [open_remote_spawn_process $CHECK_HOST "ts_def_con" $ts_config(product_root)/bin/$CHECK_ARCH/qrsh "-now n -l arch=bla sleep 3600"]
+   set sp_id [ lindex $qrsh_id 1 ]
+
+   set timer 10
+
+   while { [ get_job_info -1 ] == 0 } {
+      if { $timer == 0 } {
+         add_proc_error "qrsh_sigterm_pending_job" -1 "error submitting qrsh job"
+         break;
+      }
+      sleep 1
+      incr timer -1
+   }
+  
+   # now terminate the connection
+   send -i $sp_id "\003"
+   send -i $sp_id "\003"
+   close_spawn_process $qrsh_id
+
+   wait_for_end_of_all_jobs 15
+
+   set result [start_sge_bin qstat "-s pr" "" "" catch_return ]
+   if { $catch_return == 0 } {
+      if { [ string compare $result "" ] == 0 } {
+         puts $CHECK_OUTPUT "no further jobs in system"
+      } else {
+         add_proc_error "qrsh_sigterm_pending_job" -1 "CTRL-C for pending qrsh job does not delete job - issue 1639"
+      }
+   } else {
+      add_proc_error "qrsh_sigterm_pending_job" -1 "error executing qstat -s pr"
+   }
+
+   delete_all_jobs
+   wait_for_end_of_all_jobs 60
+
+   set_error 0 "ok"
+}
+
 
 proc qrsh_cleanup {} {
    delete_all_jobs

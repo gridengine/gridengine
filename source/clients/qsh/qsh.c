@@ -680,11 +680,16 @@ static int start_client_program(const char *client_name,
 
    if (child_pid) {
       bool done;
+      struct sigaction forward_action;
 
+      forward_action.sa_handler = forward_signal;
+      sigemptyset(&forward_action.sa_mask);
+      forward_action.sa_flags=0;
+
+      sigaction(SIGINT, &forward_action, NULL);
+      sigaction(SIGQUIT, &forward_action, NULL);
+      sigaction(SIGTERM, &forward_action, NULL);
       sge_unblock_all_signals();
-      signal(SIGINT,  forward_signal);
-      signal(SIGQUIT, forward_signal);
-      signal(SIGTERM, forward_signal);
   
       done = false;
       while (!done) {
@@ -1769,8 +1774,13 @@ int main(int argc, char **argv)
             msgsock = wait_for_qrsh_socket(sock, random_poll); 
 
             /* qlogin_starter reports "ready to start" */
-            if(msgsock > 0) {
+            if(msgsock >= 0) {
                if(!get_client_server_context(msgsock, &port, &job_dir, &utilbin_dir, &host)) {
+                  cl_com_ignore_timeouts(CL_FALSE);
+                  cl_commlib_open_connection(cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name(),0),
+                                     (char*) sge_get_master(0),
+                                     (char*) prognames[QMASTER],
+                                     1);
                   delete_job(job_id, lp_jobs);
                   do_exit = 1;
                   exit_status = 1;
@@ -1787,6 +1797,11 @@ int main(int argc, char **argv)
                                                   is_rsh, is_rlogin, nostdin, noshell, sock);
                if(exit_status < 0) {
                   WARNING((SGE_EVENT, MSG_QSH_CLEANINGUPAFTERABNORMALEXITOF_S, client_name));
+                  cl_com_ignore_timeouts(CL_FALSE);
+                  cl_commlib_open_connection(cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name(),0),
+                                     (char*) sge_get_master(0),
+                                     (char*) prognames[QMASTER],
+                                     1);
                   delete_job(job_id, lp_jobs);
                   exit_status = EXIT_FAILURE;
                }
@@ -1798,7 +1813,11 @@ int main(int argc, char **argv)
             /* wait for qsh job to be scheduled */
             sleep(random_poll);
          }   
-   
+         cl_com_ignore_timeouts(CL_FALSE);
+         cl_commlib_open_connection(cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name(),0),
+                                   (char*) sge_get_master(0),
+                                   (char*) prognames[QMASTER],
+                                    1);
          /* get job from qmaster: to handle qsh and to detect deleted qrsh job */
          what = lWhat("%T(%I)", JB_Type, JB_ja_tasks); 
          where = lWhere("%T(%I==%u)", JB_Type, JB_job_number, job_id); 
@@ -1911,7 +1930,6 @@ static void delete_job(u_long32 job_id, lList *jlp)
 
    sprintf(job_str, sge_u32, job_id);
    lAddElemStr(&idlp, ID_str, job_str, ID_Type);
-
    sge_gdi(SGE_JOB_LIST, SGE_GDI_DEL, &idlp, NULL, NULL);
    /*
    ** no error handling here, we try to delete the job

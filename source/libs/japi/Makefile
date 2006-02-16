@@ -83,13 +83,14 @@ drmaa_extras_clean: drmaa_howto_clean
 	$(RM) test_drmaa test_drmaa.o example example.o test_drmaa_sync \
          test_drmaa_sync.o test_drmaa_no_bin test_drmaa_no_bin.o \
          test_drmaa_issue1768 test_drmaa_issue1768.o test_drmaa_issue1892 \
-         test_drmaa_issue1892.o
+         test_drmaa_issue1892.o \
+         compile compile.o
 
 japilib: $(JAPILIB)
 drmaalib: $(DRMAALIB)
 
 drmaa_extras: drmaa_howto_all test_drmaa example test_drmaa_sync \
-              test_drmaa_no_bin test_drmaa_issue1768 test_drmaa_issue1892
+              test_drmaa_no_bin test_drmaa_issue1768 test_drmaa_issue1892 compile
 	
 japi_clean:
 	$(RM) $(JAPILIB_OBJS) libjapi.0.95$(LIBEXT) libjapi.1.0$(LIBEXT)

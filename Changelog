@@ -1,3 +1,6 @@
+JG-2006-02-16-0: Enhancem.: Enhanced the DRMAA example "compile" to delete the
+                            compile jobs at CTRL-C.
+
 RD-2006-02-14-0: Bugfix:    Interrupting qrsh while pending does not remove job
                  Bugtraq:   6287945
                  Issue:     1639
@@ -109,7 +112,8 @@ OJ-2006-01-03-0: Testsuite: added stnode, event client functionality to
                  Issue:     477
 
 
-JG-2005-12-28-0: Bugfix:    - qrsh always did verbose output
+JG-2005-12-28-0: Bugfix:    - qrsh always did verbose output (no CR/IZ, as the
+                              bug did not appear in any released product).
                  Testsuite: - fixed broken testsuite for 5.3
                             - shadow only hosts were not added to admin host 
                               list

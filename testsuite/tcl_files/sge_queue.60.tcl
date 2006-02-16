@@ -151,7 +151,6 @@ proc add_queue { qname hostlist change_array {fast_add 1} } {
    set chgar(qname)     "$qname"
    set chgar(hostlist)  "$hostlist"
 
-
    # localize messages
    # JG: TODO: object name is taken from c_gdi object structure - not I18Ned!!
    set QUEUE [translate $ts_config(master_host) 1 0 0 [sge_macro MSG_OBJ_QUEUE]]
@@ -188,7 +187,7 @@ proc add_queue { qname hostlist change_array {fast_add 1} } {
 }
 
 # set_queue_work - no public interface
-proc set_queue_work { qname change_array } {
+proc set_queue_work { qname change_array {raise_error 1} } {
    global ts_config
    global CHECK_OUTPUT CHECK_ARCH CHECK_USER
 
@@ -201,12 +200,19 @@ proc set_queue_work { qname change_array } {
    # JG: TODO: object name is taken from c_gdi object structure - not I18Ned!!
    set QUEUE [translate $ts_config(master_host) 1 0 0 [sge_macro MSG_OBJ_QUEUE]]
    set MODIFIED [translate $ts_config(master_host) 1 0 0 [sge_macro MSG_SGETEXT_MODIFIEDINLIST_SSSS] $CHECK_USER "*" $qname "cluster queue" ]
-   set result [ handle_vi_edit "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-mq ${qname}" $vi_commands $MODIFIED]
+   set UNKNOWN_ATTRIBUTE [ translate_macro MSG_UNKNOWNATTRIBUTENAME_S $qname ]
+   set NOT_MODIFIED [translate_macro MSG_FILE_NOTCHANGED ]
+
+   #set result [ handle_vi_edit "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-mq ${qname}" $vi_commands $MODIFIED]
+   set result [ handle_vi_edit "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-mq ${qname}" $vi_commands $MODIFIED $NOT_MODIFIED $UNKNOWN_ATTRIBUTE ]
    if { $result == -2 } {
-      add_proc_error "set_queue" -1 "$qname is not a queue"
+      add_proc_error "set_queue" -1 "queue $qname not modified" $raise_error
+   }
+   if { $result == -3 } {
+      add_proc_error "set_queue" -1 "unknown attribute in queue $qname " $raise_error
    }
    if { $result != 0  } {
-      add_proc_error "set_queue" -1 "error modify queue $qname, $result"
+      add_proc_error "set_queue" -1 "error modify queue $qname, $result" $raise_error
    } 
 
    return $result
@@ -270,7 +276,7 @@ proc set_cqueue_specific_values { current_array change_array hostlist } {
          # use old cqueue value as default, set new host specific
          set default_value [string trimright [lindex $value_list 0] ","]
          puts $CHECK_OUTPUT "--> default value = $default_value"
-      
+
          # copy host specific values to array
          for {set i 1} {$i < [llength $value_list]} {incr i} {
             set host_value [lindex $value_list $i]
@@ -327,7 +333,7 @@ proc set_cqueue_specific_values { current_array change_array hostlist } {
 #     set_queue() -- set queue attributes
 #
 #  SYNOPSIS
-#     set_queue { qname hostlist change_array } 
+#     set_queue { qname hostlist change_array {fast_add 1} {on_host ""} {as_user ""} {raise_error 1}} 
 #
 #  FUNCTION
 #     Sets the attributes given in change_array in the cluster queue qname.
@@ -339,13 +345,18 @@ proc set_cqueue_specific_values { current_array change_array hostlist } {
 #     qname        - name of the (cluster) queue
 #     hostlist     - list of hosts / host groups. 
 #     change_array - array containing the changed attributes.
+#     {fast_add 1} - 0: modify the attribute using qconf -mq,
+#                  - 1: modify the attribute using qconf -Mq, faster
+#     {on_host ""}    - execute qconf on this host, default is master host
+#     {as_user ""}    - execute qconf as this user, default is $CHECK_USER
+#     raise_error - do add_proc_error in case of errors
 #
 #  RESULT
 #
 #*******************************************************************************
-proc set_queue { qname hostlist change_array } {
+proc set_queue { qname hostlist change_array {fast_add 1}  {on_host ""} {as_user ""}  {raise_error 1}} {
    global ts_config
-   global CHECK_ARCH CHECK_OUTPUT CHECK_USER
+   global CHECK_OUTPUT CHECK_ARCH
 
    upvar $change_array chgar
 
@@ -362,11 +373,119 @@ proc set_queue { qname hostlist change_array } {
       set_cqueue_specific_values currar chgar $hostlist
    }
 
-   # do the work
-   set result [set_queue_work $qname chgar]
 
+   # Modify queue from file
+   if { $fast_add } {
+
+     set tmpfile [dump_array_to_tmpfile chgar]
+     set ret [start_sge_bin "qconf" "-Mq $tmpfile" $on_host $as_user ]
+     
+     if {$prg_exit_state == 0} {
+         set result 0
+      } else {
+         set result [mod_queue_error $ret $qname $tmpfile $raise_error]
+      }
+
+   } else {
+
+      # do the work
+      set result [set_queue_work $qname chgar $raise_error]
+      
+      if { $result != 0 } {
+            add_proc_error "mod_queue" -1 "could not modifiy queue $qname " $raise_error
+            set result -1
+      }
+
+   }
+   
    return $result
 }
+
+#****** sge_queue.60/mod_queue_error() ***************************************
+#  NAME
+#     mod_queue_error() -- error handling for mod_queue/set_queue
+#
+#  SYNOPSIS
+#     mod_queue_error {result qname tmpfile raise_error }
+#
+#  FUNCTION
+#     Does the error handling for mod_queue/set_queue.
+#     Translates possible error messages of qconf -Mq,
+#     builds the datastructure required for the handle_sge_errors
+#     function call.
+#
+#     The error handling function has been intentionally separated from
+#     mod_queue/set_queue. While the qconf call and parsing the result is
+#     version independent, the error messages (macros) usually are version
+#     dependent.
+#
+#  INPUTS
+#     result      - qconf output
+#     qname       - queue name for qconf -Mq
+#     tmpfile     - temp file for qconf -Mq
+#     raise_error - do add_proc_error in case of errors
+#
+#  RESULT
+#     Returncode for mod_queue/set_queue function:
+#      -1: "wrong_attr" is not an attribute
+#     -99: other error
+#
+#  SEE ALSO
+#     sge_calendar/get_calendar
+#     sge_procedures/handle_sge_errors
+#******************************************************************************
+proc mod_queue_error {result qname tmpfile raise_error} {
+
+   # recognize certain error messages and return special return code
+   set messages(index) "-1 -2"
+   set messages(-1) [translate_macro MSG_OBJECT_VALUENOTULONG_S "*" ]
+   set messages(-2) [translate_macro MSG_SGETEXT_DOESNOTEXIST_SS "cluster queue" $qname]
+
+   set ret 0
+   # now evaluate return code and raise errors
+   set ret [handle_sge_errors "mod_queue" "qconf -Mq $tmpfile" $result messages $raise_error]
+
+   return $ret
+}
+
+#****** sge_queue.60/queue/mod_queue() ******************************************
+#  NAME
+#     mod_queue() -- wrapper for set_queue 
+#
+#  SYNOPSIS
+#     mod_queue { qname hostlist change_array {fast_add 1} {on_host ""} {as_user ""} {raise_errori 1}}
+#
+#  FUNCTION
+#     See set_queue
+#
+#  INPUTS
+#     qname        - name of the (cluster) queue
+#     hostlist     - list of hosts / host groups.
+#     change_array - array containing the changed attributes.
+#     {fast_add 1} - 0: modify the attribute using qconf -mckpt,
+#                  - 1: modify the attribute using qconf -Mckpt, faster
+#     {on_host ""}    - execute qconf on this host, default is master host
+#     {as_user ""}    - execute qconf as this user, default is $CHECK_USER
+#     {raise_error 1} - do add_proc_error in case of errors
+#
+#  RESULT
+#
+#*******************************************************************************
+
+proc mod_queue { qname hostlist change_array {fast_add 1} {on_host ""} {as_user ""} {raise_error 1}} {
+
+   upvar $change_array chgar
+   get_queue $qname currar
+
+   foreach elem [array names chgar] {
+      set currar($elem) $chgar($elem)
+   }
+
+   return [set_queue $qname $hostlist currar $fast_add $on_host $as_user $raise_error]
+
+}
+
+#####
 
 proc del_queue { q_name hostlist {ignore_hostlist 0} {del_cqueue 0}} {
   global ts_config

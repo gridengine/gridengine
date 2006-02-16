@@ -1,3 +1,4 @@
+#!/usr/local/bin/tclsh
 #___INFO__MARK_BEGIN__
 ##########################################################################
 #
@@ -113,8 +114,6 @@ proc reset_schedd_config {} {
    return $ret_value
 }
 
-
-
 #                                                             max. column:     |
 #****** sge_procedures/set_schedd_config() ******
 # 
@@ -122,7 +121,7 @@ proc reset_schedd_config {} {
 #     set_schedd_config -- change scheduler configuration
 #
 #  SYNOPSIS
-#     set_schedd_config { change_array } 
+#     set_schedd_config { change_array {fast_add 1} {on_host ""} {as_user ""} {raise_error 1} } 
 #
 #  FUNCTION
 #     Set the scheduler configuration corresponding to the content of the 
@@ -131,6 +130,12 @@ proc reset_schedd_config {} {
 #  INPUTS
 #     change_array - name of an array variable that will be set by 
 #                    set_schedd_config
+#     {fast_add 1} - 0: modify the attribute using qconf -mckpt,
+#                  - 1: modify the attribute using qconf -Mckpt, faster
+#     {on_host ""}    - execute qconf on this host, default is master host
+#     {as_user ""}    - execute qconf as this user, default is $CHECK_USER
+#     {raise_error 1} - raise an error condition on error (default), or just
+#                       output the error message to stdout
 #  RESULT
 #     -1 : timeout
 #      0 : ok
@@ -180,21 +185,130 @@ proc reset_schedd_config {} {
 #  SEE ALSO
 #     sge_procedures/get_schedd_config()
 #*******************************
-proc set_schedd_config { change_array } {
+
+proc set_schedd_config { change_array {fast_add 1} {on_host ""} {as_user ""} {raise_error 1}} {
   global ts_config
-  global env CHECK_ARCH
-  global CHECK_OUTPUT CHECK_CORE_MASTER
+  global env CHECK_ARCH 
+
   upvar $change_array chgar
 
-  set vi_commands [build_vi_command chgar]
-  set CHANGED_SCHEDD_CONFIG [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SCHEDD_CHANGEDSCHEDULERCONFIGURATION]]
-  set result [ handle_vi_edit "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-msconf" $vi_commands $CHANGED_SCHEDD_CONFIG ]  
+  # Modify sched from file?
+   if { $fast_add } {
 
-  if { $result != 0 } {
-     add_proc_error "set_schedd_config" -1 "error changing scheduler configuration"
-  }
+      get_schedd_config old_config
+      foreach elem [array names chgar] {
+         set old_config($elem) "$chgar($elem)"
+      }
+
+      set tmpfile [dump_array_to_tmpfile old_config]
+      set ret [start_sge_bin "qconf" "-Msconf $tmpfile" $on_host $as_user ]
+
+      if {$prg_exit_state == 0} {
+         set result 0
+      } else {
+         set result [set_schedd_config_error $ret $tmpfile $raise_error]
+      }
+
+   } else {
+
+      set vi_commands [build_vi_command chgar]
+      set CHANGED_SCHEDD_CONFIG [translate_macro MSG_SCHEDD_CHANGEDSCHEDULERCONFIGURATION ]
+      set NOTULONG [translate_macro MSG_OBJECT_VALUENOTULONG_S "*" ]
+
+      set result [handle_vi_edit "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-msconf" $vi_commands $CHANGED_SCHEDD_CONFIG $NOTULONG]  
+
+      if { $result == -1 } { 
+         add_proc_error "set_schedd_config" -1 "timeout error" $raise_error 
+      } elseif { $result == -2 } { 
+         add_proc_error "set_schedd_config" -1 "not a u_long32 value" $raise_error
+      } elseif { $result != 0 } { 
+         add_proc_error "set_schedd_config" -1 "error changing scheduler configuration" $raise_error
+      }
+     
+   }
   
   return $result
+  
+}
+
+#****** sge_sched_conf/set_schedd_config_error() ***************************************
+#  NAME
+#     set_schedd_config_error() -- error handling for set_schedd_config
+#
+#  SYNOPSIS
+#     set_schedd_config_error { result tmpfile raise_error }
+#
+#  FUNCTION
+#     Does the error handling for set_schedd_config.
+#     Translates possible error messages of qconf -Msconf,
+#     builds the datastructure required for the handle_sge_errors
+#     function call.
+#
+#     The error handling function has been intentionally separated from
+#     set_schedd_config. While the qconf call and parsing the result is
+#     version independent, the error messages (macros) usually are version
+#     dependent.
+#
+#  INPUTS
+#     result      - qconf output
+#     tmpfile     - temp file for qconf -Msconf
+#     raise_error - do add_proc_error in case of errors
+#
+#  RESULT
+#     Returncode for set_exechost function:
+#      -1: "something" does not exist
+#     -99: other error
+#
+#  SEE ALSO
+#     sge_calendar/get_calendar
+#     sge_procedures/handle_sge_errors
+#*******************************************************************************
+proc set_schedd_config_error {result tmpfile  raise_error} {
+
+   # build up needed vars
+
+   set messages(index) "-1"
+   set messages(-1)  [translate_macro MSG_OBJECT_VALUENOTULONG_S "*" ]
+
+   set ret 0
+   # now evaluate return code and raise errors
+   set ret [handle_sge_errors "set_exechost" "qconf -Msconf $tmpfile" $result messages $raise_error]
+
+  return $ret
+}
+
+
+#****** sge_sched_config/mod_schedd_config() ******
+#
+#  NAME
+#     mod_schedd_config -- Wrapper around set_schedd_config
+#
+#  SYNOPSIS
+#     mod_schedd_config { change_array {fast_add 1} {on_host ""} {as_user ""} {raise_error 1 } }
+#
+#  FUNCTION
+#     See set_exechost
+#
+#  INPUTS
+#     change_array - name of an array variable that will be set by set_schedd_config
+#     {fast_add 1} - 0: modify the attribute using qconf -msconf,
+#                  - 1: modify the attribute using qconf -Msconf, faster
+#     {on_host ""}    - execute qconf on this host, default is master host
+#     {as_user ""}    - execute qconf as this user, default is $CHECK_USER
+#     {raise_error 1} - raise an error condition on error (default), or just
+#                       output the error message to stdout
+#
+#  SEE ALSO
+#     sge_host/get_exechost()
+#*******************************
+proc mod_schedd_config { change_array {fast_add 1} {on_host ""} {as_user ""} {raise_error 1}} {
+   global CHECK_OUTPUT
+
+   upvar $change_array chgar
+   puts $CHECK_OUTPUT "Using mod_schedd_config as wrapper for set_schedd_config \n"
+
+   return [set_schedd_config chgar $fast_add $on_host $as_user $raise_error]
+
 }
 
 #                                                             max. column:     |

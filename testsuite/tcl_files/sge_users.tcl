@@ -36,13 +36,12 @@
 #     get_manager_list() -- get the list of managers
 #
 #  SYNOPSIS
-#     get_manager_list { {output_var result} {on_host ""} {as_user ""} {raise_error 1}  }
+#     get_manager_list { {on_host ""} {as_user ""} {raise_error 1}  }
 #
 #  FUNCTION
 #     Calls qconf -sm to retrieve a list of managers
 #
 #  INPUTS
-#     output_var      - result will be placed here
 #     {on_host ""}    - execute qconf on this host, default is master host
 #     {as_user ""}    - execute qconf as this user, default is $CHECK_USER
 #     {raise_error 1} - raise an error condition on error (default), or just
@@ -56,8 +55,7 @@
 #     sge_procedures/get_sge_error()
 #     sge_procedures/get_qconf_list()
 #*******************************************************************************
-proc get_manager_list {{output_var result} {on_host ""} {as_user ""} {raise_error 1}} {
-   upvar $output_var out
+proc get_manager_list { {on_host ""} {as_user ""} {raise_error 1}} {
 
    return [get_qconf_list "get_manager_list" "-sm" out $on_host $as_user $raise_error]
 
@@ -67,13 +65,12 @@ proc get_manager_list {{output_var result} {on_host ""} {as_user ""} {raise_erro
 #     add_manager() -- add manager
 #
 #  SYNOPSIS
-#     add_manager {manager {output_var result} {on_host ""} {as_user ""} {raise_error 1}  }
+#     add_manager {manager {on_host ""} {as_user ""} {raise_error 1}  }
 #
 #  FUNCTION
 #     Calls qconf -am $manager to add manager
 #
 #  INPUTS
-#     output_var      - result will be placed here
 #     manager         - manager to be added by qconf -am
 #     {on_host ""}    - execute qconf on this host, default is master host
 #     {as_user ""}    - execute qconf as this user, default is $CHECK_USER
@@ -88,8 +85,7 @@ proc get_manager_list {{output_var result} {on_host ""} {as_user ""} {raise_erro
 #     sge_procedures/get_sge_error()
 #     sge_procedures/get_qconf_list()
 #*******************************************************************************
-proc add_manager {manager {output_var result} {on_host ""} {as_user ""} {raise_error 1}} {
-   upvar $output_var out
+proc add_manager {manager  {on_host ""} {as_user ""} {raise_error 1}} {
 
    return [get_qconf_list "get_manager_list" "-am $manager" out $on_host $as_user $raise_error]
 
@@ -100,13 +96,12 @@ proc add_manager {manager {output_var result} {on_host ""} {as_user ""} {raise_e
 #     del_manager() -- delete manager
 #
 #  SYNOPSIS
-#     del_manager {manager {output_var result} {on_host ""} {as_user ""} {raise_error 1}  }
+#     del_manager {manager {on_host ""} {as_user ""} {raise_error 1}  }
 #
 #  FUNCTION
 #     Calls qconf -dm $manager to add manager
 #
 #  INPUTS
-#     output_var      - result will be placed here
 #     manager         - manager to be deleted by qconf -dm
 #     {on_host ""}    - execute qconf on this host, default is master host
 #     {as_user ""}    - execute qconf as this user, default is $CHECK_USER
@@ -121,8 +116,7 @@ proc add_manager {manager {output_var result} {on_host ""} {as_user ""} {raise_e
 #     sge_procedures/get_sge_error()
 #     sge_procedures/get_qconf_list()
 #*******************************************************************************
-proc del_manager {manager {output_var result} {on_host ""} {as_user ""} {raise_error 1}} {
-   upvar $output_var out
+proc del_manager {manager {on_host ""} {as_user ""} {raise_error 1}} {
 
    return [get_qconf_list "get_manager_list" "-dm $manager" out $on_host $as_user $raise_error]
 
@@ -134,13 +128,12 @@ proc del_manager {manager {output_var result} {on_host ""} {as_user ""} {raise_e
 #     get_operator_list() -- get the list of operators
 #
 #  SYNOPSIS
-#     get_operator_list { {output_var result} {on_host ""} {as_user ""} {raise_error 1}  }
+#     get_operator_list { {on_host ""} {as_user ""} {raise_error 1}  }
 #
 #  FUNCTION
 #     Calls qconf -so to retrieve a list of operators
 #
 #  INPUTS
-#     output_var      - result will be placed here
 #     {on_host ""}    - execute qconf on this host, default is master host
 #     {as_user ""}    - execute qconf as this user, default is $CHECK_USER
 #     {raise_error 1} - raise an error condition on error (default), or just
@@ -154,8 +147,7 @@ proc del_manager {manager {output_var result} {on_host ""} {as_user ""} {raise_e
 #     sge_procedures/get_sge_error()
 #     sge_procedures/get_qconf_list()
 #*******************************************************************************
-proc get_operator_list {{output_var result} {on_host ""} {as_user ""} {raise_error 1}} {
-   upvar $output_var out
+proc get_operator_list { {on_host ""} {as_user ""} {raise_error 1}} {
 
    return [get_qconf_list "get_operator_list" "-so" out $on_host $as_user $raise_error]
 
@@ -166,13 +158,12 @@ proc get_operator_list {{output_var result} {on_host ""} {as_user ""} {raise_err
 #     get_user_list() -- get the list of users
 #
 #  SYNOPSIS
-#     get_user_list { {output_var result} {on_host ""} {as_user ""} {raise_error 1}  }
+#     get_user_list { {on_host ""} {as_user ""} {raise_error 1}  }
 #
 #  FUNCTION
 #     Calls qconf -sul to retrieve a list of users
 #
 #  INPUTS
-#     output_var      - result will be placed here
 #     {on_host ""}    - execute qconf on this host, default is master host
 #     {as_user ""}    - execute qconf as this user, default is $CHECK_USER
 #     {raise_error 1} - raise an error condition on error (default), or just
@@ -186,10 +177,190 @@ proc get_operator_list {{output_var result} {on_host ""} {as_user ""} {raise_err
 #     sge_procedures/get_sge_error()
 #     sge_procedures/get_qconf_list()
 #*******************************************************************************
-proc get_user_list {{output_var result} {on_host ""} {as_user ""} {raise_error 1}} {
-   upvar $output_var out
+proc get_user_list { {on_host ""} {as_user ""} {raise_error 1}} {
 
    return [get_qconf_list "get_user_list" "-sul" out $on_host $as_user $raise_error]
 
+}
+
+#****** sge_users/get_ulist() ******************************************
+#  NAME
+#     get_ulist() -- Get template user list array
+#
+#  SYNOPSIS
+#     get_ulist { userlist array   {raise_error 1}}
+#
+#  FUNCTION
+#     Create user in userlist
+#
+#  INPUTS
+#     userlist     - user name to be modifies
+#     array        - array containing the changed attributes.
+#     {fast_add 1} - 0: modify the attribute using qconf -mckpt,
+#                  - 1: modify the attribute using qconf -Mckpt, faster
+#     {on_host ""}    - execute qconf on this host, default is master host
+#     {as_user ""}    - execute qconf as this user, default is $CHECK_USER
+#     {raise_error 1} - raise an error condition on error (default), or just
+#                       output the error message to stdout
+#
+#  RESULT
+#
+#  COMMENT 
+#   Use this construct due to some issues with using get_qconf_list
+#
+#*******************************************************************************
+
+proc get_ulist { userlist change_array {raise_error 1}} {
+  global ts_config
+  global CHECK_ARCH CHECK_OUTPUT
+
+  upvar $change_array chgar
+
+  set result [start_sge_bin "qconf" "-su $userlist" "" "" ]
+
+  if { $prg_exit_state != 0 } {
+     add_proc_error "get_ulist" "-1" "qconf error: $result" $raise_error
+     return
+  }
+
+  # split each line as listelement
+  set help [split $result "\n"]
+
+  foreach elem $help {
+     set id [lindex $elem 0]
+     set value [lrange $elem 1 end]
+     set value [replace_string $value "{" ""]
+     set value [replace_string $value "}" ""]
+
+     if { $id != "" } {
+        set chgar($id) $value
+     }
+  }
+}
+
+
+#****** sge_users/mod_userlist() ******************************************
+#  NAME
+#     mod_userlist() -- Modify user list
+#
+#  SYNOPSIS
+#     mod_userlist { userlist array  {fast_add 1} {on_host ""} {as_user ""} {raise_error 1}}
+#
+#  FUNCTION
+#     Modifies user in userlist
+#
+#  INPUTS
+#     userlist     - user name to be modifies
+#     array        - array containing the changed attributes.
+#     {fast_add 1} - 0: modify the attribute using qconf -mckpt,
+#                  - 1: modify the attribute using qconf -Mckpt, faster
+#     {on_host ""}    - execute qconf on this host, default is master host
+#     {as_user ""}    - execute qconf as this user, default is $CHECK_USER
+#     {raise_error 1} - raise an error condition on error (default), or just
+#                       output the error message to stdout
+#
+#  RESULT
+#
+#*******************************************************************************
+proc mod_userlist { userlist array {fast_add 1} {on_host ""} {as_user ""} {raise_error 1}} {
+   global ts_config
+   global CHECK_ARCH CHECK_OUTPUT CHECK_USER
+
+   upvar $array current_ul
+
+# Modify userlist from file
+   if { $fast_add } {
+      get_ulist $userlist old_ul
+      foreach elem [array names current_ul] {
+         set old_ul($elem) "$current_ul($elem)"
+      }
+
+      set tmpfile [dump_array_to_tmpfile old_ul]
+      set result [start_sge_bin "qconf" "-Mu $tmpfile" $on_host $as_user ]
+
+
+      if {$prg_exit_state == 0} {
+         set ret 0
+      } else {
+         set ret [mod_userlist_error $result $userlist $tmpfile $raise_error]
+      }
+
+   } else {
+
+      # do the work via vi
+      set vi_commands [build_vi_command current_ul]
+      set args "-mu $userlist"
+
+      set MODIFIED [translate_macro MSG_SGETEXT_MODIFIEDINLIST_SSSS "*" "*" "$userlist" "userset" ]
+      set NOT_MODIFIED [translate_macro MSG_FILE_NOTCHANGED ]
+      set ALREADY_EXISTS [ translate_macro MSG_SGETEXT_ALREADYEXISTS_SS "*" "*"]
+      set UNKNOWN_ATTRIBUTE [ translate_macro MSG_UNKNOWNATTRIBUTENAME_S "*" ]
+      set NOTULONG [ translate_macro MSG_OBJECT_VALUENOTULONG_S "*" ]
+
+      set result [ handle_vi_edit "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" $args $vi_commands $MODIFIED $ALREADY_EXISTS $NOT_MODIFIED $NOTULONG]
+      if { $result == -1 } { 
+         add_proc_error "mod_userlist" -1 "timeout error" $raise_error
+      } elseif { $result == -2 } { 
+         add_proc_error "mod_userlist" -1 "already exists" $raise_error
+      } elseif { $result == -3 } { 
+         add_proc_error "mod_userlist" -1 "not modified " $raise_error
+      } elseif { $result == -4 } { 
+         add_proc_error "mod_userlist" -1 "not  u_long32 value" $raise_error
+      } elseif { $result != 0  } { 
+         add_proc_error "mod_userlist" -1 "could not modify userlist " $raise_error
+      }
+
+      set ret $result
+
+   }
+
+   return $ret
+}
+
+#****** sge_users/mod_userlist_error() ***************************************
+#  NAME
+#     mod_userlist_error() -- error handling for mod_userlist
+#
+#  SYNOPSIS
+#     mod_userlist_error {result userlist tmpfile raise_error }
+#
+#  FUNCTION
+#     Does the error handling for mod_user.
+#     Translates possible error messages of qconf -Mu,
+#     builds the datastructure required for the handle_sge_errors
+#     function call.
+#
+#     The error handling function has been intentionally separated from
+#     mod_userlist. While the qconf call and parsing the result is
+#     version independent, the error messages (macros) usually are version
+#     dependent.
+#
+#  INPUTS
+#     result      - qconf output
+#     userlist    - object qconf is modifying
+#     tmpfile     - temp file for qconf -Mattr
+#     raise_error - do add_proc_error in case of errors
+#
+#  RESULT
+#     Returncode for mod_userlist function:
+#      -1: "wrong_attr" is not an attribute
+#     -99: other error
+#
+#  SEE ALSO
+#     sge_calendar/get_calendar
+#     sge_procedures/handle_sge_errors
+#*******************************************************************************
+proc mod_userlist_error {result userlist tmpfile raise_error} {
+
+   # recognize certain error messages and return special return code
+   set messages(index) "-1 -2"
+   set messages(-1) [translate_macro MSG_OBJECT_VALUENOTULONG_S "*" ]
+   set messages(-2) [translate_macro MSG_SGETEXT_DOESNOTEXIST_SS "userset" $userlist ]
+
+   set ret 0
+   # now evaluate return code and raise errors
+   set ret [handle_sge_errors "mod_user" "qconf -Mu $tmpfile " $result messages $raise_error]
+
+   return $ret
 }
 

@@ -287,9 +287,11 @@ proc get_project_list {{output_var result} {on_host ""} {as_user ""} {raise_erro
 #     mod_project {attribute value change_array {fast_add 1} {on_host ""} {as_user ""} raise_error}
 #
 # returns
-# -100 on unknown error
+# -100 on unknown error from handle_vi_edit
 # -1   on timeout
 # -2   if queue allready exists
+# -3   if value not  u_long32
+# -4   if unknown attribute
 # 0    if ok
 #
 # name      template
@@ -319,24 +321,28 @@ proc get_project_list {{output_var result} {on_host ""} {as_user ""} {raise_erro
 #     sge_procedures/get_sge_error()
 #     sge_procedures/get_qconf_list()
 #*******************************
-proc mod_project {project attribute value {fast_add 1} {on_host ""} {as_user ""} {raise_error 1} } {
+proc mod_project {project change_array {fast_add 1} {on_host ""} {as_user ""} {raise_error 1} } {
    global ts_config
 
    global CHECK_ARCH CHECK_OUTPUT
    global CHECK_CORE_MASTER CHECK_USER
 
-   get_prj $project old_values
-   set old_values($attribute) "$value"
+   upvar $change_array old_values
 
    # add queue from file?
    if { $fast_add } {
-      set tmpfile [dump_array_to_tmpfile old_values]
+      get_prj $project old_prj
+      foreach elem [array names old_values] {
+         set old_prj($elem) "$old_values($elem)"
+      }
+      
+      set tmpfile [dump_array_to_tmpfile old_prj]
       set result [start_sge_bin "qconf" "-Mprj $tmpfile" $on_host $as_user]
 
       if {$prg_exit_state == 0} {
          set ret 0
       } else {
-         set ret [mod_project_error $result $attribute $value $tmpfile $raise_error]
+         set ret [mod_project_error $result $tmpfile $raise_error]
       }
 
    } else {
@@ -346,8 +352,8 @@ proc mod_project {project attribute value {fast_add 1} {on_host ""} {as_user ""}
       set MODIFIED [translate_macro MSG_SGETEXT_MODIFIEDINLIST_SSSS "*" "*" "*" "*" ]
       set ALREADY_EXISTS [ translate_macro MSG_SGETEXT_ALREADYEXISTS_SS "*" "*"]
       set NOT_MODIFIED [translate_macro MSG_FILE_NOTCHANGED ]
-      set NOTULONG [ translate_macro MSG_OBJECT_VALUENOTULONG_S "$value" ]
-      set UNKNOWN_ATTRIBUTE [ translate_macro MSG_UNKNOWNATTRIBUTENAME_S "$attribute" ]
+      set NOTULONG [ translate_macro MSG_OBJECT_VALUENOTULONG_S "*" ]
+      set UNKNOWN_ATTRIBUTE [ translate_macro MSG_UNKNOWNATTRIBUTENAME_S "*" ]
 
       set result [ handle_vi_edit "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-mprj $project" $vi_commands $MODIFIED $ALREADY_EXISTS $NOTULONG $UNKNOWN_ATTRIBUTE $NOT_MODIFIED]
 
@@ -356,16 +362,16 @@ proc mod_project {project attribute value {fast_add 1} {on_host ""} {as_user ""}
       } elseif {$result == -2 } { 
          add_proc_error "mod_project" -1 "\"[set old_values(name)]\" already exists"  $raise_error
       } elseif {$result == -3 } { 
-         add_proc_error "mod_project" -1 "$value not  u_long32 value"  $raise_error
+         add_proc_error "mod_project" -1 "value not  u_long32 value"  $raise_error
       } elseif {$result == -4 } { 
-         add_proc_error "mod_project" -1 "unknown attribute $attribute"  $raise_error
+         add_proc_error "mod_project" -1 "unknown attribute "  $raise_error
       } elseif {$result != 0  } { 
-        add_proc_error "mod_project" -1 "could not add project \"[set old_values(name)]\""  
+         add_proc_error "mod_project" -1 "could not add project \"[set old_values(name)]\""  
       }
 
       set ret $result
    }
-  return $ret
+   return $ret
 }
 
 #****** sge_project/mod_project_error() ***************************************
@@ -402,12 +408,12 @@ proc mod_project {project attribute value {fast_add 1} {on_host ""} {as_user ""}
 #     sge_calendar/get_calendar
 #     sge_procedures/handle_sge_errors
 #*******************************************************************************
-proc mod_project_error {result attribute value tmpfile raise_error} {
+proc mod_project_error {result tmpfile raise_error} {
 
    # recognize certain error messages and return special return code
    set messages(index) "-1 -2"
-   set messages(-1) "error: [translate_macro MSG_UNKNOWNATTRIBUTENAME_S $attribute]"
-   set messages(-2) [translate_macro MSG_OBJECT_VALUENOTULONG_S $value]
+   set messages(-1) "error: [translate_macro MSG_UNKNOWNATTRIBUTENAME_S \"*\" ]"
+   set messages(-2) [translate_macro MSG_OBJECT_VALUENOTULONG_S "*"]
 
    set ret 0
    # now evaluate return code and raise errors

@@ -228,25 +228,19 @@ proc set_exechost { change_array host {fast_add 1} {on_host ""} {as_user ""} {ra
 
    get_exechost old_values $host
 
+   foreach elem $values {
+      set old_values($elem) "$chgar($elem)"
+   }
+
    # Need to unset these values since qconf -M(m)e does not
    # allow the modifications of "load_values" or "processors"
    # but get_exechost gets ALL the parameters for exechost
-
-
-   foreach elem $values {
-#      if { ( $elem == "load_values" ) || ( $elem == "processors" ) } {
-#         continue
-#      }
-      set old_values($elem) "$chgar($elem)"
-   }
 
    unset old_values(load_values)
    unset old_values(processors)
 
    # Modify exechost from file?
    if { $fast_add } {
-#     unset old_values(processors)
-#     unset old_values(load_values)
 
      set tmpfile [dump_array_to_tmpfile old_values]
      set result [start_sge_bin "qconf" "-Me $tmpfile" $on_host $as_user]

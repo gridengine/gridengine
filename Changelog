@@ -1,3 +1,8 @@
+DT-2006-02-17-0: Bugfix:    o Added missing howto info.
+                            - Contributed by Chris Dagdigian
+                 Changed:   www
+                 Review:    DT
+
 OJ-2006-02-16-0: Testsuite: Added test cases for *prj, *q, *u, *sconf for qconf
                             in  sge_queue.60.tcl, sge_host.tcl, sge_sched_conf.tcl
                             sge_users.tcl, sge_project.tcl
@@ -26,6 +31,7 @@ OJ-2006-02-10-0: Testsuite: Added test cases for *hgrp, *prj for qconf
                             in  sge_host.60.tcl, sge_project.tcl as well
                             as error handling for these tests.
                  Review:    DT
+
 JG-2006-02-10-0: Testsuite: Minor fixes and cleanup.
                  Review:    RD
 
@@ -40,8 +46,9 @@ HP-2006-02-09-0: Bugfix:    qrsh now adds a '\n' to error output recieved from
 
 OJ-2006-02-06-0: Testsuite: Added error handling in *ckpt, *e routines
                             in  sge_checkpoint.60.tcl, sge_host.tcl
-			    and control_procedures.tcl
+                            and control_procedures.tcl
                  Review:    DT
+
 JG-2006-02-03-0: Testsuite: Improved error handling for sge functions called 
                             from testsuite.
                             Code coverage analysis using Solaris cc/tcov.

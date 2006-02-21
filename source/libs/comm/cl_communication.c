@@ -452,6 +452,7 @@ int cl_com_create_ssl_setup(cl_ssl_setup_t**     new_setup,
                             char*                ssl_key_pem_file,
                             char*                ssl_rand_file,
                             char*                ssl_reconnect_file,
+                            char*                ssl_crl_file,
                             unsigned long        ssl_refresh_time,
                             char*                ssl_password,
                             cl_ssl_verify_func_t ssl_verify_func) {
@@ -547,6 +548,14 @@ int cl_com_create_ssl_setup(cl_ssl_setup_t**     new_setup,
       }
    }
 
+   if (ssl_crl_file != NULL) {
+      tmp_setup->ssl_crl_file = strdup(ssl_crl_file);
+      if (tmp_setup->ssl_crl_file == NULL) {
+         cl_com_free_ssl_setup(&tmp_setup);
+         return CL_RETVAL_MALLOC;
+      }
+   }
+
    tmp_setup->ssl_refresh_time = ssl_refresh_time;
 
    if (ssl_password != NULL) {
@@ -587,6 +596,7 @@ int cl_com_dup_ssl_setup(cl_ssl_setup_t** new_setup, cl_ssl_setup_t* source) {
                                   source->ssl_key_pem_file,
                                   source->ssl_rand_file,
                                   source->ssl_reconnect_file,
+                                  source->ssl_crl_file,
                                   source->ssl_refresh_time,
                                   source->ssl_password,
                                   source->ssl_verify_func);
@@ -623,6 +633,10 @@ int cl_com_free_ssl_setup(cl_ssl_setup_t** del_setup) {
    }
    if ((*del_setup)->ssl_reconnect_file != NULL) {
       free((*del_setup)->ssl_reconnect_file);
+   }
+   
+   if ((*del_setup)->ssl_crl_file != NULL) {
+      free((*del_setup)->ssl_crl_file);
    }
    
    if ((*del_setup)->ssl_password != NULL) {

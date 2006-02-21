@@ -64,6 +64,7 @@ ErrUsage()
    "   -verify <cert>   verify a <cert>\n" \
    "   -print <cert>    print a <cert>\n" \
    "   -printkey <key>  print a <key>\n" \
+   "   -printcrl <crl>  print a <crl>\n" \
    "   -renew <user>    extend the certificate of <user>\n" \
    "   -renew_ca        extend the CA certificate\n" \
    "   -renew_sys       extend the daemon certificate\n" \
@@ -689,6 +690,7 @@ RenewCert()
    ExecuteAsAdmin $CA -config $TMPFILE1 -policy policy_anything \
                       -batch $DAYS \
                       -gencrl -out $CRLFILE
+   ExecuteAsAdmin $CHMOD 644 $CRLFILE 
 
    if [ $? != 0 ]; then
       $INFOTEXT "Can't generate revocation list %s. Exit." $CRLFILE
@@ -985,6 +987,16 @@ while [ $ARGC != 0 ]; do
       shift
       ARGC=`expr $ARGC - 1`
       ;;
+   -printcrl)
+      if [ $ARGC -lt 2 ]; then
+         $INFOTEXT "Error: -printcrl needs argument"
+         ErrUsage
+      fi
+      WHICH="printcrl"
+      newcert=$2
+      shift
+      ARGC=`expr $ARGC - 1`
+      ;;
    -days)
       if [ $ARGC -lt 2 ]; then
          $INFOTEXT "Error: -days needs argument"
@@ -1094,6 +1106,7 @@ VERIFY="$OPENSSL verify"
 
 X509="$OPENSSL x509"
 X509KEY="$OPENSSL rsa"
+X509CRL="$OPENSSL crl"
 
 P12="$OPENSSL pkcs12"
 
@@ -1137,6 +1150,10 @@ print)
     ;;
 printkey) 
     $X509KEY -in $newcert -text
+    RET=$?
+    ;;
+printcrl) 
+    $X509CRL -in $newcert -text
     RET=$?
     ;;
 renew) 

@@ -245,6 +245,7 @@ typedef struct cl_ssl_setup_type {
    char*           ssl_key_pem_file;           /*  key file                                      ->key_file<-                  */
    char*           ssl_rand_file;              /*  rand file (if RAND_status() not ok)           ->rand_file<-                 */
    char*           ssl_reconnect_file;         /*  file for reconnect data                       ->reconnect_file (not used)<- */
+   char*           ssl_crl_file;               /*  file for revocation list */
    unsigned long   ssl_refresh_time;           /*  key alive time for connections (for services) ->refresh_time (not used)<-   */
    char*           ssl_password;               /*  password for encrypted keyfiles               ->not used<-                  */
 

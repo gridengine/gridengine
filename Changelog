@@ -1,3 +1,6 @@
+HP-2006-02-21-0: Bugfix:    Fixed broken build
+                 Changed:   libs/japi/Makefile
+
 DT-2006-02-17-0: Bugfix:    o Added missing howto info.
                             - Contributed by Chris Dagdigian
                  Changed:   www

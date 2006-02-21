@@ -209,7 +209,7 @@ example.o: $(JAPILIB_DIR)/example.c
 	$(CC) $(CFLAGS) -c $(JAPILIB_DIR)/example.c
 
 compile: compile.o $(DRMAALIB)
-	$(LD_WRAPPER) $(CC) $(CFLAGS) -o compile compile.o $(LFLAGS) -ldrmaa $(LIBS) $(SLIBS) $(DLLIB)
+	$(LD_WRAPPER) $(CC) $(CFLAGS) -o compile compile.o $(LFLAGS) -ldrmaa $(WINGRIDLIB) $(LIBS) $(SLIBS) $(DLLIB)
 
 compile.o: $(JAPILIB_DIR)/compile.c
 	$(CC) $(CFLAGS) -c $(JAPILIB_DIR)/compile.c

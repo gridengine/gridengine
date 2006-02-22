@@ -1,0 +1,6 @@
+Issue:      1981
+Synopsis:   slow scheduler performance for jobs with hard queue requests
+
+This bug is verified in the following testsuite check:
+Check:      system_tests/scheduler/queue_requests
+Function:   scheduler_queue_requests_q, scheduler_queue_requests_masterq

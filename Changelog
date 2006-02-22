@@ -1,3 +1,7 @@
+JG-2006-02-22-0: Testsuite: New check system_tests/scheduler/queue_requests,
+                            covering also IZ 1981.
+                 Review:    SG
+
 HP-2006-02-21-0: Bugfix:    Fixed broken build
                  Changed:   libs/japi/Makefile
 
@@ -7,13 +11,14 @@ DT-2006-02-17-0: Bugfix:    o Added missing howto info.
                  Review:    DT
 
 OJ-2006-02-16-0: Testsuite: Added test cases for *prj, *q, *u, *sconf for qconf
-                            in  sge_queue.60.tcl, sge_host.tcl, sge_sched_conf.tcl
-                            sge_users.tcl, sge_project.tcl
+                            in  sge_queue.60.tcl, sge_host.tcl, 
+                            sge_sched_conf.tcl sge_users.tcl, sge_project.tcl
                             as error handling for these tests.
                  Review:    DT
 
 JG-2006-02-16-0: Enhancem.: Enhanced the DRMAA example "compile" to delete the
                             compile jobs at CTRL-C.
+                 Review:    CR
 
 RD-2006-02-14-0: Bugfix:    Interrupting qrsh while pending does not remove job
                  Bugtraq:   6287945

@@ -31,25 +31,24 @@
 #___INFO__MARK_END__
 
 
-proc delete_all_jobs {} {
+proc delete_all_jobs {{clear_queues 1}} {
    global ts_config CHECK_OUTPUT CHECK_USER
 
    puts $CHECK_OUTPUT "deleting all jobs"
-   set arch [resolve_arch $ts_config(master_host)]
-   set qdel "$ts_config(product_root)/bin/$arch/qdel"
-   set output [start_remote_prog $ts_config(master_host) $CHECK_USER $qdel "-u '*' '*'"]
+   set output [start_sge_bin "qdel" "-u '*' '*'"]
+   puts $CHECK_OUTPUT $output
+
    if {$prg_exit_state == 0} {
       set ret 1
    } else {
       set ret 0
    }
 
-   puts $CHECK_OUTPUT $output
-
-   puts $CHECK_OUTPUT "do a qmod -c \"*\" ..."
-   set qmod "$ts_config(product_root)/bin/$arch/qmod"
-   set output2 [start_remote_prog $ts_config(master_host) $CHECK_USER $qmod "-c \"*\""]
-   puts $CHECK_OUTPUT $output2
+   if {$clear_queues} {
+      puts $CHECK_OUTPUT "do a qmod -c \"*\" ..."
+      set output [start_sge_bin "qmod" "-c \"*\""]
+      puts $CHECK_OUTPUT $output
+   }
 
    return $ret
 }

@@ -1,3 +1,9 @@
+MD-2006-02-22-0: Bugfix:    -  "qstat -j" aborts
+                 Issue:     1972
+                 Bugtraq:   6384682 
+                 Changed:   qstat 
+                 Review:    JG 
+
 AA-2006-02-21-0: Bugfix:    Certificate Revocation
                  Bugtraq:   6387206
                  Review:    RD, pending

@@ -94,7 +94,6 @@
 ** qmaster_heartbeat.c 
 */
 #define MSG_HEART_CANNOTCLOSE          _MESSAGE(27040, _("can't close file "SFN": "SFN))
-#define MSG_HEART_CANNOTOPEN           _MESSAGE(27041, _("can't open file "SFN": "SFN))
 
 /*
 ** mail.c

@@ -1,3 +1,9 @@
+HP-2006-02-22-0: Bugfix:    Fixed broken update_ts_config_version
+                            Removed unused string from msg_daemons_common.h
+                 Changed:   testsuite/check.exp
+                            daemons/common/msg_daemons_common.h
+                 Review:    CR
+
 JG-2006-02-22-0: Testsuite: New check system_tests/scheduler/queue_requests,
                             covering also IZ 1981.
                  Review:    SG

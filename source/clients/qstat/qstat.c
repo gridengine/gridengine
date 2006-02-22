@@ -1838,6 +1838,7 @@ static int qstat_show_job_info(u_long32 isXML)
                             lGetUlong(flt_jid, ULNG)) {
                            lRemoveElem(lGetList(flt_msg, MES_job_number_list), &flt_jid);
                            found_jid = 1;
+                           break;
                         }
                      }
                      if (!found_jid) { 

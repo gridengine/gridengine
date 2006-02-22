@@ -1,3 +1,9 @@
+MD-2006-02-22-0: Bugfix:    -  "qstat -j" aborts
+                 Issue:     1972
+                 Bugtraq:   6384682 
+                 Changed:   qstat 
+                 Review:    JG
+
 HP-2006-02-22-0: Bugfix:    Fixed broken update_ts_config_version
                             Removed unused string from msg_daemons_common.h
                  Changed:   testsuite/check.exp

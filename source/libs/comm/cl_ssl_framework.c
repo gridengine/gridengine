@@ -228,6 +228,11 @@ static void                 (*cl_com_ssl_func__X509_STORE_free)                 
  *   freed with cl_com_ssl_free_com_private(). A pointer to the 
  *   malloced structure can be obtained with cl_com_ssl_get_private()
  */
+typedef struct cl_ssl_verify_crl_data_type {
+   time_t last_modified;
+   X509_STORE *store;
+} cl_ssl_verify_crl_data_t;
+
 typedef struct cl_com_ssl_private_type {
    /* TCP/IP specific */
    int                server_port;         /* used port for server setup */
@@ -244,6 +249,7 @@ typedef struct cl_com_ssl_private_type {
    cl_ssl_setup_t*    ssl_setup;           /* ssl setup structure */
 
    char*              ssl_unique_id;       /* uniqueIdentifier for this connection */
+   cl_ssl_verify_crl_data_t* ssl_crl_data; /* contains crl specific data configuration */
 } cl_com_ssl_private_t;
 
 /* 
@@ -586,85 +592,89 @@ static int cl_com_ssl_set_default_mode(SSL_CTX *ctx, SSL *ssl) {
 }
 
 #ifdef ENABLE_CRL
-
-static int ssl_callback_SSLVerify_CRL(
-    int ok, X509_STORE_CTX *ctx, const char *crl_file, const char *ca_cert_file)
-{
+static int ssl_callback_SSLVerify_CRL(int ok, X509_STORE_CTX *ctx, cl_com_ssl_private_t* private) {
    X509 *cert = NULL;
    X509_LOOKUP *lookup = NULL;
-   X509_STORE *store = NULL;
    X509_STORE_CTX verify_ctx;
    int err;
    int is_ok = true; 
-   bool cleanup_verify_ctx = false;
    SGE_STRUCT_STAT stat_buffer;
+   
+   if (private == NULL || private->ssl_setup == NULL || private->ssl_crl_data == NULL) {
+      CL_LOG(CL_LOG_INFO,"no crl checking");
+      return true;
+   }
 
-   if (crl_file == NULL || SGE_STAT(crl_file, &stat_buffer)) {
+   if (private->ssl_setup->ssl_crl_file == NULL || SGE_STAT(private->ssl_setup->ssl_crl_file, &stat_buffer)) {
       CL_LOG(CL_LOG_INFO,"no crl checking");
       return true;
    }   
 
-   cert = cl_com_ssl_func__X509_STORE_CTX_get_current_cert(ctx);
-   if (cert == NULL) {
-      CL_LOG(CL_LOG_INFO,"cert is NULL");
-      is_ok = false;
-   }   
-
    /* create the cert store and set the verify callback */
-   if (!(store = cl_com_ssl_func__X509_STORE_new())) {
-      CL_LOG(CL_LOG_INFO,"Error creating X509_STORE_CTX object");
-      is_ok = false;
-      goto error;
-   }    
-   cl_com_ssl_func__X509_STORE_set_flags(store, X509_V_FLAG_CRL_CHECK | X509_V_FLAG_CRL_CHECK_ALL);
-   
-   if (cl_com_ssl_func__X509_STORE_load_locations(store, ca_cert_file, NULL) != 1) {
-      CL_LOG(CL_LOG_INFO, "Error loading the CA file or directory");
-      is_ok = false;
-      goto error;
-   }   
-   if (cl_com_ssl_func__X509_STORE_set_default_paths(store) != 1) {
-      CL_LOG(CL_LOG_INFO, "Error loading the system-wide CA certificates");
-      is_ok = false;
-      goto error;
-   }   
-   
-   if (!(lookup = cl_com_ssl_func__X509_STORE_add_lookup(store, cl_com_ssl_func__X509_LOOKUP_file()))) {
-      CL_LOG(CL_LOG_INFO, "Error creating X509_LOOKUP object");
-      is_ok = false;
-      goto error;
-   }    
-   if (cl_com_ssl_func__X509_load_crl_file(lookup, crl_file, X509_FILETYPE_PEM) != 1) {
-      CL_LOG(CL_LOG_INFO, "Error reading the CRL file");
-      is_ok = false;
-      goto error;
-   }    
+   if (private->ssl_crl_data->store == NULL || stat_buffer.st_mtime != private->ssl_crl_data->last_modified) {
+       CL_LOG(CL_LOG_WARNING, "creating new crl store context");
+       private->ssl_crl_data->last_modified=stat_buffer.st_mtime;
+       if (private->ssl_crl_data->store != NULL) {
+           cl_com_ssl_func__X509_STORE_free(private->ssl_crl_data->store);
+           private->ssl_crl_data->store=NULL;
+       }
 
-   /* X509_STORE_CTX_init did not return an error condition in prior versions */
-   if (cl_com_ssl_func__X509_STORE_CTX_init(&verify_ctx, store, cert, NULL) != 1) {
-      CL_LOG(CL_LOG_INFO, "Error initializing verification context");
-      is_ok = false;
-      goto error;
-   }    
-   cleanup_verify_ctx = true;
+       if (!(private->ssl_crl_data->store=cl_com_ssl_func__X509_STORE_new())) {
+          CL_LOG(CL_LOG_ERROR,"Error creating X509_STORE_CTX object");
+          is_ok = false;
+       }   
 
-   /* verify the certificate */
-   if (cl_com_ssl_func__X509_verify_cert(&verify_ctx) != 1) {
-      is_ok = false;
-      goto error;
+       if (is_ok == true) {
+          cl_com_ssl_func__X509_STORE_set_flags(private->ssl_crl_data->store, X509_V_FLAG_CRL_CHECK | X509_V_FLAG_CRL_CHECK_ALL);
+       }
+       if (is_ok == true && (cl_com_ssl_func__X509_STORE_load_locations(private->ssl_crl_data->store, private->ssl_setup->ssl_CA_cert_pem_file, NULL) != 1)) {
+          CL_LOG(CL_LOG_ERROR, "Error loading the CA file or directory");
+          is_ok = false;
+       }   
+       if (is_ok == true && (cl_com_ssl_func__X509_STORE_set_default_paths(private->ssl_crl_data->store) != 1)) {
+          CL_LOG(CL_LOG_ERROR, "Error loading the system-wide CA certificates");
+          is_ok = false;
+       }   
+       if (is_ok == true && (!(lookup = cl_com_ssl_func__X509_STORE_add_lookup(private->ssl_crl_data->store, cl_com_ssl_func__X509_LOOKUP_file())))) {
+          CL_LOG(CL_LOG_ERROR, "Error creating X509_LOOKUP object");
+          is_ok = false;
+       }    
+       if (is_ok == true && (cl_com_ssl_func__X509_load_crl_file(lookup, private->ssl_setup->ssl_crl_file, X509_FILETYPE_PEM) != 1)) {
+          CL_LOG(CL_LOG_ERROR, "Error reading the CRL file");
+          is_ok = false;
+       }    
+
+       /* free store on in error case */
+       if (is_ok == false && private->ssl_crl_data->store != NULL) {
+          cl_com_ssl_func__X509_STORE_free(private->ssl_crl_data->store);
+          private->ssl_crl_data->store=NULL;
+       }
+   } else {
+      CL_LOG(CL_LOG_WARNING, "using old crl store context");
    }
 
-error:
-   err = cl_com_ssl_func__X509_STORE_CTX_get_error(&verify_ctx);
-/*       cl_com_ssl_func__X509_STORE_CTX_set_error(ctx, X509_V_ERR_CERT_REVOKED); */
-   cl_com_ssl_func__X509_STORE_CTX_set_error(ctx, err);
-/*    cl_com_ssl_func__ERR_print_errors_fp(stdout); */
-   if (cleanup_verify_ctx) {
-      cl_com_ssl_func__X509_STORE_CTX_cleanup(&verify_ctx);
-   }   
-   if (store != NULL) {
-      cl_com_ssl_func__X509_STORE_free(store);
-   }   
+   cert = cl_com_ssl_func__X509_STORE_CTX_get_current_cert(ctx);
+   if (cert != NULL) {
+       /* X509_STORE_CTX_init did not return an error condition in prior versions */
+       if (cl_com_ssl_func__X509_STORE_CTX_init(&verify_ctx, private->ssl_crl_data->store, cert, NULL) != 1) {
+          CL_LOG(CL_LOG_ERROR, "Error initializing verification context");
+          is_ok = false;
+       } else {
+          /* verify the certificate */
+          if (cl_com_ssl_func__X509_verify_cert(&verify_ctx) != 1) {
+             is_ok = false;
+          }
+       }
+       if (is_ok == false) {
+           err = cl_com_ssl_func__X509_STORE_CTX_get_error(&verify_ctx);
+           cl_com_ssl_func__X509_STORE_CTX_set_error(ctx, err);
+       }
+       cl_com_ssl_func__X509_STORE_CTX_cleanup(&verify_ctx);
+   } else {
+      CL_LOG(CL_LOG_ERROR,"cert is NULL");
+      is_ok = false;
+   }
+
    return is_ok;
 }
 
@@ -688,7 +698,7 @@ static int cl_com_ssl_verify_callback(int preverify_ok, X509_STORE_CTX *ctx) {
    int errnum = 0;
    SSL *ssl = NULL;
    SSL_CTX *ssl_ctx = NULL;
-   cl_ssl_setup_t *ssl_setup = NULL;
+   cl_com_ssl_private_t* ssl_private_setup = NULL;
 
    if (preverify_ok != 1) {
       return preverify_ok;
@@ -696,9 +706,9 @@ static int cl_com_ssl_verify_callback(int preverify_ok, X509_STORE_CTX *ctx) {
 
    ssl = cl_com_ssl_func__X509_STORE_CTX_get_ex_data(ctx, cl_com_ssl_func__SSL_get_ex_data_X509_STORE_CTX_idx());
    ssl_ctx = cl_com_ssl_func__SSL_get_SSL_CTX(ssl);
-   ssl_setup = (cl_ssl_setup_t*) cl_com_ssl_func__SSL_CTX_get_app_data(ssl_ctx);
+   ssl_private_setup = (cl_com_ssl_private_t*) cl_com_ssl_func__SSL_CTX_get_app_data(ssl_ctx);
 
-   if (ssl_setup == NULL) {
+   if (ssl_private_setup == NULL) {
       return preverify_ok;
    }   
 
@@ -727,7 +737,7 @@ static int cl_com_ssl_verify_callback(int preverify_ok, X509_STORE_CTX *ctx) {
    /*
     * Additionally perform CRL-based revocation checks
     */
-   is_ok = ssl_callback_SSLVerify_CRL(is_ok, ctx, ssl_setup->ssl_crl_file, ssl_setup->ssl_CA_cert_pem_file);
+   is_ok = ssl_callback_SSLVerify_CRL(is_ok, ctx, ssl_private_setup);
    if (!is_ok) {
       /*
        * If we already know it's not ok, log the real reason
@@ -1948,6 +1958,19 @@ static int cl_com_ssl_free_com_private(cl_com_connection_t* connection) {
       return CL_RETVAL_NO_FRAMEWORK_INIT;
    }
 
+   /* free ssl_crl_data */
+   if (private->ssl_crl_data != NULL) {
+
+      /* TODO: free cl_ssl_verify_crl_data_t content */
+      if (private->ssl_crl_data->store != NULL) {
+         cl_com_ssl_func__X509_STORE_free(private->ssl_crl_data->store);
+         private->ssl_crl_data->store = NULL;
+      }
+      cl_com_ssl_log_ssl_errors(__CL_FUNCTION__);
+      free(private->ssl_crl_data);
+      private->ssl_crl_data = NULL;
+   }
+
    /* SSL Specific shutdown */
    if (private->ssl_obj != NULL) {
       int back = 0;
@@ -1991,6 +2014,7 @@ static int cl_com_ssl_free_com_private(cl_com_connection_t* connection) {
    if (private->ssl_setup != NULL) {
       cl_com_free_ssl_setup(&(private->ssl_setup));
    }
+   cl_com_ssl_log_ssl_errors(__CL_FUNCTION__);
 
    if (private->ssl_unique_id != NULL) {
       free(private->ssl_unique_id);
@@ -2048,7 +2072,7 @@ static int cl_com_ssl_setup_context(cl_com_connection_t* connection, cl_bool_t i
                                           cl_com_ssl_verify_callback);
       
       /* set crl_file into SSL_CTX for later retrieval from cl_com_ssl_verify_callback */
-      cl_com_ssl_func__SSL_CTX_set_app_data(private->ssl_ctx, (void*)private->ssl_setup);
+      cl_com_ssl_func__SSL_CTX_set_app_data(private->ssl_ctx, (void*)private);
    }
 
    /* load certificate chain file */
@@ -2506,6 +2530,14 @@ int cl_com_ssl_setup_connection(cl_com_connection_t**          connection,
       cl_com_close_connection(connection);
       return ret_val;
    } 
+
+   com_private->ssl_crl_data = (cl_ssl_verify_crl_data_t*) malloc(sizeof(cl_ssl_verify_crl_data_t));
+   if (com_private->ssl_crl_data == NULL) {
+      cl_com_close_connection(connection);
+      return CL_RETVAL_MALLOC;
+   }
+   memset(com_private->ssl_crl_data, 0, sizeof(cl_ssl_verify_crl_data_t));
+   
    return CL_RETVAL_OK;
 }
 

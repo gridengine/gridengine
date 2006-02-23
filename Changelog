@@ -1,3 +1,9 @@
+RD-2006-02-23-0: Bugfix:    commlib closes wrong connection on SSL error 
+                            performance enhancement for certificate revocation
+                 Issue:     1990 
+                 Bugtraq:   6389526, 6387206
+                 Review:    CR 
+
 MD-2006-02-22-0: Bugfix:    -  "qstat -j" aborts
                  Issue:     1972
                  Bugtraq:   6384682 

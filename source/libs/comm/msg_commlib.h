@@ -109,7 +109,7 @@
 #define MSG_CL_COMMLIB_SSL_ERROR_151441508            _MESSAGE(85500, _("certificate file contains a bad certificate"))
 #define MSG_CL_COMMLIB_SSL_ERROR_33558541             _MESSAGE(85501, _("please check the permissions of the pem certificate file"))
 #define MSG_CL_COMMLIB_SSL_ERROR_336151573            _MESSAGE(85502, _("the used certificate is expired"))
-#define MSG_CL_COMMLIB_SSL_ERROR_336105650            _MESSAGE(85503, _("the daemon certificate is expired or invalid"))
+#define MSG_CL_COMMLIB_SSL_ERROR_336105650            _MESSAGE(85503, _("the used certificate is expired or invalid"))
 
 
 

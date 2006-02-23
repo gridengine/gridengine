@@ -1760,7 +1760,7 @@ static int qstat_show_job_info(u_long32 isXML)
    lListElem *sme;
    lListElem *jid_ulng = NULL; 
 
-   DENTER(TOP_LAYER, "qstat_show_job");
+   DENTER(TOP_LAYER, "qstat_show_job_info");
 
    /* get job scheduling information */
    what = lWhat("%T(ALL)", SME_Type);

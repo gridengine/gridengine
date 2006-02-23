@@ -1,3 +1,10 @@
+RD-2006-02-23-0: Bugfix:    Merged EB-2005-12-15-0 from V60s2_BRANCH
+                            subordinate properties lost on qmaster restart
+                 Issue:     1741
+                 Bugtraq:   6319223
+                 Changed:   sge_qmaster
+                 Review:    SG
+
 RD-2006-02-23-0: Bugfix:    commlib closes wrong connection on SSL error 
                             performance enhancement for certificate revocation
                  Issue:     1990 

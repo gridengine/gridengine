@@ -162,6 +162,8 @@ so_list_add(lList **this_list, lList **answer_list, const char *so_name,
          elem = lAddElemStr(this_list, SO_name, so_name, SO_Type);
          lSetUlong(elem, SO_threshold, threshold);
       }
+   } else {
+      DTRACE;
    }
    
    DEXIT;
@@ -252,6 +254,7 @@ so_list_resolve(const lList *so_list, lList **answer_list,
              * code did.  I would actually count this as an error, but since it
              * wasn't before, it won't be now. [DT] */
             if (strcmp (cq_name_str, qi_name) == 0) {
+               DTRACE;
                continue;
             }
          }
@@ -284,12 +287,12 @@ so_list_resolve(const lList *so_list, lList **answer_list,
                   /* If this cqueue doesn't have a qinstance on this host,
                    * just skip it. */
                   if (qinstance != NULL) {
-                     const char *qinstance_name = lGetString (qinstance,
+                     const char *qinstance_name = lGetString(qinstance,
                                                              QU_full_name);
                      int threshold = lGetUlong (so, SO_threshold);
 
-                     ret = so_list_add (resolved_so_list, answer_list,
-                                        qinstance_name, threshold);
+                     ret = so_list_add(resolved_so_list, answer_list,
+                                       qinstance_name, threshold);
                   }
                }
             }

@@ -984,16 +984,30 @@ static int setup_qmaster(void)
    debit_all_jobs_from_qs(); 
    debit_all_jobs_from_pes(*object_base[SGE_TYPE_PE].list); 
 
-   /* clear suspend on subordinate flag in QU_state */ 
+   /*
+    * Initialize cached values for each qinstance:
+    *    - fullname
+    *    - clear suspend on subordinate flag
+    */
    for_each(tmpqep, *(object_type_get_master_list(SGE_TYPE_CQUEUE))) {
       lList *qinstance_list = lGetList(tmpqep, CQ_qinstances);
       lListElem *qinstance;
 
       for_each(qinstance, qinstance_list) {
+         qinstance_set_full_name(qinstance);
          qinstance_state_set_susp_on_sub(qinstance, false);
       }
    }
 
+   /* 
+    * Initialize
+    *    - suspend on subordinate state 
+    *    - cached QI values.
+    */
+   for_each(tmpqep, *(object_type_get_master_list(SGE_TYPE_CQUEUE))) {
+      cqueue_mod_qinstances(tmpqep, NULL, tmpqep, true, &monitor);
+   }
+        
    /* 
     * initialize QU_queue_number if the value is 0 
     *
@@ -1019,15 +1033,6 @@ static int setup_qmaster(void)
       }
    }
 
-   /* 
-    * Initialize
-    *    - suspend on subordinate state 
-    *    - cached QI values.
-    */
-   for_each(tmpqep, *object_base[SGE_TYPE_CQUEUE].list) {
-      cqueue_mod_qinstances(tmpqep, NULL, tmpqep, true, &monitor);
-   }
-        
    /* calendar */
    {
       lListElem *cep;

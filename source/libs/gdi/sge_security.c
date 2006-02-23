@@ -196,6 +196,7 @@ int sge_ssl_setup_security_path(const char *progname) {
 #define UserKey         "key.pem"
 #define RandFile        "rand.seed"
 #define UserCert        "cert.pem"
+#define CrlFile         "ca-crl.pem"
 #define ReconnectFile   "private/reconnect.dat"
 #define VALID_MINUTES    7          /* expiry of connection        */
 
@@ -208,6 +209,7 @@ int sge_ssl_setup_security_path(const char *progname) {
    char *rand_file      = NULL;
    char *cert_file      = NULL; 
    char *reconnect_file = NULL;
+   char *crl_file       = NULL;
 
    DENTER(TOP_LAYER, "setup_ssl_security_path");
 
@@ -290,6 +292,11 @@ int sge_ssl_setup_security_path(const char *progname) {
       SGE_EXIT(1);
    }
    DPRINTF(("ca_cert_file: %s\n", ca_cert_file));
+
+	crl_file = sge_malloc(strlen(ca_root) + strlen(CrlFile) + 2);
+	sprintf(crl_file, "%s/%s", ca_root, CrlFile);
+
+   DPRINTF(("crl_file: %s\n", crl_file));
 
    /*
    ** determine userdir: 
@@ -408,6 +415,7 @@ int sge_ssl_setup_security_path(const char *progname) {
                                            key_file,              /* ssl_key_pem_file     */
                                            rand_file,             /* ssl_rand_file        */
                                            reconnect_file,        /* ssl_reconnect_file   */
+                                           crl_file,              /* ssl_reconnect_file   */
                                            60 * VALID_MINUTES,    /* ssl_refresh_time     */
                                            NULL,                  /* ssl_password         */
                                            ssl_cert_verify_func); /* ssl_verify_func (cl_ssl_verify_func_t)  */

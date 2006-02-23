@@ -206,13 +206,13 @@ proc set_queue_work { qname change_array {raise_error 1} } {
    #set result [ handle_vi_edit "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-mq ${qname}" $vi_commands $MODIFIED]
    set result [ handle_vi_edit "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-mq ${qname}" $vi_commands $MODIFIED $NOT_MODIFIED $UNKNOWN_ATTRIBUTE ]
    if { $result == -2 } {
-      add_proc_error "set_queue" -1 "queue $qname not modified" $raise_error
+      add_proc_error "set_queue_work" -1 "queue $qname not modified" $raise_error
    }
    if { $result == -3 } {
-      add_proc_error "set_queue" -1 "unknown attribute in queue $qname " $raise_error
+      add_proc_error "set_queue_work" -1 "unknown attribute in queue $qname " $raise_error
    }
    if { $result != 0  } {
-      add_proc_error "set_queue" -1 "error modify queue $qname, $result" $raise_error
+      add_proc_error "set_queue_work" -1 "error modify queue $qname, $result" $raise_error
    } 
 
    return $result
@@ -392,7 +392,7 @@ proc set_queue { qname hostlist change_array {fast_add 1}  {on_host ""} {as_user
       set result [set_queue_work $qname chgar $raise_error]
       
       if { $result != 0 } {
-            add_proc_error "mod_queue" -1 "could not modifiy queue $qname " $raise_error
+            add_proc_error "set_queue" -1 "could not modifiy queue $qname " $raise_error
             set result -1
       }
 
@@ -443,7 +443,7 @@ proc mod_queue_error {result qname tmpfile raise_error} {
 
    set ret 0
    # now evaluate return code and raise errors
-   set ret [handle_sge_errors "mod_queue" "qconf -Mq $tmpfile" $result messages $raise_error]
+   set ret [handle_sge_errors "mod_queue_error" "qconf -Mq $tmpfile" $result messages $raise_error]
 
    return $ret
 }

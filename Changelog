@@ -1,3 +1,6 @@
+RD-2006-02-23-0: Testsuite: Fixed broken install_core_system
+                 Review:    CR
+
 MD-2006-02-22-0: Bugfix:    -  "qstat -j" aborts
                  Issue:     1972
                  Bugtraq:   6384682 

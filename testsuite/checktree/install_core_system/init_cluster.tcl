@@ -326,7 +326,7 @@ proc setup_queues {} {
    set new_values(load_thresholds)       "np_load_avg=11.00"
    set new_values(qtype)                 "BATCH INTERACTIVE CHECKPOINTING PARALLEL"
  
-   set result [set_queue "all.q" "" new_values]
+   set result [mod_queue "all.q" "" new_values]
    switch -- $result { 
       -1 {
          set_error -1 "setup_queues - modify queue ${hostname}.q - got timeout"
@@ -354,7 +354,7 @@ proc setup_queues {} {
          set slots [ expr ( $slots_tmp * 10) ]
          set new_values(slots) "$slots"
 
-         set result [set_queue "all.q" $hostname new_values]
+         set result [mod_queue "all.q" $hostname new_values]
          switch -- $result { 
             -1 {
                set_error -1 "setup_queues - modify queue ${hostname}.q - got timeout"

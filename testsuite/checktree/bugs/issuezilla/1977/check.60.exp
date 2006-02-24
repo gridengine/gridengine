@@ -95,7 +95,7 @@ proc issue_1977_setup  {} {
 
    # modify complex values of all.q
    set queue_settings(complex_values) "t=true"
-   set_queue "all.q" "" queue_settings
+   mod_queue "all.q" "" queue_settings
 
    set_error 0 "ok"
 }
@@ -112,7 +112,7 @@ proc issue_1977_cleanup  {} {
 
    # modify complex values of all.q
    set queue_settings(complex_values) "none"
-   set_queue "all.q" "" queue_settings
+   mod_queue "all.q" "" queue_settings
 
    # restore complex
    set_complex consumable_complex_backup

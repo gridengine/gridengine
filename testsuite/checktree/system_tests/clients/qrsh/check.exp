@@ -506,7 +506,7 @@ proc qrsh_starter_method {} {
 
    # set starter method
    set change_array(starter_method) "$CHECK_ACTUAL_TEST_PATH/starter.sh"
-   set_queue all.q "" change_array
+   mod_queue all.q "" change_array
 
    foreach host $qrsh_hostlist {
       set qrsh_id [open_remote_spawn_process $qrsh_submithost "ts_def_con" $CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qrsh \
@@ -557,7 +557,7 @@ proc qrsh_starter_method {} {
 
    # unset starter method
    set change_array(starter_method) "none"
-   set_queue "all.q" "" change_array
+   mod_queue "all.q" "" change_array
 
    set_error 0 "ok"
 }
@@ -1057,7 +1057,7 @@ proc qrsh_terminate {} {
 
    # set terminate method
    set change_array(terminate_method) "$CHECK_ACTUAL_TEST_PATH/terminate.sh \$job_id \$job_pid $terminate_out_file"
-   set_queue "all.q" "" change_array
+   mod_queue "all.q" "" change_array
 
 
 
@@ -1177,7 +1177,7 @@ proc qrsh_terminate {} {
 
    # reset terminate method
    set change_array(terminate_method) "NONE"
-   set_queue "all.q" "" change_array
+   mod_queue "all.q" "" change_array
 
    wait_for_end_of_all_jobs 30 
 

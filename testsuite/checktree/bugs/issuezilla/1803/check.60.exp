@@ -114,7 +114,7 @@ proc issue_1803_setup {} {
    # set prolog and epilog in all.q
    set my_conf(prolog) "/bin/true prolog"
    set my_conf(epilog) "/bin/true epilog" 
-   set_queue all.q  "" my_conf
+   mod_queue all.q  "" my_conf
 
    # set KEEP_ACTIVE and short load_report_time in execd params
    get_config act_configuration
@@ -144,7 +144,7 @@ proc issue_1803_cleanup {} {
 
    set my_conf(prolog) "none"
    set my_conf(epilog) "none"
-   set_queue all.q "" my_conf
+   mod_queue all.q "" my_conf
 
    switch_to_admin_user_system
 
@@ -169,7 +169,7 @@ proc issue_1803_test {} {
       # Setting execd_params to KEEP_ACTIVE=true
       set myconfig(starter_method) "$starter_method"
       puts $CHECK_OUTPUT "setting starter_method to \"$starter_method\" ..."
-      set_queue all.q "" myconfig
+      mod_queue all.q "" myconfig
       
       # init_logfile_wait instead of sleep
 

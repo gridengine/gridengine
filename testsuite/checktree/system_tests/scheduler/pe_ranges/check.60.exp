@@ -282,7 +282,7 @@ proc pe_ranges_test {} {
 
       #clean up
       set queue_settings(load_thresholds) "np_load_avg=11.75"
-      set_queue "res.q" $pe_ranges_test_hosts queue_settings
+      mod_queue "res.q" $pe_ranges_test_hosts queue_settings
       
       set global_host(complex_values) $orig_global_host(complex_values)
       set_exechost global_host global

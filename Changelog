@@ -1,3 +1,6 @@
+RD-2006-02-24-0: Testsuite: fixed several testuite tests
+                 Review:    JG
+
 RD-2006-02-23-0: Bugfix:    Merged EB-2005-12-15-0 from V60s2_BRANCH
                             subordinate properties lost on qmaster restart
                  Issue:     1741

@@ -366,14 +366,6 @@ proc set_queue { qname hostlist change_array {fast_add 1}  {on_host ""} {as_user
 
    get_queue $qname currar
 
-   # process chgar and set values
-   if { [llength $hostlist] == 0 } {
-      set_cqueue_default_values currar chgar
-   } else {
-      set_cqueue_specific_values currar chgar $hostlist
-   }
-
-
    # Modify queue from file
    if { $fast_add } {
 

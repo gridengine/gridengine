@@ -46,7 +46,7 @@ global env
 global check_category
 
 # define a level initialization procedure:
-#set check_init_level_procedure "qconf_init_level"
+set check_init_level_procedure "qconf_init_level"
 
 # define test's name and run level descriptions
 set check_name            "qconf"

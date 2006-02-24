@@ -424,8 +424,7 @@ int sge_gdi_multi_sync(lList **alpp, int mode, u_long32 target, u_long32 cmd,
    }
 #endif
    gid = getgid();
-   if (sge_gid2group(gid, groupname, sizeof(groupname), 
-         MAX_NIS_RETRIES)) {
+   if(sge_gid2group(gid, groupname, sizeof(groupname), MAX_NIS_RETRIES)) {
       SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_GETGRGIDXFAILEDERRORX_U,
                              sge_u32c(gid)));
       goto error; 

@@ -43,6 +43,7 @@
 #include "uti/sge_stdlib.h"
 #include "uti/sge_spool.h"
 #include "uti/sge_unistd.h"
+#include "uti/sge_uidgid.h"
 
 #include "sge.h"
 #include "sge_any_request.h"
@@ -251,13 +252,13 @@ char **argv
                u_long32 gid;
 
                if (sscanf(argv[++ii], sge_u32, &gid) == 1) {
-                  struct group *pg;
-
-                  pg = getgrgid((gid_t)gid);
-                  strcpy(group, (pg ? pg->gr_name : argv[ii]));
+                  if(sge_gid2group((gid_t)gid, group, 
+                                   MAX_STRING_SIZE, MAX_NIS_RETRIES) != 0) {
+                     sge_strlcpy(group, argv[ii], MAX_STRING_SIZE);
+                  }
                }
                else {
-                  strcpy(group, argv[ii]);
+                  sge_strlcpy(group, argv[ii], MAX_STRING_SIZE);
                }
             }
          }

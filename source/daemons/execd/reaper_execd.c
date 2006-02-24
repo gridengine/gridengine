@@ -1553,19 +1553,21 @@ read_dusage(lListElem *jr, const char *jobdir, u_long32 jobid,
       lSetString(jr, JR_owner, owner = get_conf_val("job_owner"));
       if (owner) {
          struct passwd *pw;
-         struct group *pg;
          struct passwd pw_struct;
-         char buffer[2048];
+         stringT buffer_pw;
+         stringT buffer_pg;
 
-         pw = sge_getpwnam_r(owner, &pw_struct, buffer, sizeof(buffer));
+         pw = sge_getpwnam_r(owner, &pw_struct, buffer_pw, MAX_STRING_SIZE);
          if (pw) {
             if (mconf_get_use_qsub_gid()) {
                char *tmp_qsub_gid = search_conf_val("qsub_gid");
                pw->pw_gid = atol(tmp_qsub_gid);
-            } 
-            pg = getgrgid(pw->pw_gid);
-            if (pg && pg->gr_name)
-               lSetString(jr, JR_group, pg->gr_name);
+            }
+
+            if(sge_gid2group(pw->pw_gid, buffer_pg, 
+                             MAX_STRING_SIZE, MAX_NIS_RETRIES) != 0) {
+               lSetString(jr, JR_group, buffer_pg);
+            }
          }
       }
 

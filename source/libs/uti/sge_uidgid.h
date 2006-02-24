@@ -33,6 +33,7 @@
 /*___INFO__MARK_END__*/
 
 #include <sys/types.h> 
+#include <grp.h>
 
 #include "sge_dstring.h"
 #include "sge_unistd.h"
@@ -45,7 +46,6 @@
 #if defined(INTERIX)
 #  define seteuid(euid) setreuid(-1, euid)
 #  define setegid(egid) setregid(-1, egid)
-#  define getgrgid_r getgrgid_nomembers_r
 #  define SGE_SUPERUSER_UID wl_get_superuser_id()
 #  define SGE_SUPERUSER_GID wl_get_superuser_gid() 
 #else
@@ -76,7 +76,10 @@ int sge_set_uid_gid_addgrp(const char *user, const char *intermediate_user,
                            int min_gid, int min_uid, int add_grp, 
                            char *err_str, int use_qsub_gid, gid_t qsub_gid);
 
-struct passwd *sge_getpwnam_r(const char *name, struct passwd *pw_struct, char *buffer, int buflen);
+struct passwd *sge_getpwnam_r(const char *name, struct passwd *pw, 
+                              char *buffer, size_t bufsize);
+struct group *sge_getgrgid_r(gid_t gid, struct group *pg, 
+                             char *buffer, size_t bufsize, int retries);
  
 /*
  * Deprecated functions. Do not use anymore!

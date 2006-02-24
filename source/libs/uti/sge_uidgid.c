@@ -621,7 +621,7 @@ int sge_uid2user(uid_t uid, char *dst, size_t sz, int retries)
 
 /****** uti/uidgid/sge_gid2group() ********************************************
 *  NAME
-*     sge_gid2group() -- Resolves gid to user name. 
+*     sge_gid2group() -- Resolves gid to group name. 
 *
 *  SYNOPSIS
 *     int sge_gid2group(gid_t gid, char *dst, size_t sz, int retries) 
@@ -660,24 +660,8 @@ int sge_gid2group(gid_t gid, char *dst, size_t sz, int retries)
       
       size = get_group_buffer_size();
       buf = sge_malloc(size);
-      
-     /* max retries that are made resolving group name */
-#if defined (INTERIX)
-      while (getgrgid_nomembers_r(gid, &grentry, buf, size, &gr) != 0)
-#else
-      while (getgrgid_r(gid, &grentry, buf, size, &gr) != 0)
-#endif
-      {
-         if (!retries--) {
-            sge_free(buf);
-            
-            DEXIT;
-            return 1;
-         }
-         
-         sleep(1);
-      }
-      
+
+      gr = sge_getgrgid_r(gid, &grentry, buf, size, retries);
       /* Bugfix: Issuezilla 1256
        * We need to handle the case when the OS is unable to resolve the GID to
        * a name. [DT] */
@@ -718,7 +702,6 @@ static int get_group_buffer_size(void)
 
    return sz;
 }
-
 
 /****** uti/uidgid/sge_set_uid_gid_addgrp() ***********************************
 *  NAME
@@ -1042,7 +1025,7 @@ int sge_add_group(gid_t add_grp_id, char *err_str)
 *     const char *name  - points to user name 
 *     struct passwd *pw - points to structure which will be updated upon success 
 *     char *buffer      - points to memory referenced by 'pw'
-*     int buflen        - size of 'buffer' in bytes 
+*     size_t buflen     - size of 'buffer' in bytes 
 *
 *  RESULT
 *     struct passwd* - Pointer to entry matching user name upon success,
@@ -1052,7 +1035,8 @@ int sge_add_group(gid_t add_grp_id, char *err_str)
 *     MT-NOTE: sge_getpwnam_r() is MT safe. 
 *
 *******************************************************************************/
-struct passwd *sge_getpwnam_r(const char *name, struct passwd *pw, char *buffer, int buflen)
+struct passwd *sge_getpwnam_r(const char *name, struct passwd *pw, 
+                              char *buffer, size_t bufsize)
 {
    struct passwd *res = NULL;
    int i = MAX_NIS_RETRIES;
@@ -1060,7 +1044,7 @@ struct passwd *sge_getpwnam_r(const char *name, struct passwd *pw, char *buffer,
    DENTER(UIDGID_LAYER, "sge_getpwnam_r");
 
    while (i-- && !res) {
-      if (getpwnam_r(name, pw, buffer, buflen, &res) != 0) {
+      if (getpwnam_r(name, pw, buffer, bufsize, &res) != 0) {
          res = NULL;
       }
    }
@@ -1073,6 +1057,62 @@ struct passwd *sge_getpwnam_r(const char *name, struct passwd *pw, char *buffer,
    DEXIT;
    return res;
 } /* sge_getpwnam_r() */
+
+
+/****** sge_uidgid/sge_getgrgid_r() ********************************************
+*  NAME
+*     sge_getgrgid_r() -- Return group informations for a given group ID.
+*
+*  SYNOPSIS
+*     struct group* sge_getgrgid_r(gid_t gid, struct group *pg,
+*                                  char *buffer, size_t bufsize, int retires)
+*
+*  FUNCTION
+*     Search account database for a group. This function is just a wrapper for
+*     'getgrgid_r()', taking into account some additional possible errors.
+*     For a detailed description see 'getgrgid_r()' man page.
+*
+*  INPUTS
+*     gid_t gid         - group ID
+*     struct group *pg  - points to structure which will be updated upon success
+*     char *buffer      - points to memory referenced by 'pg'
+*     size_t buflen     - size of 'buffer' in bytes 
+*     int retries       - number of retries to connect to NIS
+*
+*  RESULT
+*     struct group*  - Pointer to entry matching group informations upon success,
+*                      NULL otherwise.
+*
+*  NOTES
+*     MT-NOTE: sge_getpwnam_r() is MT safe. 
+*
+*******************************************************************************/
+struct group *sge_getgrgid_r(gid_t gid, struct group *pg, 
+                             char *buffer, size_t bufsize, int retries)
+{
+   struct group *res = NULL;
+
+   DENTER(UIDGID_LAYER, "sge_getgrgid_r");
+
+   while(retries-- && !res) {
+#if defined(INTERIX)
+      if(getgrgid_nomembers_r(gid, pg, buffer, bufsize, &res) != 0) 
+#else
+      if(getgrgid_r(gid, pg, buffer, bufsize, &res) != 0) 
+#endif
+      {
+         res = NULL;
+      }
+   }
+
+   /* could be that struct is not NULL but group nam is empty */
+   if(res && !res->gr_name) {
+      res = NULL;
+   }
+
+   DEXIT;
+   return res;
+} /* sge_getgrgid_r() */
 
 /****** libs/uti/uidgid_state_get_*() ************************************
 *  NAME

@@ -1,3 +1,14 @@
+HP-2005-02-24-0: Bugfix:    on some Windows execution hosts, execd hangs
+                            after the job has finished 
+                 Bugtraq:   6363245
+                 Changed:   source/clients/qacct/qacct.c
+                            source/common/basis_types.h
+                            source/daemons/execd/reaper_execd.c
+                            source/libs/gdi/sge_gdi_request.c
+                            source/libs/uti/sge_uidgid.c
+                            source/libs/uti/sge_uidgid.h
+                 Review:    CR             
+
 RD-2006-02-24-0: Testsuite: fixed several testuite tests
                  Review:    JG
 

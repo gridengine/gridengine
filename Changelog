@@ -1,3 +1,7 @@
+RC-2006-02-25-0: Bugfix:    mem_free 4GB wraparound on MacOSX
+                 Changed:   libs/uti/sge_loadmem.c
+                 Review:    HP
+
 HP-2005-02-24-0: Bugfix:    on some Windows execution hosts, execd hangs
                             after the job has finished 
                  Bugtraq:   6363245

@@ -1,3 +1,7 @@
+RC-2006-02-25-0: Bugfix:    mem_free 4GB wraparound on MacOSX
+                 Changed:   libs/uti/sge_loadmem.c
+                 Review:    HP
+
 RD-2006-02-23-0: Bugfix:    commlib closes wrong connection on SSL error 
                             performance enhancement for certificate revocation
                  Issue:     1990 

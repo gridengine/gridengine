@@ -1,3 +1,8 @@
+OJ-2006-02-27-0: Testsuite: Restored old calls to set_cqueue_default_values
+                            set_cqueue_specific_values,
+                            in sge_queue.60.tcl; fixed mod_queue
+                 Review:    DT
+
 RC-2006-02-25-0: Bugfix:    mem_free 4GB wraparound on MacOSX
                  Changed:   libs/uti/sge_loadmem.c
                  Review:    HP

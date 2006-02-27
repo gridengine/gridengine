@@ -366,9 +366,24 @@ proc set_queue { qname hostlist change_array {fast_add 1}  {on_host ""} {as_user
 
    get_queue $qname currar
 
+   # process chgar and set values
+   if { [llength $hostlist] == 0 } {
+      set_cqueue_default_values currar chgar
+   } else {
+      set_cqueue_specific_values currar chgar $hostlist
+   }
+
    # Modify queue from file
    if { $fast_add } {
 
+     # Add in currar elements from chgar which have NOT
+     # been changed
+     foreach elem [array names currar] {
+        if { ![info exists chgar($elem)] } {
+        set chgar($elem) $currar($elem)
+        }
+     }
+ 
      set tmpfile [dump_array_to_tmpfile chgar]
      set ret [start_sge_bin "qconf" "-Mq $tmpfile" $on_host $as_user ]
      
@@ -467,13 +482,7 @@ proc mod_queue_error {result qname tmpfile raise_error} {
 proc mod_queue { qname hostlist change_array {fast_add 1} {on_host ""} {as_user ""} {raise_error 1}} {
 
    upvar $change_array chgar
-   get_queue $qname currar
-
-   foreach elem [array names chgar] {
-      set currar($elem) $chgar($elem)
-   }
-
-   return [set_queue $qname $hostlist currar $fast_add $on_host $as_user $raise_error]
+   return [set_queue $qname $hostlist chgar $fast_add $on_host $as_user $raise_error]
 
 }
 

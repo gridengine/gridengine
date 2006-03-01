@@ -43,8 +43,6 @@
 
 #include "msg_qconf.h"
 
-#define INIT_ALPP(alpp) (alpp && !*alpp)?((*alpp=lCreateList("answers", AN_Type))!=NULL):0
-
 static void report_and_free_answers(lList **alpp, lList *new_answers);
 
 static void report_and_free_answers(
@@ -97,7 +95,9 @@ lList *acl_args
 
    DENTER(TOP_LAYER, "sge_client_add_user");
 
-   INIT_ALPP(alpp);
+   if ((alpp != NULL) && (*alpp == NULL)) {
+      *alpp = lCreateList("answers", AN_Type);
+   }
 
    what = lWhat("%T(ALL)", US_Type);
 
@@ -190,7 +190,9 @@ lList *acl_args
 
    DENTER(TOP_LAYER, "sge_client_del_user");
 
-   INIT_ALPP(alpp);
+   if ((alpp != NULL) && (*alpp == NULL)) {
+      *alpp = lCreateList("answers", AN_Type);
+   }
 
    what = lWhat("%T(ALL)", US_Type);
 
@@ -288,7 +290,9 @@ lList **dst
    
    DENTER(TOP_LAYER, "sge_client_get_acls");
 
-   INIT_ALPP(alpp);
+   if ((alpp != NULL) && (*alpp == NULL)) {
+      *alpp = lCreateList("answers", AN_Type);
+   }
 
    where = NULL;
    for_each(aclarg,acl_args) {

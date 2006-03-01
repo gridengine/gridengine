@@ -101,9 +101,13 @@ public class SessionImplTest extends TestCase {
 
       this.initSession ();
       
-      assertEquals ("", session.getContact ());
-      
-      this.exitSession ();
+      try {
+         assertNotNull (session.getContact ());
+         assertTrue (session.getContact ().startsWith ("session="));
+      }
+      finally {
+         this.exitSession ();
+      }
    }
    
    /** Test of getDRMSystem method, of class com.sun.grid.drmaa.SessionImpl. */
@@ -116,9 +120,12 @@ public class SessionImplTest extends TestCase {
 
       this.initSession ();
       
-      assertTrue (session.getDrmSystem ().equals (version));
-      
-      this.exitSession ();
+      try {
+         assertTrue (session.getDrmSystem ().equals (version));
+      }
+      finally {
+         this.exitSession ();
+      }
    }
    
    /** Test of getDRMAAImplementation method, of class com.sun.grid.drmaa.SessionImpl. */
@@ -127,13 +134,15 @@ public class SessionImplTest extends TestCase {
       
       String version = Settings.get (Settings.VERSION);
 
-      assertTrue (session.getDrmaaImplementation ().equals ("DRMAA 1.0 Java language binding 0.5 -- " + version));
+      assertTrue (session.getDrmaaImplementation ().equals (version));
 
       this.initSession ();
-      
-      assertTrue (session.getDrmaaImplementation ().equals ("DRMAA 1.0 Java language binding 0.5 -- " + version));
-      
-      this.exitSession ();
+
+      try {
+         assertTrue (session.getDrmaaImplementation ().equals (version));
+      } finally {
+         this.exitSession ();
+      }
    }
    
    /** Test of getVersion method, of class com.sun.grid.drmaa.SessionImpl. */
@@ -143,10 +152,12 @@ public class SessionImplTest extends TestCase {
       Version v = new Version (0, 5);
       
       this.initSession ();
-      
-      assertEquals (v, session.getVersion ());
-      
-      this.exitSession ();
+
+      try {
+         assertEquals (v, session.getVersion ());
+      } finally {
+         this.exitSession ();
+      }
    }
    
    /** Test of create|deleteJobTemplate method, of class com.sun.grid.drmaa.SessionImpl. */
@@ -156,38 +167,40 @@ public class SessionImplTest extends TestCase {
       JobTemplate jt = null;
       
       this.initSession ();
-      
+
       try {
-         jt = session.createJobTemplate ();
+         try {
+            jt = session.createJobTemplate ();
+         }
+         catch (DrmaaException e) {
+            fail ("Unable to create job template: " + e.getMessage ());
+         }
+         
+         assertNotNull (jt);
+         assertTrue (jt instanceof JobTemplateImpl);
+         
+         try {
+            session.deleteJobTemplate (jt);
+         }
+         catch (InvalidJobTemplateException e) {
+            fail ("Unable to delete job template: " + e.getMessage ());
+         }
+         catch (DrmaaException e) {
+            fail ("Unable to create job template: " + e.getMessage ());
+         }
+         
+         try {
+            session.deleteJobTemplate (jt);
+            fail ("Able to delete job template twice");
+         }
+         catch (InvalidJobTemplateException e) {
+            /* Don't care */
+         }
+         catch (DrmaaException e) {
+            fail ("Unable to delete job template: " + e.getMessage ());
+         }
+      } finally {
+         this.exitSession ();
       }
-      catch (DrmaaException e) {
-         fail ("Unable to create job template: " + e.getMessage ());
-      }
-      
-      assertNotNull (jt);
-      assertTrue (jt instanceof JobTemplateImpl);
-      
-      try {
-         session.deleteJobTemplate (jt);
-      }
-      catch (InvalidJobTemplateException e) {
-         fail ("Unable to delete job template: " + e.getMessage ());
-      }
-      catch (DrmaaException e) {
-         fail ("Unable to create job template: " + e.getMessage ());
-      }
-      
-      try {
-         session.deleteJobTemplate (jt);
-         fail ("Able to delete job template twice");
-      }
-      catch (InvalidJobTemplateException e) {
-         /* Don't care */
-      }
-      catch (DrmaaException e) {
-         fail ("Unable to delete job template: " + e.getMessage ());
-      }
-      
-      this.exitSession ();
    }
 }

@@ -53,10 +53,13 @@ set check_init_level_procedure "drmaa_init_level"
 # define test's name and run level descriptions
 set check_name            "drmaa"
 set check_category        "COMPATIBILITY SYSTEM VERIFIED"
-set check_highest_level   202
-set check_description(200)  "tests to verify DRMAA library: single threaded"
-set check_description(201)  "tests to verify DRMAA library: multi threaded"
-set check_description(202)  "tests to verify DRMAA library: additional interfaces"
+set check_highest_level   205
+set check_description(200)  "tests to verify DRMAA 0.95 library: single threaded"
+set check_description(201)  "tests to verify DRMAA 0.95 library: multi threaded"
+set check_description(202)  "tests to verify DRMAA 0.95 library: additional interfaces"
+set check_description(200)  "tests to verify DRMAA 1.0 library: single threaded"
+set check_description(201)  "tests to verify DRMAA 1.0 library: multi threaded"
+set check_description(202)  "tests to verify DRMAA 1.0 library: additional interfaces"
 
 # define test's dependencies
 set check_needs           "init_core_system" 
@@ -77,15 +80,24 @@ proc drmaa_init_level {} {
   # returning -1 causes disabling a certain runlevel
   # here per run level settings can be prepared
   switch -- $CHECK_ACT_LEVEL {
-     "200" { 
-        return 0
-     } 
-     "201" { 
+     "200" {
         return 0
      }
-     "202" { 
+     "201" {
         return 0
-     } 
+     }
+     "202" {
+        return 0
+     }
+     "203" {
+        return 0
+     }
+     "204" {
+        return 0
+     }
+     "205" {
+        return 0
+     }
   } 
 
   return -1  ;# no other level else
@@ -105,6 +117,7 @@ proc drmaa_setup {} {
 
    # set new value
    set new_config(qmaster_params) "FORBID_RESCHEDULE=TRUE,FORBID_APPERROR=TRUE"
+   set new_config(delegated_file_staging) "true"
    set_config new_config
 
    # setup file staging scripts
@@ -114,13 +127,18 @@ proc drmaa_setup {} {
 
 # undo what we've done in drmaa_setup
 proc drmaa_cleanup  {} {
-   global backup_qmaster_params drmaa_config
+   global backup_qmaster_params drmaa_config ts_config
 
    delete_all_jobs
    wait_for_end_of_all_jobs 60
 
    # undo configuration changes that were made for this test
    set_config drmaa_config
+
+   # restore DRMAA library version
+   foreach host $ts_config(unique_arch_nodes) {
+      drmaa_redirect_lib "0.95" $host
+   }
 
    set_error 0 "ok"
 }
@@ -137,8 +155,16 @@ proc drmaa_check {} {
 
       set binary_path "$ts_config(source_dir)/$compile_arch_mt"
       puts $CHECK_OUTPUT "host is $host has arch $compile_arch_mt mt bin path $binary_path"
+      set level $CHECK_ACT_LEVEL
 
-      switch -- $CHECK_ACT_LEVEL {
+      if {$level <= 202} {
+         drmaa_redirect_lib "0.95" $host
+      } else {
+         drmaa_redirect_lib "1.0" $host
+         incr level -3
+      }
+
+      switch -- $level {
          "200" { 
             # -- do all ST_DRMAA_CONTROL tests
             drmaa_test_failing_control_operations $host $binary_path
@@ -156,9 +182,10 @@ proc drmaa_check {} {
             drmaa_test_st_input_becomes_output $host $binary_path
 
             # -- tests without an argument
-            foreach st_test "ST_MULT_INIT ST_MULT_EXIT ST_SUPPORTED_ATTR \
-               ST_SUPPORTED_VATTR ST_VERSION ST_DRM_SYSTEM ST_CONTACT \
-               ST_EMPTY_SESSION_WAIT ST_EMPTY_SESSION_SYNCHRONIZE_DISPOSE \
+            foreach st_test "ST_ERROR_CODES ST_MULT_INIT ST_MULT_EXIT \
+               ST_SUPPORTED_ATTR ST_SUPPORTED_VATTR ST_VERSION ST_DRM_SYSTEM \
+               ST_CONTACT ST_EMPTY_SESSION_WAIT \
+               ST_EMPTY_SESSION_SYNCHRONIZE_DISPOSE \
                ST_EMPTY_SESSION_SYNCHRONIZE_NODISPOSE ST_DRMAA_IMPL \
                ST_UNSUPPORTED_ATTR ST_UNSUPPORTED_VATTR" {
                
@@ -192,7 +219,7 @@ proc drmaa_check {} {
                   ST_BULK_SUBMIT_IN_HOLD_SESSION_DELETE \
                   ST_BULK_SUBMIT_IN_HOLD_SINGLE_DELETE \
                   ST_SUBMIT_IN_HOLD_RELEASE ST_SUBMIT_IN_HOLD_DELETE \
-                  ST_SYNCHRONIZE_NONEXISTANT" {
+                  ST_SYNCHRONIZE_NONEXISTANT ST_RECOVERABLE_SESSION" {
                puts "starting single threaded test $st_test"
                drmaa_test $host $binary_path $st_test $CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/suspendable_sleeper.sh
             }
@@ -440,4 +467,18 @@ proc drmaa_test_failing_control_operations { host binary_path } {
       drmaa_test $host $binary_path ST_DRMAA_CONTROL "$control_op DRMAA_ERRNO_INVALID_JOB $job_id.1" $CHECK_FIRST_FOREIGN_SYSTEM_USER
       drmaa_test $host $binary_path ST_DRMAA_CONTROL "$control_op DRMAA_ERRNO_INVALID_JOB $job_id.2" $CHECK_FIRST_FOREIGN_SYSTEM_USER
    }
+}
+
+proc drmaa_redirect_lib {version {host CHECK_HOST}} {
+   global ts_config CHECK_USER CHECK_HOST CHECK_OUTPUT
+
+   puts $CHECK_OUTPUT "Using DRMAA version $version on $host"
+
+   set compile_arch [resolve_build_arch_installed_libs $host]
+   set install_arch [resolve_arch $host]
+
+   start_remote_prog $CHECK_HOST "root" "/bin/rm" "$ts_config(product_root)/lib/$install_arch/libdrmaa.so"
+   start_remote_prog $CHECK_HOST "root" "/bin/ln" "-s libdrmaa.so.$version $ts_config(product_root)/lib/$install_arch/libdrmaa.so"
+   start_remote_prog $CHECK_HOST "root" "/bin/rm" "$ts_config(source_dir)/$compile_arch/test_drmaa"
+   start_remote_prog $CHECK_HOST "root" "/bin/ln" "-s test_drmaa.$version $ts_config(source_dir)/$compile_arch/test_drmaa"
 }

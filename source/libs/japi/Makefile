@@ -160,11 +160,20 @@ com_sun_grid_drmaa_SessionImpl.0.95.o: $(CLASSES_DIR)/com_sun_grid_drmaa_Session
 
 #---------------------------------------------------------------------
 
-test_drmaa: test_drmaa.o $(DRMAALIB) $(WINGRIDLIB_DEP)
-	$(LD_WRAPPER) $(CC) -o $@ test_drmaa.o $(LFLAGS) -ldrmaa $(WINGRIDLIB) $(LIBS) $(SLIBS) $(DLLIB)
+test_drmaa: test_drmaa.1.0 test_drmaa.0.95
+	rm -f test_drmaa ; ln -s test_drmaa.0.95 test_drmaa
 
-test_drmaa.o: $(JAPILIB_DIR)/test_drmaa.c
-	$(CC) $(CFLAGS) -c $(JAPILIB_DIR)/test_drmaa.c
+test_drmaa.1.0: test_drmaa.1.0.o $(DRMAALIB) $(WINGRIDLIB_DEP)
+	$(LD_WRAPPER) $(CC) -o $@ test_drmaa.1.0.o $(LFLAGS) -DDRMAA_10 -ldrmaa $(WINGRIDLIB) $(LIBS) $(SLIBS) $(DLLIB)
+
+test_drmaa.0.95: test_drmaa.0.95.o $(DRMAALIB) $(WINGRIDLIB_DEP)
+	$(LD_WRAPPER) $(CC) -o $@ test_drmaa.0.95.o $(LFLAGS) -ldrmaa $(WINGRIDLIB) $(LIBS) $(SLIBS) $(DLLIB)
+
+test_drmaa.1.0.o: $(JAPILIB_DIR)/test_drmaa.c
+	$(CC) $(CFLAGS) -DDRMAA_10 -c $(JAPILIB_DIR)/test_drmaa.c -o test_drmaa.1.0.o
+
+test_drmaa.0.95.o: $(JAPILIB_DIR)/test_drmaa.c
+	$(CC) $(CFLAGS) -c $(JAPILIB_DIR)/test_drmaa.c -o test_drmaa.0.95.o
 
 test_drmaa_sync: test_drmaa_sync.o $(DRMAALIB) $(WINGRIDLIB_DEP)
 	$(LD_WRAPPER) $(CC) -o $@ test_drmaa_sync.o $(LFLAGS) -ldrmaa $(WINGRIDLIB) $(LIBS) $(SLIBS) $(DLLIB)

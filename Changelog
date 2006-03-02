@@ -1,3 +1,6 @@
+DT-2006-03-02-0: Bugfix:    o Fixed errors in DT-2006-03-01-0
+                 Changed:   JAPI, testsuite
+
 DT-2006-03-01-0: Enhancem.: o Completed DRMAA 0.95 => 1.0
                             o Made DRMAA sessions reconnectable
                  Bugfix:    o Fixed illegal memory access

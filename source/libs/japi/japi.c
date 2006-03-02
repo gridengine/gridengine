@@ -1660,7 +1660,7 @@ static int japi_user_hold_add_jobid(u_long32 gdi_action, lList **request_list,
 
    DENTER(TOP_LAYER, "japi_user_hold_add_jobid");
 
-   if (array) {
+   if (!array) {
       taskid = 0;
    }
 
@@ -1847,21 +1847,26 @@ int japi_control(const char *jobid_str, int drmaa_action, dstring *diag)
    case DRMAA_CONTROL_HOLD:
    case DRMAA_CONTROL_RELEASE:
       {
-         lListElem *aep;
-         lList *alp, *request_list = NULL;
+         lListElem *aep = NULL;
+         lList *alp = NULL;
+         lList *request_list = NULL;
          u_long32 gdi_action;
 
          /* set action */
-         if (drmaa_action == DRMAA_CONTROL_HOLD)
+         if (drmaa_action == DRMAA_CONTROL_HOLD) {
             gdi_action = MINUS_H_TGT_USER|MINUS_H_CMD_ADD;
-         else
+         }
+         else {
             gdi_action = MINUS_H_TGT_USER|MINUS_H_CMD_SUB;
+         }
 
-         if (!strcmp(jobid_str, DRMAA_JOB_IDS_SESSION_ALL)) {
-            lListElem *japi_job;
+         if (strcmp(jobid_str, DRMAA_JOB_IDS_SESSION_ALL) == 0) {
+            lListElem *japi_job = NULL;
+            
             JAPI_LOCK_JOB_LIST();    
             for_each (japi_job, Master_japi_job_list) {
-               jobid = lGetUlong(japi_job, JJ_jobid);   
+               jobid = lGetUlong(japi_job, JJ_jobid);
+               
                if (!JOB_TYPE_IS_ARRAY(lGetUlong(japi_job, JJ_type))) {
                   drmaa_errno = japi_user_hold_add_jobid(gdi_action,
                                                          &request_list, 
@@ -1876,13 +1881,21 @@ int japi_control(const char *jobid_str, int drmaa_action, dstring *diag)
                      return drmaa_errno;
                   }
                } else {
-                  lListElem *range;
+                  lListElem *range = NULL;
+                  
                   for_each (range, lGetList(japi_job, JJ_not_yet_finished_ids)) {
                      u_long32 min, max, step;
+
                      range_get_all_ids(range, &min, &max, &step);
-                     for (taskid=min; taskid<=max; taskid+= step) {
-                        if ((drmaa_errno=japi_user_hold_add_jobid(gdi_action, &request_list, jobid, 
-                                 taskid, true, diag))!=DRMAA_ERRNO_SUCCESS) {
+
+                     for (taskid = min; taskid <= max; taskid += step) {
+                        drmaa_errno = japi_user_hold_add_jobid(gdi_action,
+                                                               &request_list,
+                                                               jobid, 
+                                                               taskid, true,
+                                                               diag);
+
+                        if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
                            /* diag written by japi_user_hold_add_jobid() */
                            JAPI_UNLOCK_JOB_LIST();    
                            japi_dec_threads(SGE_FUNC);
@@ -1932,6 +1945,7 @@ int japi_control(const char *jobid_str, int drmaa_action, dstring *diag)
                   return ret;
                }
             }
+            
             lFreeList(&alp);
          }
       }

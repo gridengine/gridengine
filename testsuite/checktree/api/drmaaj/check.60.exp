@@ -60,7 +60,7 @@ set check_description(201)  "tests to verify DRMAA-J 1.0 library"
 set check_needs           "init_core_system" 
 
 # setup and cleanup functions
-set check_cleanup_function "drmaaj_setup"
+set check_setup_function "drmaaj_setup"
 set check_cleanup_function "drmaaj_cleanup"
 
 # define test's procedure order
@@ -163,8 +163,8 @@ proc drmaaj_check {} {
       set options "-cp $classpath $options"
 
       puts $CHECK_OUTPUT "Starting VM: $JAVA $options junit.textui.TestRunner DrmaaSuite"
-      set test_output [ start_remote_prog $host $CHECK_USER "cd" ".\nLD_LIBRARYN32_PATH=\$LD_LIBRARY_PATH \nexport LD_LIBRARYN32_PATH\n$JAVA $options junit.textui.TestRunner DrmaaSuite" prg_exit_state 500 ]
-#      set test_output [ start_remote_prog $host $CHECK_USER "cd" ".\nLD_LIBRARYN32_PATH=\$LD_LIBRARY_PATH \nexport LD_LIBRARYN32_PATH\n. \$SGE_ROOT/util/dl.sh\ndl 2\n$JAVA $options junit.textui.TestRunner com.sun.grid.drmaa.JobTemplateImplTest" prg_exit_state 500 ]
+#      set test_output [ start_remote_prog $host $CHECK_USER "cd" ".\nLD_LIBRARYN32_PATH=\$LD_LIBRARY_PATH \nexport LD_LIBRARYN32_PATH\n$JAVA $options junit.textui.TestRunner DrmaaSuite" prg_exit_state 500 ]
+      set test_output [ start_remote_prog $host $CHECK_USER "cd" ".\nLD_LIBRARYN32_PATH=\$LD_LIBRARY_PATH \nexport LD_LIBRARYN32_PATH\n. \$SGE_ROOT/util/dl.sh\ndl 2\n$JAVA $options junit.textui.TestRunner com.sun.grid.drmaa.SessionImplJobTest" prg_exit_state 500 ]
 
       if { $prg_exit_state != 0 } {
          add_proc_error drmaa_check -1 "DRMAA-J jUnit test suite failed at host $host:\n$test_output"

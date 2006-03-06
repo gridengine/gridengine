@@ -1,3 +1,10 @@
+MD-2006-02-22-0: Bugfix:    execd installation on Windows fails due to 
+                            missing spooldefaults 
+                 Issue:     - 
+                 Bugtraq:   6376809 
+                 Changed:   install 
+                 Review:    RD
+
 DT-2006-03-02-0: Bugfix:    o Fixed errors in DT-2006-03-01-0
                  Changed:   JAPI, testsuite
 

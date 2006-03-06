@@ -76,20 +76,29 @@ BasicSettings()
 
   unset SGE_NOMSG
 
-  # set spooldefaults binary path
-  SPOOLDEFAULTS=$SGE_UTILBIN/spooldefaults
-  if [ ! -f $SPOOLDEFAULTS ]; then
-     $ECHO "can't find \"$SPOOLDEFAULTS\""
-     $ECHO "Installation failed."
+  if [ ! -d $SGE_BIN ]; then
+     $ECHO "Can't find binaries for architecture: $SGE_ARCH!"
+     $ECHO "Please check your binaries. Installation failed!"
+     $ECHO "Exiting installation."
      exit 1
   fi
 
-  SPOOLINIT=$SGE_UTILBIN/spoolinit
-  if [ ! -f $SPOOLINIT ]; then
-     $ECHO "can't find \"$SPOOLINIT\""
-     $ECHO "Installation failed."
-     exit 1
-  fi
+   if [ "$SGE_ARCH" != "win32-x86" ]; then
+      # set spooldefaults binary path
+      SPOOLDEFAULTS=$SGE_UTILBIN/spooldefaults
+      if [ ! -f $SPOOLDEFAULTS ]; then
+         $ECHO "can't find \"$SPOOLDEFAULTS\""
+         $ECHO "Installation failed."
+         exit 1
+      fi
+
+      SPOOLINIT=$SGE_UTILBIN/spoolinit
+      if [ ! -f $SPOOLINIT ]; then
+         $ECHO "can't find \"$SPOOLINIT\""
+         $ECHO "Installation failed."
+         exit 1
+      fi
+   fi
 
   HOST=`$SGE_UTILBIN/gethostname -name`
   if [ "$HOST" = "" ]; then
@@ -470,7 +479,7 @@ ResolveHosts()
          else
             if [ -f $host ]; then
                for fhost in `cat $host`; do
-                  HOSTS="$HOSTS `$SGE_UTILBIN/gethostbyname -name $host`"
+                  HOSTS="$HOSTS `$SGE_UTILBIN/gethostbyname -name $fhost`"
                done
             fi
             HOSTS="$HOSTS `$SGE_UTILBIN/gethostbyname -name $host`" 
@@ -2524,4 +2533,7 @@ GetAdminUser()
 }
 
 
-   
+PreInstallCheck()
+{
+   CheckBinaries
+}

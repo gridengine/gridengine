@@ -112,7 +112,7 @@ CSP_MAIL_ADDRESS="undef"
 
 BasicSettings
 SetUpInfoText
-CheckBinaries
+PreInstallCheck
 
 
 ARGC=$#
@@ -417,8 +417,8 @@ if [ "$EXECD" = "install" -a "$UPDATE" != "true" ]; then
          installed=$?
    
          if [ "$installed" = 0 ]; then
-	         if [ $h = `$SGE_UTILBIN/gethostname -name` ]; then
-		      LOCALINST=true
+	    if [ $h = `$SGE_UTILBIN/gethostname -aname` ]; then
+	       LOCALINST=true
             else
                CheckRSHConnection $h
                if [ "$?" = 0 ]; then 

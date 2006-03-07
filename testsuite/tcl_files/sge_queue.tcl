@@ -916,26 +916,25 @@ proc clear_queue {queue {output_var result}  {on_host ""} {as_user ""} {raise_er
 #
 #  RESULT
 #     Returncode for clear_queue function:
-#      -1:  cluster queue "queue" does not exist
+#      -1:  invalid queue or job "queue"
 #     -99: other error
 #
 #  SEE ALSO
 #     sge_calendar/get_calendar
 #     sge_procedures/handle_sge_errors
 #*******************************************************************************
-proc clear_queue_error {result calendar raise_error} {
+proc clear_queue_error {result queue raise_error} {
 
    # recognize certain error messages and return special return code
-   set messages(index) "-1"
-   set messages(-1) [translate_macro MSG_CALENDAR_XISNOTACALENDAR_S $calendar]
+   set messages(index) "-1 "
+   set messages(-1) [translate_macro MSG_QUEUE_INVALIDQORJOB_S $queue]
 
    # we might have version dependent, calendar specific error messages
-   get_calendar_error_vdep messages $calendar
+   get_clear_queue_error_vdep messages $queue
 
    set ret 0
    # now evaluate return code and raise errors
-   set ret [handle_sge_errors "get_calendar" "qconf -cq $calendar" $result messages
-$raise_error]
+   set ret [handle_sge_errors "get_calendar" "qconf -cq $queue" $result messages $raise_error]
 
    return $ret
 }
@@ -970,5 +969,110 @@ proc get_queue_list {{output_var result} {on_host ""} {as_user ""} {raise_error 
 
    return [get_qconf_list "get_queue_list" "-sql" out $on_host $as_user $raise_error]
 
+}
+
+
+#****** sge_queue/purge_queue() *****************************************
+#  NAME
+#     purge_queue() -- purge queue object queue@$host
+#
+#  SYNOPSIS
+#     purge_queue { queue host object {output_var result} {on_host ""} {as_user ""} {raise_error 1}  }
+#
+#  FUNCTION
+#     Calls qconf -purge queue hostlist $queue@$host to clear purge $queue
+#
+#  INPUTS
+#     queue           - queue to be cleared
+#     host            - host instnace on which to purge queue
+#     object          - object to be purged: hostlist, load_threashold,...
+#     output_var      - result will be placed here
+#     {on_host ""}    - execute qconf on this host, default is master host
+#     {as_user ""}    - execute qconf as this user, default is $CHECK_USER
+#     {raise_error 1} - raise an error condition on error (default), or just
+#                       output the error message to stdout
+#
+#  RESULT
+#     0 on success, an error code on error.
+#     For a list of error codes, see sge_procedures/get_sge_error().
+#
+#  SEE ALSO
+#     sge_calendar/get_calendar()
+#     sge_calendar/get_calendar_error()
+#*******************************************************************************
+proc purge_queue {queue host object {output_var result}  {on_host ""} {as_user ""} {raise_error 1}} {
+
+   upvar $output_var out
+
+   # clear output variable
+   if {[info exists out]} {
+      unset out
+   }
+
+   set ret 0
+   set result [start_sge_bin "qconf" "-purge queue $object $queue@host" $on_host $as_user]
+
+   # parse output or raise error
+   if {$prg_exit_state == 0} {
+      parse_simple_record result out
+   } else {
+      set ret [purge_queue_error $result $queue $host $object $raise_error]
+   }
+
+   return $ret
+
+}
+#****** sge_queue/purge_queue_error() ***************************************
+#  NAME
+#     purge_queue_error() -- error handling for purge_queue
+#
+#  SYNOPSIS
+#     purge_queue_error { result queue host object raise_error }
+#
+#  FUNCTION
+#     Does the error handling for purge_queue.
+#     Translates possible error messages of qconf -purge,
+#     builds the datastructure required for the handle_sge_errors
+#     function call.
+#
+#     The error handling function has been intentionally separated from
+#     purge_queue. While the qconf call and parsing the result is
+#     version independent, the error messages (macros) usually are version
+#     dependent.
+#
+#  INPUTS
+#     result      - qconf output
+#     queue       - queue for which qconf -purge has been called
+#     host        - host on which queue will be purged
+#     object      - object  which queue will be purged
+#     raise_error - do add_proc_error in case of errors
+#
+#  RESULT
+#     Returncode for purge_queue function:
+#      -1:  Cluster queue entry "queue" does not exist
+#     -99: other error
+#
+#  SEE ALSO
+#     sge_calendar/get_calendar
+#     sge_procedures/handle_sge_errors
+#*******************************************************************************
+proc purge_queue_error {result queue host object raise_error} {
+
+   global CHECK_OUTPUT
+
+   # recognize certain error messages and return special return code
+   set messages(index) "-1 "
+   set messages(-1) [concat "error: " [translate_macro MSG_CQUEUE_DOESNOTEXIST_S $queue]]
+
+   puts  $CHECK_OUTPUT "$messages(-1)"
+
+   # we might have version dependent, calendar specific error messages
+   get_clear_queue_error_vdep messages $queue
+
+   set ret 0
+   # now evaluate return code and raise errors
+   set ret [handle_sge_errors "purge_queue" "qconf -purge $object $queue@host" $result messages $raise_error]
+
+   return $ret
 }
 

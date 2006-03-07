@@ -1,3 +1,6 @@
+OJ-2006-03-06-0: Testsuite: Added new purge_queue in sge_queue.tcl
+                 Review:    DT
+
 MD-2006-02-22-0: Bugfix:    execd installation on Windows fails due to 
                             missing spooldefaults 
                  Issue:     - 

@@ -654,7 +654,7 @@ static int ssl_callback_SSLVerify_CRL(int ok, X509_STORE_CTX *ctx, cl_com_ssl_pr
    }
 
    cert = cl_com_ssl_func__X509_STORE_CTX_get_current_cert(ctx);
-   if (cert != NULL) {
+   if (cert != NULL && is_ok != false) {
        /* X509_STORE_CTX_init did not return an error condition in prior versions */
        if (cl_com_ssl_func__X509_STORE_CTX_init(&verify_ctx, private->ssl_crl_data->store, cert, NULL) != 1) {
           CL_LOG(CL_LOG_ERROR, "Error initializing verification context");
@@ -671,7 +671,7 @@ static int ssl_callback_SSLVerify_CRL(int ok, X509_STORE_CTX *ctx, cl_com_ssl_pr
        }
        cl_com_ssl_func__X509_STORE_CTX_cleanup(&verify_ctx);
    } else {
-      CL_LOG(CL_LOG_ERROR,"cert is NULL");
+      CL_LOG(CL_LOG_ERROR,"cert or X509 store is NULL");
       is_ok = false;
    }
 
@@ -1961,7 +1961,6 @@ static int cl_com_ssl_free_com_private(cl_com_connection_t* connection) {
    /* free ssl_crl_data */
    if (private->ssl_crl_data != NULL) {
 
-      /* TODO: free cl_ssl_verify_crl_data_t content */
       if (private->ssl_crl_data->store != NULL) {
          cl_com_ssl_func__X509_STORE_free(private->ssl_crl_data->store);
          private->ssl_crl_data->store = NULL;
@@ -2530,7 +2529,8 @@ int cl_com_ssl_setup_connection(cl_com_connection_t**          connection,
       cl_com_close_connection(connection);
       return ret_val;
    } 
-
+  
+   /* ssl_crl_data */
    com_private->ssl_crl_data = (cl_ssl_verify_crl_data_t*) malloc(sizeof(cl_ssl_verify_crl_data_t));
    if (com_private->ssl_crl_data == NULL) {
       cl_com_close_connection(connection);

@@ -1,3 +1,9 @@
+RD-2006-03-09-0: Bugfix:    - fixed race conditions for sge_ca -renew
+                            - fixed qmaster core dump with invalid revocation
+                              list
+                 Changed:   sge_ca, commlib
+                 Review:    AA
+
 MD-2006-02-22-0: Bugfix:    execd installation on Windows fails due to 
                             missing spooldefaults 
                  Issue:     - 

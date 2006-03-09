@@ -484,7 +484,9 @@ ExecuteAsAdmin()
       Translate 1 "Probably a permission problem. Please check file access permissions."
       Translate 1 "Check read/write permission. Check if SGE daemons are running."
       $ECHO >&2
-      exit 1
+      if [ "$ADMINRUN_NO_EXIT" != "true" ]; then 
+         exit 1
+      fi
    fi
    return 0
 }

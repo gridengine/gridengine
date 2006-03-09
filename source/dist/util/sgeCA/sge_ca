@@ -57,7 +57,6 @@ ErrUsage()
    myname=`basename $0`
    $INFOTEXT -e \
    "\nUsage: %s <command>\n" \
-   "   -env             export SGE_CERTFILE and SGE_KEYFILE for daemon\n" \
    "   -init            initialize CA infrastructure\n" \
    "   -req             generate a certificate request and private key\n" \
    "   -sign            sign a certificate request\n" \
@@ -75,7 +74,10 @@ ErrUsage()
    "   -outdir <dir>    write to directory <dir>\n" \
    "   -cadir <dir>     overwrite CALOCALTOP and CATOP settings\n" \
    "   -pkcs12 <file>   generate pkcs12 format files for the users in <file>\n" \
-   "   -usercert <file> generate certificates and keys for the users in <file>\n" $myname
+   "   -usercert <file> generate certificates and keys for the users in <file>\n" \
+   "   -user <u:g:e>    generate certificates and keys for <u:g:e>\n" \
+   "                    with u=Unix User, g=Common Name, e=email\n" \
+   $myname
 
    exit 1
 }
@@ -380,8 +382,8 @@ MakeRandFile()
    if [ ! -r /dev/urandom ]; then
       if [ -r /dev/random ]; then 
          rfile=/dev/random
-      elif [ -r /kernel/genunix ]; then
-         rfile=/kernel/genunix
+      # elif [ -r /kernel/genunix ]; then
+      #   rfile=/kernel/genunix
       elif [ -r /bin/vi ]; then
          rfile=/bin/vi
       fi
@@ -397,6 +399,45 @@ MakeRandFile()
    # ls -l $rfile $1
    # echo "--------------"
 
+}
+
+
+#--------------------------------------------------------------------------
+# MakeUserCert create user certificates and keys for Windows Admin user
+#
+# $1 = <user:gecos:email>
+#
+MakeUserCert()
+{
+   line="$1"
+
+   unixuser=`echo $line|cut -d: -f1`
+   gecos=`echo $line|cut -d: -f2`
+   email=`echo $line|cut -d: -f3`
+
+   # echo $unixuser:$gecos:$email
+   if [ "$unixuser" = "" ]; then
+      $INFOTEXT "no Unix user specified. Exit."
+      exit 1
+   fi   
+
+   if [ "$gecos" = "" ]; then
+      gecos=$unixuser
+   fi   
+   if [ "$email" = "" ]; then
+      email=$unixuser
+   fi   
+
+   entries=`$V5UTILBIN/adminrun $ADMINUSER grep "CN=$gecos" $CATOP/index.txt|grep '^V'|wc -l`
+   if [ $entries = 0 ]; then
+      $INFOTEXT "Generating certificate and key for '%s' ('%s','%s')." \
+         "$unixuser" "$gecos" "$email"
+      MakeCert user "$unixuser" "$gecos" "$email"
+   else   
+      $INFOTEXT "Please renew certificate for '%s' ('%s','%s') instead." \
+         "$unixuser" "$gecos" "$email"
+      # RenewCert user $unixuser
+   fi
 }
 
 #--------------------------------------------------------------------------
@@ -417,20 +458,7 @@ MakeUserCerts()
    userfile=$1
 
    cat $userfile | while read line; do
-      unixuser=`echo $line|cut -d: -f1`
-      gecos=`echo $line|cut -d: -f2`
-      email=`echo $line|cut -d: -f3`
-      
-      entries=`$V5UTILBIN/adminrun $ADMINUSER grep "CN=$gecos" $CATOP/index.txt|grep '^V'|wc -l`
-      if [ $entries = 0 ]; then
-         $INFOTEXT "Generating certificate and key for '%s' ('%s','%s')." \
-            "$unixuser" "$gecos" "$email"
-         MakeCert user "$unixuser" "$gecos" "$email"
-      else   
-         $INFOTEXT "Please renew certificate for '%s' ('%s','%s') instead." \
-            "$unixuser" "$gecos" "$email"
-         # RenewCert user $unixuser
-      fi
+      MakeUserCert "$line"
    done   
 }
 
@@ -550,7 +578,11 @@ MakeCert()
       if [ $rootinstalls = true ]; then
          Execute $CHMOD 500 $KEYDIR
          Execute $CHMOD 400 $KEYDIR/*
-         Execute $CHOWN -R $2 $KEYDIR
+         # check if user exists and chown if yes
+         id $2  > /dev/null 2>&1
+         if [ $? = 0 ]; then
+            Execute $CHOWN -R $2 $KEYDIR
+         fi   
       fi
 
       $INFOTEXT "created and signed certificate for user '%s' in '%s'" $2 $KEYDIR
@@ -592,7 +624,15 @@ RenewCA()
 #
 RenewCert()
 {
-   if [ $1 = daemon ]; then
+   ADMINRUN_NO_EXIT=true # ExecuteAsAdmin should not exit, 
+                         # we need to cleanup the file permissions
+
+   if [ "$rootinstalls" != true ]; then
+      $INFOTEXT -u "\nError: Only root user can renew certificates!"
+      exit 1
+   fi
+  
+   if [ "$1" = daemon ]; then
       $INFOTEXT -u "\nRenewing daemon certificate"
    else
       $INFOTEXT -u "\nRenewing  '%s' user certificate" "$2"
@@ -608,7 +648,7 @@ RenewCert()
    Execute cat $CONFIG_DIR/sge_ssl_template.cnf $TMPFILE > $TMPFILE1
 
 
-   if [ $1 = daemon ]; then
+   if [ "$1" = daemon ]; then
       KEYDIR=$CALOCALTOP/private
       KEYFILE=$CALOCALTOP/private/key.pem
       REQFILE=$CALOCALTOP/private/req.pem
@@ -619,12 +659,13 @@ RenewCert()
       CRLFILE=$CATOP/ca-crl.pem
    else
       KEYDIR=$CALOCALTOP/userkeys/$2
-      KEYFILE=$KEYDIR/key.pem
-      REQFILE=$KEYDIR/req.pem
-      CERTFILE=$KEYDIR/cert.pem
-      NEWCERTFILE=$KEYDIR/cert.pem.new
-      OLDCERTFILE=$KEYDIR/cert.pem.old
-      RSFILE=$KEYDIR/rand.seed
+      NEWKEYDIR=/tmp/$$/userkeys/$2
+      KEYFILE=$NEWKEYDIR/key.pem
+      REQFILE=$NEWKEYDIR/req.pem
+      CERTFILE=$NEWKEYDIR/cert.pem
+      NEWCERTFILE=$NEWKEYDIR/cert.pem.new
+      OLDCERTFILE=$NEWKEYDIR/cert.pem.old
+      RSFILE=$NEWKEYDIR/rand.seed
       CRLFILE=$CATOP/ca-crl.pem
    fi
 
@@ -632,87 +673,75 @@ RenewCert()
    # rand.seed already exists, therefore no MakeRandFile $RSFILE $2
    RANDFILE=$RSFILE; export RANDFILE
 
-   if [ $rootinstalls = true ]; then
-      umask 077
+   if [ "$1" = daemon ]; then
+      Execute $CHMOD 644 $CERTFILE
+   else
+      Execute $MKDIR -p $NEWKEYDIR
+      Execute $CP $KEYDIR/* $NEWKEYDIR
+      Execute $CHOWN -R $ADMINUSER $NEWKEYDIR
+      Execute $CHMOD 644 $NEWKEYDIR/*
    fi
 
+   umask 077
+
    # revoke the old certificate and create the certificate revocation list
-   Execute $CHMOD 511 $KEYDIR
-   if [ $1 = daemon ]; then
-      ExecuteAsAdmin $CHMOD 644 $CERTFILE
-      ExecuteAsAdmin $CHMOD 666 $RSFILE
-   else
-      Execute $CHMOD 644 $CERTFILE
-      Execute $CHMOD 666 $RSFILE
-   fi
    ExecuteAsAdmin $CA -config $TMPFILE1 -policy policy_anything \
                       -batch $DAYS \
                       -revoke $CERTFILE 
 
    if [ $? != 0 ]; then
       $INFOTEXT "Can't revoke %s. Exit." $CERTFILE
-      exit 1
-   fi  
-
-   # create the certificate revocation list
-   ExecuteAsAdmin $CA -config $TMPFILE1 -policy policy_anything \
-                      -batch $DAYS \
-                      -gencrl -out $CRLFILE
-   ExecuteAsAdmin $CHMOD 644 $CRLFILE 
-
-   if [ $? != 0 ]; then
-      $INFOTEXT "Can't generate revocation list %s. Exit." $CRLFILE
-      exit 1
-   fi  
-
-   # create request from certificate
-   # Execute $X509 -x509toreq -in $CERTFILE -out $REQFILE -signkey $KEYFILE 
-
-   # extend the request
-   #Execute $X509 -req $DAYS -in $REQFILE \
-   #                -signkey $CALOCALTOP/private/$CAKEY \
-   #                -out $NEWCERTFILE
-
-   # allow admin user access to user's dir
-   if [ $ADMINUSER != default -a $rootinstalls = true ]; then
-      Execute $CHOWN -R $ADMINUSER $KEYDIR
-      Execute $CHMOD 700 $KEYDIR
-   fi
-
-   # sign certificate request
-   ExecuteAsAdmin $CA -config $TMPFILE1 \
-                      -policy policy_anything -batch $DAYS \
-                      -out $NEWCERTFILE -infiles $REQFILE
-
-   if [ $? != 0 ]; then
-      $INFOTEXT "Can't renew %s. Exit." $CERTFILE
-      exit 1
-   fi  
-
-   if [ $1 = daemon ]; then
-      if [ -f $OLDCERTFILE ]; then
-	 ExecuteAsAdmin $RM -f $OLDCERTFILE
-      fi
-      ExecuteAsAdmin $CP $CERTFILE $OLDCERTFILE
-      ExecuteAsAdmin $MV $NEWCERTFILE $CERTFILE
-      ExecuteAsAdmin $CHMOD 444 $CERTFILE
    else
-      Execute $CP $CERTFILE $OLDCERTFILE
-      Execute $MV $NEWCERTFILE $CERTFILE
+
+      # sign certificate request
+      ExecuteAsAdmin $CA -config $TMPFILE1 \
+                         -policy policy_anything -batch $DAYS \
+                         -out $NEWCERTFILE -infiles $REQFILE
+
+      if [ $? != 0 ]; then
+         $INFOTEXT "Can't renew %s. Exit." $CERTFILE
+      else  
+      
+         # create the certificate revocation list
+         ExecuteAsAdmin $CA -config $TMPFILE1 -policy policy_anything \
+                            -batch $DAYS \
+                            -gencrl -out ${CRLFILE}.tmp
+
+         if [ $? != 0 ]; then
+            $INFOTEXT "Can't generate revocation list %s. Exit." $CRLFILE
+         else
+            if [ $1 = daemon ]; then
+               $INFOTEXT "renewed certificate for SGE daemons" 
+            else
+               $INFOTEXT "renewed certificate for user '%s' in '%s'" $2 $KEYDIR
+            fi
+         fi  
+
+         if [ -f $OLDCERTFILE ]; then
+            ExecuteAsAdmin $RM -f $OLDCERTFILE
+         fi
+
+         ExecuteAsAdmin $CP $CERTFILE $OLDCERTFILE
+         ExecuteAsAdmin $MV $NEWCERTFILE $CERTFILE
+         ExecuteAsAdmin $CHMOD 644 $CERTFILE
+      
+         if [ "$1" != daemon ]; then
+            Execute $CP -f $NEWKEYDIR/* $KEYDIR
+         fi
+
+         ExecuteAsAdmin $MV ${CRLFILE}.tmp $CRLFILE
+         ExecuteAsAdmin $CHMOD 644 $CRLFILE 
+      fi
+ 
    fi
 
    $RM -f $TMPFILE $TMPFILE1 
 
-   if [ $1 = daemon ]; then
-      $INFOTEXT "renewed certificate for SGE daemons" 
-   else
-      if [ $rootinstalls = true ]; then
-         Execute $CHMOD 500 $KEYDIR
-         Execute $CHMOD 400 $KEYDIR/*
-         Execute $CHOWN -R $2 $KEYDIR
-      fi
-
-      $INFOTEXT "renewed certificate for user '%s' in '%s'" $2 $KEYDIR
+   if [ $1 != daemon ]; then
+      Execute $RM -rf $NEWKEYDIR
+      Execute $CHMOD 500 $KEYDIR
+      Execute $CHMOD 400 $KEYDIR/*
+      Execute $CHOWN -R $2 $KEYDIR
    fi
 
    umask 022
@@ -913,9 +942,6 @@ while [ $ARGC != 0 ]; do
       shift
       ARGC=`expr $ARGC - 1`
       ;;
-   -env)
-      WHICH="env"
-      ;;
    -init)
       WHICH="init"
       ;;
@@ -1022,14 +1048,16 @@ while [ $ARGC != 0 ]; do
       shift
       ARGC=`expr $ARGC - 1`
       ;;
-env) 
-    echo $CALOCALTOP
-#    SGE_CERTFILE=$CALOCALTOP/userkeys/$ADMINUSER/cert.pem
-#    SGE_KEYFILE=$CALOCALTOP/userkeys/$ADMINUSER/key.pem
-#    export SGE_KEYFILE SGE_CERTFILE
-#    echo $SGE_CERTFILE $SGE_KEYFILE
-    RET=$?
-    ;;
+   -user)
+      WHICH="oneuser"
+      if [ $ARGC -lt 2 ]; then
+         $INFOTEXT "Error: -user needs argument"
+         ErrUsage
+      fi
+      user=$2
+      shift
+      ARGC=`expr $ARGC - 1`
+      ;;
    -renew)
       if [ $ARGC -lt 2 ]; then
          $INFOTEXT "Error: -renew needs argument"
@@ -1105,6 +1133,9 @@ copy)
     ;;
 usercert) 
     MakeUserCerts $userfile
+    ;;
+oneuser)
+    MakeUserCert "$user"
     ;;
 verify) 
     $VERIFY -CAfile $CATOP/$CACERT $newcert

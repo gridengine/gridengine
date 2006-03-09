@@ -221,8 +221,9 @@ ExecuteAsAdmin()
       $INFOTEXT -log "Check read/write permission. Check if SGE daemons are running."
 
       MoveLog
-
-      exit 1
+      if [ "$ADMINRUN_NO_EXIT" != "true" ]; then
+         exit 1
+      fi
    fi
    return 0
 }

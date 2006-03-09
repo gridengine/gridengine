@@ -94,6 +94,8 @@ COPY_COMMAND="scp"
 EXEC_HOST_LIST="undef"
 CONFIG_FILE="undef"
 STDOUT2LOG="0"
+PAR_EXECD_INST_COUNT="20"
+JAVA_VERSION="undef"
 
 SGE_NOMSG="undef"
 
@@ -407,6 +409,13 @@ if [ "$EXECD" = "install" -a "$UPDATE" != "true" ]; then
     Stdout2Log
     . $SGE_ROOT/$SGE_CELL/common/settings.sh
 
+   if [ -f "$SGE_ROOT/$SGE_CELL/common/bootstrap" ]; then
+      ignore_fqdn=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep "ignore_fqdn" | awk '{ print $2 }'`
+      default_domain=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep "default_domain" | awk '{ print $2 }'`
+   fi
+
+    TMP_EXEC_HOST_LIST=$EXEC_HOST_LIST
+
     if [ "$NOREMOTE" = false ]; then
 
       LOCALINST=false
@@ -417,8 +426,8 @@ if [ "$EXECD" = "install" -a "$UPDATE" != "true" ]; then
          installed=$?
    
          if [ "$installed" = 0 ]; then
-	    if [ $h = `$SGE_UTILBIN/gethostname -aname` ]; then
-	       LOCALINST=true
+            if [ $h = `$SGE_UTILBIN/gethostname -aname` ]; then
+	            LOCALINST=true
             else
                CheckRSHConnection $h
                if [ "$?" = 0 ]; then 
@@ -434,10 +443,49 @@ if [ "$EXECD" = "install" -a "$UPDATE" != "true" ]; then
          fi
 
          inst_counter=`expr $inst_counter + 1`
-         if [ "$inst_counter" = "25" ]; then
-            sleep 5
-            inst_counter=0
-         fi
+         is_done=0
+         #removing already installed execd host from TMP_EXEC_HOST_LIST,
+         #if inst_counter equal to configured parallel install limit
+         while [ "$inst_counter" -ge "$PAR_EXECD_INST_COUNT" ]; do
+            is_done=`expr $is_done + 1`
+            for e in $TMP_EXEC_HOST_LIST; do
+               #checking if fqdn is ignored
+               #if ignored, use short hostname -> cut after first dot
+               if [ "$ignore_fqdn" = "true" ]; then
+                  ExecdAlreadyInstalled `echo $e | cut -d"." -f1`
+                  installed=$?
+               else
+                  #if not ignored check, if a default domain is entered
+                  if [ "$default_domain" != "none" ]; then
+                     #default_domain is entered, check if given hostname is long or not
+                     #given hostname is long the defualt domain won't be added
+                     #given hostname is short, default_domain will be added
+                     hasdot=`echo $e|grep '\.'`
+                     if [ "$hasdot" = "" ]; then
+                        e=$e.$default_domain
+                     fi
+                  fi      
+                  ExecdAlreadyInstalled $e
+                  installed=$?    
+               fi
+
+               if [ "$installed" = 1 ]; then
+                  inst_counter=`expr $inst_counter - 1`
+                  is_done=0
+                  help_list=""
+                  for hh in $TMP_EXEC_HOST_LIST; do
+                     if [ $e != $hh ]; then
+                        help_list="$help_list $hh"
+                     fi
+                  done
+                  TMP_EXEC_HOST_LIST="$help_list"
+               fi
+            done
+            sleep 3
+            if [ "$is_done" -ge "20" ]; then
+               inst_counter=0
+            fi 
+         done 
       done
 
    else

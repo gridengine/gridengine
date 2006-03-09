@@ -1,3 +1,9 @@
+MD-2006-03-09-0: Bugfix:    The parallel automatic install may overload machines 
+                 Issue:     1986 
+                 Bugtraq:   6387371 
+                 Changed:   install 
+                 Review:    HP 
+
 RD-2006-03-09-0: Bugfix:    - fixed race conditions for sge_ca -renew
                              - fixed qmaster core dump with invalid revocation
                                list

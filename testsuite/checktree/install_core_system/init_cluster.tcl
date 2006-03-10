@@ -506,7 +506,7 @@ proc setup_conf {} {
   }
 
   if { $ts_config(product_type) == "sgeee" } {
-    set params(execd_params)    "PTF_MIN_PRIORITY=20,PTF_MAX_PRIORITY=0"
+    set params(execd_params)    "PTF_MIN_PRIORITY=20,PTF_MAX_PRIORITY=0,SET_LIB_PATH=true"
     set params(enforce_project) "false"
     set params(projects) "none"
     set params(xprojects) "none"
@@ -515,9 +515,9 @@ proc setup_conf {} {
   set result [ set_config params ] 
 
   # for sgeee systems on irix: set execd params to
-  # PTF_MIN_PRIORITY=40,PTF_MAX_PRIORITY=20
+  # PTF_MIN_PRIORITY=40,PTF_MAX_PRIORITY=20,SET_LIB_PATH=true
   if { $ts_config(product_type) == "sgeee" } {
-  set ptf_param(execd_params) "PTF_MIN_PRIORITY=40,PTF_MAX_PRIORITY=20"
+  set ptf_param(execd_params) "PTF_MIN_PRIORITY=40,PTF_MAX_PRIORITY=20,SET_LIB_PATH=true"
     foreach i $ts_config(execd_nodes) {
       switch -exact [resolve_arch $i] {
         irix6 {

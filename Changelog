@@ -1,3 +1,6 @@
+RD-2006-03-10-0: Testsuite: fixed mod_queue with fast_add option
+                 Review:    JG
+
 RC-2006-03-10-0: Enhancem.: allow execd to run on Scyld Beowulf
                             - Contributed by RH (Scyld also provided the same fix)
                  Issue:     1936

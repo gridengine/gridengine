@@ -223,6 +223,7 @@ proc set_cqueue_default_values { current_array change_array } {
 
    upvar $current_array currar
    upvar $change_array chgar
+      puts $CHECK_OUTPUT "calling set_cqueue_default_values"
 
    # parse each attribute to be changed and set the queue default value
    foreach attribute [array names chgar] {
@@ -250,6 +251,7 @@ proc set_cqueue_specific_values { current_array change_array hostlist } {
 
    upvar $current_array currar
    upvar $change_array chgar
+      puts $CHECK_OUTPUT "calling set_cqueue_specific_values"
 
    # parse each attribute to be changed
    foreach attribute [array names chgar] {
@@ -378,13 +380,17 @@ proc set_queue { qname hostlist change_array {fast_add 1}  {on_host ""} {as_user
 
      # Add in currar elements from chgar which have NOT
      # been changed
+     
+     foreach elem [array names chgar] {
+        set fastar($elem) $chgar($elem)
+     }
      foreach elem [array names currar] {
         if { ![info exists chgar($elem)] } {
-        set chgar($elem) $currar($elem)
+           set fastar($elem) $currar($elem)
         }
      }
  
-     set tmpfile [dump_array_to_tmpfile chgar]
+     set tmpfile [dump_array_to_tmpfile fastar]
      set ret [start_sge_bin "qconf" "-Mq $tmpfile" $on_host $as_user ]
      
      if {$prg_exit_state == 0} {

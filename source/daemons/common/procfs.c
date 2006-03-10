@@ -151,7 +151,7 @@ int groups_in_proc (void) {
    char buf[1024];
    FILE* fd = (FILE*) NULL;
    
-   sprintf(procnam, "%s/1/status", PROC_DIR);
+   sprintf(procnam, "%s/self/status", PROC_DIR);
    if (!(fd = fopen(procnam, "r"))) {
       return (0);
    }

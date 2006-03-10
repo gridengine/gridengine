@@ -185,7 +185,7 @@ proc complex_setup  {} {
    set_config new_config $complex_host
 
    # wait for loadsensor to have effect
-   sleep 35
+   sleep 40
 
    # create a test queue
    set queue(slots)           10

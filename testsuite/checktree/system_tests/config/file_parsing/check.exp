@@ -74,7 +74,7 @@ global file_parsing_local_request_file
 global file_parsing_job_host
 
 proc file_parsing_init_level {} {
-   global ts_config
+   global ts_config CHECK_OUTPUT
   global CHECK_ACT_LEVEL
   global CHECK_PRODUCT_ROOT
   global env
@@ -226,7 +226,7 @@ proc file_parsing_N_option {} {
       while { 1 } {
          sleep 1
          puts $CHECK_OUTPUT "try to get accounting info for job $elem ..."
-         set result [get_qacct $elem "" "" 0]
+         set result [get_qacct $elem qacct_info "" "" 0]
          puts $CHECK_OUTPUT "result: $result"
          if { $result != 0 } {
             if { [timestamp] < $timeout_time } {
@@ -379,7 +379,7 @@ proc file_parsing_long_option {} {
       while { 1 } {
          sleep 1
          puts $CHECK_OUTPUT "try to get accounting info for job $elem ..."
-         set result [get_qacct $elem "" "" 0]
+         set result [get_qacct $elem qacct_info "" "" 0]
          puts $CHECK_OUTPUT "result: $result"
          if { $result != 0 } {
             if { [timestamp] < $timeout_time } {

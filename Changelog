@@ -1,3 +1,8 @@
+DT-2006-03-10-0: Bugfix:    o Fixed man page bug
+                 Issue:     1999
+                 Bugtraq:   6396851
+                 Changed:   sched_conf man page
+
 RC-2006-03-10-0: Enhancem.: allow execd to run on Scyld Beowulf
                             - Contributed by RH (Scyld also provided the same fix)
                  Issue:     1936

@@ -1,3 +1,9 @@
+RC-2006-03-10-0: Enhancem.: allow execd to run on Scyld Beowulf
+                            - Contributed by RH (Scyld also provided the same fix)
+                 Issue:     1936
+                 Changed:   execd
+                 Review:    RC
+
 MD-2006-03-09-0: Bugfix:    The parallel automatic install may overload machines 
                  Issue:     1986 
                  Bugtraq:   6387371 

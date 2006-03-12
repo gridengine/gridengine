@@ -1367,6 +1367,10 @@ case LINUXPPC:
       set OFLAG = "-O2"
    endif
 
+   if ($BUILDARCH == LINUXPPC) then
+      set CFLAGS = "-m32 $CFLAGS"
+   endif
+
    if ($DEBUGGED == 1) then
       set DEBUG_FLAG = "-g $INSURE_FLAG -DSGE_LOCK_DEBUG"
       set OFLAG = ""

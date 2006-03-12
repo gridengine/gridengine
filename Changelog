@@ -1,3 +1,7 @@
+RC-2006-03-12-0: Bugfix:    make sure SGE is always 32-bit on PPC Linux
+                 Review:    AH
+                 Changed:   aimk
+
 JG-2006-03-10-0: Testsuite: fixes for file_parsing and complex tests.
                  Review:    RD
 
@@ -19,8 +23,8 @@ MD-2006-03-09-0: Bugfix:    The parallel automatic install may overload machines
 RD-2006-03-09-0: Bugfix:    - fixed race conditions for sge_ca -renew
                              - fixed qmaster core dump with invalid revocation
                                list
-                  Changed:   sge_ca, commlib
-                  Review:    AA
+                 Changed:   sge_ca, commlib
+                 Review:    AA
 
 OJ-2006-03-06-0: Testsuite: Added new purge_queue in sge_queue.tcl
                  Review:    DT

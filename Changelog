@@ -1,3 +1,7 @@
+CR-2006-03-13-0: Cleanup:   code cleanup and logging in commlib ssl module
+                            (merged from V60s2_BRANCH)
+                 Review:    AA
+
 RC-2006-03-12-0: Bugfix:    make sure SGE is always 32-bit on PPC Linux
                  Review:    AH
                  Changed:   aimk

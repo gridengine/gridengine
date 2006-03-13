@@ -687,7 +687,7 @@ static int ssl_callback_SSLVerify_CRL(int ok, X509_STORE_CTX *ctx, cl_com_ssl_pr
 #endif
 #define __CL_FUNCTION__ "cl_com_ssl_verify_callback()"
 static int cl_com_ssl_verify_callback(int preverify_ok, X509_STORE_CTX *ctx) {
-   int    is_ok = 1;
+   int    is_ok = 0;
 #if 0   
    X509*  xs = NULL;
    int errdepth = 0;
@@ -704,12 +704,13 @@ static int cl_com_ssl_verify_callback(int preverify_ok, X509_STORE_CTX *ctx) {
       return preverify_ok;
    }
 
+   /* get pointer to commlib private data struct from ssl ctx */
    ssl = cl_com_ssl_func__X509_STORE_CTX_get_ex_data(ctx, cl_com_ssl_func__SSL_get_ex_data_X509_STORE_CTX_idx());
    ssl_ctx = cl_com_ssl_func__SSL_get_SSL_CTX(ssl);
    ssl_private_setup = (cl_com_ssl_private_t*) cl_com_ssl_func__SSL_CTX_get_app_data(ssl_ctx);
 
    if (ssl_private_setup == NULL) {
-      return preverify_ok;
+      return is_ok;
    }   
 
 #if 0   
@@ -1961,6 +1962,7 @@ static int cl_com_ssl_free_com_private(cl_com_connection_t* connection) {
    /* free ssl_crl_data */
    if (private->ssl_crl_data != NULL) {
 
+      /* free cl_ssl_verify_crl_data_t content */
       if (private->ssl_crl_data->store != NULL) {
          cl_com_ssl_func__X509_STORE_free(private->ssl_crl_data->store);
          private->ssl_crl_data->store = NULL;
@@ -2065,13 +2067,15 @@ static int cl_com_ssl_setup_context(cl_com_connection_t* connection, cl_bool_t i
       CL_LOG(CL_LOG_INFO, "setting up context as client");
    } else {
       CL_LOG(CL_LOG_INFO, "setting up context as server");
+      
+      /* set private structure pointer into SSL_CTX for later retrieval from cl_com_ssl_verify_callback */
+      CL_LOG(CL_LOG_INFO, "storing ssl private object into ssl ctx object");
+      cl_com_ssl_func__SSL_CTX_set_app_data(private->ssl_ctx, (void*)private);
+
       CL_LOG(CL_LOG_INFO, "setting peer verify mode for clients");
       cl_com_ssl_func__SSL_CTX_set_verify(private->ssl_ctx,
                                           SSL_VERIFY_PEER|SSL_VERIFY_FAIL_IF_NO_PEER_CERT,
                                           cl_com_ssl_verify_callback);
-      
-      /* set crl_file into SSL_CTX for later retrieval from cl_com_ssl_verify_callback */
-      cl_com_ssl_func__SSL_CTX_set_app_data(private->ssl_ctx, (void*)private);
    }
 
    /* load certificate chain file */
@@ -2529,7 +2533,7 @@ int cl_com_ssl_setup_connection(cl_com_connection_t**          connection,
       cl_com_close_connection(connection);
       return ret_val;
    } 
-  
+
    /* ssl_crl_data */
    com_private->ssl_crl_data = (cl_ssl_verify_crl_data_t*) malloc(sizeof(cl_ssl_verify_crl_data_t));
    if (com_private->ssl_crl_data == NULL) {

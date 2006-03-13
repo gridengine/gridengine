@@ -654,7 +654,7 @@ static int ssl_callback_SSLVerify_CRL(int ok, X509_STORE_CTX *ctx, cl_com_ssl_pr
    }
 
    cert = cl_com_ssl_func__X509_STORE_CTX_get_current_cert(ctx);
-   if (cert != NULL && is_ok != false) {
+   if (is_ok == true && cert != NULL) {
        /* X509_STORE_CTX_init did not return an error condition in prior versions */
        if (cl_com_ssl_func__X509_STORE_CTX_init(&verify_ctx, private->ssl_crl_data->store, cert, NULL) != 1) {
           CL_LOG(CL_LOG_ERROR, "Error initializing verification context");
@@ -671,7 +671,12 @@ static int ssl_callback_SSLVerify_CRL(int ok, X509_STORE_CTX *ctx, cl_com_ssl_pr
        }
        cl_com_ssl_func__X509_STORE_CTX_cleanup(&verify_ctx);
    } else {
-      CL_LOG(CL_LOG_ERROR,"cert or X509 store is NULL");
+      if (is_ok == false) {
+         CL_LOG(CL_LOG_ERROR,"X509 store is not valid");
+      }
+      if (cert == NULL) {
+         CL_LOG(CL_LOG_ERROR,"cert is NULL");
+      }
       is_ok = false;
    }
 
@@ -687,7 +692,7 @@ static int ssl_callback_SSLVerify_CRL(int ok, X509_STORE_CTX *ctx, cl_com_ssl_pr
 #endif
 #define __CL_FUNCTION__ "cl_com_ssl_verify_callback()"
 static int cl_com_ssl_verify_callback(int preverify_ok, X509_STORE_CTX *ctx) {
-   int    is_ok = 1;
+   int    is_ok = 0;
 #if 0   
    X509*  xs = NULL;
    int errdepth = 0;
@@ -704,12 +709,13 @@ static int cl_com_ssl_verify_callback(int preverify_ok, X509_STORE_CTX *ctx) {
       return preverify_ok;
    }
 
+   /* get pointer to commlib private data struct from ssl ctx */
    ssl = cl_com_ssl_func__X509_STORE_CTX_get_ex_data(ctx, cl_com_ssl_func__SSL_get_ex_data_X509_STORE_CTX_idx());
    ssl_ctx = cl_com_ssl_func__SSL_get_SSL_CTX(ssl);
    ssl_private_setup = (cl_com_ssl_private_t*) cl_com_ssl_func__SSL_CTX_get_app_data(ssl_ctx);
 
    if (ssl_private_setup == NULL) {
-      return preverify_ok;
+      return is_ok;
    }   
 
 #if 0   
@@ -747,6 +753,9 @@ static int cl_com_ssl_verify_callback(int preverify_ok, X509_STORE_CTX *ctx) {
       snprintf(buf, sizeof(buf)-1, "Certificate Verification: Error (%d): %s\n",
                errnum, cl_com_ssl_func__X509_verify_cert_error_string(errnum));
       CL_LOG(CL_LOG_ERROR, buf);
+
+      /* TODO: (CR) push application error, the CL_LOG function only logs it to commlib
+                    debug buffer */
    }   
 
    return is_ok;
@@ -1961,6 +1970,7 @@ static int cl_com_ssl_free_com_private(cl_com_connection_t* connection) {
    /* free ssl_crl_data */
    if (private->ssl_crl_data != NULL) {
 
+      /* free cl_ssl_verify_crl_data_t content */
       if (private->ssl_crl_data->store != NULL) {
          cl_com_ssl_func__X509_STORE_free(private->ssl_crl_data->store);
          private->ssl_crl_data->store = NULL;
@@ -2065,13 +2075,15 @@ static int cl_com_ssl_setup_context(cl_com_connection_t* connection, cl_bool_t i
       CL_LOG(CL_LOG_INFO, "setting up context as client");
    } else {
       CL_LOG(CL_LOG_INFO, "setting up context as server");
+      
+      /* set private structure pointer into SSL_CTX for later retrieval from cl_com_ssl_verify_callback */
+      CL_LOG(CL_LOG_INFO, "storing ssl private object into ssl ctx object");
+      cl_com_ssl_func__SSL_CTX_set_app_data(private->ssl_ctx, (void*)private);
+
       CL_LOG(CL_LOG_INFO, "setting peer verify mode for clients");
       cl_com_ssl_func__SSL_CTX_set_verify(private->ssl_ctx,
                                           SSL_VERIFY_PEER|SSL_VERIFY_FAIL_IF_NO_PEER_CERT,
                                           cl_com_ssl_verify_callback);
-      
-      /* set crl_file into SSL_CTX for later retrieval from cl_com_ssl_verify_callback */
-      cl_com_ssl_func__SSL_CTX_set_app_data(private->ssl_ctx, (void*)private);
    }
 
    /* load certificate chain file */
@@ -2529,7 +2541,7 @@ int cl_com_ssl_setup_connection(cl_com_connection_t**          connection,
       cl_com_close_connection(connection);
       return ret_val;
    } 
-  
+
    /* ssl_crl_data */
    com_private->ssl_crl_data = (cl_ssl_verify_crl_data_t*) malloc(sizeof(cl_ssl_verify_crl_data_t));
    if (com_private->ssl_crl_data == NULL) {

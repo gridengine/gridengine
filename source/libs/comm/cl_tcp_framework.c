@@ -1024,17 +1024,22 @@ int cl_com_tcp_read_GMSH(cl_com_connection_t* connection, unsigned long *only_on
    }
 
    /* now read complete header */
-   while ( connection->data_read_buffer[connection->data_read_buffer_pos - 1] != '>' ) {
+   while ( connection->data_read_buffer[connection->data_read_buffer_pos - 1] != '>' ||
+           connection->data_read_buffer[connection->data_read_buffer_pos - 2] != 'h'   ) {
+
+      /* check buffer overflow */
       if ( connection->data_read_buffer_pos >= connection->data_buffer_size) {
-         CL_LOG(CL_LOG_INFO,"buffer overflow");
+         CL_LOG(CL_LOG_WARNING,"buffer overflow");
          return CL_RETVAL_STREAM_BUFFER_OVERFLOW;
       }
+
       if (only_one_read != NULL) {
          data_read = 0;
          retval = cl_com_tcp_read(connection, 
                                   &(connection->data_read_buffer[connection->data_read_buffer_pos]),
                                   1,
                                   &data_read);
+
          connection->data_read_buffer_pos = connection->data_read_buffer_pos + data_read;
          *only_one_read = data_read;
       } else {
@@ -1050,9 +1055,15 @@ int cl_com_tcp_read_GMSH(cl_com_connection_t* connection, unsigned long *only_on
       }
    }
 
+   if ( connection->data_read_buffer_pos >= connection->data_buffer_size) {
+      CL_LOG(CL_LOG_WARNING,"buffer overflow (2)");
+      return CL_RETVAL_STREAM_BUFFER_OVERFLOW;
+   }
+
    connection->data_read_buffer[connection->data_read_buffer_pos] = 0;
    /* header should be now complete */
    if ( strcmp((char*)&(connection->data_read_buffer[connection->data_read_buffer_pos - 7]) ,"</gmsh>") != 0) {
+      CL_LOG(CL_LOG_WARNING,"can't find gmsh end tag");
       return CL_RETVAL_GMSH_ERROR;
    }
    

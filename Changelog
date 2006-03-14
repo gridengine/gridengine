@@ -1,3 +1,9 @@
+CR-2006-03-14-0: Cleanup:   Off-by-one overrun in communication library
+                            (merged from V60s2_BRANCH)
+                 Bugtraq:   6398008
+                 Review:    RD
+                 Changed:   commlib
+
 CR-2006-03-13-0: Cleanup:   code cleanup and logging in commlib ssl module
                             (merged from V60s2_BRANCH)
                  Review:    AA

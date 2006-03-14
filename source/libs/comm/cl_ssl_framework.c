@@ -654,7 +654,7 @@ static int ssl_callback_SSLVerify_CRL(int ok, X509_STORE_CTX *ctx, cl_com_ssl_pr
    }
 
    cert = cl_com_ssl_func__X509_STORE_CTX_get_current_cert(ctx);
-   if (cert != NULL && is_ok != false) {
+   if (is_ok == true && cert != NULL) {
        /* X509_STORE_CTX_init did not return an error condition in prior versions */
        if (cl_com_ssl_func__X509_STORE_CTX_init(&verify_ctx, private->ssl_crl_data->store, cert, NULL) != 1) {
           CL_LOG(CL_LOG_ERROR, "Error initializing verification context");
@@ -671,7 +671,12 @@ static int ssl_callback_SSLVerify_CRL(int ok, X509_STORE_CTX *ctx, cl_com_ssl_pr
        }
        cl_com_ssl_func__X509_STORE_CTX_cleanup(&verify_ctx);
    } else {
-      CL_LOG(CL_LOG_ERROR,"cert or X509 store is NULL");
+      if (is_ok == false) {
+         CL_LOG(CL_LOG_ERROR,"X509 store is not valid");
+      }
+      if (cert == NULL) {
+         CL_LOG(CL_LOG_ERROR,"cert is NULL");
+      }
       is_ok = false;
    }
 
@@ -748,6 +753,9 @@ static int cl_com_ssl_verify_callback(int preverify_ok, X509_STORE_CTX *ctx) {
       snprintf(buf, sizeof(buf)-1, "Certificate Verification: Error (%d): %s\n",
                errnum, cl_com_ssl_func__X509_verify_cert_error_string(errnum));
       CL_LOG(CL_LOG_ERROR, buf);
+
+      /* TODO: (CR) push application error, the CL_LOG function only logs it to commlib
+                    debug buffer */
    }   
 
    return is_ok;
@@ -3373,9 +3381,12 @@ int cl_com_ssl_read_GMSH(cl_com_connection_t* connection, unsigned long *only_on
    }
 
    /* now read complete header */
-   while ( connection->data_read_buffer[connection->data_read_buffer_pos - 1] != '>' ) {
+   while ( connection->data_read_buffer[connection->data_read_buffer_pos - 1] != '>' ||
+           connection->data_read_buffer[connection->data_read_buffer_pos - 2] != 'h'   ) {
+
+      /* check buffer overflow */
       if ( connection->data_read_buffer_pos >= connection->data_buffer_size) {
-         CL_LOG(CL_LOG_ERROR,"buffer overflow");
+         CL_LOG(CL_LOG_WARNING,"buffer overflow");
          return CL_RETVAL_STREAM_BUFFER_OVERFLOW;
       }
       if (only_one_read != NULL) {
@@ -3399,9 +3410,16 @@ int cl_com_ssl_read_GMSH(cl_com_connection_t* connection, unsigned long *only_on
       }
    }
 
+   if ( connection->data_read_buffer_pos >= connection->data_buffer_size) {
+       CL_LOG(CL_LOG_WARNING,"buffer overflow (2)");
+       return CL_RETVAL_STREAM_BUFFER_OVERFLOW;
+   }
+
+
    connection->data_read_buffer[connection->data_read_buffer_pos] = 0;
    /* header should be now complete */
    if ( strcmp((char*)&(connection->data_read_buffer[connection->data_read_buffer_pos - 7]) ,"</gmsh>") != 0) {
+      CL_LOG(CL_LOG_WARNING,"can't find gmsh end tag");
       return CL_RETVAL_GMSH_ERROR;
    }
    

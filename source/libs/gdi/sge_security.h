@@ -96,8 +96,9 @@ void tgtcclr(lListElem *jep, const char *rhost, const char* target);
 int sge_set_auth_info(sge_gdi_request *request, uid_t uid, char *user, 
                         gid_t gid, char *group);
 
-int sge_get_auth_info(sge_gdi_request *request, uid_t *uid, char *user, 
-                        gid_t *gid, char *group);
+int sge_get_auth_info(sge_gdi_request *request, 
+                      uid_t *uid, char *user, size_t user_len,
+                      gid_t *gid, char *group, size_t group_len);
 
 int sge_security_verify_user(const char *host, const char *commproc, u_long32 id, const char *user); 
 

@@ -105,13 +105,13 @@ sge_create_cull_order_pos(order_pos_t **cull_order_pos, lListElem *jep, lListEle
    order_job_pos = &((*cull_order_pos)->order_job);   
 
    if (jep != NULL) {
-      job_pos->JB_version_pos = lGetPosViaElem(jep,JB_version);
-      job_pos->JB_nppri_pos = lGetPosViaElem(jep,JB_nppri);
-      job_pos->JB_nurg_pos = lGetPosViaElem(jep,JB_nurg);
-      job_pos->JB_urg_pos = lGetPosViaElem(jep,JB_urg);
-      job_pos->JB_rrcontr_pos = lGetPosViaElem(jep,JB_rrcontr);
-      job_pos->JB_dlcontr_pos = lGetPosViaElem(jep,JB_dlcontr);
-      job_pos->JB_wtcontr_pos = lGetPosViaElem(jep,JB_wtcontr);  
+      job_pos->JB_version_pos = lGetPosViaElem(jep,JB_version, SGE_NO_ABORT);
+      job_pos->JB_nppri_pos = lGetPosViaElem(jep,JB_nppri, SGE_NO_ABORT);
+      job_pos->JB_nurg_pos = lGetPosViaElem(jep,JB_nurg, SGE_NO_ABORT);
+      job_pos->JB_urg_pos = lGetPosViaElem(jep,JB_urg, SGE_NO_ABORT);
+      job_pos->JB_rrcontr_pos = lGetPosViaElem(jep,JB_rrcontr, SGE_NO_ABORT);
+      job_pos->JB_dlcontr_pos = lGetPosViaElem(jep,JB_dlcontr, SGE_NO_ABORT);
+      job_pos->JB_wtcontr_pos = lGetPosViaElem(jep,JB_wtcontr, SGE_NO_ABORT);  
 /*      
 DPRINTF(("job prio pos: %d %d %d %d %d %d %d\n", job_pos->JB_version_pos, job_pos->JB_nppri_pos,  job_pos->JB_nurg_pos,
                                   job_pos->JB_urg_pos, job_pos->JB_rrcontr_pos, job_pos->JB_dlcontr_pos,
@@ -120,15 +120,15 @@ DPRINTF(("job prio pos: %d %d %d %d %d %d %d\n", job_pos->JB_version_pos, job_po
    }
 
    if (jatp != NULL) {
-      ja_pos->JAT_status_pos = lGetPosViaElem(jatp,JAT_status);
-      ja_pos->JAT_tix_pos = lGetPosViaElem(jatp,JAT_tix);
+      ja_pos->JAT_status_pos = lGetPosViaElem(jatp,JAT_status, SGE_NO_ABORT);
+      ja_pos->JAT_tix_pos = lGetPosViaElem(jatp,JAT_tix, SGE_NO_ABORT);
 
-      ja_pos->JAT_oticket_pos = lGetPosViaElem(jatp,JAT_oticket);
-      ja_pos->JAT_fticket_pos = lGetPosViaElem(jatp,JAT_fticket);
-      ja_pos->JAT_sticket_pos = lGetPosViaElem(jatp,JAT_sticket);
-      ja_pos->JAT_share_pos = lGetPosViaElem(jatp,JAT_share);
-      ja_pos->JAT_prio_pos = lGetPosViaElem(jatp,JAT_prio);
-      ja_pos->JAT_ntix_pos = lGetPosViaElem(jatp,JAT_ntix);
+      ja_pos->JAT_oticket_pos = lGetPosViaElem(jatp,JAT_oticket, SGE_NO_ABORT);
+      ja_pos->JAT_fticket_pos = lGetPosViaElem(jatp,JAT_fticket, SGE_NO_ABORT);
+      ja_pos->JAT_sticket_pos = lGetPosViaElem(jatp,JAT_sticket, SGE_NO_ABORT);
+      ja_pos->JAT_share_pos = lGetPosViaElem(jatp,JAT_share, SGE_NO_ABORT);
+      ja_pos->JAT_prio_pos = lGetPosViaElem(jatp,JAT_prio, SGE_NO_ABORT);
+      ja_pos->JAT_ntix_pos = lGetPosViaElem(jatp,JAT_ntix, SGE_NO_ABORT);
 /*
 DPRINTF(("ja task prio pos: %d %d %d %d %d %d %d %d\n", ja_pos->JAT_status_pos, ja_pos->JAT_tix_pos, ja_pos->JAT_oticket_pos,
                                         ja_pos->JAT_fticket_pos, ja_pos->JAT_sticket_pos, 
@@ -138,12 +138,12 @@ DPRINTF(("ja task prio pos: %d %d %d %d %d %d %d %d\n", ja_pos->JAT_status_pos, 
 
    if (joker != NULL) {
       order_job_pos->JB_version_pos = -1;
-      order_job_pos->JB_nppri_pos = lGetPosViaElem(joker,JB_nppri);
-      order_job_pos->JB_nurg_pos = lGetPosViaElem(joker,JB_nurg);
-      order_job_pos->JB_urg_pos = lGetPosViaElem(joker,JB_urg);
-      order_job_pos->JB_rrcontr_pos = lGetPosViaElem(joker,JB_rrcontr);
-      order_job_pos->JB_dlcontr_pos = lGetPosViaElem(joker,JB_dlcontr);
-      order_job_pos->JB_wtcontr_pos = lGetPosViaElem(joker,JB_wtcontr);
+      order_job_pos->JB_nppri_pos = lGetPosViaElem(joker,JB_nppri, SGE_NO_ABORT);
+      order_job_pos->JB_nurg_pos = lGetPosViaElem(joker,JB_nurg, SGE_NO_ABORT);
+      order_job_pos->JB_urg_pos = lGetPosViaElem(joker,JB_urg, SGE_NO_ABORT);
+      order_job_pos->JB_rrcontr_pos = lGetPosViaElem(joker,JB_rrcontr, SGE_NO_ABORT);
+      order_job_pos->JB_dlcontr_pos = lGetPosViaElem(joker,JB_dlcontr, SGE_NO_ABORT);
+      order_job_pos->JB_wtcontr_pos = lGetPosViaElem(joker,JB_wtcontr, SGE_NO_ABORT);
 /*
       DPRINTF(("job order pos: %d %d %d %d %d %d %d\n", order_job_pos->JB_version_pos, order_job_pos->JB_nppri_pos,  order_job_pos->JB_nurg_pos,
                                   order_job_pos->JB_urg_pos, order_job_pos->JB_rrcontr_pos, order_job_pos->JB_dlcontr_pos,
@@ -155,12 +155,12 @@ DPRINTF(("ja task prio pos: %d %d %d %d %d %d %d %d\n", ja_pos->JAT_status_pos, 
       order_ja_pos->JAT_status_pos = -1;
       order_ja_pos->JAT_tix_pos = -1;
 
-      order_ja_pos->JAT_oticket_pos = lGetPosViaElem(joker_task,JAT_oticket);
-      order_ja_pos->JAT_fticket_pos = lGetPosViaElem(joker_task,JAT_fticket);
-      order_ja_pos->JAT_sticket_pos = lGetPosViaElem(joker_task,JAT_sticket);
-      order_ja_pos->JAT_share_pos = lGetPosViaElem(joker_task,JAT_share);
-      order_ja_pos->JAT_prio_pos = lGetPosViaElem(joker_task,JAT_prio);
-      order_ja_pos->JAT_ntix_pos = lGetPosViaElem(joker_task,JAT_ntix);  
+      order_ja_pos->JAT_oticket_pos = lGetPosViaElem(joker_task,JAT_oticket, SGE_NO_ABORT);
+      order_ja_pos->JAT_fticket_pos = lGetPosViaElem(joker_task,JAT_fticket, SGE_NO_ABORT);
+      order_ja_pos->JAT_sticket_pos = lGetPosViaElem(joker_task,JAT_sticket, SGE_NO_ABORT);
+      order_ja_pos->JAT_share_pos = lGetPosViaElem(joker_task,JAT_share, SGE_NO_ABORT);
+      order_ja_pos->JAT_prio_pos = lGetPosViaElem(joker_task,JAT_prio, SGE_NO_ABORT);
+      order_ja_pos->JAT_ntix_pos = lGetPosViaElem(joker_task,JAT_ntix, SGE_NO_ABORT);  
 /*
       DPRINTF(("ja task order pos: %d %d %d %d %d %d %d %d\n", order_ja_pos->JAT_status_pos, order_ja_pos->JAT_tix_pos, order_ja_pos->JAT_oticket_pos,
                                         order_ja_pos->JAT_fticket_pos, order_ja_pos->JAT_sticket_pos, 

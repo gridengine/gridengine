@@ -442,48 +442,48 @@ static bool calc_pos(void)
       if (config) {
          pos.empty = false;
 
-         ret &= (pos.algorithm = lGetPosViaElem(config, SC_algorithm )) != -1; 
-         ret &= (pos.schedule_interval = lGetPosViaElem(config, SC_schedule_interval)) != -1; 
-         ret &= (pos.maxujobs = lGetPosViaElem(config, SC_maxujobs)) != -1;
-         ret &= (pos.queue_sort_method = lGetPosViaElem(config, SC_queue_sort_method)) != -1;
+         ret &= (pos.algorithm = lGetPosViaElem(config, SC_algorithm, SGE_NO_ABORT )) != -1; 
+         ret &= (pos.schedule_interval = lGetPosViaElem(config, SC_schedule_interval, SGE_NO_ABORT)) != -1; 
+         ret &= (pos.maxujobs = lGetPosViaElem(config, SC_maxujobs, SGE_NO_ABORT)) != -1;
+         ret &= (pos.queue_sort_method = lGetPosViaElem(config, SC_queue_sort_method, SGE_NO_ABORT)) != -1;
 
-         ret &= (pos.job_load_adjustments = lGetPosViaElem(config,SC_job_load_adjustments )) != -1;
-         ret &= (pos.load_adjustment_decay_time = lGetPosViaElem(config, SC_load_adjustment_decay_time)) != -1;
-         ret &= (pos.load_formula = lGetPosViaElem(config, SC_load_formula)) != -1;
-         ret &= (pos.schedd_job_info = lGetPosViaElem(config, SC_schedd_job_info)) != -1;
-         ret &= (pos.flush_submit_sec = lGetPosViaElem(config, SC_flush_submit_sec)) != -1;
-         ret &= (pos.flush_finish_sec = lGetPosViaElem(config, SC_flush_finish_sec)) != -1;
-         ret &= (pos.params = lGetPosViaElem(config, SC_params)) != -1;
+         ret &= (pos.job_load_adjustments = lGetPosViaElem(config,SC_job_load_adjustments, SGE_NO_ABORT )) != -1;
+         ret &= (pos.load_adjustment_decay_time = lGetPosViaElem(config, SC_load_adjustment_decay_time, SGE_NO_ABORT)) != -1;
+         ret &= (pos.load_formula = lGetPosViaElem(config, SC_load_formula, SGE_NO_ABORT)) != -1;
+         ret &= (pos.schedd_job_info = lGetPosViaElem(config, SC_schedd_job_info, SGE_NO_ABORT)) != -1;
+         ret &= (pos.flush_submit_sec = lGetPosViaElem(config, SC_flush_submit_sec, SGE_NO_ABORT)) != -1;
+         ret &= (pos.flush_finish_sec = lGetPosViaElem(config, SC_flush_finish_sec, SGE_NO_ABORT)) != -1;
+         ret &= (pos.params = lGetPosViaElem(config, SC_params, SGE_NO_ABORT)) != -1;
 
-         ret &= (pos.reprioritize_interval = lGetPosViaElem(config, SC_reprioritize_interval)) != -1;
-         ret &= (pos.halftime = lGetPosViaElem(config, SC_halftime)) != -1;
-         ret &= (pos.usage_weight_list = lGetPosViaElem(config, SC_usage_weight_list)) != -1;
+         ret &= (pos.reprioritize_interval = lGetPosViaElem(config, SC_reprioritize_interval, SGE_NO_ABORT)) != -1;
+         ret &= (pos.halftime = lGetPosViaElem(config, SC_halftime, SGE_NO_ABORT)) != -1;
+         ret &= (pos.usage_weight_list = lGetPosViaElem(config, SC_usage_weight_list, SGE_NO_ABORT)) != -1;
 
-         ret &= (pos.compensation_factor = lGetPosViaElem(config, SC_compensation_factor)) != -1;
-         ret &= (pos.weight_user = lGetPosViaElem(config, SC_weight_user)) != -1;
-         ret &= (pos.weight_project = lGetPosViaElem(config, SC_weight_project)) != -1;
-         ret &= (pos.weight_department = lGetPosViaElem(config, SC_weight_department)) != -1;
-         ret &= (pos.weight_job = lGetPosViaElem(config, SC_weight_job)) != -1;
+         ret &= (pos.compensation_factor = lGetPosViaElem(config, SC_compensation_factor, SGE_NO_ABORT)) != -1;
+         ret &= (pos.weight_user = lGetPosViaElem(config, SC_weight_user, SGE_NO_ABORT)) != -1;
+         ret &= (pos.weight_project = lGetPosViaElem(config, SC_weight_project, SGE_NO_ABORT)) != -1;
+         ret &= (pos.weight_department = lGetPosViaElem(config, SC_weight_department, SGE_NO_ABORT)) != -1;
+         ret &= (pos.weight_job = lGetPosViaElem(config, SC_weight_job, SGE_NO_ABORT)) != -1;
 
-         ret &= (pos.weight_tickets_functional = lGetPosViaElem(config, SC_weight_tickets_functional)) != -1;
-         ret &= (pos.weight_tickets_share = lGetPosViaElem(config, SC_weight_tickets_share)) != -1;
-         ret &= (pos.weight_tickets_override = lGetPosViaElem(config, SC_weight_tickets_override)) != -1;
+         ret &= (pos.weight_tickets_functional = lGetPosViaElem(config, SC_weight_tickets_functional, SGE_NO_ABORT)) != -1;
+         ret &= (pos.weight_tickets_share = lGetPosViaElem(config, SC_weight_tickets_share, SGE_NO_ABORT)) != -1;
+         ret &= (pos.weight_tickets_override = lGetPosViaElem(config, SC_weight_tickets_override, SGE_NO_ABORT)) != -1;
 
-         ret &= (pos.share_override_tickets = lGetPosViaElem(config, SC_share_override_tickets)) != -1;
-         ret &= (pos.share_functional_shares = lGetPosViaElem(config, SC_share_functional_shares)) != -1;
-         ret &= (pos.max_functional_jobs_to_schedule = lGetPosViaElem(config, SC_max_functional_jobs_to_schedule)) != -1;
-         ret &= (pos.report_pjob_tickets = lGetPosViaElem(config, SC_report_pjob_tickets)) != -1;
-         ret &= (pos.max_pending_tasks_per_job = lGetPosViaElem(config, SC_max_pending_tasks_per_job)) != -1;
-         ret &= (pos.halflife_decay_list = lGetPosViaElem(config, SC_halflife_decay_list)) != -1;
-         ret &= (pos.policy_hierarchy = lGetPosViaElem(config, SC_policy_hierarchy)) != -1;
+         ret &= (pos.share_override_tickets = lGetPosViaElem(config, SC_share_override_tickets, SGE_NO_ABORT)) != -1;
+         ret &= (pos.share_functional_shares = lGetPosViaElem(config, SC_share_functional_shares, SGE_NO_ABORT)) != -1;
+         ret &= (pos.max_functional_jobs_to_schedule = lGetPosViaElem(config, SC_max_functional_jobs_to_schedule, SGE_NO_ABORT)) != -1;
+         ret &= (pos.report_pjob_tickets = lGetPosViaElem(config, SC_report_pjob_tickets, SGE_NO_ABORT)) != -1;
+         ret &= (pos.max_pending_tasks_per_job = lGetPosViaElem(config, SC_max_pending_tasks_per_job, SGE_NO_ABORT)) != -1;
+         ret &= (pos.halflife_decay_list = lGetPosViaElem(config, SC_halflife_decay_list, SGE_NO_ABORT)) != -1;
+         ret &= (pos.policy_hierarchy = lGetPosViaElem(config, SC_policy_hierarchy, SGE_NO_ABORT)) != -1;
 
-         ret &= (pos.weight_ticket = lGetPosViaElem(config, SC_weight_ticket)) != -1;
-         ret &= (pos.weight_waiting_time = lGetPosViaElem(config, SC_weight_waiting_time)) != -1;
-         ret &= (pos.weight_deadline = lGetPosViaElem(config, SC_weight_deadline)) != -1;
-         ret &= (pos.weight_urgency = lGetPosViaElem(config, SC_weight_urgency)) != -1;
-         ret &= (pos.weight_priority = lGetPosViaElem(config, SC_weight_priority)) != -1;
-         ret &= (pos.max_reservation = lGetPosViaElem(config, SC_max_reservation)) != -1;
-         ret &= (pos.default_duration = lGetPosViaElem(config, SC_default_duration)) != -1;
+         ret &= (pos.weight_ticket = lGetPosViaElem(config, SC_weight_ticket, SGE_NO_ABORT)) != -1;
+         ret &= (pos.weight_waiting_time = lGetPosViaElem(config, SC_weight_waiting_time, SGE_NO_ABORT)) != -1;
+         ret &= (pos.weight_deadline = lGetPosViaElem(config, SC_weight_deadline, SGE_NO_ABORT)) != -1;
+         ret &= (pos.weight_urgency = lGetPosViaElem(config, SC_weight_urgency, SGE_NO_ABORT)) != -1;
+         ret &= (pos.weight_priority = lGetPosViaElem(config, SC_weight_priority, SGE_NO_ABORT)) != -1;
+         ret &= (pos.max_reservation = lGetPosViaElem(config, SC_max_reservation, SGE_NO_ABORT)) != -1;
+         ret &= (pos.default_duration = lGetPosViaElem(config, SC_default_duration, SGE_NO_ABORT)) != -1;
       }
       else {
          ret = false;

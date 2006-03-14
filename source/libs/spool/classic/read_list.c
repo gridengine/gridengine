@@ -887,7 +887,7 @@ const char *object_dir
    DENTER(TOP_LAYER, "reresolve_host");
 
 
-   pos = lGetPosViaElem(ep, nm);
+   pos = lGetPosViaElem(ep, nm, SGE_DO_ABORT);
    dataType = lGetPosType(lGetElemDescr(ep),pos);
    if (dataType == lHostT) {
       old_name = strdup(lGetHost(ep, nm));

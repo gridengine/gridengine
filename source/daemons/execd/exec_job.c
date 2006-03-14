@@ -687,7 +687,7 @@ int err_length) {
                    petep == NULL ? lGetString(jep, JB_job_name) : lGetString(petep, PET_name), 
                    job_id,
                    job_is_array(jep) ? ja_task_id : 0,
-                   SGE_SHELL, shell_path);
+                   SGE_SHELL, shell_path, SGE_PATH_MAX);
 
       if (shell_path[0] == 0) {
          strcpy(shell_path, lGetString(master_q, QU_shell));
@@ -860,14 +860,14 @@ int err_length) {
       /* When there is no path given, we will fill it later (in the shepherd) with
        * the default path. */
       
-      bInputFileStaging  = sge_get_fs_path( lGetList( jep, JB_stdin_path_list ),
-         fs_stdin_host, fs_stdin_path );
+      bInputFileStaging  = sge_get_fs_path(lGetList(jep, JB_stdin_path_list),
+         fs_stdin_host, SGE_PATH_MAX, fs_stdin_path, SGE_PATH_MAX);
 
-      bOutputFileStaging = sge_get_fs_path( lGetList( jep, JB_stdout_path_list ), 
-         fs_stdout_host, fs_stdout_path );
+      bOutputFileStaging = sge_get_fs_path(lGetList(jep, JB_stdout_path_list), 
+         fs_stdout_host, SGE_PATH_MAX, fs_stdout_path, SGE_PATH_MAX);
 
-      bErrorFileStaging  = sge_get_fs_path( lGetList( jep, JB_stderr_path_list ), 
-         fs_stderr_host, fs_stderr_path );
+      bErrorFileStaging  = sge_get_fs_path(lGetList(jep, JB_stderr_path_list), 
+         fs_stderr_host, SGE_PATH_MAX, fs_stderr_path, SGE_PATH_MAX);
 
 
    /* The fs_stdin_tmp_path and stdin_path (and so on) will be set correctly
@@ -879,19 +879,19 @@ int err_length) {
                 lGetString(jep, JB_job_name),
                 job_id,
                 job_is_array(jep) ? ja_task_id : 0,
-                SGE_STDOUT, stdout_path);
+                SGE_STDOUT, stdout_path, SGE_PATH_MAX);
    sge_get_path(lGetList(jep, JB_stderr_path_list), cwd,
                 lGetString(jep, JB_owner), 
                 lGetString(jep, JB_job_name),
                 job_id,
                 job_is_array(jep) ? ja_task_id : 0,
-                SGE_STDERR, stderr_path);
+                SGE_STDERR, stderr_path, SGE_PATH_MAX);
    sge_get_path(lGetList(jep, JB_stdin_path_list), cwd,
                 lGetString(jep, JB_owner), 
                 lGetString(jep, JB_job_name),
                 job_id,
                 job_is_array(jep) ? ja_task_id : 0,
-                SGE_STDIN, stdin_path);
+                SGE_STDIN, stdin_path, SGE_PATH_MAX);
 
    DPRINTF(( "fs_stdin_host=%s\n", fs_stdin_host ? fs_stdin_host : "\"\"" ));
    DPRINTF(( "fs_stdin_path=%s\n", fs_stdin_path ? fs_stdin_path : "" ));
@@ -1064,7 +1064,7 @@ int err_length) {
                    lGetString(jep, JB_job_name), 
                    job_id,
                    job_is_array(jep) ? ja_task_id : 0,
-                   SGE_PAR_STDOUT, pe_stdout_path);
+                   SGE_PAR_STDOUT, pe_stdout_path, SGE_PATH_MAX);
       fprintf(fp, "pe_stdout_path=%s\n", pe_stdout_path);
 
       /* build path for stderr of pe scripts */
@@ -1073,7 +1073,7 @@ int err_length) {
                    lGetString(jep, JB_job_name), 
                    job_id,
                    job_is_array(jep) ? ja_task_id : 0,
-                   SGE_PAR_STDERR, pe_stderr_path);
+                   SGE_PAR_STDERR, pe_stderr_path, SGE_PATH_MAX);
       fprintf(fp, "pe_stderr_path=%s\n", pe_stderr_path);
    }
   

@@ -262,7 +262,7 @@ const lList* master_hGroup_List
      return STATUS_EUNKNOWN;
    }
    /* ep is no host element, if ep has no nm */
-   if ((pos = lGetPosViaElem(hep, nm)) < 0) {
+   if ((pos = lGetPosViaElem(hep, nm, SGE_NO_ABORT)) < 0) {
       ERROR((SGE_EVENT, MSG_SGETEXT_MISSINGCULLFIELD_SS,
             lNm2Str(nm), SGE_FUNC));
       answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
@@ -406,7 +406,7 @@ int sub_command, monitoring_t *monitor
          goto ERROR;
       }
    }
-   pos = lGetPosViaElem(new_host, nm);
+   pos = lGetPosViaElem(new_host, nm, SGE_NO_ABORT);
    dataType = lGetPosType(lGetElemDescr(new_host),pos);
    if (dataType == lHostT) {
       host = lGetHost(new_host, nm);
@@ -415,7 +415,7 @@ int sub_command, monitoring_t *monitor
    }
    if (nm == EH_name) {
       /* ---- EH_scaling_list */
-      if (lGetPosViaElem(ep, EH_scaling_list)>=0) {
+      if (lGetPosViaElem(ep, EH_scaling_list, SGE_NO_ABORT)>=0) {
          attr_mod_sub_list(alpp, new_host, EH_scaling_list, HS_name, ep,
             sub_command, SGE_ATTR_LOAD_SCALING, SGE_OBJ_EXECHOST, 0);
          if (verify_scaling_list(alpp, new_host)!=STATUS_OK)
@@ -429,7 +429,7 @@ int sub_command, monitoring_t *monitor
       }
 
       /* ---- EH_acl */
-      if (lGetPosViaElem(ep, EH_acl)>=0) {
+      if (lGetPosViaElem(ep, EH_acl, SGE_NO_ABORT)>=0) {
          DPRINTF(("got new EH_acl\n"));
          /* check acl list */
          if (userset_list_validate_acl_list(lGetList(ep, EH_acl), alpp)!=STATUS_OK)
@@ -439,7 +439,7 @@ int sub_command, monitoring_t *monitor
       }
 
       /* ---- EH_xacl */
-      if (lGetPosViaElem(ep, EH_xacl)>=0) {
+      if (lGetPosViaElem(ep, EH_xacl, SGE_NO_ABORT)>=0) {
          DPRINTF(("got new EH_xacl\n"));
          /* check xacl list */
          if (userset_list_validate_acl_list(lGetList(ep, EH_xacl), alpp)!=STATUS_OK)
@@ -450,7 +450,7 @@ int sub_command, monitoring_t *monitor
 
 
       /* ---- EH_prj */
-      if (lGetPosViaElem(ep, EH_prj)>=0) {
+      if (lGetPosViaElem(ep, EH_prj, SGE_NO_ABORT)>=0) {
          DPRINTF(("got new EH_prj\n"));
          /* check prj list */
          if (verify_userprj_list(alpp, lGetList(ep, EH_prj),
@@ -462,7 +462,7 @@ int sub_command, monitoring_t *monitor
       }
 
       /* ---- EH_xprj */
-      if (lGetPosViaElem(ep, EH_xprj)>=0) {
+      if (lGetPosViaElem(ep, EH_xprj, SGE_NO_ABORT)>=0) {
          DPRINTF(("got new EH_xprj\n"));
          /* check xprj list */
          if (verify_userprj_list(alpp, lGetList(ep, EH_xprj), 
@@ -474,12 +474,12 @@ int sub_command, monitoring_t *monitor
       }
 
       /* ---- EH_usage_scaling_list */
-      if (lGetPosViaElem(ep, EH_usage_scaling_list)>=0) {
+      if (lGetPosViaElem(ep, EH_usage_scaling_list, SGE_NO_ABORT)>=0) {
          attr_mod_sub_list(alpp, new_host, EH_usage_scaling_list, HS_name, ep,
          sub_command, SGE_ATTR_USAGE_SCALING, SGE_OBJ_EXECHOST, 0); 
       }
 
-      if (lGetPosViaElem(ep, EH_report_variables)>=0) {
+      if (lGetPosViaElem(ep, EH_report_variables, SGE_NO_ABORT)>=0) {
          const lListElem *var;
          attr_mod_sub_list(alpp, new_host, EH_report_variables, STU_name, ep,
             sub_command, "report_variables", SGE_OBJ_EXECHOST, 0);
@@ -520,7 +520,7 @@ gdi_object_t *object
 
    DENTER(TOP_LAYER, "host_spool");
 
-   pos = lGetPosViaElem(ep, object->key_nm );
+   pos = lGetPosViaElem(ep, object->key_nm, SGE_NO_ABORT );
    dataType = lGetPosType(lGetElemDescr(ep),pos);
    if (dataType == lHostT ) { 
       key = lGetHost(ep, object->key_nm);
@@ -1037,7 +1037,7 @@ void sge_gdi_kill_exechost(char *host,
 
    DENTER(GDI_LAYER, "sge_gdi_kill_exechost");
 
-   if (sge_get_auth_info(request, &uid, user, &gid, group) == -1) {
+   if (sge_get_auth_info(request, &uid, user, sizeof(user), &gid, group, sizeof(group)) == -1) {
       ERROR((SGE_EVENT, MSG_GDI_FAILEDTOEXTRACTAUTHINFO));
       answer_list_add(&(answer->alp), SGE_EVENT, STATUS_ENOMGR, 
                       ANSWER_QUALITY_ERROR);

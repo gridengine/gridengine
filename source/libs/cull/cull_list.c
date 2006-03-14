@@ -1928,20 +1928,12 @@ lListElem *lDechainObject(lListElem *parent, int name)
       return NULL;
    }
 
-   pos = lGetPosViaElem(parent, name);
-   if (pos < 0) {
-      /* someone has called lDechainObject() with an invalid name */
-      CRITICAL((SGE_EVENT, MSG_CULL_DECHAINOBJECT_XNOTFOUNDINELEMENT_S ,
-               lNm2Str(name)));
-      DEXIT;
-      abort();
-   }
+   pos = lGetPosViaElem(parent, name, SGE_DO_ABORT);
 
    if(mt_get_type(parent->descr[pos].mt) != lObjectT) {
       incompatibleType2(MSG_CULL_DECHAINOBJECT_WRONGTYPEFORFIELDXY_S,
                         lNm2Str(name));
       DEXIT;
-      abort();
    }
   
    dep = (lListElem *) parent->cont[pos].obj;

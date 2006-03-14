@@ -3674,7 +3674,7 @@ static lListElem *elem_select(subscription_t *subscription, lListElem *element,
       if (el) {
          /* copy the sub-lists, if they are still part of the reduced main element */
          for(counter = 0; counter < ids_size; counter ++) {
-            if (sub_list[counter] && (lGetPosViaElem(el, ids[counter]) != -1)) {
+            if (sub_list[counter] && (lGetPosViaElem(el, ids[counter], SGE_NO_ABORT) != -1)) {
                lSetList(el, ids[counter],
                         lSelectDPack("", sub_list[counter], sub_selection,
                                      sub_descr, sub_fields, false, NULL, NULL));

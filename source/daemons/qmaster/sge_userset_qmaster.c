@@ -89,7 +89,7 @@ char *rhost
    }
 
    /* ep is no acl element, if ep has no US_name */
-   if ((pos = lGetPosViaElem(ep, US_name)) < 0) {
+   if ((pos = lGetPosViaElem(ep, US_name, SGE_NO_ABORT)) < 0) {
       CRITICAL((SGE_EVENT, MSG_SGETEXT_MISSINGCULLFIELD_SS,
             lNm2Str(US_name), SGE_FUNC));
       answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
@@ -194,7 +194,7 @@ char *rhost
    }
 
    /* ep is no userset element, if ep has no US_name */
-   if ((pos = lGetPosViaElem(ep, US_name)) < 0) {
+   if ((pos = lGetPosViaElem(ep, US_name, SGE_NO_ABORT)) < 0) {
       CRITICAL((SGE_EVENT, MSG_SGETEXT_MISSINGCULLFIELD_SS,
             lNm2Str(US_name), SGE_FUNC));
       answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
@@ -268,7 +268,7 @@ char *rhost
    }
 
    /* ep is no userset element, if ep has no US_name */
-   if ((pos = lGetPosViaElem(ep, US_name)) < 0) {
+   if ((pos = lGetPosViaElem(ep, US_name, SGE_NO_ABORT)) < 0) {
       CRITICAL((SGE_EVENT, MSG_SGETEXT_MISSINGCULLFIELD_SS,
             lNm2Str(US_name), SGE_FUNC));
       answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);

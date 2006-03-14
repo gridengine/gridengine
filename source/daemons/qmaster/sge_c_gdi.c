@@ -275,7 +275,7 @@ sge_c_gdi(char *host, sge_gdi_request *request, sge_gdi_request *response,
       return;
    }
 
-   if (sge_get_auth_info(request, &uid, user, &gid, group) == -1) {
+   if (sge_get_auth_info(request, &uid, user, sizeof(user), &gid, group, sizeof(group)) == -1) {
       ERROR((SGE_EVENT, MSG_GDI_FAILEDTOEXTRACTAUTHINFO));
       answer_list_add(&(response->alp), SGE_EVENT, STATUS_ENOMGR, 
                       ANSWER_QUALITY_ERROR);
@@ -478,7 +478,7 @@ sge_c_gdi_get(gdi_object_t *ao, char *host, sge_gdi_request *request,
       return;
    }
 
-   if (sge_get_auth_info(request, &uid, user, &gid, group) == -1) {
+   if (sge_get_auth_info(request, &uid, user, sizeof(user), &gid, group, sizeof(group)) == -1) {
       ERROR((SGE_EVENT, MSG_GDI_FAILEDTOEXTRACTAUTHINFO));
       answer_list_add(&(answer->alp), SGE_EVENT, STATUS_ENOMGR, 
                       ANSWER_QUALITY_ERROR);
@@ -1116,7 +1116,7 @@ static void sge_gdi_do_permcheck(char *host, sge_gdi_request *request, sge_gdi_r
 
    DENTER(GDI_LAYER, "sge_gdi_do_permcheck");
 
-   if (sge_get_auth_info(request, &uid, user, &gid, group) == -1) {
+   if (sge_get_auth_info(request, &uid, user, sizeof(user), &gid, group, sizeof(group)) == -1) {
       ERROR((SGE_EVENT, MSG_GDI_FAILEDTOEXTRACTAUTHINFO));
       answer_list_add(&(answer->alp), SGE_EVENT, STATUS_ENOMGR, ANSWER_QUALITY_ERROR);
       DEXIT;
@@ -1330,7 +1330,7 @@ static void sge_gdi_shutdown_event_client(const char *aHost,
 
    DENTER(TOP_LAYER, "sge_gdi_shutdown_event_client");
 
-   if (sge_get_auth_info(aRequest, &uid, user, &gid, group) == -1)
+   if (sge_get_auth_info(aRequest, &uid, user, sizeof(user), &gid, group, sizeof(group)) == -1)
    {
       ERROR((SGE_EVENT, MSG_GDI_FAILEDTOEXTRACTAUTHINFO));
       answer_list_add(&(anAnswer->alp), SGE_EVENT, STATUS_ENOMGR, ANSWER_QUALITY_ERROR);
@@ -1474,7 +1474,7 @@ trigger_scheduler_monitoring(char *aHost, sge_gdi_request *aRequest, sge_gdi_req
 
    DENTER(GDI_LAYER, "trigger_scheduler_monitoring");
 
-   if (sge_get_auth_info(aRequest, &uid, user, &gid, group) == -1) {
+   if (sge_get_auth_info(aRequest, &uid, user, sizeof(user), &gid, group, sizeof(group)) == -1) {
       ERROR((SGE_EVENT, MSG_GDI_FAILEDTOEXTRACTAUTHINFO));
       answer_list_add(&(anAnswer->alp), SGE_EVENT, STATUS_ENOMGR, ANSWER_QUALITY_ERROR);
       DEXIT;
@@ -1525,7 +1525,7 @@ static void sge_c_gdi_mod(gdi_object_t *ao, char *host, sge_gdi_request *request
 
    sge_dstring_init(&ds, buffer, sizeof(buffer));
 
-   if (sge_get_auth_info(request, &uid, user, &gid, group) == -1)
+   if (sge_get_auth_info(request, &uid, user, sizeof(user), &gid, group, sizeof(group)) == -1)
    {
       ERROR((SGE_EVENT, MSG_GDI_FAILEDTOEXTRACTAUTHINFO));
       answer_list_add(&(answer->alp), SGE_EVENT, STATUS_ENOMGR, ANSWER_QUALITY_ERROR);
@@ -1768,7 +1768,7 @@ static int sge_chck_mod_perm_host(lList **alpp, u_long32 target, char *host,
       ** check if override ticket changei request, if yes we need
       ** to be on an admin host and must not be on a submit host
       */
-      if ( mod && (lGetPosViaElem(ep, JB_override_tickets) >= 0)) {
+      if ( mod && (lGetPosViaElem(ep, JB_override_tickets, SGE_NO_ABORT) >= 0)) {
          /* host must be SGE_ADMINHOST_LIST */
          if (!host_list_locate(Master_Adminhost_List, host)) {
             ERROR((SGE_EVENT, MSG_SGETEXT_NOADMINHOST_S, host));
@@ -1964,7 +1964,7 @@ monitoring_t *monitor
    }
 
    /* ep is no element of this type, if ep has no QU_qname */
-   if (lGetPosViaElem(instructions, object->key_nm) < 0)
+   if (lGetPosViaElem(instructions, object->key_nm, SGE_NO_ABORT) < 0)
    {
       CRITICAL((SGE_EVENT, MSG_SGETEXT_MISSINGCULLFIELD_SS, lNm2Str(object->key_nm), SGE_FUNC));
       answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
@@ -1988,7 +1988,7 @@ monitoring_t *monitor
       }
    }
 
-   pos = lGetPosViaElem(instructions,  object->key_nm );
+   pos = lGetPosViaElem(instructions,  object->key_nm, SGE_NO_ABORT);
    dataType = lGetPosType(lGetElemDescr(instructions),pos);
    if (dataType == lHostT) {
       name = lGetHost(instructions, object->key_nm); 

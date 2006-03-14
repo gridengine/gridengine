@@ -66,7 +66,7 @@ char *attr_name
    DENTER(TOP_LAYER, "attr_mod_ctrl_method");
 
    /* ---- attribute nm */
-   if (lGetPosViaElem(qep, nm)>=0) {
+   if (lGetPosViaElem(qep, nm, SGE_NO_ABORT)>=0) {
       DPRINTF(("got new %s\n", attr_name));
 
       s = lGetString(qep, nm);
@@ -112,7 +112,7 @@ char *variables[]
    DENTER(TOP_LAYER, "attr_mod_procedure");
 
    /* ---- attribute nm */
-   if (lGetPosViaElem(qep, nm)>=0) {
+   if (lGetPosViaElem(qep, nm, SGE_NO_ABORT)>=0) {
       const char *s; 
       DPRINTF(("got new %s\n", attr_name));
 
@@ -160,7 +160,7 @@ char *attr_name
    DENTER(TOP_LAYER, "attr_mod_str");
 
    /* ---- attribute nm */
-   if (lGetPosViaElem(qep, nm)>=0) {
+   if (lGetPosViaElem(qep, nm, SGE_NO_ABORT)>=0) {
       DPRINTF(("got new %s\n", attr_name));
       lSetString(new_ep, nm, lGetString(qep, nm));
    }
@@ -184,7 +184,7 @@ char *attr_name
    DENTER(TOP_LAYER, "attr_mod_str");
 
    /* ---- attribute nm */
-   if ((pos=lGetPosViaElem(qep, nm))>=0) {
+   if ((pos=lGetPosViaElem(qep, nm, SGE_NO_ABORT))>=0) {
       const char *s;
 
       DPRINTF(("got new %s\n", attr_name));
@@ -230,7 +230,7 @@ char *attr_name
    DENTER(TOP_LAYER, "attr_mod_ulong");
 
    /* ---- attribute nm */
-   if (lGetPosViaElem(qep, nm)>=0) {
+   if (lGetPosViaElem(qep, nm, SGE_NO_ABORT)>=0) {
       DPRINTF(("got new %s\n", attr_name));
       lSetBool(new_ep, nm, lGetBool(qep, nm));
    }
@@ -249,7 +249,7 @@ char *attr_name
    DENTER(TOP_LAYER, "attr_mod_ulong");
 
    /* ---- attribute nm */
-   if (lGetPosViaElem(qep, nm)>=0) {
+   if (lGetPosViaElem(qep, nm, SGE_NO_ABORT)>=0) {
       DPRINTF(("got new %s\n", attr_name));
       lSetUlong(new_ep, nm, lGetUlong(qep, nm));
    }
@@ -268,7 +268,7 @@ char *attr_name
    DENTER(TOP_LAYER, "attr_mod_double");
 
    /* ---- attribute nm */
-   if (lGetPosViaElem(qep, nm)>=0) {
+   if (lGetPosViaElem(qep, nm, SGE_NO_ABORT)>=0) {
       DPRINTF(("got new %s\n", attr_name));
       lSetDouble(new_ep, nm, lGetDouble(qep, nm));
    }
@@ -287,7 +287,7 @@ char *attr_name
    DENTER(TOP_LAYER, "attr_mod_mem_str");
 
    /* ---- attribute nm */
-   if (lGetPosViaElem(qep, nm)>=0) {
+   if (lGetPosViaElem(qep, nm, SGE_NO_ABORT)>=0) {
       const char *str;
 
       str = lGetString(qep, nm);
@@ -317,7 +317,7 @@ int enable_infinity
    DENTER(TOP_LAYER, "attr_mod_time_str");
 
    /* ---- attribute nm */
-   if (lGetPosViaElem(qep, nm)>=0) {
+   if (lGetPosViaElem(qep, nm, SGE_NO_ABORT)>=0) {
       const char *str; 
 
       str = lGetString(qep, nm);

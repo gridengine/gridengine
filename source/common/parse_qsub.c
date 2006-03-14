@@ -109,7 +109,6 @@ u_long32 flags
    char **sp;
    lList *answer = NULL;
    char str[1024 + 1];
-   char arg[1024 + 1];
    lListElem *ep_opt;
    int i_ret;
    u_long32 is_qalter = flags & FLG_QALTER;
@@ -1166,6 +1165,7 @@ u_long32 flags
 /*----------------------------------------------------------------------------*/
       if (!strcmp("-pe", *sp)) {
          lList *pe_range = NULL;
+         dstring d_arg = DSTRING_INIT;
 
          if (lGetElemStr(*pcmdline, SPA_switch, *sp)) {
             sprintf(str,
@@ -1180,6 +1180,7 @@ DTRACE;
              sprintf(str,MSG_PARSE_PEOPTIONMUSTHAVEPENAMEARGUMENT);
              answer_list_add(&answer, str, 
                              STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
+             sge_dstring_free(&d_arg);
              DEXIT;
              return answer;
          }
@@ -1190,6 +1191,7 @@ DTRACE;
              sprintf(str,MSG_PARSE_PEOPTIONMUSTHAVERANGEAS2NDARGUMENT);
              answer_list_add(&answer, str, 
                              STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
+             sge_dstring_free(&d_arg);
              DEXIT;
              return answer;
          }
@@ -1198,19 +1200,20 @@ DTRACE;
                                       false, false, INF_ALLOWED);
 
          if (!pe_range) {
+            sge_dstring_free(&d_arg);
             DEXIT;
             return answer;
          }
-
-         strcpy(arg, *(sp - 1));
-         strcat(arg, " ");
-         strcat(arg, *sp);
-         ep_opt = sge_add_arg(pcmdline, pe_OPT, lStringT, *(sp - 2), arg);
+         sge_dstring_append(&d_arg, *(sp-1));
+         sge_dstring_append(&d_arg, " ");
+         sge_dstring_append(&d_arg, *sp);
+         ep_opt = sge_add_arg(pcmdline, pe_OPT, lStringT, *(sp - 2), sge_dstring_get_string(&d_arg));
          lSetString(ep_opt, SPA_argval_lStringT, *(sp - 1));
          lSetList(ep_opt, SPA_argval_lListT, pe_range);
 
          sp++;
 
+         sge_dstring_free(&d_arg);
 
          continue;
       }
@@ -2399,7 +2402,6 @@ int var_list_parse_from_string(lList **lpp, const char *variable_str,
    char *variable;
    char *val_str;
    int var_len;
-   stringT str;
    char **str_str;
    char **pstr;
    lListElem *ep;
@@ -2447,8 +2449,6 @@ int var_list_parse_from_string(lList **lpp, const char *variable_str,
       SGE_ASSERT((variable));
       var_len=strlen(variable);
       lSetString(ep, VA_variable, variable);
-      memset(str, 0, sizeof(str));
-      sprintf(str, "%s=", variable);
       val_str=*pstr;
 
       /* The character at the end of the first token must be either '=' or '\0'.

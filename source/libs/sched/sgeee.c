@@ -1114,29 +1114,29 @@ sge_init_share_tree_node_fields( lListElem *node,
 
 
    if (sn_m_share_pos == -1) {
-      sn_m_share_pos = lGetPosViaElem(node, STN_m_share);
+      sn_m_share_pos = lGetPosViaElem(node, STN_m_share, SGE_NO_ABORT);
       sn_adjusted_current_proportion_pos =
-            lGetPosViaElem(node, STN_adjusted_current_proportion);
+            lGetPosViaElem(node, STN_adjusted_current_proportion, SGE_NO_ABORT);
       sn_last_actual_proportion_pos =
-            lGetPosViaElem(node, STN_last_actual_proportion);
-      sn_job_ref_count_pos = lGetPosViaElem(node, STN_job_ref_count);
-      sn_active_job_ref_count_pos = lGetPosViaElem(node, STN_active_job_ref_count);
-      sn_usage_list_pos = lGetPosViaElem(node, STN_usage_list);
-      sn_sum_priority_pos = lGetPosViaElem(node, STN_sum_priority);
-      /* sn_temp_pos = lGetPosViaElem(node, STN_temp); */
-      sn_stt_pos = lGetPosViaElem(node, STN_stt);
-      sn_ostt_pos = lGetPosViaElem(node, STN_ostt);
-      sn_ltt_pos = lGetPosViaElem(node, STN_ltt);
-      sn_oltt_pos = lGetPosViaElem(node, STN_oltt);
-      sn_shr_pos = lGetPosViaElem(node, STN_shr);
-      sn_ref_pos = lGetPosViaElem(node, STN_ref);
-      sn_proportion_pos = lGetPosViaElem(node, STN_proportion);
-      sn_adjusted_proportion_pos = lGetPosViaElem(node, STN_adjusted_proportion);
-      sn_target_proportion_pos = lGetPosViaElem(node, STN_target_proportion);
-      sn_current_proportion_pos = lGetPosViaElem(node, STN_current_proportion);
-      sn_adjusted_usage_pos = lGetPosViaElem(node, STN_adjusted_usage);
-      sn_combined_usage_pos = lGetPosViaElem(node, STN_combined_usage);
-      sn_actual_proportion_pos = lGetPosViaElem(node, STN_actual_proportion);
+            lGetPosViaElem(node, STN_last_actual_proportion, SGE_NO_ABORT);
+      sn_job_ref_count_pos = lGetPosViaElem(node, STN_job_ref_count, SGE_NO_ABORT);
+      sn_active_job_ref_count_pos = lGetPosViaElem(node, STN_active_job_ref_count, SGE_NO_ABORT);
+      sn_usage_list_pos = lGetPosViaElem(node, STN_usage_list, SGE_NO_ABORT);
+      sn_sum_priority_pos = lGetPosViaElem(node, STN_sum_priority, SGE_NO_ABORT);
+      /* sn_temp_pos = lGetPosViaElem(node, STN_temp, SGE_NO_ABORT); */
+      sn_stt_pos = lGetPosViaElem(node, STN_stt, SGE_NO_ABORT);
+      sn_ostt_pos = lGetPosViaElem(node, STN_ostt, SGE_NO_ABORT);
+      sn_ltt_pos = lGetPosViaElem(node, STN_ltt, SGE_NO_ABORT);
+      sn_oltt_pos = lGetPosViaElem(node, STN_oltt, SGE_NO_ABORT);
+      sn_shr_pos = lGetPosViaElem(node, STN_shr, SGE_NO_ABORT);
+      sn_ref_pos = lGetPosViaElem(node, STN_ref, SGE_NO_ABORT);
+      sn_proportion_pos = lGetPosViaElem(node, STN_proportion, SGE_NO_ABORT);
+      sn_adjusted_proportion_pos = lGetPosViaElem(node, STN_adjusted_proportion, SGE_NO_ABORT);
+      sn_target_proportion_pos = lGetPosViaElem(node, STN_target_proportion, SGE_NO_ABORT);
+      sn_current_proportion_pos = lGetPosViaElem(node, STN_current_proportion, SGE_NO_ABORT);
+      sn_adjusted_usage_pos = lGetPosViaElem(node, STN_adjusted_usage, SGE_NO_ABORT);
+      sn_combined_usage_pos = lGetPosViaElem(node, STN_combined_usage, SGE_NO_ABORT);
+      sn_actual_proportion_pos = lGetPosViaElem(node, STN_actual_proportion, SGE_NO_ABORT);
    }
 
    lSetPosDouble(node, sn_m_share_pos, 0);

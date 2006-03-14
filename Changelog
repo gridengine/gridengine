@@ -1,3 +1,8 @@
+AA-2006-03-14-0: Bugfix:    several buffer overruns
+                 Bugtraq:   6397987
+                 Review:    RD
+                 Changed:   all
+
 CR-2006-03-13-0: Cleanup:   code cleanup and logging in commlib ssl module
                  Review:    AA
 

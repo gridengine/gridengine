@@ -102,7 +102,7 @@ int sub_command, monitoring_t *monitor
    attr_mod_bool(pe, new_pe, PE_job_is_first_task, "job_is_first_task");
 
    /* ---- PE_user_list */
-   if (lGetPosViaElem(pe, PE_user_list)>=0) {
+   if (lGetPosViaElem(pe, PE_user_list, SGE_NO_ABORT)>=0) {
       DPRINTF(("got new PE_user_list\n"));
       /* check user_lists */
       normalize_sublist(pe, PE_user_list);
@@ -114,7 +114,7 @@ int sub_command, monitoring_t *monitor
    }
 
    /* ---- PE_xuser_list */
-   if (lGetPosViaElem(pe, PE_xuser_list)>=0) {
+   if (lGetPosViaElem(pe, PE_xuser_list, SGE_NO_ABORT)>=0) {
       DPRINTF(("got new QU_axcl\n"));
       /* check xuser_lists */
       normalize_sublist(pe, PE_xuser_list);
@@ -124,7 +124,7 @@ int sub_command, monitoring_t *monitor
          US_name, pe, sub_command, SGE_ATTR_XUSER_LISTS, SGE_OBJ_PE, 0);      
    }
 
-   if (lGetPosViaElem(pe, PE_xuser_list)>=0 || lGetPosViaElem(pe, PE_user_list)>=0) {
+   if (lGetPosViaElem(pe, PE_xuser_list, SGE_NO_ABORT)>=0 || lGetPosViaElem(pe, PE_user_list, SGE_NO_ABORT)>=0) {
       if (multiple_occurances(
             alpp,
             lGetList(new_pe, PE_user_list),
@@ -139,7 +139,7 @@ int sub_command, monitoring_t *monitor
    if (attr_mod_procedure(alpp, pe, new_pe, PE_stop_proc_args, "stop_proc_args", pe_variables)) goto ERROR;
 
    /* -------- PE_allocation_rule */
-   if (lGetPosViaElem(pe, PE_allocation_rule)>=0) {
+   if (lGetPosViaElem(pe, PE_allocation_rule, SGE_NO_ABORT)>=0) {
       s = lGetString(pe, PE_allocation_rule);
       if (!s)  {
          ERROR((SGE_EVENT, MSG_SGETEXT_MISSINGCULLFIELD_SS,
@@ -159,7 +159,7 @@ int sub_command, monitoring_t *monitor
    }
 
    /* -------- PE_urgency_slots */
-   if (lGetPosViaElem(pe, PE_urgency_slots)>=0) {
+   if (lGetPosViaElem(pe, PE_urgency_slots, SGE_NO_ABORT)>=0) {
       s = lGetString(pe, PE_urgency_slots);
       if (!s)  {
          ERROR((SGE_EVENT, MSG_SGETEXT_MISSINGCULLFIELD_SS,
@@ -178,7 +178,7 @@ int sub_command, monitoring_t *monitor
 
 #ifdef SGE_PQS_API
    /* -------- PE_qsort_args */
-   if (lGetPosViaElem(pe, PE_qsort_args)>=0) {
+   if (lGetPosViaElem(pe, PE_qsort_args, SGE_NO_ABORT)>=0) {
       void *handle=NULL, *fn=NULL;
 
       s = lGetString(pe, PE_qsort_args);
@@ -266,7 +266,7 @@ int sge_del_pe(lListElem *pep, lList **alpp, char *ruser, char *rhost)
       return STATUS_EUNKNOWN;
    }
 
-   if ((pos = lGetPosViaElem(pep, PE_name)) < 0) {
+   if ((pos = lGetPosViaElem(pep, PE_name, SGE_NO_ABORT)) < 0) {
       ERROR((SGE_EVENT, MSG_SGETEXT_MISSINGCULLFIELD_SS,
             lNm2Str(PE_name), SGE_FUNC));
       answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);

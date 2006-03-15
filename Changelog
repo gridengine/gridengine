@@ -1,3 +1,9 @@
+OJ-2006-03-14-0: Testsuite: Moved purge_queue in sge_queue.60.tcl, moved test
+                            cases with -purge queue in check.60.exp; fixed
+                            bugs in purge_queue ().
+                 Issue:     477
+	         Review:    DT
+
 CR-2006-03-14-0: Cleanup:   Off-by-one overrun in communication library
                             (merged from V60s2_BRANCH)
                  Bugtraq:   6398008
@@ -223,6 +229,11 @@ SG-2006-01-12-0: Bugfix:    fixed SG-2006-01-06-0, local
 
 JG-2006-01-11-0: Testsuite: Cleanup of remote_procedures.
                  Review:    CR
+
+OJ-2006-01-11-0: Testsuite: cleaned up add_* del_* procedures for qconf tests
+                 Changed:   testsuite
+                 Review:    JG
+                 Issue:     477
 
 SG-2006-01-06-0: Enhancem.: enables process loal event clients
                             enables 1 event client per thread

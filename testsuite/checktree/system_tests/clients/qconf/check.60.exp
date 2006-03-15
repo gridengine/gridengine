@@ -36,14 +36,15 @@
 global check_functions 
 
 # define test's procedure order
-lappend check_functions "qconf_backslash_default_space_check"  ;# functions to call (in order)
-lappend check_functions "qconf_backslash_default_comma_check"
-lappend check_functions "qconf_backslash_custom_space_check"
-lappend check_functions "qconf_backslash_custom_comma_check"
-lappend check_functions "qconf_backslash_space_output_check"
-lappend check_functions "qconf_backslash_comma_output_check"
-lappend check_functions "qconf_issue1767"
-lappend check_functions "qconf_modify_hostgroup"
+#lappend check_functions "qconf_backslash_default_space_check"  ;# functions to call (in order)
+#lappend check_functions "qconf_backslash_default_comma_check"
+#lappend check_functions "qconf_backslash_custom_space_check"
+#lappend check_functions "qconf_backslash_custom_comma_check"
+#lappend check_functions "qconf_backslash_space_output_check"
+#lappend check_functions "qconf_backslash_comma_output_check"
+#lappend check_functions "qconf_issue1767"
+#lappend check_functions "qconf_modify_hostgroup"
+lappend check_functions "qconf_purge_queue"
 
 #                                                             max. column:     |
 #****** qconf/qconf_backslash_default_space_check() ******
@@ -1035,5 +1036,90 @@ proc qconf_modify_hostgroup {} {
    }
 
    set_error 0 "ok"
+}
+
+#                                                             max. column:     |
+#****** qconf/check.exp.60/qconf_purge_queue() ******
+#
+#  NAME
+#     qconf_purge_queue - Purge queue "qconf_queue.q"
+#
+#  SYNOPSIS
+#     qconf_purge_queue { } - Call add_queue qconf_queue.q $CHECK_HOST new_queue
+#                                Use "qconf -purge queue qname qconf_queue.q"
+#                                Then clean up with "qconf -dq qconf_queue.q"
+#
+#  FUNCTION
+#     Check basic functionality of qconf
+#
+#  SEE ALSO
+#
+# sge_queue/add_queue()
+# sge_procedures/get_qconf_show_list()
+# sge_procedures/get_qconf_show_list_error()
+#*******************************
+proc qconf_purge_queue {} {
+   global ts_config env
+   global CHECK_OUTPUT CHECK_USER
+
+   # First add queue "qconf_queue.q". Set the new name to "qconf_queue.q,
+   # host to $host
+
+   set host [lindex $ts_config(execd_nodes) 0]
+   puts $CHECK_OUTPUT "Adding queue qconf_queue.q ...\n"
+   add_queue qconf_queue.q $host new_queue
+
+   # Now purge queue "qconf_queue.q"
+   puts $CHECK_OUTPUT "Positive test of qconf -purge hostlist ...\n"
+   set result33 [purge_queue "qconf_queue.q" $host "hostlist"]
+
+   if { ( $result33 == 0 ) } {
+      puts $CHECK_OUTPUT "qconf -purge queue hostlist qconf_queue.q succeded"
+   } else {
+      puts $CHECK_OUTPUT "result is $result33"
+   }
+
+   # Now purge queue "wrong_queue.q"
+   puts $CHECK_OUTPUT "Negative test of qconf -purge hostlist...\n"
+   set result34 [purge_queue "wrong_queue.q" $host "hostlist" result $host $CHECK_USER 0]
+
+   if { ( $result34 == -1 ) } {
+      puts $CHECK_OUTPUT "qconf -purge queue hostlist wrong_queue.q succeded "
+   } else {
+      puts $CHECK_OUTPUT "result is $result34"
+   }
+
+   # Now try load_thresholds for purge
+   puts $CHECK_OUTPUT "Positive test of qconf -purge load_thresholds ...\n"
+   set result35 [purge_queue "qconf_queue.q" $host "load_thresholds"]
+
+   if { ( $result35 == 0 ) } {
+      puts $CHECK_OUTPUT "qconf -purge queue load_thresholds qconf_queue.q succeded"
+   } else {
+      puts $CHECK_OUTPUT "result is $result35"
+   }
+
+   # Now purge queue "wrong_queue.q"
+   puts $CHECK_OUTPUT "Negative test of qconf -purge load_thresholds...\n"
+   set result36 [purge_queue "wrong_queue.q" $host "load_thresholds" result $host $CHECK_USER 0]
+
+   if { ( $result36 == -1 ) } {
+      puts $CHECK_OUTPUT "qconf -purge queue load_thresholds wrong_queue.q succeded "
+   } else {
+      puts $CHECK_OUTPUT "result is $result36"
+   }
+
+   # Now delete queue "qconf_queue.q"
+   puts $CHECK_OUTPUT "Positive test of qconf -dq qconf_queue.q...\n"
+   set result4 [del_queue  "qconf_queue.q" $host 1]
+
+   if { ( $result4  == 0 )} {
+      puts $CHECK_OUTPUT "qconf -dq qconf_queue.q succeded"
+   } else {
+      puts $CHECK_OUTPUT "result is $result4"
+   }
+
+   set_error 0 "ok"
+
 }
 

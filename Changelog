@@ -1,3 +1,7 @@
+RD-2006-03-15-0: Bugfix:    fixed broken build introduced by
+                            AA-2006-03-14-0
+                 Review:    AA
+
 CR-2006-03-14-0: Cleanup:   Off-by-one overrun in communication library
                  Bugtraq:   6398008
                  Review:    RD

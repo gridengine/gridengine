@@ -1,3 +1,6 @@
+SD-2006-03-16-0: Bugfix:    Fixed typo compile problem in SGE PQS API
+                 Issue:     2006
+
 AH-2006-03-16-0: Bugfix:    Applied patch to fix qstat -j XML output for
                             mail list.
                  Issue:     2005

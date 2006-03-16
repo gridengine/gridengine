@@ -752,7 +752,7 @@ int pe_validate_qsort_args(lList **alpp, const char *qsort_args, lListElem *pe,
               lib_name, lGetString(pe, PE_name), dlerror()));
       } else {
          answer_list_add_sprintf(alpp, STATUS_EEXIST, ANSWER_QUALITY_ERROR, 
-                                 MSG_PQS_UNABLETOOPENLIBRARY_SSSlib_name, 
+                                 MSG_PQS_UNABLETOOPENLIBRARY_SSS, lib_name, 
                                  lGetString(pe, PE_name), dlerror());
       }
       ret = STATUS_EEXIST;

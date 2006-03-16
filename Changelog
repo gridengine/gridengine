@@ -1,8 +1,13 @@
+AH-2006-03-16-0: Bugfix:    Applied patch to fix qstat -j XML output for
+                            mail list.
+                 Issue:     2005
+                 Review:    Craffi, MD
+
 OJ-2006-03-14-0: Testsuite: Moved purge_queue in sge_queue.60.tcl, moved test
                             cases with -purge queue in check.60.exp; fixed
                             bugs in purge_queue ().
                  Issue:     477
-	         Review:    DT
+                 Review:    DT
 
 CR-2006-03-14-0: Cleanup:   Off-by-one overrun in communication library
                             (merged from V60s2_BRANCH)

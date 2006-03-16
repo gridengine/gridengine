@@ -1,3 +1,8 @@
+AH-2006-03-16-1: Bugfix:    Applied patch to fix qstat -j XML output for
+                            mail list.
+                 Issue:     2005
+                 Review:    Craffi, MD
+
 RD-2006-03-15-0: Bugfix:    fixed broken build introduced by
                             AA-2006-03-14-0
                  Review:    AA

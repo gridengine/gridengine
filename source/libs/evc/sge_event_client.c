@@ -1284,6 +1284,8 @@ ec_register(lListElem *event_client, bool exit_on_qmaster_down, lList** alpp)
       lp = lCreateList("registration", EV_Type);
       lAppendElem(lp, lCopyElem(event_client));
 
+#if 1
+      /* TODO: is this code section really necessary */
       /* closing actual connection to qmaster and reopen new connection. This will delete all
          buffered messages  - CR */
       com_handle = cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name(), 0);
@@ -1302,6 +1304,7 @@ ec_register(lListElem *event_client, bool exit_on_qmaster_down, lList** alpp)
             ERROR((SGE_EVENT, "error opening new connection to qmaster: "SFQ"\n", cl_get_error_text(ngc_error)));
          }
       }
+#endif      
 
       /*
        *  to add may also means to modify

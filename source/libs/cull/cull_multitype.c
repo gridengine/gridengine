@@ -128,7 +128,7 @@ int unknownType(const char *str)
 *     lGetPosViaElem() -- Get Position of name within element 
 *
 *  SYNOPSIS
-*     int lGetPosViaElem(const lListElem *element, int name) 
+*     int lGetPosViaElem(const lListElem *element, int name, int do_abort) 
 *
 *  FUNCTION
 *     Get Position of field 'name' within 'element' 
@@ -136,21 +136,39 @@ int unknownType(const char *str)
 *  INPUTS
 *     const lListElem *element - element 
 *     int name                 - field name id 
+*     int do_abort             - call do_abort if do_abort=1
 *
 *  RESULT
 *     int - position or -1 in case of an error
 *******************************************************************************/
-int lGetPosViaElem(const lListElem *element, int name) 
+int lGetPosViaElem(const lListElem *element, int name, int do_abort) 
 {
+   int pos = -1;
+
    DENTER(CULL_BASIS_LAYER, "lGetPosViaElem");
 
    if (!element) {
+      if (do_abort) {
+         CRITICAL((SGE_EVENT, MSG_CULL_POINTER_NULLELEMENTFORX_S,
+                  lNm2Str(name)));
+         DEXIT;
+         abort();
+      }
       DEXIT;
       return -1;
    }
+   pos = lGetPosInDescr(element->descr, name);
+
+   if (do_abort && (pos < 0)) {
+      /* someone has called lGetPosViaElem() with invalid name */
+      CRITICAL((SGE_EVENT, MSG_CULL_XNOTFOUNDINELEMENT_S ,
+               lNm2Str(name)));
+      DEXIT;
+      abort();
+   }
 
    DEXIT;
-   return lGetPosInDescr(element->descr, name);
+   return pos;
 }
 
 /****** cull/multitype/lNm2Str() **********************************************
@@ -522,22 +540,7 @@ lList **lGetListRef(const lListElem *ep, int name)
 
    DENTER(CULL_BASIS_LAYER, "lGetListRef");
 
-   if (!ep) {
-      CRITICAL((SGE_EVENT, MSG_CULL_POINTER_GETLISTREF_NULLELEMENTFORX_S ,
-               lNm2Str(name)));
-      DEXIT;
-      abort();
-   }
-   pos = lGetPosViaElem(ep, name);
-
-   if (pos < 0) {
-      /* someone has called lGetPosUlong() */
-      /* makro with an invalid nm        */
-      CRITICAL((SGE_EVENT, MSG_CULL_GETLISTREF_XNOTFOUNDINELEMENT_S ,
-               lNm2Str(name)));
-      DEXIT;
-      abort();
-   }
+   pos = lGetPosViaElem(ep, name, SGE_DO_ABORT);
 
    if (mt_get_type(ep->descr[pos].mt) != lListT)
       incompatibleType("lGetPosListRef");
@@ -628,7 +631,8 @@ lInt lGetInt(const lListElem *ep, int name)
    int pos;
    DENTER(CULL_BASIS_LAYER, "lGetInt");
 
-   pos = lGetPosViaElem(ep, name);
+   pos = lGetPosViaElem(ep, name, SGE_DO_ABORT);
+   
    if (mt_get_type(ep->descr[pos].mt) != lIntT)
       incompatibleType2(MSG_CULL_GETINT_WRONGTYPEFORFIELDXY_SS , 
                         lNm2Str(name), multitypes[mt_get_type(ep->descr[pos].mt)]);
@@ -696,20 +700,7 @@ lUlong lGetUlong(const lListElem *ep, int name)
    int pos;
    DENTER(CULL_BASIS_LAYER, "lGetUlong");
 
-   if (!ep) {
-      CRITICAL((SGE_EVENT, MSG_CULL_POINTER_GETULONG_NULLELEMENTFORX_S ,
-               lNm2Str(name)));
-      DEXIT;
-      abort();
-   }
-
-   pos = lGetPosViaElem(ep, name);
-   if (pos < 0) {
-      /* someone has called lGetPosUlong() */
-      /* makro with an invalid nm        */
-      incompatibleType2(MSG_CULL_GETULONG_NOSUCHNAMEXYINDESCRIPTOR_IS, name, 
-                        lNm2Str(name));
-   }
+   pos = lGetPosViaElem(ep, name, SGE_DO_ABORT);
 
    if (mt_get_type(ep->descr[pos].mt) != lUlongT)
       incompatibleType2(MSG_CULL_GETULONG_WRONGTYPEFORFIELDXY_SS, 
@@ -848,22 +839,7 @@ const char *lGetString(const lListElem *ep, int name)
    int pos;
    DENTER(CULL_BASIS_LAYER, "lGetString");
 
-   if (!ep) {
-      CRITICAL((SGE_EVENT, MSG_CULL_POINTER_GETSTRING_NULLELEMENTFORX_S ,
-               lNm2Str(name)));
-      DEXIT;
-      abort();
-   }
-
-   pos = lGetPosViaElem(ep, name);
-   if (pos < 0) {
-      /* someone has called lGetString() */
-      /* makro with an invalid nm        */
-      incompatibleType2(MSG_CULL_GETSTRING_NOSUCHNAMEXYINDESCRIPTOR_IS ,
-                        name, lNm2Str(name));
-      DEXIT;
-      return NULL;
-   }
+   pos = lGetPosViaElem(ep, name, SGE_DO_ABORT);
 
    if (mt_get_type(ep->descr[pos].mt) != lStringT)
       incompatibleType2(MSG_CULL_GETSTRING_WRONGTYPEFORFILEDXY_SS ,
@@ -897,22 +873,7 @@ const char *lGetHost(const lListElem *ep, int name)
    int pos;
    DENTER(CULL_BASIS_LAYER, "lGetHost");
 
-   if (!ep) {
-      CRITICAL((SGE_EVENT, MSG_CULL_POINTER_GETHOST_NULLELEMENTFORX_S ,
-               lNm2Str(name)));
-      DEXIT;
-      abort();
-   }
-
-   pos = lGetPosViaElem(ep, name);
-   if (pos < 0) {
-      /* someone has called lGetHost() */
-      /* makro with an invalid nm        */
-      incompatibleType2(MSG_CULL_GETHOST_NOSUCHNAMEXYINDESCRIPTOR_IS ,
-                        name, lNm2Str(name));
-      DEXIT;
-      return NULL;
-   }
+   pos = lGetPosViaElem(ep, name, SGE_DO_ABORT);
 
    if (mt_get_type(ep->descr[pos].mt) != lHostT)
       incompatibleType2(MSG_CULL_GETHOST_WRONGTYPEFORFILEDXY_SS ,
@@ -1019,22 +980,7 @@ lListElem *lGetObject(const lListElem *ep, int name)
    int pos;
    DENTER(CULL_BASIS_LAYER, "lGetObject");
 
-   if (!ep) {
-      CRITICAL((SGE_EVENT,  MSG_CULL_POINTER_GETOBJECT_NULLELEMENTFORX_S ,
-               lNm2Str(name)));
-      DEXIT;   /* CHANGE BACK */
-      abort();
-   }
-   pos = lGetPosViaElem(ep, name);
-
-   if (pos < 0) {
-      /* someone has called lGetPosObject() */
-      /* makro with an invalid nm        */
-      CRITICAL((SGE_EVENT, MSG_CULL_GETOBJECT_XNOTFOUNDINELEMENT_S ,
-               lNm2Str(name)));
-      DEXIT;
-      abort();
-   }
+   pos = lGetPosViaElem(ep, name, SGE_DO_ABORT);
 
    if (mt_get_type(ep->descr[pos].mt) != lObjectT)
       incompatibleType2(MSG_CULL_GETOBJECT_WRONGTYPEFORFIELDXY_SS ,
@@ -1066,22 +1012,7 @@ lGetList(const lListElem *ep, int name)
    int pos;
    DENTER(CULL_BASIS_LAYER, "lGetList");
 
-   if (!ep) {
-      CRITICAL((SGE_EVENT,  MSG_CULL_POINTER_GETLIST_NULLELEMENTFORX_S ,
-               lNm2Str(name)));
-      DEXIT;   /* CHANGE BACK */
-      abort();
-   }
-   pos = lGetPosViaElem(ep, name);
-
-   if (pos < 0) {
-      /* someone has called lGetPosUlong() */
-      /* makro with an invalid nm        */
-      CRITICAL((SGE_EVENT, MSG_CULL_GETLIST_XNOTFOUNDINELEMENT_S ,
-               lNm2Str(name)));
-      DEXIT;
-      abort();
-   }
+   pos = lGetPosViaElem(ep, name, SGE_DO_ABORT);
 
    if (mt_get_type(ep->descr[pos].mt) != lListT)
       incompatibleType2(MSG_CULL_GETLIST_WRONGTYPEFORFIELDXY_SS ,
@@ -1138,7 +1069,7 @@ lFloat lGetFloat(const lListElem *ep, int name)
    int pos;
    DENTER(CULL_BASIS_LAYER, "lGetFloat");
 
-   pos = lGetPosViaElem(ep, name);
+   pos = lGetPosViaElem(ep, name, SGE_DO_ABORT);
 
    if (mt_get_type(ep->descr[pos].mt) != lFloatT)
       incompatibleType2(MSG_CULL_GETFLOAT_WRONGTYPEFORFIELDXY_SS , lNm2Str(name), multitypes[mt_get_type(ep->descr[pos].mt)]);
@@ -1194,7 +1125,7 @@ lDouble lGetDouble(const lListElem *ep, int name)
    int pos;
    DENTER(CULL_BASIS_LAYER, "lGetDouble");
 
-   pos = lGetPosViaElem(ep, name);
+   pos = lGetPosViaElem(ep, name, SGE_DO_ABORT);
 
    if (mt_get_type(ep->descr[pos].mt) != lDoubleT)
       incompatibleType2(MSG_CULL_GETDOUBLE_WRONGTYPEFORFIELDXY_SS , lNm2Str(name), multitypes[mt_get_type(ep->descr[pos].mt)]);
@@ -1249,7 +1180,7 @@ lLong lGetLong(const lListElem *ep, int name)
 {
    int pos;
    DENTER(CULL_BASIS_LAYER, "lGetLong");
-   pos = lGetPosViaElem(ep, name);
+   pos = lGetPosViaElem(ep, name, SGE_DO_ABORT);
 
    if (mt_get_type(ep->descr[pos].mt) != lLongT)
       incompatibleType2(MSG_CULL_GETLONG_WRONGTYPEFORFIELDXY_SS, lNm2Str(name),
@@ -1278,8 +1209,9 @@ lLong lGetLong(const lListElem *ep, int name)
 lBool lGetPosBool(const lListElem *ep, int pos) 
 {
    DENTER(CULL_BASIS_LAYER, "lGetPosBool");
+
    if (mt_get_type(ep->descr[pos].mt) != lBoolT)
-      incompatibleType("lGetPosChar");
+      incompatibleType("lGetPosBool");
    DEXIT;
    return ep->cont[pos].b;
 }
@@ -1305,7 +1237,7 @@ lBool lGetBool(const lListElem *ep, int name)
 {
    int pos;
    DENTER(CULL_BASIS_LAYER, "lGetBool");
-   pos = lGetPosViaElem(ep, name);
+   pos = lGetPosViaElem(ep, name, SGE_DO_ABORT);
 
    if (mt_get_type(ep->descr[pos].mt) != lBoolT)
       incompatibleType2(MSG_CULL_GETBOOL_WRONGTYPEFORFIELDXY_SS , lNm2Str(name), multitypes[mt_get_type(ep->descr[pos].mt)]);
@@ -1360,7 +1292,7 @@ lChar lGetChar(const lListElem *ep, int name)
 {
    int pos;
    DENTER(CULL_BASIS_LAYER, "lGetChar");
-   pos = lGetPosViaElem(ep, name);
+   pos = lGetPosViaElem(ep, name, SGE_DO_ABORT);
 
    if (mt_get_type(ep->descr[pos].mt) != lCharT)
       incompatibleType2(MSG_CULL_GETCHAR_WRONGTYPEFORFIELDXY_SS , lNm2Str(name), multitypes[mt_get_type(ep->descr[pos].mt)]);
@@ -1417,19 +1349,7 @@ lRef lGetRef(const lListElem *ep, int name)
    int pos;
    DENTER(CULL_BASIS_LAYER, "lGetRef");   
    
-   if (!ep) {
-      CRITICAL((SGE_EVENT, MSG_CULL_POINTER_GETREF_NULLELEMENTFORX_S ,
-               lNm2Str(name)));
-      DEXIT;
-      abort();
-   }
-
-   pos = lGetPosViaElem(ep, name);
-   if (pos < 0) {
-      /* someone has called lGetPosUlong() */
-      /* makro with an invalid nm        */
-      incompatibleType2(MSG_CULL_GETREF_NOSUCHNAMEXYINDESCRIPTOR_IS , name, lNm2Str(name));
-   }
+   pos = lGetPosViaElem(ep, name, SGE_DO_ABORT);
 
    if (mt_get_type(ep->descr[pos].mt) != lRefT)
       incompatibleType2(MSG_CULL_GETREF_WRONGTYPEFORFIELDXY_SS, lNm2Str(name), 
@@ -1522,7 +1442,7 @@ int lSetInt(lListElem *ep, int name, int value)
       return -1;
    }
 
-   pos = lGetPosViaElem(ep, name);
+   pos = lGetPosViaElem(ep, name, SGE_NO_ABORT);
    if (pos < 0) {
       LERROR(LENEGPOS);
       DEXIT;
@@ -1642,7 +1562,7 @@ int lSetUlong(lListElem *ep, int name, lUlong value)
       return -1;
    }
 
-   pos = lGetPosViaElem(ep, name);
+   pos = lGetPosViaElem(ep, name, SGE_NO_ABORT);
    if (pos < 0) {
       DPRINTF(("!!!!!!!!!! lSetUlong(): %s not found in element !!!!!!!!!!\n",
                lNm2Str(name)));
@@ -1736,7 +1656,7 @@ int lAddUlong(lListElem *ep, int name, lUlong offset)
       return -1;
    }
 
-   pos = lGetPosViaElem(ep, name);
+   pos = lGetPosViaElem(ep, name, SGE_NO_ABORT);
    if (pos < 0) {
       DPRINTF(("!!!!!!!!!! lSetUlong(): %s not found in element !!!!!!!!!!\n",
                lNm2Str(name)));
@@ -2008,7 +1928,7 @@ int lSetString(lListElem *ep, int name, const char *value)
       return -1;
    }
 
-   pos = lGetPosViaElem(ep, name);
+   pos = lGetPosViaElem(ep, name, SGE_NO_ABORT);
    if (pos < 0) {
       incompatibleType2(MSG_CULL_SETSTRING_NOSUCHNAMEXYINDESCRIPTOR_IS ,
                         name, lNm2Str(name));
@@ -2114,7 +2034,7 @@ int lSetHost(lListElem *ep, int name, const char *value)
       return -1;
    }
 
-   pos = lGetPosViaElem(ep, name);
+   pos = lGetPosViaElem(ep, name, SGE_NO_ABORT);
    if (pos < 0) {
       incompatibleType2(MSG_CULL_SETHOST_NOSUCHNAMEXYINDESCRIPTOR_IS ,
                         name, lNm2Str(name));
@@ -2341,7 +2261,7 @@ int lXchgString(lListElem *ep, int name, char **str)
       DEXIT;
       return -1;
    }
-   pos = lGetPosViaElem(ep, name);
+   pos = lGetPosViaElem(ep, name, SGE_NO_ABORT);
    if (pos < 0) {
       LERROR(LENEGPOS);
       DEXIT;
@@ -2401,7 +2321,7 @@ int lXchgList(lListElem *ep, int name, lList **lpp)
       DEXIT;
       return -1;
    }
-   pos = lGetPosViaElem(ep, name);
+   pos = lGetPosViaElem(ep, name, SGE_NO_ABORT);
    if (pos < 0) {
       LERROR(LENEGPOS);
       DEXIT;
@@ -2505,7 +2425,7 @@ int lSetObject(lListElem *ep, int name, lListElem *value)
       return -1;
    }
 
-   pos = lGetPosViaElem(ep, name);
+   pos = lGetPosViaElem(ep, name, SGE_NO_ABORT);
    if (pos < 0) {
       DPRINTF(("!!!!!!!!!! lSetObject(): %s not found in element !!!!!!!!!!\n",
                lNm2Str(name)));
@@ -2579,7 +2499,7 @@ int lSetList(lListElem *ep, int name, lList *value)
       DEXIT;
       return -1;
    }
-   pos = lGetPosViaElem(ep, name);
+   pos = lGetPosViaElem(ep, name, SGE_NO_ABORT);
    if (pos < 0) {
       DPRINTF(("!!!!!!!!!! lSetList(): %s not found in element !!!!!!!!!!\n",
                lNm2Str(name)));
@@ -2691,7 +2611,7 @@ int lSetFloat(lListElem * ep, int name, lFloat value)
       return -1;
    }
 
-   pos = lGetPosViaElem(ep, name);
+   pos = lGetPosViaElem(ep, name, SGE_NO_ABORT);
    if (pos < 0) {
       LERROR(LENEGPOS);
       DEXIT;
@@ -2799,7 +2719,7 @@ int lSetDouble(lListElem *ep, int name, lDouble value)
       return -1;
    }
 
-   pos = lGetPosViaElem(ep, name);
+   pos = lGetPosViaElem(ep, name, SGE_NO_ABORT);
    if (pos < 0) {
       LERROR(LENEGPOS);
       DEXIT;
@@ -2855,7 +2775,7 @@ int lAddDouble(lListElem *ep, int name, lDouble value)
       return -1;
    }
 
-   pos = lGetPosViaElem(ep, name);
+   pos = lGetPosViaElem(ep, name, SGE_NO_ABORT);
    if (pos < 0) {
       LERROR(LENEGPOS);
       DEXIT;
@@ -2962,7 +2882,7 @@ int lSetLong(lListElem *ep, int name, lLong value)
       return -1;
    }
 
-   pos = lGetPosViaElem(ep, name);
+   pos = lGetPosViaElem(ep, name, SGE_NO_ABORT);
    if (pos < 0) {
       LERROR(LENEGPOS);
       DEXIT;
@@ -3069,7 +2989,7 @@ int lSetBool(lListElem * ep, int name, lBool value)
       return -1;
    }
 
-   pos = lGetPosViaElem(ep, name);
+   pos = lGetPosViaElem(ep, name, SGE_NO_ABORT);
    if (pos < 0) {
       LERROR(LENEGPOS);
       DEXIT;
@@ -3176,7 +3096,7 @@ int lSetChar(lListElem * ep, int name, lChar value)
       return -1;
    }
 
-   pos = lGetPosViaElem(ep, name);
+   pos = lGetPosViaElem(ep, name, SGE_NO_ABORT);
    if (pos < 0) {
       LERROR(LENEGPOS);
       DEXIT;
@@ -3283,7 +3203,7 @@ int lSetRef(lListElem * ep, int name, lRef value)
       return -1;
    }
 
-   pos = lGetPosViaElem(ep, name);
+   pos = lGetPosViaElem(ep, name, SGE_NO_ABORT);
    if (pos < 0) {
       LERROR(LENEGPOS);
       DEXIT;
@@ -3430,7 +3350,7 @@ lListElem *lAddSubStr(lListElem *ep, int nm, const char *str, int snm,
    }
 
    /* run time type checking */
-   if ((sublist_pos = lGetPosViaElem(ep, snm)) < 0) {
+   if ((sublist_pos = lGetPosViaElem(ep, snm, SGE_NO_ABORT)) < 0) {
       CRITICAL((SGE_EVENT, MSG_CULL_ADDSUBSTRERRORXRUNTIMETYPE_S , lNm2Str(snm)));
       DEXIT;
       return NULL;
@@ -3493,7 +3413,7 @@ lListElem *lAddSubHost(lListElem *ep, int nm, const char *str, int snm,
    }
 
    /* run time type checking */
-   if ((sublist_pos = lGetPosViaElem(ep, snm)) < 0) {
+   if ((sublist_pos = lGetPosViaElem(ep, snm, SGE_NO_ABORT)) < 0) {
       CRITICAL((SGE_EVENT, MSG_CULL_ADDSUBHOSTERRORXRUNTIMETYPE_S , lNm2Str(snm)));
       DEXIT;
       return NULL;
@@ -3670,14 +3590,7 @@ int lDelSubStr(lListElem *ep, int nm, const char *str, int snm)
    DENTER(CULL_LAYER, "lDelSubStr");
 
    /* get position of sublist in ep */
-   sublist_pos = lGetPosViaElem(ep, snm);
-
-   /* run time type checking */
-   if (sublist_pos < 0) {
-      CRITICAL((SGE_EVENT, MSG_CULL_DELSUBSTRERRORXRUNTIMETYPEERROR_S , lNm2Str(snm)));
-      DEXIT;
-      abort();
-   }
+   sublist_pos = lGetPosViaElem(ep, snm, SGE_DO_ABORT);
 
    ret = lDelElemStr(&(ep->cont[sublist_pos].glp), nm, str);
 
@@ -3798,14 +3711,7 @@ lListElem *lGetSubStr(const lListElem *ep, int nm, const char *str, int snm)
 
    if (ep != NULL) {
       /* get position of sublist in ep */
-      sublist_pos = lGetPosViaElem(ep, snm);
-
-      /* run time type checking */
-      if (sublist_pos < 0) {
-         CRITICAL((SGE_EVENT, MSG_CULL_GETSUBSTRERRORXRUNTIMETYPE_S , lNm2Str(snm)));
-         DEXIT;
-         abort();
-      }
+      sublist_pos = lGetPosViaElem(ep, snm, SGE_DO_ABORT);
 
       ret = lGetElemStr(ep->cont[sublist_pos].glp, nm, str);
    }
@@ -4151,7 +4057,7 @@ lListElem *lAddSubUlong(lListElem *ep, int nm, lUlong val, int snm,
    }
 
    /* run time type checking */
-   if ((sublist_pos = lGetPosViaElem(ep, snm)) < 0) {
+   if ((sublist_pos = lGetPosViaElem(ep, snm, SGE_NO_ABORT)) < 0) {
       CRITICAL((SGE_EVENT, MSG_CULL_ADDSUBULONGERRORXRUNTIMETYPE_S , lNm2Str(snm)));
       DEXIT;
       return NULL;
@@ -4258,14 +4164,7 @@ int lDelSubUlong(lListElem *ep, int nm, lUlong val, int snm)
    DENTER(CULL_LAYER, "lDelSubUlong");
 
    /* get position of sublist in ep */
-   sublist_pos = lGetPosViaElem(ep, snm);
-
-   /* run time type checking */
-   if (sublist_pos < 0) {
-      CRITICAL((SGE_EVENT, MSG_CULL_DELSUBULONGERRORXRUNTIMETYPE_S  , lNm2Str(snm)));
-      DEXIT;
-      abort();
-   }
+   sublist_pos = lGetPosViaElem(ep, snm, SGE_DO_ABORT);
 
    ret = lDelElemUlong(&(ep->cont[sublist_pos].glp), nm, val);
 
@@ -4371,15 +4270,7 @@ lListElem *lGetSubUlong(const lListElem *ep, int nm, lUlong val, int snm)
    DENTER(CULL_LAYER, "lGetSubUlong");
 
    /* get position of sublist in ep */
-   sublist_pos = lGetPosViaElem(ep, snm);
-
-   /* run time type checking */
-   if (sublist_pos < 0) {
-      CRITICAL((SGE_EVENT, MSG_CULL_GETSUBULONGERRORXRUNTIMETYPE_S , 
-         lNm2Str(snm)));
-      DEXIT;
-      abort();
-   }
+   sublist_pos = lGetPosViaElem(ep, snm, SGE_DO_ABORT);
 
    ret = lGetElemUlong(ep->cont[sublist_pos].glp, nm, val);
 
@@ -4585,15 +4476,7 @@ int lDelSubCaseStr(lListElem *ep, int nm, const char *str, int snm)
    DENTER(CULL_LAYER, "lDelSubCaseStr");
 
    /* get position of sublist in ep */
-   sublist_pos = lGetPosViaElem(ep, snm);
-
-   /* run time type checking */
-   if (sublist_pos < 0) {
-      CRITICAL((SGE_EVENT, MSG_CULL_DELSUBCASESTRERRORXRUNTIMETYPE_S, 
-                lNm2Str(snm)));
-      DEXIT;
-      abort();
-   }
+   sublist_pos = lGetPosViaElem(ep, snm, SGE_DO_ABORT);
 
    ret = lDelElemCaseStr(&(ep->cont[sublist_pos].glp), nm, str);
 
@@ -4710,15 +4593,7 @@ lListElem *lGetSubCaseStr(const lListElem *ep, int nm, const char *str,
    DENTER(CULL_LAYER, "lGetSubStr");
 
    /* get position of sublist in ep */
-   sublist_pos = lGetPosViaElem(ep, snm);
-
-   /* run time type checking */
-   if (sublist_pos < 0) {
-      CRITICAL((SGE_EVENT, MSG_CULL_GETSUBCASESTRERRORXRUNTIMETYPE_S , 
-      lNm2Str(snm)));
-      DEXIT;
-      abort();
-   }
+   sublist_pos = lGetPosViaElem(ep, snm, SGE_DO_ABORT);
 
    ret = lGetElemCaseStr(ep->cont[sublist_pos].glp, nm, str);
 
@@ -5035,14 +4910,7 @@ lListElem *lGetSubHost(const lListElem *ep, int nm, const char *str, int snm)
    DENTER(CULL_LAYER, "lGetSubHost");
 
    /* get position of sublist in ep */
-   sublist_pos = lGetPosViaElem(ep, snm);
-
-   /* run time type checking */
-   if (sublist_pos < 0) {
-      CRITICAL((SGE_EVENT, MSG_CULL_GETSUBCASESTRERRORXRUNTIMETYPE_S , lNm2Str(snm)));
-      DEXIT;
-      abort();
-   }
+   sublist_pos = lGetPosViaElem(ep, snm, SGE_DO_ABORT);
 
    ret = lGetElemHost(ep->cont[sublist_pos].glp, nm, str);
 

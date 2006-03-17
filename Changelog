@@ -1,3 +1,8 @@
+AA-2006-03-17-0: Bugfix:    several buffer overruns, merge from V60s2_BRANCH
+                 Bugtraq:   6397987
+                 Review:    RD
+                 Changed:   all
+
 SD-2006-03-16-0: Bugfix:    Fixed typo compile problem in SGE PQS API
                  Issue:     2006
 

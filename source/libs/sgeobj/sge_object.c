@@ -723,7 +723,7 @@ object_append_raw_field_to_dstring(const lListElem *object, lList **answer_list,
 
    DENTER(OBJECT_LAYER, "object_append_raw_field_to_dstring");
 
-   pos = lGetPosViaElem(object, nm);
+   pos = lGetPosViaElem(object, nm, SGE_NO_ABORT);
 
    if (pos < 0) {
       answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
@@ -1007,7 +1007,7 @@ object_parse_raw_field_from_string(lListElem *object, lList **answer_list,
 
    DENTER(OBJECT_LAYER, "object_parse_raw_field_from_string");
 
-   pos = lGetPosViaElem(object, nm);
+   pos = lGetPosViaElem(object, nm, SGE_NO_ABORT);
    if (pos < 0) {
       answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                               ANSWER_QUALITY_ERROR, MSG_NMNOTINELEMENT_S, 
@@ -1565,7 +1565,7 @@ object_parse_bool_from_string(lListElem *this_elem, lList **answer_list,
 
    DENTER(OBJECT_LAYER, "object_parse_bool_from_string");
    if (this_elem != NULL && string != NULL) {
-      int pos = lGetPosViaElem(this_elem, name);
+      int pos = lGetPosViaElem(this_elem, name, SGE_NO_ABORT);
 
       if (!strcasecmp(string, "true") || !strcasecmp(string, "t") || 
           !strcmp(string, "1") ||
@@ -1598,7 +1598,7 @@ object_parse_time_from_string(lListElem *this_elem, lList **answer_list,
 
    DENTER(OBJECT_LAYER, "object_parse_time_from_string");
    if (this_elem != NULL && string != NULL) {
-      int pos = lGetPosViaElem(this_elem, name);
+      int pos = lGetPosViaElem(this_elem, name, SGE_NO_ABORT);
 
       if (parse_ulong_val(NULL, NULL, TYPE_TIM, string, NULL, 0)) {
          lSetPosString(this_elem, pos, string);
@@ -1625,7 +1625,7 @@ object_parse_inter_from_string(lListElem *this_elem, lList **answer_list,
 
    DENTER(OBJECT_LAYER, "object_parse_inter_from_string");
    if (this_elem != NULL && string != NULL) {
-      int pos = lGetPosViaElem(this_elem, name);
+      int pos = lGetPosViaElem(this_elem, name, SGE_NO_ABORT);
 
       if (parse_ulong_val(NULL, NULL, TYPE_TIM, string, NULL, 0)) {
          lSetPosString(this_elem, pos, string);
@@ -1654,7 +1654,7 @@ object_parse_list_from_string(lListElem *this_elem, lList **answer_list,
    DENTER(OBJECT_LAYER, "object_parse_strlist_from_string");
    if (this_elem != NULL && string != NULL) {
       lList *tmp_list = NULL;
-      int pos = lGetPosViaElem(this_elem, name);
+      int pos = lGetPosViaElem(this_elem, name, SGE_NO_ABORT);
 
       lString2List(string, &tmp_list, descr, nm, "\t \v\r,");
       if (tmp_list != NULL) {
@@ -1692,7 +1692,7 @@ object_parse_celist_from_string(lListElem *this_elem, lList **answer_list,
 
    if (this_elem != NULL && string != NULL) {
       lList *tmp_list = NULL;
-      int pos = lGetPosViaElem(this_elem, name);
+      int pos = lGetPosViaElem(this_elem, name, SGE_NO_ABORT);
 
       if (!cull_parse_definition_list((char *)string, &tmp_list, "", CE_Type, rule)) {
          lSetPosList(this_elem, pos, tmp_list);
@@ -1722,7 +1722,7 @@ object_parse_solist_from_string(lListElem *this_elem, lList **answer_list,
    if (this_elem != NULL && string != NULL) {
       lList *tmp_list = NULL;
       lListElem *tmp_elem = NULL;
-      int pos = lGetPosViaElem(this_elem, name);
+      int pos = lGetPosViaElem(this_elem, name, SGE_NO_ABORT);
 
       lString2List(string, &tmp_list, SO_Type, SO_name, ", \t");
       if (tmp_list != NULL) {
@@ -1777,7 +1777,7 @@ object_parse_qtlist_from_string(lListElem *this_elem, lList **answer_list,
    DENTER(TOP_LAYER, "object_parse_qtlist_from_string");
    if (this_elem != NULL && string != NULL) {
       u_long32 value;
-      int pos = lGetPosViaElem(this_elem, name);
+      int pos = lGetPosViaElem(this_elem, name, SGE_NO_ABORT);
 
       if (sge_parse_bitfield_str(string, queue_types, &value, "", 
                                  answer_list, true)) {
@@ -1806,7 +1806,7 @@ object_parse_mem_from_string(lListElem *this_elem, lList **answer_list,
 
    DENTER(OBJECT_LAYER, "object_parse_mem_from_string");
    if (this_elem != NULL && string != NULL) {
-      int pos = lGetPosViaElem(this_elem, name);
+      int pos = lGetPosViaElem(this_elem, name, SGE_NO_ABORT);
 
       if (parse_ulong_val(NULL, NULL, TYPE_MEM, string, NULL, 0)) {
          lSetPosString(this_elem, pos, string);
@@ -1833,7 +1833,7 @@ object_parse_ulong32_from_string(lListElem *this_elem, lList **answer_list,
    
    DENTER(OBJECT_LAYER, "object_parse_ulong32_from_string");
    if (this_elem != NULL && string != NULL) {
-      int pos = lGetPosViaElem(this_elem, name);
+      int pos = lGetPosViaElem(this_elem, name, SGE_NO_ABORT);
 
       if (strlen(string) == 0) {
          /*
@@ -1886,7 +1886,7 @@ object_parse_int_from_string(lListElem *this_elem, lList **answer_list,
 
    DENTER(OBJECT_LAYER, "object_parse_int_from_string");
    if (this_elem != NULL && string != NULL) {
-      int pos = lGetPosViaElem(this_elem, name);
+      int pos = lGetPosViaElem(this_elem, name, SGE_NO_ABORT);
       int value;
 
       if (sscanf(string, "%d", &value) == 1) {
@@ -1914,7 +1914,7 @@ object_parse_char_from_string(lListElem *this_elem, lList **answer_list,
 
    DENTER(OBJECT_LAYER, "object_parse_char_from_string");
    if (this_elem != NULL && string != NULL) {
-      int pos = lGetPosViaElem(this_elem, name);
+      int pos = lGetPosViaElem(this_elem, name, SGE_NO_ABORT);
       char value;
 
       if (sscanf(string, "%c", &value) == 1) {
@@ -1942,7 +1942,7 @@ object_parse_long_from_string(lListElem *this_elem, lList **answer_list,
 
    DENTER(OBJECT_LAYER, "object_parse_long_from_string");
    if (this_elem != NULL && string != NULL) {
-      int pos = lGetPosViaElem(this_elem, name);
+      int pos = lGetPosViaElem(this_elem, name, SGE_NO_ABORT);
       long value;
 
       if (sscanf(string, "%ld", &value) == 1) {
@@ -1970,7 +1970,7 @@ object_parse_double_from_string(lListElem *this_elem, lList **answer_list,
 
    DENTER(OBJECT_LAYER, "object_parse_double_from_string");
    if (this_elem != NULL && string != NULL) {
-      int pos = lGetPosViaElem(this_elem, name);
+      int pos = lGetPosViaElem(this_elem, name, SGE_NO_ABORT);
       double value;
 
       if (sscanf(string, "%lf", &value) == 1) {
@@ -1998,7 +1998,7 @@ object_parse_float_from_string(lListElem *this_elem, lList **answer_list,
 
    DENTER(OBJECT_LAYER, "object_parse_float_from_string");
    if (this_elem != NULL && string != NULL) {
-      int pos = lGetPosViaElem(this_elem, name);
+      int pos = lGetPosViaElem(this_elem, name, SGE_NO_ABORT);
       float value;
 
       if (sscanf(string, "%f", &value) == 1) {
@@ -2022,7 +2022,7 @@ bool
 object_set_any_type(lListElem *this_elem, int name, void *value)
 {
    int cull_ret = 0;
-   int pos = lGetPosViaElem(this_elem, name);
+   int pos = lGetPosViaElem(this_elem, name, SGE_NO_ABORT);
    int type = lGetPosType(lGetElemDescr(this_elem), pos);
 
    DENTER(OBJECT_LAYER, "object_set_any_type");
@@ -2062,8 +2062,8 @@ bool
 object_replace_any_type(lListElem *this_elem, int name, lListElem *org_elem)
 {
    int cull_ret = 0;
-   int out_pos = lGetPosViaElem(this_elem, name);
-   int in_pos = lGetPosViaElem(org_elem, name);
+   int out_pos = lGetPosViaElem(this_elem, name, SGE_NO_ABORT);
+   int in_pos = lGetPosViaElem(org_elem, name, SGE_NO_ABORT);
    int type = lGetPosType(lGetElemDescr(this_elem), out_pos);
 
    DENTER(OBJECT_LAYER, "object_replace_any_type");
@@ -2121,7 +2121,7 @@ object_replace_any_type(lListElem *this_elem, int name, lListElem *org_elem)
 void 
 object_get_any_type(lListElem *this_elem, int name, void *value)
 {
-   int pos = lGetPosViaElem(this_elem, name);
+   int pos = lGetPosViaElem(this_elem, name, SGE_NO_ABORT);
    int type = lGetPosType(lGetElemDescr(this_elem), pos);
 
    DENTER(OBJECT_LAYER, "object_get_any_type");
@@ -2168,7 +2168,7 @@ attr_mod_sub_list(lList **alpp, lListElem *this_elem, int this_elem_name,
    bool ret = true;
 
    DENTER(TOP_LAYER, "attr_mod_sub_list");
-   if (lGetPosViaElem(delta_elem, this_elem_name) >= 0) {
+   if (lGetPosViaElem(delta_elem, this_elem_name, SGE_NO_ABORT) >= 0) {
       if (sub_command == SGE_GDI_CHANGE ||
           sub_command == SGE_GDI_APPEND ||
           sub_command == SGE_GDI_REMOVE) {
@@ -2196,7 +2196,7 @@ attr_mod_sub_list(lList **alpp, lListElem *this_elem, int this_elem_name,
 
                next_full_element = lNext(full_element);
 
-               pos = lGetPosViaElem(reduced_element, this_elem_primary_key);
+               pos = lGetPosViaElem(reduced_element, this_elem_primary_key, SGE_NO_ABORT);
                type = lGetPosType(lGetElemDescr(reduced_element), pos);            
                if (type == lStringT) {
                   rstring = lGetString(reduced_element, this_elem_primary_key);
@@ -2212,7 +2212,7 @@ attr_mod_sub_list(lList **alpp, lListElem *this_elem, int this_elem_name,
                                   ANSWER_QUALITY_ERROR);
                   ret = false;
                }
-      
+
                if (ret && 
                    (((type == lStringT) && strcmp(rstring, fstring) == 0) ||
                    ((type == lHostT) && sge_hostcmp(rstring, fstring) == 0))) {
@@ -2260,7 +2260,8 @@ attr_mod_sub_list(lList **alpp, lListElem *this_elem, int this_elem_name,
          if (ret && (sub_command == SGE_GDI_CHANGE ||
              sub_command == SGE_GDI_APPEND ||
              sub_command == SGE_GDI_REMOVE)) {
-            next_reduced_element = lFirst(reduced_sublist);
+             next_reduced_element = lFirst(reduced_sublist);
+
             while ((reduced_element = next_reduced_element)) {
                int pos, type;
                const char *rstring = NULL;
@@ -2268,7 +2269,7 @@ attr_mod_sub_list(lList **alpp, lListElem *this_elem, int this_elem_name,
 
                next_reduced_element = lNext(reduced_element);
 
-               pos = lGetPosViaElem(reduced_element, this_elem_primary_key);
+               pos = lGetPosViaElem(reduced_element, this_elem_primary_key, SGE_NO_ABORT);
                type = lGetPosType(lGetElemDescr(reduced_element), pos);            
                if (type == lStringT) {
                   rstring = lGetString(reduced_element, this_elem_primary_key);

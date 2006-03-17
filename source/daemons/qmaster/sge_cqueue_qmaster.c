@@ -329,7 +329,7 @@ cqueue_mod_attributes(lListElem *cqueue, lList **answer_list,
 
       while (cqueue_attribute_array[index].cqueue_attr != NoName && ret) {
          int pos = lGetPosViaElem(reduced_elem,
-                                  cqueue_attribute_array[index].cqueue_attr);
+                                  cqueue_attribute_array[index].cqueue_attr, SGE_NO_ABORT);
 
          if (pos >= 0) {
             ret &= cqueue_mod_sublist(cqueue, answer_list, reduced_elem,
@@ -357,7 +357,7 @@ cqueue_mod_hostlist(lListElem *cqueue, lList **answer_list,
 
    DENTER(TOP_LAYER, "cqueue_mod_hostlist");
    if (cqueue != NULL && reduced_elem != NULL) {
-      int pos = lGetPosViaElem(reduced_elem, CQ_hostlist);
+      int pos = lGetPosViaElem(reduced_elem, CQ_hostlist, SGE_NO_ABORT);
 
       if (pos >= 0) {
          const char *cqueue_name = lGetString(cqueue, CQ_name);
@@ -478,7 +478,7 @@ cqueue_mod_qinstances(lListElem *cqueue, lList **answer_list,
             const char *matching_group = NULL;
 
             int pos = lGetPosViaElem(reduced_elem,
-                                 cqueue_attribute_array[index].cqueue_attr);
+                                 cqueue_attribute_array[index].cqueue_attr, SGE_NO_ABORT);
 
 
             /*
@@ -623,7 +623,7 @@ int cqueue_mod(lList **answer_list, lListElem *cqueue, lListElem *reduced_elem,
    DENTER(TOP_LAYER, "cqueue_mod");
 
    if (ret) {
-      int pos = lGetPosViaElem(reduced_elem, CQ_name);
+      int pos = lGetPosViaElem(reduced_elem, CQ_name, SGE_NO_ABORT);
 
       if (pos >= 0) {
          const char *name = lGetPosString(reduced_elem, pos);

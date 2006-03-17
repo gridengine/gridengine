@@ -865,7 +865,7 @@ sge_follow_order(lListElem *ep, lList **alpp, char *ruser, char *rhost,
                job_pos_t   *order_job_pos;
          
                joker_task = lFirst(lGetList(joker, JB_ja_tasks));
-               destribute_tickets = (lGetPosViaElem(joker_task, JAT_granted_destin_identifier_list) > -1)? true : false;
+               destribute_tickets = (lGetPosViaElem(joker_task, JAT_granted_destin_identifier_list, SGE_NO_ABORT) > -1)? true : false;
 
                sge_mutex_lock("follow_last_update_mutex", SGE_FUNC, __LINE__, &Follow_Control.last_update_mutex);
          
@@ -961,7 +961,7 @@ sge_follow_order(lListElem *ep, lList **alpp, char *ruser, char *rhost,
                   lFreeList(&oeql);
 
                } 
-               else if (lGetPosViaElem(jatp, JAT_granted_destin_identifier_list) !=-1 )
+               else if (lGetPosViaElem(jatp, JAT_granted_destin_identifier_list, SGE_NO_ABORT) !=-1 )
                      lAppendElem(*topp, lCopyElem(ep));
             }
          }
@@ -1129,7 +1129,7 @@ sge_follow_order(lListElem *ep, lList **alpp, char *ruser, char *rhost,
             lGetNumberOfElem(lGetList(ep, OR_joker))));
 
          for_each (up_order, lGetList(ep, OR_joker)) {
-            if ((pos=lGetPosViaElem(up_order, UP_name))<0 || 
+            if ((pos=lGetPosViaElem(up_order, UP_name, SGE_NO_ABORT))<0 || 
                   !(up_name = lGetString(up_order, UP_name))) {
                continue;
             }   
@@ -1145,7 +1145,7 @@ sge_follow_order(lListElem *ep, lList **alpp, char *ruser, char *rhost,
                continue;
             }   
 
-            if ((pos=lGetPosViaElem(up_order, UP_version)) >= 0 &&
+            if ((pos=lGetPosViaElem(up_order, UP_version, SGE_NO_ABORT)) >= 0 &&
                 (lGetPosUlong(up_order, pos) != lGetUlong(up, UP_version))) {
                /* order contains update for outdated user/project usage */
                WARNING((SGE_EVENT, MSG_ORD_USRPRJVERSION_SUU, up_name, sge_u32c(lGetPosUlong(up_order, pos)),
@@ -1156,18 +1156,18 @@ sge_follow_order(lListElem *ep, lList **alpp, char *ruser, char *rhost,
 
             lSetUlong(up, UP_version, lGetUlong(up, UP_version)+1);
 
-            if ((pos=lGetPosViaElem(up_order, UP_project))>=0) {
+            if ((pos=lGetPosViaElem(up_order, UP_project, SGE_NO_ABORT))>=0) {
                lSwapList(up_order, UP_project, up, UP_project);
             }
 
-            if ((pos=lGetPosViaElem(up_order, UP_usage_time_stamp))>=0)
+            if ((pos=lGetPosViaElem(up_order, UP_usage_time_stamp, SGE_NO_ABORT))>=0)
                lSetUlong(up, UP_usage_time_stamp, lGetPosUlong(up_order, pos));
 
-            if ((pos=lGetPosViaElem(up_order, UP_usage))>=0) {
+            if ((pos=lGetPosViaElem(up_order, UP_usage, SGE_NO_ABORT))>=0) {
                lSwapList(up_order, UP_usage, up, UP_usage);
             }
 
-            if ((pos=lGetPosViaElem(up_order, UP_long_term_usage))>=0) {
+            if ((pos=lGetPosViaElem(up_order, UP_long_term_usage, SGE_NO_ABORT))>=0) {
                lSwapList(up_order, UP_long_term_usage, up, UP_long_term_usage);
             }
 
@@ -1258,7 +1258,7 @@ sge_follow_order(lListElem *ep, lList **alpp, char *ruser, char *rhost,
          joker = lFirst(lGetList(ep, OR_joker));
 
          if (sconf_is() && joker != NULL) {
-            if ((pos=lGetPosViaElem(joker, SC_weight_tickets_override)) > -1) {
+            if ((pos=lGetPosViaElem(joker, SC_weight_tickets_override, SGE_NO_ABORT)) > -1) {
                sconf_set_weight_tickets_override( lGetPosUlong(joker, pos));
             }   
          }

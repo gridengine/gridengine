@@ -1100,7 +1100,7 @@ sge_select_queue(lList *requested_attr, lListElem *queue, lListElem *host,
    actual_attr = lGetList(global, EH_resource_utilization);
 
    /* is there a multiplier for load correction (may be not in qstat, qmon etc) */
-   if (lGetPosViaElem(global, EH_load_correction_factor) >= 0) {
+   if (lGetPosViaElem(global, EH_load_correction_factor, SGE_NO_ABORT) >= 0) {
       if ((ulc_factor=lGetUlong(global, EH_load_correction_factor)))
          lc_factor = ((double)ulc_factor)/100;
    } 
@@ -1118,7 +1118,7 @@ sge_select_queue(lList *requested_attr, lListElem *queue, lListElem *host,
       config_attr = lGetList(host, EH_consumable_config_list);
       actual_attr = lGetList(host, EH_resource_utilization);
 
-      if (lGetPosViaElem(host, EH_load_correction_factor) >= 0) {
+      if (lGetPosViaElem(host, EH_load_correction_factor, SGE_NO_ABORT) >= 0) {
          if ((ulc_factor=lGetUlong(host, EH_load_correction_factor)))
             lc_factor = ((double)ulc_factor)/100;
       }
@@ -2243,13 +2243,13 @@ sge_load_alarm(char *reason, lListElem *qep, lList *threshold,
       return 1;
    }
 
-   if ((lGetPosViaElem(hep, EH_load_correction_factor) >= 0)
+   if ((lGetPosViaElem(hep, EH_load_correction_factor, SGE_NO_ABORT) >= 0)
        && (ulc_factor=lGetUlong(hep, EH_load_correction_factor))) {
       lc_host = ((double)ulc_factor)/100;
    }   
 
    if ((global_hep = host_list_locate(exechost_list, "global")) != NULL) {
-      if ((lGetPosViaElem(global_hep, EH_load_correction_factor) >= 0)
+      if ((lGetPosViaElem(global_hep, EH_load_correction_factor, SGE_NO_ABORT) >= 0)
           && (ulc_factor=lGetUlong(global_hep, EH_load_correction_factor)))
          lc_global = ((double)ulc_factor)/100;
    }
@@ -4518,7 +4518,7 @@ parallel_host_slots(sge_assignment_t *a, int *slots, int *slots_qend, int *host_
 
       /* cause load be raised artificially to reflect load correction when
          checking job requests */
-      if (lGetPosViaElem(hep, EH_load_correction_factor) >= 0) {
+      if (lGetPosViaElem(hep, EH_load_correction_factor, SGE_NO_ABORT) >= 0) {
          u_long32 ulc_factor;
          if ((ulc_factor=lGetUlong(hep, EH_load_correction_factor)))
             lc_factor = ((double)ulc_factor)/100;
@@ -4629,7 +4629,7 @@ sequential_host_time(u_long32 *start, const sge_assignment_t *a,
 
    /* cause load be raised artificially to reflect load correction when
       checking job requests */
-   if (lGetPosViaElem(hep, EH_load_correction_factor) >= 0) {
+   if (lGetPosViaElem(hep, EH_load_correction_factor, SGE_NO_ABORT) >= 0) {
       if ((ulc_factor=lGetUlong(hep, EH_load_correction_factor)))
          lc_factor = ((double)ulc_factor)/100;
    }
@@ -4702,7 +4702,7 @@ sequential_global_time(u_long32 *start, const sge_assignment_t *a, int *violatio
    
    /* cause global load be raised artificially to reflect load correction when
       checking job requests */
-   if (lGetPosViaElem(a->gep, EH_load_correction_factor) >= 0) {
+   if (lGetPosViaElem(a->gep, EH_load_correction_factor, SGE_NO_ABORT) >= 0) {
       if ((ulc_factor=lGetUlong(a->gep, EH_load_correction_factor)))
          lc_factor = ((double)ulc_factor)/100;
    }
@@ -4769,7 +4769,7 @@ parallel_global_slots(const sge_assignment_t *a, int *slots, int *slots_qend, in
    if (sge_host_match_static(a->job, NULL, a->gep, a->centry_list, a->acl_list) == DISPATCH_OK) {
       /* cause global load be raised artificially to reflect load correction when
          checking job requests */
-      if (lGetPosViaElem(a->gep, EH_load_correction_factor) >= 0)
+      if (lGetPosViaElem(a->gep, EH_load_correction_factor, SGE_NO_ABORT) >= 0)
          if ((ulc_factor=lGetUlong(a->gep, EH_load_correction_factor)))
             lc_factor = ((double)ulc_factor)/100;
 

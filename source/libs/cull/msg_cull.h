@@ -222,6 +222,11 @@
 /* #define MSG_CULL_DECHAINOBJECT_INCONSISTENTCONTENT_S       _message(41164, _("lDechainObject: element to dechain from field "SFQ" is not the requested element")) __TS Removed automatically from testsuite!! TS__*/
 #define MSG_CULL_GETBOOL_WRONGTYPEFORFIELDXY_SS          _MESSAGE(41165, _("lGetBool: wrong type for field "SFN" ("SFN")"))
 #define MSG_CULL_SETBOOL_WRONGTYPEFORFIELDXY_SS          _MESSAGE(41166, _("lSetBool: wrong type for field "SFN" ("SFN")"))
-#define MSG_CULL_WHERE_SHOULDBEBOOL                     _MESSAGE(41167, _("lWhere (should be a lBoolT)"))
+#define MSG_CULL_WHERE_SHOULDBEBOOL                      _MESSAGE(41167, _("lWhere (should be a lBoolT)"))
+
+#define MSG_CULL_XNOTFOUNDINELEMENT_S                    _MESSAGE(41068, _("!!!!!!!!!! "SFN" not found in element !!!!!!!!!!"))
+
+#define MSG_CULL_POINTER_NULLELEMENTFORX_S               _MESSAGE(41069, _("!!!!!!!!!! got NULL element for "SFN" !!!!!!!!!!"))
+
 #endif /* __MSG_CULL_H */ 
 

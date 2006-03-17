@@ -139,7 +139,7 @@ print_jatask_event(object_description *object_base, sge_object_type type,
    timestamp = sge_get_gmt();
 
    DPRINTF(("%s\n", event_text(event, &buffer_wrapper)));
-   if (lGetPosViaElem(event, ET_type) >= 0) {
+   if (lGetPosViaElem(event, ET_type, SGE_NO_ABORT) >= 0) {
       u_long32 type = lGetUlong(event, ET_type);
       if (type == sgeE_JATASK_MOD) { 
          lList *jat = lGetList(event,ET_new_version);
@@ -207,7 +207,7 @@ analyze_jatask_event(object_description *object_base,sge_object_type type,
 
    sge_dstring_init(&buffer_wrapper, buffer, sizeof(buffer));
    
-   if (lGetPosViaElem(event, ET_type) >= 0) {
+   if (lGetPosViaElem(event, ET_type, SGE_NO_ABORT) >= 0) {
       u_long32 type = lGetUlong(event, ET_type);
 
       if (type == sgeE_JATASK_MOD) { 

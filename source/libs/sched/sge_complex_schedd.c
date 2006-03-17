@@ -1253,7 +1253,7 @@ lListElem *get_attribute_by_name(lListElem* global, lListElem *host, lListElem *
       actual_attr = lGetList(global, EH_resource_utilization);
 
       /* is there a multiplier for load correction (may be not in qstat, qmon etc) */
-      if (lGetPosViaElem(global, EH_load_correction_factor) >= 0) {
+      if (lGetPosViaElem(global, EH_load_correction_factor, SGE_NO_ABORT) >= 0) {
          if ((lc_factor=lGetUlong(global, EH_load_correction_factor)) != 0) {
             lc_factor = ((double)lc_factor)/100;
          }   
@@ -1273,7 +1273,7 @@ lListElem *get_attribute_by_name(lListElem* global, lListElem *host, lListElem *
       actual_attr = lGetList(host, EH_resource_utilization);
 
       /* is there a multiplier for load correction (may be not in qstat, qmon etc) */
-      if (lGetPosViaElem(host, EH_load_correction_factor) >= 0) {
+      if (lGetPosViaElem(host, EH_load_correction_factor, SGE_NO_ABORT) >= 0) {
          if ((lc_factor=lGetUlong(host, EH_load_correction_factor)) != 0) {
             lc_factor = ((double)lc_factor)/100;
          }
@@ -1370,7 +1370,7 @@ char *object_name
    DENTER(TOP_LAYER, "attr_mod_threshold");
 
    /* ---- attribute nm */
-   if (lGetPosViaElem(qep, nm)>=0) {
+   if (lGetPosViaElem(qep, nm, SGE_NO_ABORT)>=0) {
       lListElem *tmp_elem = NULL;
 
       DPRINTF(("got new %s\n", attr_name));

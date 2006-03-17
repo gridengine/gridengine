@@ -128,17 +128,17 @@ void sge_build_job_category_dstring(dstring *category_str, lListElem *job, lList
    sge_mutex_lock("cull_order_mutex", SGE_FUNC, __LINE__, &Category_Control.cull_order_mutex);
 
    if (Category_Control.cull_order_pos.JB_hard_queue_list_pos == -1) {
-      Category_Control.cull_order_pos.JB_hard_queue_list_pos = lGetPosViaElem(job, JB_hard_queue_list);
-      Category_Control.cull_order_pos.JB_master_hard_queue_list_pos = lGetPosViaElem(job, JB_master_hard_queue_list);
-      Category_Control.cull_order_pos.JB_hard_resource_list_pos = lGetPosViaElem(job, JB_hard_resource_list);
-      Category_Control.cull_order_pos.JB_soft_resource_list_pos = lGetPosViaElem(job, JB_soft_resource_list);
-      Category_Control.cull_order_pos.JB_checkpoint_name_pos = lGetPosViaElem(job, JB_checkpoint_name);
-      Category_Control.cull_order_pos.JB_type_pos = lGetPosViaElem(job, JB_type);
-      Category_Control.cull_order_pos.JB_owner_pos = lGetPosViaElem(job, JB_owner);
-      Category_Control.cull_order_pos.JB_group_pos = lGetPosViaElem(job, JB_group);
-      Category_Control.cull_order_pos.JB_project_pos = lGetPosViaElem(job, JB_project);
-      Category_Control.cull_order_pos.JB_pe_pos = lGetPosViaElem(job, JB_pe);
-      Category_Control.cull_order_pos.JB_range_pos = lGetPosViaElem(job, JB_pe_range);
+      Category_Control.cull_order_pos.JB_hard_queue_list_pos = lGetPosViaElem(job, JB_hard_queue_list, SGE_NO_ABORT);
+      Category_Control.cull_order_pos.JB_master_hard_queue_list_pos = lGetPosViaElem(job, JB_master_hard_queue_list, SGE_NO_ABORT);
+      Category_Control.cull_order_pos.JB_hard_resource_list_pos = lGetPosViaElem(job, JB_hard_resource_list, SGE_NO_ABORT);
+      Category_Control.cull_order_pos.JB_soft_resource_list_pos = lGetPosViaElem(job, JB_soft_resource_list, SGE_NO_ABORT);
+      Category_Control.cull_order_pos.JB_checkpoint_name_pos = lGetPosViaElem(job, JB_checkpoint_name, SGE_NO_ABORT);
+      Category_Control.cull_order_pos.JB_type_pos = lGetPosViaElem(job, JB_type, SGE_NO_ABORT);
+      Category_Control.cull_order_pos.JB_owner_pos = lGetPosViaElem(job, JB_owner, SGE_NO_ABORT);
+      Category_Control.cull_order_pos.JB_group_pos = lGetPosViaElem(job, JB_group, SGE_NO_ABORT);
+      Category_Control.cull_order_pos.JB_project_pos = lGetPosViaElem(job, JB_project, SGE_NO_ABORT);
+      Category_Control.cull_order_pos.JB_pe_pos = lGetPosViaElem(job, JB_pe, SGE_NO_ABORT);
+      Category_Control.cull_order_pos.JB_range_pos = lGetPosViaElem(job, JB_pe_range, SGE_NO_ABORT);
    }
    sge_mutex_unlock("cull_order_mutex", SGE_FUNC, __LINE__, &Category_Control.cull_order_mutex);
    
@@ -197,7 +197,6 @@ void sge_build_job_category_dstring(dstring *category_str, lListElem *job, lList
    sge_unparse_string_option_dstring(category_str, job, Category_Control.cull_order_pos.JB_project_pos, "-P");
    DRETURN_VOID;
 }
-
 
 /****** category/sge_build_job_cs_category() ***********************************
 *  NAME

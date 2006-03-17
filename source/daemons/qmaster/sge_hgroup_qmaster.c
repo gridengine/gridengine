@@ -89,7 +89,7 @@ hgroup_mod_hostlist(lListElem *hgroup, lList **answer_list,
 
    DENTER(TOP_LAYER, "hgroup_mod_hostlist");
    if (hgroup != NULL && reduced_elem != NULL) {
-      int pos = lGetPosViaElem(reduced_elem, HGRP_host_list);
+      int pos = lGetPosViaElem(reduced_elem, HGRP_host_list, SGE_NO_ABORT);
 
       if (pos >= 0) {
          lList *list = lGetPosList(reduced_elem, pos);
@@ -243,7 +243,7 @@ hgroup_mod(lList **answer_list, lListElem *hgroup, lListElem *reduced_elem,
 
    if (ret) {
       /* Did we get a hostgroupname?  */
-      pos = lGetPosViaElem(reduced_elem, HGRP_name);
+      pos = lGetPosViaElem(reduced_elem, HGRP_name, SGE_NO_ABORT);
       if (pos >= 0) {
          const char *name = lGetPosHost(reduced_elem, pos);
 
@@ -284,7 +284,7 @@ hgroup_mod(lList **answer_list, lListElem *hgroup, lListElem *reduced_elem,
     * Is there a list of host references
     */
    if (ret) {
-      pos = lGetPosViaElem(reduced_elem, HGRP_host_list);
+      pos = lGetPosViaElem(reduced_elem, HGRP_host_list, SGE_NO_ABORT);
       if (pos >= 0) {
          lList *add_hosts = NULL;
          lList *rem_hosts = NULL;

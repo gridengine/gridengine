@@ -127,19 +127,19 @@ int sub_command, monitoring_t *monitor
    }
 
    /* ---- UP_oticket */
-   if ((pos=lGetPosViaElem(ep, UP_oticket))>=0) {
+   if ((pos=lGetPosViaElem(ep, UP_oticket, SGE_NO_ABORT))>=0) {
       uval = lGetPosUlong(ep, pos);
       lSetUlong(modp, UP_oticket, uval);
    }
 
    /* ---- UP_fshare */
-   if ((pos=lGetPosViaElem(ep, UP_fshare))>=0) {
+   if ((pos=lGetPosViaElem(ep, UP_fshare, SGE_NO_ABORT))>=0) {
       uval = lGetPosUlong(ep, pos);
       lSetUlong(modp, UP_fshare, uval);
    }
 
    /* ---- UP_delete_time */
-   if ((pos=lGetPosViaElem(ep, UP_delete_time))>=0) {
+   if ((pos=lGetPosViaElem(ep, UP_delete_time, SGE_NO_ABORT))>=0) {
       uval = lGetPosUlong(ep, pos);
       lSetUlong(modp, UP_delete_time, uval);
    }
@@ -147,14 +147,14 @@ int sub_command, monitoring_t *monitor
    up_new_version = lGetUlong(modp, UP_version)+1;
 
    /* ---- UP_usage */
-   if ((pos=lGetPosViaElem(ep, UP_usage))>=0) {
+   if ((pos=lGetPosViaElem(ep, UP_usage, SGE_NO_ABORT))>=0) {
       lp = lGetPosList(ep, pos);
       lSetList(modp, UP_usage, lCopyList("usage", lp));
       lSetUlong(modp, UP_version, up_new_version);
    }
 
    /* ---- UP_project */
-   if ((pos=lGetPosViaElem(ep, UP_project))>=0) {
+   if ((pos=lGetPosViaElem(ep, UP_project, SGE_NO_ABORT))>=0) {
       lp = lGetPosList(ep, pos);
       lSetList(modp, UP_project, lCopyList("project", lp));
       lSetUlong(modp, UP_version, up_new_version);
@@ -162,7 +162,7 @@ int sub_command, monitoring_t *monitor
 
    if (user_flag) {
       /* ---- UP_default_project */
-      if ((pos=lGetPosViaElem(ep, UP_default_project))>=0) {
+      if ((pos=lGetPosViaElem(ep, UP_default_project, SGE_NO_ABORT))>=0) {
          const char *dproj;
 
          /* make sure default project exists */
@@ -180,7 +180,7 @@ int sub_command, monitoring_t *monitor
       }
    } else {
       /* ---- UP_acl */
-      if ((pos=lGetPosViaElem(ep, UP_acl))>=0) {
+      if ((pos=lGetPosViaElem(ep, UP_acl, SGE_NO_ABORT))>=0) {
          lp = lGetPosList(ep, pos);
          lSetList(modp, UP_acl, lCopyList("acl", lp));
 
@@ -191,7 +191,7 @@ int sub_command, monitoring_t *monitor
       }
 
       /* ---- UP_xacl */
-      if ((pos=lGetPosViaElem(ep, UP_xacl))>=0) {
+      if ((pos=lGetPosViaElem(ep, UP_xacl, SGE_NO_ABORT))>=0) {
          lp = lGetPosList(ep, pos);
          lSetList(modp, UP_xacl, lCopyList("xacl", lp));
          if (userset_list_validate_acl_list(lGetList(ep, UP_xacl), alpp)!=STATUS_OK) {
@@ -200,8 +200,8 @@ int sub_command, monitoring_t *monitor
          }
       }
 
-      if (lGetPosViaElem(modp, UP_xacl)>=0 || 
-          lGetPosViaElem(modp, UP_acl)>=0) {
+      if (lGetPosViaElem(modp, UP_xacl, SGE_NO_ABORT)>=0 || 
+          lGetPosViaElem(modp, UP_acl, SGE_NO_ABORT)>=0) {
          if (multiple_occurances( alpp,
                lGetList(modp, UP_acl),
                lGetList(modp, UP_xacl),

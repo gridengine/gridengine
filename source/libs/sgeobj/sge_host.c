@@ -224,7 +224,7 @@ int sge_resolve_host(lListElem *ep, int nm)
    }
 
    /* ep is no host element, if ep has no nm */
-   if ((pos = lGetPosViaElem(ep, nm)) < 0) {
+   if ((pos = lGetPosViaElem(ep, nm, SGE_NO_ABORT)) < 0) {
       DEXIT;
       return -1;
    }

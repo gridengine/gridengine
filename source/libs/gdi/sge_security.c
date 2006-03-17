@@ -58,6 +58,8 @@
 #include "sge_job.h"
 #include "sge_answer.h"
 #include "sge_time.h"
+#include "sge_bootstrap.h"
+#include "sge_string.h"
 
 
 #include "msg_common.h"
@@ -1626,11 +1628,14 @@ int sge_set_auth_info(sge_gdi_request *request, uid_t uid, char *user,
 ** NOTES
 **    MT-NOTE: sge_decrypt() is MT safe (assumptions)
 */
-int sge_get_auth_info(sge_gdi_request *request, uid_t *uid, char *user, 
-                        gid_t *gid, char *group)
+int sge_get_auth_info(sge_gdi_request *request, 
+                      uid_t *uid, char *user, size_t user_len, 
+                      gid_t *gid, char *group, size_t group_len)
 {
    char dbuffer[2*SGE_SEC_BUFSIZE];
    int dlen = 0;
+   char userbuf[2*SGE_SEC_BUFSIZE];
+   char groupbuf[2*SGE_SEC_BUFSIZE];
 
    DENTER(TOP_LAYER, "sge_get_auth_info");
 
@@ -1639,10 +1644,23 @@ int sge_get_auth_info(sge_gdi_request *request, uid_t *uid, char *user,
       return -1;
    }   
 
-   if (sscanf(dbuffer, pid_t_fmt" "pid_t_fmt" %s %s", uid, gid, user, group) != 4) {
+   if (sscanf(dbuffer, pid_t_fmt" "pid_t_fmt" %s %s", uid, gid, userbuf, groupbuf) != 4) {
       DEXIT;
       return -1;
    }   
+
+   if (strlen(userbuf) > user_len) {
+      DEXIT;
+      return -1;
+   }   
+
+   if (strlen(groupbuf) > group_len) {
+      DEXIT;
+      return -1;
+   }   
+   
+   sge_strlcpy(user, userbuf, user_len);
+   sge_strlcpy(group, groupbuf, group_len);
 
    DEXIT;
    return 0;
@@ -1860,54 +1878,67 @@ static bool change_encoding(char *cbuf, int* csize, unsigned char* ubuf, int* us
 /* MT-NOTE: sge_security_verify_user() is MT safe (assumptions) */
 int sge_security_verify_user(const char *host, const char *commproc, u_long32 id, const char *gdi_user) 
 {
+   const char *admin_user = bootstrap_get_admin_user();
+
    DENTER(TOP_LAYER, "sge_security_verify_user");
+
+   if (gdi_user == NULL || host == NULL || commproc == NULL) {
+     DPRINTF(("gdi user name or host or commproc is NULL\n"));
+     DEXIT;
+     return False;
+   }
+
+   if (is_daemon(commproc) && (strcmp(gdi_user, admin_user) != 0) && (strcmp(gdi_user, "root") != 0)) {
+     DEXIT;
+     return False;
+   }
 
 #ifdef SECURE
    if (feature_is_enabled(FEATURE_CSP_SECURITY)) {
-      const char* dummy_host = "NULL";
-      const char* dummy_commproc = "NULL";
-      const char* dummy_gdi_user = "NULL";
-      char* dummy_unique_user = "NULL";
       cl_com_handle_t* handle = NULL;
       char* unique_identifier = NULL;
 
-      if (gdi_user != NULL) {
-         dummy_gdi_user = gdi_user;
-      }
-      if (commproc != NULL) {
-         dummy_commproc = commproc;
-      }
-      if (host != NULL) {
-         dummy_host = host;
-      }
-
       handle = cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0);
       if (cl_com_ssl_get_unique_id(handle, (char*)host, (char*)commproc, (unsigned long)id, &unique_identifier) == CL_RETVAL_OK) {
-         dummy_unique_user = unique_identifier;
-         DPRINTF(("unique identifier = "SFQ"\n", dummy_unique_user));
+         DPRINTF(("unique identifier = "SFQ"\n", unique_identifier ? unique_identifier : "NULL" ));
       }
 
+      if (unique_identifier == NULL) {
+         DPRINTF(("unique_identifier is NULL\n"));
+         DEXIT;
+         return False;
+      }
       
-
-      /* TODO: This is only a workaround for the problem that daemons are not always started
-               as root, they also can be stared as admin user */
+      DPRINTF(("endpoint "SFN"/"SFN"/"sge_U32CFormat" has the unique identifier "SFQ", gdi user = "SFQ"\n", 
+                  host, 
+                  commproc, 
+                  sge_u32c(id), 
+                  unique_identifier, 
+                  gdi_user));
 
       if (!is_daemon(commproc)) {
-         DPRINTF(("endpoint "SFN"/"SFN"/"sge_U32CFormat" has the unique identifier "SFQ", gdi user = "SFQ"\n", 
-                  dummy_host, dummy_commproc, sge_u32c(id), dummy_unique_user, dummy_gdi_user));
-         if (strcmp(dummy_gdi_user,dummy_unique_user) != 0) {
+         if (strcmp(gdi_user, unique_identifier) != 0) {
             DPRINTF(("endpoint certificate user name doesn't match gdi user name\n"));
-            free(unique_identifier);
+            FREE(unique_identifier);
             unique_identifier = NULL;
             DEXIT;
             return False;
          }
       } else {
-         DPRINTF(("ignoring verify user request for endpoint "SFN"/"SFN"/"sge_U32CFormat", gdi user = "SFQ"\n",
-                  dummy_host, dummy_commproc, sge_u32c(id), dummy_gdi_user));
+         /*
+         ** only admin user or root user are allowed to run daemons
+         */
+         if (( strcmp(unique_identifier, admin_user) != 0) && ( strcmp(unique_identifier, "root") != 0)) {
+            DPRINTF(("no admin user request for endpoint "SFN"/"SFN"/"sge_U32CFormat", gdi user = "SFQ"\n",
+                  host, commproc, sge_u32c(id), gdi_user));
+            FREE(unique_identifier);
+            unique_identifier = NULL;
+            DEXIT;
+            return False;
+         }   
       }
       if (unique_identifier != NULL) {
-         free(unique_identifier);
+         FREE(unique_identifier);
          unique_identifier = NULL;
       }
    }  

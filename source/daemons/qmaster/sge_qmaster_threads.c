@@ -155,7 +155,8 @@ void sge_gdi_kill_master(char *host, sge_gdi_request *request, sge_gdi_request *
 
    DENTER(GDI_LAYER, "sge_gdi_kill_master");
 
-   if (sge_get_auth_info(request, &uid, username, &gid, groupname) == -1) {
+   if (sge_get_auth_info(request, &uid, username, sizeof(username), 
+                                  &gid, groupname, sizeof(groupname)) == -1) {
       ERROR((SGE_EVENT, MSG_GDI_FAILEDTOEXTRACTAUTHINFO));
       answer_list_add(&(answer->alp), SGE_EVENT, STATUS_ENOMGR, ANSWER_QUALITY_ERROR);
       DEXIT;

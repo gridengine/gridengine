@@ -329,13 +329,19 @@ lDescr **dpp
       return ret;
    }
 
-   if ((dp = (lDescr *) malloc(sizeof(lDescr) * (n + 1))) == NULL) {
+   if (n > n+1) {
       LERROR(LEMALLOC);
       DEXIT;
       return PACK_ENOMEM;
    }
 
-   memset(dp, 0, sizeof(lDescr) * (n + 1));
+   if ((dp = (lDescr *) malloc(sizeof(lDescr) * (n+1))) == NULL) {
+      LERROR(LEMALLOC);
+      DEXIT;
+      return PACK_ENOMEM;
+   }
+
+   memset(dp, 0, sizeof(lDescr) * (n+1));
 
    dp[n].nm = NoName;
    dp[n].mt = lEndT;

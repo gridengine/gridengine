@@ -778,37 +778,38 @@ sge_c_gdi_add(gdi_object_t *ao, char *host, sge_gdi_request *request,
             sge_add_event_client(ep,&(answer->alp), (sub_command & SGE_GDI_RETURN_NEW_VERSION) ? &(answer->lp) : NULL, user, host, monitor);
          }
       } else if (request->target == SGE_JOB_LIST) {
-         
          for_each(ep, request->lp) { /* is thread save. the global lock is used, when needed */
                                                    /* fill address infos from request into event client that must be added */
-            if(mconf_get_simulate_hosts()) { 
+            if (job_verify_submitted_job(ep, &(answer->alp))) {
+               if(mconf_get_simulate_hosts()) {
 
-               int multi_job = 1;
-               int i;
-               lList *context = lGetList(ep, JB_context);
-               if(context != NULL) {
-                  lListElem *multi = lGetElemStr(context, VA_variable, "SGE_MULTI_SUBMIT");
-                  if(multi != NULL) {
-                     multi_job = atoi(lGetString(multi, VA_value));
-                     DPRINTF(("Cloning job %d times in simulation mode\n", multi_job));
+                  int multi_job = 1;
+                  int i;
+                  lList *context = lGetList(ep, JB_context);
+                  if(context != NULL) {
+                     lListElem *multi = lGetElemStr(context, VA_variable, "SGE_MULTI_SUBMIT");
+                     if(multi != NULL) {
+                        multi_job = atoi(lGetString(multi, VA_value));
+                        DPRINTF(("Cloning job %d times in simulation mode\n", multi_job));
+                     }
                   }
-               }
-               
-               for(i = 0; i < multi_job; i++) {
-                  lListElem *clone = lCopyElem(ep);
-                  sge_gdi_add_job(clone, &(answer->alp), 
+                  
+                  for(i = 0; i < multi_job; i++) {
+                     lListElem *clone = lCopyElem(ep);
+                     sge_gdi_add_job(clone, &(answer->alp), 
+                                     (sub_command & SGE_GDI_RETURN_NEW_VERSION) ? 
+                                     &(answer->lp) : NULL, 
+                                     user, host, uid, gid, group, request, monitor);
+                        lFreeElem(&clone);
+                  }
+                  
+               } else {
+                  /* submit needs to know user and group */
+                  sge_gdi_add_job(ep, &(answer->alp), 
                                   (sub_command & SGE_GDI_RETURN_NEW_VERSION) ? 
                                   &(answer->lp) : NULL, 
                                   user, host, uid, gid, group, request, monitor);
-                     lFreeElem(&clone);
                }
-               
-            } else {
-               /* submit needs to know user and group */
-               sge_gdi_add_job(ep, &(answer->alp), 
-                               (sub_command & SGE_GDI_RETURN_NEW_VERSION) ? 
-                               &(answer->lp) : NULL, 
-                               user, host, uid, gid, group, request, monitor);
             }
          }
       } else if (request->target == SGE_SC_LIST ) {

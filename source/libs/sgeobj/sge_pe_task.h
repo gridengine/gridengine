@@ -44,4 +44,6 @@ lListElem *pe_task_sum_past_usage_all(lList *pe_task_list);
 lListElem *pe_task_sum_past_usage_list(lList *pe_task_list, 
                                        const lListElem *pe_task);
 
+bool pe_task_verify_request(const lListElem *petr, lList **answer_list);
+
 #endif /* __SGE_PETASK_H */

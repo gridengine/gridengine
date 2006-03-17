@@ -1,3 +1,7 @@
+JG-2006-03-17-0: Enhancem.: Added verification of incoming job and petask 
+                            request in qmaster and execd (no full check yet).
+                 Review:    AA
+
 SD-2006-03-16-0: Bugfix:    Fixed typo compile problem in SGE PQS API
                  Issue:     2006
 
@@ -97,7 +101,8 @@ JG-2006-01-30-0: Enhancem.: cleanup aimk code coverage options
                             actions.
                  Review:    RD
 
-JG-2005-12-28-0: Bugfix:    qrsh always did verbose output
+JG-2005-12-28-0: Bugfix:    qrsh always did verbose output (no CR/IZ, as the
+                            bug did not appear in any released product).
                  Review:    CR
 
 JG-2005-12-27-0: Bugfix:    Merged JG-2005-12-23-0 from maintrunk:

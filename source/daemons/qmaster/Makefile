@@ -38,7 +38,6 @@ QMASTER_DIR = $(SDIR)/daemons/qmaster
 QMASTER_TARGETS = sge_qmaster
 
 QMASTER_SRC = sge_qmaster_threads.c \
-              sge_c_ack.c \
               sge_c_gdi.c \
               sge_follow.c \
               sge_give_jobs.c \
@@ -162,9 +161,6 @@ sge_qmod_qmaster.o:	$(QMASTER_DIR)/sge_qmod_qmaster.c
 
 sge_userset_qmaster.o:	$(QMASTER_DIR)/sge_userset_qmaster.c
 		$(CC) $(CFLAGS) -c $(QMASTER_DIR)/sge_userset_qmaster.c
-
-sge_c_ack.o:    $(QMASTER_DIR)/sge_c_ack.c
-		$(CC) $(CFLAGS) -c $(QMASTER_DIR)/sge_c_ack.c
 
 sge_c_gdi.o:	$(QMASTER_DIR)/sge_c_gdi.c
 		$(CC) -o $@ $(CFLAGS) -c $(QMASTER_DIR)/sge_c_gdi.c

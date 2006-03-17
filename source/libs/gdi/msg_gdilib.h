@@ -50,6 +50,8 @@
 #define MSG_SEC_KRBENCRYPTTGT_SSIS    _MESSAGE(43020, _("could not encrypt TGT for client <"SFN","SFN",%d> - "SFN))
 #define MSG_SEC_KRBENCRYPTTGTUSER_SUS _MESSAGE(43021, _("could not encrypt TGT for user "SFN", job "sge_U32CFormat" - "SFN))
 #define MSG_SEC_NOUID_SU              _MESSAGE(43022, _("could not get user ID for "SFN", job "sge_U32CFormat))
+#define MSG_REQUEST_DENIED_FOR_USER_S _MESSAGE(43023, _("request denied for user "SFN))
+#define MSG_ADMIN_REQUEST_DENIED_FOR_USER_S _MESSAGE(43024, _("admin request denied for user "SFN))
 
 /* 
 ** gdilib/sge_any_request.c

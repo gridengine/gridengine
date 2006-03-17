@@ -1,3 +1,6 @@
+RD-2006-03-17-0: Enhancem.: Added additional permission checking in CSP mode
+                 Review:    AA
+
 JG-2006-03-17-0: Enhancem.: Added verification of incoming job and petask 
                             request in qmaster and execd (no full check yet).
                  Review:    AA
@@ -7134,3 +7137,4 @@ JG-2004-04-06-0: Enhancem.: write intermediate accounting records to reporting
 MD-2004-04-06-0: Bugfix:    - Improper variable comparison
                             - autoinstall does not work
                             - changed logfile dir
+

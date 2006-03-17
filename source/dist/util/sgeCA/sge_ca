@@ -659,7 +659,8 @@ RenewCert()
       CRLFILE=$CATOP/ca-crl.pem
    else
       KEYDIR=$CALOCALTOP/userkeys/$2
-      NEWKEYDIR=/tmp/$$/userkeys/$2
+      NEWKEYBASEDIR=/tmp/sge_ca_dir_$$
+      NEWKEYDIR=$NEWKEYBASEDIR/userkeys/$2
       KEYFILE=$NEWKEYDIR/key.pem
       REQFILE=$NEWKEYDIR/req.pem
       CERTFILE=$NEWKEYDIR/cert.pem
@@ -735,10 +736,10 @@ RenewCert()
  
    fi
 
-   $RM -f $TMPFILE $TMPFILE1 
+   Execute $RM -f $TMPFILE $TMPFILE1 
 
-   if [ $1 != daemon ]; then
-      Execute $RM -rf $NEWKEYDIR
+   if [ "$1" != daemon ]; then
+      Execute $RM -rf $NEWKEYBASEDIR
       Execute $CHMOD 500 $KEYDIR
       Execute $CHMOD 400 $KEYDIR/*
       Execute $CHOWN -R $2 $KEYDIR

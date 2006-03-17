@@ -64,6 +64,7 @@
 #include "sge_var.h"
 #include "sge_qinstance.h"
 #include "get_path.h"
+#include "sge_bootstrap.h"
 #include "sge_answer.h"
 
 #include "msg_common.h"
@@ -111,7 +112,6 @@ int answer_error;
       return 0;
    }
 
-   feature_activate((feature_id_t)feature_set);
 
    /* if request comes from qmaster: start a job
     * else it is a request to start a pe task
@@ -119,7 +119,13 @@ int answer_error;
    if(strcmp(de->commproc, prognames[QMASTER]) == 0) {
       lListElem *job, *ja_task;
       lList *answer_list = NULL;
+      const char *admin_user = bootstrap_get_admin_user();
 
+      if (false == sge_security_verify_unique_identifier(true, admin_user, uti_state_get_sge_formal_prog_name(), 0,
+                                            de->host, de->commproc, de->id)) {
+         DRETURN(0);
+      }
+       
       if (cull_unpack_elem(pb, &job, NULL)) {
          ERROR((SGE_EVENT, MSG_COM_UNPACKJOB));
          DRETURN(0);
@@ -698,6 +704,11 @@ int *synchron
 
    if (jatep == NULL) { 
       ERROR((SGE_EVENT, MSG_JOB_TASKNOTASKINJOB_UU, sge_u32c(jobid), sge_u32c(jataskid)));
+      goto Error;
+   }
+
+   if (false == sge_security_verify_unique_identifier(false, lGetString(jep, JB_owner), uti_state_get_sge_formal_prog_name(), 0,
+                                         de->host, de->commproc, de->id)) {
       goto Error;
    }
 

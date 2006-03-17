@@ -102,6 +102,14 @@ int sge_get_auth_info(sge_gdi_request *request,
 
 int sge_security_verify_user(const char *host, const char *commproc, u_long32 id, const char *user); 
 
+bool sge_security_verify_unique_identifier(bool check_admin_user, 
+                                           const char* user, 
+                                           const char* progname,
+                                           unsigned long progid, 
+                                           const char* hostname, 
+                                           const char* commproc, 
+                                           unsigned long commid);
+
 void sge_security_event_handler(te_event_t anEvent, monitoring_t *monitor);
 
 #endif /* __SGE_SECURITY_H */

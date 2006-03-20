@@ -1,4 +1,10 @@
-JG-2006-03-30-0: Enhancem.: Added verification of incoming job and petask 
+JG-2006-03-20-1: Bugfix:    Fixed a deadlock in qmaster when writing (closing) 
+                            the reporting file failed.
+                 Bugtraq:   6397383
+                 Issue:     2007
+                 Review:    RD
+
+JG-2006-03-20-0: Enhancem.: Added verification of incoming job and petask 
                             request in qmaster and execd (no full check yet).
                             (Merge of V60s2_BRANCH, JG-2006-03-17-0)
                  Review:    AA

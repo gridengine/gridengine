@@ -1441,22 +1441,24 @@ static bool reporting_flush_report_file(lList **answer_list,
          }
       }
 
-      /* close file */
-      if (fp != NULL) {
-         FCLOSE(fp);
-      }
-
       /* clear the buffer. We do this regardless of the result of
        * the writing command. Otherwise, if writing the report file failed
        * over a longer time period, the reporting buffer could grow endlessly.
        */
       sge_dstring_clear(&(buf->buffer));
 
+      /* close file */
+      if (fp != NULL) {
+         FCLOSE(fp);
+      }
+
       sge_mutex_unlock(buf->mtx_name, SGE_FUNC, __LINE__, &(buf->mtx));
    }
 
    DRETURN(ret);
+
 FCLOSE_ERROR:
+   sge_mutex_unlock(buf->mtx_name, SGE_FUNC, __LINE__, &(buf->mtx));
    if (answer_list == NULL) {
       ERROR((SGE_EVENT, MSG_ERRORCLOSINGFILE_SS, filename, 
              sge_strerror(errno, &error_dstring)));
@@ -1466,6 +1468,7 @@ FCLOSE_ERROR:
                               MSG_ERRORCLOSINGFILE_SS, filename, 
                               sge_strerror(errno, &error_dstring));
    }
+
    DRETURN(false);
 }
 

@@ -1,3 +1,8 @@
+RD-2006-03-20-0: Enhancem.: Added additional permission checking in CSP mode
+                            (Merge of V60s2_BRANCH, RD-2006-03-17-0)
+                 Bugtraq:   6400729
+                 Review:    AA
+
 JG-2006-03-20-1: Bugfix:    Fixed a deadlock in qmaster when writing (closing) 
                             the reporting file failed.
                  Bugtraq:   6397383

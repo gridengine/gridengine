@@ -716,15 +716,6 @@ static void qping_print_line(char* buffer, int nonewline, int dump_tag) {
                            case TAG_EVENT_CLIENT_EXIT:
                               printf("   TAG_EVENT_CLIENT_EXIT\n");
                               break;
-                           case TAG_SEC_ANNOUNCE:
-                              printf("   TAG_SEC_ANNOUNCE\n");
-                              break;
-                           case TAG_SEC_RESPOND:
-                              printf("   TAG_SEC_RESPOND\n");
-                              break;
-                           case TAG_SEC_ERROR:
-                              printf("   TAG_SEC_ERROR\n");
-                              break;
    
                            default:
                               printf("   Unexpected tag\n");
@@ -884,7 +875,6 @@ static void qping_print_line(char* buffer, int nonewline, int dump_tag) {
          case TAG_KILL_EXECD
          case TAG_NEW_FEATURES
          case TAG_GET_NEW_CONF
-         case TAG_SEC_ANNOUNCE
          ...
          are missing !!!
    #endif

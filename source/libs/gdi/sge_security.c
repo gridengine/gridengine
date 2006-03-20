@@ -1892,57 +1892,19 @@ int sge_security_verify_user(const char *host, const char *commproc, u_long32 id
      DEXIT;
      return False;
    }
-
-#ifdef SECURE
-   if (feature_is_enabled(FEATURE_CSP_SECURITY)) {
-      cl_com_handle_t* handle = NULL;
-      char* unique_identifier = NULL;
-
-      handle = cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0);
-      if (cl_com_ssl_get_unique_id(handle, (char*)host, (char*)commproc, (unsigned long)id, &unique_identifier) == CL_RETVAL_OK) {
-         DPRINTF(("unique identifier = "SFQ"\n", unique_identifier ? unique_identifier : "NULL" ));
-      }
-
-      if (unique_identifier == NULL) {
-         DPRINTF(("unique_identifier is NULL\n"));
+   if (!is_daemon(commproc)) {
+      if (false == sge_security_verify_unique_identifier(false, gdi_user, uti_state_get_sge_formal_prog_name(), 0,
+                                            host, commproc, id)) {
          DEXIT;
          return False;
       }
-      
-      DPRINTF(("endpoint "SFN"/"SFN"/"sge_U32CFormat" has the unique identifier "SFQ", gdi user = "SFQ"\n", 
-                  host, 
-                  commproc, 
-                  sge_u32c(id), 
-                  unique_identifier, 
-                  gdi_user));
-
-      if (!is_daemon(commproc)) {
-         if (strcmp(gdi_user, unique_identifier) != 0) {
-            DPRINTF(("endpoint certificate user name doesn't match gdi user name\n"));
-            FREE(unique_identifier);
-            unique_identifier = NULL;
-            DEXIT;
-            return False;
-         }
-      } else {
-         /*
-         ** only admin user or root user are allowed to run daemons
-         */
-         if (( strcmp(unique_identifier, admin_user) != 0) && ( strcmp(unique_identifier, "root") != 0)) {
-            DPRINTF(("no admin user request for endpoint "SFN"/"SFN"/"sge_U32CFormat", gdi user = "SFQ"\n",
-                  host, commproc, sge_u32c(id), gdi_user));
-            FREE(unique_identifier);
-            unique_identifier = NULL;
-            DEXIT;
-            return False;
-         }   
+   } else {
+      if (false == sge_security_verify_unique_identifier(true, admin_user, uti_state_get_sge_formal_prog_name(), 0,
+                                            host, commproc, id)) {
+         DEXIT;
+         return False;
       }
-      if (unique_identifier != NULL) {
-         FREE(unique_identifier);
-         unique_identifier = NULL;
-      }
-   }  
-#endif
+   }
 
 #ifdef KERBEROS
 
@@ -1957,17 +1919,64 @@ int sge_security_verify_user(const char *host, const char *commproc, u_long32 id
    return True;
 }   
 
+bool sge_security_verify_unique_identifier(bool check_admin_user, const char* user, const char* progname,
+        unsigned long progid, const char* hostname, const char* commproc, unsigned long commid) {
+
+   DENTER(TOP_LAYER, "sge_security_verify_unique_identifier");
+
+#ifdef SECURE
+
+   if (user == NULL || progname == NULL || hostname == NULL || commproc == NULL) {
+      DEXIT;
+      return false;
+   }
+
+   if (feature_is_enabled(FEATURE_CSP_SECURITY)) {
+     cl_com_handle_t* handle = NULL;
+     char* unique_identifier = NULL;
+
+     handle = cl_com_get_handle((char*)progname, progid);
+     if (cl_com_ssl_get_unique_id(handle, (char*)hostname, (char*)commproc, commid, &unique_identifier) == CL_RETVAL_OK) {
+         DPRINTF(("unique identifier = "SFQ"\n", unique_identifier ));
+         DPRINTF(("user = "SFQ"\n", user));
+     }
+
+     if ( unique_identifier == NULL ) {
+         DPRINTF(("unique_identifier is NULL\n"));
+         DEXIT;
+         return false;
+      }
+
+      if (check_admin_user) {
+        if ( strcmp(unique_identifier, user) != 0 &&
+             strcmp(unique_identifier, "root") != 0) {
+            DPRINTF((MSG_ADMIN_REQUEST_DENIED_FOR_USER_S, user ? user: "NULL"));
+            WARNING((SGE_EVENT, MSG_ADMIN_REQUEST_DENIED_FOR_USER_S, user ? user: "NULL"));
+            FREE(unique_identifier);
+            DEXIT;
+            return false;
+        }     
+      } else {
+         if (strcmp(unique_identifier, user) != 0) {
+            DPRINTF((MSG_REQUEST_DENIED_FOR_USER_S, user ? user: "NULL"));
+            WARNING((SGE_EVENT, MSG_REQUEST_DENIED_FOR_USER_S, user ? user: "NULL"));
+            FREE(unique_identifier);
+            DEXIT;
+            return false;
+         }
+      }
+      
+      FREE(unique_identifier);
+   }
+#endif
+   DEXIT;
+   return true;
+}
+
 /* MT-NOTE: sge_security_ck_to_do() is MT safe (assumptions) */
 void sge_security_event_handler(te_event_t anEvent, monitoring_t *monitor)
 {
-#ifdef SECURE
-#if 0
-   if (feature_is_enabled(FEATURE_CSP_SECURITY)) {
-      sec_clear_connectionlist();
-   } 
-#endif  
-#endif
-   
+  
 #ifdef KERBEROS
    krb_check_for_idle_clients();
 #endif

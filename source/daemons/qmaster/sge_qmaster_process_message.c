@@ -45,13 +45,21 @@
 #include "sge_gdi_request.h"
 #include "sge_string.h"
 #include "sge_c_gdi.h"
-#include "sge_c_ack.h"
 #include "sge_c_report.h"
 #include "sge_qmaster_main.h"
 #include "sgeobj/sge_answer.h"
 #include "sge_prog.h"
 #include "sge_mtutil.h"
 #include "sge_conf.h"
+#include "sge_bootstrap.h"
+#include "sge_security.h"
+#include "sge_ack.h"
+#include "sge_ja_taskL.h"
+#include "sge_job.h"
+#include "sge_qinstance.h"
+#include "sge_cqueue.h"
+#include "sge_lock.h"
+#include "spool/sge_spooling.h"
 
 #include "msg_qmaster.h"
 #include "msg_common.h"
@@ -145,7 +153,9 @@ static void eval_atomic_end(request_handling_t type);
 
 static request_handling_t do_gdi_request(struct_msg_t*, monitoring_t *monitor);
 static request_handling_t do_report_request(struct_msg_t*, monitoring_t *monitor);
-static void do_event_client_exit(const char*, const char*, sge_pack_buffer*);
+static void do_event_client_exit(struct_msg_t *aMsg, monitoring_t *monitor);
+static void do_c_ack(struct_msg_t *aMsg, monitoring_t *monitor);
+static void sge_c_job_ack(char *, char *, u_long32, u_long32, u_long32, monitoring_t *monitor);
 
 
 /****** sge_qmaster_process_message/eval_message_and_block() *******************
@@ -407,16 +417,14 @@ void *sge_qmaster_process_message(void *anArg, monitoring_t *monitor)
 
    switch (msg.tag)
    {
-      case TAG_SEC_ANNOUNCE:
-         break; /* All processing done in libsec */
       case TAG_GDI_REQUEST: 
          type = do_gdi_request(&msg, monitor);
          break;
       case TAG_ACK_REQUEST:
-         sge_c_ack(msg.snd_host, msg.snd_name, &(msg.buf), monitor);
+         do_c_ack(&msg, monitor);
          break;
       case TAG_EVENT_CLIENT_EXIT:
-         do_event_client_exit(msg.snd_host, msg.snd_name, &(msg.buf));
+         do_event_client_exit(&msg, monitor);
          MONITOR_ACK(monitor);   
          break;
       case TAG_REPORT_REQUEST: 
@@ -554,8 +562,16 @@ static request_handling_t do_report_request(struct_msg_t *aMsg, monitoring_t *mo
 {
    lList *rep = NULL;
    request_handling_t type = ATOMIC_NONE;
+   const char *admin_user = bootstrap_get_admin_user();
 
    DENTER(TOP_LAYER, "do_report_request");
+
+   /* Load reports are only accepted from admin/root user */
+   if (false == sge_security_verify_unique_identifier(true, admin_user, uti_state_get_sge_formal_prog_name(), 0,
+                                            aMsg->snd_host, aMsg->snd_name, aMsg->snd_id)) {
+      DEXIT;
+      return type;
+    }
 
    if (cull_unpack_list(&(aMsg->buf), &rep)) {
       ERROR((SGE_EVENT,MSG_CULL_FAILEDINCULLUNPACKLISTREPORT));
@@ -595,25 +611,204 @@ static request_handling_t do_report_request(struct_msg_t *aMsg, monitoring_t *mo
 *     MT-NOTE: do_event_client_exit() is NOT MT safe. 
 *
 *******************************************************************************/
-static void do_event_client_exit(const char *aHost, const char *aSender, sge_pack_buffer *aBuffer)
+static void do_event_client_exit(struct_msg_t *aMsg, monitoring_t *monitor)
 {
    u_long32 client_id = 0;
 
    DENTER(TOP_LAYER, "do_event_client_exit");
 
-   if (unpackint(aBuffer, &client_id) != PACK_SUCCESS)
+   if (unpackint(&(aMsg->buf), &client_id) != PACK_SUCCESS)
    {
       ERROR((SGE_EVENT, MSG_COM_UNPACKINT_I, 1));
-      DPRINTF(("%s: client id unpack failed - host %s - sender %s\n", SGE_FUNC, aHost, aSender));
+      DPRINTF(("%s: client id unpack failed - host %s - sender %s\n", SGE_FUNC, aMsg->snd_host, aMsg->snd_name));
       DEXIT;
       return;
    }
 
-   DPRINTF(("%s: remove client " sge_u32 " - host %s - sender %s\n", SGE_FUNC, client_id, aHost, aSender));
+   DPRINTF(("%s: remove client " sge_u32 " - host %s - sender %s\n", SGE_FUNC, client_id, aMsg->snd_host, aMsg->snd_name));
 
+   /* 
+   ** check for scheduler shutdown if the request comes from admin or root 
+   ** TODO: further enhancement could be matching the owner of the event client 
+   **       with the request owner
+   */
+   if (client_id == 1) {
+      const char *admin_user = bootstrap_get_admin_user();
+      if (false == sge_security_verify_unique_identifier(true, admin_user, uti_state_get_sge_formal_prog_name(), 0,
+                                               aMsg->snd_host, aMsg->snd_name, aMsg->snd_id)) {
+         DEXIT;
+         return;
+       }
+   }
+   
    sge_remove_event_client(client_id);
 
    DEXIT;
    return;
 } /* do_event_client_exit() */
 
+
+/****************************************************
+ Master code.
+ Handle ack requests
+ Ack requests can be packed together in one packet.
+
+ These are:
+ - an execd sends an ack for a received job
+ - an execd sends an ack for a signal delivery
+ - the schedd sends an ack for received events
+
+ if the counterpart uses the dispatcher ack_tag is the
+ TAG we sent to the counterpart.
+ ****************************************************/
+static void do_c_ack(struct_msg_t *aMsg, monitoring_t *monitor) 
+{
+   u_long32 ack_tag, ack_ulong, ack_ulong2;
+   const char *admin_user = bootstrap_get_admin_user();
+
+   DENTER(TOP_LAYER, "do_c_ack");
+
+   
+   /* Do some validity tests */
+   while (!unpackint(&(aMsg->buf), &ack_tag)) {
+      if (unpackint(&(aMsg->buf), &ack_ulong)) {
+         ERROR((SGE_EVENT, MSG_COM_UNPACKINT_I, 1));
+         DEXIT;
+         return;
+      }
+      if (unpackint(&(aMsg->buf), &ack_ulong2)) {
+         ERROR((SGE_EVENT, MSG_COM_UNPACKINT_I, 2));
+         DEXIT;
+         return;
+      }
+
+      DPRINTF(("ack_ulong = %ld, ack_ulong2 = %ld\n", ack_ulong, ack_ulong2));
+      switch (ack_tag) {
+      case TAG_SIGJOB:
+      case TAG_SIGQUEUE:
+         MONITOR_EACK(monitor);
+         /* 
+         ** accept only ack requests from admin or root
+         */
+         if (false == sge_security_verify_unique_identifier(true, admin_user, uti_state_get_sge_formal_prog_name(), 0,
+                                                  aMsg->snd_host, aMsg->snd_name, aMsg->snd_id)) {
+            DEXIT;
+            return;
+         }
+         /* an execd sends a job specific acknowledge ack_ulong == jobid of received job */
+         sge_c_job_ack(aMsg->snd_host, aMsg->snd_name, ack_tag, ack_ulong, ack_ulong2, monitor);
+         break;
+
+      case ACK_EVENT_DELIVERY:
+         MONITOR_ACK(monitor); 
+         /* 
+         ** TODO: in this case we should check if the event belongs to the user
+         **       who send the request
+         */
+         sge_handle_event_ack(ack_ulong2, (ev_event)ack_ulong);
+         break;
+
+      default:
+         WARNING((SGE_EVENT, MSG_COM_UNKNOWN_TAG, sge_u32c(ack_tag)));
+         break;
+      }
+   }
+  
+   DEXIT;
+   return;
+}
+
+/***************************************************************/
+static void sge_c_job_ack(char *host, char *commproc, u_long32 ack_tag, 
+                          u_long32 ack_ulong, u_long32 ack_ulong2, 
+                          monitoring_t *monitor) 
+{
+   lListElem *qinstance = NULL;
+   lListElem *jep = NULL;
+   lListElem *jatep = NULL;
+   lList *answer_list = NULL;
+
+   DENTER(TOP_LAYER, "sge_c_job_ack");
+
+   MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE), monitor); 
+
+   if (strcmp(prognames[EXECD], commproc) &&
+      strcmp(prognames[QSTD], commproc)) {
+      ERROR((SGE_EVENT, MSG_COM_ACK_S, commproc));
+      SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
+      DEXIT;
+      return;
+   }
+
+   switch (ack_tag) {
+   case TAG_SIGJOB:
+      DPRINTF(("TAG_SIGJOB\n"));
+      /* ack_ulong is the jobid */
+      if (!(jep = job_list_locate(Master_Job_List, ack_ulong))) {
+         ERROR((SGE_EVENT, MSG_COM_ACKEVENTFORUNKOWNJOB_U, sge_u32c(ack_ulong) ));
+         SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
+         DEXIT;
+         return;
+      }
+      jatep = job_search_task(jep, NULL, ack_ulong2);
+      if (jatep == NULL) {
+         ERROR((SGE_EVENT, MSG_COM_ACKEVENTFORUNKNOWNTASKOFJOB_UU, sge_u32c(ack_ulong2), sge_u32c(ack_ulong)));
+         SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
+         DEXIT;
+         return;
+      }
+
+      DPRINTF(("JOB "sge_u32": SIGNAL ACK\n", lGetUlong(jep, JB_job_number)));
+      lSetUlong(jatep, JAT_pending_signal, 0);
+      te_delete_one_time_event(TYPE_SIGNAL_RESEND_EVENT, ack_ulong, ack_ulong2, NULL);
+      {
+         dstring buffer = DSTRING_INIT;
+         spool_write_object(&answer_list, spool_get_default_context(), jep, 
+                            job_get_key(lGetUlong(jep, JB_job_number), 
+                                        ack_ulong2, NULL, &buffer), 
+                            SGE_TYPE_JOB);
+         sge_dstring_free(&buffer);
+      }
+      answer_list_output(&answer_list);
+      
+      break;
+
+   case TAG_SIGQUEUE:
+      {
+         lListElem *cqueue = NULL;
+
+         for_each(cqueue, *(object_type_get_master_list(SGE_TYPE_CQUEUE))) {
+            lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
+
+            qinstance = lGetElemUlong(qinstance_list, 
+                                      QU_queue_number, ack_ulong);
+            if (qinstance != NULL) {
+               break;
+            }
+         }
+         if (qinstance == NULL) {
+            ERROR((SGE_EVENT, MSG_COM_ACK_QUEUE_U, sge_u32c(ack_ulong)));
+            SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
+            DEXIT;
+            return;
+         }
+      }
+      
+      DPRINTF(("QUEUE %s: SIGNAL ACK\n", lGetString(qinstance, QU_full_name)));
+
+      lSetUlong(qinstance, QU_pending_signal, 0);
+      te_delete_one_time_event(TYPE_SIGNAL_RESEND_EVENT, 0, 0, lGetString(qinstance, QU_full_name));
+      spool_write_object(&answer_list, spool_get_default_context(), qinstance, 
+                         lGetString(qinstance, QU_full_name), SGE_TYPE_QINSTANCE);
+      answer_list_output(&answer_list);
+      break;
+
+   default:
+      ERROR((SGE_EVENT, MSG_COM_ACK_UNKNOWN));
+   }
+
+   SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
+   
+   DEXIT;
+   return;
+}

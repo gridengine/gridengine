@@ -49,7 +49,6 @@
 
 #define ENABLE_CRL
 
-
 #ifdef LOAD_OPENSSL
 
 #ifdef LINUX
@@ -303,6 +302,7 @@ static void                  cl_com_ssl_locking_callback(int mode, int type, con
 static int                   cl_com_ssl_verify_callback(int preverify_ok, X509_STORE_CTX *ctx); /* callback for verify clients certificate */
 static int                   cl_com_ssl_set_default_mode(SSL_CTX *ctx, SSL *ssl);
 static void                  cl_com_ssl_log_mode_settings(long mode);
+static int                   cl_com_ssl_fill_private_from_peer_cert(cl_com_ssl_private_t *private, cl_bool_t is_server);
 
 
 #ifdef __CL_FUNCTION__
@@ -2627,9 +2627,6 @@ int cl_com_ssl_connection_complete_shutdown(cl_com_connection_t*  connection) {
          case SSL_ERROR_WANT_READ:  {
             return CL_RETVAL_UNCOMPLETE_READ;
          }
-         case SSL_ERROR_SYSCALL: {
-            return CL_RETVAL_UNCOMPLETE_READ;
-         }
          case SSL_ERROR_WANT_WRITE: {
             return CL_RETVAL_UNCOMPLETE_WRITE;
          }
@@ -2732,8 +2729,6 @@ int cl_com_ssl_connection_complete_accept(cl_com_connection_t*  connection,
    }
 
    if ( connection->connection_sub_state == CL_COM_ACCEPT) {
-      X509* peer = NULL;
-      char peer_CN[256];
       int ssl_accept_back;
       int ssl_error;
       CL_LOG_STR(CL_LOG_INFO,"connection sub state:", cl_com_get_connection_sub_state(connection));
@@ -2757,10 +2752,6 @@ int cl_com_ssl_connection_complete_accept(cl_com_connection_t*  connection,
             case SSL_ERROR_WANT_READ:
             case SSL_ERROR_WANT_WRITE:
             case SSL_ERROR_WANT_ACCEPT:
-            case SSL_ERROR_SYSCALL:
-#if 0
-            case SSL_ERROR_WANT_X509_LOOKUP:
-#endif 
                     {
                /* do it again */
                /* TODO!!! : make code for only_once == 0 */
@@ -2807,92 +2798,7 @@ int cl_com_ssl_connection_complete_accept(cl_com_connection_t*  connection,
       CL_LOG(CL_LOG_INFO,"SSL Accept successful");
       connection->write_buffer_timeout_time = 0;
 
-      CL_LOG(CL_LOG_INFO,"Checking Client Authentication");
-      if (cl_com_ssl_func__SSL_get_verify_result(private->ssl_obj) != X509_V_OK) {
-         CL_LOG(CL_LOG_ERROR,"client certificate doesn't verify");
-         cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SSL_CERTIFICATE_ERROR, MSG_CL_COMMLIB_SSL_CLIENT_CERTIFICATE_ERROR);
-         cl_com_ssl_log_ssl_errors(__CL_FUNCTION__);
-         return CL_RETVAL_SSL_CERTIFICATE_ERROR;
-      }
-
-      
-      /* Check the common name */
-      peer = cl_com_ssl_func__SSL_get_peer_certificate(private->ssl_obj);
-      if (peer != NULL) {
-         char uniqueIdentifier[1024];
-         cl_com_ssl_func__X509_NAME_get_text_by_NID(cl_com_ssl_func__X509_get_subject_name(peer),
-                                                    NID_commonName, peer_CN, 256);
-
-
-         if (peer_CN != NULL) {
-            CL_LOG_STR(CL_LOG_INFO,"calling ssl verify callback with peer name:",peer_CN);
-            if ( private->ssl_setup->ssl_verify_func(CL_SSL_PEER_NAME, CL_TRUE, peer_CN) != CL_TRUE) {
-               CL_LOG(CL_LOG_ERROR, "commlib ssl verify callback function failed in peer name check");
-               cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SSL_PEER_CERTIFICATE_ERROR, MSG_CL_COMMLIB_SSL_PEER_NAME_MATCH_ERROR);
-               cl_com_ssl_log_ssl_errors(__CL_FUNCTION__);
-               cl_com_ssl_func__X509_free(peer);
-               peer = NULL;
-               return CL_RETVAL_SSL_PEER_CERTIFICATE_ERROR;
-            }
-         } else {
-            CL_LOG(CL_LOG_ERROR, "could not get peer_CN from peer certificate");
-            cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SSL_PEER_CERTIFICATE_ERROR, MSG_CL_COMMLIB_SSL_PEER_CERT_GET_ERROR);
-            cl_com_ssl_log_ssl_errors(__CL_FUNCTION__);
-            cl_com_ssl_func__X509_free(peer);
-            peer = NULL;
-            return CL_RETVAL_SSL_PEER_CERTIFICATE_ERROR;
-         }
-         
-         if (cl_com_ssl_func__X509_NAME_get_text_by_OBJ(cl_com_ssl_func__X509_get_subject_name(peer), 
-                                        cl_com_ssl_func__OBJ_nid2obj(NID_userId), 
-                                        uniqueIdentifier, 
-                                        sizeof(uniqueIdentifier))) {
-            if (uniqueIdentifier != NULL) {
-               CL_LOG_STR(CL_LOG_INFO,"unique identifier:", uniqueIdentifier);
-               CL_LOG_STR(CL_LOG_INFO,"calling ssl_verify_func with user name:",uniqueIdentifier);
-               if ( private->ssl_setup->ssl_verify_func(CL_SSL_USER_NAME, CL_TRUE, uniqueIdentifier) != CL_TRUE) {
-                  CL_LOG(CL_LOG_ERROR, "commlib ssl verify callback function failed in user name check");
-                  cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SSL_PEER_CERTIFICATE_ERROR, MSG_CL_COMMLIB_SSL_USER_ID_VERIFY_ERROR);
-                  cl_com_ssl_log_ssl_errors(__CL_FUNCTION__);
-                  cl_com_ssl_func__X509_free(peer);
-                  peer = NULL;
-                  return CL_RETVAL_SSL_PEER_CERTIFICATE_ERROR;
-               }
-               /* store uniqueIdentifier into private structure */
-               private->ssl_unique_id = strdup(uniqueIdentifier);
-               if ( private->ssl_unique_id == NULL) {
-                  CL_LOG(CL_LOG_ERROR, "could not malloc unique identifier memory");
-                  cl_com_ssl_log_ssl_errors(__CL_FUNCTION__);
-                  cl_com_ssl_func__X509_free(peer);
-                  peer = NULL;
-                  return CL_RETVAL_MALLOC;
-               }
-
-            } else {
-               CL_LOG(CL_LOG_ERROR, "could not get uniqueIdentifier from peer certificate");
-               cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SSL_PEER_CERTIFICATE_ERROR, MSG_CL_COMMLIB_SSL_USER_ID_GET_ERROR);
-               cl_com_ssl_log_ssl_errors(__CL_FUNCTION__);
-               cl_com_ssl_func__X509_free(peer);
-               peer = NULL;
-               return CL_RETVAL_SSL_PEER_CERTIFICATE_ERROR;
-            }
-         } else {
-            CL_LOG(CL_LOG_ERROR,"client certificate error: could not get identifier");
-            cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SSL_PEER_CERTIFICATE_ERROR, MSG_CL_COMMLIB_SSL_USER_ID_GET_ERROR);
-            cl_com_ssl_log_ssl_errors(__CL_FUNCTION__);
-            cl_com_ssl_func__X509_free(peer);
-            peer = NULL;
-            return CL_RETVAL_SSL_PEER_CERTIFICATE_ERROR;
-         }
-         cl_com_ssl_func__X509_free(peer);
-         peer = NULL;
-      } else {
-         CL_LOG(CL_LOG_ERROR,"client did not send peer certificate");
-         cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SSL_PEER_CERTIFICATE_ERROR, MSG_CL_COMMLIB_SSL_CLIENT_CERT_NOT_SENT_ERROR);
-         cl_com_ssl_log_ssl_errors(__CL_FUNCTION__);
-         return CL_RETVAL_SSL_PEER_CERTIFICATE_ERROR;
-      }
-      return CL_RETVAL_OK;
+      return cl_com_ssl_fill_private_from_peer_cert(private, CL_TRUE);
    }
 
    return CL_RETVAL_UNKNOWN;
@@ -3233,8 +3139,6 @@ int cl_com_ssl_open_connection(cl_com_connection_t* connection, int timeout, uns
    }
 
    if ( connection->connection_sub_state == CL_COM_OPEN_SSL_CONNECT) {
-      X509* peer = NULL;
-      char peer_CN[256];
       int ssl_connect_error = 0;
       int ssl_error = 0;
       struct timeval now;
@@ -3258,11 +3162,6 @@ int cl_com_ssl_open_connection(cl_com_connection_t* connection, int timeout, uns
             case SSL_ERROR_WANT_READ:
             case SSL_ERROR_WANT_WRITE:
             case SSL_ERROR_WANT_CONNECT:
-            case SSL_ERROR_SYSCALL:
-#if 0
-            case SSL_ERROR_WANT_ACCEPT:
-            case SSL_ERROR_WANT_X509_LOOKUP:
-#endif 
                     {
                /* do it again */
                /* TODO!!! : make code for only_once == 0 */
@@ -3295,51 +3194,8 @@ int cl_com_ssl_open_connection(cl_com_connection_t* connection, int timeout, uns
       CL_LOG(CL_LOG_INFO,"SSL Connect successful");
       connection->write_buffer_timeout_time = 0;
 
-      CL_LOG(CL_LOG_INFO,"Checking Server Authentication");
+      return cl_com_ssl_fill_private_from_peer_cert(private, CL_FALSE);
 
-      if (cl_com_ssl_func__SSL_get_verify_result(private->ssl_obj) != X509_V_OK) {
-         CL_LOG(CL_LOG_ERROR,"Certificate doesn't verify");
-         cl_com_ssl_log_ssl_errors(__CL_FUNCTION__);
-         cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SSL_CERTIFICATE_ERROR, MSG_CL_COMMLIB_CHECK_SSL_CERTIFICATE );
-         return CL_RETVAL_SSL_CERTIFICATE_ERROR;
-      }
-
-      /* Check the common name */
-      peer = cl_com_ssl_func__SSL_get_peer_certificate(private->ssl_obj);
-      if (peer != NULL) {
-         cl_com_ssl_func__X509_NAME_get_text_by_NID(cl_com_ssl_func__X509_get_subject_name(peer),
-                                              NID_commonName, 
-                                              peer_CN,
-                                              256);
-          
-         if (peer_CN != NULL) {
-            CL_LOG_STR(CL_LOG_INFO,"calling ssl verify callback with peer name:",peer_CN);
-            if ( private->ssl_setup->ssl_verify_func(CL_SSL_PEER_NAME, CL_FALSE, peer_CN) != CL_TRUE) {
-               CL_LOG(CL_LOG_ERROR, "commlib ssl verify callback function failed in peer name check");
-               cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SSL_PEER_CERTIFICATE_ERROR, MSG_CL_COMMLIB_SSL_VERIFY_CALLBACK_FUNC_ERROR);
-               cl_com_ssl_log_ssl_errors(__CL_FUNCTION__);
-               cl_com_ssl_func__X509_free(peer);
-               peer = NULL;
-               return CL_RETVAL_SSL_PEER_CERTIFICATE_ERROR;
-            }
-         } else {
-            CL_LOG(CL_LOG_ERROR, "could not get peer_CN from peer certificate");
-            cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SSL_PEER_CERTIFICATE_ERROR, MSG_CL_COMMLIB_SSL_PEER_NAME_GET_ERROR);
-            cl_com_ssl_log_ssl_errors(__CL_FUNCTION__);
-            cl_com_ssl_func__X509_free(peer);
-            peer = NULL;
-            return CL_RETVAL_SSL_PEER_CERTIFICATE_ERROR;
-         }
-         cl_com_ssl_func__X509_free(peer);
-         peer = NULL;
-      } else {
-         CL_LOG(CL_LOG_ERROR,"service did not send peer certificate");
-         cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SSL_PEER_CERTIFICATE_ERROR, MSG_CL_COMMLIB_SSL_SERVER_CERT_NOT_SENT_ERROR);
-         cl_com_ssl_log_ssl_errors(__CL_FUNCTION__);
-         return CL_RETVAL_SSL_PEER_CERTIFICATE_ERROR;
-      }
-
-      return CL_RETVAL_OK;
    }
    return CL_RETVAL_UNKNOWN;
 }
@@ -4384,7 +4240,6 @@ int cl_com_ssl_write(cl_com_connection_t* connection, cl_byte_t* message, unsign
                ssl_error = cl_com_ssl_func__SSL_get_error(private->ssl_obj, data_written);
                private->ssl_last_error = ssl_error;
                switch(ssl_error) {
-                  case SSL_ERROR_SYSCALL:
                   case SSL_ERROR_WANT_READ: 
                   case SSL_ERROR_WANT_WRITE: {
                      CL_LOG_STR(CL_LOG_INFO,"ssl_error:", cl_com_ssl_get_error_text(ssl_error));
@@ -4416,7 +4271,6 @@ int cl_com_ssl_write(cl_com_connection_t* connection, cl_byte_t* message, unsign
             ssl_error = cl_com_ssl_func__SSL_get_error(private->ssl_obj, data_written);
             private->ssl_last_error = ssl_error;
             switch(ssl_error) {
-               case SSL_ERROR_SYSCALL:
                case SSL_ERROR_WANT_READ: 
                case SSL_ERROR_WANT_WRITE: {
                   CL_LOG_STR(CL_LOG_INFO,"ssl_error:", cl_com_ssl_get_error_text(ssl_error));
@@ -4541,7 +4395,6 @@ int cl_com_ssl_read(cl_com_connection_t* connection, cl_byte_t* message, unsigne
                ssl_error = cl_com_ssl_func__SSL_get_error(private->ssl_obj, data_read);
                private->ssl_last_error = ssl_error;
                switch(ssl_error) {
-                  case SSL_ERROR_SYSCALL:
                   case SSL_ERROR_WANT_READ: 
                   case SSL_ERROR_WANT_WRITE: {
                      CL_LOG_STR(CL_LOG_INFO,"ssl_error:", cl_com_ssl_get_error_text(ssl_error));
@@ -4574,7 +4427,6 @@ int cl_com_ssl_read(cl_com_connection_t* connection, cl_byte_t* message, unsigne
             private->ssl_last_error = ssl_error;
            
             switch(ssl_error) {
-               case SSL_ERROR_SYSCALL:
                case SSL_ERROR_WANT_READ: 
                case SSL_ERROR_WANT_WRITE: {
                   CL_LOG_STR(CL_LOG_INFO,"ssl_error:", cl_com_ssl_get_error_text(ssl_error));
@@ -4673,6 +4525,123 @@ int cl_com_ssl_get_unique_id(cl_com_handle_t* handle,
    free(unique_hostname);
    unique_hostname = NULL;
    return function_return_value;
+}
+
+/* fill private structure */
+/* is_server = CL_TRUE  -> peer certificate comes from server */
+/* is_server = CL_FALSE -> peer certificate comes from client */
+static int cl_com_ssl_fill_private_from_peer_cert(cl_com_ssl_private_t *private, cl_bool_t is_server) {
+
+      X509* peer = NULL;
+      char peer_CN[256];
+
+      if (private == NULL) {
+        return CL_RETVAL_SSL_CERTIFICATE_ERROR;
+      } 
+
+      if (is_server == CL_TRUE) {
+        CL_LOG(CL_LOG_INFO, "Checking Client Authentication");
+      } else {  
+        CL_LOG(CL_LOG_INFO, "Checking Server Authentication");
+      }  
+      
+      if (cl_com_ssl_func__SSL_get_verify_result(private->ssl_obj) != X509_V_OK) {
+         if (is_server == CL_TRUE) {
+            CL_LOG(CL_LOG_ERROR,"client certificate doesn't verify");
+            cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SSL_CERTIFICATE_ERROR, MSG_CL_COMMLIB_SSL_CLIENT_CERTIFICATE_ERROR);
+         } else {   
+            CL_LOG(CL_LOG_ERROR,"Certificate doesn't verify");
+            cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SSL_CERTIFICATE_ERROR, MSG_CL_COMMLIB_CHECK_SSL_CERTIFICATE );
+         }
+         cl_com_ssl_log_ssl_errors(__CL_FUNCTION__);
+         return CL_RETVAL_SSL_CERTIFICATE_ERROR;
+      }
+
+      /* Check the common name */
+      peer = cl_com_ssl_func__SSL_get_peer_certificate(private->ssl_obj);
+      if (peer != NULL) {
+         char uniqueIdentifier[1024];
+         cl_com_ssl_func__X509_NAME_get_text_by_NID(cl_com_ssl_func__X509_get_subject_name(peer),
+                                                    NID_commonName, peer_CN, 256);
+
+
+         if (peer_CN != NULL) {
+            int retval;
+            CL_LOG_STR(CL_LOG_INFO,"calling ssl verify callback with peer name:",peer_CN);
+            retval = private->ssl_setup->ssl_verify_func(CL_SSL_PEER_NAME, is_server, peer_CN);
+
+            if ( retval != CL_TRUE) {
+               CL_LOG(CL_LOG_ERROR, "commlib ssl verify callback function failed in peer name check");
+               cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SSL_PEER_CERTIFICATE_ERROR, MSG_CL_COMMLIB_SSL_VERIFY_CALLBACK_FUNC_ERROR);
+               cl_com_ssl_log_ssl_errors(__CL_FUNCTION__);
+               cl_com_ssl_func__X509_free(peer);
+               peer = NULL;
+               return CL_RETVAL_SSL_PEER_CERTIFICATE_ERROR;
+            }
+         } else {
+            CL_LOG(CL_LOG_ERROR, "could not get peer_CN from peer certificate");
+            cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SSL_PEER_CERTIFICATE_ERROR, MSG_CL_COMMLIB_SSL_PEER_CERT_GET_ERROR);
+            cl_com_ssl_log_ssl_errors(__CL_FUNCTION__);
+            cl_com_ssl_func__X509_free(peer);
+            peer = NULL;
+            return CL_RETVAL_SSL_PEER_CERTIFICATE_ERROR;
+         }
+         
+         if (cl_com_ssl_func__X509_NAME_get_text_by_OBJ(cl_com_ssl_func__X509_get_subject_name(peer), 
+                                        cl_com_ssl_func__OBJ_nid2obj(NID_userId), 
+                                        uniqueIdentifier, 
+                                        sizeof(uniqueIdentifier))) {
+            if (uniqueIdentifier != NULL) {
+               CL_LOG_STR(CL_LOG_INFO,"unique identifier:", uniqueIdentifier);
+               CL_LOG_STR(CL_LOG_INFO,"calling ssl_verify_func with user name:",uniqueIdentifier);
+               if ( private->ssl_setup->ssl_verify_func(CL_SSL_USER_NAME, is_server, uniqueIdentifier) != CL_TRUE) {
+                  CL_LOG(CL_LOG_ERROR, "commlib ssl verify callback function failed in user name check");
+                  cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SSL_PEER_CERTIFICATE_ERROR, MSG_CL_COMMLIB_SSL_USER_ID_VERIFY_ERROR);
+                  cl_com_ssl_log_ssl_errors(__CL_FUNCTION__);
+                  cl_com_ssl_func__X509_free(peer);
+                  peer = NULL;
+                  return CL_RETVAL_SSL_PEER_CERTIFICATE_ERROR;
+               }
+               /* store uniqueIdentifier into private structure */
+               private->ssl_unique_id = strdup(uniqueIdentifier);
+               if ( private->ssl_unique_id == NULL) {
+                  CL_LOG(CL_LOG_ERROR, "could not malloc unique identifier memory");
+                  cl_com_ssl_log_ssl_errors(__CL_FUNCTION__);
+                  cl_com_ssl_func__X509_free(peer);
+                  peer = NULL;
+                  return CL_RETVAL_MALLOC;
+               }
+
+            } else {
+               CL_LOG(CL_LOG_ERROR, "could not get uniqueIdentifier from peer certificate");
+               cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SSL_PEER_CERTIFICATE_ERROR, MSG_CL_COMMLIB_SSL_USER_ID_GET_ERROR);
+               cl_com_ssl_log_ssl_errors(__CL_FUNCTION__);
+               cl_com_ssl_func__X509_free(peer);
+               peer = NULL;
+               return CL_RETVAL_SSL_PEER_CERTIFICATE_ERROR;
+            }
+         } else {
+            CL_LOG(CL_LOG_ERROR,"client certificate error: could not get identifier");
+            cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SSL_PEER_CERTIFICATE_ERROR, MSG_CL_COMMLIB_SSL_USER_ID_GET_ERROR);
+            cl_com_ssl_log_ssl_errors(__CL_FUNCTION__);
+            cl_com_ssl_func__X509_free(peer);
+            peer = NULL;
+            return CL_RETVAL_SSL_PEER_CERTIFICATE_ERROR;
+         }
+         cl_com_ssl_func__X509_free(peer);
+         peer = NULL;
+      } else {
+         if (is_server == CL_TRUE) {
+            CL_LOG(CL_LOG_ERROR,"client did not send peer certificate");
+            cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SSL_PEER_CERTIFICATE_ERROR, MSG_CL_COMMLIB_SSL_CLIENT_CERT_NOT_SENT_ERROR);
+         } else {
+            CL_LOG(CL_LOG_ERROR,"service did not send peer certificate");
+            cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SSL_PEER_CERTIFICATE_ERROR, MSG_CL_COMMLIB_SSL_SERVER_CERT_NOT_SENT_ERROR);
+         }
+         cl_com_ssl_log_ssl_errors(__CL_FUNCTION__);
+         return CL_RETVAL_SSL_PEER_CERTIFICATE_ERROR;
+      }
+      return CL_RETVAL_OK;
 }
 #else
 

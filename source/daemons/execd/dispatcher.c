@@ -51,6 +51,9 @@
 #include "qm_name.h"
 #include "execd.h"
 #include "uti/sge_monitor.h"
+#include "sge_bootstrap.h"
+#include "sge_prog.h"
+
 
 /* number of messages to cache in server process
    the rest stays in commd */
@@ -70,6 +73,7 @@ typedef struct pbcache {
 
 
 static int match_dpe(dispatch_entry *dea, dispatch_entry *deb);
+static int authorize_dpe(dispatch_entry *deb);
 static int receive_message_cach_n_ack(dispatch_entry *de, sge_pack_buffer **pb, 
                                int *tagarray, int cachesize, 
                                void (*errfunc)(const char *));
@@ -259,7 +263,7 @@ int dispatch( dispatch_entry*   table,
       /* look for dispatch entries matching the inbound message or
          entries activated at idle times */
       for (ntab=0; ntab<tabsize; ntab++) {
-         if (match_dpe(&de, &table[ntab])) {
+         if (match_dpe(&de, &table[ntab]) == 1 && authorize_dpe(&de) == 1) {
             sigset_t old_sigset, sigset;
 
             if(init_packbuffer(&apb, 1024, 0) != PACK_SUCCESS) {
@@ -340,10 +344,9 @@ int dispatch( dispatch_entry*   table,
 /****************************************************/
 /* match 2 dispatchtable entries against each other */
 /****************************************************/
-static int match_dpe(dea, deb)
-dispatch_entry *dea, *deb;
-{
-   if (deb->tag == -1) /* cyclic entries allways match */
+static int match_dpe(dispatch_entry* dea, dispatch_entry* deb) {
+
+   if (deb->tag == -1) /* cyclic entries always match */
       return 1;
    if (deb->tag && deb->tag != dea->tag)
       return 0;
@@ -356,6 +359,52 @@ dispatch_entry *dea, *deb;
       return 0;
 
    return 1;
+}
+
+/****** dispatcher/authorize_dpe() *********************************************
+*  NAME
+*     authorize_dpe() -- check unique identifier for dispatch entry (only in CSP mode)
+*
+*  SYNOPSIS
+*     static int authorize_dpe(dispatch_entry *deb) 
+*
+*  FUNCTION
+*     This function checks if the request is comming from sge_admin or root user
+*     for all execd requests except TAG_JOB_EXECUTION. The TAG_JOB_EXECUTION is 
+*     handled in corresponding tag function 
+*
+*  INPUTS
+*     dispatch_entry *deb - contains host, commproc, commid and tag 
+*
+*  RESULT
+*     static int    1 if allowed, 0 denied  
+*
+*  NOTES
+*     MT-NOTE: authorize_dpe() is MT safe 
+*
+*******************************************************************************/
+static int authorize_dpe(dispatch_entry *deb) {
+
+  DENTER(TOP_LAYER, "authorize_dpe");
+
+  if (deb->tag == -1 || deb->tag == 0) { /* cyclic entries always match */
+    DEXIT;
+    return 1;
+  }
+
+  /* Do the check for all tags except the TAG_JOB_EXECUTION. The JOB_EXECUTION tag does the check
+     by it self because it needs to allow inherit jobs */
+  if (deb->tag != TAG_JOB_EXECUTION) { 
+      const char *admin_user = bootstrap_get_admin_user();
+      if (false == sge_security_verify_unique_identifier(true, admin_user, prognames[EXECD], 1,
+                                            deb->host, deb->commproc, deb->id)) {
+         DEXIT;
+         return 0;
+      }
+   }
+
+  DEXIT;
+  return 1;
 }
 
 

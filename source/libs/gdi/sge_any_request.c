@@ -157,12 +157,6 @@ const char* sge_dump_message_tag(unsigned long tag) {
          return "TAG_TASK_TID";
       case TAG_EVENT_CLIENT_EXIT:
          return "TAG_EVENT_CLIENT_EXIT";
-      case TAG_SEC_ANNOUNCE:
-         return "TAG_SEC_ANNOUNCE";
-      case TAG_SEC_RESPOND:
-         return "TAG_SEC_RESPOND";
-      case TAG_SEC_ERROR:
-         return "TAG_SEC_ERROR";
       default:
          break;
    }

@@ -1107,7 +1107,7 @@ void sge_remove_event_client(u_long32 aClientID) {
    pthread_once(&Event_Master_Once, event_master_once_init);
 
    lock_client(aClientID, true);
-   client = get_event_client (aClientID);
+   client = get_event_client(aClientID);
    
    /* If we didn't find the client in the array, try the list as a backup.  The
     * result should always be the same, but we do it anyway, just in case. */

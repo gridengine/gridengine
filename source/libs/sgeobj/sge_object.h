@@ -334,4 +334,7 @@ bool
 object_list_has_differences(const lList *this_elem, lList **answer_list,
                             const lList *old_elem, bool modify_changed_flag);
 
+bool object_list_verify_cull(const lList *lp, const lDescr *descr);
+bool object_verify_cull(const lListElem *ep, const lDescr *descr);
+
 #endif /* __SGE_OBJECT_H */

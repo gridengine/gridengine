@@ -367,7 +367,7 @@ object_has_type(const lListElem *object, const lDescr *descr)
     *
     * --> make sure that your object is handled in object_get_primary_key() 
     */
-   if (object != NULL &&
+   if (object != NULL && descr != NULL &&
        lGetPosInDescr(object->descr, object_get_primary_key(descr)) != -1) {
       ret = true;
    }
@@ -460,12 +460,15 @@ int
 object_get_primary_key(const lDescr *descr)
 {
    int ret = NoName;
-   int i;
 
-   for (i = 0; descr[i].nm != NoName; i++) {
-      if (descr[i].mt & CULL_PRIMARY_KEY) {
-         ret = descr[i].nm;
-         break;
+   if (descr != NULL) {
+      int i;
+
+      for (i = 0; descr[i].nm != NoName; i++) {
+         if (descr[i].mt & CULL_PRIMARY_KEY) {
+            ret = descr[i].nm;
+            break;
+         }
       }
    }
 
@@ -2519,3 +2522,156 @@ object_list_has_differences(const lList *this_list, lList **answer_list,
 
    DRETURN(ret);
 }
+
+/****** sge_object/object_list_verify_cull() ***********************************
+*  NAME
+*     object_list_verify_cull() -- verify cull list structure
+*
+*  SYNOPSIS
+*     bool 
+*     object_list_verify_cull(const lList *lp, const lDescr *descr) 
+*
+*  FUNCTION
+*     Verifies that a cull list, including all its objects and sublists,
+*     is a valid object of a defined type.
+*  
+*     There are cases, where the type of a list cannot be verified, when the
+*     type of a sublist is set to CULL_ANY_SUBTYPE in the cull list definition.
+*     In this case, the list descriptor is not checked, but still all list
+*     objects and there sublists are verified.
+*
+*  INPUTS
+*     const lList *lp     - list to verify
+*     const lDescr *descr - expected descriptor (or NULL, see above)
+*
+*  RESULT
+*     bool - true, if the object is OK, else false
+*
+*  NOTES
+*     MT-NOTE: object_list_verify_cull() is MT safe 
+*
+*  SEE ALSO
+*     sge_object/object_verify_cull()
+*     cull/list/lCompListDescr()
+*******************************************************************************/
+bool 
+object_list_verify_cull(const lList *lp, const lDescr *descr)
+{
+   bool ret = true;
+
+   /* 
+    * valid input parameters?
+    * descr may be NULL, if sublist is defined as CULL_ANY_SUBTYPE
+    */
+   if (lp == NULL) {
+      ret = false;
+   }
+
+   /* does list descriptor match expected descriptor? */
+   if (ret) {
+      if (descr != NULL) {
+         if (lCompListDescr(lp->descr, descr) != 0) {
+            ret = false;
+         }
+      }
+   }
+
+   /* recursively check sublists and subobjects */
+   if (ret) {
+      const lListElem *ep;
+      for_each (ep, lp) {
+         if (!object_verify_cull(ep, NULL)) {
+            ret = false;
+            break;
+         }
+      }
+   }
+
+   return ret;
+}
+
+/****** sge_object/object_verify_cull() ****************************************
+*  NAME
+*     object_verify_cull() -- verify cull object structure
+*
+*  SYNOPSIS
+*     bool 
+*     object_verify_cull(const lListElem *ep, const lDescr *descr) 
+*
+*  FUNCTION
+*     Verifies that a cull object, including all its sublists and subobjects,
+*     is a valid object of a defined type.
+*  
+*     The type (descr) argument may be zero in two cases:
+*        - the descriptor has already been checked. This is the case when called
+*          from object_list_verify_cull().
+*        - we don't know the type of a subobject (if it is defined as 
+*          CULL_ANY_SUBTYPE in the cull object definition
+*
+*  INPUTS
+*     const lListElem *ep - the object to verify
+*     const lDescr *descr - expected object type, or NULL (see above)
+*
+*  RESULT
+*     bool - true on success, else false
+*
+*  NOTES
+*     MT-NOTE: object_verify_cull() is MT safe 
+*
+*  SEE ALSO
+*     sge_object/object_verify_cull()
+*     cull/list/lCompListDescr()
+*******************************************************************************/
+bool 
+object_verify_cull(const lListElem *ep, const lDescr *descr)
+{
+   bool ret = true;
+
+   /* 
+    * valid input parameters?
+    * descr may be NULL, if subobject is defined as CULL_ANY_SUBTYPE
+    */
+   if (ep == NULL) {
+      ret = false;
+   }
+
+   /* does object descriptor match expected descriptor? */
+   if (ret) {
+      if (descr != NULL) {
+         if (lCompListDescr(ep->descr, descr) != 0) {
+            ret = false;
+         }
+      }
+   }
+
+   /* check contents of subobject */
+   if (ret) {
+      int i = 0;
+      while (ep->descr[i].nm != NoName) {
+         int type = mt_get_type(ep->descr[i].mt);
+         if (type == lListT) {
+            lList *lp = lGetList(ep, ep->descr[i].nm);
+            if (lp != NULL) {
+               const lDescr *subdescr = object_get_subtype(ep->descr[i].nm);
+               if (!object_list_verify_cull(lp, subdescr)) {
+                  ret = false;
+                  break;
+               }
+            }
+         } else if (type == lObjectT) {
+            lListElem *sub_ep = lGetObject(ep, ep->descr[i].nm);
+            if (sub_ep != NULL) {
+               const lDescr *subdescr = object_get_subtype(ep->descr[i].nm);
+               if (!object_verify_cull(sub_ep, subdescr)) {
+                  ret = false;
+                  break;
+               }
+            }
+         } 
+         i++;
+      }
+   }
+
+   return ret;
+}
+

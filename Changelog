@@ -1,3 +1,8 @@
+JG-2006-03-30-0: Enhancem.: Added verification of incoming job and petask 
+                            request in qmaster and execd (no full check yet).
+                            (Merge of V60s2_BRANCH, JG-2006-03-17-0)
+                 Review:    AA
+
 AA-2006-03-17-0: Bugfix:    several buffer overruns, merge from V60s2_BRANCH
                  Bugtraq:   6397987
                  Review:    RD

@@ -65,6 +65,7 @@
 #include "sge_qinstance.h"
 #include "get_path.h"
 #include "sgeobj/sge_object.h"
+#include "sge_answer.h"
 
 #include "msg_common.h"
 #include "msg_execd.h"
@@ -118,11 +119,16 @@ int answer_error;
     */
    if(strcmp(de->commproc, prognames[QMASTER]) == 0) {
       lListElem *job, *ja_task;
+      lList *answer_list = NULL;
 
       if (cull_unpack_elem(pb, &job, NULL)) {
          ERROR((SGE_EVENT, MSG_COM_UNPACKJOB));
-         DEXIT;
-         return 0;
+         DRETURN(0);
+      }
+
+      if (!job_verify_execd_job(job, &answer_list)) {
+         answer_list_output(&answer_list);
+         DRETURN(0);
       }
 
       /* we expect one jatask to start per request */
@@ -138,10 +144,16 @@ int answer_error;
       }
    } else {
       lListElem *petrep;
+      lList *answer_list = NULL;
+
       if (cull_unpack_elem(pb, &petrep, NULL)) {
          ERROR((SGE_EVENT, MSG_COM_UNPACKJOB));
-         DEXIT;
-         return 0;
+         DRETURN(0);
+      }
+
+      if (!pe_task_verify_request(petrep, &answer_list)) {
+         answer_list_output(&answer_list);
+         DRETURN(0);
       }
 
       DPRINTF(("new pe task for job: %ld.%ld\n", 

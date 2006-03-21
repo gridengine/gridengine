@@ -62,6 +62,7 @@
 
 #include "sgeobj/sge_userset.h"
 #include "sgeobj/sge_qrefL.h"
+#include "sgeobj/sge_utility.h"
 
 #include "msg_sgeobjlib.h"
 #include "msg_gdilib.h"
@@ -2882,6 +2883,47 @@ job_verify(const lListElem *job, lList **answer_list)
       }
    }
 
+   if (ret) {
+      const char *name = lGetString(job, JB_job_name);
+      if (name != NULL) {
+         if (verify_str_key(answer_list, name, lNm2Str(JB_job_name)) != 0) {
+            ret = false;
+         }
+      }
+   }
+
+   if (ret) {
+      const char *cwd = lGetString(job, JB_cwd);
+
+      if (cwd != NULL) {
+         ret = path_verify(cwd, answer_list);
+      }
+   }
+
+   if (ret) {
+      const lList *path_aliases = lGetList(job, JB_path_aliases);
+
+      if (path_aliases != NULL) {
+         ret = path_alias_verify(path_aliases, answer_list);
+      }
+   } 
+
+   if (ret) {
+      const lList *env_list = lGetList(job, JB_env_list);
+
+      if (env_list != NULL) {
+         ret = var_list_verify(env_list, answer_list);
+      }
+   } 
+
+   if (ret) {
+      const lList *context_list = lGetList(job, JB_context);
+
+      if (context_list != NULL) {
+         ret = var_list_verify(context_list, answer_list);
+      }
+   } 
+
    DRETURN(ret);
 }
 
@@ -2981,6 +3023,10 @@ job_verify_execd_job(const lListElem *job, lList **answer_list)
     *    - JB_cwd != NULL??
     *    - a correct JAT_Type sublist with a single element (to be verified)
     */
+
+   if (ret) {
+      ret = object_verify_ulong_not_null(job, answer_list, JB_job_number);
+   }
 
    DRETURN(ret);
 }

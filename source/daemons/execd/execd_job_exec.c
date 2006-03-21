@@ -133,6 +133,7 @@ int answer_error;
 
       if (!job_verify_execd_job(job, &answer_list)) {
          answer_list_output(&answer_list);
+         ERROR((SGE_EVENT, MSG_EXECD_INVALIDJOBREQUEST_SS, de->commproc, de->host));
          DRETURN(0);
       }
 
@@ -158,6 +159,7 @@ int answer_error;
 
       if (!pe_task_verify_request(petrep, &answer_list)) {
          answer_list_output(&answer_list);
+         ERROR((SGE_EVENT, MSG_EXECD_INVALIDTASKREQUEST_SS, de->commproc, de->host));
          DRETURN(0);
       }
 

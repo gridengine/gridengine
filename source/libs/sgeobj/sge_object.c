@@ -2366,3 +2366,84 @@ object_verify_cull(const lListElem *ep, const lDescr *descr)
    return ret;
 }
 
+/****** sge_object/object_verify_ulong_not_null() ******************************
+*  NAME
+*     object_verify_ulong_not_null() -- verify ulong attribute not null
+*
+*  SYNOPSIS
+*     bool 
+*     object_verify_ulong_not_null(const lListElem *ep, lList **answer_list, 
+*                                  int nm) 
+*
+*  FUNCTION
+*     Verify that a certain ulong attribute in an object is not 0
+*
+*  INPUTS
+*     const lListElem *ep - object to verify
+*     lList **answer_list - answer list to pass back error messages
+*     int nm              - the attribute to verify
+*
+*  RESULT
+*     bool - true on success,
+*            false on error with error message in answer_list
+*
+*  NOTES
+*     MT-NOTE: object_verify_ulong_not_null() is MT safe 
+*
+*  SEE ALSO
+*     sge_object/object_verify_string_not_null()
+*******************************************************************************/
+bool 
+object_verify_ulong_not_null(const lListElem *ep, lList **answer_list, int nm)
+{
+   bool ret = true;
+
+   if (lGetUlong(ep, nm) == 0) {
+      answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR, 
+                              MSG_OBJECT_ULONG_NOT_NULL, lNm2Str(nm));
+      ret = false;
+   }
+
+   return ret;
+}
+
+/****** sge_object/object_verify_string_not_null() *****************************
+*  NAME
+*     object_verify_string_not_null() -- verify string attribute not null
+*
+*  SYNOPSIS
+*     bool 
+*     object_verify_string_not_null(const lListElem *ep, lList **answer_list, 
+*                                   int nm) 
+*
+*  FUNCTION
+*     Verifies that a string attribute of a certain object is not NULL.
+*
+*  INPUTS
+*     const lListElem *ep - the object to verify
+*     lList **answer_list - answer list to pass back error messages
+*     int nm              - the attribute to verify
+*
+*  RESULT
+*     bool - true on success,
+*            false on error with error message in answer_list
+*
+*  NOTES
+*     MT-NOTE: object_verify_string_not_null() is MT safe 
+*
+*  SEE ALSO
+*     sge_object/object_verify_ulong_not_null()
+*******************************************************************************/
+bool 
+object_verify_string_not_null(const lListElem *ep, lList **answer_list, int nm)
+{
+   bool ret = true;
+
+   if (lGetString(ep, nm) == NULL) {
+      answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR, 
+                              MSG_OBJECT_STRING_NOT_NULL, lNm2Str(nm));
+      ret = false;
+   }
+
+   return ret;
+}

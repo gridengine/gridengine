@@ -1,3 +1,7 @@
+JG-2006-03-21-0: Enhancem.: Improved verification of incoming petask requests in
+                            sge_execd (JG-2006-03-17-0 continued).
+                 Review:    RD
+
 RD-2006-03-20-0: Cleanup:   Removed uncommented code introduced by 
                             RD-2006-03-17-0
 

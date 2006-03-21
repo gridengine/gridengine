@@ -307,4 +307,14 @@
 #define MSG_PE_REJECTINGURGENCYSLOTS_S  _MESSAGE(64319, _("rejecting invalid urgency_slots setting "SFQ))
 #define MSG_CALENDAR_CALCTERMINATED    _MESSAGE(64310, _("Calendar calculation terminated due to inf. loop!"))
 
+#define MSG_OBJECT_STRUCTURE_ERROR     _MESSAGE(64311, _("corrupted cull structure or reduced element"))
+#define MSG_OBJECT_ULONG_NOT_NULL            _MESSAGE(64312, _("object attribute "SFQ" may not be 0"))
+#define MSG_OBJECT_STRING_NOT_NULL            _MESSAGE(64313, _("object attribute "SFQ" may not be NULL"))
+#define MSG_OBJECT_VARIABLENAME_NOT_EMPTY            _MESSAGE(64314, _("variable names may not be empty"))
+#define MSG_PATH_TOOLONG_I _MESSAGE(64315, _("a path or filename may not exceed %d characters"))
+
+#define MSG_PATH_ALIAS_INVALID_PATH _MESSAGE(64316, _("paths may not be empty strings"))
+#define MSG_HOSTNAME_NOT_EMPTY _MESSAGE(64316, _("hostnames may not be empty string"))
+#define MSG_HOSTNAME_TOOLONG _MESSAGE(64317, _("hostnames too long"))
+
 #endif /* __MSG_SGEOBJLIB_H */

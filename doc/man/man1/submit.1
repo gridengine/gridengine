@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: submit.1,v $     Last Update: $Date: 2005/11/24 13:13:47 $     Revision: $Revision: 1.59 $
+.\" $RCSfile: submit.1,v $     Last Update: $Date: 2006/03/22 13:24:57 $     Revision: $Revision: 1.60 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH SUBMIT 1 "$Date: 2005/11/24 13:13:47 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH SUBMIT 1 "$Date: 2006/03/22 13:24:57 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 .IP "qsub   \-" 1i
 submit a batch job to xxQS_NAMExx.
@@ -552,11 +552,14 @@ maximum as configured by the xxQS_NAMExx administrator.
 This option is applicable only for users allowed to submit deadline jobs.
 .\"
 .IP "\fB\-e [[hostname]:]path,...\fP"
-Available for \fIqsub\fP and \fIqalter\fP only.
+Available for \fIqsub\fP, \fIqsh\fP, \fIqrsh\fP, \fIqlogin\fP and
+\fIqalter\fP only.
 .sp 1
 Defines or redefines
-the path used for the standard error stream of the job. If
-the \fBpath\fP constitutes an absolute path name, the
+the path used for the standard error stream of the job. For
+\fIqsh\fP, \fIqrsh\fP and \fIqlogin\fP only the standard error
+stream of prolog and epilog is redirected.
+If the \fBpath\fP constitutes an absolute path name, the
 error-path attribute of the job is set to \fBpath\fP, including
 the \fBhostname\fP. If the path name is relative, xxQS_NAMExx
 expands \fBpath\fP either with the current working directory
@@ -567,8 +570,8 @@ placed in the corresponding location only if the job runs on
 the specified host. If the path contains a ":" without a
 \fBhostname\fP, a leading ":" has to be specified.
 .sp 1
-By default the file name for standard
-error has the form \fIjob_name.\fPe\fIjob_id\fP and
+By default the file name for interactive jobs is \fI/dev/null\fP. For
+batch jobs the default file name has the form \fIjob_name.\fPe\fIjob_id\fP and
 \fIjob_name.\fPe\fIjob_id\fP.\fBtask_id\fP for array job tasks (see
 \fB\-t\fP option below).
 .sp 1
@@ -783,7 +786,8 @@ option "-v xxQS_NAME_Sxx_QMASTER_PORT" either as a command argument or an
 embedded directive.
 .\"
 .IP "\fB\-j y[es]|n[o]\fP"
-Available for \fIqsub\fP and \fIqalter\fP only.
+Available for \fIqsub\fP, \fIqsh\fP, \fIqrsh\fP, \fIqlogin\fP and
+\fIqalter\fP only.
 .sp 1
 Specifies whether or not the standard error stream of the job
 is merged into the standard output stream.

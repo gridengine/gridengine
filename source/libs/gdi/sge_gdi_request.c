@@ -1611,16 +1611,16 @@ sge_gdi_request *free_gdi_request(sge_gdi_request *ar) {
       /* save next pointer */
       next = ar->next;
 
-      if (ar->host) free(ar->host);
-      if (ar->commproc) free(ar->commproc);
-      if (ar->auth_info) free(ar->auth_info);
+      FREE(ar->host);
+      FREE(ar->commproc);
+      FREE(ar->auth_info);
 
       lFreeList(&(ar->lp));
       lFreeList(&(ar->alp));
       lFreeWhere(&(ar->cp));
       lFreeWhat(&(ar->enp));
 
-      free(ar);
+      FREE(ar);
 
       ar = next;
    }

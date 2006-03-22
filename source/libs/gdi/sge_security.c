@@ -148,7 +148,6 @@ static void dump_snd_info(char* un_resolved_hostname, char* component_name, unsi
 }
 
 
-#ifdef SECURE
 
 static bool is_daemon(const char* progname) {
    if (progname != NULL) {
@@ -170,7 +169,7 @@ static bool is_master(const char* progname) {
    return false;
 }
 
-
+#ifdef SECURE
 
 /* int 0 on success, -1 on failure */
 int sge_ssl_setup_security_path(const char *progname) {

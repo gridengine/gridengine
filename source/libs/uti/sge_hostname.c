@@ -401,7 +401,7 @@ struct hostent *sge_gethostbyname(const char *name, int* system_error_retval)
       char buffer[4096];
 
       /* No need to malloc he because it will end up pointing to re. */
-      gethostbyname_r (name, &re, buffer, 4096, &he, &l_errno);
+      gethostbyname_r(name, &re, buffer, 4096, &he, &l_errno);
       
       /* Since re contains pointers into buffer, and both re and the buffer go
        * away when we exit this code block, we make a deep copy to return. */
@@ -558,13 +558,12 @@ struct hostent *sge_gethostbyname(const char *name, int* system_error_retval)
 *******************************************************************************/
 struct hostent *sge_copy_hostent(struct hostent *orig)
 {
-   struct hostent *copy = (struct hostent *)malloc (sizeof (struct hostent));
+   struct hostent *copy = (struct hostent *)malloc(sizeof(struct hostent));
    char **p = NULL;
    int count = 0;
 
    DENTER (GDI_LAYER, "sge_copy_hostent");
  
-
    if (copy != NULL) {  
       /* reset the malloced memory */
       memset(copy, 0, sizeof(struct hostent));
@@ -576,7 +575,7 @@ struct hostent *sge_copy_hostent(struct hostent *orig)
       
       /* Count the number of entries */
       count = 0;
-      for (p = orig->h_addr_list; *p != 0; p++) {
+      for (p = orig->h_addr_list; *p != NULL; p++) {
          count++;
       }
       
@@ -586,7 +585,7 @@ struct hostent *sge_copy_hostent(struct hostent *orig)
       
       /* Copy the entries */
       count = 0;
-      for (p = orig->h_addr_list; *p != 0; p++) {
+      for (p = orig->h_addr_list; *p != NULL; p++) {
 
 #ifndef in_addr_t
          int tmp_size = sizeof (uint32_t); /* POSIX definition for AF_INET */

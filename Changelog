@@ -1,3 +1,8 @@
+RD-2006-03-22-0: Bugfix:    qstat -u <user> crashes
+                 Bugtraq:   6401993
+                 Issue:     2010
+                 Review:    JG
+
 JG-2006-03-22-0: Enhancem.: Improved verification of incoming petask requests in
                             sge_execd (merged JG-2006-03-21-0 from 
                             V60s2_BRANCH).

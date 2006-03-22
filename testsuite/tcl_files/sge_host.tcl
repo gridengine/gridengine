@@ -362,7 +362,7 @@ proc set_exechost_error {result old_values tmpfile  raise_error} {
 #  SEE ALSO
 #     sge_host/get_exechost()
 #*******************************
-proc mod_exechost { change_array host {fast_add 1} {on_host ""} {as_user ""} {raise_error 1}} {
+proc mod_exechost {change_array host {fast_add 1} {on_host ""} {as_user ""} {raise_error 1}} {
    global CHECK_OUTPUT
 
    upvar $change_array out
@@ -376,7 +376,7 @@ proc mod_exechost { change_array host {fast_add 1} {on_host ""} {as_user ""} {ra
 #     get_exechost_list() -- get a list of exec hosts
 #
 #  SYNOPSIS
-#     get_exechost_list { output_var {on_host ""} {as_user ""} {raise_error 1} 
+#     get_exechost_list {output_var {on_host ""} {as_user ""} {raise_error 1} 
 #     } 
 #
 #  FUNCTION

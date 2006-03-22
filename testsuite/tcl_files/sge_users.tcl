@@ -153,17 +153,18 @@ proc get_operator_list { {on_host ""} {as_user ""} {raise_error 1}} {
 
 }
 
-#****** sge_users/get_user_list() *****************************************
+#****** sge_users/get_userset_list() *****************************************
 #  NAME
-#     get_user_list() -- get the list of users
+#     get_userset_list() -- get the list of usersets
 #
 #  SYNOPSIS
-#     get_user_list { {on_host ""} {as_user ""} {raise_error 1}  }
+#     get_userset_list {output_var {on_host ""} {as_user ""} {raise_error 1}  }
 #
 #  FUNCTION
-#     Calls qconf -sul to retrieve a list of users
+#     Calls qconf -sul to retrieve a list of usersets
 #
 #  INPUTS
+#     output_var      - result will be placed here
 #     {on_host ""}    - execute qconf on this host, default is master host
 #     {as_user ""}    - execute qconf as this user, default is $CHECK_USER
 #     {raise_error 1} - raise an error condition on error (default), or just
@@ -177,10 +178,9 @@ proc get_operator_list { {on_host ""} {as_user ""} {raise_error 1}} {
 #     sge_procedures/get_sge_error()
 #     sge_procedures/get_qconf_list()
 #*******************************************************************************
-proc get_user_list { {on_host ""} {as_user ""} {raise_error 1}} {
-
-   return [get_qconf_list "get_user_list" "-sul" out $on_host $as_user $raise_error]
-
+proc get_userset_list {output_var {on_host ""} {as_user ""} {raise_error 1}} {
+   upvar $output_var out
+   return [get_qconf_list "get_userset_list" "-sul" out $on_host $as_user $raise_error]
 }
 
 #****** sge_users/get_ulist() ******************************************
@@ -362,5 +362,39 @@ proc mod_userlist_error {result userlist tmpfile raise_error} {
    set ret [handle_sge_errors "mod_user" "qconf -Mu $tmpfile " $result messages $raise_error]
 
    return $ret
+}
+
+#****** sge_users/get_user_list() *****************************************
+#  NAME
+#     get_user_list() -- get the list of users
+#
+#  SYNOPSIS
+#     get_user_list { {on_host ""} {as_user ""} {raise_error 1}  }
+#
+#  FUNCTION
+#     Calls qconf -suserl to retrieve a list of users
+#
+#  INPUTS
+#     output_var      - result will be placed here
+#     {on_host ""}    - execute qconf on this host, default is master host
+#     {as_user ""}    - execute qconf as this user, default is $CHECK_USER
+#     {raise_error 1} - raise an error condition on error (default), or just
+#                       output the error message to stdout
+#
+#  RESULT
+#     0 on success, an error code on error.
+#     For a list of error codes, see sge_procedures/get_sge_error().
+#
+#  SEE ALSO
+#     sge_procedures/get_sge_error()
+#     sge_procedures/get_qconf_list()
+#*******************************************************************************
+proc get_user_list {output_var {on_host ""} {as_user ""} {raise_error 1}} {
+   # JG: TODO: we need proper error handling here.
+   # If no user is defined, output of qconf -suserl is 
+   # "no user list defined", return code is 0, so we end up with a user list 
+   # "no", "user", "list", "defined"
+   upvar $output_var out
+   return [get_qconf_list "get_user_list" "-suserl" out $on_host $as_user $raise_error]
 }
 

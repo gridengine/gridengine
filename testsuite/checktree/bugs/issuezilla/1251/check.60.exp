@@ -74,7 +74,7 @@ proc issue_1251_run  {} {
    set node_count 0
    set stree ""
 
-   build_share_tree 5
+   issue_1251_build_share_tree 5
 
    set f [ open "$tmp_name" w ]
    puts $f $stree
@@ -100,7 +100,7 @@ proc issue_1251_run  {} {
    }
 }
 
-proc build_share_tree { depth } {
+proc issue_1251_build_share_tree { depth } {
    global prj_count node_count stree
 
    set parent $node_count
@@ -115,10 +115,10 @@ proc build_share_tree { depth } {
       set stree "${stree}shares=1\n"
       set stree "${stree}childnodes=$child1,$child2\n"
 
-      build_share_tree [ expr $depth - 1 ]
-      build_share_tree [ expr $depth - 1 ]
+      issue_1251_build_share_tree [ expr $depth - 1 ]
+      issue_1251_build_share_tree [ expr $depth - 1 ]
    } else {
-      add_project "prj$prj_count"
+      issue_1251_add_project "prj$prj_count"
 
       set stree "${stree}id=$parent\n"
       set stree "${stree}name=prj$prj_count\n"
@@ -130,7 +130,7 @@ proc build_share_tree { depth } {
    }
 }
 
-proc add_project { name } {
+proc issue_1251_add_project { name } {
    global tmp_name CHECK_PRODUCT_ROOT CHECK_ARCH
 
    set f [ open "$tmp_name" w ]

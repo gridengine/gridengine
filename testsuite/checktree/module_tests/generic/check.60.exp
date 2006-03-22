@@ -77,6 +77,7 @@ lappend generic_module_tests "test_cull_list"
 lappend generic_module_tests "test_cull_pack"
 lappend generic_module_tests "test_enumeration"
 lappend generic_module_tests "test_sge_calendar"
+lappend generic_module_tests "test_sge_object"
 
 proc generic_module_tests_init_level {} {
    global ts_config

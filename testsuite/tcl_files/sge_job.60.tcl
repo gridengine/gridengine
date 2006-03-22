@@ -30,7 +30,6 @@
 ##########################################################################
 #___INFO__MARK_END__
 
-
 proc delete_all_jobs {{clear_queues 1}} {
    global ts_config CHECK_OUTPUT CHECK_USER
 

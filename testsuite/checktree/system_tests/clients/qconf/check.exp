@@ -143,6 +143,8 @@ proc qconf_init_level {} {
 
 proc qconf_setup {} {
    global CHECK_OUTPUT CHECK_USER qconf_original_host_groups qconf_original_usersets qconf_orig_queues qconf_project qconf_sched_config qconf_userlist 
+   global backup_allhosts
+
    puts $CHECK_OUTPUT "setup ..."
    set output [start_sge_bin qconf -shgrpl]
    set output [string trim $output]
@@ -166,10 +168,9 @@ proc qconf_setup {} {
    set qconf_project "qconf_project"
    # Create new project
    set qconf_prj_setup(name) "$qconf_project"
-   set my_project "$qconf_prj_setup(name)"
 
-   puts $CHECK_OUTPUT "Create project $my_project ...\n"
-   set result [add_project qconf_prj_setup]
+   puts $CHECK_OUTPUT "Create project $qconf_project ...\n"
+   set result [add_prj qconf_prj_setup]
 
    puts $CHECK_OUTPUT "Create userlist qconf_userlist ...\n"
    add_access_list $CHECK_USER qconf_userlist
@@ -235,10 +236,10 @@ proc qconf_cleanup {} {
          }
 
       }
+   }
 
    # Re-set it back
    set my_project "qconf_project"
-
    puts $CHECK_OUTPUT "Delete project $my_project ...\n"
    set result [del_project $my_project]
 
@@ -246,7 +247,6 @@ proc qconf_cleanup {} {
    puts $CHECK_OUTPUT "Set scheduler to original config ...\n"
    set result [mod_schedd_config qconf_sched_config]
 
-   }
 
    set_error 0 ""
 }
@@ -1444,13 +1444,13 @@ proc qconf_sss_check {} {
 #     qconf_sul_check - Display user list
 #
 #  SYNOPSIS
-#     qconf_sul_check { } - Call get_user_list
+#     qconf_sul_check { } - Call get_userset_list
 #
 #  FUNCTION
 #     Check basic functionality of qconf
 #
 #  SEE ALSO
-# sge_users/get_user_list()
+# sge_users/get_userset_list()
 #*******************************
 proc qconf_sul_check {} {
    global ts_config env
@@ -1458,7 +1458,7 @@ proc qconf_sul_check {} {
 
    # Do q positive test
    puts $CHECK_OUTPUT "Positive test for qconf -sul ...\n"
-   set result0 [get_user_list ]
+   set result0 [get_userset_list userset_list]
 
    if { ( $result0 == 0 ) } {
       puts $CHECK_OUTPUT "qconf -sul succeded"
@@ -1816,17 +1816,23 @@ proc qconf_add_show_delete_stnode {} {
    set project "mytestproject"
 
    # Add users
+   # Some of them might already exist - in this case we call mod_user
+   get_user_list current_user_list
    puts $CHECK_OUTPUT "Adding  user $CHECK_USER to project $project ...\n"
 
-   set new_user(name) $CHECK_USER
-   set new_user(default_project) $project
-   add_user new_user
-
-   puts $CHECK_OUTPUT "Adding  user $CHECK_FIRST_FOREIGN_SYSTEM_USER to project $project ...\n"
-   set new_user(name) $CHECK_FIRST_FOREIGN_SYSTEM_USER
-   add_user new_user
-
-   # Check that the new project has been added
+   foreach user "$CHECK_USER $CHECK_FIRST_FOREIGN_SYSTEM_USER" {
+      if {[info exists new_user]} {
+         unset new_user
+      }
+      puts $CHECK_OUTPUT "Adding  user $user to project $project ...\n"
+      set new_user(name) $user
+      set new_user(default_project) $project
+      if {[lsearch -exact $current_user_list $user] < 0} {
+         add_user new_user 1
+      } else {
+         mod_user new_user 1
+      }
+   }
 
    # Now add policies to the project $project
    puts $CHECK_OUTPUT "Adding  30 shares to $CHECK_USER to project $project and 70 shares to $CHECK_FIRST_FOREIGN_SYSTEM_USER...\n"
@@ -2436,11 +2442,12 @@ proc qconf_modify_exechost {} {
    set prj_setup(name) "qconf_test_prj"
    set my_project "qconf_test_prj"
    puts $CHECK_OUTPUT "Create project $my_project ...\n"
-   set result [add_project prj_setup]
+   set result [add_prj prj_setup]
+   puts $CHECK_OUTPUT $result
 
    # Modify exechost fast
    puts $CHECK_OUTPUT "Modify exec host  $host  from file ...\n"
-   set new_exechost_charray(projects) "qconf_test_prj"
+   set new_exechost_charray(projects) "$my_project"
    set result0 [mod_exechost new_exechost_charray $host]
 
   if { ( $result0 == 0 ) } {

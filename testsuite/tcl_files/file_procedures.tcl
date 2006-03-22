@@ -3467,26 +3467,12 @@ proc get_bdb_spooldir {{host ""} {only_local 0}} {
 #     "unknown" in case of errors.
 #*******************************************************************************
 proc get_fstype {path {host ""}} {
-   global ts_config CHECK_OUTPUT CHECK_USER
-
-   # if host doesn't matter for query, use master host
-   if {$host == ""} {
-      set host $ts_config(master_host)
-   }
-
-   # if it is available, call utilbin/<arch>/fstype
-   set ret "unknown"
-   set arch [resolve_arch $host]
-   set binary "$ts_config(product_root)/utilbin/$arch/fstype"
-   if {![file exists $binary]} {
-      add_proc_error "" -3 "can't retrieve filesystem type of $path:\n$binary does not exist"
+   # use the SGE utilbin fstype
+   set output [start_sge_utilbin "fstype" $path]
+   if {$prg_exit_state != 0} {
+      add_proc_error "" -1 "fstype $path failed:\n$output"
    } else {
-      set output [start_remote_prog $host $CHECK_USER $binary $path]
-      if {$prg_exit_state != 0} {
-         add_proc_error "" -1 "$binary $path failed on host $host:\n$output"
-      } else {
-         set ret [string trim $output]
-      }
+      set ret [string trim $output]
    }
 
    return $ret

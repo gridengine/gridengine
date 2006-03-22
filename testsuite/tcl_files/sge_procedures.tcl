@@ -2149,7 +2149,7 @@ proc get_scheduling_info { job_id { check_pending 1 }} {
 }
 
 #                                                             max. column:     |
-#****** sge_procedures/add_user() ******
+#****** sge_procedures/add_userset() ******
 # 
 #  NAME
 #     add_userset -- add a userset with qconf -Au
@@ -2233,10 +2233,10 @@ proc add_userset { change_array } {
      return 0
    }
    if { [ string match "*$ALREADY_EXISTS" $result] } {
-     add_proc_error "add_user" -1 "\"[set chgar(name)]\" already exists"
+     add_proc_error "add_userset" -1 "\"[set chgar(name)]\" already exists"
      return -2
    }
-   add_proc_error "add_user" -1 "\"error adding [set chgar(name)]\""
+   add_proc_error "add_userset" -1 "\"error adding [set chgar(name)]\""
    return -100
 }
 
@@ -2417,7 +2417,7 @@ proc del_access_list { list_name } {
 #  SEE ALSO
 #     ???/???
 #*******************************
-proc add_user { change_array { from_file 0 } } {
+proc add_user {change_array {from_file 0}} {
   global ts_config
   global CHECK_ARCH 
   global CHECK_CORE_MASTER CHECK_USER CHECK_HOST CHECK_USER CHECK_OUTPUT
@@ -4599,7 +4599,7 @@ proc submit_job { args {do_error_check 1} {submit_timeout 60} {host ""} {user ""
           }
           -i $sp_id timeout {
              puts $CHECK_OUTPUT "submit_job - timeout(1)"
-             add_proc_error "submit_job" "-1" "got timeout(1) error\nexpect_out(buffer):\n\"$expect_out(buffer)\""
+             add_proc_error "submit_job" "-1" "got timeout(1) error"
              set return_value -1 
           }
           -i $sp_id eof {
@@ -4709,7 +4709,7 @@ proc submit_job { args {do_error_check 1} {submit_timeout 60} {host ""} {user ""
                    add_proc_error "submit_job" "-1" "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
                 }
                 -i $sp_id timeout {
-                   puts $CHECK_OUTPUT "submit_job - timeout(2)"
+                   puts $CHECK_OUTPUT "submit_job - timeout(3)"
                    set return_value -1 
                 }
                 -i $sp_id "_exit_status_" {
@@ -4752,7 +4752,7 @@ proc submit_job { args {do_error_check 1} {submit_timeout 60} {host ""} {user ""
                    add_proc_error "submit_job" "-1" "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
                 }
                 -i $sp_id timeout {
-                   puts $CHECK_OUTPUT "submit_job - timeout(2)"
+                   puts $CHECK_OUTPUT "submit_job - timeout(4)"
                    set return_value -1 
                 }
                 -i $sp_id "_exit_status_" {

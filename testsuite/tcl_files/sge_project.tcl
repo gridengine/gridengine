@@ -126,42 +126,6 @@ proc get_prj { prj_name change_array } {
      }
   }
 }
-#                                                             max. column:     |
-#****** sge_project/add_project() ******
-#
-#  NAME
-#     add_project -- wrapper for add_prj
-#
-#  SYNOPSIS
-#     add_project { myprj_name }
-#
-#  FUNCTION
-#     Wrapper for add_prj
-#
-#  INPUTS
-#     myprj_name - project
-#
-#  RESULT
-#     ???
-#
-#  EXAMPLE
-#     ???
-#
-#  NOTES
-#     ???
-#
-#  BUGS
-#     ???
-#
-#  SEE ALSO
-#     ???/???
-#*******************************
-proc add_project { change_array } {
-
-     upvar $change_array chgar
-
-     add_prj chgar
-}
 
 #                                                             max. column:     |
 #****** sge_project/del_prj() ******

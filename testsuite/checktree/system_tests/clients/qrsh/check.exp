@@ -67,7 +67,7 @@ lappend check_functions "qrsh_function"              ;# is a job executed?
 lappend check_functions "qrsh_h"                     ;# test -h option
 lappend check_functions "qrsh_hold_jid"              ;# test -hold_jid option
 lappend check_functions "qrsh_alltoall"              ;# qrsh from all hosts to all hosts
-append check_functions "qrsh_starter_method"        ;# does the starter method work for qrsh?
+lappend check_functions "qrsh_starter_method"        ;# does the starter method work for qrsh?
 lappend check_functions "qrsh_accounting"            ;# accounting and online usage (sgeee)
 lappend check_functions "qrsh_suspend"               ;# suspend
 lappend check_functions "qrsh_delete"                ;# delete

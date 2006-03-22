@@ -45,19 +45,22 @@
 #     It sets up the required environment (e.g. directories)
 #     for code coverage analysis.
 #
+#  INPUTS
+#     {clean 0} - shall the coverage directories be deleted and reinitialized?
+#
 #  SEE ALSO
 #     coverage/insure_initialize()
 #     coverage/tcov_initialize()
 #*******************************************************************************
-proc coverage_initialize {} {
+proc coverage_initialize {{clean 0}} {
    global CHECK_COVERAGE
 
    if {$CHECK_COVERAGE == "tcov"} {
-      tcov_initialize
+      tcov_initialize $clean
    }
 
    if {$CHECK_COVERAGE == "insure"} {
-      insure_initialize
+      insure_initialize $clean
    }
 }
 
@@ -228,7 +231,7 @@ proc insure_get_local_basedir {} {
 #  SEE ALSO
 #     coverage/coverage_initialize()
 #*******************************************************************************
-proc insure_initialize {} {
+proc insure_initialize {{clean 0}} {
    global ts_config CHECK_OUTPUT
    global CHECK_COVERAGE_DIR CHECK_HOST
 
@@ -244,7 +247,7 @@ proc insure_initialize {} {
    set users [user_conf_get_cluster_users]
    foreach host $hosts {
       puts -nonewline " $host" ; flush $CHECK_OUTPUT
-      start_remote_prog $host "root" "$ts_config(testsuite_root_dir)/scripts/insure_create_log_dirs.sh" "$basedir $users"
+      start_remote_prog $host "root" "$ts_config(testsuite_root_dir)/scripts/insure_create_log_dirs.sh" "$clean $basedir $users"
    }
    puts $CHECK_OUTPUT " done"
 
@@ -275,7 +278,7 @@ proc insure_initialize {} {
       # we might want to add the hostname as directory to the following option.
       # We should also consider if storing the log files on a local filesystem
       # could significantly speed up testsuite execution
-      puts $f "insure++.coverage_log_file /tmp/insure/${user}/tca.%v.log"
+      puts $f "insure++.coverage_log_file ${basedir}/${user}/tca.%v.log"
       puts $f "insure++.coverage_banner off"
       puts $f "insure++.report_banner off"
       puts $f "insure++.threaded_runtime on"
@@ -295,32 +298,35 @@ proc insure_initialize {} {
 }
 
 proc insure_join_dirs {} {
-   global CHECK_OUTPUT
+   global ts_config CHECK_OUTPUT
+   global CHECK_COVERAGE_DIR CHECK_HOST
 
-   puts $CHECK_OUTPUT "not yet implemented"
-#   global ts_config CHECK_OUTPUT
-#   global CHECK_COVERAGE_DIR CHECK_HOST
-#
-#   if { [have_root_passwd] == -1 } {
-#      puts $CHECK_OUTPUT "need root access ..."
-#      set_root_passwd
-#   }
-#
-#   # copy from local logdir (basedir) to CHECK_COVERAGE_DIR/$host
-#   set basedir [tcov_get_local_basedir]
-#   puts -nonewline $CHECK_OUTPUT "copying local log directories from host" ; flush $CHECK_OUTPUT
-#   set hosts [host_conf_get_cluster_hosts]
-#   foreach host $hosts {
-#      puts -nonewline " $host" ; flush $CHECK_OUTPUT
-#      start_remote_prog $host "root" "$ts_config(testsuite_root_dir)/scripts/tcov_join_log_dirs.sh" "$basedir ${CHECK_COVERAGE_DIR}/${host}"
-#   }
-#   puts $CHECK_OUTPUT " done"
-#
-#   puts -nonewline $CHECK_OUTPUT "deleting empty coverage files" ; flush $CHECK_OUTPUT
-#   start_remote_prog $CHECK_HOST "root" "find" "$CHECK_COVERAGE_DIR -name tcovd -size 0 -exec rm {} \;"
-#   puts $CHECK_OUTPUT " done"
+   if { [have_root_passwd] == -1 } {
+      puts $CHECK_OUTPUT "need root access ..."
+      set_root_passwd
+   }
+
+   # copy from local logdir (basedir) to CHECK_COVERAGE_DIR/$host
+   set basedir [insure_get_local_basedir]
+   puts -nonewline $CHECK_OUTPUT "copying local log directories from host" ; flush $CHECK_OUTPUT
+   set hosts [host_conf_get_cluster_hosts]
+   foreach host $hosts {
+      puts -nonewline " $host" ; flush $CHECK_OUTPUT
+      start_remote_prog $host "root" "$ts_config(testsuite_root_dir)/scripts/insure_join_log_dirs.sh" "$basedir ${CHECK_COVERAGE_DIR}/${host}" prg_exit_state 600
+   }
+   puts $CHECK_OUTPUT " done"
 }
 
+proc insure_compute_coverage {} {
+
+
+# source code with coverage for a certain file:
+# tca -ds -ct -fF sge_dstring.c /cod_home/joga/sys/tca/*/*/tca*.log
+#
+# coverage summary per file
+# tca -dS -fF sge_dstring.c /cod_home/joga/sys/tca/*/*/tca*.log
+
+}
 
 #****** coverage/tcov_get_local_basedir() ************************************
 #  NAME
@@ -361,7 +367,7 @@ proc tcov_get_local_basedir {} {
 #     coverage/coverage_initialize()
 #     coverage/tcov_per_process_setup()
 #*******************************************************************************
-proc tcov_initialize {} {
+proc tcov_initialize {{clean 0}} {
    global ts_config CHECK_OUTPUT
    global CHECK_COVERAGE_DIR CHECK_HOST CHECK_USER
    global env
@@ -378,7 +384,7 @@ proc tcov_initialize {} {
    set users [user_conf_get_cluster_users]
    foreach host $hosts {
       puts -nonewline " $host" ; flush $CHECK_OUTPUT
-      start_remote_prog $host "root" "$ts_config(testsuite_root_dir)/scripts/tcov_create_log_dirs.sh" "$basedir $users"
+      start_remote_prog $host "root" "$ts_config(testsuite_root_dir)/scripts/tcov_create_log_dirs.sh" "$clean $basedir $users"
    }
    puts $CHECK_OUTPUT " done"
 
@@ -452,7 +458,7 @@ proc tcov_join_dirs {} {
    set hosts [host_conf_get_cluster_hosts]
    foreach host $hosts {
       puts -nonewline " $host" ; flush $CHECK_OUTPUT
-      start_remote_prog $host "root" "$ts_config(testsuite_root_dir)/scripts/tcov_join_log_dirs.sh" "$basedir ${CHECK_COVERAGE_DIR}/${host}"
+      start_remote_prog $host "root" "$ts_config(testsuite_root_dir)/scripts/tcov_join_log_dirs.sh" "$basedir ${CHECK_COVERAGE_DIR}/${host}" prg_exit_state 600
    }
    puts $CHECK_OUTPUT " done"
 

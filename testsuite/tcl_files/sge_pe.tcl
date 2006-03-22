@@ -186,8 +186,17 @@ proc get_pe {pe_name change_array} {
 #     Set a pe configuration corresponding to the content of the change_array.
 #
 #  INPUTS
-#     pe_obj       - name of pe object to configure
-#     change_array - name of an array variable that will be set by set_pe()
+#     pe_obj         - name of the pe.
+#     change_array   - TCL array specifying the pe object to configure
+#                      The following array members can be set:
+#                        - slots             optional, default 0
+#                        - user_lists        optional, default NONE
+#                        - xuser_lists       optional, default NONE
+#                        - start_proc_args   optional, default /bin/true
+#                        - stop_proc_args    optional, default /bin/true
+#                        - allocation_rule   optional, default $pe_slots
+#                        - control_slaves    optional, default FALSE
+#                        - job_is_first_task optional, default TRUE
 #
 #  RESULT
 #     0  : ok
@@ -196,38 +205,27 @@ proc get_pe {pe_name change_array} {
 #  SEE ALSO
 #     sge_procedures/add_pe()
 #*******************************************************************************
-proc set_pe { pe_obj change_array } {
-# pe_name           testpe
-# queue_list        NONE
-# slots             0
-# user_lists        NONE
-# xuser_lists       NONE
-# start_proc_args   /bin/true
-# stop_proc_args    /bin/true
-# allocation_rule   $pe_slots
-# control_slaves    FALSE
-# job_is_first_task TRUE
+proc set_pe {pe_obj change_array} {
 
    global ts_config
-  global env CHECK_ARCH
-  global CHECK_CORE_MASTER CHECK_USER CHECK_OUTPUT
+   global env CHECK_ARCH
+   global CHECK_CORE_MASTER CHECK_USER CHECK_OUTPUT
 
-  upvar $change_array chgar
+   upvar $change_array chgar
 
-  if { $ts_config(gridengine_version) == 60 && [info exists chgar(queue_list)]} {
-     if { [ info exists chgar(queue_list) ] } {
-        puts $CHECK_OUTPUT "this qconf version doesn't support queue_list for pe objects"
-        add_proc_error "set_pe" -3 "this qconf version doesn't support queue_list for pe objects,\nuse assign_queues_with_pe_object() after adding pe\nobjects and don't use queue_list parameter.\nyou can call get_pe_ckpt_version() to test pe version"
-        unset chgar(queue_list)
-     }
-  }
+   if {$ts_config(gridengine_version) == 60 && [info exists chgar(queue_list)]} {
+      if {[info exists chgar(queue_list)]} {
+         add_proc_error "set_pe" -3 "this qconf version doesn't support queue_list for pe objects,\nuse assign_queues_with_pe_object() after adding pe\nobjects and don't use queue_list parameter.\nyou can call get_pe_ckpt_version() to test pe version"
+         unset chgar(queue_list)
+      }
+   }
 
-  set vi_commands [build_vi_command chgar]
+   set vi_commands [build_vi_command chgar]
 
-  set MODIFIED  [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_MODIFIEDINLIST_SSSS] $CHECK_USER "*" "*" "*"]
-  set ALREADY_EXISTS [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_ALREADYEXISTS_SS] "*" "*" ]
+   set MODIFIED  [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_MODIFIEDINLIST_SSSS] $CHECK_USER "*" "*" "*"]
+   set ALREADY_EXISTS [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_ALREADYEXISTS_SS] "*" "*" ]
 
-  if { $ts_config(gridengine_version) == 53 } {
+   if { $ts_config(gridengine_version) == 53 } {
       set NOT_EXISTS [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_UNKNOWNUSERSET_SSSS] "*" "*" "*" "*" ]
    } else {
       # JG: TODO: is it the right message? It's the only one mentioning non 
@@ -235,14 +233,14 @@ proc set_pe { pe_obj change_array } {
       set NOT_EXISTS [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_CQUEUE_UNKNOWNUSERSET_S] "*" ]
    }
 
-  set result [ handle_vi_edit "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-mp $pe_obj" $vi_commands $MODIFIED $ALREADY_EXISTS $NOT_EXISTS ]
+   set result [ handle_vi_edit "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-mp $pe_obj" $vi_commands $MODIFIED $ALREADY_EXISTS $NOT_EXISTS ]
 
-  if {$result == -1 } { add_proc_error "set_pe" -1 "timeout error" }
-  if {$result == -2 } { add_proc_error "set_pe" -1 "parallel environment \"$pe_obj\" already exists" }
-  if {$result == -3 } { add_proc_error "set_pe" -1 "something (perhaps a queue) does not exist" }
-  if {$result != 0  } { add_proc_error "set_pe" -1 "could not change parallel environment \"$pe_obj\"" }
+   if {$result == -1 } { add_proc_error "set_pe" -1 "timeout error" }
+   if {$result == -2 } { add_proc_error "set_pe" -1 "parallel environment \"$pe_obj\" already exists" }
+   if {$result == -3 } { add_proc_error "set_pe" -1 "something (perhaps a queue) does not exist" }
+   if {$result != 0  } { add_proc_error "set_pe" -1 "could not change parallel environment \"$pe_obj\"" }
 
-  return $result
+   return $result
 }
 
 #                                                             max. column:     |

@@ -1,7 +1,16 @@
+RD-2006-03-22-1: Bugfix:    - qrsh does not accept -o/-e/-j
+                            - qrsh issue with interactive jobs and directory
+                              write permissions
+                            - interactive jobs leave behind output/error
+                              files if prolog/epilog are run
+                 Issue:     1997, 1998, 368 
+                 Bugtraq:   6391238, 6390494, 4737342
+                 Review:    JG
+
 RD-2006-03-22-0: Bugfix:    qstat -u <user> crashes
                  Bugtraq:   6401993
                  Issue:     2010
-                 Review:    AA
+                 Review:    JG
 
 JG-2006-03-21-0: Enhancem.: Improved verification of incoming petask requests in
                             sge_execd (JG-2006-03-17-0 continued).

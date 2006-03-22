@@ -428,6 +428,7 @@ static char *read_from_qrsh_socket(int msgsock)
    } while (*c++ != 0); 
 
    close(msgsock);
+   DEXIT;
    return buffer;
 }
 
@@ -478,7 +479,7 @@ static int get_remote_exit_code(int sock)
       if(s_ret && *s_ret) {
          char *message = strchr(s_ret, ':');
          if(message != NULL && strlen(message) > 0) {
-            fprintf(stderr, message + 1);
+            fprintf(stderr, "%s\n", message + 1);
             *message = 0;
          }
          VERBOSE_LOG((stderr, "%s\n", s_ret));
@@ -1126,6 +1127,7 @@ void write_client_name_cache(const char *cache_path, const char *client_name)
 static void set_job_info(lListElem *job, const char *name, int is_qlogin, 
                          int is_rsh, int is_rlogin)
 {
+   lList* stdout_stderr_path = NULL;
    u_long32 jb_now = lGetUlong(job, JB_type);
    const char *job_name  = lGetString(job, JB_job_name);
    
@@ -1157,6 +1159,10 @@ static void set_job_info(lListElem *job, const char *name, int is_qlogin,
 
    lSetUlong(job, JB_type, jb_now);
    lSetString(job, JB_job_name, job_name);
+
+   cull_parse_path_list(&stdout_stderr_path, "/dev/null");
+   lSetList(job, JB_stdout_path_list, lCopyList("stdout_path_list", stdout_stderr_path));
+   lSetList(job, JB_stderr_path_list, lCopyList("stderr_path_list", stdout_stderr_path));
 }
 
 /****** Interactive/qsh/set_command_to_env() ***************************************
@@ -1522,7 +1528,6 @@ int main(int argc, char **argv)
 
    opt_list_merge_command_lines(&opts_all, &opts_defaults, &opts_scriptfile,
                                 &opts_cmdline);
-   
 
    alp = cull_parse_qsh_parameter(opts_all, &job);
    do_exit = parse_result_list(alp, &alp_error);
@@ -1542,7 +1547,6 @@ int main(int argc, char **argv)
    }   
    
    if (!existing_job) {
-      set_job_info(job, name, is_qlogin, is_rsh, is_rlogin); 
       DPRINTF(("Everything ok\n"));
 #ifndef NO_SGE_COMPILE_DEBUG
       if (rmon_mlgetl(&DEBUG_ON, TOP_LAYER) & INFOPRINT) { 
@@ -1972,7 +1976,8 @@ static void remove_unknown_opts(lList *lp, u_long32 jb_now, int tightly_integrat
             strcmp(cp, "-V") && strcmp(cp, "-display") && strcmp(cp, "-verify") &&
             strcmp(cp, "-soft") && strcmp(cp, "-M") && strcmp(cp, "-verbose") &&
             strcmp(cp, "-ac") && strcmp(cp, "-dc") && strcmp(cp, "-sc") &&
-            strcmp(cp, "-S") && strcmp(cp, "-w") && strcmp(cp, "-js") && strcmp(cp, "-R")
+            strcmp(cp, "-S") && strcmp(cp, "-w") && strcmp(cp, "-js") && strcmp(cp, "-R") &&
+            strcmp(cp, "-o") && strcmp(cp, "-e") && strcmp(cp, "-j")
            ) {
             if(error) {
                ERROR((SGE_EVENT, MSG_ANSWER_UNKOWNOPTIONX_S, cp));

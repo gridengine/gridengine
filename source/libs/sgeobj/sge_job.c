@@ -62,6 +62,7 @@
 
 #include "sgeobj/sge_userset.h"
 #include "sgeobj/sge_qrefL.h"
+#include "sgeobj/sge_utility.h"
 
 #include "msg_sgeobjlib.h"
 #include "msg_gdilib.h"
@@ -2863,23 +2864,64 @@ bool sge_unparse_string_option_dstring(dstring *category_str, const lListElem *j
 bool 
 job_verify(const lListElem *job, lList **answer_list)
 {
-bool ret = true;
+   bool ret = true;
 
-DENTER(TOP_LAYER, "job_verify");
+   DENTER(TOP_LAYER, "job_verify");
 
-if (job == NULL) {
-   answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR, "NULL pointer argument");
-   ret = false;
-}
-
-if (ret) {
-   if (!object_verify_cull(job, JB_Type)) {
-      answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR, "corrupted cull structure or reduced element");
+   if (job == NULL) {
+      answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR, "NULL pointer argument");
       ret = false;
    }
-}
 
-DRETURN(ret);
+   if (ret) {
+      if (!object_verify_cull(job, JB_Type)) {
+         answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR, "corrupted cull structure or reduced element");
+         ret = false;
+      }
+   }
+
+   if (ret) {
+      const char *name = lGetString(job, JB_job_name);
+      if (name != NULL) {
+         if (verify_str_key(answer_list, name, lNm2Str(JB_job_name)) != 0) {
+            ret = false;
+         }
+      }
+   }
+
+   if (ret) {
+      const char *cwd = lGetString(job, JB_cwd);
+
+      if (cwd != NULL) {
+         ret = path_verify(cwd, answer_list);
+      }
+   }
+
+   if (ret) {
+      const lList *path_aliases = lGetList(job, JB_path_aliases);
+
+      if (path_aliases != NULL) {
+         ret = path_alias_verify(path_aliases, answer_list);
+      }
+   } 
+
+   if (ret) {
+      const lList *env_list = lGetList(job, JB_env_list);
+
+      if (env_list != NULL) {
+         ret = var_list_verify(env_list, answer_list);
+      }
+   } 
+
+   if (ret) {
+      const lList *context_list = lGetList(job, JB_context);
+
+      if (context_list != NULL) {
+         ret = var_list_verify(context_list, answer_list);
+      }
+   } 
+
+   DRETURN(ret);
 }
 
 /****** sge_job/job_verify_submitted_job() *************************************
@@ -2917,13 +2959,13 @@ DRETURN(ret);
 bool 
 job_verify_submitted_job(const lListElem *job, lList **answer_list)
 {
-bool ret = true;
+   bool ret = true;
 
-DENTER(TOP_LAYER, "job_verify_submitted_job");
+   DENTER(TOP_LAYER, "job_verify_submitted_job");
 
-ret = job_verify(job, answer_list);
+   ret = job_verify(job, answer_list);
 
-DRETURN(ret);
+   DRETURN(ret);
 }
 
 /****** sge_job/job_verify_execd_job() *****************************************
@@ -2961,24 +3003,28 @@ DRETURN(ret);
 bool
 job_verify_execd_job(const lListElem *job, lList **answer_list)
 {
-bool ret = true;
+   bool ret = true;
 
-DENTER(TOP_LAYER, "job_verify_execd_job");
+   DENTER(TOP_LAYER, "job_verify_execd_job");
 
-ret = job_verify(job, answer_list);
+   ret = job_verify(job, answer_list);
 
-/* 
- * A job entering execd must have some additional properties:
- *    - correct state
- *    - JB_job_number > 0
- *    - JB_job_name != NULL
- *    - JB_exec_file etc. ???
- *    - JB_submission_time, JB_execution_time??
- *    - JB_owner != NULL
- *    - JB_cwd != NULL??
- *    - a correct JAT_Type sublist with a single element (to be verified)
- */
+   /* 
+    * A job entering execd must have some additional properties:
+    *    - correct state
+    *    - JB_job_number > 0
+    *    - JB_job_name != NULL
+    *    - JB_exec_file etc. ???
+    *    - JB_submission_time, JB_execution_time??
+    *    - JB_owner != NULL
+    *    - JB_cwd != NULL??
+    *    - a correct JAT_Type sublist with a single element (to be verified)
+    */
 
-DRETURN(ret);
+   if (ret) {
+      ret = object_verify_ulong_not_null(job, answer_list, JB_job_number);
+   }
+
+   DRETURN(ret);
 }
 

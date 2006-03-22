@@ -37,7 +37,7 @@
 
 #include "uti/sge_stdio.h"
 #include "sgermon.h"
-#include "sge_path_alias.h"
+#include "sgeobj/sge_path_alias.h"
 #include "sge_log.h"
 #include "sge_host.h"
 #include "setup_path.h"
@@ -45,10 +45,12 @@
 #include "sge_uidgid.h"
 #include "sge_unistd.h"
 #include "sge_hostname.h"
-#include "sge_answer.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_utility.h"
 
 #include "msg_common.h"
 #include "msg_daemons_common.h"
+#include "sgeobj/msg_sgeobjlib.h"
 #include "cl_errors.h"
 
 /****** sgeobj/path_alias/-PathAlias *******************************************
@@ -450,3 +452,121 @@ int path_alias_list_get_path(const lList *path_aliases, lList **alpp,
    return 0;
 
 }
+
+/****** sge_path_alias/path_verify() *******************************************
+*  NAME
+*     path_verify() -- verify a path string
+*
+*  SYNOPSIS
+*     bool 
+*     path_verify(const char *path, lList **answer_list) 
+*
+*  FUNCTION
+*     Verifies if a path string has valid contents.
+*     Currently only the length of the path string is verified,
+*     other checks (character set etc.) should be done.
+*
+*  INPUTS
+*     const char *path    - the string to verify
+*     lList **answer_list - answer list to pass back error messages
+*
+*  RESULT
+*     bool - true on success,
+*            false on error with error message in answer_list
+*
+*  NOTES
+*     MT-NOTE: path_verify() is MT safe 
+*******************************************************************************/
+bool 
+path_verify(const char *path, lList **answer_list)
+{
+   bool ret = true;
+
+   if (path == NULL || *path == '\0') {
+      answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR, 
+                              MSG_PATH_ALIAS_INVALID_PATH);
+      ret = false;
+   }
+
+   if (ret) {
+      if (strlen(path) > SGE_PATH_MAX) {
+         answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR, 
+                                 MSG_PATH_TOOLONG_I, SGE_PATH_MAX);
+         ret = false;
+      }
+   }
+
+   /* 
+    * TODO: we have to do additional checks here 
+    * we could use a variant of verify_str_key, using different valid character definition
+    * verify_str_key will be extended to do length check
+    * shall we also check for absolute vs. relative path?
+    * filename vs. directory path?
+    */
+
+   return ret;
+}
+
+/****** sge_path_alias/path_alias_verify() *************************************
+*  NAME
+*     path_alias_verify() -- verify path alias list
+*
+*  SYNOPSIS
+*     bool 
+*     path_alias_verify(const lList *path_aliases, lList **answer_list) 
+*
+*  FUNCTION
+*     Verify a path alias list as it is sent with job or pe task start orders
+*     to sge_execd.
+*
+*  INPUTS
+*     const lList *path_aliases - path alias list
+*     lList **answer_list       - answer list to pass back error messages
+*
+*  RESULT
+*     bool - true on success,
+*            false on error with error message in answer_list
+*
+*  NOTES
+*     MT-NOTE: path_alias_verify() is MT safe 
+*
+*  SEE ALSO
+*     sge_path_alias/path_verify()
+*******************************************************************************/
+bool 
+path_alias_verify(const lList *path_aliases, lList **answer_list)
+{
+   bool ret = true;
+   const lListElem *ep;
+
+   for_each (ep, path_aliases) {
+      /* 
+       * PA_origin and PA_translation may not be NULL or empty string 
+       * they have to be valid paths.
+       */
+      if (ret) {
+         ret = path_verify(lGetString(ep, PA_origin), answer_list);
+      }
+      if (ret) {
+         ret = path_verify(lGetString(ep, PA_translation), answer_list);
+      }
+
+       /*
+       * PA_submit_host and PA_exec_host have to be either '*' or a valid
+       * hostname (no need to resolve them).
+       */
+      if (ret) {
+         ret = verify_host_name(answer_list, lGetHost(ep, PA_submit_host));
+      }
+      if (ret) {
+         ret = verify_host_name(answer_list, lGetHost(ep, PA_exec_host));
+      }
+
+      if (!ret) {
+         break;
+      }
+   }
+
+   return ret;
+}
+

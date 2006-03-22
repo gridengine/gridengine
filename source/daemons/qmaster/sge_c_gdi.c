@@ -787,7 +787,10 @@ sge_c_gdi_add(gdi_object_t *ao, char *host, sge_gdi_request *request,
       } else if (request->target == SGE_JOB_LIST) {
          for_each(ep, request->lp) { /* is thread save. the global lock is used, when needed */
                                                    /* fill address infos from request into event client that must be added */
-            if (job_verify_submitted_job(ep, &(answer->alp))) {
+            if (!job_verify_submitted_job(ep, &(answer->alp))) {
+               ERROR((SGE_EVENT, MSG_QMASTER_INVALIDJOBSUBMISSION_SSS,
+                      user, request->commproc, request->host));
+            } else {
                if(mconf_get_simulate_hosts()) {
 
                   int multi_job = 1;

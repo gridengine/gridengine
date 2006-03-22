@@ -43,6 +43,8 @@
 #include "sge_answer.h"
 #include "sge_utility.h"
 
+#include "cl_communication.h" /* CL_MAXHOSTNAMELEN_LENGTH */
+
 #include "msg_common.h"
 #include "msg_qmaster.h"
 #include "msg_sgeobjlib.h"
@@ -140,3 +142,46 @@ int verify_str_key(lList **alpp, const char *str, const char *name)
    return 0;
 }
 
+/****** sge_utility/verify_host_name() *****************************************
+*  NAME
+*     verify_host_name() -- verify a hostname
+*
+*  SYNOPSIS
+*     bool 
+*     verify_host_name(lList **answer_list, const char *host_name) 
+*
+*  FUNCTION
+*     Verifies if a hostname is correct (regarding maximum length etc.).
+*
+*  INPUTS
+*     lList **answer_list   - answer list to pass back error messages
+*     const char *host_name - the hostname to verify
+*
+*  RESULT
+*     bool - true on success,
+*            false on error with error message in answer_list
+*
+*  NOTES
+*     MT-NOTE: verify_host_name() is MT safe 
+*******************************************************************************/
+bool verify_host_name(lList **answer_list, const char *host_name)
+{
+   bool ret = true;
+
+   if (host_name == NULL || *host_name == '\0') {
+      answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR, 
+                              MSG_HOSTNAME_NOT_EMPTY);
+      ret = false;
+   }
+
+   if (ret) {
+      if (strlen(host_name) > CL_MAXHOSTNAMELEN_LENGTH) {
+         answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR, 
+                                 MSG_HOSTNAME_NOT_EMPTY);
+      }
+   }
+
+   /* TODO: further verification (e.g. character set) */
+
+   return ret;
+}

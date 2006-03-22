@@ -914,13 +914,14 @@ int cull_pack_list_partial(sge_pack_buffer *pb, const lList *lp,
    DENTER(CULL_LAYER, "cull_pack_list_partial");
 
    PROF_START_MEASUREMENT(SGE_PROF_PACKING);
-   if((ret = packint(pb, lp != NULL)) != PACK_SUCCESS) {
-      PROF_STOP_MEASUREMENT(SGE_PROF_PACKING);
-      DEXIT;
-      return ret;
-   }
 
    if (lp != NULL) {
+      if((ret = packint(pb, 1)) != PACK_SUCCESS) {
+         PROF_STOP_MEASUREMENT(SGE_PROF_PACKING);
+         DEXIT;
+         return ret;
+      }
+
       if((ret = packint(pb, lp->nelem)) != PACK_SUCCESS) {
          PROF_STOP_MEASUREMENT(SGE_PROF_PACKING);
          DEXIT;
@@ -953,7 +954,14 @@ int cull_pack_list_partial(sge_pack_buffer *pb, const lList *lp,
             return ret;
          }
       }
+   } else {
+      if((ret = packint(pb, 0)) != PACK_SUCCESS) {
+         PROF_STOP_MEASUREMENT(SGE_PROF_PACKING);
+         DEXIT;
+         return ret;
+      }
    }
+
    if (lp != NULL) {
       /* pack each list element */
       for_each(ep, lp) {

@@ -1216,17 +1216,20 @@ void lFreeWhere(lCondition **cp)
    case STRCASECMP:
    case PATTERNCMP:
    case HOSTNAMECMP:
-
       if (mt_get_type((*cp)->operand.cmp.mt) == lStringT) {
          if ((*cp)->operand.cmp.val.str) {
-            free((*cp)->operand.cmp.val.str);
+            FREE((*cp)->operand.cmp.val.str);
          }
       }
       if (mt_get_type((*cp)->operand.cmp.mt) == lHostT) {
          if ((*cp)->operand.cmp.val.host) {
-            free((*cp)->operand.cmp.val.host);
+            FREE((*cp)->operand.cmp.val.host);
          }
       }
+      if (mt_get_type((*cp)->operand.cmp.mt) == lListT) {
+         lFreeWhere(&((*cp)->operand.cmp.val.cp));
+      }
+      break;
    case SUBSCOPE:
       if (mt_get_type((*cp)->operand.cmp.mt) == lListT) {
          lFreeWhere(&((*cp)->operand.cmp.val.cp));
@@ -1234,7 +1237,9 @@ void lFreeWhere(lCondition **cp)
       break;
    case AND:
    case OR:
+      lFreeWhere(&((*cp)->operand.log.first));
       lFreeWhere(&((*cp)->operand.log.second));
+      break;
    case NEG:
       lFreeWhere(&((*cp)->operand.log.first));
       break;

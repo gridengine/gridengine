@@ -87,7 +87,7 @@ int sub_command, monitoring_t *monitor
    pe_name = lGetString(new_pe, PE_name);
 
    /* Name has to be a valid filename without pathchanges */
-   if (add && verify_str_key(alpp, pe_name, MSG_OBJ_PE)) {
+   if (add && verify_str_key(alpp, pe_name, MAX_VERIFY_STRING, MSG_OBJ_PE) != STATUS_OK) {
       DEXIT;
       return STATUS_EUNKNOWN;
    }

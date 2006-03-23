@@ -162,6 +162,8 @@ extern "C" {
 #define MAX_STRING_SIZE 2048
 typedef char stringT[MAX_STRING_SIZE];
 
+#define MAX_VERIFY_STRING 512
+
 #define INTSIZE     4           /* (4) 8 bit bytes */
 #if defined(_UNICOS)
 #define INTOFF      4           /* big endian 64-bit machines where sizeof(int) = 8 */

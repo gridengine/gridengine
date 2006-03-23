@@ -1,3 +1,7 @@
+MD-2006-03-23-0: Enhancem.: - security enhancement, improved string
+                              verification.
+                 Review:    RD
+
 RD-2006-03-22-1: Bugfix:    - qrsh does not accept -o/-e/-j
                             - qrsh issue with interactive jobs and directory
                               write permissions

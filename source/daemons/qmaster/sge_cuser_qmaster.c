@@ -75,7 +75,7 @@ int cuser_mod(lList **answer_list, lListElem *cuser, lListElem *reduced_elem,
          const char *name = lGetPosString(reduced_elem, pos);
 
          if (add) {
-            if (!verify_str_key(answer_list, name, "cuser")) {
+            if (verify_str_key(answer_list, name, MAX_VERIFY_STRING, "cuser") == STATUS_OK) {
                lSetString(cuser, CU_name, name);
             } else {
                ERROR((SGE_EVENT, MSG_UM_CLUSTERUSERXNOTGUILTY_S, name));

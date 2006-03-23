@@ -49,13 +49,13 @@
 #include "msg_qmaster.h"
 #include "msg_sgeobjlib.h"
 
-int verify_str_key(lList **alpp, const char *str, const char *name) 
+an_status_t verify_str_key(lList **alpp, const char *str, size_t str_length, const char *name) 
 {
    static char begin_chars[3] = { '.', '#', 0 };
    static const char *begin_strings[3];
 
-   static const char mid_characters[18] = { '\n', '\t', '\r', ' ', '/', ':', '\'',
-      '\"', '\\', '[', ']', '{', '}', '|', '(', ')', '@', 0 };
+   static const char mid_characters[19] = { '\n', '\t', '\r', ' ', '/', ':', '\'',
+      '\"', '\\', '[', ']', '{', '}', '|', '(', ')', '@', '%' , 0};
    static const char *mid_strings[18];
 
    static const char* keyword[] = { "NONE", "ALL", "TEMPLATE", NULL };
@@ -87,12 +87,20 @@ int verify_str_key(lList **alpp, const char *str, const char *name)
       mid_strings[14] = MSG_GDI_KEYSTR_PARENTHESIS;
       mid_strings[15] = MSG_GDI_KEYSTR_PARENTHESIS;
       mid_strings[16] = MSG_GDI_KEYSTR_AT;
-      mid_strings[17] = NULL;
+      mid_strings[17] = MSG_GDI_KEYSTR_PERCENT;
+      mid_strings[18] = NULL;
       keyword_strings[0] = MSG_GDI_KEYSTR_KEYWORD;
       keyword_strings[1] = MSG_GDI_KEYSTR_KEYWORD;
       keyword_strings[2] = MSG_GDI_KEYSTR_KEYWORD;
       keyword_strings[3] = NULL;
       initialized = 1;
+   }
+
+   /* check string length first, if too long -> error */
+   if (strlen(str) > str_length) {
+      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_KEYSTR_LENGTH_S,str_length));
+      answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+      return STATUS_EUNKNOWN;
    }
 
    /* check first character */
@@ -139,7 +147,7 @@ int verify_str_key(lList **alpp, const char *str, const char *name)
       }
    }
 
-   return 0;
+   return STATUS_OK;
 }
 
 /****** sge_utility/verify_host_name() *****************************************

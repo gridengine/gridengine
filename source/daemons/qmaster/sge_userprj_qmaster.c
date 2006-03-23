@@ -121,7 +121,7 @@ int sub_command, monitoring_t *monitor
          answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
          goto Error;
       }
-      if (verify_str_key(alpp, userprj, obj_name))
+      if (verify_str_key(alpp, userprj, MAX_VERIFY_STRING, obj_name) != STATUS_OK)
          goto Error;
       lSetString(modp, UP_name, userprj);
    }

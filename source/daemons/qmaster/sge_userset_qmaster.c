@@ -107,7 +107,7 @@ char *rhost
 
    /* Name has to be a valid filename without pathchanges, because we use it
       for storing user/project to disk */
-   if (verify_str_key(alpp, userset_name, MSG_OBJ_USERSET)) {
+   if (verify_str_key(alpp, userset_name, MAX_VERIFY_STRING, MSG_OBJ_USERSET) != STATUS_OK) {
       DEXIT;
       return STATUS_EUNKNOWN;
    }

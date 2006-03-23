@@ -258,7 +258,7 @@ int pe_validate(lListElem *pep, lList **alpp, int startup)
 
    DENTER(TOP_LAYER, "pe_validate");
    pe_name = lGetString(pep, PE_name);
-   if (pe_name && verify_str_key(alpp, pe_name, MSG_OBJ_PE)) {
+   if (pe_name && verify_str_key(alpp, pe_name, MAX_VERIFY_STRING, MSG_OBJ_PE) != STATUS_OK) {
       if (alpp == NULL) { 
          ERROR((SGE_EVENT, "Invalid character in pe name of pe "SFQ, pe_name));
       } else {

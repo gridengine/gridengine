@@ -155,6 +155,9 @@
 #define MSG_GDI_KEYSTR_PARENTHESIS     _MESSAGE(33100, _("Parenthesis"))
 #define MSG_GDI_KEYSTR_AT              _MESSAGE(33101, _("At"))
 #define MSG_GDI_KEYSTR_PIPE            _MESSAGE(33102, _("Pipe"))
+#define MSG_GDI_KEYSTR_PERCENT         _MESSAGE(33103, _("Percent"))
+#define MSG_GDI_KEYSTR_LENGTH_S        _MESSAGE(33104, _("string is longer then %d, this is not allowed for objectnames") )
+
 
 /*
 ** ck_to_do_qmaster.c

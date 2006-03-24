@@ -1293,6 +1293,10 @@ ec_subscribe(ev_event event)
    if (event == sgeE_ALL_EVENTS) {
       ev_event i;
       for(i = sgeE_ALL_EVENTS; i < sgeE_EVENTSIZE; i++) {
+         /* 
+          * JG: TODO: the -1 will go into an unsigned long in the event subscription object.
+          * This is potentially dangerous!
+          */
          ec_add_subscriptionElement(ec, i, EV_NOT_FLUSHED, -1);
       }
    } else {

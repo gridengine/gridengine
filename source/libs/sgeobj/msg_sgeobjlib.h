@@ -317,4 +317,12 @@
 #define MSG_HOSTNAME_NOT_EMPTY _MESSAGE(64316, _("hostnames may not be empty string"))
 #define MSG_HOSTNAME_TOOLONG _MESSAGE(64317, _("hostnames too long"))
 
+#define MSG_EVENT_INVALIDNAME _MESSAGE(64318, _("invalid event client name"))
+#define MSG_EVENT_ONLYADMINMAYSTARTSPECIALEVC _MESSAGE(64319, _("only admin user or root may start special event clients"))
+#define MSG_EVENT_INVALIDDTIME_II _MESSAGE(64320, _("invalid event delivery time %d. It has to be between 1 and %d"))
+#define MSG_EVENT_FLUSHDELAYCANNOTBEGTDTIME _MESSAGE(64321, _("event flush delay may not be greater than event delivery time"))
+#define MSG_EVENT_INVALIDBUSYHANDLING _MESSAGE(64322, _("invalid value for event client busy handling"))
+#define MSG_EVENT_INVALIDSESSIONKEY _MESSAGE(64323, _("invalid session key for event client"))
+#define MSG_EVENT_INVALIDEVENT _MESSAGE(64324, _("invalid event id in event client subscription"))
+
 #endif /* __MSG_SGEOBJLIB_H */

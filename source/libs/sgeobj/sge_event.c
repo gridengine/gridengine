@@ -31,13 +31,22 @@
 /*___INFO__MARK_END__*/
 #include <stdio.h>
 
-#include "sge_eventL.h"
-#include "cull.h"
-#include "sge_job.h"
-#include "sge_sharetree.h"
-#include "sge_event.h"
+#include "sgermon.h"
+#include "sge_log.h"
 
-#include "msg_sgeobjlib.h"
+#include "comm/cl_communication.h" /* CL_DEFINE_CLIENT_CONNECTION_LIFETIME */
+#include "cull/cull.h"
+#include "uti/sge_prog.h"
+#include "uti/sge_string.h"
+#include "sgeobj/sge_job.h"
+#include "sgeobj/sge_sharetree.h"
+#include "sgeobj/sge_event.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_object.h"
+#include "sgeobj/sge_utility.h"
+
+#include "msg_common.h"
+#include "sgeobj/msg_sgeobjlib.h"
 
 /* documentation see libs/evc/sge_event_client.c */
 const char *event_text(const lListElem *event, dstring *buffer) 
@@ -399,3 +408,217 @@ const char *event_text(const lListElem *event, dstring *buffer)
    return sge_dstring_get_string(buffer);
 }
 
+static bool event_client_verify_subscription(const lListElem *event_client, lList **answer_list, int d_time)
+{
+   bool ret = true;
+   const lListElem *ep;
+
+   DENTER(TOP_LAYER, "event_client_verify_subscription");
+
+   for_each (ep, lGetList(event_client, EV_subscribed)) {
+      if (ret) {
+         u_long32 id = lGetUlong(ep, EVS_id);
+         if (id <= sgeE_ALL_EVENTS || id >= sgeE_EVENTSIZE) {
+            answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR, 
+                                    MSG_EVENT_INVALIDEVENT);
+            ret = false;
+            break;
+         }
+      }
+
+#if 0
+      /* check flush interval - we get a -1 out of the ulong (!) in case
+       * flushing is disabled
+       * We can very easily run into this problem by configuring scheduler interval
+       * and flush_submit|finish_secs. Disabling the check.
+       */
+      if (ret) {
+         int interval = (int) lGetUlong(ep, EVS_interval);
+         if (interval > d_time) {
+            answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR, 
+                                    MSG_EVENT_FLUSHDELAYCANNOTBEGTDTIME);
+            ret = false;
+            break;
+         }
+      }
+#endif
+   }
+
+   /* TODO: verify the where and what elements */
+
+   DRETURN(ret);
+}
+
+/****** sge_event/event_client_verify() ****************************************
+*  NAME
+*     event_client_verify() -- verify an event client object
+*
+*  SYNOPSIS
+*     bool 
+*     event_client_verify(const lListElem *event_client, lList **answer_list) 
+*
+*  FUNCTION
+*     Verifies, if an incoming event client object (new event client registration
+*     through a GDI_ADD operation or event client modification through GDI_MOD
+*     operation is correct.
+*
+*     We do the following verifications:
+*        - EV_id correct:
+*           - add request usually may only request dynamic event client id, 
+*             if a special id is requested, we must be on local host and be
+*             admin user or root.
+*        - EV_name (valid string, limited length)
+*        - EV_d_time (valid delivery interval)
+*        - EV_flush_delay (valid flush delay)
+*        - EV_subscribed (valid subscription list)
+*        - EV_busy_handling (valid busy handling)
+*        - EV_session (valid string, limited length)
+*
+*     No verification will be done
+*        - EV_host (is always overwritten by qmaster code)
+*        - EV_commproc (comes from commlib)
+*        - EV_commid (comes from commlib)
+*        - EV_uid (is always overwritten  by qmaster code)
+*        - EV_last_heard_from (only used by qmaster)
+*        - EV_last_send_time (only used by qmaster)
+*        - EV_next_send_time (only used by qmaster)
+*        - EV_sub_array (only used by qmaster)
+*        - EV_changed (?)
+*        - EV_next_number (?)
+*        - EV_state (?)
+*
+*  INPUTS
+*     const lListElem *event_client - ??? 
+*     lList **answer_list           - ??? 
+*     bool add                      - is this an add request (or mod)?
+*
+*  RESULT
+*     bool - 
+*
+*  NOTES
+*     MT-NOTE: event_client_verify() is MT safe 
+*******************************************************************************/
+bool 
+event_client_verify(const lListElem *event_client, lList **answer_list, bool add)
+{
+   bool ret = true;
+   const char *str;
+   u_long d_time;
+  
+   DENTER(TOP_LAYER, "event_client_verify");
+
+   if (event_client == NULL) {
+      answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR,
+                              MSG_NULLELEMENTPASSEDTO_S, SGE_FUNC);
+      ret = false;
+   }
+
+   if (ret) {
+      if (!object_verify_cull(event_client, EV_Type)) {
+         answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR, 
+                                 MSG_OBJECT_STRUCTURE_ERROR);
+         ret = false;
+      }
+   }
+
+   if (ret) {
+      /* get the event delivery time - we'll need it in later checks */
+      d_time = lGetUlong(event_client, EV_d_time);
+
+      /* 
+       * EV_name has to be a valid string.
+       * TODO: Is verify_str_key too restrictive? Does drmaa allow to set the name?
+       */
+      str = lGetString(event_client, EV_name);
+      if (str == NULL ||
+         verify_str_key(answer_list, str, MAX_VERIFY_STRING, lNm2Str(EV_name)) != STATUS_OK) {
+         answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR, 
+                                 MSG_EVENT_INVALIDNAME);
+         ret = false;
+      }
+   }
+
+   /* 
+    * Verify the EV_id:
+    * Add requests may only contain EV_ID_ANY or a special id.
+    * If a special id is requested, it must come from admin/root
+    */
+   if (ret) {
+      u_long32 id = lGetUlong(event_client, EV_id);
+      if (add && id >= EV_ID_FIRST_DYNAMIC) {
+         answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR, 
+                                 MSG_EVENT_INVALIDNAME);
+         ret = false;
+#if 0
+      /* 
+       * useless check - EV_uid is set by client 
+       * is checked by CSP for special clients
+       */
+      } else if (id != EV_ID_ANY) {
+         u_long32 uid = lGetUlong(event_client, EV_uid);
+         u_long32 my_uid = uti_state_get_uid();
+         if (uid != my_uid && uid != 0) {
+            answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR, 
+                                    MSG_EVENT_ONLYADMINMAYSTARTSPECIALEVC);
+            ret = false;
+         }
+#endif
+      }
+   }
+
+   /* Event delivery time may not be gt commlib timeout */
+   if (ret) {
+      if (d_time < 1 || d_time > CL_DEFINE_CLIENT_CONNECTION_LIFETIME-5) {
+         answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR, 
+                                 MSG_EVENT_INVALIDDTIME_II, d_time,
+                                 CL_DEFINE_CLIENT_CONNECTION_LIFETIME-5);
+         ret = false;
+      }
+   }
+
+#if 0
+   /* 
+    * flush delay cannot be gt event delivery time 
+    * We can very easily run into this problem by configuring scheduler interval
+    * and flush_submit|finish_secs. Disabling the check.
+    */
+   if (ret) {
+      if (lGetUlong(event_client, EV_flush_delay) > d_time) {
+         answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR, 
+                                 MSG_EVENT_FLUSHDELAYCANNOTBEGTDTIME);
+         ret = false;
+      }
+   }
+#endif
+
+   /* subscription */
+   if (ret) {
+      ret = event_client_verify_subscription(event_client, answer_list, (int)d_time);
+   }
+
+   /* busy handling comes from an enum with defined set of values */
+   if (ret) {
+      u_long32 busy = lGetUlong(event_client, EV_busy_handling);
+      if (busy != EV_BUSY_NO_HANDLING && busy != EV_BUSY_UNTIL_ACK &&
+          busy != EV_BUSY_UNTIL_RELEASED && busy != EV_THROTTLE_FLUSH) {
+         answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR, 
+                                 MSG_EVENT_INVALIDBUSYHANDLING);
+         ret = false;
+      }
+   }
+
+   /* verify session key. TODO: verify_str_key too restrictive? */
+   if (ret) {
+      const char *session = lGetString(event_client, EV_session);
+      if (session != NULL) {
+         if (verify_str_key(answer_list, session, MAX_VERIFY_STRING, "session key") 
+                            != STATUS_OK) {
+            answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR, 
+                                    MSG_EVENT_INVALIDSESSIONKEY);
+            ret = false;
+         }
+      }
+   }
+
+   DRETURN(ret);
+}

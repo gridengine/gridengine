@@ -1,3 +1,7 @@
+JG-2006-03-24-0: Enhancem.: Improved verification of incoming event client 
+                            requests in sge_qmaster (JG-2006-03-17-0 continued).
+                 Review:    AA
+
 MD-2006-03-23-0: Enhancem.: - security enhancement, improved string
                               verification.
                  Review:    RD

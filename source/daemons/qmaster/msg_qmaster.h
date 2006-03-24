@@ -156,7 +156,7 @@
 #define MSG_GDI_KEYSTR_AT              _MESSAGE(33101, _("At"))
 #define MSG_GDI_KEYSTR_PIPE            _MESSAGE(33102, _("Pipe"))
 #define MSG_GDI_KEYSTR_PERCENT         _MESSAGE(33103, _("Percent"))
-#define MSG_GDI_KEYSTR_LENGTH_S        _MESSAGE(33104, _("string is longer then %d, this is not allowed for objectnames") )
+#define MSG_GDI_KEYSTR_LENGTH_S        _MESSAGE(33104, _("string is longer than %d, this is not allowed for objectnames") )
 
 
 /*
@@ -750,6 +750,7 @@
 #define MSG_QMASTER_READ_JDB_WITH_X_ENTR_IN_Y_SECS_UU _MESSAGE(33919, _("read job database with "sge_U32CFormat" entries in "sge_U32CFormat" seconds"))
 
 #define MSG_QMASTER_INVALIDJOBSUBMISSION_SSS   _MESSAGE(33920, _("invalid job object in job submission from user "SFQ", commproc "SFQ" on host "SFQ))
+#define MSG_QMASTER_INVALIDEVENTCLIENT_SSS   _MESSAGE(33921, _("invalid event client request from user "SFQ", commproc "SFQ" on host "SFQ))
 
 #endif
 

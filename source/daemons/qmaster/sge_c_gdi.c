@@ -83,6 +83,9 @@
 #include "sge_centry.h"
 #include "sge_cqueue.h"
 #include "sge_lock.h"
+
+#include "sgeobj/sge_event.h"
+
 #include "msg_common.h"
 #include "msg_qmaster.h"
 
@@ -98,7 +101,8 @@ static void sge_c_gdi_del(char *host, sge_gdi_request *request, sge_gdi_request 
                           monitoring_t *monitor);
 
 static void sge_c_gdi_mod(gdi_object_t *ao, char *host, sge_gdi_request *request, 
-                          sge_gdi_request *answer, int sub_command, monitoring_t *monitor);
+                          sge_gdi_request *answer, int sub_command,
+                          monitoring_t *monitor);
 
 static void sge_c_gdi_copy(gdi_object_t *ao, char *host, sge_gdi_request *request, 
                            sge_gdi_request *answer, int sub_command, uid_t uid, 
@@ -765,7 +769,7 @@ sge_c_gdi_add(gdi_object_t *ao, char *host, sge_gdi_request *request,
 
       if (request->target == SGE_EVENT_LIST) {
          for_each (ep, request->lp) {/* is thread save. the global lock is used, when needed */
-                                     /* fill address infos from request into event client that must be added */
+            /* fill address infos from request into event client that must be added */
             lSetHost(ep, EV_host, request->host);
             lSetString(ep, EV_commproc, request->commproc);
             lSetUlong(ep, EV_commid, request->id);
@@ -773,9 +777,14 @@ sge_c_gdi_add(gdi_object_t *ao, char *host, sge_gdi_request *request,
             /* fill in authentication infos from request */
             lSetUlong(ep, EV_uid, uid);
 
-            mconf_set_max_dynamic_event_clients(sge_set_max_dynamic_event_clients(mconf_get_max_dynamic_event_clients()));
-            
-            sge_add_event_client(ep,&(answer->alp), (sub_command & SGE_GDI_RETURN_NEW_VERSION) ? &(answer->lp) : NULL, user, host, monitor);
+            if (!event_client_verify(ep, &(answer->alp), true)) {
+               ERROR((SGE_EVENT, MSG_QMASTER_INVALIDEVENTCLIENT_SSS,
+                      user, request->commproc, request->host));
+            } else {
+               mconf_set_max_dynamic_event_clients(sge_set_max_dynamic_event_clients(mconf_get_max_dynamic_event_clients()));
+               
+               sge_add_event_client(ep,&(answer->alp), (sub_command & SGE_GDI_RETURN_NEW_VERSION) ? &(answer->lp) : NULL, user, host, monitor);
+            }
          }
       } else if (request->target == SGE_JOB_LIST) {
          for_each(ep, request->lp) { /* is thread save. the global lock is used, when needed */
@@ -1513,7 +1522,8 @@ trigger_scheduler_monitoring(char *aHost, sge_gdi_request *aRequest, sge_gdi_req
  * MT-NOTE: sge_c_gdi_mod() is MT safe
  */
 static void sge_c_gdi_mod(gdi_object_t *ao, char *host, sge_gdi_request *request, 
-                          sge_gdi_request *answer, int sub_command, monitoring_t *monitor)
+                          sge_gdi_request *answer, int sub_command,
+                          monitoring_t *monitor)
 {
    lListElem *ep;
    uid_t uid;
@@ -1561,9 +1571,13 @@ static void sge_c_gdi_mod(gdi_object_t *ao, char *host, sge_gdi_request *request
          /* fill in authentication infos from request */
          lSetUlong(ep, EV_uid, uid);
  
-         sge_mod_event_client(ep, &(answer->alp), user, host);      
-      }
-      else if (request->target == SGE_SC_LIST) {
+         if (!event_client_verify(ep, &(answer->alp), false)) {
+            ERROR((SGE_EVENT, MSG_QMASTER_INVALIDEVENTCLIENT_SSS,
+                   user, request->commproc, request->host));
+         } else {
+            sge_mod_event_client(ep, &(answer->alp), user, host);      
+         }
+      } else if (request->target == SGE_SC_LIST) {
          sge_mod_sched_configuration(ep, &(answer->alp), user, host);
       }
       else {

@@ -1,3 +1,5 @@
+MD-2006-03-24-0: Bugfix:    fixed broken build
+
 JG-2006-03-24-0: Enhancem.: Improved verification of incoming event client 
                             requests in sge_qmaster (JG-2006-03-17-0 continued).
                  Review:    AA

@@ -1,3 +1,5 @@
+MD-2006-03-24-0: Bugfix:    fixed broken build
+
 MD-2006-03-23-0: Enhancem.: - security enhancement, improved string
                               verification.
                  Review:    RD

@@ -48,7 +48,7 @@
       DRETURN(false);                                                  \
    }
 
-int verify_str_key(lList **alpp, const char *str, size_t str_length, const char *name);
+an_status_t verify_str_key(lList **alpp, const char *str, size_t str_length, const char *name);
 
 bool verify_host_name(lList **answer_list, const char *host_name);
 #endif /* __SGE_UTILITY_H */

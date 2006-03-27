@@ -772,7 +772,7 @@ sge_c_gdi_add(gdi_object_t *ao, char *host, sge_gdi_request *request,
 
       if (request->target == SGE_EVENT_LIST) {
          for_each (ep, request->lp) {/* is thread save. the global lock is used, when needed */
-                                     /* fill address infos from request into event client that must be added */
+            /* fill address infos from request into event client that must be added */
             lSetHost(ep, EV_host, request->host);
             lSetString(ep, EV_commproc, request->commproc);
             lSetUlong(ep, EV_commid, request->id);
@@ -780,9 +780,14 @@ sge_c_gdi_add(gdi_object_t *ao, char *host, sge_gdi_request *request,
             /* fill in authentication infos from request */
             lSetUlong(ep, EV_uid, uid);
 
-            mconf_set_max_dynamic_event_clients(sge_set_max_dynamic_event_clients(mconf_get_max_dynamic_event_clients()));
-            
-            sge_add_event_client(ep,&(answer->alp), (sub_command & SGE_GDI_RETURN_NEW_VERSION) ? &(answer->lp) : NULL, user, host, monitor);
+            if (!event_client_verify(ep, &(answer->alp), true)) {
+               ERROR((SGE_EVENT, MSG_QMASTER_INVALIDEVENTCLIENT_SSS,
+                      user, request->commproc, request->host));
+            } else {
+               mconf_set_max_dynamic_event_clients(sge_set_max_dynamic_event_clients(mconf_get_max_dynamic_event_clients()));
+               
+               sge_add_event_client(ep,&(answer->alp), (sub_command & SGE_GDI_RETURN_NEW_VERSION) ? &(answer->lp) : NULL, user, host, monitor);
+            }
          }
       } else if (request->target == SGE_JOB_LIST) {
          for_each(ep, request->lp) { /* is thread save. the global lock is used, when needed */

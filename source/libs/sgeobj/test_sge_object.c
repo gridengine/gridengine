@@ -41,11 +41,14 @@
 #include "sge_object.h"
 #include "sge_job.h"
 
+static int exit_code = EXIT_SUCCESS;
+
 static void 
 check_result_bool(bool value, bool target, const char *function)
 {
    if (value != target) {
       fprintf(stderr, "function "SFQ" failed\n", function);
+      exit_code = EXIT_FAILURE;
    } else {
       fprintf(stdout, "function "SFQ" ok\n", function);
    }
@@ -56,6 +59,7 @@ check_result_int(int value, int target, const char *function)
 {
    if (value != target) {
       fprintf(stderr, "function "SFQ" failed\n", function);
+      exit_code = EXIT_FAILURE;
    } else {
       fprintf(stdout, "function "SFQ" ok\n", function);
    }
@@ -66,6 +70,7 @@ check_result_string(const char * value, const char *target, const char *function
 {
    if (sge_strnullcmp(value, target) != 0) {
       fprintf(stderr, "function "SFQ" failed\n", function);
+      exit_code = EXIT_FAILURE;
    } else {
       fprintf(stdout, "function "SFQ" ok\n", function);
    }
@@ -77,6 +82,7 @@ check_result_pointer(const void *value, const void *target,
 {
    if (value != target) {
       fprintf(stderr, "function "SFQ" failed\n", function);
+      exit_code = EXIT_FAILURE;
    } else {
       fprintf(stdout, "function "SFQ" ok\n", function);
    }
@@ -181,5 +187,5 @@ int main(int argc, char *argv[])
 
    lFreeElem(&queue);
 
-   return EXIT_SUCCESS;
+   return exit_code;
 }

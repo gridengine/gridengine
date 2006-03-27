@@ -32,6 +32,8 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+#include "sgeobj/sge_answer.h"
+
 #define SGE_CHECK_POINTER_NULL(pointer)                              \
    if ((pointer) == NULL) {                                          \
       answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,          \

@@ -749,6 +749,7 @@
 #define MSG_QMASTER_READ_JDB_WITH_X_ENTR_IN_Y_SECS_UU _MESSAGE(33919, _("read job database with "sge_U32CFormat" entries in "sge_U32CFormat" seconds"))
 
 #define MSG_QMASTER_INVALIDJOBSUBMISSION_SSS   _MESSAGE(33920, _("invalid job object in job submission from user "SFQ", commproc "SFQ" on host "SFQ))
+#define MSG_QMASTER_INVALIDEVENTCLIENT_SSS   _MESSAGE(33921, _("invalid event client request from user "SFQ", commproc "SFQ" on host "SFQ))
 
 /* sge_qmaster_threads.c */
 #define MSG_QMASTER_THREADCOUNT_U                   _MESSAGE(33930, _(sge_U32CFormat" GDI threads are enabled"))

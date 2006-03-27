@@ -49,7 +49,6 @@
 #include "job_report_execd.h"
 #include "execd_job_exec.h"
 #include "spool/classic/read_write_job.h"
-#include "sge_feature.h"
 #include "sge_conf.h"
 #include "sge_prog.h"
 #include "sge_log.h"
@@ -201,7 +200,11 @@ int answer_error;
       return 0;
    }
 
-   feature_activate((feature_id_t)feature_set);
+   /*
+   ** the check if the request has admin/root credentials is done by
+   ** the dispatcher in authorize_dpe()
+   ** so no additional check needed here like in execd_job_exec()
+   */
 
    /* ------- job */
    if (cull_unpack_elem(pb, &jelem, NULL)) {

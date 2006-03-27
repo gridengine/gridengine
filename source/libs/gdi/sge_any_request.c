@@ -918,10 +918,10 @@ sge_get_any_request(char *rhost, char *commproc, u_short *id, sge_pack_buffer *p
    /* ok, we received a message */
    if (message != NULL ) {
       if (sender != NULL && id) {
-         *id = (u_short)sender->comp_id;
+         *id = (u_short)(sender->comp_id);
       }
       if (tag) {
-        *tag = (int)message->message_tag;
+        *tag = (int)(message->message_tag);
       }  
       if (mid) {
         *mid = message->message_id;
@@ -929,13 +929,15 @@ sge_get_any_request(char *rhost, char *commproc, u_short *id, sge_pack_buffer *p
 
 
       /* fill it in the packing buffer */
-      i = init_packbuffer_from_buffer(pb, (char*)message->message, message->message_length);
+      i = init_packbuffer_from_buffer(pb, (char*)(message->message), message->message_length);
 
       /* TODO: the packbuffer must be hold, not deleted !!! */
       message->message = NULL;
 
       if(i != PACK_SUCCESS) {
          ERROR((SGE_EVENT, MSG_GDI_ERRORUNPACKINGGDIREQUEST_S, cull_pack_strerror(i)));
+         cl_com_free_endpoint(&sender);
+         cl_com_free_message(&message);
          PROF_STOP_MEASUREMENT(SGE_PROF_GDI);
          DEXIT;
          return CL_RETVAL_READ_ERROR;

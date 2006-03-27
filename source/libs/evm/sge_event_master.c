@@ -954,20 +954,19 @@ void sge_remove_event_client(u_long32 aClientID) {
       client = lGetElemUlong(Master_Control.clients, EV_id, aClientID);
 
       /* Correct the problem. */
-      Master_Control.clients_array[aClientID] = client;
-
-      sge_mutex_unlock("event_master_mutex", SGE_FUNC, __LINE__,
+      if (client != NULL) {
+         Master_Control.clients_array[aClientID] = client;
+         sge_mutex_unlock("event_master_mutex", SGE_FUNC, __LINE__,
                        &Master_Control.mutex);
-      
-      ERROR ((SGE_EVENT, MSG_ARRAY_OUT_OF_SYNC_U, sge_u32c(aClientID)));
+      } else {  
+         sge_mutex_unlock("event_master_mutex", SGE_FUNC, __LINE__,
+                       &Master_Control.mutex);
+         ERROR((SGE_EVENT, MSG_EVE_UNKNOWNEVCLIENT_US, sge_u32c(aClientID), "remove"));
+         unlock_client(aClientID);
+         return;
+      }
    }
    
-   if (client == NULL) {
-      ERROR((SGE_EVENT, MSG_EVE_UNKNOWNEVCLIENT_US, sge_u32c(aClientID), "remove"));
-      unlock_client (aClientID);
-      
-      return;
-   }
    lSetUlong(client, EV_state, EV_terminated);
 
    /* We have to remove the entry from the list before we release the client

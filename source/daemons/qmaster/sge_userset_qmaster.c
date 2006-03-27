@@ -673,9 +673,9 @@ lList **alpp,
 const char *userset_name 
 ) {
    int ret = STATUS_OK;
-   lListElem *ep;
-   lListElem *cqueue;
-   lList* user_lists;
+   lListElem *ep = NULL;
+   lListElem *cqueue = NULL;
+   lList* user_lists = NULL;
 
    DENTER(TOP_LAYER, "verify_userset_deletion");
 

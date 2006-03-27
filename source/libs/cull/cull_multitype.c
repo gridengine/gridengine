@@ -2257,7 +2257,7 @@ int lXchgString(lListElem *ep, int name, char **str)
 
    DENTER(CULL_BASIS_LAYER, "lXchgList");
 
-   if (!ep) {
+   if (ep == NULL || str == NULL) {
       LERROR(LEELEMNULL);
       DEXIT;
       return -1;
@@ -2317,7 +2317,7 @@ int lXchgList(lListElem *ep, int name, lList **lpp)
 
    DENTER(CULL_BASIS_LAYER, "lXchgList");
 
-   if (!ep) {
+   if (ep == NULL || lpp == NULL) {
       LERROR(LEELEMNULL);
       DEXIT;
       return -1;

@@ -1,3 +1,8 @@
+AA-2006-03-27-0: Enhancem.: - feature_activate code removed
+                            - handling of sge_get_auth_info
+                            - sge_remove_event_client() index out of bounds
+                 Review:    RD
+                            
 MD-2006-03-24-0: Bugfix:    fixed broken build
 
 JG-2006-03-24-0: Enhancem.: Improved verification of incoming event client 

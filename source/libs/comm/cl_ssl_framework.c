@@ -4528,8 +4528,8 @@ int cl_com_ssl_get_unique_id(cl_com_handle_t* handle,
 }
 
 /* fill private structure */
-/* is_server = CL_TRUE  -> peer certificate comes from server */
-/* is_server = CL_FALSE -> peer certificate comes from client */
+/* is_server = CL_TRUE  -> peer certificate comes from client */
+/* is_server = CL_FALSE -> peer certificate comes from server */
 static int cl_com_ssl_fill_private_from_peer_cert(cl_com_ssl_private_t *private, cl_bool_t is_server) {
 
       X509* peer = NULL;
@@ -4550,7 +4550,7 @@ static int cl_com_ssl_fill_private_from_peer_cert(cl_com_ssl_private_t *private,
             CL_LOG(CL_LOG_ERROR,"client certificate doesn't verify");
             cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SSL_CERTIFICATE_ERROR, MSG_CL_COMMLIB_SSL_CLIENT_CERTIFICATE_ERROR);
          } else {   
-            CL_LOG(CL_LOG_ERROR,"Certificate doesn't verify");
+            CL_LOG(CL_LOG_ERROR,"server certificate doesn't verify");
             cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SSL_CERTIFICATE_ERROR, MSG_CL_COMMLIB_CHECK_SSL_CERTIFICATE );
          }
          cl_com_ssl_log_ssl_errors(__CL_FUNCTION__);

@@ -101,7 +101,6 @@ int answer_error;
    DENTER(TOP_LAYER, "execd_new_features");
  
    unpackint(pb, &featureset_id);
-   feature_activate((feature_id_t)featureset_id); 
 
    DEXIT;
    return 0;             

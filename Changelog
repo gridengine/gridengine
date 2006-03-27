@@ -1,3 +1,9 @@
+MD-2006-03-27-0: Bugfix:    RPC Berkeley DB install failed due to FQDN hostname
+                 Issue:     1985 
+                 Bugtraq:   6380207 
+                 Changed:   install 
+                 Review:    HP 
+
 AA-2006-03-27-0: Enhancem.: - feature_activate code removed
                             - handling of sge_get_auth_info
                             - sge_remove_event_client() index out of bounds

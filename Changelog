@@ -1,3 +1,9 @@
+MD-2006-03-27-0: Bugfix:    RPC Berkeley DB install failed due to FQDN hostname
+                 Issue:     1985 
+                 Bugtraq:   6380207 
+                 Changed:   install 
+                 Review:    HP 
+
 JG-2006-03-27-0: Enhancem.: Improved verification of incoming event client 
                             requests in sge_qmaster (merged JG-2006-03-24-0 from
                             V60s2_BRANCH).

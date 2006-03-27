@@ -116,6 +116,7 @@ proc install_bdb_rpc {} {
    set RPC_SERVER_COMPLETE          [translate $bdb_host 0 1 0 [sge_macro DISTINST_RPC_SERVER_COMPLETE] ]
    set HIT_RETURN_TO_CONTINUE       [translate $bdb_host 0 1 0 [sge_macro DISTINST_HIT_RETURN_TO_CONTINUE] ]
    set INSTALL_SCRIPT               [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_INSTALL_SCRIPT] "*" ]
+   set DNS_DOMAIN_QUESTION          [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_DNS_DOMAIN_QUESTION] ]
 
    set prod_type_var "SGE_ROOT"
 
@@ -257,6 +258,16 @@ proc install_bdb_rpc {} {
             send -i $sp_id $input
             continue
          } 
+
+         -i $sp_id $DNS_DOMAIN_QUESTION { 
+            puts $CHECK_OUTPUT "\n -->testsuite: sending >$ANSWER_YES<(4)"
+            if {$do_log_output == 1} {
+               puts "press RETURN"
+               set anykey [wait_for_enter 1]
+            }
+            send -i $sp_id "$ANSWER_YES\n"
+            continue
+         }
 
          -i $sp_id $RPC_DIRECTORY {
             puts $CHECK_OUTPUT "\n -->testsuite: sending $spooldir"

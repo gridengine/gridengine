@@ -402,6 +402,8 @@ ErrUsage()
              "   -updatedb  BDB update from SGE Version 6.0/6.0u1 to 6.0u2\n" \
              "   -host      hostname for shadow master installation or uninstallation \n" \
              "              (eg. exec host)\n" \
+             "   -resport   the install script does not allow SGE_QMASTER_PORT numbers \n" \
+             "              higher than 1024\n" \
              "   -rsh       use rsh instead of ssh (default is ssh)\n" \
              "   -auto      full automatic installation (qmaster and exec hosts)\n" \
              "   -csp       install system with security framework protocol\n" \

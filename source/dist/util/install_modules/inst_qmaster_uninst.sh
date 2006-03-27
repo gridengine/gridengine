@@ -53,6 +53,7 @@ RemoveQmaster()
       CheckRegisteredExecd
 
    else
+      MoveLog
       exit 0 
    fi
 }
@@ -69,7 +70,8 @@ CheckRegisteredExecd()
      else
         $INFOTEXT "Found registered execution hosts, exiting uninstallation!\n"
         $INFOTEXT -log "Found registered execution hosts, exiting uninstallation!\n"
-        exit 0
+        MoveLog
+        exit 1 
      fi
 
    $INFOTEXT "There are no running execution host registered!\n"

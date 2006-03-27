@@ -85,6 +85,7 @@
 #include "sge_lock.h"
 #include "msg_common.h"
 #include "msg_qmaster.h"
+#include "sgeobj/sge_event.h"
 
 static void sge_c_gdi_get(gdi_object_t *ao, char *host, sge_gdi_request *request, 
                           sge_gdi_request *answer, sge_pack_buffer *pb, monitoring_t *monitor);

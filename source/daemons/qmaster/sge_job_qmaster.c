@@ -101,6 +101,7 @@
 #include "sge_reporting_qmaster.h"
 #include "spool/sge_spooling.h"
 #include "uti/sge_profiling.h"
+#include "uti/sge_string.h"
 
 #include "msg_common.h"
 #include "msg_qmaster.h"
@@ -1409,18 +1410,27 @@ u_long32 step
    } else if (user_list_flag) {
       lListElem *user;
       char user_list_string[2048] = "";
-      int umax = 20;
 
-      for_each (user, user_list) {
-         if (user_list_string[0] != 0)
-            strcat(user_list_string, ", ");
-         if (--umax)
-            strcat(user_list_string, lGetString(user, ST_name));
-         else {
-            /* prevent buffer overrun */
-            strcat(user_list_string, "...");
-            break;
+      if (lGetNumberOfElem(user_list) > 0) {
+         int umax = 20;
+         dstring ds = DSTRING_INIT;
+         bool first = true;
+
+         for_each(user, user_list) {
+            if (!first) {
+               sge_dstring_sprintf_append(&ds, ", ");
+            } else {
+               first = false;
+            }
+            if (umax == 0) {
+               sge_dstring_sprintf_append(&ds, "...");
+               break;
+            }   
+            sge_dstring_sprintf_append(&ds, "%s", lGetString(user, ST_name));
+            umax--;
          }
+         sge_strlcpy(user_list_string, sge_dstring_get_string(&ds), sizeof(user_list_string));
+         sge_dstring_free(&ds);         
       }
       if (jid_flag){
         if(is_array) {

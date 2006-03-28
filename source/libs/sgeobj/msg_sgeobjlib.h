@@ -324,5 +324,6 @@
 #define MSG_EVENT_INVALIDBUSYHANDLING _MESSAGE(64322, _("invalid value for event client busy handling"))
 #define MSG_EVENT_INVALIDSESSIONKEY _MESSAGE(64323, _("invalid session key for event client"))
 #define MSG_EVENT_INVALIDEVENT _MESSAGE(64324, _("invalid event id in event client subscription"))
+#define MSG_EVENT_INVALIDUPDATEFUNCTION _MESSAGE(64325, _("invalid event client update function"))
 
 #endif /* __MSG_SGEOBJLIB_H */

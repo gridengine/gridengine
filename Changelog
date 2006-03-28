@@ -1,3 +1,10 @@
+AA-2006-03-28-0: Enhancem.: - feature_activate code removed
+                            - handling of sge_get_auth_info
+                            - sge_remove_event_client() index out of bounds
+                            - EV_update_func check
+                            - empty_job_list_filter check
+                 Review:    RD
+                            
 MD-2006-03-28-0: Bugfix:    schedulers mem use growing, if pe jobs are running
                  Issue:     1980
                  Bugtraq:   6384698

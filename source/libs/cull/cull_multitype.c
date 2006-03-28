@@ -1265,6 +1265,7 @@ lBool lGetBool(const lListElem *ep, int name)
 lChar lGetPosChar(const lListElem *ep, int pos) 
 {
    DENTER(CULL_BASIS_LAYER, "lGetPosChar");
+
    if (mt_get_type(ep->descr[pos].mt) != lCharT)
       incompatibleType("lGetPosChar");
    DEXIT;

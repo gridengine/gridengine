@@ -2161,8 +2161,9 @@ static void process_acks(monitoring_t *monitor)
          
          list = lGetList(client, EV_events);
 
-         res = purge_event_list(list, (ev_event)lGetUlong (lFirst (lGetList
-                                                 (ack, EV_events)), ET_number));
+         res = purge_event_list(list, 
+                         (ev_event)lGetUlong(lFirst(lGetList(ack, EV_events)), 
+                         ET_number));
 
          MONITOR_EDT_ACK(monitor);
          DPRINTF(("%s: purged %d acknowleded events\n", SGE_FUNC, res));

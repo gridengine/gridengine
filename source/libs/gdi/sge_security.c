@@ -1643,7 +1643,7 @@ int sge_get_auth_info(sge_gdi_request *request,
       return -1;
    }   
 
-   if (sscanf(dbuffer, pid_t_fmt" "pid_t_fmt" %s %s", uid, gid, userbuf, groupbuf) != 4) {
+   if (sscanf(dbuffer, uid_t_fmt" "gid_t_fmt" %s %s", uid, gid, userbuf, groupbuf) != 4) {
       DEXIT;
       return -1;
    }   
@@ -1652,12 +1652,10 @@ int sge_get_auth_info(sge_gdi_request *request,
       DEXIT;
       return -1;
    }   
-
    if (strlen(groupbuf) > group_len) {
       DEXIT;
       return -1;
    }   
-   
    sge_strlcpy(user, userbuf, user_len);
    sge_strlcpy(group, groupbuf, group_len);
 

@@ -477,7 +477,7 @@ do_gdi_request(struct_msg_t *aMsg, monitoring_t *monitor)
    sge_gdi_request *resp_head = NULL; /* head of response linked list */
    sge_pack_buffer pb;
 
-   DENTER(TOP_LAYER, "do_gid_request");
+   DENTER(TOP_LAYER, "do_gdi_request");
 
    if (sge_unpack_gdi_request(buf, &req_head)) {
       ERROR((SGE_EVENT, MSG_GDI_FAILEDINSGEUNPACKGDIREQUEST_SSI, 
@@ -512,7 +512,6 @@ do_gdi_request(struct_msg_t *aMsg, monitoring_t *monitor)
 
          /* this is needed to identify a multi-gdi pack buffer */
          resp->next = ((req->next != NULL) ? resp : NULL);
-
 
          sge_c_gdi(aMsg->snd_host, req, resp, &pb, monitor);
       }

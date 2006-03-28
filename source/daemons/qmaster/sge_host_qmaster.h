@@ -54,7 +54,7 @@ void sge_mark_unheard(lListElem *hep, const char *target);
 
 int sge_add_host_of_type(const char *hostname, u_long32 target, monitoring_t *monitor);
 
-void sge_gdi_kill_exechost(char *host, sge_gdi_request *request, sge_gdi_request *answer);
+void sge_gdi_kill_exechost(char *host, sge_gdi_request *request, sge_gdi_request *answer, uid_t uid, gid_t gid, char *user, char *group);
 
 void sge_update_load_values(char *rhost, lList *lp);
 

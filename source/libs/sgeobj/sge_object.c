@@ -1198,7 +1198,7 @@ lList **object_type_get_master_list(const sge_object_type type)
 
    DENTER(OBJECT_LAYER, "object_type_get_master_list");
 
-   if (type >= 0 || type < SGE_TYPE_ALL) {
+   if (type >= 0 && type < SGE_TYPE_ALL) {
       GET_SPECIFIC(obj_state_t, obj_state, obj_state_global_init, obj_state_key, "object_type_get_master_list");
       
       if (obj_state->object_base[type].list != NULL) {
@@ -1253,7 +1253,7 @@ lList **sge_master_list(const object_description *object_base, const sge_object_
 
    DENTER(OBJECT_LAYER, "sge_master_list");
 
-   if (type >= 0 || type < SGE_TYPE_ALL) {
+   if (type >= 0 && type < SGE_TYPE_ALL) {
       
       if (object_base[type].list != NULL) {
          ret = object_base[type].list;
@@ -1340,7 +1340,7 @@ bool object_type_commit_master_list(const sge_object_type type, lList **answer_l
    
    DENTER(OBJECT_LAYER, "object_type_set_master_list");
    
-   if (type >= 0 || type < SGE_TYPE_ALL) {
+   if (type >= 0 && type < SGE_TYPE_ALL) {
       
       if (object_base[type].commitMasterList) {
          ret = object_base[type].commitMasterList(answer_list);
@@ -1382,7 +1382,7 @@ bool object_type_free_master_list(const sge_object_type type)
 
    DENTER(OBJECT_LAYER, "object_type_free_master_list");
 
-   if (type >= 0 || type < SGE_TYPE_ALL) {
+   if (type >= 0 && type < SGE_TYPE_ALL) {
       GET_SPECIFIC(obj_state_t, obj_state, obj_state_global_init, obj_state_key, SGE_FUNC);
       
       if (obj_state->object_base[type].list) {
@@ -1426,7 +1426,7 @@ const char *object_type_get_name(const sge_object_type type)
 
    DENTER(OBJECT_LAYER, "object_type_get_name");
 
-   if (type >= 0 || type < SGE_TYPE_ALL) {
+   if (type >= 0 && type < SGE_TYPE_ALL) {
       ret = object_base[type].type_name;
    } else if (type == SGE_TYPE_ALL) {
       ret = "default";
@@ -1509,10 +1509,10 @@ const lDescr *object_type_get_descr(const sge_object_type type)
 
    DENTER(OBJECT_LAYER, "object_type_get_descr");
 
-   if (type < 0 || type >= SGE_TYPE_ALL) {
-      ERROR((SGE_EVENT, MSG_OBJECT_INVALID_OBJECT_TYPE_SI, SGE_FUNC, type));
-   } else {
+   if (type >= 0 && type < SGE_TYPE_ALL) {
       ret = object_base[type].descr;
+   } else {
+      ERROR((SGE_EVENT, MSG_OBJECT_INVALID_OBJECT_TYPE_SI, SGE_FUNC, type));
    }
 
    DRETURN(ret);
@@ -1551,10 +1551,10 @@ int object_type_get_key_nm(const sge_object_type type)
 
    DENTER(OBJECT_LAYER, "object_type_get_key_nm");
 
-   if (type < 0 || type >= SGE_TYPE_ALL) {
-      ERROR((SGE_EVENT, MSG_OBJECT_INVALID_OBJECT_TYPE_SI, SGE_FUNC, type));
-   } else {
+   if (type >= 0 && type < SGE_TYPE_ALL) {
       ret = object_base[type].key_nm;
+   } else {
+      ERROR((SGE_EVENT, MSG_OBJECT_INVALID_OBJECT_TYPE_SI, SGE_FUNC, type));
    }
    
    DRETURN(ret);

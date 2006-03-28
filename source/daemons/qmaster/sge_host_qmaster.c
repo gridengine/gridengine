@@ -445,7 +445,7 @@ int sub_command, monitoring_t *monitor
             goto ERROR;
          }   
          attr_mod_sub_list(alpp, new_host, EH_acl, US_name, ep,
-         sub_command, SGE_ATTR_USER_LISTS, SGE_OBJ_EXECHOST, 0);
+                           sub_command, SGE_ATTR_USER_LISTS, SGE_OBJ_EXECHOST, 0);
       }
 
       /* ---- EH_xacl */
@@ -456,7 +456,8 @@ int sub_command, monitoring_t *monitor
             goto ERROR;
          }   
          attr_mod_sub_list(alpp, new_host, EH_xacl, US_name, ep,
-         sub_command, SGE_ATTR_XUSER_LISTS, SGE_OBJ_EXECHOST, 0);
+                           sub_command, SGE_ATTR_XUSER_LISTS, 
+                           SGE_OBJ_EXECHOST, 0);
       }
 
 
@@ -470,7 +471,8 @@ int sub_command, monitoring_t *monitor
             goto ERROR;
          }   
          attr_mod_sub_list(alpp, new_host, EH_prj, UP_name, ep,
-         sub_command, SGE_ATTR_PROJECTS, SGE_OBJ_EXECHOST, 0);    
+                           sub_command, SGE_ATTR_PROJECTS, 
+                           SGE_OBJ_EXECHOST, 0);    
       }
 
       /* ---- EH_xprj */
@@ -483,7 +485,8 @@ int sub_command, monitoring_t *monitor
             goto ERROR;
          }   
          attr_mod_sub_list(alpp, new_host, EH_xprj, UP_name, ep,
-         sub_command, SGE_ATTR_XPROJECTS, SGE_OBJ_EXECHOST, 0);   
+                           sub_command, SGE_ATTR_XPROJECTS, 
+                           SGE_OBJ_EXECHOST, 0);   
       }
 
       /* ---- EH_usage_scaling_list */
@@ -496,7 +499,8 @@ int sub_command, monitoring_t *monitor
          const lListElem *var;
 
          attr_mod_sub_list(alpp, new_host, EH_report_variables, STU_name, ep,
-         sub_command, "report_variables", SGE_OBJ_EXECHOST, 0);
+                           sub_command, "report_variables", 
+                           SGE_OBJ_EXECHOST, 0);
      
          /* check if all report_variables are valid complex variables */
          for_each(var, lGetList(ep, EH_report_variables)) {
@@ -584,7 +588,6 @@ int host_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object, lList *
 
          lSetList(ep, EH_resource_utilization, NULL);
          debit_host_consumable(NULL, ep, master_centry_list, 0);
-
          for_each (jep, *(object_type_get_master_list(SGE_TYPE_JOB))) {
             slots = 0;
             for_each (jatep, lGetList(jep, JB_ja_tasks)) {
@@ -1044,24 +1047,12 @@ sge_change_queue_version_exechost(const char *exechost_name)
  **** Actutally only the permission is checked here
  **** and master_kill_execds is called to do the work.
  ****/
-void sge_gdi_kill_exechost(char *host, 
-                           sge_gdi_request *request, 
-                           sge_gdi_request *answer)
+void sge_gdi_kill_exechost(char *host, sge_gdi_request *request, sge_gdi_request *answer,
+                           uid_t uid, gid_t gid, char *user, char *group)
 {
-   uid_t uid;
-   gid_t gid;
-   char user[128];
-   char group[128];
 
    DENTER(GDI_LAYER, "sge_gdi_kill_exechost");
 
-   if (sge_get_auth_info(request, &uid, user, sizeof(user), &gid, group, sizeof(group)) == -1) {
-      ERROR((SGE_EVENT, MSG_GDI_FAILEDTOEXTRACTAUTHINFO));
-      answer_list_add(&(answer->alp), SGE_EVENT, STATUS_ENOMGR, 
-                      ANSWER_QUALITY_ERROR);
-      DEXIT;
-      return;
-   }
 
    if (!manop_is_manager(user)) {
       ERROR((SGE_EVENT, MSG_OBJ_SHUTDOWNPERMS)); 

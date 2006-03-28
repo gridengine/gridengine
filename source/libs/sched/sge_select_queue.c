@@ -868,10 +868,20 @@ parallel_maximize_slots_pe(sge_assignment_t *best, int *available_slots) {
 
    old_logging = schedd_mes_get_logging(); /* store logging mode */  
 
+   if ((max_slots < min_slots) ||
+      (min_slots <= 0)) {
+      ERROR((SGE_EVENT, "invalid pe job range setting for job "sge_u32"\n", best->job_id));
+      DRETURN(DISPATCH_NEVER_CAT);
+   }
+
    /* --- prepare the posible slots for the binary search */
    max_slotsp = (max_slots - min_slots+1);
    if (!add_pe_slots_to_category(&use_category, &max_slotsp, pe, min_slots, max_slots, pe_range)) {
       ERROR((SGE_EVENT, MSG_SGETEXT_NOMEM));
+      DRETURN(DISPATCH_NEVER_CAT);
+   }
+   if (max_slotsp == 0) {
+      DPRINTF(("no slots in PE %s available for job "sge_u32"\n", pe_name, best->job_id));     
       DRETURN(DISPATCH_NEVER_CAT);
    }
    
@@ -3117,11 +3127,6 @@ add_pe_slots_to_category(category_use_t *use_category, u_long32 *max_slotsp, lLi
    if (use_category->posible_pe_slots == NULL) {
       int slots;
 
-      use_category->posible_pe_slots = malloc((*max_slotsp) * sizeof(u_long32));
-      if (use_category->posible_pe_slots == NULL) {
-         return false;
-      }
-
       *max_slotsp = 0;
       for (slots = min_slots; slots <= max_slots; slots++) {
 
@@ -3135,6 +3140,12 @@ add_pe_slots_to_category(category_use_t *use_category, u_long32 *max_slotsp, lLi
             continue;
          }   
 
+         if (use_category->posible_pe_slots == NULL) {
+            use_category->posible_pe_slots = malloc((*max_slotsp) * sizeof(u_long32));
+            if (use_category->posible_pe_slots == NULL) {
+               return false;
+            }
+         }
          use_category->posible_pe_slots[(*max_slotsp)] = slots;
          (*max_slotsp)++;
       }

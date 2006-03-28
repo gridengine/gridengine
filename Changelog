@@ -1,3 +1,9 @@
+MD-2006-03-28-0: Bugfix:    schedulers mem use growing, if pe jobs are running
+                 Issue:     1980
+                 Bugtraq:   6384698
+                 Changed:   scheduling
+                 Review:    HP
+
 MD-2006-03-27-0: Bugfix:    RPC Berkeley DB install failed due to FQDN hostname
                  Issue:     1985 
                  Bugtraq:   6380207 

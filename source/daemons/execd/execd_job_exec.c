@@ -252,8 +252,6 @@ int slave
            slave ?"slave ":"", lGetUlong(jelem, JB_job_number),
            de->commproc, de->host, de->id));
 
-   lSetString(jelem, JB_job_source, NULL); 
-
    jobid = lGetUlong(jelem, JB_job_number);
    jataskid = lGetUlong(jatep, JAT_task_number);
 

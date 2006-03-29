@@ -411,10 +411,6 @@ void cull_show_job(lListElem *job, int flags)
       if (lGetString(job, JB_script_ptr))
          printf("script_ptr:            \n%s\n", lGetString(job, JB_script_ptr));
 
-   if (lGetPosViaElem(job, JB_job_source, SGE_NO_ABORT)>=0)
-      if (lGetString(job, JB_job_source))
-         printf("job_source:                 %s\n", lGetString(job, JB_job_source));
-
    if (lGetPosViaElem(job, JB_pe, SGE_NO_ABORT)>=0)
       if (lGetString(job, JB_pe)) {
          dstring range_string = DSTRING_INIT;

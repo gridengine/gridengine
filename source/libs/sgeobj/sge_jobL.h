@@ -424,14 +424,7 @@ enum {
 *             via condition. 
 *        (ID_Type)
 *
-*     SGE_STRING(JB_job_source)
-*        Submitter (host:commproc:id) of a pe task. Only needed 
-*        in execd.
-*        ---> probably no longer needed here, but in PET_Type.
-*
 *     SGE_XULONG(JB_verify_suitable_queues)   ---> qalter?
-*
-*     SGE_XULONG(JB_nrunning)
 *
 *     SGE_XULONG(JB_soft_wallclock_gmt) ---> the same as complex s_rt?
 *
@@ -592,9 +585,7 @@ enum {
 
    JB_user_list, 
    JB_job_identifier_list,
-   JB_job_source,
    JB_verify_suitable_queues,
-   JB_nrunning,
    JB_soft_wallclock_gmt,
    JB_hard_wallclock_gmt,
    JB_override_tickets,
@@ -692,9 +683,7 @@ LISTDEF(JB_Type)
 
    SGE_LIST(JB_user_list, ST_Type, CULL_DEFAULT)  
    SGE_LIST(JB_job_identifier_list, ID_Type, CULL_DEFAULT)    
-   SGE_STRING(JB_job_source, CULL_DEFAULT)
    SGE_ULONG(JB_verify_suitable_queues, CULL_DEFAULT)
-   SGE_ULONG(JB_nrunning, CULL_DEFAULT)
    SGE_ULONG(JB_soft_wallclock_gmt, CULL_DEFAULT | CULL_SPOOL)
    SGE_ULONG(JB_hard_wallclock_gmt, CULL_DEFAULT | CULL_SPOOL)
    SGE_ULONG(JB_override_tickets, CULL_DEFAULT | CULL_SPOOL)   
@@ -792,9 +781,7 @@ NAMEDEF(JBN)
    
    NAME("JB_user_list")
    NAME("JB_job_identifier_list")
-   NAME("JB_job_source")
    NAME("JB_verify_suitable_queues")
-   NAME("JB_nrunning")
    NAME("JB_soft_wallclock_gmt")
    NAME("JB_hard_wallclock_gmt")
    NAME("JB_override_tickets")

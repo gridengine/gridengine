@@ -338,6 +338,8 @@ bool object_list_verify_cull(const lList *lp, const lDescr *descr);
 bool object_verify_cull(const lListElem *ep, const lDescr *descr);
 
 bool object_verify_ulong_not_null(const lListElem *ep, lList **answer_list, int nm);
+bool object_verify_ulong_null(const lListElem *ep, lList **answer_list, int nm);
+bool object_verify_double_null(const lListElem *ep, lList **answer_list, int nm);
 bool object_verify_string_not_null(const lListElem *ep, lList **answer_list, int nm);
 
 #endif /* __SGE_OBJECT_H */

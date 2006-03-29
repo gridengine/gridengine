@@ -310,7 +310,7 @@ char **argv
          goto Error;
       }
 
-      jobid_string = strdup (sge_dstring_get_string (&jobid));
+      jobid_string = strdup(sge_dstring_get_string(&jobid));
       DPRINTF(("job id is: %s\n", jobid_string));
 
       sge_dstring_free (&jobid);
@@ -328,7 +328,7 @@ char **argv
       const char *output = sge_dstring_get_string(&diag); 
 
       if (output != NULL) {
-        printf(output);
+        printf("%s", output);
       } else {
         printf(MSG_QSUB_YOURJOBHASBEENSUBMITTED_SS, jobid_string, lGetString(job, JB_job_name));
       }
@@ -425,7 +425,7 @@ Error:
    lFreeList(&alp);
    lFreeList(&opts_all);
    
-   if ((tmp_ret = japi_exit (JAPI_EXIT_NO_FLAG, &diag)) != DRMAA_ERRNO_SUCCESS) {
+   if ((tmp_ret = japi_exit(JAPI_EXIT_NO_FLAG, &diag)) != DRMAA_ERRNO_SUCCESS) {
       if (tmp_ret != DRMAA_ERRNO_NO_ACTIVE_SESSION) {
          fprintf(stderr, "\n");
          fprintf(stderr, MSG_QSUB_COULDNOTFINALIZEENV_S, sge_dstring_get_string (&diag));
@@ -541,7 +541,7 @@ static void qsub_terminate(void)
    fprintf(stderr, "\n%s\n", MSG_QSUB_INTERRUPTED);
    fprintf(stderr, "%s\n", MSG_QSUB_TERMINATING);
 
-   tmp_ret = japi_exit (JAPI_EXIT_KILL_PENDING, &diag);
+   tmp_ret = japi_exit(JAPI_EXIT_KILL_PENDING, &diag);
    
    /* No active session here means that the main thread beat us to exiting,
       in which case, we just quietly give up and go away. */

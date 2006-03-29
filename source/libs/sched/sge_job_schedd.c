@@ -1075,11 +1075,10 @@ lList *job_list
    DENTER(TOP_LAYER, "trace_job_sort");
 
    for_each (job, job_list) {
-      DPRINTF(("JOB "sge_u32" %d %s %d "sge_u32"\n",
+      DPRINTF(("JOB "sge_u32" %d %s "sge_u32"\n",
          lGetUlong(job, JB_job_number),
          (int)lGetUlong(job, JB_priority) - BASE_PRIORITY,
          lGetString(job, JB_owner),
-         lGetUlong(job, JB_nrunning),
          lGetUlong(job, JB_submission_time)));
    }
 

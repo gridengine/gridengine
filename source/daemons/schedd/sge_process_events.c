@@ -580,7 +580,6 @@ DTRACE;
             JB_submission_time,
             JB_owner,
             JB_group,
-            JB_nrunning,
             JB_execution_time,
             JB_checkpoint_name,   
             JB_hard_resource_list,

@@ -1,7 +1,14 @@
+RD-2006-03-29-0: Enhancem.: Improved verification of incoming job requests
+                            in qmaster (JG-2006-03-17-0 continued)
+                 Review:    AA
+
 SG-2006-03-29-0: Bugfix:    - Unclear share caclulation of running jobs
-                            - Job tickets are not correctly shown in qstat for none running jobs
-                            - slow scheduler performance for jobs with hard queue requests
-                            - Tickets are not reseted for running jobs after disableing the ticket policy
+                            - Job tickets are not correctly shown in qstat for
+                              none running jobs
+                            - slow scheduler performance for jobs with hard queue
+                              requests
+                            - Tickets are not reseted for running jobs after
+                              disableing the ticket policy
                  Issue:     1550, 1956, 1981, 2003
                  Bugtraq:   6291033, 6368747, 6384709, 6398723
                  Changed:   scheduling

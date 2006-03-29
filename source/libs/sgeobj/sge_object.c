@@ -2407,6 +2407,92 @@ object_verify_ulong_not_null(const lListElem *ep, lList **answer_list, int nm)
    return ret;
 }
 
+/****** sge_object/object_verify_ulong_null() ******************************
+*  NAME
+*     object_verify_ulong_null() -- verify ulong attribute null
+*
+*  SYNOPSIS
+*     bool 
+*     object_verify_ulong_null(const lListElem *ep, lList **answer_list, 
+*                                  int nm) 
+*
+*  FUNCTION
+*     Verify that a certain ulong attribute in an object is 0
+*
+*  INPUTS
+*     const lListElem *ep - object to verify
+*     lList **answer_list - answer list to pass back error messages
+*     int nm              - the attribute to verify
+*
+*  RESULT
+*     bool - true on success,
+*            false on error with error message in answer_list
+*
+*  NOTES
+*     MT-NOTE: object_verify_ulong_null() is MT safe 
+*
+*  SEE ALSO
+*     sge_object/object_verify_string_not_null()
+*     sge_object/object_verify_ulong_not_null()
+*     sge_object/object_verify_double_not_null()
+*******************************************************************************/
+bool 
+object_verify_ulong_null(const lListElem *ep, lList **answer_list, int nm)
+{
+   bool ret = true;
+
+   if (lGetUlong(ep, nm) != 0) {
+      answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR, 
+                              MSG_OBJECT_ULONG_NULL, lNm2Str(nm));
+      ret = false;
+   }
+
+   return ret;
+}
+
+/****** sge_object/object_verify_double_null() ******************************
+*  NAME
+*     object_verify_double_null() -- verify double attribute null
+*
+*  SYNOPSIS
+*     bool 
+*     object_verify_double_null(const lListElem *ep, lList **answer_list, 
+*                                  int nm) 
+*
+*  FUNCTION
+*     Verify that a certain double attribute in an object is 0
+*
+*  INPUTS
+*     const lListElem *ep - object to verify
+*     lList **answer_list - answer list to pass back error messages
+*     int nm              - the attribute to verify
+*
+*  RESULT
+*     bool - true on success,
+*            false on error with error message in answer_list
+*
+*  NOTES
+*     MT-NOTE: object_verify_double_null() is MT safe 
+*
+*  SEE ALSO
+*     sge_object/object_verify_string_not_null()
+*     sge_object/object_verify_ulong_not_null()
+*     sge_object/object_verify_ulong_null()
+*******************************************************************************/
+bool 
+object_verify_double_null(const lListElem *ep, lList **answer_list, int nm)
+{
+   bool ret = true;
+
+   if (lGetDouble(ep, nm) != 0.0) {
+      answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR, 
+                              MSG_OBJECT_DOUBLE_NULL, lNm2Str(nm));
+      ret = false;
+   }
+
+   return ret;
+}
+
 /****** sge_object/object_verify_string_not_null() *****************************
 *  NAME
 *     object_verify_string_not_null() -- verify string attribute not null

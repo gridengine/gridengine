@@ -592,9 +592,9 @@ enum {
 
    JB_user_list, 
    JB_job_identifier_list,
-   JB_job_source,
+   JB_job_source, /* unused, should be removed */
    JB_verify_suitable_queues,
-   JB_nrunning,
+   JB_nrunning, /* unused, should be removed */
    JB_soft_wallclock_gmt,
    JB_hard_wallclock_gmt,
    JB_override_tickets,

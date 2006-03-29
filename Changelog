@@ -1,3 +1,7 @@
+RD-2006-03-29-0: Enhancem.: Improved verification of incoming job requests
+                            in qmaster (JG-2006-03-17-0 continued)
+                 Review:    AA
+
 SG-2006-03-29-0: Bugfix:    - Unclear share caclulation of running jobs
                             - Job tickets are not correctly shown in qstat for 
                               none running jobs with a reservation

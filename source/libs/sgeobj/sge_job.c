@@ -2968,6 +2968,270 @@ job_verify_submitted_job(const lListElem *job, lList **answer_list)
 
    ret = job_verify(job, answer_list);
 
+   /* JB_job_number must me 0 */
+   if (ret) {
+      ret = object_verify_ulong_null(job, answer_list, JB_job_number);
+   }
+
+   /* JB_version must be 0 */
+   if (ret) {
+      ret = object_verify_ulong_null(job, answer_list, JB_version);
+   }
+
+   /* TODO: JB_jid_request_list */
+   /* TODO: JB_jid_predecessor_l */
+   /* TODO: JB_jid_sucessor_list */
+
+   /* JB_session must be a valid string */
+   if (ret) {
+      const char *name = lGetString(job, JB_session);
+      if (name != NULL) {
+         if (verify_str_key(answer_list, name, MAX_VERIFY_STRING, lNm2Str(JB_session)) != STATUS_OK) {
+            ret = false;
+         }
+      } 
+   }
+
+   /* JB_project must be a valid string */
+   if (ret) {
+      const char *name = lGetString(job, JB_project);
+      if (name != NULL) {
+         if (verify_str_key(answer_list, name, MAX_VERIFY_STRING, lNm2Str(JB_project)) != STATUS_OK) {
+            ret = false;
+         }
+      } 
+   }
+
+   /* JB_department must be a valid string */
+   if (ret) {
+      const char *name = lGetString(job, JB_department);
+      if (name != NULL) {
+         if (verify_str_key(answer_list, name, MAX_VERIFY_STRING, lNm2Str(JB_department)) != STATUS_OK) {
+            ret = false;
+         }
+      } 
+   }
+
+   /* TODO: JB_directive_prefix can be any string, verify_str_key is too restrictive */
+
+   /* JB_exec_file must be a valid directory string */
+   if (ret) {
+      const char *name = lGetString(job, JB_session);
+      if (name != NULL) {
+         ret = path_verify(name, answer_list);
+      } 
+   }
+
+   /* JB_script_file must be a string and a valid directory string */
+   if (ret) {
+      const char *name = lGetString(job, JB_script_file);
+      if (name != NULL) {
+         ret = path_verify(name, answer_list);
+      } 
+   }
+   
+   /* JB_script_ptr must be any string */
+   if (ret) {
+      const char *name = lGetString(job, JB_script_ptr);
+      if (name == NULL) {
+         /* JB_script_size must not 0 */
+         ret = object_verify_ulong_null(job, answer_list, JB_script_size);
+      } else {
+         /* JB_script_size must be size of JB_script_ptr */
+         /* TODO: define a max script size */
+         if (strlen(name) != lGetUlong(job, JB_script_size)) {
+            answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR, 
+                                    MSG_JOB_SCRIPTLENGTHDOESNOTMATCH);
+            ret = false;            
+         }
+      }
+   }
+
+   /* JB_submission_time is overwritten by qmaster */
+
+   /* JB_execution_time can be any value */
+
+   /* JB_deadline can be any value */
+
+   /* JB_owner is overwritten by qmaster */
+
+   /* JB_uid is overwritten by qmaster */
+
+   /* JB_group must be NULL */
+   if (ret) {
+      if (lGetString(job, JB_group) != NULL) {
+         answer_list_add_sprintf(answer_list,  STATUS_ESYNTAX, ANSWER_QUALITY_ERROR, 
+                             MSG_INVALIDJOB_REQUEST_S, "job group");
+         ret = false;
+      }
+   }
+
+   /* JB_gid must be 0 */
+   if (ret) {
+      ret = object_verify_ulong_null(job, answer_list, JB_gid);
+    }
+
+   /* JB_account must be a valid string */
+   if (ret) {
+      const char *name = lGetString(job, JB_account);
+      if (name != NULL) {
+         if(verify_str_key(answer_list, name, MAX_VERIFY_STRING, lNm2Str(JB_account)) != STATUS_OK) {
+            ret = false;
+         }
+      }
+   }
+
+   /* JB_notify boolean value */
+   /* JB_type any ulong value */
+   /* JB_reserve boolean value */
+
+   /* JB_priority must be greater than BASE_PRIORITY */
+   if (ret) {
+      if (lGetUlong(job, JB_priority) < BASE_PRIORITY) {
+            answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR, 
+                              MSG_INVALIDJOB_REQUEST_S, "job priority");
+            ret = false;
+      }
+   }
+   /* JB_jobshare any ulong value */
+
+   /* TODO JB_shell_list */
+   /* JB_verify any ulong value */
+   /* TODO JB_job_args */
+   /* JB_checkpoint_attr any ulong */
+
+   /* JB_checkpoint_name */
+   if (ret) {
+      const char *name = lGetString(job, JB_checkpoint_name);
+      if (name != NULL) {
+         if (verify_str_key(answer_list, name, MAX_VERIFY_STRING, lNm2Str(JB_checkpoint_name)) != STATUS_OK) {
+            ret = false;
+         }
+      }
+   }
+
+   /* JB_checkpoint_object */
+   if (ret) {
+      if (lGetObject(job, JB_checkpoint_object) != NULL) {
+            answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR, 
+                              MSG_INVALIDJOB_REQUEST_S, "checkpoint object");
+            ret = false;
+      }
+   }
+
+   /* JB_checkpoint_interval any ulong */
+
+   /* JB_restart can be 0, 1 or 2 */
+   if (ret) {
+      u_long32 value = lGetUlong(job, JB_restart);
+      if (value != 0 && value != 1 && value != 2) {
+            answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR, 
+                              MSG_INVALIDJOB_REQUEST_S, "restart");
+            ret = false; 
+      }
+   }
+
+   /* TODO: JB_stdout_path_list */
+   /* TODO: JB_stderr_path_list */
+   /* TODO: JB_stdin_path_list */
+   /* JB_merge_stderr boolean value */
+   /* TODO: JB_hard_resource_list */
+   /* TODO: JB_soft_resource_list */
+   /* TODO: JB_hard_queue_list */
+   /* TODO: JB_soft_queue_list */
+   /* TODO: JB_mail_options */
+   /* JB_mail_list any ulong */
+
+   /* JB_pe must be a valid string */
+   if (ret) {
+      const char *name = lGetString(job,JB_pe );
+      if (name != NULL) {
+         if (verify_str_key(answer_list, name, MAX_VERIFY_STRING, lNm2Str(JB_pe)) != STATUS_OK) {
+            ret = false;
+         }
+      }
+   }
+
+   /* TODO: JB_pe_range */
+   /* TODO: JB_master_hard_queue */
+
+   /* JB_tgt can be any string value */
+   /* JB_cred can be any string value */
+  
+   /* TODO: JB_ja_structure */
+   /* TODO: JB_ja_n_h_ids */
+   /* TODO: JB_ja_u_h_ids */
+   /* TODO: JB_ja_s_h_ids */
+   /* TODO: JB_ja_o_h_ids */
+   /* TODO: JB_ja_z_ids */
+   /* TODO: JB_ja_template */
+   /* TODO: JB_ja_tasks */
+
+   /* JB_host must be NULL */
+   if (ret) {
+      if (lGetHost(job, JB_host) != NULL) {
+            answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR, 
+                              MSG_INVALIDJOB_REQUEST_S, "host");
+            ret = false;
+      }
+   }
+
+   /* TODO: JB_category */
+   /* TODO: JB_user_list */
+   /* TODO: JB_job_identifier_list */
+
+   /* JB_job_source must be NULL */
+   if (ret) {
+      if (lGetString(job, JB_job_source) != NULL) {
+            answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR, 
+                              MSG_INVALIDJOB_REQUEST_S, "job source");
+            ret = false;
+      }
+   }
+
+   /* JB_verify_suitable_q any ulong value */
+   /* JB_nrunning any ulong value */
+   /* JB_soft_wallclock_gm must be 0 */
+   if (ret) {
+      ret = object_verify_ulong_null(job, answer_list, JB_soft_wallclock_gmt);
+    }
+
+   /* JB_hard_wallclock_gm must be 0 */
+   if (ret) {
+      ret = object_verify_ulong_null(job, answer_list, JB_hard_wallclock_gmt);
+    }
+
+   /* JB_override_tickets must be 0 */
+   if (ret) {
+      ret = object_verify_ulong_null(job, answer_list, JB_override_tickets);
+    }
+
+   /* TODO: JB_qs_args */
+   /* JB_urg must be 0 */
+   if (ret) {
+      ret = object_verify_double_null(job, answer_list, JB_urg);
+    }
+   /* JB_nurg must be 0 */
+   if (ret) {
+      ret = object_verify_double_null(job, answer_list, JB_nurg);
+    }
+   /* JB_nppri must be 0 */
+   if (ret) {
+      ret = object_verify_double_null(job, answer_list, JB_nppri);
+    }
+   /* JB_rrcontr must be 0 */
+   if (ret) {
+      ret = object_verify_double_null(job, answer_list, JB_rrcontr);
+    }
+   /* JB_dlcontr must be 0 */
+   if (ret) {
+      ret = object_verify_double_null(job, answer_list, JB_dlcontr);
+    }
+   /* JB_wtcontr must be 0 */
+   if (ret) {
+      ret = object_verify_double_null(job, answer_list, JB_wtcontr);
+    }
+
    DRETURN(ret);
 }
 

@@ -307,7 +307,7 @@ char **argv
          goto Error;
       }
 
-      jobid_string = strdup (sge_dstring_get_string (&jobid));
+      jobid_string = strdup(sge_dstring_get_string(&jobid));
       DPRINTF(("job id is: %s\n", jobid_string));
 
       sge_dstring_free (&jobid);
@@ -325,7 +325,7 @@ char **argv
       const char *output = sge_dstring_get_string(&diag); 
 
       if (output != NULL) {
-        printf(output);
+        printf("%s", output);
       } else {
         printf(MSG_QSUB_YOURJOBHASBEENSUBMITTED_SS, jobid_string, lGetString(job, JB_job_name));
       }

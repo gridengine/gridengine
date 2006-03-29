@@ -441,6 +441,8 @@ int sge_reset_job_category()
       lSetUlong(cat, CT_rejected, 0);
       lSetInt(cat, CT_count, -1);
       lSetList(cat, CT_cache, NULL);
+      lSetList(cat, CT_cached_hard_queue_list, NULL);
+      lSetList(cat, CT_cached_master_hard_queue_list, NULL);
       lSetBool(cat, CT_messages_added, false);
       lSetBool(cat, CT_rc_valid, false);
    }

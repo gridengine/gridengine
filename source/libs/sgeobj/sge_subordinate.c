@@ -90,14 +90,14 @@ tst_sos(int used, int total, lListElem *so)
    if (!(threshold=lGetUlong(so, SO_threshold))) {
       /* queue must be full for suspend of queue C */
       DPRINTF(("TSTSOS: %sfull -> %ssuspended\n", (used>=total)?"":"not ",
-         (used>=total)?"":"not "));
+               (used>=total)?"":"not "));
       DEXIT;
-         return (used>=total) ? true : false;
+      return (used>=total) ? true : false;
    }
 
    /* used slots greater or equal threshold */
    DPRINTF(("TSTSOS: "sge_u32" slots used (limit "sge_u32") -> %ssuspended\n",
-      used, threshold, ( (u_long32)(used) >= threshold)?"":"not "));
+            used, threshold, ( (u_long32)(used) >= threshold)?"":"not "));
    DEXIT;
    return ((u_long32)used) >= threshold ? true : false;
 }

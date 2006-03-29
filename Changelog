@@ -1,3 +1,15 @@
+SG-2006-03-29-0: Bugfix:    - Unclear share caclulation of running jobs
+                            - Job tickets are not correctly shown in qstat for 
+                              none running jobs with a reservation
+                            - slow scheduler performance for jobs with hard queue 
+                              requests
+                            - Tickets are not reseted for running jobs after 
+                              disableing the ticket policy
+                 Issue:     1550, 1956, 1981, 2003
+                 Bugtraq:   6291033, 6368747, 6384709, 6398723
+                 Changed:   scheduling
+                 Review:    RD
+
 AA-2006-03-28-0: Enhancem.: - empty_job_list_filter() check 
                  Review:    RD
                  

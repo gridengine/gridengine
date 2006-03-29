@@ -1557,7 +1557,7 @@ bool sge_add_event_for_client(u_long32 aClientID, u_long32 aTimestamp, ev_event 
    }
    
    DEXIT;
-   return add_list_event_for_client (aClientID, aTimestamp, type, anIntKey1, anIntKey2,
+   return add_list_event_for_client(aClientID, aTimestamp, type, anIntKey1, anIntKey2,
                                      aStrKey1, aStrKey2, aSession, lp, false);
 }
 
@@ -1639,8 +1639,8 @@ bool sge_add_list_event(u_long32 timestamp, ev_event type,
       }
    }
    
-   ret = add_list_event_for_client (EV_ID_ANY, timestamp, type, intkey, intkey2,
-                                    strkey, strkey2, session, lp, false);
+   ret = add_list_event_for_client(EV_ID_ANY, timestamp, type, intkey, intkey2,
+                                   strkey, strkey2, session, lp, false);
    return ret;
 }
 
@@ -3476,8 +3476,8 @@ static void total_update_event(lListElem *event_client, ev_event type)
          copy_lp = lCopyListHash(lGetListName(lp), lp, false);
       }
       /* 'send_events()' will free the copy of 'lp' */
-      add_list_event_for_client (id, 0, type, 0, 0, NULL, NULL, NULL, 
-                                 copy_lp, false);
+      add_list_event_for_client(id, 0, type, 0, 0, NULL, NULL, NULL, 
+                                copy_lp, false);
 
       lock_client (id, true);
    } /* if */

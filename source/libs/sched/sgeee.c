@@ -2229,10 +2229,11 @@ calc_job_functional_tickets_pass2( sge_ref_t *ref,
     * calculate user functional tickets for this job
     *-------------------------------------------------------*/
 
-   if (ref->user && sum_of_user_functional_shares)
+   if (ref->user && sum_of_user_functional_shares) {
       user_functional_tickets = (ref->user_fshare *
                                 total_functional_tickets /
                                 sum_of_user_functional_shares);
+   }
 
    /*-------------------------------------------------------
     * calculate project functional tickets for this job
@@ -3410,33 +3411,30 @@ sge_calc_tickets( sge_Sdescr_t *lists,
        * Combine the ticket values into the total tickets for the job
        *-----------------------------------------------------------------*/
 
-      for(job_ndx=0; job_ndx<num_jobs; job_ndx++)
+      for (job_ndx=0; job_ndx<num_jobs; job_ndx++) {
          calc_job_tickets(&job_ref[job_ndx]);
+      }   
 
       /* calculate the ticket % of each job */
 
       sum_of_active_tickets = 0;
       sum_of_pending_tickets = 0;
-      for(job_ndx=0; job_ndx<num_jobs; job_ndx++) {
+      for (job_ndx=0; job_ndx<num_jobs; job_ndx++) {
          sge_ref_t *jref = &job_ref[job_ndx];
          double tickets = REF_GET_TICKET(jref);
          
-         if (*max_tickets == -1) {
-            *max_tickets = tickets;
-         }
-         if (tickets > *max_tickets) {
+         if (*max_tickets < tickets) {
             *max_tickets = tickets;
          }
          
          if (jref->queued) {
             sum_of_pending_tickets += tickets;
-         }   
-         else {
+         } else {
             sum_of_active_tickets += tickets;
          }   
       }
 
-      for(job_ndx=0; job_ndx<num_jobs; job_ndx++) {
+      for (job_ndx=0; job_ndx<num_jobs; job_ndx++) {
          sge_ref_t *jref = &job_ref[job_ndx];
          double ticket_sum = jref->queued ? sum_of_pending_tickets : sum_of_active_tickets;
 
@@ -3450,24 +3448,14 @@ sge_calc_tickets( sge_Sdescr_t *lists,
 
    } 
    else {
-      for(job_ndx=0; job_ndx<num_jobs; job_ndx++) {
+      for (job_ndx=0; job_ndx<num_jobs; job_ndx++) {
          sge_ref_t *jref = &job_ref[job_ndx];
          double tickets = REF_GET_TICKET(jref);
 
-         if (*max_tickets == -1) {
+         if (*max_tickets < tickets) {
             *max_tickets = tickets;
          }
-         if (tickets > *max_tickets) {
-            *max_tickets = tickets;
-         }
-          
-         if (jref->queued) {
-            sum_of_pending_tickets += tickets;
-         }   
-         else {
-            sum_of_active_tickets += tickets;
-         }   
-         
+
          job = jref->job;
 
          if (tickets > 0) {
@@ -3514,7 +3502,7 @@ sge_calc_tickets( sge_Sdescr_t *lists,
    if (queued_jobs != NULL) {
       sge_task_ref_t *tref = task_ref_get_first_job_entry();
 
-      while(tref != NULL) {
+      while (tref != NULL) {
          lListElem *job = job_list_locate(queued_jobs, tref->job_number); 
 
          if (job) {
@@ -4296,9 +4284,12 @@ int sgeee_scheduler( sge_Sdescr_t *lists,
    do_nprio = (sconf_get_weight_priority() != 0 || report_priority) ? true : false;
 
    /* clear SGEEE fields for queued jobs */
-   for_each(job, pending_jobs){   
+   for_each(job, pending_jobs) {   
       sge_clear_job(job, false);
    }
+   for_each(job, running_jobs) {   
+      sge_clear_job(job, false);
+   }   
 
    /* calculate per job static urgency values */
    if (do_nurg) {
@@ -4317,10 +4308,10 @@ int sgeee_scheduler( sge_Sdescr_t *lists,
    min_tix = 0;
    max_tix = -1;
    
-   /* calculate tickets for pending jobs */
+   /* calculate tickets for pending jobs and compute their shares */
    sge_calc_tickets(lists, running_jobs, finished_jobs, pending_jobs, 1, &max_tix);
          
-   /* calculate tickets for running jobs */
+   /* correct the shares for the running jobs */
    seqno = sge_calc_tickets(lists, running_jobs, NULL, NULL, 0, &max_tix);
 
    if (max_tix == -1) { /* we have no running jobs and the tickets are disabled. */

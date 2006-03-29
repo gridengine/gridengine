@@ -194,7 +194,7 @@ int scheduler(sge_Sdescr_t *lists, lList **order) {
 
    split_jobs(&(lists->job_list), NULL, lists->all_queue_list, 
               mconf_get_max_aj_instances(), splitted_job_lists);
- 
+
    { /* add global queue messages */
       lList *qlp;
       lCondition *where;
@@ -278,7 +278,6 @@ int scheduler(sge_Sdescr_t *lists, lList **order) {
       }
                           
    }
-   
    sge_build_sgeee_orders(lists, NULL,*(splitted_job_lists[SPLIT_PENDING]), NULL, 
                           &orders, false, 0, false); 
    
@@ -349,7 +348,7 @@ int scheduler(sge_Sdescr_t *lists, lList **order) {
 
    if (!shut_me_down) {
       lList *orderlist=sge_join_orders(&orders);
-     
+
       if (orderlist) {
          sge_send_orders2master(&orderlist);
          if (orderlist != NULL) {
@@ -479,9 +478,9 @@ static int dispatch_jobs(sge_Sdescr_t *lists, order_t *orders,
       
       
       prepare_resource_schedules(*(splitted_job_lists[SPLIT_RUNNING]),
-                              *(splitted_job_lists[SPLIT_SUSPENDED]),
-                              lists->pe_list, lists->host_list, lists->queue_list, 
-                              lists->centry_list);
+                                 *(splitted_job_lists[SPLIT_SUSPENDED]),
+                                 lists->pe_list, lists->host_list, lists->queue_list, 
+                                 lists->centry_list);
 
       if (dis_queue_elem != NULL) {
          lDechainList(lists->queue_list, &(lists->dis_queue_list), dis_queue_elem);
@@ -761,7 +760,7 @@ static int dispatch_jobs(sge_Sdescr_t *lists, order_t *orders,
                break;
             }
 
-            if (job_get_next_task(job, &ja_task, &ja_task_id)!=0) {
+            if (job_get_next_task(job, &ja_task, &ja_task_id) != 0) {
                DPRINTF(("Found job "sge_u32" with no job array tasks\n", job_id));
             } 
             else { 
@@ -769,7 +768,6 @@ static int dispatch_jobs(sge_Sdescr_t *lists, order_t *orders,
                      job_id, ja_task_id, is_start?"":"not ", is_reserve?"":"not "));
                DPRINTF(("-----------------------------------------\n"));
 
-               
                result = select_assign_debit(
                   &(lists->queue_list), 
                   &(lists->dis_queue_list),
@@ -860,13 +858,8 @@ static int dispatch_jobs(sge_Sdescr_t *lists, order_t *orders,
                or the job is not dispatchable at all */
             schedd_mes_commit(*(splitted_job_lists[SPLIT_PENDING]), 0, cat);       
 
-            {
-               u_long32 ja_task_number = range_list_get_first_id(lGetList(orig_job, JB_ja_n_h_ids), NULL);
-               object_delete_range_id(orig_job, NULL, JB_ja_n_h_ids, ja_task_number);
-            }
-            
             /* Remove pending job if there are no pending tasks anymore */
-            if (!job_has_pending_tasks(orig_job) || (nreservation >= max_reserve )) {
+            if ((job_has_pending_tasks(orig_job) <= 1) || (nreservation >= max_reserve )) {
                lDechainElem(*(splitted_job_lists[SPLIT_PENDING]), orig_job);
                if ((*(splitted_job_lists[SPLIT_NOT_STARTED])) == NULL) {
                   *(splitted_job_lists[SPLIT_NOT_STARTED]) = lCreateList("", lGetListDescr(*(splitted_job_lists[SPLIT_PENDING])));
@@ -876,6 +869,8 @@ static int dispatch_jobs(sge_Sdescr_t *lists, order_t *orders,
                is_pjob_resort = false;
             }
             else {
+               u_long32 ja_task_number = range_list_get_first_id(lGetList(orig_job, JB_ja_n_h_ids), NULL);
+               object_delete_range_id(orig_job, NULL, JB_ja_n_h_ids, ja_task_number);
                is_pjob_resort = true;
             }
             orig_job = NULL;
@@ -890,7 +885,6 @@ static int dispatch_jobs(sge_Sdescr_t *lists, order_t *orders,
             }
          
          case DISPATCH_NEVER_JOB: /* never this particular job */
-
 
             /* here no reservation was made for a job that couldn't be started now 
                or the job is not dispatchable at all */
@@ -935,7 +929,7 @@ static int dispatch_jobs(sge_Sdescr_t *lists, order_t *orders,
 
       } /* end of while */
    }
-  
+
    if (prof_is_active(SGE_PROF_CUSTOM4)) {
       prof_stop_measurement(SGE_PROF_CUSTOM4, NULL);
 

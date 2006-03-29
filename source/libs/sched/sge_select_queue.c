@@ -1518,24 +1518,43 @@ dispatch_t sge_queue_match_static(lListElem *queue, lListElem *job, const lListE
     * is queue contained in hard queue list ? 
     */
    if (lGetList(job, JB_hard_queue_list)) {
-      lList *master_cqueue_list = NULL;
-      lList *master_hgroup_list = NULL;
-      lList *qref_list = lGetList(job, JB_hard_queue_list);
+      lListElem *category = lGetRef(job, JB_category);
       lList *resolved_qref_list = NULL;
       lListElem *resolved_qref = NULL;
       const char *qinstance_name = NULL;
       bool found_something = false;
       bool is_in_list = true;
+      bool is_list_free = true;
+      
+      if (category != NULL) { /* check for a cached resolved hard_queue_list */
+         resolved_qref_list = lGetList(category, CT_cached_hard_queue_list);
+      }
+    
+      if (resolved_qref_list == NULL) { /* resolve the hard_queue_list */
+         lList *master_cqueue_list = *(object_type_get_master_list(SGE_TYPE_CQUEUE));
+         lList *master_hgroup_list = *(object_type_get_master_list(SGE_TYPE_HGROUP));
+         lList *qref_list = lGetList(job, JB_hard_queue_list);
 
-      master_cqueue_list = *(object_type_get_master_list(SGE_TYPE_CQUEUE));
-      master_hgroup_list = *(object_type_get_master_list(SGE_TYPE_HGROUP));
+         qref_list_resolve(qref_list, NULL, &resolved_qref_list,
+                           &found_something, master_cqueue_list,
+                           master_hgroup_list, true, true);
+                           
+         if (category != NULL) {
+            lSetList(category, CT_cached_hard_queue_list, resolved_qref_list);
+            is_list_free = false;
+         }                           
+      }                        
+      else {
+         is_list_free = false;
+      }
+      /* check weather the current queue instance is requested from the job */                  
       qinstance_name = lGetString(queue, QU_full_name);
-      qref_list_resolve(qref_list, NULL, &resolved_qref_list,
-                        &found_something, master_cqueue_list,
-                        master_hgroup_list, true, true);
       resolved_qref = lGetElemStr(resolved_qref_list, QR_name, qinstance_name); 
       is_in_list = resolved_qref != NULL ? true : false;
-      lFreeList(&(resolved_qref_list));
+      
+      if (is_list_free) { /* we are not caching anything, so we have to free the list */
+         lFreeList(&(resolved_qref_list));
+      }
       if (!is_in_list) {
          DPRINTF(("Queue \"%s\" is not contained in the hard "
                   "queue list (-q) that was requested by job %d\n",
@@ -1551,25 +1570,44 @@ dispatch_t sge_queue_match_static(lListElem *queue, lListElem *job, const lListE
     * is this queue a candidate for being the master queue? 
     */
    if (lGetList(job, JB_master_hard_queue_list)) {
-      lList *master_cqueue_list = NULL;
-      lList *master_hgroup_list = NULL;
-      lList *qref_list = lGetList(job, JB_master_hard_queue_list);
+      lListElem *category = lGetRef(job, JB_category);
       lList *resolved_qref_list = NULL;
       lListElem *resolved_qref = NULL;
       const char *qinstance_name = NULL;
       bool found_something = false;
       bool is_in_list = true;
+      bool is_list_free = true;
+      
+      if (category != NULL) { /* check for a cached resolved hard_queue_list */
+         resolved_qref_list = lGetList(category, CT_cached_master_hard_queue_list);
+      }
+    
+      if (resolved_qref_list == NULL) { /* resolve the hard_queue_list */
+         lList *master_cqueue_list = *(object_type_get_master_list(SGE_TYPE_CQUEUE));
+         lList *master_hgroup_list = *(object_type_get_master_list(SGE_TYPE_HGROUP));
+         lList *qref_list = lGetList(job, JB_master_hard_queue_list);
 
-      master_cqueue_list = *(object_type_get_master_list(SGE_TYPE_CQUEUE));
-      master_hgroup_list = *(object_type_get_master_list(SGE_TYPE_HGROUP));
+         qref_list_resolve(qref_list, NULL, &resolved_qref_list,
+                           &found_something, master_cqueue_list,
+                           master_hgroup_list, true, true);
+                           
+         if (category != NULL) {
+            lSetList(category, CT_cached_master_hard_queue_list, resolved_qref_list);
+            is_list_free = false;
+         }                           
+      }                        
+      else {
+         is_list_free = false;
+      }
+      /* check weather the current queue instance is requested from the job */                  
       qinstance_name = lGetString(queue, QU_full_name);
-      qref_list_resolve(qref_list, NULL, &resolved_qref_list,
-                        &found_something, master_cqueue_list,
-                        master_hgroup_list, true, true);
       resolved_qref = lGetElemStr(resolved_qref_list, QR_name, qinstance_name);
       is_in_list = resolved_qref != NULL ? true : false;
-      lFreeList(&resolved_qref_list);
-   
+      
+      if (is_list_free) { /* we are not caching anything, so we have to free the list */
+         lFreeList(&(resolved_qref_list));
+      }
+
       /*
        * Tag queue
        */

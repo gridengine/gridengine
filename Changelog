@@ -1,3 +1,8 @@
+SG-2006-03-29-0: Bugfix:    fixed the qstat.xsd schema
+                 Issue:     2017
+                 Bugtraq:   6405794
+                 Review:    RD
+
 RD-2006-03-29-0: Enhancem.: Improved verification of incoming job requests
                             in qmaster (JG-2006-03-17-0 continued)
                  Review:    AA

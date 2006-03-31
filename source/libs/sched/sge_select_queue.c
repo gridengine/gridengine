@@ -3179,7 +3179,7 @@ add_pe_slots_to_category(category_use_t *use_category, u_long32 *max_slotsp, lLi
          }   
 
          if (use_category->posible_pe_slots == NULL) {
-            use_category->posible_pe_slots = malloc((*max_slotsp) * sizeof(u_long32));
+            use_category->posible_pe_slots = malloc((max_slots - min_slots + 1) * sizeof(u_long32));
             if (use_category->posible_pe_slots == NULL) {
                return false;
             }

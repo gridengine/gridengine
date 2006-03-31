@@ -1,3 +1,7 @@
+JG-2006-03-31-0: Bugfix:    fixed scheduler memory corruption (core dump) 
+                            introduced by MD-2006-03-28-0.
+                 Review:    RD
+
 SG-2006-03-29-0: Bugfix:    fixed the qstat.xsd schema
                  Issue:     2017
                  Bugtraq:   6405794

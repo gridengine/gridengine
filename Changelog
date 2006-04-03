@@ -1,3 +1,8 @@
+JG-2006-04-03-0: Bugfix:    Scheduler tuning during qmaster installation broken.
+                 Issue:     2022
+                 Bugtraq:   6407523
+                 Review:    MD
+
 SG-2006-04-03-0: Bugfix:    Scheduler hangs after a qmaster crash and restart
                  Issue:     2021
                  Bugtraq:   6407513

@@ -1,3 +1,9 @@
+DT-2006-04-03-0: Docs:	    o Updated qselect man page
+                            - Merged from DT-2006-01-04-0
+		           Issue:     1955
+		           Bugtraq:   6368942
+		           Changed:   qselect(1)
+
 JG-2006-04-03-0: Bugfix:    Scheduler tuning during qmaster installation broken.
                  Issue:     2022
                  Bugtraq:   6407523

@@ -391,4 +391,44 @@ proc get_schedd_config { change_array } {
   }
 }
 
+#****** sge_sched_conf/set_schedd_config_from_file() ***************************
+#  NAME
+#     set_schedd_config_from_file() -- ??? 
+#
+#  SYNOPSIS
+#     set_schedd_config_from_file { filename {on_host ""} {as_user ""} 
+#     {raise_error 1} } 
+#
+#  FUNCTION
+#     ??? 
+#
+#  INPUTS
+#     filename        - ??? 
+#     {on_host ""}    - ??? 
+#     {as_user ""}    - ??? 
+#     {raise_error 1} - ??? 
+#
+#  RESULT
+#     ??? 
+#
+#  EXAMPLE
+#     ??? 
+#
+#  NOTES
+#     ??? 
+#
+#  BUGS
+#     ??? 
+#
+#  SEE ALSO
+#     ???/???
+#*******************************************************************************
+proc set_schedd_config_from_file {filename {on_host ""} {as_user ""} {raise_error 1}} {
+   set result [start_sge_bin "qconf" "-Msconf $filename"]
+   if {$prg_exit_state != 0} {
+      add_proc_error "set_schedd_config_from_file" -1 "qconf -Msconf $filename failed:\n$result" $raise_error
+      return 0
+   }
 
+   return 1
+}

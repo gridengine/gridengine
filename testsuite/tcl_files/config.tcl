@@ -4222,7 +4222,7 @@ proc config_build_ts_config {} {
    set parameter "product_type"
    set ts_config($parameter)            ""
    set ts_config($parameter,desc)       "Grid Engine product mode"
-   set ts_config($parameter,default)    "sge"
+   set ts_config($parameter,default)    "sgeee"
    set ts_config($parameter,setup_func) "config_$parameter"
    set ts_config($parameter,onchange)   "install"
    set ts_config($parameter,pos)        $ts_pos

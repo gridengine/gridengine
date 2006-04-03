@@ -1,3 +1,10 @@
+JG-2006-04-03-0: Bugfix:    Scheduler tuning during qmaster installation broken.
+                 Testsuite: Added testsuite test for IZ 2022.
+                            Changed default testsuite product_type to "sgeee".
+                 Issue:     2022
+                 Bugtraq:   6407523
+                 Review:    MD
+                 
 RD-2006-04-03-0: Testsuite: Enabled uncommented tests
                  Review:    JG
 

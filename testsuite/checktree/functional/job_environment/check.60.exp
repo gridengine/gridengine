@@ -38,10 +38,10 @@ global job_environment_libvar
 set check_root_access_needs "yes"
 
 # additional checks for N1GE 6
-#lappend check_functions "job_environment_amount_uninherited"
-#lappend check_functions "job_environment_JOB_NAME_uninherited"
+lappend check_functions "job_environment_amount_uninherited"
+lappend check_functions "job_environment_JOB_NAME_uninherited"
 lappend check_functions "job_environment_INHERIT_ENV"
-#lappend check_functions "job_environment_SET_LIB_PATH"
+lappend check_functions "job_environment_SET_LIB_PATH"
 
 ####### job_environment_setup_60() #############################################
 #  NAME

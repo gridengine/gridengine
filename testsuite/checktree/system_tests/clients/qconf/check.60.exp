@@ -36,14 +36,14 @@
 global check_functions 
 
 # define test's procedure order
-#lappend check_functions "qconf_backslash_default_space_check"  ;# functions to call (in order)
-#lappend check_functions "qconf_backslash_default_comma_check"
-#lappend check_functions "qconf_backslash_custom_space_check"
-#lappend check_functions "qconf_backslash_custom_comma_check"
-#lappend check_functions "qconf_backslash_space_output_check"
-#lappend check_functions "qconf_backslash_comma_output_check"
-#lappend check_functions "qconf_issue1767"
-#lappend check_functions "qconf_modify_hostgroup"
+lappend check_functions "qconf_backslash_default_space_check"  ;# functions to call (in order)
+lappend check_functions "qconf_backslash_default_comma_check"
+lappend check_functions "qconf_backslash_custom_space_check"
+lappend check_functions "qconf_backslash_custom_comma_check"
+lappend check_functions "qconf_backslash_space_output_check"
+lappend check_functions "qconf_backslash_comma_output_check"
+lappend check_functions "qconf_issue1767"
+lappend check_functions "qconf_modify_hostgroup"
 lappend check_functions "qconf_purge_queue"
 
 #                                                             max. column:     |

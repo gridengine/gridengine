@@ -65,53 +65,53 @@ set check_cleanup_function "qconf_cleanup"
 
 # define test's procedure order
 set check_functions     ""
-#lappend check_functions "qconf_addqueues"             ;# functions to call (in order)
-#lappend check_functions "qconf_removequeues"
-#lappend check_functions "qconf_auser"
-#lappend check_functions "qconf_duser"
-#lappend check_functions "qconf_Auser"
-#lappend check_functions "qconf_muser"
-#lappend check_functions "qconf_Muser"
-#lappend check_functions "qconf_de_check"
-#lappend check_functions "qconf_segfault"
-#lappend check_functions "qconf_se"
-#lappend check_functions "qconf_sel"
+lappend check_functions "qconf_addqueues"             ;# functions to call (in order)
+lappend check_functions "qconf_removequeues"
+lappend check_functions "qconf_auser"
+lappend check_functions "qconf_duser"
+lappend check_functions "qconf_Auser"
+lappend check_functions "qconf_muser"
+lappend check_functions "qconf_Muser"
+lappend check_functions "qconf_de_check"
+lappend check_functions "qconf_segfault"
+lappend check_functions "qconf_se"
+lappend check_functions "qconf_sel"
 
 # TODO: check all options
-#lappend check_functions "qconf_aattr_check"
-#lappend check_functions "qconf_rattr_check"
-#lappend check_functions "qconf_Aattr_check"
-#lappend check_functions "qconf_Rattr_check"
+lappend check_functions "qconf_aattr_check"
+lappend check_functions "qconf_rattr_check"
+lappend check_functions "qconf_Aattr_check"
+lappend check_functions "qconf_Rattr_check"
 
 # Show options DONE
-#lappend check_functions "qconf_scal_check"   	;# List calendars
-#lappend check_functions "qconf_scall_check"	;# List all calalendars
-#lappend check_functions "qconf_sconfl_check"	;# List all hosts with configurations
-#lappend check_functions "qconf_sds_check"	;# List detached settings in the cluster  config
-#lappend check_functions "qconf_secl_check"	;# List event client list
-#lappend check_functions "qconf_sep_check"	;# List processors
-#lappend check_functions "qconf_shgrp_tree_check"	;# List tree like structure of hosts
-#lappend check_functions "qconf_shgrp_resolved_check"	;# List  hosts in a group
-#lappend check_functions "qconf_sm_check"	;# List  managers
-#lappend check_functions "qconf_so_check"	;# List operators 
-#lappend check_functions "qconf_ss_check"	;# List submit hosts
-#lappend check_functions "qconf_sss_check"	;# Show scheduler status
-#lappend check_functions "qconf_sul_check"	;# Show user list
-#lappend check_functions "qconf_sprjl_check"	;# Show project list
+lappend check_functions "qconf_scal_check"   	;# List calendars
+lappend check_functions "qconf_scall_check"	;# List all calalendars
+lappend check_functions "qconf_sconfl_check"	;# List all hosts with configurations
+lappend check_functions "qconf_sds_check"	;# List detached settings in the cluster  config
+lappend check_functions "qconf_secl_check"	;# List event client list
+lappend check_functions "qconf_sep_check"	;# List processors
+lappend check_functions "qconf_shgrp_tree_check"	;# List tree like structure of hosts
+lappend check_functions "qconf_shgrp_resolved_check"	;# List  hosts in a group
+lappend check_functions "qconf_sm_check"	;# List  managers
+lappend check_functions "qconf_so_check"	;# List operators 
+lappend check_functions "qconf_ss_check"	;# List submit hosts
+lappend check_functions "qconf_sss_check"	;# Show scheduler status
+lappend check_functions "qconf_sul_check"	;# Show user list
+lappend check_functions "qconf_sprjl_check"	;# Show project list
 
 # New options, non-show DONE
 
-#lappend check_functions "qconf_add_delete_manager"	;# Add and delete manager users 
-#lappend check_functions "qconf_add_show_mod_del_queue"	;# Add, show, modify and delete queue "qconf_queue.q"
-#lappend check_functions "qconf_add_show_delete_stnode"	;# Add, show and delete share tree nodes
-#lappend check_functions "qconf_event_client"	;# Create, show and delete event clients
-#lappend check_functions "qconf_add_delete_modify_calendar"	;# Add, delete and modify calendar
-#lappend check_functions "qconf_add_delete_modify_replace_attr"	;# Add, delete and modify attributes
-#lappend check_functions "qconf_modify_checkpoint"	;# Create, modify and delete checkpoint 
-#lappend check_functions "qconf_modify_exechost"	;# Modify exec host
-#lappend check_functions "qconf_modify_project";# Modify project
-#lappend check_functions "qconf_modify_userlist";# Modify user list
-#lappend check_functions "qconf_modify_sched_conf";# Modify scheduler config
+lappend check_functions "qconf_add_delete_manager"	;# Add and delete manager users 
+lappend check_functions "qconf_add_show_mod_del_queue"	;# Add, show, modify and delete queue "qconf_queue.q"
+lappend check_functions "qconf_add_show_delete_stnode"	;# Add, show and delete share tree nodes
+lappend check_functions "qconf_event_client"	;# Create, show and delete event clients
+lappend check_functions "qconf_add_delete_modify_calendar"	;# Add, delete and modify calendar
+lappend check_functions "qconf_add_delete_modify_replace_attr"	;# Add, delete and modify attributes
+lappend check_functions "qconf_modify_checkpoint"	;# Create, modify and delete checkpoint 
+lappend check_functions "qconf_modify_exechost"	;# Modify exec host
+lappend check_functions "qconf_modify_project";# Modify project
+lappend check_functions "qconf_modify_userlist";# Modify user list
+lappend check_functions "qconf_modify_sched_conf";# Modify scheduler config
 
 
 global queue_names

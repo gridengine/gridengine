@@ -1,3 +1,6 @@
+RD-2006-04-03-0: Testsuite: Enabled uncommented tests
+                 Review:    JG
+
 SG-2006-04-03-0: Bugfix:    Scheduler hangs after a qmaster crash and restart
                  Issue:     2021
                  Bugtraq:   6407513

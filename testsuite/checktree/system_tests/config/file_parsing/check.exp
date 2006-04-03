@@ -150,7 +150,7 @@ proc file_parsing_N_option {} {
    global file_parsing_local_request_file CHECK_USER
    global file_parsing_job_script file_parsing_job_host
 
-   set accouting_jobs ""
+   set accounting_jobs ""
 
     puts $CHECK_OUTPUT "Testing overwrite options ..."
     delete_remote_file $file_parsing_job_host $CHECK_USER $file_parsing_cluster_request_file
@@ -166,7 +166,7 @@ proc file_parsing_N_option {} {
         add_proc_error file_parsing_N_option "-1" "Could not start job with $option_parameter parameter"      
     }       
     wait_for_jobstart $back "GLOBAL" 30 1 1
-    lappend accouting_jobs $back
+    lappend accounting_jobs $back
 
 
     puts $CHECK_OUTPUT "home directory .sge_request file"
@@ -177,7 +177,7 @@ proc file_parsing_N_option {} {
     }       
     wait_for_jobstart $back "HOME" 30 1 1
  
-    lappend accouting_jobs $back
+    lappend accounting_jobs $back
 
 
     puts $CHECK_OUTPUT "local directory .sge_request file"
@@ -187,7 +187,7 @@ proc file_parsing_N_option {} {
         add_proc_error file_parsing_N_option "-1" "Could not start job with $option_parameter parameter"      
     }       
     wait_for_jobstart $back "LOCAL" 30 1 1
-    lappend accouting_jobs $back
+    lappend accounting_jobs $back
 
     puts $CHECK_OUTPUT "script options"
     set option_parameter "-N SCRIPT"
@@ -198,7 +198,7 @@ proc file_parsing_N_option {} {
     }       
     wait_for_jobstart $back "SCRIPT" 30 1 1
 
-    lappend accouting_jobs $back
+    lappend accounting_jobs $back
 
 
     puts $CHECK_OUTPUT "command_line"
@@ -210,7 +210,7 @@ proc file_parsing_N_option {} {
     }
     wait_for_jobstart $back "COMLINE" 30 1 1
 
-    lappend accouting_jobs $back
+    lappend accounting_jobs $back
 
 
    delete_remote_file $file_parsing_job_host $CHECK_USER $file_parsing_cluster_request_file
@@ -220,7 +220,7 @@ proc file_parsing_N_option {} {
    
    wait_for_end_of_all_jobs 60
 
-   foreach elem $accouting_jobs {
+   foreach elem $accounting_jobs {
       set timeout_time [timestamp]
       incr timeout_time 120
       while { 1 } {
@@ -275,7 +275,7 @@ proc file_parsing_long_option {} {
    global file_parsing_local_request_file
    global file_parsing_job_script file_parsing_job_host
 
-   set accouting_jobs ""
+   set accounting_jobs ""
 
     puts $CHECK_OUTPUT "Testing overwrite options ..."
 
@@ -335,21 +335,21 @@ proc file_parsing_long_option {} {
     set back [ prepare_file_and_start_job $file_parsing_cluster_request_file $opt_parameter $file_parsing_job_script]
     file_parsing_long_option_verify $back 0 "global sge_request file"
     wait_for_jobstart $back "GLOBAL____" 30  1 1
-    lappend accouting_jobs $back
+    lappend accounting_jobs $back
 
     puts $CHECK_OUTPUT "home directory .sge_request file"
     set opt_parameter "-N HOME__$option_parameter"
     set back [ prepare_file_and_start_job $file_parsing_home_request_file $opt_parameter $file_parsing_job_script]
     file_parsing_long_option_verify $back 0 "home directory .sge_request file"
     wait_for_jobstart $back "HOME______" 30 1 1
-    lappend accouting_jobs $back
+    lappend accounting_jobs $back
 
     puts $CHECK_OUTPUT "local directory .sge_request file"
     set opt_parameter "-N LOCAL_$option_parameter"
     set back [ prepare_file_and_start_job $file_parsing_local_request_file $opt_parameter $file_parsing_job_script [file dirname $file_parsing_local_request_file]]
     file_parsing_long_option_verify $back 0 "local directory .sge_request file"
     wait_for_jobstart $back "LOCAL_____" 30 1 1
-    lappend accouting_jobs $back
+    lappend accounting_jobs $back
 
     puts $CHECK_OUTPUT "script options"
     set opt_parameter "-N SCRIPT$option_parameter"
@@ -357,7 +357,7 @@ proc file_parsing_long_option {} {
     set back [ submit_job "-l h=$file_parsing_job_host $file_parsing_job_script" 1 60 $file_parsing_job_host ]
     file_parsing_long_option_verify $back 0 "script options"
     wait_for_jobstart $back "SCRIPT____" 30 1 1
-    lappend accouting_jobs $back
+    lappend accounting_jobs $back
 
     puts $CHECK_OUTPUT "command_line"
     set opt_parameter "-N COMLIN$option_parameter"
@@ -365,7 +365,7 @@ proc file_parsing_long_option {} {
     set back [ submit_job "$opt_parameter -l h=$file_parsing_job_host $file_parsing_job_script" 1 60 $file_parsing_job_host ]
     file_parsing_long_option_verify $back 0 "command_line"
     wait_for_jobstart $back "COMLIN____" 30 1 1
-    lappend accouting_jobs $back
+    lappend accounting_jobs $back
 
     delete_remote_file $file_parsing_job_host $CHECK_USER $file_parsing_cluster_request_file
     delete_remote_file $file_parsing_job_host $CHECK_USER $file_parsing_home_request_file
@@ -373,7 +373,7 @@ proc file_parsing_long_option {} {
 
     wait_for_end_of_all_jobs 60
 
-    foreach elem $accouting_jobs {
+    foreach elem $accounting_jobs {
       set timeout_time [timestamp]
       incr timeout_time 120
       while { 1 } {

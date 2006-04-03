@@ -1,3 +1,8 @@
+SG-2006-04-03-0: Bugfix:    Scheduler hangs after a qmaster crash and restart
+                 Issue:     2021
+                 Bugtraq:   6407513
+                 Review:    RD
+
 JG-2006-03-31-0: Bugfix:    fixed scheduler memory corruption (core dump) 
                             introduced by MD-2006-03-28-0.
                  Review:    RD

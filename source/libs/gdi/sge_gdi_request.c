@@ -686,6 +686,7 @@ gdi_receive_multi_async(sge_gdi_request **answer, lList **malpp, bool is_sync)
          else {
             SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_RECEIVEGDIREQUESTFAILED));
          }   
+         gdi_state_clear_last_gdi_request(); 
       }
       DEXIT;
       return false;

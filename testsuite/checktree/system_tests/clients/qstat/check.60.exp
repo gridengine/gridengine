@@ -36,7 +36,7 @@
 global check_name check_description check_needs check_functions check_errno check_errstr 
 global check_category check_root_access_needs
 
-
+package require tdom
 
 set check_root_access_needs  "yes"
 
@@ -55,6 +55,7 @@ lappend check_functions  "qstat_option_pe"
 lappend check_functions  "qstat_option_U"
 lappend check_functions  "qstat_option_s"
 lappend check_functions  "qstat_issue1800"
+lappend check_functions  "qstat_plain_xml_comparison"  ;# Compare the two....
 
 set check_errno          "-1"                    ;# 0 -> OK , != 0 means error
 set check_errstr         "was never running"     ;# string for error description
@@ -464,6 +465,9 @@ proc qstat_option_U {} {
   del_queue test.q $hostname 0 1
 
   set_error 0 "ok"
+  
+  
+  
 }
 
 proc qstat_option_s {} {
@@ -577,3 +581,85 @@ proc qstat_issue1800 {} {
   delete_all_jobs
   set_error 0 "ok"
 }
+
+#****** qstat/qstat_plain_xml_comparison() ***********************************************
+#  NAME
+#     qstat_plain_xml_comparison() -- Compare plain and XML ouptout of qstat
+#     command.
+#
+#  SYNOPSIS
+#     qstat_plain_xml_comparison { }. The assoc. array has entries for jobid, prio, name, user, state,
+#     submit_time, start_time and, if present, queue, slots, task_id. We also
+#     accumuluate the jobids in output(jobid_list).
+#
+#  FUNCTION
+#     Compare plain and XML ouptout of qstat command
+#
+#  INPUTS
+#
+#*******************************************************************************
+
+proc qstat_plain_xml_comparison {} {
+      global ts_config CHECK_OUTPUT CHECK_ACTUAL_TEST_PATH CHECK_USER output_result 
+
+      set hostname [lindex $ts_config(execd_nodes) 0]
+      
+      # Run some jobs      
+      set result_local_return [start_remote_prog $hostname $CHECK_USER "$CHECK_ACTUAL_TEST_PATH/qsub.sh" ""]
+      
+     
+      # Wait a little for jobs to be scheduled.
+      sleep 5
+
+      # qstat_plain_output contains the plain qstat output in an assoc. array
+      # qstat_plain_output(jobid) contains a list of jobids.
+      set result1 [qstat_plain_parse qstat_plain_output]
+      
+      puts $CHECK_OUTPUT "plain qstat array .... \n"
+      parray qstat_plain_output
+      
+      # qstat_xml_output contains the XML qstat output in an assoc. array
+      set result2 [qstat_xml_parse qstat_xml_output]
+      
+      puts $CHECK_OUTPUT "xml qstat array .... \n"
+      parray qstat_xml_output
+
+      # Now let's compare them by jobid. For now we skip the last entry
+      # due to bug in parse_qstat. See IZ 2024.
+      #set jobid_list $qstat_plain_output(index)
+      set jobid_list [lrange $qstat_plain_output(index) 0 end-1]
+      
+      set column_vars "prior name user state time queue master"
+
+      set error_flag 0
+      foreach jobid $jobid_list {
+   
+         foreach column $column_vars {
+            # Need to put $jobid$column since $jobid contains a "," already!
+            # For columns state, queue and master, trim the trailing blanks
+            
+            # For queue or master values, need to trim XML output to match
+            # the plain output.
+            if { ($column == "state") || ($column == "queue") || ($column == "master") } {
+               set qstat_xml_output($jobid$column) [string trim $qstat_xml_output($jobid$column)]
+            }
+            
+            if { $qstat_plain_output($jobid$column) != $qstat_xml_output($jobid$column) } {
+               puts $CHECK_OUTPUT "Plain output and XML output agree DO NOT for jobid $jobid ...\n"
+               puts $CHECK_OUTPUT "and column $column... \n"
+               puts $CHECK_OUTPUT "qstat_plain_output was $qstat_plain_output($jobid$column)... \n"
+               puts $CHECK_OUTPUT "while qstat_xml_output was $qstat_xml_output($jobid$column)... \n"
+               incr error_flag 1
+            } 
+         }
+      }
+   if { $error_flag == 0 } {  
+      set_error 0 "ok"      
+   } else {
+      set_error -1 "error in plain, XML qstat"
+   }
+   
+   delete_all_jobs
+   
+}
+

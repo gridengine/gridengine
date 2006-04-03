@@ -1510,3 +1510,97 @@ proc output_array { input } {
 }
 
 
+#                                                             max. column:     |
+#****** parser/qstat_plain_parse() ******
+#
+#  NAME
+#     qstat_plain_parse -- Parse qstat output into assoc. array
+#
+#  SYNOPSIS
+#     qstat_plain_parse { output }
+#
+#  FUNCTION
+#     Give out assoc. array with entries for jobid, prio, name, user, state,
+#     submit_time, start_time and, if present, queue, slots, task_id. We also
+#     accumuluate the jobids in output(jobid_list).
+#
+#  INPUTS
+#     None
+#
+#  RESULT
+#     assoc array output() with entries listed above
+#
+#
+#  SEE ALSO
+#     parser/parse_qstat
+#*******************************
+
+proc qstat_plain_parse { output  } {
+   global ts_config CHECK_OUTPUT CHECK_USER output_result
+
+   upvar $output qstat_output
+
+   # Run usual command
+   set result [start_sge_bin "qstat" ""]
+
+   #puts $CHECK_OUTPUT "Printing the usual result of qstat $option... \n"
+   #puts $CHECK_OUTPUT "$result \n"
+
+   parse_qstat result  qstat_output
+
+   #puts $CHECK_OUTPUT "Printing the parse_qstat result of qstat $option... \n"
+
+   #parray output_qstat
+
+   set_error 0 "ok"
+
+}
+
+#                                                             max. column:     |
+#****** parser/qstat_special_parse() ******
+#
+#  NAME
+#     qstat_special_parse -- Remove extra blanks, slash from qstat output
+#
+#  SYNOPSIS
+#     qstat_special_parse { input }
+#
+#  FUNCTION
+#     Give output with single blanks separating all the entries
+#     
+#
+#  INPUTS
+#     Output lines from qstat command.
+#
+#  RESULT
+#     string with single blanks separating all the entries
+#
+#
+#  SEE ALSO
+#     parser/parse_qstat
+#*******************************
+
+proc qstat_special_parse {input_string } {
+
+
+   # Keep on doing it while we have more than 1 whitespace
+   set flag 1
+   while { $flag } {
+      set flag [regsub "(  )+" $input_string " " input_string ]
+   }
+
+   # For date, skip slash removal
+   set date_flag [regexp "(\[0-9]*\/\[0-9]*\/\[0-9]*)" $input_string]
+
+   if {$date_flag == 1} {
+      # do nothing, we have a date, so keep the slashes; return
+      return $input_string
+   } else {
+      # we have slots, so remove the slash
+      regsub "\/" $input_string " " output_string
+      #regsub "(\[0-9\]*)\/(\[0-9\]*)( )" $input_string "\1 \2" output_string
+   }
+
+   return $output_string
+}
+

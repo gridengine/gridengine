@@ -1,3 +1,10 @@
+OJ-2006-04-03-0: Testsuite: Added test case for qstat with XML parsing. in 
+                            client/qstat.
+                            Added new file tcl_files/parser_xml.tcl with new
+                            XML parsing procedures.
+                 Issue:     1206
+                 Review:    DT
+
 JG-2006-04-03-0: Bugfix:    Scheduler tuning during qmaster installation broken.
                  Testsuite: Added testsuite test for IZ 2022.
                             Changed default testsuite product_type to "sgeee".
@@ -167,8 +174,12 @@ RD-2006-03-09-0: Bugfix:    - fixed race conditions for sge_ca -renew
                  Changed:   sge_ca, commlib
                  Review:    AA
 
-OJ-2006-03-06-0: Testsuite: Added new purge_queue in sge_queue.tcl
+OJ-2006-03-06-0: Testsuite: Moved purge_queue in sge_queue.60.tcl, moved test
+                            cases with -purge queue in check.60.exp; fixed
+                            bugs in purge_queue ().
+                 Issue:     477
                  Review:    DT
+
 
 MD-2006-02-22-0: Bugfix:    execd installation on Windows fails due to 
                             missing spooldefaults 

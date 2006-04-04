@@ -5,6 +5,10 @@ RD-2006-04-04-0: Bugfix:    CSP installation with admin user = root broken
                  Bugtraq:   6408109
                  Review:    CR
 
+JG-2006-04-04-0: Bugfix:    Fixed too restrictive job name verification.
+                            Fixed nonunique message ids.
+                 Review:    RD
+
 DT-2006-04-03-0: Docs:	    o Updated qselect man page
                             - Merged from DT-2006-01-04-0
 		           Issue:     1955

@@ -36,7 +36,7 @@
 global check_name check_description check_needs check_functions check_errno check_errstr 
 global check_category check_root_access_needs
 
-package require tdom
+#package require tdom
 
 set check_root_access_needs  "yes"
 
@@ -55,7 +55,7 @@ lappend check_functions  "qstat_option_pe"
 lappend check_functions  "qstat_option_U"
 lappend check_functions  "qstat_option_s"
 lappend check_functions  "qstat_issue1800"
-lappend check_functions  "qstat_plain_xml_comparison"  ;# Compare the two....
+#lappend check_functions  "qstat_plain_xml_comparison"  ;# Compare the two....
 
 set check_errno          "-1"                    ;# 0 -> OK , != 0 means error
 set check_errstr         "was never running"     ;# string for error description

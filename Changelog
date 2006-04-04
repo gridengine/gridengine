@@ -1,3 +1,7 @@
+JG-2006-04-04-0: Bugfix:    Fixed too restrictive job name verification.
+                 Testsuite: Fixed broken testsuite.
+                 Review:    RD
+
 OJ-2006-04-03-0: Testsuite: Added test case for qstat with XML parsing. in 
                             client/qstat.
                             Added new file tcl_files/parser_xml.tcl with new

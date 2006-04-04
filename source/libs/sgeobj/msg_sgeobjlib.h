@@ -330,4 +330,7 @@
 #define MSG_JOB_SCRIPTLENGTHDOESNOTMATCH _MESSAGE(64340, _("Script lenght does not match declared length"))
 #define MSG_INVALIDJOB_REQUEST_S _MESSAGE(64342, _("invalid "SFQ" value in job request"))
 
+#define MSG_JOB_NAMETOOLONG_I _MESSAGE(64343, _("job name too long, maximum allowed length is %d characters"))
+
+
 #endif /* __MSG_SGEOBJLIB_H */

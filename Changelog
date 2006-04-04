@@ -1,6 +1,9 @@
-JG-2006-04-04-0: Bugfix:    Fixed too restrictive job name verification.
-                            Fixed nonunique message ids.
-                 Review:    RD
+RD-2006-04-04-0: Bugfix:    CSP installation with admin user = root broken
+                            fixed broken build on AIX43
+                            changed version to 60u8 in scripts
+                 Issue:     2026
+                 Bugtraq:   6408109
+                 Review:    CR
 
 DT-2006-04-03-0: Docs:	    o Updated qselect man page
                             - Merged from DT-2006-01-04-0

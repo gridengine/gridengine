@@ -1,3 +1,10 @@
+RD-2006-04-04-0: Bugfix:    CSP installation with admin user = root broken
+                            fixed broken build on AIX43
+                            changed version to 60u8 in scripts
+                 Issue:     2026
+                 Bugtraq:   6408109
+                 Review:    CR
+
 JG-2006-04-04-0: Bugfix:    Fixed too restrictive job name verification.
                  Testsuite: Fixed broken testsuite.
                  Review:    RD

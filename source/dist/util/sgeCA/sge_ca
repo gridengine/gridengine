@@ -428,7 +428,11 @@ MakeUserCert()
       email=$unixuser
    fi   
 
-   entries=`$V5UTILBIN/adminrun $ADMINUSER grep "CN=$gecos" $CATOP/index.txt|grep '^V'|wc -l`
+   if [ "$ADMINUSER" = default ]; then
+      entries=`grep "CN=$gecos" $CATOP/index.txt|grep '^V'|wc -l`
+   else 
+      entries=`$V5UTILBIN/adminrun $ADMINUSER grep "CN=$gecos" $CATOP/index.txt|grep '^V'|wc -l`
+   fi
    if [ $entries = 0 ]; then
       $INFOTEXT "Generating certificate and key for '%s' ('%s','%s')." \
          "$unixuser" "$gecos" "$email"
@@ -543,7 +547,11 @@ MakeCert()
    fi
 
    # create rand.seed file
-   MakeRandFile $RSFILE $ADMINUSER
+   if [ "$ADMINUSER" = default ]; then
+      MakeRandFile $RSFILE  root
+   else
+      MakeRandFile $RSFILE $ADMINUSER
+   fi
 
    RANDFILE=$RSFILE; export RANDFILE
 
@@ -634,6 +642,9 @@ RenewCert()
   
    if [ "$1" = daemon ]; then
       $INFOTEXT -u "\nRenewing daemon certificate"
+      if [ "$2" = default ]; then
+         $2=root
+      fi
    else
       $INFOTEXT -u "\nRenewing  '%s' user certificate" "$2"
    fi
@@ -679,7 +690,11 @@ RenewCert()
    else
       Execute $MKDIR -p $NEWKEYDIR
       Execute $CP $KEYDIR/* $NEWKEYDIR
-      Execute $CHOWN -R $ADMINUSER $NEWKEYDIR
+      if [ "$ADMINUSER" = default ]; then
+         Execute $CHOWN -R root $NEWKEYDIR
+      else
+         Execute $CHOWN -R $ADMINUSER $NEWKEYDIR
+      fi
       Execute $CHMOD 644 $NEWKEYDIR/*
    fi
 

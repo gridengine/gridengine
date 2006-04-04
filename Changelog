@@ -1,3 +1,7 @@
+JG-2006-04-04-0: Bugfix:    Fixed too restrictive job name verification.
+                            Fixed nonunique message ids.
+                 Review:    RD
+
 DT-2006-04-03-0: Docs:	    o Updated qselect man page
                             - Merged from DT-2006-01-04-0
 		           Issue:     1955
@@ -30,8 +34,8 @@ RD-2006-03-29-0: Enhancem.: Improved verification of incoming job requests
 SG-2006-03-29-0: Bugfix:    - Unclear share caclulation of running jobs
                             - Job tickets are not correctly shown in qstat for 
                               none running jobs with a reservation
-                            - slow scheduler performance for jobs with hard queue 
-                              requests
+                            - slow scheduler performance for jobs with hard 
+                              queue requests
                             - Tickets are not reseted for running jobs after 
                               disableing the ticket policy
                  Issue:     1550, 1956, 1981, 2003

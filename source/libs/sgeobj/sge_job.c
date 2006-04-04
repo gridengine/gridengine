@@ -2886,7 +2886,9 @@ job_verify(const lListElem *job, lList **answer_list)
    if (ret) {
       const char *name = lGetString(job, JB_job_name);
       if (name != NULL) {
-         if (verify_str_key(answer_list, name, MAX_VERIFY_STRING, lNm2Str(JB_job_name)) != STATUS_OK) {
+         if (strlen(name) >= MAX_VERIFY_STRING) {
+            answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR, 
+                                    MSG_JOB_NAMETOOLONG_I, MAX_VERIFY_STRING);
             ret = false;
          }
       }

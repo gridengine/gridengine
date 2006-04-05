@@ -1105,6 +1105,7 @@ sge_mirror_error sge_mirror_process_events(lListElem *event_client)
       if (event_list != NULL) {
          ret = sge_mirror_process_event_list(event_list);
          lFreeList(&event_list);
+         event_client = ec_get_event_client();
       }
    } else {
       WARNING((SGE_EVENT, MSG_MIRROR_QMASTERALIVETIMEOUTEXPIRED));
@@ -1611,6 +1612,8 @@ sge_mirror_process_shutdown(object_description *object_base,sge_object_type type
 
    DPRINTF(("shutting down sge mirror\n"));
    sge_mirror_shutdown(&event_client);
+
+   ec_set_event_client(event_client);
 
    shut_me_down = 1;
    DEXIT;

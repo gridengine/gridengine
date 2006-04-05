@@ -40,6 +40,7 @@
 #define DEFAULT_EVENT_DELIVERY_INTERVAL (10)
 
 lListElem *ec_get_event_client(void);
+void ec_set_event_client(lListElem *ec);
 
 bool ec_prepare_registration(ev_registration_id id, const char *name);
 bool ec_register(lListElem *event_client, bool exit_on_qmaster_down, lList **alpp);

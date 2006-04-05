@@ -288,6 +288,9 @@ char *argv[]
             check_qmaster = true;
             continue;
          }
+         /* we must re-initialize 'event_client' as it might have been 
+            freed deep down in sge_mirror_process_events() */
+         event_client = ec_get_event_client();
 
          if(ec_need_new_registration()) {
             check_qmaster = true;

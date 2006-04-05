@@ -687,7 +687,7 @@ lListElem *ec_get_event_client(void)
    return ret;
 }
 
-static void ec_set_event_client(lListElem *ec)
+void ec_set_event_client(lListElem *ec)
 {
    GET_SPECIFIC(ec_state_t, ec_state, ec_state_init, ec_state_key, "ec_state_get_made_setup");
    ec_state->event_client = ec;
@@ -918,6 +918,7 @@ ec_mark4registration(lListElem *event_client)
    }
    ec_set_need_register(true);
    lSetBool(event_client, EV_changed, true);
+
    DEXIT;
 }
 

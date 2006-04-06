@@ -655,56 +655,80 @@ lListElem *job_enroll(lListElem *job, lList **answer_list,
    return ja_task;
 }  
 
-/****** sgeobj/job/job_has_pending_tasks() ********************************************
+/****** sge_job/job_count_rescheduled_ja_tasks() *******************************
 *  NAME
-*     job_has_pending_tasks() -- Returns true if there exist unenrolled tasks 
+*     job_count_rescheduled_ja_tasks() -- count rescheduled tasks
 *
 *  SYNOPSIS
-*     bool job_has_pending_tasks(lListElem *job) 
+*     static int job_count_rescheduled_ja_tasks(lListElem *job, bool count_all) 
 *
 *  FUNCTION
-*     This function returns true (1) if there exists an unenrolled 
-*     pending task in 'job'.
+*     Returns number of rescheduled tasks in JB_ja_tasks of a job. The
+*     'count_all' flag can be used to cause a quick exit if merely the
+*     existence of rescheduled tasks is of interest.
+*
+*  INPUTS
+*     lListElem *job - the job (JB_Type)
+*     bool count_all - quick exit flag
+*
+*  RESULT
+*     static int - number of tasks resp. 0/1 
+*
+*  NOTES
+*     MT-NOTE: job_count_rescheduled_ja_tasks() is MT safe 
+*******************************************************************************/
+static int job_count_rescheduled_ja_tasks(lListElem *job, bool count_all)
+{
+   lListElem *ja_task;
+   u_long32 state;
+   int n = 0;
+
+   for_each(ja_task, lGetList(job, JB_ja_tasks)) {
+      state = lGetUlong(ja_task, JAT_state);
+      if ((lGetUlong(ja_task, JAT_status) == JIDLE) &&
+          ((state & JQUEUED) != 0) &&
+          ((state & JWAITING) != 0)) {
+            n++;
+            if (!count_all)
+               break;
+      }
+   }
+   return n;
+}
+
+/****** sgeobj/job/job_count_pending_tasks() ********************************************
+*  NAME
+*     job_count_pending_tasks() -- Count number of pending tasks
+*
+*  SYNOPSIS
+*     bool job_count_pending_tasks(lListElem *job, bool count_all) 
+*
+*  FUNCTION
+*     This function returns the number of pending tasks of a job.
 *
 *  INPUTS
 *     lListElem *job - JB_Type 
+*     bool           - number of tasks or simply 0/1 if count_all is 'false'
 *
 *  RESULT
-*     bool - true or false 
+*     int - number of tasks or simply 0/1 if count_all is 'false'
 ******************************************************************************/
-bool job_has_pending_tasks(lListElem *job) 
+int job_count_pending_tasks(lListElem *job, bool count_all) 
 {
-   bool ret = false;
+   int n = 0;
 
-   DENTER(TOP_LAYER, "job_has_pending_tasks");
+   DENTER(TOP_LAYER, "job_count_pending_tasks");
 
-   if (job != NULL) {
-      if (lGetList(job, JB_ja_n_h_ids) != NULL || 
-          lGetList(job, JB_ja_u_h_ids) != NULL ||
-          lGetList(job, JB_ja_o_h_ids) != NULL ||
-          lGetList(job, JB_ja_s_h_ids) != NULL) {
-         ret = true;
-      }
+   if (count_all) {
+      n = range_list_get_number_of_ids(lGetList(job, JB_ja_n_h_ids));
+      n += job_count_rescheduled_ja_tasks(job, true);
+   } else {
+      if (lGetList(job, JB_ja_n_h_ids) || job_count_rescheduled_ja_tasks(job, false))
+         n = 1;
    }
 
-   if (!ret) { /* we have to test the ja_tasks. There might be rescheduled tasks, which are pending */
-      lListElem *ja_task = NULL;
-      u_long32 state = 0;
-     
-      for_each(ja_task, lGetList(job, JB_ja_tasks)) {
-         
-         state = lGetUlong(ja_task, JAT_state);
-         if ((lGetUlong(ja_task, JAT_status) == JIDLE) &&
-             ((state & JQUEUED) != 0) &&
-             ((state & JWAITING) != 0)) {
-               ret = true;
-               break;
-         }
-      }
-   }
-   
    DEXIT;
-   return ret;
+   return n;
 }
 
 /****** sgeobj/job/job_delete_not_enrolled_ja_task() **************************

@@ -858,14 +858,14 @@ static int dispatch_jobs(sge_Sdescr_t *lists, order_t *orders,
                or the job is not dispatchable at all */
             schedd_mes_commit(*(splitted_job_lists[SPLIT_PENDING]), 0, cat);       
 
-            /* Remove pending job if there are no pending tasks anymore */
-            if ((job_has_pending_tasks(orig_job) <= 1) || (nreservation >= max_reserve )) {
+            /* Remove pending job if there are no pending tasks anymore (including the current) */
+            if (job_count_pending_tasks(orig_job, true) < 2 || (nreservation >= max_reserve )) {
+
                lDechainElem(*(splitted_job_lists[SPLIT_PENDING]), orig_job);
                if ((*(splitted_job_lists[SPLIT_NOT_STARTED])) == NULL) {
                   *(splitted_job_lists[SPLIT_NOT_STARTED]) = lCreateList("", lGetListDescr(*(splitted_job_lists[SPLIT_PENDING])));
                }
                lAppendElem(*(splitted_job_lists[SPLIT_NOT_STARTED]), orig_job);
-               
                is_pjob_resort = false;
             }
             else {

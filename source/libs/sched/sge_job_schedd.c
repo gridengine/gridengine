@@ -242,7 +242,7 @@ job_move_first_pending_to_running(lListElem **pending_job, lList **splitted_jobs
    /*
     * Remove pending job if there are no pending tasks anymore
     */
-   if (!job_has_pending_tasks(*pending_job)) {
+   if (job_count_pending_tasks(*pending_job, false)==0) {
       lDechainElem(*(splitted_jobs[SPLIT_PENDING]), *pending_job);
       lFreeElem(pending_job);
       ret = true;

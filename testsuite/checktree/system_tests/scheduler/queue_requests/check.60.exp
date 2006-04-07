@@ -208,6 +208,10 @@ proc scheduler_queue_requests {scenario {parallel 0}} {
    set job_id [submit_job "$options $ts_config(product_root)/examples/jobs/sleeper.sh 60"]
    wait_for_jobstart $job_id "" 60
    set default_duration [scheduler_queue_requests_sched_time]
+   if {$default_duration == 0.0} {
+      set default_duration 0.01
+   }
+   delete_job $job_id 1
 
    # build queue requests
    set queue_request_list {}

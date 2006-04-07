@@ -136,8 +136,15 @@ proc issue_1933_test {} {
 
    if { [ string first "QERROR" $output ] <= 0  } {
       add_proc_error "issue_1933_test" -1 "qstat printed QERROR never"
-   } elseif { [ string first "QERROR" $output ] != [ string last "QERROR" $output ] } {
-      add_proc_error "issue_1933_test" -1 "Issue 1933 present: qstat printed QERROR for one queue instance multiple times"
+   } else {
+      if { [ string first "QERROR" $output ] != [ string last "QERROR" $output ] } {
+         set message "Issue 1933 present: qstat printed QERROR for one queue instance multiple times"
+         if {$ts_config(gridengine_version) <= 60} {
+            add_proc_error "issue_1933_test" -3 "$message\nnot fixed for 5.3 and 6.0"
+         } else {
+            add_proc_error "issue_1933_test" -1 $message
+         }
+      }
    }
 
    set_error 0 "ok"

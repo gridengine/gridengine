@@ -267,6 +267,11 @@ proc install_qmaster {} {
           continue
        }
 
+       -i $sp_id $DNS_DOMAIN_QUESTION {
+          send -i $sp_id "\n"
+          continue
+       }
+
        -i $sp_id "o you want to recreate your SGE CA infrastructure" { 
           puts $CHECK_OUTPUT "\n -->testsuite: sending >y<(1)"
           if {$do_log_output == 1} {

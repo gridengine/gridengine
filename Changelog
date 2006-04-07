@@ -1,3 +1,6 @@
+JG-2006-04-07-0: Testsuite: Minor fixes and cleanup.
+                 Review:    RD
+
 RD-2006-04-06-0: Bugfix:    execd on windows can't to connect to qmaster
                             (introduced by security enhancm. RD-2006-03-17-0)
                  Review:    MD

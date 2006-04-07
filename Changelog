@@ -1,3 +1,6 @@
+MD-2006-04-07-0: Testsuite: Issue_1330 test. Check for existing bdb spooldir
+                 Review:    JG
+
 JG-2006-04-07-0: Testsuite: Minor fixes and cleanup.
                  Review:    RD
 

@@ -155,7 +155,14 @@ proc write_autoinst_config { filename host { do_cleanup 1 } } {
    set bdb_server $ts_config(bdb_server)
    if {$bdb_server == "none"} {
       set db_dir [get_bdb_spooldir $ts_config(master_host) 1]
+      # deleting berkeley db spool dir. autoinstall will stop, if
+      # bdb spooldir exists.
+      if {[file isdirectory "$db_dir"] == 1} {
+         delete_directory "$db_dir"
+      }
    } else {
+      # in this case, the berkeley db rpc server spool dir will be removed,
+      # by rpc server install procedure
       set db_dir [get_bdb_spooldir $bdb_server 1]
    }
    puts $CHECK_OUTPUT "db_dir is $db_dir"

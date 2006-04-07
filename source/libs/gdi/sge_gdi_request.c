@@ -408,7 +408,7 @@ int sge_gdi_multi_sync(lList **alpp, int mode, u_long32 target, u_long32 cmd,
    /* 
    ** user info
    */
-   uid = getuid();
+   uid = geteuid();
    if (sge_uid2user(uid, username, sizeof(username), MAX_NIS_RETRIES)) {
       SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_FUNC_GETPWUIDXFAILED_IS , 
               (int)uid, strerror(errno)));
@@ -426,7 +426,7 @@ int sge_gdi_multi_sync(lList **alpp, int mode, u_long32 target, u_long32 cmd,
       }
    }
 #endif
-   gid = getgid();
+   gid = getegid();
    if (sge_gid2group(gid, groupname, sizeof(groupname), 
          MAX_NIS_RETRIES)) {
       SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_GETGRGIDXFAILEDERRORX_U,

@@ -338,10 +338,16 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
       }
    }
 
+/* NEED A LOCK FROM HERE ON */
+   MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE), monitor);
+
    {
-      /* set automatic default values */
-      job_number = sge_get_job_number(monitor);
+      /* get new job numbers until we find one that is not yet used */
+      do {
+         job_number = sge_get_job_number(monitor);
+      } while (job_list_locate(Master_Job_List, job_number));
       lSetUlong(jep, JB_job_number, job_number);
+
       /*
       ** with interactive jobs, JB_exec_file is not set
       */
@@ -349,22 +355,22 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
          sprintf(str, "%s/%d", EXEC_DIR, (int)job_number);
          lSetString(jep, JB_exec_file, str);
       }
+      
    }  
 
    if (!lGetString(jep, JB_job_name)) {        /* look for job name */
       ERROR((SGE_EVENT, MSG_JOB_NOJOBNAME_U, sge_u32c(job_number)));
       answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+      SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
       DEXIT;
       return STATUS_EUNKNOWN;
    }
 
    if (job_verify_name(jep, alpp, "this job")) {
+      SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
       DEXIT;
       return STATUS_EUNKNOWN;
    }
-   
-/* NEED A LOCK FROM HERE ON */
-   MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE), monitor);
    
    /* check max_jobs */
    if (job_list_register_new_job(Master_Job_List, mconf_get_max_jobs(), 0)) {/*read*/
@@ -823,8 +829,7 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
    }
    
    /* add into job list */
-   if (job_list_add_job(&Master_Job_List, "Master_Job_List", lCopyElem(jep), 
-                        1)) {
+   if (job_list_add_job(&Master_Job_List, "Master_Job_List", lCopyElem(jep), 0)) {
       answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR);
       SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
       DEXIT;
@@ -3718,6 +3723,7 @@ static u_long32 sge_get_job_number(monitoring_t *monitor)
    if (is_store_job) {
       sge_store_job_number(NULL, monitor);
    }
+
   
    DEXIT;
    return job_nr;
@@ -3757,23 +3763,28 @@ FCLOSE_ERROR:
    return;
 }
 
-void sge_store_job_number(te_event_t anEvent, monitoring_t *monitor) {
+void sge_store_job_number(te_event_t anEvent, monitoring_t *monitor) 
+{
    FILE *fp = NULL;
    u_long32 job_nr = 0;
    bool changed = false;
    DENTER(TOP_LAYER, "store_job_number");
    
-   sge_mutex_lock("job_number_mutex", "sge_init_job_number", __LINE__, 
+   sge_mutex_lock("job_number_mutex", "sge_store_job_number", __LINE__, 
                   &job_number_control.job_number_mutex);
+
    if (job_number_control.changed) {
       job_nr = job_number_control.job_number;
       job_number_control.changed = false;
       changed = true;
    }   
-   sge_mutex_unlock("job_number_mutex", "sge_init_job_number", __LINE__, 
+
+   sge_mutex_unlock("job_number_mutex", "sge_store_job_number", __LINE__, 
                   &job_number_control.job_number_mutex);     
-  
-   if(changed) {
+
+   /* here we got a race condition that can (very unlikely)
+      cause concurrent writing of the sequence number file  */
+   if (changed) {
       if (!(fp = fopen(SEQ_NUM_FILE, "w"))) {
          ERROR((SGE_EVENT, MSG_JOB_NOSEQFILECREATE_SS, SEQ_NUM_FILE, strerror(errno)));
       } else {
@@ -3781,6 +3792,7 @@ void sge_store_job_number(te_event_t anEvent, monitoring_t *monitor) {
          FCLOSE(fp);
       }   
    }
+
    DEXIT;
    return;
 FCLOSE_ERROR:

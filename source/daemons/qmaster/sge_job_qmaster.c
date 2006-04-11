@@ -345,10 +345,18 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
       }
    }
 
+/* NEED A LOCK FROM HERE ON */
    {
-      /* set automatic default values */
-      job_number = sge_get_job_number(monitor);
+      object_description *object_base = object_type_get_object_description();
+
+      MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE), monitor);
+      
+      /* get new job numbers until we find one that is not yet used */
+      do {
+         job_number = sge_get_job_number(monitor);
+      } while (job_list_locate(*object_base[SGE_TYPE_JOB].list, job_number));
       lSetUlong(jep, JB_job_number, job_number);
+
       /*
       ** with interactive jobs, JB_exec_file is not set
       */
@@ -356,55 +364,50 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
          sprintf(str, "%s/%d", EXEC_DIR, (int)job_number);
          lSetString(jep, JB_exec_file, str);
       }
-   }  
 
-   if (!lGetString(jep, JB_job_name)) {        /* look for job name */
-      ERROR((SGE_EVENT, MSG_JOB_NOJOBNAME_U, sge_u32c(job_number)));
-      answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-      DEXIT;
-      return STATUS_EUNKNOWN;
-   }
-
-   if (job_verify_name(jep, alpp, "this job")) {
-      DEXIT;
-      return STATUS_EUNKNOWN;
-   }
-  
-   /*
-    * Is the max. size of array jobs exceeded?
-    */
-   {
-      u_long32 max_aj_tasks = mconf_get_max_aj_tasks();
-      if (max_aj_tasks > 0) {
-         lList *range_list = lGetList(jep, JB_ja_structure);
-         u_long32 submit_size = range_list_get_number_of_ids(range_list);
-      
-         if (submit_size > max_aj_tasks) {
-            ERROR((SGE_EVENT, MSG_JOB_MORETASKSTHAN_U, sge_u32c(max_aj_tasks)));
-            answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-            DEXIT;
-            return STATUS_EUNKNOWN;
-         } 
+      if (!lGetString(jep, JB_job_name)) {        /* look for job name */
+         ERROR((SGE_EVENT, MSG_JOB_NOJOBNAME_U, sge_u32c(job_number)));
+         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+         SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
+         DEXIT;
+         return STATUS_EUNKNOWN;
       }
-   }
-   
-   { /* JB_context contains a raw context list, which needs to be transformed into
-        a real context. For that, we have to take out the raw context and add it back
-        again, processed. */
-   
-      lList* temp = NULL;
-      lXchgList(jep, JB_context, &temp); 
-      set_context(temp, jep);
-      lFreeList(&temp);
-   }
-   
-   
-/* NEED A LOCK FROM HERE ON */
-   {
-      object_description *object_base = object_type_get_object_description();
 
-      MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE), monitor);
+      if (job_verify_name(jep, alpp, "this job")) {
+         SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
+         DEXIT;
+         return STATUS_EUNKNOWN;
+      }
+     
+      /*
+       * Is the max. size of array jobs exceeded?
+       */
+      {
+         u_long32 max_aj_tasks = mconf_get_max_aj_tasks();
+         if (max_aj_tasks > 0) {
+            lList *range_list = lGetList(jep, JB_ja_structure);
+            u_long32 submit_size = range_list_get_number_of_ids(range_list);
+         
+            if (submit_size > max_aj_tasks) {
+               ERROR((SGE_EVENT, MSG_JOB_MORETASKSTHAN_U, sge_u32c(max_aj_tasks)));
+               answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+               SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
+               DEXIT;
+               return STATUS_EUNKNOWN;
+            } 
+         }
+      }
       
+      { /* JB_context contains a raw context list, which needs to be transformed into
+           a real context. For that, we have to take out the raw context and add it back
+           again, processed. */
+      
+         lList* temp = NULL;
+         lXchgList(jep, JB_context, &temp); 
+         set_context(temp, jep);
+         lFreeList(&temp);
+      }
+   
       /* check max_jobs */
       if (job_list_register_new_job(*object_base[SGE_TYPE_JOB].list, mconf_get_max_jobs(), 0)) {/*read*/
          INFO((SGE_EVENT, MSG_JOB_ALLOWEDJOBSPERCLUSTER, sge_u32c(mconf_get_max_jobs())));
@@ -849,8 +852,7 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
       }
       
       /* add into job list */
-      if (job_list_add_job(object_base[SGE_TYPE_JOB].list, "Master_Job_List", lCopyElem(jep), 
-                           1)) {
+      if (job_list_add_job(object_base[SGE_TYPE_JOB].list, "Master_Job_List", lCopyElem(jep), 0)) {
          answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR);
          SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
          DEXIT;
@@ -3798,16 +3800,18 @@ void sge_store_job_number(te_event_t anEvent, monitoring_t *monitor) {
 
    DENTER(TOP_LAYER, "store_job_number");
    
-   sge_mutex_lock("job_number_mutex", "sge_init_job_number", __LINE__, 
+   sge_mutex_lock("job_number_mutex", "sge_store_job_number", __LINE__, 
                   &job_number_control.job_number_mutex);
    if (job_number_control.changed) {
       job_nr = job_number_control.job_number;
       job_number_control.changed = false;
       changed = true;
    }   
-   sge_mutex_unlock("job_number_mutex", "sge_init_job_number", __LINE__, 
+   sge_mutex_unlock("job_number_mutex", "sge_store_job_number", __LINE__, 
                   &job_number_control.job_number_mutex);     
-  
+ 
+   /* here we got a race condition that can (very unlikely)
+      cause concurrent writing of the sequence number file  */ 
    if (changed) {
       FILE *fp = fopen(SEQ_NUM_FILE, "w");
 

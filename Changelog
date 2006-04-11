@@ -1,3 +1,9 @@
+AH-2006-04-11-1: Bugfix:    Job sequence number got screwed up when
+                            restarting qmaster daemon
+                 Issue:     2028
+                 Bugtraq:   6411230
+                 Review:    RD,JG
+
 JG-2006-04-11-0: Testsuite: Added test for issue 2028.
                  Review:    RD
 

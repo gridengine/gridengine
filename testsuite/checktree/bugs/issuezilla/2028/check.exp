@@ -1,0 +1,174 @@
+#!/vol2/TCL_TK/glinux/bin/expect
+#___INFO__MARK_BEGIN__
+##########################################################################
+#
+#  The Contents of this file are made available subject to the terms of
+#  the Sun Industry Standards Source License Version 1.2
+#
+#  Sun Microsystems Inc., March, 2001
+#
+#
+#  Sun Industry Standards Source License Version 1.2
+#  =================================================
+#  The contents of this file are subject to the Sun Industry Standards
+#  Source License Version 1.2 (the "License"); You may not use this file
+#  except in compliance with the License. You may obtain a copy of the
+#  License at http://gridengine.sunsource.net/Gridengine_SISSL_license.html
+#
+#  Software provided under this License is provided on an "AS IS" basis,
+#  WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING,
+#  WITHOUT LIMITATION, WARRANTIES THAT THE SOFTWARE IS FREE OF DEFECTS,
+#  MERCHANTABLE, FIT FOR A PARTICULAR PURPOSE, OR NON-INFRINGING.
+#  See the License for the specific provisions governing your rights and
+#  obligations concerning the Software.
+#
+#  The Initial Developer of the Original Code is: Sun Microsystems, Inc.
+#
+#  Copyright: 2001 by Sun Microsystems, Inc.
+#
+#  All Rights Reserved.
+#
+##########################################################################
+#___INFO__MARK_END__
+
+# define global variable in this namespace
+global check_name 
+global check_category 
+global check_description 
+global check_needs
+global check_functions 
+global check_errno 
+global check_errstr 
+global check_highest_level
+global check_init_level_procedure
+global check_root_access_needs
+global env
+
+set check_root_access_needs "yes"
+
+# define a level initialization procedure:
+set check_init_level_procedure "issue_2028_init_level"
+
+# define test's name and run level descriptions
+set check_name            "issue_2028"
+set check_category        "COMPATIBILITY SYSTEM VERIFIED"
+set check_highest_level   0
+set check_description(0)  "check job seqno wraparound"
+
+# define test's dependencies
+set check_needs           "init_core_system" 
+
+# setup and cleanup functions
+set check_setup_function issue_2028_setup
+set check_cleanup_function issue_2028_cleanup
+
+
+
+# define test's procedure order
+set check_functions ""
+lappend check_functions "issue_2028_test"
+
+proc issue_2028_init_level {} {
+   global CHECK_ACT_LEVEL
+
+   switch -- $CHECK_ACT_LEVEL {
+      "0" {
+         return 0
+      }
+   } 
+
+   return -1  ;# no other level 
+}
+
+# -------- local test procedures: initialization------------------------------
+
+
+proc issue_2028_setup  {} {
+   global ts_config CHECK_OUTPUT CHECK_USER
+   global issue_2028_backup_seqno
+
+   # backup jobseqnum
+   # we have to shutdown qmaster to force it to write the jobseqnum file
+   set qmaster_spool_dir [get_qmaster_spool_dir]
+   shutdown_qmaster $ts_config(master_host) $qmaster_spool_dir
+
+   set issue_2028_backup_seqno [get_jobseqnum]
+
+   # restart qmaster
+   startup_qmaster 0
+
+   set_error 0 "ok"
+}
+
+proc issue_2028_cleanup  {} {
+   global ts_config CHECK_OUTPUT CHECK_USER
+   global issue_2028_backup_seqno
+
+   # cleanup cluster
+   delete_all_jobs
+   wait_for_end_of_all_jobs 60
+
+   # make sure all jobs left qmaster
+   sleep 30
+
+   # shutdown qmaster and restore jobseqnum
+   set qmaster_spool_dir [get_qmaster_spool_dir]
+   shutdown_qmaster $ts_config(master_host) $qmaster_spool_dir
+
+   if {$issue_2028_backup_seqno >= 0} {
+      set_jobseqnum $issue_2028_backup_seqno
+   }
+
+   # restart qmaster
+   startup_qmaster 0
+
+   set_error 0 "ok"
+}
+
+proc issue_2028_submit {scenario {jobcount 5}} {
+   global ts_config
+
+   set id_list {}
+
+   set job_args "-o /dev/null -j y $ts_config(product_root)/examples/jobs/sleeper.sh 600"
+   for {set i 0} {$i < $jobcount} {incr i} {
+      set job_id [submit_job $job_args]
+      if {$job_id > 0} {
+         lappend id_list $job_id
+      } else {
+         break
+      }
+   }
+
+   return $id_list
+}
+
+proc issue_2028_test {} {
+   global ts_config CHECK_OUTPUT CHECK_USER
+
+   set qmaster_spool_dir [get_qmaster_spool_dir]
+
+   # shutdown qmaster
+   shutdown_qmaster $ts_config(master_host) $qmaster_spool_dir
+
+   # set jobseqnum file shortly before wraparound
+   set max_jobseqnum 9999999
+   set_jobseqnum [expr $max_jobseqnum - 2]
+
+   # startup qmaster
+   startup_qmaster 0
+
+   # submit some jobs, force wraparound
+   set id_list1 [issue_2028_submit "at wraparound"]
+
+   # shutdown and restart qmaster
+   shutdown_qmaster $ts_config(master_host) $qmaster_spool_dir
+   startup_qmaster 0
+
+   # submit some jobs - must be successfull
+   set id_list2 [issue_2028_submit "after wraparound and qmaster restart"]
+
+   set_error 0 "ok"
+}
+
+

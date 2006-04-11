@@ -3478,3 +3478,36 @@ proc get_fstype {path {host ""}} {
    return $ret
 }
 
+proc get_jobseqnum {} {
+   global ts_config CHECK_OUTPUT CHECK_USER
+
+   set ret -1
+
+   set qmaster_spool_dir [get_qmaster_spool_dir]
+
+   set output [start_remote_prog $ts_config(master_host) $CHECK_USER "cat" "$qmaster_spool_dir/jobseqnum"]
+   if {$prg_exit_state == 0} {
+      set ret [string trim $output]
+   } else {
+      add_proc_error "get_jobseqnum" -1 "retrieving job sequence number failed:\n$output"
+   }
+
+   return $ret
+}
+
+proc set_jobseqnum {jobseqnum} {
+   global ts_config CHECK_OUTPUT CHECK_USER
+
+   set ret 0
+   set qmaster_spool_dir [get_qmaster_spool_dir]
+
+   set output [start_remote_prog $ts_config(master_host) $CHECK_USER "echo" "$jobseqnum >$qmaster_spool_dir/jobseqnum"]
+
+   if {$prg_exit_state == 0} {
+      set ret 1
+   } else {
+      add_proc_error "set_jobseqnum" -1 "setting job sequence number failed:\n$output"
+   }
+   
+   return $ret
+}

@@ -1,3 +1,6 @@
+JG-2006-04-11-0: Testsuite: Added test for issue 2028.
+                 Review:    RD
+
 MD-2006-04-07-0: Testsuite: Issue_1330 test. Check for existing bdb spooldir
                  Review:    JG
 

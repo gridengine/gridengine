@@ -32,6 +32,7 @@
 
 #include <unistd.h>
 #include <stdio.h>
+#include <pwd.h>
 
 #ifdef SECURE
 #include <netinet/in.h>
@@ -48,6 +49,7 @@
 #include <openssl/err.h>
 #include <openssl/pem.h>
 #include <openssl/ssl.h>
+#include <openssl/rand.h>
 
 #include "uti/sge_arch.h"
 #include "uti/sge_log.h"
@@ -58,12 +60,14 @@
 #include "uti/setup_path.h"
 #include "uti/sge_prog.h"
 #include "uti/sge_stdio.h"
+#include "uti/sge_string.h"
 #if defined(DEFINE_SGE_PASSWD_MAIN)
 #include "sgermon.h"
 #endif
 
 #include "sge_passwd.h"
 #include "msg_utilbin.h"
+#include "msg_gdilib.h"
 
 #if !defined(DEFINE_SGE_PASSWD_MAIN)
 #define DENTER(x,y)
@@ -88,6 +92,7 @@ static EVP_PKEY* (*shared_ssl_func__X509_get_pubkey)(X509 *x);
 static char* (*shared_ssl_func__PEM_ASN1_read)(char *(*d2i)(),const char *name,FILE *fp,char **x, pem_password_cb *cb, void *u);
 EVP_PKEY* (*shared_ssl_func__d2i_AutoPrivateKey)(EVP_PKEY **a, unsigned char **pp, long length);
 static X509* (*shared_ssl_func__d2i_X509)(X509 **a, unsigned char **in, long len);
+static int (*shared_ssl_func__RAND_load_file)(const char *filename, long max_bytes);
 
 #define shared_ssl_func__EVP_OpenUpdate(a,b,c,d,e) shared_ssl_func__EVP_DecryptUpdate(a,b,c,d,e)
 #define shared_ssl_func__EVP_SealUpdate(a,b,c,d,e) shared_ssl_func__EVP_EncryptUpdate(a,b,c,d,e)
@@ -148,6 +153,7 @@ sge_init_shared_ssl_lib(void)
             "PEM_ASN1_read",
             "d2i_AutoPrivateKey",
             "d2i_X509",
+            "RAND_load_file",
             NULL
          };
 
@@ -172,6 +178,8 @@ sge_init_shared_ssl_lib(void)
 
             &shared_ssl_func__d2i_AutoPrivateKey,
             &shared_ssl_func__d2i_X509,
+
+            &shared_ssl_func__RAND_load_file,
 
             NULL
          };
@@ -221,6 +229,8 @@ sge_init_shared_ssl_lib(void)
 
    shared_ssl_func__d2i_AutoPrivateKey = d2i_AutoPrivateKey,
    shared_ssl_func__d2i_X509 = d2i_X509,
+
+   shared_ssl_func__RAND_load_file = RAND_load_file,
    ret = 0;
 #endif
    DEXIT;
@@ -252,6 +262,7 @@ sge_done_shared_ssl_lib(void)
       shared_ssl_func__PEM_ASN1_read = NULL;
       shared_ssl_func__d2i_AutoPrivateKey = NULL;
       shared_ssl_func__d2i_X509 = NULL;
+      shared_ssl_func__RAND_load_file = NULL;
       dlclose(shared_ssl_lib);
       shared_ssl_lib = NULL;
       ret = 0;
@@ -461,6 +472,41 @@ buffer_write_to_stdout(const char *buffer, size_t length)
 
 #endif
 
+int sge_ssl_get_rand_file_path(char *rand_file)
+{
+   const char *key = getenv("SGE_RANDFILE");
+   DENTER(TOP_LAYER, "sge_ssl_get_rand_file_path");
+   
+   if (key != NULL) {
+      sge_strlcpy(rand_file, key, SGE_PATH_MAX);
+   } else {
+      const char *ca_local_dir = "/var/sgeCA"; 
+      const char *sge_cell = sge_get_default_cell();
+      const char *user_key = "private/rand.seed";
+      const char *sge_qmaster_port = getenv("SGE_QMASTER_PORT");
+
+      if (sge_qmaster_port != NULL) { 
+         snprintf(rand_file, SGE_PATH_MAX, "%s/port%s/%s/%s", 
+                             ca_local_dir, sge_qmaster_port, sge_cell, user_key);
+      } else {
+         snprintf(rand_file, SGE_PATH_MAX, "%s/sge_qmaster/%s/%s", 
+                             ca_local_dir, sge_cell, user_key);
+      }
+   }
+   DEXIT;
+   return 0;
+}
+
+
+int sge_ssl_rand_load_file(char *rand_file, int max_byte)
+{
+   int ret;
+
+   ret = shared_ssl_func__RAND_load_file(rand_file, max_byte);
+
+   return ret;
+}
+
 void 
 buffer_encrypt(const char *buffer_in, size_t buffer_in_length, 
                char **buffer_out, size_t *buffer_out_size, 
@@ -474,6 +520,8 @@ buffer_encrypt(const char *buffer_in, size_t buffer_in_length,
 	EVP_PKEY *pubKey[1];
 	char ebuf[512];
    int ret = 0;
+   char rand_file[SGE_PATH_MAX];
+   char err_str[4096];
 
    DENTER(TOP_LAYER, "buffer_encrypt");
    pubKey[0] = read_public_key(sge_get_file_pub_key());
@@ -492,6 +540,23 @@ buffer_encrypt(const char *buffer_in, size_t buffer_in_length,
       DEXIT;
 	   exit(1);
 	}
+
+   /*
+    * Read rand.seed file
+    */
+   sge_ssl_get_rand_file_path(rand_file);
+   ret = sge_ssl_rand_load_file(rand_file, 2048);
+
+   if(ret <= 0) {
+      sprintf(err_str, MSG_PWD_CANTLOADRANDFILE_SS, 
+              prognames[SGE_PASSWD], rand_file);
+
+#ifdef DEFINE_SGE_PASSWD_MAIN
+      fprintf(stderr, err_str);
+#endif
+      DEXIT;
+      return;
+   }
 
  	memset(iv, '\0', sizeof(iv));
 #if 0
@@ -554,6 +619,7 @@ buffer_decrypt(const char *buffer_in, size_t buffer_in_length,
 	EVP_PKEY *privateKey;
    char *curr_ptr = (char*)buffer_in;
    const char *file_priv_key=NULL;
+   char rand_file[SGE_PATH_MAX];
    int ret = 0;
 
    DENTER(TOP_LAYER, "buffer_decrypt");
@@ -594,6 +660,23 @@ buffer_decrypt(const char *buffer_in, size_t buffer_in_length,
       DEXIT;
       return 1;
 	}
+
+   /*
+    * Read rand.seed file
+    */
+   sge_ssl_get_rand_file_path(rand_file);
+   ret = sge_ssl_rand_load_file(rand_file, 2048);
+
+   if(ret <= 0) {
+      sprintf(err_str, MSG_PWD_CANTLOADRANDFILE_SS, 
+              prognames[SGE_PASSWD], rand_file);
+
+#ifdef DEFINE_SGE_PASSWD_MAIN
+      fprintf(stderr, err_str);
+#endif
+      DEXIT;
+      return 1;
+   }
 
    memcpy(encryptKey, curr_ptr, ekeylen);
    curr_ptr += ekeylen;

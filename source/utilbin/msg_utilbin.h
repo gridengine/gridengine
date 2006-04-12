@@ -205,6 +205,7 @@
 #define MSG_PWD_OPEN_SGEPASSWD_SSI  _MESSAGE(57325,         _(SFN": can't open sgepasswd file: %s (%d)"))
 #define MSG_PWD_WRITE_SGEPASSWD_SSI _MESSAGE(57326,         _(SFN": can't write to sgepasswd file: %s (%d)"))
 #define MSG_PWD_CLOSE_SGEPASSWD_SSI _MESSAGE(57327,         _(SFN": error closing sgepasswd file: %s (%d)"))
+#define MSG_PWD_CANTLOADRANDFILE_SS _MESSAGE(57328,         _(SFN": can't load rand file %s"))
 
 
 #endif /* __MSG_UTILBIN_H */

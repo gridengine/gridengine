@@ -1,3 +1,10 @@
+HP-2006-04-12-0: Bugfix:    sgepasswd encryption didn't work on some architectures
+                            because rand.seed file wasn't loaded automatically.
+                 Issue:     ToDo
+                 Bugtraq:   ToDo
+                 Changed:   sgepasswd, sge_shepherd
+                 Review:    RD
+
 RH-2006-04-12-0: Bugfix:    The man page QUEUE_CONF(5) does not describe the memory specifier 'G'
                  Issue:     2029
                  Bugtraq:   6411660

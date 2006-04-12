@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: queue_conf.5,v $     Last Update: $Date: 2004/11/12 15:40:06 $     Revision: $Revision: 1.21 $
+.\" $RCSfile: queue_conf.5,v $     Last Update: $Date: 2006/04/12 07:33:46 $     Revision: $Revision: 1.22 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QUEUE_CONF 5 "$Date: 2004/11/12 15:40:06 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH QUEUE_CONF 5 "$Date: 2006/04/12 07:33:46 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 queue_conf \- xxQS_NAMExx queue configuration file format
@@ -55,9 +55,10 @@ would be zero it can be left out but the separating colon must remain
 .PP
 Memory specifiers are positive decimal, hexadecimal or octal integer constants
 which may be followed by a multiplier letter. Valid multiplier letters are
-k, K, m and M, where k means multiply the value by 1000, K multiply by
-1024, m multiply by 1000*1000 and M multiplies by 1024*1024. If no
-multiplier is present, the value is just counted in bytes.
+k, K, m, M, g and G, where k means multiply the value by 1000, K multiply by
+1024, m multiply by 1000*1000, M multiplies by 1024*1024, g multiply by 
+1000*1000*1000 and G multiply by 1024*1024*1024. If no multiplier is present, 
+the value is just counted in bytes.
 .PP
 If more than one host is specified under 'hostlist' (by means of a
 list of hosts or with host groups) it can be desirable to specify

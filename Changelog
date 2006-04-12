@@ -1,3 +1,8 @@
+RH-2006-04-12-0: Bugfix:    The man page QUEUE_CONF(5) does not describe the memory specifier 'G'
+                 Issue:     2029
+                 Bugtraq:   6411660
+                 Review:    RD
+
 AH-2006-04-11-0: Bugfix:    Job sequence number got screwed up when 
                             restarting qmaster daemon
                  Issue:     2028

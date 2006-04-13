@@ -37,7 +37,7 @@ usage.
 so that they apply to several kinds of resources, several kinds of
 resource consumers, to all jobs in the cluster and to combinations of
 consumers. In this context, "resources" are any defined complex
-attribute (see complex(5) known by the Grid Engine configuration. For
+attribute (see complex(5)) known by the Grid Engine configuration. For
 example this can be slots, arch, mem_total, num_proc, swap_total or any
 custom-defined resource like compiler_license.
 Resource consumers are (per) users, (per) queues, (per) hosts, (per)
@@ -473,10 +473,10 @@ reference) It's not allowed to reference a complex for a sum of scopes
 </ul>
 <p>In principle all INT or DOUBLE kind of complex values could be
 referenced but due to time constrains the first implementation allows
-only $num_proc in combination with a expanded host list.
+only $num_proc in combination with an expanded host list.
 </p><p>
 </p><h6><a name="Limitation_Rules_and_Limitation"> </a><a name="Limitation_Rules_and_Limitation_"> </a> Limitation Rules and Limitation Rule Set Interaction </h6>
-<p>In practice administrators defines some global limits and some
+<p>In practice administrators define some global limits and some
 limits that only apply for some resource consumers. These limitations
 rules are equitable. But in some cases it's necessary to define
 exceptions for some resource consumers. These limitations rules are not

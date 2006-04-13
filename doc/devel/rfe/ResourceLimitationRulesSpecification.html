@@ -221,8 +221,8 @@ cluster configuration like cluster queues, hosts or projects.
 </p><p>
 Deliberate use of restrictions in first step of implementation:
 </p><ul>
-<li> Limits are count per task as done in the current implementation.
-For example if a pe job got 10 slots he will consume 10 licenses.
+<li> Limits are counted per task as done in the current implementation.
+For example if a pe job got 10 slots it will consume 10 licenses.
 </li>
 <li> Limitation can only be done for fixed and consumable resources, not for load values. <br>
 future enhancement: see "Migration Path". That means to have resource
@@ -312,11 +312,11 @@ rulesets: (ruleset)*
 <p>
 </p><h6><a name="users"> </a> users </h6>Contains a comma separated
 list of UNIX users or ACLs (see access_list(5)). This parameter filters
-for jobs by a user in in the list or one of the ACLs in the list. Any
+for jobs by a user in the list or one of the ACLs in the list. Any
 user not in the list will not be considered for the limitation rule.
 The default value is '*' which means any user.
 An ACL is differentiated from a UNIX user name by prefixing the ACL
-name with an '@' sign. To exclude an user or ACL from the rule the name
+name with an '@' sign. To exclude a user or ACL from the rule the name
 can be prefixed with the '!' sign. Defined UNIX user or ACL names must
 not known in the Grid Engine Configuration.
 <p>
@@ -347,7 +347,7 @@ parameter filters for jobs requesting a host of the list or a host
 contained in the hostgroup. Any host not in the list will not be
 considered for the limitation rule. The default value is '*' which
 means any hosts.
-To exclude an host or hostgroup from the rule, the name can be prefixed
+To exclude a host or hostgroup from the rule, the name can be prefixed
 with the '!' sign.
 <p>
 </p><h5><a name="Basic_Configuration"> </a> Basic Configuration </h5>
@@ -386,7 +386,7 @@ If the administrator wants to limit each of the two users to 5g virtual_free he 
 </td></tr></tbody></table>
 <p>
 This is very cumbersome for large numbers of users or user groups. For
-this case a rule can be defined with a expanded list. This would look
+this case a rule can be defined with an expanded list. This would look
 like:
 </p><table bgcolor="#ffffff" border="1" cellpadding="3" cellspacing="1" width="100%"><tbody><tr><td>
 <pre>  limit users `roland, andre` to virtual_free=5g
@@ -425,7 +425,7 @@ the rule will not be effective for user "roland"
 </p><h6><a name="Dynamical_Limits"> </a> Dynamical Limits </h6>
 <p>Limitation rules always define a maximal value of a resource that
 can be used. In the most cases these values are static and equal for
-all matching filter scopes. If administrators wants different rule
+all matching filter scopes. If administrators want different rule
 limits on different scopes then they have to define multiple rules;
 this leads to a duplication of nearly identical rules. With the concept
 of dynamical limits this kind of duplication can be avoided.
@@ -465,7 +465,7 @@ To be able to set the limitation to a well-defined value some prerequisites must
 referenced complex value definition (for example slots=INT,
 num_proc=INT)
 </li>
-<li> The limitation rule must be defined as a expanded list for the
+<li> The limitation rule must be defined as an expanded list for the
 layer the complex is defined. (for example hosts `*` for $num_proc
 reference) It's not allowed to reference a complex for a sum of scopes
 (for example hosts * for $num_proc).
@@ -642,7 +642,7 @@ Limitation rule set "rule_set_1" already exists
 </p><ul>
 <li> <em>-mrls [name] (modify LRS configuration)</em>
 </li>
-</ul>Retrieves the the whole rules or only the specified current
+</ul>Retrieves the whole rules or only the specified current
 configuration for the limitation rule set (LRS), executes an editor
 (either vi(1) or the editor indicated by the EDITOR environment
 variable) and registers the new configuration with the sge_qmaster(8).

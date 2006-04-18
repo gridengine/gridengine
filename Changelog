@@ -1,3 +1,6 @@
+RD-2006-04-18-0: CVS        Created V60u8_TAG
+---------------------------------------------
+
 CR-2006-04-18-0: Bugfix:    added fix for aix and hp in ssl module
                  Changed:   cl_ssl_framework.c => commlib
                  Review:    RD

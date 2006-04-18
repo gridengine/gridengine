@@ -115,6 +115,28 @@
 #define cl_com_ssl_func__SSL_get_options(ssl) \
         cl_com_ssl_func__SSL_ctrl((ssl),SSL_CTRL_OPTIONS,0,NULL)
 
+
+/*
+ * bugfix for HP and AIX:
+ * =====================
+ *
+ * On some operating systems the open ssl error may return an
+ * error when calling ssl functions from a thread. A second call
+ * to the same function will not result in SSL_ERROR_SYSCALL ssl error.
+ * 
+ * Therefore the SSL_ERROR_SYSCALL error is ignored if 
+ *    CL_COM_ENABLE_SSL_THREAD_RETRY_BUGFIX
+ * is defined. 
+ *
+ * If there would be a real error the commlib will remove the connection
+ * after commlib case specific timeouts.
+ *
+ */
+#if defined(HPUX) || defined(AIX)
+#define CL_COM_ENABLE_SSL_THREAD_RETRY_BUGFIX
+#endif
+
+
 /* ssl function wrappers set by dlopen() */
 static void                 (*cl_com_ssl_func__CRYPTO_set_id_callback)              (unsigned long (*id_function)(void));
 static void                 (*cl_com_ssl_func__CRYPTO_set_locking_callback)         (void (*locking_function)(int mode, int n, const char *file, int line));
@@ -2550,6 +2572,9 @@ int cl_com_ssl_setup_connection(cl_com_connection_t**          connection,
    }
    memset(com_private->ssl_crl_data, 0, sizeof(cl_ssl_verify_crl_data_t));
    
+#ifdef CL_COM_ENABLE_SSL_THREAD_RETRY_BUGFIX
+   CL_LOG(CL_LOG_WARNING,"ignoring SSL_ERROR_SYSCALL for this platform!");
+#endif
    return CL_RETVAL_OK;
 }
 
@@ -2630,6 +2655,11 @@ int cl_com_ssl_connection_complete_shutdown(cl_com_connection_t*  connection) {
          case SSL_ERROR_WANT_WRITE: {
             return CL_RETVAL_UNCOMPLETE_WRITE;
          }
+#ifdef CL_COM_ENABLE_SSL_THREAD_RETRY_BUGFIX
+         case SSL_ERROR_SYSCALL: {
+            return CL_RETVAL_UNCOMPLETE_READ;
+         }
+#endif
          default: {
             CL_LOG(CL_LOG_ERROR,"SSL shutdown error");
             cl_com_ssl_log_ssl_errors(__CL_FUNCTION__);
@@ -2752,6 +2782,9 @@ int cl_com_ssl_connection_complete_accept(cl_com_connection_t*  connection,
             case SSL_ERROR_WANT_READ:
             case SSL_ERROR_WANT_WRITE:
             case SSL_ERROR_WANT_ACCEPT:
+#ifdef CL_COM_ENABLE_SSL_THREAD_RETRY_BUGFIX
+            case SSL_ERROR_SYSCALL:
+#endif
                     {
                /* do it again */
                /* TODO!!! : make code for only_once == 0 */
@@ -3162,6 +3195,9 @@ int cl_com_ssl_open_connection(cl_com_connection_t* connection, int timeout, uns
             case SSL_ERROR_WANT_READ:
             case SSL_ERROR_WANT_WRITE:
             case SSL_ERROR_WANT_CONNECT:
+#ifdef CL_COM_ENABLE_SSL_THREAD_RETRY_BUGFIX
+            case SSL_ERROR_SYSCALL:
+#endif
                     {
                /* do it again */
                /* TODO!!! : make code for only_once == 0 */
@@ -4240,6 +4276,9 @@ int cl_com_ssl_write(cl_com_connection_t* connection, cl_byte_t* message, unsign
                ssl_error = cl_com_ssl_func__SSL_get_error(private->ssl_obj, data_written);
                private->ssl_last_error = ssl_error;
                switch(ssl_error) {
+#ifdef CL_COM_ENABLE_SSL_THREAD_RETRY_BUGFIX
+                  case SSL_ERROR_SYSCALL:
+#endif
                   case SSL_ERROR_WANT_READ: 
                   case SSL_ERROR_WANT_WRITE: {
                      CL_LOG_STR(CL_LOG_INFO,"ssl_error:", cl_com_ssl_get_error_text(ssl_error));
@@ -4271,6 +4310,9 @@ int cl_com_ssl_write(cl_com_connection_t* connection, cl_byte_t* message, unsign
             ssl_error = cl_com_ssl_func__SSL_get_error(private->ssl_obj, data_written);
             private->ssl_last_error = ssl_error;
             switch(ssl_error) {
+#ifdef CL_COM_ENABLE_SSL_THREAD_RETRY_BUGFIX
+               case SSL_ERROR_SYSCALL:
+#endif
                case SSL_ERROR_WANT_READ: 
                case SSL_ERROR_WANT_WRITE: {
                   CL_LOG_STR(CL_LOG_INFO,"ssl_error:", cl_com_ssl_get_error_text(ssl_error));
@@ -4395,6 +4437,9 @@ int cl_com_ssl_read(cl_com_connection_t* connection, cl_byte_t* message, unsigne
                ssl_error = cl_com_ssl_func__SSL_get_error(private->ssl_obj, data_read);
                private->ssl_last_error = ssl_error;
                switch(ssl_error) {
+#ifdef CL_COM_ENABLE_SSL_THREAD_RETRY_BUGFIX
+                  case SSL_ERROR_SYSCALL:
+#endif
                   case SSL_ERROR_WANT_READ: 
                   case SSL_ERROR_WANT_WRITE: {
                      CL_LOG_STR(CL_LOG_INFO,"ssl_error:", cl_com_ssl_get_error_text(ssl_error));
@@ -4427,6 +4472,9 @@ int cl_com_ssl_read(cl_com_connection_t* connection, cl_byte_t* message, unsigne
             private->ssl_last_error = ssl_error;
            
             switch(ssl_error) {
+#ifdef CL_COM_ENABLE_SSL_THREAD_RETRY_BUGFIX
+               case SSL_ERROR_SYSCALL:
+#endif
                case SSL_ERROR_WANT_READ: 
                case SSL_ERROR_WANT_WRITE: {
                   CL_LOG_STR(CL_LOG_INFO,"ssl_error:", cl_com_ssl_get_error_text(ssl_error));

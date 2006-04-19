@@ -1,5 +1,10 @@
-RD-2006-04-18-0: CVS        Created V60u8_TAG
+RD-2006-04-19-1: CVS        Created V60u8_TAG
 ---------------------------------------------
+
+RD-2006-04-19-0: Bugfix:    fixed qmon for lx24-ia64
+                            disabled optimization because compiler is broken
+                 Changed:   all
+                 Review:    AA, JG
 
 CR-2006-04-18-0: Bugfix:    added fix for aix and hp in ssl module
                  Changed:   cl_ssl_framework.c => commlib

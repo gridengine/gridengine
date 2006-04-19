@@ -1,3 +1,7 @@
+CR-2006-04-19-0: Cleanup:   cleanup of RAND file reading in commlib SSL mode
+                 Changed:   cl_ssl_framework.c => commlib
+                 Review:    AA
+
 RD-2006-04-19-1: CVS        Created V60u8_TAG
 ---------------------------------------------
 

@@ -2506,36 +2506,41 @@ int cl_com_ssl_setup_connection(cl_com_connection_t**          connection,
          cl_com_ssl_func__CRYPTO_set_id_callback( cl_com_ssl_get_thread_id );
          cl_com_ssl_func__CRYPTO_set_locking_callback( cl_com_ssl_locking_callback );
 
-         /* TODO:
+         /* 
           * SSL_library_init() only registers ciphers. Another important
           * initialization is the seeding of the PRNG (Pseudo Random
           * Number Generator), which has to be performed separately.
           */
 
          if (cl_com_ssl_func__RAND_status() != 1) {
-            CL_LOG(CL_LOG_WARNING,"PRNG not seeded with enough data");
+            CL_LOG(CL_LOG_INFO, "PRNG is not seeded with enough data, reading RAND file ...");
             if ( ssl_setup->ssl_rand_file != NULL) {
                int bytes_read;
 
-               bytes_read = cl_com_ssl_func__RAND_load_file(ssl_setup->ssl_rand_file, 2048);
-               if ( bytes_read != 2048 ) {
-                  CL_LOG_STR(CL_LOG_ERROR,"couldn't read all RAND data from file:", ssl_setup->ssl_rand_file );
-               }
+               /*
+                * try to read the complete rand file
+                */
+               bytes_read = cl_com_ssl_func__RAND_load_file(ssl_setup->ssl_rand_file, -1);
+               CL_LOG_STR(CL_LOG_INFO, "using RAND file:", ssl_setup->ssl_rand_file);
+               CL_LOG_INT(CL_LOG_INFO, "nr of RAND bytes read:", bytes_read);
             } else {
-               CL_LOG(CL_LOG_ERROR,"no RAND file specified");
+               CL_LOG(CL_LOG_ERROR, "need RAND file, but there is no RAND file specified");
+            }
+
+            /* 
+             * check RAND status again and return error if there is still 
+             * not enough RAND data
+             */
+            if (cl_com_ssl_func__RAND_status() != 1) {
+               CL_LOG(CL_LOG_ERROR, "couldn't setup PRNG with enough data" );
+               pthread_mutex_unlock(&cl_com_ssl_global_config_mutex);
+               cl_com_close_connection(connection);
+               cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SSL_RAND_SEED_FAILURE, "error reading RAND data file" );
+               return CL_RETVAL_SSL_RAND_SEED_FAILURE;
             }
          } else {
-            CL_LOG(CL_LOG_INFO,"PRNG is seeded with enough data");
+            CL_LOG(CL_LOG_INFO, "PRNG is seeded with enough data");
          }
-
-         if (cl_com_ssl_func__RAND_status() != 1) {
-            CL_LOG(CL_LOG_ERROR,"couldn't setup PRNG with enough data" );
-            pthread_mutex_unlock(&cl_com_ssl_global_config_mutex);
-            cl_com_close_connection(connection);
-            cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SSL_RAND_SEED_FAILURE, "error reading RAND data file" );
-            return CL_RETVAL_SSL_RAND_SEED_FAILURE;
-         }
-         
 
          cl_com_ssl_global_config_object->ssl_initialized = CL_TRUE;
 

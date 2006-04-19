@@ -503,7 +503,7 @@ event_client_verify(const lListElem *event_client, lList **answer_list, bool add
 {
    bool ret = true;
    const char *str;
-   u_long d_time;
+   u_long d_time = 0;
   
    DENTER(TOP_LAYER, "event_client_verify");
 

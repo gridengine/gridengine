@@ -1353,7 +1353,8 @@ case LINUXPPC:
    set MAKEWINGRIDAPP   = 0
    set COMPILE_DC = 1
 
-   if ($OPTIMIZATION == 1) then
+   # Optimization on LINUXIA64 is broken, qmon dumps
+   if ($OPTIMIZATION == 1 && $BUILDARCH != LINUXIA64) then
       set OFLAG = "-O3"
    else
       set OFLAG = "-O"

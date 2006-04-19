@@ -118,7 +118,7 @@ static void examine_job_task_from_file(int startup, char *dir, lListElem *jep, l
 
  If everything is done we can remove the job directory.
  ****************************************************************************/
-void sge_reap_children_execd()
+int sge_reap_children_execd(int max_count)
 {
    int pid = 999;
    int exit_status, child_signal, core_dumped, failed;
@@ -126,13 +126,21 @@ void sge_reap_children_execd()
    lListElem *jep, *petep = NULL, *jatep = NULL;
 
    int status;
+   int reap_count = 0;
 
    DENTER(TOP_LAYER, "sge_reap_children_execd");
    DPRINTF(("========================REAPER======================\n"));
 
    pid = 999;
+   if (max_count < 1) {
+      max_count = 1;
+   }
 
    while (pid > 0) {
+      if (reap_count >= max_count) {
+         DPRINTF(("max. reap count is reached - returning. reaped "sge_U32CFormat" childs.\n", sge_u32c(reap_count)));
+         return 1;
+      }
 
       exit_status = child_signal = core_dumped = failed = 0;
 
@@ -140,14 +148,12 @@ void sge_reap_children_execd()
 
       if (pid == 0) {
          DPRINTF(("pid==0 - no stopped or exited children\n"));
-         DEXIT;                 /* no stopped or exited children */
-         continue;
+         break;
       }
 
       if (pid == -1) {
          DPRINTF(("pid==-1 - no children not previously waited for\n"));
-         DEXIT;
-         return;
+         break;
       }
 
       if (WIFSTOPPED(status)) {
@@ -179,7 +185,10 @@ void sge_reap_children_execd()
          WARNING((SGE_EVENT, MSG_WAITPIDNOSIGNOEXIT_UI, sge_u32c(pid), status));
          continue;
       }
-  
+
+      /* increase reaped job counter */ 
+      reap_count++;
+
       /* search whether it was a job or one of its tasks */
       for_each(jep, Master_Job_List) {
          int Break = 0;
@@ -283,9 +292,10 @@ void sge_reap_children_execd()
                   exit_status));
       }
    }
+   DPRINTF(("reaped "sge_U32CFormat" childs - no child remaining\n", sge_u32c(reap_count)));
 
    DEXIT;
-   return;
+   return 0;
 }
 
 #ifdef COMPILE_DC
@@ -320,7 +330,7 @@ lListElem *jr
    } else {
       if (usage) {
          lXchgList(jr, JR_usage, &usage);
-         lFreeList(usage);
+         lFreeList(&usage);
       }
    }
 
@@ -579,16 +589,16 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
          if ((sge_signo=sge_map_signal(signo)) != -1)
             lSetDouble(du, UA_value, (double)sge_signo);
       }
-   }
-      
-   if (du && ((u_long32)lGetDouble(du, UA_value) == 0xffffffff)) {
-      if (!failed) {
-         failed = SSTATE_FAILURE_AFTER_JOB;
-         if (!*error)
-            sprintf(error, MSG_JOB_CANTREADUSEDRESOURCESFORJOB);
+
+      if ((u_long32)lGetDouble(du, UA_value) == 0xffffffff) {
+         if (!failed) {
+            failed = SSTATE_FAILURE_AFTER_JOB;
+            if (!*error)
+               sprintf(error, MSG_JOB_CANTREADUSEDRESOURCESFORJOB);
+         }
       }
    }
-
+      
    DTRACE;
 
    /* Be careful: the checkpointing checking is done at the end. It will
@@ -659,6 +669,9 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
    /* general_failure */
    switch (failed) {
    case SSTATE_BEFORE_PROLOG:
+   /* for CR 6252457 this block should be removed, but for a real fix the
+      host or queue error detection must be improved
+   */
       general_failure = GFSTATE_HOST;
       lSetUlong(jr, JR_general_failure, general_failure);
       job_related_adminmail(jr, is_array);
@@ -708,8 +721,10 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
                JOB_TYPE_IS_NO_SHELL(lGetUlong(job, JB_type))))) {
             job_caused_failure = 1;
          } else if ((failed == SSTATE_NO_SHELL) && (master_queue != NULL)) {
+            char* shell_start_mode = mconf_get_shell_start_mode();
             const char *mode = job_get_shell_start_mode(job, master_queue, 
-                                                   conf.shell_start_mode);
+                                                   shell_start_mode);
+            FREE(shell_start_mode);
 
             if (!strcmp(mode, "unix_behavior") != 0) {
                job_caused_failure = 1;
@@ -746,7 +761,7 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
    case SSTATE_BEFORE_EPILOG:
    case SSTATE_EPILOG_FAILED:
    case SSTATE_PROCSET_NOTFREED:
-      general_failure = 0;
+      general_failure = GFSTATE_NO_HALT;
       lSetUlong(jr, JR_general_failure, general_failure);
       job_related_adminmail(jr, is_array);
       break;
@@ -763,12 +778,12 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
       /*
       ** test for admin mail here
       */
-      general_failure = 0;
+      general_failure = GFSTATE_NO_HALT;
       lSetUlong(jr, JR_general_failure, general_failure);
       job_related_adminmail(jr, is_array);
       break;
    default: 
-      general_failure = 0;
+      general_failure = GFSTATE_NO_HALT;
       /*
       ** this is no error, because not all failures apply to general_failure
       */
@@ -935,11 +950,11 @@ lListElem *jr
       /*
       ** Execute command to delete the client's DCE or Kerberos credentials.
       */
-      if (do_credentials)
+      if (mconf_get_do_credentials())
          delete_credentials(jep);
 
       /* remove job/task active dir */
-      if (!keep_active && !getenv("SGE_KEEP_ACTIVE")) {
+      if (!mconf_get_keep_active() && !getenv("SGE_KEEP_ACTIVE")) {
          sge_get_active_job_file_path(&jobdir,
                                       job_id, ja_task_id, pe_task_id,
                                       NULL);
@@ -955,11 +970,9 @@ lListElem *jr
       used_slots = qinstance_slots_used(master_q) - 1;
       qinstance_set_slots_used(master_q, used_slots);
       if (!used_slots) {
-         sge_switch2start_user();
          sge_remove_tmpdir(lGetString(master_q, QU_tmpdir), 
             lGetString(jep, JB_owner), lGetUlong(jep, JB_job_number), 
             ja_task_id, lGetString(master_q, QU_qname));
-         sge_switch2admin_user();
       }
 
       if (!pe_task_id_str) {
@@ -992,9 +1005,9 @@ lListElem *jr
 
       if (pe_task_id_str) {
          /* unchain pe task element from task list */
-         lRemoveElem(lGetList(jatep, JAT_task_list), petep);
+         lRemoveElem(lGetList(jatep, JAT_task_list), &petep);
       } else {
-         lRemoveElem(Master_Job_List, jep);
+         lRemoveElem(Master_Job_List, &jep);
       }
       del_job_report(jr);   
 
@@ -1061,7 +1074,7 @@ lListElem *jr
          job_remove_spool_file(job_id, ja_task_id, NULL, SPOOL_WITHIN_EXECD); 
 
          /* active dir */
-         if (!keep_active && !getenv("SGE_KEEP_ACTIVE")) {
+         if (!mconf_get_keep_active() && !getenv("SGE_KEEP_ACTIVE")) {
             DPRINTF(("removing active dir: %s\n", sge_dstring_get_string(&jobdir)));
             if (sge_rmdir(sge_dstring_get_string(&jobdir), &err_str)) {
                ERROR((SGE_EVENT, MSG_FILE_CANTREMOVEDIRECTORY_SS,
@@ -1545,10 +1558,12 @@ int usage_mul_factor
       if (owner) {
          struct passwd *pw;
          struct group *pg;
+         struct passwd pw_struct;
+         char buffer[2048];
 
-         pw = sge_getpwnam(owner);
+         pw = sge_getpwnam_r(owner, &pw_struct, buffer, sizeof(buffer));
          if (pw) {
-            if (use_qsub_gid) {
+            if (mconf_get_use_qsub_gid()) {
                char *tmp_qsub_gid = search_conf_val("qsub_gid");
                pw->pw_gid = atol(tmp_qsub_gid);
             } 
@@ -1642,7 +1657,7 @@ int usage_mul_factor
 #endif   
 
          build_derived_final_usage(jr, usage_mul_factor);
-         cflp = lFreeList(cflp);
+         lFreeList(&cflp);
       }
       else {
          ERROR((SGE_EVENT, MSG_SHEPHERD_CANTOPENUSAGEFILEXFORJOBYZX_SUUS,
@@ -1731,9 +1746,9 @@ static void build_derived_final_usage(lListElem *jr, int usage_mul_factor)
 
    DPRINTF(("CPU/MEM/IO: M(%f/%f/%f) R(%f/%f/%f) acct: %s stree: %s\n",
          cpu, mem, io, r_cpu, r_mem, r_io,
-         acct_reserved_usage?"R":"M", sharetree_reserved_usage?"R":"M"));
+         mconf_get_acct_reserved_usage()?"R":"M", mconf_get_sharetree_reserved_usage()?"R":"M"));
 
-   if (acct_reserved_usage) {
+   if (mconf_get_acct_reserved_usage()) {
       add_usage(jr, USAGE_ATTR_CPU_ACCT, NULL, r_cpu);
       add_usage(jr, USAGE_ATTR_MEM_ACCT, NULL, r_mem);
       add_usage(jr, USAGE_ATTR_IO_ACCT,  NULL, r_io);
@@ -1749,7 +1764,7 @@ static void build_derived_final_usage(lListElem *jr, int usage_mul_factor)
          add_usage(jr, USAGE_ATTR_MAXVMEM_ACCT, NULL, maxvmem);
    }
 
-   if (sharetree_reserved_usage) {
+   if (mconf_get_sharetree_reserved_usage()) {
       add_usage(jr, USAGE_ATTR_CPU, NULL, r_cpu);
       add_usage(jr, USAGE_ATTR_MEM, NULL, r_mem);
       add_usage(jr, USAGE_ATTR_IO,  NULL, r_io);

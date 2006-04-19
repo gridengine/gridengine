@@ -72,7 +72,7 @@ int add,
 const char *ruser,
 const char *rhost,
 gdi_object_t *object,
-int sub_command 
+int sub_command, monitoring_t *monitor
 ) {
    int ret;
    const char *s, *pe_name;
@@ -87,7 +87,7 @@ int sub_command
    pe_name = lGetString(new_pe, PE_name);
 
    /* Name has to be a valid filename without pathchanges */
-   if (add && verify_str_key(alpp, pe_name, MSG_OBJ_PE)) {
+   if (add && verify_str_key(alpp, pe_name, MAX_VERIFY_STRING, MSG_OBJ_PE) != STATUS_OK) {
       DEXIT;
       return STATUS_EUNKNOWN;
    }
@@ -102,7 +102,7 @@ int sub_command
    attr_mod_bool(pe, new_pe, PE_job_is_first_task, "job_is_first_task");
 
    /* ---- PE_user_list */
-   if (lGetPosViaElem(pe, PE_user_list)>=0) {
+   if (lGetPosViaElem(pe, PE_user_list, SGE_NO_ABORT)>=0) {
       DPRINTF(("got new PE_user_list\n"));
       /* check user_lists */
       normalize_sublist(pe, PE_user_list);
@@ -114,7 +114,7 @@ int sub_command
    }
 
    /* ---- PE_xuser_list */
-   if (lGetPosViaElem(pe, PE_xuser_list)>=0) {
+   if (lGetPosViaElem(pe, PE_xuser_list, SGE_NO_ABORT)>=0) {
       DPRINTF(("got new QU_axcl\n"));
       /* check xuser_lists */
       normalize_sublist(pe, PE_xuser_list);
@@ -124,7 +124,7 @@ int sub_command
          US_name, pe, sub_command, SGE_ATTR_XUSER_LISTS, SGE_OBJ_PE, 0);      
    }
 
-   if (lGetPosViaElem(pe, PE_xuser_list)>=0 || lGetPosViaElem(pe, PE_user_list)>=0) {
+   if (lGetPosViaElem(pe, PE_xuser_list, SGE_NO_ABORT)>=0 || lGetPosViaElem(pe, PE_user_list, SGE_NO_ABORT)>=0) {
       if (multiple_occurances(
             alpp,
             lGetList(new_pe, PE_user_list),
@@ -139,7 +139,7 @@ int sub_command
    if (attr_mod_procedure(alpp, pe, new_pe, PE_stop_proc_args, "stop_proc_args", pe_variables)) goto ERROR;
 
    /* -------- PE_allocation_rule */
-   if (lGetPosViaElem(pe, PE_allocation_rule)>=0) {
+   if (lGetPosViaElem(pe, PE_allocation_rule, SGE_NO_ABORT)>=0) {
       s = lGetString(pe, PE_allocation_rule);
       if (!s)  {
          ERROR((SGE_EVENT, MSG_SGETEXT_MISSINGCULLFIELD_SS,
@@ -159,7 +159,7 @@ int sub_command
    }
 
    /* -------- PE_urgency_slots */
-   if (lGetPosViaElem(pe, PE_urgency_slots)>=0) {
+   if (lGetPosViaElem(pe, PE_urgency_slots, SGE_NO_ABORT)>=0) {
       s = lGetString(pe, PE_urgency_slots);
       if (!s)  {
          ERROR((SGE_EVENT, MSG_SGETEXT_MISSINGCULLFIELD_SS,
@@ -175,6 +175,23 @@ int sub_command
       }
       lSetString(new_pe, PE_urgency_slots, s);
    }
+
+#ifdef SGE_PQS_API
+   /* -------- PE_qsort_args */
+   if (lGetPosViaElem(pe, PE_qsort_args, SGE_NO_ABORT)>=0) {
+      void *handle=NULL, *fn=NULL;
+
+      s = lGetString(pe, PE_qsort_args);
+
+      if ((ret=pe_validate_qsort_args(alpp, s, new_pe,
+                  &handle, &fn))!=STATUS_OK) {
+         DEXIT;
+         return ret;
+      }
+      lSetString(new_pe, PE_qsort_args, s);
+      /* lSetUlong(new_pe, PE_qsort_validated, 1); */
+   }
+#endif
 
    /* -------- PE_resource_utilization */
    if (add) {
@@ -217,7 +234,7 @@ int pe_spool(lList **alpp, lListElem *pep, gdi_object_t *object)
    return dbret ? 0 : 1;
 }
 
-int pe_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object, lList **ppList) 
+int pe_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object, lList **ppList, monitoring_t *monitor) 
 {
    const char *pe_name;
 
@@ -249,7 +266,7 @@ int sge_del_pe(lListElem *pep, lList **alpp, char *ruser, char *rhost)
       return STATUS_EUNKNOWN;
    }
 
-   if ((pos = lGetPosViaElem(pep, PE_name)) < 0) {
+   if ((pos = lGetPosViaElem(pep, PE_name, SGE_NO_ABORT)) < 0) {
       ERROR((SGE_EVENT, MSG_SGETEXT_MISSINGCULLFIELD_SS,
             lNm2Str(PE_name), SGE_FUNC));
       answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
@@ -285,7 +302,7 @@ int sge_del_pe(lListElem *pep, lList **alpp, char *ruser, char *rhost)
          ERROR((SGE_EVENT, "denied: %s", lGetString(answer, AN_text)));
          answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, 
                          ANSWER_QUALITY_ERROR);
-         local_answer_list = lFreeList(local_answer_list);
+         lFreeList(&local_answer_list);
          DEXIT;
          return STATUS_EUNKNOWN;
       }
@@ -301,7 +318,7 @@ int sge_del_pe(lListElem *pep, lList **alpp, char *ruser, char *rhost)
    }
 
    /* delete found pe element */
-   lRemoveElem(Master_Pe_List, ep);
+   lRemoveElem(Master_Pe_List, &ep);
 
    INFO((SGE_EVENT, MSG_SGETEXT_REMOVEDFROMLIST_SSSS, 
          ruser, rhost, pe, object_name ));

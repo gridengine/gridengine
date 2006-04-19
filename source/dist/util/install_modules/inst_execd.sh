@@ -66,19 +66,6 @@ WelcomeTheUserExecHost()
 
 
 #-------------------------------------------------------------------------
-# GetAdminUser
-#
-GetAdminUser()
-{
-   ADMINUSER=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep "admin_user" | awk '{ print $2 }'`
-   euid=`$SGE_UTILBIN/uidgid -euid`
-
-      if [ `echo "$ADMINUSER" |tr "A-Z" "a-z"` = "none" -a $euid = 0 ]; then
-         ADMINUSER=default
-      fi
-   
-}
-#-------------------------------------------------------------------------
 # CheckQmasterInstallation
 #
 CheckQmasterInstallation()
@@ -125,7 +112,12 @@ CheckQmasterInstallation()
 
    GetAdminUser
 
-   user=`grep admin_user $COMMONDIR/bootstrap | awk '{ print $2 }'`
+   if [ "$SGE_ARCH" = "win32-x86" ]; then
+      user=`grep admin_user $COMMONDIR/bootstrap | awk '{ print $2 }'`
+      user=`hostname | tr "a-z" "A-Z"`"+$user"
+   else
+      user=`grep admin_user $COMMONDIR/bootstrap | awk '{ print $2 }'`
+   fi
 
    if [ "$user" != "" ]; then
       if [ `echo "$user" |tr "A-Z" "a-z"` = "none" -a $euid = 0 ]; then
@@ -244,6 +236,14 @@ CheckCSP()
 #
 CheckHostNameResolving()
 {
+   if [ "$1" = "" -o "$1" -eq 0 ]; then
+      mode=installation 
+      MODE=Installation 
+   else
+      mode=uninstallation
+      MODE=Uninstallation
+   fi
+
    myrealname=`$SGE_UTILBIN/gethostname -name`
 
    loop_counter=0
@@ -273,15 +273,15 @@ CheckHostNameResolving()
                      "   %s\n\n" \
                      "$SGE_BIN/qconf -sh" "$errmsg"
 
-         $INFOTEXT "You can fix the problem now or abort the installation procedure.\n" \
+         $INFOTEXT "You can fix the problem now or abort the $mode procedure.\n" \
                    "The problem can be:\n\n" \
                    "   - the qmaster is not running\n" \
                    "   - the qmaster host is down\n" \
                    "   - an active firewall blocks your request\n"
          $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n "Contact qmaster again (y/n) ('n' will abort) [y] >> " 
          if [ $? != 0 ]; then
-            $INFOTEXT "Installation failed"
-            $INFOTEXT -log "Cannot contact qmaster! Installation failed"
+            $INFOTEXT "$MODE failed"
+            $INFOTEXT -log "Cannot contact qmaster! $MODE failed"
 
             if [ $AUTO = true ]; then
                MoveLog
@@ -350,7 +350,7 @@ CheckHostNameResolving()
                         $myrealname $myaname $default_domain $ignore_fqdn $myname
 
             if [ $AUTO = true ]; then
-               $INFOTEXT -log "Installation failed!\nThis hostname is not known at qmaster as an administrative host."
+               $INFOTEXT -log "$MODE failed!\nThis hostname is not known at qmaster as an administrative host."
                MoveLog
                exit 1
             fi
@@ -358,11 +358,11 @@ CheckHostNameResolving()
             $INFOTEXT "Please check and correct your >/etc/hosts< file and >/etc/nsswitch.conf<\n" \
                       "file on this host and on the qmaster machine.\n\n" \
                       "You can now add this host as an administrative host in a seperate\n" \
-                      "terminal window and then continue with the installation procedure.\n" 
+                      "terminal window and then continue with the $mode procedure.\n" 
                          
             $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n "Check again (y/n) ('n' will abort) [y] >> "
             if [ $? != 0 ]; then
-               $INFOTEXT "Installation failed"
+               $INFOTEXT "$MODE failed"
                exit 1
             fi
          else
@@ -375,7 +375,7 @@ CheckHostNameResolving()
 
       loop_counter=`expr $loop_counter + 1`
       if [ $loop_counter -ge $loop_max ]; then
-         $INFOTEXT -e "Installation failed after %s retries" $loop_max
+         $INFOTEXT -e "$MODE failed after %s retries" $loop_max
          exit
       fi
    done
@@ -479,6 +479,7 @@ AddQueue()
 
 GetLocalExecdSpoolDir()
 {
+
    $INFOTEXT -u "\nLocal execd spool directory configuration"
    $INFOTEXT "\nDuring the qmaster installation you've already entered " \
              "a global\nexecd spool directory. This is used, if no local " \
@@ -502,9 +503,10 @@ GetLocalExecdSpoolDir()
       fi
    done
 
-   if [ "$ret" = 1 ]; then
-      MakeHostSpoolDir
-   fi
+   #if [ "$ret" = 1 -a "$LOCAL_EXECD_SPOOL" = "undef" ]; then
+   #   MakeHostSpoolDir
+   #   :
+   #fi
 
    if [ $AUTO = "true" ]; then
       if [ "$EXECD_SPOOL_DIR_LOCAL" != "" ]; then
@@ -517,17 +519,17 @@ GetLocalExecdSpoolDir()
 
 MakeHostSpoolDir()
 {
+   MKDIR="mkdir -p"
    spool_dir=`qconf -sconf | grep "execd_spool_dir" | awk '{ print $2 }'`
    host_dir=`$SGE_UTILBIN/gethostname -aname | cut -d"." -f1`
 
-   mkdir -p $spool_dir/$host_dir
+   $MKDIR $spool_dir/$host_dir
    ret=$?
 
    if [ $ret = 0 ]; then
       group=`$SGE_UTILBIN/checkuser -gid $ADMINUSER`
       chown -R $ADMINUSER:$group $spool_dir/$host_dir 
    else
-      MKDIR="mkdir -p"
       ExecuteAsAdmin $MKDIR $spool_dir/$host_dir
    fi
 }
@@ -615,12 +617,84 @@ ExecdAlreadyInstalled()
    hostname=$1
    ret="undef"
 
-   ret=`qhost | grep $hostname | awk '{ print $4 }'`
-   ret2=`qconf -sconf $hostname | head -1 | cut -d":" -f1`
+   ret=`qconf -sconf $hostname | grep execd_spool_dir | awk '{ print $2 }'`
+   if [ ! -d $ret/$hostname ]; then
+      ret=`qconf -sconf | grep execd_spool_dir | awk '{ print $2 }'`
+   fi
 
-   if [ \( "$ret" = "-" -o "$ret" = "" \) -a "$ret2" != "$hostname" ]; then
-      return 0
+   if [ -d $ret/$hostname ]; then
+      $INFOTEXT -log "Found execd spool directory: $s!\nExecution host %s is already installed!" $ret/$hostname $hostname
+      return 1 
    else
-      return 1
-   fi 
+      return 0 
+   fi
+}
+
+
+CheckWinAdminUser()
+{
+   if [ "$SGE_ARCH" != "win32-x86" ]; then
+      return
+   fi
+
+   if [ -f $SGE_ROOT/$SGE_CELL/common/bootstrap ]; then
+      win_admin_user=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep admin_user | awk '{ print $2 }'`
+      if [ "$win_admin_user" = "default" -o "$win_admin_user" = "root" -o "$win_admin_user" = "none" ]; then
+         ADMINUSER=default
+      fi
+   else
+      $INFOTEXT "bootstrap file could not be found, please check your installation! Exiting now ..."
+      exit 1
+   fi
+
+   if [ "$win_admin_user" != "default" -a "$win_admin_user" != "root" -a "$win_admin_user" != "none" ]; then
+      WIN_HOST_NAME=`hostname | tr [a-z] [A-Z]`
+      ADMINUSER=$WIN_HOST_NAME"+$win_admin_user"
+
+      tmp_path=$PATH
+      PATH=/usr/contrib/win32/bin:/common:$SAVED_PATH
+      export PATH
+      eval net user $win_admin_user > /dev/null 2>&1
+      ret=$?
+      if [ "$ret" = 127 ]; then
+         /usr/contrib/win32/bin/net user $win_admin_user > /dev/null 2>&1
+         ret=$?
+         if [ "$ret" = 127 ]; then
+	         $INFOTEXT "The net binary could not be found!\nPlease, check your $PATH variable or your installation!"
+            exit 1
+         fi
+      fi
+      if [ "$ret" != 0 ]; then
+         while [ "$ret" != 0 ]; do
+            $INFOTEXT -u "Local Admin User"
+            $INFOTEXT "\nThe local admin user %s, does not exist!\n The script tries to create the admin user." $win_admin_user
+            $INFOTEXT "Please enter a password for your admin user >> "
+            stty_orig=`stty -g`
+            stty -echo
+            read SECRET
+            stty $stty_orig
+            $INFOTEXT "Creating admin user %s, now ...\n" $win_admin_user
+            eval net user $win_admin_user $SECRET /add
+            ret=$?
+            unset SECRET
+         done
+         ExecuteAsAdmin regpwd
+         $INFOTEXT -wait "Admin user created, hit <ENTER> to continue!"
+         is_nis=`mapadmin.exe | grep "UNIX Users and Groups Source" | cut -d ":" -f2 | cut -d " " -f2`
+         if [ "$is_nis" = "NIS" ]; then
+            $INFOTEXT "Your system is using NIS Domain setup. To setup the right Windows Domain\n" \
+                      "Unix Domain mapping we need your Unix Nis Domain.\n\n"
+            $INFOTEXT -n "Please enter your Unix Nis Domain now >> "
+            NIS_DOMAIN=`Enter`
+         else
+            NIS_DOMAIN="PCNFS"
+         fi
+         
+         mapadmin.exe ADD -wu "$WIN_HOST_NAME\\$win_admin_user" -uu "$NIS_DOMAIN\\$win_admin_user" -setprimary
+         
+         $SGE_BIN/qconf -am $WIN_HOST_NAME"+"$win_admin_user
+      fi
+      PATH=$tmp_path
+      export PATH 
+   fi
 }

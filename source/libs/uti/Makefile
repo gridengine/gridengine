@@ -41,7 +41,6 @@ UTILIB_DRMAA_SRC = \
          setup_path.c \
          sge_afsutil.c \
          sge_arch.c \
-         sge_base64.c \
          sge_bitfield.c \
          sge_bitop.c \
          sge_bootstrap.c \
@@ -68,7 +67,7 @@ UTILIB_DRMAA_SRC = \
          sge_uidgid.c \
          sge_unistd.c
 
-UTILIB_SRC = sge_loadmem.c sge_getloadavg.c $(UTILIB_DRMAA_SRC)
+UTILIB_SRC = sge_loadmem.c sge_getloadavg.c sge_monitor.c $(UTILIB_DRMAA_SRC)
 
 UTILIB_DRMAA_OBJS = $(UTILIB_DRMAA_SRC:.c=.o)
 UTILIB_OBJS = $(UTILIB_SRC:.c=.o)
@@ -202,9 +201,6 @@ sge_signal.o:	$(UTILIB_DIR)/sge_signal.c
 sge_htable.o:	$(UTILIB_DIR)/sge_htable.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_htable.c
 
-sge_base64.o:	$(UTILIB_DIR)/sge_base64.c
-		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_base64.c
-
 sge_bitfield.o:	$(UTILIB_DIR)/sge_bitfield.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_bitfield.c
 
@@ -219,6 +215,9 @@ sge_tmpnam.o:	$(UTILIB_DIR)/sge_tmpnam.c
 
 sge_edit.o:	$(UTILIB_DIR)/sge_edit.c 
 		$(CC) $(CFLAGS) $(MEMCFLAG) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_edit.c
+
+sge_monitor.o:	$(UTILIB_DIR)/sge_monitor.c 
+		$(CC) $(CFLAGS) $(MEMCFLAG) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_monitor.c
 
 ###############################################################################
 # test targets

@@ -90,6 +90,7 @@
 static int check_interval = CHECK_INTERVAL;
 static int get_active_interval = GET_ACTIVE_INTERVAL;
 static int delay_time = DELAY_TIME;
+static int sge_test_heartbeat = 0;
 
 char binpath[SGE_PATH_MAX];
 char oldqmaster[SGE_PATH_MAX];
@@ -114,6 +115,16 @@ static int shadowd_is_old_master_enrolled(char *oldqmaster)
    int commlib_error = CL_RETVAL_OK;
 
    DENTER(TOP_LAYER, "shadowd_is_old_master_enrolled");
+
+   /*
+    * This is for testsuite testing to simulate qmaster outage.
+    * For testing the environment variable SGE_TEST_HEARTBEAT_TIMEOUT
+    * has to be set!
+    */
+   if (sge_test_heartbeat > 0) {
+      DEXIT;
+      return is_up_and_running;
+   }
 
    handle=cl_com_create_handle(&commlib_error, CL_CT_TCP, CL_CM_CT_MESSAGE, CL_FALSE, sge_get_qmaster_port(), CL_TCP_DEFAULT,(char*)prognames[SHADOWD] , 0, 1,0 );
    if (handle == NULL) {
@@ -145,11 +156,14 @@ static int shadowd_is_old_master_enrolled(char *oldqmaster)
 }
 
 /*----------------------------------------------------------------------------*/
-int main(
-int argc,
-char **argv 
-) {
-   int heartbeat, last_heartbeat, latest_heartbeat, ret, delay;
+int 
+main(int argc, char **argv)
+{
+   int heartbeat        = 0;
+   int last_heartbeat   = 0;
+   int latest_heartbeat = 0;
+   int ret              = 0;
+   int delay            = 0;
    time_t now, last;
    const char *cp;
    fd_set fds;
@@ -157,6 +171,7 @@ char **argv
    char shadowd_pidfile[SGE_PATH_MAX];
    dstring ds;
    char buffer[256];
+   int last_prepare_enroll_error = CL_RETVAL_OK;
 
    DENTER_MAIN(TOP_LAYER, "sge_shadowd");
    
@@ -176,6 +191,9 @@ char **argv
       if ((s=getenv("SGE_DELAY_TIME")) &&
           sscanf(s, "%d", &val) == 1)
          delay_time = val;
+      if ((s=getenv("SGE_TEST_HEARTBEAT_TIMEOUT")) &&
+          sscanf(s, "%d", &val) == 1)
+         sge_test_heartbeat = val;
    }
          
    /* This needs a better solution */
@@ -208,27 +226,27 @@ char **argv
 
          DPRINTF(("pidfilename: %s\n", shadowd_pidfile));
          if ((shadowd_pid = sge_readpid(shadowd_pidfile))) {
-            DPRINTF(("shadowd_pid: %d\n", shadowd_pid));
+            DPRINTF(("shadowd_pid: "sge_U32CFormat"\n", sge_u32c(shadowd_pid)));
             if (!sge_checkprog(shadowd_pid, shadowd_name, PSCMD)) {
                CRITICAL((SGE_EVENT, MSG_SHADOWD_FOUNDRUNNINGSHADOWDWITHPIDXNOTSTARTING_I, (int) shadowd_pid));
                SGE_EXIT(1);
             }
          }
 
-         prepare_enroll(prognames[SHADOWD]);
+         prepare_enroll(prognames[SHADOWD], &last_prepare_enroll_error );
 
          /* is there a running shadowd on this host (with aliased name) */
          sprintf(shadowd_pidfile, "%s/"SHADOWD_PID_FILE, conf_string, uti_state_get_qualified_hostname());
          DPRINTF(("pidfilename: %s\n", shadowd_pidfile));
          if ((shadowd_pid = sge_readpid(shadowd_pidfile))) {
-            DPRINTF(("shadowd_pid: %d\n", shadowd_pid));
+            DPRINTF(("shadowd_pid: "sge_U32CFormat"\n", sge_u32c(shadowd_pid)));
             if (!sge_checkprog(shadowd_pid, shadowd_name, PSCMD)) {
                CRITICAL((SGE_EVENT, MSG_SHADOWD_FOUNDRUNNINGSHADOWDWITHPIDXNOTSTARTING_I, (int) shadowd_pid));
                SGE_EXIT(1);
             }
          }  
       } else {
-         prepare_enroll(prognames[SHADOWD]);
+         prepare_enroll(prognames[SHADOWD], &last_prepare_enroll_error );
       }
    }
 
@@ -283,102 +301,125 @@ char **argv
    
    sge_setup_sig_handlers(SHADOWD);
 
-   last_heartbeat = get_qmaster_heartbeat(QMASTER_HEARTBEAT_FILE);
-   last = (time_t) sge_get_gmt();
+   last_heartbeat = get_qmaster_heartbeat(QMASTER_HEARTBEAT_FILE, 30);
+
+   last = (time_t) sge_get_gmt(); /* set time of last check time */
 
    delay = 0;
-   while (TRUE) {
+   while (!shut_me_down) {
       sleep(check_interval);
 
-      if (shut_me_down) {
-         sge_shutdown();
-      }   
+      /* get current heartbeat file content */
+      heartbeat = get_qmaster_heartbeat(QMASTER_HEARTBEAT_FILE, 30);
 
-      heartbeat = get_qmaster_heartbeat(QMASTER_HEARTBEAT_FILE);
-      
       now = (time_t) sge_get_gmt();
 
-      DPRINTF(("heartbeat: %d -- last_heartbeat: %d now-last: %d \n", 
-               heartbeat, last_heartbeat, (int) (now - last)));
-      
-      /* We could read two times the heartbeat */
-      if (last_heartbeat != -1 && 
-          heartbeat != -1 && 
-          (now - last >= (get_active_interval + delay))) {
-         delay = 0;
-         if ((last_heartbeat - heartbeat) == 0) {
-            DPRINTF(("heartbeat not changed since seconds: %d\n", 
-               (int) (now - last)));
-            delay = delay_time;
-            if (!(ret = check_if_valid_shadow(path_state_get_shadow_masters_file()))) {
-               if (qmaster_lock(QMASTER_LOCK_FILE)) {
-                  ERROR((SGE_EVENT, MSG_SHADOWD_FAILEDTOLOCKQMASTERSOMBODYWASFASTER));
-               } else {
-                  int out, err;
 
-                  /* still the old qmaster name in act_qmaster file and 
-                     still the old heartbeat */
-                  latest_heartbeat = get_qmaster_heartbeat(
-                     QMASTER_HEARTBEAT_FILE);
-                  DPRINTF(("old qmaster name in act_qmaster and "
-                     "old heartbeat\n"));
-                  if (!compare_qmaster_names(oldqmaster) &&
-                      !shadowd_is_old_master_enrolled(oldqmaster) && 
-                      (latest_heartbeat - heartbeat == 0)) {
-                     char qmaster_name[256];
-                     char schedd_name[256];
+      /* Only check when we could read the heartbeat file at least two times
+       * (last_heartbeat and heartbeat) without error 
+       */
+      if (last_heartbeat > 0 && heartbeat > 0) {
 
-                     strcpy(qmaster_name, SGE_PREFIX);
-                     strcpy(schedd_name, SGE_PREFIX);
-                     strcat(qmaster_name, prognames[QMASTER]); 
-                     strcat(schedd_name, prognames[SCHEDD]);
-                     DPRINTF(("qmaster_name: "SFN"\n", qmaster_name)); 
-                     DPRINTF(("schedd_name: "SFN"\n", schedd_name)); 
+         /*
+          * OK we have to heartbeat entries to check. Check times ...
+          * now  = current time
+          * last = last check time
+          */
+         if ( (now - last) >= (get_active_interval + delay) ) {
 
-                     /*
-                      * open logfile as admin user for initial qmaster/schedd 
-                      * startup messages
-                      */
-                     out = open(qmaster_out_file, O_CREAT|O_WRONLY|O_APPEND, 
-                                0644);
-                     err = out;
-                     if (out == -1) {
+            delay = 0;
+            if (last_heartbeat == heartbeat) {
+               DPRINTF(("heartbeat not changed since seconds: "sge_U32CFormat"\n", sge_u32c(now - last)));
+               delay = delay_time; /* set delay time */
+
+               /*
+                * check if we are a possible new qmaster host (lock file of qmaster active, etc.)
+                */
+               ret = check_if_valid_shadow(path_state_get_shadow_masters_file());
+
+               if (ret == 0) {
+                  /* we can start a qmaster on this host */
+                  if (qmaster_lock(QMASTER_LOCK_FILE)) {
+                     ERROR((SGE_EVENT, MSG_SHADOWD_FAILEDTOLOCKQMASTERSOMBODYWASFASTER));
+                  } else {
+                     int out, err;
+
+                     /* still the old qmaster name in act_qmaster file and still the old heartbeat */
+                     latest_heartbeat = get_qmaster_heartbeat( QMASTER_HEARTBEAT_FILE, 30);
+                     /* TODO: what do we when there is a timeout ??? */
+                     DPRINTF(("old qmaster name in act_qmaster and old heartbeat\n"));
+                     if (!compare_qmaster_names(oldqmaster) &&
+                         !shadowd_is_old_master_enrolled(oldqmaster) && 
+                         (latest_heartbeat == heartbeat)) {
+                        char qmaster_name[256];
+                        char schedd_name[256];
+
+                        strcpy(qmaster_name, SGE_PREFIX);
+                        strcpy(schedd_name, SGE_PREFIX);
+                        strcat(qmaster_name, prognames[QMASTER]); 
+                        strcat(schedd_name, prognames[SCHEDD]);
+                        DPRINTF(("qmaster_name: "SFN"\n", qmaster_name)); 
+                        DPRINTF(("schedd_name: "SFN"\n", schedd_name)); 
+
                         /*
-                         * First priority is the master restart
-                         * => ignore this error
+                         * open logfile as admin user for initial qmaster/schedd 
+                         * startup messages
                          */
-                        out = 1;
-                        err = 2;
-                     } 
+                        out = SGE_OPEN3(qmaster_out_file, O_CREAT|O_WRONLY|O_APPEND, 
+                                   0644);
+                        err = out;
+                        if (out == -1) {
+                           /*
+                            * First priority is the master restart
+                            * => ignore this error
+                            */
+                           out = 1;
+                           err = 2;
+                        } 
 
-                     sge_switch2start_user();
-                     ret = startprog(out, err, NULL, binpath, qmaster_name, NULL);
-                     sge_switch2admin_user();
-                     if (ret)
-                        ERROR((SGE_EVENT, MSG_SHADOWD_CANTSTARTQMASTER));
-                     else {
-                        sleep(5);
                         sge_switch2start_user();
-                        ret = startprog(out, err, NULL, binpath, schedd_name, NULL);
+                        ret = startprog(out, err, NULL, binpath, qmaster_name, NULL);
                         sge_switch2admin_user();
                         if (ret)
-                           ERROR((SGE_EVENT, MSG_SHADOWD_CANTSTARTQMASTER));   
+                           ERROR((SGE_EVENT, MSG_SHADOWD_CANTSTARTQMASTER));
+                        else {
+                           sleep(5);
+                           sge_switch2start_user();
+                           ret = startprog(out, err, NULL, binpath, schedd_name, NULL);
+                           sge_switch2admin_user();
+                           if (ret)
+                              ERROR((SGE_EVENT, MSG_SHADOWD_CANTSTARTQMASTER));   
+                        }
+                        close(out);
+                     } else {
+                        qmaster_unlock(QMASTER_LOCK_FILE);
                      }
-                     close(out);
-                  } else {
-                     qmaster_unlock(QMASTER_LOCK_FILE);
+                  }      
+               } else {
+                  if (ret == -1) {
+                     /* just log the more important failures */    
+                     WARNING((SGE_EVENT, MSG_SHADOWD_DELAYINGSHADOWFUNCFORXSECONDS_U, sge_u32c(delay) ));
                   }
-               }      
-            } else if (ret == -1) {
-               /* just log the more important failures */    
-               WARNING((SGE_EVENT, MSG_SHADOWD_DELAYINGSHADOWFUNCTIONFOR10MINUTES));
+               } 
             }
+            /* Begin a new interval, set timers and hearbeat to current values */
+            last = now;
+            last_heartbeat = heartbeat;
          }
-         /* Begin a new interval, set timers and hearbeat to current values */
-         last = now;
-         last_heartbeat = heartbeat;
+      } else {
+         if (last_heartbeat < 0 || heartbeat < 0) {
+            /* There was an error reading heartbeat or last_heartbeat */
+            DPRINTF(("can't read heartbeat file. last_heartbeat="sge_U32CFormat", heartbeat="sge_U32CFormat"\n",
+                     sge_u32c(last_heartbeat), sge_u32c(heartbeat)));
+         } else {
+            DPRINTF(("have to read the heartbeat file twice to check time differences\n"));
+         }
       }
    }
+
+   sge_shutdown(0);
+
+   return EXIT_SUCCESS;
 }
 
 /*-----------------------------------------------------------------
@@ -411,7 +452,7 @@ char *oldqmaster
  
  ret = sge_hostcmp(newqmaster, oldqmaster);
  
- DPRINTF(("strcmp() of old and new qmaster returns: %d\n", ret));
+ DPRINTF(("strcmp() of old and new qmaster returns: "sge_U32CFormat"\n", sge_u32c(ret)));
  
  DEXIT;
  return ret;

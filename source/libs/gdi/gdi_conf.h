@@ -38,7 +38,8 @@ get_configuration(const char *config_name,
                   lListElem **lepp);
 
 int get_conf_and_daemonize(tDaemonizeFunc dfunc, 
-                           lList **conf_list);
+                           lList **conf_list,
+                           volatile int* abort_flag);
 
 int get_merged_configuration(lList **conf_list);
 

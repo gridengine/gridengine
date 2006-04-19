@@ -42,8 +42,8 @@
 #define KRB_CLIENT_TIMEOUT (15*60)
 
 int krb_init(const char *progname);
-int krb_send_message(int synchron, const char *tocomproc, int toid, const char *tohost, int tag, char *buffer, int buflen, u_long32 *mid, int compressed);
-int krb_receive_message(char *fromcommproc, u_short *fromid, char *fromhost, int *tag, char **buffer, u_long32 *buflen, int synchron, u_short *compressed);
+int krb_send_message(int synchron, const char *tocomproc, int toid, const char *tohost, int tag, char *buffer, int buflen, u_long32 *mid);
+int krb_receive_message(char *fromcommproc, u_short *fromid, char *fromhost, int *tag, char **buffer, u_long32 *buflen, int synchron);
 int krb_verify_user(const char *host, const char *commproc, int id, const char *user);
 int krb_check_for_idle_clients(void);
 char *krb_bin2str(void *data, int len, char *str);

@@ -53,6 +53,7 @@ RemoveQmaster()
       CheckRegisteredExecd
 
    else
+      MoveLog
       exit 0 
    fi
 }
@@ -69,7 +70,8 @@ CheckRegisteredExecd()
      else
         $INFOTEXT "Found registered execution hosts, exiting uninstallation!\n"
         $INFOTEXT -log "Found registered execution hosts, exiting uninstallation!\n"
-        exit 0
+        MoveLog
+        exit 1 
      fi
 
    $INFOTEXT "There are no running execution host registered!\n"
@@ -87,7 +89,7 @@ ShutdownMaster()
    euid=`$SGE_UTILBIN/uidgid -euid`
    spool_dir_master=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep qmaster_spool_dir | awk '{ print $2 }'`
    master_pid=`cat $spool_dir_master/qmaster.pid`
-   ADMINUSER=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep admin_user | awk '{ print $2 }'`
+   GetAdminUser
 
    `qconf -ks`
    `qconf -km`

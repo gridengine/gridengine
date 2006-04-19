@@ -35,7 +35,7 @@
 
  
 void starting_up(void);
-void sge_shutdown(void);
+void sge_shutdown(int i);
 
 #endif /* __SHUTDOWN_H */
 

@@ -500,10 +500,13 @@ pid_t sge_readpid(const char *fname)
        break;
    }
  
-   fclose(fp);
+   FCLOSE(fp);
  
    DEXIT;
    return pid;
+FCLOSE_ERROR:
+   DEXIT;
+   return 0;
 } /* sge_readpid() */        
 
 /****** uti/spool/sge_write_pid() *********************************************
@@ -530,11 +533,21 @@ void sge_write_pid(const char *pid_log_file)
    DENTER(TOP_LAYER, "sge_write_pid");
  
    close(creat(pid_log_file, 0644));
+#if defined( INTERIX )
+   /*
+    * Interix has a bug if the file is created on a NFS mapped drive.
+    */ 
+   chown(pid_log_file, geteuid(), -1);
+#endif
    if ((fp = fopen(pid_log_file, "w")) != NULL) {
       pid = getpid();
       fprintf(fp, "%d\n", pid);
-      fclose(fp);
+      FCLOSE(fp);
    }
+   DEXIT;
+   return;
+FCLOSE_ERROR:
+   /* TODO: error handling */
    DEXIT;
    return;
 }  
@@ -646,7 +659,7 @@ int sge_get_confval_array(const char *fname, int n, const char *name[],
              is_found[i] = true;
              if (--nmissing == 0) {
                 FREE(is_found);
-                fclose(fp);
+                FCLOSE(fp);
                 DEXIT;
                 return 0;
              }
@@ -670,9 +683,12 @@ int sge_get_confval_array(const char *fname, int n, const char *name[],
    }
    
    FREE(is_found);
-   fclose(fp);
+   FCLOSE(fp);
    DEXIT;
    return nmissing;
+FCLOSE_ERROR:
+   DEXIT;
+   return 0;
 } /* sge_get_confval_array() */
 
 

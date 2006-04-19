@@ -1,0 +1,3 @@
+hostlist @hostgroup1 \
+@hostgroup2 @hostgroup3 @areallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallylonghostgroupname
+group_name @parent1

@@ -63,20 +63,21 @@ SCHEDD_OBJS = $(SCHEDD_SRC:.c=.o)
 
 SCHEDD_ADD_OBJS = $(SCHEDD_ADD_SRC:.c=.o) 
 
-SCHEDD_ADD_LIBS = -lsched -lmir -levc -lgdi -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lcull -lrmon -lcomm -lcommlists -luti -llck $(DLLIB)
+SCHEDD_ADD_LIBS = -lsched -lmir -levc -lgdi -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lcull -lrmon -lcomm -lcommlists -luti $(WINGRIDLIB) -llck $(DLLIB)
 
 SCHEDD_LIB_DEPENDS = $(SCHEDLIB) $(MIRLIB) $(EVCLIB) $(GDILIB) \
                      $(SGEOBJLIB) $(SGEOBJDLIB) \
                      $(SECLIBS) $(KRBLIBS) \
-                     $(CULLLIB) $(RMONLIB) $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(TPLIB)
+                     $(CULLLIB) $(RMONLIB) $(COMMLIB) $(COMMLISTSLIB) \
+                     $(WINGRIDLIB_DEP) $(UTILIB) $(LCKLIB) $(TPLIB)
 
 SMON_OBJS = $(SMON_SRC:.c=.o)
 
 SMON_ADD_OBJS = $(SMON_ADD_SRC:.c=.o) 
 
-SMON_ADD_LIBS = -lsched -levc -lgdi -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lcull -lrmon -lcomm -lcommlists -luti -llck $(DLLIB)
+SMON_ADD_LIBS = -lsched -levc -lgdi -lsgeobjd -lsgeobj $(SECLIB) $(KRBLIB) -lcull -lrmon -lcomm -lcommlists -luti $(WINGRIDLIB) -llck $(DLLIB)
 
-SMON_LIB_DEPENDS = $(SCHEDLIB) $(EVCLIB) $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(SECLIBS) $(KRBLIBS) $(CULLLIB) $(RMONLIB) $(LCKLIB) $(COMMLIB) $(COMMLISTSLIB) $(UTILIB)
+SMON_LIB_DEPENDS = $(SCHEDLIB) $(EVCLIB) $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(SECLIBS) $(KRBLIBS) $(CULLLIB) $(WINGRIDLIB_DEP) $(RMONLIB) $(LCKLIB) $(COMMLIB) $(COMMLISTSLIB) $(UTILIB)
 
 ###############################################################################
 # global rules: all, clean, depend, messages

@@ -72,7 +72,7 @@ void starting_up()
 }
 
 /******************************************************************************/
-void sge_shutdown()
+void sge_shutdown(int i)
 {
    u_long32 old_ll = log_state_get_log_level();
    dstring ds;
@@ -92,12 +92,15 @@ void sge_shutdown()
                           feature_get_featureset_name(
                                        feature_get_active_featureset_id())); 
    }
-   INFO((SGE_EVENT, MSG_SHADOWD_CONTROLLEDSHUTDOWN_S, 
-         sge_dstring_get_string(&ds2)));
+   if (i != 0) {
+      INFO((SGE_EVENT, MSG_SHADOWD_CONTROLLEDSHUTDOWN_SU, sge_dstring_get_string(&ds2), sge_u32c(i)));
+   } else {
+      INFO((SGE_EVENT, MSG_SHADOWD_CONTROLLEDSHUTDOWN_S, sge_dstring_get_string(&ds2)));
+   }
 
    sge_dstring_free(&ds2);
    log_state_set_log_level(old_ll);
 
    DEXIT;
-   SGE_EXIT(0); /* call sge_exit() */
+   SGE_EXIT(i); /* call sge_exit() */
 }

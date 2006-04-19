@@ -79,7 +79,7 @@ sge_change_queue_version_centry(void);
 int 
 centry_mod(lList **answer_list, lListElem *centry, lListElem *reduced_elem, 
            int add, const char *remote_user, const char *remote_host, 
-           gdi_object_t *object, int sub_command) 
+           gdi_object_t *object, int sub_command, monitoring_t *monitor) 
 {
    bool ret = true;
    bool is_slots_attr = false;
@@ -91,7 +91,7 @@ centry_mod(lList **answer_list, lListElem *centry, lListElem *reduced_elem,
     * At least the centry name has to be available (CE_name)
     */
    if (ret) {
-      pos = lGetPosViaElem(reduced_elem, CE_name);
+      pos = lGetPosViaElem(reduced_elem, CE_name, SGE_NO_ABORT);
 
       if (pos >= 0) {
          const char *name = lGetPosString(reduced_elem, pos);
@@ -108,7 +108,7 @@ centry_mod(lList **answer_list, lListElem *centry, lListElem *reduced_elem,
     * Shortcut (CE_shortcut)
     */
    if (ret) {
-      pos = lGetPosViaElem(reduced_elem, CE_shortcut);
+      pos = lGetPosViaElem(reduced_elem, CE_shortcut, SGE_NO_ABORT);
 
       if (pos >= 0) {
          const char *shortcut = lGetPosString(reduced_elem, pos);
@@ -122,7 +122,7 @@ centry_mod(lList **answer_list, lListElem *centry, lListElem *reduced_elem,
     * Type (CE_valtype)
     */
    if (ret) {
-      pos = lGetPosViaElem(reduced_elem, CE_valtype);
+      pos = lGetPosViaElem(reduced_elem, CE_valtype, SGE_NO_ABORT);
 
       if (pos >= 0) {
          u_long32 type = lGetPosUlong(reduced_elem, pos);
@@ -139,7 +139,7 @@ centry_mod(lList **answer_list, lListElem *centry, lListElem *reduced_elem,
     * Operator (CE_relop)
     */
    if (ret) {
-      pos = lGetPosViaElem(reduced_elem, CE_relop);
+      pos = lGetPosViaElem(reduced_elem, CE_relop, SGE_NO_ABORT);
 
       if (pos >= 0) {
          u_long32 relop = lGetPosUlong(reduced_elem, pos);
@@ -156,7 +156,7 @@ centry_mod(lList **answer_list, lListElem *centry, lListElem *reduced_elem,
     * Requestable (CE_request)
     */
    if (ret) {
-      pos = lGetPosViaElem(reduced_elem, CE_requestable);
+      pos = lGetPosViaElem(reduced_elem, CE_requestable, SGE_NO_ABORT);
 
       if (pos >= 0) {
          u_long32 request = lGetPosUlong(reduced_elem, pos);
@@ -173,7 +173,7 @@ centry_mod(lList **answer_list, lListElem *centry, lListElem *reduced_elem,
     * Consumable (CE_consumable)
     */
    if (ret) {
-      pos = lGetPosViaElem(reduced_elem, CE_consumable);
+      pos = lGetPosViaElem(reduced_elem, CE_consumable, SGE_NO_ABORT);
 
       if (pos >= 0) {
          bool consumable = lGetPosBool(reduced_elem, pos) ? true : false;
@@ -190,7 +190,7 @@ centry_mod(lList **answer_list, lListElem *centry, lListElem *reduced_elem,
     * Default (CE_default)
     */
    if (ret) {
-      pos = lGetPosViaElem(reduced_elem, CE_default);
+      pos = lGetPosViaElem(reduced_elem, CE_default, SGE_NO_ABORT);
 
       if (pos >= 0) {
          const char *defaultval = lGetPosString(reduced_elem, pos);
@@ -207,7 +207,7 @@ centry_mod(lList **answer_list, lListElem *centry, lListElem *reduced_elem,
     * Default (CE_urgency_weight)
     */
    if (ret) {
-      pos = lGetPosViaElem(reduced_elem, CE_urgency_weight);
+      pos = lGetPosViaElem(reduced_elem, CE_urgency_weight, SGE_NO_ABORT);
 
       if (pos >= 0) {
          const char *urgency_weight = lGetPosString(reduced_elem, pos);
@@ -310,7 +310,7 @@ centry_spool(lList **alpp, lListElem *cep, gdi_object_t *object)
 *
 *******************************************************************************/
 int 
-centry_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object, lList **ppList) 
+centry_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object, lList **ppList, monitoring_t *monitor) 
 {
    bool rebuild_consumables = false;
 
@@ -389,13 +389,12 @@ int sge_del_centry(lListElem *centry, lList **answer_list,
             if (tmp_centry != NULL) {
                if (!centry_is_referenced(tmp_centry, &local_answer_list, 
                         *(object_type_get_master_list(SGE_TYPE_CQUEUE)),
-                        Master_Exechost_List, 
-                        *(object_type_get_master_list(SGE_TYPE_SCHEDD_CONF)))) {
+                        Master_Exechost_List )) {
                   if (sge_event_spool(answer_list, 0, sgeE_CENTRY_DEL, 
                                       0, 0, name, NULL, NULL,
                                       NULL, NULL, NULL, true, true)) {
 
-                     lRemoveElem(master_centry_list, tmp_centry);
+                     lRemoveElem(master_centry_list, &tmp_centry);
                      INFO((SGE_EVENT, MSG_SGETEXT_REMOVEDFROMLIST_SSSS, 
                            remote_user, remote_host, name, MSG_OBJ_CPLX));
                      answer_list_add(answer_list, SGE_EVENT, 
@@ -413,7 +412,7 @@ int sge_del_centry(lListElem *centry, lList **answer_list,
                   ERROR((SGE_EVENT, "denied: %s", lGetString(answer, AN_text)));
                   answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN,
                                  ANSWER_QUALITY_ERROR);
-                  local_answer_list = lFreeList(local_answer_list);
+                  lFreeList(&local_answer_list);
                   ret = false;
                }
             } else {

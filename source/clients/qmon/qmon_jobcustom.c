@@ -82,6 +82,7 @@
 #include "sge_qinstance_state.h"
 #include "qstat_printing.h"
 #include "sge_cqueue_qstat.h"
+#include "sge_string.h"
 
 /*-------------------------------------------------------------------------*/
 /* Prototypes */
@@ -1390,7 +1391,7 @@ XtPointer cld,cad;
    ** get the strings to do a wildmatch against
    */
    owner_str = XmtInputFieldGetString(jobfilter_owner);
-   jobfilter_owners = lFreeList(jobfilter_owners);
+   lFreeList(&jobfilter_owners);
    lString2List(owner_str, &jobfilter_owners, ST_Type, ST_name, NULL); 
 
    jobfilter_compact = XmToggleButtonGetState(jobfilter_arrays_compressed);
@@ -1443,7 +1444,7 @@ XtPointer cld, cad;
 
    qmonMessageBox(w, alp, 0);
 
-   alp = lFreeList(alp);
+   lFreeList(&alp);
 
    DEXIT;
 }
@@ -1852,10 +1853,10 @@ XtPointer cld, cad;
 
    DENTER(GUI_LAYER, "qmonJobFilterClear");
 
-   jobfilter_resources = lFreeList(jobfilter_resources);
+   lFreeList(&jobfilter_resources);
    qmonRequestDraw(jobfilter_sr, jobfilter_resources, 1);
 
-   jobfilter_owners = lFreeList(jobfilter_owners);
+   lFreeList(&jobfilter_owners);
    XmtInputFieldSetString(jobfilter_owner, "");
    
    XmToggleButtonSetState(jobfilter_arrays_compressed, 1, False);
@@ -1893,7 +1894,7 @@ XtPointer cld, cad;
    qmonRequestDraw(jobfilter_ar, arl, 0);
    qmonRequestDraw(jobfilter_sr, jobfilter_resources, 1);
 
-   arl = lFreeList(arl);
+   lFreeList(&arl);
 
    DEXIT;
 }
@@ -1945,10 +1946,7 @@ XtPointer cld, cad;
 
    type = lGetUlong(fill_in_request, CE_valtype);
    strval = lGetString(fill_in_request, CE_stringval);
-   if (strval)
-      strncpy(stringval, strval, CL_MAXHOSTLEN-1);
-   else
-      strcpy(stringval, "");
+   sge_strlcpy(stringval, strval, CL_MAXHOSTLEN);
 
    status = qmonRequestInput(w, type, cbs->element->string[0], 
                               stringval, sizeof(stringval));
@@ -1971,7 +1969,7 @@ XtPointer cld, cad;
          
       qmonRequestDraw(jobfilter_sr, jobfilter_resources, 1);
    }
-   arl = lFreeList(arl);
+   lFreeList(&arl);
 
    DEXIT;
 }
@@ -2003,9 +2001,9 @@ XtPointer cld, cad;
       }       
             
       if (found) {
-         lRemoveElem(jobfilter_resources, dep);
+         lRemoveElem(jobfilter_resources, &dep);
          if (lGetNumberOfElem(jobfilter_resources) == 0)
-            jobfilter_resources = lFreeList(jobfilter_resources);
+            lFreeList(&jobfilter_resources);
          qmonRequestDraw(jobfilter_sr, jobfilter_resources, 1);
       }
    }
@@ -2075,13 +2073,13 @@ lList *exechost_list
       return False;
    }
    if (!is_cqueue_selected(*queue_list)) {
-      *queue_list = lFreeList(*queue_list);
+      lFreeList(queue_list);
       DEXIT;
       return True;
    }
 
    filtered_queue_list = lSelect("FQL", *queue_list, tagged_queues, all_fields);  
-   *queue_list = lFreeList(*queue_list);
+   lFreeList(queue_list);
    *queue_list = filtered_queue_list;
 
    DEXIT;
@@ -2141,12 +2139,13 @@ lList *request_list
       else {
          dep = jep;
          jep = lNext(jep);
-         lRemoveElem(*job_list, dep);
+         lRemoveElem(*job_list, &dep);
       }
    } 
 
-   if (lGetNumberOfElem(*job_list) == 0)
-      *job_list = lFreeList(*job_list);
+   if (lGetNumberOfElem(*job_list) == 0) {
+      lFreeList(job_list);
+   }
 
    DEXIT;
    return True;

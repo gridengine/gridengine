@@ -45,10 +45,10 @@
 #include "sge_c_gdi.h"
 #include "sge_str.h"
 #include "sge_string.h"
+#include "sge_answer.h"
 #include "sge_utility.h"
 #include "sge_cuser.h"
 #include "sge_hgroup_qmaster.h"
-#include "sge_answer.h"
 #include "sge_unistd.h"
 #include "sge_cqueue.h"
 #include "sge_qinstance.h"
@@ -89,7 +89,7 @@ hgroup_mod_hostlist(lListElem *hgroup, lList **answer_list,
 
    DENTER(TOP_LAYER, "hgroup_mod_hostlist");
    if (hgroup != NULL && reduced_elem != NULL) {
-      int pos = lGetPosViaElem(reduced_elem, HGRP_host_list);
+      int pos = lGetPosViaElem(reduced_elem, HGRP_host_list, SGE_NO_ABORT);
 
       if (pos >= 0) {
          lList *list = lGetPosList(reduced_elem, pos);
@@ -100,7 +100,7 @@ hgroup_mod_hostlist(lListElem *hgroup, lList **answer_list,
          lList *rem_groups = NULL;
 
          if (ret) {
-            ret &= href_list_resolve_hostnames(list, answer_list);
+            ret &= href_list_resolve_hostnames(list, answer_list, true);
          }
          if (ret) {
             attr_mod_sub_list(answer_list, hgroup, HGRP_host_list, HR_name,
@@ -120,6 +120,9 @@ hgroup_mod_hostlist(lListElem *hgroup, lList **answer_list,
             ret &= href_list_find_effective_diff(answer_list, add_groups,
                                                  rem_groups, master_list,
                                                  add_hosts, rem_hosts);
+         }
+         if (ret) {
+            ret &= href_list_resolve_hostnames(*add_hosts, answer_list, false);
          }
 
 
@@ -170,12 +173,12 @@ hgroup_mod_hostlist(lListElem *hgroup, lList **answer_list,
             ret &= href_list_find_all_references(old_href_list, answer_list,
                                                  master_list, &tmp_hosts, NULL);
             ret &= href_list_remove_existing(add_hosts, answer_list, tmp_hosts);
-            tmp_hosts = lFreeList(tmp_hosts);
+            lFreeList(&tmp_hosts);
 
             ret &= href_list_find_all_references(href_list, answer_list,
                                                  master_list, &tmp_hosts, NULL);
             ret &= href_list_remove_existing(rem_hosts, answer_list, tmp_hosts);
-            tmp_hosts = lFreeList(tmp_hosts);
+            lFreeList(&tmp_hosts);
          }
 
 #if 1 /* debug */
@@ -188,9 +191,9 @@ hgroup_mod_hostlist(lListElem *hgroup, lList **answer_list,
          /*
           * Cleanup
           */
-         old_href_list = lFreeList(old_href_list);
-         add_groups = lFreeList(add_groups);
-         rem_groups = lFreeList(rem_groups);
+         lFreeList(&old_href_list);
+         lFreeList(&add_groups);
+         lFreeList(&rem_groups);
       }
    }
    DEXIT;
@@ -214,7 +217,7 @@ hgroup_commit(lListElem *hgroup)
       next_cqueue = lNext(cqueue);
       cqueue_commit(cqueue);
       lDechainElem(cqueue_list, cqueue);
-      lRemoveElem(cqueue_master_list, org_queue);
+      lRemoveElem(cqueue_master_list, &org_queue);
       lAppendElem(cqueue_master_list, cqueue);
    }
    lSetList(hgroup, HGRP_cqueue_list, NULL);
@@ -232,7 +235,7 @@ hgroup_rollback(lListElem *this_elem)
 int 
 hgroup_mod(lList **answer_list, lListElem *hgroup, lListElem *reduced_elem,
            int add, const char *remote_user, const char *remote_host, 
-           gdi_object_t *object, int sub_command) 
+           gdi_object_t *object, int sub_command, monitoring_t *monitor) 
 {
    bool ret = true;
    int pos;
@@ -241,7 +244,7 @@ hgroup_mod(lList **answer_list, lListElem *hgroup, lListElem *reduced_elem,
 
    if (ret) {
       /* Did we get a hostgroupname?  */
-      pos = lGetPosViaElem(reduced_elem, HGRP_name);
+      pos = lGetPosViaElem(reduced_elem, HGRP_name, SGE_NO_ABORT);
       if (pos >= 0) {
          const char *name = lGetPosHost(reduced_elem, pos);
 
@@ -282,7 +285,7 @@ hgroup_mod(lList **answer_list, lListElem *hgroup, lListElem *reduced_elem,
     * Is there a list of host references
     */
    if (ret) {
-      pos = lGetPosViaElem(reduced_elem, HGRP_host_list);
+      pos = lGetPosViaElem(reduced_elem, HGRP_host_list, SGE_NO_ABORT);
       if (pos >= 0) {
          lList *add_hosts = NULL;
          lList *rem_hosts = NULL;
@@ -385,16 +388,16 @@ hgroup_mod(lList **answer_list, lListElem *hgroup, lListElem *reduced_elem,
                                                      reduced_elem,
                                                      real_add_hosts, 
                                                      real_rem_hosts,
-                                                     refresh_all_values);
+                                                     refresh_all_values, monitor);
                   }
 
                   /*
                    * Free all temorarily allocated memory
                    */
-                  after_mod_list = lFreeList(after_mod_list);
-                  before_mod_list = lFreeList(before_mod_list);
-                  real_add_hosts = lFreeList(real_add_hosts);
-                  real_rem_hosts = lFreeList(real_rem_hosts);
+                  lFreeList(&after_mod_list);
+                  lFreeList(&before_mod_list);
+                  lFreeList(&real_add_hosts);
+                  lFreeList(&real_rem_hosts);
 
                   /*
                    * !!! Rollback of masterlist modification
@@ -425,12 +428,12 @@ hgroup_mod(lList **answer_list, lListElem *hgroup, lListElem *reduced_elem,
          if (ret) {
             lList *list = *(object_type_get_master_list(SGE_TYPE_EXECHOST));
 
-            ret &= host_list_add_missing_href(list, answer_list, add_hosts);
+            ret &= host_list_add_missing_href(list, answer_list, add_hosts, monitor);
          }
 
-         add_hosts = lFreeList(add_hosts);
-         rem_hosts = lFreeList(rem_hosts);
-         occupant_groups = lFreeList(occupant_groups);
+         lFreeList(&add_hosts);
+         lFreeList(&rem_hosts);
+         lFreeList(&occupant_groups);
       }  
    } 
 
@@ -509,7 +512,7 @@ hgroup_del(lListElem *this_elem, lList **answer_list,
                   ret = false;
                }
             }
-            href_list = lFreeList(href_list);
+            lFreeList(&href_list);
 
 
 #ifndef __SGE_NO_USERMAPPING__
@@ -532,7 +535,7 @@ hgroup_del(lListElem *this_elem, lList **answer_list,
                   ret = false;
                }
             }
-            string_list = lFreeList(string_list);
+            lFreeList(&string_list);
 #endif
             /*
              * Try to unlink the concerned spoolfile
@@ -545,7 +548,7 @@ hgroup_del(lListElem *this_elem, lList **answer_list,
                    * Let's remove the object => Success!
                    */
 
-                  lRemoveElem(Master_HGroup_List, hgroup);
+                  lRemoveElem(Master_HGroup_List, &hgroup);
 
                   INFO((SGE_EVENT, MSG_SGETEXT_REMOVEDFROMLIST_SSSS, 
                         remote_user, remote_host, name , "host group entry"));
@@ -589,7 +592,7 @@ hgroup_del(lListElem *this_elem, lList **answer_list,
 }
 
 int 
-hgroup_success(lListElem *hgroup, lListElem *old_hgroup, gdi_object_t *object, lList **ppList) 
+hgroup_success(lListElem *hgroup, lListElem *old_hgroup, gdi_object_t *object, lList **ppList, monitoring_t *monitor) 
 {
    const char *name = lGetHost(hgroup, HGRP_name);
 

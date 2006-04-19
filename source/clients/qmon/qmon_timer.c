@@ -439,10 +439,10 @@ XtIntervalId *id
       }
    }
    
-   lFreeWhat(what);
-   lFreeWhere(where);
-   lFreeList(alp);
-   lFreeList(lp);
+   lFreeWhat(&what);
+   lFreeWhere(&where);
+   lFreeList(&alp);
+   lFreeList(&lp);
    
    /* 
    ** keep the timer running

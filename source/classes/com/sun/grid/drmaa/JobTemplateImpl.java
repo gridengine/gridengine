@@ -31,7 +31,6 @@
 /*___INFO__MARK_END__*/
 package com.sun.grid.drmaa;
 
-import java.text.NumberFormat;
 import java.util.*;
 import java.util.regex.*;
 
@@ -132,8 +131,12 @@ public class JobTemplateImpl extends JobTemplate {
 	private static final String HARD_RUN_DURATION_LIMIT = "drmaa_run_duration_hlimit"
 	private static final String SOFT_RUN_DURATION_LIMIT = "drmaa_run_duration_slimit"
  */
-	private static final String HOLD = "drmaa_hold";
-	private static final String ACTIVE = "drmaa_active";
+	private static final String HOLD_STRING = "drmaa_hold";
+	private static final String ACTIVE_STRING = "drmaa_active";
+   private static final String BLOCK_EMAIL_TRUE_STRING = "1";
+   private static final String BLOCK_EMAIL_FALSE_STRING = "0";
+   private static final String JOIN_FILES_TRUE_STRING = "y";
+   private static final String JOIN_FILES_FALSE_STRING = "n";
    private static PartialTimestampFormat ptf = new PartialTimestampFormat ();
    private SessionImpl session = null;
    private int id = -1;
@@ -192,7 +195,14 @@ public class JobTemplateImpl extends JobTemplate {
 	 * @return The command to execute as the job or null if it has not been set
 	 */
    public String getRemoteCommand () {
-      return (String)this.getAttribute (REMOTE_COMMAND)[0];
+      String[] command = this.getAttribute (REMOTE_COMMAND);
+      
+      if (command != null) {
+         return command[0];
+      }
+      else {
+         return null;
+      }
    }
    
 	/** Set the parameters passed as arguments to the job.
@@ -237,10 +247,10 @@ public class JobTemplateImpl extends JobTemplate {
       String stateString = null;
       
       if (state == super.HOLD) {
-         stateString = this.HOLD;
+         stateString = this.HOLD_STRING;
       }
       else if (state == super.ACTIVE) {
-         stateString = this.ACTIVE;
+         stateString = this.ACTIVE_STRING;
       }
       else {
          throw new InvalidAttributeValueException ("jobSubmissionState attribute is invalid");
@@ -255,13 +265,13 @@ public class JobTemplateImpl extends JobTemplate {
     * @return The job state at submission
     */	
    public int getJobSubmissionState () {
-      String stateString = (String)this.getAttribute (JOB_SUBMISSION_STATE)[0];
+      String[] stateString =  this.getAttribute (JOB_SUBMISSION_STATE);
       
-      if (stateString.equals (this.HOLD)) {
-         return super.HOLD;
-      }
-      else if (stateString.equals (this.ACTIVE)) {
+      if ((stateString == null) || stateString[0].equals (this.ACTIVE_STRING)) {
          return super.ACTIVE;
+      }
+      else if (stateString[0].equals (this.HOLD_STRING)) {
+         return super.HOLD;
       }
       else {
          /* This should never happen */
@@ -307,14 +317,18 @@ public class JobTemplateImpl extends JobTemplate {
 	 */
    public Properties getJobEnvironment () {
       String[] props = this.getAttribute (JOB_ENVIRONMENT);
-      Properties env = new Properties ();
-      
-      for (int count = 0; count < props.length; count++) {
-         int index = props[count].indexOf ('=');
-         String name = props[count].substring (0, index);
-         String value = props[count].substring (index + 1);
-         
-         env.setProperty (name, value);
+      Properties env = null;
+   
+      if (props != null) {
+         env = new Properties ();
+
+         for (int count = 0; count < props.length; count++) {
+            int index = props[count].indexOf ('=');
+            String name = props[count].substring (0, index);
+            String value = props[count].substring (index + 1);
+
+            env.setProperty (name, value);
+         }
       }
       
       return env;
@@ -364,7 +378,14 @@ public class JobTemplateImpl extends JobTemplate {
     * set
     */
    public String getWorkingDirectory () {
-      return (String)this.getAttribute (WORKING_DIRECTORY)[0];
+      String[] wd =  this.getAttribute (WORKING_DIRECTORY);
+      
+      if (wd != null) {
+         return wd[0];
+      }
+      else {
+         return null;
+      }
    }
    
    /** <p>Specifies the DRMAA job category. The category string is used by the
@@ -400,7 +421,14 @@ public class JobTemplateImpl extends JobTemplate {
 	 * resources and/or policies or null if it has not been set
 	 */
    public String getJobCategory () {
-      return (String)this.getAttribute (JOB_CATEGORY)[0];
+      String[] category =  this.getAttribute (JOB_CATEGORY);
+      
+      if (category != null) {
+         return category[0];
+      }
+      else {
+         return null;
+      }
    }
    
 	/** Specifies native qsub options which will be interpreted as part of the
@@ -431,7 +459,14 @@ public class JobTemplateImpl extends JobTemplate {
     * set
     */
    public String getNativeSpecification () {
-     return (String)this.getAttribute (NATIVE_SPECIFICATION)[0];
+      String[] spec =  this.getAttribute (NATIVE_SPECIFICATION);
+      
+      if (spec != null) {
+         return spec[0];
+      }
+      else {
+         return null;
+      }
    }
    
 	/** Set the list of email addresses used to report the job completion and
@@ -446,7 +481,7 @@ public class JobTemplateImpl extends JobTemplate {
     * <LI>ConflictingAttributeValuesException</LI>
     * </UL>
     */	
-   public void setEmailAddresses (String[] email) throws DrmaaException {
+   public void setEmail (String[] email) throws DrmaaException {
       this.setAttribute (EMAIL_ADDRESS, Arrays.asList (email));
    }
    
@@ -455,7 +490,7 @@ public class JobTemplateImpl extends JobTemplate {
     * @return The list of email addresses used to report the job completion
     * and status or null if they have not been set
     */	
-   public String[] getEmailAddresses () {
+   public String[] getEmail () {
       String[] emails = this.getAttribute (EMAIL_ADDRESS);
       
       return emails;
@@ -474,10 +509,10 @@ public class JobTemplateImpl extends JobTemplate {
     */
    public void setBlockEmail (boolean blockEmail) throws DrmaaException {
       if (blockEmail) {
-         this.setAttribute (BLOCK_EMAIL, "1");
+         this.setAttribute (BLOCK_EMAIL, this.BLOCK_EMAIL_TRUE_STRING);
       }
       else {
-         this.setAttribute (BLOCK_EMAIL, "0");
+         this.setAttribute (BLOCK_EMAIL, this.BLOCK_EMAIL_FALSE_STRING);
       }
    }
    
@@ -486,9 +521,14 @@ public class JobTemplateImpl extends JobTemplate {
     * @return Whether to block sending e-mail by default
 	 */
    public boolean getBlockEmail () {
-      String block = (String)this.getAttribute (BLOCK_EMAIL)[0];
+      String[] block =  this.getAttribute (BLOCK_EMAIL);
       
-      return block.equals ("1");
+      if (block != null) {
+         return block[0].equals (this.BLOCK_EMAIL_TRUE_STRING);
+      }
+      else {
+         return false;
+      }
    }
    
 	/** Set the earliest time when the job may be eligible to be run.
@@ -509,12 +549,18 @@ public class JobTemplateImpl extends JobTemplate {
     * if it has not been set
 	 */
    public PartialTimestamp getStartTime () {
-      try {
-         return ptf.parse ((String)this.getAttribute (START_TIME)[0]);
+      String[] time =  this.getAttribute (START_TIME);
+      
+      if (time != null) {
+         try {
+            return ptf.parse (time[0]);
+         }
+         catch (java.text.ParseException e) {
+            throw new InternalException ("startTime property is unparsable");
+         }
       }
-      catch (java.text.ParseException e) {
-         /* This should never happen! */
-         throw new InternalException ("startTime property is unparsable");
+      else {
+         return null;
       }
    }
    
@@ -542,7 +588,14 @@ public class JobTemplateImpl extends JobTemplate {
     * @return The name of the job or null if it has not been set
 	 */
    public String getJobName () {
-      return (String)this.getAttribute (JOB_NAME)[0];
+      String[] name =  this.getAttribute (JOB_NAME);
+      
+      if (name != null) {
+         return name[0];
+      }
+      else {
+         return null;
+      }
    }
    
 	/** Set the job's standard input path.
@@ -609,7 +662,14 @@ public class JobTemplateImpl extends JobTemplate {
     * @return The job's standard input path or null if it has not been set
     */
    public String getInputPath () {
-      return (String)this.getAttribute (INPUT_PATH)[0];
+      String[] path =  this.getAttribute (INPUT_PATH);
+      
+      if (path != null) {
+         return path[0];
+      }
+      else {
+         return null;
+      }
    }
    
 	/** Sets how to direct the job's standard output.
@@ -677,7 +737,14 @@ public class JobTemplateImpl extends JobTemplate {
     * set
     */
    public String getOutputPath () {
-      return (String)this.getAttribute (OUTPUT_PATH)[0];
+      String[] path =  this.getAttribute (OUTPUT_PATH);
+      
+      if (path != null) {
+         return path[0];
+      }
+      else {
+         return null;
+      }
    }
    
 	/** Sets how to direct the job's standard error.
@@ -743,7 +810,14 @@ public class JobTemplateImpl extends JobTemplate {
     * @return How to direct the job's standard error
     */
    public String getErrorPath () {
-      return (String)this.getAttribute (ERROR_PATH)[0];
+      String[] path =  this.getAttribute (ERROR_PATH);
+      
+      if (path != null) {
+         return path[0];
+      }
+      else {
+         return null;
+      }
    }
    
 	/** Sets whether the error stream should be intermixed with the output
@@ -761,10 +835,10 @@ public class JobTemplateImpl extends JobTemplate {
     */
    public void setJoinFiles (boolean join) throws DrmaaException {
       if (join) {
-         this.setAttribute (JOIN_FILES, "y");
+         this.setAttribute (JOIN_FILES, this.JOIN_FILES_TRUE_STRING);
       }
       else {
-         this.setAttribute (JOIN_FILES, "n");
+         this.setAttribute (JOIN_FILES, this.JOIN_FILES_FALSE_STRING);
       }
    }
    
@@ -776,9 +850,14 @@ public class JobTemplateImpl extends JobTemplate {
 	 * stream
 	 */
    public boolean getJoinFiles () {
-      String block = (String)this.getAttribute (JOIN_FILES)[0];
+      String[] join =  this.getAttribute (JOIN_FILES);
       
-      return block.equalsIgnoreCase ("y");
+      if (join != null) {
+         return join[0].equalsIgnoreCase (this.JOIN_FILES_TRUE_STRING);
+      }
+      else {
+         return false;
+      }
    }
    
 	/** <p>Sets how to transfer files between hosts.
@@ -846,11 +925,16 @@ public class JobTemplateImpl extends JobTemplate {
     * TRANSFER_INPUT_FILES and/or TRANSFER_OUTPUT_FILES ored together
     */
    public FileTransferMode getTransferFiles () {
-      String buf = (String)this.getAttribute (TRANSFER_FILES)[0];
+      String[] mode =  this.getAttribute (TRANSFER_FILES);
       
-      return new FileTransferMode ((buf.indexOf ('i') != -1),
-                                   (buf.indexOf ('o') != -1),
-                                   (buf.indexOf ('e') != -1));
+      if (mode != null) {
+         return new FileTransferMode ((mode[0].indexOf ('i') != -1),
+                                      (mode[0].indexOf ('o') != -1),
+                                      (mode[0].indexOf ('e') != -1));
+      }
+      else {
+         return null;
+      }
    }
    
    private String[] getAttribute (String name) {

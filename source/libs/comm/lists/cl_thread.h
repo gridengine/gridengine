@@ -59,23 +59,23 @@
    to his own cl_thread_settings_t struct.
 */
 
+/* define cleanup functio type */
+typedef void  (*cl_thread_cleanup_func_t) (cl_thread_settings_t* thread_config);
+
 struct cl_thread_settings_type {
-   char*              thread_name;                /* name of thread */
-
-   int                thread_id;                  /* thread id */
-
-   int                thread_state;               /* thread state, e.g. CL_THREAD_WAITING */
-
-   unsigned long      thread_event_count;         /* number of cl_thread_wait_for_event() calls */
-
-   cl_raw_list_t*     thread_log_list;            /* list for log ( can be NULL ) */
-
-   pthread_t*         thread_pointer;             /* pointer to thread (pthread lib) */
-
-
-   cl_thread_condition_t* thread_event_condition;   /* event call conditions */
-   cl_thread_condition_t* thread_startup_condition; /* startup condition ( used by cl_thread_setup() ) */
-
+#ifdef CL_DO_COMMLIB_DEBUG
+   struct timeval           thread_last_cancel_test_time; /* time when thread did the last cl_thread_func_testcancel() call */
+#endif
+   char*                    thread_name;                  /* name of thread */
+   int                      thread_id;                    /* thread id */
+   int                      thread_state;                 /* thread state, e.g. CL_THREAD_WAITING */
+   unsigned long            thread_event_count;           /* number of cl_thread_wait_for_event() calls */
+   cl_raw_list_t*           thread_log_list;              /* list for log ( can be NULL ) */
+   pthread_t*               thread_pointer;               /* pointer to thread (pthread lib) */
+   cl_thread_condition_t*   thread_event_condition;       /* event call conditions */
+   cl_thread_condition_t*   thread_startup_condition;     /* startup condition ( used by cl_thread_setup() ) */
+   cl_thread_cleanup_func_t thread_cleanup_func;          /* thread cleanup function pointer */
+   void*                    thread_user_data;             /* any user data ( e.g.: a pointer to a struct ) ) */
 };
 
 struct cl_thread_condition_type {
@@ -93,7 +93,13 @@ struct cl_thread_condition_type {
 
    This functions are more used more or less internal
 */
-int cl_thread_setup(cl_thread_settings_t* thread_config, cl_raw_list_t* log_list, const char* name, int id, void * (*start_routine)(void *) ); 
+int cl_thread_setup(cl_thread_settings_t* thread_config,
+                    cl_raw_list_t* log_list,
+                    const char* name,
+                    int id,
+                    void * (*start_routine)(void *),
+                    cl_thread_cleanup_func_t cleanup_func,
+                    void* user_data ); 
 int cl_thread_cleanup(cl_thread_settings_t* thread_config); 
 cl_thread_settings_t* cl_thread_get_thread_config(void);
 int cl_thread_set_thread_config(cl_thread_settings_t* thread_config);

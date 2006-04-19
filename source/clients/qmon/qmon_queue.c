@@ -233,8 +233,8 @@ void updateQueueList(void)
 #endif  
    /* EB: TODO: */
    qlp = lSelect("SQL", qmonMirrorList(SGE_CQUEUE_LIST), where, whatall); 
-   lFreeWhere(where);
-   lFreeWhat(whatall);
+   lFreeWhere(&where);
+   lFreeWhat(&whatall);
 
 #ifdef FIXME
    /*
@@ -606,8 +606,8 @@ lList *new_hl
    /*
    ** free the previously referenced queue elements
    */
-   prev_ql = lFreeList(prev_ql);
-   prev_hl = lFreeList(prev_hl);
+   lFreeList(&prev_ql);
+   lFreeList(&prev_hl);
 
    /* now the new_ql becomes the prev_ql */
    prev_ql = new_ql;
@@ -913,7 +913,7 @@ lListElem *qep
       rows++;
    }
 
-   ncl = lFreeList(ncl);
+   lFreeList(&ncl);
    
    DEXIT;
 }
@@ -1043,8 +1043,8 @@ Boolean *ctd
 
                   strcpy(hostname, "global");
                   if (qB && qB->qI && qB->qI->qp) {
-                     strncpy(hostname, lGetHost(qB->qI->qp, QU_qhostname),
-                                 SGE_PATH_MAX);                      
+                     sge_strlcpy(hostname, lGetHost(qB->qI->qp, QU_qhostname),
+                                 SGE_PATH_MAX);
                      strtok(hostname, ".");
                   }
                   qmonBrowserMessages(w, (XtPointer)hostname, NULL);
@@ -1508,7 +1508,7 @@ XtPointer cld, cad;
 
       updateQueueList();
 
-      ql = lFreeList(ql);
+      lFreeList(&ql);
       alp = lFreeList(alp);
    }
    

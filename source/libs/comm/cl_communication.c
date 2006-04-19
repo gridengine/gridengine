@@ -41,6 +41,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <arpa/inet.h>
 #include <netdb.h>
 
 #include "sge_hostname.h"
@@ -214,10 +215,6 @@ int cl_com_add_debug_message(cl_com_connection_t* connection, const char* messag
       return CL_RETVAL_HANDLE_NOT_FOUND;
    }
 
-   if (handle->connection_list != NULL) {
-      nr_of_connections = cl_raw_list_get_elem_count(handle->connection_list);
-   }
-
    /* don't add default case for this switch! */
    switch(handle->debug_client_setup->dc_mode) {
       case CL_DEBUG_CLIENT_OFF:
@@ -232,6 +229,10 @@ int cl_com_add_debug_message(cl_com_connection_t* connection, const char* messag
       return CL_RETVAL_PARAMS;
    }
 
+   if (handle->connection_list != NULL) {
+      nr_of_connections = cl_raw_list_get_elem_count(handle->connection_list);
+   }
+
    if (message == NULL) {
       info = "n.a.";
    } else {
@@ -242,9 +243,12 @@ int cl_com_add_debug_message(cl_com_connection_t* connection, const char* messag
    time_now = now.tv_sec + (now.tv_usec / 1000000.0);
    if (ms->message_send_time.tv_sec != 0) {
       outgoing = CL_TRUE;
-      msg_time = ms->message_send_time.tv_sec + (ms->message_send_time.tv_usec / 1000000.0);
+      /* set message_time to message creation time */
+      msg_time = ms->message_insert_time.tv_sec + (ms->message_insert_time.tv_usec / 1000000.0);
       snprintf(message_time,256,"%.6f", msg_time);
 
+      /* set commlib_time to commlib linger time */
+      msg_time = ms->message_send_time.tv_sec + (ms->message_send_time.tv_usec / 1000000.0);
       com_time = msg_time - (ms->message_insert_time.tv_sec + (ms->message_insert_time.tv_usec / 1000000.0));
       snprintf(commlib_time,256,"%.6f", com_time);
       
@@ -448,6 +452,7 @@ int cl_com_create_ssl_setup(cl_ssl_setup_t**     new_setup,
                             char*                ssl_key_pem_file,
                             char*                ssl_rand_file,
                             char*                ssl_reconnect_file,
+                            char*                ssl_crl_file,
                             unsigned long        ssl_refresh_time,
                             char*                ssl_password,
                             cl_ssl_verify_func_t ssl_verify_func) {
@@ -543,6 +548,14 @@ int cl_com_create_ssl_setup(cl_ssl_setup_t**     new_setup,
       }
    }
 
+   if (ssl_crl_file != NULL) {
+      tmp_setup->ssl_crl_file = strdup(ssl_crl_file);
+      if (tmp_setup->ssl_crl_file == NULL) {
+         cl_com_free_ssl_setup(&tmp_setup);
+         return CL_RETVAL_MALLOC;
+      }
+   }
+
    tmp_setup->ssl_refresh_time = ssl_refresh_time;
 
    if (ssl_password != NULL) {
@@ -583,6 +596,7 @@ int cl_com_dup_ssl_setup(cl_ssl_setup_t** new_setup, cl_ssl_setup_t* source) {
                                   source->ssl_key_pem_file,
                                   source->ssl_rand_file,
                                   source->ssl_reconnect_file,
+                                  source->ssl_crl_file,
                                   source->ssl_refresh_time,
                                   source->ssl_password,
                                   source->ssl_verify_func);
@@ -619,6 +633,10 @@ int cl_com_free_ssl_setup(cl_ssl_setup_t** del_setup) {
    }
    if ((*del_setup)->ssl_reconnect_file != NULL) {
       free((*del_setup)->ssl_reconnect_file);
+   }
+   
+   if ((*del_setup)->ssl_crl_file != NULL) {
+      free((*del_setup)->ssl_crl_file);
    }
    
    if ((*del_setup)->ssl_password != NULL) {
@@ -670,7 +688,17 @@ int cl_com_setup_message(cl_com_message_t** message, cl_com_connection_t* connec
       connection->last_send_message_id = connection->last_send_message_id + 1;
    }
    (*message)->message_length = size;
-   connection->data_write_flag = CL_COM_DATA_READY;
+   switch (connection->connection_state) {
+      case CL_CONNECTED:
+      case CL_CLOSING:
+         connection->data_write_flag = CL_COM_DATA_READY;
+         break;
+      case CL_DISCONNECTED:
+      case CL_OPENING:
+      case CL_ACCEPTING:
+      case CL_CONNECTING:
+         break;
+   }
    return return_value;
 }
 
@@ -690,27 +718,11 @@ int cl_com_create_message(cl_com_message_t** message) {
    if (*message == NULL) {
       return CL_RETVAL_MALLOC; 
    }
+   memset( *message, 0, sizeof(cl_com_message_t));
 
    (*message)->message_state = CL_MS_UNDEFINED;
    (*message)->message_df = CL_MIH_DF_UNDEFINED;
    (*message)->message_mat = CL_MIH_MAT_UNDEFINED;
-   (*message)->message_tag = 0;
-   (*message)->message_ack_flag = 0;
-   (*message)->message_sirm = NULL;
-   (*message)->message_id = 0;
-   (*message)->message_response_id = 0;
-   (*message)->message_length = 0;
-   (*message)->message_snd_pointer = 0;
-   (*message)->message_rcv_pointer = 0;
-   (*message)->message_send_time.tv_sec  = 0;
-   (*message)->message_send_time.tv_usec = 0;
-   (*message)->message_receive_time.tv_sec  = 0;
-   (*message)->message_receive_time.tv_usec = 0;
-   (*message)->message_remove_time.tv_sec  = 0;
-   (*message)->message_remove_time.tv_usec = 0;
-   (*message)->message_insert_time.tv_sec  = 0;
-   (*message)->message_insert_time.tv_usec = 0;
-   (*message)->message = NULL;
    return CL_RETVAL_OK;
 }
 
@@ -1089,6 +1101,8 @@ const char* cl_com_get_connection_sub_state(cl_com_connection_t* connection) {
          switch( connection->connection_sub_state ) {
             case CL_COM_DO_SHUTDOWN:
                return "CL_COM_DO_SHUTDOWN";
+            case CL_COM_SHUTDOWN_DONE:
+               return "CL_COM_SHUTDOWN_DONE";
             default:
                return "UNEXPECTED CONNECTION SUB STATE";
          }
@@ -1127,8 +1141,6 @@ const char* cl_com_get_connection_sub_state(cl_com_connection_t* connection) {
                return "CL_COM_CCRM_SENT";
             case CL_COM_DONE:
                return "CL_COM_DONE";
-            case CL_COM_DONE_FLUSHED:
-               return "CL_COM_DONE_FLUSHED";
             default:
                return "UNEXPECTED CONNECTION SUB STATE";
          }
@@ -1869,12 +1881,12 @@ int cl_com_gethostname(char **unique_hostname,struct in_addr *copy_addr,struct h
    char localhostname[CL_MAXHOSTNAMELEN_LENGTH + 1];
    int retval = CL_RETVAL_OK;
    
-   
+   errno = 0;
    if (gethostname(localhostname,CL_MAXHOSTNAMELEN_LENGTH) != 0) {
-      CL_LOG(CL_LOG_ERROR, cl_get_error_text(CL_RETVAL_LOCAL_HOSTNAME_ERROR));
       if (system_error_value != NULL) {
          *system_error_value = errno;
       }
+      CL_LOG(CL_LOG_ERROR, cl_get_error_text(CL_RETVAL_LOCAL_HOSTNAME_ERROR));
       return CL_RETVAL_LOCAL_HOSTNAME_ERROR;
    }
    CL_LOG_STR( CL_LOG_DEBUG, "local gethostname() returned: ", localhostname);
@@ -1891,13 +1903,20 @@ int cl_com_gethostname(char **unique_hostname,struct in_addr *copy_addr,struct h
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_com_gethostbyname()"
-static int cl_com_gethostbyname(char *hostname, cl_com_hostent_t **hostent, int* system_error ) {
-
+static int cl_com_gethostbyname(char *hostname_unresolved, cl_com_hostent_t **hostent, int* system_error ) {
+#if defined(CRAY)  
+   struct sockaddr_in  tmp_addr;
+#else
+   struct in_addr tmp_addr;
+#endif
    struct hostent* he = NULL;
+   char* hostname = NULL;
    cl_com_hostent_t *hostent_p = NULL;   
+   int ret_val = CL_RETVAL_OK;
+   cl_bool_t do_free_host = CL_FALSE;
 
    /* check parameters */
-   if (hostent == NULL || hostname == NULL) {
+   if (hostent == NULL || hostname_unresolved == NULL) {
       CL_LOG( CL_LOG_ERROR, cl_get_error_text(CL_RETVAL_PARAMS));
       return CL_RETVAL_PARAMS;    /* we don't accept NULL pointers */
    }
@@ -1906,22 +1925,52 @@ static int cl_com_gethostbyname(char *hostname, cl_com_hostent_t **hostent, int*
       return CL_RETVAL_PARAMS;    /* we expect an pointer address, set to NULL */
    }
 
+   /* check if the incoming hostname is an ip address string */
+   if (cl_com_is_ip_address_string(hostname_unresolved, &tmp_addr) == CL_TRUE) {
+      CL_LOG(CL_LOG_INFO,"got ip address string as host name argument");
+      ret_val = cl_com_cached_gethostbyaddr(&tmp_addr, &hostname, NULL, NULL);
+      if (ret_val != CL_RETVAL_OK) {
+         if (hostname != NULL) {
+            free(hostname);
+            hostname = NULL;
+         }
+         return ret_val;
+      }
+      do_free_host = CL_TRUE;
+      CL_LOG_STR(CL_LOG_INFO,"ip address string  :", hostname_unresolved);
+      CL_LOG_STR(CL_LOG_INFO,"resulting host name:", hostname);
+   } else {
+      hostname = hostname_unresolved;
+   }
+
+   /* was there a malloc() error */
+   if (hostname == NULL) {
+      return CL_RETVAL_MALLOC;
+   }
+
+
+
    /* get memory for cl_com_hostent_t struct */
    hostent_p = (cl_com_hostent_t*)malloc(sizeof(cl_com_hostent_t));
    if (hostent_p == NULL) {
       CL_LOG(CL_LOG_ERROR, cl_get_error_text(CL_RETVAL_MALLOC));
+      if (do_free_host == CL_TRUE) {
+         free(hostname);
+         hostname = NULL;
+      }
       return CL_RETVAL_MALLOC;          /* could not get memory */ 
    }
    hostent_p->he = NULL;
-#if 0
-   hostent_p->he_data_buffer = NULL;
-#endif
    
    /* use sge_gethostbyname() */
    he = sge_gethostbyname(hostname, system_error);
    if (he == NULL) {
       CL_LOG( CL_LOG_ERROR, cl_get_error_text(CL_RETVAL_UNKOWN_HOST_ERROR));
       cl_com_free_hostent(&hostent_p);       /* could not find host */
+      if (do_free_host == CL_TRUE) {
+         free(hostname);
+         hostname = NULL;
+      }
       return CL_RETVAL_UNKOWN_HOST_ERROR;
    } else {
       hostent_p->he = he;
@@ -1929,11 +1978,19 @@ static int cl_com_gethostbyname(char *hostname, cl_com_hostent_t **hostent, int*
 
    if (hostent_p->he->h_addr == NULL) {
       cl_com_free_hostent(&hostent_p);
+      if (do_free_host == CL_TRUE) {
+         free(hostname);
+         hostname = NULL;
+      }
       return CL_RETVAL_IP_NOT_RESOLVED_ERROR;
    }
 
    *hostent = hostent_p;
    cl_com_print_host_info(hostent_p);
+   if (do_free_host == CL_TRUE) {
+      free(hostname);
+      hostname = NULL;
+   }
    return CL_RETVAL_OK;
 }
 
@@ -1998,74 +2055,89 @@ static int cl_com_gethostbyaddr(struct in_addr *addr, cl_com_hostent_t **hostent
 static int cl_com_dup_host(char** host_dest, char* source, cl_host_resolve_method_t method, char* domain) {
 
    int retval = CL_RETVAL_OK;
-   int hostlen = 0;
+   unsigned long hostlen = 0;
+   unsigned long counter = 0;
+   cl_bool_t is_static_buffer = CL_FALSE;
    char* the_dot = NULL;
 
    if (host_dest == NULL || source == NULL) {
       return CL_RETVAL_PARAMS;
    }
    if (*host_dest != NULL) {
-      return CL_RETVAL_PARAMS;
+      is_static_buffer = CL_TRUE;
    }
 
-   the_dot = strchr(source, '.');
 
    switch(method) {
        case CL_SHORT:
           hostlen = strlen(source);
-          if (the_dot != NULL) {
-             hostlen = hostlen - strlen(the_dot);
+
+          /* for performance reasons we malloc the full name */
+          if (is_static_buffer == CL_FALSE) {
+             *host_dest = (char*) malloc(sizeof(char) * (hostlen + 1));
+             if (*host_dest == NULL) {
+                return CL_RETVAL_MALLOC;
+             }
           }
-          *host_dest = (char*) malloc((sizeof(char) * hostlen) + 1);
-          if (*host_dest == NULL) {
-             return CL_RETVAL_MALLOC;
-          }
-          strncpy(*host_dest, source, hostlen);
-          (*host_dest)[hostlen]=0;
+               
+          /* now we copy till we found a dot or till end of string
+             AND transform the host name to upper letters */
+          for (counter = 0; counter < hostlen && source[counter] != '.' ; counter++) {
+             (*host_dest)[counter] = toupper(source[counter]);
+          }  
+          (*host_dest)[counter]=0;
           retval = CL_RETVAL_OK;
           break;
        case CL_LONG:
+          the_dot = strchr(source, '.');
           hostlen = strlen(source);
-          if (domain == NULL) {
-             if (the_dot == NULL) {
+
+          if (the_dot == NULL) {
+             if (domain == NULL) {
                 CL_LOG(CL_LOG_ERROR,"can't dup host with domain name without default domain");
                 /* error copy host without domain name , host is short */
-                *host_dest = (char*) malloc((sizeof(char) * hostlen) + 1);
-                if (*host_dest == NULL) {
-                   return CL_RETVAL_MALLOC;
+                if (is_static_buffer == CL_FALSE) {
+                   *host_dest = (char*) malloc( sizeof(char) * (hostlen + 1) );
+                   if (*host_dest == NULL) {
+                      return CL_RETVAL_MALLOC;
+                   }
                 }
-                strncpy(*host_dest, source, hostlen);
+                for (counter = 0; counter < hostlen  ; counter++) {
+                   (*host_dest)[counter] = toupper(source[counter]);
+                }  
                 (*host_dest)[hostlen]=0;
              } else {
-                /* we have no domain, but the host is resolved long -> ok */
-                *host_dest = (char*) malloc((sizeof(char) * hostlen) + 1);
-                if (*host_dest == NULL) {
-                   return CL_RETVAL_MALLOC;
+                /* length = hostlength + domainlength + '.' */
+                unsigned long length = hostlen + strlen(domain) + 1;
+                unsigned long domain_counter = 0;
+                /* we have a short hostname, add the default domain */
+                if (is_static_buffer == CL_FALSE) {
+                   *host_dest = (char*) malloc( sizeof(char) * ( length + 1) );
+                   if (*host_dest == NULL) { 
+                      return CL_RETVAL_MALLOC;
+                   }
                 }
-                strncpy(*host_dest, source, hostlen);
-                (*host_dest)[hostlen]=0;
+                for (counter = 0; counter < hostlen  ; counter++) {
+                   (*host_dest)[counter] = toupper(source[counter]);
+                }  
+                (*host_dest)[hostlen]='.';
+                for (counter = hostlen+1; counter < length ; counter++) {
+                   (*host_dest)[counter] = toupper(domain[domain_counter++]);
+                }
+                (*host_dest)[length]=0;
              }
           } else {
-             if (the_dot == NULL) {
-                int length = hostlen + strlen(domain) + 1;
-                /* we have a short hostname, add the default domain */
-                *host_dest = (char*) malloc((sizeof(char) * length) + 1);
-                if (*host_dest == NULL) { 
-                   return CL_RETVAL_MALLOC;
-                }
-                strncpy(*host_dest, source, hostlen);
-                (*host_dest)[hostlen]=0;
-                strncat(*host_dest, ".", 1);
-                strncat(*host_dest, domain, strlen(domain));
-             } else {
-                /* we have a long hostname, return original name */
-                *host_dest = (char*) malloc((sizeof(char) * hostlen) + 1);
+             /* we have a long hostname, return original name */
+             if (is_static_buffer == CL_FALSE) {
+                *host_dest = (char*) malloc( sizeof(char) * (hostlen + 1) );
                 if (*host_dest == NULL) {
                    return CL_RETVAL_MALLOC;
                 }
-                strncpy(*host_dest, source, hostlen);
-                (*host_dest)[hostlen]=0;
              }
+             for (counter = 0; counter < hostlen  ; counter++) {
+                (*host_dest)[counter] = toupper(source[counter]);
+             }  
+             (*host_dest)[hostlen]=0;
           }
           retval = CL_RETVAL_OK;
           break;
@@ -2129,13 +2201,13 @@ int cl_com_set_resolve_method(cl_host_resolve_method_t method, char* local_domai
    host_list_data->resolve_method = method;
    switch(host_list_data->resolve_method) {
       case CL_SHORT:
-         CL_LOG(CL_LOG_WARNING,"using short hostname for host compare operations");
+         CL_LOG(CL_LOG_INFO,"using short hostname for host compare operations");
          break;
       case CL_LONG:
-         CL_LOG(CL_LOG_WARNING,"using long hostname for host compare operations");
+         CL_LOG(CL_LOG_INFO,"using long hostname for host compare operations");
          break;
       default:
-         CL_LOG(CL_LOG_WARNING,"undefined resolving method");
+         CL_LOG(CL_LOG_ERROR,"undefined resolving method");
          break;
    }
    cl_raw_list_unlock(host_list);
@@ -2147,12 +2219,20 @@ int cl_com_set_resolve_method(cl_host_resolve_method_t method, char* local_domai
 #endif
 #define __CL_FUNCTION__ "cl_com_compare_hosts()"
 int cl_com_compare_hosts( char* host1, char* host2) {
+#define CL_COM_COMPARE_HOSTS_STATIC_BUFFER_SIZE 512
 
     int retval = CL_RETVAL_UNKNOWN;
+    char* malloc_hostbuf1 = NULL;
+    char* malloc_hostbuf2 = NULL;
     char* hostbuf1 = NULL;
     char* hostbuf2 = NULL;
     cl_raw_list_t* host_list = NULL;
     cl_host_list_data_t* host_list_data = NULL;
+    cl_host_resolve_method_t resolve_method;
+    char* local_domain_name = NULL;
+    int domain_length = 0;
+    char fixed_host_buffer1[CL_COM_COMPARE_HOSTS_STATIC_BUFFER_SIZE];
+    char fixed_host_buffer2[CL_COM_COMPARE_HOSTS_STATIC_BUFFER_SIZE];
 
 
     if (host1 == NULL || host2 == NULL) {
@@ -2171,27 +2251,73 @@ int cl_com_compare_hosts( char* host1, char* host2) {
     cl_raw_list_lock(host_list);
     host_list_data = cl_host_list_get_data(host_list);
     if (host_list_data == NULL) {
-       CL_LOG(CL_LOG_ERROR,"communication library setup error for hostlist");
        cl_raw_list_unlock(host_list);
+       CL_LOG(CL_LOG_ERROR,"communication library setup error for hostlist");
        return CL_RETVAL_RESOLVING_SETUP_ERROR;
     }
 
-    if ( ( retval = cl_com_dup_host(&hostbuf1, host1, host_list_data->resolve_method, host_list_data->local_domain_name)) != CL_RETVAL_OK) {
-       cl_raw_list_unlock(host_list);
-       return retval;
-    }
-    if ( ( retval = cl_com_dup_host(&hostbuf2, host2, host_list_data->resolve_method, host_list_data->local_domain_name)) != CL_RETVAL_OK) {
-       free(hostbuf1);
-       cl_raw_list_unlock(host_list);
-       return retval;
+    resolve_method = host_list_data->resolve_method;
+    if (host_list_data->local_domain_name != NULL) {
+       local_domain_name = strdup(host_list_data->local_domain_name);
+       if (local_domain_name == NULL) {
+          cl_raw_list_unlock(host_list);
+          return CL_RETVAL_MALLOC;
+       }
+       domain_length = strlen(local_domain_name);
     }
     cl_raw_list_unlock(host_list);
+
+    if (domain_length + strlen(host1) + 2 < CL_COM_COMPARE_HOSTS_STATIC_BUFFER_SIZE) {
+       malloc_hostbuf1 = fixed_host_buffer1;
+       if ( ( retval = cl_com_dup_host(&malloc_hostbuf1, host1, resolve_method, local_domain_name)) != CL_RETVAL_OK) {
+          free(local_domain_name);
+          return retval;
+       }
+       malloc_hostbuf1 = NULL;
+       hostbuf1 = fixed_host_buffer1;
+    } else {
+       if ( ( retval = cl_com_dup_host(&malloc_hostbuf1, host1, resolve_method, local_domain_name)) != CL_RETVAL_OK) {
+          free(local_domain_name);
+          return retval;
+       }
+       hostbuf1 = malloc_hostbuf1;
+    }
+
+
+    if (domain_length + strlen(host2) + 2 < CL_COM_COMPARE_HOSTS_STATIC_BUFFER_SIZE) {
+       malloc_hostbuf2 = fixed_host_buffer2;
+       if ( ( retval = cl_com_dup_host(&malloc_hostbuf2, host2, resolve_method, local_domain_name)) != CL_RETVAL_OK) {
+          if (malloc_hostbuf1) {
+             free(malloc_hostbuf1);
+             malloc_hostbuf1 = NULL;
+          }
+          free(local_domain_name);
+          return retval;
+       }
+       malloc_hostbuf2 = NULL;
+       hostbuf2 = fixed_host_buffer2;
+    } else {
+       if ( ( retval = cl_com_dup_host(&malloc_hostbuf2, host2, resolve_method, local_domain_name)) != CL_RETVAL_OK) {
+          if (malloc_hostbuf1) {
+             free(malloc_hostbuf1);
+             malloc_hostbuf1 = NULL;
+          }
+          free(local_domain_name);
+          return retval;
+       }
+       hostbuf2 = malloc_hostbuf2;
+    }
+
+    if (local_domain_name) {
+       free(local_domain_name);
+       local_domain_name = NULL;
+    }
 
 #if CL_DO_COMMUNICATION_DEBUG
     CL_LOG_STR(CL_LOG_DEBUG,"compareing host 1:", hostbuf1);
     CL_LOG_STR(CL_LOG_DEBUG,"compareing host 2:", hostbuf2);
 #endif
-    if ( strcasecmp(hostbuf1,hostbuf2) == 0 ) {   /* hostname compare OK */
+    if ( strcmp(hostbuf1,hostbuf2) == 0 ) {   /* hostname compare OK */
 #if CL_DO_COMMUNICATION_DEBUG
        CL_LOG(CL_LOG_DEBUG,"hosts are equal");
 #endif
@@ -2203,11 +2329,48 @@ int cl_com_compare_hosts( char* host1, char* host2) {
        retval = CL_RETVAL_UNKNOWN;
     }
     
-    free(hostbuf1);
-    free(hostbuf2);
+    if (malloc_hostbuf1) {
+       free(malloc_hostbuf1);
+    }
+    if (malloc_hostbuf2) {
+       free(malloc_hostbuf2);
+    }
     return retval;  
 }
 
+
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "cl_com_is_ip_address_string()"
+cl_bool_t cl_com_is_ip_address_string(char* resolve_hostname, struct in_addr* addr  ) {
+
+   if (resolve_hostname == NULL || addr == NULL ) {
+      CL_LOG(CL_LOG_ERROR,"got NULL pointer for hostname parameter");
+      return CL_FALSE;
+   }
+
+   addr->s_addr = inet_addr(resolve_hostname);
+
+   if ( addr->s_addr == -1) {
+      int v1 = 0;
+      int v2 = 0;
+      int v3 = 0;
+      int v4 = 0;
+
+      /* check if it is not the host address 255.255.255.255 */
+      sscanf(resolve_hostname, "%d.%d.%d.%d", &v1, &v2, &v3, &v4);
+      if (v1 == 255 && 
+          v2 == 255 &&
+          v3 == 255 &&
+          v4 == 255) {
+         CL_LOG(CL_LOG_WARNING,"got ip address 255.255.255.255 as host name!");
+         return CL_TRUE;
+      }
+      return CL_FALSE;
+   }  
+   return CL_TRUE;
+}
 
 #ifdef __CL_FUNCTION__
 #undef __CL_FUNCTION__
@@ -2223,6 +2386,7 @@ int cl_com_cached_gethostbyname( char *unresolved_host, char **unique_hostname, 
    int function_return = CL_RETVAL_GETHOSTNAME_ERROR;
    int ret_val = CL_RETVAL_OK;
    char* alias_name = NULL;
+   char* help = NULL;
 
  
    hostlist = cl_com_get_host_list();
@@ -2239,6 +2403,33 @@ int cl_com_cached_gethostbyname( char *unresolved_host, char **unique_hostname, 
    if (*unique_hostname != NULL) {
       CL_LOG( CL_LOG_ERROR, cl_get_error_text(CL_RETVAL_PARAMS));
       return CL_RETVAL_PARAMS;    /* we expect an pointer address, set to NULL */
+   }
+
+   /* If the host name is set in SGE_COMMLIB_DEBUG_NO_RESOLVE, fail. */
+   if ((help=cl_com_get_unresolvable_hosts()) != NULL) {
+      if (strstr(help, unresolved_host) != NULL) {
+         CL_LOG_STR(CL_LOG_WARNING, "host is in not resolvable host list:", unresolved_host);
+         return CL_RETVAL_GETHOSTNAME_ERROR;
+      }
+   }
+
+   /* If the host name is set in SGE_COMMLIB_DEBUG_RESOLVE, use the hostname as
+    * the unique hostname and return success. */
+   if ((help=cl_com_get_resolvable_hosts()) != NULL) {
+      if (strstr(help, unresolved_host) != NULL) {
+         CL_LOG_STR(CL_LOG_WARNING, "host is in only resolvable host list:", unresolved_host);
+
+         *unique_hostname = strdup(unresolved_host);
+
+         /* Problem: 
+          *
+          * copy_addr and he_copy will NOT contain any information 
+          * ======================================================
+          * 
+          * Reason: Can't assume any IP addr or alias names 
+          */
+         return CL_RETVAL_OK;
+      }
    }
 
 
@@ -2348,7 +2539,7 @@ int cl_com_cached_gethostbyname( char *unresolved_host, char **unique_hostname, 
       if (alias_name == NULL) {
          CL_LOG_STR(CL_LOG_INFO,"NOT found in cache, unresolved name:", unresolved_host);
       } else {
-         CL_LOG_STR(CL_LOG_INFO,"NOT found in cach, aliased name:", alias_name);
+         CL_LOG_STR(CL_LOG_INFO,"NOT found in cache, aliased name:", alias_name);
       }
       cl_raw_list_unlock(hostlist);
 
@@ -2424,7 +2615,9 @@ int cl_com_cached_gethostbyname( char *unresolved_host, char **unique_hostname, 
 
    ret_val = cl_host_alias_list_get_alias_name(ldata->host_alias_list, *unique_hostname, &alias_name );
    if (ret_val == CL_RETVAL_OK) {
+#if CL_DO_COMMUNICATION_DEBUG
       CL_LOG_STR(CL_LOG_DEBUG,"resolved name aliased to", alias_name);
+#endif
       free(*unique_hostname);
       *unique_hostname = alias_name;
    }
@@ -2466,7 +2659,7 @@ int cl_com_read_alias_file(cl_raw_list_t* hostlist) {
       return CL_RETVAL_NO_ALIAS_FILE;
    }
    if (SGE_STAT(ldata->host_alias_file, &sb)) {
-      CL_LOG(CL_LOG_ERROR,"host alias file is not existing");
+      CL_LOG(CL_LOG_WARNING,"host alias file is not existing");
       return CL_RETVAL_ALIAS_FILE_NOT_FOUND;
    }
    fp = fopen(ldata->host_alias_file, "r");
@@ -2506,6 +2699,7 @@ int cl_com_read_alias_file(cl_raw_list_t* hostlist) {
             cl_com_free_hostent(&he);
             if (main_name == NULL) {
                CL_LOG(CL_LOG_ERROR,"malloc() error");
+               /* Don't check close state, we already have a malloc() error */
                fclose(fp);
                return CL_RETVAL_MALLOC;
             }
@@ -2526,8 +2720,9 @@ int cl_com_read_alias_file(cl_raw_list_t* hostlist) {
          main_name = NULL;
       }
    }
-   fclose(fp);
-
+   if ( fclose(fp) != 0) {
+      return CL_RETVAL_CLOSE_ALIAS_FILE_FAILED;
+   }
 
    return CL_RETVAL_OK;
 }
@@ -3470,7 +3665,7 @@ int cl_com_connection_complete_request( cl_com_connection_t* connection, long ti
             return CL_RETVAL_STREAM_BUFFER_OVERFLOW;
          }
    
-         /* is data allready in buffer ? */
+         /* is data already in buffer ? */
          if (data_to_read > 0) {
             if (only_once != 0) {
                data_read = 0;
@@ -3505,7 +3700,7 @@ int cl_com_connection_complete_request( cl_com_connection_t* connection, long ti
             } else {
                snprintf(tmp_buffer, 256, MSG_CL_TCP_FW_EMPTY_SOURCE_HOST );
             }
-            cl_commlib_push_application_error(retval , tmp_buffer );
+            cl_commlib_push_application_error(CL_LOG_ERROR, retval , tmp_buffer );
             unique_host = strdup("(HOST_NOT_RESOLVABLE)");
          }
    
@@ -3523,7 +3718,7 @@ int cl_com_connection_complete_request( cl_com_connection_t* connection, long ti
             } else {
                snprintf(tmp_buffer, 256, MSG_CL_TCP_FW_EMPTY_SOURCE_HOST );
             }
-            cl_commlib_push_application_error(CL_RETVAL_LOCAL_HOSTNAME_ERROR, tmp_buffer );
+            cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_LOCAL_HOSTNAME_ERROR, tmp_buffer );
 
 
             /* deny access to connected client */
@@ -3567,7 +3762,7 @@ int cl_com_connection_complete_request( cl_com_connection_t* connection, long ti
             } else {
                snprintf(tmp_buffer, 256, MSG_CL_TCP_FW_EMPTY_DESTINATION_HOST );
             }
-            cl_commlib_push_application_error(retval , tmp_buffer );
+            cl_commlib_push_application_error(CL_LOG_ERROR, retval , tmp_buffer );
             unique_host = strdup("(HOST_NOT_RESOLVABLE)");
          }
 
@@ -3584,7 +3779,7 @@ int cl_com_connection_complete_request( cl_com_connection_t* connection, long ti
             } else {
                snprintf(tmp_buffer, 256, MSG_CL_TCP_FW_EMPTY_DESTINATION_HOST );
             }
-            cl_commlib_push_application_error(CL_RETVAL_LOCAL_HOSTNAME_ERROR, tmp_buffer );
+            cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_LOCAL_HOSTNAME_ERROR, tmp_buffer );
 
 
             /* deny access to connected client */
@@ -3628,7 +3823,7 @@ int cl_com_connection_complete_request( cl_com_connection_t* connection, long ti
                } else {
                   snprintf(tmp_buffer, 256, MSG_CL_TCP_FW_EMPTY_RDATA_HOST );
                }
-               cl_commlib_push_application_error(retval , tmp_buffer );
+               cl_commlib_push_application_error(CL_LOG_ERROR, retval , tmp_buffer );
                unique_host = strdup("(HOST_NOT_RESOLVABLE)");
             }
             connection->remote   = cl_com_create_endpoint(unique_host ,cm_message->rdata->comp_name,cm_message->rdata->comp_id);
@@ -3646,7 +3841,7 @@ int cl_com_connection_complete_request( cl_com_connection_t* connection, long ti
                } else {
                   snprintf(tmp_buffer, 256, MSG_CL_TCP_FW_EMPTY_RDATA_HOST );
                }
-               cl_commlib_push_application_error(CL_RETVAL_LOCAL_HOSTNAME_ERROR, tmp_buffer );
+               cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_LOCAL_HOSTNAME_ERROR, tmp_buffer );
 
 
                /* deny access to connected client */
@@ -3682,7 +3877,7 @@ int cl_com_connection_complete_request( cl_com_connection_t* connection, long ti
             free(unique_host);
             unique_host = NULL;
          } else {
-            /* This host is allready resolved */
+            /* This host is already resolved */
             connection->remote   = cl_com_create_endpoint(connection->receiver->comp_host,cm_message->src->comp_name,cm_message->src->comp_id);
          }
          connection->data_flow_type = cm_message->ct;
@@ -3777,7 +3972,7 @@ int cl_com_connection_complete_request( cl_com_connection_t* connection, long ti
                   snprintf(tmp_buffer,256, MSG_CL_TCP_FW_EMPTY_REMOTE_HOST );
                }
             }
-            cl_commlib_push_application_error(CL_RETVAL_LOCAL_HOSTNAME_ERROR, tmp_buffer );
+            cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_LOCAL_HOSTNAME_ERROR, tmp_buffer );
 
 
             /* deny access to connected client */
@@ -3917,7 +4112,7 @@ int cl_com_connection_complete_request( cl_com_connection_t* connection, long ti
                         connection->sender->comp_name,
                         sge_u32c(connection->sender->comp_id));
 
-               cl_commlib_push_application_error(CL_RETVAL_ACCESS_DENIED, tmp_buffer );
+               cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_ACCESS_DENIED, tmp_buffer );
 
                connection->crm_state = CL_CRM_CS_DENIED;
                connection_status = CL_CONNECT_RESPONSE_MESSAGE_CONNECTION_STATUS_DENIED;
@@ -3984,7 +4179,7 @@ int cl_com_connection_complete_request( cl_com_connection_t* connection, long ti
                            connection->receiver->comp_name,
                            sge_u32c(connection->receiver->comp_id));
 
-                  cl_commlib_push_application_error(CL_RETVAL_ENDPOINT_NOT_UNIQUE, tmp_buffer );
+                  cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_ENDPOINT_NOT_UNIQUE, tmp_buffer );
 
                   connection->crm_state = CL_CRM_CS_ENDPOINT_NOT_UNIQUE; /* CL_CRM_CS_DENIED; */
                   connection_status = CL_CONNECT_RESPONSE_MESSAGE_CONNECTION_STATUS_NOT_UNIQUE;
@@ -4035,7 +4230,7 @@ int cl_com_connection_complete_request( cl_com_connection_t* connection, long ti
                            connection->receiver->comp_name,
                            sge_u32c(connection->receiver->comp_id));
 
-                     cl_commlib_push_application_error(CL_RETVAL_NO_RESERVED_PORT_CONNECTION, tmp_buffer );
+                     cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_NO_RESERVED_PORT_CONNECTION, tmp_buffer );
 
                      connection->crm_state = CL_CRM_CS_DENIED;
                      connection_status = CL_CONNECT_RESPONSE_MESSAGE_CONNECTION_STATUS_DENIED;
@@ -4070,7 +4265,7 @@ int cl_com_connection_complete_request( cl_com_connection_t* connection, long ti
                            sge_u32c(connection->receiver->comp_id),
                            connection->local->comp_host);
 
-                     cl_commlib_push_application_error(CL_RETVAL_NO_LOCAL_HOST_CONNECTION, tmp_buffer );
+                     cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_NO_LOCAL_HOST_CONNECTION, tmp_buffer );
 
                      connection->crm_state = CL_CRM_CS_DENIED;
                      connection_status = CL_CONNECT_RESPONSE_MESSAGE_CONNECTION_STATUS_DENIED;
@@ -4129,7 +4324,7 @@ int cl_com_connection_complete_request( cl_com_connection_t* connection, long ti
                               connection->receiver->comp_host,
                               connection->receiver->comp_name,
                               sge_u32c(connection->receiver->comp_id));
-                     cl_commlib_push_application_error(CL_RETVAL_NO_RESERVED_PORT_CONNECTION, tmp_buffer );
+                     cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_NO_RESERVED_PORT_CONNECTION, tmp_buffer );
                      connection->crm_state = CL_CRM_CS_DENIED;
                      connection_status = CL_CONNECT_RESPONSE_MESSAGE_CONNECTION_STATUS_DENIED;
                      /* overwrite and free last error */            
@@ -4157,7 +4352,7 @@ int cl_com_connection_complete_request( cl_com_connection_t* connection, long ti
                int check_allowed_host_list = 0;
                if (connection->handler->allowed_host_list == NULL && check_allowed_host_list != 0) {
                   connection_status_text = MSG_CL_TCP_FW_CONNECTION_STATUS_TEXT_CLIENT_NOT_IN_ALLOWED_HOST_LIST;
-                  cl_commlib_push_application_error(CL_RETVAL_ACCESS_DENIED, MSG_CL_TCP_FW_ALLOWED_HOST_LIST_NOT_DEFINED );
+                  cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_ACCESS_DENIED, MSG_CL_TCP_FW_ALLOWED_HOST_LIST_NOT_DEFINED );
                   connection_status = CL_CONNECT_RESPONSE_MESSAGE_CONNECTION_STATUS_DENIED;
                   connection->crm_state = CL_CRM_CS_DENIED;
                   CL_LOG(CL_LOG_ERROR, connection_status_text );
@@ -4191,7 +4386,7 @@ int cl_com_connection_complete_request( cl_com_connection_t* connection, long ti
                      connection_status_text = MSG_CL_TCP_FW_CONNECTION_STATUS_TEXT_CLIENT_NOT_IN_ALLOWED_HOST_LIST;
 
                      snprintf(tmp_buffer, 256, MSG_CL_TCP_FW_HOST_X_NOT_IN_ALOWED_HOST_LIST_S, connection->client_host_name); 
-                     cl_commlib_push_application_error(CL_RETVAL_ACCESS_DENIED,tmp_buffer);
+                     cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_ACCESS_DENIED,tmp_buffer);
 
                      connection->crm_state = CL_CRM_CS_DENIED;
                      connection_status = CL_CONNECT_RESPONSE_MESSAGE_CONNECTION_STATUS_DENIED;
@@ -4335,6 +4530,7 @@ int cl_com_connection_complete_request( cl_com_connection_t* connection, long ti
                cl_dump_connection(connection);
             } else {
                connection->connection_state = CL_CLOSING;  /* That was it! */
+               connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
                CL_LOG(CL_LOG_WARNING,"access to client denied");
                cl_dump_connection(connection);
             }
@@ -4499,7 +4695,7 @@ int cl_com_connection_complete_request( cl_com_connection_t* connection, long ti
             return CL_RETVAL_STREAM_BUFFER_OVERFLOW;
          }
    
-         /* is data allready in buffer ? */
+         /* is data already in buffer ? */
          if (data_to_read > 0) {
             if (only_once != 0) {
                data_read = 0;
@@ -4541,16 +4737,17 @@ int cl_com_connection_complete_request( cl_com_connection_t* connection, long ti
             CL_LOG_INT(CL_LOG_ERROR,"Connect Error:",crm_message->cs_condition);
             CL_LOG_STR(CL_LOG_ERROR,"error:",crm_message->cs_text);
             connection->connection_state = CL_CLOSING;  /* That was it */
+            connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
 
             switch(crm_message->cs_condition) {
                case CL_CRM_CS_DENIED:
-                  cl_commlib_push_application_error(CL_RETVAL_ACCESS_DENIED, crm_message->cs_text);
+                  cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_ACCESS_DENIED, crm_message->cs_text);
                   break;
                case CL_CRM_CS_ENDPOINT_NOT_UNIQUE:
-                  cl_commlib_push_application_error(CL_RETVAL_ENDPOINT_NOT_UNIQUE, crm_message->cs_text);
+                  cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_ENDPOINT_NOT_UNIQUE, crm_message->cs_text);
                   break;
                default:
-                  cl_commlib_push_application_error(CL_RETVAL_UNKNOWN, crm_message->cs_text );
+                  cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_UNKNOWN, crm_message->cs_text );
                   break;
             }
          }
@@ -4571,6 +4768,7 @@ int cl_com_connection_complete_request( cl_com_connection_t* connection, long ti
               cl_com_compare_hosts(crm_message->src->comp_host   , connection->sender->comp_host   ) != CL_RETVAL_OK    ) {
             CL_LOG(CL_LOG_ERROR,"host names are not resolved equal");
             connection->connection_state = CL_CLOSING;  /* That was it */
+            connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
          }
    
          if ( connection->local->comp_id == 0 ) {

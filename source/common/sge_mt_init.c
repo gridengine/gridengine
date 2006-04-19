@@ -38,6 +38,9 @@
 #include "sge_feature.h"
 #include "gdi_setup.h"
 #include "sge_profiling.h"
+#include "sge_lock.h"
+
+#include "sgeobj/sge_schedd_conf.h"
 
 /****** common/sge_mt_init/sge_mt_init() ***************************************
 *  NAME
@@ -70,6 +73,8 @@
 *******************************************************************************/
 void sge_mt_init(void)
 {
+   sge_setup_lock_service();
+
    sge_prof_setup();
    uidgid_mt_init();
    path_mt_init();
@@ -77,6 +82,7 @@ void sge_mt_init(void)
    bootstrap_mt_init(); 
    feature_mt_init();
 
+   sc_init_mt();
    gdi_mt_init();
 
 } /* sge_mt_init */

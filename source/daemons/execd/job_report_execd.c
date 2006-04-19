@@ -162,7 +162,7 @@ get_job_report(u_long32 job_id, u_long32 ja_task_id, const char *pe_task_id)
 void del_job_report(
 lListElem *jr 
 ) {
-   lRemoveElem(jr_list, jr);
+   lRemoveElem(jr_list, &jr);
 }
 
 void cleanup_job_report(
@@ -183,7 +183,7 @@ u_long32 jataskid
 
          DPRINTF(("!!!! removing jobreport for "sge_u32"."sge_u32" task %s !!!!\n",
             jobid, jataskid, s?s:"master"));
-         lRemoveElem(jr_list, jr);
+         lRemoveElem(jr_list, &jr);
       }
    }
 
@@ -348,6 +348,15 @@ execd_c_ack(struct dispatch_entry *de, sge_pack_buffer *pb, sge_pack_buffer *apb
             ERROR((SGE_EVENT, MSG_COM_ACK_UNKNOWN));
             break;
       }
+      /* 
+       * delete job's spooling directory may take some time
+       * (NFS directory case). We have to trigger communication
+       * to be sure not to get communication timeouts when we have
+       * to delete lot's of jobs at once. ( The trigger is done
+       * NOT synchron which means that the commlib will return
+       * when there is nothing to do
+       */
+      cl_commlib_trigger(cl_com_get_handle("execd",1) ,0);
    }
    DEXIT;
    return 0;

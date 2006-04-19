@@ -40,15 +40,16 @@ QSH_SRC = qsh.c parse_job_qsh.c
 
 QSH_ADD_SRC = parse_job_cull.c parse_qsub.c \
                sig_handlers.c read_defaults.c \
-               show_job.c usage.c sge_options.c
+               show_job.c usage.c sge_options.c \
+               sge_mt_init.c
 
 QSH_OBJS = $(QSH_SRC:.c=.o)
 
 QSH_ADD_OBJS = $(QSH_ADD_SRC:.c=.o)
 
-QSH_ADD_LIBS = -lgdi -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lcull -lcomm -lcommlists -luti -llck -lrmon $(DLLIB)
+QSH_ADD_LIBS = -lgdi -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lcull -lcomm -lcommlists -luti $(WINGRIDLIB) -llck -lrmon $(DLLIB)
 
-QSH_LIB_DEPENDS = $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(CULLLIB) $(COMMLIB) $(COMMLISTSLIB) $(SECLIBS) $(KRBLIBS) $(UTILIB) $(LCKLIB) $(RMONLIB) $(TPLIB)
+QSH_LIB_DEPENDS = $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(CULLLIB) $(COMMLIB) $(COMMLISTSLIB) $(SECLIBS) $(KRBLIBS) $(WINGRIDLIB_DEP) $(UTILIB) $(LCKLIB) $(RMONLIB) $(TPLIB)
 
 ###############################################################################
 # global rules: all, clean, depend, messages

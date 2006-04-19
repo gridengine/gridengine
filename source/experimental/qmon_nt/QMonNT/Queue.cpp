@@ -224,15 +224,15 @@ CString CQueue::TimeToString(const CTime &stringTime)
 ** operator lListElem*
 **
 ** Wandelt das Queue-Objekt in ein Cull-List-Element um.
-** HINWEIS: Das zurückgegebene List-Element muß von der aufrufenden
-** Funktion gelöscht werden!
+** HINWEIS: Das zurï¿½ckgegebene List-Element muï¿½ von der aufrufenden
+** Funktion gelï¿½scht werden!
 */
 CQueue::operator lListElem* ()
 {
     lListElem *ep = lCreateElem(QU_Type);
 	ASSERT(NULL != ep);
 	
-	lSetString	(ep, QU_qname,			qname.GetBuffer(0));	// Schlüsselfeld, wird immer benötigt!
+	lSetString	(ep, QU_qname,			qname.GetBuffer(0));	// Schlï¿½sselfeld, wird immer benï¿½tigt!
 
 	lSetUlong	(ep, QU_job_slots,		qjobslots);
 	lSetString	(ep, QU_qhostname,		qhostname.GetBuffer(0));
@@ -257,7 +257,7 @@ CQueue::operator lListElem* ()
 	lSetString	(ep, QU_s_core,			qsoftcorefilesize.GetBuffer(0));
 	lSetString	(ep, QU_s_rss,			qsoftresidentsetsize.GetBuffer(0));
 	lSetString	(ep, QU_s_vmem,			qsoftvirtualmemory.GetBuffer(0));
-	// >>> Code für neue Felder hier einfügen
+	// >>> Code fï¿½r neue Felder hier einfï¿½gen
 
 	lList *lp = NULL;
 	if (!qComplexList.empty()) {
@@ -317,7 +317,7 @@ CComplexAtributeList CQueue::GetAllAvailableCheckPointings(CQmonntDoc *pDoc)
 	lCondition *lWhereCondition = lWhere("%T(%I != %s)", CE_Type, CE_name, "slots");
 	ASSERT(NULL != lWhereCondition);
 	entries = lSelectDestroy(entries, lWhereCondition);
-	lWhereCondition = lFreeWhere(lWhereCondition);
+lFreeWhere(&lWhereCondition);
 
 	// Fill in the all checkpointings list
 	CComplexAtributeList AllCheckPointings;
@@ -326,10 +326,13 @@ CComplexAtributeList CQueue::GetAllAvailableCheckPointings(CQmonntDoc *pDoc)
 		AllCheckPointings.push_back(CComplexAtribute(ep));
 		
 	// Free the lists
-	qep      = lFreeElem(qep);
-	entries  = lFreeList(entries);
-	lHost    = lFreeList(lHost);
-	lComplex = lFreeList(lComplex);
+lFreeElem(&qep);
+    lFreeList(&entries);
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       
+    lFreeList(&lHost);
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         
+    lFreeList(&lComplex);
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      
 
 	return AllCheckPointings;
 }
@@ -344,7 +347,7 @@ CComplexAtributeList CQueue::GetAllAvailableCheckPointings(CQmonntDoc *pDoc)
 ** FindByID
 **
 ** Sucht ein Element mit der angegebenen ID in der Liste
-** und liefert den Iterator darauf zurück. Falls der Iterator
+** und liefert den Iterator darauf zurï¿½ck. Falls der Iterator
 ** gleich end() ist, wurde das Element nicht gefunden!
 */
 CQueueList::iterator CQueueList::FindByID(ULONG ID)
@@ -359,7 +362,7 @@ CQueueList::iterator CQueueList::FindByID(ULONG ID)
 /*
 ** RemoveByID
 **
-** Löscht das Element mit der angegebenen ID aus der Liste.
+** Lï¿½scht das Element mit der angegebenen ID aus der Liste.
 */
 void CQueueList::RemoveByID(ULONG ID)
 {

@@ -38,6 +38,7 @@
 #include "basis_types.h"
 #include "msg_utilib.h"
 
+#define LOG_PROF       0      /* no action, but it has to be printed allways */
 
 void log_state_set_log_level(u_long32);
 void log_state_set_log_file(char *file);
@@ -63,6 +64,7 @@ int             log_state_get_log_as_admin_user(void);
 #define SGE_LOG(level,msg) sge_log(level, msg, __FILE__, SGE_FUNC, __LINE__ );
 
 #if defined(__INSURE__)
+#   define PROFILING(x)     (sprintf x,sge_log(LOG_PROF,   SGE_EVENT,__FILE__,SGE_FUNC,__LINE__)) ? 1 : 0
 #   define CRITICAL(x) (sprintf x,sge_log(LOG_CRIT,   SGE_EVENT,__FILE__,SGE_FUNC,__LINE__)) ? 1 : 0
 #   define ERROR(x)    (sprintf x,sge_log(LOG_ERR,    SGE_EVENT,__FILE__,SGE_FUNC,__LINE__)) ? 1 : 0
 #   define WARNING(x)  (sprintf x,sge_log(LOG_WARNING,SGE_EVENT,__FILE__,SGE_FUNC,__LINE__)) ? 1 : 0
@@ -70,6 +72,32 @@ int             log_state_get_log_as_admin_user(void);
 #   define INFO(x)     (sprintf x,sge_log(LOG_INFO,   SGE_EVENT,__FILE__,SGE_FUNC,__LINE__)) ? 1 : 0
 #   define DEBUG(x)    (sprintf x,sge_log(LOG_DEBUG,  SGE_EVENT,__FILE__,SGE_FUNC,__LINE__)) ? 1 : 0
 #else
+
+/****** uti/log/PROFILING() ****************************************************
+*  NAME
+*     PROFILING() -- Log a profiling message 
+*
+*  SYNOPSIS
+*     #define PROFILING(params)
+*     void PROFILING(char *buffer, const char* formatstring, ...) 
+*
+*  FUNCTION
+*     Log a profiling message 
+*
+*  INPUTS
+*     buffer       - e.g SGE_EVENT
+*     formatstring - printf formatstring
+*     ...
+******************************************************************************/ 
+#ifdef __SGE_COMPILE_WITH_GETTEXT__
+#   define PROFILING(x) (sge_set_message_id_output(1), \
+                        sprintf x, \
+                        sge_set_message_id_output(0), \
+                        sge_log(LOG_PROF, SGE_EVENT,__FILE__,SGE_FUNC,__LINE__) ,1) ? 1 : 0
+#else
+#   define PROFILING(x) (sprintf x, \
+                        sge_log(LOG_PROF, SGE_EVENT,__FILE__,SGE_FUNC,__LINE__) ,1) ? 1 : 0
+#endif
 
 /****** uti/log/CRITICAL() ****************************************************
 *  NAME

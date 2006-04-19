@@ -166,6 +166,7 @@ bool host_is_referenced(const lListElem *host,
                   ret = true;
                   break;
                }
+               lFreeList(&host_list);
             }
          }
       }
@@ -227,7 +228,7 @@ int sge_resolve_host(lListElem *ep, int nm)
    }
 
    /* ep is no host element, if ep has no nm */
-   if ((pos = lGetPosViaElem(ep, nm)) < 0) {
+   if ((pos = lGetPosViaElem(ep, nm, SGE_NO_ABORT)) < 0) {
       DEXIT;
       return -1;
    }
@@ -393,7 +394,7 @@ host_trash_load_values(lListElem *host)
             DPRINTF(("host "SFN": trashing load value "SFQ"\n",
                      host_name,
                      load_name));
-            lRemoveElem(load_list, ep);
+            lRemoveElem(load_list, &ep);
          }
 
          /* assign next element */

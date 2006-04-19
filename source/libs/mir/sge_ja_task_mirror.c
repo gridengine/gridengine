@@ -205,8 +205,8 @@ ja_task_update_master_list(sge_object_type type, sge_event_action action,
                                      job_get_id_string(job_id, ja_task_id, 
                                                        NULL), 
                                      action, event) != SGE_EM_OK) {
-      lFreeList(pe_tasks);
-      lFreeList(usage);
+      lFreeList(&pe_tasks);
+      lFreeList(&usage);
       DEXIT;
       return false;
    }
@@ -218,16 +218,16 @@ ja_task_update_master_list(sge_object_type type, sge_event_action action,
       if (ja_task == NULL) {
          ERROR((SGE_EVENT, MSG_JOB_CANTFINDJATASKFORUPDATEIN_SS,
                 job_get_id_string(job_id, ja_task_id, NULL), SGE_FUNC));
-         lFreeList(pe_tasks);
-         lFreeList(usage);
+         lFreeList(&pe_tasks);
+         lFreeList(&usage);
          DEXIT;
          return false;
       }
 
       lXchgList(ja_task, JAT_task_list, &pe_tasks);
       lXchgList(ja_task, JAT_scaled_usage_list, &usage);
-      pe_tasks = lFreeList(pe_tasks);
-      usage = lFreeList(usage);
+      lFreeList(&pe_tasks);
+      lFreeList(&usage);
    }
 
    if (action == SGE_EMA_ADD) {

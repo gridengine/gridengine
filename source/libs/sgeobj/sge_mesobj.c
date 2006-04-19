@@ -81,11 +81,11 @@ qim_list_trash_all_of_type_X(lList **this_list, u_long32 type)
 
          next_elem = lNext(elem);
          if ((elem_type & type) != 0) {
-            lRemoveElem(*this_list, elem);
+            lRemoveElem(*this_list, &elem);
          }
       }
       if (lGetNumberOfElem(*this_list) == 0) {
-         *this_list = lFreeList(*this_list);
+         lFreeList(this_list);
       }
    }
    DEXIT;

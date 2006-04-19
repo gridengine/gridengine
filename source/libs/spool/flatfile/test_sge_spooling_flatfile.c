@@ -142,7 +142,7 @@ int main(int argc, char *argv[])
          answer_list_print_err_warn(&answer_list, NULL, NULL);
       } else {
          lWriteElemTo(reread_queue, stdout);
-         reread_queue = lFreeElem(reread_queue);
+         lFreeElem(&reread_queue);
       }
      
       sge_unlink(NULL, filepath);

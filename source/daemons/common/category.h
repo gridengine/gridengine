@@ -34,8 +34,8 @@
 
 
 
-const char* 
-sge_build_job_category(dstring *category_str, lListElem *job, lList *acl_list);
+void
+sge_build_job_category_dstring(dstring *category_str, lListElem *job, lList *acl_list); 
 
 const char* 
 sge_build_job_cs_category(dstring *category_str, lListElem *job, lListElem *cat_obj); 

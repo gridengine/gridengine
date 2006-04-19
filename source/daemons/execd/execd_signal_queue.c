@@ -61,6 +61,9 @@
 #include "sge_qinstance_state.h"
 #include "sge_report_execd.h"
 #include "sge_report.h"
+#if defined(DARWIN)
+#include "sge_uidgid.h"
+#endif
 
 #include "msg_execd.h"
 #include "msg_daemons_common.h"
@@ -98,7 +101,7 @@ execd_signal_queue(struct dispatch_entry *de, sge_pack_buffer *pb, sge_pack_buff
    /* In real this is both a signal queue and a signal job request.
       If jobid is set this is a job signal.
          qname is set this is a queue signal.
-      Acknowledges are sent allready by the dispatcher. */
+      Acknowledges are sent already by the dispatcher. */
 
    if (jobid) {     /* signal a job / task */
       found = (signal_job(jobid, jataskid, signal)==0);
@@ -135,7 +138,7 @@ execd_signal_queue(struct dispatch_entry *de, sge_pack_buffer *pb, sge_pack_buff
                               INFO((SGE_EVENT, MSG_JOB_INITMIGRSUSPQ_U, sge_u32c(lGetUlong(jep, JB_job_number))));
                               signal = SGE_MIGRATE;
                            }   
-                           if( sge_execd_deliver_signal(signal, jep, jatep) == 0) {
+                           if (sge_execd_deliver_signal(signal, jep, jatep) == 0) {
                               sge_send_suspend_mail(signal,master_q ,jep, jatep); 
                            }
                         }   
@@ -234,7 +237,7 @@ lListElem *jatep
          sge_sig2str(sig)));
 
    /* for simulated hosts do nothing */
-   if(simulate_hosts == 1 && 
+   if(mconf_get_simulate_hosts() && 
       (lGetUlong(jatep, JAT_status) & JSIMULATED)) {
 
       if(sig == SGE_SIGKILL) {
@@ -438,6 +441,7 @@ void sge_send_suspend_mail(u_long32 signal, lListElem *master_q, lListElem *jep,
                job_owner,
                job_sub_time_str,
                job_exec_time_str);
+       sprintf(mail_body, "\n");
  
        cull_mail(mail_users, mail_subject, mail_body, mail_type );
    } 
@@ -534,11 +538,11 @@ const char *pe_task_id
    ** execd.uid==0 && execd.euid==admin_user
    **    => kill does neither send SIGCONT-signals nor return an error
    */
-#if defined(NECSX4) || defined(NECSX5)
+#if defined(NECSX4) || defined(NECSX5) || defined(DARWIN)
    sge_switch2start_user();
 #endif    
    if (kill(pid, direct_signal?sig:SIGTTIN)) {
-#if defined(NECSX4) || defined(NECSX5)
+#if defined(NECSX4) || defined(NECSX5) || defined(DARWIN)
       sge_switch2admin_user();
 #endif   
       if (errno == ESRCH)
@@ -562,7 +566,7 @@ CheckShepherdStillRunning:
                                    job_id, ja_task_id, pe_task_id, NULL);
 
       if (!SGE_STAT(sge_dstring_get_string(&path), &statbuf) && S_ISDIR(statbuf.st_mode)) {
-         dead_children = 1; /* may be we've lost a SIGCHLD */
+         sge_sig_handler_dead_children = 1; /* may be we've lost a SIGCHLD */
          sge_dstring_free(&path);
          DEXIT;
          return 0;
@@ -684,6 +688,14 @@ u_long32 signal
          }
       } else {
          if (signal == SGE_SIGKILL) {
+            /*
+             * At this point job termination is triggered and JDELETED state is set.
+             * Based on that state it should be possible to provide better diagnosis 
+             * information if the job dies due to a signal (Issue: #483). Possibly 
+             * SGE_SIGXCPU should be treated similarly. 
+             * ja_task_message_add(jatep, 1, err_str) could be used to intermediately
+             * store job termination reason until it gets reaped later on.
+             */
             state = lGetUlong(jatep, JAT_state);
             SETBIT(JDELETED, state);
             lSetUlong(jatep, JAT_state, state); 

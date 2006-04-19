@@ -59,7 +59,8 @@ OPTIONS
      -Aconf file_list              &lt;<I>add</I> <I>configurations</I>&gt;
           Add the cluster configurations (see <B><A HREF="../htmlman5/sge_conf.html">sge_conf(5)</A></B>) speci-
           fied  in  the  files  enlisted  in  the comma separated
-          file_list.
+          file_list. The configuration is added for the host that
+          is identical to the file name.
           Requires root or manager privileges.
 
      -Ae fname                     &lt;<I>add</I> <I>execution</I> <I>host</I>&gt;
@@ -105,6 +106,7 @@ OPTIONS
 
      -Mattr obj_spec fname obj_instance,...
                                  &lt;<I>mod</I>. <I>object</I> <I>attributes</I>&gt;
+
           Similar to -mattr (see below) but takes  specifications
           for  the  object  attributes  to  be modified from file
           named fname. As opposed to -mattr, multiple  attributes
@@ -156,8 +158,9 @@ OPTIONS
           Same as -mprj (see below) but instead  of  invoking  an
           editor  to  modify  the  project configuration the file
           fname is considered to contain a changed configuration.
-          Refer  to  <B><A HREF="../htmlman5/project.html">project(5)</A></B> for details on the project confi-
-          guration format.  Requires root or manager privilege.
+          Refer   to   <B><A HREF="../htmlman5/project.html">project(5)</A></B>  for  details  on  the  project
+          configuration  format.   Requires   root   or   manager
+          privilege.
 
      -Mq fname                     &lt;<I>modify</I> <I>queue</I> <I>configuration</I>&gt;
           Same as -mq (see below) but instead of invoking an edi-
@@ -184,7 +187,7 @@ OPTIONS
           Requires root/manager privileges.
 
      -aattr obj_spec attr_name val obj_instance,...
-                                 &lt;<I>add</I> <I>to</I> <I>object</I> <I>attributes</I>&gt;
+             &lt;<I>add</I> <I>to</I> <I>object</I> <I>attributes</I>&gt;
           Allows adding specifications to a single  configuration
           list  attribute in multiple instances of an object with
           a single command. Currently supported objects  are  the
@@ -199,7 +202,7 @@ OPTIONS
           obj_instance  this adds to the cluster queues attribute
           sublist the cluster queues implicit default  configura-
           tion  value  or the queue domain configuration value or
-          queue  instance   configuartion   value.    The   queue
+          queue  instance   configuration   value.    The   queue
           load_thesholds parameter is an example of a list attri-
           bute. With the -aattr option, entries can be  added  to
           such  lists,  while  they  can  be deleted with -dattr,
@@ -638,6 +641,12 @@ OPTIONS
           modified data is registered. Requires root  or  manager
           privileges.
 
+     -purge queue attr_nm,... queue_instance
+             &lt;<I>purge</I> <I>attributes</I>&gt;
+          Purge the attributes defined in attr_nm from the  queue
+          instance  defined  in  queue_instance.  The name of the
+          attributes are described in <B><A HREF="../htmlman1/queue_conf.html">queue_conf(1)</A></B>.
+
      -sc                           &lt;<I>show</I> <I>complexes</I>&gt;
           Display the complex configuration.
 
@@ -705,7 +714,7 @@ OPTIONS
      -shgrp_resolved       &lt;<I>show</I> <I>host</I> <I>group</I> <I>hosts</I>&gt;
           Shows a list of all hosts which are part of the defini-
           tion  of  host group. If the host group definition con-
-          taines sub host  groups  than  also  these  groups  are
+          tains sub  host  groups  than  also  these  groups  are
           resolved and the hostnames are printed.
 
      -sm                           &lt;<I>show</I> <I>managers</I>&gt;
@@ -866,15 +875,6 @@ SEE ALSO
 COPYRIGHT
      See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
      sions.
-
-
-
-
-
-
-
-
-
 
 
 

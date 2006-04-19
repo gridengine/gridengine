@@ -65,6 +65,14 @@ char *tmpdir
 
    sge_switch2start_user();
    sge_mkdir(tmpdir, 0755, 0, 0);
+
+   /*
+    * chown is considered to be a security flaw, as an attacker might move the 
+    * directory between the mkdir and chown.
+    * This is both nearly impossible here and would have no effect.
+    * Make flawfinder ignore it
+    */
+   /* Flawfinder: ignore */
    chown(tmpdir, uid, gid);
    sge_switch2admin_user();
 
@@ -95,11 +103,14 @@ const char *queue_name
 
    sprintf(tmpstr, "%s/"sge_u32"."sge_u32".%s", dir, jobid, jataskid, queue_name);
    DPRINTF(("recursively unlinking \"%s\"\n", tmpstr));
+   sge_switch2start_user();
    if (sge_rmdir(tmpstr, &err_str)) {
       ERROR((SGE_EVENT, MSG_FILE_RECURSIVERMDIR_SS, 
              tmpstr, err_str_buffer));
+      sge_switch2admin_user();
       return -1;
    }
+   sge_switch2admin_user();
 
    DEXIT;
    return 0;

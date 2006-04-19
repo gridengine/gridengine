@@ -148,10 +148,15 @@ static cl_bool_t my_ssl_verify_func(cl_ssl_verify_mode_t mode, cl_bool_t service
 }
 
 
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "main()"
 extern int main(int argc, char** argv)
 {
   struct sigaction sa;
   cl_ssl_setup_t ssl_config;
+  static int runs = 100;
 
 
   int handle_port = 0;
@@ -170,6 +175,7 @@ extern int main(int argc, char** argv)
   ssl_config.ssl_cert_pem_file    = getenv("SSL_CERT_FILE");    /*  certificates file                           */
   ssl_config.ssl_key_pem_file     = getenv("SSL_KEY_FILE");     /*  key file                                    */
   ssl_config.ssl_rand_file        = getenv("SSL_RAND_FILE");    /*  rand file (if RAND_status() not ok)         */
+  ssl_config.ssl_crl_file         = getenv("SSL_CRL_FILE");     /*  revocation list file                        */
   ssl_config.ssl_reconnect_file   = NULL;                       /*  file for reconnect data    (not used)       */
   ssl_config.ssl_refresh_time     = 0;                          /*  key alive time for connections (not used)   */
   ssl_config.ssl_password         = NULL;                       /*  password for encrypted keyfiles (not used)  */
@@ -286,18 +292,20 @@ extern int main(int argc, char** argv)
 
   cl_com_append_known_endpoint_from_name(handle->local->comp_host, "server", 1, 5000, CL_CM_AC_ENABLED, CL_FALSE );
 
-
+  if (getenv("CL_RUNS")) { 
+     runs = atoi(getenv("CL_RUNS"));
+  }
   while(do_shutdown != 1) {
-     unsigned long mid;
      int ret_val;
-     static int runs = 100;
 
      CL_LOG(CL_LOG_INFO,"main()");
-     cl_commlib_trigger(handle); 
+     cl_commlib_trigger(handle, 1); 
 
-#if 0
-     runs--;
-#endif
+     if (getenv("CL_RUNS")) { 
+        printf("runs: %d\n", runs);
+        runs--;
+     }
+
      if (runs<= 0) {
         do_shutdown = 1;
      }
@@ -368,7 +376,7 @@ extern int main(int argc, char** argv)
                                 sender->comp_id, CL_MIH_MAT_NAK,  
                                 message->message, 
                                 message->message_length, 
-                                &mid, message->message_id,0, 
+                                NULL, message->message_id,0, 
                                 CL_FALSE,CL_FALSE);
            if (ret_val != CL_RETVAL_OK) {
               CL_LOG_INT(CL_LOG_ERROR,"sent message response for message id", (int)message->message_id);

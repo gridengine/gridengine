@@ -34,6 +34,9 @@
 #include <strings.h>
 #include <ctype.h>
 #include <string.h>
+#ifdef SGE_PQS_API
+#include <dlfcn.h>
+#endif
 
 #include "sge.h"
 #include "sgermon.h"
@@ -54,6 +57,9 @@
 #include "sge_resource_utilization.h"
 #include "sge_pe.h"
 #include "sge_str.h"
+#ifdef SGE_PQS_API
+#include "sge_string.h"
+#endif
 
 #include "msg_common.h"
 #include "msg_sgeobjlib.h"
@@ -252,9 +258,13 @@ int pe_validate(lListElem *pep, lList **alpp, int startup)
 
    DENTER(TOP_LAYER, "pe_validate");
    pe_name = lGetString(pep, PE_name);
-   if (pe_name && verify_str_key(alpp, pe_name, MSG_OBJ_PE)) {
-      ERROR((SGE_EVENT, "Invalid character in pe name of pe "SFQ, pe_name));
-      answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
+   if (pe_name && verify_str_key(alpp, pe_name, MAX_VERIFY_STRING, MSG_OBJ_PE) != STATUS_OK) {
+      if (alpp == NULL) { 
+         ERROR((SGE_EVENT, "Invalid character in pe name of pe "SFQ, pe_name));
+      } else {
+         answer_list_add_sprintf(alpp, STATUS_EEXIST, ANSWER_QUALITY_ERROR, 
+                                 MSG_PE_INVALIDCHARACTERINPE_S, pe_name); 
+      }
       DEXIT;
       return STATUS_EEXIST;
    }
@@ -266,8 +276,12 @@ int pe_validate(lListElem *pep, lList **alpp, int startup)
    NULL_OUT_NONE(pep, PE_start_proc_args);
    s = lGetString(pep, PE_start_proc_args);
    if (s && replace_params(s, NULL, 0, pe_variables )) {
-      ERROR((SGE_EVENT, MSG_PE_STARTPROCARGS_SS, pe_name, err_msg));
-      answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
+      if (alpp == NULL) {
+         ERROR((SGE_EVENT, MSG_PE_STARTPROCARGS_SS, pe_name, err_msg));
+      } else {
+         answer_list_add_sprintf(alpp, STATUS_EEXIST, ANSWER_QUALITY_ERROR, 
+                                 MSG_PE_STARTPROCARGS_SS, pe_name, err_msg); 
+      }
       DEXIT;
       return STATUS_EEXIST;
    }
@@ -277,8 +291,12 @@ int pe_validate(lListElem *pep, lList **alpp, int startup)
    NULL_OUT_NONE(pep, PE_stop_proc_args);
    s = lGetString(pep, PE_stop_proc_args);
    if (s && replace_params(s, NULL, 0, pe_variables )) {
-      ERROR((SGE_EVENT, MSG_PE_STOPPROCARGS_SS, pe_name, err_msg));
-      answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
+      if (alpp == NULL) {
+         ERROR((SGE_EVENT, MSG_PE_STOPPROCARGS_SS, pe_name, err_msg));
+      } else {
+         answer_list_add_sprintf(alpp, STATUS_EEXIST, ANSWER_QUALITY_ERROR, 
+                                 MSG_PE_STOPPROCARGS_SS, pe_name, err_msg); 
+      }
       DEXIT;
       return STATUS_EEXIST;
    }
@@ -286,16 +304,25 @@ int pe_validate(lListElem *pep, lList **alpp, int startup)
    /* -------- allocation_rule */
    s = lGetString(pep, PE_allocation_rule);
    if (!s)  {
-      ERROR((SGE_EVENT, MSG_SGETEXT_MISSINGCULLFIELD_SS,
-            lNm2Str(PE_allocation_rule), "validate_pe"));
-      answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
+      if (alpp == NULL) {
+         ERROR((SGE_EVENT, MSG_SGETEXT_MISSINGCULLFIELD_SS,
+               lNm2Str(PE_allocation_rule), "validate_pe"));
+      } else {
+         answer_list_add_sprintf(alpp, STATUS_EEXIST, ANSWER_QUALITY_ERROR, 
+                                 MSG_SGETEXT_MISSINGCULLFIELD_SS, 
+                                 lNm2Str(PE_allocation_rule), "validate_pe"); 
+      }
       DEXIT;
       return STATUS_EEXIST;
    }
 
    if (replace_params(s, NULL, 0, pe_alloc_rule_variables )) {
-      ERROR((SGE_EVENT, MSG_PE_ALLOCRULE_SS, pe_name, err_msg));
-      answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
+      if (alpp == NULL) {
+         ERROR((SGE_EVENT, MSG_PE_ALLOCRULE_SS, pe_name, err_msg));
+      } else {
+         answer_list_add_sprintf(alpp, STATUS_EEXIST, ANSWER_QUALITY_ERROR, 
+                                 MSG_PE_ALLOCRULE_SS, pe_name, err_msg);
+      }
       DEXIT;
       return STATUS_EEXIST;
    }
@@ -321,6 +348,23 @@ int pe_validate(lListElem *pep, lList **alpp, int startup)
       return ret;
    }
    
+#ifdef SGE_PQS_API
+   /* -------- PE_qsort_args */
+   NULL_OUT_NONE(pep, PE_qsort_args);
+   if (startup) {
+      void *handle=NULL, *fn=NULL;
+      const char *qsort_args = lGetString(pep, PE_qsort_args);
+      if (qsort_args) {
+         if ((ret=pe_validate_qsort_args(alpp, qsort_args, pep,
+                     &handle, &fn))!=STATUS_OK) {
+            DEXIT;
+            return ret;
+         }
+         /* lSetRef(pep, PE_qsort_validated, 1); */
+      }
+   }
+#endif
+
    DEXIT;
    return STATUS_OK;
 }
@@ -345,7 +389,7 @@ int pe_validate(lListElem *pep, lList **alpp, int startup)
 *  NOTES
 *     MT-NOTE: pe_validate_urgency_slots() is MT safe
 *******************************************************************************/
-int pe_validate_urgency_slots(lList **alpp, const char *s)
+int pe_validate_urgency_slots(lList **answer_list, const char *s)
 {
    DENTER(TOP_LAYER, "pe_validate_urgency_slots");
 
@@ -353,9 +397,12 @@ int pe_validate_urgency_slots(lList **alpp, const char *s)
        strcasecmp(s, SGE_ATTRVAL_MAX) &&
        strcasecmp(s, SGE_ATTRVAL_AVG) &&
        !isdigit(s[0])) {
-      ERROR((SGE_EVENT, "rejecting invalid urgency_slots setting \"%s\"\n", 
-         s));
-      answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR); 
+      if (answer_list == NULL) {
+         ERROR((SGE_EVENT, "rejecting invalid urgency_slots setting \"%s\"\n", 
+                s));
+      } else {
+         answer_list_add_sprintf(answer_list, STATUS_EEXIST, ANSWER_QUALITY_ERROR, MSG_PE_REJECTINGURGENCYSLOTS_S, s); 
+      }
       DEXIT;
       return STATUS_ESEMANTIC;
    }
@@ -472,8 +519,7 @@ pe_urgency_slots(const lListElem *pe, const char *urgency_slot_setting,
    } else if (isdigit(urgency_slot_setting[0])) {
       n = atoi(urgency_slot_setting);
    } else {
-      CRITICAL((SGE_EVENT, "unknown urgency_slot_setting \"%s\" for PE "
-                "\"%s\"\n", urgency_slot_setting, lGetString(pe, PE_name)));
+      CRITICAL((SGE_EVENT, MSG_PE_UNKNOWN_URGENCY_SLOT_SS, urgency_slot_setting, lGetString(pe, PE_name)));
       n = 1;
    }
    DEXIT;
@@ -524,6 +570,10 @@ lListElem* pe_create_template(char *pe_name)
    lSetBool(pep, PE_job_is_first_task, TRUE);
 
    lSetString(pep, PE_urgency_slots, SGE_ATTRVAL_MIN);
+
+#ifdef SGE_PQS_API
+   lSetString(pep, PE_qsort_args, NULL);
+#endif
 
    DEXIT;
    return pep;
@@ -627,4 +677,128 @@ void pe_debit_slots(lListElem *pep, int slots, u_long32 job_id)
    DEXIT;
    return;
 }
+
+
+#ifdef SGE_PQS_API
+/****** sgeobj/pe/pe_validate_qsort_args() *********************************
+*  NAME
+*     pe_validate_qsort_args() -- Ensures the qsort_args setting is valid
+*     by verifying that the dynamic link library can be loaded. This function
+*     is presumably called during startup and whenever a PE is created
+*     or modified.
+*
+*  SYNOPSIS
+*     int pe_validate_qsort_args(lList **alpp, const char *qsort_args, 
+*           lListElem *pe, void **lib, void **fn) 
+*
+*  FUNCTION
+*     Validates urgency slot setting.
+*
+*  INPUTS
+*     lList **alpp  - On error a context message is returned.
+*     const char *qsort_args - The qsort_args string
+*     lListElem *pe - The new or existing PE
+*     void **lib - The returned handle of the dynamically linked library
+*     void **fn - The returned address of the dynamically linked function
+*
+*  RESULT
+*     int - values other than STATUS_OK indicate error condition 
+*
+*  NOTES
+*     MT-NOTE: pe_validate_qsort_args() is not MT safe
+*******************************************************************************/
+int pe_validate_qsort_args(lList **alpp, const char *qsort_args, lListElem *pe,
+      void **lib, void **fn)
+{
+   const char *old_qsort_args = lGetString(pe, PE_qsort_args);
+   char *lib_name, *fn_name;
+   struct saved_vars_s *cntx = NULL;
+   void *lib_handle=NULL, *fn_handle=NULL;
+   int ret = STATUS_OK;
+   const char *error;
+
+   DENTER(TOP_LAYER, "pe_validate_qsort_args");
+
+   /*
+    * If we already have already validated the function and the old and new qsort_args
+    * are the same, then we're done
+    */
+   if ( /* lGetUlong(pe, PE_qsort_validated) && */
+             old_qsort_args && qsort_args && strcmp(old_qsort_args, qsort_args)==0) {
+      goto cleanup;
+   }
+
+   /* if new args are blank, then we go close the old library */
+   if (!qsort_args)
+      goto cleanup;
+
+   /* get library name */
+   lib_name = sge_strtok_r(qsort_args, " ", &cntx); 
+   if (!lib_name) {
+      if (alpp == NULL) {
+         ERROR((SGE_EVENT, "No d2yyynamic library specified for pe_qsort_args for PE %s\n",
+                lGetString(pe, PE_name)));
+      } else {
+         answer_list_add_sprintf(alpp, STATUS_EEXIST, ANSWER_QUALITY_ERROR, 
+                                 MSG_PQS_NODYNAMICLIBRARY_S, lGetString(pe, PE_name));
+      }
+      ret = STATUS_EEXIST;
+      goto cleanup;
+   }
+
+   /* open library */
+   lib_handle = dlopen(lib_name, RTLD_LAZY);
+   if (!lib_handle) {
+      if (alpp == NULL) {
+         ERROR((SGE_EVENT, "Unable to open %s library in pe_qsort_args for PE %s - %s\n",
+              lib_name, lGetString(pe, PE_name), dlerror()));
+      } else {
+         answer_list_add_sprintf(alpp, STATUS_EEXIST, ANSWER_QUALITY_ERROR, 
+                                 MSG_PQS_UNABLETOOPENLIBRARY_SSS, lib_name, 
+                                 lGetString(pe, PE_name), dlerror());
+      }
+      ret = STATUS_EEXIST;
+      goto cleanup;
+   }
+
+   /* get function name */
+   fn_name = sge_strtok_r(NULL, " ", &cntx);
+   if (!fn_name) {
+      if (alpp == NULL) {
+         ERROR((SGE_EVENT, "No function name specified in pe_qsort_args for PE %s \n",
+              lGetString(pe, PE_name)));
+      } else {
+         answer_list_add_sprintf(alpp, STATUS_EEXIST, ANSWER_QUALITY_ERROR, 
+                                 MSG_PQS_NOFUNCTIONNAME_S, lGetString(pe, PE_name));
+      }
+      ret = STATUS_EEXIST;
+      goto cleanup;
+   }
+
+   /* lookup function address */
+   fn_handle = dlsym(lib_handle, fn_name);
+   if ((error = dlerror()) != NULL) {
+      if (alpp == NULL) {
+         ERROR((SGE_EVENT, "Unable to locate %s symbol in %s library for pe_qsort_args in PE %s - %s\n",
+              fn_name, lib_name, lGetString(pe, PE_name), error));
+      } else {
+         answer_list_add_sprintf(alpp, STATUS_EEXIST, ANSWER_QUALITY_ERROR, 
+                                 MSG_PQS_UNABLELOCATESYMBOL_SSSS, fn_name, 
+                                 lib_name, lGetString(pe, PE_name), error);
+      }
+      ret = STATUS_EEXIST;
+      goto cleanup;
+   }
+
+cleanup:
+
+   if (cntx)
+      sge_free_saved_vars(cntx);
+
+   if (lib_handle)
+      dlclose(lib_handle);
+
+   return ret;
+}
+#endif
 

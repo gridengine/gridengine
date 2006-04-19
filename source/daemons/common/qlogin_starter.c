@@ -53,9 +53,53 @@
 #include "config_file.h"
 #include "err_trace.h"
 #include "qlogin_starter.h"
+#include "sge_uidgid.h"
 
+#if defined(INTERIX)
+#  include "misc.h"
+#endif
 
 static char err_str[1024];
+
+/****** qrsh_starter/delete_qrsh_pid_file() *****************************************
+*  NAME
+*     delete_qrsh_pid_file() -- delete the pid file from $TMPDIR
+*
+*  SYNOPSIS
+*     static int delete_qrsh_pid_file() 
+*
+*  FUNCTION
+*     Delete the pid file created by qrsh_starter
+*
+*  RESULT
+*     1, if the file could be deleted
+*     0, if and error occured. Possible error situations are:
+*           - the environment variable TMPDIR cannot be read
+*           - the file cannot be deleted
+*
+*  SEE ALSO
+*  qrsh_starter
+*******************************************************************************/
+int delete_qrsh_pid_file()
+{
+   char *pid_file_name = NULL;
+   int ret = 1;
+
+   if((pid_file_name = search_conf_val("qrsh_pid_file")) == NULL) {
+      SHEPHERD_TRACE((err_str, "cannot get variable %s", pid_file_name));
+      return 0;
+   }
+   
+   if (unlink(pid_file_name) != 0) {
+      SHEPHERD_TRACE((err_str, "cannot delete qrsh pid file %s", pid_file_name));
+      ret = 0;
+   }   
+   
+   return ret;
+
+}
+
+
 
 /****** shepherd/qrsh/write_to_qrsh() *****************************************
 *  NAME
@@ -193,39 +237,6 @@ void write_exit_code_to_qrsh(int exit_code)
    /* rshd exited with OK: try to get returncode from qrsh_starter file */
    SHEPHERD_TRACE((err_str, "write_exit_code_to_qrsh(%d)", exit_code));
 
-   /* we only have an error file in TMPDIR in case of rsh, 
-      otherwise pass exit_code */ 
-   if (search_conf_val("rsh_daemon") != NULL) {
-      if (exit_code == 0) {
-         char *tmpdir;
-         char *taskid;
-         FILE *errorfile;
-   
-         exit_code = 1;
-         
-         tmpdir = getenv("TMPDIR");
-         taskid = search_conf_val("pe_task_id");
-         SHEPHERD_TRACE((err_str, "write_exit_code_to_qrsh - TMPDIR = "
-            "%s, pe_task_id = %s", tmpdir ? tmpdir : "0", 
-            taskid ? taskid : "0"));
-         if (tmpdir) {
-            if (taskid) {
-               sprintf(buffer, "%s/qrsh_exit_code.%s", tmpdir, taskid);
-            } else {   
-               sprintf(buffer, "%s/qrsh_exit_code", tmpdir);
-            }   
-            errorfile = fopen(buffer, "r");
-            if (errorfile) {
-               if (fscanf(errorfile, "%d", &exit_code) == 1) {
-                  SHEPHERD_TRACE((err_str, "error code from remote "
-                     "command is %d", exit_code));
-               }
-               fclose(errorfile);
-            }
-         }
-      }
-   }
-
    /* write exit code as string number to qrsh */
    sprintf(buffer, "%d", exit_code);
    if (write_to_qrsh(buffer) != 0) {
@@ -239,25 +250,28 @@ void write_exit_code_to_qrsh(int exit_code)
 *
 *  SYNOPSIS
 *     #include "qlogin_starter.h"
-*     int get_exit_code_of_qrsh_starter(void);
+*     int get_exit_code_of_qrsh_starter(int* exit_code);
 *
 *  FUNCTION
 *     Reads the exit code from a process started via qrsh - qrsh_starter
 *     from a file in the jobs TMPDIR.
 *
+*  INPUTS
+*     exit_code - exit code of qrsh_starter
+*
 *  RESULT
-*     the exit code of the process
-*     1, if an error occured while reading the file
+*     0, success
+*     1, if an error occured while trying to get the exit code
 ******************************************************************************/
-int get_exit_code_of_qrsh_starter(void)
+int get_exit_code_of_qrsh_starter(int* exit_code)
 {
    char buffer[1024];
-   int exit_code = 1;
+   int ret = 1;
 
+   *exit_code = 1;
    *buffer = 0;
 
    /* rshd exited with OK: try to get returncode from qrsh_starter file */
-   SHEPHERD_TRACE((err_str, "get_exit_code_of_qrsh_starter()")); 
 
    /* we only have an error file in TMPDIR in case of rsh, 
     * otherwise pass exit_code */
@@ -270,8 +284,8 @@ int get_exit_code_of_qrsh_starter(void)
       taskid = search_conf_val("pe_task_id");
       SHEPHERD_TRACE((err_str, "get_exit_code_of_qrsh_starter - TMPDIR = %s,"
          " pe_task_id = %s", tmpdir ? tmpdir : "0", taskid ? taskid : "0"));
-      if (tmpdir) {
-         if (taskid) {
+      if (tmpdir != NULL) {
+         if (taskid != NULL) {
             sprintf(buffer, "%s/qrsh_exit_code.%s", tmpdir, taskid);
          } else {
             sprintf(buffer, "%s/qrsh_exit_code", tmpdir);
@@ -279,15 +293,23 @@ int get_exit_code_of_qrsh_starter(void)
 
          errorfile = fopen(buffer, "r");
          if (errorfile) {
-            if (fscanf(errorfile, "%d", &exit_code) == 1) {
+            ret = 0;
+            if (fscanf(errorfile, "%d", exit_code) == 1) {
                SHEPHERD_TRACE((err_str, "error code from remote command "
-                  "is %d", exit_code));
+                  "is %d", *exit_code));
             }
             fclose(errorfile);
+            if (unlink(buffer) != 0) {
+               SHEPHERD_TRACE((err_str, "can't delete %s", buffer));
+            }
+         } else {
+            SHEPHERD_TRACE((err_str, "can't open file %s", buffer ));
          }
+      } else {
+        SHEPHERD_TRACE((err_str, "unable to get qrsh_tmpdir"));
       }
    }
-   return exit_code;        
+   return ret;        
 }
 
 /****** shepherd/qrsh/get_exit_code_of_qrsh_starter() *************************
@@ -348,6 +370,9 @@ const char *get_error_of_qrsh_starter(void)
                ret = strdup(buffer);
             }
             fclose(errorfile);
+            if (unlink(buffer) != 0) {
+               SHEPHERD_TRACE((err_str, "can't delete %s", buffer));
+            }
          }
       }
    }
@@ -410,7 +435,7 @@ int qlogin_starter(const char *cwd, char *daemon, char** env)
    char *args[20]; /* JG: TODO: should be dynamically allocated */
    int argc = 0;
    const char *sge_root = NULL;
-   char *arch = NULL;
+   const char *arch = NULL;
 #if AIX51
    size_t length;
    size_t len;
@@ -421,17 +446,14 @@ int qlogin_starter(const char *cwd, char *daemon, char** env)
 
    len = sizeof(serv_addr);
 
-   SHEPHERD_TRACE((err_str, "uid = " uid_t_fmt ", euid = " uid_t_fmt ", gid = " gid_t_fmt ", egid = " gid_t_fmt "", 
-                   getuid(), geteuid(), getgid(), getegid()));
-   
    /* must be root because we must access /dev/something */
-#if !defined(INTERIX)
-   if (setgid(0) || setuid(0) || setegid(0) || seteuid(0)) {
+   if( setgid(SGE_SUPERUSER_GID) ||
+       setuid(SGE_SUPERUSER_UID) ||
+       setegid(SGE_SUPERUSER_GID) ||
+       seteuid(SGE_SUPERUSER_UID)) {
       SHEPHERD_TRACE((err_str, "cannot change uid/gid\n"));
       return 4;
    }
-#endif
-
    SHEPHERD_TRACE((err_str, "uid = " uid_t_fmt ", euid = " uid_t_fmt ", gid = " gid_t_fmt ", egid = " gid_t_fmt "", 
                    getuid(), geteuid(), getgid(), getegid()));
    
@@ -480,10 +502,10 @@ int qlogin_starter(const char *cwd, char *daemon, char** env)
     * directory 
     */
    port = ntohs(serv_addr.sin_port);
-   SHEPHERD_TRACE((err_str, "bound to port %d\n", port));
+   SHEPHERD_TRACE((err_str, "bound to port %d", port));
  
    sge_root = sge_get_root_dir(0, NULL, 0, 1);
-   arch = getenv("ARC");
+   arch = sge_get_arch();
    
    if (sge_root == NULL || arch == NULL) {
       SHEPHERD_TRACE((err_str, "reading environment SGE_ROOT and ARC failed"));

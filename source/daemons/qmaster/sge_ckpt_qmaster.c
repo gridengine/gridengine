@@ -111,21 +111,22 @@
 *     STATUS_EUNKNOWN - an error occured
 ******************************************************************************/ 
 int ckpt_mod(lList **alpp, lListElem *new_ckpt, lListElem *ckpt, int add,
-             const char *ruser, const char *rhost, gdi_object_t *object, int sub_command) 
+             const char *ruser, const char *rhost, gdi_object_t *object, 
+             int sub_command, monitoring_t *monitor) 
 {
    const char *ckpt_name;
 
    DENTER(TOP_LAYER, "ckpt_mod");
 
    /* ---- CK_name */
-   if (lGetPosViaElem(ckpt, CK_name) >= 0) {
+   if (lGetPosViaElem(ckpt, CK_name, SGE_NO_ABORT) >= 0) {
       if (add) {
          if (attr_mod_str(alpp, ckpt, new_ckpt, CK_name, SGE_ATTR_CKPT_NAME)) {
             goto ERROR;
          }
       }
       ckpt_name = lGetString(new_ckpt, CK_name);
-      if (add && verify_str_key(alpp, ckpt_name, SGE_ATTR_CKPT_NAME)) {
+      if (add && verify_str_key(alpp, ckpt_name, MAX_VERIFY_STRING, SGE_ATTR_CKPT_NAME) != STATUS_OK) {
          DEXIT;
          return STATUS_EUNKNOWN;
       }
@@ -153,7 +154,7 @@ int ckpt_mod(lList **alpp, lListElem *new_ckpt, lListElem *ckpt, int add,
    attr_mod_str(alpp, ckpt, new_ckpt, CK_ckpt_dir, SGE_ATTR_CKPT_DIR);
   
    /* ---- CK_when */
-   if (lGetPosViaElem(ckpt, CK_when) >= 0) {
+   if (lGetPosViaElem(ckpt, CK_when, SGE_NO_ABORT) >= 0) {
       int new_flags, flags;
 
       new_flags = sge_parse_checkpoint_attr(lGetString(new_ckpt, CK_when));
@@ -274,7 +275,7 @@ int ckpt_spool(lList **alpp, lListElem *ep, gdi_object_t *object)
 *  RESULT
 *     0 - success
 ******************************************************************************/ 
-int ckpt_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object, lList **ppList) 
+int ckpt_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object, lList **ppList, monitoring_t *monitor) 
 {
    const char *ckpt_name;
 
@@ -332,7 +333,7 @@ int sge_del_ckpt(lListElem *ep, lList **alpp, char *ruser, char *rhost)
    }
 
    /* ep is no ckpt element, if ep has no CK_name */
-   if ((pos = lGetPosViaElem(ep, CK_name)) < 0) {
+   if ((pos = lGetPosViaElem(ep, CK_name, SGE_NO_ABORT)) < 0) {
       CRITICAL((SGE_EVENT, MSG_SGETEXT_MISSINGCULLFIELD_SS,
             lNm2Str(CK_name), SGE_FUNC));
       answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
@@ -369,7 +370,7 @@ int sge_del_ckpt(lListElem *ep, lList **alpp, char *ruser, char *rhost)
          ERROR((SGE_EVENT, "denied: %s", lGetString(answer, AN_text)));
          answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN,
                          ANSWER_QUALITY_ERROR);
-         local_answer_list = lFreeList(local_answer_list);
+         lFreeList(&local_answer_list);
          DEXIT;
          return STATUS_EUNKNOWN;
       }
@@ -385,7 +386,7 @@ int sge_del_ckpt(lListElem *ep, lList **alpp, char *ruser, char *rhost)
    }
 
    /* now we can remove the element */
-   lRemoveElem(*lpp, found);
+   lRemoveElem(*lpp, &found);
 
    INFO((SGE_EVENT, MSG_SGETEXT_REMOVEDFROMLIST_SSSS,
             ruser, rhost, ckpt_name, MSG_OBJ_CKPT));

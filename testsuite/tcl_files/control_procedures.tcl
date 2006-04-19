@@ -262,6 +262,7 @@ proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result 
 
       send -i $sp_id "G"
       set timeout_count 0
+      set start_time 0
       while { $stop_line_wait == 0 } {
          expect {
             -i $sp_id full_buffer {
@@ -730,8 +731,8 @@ proc get_ps_info { { pid 0 } { host "local"} { variable ps_info } {additional_ru
       "irix6" -
       "irix65" { 
          set myenvironment(COLUMNS) "500"
-         set result [start_remote_prog "$host" "$CHECK_USER" "ps" "-eo \"pid pgid ppid uid state stime vsz time args\"" prg_exit_state 60 0 myenvironment]
-         set index_names "  PID  PGID  PPID   UID S    STIME {VSZ   }        TIME COMMAND"
+         set result [start_remote_prog "$host" "$CHECK_USER" "ps" "-eo \"pid,pgid,ppid,uid=LONGUID,state,stime,vsz,time,args\"" prg_exit_state 60 0 myenvironment]
+         set index_names "  PID  PGID  PPID LONGUID S    STIME {VSZ   }        TIME COMMAND"
          set pid_pos     0
          set gid_pos     1
          set ppid_pos    2
@@ -1398,11 +1399,16 @@ proc resolve_build_arch { host } {
 #  SEE ALSO
 #     ???/???
 #*******************************
-proc resolve_host { name { long 1 } } {
+proc resolve_host { name { long 0 } } {
    global ts_config
    global CHECK_OUTPUT
    global resolve_host_cache
 
+   # we cannot resolve hostgroups.
+   if {[string range $name 0 0] == "@" } {
+      puts $CHECK_OUTPUT "hostgroups ($name) cannot be resolved"
+      return $name
+   }
    
    if { $long != 0 } {
       if {[info exists resolve_host_cache($name,long)]} {

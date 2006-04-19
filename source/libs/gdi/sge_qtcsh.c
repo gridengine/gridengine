@@ -41,6 +41,7 @@
 
 #include "sge_gdi.h"
 #include "sge_answer.h"
+#include "sge_stdio.h"
 #include "sge_any_request.h"
 #include "sgermon.h"
 #include "sge_log.h"
@@ -51,6 +52,7 @@
 #include "sge_prog.h"
 #include "sge_conf.h"
 #include "lck/sge_mtutil.h"
+#include "sge_string.h"
 
 #include "msg_common.h"
 
@@ -121,10 +123,10 @@ print_func_t ostream
       /* read in config file */
       if (read_config_list(fp, &clp_cluster, alpp, CF_Type, CF_name, CF_value,
                         CF_sublist, NULL, RCL_NO_VALUE, buffer, sizeof(buffer)-1)) {
-         fclose(fp);
+         FCLOSE(fp);
          goto Error;
       }
-      fclose(fp);
+      FCLOSE(fp);
    }
 
    /* skip tasknames containing '/' */
@@ -132,7 +134,7 @@ print_func_t ostream
    while ((cep=nxt)) {
       nxt = lNext(cep);
       if (strrchr(lGetString(cep, CF_name), '/')) 
-         lRemoveElem(clp_cluster, cep);
+         lRemoveElem(clp_cluster, &cep);
 
    }
 
@@ -167,10 +169,10 @@ print_func_t ostream
       /* read in config file */
       if (read_config_list(fp, &clp_user, alpp, CF_Type, CF_name, CF_value,
                            CF_sublist, NULL, RCL_NO_VALUE, buffer, sizeof(buffer)-1)) {
-         fclose(fp);
+         FCLOSE(fp);
          goto Error;
       }
-      fclose(fp);
+      FCLOSE(fp);
    }
 
    /* skip tasknames containing '/' */
@@ -178,7 +180,7 @@ print_func_t ostream
    while ((cep=nxt)) {
       nxt = lNext(cep);
       if (strrchr(lGetString(cep, CF_name), '/')) 
-         lRemoveElem(clp_user, cep);
+         lRemoveElem(clp_user, &cep);
    }
 
 #if 0
@@ -204,11 +206,11 @@ print_func_t ostream
 
       if ((cep_dest=lGetElemStr(clp_cluster, CF_name, ro_task_name))) {
          /* do not override cluster global task entry */
-         lRemoveElem(clp_user, cep);
+         lRemoveElem(clp_user, &cep);
       } else if ((cep_dest=lGetElemStr(clp_cluster, CF_name, task_name))) {
          /* override cluster global task entry */
          lSetString(cep_dest, CF_value, lGetString(cep, CF_value));
-         lRemoveElem(clp_user, cep);
+         lRemoveElem(clp_user, &cep);
       } else {
          /* no entry in cluster global task list 
             use entry from user task list */
@@ -220,10 +222,10 @@ print_func_t ostream
 
       free(ro_task_name);
    }
-   lFreeList(clp_user);
+   lFreeList(&clp_user);
 
-   if (task_config)
-      lFreeList(task_config);
+   
+   lFreeList(&task_config);
    task_config = clp_cluster;
 
    /* remove leading '!' from command names */
@@ -250,8 +252,9 @@ print_func_t ostream
    return 0;
 
 Error:
-   lFreeList(clp_cluster);
-   lFreeList(clp_user);
+FCLOSE_ERROR:
+   lFreeList(&clp_cluster);
+   lFreeList(&clp_user);
    return -1;
 }
 
@@ -263,10 +266,14 @@ int close_stdin /* use of qrsh's -nostdin option */
 ) {
    const char *value; 
    char *taskname = NULL;
-   lListElem *task;
-   int i, narg_resreq = 0, narg_argv = 0;
-   char **argv_iter, 
-        **newargv;
+   lListElem *task = NULL;
+   int i = 0;
+   int narg_resreq = 0;
+   int narg_argv = 0;
+   int newargv_size = 0;
+   char **argv_iter = NULL;
+   char **newargv = NULL;
+   /* TODO: This should be SGE_PATH_MAX. */
    char qrsh_path[2048];
 
    /* remote execution only for commands without any path information */
@@ -295,15 +302,16 @@ int close_stdin /* use of qrsh's -nostdin option */
       narg_argv++; 
    }
    
-   newargv = (char **)malloc(sizeof(char *) * (
+   newargv_size =
       1 +                                /* qrsh */
       (close_stdin?1:0) +                /* -nostdin */
       (mode_verbose?1:0) +               /* -verbose */
       2 +                                /* -now [y|n] */
       narg_resreq +                      /* resource requests to qrsh */
       narg_argv +                        /* argv of command to be started */
-      1                                  /* NULL */
-   ));
+      1;                                 /* NULL */
+   newargv = (char **)malloc(sizeof(char *) * newargv_size);
+   memset(newargv, 0, newargv_size);
 
    /* build argv for qrsh */
    i = 0;
@@ -333,9 +341,9 @@ int close_stdin /* use of qrsh's -nostdin option */
    for (argv_iter=argv; argv_iter[0] != NULL; argv_iter++) {
       newargv[i++] = argv_iter[0];
    }
-      
-   newargv[i] = NULL;
 
+   newargv[i] = NULL;
+      
    sprintf(qrsh_path, "%s/bin/%s/qrsh", sge_get_root_dir(1, NULL, 0, 1), sge_get_arch());
 
    return execvp(qrsh_path, newargv);
@@ -343,23 +351,27 @@ int close_stdin /* use of qrsh's -nostdin option */
 
 /* This method counts the number of arguments in the string using a quick and
  * dirty algorithm.  The algorithm may incorrectly report the number of arguments
- * to be too large because it does not parse quotations correctly. */
+ * to be too large because it does not parse quotations correctly. 
+ * MT-NOTE: sge_quick_count_num_args() is MT safe
+ */
 int sge_quick_count_num_args (
 const char* args /* The argument string to count by whitespace tokens */
 ) {
    int num_args = 0;
    char *resreq = (char *)malloc (strlen (args)+1);
    char *s;
+   struct saved_vars_s *context = NULL;
    
    DENTER (TOP_LAYER, "count_num_qtask_args");
    
    /* This function may return a larger number than required since it does not
     * parse quotes.  This is ok, however, since it's current usage is for
     * mallocing arrays, and a little too big is fine. */
-   strcpy (resreq, args);
-   for (s=strtok (resreq, " \t"); s; s=strtok(NULL, " \t"))
+   strcpy(resreq, args);
+   for (s=sge_strtok_r(resreq, " \t", &context); s; s=sge_strtok_r(NULL, " \t", &context))
       num_args++;
    free(resreq);
+   sge_free_saved_vars(context);
    
    DEXIT;
    return num_args;
@@ -413,16 +425,39 @@ char** pargs /* The array to contain the parsed arguments */
    DEXIT;
 }
 
-/* This function was added to enable the DRMAA library to handle job
- * categories.  It is similar to sge_init() except that it doesn't do any
- * initialization. */
-char** sge_get_qtask_args (
-char *taskname, /* The name of the task to look for in the qtask files */
-lList *alp /* For returning error information */
-) {
-   const char *value; 
+/****** QTCSH/sge_get_qtask_args() *********************************************
+*  NAME
+*     sge_get_qtask_args() -- get args for a qtask entry
+*
+*  SYNOPSIS
+*     char** sge_get_qtask_args (char *taskname, lList *alp)
+*
+*  FUNCTION
+*     This function reads the qtask files and returns an array of args for the
+*     given qtask entry.  Calling this function will initialize the qtask
+*     framework, if it has not already been initialized.
+*
+*  INPUTS
+*     char *taskname    The name of the entry for which to look in the qtask
+*                       files
+*     lList *alp        For returning error information
+*
+*  RESULT
+*     char **           A NULL-terminated array of args for the given qtask
+*                       entry
+*
+*  NOTES
+*     MT-NOTE: sge_get_qtask_args() is MT safe with respect to itself, but it is
+*              not thread safe to use this function in conjuction with the
+*              init_qtask_config() or sge_init() functions or accessing the
+*              task_config global variable.
+*
+*******************************************************************************/
+char **sge_get_qtask_args (char *taskname, lList *alp)
+{
+   const char *value = NULL; 
    int num_args = 0;
-   lListElem *task;
+   lListElem *task = NULL;
    char** args = NULL;
    
    DENTER (TOP_LAYER, "sge_get_qtask_args");
@@ -442,7 +477,7 @@ lList *alp /* For returning error information */
    if (task_config == NULL) {
       /* Just using printf here since we don't really have an exciting function
        * like xprintf to pass in.  This was really meant for use with qtsch. */
-      if (init_qtask_config (&alp, (print_func_t)printf)) {
+      if (init_qtask_config (&alp, (print_func_t)printf) != 0) {
          sge_mutex_unlock("qtask_mutex", SGE_FUNC, __LINE__, &qtask_mutex);
          DEXIT;
          return args;
@@ -450,20 +485,23 @@ lList *alp /* For returning error information */
    }
 
    sge_mutex_unlock("qtask_mutex", SGE_FUNC, __LINE__, &qtask_mutex);
-    
-   if (!(task=lGetElemStr(task_config, CF_name, taskname))) {
+   
+   task = lGetElemStr(task_config, CF_name, taskname);
+   
+   if (task == NULL) {
       DEXIT;
       return args;
    }
   
-   if ((value = lGetString(task, CF_value))) {
-      num_args = sge_quick_count_num_args (value);
+   value = lGetString(task, CF_value);
+   
+   if (value != NULL) {
+      num_args = sge_quick_count_num_args(value);
    }
    
-   args = (char **)malloc (sizeof (char *) * (num_args + 1));   
-   
+   args = (char **)malloc(sizeof(char *) * (num_args + 1));   
+   memset(args, 0, sizeof(char *) * (num_args + 1));
    sge_parse_args (value, args);
-   args[num_args] = NULL;
    
    DEXIT;
    return args;
@@ -493,7 +531,7 @@ print_func_t ostream
          mode_remote = force_remote?mode_remote:!getenv("JOB_ID");          
 /*          (*ostream) ("mode_remote = %d\n", mode_remote); */
       }
-      lFreeList(alp);
+      lFreeList(&alp);
    } else {
       mode_remote = 0;          
 /*       (*ostream) ("no $SGE_ROOT, running as normal tcsh\n"); */

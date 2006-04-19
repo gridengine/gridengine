@@ -43,8 +43,8 @@
 #include "sge_prog.h"
 #include "sgermon.h"
 #include "sge_log.h"
-#include "sge_utility.h"
 #include "sge_answer.h"
+#include "sge_utility.h"
 #include "version.h"
 #include "msg_common.h"
 #include "msg_sgeobjlib.h"
@@ -182,8 +182,7 @@ int feature_initialize_from_string(const char *mode)
    feature_id_t id;
    int ret;
 
-   DENTER(TOP_LAYER, "featureset_initialize_from_string");
-
+   DENTER(TOP_LAYER, "feature_initialize_from_string");
    id = feature_get_featureset_id(mode);
 
    if (id == FEATURE_UNINITIALIZED) {
@@ -257,29 +256,42 @@ void feature_initialize(void)
 ******************************************************************************/
 void feature_activate(feature_id_t id) 
 {
+   lList **feature_list_pp;
+   lList *feature_list;
    lListElem *active_set;
    lListElem *inactive_set;
 
-   DENTER(TOP_LAYER, "feature_activate");  
+   DENTER(TOP_LAYER, "feature_activate");
 
-   if (!*feature_get_master_featureset_list()) {
+   /* get fature list, if it hasn't been initialized yet, do so */
+   feature_list_pp = feature_get_master_featureset_list();
+   feature_list = *feature_list_pp;
+   if (feature_list == NULL) {
       feature_initialize();
+      feature_list_pp = feature_get_master_featureset_list();
+      feature_list = *feature_list_pp;
    }
-   
-   inactive_set = lGetElemUlong(*feature_get_master_featureset_list(), FES_id, id);
-   active_set = lGetElemUlong(*feature_get_master_featureset_list(), FES_active, 1);
 
+   /* get the feature we want to activate */
+   inactive_set = lGetElemUlong(feature_list, FES_id, id);
+   /* get the feature that is currently activated */
+   active_set = lGetElemUlong(feature_list, FES_active, 1L);
+
+   /* if both exist, we have to deactivate the former active, activate the new active */
    if (inactive_set && active_set) {
       lSetUlong(active_set, FES_active, 0);
       lSetUlong(inactive_set, FES_active, 1);
+
       if (lGetUlong(active_set, FES_id) != id) {
          WARNING((SGE_EVENT, MSG_GDI_SWITCHFROMTO_SS, 
             feature_get_featureset_name((feature_id_t)lGetUlong(active_set, FES_id)),
             feature_get_featureset_name(id)));
       }
    } else if (inactive_set) {
+      /* there was no active feature before */
       lSetUlong(inactive_set, FES_active, 1);
    }
+
    DEXIT;
 }
 
@@ -377,11 +389,12 @@ static feature_id_t feature_get_featureset_id(const char *name)
    int i = 0;
    feature_id_t ret = FEATURE_UNINITIALIZED;
 
-   DENTER(TOP_LAYER, "featureset_get_id");
+   DENTER(TOP_LAYER, "feature_get_featureset_id");
    if (!name) {
       DEXIT;
       return ret;
    }
+
    while (featureset_list[i].name && strcmp(featureset_list[i].name, name)) {
       i++;
    }
@@ -551,7 +564,7 @@ static void feature_state_destroy(void* theState)
 {
    struct feature_state_t* state = (struct feature_state_t *)theState;
 
-   state->Master_FeatureSet_List = lFreeList(state->Master_FeatureSet_List);
+   lFreeList(&(state->Master_FeatureSet_List));
    free(state);
 }
 

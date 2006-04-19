@@ -39,7 +39,6 @@ global check_init_level_procedure
 set check_init_level_procedure "qmod_general_init_level"
 set check_name         "qmod_general"
 set check_category     "COMPATIBILITY SYSTEM L10N VERIFIED"
-set check_root_access_needs "yes"
 
 set check_description(0)  "checking all options, except rescheduling (-r)"
 set check_needs        "init_core_system"  ;# dependencies of this check (name of other check)
@@ -117,16 +116,18 @@ proc qmod_general_init_level {} {
 #     ???/???
 #*******************************
 proc qmod_setup {} {
-   global CHECK_HOST CHECK_OUTPUT
-   global test_queue qmod_test_queues 
+   global ts_config
+   global CHECK_OUTPUT
+   global test_host test_queue qmod_test_queues 
 
+   set test_host [lindex $ts_config(execd_nodes) 0]
    foreach queue_name $qmod_test_queues {
       set q_param(slots)                 "2"
       set q_param(load_thresholds)       "np_load_avg=6.75"      
-      add_queue $queue_name ${CHECK_HOST} q_param
+      add_queue $queue_name $test_host q_param
    }
 
-   set test_queue [get_queue_instance "qmod0" $CHECK_HOST]
+   set test_queue [get_queue_instance "qmod0" $test_host]
 
    set_error 0 "ok"        
 }
@@ -162,13 +163,13 @@ proc qmod_setup {} {
 #     ???/???
 #*******************************
 proc qmod_cleanup {} {
-   global CHECK_HOST qmod_test_queues
+   global test_host qmod_test_queues
 
    delete_all_jobs
    wait_for_end_of_all_jobs 60
 
    foreach queue_name $qmod_test_queues {
-     del_queue $queue_name $CHECK_HOST 0 1
+     del_queue $queue_name $test_host 0 1
    }
 
    set_error 0 "ok"
@@ -203,11 +204,11 @@ proc qmod_cleanup {} {
 #     ???/???
 #*******************************
 proc qmod_wildcard_enable {} {
-   global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_HOST CHECK_OUTPUT qmod_test_queues
+   global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_OUTPUT qmod_test_queues test_host
    
    #enable all queues on the test host
    set queue_name "qmod*"
-   set queue_instance [get_queue_instance $queue_name ${CHECK_HOST}] 
+   set queue_instance [get_queue_instance $queue_name $test_host] 
    set result [ catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qmod -e $queue_name" } output ]
    
    if {$result != 0} {
@@ -215,7 +216,7 @@ proc qmod_wildcard_enable {} {
    }            
    
    foreach queue_name $qmod_test_queues {
-      set queue_instance [get_queue_instance $queue_name ${CHECK_HOST}]
+      set queue_instance [get_queue_instance $queue_name $test_host]
       puts $CHECK_OUTPUT "get state of queue \"$queue_instance\""
       set state [ get_queue_state $queue_instance ] 
       if { [ string compare $state "" ] != 0  } {
@@ -256,10 +257,10 @@ proc qmod_wildcard_enable {} {
 #     ???/???
 #*******************************
 proc qmod_wildcard_disable { } {
-   global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_HOST CHECK_OUTPUT qmod_test_queues
+   global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_OUTPUT test_host qmod_test_queues
    
-   #diable all queues on the test host
-   set queue_name [get_queue_instance "qmod*" ${CHECK_HOST}] 
+   #disable all queues on the test host
+   set queue_name [get_queue_instance "qmod*" $test_host] 
    set result [ catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qmod -d $queue_name" } output ]
    
    if {$result != 0} {
@@ -267,7 +268,7 @@ proc qmod_wildcard_disable { } {
    }            
    
    foreach queue_name $qmod_test_queues {
-      set queue_instance [get_queue_instance $queue_name ${CHECK_HOST}] 
+      set queue_instance [get_queue_instance $queue_name $test_host] 
       puts $CHECK_OUTPUT "get state of queue \"$queue_instance\""
       set state [ get_queue_state $queue_instance ] 
       if { [ string compare $state "d" ] != 0  } {
@@ -302,8 +303,11 @@ proc qmod_wildcard_disable { } {
 #
 #*******************************
 proc qmod_issue_1131 {} {
-   global CHECK_HOST CHECK_OUTPUT CHECK_ARCH ts_config
-   set queue_name "@${CHECK_HOST}"
+   global ts_config
+   global CHECK_OUTPUT CHECK_ARCH
+   global test_host
+
+   set queue_name "@$test_host"
    set result [ catch { eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qmod -d $queue_name" } output ]
    
    if { $result != 0 } {
@@ -632,22 +636,10 @@ proc qmod_unsuspend {} {
 #     ???/???
 #*******************************
 proc qmod_clearerrorstate {} {
-   
-   global CHECK_PRODUCT_TYPE CHECK_PRODUCT_ROOT CHECK_ARCH test_queue CHECK_HOST
+   global CHECK_OUTPUT CHECK_PRODUCT_TYPE CHECK_PRODUCT_ROOT CHECK_ARCH test_queue 
 
-
-   if { [have_root_passwd] == -1 } {
-      set_error -3 "root access required"
-      return
-   } 
- 
-
-   set file_name "sge_shepherd"
-
-   # rename the shepherd binary to produce error state
-   set output [ run_command_as_user "$CHECK_HOST" "root" "/bin/mv" "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/$file_name $CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/${file_name}.tmp" 1 ] 
-   wait_for_file "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/$file_name" 200 1    ;# wait for shepherd binary to disappear
-   
+   # set queue prolog to a non existing script - this will produce an error state
+   mqattr prolog "/tmp/foo/bar/non_existing_prolog.sh" $test_queue
 
    # submit testjob to set the queue in error
    set job_id [ submit_job "-o /dev/null -e /dev/null -q $test_queue $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 15" ] 
@@ -655,10 +647,9 @@ proc qmod_clearerrorstate {} {
    # wait for queue to get in error state
    set time [timestamp]
    while {1} {
-   
       set state [ get_queue_state $test_queue ] 
       if { [ string first "E" $state ] >=  0  } {
-         break;
+         break
       }
 
       set runtime [expr ( [timestamp] - $time) ]
@@ -666,25 +657,18 @@ proc qmod_clearerrorstate {} {
          set_error -1 "timeout waiting for queue $test_queue to get in error state"
          break;
       }
+
       sleep 1
    }
-  
-   # set the shepherd binary to his orignal filename
-   # set result [ catch { file rename $CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/$file_name.tmp $CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/$file_name } ]
-   # if { $result != 0 } {
-   #   set_error -1 "could not rename the $file_name binary to original name"
-   # }
-   set output [ run_command_as_user "$CHECK_HOST" "root" "/bin/mv" "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/${file_name}.tmp $CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/$file_name" 1 ] 
-   wait_for_file "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/$file_name" 200    ;# wait for shepherd binary to appear
+ 
+   # remove the prolog
+   mqattr prolog none $test_queue
 
-
-
-   # now wait for jobstart
+   # now wait for jobstart - should not happen as queue is in error state
    set result [wait_for_jobstart $job_id "leeper" 120 0]
    if {$result != -1} {
       set_error -1 "job $job_id should not start until yet"
    }
-
 
    # clear error state
    set result [ catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qmod -c $test_queue" } output ]
@@ -697,15 +681,32 @@ proc qmod_clearerrorstate {} {
    if { [ string compare $state "" ] != 0  } {
       set_error -1 "queue $test_queue is not in original state"
    }
-
-   
  
    # now wait for jobend
    wait_for_jobstart $job_id "leeper" 300
    wait_for_jobend   $job_id "leeper" 300 
 
+   qmod_clear_all_error_states
+
    set_error 0 "ok" 
-}  
+}
+
+# Due to a bug, in N1GE 6 an invalid queue prolog will set the host into error state
+# we have to clear it after the qmod_clearerrorstate test.
+proc qmod_clear_all_error_states {} {
+   global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_OUTPUT
+   global test_host qmod_test_queues
+
+   set queue_list $qmod_test_queues
+   lappend queue_list "all.q"
+   
+   foreach queue $queue_list {
+      set qinstance [get_queue_instance $queue $test_host]
+      puts $CHECK_OUTPUT "clear error state of $qinstance"
+      catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qmod -c $qinstance" } output
+      puts $CHECK_OUTPUT "$output"
+   }
+}
 
 # do to:
 # 1) set running job to suspend
@@ -745,12 +746,13 @@ proc qmod_clearerrorstate {} {
 #     ???/???
 #*******************************
 proc qmod_forceaction {} {
-   global CHECK_PRODUCT_ROOT CHECK_ARCH test_queue CHECK_OUTPUT CHECK_ACTUAL_TEST_PATH
+   global ts_config
+   global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_USER test_host test_queue CHECK_OUTPUT CHECK_ACTUAL_TEST_PATH
 
    # submit testjob to set the queue in error
-   set job_id [ submit_job "-q $test_queue -o /dev/null -e /dev/null $CHECK_ACTUAL_TEST_PATH/qmod_job.sh 5 $CHECK_ACTUAL_TEST_PATH/qmod_job.sh" ] 
+   set job_id [ submit_job "-N QMOD -q $test_queue -o /dev/null -e /dev/null $ts_config(testsuite_root_dir)/scripts/work_pid.sh 300" ] 
    # now wait for jobstart
-   wait_for_jobstart $job_id "blocking" 300
+   wait_for_jobstart $job_id "QMOD" 300
    wait_for_end_of_transfer $job_id 300 
   
 
@@ -758,32 +760,28 @@ proc qmod_forceaction {} {
    set time_out [ expr ( [timestamp] + 60 ) ]
    set procgroup_ok 0
    while { [timestamp] < $time_out } {
-      set state [ get_suspend_state_of_job $job_id "pid_list" 0] 
-      set grppid [ get_grppid_of_job $job_id ]
+      set state [ get_suspend_state_of_job $job_id $test_host "pid_list" 0] 
+      set grppid [ get_grppid_of_job $job_id $test_host]
       puts $CHECK_OUTPUT "Job has real state \"$state\""
       puts $CHECK_OUTPUT "Job has grp pid \"$grppid\""
-      puts $CHECK_OUTPUT "pitlist is $pid_list and has length [llength $pid_list]"
-      if { [llength $pid_list] == 5 } {
-         puts $CHECK_OUTPUT "found 5 process mebmers - ok"
+      puts $CHECK_OUTPUT "pid_list is $pid_list and has length [llength $pid_list]"
+      if { [llength $pid_list] == 1 } {
+         puts $CHECK_OUTPUT "found 1 process member - ok"
          set procgroup_ok 1
          break;
       }
    }
    if { $procgroup_ok != 1 } {
-      set_error -1 "not 5 processes in processgroup \"$grppid\""
+      set_error -1 "not 1 process in processgroup \"$grppid\""
    }
  
 
    # set job in suspend mode
-   puts $CHECK_OUTPUT "setting job in suspend mode ..."
-   set result [ catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qmod -s $job_id" } output ]
-   if {$result != 0} {
-     set_error -1 "exit state of \"qmod -s $job_id\" is not 0"
-   }          
-   puts $CHECK_OUTPUT $output
+   puts $CHECK_OUTPUT "suspend job ..."
+   suspend_job $job_id
  
-   set state [ get_suspend_state_of_job $job_id ] 
-   set grppid [ get_grppid_of_job $job_id ]
+   set state [ get_suspend_state_of_job $job_id $test_host]
+   set grppid [ get_grppid_of_job $job_id $test_host]
    puts $CHECK_OUTPUT "Job has real state \"$state\""
    puts $CHECK_OUTPUT "Job has grp pid \"$grppid\""
    
@@ -794,94 +792,66 @@ proc qmod_forceaction {} {
 
    puts $CHECK_OUTPUT "unsuspend job with kill command ..."
    # unsunspend job per kill command
-   switch -- $CHECK_ARCH {
+   switch -- [resolve_arch $test_host] {
       "glinux" {
-            foreach pidnr $pid_list {
-            set result [ catch { eval exec "/bin/kill -CONT $pidnr" } ]
+         foreach pidnr $pid_list {
+            start_remote_prog $test_host $CHECK_USER "/bin/kill" "-CONT $pidnr"
+            #set result [ catch { eval exec "/bin/kill -CONT $pidnr" } ]
          }
       }
       "alinux" {
-         # on our alinux they have changed the CONT and STOP signal numbers ;-)
-         set result [ catch { eval exec "/bin/kill -STOP -$grppid" } ]
+         # on our alinux they have confused the CONT and STOP signal numbers ;-)
+         start_remote_prog $test_host $CHECK_USER "/bin/kill" "-STOP -$grppid"
+         #set result [ catch { eval exec "/bin/kill -STOP -$grppid" } ]
       }
 
       default {
-         set result [ catch { eval exec "kill -CONT -$grppid" } ]
+         start_remote_prog $test_host $CHECK_USER "kill" "-CONT -$grppid"
+         #set result [ catch { eval exec "kill -CONT -$grppid" } ]
       }
    }
 
 #   sleep 5
 
-   set state [ get_suspend_state_of_job $job_id ] 
+   set state [ get_suspend_state_of_job $job_id $test_host]
    puts $CHECK_OUTPUT "Job has real state \"$state\""
 
    if { [string compare "T" $state] == 0 } {
       set_error -1 "job $job_id (grppid: $grppid) is still in suspend state"
    }   
-   
-   puts $CHECK_OUTPUT "set job in suspend mode (queueing system things it is still suspended) ..."
 
    # set job in suspend mode (is allready in suspend (in SGE system))
-   set result [ catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qmod -s $job_id" } output ]
-   if {$result != 0} {
-     set_error -1 "exit state of \"qmod -s $job_id\" is not 0"
-   }          
-   puts $CHECK_OUTPUT $output
+   puts $CHECK_OUTPUT "suspend job (queueing system thinks it is still suspended) ..."
+   suspend_job $job_id 0 0
 
-   set state [ get_suspend_state_of_job $job_id ] 
+   set state [ get_suspend_state_of_job $job_id $test_host]
    puts $CHECK_OUTPUT "Job has real state \"$state\""
    
    if { [string compare "T" $state] == 0 } {
       set_error -1 "job $job_id (grppid: $grppid) is still in suspend state without force flag"
    }    
-
-   puts $CHECK_OUTPUT "set job in suspend mode with force flag ..." 
-   
  
    # set job in suspend mode (is allready in suspend (in SGE system)) with force flag set
-   set result [ catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qmod -f -s $job_id" } output ]
-   if {$result != 0} {
-     set_error -1 "exit state of \"qmod -f -s $job_id\" is not 0"
-   }          
-   puts $CHECK_OUTPUT $output
+   puts $CHECK_OUTPUT "suspend job with force flag ..." 
+   suspend_job $job_id 1
 
-   set state [ get_suspend_state_of_job $job_id ] 
+   set state [ get_suspend_state_of_job $job_id $test_host]
    puts $CHECK_OUTPUT "Job has real state \"$state\""
    
    if { [string compare "T" $state] != 0 } {
       set_error -1 "job $job_id (grppid: $grppid) is still not in suspend state with using force flag"
    }    
 
-   puts $CHECK_OUTPUT "set job in unsuspend mode ..."
-   
-
    # ok unsuspend the job
-   # set job in unsuspend mode
-   set result [ catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qmod -us $job_id" } output ]
-   if {$result != 0} {
-     set_error -1 "exit state of \"qmod -us $job_id\" is not 0"
-   }          
-   puts $CHECK_OUTPUT $output
+   puts $CHECK_OUTPUT "unsuspend job"
+   unsuspend_job $job_id
 
+   # delete job and wait for jobend
+   puts $CHECK_OUTPUT "delete job and wait for jobend ..."
+   delete_job $job_id 1
 
-   puts $CHECK_OUTPUT "release job and wait for jobend ..."
-
-   
-
-   # release job
-   set result [ catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qdel $job_id" } output ]
-
-
-   # wait for jobend 
-   set break_time [timestamp]
-   set break_time [ expr ( $break_time + 300 ) ]
-   while { [timestamp] < $break_time } {
-      if { [was_job_running $job_id 0] != -1 } {
-         break;
-      }
-   }
    # let's see if all processes are killed
-   get_ps_info
+   get_ps_info 0 $test_host
    
    for {set i 0} {$i < $ps_info(proc_count) } {incr i 1} {
       puts $CHECK_OUTPUT "ps_info(pgid,$i)     = $ps_info(pgid,$i), command is \"$ps_info(command,$i)\""
@@ -891,5 +861,6 @@ proc qmod_forceaction {} {
          set_error -1 "process $ps_info(pid,$i) is still in ps list"
       }
    }
+
    set_error 0 "ok"
 }

@@ -117,6 +117,7 @@ Shutdown()
       $utilbin_dir/checkprog $pid $name > /dev/null
       if [ "$?" = 0 ]; then
          kill -TERM $pid
+         return $?
       fi
    fi
 }
@@ -277,6 +278,7 @@ if [ "$startup" = true ]; then
       exec 1>/dev/null 2>&1
       $bin_dir/sge_execd
       [ $? -eq 0 -a -d /var/lock/subsys ] && touch /var/lock/subsys/sgeexecd
+      exit 0
 else
    if [ $execd = true ]; then
       # Shutdown execution daemon
@@ -286,8 +288,16 @@ else
       # Send SIGTERM to execd
       echo "   Shutting down Grid Engine execution daemon"
       Shutdown sge_execd $execd_spool_dir/execd.pid
-      [ -f /var/lock/subsys/sgeexecd ] && rm /var/lock/subsys/sgeexecd
-
+      ret=$?
+      if [ -f /var/lock/subsys/sgeexecd ]; then
+          uid=`$utilbin_dir/uidgid -uid` 
+          if [ "$uid" = "0" -a "$ret" = "0" ]; then
+             rm -f /var/lock/subsys/sgeexecd >/dev/null 2>&1
+          else
+             echo "Can't shut down execd!"
+             exit 1
+          fi
+      fi
       if [ $softstop = false ]; then
          # Send SIGTERM to all shepherds
          for jobid in `ls $execd_spool_dir/active_jobs`; do

@@ -49,7 +49,6 @@
 #include "job_report_execd.h"
 #include "execd_job_exec.h"
 #include "spool/classic/read_write_job.h"
-#include "sge_feature.h"
 #include "sge_conf.h"
 #include "sge_prog.h"
 #include "sge_log.h"
@@ -64,6 +63,8 @@
 #include "sge_var.h"
 #include "sge_qinstance.h"
 #include "get_path.h"
+#include "sge_bootstrap.h"
+#include "sge_answer.h"
 
 #include "msg_common.h"
 #include "msg_execd.h"
@@ -110,18 +111,29 @@ int answer_error;
       return 0;
    }
 
-   feature_activate((feature_id_t)feature_set);
 
    /* if request comes from qmaster: start a job
     * else it is a request to start a pe task
     */
    if(strcmp(de->commproc, prognames[QMASTER]) == 0) {
       lListElem *job, *ja_task;
+      lList *answer_list = NULL;
+      const char *admin_user = bootstrap_get_admin_user();
 
+      if (false == sge_security_verify_unique_identifier(true, admin_user, uti_state_get_sge_formal_prog_name(), 0,
+                                            de->host, de->commproc, de->id)) {
+         DRETURN(0);
+      }
+       
       if (cull_unpack_elem(pb, &job, NULL)) {
          ERROR((SGE_EVENT, MSG_COM_UNPACKJOB));
-         DEXIT;
-         return 0;
+         DRETURN(0);
+      }
+
+      if (!job_verify_execd_job(job, &answer_list)) {
+         answer_list_output(&answer_list);
+         ERROR((SGE_EVENT, MSG_EXECD_INVALIDJOBREQUEST_SS, de->commproc, de->host));
+         DRETURN(0);
       }
 
       /* we expect one jatask to start per request */
@@ -132,15 +144,22 @@ int answer_error;
             (long) lGetUlong(ja_task, JAT_task_number)));
          ret = handle_job(job, ja_task, de, pb, 0);
          if(ret != 0) {
-            lFreeElem(job);
+            lFreeElem(&job);
          }
       }
    } else {
       lListElem *petrep;
+      lList *answer_list = NULL;
+
       if (cull_unpack_elem(pb, &petrep, NULL)) {
          ERROR((SGE_EVENT, MSG_COM_UNPACKJOB));
-         DEXIT;
-         return 0;
+         DRETURN(0);
+      }
+
+      if (!pe_task_verify_request(petrep, &answer_list)) {
+         answer_list_output(&answer_list);
+         ERROR((SGE_EVENT, MSG_EXECD_INVALIDTASKREQUEST_SS, de->commproc, de->host));
+         DRETURN(0);
       }
 
       DPRINTF(("new pe task for job: %ld.%ld\n", 
@@ -149,7 +168,7 @@ int answer_error;
 
       ret = handle_task(petrep, de, pb, apb, synchron);
 
-      lFreeElem(petrep);
+      lFreeElem(&petrep);
    }
    
    if(ret == 0) {
@@ -181,7 +200,11 @@ int answer_error;
       return 0;
    }
 
-   feature_activate((feature_id_t)feature_set);
+   /*
+   ** the check if the request has admin/root credentials is done by
+   ** the dispatcher in authorize_dpe()
+   ** so no additional check needed here like in execd_job_exec()
+   */
 
    /* ------- job */
    if (cull_unpack_elem(pb, &jelem, NULL)) {
@@ -197,7 +220,7 @@ int answer_error;
    }
 
    if (ret)  {
-      lFreeElem(jelem);
+      lFreeElem(&jelem);
    } 
 
    DEXIT;
@@ -294,7 +317,7 @@ int slave
       DPRINTF(("Q: %s %d\n", qnm, slots));
    }
    /* trash envelope */
-   qlp = lFreeList(qlp);
+   lFreeList(&qlp);
 
    /* ------- optionally pe */
    if (lGetString(jatep, JAT_granted_pe)) {
@@ -360,7 +383,7 @@ int slave
          if (!found_script) {
             /* We are root. Make the scriptfile readable for the jobs submitter,
                so shepherd can open (execute) it after changing to the user. */
-            fd = open(lGetString(jelem, JB_exec_file), O_CREAT | O_WRONLY, 0755);
+            fd = SGE_OPEN3(lGetString(jelem, JB_exec_file), O_CREAT | O_WRONLY, 0755);
             if (fd < 0) {
                sge_dstring_sprintf(&err_str, MSG_ERRORWRITINGFILE_SS, 
                                    lGetString(jelem, JB_exec_file), 
@@ -393,8 +416,8 @@ int slave
    ** Execute command to store the client's DCE or Kerberos credentials.
    ** This also creates a forwardable credential for the user.
    */
-   if (do_credentials) {
-      if (store_sec_cred2(jelem, do_authentication, &general, SGE_EVENT) != 0) {
+   if (mconf_get_do_credentials()) {
+      if (store_sec_cred2(jelem, mconf_get_do_authentication(), &general, SGE_EVENT) != 0) {
          sge_dstring_copy_string(&err_str, SGE_EVENT);
          goto Error;
       }   
@@ -441,7 +464,7 @@ Error:
    }
 
 Ignore:   
-   lFreeList(qlp);
+   lFreeList(&qlp);
    return -1;  
 }
 
@@ -686,6 +709,11 @@ int *synchron
 
    if (jatep == NULL) { 
       ERROR((SGE_EVENT, MSG_JOB_TASKNOTASKINJOB_UU, sge_u32c(jobid), sge_u32c(jataskid)));
+      goto Error;
+   }
+
+   if (false == sge_security_verify_unique_identifier(false, lGetString(jep, JB_owner), uti_state_get_sge_formal_prog_name(), 0,
+                                         de->host, de->commproc, de->id)) {
       goto Error;
    }
 

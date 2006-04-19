@@ -77,7 +77,7 @@ static int update_license_data(lListElem *hep, lList *lp_lic);
 *     MT-NOTE: sge_c_report() is MT safe
 *
 ******************************************************************************/
-void sge_c_report(char *rhost, char *commproc, int id, lList *report_list)
+void sge_c_report(char *rhost, char *commproc, int id, lList *report_list, monitoring_t *monitor)
 {
    lListElem *hep = NULL;
    u_long32 rep_type;
@@ -117,7 +117,7 @@ void sge_c_report(char *rhost, char *commproc, int id, lList *report_list)
    
    this_seqno = lGetUlong(lFirst(report_list), REP_seqno);
    
-   SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE); 
+   MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE), monitor); 
    /* need exec host for all types of reports */
    if (!(hep = host_list_locate(Master_Exechost_List, rhost))) {
       ERROR((SGE_EVENT, MSG_GOTSTATUSREPORTOFUNKNOWNEXECHOST_S, rhost));
@@ -154,13 +154,13 @@ void sge_c_report(char *rhost, char *commproc, int id, lList *report_list)
 
       switch (rep_type) {
       case NUM_REP_REPORT_LOAD:
-      
+         MONITOR_ELOAD(monitor); 
          /* Now handle execds load reports */
          sge_update_load_values(rhost, lGetList(report, REP_list));
 
          break;
-      case NUM_REP_REPORT_CONF:
-
+      case NUM_REP_REPORT_CONF: /* this is thread safe, no need for the global lock */
+         MONITOR_ECONF(monitor); 
          if (hep && (sge_compare_configuration(hep, lGetList(report, REP_list)) != 0)) {
             DPRINTF(("%s: configuration on host %s is not up to date\n", SGE_FUNC, rhost));
 
@@ -174,7 +174,8 @@ void sge_c_report(char *rhost, char *commproc, int id, lList *report_list)
          /*
          ** save number of processors
          */
-         ret = update_license_data(hep, lGetList(report, REP_list));
+         MONITOR_EPROC(monitor);
+         ret = update_license_data(hep, lGetList(report, REP_list)); /* is not thread safe, needs global lock */
          if (ret) {
             ERROR((SGE_EVENT, MSG_LICENCE_ERRORXUPDATINGLICENSEDATA_I, ret));
          }
@@ -182,11 +183,11 @@ void sge_c_report(char *rhost, char *commproc, int id, lList *report_list)
          break;
 
       case NUM_REP_REPORT_JOB:
-
          {
+            MONITOR_EJOB(monitor);
             is_pb_used = true;
             if(init_packbuffer(&pb, 1024, 0) == PACK_SUCCESS) {
-               process_job_report(report, hep, rhost, commproc, &pb);
+               process_job_report(report, hep, rhost, commproc, &pb, monitor); /* is not thread safe, needs global lock */
             }
          }
          break;
@@ -203,7 +204,7 @@ void sge_c_report(char *rhost, char *commproc, int id, lList *report_list)
          lList *alp = NULL;
          /* send all stuff packed during processing to execd */
          sge_send_any_request(0, NULL, rhost, commproc, id, &pb, TAG_ACK_REQUEST, 0, &alp); 
-         
+         MONITOR_MESSAGES_OUT(monitor); 
          answer_list_output (&alp);
       }
       clear_packbuffer(&pb);
@@ -253,15 +254,15 @@ static int update_license_data(lListElem *hep, lList *lp_lic)
    ** at the moment only the first element is evaluated
    */
    processors = lGetUlong(lFirst(lp_lic), LIC_processors);
-   /* arch = lGetString(lFirst(lp_lic), LIC_arch); */ 
 
    old_processors = lGetUlong(hep, EH_processors);
-   lSetUlong(hep, EH_processors, processors);
    /*
    ** we spool, cf. cod_update_load_values()
    */
    if (processors != old_processors) {
       lList *answer_list = NULL;
+
+      lSetUlong(hep, EH_processors, processors);
 
       DPRINTF(("%s has " sge_u32 " processors\n",
          lGetHost(hep, EH_name), processors));

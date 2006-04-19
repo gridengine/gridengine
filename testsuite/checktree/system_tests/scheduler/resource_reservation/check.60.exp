@@ -1,0 +1,422 @@
+#!/vol2/TCL_TK/glinux/bin/expect
+#___INFO__MARK_BEGIN__
+##########################################################################
+#
+#  The Contents of this file are made available subject to the terms of
+#  the Sun Industry Standards Source License Version 1.2
+#
+#  Sun Microsystems Inc., March, 2001
+#
+#
+#  Sun Industry Standards Source License Version 1.2
+#  =================================================
+#  The contents of this file are subject to the Sun Industry Standards
+#  Source License Version 1.2 (the "License"); You may not use this file
+#  except in compliance with the License. You may obtain a copy of the
+#  License at http://gridengine.sunsource.net/Gridengine_SISSL_license.html
+#
+#  Software provided under this License is provided on an "AS IS" basis,
+#  WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING,
+#  WITHOUT LIMITATION, WARRANTIES THAT THE SOFTWARE IS FREE OF DEFECTS,
+#  MERCHANTABLE, FIT FOR A PARTICULAR PURPOSE, OR NON-INFRINGING.
+#  See the License for the specific provisions governing your rights and
+#  obligations concerning the Software.
+#
+#  The Initial Developer of the Original Code is: Sun Microsystems, Inc.
+#
+#  Copyright: 2001 by Sun Microsystems, Inc.
+#
+#  All Rights Reserved.
+#
+##########################################################################
+#___INFO__MARK_END__
+
+# define global variable in this namespace
+global check_name 
+global check_category 
+global check_description 
+global check_needs
+global check_functions 
+global check_errno 
+global check_errstr 
+global check_highest_level
+global check_init_level_procedure
+global check_root_access_needs
+global env
+
+# define a level initialization procedure:
+set check_init_level_procedure "resource_reservation_init_level"
+
+# define test's name and run level descriptions
+set check_name            "resource_reservation"
+set check_category        "COMPATIBILITY SYSTEM VERIFIED"
+set check_highest_level   0
+set check_description(0)  "check resource reservation"
+
+# define test's dependencies
+set check_needs           "init_core_system" 
+
+# setup and cleanup functions
+set check_setup_function resource_reservation_setup
+set check_cleanup_function resource_reservation_cleanup
+
+# define test's procedure order
+set check_functions ""
+lappend check_functions "resource_reservation_basic"
+
+
+proc resource_reservation_init_level {} {
+   global ts_config
+   global CHECK_ACT_LEVEL
+   global CHECK_OUTPUT
+ 
+   switch -exact -- $CHECK_ACT_LEVEL {
+      "0" {
+         return 0 ;# Tests resource_reservation
+      }
+   }
+
+   return -1
+}
+
+# -------- local test procedures: initialization ------------------------------
+
+global rr_queue_name 
+global rr_h_vmem_complex 
+global rr_host
+global binary_path
+global job_desc
+
+proc resource_reservation_setup {} {
+
+   global rr_queue_name rr_h_vmem_complex 
+   global rr_host
+   global ts_config
+   global binary_path
+   global CHECK_OUTPUT
+   global CHECK_SOURCE_DIR
+
+   puts $CHECK_OUTPUT "rr-startup" 
+ 
+   # Setup the scheduler
+   set schedconf(schedule_interval)          "0:0:05"
+   set schedconf(weight_tickets_functional)  "0"
+   set schedconf(weight_tickets_share)       "0"
+   set schedconf(share_override_tickets)     "TRUE"
+   set schedconf(share_functional_shares)    "TRUE"
+   set schedconf(weight_ticket)              "0.000000"
+   set schedconf(weight_waiting_time)        "0.000000"
+   set schedconf(weight_urgency)             "0.1"
+   set schedconf(weight_priority)            "1.000000"
+   set schedconf(max_reservation)            "10"
+   set schedconf(default_duration)           "0:10:0"
+   set schedconf(flush_submit_sec)             1
+   set schedconf(flush_finish_sec)             1
+   set schedconf(job_load_adjustments)       "NONE"
+   set schedconf(load_adjustment_decay_time) "0:0:00"
+
+   set result [ set_schedd_config schedconf ]
+   if { $result != 0 } {
+      set_error -1 "setup of scheduler for overwrite ticket test failed"
+      return -1
+   }
+   
+   puts $CHECK_OUTPUT "Scheduler configured"
+
+  # Save original complexes
+   get_complex urgency_org_complexes
+   set rr_h_vmem_complex $urgency_org_complexes(h_vmem)
+ 
+  # set complex attributes
+   set tmp_complex(license)   "lic        INT      <=    YES         YES        0       100"
+   set tmp_complex(license2)  "lic2       double   <=    YES         YES        0       100"   
+   set tmp_complex(h_vmem)    "h_vmem     MEMORY   <=    YES         YES        100M    0.0000001"
+   set tmp_complex(myslots)   "ms         INT      <=    YES         YES        0       100"
+   
+   set result [ set_complex tmp_complex ]
+   
+#   if { $result == -1} {
+#      puts $CHECK_OUTPUT "complex attributes added"
+#   } else {
+#      if { $result == -2 } {
+#         puts $CHECK_OUTPUT "complex attributes modified"
+#      } else {
+#         set_error -1 "setup of complex definition failed"
+#         return -1
+#      }
+#   }
+
+  # setup needed pe
+   set pe(pe_name)           "round_robin"
+   set pe(slots)             "5"
+   set pe(allocation_rule)   "\$round_robin"
+   add_pe pe
+
+   set pe(pe_name)           "fill_up"
+   set pe(slots)             "5"
+   set pe(allocation_rule)   "\$fill_up"
+   add_pe pe
+
+   set pe(pe_name)           "pe_slots"
+   set pe(slots)             "5"
+   set pe(allocation_rule)   "\$pe_slots"
+   add_pe pe   
+
+  # setup the rr test queue
+   set rr_queue_name               "rr_queue.q"
+   set queue_conf(slots)            "5"
+   set queue_conf(load_thresholds)  "NONE"
+   set queue_conf(pe_list)          "make round_robin fill_up pe_slots"
+   set queue_conf(complex_values)   "myslots=5"
+
+   puts $CHECK_OUTPUT "Add queue $rr_queue_name"
+   
+   add_queue $rr_queue_name "@allhosts" queue_conf 1
+
+  # enable / disable queues needed for the test
+   set queue_list {}
+   foreach host $ts_config(execd_nodes) {
+      lappend queue_list [get_queue_instance "all.q" $host]
+   }
+   disable_queue $queue_list   
+
+   set rr_host [lindex $ts_config(execd_nodes) 0]
+
+   set queue_list {}
+   foreach host [lrange $ts_config(execd_nodes) 1 end] {
+      lappend queue_list [get_queue_instance "rr_queue.q" $host]
+   }
+   disable_queue $queue_list  
+
+#-----  
+  
+  # set global variable  
+   set my_host_config(complex_values) "license=5,license2=5"
+   set_exechost my_host_config "global"
+
+  # set host variable 
+   set my_host_config(complex_values) "h_vmem=5G"
+   set_exechost my_host_config $rr_host
+
+
+   set binary_arch "[resolve_arch $rr_host]"
+
+#   switch -- $binary_arch {
+#      "sol-sparc" -
+#      "sol-sparc64" -
+#      "sol-x86" -
+#      "lx24-x86" -
+#      "lx26-x86" -
+#      "lx24-amd64" -
+#      "lx26-amd64" {
+#         puts $CHECK_OUTPUT "architecture $binary_arch is supported"
+#      }
+#
+#      default {
+#         set_error -1 "DRMAA not supported for binary architecture $binary_arch"
+#         return -1
+#      }
+#   }   
+
+   set compile_arch_mt [resolve_build_arch $rr_host]
+   
+   set binary_path "$CHECK_SOURCE_DIR/$compile_arch_mt"
+  
+   puts $CHECK_OUTPUT "host is $rr_host has arch $compile_arch_mt mt bin path $binary_path"
+
+  # done
+   set_error 0 "setup OK"
+   return 0
+}
+
+proc resource_reservation_cleanup {  } {
+
+   global rr_queue_name rr_h_vmem_complex
+   global ts_config
+   global rr_host
+   global binary_path
+   global CHECK_OUTPUT
+   global CHECK_SOURCE_DIR
+
+  # remove jobs
+   delete_all_jobs
+   wait_for_end_of_all_jobs 60
+   
+  # reset the scheduler configuration
+   reset_schedd_config
+   
+  # del queue 
+   del_queue $rr_queue_name "@allhosts" 0 1
+ 
+  # remove PEs
+   del_pe        "round_robin"
+   del_pe        "fill_up"
+   del_pe        "pe_slots"
+ 
+  # set global variable  
+   set my_host_config(complex_values) "NONE"
+   set_exechost my_host_config "global"
+
+  # set host variable 
+   
+   set my_host_config(complex_values) "NONE"
+   set_exechost my_host_config $rr_host
+ 
+  # remove complex attributes
+   set tmp_complex(license)   ""
+   set tmp_complex(license2)  ""
+   set tmp_complex(h_vmem)   $rr_h_vmem_complex
+   set tmp_complex(myslots)   ""
+   puts $CHECK_OUTPUT "result from set_comples: [set_complex tmp_complex]"
+
+  # enable queues
+   set queue_list {}
+   foreach host $ts_config(execd_nodes) {
+      lappend queue_list [get_queue_instance "all.q" $host]
+   }
+   enable_queue $queue_list   
+   
+   set_error 0 "clean OK"
+}
+
+# -------- local test procedures: initialization ------------------------------
+
+
+proc get_job_descriptions { test1 test2 } {
+   global job_desc
+   global CHECK_OUTPUT
+   global ts_config
+
+   set runtime_def "15"
+   set runtime_long "25" 
+
+   set job_script "$ts_config(product_root)/examples/jobs/sleeper.sh"
+   set drmaa_mode "ST_RESERVATION_FINISH_ORDER"
+
+   if { $test2 == "backfill" } {
+      set runtime_long $runtime_def 
+      set drmaa_mode "ST_BACKFILL_FINISH_ORDER"
+   }
+
+   switch -exact $test1 { 
+      "license" {
+         set job_desc1 "-R y -N L4_BF -p 100 -l h_rt=$runtime_def,license=4"
+         set job_desc2 "-R y -N L5_BF -p 0 -l h_rt=$runtime_def,license=5"
+         set job_desc3 "-R y -N L1_BF -p 0 -l h_rt=$runtime_long,license=1"
+      }
+      "array" {
+         set job_desc1 "-R y -N L4_BF -p 100 -l h_rt=$runtime_def,license=4"
+         set job_desc2 "-t 1-2 -R y -N L5_BF -p 0 -l h_rt=$runtime_def,license=2.5"
+         set job_desc3 "-R y -N L1_BF -p 0 -l h_rt=$runtime_long,license=1"
+      }
+      "memory" {
+         set job_desc1 "-R y -N L4_BF -p 100 -l h_rt=$runtime_def,h_vmem=4G"
+         set job_desc2 "-R y -N L5_BF -p 0 -l h_rt=$runtime_def,h_vmem=5G" 
+         set job_desc3 "-R y -N L1_BF -p 0 -l h_rt=$runtime_long,h_vmem=1G"
+      }
+      "myslots" {
+         set job_desc1 "-R y -N L4_BF -p 100 -l h_rt=$runtime_def,myslots=4"
+         set job_desc2 "-R y -N L5_BF -p 0 -l h_rt=$runtime_def,myslots=5" 
+         set job_desc3 "-R y -N L1_BF -p 0 -l h_rt=$runtime_long,myslots=1"
+      }
+      "round_robin" {
+         set job_desc1 "-R y -N L4_BF -p 100 -l h_rt=$runtime_def -pe round_robin 4"
+         set job_desc2 "-R y -N L5_BF -p 0 -l h_rt=$runtime_def -pe round_robin 5" 
+         set job_desc3 "-R y -N L1_BF -p 0 -l h_rt=$runtime_long -pe round_robin 1"
+      }
+      "fill_up" {
+         set job_desc1 "-R y -N L4_BF -p 100 -l h_rt=$runtime_def -pe fill_up 4"
+         set job_desc2 "-R y -N L5_BF -p 0 -l h_rt=$runtime_def -pe fill_up 5" 
+         set job_desc3 "-R y -N L1_BF -p 0 -l h_rt=$runtime_long -pe fill_up 1"
+      }
+      "pe_slots" {
+         set job_desc1 "-R y -N L4_BF -p 100 -l h_rt=$runtime_def -pe pe_slots 4"
+         set job_desc2 "-R y -N L5_BF -p 0 -l h_rt=$runtime_def -pe pe_slots 5" 
+         set job_desc3 "-R y -N L1_BF -p 0 -l h_rt=$runtime_long -pe pe_slots 1"
+      }
+   }
+   
+   set job_desc "$drmaa_mode $job_script \"$job_desc1\" \"$job_desc2\" \"$job_desc3\"" 
+}
+
+#****** resource_reservation/drmaa_test() ******
+#  NAME
+#     drmaa_test() -- generic drmaa test
+#
+#  SYNOPSIS
+#     drmaa_test { test_name host binary_path arguments }
+#
+#  FUNCTION
+#     This procedure starts test_drmaa with the corresponding arguemnts.
+#     Exit status of test_drmaa must always be 0 otherwise test has failed.
+#
+#  INPUTS
+#     test_name                  - The name of a test. To get a complete list
+#                                  of all test cases run 'test_drmaa' without args
+#     arguments                  - Additional arguments needed for the test case.
+#
+#  EXAMPLE
+#     drmaa_test ST_SUBMIT_WAIT ori <source-path>/SOLARIS86/ $SGE_ROOT/examples/jobs/sleeper.sh
+#*******************************
+#
+proc drmaa_test { test_name arguments } {
+   global CHECK_OUTPUT CHECK_USER
+   global binary_path
+   global rr_host
+   global rr_host
+
+   set user $CHECK_USER
+
+   puts $CHECK_OUTPUT "$binary_path/test_drmaa $test_name $arguments"
+   set test_output [ start_remote_prog $rr_host $user $binary_path/test_drmaa "$test_name $arguments" prg_exit_state 500 ]
+
+   puts $CHECK_OUTPUT "exit status was $prg_exit_state"
+   puts $CHECK_OUTPUT "output was\n$test_output"
+
+   if { $prg_exit_state != 0 } {
+      add_proc_error drmaa_check -1 "$binary_path/test_drmaa $test_name $arguments failed at host $rr_host"
+   }
+
+#   wait_for_enter
+}
+
+
+proc resource_reservation_basic { } {
+   global job_desc
+   
+   get_job_descriptions "license" "backfill"
+   drmaa_test "" $job_desc 
+   get_job_descriptions "memory" "backfill"
+   drmaa_test "" $job_desc 
+   get_job_descriptions "myslots" "backfill"
+   drmaa_test "" $job_desc 
+   get_job_descriptions "round_robin" "backfill"
+   drmaa_test "" $job_desc 
+   get_job_descriptions "fill_up" "backfill"
+   drmaa_test "" $job_desc 
+   get_job_descriptions "pe_slots" "backfill"
+   drmaa_test "" $job_desc 
+  
+   get_job_descriptions "array" "backfill"
+   drmaa_test "" $job_desc 
+  
+   get_job_descriptions "license" "reservation"  
+   drmaa_test "" $job_desc 
+   get_job_descriptions "memory" "reservation"    
+   drmaa_test "" $job_desc 
+   get_job_descriptions "myslots" "reservation"
+   drmaa_test "" $job_desc 
+   get_job_descriptions "round_robin" "reservation"
+   drmaa_test "" $job_desc 
+   get_job_descriptions "fill_up" "reservation"
+   drmaa_test "" $job_desc 
+   get_job_descriptions "pe_slots" "reservation"
+   drmaa_test "" $job_desc 
+
+    get_job_descriptions "array" "reservation"
+   drmaa_test "" $job_desc 
+
+
+   set_error 0 "clean OK"
+
+}

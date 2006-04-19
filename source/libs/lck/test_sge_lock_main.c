@@ -30,23 +30,18 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "test_sge_lock_main.h"
-
+#include <sys/time.h>
 #include <pthread.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
-#include "sge_lock.h"
 
-
-static pthread_mutex_t *locks;
+#include "lck/test_sge_lock_main.h"
+#include "lck/sge_lock.h"
+#include "lck/sge_mtutil.h"
+#include "uti/sge_stdlib.h"
 
 static void setup(void);
-static void teardown(void);
-static sge_locker_t id_callback(void);
-static void lock_callback(sge_locktype_t aType, sge_lockmode_t aMode, sge_locker_t anID);
-static void unlock_callback(sge_locktype_t aType, sge_lockmode_t aMode, sge_locker_t anID);
-
 
 /****** test_sge_lock_main/main() **********************************************
 *  NAME
@@ -77,28 +72,47 @@ static void unlock_callback(sge_locktype_t aType, sge_lockmode_t aMode, sge_lock
 int main(int argc, char *argv[])
 {
    pthread_t *t;
-   int i,j;
-
+   int i;
+   int j;
+   int thrd_count;
+   struct timeval before;
+   struct timeval after;
+   double time_new;
+   
    DENTER_MAIN(TOP_LAYER, "main");
 
    setup();
 
-   i = get_thrd_demand();
-   t = (pthread_t *)malloc(i * sizeof(pthread_t));
+   thrd_count = get_thrd_demand();
+   t = (pthread_t *)malloc(thrd_count * sizeof(pthread_t));
 
-   DPRINTF(("%s Create %d threads\n", SGE_FUNC, i));
+   for (i = 1; i <= thrd_count; i++) {
+      for(j = 0; j < i; j++) {
+         t[j] = 0;
+      }
+     
+      set_thread_count(i);
+      
+      gettimeofday(&before, NULL); 
 
-   for(j = 0; j < i; j++) {
-      pthread_create(&(t[j]), NULL, get_thrd_func(), get_thrd_func_arg());
+      printf("\n%s Create %d threads\n\n", SGE_FUNC, i);
+
+      for(j = 0; j < i; j++) {
+         pthread_create(&(t[j]), NULL, get_thrd_func(), get_thrd_func_arg());
+      }
+      for(j = 0; j < i; j++) {
+         pthread_join(t[j], NULL);
+      }
+
+      gettimeofday(&after, NULL);
+
+      time_new = after.tv_usec - before.tv_usec;
+      time_new = after.tv_sec - before.tv_sec + (time_new/1000000);
+
+      printf("the test took: %fs\n", time_new);
    }
-
-   for(j = 0; j < i; j++) {
-      DPRINTF(("%s Join thread %u\n", SGE_FUNC, (unsigned int)t[j]));
-      pthread_join(t[j], NULL);
-   }
-
-   teardown();
-   free(t);
+   sge_teardown_lock_service();
+   FREE(t);
 
    DEXIT;
    return 0;
@@ -126,168 +140,11 @@ int main(int argc, char *argv[])
 *******************************************************************************/
 static void setup(void)
 {
-   pthread_mutexattr_t attr;
-   int n, i;
-
    DENTER(TOP_LAYER, "setup");
 
-   pthread_mutexattr_init(&attr);
-   pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
-
-   n = sge_num_locktypes();
-   locks = (pthread_mutex_t *)malloc(n * sizeof(pthread_mutex_t));
-
-   for(i = 0; i < n; i++) {
-      pthread_mutex_init(&(locks[i]), &attr);
-   }
-
-   sge_set_lock_callback(lock_callback);
-   sge_set_unlock_callback(unlock_callback);
-   sge_set_id_callback(id_callback);
+   sge_setup_lock_service();
 
    DEXIT;
    return;
 } /* setup */
-
-/****** test_sge_lock_main/teardown() ******************************************
-*  NAME
-*     teardown() -- Teardown the locking API 
-*
-*  SYNOPSIS
-*     static void teardown(void) 
-*
-*  FUNCTION
-*     Destroy and free the pthread mutexes created during the setup. 
-*
-*  INPUTS
-*     void - none 
-*
-*  RESULT
-*     static void - none 
-*
-*  SEE ALSO
-*     test_sge_lock_main/setup()
-*******************************************************************************/
-static void teardown(void)
-{
-   int n, i;
-
-   DENTER(TOP_LAYER, "teardown");
-
-   n = sge_num_locktypes();
-
-   for (i = 0; i < n; i++) {
-      pthread_mutex_destroy(&(locks[i]));
-   }
-   
-   free(locks);
-
-   DEXIT;
-   return;
-} /* teardown */
-
-/****** test_sge_lock_main/id_callback() ***************************************
-*  NAME
-*     id_callback() -- Locker ID callback implementation
-*
-*  SYNOPSIS
-*     static sge_locker_t id_callback(void) 
-*
-*  FUNCTION
-*     Return if of current thread as locker id. 
-*
-*  INPUTS
-*     void - none 
-*
-*  RESULT
-*     static sge_locker_t - locker id 
-*
-*  SEE ALSO
-*     test_sge_lock_main/setup()
-*     lck/sge_lock.c
-*******************************************************************************/
-static sge_locker_t id_callback(void)
-{
-   return (sge_locker_t)pthread_self();
-} /* id_callback */
-
-/****** test_sge_lock_main/lock_callback() *************************************
-*  NAME
-*     lock_callback() -- Lock callback implementation 
-*
-*  SYNOPSIS
-*     static void lock_callback(sge_locktype_t aType, sge_lockmode_t aMode, 
-*     sge_locker_t anID) 
-*
-*  FUNCTION
-*     Lock pthread mutex determined by 'aType' in mode 'aMode'.
-*
-*  INPUTS
-*     sge_locktype_t aType - lock type 
-*     sge_lockmode_t aMode - lock mode 
-*     sge_locker_t anID    - locker id 
-*
-*  RESULT
-*     static void - none
-*
-*  SEE ALSO
-*     test_sge_lock_main/setup()
-*     lck/sge_lock.c
-*******************************************************************************/
-static void lock_callback(sge_locktype_t aType, sge_lockmode_t aMode, sge_locker_t anID)
-{
-   DENTER(TOP_LAYER, "lock_callback");
-
-   DLOCKPRINTF(("Locker %d tries to lock %s\n", (int)anID, sge_type_name(aType)));
-
-   if (pthread_mutex_lock(&(locks[aType])) != 0)
-   {
-      DLOCKPRINTF(("Locker %d failed to lock %s\n", (int)anID, sge_type_name(aType)));
-      abort();
-   }
-
-   DLOCKPRINTF(("Locker %d locked %s\n", (int)anID, sge_type_name(aType)));
-
-   DEXIT;
-   return;
-} /* lock_callback */
-
-/****** test_sge_lock_main/unlock_callback() ***********************************
-*  NAME
-*     unlock_callback() -- Unlock callback implementation 
-*
-*  SYNOPSIS
-*     static void unlock_callback(sge_locktype_t aType, sge_lockmode_t aMode, 
-*     sge_locker_t anID) 
-*
-*  FUNCTION
-*     Unlock pthread mutex determined by 'aType'. 
-*
-*  INPUTS
-*     sge_locktype_t aType - lock type 
-*     sge_lockmode_t aMode - lock mode 
-*     sge_locker_t anID    - locker id 
-*
-*  RESULT
-*     static void - none
-*
-*  SEE ALSO
-*     test_sge_lock_main/setup()
-*     lck/sge_lock.c
-*******************************************************************************/
-static void unlock_callback(sge_locktype_t aType, sge_lockmode_t aMode, sge_locker_t anID)
-{
-   DENTER(TOP_LAYER, "unlock_callback");
-
-   if (pthread_mutex_unlock(&(locks[aType])) != 0)
-   {
-      DLOCKPRINTF(("Locker %d failed to unlock %s\n", (int)anID, sge_type_name(aType)));
-      abort();
-   }
-
-   DLOCKPRINTF(("Locker %d unlocked %s\n", (int)anID, sge_type_name(aType)));
-
-   DEXIT;
-   return;
-} /* lock_callback */
 

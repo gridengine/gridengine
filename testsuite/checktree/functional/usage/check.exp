@@ -79,6 +79,8 @@ global check_highest_level
 global check_init_level_procedure
 global check_root_access_needs
 global env
+global ts_config
+global submit_command
 
 #set check_root_access_needs "yes"
 
@@ -92,17 +94,15 @@ set check_category        "COMPATIBILITY SYSTEM VERIFIED"
 set check_highest_level   1
 set check_description(0)  "check reserved usage of jobs submitted with qsub"
 set check_description(1)  "check reserved usage of jobs submitted with qrsh"
-set check_description(2)  "check usage of jobs submitted with qsub"
-set check_description(3)  "check usage of jobs submitted with qrsh"
 
 # define test's dependencies
 set check_needs           "init_core_system" 
 
 # setup and cleanup functions
-# JG: TODO: some parts of the setup could be done
-# per check, not per level
-set check_setup_level_function "usage_setup"
-set check_cleanup_level_function "usage_cleanup"
+set check_setup_function "usage_setup"
+set check_cleanup_function "usage_cleanup"
+#set check_setup_level_function "usage_setup_level"
+#set check_cleanup_level_function "usage_cleanup_level"
 
 # define test's procedure order
 set check_functions ""
@@ -112,28 +112,17 @@ lappend check_functions "usage_loose1"
 lappend check_functions "usage_loose2"
 
 proc usage_init_level {} {
+   global ts_config
    global CHECK_ACT_LEVEL
-   global submit_command reserved_usage
+   global submit_command
 
    switch -- $CHECK_ACT_LEVEL {
       "0" { 
          set submit_command qsub
-         set reserved_usage 1
          return 0    
       } 
       "1" {
          set submit_command qrsh
-         set reserved_usage 1
-         return 0
-      }
-      "2" { 
-         set submit_command qsub
-         set reserved_usage 0
-         return 0    
-      } 
-      "3" {
-         set submit_command qrsh
-         set reserved_usage 0
          return 0
       }
    } 
@@ -143,14 +132,10 @@ proc usage_init_level {} {
 
 # -------- local test procedures: initialization------------------------------
 
-global submit_command
-
 proc usage_setup  {} {
    global ts_config
-   global reserved_usage saved_config
-   global master_host
-
-   set master_host [lindex $ts_config(execd_nodes) 0]
+   global CHECK_OUTPUT
+   global saved_config
 
    # modify config and remember old values
    get_config config
@@ -173,9 +158,7 @@ proc usage_setup  {} {
 
    set new_config(load_report_time) "0:0:5"
    
-   if {$reserved_usage} {
-      set new_config(execd_params) "$config(execd_params) acct_reserved_usage=1 sharetree_reserved_usage=1"
-   }
+   set new_config(execd_params) "$config(execd_params) acct_reserved_usage=1 sharetree_reserved_usage=1"
    set_config new_config
    after 15000
 
@@ -207,9 +190,7 @@ proc usage_setup  {} {
    set queue_conf(slots)           5
 
    # set memory limits
-   if {$reserved_usage} {
-      set queue_conf(h_vmem) "100M"
-   }
+   set queue_conf(h_vmem) "500M"
    add_queue "usage.q" "@allhosts" queue_conf
 
    set_error 0 "ok"
@@ -217,7 +198,7 @@ proc usage_setup  {} {
 
 proc usage_cleanup  {} {
    global ts_config
-   global reserved_usage saved_config
+   global saved_config
 
    delete_all_jobs
    wait_for_end_of_all_jobs 60
@@ -280,7 +261,8 @@ proc usage_monitor_job {id started_var finished_var jobid_var info_var {my_timeo
       -i $sp_id "?*\n" {
          #puts $CHECK_OUTPUT "entered default branch, data: $expect_out(0,string)"
          foreach line [ string trim [split $expect_out(0,string) "\n"]] {
-            if {[string length [string trim $line]] > 0} {
+            set line [string trim $line]
+            if {[string length $line] > 0} {
                #puts $CHECK_OUTPUT "processing line: $line"
                switch -glob -- $line {
                   "starting with method *" {
@@ -393,7 +375,7 @@ proc usage_check {jobid qstat_j_info slots} {
    #           and set different memory limits for different queues
    set wallclock $qacct_info(ru_wallclock)
    set expected_cpu [expr $wallclock * $slots]
-   set expected_mem [expr $wallclock * 100.0 * $slots / 1024]
+   set expected_mem [expr $wallclock * 500.0 * $slots / 1024]
    puts $CHECK_OUTPUT "expected_cpu = $expected_cpu, expected_mem = $expected_mem"
 
    # compare usage
@@ -444,25 +426,31 @@ proc usage_monitor_check {id test_name slots} {
    set end [expr $now + 300]
    while {$job_finished == 0 && $now < $end} {
       set job_state [usage_monitor_job $id started finished jobid info $my_timeout $timeout_error]
-      puts $CHECK_OUTPUT "job state: $job_state"
       set job_finished [usage_job_finished $job_state]
 
-      if {$started > 0} {
+      if {$started > 0 && $job_finished == 0} {
          set my_timeout 1
          set timeout_error 0
-         get_qstat_j_info $jobid
-         # get online usage
-         foreach name [array names qstat_j_info] {
-            if {[string compare [lindex $name 0] "usage"] == 0} {
-               set usage_list [split $qstat_j_info($name) ","]
-               set value_list [split [lindex $usage_list 0] "="]
-               set online_cpu [parse_cpu_time [lindex $value_list 1]]
-               set value_list [split [lindex $usage_list 1] "="]
-               set online_mem [lindex [lindex $value_list 1] 0]
-               set online_info(cpu) [max $online_info(cpu) $online_cpu]
-               set online_info(mem) [max $online_info(mem) $online_mem]
+         if {![get_qstat_j_info $jobid]} {
+            add_proc_error test_name -1 "job terminated abnormally"
+            set job_finished 1
+         } else {
+            # get online usage
+            foreach name [array names qstat_j_info] {
+               if {[string compare [lindex $name 0] "usage"] == 0} {
+                  set usage_list [split $qstat_j_info($name) ","]
+                  set value_list [split [lindex $usage_list 0] "="]
+                  set online_cpu [parse_cpu_time [lindex $value_list 1]]
+                  set value_list [split [lindex $usage_list 1] "="]
+                  set online_mem [lindex [lindex $value_list 1] 0]
+                  set online_info(cpu) [max $online_info(cpu) $online_cpu]
+                  set online_info(mem) [max $online_info(mem) $online_mem]
+               }
             }
+            puts $CHECK_OUTPUT "job state: $job_state, cpu: $online_info(cpu), mem: $online_info(mem)"
          }
+      } else {
+         puts $CHECK_OUTPUT "job state: $job_state"
       }
 
       set now [clock seconds]
@@ -498,12 +486,16 @@ proc usage_single {} {
    global CHECK_SCRIPT_FILE_DIR
    global submit_command
    global master_host
-   puts $CHECK_OUTPUT "usage: single cpu job submitted with $submit_command"
 
-   set queue [get_queue_instance "usage.q" $master_host]
-   set id [submit_with_method $submit_command "-N usage -q $queue" "$ts_config(testsuite_root_dir)/$CHECK_SCRIPT_FILE_DIR/usage.sh" "sleep 60"]
+   foreach master_host $ts_config(unique_arch_nodes) {
+      puts $CHECK_OUTPUT "usage: single cpu job submitted with $submit_command to run on host $master_host"
 
-   usage_monitor_check $id "usage_single" 1
+      set queue [get_queue_instance "usage.q" $master_host]
+      set id [submit_with_method $submit_command "-N usage -q $queue" "$ts_config(testsuite_root_dir)/$CHECK_SCRIPT_FILE_DIR/usage.sh" "sleep 60" $master_host]
+
+      usage_monitor_check $id "usage_single" 1
+   }
+
    set_error 0 "ok"
 }
 
@@ -513,12 +505,16 @@ proc usage_tight {} {
    global CHECK_SCRIPT_FILE_DIR
    global submit_command
    global master_host
-   puts $CHECK_OUTPUT "usage: tightly integrated parallel job submitted with $submit_command"
 
-   set queue [get_queue_instance "usage.q" $master_host]
-   set id [submit_with_method $submit_command "-pe tight 4 -N usage -masterq $queue" "$ts_config(testsuite_root_dir)/$CHECK_SCRIPT_FILE_DIR/pe_job.sh" "$ts_config(testsuite_root_dir)/$CHECK_SCRIPT_FILE_DIR/pe_task.sh 1 120"]
+   foreach master_host $ts_config(unique_arch_nodes) {
+      puts $CHECK_OUTPUT "usage: tightly integrated parallel job submitted with $submit_command, master_host is $master_host"
 
-   usage_monitor_check $id "usage_tight" 5
+      set queue [get_queue_instance "usage.q" $master_host]
+      set id [submit_with_method $submit_command "-pe tight 4 -N usage -masterq $queue" "$ts_config(testsuite_root_dir)/$CHECK_SCRIPT_FILE_DIR/pe_job.sh" "$ts_config(testsuite_root_dir)/$CHECK_SCRIPT_FILE_DIR/pe_task.sh 1 120" $master_host]
+
+      usage_monitor_check $id "usage_tight" 5
+   }
+
    set_error 0 "ok"
 }
 
@@ -528,12 +524,16 @@ proc usage_loose {pe expected_slots} {
    global CHECK_SCRIPT_FILE_DIR
    global submit_command
    global master_host
-   puts $CHECK_OUTPUT "usage: parallel job in pe $pe submitted with $submit_command"
 
-   set queue [get_queue_instance "usage.q" $master_host]
-   set id [submit_with_method $submit_command "-N usage -pe $pe 4 -masterq $queue" "$ts_config(testsuite_root_dir)/$CHECK_SCRIPT_FILE_DIR/usage.sh" "sleep 60"]
+   foreach master_host $ts_config(unique_arch_nodes) {
+      puts $CHECK_OUTPUT "usage: parallel job in pe $pe submitted with $submit_command, master_host is $master_host"
 
-   usage_monitor_check $id "usage_loose" $expected_slots
+      set queue [get_queue_instance "usage.q" $master_host]
+      set id [submit_with_method $submit_command "-N usage -pe $pe 4 -masterq $queue" "$ts_config(testsuite_root_dir)/$CHECK_SCRIPT_FILE_DIR/usage.sh" "sleep 60" $master_host]
+
+      usage_monitor_check $id "usage_loose" $expected_slots
+   }
+
    set_error 0 "ok"
 }
 

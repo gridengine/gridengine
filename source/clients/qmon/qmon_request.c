@@ -51,6 +51,7 @@
 #include "sge_gdi.h"
 #include "sge_host.h"
 #include "sge_all_listsL.h"
+#include "sge_string.h"
 #include "qmon_cull.h"
 #include "qmon_request.h"
 #include "qmon_submit.h"
@@ -155,7 +156,7 @@ XtPointer cld, cad;
    qmonMirrorMultiAnswer(CENTRY_T, &alp);
    if (alp) {
       qmonMessageBox(w, alp, 0);
-      alp = lFreeList(alp);
+      lFreeList(&alp);
       /* set normal cursor */
       XmtDisplayDefaultCursor(w);
       DEXIT;
@@ -165,7 +166,7 @@ XtPointer cld, cad;
                                        REQUESTABLE_RESOURCES);
 
    hrl = qmonSubmitHR();
-   hard_requests = lFreeList(hard_requests);
+   lFreeList(&hard_requests);
    if (hrl) {
       hard_requests = lCopyList("hr", hrl);
       for_each(ep, hard_requests) {
@@ -181,7 +182,7 @@ XtPointer cld, cad;
    }   
    
    srl = qmonSubmitSR();
-   soft_requests = lFreeList(soft_requests);
+   lFreeList(&soft_requests);
    if (srl) {
       soft_requests = lCopyList("sr", srl);
       for_each(ep, soft_requests) {
@@ -266,13 +267,13 @@ XtPointer cld, cad;
 
    if (hard_soft) {
       if (soft_requests) {
-         soft_requests = lFreeList(soft_requests);
+         lFreeList(&soft_requests);
          qmonRequestDraw(request_sr, soft_requests, 1);
       }
    }
    else {
       if (hard_requests) {
-         hard_requests = lFreeList(hard_requests);
+         lFreeList(&hard_requests);
          qmonRequestDraw(request_hr, hard_requests, 1);
       }
    }
@@ -351,10 +352,13 @@ int how
    entries = ce_list;
    
    if (entries) {
-      if (!lp) 
+      if (!lp) {
          lp = lCopyList("CE_entries", entries);
-      else
-         lAddList(lp, lCopyList("CE_entries", entries));
+      }   
+      else {
+         lList *copy = lCopyList("CE_entries", entries);
+         lAddList(lp, &copy);
+      }
    }
 
    lUniqStr(lp, CE_name);
@@ -522,10 +526,7 @@ XtPointer cld, cad;
 
    type = lGetUlong(fill_in_request, CE_valtype);
    strval = lGetString(fill_in_request, CE_stringval);
-   if (strval)
-      strncpy(stringval, strval, CL_MAXHOSTLEN-1);
-   else
-      strcpy(stringval, "");
+   sge_strlcpy(stringval, strval, CL_MAXHOSTLEN);
 
    status = qmonRequestInput(w, type, cbs->element->string[0], 
                               stringval, sizeof(stringval));

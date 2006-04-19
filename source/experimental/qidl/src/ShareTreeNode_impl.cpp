@@ -101,7 +101,7 @@ Codine_ShareTreeNode_impl::~Codine_ShareTreeNode_impl() {
    }
    
    if(creation != 0)
-      lFreeElem(self);
+      lFreeElem(&self);
 }
 
 
@@ -357,7 +357,8 @@ void Codine_ShareTreeNode_impl::add(CORBA_Context* ctx) {
    if (alp) {
       what = lWhat("%T(ALL)", SN_Type);
       erralp = cod_api(COD_SHARETREE_LIST, COD_API_GET, &lp, NULL, what);
-      erralp = lFreeList(erralp);
+      lFreeList(&erralp);
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      
       ep = lFirst(lp);
       Codine_Master_impl::instance()->updateShareTree(ep);
    }
@@ -458,7 +459,7 @@ void Codine_ShareTreeNode_impl::changed(lListElem* _newSelf) {
    // This works as long as there is only one CORBA thread, so there
    // can be only one request dispatched at one time.
    // If more client requests were able to execute simultanously,
-   // they would overwrite this local variable => !&%$&/§$§%
+   // they would overwrite this local variable => !&%$&/ï¿½$ï¿½%
    lastEvent = qidl_event_count;
 
    // build header

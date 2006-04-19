@@ -61,7 +61,7 @@ lList *Master_CEntry_List = NULL;
 /* EB: ADOC: add commets */
 
 static int
-centry_fill_and_check(lListElem *cep, bool allow_empty_boolean,
+centry_fill_and_check(lListElem *cep, lList** answer_list, bool allow_empty_boolean,
                       bool allow_neg_consumable);
 
    const int max_host_resources=23;/* specifies the number of elements in the host_resource array */
@@ -134,6 +134,7 @@ centry_fill_and_check(lListElem *cep, bool allow_empty_boolean,
 *
 *  INPUTS
 *     lListElem *cep           - CE_Type, this object will be checked
+*     lList** answer_list      - answer list
 *     int allow_empty_boolean  - boolean
 *        true  - NULL values of boolean attributes will
 *                be replaced with "true"
@@ -150,7 +151,7 @@ centry_fill_and_check(lListElem *cep, bool allow_empty_boolean,
 *        an error message will be written into SGE_EVENT
 ******************************************************************************/
 static int
-centry_fill_and_check(lListElem *this_elem, bool allow_empty_boolean,
+centry_fill_and_check(lListElem *this_elem, lList** answer_list, bool allow_empty_boolean,
                       bool allow_neg_consumable)
 {
    static char tmp[1000];
@@ -171,6 +172,7 @@ centry_fill_and_check(lListElem *this_elem, bool allow_empty_boolean,
       }
       else {
          ERROR((SGE_EVENT, MSG_CPLX_VALUEMISSING_S, name));
+         answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          DEXIT;
          return -1;
       }
@@ -184,6 +186,7 @@ centry_fill_and_check(lListElem *this_elem, bool allow_empty_boolean,
       case TYPE_DOUBLE:
          if (!parse_ulong_val(&dval, NULL, type, s, tmp, sizeof(tmp)-1)) {
             ERROR((SGE_EVENT, MSG_CPLX_WRONGTYPE_SSS, name, s, tmp));
+            answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             DEXIT;
             return -1;
          }
@@ -193,6 +196,7 @@ centry_fill_and_check(lListElem *this_elem, bool allow_empty_boolean,
          if ((s=lGetString(this_elem, CE_default))
             && !parse_ulong_val(&dval, NULL, type, s, tmp, sizeof(tmp)-1)) {
             ERROR((SGE_EVENT, MSG_CPLX_WRONGTYPE_SSS, name, s, tmp));
+            answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             DEXIT;
             return -1;
          }
@@ -201,6 +205,7 @@ centry_fill_and_check(lListElem *this_elem, bool allow_empty_boolean,
          if (!allow_neg_consumable && lGetBool(this_elem, CE_consumable)
              && lGetDouble(this_elem, CE_doubleval) < (double)0.0) {
             ERROR((SGE_EVENT, MSG_CPLX_ATTRIBISNEG_S, name));
+            answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
 
             DEXIT;
             return -1;
@@ -224,8 +229,10 @@ centry_fill_and_check(lListElem *this_elem, bool allow_empty_boolean,
          if (ret != CL_RETVAL_OK) {
             if (ret == CL_RETVAL_GETHOSTNAME_ERROR) {
                ERROR((SGE_EVENT, MSG_SGETEXT_CANTRESOLVEHOST_S, s));
+               answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             } else {
                ERROR((SGE_EVENT, MSG_SGETEXT_INVALIDHOST_S, s));
+               answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             }
             DEXIT;
             return -1;
@@ -239,6 +246,7 @@ centry_fill_and_check(lListElem *this_elem, bool allow_empty_boolean,
 
       default:
          ERROR((SGE_EVENT, MSG_SGETEXT_UNKNOWN_ATTR_TYPE_U, sge_u32c(type)));
+         answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          DEXIT;
          return -1;
    }
@@ -385,8 +393,7 @@ centry_create(lList **answer_list, const char *name)
 bool 
 centry_is_referenced(const lListElem *centry, lList **answer_list,
                      const lList *master_cqueue_list,
-                     const lList *master_exechost_list,
-                     const lList *master_sconf_list)
+                     const lList *master_exechost_list)
 {
    bool ret = false;
 
@@ -431,7 +438,7 @@ centry_is_referenced(const lListElem *centry, lList **answer_list,
          }
       }
       if (!ret) {
-         if (sconf_is_centry_referenced(sconf_get_config(), centry)) {
+         if (sconf_is_centry_referenced(centry)) {
             answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
                                     ANSWER_QUALITY_INFO, 
                                     MSG_CENTRYREFINSCONF_S, centry_name);
@@ -577,7 +584,7 @@ centry_list_sort(lList *this_list)
 
       order = lParseSortOrderVarArg(lGetListDescr(this_list), "%I+", CE_name);
       lSortList(this_list, order);
-      order = lFreeSortOrder(order);
+      lFreeSortOrder(&order);
    }
    DEXIT;
    return ret;
@@ -640,6 +647,7 @@ centry_list_init_double(lList *this_list)
 *
 *  INPUTS
 *     lList *this_list           - resources as complex list CE_Type
+*     lList **answer_list        - answer list
 *     lList *master_centry_list  - the global complex list
 *     bool allow_non_requestable - needed for qstat -l or qmon customize
 *                                 dialog
@@ -660,11 +668,12 @@ centry_list_init_double(lList *this_list)
 *        an error message will be written into SGE_EVENT
 *******************************************************************************/
 int
-centry_list_fill_request(lList *this_list, lList *master_centry_list,
+centry_list_fill_request(lList *this_list, lList **answer_list, lList *master_centry_list,
                          bool allow_non_requestable, bool allow_empty_boolean,
                          bool allow_neg_consumable)
 {
-   lListElem *entry, *cep;
+   lListElem *entry = NULL;
+   lListElem *cep = NULL;
 
    DENTER(CENTRY_LAYER, "centry_list_fill_request");
 
@@ -677,6 +686,7 @@ centry_list_fill_request(lList *this_list, lList *master_centry_list,
          requestable = lGetUlong(cep, CE_requestable);
          if (!allow_non_requestable && requestable == REQU_NO) {
             ERROR((SGE_EVENT, MSG_SGETEXT_RESOURCE_NOT_REQUESTABLE_S, name));
+            answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             DEXIT;
             return -1;
          }
@@ -692,7 +702,7 @@ centry_list_fill_request(lList *this_list, lList *master_centry_list,
          /* we also know wether it is a consumable attribute */
          lSetBool(entry, CE_consumable, lGetBool(cep, CE_consumable));
 
-         if (centry_fill_and_check(entry, allow_empty_boolean, allow_neg_consumable)) {
+         if (centry_fill_and_check(entry, answer_list, allow_empty_boolean, allow_neg_consumable)) {
             /* no error msg here - centry_fill_and_check() makes it */
             DEXIT;
             return -1;
@@ -701,6 +711,7 @@ centry_list_fill_request(lList *this_list, lList *master_centry_list,
          /* CLEANUP: message should be put into answer_list and
             returned via argument. */
          ERROR((SGE_EVENT, MSG_SGETEXT_UNKNOWN_RESOURCE_S, name));
+         answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          DEXIT;
          return -1;
       }
@@ -789,13 +800,14 @@ centry_list_append_to_string(lList *this_list, char *buff,
 /* CLEANUP: add answer_list remove SGE_EVENT */
 /*
  * NOTE
- *    MT-NOTE: function is not MT safe
+ *    MT-NOTE: centry_list_parse_from_string() is MT safe
  */
 lList *
 centry_list_parse_from_string(lList *complex_attributes,
                               const char *str, bool check_value) 
 {
    const char *cp;
+   struct saved_vars_s *context = NULL;
 
    DENTER(TOP_LAYER, "centry_list_parse_from_string");
 
@@ -809,7 +821,7 @@ centry_list_parse_from_string(lList *complex_attributes,
    }
 
    /* str now points to the attr=value pairs */
-   while ((cp = sge_strtok(str, ", "))) {
+   while ((cp = sge_strtok_r(str, ", ", &context))) {
       lListElem *complex_attribute = NULL;
       const char *attr = NULL;
       char *value = NULL;
@@ -826,14 +838,16 @@ centry_list_parse_from_string(lList *complex_attributes,
 
       if (attr == NULL || *attr == '\0') {
          ERROR((SGE_EVENT, MSG_SGETEXT_UNKNOWN_RESOURCE_S, ""));
-         lFreeList(complex_attributes);
+         lFreeList(&complex_attributes);
+         sge_free_saved_vars(context);
          DEXIT;
          return NULL;
       }
 
       if ((check_value) && (value == NULL || *value == '\0')) {
          ERROR((SGE_EVENT, MSG_CPLX_VALUEMISSING_S, attr));
-         lFreeList(complex_attributes);
+         lFreeList(&complex_attributes);
+         sge_free_saved_vars(context);
          DEXIT;
          return NULL;
       }
@@ -842,7 +856,8 @@ centry_list_parse_from_string(lList *complex_attributes,
       if ( (complex_attribute= lGetElemStr(complex_attributes, CE_name, attr)) == NULL) {
          if ((complex_attribute = lCreateElem(CE_Type)) == NULL) {
             ERROR((SGE_EVENT, MSG_PARSE_NOALLOCATTRELEM));
-            lFreeList(complex_attributes);
+            lFreeList(&complex_attributes);
+            sge_free_saved_vars(context);
             DEXIT;
             return NULL;
          }
@@ -854,6 +869,8 @@ centry_list_parse_from_string(lList *complex_attributes,
       
       lSetString(complex_attribute, CE_stringval, value);
    }
+
+   sge_free_saved_vars(context);
 
    DEXIT;
    return complex_attributes;
@@ -1258,21 +1275,38 @@ centry_list_is_correct(lList *this_list, lList **answer_list)
 int 
 ensure_attrib_available(lList **alpp, lListElem *ep, int nm) 
 {
-   lListElem *attr;
+   int ret = 0;
+   lListElem *attr = NULL;
 
    DENTER(TOP_LAYER, "ensure_attrib_available");
-   for_each (attr, lGetList(ep, nm)) {
-      const char *name = lGetString(attr, CE_name);
-      lListElem *centry = centry_list_locate(Master_CEntry_List, name);
+   if (ep != NULL) {
+      DTRACE;
+      for_each (attr, lGetList(ep, nm)) {
+         const char *name = lGetString(attr, CE_name);
+         lListElem *centry = centry_list_locate(Master_CEntry_List, name);
 
-      if (centry == NULL) {
-         ERROR((SGE_EVENT, MSG_GDI_NO_ATTRIBUTE_S, name));
-         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-         DEXIT;
-         return STATUS_EUNKNOWN;
+         DTRACE;
+         if (centry == NULL) {
+            ERROR((SGE_EVENT, MSG_GDI_NO_ATTRIBUTE_S, 
+                   name != NULL ? name : "<noname>"));
+            answer_list_add(alpp, SGE_EVENT, 
+                            STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+            ret = STATUS_EUNKNOWN;
+         } else {
+            const char *fullname = lGetString(centry, CE_name);
+
+            /*
+             * Replace shortcuts by the fullname silently 
+             */
+            DTRACE;
+            if (fullname != NULL && name != NULL &&
+                strcmp(fullname, name) != 0) {
+               lSetString(attr, CE_name, fullname);
+            }
+         }
       }
    }
    DEXIT;
-   return 0;
+   return ret;
 }
 

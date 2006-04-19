@@ -36,6 +36,7 @@
 #include "sge_dstring.h"
 #include "sge_object.h"
 #include "sge_qmaster_timed_event.h"
+#include "uti/sge_monitor.h"
 
 
 typedef enum {
@@ -62,10 +63,10 @@ bool
 reporting_initialize(lList **answer_list);
 
 bool
-reporting_shutdown(lList **answer_list);
+reporting_shutdown(lList **answer_list, bool do_spool);
 
 void
-reporting_trigger_handler(te_event_t anEvent);
+reporting_trigger_handler(te_event_t anEvent, monitoring_t *monitor);
 
 bool
 reporting_create_new_job_record(lList **answer_list, const lListElem *job);
@@ -105,9 +106,6 @@ bool
 reporting_create_queue_consumable_record(lList **answer_list,
                                         const lListElem *queue,
                                         u_long32 report_time);
-
-bool
-reporting_create_sharelog_record(lList **answer_list);
 
 bool
 reporting_is_intermediate_acct_required(const lListElem *job, 

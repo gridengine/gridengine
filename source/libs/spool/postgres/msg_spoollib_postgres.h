@@ -35,15 +35,15 @@
 /* 
  * libs/spool/postgres/sge_spooling_postgres.c
  */
-#define MSG_POSTGRES_INVALIDARGSTOCREATESPOOLINGCONTEXT  _MESSAGE(69000,_("invalid arguments passed to creation of postgres spooling context\n"))
-#define MSG_POSTGRES_OPENFAILED_SS  _MESSAGE(69001, _("connecting to PostgreSQL Database ("SFN") failed: "SFN"\n"))
-#define MSG_POSTGRES_OPENSUCCEEDED_S  _MESSAGE(69002, _("connected to PostgreSQL Database ("SFN")\n"))
-#define MSG_POSTGRES_NOCONNECTIONTOCLOSE_S  _MESSAGE(69003, _("no database connection to close ("SFN")\n"))
-#define MSG_POSTGRES_CLOSEDCONNECTION_S   _MESSAGE(69004, _("closed database connection ("SFN"\n"))
+#define MSG_POSTGRES_INVALIDARGSTOCREATESPOOLINGCONTEXT  _MESSAGE(69000,_("invalid arguments passed to creation of postgres spooling context"))
+#define MSG_POSTGRES_OPENFAILED_SS  _MESSAGE(69001, _("connecting to PostgreSQL Database ("SFN") failed: "SFN))
+#define MSG_POSTGRES_OPENSUCCEEDED_S  _MESSAGE(69002, _("connected to PostgreSQL Database ("SFN")"))
+#define MSG_POSTGRES_NOCONNECTIONTOCLOSE_S  _MESSAGE(69003, _("no database connection to close ("SFN")"))
+#define MSG_POSTGRES_CLOSEDCONNECTION_S   _MESSAGE(69004, _("closed database connection ("SFN))
 
-#define MSG_POSTGRES_HISTORYDISABLED      _MESSAGE(69007, _("spooling without historical data\n"))
-#define MSG_POSTGRES_HISTORYENABLED       _MESSAGE(69008, _("spooling with historical data\n"))
-#define MSG_POSTGRES_COMMANDFAILED_S      _MESSAGE(69009, _("failed executing sql command: "SFN"\n"))
-#define MSG_POSTGRES_COMMANDFAILED_SS     _MESSAGE(69010, _("failed executing sql command "SFQ": "SFN"\n"))
+#define MSG_POSTGRES_HISTORYDISABLED      _MESSAGE(69007, _("spooling without historical data"))
+#define MSG_POSTGRES_HISTORYENABLED       _MESSAGE(69008, _("spooling with historical data"))
+#define MSG_POSTGRES_COMMANDFAILED_S      _MESSAGE(69009, _("failed executing sql command: "SFN))
+#define MSG_POSTGRES_COMMANDFAILED_SS     _MESSAGE(69010, _("failed executing sql command "SFQ": "SFN))
 
 #endif /* __MSG_SPOOLLIB_TEMPLATE_H */

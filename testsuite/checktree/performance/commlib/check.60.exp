@@ -643,7 +643,14 @@ proc cl_throughput_run  {} {
    set vevc_binary       $ts_config(source_dir)/$up_arch/test_virtual_event_client
    set vgdi_binary       $ts_config(source_dir)/$up_arch/test_virtual_gdi_client
 
-   set host_list          [lrange $ts_config(execd_nodes) 1 end]
+   if { [info exists host_list] } {
+      unset host_list 
+   }
+   foreach host $ts_config(execd_nodes) {
+      if { $host != $vqmaster_host } {
+         lappend host_list $host
+      }
+   }
    set nr_of_remote_hosts [llength $host_list]
 
    switch -- $CHECK_ACT_LEVEL {

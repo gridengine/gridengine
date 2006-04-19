@@ -59,6 +59,7 @@ usage(char *progname)
    char *p;
    p = (NULL == (p = strrchr(progname,'/'))) ? progname : p+1;
    fprintf(stderr, MSG_GSS_WRITECRED_USAGE_S , p);
+   fprintf(stderr, "\n");
    exit(1);
 }
 
@@ -73,9 +74,10 @@ main(int argc, char **argv)
 
 
    if (argc > 1) {
-      fd = open(argv[1], O_WRONLY|O_CREAT, 0700);
+      fd = SGE_OPEN3(argv[1], O_WRONLY|O_CREAT, 0700);
       if (fd < 0) {
 	 fprintf(stderr, MSG_GSS_COULDNOTOPENXY_SS , argv[1], strerror(errno));
+    fprintf(stderr, "\n");
 	 exit(1);
       }
    }
@@ -85,28 +87,31 @@ main(int argc, char **argv)
     * read client credentials buffer from stdin
     */
 
-   fprintf(stderr, MSG_GSS_READINGCREDENTIALLENGTH);
+   fprintf(stderr, "%s\n", MSG_GSS_READINGCREDENTIALLENGTH);
 
    if (read(0, lenbuf, sizeof(lenbuf)) != sizeof(lenbuf)) {
-      fprintf(stderr, MSG_GSS_FAILEDREADINGCREDENTIALLENGTHFROMSTDIN);
+      fprintf(stderr, "%s\n", MSG_GSS_FAILEDREADINGCREDENTIALLENGTHFROMSTDIN);
       return 3;
    }
    client_cred.length = gsslib_unpackint(lenbuf);             
 
    fprintf(stderr, MSG_GSS_READLENGTHOFX_I, (int)client_cred.length);
+   fprintf(stderr, "\n");
 
    if ((client_cred.value = (char *)malloc(client_cred.length)) == 0) {
       fprintf(stderr, MSG_GSS_COULDNOTALLOCATEXBYTESFORCREDENTIALS_I,
               (int)client_cred.length);
+      fprintf(stderr, "\n");
       return 3;
    }
 
    if (read(0, client_cred.value, client_cred.length) != client_cred.length) {
-      fprintf(stderr, MSG_GSS_FAILEDREADINGCREDENTIALLENGTHFROMSTDIN);
+      fprintf(stderr, "%s\n", MSG_GSS_FAILEDREADINGCREDENTIALLENGTHFROMSTDIN);
       return 3;
    }
 
    fprintf(stderr, MSG_GSS_READXBYTES_I, (int)client_cred.length);
+   fprintf(stderr, "\n");
 
    /*
     * write credentials to stdout
@@ -117,8 +122,10 @@ main(int argc, char **argv)
       write(fd, lenbuf, sizeof(lenbuf));                      
       write(fd, client_cred.value, client_cred.length);                      
       fprintf(stderr, MSG_GSS_WROTEXBYTES_I , (int)client_cred.length);
+      fprintf(stderr, "\n");
    } else {                                                   
       fprintf(stderr, MSG_GSS_WRITECREDNOCREDENTIALSFOUND);      
+      fprintf(stderr, "\n");
       cc = 1;                                                 
    }                                                          
   

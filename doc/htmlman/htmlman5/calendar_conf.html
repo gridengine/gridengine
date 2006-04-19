@@ -43,9 +43,6 @@ FORMAT
      <B>o</B>  at least one of  year_day_range_list,  daytime_range_list
         and state always have to be present,
 
-     <B>o</B>  every day in the year is assumed  if  year_day_range_list
-        is omitted,
-
      <B>o</B>  all day long is assumed if daytime_range_list is omitted,
 
      <B>o</B>  switching the queue  to  "off"  (i.e.  disabling  it)  is
@@ -127,7 +124,7 @@ SEMANTICS
 
 
      <B>o</B>  the second time specification in a daytime_range_list may
-        be  prior  the first one and treated as expected. Thus an
+        be  before the first one and treated as expected. Thus an
         entry of the form
 
           year  12.03.2004=12-11=off
@@ -200,6 +197,9 @@ SEE ALSO
 COPYRIGHT
      See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
      sions.
+
+
+
 
 
 

@@ -80,7 +80,7 @@
 #include "msg_qmaster.h"
 
 
-static int do_add_auto_user(lListElem*, lList**);
+static int do_add_auto_user(lListElem*, lList**, monitoring_t *monitor);
 
 
 int userprj_mod(
@@ -91,7 +91,7 @@ int add,
 const char *ruser,
 const char *rhost,
 gdi_object_t *object,
-int sub_command 
+int sub_command, monitoring_t *monitor 
 ) {
    int user_flag = (object->target==SGE_USER_LIST)?1:0;
    int pos;
@@ -121,25 +121,25 @@ int sub_command
          answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
          goto Error;
       }
-      if (verify_str_key(alpp, userprj, obj_name))
+      if (verify_str_key(alpp, userprj, MAX_VERIFY_STRING, obj_name) != STATUS_OK)
          goto Error;
       lSetString(modp, UP_name, userprj);
    }
 
    /* ---- UP_oticket */
-   if ((pos=lGetPosViaElem(ep, UP_oticket))>=0) {
+   if ((pos=lGetPosViaElem(ep, UP_oticket, SGE_NO_ABORT))>=0) {
       uval = lGetPosUlong(ep, pos);
       lSetUlong(modp, UP_oticket, uval);
    }
 
    /* ---- UP_fshare */
-   if ((pos=lGetPosViaElem(ep, UP_fshare))>=0) {
+   if ((pos=lGetPosViaElem(ep, UP_fshare, SGE_NO_ABORT))>=0) {
       uval = lGetPosUlong(ep, pos);
       lSetUlong(modp, UP_fshare, uval);
    }
 
    /* ---- UP_delete_time */
-   if ((pos=lGetPosViaElem(ep, UP_delete_time))>=0) {
+   if ((pos=lGetPosViaElem(ep, UP_delete_time, SGE_NO_ABORT))>=0) {
       uval = lGetPosUlong(ep, pos);
       lSetUlong(modp, UP_delete_time, uval);
    }
@@ -147,14 +147,14 @@ int sub_command
    up_new_version = lGetUlong(modp, UP_version)+1;
 
    /* ---- UP_usage */
-   if ((pos=lGetPosViaElem(ep, UP_usage))>=0) {
+   if ((pos=lGetPosViaElem(ep, UP_usage, SGE_NO_ABORT))>=0) {
       lp = lGetPosList(ep, pos);
       lSetList(modp, UP_usage, lCopyList("usage", lp));
       lSetUlong(modp, UP_version, up_new_version);
    }
 
    /* ---- UP_project */
-   if ((pos=lGetPosViaElem(ep, UP_project))>=0) {
+   if ((pos=lGetPosViaElem(ep, UP_project, SGE_NO_ABORT))>=0) {
       lp = lGetPosList(ep, pos);
       lSetList(modp, UP_project, lCopyList("project", lp));
       lSetUlong(modp, UP_version, up_new_version);
@@ -162,7 +162,7 @@ int sub_command
 
    if (user_flag) {
       /* ---- UP_default_project */
-      if ((pos=lGetPosViaElem(ep, UP_default_project))>=0) {
+      if ((pos=lGetPosViaElem(ep, UP_default_project, SGE_NO_ABORT))>=0) {
          const char *dproj;
 
          /* make sure default project exists */
@@ -179,7 +179,7 @@ int sub_command
       }
    } else {
       /* ---- UP_acl */
-      if ((pos=lGetPosViaElem(ep, UP_acl))>=0) {
+      if ((pos=lGetPosViaElem(ep, UP_acl, SGE_NO_ABORT))>=0) {
          lp = lGetPosList(ep, pos);
          lSetList(modp, UP_acl, lCopyList("acl", lp));
 
@@ -190,7 +190,7 @@ int sub_command
       }
 
       /* ---- UP_xacl */
-      if ((pos=lGetPosViaElem(ep, UP_xacl))>=0) {
+      if ((pos=lGetPosViaElem(ep, UP_xacl, SGE_NO_ABORT))>=0) {
          lp = lGetPosList(ep, pos);
          lSetList(modp, UP_xacl, lCopyList("xacl", lp));
          if (userset_list_validate_acl_list(lGetList(ep, UP_xacl), alpp)!=STATUS_OK) {
@@ -199,8 +199,8 @@ int sub_command
          }
       }
 
-      if (lGetPosViaElem(modp, UP_xacl)>=0 || 
-          lGetPosViaElem(modp, UP_acl)>=0) {
+      if (lGetPosViaElem(modp, UP_xacl, SGE_NO_ABORT)>=0 || 
+          lGetPosViaElem(modp, UP_acl, SGE_NO_ABORT)>=0) {
          if (multiple_occurances( alpp,
                lGetList(modp, UP_acl),
                lGetList(modp, UP_xacl),
@@ -219,7 +219,7 @@ Error:
    return STATUS_EUNKNOWN;
 }
 
-int userprj_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object, lList **ppList) 
+int userprj_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object, lList **ppList, monitoring_t *monitor) 
 {
    int user_flag = (object->target==SGE_USER_LIST)?1:0;
    
@@ -278,6 +278,7 @@ int user        /* =1 user, =0 project */
    const char *name;
    lListElem *ep;
    lListElem *myep;
+   lList* projects;
 
    DENTER(TOP_LAYER, "sge_del_userprj");
 
@@ -356,20 +357,26 @@ int user        /* =1 user, =0 project */
       }
 
       /* check global configuration */
-      if (userprj_list_locate(conf.projects, name)) {
+      projects = mconf_get_projects();
+      if (userprj_list_locate(projects, name)) {
          ERROR((SGE_EVENT, MSG_SGETEXT_PROJECTSTILLREFERENCED_SSSS, name, 
                MSG_OBJ_PRJS, MSG_OBJ_CONF, MSG_OBJ_GLOBAL));
          answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+         lFreeList(&projects);
          DEXIT;
          return STATUS_EEXIST;
       }
-      if (userprj_list_locate(conf.xprojects, name)) {
+      lFreeList(&projects);
+      projects = mconf_get_xprojects();
+      if (userprj_list_locate(projects, name)) {
          ERROR((SGE_EVENT, MSG_SGETEXT_PROJECTSTILLREFERENCED_SSSS, name, 
                MSG_OBJ_XPRJS, MSG_OBJ_CONF, MSG_OBJ_GLOBAL));
          answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+         lFreeList(&projects);
          DEXIT;
          return STATUS_EEXIST;
       }
+      lFreeList(&projects);
 
       /* check user list for reference */
       if ((myep = lGetElemStr(Master_User_List, UP_default_project, name))) {
@@ -393,7 +400,7 @@ int user        /* =1 user, =0 project */
          ruser, rhost, name, user?MSG_OBJ_USER:MSG_OBJ_PRJ));
    answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
 
-   lRemoveElem(*upl, ep);
+   lRemoveElem(*upl, &ep);
 
    DEXIT;
    return STATUS_OK;
@@ -430,18 +437,19 @@ const char *obj_name   /* e.g. "fangorn"  */
 /* automatic user objects which have expired.                         */
 /*-------------------------------------------------------------------------*/
 void
-sge_automatic_user_cleanup_handler(te_event_t anEvent)
+sge_automatic_user_cleanup_handler(te_event_t anEvent, monitoring_t *monitor)
 {
+   u_long32 auto_user_delete_time = mconf_get_auto_user_delete_time();
    DENTER(TOP_LAYER, "sge_automatic_user_cleanup_handler");
 
-   SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE);
+   MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE), monitor);
 
    /* shall auto users be deleted again? */
-   if (conf.auto_user_delete_time > 0) {
+   if (auto_user_delete_time > 0) {
       lListElem *user, *next;
 
       u_long32 now = sge_get_gmt();
-      u_long32 next_delete = now + conf.auto_user_delete_time;
+      u_long32 next_delete = now + auto_user_delete_time;
 
       const char *admin = bootstrap_get_admin_user();
       const char *qmaster_host = uti_state_get_qualified_hostname();
@@ -494,10 +502,11 @@ sge_automatic_user_cleanup_handler(te_event_t anEvent)
 /*    called in sge_gdi_add_job                                            */
 /*-------------------------------------------------------------------------*/
 int
-sge_add_auto_user(const char *user, lList **alpp)
+sge_add_auto_user(const char *user, lList **alpp, monitoring_t *monitor)
 {
    lListElem *uep;
    int status = STATUS_OK;
+   u_long32 auto_user_delete_time = mconf_get_auto_user_delete_time();
 
    DENTER(TOP_LAYER, "sge_add_auto_user");
 
@@ -508,8 +517,8 @@ sge_add_auto_user(const char *user, lList **alpp)
       /* and is an auto user */
       if (lGetUlong(uep, UP_delete_time) != 0) {
          /* and we shall not keep auto users forever */
-         if (conf.auto_user_delete_time > 0) {
-            lSetUlong(uep, UP_delete_time, sge_get_gmt() + conf.auto_user_delete_time);
+         if (auto_user_delete_time > 0) {
+            lSetUlong(uep, UP_delete_time, sge_get_gmt() + auto_user_delete_time);
          }
       }
       /* and we are done */
@@ -523,28 +532,32 @@ sge_add_auto_user(const char *user, lList **alpp)
       DEXIT;
       return STATUS_EMALLOC;
    } else {
+      char* auto_user_default_project = NULL;
+
       /* set user object attributes */
       lSetString(uep, UP_name, user);
 
-      if (conf.auto_user_delete_time > 0) {
-         lSetUlong(uep, UP_delete_time, sge_get_gmt() + conf.auto_user_delete_time);
+      if (auto_user_delete_time > 0) {
+         lSetUlong(uep, UP_delete_time, sge_get_gmt() + auto_user_delete_time);
       } else {
          lSetUlong(uep, UP_delete_time, 0);
       }
 
-      lSetUlong(uep, UP_oticket, conf.auto_user_oticket);
-      lSetUlong(uep, UP_fshare, conf.auto_user_fshare);
+      lSetUlong(uep, UP_oticket, mconf_get_auto_user_oticket());
+      lSetUlong(uep, UP_fshare, mconf_get_auto_user_fshare());
 
-      if (conf.auto_user_default_project == NULL || 
-          strcasecmp(conf.auto_user_default_project, "none") == 0) {
+      auto_user_default_project = mconf_get_auto_user_default_project();
+      if (auto_user_default_project == NULL || 
+          strcasecmp(auto_user_default_project, "none") == 0) {
          lSetString(uep, UP_default_project, NULL);
       } else {
-         lSetString(uep, UP_default_project, conf.auto_user_default_project);
+         lSetString(uep, UP_default_project, auto_user_default_project);
       }
    
       /* add the auto user via GDI request */
-      status = do_add_auto_user(uep, alpp); 
-      uep = lFreeElem(uep);
+      status = do_add_auto_user(uep, alpp, monitor); 
+      lFreeElem(&uep);
+      FREE(auto_user_default_project);
    }
 
    DEXIT;
@@ -562,7 +575,7 @@ sge_add_auto_user(const char *user, lList **alpp)
 *     MT-NOTE: do_add_auto_user() is not MT safe 
 *
 *******************************************************************************/
-static int do_add_auto_user(lListElem* anUser, lList** anAnswer)
+static int do_add_auto_user(lListElem* anUser, lList** anAnswer, monitoring_t *monitor)
 {
    int res = STATUS_EUNKNOWN;
    gdi_object_t *userList = NULL;
@@ -579,9 +592,9 @@ static int do_add_auto_user(lListElem* anUser, lList** anAnswer)
     */
    res = sge_gdi_add_mod_generic(&tmpAnswer, anUser, 1, userList, 
                                  bootstrap_get_admin_user(), 
-                                 uti_state_get_qualified_hostname(), 0, &ppList);
+                                 uti_state_get_qualified_hostname(), 0, &ppList, monitor);
 
-   ppList = lFreeList(ppList);
+   lFreeList(&ppList);
    if ((STATUS_OK != res) && (NULL != tmpAnswer))
    {
       lListElem *err   = lFirst(tmpAnswer);
@@ -593,7 +606,7 @@ static int do_add_auto_user(lListElem* anUser, lList** anAnswer)
    }
 
    if (tmpAnswer != NULL) {
-      tmpAnswer = lFreeList(tmpAnswer);
+      lFreeList(&tmpAnswer);
    }
 
    DEXIT;
@@ -625,8 +638,8 @@ void sge_userprj_spool(void) {
 
    DENTER(TOP_LAYER, "sge_userprj_spool");
 
+   /* this function is used on qmaster shutdown, no need to monitor this lock */
    SGE_LOCK(LOCK_GLOBAL, LOCK_READ);
-   
 
    for_each(elem, Master_User_List) {
       name = lGetString(elem, UP_name);

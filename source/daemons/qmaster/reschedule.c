@@ -103,7 +103,7 @@ u_long32 add_time = 0;
 *     MT-NOTE: reschedule_unknown_event() is NOT MT safe
 *
 *******************************************************************************/
-void reschedule_unknown_event(te_event_t anEvent)
+void reschedule_unknown_event(te_event_t anEvent, monitoring_t *monitor)
 {
    lListElem *qep;            /* QU_Type */
    lList *answer_list = NULL; /* AN_Type */
@@ -116,12 +116,12 @@ void reschedule_unknown_event(te_event_t anEvent)
 
    DENTER(TOP_LAYER, "reschedule_unknown_event");
 
-   SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE);
+   MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE), monitor);
  
    /*
     * is the automatic rescheduling disabled
     */
-   if (disable_reschedule) {
+   if (mconf_get_disable_reschedule()) {
       DEXIT;
       goto Error;
    }         
@@ -150,7 +150,7 @@ void reschedule_unknown_event(te_event_t anEvent)
       when = time(NULL) + (delta - timeout);
       ev = te_new_event((time_t)when, TYPE_RESCHEDULE_UNKNOWN_EVENT, ONE_TIME_EVENT, delta, 0, hostname);
       te_add_event(ev);
-      te_free_event(ev);
+      te_free_event(&ev);
       DEXIT;
       goto Error;
    }
@@ -182,8 +182,8 @@ void reschedule_unknown_event(te_event_t anEvent)
     * unknown state and append the jobids/taskids into
     * a sublist of the exechost object
     */
-   reschedule_jobs(hep, 0, &answer_list);
-   lFreeList(answer_list);
+   reschedule_jobs(hep, 0, &answer_list, monitor);
+   lFreeList(&answer_list);
    
    free((char*)hostname);
    
@@ -220,7 +220,7 @@ Error:
 *  RESULT
 *     int - 0 on success; 1 if one of the parameters was invalid 
 *******************************************************************************/
-int reschedule_jobs(lListElem *ep, u_long32 force, lList **answer) 
+int reschedule_jobs(lListElem *ep, u_long32 force, lList **answer, monitoring_t *monitor) 
 {
    lListElem *jep;               /* JB_Type */
    int ret = 1;
@@ -239,7 +239,7 @@ int reschedule_jobs(lListElem *ep, u_long32 force, lList **answer)
        * append the jobids/taskids into a sublist of the exechost object
        */
       for_each(jep, Master_Job_List) {
-         reschedule_job(jep, NULL, ep, force, answer);
+         reschedule_job(jep, NULL, ep, force, answer, monitor);
       }      
       ret = 0;
    }
@@ -287,7 +287,7 @@ int reschedule_jobs(lListElem *ep, u_long32 force, lList **answer)
 *     int - 0 on success
 *******************************************************************************/
 int reschedule_job(lListElem *jep, lListElem *jatep, lListElem *ep,  
-                   u_long32 force, lList **answer) 
+                   u_long32 force, lList **answer, monitoring_t *monitor) 
 {
    lListElem *qep;               /* QU_Type */
    lListElem *hep;               /* EH_Type */
@@ -557,8 +557,8 @@ int reschedule_job(lListElem *jep, lListElem *jatep, lListElem *ep,
             lGetHost(first_granted_queue, JG_qhostname));
          lSetString(pseudo_jr, JR_owner,
             lGetString(jep, JB_owner));
-         sge_job_exit(pseudo_jr, jep, this_jatep);
-         lFreeElem(pseudo_jr);
+         sge_job_exit(pseudo_jr, jep, this_jatep, monitor);
+         lFreeElem(&pseudo_jr);
       }                         
 
       DTRACE;
@@ -734,7 +734,7 @@ void delete_from_reschedule_unknown_list(lListElem *host)
             DPRINTF(("RU: REMOVED "sge_u32"."sge_u32" FROM RU LIST\n",
                lGetUlong(this, RU_job_number),
                lGetUlong(this, RU_task_number)));
-            lRemoveElem(rulp, this);
+            lRemoveElem(rulp, &this);
             {
                lList *answer_list = NULL;
                sge_event_spool(&answer_list, 0, sgeE_EXECHOST_MOD, 
@@ -964,9 +964,6 @@ void update_reschedule_unknown_timout_values(const char *config_name)
    } else {
       if ( strcmp(SGE_TEMPLATE_NAME, config_name) != 0 ) {
          host = host_list_locate(Master_Exechost_List, config_name); 
-         if (!host) {
-            DPRINTF(("!!!!!!!update_reschedule_unknown_timout_values: got null for host\n"));
-         }
          update_reschedule_unknown_timeout(host);
       }       
    }
@@ -994,41 +991,35 @@ void update_reschedule_unknown_timout_values(const char *config_name)
 ******************************************************************************/
 void update_reschedule_unknown_timeout(lListElem *host) 
 {
-   lListElem *conf_entry = NULL; /* CF_Type */
-   const char *hostname = NULL;
-   u_long32 timeout = 0;
    
    DENTER(TOP_LAYER, "update_reschedule_unknown_timeout");
    
-   if (NULL == host)
-   {
-      DEXIT;
-      return;
-   }
+   if (host != NULL) {
+      lListElem *conf_entry = NULL; /* CF_Type */
+      const char *hostname = lGetHost(host, EH_name);
+      u_long32 timeout = lGetUlong(host, EH_reschedule_unknown);
    
-   hostname = lGetHost(host, EH_name);
-   timeout = lGetUlong(host, EH_reschedule_unknown);
-   
-   if ((conf_entry = sge_get_configuration_entry_by_name(hostname, "reschedule_unknown")) != NULL)
-   {
-      const char *value = lGetString(conf_entry, CF_value);
-      
-      if (parse_ulong_val(NULL, &timeout, TYPE_TIM, value, NULL, 0) == 0)
-      {
-         ERROR((SGE_EVENT, MSG_OBJ_RESCHEDULEUNKN_SS, hostname, value));
+      conf_entry = sge_get_configuration_entry_by_name(hostname, 
+                                                       "reschedule_unknown");
+      if (conf_entry != NULL) {
+         const char *value = lGetString(conf_entry, CF_value);
+         
+         if (parse_ulong_val(NULL, &timeout, TYPE_TIM, value, NULL, 0) == 0) {
+            ERROR((SGE_EVENT, MSG_OBJ_RESCHEDULEUNKN_SS, hostname, value));
+            timeout = 0;
+         }
+         
+         lFreeElem(&conf_entry);
+      } else {
          timeout = 0;
       }
       
-      lFreeElem(conf_entry);         
+      DPRINTF(("%s: reschedule_unknown timeout for host "SFN" is "sge_u32"\n", 
+               SGE_FUNC, hostname, timeout));  
+      lSetUlong(host, EH_reschedule_unknown, timeout); 
+   } else {
+      DPRINTF(("%s: host == NULL\n", SGE_FUNC));
    }
-   else
-   {
-      timeout = 0;
-   }
-   
-   DPRINTF(("%s: reschedule_unknown timeout for host "SFN" is "sge_u32"\n", SGE_FUNC, hostname, timeout));  
-      
-   lSetUlong(host, EH_reschedule_unknown, timeout); 
    
    DEXIT;
    return; 
@@ -1053,7 +1044,6 @@ void update_reschedule_unknown_timeout(lListElem *host)
 *******************************************************************************/
 u_long32 reschedule_unknown_timeout(lListElem *hep) 
 {
-   extern int new_config;
    static int not_init = 1;
    u_long32 timeout = 0;
    const char *host = NULL;
@@ -1064,7 +1054,7 @@ u_long32 reschedule_unknown_timeout(lListElem *hep)
    timeout = lGetUlong(hep, EH_reschedule_unknown);
 
    /* cache reschedule_unknown parameter in execd host to prevent host name resolving */
-   if (new_config || not_init)
+   if (mconf_is_new_config() || not_init)
    {
       lListElem *conf_entry = NULL;
       
@@ -1076,7 +1066,7 @@ u_long32 reschedule_unknown_timeout(lListElem *hep)
             timeout = 0;
          }
          
-         lFreeElem(conf_entry);
+         lFreeElem(&conf_entry);
       }
    
       DPRINTF(("%s: reschedule_unknown timeout for host %s is "sge_u32"\n", SGE_FUNC, host, timeout));
@@ -1125,7 +1115,7 @@ void reschedule_unknown_trigger(lListElem *hep)
       
       ev = te_new_event((time_t)when, TYPE_RESCHEDULE_UNKNOWN_EVENT, ONE_TIME_EVENT, timeout, 0, host);
       te_add_event(ev);
-      te_free_event(ev);
+      te_free_event(&ev);
    }
    DEXIT;
 }       
@@ -1169,7 +1159,7 @@ remove_from_reschedule_unknown_list(lListElem *host, u_long32 job_number,
 
          if (lGetUlong(elem, RU_job_number) == job_number &&
              lGetUlong(elem, RU_task_number) == task_number) {
-            lRemoveElem(unknown_list, elem);
+            lRemoveElem(unknown_list, &elem);
             is_modified = true;
          }
       }

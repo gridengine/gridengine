@@ -1114,29 +1114,29 @@ sge_init_share_tree_node_fields( lListElem *node,
 
 
    if (sn_m_share_pos == -1) {
-      sn_m_share_pos = lGetPosViaElem(node, STN_m_share);
+      sn_m_share_pos = lGetPosViaElem(node, STN_m_share, SGE_NO_ABORT);
       sn_adjusted_current_proportion_pos =
-            lGetPosViaElem(node, STN_adjusted_current_proportion);
+            lGetPosViaElem(node, STN_adjusted_current_proportion, SGE_NO_ABORT);
       sn_last_actual_proportion_pos =
-            lGetPosViaElem(node, STN_last_actual_proportion);
-      sn_job_ref_count_pos = lGetPosViaElem(node, STN_job_ref_count);
-      sn_active_job_ref_count_pos = lGetPosViaElem(node, STN_active_job_ref_count);
-      sn_usage_list_pos = lGetPosViaElem(node, STN_usage_list);
-      sn_sum_priority_pos = lGetPosViaElem(node, STN_sum_priority);
-      /* sn_temp_pos = lGetPosViaElem(node, STN_temp); */
-      sn_stt_pos = lGetPosViaElem(node, STN_stt);
-      sn_ostt_pos = lGetPosViaElem(node, STN_ostt);
-      sn_ltt_pos = lGetPosViaElem(node, STN_ltt);
-      sn_oltt_pos = lGetPosViaElem(node, STN_oltt);
-      sn_shr_pos = lGetPosViaElem(node, STN_shr);
-      sn_ref_pos = lGetPosViaElem(node, STN_ref);
-      sn_proportion_pos = lGetPosViaElem(node, STN_proportion);
-      sn_adjusted_proportion_pos = lGetPosViaElem(node, STN_adjusted_proportion);
-      sn_target_proportion_pos = lGetPosViaElem(node, STN_target_proportion);
-      sn_current_proportion_pos = lGetPosViaElem(node, STN_current_proportion);
-      sn_adjusted_usage_pos = lGetPosViaElem(node, STN_adjusted_usage);
-      sn_combined_usage_pos = lGetPosViaElem(node, STN_combined_usage);
-      sn_actual_proportion_pos = lGetPosViaElem(node, STN_actual_proportion);
+            lGetPosViaElem(node, STN_last_actual_proportion, SGE_NO_ABORT);
+      sn_job_ref_count_pos = lGetPosViaElem(node, STN_job_ref_count, SGE_NO_ABORT);
+      sn_active_job_ref_count_pos = lGetPosViaElem(node, STN_active_job_ref_count, SGE_NO_ABORT);
+      sn_usage_list_pos = lGetPosViaElem(node, STN_usage_list, SGE_NO_ABORT);
+      sn_sum_priority_pos = lGetPosViaElem(node, STN_sum_priority, SGE_NO_ABORT);
+      /* sn_temp_pos = lGetPosViaElem(node, STN_temp, SGE_NO_ABORT); */
+      sn_stt_pos = lGetPosViaElem(node, STN_stt, SGE_NO_ABORT);
+      sn_ostt_pos = lGetPosViaElem(node, STN_ostt, SGE_NO_ABORT);
+      sn_ltt_pos = lGetPosViaElem(node, STN_ltt, SGE_NO_ABORT);
+      sn_oltt_pos = lGetPosViaElem(node, STN_oltt, SGE_NO_ABORT);
+      sn_shr_pos = lGetPosViaElem(node, STN_shr, SGE_NO_ABORT);
+      sn_ref_pos = lGetPosViaElem(node, STN_ref, SGE_NO_ABORT);
+      sn_proportion_pos = lGetPosViaElem(node, STN_proportion, SGE_NO_ABORT);
+      sn_adjusted_proportion_pos = lGetPosViaElem(node, STN_adjusted_proportion, SGE_NO_ABORT);
+      sn_target_proportion_pos = lGetPosViaElem(node, STN_target_proportion, SGE_NO_ABORT);
+      sn_current_proportion_pos = lGetPosViaElem(node, STN_current_proportion, SGE_NO_ABORT);
+      sn_adjusted_usage_pos = lGetPosViaElem(node, STN_adjusted_usage, SGE_NO_ABORT);
+      sn_combined_usage_pos = lGetPosViaElem(node, STN_combined_usage, SGE_NO_ABORT);
+      sn_actual_proportion_pos = lGetPosViaElem(node, STN_actual_proportion, SGE_NO_ABORT);
    }
 
    lSetPosDouble(node, sn_m_share_pos, 0);
@@ -1315,13 +1315,8 @@ combine_usage( sge_ref_t *ref )
    /*-------------------------------------------------------------
     * Get usage from associated user/project object
     *-------------------------------------------------------------*/
-
-#if 0
-   userprj = ref->share_tree_type == STT_PROJECT ? ref->project : ref->user;
-#endif
-
    if (ref->node) {
-      const lList *usage_weight_list = NULL;
+      lList *usage_weight_list = NULL;
       lList *usage_list=NULL;
       lListElem *usage_weight, *usage_elem;
       double sum_of_usage_weights = 0;
@@ -1351,10 +1346,14 @@ combine_usage( sge_ref_t *ref )
                    ((upp = lGetElemStr(upp_list, UPP_name,
                                        lGetString(ref->project, UP_name)))))
                   usage_list = lGetList(upp, UPP_usage);
-            } else
+            } 
+            else {
                usage_list = lGetList(ref->user, UP_usage);
-         } else if (ref->project) /* not sure about this, use it when? */
+            }
+         } 
+         else if (ref->project) { /* not sure about this, use it when? */
             usage_list = lGetList(ref->project, UP_usage);
+         }
 
          for_each(usage_elem, usage_list) {
             usage_name = lGetString(usage_elem, UA_name);
@@ -1373,7 +1372,7 @@ combine_usage( sge_ref_t *ref )
        *-------------------------------------------------------------*/
 
       lSetDouble(ref->node, STN_combined_usage, usage_value);
-
+      lFreeList(&usage_weight_list);
    }
 
    return;
@@ -1405,30 +1404,28 @@ decay_and_sum_usage( sge_ref_t *ref,
              *userprj = NULL,
              *petask;
 
-   if (!node && !user && !project)
+   if (!node && !user && !project) {
       return;
+   }
 
-#if 0
-   if (ref->share_tree_type == STT_PROJECT)
-      userprj = ref->project;
-   else
+   if (ref->user) {
       userprj = ref->user;
-#endif
-
-   if (ref->user)
-      userprj = ref->user;
-   else if (ref->project)
+   }
+   else if (ref->project) {
       userprj = ref->project;
+   }
 
    /*-------------------------------------------------------------
     * Decay the usage for the associated user and project
     *-------------------------------------------------------------*/
     
-   if (user)
+   if (user) {
       decay_userprj_usage(user, decay_list, seqno, curr_time);
+   }
 
-   if (project)
+   if (project) {
       decay_userprj_usage(project, decay_list, seqno, curr_time);
+   }
 
    /*-------------------------------------------------------------
     * Note: Since SGE will update job.usage directly, we 
@@ -1657,8 +1654,7 @@ decay_and_sum_usage( sge_ref_t *ref,
     * save off current job usage in debitted job usage list
     *-------------------------------------------------------------*/
 
-   if (old_usage_list)
-      lFreeList(old_usage_list);
+   lFreeList(&old_usage_list);
 
    if (job_usage_list) {
       if (userprj) {
@@ -1680,7 +1676,7 @@ decay_and_sum_usage( sge_ref_t *ref,
             lAppendElem(upu_list, upu);
          }
       }
-      lFreeList(job_usage_list);
+      lFreeList(&job_usage_list);
    }
 
 }
@@ -2074,7 +2070,7 @@ static void free_fcategories(lList **fcategories, sge_ref_list_t **ref_array) {
       lSetRef(fcategory, FCAT_project, NULL);
    }
 
-   *fcategories = lFreeList(*fcategories);
+   lFreeList(fcategories);
    FREE(*ref_array);
 
 }
@@ -2224,10 +2220,11 @@ calc_job_functional_tickets_pass2( sge_ref_t *ref,
     * calculate user functional tickets for this job
     *-------------------------------------------------------*/
 
-   if (ref->user && sum_of_user_functional_shares)
+   if (ref->user && sum_of_user_functional_shares) {
       user_functional_tickets = (ref->user_fshare *
                                 total_functional_tickets /
                                 sum_of_user_functional_shares);
+   }   
 
    /*-------------------------------------------------------
     * calculate project functional tickets for this job
@@ -2720,10 +2717,13 @@ sge_calc_tickets( sge_Sdescr_t *lists,
 
    sge_scheduling_run++;
    { 
-      const lList *halflife_decay_list = sconf_get_halflife_decay_list();
+      lList *halflife_decay_list = sconf_get_halflife_decay_list();
+
       if (halflife_decay_list) {
-         lListElem *ep, *u;
+         lListElem *ep = NULL;
+         lListElem *u = NULL;
          double decay_rate, decay_constant;
+         
          for_each(ep, halflife_decay_list) {
             calculate_decay_constant(lGetDouble(ep, UA_value),
                                     &decay_rate, &decay_constant);
@@ -2731,13 +2731,16 @@ sge_calc_tickets( sge_Sdescr_t *lists,
                            UA_Type); 
             lSetDouble(u, UA_value, decay_constant);
          }
-      } else {
-         lListElem *u;
+      } 
+      else {
+         lListElem *u = NULL;
          double decay_rate, decay_constant;
+
          calculate_decay_constant(-1, &decay_rate, &decay_constant);
          u = lAddElemStr(&decay_list, UA_name, "finished_jobs", UA_Type); 
          lSetDouble(u, UA_value, decay_constant);
       }
+       lFreeList(&halflife_decay_list);
    }
 
    /*-------------------------------------------------------------
@@ -3168,7 +3171,7 @@ sge_calc_tickets( sge_Sdescr_t *lists,
                if (hierarchy[policy_ndx].dependent)
                   jref->tickets += REF_GET_STICKET(jref);
             }
-            lFreeList(sorted_job_node_list);
+            lFreeList(&sorted_job_node_list);
          }
       }
 
@@ -3235,10 +3238,7 @@ sge_calc_tickets( sge_Sdescr_t *lists,
                
                FREE(sort_list);
                FREE(job_ref);
-
-               if (decay_list) {
-                  lFreeList(decay_list);
-               }   
+               lFreeList(&decay_list);
 
                if (fcategories != NULL) {
                   free_fcategories(&fcategories, &ref_array);
@@ -3252,9 +3252,8 @@ sge_calc_tickets( sge_Sdescr_t *lists,
 
             /* Loop through all the jobs calculating the functional tickets and
                find the job with the most functional tickets.  Move it to the
-               top of the list¸ and start the process all over again with the
+               top of the listï¿½ and start the process all over again with the
                remaining jobs. */
-
             for(i=0; i<max; i++) {
                double ftickets, max_ftickets=-1;
                u_long32 jid, save_jid=0, save_tid=0;
@@ -3283,9 +3282,9 @@ sge_calc_tickets( sge_Sdescr_t *lists,
 
                   ftickets = REF_GET_FTICKET(jref);
 
-                  if (hierarchy[policy_ndx].dependent)
+                  if (hierarchy[policy_ndx].dependent) {
                      ftickets += jref->tickets;
-
+                  }
                   /* controll, if the current job has the most tickets */
                   if(ftickets >= max_ftickets){
                      if (max_current == NULL ||
@@ -3307,7 +3306,7 @@ sge_calc_tickets( sge_Sdescr_t *lists,
                   - if it was the last element, remove the fcategory*/
                if (max_current != NULL) {
                   sge_ref_list_t *tmp =lGetRef(max_current, FCAT_jobrelated_ticket_first);  
-                  copy_ftickets (tmp, tmp->next);
+                  copy_ftickets(tmp, tmp->next);
 
                   /* switch to next elem */
                   lSetRef(max_current, FCAT_jobrelated_ticket_first, tmp->next);  
@@ -3319,7 +3318,7 @@ sge_calc_tickets( sge_Sdescr_t *lists,
                      lSetRef(max_current, FCAT_dept, NULL);
                      lSetRef(max_current, FCAT_project, NULL);
 
-                     lRemoveElem(fcategories, max_current);
+                     lRemoveElem(fcategories, &max_current);
                   }
 
                /* This is the job with the most functional tickets, consider it active */
@@ -3398,33 +3397,30 @@ sge_calc_tickets( sge_Sdescr_t *lists,
        * Combine the ticket values into the total tickets for the job
        *-----------------------------------------------------------------*/
 
-      for(job_ndx=0; job_ndx<num_jobs; job_ndx++)
+      for (job_ndx=0; job_ndx<num_jobs; job_ndx++) {
          calc_job_tickets(&job_ref[job_ndx]);
+      }   
 
       /* calculate the ticket % of each job */
 
       sum_of_active_tickets = 0;
       sum_of_pending_tickets = 0;
-      for(job_ndx=0; job_ndx<num_jobs; job_ndx++) {
+      for (job_ndx=0; job_ndx<num_jobs; job_ndx++) {
          sge_ref_t *jref = &job_ref[job_ndx];
          double tickets = REF_GET_TICKET(jref);
          
-         if (*max_tickets == -1) {
-            *max_tickets = tickets;
-         }
-         if (tickets > *max_tickets) {
+         if (*max_tickets < tickets) {
             *max_tickets = tickets;
          }
          
          if (jref->queued) {
             sum_of_pending_tickets += tickets;
-         }   
-         else {
+         } else {
             sum_of_active_tickets += tickets;
          }   
       }
 
-      for(job_ndx=0; job_ndx<num_jobs; job_ndx++) {
+      for (job_ndx=0; job_ndx<num_jobs; job_ndx++) {
          sge_ref_t *jref = &job_ref[job_ndx];
          double ticket_sum = jref->queued ? sum_of_pending_tickets : sum_of_active_tickets;
 
@@ -3438,24 +3434,14 @@ sge_calc_tickets( sge_Sdescr_t *lists,
 
    } 
    else {
-      for(job_ndx=0; job_ndx<num_jobs; job_ndx++) {
+      for (job_ndx=0; job_ndx<num_jobs; job_ndx++) {
          sge_ref_t *jref = &job_ref[job_ndx];
          double tickets = REF_GET_TICKET(jref);
 
-         if (*max_tickets == -1) {
+         if (*max_tickets < tickets) {
             *max_tickets = tickets;
          }
-         if (tickets > *max_tickets) {
-            *max_tickets = tickets;
-         }
-          
-         if (jref->queued) {
-            sum_of_pending_tickets += tickets;
-         }   
-         else {
-            sum_of_active_tickets += tickets;
-         }   
-         
+   
          job = jref->job;
 
          if (tickets > 0) {
@@ -3502,7 +3488,7 @@ sge_calc_tickets( sge_Sdescr_t *lists,
    if (queued_jobs != NULL) {
       sge_task_ref_t *tref = task_ref_get_first_job_entry();
 
-      while(tref != NULL) {
+      while (tref != NULL) {
          lListElem *job = job_list_locate(queued_jobs, tref->job_number); 
 
          if (job) {
@@ -3516,22 +3502,15 @@ sge_calc_tickets( sge_Sdescr_t *lists,
       }
    }
 
-   if (job_ref) {
-      free(job_ref);
-   }
+   FREE(job_ref);
+   lFreeList(&decay_list);
 
-   if (decay_list)
-      lFreeList(decay_list);
-
-   PROF_STOP_MEASUREMENT(SGE_PROF_SCHEDLIB4);
-   prof_calc = prof_get_measurement_wallclock(SGE_PROF_SCHEDLIB4, false, NULL);
-      
-   if(prof_is_active(SGE_PROF_SCHEDLIB4)){
-      u_long32 saved_logginglevel = log_state_get_log_level();
-      log_state_set_log_level(LOG_INFO); 
-      INFO((SGE_EVENT, "PROF: job ticket calculation: init: %.3f s, pass 0: %.3f s, pass 1: %.3f, pass2: %.3f, calc: %.3f s\n",
+   if (prof_is_active(SGE_PROF_SCHEDLIB4)){
+      prof_stop_measurement(SGE_PROF_SCHEDLIB4, NULL);
+      prof_calc = prof_get_measurement_wallclock(SGE_PROF_SCHEDLIB4, false, NULL);    
+   
+      PROFILING((SGE_EVENT, "PROF: job ticket calculation: init: %.3f s, pass 0: %.3f s, pass 1: %.3f, pass2: %.3f, calc: %.3f s",
                prof_init, prof_pass0, prof_pass1, prof_pass2, prof_calc));
-      log_state_set_log_level(saved_logginglevel);
    }
 
    DEXIT;
@@ -3589,7 +3568,7 @@ sge_sort_pending_job_nodes(lListElem *root,
             if (job_node_list == NULL)
                job_node_list = child_job_node_list;
             else
-               lAddList(job_node_list, child_job_node_list);
+               lAddList(job_node_list, &child_job_node_list);
          }
       }
    }
@@ -3971,7 +3950,6 @@ sge_build_sgeee_orders(sge_Sdescr_t *lists, lList *running_jobs, lList *queued_j
 {
    static lEnumeration *usage_what = NULL;
    static lEnumeration *share_tree_what = NULL;
-   static lEnumeration *config_what = NULL;
    lCondition *where=NULL;
    lList *up_list = NULL;
    lList *order_list = NULL;
@@ -3986,11 +3964,6 @@ sge_build_sgeee_orders(sge_Sdescr_t *lists, lList *running_jobs, lList *queued_j
    
    DENTER(TOP_LAYER, "sge_build_sgeee_orders");
 
-   if (config_what == NULL) {
-      config_what = lWhat("%T(%I )", SC_Type,
-                   SC_weight_tickets_override);
-   }   
-                   
    if (share_tree_what == NULL) {
       share_tree_what = lWhat("%T(%I %I %I %I %I %I)", STN_Type,
                          STN_version, STN_name, STN_job_ref_count, STN_m_share,
@@ -4060,7 +4033,6 @@ sge_build_sgeee_orders(sge_Sdescr_t *lists, lList *running_jobs, lList *queued_j
       for_each(job, queued_jobs) {
          lListElem *ja_task;
          int tasks=0;
-  
          if (max_queued_ticket_orders) {
          
             /* NOTE: only send pending tickets for the first sub-task */
@@ -4117,8 +4089,10 @@ sge_build_sgeee_orders(sge_Sdescr_t *lists, lList *running_jobs, lList *queued_j
                lSetUlong(order, OR_type, ORT_update_user_usage);
                lSetList(order, OR_joker, up_list);
                lAppendElem(order_list, order);
-            } else
-               lFreeList(up_list);
+            } 
+            else {
+               lFreeList(&up_list);
+            }
          }
          DPRINTF(("   added %d orders for updating usage of user\n",
             lGetNumberOfElem(order_list) - norders));      
@@ -4127,7 +4101,6 @@ sge_build_sgeee_orders(sge_Sdescr_t *lists, lList *running_jobs, lList *queued_j
       /*-----------------------------------------------------------------
        * build update project usage order
        *-----------------------------------------------------------------*/
-
       if (lists->project_list) {
          norders = lGetNumberOfElem(order_list); 
          if ((up_list = lSelect("", lists->project_list, where, usage_what))) {
@@ -4137,25 +4110,26 @@ sge_build_sgeee_orders(sge_Sdescr_t *lists, lList *running_jobs, lList *queued_j
                lSetList(order, OR_joker, up_list);
                lAppendElem(order_list, order);
             } else
-               lFreeList(up_list);
+               lFreeList(&up_list);
          }
          DPRINTF(("   added %d orders for updating usage of project\n",
             lGetNumberOfElem(order_list) - norders));
       }
 
-      lFreeWhere(where);
+      lFreeWhere(&where);
 
       /*-----------------------------------------------------------------
        * build update share tree order
        *-----------------------------------------------------------------*/
 
       if (lists->share_tree && ((root = lFirst(lists->share_tree)))) {
-         lListElem *node;
+         lListElem *node = NULL;
          norders = lGetNumberOfElem(order_list);
 
          if ((node = get_mod_share_tree(root, share_tree_what, last_seqno))) {
             up_list = lCreateList("", STN_Type);
             lAppendElem(up_list, node);
+
             order = lCreateElem(OR_Type);
             lSetUlong(order, OR_type, ORT_share_tree);
             lSetList(order, OR_joker, up_list);
@@ -4170,19 +4144,27 @@ sge_build_sgeee_orders(sge_Sdescr_t *lists, lList *running_jobs, lList *queued_j
        *-----------------------------------------------------------------*/
 
       if (sconf_is()) {
-         lList *config_list;
-         norders = lGetNumberOfElem(order_list); 
-         if ((config_list = lSelect("", *sconf_get_config_list(), NULL, config_what))) {
-            if (lGetNumberOfElem(config_list)>0) {
-               order = lCreateElem(OR_Type);
-               lSetUlong(order, OR_type, ORT_sched_conf);
-               lSetList(order, OR_joker, config_list);
-               lAppendElem(order_list, order);
-            } else
-               lFreeList(config_list);
-         }
-         DPRINTF(("   added %d orders for scheduler configuration\n",
-            lGetNumberOfElem(order_list) - norders));   
+         lListElem *node = NULL;
+         const lDescr schedConfDesc[] = {
+                            {SC_weight_tickets_override, lUlongT},
+                            {NoName, lEndT}
+                           };
+
+         node = lCreateElem(schedConfDesc);
+         up_list = lCreateList("sched_conf_update", schedConfDesc);
+
+         lAppendElem(up_list, node);
+         
+         lSetUlong(node, SC_weight_tickets_override, 
+                   sconf_get_weight_tickets_override());
+
+         order = lCreateElem(OR_Type);
+         lSetUlong(order, OR_type, ORT_sched_conf);
+         lSetList(order, OR_joker, up_list);
+         lAppendElem(order_list, order);
+         
+         DPRINTF(("   added 1 order for scheduler configuration\n"));
+         
       }
       last_seqno = seqno;
    }
@@ -4288,23 +4270,23 @@ int sgeee_scheduler( sge_Sdescr_t *lists,
    do_nprio = (sconf_get_weight_priority() != 0 || report_priority) ? true : false;
 
    /* clear SGEEE fields for queued jobs */
-   for_each(job, pending_jobs){   
+   for_each(job, pending_jobs) {   
       sge_clear_job(job, false);
    }
+   for_each(job, running_jobs) {   
+      sge_clear_job(job, false);
+   }   
 
    /* calculate per job static urgency values */
    if (do_nurg) {
       PROF_START_MEASUREMENT(SGE_PROF_CUSTOM3);
       sge_do_urgency(now, pending_jobs, running_jobs, lists);
-      PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM3);
 
       if (prof_is_active(SGE_PROF_CUSTOM3)) {
-         u_long32 saved_logginglevel = log_state_get_log_level();
+         prof_stop_measurement(SGE_PROF_CUSTOM3, NULL);
 
-         log_state_set_log_level(LOG_INFO);
-         INFO((SGE_EVENT, "PROF: static urgency took %.3f s\n",
+         PROFILING((SGE_EVENT, "PROF: static urgency took %.3f s",
                prof_get_measurement_wallclock(SGE_PROF_CUSTOM3, false, NULL)));
-         log_state_set_log_level(saved_logginglevel);
       }
 
    }   
@@ -4312,10 +4294,10 @@ int sgeee_scheduler( sge_Sdescr_t *lists,
    min_tix = 0;
    max_tix = -1;
    
-   /* calculate tickets for pending jobs */
+   /* calculate tickets for pending jobs and compute their shares */
    sge_calc_tickets(lists, running_jobs, finished_jobs, pending_jobs, 1, &max_tix);
          
-   /* calculate tickets for running jobs */
+   /* correct the shares for the running jobs */
    seqno = sge_calc_tickets(lists, running_jobs, NULL, NULL, 0, &max_tix);
 
    if (max_tix == -1) { /* we have no running jobs and the tickets are disabled. */
@@ -4342,15 +4324,11 @@ int sgeee_scheduler( sge_Sdescr_t *lists,
    sge_do_sgeee_priority(running_jobs, min_tix, max_tix, do_nprio, do_nurg); 
    sge_do_sgeee_priority(pending_jobs, min_tix, max_tix, do_nprio, do_nurg); 
 
-   PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM3);
-
    if (prof_is_active(SGE_PROF_CUSTOM3)) {
-      u_long32 saved_logginglevel = log_state_get_log_level();
+      prof_stop_measurement(SGE_PROF_CUSTOM3, NULL);
 
-      log_state_set_log_level(LOG_INFO);
-      INFO((SGE_EVENT, "PROF: normalizing job tickets took %.3f s\n",
-            prof_get_measurement_wallclock(SGE_PROF_CUSTOM3, false, NULL)));
-      log_state_set_log_level(saved_logginglevel);
+      PROFILING((SGE_EVENT, "PROF: normalizing job tickets took %.3f s",
+                 prof_get_measurement_wallclock(SGE_PROF_CUSTOM3, false, NULL)));
    }
 
    PROF_STOP_MEASUREMENT(SGE_PROF_SCHEDLIB4)
@@ -4373,15 +4351,11 @@ int sgeee_scheduler( sge_Sdescr_t *lists,
                              update_execd);
    }
 
-   PROF_STOP_MEASUREMENT(SGE_PROF_SCHEDLIB4);
    if (prof_is_active(SGE_PROF_SCHEDLIB4)) {
-      u_long32 saved_logginglevel = log_state_get_log_level();
-      log_state_set_log_level(LOG_INFO); 
+      prof_stop_measurement(SGE_PROF_SCHEDLIB4, NULL);
 
-      INFO((SGE_EVENT, "PROF: create active job orders: %.3f s\n",
+      PROFILING((SGE_EVENT, "PROF: create active job orders: %.3f s",
                prof_get_measurement_wallclock(SGE_PROF_SCHEDLIB4,false, NULL)));
-
-      log_state_set_log_level(saved_logginglevel);
    }  
    
    DEXIT;
@@ -4681,7 +4655,7 @@ static void calculate_pending_shared_override_tickets(sge_ref_t *job_ref, int nu
                      lSetRef(current, FCAT_dept, NULL);
                      lSetRef(current, FCAT_project, NULL);
 
-                     lRemoveElem(fcategories, max_current);
+                     lRemoveElem(fcategories, &max_current);
                   }            
                }
                else { /* we reached an end. */

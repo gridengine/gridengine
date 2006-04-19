@@ -73,6 +73,9 @@ static bool
 spool_berkeleydb_clear_log(lList **answer_list, bdb_info info);
 
 static bool
+spool_berkeleydb_trigger_rpc(lList **answer_list, bdb_info info);
+
+static bool
 spool_berkeleydb_checkpoint(lList **answer_list, bdb_info info);
 
 /****** spool/berkeleydb/spool_berkeleydb_check_version() **********************
@@ -727,7 +730,16 @@ spool_berkeleydb_trigger(lList **answer_list, bdb_info info,
    DENTER(TOP_LAYER, "spool_berkeleydb_trigger");
 
    if (bdb_get_next_clear(info) <= trigger) {
-      ret = spool_berkeleydb_clear_log(answer_list, info);
+      /* 
+       * in the clear interval, we 
+       * - clear unused transaction logs for local spooling
+       * - do a dummy request in case of RPC spooling to avoid timeouts
+       */
+      if (bdb_get_server(info) == NULL) {
+         ret = spool_berkeleydb_clear_log(answer_list, info);
+      } else {
+         ret = spool_berkeleydb_trigger_rpc(answer_list, info);
+      }
       bdb_set_next_clear(info, trigger + BERKELEYDB_CLEAR_INTERVAL);
    }
 
@@ -784,6 +796,7 @@ spool_berkeleydb_read_list(lList **answer_list, bdb_info info,
                                  dbret, db_strerror(dbret));
          ret = false;
       } else {
+         bool done;
          /* initialize query to first record for this object type */
          memset(&key_dbt, 0, sizeof(key_dbt));
          memset(&data_dbt, 0, sizeof(data_dbt));
@@ -792,7 +805,8 @@ spool_berkeleydb_read_list(lList **answer_list, bdb_info info,
          PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
          dbret = dbc->c_get(dbc, &key_dbt, &data_dbt, DB_SET_RANGE);
          PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
-         while (true) {
+         done = false;
+         while (!done) {
             if (dbret != 0 && dbret != DB_NOTFOUND) {
                spool_berkeleydb_handle_bdb_error(answer_list, info, dbret);
                answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
@@ -800,15 +814,18 @@ spool_berkeleydb_read_list(lList **answer_list, bdb_info info,
                                        MSG_BERKELEY_QUERYERROR_SIS,
                                        key, dbret, db_strerror(dbret));
                ret = false;
+               done = true;
                break;
             } else if (dbret == DB_NOTFOUND) {
                DPRINTF(("last record reached\n"));
+               done = true;
                break;
             } else if (key_dbt.data != NULL && 
                        strncmp(key_dbt.data, key, strlen(key)) 
                        != 0) {
                DPRINTF(("current key is %s\n", key_dbt.data));
                DPRINTF(("last record of this object type reached\n"));
+               done = true;
                break;
             } else {
                sge_pack_buffer pb;
@@ -818,7 +835,7 @@ spool_berkeleydb_read_list(lList **answer_list, bdb_info info,
                DPRINTF(("read object with key "SFQ", size %d\n", 
                         key_dbt.data, data_dbt.size));
                cull_ret = init_packbuffer_from_buffer(&pb, data_dbt.data, 
-                                                      data_dbt.size, 0);
+                                                      data_dbt.size);
                if (cull_ret != PACK_SUCCESS) {
                   answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                                           ANSWER_QUALITY_ERROR, 
@@ -826,6 +843,7 @@ spool_berkeleydb_read_list(lList **answer_list, bdb_info info,
                                           key_dbt.data,
                                           cull_pack_strerror(cull_ret));
                   ret = false;
+                  done = true;
                   break;
                }
 
@@ -837,6 +855,7 @@ spool_berkeleydb_read_list(lList **answer_list, bdb_info info,
                                           key_dbt.data,
                                           cull_pack_strerror(cull_ret));
                   ret = false;
+                  done = true;
                   break;
                }
                /* we may not free the packbuffer: it references the buffer
@@ -851,8 +870,6 @@ spool_berkeleydb_read_list(lList **answer_list, bdb_info info,
                }
 
                /* get next record */
-      /*          memset(&key_dbt, 0, sizeof(key_dbt)); */
-      /*          memset(&data_dbt, 0, sizeof(data_dbt)); */
                PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
                dbret = dbc->c_get(dbc, &key_dbt, &data_dbt, DB_NEXT);
                PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
@@ -898,7 +915,7 @@ spool_berkeleydb_write_object(lList **answer_list, bdb_info info,
                                  cull_pack_strerror(cull_ret));
          ret = false;
       } else {
-         cull_ret = cull_pack_elem_partial(&pb, object, pack_part);
+         cull_ret = cull_pack_elem_partial(&pb, object, NULL, pack_part);
          if (cull_ret != PACK_SUCCESS) {
             answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                                     ANSWER_QUALITY_ERROR, 
@@ -960,7 +977,7 @@ spool_berkeleydb_write_object(lList **answer_list, bdb_info info,
 
    if (tmp_list != NULL) {
       lDechainElem(tmp_list, (lListElem *)object);
-      tmp_list = lFreeList(tmp_list);
+      lFreeList(&tmp_list);
    }
 
    DEXIT;
@@ -1153,6 +1170,7 @@ spool_berkeleydb_delete_object(lList **answer_list, bdb_info info,
                                     dbret, db_strerror(dbret));
             ret = false;
          } else {
+            bool done;
             DBT cursor_dbt, data_dbt;
             /* initialize query to first record for this object type */
             memset(&cursor_dbt, 0, sizeof(cursor_dbt));
@@ -1162,7 +1180,8 @@ spool_berkeleydb_delete_object(lList **answer_list, bdb_info info,
             PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
             dbret = dbc->c_get(dbc, &cursor_dbt, &data_dbt, DB_SET_RANGE);
             PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
-            while (true) {
+            done = false;
+            while (!done) {
                if (dbret != 0 && dbret != DB_NOTFOUND) {
                   spool_berkeleydb_handle_bdb_error(answer_list, info, dbret);
                   answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
@@ -1170,15 +1189,18 @@ spool_berkeleydb_delete_object(lList **answer_list, bdb_info info,
                                           MSG_BERKELEY_QUERYERROR_SIS,
                                           key, dbret, db_strerror(dbret));
                   ret = false;
+                  done = true;
                   break;
                } else if (dbret == DB_NOTFOUND) {
                   DPRINTF(("last record reached\n"));
+                  done = true;
                   break;
                } else if (cursor_dbt.data != NULL && 
                           strncmp(cursor_dbt.data, key, strlen(key)) 
                           != 0) {
                   DPRINTF(("current key is %s\n", cursor_dbt.data));
                   DPRINTF(("last record of this object type reached\n"));
+                  done = true;
                   break;
                } else {
                   int delete_ret;
@@ -1208,6 +1230,7 @@ spool_berkeleydb_delete_object(lList **answer_list, bdb_info info,
                                              delete_ret, db_strerror(delete_ret));
                      ret = false;
                      free(delete_dbt.data);
+                     done = true;
                      break;
                   } else {
                      DEBUG((SGE_EVENT, "deleted record with key "SFQ"\n", (char *)delete_dbt.data));
@@ -1502,13 +1525,24 @@ spool_berkeleydb_handle_bdb_error(lList **answer_list, bdb_info info,
                                   int bdb_errno)
 {
    /* we lost the connection to a RPC server */
-   if (bdb_errno == DB_NOSERVER) {
+   if (bdb_errno == DB_NOSERVER || bdb_errno == DB_NOSERVER_ID) {
       const char *server = bdb_get_server(info);
       const char *path   = bdb_get_path(info);
 
       answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                               ANSWER_QUALITY_ERROR, 
                               MSG_BERKELEY_CONNECTION_LOST_SS,
+                              server != NULL ? server : "no server defined",
+                              path != NULL ? path : "no database path defined");
+
+      spool_berkeleydb_error_close(info);
+   } else if (bdb_errno == DB_NOSERVER_HOME) {
+      const char *server = bdb_get_server(info);
+      const char *path   = bdb_get_path(info);
+
+      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                              ANSWER_QUALITY_ERROR, 
+                              MSG_BERKELEY_RPCSERVERLOSTHOME_SS,
                               server != NULL ? server : "no server defined",
                               path != NULL ? path : "no database path defined");
 
@@ -1590,6 +1624,7 @@ spool_berkeleydb_read_keys(lList **answer_list, bdb_info info,
                                  dbret, db_strerror(dbret));
          ret = false;
       } else {
+         bool done;
          /* initialize query to first record for this object type */
          memset(&key_dbt, 0, sizeof(key_dbt));
          memset(&data_dbt, 0, sizeof(data_dbt));
@@ -1598,7 +1633,8 @@ spool_berkeleydb_read_keys(lList **answer_list, bdb_info info,
          PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
          dbret = dbc->c_get(dbc, &key_dbt, &data_dbt, DB_SET_RANGE);
          PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
-         while (true) {
+         done = false;
+         while (!done) {
             if (dbret != 0 && dbret != DB_NOTFOUND) {
                spool_berkeleydb_handle_bdb_error(answer_list, info, dbret);
                answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
@@ -1606,15 +1642,18 @@ spool_berkeleydb_read_keys(lList **answer_list, bdb_info info,
                                        MSG_BERKELEY_QUERYERROR_SIS,
                                        key, dbret, db_strerror(dbret));
                ret = false;
+               done = true;
                break;
             } else if (dbret == DB_NOTFOUND) {
                DPRINTF(("last record reached\n"));
+               done = true;
                break;
             } else if (key_dbt.data != NULL && 
                        strncmp(key_dbt.data, key, strlen(key)) 
                        != 0) {
                DPRINTF(("current key is %s\n", key_dbt.data));
                DPRINTF(("last record of this object type reached\n"));
+               done = true;
                break;
             } else {
                DPRINTF(("read object with key "SFQ", size %d\n", 
@@ -1659,7 +1698,6 @@ spool_berkeleydb_read_object(lList **answer_list, bdb_info info,
                               ANSWER_QUALITY_ERROR, 
                               MSG_BERKELEY_NOCONNECTIONOPEN_S,
                               bdb_get_database_name(database));
-      ret = false;
    } else {
       DPRINTF(("querying object with key %s\n", key));
 
@@ -1686,14 +1724,14 @@ spool_berkeleydb_read_object(lList **answer_list, bdb_info info,
          DPRINTF(("read object with key "SFQ", size %d\n", 
                   key_dbt.data, data_dbt.size));
          cull_ret = init_packbuffer_from_buffer(&pb, data_dbt.data, 
-                                                data_dbt.size, 0);
+                                                data_dbt.size);
          if (cull_ret != PACK_SUCCESS) {
             answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                                     ANSWER_QUALITY_ERROR, 
                                     MSG_BERKELEY_UNPACKINITERROR_SS,
                                     key_dbt.data,
                                     cull_pack_strerror(cull_ret));
-            ret = false;
+            ret = NULL;
          }
          DPRINTF(("init_packbuffer succeeded\n"));
 
@@ -1705,7 +1743,7 @@ spool_berkeleydb_read_object(lList **answer_list, bdb_info info,
                                     MSG_BERKELEY_UNPACKERROR_SS,
                                     key_dbt.data,
                                     cull_pack_strerror(cull_ret));
-            ret = false;
+            ret = NULL;
          }
 
          /* We specified DB_DBT_MALLOC - BDB will malloc memory for each
@@ -1725,65 +1763,98 @@ static bool
 spool_berkeleydb_clear_log(lList **answer_list, bdb_info info)
 {
    bool ret = true;
+   DB_ENV *env;
 
    DENTER(TOP_LAYER, "spool_berkeleydb_clear_log");
 
-   /* only necessary for local spooling */
-   if (bdb_get_server(info) == NULL) {
-      DB_ENV *env;
+   /* check connection */
+   env = bdb_get_env(info);
+   if (env == NULL) {
+      dstring dbname_dstring = DSTRING_INIT;
+      const char *dbname;
+   
+      dbname = bdb_get_dbname(info, &dbname_dstring);
+      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                              ANSWER_QUALITY_ERROR, 
+                              MSG_BERKELEY_NOCONNECTIONOPEN_S,
+                              dbname);
+      sge_dstring_free(&dbname_dstring);
+      ret = false;
+   }
 
-      /* check connection */
-      env = bdb_get_env(info);
-      if (env == NULL) {
-         dstring dbname_dstring = DSTRING_INIT;
-         const char *dbname;
-      
-         dbname = bdb_get_dbname(info, &dbname_dstring);
+   if (ret) {
+      int dbret;
+      char **list;
+
+      PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
+      dbret = env->log_archive(env, &list, DB_ARCH_ABS);
+      PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
+      if (dbret != 0) {
+         spool_berkeleydb_handle_bdb_error(answer_list, info, dbret);
          answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                                  ANSWER_QUALITY_ERROR, 
-                                 MSG_BERKELEY_NOCONNECTIONOPEN_S,
-                                 dbname);
-         sge_dstring_free(&dbname_dstring);
+                                 MSG_BERKELEY_CANNOTRETRIEVELOGARCHIVE_IS,
+                                 dbret, db_strerror(dbret));
          ret = false;
       }
 
-      if (ret) {
-         int dbret;
-         char **list;
+      if (ret && list != NULL) {
+         char **file;
 
-         PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
-         dbret = env->log_archive(env, &list, DB_ARCH_ABS);
-         PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
-         if (dbret != 0) {
-            spool_berkeleydb_handle_bdb_error(answer_list, info, dbret);
-            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                    ANSWER_QUALITY_ERROR, 
-                                    MSG_BERKELEY_CANNOTRETRIEVELOGARCHIVE_IS,
-                                    dbret, db_strerror(dbret));
-            ret = false;
-         }
+         for (file = list; *file != NULL; file++) {
+            if (remove(*file) != 0) {
+               dstring error_dstring = DSTRING_INIT;
 
-         if (ret && list != NULL) {
-            char **file;
-
-            for (file = list; *file != NULL; file++) {
-               if (remove(*file) != 0) {
-                  dstring error_dstring = DSTRING_INIT;
-
-                  answer_list_add_sprintf(answer_list, STATUS_EDISK, 
-                                          ANSWER_QUALITY_ERROR, 
-                                          MSG_ERRORDELETINGFILE_SS,
-                                          *file,
-                                          sge_strerror(errno, &error_dstring));
-                  sge_dstring_free(&error_dstring);
-                  ret = false;
-                  break;
-               }
+               answer_list_add_sprintf(answer_list, STATUS_EDISK, 
+                                       ANSWER_QUALITY_ERROR, 
+                                       MSG_ERRORDELETINGFILE_SS,
+                                       *file,
+                                       sge_strerror(errno, &error_dstring));
+               sge_dstring_free(&error_dstring);
+               ret = false;
+               break;
             }
-
-            free(list);
          }
+
+         free(list);
       }
+   }
+
+   DEXIT;
+   return ret;
+}
+
+static bool
+spool_berkeleydb_trigger_rpc(lList **answer_list, bdb_info info)
+{
+   bool ret = true;
+   DB_ENV *env;
+
+   DENTER(TOP_LAYER, "spool_berkeleydb_trigger_rpc");
+
+   /* check connection */
+   env = bdb_get_env(info);
+   if (env == NULL) {
+      dstring dbname_dstring = DSTRING_INIT;
+      const char *dbname;
+   
+      dbname = bdb_get_dbname(info, &dbname_dstring);
+      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                              ANSWER_QUALITY_ERROR, 
+                              MSG_BERKELEY_NOCONNECTIONOPEN_S,
+                              dbname);
+      sge_dstring_free(&dbname_dstring);
+      ret = false;
+   }
+
+   if (ret) {
+      lList *local_answer_list = NULL;
+      lListElem *ep;
+
+      ep = spool_berkeleydb_read_object(&local_answer_list, info, BDB_CONFIG_DB,
+                                        "..trigger_bdb_rpc_server..");
+      lFreeElem(&ep);
+      lFreeList(&local_answer_list);
    }
 
    DEXIT;
@@ -1795,7 +1866,7 @@ spool_berkeleydb_checkpoint(lList **answer_list, bdb_info info)
 {
    bool ret = true;
 
-   DENTER(TOP_LAYER, "spool_berkeleydb_clear_log");
+   DENTER(TOP_LAYER, "spool_berkeleydb_checkpoint");
 
    /* only necessary for local spooling */
    if (bdb_get_server(info) == NULL) {

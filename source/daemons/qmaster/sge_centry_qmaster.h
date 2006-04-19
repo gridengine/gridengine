@@ -33,12 +33,13 @@
 /*___INFO__MARK_END__*/
 
 #include "sge_c_gdi.h"
+#include "uti/sge_monitor.h"
 
 int 
 sge_del_centry(lListElem *cxp, lList **alpp, char *ruser, char *rhost);
 
 int 
-centry_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object, lList **ppList);
+centry_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object, lList **ppList, monitoring_t *monitor);
 
 int 
 centry_spool(lList **alpp, lListElem *cep, gdi_object_t *object);
@@ -46,7 +47,7 @@ centry_spool(lList **alpp, lListElem *cep, gdi_object_t *object);
 int 
 centry_mod(lList **alpp, lListElem *new_complex, lListElem *ep, int add, 
            const char *ruser, const char *rhost, gdi_object_t *object, 
-           int sub_command);
+           int sub_command, monitoring_t *monitor);
 
 void
 centry_redebit_consumables(const lList *centries);

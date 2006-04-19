@@ -1841,7 +1841,7 @@ proc add_checkpointobj { change_array } {
 
    set vi_commands [build_vi_command chgar]
 
-   set ckpt_name [set chgar(ckpt_name)]
+   set ckpt_name $chgar(ckpt_name)
    set args "-ackpt $ckpt_name"
  
    set ALREADY_EXISTS [ translate $ts_config(master_host) 1 0 0 [sge_macro MSG_SGETEXT_ALREADYEXISTS_SS] "*" $ckpt_name]
@@ -2627,7 +2627,7 @@ proc del_calendar { mycal_name } {
 #
 #  RESULT
 #     -1   timeout error
-#     -2   callendar allready exists
+#     -2   calendar allready exists
 #      0   ok
 #
 #  EXAMPLE
@@ -2670,7 +2670,7 @@ proc add_calendar { change_array } {
   set result [ handle_vi_edit "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-acal xyz" $vi_commands $ADDED $ALREADY_EXISTS]
   if { $result == -1 } { add_proc_error "add_calendar" -1 "timeout error" }
   if { $result == -2 } { add_proc_error "add_calendar" -1 "\"[set chgar(calendar_name)]\" already exists" }
-  if { $result != 0  } { add_proc_error "add_calendar" -1 "could not add callendar \"[set chgar(calendar_name)]\"" }
+  if { $result != 0  } { add_proc_error "add_calendar" -1 "could not add calendar \"[set chgar(calendar_name)]\"" }
   return $result
 }
 
@@ -2731,6 +2731,22 @@ proc was_job_running {jobid {do_errorcheck 1} } {
 
 }
 
+
+proc match_queue {qname qlist} {
+   global CHECK_OUTPUT
+
+   puts $CHECK_OUTPUT "trying to match $qname to queues in $qlist"
+
+   set ret {}
+   foreach q $qlist {
+      if {[string match "$qname*" $q] == 1} {
+         lappend ret $q
+      }
+   }
+
+   return $ret
+}
+
 #                                                             max. column:     |
 #****** sge_procedures/slave_queue_of() ******
 # 
@@ -2738,14 +2754,20 @@ proc was_job_running {jobid {do_errorcheck 1} } {
 #     slave_queue_of -- Get the last slave queue of a parallel job
 #
 #  SYNOPSIS
-#     slave_queue_of { job_id } 
+#     slave_queue_of { job_id {qlist {}}} 
 #
 #  FUNCTION
 #     This procedure will return the name of the last slave queue of a
 #     parallel job or "" if the SLAVE queue was not found.
 #
+#     If a queue list is passed via qlist parameter, the queue name returned
+#     by qstat will be matched against the queue names in qlist.
+#     This is sometimes necessary, if the queue name printed by qstat is 
+#     truncated (SGE(EE) 5.3, long hostnames).
+#
 #  INPUTS
 #     job_id - Identification number of the job
+#     qlist  - a list of queues - one has to match the slave_queue.
 #
 #  RESULT
 #     empty or the last queue name on which the SLAVE task is running 
@@ -2753,8 +2775,8 @@ proc was_job_running {jobid {do_errorcheck 1} } {
 #  SEE ALSO
 #     sge_procedures/master_queue_of()
 #*******************************
-proc slave_queue_of { job_id } {
-  global ts_config
+proc slave_queue_of { job_id {qlist {}}} {
+   global ts_config
    global CHECK_OUTPUT
 # return last slave queue of job
 # no slave -> return ""
@@ -2763,14 +2785,27 @@ proc slave_queue_of { job_id } {
    
    set result [get_standard_job_info $job_id]
    foreach elem $result {
-       set whatami [lindex $elem 8]
-       if { [string compare $whatami "SLAVE"] == 0 } { 
-          set slave_queue [lindex $elem 7]
-          puts $CHECK_OUTPUT "Slave is running on queue \"$slave_queue\""
-       }
+      set whatami [lindex $elem 8]
+      if { [string compare $whatami "SLAVE"] == 0 } {
+         set slave_queue [lindex $elem 7]
+         if {[llength $qlist] > 0} {
+            # we have to match queue name from qstat against qlist
+            set matching_queues [match_queue $slave_queue $qlist]
+            if {[llength $matching_queues] == 0} {
+               add_proc_error "slave_queue_of" -1 "no queue is matching queue list"
+            } else {
+               if {[llength $matching_queues] > 1} {
+                  add_proc_error "slave_queue_of" -1 "multiple queues are matching queue list"
+               } else {
+                  set slave_queue [lindex $matching_queues 0]
+               }
+            }
+         }
+         puts $CHECK_OUTPUT "Slave is running on queue \"$slave_queue\""
+      }
    }
 
-   set slave_queue [get_cluster_queue $slave_queue]
+   #set slave_queue [get_cluster_queue $slave_queue]
    
    if {$slave_queue == ""} {
      add_proc_error "slave_queue_of" -1 "no slave queue for job $job_id found"
@@ -2786,14 +2821,20 @@ proc slave_queue_of { job_id } {
 #     master_queue_of -- get the master queue of a parallel job
 #
 #  SYNOPSIS
-#     master_queue_of { job_id } 
+#     master_queue_of { job_id {qlist {}}} 
 #
 #  FUNCTION
 #     This procedure will return the name of the master queue of a
 #     parallel job or "" if the MASTER queue was not found.
 #
+#     If a queue list is passed via qlist parameter, the queue name returned
+#     by qstat will be matched against the queue names in qlist.
+#     This is sometimes necessary, if the queue name printed by qstat is 
+#     truncated (SGE(EE) 5.3, long hostnames).
+#
 #  INPUTS
 #     job_id - Identification number of the job
+#     qlist  - a list of queues - one has to match the slave_queue.
 #
 #  RESULT
 #     empty or the last queue name on which the MASTER task is running 
@@ -2801,7 +2842,7 @@ proc slave_queue_of { job_id } {
 #  SEE ALSO
 #     sge_procedures/slave_queue_of()
 #*******************************
-proc master_queue_of { job_id } {
+proc master_queue_of { job_id {qlist {}}} {
   global ts_config
    global CHECK_OUTPUT
 # return master queue of job
@@ -2811,19 +2852,33 @@ proc master_queue_of { job_id } {
    
    set result [get_standard_job_info $job_id]
    foreach elem $result {
-       set whatami [lindex $elem 8]
-       if { [string compare $whatami "MASTER"] == 0 } { 
-          set master_queue [lindex $elem 7]
-          puts $CHECK_OUTPUT "Master is running on queue \"$master_queue\""
-          break                  ;# break out of loop, if Master found
+      set whatami [lindex $elem 8]
+      if { [string compare $whatami "MASTER"] == 0 } { 
+         set master_queue [lindex $elem 7]
+         if {[llength $qlist] > 0} {
+            # we have to match queue name from qstat against qlist
+            set matching_queues [match_queue $master_queue $qlist]
+            if {[llength $matching_queues] == 0} {
+               add_proc_error "master_queue_of" -1 "no queue is matching queue list"
+            } else {
+               if {[llength $matching_queues] > 1} {
+                  add_proc_error "master_queue_of" -1 "multiple queues are matching queue list"
+               } else {
+                  set master_queue [lindex $matching_queues 0]
+               }
+            }
+         }
+         puts $CHECK_OUTPUT "Master is running on queue \"$master_queue\""
+         break                  ;# break out of loop, if Master found
        }
    }
 
-   set master_queue [get_cluster_queue $master_queue]
+   #set master_queue [get_cluster_queue $master_queue]
 
    if {$master_queue == ""} {
      add_proc_error "master_queue_of" -1 "no master queue for job $job_id found"
-   }  
+   }
+
    return $master_queue
 }
 
@@ -3288,8 +3343,8 @@ proc mqattr { attribute entry queue_list } {
   
   foreach elem $help {
      set queue_name [lindex $queue_list $counter]
-     set MODIFIED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_MODIFIEDINLIST_SSSS] $CHECK_USER "*" $queue_name "*"]
-     if { [ string match "*$MODIFIED*" $elem ] != 1 } {
+     set MODIFIED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_MODIFIEDINLIST_SSSS] $CHECK_USER "*" "*" "*"]
+     if { [ string match "$MODIFIED" $elem ] != 1 } {
         puts $CHECK_OUTPUT "Could not modify queue $queue_name."
         set return_value -1
      } else {
@@ -3322,7 +3377,9 @@ proc mqattr { attribute entry queue_list } {
 #     This procedure will call qmod to suspend the given job id.
 #
 #  INPUTS
-#     id - job identification number
+#     id          - job identification number
+#     force       - do a qmod -f
+#     error_check - raise an error in case qmod fails
 #
 #  RESULT
 #     0  - ok
@@ -3331,17 +3388,23 @@ proc mqattr { attribute entry queue_list } {
 #  SEE ALSO
 #     sge_procedures/unsuspend_job()
 #*******************************
-proc suspend_job { id } {
-  global ts_config
-   global CHECK_ARCH open_spawn_buffer CHECK_USER CHECK_HOST
+proc suspend_job { id {force 0} {error_check 1}} {
+   global ts_config
+   global CHECK_OUTPUT CHECK_ARCH open_spawn_buffer CHECK_USER CHECK_HOST
 
-   set SUSPEND1 [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_SUSPENDTASK_SUU] "*" "*" "*" ]
-   set SUSPEND2 [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_SUSPENDJOB_SU] "*" "*" ]
-
-
+   set SUSPEND1 [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_SUSPENDTASK_SUU] $CHECK_USER $id "*" ]
+   set SUSPEND2 [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_SUSPENDJOB_SU] $CHECK_USER $id ]
+   set ALREADY_SUSP1 [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_ALREADYSUSPENDED_SUU] $CHECK_USER $id "*"]
+   set ALREADY_SUSP2 [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_ALREADYSUSPENDED_SU] $CHECK_USER $id]
+   set FORCED_SUSP1 [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_FORCESUSPENDTASK_SUU] $CHECK_USER $id "*"]
+   set FORCED_SUSP2 [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_FORCESUSPENDJOB_SU] $CHECK_USER $id]
    log_user 0 
 	set program "$ts_config(product_root)/bin/$CHECK_ARCH/qmod"
-   set sid [ open_remote_spawn_process $CHECK_HOST $CHECK_USER $program "-s $id"  ]     
+   if {$force} {
+      set sid [ open_remote_spawn_process $CHECK_HOST $CHECK_USER $program "-f -s $id"  ]     
+   } else {
+      set sid [ open_remote_spawn_process $CHECK_HOST $CHECK_USER $program "-s $id"  ]     
+   }
 
    set sp_id [ lindex $sid 1 ]
 	set timeout 30
@@ -3353,25 +3416,47 @@ proc suspend_job { id } {
          set result -1 
          add_proc_error "suspend_job" "-1" "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
       }
-	   -i $sp_id $SUSPEND1 {
-	      set result 0 
+	   -i $sp_id -- "$SUSPEND1" {
+         puts $CHECK_OUTPUT "$expect_out(0,string)"
+	      set result 0
 	   }
-	   -i $sp_id $SUSPEND2 {
-	      set result 0 
+	   -i $sp_id -- "$SUSPEND2" {
+         puts $CHECK_OUTPUT "$expect_out(0,string)"
+	      set result 0
+	   }
+	   -i $sp_id -- "$ALREADY_SUSP1" {
+         puts $CHECK_OUTPUT "$expect_out(0,string)"
+	      set result -1
+	   }
+	   -i $sp_id -- "$ALREADY_SUSP2" {
+         puts $CHECK_OUTPUT "$expect_out(0,string)"
+	      set result -1
+	   }
+	   -i $sp_id -- "$FORCED_SUSP1" {
+         puts $CHECK_OUTPUT "$expect_out(0,string)"
+	      set result 0
+	   }
+	   -i $sp_id -- "$FORCED_SUSP2" {
+         puts $CHECK_OUTPUT "$expect_out(0,string)"
+	      set result 0
 	   }
 	   -i $sp_id "suspended job" {
-	      set result 0 
+	      set result 0
 	   }
       -i $sp_id default {
-	      set result -1 
+         puts $CHECK_OUTPUT "unexpected output: $expect_out(0,string)"
+	      set result -1
 	   }
 	}
 	# close spawned process 
 	close_spawn_process $sid
    log_user 1
-   if { $result != 0 } {
+
+   # error check
+   if { $error_check && $result != 0 } {
       add_proc_error "suspend_job" -1 "could not suspend job $id"
    }
+
    return $result
 }
 
@@ -4216,16 +4301,16 @@ proc get_submit_error { error_id } {
 #     sge_procedures/get_suspend_state_of_job()
 #*******************************
 proc get_grppid_of_job { jobid {host ""}} {
-  global ts_config
-   global CHECK_OUTPUT CHECK_HOST
+   global ts_config
+   global CHECK_OUTPUT CHECK_HOST CHECK_USER
 
    # default for host parameter, use localhost
    if {$host == ""} {
       set host $CHECK_HOST
    }
 
+   # read execd spooldir from local or global config
    get_config value $host
-    
    if {[info exists value(execd_spool_dir)]} {
       set spool_dir $value(execd_spool_dir)
       puts $CHECK_OUTPUT "using local exec spool dir"  
@@ -4237,21 +4322,30 @@ proc get_grppid_of_job { jobid {host ""}} {
 
    puts $CHECK_OUTPUT "Exec Spool Dir is: $spool_dir"
 
-   # JG: TODO: we have to do a cat <pidfile> on remote host
-   set pidfile "$spool_dir/$CHECK_HOST/active_jobs/$jobid.1/job_pid"
+   # build name of pid file
+   set pidfile "$spool_dir/$host/active_jobs/$jobid.1/job_pid"
 
-   after 5000
-
-   set back [ catch { open $pidfile "r" } fio ]
-
-   set real_pid ""
-
-   if { $back != 0  } {
-      add_proc_error "get_grppid_of_job" -1 "can't open \"$pidfile\""
-   } else {
-      gets $fio real_pid
-      close $fio
+   # read pid from pidfile on execution host
+   set real_pid [start_remote_prog $host $CHECK_USER "cat" "$pidfile"]
+   if {$prg_exit_state != 0} {
+      add_proc_error "get_grppid_of_job" -1 "can't read $pidfile on host $host: $real_pid"
+      set real_pid ""
    }
+
+   # trim trailing newlines etc.
+   set real_pid [string trim $real_pid]
+#   after 5000
+#
+#   set back [ catch { open $pidfile "r" } fio ]
+#
+#   set real_pid ""
+#
+#   if { $back != 0  } {
+#      add_proc_error "get_grppid_of_job" -1 "can't open \"$pidfile\""
+#   } else {
+#      gets $fio real_pid
+#      close $fio
+#   }
 
    return $real_pid
 }
@@ -4274,6 +4368,7 @@ proc get_grppid_of_job { jobid {host ""}} {
 #
 #  INPUTS
 #     jobid                      - job identification number
+#     { host "" }                - host the job is running on, default $CHECK_HOST
 #     { pidlist pid_list }       - name of variable to store the pidlist
 #     {do_error_check 1}         - enable error messages (add_proc_error), default
 #                                  if not 1 the procedure will not report errors
@@ -4286,19 +4381,24 @@ proc get_grppid_of_job { jobid {host ""}} {
 #     sge_procedures/get_grppid_of_job()
 #     sge_procedures/add_proc_error()
 #*******************************************************************************
-proc get_suspend_state_of_job { jobid { pidlist pid_list } {do_error_check 1} { pgi process_group_info } } {
+proc get_suspend_state_of_job { jobid {host ""} { pidlist pid_list } {do_error_check 1} { pgi process_group_info } } {
   global ts_config
    global CHECK_OUTPUT CHECK_HOST CHECK_ARCH
 
    upvar $pidlist pidl 
    upvar $pgi pginfo
 
+   if {$host == ""} {
+      set host $CHECK_HOST
+   }
+
    # give the system time to change the processes before ps call!!
+   # JG: TODO: this should not be done here, but in the caller's context!
    after 5000
 
    # get process group id
-   set real_pid [get_grppid_of_job $jobid]
-   puts $CHECK_OUTPUT "grpid is \"$real_pid\" on host \"$CHECK_HOST\""
+   set real_pid [get_grppid_of_job $jobid $host]
+   puts $CHECK_OUTPUT "grpid is \"$real_pid\" on host \"$host\""
 
 
    set time_now [timestamp]
@@ -4306,9 +4406,8 @@ proc get_suspend_state_of_job { jobid { pidlist pid_list } {do_error_check 1} { 
 
    set have_errors 0
    while { [timestamp] < $time_out } {
-
       # get current process list (ps)
-      get_ps_info $real_pid "local" ps_list
+      get_ps_info $real_pid $host ps_list
       
    
       # copy pid_list from ps_list
@@ -5469,7 +5568,7 @@ proc startup_qmaster { {and_scheduler 1} } {
 
    if { $master_debug != 0 } {
       puts $CHECK_OUTPUT "using DISPLAY=${CHECK_DISPLAY_OUTPUT}"
-      start_remote_prog "$CHECK_CORE_MASTER" "$startup_user" "/usr/openwin/bin/xterm" "-bg darkolivegreen -fg navajowhite -sl 5000 -sb -j -display $CHECK_DISPLAY_OUTPUT -e $CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/debug_starter.sh /tmp/out.$CHECK_USER.qmaster.$CHECK_CORE_MASTER \"$CHECK_SGE_DEBUG_LEVEL\" $ts_config(product_root)/bin/${arch}/sge_qmaster &" prg_exit_state 60 2 ""
+      start_remote_prog "$CHECK_CORE_MASTER" "$startup_user" "/usr/bin/X11/xterm" "-bg darkolivegreen -fg navajowhite -sl 5000 -sb -j -display $CHECK_DISPLAY_OUTPUT -e $CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/debug_starter.sh /tmp/out.$CHECK_USER.qmaster.$CHECK_CORE_MASTER \"$CHECK_SGE_DEBUG_LEVEL\" $ts_config(product_root)/bin/${arch}/sge_qmaster &" prg_exit_state 60 2 ""
    } else {
       start_remote_prog "$CHECK_CORE_MASTER" "$startup_user" "$ts_config(product_root)/bin/${arch}/sge_qmaster" ";sleep 2"
    }
@@ -5479,7 +5578,7 @@ proc startup_qmaster { {and_scheduler 1} } {
       if { $schedd_debug != 0 } {
          puts $CHECK_OUTPUT "using DISPLAY=${CHECK_DISPLAY_OUTPUT}"
          puts $CHECK_OUTPUT "starting schedd as $startup_user" 
-         start_remote_prog "$CHECK_CORE_MASTER" "$startup_user" "/usr/openwin/bin/xterm" "-bg darkolivegreen -fg navajowhite -sl 5000 -sb -j -display $CHECK_DISPLAY_OUTPUT -e $CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/debug_starter.sh /tmp/out.$CHECK_USER.schedd.$CHECK_CORE_MASTER \"$CHECK_SGE_DEBUG_LEVEL\" $ts_config(product_root)/bin/${arch}/sge_schedd &" prg_exit_state 60 2 ""
+         start_remote_prog "$CHECK_CORE_MASTER" "$startup_user" "/usr/bin/X11/xterm" "-bg darkolivegreen -fg navajowhite -sl 5000 -sb -j -display $CHECK_DISPLAY_OUTPUT -e $CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/debug_starter.sh /tmp/out.$CHECK_USER.schedd.$CHECK_CORE_MASTER \"$CHECK_SGE_DEBUG_LEVEL\" $ts_config(product_root)/bin/${arch}/sge_schedd &" prg_exit_state 60 2 ""
       } else {
          puts $CHECK_OUTPUT "starting schedd as $startup_user" 
          set result [start_remote_prog "$CHECK_CORE_MASTER" "$startup_user" "$ts_config(product_root)/bin/${arch}/sge_schedd" ";sleep 5"]
@@ -5541,7 +5640,7 @@ proc startup_scheduler {} {
 
    if { $schedd_debug != 0 } {
       puts $CHECK_OUTPUT "using DISPLAY=${CHECK_DISPLAY_OUTPUT}"
-      start_remote_prog "$CHECK_CORE_MASTER" "$startup_user" "/usr/openwin/bin/xterm" "-bg darkolivegreen -fg navajowhite -sl 5000 -sb -j -display $CHECK_DISPLAY_OUTPUT -e $CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/debug_starter.sh /tmp/out.$CHECK_USER.schedd.$CHECK_CORE_MASTER \"$CHECK_SGE_DEBUG_LEVEL\" $ts_config(product_root)/bin/${arch}/sge_schedd &" prg_exit_state 60 2 ""
+      start_remote_prog "$CHECK_CORE_MASTER" "$startup_user" "/usr/bin/X11/xterm" "-bg darkolivegreen -fg navajowhite -sl 5000 -sb -j -display $CHECK_DISPLAY_OUTPUT -e $CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/debug_starter.sh /tmp/out.$CHECK_USER.schedd.$CHECK_CORE_MASTER \"$CHECK_SGE_DEBUG_LEVEL\" $ts_config(product_root)/bin/${arch}/sge_schedd &" prg_exit_state 60 2 ""
    } else {
       start_remote_prog "$CHECK_CORE_MASTER" "$startup_user" "$ts_config(product_root)/bin/${arch}/sge_schedd" ""
    }
@@ -5911,8 +6010,6 @@ proc shutdown_qmaster {hostname qmaster_spool_dir} {
    puts $CHECK_OUTPUT "killing qmaster on host $hostname ..."
    puts $CHECK_OUTPUT "retrieving data from spool dir $qmaster_spool_dir"
 
-
-
    set qmaster_pid -1
 
    set qmaster_pid [ start_remote_prog "$hostname" "$CHECK_USER" "cat" "$qmaster_spool_dir/qmaster.pid" ]
@@ -5921,11 +6018,9 @@ proc shutdown_qmaster {hostname qmaster_spool_dir} {
       set qmaster_pid -1
    }
  
-
    get_ps_info $qmaster_pid $hostname
    if { ($ps_info($qmaster_pid,error) == 0) } {
       if { [ is_pid_with_name_existing $hostname $qmaster_pid "sge_qmaster" ] == 0 } { 
-
          puts $CHECK_OUTPUT "killing qmaster with pid $qmaster_pid on host $hostname"
          puts $CHECK_OUTPUT "do a qconf -km ..."
 
@@ -5943,6 +6038,7 @@ proc shutdown_qmaster {hostname qmaster_spool_dir} {
       add_proc_error "shutdown_qmaster" "-1" "ps_info failed (2), pid=$qmaster_pid"
       set qmaster_pid -1
    }
+
    puts $CHECK_OUTPUT "done."
 }  
 
@@ -6453,6 +6549,16 @@ proc shutdown_core_system {} {
       }
    }
 
+   # check for core files
+   # core file in qmaster spool directory
+   set spooldir [get_spool_dir $ts_config(master_host) qmaster]
+   check_for_core_files $ts_config(master_host) $spooldir
+
+   # core files in execd spool directories
+   foreach host $ts_config(execd_nodes) { 
+      set spooldir [get_spool_dir $host execd] 
+      check_for_core_files $host "$spooldir/$host"
+   }
 }
 
 #****** sge_procedures/startup_core_system() ***********************************
@@ -6656,6 +6762,9 @@ proc delete_operator {anOperator} {
 #     options       - options to the submit command
 #     script        - script to start
 #     args          - arguments to the script
+#     tail_host     - host on which a tail to the output file will be done.
+#                     This may be important, it should be the host where the job, or
+#                     the master task of the job is run to avoid NFS latencies.
 #
 #  RESULT
 #     a session id from open_spawn_process, or an empty string ("") on error
@@ -6665,18 +6774,16 @@ proc delete_operator {anOperator} {
 #
 #*******************************
 #
-proc submit_with_method {submit_method options script args} {
+proc submit_with_method {submit_method options script args tail_host} {
    global ts_config
    global CHECK_OUTPUT CHECK_HOST CHECK_USER 
    global CHECK_PROTOCOL_DIR
-   global file_procedure_logfile_wait_sp_id
   
    # preprocessing args - it is treated as list for some reason - options not.
    set job_args [lindex $args 0]
    foreach arg [lrange $args 1 end] {
       append job_args " $arg"
    }
-   
   
    switch -exact $submit_method {
       qsub {
@@ -6685,11 +6792,9 @@ proc submit_with_method {submit_method options script args} {
          set job_output_file "$CHECK_PROTOCOL_DIR/check.out"
          catch {exec touch $job_output_file} output
          # initialize tail to logfile
-         init_logfile_wait $CHECK_HOST $job_output_file
+         set sid [init_logfile_wait $tail_host $job_output_file]
          # submit job
          submit_job "-o $job_output_file -j y $options $script $job_args" 1 60
-         # return global file handle
-         set sid $file_procedure_logfile_wait_sp_id
       }
 
       qrsh {

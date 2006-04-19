@@ -76,6 +76,7 @@
 #include "sge_var.h"
 #include "sge_gdi.h"
 #include "sge_profiling.h"
+#include "sge_mt_init.h"
 
 #include "msg_clients_common.h"
 #include "msg_qsh.h"
@@ -427,6 +428,7 @@ static char *read_from_qrsh_socket(int msgsock)
    } while (*c++ != 0); 
 
    close(msgsock);
+   DEXIT;
    return buffer;
 }
 
@@ -477,7 +479,7 @@ static int get_remote_exit_code(int sock)
       if(s_ret && *s_ret) {
          char *message = strchr(s_ret, ':');
          if(message != NULL && strlen(message) > 0) {
-            fprintf(stderr, message + 1);
+            fprintf(stderr, "%s\n", message + 1);
             *message = 0;
          }
          VERBOSE_LOG((stderr, "%s\n", s_ret));
@@ -675,35 +677,41 @@ static int start_client_program(const char *client_name,
       return 1;
    }
 
-   if(child_pid) {
+   if (child_pid) {
+      bool done;
+
       sge_unblock_all_signals();
       signal(SIGINT,  forward_signal);
       signal(SIGQUIT, forward_signal);
       signal(SIGTERM, forward_signal);
-   
-      while(1) {
+  
+      done = false;
+      while (!done) {
          int status;
 
       /* Always try to get exit code (or error) from shepherd.
        * If rsh didn't return EXIT_SUCCESS or didn't exit (!WIFEXITED), 
        * output a message "cleaning up ..." and delete the job
        */
-         if(waitpid(child_pid, &status, 0) == child_pid) {
+         if (waitpid(child_pid, &status, 0) == child_pid) {
             int ret = -1;  /* default: delete job */
 
-            if(WIFEXITED(status)) {
+            if (WIFEXITED(status)) {
                ret = WEXITSTATUS(status);
                VERBOSE_LOG((stderr, MSG_QSH_EXITEDWITHCODE_SI, client_name, ret));
+               VERBOSE_LOG((stderr, "\n"));
             }
 
-            if(WIFSIGNALED(status)) {
+            if (WIFSIGNALED(status)) {
                int code = WTERMSIG(status);
-               VERBOSE_LOG((stderr, MSG_QSH_EXITEDONSIGNAL_SIS, client_name, code, sge_sys_sig2str(code)));
+               VERBOSE_LOG((stderr, MSG_QSH_EXITEDONSIGNAL_SIS, client_name, 
+                           code, sge_sys_sig2str(code)));
+               VERBOSE_LOG((stderr, "\n"));
                /* if not qrsh <command>: use default: delete job */
             }
 
             /* get exit code from shepherd for qrsh <command> */
-            if(is_rsh) {
+            if (is_rsh) {
                ret = get_remote_exit_code(sock);
             }
 
@@ -884,8 +892,8 @@ static int get_client_server_context(int msgsock, char **port, char **job_dir, c
 *     get_client_name -- get path and name of client program to start
 *
 *  SYNOPSIS
-*     static char *get_client_name(int is_rsh, int is_rlogin, 
-*                                  int inherit_job);
+*     static const char *
+*     get_client_name(int is_rsh, int is_rlogin, int inherit_job);
 *
 *  FUNCTION
 *     Determines path and name of the client program to start 
@@ -911,87 +919,140 @@ static int get_client_server_context(int msgsock, char **port, char **job_dir, c
 *     path and name of client program
 *     NULL, if an error occures
 *
+*  NOTE
+*     It is in the responsibility of the caller to free the client name!
+*
+*  MT-NOTE
+*     get_client_name is thread safe 
 ****************************************************************************
 *
 */
-static const char *get_client_name(int is_rsh, int is_rlogin, int inherit_job)
+static const char *
+get_client_name(int is_rsh, int is_rlogin, int inherit_job)
 {
+   /* this is what we return */
+   const char *client_name  = NULL;
+
+   /* config lists and entries to retrieve client_name from qmaster */
    lList     *conf_list       = NULL;
    lListElem *global          = NULL; 
    lListElem *local           = NULL;
    lListElem *qlogin_cmd_elem = NULL;
 
-   static char *session_type = "telnet";
-   char        *config_name  = "qlogin_command";
-   const char  *client_name  = NULL;
-   static char cache_name[SGE_PATH_MAX];
+   /* session type and config entry name */
+   const char *session_type;
+   const char *config_name;
+
+   /* filename of client command cache in case of qrsh -inherit */
+   char cache_name_buffer[SGE_PATH_MAX];
+   dstring cache_name_dstring;
+   const char *cache_name = NULL;
 
    DENTER(TOP_LAYER, "get_client_name");
 
-   if(is_rsh) { 
-      session_type = "rsh"; 
-      config_name  = "rsh_command";
-   }
-              
-   if(is_rlogin) { 
-      session_type = "rlogin"; 
-      config_name  = "rlogin_command";
-   }
-  
-   /* if rsh, try to read from file */
-   if(inherit_job) {
+   /* 
+    * In case of qrsh -inherit, try to read client_command from a cache file.
+    * The cache file is created in the jobs TMPDIR.
+    */
+   if (inherit_job) {
       char *tmpdir = getenv("TMPDIR");
-      *cache_name = 0;
-      if(tmpdir) {
+      /*
+       * If TMPDIR is not set for some reason (should never occur), 
+       * we cannot read a cache.
+       * cache_name remains NULL, which is checked by the code trying
+       * to write the cache file later on
+       */
+      if (tmpdir != NULL) {
          FILE *cache;
-         sprintf(cache_name, "%s/%s", tmpdir, QRSH_CLIENT_CACHE);
-         if((cache = fopen(cache_name, "r")) != NULL) {
-            if(fgets(cache_name, SGE_PATH_MAX, cache) != NULL) {
+
+         /* build filename of cache file */
+         sge_dstring_init(&cache_name_dstring, cache_name_buffer, SGE_PATH_MAX);
+         cache_name = sge_dstring_sprintf(&cache_name_dstring, "%s/%s", 
+                                          tmpdir, QRSH_CLIENT_CACHE);
+         /* try to read cache file */
+         cache = fopen(cache_name, "r");
+         if (cache != NULL) {
+            char cached_command[SGE_PATH_MAX];
+
+            if (fgets(cached_command, SGE_PATH_MAX, cache) != NULL) {
                fclose(cache);
-               DPRINTF(("found cached client name: %s\n", cache_name));
+               DPRINTF(("found cached client name: %s\n", cached_command));
                DEXIT;
-               return cache_name;
+               return strdup(cached_command);
             }
+            fclose(cache);
          }
       }
    }
+ 
+   /* set session type and the corresponding config entry name */
+   if(is_rsh) { 
+      session_type = "rsh"; 
+      config_name  = "rsh_command";
+   } else if(is_rlogin) { 
+      session_type = "rlogin"; 
+      config_name  = "rlogin_command";
+   } else {
+      session_type = "telnet"; 
+      config_name  = "qlogin_command";
+   }
   
    /* get configuration from qmaster */
-   if(get_configuration(uti_state_get_qualified_hostname(), &global, &local) ||
-      merge_configuration(global, local, &conf, &conf_list)) {
+   if(get_configuration(uti_state_get_qualified_hostname(), &global, &local) != 0 ||
+      merge_configuration(global, local, &conf_list) != 0) {
       ERROR((SGE_EVENT, MSG_CONFIG_CANTGETCONFIGURATIONFROMQMASTER));
+      lFreeList(&conf_list);
+      lFreeElem(&global);
+      lFreeElem(&local);
       DEXIT;
       return NULL;
    }
 
    /* search for config entry */
    qlogin_cmd_elem = lGetElemStr(conf_list, CF_name, config_name);
-   if(!qlogin_cmd_elem) {
+   if(qlogin_cmd_elem == NULL) {
       ERROR((SGE_EVENT, MSG_CONFIG_CANTGETCONFIGURATIONFROMQMASTER));
+      lFreeList(&conf_list);
+      lFreeElem(&global);
+      lFreeElem(&local);
       DEXIT;
       return NULL;
    }
 
+   /* use config entry, if found */
    client_name = lGetString(qlogin_cmd_elem, CF_value);
 
-   /* default handling */
-   if(client_name == NULL || !strcmp(client_name, "none")) {
+   /* 
+    * If no command is configured, or none is configured as command,
+    * use a default: The rsh/rlogin distributed with SGE or telnet.
+    */
+   if(client_name == NULL || sge_strnullcasecmp(client_name, "none") == 0) {
       if(is_rsh || is_rlogin) {
-         /* use path $ROOT/utilbin/$ARCH/sessionType */
-         static char cmdpath[1024];
+         char default_buffer[SGE_PATH_MAX];
+         dstring default_dstring;
 
-         sprintf(cmdpath, "%s/utilbin/%s/%s", path_state_get_sge_root(), sge_get_arch(), session_type);
-         client_name = cmdpath;
+         sge_dstring_init(&default_dstring, default_buffer, SGE_PATH_MAX);
+         sge_dstring_sprintf(&default_dstring, "%s/utilbin/%s/%s", 
+                             path_state_get_sge_root(), sge_get_arch(), 
+                             session_type);
+         client_name = strdup(sge_dstring_get_string(&default_dstring));
       } else {
          /* try to find telnet in PATH */
-         client_name = session_type;
+         client_name = strdup(session_type);
       }
-   } 
+   } else {
+      client_name = strdup(client_name);
+   }
+
 
    if(inherit_job) {
-      /* cache client_name for use of further qrexec calls */
+      /* cache client_name for use in further qrsh -inherit calls */
       write_client_name_cache(cache_name, client_name);
    }
+
+   lFreeList(&conf_list);
+   lFreeElem(&global);
+   lFreeElem(&local);
 
    return client_name;
 }
@@ -1030,17 +1091,14 @@ static const char *get_client_name(int is_rsh, int is_rlogin, int inherit_job)
 *******************************************************************************/
 void write_client_name_cache(const char *cache_path, const char *client_name) 
 {
-   if(cache_path && *cache_path && client_name && *client_name) {
+   if (cache_path != NULL && *cache_path != '\0' && 
+       client_name != NULL && *client_name != '\0') {
       FILE *cache = NULL;
    
       if((cache = fopen(cache_path, "w")) != NULL) {
          fprintf(cache, client_name);
          fclose(cache);
       }
-
-#if 0
-      fprintf(stderr, "Wrote cached client name %s to file %s\n", client_name, cache_path);
-#endif      
    }
 }
 
@@ -1069,6 +1127,7 @@ void write_client_name_cache(const char *cache_path, const char *client_name)
 static void set_job_info(lListElem *job, const char *name, int is_qlogin, 
                          int is_rsh, int is_rlogin)
 {
+   lList* stdout_stderr_path = NULL;
    u_long32 jb_now = lGetUlong(job, JB_type);
    const char *job_name  = lGetString(job, JB_job_name);
    
@@ -1100,6 +1159,10 @@ static void set_job_info(lListElem *job, const char *name, int is_qlogin,
 
    lSetUlong(job, JB_type, jb_now);
    lSetString(job, JB_job_name, job_name);
+
+   cull_parse_path_list(&stdout_stderr_path, "/dev/null");
+   lSetList(job, JB_stdout_path_list, lCopyList("stdout_path_list", stdout_stderr_path));
+   lSetList(job, JB_stderr_path_list, lCopyList("stderr_path_list", stdout_stderr_path));
 }
 
 /****** Interactive/qsh/set_command_to_env() ***************************************
@@ -1212,7 +1275,7 @@ int main(int argc, char **argv)
 
    DENTER_MAIN(TOP_LAYER, "qsh");
 
-   sge_prof_setup();
+   sge_mt_init();
 
    /*
    ** get command name: qlogin, qrsh or qsh
@@ -1262,7 +1325,7 @@ int main(int argc, char **argv)
    */
    opt_list_append_opts_from_default_files(&opts_defaults, &alp, environ);
    do_exit = parse_result_list(alp, &alp_error);
-   lFreeList(alp);
+   lFreeList(&alp);
 
    if (alp_error) {
       sge_prof_cleanup();
@@ -1274,7 +1337,7 @@ int main(int argc, char **argv)
    */
    alp = cull_parse_cmdline(argv + 1, environ, &opts_cmdline, FLG_USE_PSEUDOS);
    do_exit = parse_result_list(alp, &alp_error);
-   lFreeList(alp);
+   lFreeList(&alp);
 
    if (alp_error) {
       sge_prof_cleanup();
@@ -1288,7 +1351,7 @@ int main(int argc, char **argv)
       answer_list_add(&answer, SGE_EVENT, 
                       STATUS_EMALLOC, ANSWER_QUALITY_ERROR);
       do_exit = parse_result_list(alp, &alp_error);
-      answer = lFreeList(answer);
+      lFreeList(&answer);
       
       if (alp_error) {
          sge_prof_cleanup();
@@ -1304,13 +1367,13 @@ int main(int argc, char **argv)
 
    /* set verbosity */
    while ((ep = lGetElemStr(opts_cmdline, SPA_switch, "-verbose"))) {
-      lRemoveElem(opts_cmdline, ep);
+      lRemoveElem(opts_cmdline, &ep);
       log_state_set_log_verbose(1);
    }
 
    /* parse -noshell */
    while ((ep = lGetElemStr(opts_cmdline, SPA_switch, "-noshell"))) {
-      lRemoveElem(opts_cmdline, ep);
+      lRemoveElem(opts_cmdline, &ep);
       noshell = 1;
    }
 
@@ -1319,12 +1382,12 @@ int main(int argc, char **argv)
    */
    if(is_rsh) {
       while ((ep = lGetElemStr(opts_cmdline, SPA_switch, "-nostdin"))) {
-         lRemoveElem(opts_cmdline, ep);
+         lRemoveElem(opts_cmdline, &ep);
          nostdin = 1;
       }
      
       while ((ep = lGetElemStr(opts_cmdline, SPA_switch, "-inherit"))) {
-         lRemoveElem(opts_cmdline, ep);
+         lRemoveElem(opts_cmdline, &ep);
          inherit_job = 1;
       }
      
@@ -1365,9 +1428,9 @@ int main(int argc, char **argv)
             lDechainElem(opts_cmdline, ep);
             lAppendElem(opts_qrsh, ep);
            
-            new_name = sge_basename(lGetString(ep, SPA_argval_lStringT), '/');
+            new_name = sge_jobname(lGetString(ep, SPA_argval_lStringT));
             if(new_name != NULL) {
-               strncpy(name, new_name, MAX_JOB_NAME); 
+               sge_strlcpy(name, new_name, MAX_JOB_NAME); 
             }
 
             while((ep = lGetElemStr(opts_cmdline, SPA_switch, "jobarg"))) {
@@ -1405,10 +1468,10 @@ int main(int argc, char **argv)
 
       /* remove the binary option from commandline before proceeding */
       while ((ep = lGetElemStr(opts_defaults, SPA_switch, "-b"))) {
-         lRemoveElem(opts_defaults, ep);
+         lRemoveElem(opts_defaults, &ep);
       }
       while ((ep = lGetElemStr(opts_cmdline, SPA_switch, "-b"))) {
-         lRemoveElem(opts_cmdline, ep);
+         lRemoveElem(opts_cmdline, &ep);
       }
 
       /* set binary bit or handle script submission */
@@ -1436,7 +1499,7 @@ int main(int argc, char **argv)
          opt_list_append_opts_from_script(&opts_scriptfile, &alp, 
                                           opts_qrsh, environ);
          do_exit = parse_result_list(alp, &alp_error);
-         lFreeList(alp);
+         lFreeList(&alp);
 
          if (alp_error) {
             sge_prof_cleanup();
@@ -1446,11 +1509,11 @@ int main(int argc, char **argv)
          /* set length and script contents in job */
          if ((ep = lGetElemStr(opts_scriptfile, SPA_switch, STR_PSEUDO_SCRIPTLEN))) {
             lSetUlong(job, JB_script_size, lGetUlong(ep, SPA_argval_lUlongT));
-            lRemoveElem(opts_scriptfile, ep);
+            lRemoveElem(opts_scriptfile, &ep);
          }
          if ((ep = lGetElemStr(opts_scriptfile, SPA_switch, STR_PSEUDO_SCRIPTPTR))) {
             lSetString(job, JB_script_ptr, lGetString(ep, SPA_argval_lStringT));
-            lRemoveElem(opts_scriptfile, ep);
+            lRemoveElem(opts_scriptfile, &ep);
          }
       }   
    }
@@ -1465,12 +1528,11 @@ int main(int argc, char **argv)
 
    opt_list_merge_command_lines(&opts_all, &opts_defaults, &opts_scriptfile,
                                 &opts_cmdline);
-   
 
    alp = cull_parse_qsh_parameter(opts_all, &job);
    do_exit = parse_result_list(alp, &alp_error);
-   lFreeList(alp);
-   lFreeList(opts_all);
+   lFreeList(&alp);
+   lFreeList(&opts_all);
    if (alp_error) {
       sge_prof_cleanup();
       SGE_EXIT(1);
@@ -1485,7 +1547,6 @@ int main(int argc, char **argv)
    }   
    
    if (!existing_job) {
-      set_job_info(job, name, is_qlogin, is_rsh, is_rlogin); 
       DPRINTF(("Everything ok\n"));
 #ifndef NO_SGE_COMPILE_DEBUG
       if (rmon_mlgetl(&DEBUG_ON, TOP_LAYER) & INFOPRINT) { 
@@ -1504,6 +1565,7 @@ int main(int argc, char **argv)
       */
       if (set_sec_cred(job) != 0) {
          fprintf(stderr, MSG_SEC_SETJOBCRED);
+         fprintf(stderr, "\n");
          SGE_EXIT(1);
       }   
 
@@ -1553,6 +1615,7 @@ int main(int argc, char **argv)
       sge_tid_t tid;
      
       VERBOSE_LOG((stderr, MSG_QSH_SENDINGTASKTO_S, host)); 
+      VERBOSE_LOG((stderr, "\n"));
 
 #if 0
       /* if we had a connection to qmaster commd (to get configuration), close it and reset commproc id */
@@ -1578,6 +1641,7 @@ int main(int argc, char **argv)
       }
 
       VERBOSE_LOG((stderr, MSG_QSH_SERVERDAEMONSUCCESSFULLYSTARTEDWITHTASKID_S, tid)); 
+      VERBOSE_LOG((stderr, "\n"));
 
       if((msgsock = wait_for_qrsh_socket(sock, QSH_SOCKET_FINAL_TIMEOUT)) == -1) {
          ERROR((SGE_EVENT,MSG_QSH_CANNOTGETCONNECTIONTOQLOGIN_STARTER_SS,"shepherd", host));
@@ -1591,11 +1655,12 @@ int main(int argc, char **argv)
       }
 
       VERBOSE_LOG((stderr, MSG_QSH_ESTABLISHINGREMOTESESSIONTO_SS, client_name, host));
+      VERBOSE_LOG((stderr, "\n")); 
 
       exit_status = start_client_program(client_name, opts_qrsh, host, port, job_dir, utilbin_dir,
                                          is_rsh, is_rlogin, nostdin, noshell, sock);
       /* CR: TODO: This code is not active because there is no need to wait for an
-       *           task exit message. The exit_status is allready reported by 
+       *           task exit message. The exit_status is already reported by 
        *           start_client_program().
        *
        *           The code who sends the task exit message is located in the execd code
@@ -1630,24 +1695,26 @@ int main(int argc, char **argv)
 
       /* reinitialize 'job' with pointer to new version from qmaster */
       job = lFirst(lp_jobs);
- 
+      if (job) {
+        job_id = lGetUlong(job, JB_job_number );
+      } else {
+        job_id = 0;
+      }
+      DPRINTF(("job id is: %ld\n", job_id));
+
       for_each(aep, alp) {
          status = lGetUlong(aep, AN_status);
          quality = lGetUlong(aep, AN_quality);
          if (quality == ANSWER_QUALITY_ERROR) {
-            ERROR((SGE_EVENT, "%s", lGetString(aep, AN_text)));
+            fprintf(stderr, "%s\n", lGetString(aep, AN_text));
             do_exit = 1;
          }
          else if (quality == ANSWER_QUALITY_WARNING) {
-            WARNING((SGE_EVENT, "%s", lGetString(aep, AN_text)));
+            fprintf(stderr, "%s\n", lGetString(aep, AN_text));
          } else {
-            INFO((SGE_EVENT, "%s", lGetString(aep, AN_text)));
-            if (job) {
-               job_id = lGetUlong(job, JB_job_number );
-            } else {
-               job_id = 0;
+            if (log_state_get_log_verbose()) {
+               fprintf(stdout, "%s\n", lGetString(aep, AN_text));
             }
-            DPRINTF(("job id is: %ld\n", job_id));
          }
       }
 
@@ -1655,8 +1722,8 @@ int main(int argc, char **argv)
          do_exit = 1;
    
       if (do_exit) {
-         lFreeList(alp);
-         lFreeList(lp_jobs);
+         lFreeList(&alp);
+         lFreeList(&lp_jobs);
          if (status == STATUS_NOTOK_DOAGAIN) { 
             sge_prof_cleanup();
             SGE_EXIT(status);
@@ -1696,22 +1763,34 @@ int main(int argc, char **argv)
             msgsock = wait_for_qrsh_socket(sock, random_poll); 
 
             /* qlogin_starter reports "ready to start" */
-            if(msgsock > 0) {
+            if(msgsock >= 0) {
                if(!get_client_server_context(msgsock, &port, &job_dir, &utilbin_dir, &host)) {
+                  cl_com_ignore_timeouts(CL_FALSE);
+                  cl_commlib_open_connection(cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name(),0),
+                                     (char*) sge_get_master(0),
+                                     (char*) prognames[QMASTER],
+                                     1);
                   delete_job(job_id, lp_jobs);
                   do_exit = 1;
                   exit_status = 1;
                   break;
                }
-   
+               VERBOSE_LOG((stderr, "\n")); 
                VERBOSE_LOG((stderr, MSG_QSH_INTERACTIVEJOBHASBEENSCHEDULED_S, 
                             job_get_id_string(job_id, 0, NULL)));
+               VERBOSE_LOG((stderr, "\n")); 
                VERBOSE_LOG((stderr, MSG_QSH_ESTABLISHINGREMOTESESSIONTO_SS, client_name, host));
+               VERBOSE_LOG((stderr, "\n")); 
 
                exit_status = start_client_program(client_name, opts_qrsh, host, port, job_dir, utilbin_dir,
                                                   is_rsh, is_rlogin, nostdin, noshell, sock);
                if(exit_status < 0) {
                   WARNING((SGE_EVENT, MSG_QSH_CLEANINGUPAFTERABNORMALEXITOF_S, client_name));
+                  cl_com_ignore_timeouts(CL_FALSE);
+                  cl_commlib_open_connection(cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name(),0),
+                                     (char*) sge_get_master(0),
+                                     (char*) prognames[QMASTER],
+                                     1);
                   delete_job(job_id, lp_jobs);
                   exit_status = EXIT_FAILURE;
                }
@@ -1723,7 +1802,11 @@ int main(int argc, char **argv)
             /* wait for qsh job to be scheduled */
             sleep(random_poll);
          }   
-   
+         cl_com_ignore_timeouts(CL_FALSE);
+         cl_commlib_open_connection(cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name(),0),
+                                   (char*) sge_get_master(0),
+                                   (char*) prognames[QMASTER],
+                                    1);
          /* get job from qmaster: to handle qsh and to detect deleted qrsh job */
          what = lWhat("%T(%I)", JB_Type, JB_ja_tasks); 
          where = lWhere("%T(%I==%u)", JB_Type, JB_job_number, job_id); 
@@ -1732,9 +1815,9 @@ int main(int argc, char **argv)
    
          do_exit = parse_result_list(alp, &alp_error);
    
-         lFreeWhere(where);
-         lFreeWhat(what);
-         alp = lFreeList(alp);
+         lFreeWhere(&where);
+         lFreeWhat(&what);
+         lFreeList(&alp);
    
          do_shut = shut_me_down;
          if (do_shut || do_exit) {
@@ -1749,7 +1832,7 @@ int main(int argc, char **argv)
             continue;
          }
   
-         if (!lp_poll || !(jep = lFirst(lp_poll))) {
+         if ( (lp_poll == NULL || lGetNumberOfElem(lp_poll) == 0 ) || !(jep = lFirst(lp_poll))) {
             WARNING((SGE_EVENT, "\n"));
             log_state_set_log_verbose(1);
             WARNING((SGE_EVENT, MSG_QSH_REQUESTCANTBESCHEDULEDTRYLATER_S, uti_state_get_sge_formal_prog_name()));
@@ -1775,8 +1858,10 @@ int main(int argc, char **argv)
    
             case JRUNNING:
             case JTRANSFERING:
+               VERBOSE_LOG((stderr, "\n")); 
                VERBOSE_LOG((stderr, MSG_QSH_INTERACTIVEJOBHASBEENSCHEDULED_S, 
                             job_get_id_string(job_id, 0, NULL)));
+               VERBOSE_LOG((stderr, "\n")); 
    
                /* in case of qlogin: has been scheduled / is transitting just after */
                /* timeout -> loop */
@@ -1800,7 +1885,7 @@ int main(int argc, char **argv)
                break;
          }
    
-         lp_poll = lFreeList(lp_poll);
+         lFreeList(&lp_poll);
 
          if(!do_exit && polling_interval < QSH_POLLING_MAX) {
             polling_interval *= 2;
@@ -1808,10 +1893,10 @@ int main(int argc, char **argv)
          }
       } /* end of while (1) polling */
    
-      lp_jobs = lFreeList(lp_jobs);
-   
+      lFreeList(&lp_jobs);
    }
 
+   FREE(client_name);
    sge_prof_cleanup();
    SGE_EXIT(exit_status);
    DEXIT;
@@ -1875,11 +1960,11 @@ static void remove_unknown_opts(lList *lp, u_long32 jb_now, int tightly_integrat
                sge_prof_cleanup();
                SGE_EXIT(EXIT_FAILURE);
             } else {
-               lRemoveElem(lp, ep);
+               lRemoveElem(lp, &ep);
                continue;
             }
          }
-          
+
          if(strcmp(cp, "jobarg") && strcmp(cp, "script") &&
             strcmp(cp, "-A") && strcmp(cp, "-cell") && strcmp(cp, "-clear") && 
             strcmp(cp, "-cwd") && strcmp(cp, "-hard") && strcmp(cp, "-help") &&
@@ -1891,14 +1976,15 @@ static void remove_unknown_opts(lList *lp, u_long32 jb_now, int tightly_integrat
             strcmp(cp, "-V") && strcmp(cp, "-display") && strcmp(cp, "-verify") &&
             strcmp(cp, "-soft") && strcmp(cp, "-M") && strcmp(cp, "-verbose") &&
             strcmp(cp, "-ac") && strcmp(cp, "-dc") && strcmp(cp, "-sc") &&
-            strcmp(cp, "-S") && strcmp(cp, "-w")
+            strcmp(cp, "-S") && strcmp(cp, "-w") && strcmp(cp, "-js") && strcmp(cp, "-R") &&
+            strcmp(cp, "-o") && strcmp(cp, "-e") && strcmp(cp, "-j")
            ) {
             if(error) {
                ERROR((SGE_EVENT, MSG_ANSWER_UNKOWNOPTIONX_S, cp));
                sge_prof_cleanup();
                SGE_EXIT(EXIT_FAILURE);
             } else {
-               lRemoveElem(lp, ep);
+               lRemoveElem(lp, &ep);
                continue;
             }
          }
@@ -1915,7 +2001,7 @@ static void remove_unknown_opts(lList *lp, u_long32 jb_now, int tightly_integrat
                   sge_prof_cleanup();
                   SGE_EXIT(EXIT_FAILURE);
                } else {
-                  lRemoveElem(lp, ep);
+                  lRemoveElem(lp, &ep);
                   continue;
                }
             }
@@ -1929,7 +2015,7 @@ static void remove_unknown_opts(lList *lp, u_long32 jb_now, int tightly_integrat
                   sge_prof_cleanup();
                   SGE_EXIT(EXIT_FAILURE);
                } else {
-                  lRemoveElem(lp, ep);
+                  lRemoveElem(lp, &ep);
                   continue;
                }
             }
@@ -1947,7 +2033,7 @@ static void remove_unknown_opts(lList *lp, u_long32 jb_now, int tightly_integrat
                   sge_prof_cleanup();
                   SGE_EXIT(EXIT_FAILURE);
                } else {
-                  lRemoveElem(lp, ep);
+                  lRemoveElem(lp, &ep);
                   continue;
                }
             }

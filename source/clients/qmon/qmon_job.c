@@ -66,6 +66,7 @@
 #include "sge_time.h"
 #include "sge_job_schedd.h"
 #include "sge_all_listsL.h"
+#include "sge_answer.h"
 #include "sge_utility.h"
 #include "sge_feature.h"
 #include "qmon_matrix.h"
@@ -77,7 +78,6 @@
 #include "sge_support.h"
 #include "sge_job.h"
 #include "sge_range.h"
-#include "sge_answer.h"
 #include "sge_object.h"
 #include "sge_centry.h"
 #include "sge_cqueue.h"
@@ -167,7 +167,7 @@ XtPointer cld, cad;
                             &alp);
       if (alp) {
          qmonMessageBox(w, alp, 0);
-         alp = lFreeList(alp);
+         lFreeList(&alp);
          /* set normal cursor */
          XmtDisplayDefaultCursor(w);
          DEXIT;
@@ -231,7 +231,7 @@ XtPointer cld, cad;
    qmonMirrorMultiAnswer(JOB_T|CQUEUE_T|EXECHOST_T|ZOMBIE_T|USERSET_T|PROJECT_T, &alp);
    if (alp) {
       qmonMessageBox(w, alp, 0);
-      alp = lFreeList(alp);
+      lFreeList(&alp);
       /* set default cursor */
       XmtDisplayDefaultCursor(w);
       return;
@@ -678,7 +678,7 @@ void updateJobList(void)
    /*
    ** we need the ql no longer, free it
    */
-   ql = lFreeList(ql);
+   lFreeList(&ql);
 
    /*
    ** sort the jobs according to priority
@@ -775,7 +775,7 @@ void updateJobList(void)
                tow++;                                                            
             }
          }
-         rtasks = lFreeList(rtasks);
+         lFreeList(&rtasks);
          row += tow;
       }
       /*
@@ -789,7 +789,7 @@ void updateJobList(void)
             while (( task_group = ja_task_list_split_group(&ptasks))) {
                qmonJobToMatrix(job_pending_jobs, jep, NULL, task_group,
                               JOB_DISPLAY_MODE_PENDING, pow);
-               task_group = lFreeList(task_group);
+               lFreeList(&task_group);
                pow++;
             }
          } else {
@@ -800,7 +800,7 @@ void updateJobList(void)
             }
             pow++;
          }
-         ptasks = lFreeList(ptasks);
+          lFreeList(&ptasks);
       }
       if (lGetList(jep, JB_ja_n_h_ids) || lGetList(jep, JB_ja_u_h_ids) ||
           lGetList(jep, JB_ja_o_h_ids) || lGetList(jep, JB_ja_s_h_ids)) {
@@ -841,19 +841,19 @@ void updateJobList(void)
          }
          job_destroy_hold_id_lists(jep, range_list);
       }
-      etasks = lFreeList(etasks);
+      lFreeList(&etasks);
    }
 
    /*
    ** free the where/what
    */
-   where_run = lFreeWhere(where_run);
-   where_exiting = lFreeWhere(where_exiting);
-   where_notexiting = lFreeWhere(where_notexiting);
-   where_unfinished = lFreeWhere(where_unfinished);
-   what = lFreeWhat(what);
-   what_queue = lFreeWhat(what_queue);
-   jl = lFreeList(jl);
+   lFreeWhere(&where_run);
+   lFreeWhere(&where_exiting);
+   lFreeWhere(&where_notexiting);
+   lFreeWhere(&where_unfinished);
+   lFreeWhat(&what);
+   lFreeWhat(&what_queue);
+   lFreeList(&jl);
 
    /*
    ** update the zombie job entries
@@ -977,14 +977,14 @@ lList **local
          alp = qmonDelList(SGE_JOB_LIST, local, 
                            ID_str, &sl, NULL, NULL);
          qmonMessageBox(w, alp, 0);
-         alp = lFreeList(alp);
-         sl = lFreeList(sl);
+         lFreeList(&alp);
+         lFreeList(&sl);
       }
 
       updateJobList();
       XbaeMatrixDeselectAll(matrix);
 
-      jl = lFreeList(jl);
+      lFreeList(&jl);
    } 
 #if 0   
    else {
@@ -1080,7 +1080,7 @@ XtPointer cad
          jl = rl;
       }
       else if (rl) {
-         lAddList(jl, rl);
+         lAddList(jl, &rl);
       }
    }
    else {
@@ -1103,8 +1103,8 @@ XtPointer cad
       XbaeMatrixDeselectAll(job_running_jobs);
       XbaeMatrixDeselectAll(job_pending_jobs);
 
-      jl = lFreeList(jl);
-      alp = lFreeList(alp);
+      lFreeList(&jl);
+      lFreeList(&alp);
    }
    else {
       qmonMessageShow(w, True, "@{There are no jobs selected !}");
@@ -1155,11 +1155,11 @@ int nm;
                      lList *alp = NULL;
                      /* TODO: SG: check, if this is correct */
                      if (sge_parse_jobtasks(&ipp, &idp, str, &alp, false, NULL) == -1) {
-                        alp = lFreeList(alp);
+                        lFreeList(&alp);
                         DEXIT;
                         return NULL;
                      }
-                     alp = lFreeList(alp);
+                     lFreeList(&alp);
 
                      if (ipp) {
                         for_each(idp, ipp) {
@@ -1185,7 +1185,7 @@ int nm;
                                          1, JAT_Type);
                         }
                         lSetList(jep, JB_ja_tasks, jat_list);
-                        ipp = lFreeList(ipp);
+                        lFreeList(&ipp);
                      }
                   }
                   break;
@@ -1236,7 +1236,7 @@ XtPointer cad
    if (!jl && rl)
       jl = rl;
    else if (rl)
-      lAddList(jl, rl);
+      lAddList(jl, &rl);
    
    
    if (jl)
@@ -1254,8 +1254,8 @@ XtPointer cad
    
       qmonMessageBox(w, alp, 0);
 
-      jl = lFreeList(jl);
-      alp = lFreeList(alp);
+      lFreeList(&jl);
+      lFreeList(&alp);
 
       /*
       ** we use the callback to get the new job list from master
@@ -1304,7 +1304,7 @@ XtPointer cld, cad;
    if (!jl && rl)
       jl = rl;
    else if (rl)
-      lAddList(jl, rl);
+      lAddList(jl, &rl);
    
    if (jl) {
       dstring dyn_tasks = DSTRING_INIT;
@@ -1365,8 +1365,8 @@ XtPointer cld, cad;
       
          qmonMessageBox(w, alp, 0);
 
-         jl = lFreeList(jl);
-         alp = lFreeList(alp);
+         lFreeList(&jl);
+         lFreeList(&alp);
 
          /*
          ** we use the callback to get the new job list from master
@@ -1412,7 +1412,7 @@ XtPointer cld, cad;
    if (!pl && rl) {
       pl = rl;
    } else if (rl) {
-      lAddList(pl, rl);
+      lAddList(pl, &rl);
    }
 #endif
    /*
@@ -1422,7 +1422,7 @@ XtPointer cld, cad;
       data.mode = SUBMIT_QALTER_PENDING;
       data.job_id = lGetUlong(lFirst(pl), JB_job_number);
       qmonSubmitPopup(w, (XtPointer)&data, NULL);
-      lFreeList(pl);
+      lFreeList(&pl);
       XbaeMatrixDeselectAll(job_pending_jobs);
 #ifdef QALTER_RUNNING
       XbaeMatrixDeselectAll(job_running_jobs);
@@ -1840,7 +1840,7 @@ dstring *sb
    /* get job scheduling information */
    what = lWhat("%T(ALL)", SME_Type);
    alp = sge_gdi(SGE_JOB_SCHEDD_INFO, SGE_GDI_GET, &ilp, NULL, what);
-   lFreeWhat(what);
+   lFreeWhat(&what);
    for_each(aep, alp) {
       if (lGetUlong(aep, AN_status) != STATUS_OK) {
          if (fp)
@@ -1852,7 +1852,7 @@ dstring *sb
          schedd_info = false;
       }
    }
-   alp = lFreeList(alp);
+   lFreeList(&alp);
  
    /* build 'where' for all jobs */
    where = NULL;
@@ -1868,8 +1868,8 @@ dstring *sb
    what = lWhat("%T(ALL)", JB_Type);
    /* get job list */
    alp = sge_gdi(SGE_JOB_LIST, SGE_GDI_GET, &jlp, where, what);
-   lFreeWhere(where);
-   lFreeWhat(what);
+   lFreeWhere(&where);
+   lFreeWhat(&what);
    for_each(aep, alp) {
       if (lGetUlong(aep, AN_status) != STATUS_OK) {
          if (fp)
@@ -1881,7 +1881,7 @@ dstring *sb
          jobs_exist = false;
       }
    }
-   lFreeList(alp);
+   lFreeList(&alp);
    if(!jobs_exist) {
       DEXIT;
       return 1;
@@ -1927,13 +1927,13 @@ dstring *sb
             while ((mes = lFindNext(mes, where)))
                sge_dstring_sprintf_append(sb, "                            %s\n",
                                     lGetString(mes, MES_message));
-            lFreeWhere(where);
+            lFreeWhere(&where);
          }
       }
    }                      
  
-   lFreeList(ilp);
-   lFreeList(jlp);
+   lFreeList(&ilp);
+   lFreeList(&jlp);
    DEXIT;
    return 0;
 }
@@ -1964,7 +1964,7 @@ dstring *sb
    /* get job scheduling information */
    what = lWhat("%T(ALL)", SME_Type);
    alp = sge_gdi(SGE_JOB_SCHEDD_INFO, SGE_GDI_GET, &ilp, NULL, what);
-   lFreeWhat(what);
+   lFreeWhat(&what);
    for_each(aep, alp) {
       if (lGetUlong(aep, AN_status) != STATUS_OK) {
          if (fp)
@@ -1976,7 +1976,7 @@ dstring *sb
          schedd_info = false;
       }
    }
-   lFreeList(alp);
+   lFreeList(&alp);
    if (!schedd_info) {
       DEXIT;
       return 1;
@@ -2067,7 +2067,7 @@ dstring *sb
          sge_dstring_sprintf_append(sb, "%s\n", text);
    }
  
-   lFreeList(ilp);
+   lFreeList(&ilp);
    DEXIT;
    return 0;
 }                             

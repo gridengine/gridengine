@@ -37,19 +37,18 @@
 /* 
 ** history/qacct.c
 */ 
-#define MSG_HISTORY_NOJOBSRUNNINGSINCESTARTUP      _MESSAGE(25066, _("no jobs running since startup\n"))
-#define MSG_HISTORY_FAILEDRESOLVINGHOSTNAME_SS     _MESSAGE(25067, _("failed resolving hostname "SFQ": "SFN"\n"))
-#define MSG_HISTORY_TOPTIONMASTHAVELISTOFTASKIDRANGES  _MESSAGE(25068, _("ERROR! -t option must have a list of task id ranges\n"))
-#define MSG_HISTORY_INVALIDLISTOFTASKIDRANGES_S       _MESSAGE(25069, _("ERROR! invalid list of task id ranges: "SFN"\n"))
-#define MSG_HISTORY_ERRORUNABLETOOPENX_S     _MESSAGE(25074, _("error unable to open "SFN"\n"))
-#define MSG_HISTORY_NOTENOUGTHMEMORYTOCREATELIST   _MESSAGE(25075, _("not enough memory to create list\n"))
-#define MSG_HISTORY_IGNORINGINVALIDENTRYINLINEX_U  _MESSAGE(25076, _("ignoring invalid entry in line " sge_U32CFormat "\n"))
-#define MSG_HISTORY_IGNORINGJOBXFORACCOUNTINGMASTERQUEUEYNOTEXISTS_IS   _MESSAGE(25082, _("ignoring job %d for accounting: jobs master queue "SFN" does not longer exist\n"))
-#define MSG_HISTORY_JOBARRAYTASKSWXYZNOTFOUND_DDDD   _MESSAGE(25084, _("Job-array tasks "sge_U32CFormat"."sge_U32CFormat"-"sge_U32CFormat":"sge_U32CFormat" not found\n" ))
-#define MSG_HISTORY_JOBIDXNOTFOUND_D          _MESSAGE(25085, _("job id " sge_U32CFormat  " not found\n"  ))
-#define MSG_HISTORY_JOBARRAYTASKSWXYZNOTFOUND_SDDD    _MESSAGE(25086, _("Job-array tasks "SFQ"."sge_U32CFormat"-"sge_U32CFormat":"sge_U32CFormat" not found\n"))
-#define MSG_HISTORY_JOBNAMEXNOTFOUND_S       _MESSAGE(25087, _("job name "SFN" not found\n"))
-#define MSG_HISTORY_TOPTIONREQUIRESJOPTION   _MESSAGE(25088, _("-t option requires -j option\n"))
+#define MSG_HISTORY_NOJOBSRUNNINGSINCESTARTUP      _MESSAGE(25066, _("no jobs running since startup"))
+#define MSG_HISTORY_TOPTIONMASTHAVELISTOFTASKIDRANGES  _MESSAGE(25068, _("ERROR! -t option must have a list of task id ranges"))
+#define MSG_HISTORY_INVALIDLISTOFTASKIDRANGES_S       _MESSAGE(25069, _("ERROR! invalid list of task id ranges: "SFN))
+#define MSG_HISTORY_ERRORUNABLETOOPENX_S     _MESSAGE(25074, _("error unable to open "SFN))
+#define MSG_HISTORY_NOTENOUGTHMEMORYTOCREATELIST   _MESSAGE(25075, _("not enough memory to create list"))
+#define MSG_HISTORY_IGNORINGINVALIDENTRYINLINEX_U  _MESSAGE(25076, _("ignoring invalid entry in line " sge_U32CFormat))
+#define MSG_HISTORY_IGNORINGJOBXFORACCOUNTINGMASTERQUEUEYNOTEXISTS_IS   _MESSAGE(25082, _("ignoring job %d for accounting: jobs master queue "SFN" does not longer exist"))
+#define MSG_HISTORY_JOBARRAYTASKSWXYZNOTFOUND_DDDD   _MESSAGE(25084, _("Job-array tasks "sge_U32CFormat"."sge_U32CFormat"-"sge_U32CFormat":"sge_U32CFormat" not found" ))
+#define MSG_HISTORY_JOBIDXNOTFOUND_D          _MESSAGE(25085, _("job id " sge_U32CFormat  " not found"))
+#define MSG_HISTORY_JOBARRAYTASKSWXYZNOTFOUND_SDDD    _MESSAGE(25086, _("Job-array tasks "SFQ"."sge_U32CFormat"-"sge_U32CFormat":"sge_U32CFormat" not found"))
+#define MSG_HISTORY_JOBNAMEXNOTFOUND_S       _MESSAGE(25087, _("job name "SFN" not found"))
+#define MSG_HISTORY_TOPTIONREQUIRESJOPTION   _MESSAGE(25088, _("-t option requires -j option"))
 #define MSG_HISTORY_HOST            "HOST"
 #define MSG_HISTORY_QUEUE           "CLUSTER QUEUE"
 #define MSG_HISTORY_GROUP           "GROUP"
@@ -58,26 +57,26 @@
 #define MSG_HISTORY_DEPARTMENT      "DEPARTMENT"
 #define MSG_HISTORY_PE              "PE"
 #define MSG_HISTORY_SLOTS           "SLOTS"
-#define MSG_HISTORY_TOTSYSTEMUSAGE  _MESSAGE(25089, _("Total System Usage\n"))
+#define MSG_HISTORY_TOTSYSTEMUSAGE  _MESSAGE(25089, _("Total System Usage"))
 #define MSG_HISTORY_USAGE           _MESSAGE(25090, _("usage:"    ))
-#define MSG_HISTORY_A_OPT_USAGE     _MESSAGE(25091, _("jobs accounted to the given account\n"      ))
-#define MSG_HISTORY_help_OPT_USAGE  _MESSAGE(25092, _("display this message\n"  ))
-#define MSG_HISTORY_h_OPT_USAGE     _MESSAGE(25093, _("list [matching] host\n"))
-#define MSG_HISTORY_q_OPT_USAGE     _MESSAGE(25094, _("list [matching] queue\n"))
-#define MSG_HISTORY_g_OPT_USAGE     _MESSAGE(25095, _("list [matching] group\n"))
-#define MSG_HISTORY_o_OPT_USAGE     _MESSAGE(25096, _("list [matching] owner\n"))
-#define MSG_HISTORY_P_OPT_USAGE     _MESSAGE(25097, _("list [matching] project\n"))
-#define MSG_HISTORY_D_OPT_USAGE     _MESSAGE(25098, _("list [matching] department\n"))
-#define MSG_HISTORY_pe_OPT_USAGE    _MESSAGE(25099, _("list [matching] parallel environment\n"))
-#define MSG_HISTORY_slots_OPT_USAGE _MESSAGE(25100, _("list [matching] job slots\n"   ))
-#define MSG_HISTORY_l_OPT_USAGE     _MESSAGE(25101, _("request given complex attributes\n" ))
-#define MSG_HISTORY_b_OPT_USAGE     _MESSAGE(25102, _("jobs started after\n"))
-#define MSG_HISTORY_e_OPT_USAGE     _MESSAGE(25103, _("jobs started before\n"))
-#define MSG_HISTORY_d_OPT_USAGE     _MESSAGE(25104, _("jobs started during the last d days\n"))
-#define MSG_HISTORY_j_OPT_USAGE     _MESSAGE(25105, _("list all [matching] jobs\n"))
-#define MSG_HISTORY_t_OPT_USAGE     _MESSAGE(25106, _("list all [matching] tasks (requires -j option)\n"))
-#define MSG_HISTORY_f_OPT_USAGE           _MESSAGE(25109, _("use alternate accounting file\n"))
-#define MSG_HISTORY_beginend_OPT_USAGE    _MESSAGE(25110, _("[[CC]YYMMDDhhmm[.SS]\n"))
+#define MSG_HISTORY_A_OPT_USAGE     _MESSAGE(25091, _("jobs accounted to the given account"      ))
+#define MSG_HISTORY_help_OPT_USAGE  _MESSAGE(25092, _("display this message"  ))
+#define MSG_HISTORY_h_OPT_USAGE     _MESSAGE(25093, _("list [matching] host"))
+#define MSG_HISTORY_q_OPT_USAGE     _MESSAGE(25094, _("list [matching] queue"))
+#define MSG_HISTORY_g_OPT_USAGE     _MESSAGE(25095, _("list [matching] group"))
+#define MSG_HISTORY_o_OPT_USAGE     _MESSAGE(25096, _("list [matching] owner"))
+#define MSG_HISTORY_P_OPT_USAGE     _MESSAGE(25097, _("list [matching] project"))
+#define MSG_HISTORY_D_OPT_USAGE     _MESSAGE(25098, _("list [matching] department"))
+#define MSG_HISTORY_pe_OPT_USAGE    _MESSAGE(25099, _("list [matching] parallel environment"))
+#define MSG_HISTORY_slots_OPT_USAGE _MESSAGE(25100, _("list [matching] job slots"   ))
+#define MSG_HISTORY_l_OPT_USAGE     _MESSAGE(25101, _("request given complex attributes" ))
+#define MSG_HISTORY_b_OPT_USAGE     _MESSAGE(25102, _("jobs started after"))
+#define MSG_HISTORY_e_OPT_USAGE     _MESSAGE(25103, _("jobs started before"))
+#define MSG_HISTORY_d_OPT_USAGE     _MESSAGE(25104, _("jobs started during the last d days"))
+#define MSG_HISTORY_j_OPT_USAGE     _MESSAGE(25105, _("list all [matching] jobs"))
+#define MSG_HISTORY_t_OPT_USAGE     _MESSAGE(25106, _("list all [matching] tasks (requires -j option)"))
+#define MSG_HISTORY_f_OPT_USAGE           _MESSAGE(25109, _("use alternate accounting file"))
+#define MSG_HISTORY_beginend_OPT_USAGE    _MESSAGE(25110, _("[[CC]YYMMDDhhmm[.SS]"))
 #define MSG_HISTORY_SHOWJOB_QNAME             "qname"
 #define MSG_HISTORY_SHOWJOB_HOSTNAME          "hostname"
 #define MSG_HISTORY_SHOWJOB_GROUP             "group"
@@ -123,9 +122,9 @@
 #define MSG_HISTORY_SHOWJOB_IO                "io"
 #define MSG_HISTORY_SHOWJOB_IOW               "iow"
 #define MSG_HISTORY_SHOWJOB_MAXVMEM           "maxvmem"
-#define MSG_HISTORY_GETALLLISTSGETCOMPLEXLISTFAILED      _MESSAGE(25111, _("get_all_lists: failed to get complex list\n"))
-#define MSG_HISTORY_GETALLLISTSGETEXECHOSTLISTFAILED     _MESSAGE(25112, _("get_all_lists: failed to get exechost list\n"))
-#define MSG_HISTORY_GETALLLISTSGETQUEUELISTFAILED        _MESSAGE(25113, _("get_all_lists: failed to get queue list\n"))
+#define MSG_HISTORY_GETALLLISTSGETCOMPLEXLISTFAILED      _MESSAGE(25111, _("get_all_lists: failed to get complex list"))
+#define MSG_HISTORY_GETALLLISTSGETEXECHOSTLISTFAILED     _MESSAGE(25112, _("get_all_lists: failed to get exechost list"))
+#define MSG_HISTORY_GETALLLISTSGETQUEUELISTFAILED        _MESSAGE(25113, _("get_all_lists: failed to get queue list"))
 
 
 

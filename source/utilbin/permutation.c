@@ -170,11 +170,11 @@ void usage(int exit_code)
    printf("%s\n permutation [options] range [number]\n",MSG_UTILBIN_USAGE);
 
    
-   printf(MSG_UTILBIN_PERMUSAGE1);
-   printf("   -s         %s",MSG_UTILBIN_PERMUSAGE2);
-   printf("   -p n       %s",MSG_UTILBIN_PERMUSAGE3);
-   printf("   -f n       %s",MSG_UTILBIN_PERMUSAGE4);
-   printf(MSG_UTILBIN_PERMUSAGE5);
+   printf("%s\n", MSG_UTILBIN_PERMUSAGE1);
+   printf("   -s         %s\n",MSG_UTILBIN_PERMUSAGE2);
+   printf("   -p n       %s\n",MSG_UTILBIN_PERMUSAGE3);
+   printf("   -f n       %s\n",MSG_UTILBIN_PERMUSAGE4);
+   printf("%s\n", MSG_UTILBIN_PERMUSAGE5);
    
    exit(exit_code);
 }

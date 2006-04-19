@@ -39,13 +39,13 @@ extern "C" {
 
 #include "basis_types.h"
    
-#define MSG_DRMAA_SWITCH_WITH_NO_CAT   _MESSAGE(45001, _("No job category could be found even though -cat was detected\n"))
-#define MSG_DRMAA_UNKNOWN_JOB_CAT      _MESSAGE(45002, _("Unknown job category\n"))
-#define MSG_DRMAA_INVALID_TIME_STRING  _MESSAGE(45003, _("invalid format for job start time\n"))
-#define MSG_DRMAA_TIME_PARSE_ERROR     _MESSAGE(45004, _("Error parsing DRMAA date string\n"))
-#define MSG_DRMAA_INC_NOT_ALLOWED      _MESSAGE(45005, _("The $drmaa_inc_ph$ placeholder is not allowed when the DRMAA_NATIVE_SPECIFICATION attribute contains \"-b n\"\n"))
-#define MSG_DRMAA_PATH_NEEDS_COLON_S   _MESSAGE(45006, _("The "SFQ" attribute must begin with a colon, ':'\n"))
-#define MSG_DRMAA_NEEDS_INPUT_PATH     _MESSAGE(45007, _("When using input file staging, and input path must be set.\n"))
+#define MSG_DRMAA_SWITCH_WITH_NO_CAT   _MESSAGE(45001, _("No job category could be found even though -cat was detected"))
+#define MSG_DRMAA_UNKNOWN_JOB_CAT      _MESSAGE(45002, _("Unknown job category"))
+#define MSG_DRMAA_INVALID_TIME_STRING  _MESSAGE(45003, _("invalid format for job start time"))
+#define MSG_DRMAA_TIME_PARSE_ERROR     _MESSAGE(45004, _("Error parsing DRMAA date string"))
+#define MSG_DRMAA_INC_NOT_ALLOWED      _MESSAGE(45005, _("The $drmaa_inc_ph$ placeholder is not allowed when the DRMAA_NATIVE_SPECIFICATION attribute contains \"-b n\""))
+#define MSG_DRMAA_PATH_NEEDS_COLON_S   _MESSAGE(45006, _("The "SFQ" attribute must begin with a colon, ':'"))
+#define MSG_DRMAA_NEEDS_INPUT_PATH     _MESSAGE(45007, _("When using input file staging, and input path must be set."))
 
 #define MSG_JDRMAA_BAD_JOB_TEMPLATE    _MESSAGE(45101, _("Requested job template does not exist"))
 #define MSG_JDRMAA_NULL_POINTER_S      _MESSAGE(45102, _("The "SFN" may not be null"))

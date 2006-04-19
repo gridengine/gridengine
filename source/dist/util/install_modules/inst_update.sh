@@ -177,17 +177,24 @@ GetOldCkpt()
 
 GetOldComplexes()
 {
+   if [ -d /tmp/centry -o -f /tmp/centry ]; then
+      rm -rf /tmp/centry
+   fi
+
    Makedir /tmp/centry
    loop=1
 
-   for c in `ls $OLD_QMASTER_SPOOL/complexes`; do
    OLD_IFS=$IFS
-  IFS="
+
+   for c in `ls $OLD_QMASTER_SPOOL/complexes`; do
+      complex_entries=`cat $OLD_QMASTER_SPOOL/complexes/$c | grep -v "#"`
+      IFS="
 "
-      for ce in `cat $OLD_QMASTER_SPOOL/complexes/$c | grep -v "#"`; do
+
+      for ce in $complex_entries; do
+         IFS="$OLD_IFS"
          ce_name=`echo $ce | awk '{ print $1 }'`
          echo $ce | tr " " "\n" | grep "[a-z A-Z 0-9 ==]" >>  /tmp/centry/$ce_name"_tmp"
-  IFS="$OLD_IFS"
 
          for e in `cat /tmp/centry/$ce_name"_tmp"`; do
             case $loop in
@@ -243,6 +250,7 @@ GetOldComplexes()
          TOUCH=touch
          UPDATE_LOG=/tmp/update.$pid
          ExecuteAsAdmin $TOUCH $UPDATE_LOG 
+
          if [ $CE_TYPE = "INT" -o $CE_TYPE = "DOUBLE" -o $CE_TYPE = "MEMORY" -o $CE_TYPE = "TIME" ]; then
             if [ $CE_CONSUMABLE = "YES" -a $CE_REQUESTABLE = "NO" ]; then
                if [ $CE_TYPE = "INT" -o $CE_TYPE = "MEMORY" -o $CE_TYPE = "DOUBLE" ]; then
@@ -445,7 +453,7 @@ GetOldManagers()
 GetOldOperators()
 {
    OLD_OPERATORS=`cat $OLD_QMASTER_SPOOL/operators | grep -v "#" | tr "\n" " "`    
-   ExecuteAsAdmin $SPOOLDEFAULTS operators $OLD_MANAGERS
+   ExecuteAsAdmin $SPOOLDEFAULTS operators $OLD_OPERATORS
 }
 
 
@@ -635,7 +643,7 @@ UpgradeDB()
 {
 
    if [ -f $SGE_ROOT/$SGE_CELL/common/bootstrap ]; then
-      ADMINUSER=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep "admin_user" | awk '{ print $2 }'`
+      GetAdminUser
    else
       echo "bootstrap file could not be found, check your installation!"
       exit 1

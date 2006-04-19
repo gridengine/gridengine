@@ -443,21 +443,7 @@ lListElem *lWhereToElem(const lCondition *where){
          if (cull_pack_cond(&pb, where) == PACK_SUCCESS) {
             whereElem = lCreateElem(PACK_Type);
             lSetUlong(whereElem, PACK_id, SGE_WHERE);
-#ifdef COMMCOMPRESS 
-            if(pb.mode == 0) {
-               if(flush_packbuffer(&pb) == PACK_SUCCESS){
-                  setByteArray( (char*)pb.head_ptr,  pb.cpr.total_out, whereElem, PACK_String);
-                  lSetBool(whereElem, PACK_compressed, true);
-                }
-                else
-                  whereElem = lFreeElem(whereElem);
-            }
-            else
-#endif
-            {
-               setByteArray( (char*)pb.head_ptr, pb.bytes_used, whereElem, PACK_string);
-               lSetBool(whereElem, PACK_compressed, false);
-            }
+            setByteArray( (char*)pb.head_ptr, pb.bytes_used, whereElem, PACK_string);
          }
       }
       clear_packbuffer(&pb); 
@@ -471,18 +457,14 @@ lCondition *lWhereFromElem(const lListElem *where){
    sge_pack_buffer pb;
    int size=0;
    char *buffer;
-   bool compressed = false;
    int ret=0;
    DENTER(CULL_LAYER, "lWhereFromCull");
 
    if (lGetUlong(where, PACK_id) == SGE_WHERE) {
-
-      compressed = lGetBool(where, PACK_compressed) ? true : false;
       size = getByteArray(&buffer, where, PACK_string);
       if (size <= 0){
          ERROR((SGE_EVENT, MSG_PACK_INVALIDPACKDATA ));
-      }
-      else if ((ret = init_packbuffer_from_buffer(&pb, buffer, size, compressed)) == PACK_SUCCESS){
+      } else if ((ret = init_packbuffer_from_buffer(&pb, buffer, size)) == PACK_SUCCESS) {
          cull_unpack_cond(&pb, &cond);
          clear_packbuffer(&pb); 
       }
@@ -592,7 +574,7 @@ static lCondition *subscope(cull_parse_state* state, va_list *app)
 
    if (scan(NULL, state) != KET) {
       LERROR(LESYNTAX);
-      lFreeWhere(cp);
+      lFreeWhere(&cp);
       DEXIT;
       return NULL;
    }
@@ -615,7 +597,7 @@ static lCondition *sum(lDescr *dp, cull_parse_state *state, va_list *app)
 
       if (!(newcp = (lCondition *) calloc(1, sizeof(lCondition)))) {
          LERROR(LEMALLOC);
-         lFreeWhere(cp);
+         lFreeWhere(&cp);
          DEXIT;
          return NULL;
       }
@@ -641,7 +623,7 @@ static lCondition *product(lDescr *dp, cull_parse_state *state, va_list *app)
       eat_token(state);
 
       if (!(newcp = (lCondition *) calloc(1, sizeof(lCondition)))) {
-         lFreeWhere(cp);
+         lFreeWhere(&cp);
          LERROR(LEMALLOC);
          DEXIT;
          return NULL;
@@ -666,7 +648,7 @@ static lCondition *factor(lDescr *dp, cull_parse_state *state, va_list *app)
       eat_token(state);
 
       if (!(cp = (lCondition *) calloc(1, sizeof(lCondition)))) {
-         lFreeWhere(cp);
+         lFreeWhere(&cp);
          LERROR(LEMALLOC);
          DEXIT;
          return NULL;
@@ -738,7 +720,7 @@ static lCondition *read_val(lDescr *dp, cull_parse_state *state, va_list *app)
    }
 
    if ((token = scan(NULL, state)) != FIELD) {
-      cp = lFreeWhere(cp);
+      lFreeWhere(&cp);
       LERROR(LESYNTAX);
       DEXIT;
       return 0;
@@ -747,7 +729,7 @@ static lCondition *read_val(lDescr *dp, cull_parse_state *state, va_list *app)
 
    cp->operand.cmp.nm = va_arg(*app, int);
    if ((cp->operand.cmp.pos = lGetPosInDescr(dp, cp->operand.cmp.nm)) < 0) {
-      cp = lFreeWhere(cp);
+      lFreeWhere(&cp);
       LERROR(LENAMENOT);
       DEXIT;
       return NULL;
@@ -773,7 +755,7 @@ static lCondition *read_val(lDescr *dp, cull_parse_state *state, va_list *app)
       cp->op = token;
       eat_token(state);
       if (mt_get_type(cp->operand.cmp.mt) != lListT) {
-         cp = lFreeWhere(cp);
+         lFreeWhere(&cp);
          LERROR(LEINCTYPE);
          DEXIT;
          return NULL;
@@ -783,7 +765,7 @@ static lCondition *read_val(lDescr *dp, cull_parse_state *state, va_list *app)
       return cp;
 
    default:
-      cp = lFreeWhere(cp);
+      lFreeWhere(&cp);
       LERROR(LEOPUNKNOWN);
       DEXIT;
       return NULL;
@@ -839,7 +821,7 @@ static lCondition *read_val(lDescr *dp, cull_parse_state *state, va_list *app)
    case CHAR:
       if (mt_get_type(cp->operand.cmp.mt) != lCharT)
          incompatibleType(MSG_CULL_WHERE_SHOULDBECHART);
-#if USING_GCC_2_96 || __GNUC__ == 3 || __INSIGHT__
+#if USING_GCC_2_96 || __GNUC__ >= 3 || __INSIGHT__
       cp->operand.cmp.val.c = va_arg(*app, int);
 #else
       cp->operand.cmp.val.c = va_arg(*app, lChar);
@@ -849,7 +831,7 @@ static lCondition *read_val(lDescr *dp, cull_parse_state *state, va_list *app)
    case BOOL:
       if (mt_get_type(cp->operand.cmp.mt) != lBoolT)
          incompatibleType(MSG_CULL_WHERE_SHOULDBEBOOL);
-#if USING_GCC_2_96 || __GNUC__ == 3 || __INSIGHT__
+#if USING_GCC_2_96 || __GNUC__ >= 3 || __INSIGHT__
       cp->operand.cmp.val.b = va_arg(*app, int);
 #else
       cp->operand.cmp.val.b = va_arg(*app, lBool);
@@ -863,7 +845,7 @@ static lCondition *read_val(lDescr *dp, cull_parse_state *state, va_list *app)
       break;
 
    default:
-      cp = lFreeWhere(cp);
+      lFreeWhere(&cp);
       unknownType("lWhere");
       DEXIT;
       return NULL;
@@ -915,7 +897,7 @@ static lCondition *_subscope(cull_parse_state *state, WhereArgList *wapp)
 
    if (scan(NULL, state) != KET) {
       LERROR(LESYNTAX);
-      lFreeWhere(cp);
+      lFreeWhere(&cp);
       DEXIT;
       return NULL;
    }
@@ -938,7 +920,7 @@ static lCondition *_sum(lDescr *dp, cull_parse_state *state, WhereArgList *wapp)
 
       if (!(newcp = (lCondition *) calloc(1, sizeof(lCondition)))) {
          LERROR(LEMALLOC);
-         lFreeWhere(cp);
+         lFreeWhere(&cp);
          DEXIT;
          return NULL;
       }
@@ -964,7 +946,7 @@ static lCondition *_product(lDescr *dp, cull_parse_state *state, WhereArgList *w
       eat_token(state);
 
       if (!(newcp = (lCondition *) calloc(1, sizeof(lCondition)))) {
-         lFreeWhere(cp);
+         lFreeWhere(&cp);
          LERROR(LEMALLOC);
          DEXIT;
          return NULL;
@@ -989,7 +971,7 @@ static lCondition *_factor(lDescr *dp, cull_parse_state *state, WhereArgList *wa
       eat_token(state);
 
       if (!(cp = (lCondition *) calloc(1, sizeof(lCondition)))) {
-         lFreeWhere(cp);
+         lFreeWhere(&cp);
          LERROR(LEMALLOC);
          DEXIT;
          return NULL;
@@ -1052,7 +1034,7 @@ static lCondition *_read_val(lDescr *dp, cull_parse_state *state, WhereArgList *
    }
 
    if ((token = scan(NULL, state)) != FIELD) {
-      lFreeWhere(cp);
+      lFreeWhere(&cp);
       LERROR(LESYNTAX);
       DEXIT;
       return 0;
@@ -1063,7 +1045,7 @@ static lCondition *_read_val(lDescr *dp, cull_parse_state *state, WhereArgList *
 /*    DPRINTF(("(*wapp)->field = %d\n", (*wapp)->field)); */
    cp->operand.cmp.nm = (*wapp)->field;
    if ((cp->operand.cmp.pos = lGetPosInDescr(dp, cp->operand.cmp.nm)) < 0) {
-      lFreeWhere(cp);
+      lFreeWhere(&cp);
       LERROR(LENAMENOT);
       DEXIT;
       return NULL;
@@ -1089,7 +1071,7 @@ static lCondition *_read_val(lDescr *dp, cull_parse_state *state, WhereArgList *
       cp->op = token;
       eat_token(state);
       if (mt_get_type(cp->operand.cmp.mt) != lListT) {
-         cp = lFreeWhere(cp);
+         lFreeWhere(&cp);
          LERROR(LEINCTYPE);
          DEXIT;
          return NULL;
@@ -1099,7 +1081,7 @@ static lCondition *_read_val(lDescr *dp, cull_parse_state *state, WhereArgList *
       return cp;
 
    default:
-      lFreeWhere(cp);
+      lFreeWhere(&cp);
       LERROR(LEOPUNKNOWN);
       DEXIT;
       return NULL;
@@ -1206,27 +1188,24 @@ static lCondition *_read_val(lDescr *dp, cull_parse_state *state, WhereArgList *
 *     lFreeWhere() -- Free a condition
 *
 *  SYNOPSIS
-*     lCondition* lFreeWhere(lCondition *cp) 
+*     lFreeWhere(lCondition **cp) 
 *
 *  FUNCTION
 *     Free a condition.
 *
 *  INPUTS
-*     lCondition *cp - condition 
+*     lCondition **cp - condition, will be set to NULL 
 *
-*  RESULT
-*     lCondition* - NULL
 ******************************************************************************/ 
-lCondition *lFreeWhere(lCondition *cp) 
+void lFreeWhere(lCondition **cp) 
 {
    DENTER(CULL_LAYER, "lFreeWhere");
 
-   if (!cp) {
-      DEXIT;
-      return NULL;
+   if (cp == NULL || *cp == NULL) {
+      DRETURN_VOID;
    }
 
-   switch (cp->op) {
+   switch ((*cp)->op) {
    case EQUAL:
    case NOT_EQUAL:
    case LOWER_EQUAL:
@@ -1237,39 +1216,41 @@ lCondition *lFreeWhere(lCondition *cp)
    case STRCASECMP:
    case PATTERNCMP:
    case HOSTNAMECMP:
-
-      if (mt_get_type(cp->operand.cmp.mt) == lStringT) {
-         if (cp->operand.cmp.val.str) {
-            free(cp->operand.cmp.val.str);
+      if (mt_get_type((*cp)->operand.cmp.mt) == lStringT) {
+         if ((*cp)->operand.cmp.val.str) {
+            FREE((*cp)->operand.cmp.val.str);
          }
       }
-      if (mt_get_type(cp->operand.cmp.mt) == lHostT) {
-         if (cp->operand.cmp.val.host) {
-            free(cp->operand.cmp.val.host);
+      if (mt_get_type((*cp)->operand.cmp.mt) == lHostT) {
+         if ((*cp)->operand.cmp.val.host) {
+            FREE((*cp)->operand.cmp.val.host);
          }
       }
+      if (mt_get_type((*cp)->operand.cmp.mt) == lListT) {
+         lFreeWhere(&((*cp)->operand.cmp.val.cp));
+      }
+      break;
    case SUBSCOPE:
-      if (mt_get_type(cp->operand.cmp.mt) == lListT) {
-         lFreeWhere(cp->operand.cmp.val.cp);
+      if (mt_get_type((*cp)->operand.cmp.mt) == lListT) {
+         lFreeWhere(&((*cp)->operand.cmp.val.cp));
       }
       break;
    case AND:
    case OR:
-      lFreeWhere(cp->operand.log.second);
+      lFreeWhere(&((*cp)->operand.log.first));
+      lFreeWhere(&((*cp)->operand.log.second));
+      break;
    case NEG:
-      lFreeWhere(cp->operand.log.first);
+      lFreeWhere(&((*cp)->operand.log.first));
       break;
 
    default:
       LERROR(LEOPUNKNOWN);
-      DEXIT;
-      return NULL;
+      DRETURN_VOID;
    }
 
-   free(cp);
-
-   DEXIT;
-   return NULL;
+   FREE(*cp);
+   DRETURN_VOID;
 }
 
 /****** cull/where/lCompare() *************************************************
@@ -1596,7 +1577,7 @@ lCondition *lCopyWhere(const lCondition *cp)
          break;
       default:
          unknownType("lCopyWhere");
-         new = lFreeWhere(new);
+         lFreeWhere(&new);
          DEXIT;
          return NULL;
       }
@@ -1617,7 +1598,7 @@ lCondition *lCopyWhere(const lCondition *cp)
 
    default:
       LERROR(LEOPUNKNOWN);
-      new = lFreeWhere(new);
+      lFreeWhere(&new);
       DEXIT;
       return NULL;
    }

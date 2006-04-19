@@ -32,6 +32,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <locale.h>
 
 #include <Xm/Xm.h>
 
@@ -63,6 +64,7 @@
 #include "sge_feature.h"
 #include "sge_prog.h"
 #include "sge_mt_init.h"
+#include "version.h"
 
 #ifdef REPLAY_XT
 #include "ReplayXt.h"
@@ -194,7 +196,9 @@ char **argv
    Widget StartupWindow = 0;
    Arg  args[10];
    Cardinal ac = 0;
+#ifdef L10N
    char *lang;
+#endif   
    static char progname[256];
 /*    static char app_name[1024]; */
 
@@ -203,6 +207,11 @@ char **argv
 
    DENTER_MAIN(TOP_LAYER, "qmon_main");
 
+#ifndef L10N
+   setlocale(LC_ALL, "C");
+   putenv("LANG=C"); 
+   putenv("LC_ALL=C"); 
+#endif
    sge_mt_init();
 
    /* INSTALL SIGNAL HANDLER */
@@ -211,8 +220,12 @@ char **argv
    strcpy(progname, argv[0]);
    
    /* GENERAL SGE SETUP */
-   if (!(argc > 1 && !strcmp(argv[1], "-help")))
-      qmonInitSge(progname);
+   if (!(argc > 1 && !strcmp(argv[1], "-help"))) {
+      qmonInitSge(progname, 0);
+   } else {  
+      /* -help */
+      qmonInitSge(progname, 1);
+   }
 
    SGE_ROOT = sge_get_root_dir(0, NULL, 0, 1);
 
@@ -277,6 +290,7 @@ char **argv
    XtAppAddActionHook(AppContext, TraceActions, NULL);
 #endif
 
+#ifdef L10N
    /*
    ** Internationalization:
    ** The qmon_messages.ad file is installed under 
@@ -291,6 +305,8 @@ char **argv
          lang = "C";
       XmtLoadResourceFile(AppShell, "qmon_messages", False, True);
    }   
+#endif
+
 #if 0   
    strcpy(app_name, "QMON +++ Main Control");
    if (strcmp(uti_state_get_default_cell(), "default")) {
@@ -472,7 +488,8 @@ static void qmonUsage(Widget w)
 
    sge_dstring_init(&ds, buffer, sizeof(buffer));
 
-   printf("%s\n", feature_get_product_name(FS_SHORT_VERSION, &ds));
+   printf("%s %s\n", GE_SHORTNAME, GDI_VERSION);
+/*    printf("%s\n", feature_get_product_name(FS_SHORT_VERSION, &ds)); */
    printf(XmtLocalize2(w, "usage: qmon\n", "qmon_usage", "usageTitle"));
    printf("	[-cmap]                           ");
    printf(XmtLocalize2(w, "use own colormap\n", "qmon_usage", "cmapOption"));

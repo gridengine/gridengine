@@ -33,6 +33,7 @@
 /*___INFO__MARK_END__*/
 
 #include "cull_list.h"
+#include "pack.h"
 
 #ifdef  __cplusplus
 extern "C" {
@@ -40,15 +41,23 @@ extern "C" {
 
 int lSplit(lList **slp, lList **ulp, const char *ulp_name, const lCondition *cp);
 
-lListElem *lSelectElemD(const lListElem *slp, const lCondition *cp, const lDescr *dp, const lEnumeration *enp, bool isHash); 
-lListElem *lSelectElem(const lListElem *slp, const lCondition *cp, const lEnumeration *enp, bool isHash); 
+lListElem *
+lSelectElemDPack(const lListElem *slp, const lCondition *cp, const lDescr *dp, 
+                 const lEnumeration *enp, bool isHash, sge_pack_buffer *pb,
+                 u_long32 *elements); 
+
+lListElem *
+lSelectElemPack(const lListElem *slp, const lCondition *cp, 
+                const lEnumeration *enp, bool isHash, sge_pack_buffer *pb); 
 
 lList *lSelect(const char *name, const lList *slp, const lCondition *cp, const lEnumeration *ep);
-lList *lSelectHash(const char *name, const lList *slp, const lCondition *cp, 
-                   const lEnumeration *ep, bool isHash);
 
-lList *lSelectD(const char *name, const lList *slp, const lCondition *cp, const lDescr *dp, 
-                const lEnumeration *enp, bool isHash);
+lList *lSelectHashPack(const char *name, const lList *slp, 
+                       const lCondition *cp, const lEnumeration *enp, 
+                       bool isHash, sge_pack_buffer *pb);
+
+lList *lSelectDPack(const char *name, const lList *slp, const lCondition *cp,                       const lDescr *dp, const lEnumeration *enp, bool isHash,
+                    sge_pack_buffer *pb, u_long32 *elements);
 
 lDescr *lGetReducedDescr(const lDescr *type, const lEnumeration *what);
 

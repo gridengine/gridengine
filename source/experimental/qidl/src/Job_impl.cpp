@@ -85,7 +85,7 @@ Codine_Job_impl::~Codine_Job_impl() {
    DPRINTF(("ID: %ld\n", key));
    
    if(creation != 0)
-      lFreeElem(self);
+      lFreeElem(&self);
 }
 
 // inherited from Codine_Object
@@ -101,7 +101,7 @@ void Codine_Job_impl::destroy(CORBA_Context* ctx) {
    // CORBA object only ?
    if(creation != 0) {
       orb->disconnect(this);
-      self = lFreeElem(self);
+      lFreeElem(&self);
       // The CORBA object itself will be destroyed by
       // the master, some time later
       return;
@@ -156,7 +156,7 @@ lListElem* Codine_Job_impl::getSelf() {
 
    lCondition* cp = lWhere("%T(%I==%u)", JB_Type, JB_job_number, key);
    self = lFindFirst(Master_Job_List, cp);
-   lFreeWhere(cp);
+   lFreeWhere(&cp);
     
    if(!self) {  
       // we must not destroy ourselves here because the other thread
@@ -883,7 +883,7 @@ void Codine_Job_impl::changed(lListElem* _newSelf) {
    // This works as long as there is only one CORBA thread, so there
    // can be only one request dispatched at one time.
    // If more client requests were able to execute simultanously,
-   // they would overwrite this local variable => !&%$&/§$§%
+   // they would overwrite this local variable => !&%$&/ï¿½$ï¿½%
    lastEvent = qidl_event_count;
 
    // get out new job id

@@ -340,8 +340,8 @@ href_list_find_effective_diff(lList **answer_list, const lList *add_groups,
                                  *rem_hosts, &tmp_add_hosts,
                                  &tmp_rem_hosts, NULL, NULL);
       if (ret) {
-         *add_hosts = lFreeList(*add_hosts);
-         *rem_hosts = lFreeList(*rem_hosts);
+         lFreeList(add_hosts);
+         lFreeList(rem_hosts);
          *add_hosts = tmp_add_hosts;
          *rem_hosts = tmp_rem_hosts;
          tmp_add_hosts = NULL;
@@ -543,7 +543,7 @@ href_list_find_all_references(const lList *this_list, lList **answer_list,
          if (ret) {
             if (used_hosts != NULL && used_sub_hosts != NULL) {
                if (*used_hosts != NULL) {
-                  lAddList(*used_hosts, used_sub_hosts);
+                  lAddList(*used_hosts, &used_sub_hosts);
                } else {
                   *used_hosts = used_sub_hosts;
                   used_sub_hosts = NULL;
@@ -551,7 +551,7 @@ href_list_find_all_references(const lList *this_list, lList **answer_list,
             }
             if (used_groups != NULL && used_sub_groups != NULL) {
                if (*used_groups != NULL) {
-                  lAddList(*used_groups, used_sub_groups);
+                  lAddList(*used_groups, &used_sub_groups);
                } else {
                   *used_groups = used_sub_groups;
                   used_sub_groups = NULL;
@@ -561,7 +561,7 @@ href_list_find_all_references(const lList *this_list, lList **answer_list,
       }
 
       if (free_tmp_list) {
-         tmp_used_groups = lFreeList(tmp_used_groups);
+         lFreeList(&tmp_used_groups);
       }
    } 
    DEXIT;
@@ -693,7 +693,7 @@ href_list_find_all_referencees(const lList *this_list, lList **answer_list,
                                                &occupant_sub_groups);
 
          if (occupant_sub_groups != NULL && ret) {
-            lAddList(*occupant_groups, occupant_sub_groups);
+            lAddList(*occupant_groups, &occupant_sub_groups);
             occupant_sub_groups = NULL;
          } 
       }
@@ -713,14 +713,18 @@ href_list_find_all_referencees(const lList *this_list, lList **answer_list,
 *
 *  SYNOPSIS
 *     bool 
-*     href_list_resolve_hostnames(lList *this_list, lList **answer_list) 
+*     href_list_resolve_hostnames(lList *this_list, 
+*                                 lList **answer_list, bool ignore_errors) 
 *
 *  FUNCTION
-*     Resolve hostnames contained in 'this_list'. 
+*     Resolve hostnames contained in 'this_list'. Depending on the
+*     'ignore_errors' parameter the function will either fail if a
+*     host is not resolvable or this will be ignored. 
 *
 *  INPUTS
 *     lList *this_list    - HR_Type list 
 *     lList **answer_list - AN_Type list 
+*     bool ignore_errors  - ignore if a host is not resolveable
 *
 *  RESULT
 *     bool - error state
@@ -728,11 +732,13 @@ href_list_find_all_referencees(const lList *this_list, lList **answer_list,
 *        false - Error
 *******************************************************************************/
 bool 
-href_list_resolve_hostnames(lList *this_list, lList **answer_list) 
+href_list_resolve_hostnames(lList *this_list, 
+                            lList **answer_list, bool ignore_errors) 
 {
    bool ret = true;
 
    DENTER(HOSTREF_LAYER, "href_list_resolve_hostnames");
+
    if (this_list != NULL) {
       lListElem *href = NULL;
 
@@ -746,16 +752,18 @@ href_list_resolve_hostnames(lList *this_list, lList **answer_list)
             if (back == CL_RETVAL_OK) {
                lSetHost(href, HR_name, resolved_name);
             } else {
-               INFO((SGE_EVENT, MSG_HGRP_UNKNOWNHOST, name));
-               answer_list_add(answer_list, SGE_EVENT, 
-                               STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
-               ret = false;
+               if (!ignore_errors) {
+                  INFO((SGE_EVENT, MSG_HGRP_UNKNOWNHOST, name));
+                  answer_list_add(answer_list, SGE_EVENT, 
+                                  STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+
+                  ret = false;
+               }
             }
          }
       }
    }
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** sgeobj/href/href_list_append_to_dstring() *****************************
@@ -845,11 +853,11 @@ href_list_remove_existing(lList **this_list, lList **answer_list,
 
          if (existing_href != NULL) {
             DTRACE;
-            lRemoveElem(*this_list, existing_href);
+            lRemoveElem(*this_list, &existing_href);
          }
       }
       if (lGetNumberOfElem(*this_list) == 0) {
-         *this_list = lFreeList(*this_list);
+         lFreeList(this_list);
       }
    }
    DEXIT;
@@ -934,7 +942,7 @@ href_list_make_uniq(lList *this_list, lList **answer_list)
       elem2 = lGetElemHostFirst(this_list, HR_name, 
                                 lGetHost(elem, HR_name), &iterator); 
       if (elem2 != NULL && elem != elem2) {
-         lRemoveElem(this_list, elem);
+         lRemoveElem(this_list, &elem);
       }
    }
    DEXIT;

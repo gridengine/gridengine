@@ -340,7 +340,7 @@ static void japi_use_library_signals(void)
 static void japi_once_init(void)
 {
    /* enable rmon monitoring */
-   rmon_mopen(NULL, 0, "japilib");
+   rmon_mopen(0, NULL, "japilib");
    feature_mt_init();
 }
 
@@ -419,7 +419,7 @@ int japi_init_mt(dstring *diag)
    
    if ((gdi_errno != AE_OK) && (gdi_errno != AE_ALREADY_SETUP)) {
       answer_to_dstring(lFirst(alp), diag);
-      lFreeList(alp);
+      lFreeList(&alp);
       DEXIT;
       return DRMAA_ERRNO_INTERNAL_ERROR;
    }
@@ -855,7 +855,7 @@ static int japi_open_session(const char *key_in, dstring *key_out, dstring *diag
    pwd = sge_getpwnam_r(uti_state_get_user_name(), &pw_struct, buffer, sizeof(buffer));
    if (!pwd) {
       if (diag) 
-         sge_dstring_sprintf(diag, "error: getpwnam() failed for user \"%s\"\n", uti_state_get_user_name());
+         sge_dstring_sprintf(diag, MSG_JAPI_PWNAM_FAILED_S, uti_state_get_user_name());
       DEXIT;
       return DRMAA_ERRNO_INTERNAL_ERROR;
    } 
@@ -902,7 +902,7 @@ static int japi_open_session(const char *key_in, dstring *key_out, dstring *diag
 
       if (ret != 0) {
          if (diag) 
-            sge_dstring_sprintf(diag, "error: mkdir(\"%s\") failed: %s\n", 
+            sge_dstring_sprintf(diag, MSG_JAPI_MKDIR_FAILED_SS, 
                   sge_dstring_get_string(&tmp_session_path), strerror(errno));
          DEXIT;
          return DRMAA_ERRNO_INTERNAL_ERROR;
@@ -930,7 +930,7 @@ static int japi_open_session(const char *key_in, dstring *key_out, dstring *diag
       if (SGE_STAT(sge_dstring_get_string(&tmp_session_path), &stat_buf) && errno==ENOENT) {
          /* error */
          if (diag) {
-            sge_dstring_sprintf(diag, "error: cannot reopen session \"%s\"\n", key_in);
+            sge_dstring_sprintf(diag, MSG_JAPI_CANNOT_REOPEN_SESSION_S, key_in);
          }
          
          DEXIT;
@@ -946,7 +946,7 @@ static int japi_open_session(const char *key_in, dstring *key_out, dstring *diag
       sge_dstring_copy_string(key_out, key_in);
 #else
       if (diag) {
-         sge_dstring_sprintf(diag, "error: cannot reopen session \"%s\"\n", key_in);
+         sge_dstring_sprintf(diag, MSG_JAPI_CANNOT_REOPEN_SESSION_S, key_in);
       }
 
       DEXIT;
@@ -998,7 +998,7 @@ static int japi_close_session(const dstring *key, dstring *diag)
    pwd = sge_getpwnam_r(uti_state_get_user_name(), &pw_struct, buffer, sizeof(buffer));
    if (!pwd) {
       if (diag) 
-         sge_dstring_sprintf(diag, "error: getpwnam() failed for user \"%s\"\n", uti_state_get_user_name());
+         sge_dstring_sprintf(diag, MSG_JAPI_PWNAM_FAILED_S, uti_state_get_user_name());
       DEXIT;
       return DRMAA_ERRNO_INTERNAL_ERROR;
    } 
@@ -1165,10 +1165,12 @@ int japi_exit(bool close_session, int flag, dstring *diag)
    /* 
     * disconnect from commd
     */
+   DPRINTF (("Before commlib shutdown\n"));
    cl_errno = cl_commlib_shutdown_handle (cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name(), 0), CL_FALSE);
+   DPRINTF (("After commlib shutdown\n"));
    
    if (cl_errno != CL_RETVAL_OK) {
-      sge_dstring_sprintf(diag, "cl_commlib_shutdown_handle() failed: %s\n", cl_get_error_text(cl_errno));
+      sge_dstring_sprintf(diag, MSG_JAPI_CANNOT_CLOSE_COMMLIB_S, cl_get_error_text(cl_errno));
       DEXIT;
       return DRMAA_ERRNO_INTERNAL_ERROR;
    }
@@ -1176,7 +1178,7 @@ int japi_exit(bool close_session, int flag, dstring *diag)
    /* We have to wait to free the job list until any waiting or syncing threads
     * have exited.  Otherwise, they may think their jobs exited badly. */
    JAPI_LOCK_JOB_LIST();    
-   Master_japi_job_list = lFreeList(Master_japi_job_list);
+   lFreeList(&Master_japi_job_list);
    JAPI_UNLOCK_JOB_LIST();    
 
    /* close JAPI session or not. */
@@ -1357,7 +1359,7 @@ void japi_delete_string_vector(drmaa_attr_values_t* iter )
    case JAPI_ITERATOR_BULK_JOBS:
       break;
    case JAPI_ITERATOR_STRINGS:
-      iter->it.si.strings = lFreeList(iter->it.si.strings);
+      lFreeList(&(iter->it.si.strings));
       break;
    default:
       break;
@@ -1407,11 +1409,11 @@ static int japi_send_job(lListElem *sge_job_template, u_long32 *jobid, dstring *
       *jobid = lGetUlong(job, JB_job_number);
    }
    
-   job_lp = lFreeList(job_lp);
+   lFreeList(&job_lp);
 
    if (!(aep = lFirst(alp))) {
-      alp = lFreeList(alp);
-      sge_dstring_copy_string(diag, "sge_gdi() failed returning answer list");
+      lFreeList(&alp);
+      sge_dstring_copy_string(diag, MSG_JAPI_BAD_GDI_ANSWER_LIST);
       DEXIT;
       return DRMAA_ERRNO_INTERNAL_ERROR;
    }
@@ -1445,7 +1447,7 @@ static int japi_send_job(lListElem *sge_job_template, u_long32 *jobid, dstring *
          sge_dstring_append(diag, "\n");
       }
    }
-   alp = lFreeList(alp);
+   lFreeList(&alp);
 
    DEXIT;
    return result;
@@ -1474,7 +1476,8 @@ static int japi_send_job(lListElem *sge_job_template, u_long32 *jobid, dstring *
 *     static int - DRMAA error codes
 *
 *  NOTES
-*     MT-NOTES: japi_add_job() is MT safe 
+*     MT-NOTES: japi_add_job() is not MT safe due to 
+*               Master_japi_job_list
 *******************************************************************************/
 static int japi_add_job(u_long32 jobid, u_long32 start, u_long32 end, u_long32 incr, 
       bool is_array, dstring *diag)
@@ -1483,14 +1486,10 @@ static int japi_add_job(u_long32 jobid, u_long32 start, u_long32 end, u_long32 i
 
    DENTER(TOP_LAYER, "japi_add_job");
 
-   JAPI_LOCK_JOB_LIST();
-
    japi_job = lGetElemUlong(Master_japi_job_list, JJ_jobid, jobid);
-   if (japi_job) {
-      JAPI_UNLOCK_JOB_LIST();
-
+   if (japi_job != NULL) {
       /* job may not yet exist */
-      sge_dstring_copy_string(diag, "job exists already in japi job list");
+      sge_dstring_sprintf(diag, MSG_JAPI_JOB_ALREADY_EXISTS_S, jobid);
       DEXIT;
       return DRMAA_ERRNO_INTERNAL_ERROR;
    }
@@ -1508,8 +1507,6 @@ static int japi_add_job(u_long32 jobid, u_long32 start, u_long32 end, u_long32 i
       JOB_TYPE_SET_ARRAY(job_type);
       lSetUlong(japi_job, JJ_type, job_type);
    }
-
-   JAPI_UNLOCK_JOB_LIST();
 
    DEXIT;
    return DRMAA_ERRNO_SUCCESS;
@@ -1580,18 +1577,23 @@ int japi_run_job(dstring *job_id, lListElem *sge_job_template, dstring *diag)
    /* tag job with JAPI session key */
    lSetString(sge_job_template, JB_session, japi_session_key);
 
+   JAPI_LOCK_JOB_LIST();    
+
    /* send job to qmaster using GDI */
    drmaa_errno = japi_send_job(sge_job_template, &jobid, diag);
    if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
+      JAPI_UNLOCK_JOB_LIST();    
       japi_dec_threads(SGE_FUNC);
       /* diag written by japi_send_job() */
       DEXIT;
       return drmaa_errno;
    }
 
-   /* add job arry to library session data */
+   /* add job array to library session data */
    drmaa_errno = japi_add_job(jobid, 1, 1, 1, false, diag);
    
+   JAPI_UNLOCK_JOB_LIST();    
+
    /* this is just a dirty hook for testing purposes 
       need this to enforce certain error conditions */
    if ((s=getenv("SGE_DELAY_AFTER_SUBMIT"))) {
@@ -1686,9 +1688,12 @@ int japi_run_bulk_jobs(drmaa_attr_values_t **jobidsp, lListElem *sge_job_templat
       lSetString(sge_job_template, JB_session, japi_session_key);
    }
 
+   JAPI_LOCK_JOB_LIST();    
+
    /* send job to qmaster using GDI */
    drmaa_errno = japi_send_job(sge_job_template, &jobid, diag);
    if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
+      JAPI_UNLOCK_JOB_LIST();    
       japi_dec_threads(SGE_FUNC);
       /* diag written by japi_send_job() */
       DEXIT;
@@ -1697,6 +1702,9 @@ int japi_run_bulk_jobs(drmaa_attr_values_t **jobidsp, lListElem *sge_job_templat
 
    /* add job arry to library session data */
    drmaa_errno = japi_add_job(jobid, start, end, incr, true, diag);
+
+   JAPI_UNLOCK_JOB_LIST();    
+
    japi_dec_threads(SGE_FUNC);
    if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
       /* diag written by japi_add_job() */
@@ -1782,7 +1790,7 @@ static int japi_user_hold_add_jobid(u_long32 gdi_action, lList **request_list,
    if (lGetSubUlong(jep, JAT_task_number, taskid, JB_ja_tasks)) {
       /* taskid is referenced twice */
       if (diag) 
-         sge_dstring_sprintf(diag, "task "sge_U32CFormat" of jobid "sge_U32CFormat" referenced twice\n", 
+         sge_dstring_sprintf(diag, MSG_JAPI_TASK_REF_TWICE_UU, 
                taskid, jobid);
       DEXIT;
       return DRMAA_ERRNO_INVALID_ARGUMENT;
@@ -1910,7 +1918,7 @@ int japi_control(const char *jobid_str, int drmaa_action, dstring *diag)
             if (japi_parse_jobid(jobid_str, &jobid, &taskid, &array, diag)) {
                japi_dec_threads(SGE_FUNC);
                /* diag written by japi_parse_jobid() */
-               ref_list = lFreeList(ref_list);
+               lFreeList(&ref_list);
                DEXIT;
                return DRMAA_ERRNO_INVALID_ARGUMENT;
             }
@@ -1930,8 +1938,8 @@ int japi_control(const char *jobid_str, int drmaa_action, dstring *diag)
             
             alp = sge_gdi(SGE_CQUEUE_LIST, SGE_GDI_TRIGGER, 
                           &id_list, NULL, NULL);
-            id_list = lFreeList(id_list);
-            ref_list = lFreeList(ref_list);
+            lFreeList(&id_list);
+            lFreeList(&ref_list);
 
             for_each (aep, alp) {
                if (lGetUlong(aep, AN_status) != STATUS_OK) {
@@ -1939,13 +1947,13 @@ int japi_control(const char *jobid_str, int drmaa_action, dstring *diag)
 
                   japi_dec_threads(SGE_FUNC);
                   ret = japi_gdi_control_error2japi_error(aep, diag, drmaa_action);
-                  alp = lFreeList(alp);
+                  lFreeList(&alp);
                   
                   DEXIT;
                   return ret;
                }
             }
-            alp = lFreeList(alp);
+            lFreeList(&alp);
          }
       }
       break;
@@ -1977,7 +1985,7 @@ int japi_control(const char *jobid_str, int drmaa_action, dstring *diag)
                      /* diag written by japi_user_hold_add_jobid() */
                      JAPI_UNLOCK_JOB_LIST();    
                      japi_dec_threads(SGE_FUNC);
-                     request_list = lFreeList(request_list);
+                     lFreeList(&request_list);
                      DEXIT;
                      return drmaa_errno;
                   }
@@ -1992,7 +2000,7 @@ int japi_control(const char *jobid_str, int drmaa_action, dstring *diag)
                            /* diag written by japi_user_hold_add_jobid() */
                            JAPI_UNLOCK_JOB_LIST();    
                            japi_dec_threads(SGE_FUNC);
-                           request_list = lFreeList(request_list);
+                           lFreeList(&request_list);
                            DEXIT;
                            return drmaa_errno;
                         }
@@ -2005,7 +2013,7 @@ int japi_control(const char *jobid_str, int drmaa_action, dstring *diag)
             if (japi_parse_jobid(jobid_str, &jobid, &taskid, &array, diag)) {
                japi_dec_threads(SGE_FUNC);
                /* diag written by japi_parse_jobid() */
-               request_list = lFreeList(request_list);
+               lFreeList(&request_list);
                DEXIT;
                return DRMAA_ERRNO_INVALID_ARGUMENT;
             }
@@ -2016,7 +2024,7 @@ int japi_control(const char *jobid_str, int drmaa_action, dstring *diag)
             if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
                japi_dec_threads(SGE_FUNC);
                /* diag written by japi_user_hold_add_jobid() */
-               request_list = lFreeList(request_list);
+               lFreeList(&request_list);
                DEXIT;
                return drmaa_errno;
             }
@@ -2024,7 +2032,7 @@ int japi_control(const char *jobid_str, int drmaa_action, dstring *diag)
 
          if (request_list) {
             alp = sge_gdi(SGE_JOB_LIST, SGE_GDI_MOD, &request_list, NULL, NULL);
-            request_list = lFreeList(request_list);
+            lFreeList(&request_list);
 
             for_each (aep, alp) {
                if (lGetUlong(aep, AN_status) != STATUS_OK) {
@@ -2032,13 +2040,13 @@ int japi_control(const char *jobid_str, int drmaa_action, dstring *diag)
 
                   japi_dec_threads(SGE_FUNC);
                   ret = japi_gdi_control_error2japi_error(aep, diag, drmaa_action);
-                  lFreeList(alp);
+                  lFreeList(&alp);
                   
                   DEXIT;
                   return ret;
                }
             }
-            lFreeList(alp);
+            lFreeList(&alp);
          }
       }
       break;
@@ -2120,7 +2128,7 @@ int japi_control(const char *jobid_str, int drmaa_action, dstring *diag)
                   if (ret != DRMAA_ERRNO_SUCCESS) {
                      JAPI_UNLOCK_JOB_LIST();
                      japi_dec_threads(SGE_FUNC);
-                     id_list = lFreeList(id_list);
+                     lFreeList(&id_list);
                      DEXIT;
                      return ret;
                   }
@@ -2136,7 +2144,7 @@ int japi_control(const char *jobid_str, int drmaa_action, dstring *diag)
             if (japi_parse_jobid(jobid_str, &jobid, &taskid, &array, diag)) {
                japi_dec_threads(SGE_FUNC);
                /* diag written by japi_parse_jobid() */
-               id_list = lFreeList(id_list);
+               lFreeList(&id_list);
                DEXIT;
                return DRMAA_ERRNO_INVALID_ARGUMENT;
             }
@@ -2173,7 +2181,7 @@ int japi_control(const char *jobid_str, int drmaa_action, dstring *diag)
 
             if (ret != DRMAA_ERRNO_SUCCESS) {
                japi_dec_threads(SGE_FUNC);
-               id_list = lFreeList(id_list);
+               lFreeList(&id_list);
                DEXIT;
                return ret;
             }
@@ -2352,7 +2360,7 @@ int japi_synchronize(const char *job_ids[], signed long timeout, bool dispose, d
    /* wait(?) until specified jobs have finished according to library session data */
 
    /* synchronize with *all* jobs submitted during this session ? */
-   for (i=0; job_ids[i]; i++) {
+   for (i=0; job_ids[i] != NULL; i++) {
       if (!strcmp(job_ids[i], DRMAA_JOB_IDS_SESSION_ALL)) {
          sync_all = true;
          break;
@@ -2457,7 +2465,7 @@ int japi_synchronize(const char *job_ids[], signed long timeout, bool dispose, d
              * of the sync_list.  That means that if we free the sync_list, we
              * don't have to free the individual elements of the
              * sync_job_ids. */
-            sync_list = lFreeList (sync_list);
+            lFreeList(&sync_list);
             FREE (sync_job_ids);
          }
          
@@ -2473,8 +2481,9 @@ int japi_synchronize(const char *job_ids[], signed long timeout, bool dispose, d
             wait_result = JAPI_WAIT_TIMEOUT; 
             break;
          } 
-      } else
+      } else {
          pthread_cond_wait(&Master_japi_job_list_finished_cv, &Master_japi_job_list_mutex);
+      }
    }
 
    JAPI_UNLOCK_JOB_LIST();
@@ -2491,7 +2500,7 @@ int japi_synchronize(const char *job_ids[], signed long timeout, bool dispose, d
       /* The sync_job_ids is an array of pointers to the ST_name elements of the
        * sync_list.  That means that if we free the sync_list, we don't have to
        * free the individual elements of the sync_job_ids. */
-      sync_list = lFreeList (sync_list);
+      lFreeList(&sync_list);
       FREE (sync_job_ids);
    }
    
@@ -2539,7 +2548,7 @@ static int japi_synchronize_jobids_retry(const char *job_ids[], bool dispose)
     * We simply iterate over all jobids and do the wait operation 
     * for each of them. 
     */
-   for (i=0; job_ids[i]; i++) {
+   for (i=0; job_ids[i] != NULL; i++) {
       u_long32 jobid, taskid;  
       bool is_array;
     
@@ -2548,7 +2557,8 @@ static int japi_synchronize_jobids_retry(const char *job_ids[], bool dispose)
       japi_parse_jobid(job_ids[i], &jobid, &taskid, &is_array, NULL);
 
       japi_job = lGetElemUlong(Master_japi_job_list, JJ_jobid, jobid);
-      if (!japi_job) {
+      
+      if (japi_job == NULL) {
          DPRINTF(("synchronized with "sge_u32"."sge_u32"\n", jobid, taskid));
          continue;
       }
@@ -2567,7 +2577,7 @@ static int japi_synchronize_jobids_retry(const char *job_ids[], bool dispose)
          DPRINTF(("dispose job finish information for job "sge_u32" task "sge_u32"\n", jobid, taskid));
          if (!lGetList(japi_job, JJ_finished_tasks) && !not_yet_finished) {
             /* remove JAPI job if no longer needed */
-            lRemoveElem(Master_japi_job_list, japi_job); 
+            lRemoveElem(Master_japi_job_list, &japi_job);
          }
       }
    }
@@ -2722,8 +2732,8 @@ int japi_wait(const char *job_id, dstring *waited_job, int *stat,
    }
    else {
       wait4any = 0;
-      if ((drmaa_errno=japi_parse_jobid(job_id, &jobid, &taskid, &is_array_task, diag))
-                           !=DRMAA_ERRNO_SUCCESS) {
+      if ((drmaa_errno = japi_parse_jobid(job_id, &jobid, &taskid, &is_array_task, diag))
+                           != DRMAA_ERRNO_SUCCESS) {
          japi_dec_threads(SGE_FUNC);
          /* diag written by japi_parse_jobid() */
          DEXIT;
@@ -2791,7 +2801,7 @@ int japi_wait(const char *job_id, dstring *waited_job, int *stat,
                lAppendElem (slp, sep);
 
                sprintf (buffer, "%s=%.4f", lGetString (uep, UA_name), lGetDouble (uep, UA_value));
-               lSetString (sep, ST_name, strdup (buffer));
+               lSetString (sep, ST_name, buffer);
             }
 
             (*rusage)->iterator_type = JAPI_ITERATOR_STRINGS;
@@ -2802,15 +2812,15 @@ int japi_wait(const char *job_id, dstring *waited_job, int *stat,
 
       japi_dec_threads(SGE_FUNC);
 
-      rusagep = lFreeList(rusagep);
+      lFreeList(&rusagep);
    }
 
-   if (wait_result==JAPI_WAIT_INVALID) {
+   if (wait_result == JAPI_WAIT_INVALID) {
       japi_standard_error(DRMAA_ERRNO_INVALID_JOB, diag);
       DEXIT;
       return DRMAA_ERRNO_INVALID_JOB;
    }
-   if (wait_result==JAPI_WAIT_TIMEOUT) {
+   if (wait_result == JAPI_WAIT_TIMEOUT) {
       japi_standard_error(DRMAA_ERRNO_EXIT_TIMEOUT, diag);
       DEXIT;
       return DRMAA_ERRNO_EXIT_TIMEOUT;
@@ -2824,7 +2834,7 @@ int japi_wait(const char *job_id, dstring *waited_job, int *stat,
          sge_dstring_sprintf(waited_job, "%ld", waited_jobid);
    }
 
-   if (wait_result!=JAPI_WAIT_FINISHED) {
+   if (wait_result != JAPI_WAIT_FINISHED) {
       japi_standard_error(DRMAA_ERRNO_INVALID_JOB, diag);
       DEXIT;
       return DRMAA_ERRNO_INVALID_JOB;
@@ -2919,9 +2929,10 @@ static int japi_wait_retry(lList *japi_job_list, int wait4any, u_long32 jobid,
          else {
             return_value = JAPI_WAIT_FINISHED;
          }
-      } else {
+      } /* if wait4any */
+      else {
          job = lGetElemUlong(japi_job_list, JJ_jobid, jobid);
-         if (!job) {
+         if (job == NULL) {
             return_value = JAPI_WAIT_ALLFINISHED;
          }
          else {
@@ -3076,7 +3087,7 @@ static int japi_wait_retry(lList *japi_job_list, int wait4any, u_long32 jobid,
                *rusagep = usage_copy;
             }
             else {
-               lAddList (*rusagep, usage_copy);
+               lAddList(*rusagep, &usage_copy);
             }
          }
       }
@@ -3084,10 +3095,10 @@ static int japi_wait_retry(lList *japi_job_list, int wait4any, u_long32 jobid,
 
    if (*wevent == JAPI_JOB_FINISH) {
       /* remove reaped jobs from library session data */
-      lRemoveElem(lGetList(job, JJ_finished_tasks), task);
+      lRemoveElem(lGetList(job, JJ_finished_tasks), &task);
       if (range_list_is_empty(lGetList(job, JJ_not_yet_finished_ids)) 
          && lGetNumberOfElem(lGetList(job, JJ_finished_tasks))==0) {
-         lRemoveElem(Master_japi_job_list, job);
+         lRemoveElem(Master_japi_job_list, &job);
       }
    }
 
@@ -3178,8 +3189,18 @@ japi_sge_state_to_drmaa_state(lListElem *job, lList *cqueue_list,
       
       if ((ja_task != NULL) && (lGetUlong(ja_task, JAT_status) == JFINISHED)) {
          task_finished = true;
+      } else {
+         if (ja_task == NULL) {
+            if (!range_list_is_id_within(lGetList(job, JB_ja_n_h_ids), taskid) &&
+                !range_list_is_id_within(lGetList(job, JB_ja_u_h_ids), taskid) &&
+                !range_list_is_id_within(lGetList(job, JB_ja_s_h_ids), taskid) &&
+                !range_list_is_id_within(lGetList(job, JB_ja_o_h_ids), taskid))
+               task_finished = true;
+         }
       }
    }
+
+   DPRINTF(("japi_sge_state_to_drmaa_state(1)\n"));
 
    /*
     * The reason for this job no longer being available at qmaster might 
@@ -3218,18 +3239,21 @@ japi_sge_state_to_drmaa_state(lListElem *job, lList *cqueue_list,
          }
 
          japi_task = lGetSubUlong(japi_job, JJAT_task_id, taskid, JJ_finished_tasks);
-         wait_status = lGetUlong(japi_task, JJAT_stat);
-         DPRINTF(("wait_status("sge_u32"/"sge_u32") = "sge_u32"\n", jobid, taskid, wait_status));
          
-         if (SGE_GET_NEVERRAN(wait_status)) {
-            *remote_ps = DRMAA_PS_FAILED;
-         } else {
-            *remote_ps = DRMAA_PS_DONE;
+         if (japi_task != NULL) {
+            wait_status = lGetUlong(japi_task, JJAT_stat);
+            DPRINTF(("wait_status("sge_u32"/"sge_u32") = "sge_u32"\n", jobid, taskid, wait_status));
+
+            if (SGE_GET_NEVERRAN(wait_status)) {
+               *remote_ps = DRMAA_PS_FAILED;
+            } else {
+               *remote_ps = DRMAA_PS_DONE;
+            }
+
+            JAPI_UNLOCK_JOB_LIST();
+            DEXIT;
+            return DRMAA_ERRNO_SUCCESS;
          }
-         
-         JAPI_UNLOCK_JOB_LIST();
-         DEXIT;
-         return DRMAA_ERRNO_SUCCESS;
       }
       
       if ((japi_job == NULL) || (japi_task == NULL)) {
@@ -3251,6 +3275,8 @@ japi_sge_state_to_drmaa_state(lListElem *job, lList *cqueue_list,
       return DRMAA_ERRNO_SUCCESS;
    }
 
+   DPRINTF(("japi_sge_state_to_drmaa_state(2)\n"));
+
    if (!is_array_task) {
       /* reject "jobid" without taskid for array jobs */
       if (JOB_TYPE_IS_ARRAY(lGetUlong(job, JB_type))) {
@@ -3267,8 +3293,10 @@ japi_sge_state_to_drmaa_state(lListElem *job, lList *cqueue_list,
       }
    }
 
-   if (ja_task != NULL) { 
-      /* the state of enrolled tasks can be direclty determined */
+   DPRINTF(("japi_sge_state_to_drmaa_state(3)\n"));
+
+   if (ja_task != NULL) {
+      /* the state of enrolled tasks can directly be determined */
       u_long32 ja_task_status = lGetUlong(ja_task, JAT_status);
       u_long32 ja_task_state = lGetUlong(ja_task, JAT_state);
       u_long32 ja_task_hold = lGetUlong(ja_task, JAT_hold);
@@ -3348,6 +3376,8 @@ japi_sge_state_to_drmaa_state(lListElem *job, lList *cqueue_list,
       return DRMAA_ERRNO_SUCCESS;
    }
   
+   DPRINTF(("japi_sge_state_to_drmaa_state(4)\n"));
+
    /* not yet enrolled tasks are always PENDING */
    *remote_ps = DRMAA_PS_SUBSTATE_PENDING;
 
@@ -3360,6 +3390,8 @@ japi_sge_state_to_drmaa_state(lListElem *job, lList *cqueue_list,
        )
       *remote_ps |= DRMAA_PS_SUBSTATE_SYSTEM_SUSP;
  
+   DPRINTF(("japi_sge_state_to_drmaa_state(5)\n"));
+
    DEXIT;
    return DRMAA_ERRNO_SUCCESS;
 }
@@ -3420,8 +3452,8 @@ static int japi_get_job_and_queues(u_long32 jobid, lList **retrieved_cqueue_list
    qu_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_CQUEUE_LIST, 
                          SGE_GDI_GET, NULL, cqueue_selection, cqueue_fields, 
                          NULL, &state, true);
-   cqueue_selection = lFreeWhere(cqueue_selection);
-   cqueue_fields = lFreeWhat(cqueue_fields);
+   lFreeWhere(&cqueue_selection);
+   lFreeWhat(&cqueue_fields);
 
    /* prepare GDI GET JOB selection */
    job_selection = lWhere("%T(%I==%u)", JB_Type, JB_job_number, jobid);
@@ -3445,15 +3477,15 @@ static int japi_get_job_and_queues(u_long32 jobid, lList **retrieved_cqueue_list
    
    jb_id = sge_gdi_multi(&alp, SGE_GDI_SEND, SGE_JOB_LIST, SGE_GDI_GET, NULL, 
          job_selection, job_fields, &mal, &state, true);
-   job_selection = lFreeWhere(job_selection);
-   job_fields = lFreeWhat(job_fields);
+   lFreeWhere(&job_selection);
+   lFreeWhat(&job_fields);
 
    alp = sge_gdi_extract_answer(SGE_GDI_GET, SGE_CQUEUE_LIST, qu_id, mal, 
                                 retrieved_cqueue_list);
    aep = lFirst(alp);
    
    if (aep == NULL) {
-      sge_dstring_copy_string(diag, "sge_gdi() failed returning answer list");
+      sge_dstring_copy_string(diag, MSG_JAPI_BAD_GDI_ANSWER_LIST);
       DEXIT;
       return DRMAA_ERRNO_INTERNAL_ERROR;
    }
@@ -3462,18 +3494,18 @@ static int japi_get_job_and_queues(u_long32 jobid, lList **retrieved_cqueue_list
       
    if (quality == ANSWER_QUALITY_ERROR) {
       answer_to_dstring(aep, diag);
-      alp = lFreeList(alp);
+      lFreeList(&alp);
       DEXIT;
       return DRMAA_ERRNO_DRM_COMMUNICATION_FAILURE;
    } 
 
-   alp = lFreeList(alp);
+    lFreeList(&alp);
 
    alp = sge_gdi_extract_answer(SGE_GDI_GET, SGE_JOB_LIST, jb_id, mal, retrieved_job_list);
    aep = lFirst(alp);
    
    if (aep == NULL) {
-      sge_dstring_copy_string(diag, "sge_gdi() failed returning answer list");
+      sge_dstring_copy_string(diag, MSG_JAPI_BAD_GDI_ANSWER_LIST);
       DEXIT;
       return DRMAA_ERRNO_INTERNAL_ERROR;
    }
@@ -3482,12 +3514,12 @@ static int japi_get_job_and_queues(u_long32 jobid, lList **retrieved_cqueue_list
    
    if (quality == ANSWER_QUALITY_ERROR) {
       answer_to_dstring(aep, diag);
-      alp = lFreeList(alp);
+      lFreeList(&alp);
       DEXIT;
       return DRMAA_ERRNO_DRM_COMMUNICATION_FAILURE;
    } 
    
-   alp = lFreeList(alp);
+   lFreeList(&alp);
 
    DEXIT;
    return DRMAA_ERRNO_SUCCESS;
@@ -3529,7 +3561,7 @@ static int japi_parse_jobid(const char *job_id_str, u_long32 *jp, u_long32 *tp,
    /* parse jobid/taskid */
    if (strchr(job_id_str, '.')) {
       if (sscanf(job_id_str, sge_u32"."sge_u32, &jobid, &taskid) != 2) {
-         sge_dstring_sprintf(diag, "job id passed "SFQ" is not a valid bulk job id\n", job_id_str);
+         sge_dstring_sprintf(diag, MSG_JAPI_BAD_BULK_JOB_ID_S, job_id_str);
          DEXIT;
          return DRMAA_ERRNO_INVALID_ARGUMENT;
       }
@@ -3537,7 +3569,7 @@ static int japi_parse_jobid(const char *job_id_str, u_long32 *jp, u_long32 *tp,
       is_array_task = true;
    } else {
       if (sscanf(job_id_str, sge_u32, &jobid) != 1) {
-         sge_dstring_sprintf(diag, "job id passed "SFQ" is not a valid job id\n", job_id_str);
+         sge_dstring_sprintf(diag, MSG_JAPI_BAD_JOB_ID_S, job_id_str);
          DEXIT;
          return DRMAA_ERRNO_INVALID_ARGUMENT;
       }
@@ -3595,6 +3627,22 @@ static int japi_parse_jobid(const char *job_id_str, u_long32 *jp, u_long32 *tp,
 *     jobids.
 *     Would be good to have DRMAA_JOB_IDS_SESSION_ALL supported with 
 *     drama_job_ps().
+*
+*     This function should be changed in a way that local JAPI-internal 
+*     information is evaluated at first and no GDI request is done if
+*     this isn't necessary: 
+*
+*     (1) A GDI request isn't acutally required for argument checking 
+*         to prevent "jobid" being passed for array jobs or "jobid.taskid" 
+*         be passed for non-array jobs. This is true at least for jobs 
+*         that were submitted during the session which can be assumed the
+*         majority. Argument checking can be done based on JJ_type.
+*
+*     (2) A GDI request isn't actually required if job finish event
+*         already arrived at JAPI.
+*     
+*     in these cases GDI request could be saved. This would help 
+*     improving qmaster availability.
 *******************************************************************************/
 int japi_job_ps(const char *job_id_str, int *remote_ps, dstring *diag)
 {
@@ -3636,7 +3684,7 @@ int japi_job_ps(const char *job_id_str, int *remote_ps, dstring *diag)
       return DRMAA_ERRNO_INTERNAL_ERROR;
    }
 
-   DPRINTF(("japi_job_ps("SFQ")\n", job_id_str)); 
+   DPRINTF(("japi_job_ps1("SFQ")\n", job_id_str)); 
    if ((drmaa_errno=japi_parse_jobid(job_id_str, &jobid, &taskid, 
          &is_array_task, diag)) !=DRMAA_ERRNO_SUCCESS) {
       japi_dec_threads(SGE_FUNC);
@@ -3644,6 +3692,8 @@ int japi_job_ps(const char *job_id_str, int *remote_ps, dstring *diag)
       DEXIT;
       return drmaa_errno;
    }
+
+   DPRINTF(("japi_job_ps2("SFQ")\n", job_id_str)); 
 
    drmaa_errno = japi_get_job_and_queues(jobid, &retrieved_cqueue_list, &retrieved_job_list, diag);
    if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
@@ -3653,6 +3703,8 @@ int japi_job_ps(const char *job_id_str, int *remote_ps, dstring *diag)
       return drmaa_errno;
    }
 
+   DPRINTF(("japi_job_ps3("SFQ")\n", job_id_str)); 
+
    drmaa_errno = japi_sge_state_to_drmaa_state(lFirst(retrieved_job_list), 
                                                retrieved_cqueue_list, 
                                                is_array_task, jobid, taskid, 
@@ -3660,8 +3712,8 @@ int japi_job_ps(const char *job_id_str, int *remote_ps, dstring *diag)
 
    japi_dec_threads(SGE_FUNC);
 
-   retrieved_job_list = lFreeList(retrieved_job_list);
-   retrieved_cqueue_list = lFreeList(retrieved_cqueue_list);
+   lFreeList(&retrieved_job_list);
+   lFreeList(&retrieved_cqueue_list);
 
    DEXIT;
    return drmaa_errno;
@@ -4038,6 +4090,7 @@ void japi_version(unsigned int *major, unsigned int *minor)
 *  OUTPUTS
 *     dstring *drm  - Returns DRM name - on success
 *     dstring *diag - Returns diagnssis information - on error.
+*     int me        - Me.wo progname
 *
 *  RESULT
 *     int - DRMAA error codes
@@ -4045,14 +4098,16 @@ void japi_version(unsigned int *major, unsigned int *minor)
 *  NOTES
 *     MT-NOTE: japi_get_drm_system() is MT safe
 *******************************************************************************/
-int japi_get_drm_system(dstring *drm, dstring *diag)
+int japi_get_drm_system(dstring *drm, dstring *diag, int me)
 {
    dstring buffer = DSTRING_INIT;
    pthread_once(&japi_once_control, japi_once_init);
 
+   /* Set application prog number */
+   prog_number = me;
+
    /* per thread initialization */
    if (japi_init_mt(diag)!=DRMAA_ERRNO_SUCCESS) {
-/*       japi_standard_error(DRMAA_ERRNO_INTERNAL_ERROR, diag); */
       return DRMAA_ERRNO_INTERNAL_ERROR;
    }
 
@@ -4114,7 +4169,7 @@ static void *japi_implementation_thread(void *p)
    JAPI_LOCK_EC_STATE();
    if (japi_ec_state != JAPI_EC_STARTING) {
       JAPI_UNLOCK_EC_STATE();
-      lFreeList(alp);
+      lFreeList(&alp);
       goto SetupFailed;
    }
    JAPI_UNLOCK_EC_STATE();
@@ -4138,7 +4193,7 @@ static void *japi_implementation_thread(void *p)
                   lGetUlong(aep, AN_status), (answer_quality_t)lGetUlong(aep, AN_quality));
          }
       }
-      lFreeList(alp);
+      lFreeList(&alp);
       goto SetupFailed;
    }
    log_state_set_log_gui(0);
@@ -4173,14 +4228,14 @@ static void *japi_implementation_thread(void *p)
    
    ec_mod_subscription_where(sgeE_JOB_LIST, what_el, where_el);
 
-   where = lFreeWhere(where);
-   what = lFreeWhat(what);
+   lFreeWhere(&where);
+   lFreeWhat(&what);
    if (where_el) {
-      where_el = lFreeElem(where_el);
+      lFreeElem(&where_el);
    }
    
    if (what_el) {
-      what_el = lFreeElem(what_el);
+      lFreeElem(&what_el);
    }
 
    ec_subscribe(sgeE_JOB_FINISH);
@@ -4198,7 +4253,7 @@ static void *japi_implementation_thread(void *p)
    JAPI_LOCK_EC_STATE();
    if (japi_ec_state != JAPI_EC_STARTING) {
       JAPI_UNLOCK_EC_STATE();
-      lFreeList(alp);
+      lFreeList(&alp);
       goto SetupFailed;
    }
    
@@ -4213,7 +4268,7 @@ static void *japi_implementation_thread(void *p)
          }
       }
       JAPI_UNLOCK_EC_STATE();
-      lFreeList(alp);
+      lFreeList(&alp);
       goto SetupFailed;
    }
    japi_ec_id = ec_get_id();
@@ -4237,7 +4292,7 @@ static void *japi_implementation_thread(void *p)
          if (japi_ec_state == JAPI_EC_FINISHING) {
             JAPI_UNLOCK_EC_STATE();
             DPRINTF (("Received stop request while waiting for events.\n"));
-            event_list = lFreeList(event_list);
+            lFreeList(&event_list);
             break;
          }
          JAPI_UNLOCK_EC_STATE();
@@ -4347,7 +4402,7 @@ static void *japi_implementation_thread(void *p)
                         } /* for */
                      } /* for_each */
 
-                     range_list_copy = lFreeList(range_list_copy);
+                     lFreeList(&range_list_copy);
                   } /* else */
                } /* for_each */
 
@@ -4495,7 +4550,7 @@ static void *japi_implementation_thread(void *p)
                
             } /* else if type == sgeE_QMASTER_GOES_DOWN */
          } /* for_each */
-         event_list = lFreeList(event_list);
+         lFreeList(&event_list);
       } /* else */
 
       if (!stop_ec) {
@@ -4858,7 +4913,7 @@ static int japi_read_dynamic_attributes(dstring *diag)
       }
    }
 
-   config = lFreeElem(config);
+   lFreeElem(&config);
    DEXIT;
    return drmaa_errno;
 }
@@ -4899,7 +4954,7 @@ static int do_gdi_delete (lList **id_list, int action, bool delete_all,
    DENTER (TOP_LAYER, "do_gdi_delete");
 
    alp = sge_gdi(SGE_JOB_LIST, SGE_GDI_DEL, id_list, NULL, NULL);
-   *id_list = lFreeList(*id_list);
+   lFreeList(id_list);
 
    for_each (aep, alp) {
       int status = lGetUlong(aep, AN_status);
@@ -4913,13 +4968,13 @@ static int do_gdi_delete (lList **id_list, int action, bool delete_all,
     * return a DRMAA_ERRNO_INVALID_JOB error by every control(ALL, TERM). */
       if ((status != STATUS_OK) && !(delete_all && (status == STATUS_EEXIST))) {
          int ret = japi_gdi_control_error2japi_error(aep, diag, action);
-         alp = lFreeList(alp);
+         lFreeList(&alp);
          DEXIT;
          return ret;
       }
    }
 
-   alp = lFreeList(alp);
+   lFreeList(&alp);
 
    DEXIT;
    return DRMAA_ERRNO_SUCCESS;
@@ -4954,8 +5009,8 @@ static int japi_stop_event_client (void)
    snprintf(id_string, sizeof(id_string)-1, sge_u32, japi_ec_id);
    lAddElemStr(&id_list, ID_str, id_string, ID_Type);
    alp = gdi_kill(id_list, uti_state_get_default_cell(), 0, EVENTCLIENT_KILL);
-   id_list = lFreeList(id_list);
-   alp = lFreeList(alp);
+   lFreeList(&id_list);
+   lFreeList(&alp);
    
    DEXIT;
    return 0;

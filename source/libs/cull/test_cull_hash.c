@@ -49,6 +49,7 @@
 #define __SGE_GDI_LIBRARY_HOME_OBJECT_FILE__
 #include "cull.h"
 
+#include "uti/sge_profiling.h"
 
 #ifdef TEST_USE_JOBL
 #include "sge_jobL.h"
@@ -91,7 +92,7 @@ lNameSpace my_nmv[] = {
 
 static void usage(const char *argv0) 
 {
-   fprintf(stderr, "usage: %s <num_objects> <num_names> <uh> <nuh>\n", argv0);
+   fprintf(stderr, "usage: %s [<num_objects> <num_names> <uh> <nuh>]\n", argv0);
    fprintf(stderr, "<num_objects> = number of objects to be created\n");
    fprintf(stderr, "<num_names>   = number of entries in non unique hash\n");
    fprintf(stderr, "<uh>          = create unique hash\n");
@@ -187,7 +188,7 @@ static void do_test(bool unique_hash, bool non_unique_hash,
    /* measure time */
    now = times(&tms_buffer);
    prof_copy = (now - start) * 1.0 / clk_tck;
-   copy = lFreeList(copy);
+   lFreeList(&copy);
 
    /* TEST: random access by unique attrib */
    start = times(&tms_buffer);
@@ -258,7 +259,7 @@ static void do_test(bool unique_hash, bool non_unique_hash,
       ep = lGetElemUlong(lp, NM_ULONG, rand() % num_objects);
       /* if same rand showed up earlier, object does no longer exist! */
       if (ep != NULL) {
-         lRemoveElem(lp, ep);
+         lRemoveElem(lp, &ep);
          objs_dru++;
       }
    }   
@@ -276,7 +277,7 @@ static void do_test(bool unique_hash, bool non_unique_hash,
       next_ep = lGetElemStrFirst(lp, NM_STRING, names[i], &iterator);
       while ((ep = next_ep) != NULL) {
          next_ep = lGetElemStrNext(lp, NM_STRING, names[i], &iterator);
-         lRemoveElem(lp, ep);
+         lRemoveElem(lp, &ep);
          objs_dinu++;
       }
    }
@@ -297,7 +298,7 @@ static void do_test(bool unique_hash, bool non_unique_hash,
 #ifdef MALLINFO
           (meminfo.usmblks + meminfo.uordblks) / 1024
 #else
-          0
+          0L
 #endif
           );
 
@@ -305,7 +306,7 @@ static void do_test(bool unique_hash, bool non_unique_hash,
 printf("%s\n", cull_hash_statistics(cht, &stat_dstring));
    sge_dstring_free(&stat_dstring);
 #endif
-   lFreeList(lp);
+   lFreeList(&lp);
 }
 
 int main(int argc, char *argv[])
@@ -315,22 +316,30 @@ int main(int argc, char *argv[])
    int i;
    bool uh, nuh;
 
-   if (argc < 5) {
+   if (argc != 1 && argc < 5) {
       usage(argv[0]);
    }
 
    /* initialize globals */
    lInit(my_nmv);
    clk_tck = sysconf(_SC_CLK_TCK); /* JG: TODO: sge_sysconf? */
+   sge_prof_setup();
 
    /* we need random numbers */
    srand(time(0));
 
-   /* parse commandline options */
-   num_objects = atoi(argv[1]);
-   num_names   = atoi(argv[2]);
-   uh          = atoi(argv[3]) == 0 ? false : true;
-   nuh         = atoi(argv[4]) == 0 ? false : true;
+   if (argc == 1) {
+      num_objects = 1000;
+      num_names   = 10;
+      uh          = true;
+      nuh         = true;
+   } else {
+      /* parse commandline options */
+      num_objects = atoi(argv[1]);
+      num_names   = atoi(argv[2]);
+      uh          = atoi(argv[3]) == 0 ? false : true;
+      nuh         = atoi(argv[4]) == 0 ? false : true;
+   }
 
    /* create name array */
    names = (const char **) malloc (num_names * sizeof(const char *));

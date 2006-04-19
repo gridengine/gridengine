@@ -115,7 +115,7 @@ void ja_task_list_print_to_string(const lList *ja_task_list,
    } 
    range_list_sort_uniq_compress(range_list, NULL); 
    range_list_print_to_string(range_list, range_string, false); 
-   range_list = lFreeList(range_list);
+   lFreeList(&range_list);
    DEXIT;
 }
 
@@ -158,7 +158,7 @@ lList* ja_task_list_split_group(lList **ja_task_list)
                         JAT_status, status, JAT_state, state,
                         JAT_hold, hold);
          lSplit(ja_task_list, &ret_list, NULL, where);
-         where = lFreeWhere(where);
+         lFreeWhere(&where);
       }
    }
    return ret_list;
@@ -353,7 +353,8 @@ int sge_parse_jobtasks( lList **ipp, lListElem **idp, const char *str_jobtask,
          task_id_range_list = lCopyList(lGetListName(arrayDefList), arrayDefList);
       }
       else {
-         lAddList(task_id_range_list, lCopyList("", arrayDefList));
+         lList *copy = lCopyList("", arrayDefList);
+         lAddList(task_id_range_list, &copy);
       }
    }
 

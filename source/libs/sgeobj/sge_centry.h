@@ -63,8 +63,7 @@ centry_create(lList **answer_list,
 bool
 centry_is_referenced(const lListElem *centry, lList **answer_list,
                      const lList *master_cqueue_list,
-                     const lList *master_exechost_list,
-                     const lList *master_sconf_list);
+                     const lList *master_exechost_list);
 
 bool
 centry_print_resource_to_dstring(const lListElem *this_elem, 
@@ -88,7 +87,7 @@ bool
 centry_list_init_double(lList *this_list);
 
 int
-centry_list_fill_request(lList *centry_list, lList *master_centry_list,
+centry_list_fill_request(lList *centry_list, lList **answer_list, lList *master_centry_list,
                          bool allow_non_requestable, bool allow_empty_boolean,
                          bool allow_neg_consumable);
 

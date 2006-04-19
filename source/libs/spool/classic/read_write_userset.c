@@ -216,13 +216,14 @@ int spool
    FPRINTF((fp, "\n"));
 
    if (fname) {
-      fclose(fp);
+      FCLOSE(fp);
    }
 
    DEXIT;
    return 0;
 
 FPRINTF_ERROR:
+FCLOSE_ERROR:
    DEXIT;
    return -1;
 }

@@ -38,6 +38,7 @@
 #   include "sge_gdiP.h"
 #endif
 
+#include "uti/sge_monitor.h"
 #include "cull.h"
 
 typedef struct _gdi_object_t gdi_object_t;
@@ -50,7 +51,8 @@ typedef int (*modifier_func_t)(
    const char *ruser,
    const char *rhost,
    gdi_object_t *object, /* some kind of "this" */
-   int sub_command
+   int sub_command,
+   monitoring_t *monitor
 );
 
 typedef int (*writer_func_t)(
@@ -66,7 +68,8 @@ typedef int (*on_success_func_t)(
    lListElem *ep,       /* new modified and already spooled element */
    lListElem *old_ep,   /* old element is NULL in add case */
    gdi_object_t *this,  /* some kind of "this" */
-   lList **ppList       /* a list to pass back information for post processing */
+   lList **ppList,       /* a list to pass back information for post processing */
+   monitoring_t *monitor  /* monitoring structure */
 );
 
 struct _gdi_object_t {
@@ -75,7 +78,6 @@ struct _gdi_object_t {
    lDescr             *type;           /* QU_Type */
    char               *object_name;    /* "queue" */
    lList              **master_list;   /* &Master_Calendar_List */
-   getMasterList      getMasterList;   /* master list retrieve method    */
    modifier_func_t    modifier;        /* responsible for validating each our attribute modifier */
    writer_func_t      writer;          /* function that spools our object */
    on_success_func_t  on_success;      /* do everything what has to be done on successful writing */
@@ -83,13 +85,20 @@ struct _gdi_object_t {
 
 gdi_object_t *get_gdi_object(u_long32);
 
-int sge_gdi_add_mod_generic(lList **alpp, lListElem *instructions, int add, gdi_object_t *object, const char *ruser, const char *rhost, int sub_command, lList **ppList);
+void 
+sge_c_gdi(char *host, sge_gdi_request *request, sge_gdi_request *answer,
+          sge_pack_buffer *pb, monitoring_t *monitor);
 
-void sge_c_gdi(char *host, sge_gdi_request *request, sge_gdi_request *answer);
+int 
+sge_gdi_add_mod_generic(lList **alpp, lListElem *instructions, int add, 
+                        gdi_object_t *object, const char *ruser, 
+                        const char *rhost, int sub_command, lList **ppList, 
+                        monitoring_t *monitor);
 
 void sge_clean_lists(void); 
 
-int verify_request_version(lList **alpp, u_long32 version, char *host, char *commproc, int id);
+int verify_request_version(lList **alpp, u_long32 version, char *host, 
+                           char *commproc, int id);
 
 #endif /* __SGE_C_GDI_H */
 

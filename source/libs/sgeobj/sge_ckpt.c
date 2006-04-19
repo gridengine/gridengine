@@ -263,7 +263,7 @@ int ckpt_validate(lListElem *this_elem, lList **alpp)
 
    /* -------- CK_name */
    if (verify_str_key(alpp, lGetString(this_elem, CK_name), 
-                      "checkpoint interface")) {
+                       MAX_VERIFY_STRING, "checkpoint interface") != STATUS_OK) {
       DEXIT;
       return STATUS_EUNKNOWN;
    }

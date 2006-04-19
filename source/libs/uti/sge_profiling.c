@@ -121,7 +121,7 @@
 *
 *  NOTES
 *     MT-NOTE: this module is MT safe, if sge_prof_setup() and/or
-*              sge_set_profiling_enabled() are called before
+*              sge_prof_set_enabled() are called before
 *              profiling is started and sge_prof_cleanup() is called after
 *              all threads which make profiling calls have been stopped!
 *              sge_prof_cleanup() is used to free  the profiling array 
@@ -173,11 +173,7 @@ typedef struct {
    int         is_terminated;
 } sge_thread_info_t;
 
-/* This is for thread alive timeout measurement */
 static int sge_prof_array_initialized = 0;
-static pthread_mutex_t           thread_times_mutex = PTHREAD_MUTEX_INITIALIZER;
-static sge_thread_alive_times_t  thread_times;     /* this struct is initalized in sge_update_thread_alive_time() */
-static bool                      thread_times_init_done = false;
 
 static void        prof_info_init(prof_level level, pthread_t thread_id);
 static void        prof_info_level_init(prof_level i, int thread_num);
@@ -1405,17 +1401,14 @@ bool prof_output_info(prof_level level, bool with_sub, const char *info)
       if ((thread_num >= 0) && (thread_num < MAX_THREAD_NUM) &&
           prof_is_active(level)) {
          const char *info_message = NULL;
-         u_long32 saved_logginglevel = log_state_get_log_level();
 
-         log_state_set_log_level(LOG_INFO);
          info_message = prof_get_info_string(level, with_sub, NULL);
-         INFO((SGE_EVENT, "PROF(%d): %s%s", (int)thread_id, info, ""));
+         PROFILING((SGE_EVENT, "PROF(%d): %s%s", (int)thread_id, info, ""));
          for (message = strtok_r((char*)info_message, "\n", &pos); message; 
               message = strtok_r(NULL, "\n", &pos)) {
-            INFO((SGE_EVENT, "PROF(%d): %s", (int)thread_id, message));
+            PROFILING((SGE_EVENT, "PROF(%d): %s", (int)thread_id, message));
          }
 
-         log_state_set_log_level(saved_logginglevel);
          ret = true;
       }
    }
@@ -1858,8 +1851,7 @@ int set_thread_prof_status_by_name(const char* thread_name, bool prof_status) {
 
    if (!profiling_enabled) {
       return 0;
-   }   
-   else if (thread_name == NULL) {
+   } else if (thread_name == NULL) {
       return 1;
    }
 
@@ -1869,7 +1861,7 @@ int set_thread_prof_status_by_name(const char* thread_name, bool prof_status) {
    
    for (i = 0; i < MAX_THREAD_NUM; i++) {
       if (thrdInfo[i].thrd_name != NULL) {
-         if (strcmp(thrdInfo[i].thrd_name, thread_name)) {
+         if (strcmp(thrdInfo[i].thrd_name, thread_name) == 0) {
             thrdInfo[i].prof_is_active = prof_status;
          }
       }
@@ -2029,146 +2021,6 @@ static int get_prof_info_thread_id(pthread_t thread_num) {
    ret = (long)pthread_getspecific (thread_id_key);
 
    return (int)ret;
-}
-
-
-/****** uti/profiling/sge_lock_alive_time_mutex() ******************************
-*  NAME
-*     sge_lock_alive_time_mutex() -- lock alive time mutex 
-*
-*  SYNOPSIS
-*     void sge_lock_alive_time_mutex(void); 
-*
-*  FUNCTION
-*     This function is called to lock the alive time mutex before modifying
-*     thread_times structure returned by sge_get_thread_alive_times().
-*
-*  NOTES
-*     MT-NOTE: sge_lock_alive_time_mutex() is MT safe
-*******************************************************************************/
-void sge_lock_alive_time_mutex(void) {
-   pthread_mutex_lock(&thread_times_mutex);
-}
-
-/****** uti/profiling/sge_unlock_alive_time_mutex() ******************************
-*  NAME
-*     sge_unlock_alive_time_mutex() -- unlock alive time mutex 
-*
-*  SYNOPSIS
-*     void sge_unlock_alive_time_mutex(void); 
-*
-*  FUNCTION
-*     This function is called to unlock the alive time mutex before modifying
-*     thread_times structure returned by sge_get_thread_alive_times().
-*
-*  NOTES
-*     MT-NOTE: sge_unlock_alive_time_mutex() is MT safe
-*******************************************************************************/
-void sge_unlock_alive_time_mutex(void) {
-   pthread_mutex_unlock(&thread_times_mutex);
-}
-
-
-/****** uti/profiling/sge_get_thread_alive_times() ******************************
-*  NAME
-*     sge_get_thread_alive_times() -- get thread_times structure 
-*
-*  SYNOPSIS
-*     sge_thread_alive_times_t* sge_get_thread_alive_times(void);
-*
-*  FUNCTION
-*     This function returns the pointer to the global tread_times structure.
-*     Use sge_lock_alive_time_mutex() and sge_unlock_alive_time_mutex() before
-*     modifiying this structure.
-*
-*  RESULT
-*     sge_thread_alive_times_t* - pointer to global thread_times structure
-*
-*  NOTES
-*     MT-NOTE: sge_get_thread_alive_times() is MT safe (if locked)
-*******************************************************************************/
-sge_thread_alive_times_t* sge_get_thread_alive_times(void) {
-   if (thread_times_init_done == true) {
-      return &thread_times;
-   }
-
-   return NULL;
-}
-
-
-/****** uti/profiling/sge_update_thread_alive_time() ******************************
-*  NAME
-*     sge_update_thread_alive_time() -- set alive time for specified thread
-*
-*  SYNOPSIS
-*     void sge_update_thread_alive_time(sge_thread_name_t thread);
-*
-*  FUNCTION
-*     This function must be called to update the last timestamp information
-*     for the specified thread.
-*
-*     Actual thread identifier are SGE_MASTER_EVENT_DELIVER_THREAD, 
-*     SGE_MASTER_TIMED_EVENT_THREAD, SGE_MASTER_MESSAGE_THREAD and
-*     SGE_MASTER_SIGNAL_THREAD.
-*
-*  INPUTS
-*     sge_thread_name_t thread - thread id
-*
-*  NOTES
-*     MT-NOTE: sge_update_thread_alive_time() is MT safe
-*******************************************************************************/
-void sge_update_thread_alive_time(sge_thread_name_t thread) {
-   if (!profiling_enabled) {
-      return;
-   }
-
-   pthread_mutex_lock(&thread_times_mutex);  
-   if ( thread_times_init_done == false ) {
-      /* init sge_thread_alive_times_t struct */
-      memset(&thread_times, 0, sizeof(sge_thread_alive_times_t));
-
-      thread_times.event_deliver_thread.warning_timeout = 10;
-      thread_times.timed_event_thread.warning_timeout   = 30;
-      thread_times.message_thread.warning_timeout       = 10; 
-      thread_times.signal_thread.warning_timeout        = 0;  /* no timeout for this thread */
-      thread_times.execd_main.warning_timeout           = 10;
-      
-
-      thread_times.event_deliver_thread.error_timeout   = 600;
-      thread_times.timed_event_thread.error_timeout     = 600;
-      thread_times.message_thread.error_timeout         = 600;
-      thread_times.signal_thread.error_timeout          = 0;  /* no timeout for this thread */
-      thread_times.execd_main.error_timeout             = 600;
-      
-
-      gettimeofday(&(thread_times.event_deliver_thread.timestamp),NULL);
-      gettimeofday(&(thread_times.timed_event_thread.timestamp),NULL);
-      gettimeofday(&(thread_times.message_thread.timestamp),NULL);
-      gettimeofday(&(thread_times.signal_thread.timestamp),NULL);
-      gettimeofday(&(thread_times.execd_main.timestamp),NULL);
-
-      thread_times_init_done = true;
-   }
-
-   switch(thread) {
-      case SGE_MASTER_EVENT_DELIVER_THREAD:
-         gettimeofday(&(thread_times.event_deliver_thread.timestamp),NULL);
-         break;
-      case SGE_MASTER_TIMED_EVENT_THREAD:
-         gettimeofday(&(thread_times.timed_event_thread.timestamp),NULL);
-         break;
-      case SGE_MASTER_MESSAGE_THREAD:
-         gettimeofday(&(thread_times.message_thread.timestamp),NULL);
-         break;
-      case SGE_MASTER_SIGNAL_THREAD:
-         gettimeofday(&(thread_times.signal_thread.timestamp),NULL);
-         break;
-      case SGE_EXECD_MAIN:
-         gettimeofday(&(thread_times.execd_main.timestamp),NULL);
-         break;
-   }
-
-   pthread_mutex_unlock(&thread_times_mutex);  
 }
 
 /****** uti/profiling/thread_start_stop_profiling() ****************************

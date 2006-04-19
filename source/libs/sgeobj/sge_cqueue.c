@@ -49,6 +49,7 @@
 #include "sge_attr.h"
 #include "sge_centry.h"
 #include "sge_cqueue.h"
+#include "sge_cqueue_verify.h"
 #include "sge_qinstance.h"
 #include "sge_qinstance_state.h"
 #include "sge_qinstance_type.h"
@@ -193,7 +194,15 @@ enumeration_create_reduced_cq(bool fetch_all_qi, bool fetch_all_nqi)
 *                       bool *has_domain) 
 *
 *  FUNCTION
-*     ??? 
+*     Splits a qinstance name into its components.
+*
+*     Examples:
+*  
+*     QI-name         cqueue_name  host_domain  has_hostname  has_domain
+*     ------------------------------------------------------------------
+*     all.q           all.q        ""           false         false
+*     all.q@hostname  all.q        hostname     true          false
+*     all.q@@hgrp     all.q        @hgrp        false         true
 *
 *  INPUTS
 *     const char *name     - CQ/QD or QI name 
@@ -905,7 +914,7 @@ cqueue_verify_attributes(lListElem *cqueue, lList **answer_list,
 
       while (cqueue_attribute_array[index].cqueue_attr != NoName && ret) {
          int pos = lGetPosViaElem(reduced_elem,
-                                  cqueue_attribute_array[index].cqueue_attr);
+                                  cqueue_attribute_array[index].cqueue_attr, SGE_NO_ABORT);
 
          if (pos >= 0) {
             lList *list = NULL;
@@ -983,11 +992,10 @@ cqueue_verify_attributes(lListElem *cqueue, lList **answer_list,
                                  cqueue_attribute_array[index].href_attr, 
                                  resolved_name);
                      } else {
-                        ERROR((SGE_EVENT, MSG_HGRP_UNKNOWNHOST, hostname));
-                        answer_list_add(answer_list, SGE_EVENT,
-                                      STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
-                        ret = false;
-                        break;
+                        /*
+                         * Due to CR 6319231, IZ 1760 this is allowed
+                         */
+                        ;
                      }
                   }
                }
@@ -1015,6 +1023,55 @@ cqueue_verify_attributes(lListElem *cqueue, lList **answer_list,
    return ret;
 }
 
+/****** sgeobj/cqueue/cqueue_mod_sublist() ***********************************
+*  NAME
+*     cqueue_mod_sublist() -- modify cqueues configuration sublist 
+*
+*  SYNOPSIS
+*     bool 
+*     cqueue_mod_sublist(lListElem *this_elem, lList **answer_list, 
+*                        lListElem *reduced_elem, int sub_command, 
+*                        int attribute_name, int sublist_host_name, 
+*                        int sublist_value_name, int subsub_key, 
+*                        const char *attribute_name_str, 
+*                        const char *object_name_str) 
+*
+*  FUNCTION
+*     This function modifies a certain configuration sublist of "this_elem".
+*     Possible errors will be reported in "answer_list". "reduced_elem"
+*     will be used to identify the changes which have been done.
+*     "sub_command" defines how these changes should be applied to 
+*     "this_elem". "sublist_value_name" is the sublist of "this_elem" which
+*     should be modified whereas "subsub_key" defines the attribute
+*     which containes the primary key of that sublist. "attribute_name_str"
+*     is the name of the cqueue attribute which will be modified with
+*     this operation. It will be used for error output. "object_name_str"
+*     is the name of the cqueue which will be modified by this operation.
+*      
+*
+*  INPUTS
+*     lListElem *this_elem           - CQ_Type 
+*     lList **answer_list            - AN_Type 
+*     lListElem *reduced_elem        - reduced CQ_Type element 
+*     int sub_command                - GDI subcommand 
+*     int attribute_name             - CULL attribute name (CQ_Type)
+*     int sublist_host_name          - CULL sublist attribute name
+*                                      depend on sublist of CQ_Type 
+*     int sublist_value_name         - CULL sublist attribute name of that
+*                                      field which containes the value of
+*                                      the attribute to be modified.
+*     int subsub_key                 - CULL sublist attribute key
+*     const char *attribute_name_str - string used for user output 
+*     const char *object_name_str    - cqueue name 
+*
+*  RESULT
+*     bool - error state
+*        true  - success
+*        false - error
+*
+*  NOTES
+*     MT-NOTE: cqueue_mod_sublist() is MT safe 
+*******************************************************************************/
 bool
 cqueue_mod_sublist(lListElem *this_elem, lList **answer_list,
                    lListElem *reduced_elem, int sub_command,
@@ -1027,8 +1084,8 @@ cqueue_mod_sublist(lListElem *this_elem, lList **answer_list,
    int pos;
 
    DENTER(CQUEUE_LAYER, "cqueue_mod_sublist");
-  
-   pos = lGetPosViaElem(reduced_elem, attribute_name);
+ 
+   pos = lGetPosViaElem(reduced_elem, attribute_name, SGE_NO_ABORT);
    if (pos >= 0) {
       lList *mod_list = lGetPosList(reduced_elem, pos);
       lList *org_list = lGetList(this_elem, attribute_name);
@@ -1049,7 +1106,7 @@ cqueue_mod_sublist(lListElem *this_elem, lList **answer_list,
             mod_elem = lGetElemHost(mod_list, sublist_host_name, name);
             if (mod_elem == NULL) {
                DPRINTF(("Removing attribute list for "SFQ"\n", name));
-               lRemoveElem(org_list, elem);
+               lRemoveElem(org_list, &elem);
             }
          }
       }
@@ -1063,23 +1120,30 @@ cqueue_mod_sublist(lListElem *this_elem, lList **answer_list,
          char resolved_name[CL_MAXHOSTLEN+1];
          lListElem *org_elem = NULL;
          
+         if (name == NULL) {
+            ERROR((SGE_EVENT, MSG_SGETEXT_INVALIDHOST_S, ""));
+            answer_list_add(answer_list, SGE_EVENT,
+                            STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+            ret = false;
+            break;
+         }
          /* Don't try to resolve hostgroups */
          if (name[0] != '@') {
             int back = getuniquehostname(name, resolved_name, 0);
 
-            if (back != CL_RETVAL_OK) {
-               ERROR((SGE_EVENT, MSG_HGRP_UNKNOWNHOST, name));
-               answer_list_add(answer_list, SGE_EVENT,
-                               STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
-               ret = false;
-               break;
+            if (back == CL_RETVAL_OK) {
+               /* 
+                * This assignment is ok because previous name contained 
+                * a const string from the mod_elem that we didn't need 
+                * to free.  Now it will contain a string that's on the 
+                * stack, so we still don't have to free it. 
+                */
+               name = resolved_name;
+            } else {
+               /*
+                * Due to CR 6319231, IZ 1760 this is allowed
+                */
             }
-            
-            /* This assignment is ok because preious name contained a const
-             * string from the mod_elem that we didn't need to free.  Now it
-             * will contain a string that's on the stack, so we still don't have
-             * to free it. */
-            name = resolved_name;
          }
          
          org_elem = lGetElemHost(org_list, sublist_host_name, name);
@@ -1116,6 +1180,37 @@ cqueue_mod_sublist(lListElem *this_elem, lList **answer_list,
    return ret;
 }
 
+/****** sgeobj/cqueue/cqueue_list_find_all_matching_references() **************
+*  NAME
+*     cqueue_list_find_all_matching_references() -- as it says 
+*
+*  SYNOPSIS
+*     bool 
+*     cqueue_list_find_all_matching_references(const lList *this_list, 
+*                                              lList **answer_list, 
+*                                              const char *cqueue_pattern, 
+*                                              lList **qref_list) 
+*
+*  FUNCTION
+*     Find all cqueues in "this_list" where the cqueue name matches 
+*     the pattern "cqueue_pattern". The names of that cqueues will
+*     be added to the sublist "qref_list" (QR_Type). "answer_list" will
+*     contain an error message if this function failes.
+*
+*  INPUTS
+*     const lList *this_list     - CQ_Type 
+*     lList **answer_list        - AN_Type 
+*     const char *cqueue_pattern - fnmatch patterm 
+*     lList **qref_list          - QR_Type list 
+*
+*  RESULT
+*     bool - error state
+*        true  - success
+*        false - error 
+*
+*  NOTES
+*     MT-NOTE: cqueue_list_find_all_matching_references() is MT safe 
+*******************************************************************************/
 bool
 cqueue_list_find_all_matching_references(const lList *this_list,
                                          lList **answer_list,
@@ -1145,6 +1240,30 @@ cqueue_list_find_all_matching_references(const lList *this_list,
    return ret;
 }
 
+/****** sgeobj/cqueue/cqueue_xattr_pre_gdi() **********************************
+*  NAME
+*     cqueue_xattr_pre_gdi() --  
+*
+*  SYNOPSIS
+*     bool 
+*     cqueue_xattr_pre_gdi(lList *this_list, lList **answer_list) 
+*
+*  FUNCTION
+*     This function makes sure that a cqueue elements has the necessary
+*     information before it is sent to qmaster as a modify gdi request
+*
+*  INPUTS
+*     lList *this_list    - CQ_Type 
+*     lList **answer_list - AN_Type 
+*
+*  RESULT
+*     bool - error state
+*        true  - success
+*        false - error ("answer_list" containes more information
+*
+*  NOTES
+*     MT-NOTE: cqueue_xattr_pre_gdi() is MT safe 
+*******************************************************************************/
 bool
 cqueue_xattr_pre_gdi(lList *this_list, lList **answer_list) 
 {
@@ -1177,7 +1296,7 @@ cqueue_xattr_pre_gdi(lList *this_list, lList **answer_list)
              */
             while (cqueue_attribute_array[index].cqueue_attr != NoName && ret) {
                int pos = lGetPosViaElem(cqueue,
-                                  cqueue_attribute_array[index].cqueue_attr);
+                                  cqueue_attribute_array[index].cqueue_attr, SGE_NO_ABORT);
 
                if (pos >= 0) {
                   lList *list = lGetPosList(cqueue, pos);
@@ -1204,217 +1323,6 @@ cqueue_xattr_pre_gdi(lList *this_list, lList **answer_list)
          }
          sge_dstring_free(&host_domain);
          sge_dstring_free(&cqueue_name);
-      }
-   }
-   DEXIT;
-   return ret;
-}
-
-bool 
-cqueue_verify_priority(lListElem *cqueue, lList **answer_list, 
-                       lListElem *attr_elem)
-{
-   bool ret = true;
-   
-   DENTER(CQUEUE_LAYER, "cqueue_verify_priority");
-   if (cqueue != NULL && attr_elem != NULL) {
-      const char *priority_string = lGetString(attr_elem, ASTR_value);
-
-      if (priority_string != NULL) {
-         const int priority = atoi(priority_string);
-
-         if (priority == 0 && priority_string[0] != '0') {
-            answer_list_add(answer_list, MSG_CQUEUE_WRONGCHARINPRIO, 
-                            STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-            ret = false;
-         } else if (priority < -20 || priority > 20 ) {
-            answer_list_add(answer_list, MSG_CQUEUE_PRIORITYNOTINRANGE, 
-                            STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-            ret = false;
-         }
-      }
-   }
-   DEXIT;
-   return ret;
-}
-
-bool 
-cqueue_verify_processors(lListElem *cqueue, lList **answer_list, 
-                         lListElem *attr_elem)
-{
-   bool ret = true;
-   
-   DENTER(CQUEUE_LAYER, "cqueue_verify_priority");
-   if (cqueue != NULL && attr_elem != NULL) {
-      const char *processors_string = lGetString(attr_elem, ASTR_value);
-
-      if (processors_string != NULL) {
-         lList *range_list = NULL;
-
-         range_list_parse_from_string(&range_list, answer_list, 
-                                      processors_string,
-                                      JUST_PARSE, false, INF_ALLOWED);
-         if (*answer_list) {
-            ret = false;
-         }
-      }
-   }
-   DEXIT;
-   return ret;
-}
-
-bool 
-cqueue_verify_pe_list(lListElem *cqueue, lList **answer_list, 
-                       lListElem *attr_elem)
-{
-   bool ret = true;
-   
-   DENTER(CQUEUE_LAYER, "cqueue_verify_pe_list");
-   if (cqueue != NULL && attr_elem != NULL) {
-      lList *pe_list = lGetList(attr_elem, ASTRLIST_value);
-
-      if (pe_list != NULL) {
-         const lList *master_list = *(object_type_get_master_list(SGE_TYPE_PE));
-
-         if (!pe_list_do_all_exist(master_list, answer_list, pe_list, true)) {
-            ret = false;
-         }
-      }
-   }
-   DEXIT;
-   return ret;
-}
-
-bool 
-cqueue_verify_ckpt_list(lListElem *cqueue, lList **answer_list, 
-                        lListElem *attr_elem)
-{
-   bool ret = true;
-   
-   DENTER(CQUEUE_LAYER, "cqueue_verify_ckpt_list");
-   if (cqueue != NULL && attr_elem != NULL) {
-      lList *ckpt_list = lGetList(attr_elem, ASTRLIST_value);
-
-      if (ckpt_list != NULL) {
-         const lList *master_list = *(ckpt_list_get_master_list());
-
-         if (!ckpt_list_do_all_exist(master_list, answer_list, ckpt_list)) {
-            ret = false;
-         }
-      }
-   }
-   DEXIT;
-   return ret;
-}
-
-bool 
-cqueue_verify_user_list(lListElem *cqueue, lList **answer_list, 
-                        lListElem *attr_elem)
-{
-   bool ret = true;
-   
-   DENTER(CQUEUE_LAYER, "cqueue_verify_user_list");
-   if (cqueue != NULL && attr_elem != NULL) {
-      lList *user_list = lGetList(attr_elem, AUSRLIST_value);
-
-      if (user_list != NULL) {
-         if (userset_list_validate_acl_list(user_list, answer_list) == STATUS_EUNKNOWN) {
-            ret = false;
-         }
-      }
-   }
-   DEXIT;
-   return ret;
-}
-
-bool
-cqueue_verify_project_list(lListElem *cqueue, lList **answer_list,
-                           lListElem *attr_elem)
-{
-   bool ret = true;
-
-   DENTER(CQUEUE_LAYER, "cqueue_verify_project_list");
-   if (cqueue != NULL && attr_elem != NULL) {
-      lList *project_list = lGetList(attr_elem, APRJLIST_value);
-
-      if (project_list != NULL) {
-         const lList *master_list = *(prj_list_get_master_list());
-
-         if (!prj_list_do_all_exist(master_list, answer_list, project_list)) {
-            ret = false;
-         }
-      }
-   }
-   DEXIT;
-   return ret;
-}
-
-bool
-cqueue_verify_consumable_config_list(lListElem *cqueue, lList **answer_list,
-                                     lListElem *attr_elem)
-{
-   bool ret = true;
-
-   DENTER(CQUEUE_LAYER, "cqueue_verify_project_list");
-   if (cqueue != NULL && attr_elem != NULL) {
-      lList *centry_list = lGetList(attr_elem, ACELIST_value);
-
-      if (centry_list != NULL) {
-         const lList *master_list = *(centry_list_get_master_list());
-
-         if (!centry_list_do_all_exists(master_list, answer_list, centry_list)) {
-            ret = false;
-         }
-      }
-   }
-   DEXIT;
-   return ret;
-}
-
-bool
-cqueue_verify_subordinate_list(lListElem *cqueue, lList **answer_list,
-                               lListElem *attr_elem)
-{
-   bool ret = true;
-
-   DENTER(CQUEUE_LAYER, "cqueue_verify_subordinate_list");
-   if (cqueue != NULL && attr_elem != NULL) {
-      const lList *master_list = *(object_type_get_master_list(SGE_TYPE_CQUEUE));
-      const char *cqueue_name = lGetString(cqueue, CQ_name);
-      lList *so_list = lGetList(attr_elem, ASOLIST_value);
-      lListElem *so;
-
-      for_each(so, so_list) {
-         const char *so_name = lGetString(so, SO_name);
-  
-         /*
-          * Check for recursions to ourself
-          */ 
-         if (strcmp(cqueue_name, so_name) != 0) {
-            const lListElem *cqueue = NULL;
-
-            /*
-             * Check if cqueue exists
-             */
-            cqueue = cqueue_list_locate(master_list, so_name);
-            if (cqueue != NULL) {
-               /*
-                * Success
-                */
-               ;
-            } else {
-               ERROR((SGE_EVENT, MSG_CQUEUE_UNKNOWNSUB_SS, 
-                      so_name, cqueue_name));
-               answer_list_add(answer_list, SGE_EVENT, 
-                               STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-               ret = false;
-            }
-         } else {
-            ERROR((SGE_EVENT, MSG_CQUEUE_SUBITSELF_S, cqueue_name));
-            answer_list_add(answer_list, SGE_EVENT, 
-                            STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-            ret = false;
-         }
       }
    }
    DEXIT;
@@ -1471,94 +1379,36 @@ cqueue_is_used_in_subordinate(const char *cqueue_name, const lListElem *cqueue)
    return ret;
 }
 
-bool 
-cqueue_verify_calendar(lListElem *cqueue, lList **answer_list, 
-                       lListElem *attr_elem)
-{
-   bool ret = true;
-   
-   DENTER(CQUEUE_LAYER, "cqueue_verify_calendar");
-   if (cqueue != NULL && attr_elem != NULL) {
-      const char *name = lGetString(attr_elem, ASTR_value);
-
-      if (name != NULL && strcasecmp("none", name)) {
-         lListElem *calendar = calendar_list_locate(Master_Calendar_List, name);
-
-         if (calendar == NULL) {
-            sprintf(SGE_EVENT, MSG_CQUEUE_UNKNOWNCALENDAR_S, name);
-            answer_list_add(answer_list, SGE_EVENT, 
-                            STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-            ret = false;
-         }
-      }
-   }
-   DEXIT;
-   return ret;
-}
-
-bool 
-cqueue_verify_initial_state(lListElem *cqueue, lList **answer_list, 
-                            lListElem *attr_elem)
-{
-   bool ret = true;
-   
-   DENTER(CQUEUE_LAYER, "cqueue_verify_initial_state");
-   if (cqueue != NULL && attr_elem != NULL) {
-      const char *names[] = {"default", "enabled", "disabled", NULL};
-      const char *name = lGetString(attr_elem, ASTR_value);
-      bool found = false;
-      int i = 0;
-
-      while (names[i] != NULL) {
-         if (!strcasecmp(name, names[i])) {
-            found = true;
-         }
-         i++;
-      }
-      if (!found) {
-         sprintf(SGE_EVENT, MSG_CQUEUE_UNKNOWNINITSTATE_S, name);
-         answer_list_add(answer_list, SGE_EVENT, 
-                         STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-         ret = false;
-      }
-   }
-   DEXIT;
-   return ret;
-}
-
-bool 
-cqueue_verify_shell_start_mode(lListElem *cqueue, lList **answer_list, 
-                               lListElem *attr_elem)
-{
-   bool ret = true;
-   
-   DENTER(CQUEUE_LAYER, "cqueue_verify_shell_start_mode");
-   if (cqueue != NULL && attr_elem != NULL) {
-      const char *names[] = {
-         "unix_behavior", "posix_compliant", "script_from_stdin", 
-         NULL
-      };
-      const char *name = lGetString(attr_elem, ASTR_value);
-      bool found = false;
-      int i = 0;
-
-      while (names[i] != NULL) {
-         if (!strcasecmp(name, names[i])) {
-            found = true;
-         }
-         i++;
-      }
-      if (!found) {
-         sprintf(SGE_EVENT, MSG_CQUEUE_UNKNOWNSTARTMODE_S, name);
-         answer_list_add(answer_list, SGE_EVENT, 
-                         STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-         ret = false;
-      }
-   }
-   DEXIT;
-   return ret;
-}
-
+/****** sgeobj/cqueue/cqueue_list_find_hgroup_references() ********************
+*  NAME
+*     cqueue_list_find_hgroup_references() -- find hgroup references 
+*
+*  SYNOPSIS
+*     bool 
+*     cqueue_list_find_hgroup_references(const lList *this_list, 
+*                                        lList **answer_list, 
+*                                        const lListElem *hgroup, 
+*                                        lList **string_list) 
+*
+*  FUNCTION
+*     This function add each cqueue name contained in "this_list" 
+*     to "string_list" where "hgroup" is referenced. Errors will
+*     be reported via "answer_list".
+*
+*  INPUTS
+*     const lList *this_list  - CQ_Type 
+*     lList **answer_list     - AN_Type 
+*     const lListElem *hgroup - HGRP_Type 
+*     lList **string_list     - ST_Type 
+*
+*  RESULT
+*     bool - error state
+*        true  - success
+*        false - error
+*
+*  NOTES
+*     MT-NOTE: cqueue_list_find_hgroup_references() is MT safe 
+*******************************************************************************/
 bool
 cqueue_list_find_hgroup_references(const lList *this_list, lList **answer_list,
                                    const lListElem *hgroup, lList **string_list)
@@ -1580,6 +1430,32 @@ cqueue_list_find_hgroup_references(const lList *this_list, lList **answer_list,
    return ret;
 }
 
+/****** sgeobj/cqueue/cqueue_list_set_tag() ***********************************
+*  NAME
+*     cqueue_list_set_tag() -- tags each cqueue and optionally qinstance 
+*
+*  SYNOPSIS
+*     void 
+*     cqueue_list_set_tag(lList *this_list, 
+*                         u_long32 tag_value, bool tag_qinstances) 
+*
+*  FUNCTION
+*     Tags all cqueues contained in "this_list" with the value 
+*     "tag_value". Optionally all qinstances contained in the
+*     CQ_qinstances-sublist will be tagged too if "tag_qinstances" 
+*     is true. 
+*
+*  INPUTS
+*     lList *this_list    - CQ_Type 
+*     u_long32 tag_value  - value 
+*     bool tag_qinstances - true if instances should be tagged 
+*
+*  RESULT
+*     void - None
+*
+*  NOTES
+*     MT-NOTE: cqueue_list_set_tag() is MT safe 
+*******************************************************************************/
 void
 cqueue_list_set_tag(lList *this_list, u_long32 tag_value, bool tag_qinstances)
 {
@@ -1599,6 +1475,28 @@ cqueue_list_set_tag(lList *this_list, u_long32 tag_value, bool tag_qinstances)
    DEXIT;
 }
 
+/****** sgeobj/cqueue/cqueue_list_locate_qinstance() **************************
+*  NAME
+*     cqueue_list_locate_qinstance() -- finds a certain qinstance 
+*
+*  SYNOPSIS
+*     lListElem * 
+*     cqueue_list_locate_qinstance(lList *cqueue_list, const char *full_name) 
+*
+*  FUNCTION
+*     Returns a certain qinstance with the name "full_name" from
+*     the master cqueue list given by "cqueue_list". 
+*
+*  INPUTS
+*     lList *cqueue_list    - CQ_Type 
+*     const char *full_name - qinstance name of the form <CQNAME>@<HOSTNAME> 
+*
+*  RESULT
+*     lListElem * - QU_Type
+*
+*  NOTES
+*     MT-NOTE: cqueue_list_locate_qinstance() is MT safe 
+*******************************************************************************/
 lListElem *
 cqueue_list_locate_qinstance(lList *cqueue_list, const char *full_name) 
 {
@@ -1624,8 +1522,7 @@ cqueue_list_locate_qinstance(lList *cqueue_list, const char *full_name)
 
          ret = lGetElemHost(qinstance_list, QU_qhostname, hostname);
       } else {
-         ERROR((SGE_EVENT, "cqueue_list_locate_qinstance("SFQ"): cqueue == NULL"
-                "("SFQ", "SFQ", %d, %d)", full_name, 
+         ERROR((SGE_EVENT, MSG_CQUEUE_CQUEUEISNULL_SSSII, full_name, 
                 cqueue_name != NULL ? cqueue_name : "<null>", 
                 hostname != NULL ? hostname: "<null>", 
                 (int)has_hostname, (int)has_domain));
@@ -1633,12 +1530,40 @@ cqueue_list_locate_qinstance(lList *cqueue_list, const char *full_name)
       sge_dstring_free(&cqueue_name_buffer);
       sge_dstring_free(&host_domain_buffer);
    } else {
-      ERROR((SGE_EVENT, "cqueue_list_locate_qinstance(): full_name == NULL\n"));
+      ERROR((SGE_EVENT, MSG_CQUEUE_FULLNAMEISNULL));
    }
    DEXIT;
    return ret;
 }
 
+/****** sge_cqueue/cqueue_find_used_href() *************************************
+*  NAME
+*     cqueue_find_used_href() -- Finds used host references  
+*
+*  SYNOPSIS
+*     bool 
+*     cqueue_find_used_href(lListElem *this_elem, 
+*                           lList **answer_list, 
+*                           lList **href_list) 
+*
+*  FUNCTION
+*     This function returns all host references in "href_list"
+*     for which attribute specific overwritings exist in the cqueue 
+*     "this_elem". 
+*
+*  INPUTS
+*     lListElem *this_elem - CQ_Type 
+*     lList **answer_list  - AN_Type 
+*     lList **href_list    - HR_Type 
+*
+*  RESULT
+*     bool - error state
+*        true  - success
+*        false - error
+*
+*  NOTES
+*     MT-NOTE: cqueue_find_used_href() is MT safe 
+*******************************************************************************/
 bool
 cqueue_find_used_href(lListElem *this_elem, lList **answer_list, 
                       lList **href_list) 
@@ -1651,7 +1576,7 @@ cqueue_find_used_href(lListElem *this_elem, lList **answer_list,
 
       while (cqueue_attribute_array[index].cqueue_attr != NoName && ret) {
          int pos = lGetPosViaElem(this_elem,
-                            cqueue_attribute_array[index].cqueue_attr);
+                            cqueue_attribute_array[index].cqueue_attr, SGE_NO_ABORT);
 
          if (pos >= 0) {
             lList *list = lGetPosList(this_elem, pos);
@@ -1671,6 +1596,34 @@ cqueue_find_used_href(lListElem *this_elem, lList **answer_list,
    return ret;
 }
 
+/****** sgeobj/cqueue/cqueue_trash_used_href_setting() ************************
+*  NAME
+*     cqueue_trash_used_href_setting() -- trash certain setting 
+*
+*  SYNOPSIS
+*     bool 
+*     cqueue_trash_used_href_setting(lListElem *this_elem, 
+*                                    lList **answer_list, 
+*                                    const char *hgroup_or_hostname) 
+*
+*  FUNCTION
+*     Trash all attribute specific overwritings in "this_elem" for
+*     the give host or hgroup "hgroup_or_hostname". Errors will be 
+*     reported in "answer_list". 
+*
+*  INPUTS
+*     lListElem *this_elem           - CQ_Type 
+*     lList **answer_list            - AN_Type 
+*     const char *hgroup_or_hostname - host or hgroup name 
+*
+*  RESULT
+*     bool - error result
+*        true  - success
+*        false - error
+*
+*  NOTES
+*     MT-NOTE: cqueue_trash_used_href_setting() is MT safe 
+*******************************************************************************/
 bool
 cqueue_trash_used_href_setting(lListElem *this_elem, lList **answer_list, 
                                const char *hgroup_or_hostname) 
@@ -1683,7 +1636,7 @@ cqueue_trash_used_href_setting(lListElem *this_elem, lList **answer_list,
 
       while (cqueue_attribute_array[index].cqueue_attr != NoName && ret) {
          int pos = lGetPosViaElem(this_elem,
-                            cqueue_attribute_array[index].cqueue_attr);
+                            cqueue_attribute_array[index].cqueue_attr, SGE_NO_ABORT);
 
          if (pos >= 0) {
             lList *list = lGetPosList(this_elem, pos);
@@ -1698,7 +1651,7 @@ cqueue_trash_used_href_setting(lListElem *this_elem, lList **answer_list,
                next_elem = lNext(elem);
 
                if (!sge_hostcmp(hgroup_or_hostname, attr_hostname)) {
-                  lRemoveElem(list, elem);
+                  lRemoveElem(list, &elem);
                }
             }
          }
@@ -1737,7 +1690,9 @@ cqueue_trash_used_href_setting(lListElem *this_elem, lList **answer_list,
 *     MT-NOTE: cqueue_purge_host() is not MT safe 
 *
 *******************************************************************************/
-bool cqueue_purge_host(lListElem *this_elem, lList **answer_list, lList *attr_list, const char *hgroup_or_hostname)
+bool 
+cqueue_purge_host(lListElem *this_elem, lList **answer_list, 
+                  lList *attr_list, const char *hgroup_or_hostname)
 {
    bool ret = false;
    int index;
@@ -1758,7 +1713,8 @@ bool cqueue_purge_host(lListElem *this_elem, lList **answer_list, lList *attr_li
             sublist = NULL;
             lXchgList(this_elem, CQ_hostlist, &sublist);
             if (lDelElemHost(&sublist, HR_name, hgroup_or_hostname) == 1) {
-               DPRINTF((SFQ" deleted in "SFQ"\n", hgroup_or_hostname, SGE_ATTR_HOSTLIST ));
+               DPRINTF((SFQ" deleted in "SFQ"\n", hgroup_or_hostname, 
+                        SGE_ATTR_HOSTLIST ));
                ret = true;
             }
             lXchgList(this_elem, CQ_hostlist, &sublist);
@@ -1770,10 +1726,14 @@ bool cqueue_purge_host(lListElem *this_elem, lList **answer_list, lList *attr_li
 
             /* Does the given attr_wildcard match with the actual attr_name */ 
             if (!fnmatch(attr_name, cqueue_attribute_array[index].name, 0)) {
-               sublist = lGetList(this_elem, cqueue_attribute_array[index].cqueue_attr );
+               sublist = lGetList(this_elem, 
+                                  cqueue_attribute_array[index].cqueue_attr );
 
-               if (lDelElemHost(&sublist, cqueue_attribute_array[index].href_attr, hgroup_or_hostname) == 1) {
-                  DPRINTF((SFQ" deleted in "SFQ"\n", hgroup_or_hostname, cqueue_attribute_array[index].name ));
+               if (lDelElemHost(&sublist, 
+                                cqueue_attribute_array[index].href_attr, 
+                                hgroup_or_hostname) == 1) {
+                  DPRINTF((SFQ" deleted in "SFQ"\n", hgroup_or_hostname, 
+                           cqueue_attribute_array[index].name ));
                   ret = true;
                }
             }
@@ -1785,3 +1745,79 @@ bool cqueue_purge_host(lListElem *this_elem, lList **answer_list, lList *attr_li
    DEXIT;
    return ret;
 }
+
+/****** sgeobj/cqueue/cqueue_list_get_max_qinstance_number() ******************
+*  NAME
+*     cqueue_list_get_max_qinstance_number() -- max used qinstance number
+*
+*  SYNOPSIS
+*     u_long32 cqueue_list_get_max_qinstance_number(lList *this_list) 
+*
+*  FUNCTION
+*     Returns the maximum used qinstance number. 
+*
+*  INPUTS
+*     lList *this_list - CQ_Type 
+*
+*  RESULT
+*     u_long32 - qinstance number
+*
+*  NOTES
+*     MT-NOTE: cqueue_list_get_max_qinstance_number() is MT safe 
+*******************************************************************************/
+u_long32
+cqueue_list_get_max_qinstance_number(lList *this_list)
+{
+   u_long32 ret = 0;
+   lListElem *cqueue;
+
+   DENTER(CQUEUE_LAYER, "cqueue_list_get_max_qinstance_number");
+   for_each(cqueue, this_list) {
+      lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
+      ret = MAX(ret, qinstance_list_get_max_qinstance_number(qinstance_list));
+   }
+   DEXIT;
+   return ret;
+}
+
+/****** sgeobj/cqueue/cqueue_list_qinstance_number_is_used() ******************
+*  NAME
+*     cqueue_list_qinstance_number_is_used() -- checks if a number is used 
+*
+*  SYNOPSIS
+*     bool 
+*     cqueue_list_qinstance_number_is_used(lList *this_list, 
+*                                          u_long32 number) 
+*
+*  FUNCTION
+*     Checks if a cerain number is used as qinstance "number" in 
+*     any of the qinstances part of the cqueue list "this_list".
+*
+*  INPUTS
+*     lList *this_list - CQ_list 
+*     u_long32 number  - qinstance number 
+*
+*  RESULT
+*     bool - error result
+*        true  - already used
+*        false - number is unused
+*
+*  NOTES
+*     MT-NOTE: cqueue_list_qinstance_number_is_used() is MT safe 
+*******************************************************************************/
+bool
+cqueue_list_qinstance_number_is_used(lList *this_list, u_long32 number)
+{  
+   bool ret = false;
+
+   lListElem *cqueue;
+
+   DENTER(CQUEUE_LAYER, "cqueue_list_qinstance_number_is_used");
+   for_each(cqueue, this_list) {
+      lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
+      ret = qinstance_list_number_is_used(qinstance_list, number);
+   }                 
+   DEXIT;
+   return ret;
+}
+

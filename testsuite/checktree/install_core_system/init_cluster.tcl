@@ -103,7 +103,7 @@ proc make_user_cert {} {
 
    if { !$check_use_installed_system } {
       if { $ts_config(product_feature) == "csp" } {
-         puts $CHECK_OUTPUT "removing evtl. existing user_file.txt \"$CHECK_MAIN_RESULTS_DIR/user_file.txt\" ..."
+         puts $CHECK_OUTPUT "removing poss. existing user_file.txt \"$CHECK_MAIN_RESULTS_DIR/user_file.txt\" ..."
          set result [ start_remote_prog "$ts_config(master_host)" "$CHECK_USER" "rm" "$CHECK_MAIN_RESULTS_DIR/user_file.txt" ]
          puts $CHECK_OUTPUT $result
     
@@ -117,7 +117,7 @@ proc make_user_cert {} {
          set result [ start_remote_prog "$ts_config(master_host)" "root" "cd" "$ts_config(product_root) ; util/sgeCA/sge_ca -usercert $CHECK_MAIN_RESULTS_DIR/user_file.txt" ]
          puts $CHECK_OUTPUT $result
       
-         puts $CHECK_OUTPUT "removing evtl. existing user_file.txt \"$CHECK_MAIN_RESULTS_DIR/user_file.txt\" ..."
+         puts $CHECK_OUTPUT "removing poss. existing user_file.txt \"$CHECK_MAIN_RESULTS_DIR/user_file.txt\" ..."
          set result [ start_remote_prog "$ts_config(master_host)" "$CHECK_USER" "rm" "$CHECK_MAIN_RESULTS_DIR/user_file.txt" ]
          puts $CHECK_OUTPUT $result
      } else {

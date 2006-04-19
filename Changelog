@@ -1,3 +1,6 @@
+JG-2006-04-19-0: Testsuite: Minor fixes and cleanup.
+                 Review:    RD
+
 CR-2006-04-19-0: Cleanup:   cleanup of RAND file reading in commlib SSL mode
                  Changed:   cl_ssl_framework.c => commlib (merge from V60s2_BRANCH)
                  Review:    AA

@@ -4503,21 +4503,22 @@ proc submit_job { args {do_error_check 1} {submit_timeout 60} {host ""} {user ""
      set JOB_SUBMITTED_DUMMY [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QSUB_YOURJOBHASBEENSUBMITTED_SS] "__JOB_ID__" "__JOB_NAME__"]
      set SUCCESSFULLY        [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QSUB_YOURIMMEDIATEJOBXHASBEENSUCCESSFULLYSCHEDULED_S] "*"]
      set UNKNOWN_RESOURCE2 [translate $CHECK_HOST 1 0 0 [sge_macro MSG_SCHEDD_JOBREQUESTSUNKOWNRESOURCE_S] ]
-     set WRONG_TYPE          [translate $CHECK_HOST 0 0 0 [sge_macro MSG_QSUB_COULDNOTRUNJOB_S] "*"]
+     set NAMETOOLONG         [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_NAMETOOLONG_I] "*"]
+     set JOBALREADYEXISTS [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_JOBALREADYEXISTS_S] "*"]
   } else {
      set JOB_SUBMITTED       [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_SUBMITJOB_USS] "*" "*" "*"]
      set JOB_SUBMITTED_DUMMY [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_SUBMITJOB_USS] "__JOB_ID__" "__JOB_NAME__" "__JOB_ARG__"]
      set SUCCESSFULLY        [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QSUB_YOURIMMEDIATEJOBXHASBEENSUCCESSFULLYSCHEDULED_U] "*"]
      set UNKNOWN_RESOURCE2   [translate $CHECK_HOST 1 0 0 [sge_macro MSG_SCHEDD_JOBREQUESTSUNKOWNRESOURCE] ]
-     set WRONG_TYPE          [translate $CHECK_HOST 1 0 0 [sge_macro MSG_CPLX_WRONGTYPE_SSS] "*" "*" "*"]
+     set NAMETOOLONG         "asldfkaöslfjaösdlkfjaöskldfjöasfjdaölsfjöasfjd";# don't have this message in 5.3
+     set JOBALREADYEXISTS [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_JOBALREADYEXISTS_U] "*"]
   }
 
+  set WRONG_TYPE          [translate $CHECK_HOST 1 0 0 [sge_macro MSG_CPLX_WRONGTYPE_SSS] "*" "*" "*"]
   set ERROR_OPENING       [translate $CHECK_HOST 1 0 0 [sge_macro MSG_FILE_ERROROPENINGXY_SS] "*" "*"]
   set NOT_ALLOWED_WARNING [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_NOTINANYQ_S] "*" ]
   set NO_DEADLINE_USER    [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_NODEADLINEUSER_S] $user ]
 
-
-  
 
   set JOB_ARRAY_SUBMITTED       [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_SUBMITJOBARRAY_UUUUSS] "*" "*" "*" "*" "*" "*" ]
   set JOB_ARRAY_SUBMITTED_DUMMY [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_SUBMITJOBARRAY_UUUUSS] "__JOB_ID__" "" "" "" "__JOB_NAME__" "__JOB_ARG__"]
@@ -4550,19 +4551,8 @@ proc submit_job { args {do_error_check 1} {submit_timeout 60} {host ""} {user ""
   set GDI_INITIALPORTIONSTRINGNODECIMAL_S [translate $CHECK_HOST 0 0 0 [sge_macro MSG_GDI_INITIALPORTIONSTRINGNODECIMAL_S] "*" ] 
 
 
-  if { $ts_config(gridengine_version) == 60 } {
-#     set COLON_NOT_ALLOWED [translate $CHECK_HOST 1 0 0 [sge_macro MSG_COLONNOTALLOWED]]
-#     "Colon (':') not allowed in account string"
-
-#      "Unable to run job: : not allowed in objectname."
-      set COLON_NOT_ALLOWED [translate $CHECK_HOST 1 0 0 [sge_macro MSG_GDI_KEYSTR_MIDCHAR_S] ":" ]
-
-
-  } else {
-     set help_translation  [translate $CHECK_HOST 1 0 0 [sge_macro MSG_GDI_KEYSTR_COLON]]
-     set COLON_NOT_ALLOWED [translate $CHECK_HOST 1 0 0 [sge_macro MSG_GDI_KEYSTR_MIDCHAR_SC] "$help_translation" ":" ]
-  }
-
+  set help_translation  [translate $CHECK_HOST 1 0 0 [sge_macro MSG_GDI_KEYSTR_COLON]]
+  set COLON_NOT_ALLOWED [translate $CHECK_HOST 1 0 0 [sge_macro MSG_GDI_KEYSTR_MIDCHAR_SC] "$help_translation" ":"]
 
   append USAGE " qsub"
 
@@ -4775,7 +4765,7 @@ proc submit_job { args {do_error_check 1} {submit_timeout 60} {host ""} {user ""
    
           }
    
-          -i $sp_id -- "usage: qsub" {
+          -i $sp_id "usage: qsub" {
              puts $CHECK_OUTPUT "got usage ..."
              if {([string first "help" $args] >= 0 ) || ([string first "commandfile" $args] >= 0)} {
                 set return_value -2 
@@ -4783,7 +4773,7 @@ proc submit_job { args {do_error_check 1} {submit_timeout 60} {host ""} {user ""
                 set return_value -3
              }
           } 
-          -i $sp_id -- $USAGE {
+          -i $sp_id $USAGE {
              puts $CHECK_OUTPUT "got usage ..."
              if {([string first "help" $args] >= 0 ) || ([string first "commandfile" $args] >= 0)} {
                 set return_value -2 
@@ -4792,107 +4782,113 @@ proc submit_job { args {do_error_check 1} {submit_timeout 60} {host ""} {user ""
              }
           } 
    
-          -i $sp_id -- "job_number" {
+          -i $sp_id "job_number" {
             if {[string first "verify" $args] >= 0 } {
                set return_value -4
             } else {
                set return_value -5
             } 
           }
-          -i $sp_id --  $TO_MUCH_TASKS {
+          -i $sp_id $TO_MUCH_TASKS {
              set return_value -7
           }
-          -i $sp_id -- "submit a job with more than" {
+          -i $sp_id "submit a job with more than" {
              set return_value -7
           }
-          -i $sp_id -- $UNKNOWN_RESOURCE1 {
+          -i $sp_id $UNKNOWN_RESOURCE1 {
              set return_value -8
           }
-          -i $sp_id -- $UNKNOWN_RESOURCE2 {
+          -i $sp_id $UNKNOWN_RESOURCE2 {
              set return_value -8
           }
-          -i $sp_id -- "unknown resource" {
+          -i $sp_id "unknown resource" {
              set return_value -8
           }
-          -i $sp_id --  $CAN_T_RESOLVE {
+          -i $sp_id $CAN_T_RESOLVE {
              set return_value -9
           }
-          -i $sp_id -- "can't resolve hostname" {
+          -i $sp_id "can't resolve hostname" {
              set return_value -9
           }
-          -i $sp_id --  $NOT_REQUESTABLE {
+          -i $sp_id $NOT_REQUESTABLE {
              set return_value -10
           }
-          -i $sp_id -- "configured as non requestable" {
+          -i $sp_id "configured as non requestable" {
              set return_value -10
           }
           
-          -i $sp_id --  $NOT_ALLOWED1 {
+          -i $sp_id $NOT_ALLOWED1 {
              set return_value -11
           }       
-          -i $sp_id --  $NOT_ALLOWED2 {
+          -i $sp_id $NOT_ALLOWED2 {
              set return_value -11
           }       
-          -i $sp_id -- "not allowed to submit jobs" {
+          -i $sp_id "not allowed to submit jobs" {
              set return_value -11
           }
-          -i $sp_id --  $NO_ACC_TO_PRJ1 {
+          -i $sp_id $NO_ACC_TO_PRJ1 {
              puts $CHECK_OUTPUT "got string(2): \"$expect_out(0,string)\""
              set return_value -12
           }
-          -i $sp_id --  $NO_ACC_TO_PRJ2 {
+          -i $sp_id $NO_ACC_TO_PRJ2 {
          
              set return_value -12
           }
-          -i $sp_id -- "no access to project" {
+          -i $sp_id "no access to project" {
              set return_value -12
           }
-          -i $sp_id -- $UNKNOWN_OPTION {
+          -i $sp_id $UNKNOWN_OPTION {
              set return_value -13
           }
-          -i $sp_id -- "Unknown option" {
+          -i $sp_id "Unknown option" {
              set return_value -13
           }
-          -i $sp_id -- $NON_AMBIGUOUS {
+          -i $sp_id $NON_AMBIGUOUS {
              set return_value -14
           }
-          -i $sp_id -- "non-ambiguous jobnet predecessor" {
+          -i $sp_id "non-ambiguous jobnet predecessor" {
              set return_value -14
           }
-          -i $sp_id -- $UNAMBIGUOUSNESS {
+          -i $sp_id $UNAMBIGUOUSNESS {
              set return_value -15
           }
-          -i $sp_id -- "using job name \"*\" for*violates reference unambiguousness" {
+          -i $sp_id "using job name \"*\" for*violates reference unambiguousness" {
              set return_value -15
           }
-          -i $sp_id -- $ERROR_OPENING {
+          -i $sp_id $ERROR_OPENING {
              set return_value -16
           }
-          -i $sp_id -- $COLON_NOT_ALLOWED {
+          -i $sp_id $COLON_NOT_ALLOWED {
              set return_value -17
           }
-          -i $sp_id -- $ONLY_ONE_RANGE {
+          -i $sp_id $ONLY_ONE_RANGE {
              set return_value -18
           }
-          -i $sp_id -- "$PARSE_DUPLICATEHOSTINFILESPEC" { 
+          -i $sp_id "$PARSE_DUPLICATEHOSTINFILESPEC" { 
              set return_value -19
           }
-          -i $sp_id -- "two files are specified for the same host" { 
+          -i $sp_id "two files are specified for the same host" { 
              set return_value -19
           }
          
-          -i $sp_id -- $GDI_NEGATIVSTEP { 
+          -i $sp_id $GDI_NEGATIVSTEP { 
              set return_value -20
           }
 
-          -i $sp_id -- $GDI_INITIALPORTIONSTRINGNODECIMAL_S { 
+          -i $sp_id $GDI_INITIALPORTIONSTRINGNODECIMAL_S { 
              set return_value -21
           }
-          -i $sp_id -- $NO_DEADLINE_USER {
+          -i $sp_id $NO_DEADLINE_USER {
              set return_value -22
           }
-          -i $sp_id -- $WRONG_TYPE {
+          -i $sp_id $WRONG_TYPE {
              set return_value -23
+          }
+          -i $sp_id $NAMETOOLONG {
+             set return_value -24
+          }
+          -i $sp_id $JOBALREADYEXISTS {
+             set return_value -25
           }
         }
      }
@@ -4930,6 +4926,8 @@ proc submit_job { args {do_error_check 1} {submit_timeout 60} {host ""} {user ""
           "-21" { add_proc_error "submit_job" -1 [get_submit_error $return_value]  }
           "-22" { add_proc_error "submit_job" -1 [get_submit_error $return_value]  }
           "-23" { add_proc_error "submit_job" -1 [get_submit_error $return_value]  }
+          "-24" { add_proc_error "submit_job" -1 [get_submit_error $return_value]  }
+          "-25" { add_proc_error "submit_job" -1 [get_submit_error $return_value]  }
 
 
           default { add_proc_error "submit_job" 0 "job $return_value submitted - ok" }
@@ -4990,6 +4988,8 @@ proc get_submit_error { error_id } {
       "-21" { return "-t step of range must be a decimal number" }
       "-22" { return "user is not in access list deadlineusers" }
       "-23" { return "wrong type for submit -l option" }
+      "-24" { return "the job name (-N option) is too long" }
+      "-25" { return "duplicate job id found - issue 2028?" }
 
       default { return "unknown error" }
    }

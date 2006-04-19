@@ -136,6 +136,11 @@ proc issue_2028_submit {scenario {jobcount 5}} {
       if {$job_id > 0} {
          lappend id_list $job_id
       } else {
+         if {$job_id == -25} {
+            add_proc_error "issue_2028_submit" -1 "iz 2028 is present - job submission failed $scenario"
+         } else {
+            add_proc_error "issue_2028_submit" -1 "job submission failed $scenario - seemingly due to other problem than iz 2028"
+         }
          break
       }
    }

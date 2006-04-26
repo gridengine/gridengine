@@ -874,7 +874,7 @@ proc set_root_passwd {} {
         puts $CHECK_OUTPUT "--> root password not set!"
      } else {
         puts $CHECK_OUTPUT "--> testing root access ..."
-        set result [ start_remote_prog $CHECK_HOST "root" "id" "" ]
+        set result [start_remote_prog $CHECK_HOST "root" "id" "" prg_exit_state 60 0 "" 1 1 1 0]
      }
   }
   

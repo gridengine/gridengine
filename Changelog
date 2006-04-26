@@ -1,3 +1,6 @@
+JG-2006-04-26-0: Testsuite: Minor enhancements, fixes, and cleanup.
+                 Review:    AA
+
 RD-2006-04-19-0: Bugfix:    fixed qmon for lx24-ia64
                              disabled optimization because compiler is broken
                  Changed:   all

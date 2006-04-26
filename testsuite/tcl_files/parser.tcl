@@ -1435,7 +1435,14 @@ proc parse_qstat_j {input output {jobid 0} } {
 
    set transform(submission_time)  transform_date_time
    set transform(execution_time)   transform_date_time
-   process_named_record in out "no_delemiter___" "job_number" $jobid 0 0 variable_not_set transform variable_not_set ":"
+
+   if {[string is integer $jobid]} {
+      set idx_name "job_number"
+   } else {
+      set idx_name "job_name"
+   }
+
+   process_named_record in out "no_delemiter___" $idx_name $jobid 0 0 variable_not_set transform variable_not_set ":"
 }
 
 

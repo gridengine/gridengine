@@ -614,6 +614,57 @@ proc start_sge_utilbin {bin args {host ""} {user ""} {exit_var prg_exit_state}} 
    return [start_sge_bin $bin $args $host $user exit_state 60 "utilbin"]
 }
 
+#****** sge_procedures/start_source_bin() *****************************************
+#  NAME
+#     start_source_bin() -- start a binary in compile directory
+#
+#  SYNOPSIS
+#     start_source_bin { bin args {host ""} {user ""} {exit_var prg_exit_state} 
+#     {timeout 60} {sub_path "bin"} } 
+#
+#  FUNCTION
+#     Starts a binary in the compile directory (gridengine/source/$buildarch).
+#
+#  INPUTS
+#     bin                       - binary to start, e.g. test_drmaa
+#     args                      - arguments, e.g. "-sel"
+#     {host ""}                 - host on which to execute command
+#     {user ""}                 - user who shall call command
+#     {exit_var prg_exit_state} - variable for returning command exit code
+#     {timeout 60}              - timeout for command execution
+#
+#  RESULT
+#     Output of called command.
+#     The exit code will be placed in exit_var.
+#
+#  SEE ALSO
+#     sge_procedures/start_sge_bin()
+#     remote_procedures/start_remote_prog()
+#*******************************************************************************
+proc start_source_bin {bin args {host ""} {user ""} {exit_var prg_exit_state} {timeout 60}} {
+   global ts_config CHECK_OUTPUT CHECK_USER
+
+   upvar $exit_var exit_state
+
+   if {$host == ""} {
+      set host $ts_config(master_host)
+   }
+
+   if {$user == ""} {
+      set user $CHECK_USER
+   }
+
+   set arch [resolve_build_arch_installed_libs $host]
+   set ret 0
+   set binary "$ts_config(source_dir)/$arch/$bin"
+
+   debug_puts "executing $binary $args\nas user $user on host $host"
+   # Add " around $args if there are more the 1 args....
+   set result [start_remote_prog $host $user $binary "$args" exit_state $timeout]
+
+   return $result
+}
+
 #****** sge_procedures/get_sge_error_generic() *********************************
 #  NAME
 #     get_sge_error_generic() -- provide a list of generic error messages
@@ -7373,7 +7424,7 @@ proc shutdown_core_system {} {
    # core files in execd spool directories
    foreach host $ts_config(execd_nodes) { 
       set spooldir [get_spool_dir $host execd] 
-      check_for_core_files $host "$spooldir/$host"
+      check_for_core_files $host "$spooldir"
    }
 }
 

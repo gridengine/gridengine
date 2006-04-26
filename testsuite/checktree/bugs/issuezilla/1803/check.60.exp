@@ -191,7 +191,7 @@ proc issue_1803_test {} {
          set starter_method_split [ split $starter_method "/" ]
          set starter_bin [lindex $starter_method_split [ expr ([llength $starter_method_split] -1) ]]
 
-         set jobs_dir $spool_dir/$host/active_jobs/$job_id.1
+         set jobs_dir $spool_dir/active_jobs/$job_id.1
          set trace_file        $jobs_dir/trace
          puts $CHECK_OUTPUT "trace file:       $trace_file"
          wait_for_remote_file $host $ts_user_config(second_foreign_user) $trace_file

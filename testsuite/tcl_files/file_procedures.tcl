@@ -3390,6 +3390,10 @@ proc get_spool_dir {host subdir} {
             set spooldir "$spooldir/$host"
          }
       }
+   } else {
+      if {$subdir == "execd"} {
+         append spooldir "/$host"
+      }
    }
 
    return $spooldir

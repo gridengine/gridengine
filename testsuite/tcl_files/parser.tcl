@@ -1517,6 +1517,7 @@ proc output_array { input } {
 }
 
 
+
 #                                                             max. column:     |
 #****** parser/qstat_plain_parse() ******
 #
@@ -1563,6 +1564,98 @@ proc qstat_plain_parse { output  } {
 
 }
 
+proc qstat_f_plain_parse { output  } {
+   global ts_config CHECK_OUTPUT CHECK_USER output_result
+
+   upvar $output qstat_output
+
+   #set output_result ""
+   set qstat_output(jobid_list) ""
+   
+   # Run usual command
+   set result [start_sge_bin "qstat" "-f"]
+   parse_multiline_list result parsed_out
+
+   #puts $CHECK_OUTPUT "Printing the usual result of qstat $option... \n"
+   #puts $CHECK_OUTPUT "$result \n"
+
+   #parse_qstat result  qstat_output
+
+   #puts $CHECK_OUTPUT "Printing the parse_qstat result of qstat $option... \n"
+
+   #parray output_qstat
+
+   set index 0
+   set parsed_out_length [llength $parsed_out]
+   set final_parsed_out ""
+
+   # Also construct the new, saved list... Use lappend
+   while { $index <= $parsed_out_length } {
+      if {[regexp "\[0-9\]" [lindex $parsed_out $index]] } {
+         #puts $CHECK_OUTPUT "[lindex $parsed_out $index] \n"
+         lappend final_parsed_out [lindex $parsed_out $index]
+      }
+      incr index 1
+   }
+
+   #Now create the qstat_output array
+   
+   set final_index 0
+   set final_parsed_out_length [llength $final_parsed_out]
+   for { set index 0} { $index < $final_parsed_out_length }  {incr index 1} {
+
+      set old_string  [lindex $final_parsed_out $index]
+      set single_white_space_string [qstat_special_parse $old_string ]
+
+      # If the first element contains a letter, it is a queue listing
+      # Else, it is a jobid.
+      
+      set id [lindex $single_white_space_string 0]
+      if { [regexp "\[a-zA-Z\]" $id] } {  ; # queue listing
+         set qstat_output($id,qname) [lindex $single_white_space_string 0]
+         set qstat_output($id,qtype) [lindex $single_white_space_string 1]
+         set qstat_output($id,used_slots) [lindex $single_white_space_string 2]
+         set qstat_output($id,total_slots) [lindex $single_white_space_string 3]
+         set qstat_output($id,load_avg) [lindex $single_white_space_string 4]
+         set qstat_output($id,arch) [lindex $single_white_space_string 5]
+         append qstat_output($id,state) ""
+         if { [llength $single_white_space_string] > 6 } {
+            set qstat_output($id,state) [lindex $single_white_space_string 6]
+         }
+         
+         lappend qstat_output(queue_list) $id
+         
+      } else { ; # job listing
+         set jobid $id
+         set qstat_output($jobid,jobid) $jobid
+         lappend qstat_output(jobid_list) $jobid
+         set qstat_output($jobid,prior) [lindex $single_white_space_string 1]
+         set qstat_output($jobid,name) [lindex $single_white_space_string  2]
+         set qstat_output($jobid,user) [lindex $single_white_space_string  3]
+         set qstat_output($jobid,state) [lindex $single_white_space_string  4]
+         set qstat_output($jobid,submit_time) [lindex $single_white_space_string  5]
+         set qstat_output($jobid,start_time) [lindex $single_white_space_string  6]
+         set qstat_output($jobid,time) "$qstat_output($jobid,submit_time) $qstat_output($jobid,start_time)"
+         set qstat_output($jobid,time)  [transform_date_time $qstat_output($jobid,time)]
+         append qstat_output($jobid,slots) "[lindex $single_white_space_string  7] "
+         
+         if { [llength $single_white_space_string ] > 7} {
+            append qstat_output($jobid,task_id) "[lindex $single_white_space_string  8] "
+         }
+
+         #parray qstat_output
+
+         #puts $CHECK_OUTPUT "is $single_white_space_string \n"
+
+      
+       }
+
+   }
+   
+   set_error 0 "ok"
+
+}
+
 #                                                             max. column:     |
 #****** parser/qstat_special_parse() ******
 #
@@ -1597,7 +1690,7 @@ proc qstat_special_parse {input_string } {
    }
 
    # For date, skip slash removal
-   set date_flag [regexp "(\[0-9]*\/\[0-9]*\/\[0-9]*)" $input_string]
+   set date_flag [regexp "(\[0-9]+\/\[0-9]+\/\[0-9]+)" $input_string]
 
    if {$date_flag == 1} {
       # do nothing, we have a date, so keep the slashes; return

@@ -3003,6 +3003,22 @@ sequential_tag_queues_suitable4job(sge_assignment_t *a)
          continue;
       }
 
+#ifdef COMPILE_CQ_OPT
+      if (!getenv("SGE_NOCQOPT")) { /* QA hook */
+         const char *cqname = lGetString(qep, QU_qname);
+         if (qref_list_cq_rejected(lGetList(a->job, JB_hard_queue_list), cqname)) {
+            DPRINTF(("Cluster Queue \"%s\" is rejected by the hard "
+                     "queue list (-q) that was requested by job %d\n",
+                     cqname, (int)a->job_id));
+            schedd_mes_add(a->job_id, SCHEDD_INFO_NOTINHARDQUEUELST_S, qname);
+            if (skip_queue_list)
+               lAddElemStr(&skip_queue_list, CTI_name, qname, CTI_Type);
+            best_queue_result = find_best_result(DISPATCH_NEVER_CAT, best_queue_result); 
+            continue;
+         }
+      }
+#endif
+
       eh_name = lGetHost(qep, QU_qhostname);
       hep = lGetElemHost(a->host_list, EH_name, eh_name);
 

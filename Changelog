@@ -1,3 +1,10 @@
+AH-2006-04-28-0: Enhancem.: Added scheduler quick exit for sequential jobs 
+                            based on -q clusterq. Until now the optimization 
+                            is available only if code was compiled with 
+                            -DCOMPILE_CQ_OPT.
+                 Changed:   sge_schedd
+                 Review:    TBD
+
 CR-2006-04-19-0: Cleanup:   cleanup of RAND file reading in commlib SSL mode
                  Changed:   cl_ssl_framework.c => commlib
                  Review:    AA

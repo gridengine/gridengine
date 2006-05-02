@@ -405,10 +405,10 @@ int cl_com_tcp_open_connection(cl_com_connection_t* connection, int timeout, uns
          int select_back = 0;
          struct timeval now;
          int socket_error = 0;
-#if defined(AIX)
-         socklen_t socklen = sizeof(socket_error);
-#else
+#if defined(IRIX65) || defined(INTERIX) || defined(DARWIN6)
          int socklen = sizeof(socket_error);
+#else
+         socklen_t socklen = sizeof(socket_error);
 #endif
 
          if (only_once == 0) {
@@ -1172,10 +1172,10 @@ int cl_com_tcp_connection_request_handler_setup(cl_com_connection_t* connection 
    }
 
    if (private->server_port == 0) {
-#if defined(AIX43) || defined(AIX51)
-      size_t length;
-#else
+#if defined(IRIX65) || defined(INTERIX) || defined(DARWIN6)
       int length;
+#else
+      socklen_t length;
 #endif
       length = sizeof(serv_addr);
       /* find out assigned port number and pass it to caller */
@@ -1306,10 +1306,10 @@ int cl_com_tcp_connection_request_handler(cl_com_connection_t* connection, cl_co
    struct sockaddr_in cli_addr;
    int new_sfd = 0;
    int sso;
-#if defined(AIX43) || defined(AIX51)
-   size_t fromlen = 0;
-#else
+#if defined(IRIX65) || defined(INTERIX) || defined(DARWIN6)
    int fromlen = 0;
+#else
+   socklen_t fromlen;
 #endif
    int retval;
    int server_fd = -1;
@@ -1501,10 +1501,10 @@ int cl_com_tcp_open_connection_request_handler(cl_raw_list_t* connection_list, c
    int get_sock_opt_error = 0;
    char tmp_string[1024];
 
-#if defined(AIX)
-   socklen_t socklen = sizeof(socket_error);
-#else
+#if defined(IRIX65) || defined(INTERIX) || defined(DARWIN6)
    int socklen = sizeof(socket_error);
+#else
+   socklen_t socklen = sizeof(socket_error);
 #endif
 
 #ifdef USE_POLL

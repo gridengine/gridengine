@@ -66,8 +66,7 @@ set POSTGRES_HOME = /vol2/tools/SW/postgresql-7.3.2/$buildarch
 # BERKELEYDB_HOME the directory where the include and lib directory of
 # Berkeley DB is installed
 #
-set BERKELEYDB_HOME = /vol2/SW/db-4.2.52/$buildarch
-#set BERKELEYDB_HOME = /vol2/SW/db-4.3.3/$buildarch
+set BERKELEYDB_HOME = /vol2/SW/db-4.4.20/$buildarch
 set BDB_INCLUDE_SUBDIR =
 set BDB_LIB_SUBDIR =
 set BDB_LIB_SUFFIX =

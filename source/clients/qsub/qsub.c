@@ -655,7 +655,7 @@ static int report_exit_status (int stat, const char *jobid)
          exit_status = 1;
       }
    }
-  printf("\n");
+   printf("\n");
    
    return exit_status;
 }

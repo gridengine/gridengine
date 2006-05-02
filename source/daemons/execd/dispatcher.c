@@ -692,6 +692,7 @@ int *tagarray
 static int alloc_de(de)       /* malloc fields in de */
 dispatch_entry *de;
 {
+   de->id = 0;
    de->commproc = malloc(CL_MAXHOSTLEN+1);
    de->host = malloc(CL_MAXHOSTLEN+1);
 

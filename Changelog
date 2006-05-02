@@ -1,3 +1,7 @@
+JG-2006-05-02-0: Enhancem.: Use Berkeley DB 4.4.20 for berkeleydb spooling.
+                            Port to Mac OS 10.4, enable build with gcc-4.
+                 Review:    RD
+
 OJ-2006-04-26-0: Testsuite: Added test case for qstat -f with XML parsing. in
                             client/qstat.
                             Added new file tcl_files/parser_xml.tcl with new
@@ -17,14 +21,17 @@ JG-2006-04-19-0: Testsuite: Minor fixes and cleanup.
                  Review:    RD
 
 CR-2006-04-19-0: Cleanup:   cleanup of RAND file reading in commlib SSL mode
-                 Changed:   cl_ssl_framework.c => commlib (merge from V60s2_BRANCH)
+                 Changed:   cl_ssl_framework.c => commlib (merge from 
+                            V60s2_BRANCH)
                  Review:    AA
 
 CR-2006-04-18-0: Bugfix:    added fix for aix and hp in ssl module
-                 Changed:   cl_ssl_framework.c => commlib (merge from V60s2_BRANCH)
+                 Changed:   cl_ssl_framework.c => commlib (merge from 
+                            V60s2_BRANCH)
                  Review:    RD
 
-RH-2006-04-12-0: Bugfix:    The man page QUEUE_CONF(5) does not describe the memory specifier 'G'
+RH-2006-04-12-0: Bugfix:    The man page QUEUE_CONF(5) does not describe the 
+                            memory specifier 'G'
                  Issue:     2029
                  Bugtraq:   6411660
                  Review:    RD

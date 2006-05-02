@@ -856,7 +856,7 @@ int ckpt_type
    struct rusage rusage;
    int  status, child_signal=0, exit_status;
    u_long32 wait_status = 0;
-   int core_dumped, ckpt_interval, ckpt_pid;
+   int core_dumped, ckpt_interval, ckpt_pid = 0;
    int wexit_flag_true = 1; /* to please IRIX compiler */
 
 #if defined(IRIX)

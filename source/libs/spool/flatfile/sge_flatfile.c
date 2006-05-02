@@ -731,7 +731,7 @@ spool_flatfile_open_file(lList **answer_list,
             return NULL;
          }
 
-#if !defined(AIX42) && !defined(DARWIN6)
+#if !defined(DARWIN6)
          flockfile(file);
 #endif
          fflush(file);
@@ -826,7 +826,7 @@ spool_flatfile_close_file(lList **answer_list, FILE *file, const char *filepath,
    
    if (destination == SP_DEST_STDOUT || destination == SP_DEST_STDERR) {
       fflush(file);
-#if !defined(AIX42) && !defined(DARWIN6)
+#if !defined(DARWIN6)
       funlockfile(file);
 #endif
    } else {

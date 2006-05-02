@@ -68,7 +68,7 @@ QMON_SHARED_LIBRARIES="libXbae libXicon libXmt libXspin libXtab"
 QMON_NEED_SHARED_LIBRARIES="libXltree"
 OPENSSL_SHARED_LIBRARIES="libcrypto libssl"
 
-BERKELEYDB_SHARED_LIBRARIES="libdb-4.2"
+BERKELEYDB_SHARED_LIBRARIES="libdb-4.4"
 
 DRMAA_SHARED_LIBRARIES="libdrmaa"
 # The last number listed here will be the verson linked from libdrmaa.so

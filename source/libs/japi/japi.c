@@ -2581,8 +2581,8 @@ int japi_wait(const char *job_id, dstring *waited_job, int *stat,
    int wait4any = 0;
    bool is_array_task = false;
    int drmaa_errno, wait_result;
-   bool waited_is_task_array;
-   u_long32 waited_jobid, waited_taskid;
+   bool waited_is_task_array = false;
+   u_long32 waited_jobid = 0, waited_taskid = 0;
    bool got_usage_info = false;
 
    DENTER(TOP_LAYER, "japi_wait");

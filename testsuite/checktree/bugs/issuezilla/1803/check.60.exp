@@ -231,7 +231,7 @@ proc issue_1803_test {} {
                      # job
                      set expected_binary  "/bin/csh"
                      set expected_argument1        "-csh"
-                     set expected_argument2        "$spool_dir/$host/job_scripts/$job_id"
+                     set expected_argument2        "$spool_dir/job_scripts/$job_id"
                      set expected_argument3        "1"
                   } elseif { $starter_method != "none" && $counter == 1 && [string first "-b y" $job_args] >= 0 } {
                      # job
@@ -243,7 +243,7 @@ proc issue_1803_test {} {
                      # job
                      set expected_binary  "$starter_method"
                      set expected_argument1        "-$starter_bin"
-                     set expected_argument2        "$spool_dir/$host/job_scripts/$job_id"
+                     set expected_argument2        "$spool_dir/job_scripts/$job_id"
                      set expected_argument3        "1"
                   } elseif { $counter == 2} {
                      # epilog

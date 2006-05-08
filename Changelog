@@ -1,3 +1,10 @@
+MD-2006-05-08-0: Bugfix:    during QMaster installation, creation of local 
+                            database directory fails on hp11 
+                 Issue:     2051 
+                 Bugtraq:   6412865 
+                 Changed:   install 
+                 Review:    HP
+
 AH-2006-04-28-0: Enhancem.: Added scheduler quick exit for sequential jobs 
                             based on -q clusterq. Until now the optimization 
                             is available only if code was compiled with 

@@ -1,3 +1,10 @@
+MD-2006-05-08-0: Bugfix:    during QMaster installation, creation of local 
+                            database directory fails on hp11 
+                 Issue:     2051 
+                 Bugtraq:   6412865 
+                 Changed:   install 
+                 Review:    HP
+
 JG-2006-05-02-0: Enhancem.: Use Berkeley DB 4.4.20 for berkeleydb spooling.
                             Port to Mac OS 10.4, enable build with gcc-4.
                  Review:    RD

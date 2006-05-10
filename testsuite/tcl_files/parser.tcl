@@ -292,8 +292,12 @@ proc parse_fixed_column_lines {input output position {start_line 0}
    set tmp [split $in "\n"]
    
    # compute array dimensions
-   set num_lines [llength $tmp]
    set num_cols [array size pos]
+   set num_lines [llength $tmp]
+   # ignore empty trailing line
+   if {[string trim [lindex $tmp [expr $num_lines -1]]] == ""} {
+      incr num_lines -1
+   }
 
    # split columns and create TCL array
    for { set i $start_line } { $i < $num_lines } { incr i } {
@@ -1254,8 +1258,8 @@ proc parse_qstat {input output {jobid ""} {ext 0} {do_replace_NA 1 } } {
          set  position(15)  "139 143"           ; set   names(15)    share
          set  position(16)  "145 174"           ; set   names(16)    queue
          set     rules(16)  rule_list
-         set  position(17)  "176 181"           ; set   names(17)     master
-         set  position(18)  "183 end"           ; set   names(18)    jatask
+         set  position(17)  "176 180"           ; set   names(17)     master
+         set  position(18)  "182 end"           ; set   names(18)    jatask
          set     rules(18)  rule_list
       }
    } elseif { $ext == 2 } { 
@@ -1278,8 +1282,8 @@ proc parse_qstat {input output {jobid ""} {ext 0} {do_replace_NA 1 } } {
          set   position(11) "111 129"           ; set    names(11)   deadline
          set   position(12) "130 160"           ; set    names(12)   queue
          set      rules(12)  rule_list
-         set   position(13) "161 167"           ; set    names(13)   slots
-         set   position(14) "168 end"           ; set    names(14)   jatask
+         set   position(13) "161 165"           ; set    names(13)   slots
+         set   position(14) "167 end"           ; set    names(14)   jatask
          set      rules(14)  rule_list
       }
    } else { # normat qstat
@@ -1307,9 +1311,9 @@ proc parse_qstat {input output {jobid ""} {ext 0} {do_replace_NA 1 } } {
          set  transform(5)  transform_date_time
          set   position(6)  "66 95"             ; set    names(6)    queue
          set      rules(6)  rule_list
-         set   position(7)  "97 102"            ; set    names(7)    master
+         set   position(7)  "97 101"            ; set    names(7)    master
          set      rules(7)  rule_list
-         set   position(8)  "104 end"           ; set    names(8)    jatask
+         set   position(8)  "103 end"           ; set    names(8)    jatask
          set      rules(8)  rule_list
       }
    }
@@ -1677,12 +1681,9 @@ proc qstat_f_plain_parse { output  } {
 #
 #
 #  SEE ALSO
-#     parser/parse_qstat
+#     parser/parse_qstat()
 #*******************************
-
 proc qstat_special_parse {input_string } {
-
-
    # Keep on doing it while we have more than 1 whitespace
    set flag 1
    while { $flag } {
@@ -1702,5 +1703,54 @@ proc qstat_special_parse {input_string } {
    }
 
    return $output_string
+}
+
+#****** parser/test_parse_qstat() **********************************************
+#  NAME
+#     test_parse_qstat() -- test the parse_qstat function
+#
+#  SYNOPSIS
+#     test_parse_qstat { jobid opt } 
+#
+#  FUNCTION
+#     Test function for parse_qstat.
+#     Submit a job, array job, parallel job.
+#     Execute test_parse_qstat in your testsuite, e.g. by executing
+#
+#     expect check.exp file <config file> execute_func test_parse_qstat 2 ""
+#     expect check.exp file <config file> execute_func test_parse_qstat 2 "-ext"
+#     expect check.exp file <config file> execute_func test_parse_qstat 2 "-urg"
+#
+#  INPUTS
+#     jobid - job id of the job to analyze
+#     opt   - one of "", -ext, -urg
+#
+#  SEE ALSO
+#     parser/parse_qstat()
+#*******************************************************************************
+proc test_parse_qstat {jobid opt} {
+   global CHECK_OUTPUT
+
+   if {$opt == ""} {
+      set ext 0
+   } elseif {$opt == "-ext"} {
+      set ext 1
+   } elseif {$opt == "-urg"} {
+      set ext 2
+   } else {
+      puts $CHECK_OUTPUT "invalid option $opt"
+      return
+   }
+
+   set result [start_sge_bin qstat "$opt"]
+   if {$prg_exit_state != 0} {
+      puts $CHECK_OUTPUT "qstat failed:\n$result"
+      return
+   }
+
+   parse_qstat result jobinfo $jobid $ext 1
+   foreach name [array names jobinfo] {
+      puts $CHECK_OUTPUT "$name\t$jobinfo($name)"
+   }
 }
 

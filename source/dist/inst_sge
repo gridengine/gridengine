@@ -79,6 +79,7 @@ ADD_TO_RC=false
 REMOVE_RC=false
 SET_FILE_PERMS=false
 MAKE_RC=false
+WIN_UPDATE=false
 
 QMASTER="undef"
 EXECD="undef"
@@ -224,6 +225,12 @@ while [ $ARGC != 0 ]; do
      . ./util/install_modules/inst_update.sh
      #update from 5.3 to 6.0
      ;;
+   -winupdate)
+     #update to new Gridengine Helper Service
+     WIN_UPDATE=true
+     . ./util/install_modules/inst_common.sh
+     . ./util/install_modules/inst_execd.sh
+     ;;
    -rccreate)
      MAKE_RC=true
      #Generate new rc scripts from settings file
@@ -268,6 +275,11 @@ done
 
 if [ $AUTO = "false" -a $QMASTER = "undef" -a $EXECD = "install" -a $SHADOW = "install" ]; then
    ErrUsage
+fi
+
+if [ $WIN_UPDATE = "true" ]; then
+   WelcomeTheUserWinUpdate
+   SetupWinSvc
 fi
 
 
@@ -502,7 +514,8 @@ if [ "$EXECD" = "install" -a "$UPDATE" != "true" ]; then
       CheckHostNameResolving
       GetLocalExecdSpoolDir
       AddLocalConfiguration_With_Qconf
-      AddSGEStartUpScript $euid execd 
+      AddSGEStartUpScript $euid execd
+      SetupWinSvc 
       StartExecd
       AddQueue
       GiveHints
@@ -535,6 +548,7 @@ if [ "$EXECD" = "install" -a "$UPDATE" != "true" ]; then
       GetLocalExecdSpoolDir
       AddLocalConfiguration_With_Qconf
       AddSGEStartUpScript $euid execd
+      SetupWinSvc
       StartExecd
       AddQueue
       GiveHints

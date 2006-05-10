@@ -392,8 +392,8 @@ ErrUsage()
    myname=`basename $0`
    $INFOTEXT -e \
              "Usage: %s -m|-um|-x|-ux [all]|-rccreate|-sm|-usm|-db|-udb|-updatedb \\\n" \
-             "       -upd <sge-root> <sge-cell>|-bup|-rst [-auto <filename>] [-csp] \\\n" \
-             "       [-resport] [-afs] [-host <hostname>] [-rsh] [-noremote]\n" \
+             "       -upd <sge-root> <sge-cell>|-bup|-rst [-auto <filename>] | [-winupdate] \\\n" \
+             "       [-csp] [-resport] [-afs] [-host <hostname>] [-rsh] [-noremote]\n" \
              "   -m         install qmaster host\n" \
              "   -um        uninstall qmaster host\n" \
              "   -x         install execution host\n" \
@@ -413,6 +413,7 @@ ErrUsage()
              "              higher than 1024\n" \
              "   -rsh       use rsh instead of ssh (default is ssh)\n" \
              "   -auto      full automatic installation (qmaster and exec hosts)\n" \
+             "   -winupdate update to add gui features to a existing execd installation\n" \
              "   -csp       install system with security framework protocol\n" \
              "              functionality\n" \
              "   -afs       install system with AFS functionality\n" \
@@ -591,6 +592,28 @@ WelcomeTheUserUpgrade()
              "the configuration of your old installation. If the upgrade was\n" \
              "successfully completed it is necessary to install your execution hosts\n" \
              "with the install_execd script."
+   $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
+   $CLEAR
+}
+
+#--------------------------------------------------------------------------
+#
+WelcomeTheUserWinUpdate()
+{
+   if [ "$SGE_ARCH" != "win32-x86" ]; then
+      return
+   fi
+
+   $INFOTEXT -u "\nWelcome to the Grid Engine Win Update"
+   $INFOTEXT "\nBefore you continue with the update please read these hints:\n\n" \
+             "   - Your terminal window should have a size of at least\n" \
+             "     80x24 characters\n\n" \
+             "   - The INTR character is often bound to the key Ctrl-C.\n" \
+             "     The term >Ctrl-C< is used during the udate if you\n" \
+             "     have the possibility to abort the upgrade\n\n" \
+             "The update procedure will take approximately 1-2 minutes.\n" \
+             "After this update you will get a enhanced windows execd\n" \
+             "installation, with gui support."
    $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
    $CLEAR
 }

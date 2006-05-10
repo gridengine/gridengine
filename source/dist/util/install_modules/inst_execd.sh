@@ -698,3 +698,73 @@ CheckWinAdminUser()
       export PATH 
    fi
 }
+
+InstWinHelperSvc()
+{
+   tmp_path=$PATH
+   PATH=/usr/contrib/win32/bin:/common:$SAVED_PATH
+   export PATH
+
+   WIN_SVC="N1 Grid Engine Helper Service"
+   WIN_DIR=`winpath2unix $SYSTEMROOT`
+
+   $INFOTEXT " Checking, if Helper Service is already installed!\n"
+   eval "net pause \"$WIN_SVC\"" > /dev/null 2>&1
+   ret=$?
+   if [ "$ret" = 0 ]; then
+      ret=2
+      $INFOTEXT "   ... a \"Helper Service\" is already installed!"
+      $INFOTEXT "   ... stopping service!"
+
+      while [ "$ret" -ne 0 ]; do
+         eval "net continue \"$WIN_SVC\"" > /dev/null 2>&1
+         ret=$?
+      done    
+      
+   fi
+
+   $INFOTEXT "   ... uninstalling old service!"
+   $WIN_DIR/SGE_Helper_Service.exe -uninstall
+   $INFOTEXT "\n   ... moving new service binary!"
+   cp -fR $SGE_UTILBIN/SGE_Helper_Service.exe $WIN_DIR
+   $INFOTEXT "   ... installing new service!"
+   $WIN_DIR/SGE_Helper_Service.exe -install
+   $INFOTEXT "\n   ... starting new service!"
+   eval "net start \"$WIN_SVC\"" > /dev/null 2>&1
+
+   if [ "$?" -ne 0 ]; then
+      $INFOTEXT "\n ... service could not be started!"
+      $INFOTEXT " ... exiting installation"
+      exit 1
+   fi
+
+   PATH=$tmp_path
+   export PATH
+}
+
+
+SetupWinSvc()
+{
+   if [ "$SGE_ARCH" != "win32-x86" ]; then
+      return
+   fi
+
+   if [ "$SGE_ROOT" = "" -o "$SGE_CELL" = "" ]; then
+      $INFOTEXT "Please, source <sge-root>/<sge-cell>/common/settings.[c]sh"
+      $INFOTEXT "file to setup a proper environment."
+      $INFOTEXT "... exiting update now!"
+      exit 1 
+   fi
+
+   InstWinHelperSvc
+   $INFOTEXT -wait -auto $AUTO -n "\nHit <RETURN> to continue >> "
+
+   $CLEAR
+   if [ "$WIN_UPDATE" = "true" ]; then
+      SGE_STARTUP_FILE="$SGE_ROOT/$SGE_CELL/common/sgeexecd"
+      StartExecd
+   fi
+   #$INFOTEXT "Helper Service successfully installed...."
+   #$INFOTEXT -wait -auto $AUTO -n "\nHit <RETURN> to continue >> "
+   $CLEAR
+}

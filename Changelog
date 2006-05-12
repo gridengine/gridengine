@@ -1,3 +1,9 @@
+OJ-2006-05-12-0: Testsuite: Added test case for qstat -F, qstat -F rerun,h_vmem
+                            with XML parsing. in client/qstat.
+                            Added new file tcl_files/parser_xml.tcl with new
+                            XML parsing procedures.
+                 Issue:     1206
+                 Review:    DT
 JG-2006-05-10-0: Testsuite: Fixed incorrect parsing of qstat output.
                  Issue:     2052
                  Review:    RD

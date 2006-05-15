@@ -660,7 +660,7 @@ lListElem *job_enroll(lListElem *job, lList **answer_list,
 *     job_count_rescheduled_ja_tasks() -- count rescheduled tasks
 *
 *  SYNOPSIS
-*     static int job_count_rescheduled_ja_tasks(lListElem *job, bool count_all) 
+*     static int job_count_rescheduled_ja_tasks(lListElem *job, bool count_all)
 *
 *  FUNCTION
 *     Returns number of rescheduled tasks in JB_ja_tasks of a job. The
@@ -672,10 +672,10 @@ lListElem *job_enroll(lListElem *job, lList **answer_list,
 *     bool count_all - quick exit flag
 *
 *  RESULT
-*     static int - number of tasks resp. 0/1 
+*     static int - number of tasks resp. 0/1
 *
 *  NOTES
-*     MT-NOTE: job_count_rescheduled_ja_tasks() is MT safe 
+*     MT-NOTE: job_count_rescheduled_ja_tasks() is MT safe
 *******************************************************************************/
 static int job_count_rescheduled_ja_tasks(lListElem *job, bool count_all)
 {
@@ -701,13 +701,13 @@ static int job_count_rescheduled_ja_tasks(lListElem *job, bool count_all)
 *     job_count_pending_tasks() -- Count number of pending tasks
 *
 *  SYNOPSIS
-*     bool job_count_pending_tasks(lListElem *job, bool count_all) 
+*     bool job_count_pending_tasks(lListElem *job, bool count_all)
 *
 *  FUNCTION
 *     This function returns the number of pending tasks of a job.
 *
 *  INPUTS
-*     lListElem *job - JB_Type 
+*     lListElem *job - JB_Type
 *     bool           - number of tasks or simply 0/1 if count_all is 'false'
 *
 *  RESULT
@@ -2948,7 +2948,19 @@ job_verify(const lListElem *job, lList **answer_list)
       if (context_list != NULL) {
          ret = var_list_verify(context_list, answer_list);
       }
-   } 
+   }
+
+   if (ret) {
+      ret = path_list_verify(lGetList(job, JB_stdout_path_list), answer_list);
+   }
+
+   if (ret) {
+      ret = path_list_verify(lGetList(job, JB_stderr_path_list), answer_list);
+   }
+
+   if (ret) {
+      ret = path_list_verify(lGetList(job, JB_stdin_path_list), answer_list);
+   }
 
    DRETURN(ret);
 }
@@ -3209,9 +3221,9 @@ job_verify_submitted_job(const lListElem *job, lList **answer_list)
    /* JB_job_source must be NULL */
    if (ret) {
       if (lGetString(job, JB_job_source) != NULL) {
-            answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR, 
-                              MSG_INVALIDJOB_REQUEST_S, "job source");
-            ret = false;
+         answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR, 
+                           MSG_INVALIDJOB_REQUEST_S, "job source");
+         ret = false;
       }
    }
 
@@ -3311,11 +3323,51 @@ job_verify_execd_job(const lListElem *job, lList **answer_list)
     *    - JB_submission_time, JB_execution_time??
     *    - JB_owner != NULL
     *    - JB_cwd != NULL??
-    *    - a correct JAT_Type sublist with a single element (to be verified)
     */
 
    if (ret) {
       ret = object_verify_ulong_not_null(job, answer_list, JB_job_number);
+   }
+
+   if (ret) {
+      ret = object_verify_string_not_null(job, answer_list, JB_job_name);
+   }
+
+   if (ret) {
+      ret = object_verify_string_not_null(job, answer_list, JB_owner);
+   }
+
+   if (ret) {
+      const char *cwd = lGetString(job, JB_cwd);
+
+      if (cwd != NULL) {
+         ret = path_verify(cwd, answer_list);
+      }
+   }
+
+   if (ret) {
+      const lListElem *ckpt = lGetObject(job, JB_checkpoint_object);
+      if (ckpt != NULL) {
+         if (ckpt_validate(ckpt, answer_list) != STATUS_OK) {
+            ret = false;
+         }
+      }
+   }
+
+   /* for job execution, we need exactly one ja task */
+   if (ret) {
+      const lList *ja_tasks = lGetList(job, JB_ja_tasks);
+
+      if (ja_tasks == NULL || lGetNumberOfElem(ja_tasks) != 1) {
+         answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR, 
+                           MSG_INVALIDJATASK_REQUEST);
+         ret = false;
+      }
+
+      /* verify the ja task structure */
+      if (ret) {
+         ret = ja_task_verify_execd_job(lFirst(ja_tasks), answer_list);
+      }
    }
 
    DRETURN(ret);

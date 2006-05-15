@@ -69,6 +69,7 @@
 #include "sge_host.h"
 #include "sge_load.h"
 #include "sge_utility.h"
+#include "sge_path_alias.h"
 
 #include "sge_select_queue.h"
 #include "sge_resource_utilization.h"
@@ -1313,3 +1314,184 @@ qinstance_set_conf_slots_used(lListElem *this_elem)
    DEXIT;
 }
 
+/****** sge_qinstance/qinstance_list_verify_execd_job() ************************
+*  NAME
+*     qinstance_list_verify_execd_job() -- verify a queue instance list
+*
+*  SYNOPSIS
+*     bool 
+*     qinstance_list_verify_execd_job(const lList *queue_list, lList **answer_list) 
+*
+*  FUNCTION
+*     Verify correctness of a queue instance list, that has been sent by qmaster
+*     to execd as part of a job start order.
+*
+*  INPUTS
+*     const lList *queue_list - the queue instance list
+*     lList **answer_list     - answer list to pass back error messages
+*
+*  RESULT
+*     bool - true: everything ok, else false
+*
+*  NOTES
+*     MT-NOTE: qinstance_list_verify_execd_job() is MT safe 
+*
+*  SEE ALSO
+*     sge_qinstance/qinstance_verify()
+*******************************************************************************/
+bool 
+qinstance_list_verify_execd_job(const lList *queue_list, lList **answer_list)
+{
+   bool ret = true;
+
+   DENTER(TOP_LAYER, "qinstance_verify");
+
+   if (queue_list == NULL) {
+      answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR, 
+                              MSG_NULLELEMENTPASSEDTO_S, SGE_FUNC);
+      ret = false;
+   }
+
+   if (ret) {
+      const lListElem *qep;
+
+      for_each (qep, queue_list) {
+         ret = qinstance_verify(qep, answer_list);
+         if (!ret) {
+            break;
+         }
+      }
+   }
+
+   DRETURN(ret);
+}
+
+/****** sge_qinstance/qinstance_verify() ***************************************
+*  NAME
+*     qinstance_verify() -- verify a queue instance in execd
+*
+*  SYNOPSIS
+*     bool 
+*     qinstance_verify(const lListElem *qep, lList **answer_list) 
+*
+*  FUNCTION
+*     Verify a single queue instance, that has been sent by qmaster to execd
+*     as part of a job start order.
+*
+*  INPUTS
+*     const lListElem *qep - the queue instance to verify
+*     lList **answer_list  - answer list to pass back error messages
+*
+*  RESULT
+*     bool - true: everything ok, else false
+*
+*  NOTES
+*     MT-NOTE: qinstance_verify() is MT safe 
+*******************************************************************************/
+bool 
+qinstance_verify(const lListElem *qep, lList **answer_list)
+{
+   bool ret = true;
+
+   DENTER(TOP_LAYER, "qinstance_verify");
+
+   if (qep == NULL) {
+      answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR, 
+                              MSG_NULLELEMENTPASSEDTO_S, SGE_FUNC);
+      ret = false;
+   }
+
+   if (ret) {
+      ret = verify_host_name(answer_list, lGetHost(qep, QU_qhostname));
+   }
+
+   if (ret) {
+      if (verify_str_key(answer_list, lGetString(qep, QU_qname), MAX_VERIFY_STRING, lNm2Str(QU_qname)) != STATUS_OK) {
+         ret = false;
+      }
+   }
+
+   if (ret) {
+      ret = qinstance_verify_full_name(answer_list, lGetString(qep, QU_full_name));
+   }
+
+   if (ret) {
+      ret = path_verify(lGetString(qep, QU_shell), answer_list);
+   }
+
+   DRETURN(ret);
+}
+
+/****** sge_qinstance/qinstance_verify_full_name() *****************************
+*  NAME
+*     qinstance_verify_full_name() -- verify a queue instance full name
+*
+*  SYNOPSIS
+*     bool 
+*     qinstance_verify_full_name(lList **answer_list, const char *full_name) 
+*
+*  FUNCTION
+*     Verifies, if a queue instance full name is correct (form cqueue@host).
+*
+*  INPUTS
+*     lList **answer_list   - answer list to pass back error messages
+*     const char *full_name - the queue instance name to verify
+*
+*  RESULT
+*     bool - true: everything ok, else false
+*
+*  NOTES
+*     MT-NOTE: qinstance_verify_full_name() is MT safe 
+*******************************************************************************/
+bool 
+qinstance_verify_full_name(lList **answer_list, const char *full_name)
+{
+   bool ret = true;
+
+   dstring cqueue_name = DSTRING_INIT;
+   dstring host_domain = DSTRING_INIT;
+   bool has_hostname, has_domain;
+
+   if (full_name == NULL) {
+      answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR, 
+                              MSG_INVALID_QINSTANCE_NAME_S, "<null>");
+      ret = false;
+   }
+
+   /* split the queue instance name and verify its components */
+   if (ret) {
+      if (!cqueue_name_split(full_name, &cqueue_name, &host_domain, 
+                             &has_hostname, &has_domain)) {
+         ret = false;
+      }
+   }
+
+   /* the cqueue name */
+   if (ret) {
+      if (verify_str_key(answer_list, sge_dstring_get_string(&cqueue_name), 
+                         MAX_VERIFY_STRING, "cluster queue") != STATUS_OK) {
+         ret = false;
+      }
+   }
+
+   /* the hostname or host group */
+   if (ret) {
+      if (has_hostname) {
+         ret = verify_host_name(answer_list, sge_dstring_get_string(&host_domain));
+      } else if (has_domain) {
+         if (verify_str_key(answer_list, sge_dstring_get_string(&host_domain) + 1, 
+                            MAX_VERIFY_STRING, "host domain") != STATUS_OK) {
+            ret = false;
+         }
+      } else {
+         answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR, 
+                                 MSG_INVALID_QINSTANCE_NAME_S, full_name);
+         ret = false;
+      }
+   }
+
+   sge_dstring_free(&cqueue_name);
+   sge_dstring_free(&host_domain);
+
+   return ret;
+}

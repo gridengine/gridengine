@@ -56,7 +56,7 @@ an_status_t verify_str_key(lList **alpp, const char *str, size_t str_length, con
 
    static const char mid_characters[19] = { '\n', '\t', '\r', ' ', '/', ':', '\'',
       '\"', '\\', '[', ']', '{', '}', '|', '(', ')', '@', '%' , 0};
-   static const char *mid_strings[18];
+   static const char *mid_strings[19];
 
    static const char* keyword[] = { "NONE", "ALL", "TEMPLATE", NULL };
    static const char* keyword_strings[4];
@@ -96,9 +96,15 @@ an_status_t verify_str_key(lList **alpp, const char *str, size_t str_length, con
       initialized = 1;
    }
 
+   if (str == NULL) {
+      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_KEYSTR_NULL_S, name));
+      answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+      return STATUS_EUNKNOWN;
+   }
+
    /* check string length first, if too long -> error */
    if (strlen(str) > str_length) {
-      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_KEYSTR_LENGTH_S,(int)str_length));
+      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_KEYSTR_LENGTH_I, (int)str_length));
       answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
       return STATUS_EUNKNOWN;
    }

@@ -50,6 +50,7 @@ int path_alias_list_get_path(const lList *path_aliases, lList **alpp,
                              dstring *outpath);
 
 bool path_verify(const char *path, lList **answer_list);
+bool path_list_verify(const lList *path_list, lList **answer_list);
 bool path_alias_verify(const lList *path_aliases, lList **answer_list);
 
 #endif /* __PATH_ALIASES_H */

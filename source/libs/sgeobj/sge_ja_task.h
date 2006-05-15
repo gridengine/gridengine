@@ -59,4 +59,16 @@ ja_task_message_add(lListElem *this_elem, u_long32 type, const char *message);
 bool
 ja_task_message_trash_all_of_type_X(lListElem *this_elem, u_long32 type);
 
+bool
+ja_task_verify(const lListElem *ja_task, lList **answer_list);
+
+bool
+ja_task_verify_execd_job(const lListElem *ja_task, lList **answer_list);
+
+bool
+ja_task_verify_granted_destin_identifier_list(const lList *gdil, lList **answer_list);
+
+bool
+ja_task_verify_granted_destin_identifier(const lListElem *ep, lList **answer_list);
+
 #endif /* __SGE_JA_TASK_H */

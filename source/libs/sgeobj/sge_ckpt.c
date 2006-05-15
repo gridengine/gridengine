@@ -228,7 +228,7 @@ int sge_parse_checkpoint_attr(const char *attr_str)
 *  NOTES
 *     MT-NOTE: ckpt_validate() is not MT safe
 ******************************************************************************/
-int ckpt_validate(lListElem *this_elem, lList **alpp)
+int ckpt_validate(const lListElem *this_elem, lList **alpp)
 {
    static const char* ckpt_interfaces[] = {
       "USERDEFINED",
@@ -268,31 +268,34 @@ int ckpt_validate(lListElem *this_elem, lList **alpp)
       return STATUS_EUNKNOWN;
    }
 
-
-
    /*
-   ** check if ckpt obj can be added
-   ** check allowed interfaces and license
-   */
-   if ((interface = lGetString(this_elem, CK_interface))) {
-      found = 0;
+    * check if ckpt obj can be added
+    * check allowed interfaces and license
+    */
+   interface = lGetString(this_elem, CK_interface);
+   found = 0;
+   /* handle NULL pointer for interface name */
+   if (interface == NULL) {
+      interface = "<null>";
+   } else {
+
       for (i=0; i < (sizeof(ckpt_interfaces)/sizeof(char*)); i++) {
          if (!strcasecmp(interface, ckpt_interfaces[i])) {
             found = 1;
             break;
          }
       }
-
-      if (!found) {
-         ERROR((SGE_EVENT, MSG_SGETEXT_NO_INTERFACE_S, interface));
-         answer_list_add(alpp, SGE_EVENT, 
-                         STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
-         DEXIT;
-         return STATUS_EEXIST;
-      }
    }
 
-   for (i=0; ckpt_commands[i].nm!=NoName; i++) {
+   if (!found) {
+      ERROR((SGE_EVENT, MSG_SGETEXT_NO_INTERFACE_S, interface));
+      answer_list_add(alpp, SGE_EVENT, 
+                      STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
+      DEXIT;
+      return STATUS_EEXIST;
+   }
+
+   for (i = 0; ckpt_commands[i].nm != NoName; i++) {
       if (replace_params(lGetString(this_elem, ckpt_commands[i].nm),
                NULL, 0, ckpt_variables)) {
          ERROR((SGE_EVENT, MSG_OBJ_CKPTENV_SSS,

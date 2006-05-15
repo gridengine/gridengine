@@ -1,3 +1,7 @@
+JG-2006-05-15-0: Enhancem.: Improved verification of incoming job requests
+                            in execd.
+                 Review:    RD
+
 AH-2006-05-11-0: Enhancem.: Addes new test_drmaa_perf switches
                             -scenario {queue|type|number}.{hostgroup|resource|none}
                             -quiet    {yes|no}

@@ -131,7 +131,7 @@
 #define MSG_GDI_VALUE_S              _MESSAGE(33075, _("denied: attribute "SFQ" contains invalid value (null)"))
 #define MSG_GDI_TYPE_MEM_SS          _MESSAGE(33076, _("value for attribute "SFN" "SFQ" is not a memory value"))
 #define MSG_GDI_TYPE_TIME_SS         _MESSAGE(33077, _("value for attribute "SFN" "SFQ" is not a time value"))
-/* #define MSG_GDI_KEYSTR_SS            _message(33078, _("invalid "SFN" "SFQ)) __TS Removed automatically from testsuite!! TS__*/
+#define MSG_GDI_KEYSTR_NULL_S        _MESSAGE(33078, _("NULL pointer passed as object name for "SFQ))
 #define MSG_GDI_MULTIPLE_OCCUR_SSSS  _MESSAGE(33079, _("denied: multiple occurances of "SFN" "SFQ" in "SFN" "SFQ))
 #define MSG_GDI_KEYSTR_FIRSTCHAR_SC  _MESSAGE(33081, _(SFN" (\'%c\') not allowed as first character of objectname") ) 
 #define MSG_GDI_KEYSTR_FIRSTCHAR_S   _MESSAGE(33082, _(SFN" not allowed as first character of objectname") ) 
@@ -156,7 +156,7 @@
 #define MSG_GDI_KEYSTR_AT              _MESSAGE(33101, _("At"))
 #define MSG_GDI_KEYSTR_PIPE            _MESSAGE(33102, _("Pipe"))
 #define MSG_GDI_KEYSTR_PERCENT         _MESSAGE(33103, _("Percent"))
-#define MSG_GDI_KEYSTR_LENGTH_U        _MESSAGE(33104, _("string is longer then "sge_U32CFormat", this is not allowed for objectnames"))
+#define MSG_GDI_KEYSTR_LENGTH_U        _MESSAGE(33104, _("string is longer than "sge_U32CFormat", this is not allowed for objectnames"))
 
 /*
 ** ck_to_do_qmaster.c

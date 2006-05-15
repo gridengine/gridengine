@@ -46,6 +46,7 @@
 #include "sge_unistd.h"
 #include "sge_hostname.h"
 #include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_job.h"
 #include "sgeobj/sge_utility.h"
 
 #include "msg_common.h"
@@ -570,3 +571,58 @@ path_alias_verify(const lList *path_aliases, lList **answer_list)
    return ret;
 }
 
+/****** sge_path_alias/path_list_verify() **************************************
+*  NAME
+*     path_list_verify() -- verify a path list
+*
+*  SYNOPSIS
+*     bool 
+*     path_list_verify(const lList *path_list, lList **answer_list) 
+*
+*  FUNCTION
+*     Verify a path list, e.g. the path specification in JB_stdout_path_list,
+*     coming from a qsub -o <path_list>.
+*
+*  INPUTS
+*     const lList *path_list - the path list to verify
+*     lList **answer_list    - answer list to pass back error messages
+*
+*  RESULT
+*     bool - true: everything ok, else false
+*
+*  NOTES
+*     MT-NOTE: path_list_verify() is MT safe 
+*******************************************************************************/
+bool 
+path_list_verify(const lList *path_list, lList **answer_list)
+{
+   bool ret = true;
+   const lListElem *ep;
+
+   for_each (ep, path_list) {
+      const char *host;
+
+      ret = path_verify(lGetString(ep, PN_path), answer_list);
+      if (!ret) {
+         break;
+      }
+
+      host = lGetHost(ep, PN_host);
+      if (host != NULL) {
+         ret = verify_host_name(answer_list, host);
+         if (!ret) {
+            break;
+         }
+      }
+
+      host = lGetHost(ep, PN_file_host);
+      if (host != NULL) {
+         ret = verify_host_name(answer_list, host);
+         if (!ret) {
+            break;
+         }
+      }
+   }
+
+   return ret;
+}

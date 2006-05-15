@@ -641,10 +641,17 @@ proc start_sge_utilbin {bin args {host ""} {user ""} {exit_var prg_exit_state}} 
 #     sge_procedures/start_sge_bin()
 #     remote_procedures/start_remote_prog()
 #*******************************************************************************
-proc start_source_bin {bin args {host ""} {user ""} {exit_var prg_exit_state} {timeout 60}} {
+proc start_source_bin {bin args {host ""} {user ""} {exit_var prg_exit_state} {timeout 60} {background 0} {envlist ""}} {
    global ts_config CHECK_OUTPUT CHECK_USER
 
    upvar $exit_var exit_state
+  
+   # pass on environment
+   set env_var ""
+   if {$envlist != ""} {
+      upvar $envlist env
+      set env_var env
+   }
 
    if {$host == ""} {
       set host $ts_config(master_host)
@@ -660,7 +667,7 @@ proc start_source_bin {bin args {host ""} {user ""} {exit_var prg_exit_state} {t
 
    debug_puts "executing $binary $args\nas user $user on host $host"
    # Add " around $args if there are more the 1 args....
-   set result [start_remote_prog $host $user $binary "$args" exit_state $timeout]
+   set result [start_remote_prog $host $user $binary "$args" exit_state $timeout $background $env_var]
 
    return $result
 }

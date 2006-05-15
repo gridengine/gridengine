@@ -79,12 +79,13 @@
 #include "sge_qmaster_threads.h"
 #include "sge_job_qmaster.h"
 #include "sge_profiling.h"
+#include "uti/sge_monitor.h"
+#include "sge_conf.h"
 
 #if !defined(INTERIX)
 static void init_sig_action_and_mask(void);
 #endif
 static int set_file_descriptor_limit(void);
-
 
 /****** qmaster/sge_qmaster_main/sge_qmaster_application_status() ************
 *  NAME
@@ -122,128 +123,10 @@ static int set_file_descriptor_limit(void);
 *     This function is MT save
 * 
 *******************************************************************************/
-unsigned long sge_qmaster_application_status(char** info_message) {
-   char buffer[1024];
-   unsigned long status = 0;
-   const char* status_message = NULL;
-   double last_event_deliver_thread_time          = 0.0;
-   double last_timed_event_thread_time = 0.0;
-   double last_message_thread_time       = 0.0;
-   double last_signal_thread_time        = 0.0;
-   sge_thread_alive_times_t* thread_times       = NULL;
+unsigned long sge_qmaster_application_status(char** info_message) 
+{
 
-   struct timeval now;
-
-   status_message = MSG_QMASTER_APPL_STATE_OK;
-   sge_lock_alive_time_mutex();
-
-   gettimeofday(&now,NULL);
-   thread_times = sge_get_thread_alive_times();
-   if ( thread_times != NULL ) {
-      int warning_count = 0;
-      int error_count = 0;
-      double time1;
-      double time2;
-      time1 = now.tv_sec + (now.tv_usec / 1000000.0);
-
-      time2 = thread_times->event_deliver_thread.timestamp.tv_sec + (thread_times->event_deliver_thread.timestamp.tv_usec / 1000000.0);
-      last_event_deliver_thread_time          = time1 - time2;
-
-      time2 = thread_times->timed_event_thread.timestamp.tv_sec + (thread_times->timed_event_thread.timestamp.tv_usec / 1000000.0);
-      last_timed_event_thread_time = time1 - time2;
-
-      time2 = thread_times->message_thread.timestamp.tv_sec + (thread_times->message_thread.timestamp.tv_usec / 1000000.0);
-      last_message_thread_time       = time1 - time2;
-
-      time2 = thread_times->signal_thread.timestamp.tv_sec + (thread_times->signal_thread.timestamp.tv_usec / 1000000.0);
-      last_signal_thread_time        = time1 - time2;
-   
-
-      /* always set running state */
-      thread_times->event_deliver_thread.state = 'R';
-      thread_times->timed_event_thread.state   = 'R';
-      thread_times->message_thread.state       = 'R';
-      thread_times->signal_thread.state        = 'R';
-
-      /* check for warning */
-      if ( thread_times->event_deliver_thread.warning_timeout > 0 ) {
-         if ( last_event_deliver_thread_time > thread_times->event_deliver_thread.warning_timeout ) {
-            thread_times->event_deliver_thread.state = 'W';
-            warning_count++;
-         }
-      }
-      if ( thread_times->timed_event_thread.warning_timeout > 0 ) {
-         if ( last_timed_event_thread_time > thread_times->timed_event_thread.warning_timeout ) {
-            thread_times->timed_event_thread.state = 'W';
-            warning_count++;
-         }
-      }
-      if ( thread_times->message_thread.warning_timeout > 0 ) {
-         if ( last_message_thread_time > thread_times->message_thread.warning_timeout ) {
-            thread_times->message_thread.state = 'W';
-            warning_count++;
-         }
-      }
-      if ( thread_times->signal_thread.warning_timeout > 0 ) {
-         if ( last_signal_thread_time > thread_times->signal_thread.warning_timeout ) {
-            thread_times->signal_thread.state = 'W';
-            warning_count++;
-         }
-      }
-
-      /* check for error */
-      if ( thread_times->event_deliver_thread.error_timeout > 0 ) {
-         if ( last_event_deliver_thread_time > thread_times->event_deliver_thread.error_timeout ) {
-            thread_times->event_deliver_thread.state = 'E';
-            error_count++;
-         }
-      }
-      if ( thread_times->timed_event_thread.error_timeout > 0 ) {
-         if ( last_timed_event_thread_time > thread_times->timed_event_thread.error_timeout ) {
-            thread_times->timed_event_thread.state = 'E';
-            error_count++;
-         }
-      }
-      if ( thread_times->message_thread.error_timeout > 0 ) {
-         if ( last_message_thread_time > thread_times->message_thread.error_timeout ) {
-            thread_times->message_thread.state = 'E';
-            error_count++;
-         }
-      }
-      if ( thread_times->signal_thread.error_timeout > 0 ) {
-         if ( last_signal_thread_time > thread_times->signal_thread.error_timeout ) {
-            thread_times->signal_thread.state = 'E';
-            error_count++;
-         }
-      }
-
-      if ( error_count > 0 ) {
-         status = 2;
-         status_message = MSG_QMASTER_APPL_STATE_TIMEOUT_ERROR;
-      } else if ( warning_count > 0 ) {
-         status = 1; 
-         status_message = MSG_QMASTER_APPL_STATE_TIMEOUT_WARNING;
-      }
-
-      snprintf(buffer, 1024, MSG_QMASTER_APPL_STATE_CFCFCFCFS,
-                    thread_times->event_deliver_thread.state,
-                    last_event_deliver_thread_time,
-                    thread_times->timed_event_thread.state,
-                    last_timed_event_thread_time,
-                    thread_times->message_thread.state,
-                    last_message_thread_time,
-                    thread_times->signal_thread.state,
-                    last_signal_thread_time,
-                    status_message);
-      if (info_message != NULL && *info_message == NULL) {
-         *info_message = strdup(buffer);
-      }
-   } else {
-      status = 3;
-   }
-
-   sge_unlock_alive_time_mutex();
-   return status;
+   return sge_monitor_status(info_message, mconf_get_monitor_time());
 }
 
 
@@ -391,6 +274,9 @@ int main(int argc, char* argv[])
    int max_enroll_tries;
    int ret_val;
    int file_descriptor_settings_result = 0;
+   int last_prepare_enroll_error = CL_RETVAL_OK;
+   int qmaster_exit_state = 0;
+   bool do_final_spool = true;
    DENTER_MAIN(TOP_LAYER, "qmaster");
 
    sge_prof_setup();
@@ -432,7 +318,7 @@ int main(int argc, char* argv[])
    /* this must be done as root user to be able to bind ports < 1024 */
    max_enroll_tries = 30;
    while ( cl_com_get_handle((char*)prognames[QMASTER],1) == NULL) {
-      prepare_enroll(prognames[QMASTER]); 
+      prepare_enroll(prognames[QMASTER], &last_prepare_enroll_error); 
       max_enroll_tries--;
       if ( max_enroll_tries <= 0 ) {
          /* exit after 30 seconds */
@@ -466,7 +352,7 @@ int main(int argc, char* argv[])
 
    sge_start_heartbeat();
 
-   sge_setup_lock_service();
+   sge_register_event_handler(); 
 
    sge_setup_qmaster(argv);
 
@@ -485,14 +371,31 @@ int main(int argc, char* argv[])
 
    sge_create_and_join_threads();
 
-   sge_store_job_number(NULL);
+   qmaster_exit_state = sge_get_qmaster_exit_state();
+   if (qmaster_exit_state == 100) {
+      /*
+       * another qmaster has taken over !!!
+       * sge_shutdown_qmaster_via_signal_thread()
+       * was used to set qmaster exit state 
+       */
+      do_final_spool = false;
+   }
 
-   sge_qmaster_shutdown();
+   if (do_final_spool == true) {
+      monitoring_t monitor;
+      sge_store_job_number(NULL, &monitor);
+   }
 
+   sge_qmaster_shutdown(do_final_spool);
+
+   /* TODO CR: do we need this function? (its empty) */ 
    sge_teardown_lock_service();
 
-   sge_shutdown();
+   sge_shutdown(qmaster_exit_state);
+   /* the code above will never be executed, sge_shutdown does an exit() */
 
+   /* TODO CR: this function is not called, because sge_shutdown is doing an
+               SGE_EXIT() */
    sge_prof_cleanup();
    DEXIT;
    return 0;

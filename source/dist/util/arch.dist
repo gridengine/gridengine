@@ -183,23 +183,30 @@ Linux)
       amd64)
         strings /lib64/libc.so.6 | grep "GNU C Library" | grep "2\.0" 2>&1 > /dev/null
         ;;
+      ia64)
+        strings /lib/libc.so.6.1 | grep "GNU C Library" | grep "2\.0" 2>&1 > /dev/null
+        ;;
       *)
         strings /lib/libc.so.6 | grep "GNU C Library" | grep "2\.0" 2>&1 > /dev/null
       esac
 
-      if [ $? = 0 ]; then
+      if [ $? -eq 0 ]; then
          lxrelease=UNSUPPORTED-linux2.2-glibc2.0
       else
-        case $osrelease in
-           2.4.*) lxrelease=24
-              ;;
-           2.6.*) if [ "$SGE_ROOT" != "" -a -d "$SGE_ROOT/bin/lx26-${lxmachine}" ] ; then
-                  lxrelease=26
-              else
-                  lxrelease=24
-              fi
-              ;;
-        esac
+         case $osrelease in
+         2.4.*) 
+            lxrelease=24
+            ;;
+         2.6.*) 
+            if [ "$SGE_ROOT" != "" -a -d "$SGE_ROOT/bin/lx26-${lxmachine}" ] ; then
+               lxrelease=26
+            elif [ "$SGE_ROOT" = "" -a -d "bin/lx26-${lxmachine}" ] ; then
+               lxrelease=26
+            else
+               lxrelease=24
+            fi
+            ;;
+         esac
       fi
       ;;
    *)

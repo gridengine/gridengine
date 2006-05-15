@@ -1066,11 +1066,15 @@ proc host_conf_get_nodes {host_list} {
    set node_list {}
 
    foreach host $host_list {
-      set zones $ts_host_config($host,zones)
-      if {[llength $zones] == 0} {
-         lappend node_list $host
+      if {![info exists ts_host_config($host,zones)]} {
+         add_proc_error "host_conf_get_nodes" -1 "host $host is not contained in testsuite host configuration!"
       } else {
-         set node_list [concat $node_list $zones]
+         set zones $ts_host_config($host,zones)
+         if {[llength $zones] == 0} {
+            lappend node_list $host
+         } else {
+            set node_list [concat $node_list $zones]
+         }
       }
    }
 
@@ -1107,11 +1111,15 @@ proc host_conf_get_unique_nodes {host_list} {
    set node_list {}
 
    foreach host $host_list {
-      set zones $ts_host_config($host,zones)
-      if {[llength $zones] == 0} {
-         lappend node_list $host
+      if {![info exists ts_host_config($host,zones)]} {
+         add_proc_error "host_conf_get_unique_nodes" -1 "host $host is not contained in testsuite host configuration!"
       } else {
-         set node_list [concat $node_list [lindex $zones 0]]
+         set zones $ts_host_config($host,zones)
+         if {[llength $zones] == 0} {
+            lappend node_list $host
+         } else {
+            set node_list [concat $node_list [lindex $zones 0]]
+         }
       }
    }
 
@@ -1125,7 +1133,8 @@ proc host_conf_get_unique_arch_nodes {host_list} {
    set covered_archs {}
 
    foreach node $host_list {
-      set arch [resolve_arch $node]
+      set host [node_get_host $node]
+      set arch $ts_host_config($host,arch)
       if {[lsearch -exact $covered_archs $arch] == -1} {
          lappend covered_archs $arch
          lappend node_list $node
@@ -1143,9 +1152,13 @@ proc host_conf_get_all_nodes {host_list} {
    foreach host $host_list {
       lappend node_list $host
 
-      set zones $ts_host_config($host,zones)
-      if {[llength $zones] > 0} {
-         set node_list [concat $node_list $zones]
+      if {![info exists ts_host_config($host,zones)]} {
+         add_proc_error "host_conf_get_all_nodes" -1 "host $host is not contained in testsuite host configuration!"
+      } else {
+         set zones $ts_host_config($host,zones)
+         if {[llength $zones] > 0} {
+            set node_list [concat $node_list $zones]
+         }
       }
    }
 

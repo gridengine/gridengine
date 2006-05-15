@@ -140,7 +140,6 @@ proc issue_1489_run {} {
    global CHECK_OUTPUT CHECK_ACTUAL_TEST_PATH CHECK_PROTOCOL_DIR 
    global submitresult delete_job
    global issue_1489_log_file issue_1489_lck_file
-   global wait_for_file
    
    set option "-o /dev/null -e /dev/null"
    #set option "-o $CHECK_PROTOCOL_DIR/iz_1489.stdout -e $CHECK_PROTOCOL_DIR/iz_1489.stderr"
@@ -154,7 +153,10 @@ proc issue_1489_run {} {
    }
    
    puts $CHECK_OUTPUT "waiting for file $issue_1489_lck_file"
-   set res [ wait_for_file $issue_1489_lck_file 10 0 ]
+#   waiting only 10 seconds for the lock file is to short for NFS directories
+#   set res [ wait_for_file $issue_1489_lck_file 10 0 ]
+   set res [ wait_for_file $issue_1489_lck_file 70 0 ]
+
    
    if { $res == 0 } {
       puts $CHECK_OUTPUT "lock file $issue_1489_lck_file has been created, job $my_job is running"

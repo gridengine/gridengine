@@ -1151,8 +1151,8 @@ ec_register(bool exit_on_qmaster_down, lList** alpp)
             answer_list_add(alpp, lGetString(aep, AN_text), 
                   lGetUlong(aep, AN_status), 
                   (answer_quality_t)lGetUlong(aep, AN_quality));
-            lFreeList(lp); 
-            lFreeList(alp);
+            lFreeList(&lp); 
+            lFreeList(&alp);
             if (exit_on_qmaster_down) {
                DPRINTF(("exiting in ec_register()\n"));
                SGE_EXIT(1);
@@ -1163,8 +1163,8 @@ ec_register(bool exit_on_qmaster_down, lList** alpp)
          }   
       }
 
-      lFreeList(lp); 
-      lFreeList(alp);
+      lFreeList(&lp); 
+      lFreeList(&alp);
    }
 
    PROF_STOP_MEASUREMENT(SGE_PROF_EVENTCLIENT);
@@ -1227,7 +1227,7 @@ ec_deregister(void)
          if (send_ret == CL_RETVAL_OK) {
             /* error message is output from sge_send_any_request */
             /* clear state of this event client instance */
-            ec = lFreeElem(ec);
+            lFreeElem(&ec);
             need_register = true;
             ec_reg_id = 0;
             lSetBool(ec, EV_changed, false);
@@ -1293,6 +1293,10 @@ ec_subscribe(ev_event event)
    if (event == sgeE_ALL_EVENTS) {
       ev_event i;
       for(i = sgeE_ALL_EVENTS; i < sgeE_EVENTSIZE; i++) {
+         /* 
+          * JG: TODO: the -1 will go into an unsigned long in the event subscription object.
+          * This is potentially dangerous!
+          */
          ec_add_subscriptionElement(ec, i, EV_NOT_FLUSHED, -1);
       }
    } else {
@@ -1439,7 +1443,7 @@ static void ec_remove_subscriptionElement(lListElem *event_el, ev_event event) {
          sub_el = lGetElemUlong(subscribed, EVS_id, event);
       
          if (sub_el) {
-            if (lRemoveElem(subscribed, sub_el) == 0){
+            if (lRemoveElem(subscribed, &sub_el) == 0) {
                lSetBool(ec, EV_changed, true);
             }
          }
@@ -2113,10 +2117,10 @@ ec_commit(void)
        *  - if this event client is already enrolled at qmaster
        */
       alp = sge_gdi(SGE_EVENT_LIST, SGE_GDI_MOD, &lp, NULL, NULL);
-      lFreeList(lp); 
+      lFreeList(&lp); 
       
       ret = (lGetUlong(lFirst(alp), AN_status) == STATUS_OK) ? true : false;
-      lFreeList(alp);
+      lFreeList(&alp);
       
       if (ret) {
          lSetBool(ec, EV_changed, false);
@@ -2193,7 +2197,7 @@ ec_commit_multi(lList **malpp, state_gdi_multi *state)
       commit_id = sge_gdi_multi(&alp, SGE_GDI_SEND, SGE_EVENT_LIST, SGE_GDI_MOD,
                                 &lp, NULL, NULL, malpp, state, false);
       if (lp != NULL) {                                 
-         lp = lFreeList(lp); 
+         lFreeList(&lp);
       }
 
       if (alp != NULL) {
@@ -2334,14 +2338,14 @@ ec_get(lList **event_list, bool exit_on_qmaster_down)
          if ((fetch_ok = get_event_list(sync, &report_list,&commlib_error))) {
             lList *new_events = NULL;
             lXchgList(lFirst(report_list), REP_list, &new_events);
-            report_list = lFreeList(report_list);
+            lFreeList(&report_list);
             if (!ck_event_number(new_events, &next_event, &wrong_number)) {
                /*
                 *  may be we got an old event, that was sent before
                 *  reregistration at qmaster
                 */
-               *event_list = lFreeList(*event_list);
-               new_events = lFreeList(new_events);
+               lFreeList(event_list);
+               lFreeList(&new_events);
                ec_mark4registration();
                ret = false;
                done = true;
@@ -2352,7 +2356,7 @@ ec_get(lList **event_list, bool exit_on_qmaster_down)
                      lGetNumberOfElem(new_events), next_event-1));
 
             if (*event_list != NULL) {
-               lAddList(*event_list, new_events);
+               lAddList(*event_list, &new_events);
             } else {
                *event_list = new_events;
             }
@@ -2531,7 +2535,7 @@ ck_event_number(lList *lp, u_long32 *waiting_for, u_long32 *wrong_number)
          ep = lFirst(lp);
          while (ep && lGetUlong(ep, ET_number) < i) {
             tmp = lNext(ep);
-            lRemoveElem(lp, ep);
+            lRemoveElem(lp, &ep);
             ep = tmp;
             skipped++;
          }

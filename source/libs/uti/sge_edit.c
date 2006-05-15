@@ -44,11 +44,8 @@
 #include "sge_edit.h"
 #include "sge_unistd.h"
 
-int sge_edit(
-char *fname 
-
-) {
-
+int sge_edit(const char *fname)
+{
    SGE_STRUCT_STAT before, after;
    pid_t pid;
    int status;
@@ -56,10 +53,15 @@ char *fname
 
    DENTER(TOP_LAYER, "sge_edit");;
 
+   if (fname == NULL) {
+      ERROR((SGE_EVENT, MSG_NULLPOINTER));
+      return -1;
+   }
+
    if (SGE_STAT(fname, &before)) {
       ERROR((SGE_EVENT, MSG_FILE_EDITFILEXDOESNOTEXIST_S, fname));
       DEXIT;
-      return (-1);
+      return -1;
    }
 
    chown(fname, (uid_t)uti_state_get_uid(), (gid_t)uti_state_get_gid());

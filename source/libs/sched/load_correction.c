@@ -169,8 +169,10 @@ correct_capacities(lList *host_list, lList *centry_list)
    u_long32 type, relop;
    double dval, inuse_ext, full_capacity, sc_factor;
    double load_correction;
+   lList* job_load_adj_list = NULL;
 
    DENTER(TOP_LAYER, "correct_capacities");
+   job_load_adj_list = sconf_get_job_load_adjustments();
  
    for_each (hep, host_list) {   
       const char *host_name = lGetHost(hep, EH_name);
@@ -187,8 +189,9 @@ correct_capacities(lList *host_list, lList *centry_list)
              type != TYPE_TIM &&
              type != TYPE_MEM &&  
              type != TYPE_BOO &&  
-             type != TYPE_DOUBLE)
+             type != TYPE_DOUBLE) {
             continue;
+         }
         
          if (!parse_ulong_val(&dval, NULL, type, lGetString(ep, HL_value), NULL, 0))
             continue;
@@ -218,7 +221,7 @@ correct_capacities(lList *host_list, lList *centry_list)
 
          /* do load correction */
          load_correction = 0;
-         if ((job_load=lGetElemStr(sconf_get_job_load_adjustments(), CE_name, attr_name))) {
+         if ((job_load=lGetElemStr(job_load_adj_list, CE_name, attr_name))) {
             double lc_factor;
             const char *s = lGetString(job_load, CE_stringval);
 
@@ -245,6 +248,7 @@ correct_capacities(lList *host_list, lList *centry_list)
             DPRINTF(("ext: %8.3f <= 0\n", inuse_ext));
       }
    }
+   lFreeList(&job_load_adj_list);
 
    DEXIT;
    return 0;

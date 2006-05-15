@@ -99,7 +99,7 @@ NAMEEND
 /* SGE signal numbers are high numbers so we use 16 bit */
 #define SGE_SIGNAL_BITS      0x0FFFF000
 
-/* these makros shall be used for read access on JR_wait_status */
+/* these macros shall be used for read access on JR_wait_status */
 #define SGE_GET_WEXITED(status)   ((status)&SGE_WEXITED_BIT)
 #define SGE_GET_WSIGNALED(status) ((status)&SGE_WSIGNALED_BIT)
 #define SGE_GET_WCOREDUMP(status)   ((status)&SGE_WCOREDUMP_BIT)
@@ -107,7 +107,7 @@ NAMEEND
 #define SGE_GET_WEXITSTATUS(status) (((status)&SGE_EXIT_STATUS_BITS)>>4)
 #define SGE_GET_WSIGNAL(status)     (((status)&SGE_SIGNAL_BITS)>>12)
 
-/* these makros shall be used for write access on JR_wait_status */
+/* these macros shall be used for write access on JR_wait_status */
 #define SGE_SET_WEXITED(status, flag) \
    ((status) & ~SGE_WEXITED_BIT)   | ((flag)?SGE_WEXITED_BIT:0)
 #define SGE_SET_WSIGNALED(status, flag) \

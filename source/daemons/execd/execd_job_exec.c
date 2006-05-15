@@ -49,7 +49,6 @@
 #include "job_report_execd.h"
 #include "execd_job_exec.h"
 #include "spool/classic/read_write_job.h"
-#include "sge_feature.h"
 #include "sge_conf.h"
 #include "sge_prog.h"
 #include "sge_log.h"
@@ -64,6 +63,8 @@
 #include "sge_var.h"
 #include "sge_qinstance.h"
 #include "get_path.h"
+#include "sge_bootstrap.h"
+#include "sge_answer.h"
 
 #include "msg_common.h"
 #include "msg_execd.h"
@@ -110,18 +111,29 @@ int answer_error;
       return 0;
    }
 
-   feature_activate((feature_id_t)feature_set);
 
    /* if request comes from qmaster: start a job
     * else it is a request to start a pe task
     */
    if(strcmp(de->commproc, prognames[QMASTER]) == 0) {
       lListElem *job, *ja_task;
+      lList *answer_list = NULL;
+      const char *admin_user = bootstrap_get_admin_user();
 
+      if (false == sge_security_verify_unique_identifier(true, admin_user, uti_state_get_sge_formal_prog_name(), 0,
+                                            de->host, de->commproc, de->id)) {
+         DRETURN(0);
+      }
+       
       if (cull_unpack_elem(pb, &job, NULL)) {
          ERROR((SGE_EVENT, MSG_COM_UNPACKJOB));
-         DEXIT;
-         return 0;
+         DRETURN(0);
+      }
+
+      if (!job_verify_execd_job(job, &answer_list)) {
+         answer_list_output(&answer_list);
+         ERROR((SGE_EVENT, MSG_EXECD_INVALIDJOBREQUEST_SS, de->commproc, de->host));
+         DRETURN(0);
       }
 
       /* we expect one jatask to start per request */
@@ -132,15 +144,22 @@ int answer_error;
             (long) lGetUlong(ja_task, JAT_task_number)));
          ret = handle_job(job, ja_task, de, pb, 0);
          if(ret != 0) {
-            lFreeElem(job);
+            lFreeElem(&job);
          }
       }
    } else {
       lListElem *petrep;
+      lList *answer_list = NULL;
+
       if (cull_unpack_elem(pb, &petrep, NULL)) {
          ERROR((SGE_EVENT, MSG_COM_UNPACKJOB));
-         DEXIT;
-         return 0;
+         DRETURN(0);
+      }
+
+      if (!pe_task_verify_request(petrep, &answer_list)) {
+         answer_list_output(&answer_list);
+         ERROR((SGE_EVENT, MSG_EXECD_INVALIDTASKREQUEST_SS, de->commproc, de->host));
+         DRETURN(0);
       }
 
       DPRINTF(("new pe task for job: %ld.%ld\n", 
@@ -149,7 +168,7 @@ int answer_error;
 
       ret = handle_task(petrep, de, pb, apb, synchron);
 
-      lFreeElem(petrep);
+      lFreeElem(&petrep);
    }
    
    if(ret == 0) {
@@ -181,7 +200,11 @@ int answer_error;
       return 0;
    }
 
-   feature_activate((feature_id_t)feature_set);
+   /*
+   ** the check if the request has admin/root credentials is done by
+   ** the dispatcher in authorize_dpe()
+   ** so no additional check needed here like in execd_job_exec()
+   */
 
    /* ------- job */
    if (cull_unpack_elem(pb, &jelem, NULL)) {
@@ -197,7 +220,7 @@ int answer_error;
    }
 
    if (ret)  {
-      lFreeElem(jelem);
+      lFreeElem(&jelem);
    } 
 
    DEXIT;
@@ -221,6 +244,7 @@ int slave
    int slots;
    int fd;
    const void *iterator = NULL;
+   bool report_job_error = true;   /* send job report on error? */
 
    DENTER(TOP_LAYER, "handle_job");
 
@@ -253,11 +277,6 @@ int slave
       jep = lGetElemUlongNext(Master_Job_List, JB_job_number, jobid, &iterator);
    }
 
-   if(sge_make_ja_task_active_dir(jelem, jatep, &err_str) == NULL) {
-      DEXIT;
-      goto Error;
-   }
-
    /* initialize state - prevent slaves from getting started */
    lSetUlong(jatep, JAT_status, slave?JSLAVE:JIDLE);
 
@@ -269,6 +288,32 @@ int slave
       sge_dstring_sprintf(&err_str, MSG_COM_UNPACKINGQ);
       DEXIT;
       goto Error;
+   }
+
+   /* 
+    * Verify the queue list sent with the job start order.
+    * If it is incorrect, we reject the job start.
+    * We do not send a job report for this job - this would trigger
+    * rescheduling in qmaster ...
+    *
+    * TODO: A better solution to stepwise unpacking and verification of the job order
+    * in this function would be to do all unpacking and verification in the
+    * calling function (execd_job_exec)!
+    *
+    * TODO: Why do we send the queue list (and also the pe) as a separate list, and then
+    * move it into the granted destination identifier list here in execd?
+    * Couldn't qmaster just put the queues in to the JG_queue field instead?
+    */
+   {
+      lList *answer_list = NULL;
+      if (!qinstance_list_verify_execd_job(qlp, &answer_list)) {
+         sge_dstring_sprintf(&err_str, MSG_EXECD_INVALIDJOBREQUEST_SS, de->commproc, de->host);
+         answer_list_output(&answer_list);
+         report_job_error = false;
+         DEXIT;
+         goto Error;
+      }
+      lFreeList(&answer_list);
    }
 
    /* initialize job */
@@ -294,7 +339,7 @@ int slave
       DPRINTF(("Q: %s %d\n", qnm, slots));
    }
    /* trash envelope */
-   qlp = lFreeList(qlp);
+   lFreeList(&qlp);
 
    /* ------- optionally pe */
    if (lGetString(jatep, JAT_granted_pe)) {
@@ -314,6 +359,11 @@ int slave
 
          }
       }
+   }
+
+   if (sge_make_ja_task_active_dir(jelem, jatep, &err_str) == NULL) {
+      DEXIT;
+      goto Error;
    }
 
    if (!JOB_TYPE_IS_BINARY(lGetUlong(jelem, JB_type))) {
@@ -360,7 +410,7 @@ int slave
          if (!found_script) {
             /* We are root. Make the scriptfile readable for the jobs submitter,
                so shepherd can open (execute) it after changing to the user. */
-            fd = open(lGetString(jelem, JB_exec_file), O_CREAT | O_WRONLY, 0755);
+            fd = SGE_OPEN3(lGetString(jelem, JB_exec_file), O_CREAT | O_WRONLY, 0755);
             if (fd < 0) {
                sge_dstring_sprintf(&err_str, MSG_ERRORWRITINGFILE_SS, 
                                    lGetString(jelem, JB_exec_file), 
@@ -393,8 +443,8 @@ int slave
    ** Execute command to store the client's DCE or Kerberos credentials.
    ** This also creates a forwardable credential for the user.
    */
-   if (do_credentials) {
-      if (store_sec_cred2(jelem, do_authentication, &general, SGE_EVENT) != 0) {
+   if (mconf_get_do_credentials()) {
+      if (store_sec_cred2(jelem, mconf_get_do_authentication(), &general, SGE_EVENT) != 0) {
          sge_dstring_copy_string(&err_str, SGE_EVENT);
          goto Error;
       }   
@@ -429,7 +479,7 @@ int slave
    return 0;
 
 Error:
-   {
+   if (report_job_error) {
       lListElem *jr;
       jr = execd_job_start_failure(jelem, jatep, NULL, sge_dstring_get_string(&err_str), general);
       
@@ -441,7 +491,7 @@ Error:
    }
 
 Ignore:   
-   lFreeList(qlp);
+   lFreeList(&qlp);
    return -1;  
 }
 
@@ -686,6 +736,11 @@ int *synchron
 
    if (jatep == NULL) { 
       ERROR((SGE_EVENT, MSG_JOB_TASKNOTASKINJOB_UU, sge_u32c(jobid), sge_u32c(jataskid)));
+      goto Error;
+   }
+
+   if (false == sge_security_verify_unique_identifier(false, lGetString(jep, JB_owner), uti_state_get_sge_formal_prog_name(), 0,
+                                         de->host, de->commproc, de->id)) {
       goto Error;
    }
 

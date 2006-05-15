@@ -33,15 +33,18 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+#include "cl_data_types.h"
+#include "cl_list_types.h"
 #include "cl_xml_parsing.h"
 
-#define CL_DEFINE_READ_TIMEOUT                       15 
-#define CL_DEFINE_WRITE_TIMEOUT                      15
+#define CL_DEFINE_READ_TIMEOUT                       30
+#define CL_DEFINE_WRITE_TIMEOUT                      30
 #define CL_DEFINE_ACK_TIMEOUT                        60
 #define CL_DEFINE_GET_CLIENT_CONNECTION_DATA_TIMEOUT 60   /* default timeout for accepting a connection */
 #define CL_DEFINE_DELETE_MESSAGES_TIMEOUT_AFTER_CCRM 60   /* default timeout for unread message deletion after connection shutdown */
 #define CL_DEFINE_SYNCHRON_RECEIVE_TIMEOUT           60   /* default timeout for synchron send messages */
-#define CL_DEFINE_CLIENT_CONNECTION_LIFETIME         600   /* Cut off connection when client is not active for this time */
+#define CL_DEFINE_CLIENT_CONNECTION_LIFETIME         600  /* Cut off connection when client is not active for this time */
+#define CL_DEFINE_MESSAGE_DUP_LOG_TIMEOUT            30   /* timeout for marking duplicate application error messages */
 
 
 #define CL_DEFINE_DATA_BUFFER_SIZE                   1024 * 4           /* 4 KB buffer for reading/writing messages */
@@ -78,6 +81,7 @@ int cl_com_cached_gethostbyname( char *hostname, char **unique_hostname, struct 
 int cl_com_cached_gethostbyaddr( struct in_addr *addr, char **unique_hostname,struct hostent **he_copy,int* system_error_val );
 char* cl_com_get_h_error_string(int h_error);
 int cl_com_compare_hosts(char* host1, char* host2);
+cl_bool_t cl_com_is_ip_address_string(char* hostname, struct in_addr* addr);
 int cl_com_set_resolve_method(cl_host_resolve_method_t method, char* local_domain_name);
 
 int cl_com_free_handle_statistic(cl_com_handle_statistic_t** statistic);
@@ -101,6 +105,7 @@ int cl_com_create_ssl_setup(cl_ssl_setup_t** new_setup,
                             char*            ssl_key_pem_file,
                             char*            ssl_rand_file,
                             char*            ssl_reconnect_file,
+                            char*            ssl_crl_file,
                             unsigned long    ssl_refresh_time,
                             char*            ssl_password,
                             cl_ssl_verify_func_t  ssl_verify_func);

@@ -89,7 +89,7 @@ char *rhost
    }
 
    /* ep is no acl element, if ep has no US_name */
-   if ((pos = lGetPosViaElem(ep, US_name)) < 0) {
+   if ((pos = lGetPosViaElem(ep, US_name, SGE_NO_ABORT)) < 0) {
       CRITICAL((SGE_EVENT, MSG_SGETEXT_MISSINGCULLFIELD_SS,
             lNm2Str(US_name), SGE_FUNC));
       answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
@@ -107,7 +107,7 @@ char *rhost
 
    /* Name has to be a valid filename without pathchanges, because we use it
       for storing user/project to disk */
-   if (verify_str_key(alpp, userset_name, MSG_OBJ_USERSET)) {
+   if (verify_str_key(alpp, userset_name, MAX_VERIFY_STRING, MSG_OBJ_USERSET) != STATUS_OK) {
       DEXIT;
       return STATUS_EUNKNOWN;
    }
@@ -194,7 +194,7 @@ char *rhost
    }
 
    /* ep is no userset element, if ep has no US_name */
-   if ((pos = lGetPosViaElem(ep, US_name)) < 0) {
+   if ((pos = lGetPosViaElem(ep, US_name, SGE_NO_ABORT)) < 0) {
       CRITICAL((SGE_EVENT, MSG_SGETEXT_MISSINGCULLFIELD_SS,
             lNm2Str(US_name), SGE_FUNC));
       answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
@@ -226,7 +226,7 @@ char *rhost
       return ret;
    }
 
-   lFreeElem(lDechainElem(*userset_list, found));
+   lRemoveElem(*userset_list, &found);
 
    sge_event_spool(alpp, 0, sgeE_USERSET_DEL, 
                    0, 0, userset_name, NULL, NULL,
@@ -268,7 +268,7 @@ char *rhost
    }
 
    /* ep is no userset element, if ep has no US_name */
-   if ((pos = lGetPosViaElem(ep, US_name)) < 0) {
+   if ((pos = lGetPosViaElem(ep, US_name, SGE_NO_ABORT)) < 0) {
       CRITICAL((SGE_EVENT, MSG_SGETEXT_MISSINGCULLFIELD_SS,
             lNm2Str(US_name), SGE_FUNC));
       answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
@@ -318,7 +318,7 @@ char *rhost
    }
 
    /* delete old userset */
-   lRemoveElem(*userset_list, found);
+   lRemoveElem(*userset_list, &found);
 
    /* insert modified userset */
    lAppendElem(*userset_list, lCopyElem(ep));
@@ -440,8 +440,8 @@ lList **alpp
    where = lWhere("%T(%I m= %u && %I != %s)", US_Type, US_type, US_DEPT,
                      US_name, lGetString(new_userset, US_name));
    depts = lSelect("Departments", userset_list, where, what);
-   lFreeWhere(where);
-   lFreeWhat(what);
+   lFreeWhere(&where);
+   lFreeWhat(&what);
 
    if (!depts) {
       DEXIT;
@@ -459,7 +459,7 @@ lList **alpp
          break;
    }
    
-   lFreeList(depts);
+   lFreeList(&depts);
    
    if (answers) {
       *alpp = answers;
@@ -673,8 +673,9 @@ lList **alpp,
 const char *userset_name 
 ) {
    int ret = STATUS_OK;
-   lListElem *ep;
-   lListElem *cqueue;
+   lListElem *ep = NULL;
+   lListElem *cqueue = NULL;
+   lList* user_lists = NULL;
 
    DENTER(TOP_LAYER, "verify_userset_deletion");
 
@@ -751,19 +752,23 @@ const char *userset_name
    }
 
    /* global configuration */
-   if (lGetElemStr(conf.user_lists, US_name, userset_name)) {
+   user_lists = mconf_get_user_lists();
+   if (lGetElemStr(user_lists, US_name, userset_name)) {
       ERROR((SGE_EVENT, MSG_SGETEXT_USERSETSTILLREFERENCED_SSSS, userset_name, 
             MSG_OBJ_USERLIST, MSG_OBJ_CONF, MSG_OBJ_GLOBAL));
       answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       ret = STATUS_EUNKNOWN;
    }
+   lFreeList(&user_lists);
 
-   if (lGetElemStr(conf.xuser_lists, US_name, userset_name)) {
+   user_lists = mconf_get_xuser_lists();
+   if (lGetElemStr(user_lists, US_name, userset_name)) {
       ERROR((SGE_EVENT, MSG_SGETEXT_USERSETSTILLREFERENCED_SSSS, userset_name, 
             MSG_OBJ_XUSERLIST, MSG_OBJ_CONF, MSG_OBJ_GLOBAL));
       answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       ret = STATUS_EUNKNOWN;
    }
+   lFreeList(&user_lists);
 
    DEXIT;
    return ret;

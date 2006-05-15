@@ -81,7 +81,7 @@ sharetree_update_master_list(sge_object_type type, sge_event_action action,
    DENTER(TOP_LAYER, "sharetree_update_master_list");
 
    /* remove old share tree */
-   Master_Sharetree_List = lFreeList(Master_Sharetree_List);
+   lFreeList(&Master_Sharetree_List);
 
    if ((src = lGetList(event, ET_new_version))) {
       /* install new one */

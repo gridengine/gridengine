@@ -63,7 +63,7 @@
 int 
 calendar_mod(lList **alpp, lListElem *new_cal, lListElem *cep, int add, 
              const char *ruser, const char *rhost, gdi_object_t *object, 
-             int sub_command) 
+             int sub_command, monitoring_t *monitor) 
 {
    const char *cal_name;
 
@@ -72,7 +72,7 @@ calendar_mod(lList **alpp, lListElem *new_cal, lListElem *cep, int add,
    /* ---- CAL_name cannot get changed - we just ignore it */
    if (add) {
       cal_name = lGetString(cep, CAL_name);
-      if (verify_str_key(alpp, cal_name, "calendar"))
+      if (verify_str_key(alpp, cal_name, MAX_VERIFY_STRING, "calendar") != STATUS_OK)
          goto ERROR;
       lSetString(new_cal, CAL_name, cal_name);
    } else {
@@ -81,14 +81,14 @@ calendar_mod(lList **alpp, lListElem *new_cal, lListElem *cep, int add,
 
    /* ---- CAL_year_calendar */
    attr_mod_zerostr(cep, new_cal, CAL_year_calendar, "year calendar");
-   if (lGetPosViaElem(cep, CAL_year_calendar)>=0) {
+   if (lGetPosViaElem(cep, CAL_year_calendar, SGE_NO_ABORT)>=0) {
       if (!calendar_parse_year(new_cal, alpp)) 
          goto ERROR;
    }
 
    /* ---- CAL_week_calendar */
    attr_mod_zerostr(cep, new_cal, CAL_week_calendar, "week calendar");
-   if (lGetPosViaElem(cep, CAL_week_calendar)>=0) {
+   if (lGetPosViaElem(cep, CAL_week_calendar, SGE_NO_ABORT)>=0) {
       if (!calendar_parse_week(new_cal, alpp))
          goto ERROR;
    }
@@ -139,7 +139,7 @@ sge_del_calendar(lListElem *cep, lList **alpp, char *ruser, char *rhost)
    }
 
    /* ep is no calendar element, if cep has no CAL_name */
-   if (lGetPosViaElem(cep, CAL_name)<0) {
+   if (lGetPosViaElem(cep, CAL_name, SGE_NO_ABORT)<0) {
       CRITICAL((SGE_EVENT, MSG_SGETEXT_MISSINGCULLFIELD_SS,
             lNm2Str(QU_qname), SGE_FUNC));
       answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
@@ -167,7 +167,7 @@ sge_del_calendar(lListElem *cep, lList **alpp, char *ruser, char *rhost)
          ERROR((SGE_EVENT, "denied: %s", lGetString(answer, AN_text)));
          answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC,
                          ANSWER_QUALITY_ERROR);
-         local_answer_list = lFreeList(local_answer_list);
+         lFreeList(&local_answer_list);
          DEXIT;
          return STATUS_ESEMANTIC;
       }
@@ -208,7 +208,7 @@ sge_del_calendar(lListElem *cep, lList **alpp, char *ruser, char *rhost)
 *     MT-NOTE: sge_calendar_event_handler() is not MT safe 
 *
 *******************************************************************************/
-void sge_calendar_event_handler(te_event_t anEvent) 
+void sge_calendar_event_handler(te_event_t anEvent, monitoring_t *monitor) 
 {
    lListElem *cep;
    const char* cal_name = te_get_alphanumeric_key(anEvent);
@@ -216,7 +216,7 @@ void sge_calendar_event_handler(te_event_t anEvent)
 
    DENTER(TOP_LAYER, "sge_calendar_event_handler");
 
-   SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE);
+   MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE), monitor);
 
    if (!(cep = calendar_list_locate(Master_Calendar_List, cal_name)))
    {
@@ -226,8 +226,8 @@ void sge_calendar_event_handler(te_event_t anEvent)
       return;
    }
       
-   calendar_update_queue_states(cep, 0, NULL, &ppList);
-   ppList = lFreeList(ppList);
+   calendar_update_queue_states(cep, 0, NULL, &ppList, monitor);
+   lFreeList(&ppList);
 
    sge_free((char *)cal_name);
 
@@ -237,7 +237,7 @@ void sge_calendar_event_handler(te_event_t anEvent)
    return;
 } /* sge_calendar_event_handler() */
 
-int calendar_update_queue_states(lListElem *cep, lListElem *old_cep, gdi_object_t *object, lList **ppList)
+int calendar_update_queue_states(lListElem *cep, lListElem *old_cep, gdi_object_t *object, lList **ppList, monitoring_t *monitor)
 {
    const char *cal_name = lGetString(cep, CAL_name);
    lList *state_changes_list = NULL;
@@ -253,16 +253,16 @@ int calendar_update_queue_states(lListElem *cep, lListElem *old_cep, gdi_object_
 
    state = calender_state_changes(cep, &state_changes_list, &when, NULL);
    
-   qinstance_change_state_on_calendar_all(cal_name, state, state_changes_list);
+   qinstance_change_state_on_calendar_all(cal_name, state, state_changes_list, monitor);
 
-   state_changes_list = lFreeList(state_changes_list);
+   lFreeList(&state_changes_list);
 
    if (when) {
       te_event_t ev;
 
       ev = te_new_event(when, TYPE_CALENDAR_EVENT, ONE_TIME_EVENT, 0, 0, cal_name);
       te_add_event(ev);
-      te_free_event(ev);
+      te_free_event(&ev);
    }
   
    DEXIT;

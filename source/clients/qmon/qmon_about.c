@@ -56,6 +56,7 @@ void qmonAboutMsg(w, cld, cad)
 Widget w;
 XtPointer cld, cad;
 {
+#if 0
    dstring ds;
    char buffer[256];
 
@@ -69,6 +70,20 @@ XtPointer cld, cad;
                      feature_get_product_name(FS_LONG_VERSION, &ds), 
                      uti_state_get_default_cell(), 
                      XmtLocalize(w, mailto, "mailto_msg"), SFLN_ELN); 
-/*                      XmtLocalize(w, "copyright_msg", SFLN_ELN, NULL)); */
+   sge_dstring_free(&ds);
    DEXIT;
+#else
+   char buffer[256];
+
+   DENTER(TOP_LAYER, "qmonAboutMsg");
+   sprintf(buffer, "%s %s", GE_LONGNAME, GDI_VERSION);  
+   XmtDisplayMessage(w, "about_msg", "Help", header, 
+                     "About Qmon", NULL, None, XmDIALOG_MODELESS,
+                     XmDIALOG_INFORMATION, 
+                     uti_state_get_user_name(), uti_state_get_qualified_hostname(), 
+                     buffer, 
+                     uti_state_get_default_cell(), 
+                     XmtLocalize(w, mailto, "mailto_msg"), SFLN_ELN); 
+   DEXIT;
+#endif
 }

@@ -165,8 +165,9 @@ lList
    DENTER(TOP_LAYER, "sge_create_orders");
    
    if (!job) {
+      lFreeList(&or_list);
       DEXIT;
-      return lFreeList(or_list);
+      return or_list;
    }
 
    /* create orders list if not existent */
@@ -250,7 +251,7 @@ lList
 
          sge_create_cull_order_pos(&order_pos, job, ja_task, jep, tempElem);    
          
-         tempElem = lFreeElem(tempElem);
+         lFreeElem(&tempElem);
       }
 
       ja_pos = &(order_pos->ja_task);
@@ -373,8 +374,7 @@ sge_send_orders2master( lList **orders )
       ret = answer_list_handle_request_answer_list(&alp, stderr);
    }
 
-   malp = lFreeList(malp);
-
+   lFreeList(&malp);
    DEXIT;
    return ret;
 }
@@ -416,7 +416,7 @@ lList *order_list
 *
 *  FUNCTION
 *      generates one order list from the order structure, and cleans the
-*      the order structure. The orders, which have been send allready, are
+*      the order structure. The orders, which have been send already, are
 *      removed.
 *
 *  INPUTS
@@ -440,7 +440,7 @@ lList *sge_join_orders(order_t *orders){
          orderlist = orders->jobStartOrderList;
       }
       else {
-         lAddList(orderlist, orders->jobStartOrderList);
+         lAddList(orderlist, &(orders->jobStartOrderList));
       }   
       orders->jobStartOrderList = NULL; 
     
@@ -449,13 +449,13 @@ lList *sge_join_orders(order_t *orders){
          orderlist = orders->pendingOrderList;
       }
       else {
-         lAddList(orderlist, orders->pendingOrderList);
+         lAddList(orderlist, &(orders->pendingOrderList));
       }
       orders->pendingOrderList= NULL;
 
       
       /* they have been send earlier, so we can remove them */
-      orders->sentOrderList = lFreeList(orders->sentOrderList);
+      lFreeList(&(orders->sentOrderList));
 
       return orderlist;
 }
@@ -502,7 +502,7 @@ int sge_GetNumberOfOrders(order_t *orders) {
 *
 *  FUNCTION
 *     If many jobs are dispatched during one scheduling run, this function
-*     can submit the allready generated job start orders to the master, so it
+*     can submit the already generated job start orders to the master, so it
 *     can start the jobs and does not need for the scheduling cycle to finish.
 *
 *     The config orders are submitted as well (queue suspend or unsuspend, job
@@ -525,7 +525,6 @@ int sge_send_job_start_orders(order_t *orders) {
    sge_gdi_request *answer= NULL;
    int config_mode = SGE_GDI_RECORD;
    int start_mode = SGE_GDI_RECORD;
-   int orders_send = 0;
    state_gdi_multi state = STATE_GDI_MULTI_INIT;
 
    DENTER(TOP_LAYER, "sge_send_orders2master");
@@ -536,49 +535,47 @@ int sge_send_job_start_orders(order_t *orders) {
    }
    else {
       /* check for a sucessful send */
-      malp = lFreeList(malp); 
+      lFreeList(&malp); 
    }
-  
-
    
    /* figure out, what needs to be recorded, and what needs to be send */
-   if (orders->pendingOrderList == NULL) {
-      if (orders->jobStartOrderList == NULL) {
+   if (lGetNumberOfElem(orders->pendingOrderList) == 0 ) {
+      if (lGetNumberOfElem(orders->jobStartOrderList) == 0) {
          config_mode = SGE_GDI_SEND;
-         
       }
       else {
          start_mode = SGE_GDI_SEND;   
       }
    }
   
-   /* TODO async gdi: change the last parameter in sge_gdi_multi_sync from true to false to 
-                      enable the async gdi */
-  
-   /* send orders */
+    /* send orders */
    if (lGetNumberOfElem(orders->configOrderList) > 0) {
-   
-      orders_send += lGetNumberOfElem(orders->configOrderList);
+      orders->numberSendOrders += lGetNumberOfElem(orders->configOrderList);
       sge_gdi_multi_sync(&alp, config_mode, SGE_ORDER_LIST, SGE_GDI_ADD,
-                               &orders->configOrderList, NULL, NULL, &malp, &state, false, true);
+                         &orders->configOrderList, NULL, NULL, &malp, &state, false, false);
+      if (config_mode == SGE_GDI_SEND) {
+         orders->numberSendPackages++;     
+      }
    }        
    
    if (lGetNumberOfElem(orders->jobStartOrderList) > 0) {
-
-      orders_send += lGetNumberOfElem(orders->jobStartOrderList);
+      orders->numberSendOrders += lGetNumberOfElem(orders->jobStartOrderList);
       sge_gdi_multi_sync(&alp, start_mode, SGE_ORDER_LIST, SGE_GDI_ADD,
-                            &orders->jobStartOrderList, NULL, NULL, &malp, &state, false, true);
+                         &orders->jobStartOrderList, NULL, NULL, &malp, &state, false, false);
+      if (start_mode == SGE_GDI_SEND) {
+         orders->numberSendPackages++;     
+      }
    }
 
    if (lGetNumberOfElem(orders->pendingOrderList) > 0) {
-
-      orders_send += lGetNumberOfElem(orders->pendingOrderList);
+      orders->numberSendOrders += lGetNumberOfElem(orders->pendingOrderList);
       sge_gdi_multi_sync(&alp, SGE_GDI_SEND, SGE_ORDER_LIST, SGE_GDI_ADD,
-                            &orders->pendingOrderList, NULL, NULL, &malp, &state, false, true);
+                         &orders->pendingOrderList, NULL, NULL, &malp, &state, false, false);
+      orders->numberSendPackages++;                      
    }
 
-   malp = lFreeList(malp);
-   alp = lFreeList(alp);
+   lFreeList(&malp);
+   lFreeList(&alp);
 
    DEXIT;
    return true;

@@ -1,9 +1,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 
 #define __SGE_GDI_LIBRARY_HOME_OBJECT_FILE__
-#include "cull.h"
+#include "cull/cull.h"
+
+#include "uti/sge_profiling.h"
+#include "uti/sge_stdio.h"
+
+#include "msg_common.h"
 
 enum {
    TEST_host = 1,
@@ -47,6 +53,7 @@ lNameSpace nmv[] = {
 
 int main(int argc, char *argv[])
 {
+   const char *const filename = "test_cull_pack.txt";
    lListElem *ep, *obj, *copy;
    sge_pack_buffer pb, copy_pb;
    int pack_ret;
@@ -54,6 +61,7 @@ int main(int argc, char *argv[])
    char *buffer;
 
    lInit(nmv);
+   sge_prof_setup();
 
    /* create an element */
    ep = lCreateElem(TEST_Type);
@@ -88,7 +96,7 @@ int main(int argc, char *argv[])
 
    buffer = (char *)malloc(pb.bytes_used);
    memcpy(buffer, pb.head_ptr, pb.bytes_used);
-   if((pack_ret = init_packbuffer_from_buffer(&copy_pb, buffer, pb.bytes_used, 0)) != PACK_SUCCESS) {
+   if((pack_ret = init_packbuffer_from_buffer(&copy_pb, buffer, pb.bytes_used)) != PACK_SUCCESS) {
       printf("initializing packbuffer from packed data failed: %s\n", cull_pack_strerror(pack_ret));
       return EXIT_FAILURE;
    }
@@ -102,7 +110,7 @@ int main(int argc, char *argv[])
 
    printf("element after packing and unpacking\n");
    lWriteElemTo(copy, stdout);
-   copy = lFreeElem(copy);
+   lFreeElem(&copy);
 
    /* test partial packing */
    if((pack_ret = init_packbuffer(&pb, 100, 0)) != PACK_SUCCESS) {
@@ -110,14 +118,14 @@ int main(int argc, char *argv[])
       return EXIT_FAILURE;
    }
 
-   if((pack_ret = cull_pack_elem_partial(&pb, ep, CULL_SPOOL)) != PACK_SUCCESS) {
+   if((pack_ret = cull_pack_elem_partial(&pb, ep, NULL, CULL_SPOOL)) != PACK_SUCCESS) {
       printf("partially packing element failed: %s\n", cull_pack_strerror(pack_ret));
       return EXIT_FAILURE;
    }
 
    buffer = (char *)malloc(pb.bytes_used);
    memcpy(buffer, pb.head_ptr, pb.bytes_used);
-   if((pack_ret = init_packbuffer_from_buffer(&copy_pb, buffer, pb.bytes_used, 0)) != PACK_SUCCESS) {
+   if((pack_ret = init_packbuffer_from_buffer(&copy_pb, buffer, pb.bytes_used)) != PACK_SUCCESS) {
       printf("initializing packbuffer from partially packed data failed: %s\n", cull_pack_strerror(pack_ret));
       return EXIT_FAILURE;
    }
@@ -131,32 +139,36 @@ int main(int argc, char *argv[])
 
    printf("element after partial packing and unpacking\n");
    lWriteElemTo(copy, stdout);
-   copy = lFreeElem(copy);
+   lFreeElem(&copy);
 
    /* test lDump functions */
-   if(lDumpElem("test_cull_pack.txt", ep, 1)) {
+   if(lDumpElem(filename, ep, 1)) {
       printf("error dumping element\n");
       return EXIT_FAILURE;
    }
 
-   if((fd = fopen("test_cull_pack.txt", "r")) == NULL) {
+   if((fd = fopen(filename, "r")) == NULL) {
       printf("error opening dump file test_cull_pack.txt\n");
       return EXIT_FAILURE;
    }
 
    if((copy = lUndumpElemFp(fd, TEST_Type)) == NULL) {
-      fclose(fd);
+      FCLOSE(fd);
       printf("error undumping element\n");
       return EXIT_FAILURE;
    }
-   fclose(fd);
+   FCLOSE(fd);
    printf("element after dumping and undumping\n");
    lWriteElemTo(copy, stdout);
-   copy = lFreeElem(copy);
+   lFreeElem(&copy);
 
    /* cleanup and exit */
-   lFreeElem(ep);                  
+   lFreeElem(&ep);
    return EXIT_SUCCESS;
+
+FCLOSE_ERROR:
+   printf(MSG_ERRORCLOSINGFILE_SS, filename, strerror(errno));
+   return EXIT_FAILURE;
 }
 
 

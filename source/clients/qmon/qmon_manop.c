@@ -146,7 +146,7 @@ XtPointer cld, cad;
    qmonMirrorMultiAnswer(MANAGER_T | OPERATOR_T | USERSET_T | USER_T, &alp);
    if (alp) {
       qmonMessageBox(w, alp, 0);
-      alp = lFreeList(alp);
+      lFreeList(&alp);
       /* set default cursor */
       XmtDisplayDefaultCursor(w);
       DEXIT;
@@ -304,7 +304,7 @@ static void qmonManopFillList(void)
          lSetString(ep, UP_default_project, "NONE");
    }
    qmonSetNxN(user_matrix, cl, 3, UP_name, UP_default_project, UP_delete_time);
-   lFreeList(cl);
+   lFreeList(&cl);
 
    DEXIT;
 }
@@ -380,9 +380,9 @@ XtPointer cld, cad;
    
       updateManopList();
 
-      alp = lFreeList(alp);
-      lp = lFreeList(lp);
-      lFreeWhat(what);
+      lFreeList(&alp);
+      lFreeList(&lp);
+      lFreeWhat(&what);
    } 
    
    DEXIT;
@@ -440,7 +440,7 @@ XtPointer cld, cad;
       what = lWhat("%T(ALL)", dp);
       if (!(lp = lCreateElemList("AH", dp, 1))) {
          fprintf(stderr, "lCreateElemList failed\n");
-         lFreeWhat(what);
+         lFreeWhat(&what);
          DEXIT;
          return;
       }
@@ -457,9 +457,9 @@ XtPointer cld, cad;
          
       XmtInputFieldSetString(username, "");
 
-      lFreeWhat(what);
-      lp = lFreeList(lp);
-      alp = lFreeList(alp);
+      lFreeWhat(&what);
+      lFreeList(&lp);
+      lFreeList(&alp);
    }
    DEXIT;
 }
@@ -494,7 +494,7 @@ XtPointer cld, cad;
    qmonMirrorMultiAnswer(MANAGER_T | OPERATOR_T | USERSET_T | USER_T, &alp);
    if (alp) {
       qmonMessageBox(w, alp, 0);
-      alp = lFreeList(alp);
+      lFreeList(&alp);
       DEXIT;
       return;
    }
@@ -915,9 +915,9 @@ XtPointer cld, cad;
       XmListSelectItem(userset_names, xusetname, True);
       XmStringFree(xusetname);
 
-      lFreeWhat(what);
-      lp = lFreeList(lp);
-      alp = lFreeList(alp);
+      lFreeWhat(&what);
+      lFreeList(&lp);
+      lFreeList(&alp);
    }  
    else { 
       qmonMessageShow(w, True, "Userset List Name required !");
@@ -970,9 +970,9 @@ XtPointer cld, cad;
 
          qmonMessageBox(w, alp, 0);
          
-         lFreeWhat(what);
-         lp = lFreeList(lp);
-         alp = lFreeList(alp);
+         lFreeWhat(&what);
+         lFreeList(&lp);
+         lFreeList(&alp);
 
          updateUsersetList();
          XtVaGetValues( userset_names,
@@ -1020,7 +1020,7 @@ XtPointer cld, cad;
    qmonMirrorMultiAnswer(PROJECT_T, &alp);
    if (alp) {
       qmonMessageBox(w, alp, 0);
-      alp = lFreeList(alp);
+      lFreeList(&alp);
       DEXIT;
       return;
    }
@@ -1071,8 +1071,8 @@ XtPointer cld, cad;
              qmonMessageBox(w, alp, 0);
              updateManopList();
 
-             alp = lFreeList(alp);
-             lp = lFreeList(lp);
+             lFreeList(&alp);
+             lFreeList(&lp);
          }
       }
       /*

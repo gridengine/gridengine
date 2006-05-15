@@ -172,8 +172,9 @@ int read_config_list(FILE *fp, lList **lpp, lList **alpp, lDescr *dp, int nm1,
       }
    }
    
-   if (last)
+   if (last) {
       sge_free_saved_vars(last);
+   }   
    DEXIT;
    return 0; 
 
@@ -295,7 +296,7 @@ int name_nm
       return fields?true:false;
    }
 
-   pos = lGetPosViaElem(ep, name_nm);
+   pos = lGetPosViaElem(ep, name_nm, SGE_NO_ABORT);
    dataType = lGetPosType(lGetElemDescr(ep),pos);
    switch (dataType) {
       case lStringT:
@@ -831,7 +832,7 @@ bool set_conf_list(lList **alpp, lList **clpp, int fields[], const char *key,
       int pos, dataType;
       lListElem *lep = lFirst(tmplp);
 
-      pos = lGetPosViaElem(lep, sub_name_nm);
+      pos = lGetPosViaElem(lep, sub_name_nm, SGE_NO_ABORT);
       dataType = lGetPosType(lGetElemDescr(lep),pos);
       switch (dataType) {
          case lStringT:
@@ -851,7 +852,7 @@ bool set_conf_list(lList **alpp, lList **clpp, int fields[], const char *key,
          DEXIT;
          return true;
       } else {
-         lFreeList(tmplp);
+         lFreeList(&tmplp);
       }
    }
 
@@ -1368,8 +1369,9 @@ int subval_nm
       }
    }
    
-   if(!strcasecmp("NONE", lGetString(lFirst(tmplp), subname_nm)))
-      tmplp = lFreeList(tmplp);
+   if (!strcasecmp("NONE", lGetString(lFirst(tmplp), subname_nm))) {
+      lFreeList(&tmplp);
+   }   
 
    lSetList(ep, name_nm, tmplp);
    lDelElemStr(clpp, CF_name, key);

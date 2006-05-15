@@ -64,7 +64,7 @@
 */
 bool
 cqueue_list_x_on_subordinate_gdil(lList *this_list, bool suspend,
-                                  const lList *gdil)
+                                  const lList *gdil, monitoring_t *monitor)
 {
    bool ret = true;
    lListElem *gdi = NULL;
@@ -117,7 +117,7 @@ cqueue_list_x_on_subordinate_gdil(lList *this_list, bool suspend,
                   /*
                    * Suspend/unsuspend the subordinated queue
                    */
-                  ret &= qinstance_x_on_subordinate(so_queue, suspend, false);
+                  ret &= qinstance_x_on_subordinate(so_queue, suspend, false, monitor);
 
                } else {
                   ERROR((SGE_EVENT, MSG_QINSTANCE_NQIFOUND_SS, 
@@ -126,7 +126,7 @@ cqueue_list_x_on_subordinate_gdil(lList *this_list, bool suspend,
                }
             }
          }
-         resolved_so_list = lFreeList(resolved_so_list);
+         lFreeList(&resolved_so_list);
       } else {
          /* should never happen */
          ERROR((SGE_EVENT, MSG_QINSTANCE_NQIFOUND_SS, full_name, SGE_FUNC));
@@ -139,7 +139,7 @@ cqueue_list_x_on_subordinate_gdil(lList *this_list, bool suspend,
 
 bool
 qinstance_x_on_subordinate(lListElem *this_elem, bool suspend,
-                           bool rebuild_cache)
+                           bool rebuild_cache, monitoring_t *monitor)
 {
    bool ret = true;
    u_long32 sos_counter;
@@ -196,7 +196,7 @@ qinstance_x_on_subordinate(lListElem *this_elem, bool suspend,
       DPRINTF(("Due to other suspend states signal will %sbe delivered\n",
                send_qinstance_signal ? "NOT " : "")); 
       if (send_qinstance_signal && !rebuild_cache) {
-         ret = (sge_signal_queue(signal, this_elem, NULL, NULL) == 0) ? true : false;
+         ret = (sge_signal_queue(signal, this_elem, NULL, NULL, monitor) == 0) ? true : false;
       }
 
       qinstance_state_set_susp_on_sub(this_elem, suspend);
@@ -213,7 +213,7 @@ qinstance_x_on_subordinate(lListElem *this_elem, bool suspend,
 bool
 cqueue_list_x_on_subordinate_so(lList *this_list, lList **answer_list,
                                 bool suspend, const lList *resolved_so_list,
-                                bool do_recompute_caches)
+                                bool do_recompute_caches, monitoring_t *monitor)
 {
    bool ret = true;
    const lListElem *so = NULL;
@@ -226,12 +226,11 @@ cqueue_list_x_on_subordinate_so(lList *this_list, lList **answer_list,
     */
    for_each(so, resolved_so_list) {
       const char *full_name = lGetString(so, SO_name);
-
       lListElem *qinstance = cqueue_list_locate_qinstance(this_list, full_name);
 
       if (qinstance != NULL) {
          ret &= qinstance_x_on_subordinate(qinstance, suspend,
-                                           do_recompute_caches);
+                                           do_recompute_caches, monitor);
          if (!ret) {
             break;
          }
@@ -258,7 +257,7 @@ qinstance_find_suspended_subordinates(const lListElem *this_elem,
       const char *qinstance_name = lGetString(this_elem, QU_qname);
       const char *hostname = lGetHost(this_elem, QU_qhostname);
       /* Slots calculations */
-      u_long32 slots = lGetUlong (this_elem, QU_job_slots);
+      u_long32 slots = lGetUlong(this_elem, QU_job_slots);
       u_long32 slots_used = qinstance_slots_used(this_elem);
       bool all_full = (slots_used == slots) ? true : false;
 
@@ -268,33 +267,40 @@ qinstance_find_suspended_subordinates(const lListElem *this_elem,
       so_list_resolve(so_list, answer_list, resolved_so_list, qinstance_name,
                       hostname);
 
-      /* If the number of used slots on this qinstance is greater than a
+      /* 
+       * If the number of used slots on this qinstance is greater than a
        * subordinate's threshold (if it has one), or if this qinstance has all
        * of it's slots full, this subordinate should be suspended.  Otherwise,
-       * remove it from the list. */
+       * remove it from the list. 
+       */
       if (!all_full) {
          lListElem *next_so = NULL;
+
          /*
           * Remove all subordinated queues from "resolved_so_list" which
           * are not actually suspended by "this_elem" 
           */
+         DTRACE;
          next_so = lFirst(*resolved_so_list);
          while ((so = next_so) != NULL) {
             next_so = lNext(so);
             if (!tst_sos(slots_used, slots, so)) {
                DPRINTF (("Removing %s because it's not suspended\n",
                          lGetString (so, SO_name)));
-               lRemoveElem(*resolved_so_list, so);
+               lRemoveElem(*resolved_so_list, &so);
             }
          }
+      } else {
+         DTRACE;
       }
    }
+
    DEXIT;
    return ret;
 }
 
 bool
-qinstance_initialize_sos_attr(lListElem *this_elem) 
+qinstance_initialize_sos_attr(lListElem *this_elem, monitoring_t *monitor) 
 {
    bool ret = true;
    lListElem *cqueue = NULL;
@@ -319,7 +325,8 @@ qinstance_initialize_sos_attr(lListElem *this_elem)
       lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
       lListElem *qinstance = NULL; 
 
-      for_each(qinstance, qinstance_list) {
+      qinstance = lGetElemHost(qinstance_list, QU_qhostname, hostname);
+      if (qinstance != NULL) {
          lList *so_list = lGetList(qinstance, QU_subordinate_list);
          lListElem *so = NULL;
          lList *resolved_so_list = NULL;
@@ -336,11 +343,11 @@ qinstance_initialize_sos_attr(lListElem *this_elem)
             if (!strcmp(full_name, so_full_name)) {
                /* suspend the queue if neccessary */
                if (tst_sos(slots_used, slots, so)) {
-                  qinstance_x_on_subordinate(this_elem, true, false); 
+                  qinstance_x_on_subordinate(this_elem, true, false, monitor); 
                }
             } 
          }
-         resolved_so_list = lFreeList(resolved_so_list);
+         lFreeList(&resolved_so_list);
       }
    }
    DEXIT;

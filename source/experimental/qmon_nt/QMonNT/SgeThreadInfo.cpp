@@ -140,8 +140,8 @@ UINT CCodThreadInfo::CodThreadProc(LPVOID pParam)
 	ASSERT(NULL != alp);
 	cod_setup(QUSERDEFINED, &alp);
 
-	// Answerlist erzeugen und mit Message ans Dokument übergeben.
-	// Dokument ist für das Löschen der Answerlist zuständig!
+	// Answerlist erzeugen und mit Message ans Dokument ï¿½bergeben.
+	// Dokument ist fï¿½r das Lï¿½schen der Answerlist zustï¿½ndig!
 	CodThreadInfo.AnswerList.Append(alp);
 	alp = lFreeList(alp);
 
@@ -167,18 +167,18 @@ UINT CCodThreadInfo::CodThreadProc(LPVOID pParam)
 			// Anderes Problem. Meldung schicken und bei 
 			// Auftragsschleife weitermachen:
 			CodThreadInfo.MainWindow->SendMessage(WM_CODNOTIFY, TR_CONNECTIONSETUP_UNKNOWNERR, NULL);
-			// TODO: Ja, ja, dieser Fall kann hier ja nie auftreten, ich weiß.
+			// TODO: Ja, ja, dieser Fall kann hier ja nie auftreten, ich weiï¿½.
 			// aber vielleicht braucht man es ja mal......
 			break;
 	}*/
 
 	/*
 	** Beginn der Auftragsschleife. Hier wird auf ein Event
-	** gewartet, das vom Dokument gesetzt wird. Anschließend
+	** gewartet, das vom Dokument gesetzt wird. Anschlieï¿½end
 	** wird das Kommando, das mit dem Event verbunden ist,
-	** ausgeführt. In diese Schleife wird auch gesprungen,
+	** ausgefï¿½hrt. In diese Schleife wird auch gesprungen,
 	** wenn beim Setup ein Fehler auftrat, die diese Schleife
-	** auf das Beendigungsflag prüft.
+	** auf das Beendigungsflag prï¿½ft.
 	*/
 	UINT Command;
 	while (true) {
@@ -242,7 +242,7 @@ UINT CCodThreadInfo::CodThreadProc(LPVOID pParam)
 				CodThreadInfo.SubmitJob(reinterpret_cast<CJob *>(CodThreadInfo.m_Arg));
 				break;
 
-			// >>> Code für neue Thread Commands hier einfügen
+			// >>> Code fï¿½r neue Thread Commands hier einfï¿½gen
 			default:
 				DPRINTF(("Unhandled ThreadCommand: %u\n", Command));
 				ASSERT(false);
@@ -289,8 +289,9 @@ void CCodThreadInfo::GetAllQueues()
 	lList *alp = cod_api(COD_QUEUE_LIST, COD_API_GET, &lp, NULL, whatall);
 	ASSERT(NULL != alp);
 	AnswerList.Append(alp);
-	whatall = lFreeWhat(whatall);
-	alp     = lFreeList(alp);
+lFreeWhat(&whatall);
+    lFreeList(&alp);
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           
 
 	// Stefan Mihaila: if something was wrong,
 	// send the proper notification message to 'MainWindow'
@@ -355,9 +356,10 @@ void CCodThreadInfo::GetAllJobs()
 		NULL /*whereAllExceptFinished*/, whatall);
 	ASSERT(NULL != alp);
 	AnswerList.Append(alp);
-	//whereAllExceptFinished = lFreeWhere(whereAllExceptFinished);
+lFreeWhere(&whereAllExceptFinished);
 	whatall = lFreeWhat(whatall);
-	alp		= lFreeList(alp);
+    lFreeList(&alp);
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           
 
 	// Stefan Mihaila: if something was wrong,
 	// send the proper notification message to 'MainWindow'
@@ -374,7 +376,7 @@ void CCodThreadInfo::GetAllJobs()
 
 	// The deletion of JobList pointer is the responsability
 	// of the WM_CODNOTIFY handler function !!!
-	CJobList *JobList = new CJobList;	// Für das Löschen ist das Dokument zuständig!
+	CJobList *JobList = new CJobList;	// Fï¿½r das Lï¿½schen ist das Dokument zustï¿½ndig!
 	ASSERT(NULL != JobList);
 
 	// Daten aus lp holen und CJobList aufbauen:
@@ -434,7 +436,7 @@ void CCodThreadInfo::GetAllHosts()
 
 	// The deletion of HostList pointer is the responsability
 	// of the WM_CODNOTIFY handler function !!!
-	CHostList *HostList = new CHostList;	// Für das Löschen ist das Dokument zuständig!
+	CHostList *HostList = new CHostList;	// Fï¿½r das Lï¿½schen ist das Dokument zustï¿½ndig!
 	ASSERT(NULL != HostList);
 
 	// Daten aus lp holen und CHostList aufbauen:
@@ -543,8 +545,10 @@ void CCodThreadInfo::ModQueues(CQueueSet *pQueueSet)
 	ASSERT(NULL != alp);
 	AnswerList.Append(alp);
 	what = lFreeWhat(what);
-	alp  = lFreeList(alp);
-	lp   = lFreeList(lp);
+    lFreeList(&alp);
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           
+    lFreeList(&lp);
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            
 
 	// Stefan Mihaila: if something was wrong,
 	// send the proper notification message to 'MainWindow'
@@ -589,7 +593,8 @@ void CCodThreadInfo::DelAllQueues(CQueueSet *pQueueSet)
 	AnswerList.Append(alp);
 	what = lFreeWhat(what);
 	alp  = lFreeList(alp);
-	lp	 = lFreeList(lp);
+    lFreeList(&lp);
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            
 
 	// Stefan Mihaila: if something was wrong,
 	// send the proper notification message to 'MainWindow'
@@ -754,7 +759,8 @@ void CCodThreadInfo::SubmitJob(CJob *Job)
 	AnswerList.Append(alp);
 	alp		= lFreeList(alp);
 	// Stefan Mihaila: Warning: 'lp' may or may be not NULL !
-	lp		= lFreeList(lp);
+    lFreeList(&lp);
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            
 
 	delete Job;
 	Job = NULL;

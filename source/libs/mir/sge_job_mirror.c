@@ -192,7 +192,7 @@ bool job_update_master_list(sge_object_type type, sge_event_action action,
    }
 
    if(sge_mirror_update_master_list(list, list_descr, job, job_get_id_string(job_id, 0, NULL), action, event) != SGE_EM_OK) {
-      ja_tasks = lFreeList(ja_tasks);
+      lFreeList(&ja_tasks);
       DEXIT;
       return false;
    }
@@ -204,13 +204,13 @@ bool job_update_master_list(sge_object_type type, sge_event_action action,
       if(job == NULL) {
          ERROR((SGE_EVENT, MSG_JOB_CANTFINDJOBFORUPDATEIN_SS,
                 job_get_id_string(job_id, 0, NULL), "job_update_master_list"));
-         ja_tasks = lFreeList(ja_tasks);
+         lFreeList(&ja_tasks);
          DEXIT;
          return false;
       }
 
       lXchgList(job, JB_ja_tasks, &ja_tasks);
-      ja_tasks = lFreeList(ja_tasks);
+      lFreeList(&ja_tasks);
    }
 
    DEXIT;
@@ -234,9 +234,7 @@ job_schedd_info_update_master_list(sge_object_type type,
    list_descr = SME_Type;
 
    /* We always update the whole list (consisting of one list element) */
-   if(*list != NULL) {
-      *list = lFreeList(*list);
-   }
+   lFreeList(list);
 
    if((data_list = lGetList(event, ET_new_version)) != NULL) {
       if((ep = lFirst(data_list)) != NULL) {

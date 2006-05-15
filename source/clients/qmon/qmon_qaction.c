@@ -88,6 +88,7 @@
 #include "sge_qinstance_state.h"
 #include "sge_attr.h"
 #include "sge_cqueue_qconf.h"
+#include "sge_string.h"
 
 /*-------------------------------------------------------------------------*/
 
@@ -872,7 +873,7 @@ XtPointer cld, cad;
 
    if (cq_dialog && XtIsManaged(cq_dialog)) {
 
-      current_qep = lFreeElem(current_qep);
+      lFreeElem(&current_qep);
    
       XtUnmanageChild(cq_dialog);
       XtPopdown(XtParent(cq_dialog));
@@ -1322,7 +1323,7 @@ XtPointer cld, cad;
    qmonMirrorMultiAnswer(USERSET_T | PROJECT_T | PE_T | CKPT_T, &alp);
    if (alp) {
       qmonMessageBox(w, alp, 0);
-      alp = lFreeList(alp);
+      lFreeList(&alp);
       DEXIT;
       return;
    }
@@ -1420,7 +1421,7 @@ XtPointer cld, cad;
    qmonMirrorMultiAnswer(CQUEUE_T, &alp);
    if (alp) {
       qmonMessageBox(w, alp, 0);
-      alp = lFreeList(alp);
+      lFreeList(&alp);
       DEXIT;
       return;
    }
@@ -1550,8 +1551,8 @@ XtPointer cld, cad;
    } else {
       dont_close = 1;
    }   
-   alp = lFreeList(alp);
-   copy = lFreeElem(copy);
+   lFreeList(&alp);
+   lFreeElem(&copy);
 
    if (!dont_close)
       qmonQCPopdown(w, NULL, NULL);
@@ -1580,7 +1581,7 @@ StringConst href
    ql = qmonMirrorList(SGE_CQUEUE_LIST);
 
    if (current_qep) {
-      current_qep = lFreeElem(current_qep);
+      lFreeElem(&current_qep);
    }   
    if (!strcmp(qname, "template")) {
          current_qep = cqueue_create(&alp, "template" );
@@ -1598,7 +1599,7 @@ StringConst href
 
    qmonCullToCQ(current_qep, data, href);
 
-   lFreeList(alp);
+   lFreeList(&alp);
 
    DEXIT;
 }   
@@ -1747,7 +1748,7 @@ static void qmonQCMem(Widget w, XtPointer cld, XtPointer cad)
    DENTER(GUI_LAYER, "qmonQCLimitInputMem");
    
    value = XmtInputFieldGetString(target);
-   strncpy(stringval, value, BUFSIZ-1);
+   sge_strlcpy(stringval, value, BUFSIZ);
    status = XmtAskForMemory(w, NULL, "@{Enter a memory value}",
                   stringval, sizeof(stringval), NULL);
    if (stringval[0] == '\0')
@@ -1778,7 +1779,7 @@ XtPointer cld, cad;
       mode = False;
 
    current = XmtInputFieldGetString(input_field);
-   strncpy(stringval, current ? current : "", sizeof(stringval)-1);
+   sge_strlcpy(stringval, current, sizeof(stringval));
    status = XmtAskForTime(w, NULL, "@{Enter time}",
                stringval, sizeof(stringval), NULL, mode);
    if (stringval[0] == '\0')
@@ -2194,7 +2195,7 @@ void updateQCQ(void)
       UpdateXmListFromCull(cq_queue_set, XmFONTLIST_DEFAULT_TAG, qlf, QU_qname);
       XmtLayoutEnableLayout(cq_dialog);
 
-      qlf = lFreeList(qlf);
+      lFreeList(&qlf);
    }
    
    DEXIT;
@@ -2535,7 +2536,7 @@ const char *href
 /*       lWriteElemTo(qep, stdout); */
    }   
    
-   alp = lFreeList(alp);
+   lFreeList(&alp);
    
    
    DEXIT;
@@ -2631,7 +2632,7 @@ const char *href
    inter_attr_list_add_set_del(lGetListRef(qep, CQ_min_cpu_interval), &alp, href, NULL, True); 
    inter_attr_list_add_set_del(lGetListRef(qep, CQ_notify), &alp, href, NULL, True);
 
-   alp = lFreeList(alp);
+   lFreeList(&alp);
    
    if (qmon_debug) {
       lWriteElemTo(qep, stdout);
@@ -2943,12 +2944,16 @@ static void qmonQCToggleTW(Widget w, XtPointer cld, XtPointer cad)
       XtSetSensitive(target, set);
       target = XmtNameToWidget(w, "^load_thresholds"); 
       XtSetSensitive(target, set);
+      target = XmtNameToWidget(w, "^load_thresholds_remove"); 
+      XtSetSensitive(target, set);
    }   
 
    if (w == suspend_thresholds_tw) {
       target = XmtNameToWidget(w, "^suspend_thresholds_label"); 
       XtSetSensitive(target, set);
       target = XmtNameToWidget(w, "^suspend_thresholds"); 
+      XtSetSensitive(target, set);
+      target = XmtNameToWidget(w, "^suspend_thresholds_remove"); 
       XtSetSensitive(target, set);
    }   
 
@@ -3117,12 +3122,16 @@ static void qmonQCToggleTW(Widget w, XtPointer cld, XtPointer cad)
       XtSetSensitive(target, set);
       target = XmtNameToWidget(w, "^complexes_ccl"); 
       XtSetSensitive(target, set);
+      target = XmtNameToWidget(w, "^complexes_ccl_remove"); 
+      XtSetSensitive(target, set);
    }   
 
    if (w == subordinate_list_tw ) {
       target = XmtNameToWidget(w, "^subordinate_list_label"); 
       XtSetSensitive(target, set);
       target = XmtNameToWidget(w, "^subordinates_attached"); 
+      XtSetSensitive(target, set);
+      target = XmtNameToWidget(w, "^subordinates_attached_remove"); 
       XtSetSensitive(target, set);
    }   
 

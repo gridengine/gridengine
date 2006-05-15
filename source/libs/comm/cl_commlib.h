@@ -50,9 +50,10 @@ cl_raw_list_t* cl_com_get_log_list(void);
 cl_raw_list_t* cl_com_get_endpoint_list(void);
 
 /* application log functions */
-int cl_commlib_push_application_error(int cl_error, const char* cl_info);
+int cl_commlib_push_application_error(cl_log_t cl_err_type, int cl_error, const char* cl_info);
 
 int cl_com_setup_commlib(cl_thread_mode_t t_mode, cl_log_t debug_level , cl_log_func_t flush_func);
+cl_bool_t cl_com_setup_commlib_complete(void);
 int cl_com_cleanup_commlib(void);
 
 
@@ -122,6 +123,10 @@ int cl_com_application_debug(cl_com_handle_t* handle, const char* message);
 int cl_com_set_application_debug_client_callback_func(cl_app_debug_client_func_t);
 
 
+char* cl_com_get_resolvable_hosts(void);
+char* cl_com_get_unresolvable_hosts(void);
+
+
 
 cl_thread_mode_t cl_commlib_get_thread_state(void);
 
@@ -136,7 +141,7 @@ TODO: ADOC Header !!!
 
 /* typical user function calls */
 
-int cl_commlib_trigger           (cl_com_handle_t* handle);
+int cl_commlib_trigger           (cl_com_handle_t* handle, int synchron);
 
 
 int cl_commlib_close_connection  (cl_com_handle_t* handle, 

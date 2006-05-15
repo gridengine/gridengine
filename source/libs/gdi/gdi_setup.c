@@ -60,6 +60,7 @@
 #include "setup_path.h"
 #include "sge_feature.h"
 #include "sge_bootstrap.h"
+#include "sge_string.h"
 
 #include "uti/sge_profiling.h"
 
@@ -249,8 +250,8 @@ gdi_set_request(const char* rhost, const char* commproc, u_short id,
       return false;
    }
  
-   strncpy(async_gdi->rhost, rhost, CL_MAXHOSTLEN);
-   strncpy(async_gdi->commproc, commproc, CL_MAXHOSTLEN);
+   sge_strlcpy(async_gdi->rhost, rhost, CL_MAXHOSTLEN);
+   sge_strlcpy(async_gdi->commproc, commproc, CL_MAXHOSTLEN);
    async_gdi->id = id;
    async_gdi->gdi_request_mid = gdi_request_mid;
 
@@ -355,11 +356,15 @@ void gdi_state_set_isalive(int i)
 int sge_gdi_setup(const char *programname, lList **alpp)
 {
    bool alpp_was_null = true;
+   int last_enroll_error = CL_RETVAL_OK;
    DENTER(TOP_LAYER, "sge_gdi_setup");
+
+   lInit(nmv);
 
    if (alpp != NULL && *alpp != NULL) {
      alpp_was_null = false;
    }
+
    /* initialize libraries */
    pthread_once(&gdi_once_control, gdi_once_init);
    if (gdi_state_get_made_setup()) {
@@ -384,8 +389,6 @@ int sge_gdi_setup(const char *programname, lList **alpp)
    sge_init_language(NULL,NULL);   
 #endif /* __SGE_COMPILE_WITH_GETTEXT__  */
 
-   lInit(nmv);
-
    if (sge_setup(uti_state_get_mewho(), alpp)) {
       if (alpp_was_null) {
          /* This frees the list, so no worries. */
@@ -396,7 +399,7 @@ int sge_gdi_setup(const char *programname, lList **alpp)
       return AE_QMASTER_DOWN;
    }
 
-   prepare_enroll(programname);
+   prepare_enroll(programname, &last_enroll_error);
 
    /* ensure gdi default exit func is used if no-one has been specified */
    if (!uti_state_get_exit_func())

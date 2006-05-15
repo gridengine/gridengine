@@ -32,6 +32,8 @@
 
 /* system */
 #include <stdio.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 
 #if defined(ALPHA)
    extern void flockfile(FILE *);
@@ -74,7 +76,7 @@
 #include "uti/sge_spool.h"
 
 static void spool_flatfile_add_line_breaks (dstring *buffer);
-   
+
 #ifdef DEBUG_FLATFILE
 bool flatfile_debugging = true;
 
@@ -140,7 +142,7 @@ static char *get_end_token(char *buffer, int size, const char *end_token,
    char new_buffer[2] = { '\0', '\0' };
 
    if(end_token != NULL) {
-      strncpy(buffer, end_token, size);
+      sge_strlcpy(buffer, end_token, size);
    } else {
       *buffer = '\0';
    }
@@ -333,6 +335,8 @@ spool_flatfile_align_list(lList **answer_list, const lList *list,
       }
    }
 
+   sge_dstring_free(&buffer);
+
    DEXIT;
    return true;
 }
@@ -413,6 +417,7 @@ spool_flatfile_write_list(lList **answer_list,
                                             instr->spool_instr);
       if (my_fields == NULL) {
          /* message generated in spool_get_fields_to_spool */
+         sge_dstring_free(&char_buffer);
          DEXIT;
          return NULL;
       }
@@ -422,6 +427,7 @@ spool_flatfile_write_list(lList **answer_list,
             if (!spool_flatfile_align_list(answer_list, list, my_fields, 0)) {
                /* message generated in spool_flatfile_align_object */
                my_fields = spool_free_spooling_fields(my_fields);
+               sge_dstring_free(&char_buffer);
                DEXIT;
                return NULL;
             }
@@ -457,6 +463,8 @@ spool_flatfile_write_list(lList **answer_list,
             }
             
             sge_dstring_append_char (&char_buffer, '\n');
+
+            sge_dstring_free(&tmp);
          }
          
          if(!spool_flatfile_write_list_fields(answer_list, list, &char_buffer, 
@@ -471,7 +479,7 @@ spool_flatfile_write_list(lList **answer_list,
          }
          
          if (instr->show_footer) {
-            sge_dstring_sprintf_append (&char_buffer, "# "SFN, MSG_COMPLEX_STARTSCOMMENTBUTNOSAVE);
+            sge_dstring_sprintf_append (&char_buffer, "# "SFN"\n", MSG_COMPLEX_STARTSCOMMENTBUTNOSAVE);
          }
          
          data     = sge_dstring_get_string(&char_buffer);
@@ -823,19 +831,18 @@ spool_flatfile_close_file(lList **answer_list, FILE *file, const char *filepath,
 #if !defined(AIX42) && !defined(DARWIN6)
       funlockfile(file);
 #endif
-      return true;
-   }
-
-   if (fclose(file) != 0) {
-      answer_list_add_sprintf(answer_list, STATUS_EDISK,
-                              ANSWER_QUALITY_ERROR, 
-                              MSG_ERRORCLOSINGFILE_SS, 
-                              filepath != NULL ? filepath : "<null>", 
-                              strerror(errno));
-      return false;
+   } else {
+      FCLOSE(file);
    }
 
    return true;
+FCLOSE_ERROR:
+   answer_list_add_sprintf(answer_list, STATUS_EDISK,
+                           ANSWER_QUALITY_ERROR,
+                           MSG_ERRORCLOSINGFILE_SS,
+                           filepath != NULL ? filepath : "<null>",
+                           strerror(errno));
+   return false;
 }
 
 static const char *
@@ -860,7 +867,7 @@ spool_flatfile_write_data(lList **answer_list, const void *data, int data_len,
    }
 
    if (print_header && (sge_spoolmsg_write(file, COMMENT_CHAR, 
-         feature_get_product_name(FS_VERSION, &ds)) < 0)) {
+      feature_get_product_name(FS_VERSION, &ds)) < 0)) {
       /* on error just don't print the header */
    }
 
@@ -1206,12 +1213,24 @@ spool_flatfile_read_object(lList **answer_list, const lDescr *descr,
          DEXIT;
          return NULL;
       }
-
       file_opened = true;
    }
 
    /* initialize scanner */
    token = spool_scanner_initialize(file);
+
+   if (token == SPFT_ERROR_NO_MEMORY) {
+      /* messages generated in spool_get_fields_to_spool */
+      spool_scanner_shutdown();
+      answer_list_add_sprintf(answer_list, STATUS_EDISK,
+                              ANSWER_QUALITY_ERROR, 
+                              MSG_GDI_OUTOFMEMORY);
+      if (file_opened) {
+         FCLOSE(file);
+      }
+      DEXIT;
+      return NULL;
+   }
 
    /* if no fields are passed, retrieve them from instructions */
    if (fields_in != NULL) {
@@ -1223,7 +1242,7 @@ spool_flatfile_read_object(lList **answer_list, const lDescr *descr,
          /* messages generated in spool_get_fields_to_spool */
          spool_scanner_shutdown();
          if (file_opened) {
-            fclose (file);
+            FCLOSE(file);
          }
          DEXIT;
          return NULL;
@@ -1240,7 +1259,7 @@ spool_flatfile_read_object(lList **answer_list, const lDescr *descr,
 
    /* if we opened the file, we also have to close it */
    if (file_opened) {
-      fclose(file);
+      FCLOSE(file);
    }
 
    /* if we created our own fields */
@@ -1250,6 +1269,9 @@ spool_flatfile_read_object(lList **answer_list, const lDescr *descr,
 
    DEXIT;
    return object;
+FCLOSE_ERROR:
+   DEXIT;
+   return NULL;
 }
 
 static lListElem *
@@ -1796,6 +1818,21 @@ spool_flatfile_read_list(lList **answer_list, const lDescr *descr,
    /* initialize scanner */
    token = spool_scanner_initialize(file);
 
+   if (token == SPFT_ERROR_NO_MEMORY) {
+      /* messages generated in spool_get_fields_to_spool */
+      spool_scanner_shutdown();
+
+      answer_list_add_sprintf(answer_list, STATUS_EDISK,
+                              ANSWER_QUALITY_ERROR, 
+                              MSG_GDI_OUTOFMEMORY);
+
+      if (file_opened) {
+         FCLOSE(file);
+      }
+      DEXIT;
+      return NULL;
+   }
+
    /* if no fields are passed, retrieve them from instructions */
    if (fields_in != NULL) {
       fields = fields_in;
@@ -1804,6 +1841,10 @@ spool_flatfile_read_list(lList **answer_list, const lDescr *descr,
                                             instr->spool_instr);
       if (my_fields == NULL) {
          /* messages generated in spool_get_fields_to_spool */
+         spool_scanner_shutdown();
+         if (file_opened) {
+            FCLOSE(file);
+         }
          DEXIT;
          return NULL;
       }
@@ -1814,10 +1855,11 @@ spool_flatfile_read_list(lList **answer_list, const lDescr *descr,
    list = _spool_flatfile_read_list(answer_list, descr, instr, 
                                     fields, fields_out, &token, NULL,
                                     parse_values);
+   spool_scanner_shutdown();
 
    /* if we opened the file, we also have to close it */
    if (file_opened) {
-      fclose(file);
+      FCLOSE(file);
    }
 
    /* if we created our own fields */
@@ -1827,6 +1869,9 @@ spool_flatfile_read_list(lList **answer_list, const lDescr *descr,
 
    DEXIT;
    return list;
+FCLOSE_ERROR:
+   DEXIT;
+   return NULL;
 }
 
 static lList *
@@ -1952,7 +1997,7 @@ FF_DEBUG("after parsing list");
 
    /* if no objects could be read, we need no list */
    if (lGetNumberOfElem(list) == 0) {
-      list = lFreeList(list);
+      lFreeList(&list);
    }
 
    return list;
@@ -2100,7 +2145,8 @@ static void spool_flatfile_add_line_breaks (dstring *buffer)
    sge_dstring_clear (buffer);
 
    str_buf[0] = '\0';
-   
+
+   /* Loop as long as the string is longer than the max length. */
    while (strlen (strp) > MAX_LINE_LENGTH - word) {
       /* Account for newlines */
       char *newlp = strchr (strp, '\n');
@@ -2143,15 +2189,11 @@ static void spool_flatfile_add_line_breaks (dstring *buffer)
             word++;
          }
          
-         indent_str = (char *)malloc (word * sizeof (char) + 4);
+         indent_str = (char *)malloc ((word + 4) * sizeof (char));
          indent_str[0] = ' ';
          indent_str[1] = '\\';
          indent_str[2] = '\n';
-
-         for (index = 0; index < word; index++) {
-            indent_str[index + 3] = ' ';
-         }
-
+         memset(indent_str + 3, ' ', word);
          indent_str[word + 3] = '\0';
       }
       
@@ -2166,21 +2208,26 @@ static void spool_flatfile_add_line_breaks (dstring *buffer)
       /* We have to account for the fact that on all lines after the first, the
        * line length is decreased by the indentation. */
       /* On the first line, we have to start looking at the end of the line and
-       * stop looking before we reach the delimiter before the second word. */
+       * stop looking before we reach the delimiter before the second word.  In
+       * both cases, we start two charcters from the "end" so that there's
+       * room for a space and a backslash. */
       if (first_line) {
-         for (index = MAX_LINE_LENGTH - 1; index > word; index--) {
-            if (isspace (strp[index]) || (strp[index] == ',')) {
+         for (index = MAX_LINE_LENGTH - 2; index > word; index--) {
+            if (isspace (strp[index]) || 
+                ((index < MAX_LINE_LENGTH - 2) && (strp[index] == ','))) {
                break;
             }
          }
       }
       /* On later lines, we start looking at the end of the line, adjusted for
        * the amount of space we will indent it, and we stop looking at the
-       * second character on the line since having the first character as a
+       * second character on the line, since having the first character as a
        * break point is useless. */
       else {
-         for (index = MAX_LINE_LENGTH - word - 1; index >= 1; index--) {
-            if (isspace (strp[index]) || (strp[index] == ',')) {
+         for (index = MAX_LINE_LENGTH - word - 2; index >= 1; index--) {
+            if (isspace (strp[index]) ||
+                ((index < MAX_LINE_LENGTH - word - 2) &&
+                 (strp[index] == ','))) {
                break;
             }
          }
@@ -2215,7 +2262,7 @@ static void spool_flatfile_add_line_breaks (dstring *buffer)
           * line length is decreased by the indentation. */
          /* On the first line, we start looking at the end of the line. */
          if (first_line) {
-            index = MAX_LINE_LENGTH;
+            index = MAX_LINE_LENGTH - 2;
 
             while ((index < MAX_STRING_SIZE - 1) && (strp[index] != '\0')) {
                if (isspace (strp[index]) || (strp[index] == ',') ||
@@ -2229,7 +2276,7 @@ static void spool_flatfile_add_line_breaks (dstring *buffer)
          /* On later lines, we start looking at the end of the line, adjusted for
           * the amount of space we will indent it. */
          else {
-            index = MAX_LINE_LENGTH - word;
+            index = MAX_LINE_LENGTH - word - 2;
 
             while ((index < MAX_STRING_SIZE - 1) && (strp[index] != '\0')) {
                if (isspace (strp[index]) || (strp[index] == ',') ||

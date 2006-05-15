@@ -994,7 +994,7 @@ spool_database_delete_id(lList **answer_list,
          lListElem *parent_ep = lGetElemStr(*id_list, SPM_key, parent_key);
          if (parent_ep != NULL) {
             if (key == NULL) {
-               lRemoveElem(*id_list, parent_ep);
+               lRemoveElem(*id_list, &parent_ep);
                ret = true;
             } else {
                if (lDelSubStr(parent_ep, SPM_key, key, SPM_sublist)) {
@@ -1006,7 +1006,7 @@ spool_database_delete_id(lList **answer_list,
          /* don't use lDelElemStr - we don't write back id_list! */
          lListElem *ep = lGetElemStr(*id_list, SPM_key, key);
          if (ep != NULL) {
-            lRemoveElem(*id_list, ep);
+            lRemoveElem(*id_list, &ep);
             ret = true;
          }
       }

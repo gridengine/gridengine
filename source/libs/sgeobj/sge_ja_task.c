@@ -48,9 +48,14 @@
 #include "sge_job.h"
 #include "sgeobj/sge_idL.h"
 #include "sgeobj/sge_strL.h"
+#include "sgeobj/sge_object.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_qinstance.h"
+#include "sgeobj/sge_utility.h"
 
 #include "sge_usageL.h"
 
+#include "msg_common.h"
 #include "msg_sgeobjlib.h"
 
 /****** sgeobj/ja_task/ja_task_search_pe_task()*********************************
@@ -115,7 +120,7 @@ void ja_task_list_print_to_string(const lList *ja_task_list,
    } 
    range_list_sort_uniq_compress(range_list, NULL); 
    range_list_print_to_string(range_list, range_string, false); 
-   range_list = lFreeList(range_list);
+   lFreeList(&range_list);
    DEXIT;
 }
 
@@ -158,7 +163,7 @@ lList* ja_task_list_split_group(lList **ja_task_list)
                         JAT_status, status, JAT_state, state,
                         JAT_hold, hold);
          lSplit(ja_task_list, &ret_list, NULL, where);
-         where = lFreeWhere(where);
+         lFreeWhere(&where);
       }
    }
    return ret_list;
@@ -353,7 +358,8 @@ int sge_parse_jobtasks( lList **ipp, lListElem **idp, const char *str_jobtask,
          task_id_range_list = lCopyList(lGetListName(arrayDefList), arrayDefList);
       }
       else {
-         lAddList(task_id_range_list, lCopyList("", arrayDefList));
+         lList *copy = lCopyList("", arrayDefList);
+         lAddList(task_id_range_list, &copy);
       }
    }
 
@@ -454,5 +460,237 @@ ja_task_message_trash_all_of_type_X(lListElem *this_elem, u_long32 type)
    ret = object_message_trash_all_of_type_X(this_elem, JAT_message_list, type);
    DEXIT;
    return ret;
+}
+
+/****** sge_ja_task/ja_task_verify() *******************************************
+*  NAME
+*     ja_task_verify() -- verify a ja_task object
+*
+*  SYNOPSIS
+*     bool 
+*     ja_task_verify(const lListElem *ja_task, lList **answer_list) 
+*
+*  FUNCTION
+*     Verify correctness of a ja_task object.
+*
+*  INPUTS
+*     const lListElem *ja_task - the ja_task to verify
+*     lList **answer_list      - answer list to pass back error messages
+*
+*  RESULT
+*     bool - true: everything ok, else false
+*
+*  NOTES
+*     MT-NOTE: ja_task_verify() is MT safe 
+*
+*  SEE ALSO
+*     sge_ja_task/ja_task_verify_execd_job()
+*******************************************************************************/
+bool 
+ja_task_verify(const lListElem *ja_task, lList **answer_list)
+{
+   bool ret = true;
+
+   DENTER(TOP_LAYER, "ja_task_verify");
+
+   ret = object_verify_ulong_not_null(ja_task, answer_list, JAT_task_number);
+
+   /* 
+    * TODO: JAT_status,
+    * TODO: JAT_start_time,
+    * TODO: JAT_end_time,
+    * TODO: JAT_hold,
+    * TODO: JAT_granted_pe,
+    * TODO: JAT_job_restarted,
+    * TODO: JAT_master_queue,
+    * TODO: JAT_state,
+    * TODO: JAT_pvm_ckpt_pid,
+
+    * TODO: JAT_pending_signal,
+    * TODO: JAT_pending_signal_delivery_time,
+    * TODO: JAT_pid,
+    * TODO: JAT_osjobid,
+    * TODO: JAT_usage_list,
+
+    * TODO: JAT_scaled_usage_list,
+    * TODO: JAT_reported_usage_list,
+    * TODO: JAT_fshare,
+    * TODO: JAT_tix,
+    * TODO: JAT_oticket,
+
+    * TODO: JAT_fticket,
+    * TODO: JAT_sticket,
+    * TODO: JAT_share,
+    * TODO: JAT_suitable,
+    * TODO: JAT_task_list,
+    * TODO: JAT_finished_task_list,
+
+    * TODO: JAT_previous_usage_list,
+
+    * TODO: JAT_pe_object,
+    * TODO: JAT_next_pe_task_id,
+    * TODO: JAT_stop_initiate_time,
+    * TODO: JAT_prio,
+    * TODO: JAT_ntix,
+
+    * TODO: JAT_message_list
+    */
+
+   DRETURN(ret);
+}
+
+/****** sge_ja_task/ja_task_verify_execd_job() *********************************
+*  NAME
+*     ja_task_verify_execd_job() -- verify a ja_task object for execd
+*
+*  SYNOPSIS
+*     bool 
+*     ja_task_verify_execd_job(const lListElem *ja_task, lList **answer_list) 
+*
+*  FUNCTION
+*     Verify a ja_task object that has been sent to execd.
+*
+*  INPUTS
+*     const lListElem *ja_task - the ja_task object to verify
+*     lList **answer_list      - answer list to pass back error messages
+*
+*  RESULT
+*     bool - true: everything ok, else false
+*
+*  NOTES
+*     MT-NOTE: ja_task_verify_execd_job() is MT safe 
+*
+*  SEE ALSO
+*     sge_ja_task/ja_task_verify()
+*******************************************************************************/
+bool 
+ja_task_verify_execd_job(const lListElem *ja_task, lList **answer_list)
+{
+   bool ret = true;
+
+   DENTER(TOP_LAYER, "ja_task_verify_execd_job");
+
+   ret = ja_task_verify(ja_task, answer_list);
+
+   if (ret) {
+      ret = ja_task_verify_granted_destin_identifier_list(lGetList(ja_task, JAT_granted_destin_identifier_list), answer_list);
+   }
+
+   DRETURN(ret);
+}
+
+/****** sge_ja_task/ja_task_verify_granted_destin_identifier_list() ************
+*  NAME
+*     ja_task_verify_granted_destin_identifier_list() -- verify granted destination identifier list
+*
+*  SYNOPSIS
+*     bool 
+*     ja_task_verify_granted_destin_identifier_list(const lList *gdil, 
+*                                                   lList **answer_list) 
+*
+*  FUNCTION
+*     Verify correctness of a granted destination identifier list being part 
+*     of a scheduled ja_task.
+*
+*  INPUTS
+*     const lList *gdil   - the list to verify
+*     lList **answer_list - answer list to pass back error messages
+*
+*  RESULT
+*     bool - true: everything ok, else false
+*
+*  NOTES
+*     MT-NOTE: ja_task_verify_granted_destin_identifier_list() is MT safe 
+*
+*  SEE ALSO
+*     sge_ja_task/ja_task_verify_granted_destin_identifier()
+*******************************************************************************/
+bool 
+ja_task_verify_granted_destin_identifier_list(const lList *gdil, lList **answer_list)
+{
+   bool ret = true;
+
+   DENTER(TOP_LAYER, "ja_task_verify_granted_destin_identifier_list");
+
+   if (gdil == NULL) {
+      answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR, 
+                              MSG_INVALID_GDIL);
+      ret = false;
+   }
+
+   if (ret) {
+      const lListElem *ep;
+
+      for_each (ep, gdil) {
+         ret = ja_task_verify_granted_destin_identifier(ep, answer_list);
+         if (!ret) {
+            break;
+         }
+      }
+   }
+
+   DRETURN(ret);
+}
+
+/****** sge_ja_task/ja_task_verify_granted_destin_identifier() *****************
+*  NAME
+*     ja_task_verify_granted_destin_identifier() -- verify a granted destination identifier
+*
+*  SYNOPSIS
+*     bool 
+*     ja_task_verify_granted_destin_identifier(const lListElem *ep, 
+*                                              lList **answer_list) 
+*
+*  FUNCTION
+*     Verify a single element of a granted destination identifier list
+*     (a granted queue with a certain number of slots).
+*
+*  INPUTS
+*     const lListElem *ep - the element to verify
+*     lList **answer_list - answer list to pass back error messages
+*
+*  RESULT
+*     bool - true: everything ok, else false
+*
+*  NOTES
+*     MT-NOTE: ja_task_verify_granted_destin_identifier() is MT safe 
+*
+*  SEE ALSO
+*     sge_ja_task/ja_task_verify_granted_destin_identifier_list()
+*******************************************************************************/
+bool 
+ja_task_verify_granted_destin_identifier(const lListElem *ep, lList **answer_list)
+{
+   bool ret = true;
+
+   DENTER(TOP_LAYER, "ja_task_verify_granted_destin_identifier");
+
+   if (ep == NULL) {
+      answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR, 
+                              MSG_NULLELEMENTPASSEDTO_S, SGE_FUNC);
+      ret = false;
+   }
+
+   if (ret) {
+      ret = qinstance_verify_full_name(answer_list, lGetString(ep, JG_qname));
+   }
+
+   if (ret) {
+      ret = verify_host_name(answer_list, lGetHost(ep, JG_qhostname));
+   }
+
+   if (ret) {
+      ret = object_verify_ulong_not_null(ep, answer_list, JG_slots);
+   }
+
+   if (ret) {
+      const lListElem *queue = lGetObject(ep, JG_queue);
+
+      if (queue != NULL) {
+         ret = qinstance_verify(queue, answer_list);
+      }
+   }
+
+   DRETURN(ret);
 }
 

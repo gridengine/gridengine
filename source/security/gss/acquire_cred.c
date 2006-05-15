@@ -55,9 +55,9 @@ usage(char *progname)
 {
    char *p;
    p = (NULL == (p = strrchr(progname,'/'))) ? progname : p+1;
-   fprintf(stderr,
-           MSG_GSS_ACQUIREX_USAGE_S 
-           MSG_GSS_ACQUIREX_s_OPT_USAGE , p);
+   fprintf(stderr, "%s\n", MSG_GSS_ACQUIREX_USAGE_S);
+   fprintf(stderr, MSG_GSS_ACQUIREX_s_OPT_USAGE , p);
+   fprintf(stderr, "\n");
    exit(1);
 }
 

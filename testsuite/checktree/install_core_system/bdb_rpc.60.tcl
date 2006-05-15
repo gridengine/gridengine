@@ -121,6 +121,7 @@ proc install_bdb_rpc {} {
       set RPC_INSTALL_RC_SCRIPT        [translate $bdb_host 0 1 0 [sge_macro DISTINST_RPC_INSTALL_RC_SCRIPT] ]
       set RPC_SERVER_COMPLETE          [translate $bdb_host 0 1 0 [sge_macro DISTINST_RPC_SERVER_COMPLETE] ]
       set HIT_RETURN_TO_CONTINUE       [translate $bdb_host 0 1 0 [sge_macro DISTINST_HIT_RETURN_TO_CONTINUE] ]
+      set INSTALL_SCRIPT               [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_INSTALL_SCRIPT] "*" ]
 
       cd "$ts_config(product_root)"
 
@@ -315,6 +316,18 @@ proc install_bdb_rpc {} {
                send -i $sp_id "$ANSWER_NO\n"
                continue;
             }
+
+            -i $sp_id $INSTALL_SCRIPT { 
+               puts $CHECK_OUTPUT "\n -->testsuite: sending >$ANSWER_NO<(12)"
+               if {$do_log_output == 1} {
+                    puts "press RETURN"
+                    set anykey [wait_for_enter 1]
+               }
+     
+               send -i $sp_id "$ANSWER_NO\n"
+               continue;
+            }
+
 
 
             -i $sp_id "Error:" {

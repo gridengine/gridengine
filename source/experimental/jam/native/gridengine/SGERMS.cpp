@@ -63,13 +63,13 @@ SGERMS::~SGERMS()
   if(queues)
     lFreeList(queues);
   if(queue_elem)
-    lFreeElem(queue_elem);
+    lFreeElem(&queue_elem);
   if(answer)
     lFreeList(answer);
   if(what)
     lFreeWhat(what);
   if(where)
-    lFreeWhere(where);
+    lFreeWhere(&where);
 }
 
 //================== public functions =============

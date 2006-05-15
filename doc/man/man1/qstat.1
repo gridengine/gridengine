@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: qstat.1,v $     Last Update: $Date: 2004/11/12 15:40:03 $     Revision: $Revision: 1.27 $
+.\" $RCSfile: qstat.1,v $     Last Update: $Date: 2005/11/24 14:50:35 $     Revision: $Revision: 1.28.2.2 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QSTAT 1 "$Date: 2004/11/12 15:40:03 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH QSTAT 1 "$Date: 2005/11/24 14:50:35 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 qstat \- show the status of xxQS_NAMExx jobs and queues
 .\"
@@ -156,7 +156,7 @@ Prints either for all pending jobs or the jobs contained in job_list
 various information. The job_list can contain job_ids, job_names, or 
 patterns. 
 .sp
-For jobs in error state the error reason is displayed. For jobs that
+For jobs in E(rror) state the error reason is displayed. For jobs that
 could not be dispatched during in the last scheduling interval the 
 obstacles are shown, if 'schedd_job_info' in 
 .M sched_conf 5 
@@ -336,9 +336,8 @@ the name of the job.
 .IP "\(bu" 3n
 the user name of the job owner.
 .IP "\(bu" 3n
-the status of the job \- one of d(eletion), t(ransfering),
-r(unning), R(estarted), s(uspended), S(uspended), T(hreshold), w(aiting) or
-h(old).
+the status of the job \- one of d(eletion), E(rror), h(old), r(unning),
+R(estarted), s(uspended), S(uspended), t(ransfering), T(hreshold) or w(aiting).
 .sp 1
 The state d(eletion) indicates that a 
 .M qdel 1 
@@ -372,6 +371,11 @@ to which job dependencies have been assigned to the job via the
 .M qsub 1
 or
 .M qalter 1 .
+.sp 1
+The state E(rror) appears for pending jobs that couldn't be started due to 
+job properties. The reason for the job error is shown by the 
+.M qstat 1
+\fB\-j job_list\fP option.
 .IP "\(bu" 3n
 the submission or start time and date of the job.
 .IP "\(bu" 3n

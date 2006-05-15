@@ -35,10 +35,10 @@
 
 #ifdef KERBEROS
 	#include "krb_lib.h"
-	#define send_message(a,b,c,d,e,f,g,h,i) \
-		krb_send_message(a,b,c,d,e,f,g,h,i)
-	#define receive_message(a,b,c,d,e,f,g,i) \
-		krb_receive_message(a,b,c,d,e,f,g,i)
+	#define send_message(a,b,c,d,e,f,g,h) \
+		krb_send_message(a,b,c,d,e,f,g,h)
+	#define receive_message(a,b,c,d,e,f,g) \
+		krb_receive_message(a,b,c,d,e,f,g)
 #endif
 
 #endif /* __KRB_SUBST_H */

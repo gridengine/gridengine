@@ -55,6 +55,7 @@
 #include "sge_range.h"
 #include "sge_qinstance.h"
 #include "sge_str.h"
+#include "sge_string.h"
 #include "qmon_quarks.h"
 #include "qmon_widgets.h"
 #include "qmon_rmon.h"
@@ -446,9 +447,10 @@ Cardinal size
          str2 = (StringConst)lGetHost(ep, MR_host);
          if (str1) {
             if (!str2)
-               strncpy(buf, str1, BUFSIZ);
+               sge_strlcpy(buf, str1, BUFSIZ);
+
             else
-               sprintf(buf, "%s@%s", str1, str2);
+               snprintf(buf, BUFSIZ, "%s@%s", str1, str2);
             str_table[i] = XtNewString(buf);
          }
          else
@@ -727,7 +729,7 @@ Cardinal size
                                       0, 0, INF_ALLOWED);
          if (alp) {
             qmonMessageShow(w, True, (StringConst)lGetString(lFirst(alp), AN_text));
-            alp =lFreeList(alp);
+            lFreeList(&alp);
          }
       }
       if (type == QmonQTRN_Type) {
@@ -735,7 +737,7 @@ Cardinal size
                                       0, 1, INF_NOT_ALLOWED);
          if (alp) {
             qmonMessageShow(w, True, (StringConst)lGetString(lFirst(alp), AN_text));
-            alp =lFreeList(alp);
+            lFreeList(&alp);
          }
       }
       if (type == QmonQPN_Type) {
@@ -754,7 +756,7 @@ Cardinal size
          for_each (ep, sl) {
             lAddElemStr(&ret_list, JRE_job_name, lGetString(ep, ST_name), JRE_Type);
          }
-         sl = lFreeList(sl);
+         lFreeList(&sl);
       }
    }
    

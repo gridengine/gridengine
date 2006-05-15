@@ -44,6 +44,8 @@
 #include "sge_stdlib.h"
 #include "sge_string.h"
 #include "sge_centry.h"
+#include "sge_answer.h"
+#include "msg_sgeobjlib.h"
 
 /****** sgeobj/var/-VariableList **********************************************
 *  NAME
@@ -262,13 +264,13 @@ void var_list_set_sharedlib_path(lList **varl)
                         strlen("/lib/") + strlen(sge_get_arch()) + 1);
    sprintf(sge_sharedlib_path, "%s/lib/%s", sge_root, sge_get_arch());
 
-   /* if allready in environment: extend by SGE sharedlib path, else set */
+   /* if already in environment: extend by SGE sharedlib path, else set */
    sharedlib_elem = lGetElemStr(*varl, VA_variable, sharedlib_path_name);
    if(sharedlib_elem != NULL) {
       const char *old_value = lGetString(sharedlib_elem, VA_value);
 
       if(old_value && strlen(old_value) > 0) {
-         DPRINTF(("sharedlib path %s allready set:\n", sharedlib_path_name));
+         DPRINTF(("sharedlib path %s already set:\n", sharedlib_path_name));
          
          sharedlib_path = sge_malloc(strlen(old_value) + 1 + 
                           strlen(sge_sharedlib_path) + 1);
@@ -477,7 +479,7 @@ void var_list_copy_prefix_vars_undef(lList **varl,
    if (*varl == NULL) {
       *varl = lCreateList("", VA_Type);
    }
-   lAddList(*varl, var_list2); 
+   lAddList(*varl, &var_list2);
    DEXIT;
 }
 
@@ -613,7 +615,7 @@ void var_list_remove_prefix_vars(lList **varl, const char *prefix)
       next_var_elem = lNext(var_elem);
 
       if (!strncmp(prefix_name, prefix, prefix_len)) {
-         lRemoveElem(*varl, var_elem);
+         lRemoveElem(*varl, &var_elem);
       } 
    }
    DEXIT;
@@ -702,7 +704,7 @@ int var_list_add_as_set(lList *lp0, lList *lp1)
    const lDescr *dp0, *dp1;
    const char *name, *value;
 
-   DENTER(CULL_LAYER, "lReplaceList");
+   DENTER(CULL_LAYER, "var_list_add_as_set");
 
    if (!lp1 || !lp0) {
       DEXIT;
@@ -733,7 +735,7 @@ int var_list_add_as_set(lList *lp0, lList *lp1)
        * value of the element from the second list. */
       if (ep0 != NULL) {
          value = lGetString (ep1, VA_value);         
-         lSetString (ep0, VA_value, strdup (value));
+         lSetString (ep0, VA_value, value);
       }
       /* If there is no matching element, add the element from the second list
        * to the first list. */
@@ -746,8 +748,53 @@ int var_list_add_as_set(lList *lp0, lList *lp1)
    }
 
    /* The second list is no longer needed. */
-   lFreeList(lp1);
+   lFreeList(&lp1);
 
    DEXIT;
    return 0;
 }
+
+/****** sge_var/var_list_verify() **********************************************
+*  NAME
+*     var_list_verify() -- verify contents of a variable list
+*
+*  SYNOPSIS
+*     bool 
+*     var_list_verify(const lList *lp, lList **answer_list) 
+*
+*  FUNCTION
+*     Verifies the contents of a variable list.
+*     Variable names may not be NULL or empty strings.
+*
+*  INPUTS
+*     const lList *lp     - the list to verify
+*     lList **answer_list - answer list to pass back error messages
+*
+*  RESULT
+*     bool - true on success, 
+*            false in case of errors, error message in answer_list
+*
+*  NOTES
+*     MT-NOTE: var_list_verify() is MT safe 
+*******************************************************************************/
+bool 
+var_list_verify(const lList *lp, lList **answer_list)
+{
+   bool ret = true;
+   lListElem *ep;
+
+   for_each (ep, lp) {
+      const char *variable = lGetString(ep, VA_variable);
+      if (variable == NULL || variable[0] == '\0') {
+         answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR, 
+                                 MSG_OBJECT_VARIABLENAME_NOT_EMPTY);
+         ret = false;
+         break;
+      }
+   }
+
+   /* TODO: further checks, e.g. length, format strings */
+
+   return ret;
+}
+

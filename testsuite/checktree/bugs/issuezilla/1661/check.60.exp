@@ -1,0 +1,217 @@
+#!/vol2/TCL_TK/glinux/bin/expect
+#___INFO__MARK_BEGIN__
+##########################################################################
+#
+#  The Contents of this file are made available subject to the terms of
+#  the Sun Industry Standards Source License Version 1.2
+#
+#  Sun Microsystems Inc., March, 2001
+#
+#
+#  Sun Industry Standards Source License Version 1.2
+#  =================================================
+#  The contents of this file are subject to the Sun Industry Standards
+#  Source License Version 1.2 (the "License"); You may not use this file
+#  except in compliance with the License. You may obtain a copy of the
+#  License at http://gridengine.sunsource.net/Gridengine_SISSL_license.html
+#
+#  Software provided under this License is provided on an "AS IS" basis,
+#  WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING,
+#  WITHOUT LIMITATION, WARRANTIES THAT THE SOFTWARE IS FREE OF DEFECTS,
+#  MERCHANTABLE, FIT FOR A PARTICULAR PURPOSE, OR NON-INFRINGING.
+#  See the License for the specific provisions governing your rights and
+#  obligations concerning the Software.
+#
+#  The Initial Developer of the Original Code is: Sun Microsystems, Inc.
+#
+#  Copyright: 2001 by Sun Microsystems, Inc.
+#
+#  All Rights Reserved.
+#
+##########################################################################
+#___INFO__MARK_END__
+
+
+
+# Template for testsuite check
+# 
+# 1) replace the following symbols by your test specific names
+#    o issue_1661   name of your test (e.g. consumable_test)
+#    o 
+#
+# 2) set check_root_access_needs to "yes" or "no" (if you need root access)
+#
+# 3) set check_category
+#
+# 4) set check_highest_level ( e.g.: runlevel "short" has reserved values from 0 to 99 ) 
+#
+# 5) set check_needs (e.g.: "init_core_system" this means that this test is not 
+#    started without succesfull run of "init_core_system" test
+# 6) implement the default functions (e.g.: issue_1661_init_level)
+#
+# 7) you can add any function name to check_functions (all function (no paramters allowed) are started 
+#    within each runlevel number
+#    PLEASE finish each check_function with a set_error() function call
+#    PLEASE use add_proc_error() to submit errors
+#    add_proc_error() is used in many testsuite standard functions, so not every 
+#    function call must check the return state.
+# 
+
+
+
+# define global variable in this namespace
+global check_name 
+global check_category 
+global check_description 
+global check_needs
+global check_functions 
+global check_errno 
+global check_errstr 
+global check_highest_level
+global check_init_level_procedure
+global check_root_access_needs
+global env
+
+#set check_root_access_needs "yes"
+
+# define a level initialization procedure:
+set check_init_level_procedure "issue_1661_init_level"
+
+# define test's name and run level descriptions
+set check_name            "issue_1661"
+set check_category        "COMPATIBILITY SYSTEM VERIFIED"
+set check_highest_level   8
+set check_description(0)  "Test IP string host name resolving"
+set check_description(1)  ""
+set check_description(2)  ""
+set check_description(3)  ""
+set check_description(4)  ""
+set check_description(5)  ""
+set check_description(6)  ""
+set check_description(7)  ""
+set check_description(8)  ""
+
+
+
+
+
+
+
+# define test's dependencies
+set check_needs           "init_core_system" 
+
+# setup and cleanup functions
+set check_setup_function issue_1661_setup
+set check_cleanup_function issue_1661_cleanup
+
+
+
+# define test's procedure order
+set check_functions ""
+lappend check_functions "issue_1661_test1"
+#lappend check_functions "issue_1661_test2"
+#lappend check_functions "issue_1661_test3"
+
+
+global issue_1661_test_hosts
+global issue_1661_saved_slot_count
+
+proc issue_1661_init_level {} {
+   global CHECK_ACT_LEVEL
+
+   switch -- $CHECK_ACT_LEVEL {
+      "0" { 
+         return 0
+      } 
+      "1" {
+         return -1
+      }
+      "2" {
+         return -1
+      }
+      "3" {
+         return -1
+      }
+      "4" {
+         return -1
+      }
+      "5" {
+         return -1
+      }
+      "6" {
+         return -1
+      }
+      "7" {
+         return -1
+      }
+      "8" {
+         return -1
+      }
+   } 
+
+   return -1  ;# no other level 
+}
+
+
+
+
+# -------- local test procedures: initialization------------------------------
+
+
+proc issue_1661_setup  {} {
+   global CHECK_OUTPUT ts_config
+
+   set_error 0 "ok"
+}
+
+proc issue_1661_cleanup  {} {
+   global CHECK_OUTPUT ts_config
+
+#   delete_all_jobs
+#   wait_for_end_of_all_jobs 60
+
+   set_error 0 "ok"
+}
+
+
+proc issue_1661_test1 {} {
+   global check_description CHECK_ACT_LEVEL
+   global CHECK_OUTPUT ts_config CHECK_USER
+
+
+   puts $CHECK_OUTPUT "$check_description($CHECK_ACT_LEVEL):"
+
+   set arch [resolve_arch $ts_config(master_host)]
+   set gethostname_binary $ts_config(product_root)/utilbin/${arch}/gethostname
+   set gethostbyname_binary $ts_config(product_root)/utilbin/${arch}/gethostbyname
+   
+
+   set output [start_remote_prog $ts_config(master_host) $CHECK_USER $gethostname_binary ""]
+   set line [split $output "\n"]
+   foreach ln $line {
+      if { [string match "*Address*" $ln] } {
+         set ip_address [split $ln ":"]
+         set ip_address [lindex $ip_address 1]
+         set ip_address [string trim $ip_address]
+         puts $CHECK_OUTPUT "host \"$ts_config(master_host)\"'s IP: \"$ip_address\""
+      }
+   }
+   
+   set name_resolve_name [start_remote_prog $ts_config(master_host) $CHECK_USER $gethostbyname_binary "-aname $ts_config(master_host)"]
+   set name_resolve_name [string trim $name_resolve_name]
+   puts $CHECK_OUTPUT "resolving of \"$ts_config(master_host)\" returns \"$name_resolve_name\""
+
+   set ip_resolve_name [start_remote_prog $ts_config(master_host) $CHECK_USER $gethostbyname_binary "-aname $ip_address"]
+   set ip_resolve_name [string trim $ip_resolve_name]
+   puts $CHECK_OUTPUT "resolving of \"$ip_address\" returns \"$ip_resolve_name\""
+
+
+   if { [string compare $ip_resolve_name $name_resolve_name] != 0 } {
+      add_proc_error "issue_1661_test1" -1 "ip address \"$ip_address\" not resolved to host name \"$name_resolve_name\"\nissue 1661 is present"
+   }
+
+
+   set_error 0 "ok"
+}
+
+

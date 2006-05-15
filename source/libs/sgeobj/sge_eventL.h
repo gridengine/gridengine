@@ -96,7 +96,7 @@ enum {
    EV_flush_delay,           /* flush delay paramter */
    /* je kleiner EV_flush_delay eines Event client
       desto unmittelbarer das Drosseln des Event-flushens */
-   EV_subscribed,            /* a list of subscriped events */
+   EV_subscribed,            /* a list of subscribed events */
    
    EV_changed,               /* identifies changes in the subscription list */
    EV_busy_handling,         /* how to handle busy-states */

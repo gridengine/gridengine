@@ -296,8 +296,17 @@ proc get_requestable_queue { queue host } {
    return [get_queue_instance $queue $host]
 }
 
-# in 5.3 we don't have cluster queues - use the queue instance for all 
-# operations
+# queue instance has the form <qname>_<hostname>.
+# we assume there are no underscores in hostname.
 proc get_cluster_queue {queue_instance} {
-   return $queue_instance
+   set cqueue $queue_instance
+
+   set pos [string last "_" $queue_instance]
+   if {$pos > 0} {
+      set cqueue [string range $queue_instance 0 [expr $pos -1]]
+   }
+
+   puts $CHECK_OUTPUT "queue instance $queue_instance is cluster queue $cqueue"
+
+   return $cqueue
 }

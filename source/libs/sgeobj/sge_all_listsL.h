@@ -191,8 +191,6 @@ extern "C" {
       {USR_LOWERBOUND, USRS, USRN},     /* scheduler access tree: user */
       {JRL_LOWERBOUND, JRLS, JRLN},     /* scheduler access tree: job
                                          * reference */
-
-      /* former ptf_nmv entries */
       {JL_LOWERBOUND, JLS, JLN},        /* ptf job list */
       {JO_LOWERBOUND, JOS, JON},        /* ptf O.S. job list */
 
@@ -202,6 +200,10 @@ extern "C" {
       {CU_LOWERBOUND, CUS, CUN},        /* usermap entry list for
                                          * administrator mapping */
       {LS_LOWERBOUND, LSS, LSN},        /* load sensor list */
+
+      {RU_LOWERBOUND, RUS, RUN},        /* user unknown list */
+      {FES_LOWERBOUND, FESS, FESN},
+      
       {SU_LOWERBOUND, SUS, SUN},        /* submit user */
       {SEC_LOWERBOUND, SecurityS, SecurityN},   /* Certificate security */
 
@@ -220,6 +222,7 @@ extern "C" {
       {ATIME_LOWERBOUND, ATIMES, ATIMEN},       /* CQ time limit sublist */
       {AMEM_LOWERBOUND, AMEMS, AMEMN},          /* CQ memory limit sublist */
       {AINTER_LOWERBOUND, AINTERS, AINTERN},    /* CQ interval sublist */
+      {ASTRING_LOWERBOUND, ASTRINGS, ASTRINGN},
       {ASTRLIST_LOWERBOUND, ASTRLISTS, ASTRLISTN}, /* CQ ST_Type-list sublist */
       {AUSRLIST_LOWERBOUND, AUSRLISTS, AUSRLISTN}, /* CQ US_Type-list sublist */
       {APRJLIST_LOWERBOUND, APRJLISTS, APRJLISTN}, /* CQ UP_Type-list sublist */
@@ -274,7 +277,6 @@ extern "C" {
 #endif
 
    extern lNameSpace nmv[];
-   extern lNameSpace ptf_nmv[];
 
 #ifdef  __cplusplus
 }

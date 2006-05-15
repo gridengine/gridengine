@@ -65,6 +65,7 @@
 #include "qmon_message.h"
 #include "sge_bitfield.h"
 #include "sge_qinstance_state.h"
+#include "sge_string.h"
 
 /*-------------------------------------------------------------------------*/
 /* Prototypes */
@@ -113,7 +114,7 @@ void qmonPopupQCU(Widget w, XtPointer cld, XtPointer cad)
    qmonMirrorMultiAnswer(PE_T | CENTRY_T,  &alp);
    if (alp) {
       qmonMessageBox(w, alp, 0);
-      alp = lFreeList(alp);
+      lFreeList(&alp);
       DEXIT;
       return;
    }
@@ -199,21 +200,21 @@ static void okCB(Widget w, XtPointer cld, XtPointer cad)
    ** pe filter
    */
    lp = XmStringToCull(pe_filter_sp, ST_Type, ST_name, ALL_ITEMS);
-   queue_filter_pe = lFreeList(queue_filter_pe);
+   lFreeList(&queue_filter_pe);
    queue_filter_pe = lp;
    
    /*
    ** user filter
    */
    lp = XmStringToCull(misc_filter_user_sp, ST_Type, ST_name, ALL_ITEMS);
-   queue_filter_user = lFreeList(queue_filter_user);
+   lFreeList(&queue_filter_user);
    queue_filter_user = lp;
 
    /*
    ** q wildcard filter
    */
    lp = XmStringToCull(misc_filter_q_sp, QR_Type, QR_name, ALL_ITEMS);
-   queue_filter_q = lFreeList(queue_filter_q);
+   lFreeList(&queue_filter_q);
    queue_filter_q = lp;
    
    for (i=0; i<sizeof(queue_filter_state); i++) {
@@ -276,7 +277,7 @@ static void saveCB(Widget w, XtPointer cld, XtPointer cad)
 
    qmonMessageBox(w, alp, 0);
 
-   alp = lFreeList(alp);
+   lFreeList(&alp);
 
    DEXIT;
 }
@@ -378,7 +379,7 @@ static void qmonResFilterClear(Widget w, XtPointer cld, XtPointer cad)
 
    DENTER(GUI_LAYER, "qmonResFilterClear");
 
-   queue_filter_resources = lFreeList(queue_filter_resources);
+   lFreeList(&queue_filter_resources);
    qmonRequestDraw(r_filter_sr, queue_filter_resources, 1);
    
    DEXIT;
@@ -412,7 +413,7 @@ static void qmonResFilterSet(Widget w, XtPointer cld, XtPointer cad)
    qmonRequestDraw(r_filter_ar, arl, 0);
    qmonRequestDraw(r_filter_sr, queue_filter_resources, 1);
 
-   arl = lFreeList(arl);
+   lFreeList(&arl);
 
    DEXIT;
 }
@@ -462,10 +463,7 @@ static void qmonResFilterEditResource(Widget w, XtPointer cld, XtPointer cad)
 
    type = lGetUlong(fill_in_request, CE_valtype);
    strval = lGetString(fill_in_request, CE_stringval);
-   if (strval)
-      strncpy(stringval, strval, CL_MAXHOSTLEN-1);
-   else
-      strcpy(stringval, "");
+   sge_strlcpy(stringval, strval, CL_MAXHOSTLEN);
 
    status = qmonRequestInput(w, type, cbs->element->string[0], 
                               stringval, sizeof(stringval));
@@ -514,9 +512,10 @@ static void qmonResFilterRemoveResource(Widget w, XtPointer cld, XtPointer cad)
       }       
             
       if (found) {
-         lRemoveElem(queue_filter_resources, dep);
-         if (lGetNumberOfElem(queue_filter_resources) == 0)
-            queue_filter_resources = lFreeList(queue_filter_resources);
+         lRemoveElem(queue_filter_resources, &dep);
+         if (lGetNumberOfElem(queue_filter_resources) == 0) {
+            lFreeList(&queue_filter_resources);
+         }
          qmonRequestDraw(r_filter_sr, queue_filter_resources, 1);
       }
    }

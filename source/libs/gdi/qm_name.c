@@ -35,6 +35,7 @@
 #include <errno.h>
 
 #include "sge_log.h"
+#include "sge_stdio.h"
 #include "sgermon.h"
 #include "basis_types.h"
 #include "qm_name.h"
@@ -74,7 +75,7 @@ int read_master_file
       return NULL;
    }
 
-   DPRINTF(("got qmaster host \"%s\"\n", cached_master_name));
+   DPRINTF(("(re-)reading act_qmaster file. Got master host \"%s\"\n", cached_master_name));
    DEXIT;
    return cached_master_name;
 }
@@ -142,7 +143,7 @@ char *err_str
    if (len == 0) {
       if (err_str)
          sprintf(err_str, MSG_GDI_MASTERHOSTNAMEHASZEROLENGTH_S , master_file);
-      fclose(fp);
+      FCLOSE(fp);
       DEXIT;
       return -1;
    }   
@@ -151,15 +152,19 @@ char *err_str
       if (err_str)
          sprintf(err_str, MSG_GDI_MASTERHOSTNAMEEXCEEDSCHARS_SI , 
                  master_file, (int) CL_MAXHOSTLEN);
-      fclose(fp);
+         sprintf(err_str, "\n");
+      FCLOSE(fp);
       DEXIT;
       return -1;
    }
 
-   fclose(fp);
+   FCLOSE(fp);
    strcpy(master_host, first);
    DEXIT;
    return 0;
+FCLOSE_ERROR:
+   DEXIT;
+   return -1;
 }
 
 /*********************************************************************
@@ -189,10 +194,12 @@ char *err_str
       if (err_str)
          sprintf(err_str, MSG_GDI_WRITEMASTERHOSTNAMEFAILED_S , 
                  master_file);
-      fclose(fp);
+      FCLOSE(fp);
       return -1;
    } 
 
    fclose(fp);
    return 0;
+FCLOSE_ERROR:
+   return -1;
 }

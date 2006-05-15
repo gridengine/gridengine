@@ -242,13 +242,14 @@ int user        /* =1 user, =0 project */
    }
 
    if (fname) {
-      fclose(fp);
+      FCLOSE(fp);
    }
 
    DEXIT;
    return 0;
 
 FPRINTF_ERROR:
+FCLOSE_ERROR:
    answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR); 
    DEXIT;
    return -1;   
@@ -392,7 +393,7 @@ int parsing_type
                }
 
                if (ssclp)
-                  lFreeList(ssclp);
+                  lFreeList(&ssclp);
 
                lSetList(cp, CF_sublist, NULL);  /* frees old list */
 
@@ -555,7 +556,7 @@ int main(int argc, char *argv[])
    if (write_userprj(NULL, ep, "/sge_home/andreas/andreas", NULL, 1, 1))
       perror("failed writing user object\n");
 
-   lFreeElem(ep);
+   lFreeElem(&ep);
 
    if (!(ep = read_userprj("/sge_home/andreas/andreas", 1, &alp)))
       fprintf(stderr, "failed reading user object: %s\n", 

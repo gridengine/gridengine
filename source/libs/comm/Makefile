@@ -40,17 +40,19 @@ DEPEND = $(SOURCE)/3rdparty/sge_depend/$(COMPILE_ARCH)/sge_depend -l -S -Y $(CFL
 ##########################################################################
 
 ###############################################################################
-include $(SOURCE)/libs/comm/lists/Makefile
+include $(SDIR)/libs/comm/lists/Makefile
+include $(SDIR)/libs/comm/examples/Makefile
 ###############################################################################
 
 COMMLIB = libcomm$(LIBEXT)
-COMMLIB_DIR = $(SOURCE)/libs/comm
+COMMLIB_DIR = $(SDIR)/libs/comm
 COMMLIB_SRC = \
          cl_tcp_framework.c \
          cl_ssl_framework.c \
          cl_communication.c \
          cl_xml_parsing.c \
          cl_connection_list.c \
+         cl_app_message_queue.c \
          cl_message_list.c \
          cl_host_list.c \
          cl_host_alias_list.c \
@@ -75,7 +77,9 @@ COMMLIB_TEST_SRC = \
          test_virtual_gdi_client.c \
          test_debug_client.c \
          test_status_info.c \
-         test_issues.c
+         test_issues.c \
+         test_general.c \
+         test_thread_throughput.c
 
 COMMLIB_TEST_OBJS = $(COMMLIB_TEST_SRC:.c=.o)
 
@@ -85,16 +89,16 @@ COMMLIBS = $(COMMLIB) $(COMMLISTSLIB)
 ###############################################################################
 # global rules: all, clean, depend, messages
 ###############################################################################
-comm_all: commlib commlists_all test_cl_tcp_framework test_cl_commlib test_cl_commlib_client \
+comm_all: commlib commlists_all commexamples_all test_cl_tcp_framework test_cl_commlib test_cl_commlib_client \
      test_cl_hostname_list test_cl_hostalias_list test_multithread_io test_status_info \
      test_server_connection test_cl_endpoint_list test_virtual_qmaster test_virtual_event_client \
-     test_virtual_gdi_client test_debug_client test_issues
+     test_virtual_gdi_client test_debug_client test_general test_issues test_thread_throughput
 
 depend: commlib_depend commlistslib_depend
 
 messages: commlib_messages commlistslib_messages
 
-clean: commlib_clean
+clean: commlib_clean commexamples_clean commlistslib_clean
 
 commlib: $(COMMLIB) $(COMMLISTSLIB)
 
@@ -103,7 +107,7 @@ commlib_clean: commlistslib_clean
       test_cl_tcp_framework test_cl_commlib_client test_cl_commlib test_cl_hostname_list \
       test_cl_hostalias_list test_multithread_io test_status_info test_server_connection \
       test_cl_endpoint_list test_virtual_qmaster test_virtual_event_client \
-      test_virtual_gdi_client test_debug_client test_issues
+      test_virtual_gdi_client test_debug_client test_general test_issues test_thread_throughput
 
 commlib_depend: commlistslib_depend
 		$(DEPEND) -f$(COMMLIB_DIR)/commlib_dependencies $(COMMLIB_DIR)/*.c
@@ -143,6 +147,8 @@ cl_xml_parsing.o: $(COMMLIB_DIR)/cl_xml_parsing.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(COMMLIB_DIR)/cl_xml_parsing.c
 cl_connection_list.o: $(COMMLIB_DIR)/cl_connection_list.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(COMMLIB_DIR)/cl_connection_list.c
+cl_app_message_queue.o: $(COMMLIB_DIR)/cl_app_message_queue.c 
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(COMMLIB_DIR)/cl_app_message_queue.c
 cl_message_list.o: $(COMMLIB_DIR)/cl_message_list.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(COMMLIB_DIR)/cl_message_list.c
 cl_host_list.o: $(COMMLIB_DIR)/cl_host_list.c 
@@ -160,48 +166,54 @@ cl_commlib.o: $(COMMLIB_DIR)/cl_commlib.c
 
 #---------------------------------------------------------------------
 # test programs
-test_cl_tcp_framework:	test_cl_tcp_framework.o $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB)  $(RMONLIB)
-	$(CC) -o test_cl_tcp_framework $(LFLAGS) test_cl_tcp_framework.o $(SECLIB) $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB) $(DLLIB) $(LIBS) 
+test_cl_tcp_framework:	test_cl_tcp_framework.o $(COMMLIB) $(COMMLISTSLIB) $(WINGRIDLIB_DEP) $(UTILIB) $(LCKLIB)  $(RMONLIB)
+	$(CC) -o test_cl_tcp_framework $(LFLAGS) test_cl_tcp_framework.o $(SECLIB) $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(WINGRIDLIB) $(LCKLIB) $(RMONLIB) $(DLLIB) $(LIBS) 
 
-test_cl_commlib: test_cl_commlib.o $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB)
-	$(CC) -o test_cl_commlib $(LFLAGS) test_cl_commlib.o $(SECLIB) $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB) $(DLLIB) $(LIBS)
+test_cl_commlib: test_cl_commlib.o $(COMMLIB) $(COMMLISTSLIB) $(WINGRIDLIB_DEP) $(UTILIB) $(LCKLIB) $(RMONLIB)
+	$(CC) -o test_cl_commlib $(LFLAGS) test_cl_commlib.o $(SECLIB) $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(WINGRIDLIB) $(LCKLIB) $(RMONLIB) $(DLLIB) $(LIBS)
 
-test_server_connection: test_server_connection.o $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB)
-	$(CC) -o test_server_connection $(LFLAGS) test_server_connection.o $(SECLIB) $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB) $(DLLIB) $(LIBS)
+test_server_connection: test_server_connection.o $(COMMLIB) $(COMMLISTSLIB) $(WINGRIDLIB_DEP) $(UTILIB) $(LCKLIB) $(RMONLIB)
+	$(CC) -o test_server_connection $(LFLAGS) test_server_connection.o $(SECLIB) $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(WINGRIDLIB) $(LCKLIB) $(RMONLIB) $(DLLIB) $(LIBS)
 
-test_cl_commlib_client: test_cl_commlib_client.o $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB)
-	$(CC) -o test_cl_commlib_client $(LFLAGS) test_cl_commlib_client.o $(SECLIB) $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB) $(DLLIB) $(LIBS)
+test_cl_commlib_client: test_cl_commlib_client.o $(COMMLIB) $(COMMLISTSLIB) $(WINGRIDLIB_DEP) $(UTILIB) $(LCKLIB) $(RMONLIB)
+	$(CC) -o test_cl_commlib_client $(LFLAGS) test_cl_commlib_client.o $(SECLIB) $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(WINGRIDLIB) $(LCKLIB) $(RMONLIB) $(DLLIB) $(LIBS)
 
-test_cl_hostname_list: test_cl_hostname_list.o $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB)
-	$(CC) -o test_cl_hostname_list $(LFLAGS) test_cl_hostname_list.o $(SECLIB) $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB) $(DLLIB) $(LIBS)
+test_cl_hostname_list: test_cl_hostname_list.o $(COMMLIB) $(COMMLISTSLIB) $(WINGRIDLIB_DEP) $(UTILIB) $(LCKLIB) $(RMONLIB)
+	$(CC) -o test_cl_hostname_list $(LFLAGS) test_cl_hostname_list.o $(SECLIB) $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(WINGRIDLIB) $(LCKLIB) $(RMONLIB) $(DLLIB) $(LIBS)
 
-test_cl_endpoint_list: test_cl_endpoint_list.o $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB)
-	$(CC) -o test_cl_endpoint_list $(LFLAGS) test_cl_endpoint_list.o $(SECLIB) $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB) $(DLLIB) $(LIBS)
+test_cl_endpoint_list: test_cl_endpoint_list.o $(COMMLIB) $(COMMLISTSLIB) $(WINGRIDLIB_DEP) $(UTILIB) $(LCKLIB) $(RMONLIB)
+	$(CC) -o test_cl_endpoint_list $(LFLAGS) test_cl_endpoint_list.o $(SECLIB) $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(WINGRIDLIB) $(LCKLIB) $(RMONLIB) $(DLLIB) $(LIBS)
 
-test_cl_hostalias_list: test_cl_hostalias_list.o $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB) 
-	$(CC) -o test_cl_hostalias_list $(LFLAGS) test_cl_hostalias_list.o $(SECLIB) $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB) $(DLLIB) $(LIBS)
+test_cl_hostalias_list: test_cl_hostalias_list.o $(COMMLIB) $(COMMLISTSLIB) $(WINGRIDLIB_DEP) $(UTILIB) $(LCKLIB) $(RMONLIB) 
+	$(CC) -o test_cl_hostalias_list $(LFLAGS) test_cl_hostalias_list.o $(SECLIB) $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(WINGRIDLIB) $(LCKLIB) $(RMONLIB) $(DLLIB) $(LIBS)
 
-test_multithread_io: test_multithread_io.o $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB)
-	$(CC) -o test_multithread_io $(LFLAGS) test_multithread_io.o $(SECLIB) $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB) $(DLLIB) $(LIBS)
+test_multithread_io: test_multithread_io.o $(COMMLIB) $(COMMLISTSLIB) $(WINGRIDLIB_DEP) $(UTILIB) $(LCKLIB) $(RMONLIB)
+	$(CC) -o test_multithread_io $(LFLAGS) test_multithread_io.o $(SECLIB) $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(WINGRIDLIB) $(LCKLIB) $(RMONLIB) $(DLLIB) $(LIBS)
 
-test_virtual_qmaster: test_virtual_qmaster.o $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB)
-	$(CC) -o test_virtual_qmaster $(LFLAGS) test_virtual_qmaster.o $(SECLIB) $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB) $(DLLIB) $(LIBS)
+test_virtual_qmaster: test_virtual_qmaster.o $(COMMLIB) $(COMMLISTSLIB) $(WINGRIDLIB_DEP) $(UTILIB) $(LCKLIB) $(RMONLIB)
+	$(CC) -o test_virtual_qmaster $(LFLAGS) test_virtual_qmaster.o $(SECLIB) $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(WINGRIDLIB) $(LCKLIB) $(RMONLIB) $(DLLIB) $(LIBS)
 
-test_virtual_event_client: test_virtual_event_client.o $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB)
-	$(CC) -o test_virtual_event_client $(LFLAGS) test_virtual_event_client.o $(SECLIB) $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB) $(DLLIB) $(LIBS)
+test_virtual_event_client: test_virtual_event_client.o $(COMMLIB) $(COMMLISTSLIB) $(WINGRIDLIB_DEP) $(UTILIB) $(LCKLIB) $(RMONLIB)
+	$(CC) -o test_virtual_event_client $(LFLAGS) test_virtual_event_client.o $(SECLIB) $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(WINGRIDLIB) $(LCKLIB) $(RMONLIB) $(DLLIB) $(LIBS)
 
-test_virtual_gdi_client: test_virtual_gdi_client.o $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB)
-	$(CC) -o test_virtual_gdi_client $(LFLAGS) test_virtual_gdi_client.o $(SECLIB) $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB) $(DLLIB) $(LIBS)
+test_virtual_gdi_client: test_virtual_gdi_client.o $(COMMLIB) $(COMMLISTSLIB) $(WINGRIDLIB_DEP) $(UTILIB) $(LCKLIB) $(RMONLIB)
+	$(CC) -o test_virtual_gdi_client $(LFLAGS) test_virtual_gdi_client.o $(SECLIB) $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(WINGRIDLIB) $(LCKLIB) $(RMONLIB) $(DLLIB) $(LIBS)
 
-test_debug_client: test_debug_client.o $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB)
-	$(CC) -o test_debug_client $(LFLAGS) test_debug_client.o $(SECLIB) $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB) $(DLLIB) $(LIBS)
+test_debug_client: test_debug_client.o $(COMMLIB) $(COMMLISTSLIB) $(WINGRIDLIB_DEP) $(UTILIB) $(LCKLIB) $(RMONLIB)
+	$(CC) -o test_debug_client $(LFLAGS) test_debug_client.o $(SECLIB) $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(WINGRIDLIB) $(LCKLIB) $(RMONLIB) $(DLLIB) $(LIBS)
 
-test_status_info: test_status_info.o $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB)
-	$(CC) -o test_status_info $(LFLAGS) test_status_info.o $(SECLIB) $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB) $(DLLIB) $(LIBS)
+test_status_info: test_status_info.o $(COMMLIB) $(COMMLISTSLIB) $(WINGRIDLIB_DEP) $(UTILIB) $(LCKLIB) $(RMONLIB)
+	$(CC) -o test_status_info $(LFLAGS) test_status_info.o $(SECLIB) $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(WINGRIDLIB) $(LCKLIB) $(RMONLIB) $(DLLIB) $(LIBS)
 
-test_issues: test_issues.o $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB)
-	$(CC) -o test_issues $(LFLAGS) test_issues.o $(SECLIB) $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB) $(DLLIB) $(LIBS)
+test_issues: test_issues.o $(COMMLIB) $(COMMLISTSLIB) $(WINGRIDLIB_DEP) $(UTILIB) $(LCKLIB) $(RMONLIB)
+	$(CC) -o test_issues $(LFLAGS) test_issues.o $(SECLIB) $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(WINGRIDLIB) $(LCKLIB) $(RMONLIB) $(DLLIB) $(LIBS)
 
+
+test_general: test_general.o $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(WINGRIDLIB_DEP) $(LCKLIB) $(RMONLIB)
+	$(CC) -o test_general $(LFLAGS) test_general.o $(SECLIB) $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(WINGRIDLIB) $(LCKLIB) $(RMONLIB) $(DLLIB) $(LIBS)
+
+test_thread_throughput: test_thread_throughput.o $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(WINGRIDLIB_DEP) $(LCKLIB) $(RMONLIB)
+	$(CC) -o test_thread_throughput $(LFLAGS) test_thread_throughput.o $(SECLIB) $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(WINGRIDLIB) $(LCKLIB) $(RMONLIB) $(DLLIB) $(LIBS)
 
 
 
@@ -231,6 +243,10 @@ test_status_info.o: $(COMMLIB_DIR)/test_status_info.c
 	$(CC) $(CFLAGS) -c $(COMMLIB_DIR)/test_status_info.c
 test_issues.o: $(COMMLIB_DIR)/test_issues.c
 	$(CC) $(CFLAGS) -c $(COMMLIB_DIR)/test_issues.c
+test_general.o: $(COMMLIB_DIR)/test_general.c
+	$(CC) $(CFLAGS) -c $(COMMLIB_DIR)/test_general.c
+test_thread_throughput.o: $(COMMLIB_DIR)/test_thread_throughput.c
+	$(CC) $(CFLAGS) -c $(COMMLIB_DIR)/test_thread_throughput.c
 test_debug_client.o: $(COMMLIB_DIR)/test_debug_client.c
 	$(CC) $(CFLAGS) -c $(COMMLIB_DIR)/test_debug_client.c
 

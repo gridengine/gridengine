@@ -163,7 +163,7 @@ XtPointer cld, cad;
 
    alp = qmonReadFile(filename);
    qmonMessageBox(w, alp, 0);
-   lFreeList(alp);
+   lFreeList(&alp);
    
    DEXIT;
 }

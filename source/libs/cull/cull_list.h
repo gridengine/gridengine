@@ -37,6 +37,7 @@
 
 #include "basis_types.h"
 #include "cull/cull_hashP.h"
+#include "pack.h"
 
 #ifdef  __cplusplus
 extern "C" {
@@ -214,10 +215,10 @@ lList *lCreateList(const char *listname, const lDescr *descr);
 lList *lCreateListHash(const char *listname, const lDescr *descr, bool hash);
 lList *lCreateElemList(const char *listname, const lDescr *descr, int nr_elem);
 
-lListElem *lFreeElem(lListElem *ep);
-lList *lFreeList(lList *lp);
+void lFreeElem(lListElem **ep);
+void lFreeList(lList **ilp);
 
-int lAddList(lList *lp0, lList *lp1);
+int lAddList(lList *lp0, lList **lp1);
 int lAppendList(lList *lp0, lList *lp1);
 lList *lAddSubList(lListElem *ep, int nm, lList *to_add);
 int lCompListDescr(const lDescr *dp0, const lDescr *dp1);
@@ -228,14 +229,19 @@ lListElem *lCopyElemHash(const lListElem *src, bool isHash);
 
 int lModifyWhat(lListElem *dst, const lListElem *src, const lEnumeration *enp);
 
-int lCopyElemPartial(lListElem *dst, int *jp, const lListElem *src, const lEnumeration *ep, bool isHash);
-int lCopySwitch(const lListElem *sep, lListElem *dep, int src_idx, int dst_idx, bool isHash, lEnumeration *ep);
+int 
+lCopyElemPartialPack(lListElem *dst, int *jp, const lListElem *src, 
+                     const lEnumeration *ep, bool isHash, sge_pack_buffer *pb);
+
+int 
+lCopySwitchPack(const lListElem *sep, lListElem *dep, int src_idx, int dst_idx,
+                bool isHash, lEnumeration *ep, sge_pack_buffer *pb);
 
 int lAppendElem(lList *lp, lListElem *ep);
 lListElem *lDechainElem(lList *lp, lListElem *ep);
 void lDechainList(lList *source, lList **target, lListElem *ep);
 lListElem *lDechainObject(lListElem *parent, int name);
-int lRemoveElem(lList *lp, lListElem *ep);
+int lRemoveElem(lList *lp, lListElem **ep);
 int lInsertElem(lList *lp, lListElem *ep, lListElem *new_elem);
 
 int lPSortList(lList *lp, const char *fmt, ...);

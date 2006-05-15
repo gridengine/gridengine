@@ -127,7 +127,7 @@ proc submit_del_test { } {
 
    set catch_result [delete_all_jobs]
 
-   wait_for_end_of_all_jobs 120
+   wait_for_end_of_all_jobs 180
 
    if { $CHECK_L10N == 1 } {
          if { $ts_config(gridengine_version) == 60 } {
@@ -176,7 +176,7 @@ proc submit_del_test { } {
    }
    set runs [ expr ( [llength $ts_config(execd_nodes) ] * 5 ) ]
 
-   wait_for_end_of_all_jobs 120
+   wait_for_end_of_all_jobs 180
    puts $CHECK_OUTPUT "pass 1 completed"
    
    incr job_id 1  ;# prepare job_id for next job !!!
@@ -191,7 +191,7 @@ proc submit_del_test { } {
       }
    }
    
-   wait_for_end_of_all_jobs 120
+   wait_for_end_of_all_jobs 180
 
    puts $CHECK_OUTPUT "pass 2 completed"
    set_error 0 "ok"

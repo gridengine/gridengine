@@ -43,6 +43,7 @@
 #include "msg_common.h"
 #include "sge_unistd.h"
 #include "sge_arch.h"
+#include "sge_string.h"
 
 /****** uti/prog/sge_get_arch() ************************************************
 *  NAME
@@ -206,7 +207,6 @@ const char *sge_get_root_dir(int do_exit, char *buffer, size_t size, int do_erro
 {
    char *sge_root; 
    char *s;
-   int error_number = 0;
 
    DENTER(TOP_LAYER, "sge_get_root_dir");
 
@@ -221,11 +221,9 @@ const char *sge_get_root_dir(int do_exit, char *buffer, size_t size, int do_erro
    if (sge_root) {
       s = sge_root;
    } else {
-      error_number = 4;
       goto error;
    } 
    if (!s || strlen(s)==0) { 
-      error_number = 4;
       goto error;
    } else {
       /*
@@ -240,25 +238,10 @@ const char *sge_get_root_dir(int do_exit, char *buffer, size_t size, int do_erro
 
 error:
    if (do_error_log) {
-      switch(error_number) {
-         case 4:
-            if (buffer != NULL) {
-               strncpy(buffer, MSG_SGEROOTNOTSET, size);
-            }
-            else {
-               CRITICAL((SGE_EVENT, MSG_SGEROOTNOTSET));
-            }
-            
-            break;
-         default:
-            if (buffer != NULL) {
-               strncpy(buffer, MSG_UNKNOWNERRORINSGEROOT, size);
-            }
-            else {
-               CRITICAL((SGE_EVENT, MSG_UNKNOWNERRORINSGEROOT));
-            }
-            
-            break;
+      if (buffer != NULL) {
+         sge_strlcpy(buffer, MSG_SGEROOTNOTSET, size);
+      } else {
+         CRITICAL((SGE_EVENT, MSG_SGEROOTNOTSET));
       }
    }
 

@@ -203,7 +203,7 @@ char *write_sched_configuration(int spool, int how, const char *common_dir, cons
    FPRINTF((fp, "default_duration                 %s\n", lGetString(ep, SC_default_duration)));
 
    if (how != 0) {
-      fclose(fp);
+      FCLOSE(fp);
    }
 
    if (how == 2 || how == 3) {
@@ -219,6 +219,7 @@ char *write_sched_configuration(int spool, int how, const char *common_dir, cons
    /* JG: TODO: ERROR: fname is returned, but is a stack variable!! */
    return how==1?sge_strdup(NULL, fname):fname;
 FPRINTF_ERROR:
+FCLOSE_ERROR:
    DEXIT;
    return NULL;
 }
@@ -455,7 +456,7 @@ static int read_schedd_conf_work(lList **alpp, lList **clpp, int fields[],
 
    /* --------- SC_queue_sort_method */
    str = get_conf_value(&alp, *clpp, CF_name, CF_value, "queue_sort_method");
-   alp = lFreeList(alp);
+   lFreeList(&alp);
    if (str) {
       ul = str2qsm(str);
       if (ul == (u_long32) -1) {
@@ -470,7 +471,7 @@ static int read_schedd_conf_work(lList **alpp, lList **clpp, int fields[],
    }
    else {
       str = get_conf_value(&alp, *clpp, CF_name, CF_value, "sort_seq_no");
-      alp = lFreeList(alp);
+      lFreeList(&alp);
       if (!str) {
          SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_SCHEDCONF_INVALIDVALUEXFORQUEUESORTMETHOD_S, str));
          answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);

@@ -116,7 +116,7 @@ remove_immediate_jobs( lList *pending_job_list, lList *running_job_list, order_t
          remove_immediate_job(running_job_list, job, orders, 1);
       }
       
-      where = lFreeWhere(where);      
+      lFreeWhere(&where);
    }
 
    DEXIT;
@@ -183,7 +183,7 @@ remove_immediate_job( lList *job_list, lListElem *job, order_t *orders, int remo
          order_remove_immediate(job, ja_task, orders);
       }
    }
-   lRemoveElem(job_list, job);
+   lRemoveElem(job_list, &job);
    
    DEXIT;
 }
@@ -240,11 +240,11 @@ order_remove_order_and_immediate( lListElem *job, lListElem *ja_task, order_t *o
       DPRINTF (("Removing job start order for job task %u.%u\n",
                 lGetUlong (job, JB_job_number),
                 lGetUlong (ja_task, JAT_task_number)));
-      lRemoveElem (orderList, ep);
+      lRemoveElem(orderList, &ep);
    }
    
    order_remove_immediate (job, ja_task, orders);
-   lFreeWhere (where);
+   lFreeWhere(&where);
    
    DEXIT;
 }

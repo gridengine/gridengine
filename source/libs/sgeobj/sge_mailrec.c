@@ -63,6 +63,9 @@
 *
 *  SEE ALSO
 *     sgeobj/mailrec/mailrec_unparse() 
+*
+*  NOTES
+*     MT-NOTE: mailrec_parse() is MT safe
 *******************************************************************************/
 int mailrec_parse(lList **lpp, const char *mail_str) 
 {
@@ -72,6 +75,7 @@ int mailrec_parse(lList **lpp, const char *mail_str)
    char **pstr;
    lListElem *ep, *tmp;
    char *mail;
+   struct saved_vars_s *context;
 
    DENTER(TOP_LAYER, "mailrec_parse");
 
@@ -95,7 +99,7 @@ int mailrec_parse(lList **lpp, const char *mail_str)
    }
 
    if (!*lpp) {
-      *lpp = lCreateList("mail list", MR_Type);
+      *lpp = lCreateList("mail_list", MR_Type);
       if (!*lpp) {
          FREE(mail);
          FREE(str_str);
@@ -105,11 +109,13 @@ int mailrec_parse(lList **lpp, const char *mail_str)
    }
 
    for (pstr = str_str; *pstr; pstr++) {
-      user = sge_strtok(*pstr, "@");
-      host = sge_strtok(NULL, "@");
+      context = NULL;
+      user = sge_strtok_r(*pstr, "@", &context);
+      host = sge_strtok_r(NULL, "@", &context);
       if ((tmp=lGetElemStr(*lpp, MR_user, user))) {
          if (!sge_strnullcmp(host, lGetHost(tmp, MR_host))) {
             /* got this mail adress twice */
+            sge_free_saved_vars(context);
             continue;
          }
       }
@@ -120,6 +126,8 @@ int mailrec_parse(lList **lpp, const char *mail_str)
       if (host) 
          lSetHost(ep, MR_host, host);
       lAppendElem(*lpp, ep);
+
+      sge_free_saved_vars(context);
    }
 
    FREE(mail);

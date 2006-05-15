@@ -84,7 +84,7 @@ Codine_ExecHost_impl::~Codine_ExecHost_impl() {
    DPRINTF(("Name: %s\n", (const char*)key));
 
    if(creation != 0)
-      lFreeElem(self);
+      lFreeElem(&self);
 }
 
 // inherited from Codine_Object
@@ -131,7 +131,7 @@ lListElem* Codine_ExecHost_impl::getSelf() {
 
    lCondition* cp = lWhere("%T(%I==%s)", EH_Type, EH_name, (const char*)key);
    self = lFindFirst(Master_Exechost_List, cp);
-   lFreeWhere(cp);
+   lFreeWhere(&cp);
     
    if(!self) {  
       // we must not destroy ourselves here because the other thread
@@ -567,7 +567,7 @@ void Codine_ExecHost_impl::changed(lListElem* _newSelf) {
    // This works as long as there is only one CORBA thread, so there
    // can be only one request dispatched at one time.
    // If more client requests were able to execute simultanously,
-   // they would overwrite this local variable => !&%$&/§$§%
+   // they would overwrite this local variable => !&%$&/ï¿½$ï¿½%
    lastEvent = qidl_event_count;
 
    // build header

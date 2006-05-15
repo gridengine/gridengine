@@ -109,6 +109,7 @@ static void gsslib_display_status_1(char *m, OM_uint32 code, int type)
                                     type, GSS_C_NULL_OID,
                                     &msg_ctx, &msg);
       sprintf(msgptr, MSG_GSS_APIERRORXY_SS , m?m:"<>", (char *)msg.value?(char *)msg.value:"<>");
+      sprintf(msgptr, "\n");
       (void) gss_release_buffer(&min_stat, &msg);
       msgptr += strlen(msgptr);
 
@@ -146,6 +147,7 @@ void gsslib_reset_error(void)
 char *gsslib_print_error(char *msg)
 {
    strcpy(msgptr, msg);
+   sprintf(msgptr, "\n");
    msgptr += strlen(msg);
    return msgbuf;
 }
@@ -432,7 +434,7 @@ gsslib_put_credentials(gss_cred_id_t server_creds,
    }
 
    if (send_tok.length != 0) {
-      fprintf(stderr, MSG_GSS_ACCEPTSECCONTEXTREQUIRESTOKENTOBESENTBACK );
+      fprintf(stderr, "%s\n", MSG_GSS_ACCEPTSECCONTEXTREQUIRESTOKENTOBESENTBACK );
       /* cc = -1;
       goto error; */
    }

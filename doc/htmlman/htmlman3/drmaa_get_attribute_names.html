@@ -177,7 +177,7 @@ DRMAA JOB TEMPLATE ATTRIBUTES
 
   drmaa_wd - "&lt;directory_name&gt;"
      Specifies the directory name where the job will be executed.
-     A   '$drmaa_hd_ph$'  placeholder  at  the  begining  of  the
+     A  '$drmaa_hd_ph$'  placeholder  at  the  beginning  of  the
      <I>directory</I>_<I>name</I> denotes the remaining  string  portion  as  a
      relative directory name that is resolved relative to the job
      user's home directory at the execution host. When the  DRMAA
@@ -324,7 +324,7 @@ DRMAA JOB TEMPLATE ATTRIBUTES
      qtask file are searched. Job  settings  resulting  from  job
      template  category are overridden by settings resulting from
      the job  template  drmaa_native_specification  attribute  as
-     well as by explict DRMAA job template settings.
+     well as by explicit DRMAA job template settings.
 
      In order to avoid collisions with command names in the qtask
      files,  it is recommended that DRMAA job category names take
@@ -352,7 +352,7 @@ DRMAA JOB TEMPLATE ATTRIBUTES
      remote environment values if there is a collision.
 
   drmaa_v_email - "&lt;email1&gt; &lt;email2&gt; ...
-     Specifies e-mail adresses that are used to  report  the  job
+     Specifies e-mail addresses that are used to report  the  job
      completion and status.
 
   drmaa_block_email - "{0|1}"
@@ -387,9 +387,9 @@ DRMAA JOB TEMPLATE ATTRIBUTES
 
   drmaa_transfer_files - "[i][o][e]"
      Specifies, which of the standard I/O  files  (stdin,  stdout
-     and stderr) are to be transfered to/from the execution host.
-     If not set, defaults to "". Any combination of 'e', 'i'  and
-     'o'     may    be    specified.     See    drmaa_input_path,
+     and  stderr)  are  to  be  transferred to/from the execution
+     host. If not set, defaults to "". Any  combination  of  'e',
+     'i'   and  'o'  may  be  specified.   See  drmaa_input_path,
      drmaa_output_path and drmaa_error_path for information about
      how to specify the standard input file, standard output file
      and standard error file.  The file transfer mechanism itself

@@ -438,9 +438,9 @@ static void sge_ls_destroy_ls(lListElem *this_ls, int send_no_quit_command)
 
    sge_ls_stop_ls(this_ls, send_no_quit_command);
    lDechainElem(ls_list, this_ls);
-   lFreeElem(this_ls);
-   if (!lGetNumberOfElem(ls_list)) {
-      ls_list = lFreeList(ls_list);
+   lFreeElem(&this_ls);
+   if (lGetNumberOfElem(ls_list) == 0) {
+      lFreeList(&ls_list);
    }
    DEXIT;
    return;
@@ -514,15 +514,19 @@ static int read_ls(void)
    DENTER(TOP_LAYER, "read_ls");
 
    for_each(ls_elem, ls_list) {
+      bool done;
+      
       if (sge_ls_get_pid(ls_elem) == -1) {
          continue;
       }
       DPRINTF(("receiving from %s\n", lGetString(ls_elem, LS_command)));
-      while (1) {
+      done = false;
+      while (!done) {
          FILE *file = lGetRef(ls_elem, LS_out);
          lList *tmp_list;
 
          if (fscanf(file, "%[^\n]\n", input) != 1) {
+            done = true;
             break;
          }
 #ifdef INTERIX
@@ -546,6 +550,7 @@ static int read_ls(void)
 
             /* request next load report from ls */
             ls_send_command(ls_elem, "\n");
+            done = true;
             break;
          }
 
@@ -933,11 +938,13 @@ int sge_ls_get(lList **lpp)
 {
    lListElem *ls_elem;          /* LS_Type */
    lListElem *ep;
+   char* load_sensor = NULL;
 
    DENTER(TOP_LAYER, "sge_ls_get");
 
    sge_ls_initialize();
-   sge_ls_start(conf.load_sensor);
+   load_sensor = mconf_get_load_sensor();
+   sge_ls_start(load_sensor);
 
    for_each(ls_elem, ls_list) {
       int restart = 0;
@@ -986,6 +993,7 @@ int sge_ls_get(lList **lpp)
                                  lGetHost(ep, LR_host));
       }
    }
+   FREE(load_sensor);
 
    DEXIT;
    return 0;
@@ -1020,7 +1028,7 @@ void sge_ls_stop(int exited)
       nxt = lNext(ls_elem);
       sge_ls_destroy_ls(ls_elem, exited);
    }
-   lFreeList(ls_list);
+   lFreeList(&ls_list);
 
    DEXIT;
    return;

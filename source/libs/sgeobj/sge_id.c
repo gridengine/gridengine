@@ -85,7 +85,7 @@ id_list_build_from_str_list(lList **id_list,
          } else {
             answer_list_add(answer_list, MSG_ID_UNABLETOCREATE, 
                             STATUS_EMALLOC, ANSWER_QUALITY_ERROR);
-            *id_list = lFreeList(*id_list);
+            lFreeList(id_list);
             break;
          }
          

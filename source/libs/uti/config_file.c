@@ -36,11 +36,13 @@
 
 #include "sgermon.h"
 #include "sge_log.h"
+#include "sge_stdio.h"
 #include "basis_types.h"
 #include "sge_string.h"
 #include "err_trace.h"
 #include "sge_parse_num_par.h"
 #include "config_file.h"
+
 #include "msg_daemons_common.h"
 
 
@@ -49,8 +51,7 @@ char err_msg[1000] = { '0' };
 void set_error(const char *err_str) 
 {
    if (err_str) {
-      strncpy(err_msg, err_str, sizeof(err_msg)-1);
-      err_msg[sizeof(err_msg)-1] = '\0';
+      sge_strlcpy(err_msg, err_str, sizeof(err_msg));
    }
 }
 
@@ -183,18 +184,26 @@ const char *fname
       return 1;
 
    while (fgets(buf, sizeof(buf), fp)) {
-      name = strtok(buf, " =");
+      struct saved_vars_s *context;
+      context = NULL;
+      name = sge_strtok_r(buf, " =", &context);
       if (!name) {
+         sge_free_saved_vars(context);
          break;
       }   
-      value = strtok(NULL, "\n");
+      value = sge_strtok_r(NULL, "\n", &context);
 
-      if (add_config_entry(name, value))
+      if (add_config_entry(name, value)) {
+         sge_free_saved_vars(context);
          return 2;
+      }
+      sge_free_saved_vars(context);
    }
-   fclose(fp);
+   FCLOSE(fp);
 
    return 0;
+FCLOSE_ERROR:
+   return 1;
 }
 
 /******************************************************/
@@ -417,7 +426,12 @@ char **allowed
       just_check = 1;
    }
 
-   sp=src; 
+   /* handle NULL string as src */
+   if (src == NULL) {
+      sp = "";
+   } else {
+      sp=src; 
+   }
    while (*sp) {
       switch (*sp) {
       case '$':
@@ -499,37 +513,93 @@ char **allowed
    return 0;
 }
 
+bool parse_time_param(const char *input, const char *variable, u_long32 *value)
+{
+   bool ret = false;
+
+   DENTER(BASIS_LAYER, "parse_time_param");
+
+   if (input != NULL && variable != NULL && value != NULL) {
+      int var_len = strlen(variable);
+      
+      /* Test that 'variable' is the left side of the = in 'input.' */
+      /* We don't have to guard against an overrun in input[var_len] because we
+       * know that input is at least as long as var_len when we pass the
+       * strncasecmp(), so the worst that input[var_len] could be is \0. */
+      if ((strncasecmp(input, variable, var_len) == 0) &&
+         ((input[var_len] == '=') || (input[var_len] == '\0'))) {
+         const char *s;
+
+         /* yes, this variable is set */
+         ret = true;
+
+         /* search position of = */
+         s = strchr(input, '=');
+
+         /* only boolean variable contained in input -> value = true */
+         if (s == NULL) {
+            *value = 0;
+         } else {
+            /* skip = */
+            s++;
+
+            if (!extended_parse_ulong_val(NULL, value, TYPE_TIM, s, NULL, 0, 0)) {
+               *value = 0;
+               ret = false;
+            }
+         }
+
+         DPRINTF(("%s = "sge_u32"\n", variable, value));
+      }
+   }
+
+   DEXIT;
+   return ret;
+}
+
+
 bool parse_bool_param(const char *input, const char *variable, bool *value)
 {
    bool ret = false;
 
    DENTER(BASIS_LAYER, "parse_bool_param");
 
-   /* variable is set in input */
-   if (strncasecmp(input, variable, strlen(variable)) == 0) {
-      const char *s;
+   if (input != NULL && variable != NULL && value != NULL) {
+      int var_len = strlen(variable);
+      
+      /* 
+       * Test that 'variable' is the left side of the = in 'input' or
+       * 'input' only contains 'variable'.
+       * We don't have to guard against an overrun in input[var_len] because we
+       * know that input is at least as long as var_len when we pass the
+       * strncasecmp(), so the worst that input[var_len] could be is \0. 
+       */
+      if ((strncasecmp(input, variable, var_len) == 0) &&
+         ((input[var_len] == '=') || (input[var_len] == '\0'))) {
+         const char *s;
 
-      /* yes, this variable is set */
-      ret = true;
+         /* yes, this variable is set */
+         ret = true;
 
-      /* search position of = */
-      s = strchr(input, '=');
+         /* search position of = */
+         s = strchr(input, '=');
 
-      /* only boolean variable contained in input -> value = true */
-      if (s == NULL) {
-         *value = true;
-      } else {
-         /* skip = */
-         s++;
-         /* parse value */
-         if (*s == '1' || strcasecmp(s, "true") == 0) {
+         /* only boolean variable contained in input -> value = true */
+         if (s == NULL) {
             *value = true;
          } else {
-            *value = false;
+            /* skip = */
+            s++;
+            /* parse value */
+            if (*s == '1' || strcasecmp(s, "true") == 0) {
+               *value = true;
+            } else {
+               *value = false;
+            }
          }
-      }
 
-      DPRINTF(("%s = %s\n", variable, value ? "true" : "false"));
+         DPRINTF(("%s = %s\n", variable, value ? "true" : "false"));
+      }
    }
 
    DEXIT;
@@ -541,34 +611,38 @@ bool parse_int_param(const char *input, const char *variable,
 {
    bool ret = false;
 
-   DENTER(BASIS_LAYER, "parse_ulong_param");
+   DENTER(BASIS_LAYER, "parse_int_param");
 
-   /* variable is set in input */
-   if (strncasecmp(input, variable, strlen(variable)) == 0) {
-      const char *s;
+   if (input != NULL && variable != NULL && value != NULL) {
+      int var_len = strlen(variable);
 
-      /* yes, this variable is set */
-      ret = true;
+      if ((strncasecmp(input, variable, var_len) == 0) &&
+         ((input[var_len] == '=') || (input[var_len] == '\0'))) {
+         const char *s;
 
-      /* search position of = */
-      s = strchr(input, '=');
+         /* yes, this variable is set */
+         ret = true;
 
-      /* no value contained in input -> value = 0 */
-      if (s == NULL) {
-         *value = 0;
-      } else {
-         u_long32 new_value;
-         /* skip = */
-         s++;
-         /* parse value */
-         if (parse_ulong_val(NULL, &new_value, type, s, NULL, 0)) {
-            *value = new_value;
-         } else {
+         /* search position of = */
+         s = strchr(input, '=');
+
+         /* no value contained in input -> value = 0 */
+         if (s == NULL) {
             *value = 0;
+         } else {
+            u_long32 new_value;
+            /* skip = */
+            s++;
+            /* parse value */
+            if (parse_ulong_val(NULL, &new_value, type, s, NULL, 0)) {
+               *value = new_value;
+            } else {
+               *value = 0;
+            }
          }
-      }
 
-      DPRINTF(("%s = %d\n", variable, value));
+         DPRINTF(("%s = %d\n", variable, value));
+      }
    }
 
    DEXIT;

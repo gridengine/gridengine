@@ -88,7 +88,7 @@ char *sge_read_token(const char *file)
       return NULL;
    }
 
-   if ((fd = open(file, O_RDONLY)) == -1) {
+   if ((fd = SGE_OPEN2(file, O_RDONLY)) == -1) {
       DTRACE;
       return NULL;
    }
@@ -159,7 +159,6 @@ int sge_afs_extend_token(const char *command, char *tokenbuf, const char *user,
       DEXIT;
       return -1;
    }
-    
    if (sge_string2bin(fp_in, tokenbuf) == -1) {
       if (err_str) {
          sprintf(err_str, MSG_TOKEN_NOWRITEAFS_S , cmdbuf);
@@ -209,7 +208,7 @@ int sge_get_token_cmd(const char *tokencmdname, char *buf)
 
     if (!tokencmdname || !strlen(tokencmdname)) {
        if (!buf) {
-          fprintf(stderr, MSG_COMMAND_NOPATHFORTOKEN);
+          fprintf(stderr, "%s\n", MSG_COMMAND_NOPATHFORTOKEN);
        } else {   
           strcpy(buf, MSG_COMMAND_NOPATHFORTOKEN);
        }
@@ -219,6 +218,7 @@ int sge_get_token_cmd(const char *tokencmdname, char *buf)
     if (SGE_STAT(tokencmdname, &sb) == -1) {
        if (!buf) {
           fprintf(stderr, MSG_COMMAND_NOFILESTATUS_S , tokencmdname);
+          fprintf(stderr, "\n");
        } else {
           sprintf(buf, MSG_COMMAND_NOFILESTATUS_S , tokencmdname);
        }
@@ -228,6 +228,7 @@ int sge_get_token_cmd(const char *tokencmdname, char *buf)
     if (!(sb.st_mode & (S_IXUSR|S_IXGRP|S_IXOTH))) {
        if (!buf) {
           fprintf(stderr, MSG_COMMAND_NOTEXECUTABLE_S , tokencmdname);
+          fprintf(stderr, "\n");
        } else {
           sprintf(buf, MSG_COMMAND_NOTEXECUTABLE_S , tokencmdname);
        }

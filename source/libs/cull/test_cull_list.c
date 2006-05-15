@@ -3,6 +3,7 @@
 
 #define __SGE_GDI_LIBRARY_HOME_OBJECT_FILE__
 #include "cull.h"
+#include "cull_list.h"
 
 enum {
    TEST_int = 1,
@@ -96,27 +97,27 @@ int main(int argc, char *argv[])
    copy = lCopyElem(ep);
    printf("copy of element\n");
    lWriteElemTo(copy, stdout);
-   copy = lFreeElem(copy);
+   lFreeElem(&copy);
 
-   /* test lCopyElemPartial */
+   /* test lCopyElemPartialPack */
    /* first copy the complete element */
    copy = lCreateElem(TEST_Type);
    enp = lWhat("%T(ALL)", TEST_Type);
    index = 0;
-   lCopyElemPartial(copy, &index, ep, enp, true); 
+   lCopyElemPartialPack(copy, &index, ep, enp, true, NULL); 
    printf("complete copy of element\n");
    lWriteElemTo(copy, stdout);
-   copy = lFreeElem(copy);
-   enp = lFreeWhat(enp);
+   lFreeElem(&copy);
+   lFreeWhat(&enp);
    /* now copy a reduced element */
    copy = lCreateElem(TEST_Type);
    enp = lWhat("%T(%I %I %I)", TEST_Type, TEST_string, TEST_float, TEST_double);
    index = lGetPosInDescr(TEST_Type, TEST_string);
-   lCopyElemPartial(copy, &index, ep, enp, true); 
+   lCopyElemPartialPack(copy, &index, ep, enp, true, NULL); 
    printf("partial copy of element\n");
    lWriteElemTo(copy, stdout);
-   copy = lFreeElem(copy);
-   enp = lFreeWhat(enp);
+   lFreeElem(&copy);
+   lFreeWhat(&enp);
 
    /* test reducing of elements */
 
@@ -126,7 +127,7 @@ int main(int argc, char *argv[])
    lWriteElemTo(ep, stdout);
 
    /* cleanup and exit */
-   lFreeElem(ep);                  
+   lFreeElem(&ep);                  
    return EXIT_SUCCESS;
 }
 

@@ -143,7 +143,7 @@ lList *read_cmplx(const char *fname, const char *cmplx_name, lList **alpp)
       ERROR((SGE_EVENT, MSG_FILE_NOOPEN_SS, fname, strerror(errno)));
       if (alpp) {
          answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR);
-         lp = lFreeList(lp);
+         lFreeList(&lp);
          DEXIT;
          return NULL;
       }
@@ -179,7 +179,7 @@ lList *read_cmplx(const char *fname, const char *cmplx_name, lList **alpp)
          ERROR((SGE_EVENT, MSG_PARSE_CANTPARSECPLX_SI, fname, line));
          if (alpp) {
             answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
-            lp = lFreeList(lp);
+            lFreeList(&lp);
             DEXIT;
             return NULL;
          }
@@ -200,7 +200,7 @@ lList *read_cmplx(const char *fname, const char *cmplx_name, lList **alpp)
             ERROR((SGE_EVENT, MSG_PARSE_INVALIDCPLXTYPE_SS, fname, s));
          if (alpp) {
             answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
-            lp = lFreeList(lp);
+            lFreeList(&lp);
             DEXIT;
             return NULL;
          }
@@ -213,7 +213,7 @@ lList *read_cmplx(const char *fname, const char *cmplx_name, lList **alpp)
          ERROR((SGE_EVENT, MSG_PARSE_CANTPARSECPLX_SI, fname, line));
          if (alpp) {
             answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
-            lp = lFreeList(lp);
+            lFreeList(&lp);
             DEXIT;
             return NULL;
          }
@@ -234,7 +234,7 @@ lList *read_cmplx(const char *fname, const char *cmplx_name, lList **alpp)
             ERROR((SGE_EVENT, MSG_PARSE_INVALIDCPLXRELOP_SS, fname, s));
             if (alpp) {
                answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
-               lp = lFreeList(lp);
+               lFreeList(&lp);
                DEXIT;
                return NULL;
             }
@@ -247,7 +247,7 @@ lList *read_cmplx(const char *fname, const char *cmplx_name, lList **alpp)
          ERROR((SGE_EVENT, MSG_PARSE_CANTPARSECPLX_SI, fname, line));
          if (alpp) {
             answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
-            lp = lFreeList(lp);
+            lFreeList(&lp);
             DEXIT;
             return NULL;
          }
@@ -257,7 +257,7 @@ lList *read_cmplx(const char *fname, const char *cmplx_name, lList **alpp)
       
       /* REQUESTABLE */
       if (parse_requestable(alpp, cp, ep, fname, line)) {
-         lp = lFreeList(lp);
+         lFreeList(&lp);
          if (alpp) {
             DEXIT;
             return NULL;
@@ -267,7 +267,7 @@ lList *read_cmplx(const char *fname, const char *cmplx_name, lList **alpp)
 
       /* CONSUMABLE */
       if (parse_flag(alpp, cp, ep, CE_consumable, "consumable", fname, line)) {
-         lp = lFreeList(lp);
+         lFreeList(&lp);
          if (alpp) {
             DEXIT;
             return NULL;
@@ -283,7 +283,7 @@ lList *read_cmplx(const char *fname, const char *cmplx_name, lList **alpp)
          ERROR((SGE_EVENT, MSG_PARSE_INVALIDCPLXCONSUM_SSS, fname, lGetString(ep, CE_name), map_type2str(type)));
          if (alpp) {
             answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
-            lp = lFreeList(lp);
+            lFreeList(&lp);
             DEXIT;
             return NULL;
          }
@@ -307,7 +307,7 @@ lList *read_cmplx(const char *fname, const char *cmplx_name, lList **alpp)
                ERROR((SGE_EVENT, MSG_PARSE_CANTPARSECPLX_S, fname));
                if (alpp) {
                   answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
-                  lp = lFreeList(lp);
+                  lFreeList(&lp);
                   DEXIT;
                   return NULL;
                }
@@ -335,7 +335,7 @@ lList *read_cmplx(const char *fname, const char *cmplx_name, lList **alpp)
                ERROR((SGE_EVENT, MSG_PARSE_CANTPARSECPLX_S, fname));
                if (alpp) {
                   answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
-                  lp = lFreeList(lp);
+                  lFreeList(&lp);
                   DEXIT;
                   return NULL;
                }
@@ -350,7 +350,7 @@ lList *read_cmplx(const char *fname, const char *cmplx_name, lList **alpp)
          ERROR((SGE_EVENT, MSG_PARSE_CANTPARSECPLX_SI, fname, line));
          if (alpp) {
             answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
-            lp = lFreeList(lp);
+            lFreeList(&lp);
             DEXIT;
             return NULL;
          }
@@ -363,7 +363,7 @@ lList *read_cmplx(const char *fname, const char *cmplx_name, lList **alpp)
          ERROR((SGE_EVENT, MSG_PARSE_CANTPARSECPLX_SI, fname, line));
          if (alpp) {
             answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
-            lp = lFreeList(lp);
+            lFreeList(&lp);
             DEXIT;
             return NULL;
          }
@@ -373,10 +373,12 @@ lList *read_cmplx(const char *fname, const char *cmplx_name, lList **alpp)
       lAppendElem(lp, ep);
    }
 
-   fclose(fp);
-
+   FCLOSE(fp);
    DEXIT;
    return lp;
+FCLOSE_ERROR:
+   DEXIT;
+   return NULL;
 }
 
 static int parse_flag(
@@ -520,16 +522,17 @@ lList **alpp
    }
 
 
-   FPRINTF((fp, "# "SFN, MSG_COMPLEX_STARTSCOMMENTBUTNOSAVE));
+   FPRINTF((fp, "# "SFN"\n", MSG_COMPLEX_STARTSCOMMENTBUTNOSAVE));
    
    if (fname) {
-      fclose(fp);
+      FCLOSE(fp);
    }
 
    DEXIT;
    return 0;
 
 FPRINTF_ERROR:
+FCLOSE_ERROR:
    ERROR((SGE_EVENT, MSG_ERRORWRITINGFILE_SS, fname, strerror(errno)));
    if (alpp) 
       answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR); 

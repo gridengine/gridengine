@@ -66,6 +66,7 @@
  *                       configuration is requested, CONF_Type, should point
  *                       to NULL or otherwise will be freed
  * RETURN
+ *    0   on success
  *   -1   NULL pointer received
  *   -2   error resolving host
  *   -3   invalid NULL pointer received for local configuration
@@ -98,7 +99,6 @@ lListElem **lepp
    int success;
    static int already_logged = 0;
    u_long32 status;
-   cl_com_handle_t* handle = NULL;
    
    DENTER(TOP_LAYER, "get_configuration");
 
@@ -108,16 +108,15 @@ lListElem **lepp
    }
 
    if (*gepp) {
-      *gepp = lFreeElem(*gepp);
+      lFreeElem(gepp);
    }
    if (lepp && *lepp) {
-      *lepp = lFreeElem(*lepp);
+      lFreeElem(lepp);
    }
 
    if (!strcasecmp(config_name, "global")) {
       is_global_requested = 1;
    } else {
-      int commlib_error = CL_RETVAL_OK;
       hep = lCreateElem(EH_Type);
       lSetHost(hep, EH_name, config_name);
 
@@ -125,57 +124,24 @@ lListElem **lepp
 
       if (ret != CL_RETVAL_OK) {
          DPRINTF(("get_configuration: error %d resolving host %s: %s\n", ret, config_name, cl_get_error_text(ret)));
-         hep = lFreeElem(hep);
+         lFreeElem(&hep);
          ERROR((SGE_EVENT, MSG_SGETEXT_CANTRESOLVEHOST_S, config_name));
          DEXIT;
          return -2;
       }
       DPRINTF(("get_configuration: unique for %s: %s\n", config_name, lGetHost(hep, EH_name)));
 
-      handle = cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0);
-      commlib_error = sge_get_communication_error();
-
-      switch (commlib_error) {
-         case CL_RETVAL_OK:
-            break;
-         case CL_RETVAL_ENDPOINT_NOT_UNIQUE:
-            if (handle == NULL) {
-               ERROR((SGE_EVENT, cl_get_error_text(commlib_error)));
-            } else {
-               ERROR((SGE_EVENT, MSG_GDI_ALREADY_CONECTED_SSU,
-                                    handle->local->comp_host,
-                                    handle->local->comp_name,
-                                    handle->local->comp_id));
-            }
-            hep = lFreeElem(hep);
-            DEXIT;
-            return -6;
-         case CL_RETVAL_ACCESS_DENIED:
-            if (handle == NULL) {
-               ERROR((SGE_EVENT, cl_get_error_text(commlib_error)));
-            } else {
-               ERROR((SGE_EVENT, MSG_GDI_ACCESS_DENIED_SSU,
-                                    handle->local->comp_host,
-                                    handle->local->comp_name,
-                                    handle->local->comp_id));
-            }
-
-            hep = lFreeElem(hep);
-            DEXIT;
-            return -6;
-         default:
-            break;
-            /*
-             * no need to log an error to the messages file, because
-             * commlib errors are logged via general_communication_error()
-             * callback function
-             */
+      if (sge_get_com_error_flag(SGE_COM_ACCESS_DENIED)       == true ||
+          sge_get_com_error_flag(SGE_COM_ENDPOINT_NOT_UNIQUE) == true) {
+         lFreeElem(&hep);
+         DEXIT;
+         return -6;
       }
    }
 
    if (!is_global_requested && !lepp) {
       ERROR((SGE_EVENT, MSG_NULLPOINTER));
-      lFreeElem(hep);
+      lFreeElem(&hep);
       DEXIT;
       return -3;
    }
@@ -195,8 +161,8 @@ lListElem **lepp
    what = lWhat("%T(ALL)", CONF_Type);
    alp = sge_gdi(SGE_CONFIG_LIST, SGE_GDI_GET, &lp, where, what);
 
-   lFreeWhat(what);
-   lFreeWhere(where);
+   lFreeWhat(&what);
+   lFreeWhere(&where);
 
    success = ((status= lGetUlong(lFirst(alp), AN_status)) == STATUS_OK);
    if (!success) {
@@ -205,13 +171,13 @@ lListElem **lepp
          already_logged = 1;       
       }
                    
-      lFreeList(alp);
-      lFreeList(lp);
-      lFreeElem(hep);
+      lFreeList(&alp);
+      lFreeList(&lp);
+      lFreeElem(&hep);
       DEXIT;
       return (status != STATUS_EDENIED2HOST)?-4:-7;
    }
-   lFreeList(alp);
+   lFreeList(&alp);
 
    if (lGetNumberOfElem(lp) > (2 - is_global_requested)) {
       WARNING((SGE_EVENT, MSG_CONF_REQCONF_II, 2 - is_global_requested, lGetNumberOfElem(lp)));
@@ -219,8 +185,8 @@ lListElem **lepp
 
    if (!(*gepp = lGetElemHost(lp, CONF_hname, SGE_GLOBAL_NAME))) {
       ERROR((SGE_EVENT, MSG_CONF_NOGLOBAL));
-      lFreeList(lp);
-      lFreeElem(hep);
+      lFreeList(&lp);
+      lFreeElem(&hep);
       DEXIT;
       return -5;
    }
@@ -231,8 +197,8 @@ lListElem **lepp
          if (*gepp) {
             WARNING((SGE_EVENT, MSG_CONF_NOLOCAL_S, lGetHost(hep, EH_name)));
          }
-         lFreeList(lp);
-         lFreeElem(hep);
+         lFreeList(&lp);
+         lFreeElem(&hep);
          already_logged = 0;
          DEXIT;
          return 0;
@@ -240,8 +206,8 @@ lListElem **lepp
       lDechainElem(lp, *lepp);
    }
    
-   lFreeElem(hep);
-   lFreeList(lp);
+   lFreeElem(&hep);
+   lFreeList(&lp);
    already_logged = 0;
    DEXIT;
    return 0;
@@ -249,7 +215,8 @@ lListElem **lepp
 
 int get_conf_and_daemonize(
 tDaemonizeFunc dfunc,
-lList **conf_list
+lList **conf_list,
+volatile int* abort_flag
 ) {
    lListElem *global = NULL;
    lListElem *local = NULL;
@@ -279,32 +246,41 @@ lList **conf_list
             dfunc();
          }
          handle = cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0);
-         ret_val = cl_commlib_trigger(handle);
+         ret_val = cl_commlib_trigger(handle, 1);
          switch(ret_val) {
             case CL_RETVAL_SELECT_TIMEOUT:
             case CL_RETVAL_OK:
                break;
             default:
-               sleep(1);
+               sleep(1);  /* for other errors */
                break;
          }
          sleep_counter++;
       } else {
+         /* here we are daemonized, we do a longer sleep when there is no connection */
          DTRACE;
          handle = cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0);
-         ret_val = cl_commlib_trigger(handle);
+         ret_val = cl_commlib_trigger(handle, 1);
          switch(ret_val) {
             case CL_RETVAL_SELECT_TIMEOUT:
+               sleep(30);  /* If we could not establish the connection */
+               break;
             case CL_RETVAL_OK:
                break;
             default:
-               sleep(1);
+               sleep(30);  /* for other errors */
                break;
          }
       }
+      if (abort_flag != NULL) {
+         if (*abort_flag != 0) {
+            DEXIT;
+            return -2;
+         }
+      }
    }
-
-   ret = merge_configuration(global, local, &conf, NULL);
+  
+   ret = merge_configuration(global, local, NULL);
    if (ret) {
       DPRINTF((
          "Error %d merging configuration \"%s\"\n", ret, uti_state_get_qualified_hostname()));
@@ -316,7 +292,7 @@ lList **conf_list
     */
    lSetList(global, CONF_entries, NULL);
    lSetList(local, CONF_entries, NULL);
-   *conf_list = lFreeList(*conf_list);
+   lFreeList(conf_list);
    *conf_list = lCreateList("config list", CONF_Type);
    lAppendElem(*conf_list, global);
    lAppendElem(*conf_list, local);
@@ -346,16 +322,16 @@ lList **conf_list
    ret = get_configuration(uti_state_get_qualified_hostname(), &global, &local);
    if (ret) {
       ERROR((SGE_EVENT, MSG_CONF_NOREADCONF_IS, ret, uti_state_get_qualified_hostname()));
-      lFreeElem(global);
-      lFreeElem(local);
+      lFreeElem(&global);
+      lFreeElem(&local);
       return -1;
    }
 
-   ret = merge_configuration(global, local, &conf, NULL);
+   ret = merge_configuration(global, local, NULL);
    if (ret) {
       ERROR((SGE_EVENT, MSG_CONF_NOMERGECONF_IS, ret, uti_state_get_qualified_hostname()));
-      lFreeElem(global);
-      lFreeElem(local);
+      lFreeElem(&global);
+      lFreeElem(&local);
       return -2;
    }
    /*
@@ -365,7 +341,7 @@ lList **conf_list
    lSetList(global, CONF_entries, NULL);
    lSetList(local, CONF_entries, NULL);
 
-   *conf_list = lFreeList(*conf_list);
+   lFreeList(conf_list);
    *conf_list = lCreateList("config list", CONF_Type);
    lAppendElem(*conf_list, global);
    lAppendElem(*conf_list, local);

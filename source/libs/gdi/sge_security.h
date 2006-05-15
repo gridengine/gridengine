@@ -47,41 +47,28 @@
 int sge_security_initialize(const char *name);
 void sge_security_exit(int i);
 
-int gdi_receive_message(
-char *fromcommproc,
-u_short *fromid,
-char *fromhost,
-int *tag,
-char **buffer,
-u_long32 *buflen,
-int synchron,
-u_short *compressed 
-);
+int 
+gdi_receive_message(char *fromcommproc, u_short *fromid, char *fromhost, 
+                    int *tag, char **buffer, u_long32 *buflen, int synchron);
 
-int gdi_send_message(
-int synchron,
-const char *tocomproc,
-int toid,
-const char *tohost,
-int tag,
-char *buffer,
-int buflen,
-u_long32 *mid,
-int compressed 
-);
+int 
+gdi_send_message(int synchron, const char *tocomproc, int toid, 
+                 const char *tohost, int tag, char *buffer, int buflen, 
+                 u_long32 *mid);
 
-int gdi_receive_sec_message(cl_com_handle_t* handle,
-                            char* un_resolved_hostname, char* component_name, unsigned long component_id, 
-                            int synchron, unsigned long response_mid, 
-                            cl_com_message_t** message, cl_com_endpoint_t** sender);
+int 
+gdi_receive_sec_message(cl_com_handle_t* handle, char* un_resolved_hostname, 
+                        char* component_name, unsigned long component_id, 
+                        int synchron, unsigned long response_mid, 
+                        cl_com_message_t** message, cl_com_endpoint_t** sender);
 
-int gdi_send_sec_message   (cl_com_handle_t* handle,
-                            char* un_resolved_hostname, char* component_name, unsigned long component_id, 
-                            cl_xml_ack_type_t ack_type, 
-                            cl_byte_t* data, unsigned long size , 
-                            unsigned long* mid, unsigned long response_mid, unsigned long tag ,
-                            int copy_data,
-                            int wait_for_ack);
+int 
+gdi_send_sec_message(cl_com_handle_t* handle, char* un_resolved_hostname, 
+                     char* component_name, unsigned long component_id, 
+                     cl_xml_ack_type_t ack_type, cl_byte_t* data, 
+                     unsigned long size, unsigned long* mid, 
+                     unsigned long response_mid, unsigned long tag ,
+                     int copy_data, int wait_for_ack);
 
 int set_sec_cred(lListElem *job);
 
@@ -109,12 +96,21 @@ void tgtcclr(lListElem *jep, const char *rhost, const char* target);
 int sge_set_auth_info(sge_gdi_request *request, uid_t uid, char *user, 
                         gid_t gid, char *group);
 
-int sge_get_auth_info(sge_gdi_request *request, uid_t *uid, char *user, 
-                        gid_t *gid, char *group);
+int sge_get_auth_info(sge_gdi_request *request, 
+                      uid_t *uid, char *user, size_t user_len,
+                      gid_t *gid, char *group, size_t group_len);
 
 int sge_security_verify_user(const char *host, const char *commproc, u_long32 id, const char *user); 
 
-void sge_security_event_handler(te_event_t anEvent);
+bool sge_security_verify_unique_identifier(bool check_admin_user, 
+                                           const char* user, 
+                                           const char* progname,
+                                           unsigned long progid, 
+                                           const char* hostname, 
+                                           const char* commproc, 
+                                           unsigned long commid);
+
+void sge_security_event_handler(te_event_t anEvent, monitoring_t *monitor);
 
 #endif /* __SGE_SECURITY_H */
 

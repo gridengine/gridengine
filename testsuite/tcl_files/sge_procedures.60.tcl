@@ -111,9 +111,10 @@ proc copy_certificates { host } {
          puts $CHECK_OUTPUT $result
                     
          # tar file will be on nfs - wait for it to be visible
-         wait_for_remote_file $host $CHECK_USER "$ts_config(results_dir)/port${ts_config(commd_port)}.tar"
+         wait_for_remote_file $host "root" "$ts_config(results_dir)/port${ts_config(commd_port)}.tar"
                     
-         puts $CHECK_OUTPUT "copy tar file \"$ts_config(results_dir)/port${ts_config(commd_port)}.tar\"\nto \"$TAR_FILE\" on host $host ..."
+         puts $CHECK_OUTPUT "copy tar file \"$ts_config(results_dir)/port${ts_config(commd_port)}.tar\"\nto \"$TAR_FILE\" on host $host as root user ..."
+         after 1000
          set result [ start_remote_prog "$host" "root" "cp" "$ts_config(results_dir)/port${ts_config(commd_port)}.tar $TAR_FILE" prg_exit_state 300 ]
          puts $CHECK_OUTPUT $result
 

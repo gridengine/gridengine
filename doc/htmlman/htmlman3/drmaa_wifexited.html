@@ -92,10 +92,10 @@ DESCRIPTION
      return code is DRMAA_ERRNO_EXIT_TIMEOUT.
 
      The <I>dispose</I> parameter specifies how to treat reaping  infor-
-     mation. If '0' is passed to this paramter, job finish infor-
-     mation will still be available when <B><A HREF="../htmlman3/drmaa_wait.html">drmaa_wait(3)</A></B>  is  used.
-     If  '1'  is  passed,  <B><A HREF="../htmlman3/drmaa_wait.html">drmaa_wait(3)</A></B> will be unable to access
-     this job's finish information.
+     mation.  If  '0'  is  passed  to  this parameter, job finish
+     information will still be available  when  <B><A HREF="../htmlman3/drmaa_wait.html">drmaa_wait(3)</A></B>  is
+     used.  If  '1'  is  passed,  <B><A HREF="../htmlman3/drmaa_wait.html">drmaa_wait(3)</A></B> will be unable to
+     access this job's finish information.
 
   drmaa_wait()
      The drmaa_wait() function blocks the calling thread until  a
@@ -132,7 +132,7 @@ DESCRIPTION
 
      If <I>stat</I> is not a null pointer, then on return  from  a  suc-
      cessful  <B><A HREF="../htmlman3/drmaa_wait.html">drmaa_wait(3)</A></B> call, the status of the job is stored
-     in the interger pointed to by <I>stat</I>.  <I>stat</I> indicates  whether
+     in the integer pointed to by <I>stat</I>.  <I>stat</I>  indicates  whether
      job  failed  or finished and other information. The informa-
      tion encoded in  the  integer  value  can  be  accessed  via
      <B><A HREF="../htmlman3/drmaa_wifaborted.html">drmaa_wifaborted(3)</A></B>  <B><A HREF="../htmlman3/drmaa_wifexited.html">drmaa_wifexited(3)</A></B> <B><A HREF="../htmlman3/drmaa_wifsignaled.html">drmaa_wifsignaled(3)</A></B>

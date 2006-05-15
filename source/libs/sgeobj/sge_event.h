@@ -39,4 +39,6 @@
 
 const char *event_text(const lListElem *event, dstring *buffer);
 
+bool event_client_verify(const lListElem *event_client, lList **answer_list, bool add);
+
 #endif /* __SGE_EVENT_H */

@@ -65,6 +65,7 @@
 #include "sge_spool.h"
 #include "qevent.h"
 #include "sge_profiling.h"
+#include "sge_mt_init.h"
 
 
 #if defined(SOLARIS) || defined(ALPHA)
@@ -139,7 +140,7 @@ bool print_jatask_event(sge_object_type type, sge_event_action action,
 
    DPRINTF(("%s\n", event_text(event, &buffer_wrapper)));
 /*    fprintf(stdout,"%s\n",event_text(event, &buffer_wrapper)); */
-   if (lGetPosViaElem(event, ET_type) >= 0) {
+   if (lGetPosViaElem(event, ET_type, SGE_NO_ABORT) >= 0) {
       u_long32 type = lGetUlong(event, ET_type);
       if (type == sgeE_JATASK_MOD) { 
          lList *jat = lGetList(event,ET_new_version);
@@ -209,7 +210,7 @@ bool analyze_jatask_event(sge_object_type type, sge_event_action action,
 
    sge_dstring_init(&buffer_wrapper, buffer, sizeof(buffer));
    
-   if (lGetPosViaElem(event, ET_type) >= 0) {
+   if (lGetPosViaElem(event, ET_type, SGE_NO_ABORT) >= 0) {
       u_long32 type = lGetUlong(event, ET_type);
 
       if (type == sgeE_JATASK_MOD) { 
@@ -470,7 +471,7 @@ int main(int argc, char *argv[])
 
    DENTER_MAIN(TOP_LAYER, "qevent");
 
-   sge_prof_setup();
+   sge_mt_init();
 
    /* dump pid to file */
    qevent_dump_pid_file();
@@ -565,8 +566,8 @@ int main(int argc, char *argv[])
                /*   ec_unsubscribe(sgeE_JOB_ADD); */
                   
                   /* free the what and where mask */
-                  where = lFreeWhere(where);
-                  what = lFreeWhat(what);
+                  lFreeWhere(&where);
+                  lFreeWhat(&what);
                break;
             case QEVENT_JB_TASK_END:
             
@@ -584,8 +585,8 @@ int main(int argc, char *argv[])
                   ec_unsubscribe(sgeE_JATASK_MOD);
 
                   /* free the what and where mask */
-                  where = lFreeWhere(where);
-                  what = lFreeWhat(what);
+                  lFreeWhere(&where);
+                  lFreeWhat(&what);
                break;
          }        
       }
@@ -629,7 +630,7 @@ static char* qevent_get_event_name(int event) {
 
 
 
-void qevent_testsuite_mode(void) 
+static void qevent_testsuite_mode(void) 
 {
 #if 0 /* EB: DEBUG */
 #define QEVENT_SHOW_ALL
@@ -670,24 +671,24 @@ void qevent_testsuite_mode(void)
     what =  lIntVector2What(JB_Type, job_nm); 
 
    sge_mirror_subscribe(SGE_TYPE_JOB, print_jatask_event, NULL, NULL, where, what);
-   where = lFreeWhere(where);
-   what = lFreeWhat(what);
+   lFreeWhere(&where);
+   lFreeWhat(&what);
    
    where = NULL; 
    what = lIntVector2What(JAT_Type, jat_nm); 
 
    sge_mirror_subscribe(SGE_TYPE_JATASK, print_jatask_event, NULL, NULL, where, what);
-   where = lFreeWhere(where);
-   what = lFreeWhat(what);
+   lFreeWhere(&where);
+   lFreeWhat(&what);
  
    /* we want a 5 second event delivery interval */
    ec_set_edtime(5);
 
    /* and have our events flushed immediately */
-   ec_set_flush(sgeE_JATASK_MOD, true, 0);
-   ec_set_flush(sgeE_JOB_FINAL_USAGE, true, 0);
-   ec_set_flush(sgeE_JOB_ADD, true, 0);
-   ec_set_flush(sgeE_JOB_DEL, true, 0);
+   ec_set_flush(sgeE_JATASK_MOD, true, 1);
+   ec_set_flush(sgeE_JOB_FINAL_USAGE, true, 1);
+   ec_set_flush(sgeE_JOB_ADD, true, 1);
+   ec_set_flush(sgeE_JOB_DEL, true, 1);
 
 #endif
    

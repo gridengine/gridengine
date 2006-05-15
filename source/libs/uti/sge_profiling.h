@@ -41,36 +41,6 @@
 
 #include "sge_dstring.h"
 
-/* Thread timeout measurement */
-typedef enum sge_thread_name_def {
-   SGE_MASTER_EVENT_DELIVER_THREAD = 1,
-   SGE_MASTER_TIMED_EVENT_THREAD,
-   SGE_MASTER_MESSAGE_THREAD,
-   SGE_MASTER_SIGNAL_THREAD,
-   SGE_EXECD_MAIN
-} sge_thread_name_t;
-
-typedef struct sge_thread_alive_data_def {
-   struct timeval  timestamp;         /* timestamp struct */
-   int             warning_timeout;   /* timeout for warning state in seconds */
-   int             error_timeout;     /* timeout for error state in seconds */
-   char            state;             /* thread status W=Warning, E=Error, R=Running */
-} sge_thread_alive_data_t;
-
-typedef struct sge_thread_alive_times_def {
-   sge_thread_alive_data_t event_deliver_thread;
-   sge_thread_alive_data_t timed_event_thread;
-   sge_thread_alive_data_t message_thread;
-   sge_thread_alive_data_t signal_thread;
-
-   sge_thread_alive_data_t execd_main;
-} sge_thread_alive_times_t;
-
-void sge_update_thread_alive_time(sge_thread_name_t thread);
-void sge_lock_alive_time_mutex(void);
-void sge_unlock_alive_time_mutex(void);
-sge_thread_alive_times_t* sge_get_thread_alive_times(void);
-
 typedef enum {
    SGE_PROF_NONE = -1,
    SGE_PROF_OTHER = 0,

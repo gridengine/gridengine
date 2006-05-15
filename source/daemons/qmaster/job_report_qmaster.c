@@ -145,7 +145,8 @@ lListElem *report,
 lListElem *hep,
 char *rhost,
 char *commproc,
-sge_pack_buffer *pb  
+sge_pack_buffer *pb,
+monitoring_t *monitor
 ) {
    lList* jrl = NULL; /* JR_Type */
    lListElem *jep, *jr, *ep, *jatep = NULL; 
@@ -324,7 +325,7 @@ sge_pack_buffer *pb
                  
                   if (status == JTRANSFERING) { /* got async ack for this job */
                      DPRINTF(("--- transfering job "sge_u32" is running\n", jobid));
-                     sge_commit_job(jep, jatep, jr, COMMIT_ST_ARRIVED, COMMIT_DEFAULT); /* implicitly sending usage to schedd */
+                     sge_commit_job(jep, jatep, jr, COMMIT_ST_ARRIVED, COMMIT_DEFAULT, monitor); /* implicitly sending usage to schedd */
                      cancel_job_resend(jobid, jataskid);
                   } else {
                      /* need to generate a job event for new usage 
@@ -504,7 +505,15 @@ sge_pack_buffer *pb
                if (lGetUlong(first_at_host, JG_tag_slave_job) != 0) {
 
                   DPRINTF(("slave job "sge_u32" arrived at %s\n", jobid, rhost));
+#if 0 /* EB: DEBUG: This code can be used to provoke IZ 1619 */
+                  srand(time(0));
+                  if (rand() > RAND_MAX / 2) {
+                     lSetUlong(first_at_host, JG_tag_slave_job, 0); 
+                  }
+#else      
                   lSetUlong(first_at_host, JG_tag_slave_job, 0);
+#endif
+                
 
                   /* should trigger a fast delivery of the job to master execd 
                      script but only when all other slaves have also arrived */ 
@@ -641,7 +650,7 @@ sge_pack_buffer *pb
                      DPRINTF(("--- running job "sge_u32"."sge_u32" is exiting\n", 
                         jobid, jataskid, (status==JTRANSFERING)?"transfering":"running"));
 
-                     sge_job_exit(jr, jep, jatep);
+                     sge_job_exit(jr, jep, jatep, monitor);
                   } else {
                      u_long32 failed = lGetUlong(jr, JR_failed);
 
@@ -758,7 +767,7 @@ sge_pack_buffer *pb
                                           true, true);
                            answer_list_output(&answer_list);
                         }
-                        lRemoveElem(lGetList(jatep, JAT_task_list), petask);
+                        lRemoveElem(lGetList(jatep, JAT_task_list), &petask);
                         
                         /* get rid of this job in case a task died from XCPU/XFSZ or 
                            exited with a core dump */

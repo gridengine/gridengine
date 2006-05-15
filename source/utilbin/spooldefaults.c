@@ -71,25 +71,25 @@ static int spool_object_list(const char *directory,
 static void usage(const char *argv0)
 {
    fprintf(stderr, "%s\n %s command\n\n", MSG_UTILBIN_USAGE, argv0);
-   fprintf(stderr, "%s", MSG_SPOOLDEFAULTS_COMMANDINTRO1);
-   fprintf(stderr, "%s", MSG_SPOOLDEFAULTS_COMMANDINTRO2);
-   fprintf(stderr, "%s", MSG_SPOOLDEFAULTS_TEST);
-   fprintf(stderr, "%s", MSG_SPOOLDEFAULTS_ADMINHOSTS);
-   fprintf(stderr, "%s", MSG_SPOOLDEFAULTS_CALENDARS);
-   fprintf(stderr, "%s", MSG_SPOOLDEFAULTS_CKPTS);
-   fprintf(stderr, "%s", MSG_SPOOLDEFAULTS_COMPLEXES);
-   fprintf(stderr, "%s", MSG_SPOOLDEFAULTS_CONFIGURATION);
-   fprintf(stderr, "%s", MSG_SPOOLDEFAULTS_CQUEUES);
-   fprintf(stderr, "%s", MSG_SPOOLDEFAULTS_EXECHOSTS);
-   fprintf(stderr, "%s", MSG_SPOOLDEFAULTS_LOCAL_CONF);
-   fprintf(stderr, "%s", MSG_SPOOLDEFAULTS_MANAGERS);
-   fprintf(stderr, "%s", MSG_SPOOLDEFAULTS_OPERATORS);
-   fprintf(stderr, "%s", MSG_SPOOLDEFAULTS_PES);
-   fprintf(stderr, "%s", MSG_SPOOLDEFAULTS_PROJECTS);
-   fprintf(stderr, "%s", MSG_SPOOLDEFAULTS_SHARETREE);
-   fprintf(stderr, "%s", MSG_SPOOLDEFAULTS_SUBMITHOSTS);
-   fprintf(stderr, "%s", MSG_SPOOLDEFAULTS_USERS);
-   fprintf(stderr, "%s", MSG_SPOOLDEFAULTS_USERSETS);
+   fprintf(stderr, "%s\n", MSG_SPOOLDEFAULTS_COMMANDINTRO1);
+   fprintf(stderr, "%s\n", MSG_SPOOLDEFAULTS_COMMANDINTRO2);
+   fprintf(stderr, "%s\n", MSG_SPOOLDEFAULTS_TEST);
+   fprintf(stderr, "%s\n", MSG_SPOOLDEFAULTS_ADMINHOSTS);
+   fprintf(stderr, "%s\n", MSG_SPOOLDEFAULTS_CALENDARS);
+   fprintf(stderr, "%s\n", MSG_SPOOLDEFAULTS_CKPTS);
+   fprintf(stderr, "%s\n", MSG_SPOOLDEFAULTS_COMPLEXES);
+   fprintf(stderr, "%s\n", MSG_SPOOLDEFAULTS_CONFIGURATION);
+   fprintf(stderr, "%s\n", MSG_SPOOLDEFAULTS_CQUEUES);
+   fprintf(stderr, "%s\n", MSG_SPOOLDEFAULTS_EXECHOSTS);
+   fprintf(stderr, "%s\n", MSG_SPOOLDEFAULTS_LOCAL_CONF);
+   fprintf(stderr, "%s\n", MSG_SPOOLDEFAULTS_MANAGERS);
+   fprintf(stderr, "%s\n", MSG_SPOOLDEFAULTS_OPERATORS);
+   fprintf(stderr, "%s\n", MSG_SPOOLDEFAULTS_PES);
+   fprintf(stderr, "%s\n", MSG_SPOOLDEFAULTS_PROJECTS);
+   fprintf(stderr, "%s\n", MSG_SPOOLDEFAULTS_SHARETREE);
+   fprintf(stderr, "%s\n", MSG_SPOOLDEFAULTS_SUBMITHOSTS);
+   fprintf(stderr, "%s\n", MSG_SPOOLDEFAULTS_USERS);
+   fprintf(stderr, "%s\n", MSG_SPOOLDEFAULTS_USERSETS);
 }
 
 static int init_framework(void)
@@ -184,7 +184,7 @@ static int spool_manops(sge_object_type type, int argc, char *argv[])
 static int spool_configuration(int argc, char *argv[])
 {
    int ret = EXIT_SUCCESS;
-   lListElem *conf;
+   lListElem *conf = NULL;
    lList *answer_list = NULL;
 
    DENTER(TOP_LAYER, "spool_configuration");
@@ -195,14 +195,13 @@ static int spool_configuration(int argc, char *argv[])
       ret = EXIT_FAILURE;
    } else {
       /* put config into a list - we can't spool free objects */
-      lList *list = lCreateList("list", CONF_Type);
-      lAppendElem(list, conf);
       if (!spool_write_object(&answer_list, spool_get_default_context(), conf, SGE_GLOBAL_NAME, SGE_TYPE_CONFIG)) {
          /* error output has been done in spooling function */
          ret = EXIT_FAILURE;
       }
       answer_list_output(&answer_list);
    }
+   lFreeElem(&conf);
 
    DEXIT;
    return ret;
@@ -211,8 +210,6 @@ static int spool_configuration(int argc, char *argv[])
 static int spool_local_conf(int argc, char *argv[])
 {
    int ret = EXIT_SUCCESS;
-   lListElem *conf;
-   lList *answer_list = NULL;
 
    DENTER(TOP_LAYER, "spool_local_conf");
 
@@ -221,13 +218,13 @@ static int spool_local_conf(int argc, char *argv[])
       usage(argv[0]);
       ret = EXIT_FAILURE;
    } else {
-      conf = read_configuration(argv[2], argv[3], FLG_CONF_SPOOL);
+      lList *answer_list = NULL;
+      lListElem *conf = read_configuration(argv[2], argv[3], FLG_CONF_SPOOL);
 
       if (conf == NULL) {
          ERROR((SGE_EVENT, MSG_SPOOLDEFAULTS_CANTREADLOCALCONF_S, argv[2]));
          ret = EXIT_FAILURE;
       } else {
-         lList *list;
          lListElem *context = spool_create_dynamic_context(NULL, 
                               bootstrap_get_spooling_method(),
                               bootstrap_get_spooling_lib(), 
@@ -237,8 +234,6 @@ static int spool_local_conf(int argc, char *argv[])
          lListElem *le = spool_read_object(NULL, context, SGE_TYPE_CONFIG, argv[3]); 
          if ( le == NULL) { 
             /* put config into a list - we can't spool free objects */
-            list = lCreateList("list", CONF_Type);
-            lAppendElem(list, conf);
             if (!spool_write_object(&answer_list, spool_get_default_context(), 
                                  conf, argv[3], SGE_TYPE_CONFIG)) {
                /* error output has been done in spooling function */
@@ -249,6 +244,8 @@ static int spool_local_conf(int argc, char *argv[])
          }
          answer_list_output(&answer_list);
       }
+      lFreeElem(&conf);
+      lFreeList(&answer_list);
    }
 
    DEXIT;
@@ -410,6 +407,8 @@ static int spool_object_list(const char *directory,
          break;
       }
    }
+   lFreeList(&answer_list);
+   lFreeList(&list);
 
    DEXIT;
    return ret;

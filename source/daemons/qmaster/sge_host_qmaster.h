@@ -36,6 +36,7 @@
 #include "sge_c_gdi.h"
 #include "sge_feature.h"
 #include "sge_qmaster_timed_event.h"
+#include "uti/sge_monitor.h"
 
 
 /* funtions called via gdi and inside the qmaster */
@@ -43,23 +44,26 @@ int sge_del_host(lListElem *, lList **, char *, char *, u_long32, const lList* m
 
 int host_spool(lList **alpp, lListElem *ep, gdi_object_t *object);
 
-int host_mod(lList **alpp, lListElem *new_host, lListElem *ep, int add, const char *ruser, const char *rhost, gdi_object_t *object, int sub_command);
+int host_mod(lList **alpp, lListElem *new_host, lListElem *ep, int add, 
+             const char *ruser, const char *rhost, gdi_object_t *object, 
+             int sub_command, monitoring_t *monitor);
 
-int host_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object, lList **ppList);
+int host_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object, lList **ppList, monitoring_t *monitor);
 
 void sge_mark_unheard(lListElem *hep, const char *target);
 
-int sge_add_host_of_type(const char *hostname, u_long32 target);
+int sge_add_host_of_type(const char *hostname, u_long32 target, monitoring_t *monitor);
 
-void sge_gdi_kill_exechost(char *host, sge_gdi_request *request, sge_gdi_request *answer);
+void sge_gdi_kill_exechost(char *host, sge_gdi_request *request, sge_gdi_request *answer, uid_t uid, gid_t gid, char *user, char *group);
 
 void sge_update_load_values(char *rhost, lList *lp);
 
-void sge_load_value_cleanup_handler(te_event_t anEvent);
+void sge_load_value_cleanup_handler(te_event_t anEvent, monitoring_t *monitor);
 
 int sge_count_uniq_hosts(lList *ahl, lList *shl);
 
-int sge_execd_startedup(lListElem *hep, lList **alpp, char *ruser, char *rhost, u_long32 target);
+int sge_execd_startedup(lListElem *hep, lList **alpp, char *ruser, char *rhost, 
+                        u_long32 target, monitoring_t *monitor);
 
 u_long32 load_report_interval(lListElem *hep); 
 u_long32 sge_get_max_unheard_value(void); 
@@ -72,8 +76,8 @@ int host_notify_about_X(lListElem *host,
                         int progname_id);
 
 bool
-host_list_add_missing_href(lList *this_list, 
-                           lList **answer_list, const lList *href_list);
+host_list_add_missing_href(lList *this_list, lList **answer_list, const lList *href_list, 
+                           monitoring_t *monitor);
 
 #endif /* __SGE_HOST_QMASTER_H */
 

@@ -1,0 +1,7 @@
+name    userlist5
+type    ACL DEPT
+fshare  0
+oticket 0
+entries root,\
+ bin,\
+ sys

@@ -46,7 +46,6 @@ typedef struct {
    int               lerrno;            /* cull errno               */
    char              noinit[50];        /* cull error buffer        */
    const lSortOrder* global_sort_order; /* qsort() by-pass argument */
-   int               chunk_size;        /* chunk size if packing    */
    const lNameSpace* name_space;        /* name vector              */
 } cull_state_t;
 
@@ -98,17 +97,6 @@ const lSortOrder *cull_state_get_global_sort_order(void)
    cull_state = cull_state_getspecific(cull_state_key);
 
    return cull_state->global_sort_order;
-}
-
-int cull_state_get_chunk_size(void)
-{
-   cull_state_t *cull_state = NULL;
-
-   pthread_once(&cull_once, cull_once_init);
- 
-   cull_state = cull_state_getspecific(cull_state_key);
-
-   return cull_state->chunk_size;
 }
 
 const lNameSpace *cull_state_get_name_space(void)
@@ -165,19 +153,6 @@ void cull_state_set_global_sort_order( const lSortOrder *so)
    cull_state = cull_state_getspecific(cull_state_key);
 
    cull_state->global_sort_order = so;
-
-   return;
-}
-
-void cull_state_set_chunk_size( int chunk_size)
-{
-   cull_state_t *cull_state = NULL;
-
-   pthread_once(&cull_once, cull_once_init);
- 
-   cull_state = cull_state_getspecific(cull_state_key);
-
-   cull_state->chunk_size = chunk_size;
 
    return;
 }
@@ -318,6 +293,5 @@ static void cull_state_init(cull_state_t *theState)
    theState->lerrno = 0;
    theState->noinit[0] = '\0';
    theState->global_sort_order = NULL;
-   theState->chunk_size = CHUNK;
    theState->name_space = NULL;
 }

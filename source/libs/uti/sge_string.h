@@ -45,6 +45,8 @@ struct saved_vars_s {
 
 const char *sge_basename(const char *name, int delim);
 
+const char *sge_jobname(const char *name);
+
 char *sge_delim_str(char *str, char **delim_pos, const char *delim);
 
 char *sge_dirname(const char *name, int delim);
@@ -83,6 +85,9 @@ char **sge_stradup(char **cpp, int n);
 void sge_strafree(char **cpp); 
 
 char **sge_stramemncpy(const char *cp, char **cpp, int n);
+
+
+size_t sge_strlcpy(char *dst, const char *src, size_t dstsize);
 
 char **sge_stracasecmp(const char *cp, char **cpp);
 

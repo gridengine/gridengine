@@ -78,7 +78,7 @@
                       "ccrm" = connection close response message (CCRM) 
       MIH_MAT:     Message Acknowledge Type:
                       "nak"  = not acknowledged
-                      "ack"  = acknowledged after application has read the message from NGC, 
+                      "ack"  = acknowledged after commlib has read the message
                       "sync" = acknowledged after application has read the message from NGC AND processed the message
       MIH_TAG:     User defined
       MIH_RID:     Response ID
@@ -282,11 +282,6 @@
 #define CL_CCRM_MESSAGE_VERSION                      "0.1"
 
 
-typedef enum cl_bool_def {
-   CL_FALSE = 0,
-   CL_TRUE
-} cl_bool_t;
-
 
 typedef struct cl_com_endpoint {
    /* internal identification tripple */
@@ -445,6 +440,7 @@ int cl_xml_parse_SIRM(unsigned char* buffer, unsigned long buffer_length, cl_com
 int cl_xml_parse_CCM(unsigned char* buffer, unsigned long buffer_length, cl_com_CCM_t** message );
 int cl_xml_parse_CCRM(unsigned char* buffer, unsigned long buffer_length, cl_com_CCRM_t** message );
 
-
+int cl_com_transformString2XML(const char* input, char** output);
+int cl_com_transformXML2String(const char* input, char** output);
 #endif /* __CL_XML_PARSING_H */
 

@@ -73,6 +73,8 @@
 #include "sge_ulong.h"
 #include "sge_centry.h"
 #include "sge_profiling.h"
+#include "sgeobj/sge_schedd_conf.h"
+#include "sge_mt_init.h"
 
 #define QHOST_DISPLAY_QUEUES     (1<<0)
 #define QHOST_DISPLAY_JOBS       (1<<1)
@@ -117,7 +119,7 @@ char **argv
 
    DENTER_MAIN(TOP_LAYER, "qhost");
 
-   sge_prof_setup();
+   sge_mt_init();
   
    log_state_set_log_gui(1);
 
@@ -139,10 +141,10 @@ char **argv
       ** high level parsing error! sow answer list
       */
       for_each(aep, alp) {
-         fprintf(stderr, "%s", lGetString(aep, AN_text));
+         fprintf(stderr, "%s\n", lGetString(aep, AN_text));
       }
-      lFreeList(alp);
-      lFreeList(pcmdline);
+      lFreeList(&alp);
+      lFreeList(&pcmdline);
       sge_prof_cleanup();
       SGE_EXIT(1);
    }
@@ -164,10 +166,10 @@ char **argv
       ** low level parsing error! show answer list
       */
       for_each(aep, alp) {
-         fprintf(stderr, "%s", lGetString(aep, AN_text));
+         fprintf(stderr, "%s\n", lGetString(aep, AN_text));
       }
-      alp = lFreeList(alp);
-      pcmdline = lFreeList(pcmdline);
+      lFreeList(&alp);
+      lFreeList(&pcmdline);
       sge_prof_cleanup();
       SGE_EXIT(1);
    }
@@ -192,10 +194,18 @@ char **argv
    if (lGetNumberOfElem(resource_match_list)) {
       int selected;
 
-      if (centry_list_fill_request(resource_match_list, cl, true, true, false)) {
+      if (centry_list_fill_request(resource_match_list, &alp, cl, true, true, false)) {
          /* error message gets written by centry_list_fill_request into SGE_EVENT */
          SGE_EXIT(1);
       }
+
+      {/* clean host list */
+         lListElem *host = NULL;
+         for_each(host, ehl) {
+            lSetUlong(host, EH_tagged, 0);
+         }  
+      }   
+         
       /* prepare request */
       for_each(ep, ehl) {
 
@@ -205,10 +215,14 @@ char **argv
 
          DPRINTF(("matching host %s with qhost -l\n", lGetHost(ep, EH_name)));
 
-         selected = sge_select_queue(resource_match_list, NULL, ep, ehl, cl, true, -1);
+         selected = sge_select_queue(resource_match_list, NULL, ep, ehl, cl, 
+                                     true, -1, NULL, NULL, NULL);
 
-         if (selected) 
+         if (selected) { 
             lSetUlong(ep, EH_tagged, 1);
+         } else {
+            lSetUlong(ep, EH_tagged, 0);
+         }
       }
 
       /*
@@ -216,7 +230,7 @@ char **argv
       */
       where = lWhere("%T(%I == %u)", EH_Type, EH_tagged, 1);
       lSplit(&ehl, NULL, NULL, where);
-      where = lFreeWhere(where);
+      lFreeWhere(&where);
    }
 
    /* scale load values and adjust consumable capacities */
@@ -229,7 +243,7 @@ char **argv
    ep = NULL;
    where = lWhere("%T(%I == %s)", EH_Type, EH_name, SGE_GLOBAL_NAME );
    ep = lDechainElem(ehl, lFindFirst(ehl, where));
-   lFreeWhere(where); 
+   lFreeWhere(&where);
    if (ep) {
       lInsertElem(ehl,NULL,ep); 
    }
@@ -252,8 +266,8 @@ char **argv
       sge_print_queues(ql, ep, jl, NULL, ehl, cl, pel, show);
    }   
 
-   lFreeList(ehl);
-   lFreeList(alp);
+   lFreeList(&ehl);
+   lFreeList(&alp);
    sge_prof_cleanup();
 
    SGE_EXIT(status==STATUS_OK?0:1); /* 0 means ok - others are errors */
@@ -283,7 +297,7 @@ lList *centry_list
    host = lGetHost(hep, EH_name);
 
    /* cut away domain in case of ignore_fqdn */
-   strncpy(host_print, host, CL_MAXHOSTLEN);
+   sge_strlcpy(host_print, host, CL_MAXHOSTLEN);
    if (bootstrap_get_ignore_fqdn() && (s = strchr(host_print, '.')))
       *s = '\0';
 
@@ -292,10 +306,10 @@ lList *centry_list
    */
    lep=get_attribute_by_name(NULL, hep, NULL, LOAD_ATTR_ARCH, centry_list, DISPATCH_TIME_NOW, 0);
    if (lep) {
-      strncpy(arch_string, sge_get_dominant_stringval(lep, &dominant, &rs), 
-               sizeof(arch_string)-1); 
+      sge_strlcpy(arch_string, sge_get_dominant_stringval(lep, &dominant, &rs), 
+               sizeof(arch_string)); 
       sge_dstring_clear(&rs);
-      lep = lFreeElem(lep);
+      lFreeElem(&lep);
    }            
    else
       strcpy(arch_string, "-");
@@ -305,10 +319,10 @@ lList *centry_list
    */
    lep=get_attribute_by_name(NULL, hep, NULL, "num_proc", centry_list, DISPATCH_TIME_NOW, 0);
    if (lep) {
-      strncpy(num_proc, sge_get_dominant_stringval(lep, &dominant, &rs),
-               sizeof(num_proc)-1); 
+      sge_strlcpy(num_proc, sge_get_dominant_stringval(lep, &dominant, &rs),
+               sizeof(num_proc)); 
       sge_dstring_clear(&rs);
-      lep = lFreeElem(lep);
+      lFreeElem(&lep);
    }            
    else
       strcpy(num_proc, "-");
@@ -320,7 +334,7 @@ lList *centry_list
    if (lep) {
       reformatDoubleValue(load_avg, "%.2f%c", sge_get_dominant_stringval(lep, &dominant, &rs));
       sge_dstring_clear(&rs);
-      lep = lFreeElem(lep);
+      lFreeElem(&lep);
    }            
    else
       strcpy(load_avg, "-");
@@ -332,7 +346,7 @@ lList *centry_list
    if (lep) {
       reformatDoubleValue(mem_total, "%.1f%c", sge_get_dominant_stringval(lep, &dominant, &rs));
       sge_dstring_clear(&rs);
-      lep = lFreeElem(lep);
+      lFreeElem(&lep);
    }            
    else
       strcpy(mem_total, "-");
@@ -344,7 +358,7 @@ lList *centry_list
    if (lep) {
       reformatDoubleValue(mem_used, "%.1f%c", sge_get_dominant_stringval(lep, &dominant, &rs));
       sge_dstring_clear(&rs);
-      lep = lFreeElem(lep);
+      lFreeElem(&lep);
    }            
    else
       strcpy(mem_used, "-");
@@ -356,7 +370,7 @@ lList *centry_list
    if (lep) {
       reformatDoubleValue(swap_total, "%.1f%c", sge_get_dominant_stringval(lep, &dominant, &rs));
       sge_dstring_clear(&rs);
-      lep = lFreeElem(lep);
+      lFreeElem(&lep);
    }            
    else
       strcpy(swap_total, "-");
@@ -368,7 +382,7 @@ lList *centry_list
    if (lep) {
       reformatDoubleValue(swap_used, "%.1f%c", sge_get_dominant_stringval(lep, &dominant, &rs));
       sge_dstring_clear(&rs);
-      lep = lFreeElem(lep);
+      lFreeElem(&lep);
    }            
    else
       strcpy(swap_used, "-");
@@ -600,7 +614,7 @@ u_long32 show
          break;
       }
    }
-   lFreeList(rlp);
+   lFreeList(&rlp);
    sge_dstring_free(&resource_string);
    DEXIT;
 }
@@ -633,13 +647,13 @@ FILE *fp
 
    fprintf(fp,"%s qhost [options]\n", MSG_SRC_USAGE);
          
-   fprintf(fp, "  [-help]                    %s", MSG_QHOST_help_OPT_USAGE);
-   fprintf(fp, "  [-h hostlist]              %s", MSG_QHOST_h_OPT_USAGE);
-   fprintf(fp, "  [-q]                       %s", MSG_QHOST_q_OPT_USAGE);
-   fprintf(fp, "  [-j]                       %s", MSG_QHOST_j_OPT_USAGE);
-   fprintf(fp, "  [-l attr=val,...]          %s", MSG_QHOST_l_OPT_USAGE);
-   fprintf(fp, "  [-F [resource_attribute]]  %s", MSG_QHOST_F_OPT_USAGE); 
-   fprintf(fp, "  [-u user[,user,...]]       %s", MSG_QHOST_u_OPT_USAGE); 
+   fprintf(fp, "  [-help]                    %s\n", MSG_QHOST_help_OPT_USAGE);
+   fprintf(fp, "  [-h hostlist]              %s\n", MSG_QHOST_h_OPT_USAGE);
+   fprintf(fp, "  [-q]                       %s\n", MSG_QHOST_q_OPT_USAGE);
+   fprintf(fp, "  [-j]                       %s\n", MSG_QHOST_j_OPT_USAGE);
+   fprintf(fp, "  [-l attr=val,...]          %s\n", MSG_QHOST_l_OPT_USAGE);
+   fprintf(fp, "  [-F [resource_attribute]]  %s\n", MSG_QHOST_F_OPT_USAGE); 
+   fprintf(fp, "  [-u user[,user,...]]       %s\n", MSG_QHOST_u_OPT_USAGE); 
 
    if (fp==stderr) {
       SGE_EXIT(1);
@@ -779,7 +793,7 @@ lListElem *ep;
       }
 
       if(parse_string(ppcmdline, "-l", &alp, &argstr)) {
-         *pplres = centry_list_parse_from_string(*pplres, argstr, true);
+         *pplres = centry_list_parse_from_string(*pplres, argstr, false);
          FREE(argstr);
          continue;
       }
@@ -914,19 +928,19 @@ lWriteListTo(ehl, stdout);
    eh_all = lWhat("%T(ALL)", EH_Type);
    eh_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_EXECHOST_LIST, SGE_GDI_GET, 
                         NULL, where, eh_all, NULL, &state, true);
-   eh_all = lFreeWhat(eh_all);
-   where = lFreeWhere(where);
+   lFreeWhat(&eh_all);
+   lFreeWhere(&where);
 
    if (alp) {
-      printf("%s", lGetString(lFirst(alp), AN_text));
+      printf("%s\n", lGetString(lFirst(alp), AN_text));
       SGE_EXIT(1);
    }
 
    q_all = lWhat("%T(ALL)", QU_Type);
    q_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_CQUEUE_LIST, SGE_GDI_GET, 
                         NULL, NULL, q_all, NULL, &state, true);
-   q_all = lFreeWhat(q_all);
-   qw = lFreeWhere(qw);
+   lFreeWhat(&q_all);
+   lFreeWhere(&qw);
 
    if (alp) {
       printf("%s\n", lGetString(lFirst(alp), AN_text));
@@ -994,11 +1008,11 @@ lWriteListTo(ehl, stdout);
 
       j_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_JOB_LIST, SGE_GDI_GET, 
                            NULL, jw, j_all, NULL, &state, true);
-      j_all = lFreeWhat(j_all);
-      jw = lFreeWhere(jw);
+      lFreeWhat(&j_all);
+      lFreeWhere(&jw);
 
       if (alp) {
-         printf("%s", lGetString(lFirst(alp), AN_text));
+         printf("%s\n", lGetString(lFirst(alp), AN_text));
          SGE_EXIT(1);
       }
    }
@@ -1009,10 +1023,10 @@ lWriteListTo(ehl, stdout);
    ce_all = lWhat("%T(ALL)", CE_Type);
    ce_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_CENTRY_LIST, SGE_GDI_GET, 
                         NULL, NULL, ce_all, NULL, &state, true);
-   ce_all = lFreeWhat(ce_all);
+   lFreeWhat(&ce_all);
 
    if (alp) {
-      printf("%s", lGetString(lFirst(alp), AN_text));
+      printf("%s\n", lGetString(lFirst(alp), AN_text));
       SGE_EXIT(1);
    }
 
@@ -1022,10 +1036,10 @@ lWriteListTo(ehl, stdout);
    pe_all = lWhat("%T(ALL)", PE_Type);
    pe_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_PE_LIST, SGE_GDI_GET, 
                            NULL, NULL, pe_all, NULL, &state, true);
-   pe_all = lFreeWhat(pe_all);
+   lFreeWhat(&pe_all);
 
    if (alp) {
-      printf("%s", lGetString(lFirst(alp), AN_text));
+      printf("%s\n", lGetString(lFirst(alp), AN_text));
       SGE_EXIT(1);
    }
 
@@ -1036,11 +1050,11 @@ lWriteListTo(ehl, stdout);
    gc_what = lWhat("%T(ALL)", CONF_Type);
    gc_id = sge_gdi_multi(&alp, SGE_GDI_SEND, SGE_CONFIG_LIST, SGE_GDI_GET,
                         NULL, gc_where, gc_what, &mal, &state, true);
-   gc_what = lFreeWhat(gc_what);
-   gc_where = lFreeWhere(gc_where);
+   lFreeWhat(&gc_what);
+   lFreeWhere(&gc_where);
 
    if (alp) {
-      printf("%s", lGetString(lFirst(alp), AN_text));
+      printf("%s\n", lGetString(lFirst(alp), AN_text));
       SGE_EXIT(1);
    }
 
@@ -1052,38 +1066,38 @@ lWriteListTo(ehl, stdout);
    alp = sge_gdi_extract_answer(SGE_GDI_GET, SGE_EXECHOST_LIST, eh_id, 
                                  mal, exechost_l);
    if (!alp) {
-      printf(MSG_GDI_EXECHOSTSGEGDIFAILED);
+      printf("%s\n", MSG_GDI_EXECHOSTSGEGDIFAILED);
       SGE_EXIT(1);
    }
    if (lGetUlong(aep=lFirst(alp), AN_status) != STATUS_OK) {
-      printf("%s", lGetString(aep, AN_text));
+      printf("%s\n", lGetString(aep, AN_text));
       SGE_EXIT(1);
    }
-   alp = lFreeList(alp);
+   lFreeList(&alp);
 
    /* --- queue */
    alp = sge_gdi_extract_answer(SGE_GDI_GET, SGE_CQUEUE_LIST, q_id, 
                                  mal, queue_l);
    if (!alp) {
-      printf(MSG_GDI_QUEUESGEGDIFAILED);
+      printf("%s\n", MSG_GDI_QUEUESGEGDIFAILED);
       SGE_EXIT(1);
    }
    if (lGetUlong(aep=lFirst(alp), AN_status) != STATUS_OK) {
-      printf("%s", lGetString(aep, AN_text));
+      printf("%s\n", lGetString(aep, AN_text));
       SGE_EXIT(1);
    }
-   alp = lFreeList(alp);
+   lFreeList(&alp);
 
    /* --- job */
    if (job_l && (show & QHOST_DISPLAY_JOBS)) {
       lListElem *ep = NULL;
       alp = sge_gdi_extract_answer(SGE_GDI_GET, SGE_JOB_LIST, j_id, mal, job_l);
       if (!alp) {
-         printf(MSG_GDI_JOBSGEGDIFAILED);
+         printf("%s\n", MSG_GDI_JOBSGEGDIFAILED);
          SGE_EXIT(1);
       }
       if (lGetUlong(aep=lFirst(alp), AN_status) != STATUS_OK) {
-         printf("%s", lGetString(aep, AN_text));
+         printf("%s\n", lGetString(aep, AN_text));
          SGE_EXIT(1);
       }
       /*
@@ -1093,52 +1107,52 @@ lWriteListTo(ehl, stdout);
          for_each(jatep, lGetList(ep, JB_ja_tasks))
             lSetUlong(jatep, JAT_suitable, TAG_SHOW_IT);
 
-      alp = lFreeList(alp);
+      lFreeList(&alp);
    }
 
    /* --- complex attribute */
    alp = sge_gdi_extract_answer(SGE_GDI_GET, SGE_CENTRY_LIST, ce_id,
                                  mal, centry_l);
    if (!alp) {
-      printf(MSG_GDI_COMPLEXSGEGDIFAILED);
+      printf("%s\n", MSG_GDI_COMPLEXSGEGDIFAILED);
       SGE_EXIT(1);
    }
    if (lGetUlong(aep=lFirst(alp), AN_status) != STATUS_OK) {
-      printf("%s", lGetString(aep, AN_text));
+      printf("%s\n", lGetString(aep, AN_text));
       SGE_EXIT(1);
    }
-   alp = lFreeList(alp);
+   lFreeList(&alp);
 
    /* --- pe */
    alp = sge_gdi_extract_answer(SGE_GDI_GET, SGE_PE_LIST, pe_id,
                                  mal, pe_l);
    if (!alp) {
-      printf(MSG_GDI_COMPLEXSGEGDIFAILED);
+      printf("%s\n", MSG_GDI_COMPLEXSGEGDIFAILED);
       SGE_EXIT(1);
    }
    if (lGetUlong(aep=lFirst(alp), AN_status) != STATUS_OK) {
-      printf("%s", lGetString(aep, AN_text));
+      printf("%s\n", lGetString(aep, AN_text));
       SGE_EXIT(1);
    }
-   alp = lFreeList(alp);
+   lFreeList(&alp);
 
    /* --- apply global configuration for sge_hostcmp() scheme */
    alp = sge_gdi_extract_answer(SGE_GDI_GET, SGE_CONFIG_LIST, gc_id, mal, &conf_l);
    if (!alp) {
-      printf(MSG_GDI_SCHEDDCONFIGSGEGDIFAILED);
+      printf("%s\n", MSG_GDI_SCHEDDCONFIGSGEGDIFAILED);
       SGE_EXIT(1);
    }
    if (lGetUlong(aep=lFirst(alp), AN_status) != STATUS_OK) {
-      printf("%s", lGetString(aep, AN_text));
+      printf("%s\n", lGetString(aep, AN_text));
       SGE_EXIT(1);
    }
    if (lFirst(conf_l)) {
       lListElem *local = NULL;
-      merge_configuration(lFirst(conf_l), local, &conf, NULL);
+      merge_configuration(lFirst(conf_l), local, NULL);
    }
-   alp = lFreeList(alp);
+   lFreeList(&alp);
 
-   mal = lFreeList(mal);
+   lFreeList(&mal);
 
    DEXIT;
    return;

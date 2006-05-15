@@ -150,10 +150,11 @@ proc add_queue { qname hostlist change_array {fast_add 0} } {
    set chgar(qname)     "$qname"
    set chgar(hostlist)  "$hostlist"
 
-   # just resolve the queue name 
-   foreach test_hname $hostlist {
-      resolve_queue "$qname@$test_hname"
-   }
+# just resolve the queue name 
+#   foreach test_hname $hostlist {
+#      resolve_queue "$qname@$test_hname"
+#   }
+
    # localize messages
    # JG: TODO: object name is taken from c_gdi object structure - not I18Ned!!
    set QUEUE [translate $ts_config(master_host) 1 0 0 [sge_macro MSG_OBJ_QUEUE]]
@@ -462,12 +463,16 @@ proc get_requestable_queue { queue host } {
 }
 
 proc get_cluster_queue {queue_instance} {
+   set cqueue $queue_instance
+
    if {$queue_instance != "" } {
       set at [string first "@" $queue_instance]
       if {$at > 0} {
-         set queue_instance [string range $queue_instance 0 [expr $at - 1]]
+         set cqueue [string range $queue_instance 0 [expr $at - 1]]
       }
    }
 
-   return $queue_instance
+   puts $CHECK_OUTPUT "queue instance $queue_instance is cluster queue $cqueue"
+
+   return $cqueue
 }

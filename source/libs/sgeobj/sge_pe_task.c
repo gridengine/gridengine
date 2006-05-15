@@ -37,13 +37,20 @@
 #include "sge_log.h"
 #include "cull_list.h"
 
-#include "sge_job.h"
-#include "sge_ja_task.h"
-#include "sge_pe_task.h"
+#include "sgeobj/sge_object.h"
+#include "sgeobj/sge_answer.h"
 
-#include "sge_usageL.h"
+#include "sgeobj/sge_job.h"
+#include "sgeobj/sge_ja_task.h"
+#include "sgeobj/sge_path_alias.h"
+#include "sgeobj/sge_pe_task.h"
+#include "sgeobj/sge_var.h"
+#include "sgeobj/sge_utility.h"
 
-#include "msg_sgeobjlib.h"
+#include "sgeobj/sge_usageL.h"
+
+#include "msg_common.h"
+#include "sgeobj/msg_sgeobjlib.h"
 
 /****** sgeobj/pe_task/pe_task_sum_past_usage() *******************************
 *  NAME
@@ -238,3 +245,113 @@ pe_task_sum_past_usage_list(lList *pe_task_list, const lListElem *pe_task)
    return container;
 }
 
+/****** sge_pe_task/pe_task_verify_request() ***********************************
+*  NAME
+*     pe_task_verify_request() -- verify a pe task request object
+*
+*  SYNOPSIS
+*     bool 
+*     pe_task_verify_request(const lListElem *petr, lList **answer_list) 
+*
+*  FUNCTION
+*     Verifies structure and contents of a pe task request.
+*     A pe task request is sent to sge_execd by qrsh -inherit.
+*
+*  INPUTS
+*     const lListElem *petr - the object to verify
+*     lList **answer_list   - answer list to pass back error messages
+*
+*  RESULT
+*     bool - true on success,
+*            false on error with error message in answer_list
+*
+*  NOTES
+*     MT-NOTE: pe_task_verify_request() is MT safe 
+*
+*  BUGS
+*     The function is far from being complete.
+*     Currently, only the CULL structure is verified, not the contents.
+*
+*  SEE ALSO
+*     sge_object/object_verify_cull()
+*******************************************************************************/
+bool 
+pe_task_verify_request(const lListElem *petr, lList **answer_list) {
+   bool ret = true;
+
+   DENTER(TOP_LAYER, "pe_task_verify_request");
+
+   if (petr == NULL) {
+      answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR,
+                              MSG_NULLELEMENTPASSEDTO_S, SGE_FUNC);
+      ret = false;
+   }
+
+   if (ret) {
+      if (!object_verify_cull(petr, PETR_Type)) {
+         answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR, 
+                                 MSG_OBJECT_STRUCTURE_ERROR);
+         ret = false;
+      }
+   }
+
+   /* 
+    * A pe task request entering execd must have some additional properties: 
+    *    - PETR_jobid > 0
+    *    - PETR_jataskid > 0
+    *    - PETR_owner != NULL
+    *    - verify PETR_queuename, if != NULL
+    *    - verify PETR_cwd, if it is != NULL
+    *    - verify PETR_path_aliases, if they are != NULL
+    *    - verify PETR_environment, if it is != NULL
+    *    - PETR_submission_time (currently unused)
+    */
+
+   if (ret) {
+      ret = object_verify_ulong_not_null(petr, answer_list, PETR_jobid);
+   }
+
+   if (ret) {
+      ret = object_verify_ulong_not_null(petr, answer_list, PETR_jataskid);
+   }
+
+   if (ret) {
+      ret = object_verify_string_not_null(petr, answer_list, PETR_owner);
+   }
+
+   if (ret) {
+      const char *queue_name = lGetString(petr, PETR_queuename);
+
+      if (queue_name != NULL) {
+         if (verify_str_key(answer_list, queue_name, MAX_VERIFY_STRING, lNm2Str(PETR_queuename)) != STATUS_OK) {
+            ret = false;
+         }
+      }
+   }
+
+   if (ret) {
+      const char *cwd = lGetString(petr, PETR_cwd);
+
+      if (cwd != NULL) {
+         ret = path_verify(cwd, answer_list);
+      }
+   }
+
+   if (ret) {
+      const lList *path_aliases = lGetList(petr, PETR_path_aliases);
+
+      if (path_aliases != NULL) {
+         ret = path_alias_verify(path_aliases, answer_list);
+      }
+   } 
+
+   if (ret) {
+      const lList *env_list = lGetList(petr, PETR_environment);
+
+      if (env_list != NULL) {
+         ret = var_list_verify(env_list, answer_list);
+      }
+   } 
+
+   DRETURN(ret);
+}

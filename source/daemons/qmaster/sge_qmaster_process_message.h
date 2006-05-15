@@ -33,6 +33,8 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-void *sge_qmaster_process_message(void *anArg);
+#include "sge_monitor.h"
+
+void *sge_qmaster_process_message(void *anArg, monitoring_t *monitor);
 
 #endif /* _SGE_QMASTER_PROCESS_MESSAGE_H_ */

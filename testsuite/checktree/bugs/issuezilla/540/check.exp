@@ -119,6 +119,8 @@ proc issue_540_check {} {
    wait_for_jobstart $job_id $job_name 300
    wait_for_jobend $job_id $job_name 20
 
+   # on slow NFS, it may take some time for outputfile to be visible
+   wait_for_file "$user_home/$job_output_file" 120 0 0
    if {![file exists "$user_home/$job_output_file"]} {
       add_proc_error "issue_540_check" "-1" "qsub did not create the specified output file $job_output_file"
    } else {

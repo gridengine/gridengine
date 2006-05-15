@@ -69,7 +69,10 @@ static char *sge_unparse_mail_options(u_long32 mail_opt);
 static int sge_unparse_checkpoint_option(lListElem *job, lList **pcmdline, lList **alpp);
 static int sge_unparse_account_string(lListElem *job, lList **pcmdline, lList **alpp);
 static int sge_unparse_path_list(lListElem *job, int nm, char *option, lList **pcmdline, lList **alpp);
+static int sge_unparse_pe(lListElem *job, lList **pcmdline, lList **alpp);
 
+static int sge_unparse_resource_list(lListElem *job, int nm, lList **pcmdline, lList **alpp);
+static int sge_unparse_string_option(lListElem *job, int nm, char *option, lList **pcmdline, lList **alpp);
 
 lList *cull_unparse_job_parameter(
 lList **pcmdline,
@@ -108,22 +111,6 @@ int flags
       return answer;
    }
   
-#if 0 /* JG: removed JB_cell from job object */  
-   /*
-   ** -cell
-   ** we make no difference between the default value and some other value
-   ** that comes from the -cell option, because we cant differentiate
-   ** as JB_cell is always set, there will always be a -cell option in a
-   ** defaults file
-   */
-   if (sge_unparse_string_option(job, JB_cell, "-cell", 
-            pcmdline, &answer) != 0) {
-      DEXIT;
-      return answer;
-   }
-#endif   
-
-
    /*
     * -ckpt 
     */
@@ -555,37 +542,6 @@ char *str
    return str;
 }
 
-#if 0
-static char *sge_unparse_hold_list(
-u_long32 hold 
-) {
-   static char hold_str[4 + 1];
-   char *pc;
-
-   DENTER(BASIS_LAYER, "sge_unparse_hold_list");
-   memset(hold_str, 0, sizeof(hold_str));
-   pc = hold_str;
-   if (VALID(USER, hold)) {
-      *pc++ = USER_SYM;
-   }
-   if (VALID(SYSTEM, hold)) {
-      *pc++ = SYSTEM_SYM;
-   }
-   if (VALID(OTHER, hold)) {
-      *pc++ = OTHER_SYM;
-   }
-   if (VALID(NO_HOLD, hold)) {
-      *pc++ = NO_HOLD_SYM;
-   }
-   if (!*hold_str) {
-      DEXIT;
-      return NULL;
-   }
-   DEXIT;
-   return hold_str;
-}
-#endif
-
 /*-------------------------------------------------------------------------*/
 static char *sge_unparse_mail_options(
 u_long32 mail_opt 
@@ -683,7 +639,7 @@ lList **alpp
 
 
 /*-------------------------------------------------------------------------*/
-int sge_unparse_string_option(
+static int sge_unparse_string_option(
 lListElem *job,
 int nm,
 char *option,
@@ -704,30 +660,8 @@ lList **alpp
 }
 
 /*-------------------------------------------------------------------------*/
-int sge_unparse_ulong_option(
-lListElem *job,
-int nm,
-char *option,
-lList **pcmdline,
-lList **alpp 
-) {
-   lListElem *ep_opt = NULL;
-   u_long32 cp;
-
-   DENTER(TOP_LAYER, "sge_unparse_string_option");
-   
-   if ((cp = lGetUlong(job, nm))) {
-      char number[50];
-      snprintf(number, 49, sge_u32, cp);
-      ep_opt = sge_add_arg(pcmdline, 0, lUlongT, option, number);
-      lSetUlong(ep_opt, SPA_argval_lUlongT, cp);
-   }
-   DEXIT;
-   return 0;
-}
-
 /*-------------------------------------------------------------------------*/
-int sge_unparse_resource_list(
+static int sge_unparse_resource_list(
 lListElem *job,
 int nm,
 lList **pcmdline,
@@ -743,10 +677,12 @@ lList **alpp
       lListElem *ep_opt;
       int hard = (nm == JB_hard_resource_list);
       
-      if (hard) 
+      if (hard) {
          ep_opt = sge_add_noarg(pcmdline, hard_OPT, "-hard", NULL);
-      else
+      }
+      else {
          ep_opt = sge_add_noarg(pcmdline, soft_OPT, "-soft", NULL);
+      }
 
       ret = centry_list_append_to_string(lp, str, sizeof(str) - 1);
       if (ret) {
@@ -775,7 +711,7 @@ lList **alpp
 }
 
 /*-------------------------------------------------------------------------*/
-int sge_unparse_pe(
+static int sge_unparse_pe(
 lListElem *job,
 lList **pcmdline,
 lList **alpp 
@@ -859,82 +795,3 @@ lList **alpp
    return ret;
 }
 
-/*-------------------------------------------------------------------------*/
-int sge_unparse_id_list(
-lListElem *job,
-int nm,
-char *option,
-lList **pcmdline,
-lList **alpp 
-) {
-   lList *lp = NULL;
-   int ret = 0;
-   char str[BUFSIZ];
-   lListElem *ep_opt;
-
-   DENTER(TOP_LAYER, "sge_unparse_id_list");
-
-   if ((lp = lGetList(job, nm))) {
-      int fields[] = { QR_name, 0 };
-      const char *delis[] = {":", ",", NULL};
-
-      ret = uni_print_list(NULL, str, sizeof(str) - 1, lp, fields, delis, FLG_NO_DELIS_STRINGS);
-      if (ret) {
-         DPRINTF(("Error %d formatting id list\n", ret));
-         sprintf(str, MSG_LIST_ERRORFORMATINGIDLIST);
-         answer_list_add(alpp, str, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
-         return ret;
-      }
-
-      ep_opt = sge_add_arg(pcmdline, q_OPT, lListT, option, str);
-      lSetList(ep_opt, SPA_argval_lListT, lCopyList(option, lp));
-   }
-   DEXIT;
-   return ret;
-}
-
-/*-------------------------------------------------------------------------*/
-int sge_unparse_acl(
-const char *owner,
-const char *group,
-const char *option,
-lList *acl,
-lList **pcmdline,
-lList **alpp 
-) {
-   lList *lp = NULL;
-   int ret = 0;
-   char str[BUFSIZ];
-   lListElem *ap = NULL;
-
-   DENTER(TOP_LAYER, "sge_unparse_acl");
-
-   for_each (ap, acl) {
-      if (sge_contained_in_access_list(owner, group, ap, alpp)) {
-         lAddElemStr(&lp, ST_name, lGetString(ap, US_name), ST_Type);
-      }
-   }
-
-   /* We know that if lp was created, it was through lAddElemStr, so the only
-    * way the number of elements can be 0 is if it's NULL. */
-   if (lGetNumberOfElem(lp) > 0) {
-      int fields[] = { ST_name, 0 };
-      const char *delis[] = {":", ",", NULL};
-
-      ret = uni_print_list(NULL, str, sizeof(str) - 1, lp, fields, delis, FLG_NO_DELIS_STRINGS);
-      lp = lFreeList(lp);
-      if (ret) {
-         DPRINTF(("Error %d formatting acl list\n", ret));
-         sprintf(str, MSG_LIST_ERRORFORMATINGACLLIST);
-         answer_list_add(alpp, str, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
-         DEXIT;
-         return ret;
-      }
-      sge_add_arg(pcmdline, q_OPT, lListT, option, str);
-   }
-
-   DEXIT;
-   return 0;
-}
-       
-      

@@ -150,14 +150,6 @@ lList *cull_parse_job_parameter(lList *cmdline, lListElem **pjob)
       lSetList(*pjob, JB_ja_tasks, tmpl_task_list); 
    }
 
-   if (!lGetUlong(*pjob, JB_submission_time)) {
-      lSetUlong(*pjob, JB_submission_time, sge_get_gmt());
-   }
-   if (!lGetString(*pjob, JB_owner)) {
-      lSetString(*pjob, JB_owner, uti_state_get_user_name());
-   }
-   lSetUlong(*pjob, JB_uid, uti_state_get_uid());
-
    /*
    ** path aliasing
    */
@@ -191,7 +183,7 @@ lList *cull_parse_job_parameter(lList *cmdline, lListElem **pjob)
       }
       
       lSetUlong(*pjob, JB_type, jb_now);
-      lRemoveElem(cmdline, ep);
+      lRemoveElem(cmdline, &ep);
    }
 
    /*
@@ -208,7 +200,7 @@ lList *cull_parse_job_parameter(lList *cmdline, lListElem **pjob)
       }
       
       lSetUlong(*pjob, JB_type, jb_now);
-      lRemoveElem(cmdline, ep);
+      lRemoveElem(cmdline, &ep);
    }
 
    /*
@@ -217,10 +209,10 @@ lList *cull_parse_job_parameter(lList *cmdline, lListElem **pjob)
    ep = lGetElemStr(cmdline, SPA_switch, "-t");
    if (ep != NULL) {
       lList *range_list = lGetList(ep, SPA_argval_lListT);
-      lList *new_range_list = lCopyList("",  range_list);
+      lList *new_range_list = lCopyList("task_id_range",  range_list);
 
       lSetList(*pjob, JB_ja_structure, new_range_list);
-      lRemoveElem(cmdline, ep);
+      lRemoveElem(cmdline, &ep);
    
       {
          u_long32 job_type = lGetUlong(*pjob, JB_type);
@@ -250,7 +242,7 @@ lList *cull_parse_job_parameter(lList *cmdline, lListElem **pjob)
          ** remove -clear itsself
          */
          if (ep_run == ep) {
-            lRemoveElem(cmdline, ep_run);
+            lRemoveElem(cmdline, &ep_run);
             break;
          }
          /*
@@ -265,7 +257,8 @@ lList *cull_parse_job_parameter(lList *cmdline, lListElem **pjob)
          */
          cp_switch = lGetString(lPrev(ep_run), SPA_switch);
          if (cp_switch && (*cp_switch == '-')) {
-            lRemoveElem(cmdline, lPrev(ep_run));
+            lListElem *prev = lPrev(ep_run); 
+            lRemoveElem(cmdline, &prev);
          }
       }
 
@@ -281,18 +274,18 @@ lList *cull_parse_job_parameter(lList *cmdline, lListElem **pjob)
 
    while ((ep = lGetElemStr(cmdline, SPA_switch, "-a"))) {
       lSetUlong(*pjob, JB_execution_time, lGetUlong(ep, SPA_argval_lUlongT));
-      lRemoveElem(cmdline, ep);
+      lRemoveElem(cmdline, &ep);
    }
 
    while ((ep = lGetElemStr(cmdline, SPA_switch, "-A"))) {
       /* the old account string is overwritten */
       lSetString(*pjob, JB_account, lGetString(ep, SPA_argval_lStringT));
-      lRemoveElem(cmdline, ep);
+      lRemoveElem(cmdline, &ep);
    }
 
    while ((ep = lGetElemStr(cmdline, SPA_switch, "-dl"))) {
       lSetUlong(*pjob, JB_deadline, lGetUlong(ep, SPA_argval_lUlongT));
-      lRemoveElem(cmdline, ep);
+      lRemoveElem(cmdline, &ep);
    }
    
    while ((ep = lGetElemStr(cmdline, SPA_switch, "-c"))) {
@@ -301,12 +294,12 @@ lList *cull_parse_job_parameter(lList *cmdline, lListElem **pjob)
       if (lGetUlong(ep, SPA_argtype) == lIntT) 
          lSetUlong(*pjob, JB_checkpoint_attr, lGetInt(ep, SPA_argval_lIntT));
 
-      lRemoveElem(cmdline, ep);
+      lRemoveElem(cmdline, &ep);
    }
 
    while ((ep = lGetElemStr(cmdline, SPA_switch, "-ckpt"))) {
       lSetString(*pjob, JB_checkpoint_name, lGetString(ep, SPA_argval_lStringT));
-      lRemoveElem(cmdline, ep);
+      lRemoveElem(cmdline, &ep);
    }
 
    while ((ep = lGetElemStr(cmdline, SPA_switch, "-cwd"))) {
@@ -329,7 +322,7 @@ lList *cull_parse_job_parameter(lList *cmdline, lListElem **pjob)
       }
       
       lSetString(*pjob, JB_cwd, path);
-      lRemoveElem(cmdline, ep);
+      lRemoveElem(cmdline, &ep);
       
       lSetList(*pjob, JB_path_aliases, lCopyList("PathAliases", path_alias));
       
@@ -339,7 +332,7 @@ lList *cull_parse_job_parameter(lList *cmdline, lListElem **pjob)
    while ((ep = lGetElemStr(cmdline, SPA_switch, "-C"))) {
       lSetString(*pjob, JB_directive_prefix, 
          lGetString(ep, SPA_argval_lStringT));
-      lRemoveElem(cmdline, ep);
+      lRemoveElem(cmdline, &ep);
    }
 
    /*
@@ -367,20 +360,20 @@ lList *cull_parse_job_parameter(lList *cmdline, lListElem **pjob)
    /* -h */
    while ((ep = lGetElemStr(cmdline, SPA_switch, "-h"))) {
       if (lGetInt(ep, SPA_argval_lIntT) & MINUS_H_TGT_USER) {
-         lSetList(*pjob, JB_ja_u_h_ids, lCopyList("user hold ids",
+         lSetList(*pjob, JB_ja_u_h_ids, lCopyList("task_id_range",
                   lGetList(*pjob, JB_ja_n_h_ids)));
          lSetList(*pjob, JB_ja_n_h_ids, NULL);
       }
-      lRemoveElem(cmdline, ep);
+      lRemoveElem(cmdline, &ep);
    }
 
    /* not needed in job struct */
    while ((ep = lGetElemStr(cmdline, SPA_switch, "-hard"))) {
-      lRemoveElem(cmdline, ep);
+      lRemoveElem(cmdline, &ep);
    }
 
    if ((ep = lGetElemStr(cmdline, SPA_switch, "-help"))) {
-      lRemoveElem(cmdline, ep);
+      lRemoveElem(cmdline, &ep);
       sprintf(error_string, MSG_ANSWER_HELPNOTALLOWEDINCONTEXT);
       answer_list_add(&answer, error_string, 
                       STATUS_ENOIMP, ANSWER_QUALITY_ERROR);
@@ -397,14 +390,14 @@ lList *cull_parse_job_parameter(lList *cmdline, lListElem **pjob)
             DPRINTF(("-hold_jid %s\n", lGetString(sep, ST_name)));
             lAddElemStr(&jref_list, JRE_job_name, lGetString(sep, ST_name), JRE_Type);
          }
-         lRemoveElem(cmdline, ep);
+         lRemoveElem(cmdline, &ep);
       }
       lSetList(*pjob, JB_jid_request_list, jref_list);
    }
 
    while ((ep = lGetElemStr(cmdline, SPA_switch, "-j"))) {
       lSetBool(*pjob, JB_merge_stderr, lGetInt(ep, SPA_argval_lIntT));
-      lRemoveElem(cmdline, ep);
+      lRemoveElem(cmdline, &ep);
    }
 
    parse_list_simple(cmdline, "-jid", *pjob, JB_job_identifier_list, 
@@ -428,7 +421,7 @@ lList *cull_parse_job_parameter(lList *cmdline, lListElem **pjob)
          old_mail_opts = lGetUlong(*pjob, JB_mail_options);
          lSetUlong(*pjob, JB_mail_options, ul | old_mail_opts);
       }
-      lRemoveElem(cmdline, ep);
+      lRemoveElem(cmdline, &ep);
    }
 
    parse_list_simple(cmdline, "-M", *pjob, JB_mail_list, MR_host, MR_user, FLG_LIST_MERGE);
@@ -442,12 +435,12 @@ lList *cull_parse_job_parameter(lList *cmdline, lListElem **pjob)
 
    while ((ep = lGetElemStr(cmdline, SPA_switch, "-N"))) {
       lSetString(*pjob, JB_job_name, lGetString(ep, SPA_argval_lStringT));
-      lRemoveElem(cmdline, ep);
+      lRemoveElem(cmdline, &ep);
    }
    
    while ((ep = lGetElemStr(cmdline, SPA_switch, "-notify"))) {
       lSetBool(*pjob, JB_notify, TRUE);
-      lRemoveElem(cmdline, ep);
+      lRemoveElem(cmdline, &ep);
    }
 
    while ((ep = lGetElemStr(cmdline, SPA_switch, "-now"))) {
@@ -460,7 +453,7 @@ lList *cull_parse_job_parameter(lList *cmdline, lListElem **pjob)
 
       lSetUlong(*pjob, JB_type, jb_now);
 
-      lRemoveElem(cmdline, ep);
+      lRemoveElem(cmdline, &ep);
    }
    
    /*
@@ -478,23 +471,23 @@ lList *cull_parse_job_parameter(lList *cmdline, lListElem **pjob)
    while ((ep = lGetElemStr(cmdline, SPA_switch, "-p"))) {
       int pri = lGetInt(ep, SPA_argval_lIntT);
       lSetUlong(*pjob, JB_priority, BASE_PRIORITY + pri);
-      lRemoveElem(cmdline, ep);
+      lRemoveElem(cmdline, &ep);
    }
 
    while ((ep = lGetElemStr(cmdline, SPA_switch, "-js"))) {
       lSetUlong(*pjob, JB_jobshare, lGetUlong(ep, SPA_argval_lUlongT));
-      lRemoveElem(cmdline, ep);
+      lRemoveElem(cmdline, &ep);
    }
 
    while ((ep = lGetElemStr(cmdline, SPA_switch, "-P"))) {
       lSetString(*pjob, JB_project, lGetString(ep, SPA_argval_lStringT));
-      lRemoveElem(cmdline, ep);
+      lRemoveElem(cmdline, &ep);
    }
 
    while ((ep = lGetElemStr(cmdline, SPA_switch, "-pe"))) {
       lSetString(*pjob, JB_pe, lGetString(ep, SPA_argval_lStringT));
       lSwapList(*pjob, JB_pe_range, ep, SPA_argval_lListT);
-      lRemoveElem(cmdline, ep);
+      lRemoveElem(cmdline, &ep);
    }
 
    parse_list_hardsoft(cmdline, "-q", *pjob, 
@@ -505,17 +498,17 @@ lList *cull_parse_job_parameter(lList *cmdline, lListElem **pjob)
    
    while ((ep = lGetElemStr(cmdline, SPA_switch, "-R"))) {
       lSetBool(*pjob, JB_reserve, lGetInt(ep, SPA_argval_lIntT));
-      lRemoveElem(cmdline, ep);
+      lRemoveElem(cmdline, &ep);
    }
 
    while ((ep = lGetElemStr(cmdline, SPA_switch, "-r"))) {
       lSetUlong(*pjob, JB_restart, lGetInt(ep, SPA_argval_lIntT));
-      lRemoveElem(cmdline, ep);
+      lRemoveElem(cmdline, &ep);
    }
 
    /* not needed in job struct */
    while ((ep = lGetElemStr(cmdline, SPA_switch, "-soft"))) {
-      lRemoveElem(cmdline, ep);
+      lRemoveElem(cmdline, &ep);
    }
 
    parse_list_simple(cmdline, "-S", *pjob, JB_shell_list, PN_host, PN_path, FLG_LIST_MERGE);
@@ -538,12 +531,15 @@ lList *cull_parse_job_parameter(lList *cmdline, lListElem **pjob)
          !strcmp(lGetString(ep, SPA_switch), "-dc") ||
          !strcmp(lGetString(ep, SPA_switch), "-sc")) {
          lListElem* temp;
-         if(!lGetList(*pjob, JB_context))
+         if(!lGetList(*pjob, JB_context)) {
             lSetList(*pjob, JB_context, lCopyList("context", lGetList(ep, SPA_argval_lListT)));
-         else
-            lAddList(lGetList(*pjob, JB_context), lCopyList("context", lGetList(ep, SPA_argval_lListT)));
+         }
+         else {
+            lList *copy = lCopyList("context", lGetList(ep, SPA_argval_lListT));
+            lAddList(lGetList(*pjob, JB_context), &copy);
+         }
          temp = lNext(ep);
-         lRemoveElem(cmdline, ep);
+         lRemoveElem(cmdline, &ep);
          ep = temp;
       }
       else
@@ -551,12 +547,12 @@ lList *cull_parse_job_parameter(lList *cmdline, lListElem **pjob)
 
    while ((ep = lGetElemStr(cmdline, SPA_switch, "-verify"))) {
       lSetUlong(*pjob, JB_verify, TRUE);
-      lRemoveElem(cmdline, ep);
+      lRemoveElem(cmdline, &ep);
    }
 
    while ((ep = lGetElemStr(cmdline, SPA_switch, "-w"))) {
       lSetUlong(*pjob, JB_verify_suitable_queues, lGetInt(ep, SPA_argval_lIntT));
-      lRemoveElem(cmdline, ep);
+      lRemoveElem(cmdline, &ep);
    }
 
    /* There is technically no conflict between -cwd and -wd.  They both set the
@@ -588,7 +584,7 @@ lList *cull_parse_job_parameter(lList *cmdline, lListElem **pjob)
 #endif
 
       lSetString(*pjob, JB_cwd, wd);
-      lRemoveElem(cmdline, ep);
+      lRemoveElem(cmdline, &ep);
    
       /* If -cwd didn't already set the JB_path_aliases field, set it. */
       if (lGetList (*pjob, JB_path_aliases) == NULL) {
@@ -598,7 +594,7 @@ lList *cull_parse_job_parameter(lList *cmdline, lListElem **pjob)
       FREE (path);
    }
    
-   path_alias = lFreeList(path_alias);
+   lFreeList(&path_alias);
    
    /*
    ** no switch - must be scriptfile
@@ -606,17 +602,17 @@ lList *cull_parse_job_parameter(lList *cmdline, lListElem **pjob)
    */
    if ((ep = lGetElemStr(cmdline, SPA_switch, STR_PSEUDO_SCRIPT))) {
       lSetString(*pjob, JB_script_file, lGetString(ep, SPA_argval_lStringT));
-      lRemoveElem(cmdline, ep);
+      lRemoveElem(cmdline, &ep);
    }
 
    if ((ep = lGetElemStr(cmdline, SPA_switch, STR_PSEUDO_SCRIPTLEN))) {
       lSetUlong(*pjob, JB_script_size, lGetUlong(ep, SPA_argval_lUlongT));
-      lRemoveElem(cmdline, ep);
+      lRemoveElem(cmdline, &ep);
    }
 
    if ((ep = lGetElemStr(cmdline, SPA_switch, STR_PSEUDO_SCRIPTPTR))) {
       lSetString(*pjob, JB_script_ptr, lGetString(ep, SPA_argval_lStringT));
-      lRemoveElem(cmdline, ep);
+      lRemoveElem(cmdline, &ep);
    }
 
    {
@@ -627,7 +623,7 @@ lList *cull_parse_job_parameter(lList *cmdline, lListElem **pjob)
       while ((ep = lGetElemStr(cmdline, SPA_switch, STR_PSEUDO_JOBARG))) {
          lAddElemStr(&lp, ST_name, lGetString(ep, SPA_argval_lStringT), ST_Type);
          
-         lRemoveElem(cmdline, ep);
+         lRemoveElem(cmdline, &ep);
       }
       lSetList(*pjob, JB_job_args, lp);
    }
@@ -724,6 +720,8 @@ lList *cull_parse_job_parameter(lList *cmdline, lListElem **pjob)
 *     If a line is longer than MAX_STRING_SIZE bytes, contents (SGE options) 
 *     starting from position MAX_STRING_SIZE + 1 are silently ignored.
 *     MAX_STRING_SIZE is defined in common/basis_types.h (current value 2048).
+*
+*     MT-NOTE: parse_script_file() is MT safe
 *
 *  SEE ALSO
 *     centry_list_parse_from_string()
@@ -967,8 +965,8 @@ u_long32 flags
                } /* for_each (aep in alp) */
 
                FREE(str_table);
-               alp = lFreeList(alp);
-               FREE (free_me);
+               lFreeList(&alp);
+               FREE(free_me);
                parameters = NULL;
                
                if (do_exit) {
@@ -981,7 +979,7 @@ u_long32 flags
                ** -C option is ignored in scriptfile - delete all occurences
                */
                while ((ep = lGetElemStr(lp_new_opts, SPA_switch, "-C"))) {
-                  lRemoveElem(lp_new_opts, ep);
+                  lRemoveElem(lp_new_opts, &ep);
                }
             } /* if (parameters is not empty) */
             else {
@@ -1021,10 +1019,10 @@ u_long32 flags
       *lpp_options = lp_new_opts;
    } else {
       if (flags & FLG_LOWER_PRIOR) {
-         lAddList(lp_new_opts, *lpp_options);
+         lAddList(lp_new_opts, lpp_options);
          *lpp_options = lp_new_opts;
       } else {
-         lAddList(*lpp_options, lp_new_opts);
+         lAddList(*lpp_options, &lp_new_opts);
          lp_new_opts = NULL;
       }
    }

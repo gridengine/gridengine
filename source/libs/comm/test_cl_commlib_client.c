@@ -146,6 +146,7 @@ extern int main(int argc, char** argv)
      ssl_config.ssl_cert_pem_file    = getenv("SSL_CERT_FILE");    /*  certificates file                           */
      ssl_config.ssl_key_pem_file     = getenv("SSL_KEY_FILE");     /*  key file                                    */
      ssl_config.ssl_rand_file        = getenv("SSL_RAND_FILE");    /*  rand file (if RAND_status() not ok)         */
+     ssl_config.ssl_crl_file         = getenv("SSL_CRL_FILE");     /*  revocation list file                        */
      ssl_config.ssl_reconnect_file   = NULL;                       /*  file for reconnect data    (not used)       */
      ssl_config.ssl_refresh_time     = 0;                          /*  key alive time for connections (not used)   */
      ssl_config.ssl_password         = NULL;                       /*  password for encrypted keyfiles (not used)  */
@@ -175,7 +176,7 @@ extern int main(int argc, char** argv)
 
 #ifdef CREATE_SERVICE
   cl_com_append_known_endpoint_from_name(argv[1], "server", 1,atoi(argv[2]),CL_CM_AC_DISABLED , 1);
-  handle=cl_com_create_handle(NULL,framework,CL_CM_CT_MESSAGE , 1, 0 , "client", atoi(argv[3]),SELECT_TIMEOUT,0 );
+  handle=cl_com_create_handle(NULL,framework,CL_CM_CT_MESSAGE , CL_TRUE, 0 , CL_TCP_DEFAULT, "client", atoi(argv[3]),SELECT_TIMEOUT,0 );
   if (handle == NULL) {
      printf("could not get handle\n");
      exit(1);
@@ -290,7 +291,7 @@ extern int main(int argc, char** argv)
         if (retval == CL_RETVAL_OK) {
            CL_LOG_INT(CL_LOG_WARNING,"received ack for message mid", (int)mid); 
         } else {
-           cl_commlib_trigger(handle);
+           cl_commlib_trigger(handle, 1);
         }
 
         if ( retval == CL_RETVAL_CONNECTION_NOT_FOUND ) {
@@ -315,7 +316,7 @@ extern int main(int argc, char** argv)
      bytes_received = 0;
      while (bytes_received != welcome_text_size ) {
 
-        cl_commlib_trigger(handle); 
+        cl_commlib_trigger(handle, 1); 
 
 
         CL_LOG_INT(CL_LOG_WARNING,"waiting for mid .... ", (int)mid); 
@@ -420,7 +421,7 @@ extern int main(int argc, char** argv)
            }
         }  
 #ifdef CREATE_SERVICE
-        handle=cl_com_create_handle(NULL,framework,CL_CM_CT_MESSAGE , 1, 0 , "client", atoi(argv[3]), SELECT_TIMEOUT,0 );
+        handle=cl_com_create_handle(NULL,framework,CL_CM_CT_MESSAGE , CL_TRUE, 0 , CL_TCP_DEFAULT, "client", atoi(argv[3]),SELECT_TIMEOUT,0 );
         if (handle == NULL) {
            printf("could not get handle\n");
            exit(-1);

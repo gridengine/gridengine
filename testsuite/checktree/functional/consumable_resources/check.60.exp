@@ -31,6 +31,81 @@
 ##########################################################################
 #___INFO__MARK_END__
 
+# Test description:
+# ------------------
+#
+# Scenario 1) Consumable resources on global level
+#
+#   setup:
+#      - add following complex attribute ( test1 t1 INT <=  YES YES 0 1000)
+#      - add the attribute to the global host complex_values     test1=5
+#   
+#   a) - default cluster with two execution hosts and unlimited slots
+#      - submit 6 jobs without resource requests 
+#      => All jobs will run
+#
+#   b) - default cluster with two execution hosts and unlimited slots
+#      - submit 6 jobs with (-l test1=1) resource request
+#      => 5 jobs will run the 6th has to wait because:
+#         (-l test1=1) cannot run globally because it offers only gc:test1=0.000000
+#
+#   mod:
+#    - add following complex attribute (test1 t1 INT <= YES YES 1 1000)
+#
+#   c) - default cluster with two execution hosts and unlimited slots
+#      - submit 6 jobs without resource requests
+#      => 5 jobs will run the 6th has to wait because:
+#         (-l test1=1) cannot run globally because it offers only gc:test1=0.000000
+#
+#   d) - default cluster with two execution hosts and unlimited slots
+#      - submit 6 jobs with (-l test1=0) resource request
+#      => 6 jobs will run 
+#
+#   e) - define a consumable load threashold (t1=3)
+#      - submit 6 jobs
+#     => 2 jobs will run, 
+#        queue instance "all.q@carc" dropped because it is overloaded: test1=8.000000 (no load value) <= 8
+#
+# Scenario 2) Consumable resource on host level
+#
+#   setup:
+#      - add following complex attribute ( test1 t1 INT <=  YES YES 0 1000)
+#      - add the attribute to the global host complex_values     test1=5
+#
+#   a) - default cluster with two execution hosts and unlimited slots
+#      - submit 6 jobs with following request (-l h=host_a)
+#      => All jobs will run
+#
+#   b) - default cluster with two execution hosts and unlimited slots
+#      - submit 6 jobs with following request (-l h=host_a,test2=1)
+#      => 5 jobs will run the 6th has to wait because: 
+#      (-l hostname=carc,test2=1) cannot run at host "carc.germany.sun.com" because it offers only hc:test2=0.000000
+#      
+#   mod:
+#    - add following complex attribute (test1 t1 INT <= YES YES 1 1000)
+#
+#   c) - default cluster with two execution hosts and unlimited slots
+#      - submit 6 jobs with following request (-l h=host_a)
+#      => 5 jobs will run the 6th has to wait because:
+#         (-l hostname=carc) cannot run at host "carc.germany.sun.com" because for default request it offers only hc:test2=0.000000
+#
+#   d) - default cluster with two execution hosts and unlimited slots
+#      - submit 6 jobs with following request (-l h=host_a,test2=0)
+#      => 6 jobs will run 
+#
+#   e) - define a consumable load threashold (t1=3)
+#      - submit 6 jobs
+#     => 2 jobs will run, 
+#        queue instance "all.q@carc" dropped because it is overloaded: test1=8.000000 (no load value) <= 8
+#
+# and more, issue 1212 coveres most of it
+#
+#
+#
+# Bugfixes:
+# - Issue: 1306, Bugster: 6287862 - qhost -l for complexes broken
+
+
 # define global variable in this namespace
 global check_name 
 global check_category 
@@ -45,7 +120,6 @@ global check_root_access_needs
 global env
 
 #set check_root_access_needs "yes"
-
 
 # define a level initialization procedure:
 set check_init_level_procedure "consumable_resources_init_level"
@@ -64,20 +138,12 @@ set check_description(6)  "Consumable resources and rescheduling"
 set check_description(7)  "Consumable resources and load sensors"
 set check_description(8)  "Consumable resources and 2 load sensor scripts"
 
-
-
-
-
-
-
 # define test's dependencies
 set check_needs           "init_core_system" 
 
 # setup and cleanup functions
 set check_setup_function consumable_resources_setup
 set check_cleanup_function consumable_resources_cleanup
-
-
 
 # define test's procedure order
 set check_functions "consumable_resources_test"
@@ -132,7 +198,11 @@ proc consumable_resources_setup  {} {
    global ts_config
    global consumable_resources_test_hosts
    global consumable_resources_saved_slot_count
+   global consumable_complex_backup
    global CHECK_OUTPUT
+
+   # backup complex - we will modify it during the test
+   get_complex consumable_complex_backup
 
    set consumable_resources_test_hosts {}
    set consumable_resources_saved_slot_count ""
@@ -153,9 +223,14 @@ proc consumable_resources_setup  {} {
    disable_queue $queue_list
    puts $CHECK_OUTPUT "disabled $queue_list"
    
+   set pe(pe_name)           "round_robin"
+   set pe(slots)             "999"
+   set pe(allocation_rule)   "\$round_robin"
+   add_pe pe
 
    set queue_settings(slots) 1000
    set queue_settings(load_thresholds) "np_load_avg=11.75"
+   set queue_settings(pe_list)          "round_robin"
    set qname "res.q"
    add_queue $qname $consumable_resources_test_hosts queue_settings
    puts $CHECK_OUTPUT "added queue $qname for hosts $consumable_resources_test_hosts"
@@ -167,6 +242,7 @@ proc consumable_resources_cleanup  {} {
    global CHECK_OUTPUT ts_config
    global consumable_resources_test_hosts
    global consumable_resources_saved_slot_count
+   global consumable_complex_backup
 
    delete_all_jobs
    wait_for_end_of_all_jobs 60
@@ -182,12 +258,66 @@ proc consumable_resources_cleanup  {} {
    set qname "res.q"
    del_queue $qname $consumable_resources_test_hosts  0 1
 
+   del_pe        "round_robin"
+
+   # restore complex
+   set_complex consumable_complex_backup
+
    set_error 0 "ok"
+}
+
+# Issue: 1306, Bugster: 6287862 - qhost -l for complexes broken
+proc check_qhost_broken { complex count } {
+   global ts_config CHECK_ARCH CHECK_OUTPUT CHECK_USER CHECK_HOST
+
+   set output [start_remote_prog $CHECK_HOST $CHECK_USER "$ts_config(product_root)/bin/$CHECK_ARCH/qhost" "-l $complex -F | grep arch | wc -l"]
+   if { $output != $count } {
+      add_proc_error "check_qhost_broken" -2 "qhost is broken - see Issue: 1306, returned $output hosts but $count is expected"
+      set error 1
+   }
+}
+
+proc consumable_resources_submit_pejobs_and_wait { job_arguments job_count run_job_count } {
+   global ts_config CHECK_OUTPUT CHECK_ARCH
+
+   set job_id [submit_job "-pe round_robin 1-$job_count $job_arguments $ts_config(product_root)/examples/jobs/sleeper.sh 100"]
+
+   while { 1 } {
+      catch {  eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-tsm" } catch_result
+      set running_jobs 0
+      set error 0
+      
+      set job_state [is_job_running $job_id "leeper"]
+      if { $job_state == 1 } {
+         set job_std_state [get_standard_job_info  $job_id 1 ]
+
+         set running_jobs [llength $job_std_state]
+      }
+
+      if { $job_state == -1 } {
+         add_proc_error "consumable_resources_submit_jobs_and_wait" -2 "job was not submitted - stop"
+         set error 1
+         break
+      }
+
+      puts $CHECK_OUTPUT "running jobs count: $running_jobs"
+      if { $running_jobs == $run_job_count || $error != 0 } {
+         break
+      }
+      if { $running_jobs != 0 } {
+         add_proc_error "consumable_resources_submit_jobs_and_wait" -2 "job ran with the wrong slot count $running_jobs expected $run_job_count"
+         set error 1
+         break
+      }
+   }
+
+   delete_all_jobs  
+   wait_for_end_of_all_jobs 60
 }
 
 proc consumable_resources_submit_jobs_and_wait { job_arguments job_count run_job_count job_arguments2 { schedd_info "" } { queue_state "" } } {
    global ts_config CHECK_OUTPUT CHECK_ARCH
- 
+
    if { $job_arguments2 == "" } {
       for { set i 0 } { $i < $job_count } { incr i 1 } {
          set job_id($i) [submit_job "$job_arguments $ts_config(product_root)/examples/jobs/sleeper.sh 100"]
@@ -297,7 +427,8 @@ proc consumable_resources_test {} {
       set job_count 6
       set run_job_count 6
       consumable_resources_submit_jobs_and_wait $job_arguments $job_count $run_job_count ""
-   
+      consumable_resources_submit_pejobs_and_wait $job_arguments $job_count $run_job_count  
+  
       # case b) 
       #           5 jobs run, 1 have to wait
       puts $CHECK_OUTPUT "\ncase b)"
@@ -305,6 +436,7 @@ proc consumable_resources_test {} {
       set job_count 6
       set run_job_count 5
       consumable_resources_submit_jobs_and_wait $job_arguments $job_count $run_job_count "" $GLOBALLY
+      consumable_resources_submit_pejobs_and_wait $job_arguments $job_count $run_job_count 
    
       # case c)
       #           5 jobs run, 1 have to wait
@@ -316,15 +448,38 @@ proc consumable_resources_test {} {
       set job_count 6
       set run_job_count 5
       consumable_resources_submit_jobs_and_wait $job_arguments $job_count $run_job_count "" $GLOBALLY
-   
+      consumable_resources_submit_pejobs_and_wait $job_arguments $job_count $run_job_count 
+
       # case d)
       #           5 jobs run, 1 have to wait
       puts $CHECK_OUTPUT "\ncase d)"
-      set job_arguments "-l test1=1 -o /dev/null -e /dev/null"
+      set job_arguments "-l test1=0 -o /dev/null -e /dev/null"
       set job_count 6
-      set run_job_count 5
+      set run_job_count 6
       consumable_resources_submit_jobs_and_wait $job_arguments $job_count $run_job_count "" $GLOBALLY
-   
+      consumable_resources_submit_pejobs_and_wait $job_arguments $job_count $run_job_count 
+
+      # case e)
+      #        2 jobs run, 4 have to wait
+      set GLOBALLY [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SCHEDD_INFO_QUEUEOVERLOADED_SS] "*" "*"]
+
+      
+      puts $CHECK_OUTPUT "\ncase e)"
+      set job_arguments "-o /dev/null -e /dev/null"
+      set queue_settings(load_thresholds) "test1=3"
+      set_queue "res.q" $consumable_resources_test_hosts queue_settings
+      set job_count 6
+      set run_job_count 2
+      consumable_resources_submit_jobs_and_wait $job_arguments $job_count $run_job_count "" $GLOBALLY
+
+# this tests issue 1745. enable the code, when the issue is fixed.
+      puts $CHECK_OUTPUT "---> found issue 1745"
+#      consumable_resources_submit_pejobs_and_wait $job_arguments $job_count $run_job_count 
+      
+      #clean up
+      set queue_settings(load_thresholds) "np_load_avg=11.75"
+      set_queue "res.q" $consumable_resources_test_hosts queue_settings
+      
       set global_host(complex_values) $orig_global_host(complex_values)
       set_exechost global_host global
       
@@ -335,7 +490,6 @@ proc consumable_resources_test {} {
 
    if { $CHECK_ACT_LEVEL == 1 } {
       set RUNATHOST  [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SCHEDD_INFO_CANNOTRUNATHOST_SSS]  "*" "*" "*test2=0*"]
-#      set RUNINQUEUE [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SCHEDD_INFO_CANNOTRUNINQUEUE_SSS] "*" "*" "*test2=0*"]
    
       # case a)
       #           all jobs will run
@@ -353,12 +507,13 @@ proc consumable_resources_test {} {
       # modify complex_values of host_a host
       set host_a_host(complex_values) "test2=5"
       set_exechost host_a_host $host_a
-   
+      check_qhost_broken "test2=1" 1
 
       set job_arguments "-l h=$host_a -o /dev/null -e /dev/null"
       set job_count 6
       set run_job_count 6
       consumable_resources_submit_jobs_and_wait $job_arguments $job_count $run_job_count ""
+      consumable_resources_submit_pejobs_and_wait $job_arguments $job_count $run_job_count 
    
       # case b) 
       #           5 jobs run, 1 have to wait
@@ -368,6 +523,7 @@ proc consumable_resources_test {} {
       set job_count 6
       set run_job_count 5
       consumable_resources_submit_jobs_and_wait $job_arguments $job_count $run_job_count "" $RUNATHOST
+      consumable_resources_submit_pejobs_and_wait $job_arguments $job_count $run_job_count 
    
       # case c)
       #           5 jobs run, 1 have to wait
@@ -380,15 +536,35 @@ proc consumable_resources_test {} {
       set job_count 6
       set run_job_count 5
       consumable_resources_submit_jobs_and_wait $job_arguments $job_count $run_job_count "" $RUNATHOST
+      consumable_resources_submit_pejobs_and_wait $job_arguments $job_count $run_job_count 
    
       # case d)
-      #           5 jobs run, 1 have to wait
+      #           6 jobs run, 0 have to wait
       puts $CHECK_OUTPUT "\ncase d)"
-      set job_arguments "-l h=$host_a,test2=1 -o /dev/null -e /dev/null"
+      set job_arguments "-l h=$host_a,test2=0 -o /dev/null -e /dev/null"
       set job_count 6
-      set run_job_count 5
-      consumable_resources_submit_jobs_and_wait $job_arguments $job_count $run_job_count "" $RUNATHOST 
-   
+      set run_job_count 6
+      consumable_resources_submit_jobs_and_wait $job_arguments $job_count $run_job_count "" $RUNATHOST
+      consumable_resources_submit_pejobs_and_wait $job_arguments $job_count $run_job_count  
+
+      # case e)
+      #        2 jobs run, 4 have to wait
+      
+      set RUNATHOST [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SCHEDD_INFO_QUEUEOVERLOADED_SS] "*" "*"]
+
+      puts $CHECK_OUTPUT "\ncase e)"
+      set job_arguments "-o /dev/null -e /dev/null"
+      set queue_settings(load_thresholds) "test2=3"
+      set_queue "res.q" $consumable_resources_test_hosts queue_settings
+      set job_count 6
+      set run_job_count 2
+      consumable_resources_submit_jobs_and_wait $job_arguments $job_count $run_job_count "" $RUNATHOST
+      consumable_resources_submit_pejobs_and_wait $job_arguments $job_count $run_job_count 
+
+      #clean up
+      set queue_settings(load_thresholds) "np_load_avg=11.75"
+      set_queue "res.q" $consumable_resources_test_hosts queue_settings
+
       set host_a_host(complex_values) $orig_host_a_host(complex_values)
       set_exechost host_a_host $host_a
       
@@ -410,7 +586,7 @@ proc consumable_resources_test {} {
 
       set queue_settings(complex_values) "test3=5"
       set_queue "res.q" $consumable_resources_test_hosts queue_settings
-
+      check_qhost_broken "test3=1" 0
 
       # case a
       puts $CHECK_OUTPUT "\ncase a)"
@@ -418,6 +594,7 @@ proc consumable_resources_test {} {
       set job_count 11
       set run_job_count 11
       consumable_resources_submit_jobs_and_wait $job_arguments $job_count $run_job_count ""
+      consumable_resources_submit_pejobs_and_wait $job_arguments $job_count $run_job_count  
 
       # case b
       puts $CHECK_OUTPUT "\ncase b)"
@@ -425,6 +602,7 @@ proc consumable_resources_test {} {
       set job_count 11
       set run_job_count 10
       consumable_resources_submit_jobs_and_wait $job_arguments $job_count $run_job_count "" $RUNINQUEUE
+      consumable_resources_submit_pejobs_and_wait $job_arguments $job_count $run_job_count  
 
       # case c
       puts $CHECK_OUTPUT "\ncase c)"
@@ -435,13 +613,16 @@ proc consumable_resources_test {} {
       set job_count 11
       set run_job_count 10
       consumable_resources_submit_jobs_and_wait $job_arguments $job_count $run_job_count "" $RUNINQUEUE
+      consumable_resources_submit_pejobs_and_wait $job_arguments $job_count $run_job_count  
 
+      set RUNINQUEUE [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SCHEDD_INFO_CANNOTRUNINQUEUE_SSS] "*" "*" "*test3=2*"]
       #case d
       puts $CHECK_OUTPUT "\ncase d)"
-      set job_arguments "-l test3=1 -o /dev/null -e /dev/null"
+      set job_arguments "-l test3=3 -o /dev/null -e /dev/null"
       set job_count 11
-      set run_job_count 10
+      set run_job_count 2
       consumable_resources_submit_jobs_and_wait $job_arguments $job_count $run_job_count "" $RUNINQUEUE
+      consumable_resources_submit_pejobs_and_wait $job_arguments $job_count $run_job_count  
 
       set queue_settings(complex_values) "NONE"
       set_queue "res.q" $consumable_resources_test_hosts queue_settings
@@ -478,6 +659,7 @@ proc consumable_resources_test {} {
 
       set queue_settings(complex_values) "test1=1"
       set_queue "res.q" $consumable_resources_test_hosts queue_settings
+      check_qhost_broken "test1=1" "[llength $ts_config(execd_nodes)]"
 
 
       #case a
@@ -486,7 +668,27 @@ proc consumable_resources_test {} {
       set job_count 3
       set run_job_count 2
       consumable_resources_submit_jobs_and_wait $job_arguments $job_count $run_job_count "" $RUNINQUEUE
+      consumable_resources_submit_pejobs_and_wait $job_arguments $job_count $run_job_count  
 
+      #case aa
+      puts $CHECK_OUTPUT "\ncase aa)"
+      set queue_settings(complex_values) "test1=4"
+      set_queue "res.q" $consumable_resources_test_hosts queue_settings
+      set job_arguments "-l test1=1,h=$host_a  -o /dev/null -e /dev/null"
+      set job_count 6
+      set run_job_count 3
+      consumable_resources_submit_jobs_and_wait $job_arguments $job_count $run_job_count "" $RUNINQUEUE
+      consumable_resources_submit_pejobs_and_wait $job_arguments $job_count $run_job_count       
+
+      #case ab
+      puts $CHECK_OUTPUT "\ncase ab)"
+      set queue_settings(complex_values) "test1=4"
+      set_queue "res.q" $consumable_resources_test_hosts queue_settings
+      set job_arguments "-l test1=1  -o /dev/null -e /dev/null"
+      set job_count 6
+      set run_job_count 5
+      consumable_resources_submit_jobs_and_wait $job_arguments $job_count $run_job_count "" $RUNINQUEUE
+      consumable_resources_submit_pejobs_and_wait $job_arguments $job_count $run_job_count  
 
       #case b
       puts $CHECK_OUTPUT "\ncase b)"
@@ -496,6 +698,7 @@ proc consumable_resources_test {} {
       set job_count 4
       set run_job_count 3
       consumable_resources_submit_jobs_and_wait $job_arguments $job_count $run_job_count "" $RUNATHOST
+      consumable_resources_submit_pejobs_and_wait $job_arguments $job_count $run_job_count  
 
       #case c
       puts $CHECK_OUTPUT "\ncase c)"
@@ -504,8 +707,7 @@ proc consumable_resources_test {} {
       set job_count 6
       set run_job_count 5
       consumable_resources_submit_jobs_and_wait $job_arguments1 $job_count $run_job_count $job_arguments2 $GLOBALLY
-
-
+      consumable_resources_submit_pejobs_and_wait $job_arguments2 $job_count $run_job_count  
 
       set queue_settings(complex_values) "NONE"
       set_queue "res.q" $consumable_resources_test_hosts queue_settings
@@ -541,6 +743,7 @@ proc consumable_resources_test {} {
       set job_count 1
       set run_job_count 0
       consumable_resources_submit_jobs_and_wait $job_arguments1 $job_count $run_job_count $job_arguments2 $FORCED
+      consumable_resources_submit_pejobs_and_wait $job_arguments1 $job_count $run_job_count  
 
 
       # case b
@@ -550,6 +753,7 @@ proc consumable_resources_test {} {
       set job_count 1
       set run_job_count 1
       consumable_resources_submit_jobs_and_wait $job_arguments1 $job_count $run_job_count $job_arguments2
+      consumable_resources_submit_pejobs_and_wait $job_arguments1 $job_count $run_job_count  
 
 
       set queue_settings(complex_values) "NONE"
@@ -596,10 +800,9 @@ proc consumable_resources_test {} {
       set queue_check {}
       lappend queue_check "res.q@$host_a"
       lappend queue_check "a"
-      
+
       consumable_resources_submit_jobs_and_wait $job_arguments1 $job_count $run_job_count $job_arguments2 "" $queue_check
-
-
+      consumable_resources_submit_pejobs_and_wait $job_arguments1 $job_count $run_job_count  
 
       set queue_settings(load_thresholds) "np_load_avg=11.75"
       set queue_settings(complex_values) "NONE"
@@ -654,7 +857,6 @@ proc consumable_resources_test {} {
       puts $CHECK_OUTPUT "setting hold state of job $job_id"
       hold_job $job_id
 
-
       puts $CHECK_OUTPUT "reschedule job $job_id"
       catch {  eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qmod" "-f -r $job_id" } catch_result
       puts $CHECK_OUTPUT $catch_result
@@ -665,7 +867,6 @@ proc consumable_resources_test {} {
       if { $state != "" } {
          add_proc_error "consumable_resources_test" -1 "queue did not free alarm state"
       }
-
       
       catch {  eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qstat" "-F | grep test" } qstat_F_3
 

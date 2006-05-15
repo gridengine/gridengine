@@ -286,7 +286,7 @@ main(int argc, char** argv)
      printf("try to get port for endpoint host/name/1...\n");
      printf("port is %d\n",service_port);
      printf("%s\n\n",cl_get_error_text(retval));
-     cl_commlib_trigger(handle);
+     cl_commlib_trigger(handle, 1);
      service_port = 0;
   }
 
@@ -388,7 +388,7 @@ main(int argc, char** argv)
      printf("try to get port for endpoint host/name/1...\n");
      printf("port is %d\n",service_port);
      printf("%s\n\n",cl_get_error_text(retval));
-     cl_commlib_trigger(handle);
+     cl_commlib_trigger(handle, 1);
      service_port = 0;
   }
 

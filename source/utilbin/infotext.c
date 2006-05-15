@@ -34,6 +34,7 @@
 /* Interactive formatted localized text*/
 /* __          _          _        ____*/
 /* -> infotext binary */
+#include <unistd.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -65,7 +66,7 @@ static void  sge_infotext_welcome(void);
 static void  sge_infotext_raw(char* format_string);
 static void  sge_infotext_usage(void);
 static int   sge_infotext_get_nr_of_substrings(char* buffer, char* substring);
-#if defined(ALPHA) || defined(SOLARISAMD64) || defined(ALPHA5) || defined(ALINUX) || defined(HPUX) || __GNUC__ == 3
+#if defined(ALPHA) || defined(SOLARISAMD64) || defined(ALPHA5) || defined(ALINUX) || defined(HPUX) || __GNUC__ >= 3
 static char* sge_infotext_string_replace(dstring* buf, char* arg, char* what, char* with, int only_first );
 #endif
 static char* sge_infotext_string_input_parsing(dstring* buf,char* string);
@@ -255,6 +256,8 @@ static void  sge_infotext_format_output(dstring* dash_buf,sge_infotext_options* 
    
    int new_line_opt = options->n;
 
+   bool done;
+
    DENTER(TOP_LAYER,"sge_infotext_format_output" );
 
 
@@ -275,13 +278,14 @@ static void  sge_infotext_format_output(dstring* dash_buf,sge_infotext_options* 
    DPRINTF(("strcpy done"));
    sge_dstring_copy_string(&dash,"");
    DPRINTF(("copy done"));
-   for(i=0;i< sge_dstring_strlen(&line);i++) {
+   for (i=0;i< sge_dstring_strlen(&line);i++) {
       sge_dstring_append(&dash," ");
    }
    nr_word = 0;
    DPRINTF(("while\n"));
 
-   while(1) {
+   done = false;
+   while (!done) {
       char* next_word = NULL;
       int new_line_buffer;
 
@@ -292,6 +296,7 @@ static void  sge_infotext_format_output(dstring* dash_buf,sge_infotext_options* 
             sge_infotext_print_line(dash_buf,options,&line); 
          }
          nr_word = 0;
+         done = true;
          break;
       }
 
@@ -359,16 +364,18 @@ static void  sge_infotext_format_output(dstring* dash_buf,sge_infotext_options* 
             options->n = new_line_opt;
             sge_infotext_print_line(dash_buf,options,&line); 
             nr_word = 0;
-         break;
+            done = true;
+            break;
          }
-         if( sge_dstring_strlen(&line) + strlen(next_word) + 1 > max_column &&
-            nr_word != 0 ) {
+         if (sge_dstring_strlen(&line) + strlen(next_word) + 1 > max_column &&
+            nr_word != 0) {
             sge_infotext_print_line(dash_buf,options,&line);
             nr_word = 0;
             sge_dstring_copy_dstring(&line,&dash);  
          }      
       }
    }
+
    DPRINTF(("free strings\n"));
    options->n = new_line_opt;
    sge_dstring_free(&dash);
@@ -538,7 +545,7 @@ static char* sge_infotext_string_output_parsing(dstring* string_buffer,char* str
 }
 
 
-#if defined(ALPHA) || defined(SOLARISAMD64) || defined(ALPHA5) || defined(ALINUX) || defined(HPUX) || defined(IRIX65) || __GNUC__ == 3
+#if defined(ALPHA) || defined(SOLARISAMD64) || defined(ALPHA5) || defined(ALINUX) || defined(HPUX) || defined(IRIX65) || __GNUC__ >= 3
 static char* sge_infotext_string_replace(dstring* tmp_buf, char* arg, char* what, char* with, int only_first) {
    int i;
    char* p1;
@@ -605,8 +612,9 @@ static void sge_infotext_welcome(void) {
    
    printf("\nno l10n:\n");
    printf(SGE_INFOTEXT_TESTSTRING_S, user);
-   printf("\nl10n:\n");
+   printf("\n\nl10n:\n");
    printf(_SGE_GETTEXT__((char*)_(SGE_INFOTEXT_TESTSTRING_S)), user);
+   printf("\n");
 
 }
 
@@ -1042,7 +1050,7 @@ int main( int argc, char* argv[] ) {
    DPRINTF(("pass 4\n"));
    {
       if (real_args > 0) {
-#if defined(SOLARISAMD64) || defined(ALPHA) || defined(ALPHA5) || defined(ALINUX) || defined(HPUX) || defined(IRIX65) || __GNUC__ == 3
+#if defined(SOLARISAMD64) || defined(ALPHA) || defined(ALPHA5) || defined(ALINUX) || defined(HPUX) || defined(IRIX65) || __GNUC__ >= 3
       for(i=0;i<real_args;i++) {
 /*      printf("argument[%d]: \"%s\"\n",i,argv[first_arg +i]); */
          sge_dstring_copy_string(&buffer, sge_infotext_string_replace(&tmp_buf, (char*)sge_dstring_get_string(&buffer2),"%s",argv[first_arg +i],1));
@@ -1091,10 +1099,14 @@ int main( int argc, char* argv[] ) {
             sge_infotext_format_output(&sge_infotext_dash_buffer,&options,(char*)sge_dstring_get_string(&buffer));
          }
          if (do_auto == 0) {
-            fgets(input_buffer, 2047, stdin);
-            help = strstr(input_buffer, "\n");
-            if (help != NULL) {
-               *help = 0;
+            if ( fgets(input_buffer, 2047, stdin) == NULL) {
+               ret_val = 2;
+               break;
+            } else {
+               help = strstr(input_buffer, "\n");
+               if (help != NULL) {
+                  *help = 0;
+               }
             }
          } else {
             strcpy(input_buffer,_SGE_GETTEXT__(options.def));
@@ -1123,10 +1135,13 @@ int main( int argc, char* argv[] ) {
          } 
  
          if (done != 1) {
+            printf("\n");
             printf( SGE_INFOTEXT_ONLY_ALLOWED_SS , _SGE_GETTEXT__(options.yes), _SGE_GETTEXT__(options.no));
+            printf("\n\n");
             if (do_auto != 0) {
                do_auto = 0;
             }
+            sleep(1);
          }
       }
       printf("\n");

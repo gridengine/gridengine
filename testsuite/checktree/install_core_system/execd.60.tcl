@@ -249,7 +249,7 @@ proc install_execd {} {
 
             -i $sp_id $USE_CONFIGURATION_PARAMS { 
      
-               puts $CHECK_OUTPUT "\n -->testsuite: sending >$ANSWER_YES<(11.5)"
+               puts $CHECK_OUTPUT "\n -->testsuite: sending >$ANSWER_YES<(10)"
                if {$do_log_output == 1} {
                     puts "press RETURN"
                     set anykey [wait_for_enter 1]
@@ -259,61 +259,64 @@ proc install_execd {} {
             }
 
             -i $sp_id $ENTER_LOCAL_EXECD_SPOOL_DIR_ASK {
-
-               if { $INST_VERSION >= 4 } {
-                  if { $LOCAL_ALREADY_CHECKED == 0 } {
-                     set LOCAL_ALREADY_CHECKED 1
-                     puts $CHECK_OUTPUT "\n -->testsuite: sending >$ANSWER_YES<(11.6)"
-                     if {$do_log_output == 1} {
-                          puts "press RETURN"
-                          set anykey [wait_for_enter 1]
-                     }
-                     send -i $sp_id "$ANSWER_YES\n"
-                     continue;
-                  } else {
-                     set spooldir [get_spool_dir $exec_host execd]
-                     if { $spooldir == "" } {
-                        puts $CHECK_OUTPUT "\n -->testsuite: sending >$ANSWER_NO<(11.7)"
-                        if {$do_log_output == 1} {
-                             puts "press RETURN"
-                             set anykey [wait_for_enter 1]
-                        }
-                        send -i $sp_id "$ANSWER_NO\n"
-                        continue;
-                     } else {
-
-                        puts $CHECK_OUTPUT "\n -->testsuite: sending >$ANSWER_YES<(11.6)"
-                        if {$do_log_output == 1} {
-                             puts "press RETURN"
-                             set anykey [wait_for_enter 1]
-                        }
-                        send -i $sp_id "$ANSWER_YES\n"
-                        continue;
-                     }
+               # If we said yes to the question whether we want to configure a local
+               # spooldir, but enter an empty directory path here, inst_sge has
+               # to handle this situation.
+               # Beginning with INST_VERSION 4, this situation is handled correctly.
+               # To thest the correct error handling, we send yes here and later on
+               # (ENTER_LOCAL_EXECD_SPOOL_DIR_ENTER) we send \"\" as spooldir.
+               # inst_sge has to detect the incorrect input and repeat this question.
+               if { $INST_VERSION >= 4 && $LOCAL_ALREADY_CHECKED == 0 } {
+                  puts $CHECK_OUTPUT "\n -->testsuite: sending >$ANSWER_YES<(11.1)"
+                  if {$do_log_output == 1} {
+                     puts "press RETURN"
+                     set anykey [wait_for_enter 1]
                   }
+                  send -i $sp_id "$ANSWER_YES\n"
                } else {
-                  set spooldir [get_spool_dir $exec_host execd]
+                  set spooldir [get_local_spool_dir $exec_host execd]
                   if { $spooldir == "" } {
-                     puts $CHECK_OUTPUT "\n -->testsuite: sending >$ANSWER_NO<(11.7)"
+                     puts $CHECK_OUTPUT "\n -->testsuite: sending >$ANSWER_NO<(11.2)"
                      if {$do_log_output == 1} {
                           puts "press RETURN"
                           set anykey [wait_for_enter 1]
                      }
                      send -i $sp_id "$ANSWER_NO\n"
-                     continue;
                   } else {
-
-                     puts $CHECK_OUTPUT "\n -->testsuite: sending >$ANSWER_YES<(11.6)"
+                     puts $CHECK_OUTPUT "\n -->testsuite: sending >$ANSWER_YES<(11.3)"
                      if {$do_log_output == 1} {
                           puts "press RETURN"
                           set anykey [wait_for_enter 1]
                      }
                      send -i $sp_id "$ANSWER_YES\n"
-                     continue;
                   }
                }
-            }
+               continue;
+            }   
 
+            -i $sp_id $ENTER_LOCAL_EXECD_SPOOL_DIR_ENTER {
+               puts $CHECK_OUTPUT "\n -->testsuite: send local spool directory\n"
+
+               # Second part of inst_sge error handling test (ENTER_LOCAL_EXECD_SPOOL_DIR_ASK):
+               # Sending \"\" as spooldir
+               if { $INST_VERSION >= 4 && $LOCAL_ALREADY_CHECKED == 0 } {
+                  set LOCAL_ALREADY_CHECKED 1
+                  set spooldir ""
+                  puts $CHECK_OUTPUT "checking inst_sge error handling, sending \"\" as local spooldir"
+               } else {
+                  set spooldir [get_local_spool_dir $exec_host execd 0]
+                  puts $CHECK_OUTPUT "spooldir on host $exec_host is $spooldir"
+               }
+
+               if {$do_log_output == 1} {
+                    puts "press RETURN"
+                    set anykey [wait_for_enter 1]
+               }
+
+               send -i $sp_id "$spooldir\n"
+               log_user 1
+               continue; 
+            }
 
             -i $sp_id $CELL_NAME_FOR_EXECD {
                puts $CHECK_OUTPUT "\n -->testsuite: sending $ts_config(cell)"
@@ -337,38 +340,6 @@ proc install_execd {} {
                continue;
             }
 
-#            -i $sp_id $LOCAL_CONFIG_FOR_HOST {
-#               puts $CHECK_OUTPUT "\n -->testsuite: reconfigure configuration for spool dir\n"
-#               set spooldir [get_spool_dir $exec_host execd]
-#               puts $CHECK_OUTPUT "spooldir on host $exec_host is $spooldir"
-#
-#               if { $spooldir != "" } {
-#                  set params(execd_spool_dir) $spooldir
-#                  set_config params $exec_host
-#                  set local_execd_spool_set 1 
-#               }
-#               log_user 1
-#               continue; 
-#            }
-
-            -i $sp_id $ENTER_LOCAL_EXECD_SPOOL_DIR_ENTER {
-               puts $CHECK_OUTPUT "\n -->testsuite: reconfigure configuration for spool dir\n"
-               set spooldir [get_spool_dir $exec_host execd 0]
-               puts $CHECK_OUTPUT "spooldir on host $exec_host is $spooldir"
-
-                  if {$do_log_output == 1} {
-                       puts "press RETURN"
-                       set anykey [wait_for_enter 1]
-                  }
-
-               if { $spooldir != "" } {
-                  send -i $sp_id "$spooldir\n"
-               } else {
-                  send -i $sp_id "\n"  
-               }
-               log_user 1
-               continue; 
-            }
 
 
             -i $sp_id $IF_NOT_OK_STOP_INSTALLATION {

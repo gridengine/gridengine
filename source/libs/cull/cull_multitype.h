@@ -40,6 +40,9 @@
 extern "C" {
 #endif
 
+#define SGE_NO_ABORT    0
+#define SGE_DO_ABORT    1
+
 #define for_each_attr(ATTR, LDP) for (ATTR = LDP->nm; ATTR != NoName; LDP++, ATTR = LDP->nm)
 
 extern const char *multitypes[];
@@ -52,7 +55,7 @@ int lGetPosType(const lDescr *dp, int pos);
 int lCountDescr(const lDescr *dp);
 lDescr* lCopyDescr(const lDescr *dp);
 
-int lGetPosViaElem(const lListElem *element, int nm);
+int lGetPosViaElem(const lListElem *element, int nm, int abort);
 
 void lInit(const lNameSpace *namev);
 const char *lNm2Str(int nm);
@@ -64,6 +67,7 @@ char **lGetPosHostRef(const lListElem *ep, int id);
 lList **lGetListRef(const lListElem *ep, int name);
 int lGetType(const lDescr *dp, int nm);
 int lXchgList(lListElem *ep, int name, lList **lpp);
+int lXchgString(lListElem *ep, int name, char **str);
 int lSwapList(lListElem *to, int to_nm, lListElem *from, int from_nm);
 
 lInt        lGetPosInt(const lListElem *ep, int id);

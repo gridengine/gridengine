@@ -43,37 +43,36 @@
 #define MSG_MASTER                         _MESSAGE(27001, _("master"))
 #define MSG_STARTUP_STARTINGUP_S           _MESSAGE(27002, _("starting up "SFN))
 #define MSG_SHADOWD_CONTROLLEDSHUTDOWN_S   _MESSAGE(27003, _("controlled shutdown "SFN))
+#define MSG_SHADOWD_CONTROLLEDSHUTDOWN_SU  _MESSAGE(27000, _("controlled shutdown "SFN" (exit state = "sge_U32CFormat")"))
 #define MSG_ERROR_CANTSWITCHTOADMINUSER    _MESSAGE(27004, _("can't switch to admin_user"))
 
 /*
 ** path_aliases.c
 */
-#define MSG_ALIAS_INVALIDSYNTAXOFPATHALIASFILEX_S    _MESSAGE(27005, _("invalid syntax of path alias file "SFQ"\n"))
-#define MSG_ALIAS_CANTREAD_SS                        _MESSAGE(27006, _("can't read path aliasing file "SFQ": "SFN"\n"))
+#define MSG_ALIAS_INVALIDSYNTAXOFPATHALIASFILEX_S    _MESSAGE(27005, _("invalid syntax of path alias file "SFQ))
+#define MSG_ALIAS_CANTREAD_SS                        _MESSAGE(27006, _("can't read path aliasing file "SFQ": "SFN))
 
 
 /*
 ** unparse_job_cull.c
 */
-#define MSG_LIST_ERRORFORMATINGJIDPREDECESSORLISTASHOLDJID       _MESSAGE(27007, _("Error formatting jid_request_list as -hold_jid\n"))
-#define MSG_LIST_ERRORFORMATINGJOBIDENTIFIERLISTASJID       _MESSAGE(27008, _("Error formatting job_identifier_list as -jid\n"))
-#define MSG_PARSE_ERRORUNPARSINGMAILOPTIONS       _MESSAGE(27009, _("Error unparsing mail options\n"))
-#define MSG_LIST_ERRORFORMATTINGMAILLISTASM       _MESSAGE(27010, _("Error formatting mail list as -M\n"))
-#define MSG_PROC_INVALIDPROIRITYMUSTBELESSTHAN1025       _MESSAGE(27011, _("ERROR! invalid priority, priority must be less than 1025\n"))
-#define MSG_PROC_INVALIDPRIORITYMUSTBEGREATERTHANMINUS1024       _MESSAGE(27012, _("ERROR! invalid priority, priority must be greater than -1024\n"))
-#define MSG_LIST_ERRORFORMATINGHARDQUEUELISTASQ       _MESSAGE(27013, _("Error formatting hard_queue_list as -q\n"))
-#define MSG_LIST_ERRORFORMATINGSOFTQUEUELISTASQ       _MESSAGE(27014, _("Error formatting soft_queue_list as -q\n"))
-/* #define MSG_LIST_ERRORFORMATINGQSARGSLIST       _message(27015, _("Error formatting qs_args list\n")) __TS Removed automatically from testsuite!! TS__*/
-#define MSG_LIST_ERRORFORMATINGSHELLLIST       _MESSAGE(27016, _("Error formatting shell_list\n"))
-#define MSG_LIST_ERRORFORMATINGENVIRONMENTLISTASV       _MESSAGE(27017, _("Error formatting environment list as -v\n"))
-#define MSG_LIST_ERRORFORMATINGJOBARGUMENTS       _MESSAGE(27018, _("Error formatting job argumentents\n"))
-#define MSG_JOB_INVALIDVALUEFORCHECKPOINTATTRIBINJOB_U       _MESSAGE(27019, _("ERROR! invalid value for checkpoint attribute in job "sge_U32CFormat"\n"))
-#define MSG_LIST_ERRORFORMATINGHARDRESOURCELISTASL       _MESSAGE(27020, _("Error formatting hard_resource_list as -l\n"))
-#define MSG_JOB_JOBHASPEWITHNORANGES       _MESSAGE(27021, _("Job has parallel environment with no ranges\n"))
-#define MSG_LIST_ERRORFORMATINGRANGESINPE       _MESSAGE(27022, _("Error formatting ranges in -pe\n"))
-#define MSG_LIST_ERRORFORMATINGPATHLIST       _MESSAGE(27023, _("Error formatting path_list\n"))
-#define MSG_LIST_ERRORFORMATINGIDLIST       _MESSAGE(27024, _("Error formatting id list\n"))
-#define MSG_LIST_ERRORFORMATINGACLLIST       _MESSAGE(27025, _("Error formatting acl list\n"))
+#define MSG_LIST_ERRORFORMATINGJIDPREDECESSORLISTASHOLDJID       _MESSAGE(27007, _("Error formatting jid_request_list as -hold_jid"))
+#define MSG_LIST_ERRORFORMATINGJOBIDENTIFIERLISTASJID       _MESSAGE(27008, _("Error formatting job_identifier_list as -jid"))
+#define MSG_PARSE_ERRORUNPARSINGMAILOPTIONS       _MESSAGE(27009, _("Error unparsing mail options"))
+#define MSG_LIST_ERRORFORMATTINGMAILLISTASM       _MESSAGE(27010, _("Error formatting mail list as -M"))
+#define MSG_PROC_INVALIDPROIRITYMUSTBELESSTHAN1025       _MESSAGE(27011, _("ERROR! invalid priority, priority must be less than 1025"))
+#define MSG_PROC_INVALIDPRIORITYMUSTBEGREATERTHANMINUS1024       _MESSAGE(27012, _("ERROR! invalid priority, priority must be greater than -1024"))
+#define MSG_LIST_ERRORFORMATINGHARDQUEUELISTASQ       _MESSAGE(27013, _("Error formatting hard_queue_list as -q"))
+#define MSG_LIST_ERRORFORMATINGSOFTQUEUELISTASQ       _MESSAGE(27014, _("Error formatting soft_queue_list as -q"))
+/* #define MSG_LIST_ERRORFORMATINGQSARGSLIST       _message(27015, _("Error formatting qs_args list")) __TS Removed automatically from testsuite!! TS__*/
+#define MSG_LIST_ERRORFORMATINGSHELLLIST       _MESSAGE(27016, _("Error formatting shell_list"))
+#define MSG_LIST_ERRORFORMATINGENVIRONMENTLISTASV       _MESSAGE(27017, _("Error formatting environment list as -v"))
+#define MSG_LIST_ERRORFORMATINGJOBARGUMENTS       _MESSAGE(27018, _("Error formatting job argumentents"))
+#define MSG_JOB_INVALIDVALUEFORCHECKPOINTATTRIBINJOB_U       _MESSAGE(27019, _("ERROR! invalid value for checkpoint attribute in job "sge_U32CFormat))
+#define MSG_LIST_ERRORFORMATINGHARDRESOURCELISTASL       _MESSAGE(27020, _("Error formatting hard_resource_list as -l"))
+#define MSG_JOB_JOBHASPEWITHNORANGES       _MESSAGE(27021, _("Job has parallel environment with no ranges"))
+#define MSG_LIST_ERRORFORMATINGRANGESINPE       _MESSAGE(27022, _("Error formatting ranges in -pe"))
+#define MSG_LIST_ERRORFORMATINGPATHLIST       _MESSAGE(27023, _("Error formatting path_list"))
 
 
 /*
@@ -83,7 +82,7 @@
 #define MSG_PROC_CANTFORKPROCESSTOSTARTX_S       _MESSAGE(27027, _("can't fork process to start: "SFN))
 #define MSG_PROC_CANTEXECPROCESSORPROCESSDIEDTHROUGHSIGNALX_S       _MESSAGE(27028, _("cannot exec process or process died through signal: "SFN))
 #define MSG_PROC_CANTSTARTPROCESSX_S       _MESSAGE(27029, _("couldn't start process: "SFN))
-#define MSG_PROC_WAITPIDRETURNEDUNKNOWNSTATUS       _MESSAGE(27030, _("waitpid() returned unknown status\n"))
+#define MSG_PROC_WAITPIDRETURNEDUNKNOWNSTATUS       _MESSAGE(27030, _("waitpid() returned unknown status"))
 
 
 /*
@@ -92,10 +91,6 @@
 #define MSG_QMASTER_FOUNDRUNNINGQMASTERONHOSTXNOTSTARTING_S    _MESSAGE(27038, _("found running qmaster on host "SFQ"- not starting"))
 
 
-/* 
-** qmaster_heartbeat.c 
-*/
-#define MSG_HEART_CANNOTOPEN _MESSAGE(27041, _("can't open file "SFN": "SFN"\n"))
 
 /*
 ** mail.c
@@ -103,11 +98,11 @@
 #define MSG_MAIL_EMPTYUSERHOST         _MESSAGE(27042, _("sending mail is not possible since user and host are empty"))
 #define MSG_MAIL_MAILUSER_SSSS         _MESSAGE(27043, _("sending "SFN" mail to user "SFQ"|mailer "SFQ"|"SFQ))
 #define MSG_MAIL_MAILUSERHOST_SSSSS    _MESSAGE(27044, _("sending "SFN" mail to user \""SFN"@"SFN"\"|mailer "SFQ"|"SFQ))
-#define MSG_MAIL_NOPIPE                _MESSAGE(27045, _("pipe() for mail failed\n"))
-#define MSG_MAIL_NOFORK                _MESSAGE(27046, _("fork() for mail failed\n"))
-#define MSG_MAIL_NODUP                 _MESSAGE(27047, _("dup() failed\n"))
-#define MSG_MAIL_NOEXEC_S              _MESSAGE(27048, _("exec of mailer "SFQ" failed\n"))
-#define MSG_MAIL_NOMAIL1               _MESSAGE(27049, _("wait for mailer returned 0 - killing\n") ) 
+#define MSG_MAIL_NOPIPE                _MESSAGE(27045, _("pipe() for mail failed"))
+#define MSG_MAIL_NOFORK                _MESSAGE(27046, _("fork() for mail failed"))
+#define MSG_MAIL_NODUP                 _MESSAGE(27047, _("dup() failed"))
+#define MSG_MAIL_NOEXEC_S              _MESSAGE(27048, _("exec of mailer "SFQ" failed"))
+#define MSG_MAIL_NOMAIL1               _MESSAGE(27049, _("wait for mailer returned 0 - killing") ) 
 #define MSG_MAIL_NOMAIL2               _MESSAGE(27050, _("mailer had timeout - killing"))
 #define MSG_MAIL_NOMAIL3_I             _MESSAGE(27051, _("mailer was stopped due to signal %d - killing"))
 #define MSG_MAIL_NOSUBJ                _MESSAGE(27052, _("<no subject>"))
@@ -116,7 +111,7 @@
 /*
 ** admin_mail.c 
 */
-#define MSG_MAIL_PARSE_S           _MESSAGE(27053, _("Error parsing mail list "SFQ"\n"))
+#define MSG_MAIL_PARSE_S           _MESSAGE(27053, _("Error parsing mail list "SFQ))
 
 /* CR: don't localize mail subject, until we send it in Mime format!
  *  The message definition is not l10n'ed (no _() macro used)!!!     
@@ -126,6 +121,7 @@
 
 
 #define MSG_MAIL_BODY_USSSSSSSS    "Job " sge_U32CFormat " caused action: "SFN"\n User        = "SFN"\n Queue       = "SFN"\n Host        = "SFN"\n Start Time  = "SFN"\n End Time    = "SFN"\nfailed "SFN":"SFN
+#define MSG_GFSTATE_PEJOB_U        _MESSAGE(27054, _("PE Job "sge_U32CFormat" will be deleted"))
 #define MSG_GFSTATE_QUEUE_S        _MESSAGE(27055, _("Queue "SFQ" set to ERROR"))
 #define MSG_GFSTATE_HOST_S         _MESSAGE(27056, _("All Queues on host "SFQ" set to ERROR"))
 #define MSG_GFSTATE_JOB_UU         _MESSAGE(27057, _("Job-array task "sge_U32CFormat"."sge_U32CFormat" set to ERROR"))
@@ -142,7 +138,6 @@
 /* 
  * sge_category.c
  */ 
-#define MSG_CATEGORY_BUILDINGCATEGORYFORJOBXFAILED_U  _MESSAGE(27063, _("failed building category string for job "sge_U32CFormat"\n"))
 
 /*
  * Additional messages
@@ -161,7 +156,7 @@
 
 
 
-#define MSG_MAIL_BODY_SSSSS                     _MESSAGE(27068, _(SFN"\n Master queue    = "SFN"\n Owner           = "SFN"\n Submission time = "SFN"\n Start time      = "SFN"\n"))
+#define MSG_MAIL_BODY_SSSSS                     _MESSAGE(27068, _(SFN"\n Master queue    = "SFN"\n Owner           = "SFN"\n Submission time = "SFN"\n Start time      = "SFN))
 #define MSG_MAIL_TYPE_SUSP                      _MESSAGE(27069, _("job suspend"))
 #define MSG_MAIL_TYPE_CONT                      _MESSAGE(27070, _("job continue"))
 #define MSG_MAIL_UNKNOWN_REASON                 _MESSAGE(27071, _("<unknown reason>"))
@@ -198,6 +193,20 @@
 /* #define MSG_MAIL_TYPE_ABORT                     _message(27089, _("job abortion")) __TS Removed automatically from testsuite!! TS__*/
 #define MSG_MAIL_UNKNOWN_NAME                   _MESSAGE(27090, _("<unknown>"))
 #define MSG_MAIL_ACTION_APPERROR                _MESSAGE(27091, _("Rescheduled due to application error"))
+
+/* 
+** qmaster_heartbeat.c 
+*/
+#define MSG_HEART_CANNOTOPEN_SS             _MESSAGE(27041, _("can't open heartbeat file "SFQ": "SFN))
+#define MSG_HEART_CANNOT_FSEEK_SS           _MESSAGE(27092, _("can't seek to the beginning of heartbeat file "SFQ": "SFN))
+#define MSG_HEART_NO_FILENAME               _MESSAGE(27093, _("no heartbeat file name specified"))
+#define MSG_HEART_WRITE_ERROR_SS            _MESSAGE(27094, _("can't write data to heartbeat file "SFQ": "SFN))
+#define MSG_HEART_CLOSE_ERROR_SS            _MESSAGE(27095, _("error closing heartbeat file "SFQ": "SFN))
+#define MSG_HEART_WRITE_TIMEOUT_S           _MESSAGE(27096, _("got timeout error while write data to heartbeat file "SFQ))
+#define MSG_HEART_CANNOT_READ_FILE_S        _MESSAGE(27097, _("can't read act_qmaster file: "SFN))
+#define MSG_HEART_ACT_QMASTER_FILE_CHANGED  _MESSAGE(27098, _("act_qmaster file has been changed by another qmaster"))
+#define MSG_HEART_READ_TIMEOUT_S            _MESSAGE(27099, _("got timeout error while read data from heartbeat file "SFQ))
+#define MSG_HEART_CANT_SIGNAL               _MESSAGE(27100, _("can't send signal to signal thread"))
 
 #endif /* MSG_DAEMONS_COMMON_H */
 

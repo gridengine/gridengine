@@ -42,4 +42,6 @@ void *(*get_thrd_func(void))(void *anArg);
 /* Arguments to hand over to the thread function */
 void *get_thrd_func_arg(void);
 
+void set_thread_count(int count); 
+
 #endif  /* _TEST_SGE_LOCK_MAIN_H_ */

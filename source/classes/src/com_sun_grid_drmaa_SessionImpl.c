@@ -740,8 +740,11 @@ JNIEXPORT jobjectArray JNICALL Java_com_sun_grid_drmaa_SessionImpl_nativeGetAttr
       errnum = drmaa_get_vector_attribute (jt, name_str, &values, error,
                                           DRMAA_ERROR_STRING_BUFFER);
       (*env)->ReleaseStringUTFChars(env, name, name_str);
-      
-      if (errnum != DRMAAJ_ERRNO_SUCCESS) {
+
+      if (errnum == DRMAAJ_ERRNO_INVALID_ATTRIBUTE_VALUE) {
+         return NULL;
+      }
+      else if(errnum != DRMAAJ_ERRNO_SUCCESS) {
          throw_exception (env, errnum, error);
          drmaa_release_attr_values (values);
 
@@ -780,7 +783,10 @@ JNIEXPORT jobjectArray JNICALL Java_com_sun_grid_drmaa_SessionImpl_nativeGetAttr
                                    DRMAA_ERROR_STRING_BUFFER);
       (*env)->ReleaseStringUTFChars(env, name, name_str);
       
-      if (errnum != DRMAAJ_ERRNO_SUCCESS) {
+      if (errnum == DRMAAJ_ERRNO_INVALID_ATTRIBUTE_VALUE) {
+         return NULL;
+      }
+      else if(errnum != DRMAAJ_ERRNO_SUCCESS) {
          throw_exception (env, errnum, error);
 
          return NULL;

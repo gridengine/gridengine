@@ -184,7 +184,7 @@ GetQmasterSpoolDir()
       fi
 
       $INFOTEXT -n "If you will install shadow master hosts or if you want to be able to start\n" \
-                   "the qmaster daemon on other hosts (see the corresponding sectionin the\n" \
+                   "the qmaster daemon on other hosts (see the corresponding section in the\n" \
                    "Grid Engine Installation and Administration Manual for details) the account\n" \
                    "on the shadow master hosts also needs read/write access to this directory.\n\n" \
                    "The following directory\n\n [%s]\n\n will be used as qmaster spool directory by default!\n" \
@@ -344,7 +344,7 @@ SetSpoolingOptionsBerkeleyDB()
          exit 1 
       fi
       SpoolingCheckParams
-      params_ok=1
+      params_ok=$?
    fi
    if [ "$QMASTER" = "install" ]; then
       $INFOTEXT -n "\nThe Berkeley DB spooling method provides two configurations!\n\n" \
@@ -416,7 +416,7 @@ SetSpoolingOptionsBerkeleyDB()
 
             CheckLocalFilesystem $SPOOLING_DIR
             ret=$?
-            if [ $ret -eq 0 ]; then
+            if [ $ret -eq 0 -a "$AUTO" = "false" ]; then
                $INFOTEXT "\nThe database directory\n\n" \
                             "   %s\n\n" \
                             "is not on a local filesystem. Please choose a local filesystem or\n" \
@@ -435,7 +435,11 @@ SetSpoolingOptionsBerkeleyDB()
          done
        fi
    else
-      ret=`ps -efa | grep "berkeley_db_svc" | wc -l` 
+      if [ "$ARCH" = "darwin" ]; then
+         ret=`ps ax | grep "berkeley_db_svc" | wc -l` 
+      else
+         ret=`ps -efa | grep "berkeley_db_svc" | wc -l` 
+      fi
       if [ $ret -gt 1 ]; then
          $INFOTEXT "We found a running berkeley db server on this host!"
          if [ "$AUTO" = "true" ]; then
@@ -447,10 +451,9 @@ SetSpoolingOptionsBerkeleyDB()
                   $INFOTEXT -log "We found a running berkeley db server on this host!"
                   $INFOTEXT -log "Please, check this first! Exiting Installation!"
                   MoveLog
+                  exit 1
                fi
-         fi
-
-         if [ "$AUTO" = "false" ]; then
+         else                 # $AUTO != true
             $INFOTEXT -auto $AUTO -ask "y" "n" -def "n" "Do you want to use an other host for spooling? (y/n) [n] >>"
             if [ $? = 1 ]; then
                $INFOTEXT "Please enter the path to your Berkeley DB startup script! >>"
@@ -471,6 +474,7 @@ SetSpoolingOptionsBerkeleyDB()
                   ret=$?               
                   if [ "$AUTO" = true ]; then
                      $INFOTEXT -log "The spooling directory already exists!\n Please remove it or choose any other spooling directory!"
+                     MoveLog
                      exit 1
                   fi
  
@@ -699,7 +703,7 @@ AddBootstrap()
 #
 PrintBootstrap()
 {
-   $ECHO "# Version: 6.0u2"
+   $ECHO "# Version: 6.0u8"
    $ECHO "#"
    if [ $ADMINUSER != default ]; then
       $ECHO "admin_user             $ADMINUSER"
@@ -759,7 +763,7 @@ AddConfiguration()
 #
 PrintConf()
 {
-   $ECHO "# Version: 6.0u2"
+   $ECHO "# Version: 6.0u8"
    $ECHO "#"
    $ECHO "# DO NOT MODIFY THIS FILE MANUALLY!"
    $ECHO "#"
@@ -785,7 +789,7 @@ PrintConf()
    $ECHO "reschedule_unknown     00:00:00"
    $ECHO "loglevel               log_warning"
    $ECHO "administrator_mail     $CFG_MAIL_ADDR"
-   if [ $AFS = true ]; then
+   if [ "$AFS" = true ]; then
       $ECHO "set_token_cmd          /path_to_token_cmd/set_token_cmd"
       $ECHO "pag_cmd                /usr/afsws/bin/pagsh"
       $ECHO "token_extend_time      24:0:0"
@@ -796,7 +800,13 @@ PrintConf()
    fi
    $ECHO "shepherd_cmd           none"
    $ECHO "qmaster_params         none"
-   $ECHO "execd_params           none"
+   if [ "$WINDOWS_SUPPORT" = "true" -a "$WIN_DOMAIN_ACCESS" = "true" ]; then
+      $ECHO "execd_params           enable_windomacc=true"
+   elif [ "$WINDOWS_SUPPORT" = "true" -a "$WIN_DOMAIN_ACCESS" = "false" ]; then
+      $ECHO "execd_params           enable_windomacc=false"
+   else
+      $ECHO "execd_params           none"
+   fi
    $ECHO "reporting_params       accounting=true reporting=false flush_time=00:00:15 joblog=false sharelog=00:00:00"
    $ECHO "finished_jobs          100"
    $ECHO "gid_range              $CFG_GID_RANGE"
@@ -812,7 +822,7 @@ PrintConf()
    $ECHO "auto_user_default_project none"
    $ECHO "auto_user_delete_time  86400"
    $ECHO "delegated_file_staging false"
-
+   $ECHO "reprioritize           0"
 }
 
 
@@ -1052,10 +1062,19 @@ CreateSettingsFile()
 InitCA()
 {
 
-   if [ "$CSP" = true -o "$WINDOWS_SUPPORT" = true ]; then
+   if [ "$CSP" = true -o \( "$WINDOWS_SUPPORT" = "true" -a "$WIN_DOMAIN_ACCESS" = "true" \) ]; then
       # Initialize CA, make directories and get DN info
       #
-      util/sgeCA/sge_ca -init -days 365
+      if [ "$AUTO" = "true" ]; then
+         if [ "$CSP_RECREATE" = "true" ]; then
+            util/sgeCA/sge_ca -init -days 365 -auto $FILE
+            #if [ -f "$CSP_USERFILE" ]; then
+            #   util/sgeCA/sge_ca -usercert $CSP_USERFILE
+            #fi
+         fi
+      else
+         util/sgeCA/sge_ca -init -days 365
+      fi
 
       if [ $? != 0 ]; then
          CAErrUsage
@@ -1671,6 +1690,7 @@ GetDefaultDomain()
 
 SetScheddConfig()
 {
+   $CLEAR
 
    $INFOTEXT -u "Scheduler Tuning"
    $INFOTEXT -n "\nThe details on the different options are described in the manual. \n"
@@ -1700,6 +1720,7 @@ SetScheddConfig()
       elif [ $SCHEDD_CONF = "3" ]; then
          is_selected="Max"
       else
+         SCHEDD_CONF=1
          is_selected="Normal"
       fi
 
@@ -1752,6 +1773,19 @@ WindowsSupport()
 
    if [ $? = 0 ]; then
       WINDOWS_SUPPORT=true
+      WindowsDomainUserAccess
+   fi
+}
+
+
+WindowsDomainUserAccess()
+{
+   $CLEAR
+   $INFOTEXT -u "Windows Domain User Access"
+   $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n "\nDo you want to use Windows Domain Users (answer: y)\n" \
+                                                  "or are you going to use local Windows Users (answer: n) (y/n) [y] >> "
+   if [ $? = 0 ]; then
+      WIN_DOMAIN_ACCESS=true
    fi
 }
 
@@ -1769,5 +1803,10 @@ AddWindowsAdmin()
       $SGE_BIN/qconf -am $WIN_ADMIN_NAME
       $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
       $CLEAR
+      if [ "$CSP" = "true" ]; then
+         $SGE_ROOT/util/sgeCA/sge_ca -user "$WIN_ADMIN_NAME"
+         $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
+         $CLEAR
+      fi
    fi
 }

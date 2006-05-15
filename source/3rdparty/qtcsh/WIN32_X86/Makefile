@@ -1,5 +1,5 @@
 # Generated automatically from Makefile.in by configure.
-# $Id: Makefile,v 1.2 2005/01/19 11:12:53 ernst Exp $
+# $Id: Makefile,v 1.2.6.1 2005/10/19 15:23:58 pollinger Exp $
 #	Makefile.in	4.3	6/11/83
 #
 # C Shell with process control; VM/UNIX VAX Makefile
@@ -158,7 +158,7 @@ LDFLAGS=$(SGE_LOPTS) 		## This is set by autoconf.
 ################################################################
 ## LIBES.  Pick one, or roll your own.
 ################################################################
-LIBES= -lncurses -lcrypt 	 			 ## This is set by autoconf.
+LIBES= -ltermcap 	 			 ## This is set by autoconf.
 #LIBES= -ltermcap 			 ## BSD style things
 #LIBES= -ltermcap			 ## SunOS, HP-UX, pyramid
 #LIBES= -ltermcap			 ## Linux

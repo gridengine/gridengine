@@ -152,18 +152,17 @@ proc start_checkpoint_job {} {
 
 proc check_slave_migration {} {
    global checkpoint_job_id CHECK_OUTPUT CHECK_ACTUAL_TEST_PATH
-
+   global all_queue_list
 
    if { [check_test_dependencies] != 0 } {
      return
    }
 
-
    # wait for job to start running
    wait_for_end_of_transfer $checkpoint_job_id 60
 
    # find out where the slave task is running
-   set slave_queue [slave_queue_of $checkpoint_job_id]
+   set slave_queue [slave_queue_of $checkpoint_job_id $all_queue_list]
 
    # now suspend the slave queue
    suspend_queue $slave_queue
@@ -217,24 +216,20 @@ proc check_slave_migration {} {
 #     ???/???
 #*******************************
 proc check_calendardisable_migration_on_slavequeue_suspend {} {
-
    global checkpoint_job_id CHECK_OUTPUT CHECK_ACTUAL_TEST_PATH q1 q2
+   global all_queue_list ckpt_queue_list
 
    if { [check_test_dependencies] != 0 } {
      return
    }
 
-
    # wait for job to start running
    wait_for_end_of_transfer $checkpoint_job_id 100
 
-   
-
    # find out where the slave task is running
-   set slave_queue [slave_queue_of $checkpoint_job_id]
+   set slave_queue [slave_queue_of $checkpoint_job_id $all_queue_list]
 
-
-   calendardisable_queue "$q1 $q2"  ;# pass list of queues to procedure
+   calendardisable_queue $ckpt_queue_list  ;# pass list of queues to procedure
   
    # now suspend the slave queue
    suspend_queue $slave_queue
@@ -249,7 +244,7 @@ proc check_calendardisable_migration_on_slavequeue_suspend {} {
    # now unsuspend queue again
    unsuspend_queue $slave_queue
 
-   set result [calendarclear_queue "$q1 $q2"]  ;# pass list of queues to procedure
+   set result [calendarclear_queue $ckpt_queue_list]  ;# pass list of queues to procedure
   
    # wait for restart  
    wait_for_jobstart $checkpoint_job_id "DEMO" 300
@@ -287,8 +282,8 @@ proc check_calendardisable_migration_on_slavequeue_suspend {} {
 #     ???/???
 #*******************************
 proc check_calendardisable_migration_on_slavequeue_threshold_suspend {} {
-
    global checkpoint_job_id CHECK_OUTPUT CHECK_ACTUAL_TEST_PATH q1 q2
+   global all_queue_list ckpt_queue_list
 
    if { [check_test_dependencies] != 0 } {
      return
@@ -300,12 +295,11 @@ proc check_calendardisable_migration_on_slavequeue_threshold_suspend {} {
    after 5000
 
    # find out where the slave task is running
-   set slave_queue [slave_queue_of $checkpoint_job_id]
+   set slave_queue [slave_queue_of $checkpoint_job_id $all_queue_list]
    puts $CHECK_OUTPUT "slave queue: $slave_queue"
 
    puts $CHECK_OUTPUT "disable queues (calendardisable): \"$q1\" and \"$q2\""
-   calendardisable_queue "$q1 $q2"  ;# pass list of queues to procedure
-   
+   calendardisable_queue $ckpt_queue_list  ;# pass list of queues to procedure
   
    # now threshold suspend the slave queue
    threshold_suspend_queue $slave_queue
@@ -319,7 +313,7 @@ proc check_calendardisable_migration_on_slavequeue_threshold_suspend {} {
    # now unsuspend queue again
    threshold_suspend_queue_clear $slave_queue
 
-   calendarclear_queue "$q1 $q2"  ;# pass list of queues to procedure
+   calendarclear_queue $ckpt_queue_list  ;# pass list of queues to procedure
   
    # wait for restart  
    wait_for_jobstart $checkpoint_job_id "DEMO" 300
@@ -358,8 +352,8 @@ proc check_calendardisable_migration_on_slavequeue_threshold_suspend {} {
 #     ???/???
 #*******************************
 proc check_master_migration {} {
-   
    global checkpoint_job_id CHECK_OUTPUT CHECK_ACTUAL_TEST_PATH
+   global all_queue_list
 
    if { [check_test_dependencies] != 0 } {
      return
@@ -368,10 +362,8 @@ proc check_master_migration {} {
     # wait for job to start running
    wait_for_end_of_transfer $checkpoint_job_id 100
 
-   
-
    # find out where the master task is running
-   set master_queue [master_queue_of $checkpoint_job_id]
+   set master_queue [master_queue_of $checkpoint_job_id $all_queue_list]
    
    # now suspend the master queue
    suspend_queue $master_queue
@@ -391,7 +383,6 @@ proc check_master_migration {} {
 
    # wait for restart  
    wait_for_jobstart $checkpoint_job_id "DEMO" 300
-
 
    set_error 0 "check_master_migration  - no errors"  
 }
@@ -428,16 +419,17 @@ proc check_master_migration {} {
 #*******************************
 proc check_calendarsuspend_master_migration {} {
    global checkpoint_job_id CHECK_ACTUAL_TEST_PATH CHECK_OUTPUT
+   global all_queue_list
 
    if { [check_test_dependencies] != 0 } {
      return
    }
+
    # wait for job to start running
    wait_for_end_of_transfer $checkpoint_job_id 100
 
-
    # find out where the master task is running
-   set master_queue [master_queue_of $checkpoint_job_id]
+   set master_queue [master_queue_of $checkpoint_job_id $all_queue_list]
 
    # now calendarsuspend the master queue
    calendarsuspend_queue $master_queue
@@ -492,7 +484,7 @@ proc check_calendarsuspend_master_migration {} {
 #*******************************
 proc check_calendarsuspend_slave_migration {} {
    global checkpoint_job_id CHECK_ACTUAL_TEST_PATH CHECK_OUTPUT
-
+   global all_queue_list
 
    if { [check_test_dependencies] != 0 } {
      return
@@ -501,9 +493,8 @@ proc check_calendarsuspend_slave_migration {} {
    # wait for job to start running
    wait_for_end_of_transfer $checkpoint_job_id 100
 
-
    # find out where the slave task is running
-   set slave_queue [slave_queue_of $checkpoint_job_id]
+   set slave_queue [slave_queue_of $checkpoint_job_id $all_queue_list]
    puts $CHECK_OUTPUT "---> slave queue is $slave_queue"
 
    # now calendarsuspend the slave queue
@@ -519,8 +510,9 @@ proc check_calendarsuspend_slave_migration {} {
    delete_file "$CHECK_ACTUAL_TEST_PATH/migratewascalled"
 
    # now calendar un-suspend the slave queue
-   set queue_param(calendar)                  "NONE" 
-   set_queue $slave_queue "" queue_param
+   mqattr "calendar" "NONE" $slave_queue
+   #set queue_param(calendar)                  "NONE" 
+   #set_queue $slave_queue "" queue_param
 
    # wait for restart  
    wait_for_jobstart $checkpoint_job_id "DEMO" 300
@@ -623,11 +615,11 @@ proc clean_up_checkpoint_job {} {
 #*******************************
 proc setup_checkpointing {} {
   global checkpoint_host1 checkpoint_host2 q1 q2 q3 q4 migration_ckpt_name CHECK_ACTUAL_TEST_PATH
+  global ckpt_queue_list
 
   if { [check_test_dependencies] != 0 } {
      return
   }
-
 
   set ckpt_param(ckpt_name)         "$migration_ckpt_name"
   set ckpt_param(interface)         "CPR"
@@ -644,11 +636,15 @@ proc setup_checkpointing {} {
      set_error -1 "setup_checkpointing - could not add checkpoint ENV $migration_ckpt_name (result of add_checkpointobj: $result)"
      return
   }
+ 
+   assign_queues_with_ckpt_object $q1 $checkpoint_host1 $migration_ckpt_name
+   assign_queues_with_ckpt_object $q2 $checkpoint_host2 $migration_ckpt_name
+   set ckpt_queue_list {}
+   lappend ckpt_queue_list [get_queue_instance $q1 $checkpoint_host1]
+   lappend ckpt_queue_list [get_queue_instance $q2 $checkpoint_host2]
   
-  assign_queues_with_ckpt_object $q1 "" $migration_ckpt_name
-  assign_queues_with_ckpt_object $q2 "" $migration_ckpt_name
 
-  set_error 0 "setup_checkpointing - no errors" 
+   set_error 0 "setup_checkpointing - no errors" 
 }
 
 #                                                             max. column:     |
@@ -780,8 +776,8 @@ proc setup_pe {} {
      return
   }
   
-  assign_queues_with_pe_object $q1 "" $migration_pe_name
-  assign_queues_with_pe_object $q2 "" $migration_pe_name
+  assign_queues_with_pe_object $q1 $checkpoint_host1 $migration_pe_name
+  assign_queues_with_pe_object $q2 $checkpoint_host2 $migration_pe_name
 
   set_error 0 "setup_pe - no errors" 
 }
@@ -869,13 +865,17 @@ proc clean_up_pe {} {
 #     ???/???
 #*******************************
 proc setup_queues {} {
-# we need SOLARIS64 and AIX4.3 machines !
-
   global checkpoint_host1 checkpoint_host2 q1 q2 q3 q4
+  global all_queue_list
 
   if { [check_test_dependencies] != 0 } {
      return
   }
+
+  # all_queue_list will contain the qinstance names of all
+  # migration test specific queues
+  set all_queue_list {}
+
   # queues on host 1
   set q_param(load_thresholds)       "np_load_avg=7.00"
   set q_param(qtype)                 "BATCH PARALLEL CHECKPOINTING"
@@ -883,13 +883,14 @@ proc setup_queues {} {
   set q_param(nsuspend)              "1"
   set q_param(suspend_interval)      "00:00:30"
   
+  lappend all_queue_list [get_queue_instance $q1 $checkpoint_host1]
   set result [ add_queue $q1 $checkpoint_host1 q_param ]
-
   if { ($result != 0)  } {
      set_error -1 "setup_queues - could not add queue $q1"
      return
   }
 
+  lappend all_queue_list [get_queue_instance $q3 $checkpoint_host1]
   set result [ add_queue $q3 $checkpoint_host1 q_param ]
   if { $result != 0  } {
      set_error -1 "setup_queues - could not add queue $q3"
@@ -897,12 +898,14 @@ proc setup_queues {} {
   }
 
   # queues on host 2
+  lappend all_queue_list [get_queue_instance $q2 $checkpoint_host2]
   set result [ add_queue $q2 $checkpoint_host2 q_param ]
   if { $result != 0  } {
      set_error -1 "setup_queues - could not add queue $q2"
      return
   }
   
+  lappend all_queue_list [get_queue_instance $q4 $checkpoint_host2]
   set result [ add_queue $q4 $checkpoint_host2 q_param ]
   if { $result != 0  } {
      set_error -1 "setup_queues - could not add queue $q4"

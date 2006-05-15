@@ -57,6 +57,7 @@
 #include "msg_qmon.h"
 
 #include "sge_unistd.h"
+#include "sge_string.h"
 #include "sge_prog.h"
 #include "sge_all_listsL.h"
 #include "sge_userset.h"
@@ -495,7 +496,7 @@ XtPointer cld, cad;
    qmonMirrorMultiAnswer(JOB_T | USERSET_T | PROJECT_T | PE_T | CKPT_T, &alp);
    if (alp) {
       qmonMessageBox(w, alp, 0);
-      alp = lFreeList(alp);
+      lFreeList(&alp);
       /* set default cursor */
       XmtDisplayDefaultCursor(w);
       DEXIT;
@@ -576,7 +577,7 @@ XtPointer cld, cad;
       qmonMirrorMultiAnswer(JOB_T, &alp);
       if (alp) {
          qmonMessageBox(w, alp, 0);
-         alp = lFreeList(alp);
+         lFreeList(&alp);
          /* set default cursor */
          XmtDisplayDefaultCursor(w);
          DEXIT;
@@ -691,8 +692,8 @@ lList **sr
    /*
    ** free the old lists 
    */
-   SMData.hard_resource_list = lFreeList(SMData.hard_resource_list);
-   SMData.soft_resource_list = lFreeList(SMData.soft_resource_list);
+   lFreeList(&(SMData.hard_resource_list));
+   lFreeList(&(SMData.soft_resource_list));
 
    /*
    ** attach the new lists
@@ -1122,7 +1123,7 @@ XtPointer cld, cad;
 
          qmonMessageBox(w, alp, 0);
 
-         alp = lFreeList(alp);
+         lFreeList(&alp);
       }
       else {
          qmonMessageShow(w, True, "@{No valid filename specified !}");
@@ -1206,7 +1207,7 @@ XtPointer cld, cad;
       SMData.execution_time = tmp_date_time;
       if (alp) {
          qmonMessageBox(w, alp, 0);
-         alp = lFreeList(alp);
+         lFreeList(&alp);
       } else {   
          XmtDialogSetDialogValues(submit_layout, &SMData);
       }   
@@ -1256,7 +1257,7 @@ XtPointer cld, cad;
       SMData.deadline = tmp_date_time;
       if (alp) {
          qmonMessageBox(w, alp, 0);
-         alp = lFreeList(alp);
+         lFreeList(&alp);
       } else {   
          XmtDialogSetDialogValues(submit_layout, &SMData);
       }   
@@ -1307,7 +1308,7 @@ XtPointer cld, cad;
          char *pe_range = NULL;
          lList *alp = NULL;
    
-         strncpy(theInput, SMData.pe, 1023);
+         sge_strlcpy(theInput, SMData.pe, 1023);
          pe = strtok(theInput, " ");
          pe_range = strtok(NULL, "\n");
          if (!(pe_range && pe_range[0] != '\0')) {
@@ -1322,14 +1323,14 @@ XtPointer cld, cad;
 
             range_list_parse_from_string(&range_list, &alp, pe_range,
                                          1, 0, INF_ALLOWED);
-            range_list = lFreeList(range_list);
+            lFreeList(&range_list);
             if (alp) {
                sprintf(buf, 
                   XmtLocalize(w, 
                   "Parallel Environment requires valid name and valid range !", 
                   "Parallel Environment requires valid name and valid range !")
                );
-               alp = lFreeList(alp);
+               lFreeList(&alp);
                goto error;
             }
          }
@@ -1360,6 +1361,7 @@ XtPointer cld, cad;
       */
       if (set_sec_cred(lFirst(lp)) != 0) {
          sprintf(buf, MSG_SEC_SETJOBCRED);
+         sprintf(buf, "\n");
          goto error;
       }   
 
@@ -1413,9 +1415,9 @@ XtPointer cld, cad;
                                           "Job Submission failed")); 
          XmtMsgLineClear(submit_message, DISPLAY_MESSAGE_DURATION); 
       }
-      lFreeWhat(what);
-      lFreeList(lp);
-      lFreeList(alp);
+      lFreeWhat(&what);
+      lFreeList(&lp);
+      lFreeList(&alp);
    }
    else {
       Boolean close_dialog = True;
@@ -1478,7 +1480,7 @@ XtPointer cld, cad;
          qmonMessageBox(w, alp, 0);
          /* set default cursor */
          XmtDisplayDefaultCursor(w);
-         alp = lFreeList(alp);
+         lFreeList(&alp);
          DEXIT;
          return;
       }
@@ -1500,8 +1502,7 @@ XtPointer cld, cad;
          sprintf(buf, "failed to build reduced descriptor\n");
          goto error;
       }
-      lFreeWhat(what);
-
+      lFreeWhat(&what);
       
       if (!(lp = lCreateElemList("JobSubmitList", rdp, 1))) {
          DPRINTF(("lCreateElemList failure\n"));
@@ -1539,8 +1540,8 @@ XtPointer cld, cad;
          close_dialog = False;
       }
 
-      lp = lFreeList(lp);
-      alp = lFreeList(alp);
+      lFreeList(&lp);
+      lFreeList(&alp);
       
       if (close_dialog)
          qmonSubmitPopdown(w, NULL, NULL); 
@@ -1627,20 +1628,17 @@ int read_defaults
 
    dir_pre = XmtInputFieldGetString(submit_prefix);
    dir_pre = qmon_trim(dir_pre);
-   if (dir_pre && dir_pre[0] != '\0')
-      strncpy(prefix, dir_pre, sizeof(prefix)-1);
-   else
-      prefix[0] = '\0';
+   sge_strlcpy(prefix, dir_pre, sizeof(prefix));
 
    if (read_defaults) {
       opt_list_append_opts_from_default_files(&cmdline, &alp, environ);
       if (alp) {
          if (qmonMessageBox(w, alp, 0) == -1) {
-            lFreeList(alp);
+            lFreeList(&alp);
             DEXIT;
             return;
          }
-         alp = lFreeList(alp);
+         lFreeList(&alp);
       }
    }   
 
@@ -1651,7 +1649,7 @@ int read_defaults
       alp = parse_script_file(filename, (prefix[0] ? prefix : NULL), &cmdline, environ, 
                               FLG_HIGHER_PRIOR);
       qmonMessageBox(w, alp, 0);
-      alp = lFreeList(alp);
+      lFreeList(&alp);
 
       if (merge_script) {
          /*
@@ -1663,7 +1661,7 @@ int read_defaults
          qmonMessageBox(w, alp, 0);
 
          if (alp) {
-            lFreeList(alp);
+            lFreeList(&alp);
             DEXIT;
             return;
          }
@@ -1672,7 +1670,7 @@ int read_defaults
       alp = parse_script_file(filename, prefix, &cmdline, environ,
                               FLG_HIGHER_PRIOR | FLG_IGNORE_EMBEDED_OPTS); 
       qmonMessageBox(w, alp, 0);
-      alp = lFreeList(alp);
+      lFreeList(&alp);
    } 
 
    /*
@@ -1681,7 +1679,7 @@ int read_defaults
    alp = cull_parse_job_parameter(cmdline, &job);
    
    qmonMessageBox(w, alp, 0);
-   alp = lFreeList(alp);
+   lFreeList(&alp);
 
    /*
    ** for debugging
@@ -1697,7 +1695,7 @@ int read_defaults
    */
    qmonFreeSMData(&SMData);
    qmonCullToSM(job, &SMData, prefix);
-   lFreeElem(job);
+   lFreeElem(&job);
    XmtDialogSetDialogValues(submit_layout, &SMData);
 
    /*
@@ -1775,35 +1773,35 @@ tSMEntry *data
       data->pe = NULL;
    }   
 
-   data->task_range = lFreeList(data->task_range);
+   lFreeList(&(data->task_range));
 
-   data->job_args = lFreeList(data->job_args);
+   lFreeList(&(data->job_args));
    
-   data->shell_list = lFreeList(data->shell_list);
+   lFreeList(&(data->shell_list));
 
-   data->mail_list = lFreeList(data->mail_list);
+   lFreeList(&(data->mail_list));
 
-   data->stdoutput_path_list = lFreeList(data->stdoutput_path_list);
+   lFreeList(&(data->stdoutput_path_list));
    
-   data->stdinput_path_list = lFreeList(data->stdinput_path_list);
+   lFreeList(&(data->stdinput_path_list));
 
-   data->stderror_path_list = lFreeList(data->stderror_path_list);
+   lFreeList(&(data->stderror_path_list));
 
-   data->hard_resource_list = lFreeList(data->hard_resource_list);
+   lFreeList(&(data->hard_resource_list));
 
-   data->soft_resource_list = lFreeList(data->soft_resource_list);
+   lFreeList(&(data->soft_resource_list));
 
-   data->hard_queue_list = lFreeList(data->hard_queue_list);
+   lFreeList(&(data->hard_queue_list));
 
-   data->soft_queue_list = lFreeList(data->soft_queue_list);
+   lFreeList(&(data->soft_queue_list));
 
-   data->master_queue_list = lFreeList(data->master_queue_list);
+   lFreeList(&(data->master_queue_list));
 
-   data->hold_jid = lFreeList(data->hold_jid);
+   lFreeList(&(data->hold_jid));
 
-   data->env_list = lFreeList(data->env_list);
+   lFreeList(&(data->env_list));
 
-   data->ctx_list = lFreeList(data->ctx_list);
+   lFreeList(&(data->ctx_list));
 
    DEXIT;
 }
@@ -1910,7 +1908,7 @@ char *prefix
 
       var_list_split_prefix_vars(&env_list, &prefix_vars, VAR_PREFIX);
       data->env_list = lCopyList("JB_env_list", lGetList(jep, JB_env_list));
-      lAddList(lGetList(jep, JB_env_list), prefix_vars);
+      lAddList(lGetList(jep, JB_env_list), &prefix_vars);
    }
 
    data->ctx_list = lCopyList("JB_ctx_list", lGetList(jep, JB_context));
@@ -2067,14 +2065,14 @@ int save
 
       if (alp) {
          qmonMessageBox(qmon_submit, alp, 0);
-         alp = lFreeList(alp);
+         lFreeList(&alp);
          return False;
       }  
       range_list_sort_uniq_compress(range_list, &alp);
       if (lGetNumberOfElem(range_list) > 1) {
          answer_list_add(&alp, MSG_QCONF_ONLYONERANGE, STATUS_ESYNTAX, 0);
          qmonMessageBox(qmon_submit, alp, 0);
-         alp = lFreeList(alp);
+         lFreeList(&alp);
          return False; 
       }
  
@@ -2147,7 +2145,7 @@ int save
                                      (StringConst)uti_state_get_qualified_hostname()) == -1) {
          if (alp) {
             qmonMessageBox(qmon_submit, alp, 0);
-            alp = lFreeList(alp);
+            lFreeList(&alp);
             DEXIT;
             return False;
          }   
@@ -2155,7 +2153,7 @@ int save
       job_initialize_env(jep, &alp, path_alias);
       if (alp) {
          qmonMessageBox(qmon_submit, alp, 0);
-         alp = lFreeList(alp);
+         lFreeList(&alp);
          DEXIT;
          return False;
       }
@@ -2182,16 +2180,11 @@ int save
       lSetUlong(jep, JB_type, jb_now);
    }   
 
-   if (!reduced_job) {
-      if (data->cwd) {
-         const char *env_value = job_get_env_string(jep, VAR_PREFIX "O_HOME");
-         lSetString(jep, JB_cwd, cwd_string(env_value));
-         lSetList(jep, JB_path_aliases, lCopyList("PathAliases", path_alias));
-         path_alias = lFreeList(path_alias);
-      }
-#if 0 /* JG: removed JB_cell from job object */     
-      lSetString(jep, JB_cell, data->cell);
-#endif      
+   if (data->cwd) {
+      const char *env_value = job_get_env_string(jep, VAR_PREFIX "O_HOME");
+      lSetString(jep, JB_cwd, cwd_string(env_value));
+      lSetList(jep, JB_path_aliases, lCopyList("PathAliases", path_alias));
+      lFreeList(&path_alias);
    }
 
    lSetString(jep, JB_account, data->account_string);
@@ -2297,7 +2290,7 @@ int save
    
       var_list_split_prefix_vars(&env_vars, &prefix_vars, VAR_PREFIX);
       lSetList(jep, JB_env_list, lCopyList("env_list", data->env_list));
-      lAddList(lGetList(jep, JB_env_list), prefix_vars);
+      lAddList(lGetList(jep, JB_env_list), &prefix_vars);
    }
 
    DPRINTF(("JB_ctx_list %p\n", data->ctx_list));
@@ -2350,7 +2343,7 @@ int save
          lSetList(jep, JB_pe_range, perl);
       }
       else {
-         alp = lFreeList(alp);
+         lFreeList(&alp);
          return False;
       }
    }
@@ -2775,7 +2768,7 @@ XtPointer cld, cad;
    qmonMirrorMultiAnswer(CKPT_T, &alp);
    if (alp) {
       qmonMessageBox(w, alp, 0);
-      alp = lFreeList(alp);
+      lFreeList(&alp);
       DEXIT;
       return;
    }
@@ -2829,7 +2822,7 @@ XtPointer cld, cad;
    qmonMirrorMultiAnswer(PROJECT_T, &alp);
    if (alp) {
       qmonMessageBox(w, alp, 0);
-      alp = lFreeList(alp);
+      lFreeList(&alp);
       DEXIT;
       return;
    }

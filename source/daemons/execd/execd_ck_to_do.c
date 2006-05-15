@@ -71,6 +71,7 @@
 #include "sge_prog.h"
 #include "get_path.h"
 #include "sge_report.h"
+#include "sig_handlers.h"
 
 #ifdef COMPILE_DC
 #  include "ptf.h"
@@ -86,7 +87,6 @@
 static int reprioritization_enabled = 0;
 #endif
 
-extern volatile int dead_children;
 extern volatile int waiting4osjid;
 
 
@@ -100,7 +100,6 @@ static int exec_job_or_task(lListElem *jep, lListElem *jatep, lListElem *petep);
 
 static bool should_reprioritize(void);
 
-extern int shut_me_down;
 extern volatile int jobs_to_start;
 
 extern lList *jr_list;
@@ -288,7 +287,7 @@ void force_job_rlimit()
          }
 
          if (usage_list)
-            lFreeList(usage_list);
+            lFreeList(&usage_list);
 
       }
    }
@@ -370,6 +369,10 @@ execd_ck_to_do(struct dispatch_entry *de, sge_pack_buffer *pb, sge_pack_buffer *
 
    DENTER(TOP_LAYER, "execd_ck_to_do");
 
+   /*
+    *  get current time (now)
+    *  ( don't update the now time inside this function )
+    */
    now = sge_get_gmt();
 
 #ifdef KERBEROS
@@ -462,16 +465,35 @@ execd_ck_to_do(struct dispatch_entry *de, sge_pack_buffer *pb, sge_pack_buffer *
       
    /* start jobs if present */
    if (jobs_to_start) {
-      sge_start_jobs();
+      /* reset jobs_to_start before starting jobs. We may loose
+       * loose a job start if we reset jobs_to_start after sge_start_jobs()
+       */
       jobs_to_start = 0;
+      sge_start_jobs();
    }
 
-   now = sge_get_gmt();
+   if (sge_sig_handler_dead_children != 0) {
+      /* reap max. 10 jobs which generated a SIGCLD */
+
+      /* SIGCHILD signal is blocked from dispatcher(), so
+       * we can be sure that sge_sig_handler_dead_children is untouched here
+       */
+
+      sge_sig_handler_dead_children = sge_reap_children_execd(10);
+   }
+
+
    if (next_signal <= now) {
       next_signal = now + SIGNAL_RESEND_INTERVAL;
       /* resend signals to shepherds */
       for_each(jep, Master_Job_List) {
          for_each (jatep, lGetList(jep, JB_ja_tasks)) {
+
+            /* don't start wallclock before job acutally started */
+            if (lGetUlong(jatep, JAT_status) == JWAITING4OSJID ||
+                  lGetUlong(jatep, JAT_status) == JEXITING)
+               continue;
+
             if (!lGetUlong(jep, JB_hard_wallclock_gmt)) {
                lList *gdil_list = lGetList(jatep, 
                                            JAT_granted_destin_identifier_list);
@@ -484,7 +506,7 @@ execd_ck_to_do(struct dispatch_entry *de, sge_pack_buffer *pb, sge_pack_buffer *
             if (now >= lGetUlong(jep, JB_hard_wallclock_gmt) ) {
                if (!(lGetUlong(jatep, JAT_pending_signal_delivery_time)) ||
                    (now > lGetUlong(jatep, JAT_pending_signal_delivery_time))) {
-                  INFO((SGE_EVENT, MSG_EXECD_EXCEEDHWALLCLOCK_UU,
+                  WARNING((SGE_EVENT, MSG_EXECD_EXCEEDHWALLCLOCK_UU,
                        sge_u32c(lGetUlong(jep, JB_job_number)), sge_u32c(lGetUlong(jatep, JAT_task_number)))); 
                   if (sge_execd_ja_task_is_tightly_integrated(jatep)) {
                      sge_kill_petasks(jep, jatep);
@@ -503,7 +525,7 @@ execd_ck_to_do(struct dispatch_entry *de, sge_pack_buffer *pb, sge_pack_buffer *
             if (now >= lGetUlong(jep, JB_soft_wallclock_gmt)) {
                if (!(lGetUlong(jatep, JAT_pending_signal_delivery_time)) ||
                    (now > lGetUlong(jatep, JAT_pending_signal_delivery_time))) {
-                  INFO((SGE_EVENT, MSG_EXECD_EXCEEDSWALLCLOCK_UU,
+                  WARNING((SGE_EVENT, MSG_EXECD_EXCEEDSWALLCLOCK_UU,
                        sge_u32c(lGetUlong(jep, JB_job_number)), sge_u32c(lGetUlong(jatep, JAT_task_number))));  
                   if (sge_execd_ja_task_is_tightly_integrated(jatep)) {
                      sge_kill_petasks(jep, jatep);
@@ -522,19 +544,13 @@ execd_ck_to_do(struct dispatch_entry *de, sge_pack_buffer *pb, sge_pack_buffer *
       }
    }
 
-   if (dead_children) {
-      /* reap all jobs, who generated a SIGCLD */
-      sge_reap_children_execd();
-      dead_children = 0;
-   }
-
    if (next_old_job <= now) {
       next_old_job = now + OLD_JOB_INTERVAL;
       clean_up_old_jobs(0);
    }
 
    /* check for end of simulated jobs */
-   if(simulate_hosts) {
+   if(mconf_get_simulate_hosts()) {
       for_each(jep, Master_Job_List) {
          for_each (jatep, lGetList(jep, JB_ja_tasks)) {
             if((lGetUlong(jatep, JAT_status) & JSIMULATED) && lGetUlong(jatep, JAT_end_time) <= now) {
@@ -573,10 +589,10 @@ execd_ck_to_do(struct dispatch_entry *de, sge_pack_buffer *pb, sge_pack_buffer *
    }
 
    /* do timeout calculation */
-   now = sge_get_gmt();
+
    if ( sge_get_flush_jr_flag() == true || next_report <= now) {
       if (next_report <= now) {
-         next_report = now + conf.load_report_time;
+         next_report = now + mconf_get_load_report_time();
       }
 
       if (last_report_send < now) {
@@ -706,6 +722,7 @@ static int sge_start_jobs()
 {
    lListElem *jep, *jatep, *petep;
    int state_changed;
+   int jobs_started = 0;
 
    DENTER(TOP_LAYER, "sge_start_jobs");
 
@@ -724,11 +741,14 @@ static int sge_start_jobs()
             state_changed |= exec_job_or_task(jep, jatep, petep);
 
          /* now save this job so we are up to date on restart */
-         if (state_changed)
+         if (state_changed) {
             job_write_spool_file(jep, lGetUlong(jatep, JAT_task_number), 
                                  NULL, SPOOL_WITHIN_EXECD);
+            jobs_started++;
+         }
       }
    }
+   DPRINTF(("execd_ck_to_do: started "sge_U32CFormat" jobs\n", sge_u32c(jobs_started)));
 
    DEXIT;
    return 0;
@@ -776,7 +796,7 @@ lListElem *petep
 
    /* we might simulate another host */
    /* JG: TODO: make a function simulate_start_job_or_task() */
-   if(simulate_hosts == 1) {
+   if(mconf_get_simulate_hosts()) {
       const char *host = lGetHost(lFirst(lGetList(jatep, JAT_granted_destin_identifier_list)), JG_qhostname);
       if(sge_hostcmp(host, uti_state_get_qualified_hostname()) != 0) {
          lList *job_args;
@@ -832,7 +852,7 @@ lListElem *petep
       pid = -1; 
       strcpy(err_str, "FAILURE_BEFORE_EXEC");
    } else {
-      pid = sge_exec_job(jep, jatep, petep, err_str);
+      pid = sge_exec_job(jep, jatep, petep, err_str, 256);
    }   
 
    if (pid < 0) {
@@ -1061,11 +1081,11 @@ static bool should_reprioritize(void)
    }
    else
    {
-      ret = conf.reprioritize ? true : false;
+      ret = mconf_get_reprioritize()? true : false;
    }
 
    if (NULL != confl) {
-      confl = lFreeElem(confl);
+      lFreeElem(&confl);
    }
 
    DEXIT;

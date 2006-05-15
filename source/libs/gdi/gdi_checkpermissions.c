@@ -104,10 +104,8 @@ bool sge_gdi_get_mapping_name(const char *requestedHost, char *buf,
          strcpy(buf,mapName);
          DPRINTF(("Mapping name is: '%s'\n", buf));
    
-         lFreeList(permList);
-         permList = NULL;
-         lFreeList(alp);
-         alp = NULL;
+         lFreeList(&permList);
+         lFreeList(&alp);
   
          DEXIT;
          return true;
@@ -117,10 +115,8 @@ bool sge_gdi_get_mapping_name(const char *requestedHost, char *buf,
    DPRINTF(("No mapname found!\n"));
    strcpy(buf,"");
    
-   lFreeList(permList);
-   permList = NULL;
-   lFreeList(alp);
-   alp = NULL;
+   lFreeList(&permList);
+   lFreeList(&alp);
    
    DEXIT;
    return false;
@@ -170,7 +166,7 @@ bool sge_gdi_check_permission(lList **alpp, int option)
         if (*alpp == NULL) {
            *alpp = alp;
         } else {
-           lAddList(*alpp, alp); 
+           lAddList(*alpp, &alp);
         }       
      }
      failed_checks++;
@@ -205,10 +201,8 @@ bool sge_gdi_check_permission(lList **alpp, int option)
      }
   }
 
-  lFreeList(permList);
-  permList = NULL;
-  lFreeList(alp);
-  alp = NULL;
+  lFreeList(&permList);
+  lFreeList(&alp);
 
   if (failed_checks == 0) {
     access_status = true;

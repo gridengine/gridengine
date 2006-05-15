@@ -81,7 +81,7 @@ void cull_mail(lList *user_list, char *subj, char *buf, const char *mail_type) {
 
    DENTER(TOP_LAYER, "cull_mail");
 
-   mailer = conf.mailer;
+   mailer = mconf_get_mailer();
    mailer_has_subj_line = 1;
 
    if (!buf) {
@@ -94,6 +94,7 @@ void cull_mail(lList *user_list, char *subj, char *buf, const char *mail_type) {
          host = lGetHost(ep, MR_host);
          if (!user && !host) {
             ERROR((SGE_EVENT, MSG_MAIL_EMPTYUSERHOST));
+            FREE(mailer);
             DEXIT;
             return;
          } else if (!host) {
@@ -108,6 +109,7 @@ void cull_mail(lList *user_list, char *subj, char *buf, const char *mail_type) {
       }
    } 
 
+   FREE(mailer);
    DEXIT;
    return;
 }
@@ -128,6 +130,7 @@ const char *buf
    int pipefds[2];
    FILE *fp;
    stringT user_str;
+   bool done;
 
 #if !(defined(CRAY) || defined(INTERIX))
    struct rusage rusage;
@@ -188,11 +191,11 @@ const char *buf
 
       if (mailer_has_subj_line) {
          DPRINTF(("%s mail -s %s %s", mailer, subj, user_str));  
-         execl(mailer, "mail", "-s", subj, user_str, 0);
+         execl(mailer, "mail", "-s", subj, user_str, NULL);
       }
       else {
          DPRINTF(("%s mail %s", mailer, user_str));  
-         execl(mailer, "mail", user_str, 0);
+         execl(mailer, "mail", user_str, NULL);
       }
       CRITICAL((SGE_EVENT, MSG_MAIL_NOEXEC_S, mailer));
       exit(1);
@@ -205,7 +208,8 @@ const char *buf
 
    sge_setup_sig_handlers(uti_state_get_mewho());
 
-   while (1) {
+   done = false;
+   while (!done) {
       alarm(60);                /* max time to allow for mail */
       sigprocmask(SIG_SETMASK, &io_mask, &omask);
       sigaction(SIGALRM, &sigalrm_vec, &sigalrm_ovec);

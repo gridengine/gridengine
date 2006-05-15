@@ -36,13 +36,15 @@
 #     sge_macro() -- return sge macro string
 #
 #  SYNOPSIS
-#     sge_macro { macro_name } 
+#     sge_macro { macro_name {raise_error 1} } 
 #
 #  FUNCTION
 #     This procedure returns the string defined by the macro. 
 #
 #  INPUTS
-#     macro_name - sge source code macro
+#     macro_name  - sge source code macro
+#     raise_error - if macro is not found, shall an error be raised and 
+#                   reparsing of messages file be triggered?
 #
 #  RESULT
 #     string
@@ -53,10 +55,12 @@
 #  SEE ALSO
 #     ???/???
 #*******************************************************************************
-proc sge_macro { macro_name } {
+proc sge_macro { macro_name {raise_error 1} } {
    global CHECK_OUTPUT
  
    set value ""
+
+   # special handling for install macros
    switch -exact $macro_name {
       "DISTINST_HIT_RETURN_TO_CONTINUE" { set value "\nHit <RETURN> to continue >> " } 
       "DISTINST_HOSTNAME_KNOWN_AT_MASTER" { set value "\nThis hostname is known at qmaster as an administrative host.\n\nHit <RETURN> to continue >>" }
@@ -146,17 +150,23 @@ proc sge_macro { macro_name } {
       "DISTINST_RPC_SERVER_COMPLETE" { set value "e.g. * * * * * <full path to scripts> <sge-root dir> <sge-cell> <bdb-dir>\n" }     
 
    }
+
+   # if it was no install macro, try to find it from messages files
    if { $value == "" } {
       set value [get_macro_string_from_name $macro_name]
 #      puts $CHECK_OUTPUT "value for $macro_name is \n\"$value\""
    }
-   if { $value == -1 } {
-      set macro_messages_file [get_macro_messages_file_name]
-      add_proc_error "sge_macro" -3 "could not find macro \"$macro_name\" in source code!!!\ndeleting macro messages file:\n$macro_messages_file"
-      if { [ file isfile $macro_messages_file] } {
-         file delete $macro_messages_file
+
+   # macro nowhere found
+   if {$raise_error} {
+      if { $value == -1 } {
+         set macro_messages_file [get_macro_messages_file_name]
+         add_proc_error "sge_macro" -3 "could not find macro \"$macro_name\" in source code!!!\ndeleting macro messages file:\n$macro_messages_file"
+         if { [ file isfile $macro_messages_file] } {
+            file delete $macro_messages_file
+         }
+         update_macro_messages_list
       }
-      update_macro_messages_list
    }
 
    return $value

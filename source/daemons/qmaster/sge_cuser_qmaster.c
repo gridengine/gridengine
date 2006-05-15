@@ -44,8 +44,8 @@
 #include "sge_log.h"
 #include "sge_c_gdi.h"
 #include "sge_string.h"
-#include "sge_utility.h"
 #include "sge_answer.h"
+#include "sge_utility.h"
 #include "sge_unistd.h"
 #include "sge_hgroup.h"
 #include "sge_cuser.h"
@@ -62,7 +62,7 @@
 
 int cuser_mod(lList **answer_list, lListElem *cuser, lListElem *reduced_elem,
               int add, const char *remote_user, const char *remote_host,
-              gdi_object_t *object, int sub_command) 
+              gdi_object_t *object, int sub_command, monitoring_t *monitor) 
 {
    bool ret = true;
    int pos;
@@ -70,12 +70,12 @@ int cuser_mod(lList **answer_list, lListElem *cuser, lListElem *reduced_elem,
    DENTER(TOP_LAYER, "usermap_mod");
    
    if (ret) {
-      pos = lGetPosViaElem(reduced_elem, CU_name);
+      pos = lGetPosViaElem(reduced_elem, CU_name, SGE_NO_ABORT);
       if (pos >= 0) {
          const char *name = lGetPosString(reduced_elem, pos);
 
          if (add) {
-            if (!verify_str_key(answer_list, name, "cuser")) {
+            if (verify_str_key(answer_list, name, MAX_VERIFY_STRING, "cuser") == STATUS_OK) {
                lSetString(cuser, CU_name, name);
             } else {
                ERROR((SGE_EVENT, MSG_UM_CLUSTERUSERXNOTGUILTY_S, name));
@@ -103,7 +103,7 @@ int cuser_mod(lList **answer_list, lListElem *cuser, lListElem *reduced_elem,
    }
 
    if (ret) {
-      pos = lGetPosViaElem(reduced_elem, CU_ruser_list);
+      pos = lGetPosViaElem(reduced_elem, CU_ruser_list, SGE_NO_ABORT);
    
       if (pos >= 0) {
          lList *hostattr_list = lGetPosList(reduced_elem, pos);
@@ -113,7 +113,7 @@ int cuser_mod(lList **answer_list, lListElem *cuser, lListElem *reduced_elem,
    }
    
    if (ret) {
-      pos = lGetPosViaElem(reduced_elem, CU_ulong32);
+      pos = lGetPosViaElem(reduced_elem, CU_ulong32, SGE_NO_ABORT);
    
       if (pos >= 0) {
          lList *hostattr_list = lGetPosList(reduced_elem, pos);
@@ -123,7 +123,7 @@ int cuser_mod(lList **answer_list, lListElem *cuser, lListElem *reduced_elem,
    }
 
    if (ret) {
-      pos = lGetPosViaElem(reduced_elem, CU_bool);
+      pos = lGetPosViaElem(reduced_elem, CU_bool, SGE_NO_ABORT);
    
       if (pos >= 0) {
          lList *hostattr_list = lGetPosList(reduced_elem, pos);
@@ -133,7 +133,7 @@ int cuser_mod(lList **answer_list, lListElem *cuser, lListElem *reduced_elem,
    }
 
    if (ret) {
-      pos = lGetPosViaElem(reduced_elem, CU_time);
+      pos = lGetPosViaElem(reduced_elem, CU_time, SGE_NO_ABORT);
    
       if (pos >= 0) {
          lList *hostattr_list = lGetPosList(reduced_elem, pos);
@@ -143,7 +143,7 @@ int cuser_mod(lList **answer_list, lListElem *cuser, lListElem *reduced_elem,
    }
 
    if (ret) {
-      pos = lGetPosViaElem(reduced_elem, CU_mem);
+      pos = lGetPosViaElem(reduced_elem, CU_mem, SGE_NO_ABORT);
    
       if (pos >= 0) {
          lList *hostattr_list = lGetPosList(reduced_elem, pos);
@@ -153,7 +153,7 @@ int cuser_mod(lList **answer_list, lListElem *cuser, lListElem *reduced_elem,
    }
 
    if (ret) {
-      pos = lGetPosViaElem(reduced_elem, CU_inter);
+      pos = lGetPosViaElem(reduced_elem, CU_inter, SGE_NO_ABORT);
    
       if (pos >= 0) {
          lList *hostattr_list = lGetPosList(reduced_elem, pos);
@@ -171,7 +171,7 @@ int cuser_mod(lList **answer_list, lListElem *cuser, lListElem *reduced_elem,
 }
 
 int cuser_success(lListElem *cuser, lListElem *old_cuser, 
-                    gdi_object_t *object, lList **ppList) 
+                    gdi_object_t *object, lList **ppList, monitoring_t *monitor) 
 {
    DENTER(TOP_LAYER, "usermap_success");
    sge_add_event( 0, old_cuser?sgeE_CUSER_MOD:sgeE_CUSER_ADD, 0, 0, 
@@ -220,7 +220,7 @@ int cuser_del(lListElem *this_elem, lList **answer_list,
             if (sge_event_spool(answer_list, 0, sgeE_CUSER_DEL,
                                 0, 0, name, NULL, NULL,
                                 NULL, NULL, NULL, true, true)) {
-               lRemoveElem(master_cuser_list, cuser);
+               lRemoveElem(master_cuser_list, &cuser);
 
                INFO((SGE_EVENT, MSG_SGETEXT_REMOVEDFROMLIST_SSSS, 
                      remote_user, remote_host, name, 

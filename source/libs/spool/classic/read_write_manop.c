@@ -94,9 +94,7 @@ int target
       return 1;
    }
    
-   if ( *lpp ) 
-      *lpp = lFreeList(*lpp);
-
+   lFreeList(lpp);
    *lpp = lCreateList("man/op list", MO_Type);
 
    while (fscanf(fp, "%[^\n]\n", str) == 1) {
@@ -105,14 +103,18 @@ int target
          lSetString(ep, MO_name, str);
          lAppendElem(*lpp, ep);
       } else {
-         lFreeElem(ep);
+         lFreeElem(&ep);
       }
    }
 
-   fclose(fp);
+   FCLOSE(fp);
 
    DEXIT;
    return 0;
+FCLOSE_ERROR:
+   ERROR((SGE_EVENT, MSG_FILE_ERRORCLOSINGX_S, filename));
+   DEXIT;
+   return 1;
 }
 
 
@@ -179,7 +181,7 @@ int target
       FPRINTF((fp, "%s\n", lGetString(ep, MO_name)));
    }
 
-   fclose(fp);
+   FCLOSE(fp);
 
    if (rename(filename, real_filename) == -1) {
       DEXIT;
@@ -192,6 +194,7 @@ int target
    return 0;
 
 FPRINTF_ERROR:
+FCLOSE_ERROR:
    DEXIT;
    return 1;  
 }

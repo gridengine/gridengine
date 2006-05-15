@@ -35,6 +35,7 @@
 #include "sge_htable.h"
 #include "sge_dstring.h"
 #include "sge_jobL.h"
+#include "sge_job_refL.h"
 #include "sge_messageL.h"
 
 /****** sgeobj/job/jb_now *****************************************************
@@ -150,7 +151,7 @@ lListElem *job_enroll(lListElem *job, lList **answer_list,
 void job_delete_not_enrolled_ja_task(lListElem *job, lList **answer_list,
                                      u_long32 ja_task_number);
 
-bool job_has_pending_tasks(lListElem *job);
+int job_count_pending_tasks(lListElem *job, bool count_all);
 
 bool job_has_soft_requests(lListElem *job);
 
@@ -276,5 +277,26 @@ job_get_contribution(const lListElem *this_elem, lList **answer_list,
                      const lListElem *implicit_centry);
 
 void queue_or_job_get_states(int nm, char *str, u_long32 op);
+
+
+/* unparse functions */
+bool sge_unparse_string_option_dstring(dstring *category_str, const lListElem *job_elem, 
+                               int nm, char *option);
+                               
+bool sge_unparse_pe_dstring(dstring *category_str, const lListElem *job_elem, int pe_pos, int range_pos,
+                            const char *option); 
+
+bool sge_unparse_resource_list_dstring(dstring *category_str, lListElem *job_elem, 
+                                       int nm, const char *option);
+
+bool sge_unparse_queue_list_dstring(dstring *category_str, lListElem *job_elem, 
+                                    int nm, const char *option);   
+
+bool sge_unparse_acl_dstring(dstring *category_str, const char *owner, const char *group, 
+                             const lList *acl_list, const char *option);
+
+bool job_verify(const lListElem *job, lList **answer_list);
+bool job_verify_submitted_job(const lListElem *job, lList **answer_list);
+bool job_verify_execd_job(const lListElem *job, lList **answer_list);
 
 #endif /* __SGE_JOB_H */    

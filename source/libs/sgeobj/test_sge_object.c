@@ -41,11 +41,14 @@
 #include "sge_object.h"
 #include "sge_job.h"
 
+static int exit_code = EXIT_SUCCESS;
+
 static void 
 check_result_bool(bool value, bool target, const char *function)
 {
    if (value != target) {
       fprintf(stderr, "function "SFQ" failed\n", function);
+      exit_code = EXIT_FAILURE;
    } else {
       fprintf(stdout, "function "SFQ" ok\n", function);
    }
@@ -56,6 +59,7 @@ check_result_int(int value, int target, const char *function)
 {
    if (value != target) {
       fprintf(stderr, "function "SFQ" failed\n", function);
+      exit_code = EXIT_FAILURE;
    } else {
       fprintf(stdout, "function "SFQ" ok\n", function);
    }
@@ -66,6 +70,7 @@ check_result_string(const char * value, const char *target, const char *function
 {
    if (sge_strnullcmp(value, target) != 0) {
       fprintf(stderr, "function "SFQ" failed\n", function);
+      exit_code = EXIT_FAILURE;
    } else {
       fprintf(stdout, "function "SFQ" ok\n", function);
    }
@@ -77,6 +82,7 @@ check_result_pointer(const void *value, const void *target,
 {
    if (value != target) {
       fprintf(stderr, "function "SFQ" failed\n", function);
+      exit_code = EXIT_FAILURE;
    } else {
       fprintf(stdout, "function "SFQ" ok\n", function);
    }
@@ -89,12 +95,15 @@ int main(int argc, char *argv[])
    const char *ret_string;
    const void *ret_pointer;
    
-   lListElem *queue;
+   lListElem *queue = NULL;
+   lList *pe_list = NULL;
+
    dstring buffer = DSTRING_INIT;
 
    lInit(nmv);
 
    queue = lCreateElem(QU_Type);
+   lAddElemStr(&pe_list, ST_name, "test pe", ST_Type); 
 
    /* object_has_type */
    ret_bool = object_has_type(queue, QU_Type);
@@ -142,8 +151,41 @@ int main(int argc, char *argv[])
    sge_dstring_free(&buffer);
 
    /* object_[gs]et_field_contents is tested in test_sge_spooling_utilities */
-   
-   queue = lFreeElem(queue);
 
-   return EXIT_SUCCESS;
+   /* test object verification */
+   /* NULL pointer actions */
+   ret_bool = object_verify_cull(NULL, NULL);
+   check_result_bool(ret_bool, false, "object_verify_cull");
+   ret_bool = object_list_verify_cull(NULL, NULL);
+   check_result_bool(ret_bool, false, "object_list_verify_cull");
+ 
+   /* object type verification */
+   ret_bool = object_verify_cull(queue, NULL);
+   check_result_bool(ret_bool, true, "object_verify_cull");
+   ret_bool = object_verify_cull(queue, QU_Type);
+   check_result_bool(ret_bool, true, "object_verify_cull");
+   ret_bool = object_verify_cull(queue, JB_Type);
+   check_result_bool(ret_bool, false, "object_verify_cull");
+
+   /* list verification */
+   ret_bool = object_list_verify_cull(pe_list, NULL);
+   check_result_bool(ret_bool, true, "object_verify_cull");
+   ret_bool = object_list_verify_cull(pe_list, ST_Type);
+   check_result_bool(ret_bool, true, "object_verify_cull");
+   ret_bool = object_list_verify_cull(pe_list, QU_Type);
+   check_result_bool(ret_bool, false, "object_verify_cull");
+
+
+   /* object sublist verification */
+   lSetList(queue, QU_pe_list, pe_list);
+   ret_bool = object_verify_cull(queue, QU_Type);
+   check_result_bool(ret_bool, true, "object_verify_cull");
+
+   lSetList(queue, QU_owner_list, lCopyList("pe list copy", pe_list));
+   ret_bool = object_verify_cull(queue, QU_Type);
+   check_result_bool(ret_bool, false, "object_verify_cull");
+
+   lFreeElem(&queue);
+
+   return exit_code;
 }

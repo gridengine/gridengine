@@ -55,7 +55,7 @@ SGELIB      = libsge$(LIBEXT)
 ###############################################################################
 # global rules: all, clean, depend, messages
 ###############################################################################
-libs: sgeobjlib gdilib evclib evmlib mirlib spoollib culllib rmonlib schedlib utilib lcklib drmaa_all comm_all $(SGELIB)
+libs: sgeobjlib gdilib evclib evmlib mirlib spoollib culllib_all rmonlib schedlib utilib lcklib drmaa_all comm_all $(SGELIB)
 
 libs_clean: gdilib_clean sgeobjlib_clean evclib_clean evmlib_clean mirlib_clean spoollib_clean commlib_clean commlistslib_clean culllib_clean rmonlib_clean schedlib_clean utilib_clean lcklib_clean drmaa_clean $(SGELIB)_clean
 
@@ -70,7 +70,7 @@ libs_messages: gdilib_messages sgeobjlib_messages evclib_messages evmlib_message
 ###############################################################################
 # rules to build library libsge.a
 ###############################################################################
-libsge.a:	$(SCHEDLIB_OBJS) $(GDILIB_OBJS) $(SGEOBJLIB_OBJS) $(SGEOBJDLIB_OBJS) $(SECLIB_OBJS) $(KRBLIBS) $(COMMLIB_OBJS) $(CULLLIB_OBJS) $(RMONLIB_OBJS) $(UTILIB_OBJS) $(LCKLIB_OBJS) 
+libsge.a:	$(SCHEDLIB_OBJS) $(GDILIB_OBJS) $(SGEOBJLIB_OBJS) $(SGEOBJDLIB_OBJS) $(SECLIB_OBJS) $(KRBLIBS) $(COMMLIB_OBJS) $(COMMLISTSLIB_OBJS) $(CULLLIB_OBJS) $(RMONLIB_OBJS) $(UTILIB_OBJS) $(LCKLIB_OBJS)
 	$(AR) $(ARFLAGS) libsge.a $(SCHEDLIB_OBJS) $(GDILIB_OBJS) $(SGEOBJLIB_OBJS) $(SGEOBJDLIB_OBJS) $(SECLIB_OBJS) $(KRBLIBS) $(COMMLIB_OBJS) $(COMMLISTSLIB_OBJS) $(CULLLIB_OBJS) $(RMONLIB_OBJS) $(UTILIB_OBJS) $(LCKLIB_OBJS) 
 	$(RANLIB) $(SGELIB)
 

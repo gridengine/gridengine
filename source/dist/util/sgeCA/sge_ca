@@ -382,8 +382,6 @@ MakeRandFile()
    if [ ! -r /dev/urandom ]; then
       if [ -r /dev/random ]; then 
          rfile=/dev/random
-      # elif [ -r /kernel/genunix ]; then
-      #   rfile=/kernel/genunix
       elif [ -r /bin/vi ]; then
          rfile=/bin/vi
       fi

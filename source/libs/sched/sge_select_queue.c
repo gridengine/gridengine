@@ -88,6 +88,7 @@
 #include "sge_pqs_api.h"
 #endif
 #include "sge_calendarL.h"
+#include "sge_attrL.h"
 
 /* -- these implement helpers for the category optimization -------- */
 
@@ -1519,33 +1520,35 @@ dispatch_t sge_queue_match_static(lListElem *queue, lListElem *job, const lListE
                                   const lListElem *ckpt, lList *centry_list, lList *acl_list) 
 {
    u_long32 job_id;
-   const char *queue_name;
    lList *projects;
    const char *project;
+   const lList *hard_queue_list, *master_hard_queue_list; 
+   const char *qinstance_name = lGetString(queue, QU_full_name);
 
    DENTER(TOP_LAYER, "sge_queue_match_static");
 
    job_id = lGetUlong(job, JB_job_number);
-   queue_name = lGetString(queue, QU_full_name);
    /* check if job owner has access rights to the queue */
    if (!sge_has_access(lGetString(job, JB_owner), lGetString(job, JB_group), queue, acl_list)) {
-      DPRINTF(("Job %d has no permission for queue %s\n", (int)job_id, queue_name));
-      schedd_mes_add(job_id, SCHEDD_INFO_HASNOPERMISSION_SS, "queue", queue_name);
+      DPRINTF(("Job %d has no permission for queue %s\n", (int)job_id, qinstance_name));
+      schedd_mes_add(job_id, SCHEDD_INFO_HASNOPERMISSION_SS, "queue", qinstance_name);
       DEXIT;
       return DISPATCH_NEVER_CAT;
    }
+
+
 
    /* check if job can run in queue based on project */
    if ((projects = lGetList(queue, QU_projects))) {
       if ((!(project = lGetString(job, JB_project)))) {
          schedd_mes_add(job_id, SCHEDD_INFO_HASNOPRJ_S,
-            "queue", queue_name);
+            "queue", qinstance_name);
          DEXIT;
          return DISPATCH_NEVER_CAT;
       }
       if ((!userprj_list_locate(projects, project))) {
          schedd_mes_add(job_id, SCHEDD_INFO_HASINCORRECTPRJ_SSS,
-            project, "queue", queue_name);
+            project, "queue", qinstance_name);
          DEXIT;
          return DISPATCH_NEVER_CAT;
       }
@@ -1556,17 +1559,18 @@ dispatch_t sge_queue_match_static(lListElem *queue, lListElem *job, const lListE
       if (((project = lGetString(job, JB_project)) &&
            userprj_list_locate(projects, project))) {
          schedd_mes_add(job_id, SCHEDD_INFO_EXCLPRJ_SSS,
-            project, "queue", queue_name);
+            project, "queue", qinstance_name);
          DEXIT;
          return DISPATCH_NEVER_CAT;
       }
    }
 
-   if (lGetList(job, JB_hard_queue_list) ||
-       lGetList(job, JB_master_hard_queue_list)) {
+   hard_queue_list = lGetList(job, JB_hard_queue_list);
+   master_hard_queue_list = lGetList(job, JB_master_hard_queue_list);
+   if (hard_queue_list || master_hard_queue_list) {
       if (!centry_list_are_queues_requestable(centry_list)) {
          schedd_mes_add(job_id, SCHEDD_INFO_QUEUENOTREQUESTABLE_S,
-            queue_name);
+            qinstance_name);
          DEXIT;
          return DISPATCH_NEVER_CAT;
       }
@@ -1575,45 +1579,9 @@ dispatch_t sge_queue_match_static(lListElem *queue, lListElem *job, const lListE
    /* 
     * is queue contained in hard queue list ? 
     */
-   if (lGetList(job, JB_hard_queue_list)) {
-      lListElem *category = lGetRef(job, JB_category);
-      lList *resolved_qref_list = NULL;
-      lListElem *resolved_qref = NULL;
-      const char *qinstance_name = NULL;
-      bool found_something = false;
-      bool is_in_list = true;
-      bool is_list_free = true;
-      
-      if (category != NULL) { /* check for a cached resolved hard_queue_list */
-         resolved_qref_list = lGetList(category, CT_cached_hard_queue_list);
-      }
-    
-      if (resolved_qref_list == NULL) { /* resolve the hard_queue_list */
-         lList *master_cqueue_list = *(object_type_get_master_list(SGE_TYPE_CQUEUE));
-         lList *master_hgroup_list = *(object_type_get_master_list(SGE_TYPE_HGROUP));
-         lList *qref_list = lGetList(job, JB_hard_queue_list);
-
-         qref_list_resolve(qref_list, NULL, &resolved_qref_list,
-                           &found_something, master_cqueue_list,
-                           master_hgroup_list, true, true);
-                           
-         if (category != NULL) {
-            lSetList(category, CT_cached_hard_queue_list, resolved_qref_list);
-            is_list_free = false;
-         }                           
-      }                        
-      else {
-         is_list_free = false;
-      }
-      /* check weather the current queue instance is requested from the job */                  
-      qinstance_name = lGetString(queue, QU_full_name);
-      resolved_qref = lGetElemStr(resolved_qref_list, QR_name, qinstance_name); 
-      is_in_list = resolved_qref != NULL ? true : false;
-      
-      if (is_list_free) { /* we are not caching anything, so we have to free the list */
-         lFreeList(&(resolved_qref_list));
-      }
-      if (!is_in_list) {
+   if (hard_queue_list) {
+      if (qref_list_cq_rejected(hard_queue_list, lGetString(queue, QU_qname),
+                     lGetHost(queue, QU_qhostname), *(object_type_get_master_list(SGE_TYPE_HGROUP)))) {
          DPRINTF(("Queue \"%s\" is not contained in the hard "
                   "queue list (-q) that was requested by job %d\n",
                   qinstance_name, (int) job_id));
@@ -1621,50 +1589,17 @@ dispatch_t sge_queue_match_static(lListElem *queue, lListElem *job, const lListE
                         qinstance_name);
          DEXIT; 
          return DISPATCH_NEVER_CAT;
-      }
+      }  
    }
 
    /* 
     * is this queue a candidate for being the master queue? 
     */
-   if (lGetList(job, JB_master_hard_queue_list)) {
-      lListElem *category = lGetRef(job, JB_category);
-      lList *resolved_qref_list = NULL;
-      lListElem *resolved_qref = NULL;
-      const char *qinstance_name = NULL;
-      bool found_something = false;
+   if (master_hard_queue_list) {
       bool is_in_list = true;
-      bool is_list_free = true;
-      
-      if (category != NULL) { /* check for a cached resolved hard_queue_list */
-         resolved_qref_list = lGetList(category, CT_cached_master_hard_queue_list);
-      }
-    
-      if (resolved_qref_list == NULL) { /* resolve the hard_queue_list */
-         lList *master_cqueue_list = *(object_type_get_master_list(SGE_TYPE_CQUEUE));
-         lList *master_hgroup_list = *(object_type_get_master_list(SGE_TYPE_HGROUP));
-         lList *qref_list = lGetList(job, JB_master_hard_queue_list);
-
-         qref_list_resolve(qref_list, NULL, &resolved_qref_list,
-                           &found_something, master_cqueue_list,
-                           master_hgroup_list, true, true);
-                           
-         if (category != NULL) {
-            lSetList(category, CT_cached_master_hard_queue_list, resolved_qref_list);
-            is_list_free = false;
-         }                           
-      }                        
-      else {
-         is_list_free = false;
-      }
-      /* check weather the current queue instance is requested from the job */                  
-      qinstance_name = lGetString(queue, QU_full_name);
-      resolved_qref = lGetElemStr(resolved_qref_list, QR_name, qinstance_name);
-      is_in_list = resolved_qref != NULL ? true : false;
-      
-      if (is_list_free) { /* we are not caching anything, so we have to free the list */
-         lFreeList(&(resolved_qref_list));
-      }
+      if (qref_list_cq_rejected(master_hard_queue_list, lGetString(queue, QU_qname),
+                     lGetHost(queue, QU_qhostname), *(object_type_get_master_list(SGE_TYPE_HGROUP))))
+         is_in_list = false;
 
       /*
        * Tag queue
@@ -1673,7 +1608,7 @@ dispatch_t sge_queue_match_static(lListElem *queue, lListElem *job, const lListE
       if (!is_in_list) {
          DPRINTF(("Queue \"%s\" is contained in the master hard "
                   "queue list (-masterq) that was requested by job %d\n",
-                  queue_name, (int) job_id));
+                  qinstance_name, (int) job_id));
       }
    }
 
@@ -1684,8 +1619,8 @@ dispatch_t sge_queue_match_static(lListElem *queue, lListElem *job, const lListE
    if (pe) { /* parallel job */
       if (!qinstance_is_parallel_queue(queue)) {
          DPRINTF(("Queue \"%s\" is not a parallel queue as requested by " 
-                  "job %d\n", queue_name, (int)job_id));
-         schedd_mes_add(job_id, SCHEDD_INFO_NOTPARALLELQUEUE_S, queue_name);
+                  "job %d\n", qinstance_name, (int)job_id));
+         schedd_mes_add(job_id, SCHEDD_INFO_NOTPARALLELQUEUE_S, qinstance_name);
          DEXIT;
          return DISPATCH_NEVER_CAT;
       }
@@ -1695,9 +1630,9 @@ dispatch_t sge_queue_match_static(lListElem *queue, lListElem *job, const lListE
        */
       if (!qinstance_is_pe_referenced(queue, pe)) {
          DPRINTF(("Queue "SFQ" does not reference PE "SFQ"\n",
-                  queue_name, lGetString(pe, PE_name)));
+                  qinstance_name, lGetString(pe, PE_name)));
          schedd_mes_add(job_id, SCHEDD_INFO_NOTINQUEUELSTOFPE_SS,
-                        queue_name, lGetString(pe, PE_name));
+                        qinstance_name, lGetString(pe, PE_name));
          DEXIT;
          return DISPATCH_NEVER_CAT;
       }
@@ -1707,8 +1642,8 @@ dispatch_t sge_queue_match_static(lListElem *queue, lListElem *job, const lListE
       /* is it a ckpt queue ? */
       if (!qinstance_is_checkointing_queue(queue)) {
          DPRINTF(("Queue \"%s\" is not a checkpointing queue as requested by "
-                  "job %d\n", queue_name, (int)job_id));
-         schedd_mes_add(job_id, SCHEDD_INFO_NOTACKPTQUEUE_SS, queue_name);
+                  "job %d\n", qinstance_name, (int)job_id));
+         schedd_mes_add(job_id, SCHEDD_INFO_NOTACKPTQUEUE_SS, qinstance_name);
          DEXIT;
          return DISPATCH_NEVER_CAT;
       }
@@ -1718,9 +1653,9 @@ dispatch_t sge_queue_match_static(lListElem *queue, lListElem *job, const lListE
        */
       if (!qinstance_is_ckpt_referenced(queue, ckpt)) {
          DPRINTF(("Queue \"%s\" does not reference checkpointing object "SFQ
-                  "\n", queue_name, lGetString(ckpt, CK_name)));
+                  "\n", qinstance_name, lGetString(ckpt, CK_name)));
          schedd_mes_add(job_id, SCHEDD_INFO_NOTINQUEUELSTOFCKPT_SS,  
-                        queue_name, lGetString(ckpt, CK_name));
+                        qinstance_name, lGetString(ckpt, CK_name));
          DEXIT;
          return DISPATCH_NEVER_CAT;
       }
@@ -1730,8 +1665,8 @@ dispatch_t sge_queue_match_static(lListElem *queue, lListElem *job, const lListE
    if (JOB_TYPE_IS_IMMEDIATE(lGetUlong(job, JB_type))) { 
       if (!qinstance_is_interactive_queue(queue)) {
          DPRINTF(("Queue \"%s\" is not an interactive queue as requested by "
-                  "job %d\n", queue_name, (int)job_id));
-         schedd_mes_add(job_id, SCHEDD_INFO_QUEUENOTINTERACTIVE_S, queue_name);
+                  "job %d\n", qinstance_name, (int)job_id));
+         schedd_mes_add(job_id, SCHEDD_INFO_QUEUENOTINTERACTIVE_S, qinstance_name);
          DEXIT;
          return DISPATCH_NEVER_CAT;
       } 
@@ -1741,8 +1676,8 @@ dispatch_t sge_queue_match_static(lListElem *queue, lListElem *job, const lListE
       /* is it a batch or transfer queue */
       if (!qinstance_is_batch_queue(queue)) {
          DPRINTF(("Queue \"%s\" is not a batch queue as "
-                  "requested by job %d\n", queue_name, (int)job_id));
-         schedd_mes_add(job_id, SCHEDD_INFO_NOTASERIALQUEUE_S, queue_name);
+                  "requested by job %d\n", qinstance_name, (int)job_id));
+         schedd_mes_add(job_id, SCHEDD_INFO_NOTASERIALQUEUE_S, qinstance_name);
          DEXIT;
          return DISPATCH_NEVER_CAT;
       }
@@ -1751,8 +1686,8 @@ dispatch_t sge_queue_match_static(lListElem *queue, lListElem *job, const lListE
    if (ckpt && !pe && lGetString(job, JB_script_file) &&
        qinstance_is_parallel_queue(queue) && !qinstance_is_batch_queue(queue)) {
       DPRINTF(("Queue \"%s\" is not a serial queue as "
-               "requested by job %d\n", queue_name, (int)job_id));
-      schedd_mes_add(job_id, SCHEDD_INFO_NOTPARALLELJOB_S, queue_name);
+               "requested by job %d\n", qinstance_name, (int)job_id));
+      schedd_mes_add(job_id, SCHEDD_INFO_NOTPARALLELJOB_S, qinstance_name);
       DEXIT;
       return DISPATCH_NEVER_CAT;
    }
@@ -1901,6 +1836,7 @@ compute_soft_violations(const sge_assignment_t *a, lListElem *queue, int violati
        * check whether queue fulfills soft queue request of the job (-q) 
        */
       if (lGetList(a->job, JB_soft_queue_list)) {
+         bool is_in_list = true;
          lList *master_cqueue_list = NULL;
          lList *master_hgroup_list = NULL;
          lList *qref_list = lGetList(a->job, JB_soft_queue_list);
@@ -1909,7 +1845,6 @@ compute_soft_violations(const sge_assignment_t *a, lListElem *queue, int violati
          lListElem *qr;
          const char *qinstance_name = NULL;
          bool found_something = false;
-         bool is_in_list = true;
 
          master_cqueue_list = *(object_type_get_master_list(SGE_TYPE_CQUEUE));
          master_hgroup_list = *(object_type_get_master_list(SGE_TYPE_HGROUP));
@@ -2906,6 +2841,152 @@ sge_split_disabled(lList **queue_list, lList **disabled)
    return ret;
 }
 
+/****** sge_select_queue/project_cq_rejected() *********************************
+*  NAME
+*     project_cq_rejected() -- Check, if -P project rejects cluster queue
+*
+*  SYNOPSIS
+*     static bool project_cq_rejected(const char *project, const lListElem *cq) 
+*
+*  FUNCTION
+*     Match a jobs -P 'project' with project/xproject cluster queue configuration.
+*     True is returned if the project has no access.
+*
+*  INPUTS
+*     const char *project - the project of a job or NULL
+*     const lListElem *cq - cluster queue (CQ_Type)
+*
+*  RESULT
+*     static bool - True, if rejected
+*
+*  NOTES
+*     MT-NOTE: project_cq_rejected() is MT safe 
+*******************************************************************************/
+static bool project_cq_rejected(const char *project, const lListElem *cq)
+{
+   const lList *projects;
+   const lListElem *alist;
+   bool rejected;
+
+   DENTER(TOP_LAYER, "project_cq_rejected");
+
+   if (!project) {
+      /* without project: rejected, if each "project" profile 
+         does contain project references */
+      for_each (alist, lGetList(cq, CQ_projects)) {
+         if (!lGetList(alist, APRJLIST_value)) {
+            DEXIT;
+            return false;
+         }
+      }
+
+      DEXIT;
+      return true;
+   }
+
+   /* with project: rejected, if project is exluded by each "xproject" profile */
+   rejected = true;
+   for_each (alist, lGetList(cq, CQ_xprojects)) {
+      projects = lGetList(alist, APRJLIST_value);
+      if (!projects || !userprj_list_locate(projects, project)) {
+         rejected = false;
+         break;
+      }
+   }
+   if (rejected) {
+      DEXIT;
+      return true;
+   }
+
+   /* with project: rejected, if project is not included with each "project" profile */
+   rejected = true;
+   for_each (alist, lGetList(cq, CQ_projects)) {
+      projects = lGetList(alist, APRJLIST_value);
+      if (!projects || userprj_list_locate(projects, project)) {
+         rejected = false;
+         break;
+      }
+   }
+   if (rejected) {
+      DEXIT;
+      return true;
+   }
+
+   DEXIT;
+   return false;
+}
+
+/****** sge_select_queue/cqueue_match_static() *********************************
+*  NAME
+*     cqueue_match_static() -- Does cluster queue match the job?
+*
+*  SYNOPSIS
+*     static dispatch_t cqueue_match_static(const char *cqname, 
+*     sge_assignment_t *a) 
+*
+*  FUNCTION
+*     The function tries to find reasons (-q, -l and -P) why the
+*     entire cluster is not suited for the job.
+*
+*  INPUTS
+*     const char *cqname  - Cluster queue name
+*     sge_assignment_t *a - ??? 
+*
+*  RESULT
+*     static dispatch_t - Returns DISPATCH_OK  or DISPATCH_NEVER_CAT
+*
+*  NOTES
+*     MT-NOTE: cqueue_match_static() is MT safe 
+*******************************************************************************/
+static dispatch_t cqueue_match_static(const char *cqname, sge_assignment_t *a) 
+{
+   const lList *hard_resource_list;
+   const lListElem *cq;
+   const char *project;
+
+   DENTER(TOP_LAYER, "cqueue_match_static");
+
+   /* detect if entire cluster queue ruled out due to -q */
+   if (qref_list_cq_rejected(lGetList(a->job, JB_hard_queue_list), cqname, NULL, NULL)) {
+      DPRINTF(("Cluster Queue \"%s\" is not contained in the hard queue list (-q) that "
+            "was requested by job %d\n", cqname, (int)a->job_id));
+      schedd_mes_add(a->job_id, SCHEDD_INFO_NOTINHARDQUEUELST_S, cqname);
+      DEXIT;
+      return DISPATCH_NEVER_CAT;
+   }
+
+   cq = lGetElemStr(*(object_type_get_master_list(SGE_TYPE_CQUEUE)), CQ_name, cqname);
+
+   /* detect if entire cluster queue ruled out due to -l */
+   if ((hard_resource_list = lGetList(a->job, JB_hard_resource_list))) {
+      dstring unsatisfied = DSTRING_INIT;
+      if (request_cq_rejected(hard_resource_list, cq, a->centry_list, &unsatisfied)) {
+         DPRINTF(("Cluster Queue \"%s\" can not fulfill resource request (-l %s) that "
+               "was requested by job %d\n", cqname, sge_dstring_get_string(&unsatisfied), (int)a->job_id));
+         schedd_mes_add(a->job_id, SCHEDD_INFO_CANNOTRUNINQUEUE_SSS, sge_dstring_get_string(&unsatisfied), 
+               cqname, "of cluster queue");
+         sge_dstring_free(&unsatisfied);
+         DEXIT;
+         return DISPATCH_NEVER_CAT;
+      }
+   }
+
+   /* detect if entire cluster queue ruled out due to -P */
+   project = lGetString(a->job, JB_project); 
+   if (project_cq_rejected(project, cq)) {
+      DPRINTF(("Cluster queue \"%s\" does not work for -P %s job %d\n",
+         cqname, project?project:"<no project>", (int)a->job_id));
+      schedd_mes_add(a->job_id, SCHEDD_INFO_HASNOPRJ_S, "cluster queue", cqname);
+      DEXIT;
+      return DISPATCH_NEVER_CAT;
+   }
+
+   DEXIT;
+   return DISPATCH_OK;
+}
+
+
+
 /****** sge_select_queue/sequential_tag_queues_suitable4job() **************
 *  NAME
 *     sequential_tag_queues_suitable4job() -- ??? 
@@ -2950,10 +3031,12 @@ sequential_tag_queues_suitable4job(sge_assignment_t *a)
    lList *skip_queue_list = NULL;
    bool soft_requests = job_has_soft_requests(a->job);
 
+   lList *skip_cqueue_list = NULL;
+   lList *unclear_cqueue_list = NULL;
+
    category_use_t use_category;
    
    dispatch_t result;
-   u_long32 job_id = lGetUlong(a->job, JB_job_number);
    u_long32 tt_global = a->start;
    dispatch_t best_queue_result = DISPATCH_NEVER_CAT;
    int global_violations = 0, queue_violations;
@@ -2966,7 +3049,7 @@ sequential_tag_queues_suitable4job(sge_assignment_t *a)
    
    /* restore job messages from previous dispatch runs of jobs of the same category */
    if (use_category.use_category) {
-      schedd_mes_set_tmp_list(use_category.cache, CCT_job_messages, job_id);
+      schedd_mes_set_tmp_list(use_category.cache, CCT_job_messages, a->job_id);
       skip_host_list = lGetList(use_category.cache, CCT_ignore_hosts);
       skip_queue_list = lGetList(use_category.cache, CCT_ignore_queues);
    }
@@ -2989,35 +3072,35 @@ sequential_tag_queues_suitable4job(sge_assignment_t *a)
       sort_queue_list(a->queue_list);
    }
 
-   for_each(qep, a->queue_list) {   
+   for_each(qep, a->queue_list) {
       u_long32 tt_host = a->start;
       u_long32 tt_queue = a->start;   
       const char *eh_name;
-      const char *qname;
+      const char *qname, *cqname;
       lListElem *hep;
 
       qname = lGetString(qep, QU_full_name);
+      cqname = lGetString(qep, QU_qname);
+
+      /* try to foreclose the cluster queue */
+      if (lGetElemStr(skip_cqueue_list, CTI_name, cqname)) {
+         DPRINTF(("skip cluster queue %s\n", cqname));             
+         continue;
+      }
+      if (!lGetElemStr(unclear_cqueue_list, CTI_name, cqname)) {
+         if (cqueue_match_static(cqname, a) != DISPATCH_OK) {
+            lAddElemStr(&skip_cqueue_list, CTI_name, cqname, CTI_Type);
+            best_queue_result = find_best_result(DISPATCH_NEVER_CAT, best_queue_result); 
+            continue;
+         }
+         lAddElemStr(&unclear_cqueue_list, CTI_name, cqname, CTI_Type);
+      } else
+         DPRINTF(("checked cluster queue %s already\n", cqname));             
 
       if (skip_queue_list && lGetElemStr(skip_queue_list, CTI_name, qname)){
          DPRINTF(("job category skip queue %s\n", qname));             
          continue;
       }
-
-#ifdef COMPILE_CQ_OPT
-      if (!getenv("SGE_NOCQOPT")) { /* QA hook */
-         const char *cqname = lGetString(qep, QU_qname);
-         if (qref_list_cq_rejected(lGetList(a->job, JB_hard_queue_list), cqname)) {
-            DPRINTF(("Cluster Queue \"%s\" is rejected by the hard "
-                     "queue list (-q) that was requested by job %d\n",
-                     cqname, (int)a->job_id));
-            schedd_mes_add(a->job_id, SCHEDD_INFO_NOTINHARDQUEUELST_S, qname);
-            if (skip_queue_list)
-               lAddElemStr(&skip_queue_list, CTI_name, qname, CTI_Type);
-            best_queue_result = find_best_result(DISPATCH_NEVER_CAT, best_queue_result); 
-            continue;
-         }
-      }
-#endif
 
       eh_name = lGetHost(qep, QU_qhostname);
       hep = lGetElemHost(a->host_list, EH_name, eh_name);
@@ -3028,7 +3111,15 @@ sequential_tag_queues_suitable4job(sge_assignment_t *a)
             DPRINTF(("job category skip host %s\n", eh_name));          
             continue;
          }
-         
+    
+         /* match the none resources */
+         if (sge_queue_match_static(qep, a->job, NULL, a->ckpt, a->centry_list, a->acl_list) != DISPATCH_OK) {
+            if (skip_queue_list)
+               lAddElemStr(&skip_queue_list, CTI_name, qname, CTI_Type);
+            best_queue_result = find_best_result(DISPATCH_NEVER_CAT, best_queue_result); 
+            continue;
+         }
+
          queue_violations = global_violations;
 
          result = sequential_host_time( &tt_host, a, use_category.compute_violation?&queue_violations:NULL, 
@@ -3066,7 +3157,7 @@ sequential_tag_queues_suitable4job(sge_assignment_t *a)
                tt_queue = MAX(tt_queue, MAX(tt_host, tt_global));
                lSetUlong(qep, QU_available_at, tt_queue);
             }
-            DPRINTF(("    set Q: %s number="sge_u32" when="sge_u32" violations="sge_u32"\n", lGetString(qep, QU_full_name),
+            DPRINTF(("    set Q: %s number="sge_u32" when="sge_u32" violations="sge_u32"\n", qname,
                    lGetUlong(qep, QU_tag), lGetUlong(qep, QU_available_at), lGetUlong(qep, QU_soft_violation)));
             best_queue_result = DISPATCH_OK;
 
@@ -3090,7 +3181,10 @@ sequential_tag_queues_suitable4job(sge_assignment_t *a)
             lAddElemStr(&skip_queue_list, CTI_name, qname, CTI_Type);
          }
       }
-   }  
+   }
+
+   lFreeList(&skip_cqueue_list);
+   lFreeList(&unclear_cqueue_list);
 
    /* cache so far generated messages with the job category */
    if (use_category.use_category) {  
@@ -3109,6 +3203,7 @@ sequential_tag_queues_suitable4job(sge_assignment_t *a)
    DEXIT;
    return best_queue_result;
 }
+
 
 
 /****** sge_select_queue/sort_queue_list() *************************************
@@ -3867,7 +3962,6 @@ parallel_max_host_slots(sge_assignment_t *a, lListElem *host) {
 dispatch_t
 sge_sequential_assignment(sge_assignment_t *a) 
 {
-   u_long32 job_id;
    dispatch_t result;
    lListElem *job;
    int old_logging = 0;
@@ -3886,7 +3980,6 @@ sge_sequential_assignment(sge_assignment_t *a)
    } 
 
    job = a->job;
-   job_id = lGetUlong(job, JB_job_number);
 
    /* untag all queues */
    qinstance_list_set_tag(a->queue_list, 0);
@@ -3981,7 +4074,7 @@ sge_sequential_assignment(sge_assignment_t *a)
          const char *eh_name = lGetHost(best_queue, QU_qhostname);
 
          DPRINTF((sge_u32": 1 slot in queue %s@%s user %s %s for "sge_u32"\n",
-            job_id, qname, eh_name, lGetString(job, JB_owner), 
+            a->job_id, qname, eh_name, lGetString(job, JB_owner), 
                   !a->is_reservation?"scheduled":"reserved", job_start_time));
 
          gdil_ep = lAddElemStr(&gdil, JG_qname, qname, JG_Type);
@@ -4564,12 +4657,6 @@ sequential_queue_time( u_long32 *start, const sge_assignment_t *a,
    DENTER(TOP_LAYER, "queue_time_by_slots");
 
    sge_dstring_init(&reason, reason_buf, sizeof(reason_buf));
-
-   /* match the none resources */
-   if (sge_queue_match_static(qep, a->job, NULL, a->ckpt, a->centry_list, a->acl_list) != DISPATCH_OK) {
-      DEXIT;
-      return DISPATCH_NEVER_CAT;
-   }
 
    /* match the resources */
    result = rc_time_by_slots(a, hard_requests, NULL, config_attr, actual_attr, 

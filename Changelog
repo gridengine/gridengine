@@ -1,8 +1,27 @@
+AH-2006-05-16-0: Enhancem.: Various scheduling optimizations
+                            - improved and simplified -q, -masterq 
+                              matching
+                            - do static queue matching before dynamic 
+                              exec host matching for sequential jobs
+                            - do not use userset/project in 
+                              scheduling categories, if not used 
+                              as ACL with queue_conf(5), host_conf(5) 
+                              or sge_pe(5)
+                            - added static cluster queue matching for
+                              -q, -l and -P to prevent queue instance 
+                              matching
+                            - changed CULL name position in scheduler
+                              for job/task/queue instance 
+                 Review:    RD
+
+AH-2006-04-16-0: CVS        Created V60s3_BRANCH
+---------------------------------------------
+
 JG-2006-05-15-0: Enhancem.: Improved verification of incoming job requests
                             in execd.
                  Review:    RD
 
-AH-2006-05-11-0: Enhancem.: Addes new test_drmaa_perf switches
+AH-2006-05-11-0: Enhancem.: Added new test_drmaa_perf switches
                             -scenario {queue|type|number}.{hostgroup|resource|none}
                             -quiet    {yes|no}
                  Changed:   test_drmaa_perf

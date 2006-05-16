@@ -2634,7 +2634,8 @@ bool sge_unparse_acl_dstring(dstring *category_str, const char *owner, const cha
    DENTER(TOP_LAYER, "sge_unparse_acl_dstring");  
 
    for_each (elem, acl_list) {
-      if (sge_contained_in_access_list(owner, group, elem, NULL)) {
+      if (lGetBool(elem, US_consider_with_categories) && 
+               sge_contained_in_access_list(owner, group, elem, NULL)) {
          if (first) {      
             if (sge_dstring_strlen(category_str) > 0) {
                sge_dstring_sprintf_append(category_str, " ");

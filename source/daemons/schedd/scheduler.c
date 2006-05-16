@@ -1403,8 +1403,8 @@ add_job_list_to_schedule(const lList *job_list, bool suspended, lList *pe_list,
          a.queue_list = queue_list;
          a.centry_list = centry_list;
 
-         DPRINTF(("Adding job "sge_U32CFormat"."sge_U32CFormat" into schedule " "start "
-                  sge_U32CFormat" duration "sge_U32CFormat"\n", lGetUlong(jep, JB_job_number), 
+      DPRINTF(("Adding job "sge_U32CFormat"."sge_U32CFormat" into schedule " "start "
+               sge_U32CFormat" duration "sge_U32CFormat"\n", lGetUlong(jep, JB_job_number), 
                   lGetUlong(ja_task, JAT_task_number), a.start, a.duration));
 
          /* only update resource utilization schedule  

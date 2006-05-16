@@ -458,7 +458,7 @@ end:
 *     MT-NOTE: test_performance() is MT safe 
 *
 *******************************************************************************/
-static double test_performance(lListElem *job_elem, int max, lList* access_list) 
+static double test_performance(lListElem *job_elem, int max, lList* access_list, const lList *project_list) 
 {
    int i;
    dstring category_str = DSTRING_INIT;
@@ -468,7 +468,7 @@ static double test_performance(lListElem *job_elem, int max, lList* access_list)
    
    gettimeofday(&before, NULL); 
    for (i = 0; i < max; i++) {
-      sge_build_job_category_dstring(&category_str, job_elem, access_list);
+      sge_build_job_category_dstring(&category_str, job_elem, access_list, project_list, NULL);
       sge_dstring_clear(&category_str);
    }
    gettimeofday(&after, NULL);
@@ -518,7 +518,7 @@ static int test(data_entry_t *test, char *result, int count)
    if (job_elem != NULL) {
        dstring category_str = DSTRING_INIT;
 
-       sge_build_job_category_dstring(&category_str, job_elem, access_list);
+       sge_build_job_category_dstring(&category_str, job_elem, access_list, NULL, NULL);
 
        printf("got     : <%s>\n", sge_dstring_get_string(&category_str)!=NULL?sge_dstring_get_string(&category_str):"<NULL>");
 
@@ -543,7 +543,7 @@ static int test(data_entry_t *test, char *result, int count)
             printf("test with %dx :", i);
             job_elem = test_create_job(test, i);
             if (job_elem != NULL) {
-               double time = test_performance(job_elem, max, access_list); 
+               double time = test_performance(job_elem, max, access_list, NULL); 
                if (time > 1) {
                   max /= 10;
                }

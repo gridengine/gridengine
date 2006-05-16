@@ -203,7 +203,7 @@ int main(int argc, char *argv[])
       return 1;
    }
 
-#if 1
+#if 0
    printf("job_path: \"%s\"\n", job_path);
    printf("njobs:    %d\n", njobs);
    printf("nthreads: %d\n", nthreads);

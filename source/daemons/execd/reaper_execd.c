@@ -748,6 +748,8 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
    case SSTATE_NO_CWD:
    case SSTATE_AFS_PROBLEM:
    case SSTATE_APPERROR:
+   case SSTATE_PASSWD_ERROR:
+   case SSTATE_SERVICE_ERROR:
       general_failure = GFSTATE_JOB;
       lSetUlong(jr, JR_general_failure, general_failure);
       job_related_adminmail(jr, is_array);
@@ -1557,7 +1559,6 @@ int usage_mul_factor
       lSetString(jr, JR_owner, owner = get_conf_val("job_owner"));
       if (owner) {
          struct passwd *pw;
-         struct group *pg;
          struct passwd pw_struct;
          char buffer[2048];
 
@@ -1566,10 +1567,12 @@ int usage_mul_factor
             if (mconf_get_use_qsub_gid()) {
                char *tmp_qsub_gid = search_conf_val("qsub_gid");
                pw->pw_gid = atol(tmp_qsub_gid);
-            } 
-            pg = getgrgid(pw->pw_gid);
-            if (pg && pg->gr_name)
-               lSetString(jr, JR_group, pg->gr_name);
+            }
+
+            if(sge_gid2group(pw->pw_gid, buffer, 
+                             MAX_STRING_SIZE, MAX_NIS_RETRIES) != 0) {
+               lSetString(jr, JR_group, buffer);
+            }
          }
       }
 

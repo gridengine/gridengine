@@ -209,28 +209,28 @@ sge_init_shared_ssl_lib(void)
       ret = 1;
    }
 #else
-   shared_ssl_func__X509_free = X509_free,
-   shared_ssl_func__EVP_PKEY_free = EVP_PKEY_free,
-   shared_ssl_func__ERR_print_errors_fp = ERR_print_errors_fp,
-   shared_ssl_func__EVP_PKEY_size = EVP_PKEY_size,
-   shared_ssl_func__EVP_rc4 = EVP_rc4,
+   shared_ssl_func__X509_free = X509_free;
+   shared_ssl_func__EVP_PKEY_free = EVP_PKEY_free;
+   shared_ssl_func__ERR_print_errors_fp = ERR_print_errors_fp;
+   shared_ssl_func__EVP_PKEY_size = EVP_PKEY_size;
+   shared_ssl_func__EVP_rc4 = EVP_rc4;
 
-   shared_ssl_func__EVP_OpenInit = EVP_OpenInit,
-   shared_ssl_func__EVP_DecryptUpdate = EVP_DecryptUpdate,
-   shared_ssl_func__EVP_EncryptUpdate = EVP_EncryptUpdate,
-   shared_ssl_func__EVP_SealFinal = EVP_SealFinal,
-   shared_ssl_func__EVP_SealInit = EVP_SealInit,
+   shared_ssl_func__EVP_OpenInit = EVP_OpenInit;
+   shared_ssl_func__EVP_DecryptUpdate = EVP_DecryptUpdate;
+   shared_ssl_func__EVP_EncryptUpdate = EVP_EncryptUpdate;
+   shared_ssl_func__EVP_SealFinal = EVP_SealFinal;
+   shared_ssl_func__EVP_SealInit = EVP_SealInit;
 
-   shared_ssl_func__EVP_OpenFinal = EVP_OpenFinal,
-   shared_ssl_func__EVP_read_pw_string = EVP_read_pw_string,
-   shared_ssl_func__ERR_load_crypto_strings = ERR_load_crypto_strings,
-   shared_ssl_func__X509_get_pubkey = X509_get_pubkey,
-   shared_ssl_func__PEM_ASN1_read = PEM_ASN1_read,
+   shared_ssl_func__EVP_OpenFinal = EVP_OpenFinal;
+   shared_ssl_func__EVP_read_pw_string = EVP_read_pw_string;
+   shared_ssl_func__ERR_load_crypto_strings = ERR_load_crypto_strings;
+   shared_ssl_func__X509_get_pubkey = X509_get_pubkey;
+   shared_ssl_func__PEM_ASN1_read = PEM_ASN1_read;
 
-   shared_ssl_func__d2i_AutoPrivateKey = d2i_AutoPrivateKey,
-   shared_ssl_func__d2i_X509 = d2i_X509,
+   shared_ssl_func__d2i_AutoPrivateKey = d2i_AutoPrivateKey;
+   shared_ssl_func__d2i_X509 = d2i_X509;
 
-   shared_ssl_func__RAND_load_file = RAND_load_file,
+   shared_ssl_func__RAND_load_file = RAND_load_file;
    ret = 0;
 #endif
    DEXIT;

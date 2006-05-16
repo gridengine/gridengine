@@ -33,6 +33,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <sys/types.h>
+#include <sys/time.h>
+#include <sys/resource.h>
 #include <fcntl.h>
 #include <pwd.h>
 #include <errno.h>
@@ -70,6 +72,7 @@ struct rusage {
 
 #if defined(INTERIX)
 #  include "misc.h"
+#  include "windows_gui.h"
 #endif
 
 #include "builtin_starter.h"
@@ -85,6 +88,10 @@ struct rusage {
 /* The maximum number of env variables we can export. */
 #define MAX_NUMBER_OF_ENV_VARS 1023
 
+#if defined(INTERIX)
+char job_user[MAX_STRING_SIZE];
+static char user_passwd[MAX_STRING_SIZE];
+#endif
 static char* shepherd_env[MAX_NUMBER_OF_ENV_VARS + 1];
 static int shepherd_env_index = -1;
 static int inherit_environ = -1;
@@ -94,7 +101,7 @@ static char **read_job_args(char **args, int extra_args);
 static char *build_path(int type);
 static char *parse_script_params(char **script_file);
 static void setup_environment (void);
-static bool inherit_env (void);
+static bool inherit_env(void);
 #if 0 /* Not currently used, but looks kinda useful... */
 static void set_inherit_env (bool inherit);
 #endif
@@ -310,6 +317,27 @@ int truncate_stderr_out
    shepherd_trace("Initializing error file");
    shepherd_error_init( );
 
+#if defined(INTERIX)
+   if(strcmp(childname, "job") == 0
+      && wl_use_sgepasswd() == true
+      && wl_get_GUI_mode(sge_get_environment()) == true) {
+      char *pass = NULL;
+      uid_t uid;
+
+      uid = geteuid();
+      seteuid(SGE_SUPERUSER_UID);
+      sge_get_passwd(target_user, &pass, err_str);
+      seteuid(uid);
+
+      if(pass == NULL) {
+         shepherd_error(err_str);
+      } else {
+         strlcpy(user_passwd, pass, MAX_STRING_SIZE);
+         FREE(pass);
+      }
+   }
+#endif
+
    min_gid = atoi(get_conf_val("min_gid"));
    min_uid = atoi(get_conf_val("min_uid"));
 
@@ -344,6 +372,9 @@ int truncate_stderr_out
       shepherd_trace(err_str);
    } 
    else if (ret > 0) {
+      if(ret == 2) {
+         shepherd_state = SSTATE_PASSWD_ERROR;
+      }
       /*
       ** violation of min_gid or min_uid
       */
@@ -727,6 +758,11 @@ int truncate_stderr_out
    }
 
 
+#if defined(INTERIX)
+   if(strcmp(childname, "job") == 0) {
+      strcpy(job_user, target_user);
+   }
+#endif
 /* ---- switch to target user */
    if (intermediate_user) {
       if(qlogin_starter) {
@@ -922,7 +958,7 @@ static void setup_environment()
    /* Bugfix: Issuezilla 1300
     * Because this fix could break pre-existing installations, it was made
     * optional. */
-   if (!inherit_env ()) {
+   if (!inherit_env()) {
       if (shepherd_env_index < 0) {
          shepherd_env[0] = NULL;
       }
@@ -962,7 +998,7 @@ char** sge_get_environment()
    /* Bugfix: Issuezilla 1300
     * Because this fix could break pre-existing installations, it was made
     * optional. */
-   if (!inherit_env ()) {
+   if (!inherit_env()) {
       return shepherd_env;
    }
    else {
@@ -998,7 +1034,7 @@ int sge_set_env_value(const char *name, const char* value)
    /* Bugfix: Issuezilla 1300
     * Because this fix could break pre-existing installations, it was made
     * optional. */
-   if (!inherit_env ()) {
+   if (!inherit_env()) {
       char *entry = NULL;
       int entry_size = 0;
 
@@ -1051,7 +1087,7 @@ const char *sge_get_env_value(const char *name)
    /* Bugfix: Issuezilla 1300
     * Because this fix could break pre-existing installations, it was made
     * optional. */
-   if (!inherit_env ()) {
+   if (!inherit_env()) {
       if (shepherd_env_index >= 0) {
          int index = 0;
 
@@ -1415,6 +1451,36 @@ int use_starter_method /* If this flag is set the shellpath contains the
        * Because this fix could break pre-existing installations, it was made
        * optional. */
 
+#if defined(INTERIX)
+   if(strcmp(childname, "job") == 0 
+      && wl_get_GUI_mode(sge_get_environment()) == true) {
+      int  ret;
+      int  win32_exit_status = 0;
+      char **env;
+      char err_msg[MAX_STRING_SIZE];
+      char failed_str[MAX_STRING_SIZE+128];
+
+      shepherd_trace_sprintf("starting job remote: %s", filename);
+
+      env = sge_get_environment();
+      ret = wl_start_job_remote(filename, args, env, 
+                          job_user, user_passwd, 
+                          &win32_exit_status, err_msg);
+
+      if(ret != 0) {
+         shepherd_state = SSTATE_SERVICE_ERROR;
+         sprintf(failed_str, "Job execution by SGE_Helper_Service failed: %s", 
+            err_msg);
+         shepherd_error(failed_str);
+      } else {
+         shepherd_trace_sprintf("exit_status: %d", win32_exit_status);
+      }
+
+      exit(win32_exit_status);
+   } else 
+#endif
+   {
+      shepherd_trace("not a GUI job, starting directly");
       if (!inherit_env()) {
          /* The closest thing to execvp that takes an environment pointer is
           * execve.  The problem is that execve does not resolve the path.
@@ -1441,6 +1507,7 @@ int use_starter_method /* If this flag is set the shellpath contains the
          /* EXIT HERE IN CASE IF FAILURE */
          shepherd_error(failed_str);
       }
+   }
    }
 }
 

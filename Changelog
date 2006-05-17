@@ -1,3 +1,9 @@
+MD-2006-05-17-0: Enhancem.: - Added error handling for SGE_Helper_Service.exe 
+                            installation
+                            - binary check -> SGE_Helper_Service.exe
+                 Changed:   inst_execd.sh, inst_common.sh
+                 Review:    HP
+
 HP-2006-05-16-0: Enhancem.: Added support for SGE_Helper_Service.exe on Windows
                  Changed:   sge_execd, sge_shepherd, libwingrid, libuti, distinst
                  Bugtraq:   6363237

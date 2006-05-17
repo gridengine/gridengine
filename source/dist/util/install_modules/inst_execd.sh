@@ -705,6 +705,8 @@ InstWinHelperSvc()
    PATH=/usr/contrib/win32/bin:/common:$SAVED_PATH
    export PATH
 
+   loop=0
+
    WIN_SVC="N1 Grid Engine Helper Service"
    WIN_DIR=`winpath2unix $SYSTEMROOT`
 
@@ -725,10 +727,24 @@ InstWinHelperSvc()
 
    $INFOTEXT "   ... uninstalling old service!"
    $WIN_DIR/SGE_Helper_Service.exe -uninstall
+   ret=1
    $INFOTEXT "\n   ... moving new service binary!"
    cp -fR $SGE_UTILBIN/SGE_Helper_Service.exe $WIN_DIR
-   $INFOTEXT "   ... installing new service!"
-   $WIN_DIR/SGE_Helper_Service.exe -install
+
+   while [ "$ret" -ne "0" -a "$loop" -lt 6 ]; do 
+      $INFOTEXT "   ... installing new service!"
+      $WIN_DIR/SGE_Helper_Service.exe -install
+      ret=$?
+      loop=`expr $loop + 1`
+      sleep 2
+   done
+
+   if [ "$ret" -ne 0 ]; then
+      $INFOTEXT "\n ... service could not be installed!"
+      $INFOTEXT " ... exiting installation"
+      exit 1
+   fi
+
    $INFOTEXT "\n   ... starting new service!"
    eval "net start \"$WIN_SVC\"" > /dev/null 2>&1
 
@@ -764,7 +780,5 @@ SetupWinSvc()
       SGE_STARTUP_FILE="$SGE_ROOT/$SGE_CELL/common/sgeexecd"
       StartExecd
    fi
-   #$INFOTEXT "Helper Service successfully installed...."
-   #$INFOTEXT -wait -auto $AUTO -n "\nHit <RETURN> to continue >> "
    $CLEAR
 }

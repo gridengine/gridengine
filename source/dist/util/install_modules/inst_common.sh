@@ -290,10 +290,13 @@ UTILFILES="adminrun checkprog checkuser filestat gethostbyaddr gethostbyname \
            gethostname getservbyname loadcheck now qrsh_starter rlogin rsh rshd \
            testsuidroot uidgid infotext"
 
+WINUTILFILES="SGE_Helper_Service.exe"
+
 THIRD_PARTY_FILES="openssl"
 
 if [ $SGE_ARCH = "win32-x86" ]; then
    BINFILES="$WINBINFILES"
+   UTILFILES="$UTILFILES $WINUTILFILES"
 fi
 
    missing=false
@@ -338,8 +341,8 @@ fi
          "and the binaries in >%s< should be:\n\n" \
          "adminrun       gethostbyaddr  loadcheck      rlogin         uidgid\n" \
          "checkprog      gethostbyname  now            rsh            infotext\n" \
-         "checkuser      gethostname    openssl        rshd\n" \
-         "filestat       getservbyname  qrsh_starter   testsuidroot\n\n" \
+         "checkuser      gethostname    openssl        rshd           filestat\n" \
+         "getservbyname  qrsh_starter   testsuidroot   SGE_Helper_Service.exe\n\n" \
          "Installation failed. Exit.\n" $SGE_BIN $SGE_UTILBIN
       else
          $INFOTEXT "\nMissing Grid Engine binaries!\n\n" \

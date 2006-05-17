@@ -99,16 +99,11 @@ proc check_qhold_jobname {} {
       add_proc_error "check_qhold_jobname" -1 "job $hold_job2 did not produce error and output file"
    }
 
-
-   
-
    puts $CHECK_OUTPUT "Test wait for not existent job (job should immediately run)"
    set jobargs "-hold_jid FIRST -l h=${actual_host} -o /dev/null -e /dev/null $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 30" 
    set job_id [submit_job $jobargs] 
    wait_for_jobstart $job_id "Sleeper" 60
    wait_for_jobend $job_id "Sleeper" 60
-
-
 
    puts $CHECK_OUTPUT "additional job submit with same name test"
    set jobargs "-h -l h=${actual_host} -N FIRST -o /dev/null -e /dev/null $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 30" 

@@ -2913,7 +2913,6 @@ proc was_job_running {jobid {do_errorcheck 1} } {
 
   set return_value [lreplace $result 0 0]
   return $return_value
-
 }
 
 
@@ -4526,6 +4525,7 @@ proc delete_job { jobid {wait_for_end 0} {all_users 0}} {
 #       -13   unkown option - error
 #       -22   user tries to submit a job with a deadline, but the user is not in
 #             the deadline user access list
+#
 #      -100   on error 
 #     
 #
@@ -4563,15 +4563,18 @@ proc submit_job { args {do_error_check 1} {submit_timeout 60} {host ""} {user ""
      set UNKNOWN_RESOURCE2 [translate $CHECK_HOST 1 0 0 [sge_macro MSG_SCHEDD_JOBREQUESTSUNKOWNRESOURCE_S] ]
      set NAMETOOLONG         [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_NAMETOOLONG_I] "*"]
      set JOBALREADYEXISTS [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_JOBALREADYEXISTS_S] "*"]
+     set INVALID_JOB_REQUEST [translate $CHECK_HOST 1 0 0 [sge_macro MSG_INVALIDJOB_REQUEST_S] "*"]
   } else {
      set JOB_SUBMITTED       [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_SUBMITJOB_USS] "*" "*" "*"]
      set JOB_SUBMITTED_DUMMY [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_SUBMITJOB_USS] "__JOB_ID__" "__JOB_NAME__" "__JOB_ARG__"]
      set SUCCESSFULLY        [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QSUB_YOURIMMEDIATEJOBXHASBEENSUCCESSFULLYSCHEDULED_U] "*"]
      set UNKNOWN_RESOURCE2   [translate $CHECK_HOST 1 0 0 [sge_macro MSG_SCHEDD_JOBREQUESTSUNKOWNRESOURCE] ]
-     set NAMETOOLONG         "asldfkaöslfjaösdlkfjaöskldfjöasfjdaölsfjöasfjd";# don't have this message in 5.3
      set JOBALREADYEXISTS [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_JOBALREADYEXISTS_U] "*"]
+     set NAMETOOLONG         "asldfkaöslfjaösdlkfjaöskldfjöasfjdaölsfjöasfjd";# don't have this message in 5.3
+     set INVALID_JOB_REQUEST "aaasdkfjahsdlfkjhlkjghdlfghsldkgsksljsldhalakl";# don't have this message in 5.3
   }
 
+  set INVALID_PRIORITY [translate_macro MSG_PARSE_INVALIDPRIORITYMUSTBEINNEG1023TO1024]
   set WRONG_TYPE          [translate $CHECK_HOST 1 0 0 [sge_macro MSG_CPLX_WRONGTYPE_SSS] "*" "*" "*"]
   set ERROR_OPENING       [translate $CHECK_HOST 1 0 0 [sge_macro MSG_FILE_ERROROPENINGXY_SS] "*" "*"]
   set NOT_ALLOWED_WARNING [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_NOTINANYQ_S] "*" ]
@@ -4948,6 +4951,12 @@ proc submit_job { args {do_error_check 1} {submit_timeout 60} {host ""} {user ""
           -i $sp_id $JOBALREADYEXISTS {
              set return_value -25
           }
+          -i $sp_id $INVALID_JOB_REQUEST {
+             set return_value -26
+          }
+          -i $sp_id $INVALID_PRIORITY {
+             set return_value -27
+          }
         }
      }
  
@@ -4986,7 +4995,8 @@ proc submit_job { args {do_error_check 1} {submit_timeout 60} {host ""} {user ""
           "-23" { add_proc_error "submit_job" -1 [get_submit_error $return_value]  }
           "-24" { add_proc_error "submit_job" -1 [get_submit_error $return_value]  }
           "-25" { add_proc_error "submit_job" -1 [get_submit_error $return_value]  }
-
+          "-26" { add_proc_error "submit_job" -1 [get_submit_error $return_value]  }
+          "-27" { add_proc_error "submit_job" -1 [get_submit_error $return_value]  }
 
           default { add_proc_error "submit_job" 0 "job $return_value submitted - ok" }
        }
@@ -5048,6 +5058,8 @@ proc get_submit_error { error_id } {
       "-23" { return "wrong type for submit -l option" }
       "-24" { return "the job name (-N option) is too long" }
       "-25" { return "duplicate job id found - issue 2028?" }
+      "-26" { return "general job verification error?" }
+      "-27" { return "invalid priority given with -p switch" }
 
       default { return "unknown error" }
    }

@@ -778,10 +778,14 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
       /*
        * only operators and managers are allowed to submit
        * jobs with higher priority than 0 (=BASE_PRIORITY)
-       * we silently lower it to 0 in case someone tries to cheat
        */
-      if (lGetUlong(jep, JB_priority)>BASE_PRIORITY && !manop_is_operator(ruser))
-         lSetUlong(jep, JB_priority, BASE_PRIORITY);
+      if (lGetUlong(jep, JB_priority) > BASE_PRIORITY && !manop_is_operator(ruser)) {
+         ERROR((SGE_EVENT, MSG_JOB_NONADMINPRIO));
+         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+         SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
+         DEXIT;
+         return STATUS_EUNKNOWN;
+      }
 
       /* checks on -hold_jid */
       if (job_verify_predecessors(jep, alpp)) {

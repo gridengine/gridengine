@@ -132,6 +132,7 @@ int answer_error;
       }
 
       if (!job_verify_execd_job(job, &answer_list)) {
+         lFreeElem(&job);
          answer_list_output(&answer_list);
          ERROR((SGE_EVENT, MSG_EXECD_INVALIDJOBREQUEST_SS, de->commproc, de->host));
          DRETURN(0);
@@ -485,9 +486,9 @@ Error:
       if (mail_on_error) {
          reaper_sendmail(jelem, jr);
       }
-
-      sge_dstring_free(&err_str);
    }
+
+   sge_dstring_free(&err_str);
 
 Ignore:   
    lFreeList(&qlp);

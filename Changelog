@@ -1,3 +1,11 @@
+JG-2006-05-17-0: Bugfix:    Jobs with negative -p priority were rejected by
+                            sge_qmaster.
+                 Issue:     2055
+                 Bugtraq:   6424565
+                            Fixed a memory leak in execd job request 
+                            verification.
+                 Review:    RD
+
 MD-2006-05-17-0: Enhancem.: - Added error handling for SGE_Helper_Service.exe 
                             installation
                             - binary check -> SGE_Helper_Service.exe
@@ -5,7 +13,8 @@ MD-2006-05-17-0: Enhancem.: - Added error handling for SGE_Helper_Service.exe
                  Review:    HP
 
 HP-2006-05-16-0: Enhancem.: Added support for SGE_Helper_Service.exe on Windows
-                 Changed:   sge_execd, sge_shepherd, libwingrid, libuti, distinst
+                 Changed:   sge_execd, sge_shepherd, libwingrid, libuti, 
+                            distinst
                  Bugtraq:   6363237
                  Review:    MD, CR
 

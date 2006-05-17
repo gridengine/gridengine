@@ -713,7 +713,7 @@ static int job_count_rescheduled_ja_tasks(lListElem *job, bool count_all)
 *  RESULT
 *     int - number of tasks or simply 0/1 if count_all is 'false'
 ******************************************************************************/
-int job_count_pending_tasks(lListElem *job, bool count_all) 
+int job_count_pending_tasks(lListElem *job, bool count_all)
 {
    int n = 0;
 
@@ -3123,14 +3123,21 @@ job_verify_submitted_job(const lListElem *job, lList **answer_list)
    /* JB_type any ulong value */
    /* JB_reserve boolean value */
 
-   /* JB_priority must be greater than BASE_PRIORITY */
+   /* 
+    * Job priority has a valid range from -1023 to 1024.
+    * As JB_priority is an unsigned long, it is raised by BASE_PRIORITY at
+    * job submission time.
+    * Therefore a valid range is from 1 to 2 * BASE_PRIORITY.
+    */
    if (ret) {
-      if (lGetUlong(job, JB_priority) < BASE_PRIORITY) {
-            answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR, 
-                              MSG_INVALIDJOB_REQUEST_S, "job priority");
-            ret = false;
+      u_long32 priority = lGetUlong(job, JB_priority);
+      if (priority < 1 || priority > 2 * BASE_PRIORITY) {
+         answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR, 
+                                 MSG_PARSE_INVALIDPRIORITYMUSTBEINNEG1023TO1024);
+         ret = false;
       }
    }
+
    /* JB_jobshare any ulong value */
 
    /* TODO JB_shell_list */

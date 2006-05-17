@@ -49,7 +49,7 @@
 static const char* userset_types[] = {
    "ACL",   /* US_ACL   */
    "DEPT",  /* US_DEPT  */
-   ""
+   NULL
 };
 
 lList **userset_list_get_master_list(void)

@@ -70,7 +70,7 @@ lListElem *cull_read_in_cqueue(const char *dirname, const char *filename,
    DENTER(TOP_LAYER, "cull_read_in_cqueue");
 
    ep = read_object(dirname, filename, spool, 0, 0,&args, 
-                    tag?tag:&intern_tag, NULL);
+                    tag?tag:&intern_tag, fields);
   
    DEXIT;
    return ep;

@@ -112,7 +112,7 @@ lappend check_functions "qconf_modify_exechost"	;# Modify exec host
 lappend check_functions "qconf_modify_project";# Modify project
 lappend check_functions "qconf_modify_userlist";# Modify user list
 lappend check_functions "qconf_modify_sched_conf";# Modify scheduler config
-
+lappend check_functions "qconf_issue_2023"; 
 
 global queue_names
 
@@ -2738,3 +2738,36 @@ proc qconf_modify_sched_conf {} {
    set_error 0 "ok"
 }
 
+#****** qconf/qconf_issue_2023() ******
+#
+#  NAME
+#     qconf_issue_2023 - Test for Issue 2023
+#
+#  SYNOPSIS
+#     qconf_issue_2023 { } - 
+#
+#  FUNCTION
+#     Check qconf issue 2023 
+#
+#*******************************
+proc qconf_issue_2023 {} {
+   global ts_config env qconf_userlist
+   global CHECK_OUTPUT CHECK_USER
+
+   set host [lindex $ts_config(execd_nodes) 0]
+  
+   set userlist "qconf_userlist"
+   set attribute "entries"
+   set value "$CHECK_USER"
+
+   set current_ul(name) "$userlist"
+   set current_ul($attribute) "$value "
+
+   set result1 [mod_userlist $userlist current_ul ]
+   if { ( $result1 != 0 ) } {
+      add_proc_error "qconf_issue_2023" -1 "rejects configuration, when attribute value ends with a space character"
+      puts $CHECK_OUTPUT "result is $result1"
+   }
+
+   set_error 0 "ok"
+}

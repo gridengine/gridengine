@@ -58,14 +58,9 @@
 /****
  **** cull_read_in_pe
  ****/
-lListElem *cull_read_in_pe(
-const char *dirname,
-const char *filename,
-int spool,
-int type,
-int *tag,
-int fields[] 
-) {
+lListElem *cull_read_in_pe(const char *dirname, const char *filename, int spool,
+                            int type, int *tag, int fields[])
+{
    lListElem *ep;
    struct read_object_args args = { PE_Type, "pe", read_pe_work };
    int intern_tag = 0;
@@ -199,11 +194,8 @@ int parsing_type
 
 */         
 
-char *write_pe(
-int spool,
-int how,
-const lListElem *ep 
-) {
+char *write_pe(int spool, int how, const lListElem *ep)
+{
    FILE *fp;
    lListElem *sep;
    const char *s; 

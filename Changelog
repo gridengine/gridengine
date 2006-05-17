@@ -1,3 +1,12 @@
+RD-2006-05-17-0: Enhancem.: - Added flatfile and classic spooling code
+                              for Resource Limitation Rules
+                 Bugfix:    - qconf rejects configuration, when attribute
+                              value ends with a space character
+                            - fixed two cases of reading past allocated memory
+                 Bugtraq:   6407525
+                 Issue:     2023 
+                 Review:    JG
+
 JG-2006-05-15-0: Enhancem.: Improved verification of incoming job requests
                             in execd.
                  Review:    RD

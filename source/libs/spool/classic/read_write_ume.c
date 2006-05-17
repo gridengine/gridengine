@@ -56,15 +56,9 @@
 
 static int read_ume_work(lList **alpp, lList **clpp, int fields[], lListElem *ep, int spool, int flag, int *tag, int parsing_type);
 
-lListElem *cull_read_in_ume(
-const char *dirname,
-const char *filename,
-int spool,
-int flag,
-int *tag,
-int fields[]
-) {  
-   lListElem *ep;
+lListElem *cull_read_in_ume(const char *dirname, const char *filename, int spool,
+                            int flag, int *tag, int fields[]) {  
+   lListElem *ep = NULL;
    struct read_object_args args = { CU_Type, "user mapping entry list", read_ume_work };
    int intern_tag = 0;
 

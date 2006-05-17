@@ -125,19 +125,19 @@ static int parse_requestable(lList **alpp, const char *cp, lListElem *ep, const 
 lList *read_cmplx(const char *fname, const char *cmplx_name, lList **alpp) 
 {
    FILE *fp;
-   lListElem *ep=NULL;
+   lListElem *ep = NULL;
    int line = 0;
    int type = 0;
-   const char *name;
+   const char *name = NULL;
    int relop = 0;
-   char buf[10000], *cp;
-   const char *s;
-   lList *lp;
-   double dval;
+   char buf[10000], *cp = NULL;
+   const char *s = NULL;
+   lList *lp = NULL;
+   double dval = 0.0;
 
    DENTER(TOP_LAYER, "read_cmplx");
 
-   lp = lCreateList("complex entries", CE_Type);
+   lp = lCreateList("complex_entries", CE_Type);
    
    if (!(fp = fopen(fname, "r"))) {
       ERROR((SGE_EVENT, MSG_FILE_NOOPEN_SS, fname, strerror(errno)));

@@ -68,13 +68,8 @@ static int read_userset_work(lList **alpp, lList **clpp, int fields[], lListElem
 /****
  **** cull_read_in_userset
  ****/
-lListElem *cull_read_in_userset(
-const char *dirname,
-const char *filename,
-int spool,
-int flag,
-int *tag 
-) {
+lListElem *cull_read_in_userset(const char *dirname, const char *filename, 
+                                int spool, int flag, int *tag ) {
    lListElem *ep;
    struct read_object_args args = { US_Type, "userset", read_userset_work};
    int intern_tag = 0;
@@ -198,7 +193,7 @@ int spool
    bitmask = 1;
    for (ptr = userset_types; **ptr != '\0'; ptr++) {
       if (bitmask & type) {
-         FPRINTF((fp,"%s ",*ptr));
+         FPRINTF((fp,"%s",*ptr));
       }
       bitmask <<= 1;
    };

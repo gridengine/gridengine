@@ -338,4 +338,6 @@
 
 #define MSG_INVALID_QINSTANCE_NAME_S   _MESSAGE(64356, _("invalid queue instance name "SFQ))
 
+#define MSG_LIMITRULE_NOVALIDEXPANDEDLIST    _MESSAGE(64370, _("no valid expanded list"))
+
 #endif /* __MSG_SGEOBJLIB_H */

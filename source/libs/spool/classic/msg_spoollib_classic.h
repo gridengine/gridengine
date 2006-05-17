@@ -140,18 +140,13 @@
  */
 #define MSG_USERSET_NOUSERETELEMENT    _MESSAGE(61140, _("no userset element"))
 
-
-
-
-
-
-
-
-
-
-
-
-
+/*
+ * read_write_limit_rule.c
+ */
+#define MSG_LIMITRULE_RULESETNOTFINISHED     _MESSAGE(61150, _("limitation rule set not finished by \"}\""))
+#define MSG_LIMITRULE_RULESETNOTSTARTED      _MESSAGE(61151, _("limitation rule set not started by \"{\""))
+#define MSG_LIMITRULE_ERRORPARSINGRULELIMIT  _MESSAGE(61152, _("error parsing limitation rule limit"))
+#define MSG_LIMITRULE_UNKNOWNCONFIGURATIONATTRIBUTE   _MESSAGE(61153, _("unknown configuration attribute "SFQ))
 
 /*
  * all classic spooling code

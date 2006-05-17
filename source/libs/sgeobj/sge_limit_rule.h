@@ -1,5 +1,5 @@
-#ifndef _sge_flatfile_obj_H
-#define	_sge_flatfile_obj_H
+#ifndef __SGE_LIMIT_RULE_H 
+#define __SGE_LIMIT_RULE_H 
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  *
@@ -30,36 +30,11 @@
  *   All Rights Reserved.
  *
  ************************************************************************/
-/*___INFO__MARK_END__*/       
+/*___INFO__MARK_END__*/
 
-#ifdef	__cplusplus
-extern "C" {
-#endif
+#include "sgeobj/sge_limit_ruleL.h"
 
-/* A number guaranteed to be larger than the largest number of fields in a
- * static of dynamic field list. */
-#define MAX_NUM_FIELDS 60
-   
-extern spooling_field CAL_fields[];
-extern spooling_field CK_fields[];
-extern spooling_field CE_fields[];
-extern spooling_field HGRP_fields[];
-extern spooling_field US_fields[];
-extern spooling_field SC_fields[];
-extern spooling_field CQ_fields[];
-extern spooling_field CU_fields[];
+bool LIRF_object_parse_from_string(lListElem **filter, const char* buffer, lList **alp);
+bool LIRF_object_append_to_dstring(const lListElem *filter, dstring *buffer, lList **alp);
 
-spooling_field *sge_build_UP_field_list (bool spool, bool user);
-spooling_field *sge_build_STN_field_list (bool spool, bool recurse);
-spooling_field *sge_build_PE_field_list (bool spool, bool to_stdout);
-spooling_field *sge_build_EH_field_list (bool spool, bool to_stdout,
-                                            bool history);
-spooling_field *sge_build_CONF_field_list(bool spool_config);
-spooling_field *sge_build_QU_field_list(bool to_stdout, bool to_file);
-spooling_field *sge_build_LIRS_field_list(bool spool, bool to_stdout);
-
-#ifdef	__cplusplus
-}
-#endif
-
-#endif	/* _sge_flatfile_obj_H */
+#endif /* __SGE_LIMIT_RULE_H */

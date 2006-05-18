@@ -121,11 +121,13 @@ test_sge_spooling_flatfile: test_sge_spooling_flatfile.o sge_mt_init.o $(SPOOLLI
 test_sge_spooling_flatfile.o: $(SPOOLFLIB_DIR)/test_sge_spooling_flatfile.c
 	$(CC) $(CFLAGS) -c $(SPOOLFLIB_DIR)/test_sge_spooling_flatfile.c
 
-test_ff_cl: test_ff_cl.o sig_handlers.o sge_mt_init.o $(SPOOLLIB) $(SPOOLCLIB) $(GDILIB) $(CULLLIB) $(COMMLIB) $(COMMLISTSLIB) $(LCKLIB) \
-                         $(SGEOBJLIB) $(SGEOBJDLIB) $(RMONLIB) $(UTILIB) $(SPOOLFLIB) $(WINGRIDLIB_DEP) $(SCHEDLIB)
+test_ff_cl: test_ff_cl.o sig_handlers.o sge_mt_init.o $(SPOOLLIB) $(SPOOLCLIB) $(SCHEDLIB) $(SGEOBJLIB) \
+                        $(SGEOBJDLIB) $(GDILIB) $(CULLLIB) $(COMMLIB) $(COMMLISTSLIB) $(LCKLIB) \
+                        $(RMONLIB) $(UTILIB) $(SPOOLFLIB) $(WINGRIDLIB_DEP)
 	$(CC) $(CFLAGS) -o test_ff_cl $(LFLAGS) test_ff_cl.o sge_mt_init.o sig_handlers.o $(SPOOLFLIB) \
-                         $(SPOOLLIB) $(SPOOLCLIB) $(GDILIB) $(CULLLIB) $(COMMLIB) $(COMMLISTSLIB) $(LCKLIB) \
-                         $(SGEOBJLIB) $(SGEOBJDLIB) $(UTILIB) $(RMONLIB) $(WINGRIDLIB) $(LIBS) $(SECLIB) $(SLIBS) $(DLLIB) 
+                         $(SPOOLLIB) $(SPOOLCLIB) $(SCHEDLIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(GDILIB) \
+                         $(CULLLIB) $(COMMLIB) $(COMMLISTSLIB) $(LCKLIB) \
+                         $(UTILIB) $(RMONLIB) $(WINGRIDLIB) $(LIBS) $(SECLIB) $(SLIBS) $(DLLIB) 
 
 test_ff_cl.o: $(SPOOLFLIB_DIR)/test_ff_cl.c $(SPOOLFLIB) $(SPOOLLIB) $(CULLLIB) $(RMONLIB) $(UTILIB)
 	$(CC) $(CFLAGS) -c $(SPOOLFLIB_DIR)/test_ff_cl.c

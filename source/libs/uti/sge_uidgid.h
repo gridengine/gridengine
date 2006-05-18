@@ -87,6 +87,9 @@ struct group *sge_getgrgid_r(gid_t gid, struct group *pg,
 int sge_set_uid_gid_addgrp(const char *user, const char *intermediate_user,
                            int min_gid, int min_uid, int add_grp, 
                            char *err_str, int use_qsub_gid, gid_t qsub_gid);
+#if defined(INTERIX)
+int sge_get_passwd(const char* user, char **pass, char *err_str);
+#endif
 
 #ifdef SGE_THREADSAFE_UTIL
 

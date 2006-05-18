@@ -1,3 +1,9 @@
+HP-2006-05-18-0: Enhancem.: Added support for SGE_Helper_Service.exe on Windows
+                 Changed:   sge_execd, sge_shepherd, libwingrid, libuti, 
+                            distinst
+                 Bugtraq:   6363237
+                 Review:    MD, CR
+
 JG-2006-05-17-0: Bugfix:    Jobs with negative -p priority were rejected by
                             sge_qmaster.
                  Issue:     2055

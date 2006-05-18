@@ -104,6 +104,7 @@ struct rusage {
 
 #if defined(INTERIX)
 #include "../../../utilbin/sge_passwd.h"
+#include "windows_gui.h"
 #endif
 
 #if defined(SOLARIS) || defined(ALPHA)
@@ -604,7 +605,7 @@ int main(int argc, char **argv)
       }
    }
 #if defined( INTERIX )
-   wl_set_use_sgepasswd((bool)get_conf_val("enable_windomacc"));
+   wl_set_use_sgepasswd((bool)atoi(get_conf_val("enable_windomacc")));
 #endif
 
    /* init admin user stuff */
@@ -1760,9 +1761,32 @@ char *childname            /* "job", "pe_start", ...     */
       npid = wait3(&status, 0, rusage);
 #endif
 
+#if defined(INTERIX)
+/* <Windows_GUI> */
+      sge_set_environment();
+      if(strcmp(childname, "job") == 0 &&
+         wl_get_GUI_mode(sge_get_environment()) == true) {
+         if(npid != -1) {      
+            char errormsg[MAX_STRING_SIZE];
+
+            memset(&rusage_hp10, 0, sizeof(rusage_hp10));
+
+            shepherd_trace_sprintf("retrieving remote usage");
+            if(wl_getrusage_remote(get_conf_val("job_id"), 
+                                &status, &rusage_hp10, errormsg)!=0) {
+               shepherd_trace(errormsg);
+            }
+            shepherd_trace_sprintf("retrieved remote usage: %d", 
+               rusage_hp10.ru_utime);
+         }
+      } else 
+/* </Windows_GUI> */
+#endif
 #if defined(HPUX) || defined(INTERIX)
-      /* wait3 doesn't return CPU usage */
-      getrusage(RUSAGE_CHILDREN, &rusage_hp10);
+      {
+         /* wait3 doesn't return CPU usage */
+         getrusage(RUSAGE_CHILDREN, &rusage_hp10);
+      }
 #endif
 
       remaining_alarm = alarm(0);
@@ -1817,7 +1841,6 @@ char *childname            /* "job", "pe_start", ...     */
                      sge_switch2admin_user();
                   }
                } 
-
                forward_signal_to_job(pid, timeout, &postponed_signal,
                                      remaining_alarm, ctrl_pid);
             }
@@ -1837,8 +1860,26 @@ char *childname            /* "job", "pe_start", ...     */
                kill_job_after_checkpoint = 1; 
             }
          } else {
-            forward_signal_to_job(pid, timeout, &postponed_signal, 
-                                  remaining_alarm, ctrl_pid);
+#if defined(INTERIX)
+            sge_set_environment();
+            if(strcmp(childname, "job") == 0 &&
+               wl_get_GUI_mode(sge_get_environment()) == true) {
+               /*
+                * forward SIGKILL, swallow all other signals
+                */
+               int sig = map_signal(received_signal);
+               if(sig == SIGKILL) { 
+                  char errormsg[MAX_STRING_SIZE];
+                  wl_forward_signal_to_job(get_conf_val("job_id"),
+                                        &sig,
+                                        errormsg, MAX_STRING_SIZE);
+               }
+            } else
+#endif
+            {
+               forward_signal_to_job(pid, timeout, &postponed_signal, 
+                                     remaining_alarm, ctrl_pid);
+            }
          }
       }
             

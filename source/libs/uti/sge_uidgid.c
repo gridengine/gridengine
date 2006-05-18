@@ -743,6 +743,7 @@ static int get_group_buffer_size(void)
 *         0 - OK
 *        -1 - we can't switch to user since we are not root
 *         1 - we can't switch to user or we can't set add_grp
+*         2 - switch to user failed
 ******************************************************************************/
 int sge_set_uid_gid_addgrp(const char *user, const char *intermediate_user,
                            int min_gid, int min_uid, int add_grp, char *err_str,
@@ -861,7 +862,7 @@ int sge_set_uid_gid_addgrp(const char *user, const char *intermediate_user,
 
          if(uidgid_read_passwd(pw->pw_name, &pass, err_str) != 0) {
             FREE(pass);
-            return 1;
+            return 2;
          }
 
          if(wl_setuser(pw->pw_uid, pw->pw_gid, pass, err_str) != 0) {
@@ -869,7 +870,7 @@ int sge_set_uid_gid_addgrp(const char *user, const char *intermediate_user,
             sprintf(buf, MSG_SYSTEM_SETUSERFAILED_UU, sge_u32c(pw->pw_uid),
                     sge_u32c(pw->pw_gid));
             strcat(err_str, buf);
-            return 1;
+            return 2;
          }
          FREE(pass);
       }
@@ -1483,6 +1484,11 @@ password_find_entry(char *users[], char *encryped_pwds[], const char *user)
 #if defined(INTERIX)
 /* Not MT-Safe */
 /* Read password for user from sgepasswd file, decrypt password */
+int sge_get_passwd(const char* user, char **pass, char *err_str)
+{
+   return uidgid_read_passwd(user, pass, err_str);
+}
+
 static int uidgid_read_passwd(const char *user, char **pass, char *err_str)
 {
    int  i;

@@ -52,13 +52,10 @@ set HUGE_SCRIPT_PATTERN  "generated huge script file for testsuite, 100 characte
 
 # setup check's highest level
 
-set check_highest_level [llength $ts_config(unique_arch_nodes)]
-incr check_highest_level -1
+set check_highest_level 0
 
 # set description for each level
-for {set i 0} { $i <= $check_highest_level } { incr i} {
-   set check_description($i)  "check every option for execution on host [lindex $ts_config(unique_arch_nodes) $i]" 
-}
+set check_description(0)  "check every qsub option"
 
 set check_init_level_procedure "qsub_init_level"
 set check_name         "qsub"
@@ -152,25 +149,11 @@ set job_output_dir $CHECK_JOB_OUTPUT_DIR
 #     ???/???
 #*******************************
 proc qsub_init_level {} {
-   global ts_config
-   global actual_host CHECK_ACT_LEVEL
-   global HUGE_SCRIPT_SIZE HUGE_SCRIPT_TIMEOUT HUGE_SCRIPT_STEPS steps_per_queue size_interval
-   global HUGE_SCRIPT_MAX_SIZE
+   global CHECK_ACT_LEVEL
 
-   set num_queues [llength $ts_config(unique_arch_nodes)] 
-
-   # setup huge_script test
-   set steps_per_queue [expr $HUGE_SCRIPT_STEPS / $num_queues]
-   if {[expr $steps_per_queue * $num_queues] < $HUGE_SCRIPT_STEPS} {
-      incr steps_per_queue
-   } 
-   set steps_total [expr $steps_per_queue * $num_queues]
-   set size_interval [expr $HUGE_SCRIPT_MAX_SIZE / $steps_total]
-   
-   if { $CHECK_ACT_LEVEL < $num_queues } {
-      set actual_host [lindex $ts_config(unique_arch_nodes) $CHECK_ACT_LEVEL] 
+   if {$CHECK_ACT_LEVEL == 0} {
       return 0
-   } 
+   }
 
    return -1 
 }
@@ -266,19 +249,20 @@ proc qsub_submit_check {jobargs expect_submit_error {user ""} {host ""} {output_
 #     ???/???
 #*******************************
 proc check_submit {} {
-   global ts_config
-   global CHECK_PRODUCT_ROOT CHECK_ARCH
-   global check_errno job_output_dir actual_host
-   global check_errstr CHECK_OUTPUT
-   global default_q_args default_h_args
+   global ts_config CHECK_OUTPUT
+   global default_args
 
    # first clean up output directory:  
    setup_output_directory
    
    # submit from every architecture
    foreach host $ts_config(unique_arch_nodes) {
-      set jobargs $default_q_args
-      qsub_submit_check $jobargs 0 "" $host
+      qsub_submit_check $default_args 0 "" $host
+   }
+
+   # submit to every architecture
+   foreach host $ts_config(unique_arch_nodes) {
+      qsub_submit_check "-l h=${host} $default_args" 0
    }
 
    set_error 0 "ok"
@@ -472,14 +456,14 @@ proc setup_output_directory {} {
 #*******************************
 proc check_hold {} {
    global check_errno CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_OUTPUT job_output_dir actual_host
-   global default_q_args default_h_args
+   global default_args
 
    set ok 1
 
    # first clean up output directory:  
    setup_output_directory
 
-   set jobargs "-h $default_h_args"
+   set jobargs "-h $default_args"
    set result [submit_job $jobargs] 
    if {$result < 0} {
       add_proc_error "check_hold" -1 "error submitting job \"$jobargs\"\nerror $result"
@@ -567,7 +551,6 @@ proc check_start_time {} {
    global CHECK_PRODUCT_ROOT CHECK_ARCH
    global check_errno job_output_dir
    global check_errstr CHECK_OUTPUT actual_host
-   global default_q_args default_h_args
 
    # first clean up output directory:  
    setup_output_directory
@@ -709,7 +692,6 @@ proc check_deadline {} {
    global CHECK_PRODUCT_ROOT CHECK_ARCH
    global check_errno actual_host
    global check_errstr CHECK_OUTPUT job_output_dir
-   global default_q_args default_h_args
 
    if {$ts_config(product_type) == "sge"} {
       add_proc_error "check_deadline" -3 "not possible in sge system"
@@ -928,7 +910,6 @@ proc check_deadline {} {
 proc check_option_ac {} {
    global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_ACTUAL_TEST_PATH
    global CHECK_USER CHECK_HOST CHECK_ARCH actual_host
-   global default_q_args default_h_args
 
    # first clean up output directory:  
    setup_output_directory
@@ -1030,14 +1011,14 @@ proc check_option_ac {} {
 #     ???/???
 #*******************************
 proc check_option_A {} {
-   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT actual_host
-   global default_q_args default_h_args
+   global ts_config CHECK_OUTPUT
+   global default_args
 
    # first clean up output directory:  
    setup_output_directory
 
    set option "-A blahblah"
-   set jobargs "$option $default_h_args"
+   set jobargs "$option $default_args"
  
    set job_id [qsub_submit_check $jobargs 0]
 
@@ -1082,14 +1063,14 @@ proc check_option_A {} {
 #     ???/???
 #*******************************
 proc check_option_clear {} {
-   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT actual_host
-   global default_q_args default_h_args
+   global ts_config CHECK_OUTPUT
+   global default_args
 
    # first clean up output directory:  
    setup_output_directory
 
    set option "-A blahblah -clear"
-   set jobargs "$option $default_h_args"
+   set jobargs "$option $default_args"
    set job_id [qsub_submit_check $jobargs 0]
 
    if {$job_id > 0} {
@@ -1134,14 +1115,14 @@ proc check_option_clear {} {
 #     ???/???
 #*******************************
 proc check_option_c {} {
-   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT actual_host
-   global default_q_args default_h_args
+   global ts_config CHECK_OUTPUT
+   global default_args
 
    # first clean up output directory:  
    setup_output_directory
 
    set option "-c n"
-   set jobargs "$option $default_h_args"
+   set jobargs "$option $default_args"
    qsub_submit_check $jobargs 0
 
    set_error 0 ok
@@ -1177,14 +1158,14 @@ proc check_option_c {} {
 #     ???/???
 #*******************************
 proc check_option_ckpt {} {
-   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT actual_host
-   global default_q_args default_h_args
+   global ts_config CHECK_OUTPUT
+   global default_args
 
    # first clean up output directory:  
    setup_output_directory
 
    set option "-ckpt testcheckpointobject"
-   set jobargs "$option $default_h_args"
+   set jobargs "$option $default_args"
    qsub_submit_check $jobargs 0
 
    set_error 0 ok
@@ -1220,14 +1201,14 @@ proc check_option_ckpt {} {
 #     ???/???
 #*******************************
 proc check_option_cwd {} {
-   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT actual_host
-   global default_q_args default_h_args
+   global ts_config CHECK_OUTPUT
+   global default_args
 
    # first clean up output directory:  
    setup_output_directory
 
    set option "-cwd"
-   set jobargs "$option $default_h_args"
+   set jobargs "$option $default_args"
    qsub_submit_check $jobargs 0
 
    set_error 0 ok
@@ -1263,14 +1244,14 @@ proc check_option_cwd {} {
 #     ???/???
 #*******************************
 proc check_option_C {} {
-   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT actual_host
-   global default_q_args default_h_args
+   global ts_config CHECK_OUTPUT
+   global default_args
 
    # first clean up output directory:  
    setup_output_directory
 
    set option "-C TESTPREFIX"
-   set jobargs "$option $default_h_args"
+   set jobargs "$option $default_args"
    qsub_submit_check $jobargs 0
 
    set_error 0 ok
@@ -1306,14 +1287,14 @@ proc check_option_C {} {
 #     ???/???
 #*******************************
 proc check_option_dc {} {
-   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT actual_host
-   global default_q_args default_h_args
+   global ts_config CHECK_OUTPUT
+   global default_args
 
    # first clean up output directory:  
    setup_output_directory
 
    set option "-dc myvar,myvar2"
-   set jobargs "$option $default_h_args"
+   set jobargs "$option $default_args"
    qsub_submit_check $jobargs 0
 
    set_error 0 ok
@@ -1349,15 +1330,14 @@ proc check_option_dc {} {
 #     ???/???
 #*******************************
 proc check_option_e {} {
-   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT actual_host
-   global default_q_args default_h_args
+   global ts_config CHECK_OUTPUT
+   global default_args
 
    # first clean up output directory:  
    setup_output_directory
 
-   set option ""
-   set jobargs "$option $default_h_args"
-   qsub_submit_check $jobargs 0
+   # we submit just with default args - they contain the -e option
+   qsub_submit_check $default_args 0
 
    set_error 0 ok
 }
@@ -1392,14 +1372,14 @@ proc check_option_e {} {
 #     ???/???
 #*******************************
 proc check_option_hard {} {
-   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT actual_host
-   global default_q_args default_h_args
+   global ts_config CHECK_OUTPUT
+   global default_args
 
    # first clean up output directory:  
    setup_output_directory
 
    set option "-hard"
-   set jobargs "$option $default_h_args"
+   set jobargs "$option $default_args"
    qsub_submit_check $jobargs 0
 
    set_error 0 ok
@@ -1435,14 +1415,14 @@ proc check_option_hard {} {
 #     ???/???
 #*******************************
 proc check_option_help {} {
-   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT actual_host
-   global default_q_args default_h_args
+   global ts_config CHECK_OUTPUT
+   global default_args
 
    # first clean up output directory:  
    setup_output_directory
 
    set option "-help"
-   set jobargs "$option $default_h_args"
+   set jobargs "$option $default_args"
    qsub_submit_check $jobargs 1
 
    set_error 0 ok
@@ -1478,20 +1458,20 @@ proc check_option_help {} {
 #     ???/???
 #*******************************
 proc check_option_hold_jid {} {
-   global ts_config job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT actual_host
-   global default_q_args default_h_args
+   global ts_config CHECK_OUTPUT
+   global default_args
 
    # first clean up output directory:  
    setup_output_directory
 
    set option "-hold_jid 1,2,3"
-   set jobargs "$option $default_h_args"
+   set jobargs "$option $default_args"
    qsub_submit_check $jobargs 0
 
    # test with job names
    if {$ts_config(gridengine_version) >= 60} {
       set option "-hold_jid foo,bar"
-      set jobargs "$option $default_h_args"
+      set jobargs "$option $default_args"
       qsub_submit_check $jobargs 0
    }
 
@@ -1528,14 +1508,14 @@ proc check_option_hold_jid {} {
 #     ???/???
 #*******************************
 proc check_option_j_y {} {
-   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT actual_host
-   global default_q_args default_h_args
+   global ts_config CHECK_OUTPUT
+   global default_args
 
    # first clean up output directory:  
    setup_output_directory
 
    set option "-j y"
-   set jobargs "$option $default_h_args"
+   set jobargs "$option $default_args"
    qsub_submit_check $jobargs 0 "" "" 1
 
    set_error 0 ok
@@ -1571,14 +1551,14 @@ proc check_option_j_y {} {
 #     ???/???
 #*******************************
 proc check_option_j_n {} {
-   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT actual_host
-   global default_q_args default_h_args
+   global ts_config CHECK_OUTPUT
+   global default_args
 
    # first clean up output directory:  
    setup_output_directory
 
    set option "-j n"
-   set jobargs "$option $default_h_args"
+   set jobargs "$option $default_args"
    qsub_submit_check $jobargs 0
 
    set_error 0 ok
@@ -1614,12 +1594,13 @@ proc check_option_j_n {} {
 #     ???/???
 #*******************************
 proc check_option_l {} {
-   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT actual_host
-   global default_q_args default_h_args
+   global ts_config CHECK_OUTPUT
+   global default_h_args
 
    # first clean up output directory:  
    setup_output_directory
 
+   # the default_h_args contain -l h=...
    set jobargs "$default_h_args"
    qsub_submit_check $jobargs 0
 
@@ -1656,14 +1637,14 @@ proc check_option_l {} {
 #     ???/???
 #*******************************
 proc check_option_m {} {
-   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT actual_host
-   global default_q_args default_h_args
+   global ts_config CHECK_OUTPUT
+   global default_args
 
    # first clean up output directory:  
    setup_output_directory
 
    set option "-m beas"
-   set jobargs "$option $default_h_args"
+   set jobargs "$option $default_args"
    qsub_submit_check $jobargs 0
 
    set_error 0 ok
@@ -1699,14 +1680,14 @@ proc check_option_m {} {
 #     ???/???
 #*******************************
 proc check_option_notify {} {
-   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT actual_host
-   global default_q_args default_h_args
+   global ts_config CHECK_OUTPUT
+   global default_args
 
    # first clean up output directory:  
    setup_output_directory
 
    set option "-notify"
-   set jobargs "$option $default_h_args"
+   set jobargs "$option $default_args"
    qsub_submit_check $jobargs 0
 
    set_error 0 ok
@@ -1742,14 +1723,14 @@ proc check_option_notify {} {
 #     ???/???
 #*******************************
 proc check_option_now_yes {} {
-   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT actual_host
-   global default_q_args default_h_args
+   global ts_config CHECK_OUTPUT
+   global default_args job_output_dir
 
    # first clean up output directory:  
    setup_output_directory
 
    set option "-now yes"
-   set jobargs "$option $default_h_args"
+   set jobargs "$option $default_args"
   
 
    for { set i 1} { $i <= 3 } { incr i 1 } {
@@ -1820,14 +1801,14 @@ proc check_option_now_yes {} {
 #     ???/???
 #*******************************
 proc check_option_now_no {} {
-   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT actual_host
-   global default_q_args default_h_args
+   global ts_config CHECK_OUTPUT
+   global default_args
 
    # first clean up output directory:  
    setup_output_directory
 
    set option "-now no"
-   set jobargs "$option $default_h_args"
+   set jobargs "$option $default_args"
    qsub_submit_check $jobargs 0
 
    set_error 0 ok
@@ -1863,11 +1844,14 @@ proc check_option_now_no {} {
 #     ???/???
 #*******************************
 proc check_option_M {} {
-   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT actual_host CHECK_USER CHECK_REPORT_EMAIL_TO
-   global default_q_args default_h_args
+   global ts_config CHECK_OUTPUT 
+   global CHECK_REPORT_EMAIL_TO
+   global default_args
 
-   if { [ string compare $CHECK_REPORT_EMAIL_TO "none" ] == 0 } {
-      add_proc_error "check_option_M" -1 "no email address specified"  
+   # can't run the check, if no email address has been configured
+   if {[string compare $CHECK_REPORT_EMAIL_TO "none"] == 0} {
+      add_proc_error "check_option_M" -3 "no email address configured - can't run qsub -M check"  
+      set_error 0 ok
       return
    }
 
@@ -1875,7 +1859,7 @@ proc check_option_M {} {
    setup_output_directory
 
    set option "-M $CHECK_REPORT_EMAIL_TO"
-   set jobargs "$option $default_h_args"
+   set jobargs "$option $default_args"
    qsub_submit_check $jobargs 0
 
    set_error 0 ok
@@ -1911,14 +1895,14 @@ proc check_option_M {} {
 #     ???/???
 #*******************************
 proc check_option_N {} {
-   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT actual_host
-   global default_q_args default_h_args
+   global ts_config CHECK_OUTPUT
+   global default_args
 
    # first clean up output directory:  
    setup_output_directory
 
    set option "-N leeper_job"
-   set jobargs "$option $default_h_args"
+   set jobargs "$option $default_args"
    set job_id [qsub_submit_check $jobargs 0]
 
    if {$job_id > 0} {
@@ -1962,15 +1946,14 @@ proc check_option_N {} {
 #     ???/???
 #*******************************
 proc check_option_o {} {
-   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT actual_host
-   global default_q_args default_h_args
+   global ts_config CHECK_OUTPUT
+   global default_args
 
    # first clean up output directory:  
    setup_output_directory
 
-   set option ""
-   set jobargs "$option $default_h_args"
-   qsub_submit_check $jobargs 0
+   # the default args already contain a -o option
+   qsub_submit_check $default_args 0
 
    set_error 0 ok
 }
@@ -2005,14 +1988,14 @@ proc check_option_o {} {
 #     ???/???
 #*******************************
 proc check_option_P {} {
-   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT actual_host
-   global default_q_args default_h_args
+   global ts_config CHECK_OUTPUT
+   global default_args
 
    # first clean up output directory:  
    setup_output_directory
 
    set option "-P mytestproject"
-   set jobargs "$option $default_h_args"
+   set jobargs "$option $default_args"
    set job_id [qsub_submit_check $jobargs 0]
 
    if {$job_id > 0} {
@@ -2055,10 +2038,8 @@ proc check_option_P {} {
 #     ???/???
 #*******************************
 proc check_option_p {} {
-   global ts_config CHECK_OUTPUT 
-   global CHECK_USER CHECK_FIRST_FOREIGN_SYSTEM_USER
-   global job_output_dir CHECK_PRODUCT_ROOT actual_host
-   global default_q_args default_h_args
+   global ts_config CHECK_OUTPUT CHECK_USER CHECK_FIRST_FOREIGN_SYSTEM_USER
+   global default_args
 
    # first clean up output directory:  
    setup_output_directory
@@ -2066,27 +2047,26 @@ proc check_option_p {} {
    # test -p option:
    # any user must be allowed to submit with negative -p
    # only superuser may submit with positive -p
-   set jobargs "$default_h_args"
    
    # set as admin user: complete range
-   qsub_submit_check "-p -1023 $jobargs" 0 $CHECK_USER ;# IZ 2055
-   qsub_submit_check "-p 0 $jobargs" 0 $CHECK_USER
-   qsub_submit_check "-p 1024 $jobargs" 0 $CHECK_USER
+   qsub_submit_check "-p -1023 $default_args" 0 $CHECK_USER ;# IZ 2055
+   qsub_submit_check "-p 0 $default_args" 0 $CHECK_USER
+   qsub_submit_check "-p 1024 $default_args" 0 $CHECK_USER
 
-   qsub_submit_check "-p -1024 $jobargs" 1 $CHECK_USER
-   qsub_submit_check "-p 1025 $jobargs" 1 $CHECK_USER
+   qsub_submit_check "-p -1024 $default_args" 1 $CHECK_USER
+   qsub_submit_check "-p 1025 $default_args" 1 $CHECK_USER
 
    # test as non admin user: only negative .. 0
-   qsub_submit_check "-p -100 $jobargs" 0 $CHECK_FIRST_FOREIGN_SYSTEM_USER ;# IZ 2055
-   qsub_submit_check "-p 0 $jobargs" 0 $CHECK_FIRST_FOREIGN_SYSTEM_USER
+   qsub_submit_check "-p -100 $default_args" 0 $CHECK_FIRST_FOREIGN_SYSTEM_USER ;# IZ 2055
+   qsub_submit_check "-p 0 $default_args" 0 $CHECK_FIRST_FOREIGN_SYSTEM_USER
 
    # Up to version 6.0, a positive priority from non operators will be silently 
    # set to 0 by qmaster.
    # Beginning with version 6.5, we will reject such jobs.
    if {$ts_config(gridengine_version) <= 60} {
-      qsub_submit_check "-p 1 $jobargs" 0 $CHECK_FIRST_FOREIGN_SYSTEM_USER
+      qsub_submit_check "-p 1 $default_args" 0 $CHECK_FIRST_FOREIGN_SYSTEM_USER
    } else {
-      qsub_submit_check "-p 1 $jobargs" 1 $CHECK_FIRST_FOREIGN_SYSTEM_USER
+      qsub_submit_check "-p 1 $default_args" 1 $CHECK_FIRST_FOREIGN_SYSTEM_USER
    }
 
    set_error 0 ok
@@ -2122,14 +2102,14 @@ proc check_option_p {} {
 #     ???/???
 #*******************************
 proc check_option_pe {} {
-   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT actual_host
-   global default_q_args default_h_args
+   global ts_config CHECK_OUTPUT
+   global default_args
 
    # first clean up output directory:  
    setup_output_directory
 
    set option "-pe mytestpe 1-3"
-   set jobargs "$option $default_h_args"
+   set jobargs "$option $default_args"
    set job_id [qsub_submit_check $jobargs 0 "" "" 4]
 
    if {$job_id > 0} {
@@ -2175,14 +2155,24 @@ proc check_option_pe {} {
 #     ???/???
 #*******************************
 proc check_option_q {} {
-   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT actual_host
-   global default_q_args default_h_args
+   global ts_config CHECK_OUTPUT
+   global default_args actual_host
 
    # first clean up output directory:  
    setup_output_directory
 
-   set jobargs "$default_q_args"
-   qsub_submit_check $jobargs 0
+   # submission to a queue instance (5.3 queue)
+   set qinstance [get_queue_instance "all.q" $actual_host]
+   qsub_submit_check "-q $qinstance $default_args" 0
+
+   # beginning with 6.0, we can also submit
+   #  - to a cluster queue
+   #  - to all queue instances on a host
+   #  - to all qinstances of a hostgroup
+   if {$ts_config(gridengine_version) >= 60} {
+      qsub_submit_check "-q *@${actual_host} $default_args" 0
+      qsub_submit_check "-q *@@allhosts $default_args" 0
+   }
 
    set_error 0 ok
 }
@@ -2217,14 +2207,14 @@ proc check_option_q {} {
 #     ???/???
 #*******************************
 proc check_option_r_y {} {
-   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT actual_host
-   global default_q_args default_h_args
+   global ts_config CHECK_OUTPUT
+   global default_args
 
    # first clean up output directory:  
    setup_output_directory
 
    set option "-r y"
-   set jobargs "$option $default_h_args"
+   set jobargs "$option $default_args"
    qsub_submit_check $jobargs 0
 
    set_error 0 ok
@@ -2260,14 +2250,14 @@ proc check_option_r_y {} {
 #     ???/???
 #*******************************
 proc check_option_r_n {} {
-   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT actual_host
-   global default_q_args default_h_args
+   global ts_config CHECK_OUTPUT
+   global default_args
 
    # first clean up output directory:  
    setup_output_directory
 
    set option "-r n"
-   set jobargs "$option $default_h_args"
+   set jobargs "$option $default_args"
    qsub_submit_check $jobargs 0
 
    set_error 0 ok
@@ -2303,14 +2293,14 @@ proc check_option_r_n {} {
 #     ???/???
 #*******************************
 proc check_option_sc {} {
-   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT actual_host
-   global default_q_args default_h_args
+   global ts_config
+   global default_args
 
    # first clean up output directory:  
    setup_output_directory
 
    set option "-sc myvar=test3"
-   set jobargs "$option $default_h_args"
+   set jobargs "$option $default_args"
    qsub_submit_check $jobargs 0
 
    set_error 0 ok
@@ -2346,14 +2336,14 @@ proc check_option_sc {} {
 #     ???/???
 #*******************************
 proc check_option_soft {} {
-   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT actual_host
-   global default_q_args default_h_args
+   global ts_config CHECK_OUTPUT
+   global default_args
 
    # first clean up output directory:  
    setup_output_directory
 
    set option "-soft"
-   set jobargs "$option $default_h_args"
+   set jobargs "$option $default_args"
    qsub_submit_check $jobargs 0
 
    set_error 0 ok
@@ -2389,14 +2379,14 @@ proc check_option_soft {} {
 #     ???/???
 #*******************************
 proc check_option_S {} {
-   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT actual_host
-   global default_q_args default_h_args
+   global ts_config CHECK_OUTPUT
+   global default_args
 
    # first clean up output directory:  
    setup_output_directory
 
    set option "-S /bin/sh"
-   set jobargs "$option $default_h_args"
+   set jobargs "$option $default_args"
    qsub_submit_check $jobargs 0
 
    set_error 0 ok
@@ -2432,23 +2422,22 @@ proc check_option_S {} {
 #     ???/???
 #*******************************
 proc check_option_t {} {
-   global CHECK_PRODUCT_ROOT CHECK_OUTPUT
-   global job_output_dir actual_host
-   global default_q_args default_h_args
+   global ts_config CHECK_OUTPUT
+   global default_args
 
    # first clean up output directory:  
    setup_output_directory
 
    set option "-t 1-2:-1"
-   set jobargs "$option $default_h_args"
+   set jobargs "$option $default_args"
    qsub_submit_check $jobargs 1
 
    set option "-t 1-2:xx"
-   set jobargs "$option $default_h_args"
+   set jobargs "$option $default_args"
    qsub_submit_check $jobargs 1
 
    set option "-t 2-8:2"
-   set jobargs "$option $default_h_args"
+   set jobargs "$option $default_args"
    qsub_submit_check $jobargs 0 "" "" 8
   
    set_error 0 ok
@@ -2484,14 +2473,14 @@ proc check_option_t {} {
 #     ???/???
 #*******************************
 proc check_option_verify {} {
-   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT actual_host
-   global default_q_args default_h_args
+   global ts_config CHECK_OUTPUT
+   global default_args
 
    # first clean up output directory:  
    setup_output_directory
 
    set option "-verify"
-   set jobargs "$option $default_h_args"
+   set jobargs "$option $default_args"
   
    set result [submit_job $jobargs 0]  
    puts $CHECK_OUTPUT "\njob $result has args: \"$jobargs\""
@@ -2533,14 +2522,14 @@ proc check_option_verify {} {
 #     ???/???
 #*******************************
 proc check_option_V {} {
-   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT actual_host
-   global default_q_args default_h_args
+   global ts_config CHECK_OUTPUT
+   global default_args
 
    # first clean up output directory:  
    setup_output_directory
 
    set option "-V"
-   set jobargs "$option $default_h_args"
+   set jobargs "$option $default_args"
    qsub_submit_check $jobargs 0
 
    set_error 0 ok
@@ -2577,14 +2566,17 @@ proc check_option_V {} {
 #*******************************
 proc check_option_w {} {
    global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT actual_host
-   global default_q_args default_h_args
+   global default_args
 
    # first clean up output directory:  
    setup_output_directory
 
    set option "-w e"
-   set jobargs "$option $default_h_args"
+   set jobargs "$option $default_args"
    qsub_submit_check $jobargs 0
+
+   # negative test: -w e -q <invalid queue> has to be rejected
+   qsub_submit_check "-q blah $jobargs" 1
 
    set_error 0 ok
 }
@@ -2619,14 +2611,14 @@ proc check_option_w {} {
 #     ???/???
 #*******************************
 proc check_option_@ {} {
-   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT actual_host CHECK_ACTUAL_TEST_PATH
-   global default_q_args default_h_args
+   global ts_config CHECK_OUTPUT CHECK_ACTUAL_TEST_PATH
+   global default_args
 
    # first clean up output directory:  
    setup_output_directory
 
    set option "-@ $CHECK_ACTUAL_TEST_PATH/commandfile.txt"
-   set jobargs "$option $default_h_args"
+   set jobargs "$option $default_args"
   
    set result [submit_job $jobargs 0]  
 
@@ -2748,7 +2740,30 @@ proc check_huge_script {} {
 proc qsub_setup {} {
    global ts_config
    global stored_configuration
-   global job_output_dir actual_host default_q_args default_h_args
+   global job_output_dir actual_host default_args default_q_args default_h_args
+   global HUGE_SCRIPT_SIZE HUGE_SCRIPT_TIMEOUT HUGE_SCRIPT_STEPS steps_per_queue size_interval
+   global HUGE_SCRIPT_MAX_SIZE
+
+   # set some global variables
+   set num_queues [llength $ts_config(unique_arch_nodes)] 
+
+   # run host specific tests on a random host
+   set idx [expr [timestamp] % $num_queues]
+   set actual_host [lindex $ts_config(unique_arch_nodes) $idx] 
+
+   # set default jobargs
+   set default_args "-o $job_output_dir -e $job_output_dir $ts_config(product_root)/examples/jobs/sleeper.sh 5"
+   set qinstance [get_queue_instance "all.q" $actual_host]
+   set default_q_args "-q $qinstance $default_args"
+   set default_h_args "-l h=${actual_host} $default_args"
+
+   # setup huge_script test
+   set steps_per_queue [expr $HUGE_SCRIPT_STEPS / $num_queues]
+   if {[expr $steps_per_queue * $num_queues] < $HUGE_SCRIPT_STEPS} {
+      incr steps_per_queue
+   }
+   set steps_total [expr $steps_per_queue * $num_queues]
+   set size_interval [expr $HUGE_SCRIPT_MAX_SIZE / $steps_total]
 
    # backup global config
    get_config stored_configuration
@@ -2765,12 +2780,6 @@ proc qsub_setup {} {
       set my_schedd_conf(flush_submit_sec) "1"
       set_schedd_config my_schedd_conf 
    }
-
-   # set default jobargs
-   set default_args "-o $job_output_dir -e $job_output_dir $ts_config(product_root)/examples/jobs/sleeper.sh 5"
-   set qinstance [get_queue_instance "all.q" $actual_host]
-   set default_q_args "-q $qinstance $default_args"
-   set default_h_args "-l h=${actual_host} $default_args"
 
    set_error 0 "ok"
 }

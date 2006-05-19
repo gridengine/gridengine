@@ -889,10 +889,10 @@ proc setup_schedconf {} {
        set new  $new_config($param)
 
        if { [ string compare $old $new ] != 0 } {
-          if { $ts_config(gridengine_version) == 60 } {
-             if { [ string compare $param "reprioritize_interval" ] == 0 } { continue }
-          } else {
+          if { $ts_config(gridengine_version) == 53 } {
              if { [ string compare $param "sgeee_schedule_interval" ] == 0 } { continue }
+          } else {
+             if { [ string compare $param "reprioritize_interval" ] == 0 } { continue }
           }             
           if { [ string compare $param "weight_tickets_deadline" ] == 0 } { continue }
           if { [ string compare $param "job_load_adjustments" ] == 0 } { continue }

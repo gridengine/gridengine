@@ -652,13 +652,13 @@ proc issue_751 {} {
 
   set host $ts_config(master_host) 
 
-   # the bug has only be fixed in maintrunk for 6.1
+   # the bug has only be fixed in maintrunk for 6.5
    # do only raise a warning for ealier versions
    set error_level -1
    set additional_message ""
-   if {$ts_config(gridengine_version) < 61} {
+   if {$ts_config(gridengine_version) <= 60} {
       set error_level -3
-      set additional_message "\nhas been fixed only for 6.1"
+      set additional_message "\nhas been fixed only for 6.5 and higher"
    }
 
   set output [start_remote_prog $host $CHECK_USER "qconf" "-sstnode /" exit_state 30]

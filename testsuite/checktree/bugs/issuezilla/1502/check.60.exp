@@ -52,14 +52,8 @@ set check_highest_level       0
 proc issue_1502_init_level {} {
    global CHECK_ACT_LEVEL ts_config
 
-   if { $ts_config(gridengine_version) == 53 } {
-       
-       return -1
-   }
-
-    # TODO setup levels 
    switch -- $CHECK_ACT_LEVEL {
-      "0"  { 
+      "0"  {
          return 0
       }
    }

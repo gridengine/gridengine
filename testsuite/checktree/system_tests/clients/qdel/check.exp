@@ -208,12 +208,12 @@ proc qdel_submit_delete_when_transfered {} {
 
 
    if { $CHECK_ACT_LEVEL == 0 } {
-      if { $ts_config(gridengine_version) == 60 } {
-         set JOB_SUBMITTED       [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QSUB_YOURJOBHASBEENSUBMITTED_SS] "*" "*"]
-         set JOB_SUBMITTED_DUMMY [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QSUB_YOURJOBHASBEENSUBMITTED_SS] "__JOB_ID__" "__JOB_NAME__"]
-      } else {
+      if { $ts_config(gridengine_version) == 53 } {
          set JOB_SUBMITTED       [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_SUBMITJOB_USS] "*" "*" "*"]
          set JOB_SUBMITTED_DUMMY [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_SUBMITJOB_USS] "__JOB_ID__" "__JOB_NAME__" "__JOB_ARG__"]
+      } else {
+         set JOB_SUBMITTED       [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QSUB_YOURJOBHASBEENSUBMITTED_SS] "*" "*"]
+         set JOB_SUBMITTED_DUMMY [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QSUB_YOURJOBHASBEENSUBMITTED_SS] "__JOB_ID__" "__JOB_NAME__"]
       }
       set job_id_pos [ string first "__JOB_ID__" $JOB_SUBMITTED_DUMMY ]
       set job_name_pos [ string first "__JOB_NAME__" $JOB_SUBMITTED_DUMMY ]
@@ -393,12 +393,12 @@ proc submit_testjobs { { user "" } { additional_job_args "" } {testjob_count "4"
   } else {
       # perform su to user and submit jobs as user $user
       set result [ run_command_as_user "$CHECK_HOST" "$user" "qsub" "$jobargs" 4]
-      if { $ts_config(gridengine_version) == 60 } {
-         set JOB_SUBMITTED       [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QSUB_YOURJOBHASBEENSUBMITTED_SS] "*" "*"]
-         set JOB_SUBMITTED_DUMMY [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QSUB_YOURJOBHASBEENSUBMITTED_SS] "__JOB_ID__" "__JOB_NAME__"]
-      } else {
+      if { $ts_config(gridengine_version) == 53 } {
          set JOB_SUBMITTED       [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_SUBMITJOB_USS] "*" "*" "*"]
          set JOB_SUBMITTED_DUMMY [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_SUBMITJOB_USS] "__JOB_ID__" "__JOB_NAME__" "__JOB_ARG__"]
+      } else {
+         set JOB_SUBMITTED       [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QSUB_YOURJOBHASBEENSUBMITTED_SS] "*" "*"]
+         set JOB_SUBMITTED_DUMMY [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QSUB_YOURJOBHASBEENSUBMITTED_SS] "__JOB_ID__" "__JOB_NAME__"]
       }
       set job_id_pos [ string first "__JOB_ID__" $JOB_SUBMITTED_DUMMY ]
       set job_name_pos [ string first "__JOB_NAME__" $JOB_SUBMITTED_DUMMY ]

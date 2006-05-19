@@ -2716,29 +2716,25 @@ proc read_checktree_nodes { path } {
    global check_category 
    global CHECK_ACT_LEVEL
 
+   # remember last check name - we'll reset to it on function exit
    set old_check_name $check_name
 
-   # get all files and subdirectories
-   set files [get_file_names $path] 
-   set dirs [get_dir_names $path]
-
-#   puts $CHECK_OUTPUT "-> $path"
-
-   set dep_name "$CHECK_INFORMATION_FILE.$ts_config(gridengine_version).$CHECK_INFORMATION_EXT"
-   set indep_name "$CHECK_INFORMATION_FILE.$CHECK_INFORMATION_EXT"
-
+   # every checktree directory gets an individual number
    set nr $ts_checktree(act_nr)
-   
    incr ts_checktree(act_nr) 1
 
-   if { [lsearch $files $dep_name] >= 0 || [lsearch $files $indep_name] >= 0 }  {
+   # prepare for sourceing check.exp files
+   set check_highest_level 0 
+   set check_init_level_procedure "--"
+   set check_category ""
+
+   # try to find and source check files in this directory for the configured N1GE version
+   set sourced_files [ts_source $path/$CHECK_INFORMATION_FILE $CHECK_INFORMATION_EXT]
+
+   # if there is a check in this directory, remember some information
+   if {$sourced_files > 0} {
       # here is a test file
       set ts_checktree($nr,test_available) 1
-
-      set check_highest_level 0 
-      set check_init_level_procedure "--"
-      set check_category ""
-      ts_source $path/$CHECK_INFORMATION_FILE $CHECK_INFORMATION_EXT
 
       for { set lt 0 } { $lt <= $check_highest_level } { incr lt 1 } {
          if { [info exists check_description($lt)] } {
@@ -2778,11 +2774,13 @@ proc read_checktree_nodes { path } {
    }
 
    # recursive call on subdirectories
+   set dirs [get_dir_names $path]
    foreach element $dirs {
       read_checktree_nodes "$path/$element"
       lappend ts_checktree($nr,sub_nrs) $ts_checktree($path/$element)
    }
-   
+  
+   # stay in directory of former check
    set check_name $old_check_name
    return 0
 }

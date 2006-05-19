@@ -65,12 +65,6 @@ proc issue_1556_run  {} {
    global ts_config CHECK_ARCH CHECK_OUTPUT CHECK_USER CHECK_HOST
    global CHECK_ACTUAL_TEST_PATH
 
-   if { $ts_config(gridengine_version) == 53 } {
-      add_proc_error "issue_1556" -3 "issue 1556 is not fixed in 5.3"
-      set_error 0 "unsupported"
-      return
-   }
-
    set options "-sync yes -b no -o /dev/null -e /dev/null"
    # Run script 1556.sh as non-binary job
    catch {set output [start_remote_prog $CHECK_HOST $CHECK_USER "$ts_config(product_root)/bin/$CHECK_ARCH/qsub" "$options $CHECK_ACTUAL_TEST_PATH/1556.sh" ]}

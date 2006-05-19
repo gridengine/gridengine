@@ -3504,8 +3504,9 @@ proc config_testsuite_gridengine_version { only_check name config_array } {
    if { $only_check == 0 } {
       puts $CHECK_OUTPUT "" 
       puts $CHECK_OUTPUT "Please specify the gridengine version for testsuite"
-      puts $CHECK_OUTPUT "Enter \"53\" for SGE 5.3 systems,"
-      puts $CHECK_OUTPUT "Enter \"60\" for SGE 6.0 systems"
+      puts $CHECK_OUTPUT "Enter \"53\" for SGE(EE) 5.3 systems,"
+      puts $CHECK_OUTPUT "Enter \"60\" for N1GE 6.0 systems"
+      puts $CHECK_OUTPUT "Enter \"65\" for N1GE 6.5 systems"
       puts $CHECK_OUTPUT "or press >RETURN< to use the default value."
       puts $CHECK_OUTPUT "(default: $value)"
       puts -nonewline $CHECK_OUTPUT "> "
@@ -3520,7 +3521,8 @@ proc config_testsuite_gridengine_version { only_check name config_array } {
    # check parameter
    if {!$fast_setup} {
       if {[string compare $value "53"] != 0 &&
-          [string compare $value "60"] != 0} {        
+          [string compare $value "60"] != 0 &&
+          [string compare $value "65"] != 0} {
          puts $CHECK_OUTPUT "invalid testsuite gridengine version"
          return -1
       }
@@ -4421,8 +4423,8 @@ proc config_build_ts_config_1_3 {} {
    # new parameter gridengine_version
    set parameter "gridengine_version"
    set ts_config($parameter)            ""
-   set ts_config($parameter,desc)       "Gridengine Version, e.g. 53 for SGE 5.3 or 60 for SGE 6.0"
-   set ts_config($parameter,default)    ""
+   set ts_config($parameter,desc)       "Gridengine Version, e.g. 53 for SGE(EE) 5.3, or 60 for N1GE 6.0"
+   set ts_config($parameter,default)    "65"
    set ts_config($parameter,setup_func) "config_testsuite_gridengine_version"
    set ts_config($parameter,onchange)   "stop"
    set ts_config($parameter,pos)        $insert_pos

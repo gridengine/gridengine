@@ -65,9 +65,8 @@ lappend check_functions {check_miniworm}               ;# run miniworms
 lappend check_functions {check_idle}                   ;# wait for system to stabilize 
 lappend check_functions {check_flood}                  ;# flood of qsub's (sleeper)
 lappend check_functions {check_idle}                   ;# wait for system to stabilize 
-# JG: TODO: check setup with zombies in an additional runlevel
-# lappend check_functions {check_size_config_zombies}    ;# activate finished jobs
-#lappend check_functions {check_idle}                   ;# wait for system to stabilize 
+lappend check_functions {check_size_config_zombies}    ;# activate finished jobs
+lappend check_functions {check_idle}                   ;# wait for system to stabilize 
 lappend check_functions {check_miniworm}               ;# run miniworms
 lappend check_functions {check_idle}                   ;# wait for system to stabilize
 lappend check_functions {check_flood}                  ;# flood of qsub's (sleeper)
@@ -1197,17 +1196,22 @@ proc check_flood {} {
 #*******************************
 proc check_size_config {} {
    global ts_config
+   global config_backup
 
    upvar SCHEDULE_INTERVAL        schedule_interval
 
-   set default_array(schedule_interval)   $schedule_interval
+   get_config config_backup
 
-   if { $ts_config(gridengine_version) != 53 } {
-      set default_array(flush_submit_sec) 1
-      set default_array(flush_finish_sec) 1
+   if { $ts_config(gridengine_version) == 53 } {
+      set new_config(schedd_params) "flush_submit_sec=0,flush_finish_sec=0"
+      set_config new_config
+   } else {
+      set schedd_conf(flush_submit_sec) 1
+      set schedd_conf(flush_finish_sec) 1
    }
 
-   set_schedd_config default_array
+   set schedd_conf(schedule_interval)   $schedule_interval
+   set_schedd_config schedd_conf
 
    monitor_size [get_job_count] "set initial parameters"
 
@@ -1284,13 +1288,14 @@ proc check_size_config_zombies {} {
 #     ???/???
 #*******************************
 proc qmaster_size_cleanup {} {
+   global config_backup
+
    delete_all_jobs
    wait_for_end_of_all_jobs 180
 
    reset_schedd_config
 
-   set default_array(finished_jobs)   0
-   set_config default_array
+   set_config config_backup
 
    del_queue interactive "" 0 1
 

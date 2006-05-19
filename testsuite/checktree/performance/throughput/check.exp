@@ -507,9 +507,7 @@ proc throughput_setup_sharetree {} {
    # setup policy weighting for sharetree
    get_schedd_config my_config 
 
-   if { $ts_config(gridengine_version) == 53 } {
-  
-   } else {
+   if { $ts_config(gridengine_version) != 53 } {
       set my_config(weight_ticket) "1.0"
       set my_config(weight_waiting_time) "0.0"
    }
@@ -566,9 +564,7 @@ proc throughput_setup_functional_policy {} {
    # setup policy weighting for sharetree
    get_schedd_config my_config 
 
-   if { $ts_config(gridengine_version) == 53 } {
-  
-   } else {
+   if { $ts_config(gridengine_version) != 53 } {
       set my_config(weight_ticket) "1.0"
       set my_config(weight_waiting_time) "0.0"
    }

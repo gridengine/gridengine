@@ -1989,7 +1989,5 @@ proc qalter_t {} {
       }
       set_error 0 "qalter $option - no errors"
    }
-
-   return
 }
 

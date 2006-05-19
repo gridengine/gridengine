@@ -137,28 +137,20 @@ proc usage_setup  {} {
    global CHECK_OUTPUT
    global saved_config
 
-   # modify config and remember old values
-   get_config config
-   if {[info exists saved_config]} {
-      unset saved_config
-   }
-   if { $ts_config(gridengine_version) == 53 } {
-      foreach attrib "load_report_time execd_params schedd_params" {
-         set saved_config($attrib) $config($attrib)
-      }
-      set new_config(schedd_params) "$config(schedd_params) flush_submit_secs=0"
+   # backup old config
+   get_config saved_config
 
+   # set scheduler flushing params
+   if { $ts_config(gridengine_version) == 53 } {
+      set new_config(schedd_params) "$saved_config(schedd_params) flush_submit_secs=0"
    } else {
-      foreach attrib "load_report_time execd_params" {
-         set saved_config($attrib) $config($attrib)
-      }
       set my_schedd_conf(flush_submit_sec) "1"
       set_schedd_config my_schedd_conf 
    }
 
+   # set global config params
    set new_config(load_report_time) "0:0:5"
-   
-   set new_config(execd_params) "$config(execd_params) acct_reserved_usage=1 sharetree_reserved_usage=1"
+   set new_config(execd_params) "$saved_config(execd_params) acct_reserved_usage=1 sharetree_reserved_usage=1"
    set_config new_config
    after 15000
 
@@ -205,6 +197,7 @@ proc usage_cleanup  {} {
 
    # reset config
    set_config saved_config
+
    if {$ts_config(gridengine_version) != 53} {
       reset_schedd_config;
    }

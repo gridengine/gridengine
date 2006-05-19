@@ -68,18 +68,14 @@ proc qmod_verify {} {
    global CHECK_OUTPUT
    global CHECK_PRODUCT_ROOT CHECK_ARCH test_queue 
   
-   if { $ts_config(gridengine_version) == 53 } { 
-      set result [ catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qmod -verify -s $test_queue" } output ]
-      if {$result != 0} {
-        set_error -1 "exit state of \"qmod -verify -s $test_queue\" is not 0"
-      }            
-      
-      set state [ get_queue_state $test_queue ] 
-      if { [ string compare $state "" ] != 0  } {
-         set_error -1 "queue $test_queue is not in original state"
-      }
-   } else {
-      puts $CHECK_OUTPUT "the -verify switch has been removed in SGE 6.0"
+   set result [ catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qmod -verify -s $test_queue" } output ]
+   if {$result != 0} {
+     set_error -1 "exit state of \"qmod -verify -s $test_queue\" is not 0"
+   }            
+   
+   set state [ get_queue_state $test_queue ] 
+   if { [ string compare $state "" ] != 0  } {
+      set_error -1 "queue $test_queue is not in original state"
    }
    set_error 0 "ok"
 }

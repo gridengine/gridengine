@@ -1894,16 +1894,15 @@ proc set_config { change_array {host global} {do_add 0} {ignore_error 0}} {
 
   set EDIT_FAILED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_PARSE_EDITFAILED]]
 
-  if { $ts_config(gridengine_version) == 60 } {
+  if { $ts_config(gridengine_version) == 53 } {
+     set MODIFIED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_CONFIG_MODIFIEDINLIST_SSS] $CHECK_USER "*" "*"]
+     set ADDED    [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_CONFIG_ADDEDTOLIST_SSS] $CHECK_USER "*" "*"]
+     set result [ handle_vi_edit "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "$qconf_cmd $host" $vi_commands $MODIFIED $EDIT_FAILED $ADDED $GIDRANGE ]
+  } else {
      set MODIFIED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_MODIFIEDINLIST_SSSS] $CHECK_USER "*" "*" "*"]
      set ADDED    [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_ADDEDTOLIST_SSSS] $CHECK_USER "*" "*" "*"]
      set EFFECT   [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_WARN_CHANGENOTEFFECTEDUNTILRESTARTOFEXECHOSTS] "execd_spool_dir"]
      set result [ handle_vi_edit "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "$qconf_cmd $host" $vi_commands $MODIFIED $EDIT_FAILED $ADDED $GIDRANGE $EFFECT]
-
-  } else {
-     set MODIFIED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_CONFIG_MODIFIEDINLIST_SSS] $CHECK_USER "*" "*"]
-     set ADDED    [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_CONFIG_ADDEDTOLIST_SSS] $CHECK_USER "*" "*"]
-     set result [ handle_vi_edit "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "$qconf_cmd $host" $vi_commands $MODIFIED $EDIT_FAILED $ADDED $GIDRANGE ]
   }
 
   if { ($ignore_error == 1) && ($result == -4) } {
@@ -4556,7 +4555,18 @@ proc submit_job { args {do_error_check 1} {submit_timeout 60} {host ""} {user ""
 
   set arch [resolve_arch $host]
 
-  if { $ts_config(gridengine_version) == 60 } {
+  if { $ts_config(gridengine_version) == 53 } {
+     set JOB_SUBMITTED       [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_SUBMITJOB_USS] "*" "*" "*"]
+     set JOB_SUBMITTED_DUMMY [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_SUBMITJOB_USS] "__JOB_ID__" "__JOB_NAME__" "__JOB_ARG__"]
+     set SUCCESSFULLY        [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QSUB_YOURIMMEDIATEJOBXHASBEENSUCCESSFULLYSCHEDULED_U] "*"]
+     set UNKNOWN_RESOURCE2   [translate $CHECK_HOST 1 0 0 [sge_macro MSG_SCHEDD_JOBREQUESTSUNKOWNRESOURCE] ]
+     set JOBALREADYEXISTS [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_JOBALREADYEXISTS_U] "*"]
+     set NAMETOOLONG         "blah blah blah no NAMETOOLONG in 5.3"
+     set INVALID_JOB_REQUEST "blah blah blah no INVALID_JOB_REQUEST in 5.3"
+     set UNKNOWN_QUEUE [translate_macro MSG_JOB_QUNKNOWN_S "*"]
+     set POSITIVE_PRIO "blah blah blah no POSITIVE_PRIO in 5.3"
+  } else {
+     # 6.0 and higher
      set JOB_SUBMITTED       [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QSUB_YOURJOBHASBEENSUBMITTED_SS] "*" "*"]
      set JOB_SUBMITTED_DUMMY [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QSUB_YOURJOBHASBEENSUBMITTED_SS] "__JOB_ID__" "__JOB_NAME__"]
      set SUCCESSFULLY        [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QSUB_YOURIMMEDIATEJOBXHASBEENSUCCESSFULLYSCHEDULED_S] "*"]
@@ -4564,14 +4574,13 @@ proc submit_job { args {do_error_check 1} {submit_timeout 60} {host ""} {user ""
      set NAMETOOLONG         [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_NAMETOOLONG_I] "*"]
      set JOBALREADYEXISTS [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_JOBALREADYEXISTS_S] "*"]
      set INVALID_JOB_REQUEST [translate $CHECK_HOST 1 0 0 [sge_macro MSG_INVALIDJOB_REQUEST_S] "*"]
-  } else {
-     set JOB_SUBMITTED       [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_SUBMITJOB_USS] "*" "*" "*"]
-     set JOB_SUBMITTED_DUMMY [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_SUBMITJOB_USS] "__JOB_ID__" "__JOB_NAME__" "__JOB_ARG__"]
-     set SUCCESSFULLY        [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QSUB_YOURIMMEDIATEJOBXHASBEENSUCCESSFULLYSCHEDULED_U] "*"]
-     set UNKNOWN_RESOURCE2   [translate $CHECK_HOST 1 0 0 [sge_macro MSG_SCHEDD_JOBREQUESTSUNKOWNRESOURCE] ]
-     set JOBALREADYEXISTS [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_JOBALREADYEXISTS_U] "*"]
-     set NAMETOOLONG         "asldfkaöslfjaösdlkfjaöskldfjöasfjdaölsfjöasfjd";# don't have this message in 5.3
-     set INVALID_JOB_REQUEST "aaasdkfjahsdlfkjhlkjghdlfghsldkgsksljsldhalakl";# don't have this message in 5.3
+     set UNKNOWN_QUEUE [translate_macro MSG_QREF_QUNKNOWN_S "*"]
+     if {$ts_config(gridengine_version) == 60} {
+        set POSITIVE_PRIO "blah blah blah no POSITIVE_PRIO in 6.0"
+     } else {
+        # 6.5 and higher
+        set POSITIVE_PRIO [translate_macro MSG_JOB_NONADMINPRIO]
+     }
   }
 
   set INVALID_PRIORITY [translate_macro MSG_PARSE_INVALIDPRIORITYMUSTBEINNEG1023TO1024]
@@ -4957,6 +4966,12 @@ proc submit_job { args {do_error_check 1} {submit_timeout 60} {host ""} {user ""
           -i $sp_id $INVALID_PRIORITY {
              set return_value -27
           }
+          -i $sp_id $UNKNOWN_QUEUE {
+             set return_value -28
+          }
+          -i $sp_id -- $POSITIVE_PRIO {
+             set return_value -29
+          }
         }
      }
  
@@ -4997,6 +5012,8 @@ proc submit_job { args {do_error_check 1} {submit_timeout 60} {host ""} {user ""
           "-25" { add_proc_error "submit_job" -1 [get_submit_error $return_value]  }
           "-26" { add_proc_error "submit_job" -1 [get_submit_error $return_value]  }
           "-27" { add_proc_error "submit_job" -1 [get_submit_error $return_value]  }
+          "-28" { add_proc_error "submit_job" -1 [get_submit_error $return_value]  }
+          "-29" { add_proc_error "submit_job" -1 [get_submit_error $return_value]  }
 
           default { add_proc_error "submit_job" 0 "job $return_value submitted - ok" }
        }
@@ -5060,6 +5077,8 @@ proc get_submit_error { error_id } {
       "-25" { return "duplicate job id found - issue 2028?" }
       "-26" { return "general job verification error?" }
       "-27" { return "invalid priority given with -p switch" }
+      "-28" { return "unknown queue requested" }
+      "-29" { return "positive priority requested as non operator" }
 
       default { return "unknown error" }
    }

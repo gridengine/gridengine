@@ -604,12 +604,12 @@ proc qrsh_accounting {} {
    } 
 
    puts $CHECK_OUTPUT "qrsh accounting test"
-   if { $ts_config(gridengine_version) != 53 } {
-      set INTERACTIVE_JOB [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QSH_INTERACTIVEJOBHASBEENSCHEDULED_S] "*"]
-      set INTERACTIVE_JOB_DUMMY [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QSH_INTERACTIVEJOBHASBEENSCHEDULED_S] "__JOBID__"]
-   } else {
+   if { $ts_config(gridengine_version) == 53 } {
       set INTERACTIVE_JOB [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QSH_INTERACTIVEJOBHASBEENSCHEDULED_D] "*"]
       set INTERACTIVE_JOB_DUMMY [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QSH_INTERACTIVEJOBHASBEENSCHEDULED_D] "__JOBID__"]
+   } else {
+      set INTERACTIVE_JOB [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QSH_INTERACTIVEJOBHASBEENSCHEDULED_S] "*"]
+      set INTERACTIVE_JOB_DUMMY [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QSH_INTERACTIVEJOBHASBEENSCHEDULED_S] "__JOBID__"]
    }
    set job_id_start [ string first "__JOBID__" $INTERACTIVE_JOB_DUMMY ]
 
@@ -1485,10 +1485,10 @@ proc qrsh_batch {} {
 
    puts $CHECK_OUTPUT "check qrsh in immediate and batch mode (-now yes / no)"
    set COULD_NOT_BE_SCHEDULED [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QSH_REQUESTCANTBESCHEDULEDTRYLATER_S] "*" ]
-   if { $ts_config(gridengine_version) == 60 } {
-      set HAS_BEEN_SUBMITTED  [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_SUBMITJOB_USS] "*" "*" "*"]
-   } else {
+   if { $ts_config(gridengine_version) == 53 } {
       set HAS_BEEN_SUBMITTED  [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_SUBMITJOB_USS] "*" "*" "*" ]
+   } else {
+      set HAS_BEEN_SUBMITTED  [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_SUBMITJOB_USS] "*" "*" "*"]
    }
 
    foreach host $qrsh_hostlist {

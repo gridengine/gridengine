@@ -89,18 +89,22 @@ proc ts_source {filebase {extension tcl}} {
       }
 
       if { $version != "" } {
-         set filename "${filebase}.${version}.${extension}"
+         set major [string index $version 0]
+         set minor [string index $version 1]
 
-         if {[file exists $filename]} {
-            debug_puts "reading version specific file $filename"
-            set time_now [timestamp]
-            uplevel source $filename
-            set time_after [timestamp]
-            set source_time [expr $time_after - $time_now]
-            if { $source_time > 5 } {
-               puts $CHECK_OUTPUT "sourcing $filename took $source_time!"
+         for {set i 0} {$i <= $minor} {incr i} {
+            set filename "${filebase}.${major}${i}.${extension}"
+            if {[file exists $filename]} {
+               debug_puts "reading version specific file $filename"
+               set time_now [timestamp]
+               uplevel source $filename
+               set time_after [timestamp]
+               set source_time [expr $time_after - $time_now]
+               if { $source_time > 5 } {
+                  puts $CHECK_OUTPUT "sourcing $filename took $source_time!"
+               }
+               incr sourced
             }
-            incr sourced
          }
       }
    }

@@ -127,7 +127,7 @@ proc job_environment_setup  {} {
 
    get_config job_environment_config
 
-   if {$ts_config(gridengine_version) == 60} {
+   if {$ts_config(gridengine_version) >= 60} {
       job_environment_setup_60
    }
 
@@ -728,7 +728,7 @@ proc job_environment_cleanup {} {
 
    set_config job_environment_config
 
-   if {$ts_config(gridengine_version) == 60} {
+   if {$ts_config(gridengine_version) >= 60} {
       job_environment_cleanup_60
    }
 

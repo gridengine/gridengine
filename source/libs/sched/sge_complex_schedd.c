@@ -1429,6 +1429,9 @@ attr_mod_threshold(lList **alpp, lListElem *qep, lListElem *new_ep, int nm,
 *
 *  NOTES
 *     MT-NOTE: request_cq_rejected() is MT safe 
+*
+*     Builtin complex attributes such as non-consumable -l h_vmem
+*     also could be checked here.
 *******************************************************************************/
 bool request_cq_rejected(const lList* hard_resource_list, const lListElem *cq, 
       const lList *centry_list, dstring *unsatisfied)

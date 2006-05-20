@@ -414,16 +414,77 @@ qref_list_resolve(const lList *src_qref_list, lList **answer_list,
    return ret;
 }
 
+/****** sge_qref/qref_cq_rejected() ********************************************
+*  NAME
+*     qref_cq_rejected() --  Check, if -q qref_list rejects (cluster) queue
+*
+*  SYNOPSIS
+*     bool qref_cq_rejected(const char *qref_pattern, const char *cqname, const 
+*     char *hostname, const lList *hgroup_list) 
+*
+*  FUNCTION
+*     Check if patter in -q qref_list rejects cluster queue and hostname, 
+*     if passed. If NULL is passed as hostname, cluster queue verfication 
+*     is performed only.
+*
+*  INPUTS
+*     const char *qref_pattern - a wildcard pattern as defined for -q qref_list
+*     const char *cqname       - cluster queue name
+*     const char *hostname     - exeuction hostname
+*     const lList *hgroup_list - host group list
+*
+*  RESULT
+*     bool - true if rejected
+*
+*  NOTES
+*     MT-NOTE: qref_cq_rejected() is MT safe 
+*******************************************************************************/
+bool
+qref_cq_rejected(const char *qref_pattern, const char *cqname,
+      const char *hostname, const lList *hgroup_list)
+{
+   const char *s;
+
+   DENTER(TOP_LAYER, "qref_cq_rejected");
+
+   if ((s=strchr(qref_pattern, '@'))) { 
+      /* use qref part before '@' as wc_cqueue pattern */
+      int boo;
+      char *wc_cqueue = strdup(qref_pattern);
+      wc_cqueue[ s - qref_pattern ] = '\0';
+      boo = fnmatch(wc_cqueue, cqname, 0);
+      free(wc_cqueue);
+      if (!boo) {
+         if (!hostname || !qref_list_host_rejected(&s[1], hostname, hgroup_list)) {
+            DEXIT;
+            return false;
+         }
+      }
+   } else {
+      /* use entire qref as wc_queue */
+      if (!fnmatch(qref_pattern, cqname, 0)) {
+         DEXIT;
+         return false;
+      } 
+   }
+
+   DEXIT;
+   return true;
+}
+
+
 /****** sge_qref/qref_list_cq_rejected() ***************************************
 *  NAME
-*     qref_list_cq_rejected() -- Check, if -q qref_list rejects cluster queue
+*     qref_list_cq_rejected() -- Check, if -q qref_list rejects (cluster) queue
 *
 *  SYNOPSIS
 *     bool qref_list_cq_rejected(const lList *qref_list, const char *cqname,
 *                        const char *hostname, const lList *hgroup_list) 
 *
 *  FUNCTION
-*     Check if -q qref_list rejects cluster queue and hostname -- if passed.
+*     Check if -q qref_list rejects cluster queue and hostname, if passed.
+*     If NULL is passed as hostname, cluster queue verfication is performed 
+*     only.
 *
 *  INPUTS
 *     const lList *qref_list - QR_Type list as usef for -q qref_list
@@ -456,28 +517,10 @@ qref_list_cq_rejected(const lList *qref_list, const char *cqname,
    }
 
    for_each(qref_pattern, qref_list) {
-      const char *s;
       const char *name = lGetString(qref_pattern, QR_name); 
-
-      if ((s=strchr(name, '@'))) { 
-         /* use qref part before '@' as wc_cqueue pattern */
-         int boo;
-         char *wc_cqueue = strdup(name);
-         wc_cqueue[ s - name ] = '\0';
-         boo = fnmatch(wc_cqueue, cqname, 0);
-         free(wc_cqueue);
-         if (!boo) {
-            if (!hostname || !qref_list_host_rejected(&s[1], hostname, hgroup_list)) {
-               DEXIT;
-               return false;
-            }
-         }
-      } else {
-         /* use entire qref as wc_queue */
-         if (!fnmatch(name, cqname, 0)) {
-            DEXIT;
-            return false;
-         } 
+      if (qref_cq_rejected(name, cqname, hostname, hgroup_list)==false) {
+         DEXIT;
+         return false;
       }
    }
       

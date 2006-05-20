@@ -413,9 +413,7 @@ int sge_cs_category_count(void) {
 *     Some information in the category should only life throu one scheduling run.
 *     These informations are reseted in the call:
 *     - dispatching messages
-*     - not suitable queues
 *     - soft violations
-*     - not suitable hosts
 *     - not suitable cluster
 *     - the flag that identifies, if the messages are already added to the schedd infos
 *     - something with the resource reservation

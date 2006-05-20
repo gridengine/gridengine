@@ -136,8 +136,8 @@ parallel_global_slots(const sge_assignment_t *a, int *slots, int *slots_qend,
 static dispatch_t
 parallel_tag_hosts_queues(sge_assignment_t *a, lListElem *hep, int *slots, 
                    int *slots_qend, int host_soft_violations, bool *master_host, int *host_seqno, 
-                   double *previous_load, bool *previous_load_inited, category_use_t *use_category);
-
+                   double *previous_load, bool *previous_load_inited, category_use_t *use_category,
+                   lList **skip_cqueue_list, lList **unclear_cqueue_list);
 static dispatch_t
 parallel_host_slots(sge_assignment_t *a, int *slots, int *slots_qend, int *host_soft_violations,
                    lListElem *hep, bool allow_non_requestable);
@@ -1836,38 +1836,15 @@ compute_soft_violations(const sge_assignment_t *a, lListElem *queue, int violati
        * check whether queue fulfills soft queue request of the job (-q) 
        */
       if (lGetList(a->job, JB_soft_queue_list)) {
-         bool is_in_list = true;
-         lList *master_cqueue_list = NULL;
-         lList *master_hgroup_list = NULL;
          lList *qref_list = lGetList(a->job, JB_soft_queue_list);
-         lList *resolved_qref_list = NULL;
-         lListElem *resolved_qref = NULL;
          lListElem *qr;
          const char *qinstance_name = NULL;
-         bool found_something = false;
 
-         master_cqueue_list = *(object_type_get_master_list(SGE_TYPE_CQUEUE));
-         master_hgroup_list = *(object_type_get_master_list(SGE_TYPE_HGROUP));
          qinstance_name = lGetString(queue, QU_full_name);
 
          for_each (qr, qref_list) {
-            lList *qr_list;
-            lListElem *qr_copy;
-
-            qr_copy = lCopyElem(qr);
-            qr_list = lCreateList(NULL, QR_Type);
-            lAppendElem(qr_list, qr_copy);
-
-            qref_list_resolve(qr_list, NULL, &resolved_qref_list,
-                              &found_something, master_cqueue_list,
-                              master_hgroup_list, true, true);
-            resolved_qref = lGetElemStr(resolved_qref_list, QR_name, 
-                                        qinstance_name); 
-            is_in_list = resolved_qref != NULL ? true : false;
-            lFreeList(&resolved_qref_list);
-            lFreeList(&(qr_list));
-
-            if (!is_in_list) {
+            if (qref_cq_rejected(lGetString(qr, QR_name), lGetString(queue, QU_qname), 
+                lGetHost(queue, QU_qhostname), *(object_type_get_master_list(SGE_TYPE_HGROUP)))) {
                DPRINTF(("Queue \"%s\" is not contained in the soft "
                         "queue list (-q) that was requested by job %d\n",
                         qinstance_name, (int) job_id));
@@ -2841,6 +2818,51 @@ sge_split_disabled(lList **queue_list, lList **disabled)
    return ret;
 }
 
+/****** sge_select_queue/pe_cq_rejected() **************************************
+*  NAME
+*     pe_cq_rejected() -- Check, if -pe pe_name rejects cluster queue
+*
+*  SYNOPSIS
+*     static bool pe_cq_rejected(const char *pe_name, const lListElem *cq) 
+*
+*  FUNCTION
+*     Match a jobs -pe 'pe_name' with pe_list cluster queue configuration.
+*     True is returned if the parallel environment has no access.
+*
+*  INPUTS
+*     const char *project - the pe request of a job (no wildcard)
+*     const lListElem *cq - cluster queue (CQ_Type)
+*
+*  RESULT
+*     static bool - True, if rejected
+*
+*  NOTES
+*     MT-NOTE: pe_cq_rejected() is MT safe 
+*******************************************************************************/
+static bool pe_cq_rejected(const char *pe_name, const lListElem *cq)
+{
+   const lListElem *alist;
+   bool rejected;
+  
+   DENTER(TOP_LAYER, "pe_cq_rejected");
+
+   if (!pe_name) {
+      DEXIT;
+      return false;
+   }
+   
+   rejected = true;
+   for_each (alist, lGetList(cq, CQ_pe_list)) {
+      if (lGetSubStr(alist, ST_name, pe_name, ASTRLIST_value)) {
+         rejected = false;
+         break;
+      }
+   }
+
+   DEXIT;
+   return rejected;
+}
+
 /****** sge_select_queue/project_cq_rejected() *********************************
 *  NAME
 *     project_cq_rejected() -- Check, if -P project rejects cluster queue
@@ -2942,7 +2964,7 @@ static dispatch_t cqueue_match_static(const char *cqname, sge_assignment_t *a)
 {
    const lList *hard_resource_list;
    const lListElem *cq;
-   const char *project;
+   const char *project, *pe_name;
 
    DENTER(TOP_LAYER, "cqueue_match_static");
 
@@ -2977,6 +2999,16 @@ static dispatch_t cqueue_match_static(const char *cqname, sge_assignment_t *a)
       DPRINTF(("Cluster queue \"%s\" does not work for -P %s job %d\n",
          cqname, project?project:"<no project>", (int)a->job_id));
       schedd_mes_add(a->job_id, SCHEDD_INFO_HASNOPRJ_S, "cluster queue", cqname);
+      DEXIT;
+      return DISPATCH_NEVER_CAT;
+   }
+
+   /* detect if entire cluster queue ruled out due to -pe */
+   if (a->pe && (pe_name=lGetString(a->pe, PE_name)) && 
+         pe_cq_rejected(pe_name, cq)) {
+      schedd_mes_add(a->job_id, SCHEDD_INFO_HASNOPRJ_S, "cluster queue", cqname);
+         DPRINTF(("Cluster queue "SFQ" does not reference PE "SFQ"\n", cqname, pe_name));
+         schedd_mes_add(a->job_id, SCHEDD_INFO_NOTINQUEUELSTOFPE_SS, cqname, pe_name);
       DEXIT;
       return DISPATCH_NEVER_CAT;
    }
@@ -3470,6 +3502,9 @@ parallel_tag_queues_suitable4job(sge_assignment_t *a, category_use_t *use_catego
    }
    else {
       lList *skip_host_list = NULL;
+
+      lList *skip_cqueue_list = NULL;
+      lList *unclear_cqueue_list = NULL;
   
       if (use_category->use_category) {
          skip_host_list = lGetList(use_category->cache, CCT_ignore_hosts);
@@ -3505,7 +3540,8 @@ parallel_tag_queues_suitable4job(sge_assignment_t *a, category_use_t *use_catego
          if (lGetElemHost(a->queue_list, QU_qhostname, eh_name)) {
 
             parallel_tag_hosts_queues(a, hep, &hslots, &hslots_qend, global_soft_violations, 
-                &suited_as_master_host, &host_seqno, &previous_load, &previous_load_inited, use_category);
+                &suited_as_master_host, &host_seqno, &previous_load, &previous_load_inited, use_category, 
+                &skip_cqueue_list, &unclear_cqueue_list);
 
             if (hslots >= minslots) {
                accu_host_slots += hslots;
@@ -3532,6 +3568,9 @@ parallel_tag_queues_suitable4job(sge_assignment_t *a, category_use_t *use_catego
             }
          }
       } /* for each host */
+
+      lFreeList(&skip_cqueue_list);
+      lFreeList(&unclear_cqueue_list);
 
       if (accu_host_slots >= a->slots && 
          (!need_master_host || (need_master_host && have_master_host))) {
@@ -3650,7 +3689,8 @@ static dispatch_t
 parallel_tag_hosts_queues(sge_assignment_t *a, lListElem *hep, int *slots, int *slots_qend, 
                           int global_soft_violations, bool *master_host, int *host_seqno, 
                           double *previous_load, bool *previous_load_inited,
-                          category_use_t *use_category) 
+                          category_use_t *use_category, 
+                          lList **skip_cqueue_list, lList **unclear_cqueue_list) 
 {
 
    bool suited_as_master_host = false;
@@ -3658,7 +3698,7 @@ parallel_tag_hosts_queues(sge_assignment_t *a, lListElem *hep, int *slots, int *
    int accu_queue_slots, accu_queue_slots_qend;
    int qslots, qslots_qend, hslots, hslots_qend;
    int host_soft_violations, queue_soft_violations;
-   const char *qname, *eh_name = lGetHost(hep, EH_name);
+   const char *cqname, *qname, *eh_name = lGetHost(hep, EH_name);
    lListElem *qep, *next_queue; 
    dispatch_t result;
    const void *queue_iterator = NULL;
@@ -3701,6 +3741,21 @@ parallel_tag_hosts_queues(sge_assignment_t *a, lListElem *hep, int *slots, int *
            next_queue = lGetElemHostNext(a->queue_list, QU_qhostname, eh_name, &queue_iterator)) {
 
          qname = lGetString(qep, QU_full_name);
+         cqname = lGetString(qep, QU_qname);
+
+         /* try to foreclose the cluster queue */
+         if (lGetElemStr(*skip_cqueue_list, CTI_name, cqname)) {
+            DPRINTF(("skip cluster queue %s\n", cqname));             
+            continue;
+         }
+         if (!lGetElemStr(*unclear_cqueue_list, CTI_name, cqname)) {
+            if (cqueue_match_static(cqname, a) != DISPATCH_OK) {
+               lAddElemStr(skip_cqueue_list, CTI_name, cqname, CTI_Type);
+               continue;
+            }
+            lAddElemStr(unclear_cqueue_list, CTI_name, cqname, CTI_Type);
+         } else
+            DPRINTF(("checked cluster queue %s already\n", cqname));             
 
          if (skip_queue_list && lGetElemStr(skip_queue_list, CTI_name, qname)){
             continue;

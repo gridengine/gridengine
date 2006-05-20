@@ -46,6 +46,10 @@ qref_list_resolve(const lList *src_qref_list, lList **answer_list,
                   bool resolve_cqueue, bool resolve_qdomain);
 
 bool
+qref_cq_rejected(const char *qref_pattern, const char *cqname,
+      const char *hostname, const lList *hgroup_list);
+
+bool
 qref_list_cq_rejected(const lList *qref_list, const char *cqname, const char *hostname, const lList *hgroup_list);
 
 bool

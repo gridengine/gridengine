@@ -408,6 +408,7 @@ DTRACE;
          CQ_consumable_config_list,
          CQ_projects,
          CQ_xprojects,
+         CQ_pe_list,
          CQ_nsuspend,
          CQ_job_slots,
          NoName

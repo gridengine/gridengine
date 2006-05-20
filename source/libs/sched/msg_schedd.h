@@ -76,7 +76,7 @@
 #define MSG_SCHEDD_INFO_QUEUENOTREQUESTABLE_S         _MESSAGE(47047, _("cannot run in queue instance "SFQ" because queues are non requestable"))
 #define MSG_SCHEDD_INFO_NOTINHARDQUEUELST_S           _MESSAGE(47048, _("cannot run in queue "SFQ" because it is not contained in its hard queue list (-q)"))
 #define MSG_SCHEDD_INFO_NOTPARALLELQUEUE_S            _MESSAGE(47049, _("cannot run in queue instance "SFQ" because it is not of parallel type") ) 
-#define MSG_SCHEDD_INFO_NOTINQUEUELSTOFPE_SS          _MESSAGE(47050, _("cannot run in queue instance "SFQ" because PE "SFQ" is not in pe list") ) 
+#define MSG_SCHEDD_INFO_NOTINQUEUELSTOFPE_SS          _MESSAGE(47050, _("cannot run in queue "SFQ" because PE "SFQ" is not in pe list") ) 
 #define MSG_SCHEDD_INFO_NOTACKPTQUEUE_SS              _MESSAGE(47051, _("cannot run in queue instance "SFQ" because it is not of type checkpointing") ) 
 #define MSG_SCHEDD_INFO_NOTINQUEUELSTOFCKPT_SS        _MESSAGE(47052, _("cannot run in queue instance "SFQ" because ckpt object "SFQ" is not in ckpt list of queue"))
 #define MSG_SCHEDD_INFO_QUEUENOTINTERACTIVE_S         _MESSAGE(47053, _("cannot run in queue instance "SFQ" because it is not of type interactive"))

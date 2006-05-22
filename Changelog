@@ -1,3 +1,11 @@
+AH-2006-05-20-0: Bugfix:    Added shared library dependency to libdrmaa.so build rule 
+                            to overcome problem of -ldl -lpthread required at stage 
+                            for DRMAA applications.
+                 Review:    AA, JG
+                 Changed:   libdrmaa
+                 Issue:     2057
+                 Bugtraq:   6428050
+
 JG-2006-05-19-0: Testsuite: Prepared testsuite framework for N1GE 6.5.
                             Enhancements and cleanup of qsub test.
                  Review:    CR

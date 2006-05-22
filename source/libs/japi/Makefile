@@ -63,13 +63,13 @@ JAPI_ADD_SRC = parse_job_cull.c parse_qsub.c read_defaults.c sge_options.c
 JAPI_ADD_OBJS = $(JAPI_ADD_SRC:.c=.o)
 JAPI_ADD_LIBS = $(EVCLIB) -lgdi -lsgeobj -lsgeobjd \
                 $(SECLIB) $(KRBLIB) -lcull -lcomm -lcommlists \
-                $(WINGRIDLIB) -luti -lrmon -llck $(DLLIB)
+                -luti -lrmon -llck $(DLLIB)
                 
 JAPI_DEPEND_OBJS = $(JAPI_ADD_OBJS)
 
 JAPI_DEPEND_LIBS = $(EVCLIB) $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) \
                    $(CULLLIB) $(COMMLIB) $(COMMLISTSLIB) \
-                   $(WINGRIDLIB_DEP) $(UTILIB) $(RMONLIB) $(LCKLIB)
+                   $(UTILIB) $(RMONLIB) $(LCKLIB)
 
 ###############################################################################
 # global rules: all, clean, depend, messages
@@ -80,7 +80,8 @@ drmaa_clean: japi_clean drmaa_extras_clean
 	$(RM) $(DRMAALIB_OBJS) libdrmaa.a $(DRMAALIB) $(DRMAALIB_V)
 
 drmaa_extras_clean: drmaa_howto_clean
-	$(RM) test_drmaa test_drmaa.o example example.o test_drmaa_sync \
+	$(RM) test_drmaa test_drmaa.o example example.o test_drmaa_perf \
+         test_drmaa_perf.o test_drmaa_sync \
          test_drmaa_sync.o test_drmaa_no_bin test_drmaa_no_bin.o \
          test_drmaa_issue1768 test_drmaa_issue1768.o test_drmaa_issue1892 \
          test_drmaa_issue1892.o \
@@ -89,7 +90,7 @@ drmaa_extras_clean: drmaa_howto_clean
 japilib: $(JAPILIB)
 drmaalib: $(DRMAALIB)
 
-drmaa_extras: drmaa_howto_all test_drmaa example test_drmaa_sync \
+drmaa_extras: drmaa_howto_all test_drmaa example test_drmaa_perf test_drmaa_sync \
               test_drmaa_no_bin test_drmaa_issue1768 test_drmaa_issue1892 compile
 	
 japi_clean:
@@ -116,11 +117,11 @@ libjapi.1.0$(LIBEXT):  $(JAPILIB_10) $(JAPI_DEPEND_OBJS)
 	$(RANLIB) libjapi.1.0$(LIBEXT)
 
 libdrmaa$(SHAREDEXT).0.95: libjapi.0.95$(LIBEXT) $(DRMAALIB_OBJS) $(DRMAA_OBJS) $(LIBWINGRID_DEP)
-	$(SHAREDLD) $(SHARED_LFLAGS) -o libdrmaa$(SHAREDEXT).0.95 $(DRMAALIB_95_OBJS) $(DRMAA_OBJS) $(SECLIB) $(LIBWINGRID) $(SLIBS) $(LIBS) -lc -ljapi.0.95 \
+	$(SHAREDLD) $(SHARED_LFLAGS) -o libdrmaa$(SHAREDEXT).0.95 $(DRMAALIB_95_OBJS) $(DRMAA_OBJS) $(SECLIB) $(LIBWINGRID) $(LIBS) $(DLLIB) -lc -ljapi.0.95 \
    && ../scripts/nonreentrant.sh -a `../dist/util/arch` -w libdrmaa$(SHAREDEXT).0.95
 
 libdrmaa$(SHAREDEXT).1.0: libjapi.1.0$(LIBEXT) $(DRMAALIB_OBJS) $(DRMAA_OBJS) $(LIBWINGRID_DEP)
-	$(SHAREDLD) $(SHARED_LFLAGS) -o libdrmaa$(SHAREDEXT).1.0 $(DRMAALIB_10_OBJS) $(DRMAA_OBJS) $(SECLIB) $(LIBWINGRID) $(SLIBS) $(LIBS) -lc -ljapi.1.0 \
+	$(SHAREDLD) $(SHARED_LFLAGS) -o libdrmaa$(SHAREDEXT).1.0 $(DRMAALIB_10_OBJS) $(DRMAA_OBJS) $(SECLIB) $(LIBWINGRID) $(LIBS) $(DLLIB) -lc -ljapi.1.0 \
    && ../scripts/nonreentrant.sh -a `../dist/util/arch` -w libdrmaa$(SHAREDEXT).1.0
 
 # Needed to compile howtos, examples, and unit tests
@@ -163,11 +164,11 @@ com_sun_grid_drmaa_SessionImpl.0.95.o: $(CLASSES_DIR)/com_sun_grid_drmaa_Session
 test_drmaa: test_drmaa.1.0 test_drmaa.0.95
 	rm -f test_drmaa ; ln -s test_drmaa.0.95 test_drmaa
 
-test_drmaa.1.0: test_drmaa.1.0.o $(DRMAALIB) $(WINGRIDLIB_DEP)
-	$(LD_WRAPPER) $(CC) -o $@ test_drmaa.1.0.o $(LFLAGS) -DDRMAA_10 -ldrmaa $(WINGRIDLIB) $(LIBS) $(SLIBS) $(DLLIB)
+test_drmaa.1.0: test_drmaa.1.0.o $(DRMAALIB)
+	$(LD_WRAPPER) $(CC) -o $@ test_drmaa.1.0.o $(LFLAGS) -DDRMAA_10 $(LIBS) -ldrmaa
 
-test_drmaa.0.95: test_drmaa.0.95.o $(DRMAALIB) $(WINGRIDLIB_DEP)
-	$(LD_WRAPPER) $(CC) -o $@ test_drmaa.0.95.o $(LFLAGS) -ldrmaa $(WINGRIDLIB) $(LIBS) $(SLIBS) $(DLLIB)
+test_drmaa.0.95: test_drmaa.0.95.o $(DRMAALIB)
+	$(LD_WRAPPER) $(CC) -o $@ test_drmaa.0.95.o $(LFLAGS) $(LIBS) -ldrmaa
 
 test_drmaa.1.0.o: $(JAPILIB_DIR)/test_drmaa.c
 	$(CC) $(CFLAGS) -DDRMAA_10 -c $(JAPILIB_DIR)/test_drmaa.c -o test_drmaa.1.0.o
@@ -175,50 +176,50 @@ test_drmaa.1.0.o: $(JAPILIB_DIR)/test_drmaa.c
 test_drmaa.0.95.o: $(JAPILIB_DIR)/test_drmaa.c
 	$(CC) $(CFLAGS) -c $(JAPILIB_DIR)/test_drmaa.c -o test_drmaa.0.95.o
 
-test_drmaa_sync: test_drmaa_sync.o $(DRMAALIB) $(WINGRIDLIB_DEP)
-	$(LD_WRAPPER) $(CC) -o $@ test_drmaa_sync.o $(LFLAGS) -ldrmaa $(WINGRIDLIB) $(LIBS) $(SLIBS) $(DLLIB)
+test_drmaa_sync: test_drmaa_sync.o $(DRMAALIB)
+	$(LD_WRAPPER) $(CC) -o $@ test_drmaa_sync.o $(LFLAGS) $(LIBS) -ldrmaa
 
 test_drmaa_sync.o: $(JAPILIB_DIR)/test_drmaa_sync.c
 	$(CC) $(CFLAGS) -c $(JAPILIB_DIR)/test_drmaa_sync.c
 
-test_drmaa_mcpu: test_drmaa_mcpu.o $(DRMAALIB) $(WINGRIDLIB_DEP)
-	$(LD_WRAPPER) $(CC) -o $@ test_drmaa_mcpu.o $(LFLAGS) -ldrmaa $(WINGRIDLIB) $(LIBS) $(SLIBS) $(DLLIB)
+test_drmaa_mcpu: test_drmaa_mcpu.o $(DRMAALIB)
+	$(LD_WRAPPER) $(CC) -o $@ test_drmaa_mcpu.o $(LFLAGS) -ldrmaa
 
 test_drmaa_mcpu.o: $(JAPILIB_DIR)/test_drmaa_mcpu.c
 	$(CC) $(CFLAGS) -c $(JAPILIB_DIR)/test_drmaa_mcpu.c
 
-test_drmaa_perf: test_drmaa_perf.o $(DRMAALIB) $(WINGRIDLIB_DEP)
-	$(LD_WRAPPER) $(CC) -o $@ test_drmaa_perf.o $(LFLAGS) -ldrmaa $(WINGRIDLIB) $(LIBS) $(SLIBS) $(DLLIB)
+test_drmaa_perf: test_drmaa_perf.o $(DRMAALIB)
+	$(LD_WRAPPER) $(CC) -o $@ test_drmaa_perf.o $(LFLAGS) $(LIBS) -ldrmaa
 
 test_drmaa_perf.o: $(JAPILIB_DIR)/test_drmaa_perf.c
 	$(CC) $(CFLAGS) -c $(JAPILIB_DIR)/test_drmaa_perf.c
 
-test_drmaa_no_bin: test_drmaa_no_bin.o $(DRMAALIB) $(WINGRIDLIB_DEP)
-	$(LD_WRAPPER) $(CC) -o $@ test_drmaa_no_bin.o $(LFLAGS) -ldrmaa $(WINGRIDLIB) $(LIBS) $(SLIBS) $(DLLIB)
+test_drmaa_no_bin: test_drmaa_no_bin.o $(DRMAALIB)
+	$(LD_WRAPPER) $(CC) -o $@ test_drmaa_no_bin.o $(LFLAGS) $(LIBS) -ldrmaa
 
 test_drmaa_no_bin.o: $(JAPILIB_DIR)/test_drmaa_no_bin.c
 	$(CC) $(CFLAGS) -c $(JAPILIB_DIR)/test_drmaa_no_bin.c
 
-test_drmaa_issue1768: test_drmaa_issue1768.o $(DRMAALIB) $(WINGRIDLIB_DEP)
-	$(LD_WRAPPER) $(CC) $(CFLAGS) -o $@ test_drmaa_issue1768.o $(LFLAGS) -ldrmaa $(WINGRIDLIB) $(LIBS) $(SLIBS) $(DLLIB)
+test_drmaa_issue1768: test_drmaa_issue1768.o $(DRMAALIB)
+	$(LD_WRAPPER) $(CC) -o $@ test_drmaa_issue1768.o $(LFLAGS) $(LIBS) -ldrmaa
 
 test_drmaa_issue1768.o: $(JAPILIB_DIR)/test_drmaa_issue1768.c
 	$(CC) $(CFLAGS) -c $(JAPILIB_DIR)/test_drmaa_issue1768.c
 
-test_drmaa_issue1892: test_drmaa_issue1892.o $(DRMAALIB) $(WINGRIDLIB_DEP)
-	$(LD_WRAPPER) $(CC) $(CFLAGS) -o $@ test_drmaa_issue1892.o $(LFLAGS) -ldrmaa $(WINGRIDLIB) $(LIBS) $(SLIBS) $(DLLIB)
+test_drmaa_issue1892: test_drmaa_issue1892.o $(DRMAALIB)
+	$(LD_WRAPPER) $(CC) -o $@ test_drmaa_issue1892.o $(LFLAGS) $(LIBS) -ldrmaa
 
 test_drmaa_issue1892.o: $(JAPILIB_DIR)/test_drmaa_issue1892.c
 	$(CC) $(CFLAGS) -c $(JAPILIB_DIR)/test_drmaa_issue1892.c
 
-example: example.o $(DRMAALIB) $(WINGRIDLIB_DEP)
-	$(LD_WRAPPER) $(CC) $(CFLAGS) -o example example.o $(LFLAGS) -ldrmaa $(WINGRIDLIB) $(LIBS) $(SLIBS) $(DLLIB)
+example: example.o $(DRMAALIB)
+	$(LD_WRAPPER) $(CC) -o example example.o $(LFLAGS) -ldrmaa
 
 example.o: $(JAPILIB_DIR)/example.c
 	$(CC) $(CFLAGS) -c $(JAPILIB_DIR)/example.c
 
 compile: compile.o $(DRMAALIB)
-	$(LD_WRAPPER) $(CC) $(CFLAGS) -o compile compile.o $(LFLAGS) -ldrmaa $(WINGRIDLIB) $(LIBS) $(SLIBS) $(DLLIB)
+	$(LD_WRAPPER) $(CC) -o compile compile.o $(LFLAGS) -ldrmaa
 
 compile.o: $(JAPILIB_DIR)/compile.c
 	$(CC) $(CFLAGS) -c $(JAPILIB_DIR)/compile.c

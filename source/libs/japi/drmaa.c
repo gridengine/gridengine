@@ -1934,6 +1934,7 @@ int drmaa_get_next_job_id(drmaa_job_ids_t* values, char *value, size_t value_len
    return japi_string_vector_get_next((drmaa_attr_values_t*)values, value?&val:NULL);
 }
 
+#ifdef DRMAA_10
 /****** DRMAA/drmaa_get_num_attr_names() **************************************
 *  NAME
 *     drmaa_get_num_attr_names() -- Get the number of entries in the vector
@@ -2002,6 +2003,7 @@ int drmaa_get_num_job_ids(drmaa_job_ids_t* values, int *size)
 {
    return japi_string_vector_get_num((drmaa_attr_values_t*)values, size);
 }
+#endif
 
 /****** DRMAA/drmaa_release_attr_values() **************************************
 *  NAME

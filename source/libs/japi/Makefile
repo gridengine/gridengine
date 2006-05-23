@@ -151,7 +151,7 @@ test_drmaa: test_drmaa.1.0 test_drmaa.0.95
 	rm -f test_drmaa ; ln -s test_drmaa.0.95 test_drmaa
 
 test_drmaa.1.0: test_drmaa.1.0.o $(DRMAALIB) $(WINGRIDLIB_DEP)
-	$(LD_WRAPPER) $(CC) -o $@ test_drmaa.1.0.o $(LFLAGS) -DDRMAA_10 $(LIBS) -ldrmaa $(WINGRIDLIB)
+	$(LD_WRAPPER) $(CC) -o $@ test_drmaa.1.0.o $(LFLAGS) -DDRMAA_10 $(LIBS) libdrmaa$(SHAREDEXT).1.0 $(WINGRIDLIB)
 
 test_drmaa.0.95: test_drmaa.0.95.o $(DRMAALIB) $(WINGRIDLIB_DEP)
 	$(LD_WRAPPER) $(CC) -o $@ test_drmaa.0.95.o $(LFLAGS) $(LIBS) -ldrmaa $(WINGRIDLIB)

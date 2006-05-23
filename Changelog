@@ -1,3 +1,13 @@
+AH-2006-05-23-0: Bugfix:    Changed drmaa.c to ensure there are no DRMAA 1.0 
+                            specific linking symbol in libdrmaa.so.0.95. As
+                            a result DRMAA applications build with 1.0 will 
+                            not start any longer if LD_LIBRARY_PATH points 
+                            to 0.95 library.
+                 Review:    RD
+                 Changed:   libdrmaa
+                 Issue:     2059
+                 Bugtraq:   6429305
+
 HP-2006-05-23-0: Cleanup:   Removed unneccessary dependencies from libdrmaa,
                             removed libjapi.a, removed unneccessary dependencies of
                             libjapi.a from several binaries.

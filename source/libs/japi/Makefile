@@ -36,7 +36,6 @@
 JAPILIB_DIR   = $(SDIR)/libs/japi
 CLASSES_DIR   = $(SDIR)/classes/src
 
-JAPILIB       = libjapi.0.95$(LIBEXT) libjapi.1.0$(LIBEXT)
 JAPILIB_10    = japi.1.0.o
 JAPILIB_95    = japi.0.95.o
 JAPILIB_OBJS  = $(JAPILIB_10) $(JAPILIB_95)
@@ -59,17 +58,9 @@ DRMAA_OBJS       = $(EVCLIB_OBJS) $(GDILIB_OBJS) \
                    $(COMMLISTSLIB_OBJS) $(UTILIB_DRMAA_OBJS) $(LCKLIB_OBJS)
 
 JAPI_ADD_SRC = parse_job_cull.c parse_qsub.c read_defaults.c sge_options.c
-
 JAPI_ADD_OBJS = $(JAPI_ADD_SRC:.c=.o)
-JAPI_ADD_LIBS = $(EVCLIB) -lgdi -lsgeobj -lsgeobjd \
-                $(SECLIB) $(KRBLIB) -lcull -lcomm -lcommlists \
-                -luti -lrmon -llck $(DLLIB)
                 
 JAPI_DEPEND_OBJS = $(JAPI_ADD_OBJS)
-
-JAPI_DEPEND_LIBS = $(EVCLIB) $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) \
-                   $(CULLLIB) $(COMMLIB) $(COMMLISTSLIB) \
-                   $(UTILIB) $(RMONLIB) $(LCKLIB)
 
 ###############################################################################
 # global rules: all, clean, depend, messages
@@ -85,6 +76,7 @@ drmaa_extras_clean: drmaa_howto_clean
          test_drmaa_sync.o test_drmaa_no_bin test_drmaa_no_bin.o \
          test_drmaa_issue1768 test_drmaa_issue1768.o test_drmaa_issue1892 \
          test_drmaa_issue1892.o \
+         test_drmaa.1.0 test_drmaa.1.0.o test_drmaa.0.95 test_drmaa.0.95.o \
          compile compile.o
 
 japilib: $(JAPILIB)
@@ -108,20 +100,14 @@ drmaa_messages:
 ###############################################################################
 # rules to build library
 ###############################################################################
-libjapi.0.95$(LIBEXT):  $(JAPILIB_95) $(JAPI_DEPEND_OBJS)
-	$(AR) $(ARFLAGS) libjapi.0.95$(LIBEXT) $(JAPILIB_95) $(JAPI_ADD_OBJS)
-	$(RANLIB) libjapi.0.95$(LIBEXT)
-
-libjapi.1.0$(LIBEXT):  $(JAPILIB_10) $(JAPI_DEPEND_OBJS)
-	$(AR) $(ARFLAGS) libjapi.1.0$(LIBEXT) $(JAPILIB_10) $(JAPI_ADD_OBJS)
-	$(RANLIB) libjapi.1.0$(LIBEXT)
-
-libdrmaa$(SHAREDEXT).0.95: libjapi.0.95$(LIBEXT) $(DRMAALIB_OBJS) $(DRMAA_OBJS) $(LIBWINGRID_DEP)
-	$(SHAREDLD) $(SHARED_LFLAGS) -o libdrmaa$(SHAREDEXT).0.95 $(DRMAALIB_95_OBJS) $(DRMAA_OBJS) $(SECLIB) $(LIBWINGRID) $(LIBS) $(DLLIB) -lc -ljapi.0.95 \
+libdrmaa$(SHAREDEXT).0.95: $(JAPILIB_95) $(JAPI_DEPEND_OBJS) $(DRMAALIB_OBJS) $(DRMAA_OBJS) $(WINGRIDLIB_DEP)
+	$(SHAREDLD) $(SHARED_LFLAGS) -o libdrmaa$(SHAREDEXT).0.95 $(DRMAALIB_95_OBJS) $(DRMAA_OBJS) $(JAPILIB_95) $(JAPI_ADD_OBJS) \
+      $(SECLIB) $(WINGRIDLIB) $(LIBS) $(DLLIB) -lc \
    && ../scripts/nonreentrant.sh -a `../dist/util/arch` -w libdrmaa$(SHAREDEXT).0.95
 
-libdrmaa$(SHAREDEXT).1.0: libjapi.1.0$(LIBEXT) $(DRMAALIB_OBJS) $(DRMAA_OBJS) $(LIBWINGRID_DEP)
-	$(SHAREDLD) $(SHARED_LFLAGS) -o libdrmaa$(SHAREDEXT).1.0 $(DRMAALIB_10_OBJS) $(DRMAA_OBJS) $(SECLIB) $(LIBWINGRID) $(LIBS) $(DLLIB) -lc -ljapi.1.0 \
+libdrmaa$(SHAREDEXT).1.0:  $(JAPILIB_10) $(JAPI_DEPEND_OBJS) $(DRMAALIB_OBJS) $(DRMAA_OBJS) $(WINGRIDLIB_DEP)
+	$(SHAREDLD) $(SHARED_LFLAGS) -o libdrmaa$(SHAREDEXT).1.0 $(DRMAALIB_10_OBJS) $(DRMAA_OBJS) $(JAPILIB_10) $(JAPI_ADD_OBJS) \
+      $(SECLIB) $(WINGRIDLIB) $(LIBS) $(DLLIB) -lc \
    && ../scripts/nonreentrant.sh -a `../dist/util/arch` -w libdrmaa$(SHAREDEXT).1.0
 
 # Needed to compile howtos, examples, and unit tests
@@ -164,11 +150,11 @@ com_sun_grid_drmaa_SessionImpl.0.95.o: $(CLASSES_DIR)/com_sun_grid_drmaa_Session
 test_drmaa: test_drmaa.1.0 test_drmaa.0.95
 	rm -f test_drmaa ; ln -s test_drmaa.0.95 test_drmaa
 
-test_drmaa.1.0: test_drmaa.1.0.o $(DRMAALIB)
-	$(LD_WRAPPER) $(CC) -o $@ test_drmaa.1.0.o $(LFLAGS) -DDRMAA_10 $(LIBS) -ldrmaa
+test_drmaa.1.0: test_drmaa.1.0.o $(DRMAALIB) $(WINGRIDLIB_DEP)
+	$(LD_WRAPPER) $(CC) -o $@ test_drmaa.1.0.o $(LFLAGS) -DDRMAA_10 $(LIBS) -ldrmaa $(WINGRIDLIB)
 
-test_drmaa.0.95: test_drmaa.0.95.o $(DRMAALIB)
-	$(LD_WRAPPER) $(CC) -o $@ test_drmaa.0.95.o $(LFLAGS) $(LIBS) -ldrmaa
+test_drmaa.0.95: test_drmaa.0.95.o $(DRMAALIB) $(WINGRIDLIB_DEP)
+	$(LD_WRAPPER) $(CC) -o $@ test_drmaa.0.95.o $(LFLAGS) $(LIBS) -ldrmaa $(WINGRIDLIB)
 
 test_drmaa.1.0.o: $(JAPILIB_DIR)/test_drmaa.c
 	$(CC) $(CFLAGS) -DDRMAA_10 -c $(JAPILIB_DIR)/test_drmaa.c -o test_drmaa.1.0.o

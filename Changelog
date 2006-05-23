@@ -1,3 +1,9 @@
+HP-2006-05-23-0: Cleanup:   Removed unneccessary dependencies from libdrmaa,
+                            removed libjapi.a, removed unneccessary dependencies of
+                            libjapi.a from several binaries.
+                 Review:    AH
+                 Changed    libdrmaa Makefile, qsub Makefile
+
 AH-2006-05-20-0: Bugfix:    Added shared library dependency to libdrmaa.so build rule 
                             to overcome problem of -ldl -lpthread required at stage 
                             for DRMAA applications.

@@ -79,7 +79,7 @@
 #define MSG_SCHEDD_INFO_NOTINQUEUELSTOFPE_SS          _MESSAGE(47050, _("cannot run in queue "SFQ" because PE "SFQ" is not in pe list") ) 
 #define MSG_SCHEDD_INFO_NOTACKPTQUEUE_SS              _MESSAGE(47051, _("cannot run in queue instance "SFQ" because it is not of type checkpointing") ) 
 #define MSG_SCHEDD_INFO_NOTINQUEUELSTOFCKPT_SS        _MESSAGE(47052, _("cannot run in queue instance "SFQ" because ckpt object "SFQ" is not in ckpt list of queue"))
-#define MSG_SCHEDD_INFO_QUEUENOTINTERACTIVE_S         _MESSAGE(47053, _("cannot run in queue instance "SFQ" because it is not of type interactive"))
+#define MSG_SCHEDD_INFO_QUEUENOTINTERACTIVE_S         _MESSAGE(47053, _("cannot run in queue "SFQ" because it is not of type interactive"))
 #define MSG_SCHEDD_INFO_NOTASERIALQUEUE_S             _MESSAGE(47054, _("cannot run in queue instance "SFQ" because it is not of type batch"))
 #define MSG_SCHEDD_INFO_NOTPARALLELJOB_S              _MESSAGE(47055, _("cannot run in queue instance "SFQ" because the job is not parallel"))
 #define MSG_SCHEDD_INFO_NOTREQFORCEDRES_SS            _MESSAGE(47056, _("does not request 'forced' resource "SFQ" of queue instance "SFN""))

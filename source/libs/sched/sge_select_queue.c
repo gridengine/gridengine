@@ -58,6 +58,7 @@
 #include "sge_orderL.h"
 #include "sge_pe.h"
 #include "sge_ctL.h"
+#include "sge_qinstanceL.h"
 #include "sge_strL.h"
 #ifdef SGE_PQS_API
 #include "sge_varL.h"
@@ -2863,6 +2864,7 @@ static bool pe_cq_rejected(const char *pe_name, const lListElem *cq)
    return rejected;
 }
 
+
 /****** sge_select_queue/project_cq_rejected() *********************************
 *  NAME
 *     project_cq_rejected() -- Check, if -P project rejects cluster queue
@@ -2938,6 +2940,44 @@ static bool project_cq_rejected(const char *project, const lListElem *cq)
    return false;
 }
 
+/****** sge_select_queue/interactive_cq_rejected() *****************************
+*  NAME
+*     interactive_cq_rejected() --  Check, if -now yes rejects cluster queue
+*
+*  SYNOPSIS
+*     static bool interactive_cq_rejected(const lListElem *cq) 
+*
+*  FUNCTION
+*     Returns true if -now yes jobs can not be run in cluster queue
+*
+*  INPUTS
+*     const lListElem *cq - cluster queue (CQ_Type)
+*
+*  RESULT
+*     static bool - True, if rejected
+*
+*  NOTES
+*     MT-NOTE: interactive_cq_rejected() is MT safe 
+*******************************************************************************/
+static bool interactive_cq_rejected(const lListElem *cq)
+{
+   const lListElem *alist;
+   bool rejected;
+  
+   DENTER(TOP_LAYER, "interactive_cq_rejected");
+
+   rejected = true;
+   for_each (alist, lGetList(cq, CQ_qtype)) {
+      if ((lGetUlong(alist, AQTLIST_value) & IQ)) {
+         rejected = false;
+         break;
+      }
+   }
+
+   DEXIT;
+   return rejected;
+}
+
 /****** sge_select_queue/cqueue_match_static() *********************************
 *  NAME
 *     cqueue_match_static() -- Does cluster queue match the job?
@@ -3006,9 +3046,17 @@ static dispatch_t cqueue_match_static(const char *cqname, sge_assignment_t *a)
    /* detect if entire cluster queue ruled out due to -pe */
    if (a->pe && (pe_name=lGetString(a->pe, PE_name)) && 
          pe_cq_rejected(pe_name, cq)) {
-      schedd_mes_add(a->job_id, SCHEDD_INFO_HASNOPRJ_S, "cluster queue", cqname);
-         DPRINTF(("Cluster queue "SFQ" does not reference PE "SFQ"\n", cqname, pe_name));
-         schedd_mes_add(a->job_id, SCHEDD_INFO_NOTINQUEUELSTOFPE_SS, cqname, pe_name);
+      DPRINTF(("Cluster queue "SFQ" does not reference PE "SFQ"\n", cqname, pe_name));
+      schedd_mes_add(a->job_id, SCHEDD_INFO_NOTINQUEUELSTOFPE_SS, cqname, pe_name);
+      DEXIT;
+      return DISPATCH_NEVER_CAT;
+   }
+
+   /* detect if entire cluster queue ruled out due to -I y aka -now yes */
+   if (JOB_TYPE_IS_IMMEDIATE(lGetUlong(a->job, JB_type)) && interactive_cq_rejected(cq)) {
+      DPRINTF(("Queue \"%s\" is not an interactive queue as requested by job %d\n", 
+               cqname, (int)a->job_id));
+      schedd_mes_add(a->job_id, SCHEDD_INFO_QUEUENOTINTERACTIVE_S, cqname);
       DEXIT;
       return DISPATCH_NEVER_CAT;
    }
@@ -3016,7 +3064,6 @@ static dispatch_t cqueue_match_static(const char *cqname, sge_assignment_t *a)
    DEXIT;
    return DISPATCH_OK;
 }
-
 
 
 /****** sge_select_queue/sequential_tag_queues_suitable4job() **************

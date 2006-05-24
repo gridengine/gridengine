@@ -1,3 +1,11 @@
+MD-2006-05-24-0: Enhancem.: windows service installation
+                            - added standalone service installation
+                            - added standalone service uninstallation
+                            - added service uninstallation with execd uninstall
+                            - changed some user text
+                 Changed:   inst_sge, inst_common.sh, inst_execd.sh
+                 Review:    HP
+
 HP-2006-05-24-0: Bugfix:    usage values of non-GUI Windows jobs where not 
                             retrieved
                  Enhancem.: added SGE_Helper_Service dependiencies to 

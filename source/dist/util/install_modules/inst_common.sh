@@ -292,6 +292,8 @@ UTILFILES="adminrun checkprog checkuser filestat gethostbyaddr gethostbyname \
 
 WINUTILFILES="SGE_Helper_Service.exe"
 
+#SUIDFILES="rsh rlogin testsuidroot sgepasswd"
+
 THIRD_PARTY_FILES="openssl"
 
 if [ $SGE_ARCH = "win32-x86" ]; then
@@ -620,6 +622,41 @@ WelcomeTheUserWinUpdate()
    $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
    $CLEAR
 }
+
+#--------------------------------------------------------------------------
+#
+WelcomeTheUserWinSvc()
+{
+   mode=$1
+   if [ "$SGE_ARCH" != "win32-x86" ]; then
+      return
+   fi
+
+   if [ "$mode" = "install" ]; then
+      installation_id="installation"   
+      install_id="install"
+   elif [ "$mode" = "uninstall" ]; then 
+      installation_id="uninstallation"
+      install_id="uninstall"
+   else
+      installation_id="process"
+      install_id="process"
+   fi
+
+   $INFOTEXT -u "\nWelcome to the Grid Engine Windows Helper Service %s" $installation_id
+   $INFOTEXT "\nBefore you continue with the %s please read these hints:\n\n" \
+             "   - Your terminal window should have a size of at least\n" \
+             "     80x24 characters\n\n" \
+             "   - The INTR character is often bound to the key Ctrl-C.\n" \
+             "     The term >Ctrl-C< is used during the %s if you\n" \
+             "     have the possibility to abort the %s\n\n" \
+             "The %s procedure will take approximately 1-2 minutes.\n" \
+             "After this %s you will get a enhanced windows execd\n" \
+             "installation, with gui support." $installation_id $install_id $installation_id $install_id $install_id
+   $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
+   $CLEAR
+}
+
 
 #-------------------------------------------------------------------------
 # CheckWhoInstallsSGE

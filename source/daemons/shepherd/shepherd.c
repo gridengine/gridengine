@@ -1861,10 +1861,10 @@ char *childname            /* "job", "pe_start", ...     */
 
 #if defined(INTERIX)
 /* <Windows_GUI> */
-      if(npid != -1) {      
-         sge_set_environment();
-         if(strcmp(childname, "job") == 0 &&
-            wl_get_GUI_mode(sge_get_environment()) == true) {
+      sge_set_environment();
+      if(strcmp(childname, "job") == 0 &&
+         wl_get_GUI_mode(sge_get_environment()) == true) {
+         if(npid != -1) {
             char errormsg[MAX_STRING_SIZE];
 
             memset(&rusage_hp10, 0, sizeof(rusage_hp10));

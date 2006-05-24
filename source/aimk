@@ -409,8 +409,8 @@ set QMAKE            = 1
 set QTCSH            = 1
 set MAKESTRPTIME     = 0
 set MAKEFNMATCH      = 0
-set MAKEWINGRIDLIB   = 0
-set MAKEWINGRIDAPP   = 0
+set MAKEWINGRIDLIB   = 1 # Will be set to 0 by every architecture except WIN32_X86
+set MAKEWINGRIDAPP   = 1 #   and several switches
 set WITH_USERMAPPING = 0 # Compile without usermapping feature
 
 # Default Flags and Libraries 
@@ -777,8 +777,8 @@ while ($#argv >= 1 && $?found)
       set QMON   = 0
       set QTCSH  = 0
       set REMOTE = 0
-      set MAKEWINGRIDAPP = 0
-      set MAKEWINGRIDLIB = 0
+      set MAKEWINGRIDAPP = 1
+      set MAKEWINGRIDLIB = 1
       breaksw
    case "-only-depend":
       set CORE       = 0
@@ -1431,8 +1431,6 @@ case WIN32_X86:
    set MAKE = gmake
 
    # Default build targets for WIN32_X86 for which we have seperate make files
-   set MAKEWINGRIDLIB   = 1
-   set MAKEWINGRIDAPP   = 1
    set QMON             = 0
    set MAKESTRPTIME     = 0
    set MAKEFNMATCH      = 0

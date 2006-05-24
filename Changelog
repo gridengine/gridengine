@@ -1,3 +1,10 @@
+HP-2006-05-24-0: Bugfix:    usage values of non-GUI Windows jobs where not 
+                            retrieved
+                 Enhancem.: added SGE_Helper_Service dependiencies to 
+                            scripts/zerodepend, fixed Windows related bug in aimk.
+                 Changed:   aimk, scripts/zerodepend, shepherd.c
+                 Review:    MD
+
 RD-2006-05-17-0: Bugfix:    - qconf rejects configuration, when attribute
                               value ends with a space character
                             - fixed two cases of reading past allocated memory

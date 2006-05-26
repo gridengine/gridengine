@@ -133,6 +133,8 @@ proc drmaaj_check {} {
          "hp11-64" -
          "tru64" -
          "darwin" -
+         "darwin-ppc" -
+         "darwin-x86" -
          "alpha5" {
             puts $CHECK_OUTPUT "architecture $binary_arch is supported"
          }

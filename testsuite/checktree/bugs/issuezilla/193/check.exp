@@ -96,22 +96,23 @@ lappend pe_alloc_rule "\$fill_up"
 
 
 proc issue_193_init_level {} {
-   global ts_config
-  global CHECK_ACT_LEVEL hold_state pending_state queue
-  global rerun_host no_rerun_host CHECK_OUTPUT
+   global ts_config CHECK_OUTPUT check_name
+   global CHECK_ACT_LEVEL hold_state pending_state queue
+   global rerun_host no_rerun_host
 
-  if { [ llength $ts_config(execd_nodes) ] < 2 } {
-     set_error -3 "need at least 2 execd hosts"
-  } else {   
-     set rerun_host    [ lindex $ts_config(execd_nodes) 0  ]
-     set no_rerun_host [ lindex $ts_config(execd_nodes) 1  ]
+   if {$CHECK_ACT_LEVEL == 0} {
+      if {[llength $ts_config(execd_nodes)] < 2} {
+         puts $CHECK_OUTPUT "need at least 2 execd hosts for check $check_name"
+         return -1
+      }
 
-     switch -- $CHECK_ACT_LEVEL {
-        "0" { return 0 } 
-     } 
-  }
+      set rerun_host    [ lindex $ts_config(execd_nodes) 0  ]
+      set no_rerun_host [ lindex $ts_config(execd_nodes) 1  ]
 
-  return -1  ;# no other level else
+      return 0
+   }
+
+   return -1  ;# no other level else
 }
 
 proc issue193_setup {} {

@@ -2146,6 +2146,42 @@ proc update_ts_host_config_version { filename } {
       return 0
    }
 
+   if { $ts_host_config(version) == "1.5" && $actual_ts_host_config_version == "1.6" } {
+      puts $CHECK_OUTPUT "\ntestsuite host configuration update from 1.5 to 1.6 ..."
+
+      foreach host $ts_host_config(hostlist) {
+         # convert the one architecture string to a version dependent one
+         set arch $ts_host_config($host,arch)
+         unset ts_host_config($host,arch)
+         set ts_host_config($host,arch,53) [host_conf_53_arch $arch]
+         set ts_host_config($host,arch,60) [host_conf_60_arch $arch]
+         set ts_host_config($host,arch,65) [host_conf_65_arch $arch]
+
+         # we now store compile host property depending on gridengine version
+         # assume our current compile hosts compile for 53, 60, and 65
+         if {$ts_host_config($host,compile) == 1} {
+            set ts_host_config($host,compile,53) 1
+            set ts_host_config($host,compile,60) 1
+            set ts_host_config($host,compile,65) 1
+         } else {
+            set ts_host_config($host,compile,53) 0
+            set ts_host_config($host,compile,60) 0
+            set ts_host_config($host,compile,65) 0
+         }
+         unset ts_host_config($host,compile)
+      }
+      set ts_host_config(version) "1.6"
+     
+      show_config ts_host_config
+      wait_for_enter
+      if { [ save_host_configuration $filename] != 0} {
+         puts $CHECK_OUTPUT "Could not save host configuration"
+         wait_for_enter
+         return
+      }
+      return 0
+   }
+
    puts $CHECK_OUTPUT "\nunexpected version"
    return -1
 }
@@ -7169,12 +7205,14 @@ proc compile_depend { compile_hosts a_report } {
    global CHECK_OUTPUT
    
    upvar $a_report report
-   
+  
+   # we prefer building the dependencies on a sol-sparc64 host
+   # to avoid automounter issues like having a heading /tmp_mnt in paths
    set depend_host_name [lindex $compile_hosts 0] 
-
    foreach help_host $compile_hosts {
-      if { [ string compare $ts_host_config($help_host,arch) "solaris64"] == 0 || 
-           [ string compare $ts_host_config($help_host,arch) "sol-sparc64"] == 0 } {
+      set help_arch [host_conf_get_arch $help_host]
+      if { [ string compare $help_arch "solaris64"] == 0 || 
+           [ string compare $help_arch "sol-sparc64"] == 0 } {
          puts $CHECK_OUTPUT "using host $help_host to create dependencies"
          set depend_host_name $help_host
       }
@@ -8485,4 +8523,3 @@ if {$do_nomain == 0} {
 #  wait_for_enter 1
   menu 
 }
-

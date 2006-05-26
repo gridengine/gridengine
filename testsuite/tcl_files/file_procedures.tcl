@@ -3471,6 +3471,8 @@ proc get_bdb_spooldir {{host ""} {only_local 0}} {
 #     "unknown" in case of errors.
 #*******************************************************************************
 proc get_fstype {path {host ""}} {
+   set ret "unknown"
+
    # use the SGE utilbin fstype
    set output [start_sge_utilbin "fstype" $path]
    if {$prg_exit_state != 0} {

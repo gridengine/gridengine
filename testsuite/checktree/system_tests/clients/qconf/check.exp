@@ -119,24 +119,17 @@ global queue_names
 global submitjob_jobid
 
 proc qconf_init_level {} {
-   global ts_config
-   global CHECK_ACT_LEVEL hold_state pending_state queue_names
+   global ts_config CHECK_OUTPUT
+   global CHECK_ACT_LEVEL
 
-  set queue_names     ""
-  for { set i 0 } { $i < 1000 }  {incr i 1} {
-     lappend queue_names "q.$i"
-  }
+   if {$CHECK_ACT_LEVEL == 0} {
+      if {[llength $ts_config(execd_nodes)] < 2} {
+         puts $CHECK_OUTPUT "need at least 2 execd hosts for check $check_name"
+         return -1
+      }
 
-  switch -- $CHECK_ACT_LEVEL {
-     "0" {
-        if { [llength $ts_config(execd_nodes)] <= 1 } {
-           set_error -1 "need more than one host for this test"
-           return -1
-        } else {
-           return 0
-        }
-     } 
-  }
+      return 0
+   }
 
   return -1  ;# no other level else
 }
@@ -144,8 +137,15 @@ proc qconf_init_level {} {
 proc qconf_setup {} {
    global CHECK_OUTPUT CHECK_USER qconf_original_host_groups qconf_original_usersets qconf_orig_queues qconf_project qconf_sched_config qconf_userlist 
    global backup_allhosts
+   global queue_names
 
    puts $CHECK_OUTPUT "setup ..."
+
+   set queue_names ""
+   for {set i 0} {$i < 1000}  {incr i 1} {
+      lappend queue_names "q.$i"
+   }
+   
    set output [start_sge_bin qconf -shgrpl]
    set output [string trim $output]
    set qconf_original_host_groups {}
@@ -232,7 +232,7 @@ proc qconf_cleanup {} {
          if { $elem == $new_elem } {
 	    continue
          } else {
-	    del_queue $new_elem
+	         del_queue $new_elem ""
          }
 
       }

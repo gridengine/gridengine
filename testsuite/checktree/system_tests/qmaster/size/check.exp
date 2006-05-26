@@ -325,6 +325,8 @@ proc init_ps {} {
       aix43 -
       aix51 -
       darwin -
+      darwin-ppc -
+      darwin-x86 -
       irix6 -
       irix65 -
       osf4 -
@@ -372,7 +374,7 @@ proc init_ps {} {
    }
 
    # try to execute ps command
-   set result [ catch { set size [get_size master] } output ]
+   set result [catch {set size [get_size master]} output]
 
    if { $result != 0 } {
       set_error 3 "executing ps command\n$cmd_ps(master)\nfailed\n$output"

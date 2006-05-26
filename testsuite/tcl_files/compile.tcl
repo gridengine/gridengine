@@ -53,18 +53,18 @@
 #    -1 - at least for one host, no compile host is configured
 #*******************************************************************************
 proc compile_check_compile_hosts {host_list} {
-   global ts_host_config
+   global ts_config ts_host_config
 
    # remember already resolved compile archs
    set compile_archs {}
 
    # check each host in host_list
    foreach host $host_list {
-      if {![info exists ts_host_config($host,arch)]} {
-         add_proc_error "compile_check_compile_hosts" -1 "host $host is not contained in testsuite host configuration!"
+      if {![host_conf_is_supported_host $host]} {
+         add_proc_error "compile_check_compile_hosts" -1 "host $host is not contained in testsuite host configuration or not supported host!"
       } else {
          # host's architecture
-         set arch $ts_host_config($host,arch)
+         set arch [host_conf_get_arch $host]
 
          # do we already have a compile host for this arch?
          # if not, search it.
@@ -119,11 +119,11 @@ proc compile_host_list {} {
    set host_list [compile_unify_host_list $host_list]
 
    foreach host $host_list {
-      if { ! [info exists ts_host_config($host,arch)] } {
+      set arch [host_conf_get_arch $host]
+      if {$arch == ""} {
          add_proc_error "compile_host_list" -1 "Can't not determine the architecture of host $host"
          return ""
       }
-      set arch $ts_host_config($host,arch)
       if { ! [info exists compile_host($arch)] } {
          set c_host [compile_search_compile_host $arch]
          if {$c_host == "none"} {
@@ -232,8 +232,8 @@ proc compile_search_compile_host {arch} {
    global CHECK_OUTPUT
 
    foreach host $ts_host_config(hostlist) {
-      if { $ts_host_config($host,arch) == $arch && \
-           $ts_host_config($host,compile) == 1} {
+      if {[host_conf_get_arch $host] == $arch && \
+          [host_conf_is_compile_host $host]} {
          return $host
       }
    }

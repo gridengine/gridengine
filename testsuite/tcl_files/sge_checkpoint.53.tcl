@@ -68,7 +68,8 @@ proc assign_queues_with_ckpt_object { qname hostlist ckpt_obj } {
    } else {
       set my_change(queue_list) "$curr_ckpt(queue_list) $q_list"
    }
-   mod_checkpointobj $ckpt_obj my_change
+   set my_change(ckpt_name) $ckpt_obj
+   mod_checkpointobj my_change
 }
 
 #****** sge_checkpoint.53/mod_checkpointobj() *************************************
@@ -99,7 +100,7 @@ proc assign_queues_with_ckpt_object { qname hostlist ckpt_obj } {
 #*******************************************************************************
 
 proc mod_checkpointobj { change_array {fast_add 1} {on_host ""} {as_user ""}} {
- global ts_config
+   global ts_config
    global CHECK_ARCH open_spawn_buffer
    global CHECK_USER CHECK_OUTPUT
 

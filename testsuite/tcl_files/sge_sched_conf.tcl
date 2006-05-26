@@ -192,9 +192,13 @@ proc set_schedd_config { change_array {fast_add 1} {on_host ""} {as_user ""} {ra
 
   upvar $change_array chgar
 
-  # Modify sched from file?
-   if { $fast_add } {
+   # Grid Engine 5.3 doesn't have qconf -Msconf
+   if {$ts_config(gridengine_version) == 53} {
+      set fast_add 0
+   }
 
+  # Modify sched from file?
+   if {$fast_add} {
       get_schedd_config old_config
       foreach elem [array names chgar] {
          set old_config($elem) "$chgar($elem)"
@@ -213,7 +217,11 @@ proc set_schedd_config { change_array {fast_add 1} {on_host ""} {as_user ""} {ra
 
       set vi_commands [build_vi_command chgar]
       set CHANGED_SCHEDD_CONFIG [translate_macro MSG_SCHEDD_CHANGEDSCHEDULERCONFIGURATION ]
-      set NOTULONG [translate_macro MSG_OBJECT_VALUENOTULONG_S "*" ]
+      if {$ts_config(gridengine_version) == 53} {
+         set NOTULONG "blah blah 53 does not have MSG_OBJECT_VALUENOTULONG_S"
+      } else {
+         set NOTULONG [translate_macro MSG_OBJECT_VALUENOTULONG_S "*" ]
+      }
 
       set result [handle_vi_edit "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-msconf" $vi_commands $CHANGED_SCHEDD_CONFIG $NOTULONG]  
 
@@ -263,12 +271,14 @@ proc set_schedd_config { change_array {fast_add 1} {on_host ""} {as_user ""} {ra
 #     sge_calendar/get_calendar
 #     sge_procedures/handle_sge_errors
 #*******************************************************************************
-proc set_schedd_config_error {result tmpfile  raise_error} {
+proc set_schedd_config_error {result tmpfile raise_error} {
+   global ts_config
 
    # build up needed vars
-
-   set messages(index) "-1"
-   set messages(-1)  [translate_macro MSG_OBJECT_VALUENOTULONG_S "*" ]
+   if {$ts_config(gridengine_version) > 53} {
+      set messages(index) "-1"
+      set messages(-1)  [translate_macro MSG_OBJECT_VALUENOTULONG_S "*" ]
+   }
 
    set ret 0
    # now evaluate return code and raise errors

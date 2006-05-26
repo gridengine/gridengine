@@ -139,14 +139,15 @@ proc add_queue { qname hostlist change_array {fast_add 1} } {
 
          set tmpfile [dump_array_to_tmpfile default_array]
 
-         set result ""
+         set result 0
          set catch_return [ catch {  eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf -Aq ${tmpfile}" } result ]
          puts $CHECK_OUTPUT $result
 
          if { [string match "*$ADDED" $result ] == 0 } {
             add_proc_error "add_queue" "-1" "qconf error or binary not found"
+            set result -1
             break
-         } 
+         }
       } else {
          # add by handling vi
          set vi_commands [build_vi_command chgar]
@@ -229,6 +230,11 @@ proc set_queue { qname hostlist change_array } {
    }
 
    return $result
+}
+
+proc mod_queue { qname hostlist change_array {fast_add 1} {on_host ""} {as_user ""} {raise_error 1}} {
+   upvar $change_array chgar
+   return [set_queue $qname $hostlist chgar]
 }
 
 proc del_queue { q_name hostlist {ignore_hostlist 0} {del_cqueue 0}} {

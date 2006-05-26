@@ -1578,64 +1578,47 @@ proc config_master_host { only_check name config_array } {
    set description   $config($name,desc)
    set value $actual_value
 
-   set local_host [ gethostname ]
-   if { $local_host == "unknown" } {
+   set local_host [gethostname]
+   if {$local_host == "unknown"} {
       puts $CHECK_OUTPUT "Could not get local host name" 
       return -1
    }
    set CHECK_HOST $local_host
 
-   if { $actual_value == "" } {
+   if {$actual_value == ""} {
       set value $default_value
-      if { $default_value == "" } {
+      if {$default_value == ""} {
          set value $CHECK_HOST
       }
    }
 
-#   master host must be check_host !!!
-#
-   if { $only_check == 0 } {
-      # do setup  
-      if { [ lsearch $ts_host_config(hostlist) $value ] < 0  } {
-         puts $CHECK_OUTPUT "Press enter to add host \"$CHECK_HOST\" to global host configuration ..."
-         wait_for_enter
-         set errors 0
-         incr errors [host_config_hostlist_add_host ts_host_config  $CHECK_HOST]
-         incr errors [host_config_hostlist_edit_host ts_host_config $CHECK_HOST]
-         incr errors [save_host_configuration $config(host_config_file)]
-         if { $errors != 0 } {
-            setup_host_config $config(host_config_file) 1
-         }
-      }
-       if { [compile_check_compile_hosts $value] != 0 } {
-          puts $CHECK_OUTPUT "Press enter to edit global host configuration ..."
-          wait_for_enter
-          setup_host_config $config(host_config_file) 1
-       }
+   # master host must be check_host !!!
+   if {$only_check == 0} {
+      config_select_host $value config
       puts $CHECK_OUTPUT "Press enter to use host \"$CHECK_HOST\" as qmaster host"
       wait_for_enter
       set value $CHECK_HOST
-       
    } 
 
    if {!$fast_setup} {
       debug_puts "master host: $value"
-      if { [ string compare $value $CHECK_HOST] != 0 && $do_nomain == 0} {
+      if {[string compare $value $CHECK_HOST] != 0 && $do_nomain == 0} {
          puts $CHECK_OUTPUT "Master host must be local host"
          return -1
       }
 
-      if { [llength $value] != 1 } {
+      if {[llength $value] != 1} {
          puts $CHECK_OUTPUT "qmaster_host has more than one hostname entry"
          return -1
       }
 
-      if { [ lsearch $ts_host_config(hostlist) $value ] < 0  } {
-         puts $CHECK_OUTPUT "Master host \"$value\" is not in host configuration file"
+      # Verify that the master host is configured in host config and
+      # supported with the configured Grid Engine version.
+      if {![host_conf_is_supported_host $value]} {
          return -1
       }
 
-      if { [compile_check_compile_hosts $value] != 0 } {
+      if {[compile_check_compile_hosts $value] != 0} {
          return -1
       }
    }
@@ -1674,118 +1657,25 @@ proc config_execd_hosts { only_check name config_array } {
    set CHECK_CORE_EXECD ""
 
    upvar $config_array config
-   set actual_value  $config($name)
-   set default_value $config($name,default)
-   set description   $config($name,desc)
-   set value $actual_value
+   set value $config($name)
 
-   if {! $fast_setup} {
-      if { $actual_value == "" } {
-         set value $default_value
-         if { $default_value == "" } {
+   if {$only_check == 0} {
+      # initialize value from defaults, if not yet set
+      if {$value == ""} {
+         set value $config($name,default)
+         if {$value == ""} {
             set value $CHECK_HOST
          }
       }
 
-      if { $only_check == 0 } {
-   #      # do setup  
-          puts $CHECK_OUTPUT "" 
-          set selected $value
-          while { 1 } {
-             clear_screen
-             puts $CHECK_OUTPUT "----------------------------------------------------------"
-             puts $CHECK_OUTPUT $description
-             puts $CHECK_OUTPUT "----------------------------------------------------------"
-              
-             set selected [lsort $selected]
-             puts $CHECK_OUTPUT "\nSelected cluster hosts:"
-             puts $CHECK_OUTPUT "----------------------------------------------------------"
-             foreach elem $selected { puts $CHECK_OUTPUT $elem }
-             puts $CHECK_OUTPUT "----------------------------------------------------------"
-             host_config_hostlist_show_hosts ts_host_config
-             puts $CHECK_OUTPUT "\n"
-             puts $CHECK_OUTPUT "Type \"all\" to select all hosts in list"
-             puts -nonewline $CHECK_OUTPUT "Please enter hostname/number or return to exit: "
-            
-             set host [wait_for_enter 1]
-             if { [ string length $host ] == 0 } {
-                break
-             }
-             if { [ string compare $host "all" ] == 0 } {
-                set selected ""
-                foreach host $ts_host_config(hostlist) {
-                   if { [ lsearch -exact $selected $host ] < 0 } {
-                      append selected " $host"
-                   }
-                }
-                break
-             }
-             if { [string is integer $host] } {
-                incr host -1
-                set host [ lindex $ts_host_config(hostlist) $host ]
-             }
-             if { [ lsearch $ts_host_config(hostlist) $host ] < 0 } {
-                # if the host is in selected host, but no longer in host config, delete it
-                set selected_idx [lsearch -exact $selected $host]
-                if {$selected_idx >= 0} {
-                   set selected [lreplace $selected $selected_idx $selected_idx]
-                   continue
-                } else {
-                   puts $CHECK_OUTPUT "host \"$host\" not found in list"
-                   wait_for_enter
-                   continue
-                }
-             }
+      # edit the execd host list, check_host must be first host
+      set value [config_select_host_list config $name $value]
+      set value [config_check_host_in_hostlist $value]
+   }
 
-             if { [ lsearch -exact $selected $host ] < 0 } {
-                append selected " $host"
-             } else {
-                set index [lsearch $selected $host]
-                set selected [ lreplace $selected $index $index ]
-             }
-          }
-          
-          set value [string trim $selected]
-
-          set index [lsearch $value $CHECK_HOST]
-          if { $index >= 0 } {
-             set selected [ lreplace $value $index $index ]
-          }
-          set value $CHECK_HOST
-          append value " $selected"
-          set value [string trim $value]
-          foreach host $value {
-             if { [ lsearch $ts_host_config(hostlist) $host ] < 0  } {
-                puts $CHECK_OUTPUT "host \"$host\" is not in host configuration file"
-                puts $CHECK_OUTPUT "Press enter to add host \"$host\" to global host configuration ..."
-                wait_for_enter
-                set errors 0
-                incr errors [host_config_hostlist_add_host ts_host_config  $host]
-                incr errors [host_config_hostlist_edit_host ts_host_config $host]
-                incr errors [save_host_configuration $config(host_config_file)]
-                if { $errors != 0 } {
-                   setup_host_config $config(host_config_file) 1
-                }
-             }
-          }
-          if { [compile_check_compile_hosts $value] != 0 } {
-             puts $CHECK_OUTPUT "Press enter to edit global host configuration ..."
-             wait_for_enter
-             setup_host_config $config(host_config_file) 1
-          }
-      } 
-
-      if { [ string compare [lindex $value 0] $CHECK_HOST] != 0  && $do_nomain == 0} {
-         puts $CHECK_OUTPUT "First execd host must be local host"
+   if {!$fast_setup} {
+      if {![config_verify_hostlist $value "execd" 1]} {
          return -1
-      }
-
-
-      foreach host $value {
-         if { [ lsearch $ts_host_config(hostlist) $host ] < 0  } {
-            puts $CHECK_OUTPUT "Host \"$host\" is not in host configuration file"
-            return -1
-         }
       }
    }
 
@@ -1813,10 +1703,6 @@ proc config_execd_hosts { only_check name config_array } {
    # for compatibility, we set CHECK_CORE_EXECD to the node list
    # TODO: should be eliminated, use $ts_config(execd_nodes) instead
    set CHECK_CORE_EXECD $config(execd_nodes)
-
-   if { [compile_check_compile_hosts $value] != 0 } {
-      return -1
-   }
 
    return $value
 }
@@ -1849,126 +1735,44 @@ proc config_submit_only_hosts { only_check name config_array } {
    global ts_host_config fast_setup
 
    upvar $config_array config
-   set actual_value  $config($name)
-   set default_value $config($name,default)
-   set description   $config($name,desc)
-   set value $actual_value
-
-   if { $actual_value == "" } {
-      set value $default_value
-   }
+   set value $config($name)
 
    if { $only_check == 0 } {
-#      # do setup  
-       if { $value == "none" } {
-          set value ""
-       }
-       puts $CHECK_OUTPUT "" 
-       set selected $value
-       while { 1 } {
-          clear_screen
-          puts $CHECK_OUTPUT "----------------------------------------------------------"
-          puts $CHECK_OUTPUT $description
-          puts $CHECK_OUTPUT "----------------------------------------------------------"
+      # initialize value from defaults, if not yet set
+      if {$value == ""} {
+         set value $config($name,default)
+      }
 
-          set selected [lsort $selected]
-          puts $CHECK_OUTPUT "\nSelected submit only hosts:"
+      if {$value == "none"} {
+         set value ""
+      }
 
-          puts $CHECK_OUTPUT "----------------------------------------------------------"
-          foreach elem $selected { puts $CHECK_OUTPUT $elem }
-          puts $CHECK_OUTPUT "----------------------------------------------------------"
+      # edit the submit only host list
+      set value [config_select_host_list config $name $value]
 
-          host_config_hostlist_show_hosts ts_host_config
-          puts $CHECK_OUTPUT "\n"
-          puts $CHECK_OUTPUT "Type \"all\" to select all hosts who are not in execd host list"
-          puts -nonewline $CHECK_OUTPUT "Please enter hostname/number or return to exit: "
-         
-          set host [wait_for_enter 1]
-          if { [ string length $host ] == 0 } {
-             break
-          }
-          if { [ string compare $host "all" ] == 0 } {
-             set selected ""
-             foreach host $ts_host_config(hostlist) {
-                if { [ lsearch -exact $config(execd_hosts) $host ] < 0 } {
-                   append selected " $host"
-                }
-             }
-             break
-          }
-          if { [string is integer $host] } {
-             incr host -1
-             set host [ lindex $ts_host_config(hostlist) $host ]
-          }
-          if { [ lsearch $ts_host_config(hostlist) $host ] < 0 } {
-             # if the host is in selected host, but no longer in host config, delete it
-             set selected_idx [lsearch -exact $selected $host]
-             if {$selected_idx >= 0} {
-                set selected [lreplace $selected $selected_idx $selected_idx]
-                continue
-             } else {
-                puts $CHECK_OUTPUT "host \"$host\" not found in list"
-                wait_for_enter
-                continue
-             }
-          }
-          if { [ lsearch $CHECK_CORE_EXECD $host ] >= 0 } {
-             puts $CHECK_OUTPUT "host \"$host\" is in execd list"
-             wait_for_enter
-             continue
-          }
-
-
-          if { [ lsearch -exact $selected $host ] < 0 } {
-             append selected " $host"
-          } else {
-             set index [lsearch $selected $host]
-             set selected [ lreplace $selected $index $index ]
-          }
-       }
-       
-       set value [string trim $selected]
-       foreach host $value {
-          if { [ lsearch $ts_host_config(hostlist) $host ] < 0  } {
-             puts $CHECK_OUTPUT "host \"$host\" is not in host configuration file"
-             puts $CHECK_OUTPUT "Press enter to add host \"$host\" to global host configuration ..."
-             wait_for_enter
-             set errors 0
-             incr errors [host_config_hostlist_add_host ts_host_config  $host]
-             incr errors [host_config_hostlist_edit_host ts_host_config $host]
-             incr errors [save_host_configuration $config(host_config_file)]
-             if { $errors != 0 } {
-                setup_host_config $config(host_config_file) 1
-             }
-          }
-       }
-       if { [compile_check_compile_hosts $value] != 0 } {
-          puts $CHECK_OUTPUT "Press enter to edit global host configuration ..."
-          wait_for_enter
-          setup_host_config $config(host_config_file) 1
-       }
-       if { $value == "" } {
-          set value "none"
-       }
+      if {$value == ""} {
+         set value "none"
+      }
    } 
 
-   if { [string compare $value "none"] != 0 }  {
+   if {$value != "none"} {
       if {!$fast_setup} {
-         foreach host $value {
-            if { [ lsearch $ts_host_config(hostlist) $host ] < 0  } {
-               puts $CHECK_OUTPUT "Host \"$host\" is not in host configuration file"
-               return -1
-            }
-            if { [ lsearch $CHECK_CORE_EXECD $host ] >= 0  } {
-               puts $CHECK_OUTPUT "Host \"$host\" is in execd host list"
-               return -1
-            }
-         }
-
-         if { [compile_check_compile_hosts $value] != 0 } {
+         if {![config_verify_hostlist $value "submit only" 0]} {
             return -1
          }
+
+         # a submit only host may not be used otherwise in the cluster
+         set exclude "$config(master_host) $config(shadowd_hosts) $config(execd_hosts)"
+         set exclude [lsort -unique $exclude]
+
+         foreach host $value {
+            if {[lsearch $exclude $host] >= 0} {
+               puts $CHECK_OUTPUT "Submit only host $host is used as admin/exec host in the cluster"
+               return -1
+            }
+         }
       }
+
       set CHECK_SUBMIT_ONLY_HOSTS $value
    } else {
       set CHECK_SUBMIT_ONLY_HOSTS ""
@@ -3650,36 +3454,19 @@ proc config_testsuite_bdb_server { only_check name config_array } {
       } else {
          puts $CHECK_OUTPUT "using default value"
       }
-      if { $value != "none" } {
-          if { [ lsearch $ts_host_config(hostlist) $value ] < 0  } {
-             puts $CHECK_OUTPUT "host \"$host\" is not in host configuration file"
-             puts $CHECK_OUTPUT "Press enter to add host \"$host\" to global host configuration ..."
-             wait_for_enter
-             set errors 0
-             incr errors [host_config_hostlist_add_host ts_host_config  $host]
-             incr errors [host_config_hostlist_edit_host ts_host_config $host]
-             incr errors [save_host_configuration $config(host_config_file)]
-             if { $errors != 0 } {
-                setup_host_config $config(host_config_file) 1
-             }
-          }
-          if { [compile_check_compile_hosts $value] != 0 } {
-             puts $CHECK_OUTPUT "Press enter to edit global host configuration ..."
-             wait_for_enter
-             setup_host_config $config(host_config_file) 1
-          }
-       }
-    } 
+      if {$value != "none"} {
+         config_select_host $value config
+      }
+   }
 
    # check parameter
-   if {! $fast_setup} {
-      if { $value != "none" } {
-         if { [ lsearch $ts_host_config(hostlist) $value ] < 0  } {
-            puts $CHECK_OUTPUT "Host \"$value\" is not in host configuration file"
+   if {!$fast_setup} {
+      if {$value != "none"} {
+         if {![host_conf_is_supported_host $value]} {
             return -1
          }
 
-         if { [compile_check_compile_hosts $value] != 0 } {
+         if {[compile_check_compile_hosts $value] != 0} {
             return -1
          }
       }
@@ -3894,8 +3681,8 @@ proc config_add_compile_archs { only_check name config_array } {
           # now we have arch string in new_arch
           set found_arch 0
           foreach host $ts_host_config(hostlist) {
-             if { $ts_host_config($host,compile) == 1 } {
-                set compile_arch $ts_host_config($host,arch)
+             if {[host_conf_is_compile_host $host]} {
+                set compile_arch [host_conf_get_arch $host]
                 if { [ string compare $compile_arch $new_arch ] == 0 } {
                    set found_arch 1
                    break
@@ -3946,7 +3733,7 @@ proc config_add_compile_archs { only_check name config_array } {
 #     check/verify_config()
 #*******************************************************************************
 proc config_shadowd_hosts { only_check name config_array } {
-   global CHECK_OUTPUT do_nomain
+   global CHECK_OUTPUT
    global CHECK_HOST
    global CHECK_CORE_SHADOWD
    global ts_host_config
@@ -3955,119 +3742,24 @@ proc config_shadowd_hosts { only_check name config_array } {
    set CHECK_CORE_SHADOWD ""
 
    upvar $config_array config
-   set actual_value  $config($name)
-   set default_value $config($name,default)
-   set description   $config($name,desc)
-   set value $actual_value
+   set value $config($name)
 
-   if { $actual_value == "" } {
-      set value $default_value
-      if { $default_value == "" } {
-         set value $CHECK_HOST
-      }
-   }
-
-   if { $only_check == 0 } {
-#      # do setup  
-       puts $CHECK_OUTPUT "" 
-       set selected $value
-       while { 1 } {
-          clear_screen
-          puts $CHECK_OUTPUT "----------------------------------------------------------"
-          puts $CHECK_OUTPUT $description
-          puts $CHECK_OUTPUT "----------------------------------------------------------"
-           
-          set selected [lsort $selected]
-          puts $CHECK_OUTPUT "\nSelected shadow hosts:"
-          puts $CHECK_OUTPUT "----------------------------------------------------------"
-          foreach elem $selected { puts $CHECK_OUTPUT $elem }
-          puts $CHECK_OUTPUT "----------------------------------------------------------"
-          host_config_hostlist_show_hosts ts_host_config
-          puts $CHECK_OUTPUT "\n"
-          puts $CHECK_OUTPUT "Type \"all\" to select all hosts in list"
-          puts -nonewline $CHECK_OUTPUT "Please enter hostname/number or return to exit: "
-         
-          set host [wait_for_enter 1]
-          if { [ string length $host ] == 0 } {
-             break
-          }
-          if { [ string compare $host "all" ] == 0 } {
-             set selected ""
-             foreach host $ts_host_config(hostlist) {
-                if { [ lsearch -exact $selected $host ] < 0 } {
-                   append selected " $host"
-                }
-             }
-             break
-          }
-          if { [string is integer $host] } {
-             incr host -1
-             set host [ lindex $ts_host_config(hostlist) $host ]
-          }
-          if { [ lsearch $ts_host_config(hostlist) $host ] < 0 } {
-             # if the host is in selected host, but no longer in host config, delete it
-             set selected_idx [lsearch -exact $selected $host]
-             if {$selected_idx >= 0} {
-                set selected [lreplace $selected $selected_idx $selected_idx]
-                continue
-             } else {
-                puts $CHECK_OUTPUT "host \"$host\" not found in list"
-                wait_for_enter
-                continue
-             }
-          }
-          if { [ lsearch -exact $selected $host ] < 0 } {
-             append selected " $host"
-          } else {
-             set index [lsearch $selected $host]
-             set selected [ lreplace $selected $index $index ]
-          }
-       }
-       
-       set value [string trim $selected]
-
-       set index [lsearch $value $CHECK_HOST]
-       if { $index >= 0 } {
-          set selected [ lreplace $value $index $index ]
-       }
-       set value $CHECK_HOST
-       append value " $selected"
-       set value [string trim $value]
-       foreach host $value {
-          if { [ lsearch $ts_host_config(hostlist) $host ] < 0  } {
-             puts $CHECK_OUTPUT "host \"$host\" is not in host configuration file"
-             puts $CHECK_OUTPUT "Press enter to add host \"$host\" to global host configuration ..."
-             wait_for_enter
-             set errors 0
-             incr errors [host_config_hostlist_add_host ts_host_config  $host]
-             incr errors [host_config_hostlist_edit_host ts_host_config $host]
-             incr errors [save_host_configuration $config(host_config_file)]
-             if { $errors != 0 } {
-                setup_host_config $config(host_config_file) 1
-             }
-          }
-       }
-       if { [compile_check_compile_hosts $value] != 0 } {
-          puts $CHECK_OUTPUT "Press enter to edit global host configuration ..."
-          wait_for_enter
-          setup_host_config $config(host_config_file) 1
-       }
-   } 
-
-   if {!$fast_setup} {
-      if { [ string compare [lindex $value 0] $CHECK_HOST] != 0  && $do_nomain == 0} {
-         puts $CHECK_OUTPUT "First shadowd host must be local host"
-         return -1
-      }
-
-      foreach host $value {
-         if { [ lsearch $ts_host_config(hostlist) $host ] < 0  } {
-            puts $CHECK_OUTPUT "Host \"$host\" is not in host configuration file"
-            return -1
+   if {$only_check == 0} {
+      # initialize value from defaults, if not yet set
+      if {$value == ""} {
+         set value $config($name,default)
+         if {$value == ""} {
+            set value $CHECK_HOST
          }
       }
 
-      if { [compile_check_compile_hosts $value] != 0 } {
+      # edit the shadow host list, check_host must be first host
+      set value [config_select_host_list config $name $value]
+      set value [config_check_host_in_hostlist $value]
+   } 
+
+   if {!$fast_setup} {
+      if {![config_verify_hostlist $value "shadowd" 1]} {
          return -1
       }
    }
@@ -4636,6 +4328,259 @@ proc config_build_ts_config_1_91 {} {
    set ts_config(version) "1.91"
 }
 
+#****** config/config_select_host() ********************************************
+#  NAME
+#     config_select_host() -- select a host
+#
+#  SYNOPSIS
+#     config_select_host { host config_var } 
+#
+#  FUNCTION
+#     Lets the user select a hostname, e.g. as master host, or as bdb_server
+#     host.
+#
+#     Verifications are done to ensure, that the hostname is valid,
+#     configured in the testsuite host configuration, and that
+#     a compile host is known for the selected hosts architecture.
+#
+#  INPUTS
+#     host       - the currently selected hostname
+#     config_var - configuration array, default ts_host_config
+#
+#  RESULT
+#     The name of the selected host.
+#
+#  SEE ALSO
+#     config/config_select_host_list()
+#*******************************************************************************
+proc config_select_host {host config_var} {
+   global ts_config ts_host_config CHECK_OUTPUT
+
+   upvar $config_var config
+
+   # if host is not yet known, try to add it
+   if {![host_conf_is_known_host $host]} {
+      puts $CHECK_OUTPUT "Press enter to add host \"$host\" to global host configuration ..."
+      wait_for_enter
+      set errors 0
+      incr errors [host_config_hostlist_add_host ts_host_config  $host]
+      incr errors [host_config_hostlist_edit_host ts_host_config $host]
+      incr errors [save_host_configuration $config(host_config_file)]
+      if {$errors != 0} {
+         setup_host_config $config(host_config_file) 1
+      }
+   }
+
+   if {[compile_check_compile_hosts $host] != 0} {
+      puts $CHECK_OUTPUT "Press enter to edit global host configuration ..."
+      wait_for_enter
+      setup_host_config $config(host_config_file) 1
+   }
+}
+
+#****** config/config_select_host_list() ***************************************
+#  NAME
+#     config_select_host_list() -- select hosts from a host list
+#
+#  SYNOPSIS
+#     config_select_host_list { config_var name selected } 
+#
+#  FUNCTION
+#     Allows the user to select a number of hosts from the list of
+#     configured and supported hosts.
+#
+#     Verifications are done to ensure, that the hosts are valid,
+#     configured in the testsuite host configuration, and that
+#     compile hosts are known for the selected hosts architectures.
+#
+#  INPUTS
+#     config_var - configuration array, default ts_host_config
+#     name       - name of the testsuite configuration item, e.g.
+#                  "execd_hosts", or "submit_only_hosts"
+#     selected   - list of currently selected hosts
+#
+#  RESULT
+#     list of selected hosts
+#
+#  SEE ALSO
+#     config/config_select_host()
+#*******************************************************************************
+proc config_select_host_list {config_var name selected} {
+   global ts_config ts_host_config CHECK_OUTPUT
+
+   upvar $config_var config
+
+   set description   $config($name,desc)
+
+   while {1} {
+      # output description and host lists
+      clear_screen
+      puts $CHECK_OUTPUT "----------------------------------------------------------"
+      puts $CHECK_OUTPUT $description
+      puts $CHECK_OUTPUT "----------------------------------------------------------"
+        
+      set selected [lsort $selected]
+      puts $CHECK_OUTPUT "\nSelected hosts:"
+      puts $CHECK_OUTPUT "----------------------------------------------------------"
+      foreach elem $selected { puts $CHECK_OUTPUT $elem }
+      puts $CHECK_OUTPUT "----------------------------------------------------------"
+      host_config_hostlist_show_hosts ts_host_config
+      puts $CHECK_OUTPUT "\n"
+      puts $CHECK_OUTPUT "Please enter"
+      puts $CHECK_OUTPUT "  - \"all\" to select all hosts in list,"
+      puts $CHECK_OUTPUT "  - \"none\" to remove all hosts from list,"
+      puts $CHECK_OUTPUT "  - return to exit, or"
+      puts -nonewline $CHECK_OUTPUT "  - a hostname / host number: "
+     
+      # wait for user input
+      set host [wait_for_enter 1]
+
+      # user pressed return for exit
+      if {[string length $host] == 0} {
+         break
+      }
+
+      # user entered "all"
+      if {[string compare $host "all"] == 0} {
+         set selected $ts_host_config(hostlist)
+         continue
+      }
+
+      # user entered "none"
+      if {[string compare $host "none"] == 0} {
+         set selected ""
+         continue
+      }
+
+      # user entered a host number
+      if {[string is integer $host]} {
+         if {$host < 1 || $host > [llength $ts_host_config(hostlist)]} {
+            puts $CHECK_OUTPUT "invalid host number or host name"
+            wait_for_enter
+            continue
+         }
+         incr host -1
+         set host [lindex $ts_host_config(hostlist) $host]
+      }
+
+      # unknown or unsupported host
+      if {![host_conf_is_supported_host $host]} {
+         # If the host is in selected host, but no longer in host config,
+         # or not supported in the configured Grid Engine version, delete it.
+         set selected_idx [lsearch -exact $selected $host]
+         if {$selected_idx >= 0} {
+            set selected [lreplace $selected $selected_idx $selected_idx]
+            continue
+         } else {
+            wait_for_enter
+            continue
+         }
+      }
+
+      # host is ok: add or remove
+      if {[lsearch -exact $selected $host] < 0} {
+          lappend selected $host
+      } else {
+         set index [lsearch $selected $host]
+         set selected [lreplace $selected $index $index]
+      }
+   }
+   
+   # make sure we have compile hosts for all selected hosts
+   if {[compile_check_compile_hosts $selected] != 0} {
+      puts $CHECK_OUTPUT "Press enter to edit global host configuration ..."
+      wait_for_enter
+      setup_host_config $config(host_config_file) 1
+   }
+
+   return $selected
+}
+
+#****** config/config_check_host_in_hostlist() *********************************
+#  NAME
+#     config_check_host_in_hostlist() -- ensure CHECK_HOST is first in list
+#
+#  SYNOPSIS
+#     config_check_host_in_hostlist { hostlist } 
+#
+#  FUNCTION
+#     The function ensures, that CHECK_HOST is the first host in a given
+#     host list.
+#
+#  INPUTS
+#     hostlist - host list to verify
+#
+#  RESULT
+#     a new host list, with CHECK_HOST as first element
+#*******************************************************************************
+proc config_check_host_in_hostlist {hostlist} {
+   global CHECK_HOST
+
+   # make sure, $CHECK_HOST is the first host in list
+   set index [lsearch $hostlist $CHECK_HOST]
+   if {$index >= 0} {
+      set hostlist [lreplace $hostlist $index $index]
+   }
+   set hostlist [linsert $hostlist 0 $CHECK_HOST]
+
+   return $hostlist
+}
+
+#****** config/config_verify_hostlist() ****************************************
+#  NAME
+#     config_verify_hostlist() -- verify a list of hosts
+#
+#  SYNOPSIS
+#     config_verify_hostlist { hostlist name {check_host_first 0} } 
+#
+#  FUNCTION
+#     Verifies correctness of a list of host names:
+#     - the hosts must be configured in the testsuite host configuration
+#     - compile hosts must be known for all the hosts architectures
+#     - if requested (argument check_host_first), CHECK_HOST has to be the
+#       first host in the given host list
+#     
+#  INPUTS
+#     hostlist             - the list to verify
+#     name                 - name of the testsuite configuration item, e.g.
+#                            "execd_hosts", or "submit_only_hosts"
+#     {check_host_first 0} - has CHECK_HOST to be the first list element?
+#
+#  RESULT
+#     0: host list is invalid, reasons will be output to $CHECK_OUTPUT
+#     1: host list is OK
+#
+#  SEE ALSO
+#     config/config_check_host_in_hostlist()
+#     config_host/host_conf_is_supported_host()
+#     compile/compile_check_compile_hosts()
+#*******************************************************************************
+proc config_verify_hostlist {hostlist name {check_host_first 0}} {
+   global ts_config CHECK_OUTPUT
+   global CHECK_HOST
+
+   if {$check_host_first} {
+      # CHECK_HOST must be first host
+      if {[lindex $hostlist 0] != $CHECK_HOST} {
+         puts $CHECK_OUTPUT "First $name host must be local host"
+         return 0
+      }
+   }
+
+   foreach host $hostlist {
+      # Verify that all hosts are configured in host config and
+      # supported with the configured Grid Engine version.
+      if {![host_conf_is_supported_host $host]} {
+         return 0
+      }
+   }
+
+   if {[compile_check_compile_hosts $hostlist] != 0} {
+      return 0
+   }
+
+   return 1
+}
 
 
 # MAIN

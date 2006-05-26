@@ -489,7 +489,6 @@ proc mod_queue { qname hostlist change_array {fast_add 1} {on_host ""} {as_user 
 
    upvar $change_array chgar
    return [set_queue $qname $hostlist chgar $fast_add $on_host $as_user $raise_error]
-
 }
 
 #####

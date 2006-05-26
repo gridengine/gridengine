@@ -876,7 +876,6 @@ proc ps_grep { forwhat { host "local" } { variable ps_info } } {
 #     control_procedures/ps_grep
 #*******************************
 proc get_ps_info { { pid 0 } { host "local"} { variable ps_info } {additional_run 0} } {
-
    global CHECK_OUTPUT CHECK_HOST CHECK_USER
    upvar $variable psinfo
 
@@ -919,7 +918,9 @@ proc get_ps_info { { pid 0 } { host "local"} { variable ps_info } {additional_ru
          set command_pos 8
       }
      
-      "darwin" {
+      "darwin" -
+      "darwin-ppc" -
+      "darwin-x86" {
          set myenvironment(COLUMNS) "500"
          set result [start_remote_prog "$host" "$CHECK_USER" "ps" "-e -o \"pid=_____pid\" -o \"pgid=_____pgid\" -o \"ppid=_____ppid\" -o \"uid=_____uid\" -o \"state=_____s\" -o \"stime=_____stime\" -o \"vsz=_____vsz\" -o \"time=_____time\" -o \"command=_____args\"" prg_exit_state 60 0 myenvironment]
          set index_names "_____pid _____pgid _____ppid _____uid _____s _____stime _____vsz _____time _____args"

@@ -33,7 +33,7 @@
 
 global ts_host_config               ;# new testsuite host configuration array
 global actual_ts_host_config_version      ;# actual host config version number
-set    actual_ts_host_config_version "1.5"
+set    actual_ts_host_config_version "1.6"
 
 if {![info exists ts_host_config]} {
    # ts_host_config defaults
@@ -111,7 +111,7 @@ proc host_config_hostlist { only_check name config_array } {
           puts $CHECK_OUTPUT "\n\n(1)  add host"
           puts $CHECK_OUTPUT "(2)  edit host"
           puts $CHECK_OUTPUT "(3)  delete host"
-          puts $CHECK_OUTPUT "(4)  try nslookup scann"
+          puts $CHECK_OUTPUT "(4)  try nslookup scan"
           puts $CHECK_OUTPUT "(10) exit setup"
           puts -nonewline $CHECK_OUTPUT "> "
           set input [ wait_for_enter 1]
@@ -330,8 +330,9 @@ proc host_config_NFS-ROOT2ROOT { only_check name config_array } {
 #     check/verify_host_config()
 #     check/host_config_hostlist_show_compile_hosts()
 #*******************************************************************************
-proc host_config_hostlist_show_hosts { array_name } {
-   global CHECK_OUTPUT
+proc host_config_hostlist_show_hosts {array_name} {
+   global ts_config CHECK_OUTPUT
+
    upvar $array_name config
 
    puts $CHECK_OUTPUT "\nHost list:\n"
@@ -355,17 +356,18 @@ proc host_config_hostlist_show_hosts { array_name } {
       for { set i 0 } { $i < [ expr ( $max_length - [ string length $host ]  ) ] } { incr i 1 } {  
           append space " "
       }
-      if { $config($host,compile) == 1 } {
+      if {[host_conf_is_compile_host $host config]} {
           set comp_host "(compile host)"
       } else {
           set comp_host "              "
       }
 
+      set conf_arch [host_conf_get_arch $host config]
 
       if { $index <= 9 } {
-         puts $CHECK_OUTPUT "    $index) $host $space ($config($host,arch)) $comp_host"
+         puts $CHECK_OUTPUT "    $index) $host $space ($conf_arch) $comp_host"
       } else {
-         puts $CHECK_OUTPUT "   $index) $host $space ($config($host,arch)) $comp_host"
+         puts $CHECK_OUTPUT "   $index) $host $space ($conf_arch) $comp_host"
       }
    }
 }
@@ -393,16 +395,16 @@ proc host_config_hostlist_show_hosts { array_name } {
 #     check/host_config_hostlist_show_hosts()
 #*******************************************************************************
 proc host_config_hostlist_show_compile_hosts { array_name save_array } {
-   global CHECK_OUTPUT
+   global ts_config CHECK_OUTPUT
    upvar $array_name config
    upvar $save_array back
 
-   if { [ info exists back ] } {
+   if {[info exists back]} {
       unset back
    }
 
    puts $CHECK_OUTPUT "\nCompile architecture list:\n"
-   if { [llength $config(hostlist)] == 0 } {
+   if {[llength $config(hostlist)] == 0} {
       puts $CHECK_OUTPUT "no hosts defined"
    }
 
@@ -410,29 +412,33 @@ proc host_config_hostlist_show_compile_hosts { array_name save_array } {
   
    set max_arch_length 0
    foreach host $config(hostlist) {
-      if { $config($host,compile) == 1 } {
-         lappend arch_list $config($host,arch)
-         set host_list($config($host,arch)) $host
-         set arch_length [string length $config($host,arch) ]
-         if { $max_arch_length < $arch_length } {
-            set max_arch_length $arch_length
+      if {[host_conf_is_compile_host $host config]} {
+         set arch [host_conf_get_arch $host config]
+         if {$arch != "unsupported"} {
+            lappend arch_list $arch
+            set host_list($arch) $host
+            set arch_length [string length $arch]
+            if {$max_arch_length < $arch_length} {
+               set max_arch_length $arch_length
+            }
          }
       }
    }
+
    set arch_list [lsort $arch_list]
    foreach arch $arch_list {
       set host $host_list($arch)
-      if { $config($host,compile) == 1 } {
+      if {[host_conf_is_compile_host $host config]} {
          incr index 1 
          set back(count) $index
-         set back($index,arch) $config($host,arch)
+         set back($index,arch) [host_conf_get_arch $host config]
          set back($index,host) $host 
 
-         set arch_length [string length $config($host,arch)]
+         set arch_length [string length $arch]
          if { $index <= 9 } {
-            puts $CHECK_OUTPUT "    $index) $config($host,arch) [get_spaces [expr ( $max_arch_length - $arch_length ) ]] ($host)"
+            puts $CHECK_OUTPUT "    $index) $arch [get_spaces [expr ( $max_arch_length - $arch_length ) ]] ($host)"
          } else {
-            puts $CHECK_OUTPUT "   $index) $config($host,arch) [get_spaces [expr ( $max_arch_length - $arch_length ) ]] ($host)" 
+            puts $CHECK_OUTPUT "   $index) $arch [get_spaces [expr ( $max_arch_length - $arch_length ) ]] ($host)" 
          }
       } 
    }
@@ -459,9 +465,10 @@ proc host_config_hostlist_show_compile_hosts { array_name save_array } {
 #     check/verify_host_config()
 #*******************************************************************************
 proc host_config_hostlist_add_host { array_name { have_host "" } } {
-   global CHECK_OUTPUT
-   upvar $array_name config
+   global ts_config CHECK_OUTPUT
    global CHECK_USER
+
+   upvar $array_name config
   
    if { $have_host == "" } {
       clear_screen
@@ -484,7 +491,7 @@ proc host_config_hostlist_add_host { array_name { have_host "" } } {
    }
      
    if { [ lsearch $config(hostlist) $new_host ] >= 0 } {
-      puts $CHECK_OUTPUT "host \"$new_host\" is allready in list"
+      puts $CHECK_OUTPUT "host \"$new_host\" is already in list"
       return -1
    }
 
@@ -552,8 +559,13 @@ proc host_config_hostlist_add_host { array_name { have_host "" } } {
    set config($new_host,loadsensor)    ""
    set config($new_host,processors)    1
    set config($new_host,spooldir)      ""
-   set config($new_host,arch)          $arch
-   set config($new_host,compile)       0
+   set config($new_host,arch,53)       "unsupported"
+   set config($new_host,arch,60)       "unsupported"
+   set config($new_host,arch,65)       "unsupported"
+   set config($new_host,arch,$ts_config(gridengine_version))          $arch
+   set config($new_host,compile,53)    0
+   set config($new_host,compile,60)    0
+   set config($new_host,compile,65)    0
    set config($new_host,compile_time)  0
    set config($new_host,response_time) [ expr ( [timestamp] - $time ) ]
    set config($new_host,fr_locale)     ""
@@ -588,9 +600,8 @@ proc host_config_hostlist_add_host { array_name { have_host "" } } {
 #     check/verify_host_config()
 #*******************************************************************************
 proc host_config_hostlist_edit_host { array_name { has_host "" } } {
-   global CHECK_OUTPUT
+   global ts_config ts_host_config CHECK_OUTPUT
    global CHECK_USER 
-   global ts_config ts_host_config
 
    upvar $array_name config
 
@@ -618,24 +629,26 @@ proc host_config_hostlist_edit_host { array_name { has_host "" } } {
          puts $CHECK_OUTPUT $host
       }
  
-      if { [ string length $host ] == 0 } {
+      if {[string length $host] == 0} {
          break
       }
      
-      if { [string is integer $host] } {
+      if {[string is integer $host]} {
          incr host -1
          set host [ lindex $config(hostlist) $host ]
       }
 
-      if { [ lsearch $config(hostlist) $host ] < 0 } {
+      if {[lsearch $config(hostlist) $host] < 0} {
          puts $CHECK_OUTPUT "host \"$host\" not found in list"
          wait_for_enter
          set goto 0
          continue
       }
+
+      set arch [host_conf_get_arch $host config]
       puts $CHECK_OUTPUT ""
       puts $CHECK_OUTPUT "   host          : $host"
-      puts $CHECK_OUTPUT "   arch          : $config($host,arch)"
+      puts $CHECK_OUTPUT "   arch          : $arch"
       puts $CHECK_OUTPUT "   expect        : $config($host,expect)"
       puts $CHECK_OUTPUT "   vim           : $config($host,vim)"
       puts $CHECK_OUTPUT "   tar           : $config($host,tar)"
@@ -650,10 +663,10 @@ proc host_config_hostlist_edit_host { array_name { has_host "" } } {
       puts $CHECK_OUTPUT "   zh_locale     : $config($host,zh_locale)"
       puts $CHECK_OUTPUT "   zones         : $config($host,zones)"
 
-      if { $config($host,compile) == 0 } {
-         puts $CHECK_OUTPUT "   compile       : not a compile host"
+      if {[host_conf_is_compile_host $host config]} {
+         puts $CHECK_OUTPUT "   compile       : compile host for \"$arch\" binaries ($ts_config(gridengine_version))"
       } else {
-         puts $CHECK_OUTPUT "   compile       : testsuite will use this host to compile \"$config($host,arch)\" binaries"
+         puts $CHECK_OUTPUT "   compile       : not a compile host"
       }
       puts $CHECK_OUTPUT "   compile_time  : $config($host,compile_time)"
       puts $CHECK_OUTPUT "   response_time : $config($host,response_time)"
@@ -670,95 +683,121 @@ proc host_config_hostlist_edit_host { array_name { has_host "" } } {
       }
 
  
-      if { [ string compare $input "host"] == 0 } {
-         puts $CHECK_OUTPUT "Setting \"$input\" is not allowed"
-         wait_for_enter
-         continue
-      }
-
-      if { [ info exists config($host,$input) ] != 1 } {
-         puts $CHECK_OUTPUT "Not a valid category"
-         wait_for_enter
-         continue
-      }
-
-      if { [string compare $input "arch"] == 0 } {
-         puts $CHECK_OUTPUT "Setting \"$input\" is not allowed"
-         wait_for_enter
-         continue
-      }
-
-
       set isfile 0
       set isdir 0
-      set extra 0
+      set islocale 0
+      set input_type "forbidden"
       switch -- $input {
-         "expect" { set isfile 1 }
-         "vim"    { set isfile 1 }
-         "tar"    { set isfile 1 }
-         "gzip"   { set isfile 1 }
-         "ssh"    { set isfile 1 }
-         "java"   { set isfile 1 }
-         "loadsensor" { set isfile 1 }
-         "spooldir" { set isdir 1 }
-         "compile" { set extra 1 }
-         "compile_time"  { set extra 2 }
-         "response_time" { set extra 3 }
-         "zones"         { set extra 4 }
-      }      
+         "expect" -
+         "vim" -
+         "tar" -
+         "gzip" -
+         "ssh" -
+         "java" -
+         "loadsensor" { 
+            set input_type "simple"
+            set isfile 1
+         }
 
-      set do_simple_test 0
-      if { [string first "locale" $input] >= 0 } {
-         puts $CHECK_OUTPUT "INFO:"
-         puts $CHECK_OUTPUT "Please enter an environment list to get localized output on that host!"
-         puts $CHECK_OUTPUT ""
-         puts $CHECK_OUTPUT "e.g.: LANG=fr_FR.ISO8859-1 LC_MESSAGES=fr"
-         set do_simple_test 1
-      }
+         "spooldir" {
+            set input_type "simple"
+            set isdir 1 
+         }
 
-      if { $extra == 0 } {
-         puts -nonewline $CHECK_OUTPUT "\nPlease enter new $input value: "
-         set value [ wait_for_enter 1 ]
-      }
+         "compile" { 
+            set input_type "compile"
+         }
 
-      if { $extra == 1 } { ;# compile option
-         puts -nonewline $CHECK_OUTPUT "\nShould testsuite use this host for compilation (y/n) :"
-         set value [ wait_for_enter 1 ]
-         if { [ string compare "y" $value ] == 0 } {
-            set value 1
-         } else {
-            set value 0
+         "zones" { 
+            set input_type "zones"
+         }
+
+         "fr_locale" -
+         "ja_locale" -
+         "zh_locale" { 
+            set input_type "locale"
+            set islocale 1
+         }
+
+         "processors" {
+            set input_type "simple"
+         }
+   
+         "arch" {
+            set input_type "arch"
+         }
+
+         "host" -
+         "compile_time" -
+         "response_time" {
+            puts $CHECK_OUTPUT "Setting \"$input\" is not allowed"
+            wait_for_enter
+            continue
+         }
+         default {
+            puts $CHECK_OUTPUT "Not a valid category"
+            wait_for_enter
+            continue
          }
       }
 
-      if { $extra == 2 || $extra == 3 } {
-         puts $CHECK_OUTPUT "Setting \"$input\" is not allowed"
-         wait_for_enter
-         continue
-      }
+      switch -exact $input_type {
+         "simple" {
+            puts -nonewline $CHECK_OUTPUT "\nPlease enter new $input value: "
+            set value [wait_for_enter 1]
+         }
 
-      if { $extra == 4 } {
-         puts $CHECK_OUTPUT "Please enter a space separated list of zones: "
-         set value [wait_for_enter 1]
+         "arch" {
+            set input "arch,$ts_config(gridengine_version)"
+            puts $CHECK_OUTPUT "Please enter a valid architecture name"
+            puts $CHECK_OUTPUT "or \"unsupported\", if the hosts architecture is not"
+            puts $CHECK_OUTPUT "supported on Gridengine $ts_config(gridengine_version) systems"
+            puts -nonewline $CHECK_OUTPUT "\nNew architecture: "
+            set value [wait_for_enter 1]
+         }
 
-         if { [llength $value] != 0 } {
-            set host_error 0
-            foreach zone $value {
-               set result [ start_remote_prog $zone $CHECK_USER "id" "" prg_exit_state 12 0 "" 1 0 ]
-               if { $prg_exit_state != 0 } {
-                  puts $CHECK_OUTPUT $result
-                  puts $CHECK_OUTPUT "can't connect to zone $zone"
-                  wait_for_enter
-                  set host_error 1
-                  break
+         "compile" {
+            set input "compile,$ts_config(gridengine_version)"
+            puts -nonewline $CHECK_OUTPUT "\nShould testsuite use this host for compilation of $ts_config(gridengine_version) version (y/n) :"
+            set value [wait_for_enter 1]
+            if {[string compare "y" $value] == 0} {
+               set value 1
+            } else {
+               set value 0
+            }
+         }
+         "locale" {
+            puts $CHECK_OUTPUT "INFO:"
+            puts $CHECK_OUTPUT "Please enter an environment list to get localized output on that host!"
+            puts $CHECK_OUTPUT ""
+            puts $CHECK_OUTPUT "e.g.: LANG=fr_FR.ISO8859-1 LC_MESSAGES=fr"
+            puts -nonewline $CHECK_OUTPUT "\nPlease enter new locale: "
+            set value [wait_for_enter 1]
+         }
+         "zones" {
+            puts $CHECK_OUTPUT "Please enter a space separated list of zones: "
+            set value [wait_for_enter 1]
+
+            if { [llength $value] != 0 } {
+               set host_error 0
+               foreach zone $value {
+                  set result [ start_remote_prog $zone $CHECK_USER "id" "" prg_exit_state 12 0 "" 1 0 ]
+                  if { $prg_exit_state != 0 } {
+                     puts $CHECK_OUTPUT $result
+                     puts $CHECK_OUTPUT "can't connect to zone $zone"
+                     wait_for_enter
+                     set host_error 1
+                     break
+                  }
+               }
+               if {$host_error} {
+                  continue
                }
             }
-            if {$host_error} {
-               continue
-            }
          }
       }
 
+      # check for valid file name
       if { $isfile } {
          set result [ start_remote_prog $host $CHECK_USER "ls" "$value" prg_exit_state 12 0 "" 1 0 ]
          if { $prg_exit_state != 0 } {
@@ -769,6 +808,7 @@ proc host_config_hostlist_edit_host { array_name { has_host "" } } {
          }
       }
       
+      # check for valid directory name
       if { $isdir } {
          set result [ start_remote_prog $host $CHECK_USER "cd" "$value" prg_exit_state 12 0 "" 1 0 ]
          if { $prg_exit_state != 0 } {
@@ -779,7 +819,8 @@ proc host_config_hostlist_edit_host { array_name { has_host "" } } {
          }
       }
 
-      if { $do_simple_test == 1 } {
+      # locale test
+      if { $islocale == 1 } {
          set mem_it $ts_host_config($host,$input)
          set mem_l10n $ts_config(l10n_test_locale)
        
@@ -800,8 +841,6 @@ proc host_config_hostlist_edit_host { array_name { has_host "" } } {
          wait_for_enter
       }
 
-      #puts $CHECK_OUTPUT "now setting \"$input\" to \"$value\""
-      #wait_for_enter
       set config($host,$input) $value
    }
    
@@ -827,9 +866,10 @@ proc host_config_hostlist_edit_host { array_name { has_host "" } } {
 #     check/verify_host_config()
 #*******************************************************************************
 proc host_config_hostlist_delete_host { array_name } {
-   global CHECK_OUTPUT
-   upvar $array_name config
+   global ts_config CHECK_OUTPUT
    global CHECK_USER
+
+   upvar $array_name config
 
    while { 1 } {
 
@@ -859,9 +899,11 @@ proc host_config_hostlist_delete_host { array_name } {
          continue
       }
 
+      set arch [host_conf_get_arch $host config]
+      
       puts $CHECK_OUTPUT ""
       puts $CHECK_OUTPUT "   host          : $host"
-      puts $CHECK_OUTPUT "   arch          : $config($host,arch)"
+      puts $CHECK_OUTPUT "   arch          : $arch"
       puts $CHECK_OUTPUT "   expect        : $config($host,expect)"
       puts $CHECK_OUTPUT "   vim           : $config($host,vim)"
       puts $CHECK_OUTPUT "   tar           : $config($host,tar)"
@@ -875,10 +917,10 @@ proc host_config_hostlist_delete_host { array_name } {
       puts $CHECK_OUTPUT "   ja_locale     : $config($host,ja_locale)"
       puts $CHECK_OUTPUT "   zh_locale     : $config($host,zh_locale)"
 
-      if { $config($host,compile) == 0 } {
-         puts $CHECK_OUTPUT "   compile       : not a compile host"
+      if {[host_conf_is_compile_host $host config]} {
+         puts $CHECK_OUTPUT "   compile       : compile host for \"$arch\" binaries ($ts_config(gridengine_version))"
       } else {
-         puts $CHECK_OUTPUT "   compile       : testsuite will use this host to compile \"$config($host,arch)\" binaries"
+         puts $CHECK_OUTPUT "   compile       : not a compile host"
       }
       puts $CHECK_OUTPUT "   compile_time  : $config($host,compile_time)"
       puts $CHECK_OUTPUT "   response_time : $config($host,response_time)"
@@ -897,7 +939,9 @@ proc host_config_hostlist_delete_host { array_name } {
       if { [ string compare $input "y"] == 0 } {
          set index [lsearch $config(hostlist) $host]
          set config(hostlist) [ lreplace $config(hostlist) $index $index ]
-         unset config($host,arch)
+         unset config($host,arch,53)
+         unset config($host,arch,60)
+         unset config($host,arch,65)
          unset config($host,expect)
          unset config($host,vim)
          unset config($host,tar)
@@ -910,12 +954,15 @@ proc host_config_hostlist_delete_host { array_name } {
          unset config($host,fr_locale)
          unset config($host,ja_locale)
          unset config($host,zh_locale)
-         unset config($host,compile)
+         unset config($host,compile,53)
+         unset config($host,compile,60)
+         unset config($host,compile,65)
          unset config($host,compile_time)
          unset config($host,response_time)
          continue
       }
    }
+
    return 0   
 }
 
@@ -1111,7 +1158,7 @@ proc verify_host_config { config_array only_check parameter_error_list { force 0
 #  SEE ALSO
 #     check/setup_user_config()
 #*******************************************************************************
-proc setup_host_config { file { force 0 }} {
+proc setup_host_config {file {force 0}} {
    global CHECK_OUTPUT
    global ts_host_config actual_ts_host_config_version
 
@@ -1279,7 +1326,7 @@ proc host_conf_get_unique_arch_nodes {host_list} {
 
    foreach node $host_list {
       set host [node_get_host $node]
-      set arch $ts_host_config($host,arch)
+      set arch [host_conf_get_arch $host]
       if {[lsearch -exact $covered_archs $arch] == -1} {
          lappend covered_archs $arch
          lappend node_list $node
@@ -1359,7 +1406,7 @@ proc host_conf_get_archs {nodelist} {
    set archs {}
    foreach node $nodelist {
       set host [node_get_host $node]
-      lappend archs $ts_host_config($host,arch)
+      lappend archs [host_conf_get_arch $host]
    }
 
    return [lsort -unique $archs]
@@ -1388,7 +1435,7 @@ proc host_conf_get_arch_hosts {archs} {
    set hostlist {}
 
    foreach host $ts_host_config(hostlist) {
-      if {[lsearch -exact $archs $ts_host_config($host,arch)] >= 0} {
+      if {[lsearch -exact $archs [host_conf_get_arch $host]] >= 0} {
          lappend hostlist $host
       }
    }
@@ -1510,7 +1557,7 @@ proc get_java_home_for_host { host } {
 #     hostlist
 #*******************************************************************************
 proc host_conf_get_cluster_hosts {} {
-   global ts_config
+   global ts_config CHECK_OUTPUT
 
    set hosts "$ts_config(master_host) $ts_config(execd_hosts) $ts_config(execd_nodes) $ts_config(submit_only_hosts) $ts_config(bdb_server)"
    set cluster_hosts [lsort -unique $hosts]
@@ -1521,3 +1568,362 @@ proc host_conf_get_cluster_hosts {} {
 
    return $cluster_hosts
 }
+
+#****** config_host/host_conf_is_compile_host() ********************************
+#  NAME
+#     host_conf_is_compile_host() -- is a given host compile host?
+#
+#  SYNOPSIS
+#     host_conf_is_compile_host { host {config_var ""} } 
+#
+#  FUNCTION
+#     Returns if a given host is used as compile host.
+#     The information is retrieved from the ts_host_config array,
+#     unless another array is specified (e.g. during configuration).
+#
+#  INPUTS
+#     host            - the host
+#     {config_var ""} - configuration array, default ts_host_config
+#
+#  RESULT
+#     0: is not compile host
+#     1: is compile host
+#*******************************************************************************
+proc host_conf_is_compile_host {host {config_var ""}} {
+   global ts_config ts_host_config CHECK_OUTPUT
+   
+   # we might work on a temporary config
+   if {$config_var == ""} { 
+      upvar 0 ts_host_config config
+   } else {
+      upvar 1 $config_var config
+   }
+
+   set ret 0
+
+   if {[info exists config($host,compile,$ts_config(gridengine_version))]} {
+      set ret $config($host,compile,$ts_config(gridengine_version))
+   }
+
+   return $ret
+}
+
+#****** config_host/host_conf_get_arch() ***************************************
+#  NAME
+#     host_conf_get_arch() -- return a host's architecture
+#
+#  SYNOPSIS
+#     host_conf_get_arch { host {config_var ""} } 
+#
+#  FUNCTION
+#     Returns the architecture that is configured in the testsuite
+#     host configuration.
+#     The architecture string may be Grid Engine version dependent, that
+#     means, the function may return different architecture strings for
+#     different Grid Engine version (53, 60, 65, ...).
+#     If a host is not supported platform for a certain Grid Engine version,
+#     "unsupported" is returned as archictecture name.
+#
+#  INPUTS
+#     host            - the host
+#     {config_var ""} - configuration array, default ts_host_config
+#
+#  RESULT
+#     an architecture string, e.g. sol-sparc64, darwin, ...
+#*******************************************************************************
+proc host_conf_get_arch {host {config_var ""}} {
+   global ts_config ts_host_config CHECK_OUTPUT
+   
+   # we might work on a temporary config
+   if {$config_var == ""} { 
+      upvar 0 ts_host_config config
+   } else {
+      upvar 1 $config_var config
+   }
+
+   set ret ""
+
+   if {[info exists config($host,arch,$ts_config(gridengine_version))]} {
+      set ret $config($host,arch,$ts_config(gridengine_version))
+   }
+
+   return $ret
+}
+
+#****** config_host/host_conf_is_known_host() **********************************
+#  NAME
+#     host_conf_is_known_host() -- is a host configured in testsuite host conf
+#
+#  SYNOPSIS
+#     host_conf_is_known_host { host {config_var ""} } 
+#
+#  FUNCTION
+#     Checks if a given host is configured in the testsuite host configuration.
+#
+#  INPUTS
+#     host            - the host
+#     {config_var ""} - configuration array, default ts_host_config
+#
+#  RESULT
+#     0: host is not configured in testsuite host config
+#     1: is a configured host
+#
+#  SEE ALSO
+#     config_host/host_conf_is_supported_host()
+#*******************************************************************************
+proc host_conf_is_known_host {host {config_var ""}} {
+   global ts_config ts_host_config CHECK_OUTPUT
+
+   # we might work on a temporary config
+   if {$config_var == ""} { 
+      upvar 0 ts_host_config config
+   } else {
+      upvar 1 $config_var config
+   }
+
+   set ret 1
+
+   if {[lsearch $config(hostlist) $host] < 0} {
+      puts $CHECK_OUTPUT "Host \"$host\" is not in host configuration file"
+      set ret 0
+   }
+
+   return $ret
+}
+
+#****** config_host/host_conf_is_supported_host() ******************************
+#  NAME
+#     host_conf_is_supported_host() -- is host supported for given GE version
+#
+#  SYNOPSIS
+#     host_conf_is_supported_host { host {config_var ""} } 
+#
+#  FUNCTION
+#     Checks if the given host is configured in the Grid Engine host
+#     configuration and if it has an architecture, that is supported by the
+#     given Grid Engine version.
+#
+#  INPUTS
+#     host            - the host
+#     {config_var ""} - configuration array, default ts_host_config
+#
+#  RESULT
+#     0: host is not supported
+#     1: is a supported host
+#
+#  SEE ALSO
+#     config_host/host_conf_is_known_host()
+#*******************************************************************************
+proc host_conf_is_supported_host {host {config_var ""}} {
+   global ts_config ts_host_config CHECK_OUTPUT
+
+   # we might work on a temporary config
+   if {$config_var == ""} { 
+      upvar 0 ts_host_config config
+   } else {
+      upvar 1 $config_var config
+   }
+
+   set ret [host_conf_is_known_host $host config]
+
+   if {$ret} {
+      if {[host_conf_get_arch $host config] == "unsupported"} {
+         puts $CHECK_OUTPUT "Host \"$host\" is not supported with Grid Engine $ts_config(gridengine_version)"
+         set ret 0
+      }
+   }
+
+   return $ret
+}
+
+#****** config_host/host_conf_53_arch() ****************************************
+#  NAME
+#     host_conf_53_arch() -- convert any arch string to 53 arch string
+#
+#  SYNOPSIS
+#     host_conf_53_arch { arch } 
+#
+#  FUNCTION
+#     Takes an architecture string and tries to convert it to a Grid Engine
+#     5.3 architecture string.
+#
+#     If the given architecture string cannot be converted, "unknown" will
+#     be returned.
+#
+#  INPUTS
+#     arch - any arch string
+#
+#  RESULT
+#     5.3 architecture string or "unknown"
+#
+#  SEE ALSO
+#     config_host/host_conf_60_arch()
+#     config_host/host_conf_65_arch()
+#*******************************************************************************
+proc host_conf_53_arch {arch} {
+   switch -glob $arch {
+      "sol-sparc" { return "solaris" }
+      "sol-sparc64" { return "solaris64" }
+      "sol-x86" { return "solaris86" }
+      "lx??-x86" { return "glinux" }
+      "lx??-alpha" { return "alinux" }
+      "lx??-sparc" { return "slinux" }
+      "lx??-ia64" { return "ia64linux" }
+      "lx??-amd64" { return "lx24-amd64" }
+      "irix65" { return "irix6" }
+
+      "osf4" -
+      "tru64" -
+      "irix6" -
+      "hp10" -
+      "hp11" -
+      "hp11-64" -
+      "aix42" -
+      "aix43" -
+      "aix51" -
+      "cray" -
+      "crayts" -
+      "craytsieee" -
+      "necsx4" -
+      "necsx5" -
+      "sx" -
+      "darwin" -
+      "fbsd-*" -
+      "nbsd-*" {
+         return $arch
+      }
+   }
+
+   return "unsupported"
+}
+
+#****** config_host/host_conf_60_arch() ****************************************
+#  NAME
+#     host_conf_60_arch() -- convert any arch string to 60 arch string
+#
+#  SYNOPSIS
+#     host_conf_60_arch { arch } 
+#
+#  FUNCTION
+#     Takes an architecture string and tries to convert it to a Grid Engine
+#     6.0 architecture string.
+#
+#     If the given architecture string cannot be converted, "unknown" will
+#     be returned.
+#
+#  INPUTS
+#     arch - any arch string
+#
+#  RESULT
+#     6.0 architecture string or "unknown"
+#
+#  SEE ALSO
+#     config_host/host_conf_53_arch()
+#     config_host/host_conf_65_arch()
+#*******************************************************************************
+proc host_conf_60_arch {arch} {
+   # map old 5.3 names to 6.0
+   # map 6.5 names to 6.0
+   # allow all sol-, lx, fbsd, nbsd platforms for testsuite
+   # allow selected architecture names
+   # the rest will be unsupported
+   switch -glob $arch {
+      "solaris" { return "sol-sparc" }
+      "solaris64" { return "sol-sparc64" }
+      "solaris86" { return "sol-x86" }
+      "glinux" { return "lx24-x86" }
+      "alinux" { return "lx24-alpha" }
+      "slinux" { return "lx24-sparc" }
+      "ia64linux" { return "lx24-ia64" }
+      "darwin-ppc" { return "darwin" }
+
+      "sol-*" -
+      "lx??-*" -
+      "fbsd-*" -
+      "nbsd-*" -
+
+      "tru64" -
+      "irix65" -
+      "hp11" -
+      "hp11-64" -
+      "aix43" -
+      "aix51" -
+      "cray" -
+      "crayts" -
+      "craytsieee" -
+      "craysmp" -
+      "sx" -
+      "darwin" -
+      "win32-*" {
+         return $arch
+      }
+   }
+
+   return "unsupported"
+}
+
+#****** config_host/host_conf_65_arch() ****************************************
+#  NAME
+#     host_conf_65_arch() -- convert any arch string to 65 arch string
+#
+#  SYNOPSIS
+#     host_conf_65_arch { arch } 
+#
+#  FUNCTION
+#     Takes an architecture string and tries to convert it to a Grid Engine
+#     6.5 architecture string.
+#
+#     If the given architecture string cannot be converted, "unknown" will
+#     be returned.
+#
+#  INPUTS
+#     arch - any arch string
+#
+#  RESULT
+#     6.5 architecture string or "unknown"
+#
+#  SEE ALSO
+#     config_host/host_conf_53_arch()
+#     config_host/host_conf_60_arch()
+#*******************************************************************************
+proc host_conf_65_arch {arch} {
+   # map old 5.3 names to 6.5
+   # map 6.0 names to 6.5
+   # allow all sol-, lx, fbsd, nbsd platforms for testsuite
+   # allow selected architecture names
+   # the rest will be unsupported
+   switch -glob $arch {
+      "solaris" { return "sol-sparc" }
+      "solaris64" { return "sol-sparc64" }
+      "solaris86" { return "sol-x86" }
+      "glinux" { return "lx24-x86" }
+      "alinux" { return "lx24-alpha" }
+      "slinux" { return "lx24-sparc" }
+      "ia64linux" { return "lx24-ia64" }
+
+      "darwin" { return "darwin-ppc" }
+
+      "sol-*" -
+      "lx??-*" -
+      "fbsd-*" -
+      "nbsd-*" -
+
+      "irix65" -
+      "hp11" -
+      "hp11-64" -
+      "aix51" -
+      "cray" -
+      "crayts" -
+      "craytsieee" -
+      "craysmp" -
+      "sx" -
+      "darwin-ppc" -
+      "darwin-x86" -
+      "win32-*" {
+         return $arch
+      }
+   }
+
+   return "unsupported"
+}
+

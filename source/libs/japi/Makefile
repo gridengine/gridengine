@@ -101,12 +101,12 @@ drmaa_messages:
 # rules to build library
 ###############################################################################
 libdrmaa$(SHAREDEXT).0.95: $(JAPILIB_95) $(JAPI_DEPEND_OBJS) $(DRMAALIB_OBJS) $(DRMAA_OBJS) $(WINGRIDLIB_DEP)
-	$(SHAREDLD) $(SHARED_LFLAGS) -o libdrmaa$(SHAREDEXT).0.95 $(DRMAALIB_95_OBJS) $(DRMAA_OBJS) $(JAPILIB_95) $(JAPI_ADD_OBJS) \
+	$(SHAREDLD) $(SHARED_LFLAGS) $(SONAME_LFLAG_DRMAA95) -o libdrmaa$(SHAREDEXT).0.95 $(DRMAALIB_95_OBJS) $(DRMAA_OBJS) $(JAPILIB_95) $(JAPI_ADD_OBJS) \
       $(SECLIB) $(WINGRIDLIB) $(LIBS) $(DLLIB) -lc \
    && ../scripts/nonreentrant.sh -a `../dist/util/arch` -w libdrmaa$(SHAREDEXT).0.95
 
 libdrmaa$(SHAREDEXT).1.0:  $(JAPILIB_10) $(JAPI_DEPEND_OBJS) $(DRMAALIB_OBJS) $(DRMAA_OBJS) $(WINGRIDLIB_DEP)
-	$(SHAREDLD) $(SHARED_LFLAGS) -o libdrmaa$(SHAREDEXT).1.0 $(DRMAALIB_10_OBJS) $(DRMAA_OBJS) $(JAPILIB_10) $(JAPI_ADD_OBJS) \
+	$(SHAREDLD) $(SHARED_LFLAGS) $(SONAME_LFLAG_DRMAA10) -o libdrmaa$(SHAREDEXT).1.0 $(DRMAALIB_10_OBJS) $(DRMAA_OBJS) $(JAPILIB_10) $(JAPI_ADD_OBJS) \
       $(SECLIB) $(WINGRIDLIB) $(LIBS) $(DLLIB) -lc \
    && ../scripts/nonreentrant.sh -a `../dist/util/arch` -w libdrmaa$(SHAREDEXT).1.0
 
@@ -151,7 +151,7 @@ test_drmaa: test_drmaa.1.0 test_drmaa.0.95
 	rm -f test_drmaa ; ln -s test_drmaa.0.95 test_drmaa
 
 test_drmaa.1.0: test_drmaa.1.0.o $(DRMAALIB) $(WINGRIDLIB_DEP)
-	$(LD_WRAPPER) $(CC) -o $@ test_drmaa.1.0.o $(LFLAGS) -DDRMAA_10 $(LIBS) libdrmaa$(SHAREDEXT).1.0 $(WINGRIDLIB)
+	$(LD_WRAPPER) $(CC) -o $@ test_drmaa.1.0.o $(LFLAGS) $(LIBS) libdrmaa$(SHAREDEXT).1.0 $(WINGRIDLIB)
 
 test_drmaa.0.95: test_drmaa.0.95.o $(DRMAALIB) $(WINGRIDLIB_DEP)
 	$(LD_WRAPPER) $(CC) -o $@ test_drmaa.0.95.o $(LFLAGS) $(LIBS) -ldrmaa $(WINGRIDLIB)

@@ -1,3 +1,10 @@
+AH-2006-05-29-1: Bugfix:    Enhanced build process to set library name (soname) 
+                            with 0.95/1.0 libdrmaa for Solaris and Linux.
+                 Changed:   libdrmaa
+                 Issue:     2059
+                 Bugtraq:   6429305
+                 Review:    JG
+
 JG-2006-05-26-0: Testsuite: Made testsuite host configuration Grid Engine 
                             version aware. It is now possible to use one host 
                             config file for various Grid Engine versions.

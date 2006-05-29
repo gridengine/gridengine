@@ -146,7 +146,7 @@ int main(int argc, char *argv[])
    }
 
    /* we'll start the job in the cwd */
-   if (!getwd(jobwd)) {
+   if (!getcwd(jobwd, sizeof(jobwd)-1)) {
       fprintf(stderr, "getwd() failed: %s\n", strerror(errno));
       ret = 2;
       goto Finish;

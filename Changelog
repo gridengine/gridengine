@@ -1,3 +1,10 @@
+AH-2006-05-29-0: Bugfix:    Enhanced build process to set library name (soname)
+                            with 0.95/1.0 libdrmaa for Solaris and Linux.
+                 Changed:   libdrmaa
+                 Issue:     2059
+                 Bugtraq:   6429305
+                 Review:    JG
+
 MD-2006-05-24-0: Enhancem.: windows service installation
                             - added standalone service installation
                             - added standalone service uninstallation

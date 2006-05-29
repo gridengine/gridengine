@@ -455,6 +455,9 @@ set SHAREDLD         = ""
 set SHARED_CFLAGS    = ""
 set SHARED_LFLAGS    = ""
 
+# linker flag for -ldrmaa name and version
+set SONAME_LFLAG_DRMAA95 = ""
+
 # Flags for man page creation, copyright stuff and adoc
 set BUILDMAN          = 0
 set BUILDCATMAN       = 0
@@ -1393,6 +1396,8 @@ case LINUXPPC:
    set SHARED_CFLAGS = "-fPIC"
    set SHARED_LFLAGS = "$SHARED_LFLAGS -L. -shared"
 
+   set SONAME_LFLAG_DRMAA95 = "-Wl,-soname,libdrmaa.so.0.95"
+
    if ( $SHAREDLIBS == 1 || $SPOOLING_METHOD == dynamic ) then
       set LFLAGS = "$LFLAGS -rdynamic"
    endif
@@ -1737,6 +1742,10 @@ case SOLARISAMD64:
    set LIBS     = "-lsocket -lnsl $LIBS"
    set LOADAVGLIBS = "-lkstat"
    set FSTYPELIBS = "-lkstat"
+
+   if ( $CC != gcc ) then
+      set SONAME_LFLAG_DRMAA95 = "-h libdrmaa.so.0.95"
+   endif
 
    set XMTDEF   = "-DXMT_CDE_BUG_FIX"
 
@@ -2236,6 +2245,7 @@ if ( "$CORE" == 1 && "$JAVA" != 2 ) then
          "PERLGUI=$PERLGUI" "PERL=$PERL" "SWIG=$SWIG" \
          "JAVA_BINDIR=$JAVA_BINDIR" "JAVA_SHAREDEXT=$JAVA_SHAREDEXT" \
          "DRMAA_TARGET=$DRMAA_TARGET" \
+         "SONAME_LFLAG_DRMAA95=$SONAME_LFLAG_DRMAA95" \
          $argv
    if ( $status != 0 ) then
       echo not done

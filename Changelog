@@ -1,3 +1,6 @@
+AH-2006-05-31-0: Enhancem.: analyze.rb utility can now deal with array jobs and 
+                            rescheduled jobs.
+
 AH-2006-05-29-2: Cleanup:   Removed pointless code in qdel  
                  Review:    JG
 

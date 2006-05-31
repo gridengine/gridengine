@@ -51,11 +51,15 @@ class Debitable
 	def initialize()
 		@jobs = @wallclock = @cpu = @pending = 0
 	end
-	def debit_record(wallclock, cpu, pending)
+	def debit_record(r)
 		@jobs      += 1
-		@wallclock += wallclock
-		@cpu       += cpu
-		@pending   += pending
+      @wallclock += r.wallclock
+      @cpu       += r.cpu
+      if r.rd == 0
+              @pending   += r.sd - r.qd
+      else
+              @pending   += r.sd - r.rd
+      end
 	end
 	def print_debitable(key, first, size, name)
 		if first
@@ -94,12 +98,13 @@ end
 
 
 class Record
-	attr_reader :user, :wallclock, :qd, :sd, :ed, :cat, :project, :cpu, :queue, :host
+	attr_reader :user, :wallclock, :qd, :sd, :ed, :rd, :cat, :project, :cpu, :queue, :host
 	def pending_time ; @sd - @qd ; end
-	def initialize(user, wallclock, qd, sd, ed, cat, project, cpu, queue, host)
+	def initialize(user, wallclock, qd, sd, ed, cat, project, cpu, queue, host, requeued)
 		@qd = qd
 		@sd = sd
 		@ed = ed
+		@rd = requeued
 		@user = user
 		@project = project
 		@queue = queue
@@ -112,18 +117,20 @@ end
 
 class RecordHash < PrintableHash
 	# ----- init data structures -----
-	# jobid user wallclock submit start end cat project cpu  queue host vmem 
-	#  5     3    13        8      9     10  39    31    36     0 1     42 ??
+	# jobid user wallclock submit start end cat project cpu  queue host taskid
+	#  5     3    13        8      9     10  39    31    36     0  1    35
+   # should also use taskid 35 to deal with array jobs
 	def initialize(path)
 		f = open(path)
 		begin
 			f.each_line do |line|
 				if ! line.index("#")
 					s = line.split(':')
+					job     = s[5].to_i
+					task    = s[35].to_i
 				   queue   = s[0]
 				   host    = s[1]
 					user    = s[3]
-					job     = s[5].to_i
 					submit  = s[8].to_i
 					start   = s[9].to_i
 				   ende    = s[10].to_i
@@ -132,13 +139,16 @@ class RecordHash < PrintableHash
 				   cpu     = s[36].to_i
 				   cat     = s[39]
 					if submit != 0 && start != 0 && ende != 0
-						if self.has_key?(job)
-							debug "skip requeued job " + job.to_s + " " + submit.to_s + " " + start.to_s + " " + ende.to_s
-						else
-							self[job] = Record.new(user, wc, submit, start, ende, cat.strip, project, cpu, queue, host)
+                  rd = 0
+                  index = 1
+                  while self.has_key?([job, task, index]) do
+                     rd = self[[job, task, index]].ed
+                     index += 1
+                     puts "requeued job " + job.to_s + " task #{task} pending #{start - rd} requeued #{rd} #{s[5]}"
 						end
+						self[[job, task, index]] = Record.new(user, wc, submit, start, ende, cat.strip, project, cpu, queue, host, rd)
 					else 
-						# puts "invalid record " + job.to_s + " submitted " + submit.to_s + " started " + start.to_s + " ended " + ende.to_s + " wallclock " + wc.to_s
+						puts "invalid record " + job.to_s + " submitted " + submit.to_s + " started " + start.to_s + " ended " + ende.to_s + " wallclock " + wc.to_s
 					end
 				end
 			end
@@ -149,16 +159,20 @@ class RecordHash < PrintableHash
 	end
 	def print_all
 		first = true
-		self.keys.sort.each do |job|
-			r = self[job]
+		self.keys.sort.each do |key|
+			r = self[key]
+			job = key[0]
+			task = key[1]
+			run = key[2]
 			if first
-				puts "###### Table with #{self.size} accounting records ######"
-				puts sprintf("%-8.8s %-7.7s %7.7s %9.9s %9.9s %-12.12s %-12.12s %-12.12s %s", 
-					"job", "user", "pending", "wallclock", "cpu", "submit", "start", "ended", "category")
+				puts "###### Table with #{self.size} job runs ######"
+				puts sprintf("%-8.8s %-5.5s %-2.2s %-7.7s %7.7s %9.9s %9.9s %-12.12s %-12.12s %-12.12s %s", 
+					"job", "task", "n", "user", "pending", "wallclock", "cpu", "submit", "start", "ended", "category")
 				first = false
 			end
-			puts sprintf("%-8.8s %-7.7s %7.7s %9.9s %9.9s %-12.12s %-12.12s %-12.12s %s", 
-					job.to_s, r.user, r.pending_time.to_s, r.wallclock.to_s, r.cpu.to_s, r.qd.to_s, r.sd.to_s, r.ed.to_s,
+			puts sprintf("%-8.8s %-5.5s %-2.2s %-7.7s %7.7s %9.9s %9.9s %-12.12s %-12.12s %-12.12s %s", 
+					job.to_s, task.to_s, run.to_s, r.user, r.pending_time.to_s, r.wallclock.to_s, 
+						r.cpu.to_s, r.qd.to_s, r.sd.to_s, r.ed.to_s,
 					"\"" + r.cat + "\"")
 		end
 	end
@@ -175,7 +189,7 @@ class QueueHash < PrintableHash
 			if ! self.has_key?(r.queue)
 				self[r.queue] = Queue.new()
 			end
-			self[r.queue].debit_record(r.wallclock, r.cpu, r.sd - r.qd)
+			self[r.queue].debit_record(r)
 		end
 		debug "debug did queues"
 	end
@@ -195,7 +209,7 @@ class UserHash < PrintableHash
 			if ! self.has_key?(r.user)
 				self[r.user] = User.new()
 			end
-			self[r.user].debit_record(r.wallclock, r.cpu, r.sd - r.qd)
+			self[r.user].debit_record(r)
 		end
 		debug "debug did users"
 	end
@@ -215,7 +229,7 @@ class ProjectHash < PrintableHash
 			if ! self.has_key?(r.project)
 				self[r.project] = Project.new()
 			end
-			self[r.project].debit_record(r.wallclock, r.cpu, r.sd - r.qd)
+			self[r.project].debit_record(r)
 		end
 		debug "debug did project"
 	end
@@ -235,7 +249,7 @@ class HostHash < PrintableHash
 			if ! self.has_key?(r.host)
 				self[r.host] = Host.new()
 			end
-			self[r.host].debit_record(r.wallclock, r.cpu, r.sd - r.qd)
+			self[r.host].debit_record(r)
 		end
 		debug "debug did hosts"
 	end
@@ -255,7 +269,7 @@ class CategoryHash < PrintableHash
 			if ! self.has_key?(r.cat)
 				self[r.cat] = Category.new()
 			end
-			self[r.cat].debit_record(r.wallclock, r.cpu, r.sd - r.qd)
+			self[r.cat].debit_record(r)
 		end
 	end
 	def print_all
@@ -264,7 +278,7 @@ class CategoryHash < PrintableHash
 			c = self[cat]
 			if first
 				puts "###### Table with #{self.size} categories ######"
-				puts sprintf("%-7.7s %9.9s %9.9s %s", "jobs", "wallclock", "pending", "category")
+				puts sprintf("%-7.7s %9.9s %9.9s %s", "njobs", "wallclock", "pending", "category")
 				first = false
 			end
 			puts sprintf("%-7.7s %9.9s %9.9s %s", c.jobs.to_s, c.wallclock.to_s, c.pending.to_s, cat)
@@ -276,9 +290,10 @@ end
 
 
 class Timestep
-	attr_reader :queued, :started, :ended, :pcats, :rcats
+	attr_reader :queued, :requeued, :started, :ended, :pcats, :rcats
 	def initialize
 		@queued = JobsList.new
+		@requeued = JobsList.new
 		@started = JobsList.new
 		@ended = JobsList.new
 		@pcats = Hash.new
@@ -290,6 +305,13 @@ class Timestep
 		if ! @queued.empty?
 			s = s + "submitted " + @queued.to_s 
 			need_space=true
+		end
+		if ! @requeued.empty?
+			if need_space
+				s += " "
+			end
+			s = s + "requeued " + @requeued.to_s 
+			need_space = true
 		end
 		if ! @started.empty?
 			if need_space
@@ -337,22 +359,22 @@ class Timestep
 		rjobs.sort.each do |job|
 			if j_first
 				puts "###### Jobs at timestep #{time} ######"
-				puts sprintf("%-8.8s %-7.7s %-10.10s %7.7s %s", "job", "status", "user", "pending", "category")
+				puts sprintf("%-10.10s %-7.7s %-10.10s %7.7s %s", "job", "status", "user", "pending", "category")
 				j_first = false
 			end
 			r = record[job]
-			puts sprintf("%-8.8s %-7.7s %-10.10s %7.7s %s", job.to_s, 
+			puts sprintf("%-10.10s %-7.7s %-10.10s %7.7s %s", key_to_s(job),
 					"running", r.user, r.pending_time.to_s, "\"" + r.cat + "\"")
 		end
 
 		pjobs.sort.each do |job|
 			if j_first
 				puts "###### Jobs at timestep #{time} ######"
-				puts sprintf("%-8.8s %-7.7s %-10.10s %7.7s %s", "job", "status", "user", "pending", "category")
+				puts sprintf("%-10.10s %-7.7s %-10.10s %7.7s %s", "job", "status", "user", "pending", "category")
 				j_first = false
 			end
 			r = record[job]
-			puts sprintf("%-8.8s %-7.7s %-10.10s %7.7s %s", job.to_s, 
+			puts sprintf("%-10.10s %-7.7s %-10.10s %7.7s %s", key_to_s(job),
 					"pending", r.user, r.pending_time.to_s, "\"" + r.cat + "\"")
 		end
 		STDOUT.flush
@@ -373,16 +395,23 @@ class TimestepHash < PrintableHash
 	def initialize(record)
 		times = Array.new
 		queued = Array.new
+		requeued = Array.new
 		started = Array.new
 		ended = Array.new
 
-		record.each_pair do |job, r|
-			times.push(r.qd)
-			queued.push(Event.new(job, r.qd))
+		record.each_pair do |key, r|
+			if key[2] == 1
+				times.push(r.qd)
+				queued.push(Event.new(key, r.qd))
+			else
+				times.push(r.rd)
+				requeued.push(Event.new(key, r.rd))
+			end
 			times.push(r.sd)
-			started.push(Event.new(job, r.sd))
+			started.push(Event.new(key, r.sd))
+
 			times.push(r.ed)
-			ended.push(Event.new(job, r.ed))
+			ended.push(Event.new(key, r.ed))
 		end
 
 		times.compact!
@@ -396,7 +425,7 @@ class TimestepHash < PrintableHash
 		i = 0
 		nxt = 500
 		times.each do |t|
-			t = self[t] = Timestep.new
+			self[t] = Timestep.new
 
 			i += 1
 			if i == nxt
@@ -404,33 +433,52 @@ class TimestepHash < PrintableHash
 				nxt += 500
 			end
 		end
+
 		queued.each do |q|
 			self[q.time].queued.push(q.job)
 		end
-		debug "did #{queued.size} queued events"
+		debug "did #{queued.size} job queued events"
+		requeued.each do |r|
+			self[r.time].requeued.push(r.job)
+		end
+		debug "did #{requeued.size} job requeued events"
 		started.each do |s|
 			self[s.time].started.push(s.job)
 		end
-		debug "did #{started.size} started events"
+		debug "did #{started.size} job started events"
 		ended.each do |e|
 			self[e.time].ended.push(e.job)
 		end
-		debug "did #{ended.size} ended events"
+		debug "did #{ended.size} job ended events"
 
 		debug "did timesteps"
 	end
 end
 
+# -------------------
+
+def key_to_s(key)
+	if key[2] == 1
+		run = ""
+	else
+		run = "#" + key[2].to_s
+	end
+	if key[1] == 0
+		key[0].to_s + run
+	else
+		key[0].to_s + "." + key[1].to_s + run
+	end
+end
 class JobsList < Array
 	def to_s
 		first = true
 		s=""
-		self.each do |job|
+		self.each do |key|
 			if first
-				s = job.to_s
+				s = key_to_s(key)
 				first = false
 			else
-				s=s + ", " +  job.to_s
+				s += ", " +  key_to_s(key)
 			end
 		end
 		return s
@@ -510,15 +558,15 @@ class Analyzer
 	end
 
 	def init_ts_categories
-		pjobs = Array.new
-		rjobs = Array.new
+		pjobs = JobsList.new
+		rjobs = JobsList.new
 
 		i = 0
 		nxt = 500
 		@timestep.keys.sort.each do |t|
 			e = @timestep[t]
 
-			pjobs = pjobs + e.queued - e.started
+			pjobs = pjobs + e.queued + e.requeued - e.started
 
 			# no need to do all pending categories 
 			if t >= @first && t <= @last then 
@@ -531,7 +579,7 @@ class Analyzer
 				end
 			end
 
-			rjobs = rjobs + e.started - e.ended
+			rjobs = rjobs + e.started - e.requeued - e.ended
 			rjobs.each do |job|
 				cat = @record[job].cat
 				if ! e.rcats.has_key?(cat) 
@@ -553,26 +601,31 @@ class Analyzer
 
 	def print_timesteps(dotime, docat, dojob)
 		t_first = true
-		pjobs = Array.new
-		rjobs = Array.new
-		duration = @timestep.last - @timestep.first
+		pjobs = JobsList.new
+		rjobs = JobsList.new
+		duration = @last - @first
+		prev = 0
 		@timestep.keys.sort.each do |time|
 			step = @timestep[time]
-			pjobs = pjobs + step.queued - step.started
-			rjobs = rjobs + step.started - step.ended
+			pjobs = pjobs + step.queued + step.requeued - step.started
+			rjobs = rjobs + step.started - step.requeued - step.ended
 
 			if time >= @first && time <= @last then
 				# table per timestep
 				if dotime
 					if t_first
-						puts "###### Table with #{@timestep.size} timesteps (#{duration} duration) ######"
-						puts sprintf("%-12.12s %4.4s %4.4s %4.4s %4.4s %s", 
-								"time", "pend", "pcat", "runn", "rcat", "what happend?")
+						puts "###### Table with #{@timestep.size} timesteps over #{duration} seconds) ######"
+						puts sprintf("%-12.12s %6.6s %4.4s %6.6s %4.4s %5.5s %s", 
+								"time", "npend", "pcat", "nrunn", "rcat", "delta", "what happend?")
 						t_first = false
+						delta = 0
+					else
+						delta = time - prev
 					end
-					puts sprintf("%-12.12s %4.4s %-4.4s %-4.4s %-4.4s %s", 
+					puts sprintf("%-12.12s %6.6s %-4.4s %-6.6s %-4.4s %5.5s %s", 
 							time.to_s, pjobs.size.to_s, step.pcats.size.to_s, 
-							rjobs.size.to_s, step.rcats.size.to_s, step.job_events())
+							rjobs.size.to_s, step.rcats.size.to_s, delta.to_s, step.job_events())
+					prev = time
 				end
 
 				# categories table per timestep

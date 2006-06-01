@@ -399,13 +399,13 @@ proc check_option_sync_ww {} {
       }
       -i $sp_id -- "$JOB_SUBMITTED" {
          set found_job_submitted 1
-         start_sge_bin qconf "-tsm"
+         trigger_scheduling
          exp_continue
       }
       -i $sp_id -- "*our job*has been submitted" {
          # till 60u7 the qmaster reported "your" but it should be "Your"
          set found_job_submitted 1
-         start_sge_bin qconf "-tsm"
+         trigger_scheduling
          exp_continue
       }
       -i $sp_id "_exit_status_:(*)*\n" {

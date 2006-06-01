@@ -214,9 +214,9 @@ proc job_environment_qsub_job { jobname array arguments } {
 
    set ret 1
    puts $CHECK_OUTPUT "job environment should be written to $CHECK_PROTOCOL_DIR"
-   set job_id [ submit_job "$arguments -q $queue $CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/jobenv.sh $CHECK_PROTOCOL_DIR" ]
+   set job_id [submit_job "$arguments -q $queue $CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/jobenv.sh $CHECK_PROTOCOL_DIR"]
 
-   if { $job_id <= 0 } {
+   if {$job_id <= 0} {
       set ret 0
    }
 
@@ -464,6 +464,9 @@ proc job_environment_var_test {missing {extra ""}} {
    upvar $missing missing_variables
    upvar $extra extra_variables
 
+   set missing_variables ""
+   set extra_variables ""
+
    set known_variables ""
    lappend known_variables "SGE_ROOT"
    lappend known_variables "SGE_CELL"
@@ -535,8 +538,6 @@ proc job_environment_var_test {missing {extra ""}} {
    puts $CHECK_OUTPUT "checking number of environment variables ..."
 
    if {[job_environment_qsub_job "jobenv.sh" job_env "-o /dev/null -e /dev/null -ckpt testcheckpointobject -pe mytestpe 2"]} {
-      set missing_variables ""
-
       foreach var $known_variables {
          if { [info exists job_env($var)] } {
             set value $job_env($var)
@@ -554,8 +555,6 @@ proc job_environment_var_test {missing {extra ""}} {
 
       # If doing exclusive test...
       if { $extra != "" } {
-         set extra_variables ""
-
          # Remove each allowed_variable from job_env
          foreach var $allowed_variables {
             if { [info exists job_env($var)] } {

@@ -88,12 +88,12 @@ proc issue_1803_init_level {} {
    global CHECK_ACT_LEVEL
 
    switch -- $CHECK_ACT_LEVEL {
-      "0" { 
+      "0" {
          return 0
-      } 
-   } 
+      }
+   }
 
-   return -1  ;# no other level 
+   return -1  ;# no other level
 }
 
 
@@ -127,6 +127,9 @@ proc issue_1803_setup {} {
    set myconfig(load_report_time) "00:00:01"
    puts $CHECK_OUTPUT "setting execd_param to \"$my_execd_params\" ..."
    set_config myconfig
+
+   # wait some time for config to be known at exec hosts
+   sleep 15
 
    set_error 0 "ok"
 }

@@ -4441,6 +4441,7 @@ proc execute_setup_cleanup_function {func_name type} {
    # execute the setup/cleanup function
    if {$ret == 1} {
       puts $CHECK_OUTPUT "starting $type function $func_name"
+      set CHECK_CUR_PROC_NAME $func_name
       set catch_return [ catch { $func_name } catch_message ]
       # catch returnes an error - may be a TCL error
       if { $catch_return != 0 } {

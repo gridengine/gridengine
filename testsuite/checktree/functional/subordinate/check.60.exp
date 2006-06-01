@@ -190,7 +190,7 @@ proc subordinate_submit_jobs_and_wait { job_arguments job_count run_job_count jo
    }
 
    while { 1 } {
-      catch {  eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-tsm" } catch_result
+      trigger_scheduling
       set running_jobs 0
       set error 0
       for { set i 0 } { $i < $job_count } { incr i 1 } {
@@ -222,7 +222,7 @@ proc subordinate_submit_jobs_and_wait { job_arguments job_count run_job_count jo
          set sched_info_tries 10
          set ok 0
          while { $sched_info_tries > 0 } {      
-            catch {  eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-tsm" } catch_result
+            trigger_scheduling
             for { set i 0 } { $i < $job_count } { incr i 1 } {
                if { $job_id($i,running) == 0 } {
                   puts $CHECK_OUTPUT "job $job_id($i) is not running, checking schedd job info message ..."

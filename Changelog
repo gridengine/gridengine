@@ -1,3 +1,6 @@
+JG-2006-06-01-0: Testsuite: Minor enhancements, fixes, cleanup.
+                 Review:    RH
+
 AH-2006-05-31-0: Enhancem.: analyze.rb utility can now deal with array jobs and 
                             rescheduled jobs.
 

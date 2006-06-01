@@ -201,65 +201,40 @@ proc qdel_submit_delete_when_transfered {} {
    global submit_del_qconfig submit_del_check_queue CHECK_USER
    global CHECK_HOST CHECK_PRODUCT_ROOT CHECK_DEBUG_LEVEL
    global CHECK_ACT_LEVEL
- 
 
-   delete_all_jobs
-   wait_for_end_of_all_jobs 60
-
-
+   # we only execute this check in runlevel 0 - the other runlevels have no meaning here
    if { $CHECK_ACT_LEVEL == 0 } {
-      if { $ts_config(gridengine_version) == 53 } {
-         set JOB_SUBMITTED       [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_SUBMITJOB_USS] "*" "*" "*"]
-         set JOB_SUBMITTED_DUMMY [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_SUBMITJOB_USS] "__JOB_ID__" "__JOB_NAME__" "__JOB_ARG__"]
-      } else {
-         set JOB_SUBMITTED       [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QSUB_YOURJOBHASBEENSUBMITTED_SS] "*" "*"]
-         set JOB_SUBMITTED_DUMMY [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QSUB_YOURJOBHASBEENSUBMITTED_SS] "__JOB_ID__" "__JOB_NAME__"]
-      }
-      set job_id_pos [ string first "__JOB_ID__" $JOB_SUBMITTED_DUMMY ]
-      set job_name_pos [ string first "__JOB_NAME__" $JOB_SUBMITTED_DUMMY ]
-      if { $job_id_pos > $job_name_pos } {
-         add_proc_error "qdel_submit_delete_when_transfered" "-1" "locale switches parameter for qsub string! This is not supported yet"
-      }
-      incr job_id_pos -1
-      set job_id_prefix [ string range $JOB_SUBMITTED_DUMMY 0 $job_id_pos ]
-      set job_id_prefix_length [ string length $job_id_prefix]
-      puts $CHECK_OUTPUT "job id prefix is: \"$job_id_prefix\""
+      # cleanup from earlier checks
+      delete_all_jobs
+      wait_for_end_of_all_jobs 60
 
-      set arch [resolve_arch $CHECK_HOST]
-      set qsub_program "$CHECK_PRODUCT_ROOT/bin/$arch/qsub"
-      set qdel_program "$CHECK_PRODUCT_ROOT/bin/$arch/qdel"
+      # we submit sleeper jobs and delete them immediately after they entered
+      # transfering / running state
+      # we do this 25 times for every architecture
       set job_script "$CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh"
-      wait_for_end_of_all_jobs 100
       set runs 25
       while { $runs > 0 } { 
          foreach elem $ts_config(unique_arch_nodes) {
             set arguments "-o /dev/null -e /dev/null -q [get_queue_instance all.q $elem]"
-            set catch_return [ catch { eval exec "$qsub_program $arguments $job_script" } result ]
-            puts $CHECK_OUTPUT $result
-            set id_pos [string first $job_id_prefix $result]
-            incr id_pos $job_id_prefix_length
-            set job_id [string range $result $id_pos end]
-            set space_pos [ string first " " $job_id ]
-            set job_id [string range $job_id 0 $space_pos ]
-            set job_id [string trim $job_id]
-            puts $CHECK_OUTPUT "submitted job $job_id"
-            catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$arch/qconf" "-tsm" } result
-            set job_state [ wait_for_jobstart $job_id "leeper" 120 ]
-            if { $job_state == -1 } {
-               set runs 0
+            set job_id [submit_job "$arguments $job_script"]
+            if {$job_id > 0} {
+               trigger_scheduling
+               set job_state [wait_for_jobstart $job_id "leeper" 120]
+               if {$job_state == -1} {
+                  set runs 0
+               }
+               delete_job $job_id
             }
-            set catch_return [ catch { eval exec "$qdel_program $job_id" } result ]
-            puts $CHECK_OUTPUT $result
-            puts $CHECK_OUTPUT "deleted job $job_id"
          }
          incr runs -1
       }
       wait_for_end_of_all_jobs 100
    }
 
-   puts $CHECK_OUTPUT "do qmod -c for all queues"
-   foreach hostname $ts_config(execd_nodes) {
-      set result [ catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qmod -c [get_queue_instance all.q ${hostname}]" } output ]
+   # clear possible error states of queues
+   foreach host $ts_config(execd_nodes) {
+      set qinstance [get_queue_instance "all.q" $host]
+      set output [start_sge_bin "qmod" "-c $qinstance"]
       puts $CHECK_OUTPUT $output
    }
 

@@ -930,8 +930,9 @@ proc submit_error_job { jobargs } {
 #
 #*******************************************************************************
 proc submit_wait_type_job { job_type host user {variable qacct_info} } {
-   global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_HOST CHECK_DEBUG_LEVEL CHECK_USER
-   global CHECK_DISPLAY_OUTPUT ts_config
+   global ts_config CHECK_OUTPUT
+   global CHECK_PRODUCT_ROOT CHECK_HOST CHECK_DEBUG_LEVEL CHECK_USER
+   global CHECK_DISPLAY_OUTPUT CHECK_SCRIPT_FILE_DIR
    upvar $variable qacctinfo
 
 
@@ -1915,16 +1916,16 @@ proc set_config { change_array {host global} {do_add 0} {ignore_error 0}} {
   return $result
 }
 
-#****** set_config_and_propogate() *********************************************
+#****** set_config_and_propagate() *********************************************
 #  NAME
-#     set_config_and_propogate() -- set the config for the given host
+#     set_config_and_propagate() -- set the config for the given host
 #
 #  SYNOPSIS
-#     set_config_and_propogate { my_config {host global} } 
+#     set_config_and_propagate { my_config {host global} } 
 #
 #  FUNCTION
 #     Set the given config for the given host, and wait until the change has
-#     propogated.  It knows that the change has progated when the last config
+#     propagated.  It knows that the change has progated when the last config
 #     entry change appears in an execd's messages file.  If the host is global,
 #     an execd is selected from the list of execution daemons.  This method
 #     opens a remote process as $ts_user_config(first_foreign_user).
@@ -1934,7 +1935,7 @@ proc set_config { change_array {host global} {do_add 0} {ignore_error 0}} {
 #     host      the host for which the configuration should be set.  Defaults
 #               to global
 #*******************************************************************************
-proc set_config_and_propogate { config {host global} } {
+proc set_config_and_propagate { config {host global} } {
    global CHECK_OUTPUT CHECK_USER CHECK_HOST ts_config ts_user_config
    global job_environment_config 
 
@@ -1961,8 +1962,8 @@ proc set_config_and_propogate { config {host global} } {
       # Make configuration change
       set_config my_config $host
 
-      # Wait for change to propogate
-      puts $CHECK_OUTPUT "Waiting for configuration change to propogate to execd"
+      # Wait for change to propagate
+      puts $CHECK_OUTPUT "Waiting for configuration change to propagate to execd"
 
       set last_name [lindex [array names my_config] end]
 
@@ -1999,7 +2000,6 @@ proc compare_complex {a b} {
    }
    # compare the complex entry element by element
    for {set i 1} {$i < $len} {incr i} {
-      puts "comparing [lindex $a $i] with [lindex $b $i]"
       if {[string compare -nocase [lindex $a $i] [lindex $b $i]] != 0} {
          return 1
       }
@@ -2164,10 +2164,7 @@ proc get_scheduling_info { job_id { check_pending 1 }} {
          return "job not pending"
       }
    }
-   puts $CHECK_OUTPUT "Trigger scheduler monitoring"
-   catch {  eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-tsm" } catch_result
-   puts $CHECK_OUTPUT $catch_result
-   # timeout 120
+   trigger_scheduling
 
    set my_timeout [ expr ( [timestamp] + 30 ) ] 
    puts $CHECK_OUTPUT "waiting for scheduling info information ..."
@@ -5953,11 +5950,9 @@ proc wait_for_jobstart { jobid jobname seconds {do_errorcheck 1} {do_tsm 0} } {
      return -1
   }
 
-  if { $do_tsm == 1 } {
-     puts $CHECK_OUTPUT "Trigger scheduler monitoring"
-     catch {  eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-tsm" } result
-     puts $CHECK_OUTPUT $result
-  }
+   if {$do_tsm == 1} {
+      trigger_scheduling
+   }
 
   puts $CHECK_OUTPUT "Waiting for start of job $jobid ($jobname)"
   if { $do_errorcheck != 1 } {
@@ -8215,3 +8210,23 @@ proc get_event_client_list {{output_var result} {on_host ""} {as_user ""} {raise
 
 }
 
+#****** sge_procedures/trigger_scheduling() ************************************
+#  NAME
+#     trigger_scheduling() -- trigger a scheduler run
+#
+#  SYNOPSIS
+#     trigger_scheduling { } 
+#
+#  FUNCTION
+#     Triggers a scheduler run by calling qconf -tsm.
+#*******************************************************************************
+proc trigger_scheduling {} {
+   global CHECK_OUTPUT
+
+   puts $CHECK_OUTPUT "triggering scheduler run"
+
+   set output [start_sge_bin "qconf" "-tsm"]
+   if {$prg_exit_state != 0} {
+      add_proc_error "trigger_scheduling" -1 "qconf -tsm failed:\n$output"
+   }
+}

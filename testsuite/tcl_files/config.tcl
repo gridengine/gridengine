@@ -4424,7 +4424,7 @@ proc config_select_host_list {config_var name selected} {
       puts $CHECK_OUTPUT "----------------------------------------------------------"
       foreach elem $selected { puts $CHECK_OUTPUT $elem }
       puts $CHECK_OUTPUT "----------------------------------------------------------"
-      host_config_hostlist_show_hosts ts_host_config
+      set hostlist [host_config_hostlist_show_hosts ts_host_config]
       puts $CHECK_OUTPUT "\n"
       puts $CHECK_OUTPUT "Please enter"
       puts $CHECK_OUTPUT "  - \"all\" to select all hosts in list,"
@@ -4442,7 +4442,7 @@ proc config_select_host_list {config_var name selected} {
 
       # user entered "all"
       if {[string compare $host "all"] == 0} {
-         set selected $ts_host_config(hostlist)
+         set selected $hostlist
          continue
       }
 
@@ -4454,13 +4454,13 @@ proc config_select_host_list {config_var name selected} {
 
       # user entered a host number
       if {[string is integer $host]} {
-         if {$host < 1 || $host > [llength $ts_host_config(hostlist)]} {
+         if {$host < 1 || $host > [llength $hostlist]} {
             puts $CHECK_OUTPUT "invalid host number or host name"
             wait_for_enter
             continue
          }
          incr host -1
-         set host [lindex $ts_host_config(hostlist) $host]
+         set host [lindex $hostlist $host]
       }
 
       # unknown or unsupported host

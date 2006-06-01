@@ -402,7 +402,7 @@ proc share_tree_test {} {
       return 
    }
    
-   catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-tsm" } result
+   trigger_scheduling
 
    disable_queue "$test_queue"
 
@@ -420,8 +420,7 @@ proc share_tree_test {} {
 
    wait_for_jobpending $last_job "leeper" 60
 
-   catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-tsm" } result
-   puts $CHECK_OUTPUT $result
+   trigger_scheduling
    
    wait_for_job_tickes $last_job
    
@@ -514,9 +513,7 @@ proc share_tree_test {} {
          incr running_jobs -2 ;# 2 header lines
       }
       if { $running_jobs == 0 } {
-         catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-tsm" } result
-         puts -nonewline $CHECK_OUTPUT "."
-         flush $CHECK_OUTPUT
+         trigger_scheduling
       }
       sleep 2
    }

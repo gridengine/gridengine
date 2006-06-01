@@ -335,13 +335,15 @@ proc host_config_hostlist_show_hosts {array_name} {
 
    upvar $array_name config
 
+   set hostlist [lsort -dictionary $config(hostlist)]
+
    puts $CHECK_OUTPUT "\nHost list:\n"
-   if { [llength $config(hostlist)] == 0 } {
+   if {[llength $hostlist] == 0 } {
       puts $CHECK_OUTPUT "no hosts defined"
    }
 
    set max_length 0
-   foreach host $config(hostlist) {
+   foreach host $hostlist {
       if { [string length $host] > $max_length } {
          set max_length [string length $host]
       }
@@ -349,7 +351,7 @@ proc host_config_hostlist_show_hosts {array_name} {
 
 
    set index 0
-   foreach host $config(hostlist) {
+   foreach host $hostlist {
       incr index 1 
 
       set space ""
@@ -370,6 +372,8 @@ proc host_config_hostlist_show_hosts {array_name} {
          puts $CHECK_OUTPUT "   $index) $host $space ($conf_arch) $comp_host"
       }
    }
+
+   return $hostlist
 }
 
 #****** config/host/host_config_hostlist_show_compile_hosts() ************************
@@ -616,8 +620,7 @@ proc host_config_hostlist_edit_host { array_name { has_host "" } } {
       puts $CHECK_OUTPUT "\nEdit host in global host configuration"
       puts $CHECK_OUTPUT "======================================"
 
-   
-      host_config_hostlist_show_hosts config
+      set hostlist [host_config_hostlist_show_hosts config]
 
       puts $CHECK_OUTPUT "\n"
       puts -nonewline $CHECK_OUTPUT "Please enter hostname/number or return to exit: "
@@ -635,10 +638,10 @@ proc host_config_hostlist_edit_host { array_name { has_host "" } } {
      
       if {[string is integer $host]} {
          incr host -1
-         set host [ lindex $config(hostlist) $host ]
+         set host [lindex $hostlist $host]
       }
 
-      if {[lsearch $config(hostlist) $host] < 0} {
+      if {[lsearch $hostlist $host] < 0} {
          puts $CHECK_OUTPUT "host \"$host\" not found in list"
          wait_for_enter
          set goto 0
@@ -878,7 +881,7 @@ proc host_config_hostlist_delete_host { array_name } {
       puts $CHECK_OUTPUT "=========================================="
 
    
-      host_config_hostlist_show_hosts config
+      set hostlist [host_config_hostlist_show_hosts config]
 
       puts $CHECK_OUTPUT "\n"
       puts -nonewline $CHECK_OUTPUT "Please enter hostname/number or return to exit: "
@@ -890,10 +893,10 @@ proc host_config_hostlist_delete_host { array_name } {
      
       if { [string is integer $host] } {
          incr host -1
-         set host [ lindex $config(hostlist) $host ]
+         set host [lindex $hostlist $host]
       }
 
-      if { [ lsearch $config(hostlist) $host ] < 0 } {
+      if {[lsearch $hostlist $host] < 0} {
          puts $CHECK_OUTPUT "host \"$host\" not found in list"
          wait_for_enter
          continue
@@ -925,7 +928,6 @@ proc host_config_hostlist_delete_host { array_name } {
       puts $CHECK_OUTPUT "   compile_time  : $config($host,compile_time)"
       puts $CHECK_OUTPUT "   response_time : $config($host,response_time)"
 
-
       puts $CHECK_OUTPUT ""
    
       puts $CHECK_OUTPUT "\n"
@@ -938,7 +940,7 @@ proc host_config_hostlist_delete_host { array_name } {
  
       if { [ string compare $input "y"] == 0 } {
          set index [lsearch $config(hostlist) $host]
-         set config(hostlist) [ lreplace $config(hostlist) $index $index ]
+         set config(hostlist) [lreplace $config(hostlist) $index $index]
          unset config($host,arch,53)
          unset config($host,arch,60)
          unset config($host,arch,65)

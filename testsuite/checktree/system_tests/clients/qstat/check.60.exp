@@ -122,6 +122,9 @@ proc qstat_cleanup {} {
    global CHECK_OUTPUT
    global ts_config
 
+   delete_all_jobs
+   wait_for_end_of_all_jobs 60
+
    set first_host [lindex $ts_config(execd_nodes) 0]
    set last_host [lindex $ts_config(execd_nodes) 1]
 
@@ -287,7 +290,7 @@ proc check_core_queues {} {
   set check_arch [resolve_arch $check_host]
   set qstat_binary $ts_config(product_root)/bin/$check_arch/qstat
 
-  set result [start_remote_prog $check_host $CHECK_USER $qstat_binary "-f" ]
+  set result [start_remote_prog $check_host $CHECK_USER $qstat_binary "-f -q all.q"]
 #
 #Original output of qstat -f looks like this:
 #>qstat -f
@@ -335,11 +338,9 @@ proc check_core_queues {} {
      lappend slots [string range $used_tot $pos1 $pos2 ]
      lappend load [lindex $linedata 3]
   }
- 
-  
 
   # check if number of queues matches core system queue count
-  if { [llength $CHECK_CORE_EXECD] != $qcount } {
+  if {[llength $CHECK_CORE_EXECD] != $qcount} {
      set_error -1 "check_core_queues - queue count doesn't match (number of queues should be [llength $CHECK_CORE_EXECD])"
      return
   }

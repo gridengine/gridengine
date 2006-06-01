@@ -130,7 +130,7 @@ proc issue_1972_test1 {} {
       submit_job $arguments
       submit_job $arguments
 
-      set result [start_sge_bin qconf "-tsm"]
+      trigger_scheduling
       sleep 2
 
       puts $CHECK_OUTPUT "this is the test for runlevel $CHECK_ACT_LEVEL"

@@ -1,3 +1,6 @@
+HP-2006-06-02-0: Bugfix:    Fixed wrong function declaration
+                 Changed:   sge_uidgid.c
+   
 AH-2006-05-29-0: Bugfix:    Enhanced build process to set library name (soname)
                             with 0.95/1.0 libdrmaa for Solaris and Linux.
                  Changed:   libdrmaa

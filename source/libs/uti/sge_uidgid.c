@@ -54,6 +54,7 @@
 
 #if defined( INTERIX )
 #   include "misc.h"
+#   include "../../../utilbin/sge_passwd.h"
 #endif
 
 #define UIDGID_LAYER CULL_LAYER 
@@ -97,6 +98,8 @@ static void uidgid_state_set_last_uid(uid_t uid);
 static void uidgid_state_set_last_username(const char *user);
 static void uidgid_state_set_last_gid(gid_t gid);
 static void uidgid_state_set_last_groupname(const char *group);
+
+static int uidgid_read_passwd(const char *user, char **pass, char *err_str);
 
 /****** uti/uidgid/uidgid_mt_init() ************************************************
 *  NAME

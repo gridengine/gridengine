@@ -38,7 +38,7 @@
 #     qstat_xml_parse -- Generate XML output and return assoc array 
 #
 #  SYNOPSIS
-#     qstat_xml_parse { output }
+#     qstat_xml_parse { output {param ""} }
 #                     -- Generate XML output and return assoc array with
 #                        entries jobid, prior, name, user, state, total_time,
 #                        queue slots and task_id if needed. Pass XML info
@@ -49,6 +49,8 @@
 #                 Output array is similar to that of 
 #                 parse_qstat {input output {jobid ""} {ext 0} {do_replace_NA 1 } }
 #
+#      param -  pass in param to qstat
+# 
 #  FUNCTION
 #     Print out parsed xml output
 #
@@ -60,7 +62,7 @@
 #
 ##*******************************
 
-proc qstat_xml_parse { output } {
+proc qstat_xml_parse { output {param ""} } {
 
    global CHECK_OUTPUT
 
@@ -69,38 +71,61 @@ proc qstat_xml_parse { output } {
    upvar $output output_xml
 
    # Run now -xml command
-   set XML [start_sge_bin  "qstat" " -xml" ]
+   set XML [start_sge_bin  "qstat" "$param -xml" ]
 
    set doc  [dom parse $XML]
 
    set root [$doc documentElement]
 
+   if { ($param == "-urg") } {
+      set jobparam "urg"
+   } elseif {  ($param == "-pri") } {
+      set jobparam "pri"
+   } elseif {  ($param == "-r") } {
+      set jobparam "r"   
+   } else {
+      set jobparam "running"
+   }
+   
    # Parse the running jobs  using this node.
    set node [$root firstChild]   ; # <job-info/>
    set node1 [$node firstChild]  ; # <queue-info/>
 
-   set result1 [qstat_xml_jobid $node1 running output_xml]
+   #set result1 [qstat_xml_jobid $node1 running output_xml]
+   set result1 [qstat_xml_jobid $node1 $jobparam output_xml]
 
    # Parse the pending jobs info using this node. Need to start here
    # NOT at root.
+   
+   if { ($param == "-urg") } {
+      set jobparam "urgpending"
+   } elseif {  ($param == "-pri") } {
+      set jobparam "pripending"
+   } elseif {  ($param == "-r") } {
+      set jobparam "rpending"
+    } else {
+      set jobparam "pending"
+   }
    set node [$root firstChild]   ; # <job-info/>
    set node12 [$node nextSibling]  ; # <queue-info/>
    set node121 [$node12 firstChild]  ; # <qname/>
 
-   set result2 [qstat_xml_jobid $node121 pending output_xml]
+   #set result2 [qstat_xml_jobid $node121 pending output_xml]
+   set result2 [qstat_xml_jobid $node121 $jobparam output_xml]
+
 
    set_error 0 "ok"
 
 }
 
 #                                                             max. column:     |
-#****** parser_xml/qstat_ext_xml_parse() ******
+#****** parser_xml/qstat_j_JOB_NAME_xml_parse() ******
 #
 #  NAME
-#     qstat_ext_xml_parse -- Generate XML output and return assoc array 
+#     qstat_j_JOB_NAME_xml_parse -- Generate XML output and return assoc array 
 #
 #  SYNOPSIS
-#     qstat_ext_xml_parse { output }
+#     qstat_j_JOB_NAME_xml_parse { output {param ""} }
 #                     -- Generate XML output and return assoc array with
 #                        entries jobid, prior, name, user, state, total_time,
 #                        queue slots and task_id if needed. Pass XML info
@@ -111,6 +136,8 @@ proc qstat_xml_parse { output } {
 #                 Output array is similar to that of 
 #                 parse_qstat {input output {jobid ""} {ext 0} {do_replace_NA 1 } }
 #
+#      param -  pass in param to qstat
+# 
 #  FUNCTION
 #     Print out parsed xml output
 #
@@ -122,7 +149,7 @@ proc qstat_xml_parse { output } {
 #
 ##*******************************
 
-proc qstat_ext_xml_parse { output } {
+proc qstat_j_JOB_NAME_xml_parse { output {param ""} } {
 
    global CHECK_OUTPUT
 
@@ -131,37 +158,23 @@ proc qstat_ext_xml_parse { output } {
    upvar $output output_xml
 
    # Run now -xml command
-   set XML [start_sge_bin  "qstat" "-ext -xml" ]
-   #puts $CHECK_OUTPUT "Printing the xml result of qstat $option -xml... \n"
-   #puts $CHECK_OUTPUT "$XML \n"
-   #upvar $input input_qstat
+   set XML [start_sge_bin  "qstat" "-j $param -xml" ]
 
    set doc  [dom parse $XML]
 
    set root [$doc documentElement]
-
+   
    # Parse the running jobs  using this node.
-   set node [$root firstChild]   ; # <job-info/>
-   #set node12 [$node nextSibling]  ; # <queue-info/>
-   set node1 [$node firstChild]  ; # <joblisting/>
-  
-   set jobtype1 "ext"
-   set result1 [qstat_xml_jobid $node1 $jobtype1 output_xml]
-   #puts $CHECK_OUTPUT "calling jobtype is  $jobtype1 ... \n"
+   set node [$root firstChild]   ; # <djob-info/>
+   set node1 [$node firstChild]  ; # <qmaster_response/>
 
-   # Parse the pending jobs info using this node. Need to start here
-   # NOT at root.
-   set node [$root firstChild]   ; # <job-info/>
-   set node12 [$node nextSibling]  ; # <queue-info/>
-   set node121 [$node12 firstChild]  ; # <qname/>
+   set result1 [qstat_j_JOB_NAME_xml_jobid $node1 output_xml]
 
-   set jobtype2 "extpending"
-   set result2 [qstat_xml_jobid $node121 $jobtype2 output_xml]
-   #puts $CHECK_OUTPUT "second calling jobtype is  $jobtype2 ... \n"
 
    set_error 0 "ok"
 
 }
+
 #                                                             max. column:     |
 #****** parser_xml/qstat_f_xml_parse() ******
 #
@@ -180,6 +193,9 @@ proc qstat_ext_xml_parse { output } {
 #                 Output array is similar to that of
 #                 parse_qstat {input output {jobid ""} {ext 0} {do_replace_NA 1 } }
 #
+#      param - pass in "ext" or  "-ne" as params for qstat -f
+#
+#
 #  FUNCTION
 #     Print out parsed xml output
 #
@@ -191,40 +207,53 @@ proc qstat_ext_xml_parse { output } {
 #
 ##*******************************
 
-proc qstat_f_xml_parse { output } {
+proc qstat_f_xml_parse { output {param ""} } {
 
    global CHECK_OUTPUT
 
    #package require tdom
 
    upvar $output output_xml
-
+   
    # Run now -xml command
-   set XML [start_sge_bin  "qstat" "-f -xml" ]
+   set XML [start_sge_bin  "qstat" "-f $param -xml" ]
 
    set doc  [dom parse $XML]
 
    set root [$doc documentElement]
    
+   if { ($param == "-ext") } {
+      set queueparam "fext"
+   } else {
+      set queueparam ""
+   }
+   
    # Parse the running jobs  using this node.
    set node [$root firstChild]   ; # <job-info/>
    set node1 [$node firstChild]  ; # <queue-info/>
 
-   set result1 [qstat_xml_queue $node1 output_xml]
+   set result1 [qstat_xml_queue $node1 output_xml $queueparam]
 
    # Parse the pending jobs info using this node. Need to start here
    # NOT at root.
+   
+   if { ($param == "-ext") } {
+      set jobparam "fextpending"
+   } else {
+      set jobparam "full"
+   }
    
    set node [$root firstChild]   ; # <job-info/>
    set node12 [$node nextSibling]  ; # <queue-info/>
    set node121 [$node12 firstChild]  ; # <qname/>
 
-   set result2 [qstat_xml_jobid $node121 full output_xml]
+   set result2 [qstat_xml_jobid $node121 $jobparam output_xml]
    
    set_error 0 "ok"
 
 }
 
+ 
 #                                                             max. column:     |
 #****** parser_xml/qstat_F_xml_parse() ******
 #
@@ -232,7 +261,7 @@ proc qstat_f_xml_parse { output } {
 #     qstat_F_xml_parse -- Generate XML output and return assoc array
 #
 #  SYNOPSIS
-#     qstat_F_xml_parse { output }
+#     qstat_F_xml_parse { output {params ""} }
 #                     -- Generate XML output and return assoc array with
 #                        entries jobid, prior, name, user, state, total_time,
 #                        queue slots and task_id if needed. Pass XML info
@@ -244,6 +273,7 @@ proc qstat_f_xml_parse { output } {
 #                 parse_qstat {input output {jobid ""} {ext 0} {do_replace_NA 1 } }
 #
 #      params  - args passed to the "qstat -F" command
+# 
 #  FUNCTION
 #     Print out parsed xml output
 #
@@ -273,7 +303,7 @@ proc qstat_F_xml_parse { output {params ""} } {
    set root [$doc documentElement]
    
    # Parse the running jobs  using this node.
-   set node [$root firstChild]   ; # <job-info/>
+   set node [$root firstChild]   ; # <job_info/>
    set node1 [$node firstChild]  ; # <queue-info/>
 
    # Transform the args list back into a ""  separated list
@@ -294,67 +324,292 @@ proc qstat_F_xml_parse { output {params ""} } {
 }
 
 #                                                             max. column:     |
-#****** parser_xml/qstat_F_rerun_h_vmem_xml_parse() ******
+#****** parser_xml/qstat_j_ERROR_xml_jobid() ******
 #
 #  NAME
-#     qstat_F_rerun_h_vmem_xml_parse -- Generate XML output and return assoc array
+#     qstat_j_ERROR_xml_jobid -- Take XML node and return assoc array 
 #
 #  SYNOPSIS
-#     qstat_F_rerun_h_vmem__xml_parse { output }
-#                     -- Generate XML output and return assoc array with
+#     qstat_j_ERROR_xml_jobid -- Take XML node and return assoc array with
 #                        entries jobid, prior, name, user, state, total_time,
 #                        queue slots and task_id if needed. Pass XML info
 #                        to proc qstat_xml_jobid which does the bulk of
 #                        the work.
 #
-#      output  -  asscoc array with the entries mentioned above.#
-#                 Output array is similar to that of
-#                 parse_qstat {input output {jobid ""} {ext 0} {do_replace_NA 1 } }
-#
 #  FUNCTION
-#     Print out parsed xml output
+#     Return assoc array
 #
 #  INPUTS
-#     None
+#     
+#     qstat_j_ERROR_xml_jobid {node121  output} 
+#
+#     node121  -  node in XML doc where we start navigation
+#   
+#     output  -  asscoc array with the entries mentioned above.
 #
 #  NOTES
-#
+#     
 #
 ##*******************************
 
-proc qstat_F_rerun_h_vmem_xml_parse { output } {
-
+proc qstat_j_JOB_NAME_xml_jobid { node121 output} {
    global CHECK_OUTPUT
 
    #package require tdom
 
-   upvar $output output_xml
-
-   # Run now -xml command
-   set XML [start_sge_bin  "qstat" "-F rerun,h_vmem -xml" ]
-
-   set doc  [dom parse $XML]
-
-   set root [$doc documentElement]
+   upvar $output output_xml_qstat
    
-   # Parse the running jobs  using this node.
-   set node [$root firstChild]   ; # <job-info/>
-   set node1 [$node firstChild]  ; # <queue-info/>
-
-   set result1 [qstat_F_rerun_h_vmem_xml_queue $node1 output_xml]
-
-   # Parse the pending jobs info using this node. Need to start here
-   # NOT at root.
    
-   set node [$root firstChild]   ; # <job-info/>
-   set node12 [$node nextSibling]  ; # <queue-info/>
-   set node121 [$node12 firstChild]  ; # <qname/>
+   # If nothing, we have not started any jobs, so we return
+   if { $node121 == "" } {
+      return
+   }
+   set node1211 [$node121 firstChild]  ; # <qname1/>
+   set node12111 [$node1211 firstChild]  ; # <jobid/
+   if { $node12111 == "" } {
+      return
+   }
+   set jobid [$node12111 nodeValue]
 
-   set result2 [qstat_xml_jobid $node121 full output_xml]
+
+   set output_xml_qstat($jobid,jobid) $jobid
+   lappend output_xml_qstat(jobid_list) $jobid
    
-   set_error 0 "ok"
+   #puts $CHECK_OUTPUT "jobid in qstat_j_ERROR_xml_jobid is $jobid ... \n"
+   
+   set  column_vars "job_name version session department exec_file script_file \
+                     script_size submission_time execution_time deadline owner uid group \
+                     gid account notify type reserve priority jobshare shell_list verify \
+                     env_list job_args checkpoint_attr checkpoint_object checkpoint_interval \
+                     restart stdout_path_list merge_stderr hard_queue_list mail_options \
+                     mail_list ja_structure ja_template ja_tasks host verify_suitable_queues \ 
+                     nrunning soft_wallclock_gmt hard_wallclock_gmt override_tickets urg nurg \
+                     nppri rrcont dlcontr wtcont"; # .... stop at </qmaster_response> 
+   
+   # Here are sub-vars for some of the  vars above. 
+   set shell_list_vars "path host file_host file_staging"
+   
+   # sge_o_home_tag sge_o_home sge_o_logname_tag sge_o_logname ... then
+   set env_list_vars "sge_o_path_tag sge_o_path sge_o_shell_tag sge_o_shell \
+                      sge_o_mail_tag sge_o_mail sge_o_host_tag \
+                      sge_o_host sge_o_workdir_tag sge_o_workdir"
+   
+   set job_args_vars "job_args_value"
+   
+   set stdout_path_list_vars "path host file_host file_staging"
+   
+   set hard_queue_list_args "hard_queue_list_value"
+   
+   set mail_list_vars "user host"
+   
+   set ja_structure_vars "min max step"
+   
+   set ja_template_vars "task_number status start_time end_time hold job_restarted stat pvm_ckpt_pid \
+                         pending_signal pending_signal_delivery_time pid fshare tix oticket _fticket \
+                         sticket share suitable pe_object next_pe_task_id stop_initiate_time prio ntix"
+   
+   set ja_tasks_vars "task_number status start_time end_time hold job_restarted state pvm_ckpt_pid pending_signal \
+                      pending_signal_delivery_time pid usage_list fshare tix oticket fticket sticket share \
+                      suitable previous_usage_list pe_object next_pe_task_id stop_initiate_time pri \
+                      ntix message_list"
+   
+   set usage_list_vars "usage_list_submission_time usage_list_submission_time_value usage_list_priority \
+                        usage_list_priority_value"
+   
+   set previous_usage_list_vars "previous_usage_list_submission_time previous_usage_list_submission_time_value \
+                                 previous_usage_list_priority previous_usage_list_priority_value"
+   
+   set message_list_vars "type message"
 
-}
+   foreach column $column_vars {
+      set node21 [$node1211 nextSibling] ;
+      if { $node21 == "" } {
+         break
+      }
+      set node211 [$node21 firstChild] ; # <jobid info/
+
+      if { $node211 == "" } { ; # we have hit the empty queue entry
+         append output_xml_qstat($jobid,$column) ""
+         set node1211 $node21
+         continue
+      }
+      
+      set xml_param [$node211 nodeValue]
+      
+      
+      if { ($column == "env_list") } { ; # get the sge_o vars
+        
+         set node1311 [$node211  firstChild]
+         
+         foreach env_column "sge_o_home_tag sge_o_home"  {
+            ##set node31 [$node1311 nextSibling] ; works
+            set node31 $node1311
+            if { $node31 == "" } {
+               continue
+            }
+            set node311 [$node31 firstChild] ; # <jobid info/
+
+            if { $node311 == "" } { ; # we have hit the empty queue entry
+               append output_xml_qstat($jobid,$env_column) ""
+               set node1311 [$node31 nextSibling]
+               continue
+            }
+            
+            set env_xml_param [$node311 nodeValue]
+            #puts $CHECK_OUTPUT "env_xml_param is $env_xml_param ... \n"
+            set output_xml_qstat($jobid,$env_column) $env_xml_param
+            set node1311 [$node31 nextSibling] ; # works
+          }
+          
+          set node1312 [$node211 nextSibling]
+          set node1311 [$node1312 firstChild]
+          
+          foreach env_column "sge_o_log_name_tag sge_o_log_name" {
+             set node31 $node1311
+            if { $node31 == "" } {
+               continue
+            }
+            set node311 [$node31 firstChild] ; # <jobid info/
+
+            if { $node311 == "" } { ; # we have hit the empty queue entry
+              append output_xml_qstat($jobid,$env_column) ""
+              set node1311 [$node31 nextSibling]
+             continue
+            }
+            
+            set env_xml_param [$node311 nodeValue]
+            #puts $CHECK_OUTPUT "env_xml_param2 is $env_xml_param ... \n"
+            set output_xml_qstat($jobid,$env_column) $env_xml_param
+            set node1311 [$node31 nextSibling] 
+          }
+           
+          set node1313 [$node1312 nextSibling]
+          set node1311 [$node1313 firstChild]
+          
+          foreach env_column "sge_o_path_tag sge_o_path" {
+             set node31 $node1311
+             if { $node31 == "" } {
+                #set node1313 [$node1312 nextSibling]
+                #set node1311 [$node1313 firstChild]
+                #set node1312 $node1313
+                #puts $CHECK_OUTPUT "we are in the first continue for env_list_vars... \n"
+                continue
+             }
+             set node311 [$node31 firstChild] ; # <jobid info/
+
+            if { $node311 == "" } { ; # we have hit the empty queue entry
+               append output_xml_qstat($jobid,$env_column) ""
+               set node1311 [$node31 nextSibling]
+               continue
+            }
+            
+            set env_xml_param [$node311 nodeValue]
+            #puts $CHECK_OUTPUT "env_xml_param3 is $env_xml_param ... \n"
+            set output_xml_qstat($jobid,$env_column) $env_xml_param
+            set node1311 [$node31 nextSibling] 
+          }
+          
+          set node1314 [$node1313 nextSibling]
+          set node1311 [$node1314 firstChild]
+          
+          foreach env_column "sge_o_shell_tag sge_o_shell " {
+             set node31 $node1311
+             if { $node31 == "" } {
+                continue
+             }
+             set node311 [$node31 firstChild] ; # <jobid info/
+
+             if { $node311 == "" } { ; # we have hit the empty queue entry
+                append output_xml_qstat($jobid,$env_column) ""
+                set node1311 [$node31 nextSibling]
+                continue
+             }
+            
+             set env_xml_param [$node311 nodeValue]
+             #puts $CHECK_OUTPUT "env_xml_param4 is $env_xml_param ... \n"
+             set output_xml_qstat($jobid,$env_column) $env_xml_param
+             set node1311 [$node31 nextSibling] 
+          }
+          
+          set node1315 [$node1314 nextSibling]
+          set node1311 [$node1315 firstChild]
+          
+          foreach env_column "sge_o_mail_tag sge_o_mail" {
+             set node31 $node1311
+             if { $node31 == "" } {
+                continue
+             }
+             set node311 [$node31 firstChild] ; # <jobid info/
+
+             if { $node311 == "" } { ; # we have hit the empty queue entry
+                append output_xml_qstat($jobid,$env_column) ""
+                set node1311 [$node31 nextSibling]
+                continue
+             }
+            
+             set env_xml_param [$node311 nodeValue]
+             #puts $CHECK_OUTPUT "env_xml_param5 is $env_xml_param ... \n"
+             set output_xml_qstat($jobid,$env_column) $env_xml_param
+             set node1311 [$node31 nextSibling] 
+          }
+          
+          set node1316 [$node1315 nextSibling]
+          set node1311 [$node1316 firstChild]
+          
+          foreach env_column "sge_o_host_tag sge_o_host" {
+             set node31 $node1311
+             if { $node31 == "" } {
+                continue
+             }
+             set node311 [$node31 firstChild] ; # <jobid info/
+
+             if { $node311 == "" } { ; # we have hit the empty queue entry
+                append output_xml_qstat($jobid,$env_column) ""
+                set node1311 [$node31 nextSibling]
+                continue
+             }
+            
+             set env_xml_param [$node311 nodeValue]
+             #puts $CHECK_OUTPUT "env_xml_param6 is $env_xml_param ... \n"
+             set output_xml_qstat($jobid,$env_column) $env_xml_param
+             set node1311 [$node31 nextSibling] 
+          }
+          
+          set node1317 [$node1316 nextSibling]
+          set node1311 [$node1317 firstChild]
+          
+          foreach env_column "sge_o_workdir_tag sge_o_workdir" {
+             set node31 $node1311
+             if { $node31 == "" } {
+                continue
+             }
+             set node311 [$node31 firstChild] ; # <jobid info/
+
+             if { $node311 == "" } { ; # we have hit the empty queue entry
+                append output_xml_qstat($jobid,$env_column) ""
+                set node1311 [$node31 nextSibling]
+                continue
+             }
+            
+             set env_xml_param [$node311 nodeValue]
+             #puts $CHECK_OUTPUT "env_xml_param7 is $env_xml_param ... \n"
+             set output_xml_qstat($jobid,$env_column) $env_xml_param
+             set node1311 [$node31 nextSibling] 
+          }
+          
+     }        
+      
+      #puts $CHECK_OUTPUT " xml_param for $column is $xml_param ... \n" 
+      
+      set output_xml_qstat($jobid,$column) $xml_param      
+      set node1211 $node21
+      
+   }
+
+}  
+     
+
+
 #                                                             max. column:     |
 #****** parser_xml/qstat_xml_jobid() ******
 #
@@ -427,20 +682,83 @@ proc qstat_xml_jobid { node121 jobtype output} {
       set output_xml_qstat($jobid,task_id) ""
    }  elseif { $jobtype == "full" } { ; # this is for listing of qstat -F jobs
       set column_vars "prior name user state time slots task_id"   
-   }  elseif { $jobtype == "extpending" } { ; # this is for listing qstat -ext pending jobs
+   }
+   if { $jobtype == "extpending" } { ; # this is for listing qstat -ext pending jobs
       set column_vars "prior ntckts name  user project department state tckts ovrts job_share otckt ftckt  \
-      stckt share slots"
+      stckt share slots slots"
       append output_xml_qstat($jobid,cpu) " "
       append output_xml_qstat($jobid,mem) " "
       append output_xml_qstat($jobid,io) " "
       append output_xml_qstat($jobid,queue) " "      
       append output_xml_qstat($jobid,task_id) " "
-   }  elseif { $jobtype == "ext" } { ; # this is for listing qstat -ext jobs
-      set column_vars "prior ntckts name  user project department state cpu mem io tckts \
-      ovrts job_share otckt ftckt stckt share queue slots task_id"   
    }
    
-   ##puts $CHECK_OUTPUT "$jobtype for jobid $jobid column_vars are $column_vars ... \n"
+   if { $jobtype == "fextpending" } { ; # this is for listing qstat -f -ext pending jobs
+      set column_vars "prior ntckts name user project department state tckts ovrts job_share \
+      otckt ftckt stckt share slots"
+      append output_xml_qstat($jobid,cpu) " "
+      append output_xml_qstat($jobid,mem) " "
+      append output_xml_qstat($jobid,io) " "
+      append output_xml_qstat($jobid,task_id) " "
+   }
+   if { $jobtype == "ext" } { ; # this is for listing qstat -ext jobs
+      set column_vars "prior ntckts name  user project department state cpu mem io tckts \
+      ovrts job_share otckt ftckt stckt share queue slots task_id"
+      append output_xml_qstat($jobid,task_id) " "
+   }
+   if { $jobtype == "fext" } { ; # this is for listing qstat -f -ext jobs
+      set column_vars "prior ntckts name  user project department state cpu mem io tckts \
+      ovrts job_share otckt ftckt stckt share slots task_id"
+   }
+   if { $jobtype == "urg" } { ; # this is for listing qstat -urg jobs
+      set column_vars "prior nurg urg rrcontr wtcontr dlcontr name user state time  \
+      queue slots task_id"
+      append output_xml_qstat($jobid,deadline) " "
+      append output_xml_qstat($jobid,task_id) " "
+   }
+   if { $jobtype == "urgpending" } { ; # this is for listing qstat -urg jobs
+      set column_vars "prior nurg urg rrcontr wtcontr dlcontr name user state time  \
+      slots slots"
+      append output_xml_qstat($jobid,deadline) " "
+      append output_xml_qstat($jobid,queue) " "
+      append output_xml_qstat($jobid,task_id) " "
+   }
+   if { $jobtype == "pri" } { ; # this is for listing qstat -pri jobs
+      set column_vars "prior npprior ppri name  user state time queue slots task_id "
+   }
+   if { $jobtype == "pripending" } { ; # this is for listing qstat -pri pending jobs
+      set column_vars "prior npprior ppri name  user state time slots slots"
+      append output_xml_qstat($jobid,queue) ""
+      append output_xml_qstat($jobid,task_id) ""
+   }
+   if { $jobtype == "r" } { ; # this is for listing qstat -r jobs
+      set column_vars "prior  name  user state time queue slots task_id \
+                       hard_req_queue hard_resource "
+      append output_xml_qstat($jobid,full_jobname) ""
+      append output_xml_qstat($jobid,master_queue) ""
+      append output_xml_qstat($jobid,hard_resource) ""
+      append output_xml_qstat($jobid,soft_resource) ""
+      append output_xml_qstat($jobid,hard_req_queue) ""
+      append output_xml_qstat($jobid,req_pe_value) ""
+      append output_xml_qstat($jobid,granted_pe_value) ""
+   }
+   if { $jobtype == "rpending" } { ; # this is for listing qstat -r pending jobs
+      set column_vars "prior  name  user state time slots  hard_req_queue"
+      append output_xml_qstat($jobid,queue) ""
+      append output_xml_qstat($jobid,task_id) ""
+      append output_xml_qstat($jobid,full_jobname) ""
+      append output_xml_qstat($jobid,master_queue) ""
+      append output_xml_qstat($jobid,hard_resource) ""
+      append output_xml_qstat($jobid,soft_resource) ""
+      append output_xml_qstat($jobid,hard_req_queue) ""
+      append output_xml_qstat($jobid,req_pe_value) ""
+      append output_xml_qstat($jobid,granted_pe_value) ""
+   }
+   
+      
+   #puts $CHECK_OUTPUT "$jobtype for jobid $jobid column_vars are $column_vars ... \n"
+   puts  ""
+
    foreach column $column_vars {
       set node21 [$node1211 nextSibling] ;
       if { $node21 == "" } {
@@ -456,12 +774,31 @@ proc qstat_xml_jobid { node121 jobtype output} {
       
       set xml_param [$node211 nodeValue]
       
+      #puts $CHECK_OUTPUT " xml_param for $column is $xml_param ... \n"
+      puts  ""
+
       # For time, need the UNIX value, to compare with plain output.
       if { ($column == "time") } {
          set xml_param  [transform_date_time $xml_param]
       }   
-            
-      # For colums "queue" and "master" we need to append rather than set
+      
+      # In the case of qstat -r, we get hard_req_queue after slots, not task_id
+      if { ($column == "task_id") && ($jobtype == "r") && [regexp "\[a-zA-Z.\]"  $xml_param] } {
+          set output_xml_qstat($jobid,hard_req_queue) $xml_param
+          set node1211 $node21
+          continue
+      }
+      
+      if { ($column == "hard_req_queue") && ($jobtype == "r") && [regexp "lx" $xml_param] || \
+           [regexp "sol" $xml_param]} {
+          set output_xml_qstat($jobid,hard_resource) "arch=$xml_param"
+          #puts $CHECK_OUTPUT "output_xml_qstat($jobid,hard_resource) is  $output_xml_qstat($jobid,hard_resource) ... \n"
+          set output_xml_qstat($jobid,$column) ""
+          set node1211 $node21
+          continue
+      }
+      
+      # For colums "queue" and others we need to append rather than set
       # since we can have more than one entries.
       if { ($column == "queue") || ($column == "master") || ($column == "slots") || ($column == "task_id")} {
          append output_xml_qstat($jobid,$column) "$xml_param "
@@ -470,7 +807,11 @@ proc qstat_xml_jobid { node121 jobtype output} {
          set output_xml_qstat($jobid,$column) $xml_param      
          set node1211 $node21
       }
-      ##puts $CHECK_OUTPUT "in first loop jobid is $jobid and column  $column is $xml_param  ... \n"   
+     
+      if { ($column == "hard_resource") } {
+         set output_xml_qstat($jobid,hard_resource) "arch=$xml_param"
+      }
+      
    }
 
    while { 1 } {
@@ -487,15 +828,14 @@ proc qstat_xml_jobid { node121 jobtype output} {
 
       set output_xml_qstat($next_jobid,jobid) $next_jobid
       lappend output_xml_qstat(jobid_list) $next_jobid
-
-      ##puts $CHECK_OUTPUT "$jobtype for jobid $next_jobid column_vars are $column_vars ... \n"
-
+         
+      puts  ""
+      
       set node121 $node13 ; # yes, node121, NOT node122...
       
       foreach next_column $column_vars {
          set node22 [$node122 nextSibling] ;
          if { $node22 == "" } {
-            #break
             continue
          }
          set node221 [$node22 firstChild] ; # <jobid info/>
@@ -503,18 +843,36 @@ proc qstat_xml_jobid { node121 jobtype output} {
          if { $node221 == "" } { ; # we hit the empty queue entry
             append output_xml_qstat($next_jobid,$next_column) ""
             set node122 $node22
-            continue
+            continue        
          }
 
          set next_xml_param [$node221 nodeValue]
 
-
+         # In the case of qstat -r, we get hard_req_queue after slots, not task_id
+         if { ($next_column == "task_id") && ($jobtype == "r") && [regexp "\[a-zA-Z.\]" $next_xml_param] } {
+            set output_xml_qstat($next_jobid,hard_req_queue) $next_xml_param
+            set node1211 $node21
+            continue
+         }
+         
+         #puts $CHECK_OUTPUT "next_xml_param for $next_column is $next_xml_param ... \n"
+         puts  ""
+         
+         if { ($next_column == "hard_req_queue") && ($jobtype == "r") && [regexp "lx" $next_xml_param] || \
+              [regexp "sol" $next_xml_param] } {
+           set output_xml_qstat($next_jobid,hard_resource) "arch=$next_xml_param"
+           #puts $CHECK_OUTPUT "output_xml_qstat($next_jobid,hard_resource) is  $output_xml_qstat($next_jobid,hard_resource) ... \n"
+           set output_xml_qstat($next_jobid,$next_column) ""
+           set node1211 $node21
+           continue
+         }
+         
          if { ($next_column == "time") } {
             set next_xml_param  [transform_date_time $next_xml_param]
          }   
             
-         # For colums "queue" and "master" we need to append rather than set
-         # since we can have more than one entries.
+         # For colums "queue", "master", "slots", "task_id" we need to append
+         # rather than set since we can have more than one entries.
          if { ($next_column == "queue") || ($next_column == "master") || ($next_column == "slots") || ($next_column == "task_id")} {
             append output_xml_qstat($next_jobid,$next_column) "$next_xml_param "
             set node122 $node22
@@ -522,10 +880,11 @@ proc qstat_xml_jobid { node121 jobtype output} {
             set output_xml_qstat($next_jobid,$next_column) $next_xml_param
             set node122 $node22
          }
-         ##puts $CHECK_OUTPUT "in second loop jobid is $next_jobid and \
-                             column  $next_column is $next_xml_param  ... \n"        
-
-      
+         
+         if { ($next_column == "hard_resource") } {
+            set output_xml_qstat($next_jobid,hard_resource) "arch=$next_xml_param"
+         }
+         
        }
 
     }
@@ -550,17 +909,18 @@ proc qstat_xml_jobid { node121 jobtype output} {
 #
 #  INPUTS
 #
-#     qstat_xml_queue {node1 output}
+#     qstat_xml_queue {node1 output {param ""} }
 #
 #     node1  -  node in XML doc where we start navigation
 #     output  -  asscoc array with the entries mentioned above.
+#     param  - pass in param ext for -ext output
 #
 #  NOTES
 #
 #
 ##*******************************
 
-proc qstat_xml_queue { node1 output } {
+proc qstat_xml_queue { node1 output {param ""} } {
    global CHECK_OUTPUT
 
    upvar $output output_xml_qstat
@@ -600,10 +960,19 @@ proc qstat_xml_queue { node1 output } {
    }
 
    # Once we are done with the queue parameters, the next Sibling will be the
-   # node pointing to job id information. We re-user queue_xml_jobid with
-   # the  "full" flag, to pick information as listed in "qstat -f"
+   # node pointing to job id information. We re-use queue_xml_jobid with
+   # the  following flags:  "ext" for -ext; "fext" for -f -ext; and "full"
+   # for -f.
 
-   set result12 [qstat_xml_jobid $node11 full output_xml_qstat]
+   if { ($param == "ext") } {
+      set jobparam "ext"
+   } elseif { ($param == "fext") } {
+      set jobparam "fext"
+   } else {
+      set jobparam "full"
+   }
+   
+   set result12 [qstat_xml_jobid $node11 $jobparam output_xml_qstat]
    set  node11 $node12
 
 
@@ -641,12 +1010,21 @@ proc qstat_xml_queue { node1 output } {
       }
 
       # Once we are done with the queue parameters, the next Sibling will be the
-      # node pointing to job id information. We re-user queue_xml_jobid with
-      # the  "full" flag, to pick information as listed in "qstat -f"
+      # node pointing to job id information. We re-use queue_xml_jobid with
+      # the  following flags: "extpending" for -ext; "fextpending" for -f -ext;
+      # "full" for -f;
 
-      set result222 [qstat_xml_jobid $node222 full output_xml_qstat]
+      if { ($param == "ext") } {
+         set jobparam "ext"
+      } elseif { ($param == "fext") } {
+         set jobparam "fext"
+      } else {
+         set jobparam "full"
+      }
+   
+      set result222 [qstat_xml_jobid $node222 $jobparam output_xml_qstat]
 
-   }
+    }
 
    set_error 0 "ok"
 
@@ -896,14 +1274,15 @@ proc qstat_g_c_xml_queue { node output } {
    set node1 [$node firstChild]
    set node11 [$node1 firstChild]  ; # <cluster_queue_summary/>
 
-      if { $node11 == "" } { ;# Get out if at the end of tree
-         break
-      }
-      set queue [$node11 nodeValue]
-      set output_xml_qstat($queue,clusterqueue) $queue
-      lappend output_xml_qstat(queue_list) $queue
+   if { $node11 == "" } { ;# Get out if at the end of tree
+      break
+   }
    
-      set column_vars  "cqload used avail total aoACDS cdsuE"
+   set queue [$node11 nodeValue]
+   set output_xml_qstat($queue,clusterqueue) $queue
+   lappend output_xml_qstat(queue_list) $queue
+
+   set column_vars  "cqload used avail total aoACDS cdsuE"
 
    foreach column $column_vars {
 
@@ -959,126 +1338,5 @@ proc qstat_g_c_xml_queue { node output } {
 
 }
 
-#                                                             max. column:     |
-#****** parser_xml/qstat_g_d_xml_parse() ******
-#
-#  NAME
-#     qstat_g_d_xml_parse -- Generate XML output and return assoc array 
-#
-#  SYNOPSIS
-#     qstat_g_d_xml_parse { output }
-#                     -- Generate XML output and return assoc array with
-#                        entries jobid, prior, name, user, state, total_time,
-#                        queue slots and task_id if needed. Pass XML info
-#                        to proc qstat_xml_jobid which does the bulk of
-#                        the work.
-#
-#      output  -  asscoc array with the entries mentioned above.#
-#                 Output array is similar to that of 
-#                 parse_qstat {input output {jobid ""} {ext 0} {do_replace_NA 1 } }
-#
-#  FUNCTION
-#     Print out parsed xml output
-#
-#  INPUTS
-#     None
-#
-#  NOTES
-#     
-#
-##*******************************
-
-proc qstat_g_d_xml_parse { output } {
-
-   global CHECK_OUTPUT
-
-   #package require tdom
-
-   upvar $output output_xml
-
-   # Run now -xml command
-   set XML [start_sge_bin  "qstat" "-g d -xml" ]
-
-   set doc  [dom parse $XML]
-
-   set root [$doc documentElement]
-
-   # Parse the running jobs  using this node.
-   set node [$root firstChild]   ; # <job-info/>
-   set node1 [$node firstChild]  ; # <queue-info/>
-
-   set result1 [qstat_xml_jobid $node1 running output_xml]
-
-   # Parse the pending jobs info using this node. Need to start here
-   # NOT at root.
-   set node [$root firstChild]   ; # <job-info/>
-   set node12 [$node nextSibling]  ; # <queue-info/>
-   set node121 [$node12 firstChild]  ; # <qname/>
-
-   set result2 [qstat_xml_jobid $node121 pending output_xml]
-
-   set_error 0 "ok"
-
-}
-
-#                                                             max. column:     |
-#****** parser_xml/qstat_g_t_xml_parse() ******
-#
-#  NAME
-#     qstat_g_t_xml_parse -- Generate XML output and return assoc array 
-#
-#  SYNOPSIS
-#     qstat_g_t_xml_parse { output }
-#                     -- Generate XML output and return assoc array with
-#                        entries jobid, prior, name, user, state, total_time,
-#                        queue slots and task_id if needed. Pass XML info
-#                        to proc qstat_xml_jobid which does the bulk of
-#                        the work.
-#
-#      output  -  asscoc array with the entries mentioned above.#
-#                 Output array is similar to that of 
-#                 parse_qstat {input output {jobid ""} {ext 0} {do_replace_NA 1 } }
-#
-#  FUNCTION
-#     Print out parsed xml output
-#
-#  INPUTS
-#     None
-#
-#  NOTES
-#     
-#
-##*******************************
-
-proc qstat_g_t_xml_parse { output } {
-
-   global CHECK_OUTPUT
-
-   #package require tdom
-
-   upvar $output output_xml
-
-   # Run now -xml command
-   set XML [start_sge_bin  "qstat" "-g t -xml" ]
-
-   set doc  [dom parse $XML]
-
-   set root [$doc documentElement]
-
-   # Parse the running jobs  using this node.
-   set node [$root firstChild]   ; # <job-info/>
-   set node1 [$node firstChild]  ; # <queue-info/>
-
-   set result1 [qstat_xml_jobid $node1 running output_xml]
-
-   # Parse the pending jobs info using this node. Need to start here
-   # NOT at root.
-   set node [$root firstChild]   ; # <job-info/>
-   set node12 [$node nextSibling]  ; # <queue-info/>
-   set node121 [$node12 firstChild]  ; # <qname/>
-
-   set result2 [qstat_xml_jobid $node121 pending output_xml]
-
-   set_error 0 "ok"
-
-}
+ 
+    

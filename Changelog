@@ -1,3 +1,11 @@
+OJ-2006-06-06-0: Testsuite: Added test case for qstat -g c, qstat -g d,      
+                            qstat -g t, qstat -s a, qstat -s p, qstat -u user
+                            with XML parsing. in client/qstat.
+                            Added new file tcl_files/parser_xml.tcl with new
+                            XML parsing procedures.
+                 Issue:     1206
+                 Review:    DT
+
 HP-2006-06-02-0: Bugfix:    Fixed wrong function declaration
                  Changed:   sge_uidgid.c
    

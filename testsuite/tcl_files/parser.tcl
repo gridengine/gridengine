@@ -1530,7 +1530,7 @@ proc output_array { input } {
 #     accumuluate the jobids in output(jobid_list).
 #
 #  INPUTS
-#     None
+#     params  - pass in params for qstat 
 #
 #  RESULT
 #     assoc array output() with entries listed above
@@ -1540,13 +1540,13 @@ proc output_array { input } {
 #     parser/parse_qstat
 #*******************************
 
-proc qstat_plain_parse { output  } {
+proc qstat_plain_parse { output  {params ""} } {
    global ts_config CHECK_OUTPUT CHECK_USER output_result
 
    upvar $output qstat_output
 
    # Run usual command
-   set result [start_sge_bin "qstat" ""]
+   set result [start_sge_bin "qstat" "$params"]
 
    parse_qstat result  qstat_output
 
@@ -1555,18 +1555,18 @@ proc qstat_plain_parse { output  } {
 }
 
 #                                                             max. column:     |
-#****** parser/qstat_ext_plain_parse() ******
+#****** parser/qstat_urg_plain_parse() ******
 #
 #  NAME
-#     qstat_ext_plain_parse -- Parse qstat -ext output into assoc. array
+#     qstat_urg_plain_parse -- Parse qstat -urg output into assoc. array
 #
 #  SYNOPSIS
-#     qstat_ext_plain_parse { output }
+#     qstat_urg_plain_parse { output }
 #
 #  FUNCTION
-#     Give out assoc. array with entries for jobid, prio, name, user, state,
-#     submit_time, start_time and, if present, queue, slots, task_id. We also
-#     accumuluate the jobids in output(jobid_list).
+#     Give out assoc. array with entries for jobid, prior, nurg, urg, rrcontr,
+#     wtcontr, dlcontr, name, user, time, queue, slots, task_id
+#
 #
 #  INPUTS
 #     None
@@ -1579,7 +1579,7 @@ proc qstat_plain_parse { output  } {
 #     parser/parse_qstat
 #*******************************
 
-proc qstat_ext_plain_parse { output  } {
+proc qstat_urg_plain_parse { output  } {
    global ts_config CHECK_OUTPUT CHECK_USER output_result
 
    upvar $output qstat_output
@@ -1587,7 +1587,7 @@ proc qstat_ext_plain_parse { output  } {
    set qstat_output(jobid_list) ""
    
    # Run usual command
-   set result [start_sge_bin "qstat" "-ext"]
+   set result [start_sge_bin "qstat" "-urg"]
    parse_multiline_list result parsed_out
    
    #puts $CHECK_OUTPUT "output from parse_multiline_list ... \n"
@@ -1615,71 +1615,366 @@ proc qstat_ext_plain_parse { output  } {
       set old_string  [lindex $final_parsed_out $index]
       set single_white_space_string [qstat_special_parse $old_string ]
 
-      # Column order is: job-ID  prior ntckts name user project
-      # department state cpu mem io tckts ovrts otckt ftckt stckt share queue ja-task-ID
+      # Column order is: jobid, prior, nurg, urg, rrcontr, wtcontr, dlcontr,
+      # name, user, state, submit_time, start_time, deadline, queue, slots, task_id.
+
 
       set jobid [lindex $single_white_space_string 0]
       set qstat_output($jobid,jobid) $jobid
       lappend qstat_output(jobid_list) $jobid
 
-      if { [llength $single_white_space_string] > 15 } { ; # we have running jobs
-         set qstat_output($jobid,prior) [lindex $single_white_space_string 1]
-         set qstat_output($jobid,ntckts) [lindex $single_white_space_string 2]
-         set qstat_output($jobid,name) [lindex $single_white_space_string  3]
-         set qstat_output($jobid,user) [lindex $single_white_space_string  4]
-         set qstat_output($jobid,project) [lindex $single_white_space_string  5]
-         set qstat_output($jobid,department) [lindex $single_white_space_string  6]
-         set qstat_output($jobid,state) [lindex $single_white_space_string  7]
-         set qstat_output($jobid,cpu) [lindex $single_white_space_string  8]
-         set qstat_output($jobid,mem) [lindex $single_white_space_string  9]
-         set qstat_output($jobid,io) [lindex $single_white_space_string  10]
-         set qstat_output($jobid,tckts) [lindex $single_white_space_string  11]
-         set qstat_output($jobid,ovrts) [lindex $single_white_space_string  12]
-         set qstat_output($jobid,otckt) [lindex $single_white_space_string  13]
-         set qstat_output($jobid,ftckt) [lindex $single_white_space_string  14]
-         set qstat_output($jobid,stckt) [lindex $single_white_space_string  15]
-         set qstat_output($jobid,share) [lindex $single_white_space_string  16]
-         append qstat_output($jobid,queue) "[lindex $single_white_space_string  17] "
-         append qstat_output($jobid,slots) "[lindex $single_white_space_string  18] "
+      set qstat_output($jobid,prior) [lindex $single_white_space_string 1]
+      set qstat_output($jobid,nurg) [lindex $single_white_space_string 2]
+      set qstat_output($jobid,urg) [lindex $single_white_space_string  3]
+      set qstat_output($jobid,rrcontr) [lindex $single_white_space_string  4]
+      set qstat_output($jobid,wtcontr) [lindex $single_white_space_string  5]
+      set qstat_output($jobid,dlcontr) [lindex $single_white_space_string  6]
+      set qstat_output($jobid,name) [lindex $single_white_space_string  7]
+      set qstat_output($jobid,user) [lindex $single_white_space_string  8]
+      set qstat_output($jobid,state) [lindex $single_white_space_string  9]
+      set qstat_output($jobid,submit_time) [lindex $single_white_space_string  10]
+      set qstat_output($jobid,start_time) [lindex $single_white_space_string  11]
+      set qstat_output($jobid,time) "$qstat_output($jobid,submit_time) $qstat_output($jobid,start_time)"
+      set qstat_output($jobid,time)  [transform_date_time $qstat_output($jobid,time)]
          
-         if { [llength $single_white_space_string] > 18 } {
-            append qstat_output($jobid,task_id) "[lindex $single_white_space_string  19] "
-         }
+      if { [llength $single_white_space_string] == 16 } {; # with deadline, queue, slots, task_id
+         set qstat_output($jobid,deadline) [lindex $single_white_space_string  12]
+         append qstat_output($jobid,queue) "[lindex $single_white_space_string  13] "
+         append qstat_output($jobid,slots) "[lindex $single_white_space_string  14] "
+         append qstat_output($jobid,task_id) "[lindex $single_white_space_string  15] "
+      }
          
-      } else { ; # we have pending jobs; the column list is a bit different
-         set qstat_output($jobid,prior) [lindex $single_white_space_string 1]
-         set qstat_output($jobid,ntckts) [lindex $single_white_space_string 2]
-         set qstat_output($jobid,name) [lindex $single_white_space_string  3]
-         set qstat_output($jobid,user) [lindex $single_white_space_string  4]
-         set qstat_output($jobid,project) [lindex $single_white_space_string  5]
-         set qstat_output($jobid,department) [lindex $single_white_space_string  6]
-         set qstat_output($jobid,state)  [lindex $single_white_space_string  7] 
-         append qstat_output($jobid,cpu)  " "
-         append qstat_output($jobid,mem) " "
-         append qstat_output($jobid,io) " "
-         set qstat_output($jobid,tckts) [lindex $single_white_space_string  8]
-         set qstat_output($jobid,ovrts) [lindex $single_white_space_string  9]
-         set qstat_output($jobid,otckt) [lindex $single_white_space_string  10]
-         set qstat_output($jobid,ftckt) [lindex $single_white_space_string  11]
-         set qstat_output($jobid,stckt) [lindex $single_white_space_string  12]
-         set qstat_output($jobid,share) [lindex $single_white_space_string  13]
-         set qstat_output($jobid,queue) " "
-         set qstat_output($jobid,slots) [lindex $single_white_space_string  14]
-     }
+      if { [llength $single_white_space_string] == 15 } {; # with queue, slots, task_id
+         set qstat_output($jobid,deadline) ""
+         append qstat_output($jobid,queue) "[lindex $single_white_space_string  12] "
+         append qstat_output($jobid,slots) "[lindex $single_white_space_string  13] "
+         append qstat_output($jobid,task_id) "[lindex $single_white_space_string  14] "
+      }
+         
+      if { [llength $single_white_space_string] == 14 } {; # with queue, slots
+        set qstat_output($jobid,deadline) ""
+        append qstat_output($jobid,task_id) ""
+        append qstat_output($jobid,queue) "[lindex $single_white_space_string  12] "
+        append qstat_output($jobid,slots) "[lindex $single_white_space_string  13] "
+      }
+         
+      if { [llength $single_white_space_string] == 13 } {; # with slots; Pending jobs
+        set qstat_output($jobid,deadline) ""
+        append qstat_output($jobid,queue) "" 
+        append qstat_output($jobid,queue)  ""
+        append qstat_output($jobid,task_id) ""
+        append qstat_output($jobid,slots) "[lindex $single_white_space_string  12] "
+      }
+         
    }
-
+   
    set_error 0 "ok"
 
-}
+ }
 
 #                                                             max. column:     |
-#****** parser/qstat_f_plain_parse() ******
+#****** parser/qstat_pri_plain_parse() ******
 #
 #  NAME
-#     qstat_f_plain_parse -- Parse qstat -f output into assoc. array
+#     qstat_pri_plain_parse -- Parse qstat -pri output into assoc. array
 #
 #  SYNOPSIS
-#     qstat_f_plain_parse { output }
+#     qstat_pri_plain_parse { output }
+#
+#  FUNCTION
+#     Give out assoc. array with entries for: prior, nurg, npprior, ntckts,
+#     ppri, name, user, state, submit_time, start_time, queue, task_id "
+#   
+#
+#  INPUTS
+#     None
+#
+#  RESULT
+#     assoc array output() with entries listed above
+#
+#
+#  SEE ALSO
+#     parser/parse_qstat
+#*******************************
+
+proc qstat_pri_plain_parse { output  } {
+   global ts_config CHECK_OUTPUT CHECK_USER output_result
+
+   upvar $output qstat_output
+
+   set qstat_output(jobid_list) ""
+   
+   # Run usual command
+   set result [start_sge_bin "qstat" "-pri"]
+   parse_multiline_list result parsed_out
+   
+     
+   set index 0
+   set parsed_out_length [llength $parsed_out]
+   set final_parsed_out ""
+
+   # Also construct the new, saved list... Use lappend
+   while { $index <= $parsed_out_length } {
+      if {[regexp "\[0-9\]" [lindex $parsed_out $index]] } {
+         #puts $CHECK_OUTPUT "[lindex $parsed_out $index] \n"
+         lappend final_parsed_out [lindex $parsed_out $index]
+      }
+      incr index 1
+   }
+
+   #Now create the qstat_output array
+   
+   set final_index 0
+   set final_parsed_out_length [llength $final_parsed_out]
+   for { set index 0} { $index < $final_parsed_out_length }  {incr index 1} {
+
+      set old_string  [lindex $final_parsed_out $index]
+      set single_white_space_string [qstat_special_parse $old_string ]
+
+      # Column order is: prior, nurg, npprior, ntckts,
+      # ppri, name, user, state, submit_time, start_time, queue, task_id "
+      
+
+      set jobid [lindex $single_white_space_string 0]
+      set qstat_output($jobid,jobid) $jobid
+      lappend qstat_output(jobid_list) $jobid
+
+      set qstat_output($jobid,prior) [lindex $single_white_space_string 1]
+      set qstat_output($jobid,nurg) [lindex $single_white_space_string 2]
+      set qstat_output($jobid,npprior) [lindex $single_white_space_string  3]
+      set qstat_output($jobid,ntckts) [lindex $single_white_space_string  4]
+      set qstat_output($jobid,ppri) [lindex $single_white_space_string  5]
+      set qstat_output($jobid,name) [lindex $single_white_space_string  6]
+      set qstat_output($jobid,user) [lindex $single_white_space_string  7]
+      set qstat_output($jobid,state) [lindex $single_white_space_string  8]
+      set qstat_output($jobid,submit_time) [lindex $single_white_space_string  9]
+      set qstat_output($jobid,start_time) [lindex $single_white_space_string  10]
+      set qstat_output($jobid,time) "$qstat_output($jobid,submit_time) $qstat_output($jobid,start_time)"
+      set qstat_output($jobid,time)  [transform_date_time $qstat_output($jobid,time)]
+         
+      if { [llength $single_white_space_string] == 14 } {; # with deadline, queue, slots, task_id
+         append qstat_output($jobid,queue) "[lindex $single_white_space_string  11] "
+         append qstat_output($jobid,slots) "[lindex $single_white_space_string  12] "
+         append qstat_output($jobid,task_id) "[lindex $single_white_space_string  13] "
+      }
+         
+      if { [llength $single_white_space_string] == 13 } {; # with queue, slots, task_id
+         append qstat_output($jobid,queue) "[lindex $single_white_space_string  11] "
+         append qstat_output($jobid,slots) "[lindex $single_white_space_string  12] "
+         append qstat_output($jobid,task_id) ""
+      }
+         
+      if { [llength $single_white_space_string] == 12 } {; # with queue, slots
+        append qstat_output($jobid,queue)  ""
+        append qstat_output($jobid,task_id) ""
+        append qstat_output($jobid,slots) [lindex $single_white_space_string  11]
+      }
+         
+         
+   }
+   
+   set_error 0 "ok"
+
+ }
+
+
+#                                                             max. column:     |
+#****** parser/qstat_j_ERROR_plain_parse() ******
+#
+#  NAME
+#     qstat_j_ERROR_plain_parse -- Parse qstat -j ERROR output into assoc. array
+#
+#  SYNOPSIS
+#     qstat_j_ERROR_plain_parse { output }
+#
+#  FUNCTION
+#     Give out assoc. array with entries for: prior, nurg, npprior, ntckts,
+#     ppri, name, user, state, submit_time, start_time, queue, task_id "
+#   
+#
+#  INPUTS
+#     None
+#
+#  RESULT
+#     assoc array output() with entries listed above
+#
+#
+#  SEE ALSO
+#     parser/parse_qstat
+#*******************************
+
+proc qstat_j_ERROR_plain_parse { output  } {
+   global ts_config CHECK_OUTPUT CHECK_USER  jobid
+
+   upvar $output qstat_output
+
+   set qstat_output(jobid_list) ""
+   
+   # Run usual command
+   set result [start_sge_bin "qstat" "-j ERROR"]
+   parse_multiline_list result parsed_out
+   
+    
+   set index 0
+   set parsed_out_length [llength $parsed_out]
+   set final_parsed_out ""
+
+   # Also construct the new, saved list... Use lappend
+   # {[regexp "\[0-9\]" [lindex $parsed_out $index]] } 
+   while { $index <= $parsed_out_length } {      
+      #puts $CHECK_OUTPUT "[lindex $parsed_out $index] \n"
+      lappend final_parsed_out [lindex $parsed_out $index]
+      incr index 1
+   }
+
+   #Now create the qstat_output array
+   
+   set final_index 0
+   set final_parsed_out_length [llength $final_parsed_out]
+   for { set index 0} { $index < $final_parsed_out_length }  {incr index 1} {
+
+      set old_string  [lindex $final_parsed_out $index]
+      set single_white_space_string $old_string
+
+      # Column order is : jobid exec_file submission_time owner uid group gid sge_o_home \
+      #                 sge_o_log_name sge_o_path sge_o_shell sge_o_workdir sge_o_host \
+      #                 account merge mail_list notify job_name stdout_path_list jobshare \
+      #                 hard_queue_list shell_list env_list job_args script_file reason \
+      #                 scheduling"
+
+      regsub ":" $single_white_space_string " " input_string
+      set input_string_length [llength $input_string]
+      
+      #puts $CHECK_OUTPUT "single_white_space_string is $single_white_space_string ...\n"
+      #puts $CHECK_OUTPUT "and input_string is $input_string ...\n"
+
+ 
+      
+      if { [ string first "job_number" $single_white_space_string ] >=0 } {   
+         set jobid [lindex $input_string 1]
+         set qstat_output($jobid,jobid) $jobid
+         set qstat_output(jobid_list) $jobid
+      }
+      
+      if { [ string first "exec_file" $single_white_space_string ] >=0 } {
+         set qstat_output($jobid,exec_file) [lrange $input_string 1 end]
+      }   
+      
+      if { [ string first "submission_time" $single_white_space_string ] >=0 } {
+         set sub_time  [lrange $input_string 1 end]
+         set qstat_output($jobid,submission_time) [transform_date_time $sub_time]
+      }
+      
+      if { [ string first "owner" $single_white_space_string ] >=0 } {
+         set qstat_output($jobid,owner) [lindex $input_string  1]
+      }
+      
+      if { [ string first "uid" $single_white_space_string ] >=0 } {
+         set qstat_output($jobid,uid) [lindex $input_string  1]
+      }
+      
+      if { [ string first "group" $single_white_space_string ] >=0 } {
+         set qstat_output($jobid,group) [lindex $input_string  1]
+      }
+      
+      if { [ string first "gid" $single_white_space_string ] >=0 } {
+         set qstat_output($jobid,gid) [lindex $input_string  1]
+      }
+     
+      if { [ string first "sge_o_home" $single_white_space_string ] >=0 } {
+         set qstat_output($jobid,sge_o_home) [lindex $input_string  1]
+      }
+      
+      if { [ string first "sge_o_log_name" $single_white_space_string ] >=0 } {
+         set qstat_output($jobid,sge_o_log_name) [lindex $input_string  1]
+      }
+      
+      if { [ string first "sge_o_path" $single_white_space_string ] >=0 } {
+         append  qstat_output($jobid,sge_o_path) "[lindex $input_string  1]"
+      }
+      
+      if { [ string first "sge_o_shell" $single_white_space_string ] >=0 } {
+         set qstat_output($jobid,sge_o_shell) [lindex $input_string  1]
+      }
+      
+      if { [ string first "sge_o_workdir" $single_white_space_string ] >=0 } {
+         set qstat_output($jobid,sge_o_workdir) [lindex $input_string  1]
+      }
+      
+      if { [ string first "sge_o_host" $single_white_space_string ] >=0 } {
+         set qstat_output($jobid,sge_o_host) [lindex $input_string  1]
+      }
+      
+      if { [ string first "account" $single_white_space_string ] >=0 } {
+         set qstat_output($jobid,account) [lindex $input_string  1]
+      }
+      
+      if { [ string first "merge" $single_white_space_string ] >=0 } {
+         set qstat_output($jobid,merge) [lindex $input_string  1]
+      }
+      
+      if { [ string first "mail_list" $single_white_space_string ] >=0 } {
+         set qstat_output($jobid,mail_list) [lindex $input_string  1]
+      }
+      
+      if { [ string first "notify" $single_white_space_string ] >=0 } {
+         set qstat_output($jobid,notify) [lindex $input_string  1]
+      }
+      
+      if { [ string first "job_name" $single_white_space_string ] >=0 } {
+         set qstat_output($jobid,job_name) [lindex $input_string  1]
+      }
+      
+      if { [ string first "stdout_path_list" $single_white_space_string ] >=0 } {
+         append qstat_output($jobid,stdout_path_list) "[lindex $input_string  1]"
+      }
+      
+      if { [ string first "jobshare" $single_white_space_string ] >=0 } {
+         set qstat_output($jobid,jobshare) [lindex $input_string  1]
+      }
+      
+      if { [ string first "hard_queue_list" $single_white_space_string ] >=0 } {
+         set qstat_output($jobid,hard_queue_list) [lindex $input_string  1]
+      }
+      
+      if { [ string first "shell_list" $single_white_space_string ] >=0 } {
+         set qstat_output($jobid,shell_list) [lindex $input_string  1]
+      }
+      
+      if { [ string first "env_list" $single_white_space_string ] >=0 } {
+         set qstat_output($jobid,env_list) [lindex $input_string  1]
+      }
+      
+      if { [ string first "job_args" $single_white_space_string ] >=0 } {
+         set qstat_output($jobid,job_args) [lindex $input_string  1]
+      }
+      
+      if { [ string first "script_file" $single_white_space_string ] >=0 } {
+         append qstat_output($jobid,script_file) "[lindex $input_string  1]"
+      }
+      
+      if { [ string first "error reason" $single_white_space_string ] >=0 } {
+         set qstat_output($jobid,error) [lrange $input_string  0 end]
+      }
+      
+      if { [ string first "scheduling info" $single_white_space_string ] >=0 } {
+         set qstat_output($jobid,scheduling) [lrange $input_string  0 end]
+      }   
+         
+   }
+   
+   set_error 0 "ok"
+
+ }
+
+#                                                     max. column:     |
+#****** parser/qstat_r_plain_parse() ******
+#
+#  NAME
+#     qstat_r_plain_parse -- Parse qstat -r output into assoc. array
+#
+#  SYNOPSIS
+#     qstat_r_plain_parse { output }
 #
 #  FUNCTION
 #     Give out assoc. array with entries for jobid, prio, name, user, state,
@@ -1697,7 +1992,133 @@ proc qstat_ext_plain_parse { output  } {
 #     parser/parse_qstat
 #*******************************
 
-proc qstat_f_plain_parse { output  } {
+proc qstat_r_plain_parse { output  } {
+   global CHECK_OUTPUT CHECK_USER jobid
+
+   upvar $output qstat_output
+
+   set qstat_output(jobid_list) ""
+   
+   # Run usual command
+   set result [start_sge_bin "qstat" "-r"]
+   parse_multiline_list result parsed_out
+   
+   #puts $CHECK_OUTPUT "output from parse_multiline_list ... \n"
+   #puts $CHECK_OUTPUT "parsed_out is $parsed_out ... \n"
+    
+   set index 0
+   set parsed_out_length [llength $parsed_out]
+   set final_parsed_out ""
+
+   # Also construct the new, saved list... Use lappend
+   # Add the "." here, so I catch an entry like "all.q" which has
+   # NO digits....
+   while { $index <= $parsed_out_length } {
+      if {[regexp "\[0-9.\]" [lindex $parsed_out $index]] } {
+         puts $CHECK_OUTPUT "[lindex $parsed_out $index] \n"
+         lappend final_parsed_out [lindex $parsed_out $index]
+      }
+      incr index 1
+   }
+
+   #Now create the qstat_output array
+   
+   set final_index 0
+   set final_parsed_out_length [llength $final_parsed_out]
+   for { set index 0} { $index < $final_parsed_out_length }  {incr index 1} {
+
+      set old_string  [lindex $final_parsed_out $index]
+      set single_white_space_string [qstat_special_parse $old_string ]
+
+      # Column order is: jobid, prior, name, user , state, submit_time, start_time,
+      # queue,  slots, task_id
+      
+
+      if { [llength $single_white_space_string] > 6 } { ; # jobs, running or pending
+
+         set jobid [lindex $single_white_space_string 0]
+         set qstat_output($jobid,jobid) $jobid
+         lappend qstat_output(jobid_list) $jobid
+         
+         set qstat_output($jobid,prior) [lindex $single_white_space_string 1]
+         set qstat_output($jobid,name) [lindex $single_white_space_string  2]
+         set qstat_output($jobid,user) [lindex $single_white_space_string  3]
+         set qstat_output($jobid,state) [lindex $single_white_space_string  4]
+         set qstat_output($jobid,submit_time) [lindex $single_white_space_string  5]
+         set qstat_output($jobid,start_time) [lindex $single_white_space_string  6]
+         set qstat_output($jobid,time) "$qstat_output($jobid,submit_time) $qstat_output($jobid,start_time)"
+         set qstat_output($jobid,time)  [transform_date_time $qstat_output($jobid,time)]
+      
+         append qstat_output($jobid,queue) "[lindex $single_white_space_string  7] "
+         append qstat_output($jobid,slots) "[lindex $single_white_space_string  8] "
+      }   
+      if { [llength $single_white_space_string] == 10 } {
+            append qstat_output($jobid,task_id) "[lindex $single_white_space_string  9] "
+      }
+      
+      if  { [llength $single_white_space_string] < 6 } { ; # we are in the info section
+           
+         #puts $CHECK_OUTPUT "single_white_space_string is $single_white_space_string ...\n"
+         #puts $CHECK_OUTPUT "length of single_white_space_string is [llength $single_white_space_string]... \n"
+         #puts $CHECK_OUTPUT "jobid is $jobid ... \n"
+         
+         if { [string first "Full jobname" $single_white_space_string]  >= 0 } {
+            set qstat_output($jobid,full_jobname) [lindex $single_white_space_string 2]
+            #puts $CHECK_OUTPUT "qstat_output($jobid,full_jobname) is $qstat_output($jobid,full_jobname) ... \n"
+         } elseif { [string first "Master queue" $single_white_space_string ] >= 0 } {
+            set qstat_output($jobid,master_queue) [lindex $single_white_space_string 2]
+            #puts $CHECK_OUTPUT "qstat_output($jobid,master_queue) is $qstat_output($jobid,master_queue) ... \n"
+         } elseif { [string first "Hard Resource" $single_white_space_string]  >= 0 } {
+            set qstat_output($jobid,hard_resource) [lindex $single_white_space_string 2]
+            set qstat_output($jobid,hard_resource_value) [lindex $single_white_space_string 3]
+         } elseif { [string first "Soft" $single_white_space_string ] >= 0 } {
+            set qstat_output($jobid,soft_resource) [lindex $single_white_space_string 2]
+         } elseif { [string first "Hard requested queues" $single_white_space_string ] >= 0 } {
+            set qstat_output($jobid,hard_req_queue) [lindex $single_white_space_string 3]
+            puts $CHECK_OUTPUT "qstat_output($jobid,hard_req_queue) is $qstat_output($jobid,hard_req_queue) ... \n"
+         } elseif { [string first "Requested PE" $single_white_space_string ] >= 0 } {
+            set qstat_output($jobid,req_pe) [lindex $single_white_space_string 2]
+            set qstat_output($jobid,req_pe_vlaue) [lindex $single_white_space_string 3]
+         }  elseif { [string first "Granted PE" $single_white_space_string ] >= 0 } {
+            set qstat_output($jobid,granted_pe) [lindex $single_white_space_string 2]
+            set qstat_output($jobid,granted_pe_value) [lindex $single_white_space_string 3]
+         }   
+     }
+   }
+
+   set_error 0 "ok"
+
+}
+
+
+
+#                                                             max. column:     |
+#****** parser/qstat_f_plain_parse() ******
+#
+#  NAME
+#     qstat_f_plain_parse -- Parse qstat -f output into assoc. array
+#
+#  SYNOPSIS
+#     qstat_f_plain_parse { output {params ""}  }
+#
+#  FUNCTION
+#     Give out assoc. array with entries for jobid, prio, name, user, state,
+#     submit_time, start_time and, if present, queue, slots, task_id. We also
+#     accumuluate the jobids in output(jobid_list).
+#
+#  INPUTS
+#
+#   param - pass in params to qstat command
+#
+#  RESULT
+#     assoc array output() with entries listed above
+#
+#
+#  SEE ALSO
+#     parser/parse_qstat
+#*******************************
+
+proc qstat_f_plain_parse { output {param ""} } {
    global ts_config CHECK_OUTPUT CHECK_USER output_result
 
    upvar $output qstat_output
@@ -1705,7 +2126,7 @@ proc qstat_f_plain_parse { output  } {
    set qstat_output(jobid_list) ""
    
    # Run usual command
-   set result [start_sge_bin "qstat" "-f"]
+   set result [start_sge_bin "qstat" "-f $param"]
    parse_multiline_list result parsed_out
 
    set index 0
@@ -1773,6 +2194,291 @@ proc qstat_f_plain_parse { output  } {
    set_error 0 "ok"
 
 }
+
+
+
+#                                                             max. column:     |
+#****** parser/qstat_g_c_plain_parse() ******
+#
+#  NAME
+#     qstat_g_c_plain_parse -- Parse qstat -g c output into assoc. array
+#
+#  SYNOPSIS
+#     qstat_g_c_plain_parse { output }
+#
+#  FUNCTION
+#     Give out assoc. array with entries for: clusterqueue, cqload, used,
+#     avail, total, aoACDS, cdsuE. We also
+#     accumuluate the queues in output(queue_list).
+#
+#  INPUTS
+#     None
+#
+#  RESULT
+#     assoc array output() with entries listed above
+#
+#
+#  SEE ALSO
+#     parser/parse_qstat
+#*******************************
+
+proc qstat_g_c_plain_parse { output  } {
+   global ts_config CHECK_OUTPUT CHECK_USER output_result
+
+   upvar $output qstat_output
+
+   set qstat_output(queue_list) ""
+   
+   # Run usual command
+   set result [start_sge_bin "qstat" "-g c"]
+   parse_multiline_list result parsed_out
+
+    
+   set index 0
+   set parsed_out_length [llength $parsed_out]
+   set final_parsed_out ""
+
+   # Also construct the new, saved list... Use lappend
+   while { $index <= $parsed_out_length } {
+      if {[regexp "\[0-9\]" [lindex $parsed_out $index]] } {
+         #puts $CHECK_OUTPUT "[lindex $parsed_out $index] \n"
+         lappend final_parsed_out [lindex $parsed_out $index]
+      }
+      incr index 1
+   }
+
+   #Now create the qstat_output array
+   
+   set final_index 0
+   set final_parsed_out_length [llength $final_parsed_out]
+   for { set index 0} { $index < $final_parsed_out_length }  {incr index 1} {
+
+      set old_string  [lindex $final_parsed_out $index]
+      set single_white_space_string [qstat_special_parse $old_string ]
+
+      set cqueue [lindex $single_white_space_string 0]
+      set qstat_output($cqueue,clusterqueue) $cqueue
+      lappend qstat_output(queue_list) $cqueue
+
+      set qstat_output($cqueue,cqload) [lindex $single_white_space_string 1]
+      set qstat_output($cqueue,used) [lindex $single_white_space_string 2]
+      set qstat_output($cqueue,avail) [lindex $single_white_space_string 3]
+      set qstat_output($cqueue,total) [lindex $single_white_space_string 4]
+      set qstat_output($cqueue,aoACDS) [lindex $single_white_space_string 5]
+      set qstat_output($cqueue,cdsuE) [lindex $single_white_space_string 6]
+                    
+         
+   }
+
+   set_error 0 "ok"
+}
+#                                                             max. column:     |
+#****** parser/qstat_special_parse() ******
+#
+#  NAME
+#     qstat_special_parse -- Remove extra blanks, slash from qstat output
+#
+#  SYNOPSIS
+#     qstat_special_parse { input }
+#
+#  FUNCTION
+#     Give output with single blanks separating all the entries
+#     
+#
+#  INPUTS
+#     Output lines from qstat command.
+#
+#  RESULT
+#     string with single blanks separating all the entries
+#
+#
+#  SEE ALSO
+#     parser/parse_qstat
+#*******************************
+
+proc qstat_special_parse {input_string } {
+
+   if { [llength $input_string] == 1 } { ; #skip processing for complexes 
+      return $input_string
+   }
+   # Keep on doing it while we have more than 1 whitespace
+   set flag 1
+   while { $flag } {
+      set flag [regsub "(  )+" $input_string " " input_string ]
+   }
+
+   # For date, skip slash removal
+   set date_flag [regexp "(\[0-9]+\/\[0-9]+\/\[0-9]+)" $input_string]
+
+   if {$date_flag == 1} {
+      # do nothing, we have a date, so keep the slashes; return
+      return $input_string
+   } else {
+      # we have slots, so remove the slash
+      regsub "\/" $input_string " " output_string
+      #regsub "(\[0-9\]*)\/(\[0-9\]*)( )" $input_string "\1 \2" output_string
+   }
+
+   return $output_string
+}
+
+ 
+#                                                             max. column:     |
+#****** parser/qstat_ext_plain_parse() ******
+#
+#  NAME
+
+
+
+#     qstat_ext_plain_parse -- Parse qstat -ext output into assoc. array
+#
+#  SYNOPSIS
+#     qstat_ext_plain_parse { output {param ""} }
+#
+#  FUNCTION
+#     Give out assoc. array with entries for jobid, prio, name, user, state,
+#     submit_time, start_time and, if present, queue, slots, task_id. We also
+#     accumuluate the jobids in output(jobid_list).
+#
+#  INPUTS
+#     param - pass in "-f" for full output
+#
+#  RESULT
+#     assoc array output() with entries listed above
+#
+#
+#  SEE ALSO
+#     parser/parse_qstat
+#*******************************
+
+proc qstat_ext_plain_parse { output {param ""} } {
+   global ts_config CHECK_OUTPUT CHECK_USER output_result
+
+   upvar $output qstat_output
+
+   set qstat_output(jobid_list) ""
+   
+   # Run usual command
+   set result [start_sge_bin "qstat" "-ext $param"]
+   parse_multiline_list result parsed_out
+   
+   #puts $CHECK_OUTPUT "output from parse_multiline_list ... \n"
+   #puts $CHECK_OUTPUT "parsed_out is $parsed_out ... \n"
+    
+   set index 0
+   set parsed_out_length [llength $parsed_out]
+   set final_parsed_out ""
+
+   # Also construct the new, saved list... Use lappend
+   while { $index <= $parsed_out_length } {
+      if {[regexp "\[0-9\]" [lindex $parsed_out $index]] } {
+         #puts $CHECK_OUTPUT "[lindex $parsed_out $index] \n"
+         lappend final_parsed_out [lindex $parsed_out $index]
+      }
+      incr index 1
+   }
+
+   #Now create the qstat_output array
+   
+   set final_index 0
+   set final_parsed_out_length [llength $final_parsed_out]
+   for { set index 0} { $index < $final_parsed_out_length }  {incr index 1} {
+
+      set old_string  [lindex $final_parsed_out $index]
+      set single_white_space_string [qstat_special_parse $old_string ]
+
+      # Column order is: job-ID  prior ntckts name user project
+      # department state cpu mem io tckts ovrts otckt ftckt stckt share queue task_id
+
+      set id [lindex $single_white_space_string 0]
+      
+      if { [regexp "\[a-zA-Z\]" $id] } {  ; # queue listing
+         set qstat_output($id,qname) [lindex $single_white_space_string 0]
+         set qstat_output($id,qtype) [lindex $single_white_space_string 1]
+         set qstat_output($id,used_slots) [lindex $single_white_space_string 2]
+         set qstat_output($id,total_slots) [lindex $single_white_space_string 3]
+         set qstat_output($id,load_avg) [lindex $single_white_space_string 4]
+         set qstat_output($id,arch) [lindex $single_white_space_string 5]
+         append qstat_output($id,state) ""
+         if { [llength $single_white_space_string] > 6 } {
+            set qstat_output($id,state) [lindex $single_white_space_string 6]
+         }
+         
+         lappend qstat_output(queue_list) $id
+         
+      } else { ; # job listings
+        
+         set jobid [lindex $single_white_space_string 0]
+         set qstat_output($jobid,jobid) $jobid
+         lappend qstat_output(jobid_list) $jobid
+
+         if { [llength $single_white_space_string] > 15 } { ; # we have running jobs
+            set qstat_output($jobid,prior) [lindex $single_white_space_string 1]
+            set qstat_output($jobid,ntckts) [lindex $single_white_space_string 2]
+            set qstat_output($jobid,name) [lindex $single_white_space_string  3]
+            set qstat_output($jobid,user) [lindex $single_white_space_string  4]
+            set qstat_output($jobid,project) [lindex $single_white_space_string  5]
+            set qstat_output($jobid,department) [lindex $single_white_space_string  6]
+            set qstat_output($jobid,state) [lindex $single_white_space_string  7]
+            
+            set qstat_output($jobid,cpu) [lindex $single_white_space_string  8]
+            set qstat_output($jobid,mem) [lindex $single_white_space_string  9]
+            set qstat_output($jobid,io) [lindex $single_white_space_string  10]
+            set qstat_output($jobid,tckts) [lindex $single_white_space_string  11]
+            set qstat_output($jobid,ovrts) [lindex $single_white_space_string  12]
+            set qstat_output($jobid,otckt) [lindex $single_white_space_string  13]
+            set qstat_output($jobid,ftckt) [lindex $single_white_space_string  14]
+            set qstat_output($jobid,stckt) [lindex $single_white_space_string  15]
+            set qstat_output($jobid,share) [lindex $single_white_space_string  16]
+            
+            # When we parse -f -ext, we don't have the queue column!
+            if { ($param != "-f") } { 
+               append qstat_output($jobid,queue) "[lindex $single_white_space_string  17] "
+               append qstat_output($jobid,slots) "[lindex $single_white_space_string  18] "
+            } else {
+               append qstat_output($jobid,slots) "[lindex $single_white_space_string  17] "
+            
+            }
+            if { ($param != "-f") } { 
+               if { [llength $single_white_space_string] > 18 } {
+                 append qstat_output($jobid,task_id) "[lindex $single_white_space_string  19] "
+               }
+            } else {
+                if { [llength $single_white_space_string] > 17 } {
+                 append qstat_output($jobid,task_id) "[lindex $single_white_space_string  18] "
+               }
+            }
+         } else { ; # we have pending jobs; the column list is a bit different
+            set qstat_output($jobid,prior) [lindex $single_white_space_string 1]
+            set qstat_output($jobid,ntckts) [lindex $single_white_space_string 2]
+            set qstat_output($jobid,name) [lindex $single_white_space_string  3]
+            set qstat_output($jobid,user) [lindex $single_white_space_string  4]
+            set qstat_output($jobid,project) [lindex $single_white_space_string  5]
+            set qstat_output($jobid,department) [lindex $single_white_space_string  6]
+            set qstat_output($jobid,state)  [lindex $single_white_space_string  7] 
+            append qstat_output($jobid,cpu)  " "
+            append qstat_output($jobid,mem) " "
+            append qstat_output($jobid,io) " "
+            set qstat_output($jobid,tckts) [lindex $single_white_space_string  8]
+            set qstat_output($jobid,ovrts) [lindex $single_white_space_string  9]
+            set qstat_output($jobid,otckt) [lindex $single_white_space_string  10]
+            set qstat_output($jobid,ftckt) [lindex $single_white_space_string  11]
+            set qstat_output($jobid,stckt) [lindex $single_white_space_string  12]
+            set qstat_output($jobid,share) [lindex $single_white_space_string  13]
+            set qstat_output($jobid,queue) " "
+            set qstat_output($jobid,slots) [lindex $single_white_space_string  14]
+        }
+    
+     }
+   
+   }
+
+   set_error 0 "ok"
+
+}
+
+ 
+     
 #                                                             max. column:     |
 #****** parser/qstat_F_plain_parse() ******
 #
@@ -1891,84 +2597,8 @@ proc qstat_F_plain_parse {  output {params ""} } {
 }
 
 
-#                                                             max. column:     |
-#****** parser/qstat_g_d_plain_parse() ******
-#
-#  NAME
-#     qstat_g_d_plain_parse -- Parse "qstat -g d" output into assoc. array
-#
-#  SYNOPSIS
-#     qstat_g_d_plain_parse { output }
-#
-#  FUNCTION
-#     Give out assoc. array with entries for jobid, prio, name, user, state,
-#     submit_time, start_time and, if present, queue, slots, task_id. We also
-#     accumuluate the jobids in output(jobid_list).
-#
-#  INPUTS
-#     None
-#
-#  RESULT
-#     assoc array output() with entries listed above
-#
-#
-#  SEE ALSO
-#     parser/parse_qstat
-#*******************************
-
-proc qstat_g_d_plain_parse { output  } {
-   global ts_config CHECK_OUTPUT CHECK_USER output_result
-
-   upvar $output qstat_output
-
-   # Run usual command
-   set result [start_sge_bin "qstat" "-g d"]
-
-   parse_qstat result  qstat_output
-
-   set_error 0 "ok"
-
-}
-
-#                                                             max. column:     |
-#****** parser/qstat_g_t_plain_parse() ******
-#
-#  NAME
-#     qstat_g_t_plain_parse -- Parse "qstat -g t" output into assoc. array
-#
-#  SYNOPSIS
-#     qstat_g_t_plain_parse { output }
-#
-#  FUNCTION
-#     Give out assoc. array with entries for jobid, prio, name, user, state,
-#     submit_time, start_time and, if present, queue, slots, task_id. We also
-#     accumuluate the jobids in output(jobid_list).
-#
-#  INPUTS
-#     None
-#
-#  RESULT
-#     assoc array output() with entries listed above
-#
-#
-#  SEE ALSO
-#     parser/parse_qstat
-#*******************************
-
-proc qstat_g_t_plain_parse { output  } {
-   global ts_config CHECK_OUTPUT CHECK_USER output_result
-
-   upvar $output qstat_output
-
-   # Run usual command
-   set result [start_sge_bin "qstat" "-g t"]
-
-   parse_qstat result  qstat_output
-
-   set_error 0 "ok"
-   
-}
-
+ 
+ 
 #                                                             max. column:     |
 #****** parser/qstat_g_c_plain_parse() ******
 #
@@ -1993,8 +2623,6 @@ proc qstat_g_t_plain_parse { output  } {
 #  SEE ALSO
 #     parser/parse_qstat
 #*******************************
-
-
 
 proc qstat_g_c_plain_parse { output  } {
    global ts_config CHECK_OUTPUT CHECK_USER output_result
@@ -2046,54 +2674,6 @@ proc qstat_g_c_plain_parse { output  } {
 
    set_error 0 "ok"
 }
-#                                                             max. column:     |
-#****** parser/qstat_special_parse() ******
-#
-#  NAME
-#     qstat_special_parse -- Remove extra blanks, slash from qstat output
-#
-#  SYNOPSIS
-#     qstat_special_parse { input }
-#
-#  FUNCTION
-#     Give output with single blanks separating all the entries
-#     
-#
-#  INPUTS
-#     Output lines from qstat command.
-#
-#  RESULT
-#     string with single blanks separating all the entries
-#
-#
-#  SEE ALSO
-#     parser/parse_qstat()
-#*******************************
-proc qstat_special_parse {input_string } {
-
-   if { [llength $input_string] == 1 } { ; #skip processing for complexes 
-      return $input_string
-   }
-   # Keep on doing it while we have more than 1 whitespace
-   set flag 1
-   while { $flag } {
-      set flag [regsub "(  )+" $input_string " " input_string ]
-   }
-
-   # For date, skip slash removal
-   set date_flag [regexp "(\[0-9]+\/\[0-9]+\/\[0-9]+)" $input_string]
-
-   if {$date_flag == 1} {
-      # do nothing, we have a date, so keep the slashes; return
-      return $input_string
-   } else {
-      # we have slots, so remove the slash
-      regsub "\/" $input_string " " output_string
-      #regsub "(\[0-9\]*)\/(\[0-9\]*)( )" $input_string "\1 \2" output_string
-   }
-
-   return $output_string
-}
 
 #****** parser/test_parse_qstat() **********************************************
 #  NAME
@@ -2143,4 +2723,3 @@ proc test_parse_qstat {jobid opt} {
       puts $CHECK_OUTPUT "$name\t$jobinfo($name)"
    }
 }
-

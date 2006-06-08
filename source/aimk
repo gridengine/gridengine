@@ -2057,14 +2057,14 @@ if ( "$MAKEWINGRIDAPP" == 1 ) then
          set DEPEND = "../3rdparty/sge_depend/${COMPILE_ARCH}/sge_depend -l -S -Y ${DEPEND_FLAGS}"
          breaksw
       default
-         set param = ""
+         set param = $argv
          set DEPEND = ""
       breaksw
    endsw
 
    $MAKE -f $SOURCE/experimental/wingrid/Makefile "MAKE=$MAKE" "WINCC=$WINCC" \
       "WINCFLAGS=$WINCFLAGS" "WINLFLAGS=$WINLFLAGS" "SDIR=$SDIR" "RM=$RM" \
-      "DEPEND=$DEPEND" "WINLIBS=$WINLIBS" $argv
+      "DEPEND=$DEPEND" "WINLIBS=$WINLIBS" $param
 
    cd ..
 endif

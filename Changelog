@@ -1,3 +1,6 @@
+MD-2006-06-08-0: Enhancem.: Added some logging output
+                 Changed:   inst_execd.sh
+
 HP-2006-06-02-0: Bugfix:    Fixed wrong function declaration
                  Changed:   sge_uidgid.c
    

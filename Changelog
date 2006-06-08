@@ -1,3 +1,5 @@
+HP-2006-06-08-0: Enhancem.: Added man page for SGE_Helper_Service.exe
+
 OJ-2006-06-06-0: Testsuite: Added test case for qstat -g c, qstat -g d,      
                             qstat -g t, qstat -s a, qstat -s p, qstat -u user
                             with XML parsing. in client/qstat.

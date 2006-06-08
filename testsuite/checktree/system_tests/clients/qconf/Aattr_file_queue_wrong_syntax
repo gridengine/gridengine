@@ -1,3 +1,0 @@
-qtype            "PARALLEL"
-load_thresholds  "mem_free=1M"
-

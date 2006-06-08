@@ -1,3 +1,5 @@
+HP-2006-06-08-0: Enhancem.: Added man page for SGE_Helper_Service.exe
+
 MD-2006-06-08-0: Enhancem.: Added some logging output
                  Changed:   inst_execd.sh
 

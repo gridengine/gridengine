@@ -45,9 +45,9 @@
 *     host_update_master_list() -- update the master hostlists
 *
 *  SYNOPSIS
-*     bool 
-*     host_update_master_list(sge_object_type type, sge_event_action action,
-*                             lListElem *event, void *clientdata)
+*     sge_callback_result lirs_update_master_list(object_description 
+*     *object_base, sge_object_type type, sge_event_action action, lListElem 
+*     *event, void *clientdata) 
 *
 *  FUNCTION
 *     Update the global master lists of hosts
@@ -57,6 +57,7 @@
 *     on the event received.
 *
 *  INPUTS
+*     object_description *object_base - base object
 *     sge_object_type type     - event type
 *     sge_event_action action - action to perform
 *     lListElem *event        - the raw event

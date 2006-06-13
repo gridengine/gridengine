@@ -63,6 +63,8 @@
 #define MSG_CONFIG_CANTRESOLVEHOSTNAMEX_SS      _MESSAGE(61026, _("cannot resolve "SFN" name "SFQ))
 #define MSG_SGETEXT_CANTSPOOL_SS                _MESSAGE(61027, _("qmaster is unable to spool "SFN" "SFQ))
 #define MSG_FILE_NOOPENDIR_S                    _MESSAGE(61028, _("can't open directory "SFQ))
+#define MSG_CONFIG_READINGINLIRS                _MESSAGE(61029, _("Reading in limitation rule sets:"))
+#define MSG_SETUP_LIRS_S                        _MESSAGE(61030, _("Limitation Rule Set "SFQ"."))
 
 /*
  * libs/spool/read_write_manop.c

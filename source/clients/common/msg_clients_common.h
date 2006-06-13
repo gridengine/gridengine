@@ -85,5 +85,8 @@
 #define MSG_CENTRY_NULL_NAME          _MESSAGE(1041, _("Invalid complex attribute definition"))
 #define MSG_CENTRY_NULL_SHORTCUT_S    _MESSAGE(1042, _("Complex attribute "SFQ" has no shortcut defined"))
 
+#define MSG_LIRSNOTFOUNDINFILE_SS    _MESSAGE(1043, _("limitation rule set "SFQ" not found in file "SFQ))
+#define MSG_NOLIRSFOUND              _MESSAGE(1044, _("No limitation rule set found"))
+
 #endif /* __MSG_CLIENTS_COMMON_H */
 

@@ -79,7 +79,7 @@ char *rhost
    int pos, ret;
    lListElem *found;
 
-   DENTER(TOP_LAYER, "sge_add_acl");
+   DENTER(TOP_LAYER, "sge_add_userset");
 
    if ( !ep || !ruser || !rhost ) {
       CRITICAL((SGE_EVENT, MSG_SGETEXT_NULLPTRPASSED_S, SGE_FUNC));

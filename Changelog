@@ -1,3 +1,8 @@
+RD-2006-06-13-0: Enhancem.: - new qconf switches for limitation rule sets
+                            - new GDI calls for limitation rule sets 
+                 Changed:   aimk, qmaster, qconf
+                 Review:    JG 
+
 HP-2006-06-08-1: Enhancem.: Build targets depend and clean are now properly for-
                             warded to Makefiles for Win32 applications.
                  Changed:   aimk

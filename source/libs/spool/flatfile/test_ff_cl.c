@@ -1,9 +1,34 @@
-/* 
- * File:   test_ff_cl.c
- * Author: dant
- *
- * Created on January 30, 2004, 1:22 PM
- */
+/*___INFO__MARK_BEGIN__*/
+/*************************************************************************
+ * 
+ *  The Contents of this file are made available subject to the terms of
+ *  the Sun Industry Standards Source License Version 1.2
+ * 
+ *  Sun Microsystems Inc., March, 2001
+ * 
+ * 
+ *  Sun Industry Standards Source License Version 1.2
+ *  =================================================
+ *  The contents of this file are subject to the Sun Industry Standards
+ *  Source License Version 1.2 (the "License"); You may not use this file
+ *  except in compliance with the License. You may obtain a copy of the
+ *  License at http://gridengine.sunsource.net/Gridengine_SISSL_license.html
+ * 
+ *  Software provided under this License is provided on an "AS IS" basis,
+ *  WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING,
+ *  WITHOUT LIMITATION, WARRANTIES THAT THE SOFTWARE IS FREE OF DEFECTS,
+ *  MERCHANTABLE, FIT FOR A PARTICULAR PURPOSE, OR NON-INFRINGING.
+ *  See the License for the specific provisions governing your rights and
+ *  obligations concerning the Software.
+ * 
+ *   The Initial Developer of the Original Code is: Sun Microsystems, Inc.
+ * 
+ *   Copyright: 2001 by Sun Microsystems, Inc.
+ * 
+ *   All Rights Reserved.
+ * 
+ ************************************************************************/
+/*___INFO__MARK_END__*/
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -74,26 +99,25 @@
 
 #define allow_delete_time_modification
 
-static void diff(const char *file1, const char *file2);
-static void PE_test(void);
-static void CAL_test(void);
-static void CK_test(void);
-static void STN_test(void);
-static void CE_test(void);
-static void CEL_test(void); 
-static void UP_test(void);
-static void US_test(void);
-static void EH_test(void);
-static void CQ_test(void);
-static void SC_test(void);
-static void QU_test(void);
-static void HGRP_test(void);
+static int diff(const char *file1, const char *file2);
+static int PE_test(void);
+static int CAL_test(void);
+static int CK_test(void);
+static int STN_test(void);
+static int CE_test(void);
+static int CEL_test(void); 
+static int UP_test(void);
+static int US_test(void);
+static int EH_test(void);
+static int CQ_test(void);
+static int SC_test(void);
+static int QU_test(void);
+static int HGRP_test(void);
 #ifndef __SGE_NO_USERMAPPING__
-static void CU_test(void);
+static int CU_test(void);
 #endif
-static void CONF_test(void);
-static void LIRS_test(void);
-
+static int CONF_test(void);
+static int LIRS_test(void);
 
 #ifndef __SGE_NO_USERMAPPING__
 const spool_flatfile_instr qconf_comma_braced_sfi = 
@@ -116,11 +140,33 @@ const spool_flatfile_instr qconf_comma_braced_sfi =
 };
 #endif
 
+typedef int (*func)(void);
+
 /*
  * 
  */
 int main(int argc, char** argv)
 {
+   const func test_array[] = { PE_test,
+                               CAL_test,
+                               CK_test,
+                               STN_test,
+                               CE_test,
+                               CEL_test,
+                               UP_test,
+                               EH_test,
+                               US_test,
+                               CQ_test,
+                               SC_test,
+                               QU_test,
+                               HGRP_test,
+                               CONF_test,
+                               LIRS_test,
+#ifndef __SGE_NO_USERMAPPING__
+                               CU_test,
+#endif
+                               NULL };
+
    DENTER_MAIN(TOP_LAYER, "test_ff_cl");   
 
    if(argc > 1) {
@@ -131,35 +177,24 @@ int main(int argc, char** argv)
       }
    }
    else {
-
+      int i = 0;
       sge_mt_init();
 
-      PE_test();
-      CAL_test();
-      CK_test();
-      STN_test();
-      CE_test();
-      CEL_test();
-      UP_test();
-      EH_test();
-      US_test();
-      CQ_test(); 
-      SC_test();
-      QU_test();
-      HGRP_test();
-#ifndef __SGE_NO_USERMAPPING__
-      CU_test(); /* User mapping, not supported */
-#endif
-      CONF_test();
-      LIRS_test();
+      while (test_array[i] != NULL) {
+         if (test_array[i]() != 0) {
+            SGE_EXIT(1);
+         }
+         i++;
+      }
    }
 
    DEXIT;
    return(EXIT_SUCCESS);
 }
 
-static void PE_test(void)
+static int PE_test(void)
 {
+   int ret = 0;
    lList *lp = NULL;
    lList *lp2 = NULL;
    lList *alp = NULL;
@@ -322,7 +357,7 @@ static void PE_test(void)
    
    file2 = write_pe(0, 1, ep);
    
-   diff(file1, file2);
+   ret = diff(file1, file2);
    
    unlink(file1);
    unlink(file2);
@@ -331,6 +366,10 @@ static void PE_test(void)
    FREE(fields);
 
    lFreeElem(&ep);
+   if (ret != 0) {
+      printf("PE diff returned %d\n", ret);
+      return ret;
+   }
    ep = ep2;
    
    printf("PE: spool = 1\n");
@@ -359,7 +398,7 @@ static void PE_test(void)
    
    file2 = write_pe(1, 1, ep);
       
-   diff(file1, file2);
+   ret = diff(file1, file2);
    
    unlink(file1);
    unlink(file2);
@@ -372,11 +411,12 @@ static void PE_test(void)
    answer_list_output(&alp);   
    lFreeList(&alp);
    
-   return;
+   return ret;
 }
 
-static void CAL_test(void)
+static int CAL_test(void)
 {
+   int ret = 0;
    lListElem *ep = NULL;
    lListElem *ep2 = NULL;
    lList *alp = NULL;
@@ -414,7 +454,7 @@ static void CAL_test(void)
    
    file2 = write_cal(0, 1, ep);
    
-   diff(file1, file2);
+   ret = diff(file1, file2);
    
    unlink(file1);
    unlink(file2);
@@ -423,6 +463,10 @@ static void CAL_test(void)
    
    lFreeElem(&ep);
    ep = ep2;
+
+   if (ret != 0) {
+      return ret;
+   }
    
    printf("CAL: spool = 1\n");
    /* Write a CAL file using classic spooling */
@@ -449,7 +493,7 @@ static void CAL_test(void)
    
    file2 = write_cal(1, 1, ep);
    
-   diff(file1, file2);
+   ret = diff(file1, file2);
    
    unlink(file1);
    unlink(file2);
@@ -461,11 +505,12 @@ static void CAL_test(void)
    answer_list_output(&alp);   
    lFreeList(&alp);
    
-   return;
+   return ret;
 }
 
-static void CK_test(void)
+static int CK_test(void)
 {
+   int ret = 0;
    lListElem *ep = NULL;
    lListElem *ep2 = NULL;
    lList *alp = NULL;
@@ -510,7 +555,7 @@ static void CK_test(void)
    
    file2 = write_ckpt(0, 1, ep);
    
-   diff(file1, file2);
+   ret = diff(file1, file2);
    
    unlink(file1);
    unlink(file2);
@@ -519,6 +564,10 @@ static void CK_test(void)
 
    lFreeElem(&ep);
    ep = ep2;
+
+   if (ret != 0) {
+      return ret;
+   }
    
    printf("CK: spool = 1\n");
    /* Write a CK file using classic spooling */
@@ -545,7 +594,7 @@ static void CK_test(void)
    
    file2 = write_ckpt(1, 1, ep);
    
-   diff(file1, file2);
+   ret = diff(file1, file2);
    
    unlink(file1);
    unlink(file2);
@@ -557,10 +606,11 @@ static void CK_test(void)
    answer_list_output(&alp);   
    lFreeList(&alp);
    
-   return;
+   return ret;
 }
 
-static void STN_test() {
+static int STN_test() {
+   int ret = 0;
    lListElem *ep = NULL;
    lListElem *ep2 = NULL;
    lListElem *ep3 = NULL;
@@ -658,11 +708,15 @@ static void STN_test() {
    file2 = "/var/tmp/STN_ff";
    write_sharetree(&alp, ep,(char *)file2, NULL, 0, 0, 0);
    
-   diff(file1, file2);
+   ret = diff(file1, file2);
    
    unlink(file1);
    unlink(file2);
    FREE(fields);
+
+   if (ret != 0) {
+      return ret;
+   }
    
    printf("STN: spool = 0, recurse = 0, root_node = 1 -- INVALID\n");
 
@@ -695,7 +749,7 @@ static void STN_test() {
    file2 = "/var/tmp/STN_ff";
    write_sharetree(&alp, ep,(char *)file2, NULL, 0, 1, 0);
    
-   diff(file1, file2);
+   ret = diff(file1, file2);
    
    unlink(file1);
    unlink(file2);
@@ -703,6 +757,10 @@ static void STN_test() {
 
    lFreeElem(&ep);
    ep = lCopyElem(ep2);
+
+   if (ret != 0) {
+      return ret;
+   }
    
    printf("STN: spool = 0, recurse = 1, root_node = 1\n");
    /* Write a STN file using classic spooling */
@@ -731,7 +789,7 @@ static void STN_test() {
    file2 = "/var/tmp/STN_ff";
    write_sharetree(&alp, ep,(char *)file2, NULL, 0, 1, 1);
    
-   diff(file1, file2);
+   ret = diff(file1, file2);
    
    unlink(file1);
    unlink(file2);
@@ -739,6 +797,10 @@ static void STN_test() {
 
    lFreeElem(&ep);
    ep = lCopyElem(ep2);
+
+   if (ret != 0) {
+      return ret;
+   }
    
    printf("STN: spool = 1, recurse = 0, root_node = 0\n");
    /* Write a STN file using classic spooling */
@@ -767,11 +829,15 @@ static void STN_test() {
    file2 = "/var/tmp/STN_ff";
    write_sharetree(&alp, ep,(char *)file2, NULL, 1, 0, 0);
    
-   diff(file1, file2);
+   ret = diff(file1, file2);
    
    unlink(file1);
    unlink(file2);
    FREE(fields);
+
+   if (ret != 0) {
+      return ret;
+   }
    
    printf("STN: spool = 1, recurse = 0, root_node = 1 -- INVALID\n");
 
@@ -805,7 +871,7 @@ static void STN_test() {
    file2 = "/var/tmp/STN_ff";
    write_sharetree(&alp, ep,(char *)file2, NULL, 1, 1, 0);
    
-   diff(file1, file2);
+   ret = diff(file1, file2);
    
    unlink(file1);
    unlink(file2);
@@ -813,6 +879,10 @@ static void STN_test() {
 
    lFreeElem(&ep);
    ep = ep2;
+
+   if (ret != 0) {
+      return ret;
+   }
    
    printf("STN: spool = 1, recurse = 1, root_node = 1\n");
    /* Write a STN file using classic spooling */
@@ -841,7 +911,7 @@ static void STN_test() {
    file2 = "/var/tmp/STN_ff";
    write_sharetree(&alp, ep,(char *)file2, NULL, 1, 1, 1);
    
-   diff(file1, file2);
+   ret = diff(file1, file2);
    
    unlink(file1);
    unlink(file2);
@@ -852,11 +922,12 @@ static void STN_test() {
    answer_list_output(&alp);   
    lFreeList(&alp);
    
-   return;
+   return ret;
 }
 
-static void CE_test(void)
+static int CE_test(void)
 {
+   int ret = 0;
    lListElem *ep = NULL;
    lListElem *ep2 = NULL;
    lList *alp = NULL;
@@ -899,7 +970,7 @@ static void CE_test(void)
    
    file2 = write_centry(0, 1, ep);
    
-   diff(file1, file2);
+   ret = diff(file1, file2);
    
    unlink(file1);
    unlink(file2);
@@ -908,6 +979,10 @@ static void CE_test(void)
    
    lFreeElem(&ep);
    ep = ep2;
+
+   if (ret != 0) {
+      return ret;
+   }
    
    printf("CE: spool = 1\n");
    /* Write a CE file using classic spooling */
@@ -934,7 +1009,7 @@ static void CE_test(void)
    
    file2 = write_centry(1, 1, ep);
    
-   diff(file1, file2);
+   ret = diff(file1, file2);
    
    unlink(file1);
    unlink(file2);
@@ -946,11 +1021,12 @@ static void CE_test(void)
    answer_list_output(&alp);   
    lFreeList(&alp);
    
-   return;
+   return ret;
 }
 
-static void CEL_test(void)
+static int CEL_test(void)
 {
+   int ret = 0;
    lListElem *ep = NULL;
    lList *lp = NULL;
    lList *lp2 = NULL;
@@ -1012,13 +1088,17 @@ static void CEL_test(void)
    file2 = "/var/tmp/CEL_cl";
    write_cmplx(0,(char *)file2, lp, NULL, &alp);
    
-   diff(file1, file2);
+   ret = diff(file1, file2);
    
    unlink(file1);
    unlink(file2);
    
    lFreeList(&lp);
    lp = lp2;
+
+   if (ret != 0) {
+      return ret;
+   }
    
    printf("CEL: spool = 1\n");
    /* Write a CEL file using classic spooling */
@@ -1048,7 +1128,7 @@ static void CEL_test(void)
 
    lFreeList(&lp);
    
-   diff(file1, file2);
+   ret = diff(file1, file2);
    
    unlink(file1);
    unlink(file2);
@@ -1056,14 +1136,14 @@ static void CEL_test(void)
    answer_list_output(&alp);   
    lFreeList(&alp);
    
-   return;
+   return ret;
 }
 
-static void diff(const char *file1, const char *file2)
+static int diff(const char *file1, const char *file2)
 {
+   int ret = 1;
    char **argv =(char **)malloc(sizeof(char *) * 4);
    char *path = "/usr/bin/diff";
-/*   printf("diff %s %s\n", file1, file2);*/
 
    if(file1 == NULL || file2 == NULL) {
       printf("file pointer is <NULL>\n");
@@ -1077,17 +1157,23 @@ static void diff(const char *file1, const char *file2)
       argv[3] = NULL;
       
       execv(path, argv);
+      /* if execv return an error occured */
    }
    else {
       int stat_loc = 0;
       
       wait(&stat_loc);
+      if (WIFEXITED(stat_loc)) {
+         ret = WEXITSTATUS(stat_loc);
+      }
    }
    
    FREE(argv);
+   return ret;
 }
 
-static void UP_test(void) {
+static int UP_test(void) {
+   int ret = 0;
    lListElem *ep = NULL;
    lListElem *ep2 = NULL;
    lListElem *ep3 = NULL;
@@ -1335,7 +1421,7 @@ static void UP_test(void) {
    file2 = "/var/tmp/UP_ff";
    write_userprj(&alp, ep,(char *)file2, NULL, 0, 0);
    
-   diff(file1, file2);
+   ret = diff(file1, file2);
    
    unlink(file1);
    unlink(file2);
@@ -1343,6 +1429,10 @@ static void UP_test(void) {
    
    lFreeElem(&ep);
    ep = ep2;
+
+   if (ret != 0) {
+      return ret;
+   }
    
    printf("UP: spool = 0, user = 1\n");
    /* Write a UP file using classic spooling */
@@ -1371,7 +1461,7 @@ static void UP_test(void) {
    file2 = "/var/tmp/UP_ff";
    write_userprj(&alp, ep,(char *)file2, NULL, 0, 1);
    
-   diff(file1, file2);
+   ret = diff(file1, file2);
    
    unlink(file1);
    unlink(file2);
@@ -1385,11 +1475,12 @@ static void UP_test(void) {
    answer_list_output(&alp);   
    lFreeList(&alp);
    
-   return;
+   return ret;
 }
 
-static void US_test(void)
+static int US_test(void)
 {
+   int ret = 0;
    lListElem *ep = NULL;
    lListElem *ep2 = NULL;
    lList *lp = NULL;
@@ -1445,7 +1536,7 @@ static void US_test(void)
    file2 = "/var/tmp/US_ff";
    write_userset(&alp, ep,(char *)file2, NULL, 0);
    
-   diff(file1, file2);
+   ret = diff(file1, file2);
    
    unlink(file1);
    unlink(file2);
@@ -1455,11 +1546,12 @@ static void US_test(void)
    answer_list_output(&alp);   
    lFreeList(&alp);
    
-   return;
+   return ret;
 }
 
-static void EH_test(void)
+static int EH_test(void)
 {
+   int ret = 0;
    lListElem *ep = NULL;
    lListElem *ep2 = NULL;
    lList *lp = NULL;
@@ -1679,7 +1771,7 @@ static void EH_test(void)
 
    file2 = write_host(0, 1, ep, EH_name, NULL);
    
-   diff(file1, file2);
+   ret = diff(file1, file2);
    
    unlink(file1);
    unlink(file2);   
@@ -1688,16 +1780,21 @@ static void EH_test(void)
    FREE(fields);
 
    lFreeElem(&ep);
+
+   if (ret != 0) {
+      return ret;
+   }
    
    printf("EH: spool = 1 -- INVALID\n");
    
    answer_list_output(&alp);   
    lFreeList(&alp);
    
-   return;
+   return ret;
 }
 
-static void CQ_test(void) {
+static int CQ_test(void) {
+   int ret = 0;
    lListElem *ep = NULL;
    lListElem *ep2 = NULL;
    lListElem *ep3 = NULL;
@@ -2482,7 +2579,7 @@ static void CQ_test(void) {
 
    file2 = write_cqueue(0, 1, ep);
    
-   diff(file1, file2);
+   ret = diff(file1, file2);
    
    unlink(file1);
    unlink(file2);
@@ -2494,11 +2591,12 @@ static void CQ_test(void) {
    answer_list_output(&alp);   
    lFreeList(&alp);
    
-   return;
+   return ret;
 }
 
-static void SC_test(void)
+static int SC_test(void)
 {
+   int ret = 0;
    lListElem *ep = NULL;
    lListElem *ep2 = NULL;
    lList *lp = NULL;
@@ -2610,7 +2708,7 @@ static void SC_test(void)
    file2 = write_sched_configuration(0, 1, NULL, ep);
    lFreeElem(&ep);
    
-   diff(file1, file2);
+   ret = diff(file1, file2);
    
    unlink(file1);
    unlink(file2);
@@ -2620,11 +2718,12 @@ static void SC_test(void)
    answer_list_output(&alp);   
    lFreeList(&alp);
    
-   return;
+   return ret;
 }
 
-static void QU_test(void)
+static int QU_test(void)
 {
+   int ret = 0;
    lListElem *ep = NULL;
    lList * alp = NULL;
    spooling_field *fields = sge_build_QU_field_list(false, false);
@@ -2660,7 +2759,7 @@ static void QU_test(void)
    
    file2 = write_qinstance(0, 1, ep);
    
-   diff(file1, file2);
+   ret = diff(file1, file2);
    
    unlink(file1);
    unlink(file2);
@@ -2673,11 +2772,12 @@ static void QU_test(void)
    answer_list_output(&alp);   
    lFreeList(&alp);
    
-   return;
+   return ret;
 }
 
-static void HGRP_test(void)
+static int HGRP_test(void)
 {
+   int ret = 0;
    lListElem *ep = NULL;
    lListElem *ep2 = NULL;
    lList * lp = NULL;
@@ -2729,7 +2829,7 @@ static void HGRP_test(void)
    
    file2 = write_host_group(0, 1, ep);
    
-   diff(file1, file2);
+   ret = diff(file1, file2);
    
    unlink(file1);
    unlink(file2);
@@ -2741,12 +2841,13 @@ static void HGRP_test(void)
    answer_list_output(&alp);   
    lFreeList(&alp);
    
-   return;
+   return ret;
 }
 
 #ifndef __SGE_NO_USERMAPPING__
-static void CU_test(void)
+static int CU_test(void)
 {
+   int ret = 0;
    lListElem *ep = NULL;
    lListElem *ep2 = NULL;
    lList * lp = NULL;
@@ -2866,7 +2967,7 @@ static void CU_test(void)
    
    file2 = write_ume(0, 1, ep);
    
-   diff(file1, file2);
+   ret = diff(file1, file2);
    
    unlink(file1);
    unlink(file2);
@@ -2878,11 +2979,12 @@ static void CU_test(void)
    answer_list_output(&alp);   
    lFreeList(&alp);
    
-   return;
+   return ret;
 }
 #endif
 
-static void CONF_test(void) {
+static int CONF_test(void) {
+   int ret = 0;
    lListElem *ep = NULL;
    lListElem *ep2 = NULL;
    lList * lp = NULL;
@@ -2950,7 +3052,7 @@ static void CONF_test(void) {
    file2 = strdup("/var/tmp/CONF_ff");
    write_configuration(0, &alp,(char *)file2, ep, NULL, 0L);
    
-   diff(file1, file2);
+   ret = diff(file1, file2);
    
    unlink(file1);
    unlink(file2);
@@ -2962,11 +3064,11 @@ static void CONF_test(void) {
    answer_list_output(&alp);   
    lFreeList(&alp);
    
-   return;
+   return ret;
 }
 
-static void LIRS_test(void) {
-
+static int LIRS_test(void) {
+   int ret = 0;
    lListElem *ep = NULL;
    lListElem *ep2 = NULL;
    lListElem *ep3 = NULL;
@@ -2986,6 +3088,7 @@ static void LIRS_test(void) {
    lSetString(ep, LIRS_description, "Test Description");
    lSetBool(ep, LIRS_enabled, false);
    lp1 = lCreateList("Rule_List", LIR_Type);
+   /* rule 1 */
    ep2 = lCreateElem(LIR_Type);
       ep3 = lCreateElem(LIRF_Type);
       lSetBool(ep3, LIRF_expand, true);
@@ -3009,6 +3112,55 @@ static void LIRS_test(void) {
       limit = lCreateElem(LIRL_Type);
       lSetString(limit, LIRL_name, "slots");
       lSetString(limit, LIRL_value, "2*$num_proc");
+      lAppendElem(limit_list, limit);
+      lSetList(ep2, LIR_limit, limit_list);
+   lAppendElem(lp1, ep2);
+   /* rule 2 */
+   ep2 = lCreateElem(LIR_Type);
+      ep3 = lCreateElem(LIRF_Type);
+      lSetBool(ep3, LIRF_expand, true);
+         lp2 = lCreateList("Queue_List", ST_Type);
+         ep4 = lCreateElem(ST_Type);
+         lSetString(ep4, ST_name, "Test_Queue1");
+         lAppendElem(lp2, ep4);
+         lSetList(ep3, LIRF_scope, lp2);
+
+         lp2 = lCreateList("Xqueue_List", ST_Type);
+         ep4 = lCreateElem(ST_Type);
+         lSetString(ep4, ST_name, "Test_Queue2");
+         lAppendElem(lp2, ep4);
+         lSetList(ep3, LIRF_xscope, lp2);
+      lSetObject(ep2, LIR_filter_queues, ep3);
+
+      limit_list = lCreateList("Limit_List", LIRL_Type);
+      limit = lCreateElem(LIRL_Type);
+      lSetString(limit, LIRL_name, "arch");
+      lSetString(limit, LIRL_value, "lx24-amd64");
+      lAppendElem(limit_list, limit);
+      lSetList(ep2, LIR_limit, limit_list);
+   lAppendElem(lp1, ep2);
+   /* rule 3 */
+   ep2 = lCreateElem(LIR_Type);
+   lSetString(ep2, LIR_name, "rule3");
+      ep3 = lCreateElem(LIRF_Type);
+      lSetBool(ep3, LIRF_expand, true);
+         lp2 = lCreateList("PE_LIST", ST_Type);
+         ep4 = lCreateElem(ST_Type);
+         lSetString(ep4, ST_name, "Test_pe1");
+         lAppendElem(lp2, ep4);
+         lSetList(ep3, LIRF_scope, lp2);
+
+         lp2 = lCreateList("Xqueue_List", ST_Type);
+         ep4 = lCreateElem(ST_Type);
+         lSetString(ep4, ST_name, "Test_pe2");
+         lAppendElem(lp2, ep4);
+         lSetList(ep3, LIRF_xscope, lp2);
+      lSetObject(ep2, LIR_filter_pes, ep3);
+
+      limit_list = lCreateList("Limit_List", LIRL_Type);
+      limit = lCreateElem(LIRL_Type);
+      lSetString(limit, LIRL_name, "mem");
+      lSetString(limit, LIRL_value, "1G");
       lAppendElem(limit_list, limit);
       lSetList(ep2, LIR_limit, limit_list);
    lAppendElem(lp1, ep2);
@@ -3080,7 +3232,7 @@ static void LIRS_test(void) {
    file2 = write_limit_rule_sets(0, 1, lirs_list);
 #endif
 
-   diff(file1, file2);
+   ret = diff(file1, file2);
 
    unlink(file1);
    unlink(file2);
@@ -3093,5 +3245,5 @@ static void LIRS_test(void) {
 
    lFreeList(&lirs_list);
 
-   return; 
+   return ret;
 }

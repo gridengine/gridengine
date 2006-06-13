@@ -154,6 +154,7 @@ static const mirror_description dev_mirror_base[SGE_TYPE_ALL] = {
    { NULL, generic_update_master_list,             NULL, NULL },
    { NULL, generic_update_master_list,             NULL, NULL }, /*zombie*/
    { NULL, generic_update_master_list,             NULL, NULL }, /*suser*/
+   { NULL, generic_update_master_list,             NULL, NULL }, /*lirs*/
 #ifndef __SGE_NO_USERMAPPING__
    { NULL, NULL,                                   NULL, NULL },
 #endif
@@ -791,6 +792,18 @@ _sge_mirror_subscribe(lListElem *event_client,
             ec_mod_subscription_where(event_client, sgeE_HGROUP_MOD, what_el, where_el); 
          }
          break;
+      case SGE_TYPE_LIRS:
+         ec_subscribe(event_client, sgeE_LIRS_LIST);
+         ec_subscribe(event_client, sgeE_LIRS_ADD);
+         ec_subscribe(event_client, sgeE_LIRS_DEL);
+         ec_subscribe(event_client, sgeE_LIRS_MOD);
+         if (what_el && where_el){
+            ec_mod_subscription_where(event_client, sgeE_LIRS_LIST, what_el, where_el);
+            ec_mod_subscription_where(event_client, sgeE_LIRS_ADD, what_el, where_el);
+            ec_mod_subscription_where(event_client, sgeE_LIRS_DEL, what_el, where_el); 
+            ec_mod_subscription_where(event_client, sgeE_LIRS_MOD, what_el, where_el); 
+         }
+         break;
 #ifndef __SGE_NO_USERMAPPING__
       case SGE_TYPE_CUSER:
          ec_subscribe(event_client, sgeE_CUSER_LIST);
@@ -1032,6 +1045,12 @@ static sge_mirror_error _sge_mirror_unsubscribe(lListElem *event_client, sge_obj
          ec_unsubscribe(event_client, sgeE_HGROUP_ADD);
          ec_unsubscribe(event_client, sgeE_HGROUP_DEL);
          ec_unsubscribe(event_client, sgeE_HGROUP_MOD);
+         break;
+      case SGE_TYPE_LIRS:
+         ec_unsubscribe(event_client, sgeE_LIRS_LIST);
+         ec_unsubscribe(event_client, sgeE_LIRS_ADD);
+         ec_unsubscribe(event_client, sgeE_LIRS_DEL);
+         ec_unsubscribe(event_client, sgeE_LIRS_MOD);
          break;
 #ifndef __SGE_NO_USERMAPPING__
       case SGE_TYPE_CUSER:

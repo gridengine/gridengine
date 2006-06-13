@@ -307,6 +307,7 @@
 #define MSG_GDI_ARGUMENTSYNTAX_OA_JOB_IDENTIFIER_LIST  "job_identifier_list     {job_id|job_name|reg_exp}[,{job_id|job_name|reg_exp},...]"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_JOB_QUEUE_DEST       "job_queue_list          {job|queue}[{,| }{job|queue}{,| }...]"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_LISTNAME_LIST        "listname_list           listname[,listname,...]"
+#define MSG_GDI_ARGUMENTSYNTAX_OA_LIRS_LIST            "lirs_list               lirs_name[,lirs_name,...]"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_MAIL_ADDRESS         "mail_address            username[@host]"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_MAIL_LIST            "mail_list               mail_address[,mail_address,...]"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_MAIL_OPTIONS         "mail_options            `e' `b' `a' `n' `s'"
@@ -330,7 +331,7 @@
 #define MSG_GDI_ARGUMENTSYNTAX_OA_USER_LIST            "user_list               user|pattern[,user|pattern,...]"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_VARIABLE_LIST        "variable_list           variable[=value][,variable[=value],...]"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_PROJECT_LIST         "project_list            project[,project,...]"
-#define MSG_GDI_ARGUMENTSYNTAX_OA_OBJECT_NAME          "obj_nm                  \"queue\"|\"exechost\"|\"pe\"|\"ckpt\"|\"hostgroup\""
+#define MSG_GDI_ARGUMENTSYNTAX_OA_OBJECT_NAME          "obj_nm                  \"queue\"|\"exechost\"|\"pe\"|\"ckpt\"|\"hostgroup\"|\"limitation_ruleset\""
 #define MSG_GDI_ARGUMENTSYNTAX_OA_OBJECT_NAME2         "obj_nm2                 \"queue\"|\"queue_domain\"|\"queue_instance\"|\"exechost\""
 #define MSG_GDI_ARGUMENTSYNTAX_OA_OBJECT_NAME3         "obj_nm3                 \"queue\""
 #define MSG_GDI_ARGUMENTSYNTAX_OA_ATTRIBUTE_NAME       "attr_nm                 (see man pages)"
@@ -462,55 +463,55 @@
 #define MSG_GDI_UTEXT_d_OPT                              _MESSAGE(23329, _("disable"))
 
 #define MSG_GDI_USAGE_dc_OPT_SIMPLE_COMPLEX_LIST         "[-dc simple_context_list]"
-#define MSG_GDI_UTEXT_dc_OPT_SIMPLE_COMPLEX_LIST         _MESSAGE(23331, _("remove context variable(s)"))
+#define MSG_GDI_UTEXT_dc_OPT_SIMPLE_COMPLEX_LIST         _MESSAGE(23331, _("delete context variable(s)"))
 
 #define MSG_GDI_USAGE_dcal_OPT_CALENDAR_NAME             "[-dcal calendar_name]"
-#define MSG_GDI_UTEXT_dcal_OPT_CALENDAR_NAME             _MESSAGE(23332, _("remove a calendar"))
+#define MSG_GDI_UTEXT_dcal_OPT_CALENDAR_NAME             _MESSAGE(23332, _("delete calendar"))
 
 #define MSG_GDI_USAGE_dckpt_OPT_CKPT_NAME                "[-dckpt ckpt_name]"
-#define MSG_GDI_UTEXT_dckpt_OPT_CKPT_NAME                _MESSAGE(23333, _("remove a ckpt interface definition"))
+#define MSG_GDI_UTEXT_dckpt_OPT_CKPT_NAME                _MESSAGE(23333, _("delete ckpt interface definition"))
 
 #define MSG_GDI_USAGE_dconf_OPT_HOST_LIST                "[-dconf host_list]"
 #define MSG_GDI_UTEXT_dconf_OPT_HOST_LIST                _MESSAGE(23334, _("delete local configurations"))
 
 #define MSG_GDI_USAGE_de_OPT_HOST_LIST                   "[-de host_list]"
-#define MSG_GDI_UTEXT_de_OPT_HOST_LIST                   _MESSAGE(23335, _("remove an exec server"))
+#define MSG_GDI_UTEXT_de_OPT_HOST_LIST                   _MESSAGE(23335, _("delete exec server"))
 
 #define MSG_GDI_USAGE_display_OPT_DISPLAY                "[-display display]"
 #define MSG_GDI_UTEXT_display_OPT_DISPLAY                _MESSAGE(23336, _("set display to display interactive job"))
 
 #define MSG_GDI_USAGE_dh_OPT_HOST_LIST                   "[-dh host_list]"
-#define MSG_GDI_UTEXT_dh_OPT_HOST_LIST                   _MESSAGE(23337, _("remove an administrative host"))
+#define MSG_GDI_UTEXT_dh_OPT_HOST_LIST                   _MESSAGE(23337, _("delete administrative host"))
 
 #define MSG_GDI_USAGE_dl_OPT_DATE_TIME                   "[-dl date_time]"
 #define MSG_GDI_UTEXT_dl_OPT_DATE_TIME                   _MESSAGE(23338, _("request a deadline initiation time"))
 
 #define MSG_GDI_USAGE_dm_OPT_USER_LIST                   "[-dm user_list]"
-#define MSG_GDI_UTEXT_dm_OPT_USER_LIST                   _MESSAGE(23339, _("remove user from manager list"))
+#define MSG_GDI_UTEXT_dm_OPT_USER_LIST                   _MESSAGE(23339, _("delete user from manager list"))
 
 #define MSG_GDI_USAGE_do_OPT_USER_LIST                   "[-do user_list]"
-#define MSG_GDI_UTEXT_do_OPT_USER_LIST                   _MESSAGE(23340, _("remove user from operator list"))
+#define MSG_GDI_UTEXT_do_OPT_USER_LIST                   _MESSAGE(23340, _("delete user from operator list"))
 
 #define MSG_GDI_USAGE_dp_OPT_PE_NAME                     "[-dp pe-name]"
-#define MSG_GDI_UTEXT_dp_OPT_PE_NAME                     _MESSAGE(23341, _("remove a parallel environment"))
+#define MSG_GDI_UTEXT_dp_OPT_PE_NAME                     _MESSAGE(23341, _("delete parallel environment"))
 
 #define MSG_GDI_USAGE_dq_OPT_DESTIN_ID_LIST              "[-dq destin_id_list]"
-#define MSG_GDI_UTEXT_dq_OPT_DESTIN_ID_LIST              _MESSAGE(23342, _("remove a queue"))
+#define MSG_GDI_UTEXT_dq_OPT_DESTIN_ID_LIST              _MESSAGE(23342, _("delete queue"))
 
 #define MSG_GDI_USAGE_ds_OPT_HOST_LIST                   "[-ds host_list]"
-#define MSG_GDI_UTEXT_ds_OPT_HOST_LIST                   _MESSAGE(23343, _("remove submit host"))
+#define MSG_GDI_UTEXT_ds_OPT_HOST_LIST                   _MESSAGE(23343, _("delete submit host"))
 
 #define MSG_GDI_USAGE_DSTNODE_NODELIST                   "[-dstnode node_list]"
-#define MSG_GDI_UTEXT_DSTNODE_NODELIST                   _MESSAGE(23344, _("remove sharetree node(s)"))
+#define MSG_GDI_UTEXT_DSTNODE_NODELIST                   _MESSAGE(23344, _("delete sharetree node(s)"))
 
 #define MSG_GDI_USAGE_DSTREE                             "[-dstree]"
 #define MSG_GDI_UTEXT_DSTREE                             _MESSAGE(23345, _("delete the sharetree"))
 
 #define MSG_GDI_USAGE_du_OPT_USER_LIST_LISTNAME_LIST     "[-du user_list listname_list]"
-#define MSG_GDI_UTEXT_du_OPT_USER_LIST_LISTNAME_LIST     _MESSAGE(23346, _("remove user(s) from userset list(s)"))
+#define MSG_GDI_UTEXT_du_OPT_USER_LIST_LISTNAME_LIST     _MESSAGE(23346, _("delete user(s) from userset list(s)"))
 
 #define MSG_GDI_USAGE_dul_OPT_LISTNAME_LIST              "[-dul listname_list]"
-#define MSG_GDI_UTEXT_dul_OPT_LISTNAME_LIST              _MESSAGE(23347, _("remove userset list(s) completely"))
+#define MSG_GDI_UTEXT_dul_OPT_LISTNAME_LIST              _MESSAGE(23347, _("delete userset list(s) completely"))
 
 #define MSG_GDI_USAGE_DUSER_USER                         "[-duser user_list]"
 #define MSG_GDI_UTEXT_DUSER_USER                         _MESSAGE(23348, _("delete user"))
@@ -697,7 +698,7 @@
 
 #define MSG_GDI_USAGE_s_OPT_SIGNAL                       "[-s signal]"
 
-#define MSG_GDI_USAGE_sc_OPT_COMPLEX_LIST                "[-sc ]"
+#define MSG_GDI_USAGE_sc_OPT_COMPLEX_LIST                "[-sc]"
 #define MSG_GDI_UTEXT_sc_OPT_COMPLEX_LIST_SHOW           _MESSAGE(23408, _("show complex attributes"))
 #define MSG_GDI_USAGE_sc_OPT_CONTEXT_LIST                "[-sc context_list]"
 #define MSG_GDI_UTEXT_sc_OPT_CONTEXT_LIST_SET            _MESSAGE(23409, _("set job context (replaces old context)"    ))
@@ -966,7 +967,7 @@
 #define MSG_GDI_UTEXT_shell_OPT_YN                       _MESSAGE(23504, _("start command with or without wrapping <loginshell> -c"))
 
 #define MSG_GDI_USAGE_purge_OPT                          "[-purge obj_nm3 attr_nm objectname]"
-#define MSG_GDI_UTEXT_purge_OPT                          _MESSAGE(23505, _("removes attribute from object_instance"))
+#define MSG_GDI_UTEXT_purge_OPT                          _MESSAGE(23505, _("deletes attribute from object_instance"))
 
 #define MSG_COMMAND_REQUIRED_FOR_BINARY_JOB              _MESSAGE(23506, _("command required for a binary job"))
 
@@ -1044,7 +1045,21 @@
 #define MSG_FUNC_GETPWUIDXFAILED_IS        _MESSAGE(60613, _("failed to getpwuid(%d): "SFN))
 #define MSG_WARN_CHANGENOTEFFECTEDUNTILRESTARTOFEXECHOSTS   _MESSAGE(60614, _("Change of "SFQ" will not be effective before sge_execd restart as described in sge_conf(5)"))
 
-
+#define MSG_OBJ_LIRS                       _MESSAGE(60615, _("limitation rule set"))
+#define MSG_GDI_USAGE_slrs_OPT             "[-slrs [lirs_list]]"
+#define MSG_GDI_UTEXT_slrs_OPT             _MESSAGE(60616, _("show limitation rule set"))
+#define MSG_GDI_USAGE_slrsl_OPT            "[-slrsl]"
+#define MSG_GDI_UTEXT_slrsl_OPT            _MESSAGE(60617, _("show limitation rule set list"))
+#define MSG_GDI_USAGE_alrs_OPT             "[-alrs [lirs_list]]"
+#define MSG_GDI_UTEXT_alrs_OPT             _MESSAGE(60618, _("add limitation rule set(s)"))
+#define MSG_GDI_USAGE_Alrs_OPT             "[-Alrs fname]"
+#define MSG_GDI_UTEXT_Alrs_OPT             _MESSAGE(60618, _("add limitation rule set(s) from file"))
+#define MSG_GDI_USAGE_dlrs_OPT             "[-dlrs lirs_list]"
+#define MSG_GDI_UTEXT_dlrs_OPT             _MESSAGE(60618, _("delete limitation rule set(s)"))
+#define MSG_GDI_USAGE_mlrs_OPT             "[-mlrs [lirs_list]]"
+#define MSG_GDI_UTEXT_mlrs_OPT             _MESSAGE(60618, _("modify limitation rule set(s)"))
+#define MSG_GDI_USAGE_Mlrs_OPT             "[-Mlrs fname [lirs_list]]"
+#define MSG_GDI_UTEXT_Mlrs_OPT             _MESSAGE(60618, _("modify limitation rule set(s) from file"))
 /*
  * Objects and components
  */

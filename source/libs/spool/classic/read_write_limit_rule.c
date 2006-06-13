@@ -488,9 +488,9 @@ char *write_limit_rule_set(int spool, int how, const lListElem *ep) {
             return NULL;
          }
       } else  {
-         sprintf(filename, "%s/.%s", LIMITRULESETS, 
+         sprintf(filename, "%s/.%s", LIMITRULESETS_DIR, 
             lGetString(ep, LIRS_name));
-         sprintf(real_filename, "%s/%s", LIMITRULESETS, 
+         sprintf(real_filename, "%s/%s", LIMITRULESETS_DIR, 
             lGetString(ep, LIRS_name));
       }
 
@@ -587,9 +587,9 @@ char *write_limit_rule_sets(int spool, int how, const lList *lp) {
       } 
       /* 
       else  {
-         sprintf(filename, "%s/.%s", LIMITRULESETS, 
+         sprintf(filename, "%s/.%s", LIMITRULESETS_DIR, 
             lGetString(ep, LIRS_name));
-         sprintf(real_filename, "%s/%s", LIMITRULESETS, 
+         sprintf(real_filename, "%s/%s", LIMITRULESETS_DIR, 
             lGetString(ep, LIRS_name));
       }
       */

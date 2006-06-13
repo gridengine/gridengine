@@ -893,6 +893,10 @@ static int setup_qmaster(void)
    spool_read_list(&answer_list, spooling_context, object_base[SGE_TYPE_CALENDAR].list, SGE_TYPE_CALENDAR);
    answer_list_output(&answer_list);
 
+   DPRINTF(("limitation rule list -----------------------\n"));
+   spool_read_list(&answer_list, spooling_context, object_base[SGE_TYPE_LIRS].list, SGE_TYPE_LIRS);
+   answer_list_output(&answer_list);
+
 #ifndef __SGE_NO_USERMAPPING__
    DPRINTF(("administrator user mapping-----------\n"));
    spool_read_list(&answer_list, spooling_context, object_base[SGE_TYPE_CUSER].list, SGE_TYPE_CUSER);

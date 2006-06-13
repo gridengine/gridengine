@@ -86,6 +86,7 @@ const spool_flatfile_instr qconf_sub_name_value_space_sfi =
    false,
    false,
    true,
+   false,
    '\0',
    '=',
    ' ',
@@ -105,6 +106,7 @@ const spool_flatfile_instr qconf_sfi =
    false,
    false,
    true,
+   false,
    ' ',
    '\n',
    '\0',
@@ -124,6 +126,7 @@ const spool_flatfile_instr qconf_sub_comma_list_sfi =
    false,
    false,
    true,
+   false,
    '\0',
    ',',
    '\0',
@@ -143,6 +146,7 @@ const spool_flatfile_instr qconf_name_value_list_sfi =
    false,
    false,
    true,
+   false,
    '=',
    '\n',
    ',',
@@ -166,6 +170,7 @@ const spool_flatfile_instr qconf_sub_name_value_comma_sfi =
    false,
    false,
    true,
+   false,
    '\0',
    '=',
    ',',
@@ -185,6 +190,7 @@ const spool_flatfile_instr qconf_sub_comma_sfi =
    false,
    false,
    true,
+   false,
    '\0',
    '\0',
    ',',
@@ -204,6 +210,7 @@ const spool_flatfile_instr qconf_param_sfi =
    false,
    false,
    true,
+   false,
    '\0',
    '\n',
    '\0',
@@ -223,6 +230,7 @@ const spool_flatfile_instr qconf_sub_param_sfi =
    true,
    false,
    true,
+   false,
    '\0',
    ' ',
    '\0',
@@ -242,6 +250,7 @@ const spool_flatfile_instr qconf_comma_sfi =
    false,
    false,
    true,
+   false,
    ' ',
    '\n',
    '\0',
@@ -261,6 +270,7 @@ const spool_flatfile_instr qconf_ce_sfi =
    false,
    false,
    true,
+   false,
    ' ',
    '\n',
    '\0',
@@ -280,6 +290,7 @@ const spool_flatfile_instr qconf_ce_list_sfi =
    true,
    false,
    true,
+   false,
    '\0',
    ' ',
    '\0',
@@ -299,6 +310,7 @@ const spool_flatfile_instr qconf_sub_limit_rule_sfi =
    false,
    false,
    false,
+   true,
    '\0',
    ' ',
    '\0',
@@ -318,7 +330,8 @@ const spool_flatfile_instr qconf_limit_rule_set_sfi =
    false,
    true,
    true,
-   '\0',
+   true,
+   ' ',
    '\n',
    '\0',
    '{',
@@ -337,6 +350,7 @@ const spool_flatfile_instr qconf_sub_name_value_comma_braced_sfi =
    false,
    false,
    true,
+   false,
    '\0',
    '=',
    ',',
@@ -465,7 +479,7 @@ static bool
 spool_flatfile_write_list_fields(lList **answer_list, const lList *list, 
                                  dstring *buffer, 
                                  const spool_flatfile_instr *instr,
-                                 const spooling_field *fields, bool recurse);
+                                 const spooling_field *fields, bool recurse, const char *list_name);
 
 static FILE *
 spool_flatfile_open_file(lList **answer_list,
@@ -500,7 +514,7 @@ static lList *
 _spool_flatfile_read_list(lList **answer_list, const lDescr *descr, 
                           const spool_flatfile_instr *instr,
                           const spooling_field *fields, int fields_out[], int *token,
-                          const char *end_token, bool parse_values);
+                          const char *end_token, bool parse_values, const char *list_name);
 
 static spooling_field *get_recursion_field_list (const spool_flatfile_instr *instr);
 
@@ -740,7 +754,7 @@ spool_flatfile_write_list(lList **answer_list,
          }
          
          if(!spool_flatfile_write_list_fields(answer_list, list, &char_buffer, 
-                                              instr, fields, false)) {
+                                              instr, fields, false, NULL)) {
             /* in case of errors, messages are in answer_list,
              * clear data - we don't want to write erroneous data */
             sge_dstring_clear(&char_buffer); 
@@ -754,7 +768,7 @@ spool_flatfile_write_list(lList **answer_list,
             sge_dstring_sprintf_append (&char_buffer, "# "SFN"\n", MSG_COMPLEX_STARTSCOMMENTBUTNOSAVE);
          }
          
-         data     = sge_dstring_get_string(&char_buffer);
+         data = sge_dstring_get_string(&char_buffer);
          data_len = sge_dstring_strlen(&char_buffer);
          break;
       case SP_FORM_XML:
@@ -1174,6 +1188,7 @@ spool_flatfile_write_object_fields(lList **answer_list, const lListElem *object,
                                    bool root)
 {
    int i, first_field;
+   dstring field_name = DSTRING_INIT;
    dstring field_buffer = DSTRING_INIT;
    dstring tmp_buffer = DSTRING_INIT;
    const lDescr *descr;
@@ -1195,6 +1210,7 @@ spool_flatfile_write_object_fields(lList **answer_list, const lListElem *object,
       const char *value = NULL;
       int pos;
 
+      sge_dstring_clear(&field_name);
       /* If this isn't the root node, and this is the field we're supposed to
        * supress, skip it. */
       if (!root && (instr->recursion_info.supress_field == fields[i].nm)) {
@@ -1219,18 +1235,19 @@ spool_flatfile_write_object_fields(lList **answer_list, const lListElem *object,
 
       /* if record_start_end_newline indent three spaces */
       if (instr->record_start_end_newline) {
-         sge_dstring_append(&field_buffer, "   ");
+         sge_dstring_copy_string(&field_name, "   ");
       }
 
       /* if show_field_names, output field name */
       if (instr->show_field_names && (fields[i].name != NULL)) {
          /* respect alignment */
          if (fields[i].width > 0) {
-            sge_dstring_sprintf_append(&field_buffer, "%-*s", fields[0].width,
+            sge_dstring_sprintf_append(&field_name, "%-*s", fields[0].width,
                                        fields[i].name);
          } else {
-            sge_dstring_append(&field_buffer, fields[i].name);
+            sge_dstring_append(&field_name, fields[i].name);
          }
+         sge_dstring_append_dstring(&field_buffer, &field_name);
 
          /* output name-value delimiter */
          if (instr->name_value_delimiter != '\0') {
@@ -1297,7 +1314,7 @@ spool_flatfile_write_object_fields(lList **answer_list, const lListElem *object,
                if (spool_flatfile_write_list_fields(answer_list, sub_list, 
                                                     &tmp_buffer, sub_instr,
                                                     sub_fields,
-                                                    recurse_field)) {
+                                                    recurse_field, sge_dstring_get_string(&field_name))) {
                   /* error handling has been done in spool_flatfile_write_list_fields */
                   sge_dstring_append_dstring(&field_buffer, &tmp_buffer);
                }
@@ -1334,13 +1351,14 @@ spool_flatfile_write_object_fields(lList **answer_list, const lListElem *object,
          spool_flatfile_add_line_breaks (&field_buffer);
       }
       
-      sge_dstring_append_dstring (buffer, &field_buffer);
+      sge_dstring_append_dstring(buffer, &field_buffer);
 
       if (sge_dstring_strlen(buffer) != 0) {
          first_field = false;
       }
    }
 
+   sge_dstring_free(&field_name);
    sge_dstring_free(&field_buffer);
    sge_dstring_free(&tmp_buffer);
 
@@ -1352,7 +1370,7 @@ static bool
 spool_flatfile_write_list_fields(lList **answer_list, const lList *list, 
                                  dstring *buffer, 
                                  const spool_flatfile_instr *instr,
-                                 const spooling_field *fields, bool recurse)
+                                 const spooling_field *fields, bool recurse, const char *list_name)
 {
    lListElem *ep;
    bool first = true;
@@ -1375,10 +1393,16 @@ spool_flatfile_write_list_fields(lList **answer_list, const lList *list,
    else {
       my_fields = fields;
    }
-   
+
    for_each (ep, list) {
       /* from second record on write record delimiter */
       if (!first) {
+         if (instr->ignore_list_name && list_name != NULL) {
+            sge_dstring_append(buffer, list_name);
+            if (instr->field_delimiter != '\0') {
+               sge_dstring_append_char(buffer, instr->field_delimiter);
+            }
+         }
          if (instr->record_delimiter != '\0') {
             sge_dstring_append_char(buffer, instr->record_delimiter);
          }
@@ -1582,7 +1606,7 @@ _spool_flatfile_read_object(lList **answer_list, const lDescr *descr,
 {
    lListElem *object = NULL;
    int *my_fields_out = NULL;
-   
+
    /* BUGFIX: Issuezilla #732
     * If we're not given a fields_out array, create one for internal use. */
    if (fields_out != NULL) {
@@ -1711,8 +1735,7 @@ FF_DEBUG("read field name");
                stop = true;
                continue;
             }
-         }
-         else {
+         } else {
             field_has_name = true;
          }
 
@@ -1906,7 +1929,7 @@ FF_DEBUG("empty list");
             /* read sublist */
             {
                char new_end_token[MAX_STRING_SIZE];
-               
+
                get_end_token(new_end_token, MAX_STRING_SIZE, end_token,
                              instr->field_delimiter);
                /* We're passing in NULL for the fields_out parameter
@@ -1916,7 +1939,8 @@ FF_DEBUG("empty list");
                                                 sub_instr, 
                                                 fields[field_index].sub_fields, 
                                                 NULL, token, 
-                                                new_end_token, parse_values);
+                                                new_end_token, parse_values,
+                                                fields[field_index].name);
             
                lSetPosList(*object, pos, list);
                
@@ -1929,7 +1953,7 @@ FF_DEBUG("empty list");
                   }
             
                   if (instr->field_delimiter != '\0') {
-                     if (!is_delimiter(*token) ||
+                     if (!is_delimiter(*token) &&
                          *spool_text != instr->field_delimiter) {
                         answer_list_add_sprintf(answer_list, STATUS_ESYNTAX,
                                        ANSWER_QUALITY_ERROR,
@@ -2005,7 +2029,7 @@ FF_DEBUG("skipping field delimiter");
          spool_finish_line = 0;
       } else {
          if (instr->field_delimiter != '\0') {
-            if (!is_delimiter(*token) ||
+            if (!is_delimiter(*token) &&
                 *spool_text != instr->field_delimiter) {
                answer_list_add_sprintf(answer_list, STATUS_ESYNTAX,
                                        ANSWER_QUALITY_ERROR,
@@ -2156,7 +2180,7 @@ spool_flatfile_read_list(lList **answer_list, const lDescr *descr,
 
    list = _spool_flatfile_read_list(answer_list, descr, instr, 
                                     fields, fields_out, &token, new_end_token,
-                                    parse_values);
+                                    parse_values, NULL);
    spool_scanner_shutdown();
 
    /* if we opened the file, we also have to close it */
@@ -2180,7 +2204,7 @@ static lList *
 _spool_flatfile_read_list(lList **answer_list, const lDescr *descr, 
                           const spool_flatfile_instr *instr, 
                           const spooling_field *fields, int fields_out[], 
-                          int *token, const char *end_token, bool parse_values)
+                          int *token, const char *end_token, bool parse_values, const char *list_name)
 {
    bool stop = false;
    bool first_record = true;
@@ -2214,6 +2238,14 @@ _spool_flatfile_read_list(lList **answer_list, const lDescr *descr,
 FF_DEBUG("read list");
    /* parse all objects in list */
    while (*token != 0 && !stop) {
+
+      if (instr->ignore_list_name && list_name != NULL) {
+         if (strcmp(list_name, spool_text) == 0) {
+FF_DEBUG("ignored token");
+               *token = spool_lex();
+         }
+      }
+  
       /* check for list end condition */
       if (is_delimiter(*token) && check_end_token(end_token, *spool_text)) {
 FF_DEBUG("detected end_token");
@@ -2221,7 +2253,7 @@ FF_DEBUG("detected end_token");
          end_token_detected = true;
          continue;
       }
-  
+
       /* for subsequent records check record_delimiter */
       if (!first_record) {
          if (instr->record_delimiter != '\0') {
@@ -2253,7 +2285,7 @@ FF_DEBUG("detected record_delimiter");
             continue;
          }
 FF_DEBUG("detected record_start");
-         if (instr->record_start_end_newline == true) {
+         if (instr->record_start_end_newline) {
             *token = spool_lex();
          }
          *token = spool_lex();
@@ -2328,9 +2360,9 @@ static lListElem *search_for_tree_node(lListElem *ep, const char *id,
    }
    
    object_append_field_to_dstring (ep, &alp, &node_id, nm2, '\0');
-   node_id_str = sge_dstring_get_string (&node_id);
+   node_id_str = sge_dstring_get_string(&node_id);
    
-   if (strcmp (id, node_id_str) == 0) {
+   if (strcmp(id, node_id_str) == 0) {
       DEXIT;
       return ep;
    }

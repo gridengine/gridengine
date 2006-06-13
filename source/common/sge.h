@@ -58,6 +58,7 @@
 #define SGE_OBJ_CKPT                   "ckpt"
 #define SGE_OBJ_CALENDAR               "cal"
 #define SGE_OBJ_USER_MAPPING           "usermapping"
+#define SGE_OBJ_LIRS                   "limitation_ruleset"
 
 /* attribute names of sge objects */
 #define SGE_ATTR_LOAD_SCALING          "load_scaling"
@@ -70,6 +71,7 @@
 #define SGE_ATTR_USER_LISTS            "user_lists"
 #define SGE_ATTR_XUSER_LISTS           "xuser_lists"
 #define SGE_ATTR_PROJECTS              "projects"
+#define SGE_ATTR_LIMITRULES            "limitation_rules"
 #define SGE_ATTR_XPROJECTS             "xprojects"
 #define SGE_ATTR_USAGE_SCALING         "usage_scaling"
 #define SGE_ATTR_SEQ_NO                "seq_no"
@@ -108,6 +110,7 @@
 #define SGE_ATTR_PE_NAME               "pe_name"
 #define SGE_ATTR_CKPT_NAME             "ckpt_name"
 #define SGE_ATTR_HGRP_NAME             "group_name"
+#define SGE_ATTR_LIRS_NAME             "name"
 #define SGE_ATTR_CALENDAR_NAME         "calendar_name"
 #define SGE_ATTR_YEAR                  "year"
 #define SGE_ATTR_WEEK                  "week"
@@ -187,7 +190,7 @@
 #define ZOMBIE_DIR                "zombies"
 #define MAN_DIR                   "managers"
 #define OP_DIR                    "operators"
-#define LIMITRULESETS             "limit_rule_sets"
+#define LIMITRULESETS_DIR         "limit_rule_sets"
 
 #define MAN_FILE                  "managers"
 #define OP_FILE                   "operators"

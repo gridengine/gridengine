@@ -37,4 +37,15 @@
 bool LIRF_object_parse_from_string(lListElem **filter, const char* buffer, lList **alp);
 bool LIRF_object_append_to_dstring(const lListElem *filter, dstring *buffer, lList **alp);
 
+lListElem* limit_rule_set_create(lList **answer_list, const char *name);
+lListElem* limit_rule_set_defaults(lListElem* lirs);
+
+bool limit_rule_set_verify_attributes(lListElem *lirs, lList **answer_list, bool in_master);
+bool limit_rule_sets_verify_attributes(lList *lirs_list, lList **answer_list, bool in_master);
+
+lListElem *limit_rule_set_list_locate(lList *lp, const char *name);
+lListElem *limit_rule_locate(lList *lp, const char *name);
+
+bool lir_xattr_pre_gdi(lList *this_list, lList **answer_list);
+
 #endif /* __SGE_LIMIT_RULE_H */

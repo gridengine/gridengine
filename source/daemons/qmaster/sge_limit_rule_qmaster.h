@@ -1,5 +1,5 @@
-#ifndef __PARSE_QCONF_H
-#define __PARSE_QCONF_H
+#ifndef __SGE_LIMIT_RULE_QMASTER_H
+#define __SGE_LIMIT_RULE_QMASTER_H
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  * 
@@ -32,21 +32,19 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "spool/sge_spooling_utilities.h"
+#include "sge_c_gdi.h"
+#include "uti/sge_monitor.h"
 
-typedef struct object_info_entry {
-   u_long32 target;
-   char *object_name;
-   lDescr *cull_descriptor;
-   char *attribute_name;
-   int nm_name;
-   spooling_field *fields;
-   const struct spool_flatfile_instr *instr;
-   bool (*pre_gdi_function)(lList *list, lList **answer_list);
-} object_info_entry;
+/* funtions called from within gdi framework in qmaster */
+int lirs_mod(lList **alpp, lListElem *new_lirs, lListElem *lirs, int add, const char *ruser, 
+           const char *rhost, gdi_object_t *object, int sub_command, monitoring_t *monitor);
 
-int sge_parse_qconf(char **argv);
+int lirs_spool(lList **alpp, lListElem *pep, gdi_object_t *object);
 
+int lirs_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object, lList **ppList, monitoring_t *monitor);
 
-#endif /* __PARSE_QCONF_H */
+/* funtions called via gdi and inside the qmaster */
+int sge_del_limit_rule_set(lListElem *ep, lList **alpp, lList **lirs_list, 
+                    char *ruser, char *rhost);
 
+#endif

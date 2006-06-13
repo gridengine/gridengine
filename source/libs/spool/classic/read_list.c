@@ -70,6 +70,7 @@
 #include "sge_userprj.h"
 #include "sge_userset.h"
 #include "sge_utility.h"
+#include "sge_limit_rule.h"
 #include "sge_todo.h"
 
 #include "sge_str.h"
@@ -92,6 +93,7 @@
 #include "sge_hgroup.h"
 #include "read_write_host_group.h"
 #include "read_write_qinstance.h"
+#include "read_write_limit_rule.h"
 
 #include "setup_path.h"
 #include "sge_uidgid.h"
@@ -531,6 +533,7 @@ int sge_read_ckpt_list_from_disk(lList **list, const char *directory)
             }
 
             if (ckpt_validate(ep, NULL)!=STATUS_OK) {
+               lFreeElem(&ep);
                DEXIT;
                return -1;
             }
@@ -619,7 +622,7 @@ int sge_read_cqueue_list_from_disk(lList **list, const char *directory)
             config_tag = 0;
             if (!sge_silent_get()) {
                printf("\t");
-               printf(MSG_SETUP_QUEUE_S, lGetString(direntry, ST_name));
+               printf(MSG_SETUP_QUEUE_S, queue_str);
                printf("\n");
             }
             if (verify_str_key(&alp, queue_str, MAX_VERIFY_STRING, "cqueue") != STATUS_OK) {
@@ -627,11 +630,11 @@ int sge_read_cqueue_list_from_disk(lList **list, const char *directory)
                return -1;
             }   
             qep = cull_read_in_cqueue(directory, 
-                                      lGetString(direntry, ST_name), 1, 
+                                      queue_str, 1, 
                                       0, &config_tag, NULL);
             if (!qep) {
                ERROR((SGE_EVENT, MSG_CONFIG_READINGFILE_SS, directory, 
-                      lGetString(direntry, ST_name)));
+                      queue_str));
                DEXIT;
                return -1;
             }
@@ -710,8 +713,78 @@ int sge_read_cqueue_list_from_disk(lList **list, const char *directory)
 
    DEXIT;
    return 0;
-}   
+}
 
+int sge_read_limit_rule_set_list_from_disk(lList **list, const char *directory)
+{
+   lList *answer_list = NULL;
+   lList *dir_entries = NULL;
+   DENTER(TOP_LAYER, "sge_read_limit_rule_set_list_from_disk");
+
+   if (*list == NULL) {
+      *list = lCreateList("", LIRS_Type);
+   }
+
+   dir_entries = sge_get_dirents(directory);
+   if (dir_entries != NULL) {
+      lListElem *dir_entry = NULL;
+      
+      if (!sge_silent_get()) {
+         printf("%s\n", MSG_CONFIG_READINGINLIRS);
+      }
+
+      for_each(dir_entry, dir_entries) {
+         lListElem *lirs = NULL;
+         dstring filename = DSTRING_INIT;
+         const char *lirs_name;
+
+         lirs_name = lGetString(dir_entry, ST_name);
+         if (lirs_name[0] != '.') {
+           lList *tmp_lirs_list = NULL;
+           if (!sge_silent_get()) {
+               printf("\t");
+               printf(MSG_SETUP_LIRS_S, lirs_name);
+               printf("\n");
+           }
+           if (verify_str_key(&answer_list, lirs_name, MAX_VERIFY_STRING, "lirs") != STATUS_OK) {
+               sge_dstring_free(&filename);
+               lFreeList(&dir_entries);
+               DRETURN(-1);
+           }
+           sge_dstring_sprintf(&filename, "%s/%s", directory, lirs_name);
+           tmp_lirs_list = cull_read_in_limit_rule_sets(sge_dstring_get_string(&filename), &answer_list);
+           lirs = lCopyElem(lFirst(tmp_lirs_list));
+
+           if (!lirs) {
+               ERROR((SGE_EVENT, MSG_CONFIG_READINGFILE_SS, directory, 
+                      lirs_name));
+               lFreeList(&tmp_lirs_list);
+               sge_dstring_free(&filename);
+               lFreeList(&dir_entries);
+               DRETURN(-1);
+           }
+
+           if (!limit_rule_sets_verify_attributes(tmp_lirs_list, &answer_list, true)) {
+               lFreeElem(&lirs);
+               lFreeList(&tmp_lirs_list);
+               sge_dstring_free(&filename);
+               lFreeList(&dir_entries);
+               DRETURN(-1);
+           }
+           lFreeList(&tmp_lirs_list);
+
+           lAppendElem(*list, lirs);
+
+         } else {
+            sge_unlink(directory, lirs_name);
+         }
+         sge_dstring_free(&filename);
+      }
+      lFreeList(&dir_entries);
+   }
+   
+   DRETURN(0);
+}
 
 int sge_read_project_list_from_disk(lList **list, const char *directory)
 {

@@ -316,14 +316,16 @@ cqueue_provide_modify_context(lListElem **this_elem, lList **answer_list,
    
    DENTER(TOP_LAYER, "cqueue_provide_modify_context");
    if (this_elem != NULL && *this_elem) {
-      char *filename = NULL;      
-      filename = (char *)spool_flatfile_write_object(answer_list, *this_elem,
+      const char *filename = NULL;      
+      filename = spool_flatfile_write_object(answer_list, *this_elem,
                                                      false, CQ_fields,
                                                      &qconf_sfi, SP_DEST_TMP,
                                                      SP_FORM_ASCII, filename,
                                                      false);
       
       if (answer_list_output(answer_list)) {
+         unlink(filename);
+         FREE(filename);
          DEXIT;
          SGE_EXIT(1);
       }
@@ -349,7 +351,7 @@ cqueue_provide_modify_context(lListElem **this_elem, lList **answer_list,
 
          if (missing_field != NoName) {
             lFreeElem(&cqueue);
-            answer_list_output (answer_list);
+            answer_list_output(answer_list);
          }
 
          if (cqueue != NULL) {
@@ -475,9 +477,7 @@ cqueue_modify(lList **answer_list, const char *name)
          ret &= cqueue_add_del_mod_via_gdi(cqueue, answer_list, 
                                            SGE_GDI_MOD | SGE_GDI_SET_ALL);
       }
-      if (cqueue != NULL) {
-         lFreeElem(&cqueue);
-      }
+     lFreeElem(&cqueue);
    }
 
    DEXIT;
@@ -632,8 +632,8 @@ cqueue_show(lList **answer_list, const lList *qref_pattern_list)
                                                        SP_DEST_STDOUT,
                                                        SP_FORM_ASCII, NULL,
                                                        false);
-                           FREE (fields);
-                           FREE (filename_stdout);
+                           FREE(fields);
+                           FREE(filename_stdout);
                            
                            if (answer_list_output(answer_list)) {
                               lFreeList(&href_list);
@@ -680,7 +680,7 @@ cqueue_show(lList **answer_list, const lList *qref_pattern_list)
                             * in the complex values list, we have to insert a
                             * custom writer for the complex_values field.  We do
                             * that with this function. */
-                           insert_custom_complex_values_writer (fields);
+                           insert_custom_complex_values_writer(fields);
 
                            if (is_first) {
                               is_first = false; 

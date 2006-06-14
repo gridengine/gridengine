@@ -98,6 +98,9 @@ enum _enum_lMultiType {
 #define CULL_SPOOL_PROJECT 0x00020000
 #define CULL_SPOOL_USER    0x00040000
 
+#define BASIC_UNIT 50         /* Don't touch */
+#define MAX_DESCR_SIZE  4*BASIC_UNIT
+
 #ifdef __SGE_GDI_LIBRARY_HOME_OBJECT_FILE__
 
 #define LISTDEF( name ) lDescr name[] = {

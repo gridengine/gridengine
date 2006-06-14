@@ -329,7 +329,7 @@ lDescr **dpp
       return ret;
    }
 
-   if (n > n+1) {
+   if ( n+1 > MAX_DESCR_SIZE) {
       LERROR(LEMALLOC);
       DEXIT;
       return PACK_ENOMEM;
@@ -1293,6 +1293,12 @@ lEnumeration **enpp
       /* read in number of lEnumeration fields (without end mark) */
       if ((ret = unpackint(pb, &n)))
          goto error;
+
+      if ( n+1 > MAX_DESCR_SIZE ) {
+         LERROR(LEMALLOC);
+         DEXIT;
+         return PACK_ENOMEM;
+      }
 
       if (!(enp = (lEnumeration *) malloc(sizeof(lEnumeration) * (n + 1)))) {
          PROF_STOP_MEASUREMENT(SGE_PROF_PACKING);

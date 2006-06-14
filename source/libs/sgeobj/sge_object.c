@@ -2176,7 +2176,11 @@ object_has_differences(const lListElem *this_elem, lList **answer_list,
          DPRINTF(("Descriptor size is not equivalent\n"));
          ret = true;
       } 
-   }    
+   } else if (this_elem != NULL || old_elem != NULL) {
+      /* One of both elems is not NULL */
+      ret = true;
+   }
+   
    DEXIT;
    return ret;   
 }

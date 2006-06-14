@@ -1,3 +1,7 @@
+RD-2006-06-14-0: Bugfix:    fixed several potential security issues
+                 Changed:   cull
+                 Review:    JG
+
 HP-2006-06-08-1: Enhancem.: Build targets depend and clean are now problerly for-
                             warded to Makefiles for Win32 applications.
                  Changed:   aimk

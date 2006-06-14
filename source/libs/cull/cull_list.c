@@ -296,7 +296,16 @@ lCopyElemPartialPack(lListElem *dst, int *jp, const lListElem *src,
 
    default:                     /* copy only the in enp enumerated elems */
       if (pb == NULL) {
+         int maxpos = 0;
+         maxpos = lCountDescr(src->descr);
+
          for (i = 0; enp[i].nm != NoName; i++, (*jp)++) {
+            if (enp[i].pos > maxpos || enp[i].pos < 0) {
+               LERROR(LEENUMDESCR);
+               DEXIT;
+               return -1;
+            }
+
             if (lCopySwitchPack(src, dst, enp[i].pos, *jp, isHash, enp[i].ep, pb) != 0) {
                LERROR(LECOPYSWITCH);
                DEXIT;

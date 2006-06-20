@@ -47,41 +47,86 @@
 enum {
    /* -------------- these are relevant to all sections ---------------- */
    DRMAAJ_ERRNO_SUCCESS = 0, /* Routine returned normally with success. */
-   DRMAAJ_ERRNO_INTERNAL_ERROR, /* Unexpected or internal DRMAA error like memory allocation, system call failure, etc. */
-   DRMAAJ_ERRNO_DRM_COMMUNICATION_FAILURE, /* Could not contact DRM system for this request. */
-   DRMAAJ_ERRNO_AUTH_FAILURE, /* The specified request is not processed successfully due to authorization failure. */
-   DRMAAJ_ERRNO_INVALID_ARGUMENT, /* The input value for an argument is invalid. */
-   DRMAAJ_ERRNO_NO_ACTIVE_SESSION, /* Exit routine failed because there is no active session */
+   DRMAAJ_ERRNO_INTERNAL_ERROR, /* Unexpected or internal DRMAA error like memory
+                                   allocation, system call failure, etc. */
+   DRMAAJ_ERRNO_DRM_COMMUNICATION_FAILURE, /* Could not contact DRM system for
+                                              this request. */
+   DRMAAJ_ERRNO_AUTH_FAILURE, /* The specified request is not processed
+                                 successfully due to authorization failure. */
+   DRMAAJ_ERRNO_INVALID_ARGUMENT, /* The input value for an argument is
+                                     invalid. */
+   DRMAAJ_ERRNO_NO_ACTIVE_SESSION, /* Exit routine failed because there is no
+                                      active session */
    DRMAAJ_ERRNO_NO_MEMORY, /* failed allocating memory */
 
    /* -------------- init and exit specific --------------- */
-   DRMAAJ_ERRNO_INVALID_CONTACT_STRING, /* Initialization failed due to invalid contact string. */
-   DRMAAJ_ERRNO_DEFAULT_CONTACT_STRING_ERROR, /* DRMAA could not use the default contact string to connect to DRM system. */
-   DRMAAJ_ERRNO_DRMS_INIT_FAILED, /* Initialization failed due to failure to init DRM system. */
-   DRMAAJ_ERRNO_ALREADY_ACTIVE_SESSION, /* Initialization failed due to existing DRMAA session. */
+   DRMAAJ_ERRNO_INVALID_CONTACT_STRING, /* Initialization failed due to invalid
+                                           contact string. */
+   DRMAAJ_ERRNO_DEFAULT_CONTACT_STRING_ERROR, /* DRMAA could not use the default
+                                                 contact string to connect to
+                                                 DRM system. */
+#ifdef DRMAA_10
+   DRMAAJ_ERRNO_NO_DEFAULT_CONTACT_STRING_SELECTED, /* No defaults contact
+                                                       string was provided or
+                                                       selected. DRMAA requires
+                                                       that the default contact
+                                                       string is selected when
+                                                       there is more than one
+                                                       default contact string
+                                                       due to multiple DRMAA
+                                                       implementation contained
+                                                       in the binary module. */
+#endif
+   DRMAAJ_ERRNO_DRMS_INIT_FAILED, /* Initialization failed due to failure to
+                                     init DRM system. */
+   DRMAAJ_ERRNO_ALREADY_ACTIVE_SESSION, /* Initialization failed due to existing
+                                           DRMAA session. */
    DRMAAJ_ERRNO_DRMS_EXIT_ERROR, /* DRM system disengagement failed. */
 
    /* ---------------- job attributes specific -------------- */
-   DRMAAJ_ERRNO_INVALID_ATTRIBUTE_FORMAT, /* The format for the job attribute value is invalid. */
-   DRMAAJ_ERRNO_INVALID_ATTRIBUTE_VALUE, /* The value for the job attribute is invalid. */
-   DRMAAJ_ERRNO_CONFLICTING_ATTRIBUTE_VALUES, /* The value of this attribute is conflicting with a previously set attributes. */
+   DRMAAJ_ERRNO_INVALID_ATTRIBUTE_FORMAT, /* The format for the job attribute
+                                             value is invalid. */
+   DRMAAJ_ERRNO_INVALID_ATTRIBUTE_VALUE, /* The value for the job attribute is
+                                            invalid. */
+   DRMAAJ_ERRNO_CONFLICTING_ATTRIBUTE_VALUES, /* The value of this attribute is
+                                                 conflicting with a previously
+                                                 set attributes. */
 
    /* --------------------- job submission specific -------------- */
-   DRMAAJ_ERRNO_TRY_LATER, /* Could not pass job now to DRM system. A retry may succeed however (saturation). */
-   DRMAAJ_ERRNO_DENIED_BY_DRM, /* The DRM system rejected the job. The job will never be accepted due to DRM configuration or job template settings. */
+   DRMAAJ_ERRNO_TRY_LATER, /* Could not pass job now to DRM system. A retry may
+                              succeed however (saturation). */
+   DRMAAJ_ERRNO_DENIED_BY_DRM, /* The DRM system rejected the job. The job will
+                                  never be accepted due to DRM configuration or
+                                  job template settings. */
 
    /* ------------------------------- job control specific ---------------- */
-   DRMAAJ_ERRNO_INVALID_JOB, /* The job specified by the 'jobid' does not exist. */
-   DRMAAJ_ERRNO_RESUME_INCONSISTENT_STATE, /* The job has not been suspended. The RESUME request will not be processed. */
-   DRMAAJ_ERRNO_SUSPEND_INCONSISTENT_STATE, /* The job has not been running, and it cannot be suspended. */
-   DRMAAJ_ERRNO_HOLD_INCONSISTENT_STATE, /* The job cannot be moved to a HOLD state. */
-   DRMAAJ_ERRNO_RELEASE_INCONSISTENT_STATE, /* The job is not in a HOLD state. */
-   DRMAAJ_ERRNO_EXIT_TIMEOUT, /* We have encountered a time-out condition for drmaa_synchronize or drmaa_wait. */
-   DRMAAJ_ERRNO_NO_RUSAGE, /* This error code is returned by drmaa_wait() when a job has finished but no rusage and stat data could be provided. */
-   DRMAAJ_ERRNO_INVALID_JOB_TEMPLATE, /* This error code is returned when an invalid job template is passed to a function. */
-   DRMAAJ_ERRNO_NULL_POINTER, /* This error code is used for NullPointerExceptions */
-   DRMAAJ_ERRNO_BUFFER_OVERFLOW, /* This error code is used for ArrayIndexOutOfBoundsExceptions */
-   
+   DRMAAJ_ERRNO_INVALID_JOB, /* The job specified by the 'jobid' does not
+                                exist. */
+   DRMAAJ_ERRNO_RESUME_INCONSISTENT_STATE, /* The job has not been suspended.
+                                              The RESUME request will not be
+                                              processed. */
+   DRMAAJ_ERRNO_SUSPEND_INCONSISTENT_STATE, /* The job has not been running, and
+                                               it cannot be suspended. */
+   DRMAAJ_ERRNO_HOLD_INCONSISTENT_STATE, /* The job cannot be moved to a HOLD
+                                           state. */
+   DRMAAJ_ERRNO_RELEASE_INCONSISTENT_STATE, /* The job is not in a HOLD
+                                               state. */
+   DRMAAJ_ERRNO_EXIT_TIMEOUT, /* We have encountered a time-out condition for
+                                 drmaa_synchronize or drmaa_wait. */
+   DRMAAJ_ERRNO_NO_RUSAGE, /* This error code is returned by drmaa_wait() when a
+                              job has finished but no rusage and stat data could
+                              be provided. */
+   DRMAAJ_ERRNO_INVALID_JOB_TEMPLATE, /* This error code is returned when an
+                                         invalid job template is passed to a
+                                         function. */
+   DRMAAJ_ERRNO_NULL_POINTER, /* This error code is used for
+                                 NullPointerExceptions */
+/* DRMAAJ_ERRNO_NO_MORE_ELEMENTS is not listed here because it is unused in the
+ * Java language binding. */
+#ifndef DRMAA_10
+   DRMAAJ_ERRNO_BUFFER_OVERFLOW, /* This error code is used for
+                                    ArrayIndexOutOfBoundsExceptions */
+#endif
    DRMAAJ_NO_ERRNO
 };
 
@@ -97,8 +142,10 @@ static void throw_exception (JNIEnv *env, int errnum, const char *message);
 static char *get_exception_class_name (int errnum);
 static drmaa_job_template_t *get_from_list (int id);
 static int insert_into_list (drmaa_job_template_t *jt);
+#ifndef DRMAA_10
 static jobjectArray create_string_array (JNIEnv* env, int num_elem, char** strings);
-   
+#endif
+
 JNIEXPORT void JNICALL Java_com_sun_grid_drmaa_SessionImpl_nativeControl
   (JNIEnv *env, jobject object, jstring jobId, jint action)
 {
@@ -250,6 +297,72 @@ JNIEXPORT void JNICALL Java_com_sun_grid_drmaa_SessionImpl_nativeInit
    }  
 }
 
+#ifdef DRMAA_10
+JNIEXPORT jobjectArray JNICALL Java_com_sun_grid_drmaa_SessionImpl_nativeRunBulkJobs
+  (JNIEnv *env, jobject object, jint id, jint start, jint end, jint step)
+{
+   char error[DRMAA_ERROR_STRING_BUFFER + 1];
+   int errnum = DRMAAJ_ERRNO_SUCCESS;
+   char buffer[DRMAA_JOBNAME_BUFFER + 1];
+   drmaa_job_template_t *jt = NULL;
+   drmaa_job_ids_t *ids = NULL;
+   int num_elem = 0;
+   int count = 0;
+   jobjectArray ret_val = NULL;
+   jclass clazz = NULL;
+   jstring tmp_str = NULL;
+   
+   jt = get_from_list(id);
+   
+   if (jt == NULL) {
+      print_message_and_throw_exception(env, DRMAAJ_ERRNO_INVALID_JOB_TEMPLATE,
+                                        MSG_JDRMAA_BAD_JOB_TEMPLATE);
+
+      return NULL;
+   }
+   
+   errnum = drmaa_run_bulk_jobs(&ids, jt, start, end, step, error,
+                                DRMAA_ERROR_STRING_BUFFER);
+   
+   if (errnum != DRMAAJ_ERRNO_SUCCESS) {
+      throw_exception(env, errnum, error);
+      drmaa_release_job_ids (ids);
+      
+      return NULL;
+   }
+
+   errnum = drmaa_get_num_job_ids(ids, &num_elem);
+   
+   if (errnum != DRMAAJ_ERRNO_SUCCESS) {
+      throw_exception(env, errnum, NULL);
+      drmaa_release_job_ids (ids);
+      
+      return NULL;
+   }
+   
+   clazz = (*env)->FindClass (env, "java/lang/String");
+   ret_val = (*env)->NewObjectArray(env, num_elem, clazz, NULL);
+
+   for (count = 0; count < num_elem; count++) {
+      errnum = drmaa_get_next_job_id(ids, buffer, DRMAA_JOBNAME_BUFFER);
+      
+      if (errnum != DRMAAJ_ERRNO_SUCCESS) {
+         throw_exception(env, errnum, "Reported incorrect number of job ids");
+         drmaa_release_job_ids (ids);
+
+         return NULL;
+      }
+      
+      tmp_str = (*env)->NewStringUTF (env, buffer);
+      (*env)->SetObjectArrayElement(env, ret_val, count, tmp_str);
+   }
+
+   drmaa_release_job_ids(ids);
+   ids = NULL;
+   
+   return ret_val;
+}
+#else
 JNIEXPORT jobjectArray JNICALL Java_com_sun_grid_drmaa_SessionImpl_nativeRunBulkJobs
   (JNIEnv *env, jobject object, jint id, jint start, jint end, jint step)
 {
@@ -319,6 +432,7 @@ JNIEXPORT jobjectArray JNICALL Java_com_sun_grid_drmaa_SessionImpl_nativeRunBulk
    
    return ret_val;
 }
+#endif
 
 JNIEXPORT jstring JNICALL Java_com_sun_grid_drmaa_SessionImpl_nativeRunJob
   (JNIEnv *env, jobject object, jint id)
@@ -391,6 +505,106 @@ JNIEXPORT void JNICALL Java_com_sun_grid_drmaa_SessionImpl_nativeSynchronize
    }
 }
 
+#ifdef DRMAA_10
+JNIEXPORT jobject JNICALL Java_com_sun_grid_drmaa_SessionImpl_nativeWait
+  (JNIEnv *env, jobject object, jstring jobId, jlong timeout)
+{
+   char error[DRMAA_ERROR_STRING_BUFFER + 1];
+   int errnum = DRMAAJ_ERRNO_SUCCESS;
+   char buffer[DRMAA_JOBNAME_BUFFER + 1];
+   char rbuffer[BUFFER_LENGTH + 1];
+   char signal[DRMAA_SIGNAL_BUFFER + 1];
+   const char *job_id = NULL;
+   jobject job_info = NULL;
+   jmethodID meth = NULL;
+   jclass clazz = NULL;
+   jobjectArray resources = NULL;
+   int status = -1;
+   drmaa_attr_values_t *rusage = NULL;
+   jstring tmp_str = NULL;
+   int signaled = 0;
+   int count = 0;
+   int length = 0;
+   
+   if (jobId == NULL) {
+      print_message_and_throw_exception (env, DRMAAJ_ERRNO_NULL_POINTER,
+                                         MSG_JDRMAA_NULL_POINTER_S, "job id");
+      
+      return NULL;
+   }
+   
+   job_id = (*env)->GetStringUTFChars (env, jobId, NULL);
+   
+   errnum = drmaa_wait (job_id, buffer, DRMAA_JOBNAME_BUFFER, &status, (signed long)timeout,
+                       &rusage, error, DRMAA_ERROR_STRING_BUFFER);
+   (*env)->ReleaseStringUTFChars (env, jobId, job_id);
+      
+   if (errnum != DRMAAJ_ERRNO_SUCCESS) {
+      throw_exception (env, errnum, error);
+      drmaa_release_attr_values (rusage);   
+   
+      return NULL;
+   }
+
+   errnum = drmaa_get_num_attr_values(rusage, &length);
+   
+   if (errnum != DRMAAJ_ERRNO_SUCCESS) {
+      throw_exception(env, errnum, NULL);
+      drmaa_release_attr_values (rusage);   
+      
+      return NULL;
+   }
+   
+   clazz = (*env)->FindClass (env, "java/lang/String");
+   resources = (*env)->NewObjectArray(env, length, clazz, NULL);
+
+   for (count = 0; count < length; count++) {
+      errnum = drmaa_get_next_attr_value (rusage, rbuffer, BUFFER_LENGTH);
+      
+      if (errnum != DRMAAJ_ERRNO_SUCCESS) {
+         throw_exception (env, errnum, "Reported incorrect number of resource usage entries");
+         drmaa_release_attr_values (rusage);   
+
+         return NULL;
+      }
+      
+      tmp_str = (*env)->NewStringUTF (env, rbuffer);
+      (*env)->SetObjectArrayElement(env, resources, count, tmp_str);
+   }
+
+   drmaa_release_attr_values (rusage);   
+
+   errnum = drmaa_wifsignaled (&signaled, status, error,
+                              DRMAA_ERROR_STRING_BUFFER);
+   
+   if (errnum != DRMAAJ_ERRNO_SUCCESS) {
+      throw_exception (env, errnum, error);
+   
+      return NULL;
+   }
+   else if (signaled != 0) {
+      errnum = drmaa_wtermsig (signal, DRMAA_SIGNAL_BUFFER, status, error,
+                              DRMAA_ERROR_STRING_BUFFER);
+
+      if (errnum != DRMAAJ_ERRNO_SUCCESS) {
+         throw_exception (env, errnum, error);
+
+         return NULL;
+      }
+      
+      tmp_str = (*env)->NewStringUTF (env, signal);
+   }
+   
+   clazz = (*env)->FindClass (env, "com/sun/grid/drmaa/JobInfoImpl");
+   meth = (*env)->GetMethodID (env, clazz, "<init>",
+                 "(Ljava/lang/String;I[Ljava/lang/String;Ljava/lang/String;)V");
+   job_info = (*env)->NewObject (env, clazz, meth,
+                                 (*env)->NewStringUTF (env, buffer), status,
+                                 resources, tmp_str);
+   
+   return job_info;
+}
+#else
 JNIEXPORT jobject JNICALL Java_com_sun_grid_drmaa_SessionImpl_nativeWait
   (JNIEnv *env, jobject object, jstring jobId, jlong timeout)
 {
@@ -427,7 +641,7 @@ JNIEXPORT jobject JNICALL Java_com_sun_grid_drmaa_SessionImpl_nativeWait
       
    if (errnum != DRMAAJ_ERRNO_SUCCESS) {
       throw_exception (env, errnum, error);
-   
+
       return NULL;
    }
 
@@ -439,7 +653,7 @@ JNIEXPORT jobject JNICALL Java_com_sun_grid_drmaa_SessionImpl_nativeWait
                                             BUFFER_LENGTH,
                                             "resource usage entries");
          drmaa_release_attr_values (rusage);
-         
+
          return NULL;
       }
       
@@ -480,6 +694,7 @@ JNIEXPORT jobject JNICALL Java_com_sun_grid_drmaa_SessionImpl_nativeWait
    
    return job_info;
 }
+#endif
 
 JNIEXPORT jint JNICALL Java_com_sun_grid_drmaa_SessionImpl_nativeAllocateJobTemplate
   (JNIEnv *env, jobject object)
@@ -615,6 +830,99 @@ JNIEXPORT void JNICALL Java_com_sun_grid_drmaa_SessionImpl_nativeSetAttributeVal
    }
 }
 
+#ifdef DRMAA_10
+JNIEXPORT jobjectArray JNICALL Java_com_sun_grid_drmaa_SessionImpl_nativeGetAttributeNames
+  (JNIEnv *env, jobject object, jint id)
+{
+   char error[DRMAA_ERROR_STRING_BUFFER + 1];
+   int errnum = DRMAAJ_ERRNO_SUCCESS;
+   char buffer[BUFFER_LENGTH + 1];
+   jobjectArray retval = NULL;
+   jclass clazz = NULL;
+   jstring tmp_str = NULL;
+   drmaa_attr_names_t *names = NULL;
+   drmaa_attr_names_t *vnames = NULL;
+   int size = 0;
+   int vsize = 0;
+   int count = 0;
+   
+   errnum = drmaa_get_attribute_names (&names, error, DRMAA_ERROR_STRING_BUFFER);
+   
+   if (errnum != DRMAAJ_ERRNO_SUCCESS) {
+      throw_exception (env, errnum, error);
+   
+      return NULL;
+   }
+   
+   errnum = drmaa_get_vector_attribute_names (&vnames, error, 
+                                             DRMAA_ERROR_STRING_BUFFER);
+   
+   if (errnum != DRMAAJ_ERRNO_SUCCESS) {
+      throw_exception (env, errnum, error);
+      drmaa_release_attr_names (names);
+   
+      return NULL;
+   }
+   
+   errnum = drmaa_get_num_attr_names (names, &size);
+   
+   if (errnum != DRMAAJ_ERRNO_SUCCESS) {
+      throw_exception (env, errnum, NULL);
+      drmaa_release_attr_names (names);
+      drmaa_release_attr_names (vnames);
+   
+      return NULL;
+   }
+   
+   errnum = drmaa_get_num_attr_names (vnames, &vsize);
+   
+   if (errnum != DRMAAJ_ERRNO_SUCCESS) {
+      throw_exception (env, errnum, NULL);
+      drmaa_release_attr_names (names);
+      drmaa_release_attr_names (vnames);
+   
+      return NULL;
+   }
+   
+   clazz = (*env)->FindClass (env, "java/lang/String");
+   retval = (*env)->NewObjectArray(env, size + vsize, clazz, NULL);
+
+   for (count = 0; count < size; count++) {
+      errnum = drmaa_get_next_attr_name(names, buffer, BUFFER_LENGTH);
+      
+      if (errnum != DRMAAJ_ERRNO_SUCCESS) {
+         throw_exception (env, errnum, "Reported incorrect number of attribute names");
+         drmaa_release_attr_names (names);
+         drmaa_release_attr_names (vnames);
+
+         return NULL;
+      }
+
+      tmp_str = (*env)->NewStringUTF (env, buffer);
+      (*env)->SetObjectArrayElement(env, retval, count, tmp_str);
+   }
+   
+   drmaa_release_attr_names (names);
+   
+   for (count = 0; count < vsize; count++) {
+      errnum = drmaa_get_next_attr_name(vnames, buffer, BUFFER_LENGTH);
+      
+      if (errnum != DRMAAJ_ERRNO_SUCCESS) {
+         throw_exception (env, errnum, "Reported incorrect number of attribute names");
+         drmaa_release_attr_names (vnames);
+
+         return NULL;
+      }
+
+      tmp_str = (*env)->NewStringUTF (env, buffer);
+      (*env)->SetObjectArrayElement(env, retval, count + size, tmp_str);
+   }
+   
+   drmaa_release_attr_names (vnames);
+   
+   return retval;
+}
+#else
 JNIEXPORT jobjectArray JNICALL Java_com_sun_grid_drmaa_SessionImpl_nativeGetAttributeNames
   (JNIEnv *env, jobject object, jint id)
 {
@@ -654,10 +962,10 @@ JNIEXPORT jobjectArray JNICALL Java_com_sun_grid_drmaa_SessionImpl_nativeGetAttr
    
    errnum = drmaa_get_vector_attribute_names (&names, error, 
                                              DRMAA_ERROR_STRING_BUFFER);
-   
+
    if (errnum != DRMAAJ_ERRNO_SUCCESS) {
       throw_exception (env, errnum, error);
-   
+
       return NULL;
    }
    
@@ -668,8 +976,10 @@ JNIEXPORT jobjectArray JNICALL Java_com_sun_grid_drmaa_SessionImpl_nativeGetAttr
                                             MSG_JDRMAA_OVERFLOW_DS,
                                             BUFFER_LENGTH,
                                             "attribute names");
+
          drmaa_release_attr_names (names);
          
+
          return NULL;
       }
       
@@ -677,11 +987,12 @@ JNIEXPORT jobjectArray JNICALL Java_com_sun_grid_drmaa_SessionImpl_nativeGetAttr
    }
    
    max = count;
-   
+
    retval = create_string_array (env, max, name_array);
    
    return retval;
 }
+#endif
 
 JNIEXPORT jobjectArray JNICALL Java_com_sun_grid_drmaa_SessionImpl_nativeGetAttribute
   (JNIEnv *env, jobject object, jint id, jstring name)
@@ -746,11 +1057,40 @@ JNIEXPORT jobjectArray JNICALL Java_com_sun_grid_drmaa_SessionImpl_nativeGetAttr
       }
       else if(errnum != DRMAAJ_ERRNO_SUCCESS) {
          throw_exception (env, errnum, error);
-         drmaa_release_attr_values (values);
 
          return NULL;
       }
       else {
+#ifdef DRMAA_10
+         int count = 0;
+         int size = 0;
+         
+         errnum = drmaa_get_num_attr_values(values, &size);
+         
+         if (errnum != DRMAAJ_ERRNO_SUCCESS) {
+            throw_exception(env, errnum, NULL);
+            drmaa_release_attr_values(values);
+            
+            return NULL;
+         }
+         
+         clazz = (*env)->FindClass (env, "java/lang/String");
+         retval = (*env)->NewObjectArray(env, size, clazz, NULL);
+
+         for (count = 0; count < size; count++) {
+            errnum = drmaa_get_next_attr_value(values, buffer, BUFFER_LENGTH);
+            
+            if (errnum != DRMAAJ_ERRNO_SUCCESS) {
+               throw_exception(env, errnum, "Reported incorrect number of attribute value elements");
+               drmaa_release_attr_values(values);
+
+               return NULL;
+            }
+            
+            tmp_str = (*env)->NewStringUTF (env, buffer);
+            (*env)->SetObjectArrayElement(env, retval, count, tmp_str);
+         }
+#else
          char *names[BUFFER_LENGTH + 1];
          int count = 0;
          int max = 0;
@@ -774,7 +1114,8 @@ JNIEXPORT jobjectArray JNICALL Java_com_sun_grid_drmaa_SessionImpl_nativeGetAttr
          max = count;
          
          retval = create_string_array (env, max, names);
-      
+#endif
+
          drmaa_release_attr_values (values);
       }
    }
@@ -860,6 +1201,11 @@ static void print_message_and_throw_exception(JNIEnv *env, int errnum,
 static void throw_exception (JNIEnv *env, int errnum, const char *message)
 {
    jclass newExcCls = NULL;
+   const char *error = message;
+
+   if (error == NULL) {
+      error = drmaa_strerror(errnum);
+   }
    
    newExcCls = (*env)->FindClass(env, get_exception_class_name (errnum));
 
@@ -915,6 +1261,10 @@ static char *get_exception_class_name (int errnum)
          return "org/ggf/drmaa/InvalidContactStringException";
       case DRMAAJ_ERRNO_DEFAULT_CONTACT_STRING_ERROR:
          return "org/ggf/drmaa/DefaultContactStringException";
+#ifdef DRMAA_10
+      case DRMAAJ_ERRNO_NO_DEFAULT_CONTACT_STRING_SELECTED:
+         return "org/ggf/drmaa/NoDefaultContactStringException";
+#endif
       case DRMAAJ_ERRNO_DRMS_INIT_FAILED:
          return "org/ggf/drmaa/DrmsInitException";
       case DRMAAJ_ERRNO_ALREADY_ACTIVE_SESSION:
@@ -1020,6 +1370,7 @@ static drmaa_job_template_t *get_from_list (int id)
    return retval;
 }
 
+#ifndef DRMAA_10
 static jobjectArray create_string_array (JNIEnv* env, int num_elem, char** strings)
 {
    jobjectArray ret_val = NULL;
@@ -1038,3 +1389,4 @@ static jobjectArray create_string_array (JNIEnv* env, int num_elem, char** strin
    
    return ret_val;
 }
+#endif

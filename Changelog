@@ -1,3 +1,7 @@
+DT-2006-06-20-0: Enhancem.: o Merged DRMAA changes from DT-2005-12-23-0,
+                              DT-2006-03-01-0, and DT-2006-03-02-0 in maintrunk
+                 Changed:   DRMAA
+
 RD-2006-06-14-0: Bugfix:    fixed several potential security issues
                  Bugtraq:   6438475
                  Changed:   cull

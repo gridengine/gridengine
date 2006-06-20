@@ -121,9 +121,6 @@
 /* Defined in rshd.c */
 extern char **environ;
 
-static const char *session_key_env_var = "SGE_SESSION_KEY"; 
-static const char *session_shutdown_mode_env_var = "SGE_KEEP_SESSION";
-
 static int drmaa_is_attribute_supported(const char *name, bool vector, dstring *diag);
 static drmaa_attr_names_t *drmaa_fill_string_vector(const char *name[]);
 
@@ -152,25 +149,7 @@ static int drmaa_set_bulk_range (lList **opts, int start, int end, int step,
                                  lList **alp);
 static drmaa_attr_names_t *drmaa_fill_supported_nonvector_attributes (dstring *diag);
 static drmaa_attr_names_t *drmaa_fill_supported_vector_attributes (dstring *diag);
-
-/****** DRMAA/-DRMAA_Session_state *******************************************
-*  NAME
-*     DRMAA_Session_state -- The state of the DRMAA library.
-*
-*  SYNOPSIS
-*     extern char **environ 
-*        The environment is used to pass arguments forth and back trough
-*        DRMAA interface calls without actually changing the link interface.
-*        This makes 'environ' part of the DRMAA session state and access to
-*        it is guarded with the mutex 'environ_mutex'.
-*
-*  SEE ALSO
-*     JAPI/-JAPI_Session_state
-*******************************************************************************/
-
-static pthread_mutex_t environ_mutex = PTHREAD_MUTEX_INITIALIZER;
-#define DRMAA_LOCK_ENVIRON()      sge_mutex_lock("drmaa_environ_mutex", SGE_FUNC, __LINE__, &environ_mutex)
-#define DRMAA_UNLOCK_ENVIRON()    sge_mutex_unlock("drmaa_environ_mutex", SGE_FUNC, __LINE__, &environ_mutex)
+static int drmaa_parse_contact_string(const char *contact, char **session);
 
 /****** DRMAA/-DRMAA_Global_Constants *******************************************
 *  NAME
@@ -247,7 +226,17 @@ static const char *drmaa_supported_vector[] = {
 *     is an implementation dependent string which may be used to specify
 *     which DRM system to use. This routine must be called before any other 
 *     DRMAA calls, except for drmaa_version(). If 'contact' is NULL, the default 
-*     DRM system will be used. Initializes internal data structures and registers 
+*     DRM system will be used.  If 'contact' is not NULL, it is parsed for a
+*     list of semi-colon separated name=value strings.  The currently supported
+*     list of strings is:
+*
+*        session -- the id of the session to which to reconnect
+#if 0
+*        sge_root -- the SGE_ROOT to use
+*        sge_cell -- the SGE_CELL to use
+#endif
+*
+*     Initializes internal data structures and registers 
 *     with qmaster using the event client mechanisms.
 *
 *  INPUTS
@@ -275,11 +264,9 @@ int drmaa_init(const char *contact, char *error_diagnosis,
 {
    int ret;
    dstring diag;
-   dstring session_key_in = DSTRING_INIT;
-   dstring session_key_out = DSTRING_INIT;
-   dstring env_var = DSTRING_INIT;
    dstring *diagp = NULL;
-   bool set_session;
+   dstring session_key_out = DSTRING_INIT;
+   char *session_key_in = NULL;
 
    DENTER(TOP_LAYER, "drmaa_init");
 
@@ -291,45 +278,95 @@ int drmaa_init(const char *contact, char *error_diagnosis,
    /* Disable profiling for DRMAA clients. */
    sge_prof_set_enabled (false);
    
-   DRMAA_LOCK_ENVIRON();
-   set_session = getenv(session_key_env_var)?true:false;
-   if (set_session)
-      sge_dstring_copy_string(&session_key_in, getenv(session_key_env_var));
-   DRMAA_UNLOCK_ENVIRON();
+   ret = drmaa_parse_contact_string(contact, &session_key_in);
+   
+   if (ret != DRMAA_ERRNO_SUCCESS) {
+      if (diagp != NULL) {
+         sge_dstring_copy_string(diagp, drmaa_strerror(ret));
+      }
+      
+      return ret;
+   }
+   
+   ret = japi_init(contact, session_key_in, &session_key_out, DRMAA, true, NULL,
+                   diagp);
 
-   /*
-    * env var SGE_SESSION_KEY is used 
-    * to interface JAPI session key forth ... 
-    */
-   ret = japi_init(contact,
-                   set_session?sge_dstring_get_string(&session_key_in):NULL, 
-                   &session_key_out, DRMAA, true, NULL, diagp);
-
-   if (set_session)
-      sge_dstring_free(&session_key_in);
-
+   FREE(session_key_in)
+   
    if (ret != DRMAA_ERRNO_SUCCESS) {
       /* diag was set in japi_init() */
       return ret;
    }
 
-   /*
-    * ... and back to pass resulting session key back to application 
-    */
-   sge_dstring_sprintf(&env_var, "%s=%s", session_key_env_var, 
-         sge_dstring_get_string(&session_key_out));
-
-
-   DRMAA_LOCK_ENVIRON();
-   sge_putenv(sge_dstring_get_string(&env_var));
-   DRMAA_UNLOCK_ENVIRON();
-
-   sge_dstring_free(&session_key_out);
-   sge_dstring_free(&env_var);
-
    DEXIT;
    return DRMAA_ERRNO_SUCCESS;
 }
+
+/****** drmaa/drmaa_parse_contact_string() *********************************************
+*  NAME
+*     drmaa_parse_contact_string() -- Parses the contact string
+*
+*  SYNOPSIS
+*     void drmaa_parse_contact_string(const char *contact, char **session)
+*
+*  FUNCTION
+*     If the contact string is non-NULL and non-empty, this function will parse
+*     it, looking for specific flags.  The current set of supported flags is:
+*
+*  INPUTS
+*     contact - The contact string to be parsed
+*     session - The buffer into which the session string will be written
+*
+*  OUTPUTS
+*     int     - DRMAA error code
+*
+*  NOTES
+*     MT-NOTES: drmaa_parse_contact_string() is MT safe
+*******************************************************************************/
+static int drmaa_parse_contact_string(const char *contact, char **session)
+{
+   const char *full_str = contact;
+   char *token = NULL;
+   char *str = NULL;
+   struct saved_vars_s *context = NULL;
+   int drmaa_errno = DRMAA_ERRNO_SUCCESS;
+   
+   if (contact != NULL) {
+      /* First look for the = sign to find the name. */
+      while ((token = sge_strtok_r(full_str, "=", &context)) != NULL) {
+         full_str = NULL;
+         
+         /* Then look for the ; to find the value. */
+         str = sge_strtok_r(NULL, ";", &context);
+
+         if (str == NULL) {
+            /* If str is NULL, that means that the search for = did not find an
+             * = and so returned the remainder of the string.  In this case,
+             * the contact string is malformed. */
+             drmaa_errno = DRMAA_ERRNO_INVALID_ARGUMENT;
+         }
+         else if(strcasecmp(token, "session") == 0) {
+            *session = strdup(str);
+         }
+#if 0 /* For future use... */
+         else if (strcasecmp(token, "sge_root") == 0) {
+         }
+         else if (strcasecmp(token, "sge_cell") == 0) {
+         }
+#endif
+         else {
+            /* Invalid name. */
+            drmaa_errno = DRMAA_ERRNO_INVALID_ARGUMENT;
+         }
+      }
+
+      sge_free_saved_vars(context);
+      context = NULL;
+   }
+   
+   return drmaa_errno;
+}
+
 
 /****** DRMAA/drmaa_exit() ****************************************************
 *  NAME
@@ -365,8 +402,6 @@ int drmaa_exit(char *error_diagnosis, size_t error_diag_len)
    dstring diag;
    dstring *diagp = NULL;
    int drmaa_errno;
-   bool close_session = true;
-   extern int sge_clrenv(const char *name);
 
    DENTER(TOP_LAYER, "drmaa_exit");
 
@@ -375,19 +410,7 @@ int drmaa_exit(char *error_diagnosis, size_t error_diag_len)
       diagp = &diag;
    }
 
-   /* session_shutdown_mode_env_var is used to interface japi_exit(close_session) */
-   DRMAA_LOCK_ENVIRON();
-   if (getenv(session_shutdown_mode_env_var)) {
-      close_session = false;
-   }
-   DRMAA_UNLOCK_ENVIRON();
-
-   drmaa_errno = japi_exit(close_session, JAPI_EXIT_NO_FLAG, diagp);
-
-   /* need to get rid of session key env var */
-   DRMAA_LOCK_ENVIRON();
-   sge_clrenv(session_key_env_var);
-   DRMAA_UNLOCK_ENVIRON();
+   drmaa_errno = japi_exit(JAPI_EXIT_NO_FLAG, diagp);
 
    DEXIT;
    return drmaa_errno;
@@ -1911,6 +1934,77 @@ int drmaa_get_next_job_id(drmaa_job_ids_t* values, char *value, size_t value_len
    return japi_string_vector_get_next((drmaa_attr_values_t*)values, value?&val:NULL);
 }
 
+#ifdef DRMAA_10
+/****** DRMAA/drmaa_get_num_attr_names() **************************************
+*  NAME
+*     drmaa_get_num_attr_names() -- Get the number of entries in the vector
+*
+*  SYNOPSIS
+*     void drmaa_get_num_attr_names(drmaa_attr_values_t* values, int *size) 
+*
+*  FUNCTION
+*     Get the number of entries in the name vector.
+*
+*  INPUTS
+*     drmaa_attr_values_t* values - The attribute value vector.
+*
+*  OUTPUTS
+*     int - DRMAA error code
+*  NOTES
+*     MT-NOTE: drmaa_get_num_attr_names() is MT safe
+*******************************************************************************/
+int drmaa_get_num_attr_names(drmaa_attr_names_t* values, int *size)
+{
+   return japi_string_vector_get_num((drmaa_attr_values_t*)values, size);
+}
+
+/****** DRMAA/drmaa_get_num_attr_values() **************************************
+*  NAME
+*     drmaa_get_num_attr_values() -- Get the number of entries in the vector
+*
+*  SYNOPSIS
+*     void drmaa_get_num_attr_values(drmaa_attr_values_t* values, int *size) 
+*
+*  FUNCTION
+*     Get the number of entries in the value vector.
+*
+*  INPUTS
+*     drmaa_attr_values_t* values - The attribute value vector.
+*
+*  OUTPUTS
+*     int - DRMAA error code
+*  NOTES
+*     MT-NOTE: drmaa_get_num_attr_values() is MT safe
+*******************************************************************************/
+int drmaa_get_num_attr_values(drmaa_attr_values_t* values, int *size)
+{
+   return japi_string_vector_get_num((drmaa_attr_values_t*)values, size);
+}
+
+/****** DRMAA/drmaa_get_num_job_ids() **************************************
+*  NAME
+*     drmaa_get_num_job_ids() -- Get the number of entries in the vector
+*
+*  SYNOPSIS
+*     void drmaa_get_num_job_ids(drmaa_attr_values_t* values, int *size) 
+*
+*  FUNCTION
+*     Get the number of entries in the id vector.
+*
+*  INPUTS
+*     drmaa_attr_values_t* values - The attribute id vector.
+*
+*  OUTPUTS
+*     int - DRMAA error code
+*  NOTES
+*     MT-NOTE: drmaa_get_num_job_ids() is MT safe
+*******************************************************************************/
+int drmaa_get_num_job_ids(drmaa_job_ids_t* values, int *size)
+{
+   return japi_string_vector_get_num((drmaa_attr_values_t*)values, size);
+}
+#endif
+
 /****** DRMAA/drmaa_release_attr_values() **************************************
 *  NAME
 *     drmaa_release_attr_values() -- Release attribute value vector
@@ -1999,22 +2093,35 @@ void drmaa_release_job_ids(drmaa_job_ids_t* values)
 *     MT-NOTE: drmaa_get_DRM_system() is MT safe
 *******************************************************************************/
 int drmaa_get_DRM_system(char *drm_system, size_t drm_system_len, 
-         char *error_diagnosis, size_t error_diag_len)
+                         char *error_diagnosis, size_t error_diag_len)
 {
    /* Since we will only ever support one DRM, namely SGE, it doesn't make any
     * difference whether drmaa_get_DRM_system() is called before or after
     * drmaa_init().  We will always return the same string. */
-   dstring drm, diag;
-   
-   if (drm_system != NULL) {
-      sge_dstring_init(&drm, drm_system, drm_system_len+1);
-   }
+   dstring drm;
+   dstring diag;
+   dstring *diagp = NULL;
+   int drmaa_errno = DRMAA_ERRNO_SUCCESS;
    
    if (error_diagnosis != NULL) {
-      sge_dstring_init(&diag, error_diagnosis, error_diag_len+1);
+      sge_dstring_init(&diag, error_diagnosis, error_diag_len + 1);
+      diagp = &diag;
    }
    
-   return japi_get_drm_system(drm_system?&drm:NULL, error_diagnosis?&diag:NULL, DRMAA); 
+   if (drm_system != NULL) {
+      sge_dstring_init(&drm, drm_system, drm_system_len + 1);
+      drmaa_errno = japi_get_drm_system(&drm, diagp, DRMAA); 
+   }
+/* This will change the previous behavior for this method, so we have to make it
+ * specific to the new library version. */
+#ifdef DRMAA_10
+   else {
+      drmaa_errno = DRMAA_ERRNO_INVALID_ARGUMENT;
+      japi_standard_error(drmaa_errno, diagp);
+   }
+#endif
+   
+   return drmaa_errno;
 }
 
 /****** DRMAA/drmaa_get_DRMAA_implementation() *********************************
@@ -2042,11 +2149,20 @@ int drmaa_get_DRM_system(char *drm_system, size_t drm_system_len,
 *     MT-NOTE: drmaa_get_DRMAA_implementation() is MT safe
 *******************************************************************************/
 int drmaa_get_DRMAA_implementation(char *drmaa_impl, size_t drmaa_impl_len, 
-         char *error_diagnosis, size_t error_diag_len)
+                                   char *error_diagnosis, size_t error_diag_len)
 {
-   /* Since this DRMAA implementation is very tightly coupled to SGE, I just
-    * return the DRM system information as the DRMAA implementation string. */
-   return drmaa_get_DRM_system (drmaa_impl, drmaa_impl_len, error_diagnosis, error_diag_len); 
+   /* Since we will only ever support one DRM, namely SGE, it doesn't make any
+    * difference whether drmaa_get_DRM_system() is called before or after
+    * drmaa_init().  We will always return the same string. */
+   int drmaa_errno = DRMAA_ERRNO_SUCCESS;
+   
+   /* Because the DRMAA implementation is inherently bound to the DRM version,
+    * there is no need to distinguish between them. Version information can be
+    * gotten from drmaa_version() and language information is self-evident. */
+   drmaa_errno = drmaa_get_DRM_system(drmaa_impl, drmaa_impl_len,
+                                      error_diagnosis, error_diag_len);
+
+   return drmaa_errno;
 }
 
 /****** DRMAA/drmaa_get_contact() **********************************************
@@ -2073,26 +2189,34 @@ int drmaa_get_DRMAA_implementation(char *drmaa_impl, size_t drmaa_impl_len,
 *     MT-NOTE: drmaa_get_contact() is MT safe
 *******************************************************************************/
 int drmaa_get_contact(char *contact, size_t contact_len, 
-     char *error_diagnosis, size_t error_diag_len)
+                      char *error_diagnosis, size_t error_diag_len)
 {
-   dstring con, diag;
-   
-   if (contact != NULL) {
-      sge_dstring_init(&con, contact, contact_len+1);
-   }
+   dstring con;
+   dstring diag;
+   dstring *diagp = NULL;
+   int drmaa_errno = DRMAA_ERRNO_SUCCESS;
    
    if (error_diagnosis != NULL) {
       sge_dstring_init(&diag, error_diagnosis, error_diag_len+1);
+      diagp = &diag;
    }
 
-   /* So far drmaa_init(contact) is not used. Consequently 
-      we do not provide contact information here either.
-      We just return a NULL character to ensure string
-      is initialized.  Therefore, we also do not care whether drmaa_get_contact()
-      is called before or after drmaa_init(). */
-   sge_dstring_copy_string(&con, "");
+   if (contact != NULL) {
+      sge_dstring_init(&con, contact, contact_len + 1);
+      drmaa_errno = japi_get_contact(&con, diagp);
 
-   return DRMAA_ERRNO_SUCCESS;
+      /* On failure, diag is populated by japi_get_contact(). */
+   }
+/* This will change the previous behavior for this method, so we have to make it
+ * specific to the new library version. */
+#ifdef DRMAA_10
+   else {
+      drmaa_errno = DRMAA_ERRNO_INVALID_ARGUMENT;
+      japi_standard_error(drmaa_errno, diagp);
+   }
+#endif
+
+   return drmaa_errno;
 }
 
 /****** DRMAA/drmaa_version() **************************************************
@@ -2129,6 +2253,15 @@ int drmaa_version(unsigned int *major, unsigned int *minor,
       sge_dstring_init(&diag, error_diagnosis, error_diag_len+1);
    }
 
+#ifdef DRMAA_10
+   if (major != NULL) {
+      *major = 1;
+   }
+   
+   if (minor != NULL) {
+      *minor = 0;
+   }
+#else
    if (major != NULL) {
       *major = 0;
    }
@@ -2136,6 +2269,7 @@ int drmaa_version(unsigned int *major, unsigned int *minor,
    if (minor != NULL) {
       *minor = 95;
    }
+#endif
 
    return DRMAA_ERRNO_SUCCESS;
 }
@@ -2471,7 +2605,8 @@ static int drmaa_path2sge_path(const lList *attrs, int is_bulk,
 *     static int - DRMAA error codes
 *
 *  NOTES
-*     MT-NOTE: drmaa_job2sge_job() is MT safe except on AIX4.2 and FreeBSD
+*     MT-NOTE: drmaa_job2sge_job() is MT safe except on AIX4.2 and FreeBSD, with
+*              restrictions imposed by sge_get_qtask_args().
 *
 *******************************************************************************/
 static int drmaa_job2sge_job(lListElem **jtp, const drmaa_job_template_t *drmaa_jt, 
@@ -2746,12 +2881,14 @@ static int drmaa_job2sge_job(lListElem **jtp, const drmaa_job_template_t *drmaa_
          return DRMAA_ERRNO_DENIED_BY_DRM;
       }
 
-      FREE (job_cat);
+      FREE(job_cat);
       
       if (args != NULL) {
          opt_list_append_opts_from_qsub_cmdline (&opts_job_cat, &alp,
                                                  args, environ);
          
+         FREE(args);
+
          if (answer_list_has_error (&alp)) {
             answer_list_to_dstring (alp, diag);
             lFreeList(&opts_defaults);

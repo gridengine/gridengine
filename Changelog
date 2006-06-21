@@ -1,13 +1,13 @@
 AH-2006-05-23-1: Enhancem.: Scheduling optimizations
                             - added support for -now yes to cluster queue matching
-                 Review:    TBD
+                 Review:    SG
 
 AH-2006-05-20-0: Enhancem.: Scheduling optimizations
                             - use cluster queue matching also for parallel jobs
                             - added support for -pe to cluster queue matching
                             - use improved -q matching for -soft -q 
                             - added -soft site selection to test_drmaa_perf
-                 Review:    TBD
+                 Review:    SG
 
 AH-2006-05-16-0: Enhancem.: Various scheduling optimizations
                             - improved and simplified -q, -masterq 

@@ -23,7 +23,6 @@ void usage(FILE* fp) {
 int main(int argc, char *argv[])
 {
    int ret = 0;
-   char *s;
    char diagnosis[DRMAA_ERROR_STRING_BUFFER];
    char jobwd[1024*4];
    char jobid[1024];

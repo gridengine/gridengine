@@ -34,7 +34,7 @@
 #define HAVE_ALLOCA 1
 
 /* Define if you have <alloca.h> and it should be used (not on Ultrix).  */
-/* #undef HAVE_ALLOCA_H */
+#define HAVE_ALLOCA_H 1
 
 /* Define if you don't have vprintf but do have _doprnt.  */
 /* #undef HAVE_DOPRNT */
@@ -279,7 +279,7 @@
 #define HAVE_STRERROR 1
 
 /* Define if you have the strsignal function.  */
-/* #undef HAVE_STRSIGNAL */
+#define HAVE_STRSIGNAL 1
 
 /* Define if you have the wait3 function.  */
 #define HAVE_WAIT3 1

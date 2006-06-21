@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.2 2003/03/21 16:44:29 andre Exp $
+# $Id: Makefile,v 1.1 2006/06/21 14:02:14 joga Exp $
 #	Makefile.in	4.3	6/11/83
 #
 # C Shell with process control; VM/UNIX VAX Makefile
@@ -23,13 +23,13 @@ srcdir=..
 SUF=o
 CF=-c
 
-CPPFLAGS=-no-cpp-precomp -I. -I$(srcdir)
+CPPFLAGS=-I. -I$(srcdir)
 
-LFLAGS=$(SGE_LOPTS)
+LFLAGS= $(SGE_LOPTS)
 #LFLAGS= -Zn10000		# hpux lint
 
 
-CFLAGS = $(SGE_COPTS) -g -O2 -no-cpp-precomp -flat_namespace -DDARWIN -DPROG_NAME='"qtcsh"'		# This is set by autoconf.
+CFLAGS = -O3 -no-cpp-precomp -flat_namespace -Wall -Werror -Wstrict-prototypes -DFD_SETSIZE=8192 -DDARWIN -DDARWIN8 -DGETHOSTBYNAME -DGETHOSTBYADDR_M  -DLOAD_OPENSSL -I/vol2/SW/db-4.4.20/darwin-ppc/include/ -DTARGET_32BIT -DQCONF_FLATFILE  -DSPOOLING_dynamic -DSECURE -I/vol2/tools/SW/openssl-0.9.7e/darwin-ppc/include -DCOMPILE_DC -D__SGE_NO_USERMAPPING__ -Wno-error -DPROG_NAME='"qtcsh"' -DDARWIN_PPC		# This is set by autoconf.
 #CFLAGS= -g			# debug
 #CFLAGS= -O			# production
 #CFLAGS= 			# Broken optimizers....
@@ -142,7 +142,7 @@ DFLAGS = -D_PATH_TCSHELL='"${DESTBIN}/tcsh"'
 ################################################################
 ## LDFLAGS.  Define something here if you need to
 ################################################################
-LDFLAGS=$(SGE_LOPTS) 		## This is set by autoconf.
+LDFLAGS= $(SGE_LOPTS)		## This is set by autoconf.
 #LDFLAGS= 			## The simplest, suitable for all.
 #LDFLAGS= -s			## Stripped. Takes less space on disk.
 #LDFLAGS= -s -n			## Pure executable. Spares paging over
@@ -225,7 +225,7 @@ LIBES= -lncurses 	 			 ## This is set by autoconf.
 
 
 EXTRAFLAGS =  $(AFSDEF) -I../../../libs/gdi
-EXTRALIBS =  $(AFSLIB) -L../../../DARWIN $(SGE_LIBS) -lm
+EXTRALIBS =  $(AFSLIB) -L../../../DARWIN_PPC -R/lib/darwin-ppc $(SGE_LIBS) 
 
 
 # The difficult choice of a c-compiler...
@@ -358,9 +358,6 @@ tcsh.ps: tcsh.man
 	rm -f tcsh.ps
 	-ptroff -t -man $(srcdir)/tcsh.man > tcsh.ps
 
-depend:
-	@echo No dependencies for 3rd_party qtcsh
-
 
 .c.${SUF}:
 	${CC} ${CF} ${CFLAGS} ${CPPFLAGS} ${DFLAGS} ${EXTRAFLAGS} $<
@@ -423,7 +420,7 @@ tc.const.h: tc.const.c sh.char.h config.h config_f.h sh.types.h sh.err.h
 	@echo '#define _h_tc_const' >> $@
 	${CPP} $(CPPFLAGS) ${DFLAGS} ${EXTRAFLAGS} -D_h_tc_const\
 	    $(srcdir)/tc.const.c | grep 'Char STR' | \
-	    sed -e 's/Char\ \([a-zA-Z0-9_]*\)\[\].*/extern Char \1[];/' | \
+	    sed -e 's/Char \([a-zA-Z0-9_]*\)\[\].*/extern Char \1[];/' | \
 	    sort >> $@
 	@echo '#endif /* _h_tc_const */' >> $@
 
@@ -630,3 +627,6 @@ ${EDOBJS} ${EDDINC}: ed.defns.h
 
 # tc.defs.o
 tc.defs.${SUF}:	tc.defs.c sh.h
+
+depend:
+	@echo "No depends target for qtcsh yet"

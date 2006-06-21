@@ -85,8 +85,12 @@ case "craytsieee":
    set BUILDARCH = UNICOS_TS_IEEE
    set TARGET_BITS = TARGET_32BIT
    breaksw
-case "darwin":
-   set BUILDARCH = DARWIN
+case "darwin-x86":
+   set BUILDARCH = DARWIN_X86
+   set TARGET_BITS = TARGET_32BIT
+   breaksw
+case "darwin-ppc":
+   set BUILDARCH = DARWIN_PPC
    set TARGET_BITS = TARGET_32BIT
    breaksw
 case "fbsd-alpha"
@@ -1094,7 +1098,8 @@ case ALPHA5:
    set JAVA_ARCH = "alpha"
    breaksw
 
-case DARWIN:
+case DARWIN_X86:
+case DARWIN_PPC:
    set MAKEWINGRIDLIB   = 0
    set MAKEWINGRIDAPP   = 0
    set COMPILE_DC = 1
@@ -1125,13 +1130,13 @@ case DARWIN:
    set REL = `/usr/bin/uname -r`
    switch ($REL)
    case "6.*":
-      set CFLAGS = "$OFLAG -no-cpp-precomp -flat_namespace -Wall -Werror -Wstrict-prototypes -DFD_SETSIZE=8192 -DDARWIN -DDARWIN6 -DGETHOSTBYNAME -DGETHOSTBYADDR_M $DEBUG_FLAG $CFLAGS"
+      set CFLAGS = "$OFLAG -no-cpp-precomp -flat_namespace -Wall -Werror -Wstrict-prototypes -DFD_SETSIZE=8192 -DDARWIN -DDARWIN6 -D$BUILDARCH -DGETHOSTBYNAME -DGETHOSTBYADDR_M $DEBUG_FLAG $CFLAGS"
       breaksw
    case "7.*":
-      set CFLAGS = "$OFLAG -no-cpp-precomp -flat_namespace -Wall -Werror -Wstrict-prototypes -DFD_SETSIZE=8192 -DDARWIN -DDARWIN7 -DGETHOSTBYNAME -DGETHOSTBYADDR_M $DEBUG_FLAG $CFLAGS"
+      set CFLAGS = "$OFLAG -no-cpp-precomp -flat_namespace -Wall -Werror -Wstrict-prototypes -DFD_SETSIZE=8192 -DDARWIN -DDARWIN7 -D$BUILDARCH -DGETHOSTBYNAME -DGETHOSTBYADDR_M $DEBUG_FLAG $CFLAGS"
       breaksw
    case "8.*":
-      set CFLAGS = "$OFLAG -no-cpp-precomp -flat_namespace -Wall -Werror -Wstrict-prototypes -DFD_SETSIZE=8192 -DDARWIN -DDARWIN8 -DGETHOSTBYNAME -DGETHOSTBYADDR_M $DEBUG_FLAG $CFLAGS"
+      set CFLAGS = "$OFLAG -no-cpp-precomp -flat_namespace -Wall -Werror -Wstrict-prototypes -DFD_SETSIZE=8192 -DDARWIN -DDARWIN8 -D$BUILDARCH -DGETHOSTBYNAME -DGETHOSTBYADDR_M $DEBUG_FLAG $CFLAGS"
       breaksw
    default:
       echo DARWIN release \"$REL\" not supported!
@@ -1157,7 +1162,7 @@ case DARWIN:
 #   else
 #      set MOTIFHOME = /usr/local
 #   endif   
-   set MOTIFHOME = /usr/X11R6
+   set MOTIFHOME = /usr/X11R6/openmotif-2.2.3
 
    set XMTDEF   = ""
    set XMTINCD  = "$XMTINCD -I$MOTIFHOME/include"

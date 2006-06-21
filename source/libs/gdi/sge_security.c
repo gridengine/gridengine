@@ -79,6 +79,7 @@
 #define DECODE_FROM_STRING 0
 
 #ifdef SECURE
+
 const char* sge_dummy_sec_string = "AIMK_SECURE_OPTION_ENABLED";
 
 static pthread_mutex_t sec_ssl_setup_config_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -89,8 +90,6 @@ static cl_ssl_setup_t* sec_ssl_setup_config       = NULL;
 static cl_bool_t ssl_cert_verify_func(cl_ssl_verify_mode_t mode, cl_bool_t service_mode, const char* value);
 static bool is_daemon(const char* progname);
 static bool is_master(const char* progname);
-
-
 
 #endif
 
@@ -160,16 +159,16 @@ static bool is_daemon(const char* progname) {
    return false;
 }
 
+#ifdef SECURE
+
 static bool is_master(const char* progname) {
    if (progname != NULL) {
       if ( !strcmp(prognames[QMASTER],progname)) {
          return true;
-      } 
+      }
    }
    return false;
 }
-
-#ifdef SECURE
 
 /* int 0 on success, -1 on failure */
 int sge_ssl_setup_security_path(const char *progname) {

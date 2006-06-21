@@ -221,8 +221,10 @@ SetArchBin()
       ARCHBIN=NECSX5
    elif [ $i = sx ]; then
       ARCHBIN=NECSX5
-   elif [ $i = darwin ]; then
-      ARCHBIN=DARWIN
+   elif [ $i = darwin-ppc ]; then
+      ARCHBIN=DARWIN_PPC
+   elif [ $i = darwin-x86 ]; then
+      ARCHBIN=DARWIN_X86
    elif [ $i = fbsd-alpha ]; then
       ARCHBIN=FREEBSD_ALPHA
    elif [ $i = fbsd-amd64 ]; then
@@ -294,7 +296,8 @@ ArchTable()
    echo "necsx5                NECSX 5.x"
    echo "sx                    NECSX 5.x"
    echo "necsx6                NECSX 6.x"
-   echo "darwin                MacOS 10.x"
+   echo "darwin-ppc            MacOS 10.x PowerPC"
+   echo "darwin-x86            MacOS 10.x x86"
    echo "fbsd-alpha            Alpha FreeBSD"
    echo "fbsd-amd64            AMD64 FreeBSD"
    echo "fbsd-i386             x86 FreeBSD"
@@ -1308,7 +1311,7 @@ for i in $ARCH; do
             shlibext="sl"
             jnilibext="sl"
             ;;
-         darwin)
+         darwin-*)
             shlibext="dylib"
             jnilibext="jnilib"
             ;;
@@ -1360,7 +1363,7 @@ for i in $ARCH; do
 
                if [ $DSTARCH = tru64 ]; then
                   libname="$OPENSSLBASE/$DSTARCH/lib/$lib.$shlibext"
-               elif [ $DSTARCH = darwin ];  then
+               elif [ $DSTARCH = darwin-ppc -o $DSTARCH = darwin-x86 ];  then
                   libname="$OPENSSLBASE/$DSTARCH/lib/$lib.0.9.7.$shlibext"
                else
                   libname="$OPENSSLBASE/$DSTARCH/lib/$lib.$shlibext.0.9.7"
@@ -1370,7 +1373,7 @@ for i in $ARCH; do
                   InstallProg $libname
                   if [ $DSTARCH = tru64 ]; then
                      :
-                  elif [ $DSTARCH = darwin ]; then
+                  elif [ $DSTARCH = darwin-ppc -o $DSTARCH = darwin-x86 ]; then
                      (cd $DEST_SGE_ROOT/${UTILPREFIX}/$DSTARCH; \
                       ln -s $lib.0.9.7.$shlibext $lib.$shlibext)
                   else
@@ -1381,7 +1384,7 @@ for i in $ARCH; do
                   exit 1
                fi
             done
-            if [ $DSTARCH = darwin ]; then
+            if [ $DSTARCH = darwin-ppc -o $DSTARCH = darwin-x86 ]; then
                InstallProg "$OPENSSLBASE/$DSTARCH/lib/libssl.bundle"
             fi   
          fi

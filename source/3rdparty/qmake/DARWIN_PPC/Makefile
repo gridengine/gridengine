@@ -60,11 +60,11 @@ POST_INSTALL = :
 NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
-host_alias = powerpc-apple-darwin6.4
+host_alias = powerpc-apple-darwin8.6.0
 host_triplet = 
 AR = ar
 CC = gcc
-CPP = gcc -E -traditional-cpp
+CPP = gcc -E
 GETCONF = getconf
 GLOBLIB = glob/libglob.a
 LIBOBJS = 
@@ -138,7 +138,7 @@ vpath.o version.o ar.o arscan.o remote-$(REMOTE).o signame.o getopt.o \
 getopt1.o
 make_DEPENDENCIES =   
 make_LDFLAGS = 
-CFLAGS = -g -O2 -Wall -DDARWIN
+CFLAGS = -O3 -no-cpp-precomp -flat_namespace -Wall -Werror -Wstrict-prototypes -DFD_SETSIZE=8192 -DDARWIN -DDARWIN8 -DGETHOSTBYNAME -DGETHOSTBYADDR_M  -DLOAD_OPENSSL -I/vol2/SW/db-4.4.20/darwin-ppc/include/ -DTARGET_32BIT -DQCONF_FLATFILE  -DSPOOLING_dynamic -DSECURE -I/vol2/tools/SW/openssl-0.9.7e/darwin-ppc/include -DCOMPILE_DC -D__SGE_NO_USERMAPPING__ -Wno-error
 COMPILE = $(CC) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 CCLD = $(CC)
 LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(LDFLAGS) -o $@
@@ -165,52 +165,53 @@ OBJECTS = $(make_OBJECTS)
 
 all: all-redirect
 .SUFFIXES:
-.SUFFIXES: .c .o 
-#$(srcdir)/Makefile.in: Makefile.am $(top_srcdir)/configure.in $(ACLOCAL_M4) 
-#	cd $(top_srcdir) && $(AUTOMAKE) --gnu --include-deps Makefile
-#
-#Makefile: $(srcdir)/Makefile.in  $(top_builddir)/config.status
-#	cd $(top_builddir) \
-#	  && CONFIG_FILES=$@ CONFIG_HEADERS= $(SHELL) ./config.status
-#
-#$(ACLOCAL_M4):  configure.in  acinclude.m4
-#	cd $(srcdir) && $(ACLOCAL)
-#
-#config.status: $(srcdir)/configure $(CONFIG_STATUS_DEPENDENCIES)
-#	$(SHELL) ./config.status --recheck
-#$(srcdir)/configure: $(srcdir)/configure.in $(ACLOCAL_M4) $(CONFIGURE_DEPENDENCIES)
-#	cd $(srcdir) && $(AUTOCONF)
-#
-#config.h: stamp-h
-#	@if test ! -f $@; then \
-#		rm -f stamp-h; \
-#		$(MAKE) stamp-h; \
-#	else :; fi
-#stamp-h: $(srcdir)/config.h.in $(top_builddir)/config.status
-#	cd $(top_builddir) \
-#	  && CONFIG_FILES= CONFIG_HEADERS=config.h \
-#	     $(SHELL) ./config.status
-#	@echo timestamp > stamp-h 2> /dev/null
-#$(srcdir)/config.h.in: $(srcdir)/stamp-h.in
-#	@if test ! -f $@; then \
-#		rm -f $(srcdir)/stamp-h.in; \
-#		$(MAKE) $(srcdir)/stamp-h.in; \
-#	else :; fi
-#$(srcdir)/stamp-h.in: $(top_srcdir)/configure.in $(ACLOCAL_M4) acconfig.h
-#	cd $(top_srcdir) && $(AUTOHEADER)
-#	@echo timestamp > $(srcdir)/stamp-h.in 2> /dev/null
-#
-#mostlyclean-hdr:
-#
-#clean-hdr:
-#
-#distclean-hdr:
-#	-rm -f config.h
-#
-#maintainer-clean-hdr:
-#build.sh: $(top_builddir)/config.status build.sh.in
-#	cd $(top_builddir) && CONFIG_FILES=$@ CONFIG_HEADERS= $(SHELL) ./config.status
-#
+.SUFFIXES: .S .c .dvi .info .o .ps .s .texi .texinfo .txi
+$(srcdir)/Makefile.in: Makefile.am $(top_srcdir)/configure.in $(ACLOCAL_M4) 
+	cd $(top_srcdir) && $(AUTOMAKE) --gnu --include-deps Makefile
+
+Makefile: $(srcdir)/Makefile.in  $(top_builddir)/config.status
+	cd $(top_builddir) \
+	  && CONFIG_FILES=$@ CONFIG_HEADERS= $(SHELL) ./config.status
+
+$(ACLOCAL_M4):  configure.in  acinclude.m4
+	cd $(srcdir) && $(ACLOCAL)
+
+config.status: $(srcdir)/configure $(CONFIG_STATUS_DEPENDENCIES)
+	$(SHELL) ./config.status --recheck
+$(srcdir)/configure: $(srcdir)/configure.in $(ACLOCAL_M4) $(CONFIGURE_DEPENDENCIES)
+	cd $(srcdir) && $(AUTOCONF)
+
+config.h: stamp-h
+	@if test ! -f $@; then \
+		rm -f stamp-h; \
+		$(MAKE) stamp-h; \
+	else :; fi
+stamp-h: $(srcdir)/config.h.in $(top_builddir)/config.status
+	cd $(top_builddir) \
+	  && CONFIG_FILES= CONFIG_HEADERS=config.h \
+	     $(SHELL) ./config.status
+	@echo timestamp > stamp-h 2> /dev/null
+$(srcdir)/config.h.in: $(srcdir)/stamp-h.in
+	@if test ! -f $@; then \
+		rm -f $(srcdir)/stamp-h.in; \
+		$(MAKE) $(srcdir)/stamp-h.in; \
+	else :; fi
+$(srcdir)/stamp-h.in: $(top_srcdir)/configure.in $(ACLOCAL_M4) acconfig.h
+	cd $(top_srcdir) && $(AUTOHEADER)
+	touch $(srcdir)/stamp-h.in
+	#@echo timestamp > $(srcdir)/stamp-h.in 2> /dev/null
+
+mostlyclean-hdr:
+
+clean-hdr:
+
+distclean-hdr:
+	-rm -f config.h
+
+maintainer-clean-hdr:
+build.sh: $(top_builddir)/config.status build.sh.in
+	cd $(top_builddir) && CONFIG_FILES=$@ CONFIG_HEADERS= $(SHELL) ./config.status
+
 mostlyclean-binPROGRAMS:
 
 clean-binPROGRAMS:
@@ -237,7 +238,7 @@ uninstall-binPROGRAMS:
 	done
 
 depend:
-	@echo No dependencies for 3rd_party qmake
+	@echo "No depends target for qmake yet"
 
 .c.o:
 	$(COMPILE) -c $<

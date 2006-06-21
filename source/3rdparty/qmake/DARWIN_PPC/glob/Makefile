@@ -60,11 +60,11 @@ POST_INSTALL = :
 NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
-host_alias = powerpc-apple-darwin6.4
+host_alias = powerpc-apple-darwin8.6.0
 host_triplet = 
 AR = ar
 CC = gcc
-CPP = gcc -E -traditional-cpp
+CPP = gcc -E
 GETCONF = getconf
 GLOBLIB = glob/libglob.a
 LIBOBJS = 
@@ -73,7 +73,7 @@ MAKE_HOST =
 PACKAGE = make
 PERL = perl
 RANLIB = ranlib
-REMOTE = stub
+REMOTE = sge
 VERSION = 3.78.1
 
 AUTOMAKE_OPTIONS = 1.4 foreign
@@ -96,7 +96,7 @@ LDFLAGS =
 LIBS = -lkvm 
 libglob_a_LIBADD = 
 libglob_a_OBJECTS =  glob.o fnmatch.o
-CFLAGS = -g -O2
+CFLAGS = -O3 -no-cpp-precomp -flat_namespace -Wall -Werror -Wstrict-prototypes -DFD_SETSIZE=8192 -DDARWIN -DDARWIN8 -DGETHOSTBYNAME -DGETHOSTBYADDR_M  -DLOAD_OPENSSL -I/vol2/SW/db-4.4.20/darwin-ppc/include/ -DTARGET_32BIT -DQCONF_FLATFILE  -DSPOOLING_dynamic -DSECURE -I/vol2/tools/SW/openssl-0.9.7e/darwin-ppc/include -DCOMPILE_DC -D__SGE_NO_USERMAPPING__ -Wno-error
 COMPILE = $(CC) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 CCLD = $(CC)
 LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(LDFLAGS) -o $@
@@ -113,12 +113,12 @@ OBJECTS = $(libglob_a_OBJECTS)
 all: all-redirect
 .SUFFIXES:
 .SUFFIXES: .S .c .o .s
-#$(srcdir)/Makefile.in: Makefile.am $(top_srcdir)/configure.in $(ACLOCAL_M4) 
-#	cd $(top_srcdir) && $(AUTOMAKE) --foreign --include-deps glob/Makefile
-#
-#Makefile: $(srcdir)/Makefile.in  $(top_builddir)/config.status
-#	cd $(top_builddir) \
-#	  && CONFIG_FILES=$(subdir)/$@ CONFIG_HEADERS= $(SHELL) ./config.status
+$(srcdir)/Makefile.in: Makefile.am $(top_srcdir)/configure.in $(ACLOCAL_M4) 
+	cd $(top_srcdir) && $(AUTOMAKE) --foreign --include-deps glob/Makefile
+
+Makefile: $(srcdir)/Makefile.in  $(top_builddir)/config.status
+	cd $(top_builddir) \
+	  && CONFIG_FILES=$(subdir)/$@ CONFIG_HEADERS= $(SHELL) ./config.status
 
 
 mostlyclean-noinstLIBRARIES:
@@ -191,7 +191,7 @@ distdir: $(DISTFILES)
 	@for file in $(DISTFILES); do \
 	  d=$(srcdir); \
 	  if test -d $$d/$$file; then \
-	    cp -pr $$/$$file $(distdir)/$$file; \
+	    cp -pr $$d/$$file $(distdir)/$$file; \
 	  else \
 	    test -f $(distdir)/$$file \
 	    || ln $$d/$$file $(distdir)/$$file 2> /dev/null \

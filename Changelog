@@ -1,3 +1,9 @@
+JG-2006-06-21-0: Enhancem.: Separate darwin platform into darwin-ppc and
+                            darwin-x86.
+                            darwin-x86 port still to be done!
+                            Fixed build for MacOS 1.4 (ppc) with gcc-4.
+                 Review:    RD
+
 DT-2006-06-20-0: Testsuite: o Fixed test 1529
                             o Improved test_drmaa
                  Changed:   test_drmaa, test_drmaa_no_bin
@@ -5,8 +11,8 @@ DT-2006-06-20-0: Testsuite: o Fixed test 1529
 OJ-2006-06-15-0: Testsuite: Added test case for qstat -explain E, qstat -ne,
                             qstat -f -q all.q, qstat -f -ne, qstat -l q=all.q, 
                             qstat -s r, qstat -s s, qstat -s z, qstat -s hs,
-                          qstat -s hu, qstat -u wrong_user, qstat -U $CHECK_USER
-                            with XML parsing. in client/qstat.
+                            qstat -s hu, qstat -u wrong_user, qstat -U 
+                            $CHECK_USER with XML parsing. in client/qstat.
                             Added new file tcl_files/parser_xml.tcl with new
                             XML parsing procedures.
                  Issue:     1206

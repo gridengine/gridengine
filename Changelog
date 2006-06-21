@@ -1,3 +1,8 @@
+HP-2006-06-21-0: Bugfix:    Fixed broken build on Windows:
+                            Merged changes in japi and qsub Makefile from
+                            maintrunk
+                 Changed:   japi/Makefile qsub/Makefile
+
 JG-2006-06-21-0: Bugfix:    Fixed broken build.
                             Fixed installation of DRMAA libraries.
                             Fixed IZ 1529 module test binary (merged from 

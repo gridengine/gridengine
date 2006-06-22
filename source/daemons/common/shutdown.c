@@ -37,6 +37,7 @@
 #include "sge_feature.h"
 #include "shutdown.h"
 #include "setup_path.h"
+#include "sge_arch.h"
 
 #include "msg_daemons_common.h"
 
@@ -61,9 +62,10 @@ void starting_up()
                           feature_get_featureset_name(
                                        feature_get_active_featureset_id())); 
    }
-   INFO((SGE_EVENT, MSG_STARTUP_STARTINGUP_S, 
-         sge_dstring_get_string(&ds2)));
 
+   sge_dstring_init(&ds, buffer, sizeof(buffer));
+   INFO((SGE_EVENT, MSG_STARTUP_STARTINGUP_SSS, feature_get_product_name(FS_SHORT, &ds),
+        sge_dstring_get_string(&ds2), sge_get_arch()));
    sge_dstring_free(&ds2);
    log_state_set_log_level(old_ll);
 
@@ -92,10 +94,13 @@ void sge_shutdown(int i)
                           feature_get_featureset_name(
                                        feature_get_active_featureset_id())); 
    }
+   sge_dstring_init(&ds, buffer, sizeof(buffer));
    if (i != 0) {
-      INFO((SGE_EVENT, MSG_SHADOWD_CONTROLLEDSHUTDOWN_SU, sge_dstring_get_string(&ds2), sge_u32c(i)));
+      INFO((SGE_EVENT, MSG_SHADOWD_CONTROLLEDSHUTDOWN_SSSU, feature_get_product_name(FS_SHORT, &ds), 
+            sge_dstring_get_string(&ds2), sge_get_arch(), sge_u32c(i)));
    } else {
-      INFO((SGE_EVENT, MSG_SHADOWD_CONTROLLEDSHUTDOWN_S, sge_dstring_get_string(&ds2)));
+      INFO((SGE_EVENT, MSG_SHADOWD_CONTROLLEDSHUTDOWN_SSS, feature_get_product_name(FS_SHORT, &ds), 
+            sge_dstring_get_string(&ds2), sge_get_arch()));
    }
 
    sge_dstring_free(&ds2);

@@ -744,17 +744,32 @@ static void qping_print_line(char* buffer, int nonewline, int dump_tag) {
    
                   if (init_packbuffer_from_buffer(&buf, (char*)binary_buffer, buffer_length) == PACK_SUCCESS) {
                      u_long32 feature_set;
-                     lListElem* list_elem = NULL;
+                     lListElem *job = NULL, *pe = NULL;
+                     lList *qlist = NULL;
                      if (unpackint(&buf, &feature_set) == PACK_SUCCESS) {
                         printf("      unpacked tag job execution (binary buffer length %lu):\n", buffer_length );
                         printf("feature_set: "sge_U32CFormat"\n", sge_u32c(feature_set));
                      }
-                     if (cull_unpack_elem(&buf, &list_elem, NULL) == PACK_SUCCESS) {
-                        lWriteElemTo(list_elem,stdout);
+                     if (cull_unpack_elem(&buf, &job, NULL) == PACK_SUCCESS) {
+                        lWriteElemTo(job,stdout); /* job */
                      } else {
-                        printf("could not unpack list elem\n");
+                        printf("could not unpack job\n");
                      }
-                     lFreeElem(&list_elem);
+                     if (cull_unpack_list(&buf, &qlist) == PACK_SUCCESS) {
+                        lWriteListTo(qlist,stdout); /* jobs master queue */
+                     } else {
+                        printf("could not unpack queue list\n");
+                     }
+                     if (job && lGetString(lFirst(lGetList(job, JB_ja_tasks)), JAT_granted_pe)) {
+                        if (cull_unpack_elem(&buf, &pe, NULL) == PACK_SUCCESS) {
+                           lWriteElemTo(pe,stdout); /* pe elem */
+                        } else {
+                           printf("could not unpack PE elem\n");
+                        }
+                     }
+                     lFreeList(&qlist);
+                     lFreeElem(&job);
+                     lFreeElem(&pe);
                      clear_packbuffer(&buf);
                   }
                }

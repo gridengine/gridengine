@@ -1,3 +1,8 @@
+AH-2006-06-22-0: Enhancem.: Completized qping output for job execution
+                            requests sent from qmaster to execd
+                            Added FS_SHORT to daemon starting up messages
+                 Review:    CR, RD
+
 DT-2006-06-21-0: Testsuite: o Merged DRMAA changes from DT-2005-12-06-0,
                               DT-2005-12-17-0, DT-2006-01-04-0, and
                               DT-2006-03-01-0

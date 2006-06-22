@@ -41,9 +41,9 @@
 ** global deamon messages
 */
 #define MSG_MASTER                         _MESSAGE(27001, _("master"))
-#define MSG_STARTUP_STARTINGUP_S           _MESSAGE(27002, _("starting up "SFN))
-#define MSG_SHADOWD_CONTROLLEDSHUTDOWN_S   _MESSAGE(27003, _("controlled shutdown "SFN))
-#define MSG_SHADOWD_CONTROLLEDSHUTDOWN_SU  _MESSAGE(27000, _("controlled shutdown "SFN" (exit state = "sge_U32CFormat")"))
+#define MSG_STARTUP_STARTINGUP_SSS          _MESSAGE(27002, _("starting up "SFN" "SFN" ("SFN")"))
+#define MSG_SHADOWD_CONTROLLEDSHUTDOWN_SSS  _MESSAGE(27003, _("controlled shutdown "SFN" "SFN" ("SFN")"))
+#define MSG_SHADOWD_CONTROLLEDSHUTDOWN_SSSU _MESSAGE(27000, _("controlled shutdown "SFN" "SFN" ("SFN") (exit state = "sge_U32CFormat")"))
 #define MSG_ERROR_CANTSWITCHTOADMINUSER    _MESSAGE(27004, _("can't switch to admin_user"))
 
 /*

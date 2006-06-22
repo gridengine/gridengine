@@ -1,3 +1,7 @@
+AH-2006-06-22-1: Enhancem.: Completized qping output for job execution
+                            requests sent from qmaster to execd
+                 Review:    CR
+
 JG-2006-06-21-0: Enhancem.: Separate darwin platform into darwin-ppc and
                             darwin-x86.
                             darwin-x86 port still to be done!

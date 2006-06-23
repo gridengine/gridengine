@@ -121,6 +121,7 @@ static int
 remove_invalid_job_references(int user, object_description *object_base);
 
 static int    debit_all_jobs_from_qs(void);
+static void   init_categories(void);
 
 
 /****** qmaster/setup_qmaster/sge_setup_qmaster() ******************************
@@ -1108,6 +1109,8 @@ static int setup_qmaster(void)
       }
    }
 
+   init_categories();
+
    DEXIT;
    return 0;
 }
@@ -1227,3 +1230,56 @@ static int debit_all_jobs_from_qs()
    DEXIT;
    return ret;
 }
+
+/****** setup_qmaster/init_categories() ****************************************
+*  NAME
+*     init_categories() -- Initialize usersets/projects wrts categories
+*
+*  SYNOPSIS
+*     static void init_categories(void)
+*
+*  FUNCTION
+*     Initialize usersets/projects wrts categories.
+*
+*  NOTES
+*     MT-NOTE: init_categories() is not MT safe
+*******************************************************************************/
+static void init_categories(void)
+{
+   const lListElem *cq, *pe, *hep, *ep;
+   lListElem *acl, *prj;
+   lList *u_list = NULL, *p_list = NULL;
+
+   /*
+    * collect list of references to usersets/projects used as ACL
+    * with queue_conf(5), host_conf(5) and sge_pe(5)
+    */
+   for_each (cq, *object_type_get_master_list(SGE_TYPE_CQUEUE)) {
+      cqueue_diff_projects(cq, NULL, &p_list, NULL);
+      cqueue_diff_usersets(cq, NULL, &u_list, NULL);
+   }
+
+   for_each (pe, *object_type_get_master_list(SGE_TYPE_PE)) {
+      pe_diff_usersets(pe, NULL, &u_list, NULL);
+   }
+
+   for_each (hep, *object_type_get_master_list(SGE_TYPE_EXECHOST)) {
+      host_diff_projects(hep, NULL, &p_list, NULL);
+      host_diff_usersets(hep, NULL, &u_list, NULL);
+   }
+
+   /*
+    * now set categories flag with usersets/projects used as ACL
+    */
+   for_each(ep, p_list)
+      if ((prj = userprj_list_locate(*object_type_get_master_list(SGE_TYPE_PROJECT), lGetString(ep, UP_name))))
+         lSetBool(prj, UP_consider_with_categories, true);
+
+   for_each(ep, u_list)
+      if ((acl = userset_list_locate(*object_type_get_master_list(SGE_TYPE_USERSET), lGetString(ep, US_name))))
+         lSetBool(acl, US_consider_with_categories, true);
+   
+   lFreeList(&p_list);
+   lFreeList(&u_list);
+}
+

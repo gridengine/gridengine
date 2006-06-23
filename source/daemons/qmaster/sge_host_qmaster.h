@@ -79,5 +79,8 @@ bool
 host_list_add_missing_href(lList *this_list, lList **answer_list, const lList *href_list, 
                            monitoring_t *monitor);
 
+void host_diff_projects(const lListElem *new, const lListElem *old, lList **new_prj, lList **old_prj);
+void host_diff_usersets(const lListElem *new, const lListElem *old, lList **new_acl, lList **old_acl);
+
 #endif /* __SGE_HOST_QMASTER_H */
 

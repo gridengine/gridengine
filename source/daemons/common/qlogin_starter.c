@@ -447,7 +447,7 @@ int qlogin_starter(const char *cwd, char *daemon, char** env)
    const char *sge_root = NULL;
    const char *arch = NULL;
 
-#if defined(IRIX65) || defined(INTERIX) || defined(DARWIN6)
+#if defined(IRIX65) || defined(INTERIX) || defined(DARWIN6) || defined(ALPHA5)
    int length;
    int len;
 #else

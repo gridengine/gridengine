@@ -1,3 +1,8 @@
+JG-2006-06-23-0: Enhancem.: Build on darwin-x86 platform (fixed duplicate
+                            symbols in spooling libs).
+                            Build on tru64.
+                 Review:    RD
+
 AH-2006-06-22-1: Enhancem.: Completized qping output for job execution
                             requests sent from qmaster to execd
                  Review:    CR

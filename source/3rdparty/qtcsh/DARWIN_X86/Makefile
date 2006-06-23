@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.1 2006/06/21 14:02:14 joga Exp $
+# $Id: Makefile,v 1.2 2006/06/23 09:31:08 joga Exp $
 #	Makefile.in	4.3	6/11/83
 #
 # C Shell with process control; VM/UNIX VAX Makefile
@@ -29,7 +29,7 @@ LFLAGS= $(SGE_LOPTS)
 #LFLAGS= -Zn10000		# hpux lint
 
 
-CFLAGS = -O3 -no-cpp-precomp -flat_namespace -Wall -Werror -Wstrict-prototypes -DFD_SETSIZE=8192 -DDARWIN -DDARWIN8 -DGETHOSTBYNAME -DGETHOSTBYADDR_M  -DLOAD_OPENSSL -I/vol2/SW/db-4.4.20/darwin-ppc/include/ -DTARGET_32BIT -DQCONF_FLATFILE  -DSPOOLING_dynamic -DSECURE -I/vol2/tools/SW/openssl-0.9.7e/darwin-ppc/include -DCOMPILE_DC -D__SGE_NO_USERMAPPING__ -Wno-error -DPROG_NAME='"qtcsh"' -DDARWIN_PPC		# This is set by autoconf.
+CFLAGS = -O3 -no-cpp-precomp -flat_namespace -Wall -Werror -Wstrict-prototypes -DFD_SETSIZE=8192 -DDARWIN -DDARWIN8 -DGETHOSTBYNAME -DGETHOSTBYADDR_M  -DLOAD_OPENSSL -I/vol2/SW/db-4.4.20/darwin-x86/include/ -DTARGET_32BIT -DQCONF_FLATFILE  -DSPOOLING_dynamic -DSECURE -I/vol2/tools/SW/openssl-0.9.7e/darwin-x86/include -DCOMPILE_DC -D__SGE_NO_USERMAPPING__ -Wno-error -DPROG_NAME='"qtcsh"' -DDARWIN_X86		# This is set by autoconf.
 #CFLAGS= -g			# debug
 #CFLAGS= -O			# production
 #CFLAGS= 			# Broken optimizers....
@@ -225,7 +225,7 @@ LIBES= -lncurses 	 			 ## This is set by autoconf.
 
 
 EXTRAFLAGS =  $(AFSDEF) -I../../../libs/gdi
-EXTRALIBS =  $(AFSLIB) -L../../../DARWIN_PPC -R/lib/darwin-ppc $(SGE_LIBS) 
+EXTRALIBS =  $(AFSLIB) -L../../../DARWIN_X86 -R/lib/darwin-x86 $(SGE_LIBS) 
 
 
 # The difficult choice of a c-compiler...

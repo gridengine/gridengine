@@ -262,7 +262,7 @@ static void forward_signal(int sig)
 static int open_qrsh_socket(int *port) {
    int sock;
    struct sockaddr_in server;
-#if defined(IRIX65) || defined(INTERIX) || defined(DARWIN6)
+#if defined(IRIX65) || defined(INTERIX) || defined(DARWIN6) || defined(ALPHA5)
    int length;
 #else
    socklen_t length;
@@ -361,7 +361,7 @@ static int wait_for_qrsh_socket(int sock, int timeout)
       default: 
          if(FD_ISSET(sock, &ready)) {
             /* start accepting connections */
-#if defined(IRIX65) || defined(INTERIX) || defined(DARWIN6)
+#if defined(IRIX65) || defined(INTERIX) || defined(DARWIN6) || defined(ALPHA5)
             msgsock = accept(sock,(struct sockaddr *) 0,(int *) NULL);
 #else
             msgsock = accept(sock,(struct sockaddr *) 0,(socklen_t *) NULL);

@@ -119,7 +119,11 @@
 
 static const char *spooling_method = "classic";
 
+#ifdef SPOOLING_classic
 const char *get_spooling_method(void)
+#else
+const char *get_classic_spooling_method(void)
+#endif
 {
    return spooling_method;
 }

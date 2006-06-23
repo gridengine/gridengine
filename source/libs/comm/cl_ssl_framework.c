@@ -3041,7 +3041,7 @@ int cl_com_ssl_open_connection(cl_com_connection_t* connection, int timeout, uns
          struct timeval now;
          int socket_error = 0;
 
-#if defined(IRIX65) || defined(INTERIX) || defined(DARWIN6)
+#if defined(IRIX65) || defined(INTERIX) || defined(DARWIN6) || defined(ALPHA5)
          int socklen = sizeof(socket_error);
 #else
          socklen_t socklen = sizeof(socket_error);
@@ -3409,7 +3409,7 @@ int cl_com_ssl_connection_request_handler_setup(cl_com_connection_t* connection)
    }
 
    if (private->server_port == 0) {
-#if defined(IRIX65) || defined(INTERIX) || defined(DARWIN6)
+#if defined(IRIX65) || defined(INTERIX) || defined(DARWIN6) || defined(ALPHA5)
       int length;
 #else
       socklen_t length;
@@ -3456,7 +3456,7 @@ int cl_com_ssl_connection_request_handler(cl_com_connection_t* connection,cl_com
    struct sockaddr_in cli_addr;
    int new_sfd = 0;
    int sso;
-#if defined(IRIX65) || defined(INTERIX) || defined(DARWIN6)
+#if defined(IRIX65) || defined(INTERIX) || defined(DARWIN6) || defined(ALPHA5)
    int fromlen = 0;
 #else
    socklen_t fromlen = 0;
@@ -3604,7 +3604,7 @@ int cl_com_ssl_open_connection_request_handler(cl_raw_list_t* connection_list, c
    int get_sock_opt_error = 0;
    char tmp_string[1024];
 
-#if defined(IRIX65) || defined(INTERIX) || defined(DARWIN6)
+#if defined(IRIX65) || defined(INTERIX) || defined(DARWIN6) || defined(ALPHA5)
    int socklen = sizeof(socket_error);
 #else
    socklen_t socklen = sizeof(socket_error);

@@ -456,12 +456,17 @@ set FSTYPELIBS       = ""
 set TPLIB            = ""  # 3rdparty libs
 set SLIBS            = ""
 
+
 # Default settings for shared library creation
 set SHAREDLIBS       = 0
 set SHAREDEXT        = ".so"
 set SHAREDLD         = ""
 set SHARED_CFLAGS    = ""
 set SHARED_LFLAGS    = ""
+
+# linker flag for -ldrmaa name and version 
+set SONAME_LFLAG_DRMAA10 = ""
+set SONAME_LFLAG_DRMAA95 = ""
 
 # Flags for man page creation, copyright stuff and adoc
 set BUILDMAN          = 0
@@ -1150,6 +1155,7 @@ case DARWIN_PPC:
    set SHAREDLD = "$CC -dynamiclib -flat_namespace -undefined warning"
    set SHARED_CFLAGS = "-dynamic"
    set SHARED_LFLAGS = "$SHARED_LFLAGS -L."
+
    set SHAREDEXT = ".dylib"
    if ( $SHAREDLIBS == 1 ) then
       set libext = $(SHAREDEXT)
@@ -1415,6 +1421,9 @@ case LINUXPPC:
    set SHAREDLD = $CC
    set SHARED_CFLAGS = "-fPIC"
    set SHARED_LFLAGS = "$SHARED_LFLAGS -L. -shared"
+
+   set SONAME_LFLAG_DRMAA10 = "-Wl,-soname,libdrmaa.so.1.0"
+   set SONAME_LFLAG_DRMAA95 = "-Wl,-soname,libdrmaa.so.0.95"
 
    if ( $SHAREDLIBS == 1 || $SPOOLING_METHOD == dynamic ) then
       set LFLAGS = "$LFLAGS -rdynamic"
@@ -1762,6 +1771,11 @@ case SOLARISAMD64:
    set LIBS     = "-lsocket -lnsl $LIBS"
    set LOADAVGLIBS = "-lkstat"
    set FSTYPELIBS = "-lkstat"
+
+   if ( $CC != gcc ) then
+      set SONAME_LFLAG_DRMAA10 = "-h libdrmaa.so.1.0"
+      set SONAME_LFLAG_DRMAA95 = "-h libdrmaa.so.0.95"
+   endif
 
    set XMTDEF   = "-DXMT_CDE_BUG_FIX"
 
@@ -2288,6 +2302,8 @@ if ( "$CORE" == 1 && "$JAVA" != 2 ) then
          "PERLGUI=$PERLGUI" "PERL=$PERL" "SWIG=$SWIG" \
          "JAVA_BINDIR=$JAVA_BINDIR" "JAVA_SHAREDEXT=$JAVA_SHAREDEXT" \
          "JNI_TARGET=$JNI_TARGET" \
+         "SONAME_LFLAG_DRMAA10=$SONAME_LFLAG_DRMAA10" \
+         "SONAME_LFLAG_DRMAA95=$SONAME_LFLAG_DRMAA95" \
          $argv
    if ( $status != 0 ) then
       echo not done

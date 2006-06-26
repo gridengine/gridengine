@@ -293,7 +293,6 @@ set CHECK_SUBMIT_ONLY_HOSTS ""
 global CHECK_CORE_MASTER           ;# qmaster hostname
 set CHECK_CORE_MASTER ""
 global CHECK_ACT_LEVEL             ;# actual check level ( value from 0 up to xxx )
-global CHECK_ROOT_PASSWORD         ;# stored root password ( only stored in a variable )
 global CHECK_SPOOL_DIR_CONFIG_FILE ;# file for local spooldirs in $CHECK_CONFIG_DIR path
 set CHECK_SPOOL_DIR_CONFIG_FILE "local-spool.conf"
 global CHECK_LOCAL_BINARY_DIR_CONFIG_FILE ;# file for local spooldirs in $CHECK_CONFIG_DIR path
@@ -415,7 +414,6 @@ set CHECK_ADMIN_USER_SYSTEM 0
 set check_timestamp [timestamp]
 set have_ssh_access_state -1
 set pe_for_version_check_result "undefined"
-set CHECK_ROOT_PASSWORD    "none"
 set CHECK_ENABLED_RUNLEVELS "0"
 set CHECK_ENABLED_CATEGORIES {}
 set CHECK_DO_SETUP         0
@@ -835,6 +833,12 @@ proc have_ssh_access {} {
   return $have_complete_access
 }
 
+proc init_stored_passwd {} {
+   global stored_passwd
+
+   set stored_passwd(root) ""
+}
+
 #****** check/set_root_passwd() ******
 # 
 #  NAME
@@ -845,58 +849,186 @@ proc have_ssh_access {} {
 #
 #  FUNCTION
 #     This procedure reads in the root password from stdin. If the root password 
-#     is not used ( ssh access garanted) the procedure returns immediately.
+#     is not used (ssh access garanted) the procedure returns immediately.
 #     The root password is tested with an id call as root on the local machine.
 #
-#  INPUTS
+#     If we have windows host(s) in our cluster, the procedure will also ask for 
+#     the passwords of CHECK_USER, CHECK_FIRST_FOREIGN_SYSTEM_USER, and
+#     CHECK_SECOND_FOREIGN_SYSTEM_USER.
+#     This is required, as windows doesn't allow us to 
+#        - access network filesystems
+#        - switch to a certain target user
+#     without the users password.
 #
 #  SEE ALSO
 #     check/have_root_passwd
 #     check/get_root_passwd
 #*******************************
 proc set_root_passwd {} {
-  global CHECK_ROOT_PASSWORD CHECK_OUTPUT CHECK_HOST CHECK_ADMIN_USER_SYSTEM
+   global global ts_config CHECK_OUTPUT
+   global CHECK_USER CHECK_FIRST_FOREIGN_SYSTEM_USER CHECK_SECOND_FOREIGN_SYSTEM_USER
+   global stored_passwd
 
-  if { $CHECK_ADMIN_USER_SYSTEM != 0 } {
-     puts $CHECK_OUTPUT "--> running without root access"
-     set CHECK_ROOT_PASSWORD "none"
-     return
-  }
-  set result "no password" 
-  puts "root access needed, please enter root password: "
-  if { [have_ssh_access] == 0 } {
-     stty -echo
-     set  CHECK_ROOT_PASSWORD [wait_for_enter 1]
-#     gets stdin CHECK_ROOT_PASSWORD
-     stty echo
-     if { [ string compare "" $CHECK_ROOT_PASSWORD ] == 0 } {
-        set CHECK_ROOT_PASSWORD "none"
-        puts $CHECK_OUTPUT "--> root password not set!"
-     } else {
-        puts $CHECK_OUTPUT "--> testing root access ..."
-        set result [start_remote_prog $CHECK_HOST "root" "id" "" prg_exit_state 60 0 "" 1 1 1 0]
-     }
-  }
-  
-  if {[string first "root" $result] < 0 } {
-     puts $CHECK_OUTPUT "--> id as root output:\n$result"
-     puts $CHECK_OUTPUT "--> no root access"
-     puts $CHECK_OUTPUT "enter \"noroot\" to start testsuite without root access\nOR\npress >ENTER< to type in the root password again"
-     set user_input [wait_for_enter 1]
-     if { [ string compare "noroot" $user_input ] != 0 } {
-         set_root_passwd
-         return
-     } else { 
-         set CHECK_ADMIN_USER_SYSTEM 1
+   # initialize stored password database
+   if {![info exists stored_passwd]} {
+      init_stored_passwd
+   }
 
-     }
-  } else {
-     puts $CHECK_OUTPUT "--> id as root output:\n$result"
-  }
- 
+   set result "no password" 
 
-  puts $CHECK_OUTPUT "starting now ..."
-  flush $CHECK_OUTPUT
+   set passwd_required ""
+
+   # if we don't have ssh access, we need the root passwd
+   # and test it on the master host
+   if {![have_ssh_access]} {
+      lappend passwd_required "root"
+   }
+
+   # if we have a windows host in the cluster, we need passwords
+   # of all users
+   set windows_host ""
+   if {[host_conf_have_windows]} {
+      set passwd_required "$CHECK_USER root $CHECK_FIRST_FOREIGN_SYSTEM_USER $CHECK_SECOND_FOREIGN_SYSTEM_USER"
+      puts "Our testsuite cluster contains (a) windows host(s)."
+      puts "For both login into the windows host with full network access,"
+      puts "and for executing jobs (which requires registering users with sgepasswd),"
+      puts "we need the windows passwords of the following users:"
+      foreach user $passwd_required {
+         puts "  - $user"
+      }
+      puts ""
+
+      # Test login on one of the windows hosts
+      set windows_host [host_conf_get_windows_host]
+   }
+
+   # Enter and test passwords
+   foreach user $passwd_required {
+      set_passwd $user $ts_config(master_host) $windows_host
+   }
+}
+
+#****** check/set_passwd() *****************************************************
+#  NAME
+#     set_passwd() -- query user for password
+#
+#  SYNOPSIS
+#     set_passwd { user root_host win_host } 
+#
+#  FUNCTION
+#     Interactively asks for the password of a certain user 
+#     (required for windows) and stores it in a TCL data structure.
+#
+#  INPUTS
+#     user      - user names whose password shall be set
+#     root_host - host to be used for testing root password (usually a unix host)
+#     win_host  - windows host to test user passwords
+#
+#  SEE ALSO
+#     check/set_root_passwd()
+#     check/get_passwd()
+#     check/get_root_passwd()
+#*******************************************************************************
+proc set_passwd {user root_host win_host} {
+   global ts_config CHECK_OUTPUT
+   global CHECK_ADMIN_USER_SYSTEM
+   global stored_passwd
+
+   # repeat passwd question, until success, or 
+   # user explicitly requested other options
+   set error 1
+   while {$error} {
+      # enter passwd
+      puts "please enter user $user's password: "
+      stty -echo
+      set passwd [wait_for_enter 1]
+      stty echo
+
+      # evaluate passwd
+      if {$passwd == ""} {
+         puts $CHECK_OUTPUT "--> password not set!"
+      } else {
+         # temporarily set password database (for connection test)
+         set stored_passwd($user) $passwd
+
+         if {$user == "root"} {
+            set host $root_host
+         } else {
+            set host $win_host
+         }
+
+         puts $CHECK_OUTPUT "--> testing $user access to host $host ..."
+         set result [start_remote_prog $host $user "id" "" prg_exit_state 60 0 "" 1 1 1 0]
+      }
+    
+      # on error: allow reentering of passwd, or
+      # switch to admin user system, or
+      # do not reenter passwd and risk errors later on (windows non root users)
+      if {[string first $user $result] < 0} {
+         puts $CHECK_OUTPUT "--> id as $user output:\n$result"
+         puts $CHECK_OUTPUT "--> no $user access"
+         set passwd ""
+         if {$user == "root"} {
+            puts $CHECK_OUTPUT "enter \"noroot\" to start testsuite without root access\nOR\npress >ENTER< to reenter the root password"
+         } else {
+            puts $CHECK_OUTPUT "enter \"none\" to skip passwd entry and risk errors later on\nOR\npress >ENTER< to reenter $user's password"
+         }
+
+         set user_input [wait_for_enter 1]
+         # user explicitly requests not to have passwd?
+         if {$user == "root"} {
+            if {$user_input == "noroot"} {
+               set CHECK_ADMIN_USER_SYSTEM 1
+               set error 0
+            }
+         } else {
+            if {$user_input == "none"} {
+               set error 0
+            }
+         }
+      } else {
+         puts $CHECK_OUTPUT "--> id as $user output:\n$result"
+         set error 0
+      }
+   }
+
+   # finally store the passwd
+   set stored_passwd($user) $passwd
+}
+
+#****** check/get_passwd() *****************************************************
+#  NAME
+#     get_passwd() -- get the password of a given user
+#
+#  SYNOPSIS
+#     get_passwd { user } 
+#
+#  FUNCTION
+#     Returns the password of a given user (set ealier by set_passwd), or an
+#     empty string, in case no password is available.
+#
+#  INPUTS
+#     user - user whose password shall be returned
+#
+#  RESULT
+#     the password or an empty string
+#
+#  SEE ALSO
+#     check/set_passwd()
+#*******************************************************************************
+proc get_passwd {user} {
+  global stored_passwd
+
+   if {$user == "Administrator"} {
+      set user "root"
+   }
+
+   if {![info exists stored_passwd($user)] || $stored_passwd($user) == ""} {
+      add_proc_error "get_passwd" "-2" "$user's password not set"
+      return ""
+   }
+
+   return $stored_passwd($user)
 }
 
 # 0 no action
@@ -984,16 +1116,18 @@ proc get_setup_change_state {} {
 #     check/get_root_passwd
 #*******************************
 proc have_root_passwd {} {
-  global CHECK_ROOT_PASSWORD CHECK_OUTPUT
+  global CHECK_OUTPUT
+  global stored_passwd
 
-  if { [have_ssh_access] == 1 } {
+  if {[have_ssh_access] == 1} {
      return 0
   }
 
-  if { [string compare "none" $CHECK_ROOT_PASSWORD ] == 0 } {
+  if {![info exists stored_passwd(root)] || $stored_passwd(root) == ""} {
      puts $CHECK_OUTPUT "you have no ssh access and no root password"
      return -1
   }
+
   return 0
 }
 
@@ -1019,13 +1153,14 @@ proc have_root_passwd {} {
 #     check/set_root_passwd
 #*******************************
 proc get_root_passwd {} {
-  global CHECK_ROOT_PASSWORD
+  global stored_passwd
   
-  if { [ string compare "none" $CHECK_ROOT_PASSWORD ] == 0 } {
+  if {![info exists stored_passwd(root)] || $stored_passwd(root) == ""} {
      add_proc_error "get_root_passwd" "-2" "root password not set"
+     return ""
   }
 
-  return $CHECK_ROOT_PASSWORD    
+  return $stored_passwd(root)
 }
 
 
@@ -3700,9 +3835,9 @@ proc run_tests { path runcompleted } {
                         }
                      }
                    1 { 
-                        # test was allready done in an earlier run
+                        # test was already done in an earlier run
                         # no action
-                        puts $CHECK_OUTPUT "run_tests - check allready done"
+                        puts $CHECK_OUTPUT "run_tests - check already done"
                      }
 
                    2 {  
@@ -4060,7 +4195,7 @@ proc unlock_testsuite {} {
 # -1 on error, 
 # -2 check can not run
 #  0 if ok, 
-#  1 allready done
+#  1 already done
 #
 #                                                             max. column:     |
 #****** check/run_test_level() ******
@@ -4102,7 +4237,7 @@ proc run_test_level {path runcompleted level {do_save 1}} {
    global set_error_proc_called errorInfo CHECK_CORE_MASTER
    global check_setup_level_function check_cleanup_level_function
    
-   # do not run allready completed tests
+   # do not run already completed tests
    debug_puts "runcompleted is $runcompleted"
    if { $runcompleted == 0 } {
      if { ( [file isfile "$CHECK_RESULT_DIR/$check_name.res.$level"] == 1) } {
@@ -4589,7 +4724,7 @@ proc run_test {path runcompleted {run_single_test "all"} { send_mail_report 1 } 
 
   set nr_errors 0
   set nr_warnings 0
-  set nr_allready_done 0
+  set nr_already_done 0
   set nr_new_done 0
   set my_current_runlevel 0
   set do_send_mail 0
@@ -4614,7 +4749,7 @@ proc run_test {path runcompleted {run_single_test "all"} { send_mail_report 1 } 
          }
       }
 
-      # check if test was allready running
+      # check if test was already running
       if { $runcompleted == 0 } {
          if { ( [file isfile "$CHECK_RESULT_DIR/$check_name.res.$level"] == 1) } {
             continue 
@@ -4696,10 +4831,10 @@ proc run_test {path runcompleted {run_single_test "all"} { send_mail_report 1 } 
      } 
 
      if {$back == 1} {
-        debug_puts "check allready done"
-        incr nr_allready_done 1
+        debug_puts "check already done"
+        incr nr_already_done 1
      }
-     debug_puts "calls=$no_level_calls, allready done=$nr_allready_done"
+     debug_puts "calls=$no_level_calls, already done=$nr_already_done"
   }
    }
 
@@ -4723,7 +4858,7 @@ proc run_test {path runcompleted {run_single_test "all"} { send_mail_report 1 } 
       return $immediate_return
    }
 
-  if { $nr_allready_done == $no_level_calls } {
+  if { $nr_already_done == $no_level_calls } {
      return 1  ;# was done time before
   }
   
@@ -6062,7 +6197,7 @@ proc prepare_packages { } {
       puts $CHECK_OUTPUT ""
 
 
-      # now check if packages are allready installed and remove installed ones
+      # now check if packages are already installed and remove installed ones
       set package_names [ get_dir_names $CHECK_PRODUCT_ROOT/tmp_zip_copy ]
       puts -nonewline $CHECK_OUTPUT "Found following packages:"
       foreach pkg $package_names {
@@ -6071,12 +6206,12 @@ proc prepare_packages { } {
       puts $CHECK_OUTPUT "\n"
       set user_key "unknown"
       foreach pkg $package_names {
-         puts -nonewline $CHECK_OUTPUT "Checking if package \"$pkg\" is allready installed on host \"$CHECK_HOST\" ... "
+         puts -nonewline $CHECK_OUTPUT "Checking if package \"$pkg\" is already installed on host \"$CHECK_HOST\" ... "
          set output [ start_remote_prog $CHECK_HOST "root" "pkginfo" "$pkg" ]
          if { $prg_exit_state != 0 } {
             puts $CHECK_OUTPUT "not installed"
          } else {
-            puts $CHECK_OUTPUT "allready installed."
+            puts $CHECK_OUTPUT "already installed."
             puts $CHECK_OUTPUT "\n$output\n"
             puts $CHECK_OUTPUT "Press \"yes\" to uninstall ALL packages listed above or \"no\" to continue ..."
             if { $user_key == "unknown" } {
@@ -6512,6 +6647,9 @@ proc compile_source { { do_only_install 0 } } {
          } else {
             report_add_message report "All compile_clean hooks successfully executed\n"
          }
+      
+         # give NFS some rest after (probably massive) deletes
+         sleep 20
 
          # after an update, delete macro messages file to have it updated
          set macro_messages_file [get_macro_messages_file_name]
@@ -6537,6 +6675,10 @@ proc compile_source { { do_only_install 0 } } {
       } else {
          report_add_message report "All compile_clean hooks successfully executed\n"
       }
+
+      # give NFS some rest after (probably massive) deletes
+      sleep 20
+
    }
 
    if { $error_count > 0 } {
@@ -6545,7 +6687,10 @@ proc compile_source { { do_only_install 0 } } {
       if { [compile_depend $compile_hosts report] != 0 } {
         incr error_count
       } else {
-         # depend successfully build start compile all
+         # depend was successfull - sleep a bit so let nfs settle down
+         sleep 20
+
+         # start build process
          if { [compile_with_aimk $compile_hosts report "compile" ] != 0 } {
             incr error_count
          } else {
@@ -7278,6 +7423,7 @@ proc compile_depend { compile_hosts a_report } {
       report_add_message report "------------------------------------------"
       return -1
    }
+
    return 0
 }
 #                                                             max. column:     |
@@ -8038,7 +8184,7 @@ for { set i 0 } { $i < $argc } { incr i } {
       puts ""
       puts "file FILE             use FILE as defaults file"
       puts ""
-      puts "re_init               use allready installed system (will only shutdown/reconfigure the cluster!)"
+      puts "re_init               use already installed system (will only shutdown/reconfigure the cluster!)"
       puts "                      when test install_core_system is called or install option is set"
       puts ""
       puts "re_init_on_tcl_error  reinitialize cluster when tcl error occurs"

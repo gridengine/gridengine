@@ -631,7 +631,7 @@ proc qrsh_accounting {} {
                         }
                         if {[get_extended_job_info $job_id] } {
                            if { $job_info(cpu) < 10 } {
-                              add_proc_error "qrsh_accounting"  -1 "online usage probably does not work on $host"
+                              add_proc_error "qrsh_accounting"  -3 "online usage probably does not work on $host"
                            }
                         } else {
                            add_proc_error "qrsh_accounting"  -1 "get_extended_jobinfo failed for job $job_id on host $host"
@@ -1279,7 +1279,8 @@ proc qrsh_qsub_gid {} {
          aix42 -
          aix43 -
          osf4 -
-         tru64 {
+         tru64 -
+         win32-x86 {
             puts $f "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qrsh -l hostname=$host /usr/bin/id"
          }
          default {

@@ -632,7 +632,7 @@ proc setup_execd_conf {} {
      set have_exec_spool_dir [get_local_spool_dir $host execd 0] 
      set spool_dir 0
      set expected_entries 4
-     if { $have_exec_spool_dir != "" } {
+     if {$have_exec_spool_dir != ""} {
         puts $CHECK_OUTPUT "host $host has spooldir in \"$have_exec_spool_dir\""
         set spool_dir 1
         incr expected_entries 1
@@ -648,7 +648,15 @@ proc setup_execd_conf {} {
            "qlogin_daemon" { continue }
            "rlogin_daemon" { continue }
            "xterm" { continue }
-           "execd_spool_dir" { 
+           "load_sensor" {
+              # on windows, we have a load sensor, on other platforms not
+              if {[host_conf_get_arch $host] == "win32-x86"} {
+                 incr expected_entries 1
+              } else {
+                 lappend removed $elem
+              }
+           }
+           "execd_spool_dir" {
               if { [string compare $have_exec_spool_dir $tmp_config(execd_spool_dir)] == 0 } {
                   set spool_dir_found 1
               }
@@ -1133,3 +1141,111 @@ proc setup_inhouse_cluster {} {
   set_error 0 "ok"
 }
 
+#****** init_cluster/setup_win_users() *****************************************
+#  NAME
+#     setup_win_users() -- special setup for windows users
+#
+#  SYNOPSIS
+#     setup_win_users { } 
+#
+#  FUNCTION
+#     If we have windows hosts in the cluster, this procedure does special setup
+#     required for windows users.
+#     The passwords of the following users will be registered through the
+#     sgepasswd utilbin binary:
+#        - CHECK_USER
+#        - Administrator
+#        - CHECK_FIRST_FOREIGN_SYSTEM_USER
+#        - CHECK_SECOND_FOREIGN_SYSTEM_USER
+#
+#  SEE ALSO
+#     init_cluster/setup_win_user()
+#*******************************************************************************
+proc setup_win_users {} {
+   global ts_config CHECK_OUTPUT
+   global CHECK_USER CHECK_FIRST_FOREIGN_SYSTEM_USER CHECK_SECOND_FOREIGN_SYSTEM_USER
+
+   if {[host_conf_have_windows]} {
+      set win_users "$CHECK_USER Administrator $CHECK_FIRST_FOREIGN_SYSTEM_USER $CHECK_SECOND_FOREIGN_SYSTEM_USER"
+      foreach user $win_users {
+         setup_win_user_passwd $user
+      }
+   }
+
+   set_error 0 "ok"
+}
+
+#****** init_cluster/setup_win_user_passwd() ***********************************
+#  NAME
+#     setup_win_user_passwd() -- register the passwd of a windows user
+#
+#  SYNOPSIS
+#     setup_win_user_passwd { user } 
+#
+#  FUNCTION
+#     Registeres the passwd of a given windows user by calling the sgepasswd
+#     utilbin binary and answering the password questions.
+#  
+#     Requires that passwords have been interactively entered through the
+#     set_root_passwd procedure.
+#
+#  INPUTS
+#     user - user whose passwd shall be registered
+#
+#  SEE ALSO
+#     init_cluster/setup_win_users()
+#     check/set_root_passwd()
+#*******************************************************************************
+proc setup_win_user_passwd {user} {
+   global ts_config CHECK_OUTPUT
+   global CHECK_USER CHECK_DEBUG_LEVEL
+
+   puts -nonewline $CHECK_OUTPUT "setting sgepasswd of user $user ..."
+   
+   set id [open_remote_spawn_process $ts_config(master_host) $CHECK_USER "sgepasswd" $user]
+   set sp_id [lindex $id 1]
+
+   # in debug mode we want to see all the shell output
+   log_user 0
+   if {$CHECK_DEBUG_LEVEL != 0} {
+      log_user 1
+      puts $CHECK_OUTPUT ""
+   }
+
+   # wait for and answer passwd questions
+   set timeout 60
+   expect {
+      -i $sp_id full_buffer {
+         add_proc_error "setup_win_user_passwd" -1 "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
+         close_spawn_process $id
+         return
+      }   
+
+      -i $sp_id eof { 
+         add_proc_error "setup_win_user_passwd" "-1" "unexpected eof"
+         close_spawn_process $id
+         return
+      }
+
+      -i $sp_id timeout { 
+         add_proc_error "setup_win_user_passwd" "-1" "timeout while waiting for password question"
+         close_spawn_process $id;
+         return
+      }
+
+      -i $sp_id "password:" {
+         send -i $sp_id "[get_passwd $user]\n"
+         exp_continue
+      }
+      -i $sp_id "Password changed" {
+         puts -nonewline $CHECK_OUTPUT " + "
+         exp_continue
+      }
+      -i $sp_id "_exit_status_:" {
+         puts $CHECK_OUTPUT "done"
+      }
+   }
+
+   # cleanup
+   close_spawn_process $id
+}

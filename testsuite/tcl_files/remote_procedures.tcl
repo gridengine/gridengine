@@ -161,17 +161,18 @@ proc check_all_system_times {} {
    set test_start [timestamp]
    foreach host $host_list {
       set tcl_bin [ get_binary_path $host "expect"]
+      set time_script "$ts_config(testsuite_root_dir)/$CHECK_SCRIPT_FILE_DIR/time.tcl"
       puts $CHECK_OUTPUT "test remote system time on host $host ..."
-      set result [string trim [start_remote_prog $host $CHECK_USER $tcl_bin "-c 'puts \"current time is \[timestamp\]\"'"]]
+      set result [string trim [start_remote_prog $host $CHECK_USER $tcl_bin $time_script]]
       puts $CHECK_OUTPUT $result
       set time($host) [get_string_value_between "current time is" -1 $result]
       # fix remote execution time difference
       set time($host) [expr ( $time($host) - [expr ( [timestamp] - $test_start ) ] )] 
    }
 
-   set reverence_time $time($ts_config(master_host))
+   set reference_time $time($ts_config(master_host))
    foreach host $host_list {
-      set diff [expr ( $reverence_time - $time($host) )]
+      set diff [expr ( $reference_time - $time($host) )]
       puts $CHECK_OUTPUT "host $host has a time difference of $diff seconds compared to host $ts_config(master_host)"
 
       if { $diff > 45 || $diff < -45 } {
@@ -474,6 +475,7 @@ proc start_remote_prog { hostname
                          {source_settings_file 1} 
                          {set_shared_lib_path 1}
                          {raise_error 1}
+                         {win_local_user 0}
                        } {
    global CHECK_OUTPUT CHECK_MAIN_RESULTS_DIR CHECK_DEBUG_LEVEL 
    global CHECK_HOST
@@ -497,7 +499,7 @@ proc start_remote_prog { hostname
    }
 
    # open connection
-   set id [open_remote_spawn_process "$hostname" "$user" "$exec_command" "$exec_arguments" $background users_env $source_settings_file 15 $set_shared_lib_path $raise_error]
+   set id [open_remote_spawn_process "$hostname" "$user" "$exec_command" "$exec_arguments" $background users_env $source_settings_file 15 $set_shared_lib_path $raise_error $win_local_user]
    if {$id == ""} {
       add_proc_error "start_remote_prog" -1 "got no spawn id" $raise_error
       set back_exit_state -255
@@ -922,6 +924,147 @@ proc increase_timeout {{max 5} {step 1}} {
    }
 }
 
+#****** remote_procedures/map_special_users() **********************************
+#  NAME
+#     map_special_users() -- map special user names and windows user names
+#
+#  SYNOPSIS
+#     map_special_users { hostname user win_local_user } 
+#
+#  FUNCTION
+#     Does username mapping for testsuite special users and windows users.
+#
+#     Testsuite special users are user names beginning with "ts_def_con".
+#     If such a user name is passed to a function opening a rlogin connection,
+#     the connection will be opened as CHECK_USER.
+#     If a connection as CHECK_USER or another ts_def_con user already exists,
+#     a new, additional connection will be opened instead of reusing the 
+#     existing one.
+#
+#     Further mapping is done for windows users:
+#     The user id "root" is mapped to the windows user name "Administrator".
+#     If we connect to a windows machine, usually the connection will be done
+#     as windows domain user.
+#     There are cases where we have to become a local user (user Administrator, 
+#     or parameter win_local_user set to 1).
+#     In this case, we'll use as hostname "$hostname+$user".
+#
+#     On UNIX systems, using rlogin, we'll always connect as CHECK_USER, and
+#     later on switch to root or the target user.
+#     Using ssh, we'll connect as CHECK_USER, or as root, and later on 
+#     switch to the target user.
+#
+#     On Windows systems, we'll always connect as the target user (CHECK_USER,
+#     Administrator, other target user).
+#
+#  INPUTS
+#     hostname       - host to which we want to connect
+#     user           - the target user id (may also be a special user id)
+#     win_local_user - do we want to connect as windows local or domain user?
+#
+#  RESULT
+#     The functions sets the following variables in the callers context:
+#        - real_user:         this is the real user name on the target machine, 
+#                             after mapping special users,
+#                             or user name "root" to windows "Administrator".
+#        - connect_user:      We'll connect to the target host as this user.
+#        - connect_full_user: We'll use this user name on the rlogin / ssh 
+#                             commandline.
+#
+#  EXAMPLE
+#     map_special_users unix_host root 0
+#        real_user         = root
+#        connect_user      = CHECK_USER
+#        connect_full_user = CHECK_USER
+#
+#     map_special_users unix_host sgetest 1
+#        real_user         = sgetest
+#        connect_user      = sgetest
+#        connect_full_user = sgetest
+#
+#     map_special_users unix_host ts_def_con_translate 1
+#        real_user         = CHECK_USER
+#        connect_user      = CHECK_USER
+#        connect_full_user = CHECK_USER
+#
+#     map_special_users win_host root 0
+#        real_user         = Administrator
+#        connect_user      = Administrator
+#        connect_full_user = win_host+Administrator
+#
+#     map_special_users win_host sgetest 0
+#        real_user         = sgetest
+#        connect_user      = sgetest
+#        connect_full_user = sgetest
+#
+#     map_special_users win_host sgetest 1
+#        real_user         = sgetest
+#        connect_user      = sgetest
+#        connect_full_user = win_host+sgetest
+#
+#  SEE ALSO
+#     remote_procedures/open_remote_spawn_process()
+#*******************************************************************************
+proc map_special_users {hostname user win_local_user} {
+   global CHECK_USER
+
+   upvar real_user         real_user          ;# this is the real user name on the target machine
+   upvar connect_user      connect_user       ;# we'll connect as this user
+   upvar connect_full_user connect_full_user  ;# using this name in rlogin/ssh -l option (windows domain!)
+
+   # handle special user ids
+   # for these special user id's, we connect as local users to windows hosts
+   if {[string match "ts_def_con*" $user] == 1} {
+      set real_user $CHECK_USER
+   } else {
+      set real_user $user
+   }
+
+   # on interix, the root user is Administrator
+   # and we have to connect as the target user, as su doesn't work
+   # for Administrator, we have to use "hostname+Administrator" (local user)
+   if {[host_conf_get_arch $hostname] == "win32-x86"} {
+      if {$user == "root"} {
+         set real_user "Administrator"
+         if {!$win_local_user} {
+            set win_local_user 1
+         }
+      }
+
+      set connect_user        $real_user
+
+      if {$win_local_user} {
+         set connect_full_user   "$hostname+$real_user"
+      } else {
+         set connect_full_user   $real_user
+      }
+   } else {
+      # on unixes, we connect
+      # with rlogin always as CHECK_USER (and su later, if necessary)
+      # despite having the root password, we do not connect as root, as some unixes
+      # disallow root login from network
+      #
+      # with ssh either as CHECK_USER
+      #          or     as root (and su later, if necessary)
+      if {[have_ssh_access]} {
+         if {$real_user == $CHECK_USER} {
+            set connect_user $CHECK_USER
+            set connect_full_user $CHECK_USER
+         } else {
+            set connect_user "root"
+            set connect_full_user "root"
+         }
+      } else {
+         set connect_user $CHECK_USER
+         set connect_full_user $CHECK_USER
+      }
+   }
+
+   debug_puts "map_special_users: $user on host $hostname"
+   debug_puts "   real_user:         $real_user"
+   debug_puts "   connect_user:      $connect_user"
+   debug_puts "   connect_full_user: $connect_full_user"
+}
 
 #****** remote_procedures/open_remote_spawn_process() **************************
 #  NAME
@@ -989,6 +1132,7 @@ proc increase_timeout {{max 5} {step 1}} {
 #  SEE ALSO
 #     remote_procedures/increase_timeout()
 #     remote_procedures/close_spawn_id()
+#     remote_procedures/map_special_users()
 #*******************************************************************************
 proc open_remote_spawn_process { hostname 
                                  user 
@@ -1000,6 +1144,7 @@ proc open_remote_spawn_process { hostname
                                  {nr_of_tries 15} 
                                  {set_shared_lib_path 1}
                                  {raise_error 1}
+                                 {win_local_user 0}
                                } {
 
    global CHECK_OUTPUT CHECK_HOST CHECK_USER CHECK_TESTSUITE_ROOT CHECK_SCRIPT_FILE_DIR
@@ -1016,20 +1161,21 @@ proc open_remote_spawn_process { hostname
    if {$nr_of_tries < 5} {
       add_proc_error "open_remote_spawn_process" -3 "unreasonably low nr_of_tries: $nr_of_tries, setting to 5" $raise_error
    }
+   # the win_local_user feature is only needed on windows
+   # reset it for non windows hosts
+   if {$win_local_user && [host_conf_get_arch $hostname] != "win32-x86"} {
+      set win_local_user 0
+   }
 
    # handle special user ids
-   if {[string match "ts_def_con*" $user] == 1} {
-      set real_user $CHECK_USER
-   } else {
-      set real_user $user
-   }
+   map_special_users $hostname $user $win_local_user
 
    # common part of all error messages
    set error_info "connection to host \"$hostname\" as user \"$user\""
 
    # if command shall be started as other user than CHECK_USER
    # we need root access
-   if {[string compare $real_user $CHECK_USER] != 0} {
+   if {$real_user != $CHECK_USER} {
       if {[have_root_passwd] == -1} {
          add_proc_error "open_remote_spawn_process" -2 "${error_info}\nroot access required" $raise_error
          return "" 
@@ -1041,6 +1187,7 @@ proc open_remote_spawn_process { hostname
       upvar $envlist users_env
    }
 
+   # for code coverage testing, we might need a special environment
    if {$CHECK_COVERAGE != "none"} {
       coverage_per_process_setup $hostname $real_user users_env
    }
@@ -1048,7 +1195,7 @@ proc open_remote_spawn_process { hostname
    # if the same script is executed multiple times, don't recreate it
    set re_use_script 0
    # we check for a combination of all parameters
-   set spawn_command_arguments "$hostname$user$exec_command$exec_arguments$background$envlist$source_settings_file$set_shared_lib_path"
+   set spawn_command_arguments "$hostname$user$exec_command$exec_arguments$background$envlist$source_settings_file$set_shared_lib_path$win_local_user"
    if {[info exists last_spawn_command_arguments]} {
       # compare last command with this command
       if {[string compare $spawn_command_arguments $last_spawn_command_arguments] == 0} {
@@ -1077,7 +1224,7 @@ proc open_remote_spawn_process { hostname
    }
 
    # get info about an already open rlogin connection
-   get_open_spawn_rlogin_session $hostname $user con_data
+   get_open_spawn_rlogin_session $hostname $user $win_local_user con_data
 
    # we might have the required connection open
    set open_new_connection 1
@@ -1105,7 +1252,7 @@ proc open_remote_spawn_process { hostname
       #           With the current implementation, we are slower, but a dead connection
       #           will be detected early enough to close and reopen it.
       if {[check_rlogin_session $spawn_id $pid $hostname $user $nr_of_shells]} {
-         debug_puts "Using open rlogin connection to host \"$hostname\",user \"$user\""
+         debug_puts "Using open rlogin connection to host \"$hostname\", user \"$user\""
          set open_new_connection 0
       }
    }
@@ -1119,23 +1266,30 @@ proc open_remote_spawn_process { hostname
          # no open connection - open a new one
          debug_puts "opening connection to host $hostname"
 
+         # on unixes, we connect as CHECK_USER which will give us no passwd question,
+         # and handle root passwd question when switching to the target user later on
+         #
+         # on windows, we have to directly connect as the target user, where we get
+         # a passwd question for root and first/second foreign user
+         # 
+         # for unixes, we reject a passwd question (passwd = ""), for windows, we 
+         # send the stored passwd
+         set passwd ""
+
          # we either open an ssh connection (as CHECK_USER or root) 
          # or rlogin as CHECK_USER
+         #
+         # on windows hosts, login as root and su - <user> doesn't work.
+         # here we connect as target user and answer the passwd question
+         if {[host_conf_get_arch $hostname] == "win32-x86"} {
+            set passwd [get_passwd $real_user]
+         }
+
          if {[have_ssh_access]} {
             set ssh_binary [get_binary_path $CHECK_HOST ssh]
-            # if we have ssh access, we either
-            # connect via ssh as CHECK_USER
-            # connect via ssh as root (and if necessary switch user later)
-            if {$real_user == $CHECK_USER} {
-               set connect_user $CHECK_USER
-               set pid [spawn $ssh_binary $hostname]
-            } else {
-               set connect_user "root"
-               set pid [spawn $ssh_binary "-l" "root" $hostname]
-            }
+            set pid [spawn $ssh_binary "-l" $connect_full_user $hostname]
          } else {
-            set connect_user $CHECK_USER
-            set pid [spawn "rlogin" $hostname] 
+            set pid [spawn "rlogin" $hostname "-l" $connect_full_user]
          }
 
          if {$pid == 0 } {
@@ -1186,8 +1340,13 @@ proc open_remote_spawn_process { hostname
                   }
                }
                -i $spawn_id "assword:" {
-                  add_proc_error "open_remote_spawn_process (startup)" -2 "${error_info}\ngot unexpected password question" $raise_error
-                  set connect_errors 1
+                  if {$passwd == ""} {
+                     add_proc_error "open_remote_spawn_process (startup)" -2 "${error_info}\ngot unexpected password question" $raise_error
+                     set connect_errors 1
+                  } else {
+                     send -i $spawn_id -- "$passwd\n"
+                     exp_continue
+                  }
                }
                -i $spawn_id "The authenticity of host*" {
                   send -i $spawn_id -- "yes\n"
@@ -1206,12 +1365,11 @@ proc open_remote_spawn_process { hostname
                   # sleep a while and retry
                   puts -nonewline $CHECK_OUTPUT "x" ; flush $CHECK_OUTPUT
                   sleep 10
-                  break
+                  continue
                }
                -i $spawn_id -re $CHECK_SHELL_PROMPT {
                   # recognized shell prompt - now we can continue / leave this expect loop
                   debug_puts "recognized shell prompt"
-                  set connect_succeeded 1
                }
             }
          } catch_error_message]
@@ -1225,71 +1383,84 @@ proc open_remote_spawn_process { hostname
             catch {close_spawn_id $spawn_id}
             return ""
          }
-      }
 
-      # now we should have a running shell
-      # try to start a shell script doing some output we'll wait for
-      set catch_return [catch {
-         set num_tries $nr_of_tries
-         # try to start the shell_start_output.sh script
-         send -i $spawn_id -- "$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/shell_start_output.sh\n"
-         set timeout 2
-         expect {
-            -i $spawn_id eof {
-               add_proc_error "open_remote_spawn_process (shell_response)" -2 "${error_info}\nunexpected eof" $raise_error
-               set connect_errors 1
-            }
-            -i $spawn_id full_buffer {
-               add_proc_error "open_remote_spawn_process (shell_response)" -2 "${error_info}\nbuffer overflow" $raise_error
-               set connect_errors 1
-            }
-            -i $spawn_id timeout {
-               incr num_tries -1
-               if {$num_tries > 0} {
-                  # try to restart the shell_start_output.sh script
-                  send -i $spawn_id -- "$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/shell_start_output.sh\n"
-                  increase_timeout
-                  exp_continue
-               } else {
-                  # final timeout
-                  add_proc_error "open_remote_spawn_process (shell_response)" -2 "${error_info}\ntimeout" $raise_error
-                  send -i $spawn_id -- "\003" ;# send CTRL+C to stop poss. running processes
+         # now we should have a running shell
+         # try to start a shell script doing some output we'll wait for
+         set catch_return [catch {
+            set num_tries $nr_of_tries
+            # try to start the shell_start_output.sh script
+            send -i $spawn_id -- "$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/shell_start_output.sh\n"
+            set timeout 2
+            expect {
+               -i $spawn_id eof {
+                  add_proc_error "open_remote_spawn_process (shell_response)" -2 "${error_info}\nunexpected eof" $raise_error
                   set connect_errors 1
                }
-               
+               -i $spawn_id full_buffer {
+                  add_proc_error "open_remote_spawn_process (shell_response)" -2 "${error_info}\nbuffer overflow" $raise_error
+                  set connect_errors 1
+               }
+               -i $spawn_id timeout {
+                  incr num_tries -1
+                  if {$num_tries > 0} {
+                     # try to restart the shell_start_output.sh script
+                     send -i $spawn_id -- "$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/shell_start_output.sh\n"
+                     increase_timeout
+                     exp_continue
+                  } else {
+                     # final timeout
+                     add_proc_error "open_remote_spawn_process (shell_response)" -2 "${error_info}\ntimeout" $raise_error
+                     send -i $spawn_id -- "\003" ;# send CTRL+C to stop poss. running processes
+                     set connect_errors 1
+                  }
+                  
+               }
+               -i $spawn_id "assword:" {
+                  if {$passwd == ""} {
+                     add_proc_error "open_remote_spawn_process (shell_response)" -2 "${error_info}\ngot unexpected password question" $raise_error
+                     set connect_errors 1
+                  } else {
+                     send -i $spawn_id -- "$passwd\n"
+                     exp_continue
+                  }
+               }
+               -i $spawn_id "The authenticity of host*" {
+                  send -i $spawn_id -- "yes\n"
+                  exp_continue
+               }
+               -i $spawn_id "Are you sure you want to continue connecting (yes/no)?*" {
+                  send -i $spawn_id -- "yes\n"
+                  exp_continue
+               }
+               -i $spawn_id "Please type 'yes' or 'no'*" {
+                  send -i $spawn_id -- "yes\n"
+                  exp_continue
+               }
+               -i $spawn_id "ts_shell_response*\n" {
+                  # got output from shell_start_output.sh - leaving expect
+                  debug_puts "shell started"
+                  set connect_succeeded 1
+               }
+               -i $spawn_id "in.rlogind: Forkpty: Permission denied." {
+                  # interix (windows) rlogind doesn't let us login
+                  # sleep a while and retry
+                  puts -nonewline $CHECK_OUTPUT "x" ; flush $CHECK_OUTPUT
+                  sleep 10
+                  continue
+               }
             }
-            -i $spawn_id "assword:" {
-               add_proc_error "open_remote_spawn_process (shell_response)" -2 "${error_info}\ngot unexpected password question" $raise_error
-               set connect_errors 1
-            }
-            -i $spawn_id "The authenticity of host*" {
-               send -i $spawn_id -- "yes\n"
-               exp_continue
-            }
-            -i $spawn_id "Are you sure you want to continue connecting (yes/no)?*" {
-               send -i $spawn_id -- "yes\n"
-               exp_continue
-            }
-            -i $spawn_id "Please type 'yes' or 'no'*" {
-               send -i $spawn_id -- "yes\n"
-               exp_continue
-            }
-            -i $spawn_id "ts_shell_response*\n" {
-               # got output from shell_start_output.sh - leaving expect
-               debug_puts "shell started"
-            }
+         } catch_error_message ]
+         if { $catch_return == 1 } {
+            add_proc_error "open_remote_spawn_process (shell response)" -2 "${error_info}\n$catch_error_message"  $raise_error
+            set connect_errors 1
          }
-      } catch_error_message ]
-      if { $catch_return == 1 } {
-         add_proc_error "open_remote_spawn_process (shell response)" -2 "${error_info}\n$catch_error_message"  $raise_error
-         set connect_errors 1
-      }
-          
-      # did we have errors?
-      if {$connect_errors} {
-         catch {close_spawn_id $spawn_id}
-         return ""
-      }
+             
+         # did we have errors?
+         if {$connect_errors} {
+            catch {close_spawn_id $spawn_id}
+            return ""
+         }
+      } ;# end while loop for interix connection problems
 
       # now we know that we have a connection and can start a shell script
       # try to check login id
@@ -1336,17 +1507,15 @@ proc open_remote_spawn_process { hostname
       }
 
       # here we switch to the target user.
+      # if we connected to a windows host, we must already be the target user, do nothing
       # if target user is CHECK_USER, do nothing.
       # if we have ssh access, and target_user is root, do nothing
       # else switch user
       set switch_user 1
-      if {$real_user == $CHECK_USER} {
+      if {$real_user == $connect_user} {
          set switch_user 0
-      } else {
-         if {[have_ssh_access] && $real_user == "root"} {
-            set switch_user 0
-         }
       }
+
       if {$switch_user} {
          debug_puts "we have to switch user"
          set catch_return [ catch {
@@ -1478,7 +1647,7 @@ proc open_remote_spawn_process { hostname
          return ""
       }
       # store the connection
-      add_open_spawn_rlogin_session $hostname $user $spawn_id $pid $nr_of_shells
+      add_open_spawn_rlogin_session $hostname $user $win_local_user $spawn_id $pid $nr_of_shells
    } ;# opening new connection
 
    # If we call the command for the first time, make sure it is available on the remote machine
@@ -1616,7 +1785,6 @@ proc open_remote_spawn_process { hostname
 #     remote_procedures/open_spawn_process
 #     remote_procedures/open_root_spawn_process
 #     remote_procedures/close_spawn_process
-#     remote_procedures/run_command_as_user
 #     remote_procedures/start_remote_tcl_prog
 #     remote_procedures/start_remote_prog
 #*******************************
@@ -1784,6 +1952,10 @@ proc dump_spawn_rlogin_sessions {{do_output 1}} {
 #              - hostname   name of host to which we connected
 #              - user       user for which the connection has been established.
 #                           This can be a special name like ts_def_con.
+#              - win_local_user For windows, we usually will connect as domain user.
+#                               For some operations, e.g. accessing the local
+#                               spool directory of an exec host, we have to use
+#                               local users.
 #              - ltime      timestamp of last use of the connection
 #              - nr_shells  number of shells started in the connection
 #              - in_use     is the connection in use or idle
@@ -1798,17 +1970,18 @@ proc dump_spawn_rlogin_sessions {{do_output 1}} {
 #        rlogin_spawn_session_idx: TCL Array acting as an index for quick lookup
 #           of connections by hostname and user.
 #           It contains one entry per session. The array names are
-#           <hostname>,<user>, e.g.
-#           gimli,sgetest        exp4
-#           balrog,sgetest       exp6
-#           balrog,sgetest1      exp8
-#         
+#           <hostname>,<user>,<win_local_user>, e.g.
+#           gimli,sgetest,0        exp4
+#           balrog,sgetest,0       exp6
+#           balrog,sgetest1,0      exp8
+#           bofur,sgetest,1        exp10
 #
 #  INPUTS
-#     hostname - hostname of rlogin connection
-#     user     - user who logged in
-#     spawn_id - spawn process id
-#     pid      - process id of rlogin session
+#     hostname       - hostname of rlogin connection
+#     user           - user who logged in
+#     win_local_user - is the user a windows local (1) or domain user (0)
+#     spawn_id       - spawn process id
+#     pid            - process id of rlogin session
 #
 #  SEE ALSO
 #     remote_procedures/get_open_spawn_rlogin_session
@@ -1816,7 +1989,7 @@ proc dump_spawn_rlogin_sessions {{do_output 1}} {
 #     remote_procedures/del_open_spawn_rlogin_session
 #     remote_procedures/remove_oldest_spawn_rlogin_session()
 #*******************************************************************************
-proc add_open_spawn_rlogin_session {hostname user spawn_id pid nr_of_shells} {
+proc add_open_spawn_rlogin_session {hostname user win_local_user spawn_id pid nr_of_shells} {
    global CHECK_OUTPUT rlogin_spawn_session_buffer rlogin_spawn_session_idx
    global do_close_rlogin rlogin_max_open_connections 
 
@@ -1839,18 +2012,19 @@ proc add_open_spawn_rlogin_session {hostname user spawn_id pid nr_of_shells} {
    debug_puts "adding spawn_id $spawn_id, pid=$pid to host $hostname, user $user"
 
    # add session data
-   set rlogin_spawn_session_buffer($spawn_id,pid)       $pid
-   set rlogin_spawn_session_buffer($spawn_id,hostname)  $hostname
-   set rlogin_spawn_session_buffer($spawn_id,user)      $user
-   set rlogin_spawn_session_buffer($spawn_id,ltime)     [timestamp]
-   set rlogin_spawn_session_buffer($spawn_id,nr_shells) $nr_of_shells
-   set rlogin_spawn_session_buffer($spawn_id,in_use)    0
+   set rlogin_spawn_session_buffer($spawn_id,pid)                 $pid
+   set rlogin_spawn_session_buffer($spawn_id,hostname)            $hostname
+   set rlogin_spawn_session_buffer($spawn_id,user)                $user
+   set rlogin_spawn_session_buffer($spawn_id,win_local_user)      $win_local_user
+   set rlogin_spawn_session_buffer($spawn_id,ltime)               [timestamp]
+   set rlogin_spawn_session_buffer($spawn_id,nr_shells)           $nr_of_shells
+   set rlogin_spawn_session_buffer($spawn_id,in_use)              0
 
    # add session to index
    lappend rlogin_spawn_session_buffer(index) $spawn_id
 
    # add session to search index
-   set rlogin_spawn_session_idx($hostname,$user) $spawn_id
+   set rlogin_spawn_session_idx($hostname,$user,$win_local_user) $spawn_id
 }
 
 #****** remote_procedures/remove_oldest_spawn_rlogin_session() *****************
@@ -1919,20 +2093,21 @@ proc remove_oldest_spawn_rlogin_session {} {
 #     of the data structures.
 #
 #  INPUTS
-#     hostname - hostname of rlogin connection 
-#     user     - user who logged in 
-#     back_var - name of array to store data in
-#                (the array has following names:
-#                 back_var(spawn_id) 
-#                 back_var(pid)     
-#                 back_var(hostname) 
-#                 back_var(user))
+#     hostname       - hostname of rlogin connection 
+#     user           - user who logged in 
+#     win_local_user - is the user a windows local (1) or domain user (0)
+#     back_var       - name of array to store data in
+#                      (the array has following names:
+#                         back_var(spawn_id) 
+#                         back_var(pid)     
+#                         back_var(hostname) 
+#                         back_var(user))
 #
 #  RESULT
 #     1 on success, 0 if no connection is available
 #
 #  EXAMPLE
-#     get_open_spawn_rlogin_session $hostname $user con_data
+#     get_open_spawn_rlogin_session $hostname $user $win_local_user con_data
 #     if { $con_data(pid) != 0 } {
 #     }
 #
@@ -1945,7 +2120,7 @@ proc remove_oldest_spawn_rlogin_session {} {
 #     remote_procedures/get_spawn_id_rlogin_session
 #     remote_procedures/check_rlogin_session
 #*******************************************************************************
-proc get_open_spawn_rlogin_session {hostname user back_var} {
+proc get_open_spawn_rlogin_session {hostname user win_local_user back_var} {
    global CHECK_OUTPUT rlogin_spawn_session_buffer rlogin_spawn_session_idx
    global do_close_rlogin
 
@@ -1953,25 +2128,27 @@ proc get_open_spawn_rlogin_session {hostname user back_var} {
 
    # we shall not reuse connections, or
    # connection to this host/user does not exist yet
-   if {$do_close_rlogin != 0 || ![info exists rlogin_spawn_session_idx($hostname,$user)]} {
+   if {$do_close_rlogin != 0 || ![info exists rlogin_spawn_session_idx($hostname,$user,$win_local_user)]} {
       clear_open_spawn_rlogin_session back
       return 0 
    }
 
-   set spawn_id $rlogin_spawn_session_idx($hostname,$user)
-   set back(spawn_id)  $spawn_id
-   set back(pid)       $rlogin_spawn_session_buffer($spawn_id,pid)
-   set back(hostname)  $rlogin_spawn_session_buffer($spawn_id,hostname)
-   set back(user)      $rlogin_spawn_session_buffer($spawn_id,user)
-   set back(ltime)     $rlogin_spawn_session_buffer($spawn_id,ltime)
-   set back(nr_shells) $rlogin_spawn_session_buffer($spawn_id,nr_shells)
+   set spawn_id $rlogin_spawn_session_idx($hostname,$user,$win_local_user)
+   set back(spawn_id)       $spawn_id
+   set back(pid)            $rlogin_spawn_session_buffer($spawn_id,pid)
+   set back(hostname)       $rlogin_spawn_session_buffer($spawn_id,hostname)
+   set back(user)           $rlogin_spawn_session_buffer($spawn_id,user)
+   set back(win_local_user) $rlogin_spawn_session_buffer($spawn_id,win_local_user)
+   set back(ltime)          $rlogin_spawn_session_buffer($spawn_id,ltime)
+   set back(nr_shells)      $rlogin_spawn_session_buffer($spawn_id,nr_shells)
    
-   debug_puts "spawn_id  : $back(spawn_id)"
-   debug_puts "pid       : $back(pid)"
-   debug_puts "hostname  : $back(hostname)"
-   debug_puts "user:     : $back(user)"
-   debug_puts "ltime:    : $back(ltime)"
-   debug_puts "nr_shells : $back(nr_shells)"
+   debug_puts "spawn_id  :      $back(spawn_id)"
+   debug_puts "pid       :      $back(pid)"
+   debug_puts "hostname  :      $back(hostname)"
+   debug_puts "user      :      $back(user)"
+   debug_puts "win_local_user : $back(win_local_user)"
+   debug_puts "ltime     :      $back(ltime)"
+   debug_puts "nr_shells :      $back(nr_shells)"
 
    return 1
 }
@@ -2000,9 +2177,10 @@ proc del_open_spawn_rlogin_session {spawn_id} {
 
    if {[info exists rlogin_spawn_session_buffer($spawn_id,pid)]} {
       # remove session from search index
-      set hostname $rlogin_spawn_session_buffer($spawn_id,hostname)
-      set user     $rlogin_spawn_session_buffer($spawn_id,user)
-      unset rlogin_spawn_session_idx($hostname,$user)
+      set hostname       $rlogin_spawn_session_buffer($spawn_id,hostname)
+      set user           $rlogin_spawn_session_buffer($spawn_id,user)
+      set win_local_user $rlogin_spawn_session_buffer($spawn_id,win_local_user)
+      unset rlogin_spawn_session_idx($hostname,$user,$win_local_user)
 
       # remove session from array index
       set pos [lsearch -exact $rlogin_spawn_session_buffer(index) $spawn_id]
@@ -2012,6 +2190,7 @@ proc del_open_spawn_rlogin_session {spawn_id} {
       unset rlogin_spawn_session_buffer($spawn_id,pid)
       unset rlogin_spawn_session_buffer($spawn_id,hostname)
       unset rlogin_spawn_session_buffer($spawn_id,user)
+      unset rlogin_spawn_session_buffer($spawn_id,win_local_user)
       unset rlogin_spawn_session_buffer($spawn_id,ltime)
       unset rlogin_spawn_session_buffer($spawn_id,nr_shells)
       unset rlogin_spawn_session_buffer($spawn_id,in_use)
@@ -2076,12 +2255,13 @@ proc get_open_rlogin_sessions {} {
 proc clear_open_spawn_rlogin_session {back_var} {
    upvar $back_var back
 
-   set back(spawn_id) "0"
-   set back(pid)      "0"
-   set back(hostname) "0"
-   set back(user)     "0"
-   set back(ltime)     0
-   set back(nr_shells) 0
+   set back(spawn_id)       "0"
+   set back(pid)            "0"
+   set back(hostname)       "0"
+   set back(user)           "0"
+   set back(win_local_user) "0"
+   set back(ltime)           0
+   set back(nr_shells)       0
 }
 
 #****** remote_procedures/get_spawn_id_rlogin_session() ************************
@@ -2134,19 +2314,21 @@ proc get_spawn_id_rlogin_session {spawn_id back_var} {
       return 0 
    }
 
-   set back(spawn_id)  $spawn_id
-   set back(pid)       $rlogin_spawn_session_buffer($spawn_id,pid)
-   set back(hostname)  $rlogin_spawn_session_buffer($spawn_id,hostname)
-   set back(user)      $rlogin_spawn_session_buffer($spawn_id,user)
-   set back(ltime)     $rlogin_spawn_session_buffer($spawn_id,ltime)
-   set back(nr_shells) $rlogin_spawn_session_buffer($spawn_id,nr_shells)
+   set back(spawn_id)       $spawn_id
+   set back(pid)            $rlogin_spawn_session_buffer($spawn_id,pid)
+   set back(hostname)       $rlogin_spawn_session_buffer($spawn_id,hostname)
+   set back(user)           $rlogin_spawn_session_buffer($spawn_id,user)
+   set back(win_local_user) $rlogin_spawn_session_buffer($spawn_id,win_local_user)
+   set back(ltime)          $rlogin_spawn_session_buffer($spawn_id,ltime)
+   set back(nr_shells)      $rlogin_spawn_session_buffer($spawn_id,nr_shells)
    
-   debug_puts "spawn_id  : $back(spawn_id)"
-   debug_puts "pid       : $back(pid)"
-   debug_puts "hostname  : $back(hostname)"
-   debug_puts "user:     : $back(user)"
-   debug_puts "ltime:    : $back(ltime)"
-   debug_puts "nr_shells : $back(nr_shells)"
+   debug_puts "spawn_id       : $back(spawn_id)"
+   debug_puts "pid            : $back(pid)"
+   debug_puts "hostname       : $back(hostname)"
+   debug_puts "user           : $back(user)"
+   debug_puts "win_local_user : $back(win_local_user)"
+   debug_puts "ltime          : $back(ltime)"
+   debug_puts "nr_shells      : $back(nr_shells)"
 
    return 1 
 }
@@ -2230,11 +2412,8 @@ proc check_rlogin_session { spawn_id pid hostname user nr_of_shells {only_check 
    }
 
    # handle special user ids
-   if {[string match "ts_def_con*" $user] == 1} {
-      set real_user $CHECK_USER
-   } else {
-      set real_user $user
-   }
+   get_spawn_id_rlogin_session $spawn_id con_data
+   map_special_users $hostname $user $con_data(win_local_user)
 
    # perform the following test:
    # - start the check_identity.sh script
@@ -2404,7 +2583,6 @@ proc is_spawn_process_in_use {spawn_id} {
 #     remote_procedures/open_spawn_process
 #     remote_procedures/open_root_spawn_process
 #     remote_procedures/close_spawn_process
-#     remote_procedures/run_command_as_user
 #     remote_procedures/start_remote_tcl_prog
 #     remote_procedures/start_remote_prog
 #*******************************
@@ -2612,78 +2790,4 @@ proc close_spawn_process {id {check_exit_state 0}} {
 
    return $wait_code ;# return exit state
 }
-
-
-# user is a system user name
-# command is a binary in $CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH or a absolute path
-# args are the command options of command
-# counter: how often sould the command be called
-# returns each line of output in a list
-#                                                             max. column:     |
-#****** remote_procedures/run_command_as_user() ******
-# 
-#  NAME
-#     run_command_as_user -- start proccess under a specific user account
-#
-#  SYNOPSIS
-#     run_command_as_user { hostname user command args counter } 
-#
-#  FUNCTION
-#     This procedure is using start_remote_prog to start a binary or a skript 
-#     file under a specific user account.
-#
-#  INPUTS
-#     hostname - host where the command should be started
-#     user     - system user name who should start the command
-#     command  - command name (if no full path is given, the product
-#                root path will be used)
-#     args     - command arguments
-#     counter  - run the command $counter times
-#
-#  RESULT
-#     the command output 
-#
-#  EXAMPLE
-#     set jobargs "/home/me/testjob.sh"
-#     set result [ run_command_as_user "expo1" "user1" "qsub" "$jobargs" 5]
-#     puts $result
-#
-#  NOTES
-#     This procedure starts the script file remote_submit.sh in the scripts 
-#     directory of the testsuite. This script is sourcing the 
-#     default/common/settings.sh file of the cluster. If the command parameter
-#     has no full path entry it will add the $CHECK_PRODUCT_ROOT path in 
-#     front of the command. 
-#
-#  SEE ALSO
-#     remote_procedures/open_spawn_process
-#     remote_procedures/open_root_spawn_process
-#     remote_procedures/close_spawn_process
-#     remote_procedures/run_command_as_user
-#     remote_procedures/start_remote_tcl_prog
-#     remote_procedures/start_remote_prog
-#*******************************
-proc run_command_as_user { hostname user command args counter } {
-   global ts_config
-   global CHECK_TESTSUITE_ROOT CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_OUTPUT
-   global CHECK_COMMD_PORT CHECK_SCRIPT_FILE_DIR
- 
-   # perform su to user and submit jobs as user $user
-   set program  "$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/remote_submit.sh"           ;# script to call in su root -c option
-   set par1     "$CHECK_PRODUCT_ROOT"    ;# settings script
-   set par2     "$ts_config(cell)"
-   if { [string first "\/" $command ] >= 0 } {
-      set par3  "$command $args"
-   } else {
-      set par3  "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/$command $args"  ;# job to start
-   }
-   set par4     "$counter"  ;# number of qsub calls
-
-   puts $CHECK_OUTPUT "running: $par3"
-   set output [ start_remote_prog "$hostname" "$user" "$program" "\"$par1\" \"$par2\" \"$par3\" \"$par4\"" "prg_exit_state" "120" ]
-   return $output
-}
-
-
-
 

@@ -712,7 +712,7 @@ proc qmod_clear_all_error_states {} {
 # 1) set running job to suspend
 # 2) manualy (kill command) set job to running
 # 3) set suspended job to suspend 
-# 4) command must write something like (job allready suspended)
+# 4) command must write something like (job already suspended)
 # 5) manualy check if job is still running (should run)
 # 6) use -f flag (force) to suspend job again
 # 7) manualy check if job is still running (should be suspended again)
@@ -820,7 +820,7 @@ proc qmod_forceaction {} {
       set_error -1 "job $job_id (grppid: $grppid) is still in suspend state"
    }   
 
-   # set job in suspend mode (is allready in suspend (in SGE system))
+   # set job in suspend mode (is already in suspend (in SGE system))
    puts $CHECK_OUTPUT "suspend job (queueing system thinks it is still suspended) ..."
    suspend_job $job_id 0 0
 
@@ -831,7 +831,7 @@ proc qmod_forceaction {} {
       set_error -1 "job $job_id (grppid: $grppid) is still in suspend state without force flag"
    }    
  
-   # set job in suspend mode (is allready in suspend (in SGE system)) with force flag set
+   # set job in suspend mode (is already in suspend (in SGE system)) with force flag set
    puts $CHECK_OUTPUT "suspend job with force flag ..." 
    suspend_job $job_id 1
 

@@ -32,7 +32,7 @@
 
 
 #                                                             max. column:     |
-#****** parser_xml/qstat_xml_parse() ******
+#****** parser_xml/qstat_xml_parse() *******************************************
 #
 #  NAME
 #     qstat_xml_parse -- Generate XML output and return assoc array 
@@ -60,7 +60,8 @@
 #  NOTES
 #     
 #
-##*******************************
+#***************************************************************************
+#
 
 proc qstat_xml_parse { output {param ""} } {
 
@@ -147,7 +148,8 @@ proc qstat_xml_parse { output {param ""} } {
 #  NOTES
 #     
 #
-##*******************************
+#***************************************************************************
+#
 
 proc qstat_j_JOB_NAME_xml_parse { output {param ""} } {
 
@@ -205,7 +207,8 @@ proc qstat_j_JOB_NAME_xml_parse { output {param ""} } {
 #  NOTES
 #
 #
-##*******************************
+#***************************************************************************
+#
 
 proc qstat_f_xml_parse { output {param ""} } {
 
@@ -291,7 +294,8 @@ proc qstat_f_xml_parse { output {param ""} } {
 #  NOTES
 #
 #
-##*******************************
+#***************************************************************************
+#
 
 proc qstat_F_xml_parse { output {params ""} } {
 
@@ -358,7 +362,8 @@ proc qstat_F_xml_parse { output {params ""} } {
 #  NOTES
 #     
 #
-##*******************************
+#***************************************************************************
+#
 
 proc qstat_j_JOB_NAME_xml_jobid { node121 output} {
    global CHECK_OUTPUT
@@ -646,7 +651,8 @@ proc qstat_j_JOB_NAME_xml_jobid { node121 output} {
 #  NOTES
 #     
 #
-##*******************************
+#***************************************************************************
+#
 
 proc qstat_xml_jobid { node121 jobtype output} {
    global CHECK_OUTPUT
@@ -980,7 +986,8 @@ proc qstat_xml_jobid { node121 jobtype output} {
 #  NOTES
 #
 #
-##*******************************
+#***************************************************************************
+#
 
 proc qstat_xml_queue { node1 output {param ""} } {
    global CHECK_OUTPUT
@@ -1126,7 +1133,8 @@ proc qstat_xml_queue { node1 output {param ""} } {
 #  NOTES    This parser only works for default complexes configuration
 #
 #
-##*******************************
+#***************************************************************************
+#
 
 proc qstat_F_xml_queue { node1 output {params ""} } {
    global CHECK_OUTPUT
@@ -1280,7 +1288,8 @@ proc qstat_F_xml_queue { node1 output {params ""} } {
 #  NOTES
 #
 #
-##*******************************
+#***************************************************************************
+#
 
 proc qstat_g_c_xml_parse { output } {
 
@@ -1330,7 +1339,8 @@ proc qstat_g_c_xml_parse { output } {
 #  NOTES
 #
 #
-##*******************************
+#***************************************************************************
+#
 
 proc qstat_g_c_xml_queue { node output } {
    global CHECK_OUTPUT

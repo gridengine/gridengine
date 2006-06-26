@@ -67,7 +67,7 @@ proc add_prj { change_array } {
 # returns 
 # -100 on unknown error
 # -1   on timeout
-# -2   if queue allready exists
+# -2   if queue already exists
 # 0    if ok
 
 # name      template
@@ -253,7 +253,7 @@ proc get_project_list {{output_var result} {on_host ""} {as_user ""} {raise_erro
 # returns
 # -100 on unknown error from handle_vi_edit
 # -1   on timeout
-# -2   if queue allready exists
+# -2   if queue already exists
 # -3   if value not  u_long32
 # -4   if unknown attribute
 # 0    if ok

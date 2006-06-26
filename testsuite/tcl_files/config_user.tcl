@@ -613,7 +613,7 @@ proc user_config_userlist_add_user { array_name { have_user "" } } {
    }
      
    if { [ lsearch $config(userlist) $new_user ] >= 0 } {
-      puts $CHECK_OUTPUT "user \"$new_user\" is allready in list"
+      puts $CHECK_OUTPUT "user \"$new_user\" is already in list"
       return -1
    }
 
@@ -796,7 +796,7 @@ proc user_config_userlist_set_portlist { array_name user value } {
       } 
       if { [info exists config($port)] } {
          if { [ string compare $config($port) $user ] != 0 } {
-            puts $CHECK_OUTPUT "user \"$config($port)\" has allready reserved port $port"
+            puts $CHECK_OUTPUT "user \"$config($port)\" has already reserved port $port"
             set had_error 1
          }
       } 

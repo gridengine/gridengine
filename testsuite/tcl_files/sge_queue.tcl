@@ -151,7 +151,7 @@
 #
 #  RESULT
 #     -1   timeout error
-#     -2   queue allready exists
+#     -2   queue already exists
 #      0   ok 
 #
 #  EXAMPLE

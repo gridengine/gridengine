@@ -423,7 +423,7 @@ proc drmaa_test_failing_control_operations { host binary_path } {
    drmaa_test $host $binary_path ST_DRMAA_CONTROL "DRMAA_CONTROL_RESUME  DRMAA_ERRNO_RESUME_INCONSISTENT_STATE $job_id" $CHECK_FIRST_FOREIGN_SYSTEM_USER
 
    # delete job as user1
-   set result [ run_command_as_user "$ts_config(master_host)" "$CHECK_FIRST_FOREIGN_SYSTEM_USER" "qdel" "$job_id" 1 ]
+   set result [start_sge_bin "qdel" $job_id "" $CHECK_FIRST_FOREIGN_SYSTEM_USER]
    puts $CHECK_OUTPUT "qdel_output = \n$result"
     
    # ensure control operation isused as user1 on no longer existing job results in a DRMAA_ERRNO_INVALID_JOB 
@@ -457,7 +457,7 @@ proc drmaa_test_failing_control_operations { host binary_path } {
    drmaa_test $host $binary_path ST_DRMAA_CONTROL "DRMAA_CONTROL_RESUME  DRMAA_ERRNO_RESUME_INCONSISTENT_STATE $job_id.2" $CHECK_FIRST_FOREIGN_SYSTEM_USER
 
    # delete job as user1
-   set result [ run_command_as_user "$ts_config(master_host)" "$CHECK_FIRST_FOREIGN_SYSTEM_USER" "qdel" "$job_id" 1 ]
+   set result [start_sge_bin "qdel" $job_id "" $CHECK_FIRST_FOREIGN_SYSTEM_USER]
    puts $CHECK_OUTPUT "qdel_output = \n$result"
     
    # ensure control operation isused as user1 on no longer existing job results in a DRMAA_ERRNO_INVALID_JOB 
@@ -482,3 +482,4 @@ proc drmaa_redirect_lib {version {host CHECK_HOST}} {
    start_remote_prog $CHECK_HOST "root" "/bin/rm" "$ts_config(source_dir)/$compile_arch/test_drmaa"
    start_remote_prog $CHECK_HOST "root" "/bin/ln" "-s test_drmaa.$version $ts_config(source_dir)/$compile_arch/test_drmaa"
 }
+

@@ -2032,7 +2032,7 @@ proc compare_complex {a b} {
 #
 #  RESULT
 #     -1   timeout error
-#     -2   host allready exists
+#     -2   host already exists
 #      0   ok 
 #
 #  EXAMPLE
@@ -6076,7 +6076,7 @@ proc wait_for_end_of_transfer { jobid seconds } {
 #     jobid   - job identification number
 #     jobname - name of the job
 #     seconds - timeout value in seconds
-#     { or_running 0 } - if job is allready running, report no error
+#     { or_running 0 } - if job is already running, report no error
 #
 #  RESULT
 #     -1  on timeout
@@ -6564,7 +6564,7 @@ proc startup_execd_raw { hostname {envlist ""}} {
    set ALREADY_RUNNING [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_COMMPROC_ALREADY_STARTED_S] "*"]
 
    if { [string match "*$ALREADY_RUNNING" $output ] } {
-      add_proc_error "startup_execd" -1 "execd on host $hostname is allready running"
+      add_proc_error "startup_execd" -1 "execd on host $hostname is already running"
       return -1
    }
    return 0

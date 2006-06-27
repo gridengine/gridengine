@@ -18,15 +18,12 @@ Content
  4. List Tree Widget
  5. XmTab Widget
  6. Xmt Library
- 7. ReplayXt
- 8. XtscHelp
- 9. rsh/rshd
-10. tcsh
-11. qmake
-12. top
-13. zlib
-14. OpenSSL
-15. snprintf
+ 7. rsh/rshd
+ 8. tcsh
+ 9. qmake
+10. top
+11. OpenSSL
+12. snprintf
 
 
 1. Spinbox
@@ -359,68 +356,7 @@ Content
    --> Only used by qmon
 
 
-7. ReplayXt
------------
-
-   qmon/src/ReplayXt.h
-   replayXt.1.1.tar.gz (requires Tcl/Tk)
-
-   Jan Newmarch
-
-   /*
-    * Copyright 1994 Jan Newmarch, University of Canberra.
-    * Permission to use, copy, modify, and distribute this
-    * software and its documentation for any purpose and without
-    * fee is hereby granted, provided that the above copyright
-    * notice appear in all copies.  The author
-    * makes no representations about the suitability of this
-    * software for any purpose.  It is provided "as is" without
-    * express or implied warranty.
-    */
-                                        
-   This can be activated by compiling with a special define statement.
-
-   --> Only used by qmon
-
-
-8. XtscHelp
------------
-
-   qmon/src/XtscHelp.[ch]
-
-   Keith Gemeinhart - TSC Bloomington (keithg@tsc.com)
-
-   *************************************************************************
-   *                                                                       *
-   * Copyright 1995 Technology Service Corporation, all rights reserved    *
-   *                                                                       *
-   * Permission to use, copy, modify, distribute, and sell this software   *
-   * and its documentation for any purpose is hereby granted without fee,  *
-   * provided that the above copyright notice appear in all copies and     *
-   * that both that copyright notice and this permission notice appear in  *
-   * supporting documentation. No representations are made about the       *
-   * suitability of this software for any purpose. It is provided "as is"  *
-   * without express or implied warranty.                                  *
-   *                                                                       *
-   *-----------------------------------------------------------------------*
-   *                                                                       *
-   * This file contains routines required for remote control of NCSA       *
-   * Mosaic and Netscape Navigator web browsers.                           *
-   *                                                                       *
-   * Function List                                                         *
-   * -------------                                                         *
-   *                                                                       *
-   * Author                                                                *
-   * ------                                                                *
-   * Keith Gemeinhart - TSC Bloomington (keithg@tsc.com)                   *
-   *************************************************************************
-
-   Currently not activated.
-
-   --> Only used by qmon
-
-
-9. rsh/rshd
+7. rsh/rshd
 -----------
 
    remote/*
@@ -462,7 +398,7 @@ Content
    used in qrsh, qrlogin.
 
 
-10. tcsh
+8. tcsh
 --------
 
    qtcsh based on tcsh source code, integration hooks for Grid Engine support.
@@ -509,7 +445,7 @@ Content
             tc.alloc.c,tc.os.h,tc.sig.h,tc.vers.c}
 
 
-11. qmake
+9. qmake
 ---------
 
    qmake based on gmake source code (make-3.78.1.tar.Z)
@@ -537,7 +473,7 @@ Content
 
 
 
-12. top
+10. top
 -------
 
    This files use some code parts of top
@@ -590,50 +526,7 @@ Content
    - Grid Engine kernel.
 
 
-
-13. zlib
---------
-
-   3rdparty/include/{zlib.h,zconf.h}
-   zlib-1.1.3.tar.gz
-
-   Copyright (C) 1995-1998 Jean-loup Gailly and Mark Adler
-   
-   /* zlib.h -- interface of the 'zlib' general purpose compression library
-     version 1.1.3, July 9th, 1998
-    
-     Copyright (C) 1995-1998 Jean-loup Gailly and Mark Adler
-    
-     This software is provided 'as-is', without any express or implied
-     warranty.  In no event will the authors be held liable for any damages
-     arising from the use of this software.
-    
-     Permission is granted to anyone to use this software for any purpose,
-     including commercial applications, and to alter it and redistribute it
-     freely, subject to the following restrictions:
-    
-     1. The origin of this software must not be misrepresented; you must not
-        claim that you wrote the original software. If you use this software
-        in a product, an acknowledgment in the product documentation would be
-        appreciated but is not required.
-     2. Altered source versions must be plainly marked as such, and must not be
-        misrepresented as being the original software.
-     3. This notice may not be removed or altered from any source distribution.
-    
-     Jean-loup Gailly        Mark Adler
-     jloup@gzip.org          madler@alumni.caltech.edu
-    
-    
-     The data format used by the zlib library is described by RFCs (Request for
-     Comments) 1950 to 1952 in the files ftp://ds.internic.net/rfc/rfc1950.txt
-     (zlib format), rfc1951.txt (deflate format) and rfc1952.txt (gzip format).
-   */                                                                              
-
-   disabled code
-   cull/src//pack.c
-
-
-14. OpenSSL
+11. OpenSSL
 -----------
 
   The OpenSSL toolkit stays under a dual license, i.e. both the conditions of
@@ -759,7 +652,7 @@ Content
  * [including the GNU Public Licence.]
  */
 
-15. snprintf
+12. snprintf
 ------------
 
    snprintf/*

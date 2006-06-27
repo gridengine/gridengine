@@ -1,9 +1,11 @@
 AA-2006-06-27-0: Cleanup:   Removal of unused zlib and XtReplay 3rdparty code
-	         Review:    AH
-	         Changed:   qmon
+                 Review:    AH
+                 Changed:   qmon
 
 AH-2006-06-23-1: Docs:      Fixed sge_conf(5) reprioritize and related 
                             paragraph in queue_conf(5)
+                 Review:    AA
+                 Changed:   man pages
 
 JG-2006-06-26-0: Testsuite: Added support for windows hosts.
                  Review:    CR

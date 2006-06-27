@@ -1,3 +1,12 @@
+OJ-2006-06-27-0: Testsuite: Added test case for qstat -ext, qstat -f -ext,
+                            qstat -t, qstat -pri, qstat -urg, qstat -j ERROR,
+                            qstat -f -r, qstat -f -urg, qstat -f -qs E, qstat -j.
+                            with XML parsing. in client/qstat.
+                            Added new file tcl_files/parser_xml.tcl with new
+                            XML parsing procedures.
+                 Issue:     1206
+                 Review:    DT
+
 AA-2006-06-27-0: Cleanup:   Removal of unused zlib and XtReplay 3rdparty code
                  Review:    AH
                  Changed:   qmon

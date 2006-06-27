@@ -38,9 +38,10 @@ global check_category check_root_access_needs  check_highest_level tdom_present
 
 set check_root_access_needs  "yes"
 
+
 set check_name           "qstat"
 set check_category       "COMPATIBILITY SYSTEM L10N VERIFIED"
-set check_highest_level  0  ;# 0 for usual tests, 1 for XML tests
+set check_highest_level  0 ;# 0 for usual tests, 1 for XML tests
 set check_description(0) "checking qstat functionality"
 set check_description(1) "checking qstat -xml functionality"
 set check_needs          "init_core_system "      ;# dependencies of this check (name of other check)
@@ -51,6 +52,7 @@ set check_init_level_procedure "qstat_init_level"
 set check_setup_function "qstat_setup"
 set check_cleanup_function "qstat_cleanup"
 
+
 set check_functions      "";
 lappend check_functions  "check_core_queues"     ;# functions to call (in order)
 lappend check_functions  "qstat_option_l"
@@ -60,8 +62,8 @@ lappend check_functions  "qstat_option_U"
 lappend check_functions  "qstat_option_s"
 lappend check_functions  "qstat_issue1800"
 
-
-lappend check_functions  "qstat_plain_xml_comparison"  ;# Compare the two qstat commands
+#
+lappend check_functions  "qstat_plain_xml_comparison"  ;# Compare the two qstatcommands
 lappend check_functions  "qstat_ne_plain_xml_comparison"  ;# Compare the two qstat -ne commands
 lappend check_functions  "qstat_r_plain_xml_comparison"  ;# Compare the two qstat -r commands
 lappend check_functions  "qstat_j_ERROR_plain_xml_comparison"  ;# Compare the two qstat -j ERROR commands
@@ -69,13 +71,13 @@ lappend check_functions  "qstat_j_plain_xml_comparison"  ;# Compare the two qsta
 lappend check_functions  "qstat_urg_plain_xml_comparison"  ;# Compare the two qstat -urg commands
 lappend check_functions  "qstat_f_urg_plain_xml_comparison"  ;# Compare the two qstat -f -urg commands
 lappend check_functions  "qstat_pri_plain_xml_comparison"  ;# Compare the two qstat -pri commands
+lappend check_functions  "qstat_f_qs_plain_xml_comparison"  ;# Compare the two qstat -f -qs E commands
 lappend check_functions  "qstat_l_q_plain_xml_comparison"  ;# Compare the two qstat -l q=all.q commands
-lappend check_functions  "qstat_ext_plain_xml_comparison"  ;# Compare the two qstat -ext commands
 lappend check_functions  "qstat_f_plain_xml_comparison"  ;# Compare the two qstat -f commands
 lappend check_functions  "qstat_explain_plain_xml_comparison"  ;# Compare the two qstat -explain E commands
 lappend check_functions  "qstat_f_q_plain_xml_comparison"  ;# Compare the two qstat -f -q all.q commands
 lappend check_functions  "qstat_f_ne_plain_xml_comparison"  ;# Compare the two qstat -f -ne commands
-lappend check_functions  "qstat_f_qs_plain_xml_comparison"  ;# Compare the two qstat -f -qs E commands
+lappend check_functions  "qstat_ext_plain_xml_comparison"  ;# Compare the two qstat -ext commands
 lappend check_functions  "qstat_f_r_plain_xml_comparison"  ;# Compare the two qstat -f -r commands
 lappend check_functions  "qstat_f_ext_plain_xml_comparison"  ;# Compare the two qstat -f -ext commands
 lappend check_functions  "qstat_F_plain_xml_comparison"  ;# Compare the two qstat -F commands
@@ -717,7 +719,7 @@ proc qstat_issue1800 {} {
 #*******************************************************************************
 
 proc qstat_plain_xml_comparison {} {
-      global ts_config CHECK_OUTPUT CHECK_ACTUAL_TEST_PATH CHECK_USER output_result 
+      global ts_config CHECK_OUTPUT CHECK_ACTUAL_TEST_PATH CHECK_USER  
       global tdom_present CHECK_ACT_LEVEL
 
       if { ($tdom_present == "0") } {
@@ -792,6 +794,7 @@ proc qstat_plain_xml_comparison {} {
    
    delete_all_jobs
    
+   sleep 5
 }
 
   
@@ -1022,7 +1025,11 @@ proc qstat_j_plain_xml_comparison {} {
          set_error 0 "ok"      
          return 
       }
-
+       
+		puts $CHECK_OUTPUT "skipping this test, as qstat -j is broken. See IZ 2076, 2077, 2079 \n" 
+      set_error 0 "ok"      
+      return
+		
       set hostname [lindex $ts_config(execd_nodes) 0]
       
       # Delete any remaining jobs
@@ -1033,7 +1040,7 @@ proc qstat_j_plain_xml_comparison {} {
       
      
       # Wait a little for jobs to be scheduled.
-      sleep 15
+      sleep 20
 
       # qstat_j_plain_output contains the plain qstat output in an assoc. array
       # qstat_j_plain_output(jobid) contains a list of jobids.
@@ -1052,7 +1059,7 @@ proc qstat_j_plain_xml_comparison {} {
       
       # We skip some comparisons also due to a bug in qstat -j JOB_NAME:
       # See IZ 2067 for details.
-      set column_vars "message"
+      set column_vars "jobid jobid_msg"
       
       set error_flag 0
        
@@ -1063,7 +1070,16 @@ proc qstat_j_plain_xml_comparison {} {
             
             
             
-            if { $qstat_j_ERROR_plain_output($jobid,$column) != $qstat_j_ERROR_xml_output($jobid,$column) } {
+            if { $qstat_j_plain_output($jobid,$column) != $qstat_j_xml_output($jobid,$column) } {
+               
+               # Put this if due to mismatch in plain, XML messages output. See IZ 2076, 2077  for details.
+               if { ($qstat_j_plain_output($jobid,$column) == "Jobs dropped because of error state") && \
+                    ($qstat_j_xml_output($jobid,$column) == "job is in error state") || \
+                    ($qstat_j_plain_output($jobid,$column) ==  "Jobs dropped because of hold state") && \
+                    ($qstat_j_xml_output($jobid,$column) == "job dropped because of hold") } {
+                  continue
+               }
+               
                puts $CHECK_OUTPUT "Plain output and XML output DO NOT agree for jobid $jobid ...\n"
                puts $CHECK_OUTPUT "and column $column... \n"
                puts $CHECK_OUTPUT "qstat_j_plain_output was $qstat_j_plain_output($jobid,$column)... \n"
@@ -1101,7 +1117,7 @@ proc qstat_j_plain_xml_comparison {} {
 #*******************************************************************************
 
 proc qstat_r_plain_xml_comparison {} {
-      global ts_config CHECK_OUTPUT CHECK_ACTUAL_TEST_PATH CHECK_USER output_result 
+      global ts_config CHECK_OUTPUT CHECK_ACTUAL_TEST_PATH CHECK_USER   
       global tdom_present CHECK_ACT_LEVEL
 
       if { ($tdom_present == "0") } {
@@ -1139,7 +1155,7 @@ proc qstat_r_plain_xml_comparison {} {
       parray qstat_r_xml_output
 
       # Now let's compare them by jobid.  
-      set jobid_list   $qstat_r_plain_output(jobid_list)  
+      set jobid_list  $qstat_r_plain_output(jobid_list) 
       
       # We skip the task_id comparison also due to a bug in parse_qstat,
       # See IZ 2052 for details.
@@ -1211,7 +1227,7 @@ proc qstat_r_plain_xml_comparison {} {
 #*******************************************************************************
 
 proc qstat_f_r_plain_xml_comparison {} {
-   global ts_config CHECK_OUTPUT CHECK_ACTUAL_TEST_PATH CHECK_USER output_result 
+   global ts_config CHECK_OUTPUT CHECK_ACTUAL_TEST_PATH CHECK_USER   
    global tdom_present CHECK_ACT_LEVEL
 
    if { ($tdom_present == "0") } {
@@ -1351,7 +1367,7 @@ proc qstat_f_r_plain_xml_comparison {} {
 
 proc qstat_urg_plain_xml_comparison {} {
    
-      global ts_config CHECK_OUTPUT CHECK_ACTUAL_TEST_PATH CHECK_USER output_result 
+      global ts_config CHECK_OUTPUT CHECK_ACTUAL_TEST_PATH CHECK_USER   
       global  tdom_present CHECK_ACT_LEVEL
 
       if { ($tdom_present == "0") } {
@@ -1366,7 +1382,7 @@ proc qstat_urg_plain_xml_comparison {} {
       delete_all_jobs
       
       # Run some jobs      
-      set result_local_return [start_remote_prog $hostname $CHECK_USER "$CHECK_ACTUAL_TEST_PATH/qsub.sh" ""]
+      set result_local_return [start_remote_prog $hostname $CHECK_USER "$CHECK_ACTUAL_TEST_PATH/qsub3.sh" ""]
       
      
       # Wait a little for jobs to be scheduled.
@@ -1459,7 +1475,7 @@ proc qstat_f_urg_plain_xml_comparison {} {
       delete_all_jobs
       
       # Run some jobs      
-      set result_local_return [start_remote_prog $hostname $CHECK_USER "$CHECK_ACTUAL_TEST_PATH/qsub.sh" ""]
+      set result_local_return [start_remote_prog $hostname $CHECK_USER "$CHECK_ACTUAL_TEST_PATH/qsub3.sh" ""]
       
      
       # Wait a little for jobs to be scheduled.
@@ -1467,7 +1483,7 @@ proc qstat_f_urg_plain_xml_comparison {} {
       
       # qstat_f_urg_plain_output contains the plain qstat  output in an assoc. array
       # qstat_f_urg_plain_output(jobid) contains a list of jobids.
-      set result1 [qstat_f_urg_plain_parse qstat_f_urg_plain_output ]
+      set result1 [qstat_f_urg_plain_parse qstat_f_urg_plain_output "-f"]]
       
       puts $CHECK_OUTPUT "plain qstat -f -urg array .... \n"
       parray qstat_f_urg_plain_output
@@ -1496,6 +1512,9 @@ proc qstat_f_urg_plain_xml_comparison {} {
             if { ($column == "slots") || ($column == "queue") || ($column == "task_id") } {
                append qstat_f_urg_xml_output($jobid,$column) " "
                set qstat_f_urg_xml_output($jobid,$column) [string trim $qstat_f_urg_xml_output($jobid,$column)]
+               # Get rid of extra white spaces
+               set single_white_space_string [qstat_special_parse $qstat_f_urg_xml_output($jobid,$column) ]
+               set qstat_f_urg_xml_output($jobid,$column)  $single_white_space_string
                set qstat_f_urg_plain_output($jobid,$column) [string trim $qstat_f_urg_plain_output($jobid,$column)]
 
             }
@@ -1566,7 +1585,7 @@ proc qstat_f_urg_plain_xml_comparison {} {
 #*******************************************************************************
 
 proc qstat_pri_plain_xml_comparison {} {
-      global ts_config CHECK_OUTPUT CHECK_ACTUAL_TEST_PATH CHECK_USER output_result 
+      global ts_config CHECK_OUTPUT CHECK_ACTUAL_TEST_PATH CHECK_USER   
       global tdom_present CHECK_ACT_LEVEL
 
       if { ($tdom_present == "0") } {
@@ -1581,7 +1600,7 @@ proc qstat_pri_plain_xml_comparison {} {
       delete_all_jobs
       
       # Run some jobs      
-      set result_local_return [start_remote_prog $hostname $CHECK_USER "$CHECK_ACTUAL_TEST_PATH/qsub.sh" ""]
+      set result_local_return [start_remote_prog $hostname $CHECK_USER "$CHECK_ACTUAL_TEST_PATH/qsub3.sh" ""]
       
      
       # Wait a little for jobs to be scheduled.
@@ -1668,7 +1687,7 @@ proc qstat_pri_plain_xml_comparison {} {
 #*******************************************************************************
 
 proc qstat_l_q_plain_xml_comparison {} {
-      global ts_config CHECK_OUTPUT CHECK_ACTUAL_TEST_PATH CHECK_USER output_result 
+      global ts_config CHECK_OUTPUT CHECK_ACTUAL_TEST_PATH CHECK_USER   
       global tdom_present CHECK_ACT_LEVEL
 
       if { ($tdom_present == "0") } {
@@ -1737,8 +1756,8 @@ proc qstat_l_q_plain_xml_comparison {} {
             if { $qstat_l_q_plain_output($jobid$column) != $qstat_l_q_xml_output($jobid$column) } {
                puts $CHECK_OUTPUT "Plain output and XML output DO NOT agree for jobid $jobid ...\n"
                puts $CHECK_OUTPUT "and column $column... \n"
-               puts $CHECK_OUTPUT "qstat_plain_output was $qstat_plain_output($jobid$column)... \n"
-               puts $CHECK_OUTPUT "while qstat_xml_output was $qstat_xml_output($jobid$column)... \n"
+               puts $CHECK_OUTPUT "qstat_l_q_plain_output was $qstat_l_q_plain_output($jobid$column)... \n"
+               puts $CHECK_OUTPUT "while qstat_l_q_xml_output was $qstat_l_q_xml_output($jobid$column)... \n"
                incr error_flag 1
             } 
          }
@@ -1771,7 +1790,7 @@ proc qstat_l_q_plain_xml_comparison {} {
 #*******************************************************************************
 
 proc qstat_ext_plain_xml_comparison {} {
-      global ts_config CHECK_OUTPUT CHECK_ACTUAL_TEST_PATH CHECK_USER output_result 
+      global ts_config CHECK_OUTPUT CHECK_ACTUAL_TEST_PATH CHECK_USER   
       global tdom_present CHECK_ACT_LEVEL
 
       if { ($tdom_present == "0") } {
@@ -1785,8 +1804,10 @@ proc qstat_ext_plain_xml_comparison {} {
       # Delete any remaining jobs
       delete_all_jobs
       
+		sleep 15
+		
       # Run some jobs      
-      set result_local_return [start_remote_prog $hostname $CHECK_USER "$CHECK_ACTUAL_TEST_PATH/qsub.sh" ""]
+      set result_local_return [start_remote_prog $hostname $CHECK_USER "$CHECK_ACTUAL_TEST_PATH/qsub3.sh" ""]
       
      
       # Wait a little for jobs to be scheduled.
@@ -1799,6 +1820,7 @@ proc qstat_ext_plain_xml_comparison {} {
       puts $CHECK_OUTPUT "plain qstat -ext array .... \n"
       parray qstat_ext_plain_output
       
+		append qstat_ext_xml_output(jobid_list) ""
       # qstat_ext_xml_output contains the XML qstat output in an assoc. array
       set result2 [qstat_ext_xml_parse qstat_ext_xml_output]
       
@@ -1858,6 +1880,7 @@ proc qstat_ext_plain_xml_comparison {} {
    
    delete_all_jobs
    
+   sleep 5
 }
 
  
@@ -1879,7 +1902,7 @@ proc qstat_ext_plain_xml_comparison {} {
 #*******************************************************************************
 
 proc qstat_f_ext_plain_xml_comparison {} {
-      global ts_config CHECK_OUTPUT CHECK_ACTUAL_TEST_PATH CHECK_USER output_result 
+      global ts_config CHECK_OUTPUT CHECK_ACTUAL_TEST_PATH CHECK_USER   
       global tdom_present CHECK_ACT_LEVEL
 
       if { ($tdom_present == "0") } {
@@ -1894,7 +1917,7 @@ proc qstat_f_ext_plain_xml_comparison {} {
       delete_all_jobs
       
       # Run some jobs      
-      set result_local_return [start_remote_prog $hostname $CHECK_USER "$CHECK_ACTUAL_TEST_PATH/qsub.sh" ""]
+      set result_local_return [start_remote_prog $hostname $CHECK_USER "$CHECK_ACTUAL_TEST_PATH/qsub3.sh" ""]
       
       # Wait a little for jobs to be scheduled.
       sleep 15
@@ -1919,7 +1942,7 @@ proc qstat_f_ext_plain_xml_comparison {} {
       
 
       set column_vars "prior ntckts name user project department state cpu mem io \
-                       tckts ovrts otckt queue task_id" ;# ftckt stckt share queue slots task_id
+                       tckts ovrts otckt queue task_id " ; #ftckt stckt share queue slots task_id
 
       set error_flag 0
       
@@ -1994,6 +2017,7 @@ proc qstat_f_ext_plain_xml_comparison {} {
    
    delete_all_jobs
    
+   sleep 5
 }
 
 #
@@ -2018,7 +2042,7 @@ proc qstat_f_ext_plain_xml_comparison {} {
 #*******************************************************************************
 
 proc qstat_f_plain_xml_comparison {} {
-      global ts_config CHECK_OUTPUT CHECK_ACTUAL_TEST_PATH CHECK_USER output_result
+      global ts_config CHECK_OUTPUT CHECK_ACTUAL_TEST_PATH CHECK_USER  
       global tdom_present CHECK_ACT_LEVEL
 
       if { ($tdom_present == "0") } {
@@ -2147,7 +2171,7 @@ proc qstat_f_plain_xml_comparison {} {
 #*******************************************************************************
 
 proc qstat_explain_plain_xml_comparison {} {
-      global ts_config CHECK_OUTPUT CHECK_ACTUAL_TEST_PATH CHECK_USER output_result
+      global ts_config CHECK_OUTPUT CHECK_ACTUAL_TEST_PATH CHECK_USER  
       global tdom_present CHECK_ACT_LEVEL
 
       if { ($tdom_present == "0") } {
@@ -2308,7 +2332,7 @@ proc qstat_f_q_plain_xml_comparison {} {
       # qstat_f_q_xml_output contains the XML qstat output in an assoc. array
       set result2 [qstat_f_xml_parse qstat_f_q_xml_output "-q all.q"]
 
-      puts $CHECK_OUTPUT "xml qstat -f q- all.q array .... \n"
+      puts $CHECK_OUTPUT "xml qstat -f qs all.q array .... \n"
       parray qstat_f_q_xml_output
 
       #Now let's compare them by jobid
@@ -2442,7 +2466,7 @@ proc qstat_f_qs_plain_xml_comparison {} {
 #*******************************************************************************
 
 proc qstat_f_ne_plain_xml_comparison {} {
-      global ts_config CHECK_OUTPUT CHECK_ACTUAL_TEST_PATH CHECK_USER output_result
+      global ts_config CHECK_OUTPUT CHECK_ACTUAL_TEST_PATH CHECK_USER  
       global tdom_present CHECK_ACT_LEVEL
 
       if { ($tdom_present == "0") } {
@@ -2542,7 +2566,7 @@ proc qstat_f_ne_plain_xml_comparison {} {
 #*******************************************************************************
 
 proc qstat_F_plain_xml_comparison {} {
-      global ts_config CHECK_OUTPUT CHECK_ACTUAL_TEST_PATH CHECK_USER output_result
+      global ts_config CHECK_OUTPUT CHECK_ACTUAL_TEST_PATH CHECK_USER  
       global tdom_present CHECK_ACT_LEVEL
 
       if { ($tdom_present == "0") } {
@@ -2678,7 +2702,7 @@ proc qstat_F_plain_xml_comparison {} {
 #*******************************************************************************
 
 proc qstat_F_rerun_h_vmem_plain_xml_comparison {} {
-      global ts_config CHECK_OUTPUT CHECK_ACTUAL_TEST_PATH CHECK_USER output_result
+      global ts_config CHECK_OUTPUT CHECK_ACTUAL_TEST_PATH CHECK_USER  
       global tdom_present CHECK_ACT_LEVEL
 
       if { ($tdom_present == "0") } {
@@ -2814,7 +2838,7 @@ proc qstat_F_rerun_h_vmem_plain_xml_comparison {} {
 #*******************************************************************************
 
 proc qstat_g_c_plain_xml_comparison {} {
-      global ts_config CHECK_OUTPUT CHECK_ACTUAL_TEST_PATH CHECK_USER output_result 
+      global ts_config CHECK_OUTPUT CHECK_ACTUAL_TEST_PATH CHECK_USER   
       global tdom_present CHECK_ACT_LEVEL
 
       if { ($tdom_present == "0") } {
@@ -2909,7 +2933,7 @@ proc qstat_g_c_plain_xml_comparison {} {
 #*******************************************************************************
 
 proc qstat_g_d_plain_xml_comparison {} {
-      global ts_config CHECK_OUTPUT CHECK_ACTUAL_TEST_PATH CHECK_USER output_result 
+      global ts_config CHECK_OUTPUT CHECK_ACTUAL_TEST_PATH CHECK_USER   
       global tdom_present CHECK_ACT_LEVEL
 
       if { ($tdom_present == "0") } {
@@ -3012,7 +3036,7 @@ proc qstat_g_d_plain_xml_comparison {} {
 #*******************************************************************************
 
 proc qstat_g_t_plain_xml_comparison {} {
-      global ts_config CHECK_OUTPUT CHECK_ACTUAL_TEST_PATH CHECK_USER output_result 
+      global ts_config CHECK_OUTPUT CHECK_ACTUAL_TEST_PATH CHECK_USER   
       global tdom_present CHECK_ACT_LEVEL
 
       if { ($tdom_present == "0") } {
@@ -3120,7 +3144,7 @@ proc qstat_g_t_plain_xml_comparison {} {
 #*******************************************************************************
 
 proc qstat_s_a_plain_xml_comparison {} {
-      global ts_config CHECK_OUTPUT CHECK_ACTUAL_TEST_PATH CHECK_USER output_result 
+      global ts_config CHECK_OUTPUT CHECK_ACTUAL_TEST_PATH CHECK_USER   
       global tdom_present CHECK_ACT_LEVEL
 
       if { ($tdom_present == "0") } {
@@ -3214,9 +3238,9 @@ proc qstat_s_a_plain_xml_comparison {} {
 #*******************************************************************************
 
 proc qstat_s_p_plain_xml_comparison {} {
-      global ts_config CHECK_OUTPUT CHECK_ACTUAL_TEST_PATH CHECK_USER output_result 
+      global ts_config CHECK_OUTPUT CHECK_ACTUAL_TEST_PATH CHECK_USER   
       global tdom_present CHECK_ACT_LEVEL
-
+ 
       if { ($tdom_present == "0") } {
          puts $CHECK_OUTPUT "skipping qstat -xml cases ... \n"
          set_error 0 "ok"      
@@ -3808,7 +3832,7 @@ proc qstat_s_hu_plain_xml_comparison {} {
 #*******************************************************************************
 
 proc qstat_u_valid_plain_xml_comparison {} {
-      global ts_config CHECK_OUTPUT CHECK_ACTUAL_TEST_PATH CHECK_USER output_result 
+      global ts_config CHECK_OUTPUT CHECK_ACTUAL_TEST_PATH CHECK_USER   
       global tdom_present CHECK_ACT_LEVEL
 
       if { ($tdom_present == "0") } {

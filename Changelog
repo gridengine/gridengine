@@ -1,3 +1,6 @@
+AH-2006-06-23-1: Docs:      Fixed sge_conf(5) reprioritize and related 
+                            paragraph in queue_conf(5)
+
 JG-2006-06-26-0: Testsuite: Added support for windows hosts.
                  Review:    CR
 

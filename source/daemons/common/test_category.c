@@ -160,6 +160,7 @@ static lList *test_create_access(void)
                lList *users = lCreateList("user", UE_Type);
                lSetString(acc_elem, US_name, access_str);
                lSetList(acc_elem, US_entries, users);
+               lSetBool(acc_elem, US_consider_with_categories, true);
               
                lAppendElem(access_list, acc_elem);
               
@@ -179,6 +180,29 @@ static lList *test_create_access(void)
       }
    }
    return access_list;
+}
+
+/****** test_category/test_create_project() *************************************
+*  NAME
+*     test_create_project() -- creates an project list with the passed project name
+*
+*  SYNOPSIS
+*     lList* test_create_project(const char *project) 
+*
+*  RESULT
+*     lList* - NULL or valid project list
+*
+*  NOTES
+*     MT-NOTE: test_create_project() is not MT safe 
+*
+*******************************************************************************/
+static lList *test_create_project(const char *project)
+{
+   lList *project_list = NULL;
+   lListElem *prj;
+   prj = lAddElemStr(&project_list, UP_name, project, UP_Type);
+   lSetBool(prj, UP_consider_with_categories, true);
+   return project_list;
 }
 
 /****** test_category/test_create_request() ************************************
@@ -506,6 +530,7 @@ static int test(data_entry_t *test, char *result, int count)
    int ret = 0;
    lListElem *job_elem = NULL;
    lList *access_list = NULL;
+   lList *project_list = NULL;
 
    printf("\ntest %d:\n-------\n", test->test_nr);
    
@@ -514,11 +539,14 @@ static int test(data_entry_t *test, char *result, int count)
    if (test->is_access_list == 1) {
       access_list = test_create_access();
    }
+   if (test->project) {
+      project_list = test_create_project(test->project);
+   }
 
    if (job_elem != NULL) {
        dstring category_str = DSTRING_INIT;
 
-       sge_build_job_category_dstring(&category_str, job_elem, access_list, NULL, NULL);
+       sge_build_job_category_dstring(&category_str, job_elem, access_list, project_list, NULL);
 
        printf("got     : <%s>\n", sge_dstring_get_string(&category_str)!=NULL?sge_dstring_get_string(&category_str):"<NULL>");
 

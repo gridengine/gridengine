@@ -1,3 +1,7 @@
+AA-2006-06-28-0: Testsuite: test_category fixed
+                 Review:    AH
+                 Changed:   test_category
+
 OJ-2006-06-27-0: Testsuite: Added test case for qstat -ext, qstat -f -ext,
                             qstat -t, qstat -pri, qstat -urg, qstat -j ERROR,
                             qstat -f -r, qstat -f -urg, qstat -f -qs E, qstat -j.

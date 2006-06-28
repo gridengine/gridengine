@@ -896,7 +896,6 @@ proc set_root_passwd {} {
       foreach user $passwd_required {
          puts "  - $user"
       }
-      puts ""
 
       # Test login on one of the windows hosts
       set windows_host [host_conf_get_windows_host]
@@ -939,7 +938,13 @@ proc set_passwd {user root_host win_host} {
    set error 1
    while {$error} {
       # enter passwd
-      puts "please enter user $user's password: "
+      puts "\nhost access with password needed for user $user"
+      if {$user == "root"} {
+         puts "please enter the password, or \"noroot\" to start testsuite without root access"
+      } else {
+         puts "please enter the password, or \"none\" to skip passwd entry and risk errors later on"
+      }
+      puts "user $user's password: "
       stty -echo
       set passwd [wait_for_enter 1]
       stty echo
@@ -947,50 +952,45 @@ proc set_passwd {user root_host win_host} {
       # evaluate passwd
       if {$passwd == ""} {
          puts $CHECK_OUTPUT "--> password not set!"
+         continue
       } else {
-         # temporarily set password database (for connection test)
-         set stored_passwd($user) $passwd
-
-         if {$user == "root"} {
-            set host $root_host
-         } else {
-            set host $win_host
-         }
-
-         puts $CHECK_OUTPUT "--> testing $user access to host $host ..."
-         set result [start_remote_prog $host $user "id" "" prg_exit_state 60 0 "" 1 1 1 0]
-      }
-    
-      # on error: allow reentering of passwd, or
-      # switch to admin user system, or
-      # do not reenter passwd and risk errors later on (windows non root users)
-      if {[string first $user $result] < 0} {
-         puts $CHECK_OUTPUT "--> id as $user output:\n$result"
-         puts $CHECK_OUTPUT "--> no $user access"
-         set passwd ""
-         if {$user == "root"} {
-            puts $CHECK_OUTPUT "enter \"noroot\" to start testsuite without root access\nOR\npress >ENTER< to reenter the root password"
-         } else {
-            puts $CHECK_OUTPUT "enter \"none\" to skip passwd entry and risk errors later on\nOR\npress >ENTER< to reenter $user's password"
-         }
-
-         set user_input [wait_for_enter 1]
          # user explicitly requests not to have passwd?
-         if {$user == "root"} {
-            if {$user_input == "noroot"} {
-               set CHECK_ADMIN_USER_SYSTEM 1
-               set error 0
-            }
+         if {$user == "root" && $passwd == "noroot"} {
+            set CHECK_ADMIN_USER_SYSTEM 1
+            set error 0
          } else {
-            if {$user_input == "none"} {
+            if {$user != "root" && $passwd == "none"} {
                set error 0
-            }
-         }
-      } else {
-         puts $CHECK_OUTPUT "--> id as $user output:\n$result"
-         set error 0
-      }
-   }
+            } else {
+               # seems to be a real passwd - check it
+               # temporarily set password database (for connection test)
+               set stored_passwd($user) $passwd
+
+               # choose host on which to test user's passwd
+               if {$user == "root"} {
+                  set host $root_host
+               } else {
+                  set host $win_host
+               }
+
+               # try to connect to host and execute "id"
+               puts $CHECK_OUTPUT "--> testing $user access to host $host ..."
+               set result [start_remote_prog $host $user "id" "" prg_exit_state 60 0 "" 1 1 1 0]
+               puts $CHECK_OUTPUT "--> id as $user output:\n$result"
+
+               # on error: allow reentering of passwd, or
+               # switch to admin user system, or
+               # do not reenter passwd and risk errors later on (windows non root users)
+               if {[string first $user $result] >= 0} {
+                  set error 0
+               } else {
+                  puts $CHECK_OUTPUT "--> no $user access"
+                  set passwd ""
+               }
+            } ;# passwd check
+         } ;# passwd or none has been entered
+      } ;# passwd or noroot/none has been entered
+   } ;# while loop entering passwd   
 
    # finally store the passwd
    set stored_passwd($user) $passwd

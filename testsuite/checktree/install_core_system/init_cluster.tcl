@@ -531,8 +531,6 @@ proc setup_conf {} {
   
   set arrays_old [ array names old_config ]
   set arrays_new [ array names new_config ]
-#  foreach elem $arrays_old { puts "old elem: \"$elem\"" }
-#  foreach elem $arrays_new { puts "new elem: \"$elem\"" }
 
   if { [ llength $arrays_old] == [ llength $arrays_new ] } {
     foreach param $arrays_old {
@@ -546,15 +544,6 @@ proc setup_conf {} {
           if { [ string compare $param "finished_jobs" ] == 0 } { continue }
           if { [ string compare $param "max_unheard" ] == 0 } { continue }
           if { [ string compare $param "reporting_params" ] == 0 } { continue }
-#          if { [ string compare $param "" ] == 0 } { continue }
-#          if { [ string compare $param "" ] == 0 } { continue }
-#          if { [ string compare $param "" ] == 0 } { continue }
-#          if { [ string compare $param "" ] == 0 } { continue }
-#          if { [ string compare $param "" ] == 0 } { continue }
-#          if { [ string compare $param "" ] == 0 } { continue }
-#          if { [ string compare $param "" ] == 0 } { continue }
-
-
 
           add_proc_error "setup_conf" -3 "config parameter $param:\ndefault setup: $old, after testsuite reset: $new" 
        }
@@ -639,11 +628,11 @@ proc setup_execd_conf {} {
      }
 
      set spool_dir_found 0
+     set win_execd_params_found 0
      foreach elem $elements {
         append output "$elem is set to $tmp_config($elem)\n" 
         incr counter 1
         switch $elem {
-           "execd_params" { continue }
            "mailer" { continue }
            "qlogin_daemon" { continue }
            "rlogin_daemon" { continue }
@@ -652,6 +641,17 @@ proc setup_execd_conf {} {
               # on windows, we have a load sensor, on other platforms not
               if {[host_conf_get_arch $host] == "win32-x86"} {
                  incr expected_entries 1
+              } else {
+                 lappend removed $elem
+              }
+           }
+           "execd_params" {
+              # on windows, we need a special execd param for use of domain users
+              if {[host_conf_get_arch $host] == "win32-x86"} {
+                 incr expected_entries 1
+                 if {$tmp_config(execd_params) == "enable_windomac=true"} {
+                    set win_execd_params_found 1
+                 }
               } else {
                  lappend removed $elem
               }
@@ -668,8 +668,9 @@ proc setup_execd_conf {} {
               lappend removed $elem
            }
         }
-        
      }
+
+     # execd_spool_dir has to be set correctly (depending on testsuite configuration)
      if { $spool_dir == 1 && $spool_dir_found == 0 } {
         add_proc_error "setup_execd_conf" -3 "host $host should have spool dir entry \"$have_exec_spool_dir\"\nADDING: execd_spool_dir $have_exec_spool_dir"
         if {[info exists tmp_config(execd_spool_dir)]} {
@@ -684,9 +685,18 @@ proc setup_execd_conf {} {
      if { $counter != $expected_entries } {
         add_proc_error "setup_execd_conf" -1 "host $host has $counter from $expected_entries expected entries:\n$output"
      }
+
+     # we need execd params for windows hosts
+     if {[host_conf_get_arch $host] == "win32-x86" && !$win_execd_params_found} {
+        set tmp_config(execd_params) "enable_windomac=true"
+     }
+    
+     # remove unexpected options
      foreach elem $removed {
         set tmp_config($elem) ""
      }
+
+     # now set the new config
      set_config tmp_config $host
   }
 

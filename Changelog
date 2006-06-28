@@ -1,3 +1,9 @@
+JG-2006-06-28-0: Testsuite: Add execd_param required for windows domain users
+                            in install_core_system check.
+                            Fixes and cleanup for qconf and qrsh check.
+                            Cleanup of testsuite password query.
+                 Review:    CR
+
 AA-2006-06-28-0: Testsuite: test_category fixed
                  Review:    AH
                  Changed:   test_category

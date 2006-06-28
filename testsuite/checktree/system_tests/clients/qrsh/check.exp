@@ -1272,6 +1272,11 @@ proc qrsh_qsub_gid {} {
    puts $CHECK_OUTPUT "check if qsub gid is propagated to qrsh job"
 
    foreach host $qrsh_hostlist {
+      if {[resolve_arch $host] == "win32-x86"} {
+         add_proc_error "qrsh_qsub_gid" -3 "qrsh_qsub_gid test not supported on windows execution host $host"
+         continue
+      }
+
       puts $CHECK_OUTPUT "using host $host"
       # dump commandfile to file
       set f [open $CHECK_PROTOCOL_DIR/qrsh.sh w]
@@ -1783,11 +1788,11 @@ proc qrsh_sigterm_running_job {} {
 
    # start qrsh 
    set qrsh_id [open_remote_spawn_process $CHECK_HOST "ts_def_con" $ts_config(product_root)/bin/$CHECK_ARCH/qrsh "\"echo started; sleep 3600\""]
-   set sp_id [ lindex $qrsh_id 1 ]
+   set sp_id [lindex $qrsh_id 1]
 
      
    # job must be scheduled
-   set timeout 20
+   set timeout 30
    expect {
       -i $sp_id full_buffer {
          add_proc_error "qrsh_qrsh_sigterm_running_job" -1 "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
@@ -1803,9 +1808,10 @@ proc qrsh_sigterm_running_job {} {
    # now terminate the connection
    send -i $sp_id "\003"
    send -i $sp_id "\003"
+   sleep 10
    close_spawn_process $qrsh_id
 
-   wait_for_end_of_all_jobs 15
+   wait_for_end_of_all_jobs 60
 
    set result [start_sge_bin qstat "-s pr" "" "" catch_return ]
    if { $catch_return == 0 } {

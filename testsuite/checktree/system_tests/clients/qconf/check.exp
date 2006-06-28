@@ -72,7 +72,6 @@ lappend check_functions "qconf_duser"
 lappend check_functions "qconf_Auser"
 lappend check_functions "qconf_muser"
 lappend check_functions "qconf_Muser"
-lappend check_functions "qconf_de_check"
 lappend check_functions "qconf_segfault"
 lappend check_functions "qconf_se"
 lappend check_functions "qconf_sel"
@@ -91,8 +90,6 @@ lappend check_functions "qconf_sconfl_check"	;# List all hosts with configuratio
 lappend check_functions "qconf_sds_check"	;# List detached settings in the cluster  config
 lappend check_functions "qconf_secl_check"	;# List event client list
 lappend check_functions "qconf_sep_check"	;# List processors
-lappend check_functions "qconf_shgrp_tree_check"	;# List tree like structure of hosts
-lappend check_functions "qconf_shgrp_resolved_check"	;# List  hosts in a group
 lappend check_functions "qconf_sm_check"	;# List  managers
 lappend check_functions "qconf_so_check"	;# List operators 
 lappend check_functions "qconf_ss_check"	;# List submit hosts
@@ -135,7 +132,8 @@ proc qconf_init_level {} {
 }
 
 proc qconf_setup {} {
-   global CHECK_OUTPUT CHECK_USER qconf_original_host_groups qconf_original_usersets qconf_orig_queues qconf_project qconf_sched_config qconf_userlist 
+   global ts_config CHECK_OUTPUT CHECK_USER 
+   global qconf_original_host_groups qconf_original_usersets qconf_orig_queues qconf_project qconf_sched_config qconf_userlist 
    global backup_allhosts
    global queue_names
 
@@ -145,14 +143,25 @@ proc qconf_setup {} {
    for {set i 0} {$i < 1000}  {incr i 1} {
       lappend queue_names "q.$i"
    }
-   
-   set output [start_sge_bin qconf -shgrpl]
-   set output [string trim $output]
-   set qconf_original_host_groups {}
-   foreach hg $output {
-      lappend qconf_original_host_groups $hg
-      puts $CHECK_OUTPUT "saving known hostgroup \"$output\" for cleanup procedure"
+ 
+   # host group setup for GE >= 6.0
+   if {$ts_config(gridengine_version) >= 60} {
+      # we'll create additional host groups later on - remember the list of hostgroups
+      # for cleanup
+      set output [start_sge_bin qconf -shgrpl]
+      set output [string trim $output]
+      set qconf_original_host_groups {}
+      foreach hg $output {
+         puts $CHECK_OUTPUT "saving known hostgroup \"$hg\" for cleanup procedure"
+         lappend qconf_original_host_groups $hg
+      }
+
+      # create a test hostgroup
+      set qconf_hgrp_setup(group_name) "@qconf_test"
+      set qconf_hgrp_setup(hostlist)   "$ts_config(execd_nodes)"
+      add_hostgroup "@qconf_test" qconf_hgrp_setup
    }
+
 
    set output [start_sge_bin qconf -sul]
    set output [string trim $output]
@@ -183,20 +192,22 @@ proc qconf_setup {} {
 
 
 proc qconf_cleanup {} {
-   global CHECK_OUTPUT qconf_original_host_groups qconf_original_usersets qconf_orig_queues qconf_sched_config
+   global ts_config CHECK_OUTPUT 
+   global qconf_original_host_groups qconf_original_usersets qconf_orig_queues qconf_sched_config
    global CHECK_USER CHECK_FIRST_FOREIGN_SYSTEM_USER qconf_prj_setup
   
    puts $CHECK_OUTPUT "cleanup ..."
 
-
-   set output [start_sge_bin qconf -shgrpl]
-   set output [string trim $output]
-   foreach hg $output {
-      puts $CHECK_OUTPUT "testing hostgroup \"$hg\" ..."
-      if { [lsearch -exact $qconf_original_host_groups $hg] < 0 } {
-         puts $CHECK_OUTPUT "deleting unexpected hostgroup \"$hg\" ..."
-         set res [start_sge_bin qconf "-dhgrp $hg"]
-         puts $CHECK_OUTPUT $res
+   # in GE >= 6.0: cleanup hostgroups
+   if {$ts_config(gridengine_version) >= 60} {
+      set output [start_sge_bin qconf -shgrpl]
+      set output [string trim $output]
+      foreach hg $output {
+         puts $CHECK_OUTPUT "testing hostgroup \"$hg\" ..."
+         if {[lsearch -exact $qconf_original_host_groups $hg] < 0} {
+            puts $CHECK_OUTPUT "deleting unexpected hostgroup \"$hg\" ..."
+            del_hostgroup $hg
+         }
       }
    }
 
@@ -824,95 +835,6 @@ proc qconf_rattr_check {} {
 proc qconf_Rattr_check {} {
 }
 
-#                                                             max. column:     |
-#****** qconf/qconf_Rattr_check() ******
-# 
-#  NAME
-#     qconf_Rattr_check -- ??? 
-#
-#  SYNOPSIS
-#     qconf_Rattr_check { } 
-#
-#  FUNCTION
-#     ??? 
-#
-#  INPUTS
-#
-#  RESULT
-#     ??? 
-#
-#  EXAMPLE
-#     ??? 
-#
-#  NOTES
-#     ??? 
-#
-#  BUGS
-#     ??? 
-#
-#  SEE ALSO
-#     ???/???
-#*******************************
-proc qconf_de_check {} {
-   global ts_config
-   global CHECK_OUTPUT CHECK_PRODUCT_TYPE CHECK_USER CHECK env
-   puts $CHECK_OUTPUT "testing qconf -de ..."
-
-   if { $ts_config(gridengine_version) == 53 } {
-      set_error 0 "test doesn't apply for SGE 5.3"
-      return
-   }
-
-   # Setup
-   set execd [lindex $ts_config(execd_nodes) 0]
-   set arch [resolve_arch $ts_config(master_host)]
-
-   puts $CHECK_OUTPUT "using execd host $execd"
-
-   # the tmp_file is automatically removed from testsuite
-   set tmp_file [get_tmp_file_name]
-   set catch_result [ catch {  eval exec "$ts_config(product_root)/bin/$arch/qconf -se $execd | grep -v load_values | grep -v processors > $tmp_file" } result ]
-   if { $catch_result != 0 } {
-      add_proc_error "qconf_de_check" "-1" "could not store execd config: $result"
-   }
-   puts $CHECK_OUTPUT "tmp file is: $tmp_file"
-   puts $CHECK_OUTPUT "doing qconf -dattr hostgroup hostlist $execd @allhosts:"
-   set catch_result [ catch {  eval exec "$ts_config(product_root)/bin/$arch/qconf -dattr hostgroup hostlist $execd @allhosts" } result ]
-   puts $CHECK_OUTPUT $result
- 
-   if { $catch_result != 0 } {
-      add_proc_error "qconf_de_check" "-1" "could not remove host from hostgroup @allhosts: $result"
-   }
-
- 
-   # Test
-   puts $CHECK_OUTPUT "doing qconf -de $execd"
-   set catch_result [ catch {  eval exec "$ts_config(product_root)/bin/$arch/qconf" "-de" "$execd" } result ]
-   puts $CHECK_OUTPUT $result
-   
-   set EXEC_HOST_REMOVED [translate $ts_config(master_host) 1 0 0 [sge_macro MSG_SGETEXT_REMOVEDFROMLIST_SSSS] $CHECK_USER [resolve_host $ts_config(master_host) 1] [resolve_host $execd 1] "execution host"]
-
-   puts $CHECK_OUTPUT "looking for : \"$EXEC_HOST_REMOVED\""
-   puts $CHECK_OUTPUT "answer was  : \"$result\""
-
-   if { [ string match "*$EXEC_HOST_REMOVED*" $result ] == 0 } {
-      add_proc_error "qconf_de_check" "-1" "could not delete live execd: $result\nBug 1269: qconf -de still crashes qmaster"
-   }
-   puts $CHECK_OUTPUT "removed execd $execd from cluster"
-
-   puts $CHECK_OUTPUT "doing qconf -Ae $tmp_file"
-   catch { eval exec "$ts_config(product_root)/bin/$arch/qconf -Ae $tmp_file" } result 
-   puts $CHECK_OUTPUT $result
-
-   puts $CHECK_OUTPUT "doing qconf -aattr hostgroup hostlist $execd @allhosts"
-   catch { eval exec "$ts_config(product_root)/bin/$arch/qconf -aattr hostgroup hostlist $execd @allhosts" } result
-   puts $CHECK_OUTPUT $result
-
-   puts $CHECK_OUTPUT "added execd $execd to cluster"
-
-   set_error 0 "ok"
-}
-
 proc qconf_segfault {} {
    global ts_config CHECK_OUTPUT CHECK_ARCH CHECK_HOST CHECK_USER
 
@@ -1221,90 +1143,6 @@ proc qconf_sep_check {} {
       puts $CHECK_OUTPUT "qconf -sep succeded\n"
    } else {
       puts $CHECK_OUTPUT "result is $result0"
-   }
-
-   set_error 0 "ok"
-}
-#                                                             max. column:     |
-#****** qconf/qconf_shgrp_tree_check() ******
-#
-#  NAME
-#     qconf_shgrp_tree_check - Display tree like structure of host group 
-#
-#  SYNOPSIS
-#     qconf_shgrp_tree_check { } - Call get_shgrp_tree_error for group "@allhosts"
-#
-#  FUNCTION
-#     Check basic functionality of qconf
-#
-#  SEE ALSO
-# sge_host.60/get_hostgroup_tree()
-# sge_host.60/get_hostgroup_tree_error()
-#*******************************
-proc qconf_shgrp_tree_check {} {
-   global ts_config env
-   global CHECK_OUTPUT CHECK_USER CHECK_HOST CHECK_ARCH
-
-   # First do a positive test
-   puts $CHECK_OUTPUT "Positive test for qconf -shgrp_tree ...\n"
-   set result0 [get_hostgroup_tree "@allhosts" ]
-
-   if { ( $result0 == 0 ) } {
-      puts $CHECK_OUTPUT "qconf -shgrp_tree @allhosts succeded"
-   } else {
-      puts $CHECK_OUTPUT "result is $result0"
-   }
-
-   # next do a negative test
-   puts $CHECK_OUTPUT "Negative test for qconf -shgrp_tree ...\n"
-   set result1 [get_hostgroup_tree "wrong_hostgroup" result $CHECK_HOST $CHECK_USER 0]
-
-   if { ( $result1 == -1 ) } {
-      puts $CHECK_OUTPUT "qconf -shgrp_tree wrong_hostgroup succeded"
-   } else {
-      puts $CHECK_OUTPUT "result is $result1"
-   }
-
-   set_error 0 "ok"
-}
-#                                                             max. column:     |
-#****** qconf/qconf_shgrp_resolved_check() ******
-#
-#  NAME
-#     qconf_shgrp_resolved_check - Display list of host group 
-#
-#  SYNOPSIS
-#     qconf_shgrp_resolved_check { } - Call "qconf -shgrp_resolved @allhosts"
-#                            Check that the output contains   "$CHECK_HOST"
-#
-#  FUNCTION
-#     Check basic functionality of qconf
-#
-#  SEE ALSO
-# sge_host.60/get_hostgroup_resolved()
-# sge_host.60/get_hostgroup_resolved_error()
-#*******************************
-proc qconf_shgrp_resolved_check {} {
-   global ts_config env
-   global CHECK_OUTPUT CHECK_USER CHECK_HOST CHECK_ARCH
-
-   # First do a positive test
-   puts $CHECK_OUTPUT "Positive test for qconf -shgrp_resolved ...\n"
-   set result0 [get_hostgroup_resolved "@allhosts" ]
-   if { ( $result0 == 0 ) } {
-      puts $CHECK_OUTPUT "qconf -shgrp_resolved @allhosts  succeded"
-   } else {
-      puts $CHECK_OUTPUT "result is $result0"
-   }
-
-   # next do a negative test
-   puts $CHECK_OUTPUT "Negative test for qconf -shgrp_resolved ...\n"
-   set result1 [get_hostgroup_resolved "wrong_hostgroup" result $CHECK_HOST $CHECK_USER 0]
-
-   if { ( $result1 == -1 ) } {
-      puts $CHECK_OUTPUT "qconf -shgrp_resolved wrong_hostgroup succeded"
-   } else {
-      puts $CHECK_OUTPUT "result is $result1"
    }
 
    set_error 0 "ok"

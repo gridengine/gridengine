@@ -1,3 +1,8 @@
+AA-2006-06-30-0: Bugifx:    qping segfaults in ssl mode
+                 CR:        6445469
+                 IZ:        2081
+                 Review:    CR
+
 CR-2006-06-30-0: Testsuite: added java15 settings to host configuration
                             added passwd hook for additional checktree
                  Review:    JG

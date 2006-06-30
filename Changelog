@@ -1,3 +1,7 @@
+CR-2006-06-30-0: Testsuite: added java15 settings to host configuration
+                            added passwd hook for additional checktree
+                 Review:    JG
+
 JG-2006-06-28-0: Testsuite: Add execd_param required for windows domain users
                             in install_core_system check.
                             Fixes and cleanup for qconf and qrsh check.

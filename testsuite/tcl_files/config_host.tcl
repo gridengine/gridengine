@@ -33,7 +33,7 @@
 
 global ts_host_config               ;# new testsuite host configuration array
 global actual_ts_host_config_version      ;# actual host config version number
-set    actual_ts_host_config_version "1.6"
+set    actual_ts_host_config_version "1.7"
 
 if {![info exists ts_host_config]} {
    # ts_host_config defaults
@@ -554,12 +554,20 @@ proc host_config_hostlist_add_host { array_name { have_host "" } } {
       set java_bin "" 
    }
 
+   set myenv(EN_QUIET) "1"
+   set java15_bin [ start_remote_prog $host $CHECK_USER "/bin/csh" "-c \"source /vol2/resources/en_jdk15 ; which java\"" prg_exit_state 12 0 myenv 1 0 ]
+
+   if { $prg_exit_state != 0 } {
+      set java15_bin "" 
+   }
+
    set config($new_host,expect)        [string trim $expect_bin]
    set config($new_host,vim)           [string trim $vim_bin]
    set config($new_host,tar)           [string trim $tar_bin]
    set config($new_host,gzip)          [string trim $gzip_bin]
    set config($new_host,ssh)           [string trim $ssh_bin]
    set config($new_host,java)          [string trim $java_bin]
+   set config($new_host,java15)        [string trim $java15_bin]
    set config($new_host,loadsensor)    ""
    set config($new_host,processors)    1
    set config($new_host,spooldir)      ""
@@ -658,6 +666,7 @@ proc host_config_hostlist_edit_host { array_name { has_host "" } } {
       puts $CHECK_OUTPUT "   gzip          : $config($host,gzip)"
       puts $CHECK_OUTPUT "   ssh           : $config($host,ssh)"
       puts $CHECK_OUTPUT "   java          : $config($host,java)"
+      puts $CHECK_OUTPUT "   java15        : $config($host,java15)"
       puts $CHECK_OUTPUT "   loadsensor    : $config($host,loadsensor)"
       puts $CHECK_OUTPUT "   processors    : $config($host,processors)"
       puts $CHECK_OUTPUT "   spooldir      : $config($host,spooldir)"
@@ -697,6 +706,7 @@ proc host_config_hostlist_edit_host { array_name { has_host "" } } {
          "gzip" -
          "ssh" -
          "java" -
+         "java15" -
          "loadsensor" { 
             set input_type "simple"
             set isfile 1
@@ -950,6 +960,7 @@ proc host_config_hostlist_delete_host { array_name } {
          unset config($host,gzip)
          unset config($host,ssh)
          unset config($host,java)
+         unset config($host,java15)
          unset config($host,loadsensor)
          unset config($host,processors)
          unset config($host,spooldir)
@@ -1517,9 +1528,10 @@ proc host_conf_get_unused_host {{raise_error 1}} {
 #     }
 #
 #  NOTES
+#     TODO: store JAVA_HOME in host config!
 #
 #  BUGS
-#
+#     Doesn't work for MAC OS X
 #  SEE ALSO
 #*******************************************************************************
 proc get_java_home_for_host { host } {
@@ -1536,6 +1548,56 @@ proc get_java_home_for_host { host } {
     
     return $res
 }
+
+#****** config_host/get_java15_home_for_host() **************************************************
+#  NAME
+#    get_java15_home_for_host() -- Get the java15 home directory for a host
+#
+#  SYNOPSIS
+#    get_java15_home_for_host { host } 
+#
+#  FUNCTION
+#     Reads the java15 home directory for a host from the host configuration
+#
+#  INPUTS
+#    host -- name of the host
+#
+#  RESULT
+#     
+#     the java15 home directory of an empty string if the java15 is not set 
+#     in the host configuration
+#
+#  EXAMPLE
+#
+#     set java15_home [get_java15_home_for_host $CHECK_HOST]
+#
+#     if { $java15_home == "" } {
+#         puts "java15 not configurated for host $CHECK_HOST"
+#     }
+#
+#  NOTES
+#     TODO: store JAVA_HOME in host config!
+#
+#  BUGS
+#     Doesn't work for MAC OS X
+#
+#  SEE ALSO
+#*******************************************************************************
+proc get_java15_home_for_host { host } {
+   global ts_host_config CHECK_OUTPUT
+   
+    set input $ts_host_config($host,java15)
+    
+    set input_len [ string length $input ]
+    set java_len  [ string length "/bin/java" ]
+    
+    set last [ expr ( $input_len - $java_len -1 ) ]
+    
+    set res [ string range $input 0 $last]
+    
+    return $res
+}
+
 
 #****** config_host/host_conf_get_cluster_hosts() ******************************
 #  NAME

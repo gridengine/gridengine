@@ -905,7 +905,49 @@ proc set_root_passwd {} {
    foreach user $passwd_required {
       set_passwd $user $ts_config(master_host) $windows_host
    }
+   
+   # Now check for additional password hooks from additional checktrees
+   while { [get_user_passwd_hooks] != 0 } {
+      puts "Error setting password hooks ..."
+      wait_for_enter
+   }
 }
+
+#****** check/get_user_passwd_hooks() ******************************************
+#  NAME
+#     get_user_passwd_hooks() -- check password hooks from add. checktrees
+#
+#  SYNOPSIS
+#     get_user_passwd_hooks { } 
+#
+#  FUNCTION
+#     If an additional checktree defines passwd_hook then this procedure
+#     is calling the hook function.
+#
+#  RESULT
+#     -1 => error
+#     result of hook function ( should be 0 on success ) 
+#
+#*******************************************************************************
+proc get_user_passwd_hooks {} {
+   global ts_checktree CHECK_OUTPUT
+   set res 0
+   for {set i 0} { $i < $ts_checktree(act_nr)} {incr i 1 } {
+      if { [info exists ts_checktree($i,passwd_hook) ] } {
+         set prog $ts_checktree($i,passwd_hook)
+         if { [info procs $prog ] != $prog } {
+            add_proc_error "exec_install_binaries_hooks" -1 "Can not execute passwd hook $ts_checktree($i,passwd_hooks_${ii}), prog not found"
+            return 0
+         } else {
+            set res [$prog]
+            if { $res != 0} {
+               break
+            }
+         }
+      }
+   }
+   return $res
+}  
 
 #****** check/set_passwd() *****************************************************
 #  NAME
@@ -2155,7 +2197,7 @@ proc get_configuration_element_count { config_array } {
 proc update_ts_host_config_version { filename } {
    global actual_ts_host_config_version
    global ts_host_config ts_config
-   global CHECK_OUTPUT
+   global CHECK_OUTPUT CHECK_USER
 
    if { $ts_host_config(version) == "1.0" && $actual_ts_host_config_version == "1.1" } {
       puts $CHECK_OUTPUT "\ntestsuite host configuration update from 1.0 to 1.1 ..."
@@ -2306,6 +2348,37 @@ proc update_ts_host_config_version { filename } {
          unset ts_host_config($host,compile)
       }
       set ts_host_config(version) "1.6"
+     
+      show_config ts_host_config
+      wait_for_enter
+      if { [ save_host_configuration $filename] != 0} {
+         puts $CHECK_OUTPUT "Could not save host configuration"
+         wait_for_enter
+         return
+      }
+      return 0
+   }
+
+   if { $ts_host_config(version) == "1.6" && $actual_ts_host_config_version == "1.7" } {
+      puts $CHECK_OUTPUT "\ntestsuite host configuration update from 1.6 to 1.7 ..."
+
+      foreach host $ts_host_config(hostlist) {
+         # convert the java home string to a version dependent one
+         puts -nonewline " ... "
+         set myenv(EN_QUIET) "1"
+         set java15_bin [ start_remote_prog $host $CHECK_USER "/bin/csh" "-c \"source /vol2/resources/en_jdk15 ; which java\"" prg_exit_state 12 0 myenv 1 0 ]
+         if { $prg_exit_state != 0 } {
+            set java15_bin "" 
+         }
+         set java15_bin [string trim $java15_bin]
+         if { ![file isfile $java15_bin] } {
+            puts $CHECK_OUTPUT "file not found"
+            set java15_bin ""
+         }
+         puts $CHECK_OUTPUT "setting java15 for host $host to \"$java15_bin\""
+         set ts_host_config($host,java15) $java15_bin
+      }
+      set ts_host_config(version) "1.7"
      
       show_config ts_host_config
       wait_for_enter

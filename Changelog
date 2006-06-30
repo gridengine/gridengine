@@ -1,3 +1,8 @@
+AA-2006-06-30-0: Bugifx:    qping segfaults in ssl mode
+                 CR:        6445469
+                 IZ:        2081
+                 Review:    CR
+
 AH-2006-06-22-0: Enhancem.: Completized qping output for job execution
                             requests sent from qmaster to execd
                             Added FS_SHORT to daemon starting up messages

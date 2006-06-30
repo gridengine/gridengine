@@ -1330,6 +1330,7 @@ int main(int argc, char *argv[]) {
             ssl_config.ssl_key_pem_file     = getenv("SSL_KEY_FILE");     /*  key file                                    */
             ssl_config.ssl_rand_file        = getenv("SSL_RAND_FILE");    /*  rand file (if RAND_status() not ok)         */
             ssl_config.ssl_reconnect_file   = NULL;                       /*  file for reconnect data    (not used)       */
+            ssl_config.ssl_crl_file         = NULL;                       /*  file for revocation list */
             ssl_config.ssl_refresh_time     = 0;                          /*  key alive time for connections (not used)   */
             ssl_config.ssl_password         = NULL;                       /*  password for encrypted keyfiles (not used)  */
             ssl_config.ssl_verify_func      = NULL;                       /*  function callback for peer user/name check  */

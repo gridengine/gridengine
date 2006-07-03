@@ -7332,7 +7332,7 @@ proc shutdown_system_daemon { host typelist { do_term_signal_kill_first 1 } } {
 #     sge_procedures/startup_execd()
 #     sge_procedures/startup_shadowd()
 #*******************************
-proc shutdown_core_system {} {
+proc shutdown_core_system { { only_hooks 0 } } {
    global ts_config
    global CHECK_ARCH 
    global CHECK_CORE_MASTER 
@@ -7341,6 +7341,11 @@ proc shutdown_core_system {} {
    global CHECK_ADMIN_USER_SYSTEM do_compile
 
    exec_shutdown_hooks
+
+   if { $only_hooks != 0 } {
+      puts $CHECK_OUTPUT "skip shutdown core system, I am in only hooks mode"
+      return
+   }
    
    foreach sh_host $ts_config(shadowd_hosts) {
       shutdown_all_shadowd $sh_host

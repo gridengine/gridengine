@@ -1,3 +1,7 @@
+CR-2006-07-03-0: Testsuite: new menu item 50 - compile and install
+                            only checktree hooks
+                 Review:    JG
+
 AA-2006-06-30-0: Bugifx:    qping segfaults in ssl mode
                  CR:        6445469
                  IZ:        2081

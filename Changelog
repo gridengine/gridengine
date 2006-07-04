@@ -1,3 +1,7 @@
+AH-2006-07-04-0: Bugfix:    Fixed problem with host_update_categories() being 
+                            wrongly called upon qconf -dh/-ds <host> due to 
+                            AH-2006-06-23-1
+
 CR-2006-07-04-0: Testsuite: fixed bug when only 1 execd is set in configuration
                             fixed bug when adding (discovering) a new host into
                             testsuite host configuration file

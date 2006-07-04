@@ -117,7 +117,7 @@ global submitjob_jobid
 
 proc qconf_init_level {} {
    global ts_config CHECK_OUTPUT
-   global CHECK_ACT_LEVEL
+   global CHECK_ACT_LEVEL check_name
 
    if {$CHECK_ACT_LEVEL == 0} {
       if {[llength $ts_config(execd_nodes)] < 2} {

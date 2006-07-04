@@ -1,3 +1,7 @@
+CR-2006-07-04-0: Testsuite: fixed bug when only 1 execd is set in configuration
+                            fixed bug when adding (discovering) a new host into
+                            testsuite host configuration file
+
 CR-2006-07-03-0: Testsuite: new menu item 50 - compile and install
                             only checktree hooks
                  Review:    JG

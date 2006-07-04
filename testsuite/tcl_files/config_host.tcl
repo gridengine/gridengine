@@ -555,7 +555,7 @@ proc host_config_hostlist_add_host { array_name { have_host "" } } {
    }
 
    set myenv(EN_QUIET) "1"
-   set java15_bin [ start_remote_prog $host $CHECK_USER "/bin/csh" "-c \"source /vol2/resources/en_jdk15 ; which java\"" prg_exit_state 12 0 myenv 1 0 ]
+   set java15_bin [ start_remote_prog $new_host $CHECK_USER "/bin/csh" "-c \"source /vol2/resources/en_jdk15 ; which java\"" prg_exit_state 12 0 myenv 1 0 ]
 
    if { $prg_exit_state != 0 } {
       set java15_bin "" 

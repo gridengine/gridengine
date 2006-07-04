@@ -359,6 +359,7 @@ const lList* master_hGroup_List
                             NULL, NULL, NULL, true, true);
             answer_list_output(&answer_list);
          }
+         host_update_categories(NULL, ep);
          break;
       case SGE_SUBMITHOST_LIST:
          {
@@ -370,8 +371,6 @@ const lList* master_hGroup_List
          }
          break;
    }
-
-   host_update_categories(NULL, ep);
 
    /* delete found host element */
    lRemoveElem(*host_list, &ep);

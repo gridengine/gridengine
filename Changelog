@@ -1,3 +1,6 @@
+AH-2006-07-04-1: Bugfix:    Fixed problem with host_update_categories() being 
+                            wrongly called upon qconf -dh/-ds <host>
+
 AH-2006-05-23-1: Enhancem.: Scheduling optimizations
                             - added support for -now yes to cluster queue matching
                  Review:    SG
@@ -25,7 +28,7 @@ AH-2006-05-16-0: Enhancem.: Various scheduling optimizations
                               for job/task/queue instance 
                  Review:    RD
 
-AH-2006-04-16-0: CVS        Created V60s3_BRANCH
+AH-2006-05-16-0: CVS        Created V60s3_BRANCH
 ---------------------------------------------
 
 JG-2006-05-15-0: Enhancem.: Improved verification of incoming job requests

@@ -1,3 +1,8 @@
+AA-2006-07-05-0: scripts:   Added OPENSSLSOVERSION to distinst.site to support
+                            use of other SSL versions
+                 Review:    RD
+                 Changed:   scripts/distinst[.site] aimk.site
+
 AH-2006-07-04-0: Bugfix:    Fixed problem with host_update_categories() being 
                             wrongly called upon qconf -dh/-ds <host> due to 
                             AH-2006-06-23-1

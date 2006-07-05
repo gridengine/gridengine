@@ -1364,9 +1364,9 @@ for i in $ARCH; do
                if [ $DSTARCH = tru64 ]; then
                   libname="$OPENSSLBASE/$DSTARCH/lib/$lib.$shlibext"
                elif [ $DSTARCH = darwin-ppc -o $DSTARCH = darwin-x86 ];  then
-                  libname="$OPENSSLBASE/$DSTARCH/lib/$lib.0.9.7.$shlibext"
+                  libname="$OPENSSLBASE/$DSTARCH/lib/$lib.$OPENSSLSOVERSION.$shlibext"
                else
-                  libname="$OPENSSLBASE/$DSTARCH/lib/$lib.$shlibext.0.9.7"
+                  libname="$OPENSSLBASE/$DSTARCH/lib/$lib.$shlibext.$OPENSSLSOVERSION"
                fi
 
                if [ -f $libname ]; then
@@ -1375,9 +1375,9 @@ for i in $ARCH; do
                      :
                   elif [ $DSTARCH = darwin-ppc -o $DSTARCH = darwin-x86 ]; then
                      (cd $DEST_SGE_ROOT/${UTILPREFIX}/$DSTARCH; \
-                      ln -s $lib.0.9.7.$shlibext $lib.$shlibext)
+                      ln -s $lib.$OPENSSLSOVERSION.$shlibext $lib.$shlibext)
                   else
-                     (cd $DEST_SGE_ROOT/${UTILPREFIX}/$DSTARCH; ln -s $lib.${shlibext}.0.9.7 $lib.$shlibext)
+                     (cd $DEST_SGE_ROOT/${UTILPREFIX}/$DSTARCH; ln -s $lib.${shlibext}.$OPENSSLSOVERSION $lib.$shlibext)
                   fi
                elif [ $exit_on_error = true ]; then
                   echo "\"$libname\" not found. Installation failed."

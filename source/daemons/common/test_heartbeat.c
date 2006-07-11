@@ -70,6 +70,9 @@ int main(int argc, char* argv[])
 
    DENTER_MAIN(TOP_LAYER, "test_sge_qmaster_heartbeat");
 
+   /* initialize last_time */
+   gettimeofday(&last_time, NULL);
+
    if (argc==3) {
       if (strcmp(argv[1],"-only-write") == 0) {
          printf("only writing heartbeat file once\n");

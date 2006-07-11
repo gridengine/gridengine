@@ -540,6 +540,12 @@ int main(int argc, char **argv)
    dstring ds;
    char buffer[256];
 
+#if 0
+   if (getenv("SUN_PROFDATA_DIR") != NULL) {
+      sge_setenv("SUN_PROFDATA", "sge_shepherd.profile");
+   }
+#endif
+
    if (argc >= 2) {
       if ( strcmp(argv[1],"-help") == 0) {
          show_shepherd_version();
@@ -872,7 +878,8 @@ int ckpt_type
    int  status, child_signal=0, exit_status;
    u_long32 wait_status = 0;
    FILE *fp;
-   int core_dumped, ckpt_interval, ckpt_pid;
+   int core_dumped, ckpt_interval;
+   int ckpt_pid = 0;
    int wexit_flag_true = 1; /* to please IRIX compiler */
 
 #if defined(IRIX)

@@ -1120,6 +1120,9 @@ case DARWIN:
    case "7.*":
       set CFLAGS = "$OFLAG -no-cpp-precomp -flat_namespace -Wall -Werror -Wstrict-prototypes -DFD_SETSIZE=8192 -DDARWIN -DDARWIN7 -DGETHOSTBYNAME -DGETHOSTBYADDR_M $DEBUG_FLAG $CFLAGS"
       breaksw
+   case "8.*":
+      set CFLAGS = "$OFLAG -no-cpp-precomp -flat_namespace -Wall -Werror -Wstrict-prototypes -DFD_SETSIZE=8192 -DDARWIN -DDARWIN8 -DGETHOSTBYNAME -DGETHOSTBYADDR_M $DEBUG_FLAG $CFLAGS"
+      breaksw
    default:
       echo DARWIN release \"$REL\" not supported!
       exit 1
@@ -1144,7 +1147,8 @@ case DARWIN:
 #   else
 #      set MOTIFHOME = /usr/local
 #   endif   
-   set MOTIFHOME = /usr/X11R6
+#   set MOTIFHOME = /usr/X11R6
+   set MOTIFHOME = /usr/X11R6/openmotif-2.2.3
 
    set XMTDEF   = ""
    set XMTINCD  = "$XMTINCD -I$MOTIFHOME/include"
@@ -1156,6 +1160,7 @@ case DARWIN:
    switch ($REL)
    case "6.*":
    case "7.*":
+   case "8.*":
       set XLFLAGS = "$XLIBD"
       breaksw
    default:

@@ -338,7 +338,7 @@ static void qevent_start_trigger_script(int qevent_event, const char* script_fil
       /*      sge_close_all_fds(NULL); */
       sprintf(buffer  ,""sge_U32CFormat"",sge_u32c(jobid));
       sprintf(buffer2 ,""sge_U32CFormat"",sge_u32c(taskid)); 
-      execlp( script_file , sge_basename( script_file, '/' ), event_name, buffer, buffer2, 0 );
+      execlp(script_file , sge_basename( script_file, '/' ), event_name, buffer, buffer2, (char *)0);
    }
    exit(1);
 }

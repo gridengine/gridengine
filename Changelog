@@ -1,3 +1,8 @@
+JG-2006-07-11-0: Bugfix:    Fixed broken build on Mac OS 10.4 and gcc-4.*
+                            (merged from maintrunk JG-2006-06-21-0)
+                            Fixed typos in complexes man page.
+                 Review:    RD
+
 AA-2006-06-30-0: Bugifx:    qping segfaults in ssl mode
                  CR:        6445469
                  IZ:        2081

@@ -1,3 +1,7 @@
+JG-2006-07-11-0: Bugfix:    Fixed typos in complexes man page.
+                            Fixed version mismatch in jni build on darwin.
+                 Review:    RD
+
 AA-2006-07-05-0: scripts:   Added OPENSSLSOVERSION to distinst.site to support
                             use of other SSL versions
                  Review:    RD

@@ -1193,7 +1193,7 @@ case DARWIN_PPC:
    set NOERR_PROTO = "-Wno-strict-prototypes"
    set JAVA_ARCH = ""
    set JAVA_BINDIR = "Commands"
-   set JAVA_INCL = "Versions/1.3.1/Headers"
+   set JAVA_INCL = "Headers"
    set JAVA_SHAREDEXT = ".jnilib"
    unset REL
    breaksw

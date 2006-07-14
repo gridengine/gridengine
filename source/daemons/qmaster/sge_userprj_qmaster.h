@@ -55,5 +55,8 @@ int verify_userprj_list(lList **alpp, lList *name_list, lList *userprj_list, con
 void sge_automatic_user_cleanup_handler(te_event_t anEvent, monitoring_t *monitor);
 
 int sge_add_auto_user(const char *user, lList **alpp, monitoring_t *monitor);
+
+void project_update_categories(const lList *added, const lList *removed);
+
 #endif /* _SGE_USERPRJ_QMASTER_H_ */
 

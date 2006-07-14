@@ -57,6 +57,7 @@
 #include "category.h"
 #include "sge_job.h"
 #include "lck/sge_mtutil.h"
+#include "sge_userprjL.h"
 
 #include "msg_daemons_common.h"
 
@@ -103,9 +104,19 @@ static sge_category_t Category_Control = {PTHREAD_MUTEX_INITIALIZER, {-1, -1, -1
 *        soft_resource_list
 *        checkpoint_name
 *        type
-*        owner
-*        group
-*        project
+*
+*        owner/group: -U user_lists 
+*           Omitted, if user_lists/xuser_lists were not used in
+*           host_conf(5), sge_pe(5) and queue_conf(5). In sge_conf(5) 
+*           user_lists/xuser_lists still can be used, as it causes
+*           jobs already be rejected at submit time.
+*
+*        project: -P user_lists 
+*           Omitted, if projects/xprojects were not used in
+*           host_conf(5), sge_pe(5) and queue_conf(5). In sge_conf(5) 
+*           projects/xprojects still can be used, as it cuases
+*           jobs already be rejected at submit time.
+*
 *        pe
 *
 *  INPUTS
@@ -117,8 +128,8 @@ static sge_category_t Category_Control = {PTHREAD_MUTEX_INITIALIZER, {-1, -1, -1
 *     MT-NOTE: sge_build_job_category_dstring() is MT safe as long as the caller is
 *
 *******************************************************************************/
-void sge_build_job_category_dstring(dstring *category_str, lListElem *job, lList *acl_list) 
-{   
+void sge_build_job_category_dstring(dstring *category_str, lListElem *job, lList *acl_list, const lList *prj_list, bool *did_project) 
+{
 
    const char *owner = NULL;
    const char *group = NULL;
@@ -141,7 +152,7 @@ void sge_build_job_category_dstring(dstring *category_str, lListElem *job, lList
       Category_Control.cull_order_pos.JB_range_pos = lGetPosViaElem(job, JB_pe_range, SGE_NO_ABORT);
    }
    sge_mutex_unlock("cull_order_mutex", SGE_FUNC, __LINE__, &Category_Control.cull_order_mutex);
-   
+  
    /*
    ** owner -> acl
    */
@@ -194,7 +205,18 @@ void sge_build_job_category_dstring(dstring *category_str, lListElem *job, lList
    /*
    ** project
    */
-   sge_unparse_string_option_dstring(category_str, job, Category_Control.cull_order_pos.JB_project_pos, "-P");
+   {
+      const char *project = lGetPosString(job, Category_Control.cull_order_pos.JB_project_pos);
+      const lListElem *prj;
+      if (project && (prj=lGetElemStr(prj_list, UP_name, project)) && lGetBool(prj, UP_consider_with_categories)) {
+         if (did_project)
+            *did_project = true;
+         sge_unparse_string_option_dstring(category_str, job, Category_Control.cull_order_pos.JB_project_pos, "-P");
+      } else
+         if (did_project)
+            *did_project = false;
+   }
+
    DRETURN_VOID;
 }
 
@@ -225,8 +247,10 @@ void sge_build_job_category_dstring(dstring *category_str, lListElem *job, lList
 *
 *******************************************************************************/
 const char* 
-sge_build_job_cs_category(dstring *category_str, lListElem *job, lListElem *cat_obj) 
+sge_build_job_cs_category(dstring *category_str, lListElem *job, lListElem *cat_obj, bool did_project) 
 {
+   const char *p;
+
    DENTER(TOP_LAYER, "sge_build_job_category");
 
    /* 
@@ -242,6 +266,14 @@ sge_build_job_cs_category(dstring *category_str, lListElem *job, lListElem *cat_
    sge_dstring_sprintf_append(category_str, "-u %s", lGetString(job, JB_owner));
 
    /*
+    * ticket assignment can depend on a jobs project.
+    * If the project was not added to the resource categories
+    * it gets added directly to the cs category string 
+    */
+   if ((p=lGetString(job, JB_project)) && !did_project)
+      sge_dstring_sprintf_append(category_str, " -P %s", p);
+
+   /*
     * id for the resource category
     * I use teh address of the resource category as a hash value for its string.
     */
@@ -249,5 +281,4 @@ sge_build_job_cs_category(dstring *category_str, lListElem *job, lListElem *cat_
 
    DEXIT;
    return sge_dstring_get_string(category_str);
-
 }

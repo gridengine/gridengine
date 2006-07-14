@@ -69,8 +69,8 @@ static void usage(void)
    fprintf(stderr, "   -native     <nativespec>                                  native specification passed (default \"-w n\")\n");
    fprintf(stderr, "   -threads    <nthreads>                                    number of submission thread (default 1)\n");
    fprintf(stderr, "   -wait       [yes|no]                                      wait for job completion (default yes)\n");
-   fprintf(stderr, "   -quiet       [yes|no]                                     wait for job completion (default no)\n");
-   fprintf(stderr, "   -scenario   [queue|type|number].[hostgroup|resource|none] options -jobs/-threads be ignored\n");
+   fprintf(stderr, "   -quiet      [yes|no]                                      wait for job completion (default no)\n");
+   fprintf(stderr, "   -scenario   [queue|type|number|pe].[none|resource|hostgroup|softresource|softhostgroup] options -jobs/-threads be ignored\n");
 
    /* scenario assumes
       - queue "all.q"
@@ -170,14 +170,17 @@ int main(int argc, char *argv[])
          }
          s = strchr(argv[i], '.');
          *s = '\0';
-         if (strcmp("queue", argv[i]) && strcmp("type", argv[i]) && strcmp("number", argv[i])) {
+         if (strcmp("queue", argv[i]) && strcmp("type", argv[i]) && 
+             strcmp("number", argv[i]) && strcmp("pe", argv[i])) {
             usage();
             return 1;
          }
          scenario = strdup(argv[i]);
         
          s++;
-         if (strcmp("hostgroup", s) && strcmp("resource", s) && strcmp("none", s)) {
+         if (strcmp("hostgroup", s) && strcmp("resource", s) && 
+             strcmp("none", s) && strcmp("softresource", s) && 
+             strcmp("softhostgroup", s)) {
             usage();
             return 1;
          }
@@ -203,7 +206,7 @@ int main(int argc, char *argv[])
       return 1;
    }
 
-#if 1
+#if 0
    printf("job_path: \"%s\"\n", job_path);
    printf("njobs:    %d\n", njobs);
    printf("nthreads: %d\n", nthreads);
@@ -246,13 +249,13 @@ int main(int argc, char *argv[])
             pthread_join(ids[i], NULL);
          }
       }
+   
+      drmaa_delete_job_template(jt, NULL, 0);
    } else {
       if (submit_by_project("project1") || submit_by_project("project2") ||
           submit_by_project("project3") || submit_by_project("project4"))
             return 1;
    }
-
-   drmaa_delete_job_template(jt, NULL, 0);
 
    get_gmt(&finish_s);
    printf("submission took %8.3f seconds\n", DELTA_SECONDS(start_s, finish_s)); 
@@ -390,24 +393,48 @@ static drmaa_job_template_t *create_job_template(const char *job_path,
             sprintf(buffer, "-P %s -l APP%d=1 -q all.q", project, i);
          else if (!strcmp(site_b, "hostgroup"))
             sprintf(buffer, "-P %s -l APP%d=1 -q all.q@@site_b", project, i);
-         else /* "resource */
+         else if (!strcmp(site_b, "resource"))
             sprintf(buffer, "-P %s -l APP%d=1,site=b -q all.q", project, i);
+         else if (!strcmp(site_b, "softresource"))
+            sprintf(buffer, "-P %s -l APP%d=1 -q all.q -soft -l site=b", project, i);
+         else /* "softhostgroup" */
+            sprintf(buffer, "-P %s -l APP%d=1 -q all.q -soft -q *@@site_b", project, i);
 
       } else if (!strcmp(scenario, "type")) {
          if (!strcmp(site_b, "none"))
             sprintf(buffer, "-P %s -l APP%d=1,type=all", project, i);
          else if (!strcmp(site_b, "hostgroup"))
             sprintf(buffer, "-P %s -l APP%d=1,type=all -q *@@site_b", project, i);
-         else /* "resource */
+         else if (!strcmp(site_b, "resource"))
             sprintf(buffer, "-P %s -l APP%d=1,type=all,site=b", project, i);
+         else if (!strcmp(site_b, "softresource"))
+            sprintf(buffer, "-P %s -l APP%d=1,type=all -soft -l site=b", project, i);
+         else /* "softhostgroup" */
+            sprintf(buffer, "-P %s -l APP%d=1,type=all -soft -q *@@site_b", project, i);
 
       } else if (!strcmp(scenario, "number")) {
          if (!strcmp(site_b, "none"))
             sprintf(buffer, "-P %s -l APP%d=1,number=24", project, i);
          else if (!strcmp(site_b, "hostgroup"))
             sprintf(buffer, "-P %s -l APP%d=1,number=24 -q *@@site_b", project, i);
-         else /* "resource */
+         else if (!strcmp(site_b, "resource"))
             sprintf(buffer, "-P %s -l APP%d=1,number=24,site=b", project, i);
+         else if (!strcmp(site_b, "softresource"))
+            sprintf(buffer, "-P %s -l APP%d=1,number=24 -soft -l site=b", project, i);
+         else /* "softhostgroup" */
+            sprintf(buffer, "-P %s -l APP%d=1,number=24 -soft -q *@@site_b", project, i);
+         
+      } else if (!strcmp(scenario, "pe")) {
+         if (!strcmp(site_b, "none"))
+            sprintf(buffer, "-P %s -l APP%d=1 -pe pe1 1", project, i);
+         else if (!strcmp(site_b, "hostgroup"))
+            sprintf(buffer, "-P %s -l APP%d=1 -q *@@site_b -pe pe1 1", project, i);
+         else if (!strcmp(site_b, "resource"))
+            sprintf(buffer, "-P %s -l APP%d=1,site=b -pe pe1 1", project, i);
+         else if (!strcmp(site_b, "softresource"))
+            sprintf(buffer, "-P %s -l APP%d=1 -pe pe1 1 -soft -l site=b", project, i);
+         else /* "softhostgroup" */
+            sprintf(buffer, "-P %s -l APP%d=1 -pe pe1 1 -soft -q *@@site_b", project, i);
          
       } else { /* "none" */ 
          sprintf(buffer, "-l APP%d=1", i);

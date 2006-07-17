@@ -1,3 +1,7 @@
+RD-2006-07-17-0: Bugfix:    Fixed berkeleydb spooling and CSP mode on
+                            freebsd
+                 Review:    AA
+
 AH-2006-07-13-0: Enhancem.: Merged S3-branch scalability enhancements
 
 JG-2006-07-11-0: Bugfix:    Fixed broken build on Mac OS 10.4 and gcc-4.*

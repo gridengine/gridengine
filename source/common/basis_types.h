@@ -253,12 +253,10 @@ typedef char stringT[MAX_STRING_SIZE];
    else \
       variable = pthread_getspecific(key)
 
-#if !defined(FREEBSD)
 #define HAS_GETPWNAM_R
 #define HAS_GETGRNAM_R
 #define HAS_GETPWUID_R
 #define HAS_GETGRGID_R
-#endif
 
 #define HAS_LOCALTIME_R
 #define HAS_CTIME_R

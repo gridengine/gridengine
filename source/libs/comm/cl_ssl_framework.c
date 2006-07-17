@@ -988,7 +988,9 @@ static int cl_com_ssl_build_symbol_table(void) {
    {
       char* func_name = NULL;
       int had_errors = 0;
-
+#if defined(FREEBSD)
+      void* cl_com_ssl_crypto_handle_saved = NULL;
+#endif
 
       CL_LOG(CL_LOG_INFO,"loading ssl library functions with dlopen() ...");
 
@@ -1005,6 +1007,13 @@ static int cl_com_ssl_build_symbol_table(void) {
       cl_com_ssl_crypto_handle = dlopen ("libssl.bundle", RTLD_NOW | RTLD_GLOBAL | RTLD_NODELETE);
 #else
       cl_com_ssl_crypto_handle = dlopen ("libssl.bundle", RTLD_NOW | RTLD_GLOBAL );
+#endif /* RTLD_NODELETE */
+
+#elif defined(FREEBSD)
+#ifdef RTLD_NODELETE
+      cl_com_ssl_crypto_handle = dlopen ("libssl.so", RTLD_LAZY | RTLD_GLOBAL | RTLD_NODELETE);
+#else
+      cl_com_ssl_crypto_handle = dlopen ("libssl.so", RTLD_LAZY | RTLD_GLOBAL);
 #endif /* RTLD_NODELETE */
 
 #elif defined(HP11)
@@ -1029,7 +1038,10 @@ static int cl_com_ssl_build_symbol_table(void) {
          return CL_RETVAL_SSL_DLOPEN_SSL_LIB_FAILED;
       }
       
-
+#if defined(FREEBSD)
+      cl_com_ssl_crypto_handle_saved = cl_com_ssl_crypto_handle;
+      cl_com_ssl_crypto_handle = RTLD_DEFAULT;
+#endif
 
       /* setting up crypto function pointers */
       func_name = "CRYPTO_set_id_callback";
@@ -1649,6 +1661,10 @@ static int cl_com_ssl_build_symbol_table(void) {
          return CL_RETVAL_SSL_CANT_LOAD_ALL_FUNCTIONS;
       }
 
+#if defined(FREEBSD)
+      cl_com_ssl_crypto_handle = cl_com_ssl_crypto_handle_saved;
+#endif
+
       pthread_mutex_unlock(&cl_com_ssl_crypto_handle_mutex);
       CL_LOG(CL_LOG_INFO,"loading ssl library functions with dlopen() done");
 
@@ -2191,8 +2207,8 @@ int cl_com_ssl_framework_cleanup(void) {
             and/or SSL_load_error_strings() */
 
          
-         cl_com_ssl_func__CRYPTO_set_locking_callback( NULL );
-         cl_com_ssl_func__CRYPTO_set_id_callback( NULL );
+         cl_com_ssl_func__CRYPTO_set_locking_callback(NULL);
+         cl_com_ssl_func__CRYPTO_set_id_callback(NULL);
 
          cl_com_ssl_func__ERR_free_strings();
          cl_com_ssl_destroy_symbol_table();
@@ -2503,8 +2519,8 @@ int cl_com_ssl_setup_connection(cl_com_connection_t**          connection,
          }
 
          /* structures are freed at cl_com_ssl_framework_cleanup() */
-         cl_com_ssl_func__CRYPTO_set_id_callback( cl_com_ssl_get_thread_id );
-         cl_com_ssl_func__CRYPTO_set_locking_callback( cl_com_ssl_locking_callback );
+         cl_com_ssl_func__CRYPTO_set_id_callback(cl_com_ssl_get_thread_id);
+         cl_com_ssl_func__CRYPTO_set_locking_callback(cl_com_ssl_locking_callback);
 
          /* 
           * SSL_library_init() only registers ciphers. Another important

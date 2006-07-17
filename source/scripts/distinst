@@ -1384,9 +1384,6 @@ for i in $ARCH; do
                   exit 1
                fi
             done
-            if [ $DSTARCH = darwin-ppc -o $DSTARCH = darwin-x86 ]; then
-               InstallProg "$OPENSSLBASE/$DSTARCH/lib/libssl.bundle"
-            fi   
          fi
 
          if [ $DSTARCH != win32-x86 ]; then

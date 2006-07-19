@@ -1,8 +1,17 @@
+AH-2006-07-19-0: Testsuite: Enhanced system_tests/scheduler/queue_requests
+                            to cover 
+                            -q cqueue_list 
+                            -masterq cqueue_list
+                            -soft -q qinstance_list 
+                            -soft -q cqueue_list
+                 IZ:        2085
+                 Review:    JG
+
 RD-2006-07-17-0: Bugfix:    - Fixed berkeleydb spooling and CSP mode on
                               freebsd
                             - removed libssl.bundle for MacOS (no longer
                               necessary since MacOS 10.4) 
-                  Review:   AA
+                 Review:    AA
 
 JG-2006-07-11-0: Bugfix:    Fixed typos in complexes man page.
                             Fixed version mismatch in jni build on darwin.

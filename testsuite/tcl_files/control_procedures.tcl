@@ -66,8 +66,8 @@ proc dump_array_to_tmpfile { change_array } {
 
    if [info exists chgar] {
       foreach elem [array names chgar] {
-         set value [set chgar($elem)]
-         puts $file "$elem                   $value"
+         set value $chgar($elem)
+         puts $file "$elem $value"
       }
    }
 
@@ -239,7 +239,7 @@ proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result 
    set vi_env(EDITOR) [get_binary_path "$CHECK_HOST" "vim"]
    set result -100
 
-   puts $CHECK_OUTPUT "using EDITOR=$vi_env(EDITOR)"
+   debug_puts "using EDITOR=$vi_env(EDITOR)"
    # start program (e.g. qconf)
    set id [ open_remote_spawn_process $CHECK_HOST $CHECK_USER $prog_binary "$prog_args" 0 vi_env]
    set sp_id [ lindex $id 1 ] 
@@ -272,7 +272,7 @@ proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result 
          add_proc_error "handle_vi_edit" -2 "timeout - can't start vi"
       }
       -i $sp_id  "_start_mark_*\n" {
-         puts $CHECK_OUTPUT "starting now!"
+         debug_puts "starting now!"
       }
    }
 
@@ -302,7 +302,7 @@ proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result 
          add_proc_error "handle_vi_edit" -2 "timeout - can't start vi"
       }
       -i $sp_id  {[A-Za-z]*} {
-         puts $CHECK_OUTPUT "vi should run now ..."
+         debug_puts "vi should run now ..."
       }
    }
 
@@ -363,7 +363,7 @@ proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result 
          }
 
          -i $sp_id "_exit_status*\n" {
-            puts $CHECK_OUTPUT "vi terminated! (1)"
+            debug_puts "vi terminated! (1)"
             exp_continue
          }
 
@@ -409,7 +409,7 @@ proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result 
          }
          -i $sp_id "*Hit return*" {
             send -s -i $sp_id -- "\n"
-            puts $CHECK_OUTPUT "found Hit return"
+            debug_puts "found Hit return"
             exp_continue
          }
          -i $sp_id timeout {
@@ -468,7 +468,7 @@ proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result 
                set result -1
             }
             -i $sp_id "_exit_status_" {
-               puts $CHECK_OUTPUT "vi terminated! (2) (rt=$run_time)"
+               debug_puts "vi terminated! (2) (rt=$run_time)"
                set result 0
                exp_continue
             }
@@ -513,7 +513,7 @@ proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result 
             }
             
             -i $sp_id "_exit_status_" {
-               puts $CHECK_OUTPUT "vi terminated! (3)  (rt=$run_time)"
+               debug_puts "vi terminated! (3)  (rt=$run_time)"
                if { $result == -100 } {
                   set pos [string last "\n" $expect_out(buffer)]
                   incr pos -2
@@ -539,7 +539,7 @@ proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result 
       }
       debug_puts "sent_vi_commands = $sent_vi_commands"
       if { $sent_vi_commands == 0 } {
-         puts $CHECK_OUTPUT "INFO: there was NO vi command sent!"
+         debug_puts "INFO: there was NO vi command sent!"
       }
    } else {
       if { $error == 2 } {
@@ -548,7 +548,7 @@ proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result 
          send -s -i $sp_id -- ":q!\n"            ;# exit without saving
          set timeout 10
          expect -i $sp_id "_exit_status_"
-         puts $CHECK_OUTPUT "vi terminated! (4)"
+         debug_puts "vi terminated! (4)"
          close_spawn_process $id
          set error_text ""
          append error_text "got timeout while sending vi commands\n"
@@ -592,25 +592,24 @@ proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result 
          set value [ split $value "\\" ]
          set value [ join $value "" ]
          if { [ string compare $value "*$/" ] == 0 || [ string compare $value "*$/#" ] == 0 } {
-            puts $CHECK_OUTPUT "--> removing \"$var\" entry"
+            debug_puts "--> removing \"$var\" entry"
          } else {
             if { [ string compare $var "" ] != 0 && [ string compare $value "" ] != 0  } {         
-               puts $CHECK_OUTPUT "--> setting \"$var\" to \"${value}\""
+               debug_puts "--> setting \"$var\" to \"${value}\""
             } else {
                if { [string compare $elem [format "%c" 27]] == 0 } {
-                  puts $CHECK_OUTPUT "--> vi command: \"ESC\""    
+                  debug_puts "--> vi command: \"ESC\""    
                } else {
                   set output [replace_string $elem "\n" "\\n"]
-                  puts $CHECK_OUTPUT "--> vi command: \"$output\"" 
+                  debug_puts "--> vi command: \"$output\"" 
                }
             }
          }
       } else {
          set add_output [ string range $elem 2 end ]
-         puts $CHECK_OUTPUT "--> adding [string trim $add_output "[format "%c" 27] ^"]"
+         debug_puts "--> adding [string trim $add_output "[format "%c" 27] ^"]"
       }
    }
-   flush $CHECK_OUTPUT
 
    # debug output end
    if {$CHECK_DEBUG_LEVEL != 0} {
@@ -922,7 +921,7 @@ proc get_ps_info { { pid 0 } { host "local"} { variable ps_info } {additional_ru
       "darwin-ppc" -
       "darwin-x86" {
          set myenvironment(COLUMNS) "500"
-         set result [start_remote_prog "$host" "$CHECK_USER" "ps" "-e -o \"pid=_____pid\" -o \"pgid=_____pgid\" -o \"ppid=_____ppid\" -o \"uid=_____uid\" -o \"state=_____s\" -o \"stime=_____stime\" -o \"vsz=_____vsz\" -o \"time=_____time\" -o \"command=_____args\"" prg_exit_state 60 0 myenvironment]
+         set result [start_remote_prog "$host" "$CHECK_USER" "ps" "-awwx -o \"pid=_____pid\" -o \"pgid=_____pgid\" -o \"ppid=_____ppid\" -o \"uid=_____uid\" -o \"state=_____s\" -o \"stime=_____stime\" -o \"vsz=_____vsz\" -o \"time=_____time\" -o \"command=_____args\"" prg_exit_state 60 0 myenvironment]
          set index_names "_____pid _____pgid _____ppid _____uid _____s _____stime _____vsz _____time _____args"
          set pid_pos     0
          set gid_pos     1
@@ -1765,7 +1764,7 @@ proc resolve_queue { queue } {
          puts $CHECK_OUTPUT "can't resolve host \"$host_name\""
       }
    }
-   puts $CHECK_OUTPUT "queue \"$queue\" resolved to \"$new_queue_name\""
+   debug_puts "queue \"$queue\" resolved to \"$new_queue_name\""
 
    if { [string length $new_queue_name] > 30 } {
       add_proc_error "resolve_queue" -3 "The length of the queue name \"$new_queue_name\" will exceed qstat queue name output"

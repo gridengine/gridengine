@@ -163,21 +163,8 @@ proc cleanup_system { } {
    } 
 
    # SGEEE: remove sharetree
-   if { [ string compare $ts_config(product_type) "sgeee" ] == 0 } {
-      puts $CHECK_OUTPUT "\nremoving share tree ..."
-      set SHARETREE [translate $ts_config(master_host) 1 0 0 [sge_macro MSG_OBJ_SHARETREE] ]
-      set DOES_NOT_EXISTS [translate $ts_config(master_host) 1 0 0 [sge_macro MSG_SGETEXT_DOESNOTEXIST_S] $SHARETREE]
-      set REMOVED [translate $ts_config(master_host) 1 0 0 [sge_macro MSG_SGETEXT_REMOVEDLIST_SSS] $CHECK_USER "*" $SHARETREE]
-      catch { exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-dstree" } result
-      if { [string match "*$DOES_NOT_EXISTS" $result] } {
-         puts $CHECK_OUTPUT "sharetree does not exist"
-      } else {
-         if { [string match "*$REMOVED" $result] } {
-            puts $CHECK_OUTPUT "sharetree removed"
-         } else {
-            puts $CHECK_OUTPUT $result
-         }
-      }
+   if {[string compare $ts_config(product_type) "sgeee"] == 0} {
+      del_sharetree
    }
 
    # remove all checkpoint environments
@@ -264,6 +251,9 @@ proc cleanup_system { } {
       puts $CHECK_OUTPUT "removing queue $elem."
       del_queue $elem "" 1 1
    }
+
+   # cleanup the tmpdir's referenced in queues
+   cleanup_tmpdirs 
 
    # add new testsuite queues
   puts $CHECK_OUTPUT "\nadding testsuite queues ..."
@@ -1258,4 +1248,15 @@ proc setup_win_user_passwd {user} {
 
    # cleanup
    close_spawn_process $id
+}
+
+proc cleanup_tmpdirs {} {
+   global ts_config CHECK_OUTPUT
+
+   set tmpdir "/tmp/testsuite_$ts_config(commd_port)"
+
+   foreach node $ts_config(execd_nodes) {
+      puts $CHECK_OUTPUT "cleaning tmpdir ($tmpdir) on node $node"
+      start_remote_prog $node "root" "rm" "-rf $tmpdir"
+   }
 }

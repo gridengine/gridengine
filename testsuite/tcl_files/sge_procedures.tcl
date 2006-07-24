@@ -2711,81 +2711,6 @@ proc del_pe { mype_name } {
 }
 
 #                                                             max. column:     |
-#****** sge_procedures/del_user() ******
-# 
-#  NAME
-#     del_user -- ??? 
-#
-#  SYNOPSIS
-#     del_user { myuser_name } 
-#
-#  FUNCTION
-#     ??? 
-#
-#  INPUTS
-#     myuser_name - ??? 
-#
-#  RESULT
-#     ??? 
-#
-#  EXAMPLE
-#     ??? 
-#
-#  NOTES
-#     ??? 
-#
-#  BUGS
-#     ??? 
-#
-#  SEE ALSO
-#     ???/???
-#*******************************
-proc del_user { myuser_name } {
-  global ts_config
-  global CHECK_ARCH CHECK_HOST CHECK_USER CHECK_OUTPUT
-
-  if { [ string compare $ts_config(product_type) "sge" ] == 0 } {
-     set_error -1 "del_user - not possible for sge systems"
-     return
-  }
-
-  set REMOVED [translate $CHECK_HOST 1 0 0 [sge_macro MSG_SGETEXT_REMOVEDFROMLIST_SSSS] $CHECK_USER "*" "*" "*" ]
-
-  log_user 0
-  set id [ open_remote_spawn_process $CHECK_HOST $CHECK_USER "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-duser $myuser_name"]
-   
-
-  set sp_id [ lindex $id 1 ]
-  set result -1
-  set timeout 30 	
-  log_user 0 
-
-  expect {
-    -i $sp_id full_buffer {
-      set result -1
-      add_proc_error "del_user" "-1" "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
-    }
-    -i $sp_id "removed" {
-      set result 0
-    }
-    -i $sp_id $REMOVED {
-      set result 0
-    }
-    -i $sp_id default {
-      set result -1
-    }
-  }
-  close_spawn_process $id
-  log_user 1
-  if { $result != 0 } {
-     add_proc_error "del_user" -1 "could not delete user \"$myuser_name\""
-  } else {
-     puts $CHECK_OUTPUT "removed user \"$myuser_name\""
-  }
-  return $result
-}
-
-#                                                             max. column:     |
 #****** sge_procedures/del_calendar() ******
 # 
 #  NAME
@@ -6095,15 +6020,12 @@ proc wait_for_end_of_transfer { jobid seconds } {
 #     sge_procedures/wait_for_jobpending()
 #     sge_procedures/wait_for_jobend()
 #*******************************
-proc wait_for_jobpending { jobid jobname seconds { or_running 0 } } {
-  global ts_config
-  
-  global CHECK_OUTPUT
+proc wait_for_jobpending {jobid jobname seconds {or_running 0}} {
+  global ts_config CHECK_OUTPUT
 
   puts $CHECK_OUTPUT "Waiting for job $jobid ($jobname) to get in pending state"
- 
 
-  if { [is_job_id $jobid] != 1} {
+  if {[is_job_id $jobid] != 1} {
      puts $CHECK_OUTPUT "job is not integer"
      add_proc_error "wait_for_jobpending" -1 "unexpected job id: $jobid"
      return -1
@@ -8233,5 +8155,49 @@ proc trigger_scheduling {} {
    set output [start_sge_bin "qconf" "-tsm"]
    if {$prg_exit_state != 0} {
       add_proc_error "trigger_scheduling" -1 "qconf -tsm failed:\n$output"
+   }
+}
+
+#****** sge_procedures/wait_for_job_end() **************************************
+#  NAME
+#     wait_for_job_end() -- waits for a job to leave qmaster
+#
+#  SYNOPSIS
+#     wait_for_job_end { job_id {timeout 60} } 
+#
+#  FUNCTION
+#     Waits until a job is no longer referenced in qmaster (after sge_schedd
+#     has sent a job delete order to sge_qmaster).
+#
+#  INPUTS
+#     job_id       - job id to wait for
+#     {timeout 60} - how long to wait
+#
+#  SEE ALSO
+#     sge_procedures/get_qstat_j_info()
+#*******************************************************************************
+proc wait_for_job_end {job_id {timeout 60}} {
+   global ts_config CHECK_OUTPUT
+
+   # we wait until now + timeout
+   set my_timeout [expr [timestamp] + $timeout]
+
+   # if the job is still in qmaster, wait until it leaves qmaster
+   if {[get_qstat_j_info $job_id] != 0} {
+      puts -nonewline $CHECK_OUTPUT "waiting for job $job_id to leave qmaster ..."
+      flush $CHECK_OUTPUT
+
+      sleep 1
+      while {[get_qstat_j_info $job_id] != 0} {
+         puts -nonewline $CHECK_OUTPUT "."
+         flush $CHECK_OUTPUT
+         if {[timestamp] > $my_timeout} {
+            add_proc_error "delete_job" -1 "timeout while waiting for job $job_id leave qmaster"
+            break
+         }
+
+         sleep 1
+      }
+      puts $CHECK_OUTPUT ""
    }
 }

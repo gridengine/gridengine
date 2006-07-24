@@ -223,13 +223,8 @@ proc issue_1848_cleanup {} {
    global CHECK_ARCH 
    global CHECK_PRODUCT_ROOT
 
-   set catch_return [ catch {  
-      eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf -dstree" 
-   } result ]
+   del_sharetree
 
-   puts "qconf -dstree result: $result"
-   puts "qconf -dstree exit value: $catch_return "
-   
    foreach prj $prj1_id_list {
       del_prj $prj
    }

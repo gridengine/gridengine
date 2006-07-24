@@ -3079,3 +3079,139 @@ proc test_parse_qstat {jobid opt} {
       puts $CHECK_OUTPUT "$name\t$jobinfo($name)"
    }
 }
+
+#****** parser/parse_csv() *****************************************************
+#  NAME
+#     parse_csv() -- parse cvs like format
+#
+#  SYNOPSIS
+#     parse_csv { output_var input_var delimiter index } 
+#
+#  FUNCTION
+#     Parses an input buffer in a csv like format and places the results 
+#     into a TCL array.
+#
+#     Expects the input to contain one line per record, fields are delimited
+#     by a one character delimiter.
+#
+#     The first line is interpreted as header line. Field names are taken from
+#     the header line.
+#
+#     One of the fields is used as index field. Index values may not be empty
+#     and may not be duplicated.
+#
+#     The output array has the form:
+#     out(index) contains a list of the index values (record names, idx)
+#     out(idx,<field_name>) contains the data for a certain record and field.
+#
+#  INPUTS
+#     output_var - name of a TCL array used for output
+#     input_var  - name of a variable containing the input
+#     delimiter  - field delimiter
+#     index      - name of the index field
+#
+#  RESULT
+#     0   - on success
+#     < 0 - on error
+#
+#  EXAMPLE
+#     Input data delivered by calling sge_share_mon has the form:
+#     curr_time,node_name,user_name,shares,....
+#     12345678,node_1,user_1,,...
+#     12345679,node_2,,project_1,...
+#     ....
+#
+#     Calling parse_csv out in "," "node_name"
+#     will produce a TCL array of the form:
+#
+#     out(index)  {node_1 node_2 ... node_n}
+#     out(node_1,curr_time)
+#     out(node_1,user_name)
+#     out(node_1,shares)
+#     ...
+#     out(node_n,curr_time)
+#     ...
+#
+#  SEE ALSO
+#     sge_sharetree/sge_share_mon()
+#*******************************************************************************
+proc parse_csv {output_var input_var delimiter index} {
+   global ts_config CHECK_OUTPUT
+
+   upvar $output_var out
+   upvar $input_var  in
+
+   if {![info exists in]} {
+      add_proc_error "parse_csv" -1 "input variable $input_var does not exist"
+      return -1
+   }
+
+   # we have one record per line
+   set lines [split $in "\n"]
+   set num_lines [llength $lines]
+   if {$num_lines == 0} {
+      add_proc_error "parse_csv" -1 "input is empty string"
+      return -2
+   }
+
+   # use first line as header line
+   set split_header [split [lindex $lines 0] $delimiter]
+   set num_fields [llength $split_header]
+
+   # remember field names by position
+   # find position of index field
+   set index_pos -1
+   for {set i 0} {$i < $num_fields} {incr i} {
+      set field_names($i) [string trim [lindex $split_header $i]]
+
+      if {$field_names($i) == $index} {
+         set index_pos $i
+      }
+   }
+
+   # no index field found? Error!
+   if {$index_pos == -1} {
+      add_proc_error "parse_csv" -1 "couldn't find position of index field $index in header line:\n[lindex $lines 0]"
+      return -3
+   }
+
+   # parse rest of input
+   set out(index) {}
+   for {set i 1} {$i < $num_lines} {incr i} {
+      set line [string trim [lindex $lines $i]]
+
+      # skip empty lines
+      if {[string length $line] == 0} {
+         continue
+      }
+
+      # split line into fields and
+      set split_line [split $line $delimiter]
+      if {[llength $split_line] != $num_fields} {
+         add_proc_error "parse_csv" -1 "data line doesn't contain the expected number of fields ($num_fields)\n$line"
+         return -4
+      }
+
+      # store the fields by index
+      # we do not allow empty or duplicate index
+      set name [lindex $split_line $index_pos]
+      if {$name == ""} {
+         add_proc_error "parse_csv" -1 "empty index field in line $i:\n$line"
+         return -4
+      }
+      if {[lsearch -exact $out(index) $name] >= 0} {
+         add_proc_error "parse_csv" -1 "duplicate index $name in line $i:\n$line"
+         return -5
+      }
+
+      # store data
+      lappend out(index) $name
+      for {set j 0} {$j < $num_fields} {incr j} {
+         if {$j != $index_pos} {
+            set out($name,$field_names($j)) [string trim [lindex $split_line $j]]
+         }
+      }
+   }
+
+   return 0
+}

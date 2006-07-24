@@ -101,11 +101,11 @@ proc access_lists_setup  {} {
    global CHECK_FIRST_FOREIGN_SYSTEM_USER CHECK_SECOND_FOREIGN_SYSTEM_USER
    global CHECK_PRODUCT_ROOT
 
-   # setup an own queue - we change a lot of config params - better not touch all.q
-   set access_lists_queue "access.q"
+   # setup an own queue - we'll change a lot of config params - better not touch all.q
+   set access_lists_queue "access"
    set queue_values(load_thresholds)       "np_load_avg=11.00"
    set queue_values(qtype)                 "BATCH INTERACTIVE CHECKPOINTING PARALLEL"
-   add_queue $access_lists_queue "@allhosts" queue_values 1
+   add_queue $access_lists_queue "@allhosts" queue_values
    # ... and disable all.q
    foreach host $ts_config(execd_nodes) {
       disable_queue [get_queue_instance "all.q" $host]

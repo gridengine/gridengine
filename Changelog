@@ -1,3 +1,14 @@
+JG-2006-07-24-0: Testsuite: Added test for sge_share_mon.
+                            Added utility functions to create and modify
+                            sharetree. Use these functions in various checks
+                            instead of calling and handling qconf.
+                            Fixed get_ps_info for darwin.
+                            Fixed qmod_general test.
+                            Have testsuite unique tmpdir in queue config to 
+                            avoid problems with multiple testsuites running in 
+                            parallel on the same hosts.
+                 Review:    RD
+
 AH-2006-07-19-0: Testsuite: Enhanced system_tests/scheduler/queue_requests
                             to cover 
                             -q cqueue_list 
@@ -66,13 +77,13 @@ AA-2006-06-27-0: Cleanup:   Removal of unused zlib and XtReplay 3rdparty code
                  Review:    AH
                  Changed:   qmon
 
+JG-2006-06-26-0: Testsuite: Added support for windows hosts.
+                 Review:    CR
+
 AH-2006-06-23-1: Docs:      Fixed sge_conf(5) reprioritize and related 
                             paragraph in queue_conf(5)
                  Review:    AA
                  Changed:   man pages
-
-JG-2006-06-26-0: Testsuite: Added support for windows hosts.
-                 Review:    CR
 
 AH-2006-06-23-1: Enhancem.  Merged scalability enhancements from S3 branch
 

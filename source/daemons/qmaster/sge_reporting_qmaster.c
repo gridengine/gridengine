@@ -1030,6 +1030,7 @@ reporting_create_sharelog_record(lList **answer_list, monitoring_t *monitor)
          sge_sharetree_print(&data_dstring, Master_Sharetree_List, 
                              Master_User_List,
                              Master_Project_List,
+                             Master_Userset_List,
                              true,
                              false,
                              NULL,

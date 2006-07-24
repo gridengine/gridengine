@@ -306,7 +306,7 @@ lList* sge_gdi(u_long32 target, u_long32 cmd, lList **lpp, lCondition *cp,
 *           variable must be initialized with STATE_GDI_MULTI_INIT 
 *           before a series of calls to sge_gdi_multi()
 *
-*     bool do_copy - indicates, if the passed in data needs to be copyed or not
+*     bool do_copy - indicates, if the passed in data needs to be copied or not
 *
 *     bool do_sync - indicates, if the gdi request should be send sync or async.
 *

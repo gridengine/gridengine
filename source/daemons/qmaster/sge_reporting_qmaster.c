@@ -1031,6 +1031,7 @@ reporting_create_sharelog_record(lList **answer_list, monitoring_t *monitor)
          sge_sharetree_print(&data_dstring, *object_base[SGE_TYPE_SHARETREE].list, 
                              *object_base[SGE_TYPE_USER].list,
                              *object_base[SGE_TYPE_PROJECT].list,
+                             *object_base[SGE_TYPE_USERSET].list,
                              true,
                              false,
                              NULL,

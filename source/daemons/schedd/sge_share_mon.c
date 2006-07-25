@@ -52,84 +52,128 @@
 #include "sge_schedd_conf.h"
 #include "sge_profiling.h"
 
+#include "sgeobj/sge_object.h"
+
 #include "sge_sharetree_printing.h"
 
 static int
-setup_lists(lList **sharetree, lList **users, lList **projects, lList **config)
+free_lists(lList **sharetree, lList **users, lList **projects, lList **usersets, lList **config)
 {
-   lList *alp;
-   lListElem *aep;
-   lEnumeration *what;
-
-   /*
-    * get share tree
-    */
-
-   what = lWhat("%T(ALL)", STN_Type);
-   alp=sge_gdi(SGE_SHARETREE_LIST, SGE_GDI_GET, sharetree, NULL, what);
-   lFreeWhat(&what);
-
-   aep = lFirst(alp);
-   answer_exit_if_not_recoverable(aep);
-   if (answer_get_status(aep) != STATUS_OK) {
-      fprintf(stderr, "%s", lGetString(aep, AN_text));
-      exit(1);
-   }
-   lFreeList(&alp);
-
-   if (!*sharetree || lFirst(*sharetree) == NULL) {
-      fprintf(stderr, MSG_SGESHAREMON_NOSHARETREE );
-      exit(2);
-   }
-
-   /*
-    * get config list
-    */
-
-   what = lWhat("%T(ALL)", SC_Type);
-   alp=sge_gdi(SGE_SC_LIST, SGE_GDI_GET, config, NULL, what);
-   lFreeWhat(&what);
-
-   aep = lFirst(alp);
-   answer_exit_if_not_recoverable(aep);
-   if (answer_get_status(aep) != STATUS_OK) {
-      fprintf(stderr, "%s", lGetString(aep, AN_text));
-      exit(1);
-   }
-   lFreeList(&alp);
-
-   /*
-    * get user and project list
-    */
-
-   what = lWhat("%T(ALL)", UP_Type);
-   alp = sge_gdi(SGE_USER_LIST, SGE_GDI_GET, users, NULL, what);
-   lFreeWhat(&what);
-
-   what = lWhat("%T(ALL)", UP_Type);
-   alp = sge_gdi(SGE_PROJECT_LIST, SGE_GDI_GET, projects, NULL, what);
-   lFreeWhat(&what);
-
-   aep = lFirst(alp);
-   if (answer_get_status(aep) != STATUS_OK) {
-      fprintf(stderr, "%s", lGetString(aep, AN_text));
-      exit(3);
-   }
-   lFreeList(&alp);
+   lFreeList(sharetree);
+   lFreeList(users);
+   lFreeList(projects);
+   lFreeList(usersets);
+   lFreeList(config);
 
    return 0;
 }
-
 
 static int
-free_lists(lList *sharetree, lList *users, lList *projects, lList *config)
+setup_lists(lList **sharetree, lList **users, lList **projects, lList **usersets, lList **config)
 {
-   lFreeList(&sharetree);
-   lFreeList(&users);
-   lFreeList(&projects);
-   lFreeList(&config);
+   lList *alp = NULL;               /* answer list for individual gdi_multi */
+   lList *malp = NULL;              /* answer list for final gdi_multi */
+   lEnumeration *what;
+   state_gdi_multi state = STATE_GDI_MULTI_INIT;
+   int sharetree_id, sched_conf_id, user_id, project_id, userset_id;
+   bool error;
+
+   /* get share tree */
+   what = lWhat("%T(ALL)", STN_Type);
+   sharetree_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_SHARETREE_LIST, SGE_GDI_GET, 
+                                NULL, NULL, what, NULL, &state, true);
+   lFreeWhat(&what);
+   error = answer_list_output(&alp);
+
+   /* get config list */
+   if (!error) {
+      what = lWhat("%T(ALL)", SC_Type);
+      sched_conf_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_SC_LIST, SGE_GDI_GET, 
+                                    NULL, NULL, what, NULL, &state, true);
+      lFreeWhat(&what);
+      error = answer_list_output(&alp);
+   }
+
+   /* get user list */
+   if (!error) {
+      what = lWhat("%T(ALL)", UP_Type);
+      user_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_USER_LIST, SGE_GDI_GET, 
+                              NULL, NULL, what, NULL, &state, true);
+      lFreeWhat(&what);
+      error = answer_list_output(&alp);
+   }
+
+   /* get project list */
+   if (!error) {
+      what = lWhat("%T(ALL)", UP_Type);
+      project_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_PROJECT_LIST, SGE_GDI_GET, 
+                                 NULL, NULL, what, NULL, &state, true);
+      lFreeWhat(&what);
+      error = answer_list_output(&alp);
+   }
+
+   /* 
+    * get userset list 
+    * send gdi multi request to qmaster
+    */
+   if (!error) {
+      what = lWhat("%T(ALL)", US_Type);
+      userset_id = sge_gdi_multi(&alp, SGE_GDI_SEND, SGE_USERSET_LIST, SGE_GDI_GET, 
+                                 NULL, NULL, what, &malp, &state, true);
+      lFreeWhat(&what);
+      error = answer_list_output(&alp);
+   }
+
+   /* if any of the above operations failed, exit */
+   if (error) {
+      lFreeList(&malp);
+      exit(3);
+   }
+
+   /* extract the sharetree lists */
+   alp = sge_gdi_extract_answer(SGE_GDI_GET, SGE_SHARETREE_LIST, sharetree_id, malp, sharetree);
+   error = answer_list_output(&alp);
+
+   /* if we have no sharetree, output message and exit */
+   if (!error) {
+      if (!*sharetree || lFirst(*sharetree) == NULL) {
+         fprintf(stderr, "%s\n", MSG_SGESHAREMON_NOSHARETREE);
+         lFreeList(sharetree);
+         lFreeList(&malp);
+         exit(2);
+      }
+   }
+
+   /* extract sched_conf, users, projects, usersets */
+   if (!error) {
+      alp = sge_gdi_extract_answer(SGE_GDI_GET, SGE_SC_LIST, sched_conf_id, malp, config);
+      error = answer_list_output(&alp);
+   }
+   if (!error) {
+      alp = sge_gdi_extract_answer(SGE_GDI_GET, SGE_USER_LIST, user_id, malp, users);
+      error = answer_list_output(&alp);
+   }
+   if (!error) {
+      alp = sge_gdi_extract_answer(SGE_GDI_GET, SGE_PROJECT_LIST, project_id, malp, projects);
+      error = answer_list_output(&alp);
+   }
+   if (!error) {
+      alp = sge_gdi_extract_answer(SGE_GDI_GET, SGE_USERSET_LIST, userset_id, malp, usersets);
+      error = answer_list_output(&alp);
+   }
+
+   /* cleanup */
+   lFreeList(&malp);
+
+   /* if any of the above operations failed, exit */
+   if (error) {
+      free_lists(sharetree, users, projects, usersets, config);
+      exit(3);
+   }
+
    return 0;
 }
+
 
 
 
@@ -188,7 +232,12 @@ FCLOSE_ERROR:
 int
 main(int argc, char **argv)
 {
-   lList *sharetree, *users, *projects, *config;
+   lList *sharetree = NULL;
+   lList *users = NULL;
+   lList *projects = NULL;
+   lList *usersets = NULL;
+   lList *config = NULL;
+
    int interval=15;
    int err=0;
    int count=-1;
@@ -207,6 +256,8 @@ main(int argc, char **argv)
    dstring output_dstring = DSTRING_INIT;
 
    sge_prof_setup();
+   obj_init_mt();
+   sc_init_mt();
    
    format.name_format  = false;
    format.delim        = "\t";
@@ -300,10 +351,10 @@ main(int argc, char **argv)
    }
 
    while(count == -1 || count-- > 0) {
-      setup_lists(&sharetree, &users, &projects, &config);
+      setup_lists(&sharetree, &users, &projects, &usersets, &config);
       sconf_set_config(&config, NULL);
 
-      sge_sharetree_print(&output_dstring, sharetree, users, projects, group_nodes, decay_usage, names, &format);
+      sge_sharetree_print(&output_dstring, sharetree, users, projects, usersets, group_nodes, decay_usage, names, &format);
 
       if (count && strlen(format.rec_delim)) {
 	      sge_dstring_sprintf_append(&output_dstring, "%s", format.rec_delim);
@@ -314,7 +365,7 @@ main(int argc, char **argv)
              sge_dstring_strlen(&output_dstring), 1, outfile);
       outfile = close_output(outfile);
 
-      free_lists(sharetree, users, projects, config);
+      free_lists(&sharetree, &users, &projects, &usersets, &config);
       sge_dstring_clear(&output_dstring);
 
       if (count) {

@@ -1,3 +1,12 @@
+JG-2006-07-25-0: Bugfix:    sge_share_mon did not work with automatic policy 
+                            enforcement ("default" nodes in sharetree).
+                 Bugfix:    sharetree node names in sge_share_mon and in 
+                            reporting did not contain the whole path.
+                            Merge of JG-2006-07-24-0 from V60s2_BRANCH.
+                 Bugfix:    sge_share_mon was broken (missing MT init).
+                 Bugster:   6448704, 6449439
+                 Review:    RD
+
 JG-2006-07-25-0: Testsuite: Use sharetree infrastructure provided by
                             JG-2006-07-24-0 in bugs/issuezilla/1848.
                             Extended qconf test to test creation, modification,

@@ -707,8 +707,19 @@ proc start_source_bin {bin args {host ""} {user ""} {exit_var prg_exit_state} {t
 proc get_sge_error_generic {messages_var} {
    upvar $messages_var messages
 
-   lappend messages(index) "-200"
-   set messages(-200) [translate_macro MSG_SGETEXT_NOSUBMITORADMINHOST_S "*"]
+   # messages indicating insufficient host privileges
+   lappend messages(index) -200
+   lappend messages(index) -201
+   lappend messages(index) -202
+   set messages(-200) "*[translate_macro MSG_SGETEXT_NOSUBMITORADMINHOST_S "*"]"
+   set messages(-201) "*[translate_macro MSG_SGETEXT_NOADMINHOST_S "*"]"
+   set messages(-202) "*[translate_macro MSG_SGETEXT_NOSUBMITHOST_S "*"]"
+
+   # messages indicating insufficient user privileges
+   lappend messages(index) -210
+   lappend messages(index) -211
+   set messages(-210) "*[translate_macro MSG_SGETEXT_MUSTBEMANAGER_S "*"]"
+   set messages(-211) "*[translate_macro MSG_SGETEXT_MUSTBEOPERATOR_S "*"]"
 
    get_sge_error_generic_vdep messages
 }
@@ -738,6 +749,10 @@ proc get_sge_error_generic {messages_var} {
 #        -100: sge_qmaster cannot be contacted
 #
 #        -200: host executing command is no admin or submit host
+#        -201: host executing command is no admin host
+#        -202: host executing command is no submit host
+#        -210: user executing command is no manager
+#        -210: user executing command is no operator
 #
 #  INPUTS
 #     procedure       - name of the calling procedure (for error message)

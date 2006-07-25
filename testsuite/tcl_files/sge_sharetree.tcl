@@ -365,7 +365,10 @@ proc del_sharetree_node_error {result project user raise_error} {
 #  RESULT
 #       0: a sharetree existed and has been deleted
 #       1: there was no sharetree to delete
-#     < 0: error
+#     < 0: error, see sge_procedures/get_sge_error()
+#
+#  SEE ALSO
+#     sge_procedures/get_sge_error()
 #*******************************************************************************
 proc del_sharetree {{on_host ""} {as_user ""} {raise_error 1}} {
    set result [start_sge_bin "qconf" "-dstree" $on_host $as_user]
@@ -472,7 +475,7 @@ proc stree_buffer_add_node {stree_var node shares} {
    } else {
       set parent [file dirname $node]
       if {[lsearch -exact $stree(index) $parent] < 0 || ![info exists stree($parent)]} {
-         add_proc_error "stree_buffer_mod_node" -1 "parent node for sharetree node $node does not exist"
+         add_proc_error "stree_buffer_add_node" -1 "parent node for sharetree node $node does not exist"
          set ret -2
       } else {
          lappend stree(index) $node
@@ -560,14 +563,40 @@ proc stree_buffer_del_node {stree_var node} {
 
    set ret 0
 
-   set pos [[lsearch -exact $stree(index) $node]]
-   if {$pos < 0 || ![info exists stree($node)]} {
-      add_proc_error "stree_buffer_mod_node" -1 "sharetree node $node does not exist"
+   if {$node == "/"} {
+      add_proc_error "stree_buffer_del_node" -1 "cannot delete root node $node"
       set ret -1
    } else {
-      unset stree($node)
-      unset stree($node,children)
-      set stree(index) [lreplace $stree(index) $pos $pos]
+      set pos [lsearch -exact $stree(index) $node]
+      if {$pos < 0 || ![info exists stree($node)]} {
+         add_proc_error "stree_buffer_del_node" -1 "sharetree node $node does not exist"
+         set ret -2
+      } else {
+         # delete all children of this node
+         foreach child $stree($node,children) {
+            stree_buffer_del_node stree $child
+         }
+
+         # remove node from parent children list
+         set parent [file dirname $node]
+         if {[lsearch -exact $stree(index) $parent] < 0 || ![info exists stree($parent)]} {
+            add_proc_error "stree_buffer_del_node" -1 "parent node for sharetree node $node does not exist"
+            set ret -3
+         } else {
+            set parent_pos [lsearch -exact $stree($parent,children) $node]
+            if {$parent_pos < 0} {
+               add_proc_error "stree_buffer_del_node" -1 "parent node $parent does not reference $node as child"
+               set ret -4
+            } else {
+               set stree($parent,children) [lreplace $stree($parent,children) $parent_pos $parent_pos]
+            }
+         }
+
+         # now unset data of node
+         unset stree($node)
+         unset stree($node,children)
+         set stree(index) [lreplace $stree(index) $pos $pos]
+      }
    }
 
    return $ret
@@ -617,12 +646,18 @@ proc stree_buffer_get_node {stree_var node} {
 #
 #  INPUTS
 #     stree_var - the sharetree to commit
+#     {on_host ""}    - execute qconf on this host (default: qmaster host)
+#     {as_user ""}    - execute qconf as this user (default: CHECK_USER)
+#     {raise_error 1} - raise error condition in case of errors?
 #
 #  RESULT
 #     0   - on success
-#     < 0 - on error
+#     < 0 - on error, see sge_procedures/get_sge_error()
+#
+#  SEE ALSO
+#     sge_procedures/get_sge_error()
 #*******************************************************************************
-proc stree_buffer_commit {stree_var} {
+proc stree_buffer_commit {stree_var {on_host ""} {as_user ""} {raise_error 1}} {
    global CHECK_OUTPUT
 
    upvar $stree_var stree
@@ -675,10 +710,11 @@ proc stree_buffer_commit {stree_var} {
 
    # commit sharetree change
    if {$ret == 0} {
-      set result [start_sge_bin "qconf" "-Mstree $tmp_filename"]
+      set result [start_sge_bin "qconf" "-Mstree $tmp_filename" $on_host $as_user]
       set messages(index) {0}
       set messages(0) [translate_macro MSG_TREE_CHANGEDSHARETREE]
-      set ret [handle_sge_errors "stree_buffer_commit" "qconf -Mstree $tmp_filename" $result messages]
+
+      set ret [handle_sge_errors "stree_buffer_commit" "qconf -Mstree $tmp_filename" $result messages $raise_error]
    }
 
    return $ret
@@ -933,7 +969,13 @@ proc test_stree_buffer {} {
    puts $CHECK_OUTPUT [stree_buffer_get_node new_modified_sharetree "/mytestproject/$CHECK_USER"]
    puts $CHECK_OUTPUT [stree_buffer_get_node new_modified_sharetree "/mytestproject/blah"] ;# supposed to fail
 
-   puts $CHECK_OUTPUT "reread sharetree from qmaster"
+   stree_buffer_del_node new_modified_sharetree "/mytestproject"
+   stree_buffer_del_node new_modified_sharetree "/" ;# supposed to fail
+
+   stree_buffer_dump new_modified_sharetree
+   stree_buffer_commit new_modified_sharetree
+
+   puts $CHECK_OUTPUT "reread and modified sharetree from qmaster"
    wait_for_enter
   
    del_sharetree
@@ -996,9 +1038,8 @@ proc sge_share_mon {output_var {on_host ""} {as_user ""} {raise_error 1}} {
    if {$prg_exit_state == 0} {
       set ret [parse_csv out result "," "node_name"]
    } else {
-      set messages(index) {-1 -2}
+      set messages(index) {-1}
       set messages(-1) [translate_macro MSG_SGESHAREMON_NOSHARETREE]
-      set messages(-2) "*[translate_macro MSG_SGETEXT_NOSUBMITORADMINHOST_S "*"]"
       set ret [handle_sge_errors "sge_share_mon" "sge_share_mon -h -d , -c 1" $result messages $raise_error]
    }
 }

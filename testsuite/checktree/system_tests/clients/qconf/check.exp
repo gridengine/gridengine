@@ -101,10 +101,13 @@ lappend check_functions "qconf_sprjl_check"	;# Show project list
 lappend check_functions "qconf_add_delete_manager"	;# Add and delete manager users 
 lappend check_functions "qconf_add_show_mod_del_queue"	;# Add, show, modify and delete queue "qconf_queue.q"
 lappend check_functions "qconf_add_show_delete_stnode"	;# Add, show and delete share tree nodes
+lappend check_functions "qconf_create_modify_sharetree"  ;# create and modify a sharetree (qconf -Mstree)
+lappend check_functions "qconf_del_sharetree"            ;# delete the whole sharetree (qconf -dstree)
 lappend check_functions "qconf_event_client"	;# Create, show and delete event clients
 lappend check_functions "qconf_add_delete_modify_calendar"	;# Add, delete and modify calendar
 lappend check_functions "qconf_add_delete_modify_replace_attr"	;# Add, delete and modify attributes
 lappend check_functions "qconf_modify_checkpoint"	;# Create, modify and delete checkpoint 
+lappend check_functions "qconf_add_project"        ;# qconf -aprj / qconf -Aprj
 lappend check_functions "qconf_modify_exechost"	;# Modify exec host
 lappend check_functions "qconf_modify_project";# Modify project
 lappend check_functions "qconf_modify_userlist";# Modify user list
@@ -2609,3 +2612,203 @@ proc qconf_issue_2023 {} {
 
    set_error 0 "ok"
 }
+
+#****** check/qconf_create_modify_sharetree() **********************************
+#  NAME
+#     qconf_create_modify_sharetree() -- test qconf -Mstree
+#
+#  SYNOPSIS
+#     qconf_create_modify_sharetree { } 
+#
+#  FUNCTION
+#     Tests qconf -Mstree option.
+#     Positive tests adding a new sharetree and modifying a sharetree.
+#
+#     Negative tests as non admin user and from a non admin host.
+#*******************************************************************************
+proc qconf_create_modify_sharetree {} {
+   global ts_config CHECK_OUTPUT
+   global CHECK_FIRST_FOREIGN_SYSTEM_USER
+
+   # delete an already existing sharetree
+   del_sharetree
+
+   # create a sharetree
+   stree_buffer_init stree
+   stree_buffer_add_node stree "/default" 10
+   stree_buffer_add_node stree "/mytestproject" 20
+   stree_buffer_add_node stree "/mytestproject/default" 30
+   stree_buffer_commit stree
+
+   # modify the sharetree
+   stree_buffer_mod_node stree "/default" 20
+   stree_buffer_del_node stree "/mytestproject"
+   stree_buffer_commit stree
+
+   # read in the sharetree - it may only contain the / and the /default nodes
+   # with correct number of shares
+   stree_buffer_read stree2
+   if {[llength $stree2(index)] != 2 || 
+       [lindex $stree2(index) 0] != "/" || 
+       [lindex $stree2(index) 1] != "/default"} {
+      add_proc_error "qconf_create_modify_sharetree" -1 "sharetree should only contain the nodes / and /default, but contains\n$stree2(index)"
+   }
+
+   # delete the sharetree
+   del_sharetree
+
+   # try to create/modify a sharetree with insufficient permissions
+   # - as non admin user
+   # - from non admin host
+   set ret [stree_buffer_commit stree "" $CHECK_FIRST_FOREIGN_SYSTEM_USER 0]
+   if {$ret != -210} {
+      add_proc_error "qconf_create_modify_sharetree" -1 "qconf -Mstree should have failed for user $CHECK_FIRST_FOREIGN_SYSTEM_USER"
+   }
+   set non_cluster_host [host_conf_get_unused_host]
+   set ret [stree_buffer_commit stree $non_cluster_host "" 0]
+   if {$ret != -201} {
+      add_proc_error "qconf_create_modify_sharetree" -1 "qconf -Mstree should have failed on host $non_cluster_host"
+   }
+
+   # delete a sharetree created due to errors in the permission check
+   del_sharetree
+
+   set_error 0 "ok"
+}
+
+#****** check/qconf_del_sharetree() ********************************************
+#  NAME
+#     qconf_del_sharetree() -- test qconf -dstree
+#
+#  SYNOPSIS
+#     qconf_del_sharetree { } 
+#
+#  FUNCTION
+#     Tests qconf -dstree.
+#     Positive test with and without sharetree.
+#     
+#     Negative tests as non admin user and from a non admin host.
+#*******************************************************************************
+proc qconf_del_sharetree {} {
+   global ts_config CHECK_OUTPUT
+   global CHECK_FIRST_FOREIGN_SYSTEM_USER
+
+   # delete an already existing sharetree
+   del_sharetree
+
+   # build a sharetree and delete it - must give error code 0
+   stree_buffer_init stree
+   stree_buffer_add_node stree "/default" 10
+   stree_buffer_add_node stree "/mytestproject" 20
+   stree_buffer_add_node stree "/mytestproject/default" 30
+   stree_buffer_commit stree
+
+   set ret [del_sharetree]
+   if {$ret != 0} {
+      add_proc_error "qconf_del_sharetree" -1 "qconf -dstree should have reported success"
+   }
+
+   # test qconf action when there is no sharetree to delete
+   set ret [del_sharetree]
+   if {$ret != 1} {
+      add_proc_error "qconf_del_sharetree" -1 "qconf -dstree should have reported \"No sharetree\""
+   }
+
+   # try to delete a sharetree with insufficient permissions
+   # - as non admin user
+   # - from non admin host
+   stree_buffer_commit stree
+   set ret [del_sharetree "" $CHECK_FIRST_FOREIGN_SYSTEM_USER 0]
+   if {$ret != -210} {
+      add_proc_error "qconf_create_modify_sharetree" -1 "qconf -Mstree should have failed for user $CHECK_FIRST_FOREIGN_SYSTEM_USER"
+   }
+   set non_cluster_host [host_conf_get_unused_host]
+   set ret [del_sharetree $non_cluster_host "" 0]
+   if {$ret != -201} {
+      add_proc_error "qconf_create_modify_sharetree" -1 "qconf -Mstree should have failed on host $non_cluster_host"
+   }
+
+   # delete the sharetree
+   del_sharetree
+
+   set_error 0 "ok"
+}
+
+#****** check/qconf_add_project() **********************************************
+#  NAME
+#     qconf_add_project() -- test qconf -aprj / -Aprj
+#
+#  SYNOPSIS
+#     qconf_add_project { } 
+#
+#  FUNCTION
+#     Test adding projects (qconf -aprj and qconf -Aprj).
+#     Positive tests.
+#
+#     Negative tests creating duplicates and project name being a keyword,
+#     and as non admin user and from a non admin host.
+#*******************************************************************************
+proc qconf_add_project {} {
+   global ts_config CHECK_OUTPUT
+   global CHECK_FIRST_FOREIGN_SYSTEM_USER
+
+   # test adding projects
+   set project(name) "qconf_add_prj"
+
+   add_prj project 0 ;# slow add
+   del_prj "qconf_add_prj"
+
+   add_prj project 1 ;# fast add
+
+   # test adding duplicates (must fail)
+   # TODO: it's difficult to handle all the default error conditions
+   # in handle_vi_edit (e.g. host and user permissions).
+   # until this is fixed, we cannot do negative tests with qconf calling the editor.
+   #set ret [add_prj project 0 "" "" 0] ;# slow add duplicate
+   #if {$ret != -2} {
+   #   add_proc_error "qconf_add_project" -1 "qconf -aprj should have failed for duplicate"
+   #}
+   set ret [add_prj project 1 "" "" 0] ;# fast add duplicate
+   if {$ret != -2} {
+      add_proc_error "qconf_add_project" -1 "qconf -Aprj should have failed for duplicate"
+   }
+
+   del_prj "qconf_add_prj"
+
+   # test other errors
+   set project(name) "default"
+   #set ret [add_prj project 0 "" "" 0] ;# slow add incorrect prj (name is keyword)
+   #if {$ret >= 0} {
+   #   add_proc_error "qconf_add_project" -1 "qconf -aprj should have failed for a project named \"default\""
+   #}
+   set ret [add_prj project 1 "" "" 0] ;# fast add incorrect prj (name is keyword)
+   if {$ret >= 0} {
+      add_proc_error "qconf_add_project" -1 "qconf -Aprj should have failed for a project named \"default\""
+   }
+
+   # try to add a project with insufficient permissions
+   # - as non admin user
+   # - from non admin host
+   set project(name) "qconf_add_prj"
+   #set ret [add_prj project 0 "" "$CHECK_FIRST_FOREIGN_SYSTEM_USER" 0]
+   #if {$ret != -210} {
+   #   add_proc_error "qconf_add_project" -1 "qconf -aprj should have failed for user $CHECK_FIRST_FOREIGN_SYSTEM_USER"
+   #}
+   set ret [add_prj project 1 "" "$CHECK_FIRST_FOREIGN_SYSTEM_USER" 0]
+   if {$ret != -210} {
+      add_proc_error "qconf_add_project" -1 "qconf -Aprj should have failed for user $CHECK_FIRST_FOREIGN_SYSTEM_USER"
+   }
+
+   set non_cluster_host [host_conf_get_unused_host]
+   #set ret [add_prj project 0 $non_cluster_host "" 0]
+   #if {$ret != -201} {
+   #   add_proc_error "qconf_add_project" -1 "qconf -aprj should have failed on host $non_cluster_host"
+   #}
+   set ret [add_prj project 1 $non_cluster_host "" 0]
+   if {$ret != -201} {
+      add_proc_error "qconf_add_project" -1 "qconf -Aprj should have failed on host $non_cluster_host"
+   }
+
+   set_error 0 "ok"
+}
+

@@ -67,11 +67,7 @@ proc issue_1848_init_level {} {
 }
 
 proc issue_1848_setup  {} {
-   global ts_config
-   global CHECK_OUTPUT
-   global CHECK_PRODUCT_TYPE 
-   global CHECK_ARCH 
-   global CHECK_PRODUCT_ROOT
+   global ts_config CHECK_OUTPUT
    global prj1_id_list 
 
    set DIV_NO "5"
@@ -79,43 +75,42 @@ proc issue_1848_setup  {} {
    set SEC_NO "4"
    set PRJ_NO "10"
 
-   set DIV_COUNT  "1"
    set PRJ_COUNT "1"
    set TICKET_VALUE "1000"
 
-   set prj1_id_list ""
+   set prj1_id_list {}
 
+   stree_buffer_init stree
+
+   puts -nonewline $CHECK_OUTPUT "building sharetree " ; flush $CHECK_OUTPUT
+   set DIV_COUNT  "1"
    while { $DIV_COUNT <= $DIV_NO } {
    	set DIV_NAME "div$DIV_COUNT"
-	   set DIV_PATH "/$DIV_NAME=$TICKET_VALUE"
+      stree_buffer_add_node stree "/$DIV_NAME" $TICKET_VALUE
 
       set DEP_COUNT "1"
       while { $DEP_COUNT <= $DEP_NO } {
          set DEP_NAME "dep$DEP_COUNT"
-         set DEP_PATH "/$DIV_NAME/$DEP_NAME=$TICKET_VALUE"
+         stree_buffer_add_node stree "/$DIV_NAME/$DEP_NAME" $TICKET_VALUE
 
          set SEC_COUNT "1"
          while { $SEC_COUNT <= $SEC_NO } {
             set SEC_NAME "sec$SEC_COUNT"
-            set SEC_PATH "/$DIV_NAME/$DEP_NAME/$SEC_NAME=$TICKET_VALUE"
+            stree_buffer_add_node stree "/$DIV_NAME/$DEP_NAME/$SEC_NAME" $TICKET_VALUE
          
             set PRJ_TMP_COUNT "1"
             while { $PRJ_TMP_COUNT <= $PRJ_NO } {
                set PRJ "PRJ$PRJ_COUNT"
-               set PRJ_PATH "/$DIV_NAME/$DEP_NAME/$SEC_NAME/$PRJ=$TICKET_VALUE"
+               stree_buffer_add_node stree "/$DIV_NAME/$DEP_NAME/$SEC_NAME/$PRJ" $TICKET_VALUE
 
                lappend prj1_id_list $PRJ
               
                set prj_setup(name) "$PRJ"
                add_prj prj_setup
-               
-               set catch_return [ catch {  
-                  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf -astnode $DIV_PATH,$DEP_PATH,$SEC_PATH,$PRJ_PATH" 
-               } result ]
-               puts "qconf -astnode result: $result"
               
                incr PRJ_TMP_COUNT
                incr PRJ_COUNT
+               puts -nonewline $CHECK_OUTPUT "." ; flush $CHECK_OUTPUT
             }
             incr SEC_COUNT
          }
@@ -123,13 +118,34 @@ proc issue_1848_setup  {} {
       }
       incr DIV_COUNT
    }
- 
+
+   puts $CHECK_OUTPUT ""
+   stree_buffer_commit stree
+
    set myconfig(loglevel)         "log_warning"
    set_config myconfig
    
    set_error 0 "ok"
 }
 
+proc issue_1848_cleanup {} {
+   global ts_config CHECK_OUTPUT
+   global prj1_id_list 
+
+   del_sharetree
+
+   puts -nonewline $CHECK_OUTPUT "deleting projects " ; flush $CHECK_OUTPUT
+   foreach prj $prj1_id_list {
+      del_prj $prj
+      puts -nonewline $CHECK_OUTPUT "." ; flush $CHECK_OUTPUT
+   }
+   puts $CHECK_OUTPUT ""
+
+   set myconfig(loglevel)         "log_info"
+   set_config myconfig
+
+   set_error 0 "ok"
+}
 
 
 proc issue_1848_run {} {
@@ -215,22 +231,3 @@ proc issue_1848_run {} {
    }
 }
 
-proc issue_1848_cleanup {} {
-   global prj1_id_list 
-   global ts_config
-   global CHECK_OUTPUT
-   global CHECK_PRODUCT_TYPE 
-   global CHECK_ARCH 
-   global CHECK_PRODUCT_ROOT
-
-   del_sharetree
-
-   foreach prj $prj1_id_list {
-      del_prj $prj
-   }
-
-   set myconfig(loglevel)         "log_info"
-   set_config myconfig
-
-   set_error 0 "ok"
-}

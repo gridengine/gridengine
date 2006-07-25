@@ -311,8 +311,8 @@ proc share_mon_permissions {} {
    # with and without sharetree
    set non_cluster_host [host_conf_get_unused_host]
    set result [sge_share_mon sharetree $non_cluster_host "" 0]
-   if {$result != -2} {
-      add_proc_error "" -1 "sge_share_mon request should have been rejected from non cluster host $non_cluster_host"
+   if {$result != -200} {
+      add_proc_error "share_mon_permissions" -1 "sge_share_mon request should have been rejected from non cluster host $non_cluster_host"
    }
 
    set_error 0 "ok"

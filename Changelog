@@ -1,3 +1,13 @@
+JG-2006-07-25-0: Testsuite: Use sharetree infrastructure provided by
+                            JG-2006-07-24-0 in bugs/issuezilla/1848.
+                            Extended qconf test to test creation, modification,
+                            and deletion of sharetree, as well as adding 
+                            projects.
+                            Add generic error messages (user/host permissions)
+                            to handle_sge_errors.
+                 Review:    RD
+
+
 JG-2006-07-24-0: Testsuite: Added test for sge_share_mon.
                             Added utility functions to create and modify
                             sharetree. Use these functions in various checks

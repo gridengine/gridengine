@@ -46,7 +46,6 @@ files=" \
        clients/qsub/qsub_dependencies  \
        clients/qevent/qevent_dependencies  \
        common/common_dependencies  \
-       classes/src/classes_dependencies \
        daemons/common/common_dependencies  \
        daemons/execd/execd_dependencies  \
        daemons/qmaster/qmaster_dependencies  \

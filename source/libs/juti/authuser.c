@@ -153,9 +153,9 @@ int main(int argc, char** argv) {
       if(juti_getgrouplist(username, gid, &groups, &group_count) == 0) {            
          for(i = 0; i < group_count; i++) {
             if(i>0) {
-               fprintf(stdout, ",%d", groups[i]);
+               fprintf(stdout, ","gid_t_fmt, groups[i]);
             } else {
-               fprintf(stdout, "%d", groups[i]);
+               fprintf(stdout, gid_t_fmt, groups[i]);
             }
          }
          free(groups);

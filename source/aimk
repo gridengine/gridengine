@@ -1486,6 +1486,7 @@ case WIN32_X86:
    set MAKEFNMATCH      = 0
    set WITH_USERMAPPING = 0 # Compile without usermapping feature
    set COMPILE_DC       = 1
+   set AUTHLIBS         = ""
 
 
    # generate all not compilable targets using touch
@@ -2094,12 +2095,12 @@ if ( "$MAKEWINGRIDAPP" == 1 ) then
       set WINLFLAGS = ""
    endif 
    set WINLFLAGS = "${WINLFLAGS} /INCREMENTAL:NO /NOLOGO"
-   set WINLFLAGS = "${WINLFLAGS} /SUBSYSTEM:CONSOLE /MACHINE:X86"
+   set WINLFLAGS = "${WINLFLAGS} /MACHINE:X86"
    set WINLFLAGS = "${WINLFLAGS} /LIBPATH:'${WIN32_VS_L1}'"
    set WINLFLAGS = "${WINLFLAGS} /LIBPATH:'${WIN32_VS_L2}'"
    set WINLFLAGS = "${WINLFLAGS} /LIBPATH:'${WIN32_VS_L3}'"
 
-   set WINLIBS = "pdh.lib ws2_32.lib advapi32.lib"
+   set WINLIBS = "pdh.lib ws2_32.lib advapi32.lib user32.lib"
 
    switch ( "$argv" )
       case clean:

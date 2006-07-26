@@ -38,13 +38,14 @@
 
 #include <pwd.h>
 
-#if defined(IRIX65) || defined(AIX43) || defined(HP1164) || DARWIN_PPC
+#if defined(IRIX65) || defined(AIX43) || defined(HP1164) \
+    || defined(DARWIN_PPC) || defined(INTERIX)
 #define JUTI_NO_PAM
 #else
 #include <security/pam_appl.h>
 #endif
 
-#if defined(DARWIN_PPC) || defined(AIX51) || defined(AIX43)
+#if defined(DARWIN_PPC) || defined(AIX51) || defined(AIX43) || defined(INTERIX)
 #define JUTI_NO_SHADOW
 #else
 #include <shadow.h>
@@ -344,7 +345,9 @@ auth_result_t do_shadow_authentication(const char* username, const char* passwor
 #ifdef DEBUG
    printf("    crypted password: %s\n", crypted_password);
 #endif
+#if !defined(INTERIX)
    new_crypted_password = crypt(password, crypted_password);
+#endif
    if (new_crypted_password == NULL) {
       error_handler->error(MSG_JUTI_CRYPT_FAILED_S, strerror(errno));
       ret = JUTI_AUTH_ERROR;

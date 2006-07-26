@@ -1,3 +1,7 @@
+HP-2006-07-26-0: Bugfix:    Fixed broken build due to adding of juti/removing of
+                            classes
+                 Changed:   scripts/zerodepend, aimk, Makefile.global, juti
+
 RH-2006-07-26-0: Enhancem.: First version of libs/juti added
                  Review:    AA
 

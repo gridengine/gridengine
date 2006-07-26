@@ -530,6 +530,9 @@ set KRBLIBS           = ""
 set KRBLIB            = ""
 set KLIBS             = ""
 
+# CRYPT
+set AUTHLIBS          = "-lpam"
+
 # PERLGUI
 set PERLGUI           = ""
 set PERLGUI_CLEAN     = ""
@@ -1027,6 +1030,10 @@ case AIX51:
    set MAKEWINGRIDAPP   = 0
    set COMPILE_DC = 1
 
+   if ($BUILDARCH == "AIX43") then
+     set AUTHLIBS = ""
+   endif
+
    if ( $DEBUGGED == 1 ) then
       set DEBUG_FLAG = "$DEBUG_FLAG -qinitauto=01 -qro -qroconst"
    endif
@@ -1266,6 +1273,7 @@ case NETBSD_*:
 case IRIX65:
    set MAKEWINGRIDLIB   = 0
    set MAKEWINGRIDAPP   = 0
+   set AUTHLIBS = ""
    if ( $OPTIMIZATION == 1 ) then
       set OFLAG = "-O3"
    else
@@ -1307,13 +1315,16 @@ case HP1164:
    set MAKE = gmake
    set DLLIB = ""
    set OFLAG = ""
+   
    if ($BUILDARCH == HP11) then
       set HOSTRESOLVEFLAGS = "-DGETHOSTBYNAME -DGETHOSTBYADDR"
       set MEMFLAG = +DD32
+      set AUTHLIBS = "-lsec -lpam"
    else
       set HOSTRESOLVEFLAGS = "-DGETHOSTBYNAME -DGETHOSTBYADDR_M"
       set MEMFLAG = +DD64
       set COMPILE_DC = 1
+      set AUTHLIBS = "-lsec"
    endif
    if ($CC == gcc) then
       if ( $DEBUGGED == 0 ) then
@@ -1371,6 +1382,7 @@ case LINUXPPC:
    set MAKEWINGRIDLIB   = 0
    set MAKEWINGRIDAPP   = 0
    set COMPILE_DC = 1
+   set AUTHLIBS = "-lcrypt -lpam"
 
    # Optimization on LINUXIA64 is broken, qmon dumps
    if ($OPTIMIZATION == 1 && $BUILDARCH != LINUXIA64) then
@@ -1993,7 +2005,7 @@ if ( "$BUILDGETTEXT" == 1 ) then
 endif   
 
 if ( "$BUILDJAVADOC" == 1 ) then
-   echo _________J_A_V_A_D_O_C_S__________________
+   echo _______D_R_M_A_A__J_A_V_A_D_O_C_S__________
 
    cd $SOURCE/classes
 
@@ -2014,6 +2026,25 @@ if ( "$BUILDJAVADOC" == 1 ) then
    endif
 
    cd $SOURCE
+   
+
+   echo _______J_U_T_I__J_A_V_A_D_O_C_S__________
+   cd $SOURCE/libs/juti
+
+   set target = "javadoc"
+
+   ant -f build.xml $target
+
+   if ( $status != 0 ) then
+      echo not done
+      exit 1
+   else
+      echo done
+      exit 0
+   endif
+
+   cd $SOURCE
+   
 endif
 
 if ( "$SGE_DEPEND" == 1 ) then
@@ -2285,7 +2316,8 @@ if ( "$CORE" == 1 && "$JAVA" != 2 ) then
          "SECLIBS_STATIC=$SECLIBS_STATIC" \
          "WINGRIDLIB=$WINGRIDLIB" "WINGRIDLIB_DEP=$WINGRIDLIB_DEP" \
          "KRBTARGETS=$KRBTARGETS" "KRBDEPEND=$KRBDEPEND" "KRBCLEAN=$KRBCLEAN"\
-         "KRBLIBS=$KRBLIBS" "KRBLIB=$KRBLIB" "GSSDEPEND=$GSSDEPEND" \
+         "KRBLIBS=$KRBLIBS" "AUTHLIBS=$AUTHLIBS" \
+         "KRBLIB=$KRBLIB" "GSSDEPEND=$GSSDEPEND" \
          "GSSCLEAN=$GSSCLEAN" "MSDIR=$MSDIR" "SLIBS=$GSSLIBS $KLIBS" "LIBS=$LIBS" \
          "XCFLAGS=$XCFLAGS" "XLFLAGS=$XLFLAGS" \
          "XLIBS=$XLIBS" "LFLAGS=$LFLAGS $KLFLAGS" "STRIP=$STRIP" \
@@ -2318,12 +2350,24 @@ if ( "$CORE" == 1 && "$JAVA" != 2 ) then
 endif
 
 if ( "$JAVA" > 0 ) then
-   echo _________J_A_V_A__C_L_A_S_S__F_I_L_E_S____
+   echo _____D_R_M_A_A__C_L_A_S_S__F_I_L_E_S____
 
    cd classes
 
    ant -f build.xml $argv
 
+   if ( $status != 0 ) then
+      echo not done
+      exit 1
+   else if ( $JAVA == 2 ) then
+      echo done
+      exit 0
+   endif
+   cd $SOURCE
+
+   echo _________J_U_T_I__C_L_A_S_S__F_I_L_E_S___
+   cd libs/juti
+   ant -f build.xml $argv
    if ( $status != 0 ) then
       echo not done
       exit 1

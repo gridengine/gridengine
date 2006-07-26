@@ -227,7 +227,7 @@ ExecuteAsAdmin()
       $INFOTEXT -log "Probably a permission problem. Please check file access permissions."
       $INFOTEXT -log "Check read/write permission. Check if SGE daemons are running."
 
-      MoveLog
+         MoveLog
       if [ "$ADMINRUN_NO_EXIT" != "true" ]; then
          exit 1
       fi
@@ -288,7 +288,7 @@ WINBINFILES="sge_coshepherd sge_execd sge_shepherd  \
 
 UTILFILES="adminrun checkprog checkuser filestat gethostbyaddr gethostbyname \
            gethostname getservbyname loadcheck now qrsh_starter rlogin rsh rshd \
-           testsuidroot uidgid infotext"
+           testsuidroot authuser uidgid infotext"
 
 THIRD_PARTY_FILES="openssl"
 
@@ -352,10 +352,15 @@ fi
          "qhost           qrls            qtcsh           sge_shadowd\n" \
          "qping\n\n" \
          "and the binaries in >%s< should be:\n\n" \
-         "adminrun       gethostbyaddr  loadcheck      rlogin         uidgid\n" \
-         "checkprog      gethostbyname  now            rsh            infotext\n" \
-         "checkuser      gethostname    openssl        rshd\n" \
-         "filestat       getservbyname  qrsh_starter   testsuidroot\n\n" \
+         "adminrun         db_load          gethostbyname    rsh\n" \
+         "authuser         db_printlog      gethostname      rshd\n" \
+         "berkeley_db_svc  db_recover       getservbyname    sge_share_mon\n" \
+         "checkprog        db_stat          infotext         spooldefaults\n" \
+         "checkuser        db_upgrade       loadcheck        spooledit\n" \
+         "db_archive       db_verify        now              spoolinit\n" \
+         "db_checkpoint    filestat         openssl          testsuidroot\n" \
+         "db_deadlock      fstype           qrsh_starter     uidgid\n" \
+         "db_dump          gethostbyaddr    rlogin\n" \
          "Installation failed. Exit.\n" $SGE_BIN $SGE_UTILBIN
       fi
 

@@ -47,7 +47,7 @@ DEFAULTPROG="sge_qmaster sge_execd sge_shadowd sge_schedd \
 
 UTILITYBINARIES="uidgid gethostname gethostbyname gethostbyaddr \
                  getservbyname filestat checkprog loadcheck now checkuser \
-                 adminrun qrsh_starter testsuidroot \
+                 adminrun qrsh_starter testsuidroot authuser \
                  sge_share_mon infotext spooldefaults spooledit spoolinit \
                  fstype SGE_Helper_Service.exe"
 
@@ -75,6 +75,8 @@ DRMAA_SHARED_LIBRARIES="libdrmaa"
 DRMAA_SHARED_LIB_VERSIONS="1.0 0.95"
 DRMAA_HEADER_FILES="libs/japi/drmaa.h"
 DRMAAJ_FILES="CLASSES/drmaa.jar"
+
+JUTIJ_FILES="CLASSES/juti/dist/juti.jar"
 
 PVMSOURCES="start_pvm.c stop_pvm.c slave.c master.c spmd.c Makefile"
 PVMSRCSCRIPTS="install.sh aimk"
@@ -973,7 +975,7 @@ if [ $instcommon = true ]; then
          Execute cp $f $DEST_SGE_ROOT/include
       done
 
-      for filename in $DRMAAJ_FILES; do
+      for filename in $DRMAAJ_FILES $JUTIJ_FILES; do
          if [ -f $filename ]; then
              echo Installing `basename $filename`
              Execute rm -f $DEST_SGE_ROOT/lib/`basename $filename`
@@ -1238,7 +1240,7 @@ for i in $ARCH; do
                else
                   echo \"openssl\" binary not found
                fi
-            elif [ $prog = testsuidroot ]; then
+            elif [ $prog = testsuidroot -o $prog = authuser ]; then
                InstallProgSUID $prog
             elif [ $prog = berkeley_db_svc -o $prog = db_archive \
                    -o $prog = db_checkpoint -o $prog = db_deadlock \

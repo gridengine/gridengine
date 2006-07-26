@@ -69,6 +69,7 @@ files=" \
        libs/cull/cull_dependencies  \
        libs/sched/sched_dependencies  \
        libs/uti/uti_dependencies  \
+       libs/juti/juti_dependencies  \
        libs/rmon/rmon_dependencies  \
        libs/comm/commlib_dependencies  \
        libs/comm/lists/commlistslib_dependencies \

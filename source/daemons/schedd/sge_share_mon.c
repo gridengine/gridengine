@@ -72,7 +72,11 @@ setup_lists(lList **sharetree, lList **users, lList **projects, lList **usersets
    lList *malp = NULL;              /* answer list for final gdi_multi */
    lEnumeration *what;
    state_gdi_multi state = STATE_GDI_MULTI_INIT;
-   int sharetree_id, sched_conf_id, user_id, project_id, userset_id;
+   int sharetree_id = 0;
+   int sched_conf_id = 0;
+   int user_id = 0;
+   int project_id = 0;
+   int userset_id = 0;
    bool error;
 
    /* get share tree */

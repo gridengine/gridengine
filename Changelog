@@ -1,3 +1,6 @@
+RD-2006-07-27-0: CVS        Created V60u8_1_qmaster_TAG
+-------------------------------------------------------
+
 JG-2006-05-22-0: Bugfix:    Jobs with negative -p priority were rejected by
                             sge_qmaster.
                  Issue:     2055
@@ -5,6 +8,7 @@ JG-2006-05-22-0: Bugfix:    Jobs with negative -p priority were rejected by
                  Review:    RD
 
 JG-2006-05-19-0: CVS        Created V60u8_BRANCH
+---------------------------------------------
 
 RD-2006-04-19-1: CVS        Created V60u8_TAG
 ---------------------------------------------

@@ -513,6 +513,7 @@ proc process_named_record {input output delimiter {index ""} {id ""}
                                                         {transform variable_not_set}
                                                         {rules variable_not_set}
                                                         {field_delimiter ""} } {
+
    upvar $input      in
    upvar $output     out
    upvar $replace    rep
@@ -535,9 +536,10 @@ proc process_named_record {input output delimiter {index ""} {id ""}
    # loop over all relevant lines
    for { set i $head_line } { $i < $num_lines } { incr i } {
       set line [lindex $tmp $i]
+      set line [string trim $line]
      
       # record or input end?
-      if { [string compare $line $delimiter] == 0 || $i == $last_line } {
+      if { [string match $delimiter $line] == 1 || $i == $last_line } {
          # eval index and filter records according to parameter id
          set idxlen [llength $index]
          set idx ""
@@ -574,6 +576,7 @@ proc process_named_record {input output delimiter {index ""} {id ""}
          unset record      
       } else {
          # read record element 
+
          if { $field_delimiter == "" } {
             set idx [string trim [lindex $line 0]]
             set value [string trim [lrange $line 1 end]]
@@ -1060,7 +1063,30 @@ proc rule_list { a b } {
 #     ???/???
 #*******************************
 proc rule_sum { a b } {
-   return [expr $a + $b]
+   set ap [transform_unit $a]
+   set bp [transform_unit $b]
+   return [expr $ap + $bp]
+}
+
+proc transform_unit { a } {
+   set ret $a
+   set pos [string first "K" $a]
+   if { $pos > 0 } { 
+      set ret [string replace $a $pos $pos ]
+      set ret [ expr $ret * 1024 ]
+   }
+   set pos [string first "M" $a]
+   if { $pos > 0 } { 
+      set ret [string replace $a $pos $pos ]
+      set ret [ expr $ret * 1024 * 1024 ]
+   }
+   set pos [string first "G" $a]
+   if { $pos > 0 } { 
+      set ret [string replace $a $pos $pos ]
+      set ret [ expr $ret * 1024 * 1024 * 1024 ]
+   }
+      
+   return $ret
 }
 
 #                                                             max. column:     |
@@ -3028,6 +3054,45 @@ proc qstat_g_c_plain_parse { output  } {
          
    }
 
+   set_error 0 "ok"
+}
+
+proc parse_lirs_record {input_var output_var} {
+   global CHECK_OUTPUT
+   upvar $input_var  in
+   upvar $output_var out
+
+   #split each line as token
+   set help [split $in "\n"]
+
+   set name ""
+   foreach line $help {
+      set elem [string trim $line]
+      # puts $CHECK_OUTPUT "token: $elem" 
+      if { $elem == "" } {
+         # skip empty lines
+      } elseif { $elem == "\{" } {
+         # begin of new ruleset
+      } elseif { $elem == "\}" } {
+         # end of new ruleset
+         set name ""
+      } else {
+         set id [lindex $elem 0]
+         set value [lrange $elem 1 end]
+         if { $id == "name"} {
+            set name $value
+         } elseif { $name != "" } {
+            if { $id == "limit" } {
+               lappend out($name,$id) $value 
+            } else {
+               set out($name,$id) $value 
+            }
+         } else {
+            add_proc_error "parse_lirs_record" -1 "parse error limitation rule set"
+            break;
+         }
+      }
+   }
    set_error 0 "ok"
 }
 

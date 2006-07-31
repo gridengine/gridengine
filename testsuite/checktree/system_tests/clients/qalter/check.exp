@@ -1829,9 +1829,18 @@ proc qalter_w {} {
 #     ???/???
 #*******************************
 proc qalter_a {} {
-   global CHECK_PRODUCT_ROOT CHECK_ARCH submitresult
+   global CHECK_PRODUCT_ROOT CHECK_ARCH submitresult ts_config
    global check_errno job_output_dir CHECK_OUTPUT
    global check_errstr  CHECK_ACTUAL_TEST_PATH CHECK_OUTPUT CHECK_USER
+
+   set queue [get_queue_instance "all.q" [lindex $ts_config(execd_nodes) 0]]
+   set job_id [ submit_job "-h -q $queue -e $job_output_dir -o $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 15" ]
+
+   if {$job_id < 0 } {
+     del_job_files $job_id $job_output_dir 2
+     set_error -1 "failure"
+     return
+   }
 
    set hour [exec date "+%H"]
    set minute [exec date "+%M"]
@@ -1876,20 +1885,20 @@ proc qalter_a {} {
       set seconds [string index $seconds 1 ]
    }     
 
-   puts $CHECK_OUTPUT "$option $submitresult"
-#   set result [eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qstat -j $submitresult"]
+   puts $CHECK_OUTPUT "$option $job_id"
+#   set result [eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qstat -j $job_id"]
 
-   set qalterresult [eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qalter $option $submitresult"]
+   set qalterresult [eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qalter $option $job_id"]
    if {$qalterresult == 1} {
      set_error -1 "qalter $option - couldn't change starttime"
      return
    }
    
-   puts $CHECK_OUTPUT "will qrls $submitresult now ..."
+   puts $CHECK_OUTPUT "will qrls $job_id now ..."
 
 
    #Release job
-   set qrlsresult [ catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qrls $submitresult" } qrlsoutput ]
+   set qrlsresult [ catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qrls $job_id" } qrlsoutput ]
 
    puts $CHECK_OUTPUT "qrls result is $qrlsresult"
    puts $CHECK_OUTPUT "qrls output is $qrlsoutput"
@@ -1899,35 +1908,34 @@ proc qalter_a {} {
    set wait_time [expr ( 120 - $pend_time - $seconds - 10 ) ] ;# 10 seconds are ok  
    puts $CHECK_OUTPUT "qalter $option - job should not start the next $wait_time seconds"
    set time [timestamp]
-   if { [wait_for_jobstart $submitresult "leeper" $wait_time 0] != -1 } {
+   if { [wait_for_jobstart $job_id "leeper" $wait_time 0] != -1 } {
       puts $CHECK_OUTPUT "qalter $option - time left: [expr ($wait_time - [expr ( [timestamp] - $time)] ) ]"
       set_error -1 "qalter $option - job should not run until yet"
       delete_all_jobs
       return 
    } 
 
-
    # wait for job to start
    puts $CHECK_OUTPUT "qalter $option - ok now the job should start"
-   if { [wait_for_jobstart $submitresult "leeper" 300] == -1 } {
+   if { [wait_for_jobstart $job_id "leeper" 300] == -1 } {
       set_error -1 "qalter $option - job doesn't start"
-      delete_all_jobs
+      del_job_files $job_id $job_output_dir 2
       return 
    } 
  
    # wait for end of job
-   if { [wait_for_jobend $submitresult "leeper" 300] == -1 } {
+   if { [wait_for_jobend $job_id "leeper" 300] == -1 } {
       set_error -1 "qalter $option - job doesn't stop"
-      delete_all_jobs
+      del_job_files $job_id $job_output_dir 2
       return 
    } 
   
-   set back [ del_job_files $submitresult $job_output_dir 2 ]  
+   set back [del_job_files $job_id $job_output_dir 2 ]  
    if { $back != 2 } {
-        set_error -1 "qalter $option - can't delete Jobfile $submitresult"
+        set_error -1 "qalter $option - can't delete Jobfile $job_id"
    } else {
         set_error 0 "qalter $option - no errors"
-   }      
+   }
 }
 
 #                                                             max. column:     |

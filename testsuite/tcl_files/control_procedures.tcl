@@ -57,11 +57,7 @@ proc dump_array_to_tmpfile { change_array } {
 
    upvar $change_array chgar
 
-   if { ! [file isdirectory "$ts_config(testsuite_root_dir)/testsuite_trash"] } {
-      file mkdir "$ts_config(testsuite_root_dir)/testsuite_trash"
-   }
-
-   set tmpfile "$ts_config(testsuite_root_dir)/testsuite_trash/tmpfile"
+   set tmpfile [ get_tmp_file_name ]
    set file [open $tmpfile "w"]
 
    if [info exists chgar] {
@@ -72,6 +68,52 @@ proc dump_array_to_tmpfile { change_array } {
    }
 
    close $file
+
+   return $tmpfile
+}
+
+proc dump_lirs_array_to_tmpfile { change_array } {
+   global ts_config CHECK_OUTPUT
+
+   upvar $change_array chgar
+
+
+   if [info exists chgar] {
+      set old_name ""
+      set first "true"
+
+      set tmpfile [ get_tmp_file_name ]
+      set file [open $tmpfile "w"]
+
+      foreach elem [lsort [array names chgar]] {
+         set help [split $elem ","]
+         set name [lindex $help 0]
+         set field [lindex $help 1]
+         set value $chgar($elem)
+
+         if { $old_name != $name} {
+            # new lirs
+            set old_name $name
+            if { $first == "false" } {
+               puts $file "\}"
+            } else {
+               set first "false"
+            }
+            puts $file "\{" 
+            puts $file "name $name"
+         }
+         if { $field == "limit" } {
+            foreach limit $value {
+               puts $file "limit  $limit"
+            }
+         } else {
+            puts $file "$field  $value"
+         }
+      } 
+
+      puts $file "\}"
+      close $file
+   }
 
    return $tmpfile
 }

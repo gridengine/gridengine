@@ -515,7 +515,7 @@ proc add_hostgroup {group change_array {fast_add 1} {on_host ""} {as_user ""}} {
       set result [start_sge_bin "qconf" "-Ahgrp ${tmpfile}" $on_host $as_user ]
 
    } else {
-   # User vi
+   # Use vi
       set vi_commands [build_vi_command chgar]
       set CHANGED  [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_EXEC_HOSTENTRYOFXCHANGEDINEXE
 CLIST_S] "*" ]

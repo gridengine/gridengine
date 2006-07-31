@@ -1404,11 +1404,13 @@ proc qrsh_qsub_gid {} {
       expect {
          -i $sp_id full_buffer {
             add_proc_error "qrsh_qsub_gid" -1 "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
+            close_spawn_process $tail_id
             continue
          }
          -i $sp_id timeout {
             send -i $sp_id "\003"
             add_proc_error "qrsh_qsub_gid" -1 "clearing execd_params from USE_QSUB_GID=true failed on host $host"
+            close_spawn_process $tail_id
             continue
          }
          -i $sp_id $FINISHED_JOBS {

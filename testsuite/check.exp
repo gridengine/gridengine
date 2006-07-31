@@ -8179,6 +8179,7 @@ proc source_tcl_files {} {
    ts_source $libdir/sge_userset	
    ts_source $libdir/sge_sharetree	
    ts_source $libdir/sge_event_client	
+   ts_source $libdir/sge_limit_rules
    
    ts_source $libdir/checktree_helper
    ts_source $libdir/report_procedures

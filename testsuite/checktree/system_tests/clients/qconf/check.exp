@@ -2258,7 +2258,6 @@ proc qconf_modify_checkpoint {} {
    set_error 0 "ok"
 }
 
-#                                               max. column:     | #
 #****** qconf/qconf_modify_exechost() ******
 #  NAME
 #     qconf_modify_exechost - Modify exec host

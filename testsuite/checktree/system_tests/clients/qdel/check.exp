@@ -1028,9 +1028,11 @@ proc qdel_help {} {
    delete_all_jobs
    wait_for_end_of_all_jobs 60
 
-   set state [ catch {exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qdel" "-help" } output ]
+   set output [start_sge_bin "qdel" "-help" "" "" state]
 
-   puts $CHECK_OUTPUT "qdel output    : \n---\n$output\n---"
+   puts $CHECK_OUTPUT "qdel output    : \n---"
+   puts $CHECK_OUTPUT "$output"
+   puts $CHECK_OUTPUT "---\n"
    puts $CHECK_OUTPUT "qdel exit state: $state"
 
    if {$state != 0} {
@@ -1047,7 +1049,7 @@ proc qdel_help {} {
    puts $CHECK_OUTPUT "Output has $nr_of_lines lines"
 
    if { $nr_of_lines != $qdel_help_lines } {
-      set_error -1 "help output hasn't $qdel_help_lines lines"
+      set_error -1 "help output has $nr_of_lines, but expected are $qdel_help_lines lines"
    }
 
    set_error 0 "ok"

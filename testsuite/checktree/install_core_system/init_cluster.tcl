@@ -405,7 +405,36 @@ proc setup_testcheckpointobject {} {
    set_error 0 "ok"
 }
 
+proc setup_limitationrulesobjects {} {
+   global ts_config
 
+   # limitation rule set max_jobs
+   set lirs_name "max_jobs"
+   set rules ""
+   lappend rules "to slots=30000"
+
+   set lirs_charray($lirs_name,limit) "$rules"
+   set lirs_charray($lirs_name,enabled) "true"
+   add_lirs lirs_charray
+
+   # limitation rule set per_host
+   set lirs_name "per_host"
+   set rules ""
+   lappend rules "hosts `*` to slots=30000"
+   set lirs_charray($lirs_name,limit) "$rules"
+   set lirs_charray($lirs_name,enabled) "true"
+   add_lirs lirs_charray
+
+   # limitation rule set per_host
+   set lirs_name "per_queue"
+   set rules ""
+   lappend rules "queues `*` to slots=30000"
+   set lirs_charray($lirs_name,limit) "$rules"
+   set lirs_charray($lirs_name,enabled) "true"
+   add_lirs lirs_charray
+
+   set_error 0 "ok"
+}
 
 #                                                             max. column:     |
 #****** install_core_system/setup_conf() ******

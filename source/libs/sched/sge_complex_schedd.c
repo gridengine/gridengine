@@ -439,26 +439,19 @@ bool get_queue_resource(lListElem *queue_elem, const lListElem *queue, const cha
       }
      
  
-      if(value || as_str){
-         if (!is_attr_prior2(queue_elem, dval, CE_doubleval, CE_dominant)){
-            lSetUlong(queue_elem,CE_dominant , DOMINANT_LAYER_QUEUE|DOMINANT_TYPE_FIXED);
-            lSetDouble(queue_elem,CE_doubleval , dval);
+      if (!is_attr_prior2(queue_elem, dval, CE_doubleval, CE_dominant)){
+         lSetUlong(queue_elem,CE_dominant , DOMINANT_LAYER_QUEUE|DOMINANT_TYPE_FIXED);
+         lSetDouble(queue_elem,CE_doubleval , dval);
 
-            if(value){
-               lSetString(queue_elem, CE_stringval, value);
-            } 
-            else{
-               lSetString(queue_elem,CE_stringval , as_str);
-            }
+         if(value){
+            lSetString(queue_elem, CE_stringval, value);
+         } 
+         else{
+            lSetString(queue_elem,CE_stringval , as_str);
          }
       }
-      else{ 
-         lFreeElem(&queue_elem);
-         DPRINTF(("the sytem queue element %s has no value!\n", attrname));
-         /* error */
-      }
-      DEXIT;
-      return true;
+
+      DRETURN(true);
 }
 
 

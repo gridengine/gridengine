@@ -1,3 +1,6 @@
+RD-2006-07-31-2: Cleanup:   Fixed gcc42 compiler warnings
+                 Review:    AA
+
 RD-2006-07-31-1: Bufix:     Fixed broken build with option -spool-classic
                  Review:    JG
 

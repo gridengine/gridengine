@@ -1,3 +1,6 @@
+RD-2006-07-31-1: Bufix:     Fixed broken build with option -spool-classic
+                 Review:    JG
+
 RD-2006-07-31-0: Testsuite: Added basic functions for limitation rule sets
                             fixed some testsuite tests
                  Review:    JG

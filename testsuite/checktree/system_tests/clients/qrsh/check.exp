@@ -1336,7 +1336,7 @@ proc qrsh_qsub_gid {} {
       }
 
       unset config
-      if { [string length $execd_params] == 0 } {
+      if {$execd_params == ""} {
          set config(execd_params) "USE_QSUB_GID=true"
       } else {
          set config(execd_params) "$execd_params,USE_QSUB_GID=true"
@@ -1395,7 +1395,7 @@ proc qrsh_qsub_gid {} {
 
       # unset USE_QSUB_GID 
       unset config
-      set config(execd_params) "$execd_params"
+      set config(execd_params) $execd_params
       set_config config $host
 
       # wait until USE_QSUB_GID is changed on host

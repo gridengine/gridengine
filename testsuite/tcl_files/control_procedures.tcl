@@ -139,7 +139,7 @@ proc build_vi_command { change_array {current_array no_current_array_has_been_pa
            # if old and new config have the same value, create no vi command,
            # if they differ, add vi command to ...
            if { [string compare $curar($elem) $newVal] != 0 } {
-              if { $newVal == "" } {
+              if {$newVal == ""} {
                  # ... delete config entry (replace by comment)
                  lappend vi_commands ":%s/^$elem .*$/#/\n"
               } else {
@@ -151,17 +151,21 @@ proc build_vi_command { change_array {current_array no_current_array_has_been_pa
            }
         } else {
            # if the config entry didn't exist in old config: append a new line
-           lappend vi_commands "A\n$elem  $newVal[format "%c" 27]"
+           if {$newVal != ""} {
+              lappend vi_commands "A\n$elem  $newVal[format "%c" 27]"
+           }
         }
-     }   
+     }
    } else {
       # we have no current values - just create a replace statement for each attribute
       foreach elem [array names chgar] {
          # this will quote any / to \/  (for vi - search and replace)
-         set newVal [set chgar($elem)]
-         set newVal1 [split $newVal {/}]
-         set newVal [join $newVal1 {\/}]
-         lappend vi_commands ":%s/^$elem .*$/$elem  $newVal/\n"
+         set newVal $chgar($elem)
+         if {$newVal != ""} {
+            set newVal1 [split $newVal {/}]
+            set newVal [join $newVal1 {\/}]
+            lappend vi_commands ":%s/^$elem .*$/$elem  $newVal/\n"
+         }
       }
    }
 

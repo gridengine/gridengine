@@ -1,3 +1,6 @@
+JG-2006-07-31-0: Testsuite: Minor fix for qrsh check (qconf vi handling)
+                 Review:    RD
+
 HP-2006-07-26-0: Bugfix:    Fixed broken build due to adding of juti/removing of
                             classes
                  Changed:   scripts/zerodepend, aimk, Makefile.global, juti

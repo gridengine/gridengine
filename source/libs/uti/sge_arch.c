@@ -162,7 +162,11 @@ const char *sge_get_arch(void)
 #    pragma "Define a NetBSD architecture for SGE"
 # endif
 #elif defined(DARWIN)
+# if defined(DARWIN_X86)
+#   define ARCHBIN "darwin-x86"   
+# else
 #   define ARCHBIN "darwin"   
+# endif
 #elif defined(INTERIX)
 #   define ARCHBIN "win32-x86"
 #else

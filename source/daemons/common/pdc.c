@@ -70,8 +70,8 @@ int main(int argc,char *argv[])
 #include <stdlib.h>
 #include <fcntl.h>
 #include <signal.h>
+#include <time.h>
 #include <sys/types.h>
-#include <sys/time.h>
 
 #if defined(IRIX)
 #include <sys/sysmp.h>
@@ -129,7 +129,7 @@ int main(int argc,char *argv[])
 #elif defined(ALPHA)
 #  define F64 "%ld"
 #  define S64 "%li"
-#elif defined(LINUX) || defined(SOLARIS)
+#elif defined(LINUX) || defined(SOLARIS) || defined(DARWIN) || defined(INTERIX)
 #  define F64 "%ld"
 #  define S64 "%li"
 #else
@@ -156,6 +156,7 @@ int getpagesize(void);
 #include "ptf.h"
 #include "sge_feature.h"
 #include "sge_language.h"
+#include "uti/sge_uidgid.h"
 #include "sgermon.h"
 
 typedef struct {
@@ -2424,8 +2425,6 @@ int psVerify(void)
 
 #define INTOMEGS(x) (((double)x)/(1024*1024))
 
-
-
 void
 usage(void)
 {
@@ -2582,18 +2581,19 @@ main(int argc, char **argv)
    char *jobids[256];
    dstring ds;
    char buffer[256];
+   bool done = false;
 
    sge_dstring_init(&ds, buffer, sizeof(buffer));
    sprintf(sgeview_bar_title, "%-.250s", MSG_SGE_CPUUSAGE  );
-   sprintf(sgeview_window_title, "%-.100s %-.150s", feature_get_product_name(FS_SHORT, &ds) ,MSG_SGE_SGEJOBUSAGECOMPARSION );
+   sprintf(sgeview_window_title, "%-.100s %-.150s", "product_name", MSG_SGE_SGEJOBUSAGECOMPARSION );
 
 #ifdef __SGE_COMPILE_WITH_GETTEXT__ 
    /* init language output for gettext() , it will use the right language */
-   install_language_func((gettext_func_type)        gettext,
+   sge_init_language_func((gettext_func_type)        gettext,
                          (setlocale_func_type)      setlocale,
                          (bindtextdomain_func_type) bindtextdomain,
                          (textdomain_func_type)     textdomain);
-   sge_lang_init(NULL,NULL);   
+   sge_init_language(NULL,NULL);   
 #endif /* __SGE_COMPILE_WITH_GETTEXT__  */
    
    psStartCollector();
@@ -2615,7 +2615,7 @@ main(int argc, char **argv)
             forcekill = 1;
             /* no break here, fall into 'k' case */
          case 'k':
-	    killjob = 1;
+	         killjob = 1;
             if (sscanf(optarg, "%d", &signo)!=1) {
                fprintf(stderr, MSG_SGE_XISNOTAVALIDSIGNALNUMBER_S , optarg);
                fprintf(stderr, "\n");
@@ -2632,10 +2632,10 @@ main(int argc, char **argv)
          case 'n':
             verbose = 0;
             break;
-	 case 'p':
-	    showproc = 1;
-	    break;
-	 case 'S':
+         case 'p':
+            showproc = 1;
+            break;
+         case 'S':
             if (sscanf(optarg, "%d", &sysi)!=1) {
                fprintf(stderr, MSG_SGE_XISNOTAVALIDINTERVAL_S, optarg);
                fprintf(stderr, MSG_SGE_XISNOTAVALIDSIGNALNUMBER_S , optarg);
@@ -2722,7 +2722,7 @@ main(int argc, char **argv)
 
    }
 
-   while(1) {
+   while (!done) {
       psJob_t *jobs, *ojob;
       psProc_t *procs;
       psStat_t *stat = NULL;
@@ -2736,7 +2736,6 @@ main(int argc, char **argv)
       sys = NULL;
 
       if (!sgeview && system) {
-
          if ((stat = psStatus()))
             if (verbose)
                print_status(stat);
@@ -2835,8 +2834,10 @@ main(int argc, char **argv)
       if (stat) free(stat);
       if (sys) free(sys);
 
-      if (killjob && (!forcekill || activeprocs == 0))
-         break;
+      if (killjob && (!forcekill || activeprocs == 0)) {
+         done = true;
+         continue;
+      }
 
       sleep(interval);
    }

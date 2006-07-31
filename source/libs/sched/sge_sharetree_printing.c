@@ -198,7 +198,7 @@ print_field(dstring *out, const item_t *item, const format_t *format)
 static void
 print_node(dstring *out, const lListElem *node, 
            const lListElem *user, const lListElem *project, 
-           const char **names, const format_t *format, 
+           const char **names, const format_t *format,
            const lListElem *parent, const char *parent_node_names)
 {
    if (node != NULL) {
@@ -458,7 +458,7 @@ print_hdr(dstring *out, const format_t *format)
 *******************************************************************************/
 void
 sge_sharetree_print(dstring *out, lList *sharetree, const lList *users, 
-                    const lList *projects, const lList *usersets, 
+                    const lList *projects, const lList *usersets,
                     bool group_nodes, bool decay_usage, 
                     const char **names, const format_t *format)
 {

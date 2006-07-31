@@ -3779,11 +3779,6 @@ void sge_store_job_number(te_event_t anEvent, monitoring_t *monitor)
       changed = true;
    }   
 
-   sge_mutex_unlock("job_number_mutex", "sge_store_job_number", __LINE__, 
-                  &job_number_control.job_number_mutex);     
-
-   /* here we got a race condition that can (very unlikely)
-      cause concurrent writing of the sequence number file  */
    if (changed) {
       if (!(fp = fopen(SEQ_NUM_FILE, "w"))) {
          ERROR((SGE_EVENT, MSG_JOB_NOSEQFILECREATE_SS, SEQ_NUM_FILE, strerror(errno)));
@@ -3793,9 +3788,15 @@ void sge_store_job_number(te_event_t anEvent, monitoring_t *monitor)
       }   
    }
 
+   sge_mutex_unlock("job_number_mutex", "sge_store_job_number", __LINE__, 
+                  &job_number_control.job_number_mutex);     
+
    DEXIT;
    return;
 FCLOSE_ERROR:
+   sge_mutex_unlock("job_number_mutex", "sge_store_job_number", __LINE__, 
+                  &job_number_control.job_number_mutex);     
+
    DEXIT;
    return;
 }

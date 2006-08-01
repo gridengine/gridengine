@@ -52,6 +52,7 @@
 #include "sge_gdi_request.h"
 #include "sge_gdi.h"
 #include "sge_usageL.h"
+#include "sge_attrL.h"
 #include "sge_userprj_qmaster.h"
 #include "sge_userset_qmaster.h"
 #include "sge_sharetree_qmaster.h"
@@ -661,3 +662,96 @@ void sge_userprj_spool(void) {
    return;
 }
 
+
+/****** sge_userprj_qmaster/project_still_used() *******************************
+*  NAME
+*     project_still_used() -- True, if project still used
+*
+*  SYNOPSIS
+*     static bool project_still_used(const char *p) 
+*
+*  FUNCTION
+*     Returns true, if project is still used as ACL with host_conf(5), 
+*     queue_conf(5).
+*
+*  INPUTS
+*     const char *p - the project
+*
+*  RESULT
+*     static bool - True, if project still used
+*
+*  NOTES
+*     MT-NOTE: project_still_used() is not MT safe 
+*******************************************************************************/
+static bool project_still_used(const char *p) 
+{
+   const lListElem *qc, *cq, *hep;
+
+   for_each (hep, Master_Exechost_List)
+      if (lGetSubStr(hep, UP_name, p, EH_prj) ||
+          lGetSubStr(hep, UP_name, p, EH_xprj))
+         return true;
+
+   for_each (cq, Master_CQueue_List) {
+      for_each (qc, lGetList(cq, CQ_projects))
+         if (lGetSubStr(qc, UP_name, p, APRJLIST_value))
+            return true;
+      for_each (qc, lGetList(cq, CQ_xprojects))
+         if (lGetSubStr(qc, UP_name, p, APRJLIST_value))
+            return true;
+   }
+
+   return false;
+}
+
+/****** sge_userprj_qmaster/project_update_categories() ************************
+*  NAME
+*     project_update_categories() -- Update all projects wrts categories
+*
+*  SYNOPSIS
+*     void project_update_categories(const lList *added, const lList *removed) 
+*
+*  FUNCTION
+*     Each added/removed project is verified whether it is used first 
+*     time/still as ACL for host_conf(5)/queue_conf(5). If so an event 
+*     is sent.
+*
+*  INPUTS
+*     const lList *added   - List of added project references (UP_Type)
+*     const lList *removed - List of removed project references (UP_Type)
+*
+*  NOTES
+*     MT-NOTE: project_update_categories() is not MT safe 
+*******************************************************************************/
+void project_update_categories(const lList *added, const lList *removed)
+{
+   const lListElem *ep;
+   const char *p;
+   lListElem *prj;
+
+   DENTER(TOP_LAYER, "project_update_categories");
+
+   for_each (ep, added) {
+      p = lGetString(ep, UP_name);
+      DPRINTF(("added project: \"%s\"\n", p));
+      prj = lGetElemStr(Master_Project_List, UP_name, p);
+      if (lGetBool(prj, UP_consider_with_categories)==false) {
+         lSetBool(prj, UP_consider_with_categories, true);
+         sge_add_event(0, sgeE_PROJECT_MOD, 0, 0, p, NULL, NULL, prj);
+      }
+   }
+
+   for_each (ep, removed) {
+      p = lGetString(ep, UP_name);
+      DPRINTF(("removed project: \"%s\"\n", p));
+      prj = lGetElemStr(Master_Project_List, UP_name, p);
+
+      if (!project_still_used(p)) {
+         lSetBool(prj, UP_consider_with_categories, false);
+         sge_add_event(0, sgeE_PROJECT_MOD, 0, 0, p, NULL, NULL, prj);
+      }
+   }
+   
+   DEXIT;
+   return;
+}

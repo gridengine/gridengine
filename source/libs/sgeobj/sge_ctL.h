@@ -96,9 +96,7 @@ enum {
    CT_messages_added,         /* if true, the scheduler info messages have been added for this category */
    CT_resource_contribution,  /* resource request dependent contribution on urgency 
                                  this value is common with all jobs of a category */
-   CT_rc_valid,               /* indicates whether cached CT_resource_contribution is valid */
-   CT_cached_hard_queue_list, /* stores the resolved hard queue request list */
-   CT_cached_master_hard_queue_list /* stores teh resolved master queue request list for pe jobs */
+   CT_rc_valid                /* indicates whether cached CT_resource_contribution is valid */
 };
 
 ILISTDEF(CT_Type, Categories, SGE_CT_LIST)
@@ -110,9 +108,6 @@ ILISTDEF(CT_Type, Categories, SGE_CT_LIST)
    SGE_BOOL(CT_messages_added, CULL_DEFAULT)
    SGE_DOUBLE(CT_resource_contribution, CULL_DEFAULT)
    SGE_BOOL(CT_rc_valid, CULL_DEFAULT)
-   SGE_LIST(CT_cached_hard_queue_list, QR_Type, CULL_DEFAULT)
-   SGE_LIST(CT_cached_master_hard_queue_list, QR_Type, CULL_DEFAULT)
-
 LISTEND 
 
 NAMEDEF(CTN)
@@ -124,8 +119,6 @@ NAMEDEF(CTN)
    NAME("CT_messages_added")
    NAME("CT_resource_contribution")
    NAME("CT_rc_valid")
-   NAME("CT_cached_hard_queue_list")
-   NAME("CT_cached_master_hard_queue_list")
 NAMEEND
 
 #define CTS sizeof(CTN)/sizeof(char*)
@@ -162,7 +155,7 @@ NAMEDEF(CCTN)
    NAME("CCT_ignore_hosts")
    NAME("CCT_queue_violations")
    NAME("CCT_job_messages")
-   NAME("CCT_pe_name")
+   NAME("CCT_pe_job_slots")
    NAME("CCT_pe_job_slot_count")
 NAMEEND
 

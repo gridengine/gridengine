@@ -1,3 +1,6 @@
+RD-2006-07-31-2: Cleanup:   Fixed gcc42 compiler warnings
+                 Review:    AA
+
 JG-2006-06-23-0: Enhancem.: Build on darwin-x86 platform (fixed duplicate
                             symbols in spooling libs).
                             Merge from maintrunk JG-2006-06-23-0.

@@ -275,8 +275,8 @@ sge_c_gdi(char *host, sge_gdi_request *request, sge_gdi_request *response,
    gdi_object_t *ao;
    uid_t uid;
    gid_t gid;
-   char user[128];
-   char group[128];
+   char user[128] = "";
+   char group[128] = "";
    lList *local_answer_list = NULL;
 
    DENTER(TOP_LAYER, "sge_c_gdi");
@@ -300,10 +300,10 @@ sge_c_gdi(char *host, sge_gdi_request *request, sge_gdi_request *response,
       return;
    }
 
-   if (!user || !group) {
+   if ((strlen(user) == 0) || (strlen(group) == 0)) {
       CRITICAL((SGE_EVENT, MSG_GDI_NULL_IN_GDI_SSS,  
-               (!user)?MSG_OBJ_USER:"", 
-               (!group)?MSG_OBJ_GROUP:"", host));
+               (strlen(user)==0)?MSG_OBJ_USER:"", 
+               (strlen(group)==0)?MSG_OBJ_GROUP:"", host));
       answer_list_add(&(response->alp), SGE_EVENT, 
                       STATUS_ENOIMP, ANSWER_QUALITY_ERROR);
       DEXIT;

@@ -6401,7 +6401,7 @@ const char *config_name
    ep = lFirst(alp);
    answer_exit_if_not_recoverable(ep);
    if (answer_get_status(ep) != STATUS_OK) {
-      fprintf(stderr, lGetString(ep, AN_text));
+      fprintf(stderr, "%s\n", lGetString(ep, AN_text));
       fail = 1;
    } else {
       const char *filename_stdout;

@@ -143,7 +143,7 @@ sge_gdi_qmod(char *host, sge_gdi_request *request, sge_gdi_request *answer, moni
       return;
    }
 
-   if (!request->host || !user || !request->commproc || !request->id) {
+   if (!request->host || (strlen(user) == 0) || !request->commproc || !request->id) {
       CRITICAL((SGE_EVENT, MSG_SGETEXT_NULLPTRPASSED_S, SGE_FUNC));
       answer_list_add(&(answer->alp), SGE_EVENT, 
                       STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);

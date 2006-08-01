@@ -99,7 +99,9 @@ static void uidgid_state_set_last_username(const char *user);
 static void uidgid_state_set_last_gid(gid_t gid);
 static void uidgid_state_set_last_groupname(const char *group);
 
+#if defined(INTERIX)
 static int uidgid_read_passwd(const char *user, char **pass, char *err_str);
+#endif
 
 /****** uti/uidgid/uidgid_mt_init() ************************************************
 *  NAME

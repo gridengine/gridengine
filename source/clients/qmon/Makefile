@@ -80,7 +80,7 @@ QMON_SRC =   qmon_main.c qmon_job.c qmon_submit.c qmon_menus.c qmon_util.c\
             qmon_fticket.c qmon_project.c qmon_ckpt.c \
             qmon_sconf.c qmon_file.c qmon_qcustom.c qmon_preferences.c \
             qmon_matrix.c qmon_quarks.c qmon_load.c qmon_calendar.c \
-            qmon_cq.c
+            qmon_cq.c qmon_lirs.c
 
 QMON_AD   =  $(QMON_DIR)/qmon_main.ad \
             $(QMON_DIR)/qmon_browser.ad \
@@ -104,7 +104,8 @@ QMON_AD   =  $(QMON_DIR)/qmon_main.ad \
             $(QMON_DIR)/qmon_message.ad \
             $(QMON_DIR)/qmon_qcustom.ad \
             $(QMON_DIR)/qmon_calendar.ad \
-            $(QMON_DIR)/qmon_loadmon.ad
+            $(QMON_DIR)/qmon_loadmon.ad \
+            $(QMON_DIR)/qmon_lirs.ad
 
 QMON_ADD_SRC = parse_job_cull.c unparse_job_cull.c \
             parse_qsub.c read_defaults.c \
@@ -113,7 +114,8 @@ QMON_ADD_SRC = parse_job_cull.c unparse_job_cull.c \
             sge_cqueue_qconf.c sge_mt_init.c \
             sge_cqueue_qstat.c \
             read_write_complex.c \
-            read_object.c
+            read_object.c \
+            sge_limit_rule_qconf.c
 
 QMON_OBJS = $(QMON_SRC:.c=.o) qmon_diares.o
             
@@ -294,6 +296,9 @@ qmon_calendar.o:    $(QMON_DIR)/qmon_calendar.c
 
 qmon_preferences.o:    $(QMON_DIR)/qmon_preferences.c
 	$(CC) $(CFLAGS) $(XCFLAGS) -c $(QMON_DIR)/qmon_preferences.c
+
+qmon_lirs.o:    $(QMON_DIR)/qmon_lirs.c
+	$(CC) $(CFLAGS) $(XCFLAGS) -c $(QMON_DIR)/qmon_lirs.c
 
 # create the fallbacks, the 'dialogs' and the app defaults file from Mr Q
 qmon_diares.o: $(QMON_AD) $(QMON_DIR)/Q

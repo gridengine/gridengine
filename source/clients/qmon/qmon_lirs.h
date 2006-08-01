@@ -1,5 +1,5 @@
-#ifndef __QMON_FILE_H
-#define __QMON_FILE_H
+#ifndef _QMON_LIRS_H_
+#define _QMON_LIRS_H_
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  * 
@@ -32,9 +32,11 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+#include <Xmt/Xmt.h>
+
 #include "qmon_proto.h"
 
-lList* qmonReadFile(const char *filename);
-char *qmonReadText(const char *filename, lList **alpp);
+void qmonLIRSPopup(Widget w, XtPointer cld, XtPointer cad); 
 
-#endif /* __QMON_FILE_H */
+#endif /* _QMON_LIRS_H_ */
+

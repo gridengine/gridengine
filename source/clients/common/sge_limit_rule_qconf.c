@@ -331,7 +331,7 @@ bool limit_rule_set_add_from_file(lList **answer_list, const char *filename)
 {
    bool ret = false;
 
-   DENTER(TOP_LAYER, "cqueue_add_from_file");
+   DENTER(TOP_LAYER, "limit_rule_set_add_from_file");
    if (filename != NULL) {
       lList *lirs_list = NULL;
       spooling_field *fields = sge_build_LIRS_field_list(false, true);
@@ -341,15 +341,8 @@ bool limit_rule_set_add_from_file(lList **answer_list, const char *filename)
                                           NULL, true, &qconf_limit_rule_set_sfi,
                                           SP_FORM_ASCII, NULL, filename);
       if (lirs_list != NULL) {
-      #if 0
-         /* because fields_out does not work we verify the lirs_list explicit */
-         if (limit_rule_sets_verify_attributes(lirs_list, answer_list, false)) {
-      #endif
-            ret = limit_rule_set_add_del_mod_via_gdi(lirs_list, answer_list, 
+         ret = limit_rule_set_add_del_mod_via_gdi(lirs_list, answer_list, 
                                            SGE_GDI_ADD | SGE_GDI_SET_ALL); 
-      #if 0                                       
-         } 
-      #endif      
       }
 
       lFreeList(&lirs_list);
@@ -416,12 +409,6 @@ bool limit_rule_set_provide_modify_context(lList **lirs_list, lList **answer_lis
          if (answer_list_output(answer_list)) {
             lFreeList(&new_lirs_list);
          }
-         #if 0
-         /* because fields_out does not work we verify the lirs_list explicit */
-         if (!limit_rule_sets_verify_attributes(new_lirs_list, answer_list, false)) {
-            lFreeList(&new_lirs_list);
-         } 
-         #endif 
          if (new_lirs_list != NULL) {
             if (ignore_unchanged_message || object_list_has_differences(new_lirs_list, answer_list, *lirs_list, false)) {
                lFreeList(lirs_list);
@@ -531,13 +518,6 @@ bool limit_rule_set_modify_from_file(lList **answer_list, const char *filename, 
                                           NULL, true, &qconf_limit_rule_set_sfi,
                                           SP_FORM_ASCII, NULL, filename);
       if (lirs_list != NULL) {
-      #if 0 
-         /* because fields_out does not work we verify the lirs_list explicit */
-         if (!limit_rule_sets_verify_attributes(lirs_list, answer_list, false)) {
-            lFreeList(&lirs_list);
-            ret = false;
-         }
-      #endif
 
          if (ret && name != NULL) {
             lList *selected_lirs_list = NULL;
